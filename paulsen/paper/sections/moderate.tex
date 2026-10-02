@@ -33,8 +33,8 @@ diagonal error & size$/\sigma$ & reason\\
 input & $\eps/t^2$ & $t^2=K_0\eps$, $K_0$ large\\
 linear term $2t\mathcal AZ$ & $6D\sqrt{\log(2n)/d}$ & filter (\cref{lem:filter}), $d\ge A\log 2n$\\
 quadratic fluctuation & $\eta'$ & concentration, $d\ge A\log 2n$\\
-filter bias $t^2b_*$ & $0$ & cancelled by the drift (\cref{lem:mean})\\
-drift cross terms & $40/D+1/D^2$ & $D$ large\\
+filter bias $t^2b_*$ & $0$ & cancelled by the drift (\cref{lem:mean,lem:retraction})\\
+drift cross terms & $40/D+1/(2D^2)$ & $D$ large\\
 base bias $t^2b_0$ & $12\eps/d$ & \cref{lem:mean}\\
 retraction remainder & $C_Et$ & $t$ small\\
 \bottomrule
@@ -45,14 +45,14 @@ retraction remainder & $C_Et$ & $t$ small\\
 
 Fix an isometry $V\in\R^{n\times(n-d)}$ onto $(\im U)^\perp$, and let
 $\mathcal Z=\R^{(n-d)\times d}$ with the Frobenius inner product. For
-$Z\in\mathcal Z$ the matrix $H=VZ$ satisfies $U^TH=0$, and we put
+$Z\in\mathcal Z$ the matrix $VZ$ is horizontal ($U^TVZ=0$), and we put
 \[
  Y_Z=VZU^T+UZ^TV^T,\qquad \norm{(Y_Z)_i}^2=\norm{Z^Tv_i}^2+\norm{Zu_i}^2\le\opn Z^2,
  \qquad \fro{Y_Z}^2=2\fro Z^2 .
 \]
 Define
 \[
- \mathcal A:\mathcal Z\to\R^n,\quad (\mathcal AZ)_i=v_i^TZu_i=(HU^T)_{ii},\qquad
+ \mathcal A:\mathcal Z\to\R^n,\quad (\mathcal AZ)_i=v_i^TZu_i=(VZU^T)_{ii},\qquad
  \mathcal A^*x=N_x:=V^T\Diag(x)U .
 \]
 Then $\mathcal A\mathcal A^*=L$, i.e.\ $\fro{N_x}^2=x^TLx$ (\cref{lem:energy}). Let
@@ -71,7 +71,8 @@ Fix an orthonormal eigenbasis of $S$, and for each of its members $y$ with
 eigenvalue $\mu>0$ put $f_y=D_p^{-1/2}y$ and
 $Z_y=\mu^{-1/2}\bar{\mathcal A}^*y=\mu^{-1/2}N_{f_y}$. Since $BZ_y=\mu Z_y$ and
 $\ip{Z_y}{Z_{y'}}=\ip y{Sy'}/\sqrt{\mu\mu'}$, the $Z_y$ form an orthonormal
-eigenbasis of $B$ on $(\ker B)^\perp$; and since $p_i\ge a/2$,
+eigenbasis of $B$ on $(\ker B)^\perp$. Sums $\sum_{\mu>0}$ below run over these
+basis members (with multiplicity). Since $p_i\ge a/2$,
 \begin{equation}\label{eq:finfty}
  \norm{f_y}_\infty\le\sqrt{2/a}.
 \end{equation}
@@ -105,10 +106,12 @@ $1/(\rho+\mu)\le1/\rho$, and $\sum_{\mu>0}(1-\mu)\le\tr(I-S)=d$.
 \end{proof}
 
 \begin{remark}
-Only four properties of the filter $\phi(\mu)=\rho(1-\mu)/(\rho+\mu)$ are used:
-$0\le\phi\le1-\mu$, $\mu\phi(\mu)\le\rho$, and the sums in (c). The hard cutoff
-$(1-\mu)\one[\mu<\rho]$ would do as well; the rational filter keeps every object
-a rational function of $S$, which is convenient for formalisation.
+Only these properties of the filter $\phi(\mu)=\rho(1-\mu)/(\rho+\mu)$ are used:
+$\phi(0)=1$ (so $C_\rho=I$ on $\ker B$), $0\le\phi(\mu)\le1-\mu$,
+$\mu\phi(\mu)\le\rho$, and the sums in (c). The hard cutoff $(1-\mu)\one[\mu<\rho]$
+satisfies them with $\sum r_\mu/\sqrt\mu\le d/\sqrt\rho$, which doubles some
+constants below; the rational filter keeps every object a rational function of
+$S$, which is convenient for formalisation.
 \end{remark}
 
 \subsection{Commutator identities}
@@ -158,7 +161,7 @@ $\sum_jP_{kj}^2(x_k-x_j)^2$.
 \subsection{The second-order mean and the drift}
 
 \begin{lemma}[Mean]\label{lem:mean}
-$\E q(Z)=a\one-p-b_0-\mathcal Am_*$, where
+$\E q(Z)=a\one-p-b_0-b_*$ with $b_*:=\mathcal Am_*$, where
 \[
  b_0=\frac1nL(p^{-1}),\quad \norm{b_0}_\infty\le\frac{12\eps}n,\qquad
  m_*=\frac1n\sum_{\mu>0}\frac{r_\mu}\mu\,\Gamma_{f_y},\quad
@@ -191,8 +194,11 @@ Am_*$ by \cref{lem:commutator}(a), and with $\fro{N_{f_y}}=\sqrt\mu$,
 \begin{remark}[Why a drift]\label{rem:drift}
 The filter removes covariance from the directions $Z_y$, and with it their share
 $t^2b_*=t^2\mathcal Am_*$ of the second-order drift towards $a\one$. This bias
-need not be small in $\ell_\infty$ (near a direct sum joined through a few rows
-it is concentrated there). But it is the \emph{first-order} diagonal change of
+need not be below the tolerance $\sigma/(12\Theta)$ used later: for instance, for
+many small blocks joined through a common row it is of order $at^2$ at that row.
+(Since $m_*$ does not depend on the choice of eigenbasis, it can also be written
+$m_*=\frac1nV^T\bigl[(D_p^{-1/2}(I-S)(\rho I+S)^{-1}D_p^{-1/2})\circ(I-2P)\bigr]U$.)
+But it is the \emph{first-order} diagonal change of
 the deterministic horizontal direction $\frac t2m_*$, of norm
 $\frac t2\fro{m_*}\le\sqrt{a/2}/D$. Adding this direction to the noise cancels
 the bias exactly, at the price of cross terms of size $O(\sigma/D)$.
@@ -202,8 +208,10 @@ in~\cite{Orig} to remove $b_*$ afterwards by a second scaling.)
 
 \subsection{The expected graph}
 
-For a covariance $\Sigma=\sum_k\lambda_k\psi_k\otimes\psi_k$ one has
-$\E_\Sigma\Lap(Y)=\sum_k\lambda_k\Lap(Y_{\psi_k})$.
+Since $\E Y_{ij}^2$ is linear in the covariance, $\E_\Sigma\Lap(Y)=\sum_k\lambda_k
+\Lap(Y_{\psi_k})$ for every representation $\Sigma=\sum_k\lambda_k\psi_k\otimes\psi_k$
+with real $\lambda_k$; we use it for $C_\rho/n=(I-B-R_\rho)/n$ with
+$B=\sum_j\zeta_j\otimes\zeta_j$.
 
 \begin{lemma}\label{lem:expected-graph}
 $\displaystyle\E\Lap(Y)\succeq\frac a{4n}\mathsf K-\Bigl(\frac2n+\frac8d+\frac8\rho\Bigr)L$.
@@ -286,8 +294,9 @@ total variance $\frac1n\sum_j\norm{e_i^TT_{e_j}}^2/p_j\le\frac6{an}\cdot5p_i\le
 \frac{45}n$, which exceeds $\frac a{32n}$ at no more than $1440n/d$ positions.
 For $i\notin\mathfrak B$ the residual part removes at most $\delta_0a$ from row
 $i$, hence more than $\frac a{32n}$ at no more than $32\delta_0n$ positions. So for
-$d\ge10^6$ every $i\notin\mathfrak B$ has at least $0.99n$ indices $k\ne i$ with
-$\Var(Y_{ik})\ge\frac a{16n}$.
+$d\ge10^6$ (hence $n\ge2\cdot10^6$, and the excluded indices number at most
+$25+0.0065n\le0.01n$) every $i\notin\mathfrak B$ has at least $0.99n$ indices $k\ne i$
+with $\Var(Y_{ik})\ge\frac a{16n}$.
 
 \emph{Small ball.} Let $\phi:\R\to[0,1]$ be $C^1$, equal to $1$ on $[-h,h]$,
 vanishing outside $[-2h,2h]$, with $|\phi'|\le2/h$, and for $i\notin\mathfrak B$
@@ -345,7 +354,8 @@ Fix $D\ge12$ and $t\in(0,1]$, set $\rho=D^2t^2$, take a sample $Z$ as in
 Since $U^TV=0$, $(U+tVW)^T(U+tVW)=G$ and $U_t$ is Parseval.
 
 \begin{lemma}\label{lem:retraction}
-There is an absolute $C_E$ such that:
+There is an absolute $C_E$ (depending only on the bounds in \ref{S1} and on
+$D\ge12$) such that:
 \begin{enumerate}[label=(\alph*)]
 \item $\fro{U_t-U}^2\le C_Et^2d$;
 \item every row of $\mathsf E=P_t-P-tY$ satisfies
@@ -397,8 +407,9 @@ $\frac{t^4}4|q_i(m_*)|\le\frac{t^4}4\cdot\frac{2a}\rho=\frac{at^2}{2D^2}$.
 \end{proof}
 
 \begin{lemma}[Graph of the seed]\label{lem:seed-graph}
-There are absolute $t_*\in(0,1]$ and $C_{\rm core}$ such that if
-$\eta'\le\frac1{32}$, $D\ge\max\{12,13/h\}$, $b\le n/10$ and $t\le t_*$, then
+There are absolute $t_*\in(0,1]$ and $C_{\rm core}$ such that the following
+holds. Let $\eta'\le\frac1{32}$, $d\ge A_{\eta'}\log(2n)$, $D\ge13/h$,
+$b\le n/10$ and $t\le t_*$, and let $Z$ satisfy \ref{S1}--\ref{S4}. Then
 $H(L_{P_t})\le C_{\rm core}/(at^2)$.
 \end{lemma}
 
@@ -414,14 +425,15 @@ $x^T\mathsf Kx\ge(n-b)\norm x^2$ and \ref{S4} give
 \[
  x^T\Lap(P+tY)x\ge\Bigl(1-\eta'-t^2\bigl(\tfrac2n+\tfrac8d\bigr)-\tfrac8{D^2}\Bigr)x^TLx
  +at^2\Bigl(\tfrac14\bigl(1-\tfrac bn\bigr)-2\eta'\Bigr)\norm x^2
- \ge\frac{at^2}8\norm x^2 .
+ \ge\frac{at^2}8\norm x^2 ,
 \]
+since the first coefficient is positive and $\frac14\cdot\frac9{10}-\frac1{16}\ge\frac18$.
 By \eqref{eq:lap-basic} and \cref{lem:retraction}(b),
 $L_{P_t}=\Lap(P+tY+\mathsf E)\succeq\frac12\Lap(P+tY)-2at^2(D^{-2}+C_Et^2)I$,
 which is at least $\frac{at^2}{32}$ on vectors supported on $\mathfrak B$ once
 $t^2\le1/(128C_E)$.
 
-\emph{Barrier.} \Cref{lem:core} with $G=\mathfrak B^c$, part (i) with
+\emph{Barrier.} \Cref{lem:core} with $\mathcal B=\mathfrak B$, part (i) with
 $\vartheta=0.4$, $\gamma=h^2at^2/4$, and part (ii) with $\lambda=at^2/32$, gives
 $H(L_{P_t})\le\frac{1+b}{0.1h^2at^2}+\frac{32\sqrt b}{at^2}$. Put
 $C_{\rm core}=10(1+b_{\max})/h^2+32\sqrt{b_{\max}}$.

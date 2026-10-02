@@ -23,8 +23,8 @@ $\norm{x_i}^2/(1+\delta)\le\norm{\tilde x_i}^2\le\norm{x_i}^2/(1-\delta)$.
 \begin{proof}
 $\fro{U-WR}^2=2d-2\tr(U^TWR)$, maximised over $R$ by the polar factor of $U^TW$,
 giving $2d-2\sum_k\sigma_k$. Next $\fro{P-Q}^2=2d-2\tr(PQ)=2d-2\fro{U^TW}^2$
-and $\fro{(I-P)W}^2=d-\fro{U^TW}^2$; and $1-\sigma\le1-\sigma^2\le2(1-\sigma)$
-on $[0,1]$. For the polar factor, if $\varsigma_k$ are the singular values of $X$
+and $\fro{(I-P)W}^2=d-\fro{U^TW}^2$; also $1-\sigma\le1-\sigma^2$ on $[0,1]$,
+and $(I-P)W=(I-P)(W-U)$ gives $\fro{(I-P)W}\le\fro{U-W}$. For the polar factor, if $\varsigma_k$ are the singular values of $X$
 then $\fro{X-\tilde X}^2=\sum_k(\varsigma_k-1)^2\le\sum_k(\varsigma_k^2-1)^2$, and
 $\norm{\tilde x_i}^2=x_i^T(X^TX)^{-1}x_i$.
 \end{proof}
@@ -93,7 +93,7 @@ $V\in\R^{n\times(n-d)}$ be an isometry onto $(\im U)^\perp$. The subspaces
 $\Diag(\sqrt z)\im U$ and $\Diag(z^{-1/2})\im V$ are orthogonal complements, so
 the projection onto the latter has diagonal $\one-r$, while $VV^T=I-P$ has
 diagonal $\one-p$ and Laplacian $L$ (\cref{lem:energy}). The first inequality
-for $(V,z^{-1})$ is the second.
+for $(V,z^{-1})$ is the second. (If $d=n$ then $L=0$ and $r=p=\one$.)
 \end{proof}
 
 \subsection{The barrier constant and static balancing}
@@ -101,19 +101,24 @@ for $(V,z^{-1})$ is the second.
 \begin{definition}[Barrier constant]\label{def:barrier}
 Let $L$ be a weighted Laplacian on $[n]$. For $S\subseteq[n]$, an
 \emph{$S$-barrier} is a vector $\psi\ge0$ with $(L\psi)_i\ge1$ for every
-$i\notin S$. The \emph{barrier constant} $H(L)$ is the least $H$ such that every
-$S$ with $|S|\ge n/2$ has an $S$-barrier with $\norm\psi_\infty\le H$.
+$i\notin S$. The \emph{barrier constant} $H(L)\in(0,\infty]$ is the least $H$ such
+that every $S$ with $|S|\ge n/2$ has an $S$-barrier with $\norm\psi_\infty\le H$
+($H(L)=\infty$ if some such $S$ has no barrier).
 \end{definition}
 
-The minimal $S$-barrier is $x\mapsto\E_x\tau_S$, the expected hitting time of
-$S$ for the continuous-time random walk that jumps from $i$ to $j$ at rate
-$w_{ij}$; so $H(L_P)$ is the half-set hitting time of the walk with rates
-$P_{ij}^2$. It is within a factor $2$ of the $\ell_\infty$ Poisson constant used
+For the continuous-time random walk that jumps from $i$ to $j$ at rate $w_{ij}$,
+the expected hitting time $h(x)=\E_x\tau_S$ vanishes on $S$ and satisfies
+$(Lh)_i=1$ off $S$; and if $\psi$ is any $S$-barrier and $\epsilon>0$, the maximum
+principle argument in the proof of \cref{lem:median} applied to
+$h-(1+\epsilon)\psi$ gives $h\le(1+\epsilon)\psi$. So $h$ is the minimal $S$-barrier,
+and $H(L_P)$ is the half-set hitting time of the walk with rates $P_{ij}^2$. If
+$H(L)<\infty$ then the graph is connected: for a component $C$ with
+$|C|\le n/2$, summing $(L\psi)_i$ over $C$ gives $0$, so $C^c$ has no barrier. It is within a factor $2$ of the $\ell_\infty$ Poisson constant used
 in~\cite{Orig} (\cref{rem:poisson}). A small barrier constant controls scalings
 in $\ell_\infty$:
 
 \begin{lemma}[Median barrier]\label{lem:median}
-Let $L$ have barrier constant $H$, let $\beta\ge0$ with $\beta H<1$, let
+Let $H(L)\le H<\infty$, let $\beta\ge0$ with $\beta H<1$, let
 $z\in\R^n_{>0}$, and let $m$ be a median of $z$ (so that $\{z\le m\}$ and
 $\{z\ge m\}$ both have at least $n/2$ elements). If
 \[
@@ -133,8 +138,8 @@ argument to $z^{-1}$, whose median is $m^{-1}$, with $S=\{z\ge m\}$.
 \end{proof}
 
 \begin{theorem}[Static balancing]\label{thm:balancing}
-Suppose $L_P$ has barrier constant $H$, and $q\in\R^n$ satisfies
-$\sum_iq_i=d$ and $\beta H\le\frac12$, where $\beta=\norm{q-p}_\infty$. Then
+Suppose $H(L_P)\le H<\infty$, and $q\in\R^n$ satisfies $\sum_iq_i=d$ and
+$\beta H\le\frac12$, where $\beta=\norm{q-p}_\infty$. Then
 there is a Parseval $W$ with $\diag(WW^T)=q$ and
 \[
  \fro{U-W}^2\le\fro{UU^T-WW^T}^2\le\tfrac{15}4\norm{q-p}_1 .
@@ -175,8 +180,10 @@ $D=\Diag(w)$, whose projection is $P(s)$.
 \end{proof}
 
 \begin{remark}
-No existence theorem for scalings, no flow, no genericity and no connectivity
-argument is used: the box supplies a minimiser, the median barrier keeps it
+The hypothesis forces $q_i\ge p_i/2>0$: for $n\ge2$, the barrier for
+$S=[n]\setminus\{i\}$ gives $1\le(L\psi)_i\le p_i(1-p_i)H$, so
+$\beta\le1/(2H)\le p_i/2$. No existence theorem for scalings, no flow, no
+genericity and no connectivity argument is used: the box supplies a minimiser, the median barrier keeps it
 away from one face, and the trace identity $\sum_ir_i=d$ does the rest. With
 $\beta H<1$ and a box of side $T>-\log(1-\beta H)$ the same proof gives scale
 ratio $(1-\beta H)^{-1}$ and cost $\frac14((1-\beta H)^{-4}-1)\norm{q-p}_1$.
@@ -186,61 +193,66 @@ ratio $(1-\beta H)^{-1}$ and cost $\frac14((1-\beta H)^{-4}-1)\norm{q-p}_1$.
 
 \begin{lemma}[Dense core with exceptional vertices]\label{lem:core}
 Let $L$ be the Laplacian of nonnegative symmetric weights $w_{ij}$ on $[n]$,
-and let $[n]=G\sqcup B$. Suppose:
+and let $[n]=\mathcal G\sqcup\mathcal B$. Suppose:
 \begin{enumerate}[label=(\alph*)]
-\item there is $\kappa>0$ with $\sum_{j\in S}w_{ij}\ge\kappa$ for every $i\in G$
-and every $S\subseteq[n]\setminus\{i\}$ with $|S|\ge n/2$;
-\item there are $y\in\R^B$, $y\ge0$, and $R,F\ge0$ with $\norm y_\infty\le R$,
-$(L_{BB}y)_i\ge1$ for $i\in B$, and $\sum_{j\in B}w_{ij}y_j\le F$ for $i\in G$.
-(If $B=\varnothing$ take $R=F=0$.)
+\item there is $\kappa>0$ with $\sum_{j\in S}w_{ij}\ge\kappa$ for every
+$i\in\mathcal G$ and every $S\subseteq[n]\setminus\{i\}$ with $|S|\ge n/2$;
+\item there are $y\in\R^{\mathcal B}$, $y\ge0$, and $R,F_{\mathcal B}\ge0$ with
+$\norm y_\infty\le R$, $(L_{\mathcal B\mathcal B}y)_i\ge1$ for $i\in\mathcal B$,
+and $\sum_{j\in\mathcal B}w_{ij}y_j\le F_{\mathcal B}$ for $i\in\mathcal G$.
+(If $\mathcal B=\varnothing$ take $R=F_{\mathcal B}=0$.)
 \end{enumerate}
-Then $H(L)\le(1+F)/\kappa+R$. Moreover:
+Then $H(L)\le(1+F_{\mathcal B})/\kappa+R$. Moreover, with $b=|\mathcal B|$:
 \begin{enumerate}[label=(\roman*)]
-\item (a) holds with $\kappa=\vartheta\gamma$ if every $i\in G$ has at least
-$(\frac12+\vartheta)n$ indices $j\ne i$ with $w_{ij}\ge\gamma/n$;
-\item (b) holds with $R=\sqrt b/\lambda$, $F=b$, where $b=|B|$, if
-$x^TLx\ge\lambda\norm x^2$ for every $x$ supported on $B$ ($\lambda>0$);
-\item for $w_{ij}=P_{ij}^2$, (b) holds with $R=\frac8{3a}$,
-$F=\frac2{3a}\max_ip_i$ if $a>0$, $p_i\ge a/2$ on $B$ and
-$\sum_{i\in B}p_i\le\frac14$.
+\item (a) holds with $\kappa=\vartheta\gamma$ if $\vartheta\in(0,\frac12]$,
+$\gamma>0$, and every $i\in\mathcal G$ has at least $(\frac12+\vartheta)n$ indices
+$j\ne i$ with $w_{ij}\ge\gamma/n$;
+\item (b) holds with $R=\sqrt b/\lambda$, $F_{\mathcal B}=b$, if
+$x^TLx\ge\lambda\norm x^2$ for every $x$ supported on $\mathcal B$ ($\lambda>0$);
+\item for $w_{ij}=P_{ij}^2$, (b) holds with $R=\frac8{3\alpha}$,
+$F_{\mathcal B}=\frac2{3\alpha}\max_ip_i$ if $\alpha>0$, $p_i\ge\alpha/2$ on
+$\mathcal B$ and $\sum_{i\in\mathcal B}p_i\le\frac14$.
 \end{enumerate}
 \end{lemma}
 
 \begin{proof}
-Let $|S|\ge n/2$, put $\lambda_0=(1+F)/\kappa$, extend $y$ by $0$ to $G$, and
-let $\psi=(\lambda_0\one+y)\circ\one_{S^c}$, so $0\le\psi\le\lambda_0+R$ and
-$\psi_j\le\lambda_0+y_j$ for all $j$. For $i\in G\setminus S$, $\psi_i=\lambda_0$
-and $\psi_j=0$ on $S$, so
+Let $|S|\ge n/2$, put $\lambda_0=(1+F_{\mathcal B})/\kappa$, extend $y$ by $0$ to
+$\mathcal G$, and let $\psi=(\lambda_0\one+y)\circ\one_{S^c}$, so
+$0\le\psi\le\lambda_0+R$ and $\psi_j\le\lambda_0+y_j$ for all $j$. For
+$i\in\mathcal G\setminus S$, $\psi_i=\lambda_0$ and $\psi_j=0$ on $S$, so
 \[
- (L\psi)_i\ge\lambda_0\sum_{j\in S}w_{ij}-\sum_{j\in B}w_{ij}y_j\ge
- \lambda_0\kappa-F=1 .
+ (L\psi)_i\ge\lambda_0\sum_{j\in S}w_{ij}-\sum_{j\in\mathcal B}w_{ij}y_j\ge
+ \lambda_0\kappa-F_{\mathcal B}=1 .
 \]
-For $i\in B\setminus S$, $\psi_i=\lambda_0+y_i$, so
-$(L\psi)_i\ge\sum_jw_{ij}(y_i-y_j)=(L_{BB}y)_i\ge1$. Thus $\psi$ is an
-$S$-barrier.
+For $i\in\mathcal B\setminus S$, $\psi_i=\lambda_0+y_i$, so
+$(L\psi)_i\ge\sum_jw_{ij}(y_i-y_j)=(L_{\mathcal B\mathcal B}y)_i\ge1$. Thus $\psi$
+is an $S$-barrier.
 
 (i) If $N_i$ is the set of such $j$ and $S\subseteq[n]\setminus\{i\}$, then
 $|N_i\cap S|\ge|N_i|+|S|-(n-1)>\vartheta n$.
-(ii) $C=L_{BB}\succeq\lambda I$; let $y=C^{-1}\one_B$. If $y$ had a negative
-minimum at $i$, then $(Cy)_i=y_i\sum_{j\notin B}w_{ij}+\sum_{j\in
-B}w_{ij}(y_i-y_j)\le0$, a contradiction; so $y\ge0$, and
-$\norm y_\infty\le\norm y_2\le\sqrt b/\lambda$. Since
-$(C\one_B)_j=\sum_{i\in G}w_{ij}$ for $j\in B$, for each $i_0\in G$
+(ii) $C=L_{\mathcal B\mathcal B}\succeq\lambda I$; let $y=C^{-1}\one_{\mathcal B}$. If
+$y$ had a negative minimum at $i$, then $(Cy)_i=y_i\sum_{j\notin\mathcal
+B}w_{ij}+\sum_{j\in\mathcal B}w_{ij}(y_i-y_j)\le0$, a contradiction; so $y\ge0$,
+and $\norm y_\infty\le\norm y_2\le\sqrt b/\lambda$. Since
+$(C\one_{\mathcal B})_j=\sum_{i\in\mathcal G}w_{ij}$ for $j\in\mathcal B$, for each
+$i_0\in\mathcal G$
 \[
- \sum_{j\in B}w_{i_0j}y_j\le\sum_{i\in G}\sum_{j\in B}w_{ij}y_j
- =\one_B^TCy=b .
+ \sum_{j\in\mathcal B}w_{i_0j}y_j\le\sum_{i\in\mathcal G}\sum_{j\in\mathcal B}w_{ij}y_j
+ =\one_{\mathcal B}^TCy=b .
 \]
-(iii) $P_{ij}^2\le p_ip_j$ gives, for $i\in B$,
-$(L_{BB}\one_B)_i=p_i-\sum_{j\in B}P_{ij}^2\ge p_i(1-\sum_{j\in B}p_j)\ge\frac{3a}8$,
-and for $i\in G$, $\sum_{j\in B}P_{ij}^2\le p_i/4$. Take $y=\frac8{3a}\one_B$.
+(iii) $P_{ij}^2\le p_ip_j$ gives, for $i\in\mathcal B$,
+$(L_{\mathcal B\mathcal B}\one_{\mathcal B})_i=p_i-\sum_{j\in\mathcal B}P_{ij}^2\ge
+p_i(1-\sum_{j\in\mathcal B}p_j)\ge\frac{3\alpha}8$, and for $i\in\mathcal G$,
+$\sum_{j\in\mathcal B}P_{ij}^2\le p_i/4$. Take $y=\frac8{3\alpha}\one_{\mathcal B}$.
 \end{proof}
 
 \begin{remark}[Poisson constants]\label{rem:poisson}
 \cite{Orig} uses the Poisson constant $K$: every $f\perp\one$ has a solution of
 $Lg=f$ with $\norm g_\infty\le K\norm f_\infty$. Then $K\le H\le2K$. Indeed, for
 $|S|\ge n/2$ the forcing $f=\one-\frac n{|S|}\one_S$ has $\norm f_\infty\le1$,
-and $g+K\one$ is an $S$-barrier; conversely, if $Lg=f$ with $\norm
-f_\infty\le1$ and $m$ is a median of $g$, the argument of \cref{lem:median}
+and $g+K\one$ is an $S$-barrier; conversely, if $H<\infty$ the graph is connected,
+so $Lg=f$ is solvable for every $f\perp\one$, and if $\norm f_\infty\le1$ and $m$ is
+a median of $g$, the argument of \cref{lem:median}
 applied to $g-m\one-\beta'\psi$ ($\beta'>1$) gives $g\le m+H$, and symmetrically
 $g\ge m-H$. \Cref{lem:core} replaces the Schur-complement estimate
 of~\cite{Orig} by an explicit barrier.
