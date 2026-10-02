@@ -85,4 +85,4 @@ The write-up also has one scaling toolbox, a single seed interface used by both 
 
 The intro also gains a short proof that the bound is optimal: a direct sum of two slightly unbalanced ENP blocks forces ‖X−W‖² ≥ εd/8.
 
-**The streamlined proof is not formalised in Lean.** Sections 4–6 and the barrier formulation differ from the formalised route. The formal result above does not depend on them.
+**Formalisation of the streamlined proof.** The streamlined proof is now formalised separately, in `linear-paulsen/lean/`. Its final theorem `Paulsen.Linear.sharpPaulsenBound` has the same target type `Paulsen.SharpPaulsenBound`. It builds from scratch, passes the audit (axioms and proof dependencies) and the independent restatement, and every module was replayed with `leanchecker`. See `linear-paulsen/lean/final-audit.md`.
