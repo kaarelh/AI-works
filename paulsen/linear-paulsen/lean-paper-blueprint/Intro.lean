@@ -1,4 +1,5 @@
 import Paulsen.Paper.Toolbox
+import Paulsen.Paper.IntroAuxOptimal
 
 /-!
 # Paper blueprint, Section 1: statement and optimality (`sections/intro.tex`)
@@ -40,7 +41,37 @@ theorem eq_nearly_iff {n d : ℕ} (ε : ℝ) (X : Frame n d) :
         ((1 + ε) • (1 : Matrix (Fin d) (Fin d) ℝ) - X.transpose * X).PosSemidef) ∧
       ∀ i, (1 - ε) * ((d : ℝ) / n) ≤ rowNormSq X i ∧
         rowNormSq X i ≤ (1 + ε) * ((d : ℝ) / n) := by
-  sorry
+  have hquad : ∀ (M : Matrix (Fin d) (Fin d) ℝ) (x : Fin d → ℝ),
+      star x ⬝ᵥ (M *ᵥ x) = matrixQuadratic M x := by
+    intro M x
+    simp only [star_trivial, dotProduct, Matrix.mulVec, matrixQuadratic, Finset.mul_sum, mul_assoc]
+  have hsmul : ∀ (c : ℝ) (x : Fin d → ℝ),
+      matrixQuadratic (c • (1 : Matrix (Fin d) (Fin d) ℝ)) x = c * vectorNormSq x := by
+    intro c x
+    simp only [matrixQuadratic, vectorNormSq, Matrix.smul_apply, Matrix.one_apply, smul_eq_mul,
+      mul_ite, mul_one, mul_zero, ite_mul, zero_mul, Finset.sum_ite_eq, Finset.mem_univ, if_true,
+      Finset.mul_sum]
+    apply Finset.sum_congr rfl; intro i _; ring
+  have hG : ∀ x, frameEnergy X x = matrixQuadratic (X.transpose * X) x :=
+    ToolboxAux.frameEnergy_eq_quad X
+  have hH : (X.transpose * X).IsHermitian := ToolboxAux.transpose_mul_self_isHermitian X
+  have hH1 : (X.transpose * X - (1 - ε) • (1 : Matrix (Fin d) (Fin d) ℝ)).IsHermitian :=
+    hH.sub (Matrix.isHermitian_one.smul (IsSelfAdjoint.all _))
+  have hH2 : ((1 + ε) • (1 : Matrix (Fin d) (Fin d) ℝ) - X.transpose * X).IsHermitian :=
+    (Matrix.isHermitian_one.smul (IsSelfAdjoint.all _)).sub hH
+  unfold IsNearlyEqualNormParseval IsNearlyEqualNorm
+  constructor
+  · rintro ⟨hP, hN⟩
+    refine ⟨⟨Matrix.PosSemidef.of_dotProduct_mulVec_nonneg hH1 fun x => ?_,
+      Matrix.PosSemidef.of_dotProduct_mulVec_nonneg hH2 fun x => ?_⟩, hN⟩
+    · rw [hquad, matrixQuadratic_sub, hsmul, ← hG]; linarith [(hP x).1]
+    · rw [hquad, matrixQuadratic_sub, hsmul, ← hG]; linarith [(hP x).2]
+  · rintro ⟨⟨h1, h2⟩, hN⟩
+    refine ⟨fun x => ⟨?_, ?_⟩, hN⟩
+    · have := h1.dotProduct_mulVec_nonneg x
+      rw [hquad, matrixQuadratic_sub, hsmul, ← hG] at this; linarith
+    · have := h2.dotProduct_mulVec_nonneg x
+      rw [hquad, matrixQuadratic_sub, hsmul, ← hG] at this; linarith
 
 /-- The block-diagonal frame `X = X₁ ⊕ X₂` of `rem:optimal`, with `X₁` of `n₁ - k` rows and
 `X₂` of `n₁ + k` rows, both in `ℝ^{d₁}`; it has `(n₁-k)+(n₁+k) = 2n₁` rows and `2d₁`
@@ -79,7 +110,174 @@ theorem rem_optimal (n₁ k d₁ : ℕ) (hk : 1 ≤ k) (hkn : 4 * k ≤ n₁) (h
       (k : ℝ) * (D / N) ≤
           sqDistance (frameProjection (optimalExample X₁ X₂)) (frameProjection W) ∧
       ε * D / 8 ≤ sqDistance (optimalExample X₁ X₂) W := by
-  sorry
+  intro N D ε
+  have hkn1 : k ≤ n₁ := by omega
+  have hmR : ((n₁ - k : ℕ) : ℝ) = (n₁ : ℝ) - k := by rw [Nat.cast_sub hkn1]
+  have hN : N = 2 * (n₁ : ℝ) := by
+    show (((n₁ - k) + (n₁ + k) : ℕ) : ℝ) = 2 * (n₁ : ℝ)
+    push_cast [hkn1]; ring
+  have hD : D = 2 * (d₁ : ℝ) := by
+    show ((d₁ + d₁ : ℕ) : ℝ) = 2 * (d₁ : ℝ)
+    push_cast; ring
+  have hkR : (1 : ℝ) ≤ k := by exact_mod_cast hk
+  have hk4 : 4 * (k : ℝ) ≤ n₁ := by exact_mod_cast hkn
+  have hn1 : (0 : ℝ) < n₁ := by linarith
+  have hd1 : (0 : ℝ) ≤ d₁ := Nat.cast_nonneg _
+  have hmpos : (0 : ℝ) < (n₁ : ℝ) - k := by linarith
+  have hε : ε = 2 * (k : ℝ) / n₁ := by
+    show 4 * (k : ℝ) / N = _
+    rw [hN]; field_simp; ring
+  have hDN : D / N = (d₁ : ℝ) / n₁ := by
+    rw [hD, hN]; field_simp
+  -- the block structure
+  let σ : Fin (n₁ - k) ⊕ Fin (n₁ + k) ≃ Fin ((n₁ - k) + (n₁ + k)) := finSumFinEquiv
+  let τ : Fin d₁ ⊕ Fin d₁ ≃ Fin (d₁ + d₁) := finSumFinEquiv
+  let F : Matrix (Fin (n₁ - k) ⊕ Fin (n₁ + k)) (Fin d₁ ⊕ Fin d₁) ℝ :=
+    Matrix.fromBlocks X₁ 0 0 X₂
+  have hX : optimalExample X₁ X₂ = F.submatrix σ.symm τ.symm := rfl
+  have hpars : IsParseval (optimalExample X₁ X₂) := by
+    unfold IsParseval
+    rw [hX, Matrix.transpose_submatrix, Matrix.submatrix_mul_equiv]
+    have : F.transpose * F = 1 := by
+      simp only [F, Matrix.fromBlocks_transpose, Matrix.fromBlocks_multiply, Matrix.transpose_zero,
+        Matrix.zero_mul, Matrix.mul_zero, add_zero, zero_add]
+      rw [show X₁.transpose * X₁ = 1 from hX₁.1, show X₂.transpose * X₂ = 1 from hX₂.1,
+        Matrix.fromBlocks_one]
+    rw [this, Matrix.submatrix_one_equiv]
+  have hP : frameProjection (optimalExample X₁ X₂) =
+      (Matrix.fromBlocks (X₁ * X₁.transpose) 0 0 (X₂ * X₂.transpose)).submatrix σ.symm σ.symm := by
+    unfold frameProjection
+    rw [hX, Matrix.transpose_submatrix, Matrix.submatrix_mul_equiv]
+    congr 1
+    simp only [F, Matrix.fromBlocks_transpose, Matrix.fromBlocks_multiply, Matrix.transpose_zero,
+      Matrix.zero_mul, Matrix.mul_zero, add_zero, zero_add]
+  have hPσ : ∀ a b, frameProjection (optimalExample X₁ X₂) (σ a) (σ b) =
+      Matrix.fromBlocks (X₁ * X₁.transpose) 0 0 (X₂ * X₂.transpose) a b := by
+    intro a b
+    rw [hP, Matrix.submatrix_apply, Equiv.symm_apply_apply, Equiv.symm_apply_apply]
+  have hrow1 : ∀ i, rowNormSq (optimalExample X₁ X₂) (σ (Sum.inl i)) = (d₁ : ℝ) / ((n₁ : ℝ) - k) := by
+    intro i
+    rw [← frameProjection_diagonal, hPσ, Matrix.fromBlocks_apply₁₁]
+    change frameProjection X₁ i i = _
+    rw [frameProjection_diagonal, hX₁.2 i, hmR]
+  have hrow2 : ∀ i, rowNormSq (optimalExample X₁ X₂) (σ (Sum.inr i)) = (d₁ : ℝ) / ((n₁ : ℝ) + k) := by
+    intro i
+    rw [← frameProjection_diagonal, hPσ, Matrix.fromBlocks_apply₂₂]
+    change frameProjection X₂ i i = _
+    rw [frameProjection_diagonal, hX₂.2 i]
+    push_cast; ring
+  have hv1 : D / N * (1 - 2 * (k : ℝ) / N)⁻¹ = (d₁ : ℝ) / ((n₁ : ℝ) - k) := by
+    rw [hD, hN]; field_simp
+  have hv2 : D / N * (1 + 2 * (k : ℝ) / N)⁻¹ = (d₁ : ℝ) / ((n₁ : ℝ) + k) := by
+    rw [hD, hN]; field_simp
+  -- bounds on the two row norms
+  have hb1 : (1 - ε) * (D / N) ≤ (d₁ : ℝ) / ((n₁ : ℝ) - k) ∧
+      (d₁ : ℝ) / ((n₁ : ℝ) - k) ≤ (1 + ε) * (D / N) := by
+    rw [hε, hDN]
+    constructor
+    · have : (1 - 2 * (k : ℝ) / n₁) * ((d₁ : ℝ) / n₁) = d₁ * (n₁ - 2 * k) / (n₁ * n₁) := by
+        field_simp
+      rw [this, div_le_div_iff₀ (by positivity) hmpos]
+      nlinarith [mul_nonneg hd1 (sq_nonneg (k : ℝ))]
+    · have : (1 + 2 * (k : ℝ) / n₁) * ((d₁ : ℝ) / n₁) = d₁ * (n₁ + 2 * k) / (n₁ * n₁) := by
+        field_simp
+      rw [this, div_le_div_iff₀ hmpos (by positivity)]
+      have : (n₁ : ℝ) * n₁ ≤ (n₁ + 2 * k) * (n₁ - k) := by nlinarith
+      nlinarith [mul_le_mul_of_nonneg_left this hd1]
+  have hb2 : (1 - ε) * (D / N) ≤ (d₁ : ℝ) / ((n₁ : ℝ) + k) ∧
+      (d₁ : ℝ) / ((n₁ : ℝ) + k) ≤ (1 + ε) * (D / N) := by
+    rw [hε, hDN]
+    have hp : (0 : ℝ) < n₁ + k := by linarith
+    constructor
+    · have : (1 - 2 * (k : ℝ) / n₁) * ((d₁ : ℝ) / n₁) = d₁ * (n₁ - 2 * k) / (n₁ * n₁) := by
+        field_simp
+      rw [this, div_le_div_iff₀ (by positivity) hp]
+      have : ((n₁ : ℝ) - 2 * k) * (n₁ + k) ≤ n₁ * n₁ := by nlinarith
+      nlinarith [mul_le_mul_of_nonneg_left this hd1]
+    · have : (1 + 2 * (k : ℝ) / n₁) * ((d₁ : ℝ) / n₁) = d₁ * (n₁ + 2 * k) / (n₁ * n₁) := by
+        field_simp
+      rw [this, div_le_div_iff₀ hp (by positivity)]
+      have : (n₁ : ℝ) * n₁ ≤ (n₁ + 2 * k) * (n₁ + k) := by nlinarith
+      nlinarith [mul_le_mul_of_nonneg_left this hd1]
+  have hεpos : 0 ≤ ε := by rw [hε]; positivity
+  refine ⟨hN, hpars, fun i => by rw [hrow1, hv1], fun i => by rw [hrow2, hv2],
+    ⟨hpars.isNearlyParseval hεpos, fun i => ?_⟩, fun W hW => ?_⟩
+  · -- the nearly-ENP row bounds
+    obtain ⟨a, rfl⟩ := σ.surjective i
+    rcases a with i | i
+    · rw [hrow1]; exact hb1
+    · rw [hrow2]; exact hb2
+  -- the lower bound for an ENP frame `W`
+  let W₁ : Matrix (Fin (n₁ - k)) (Fin (d₁ + d₁)) ℝ := fun i l => W (σ (Sum.inl i)) l
+  let W₂ : Matrix (Fin (n₁ + k)) (Fin (d₁ + d₁)) ℝ := fun j l => W (σ (Sum.inr j)) l
+  have hWsplit : W₁.transpose * W₁ + W₂.transpose * W₂ = 1 := by
+    have h := hW.1
+    unfold IsParseval at h
+    rw [← h]
+    ext l l'
+    simp only [Matrix.add_apply, Matrix.mul_apply, Matrix.transpose_apply, W₁, W₂]
+    rw [← Equiv.sum_comp σ (fun r => W r l * W r l'), Fintype.sum_sum_type]
+  have hQ : ∀ a b, frameProjection W (σ a) (σ b) = ∑ l, W (σ a) l * W (σ b) l := by
+    intro a b; simp only [frameProjection, Matrix.mul_apply, Matrix.transpose_apply]
+  have hdist : sqDistance (frameProjection (optimalExample X₁ X₂)) (frameProjection W) =
+      ∑ a, ∑ b, (Matrix.fromBlocks (X₁ * X₁.transpose) 0 0 (X₂ * X₂.transpose) a b -
+        frameProjection W (σ a) (σ b)) ^ 2 := by
+    unfold sqDistance
+    rw [← Equiv.sum_comp σ]
+    apply Finset.sum_congr rfl; intro a _
+    rw [← Equiv.sum_comp σ]
+    apply Finset.sum_congr rfl; intro b _
+    rw [hPσ]
+  have hS : ∑ i, ∑ j, ((X₁ * X₁.transpose) i j - (W₁ * W₁.transpose) i j) ^ 2 +
+      2 * ∑ i, ∑ j, (W₁ * W₂.transpose) i j ^ 2 ≤
+      sqDistance (frameProjection (optimalExample X₁ X₂)) (frameProjection W) := by
+    rw [hdist]
+    simp only [Fintype.sum_sum_type, Matrix.fromBlocks_apply₁₁, Matrix.fromBlocks_apply₁₂,
+      Matrix.fromBlocks_apply₂₁, Matrix.fromBlocks_apply₂₂, Matrix.zero_apply, zero_sub, neg_sq,
+      hQ]
+    have e11 : ∀ i j, (∑ l, W (σ (Sum.inl i)) l * W (σ (Sum.inl j)) l) =
+        (W₁ * W₁.transpose) i j := fun i j => by
+      simp only [Matrix.mul_apply, Matrix.transpose_apply, W₁]
+    have e12 : ∀ i j, (∑ l, W (σ (Sum.inl i)) l * W (σ (Sum.inr j)) l) =
+        (W₁ * W₂.transpose) i j := fun i j => by
+      simp only [Matrix.mul_apply, Matrix.transpose_apply, W₁, W₂]
+    have e21 : ∀ i j, (∑ l, W (σ (Sum.inr i)) l * W (σ (Sum.inl j)) l) =
+        (W₁ * W₂.transpose) j i := fun i j => by
+      simp only [Matrix.mul_apply, Matrix.transpose_apply, W₁, W₂]
+      apply Finset.sum_congr rfl; intro l _; ring
+    simp only [e11, e12, e21, Finset.sum_add_distrib]
+    have h22 : 0 ≤ ∑ i, ∑ j, ((X₂ * X₂.transpose) i j -
+        ∑ l, W (σ (Sum.inr i)) l * W (σ (Sum.inr j)) l) ^ 2 :=
+      Finset.sum_nonneg fun i _ => Finset.sum_nonneg fun j _ => sq_nonneg _
+    have hswap : ∑ i, ∑ j, (W₁ * W₂.transpose) j i ^ 2 =
+        ∑ i, ∑ j, (W₁ * W₂.transpose) i j ^ 2 := Finset.sum_comm
+    linarith
+  have hEs : (X₁ * X₁.transpose).transpose = X₁ * X₁.transpose := by
+    rw [Matrix.transpose_mul, Matrix.transpose_transpose]
+  have hEE : (X₁ * X₁.transpose) * (X₁ * X₁.transpose) = X₁ * X₁.transpose :=
+    hX₁.1.frameProjection_idempotent
+  have hcore := IntroAux.optimal_core (X₁ * X₁.transpose) hEs hEE W₁ W₂ hWsplit _ hS
+  have htrE : (X₁ * X₁.transpose).trace = (d₁ : ℝ) := by
+    rw [Matrix.trace_mul_comm, show X₁.transpose * X₁ = 1 from hX₁.1, Matrix.trace_one,
+      Fintype.card_fin]
+  have htrA : (W₁ * W₁.transpose).trace = ((n₁ : ℝ) - k) * (D / N) := by
+    have : ∀ i, (W₁ * W₁.transpose) i i = rowNormSq W (σ (Sum.inl i)) := by
+      intro i
+      simp only [Matrix.mul_apply, Matrix.transpose_apply, W₁, rowNormSq, pow_two]
+    simp only [Matrix.trace, Matrix.diag_apply, this, hW.2 _, Finset.sum_const, Finset.card_univ,
+      Fintype.card_fin, nsmul_eq_mul, hmR]
+    rfl
+  have hkey : (k : ℝ) * (D / N) ≤
+      sqDistance (frameProjection (optimalExample X₁ X₂)) (frameProjection W) := by
+    have : (X₁ * X₁.transpose).trace - (W₁ * W₁.transpose).trace = (k : ℝ) * (D / N) := by
+      rw [htrE, htrA, hDN]; field_simp; ring
+    linarith
+  have halign := (lem_align (optimalExample X₁ X₂) W hpars hW.1).2.2.2.2.2
+  refine ⟨by rw [hε, hDN, hD]; field_simp; ring, hkey, ?_⟩
+  have : ε * D / 8 = (k : ℝ) * (D / N) / 2 := by
+    rw [hε, hDN, hD]; field_simp; ring
+  rw [this]
+  linarith
 
 end
 
