@@ -24,9 +24,9 @@ an ENP frame $W\in\R^{n\times d}$ with $\fro{X-W}^2\le C\eps d$.
 The bound is optimal up to the constant (\cref{rem:optimal}). Kwok, Lau, Lee and
 Ramachandran~\cite{KLLR} proved the first bound independent of $n$,
 $O(\eps d^{13/2})$; Hamilton and Moitra~\cite{HM} improved it to
-$O(\eps d^2)$; Lau and Ramachandran announced the linear bound~\cite{LR}. The
-present text reorganises the proof of~\cite{Orig}; \cref{app:notes} lists what
-was changed.
+$O(\eps d^2)$; Lau and Ramachandran announced the linear bound~\cite{LR}, via a
+different route. \Cref{app:formal} describes a Lean~4 formalisation of
+\cref{thm:main,thm:projection}.
 
 For a Parseval $U$ write $P=UU^T$ for the orthogonal projection onto its column
 space; then $P_{ii}=\norm{u_i}^2$. The problem has an equivalent form in which
@@ -120,14 +120,15 @@ rows, of size $t^2d/\sqrt n$. The spectral error of the perturbed frame is
 therefore $\eta+O(t^2d/\sqrt n+t^2d^2/n+t^3)$, with $t^2$ a large multiple of $\eta$, which is
 at most $\theta t^2$ once that multiple and $B$ are large and $t$ is small; whitening
 turns a spectral error $\delta$ into a diagonal error at most $2a\delta$.
-(In~\cite{Orig} the remainder was bounded by $O(t^3d)$, which forced
-$\eta\le c/d^2$ and a separate block-partition argument; the sharper bound
-$O(t^3)$ uses the first-order constraint once more, see \cref{lem:remainder}.)
+The cubic term is $O(t^3)$ rather than the termwise $O(t^3d)$ because the
+first-order constraint lets one centre the normalisation weights
+(\cref{lem:remainder}); this is what makes the seed work for every
+$\eta\le c_*$, with no further restriction relating $\eta$ and $d$.
 
 \paragraph{Seed 2: moderate rows ($d\ge A\log 2n$, \cref{sec:moderate}).}
 Perturb in the horizontal tangent space of the Grassmannian (so the frame stays
 exactly Parseval) with a Gaussian whose covariance is filtered:
-$C_\rho=\rho(I-B)(\rho I+B)^{-1}$, where $B$ is the normalised Gram operator of
+$C_\rho=\rho(I-\Omega)(\rho I+\Omega)^{-1}$, where $\Omega$ is the normalised Gram operator of
 the linear diagonal map $\mathcal A$. The filter makes the linear diagonal change
 $O(t\sqrt{\rho a\log n/n})$, negligible once $\rho\asymp t^2$ and $d\gg\log n$,
 while leaving weak (connecting) directions untouched. The price is a

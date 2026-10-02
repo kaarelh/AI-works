@@ -68,7 +68,7 @@ The paper was reviewed section by section, by hand and with numerical checks of 
 - one constant slip: 𝖫(W²) ≼ 2p_max·L is stated, but the argument gives 4p_max·L, which is harmless;
 - one sentence whose order of constants looks circular as written but is not: η plays two roles.
 
-## 4. Simplifications → `paper/paulsen-streamlined.pdf`
+## 4. Simplifications → `linear-paulsen/paper/linear-paulsen.pdf`
 
 Three substantive simplifications survived adversarial checking. The streamlined write-up is built around them.
 

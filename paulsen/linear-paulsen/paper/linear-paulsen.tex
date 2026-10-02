@@ -5,10 +5,18 @@
 \usepackage{amsmath,amssymb,amsthm,mathtools}
 \usepackage[margin=1.05in]{geometry}
 \usepackage{microtype,booktabs,array,enumitem}
+\usepackage{newunicodechar}
+\newunicodechar{∃}{\ensuremath{\exists}}
+\newunicodechar{∀}{\ensuremath{\forall}}
+\newunicodechar{ℝ}{\ensuremath{\mathbb R}}
+\newunicodechar{ℕ}{\ensuremath{\mathbb N}}
+\newunicodechar{∧}{\ensuremath{\wedge}}
+\newunicodechar{≤}{\ensuremath{\le}}
+\newunicodechar{ε}{\ensuremath{\varepsilon}}
 \usepackage[dvipsnames]{xcolor}
 \usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
 \usepackage[capitalise,nameinlink]{cleveref}
-\hypersetup{pdftitle={The linear Paulsen bound: a streamlined proof},pdfauthor={}}
+\hypersetup{pdftitle={A linear bound for the Paulsen problem},pdfauthor={Astra, Claude, Kaarel H\"anni, Hugo Eberhard}}
 
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{lemma}[theorem]{Lemma}
@@ -43,30 +51,32 @@
 \setlength{\emergencystretch}{2em}
 \allowdisplaybreaks[1]
 
-\title{The linear Paulsen bound:\\ a streamlined proof}
-\author{}
+\title{A linear bound for the Paulsen problem}
+\author{Astra\thanks{AI system (gpt-astra).}
+\and Claude\thanks{AI system, Anthropic.}
+\and Kaarel H\"anni
+\and Hugo Eberhard}
 \date{October 2026}
 
 \begin{document}
 \maketitle
 \vspace{-1.5em}
 \begin{abstract}
-Every real $\eps$-nearly equal-norm Parseval frame of $n$ vectors in $\R^d$
-is within squared Frobenius distance $C\eps d$ of an equal-norm Parseval frame,
-where $C$ is a universal constant. This is a reorganised and substantially
-simplified version of a recent proof of this bound (produced with an AI system
-and formalised in Lean). One deterministic engine---a static row-scaling theorem
-driven by a half-set hitting time (``barrier constant'') of the squared-Gram
-random walk---is fed by two random seeds: a filtered Gaussian tangent with a
-deterministic drift when $d\gtrsim\log n$, and a row-tangent Gaussian when
-$n\gtrsim d^2$. Compared with the original manuscript: (i) the filter bias is
-cancelled by a deterministic drift instead of a second scaling, which removes
-the local correction step, the global spectral comparison, the concentration of
-squared Gaussian graphs and the matrix-series bound; (ii) a centred remainder
-estimate lets the many-row seed work at every error level below an absolute
-constant, which removes the random block partition and the $d^6$ block size;
-(iii) the Schur-complement Poisson estimate is replaced by an explicit barrier.
-All probabilistic estimates are proved in full.
+We prove that every real $\eps$-nearly equal-norm Parseval frame of $n$ vectors
+in $\R^d$ is within squared Frobenius distance $C\eps d$ of an equal-norm
+Parseval frame, where $C$ is a universal constant. This is optimal up to the
+value of $C$. Equivalently, every rank-$d$ orthogonal projection on $\R^n$ whose
+diagonal deviates from $d/n$ by at most $\beta$ is within squared Frobenius
+distance $Cn\beta$ of a rank-$d$ projection with constant diagonal. The proof
+combines a deterministic \emph{static balancing theorem}---a row scaling,
+obtained by minimising a log-determinant over a box, that corrects any diagonal
+error which is small compared with the inverse of a half-set hitting time
+(``barrier constant'') of the random walk with rates $P_{ij}^2$---with two random
+\emph{seeds} that make this hitting time small at linear cost: a filtered
+Gaussian tangent perturbation with a deterministic drift when $d\gtrsim\log n$,
+and a row-wise tangent perturbation with row renormalisation when
+$n\gtrsim d^2$. Bounded $d$ is handled by the Hamilton--Moitra argument. The main
+theorem has been formalised in Lean~4 with Mathlib.
 \end{abstract}
 
 \tableofcontents
@@ -79,7 +89,19 @@ All probabilistic estimates are proved in full.
 \input{sections/assembly}
 \appendix
 \input{sections/gaussian}
-\input{sections/notes}
+\input{sections/formal}
+
+\section*{Contributions and acknowledgements}
+K.~H\"anni and H.~Eberhard proposed the overall strategy: perturb by a random
+tangent of size $\sqrt\eps$ to create a well-connected squared-Gram graph, and
+then balance by a diagonal scaling controlled in $\ell_\infty$. Astra
+developed the first complete proof along these lines, including both seeds and
+the reduction to them, and formalised it in Lean. Claude found the
+simplifications in the present version (the cancelling drift in the
+moderate-row seed, the centred remainder estimate that makes the many-row seed
+work at every error level and removes a block-partition step, and the
+barrier-constant formulation of balancing), wrote this text, and formalised the
+present proof.
 
 \begin{thebibliography}{9}
 \bibitem{CC}
@@ -102,9 +124,5 @@ L.~C.~Lau and A.~Ramachandran.
 \emph{Optimal bounds for Tyler's M-estimator for elliptical distributions},
 Section~7.
 \href{https://arxiv.org/abs/2510.13751}{arXiv:2510.13751}, 2025.
-\bibitem{Orig}
-\emph{A static Gaussian proof of the linear Paulsen bound}.
-Manuscript and Lean~4 formalisation (September 2026), produced with an AI
-system from a strategy of K.~H\"anni and H.~Eberhard.
 \end{thebibliography}
 \end{document}
