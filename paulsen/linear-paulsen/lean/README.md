@@ -1,10 +1,24 @@
-# Lean formalisation of the linear Paulsen bound
+# Lean formalisation of the linear Paulsen bound, with the paper's constants
 
-This project formalises the proof in *A linear bound for the Paulsen problem* (`../paper/linear-paulsen.pdf`). There are no proof placeholders and no project-specific axioms.
+This project formalises *A linear bound for the Paulsen problem* (`../paper/linear-paulsen.pdf`). The formalisation is **statement by statement and constant by constant**:
 
-## Statement
+- Every numbered definition, lemma, theorem, corollary and proposition has a Lean counterpart that carries exactly the constants of the text. So does every numbered display that makes a claim and every remark that makes a quantitative claim.
+- Explicit constants include, among others: the balancing cost 15/4, the seed bound 3Θ, `R = √b/λ` in the dense-core lemma, the Gaussian tail constants 1/8, 2/π² and 32, the net bound 16, the counts 0.9(n−1) and 0.95n, δ₀ = 1/6400, and every constant recipe inside the proofs.
+- Each Lean declaration quotes the corresponding TeX in its docstring.
+- Everything is proved, with no proof placeholders and no project-specific axioms.
 
-Frames are real `n × d` matrices whose rows are the frame vectors. The target proposition [`SharpPaulsenBound`](Paulsen/Definitions.lean) is:
+## Main results
+
+[`Paulsen/Paper/Assembly.lean`](Paulsen/Paper/Assembly.lean):
+
+```lean
+theorem Paulsen.Paper.thm_main : Paulsen.SharpPaulsenBound            -- Theorem 1.1
+theorem Paulsen.Paper.thm_projection : Paulsen.SharpProjectionBound   -- Theorem 1.2
+```
+
+The explicit dependence C = max{12, 1+8C_P}, C_P = max{4, 2+8C₀}, C₀ = max{d₀, C_*, 4/c_*, 2+4C_m, 16/ε₀} is in `thm_main_explicit`, `thm_projection_explicit` and `prop_equalrow_explicit`.
+
+`SharpPaulsenBound` ([`Paulsen/Definitions.lean`](Paulsen/Definitions.lean)) reads:
 
 ```lean
 ∃ C : ℝ, 0 < C ∧
@@ -15,36 +29,34 @@ Frames are real `n × d` matrices whose rows are the frame vectors. The target p
       sqDistance U W ≤ C * ε * (d : ℝ)
 ```
 
-- The hypotheses mean `(1−ε)I ≤ UᵀU ≤ (1+ε)I`, stated as a quadratic-form condition, and `(1−ε)d/n ≤ ‖uᵢ‖² ≤ (1+ε)d/n`.
-- The output satisfies `WᵀW = I` and `‖wᵢ‖² = d/n`.
-- The distance is `Σᵢⱼ (Uᵢⱼ − Wᵢⱼ)²`, not normalised.
+Frames are real `n × d` matrices whose rows are the frame vectors. Parseval means `UᵀU = 1`, the spectral condition is stated as a quadratic-form inequality, and row norms are compared with the real quotient `d/n`. The distance is the unnormalised squared Frobenius distance.
 
-[`SharpProjectionBound`](Paulsen/SharpProjection.lean) is the projection form. For an arbitrary real symmetric idempotent `P` with `P.rank = d` and `|Pᵢᵢ − d/n| ≤ β`, it gives a symmetric idempotent `Q` of rank `d` with `Qᵢᵢ = d/n` and `‖P − Q‖²_F ≤ C n β`.
+[`IndependentCheck.lean`](IndependentCheck.lean) restates both theorems in plain Mathlib vocabulary (`PosSemidef`, dot products, traces, `IsHermitian`, `IsIdempotentElem`, `Matrix.rank`) and derives the restatements from them.
 
-Both are proved in [`Paulsen/Linear/Main.lean`](Paulsen/Linear/Main.lean):
+## Layout
 
-```lean
-theorem Paulsen.Linear.sharpPaulsenBound : Paulsen.SharpPaulsenBound
-theorem Paulsen.Linear.sharpProjectionBound : Paulsen.SharpProjectionBound
-```
-
-[`IndependentCheck.lean`](IndependentCheck.lean) restates both theorems in plain Mathlib vocabulary and derives the restatements from them. That vocabulary is `Matrix.PosSemidef`, dot products, `trace ((U − W)ᵀ (U − W))`, `IsHermitian`, `IsIdempotentElem` and `Matrix.rank`.
-
-## Structure
-
-`Paulsen/Linear/` (about 3,600 lines) implements the argument of the paper. The rest of `Paulsen/` (about 26,000 lines) is the supporting library: frames, scaling, Gaussian tools, the noises and sampling estimates, and Hamilton–Moitra.
-
-| Paper | Lean |
+| Paper | Lean (`Paulsen/Paper/`) |
 |---|---|
-| Barrier constant, median barrier (Def. 2.6, Lemma 2.7) | [`Barrier.lean`](Paulsen/Linear/Barrier.lean) |
-| Static balancing (Thm. 2.8) | [`Balancing.lean`](Paulsen/Linear/Balancing.lean) |
-| Dense core with exceptional vertices (Lemma 2.10) | [`Core.lean`](Paulsen/Linear/Core.lean), [`BlockBarrier.lean`](Paulsen/Linear/BlockBarrier.lean), [`ManyRowBarrier.lean`](Paulsen/Linear/ManyRowBarrier.lean) |
-| Seeds (Def. 2.12, Cor. 2.13) | [`Seed.lean`](Paulsen/Linear/Seed.lean) |
-| Many-row seed: row moments, centred remainder, sample, theorem | `ManyRowMoments`, `ManyRowRemainder`, `ManyRowGraph`, `ManyRowSample`, `ManyRowParameters`, `ManyRow` |
-| Moderate-row seed: commutator, drift `m_*`, drifted retraction, seed graph, theorem | `DriftAlgebra`, `DriftRetraction`, `DriftDiagonal`, `ModerateBarrier`, `ModerateDrift` |
-| Assembly (Prop. 6.1, Thms. 1.1 and 1.2) | [`Assembly.lean`](Paulsen/Linear/Assembly.lean), [`Main.lean`](Paulsen/Linear/Main.lean) |
+| §1 (statement, Remark 1.3 optimality) | `Intro` |
+| §2 scaling toolbox | `Toolbox`, `ToolboxAux*` |
+| §3 Hamilton–Moitra | `Bounded` |
+| §4 many-row seed | `ManyRow`, `ManyRowProof`, `ManyRowAux*` |
+| §5.1–5.4 moderate seed: covariance, commutators, mean, drift, expected graph | `Moderate`, `ModerateAux*` |
+| §5.5 sample lemma (S1)–(S4) | `ModerateSample`, `SampleAux*` |
+| §5.6–5.7 retraction, seed graph, Theorem 5.1 | `ModerateSeed`, `SeedAux*` |
+| §6 assembly, Theorems 1.1 and 1.2 | `Assembly`, `AssemblyAux` |
+| Appendix A Gaussian tools | `Gaussian` |
 
-Appendix B of the paper lists where the formal proof differs in detail. The constants are much larger. The block gap of the moderate seed is derived from global concentration events of the library rather than from second moments. The balancing cost constant is 8 rather than 15/4.
+[`BLUEPRINT.md`](BLUEPRINT.md) maps every paper label to its Lean name.
+
+The rest of `Paulsen/` is the supporting library: frames, projections, the log-determinant potential, Gaussian measures, the noises, and Hamilton–Moitra. It includes `Paulsen/Linear/`, an earlier formal route to the same theorem with larger constants. Some of its definitions are reused (for example the drift `Γ_f`, `m_*` and the barrier predicates). Its theorems with worse constants are not used, and the audit checks this.
+
+Lines of code:
+
+| Part | Lines |
+|---|---|
+| `Paulsen/Paper/` | 16,100 |
+| library | 29,700 |
 
 ## Build and audit
 
@@ -55,17 +67,11 @@ lake exe cache get
 lake build
 ```
 
-The default targets are `Paulsen` and [`Audit.lean`](Audit.lean). The audit checks three things:
+The default targets are `Paulsen` and [`Audit.lean`](Audit.lean). The audit checks:
 
-- **Statements.** The final declarations have exactly the types `Paulsen.SharpPaulsenBound` and `Paulsen.SharpProjectionBound`.
-- **Axioms.** Every theorem in the `Paulsen` namespace depends only on `propext`, `Classical.choice` and `Quot.sound`. Any other axiom, or `sorryAx`, fails the build.
-- **Proof dependencies.** The proof of the main theorem actually uses the barrier-constant toolbox, the centred many-row remainder, the drifted moderate retraction and the partition-free assembly. It must not use the library's Poisson-constant balancing endpoints or its termwise remainder budget.
-
-To print the audit and the independent restatement again:
-
-```sh
-lake env lean Audit.lean
-lake env lean IndependentCheck.lean
-```
+1. The final theorems have exactly the types `SharpPaulsenBound` and `SharpProjectionBound`.
+2. Every theorem in the `Paulsen` namespace depends only on `propext`, `Classical.choice` and `Quot.sound`. Hence every paper statement is fully proved.
+3. Every `lem_*`, `thm_*`, `cor_*`, `eq_*` and `prop_*` statement of `Paulsen.Paper` (82 of them) lies in the dependency cone of the final theorems. The only exceptions are listed in the file: two existential forms whose explicit versions are used, the facts (5.2) and the definitional restatement of (1.1). Remarks are proved standalone.
+4. No library lemma with a constant weaker than the paper's is used. Examples: balancing cost 8, Gaussian tail constant 1/16, the 17/20 dense core, the 80/d expected-graph bound, the old seed thresholds.
 
 See [`final-audit.md`](final-audit.md) for the recorded output.

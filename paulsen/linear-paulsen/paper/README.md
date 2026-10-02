@@ -18,4 +18,4 @@ pdflatex -interaction=nonstopmode -halt-on-error linear-paulsen.tex
 pdflatex -interaction=nonstopmode -halt-on-error linear-paulsen.tex
 ```
 
-The Lean source is in `../lean/`. Appendix B of the paper maps the paper to the Lean modules and lists where the formal proof differs in detail.
+The Lean source is in `../lean/`. Appendix B of the paper maps the paper to the Lean modules, describes the encoding, and lists the explicit values that the formalisation exhibits for constants the paper only asserts to exist.

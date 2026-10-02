@@ -24,7 +24,7 @@ theorem paulsen_independent :
       ∃ W : Matrix (Fin n) (Fin d) ℝ, Wᵀ * W = 1 ∧
         (∀ i, W i ⬝ᵥ W i = (d : ℝ) / n) ∧
         ((U - W)ᵀ * (U - W)).trace ≤ C * ε * d := by
-  obtain ⟨C, hC, H⟩ := Paulsen.Linear.sharpPaulsenBound
+  obtain ⟨C, hC, H⟩ := Paulsen.Paper.thm_main
   refine ⟨C, hC, ?_⟩
   intro n d hd hdn ε hε hε1 U hlo hhi hrow
   -- quadratic form of UᵀU equals the frame energy
@@ -73,7 +73,7 @@ theorem paulsen_projection_independent :
     ∃ Q : Matrix (Fin n) (Fin n) ℝ, Q.IsHermitian ∧ IsIdempotentElem Q ∧ Q.rank = d ∧
       (∀ i, Q i i = (d : ℝ) / n) ∧
       ((P - Q)ᵀ * (P - Q)).trace ≤ C * n * β := by
-  obtain ⟨C, hC, H⟩ := Paulsen.Linear.sharpProjectionBound
+  obtain ⟨C, hC, H⟩ := Paulsen.Paper.thm_projection
   refine ⟨C, hC, ?_⟩
   intro n d hn P hP hPi hrank β hβ hdiag
   have hPt : P.transpose = P := by

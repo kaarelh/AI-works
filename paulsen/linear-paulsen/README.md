@@ -11,10 +11,10 @@ The paper proves that every real ε-nearly equal-norm Parseval frame of n vector
 
 - **Static balancing.** A box-constrained log-determinant minimisation corrects the diagonal. It is controlled by the barrier constant (half-set hitting time) of the squared-Gram graph.
 - **Drifted moderate-row seed.** A filtered Gaussian tangent perturbation with a deterministic drift, used when d ≳ log n.
-- **Many-row seed.** A row-tangent Gaussian with row renormalisation and a centred remainder estimate, used when n ≳ d² at every error level below an absolute constant.
+- **Many-row seed.** A row-tangent Gaussian with row renormalisation and a centred remainder estimate, used when n ≳ d².
 - **Bounded rank.** The Hamilton–Moitra argument, used when d is bounded.
 
-The Lean development formalises this proof. The principal results are `Paulsen.Linear.sharpPaulsenBound : Paulsen.SharpPaulsenBound` and `Paulsen.Linear.sharpProjectionBound : Paulsen.SharpProjectionBound`, both in [Main.lean](lean/Paulsen/Linear/Main.lean). The [audit report](lean/final-audit.md) records the build and the checks of statements, axioms and proof dependencies.
+The Lean development formalises the paper statement by statement, with exactly the paper's constants. The principal results are `Paulsen.Paper.thm_main : Paulsen.SharpPaulsenBound` and `Paulsen.Paper.thm_projection : Paulsen.SharpProjectionBound`, both in [Assembly.lean](lean/Paulsen/Paper/Assembly.lean). The [audit report](lean/final-audit.md) records the build and the checks of statements, axioms and proof dependencies.
 
 ## Reproduce the paper
 

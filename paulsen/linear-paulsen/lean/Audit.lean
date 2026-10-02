@@ -3,24 +3,25 @@ import Lean.Util.CollectAxioms
 import Lean.Elab.Command
 
 /-!
-# Audit of the formalisation of the linear Paulsen bound
+# Audit of the formalisation of "A linear bound for the Paulsen problem"
 
-1. The final theorems have exactly the target types `Paulsen.SharpPaulsenBound`
-   and `Paulsen.SharpProjectionBound` (defined in `Paulsen.Definitions` and
-   `Paulsen.SharpProjection`).
-2. Every theorem in the `Paulsen` namespace depends only on `propext`,
-   `Classical.choice` and `Quot.sound`.
-3. The final proof uses the argument of the accompanying paper: the
-   barrier-constant balancing, both seeds (centred remainder, drift), and the
-   partition-free assembly; and it does not use the Poisson-constant
-   endpoints or the crude termwise remainder budget.
+1. The final theorems have exactly the target types `Paulsen.SharpPaulsenBound` and
+   `Paulsen.SharpProjectionBound`.
+2. Every theorem of the project depends only on `propext`, `Classical.choice` and
+   `Quot.sound` (so no statement of `Paulsen/Paper` is left unproved).
+3. The proofs of the two final theorems go through the paper's statements: every
+   `lem_*`, `thm_*`, `cor_*`, `eq_*` and `prop_*` theorem of `Paulsen.Paper` is in their
+   dependency cone, except the few listed below, which are proved but not needed
+   (existential forms whose explicit versions are used, and a definitional
+   restatement). Remarks (`rem_*`) are proved as standalone statements.
+4. No library lemma with a constant worse than the paper's is used.
 -/
 
-example : Paulsen.SharpPaulsenBound := Paulsen.Linear.sharpPaulsenBound
-example : Paulsen.SharpProjectionBound := Paulsen.Linear.sharpProjectionBound
+example : Paulsen.SharpPaulsenBound := Paulsen.Paper.thm_main
+example : Paulsen.SharpProjectionBound := Paulsen.Paper.thm_projection
 
-#print axioms Paulsen.Linear.sharpPaulsenBound
-#print axioms Paulsen.Linear.sharpProjectionBound
+#print axioms Paulsen.Paper.thm_main
+#print axioms Paulsen.Paper.thm_projection
 
 open Lean Elab Command in
 run_cmd do
@@ -50,39 +51,31 @@ partial def paulsenProofDependencies (env : Environment) (name : Name) :
 open Lean Elab Command in
 run_cmd do
   let env ← getEnv
-  let deps := (paulsenProofDependencies env ``Paulsen.Linear.sharpPaulsenBound).run {} |>.2
-  let required := #[
-    -- assembly without a block partition
-    `Paulsen.Linear.sharpPaulsenBound_of_seeds,
-    `Paulsen.Linear.low_density_small_error,
-    `Paulsen.quadratic_equalRowBound,
-    -- barrier-constant toolbox
-    `Paulsen.Linear.HasBarrierBound,
-    `Paulsen.Linear.barrier_subset_bound,
-    `Paulsen.Linear.balancing_cost_barrier,
-    `Paulsen.Linear.core_barrier,
-    `Paulsen.Linear.block_barrier,
-    `Paulsen.Linear.indicator_exceptional_barrier,
-    `Paulsen.Linear.IsSeed.hasCorrection,
-    -- many-row seed with the centred remainder
-    `Paulsen.Linear.manyRowBound,
-    `Paulsen.Linear.tangentRemainder_centred_bound,
-    `Paulsen.Linear.correction_of_exceptional_set_barrier,
-    -- moderate-row seed with the drift
-    `Paulsen.Linear.moderateParsevalBound,
-    `Paulsen.Linear.driftMean_diagonal,
-    `Paulsen.Linear.exists_drifted_retraction]
-  for name in required do
-    unless deps.contains name do
-      throwError "The final proof does not use {name}"
+  let d₁ := (paulsenProofDependencies env ``Paulsen.Paper.thm_main).run {} |>.2
+  let deps := (paulsenProofDependencies env ``Paulsen.Paper.thm_projection).run d₁ |>.2
+  let standalone := #[`Paulsen.Paper.lem_sample, `Paulsen.Paper.lem_seed_graph,
+    `Paulsen.Paper.eq_S, `Paulsen.Paper.eq_nearly_iff, `Paulsen.Paper.thm_main_constant_chain]
+  let prefixes := #["lem_", "thm_", "cor_", "eq_", "prop_"]
+  let mut required : Nat := 0
+  for (name, info) in env.constants.toList do
+    if info.isTheorem && name.components.length == 3 && (`Paulsen.Paper).isPrefixOf name then
+      let last := name.components.getLast!.toString
+      if prefixes.any (last.startsWith ·) && !standalone.contains name then
+        required := required + 1
+        unless deps.contains name do
+          throwError "The final proofs do not use the paper statement {name}"
   let forbidden := #[
-    `Paulsen.BoundedPoissonSolvability,
-    `Paulsen.sharp_correction_of_poisson,
-    `Paulsen.balancing_cost,
-    `Paulsen.balancing_cost_target,
-    `Paulsen.correction_of_exceptional_set,
-    `Paulsen.tangentRemainderBudget]
+    `Paulsen.Linear.sharpPaulsenBound, `Paulsen.Linear.manyRowBound,
+    `Paulsen.Linear.moderateParsevalBound, `Paulsen.Linear.balancing_cost_barrier,
+    `Paulsen.Linear.IsSeed.hasCorrection, `Paulsen.Linear.exists_drifted_retraction,
+    `Paulsen.Smooth.exists_moderateGaussianSample_with_cross,
+    `Paulsen.Smooth.expected_retainedTangent_expansion,
+    `Paulsen.euclideanQuadratic_stdGaussian_abs_tail,
+    `Paulsen.rowIndependentSeed_dense_core_failure_le,
+    `Paulsen.tangentQuadraticMean_conditioned_bias_le,
+    `Paulsen.balancing_cost, `Paulsen.balancing_cost_target,
+    `Paulsen.sharp_correction_of_poisson, `Paulsen.BoundedPoissonSolvability]
   for name in forbidden do
     if deps.contains name then
-      throwError "The final proof uses the superseded declaration {name}"
-  logInfo m!"The final proof depends on {deps.size} project declarations; all required ones are present and no superseded endpoint is used."
+      throwError "The final proofs use the worse-constant library declaration {name}"
+  logInfo m!"The final proofs depend on {deps.size} project declarations, including all {required} required paper statements; no worse-constant library lemma is used."
