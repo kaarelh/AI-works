@@ -35,11 +35,14 @@ theorem paulsen_independent :
   have hnear : Paulsen.IsNearlyEqualNormParseval ε U := by
     refine ⟨?_, ?_⟩
     · intro x
-      have h1 := hlo.2 x
-      have h2 := hhi.2 x
-      simp only [star_trivial, Matrix.sub_mulVec, dotProduct_sub, Matrix.smul_mulVec,
-        Matrix.one_mulVec, dotProduct_smul, smul_eq_mul] at h1 h2
-      rw [hq] at h1 h2
+      have h1 : 0 ≤ x ⬝ᵥ ((Uᵀ * U - (1 - ε) • (1 : Matrix (Fin d) (Fin d) ℝ)) *ᵥ x) := by
+        simpa using hlo.dotProduct_mulVec_nonneg x
+      have h2 : 0 ≤ x ⬝ᵥ (((1 + ε) • (1 : Matrix (Fin d) (Fin d) ℝ) - Uᵀ * U) *ᵥ x) := by
+        simpa using hhi.dotProduct_mulVec_nonneg x
+      rw [Matrix.sub_mulVec, dotProduct_sub, Matrix.smul_mulVec, Matrix.one_mulVec,
+        dotProduct_smul, smul_eq_mul, hq] at h1
+      rw [Matrix.sub_mulVec, dotProduct_sub, Matrix.smul_mulVec, Matrix.one_mulVec,
+        dotProduct_smul, smul_eq_mul, hq] at h2
       have hx : x ⬝ᵥ x = Paulsen.vectorNormSq x := by
         simp [Paulsen.vectorNormSq, dotProduct, sq]
       rw [hx] at h1 h2
@@ -74,10 +77,13 @@ theorem paulsen_projection_independent :
   refine ⟨C, hC, ?_⟩
   intro n d hn P hP hPi hrank β hβ hdiag
   have hPt : P.transpose = P := by
-    simpa [Matrix.IsHermitian, Matrix.conjTranspose] using hP
+    have h := hP.eq
+    rwa [Matrix.conjTranspose_eq_transpose_of_trivial] at h
   obtain ⟨Q, hQt, hQi, hQr, hQd, hdist⟩ := H n d hn P hPt hPi hrank β hβ hdiag
   refine ⟨Q, ?_, hQi, hQr, hQd, ?_⟩
-  · simpa [Matrix.IsHermitian, Matrix.conjTranspose] using hQt
+  · show Qᴴ = Q
+    rw [Matrix.conjTranspose_eq_transpose_of_trivial]
+    exact hQt
   · have htr : ((P - Q)ᵀ * (P - Q)).trace = Paulsen.sqDistance P Q := by
       simp only [Matrix.trace, Matrix.diag, Matrix.mul_apply, Matrix.transpose_apply,
         Matrix.sub_apply, Paulsen.sqDistance]

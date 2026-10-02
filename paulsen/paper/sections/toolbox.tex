@@ -1,11 +1,13 @@
 \section{The scaling toolbox}\label{sec:toolbox}
 
 Throughout this section $U\in\R^{n\times d}$ is Parseval, $P=UU^T$,
-$p=\diag P$, and $L=L_P=\Diag(p)-P\circ P$.
+$p=\diag P$, and $L=L_P=\Diag(p)-P\circ P$. For nonnegative symmetric weights
+$w_{ij}$ the Laplacian is $(Lx)_i=\sum_jw_{ij}(x_i-x_j)$; diagonal weights do
+not contribute. We write $\osc(x)=\max_ix_i-\min_ix_i$.
 
 \subsection{Projections, distances, and the squared-Gram Laplacian}
 
-\begin{lemma}[Frame versus projection distance]\label{lem:align}
+\begin{lemma}[Frames versus projections]\label{lem:align}
 Let $U,W\in\R^{n\times d}$ be Parseval with projections $P,Q$, and let
 $\sigma_1,\dots,\sigma_d\in[0,1]$ be the singular values of $U^TW$. Then
 \[
@@ -13,18 +15,23 @@ $\sigma_1,\dots,\sigma_d\in[0,1]$ be the singular values of $U^TW$. Then
  \fro{P-Q}^2=2\sum_k(1-\sigma_k^2)=2\fro{(I-P)W}^2\le2\fro{U-W}^2 .
 \]
 Right multiplication by $R\in O(d)$ preserves Parsevalness and every row norm.
+If $X\in\R^{n\times d}$ has $\delta=\opn{X^TX-I}<1$, its polar factor
+$\tilde X=X(X^TX)^{-1/2}$ is Parseval, $\fro{X-\tilde X}^2\le d\delta^2$, and
+$\norm{x_i}^2/(1+\delta)\le\norm{\tilde x_i}^2\le\norm{x_i}^2/(1-\delta)$.
 \end{lemma}
 
 \begin{proof}
-$\fro{U-WR}^2=2d-2\tr(U^TWR)$, maximised over $R$ by the polar factor, giving
-$2d-2\sum_k\sigma_k$. Next $\fro{P-Q}^2=2d-2\tr(PQ)=2d-2\fro{U^TW}^2$ and
-$\fro{(I-P)W}^2=d-\fro{U^TW}^2$. Finally $1-\sigma\le1-\sigma^2\le2(1-\sigma)$
-for $\sigma\in[0,1]$.
+$\fro{U-WR}^2=2d-2\tr(U^TWR)$, maximised over $R$ by the polar factor of $U^TW$,
+giving $2d-2\sum_k\sigma_k$. Next $\fro{P-Q}^2=2d-2\tr(PQ)=2d-2\fro{U^TW}^2$
+and $\fro{(I-P)W}^2=d-\fro{U^TW}^2$; and $1-\sigma\le1-\sigma^2\le2(1-\sigma)$
+on $[0,1]$. For the polar factor, if $\varsigma_k$ are the singular values of $X$
+then $\fro{X-\tilde X}^2=\sum_k(\varsigma_k-1)^2\le\sum_k(\varsigma_k^2-1)^2$, and
+$\norm{\tilde x_i}^2=x_i^T(X^TX)^{-1}x_i$.
 \end{proof}
 
 \begin{lemma}[Energy identity]\label{lem:energy}
-$L$ is the Laplacian of the weighted graph with weights $P_{ij}^2$ $(i\ne j)$,
-$L\succeq0$, $L\one=0$, $L_{I-P}=L_P$, and for $x\in\R^n$, $X=\Diag(x)$,
+$L$ is the Laplacian of the weights $P_{ij}^2$ $(i\ne j)$, $L\succeq0$,
+$L\one=0$, $L_{I-P}=L_P$, and for $x\in\R^n$, $X=\Diag(x)$,
 \[
  x^TLx=\tfrac12\sum_{i,j}P_{ij}^2(x_i-x_j)^2=\fro{(I-P)XU}^2
  =\tfrac12\fro{[X,P]}^2 .
@@ -33,7 +40,7 @@ $L\succeq0$, $L\one=0$, $L_{I-P}=L_P$, and for $x\in\R^n$, $X=\Diag(x)$,
 
 \begin{proof}
 $\sum_jP_{ij}^2=(P^2)_{ii}=p_i$, so the rows of $\Diag(p)-P\circ P$ sum to zero
-and its off-diagonal entries are $-P_{ij}^2$; this gives the first formula. Next
+and its off-diagonal entries are $-P_{ij}^2$. Next
 $\fro{(I-P)XU}^2=\tr(XPX(I-P))=\sum_ix_i^2p_i-\sum_{i,j}x_ix_jP_{ij}^2$, and
 $[X,P]_{ij}=(x_i-x_j)P_{ij}$. For $I-P$ the off-diagonal weights are again
 $P_{ij}^2$.
@@ -41,54 +48,36 @@ $P_{ij}^2$.
 
 \begin{lemma}[Scaled projections]\label{lem:scaled}
 For $w\in\R^n_{>0}$ put $D=\Diag(w)$, $M=(U^TD^2U)^{-1/2}$ and $W=DUM$. Then
-$W$ is Parseval with column space $D\im U$, $\opn M\le1/\min_iw_i$, and
+$W$ is Parseval with column space $D\im U$, and
 \[
  \fro{WW^T-P}^2=2\fro{(I-P)W}^2\le\frac{2\,w^TLw}{\min_iw_i^2} .
 \]
 \end{lemma}
 
 \begin{proof}
-$W^TW=M U^TD^2U M=I$ and $U^TD^2U\succeq(\min w_i)^2I$. By \cref{lem:align}
-and \cref{lem:energy},
+$W^TW=MU^TD^2UM=I$ and $U^TD^2U\succeq(\min_iw_i)^2I$, so
+$\opn M\le1/\min_iw_i$. By \cref{lem:align,lem:energy},
 $\fro{(I-P)W}^2\le\opn M^2\fro{(I-P)DU}^2=\opn M^2\,w^TLw$.
 \end{proof}
 
-\subsection{The log-determinant potential}
+\subsection{Diagonal scaling}
 
 For $s\in\R^n$ let $D_s=\Diag(e^{s})$, let $P(s)$ be the projection onto
-$D_s\im U$, and
-\[
- F(s)=\tfrac12\log\det(U^TD_s^2U).
-\]
+$D_s\im U$, $r(s)=\diag P(s)$, and $F(s)=\frac12\log\det(U^TD_s^2U)$.
 
 \begin{lemma}\label{lem:potential}
-$F$ is smooth and convex, $F(s+c\one)=F(s)+cd$, and
-\[
- \nabla F(s)=\diag P(s),\qquad \nabla^2F(s)=2L_{P(s)} .
-\]
-Moreover, if $\norm{s}_\infty\le r$ then
-\begin{equation}\label{eq:hessian-comparison}
- e^{-4r}L_P\preceq L_{P(s)}\preceq e^{4r}L_P .
-\end{equation}
+$F$ is smooth and convex, $\nabla F(s)=r(s)$, $\sum_ir_i(s)=d$, and
+$F(s+c\one)=F(s)+cd$.
 \end{lemma}
 
 \begin{proof}
-Write $G=U^TD_s^2U=\sum_ie^{2s_i}u_iu_i^T$. Then
-$\partial_iF=e^{2s_i}u_i^TG^{-1}u_i=P(s)_{ii}$ because
-$P(s)=D_sUG^{-1}U^TD_s$, and differentiating once more gives
-$\partial_j\partial_iF=2\delta_{ij}P(s)_{ii}-2P(s)_{ij}^2$, i.e.\
-$\nabla^2F=2L_{P(s)}\succeq0$. For~\eqref{eq:hessian-comparison} let
-$W_s=D_sUM_s$ with $M_s=G^{-1/2}$, so $\opn{M_s}\le e^r$, $\opn{D_s}\le e^r$.
-Since $(I-P(s))D_sP=(I-P(s))W_sM_s^{-1}U^T=0$,
-\[
- (I-P(s))\Diag(x)W_s=(I-P(s))D_s(I-P)\Diag(x)UM_s ,
-\]
-and \cref{lem:energy} for $W_s$ gives $x^TL_{P(s)}x\le e^{4r}x^TL_Px$. The
-lower bound is the upper bound applied to the Parseval frame $W_s$ and the
-scaling $-s$, since $D_{-s}W_s=UM_s$ has column space $\im U$.
+With $G=U^TD_s^2U=\sum_ie^{2s_i}u_iu_i^T$ one has
+$\partial_iF=e^{2s_i}u_i^TG^{-1}u_i=P(s)_{ii}$, because $P(s)=D_sUG^{-1}U^TD_s$;
+differentiating again gives $\nabla^2F=2L_{P(s)}\succeq0$. The trace of $P(s)$ is
+$d$, and $G$ scales by $e^{2c}$ under $s\mapsto s+c\one$.
 \end{proof}
 
-\begin{lemma}[Exact scaling inequalities]\label{lem:scaling-ineq}
+\begin{lemma}[One-sided scaling inequalities]\label{lem:scaling-ineq}
 For $z\in\R^n_{>0}$ let $r$ be the diagonal of the projection onto
 $\Diag(\sqrt z)\im U$. Then, coordinatewise,
 \[
@@ -97,239 +86,187 @@ $\Diag(\sqrt z)\im U$. Then, coordinatewise,
 \end{lemma}
 
 \begin{proof}
-Let $G=U^T\Diag(z)U$. The matrix $(G-z_iI)G^{-1}(G-z_iI)$ is positive
-semidefinite; evaluating its quadratic form at $u_i$ and using
-$u_i^TGu_i=\sum_jP_{ij}^2z_j$, $\norm{u_i}^2=p_i$, $z_iu_i^TG^{-1}u_i=r_i$ gives
-$\sum_jP_{ij}^2z_j-2z_ip_i+z_ir_i\ge0$, which is the first inequality. Let
+Let $G=U^T\Diag(z)U$. Since $G+z_i^2G^{-1}-2z_iI=(G^{1/2}-z_iG^{-1/2})^2\succeq0$,
+evaluating at $u_i$ and using $u_i^TGu_i=\sum_jP_{ij}^2z_j=p_iz_i-(Lz)_i$ and
+$z_i^2u_i^TG^{-1}u_i=z_ir_i$ gives the first inequality. Let
 $V\in\R^{n\times(n-d)}$ be an isometry onto $(\im U)^\perp$. The subspaces
-$\Diag(\sqrt z)\im U$ and $\Diag(z^{-1/2})\im V$ are orthogonal complements,
-so the projection onto the latter has diagonal $\one-r$, while $VV^T=I-P$ has
+$\Diag(\sqrt z)\im U$ and $\Diag(z^{-1/2})\im V$ are orthogonal complements, so
+the projection onto the latter has diagonal $\one-r$, while $VV^T=I-P$ has
 diagonal $\one-p$ and Laplacian $L$ (\cref{lem:energy}). The first inequality
-for $(V,z^{-1})$ is the second inequality.
+for $(V,z^{-1})$ is the second.
 \end{proof}
 
-\subsection{Static balancing}
+\subsection{The barrier constant and static balancing}
 
-\begin{definition}\label{def:poisson}
-A weighted graph Laplacian $L$ on $n$ vertices has \emph{Poisson constant}
-$K$ if for every $f\perp\one$ there is $g$ with $Lg=f$ and
-$\norm{g}_\infty\le K\norm f_\infty$.
+\begin{definition}[Barrier constant]\label{def:barrier}
+Let $L$ be a weighted Laplacian on $[n]$. For $S\subseteq[n]$, an
+\emph{$S$-barrier} is a vector $\psi\ge0$ with $(L\psi)_i\ge1$ for every
+$i\notin S$. The \emph{barrier constant} $H(L)$ is the least $H$ such that every
+$S$ with $|S|\ge n/2$ has an $S$-barrier with $\norm\psi_\infty\le H$.
 \end{definition}
 
-If $L$ has a finite Poisson constant then the graph is connected (on each
-component the image of $L$ sums to zero). The Poisson constant is the
-$\ell_\infty\to\ell_\infty$ norm of the pseudo-inverse modulo constants; it is
-the quantity that controls a scaling in the box $\norm s_\infty\le1$.
+The minimal $S$-barrier is $x\mapsto\E_x\tau_S$, the expected hitting time of
+$S$ for the continuous-time random walk that jumps from $i$ to $j$ at rate
+$w_{ij}$; so $H(L_P)$ is the half-set hitting time of the walk with rates
+$P_{ij}^2$. It is within a factor $2$ of the $\ell_\infty$ Poisson constant used
+in~\cite{Orig} (\cref{rem:poisson}). A small barrier constant controls scalings
+in $\ell_\infty$:
 
 \begin{lemma}[Median barrier]\label{lem:median}
-Let $L$ have Poisson constant $K$, let $\beta\ge0$ with $2\beta K<1$, let
-$z\in\R^n_{>0}$, let $m$ be a median of $z$ (so that $\{z\le m\}$ and
-$\{z\ge m\}$ both have at least $n/2$ elements), and suppose
+Let $L$ have barrier constant $H$, let $\beta\ge0$ with $\beta H<1$, let
+$z\in\R^n_{>0}$, and let $m$ be a median of $z$ (so that $\{z\le m\}$ and
+$\{z\ge m\}$ both have at least $n/2$ elements). If
 \[
  (Lz)_i\le\beta z_i\ \text{ when }z_i>m,\qquad
- (Lz^{-1})_i\le\beta z_i^{-1}\ \text{ when }z_i<m .
+ (Lz^{-1})_i\le\beta z_i^{-1}\ \text{ when }z_i<m ,
 \]
-Then $\max_iz_i/\min_iz_i\le(1-2\beta K)^{-2}$.
+then $(1-\beta H)\max_iz_i\le m\le(1-\beta H)^{-1}\min_iz_i$.
 \end{lemma}
 
 \begin{proof}
-\emph{Claim.} If $|S|\ge n/2$, $y\ge0$, $y\le m$ on $S$ and $(Ly)_i\le\beta y_i$
-for $i\notin S$, then $(1-2\beta K)\max y\le m$. Indeed, $f=\one-\frac
-n{|S|}\one_S$ has $f\perp\one$ and $\norm f_\infty\le1$; take $Lg=f$ with
-$\norm g_\infty\le K$ and $h=g+K\one\in[0,2K]^n$, so $(Lh)_i=1$ for $i\notin
-S$. With $M=\max y$, the vector $v=y-m\one-\beta Mh$ is $\le0$ on $S$ and
-satisfies $(Lv)_i\le\beta y_i-\beta M\le0$ off $S$. If $\max v>0$, it is attained
-at some $i\notin S$, and $(Lv)_i=\sum_jw_{ij}(v_i-v_j)\le0$ forces $v_j=v_i$
-for all neighbours $j$; by connectedness the maximum propagates to $S$, a
-contradiction. Hence $y\le m+2\beta KM$, and evaluating at the maximum proves
-the claim.
-
-Apply the claim to $y=z$, $S=\{z\le m\}$, and to $y=z^{-1}$, $S=\{z\ge m\}$
-(with median $m^{-1}$). This gives $(1-2\beta K)\max z\le m$ and
-$(1-2\beta K)m\le\min z$.
+Let $S=\{z\le m\}$, let $\psi$ be an $S$-barrier with $\norm\psi_\infty\le H$, let
+$M=\max z$ and $\beta'>\beta$. The vector $v=z-m\one-\beta'M\psi$ is $\le0$ on
+$S$, and for $i\notin S$, $(Lv)_i\le\beta z_i-\beta'M<0$. At a maximiser $i$ of
+$v$, $(Lv)_i=\sum_jw_{ij}(v_i-v_j)\ge0$; so every maximiser lies in $S$, and
+$v\le0$. Hence $M\le m+\beta'MH$; let $\beta'\downarrow\beta$. Apply the same
+argument to $z^{-1}$, whose median is $m^{-1}$, with $S=\{z\ge m\}$.
 \end{proof}
 
 \begin{theorem}[Static balancing]\label{thm:balancing}
-Suppose $L_P$ has Poisson constant $K$, and $q\in\R^n$ satisfies
-$\sum_iq_i=d$, $\norm{q-p}_\infty\le\beta$ and $\beta K\le\frac14$. Then there
-is a Parseval $W$ with $\diag(WW^T)=q$ and
+Suppose $L_P$ has barrier constant $H$, and $q\in\R^n$ satisfies
+$\sum_iq_i=d$ and $\beta H\le\frac12$, where $\beta=\norm{q-p}_\infty$. Then
+there is a Parseval $W$ with $\diag(WW^T)=q$ and
 \[
- \fro{U-W}^2\le\fro{UU^T-WW^T}^2\le8\norm{q-p}_1 .
+ \fro{U-W}^2\le\fro{UU^T-WW^T}^2\le\tfrac{15}4\norm{q-p}_1 .
 \]
 $W$ is obtained from $U$ by a row scaling with ratio of scales at most $2$,
 whitening, and an orthogonal right factor.
 \end{theorem}
 
 \begin{proof}
-Let $\Phi(s)=F(s)-\ip qs$, so $\partial_i\Phi=P(s)_{ii}-q_i$, and let $s^*$
-minimise $\Phi$ over the cube $[0,1]^n$. Write $r=\diag P(s^*)$. Coordinatewise
-optimality gives
+Let $s$ minimise $\Phi(s)=F(s)-\ip qs$ over the cube $[0,1]^n$ (compactness),
+and write $r=r(s)$. Since $\partial_i\Phi=r_i-q_i$ (\cref{lem:potential}),
+coordinatewise optimality gives
 \begin{equation}\label{eq:kkt}
- r_i\le q_i\ \text{ if }s^*_i>0,\qquad r_i\ge q_i\ \text{ if }s^*_i<1 .
+ r_i\le q_i\ \text{ if }s_i>0,\qquad r_i\ge q_i\ \text{ if }s_i<1 .
 \end{equation}
-Let $z=e^{2s^*}$ with median $m$; then $1\le\min z\le m\le\max z\le e^2$. If
-$z_i>m$ then $s_i^*>0$, so by
-\cref{lem:scaling-ineq} and~\eqref{eq:kkt}
-$(Lz)_i\le z_i(r_i-p_i)\le z_i(q_i-p_i)\le\beta z_i$; if $z_i<m$ then $s_i^*<1$
+Let $z=e^{2s}$ with median $m$, so $1\le\min z\le m\le\max z\le e^{2}$. If
+$z_i>m$ then $s_i>0$, so by \cref{lem:scaling-ineq} and~\eqref{eq:kkt}
+$(Lz)_i\le z_i(r_i-p_i)\le z_i(q_i-p_i)\le\beta z_i$; if $z_i<m$ then $s_i<1$
 and likewise $(Lz^{-1})_i\le\beta z_i^{-1}$. By \cref{lem:median},
-$\max s^*-\min s^*\le-\log(1-2\beta K)\le\log2<1$. Hence $s^*$ does not meet
-both faces: either $s^*_i>0$ for all $i$, and then $r\le q$, or some $s^*_j=0$,
-all $s_i^*<1$, and then $r\ge q$. Since $\sum r_i=d=\sum q_i$, in both cases
-$r=q$.
+$\max z/\min z\le(1-\beta H)^{-2}\le4$, i.e.\ $\osc(s)\le\log2<1$. Hence
+$s$ does not meet both faces of the cube: either all $s_i>0$, and then
+$r\le q$, or some $s_j=0$, all $s_i<1$, and then $r\ge q$. Since
+$\sum r_i=d=\sum q_i$, in both cases $r=q$.
 
-Let $w=e^{s^*}$, $D=\Diag(w)$, $m_0=\min w$, $W_0=DU(U^TD^2U)^{-1/2}$, and
-$\delta=q-p$. \Cref{lem:scaling-ineq} with $r=q$ gives $Lz\le z\circ\delta$
-for $z=w^2$, hence $z^TLz\le\sum_iz_i^2\delta_i\le16m_0^4\norm\delta_1$, using
-$z_i\le4m_0^2$. Since $(z_i-z_j)^2\ge4m_0^2(w_i-w_j)^2$,
-\cref{lem:energy} gives $w^TLw\le4m_0^2\norm\delta_1$, and
-\cref{lem:scaled} gives $\fro{W_0W_0^T-P}^2\le8\norm\delta_1$. Finally take
-$W=W_0R$ with $R$ from \cref{lem:align}.
+For the distance let $w=e^{s}$, $f=q-p$, and let $c$ be the midpoint of the
+range of $z^2$. \Cref{lem:scaling-ineq} with $r=q$ gives $Lz\le z\circ f$, so,
+using $\sum_if_i=0$,
+\[
+ z^TLz\le\sum_iz_i^2f_i=\sum_i(z_i^2-c)f_i\le\tfrac12\osc(z^2)\norm f_1 .
+\]
+As $(z_i-z_j)^2\ge4\min w^2\,(w_i-w_j)^2$, \cref{lem:energy,lem:scaled} give
+\[
+ \fro{P(s)-P}^2\le\frac{2\,w^TLw}{\min w^2}\le\frac{z^TLz}{2\min z^2}
+ \le\frac{\osc(z^2)}{4\min z^2}\norm f_1\le\frac{4^2-1}4\norm f_1 .
+\]
+Finally apply \cref{lem:align} to the whitened frame $DU(U^TD^2U)^{-1/2}$,
+$D=\Diag(w)$, whose projection is $P(s)$.
 \end{proof}
 
 \begin{remark}
-No existence theorem for scalings, no flow, and no genericity is used: the box
-supplies a minimiser, the median barrier keeps it away from one face, and the
-trace identity $\sum_ir_i=d$ does the rest.
+No existence theorem for scalings, no flow, no genericity and no connectivity
+argument is used: the box supplies a minimiser, the median barrier keeps it
+away from one face, and the trace identity $\sum_ir_i=d$ does the rest. With
+$\beta H<1$ and a box of side $T>-\log(1-\beta H)$ the same proof gives scale
+ratio $(1-\beta H)^{-1}$ and cost $\frac14((1-\beta H)^{-4}-1)\norm{q-p}_1$.
 \end{remark}
 
-\subsection{Local correction in the dual norm}
-
-The balancing theorem needs $\ell_\infty$ control of the target. The next lemma
-handles a different kind of target error: one that is small in the norm dual
-to a Laplacian with a spectral gap, although possibly large in $\ell_\infty$.
-
-\begin{lemma}[Local correction]\label{lem:local}
-Let $W$ be Parseval with projection $P_W$ and diagonal $p_W$. Let $J$ be
-symmetric with $J\succeq\sigma I$ on $\one^\perp$ ($\sigma>0$) and
-\[
- c_1J\preceq L_{P_W}\preceq C_1J\quad\text{on }\one^\perp .
-\]
-Let $f\perp\one$ satisfy $\ip fx^2\le E\,x^TJx$ for $x\perp\one$, and let
-$0<R\le r$ with
-\begin{equation}\label{eq:local-small}
- E<\gamma^2\sigma R^2,\qquad \gamma:=2c_1e^{-4r}.
-\end{equation}
-Then there is $s\perp\one$ with $\norm s_\infty<R$, $s^TJs\le E/\gamma^2$, such
-that the Parseval frame $W'$ obtained from $\Diag(e^s)W$ by whitening satisfies
-$\diag(W'W'^T)=p_W+f$ and $L_{P_{W'}}\succeq c_1e^{-4r}J$ on $\one^\perp$.
-After an orthogonal right factor,
-\[
- \fro{W'-W}^2\le\fro{P_{W'}-P_W}^2\le2C_1e^{4r}E/\gamma^2 .
-\]
-\end{lemma}
-
-\begin{proof}
-Let $F$ be the potential of $W$ and $\Phi(s)=F(s)-F(0)-\ip{p_W+f}s$; minimise
-$\Phi$ over the compact convex set $\Omega=\{s\perp\one:\norm s_\infty\le R\}$.
-For $s\in\Omega$ with $\norm s_\infty=R$, \cref{lem:potential} gives
-\[
- \ip{\nabla\Phi(s)}s=\int_0^12s^TL_{P(us)}s\,du-\ip fs
- \ge2c_1e^{-4r}s^TJs-\sqrt{E\,s^TJs}>0,
-\]
-because $s^TJs\ge\sigma\norm s_2^2\ge\sigma R^2>E/\gamma^2$. So $-s$ is a
-feasible descent direction and the minimiser $s$ lies in the relative interior
-of $\Omega$. There $\nabla\Phi(s)\in\R\one$, and $\sum_i\nabla\Phi(s)_i=d-d-0=0$,
-so $\diag P(s)=p_W+f$. Pairing $\nabla\Phi(s)=0$ with $s$ as above gives
-$\gamma\, s^TJs\le\sqrt{E s^TJs}$, i.e.\ $s^TJs\le E/\gamma^2$, and then
-$\norm s_\infty\le\norm s_2<R$ by~\eqref{eq:local-small}. The Laplacian bound
-is~\eqref{eq:hessian-comparison}. For the distance, \cref{lem:scaled} with
-$w=e^s$, $\min w_i\ge e^{-r}$ and $|e^{s_i}-e^{s_j}|\le e^r|s_i-s_j|$ gives
-\[
- \fro{P_{W'}-P_W}^2\le2e^{2r}(e^s)^TL_{P_W}e^s\le2e^{4r}s^TL_{P_W}s
- \le2C_1e^{4r}s^TJs ,
-\]
-and \cref{lem:align} supplies the right factor.
-\end{proof}
-
-\subsection{Poisson constants from a dense core}
+\subsection{Barriers from a dense core}
 
 \begin{lemma}[Dense core with exceptional vertices]\label{lem:core}
-Let $L$ be the Laplacian of nonnegative symmetric weights $w_{ij}$ ($w_{ii}=0$)
-on $G\sqcup B$, $G\neq\varnothing$, $|B|=b$. Assume
-\[
- \sum_{j\in G}\min\{w_{ij},w_{kj}\}\ge\rho>0\quad(i,k\in G),\qquad
- \max_i\sum_jw_{ij}\le D_{\max},
-\]
-and, if $B\ne\varnothing$, that $C=L_{BB}$ is invertible with
-$\norm{C^{-1}}_{\infty\to\infty}\le R$. Then $L$ has Poisson constant
-\[
- K=\frac{1+\min\{b,D_{\max}R\}}{\rho}+R
-\]
-(with $R=b=0$ if $B=\varnothing$).
+Let $L$ be the Laplacian of nonnegative symmetric weights $w_{ij}$ on $[n]$,
+and let $[n]=G\sqcup B$. Suppose:
+\begin{enumerate}[label=(\alph*)]
+\item there is $\kappa>0$ with $\sum_{j\in S}w_{ij}\ge\kappa$ for every $i\in G$
+and every $S\subseteq[n]\setminus\{i\}$ with $|S|\ge n/2$;
+\item there are $y\in\R^B$, $y\ge0$, and $R,F\ge0$ with $\norm y_\infty\le R$,
+$(L_{BB}y)_i\ge1$ for $i\in B$, and $\sum_{j\in B}w_{ij}y_j\le F$ for $i\in G$.
+(If $B=\varnothing$ take $R=F=0$.)
+\end{enumerate}
+Then $H(L)\le(1+F)/\kappa+R$. Moreover:
+\begin{enumerate}[label=(\roman*)]
+\item (a) holds with $\kappa=\vartheta\gamma$ if every $i\in G$ has at least
+$(\frac12+\vartheta)n$ indices $j\ne i$ with $w_{ij}\ge\gamma/n$;
+\item (b) holds with $R=\sqrt b/\lambda$, $F=b$, where $b=|B|$, if
+$x^TLx\ge\lambda\norm x^2$ for every $x$ supported on $B$ ($\lambda>0$);
+\item for $w_{ij}=P_{ij}^2$, (b) holds with $R=\frac8{3a}$,
+$F=\frac2{3a}\max_ip_i$ if $a>0$, $p_i\ge a/2$ on $B$ and
+$\sum_{i\in B}p_i\le\frac14$.
+\end{enumerate}
 \end{lemma}
 
 \begin{proof}
-Write $L=\begin{pmatrix}A&-E\\-E^T&C\end{pmatrix}$ with $E=(w_{ij})_{i\in
-G,j\in B}\ge0$. $C$ is a symmetric $Z$-matrix with $C\one_B=E^T\one_G\ge0$;
-since it is invertible and positive semidefinite it is positive definite, and
-$C^{-1}\ge0$ entrywise (if $Cx=y\ge0$ then, with $x_-$ the negative part,
-$0\le x_-^Ty=x_-^TCx\le-x_-^TCx_-$, so $x_-=0$). Put $H=C^{-1}E^T\ge0$ and
-$T=EC^{-1}=H^T$; then $H\one_G=\one_B$ and $\one_G^TT=\one_B^T$. Each row sum of
-$T$ is at most $b$ (entries of a column of $T$ are bounded by its column sum
-$1$) and at most $D_{\max}R$ (as $T\one_B\le R\,E\one_B$).
-
-The Schur complement $S=A-EC^{-1}E^T$ is the
-Laplacian on $G$ with weights $\tilde w_{ik}=w_{ik}+(EC^{-1}E^T)_{ik}\ge w_{ik}$
-($i\ne k$)
-(its rows sum to zero because $C^{-1}E^T\one_G=\one_B$). Let $f\perp\one$ with
-$\norm f_\infty\le1$, and put $h=f_G+Tf_B$; then $\sum h=\sum f=0$ and
-$\norm h_\infty\le\Phi:=1+\min\{b,D_{\max}R\}$. The weights $\tilde w$ inherit
-the overlap bound, so the graph on $G$ is connected and $Sy=h$ is solvable. If
-$i,k\in G$ maximise and minimise $y$,
+Let $|S|\ge n/2$, put $\lambda_0=(1+F)/\kappa$, extend $y$ by $0$ to $G$, and
+let $\psi=(\lambda_0\one+y)\circ\one_{S^c}$, so $0\le\psi\le\lambda_0+R$ and
+$\psi_j\le\lambda_0+y_j$ for all $j$. For $i\in G\setminus S$, $\psi_i=\lambda_0$
+and $\psi_j=0$ on $S$, so
 \[
- h_i-h_k=\sum_{j\in G}\bigl[\tilde w_{ij}(y_i-y_j)+\tilde w_{kj}(y_j-y_k)\bigr]
- \ge\rho\,(y_i-y_k),
+ (L\psi)_i\ge\lambda_0\sum_{j\in S}w_{ij}-\sum_{j\in B}w_{ij}y_j\ge
+ \lambda_0\kappa-F=1 .
 \]
-so after adding a constant $\norm y_\infty\le\Phi/\rho$. Then $g_G=y$,
-$g_B=Hy+C^{-1}f_B$ solves $Lg=f$ (block substitution), and
-$\norm{g_B}_\infty\le\Phi/\rho+R$ because $H$ is row-stochastic.
+For $i\in B\setminus S$, $\psi_i=\lambda_0+y_i$, so
+$(L\psi)_i\ge\sum_jw_{ij}(y_i-y_j)=(L_{BB}y)_i\ge1$. Thus $\psi$ is an
+$S$-barrier.
+
+(i) If $N_i$ is the set of such $j$ and $S\subseteq[n]\setminus\{i\}$, then
+$|N_i\cap S|\ge|N_i|+|S|-(n-1)>\vartheta n$.
+(ii) $C=L_{BB}\succeq\lambda I$; let $y=C^{-1}\one_B$. If $y$ had a negative
+minimum at $i$, then $(Cy)_i=y_i\sum_{j\notin B}w_{ij}+\sum_{j\in
+B}w_{ij}(y_i-y_j)\le0$, a contradiction; so $y\ge0$, and
+$\norm y_\infty\le\norm y_2\le\sqrt b/\lambda$. Since
+$(C\one_B)_j=\sum_{i\in G}w_{ij}$ for $j\in B$, for each $i_0\in G$
+\[
+ \sum_{j\in B}w_{i_0j}y_j\le\sum_{i\in G}\sum_{j\in B}w_{ij}y_j
+ =\one_B^TCy=b .
+\]
+(iii) $P_{ij}^2\le p_ip_j$ gives, for $i\in B$,
+$(L_{BB}\one_B)_i=p_i-\sum_{j\in B}P_{ij}^2\ge p_i(1-\sum_{j\in B}p_j)\ge\frac{3a}8$,
+and for $i\in G$, $\sum_{j\in B}P_{ij}^2\le p_i/4$. Take $y=\frac8{3a}\one_B$.
 \end{proof}
 
-\begin{corollary}\label{cor:core}
-Suppose $b\le n/10$, $\gamma>0$, and every $i\in G$ has at least $\frac45n$
-indices $j\ne i$ with $w_{ij}\ge\gamma/n$. Then the overlap hypothesis holds with
-$\rho=\gamma/2$. Moreover:
-\begin{enumerate}[label=(\alph*)]
-\item if $L\succeq\lambda\Pi$ with $\lambda>0$, then $R\le2b/\lambda$;
-\item if $w_{ij}=P_{ij}^2$ for a projection $P$, $a>0$, $P_{ii}\ge a/2$ on $B$,
-$\sum_{i\in B}P_{ii}\le\frac14$, and $\max_iP_{ii}\le C_2a$, then
-$R\le4/a$ and $D_{\max}R\le4C_2$.
-\end{enumerate}
-\end{corollary}
-
-\begin{proof}
-Two sets of at least $\frac45n$ indices share at least $\frac35n$, of which at
-least $\frac12n$ lie in $G$, giving overlap $\ge\gamma/2$. (a) For $x$ supported
-on $B$, $x^TCx=x^TLx\ge\lambda(\norm x^2-(\sum x_i)^2/n)\ge\lambda(1-b/n)\norm
-x^2$, so $|(C^{-1})_{ij}|\le\opn{C^{-1}}\le(\lambda(1-b/n))^{-1}$; sum over a
-row. (b) By $P_{ij}^2\le P_{ii}P_{jj}$,
-$(C\one_B)_i=P_{ii}-\sum_{j\in B}P_{ij}^2\ge P_{ii}(1-\sum_{j\in B}P_{jj})\ge
-a/4$; so $C$ is strictly diagonally dominant, $C^{-1}\ge0$, and $C^{-1}\one_B\le
-(4/a)\one_B$. Also $D_{\max}\le\max_iP_{ii}$.
-\end{proof}
+\begin{remark}[Poisson constants]\label{rem:poisson}
+\cite{Orig} uses the Poisson constant $K$: every $f\perp\one$ has a solution of
+$Lg=f$ with $\norm g_\infty\le K\norm f_\infty$. Then $K\le H\le2K$. Indeed, for
+$|S|\ge n/2$ the forcing $f=\one-\frac n{|S|}\one_S$ has $\norm f_\infty\le1$,
+and $g+K\one$ is an $S$-barrier; conversely, if $Lg=f$ with $\norm
+f_\infty\le1$ and $m$ is a median of $g$, the argument of \cref{lem:median}
+applied to $g-m\one-\beta'\psi$ ($\beta'>1$) gives $g\le m+H$, and symmetrically
+$g\ge m-H$. \Cref{lem:core} replaces the Schur-complement estimate
+of~\cite{Orig} by an explicit barrier.
+\end{remark}
 
 \subsection{From a seed to an exact frame}
 
-The two constructions produce the following object.
+Both constructions produce the following object.
 
 \begin{definition}[Seed]\label{def:seed}
-Let $\Theta\ge2$ and $t>0$. A \emph{$(\Theta,t)$-seed} for an $n\times d$ frame
-$X$ is a Parseval $V\in\R^{n\times d}$ with
+Let $\Theta\ge2$ and $t>0$. A \emph{$(\Theta,t)$-seed} for $X\in\R^{n\times d}$
+is a Parseval $V\in\R^{n\times d}$ with
 \[
  \fro{V-X}^2\le\Theta t^2d,\qquad
- L_{VV^T}\text{ has Poisson constant }K\le\frac{\Theta}{at^2},\qquad
- \max_i\bigl|(VV^T)_{ii}-a\bigr|\le\frac{at^2}{4\Theta}.
+ H(L_{VV^T})\le\frac{\Theta}{at^2},\qquad
+ \max_i\bigl|(VV^T)_{ii}-a\bigr|\le\frac{at^2}{2\Theta}.
 \]
 \end{definition}
 
 \begin{corollary}\label{cor:seed}
 If $X$ has a $(\Theta,t)$-seed, there is an ENP frame $W$ with
-$\fro{X-W}^2\le4\Theta t^2d$.
+$\fro{X-W}^2\le3\Theta t^2d$.
 \end{corollary}
 
 \begin{proof}
-Apply \cref{thm:balancing} to $V$ with $q=a\one$:
-$\beta K\le\frac14$, and $\fro{V-W}^2\le8n\cdot\frac{at^2}{4\Theta}\le2t^2d$.
-Then $\fro{X-W}^2\le2\fro{X-V}^2+2\fro{V-W}^2\le(2\Theta+4)t^2d\le4\Theta
-t^2d$.
+Apply \cref{thm:balancing} to $V$ with $q=a\one$: $\beta H\le\frac12$, and
+$\fro{V-W}^2\le\frac{15}4n\cdot\frac{at^2}{2\Theta}\le t^2d$. Then
+$\fro{X-W}^2\le2\fro{X-V}^2+2\fro{V-W}^2\le(2\Theta+2)t^2d\le3\Theta t^2d$.
 \end{proof}
