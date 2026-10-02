@@ -10,7 +10,7 @@ Parseval frame. The construction: the constrained Gaussian `Z = Π_F g/√n`,
 the coupled row-independent `Z₀ = Π_E g/√n`, row normalisation at amplitude
 `t = √(K η)`, the centred remainder estimate, Markov and net events, the
 dense reference core of the `Z₀`-seed, whitening, and static balancing
-(through the Poisson-form endpoint `correction_of_dense_reference_gram_generic`).
+(through the barrier-form endpoint `correction_of_dense_reference_gram_barrier`).
 -/
 
 namespace Paulsen.Linear

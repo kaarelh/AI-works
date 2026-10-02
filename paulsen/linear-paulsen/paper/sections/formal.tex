@@ -25,4 +25,70 @@ real symmetric idempotent matrices of rank $d$. Both statements are also
 restated in plain Mathlib vocabulary (positive semidefiniteness, dot products,
 traces, \texttt{Matrix.rank}), and the restatements are derived from them.
 
-FORMAL-STATUS-PLACEHOLDER
+\paragraph{Structure.} The development has about $29{,}600$ lines. A library of
+about $26{,}000$ lines contains frames, projections and alignment, the
+squared-Gram Laplacian, diagonal scaling and the log-determinant potential,
+complementation and normalisation, the Hamilton--Moitra argument
+(\cref{sec:bounded}), Gaussian tools (quadratic forms, Lipschitz functions, nets,
+covariance calculus), the constrained and row-independent noises and the
+row-normalisation identity of \cref{sec:manyrow}, and the filtered covariance,
+the mean formula and the sampling estimates of \cref{sec:moderate}. About
+$3{,}600$ lines (directory \texttt{Paulsen/Linear}) implement the argument
+specific to this paper:
+\begin{center}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+paper & Lean (\texttt{Paulsen/Linear/})\\
+\midrule
+\cref{def:barrier,lem:median} & \texttt{Barrier}: \texttt{HasBarrierBound}, \texttt{barrier\_subset\_bound}\\
+\cref{thm:balancing} & \texttt{Balancing}: \texttt{balancing\_cost\_barrier}\\
+\cref{lem:core} (main part, (i), (iii)) & \texttt{Core}, \texttt{ManyRowBarrier}\\
+\cref{lem:core}(ii) & \texttt{BlockBarrier}: \texttt{block\_barrier}\\
+\cref{def:seed,cor:seed} & \texttt{Seed}: \texttt{IsSeed.hasCorrection}\\
+\cref{lem:rowmoments} & \texttt{ManyRowMoments}\\
+\cref{lem:remainder} & \texttt{ManyRowRemainder}: \texttt{tangentRemainder\_centred\_bound}\\
+\cref{thm:manyrow} & \texttt{ManyRowGraph}, \texttt{ManyRowSample}, \texttt{ManyRowParameters}, \texttt{ManyRow}\\
+\cref{lem:commutator}(a), \cref{lem:mean} ($m_*$), \eqref{eq:q-cs} & \texttt{DriftAlgebra}: \texttt{driftGamma}, \texttt{driftMean}\\
+\cref{lem:retraction} & \texttt{DriftRetraction}, \texttt{DriftDiagonal}\\
+\cref{lem:seed-graph}, \cref{thm:moderate} & \texttt{ModerateBarrier}, \texttt{ModerateDrift}\\
+\cref{prop:equalrow}, \cref{thm:main,thm:projection} & \texttt{Assembly}, \texttt{Main}\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Differences from the text.} The formal proof follows the argument
+above, with these differences of detail.
+\begin{enumerate}[label=(\alph*)]
+\item All constants are much larger (for instance $B=10^{40}$, $c_*=10^{-60}$ in
+\cref{thm:manyrow}; $A=10^{130}$, $\eps_0=10^{-130}$, $D=10^{40}$ in
+\cref{thm:moderate}); the balancing cost is $8\norm{q-p}_1$ rather than
+$\frac{15}4\norm{q-p}_1$; the net bound is used with $\opn Z\le128$; and
+\cref{lem:core}(ii) is used with $R=b/\lambda$.
+\item In \cref{lem:sample}, the block estimate \ref{S4} is not proved from second
+moments. Instead the formalisation uses two global events that are also
+available from the library when $d\ge A\log 2n$: the concentration
+$\opn{\Lap(Y)-\E\Lap(Y)}\le a/32$ of the squared Gaussian graph, and the bound
+$|t\,x^T\mathcal C(Y)x|\le\frac1{32}(x^TLx+at^2\norm x^2)$ for all $x$. Together
+with \cref{lem:expected-graph} they give a gap $\frac{at^2}{32}$ for $L_{P_t}$ on
+$\one^\perp$, and subtracting the mean gives the gap on vectors supported on
+$\mathfrak B$ that \cref{lem:seed-graph} needs. The rest of the moderate-row
+argument is as in the text; in particular, nothing is corrected after the
+drifted retraction.
+\item In \cref{lem:rowmoments} the fourth moment of a centred Gaussian quadratic
+form is bounded through its moment generating function, which gives a worse
+constant. One functional, $a\sum_i(r_i^2-1)^2$, controls both $\fro{\Gamma Z}^2$ and
+$\fro{\Lambda X}^2$.
+\item \Cref{lem:mr-dense} is used in a slightly different form: the dense
+reference graph has $\frac{17}{20}n$ heavy neighbours at every row, which
+holds for every $d\ge1$.
+\end{enumerate}
+
+\paragraph{Checks.} The project builds with Lean~4.32.0 and Mathlib~v4.32.0.
+\texttt{Audit.lean} checks that the final theorems have the target types; that
+every theorem of the project depends only on the axioms \texttt{propext},
+\texttt{Classical.choice} and \texttt{Quot.sound}; and that the proof of the main
+theorem uses the barrier toolbox, the centred remainder, the drift and the
+partition-free assembly, and none of the Poisson-constant endpoints of the
+library. Every module was also replayed in the kernel with
+\texttt{leanchecker}.

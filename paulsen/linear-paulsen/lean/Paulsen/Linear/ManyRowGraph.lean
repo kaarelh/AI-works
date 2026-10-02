@@ -1,5 +1,6 @@
 import Paulsen.Linear.ManyRowRemainder
 import Paulsen.HugeSeedAssembly
+import Paulsen.Linear.ManyRowBarrier
 import Paulsen.HorizontalRetraction
 
 /-!
@@ -118,10 +119,10 @@ theorem manyRow_seed_correction_of_budgets {n d : ℕ}
   have hVn := tangentSeed_isEqualNorm X Z t ha hXn hZ
   have he := tangentSeed_gram_coupling_le_op X Z Z₀ ((d : ℝ) / n) t η δ Q₀ C
     ha hη hδ0 hQ₀ hXn hXp hZ hZ₀ hVp hZ₀op hC
-  have hc := correction_of_dense_reference_gram_generic hd hdn
+  have hc := correction_of_dense_reference_gram_barrier hd hdn
     (tangentSeed X Z ((d : ℝ) / n) t)
     (frameProjection (tangentSeed X Z₀ ((d : ℝ) / n) t)) δ γ ρ _
-    hVn hVp hδ0 hδhalf hγ hγa hρ hdense he hrow hcount hleverage hsmall
+    hVn hVp hδ0 hδhalf hγ hγa hρ hdense he hrow hleverage hsmall
   have hdistance : sqDistance X (tangentSeed X Z ((d : ℝ) / n) t) ≤ t ^ 2 * H := by
     rw [sqDistance_symm]
     exact (tangentSeed_distance_from_input X Z ((d : ℝ) / n) t ha hXn hZ).trans
