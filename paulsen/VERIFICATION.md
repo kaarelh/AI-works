@@ -78,4 +78,11 @@ Three substantive simplifications survived adversarial checking. The streamlined
 
 The write-up also has one scaling toolbox, a single seed interface used by both constructions, a table of error scales, complete proofs of all sampling estimates, and explicit acyclic constant choices.
 
+**Checking of the streamlined paper.** Five independent agent reviewers checked the new text section by section, by hand and numerically, and were asked to break it. They found **no errors and no gaps**; about 40 minor or clarity items were all fixed. Highlights:
+- **Drift.** b_* = 𝒜m_* holds to 10⁻¹⁸. A Monte Carlo on a hub-joined near-direct sum (n = 200, d = 20) shows that without the drift the mean diagonal error is −t²b_*, and with the drift it is O(t) relative to at².
+- **Barrier constant.** K ≤ H ≤ 2K holds on 60 Laplacians, and the factor 2 is essentially attained. The median-barrier lemma and static balancing hold on hundreds of adversarial instances, with cost ratio at most 0.17 against the bound 15/4.
+- **Many-row remainder.** The centred remainder bound and the moment bounds were checked with explicit projection onto the constraint subspace.
+
+The intro also gains a short proof that the bound is optimal: a direct sum of two slightly unbalanced ENP blocks forces ‖X−W‖² ≥ εd/8.
+
 **The streamlined proof is not formalised in Lean.** Sections 4–6 and the barrier formulation differ from the formalised route. The formal result above does not depend on them.
