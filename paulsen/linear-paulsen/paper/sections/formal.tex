@@ -25,70 +25,79 @@ real symmetric idempotent matrices of rank $d$. Both statements are also
 restated in plain Mathlib vocabulary (positive semidefiniteness, dot products,
 traces, \texttt{Matrix.rank}), and the restatements are derived from them.
 
-\paragraph{Structure.} The development has about $29{,}600$ lines. A library of
-about $26{,}000$ lines contains frames, projections and alignment, the
-squared-Gram Laplacian, diagonal scaling and the log-determinant potential,
-complementation and normalisation, the Hamilton--Moitra argument
-(\cref{sec:bounded}), Gaussian tools (quadratic forms, Lipschitz functions, nets,
-covariance calculus), the constrained and row-independent noises and the
-row-normalisation identity of \cref{sec:manyrow}, and the filtered covariance,
-the mean formula and the sampling estimates of \cref{sec:moderate}. About
-$3{,}600$ lines (directory \texttt{Paulsen/Linear}) implement the argument
-specific to this paper:
+\paragraph{Structure.} The directory \texttt{Paulsen/Paper} (about $16{,}100$
+lines) contains, for every numbered definition, lemma, theorem, corollary and
+proposition of this paper, for every numbered display that makes a claim, and
+for every remark that makes a quantitative claim, a Lean statement with
+\emph{exactly the constants of the text}. Each declaration quotes the
+corresponding \TeX\ in its documentation. The explicit claims made inside the
+longer proofs (the constant choices in the proofs of
+\cref{thm:balancing,thm:manyrow,lem:sample,lem:retraction,lem:seed-graph,thm:moderate,prop:equalrow},
+and of \cref{thm:main,thm:projection}) are stated as separate lemmas, so the
+constants used inside proofs are pinned down as well. All of these statements
+are proved. The two main theorems are derived from them along the route of the
+text:
+\cref{thm:main} from \cref{thm:projection}, which comes from \cref{prop:equalrow}, which in turn comes from
+\cref{lem:HM,thm:manyrow,thm:moderate}. These rest on the lemmas of
+\cref{sec:toolbox,sec:manyrow,sec:moderate,app:gauss}. The remaining files form a supporting
+library (frames, projections, the log-determinant potential, Gaussian measures,
+the noises of \cref{sec:manyrow,sec:moderate}, the Hamilton--Moitra argument).
 \begin{center}
 \small
 \begin{tabular}{@{}ll@{}}
 \toprule
-paper & Lean (\texttt{Paulsen/Linear/})\\
+paper & Lean (\texttt{Paulsen/Paper/})\\
 \midrule
-\cref{def:barrier,lem:median} & \texttt{Barrier}: \texttt{HasBarrierBound}, \texttt{barrier\_subset\_bound}\\
-\cref{thm:balancing} & \texttt{Balancing}: \texttt{balancing\_cost\_barrier}\\
-\cref{lem:core} (main part, (i), (iii)) & \texttt{Core}, \texttt{ManyRowBarrier}\\
-\cref{lem:core}(ii) & \texttt{BlockBarrier}: \texttt{block\_barrier}\\
-\cref{def:seed,cor:seed} & \texttt{Seed}: \texttt{IsSeed.hasCorrection}\\
-\cref{lem:rowmoments} & \texttt{ManyRowMoments}\\
-\cref{lem:remainder} & \texttt{ManyRowRemainder}: \texttt{tangentRemainder\_centred\_bound}\\
-\cref{thm:manyrow} & \texttt{ManyRowGraph}, \texttt{ManyRowSample}, \texttt{ManyRowParameters}, \texttt{ManyRow}\\
-\cref{lem:commutator}(a), \cref{lem:mean} ($m_*$), \eqref{eq:q-cs} & \texttt{DriftAlgebra}: \texttt{driftGamma}, \texttt{driftMean}\\
-\cref{lem:retraction} & \texttt{DriftRetraction}, \texttt{DriftDiagonal}\\
-\cref{lem:seed-graph}, \cref{thm:moderate} & \texttt{ModerateBarrier}, \texttt{ModerateDrift}\\
-\cref{prop:equalrow}, \cref{thm:main,thm:projection} & \texttt{Assembly}, \texttt{Main}\\
+\cref{sec:intro} (\cref{rem:optimal}) & \texttt{Intro}\\
+\cref{sec:toolbox} & \texttt{Toolbox} (helpers \texttt{ToolboxAux*})\\
+\cref{sec:bounded} & \texttt{Bounded}\\
+\cref{sec:manyrow} & \texttt{ManyRow}, \texttt{ManyRowProof} (helpers \texttt{ManyRowAux*})\\
+\cref{sec:moderate}, up to \cref{lem:expected-graph} & \texttt{Moderate} (helpers \texttt{ModerateAux*})\\
+\cref{lem:sample} & \texttt{ModerateSample} (helpers \texttt{SampleAux*})\\
+\cref{lem:retraction,lem:seed-graph,thm:moderate} & \texttt{ModerateSeed} (helpers \texttt{SeedAux*})\\
+\cref{sec:assembly}, \cref{thm:main,thm:projection} & \texttt{Assembly}\\
+\cref{app:gauss} & \texttt{Gaussian}\\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\paragraph{Differences from the text.} The formal proof follows the argument
-above, with these differences of detail.
-\begin{enumerate}[label=(\alph*)]
-\item All constants are much larger (for instance $B=10^{40}$, $c_*=10^{-60}$ in
-\cref{thm:manyrow}; $A=10^{130}$, $\eps_0=10^{-130}$, $D=10^{40}$ in
-\cref{thm:moderate}); the balancing cost is $8\norm{q-p}_1$ rather than
-$\frac{15}4\norm{q-p}_1$; the net bound is used with $\opn Z\le128$; and
-\cref{lem:core}(ii) is used with $R=b/\lambda$.
-\item In \cref{lem:sample}, the block estimate \ref{S4} is not proved from second
-moments. Instead the formalisation uses two global events that are also
-available from the library when $d\ge A\log 2n$: the concentration
-$\opn{\Lap(Y)-\E\Lap(Y)}\le a/32$ of the squared Gaussian graph, and the bound
-$|t\,x^T\mathcal C(Y)x|\le\frac1{32}(x^TLx+at^2\norm x^2)$ for all $x$. Together
-with \cref{lem:expected-graph} they give a gap $\frac{at^2}{32}$ for $L_{P_t}$ on
-$\one^\perp$, and subtracting the mean gives the gap on vectors supported on
-$\mathfrak B$ that \cref{lem:seed-graph} needs. The rest of the moderate-row
-argument is as in the text; in particular, nothing is corrected after the
-drifted retraction.
-\item In \cref{lem:rowmoments} the fourth moment of a centred Gaussian quadratic
-form is bounded through its moment generating function, which gives a worse
-constant. One functional, $a\sum_i(r_i^2-1)^2$, controls both $\fro{\Gamma Z}^2$ and
-$\fro{\Lambda X}^2$.
-\item \Cref{lem:mr-dense} is used in a slightly different form: the dense
-reference graph has $\frac{17}{20}n$ heavy neighbours at every row, which
-holds for every $d\ge1$.
-\end{enumerate}
+\paragraph{Encoding.} Operator norms and Loewner inequalities are expressed
+through quadratic forms or the norm of the associated linear map. In
+\cref{sec:moderate} the horizontal noise is represented in ambient coordinates,
+$H=VZ\in\R^{n\times d}$ with $U^TH=0$. Gaussian vectors are images of the
+standard Gaussian measure under linear maps, ``with positive probability'' means
+that the set of good samples has positive measure, and expectations are
+Lebesgue integrals. Where the text writes $\max_i$ or $\norm\cdot_\infty$, the
+formal statement takes an arbitrary upper bound; all conclusions are monotone,
+so this is equivalent.
+
+\paragraph{Constants.} Explicit constants appear verbatim. Constants that the
+text only asserts to exist are existential in the formal statements, and the
+proofs exhibit admissible values:
+\begin{itemize}
+\item $C_{\mathcal M}=192$ and $h=\frac1{300}$, $t_0=\frac1{30}$ in \cref{sec:manyrow};
+\item $A_{\eta'}=10^{12}/\eta'^2$ in \cref{lem:sample};
+\item $C_E=2\cdot10^9$ in \cref{lem:retraction}.
+\end{itemize}
+The formalisation found no false constant. It made a few implicit hypotheses
+explicit, and these are now stated in the text: $u\ge0$ in
+\cref{lem:gauss}(b),(c); $d^2\le n$ in \cref{lem:rowmoments}; and
+$\eps_0\le\frac12$ in \cref{thm:moderate}.
 
 \paragraph{Checks.} The project builds with Lean~4.32.0 and Mathlib~v4.32.0.
-\texttt{Audit.lean} checks that the final theorems have the target types; that
-every theorem of the project depends only on the axioms \texttt{propext},
-\texttt{Classical.choice} and \texttt{Quot.sound}; and that the proof of the main
-theorem uses the barrier-constant toolbox, the centred remainder, the drift and
-the three-case assembly of \cref{prop:equalrow}, and none of the library's
-balancing lemmas formulated with Poisson constants. Every module was also replayed in the kernel with
+\texttt{Audit.lean} checks four things:
+\begin{itemize}
+\item the final theorems have the target types;
+\item every theorem of the project depends only on the axioms \texttt{propext},
+\texttt{Classical.choice} and \texttt{Quot.sound}, so that no statement is left
+unproved;
+\item every lemma, theorem, corollary, proposition and numbered claim of
+\texttt{Paulsen/Paper} lies in the dependency cone of the two final theorems;
+\item the proofs use none of the library lemmas whose constants are weaker than
+those of the text.
+\end{itemize}
+The exceptions to the third check are two existential forms whose explicit
+versions are used, the eigenvalue facts \eqref{eq:S}, and the definitional
+restatement of \eqref{eq:nearly}. The remarks are proved as standalone
+statements. Every module was also replayed in the kernel with
 \texttt{leanchecker}.
