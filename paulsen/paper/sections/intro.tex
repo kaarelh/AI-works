@@ -1,0 +1,139 @@
+\section{The result and the plan}\label{sec:intro}
+
+\subsection{Statement}
+A frame of $n$ vectors in $\R^d$ is a matrix $X\in\R^{n\times d}$ whose $i$th
+row is $x_i^T$. Distances are \emph{squared} Frobenius distances
+$\fro{X-Y}^2=\sum_i\norm{x_i-y_i}^2$, with no normalisation. Throughout,
+\[
+ a=d/n .
+\]
+$X$ is \emph{Parseval} if $X^TX=I_d$ and \emph{equal-norm} if
+$\norm{x_i}^2=a$ for all $i$; an equal-norm Parseval frame is an \emph{ENP frame}.
+$X$ is an \emph{$\eps$-nearly ENP frame} if
+\begin{equation}\label{eq:nearly}
+ (1-\eps)I_d\preceq X^TX\preceq(1+\eps)I_d,
+ \qquad (1-\eps)a\le\norm{x_i}^2\le(1+\eps)a\quad(1\le i\le n).
+\end{equation}
+
+\begin{theorem}[Linear Paulsen bound]\label{thm:main}
+There is an absolute constant $C$ such that for all $1\le d\le n$, all
+$0<\eps<1$ and every real $\eps$-nearly ENP frame $X\in\R^{n\times d}$ there is
+an ENP frame $W\in\R^{n\times d}$ with $\fro{X-W}^2\le C\eps d$.
+\end{theorem}
+
+The bound is optimal up to the constant. Kwok, Lau, Lee and
+Ramachandran~\cite{KLLR} proved the first bound independent of $n$,
+$O(\eps d^{13/2})$; Hamilton and Moitra~\cite{HM} improved it to
+$O(\eps d^2)$; Lau and Ramachandran announced the linear bound~\cite{LR}. The
+present text reorganises the proof of~\cite{Orig}; \cref{app:notes} lists what
+was changed.
+
+For a Parseval $U$ write $P=UU^T$ for the orthogonal projection onto its column
+space; then $P_{ii}=\norm{u_i}^2$. The problem has an equivalent form in which
+the error is additive.
+
+\begin{theorem}[Projection form]\label{thm:projection}
+There is an absolute constant $C$ such that for every $n\ge1$ and every
+rank-$d$ orthogonal projection $P$ on $\R^n$, with
+$\beta=\max_i|P_{ii}-d/n|$, there is a rank-$d$ orthogonal projection $Q$ with
+$Q_{ii}=d/n$ for all $i$ and $\fro{P-Q}^2\le Cn\beta$.
+\end{theorem}
+
+Both $\beta$ and $\fro{P-Q}$ are unchanged when $(P,Q)$ is replaced by
+$(I-P,I-Q)$, so in \cref{thm:projection} one may assume $d\le n/2$. The two
+theorems are derived from each other and from the main proposition in
+\cref{sec:assembly}.
+
+\paragraph{Conventions.} $c,C$ denote positive absolute constants whose value
+may change between occurrences; constants with subscripts or names are fixed
+once chosen. $\opn{\cdot}$ is the Euclidean operator norm, $\one$ the all-ones
+vector, $\Pi=I-n^{-1}\one\one^T$ the projection onto $\one^\perp$, $\Diag(x)$ the
+diagonal matrix with diagonal $x$, and
+$\diag(M)$ the diagonal of $M$ as a vector. $A\preceq B$ is the Loewner order.
+A Laplacian inequality ``on $\one^\perp$'' means the corresponding quadratic
+forms are compared on vectors orthogonal to $\one$. All Gaussian vectors are
+real and centred.
+
+\subsection{The plan}\label{subsec:plan}
+
+\paragraph{The engine: scaling.}
+Let $U$ be Parseval with projection $P$ and diagonal $p=\diag P$. For
+$s\in\R^n$ the matrix $\Diag(e^s)U$ has a column space with projection $P(s)$,
+and $s\mapsto\diag P(s)$ is the gradient of the convex function
+$\frac12\log\det(U^T\Diag(e^{2s})U)$, whose Hessian at $s=0$ is $2L_P$, where
+\[
+ L_P=\Diag(p)-P\circ P
+\]
+is the graph Laplacian with edge weights $P_{ij}^2$ (\cref{lem:energy}). To
+first order, then, changing the diagonal by $\delta\perp\one$ requires
+$s\approx\frac12L_P^{+}\delta$, and the cost of the move is about
+$s^TL_Ps\approx\frac14\delta^TL_P^{+}\delta$. If $L_P$ has spectral gap
+$\lambda$ and $|\delta_i|\le\eps a$, the cost is at most $n\eps^2a^2/\lambda$.
+For a ``random-looking'' $P$ one has $\lambda\approx a$ and the cost is
+$\eps^2 d$, but $L_P$ can be arbitrarily badly connected: for an exact direct
+sum the components cannot exchange diagonal mass at all.
+
+\paragraph{Perturb, then scale.}
+Perturb $U$ by a random horizontal tangent of size $t=\sqrt{K_0\eps}$, at cost
+$O(t^2d)=O(\eps d)$. Generic entries of the new projection then have size
+$t\sqrt{a/n}$, so most edges acquire weight $\gtrsim at^2/n$ and the new
+Laplacian has gap $\gtrsim at^2$---in fact an $\ell_\infty$ Poisson constant
+$O(1/(at^2))$ (\cref{def:poisson,lem:core}). The static balancing theorem
+(\cref{thm:balancing}) then removes any diagonal error $\beta$ with
+$\beta\cdot O(1/(at^2))\le\frac14$ exactly, at cost $8n\beta=O(t^2d)$. The
+$\ell_\infty$ (rather than spectral) formulation is essential: the scaling must
+stay in a box $\norm{s}_\infty\le1$, and an $\ell_2$ argument loses a factor
+$\sqrt n$.
+
+\paragraph{The difficulty.}
+So the perturbed frame must have diagonal error $\le\theta at^2$ in
+$\ell_\infty$ for a small fixed $\theta$. The initial error $\eps a=at^2/K_0$ is
+fine. But a random tangent of size $t$ moves each diagonal entry
+\emph{linearly} by about $t\sqrt{a/n}$, which exceeds $at^2$ as soon as
+$\eps\lesssim1/d$. Two different constructions avoid this.
+
+\paragraph{Seed 1: many rows ($n\ge Bd^2$, \cref{sec:manyrow}).}
+Perturb each row \emph{orthogonally to itself} and renormalise. Row norms stay
+exact; the cost is that the frame operator is no longer exactly $I$. Its first
+order change is removed by conditioning the Gaussian on a subspace of
+codimension $\le d^2$, and its second-order fluctuation is an average over $n$
+rows, of size $t^2d/\sqrt n$. The spectral error of the perturbed frame is
+therefore $\eta+O(t^2d/\sqrt n+t^2d^2/n+t^3)$, with $t^2$ a large multiple of $\eta$, which is
+at most $\theta t^2$ once that multiple and $B$ are large and $t$ is small; whitening
+turns a spectral error $\delta$ into a diagonal error at most $2a\delta$.
+(In~\cite{Orig} the remainder was bounded by $O(t^3d)$, which forced
+$\eta\le c/d^2$ and a separate block-partition argument; the sharper bound
+$O(t^3)$ uses the first-order constraint once more, see \cref{lem:remainder}.)
+
+\paragraph{Seed 2: moderate rows ($d\ge A\log 2n$, \cref{sec:moderate}).}
+Perturb in the horizontal tangent space of the Grassmannian (so the frame stays
+exactly Parseval) with a Gaussian whose covariance is filtered:
+$C_\rho=\rho(I-B)(\rho I+B)^{-1}$, where $B$ is the normalised Gram operator of
+the linear diagonal map. The filter makes the linear diagonal change
+$O(t\sqrt{\rho a\log n/n})$, negligible once $\rho\asymp t^2$ and $d\gg\log n$,
+while leaving weak (connecting) directions untouched. The price is a
+second-order bias $t^2b_*$ which is not small in $\ell_\infty$ but is small in
+the dual Laplacian norm, $|\ip{x}{b_*}|^2\le(2a/\rho)x^TL_Px$; it is cancelled
+exactly by one small scaling (\cref{lem:local}). All other errors are
+$\le\theta at^2$ by concentration, which is where $d\ge A\log 2n$ is used.
+
+\paragraph{Assembly (\cref{sec:assembly}).}
+After complementation and normalisation it suffices to treat equal-norm frames
+with $2d\le n$ and spectral error $\eta$. If $d<D$ (a large absolute constant),
+the Hamilton--Moitra bound $\eta d(d-1)\le D\eta d$ suffices
+(\cref{sec:bounded}). If $d\ge D$ and $n\ge Bd^2$, use Seed~1. If $d\ge D$ and
+$n<Bd^2$, then $A\log 2n\le A\log(2Bd^2)\le d$ and Seed~2 applies.
+
+\begin{center}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+regime & construction & where\\
+\midrule
+$d<D$ & radial isotropic position, ordered coordinates (Hamilton--Moitra) & \cref{sec:bounded}\\
+$d\ge D,\ n\ge Bd^2$ & row-tangent Gaussian, row normalisation, whitening, balancing & \cref{sec:manyrow}\\
+$d\ge D,\ 2d\le n<Bd^2$ & filtered horizontal Gaussian, bias correction, balancing & \cref{sec:moderate}\\
+$d>n/2$ & complement & \cref{sec:assembly}\\
+\bottomrule
+\end{tabular}
+\end{center}
