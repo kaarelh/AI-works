@@ -539,7 +539,7 @@ _STRENGTH = {"defined": 0, "nonneg": 1, "nonzero": 1, "pos": 2}
 def choose_guard(rule: RewriteRule, counterexamples: Sequence[Tuple[dict, Facts]],
                  positives: Sequence[Tuple[List[dict], Facts]], preds: Sequence[str], entails,
                  max_atoms: int = 2, bags: Optional[Sequence[Sequence[Tuple[dict, Facts]]]] = None,
-                 required: Sequence[int] = ()):
+                 required: Sequence[int] = (), min_bag_frac: float = 0.5):
     """Minimal guard (Lakatos monster-barring).
 
     Candidates are conjunctions of <= ``max_atoms`` guard atoms over the lhs
@@ -551,7 +551,9 @@ def choose_guard(rule: RewriteRule, counterexamples: Sequence[Tuple[dict, Facts]
     * Bag-level evidence (``bags``, one list of the schema's instances per
       attributed negative bag): a bag is blocked if one of its instances is;
       the guard must block every bag in ``required`` (bags in which this schema
-      is the only suspect) and at least one bag.
+      is the only suspect) and at least a ``min_bag_frac`` fraction of the bags
+      (otherwise the blame is better explained by splitting/deleting, or by
+      another schema).
 
     Among admissible guards choose the one keeping the most human positive
     instances (a positive is a list of alternative explanations; kept if one of
@@ -565,7 +567,8 @@ def choose_guard(rule: RewriteRule, counterexamples: Sequence[Tuple[dict, Facts]
         if bags is not None:
             blocked = [any(not guard_satisfied(full, sig, F, entails) for sig, F in bag) for bag in bags]
             nblocked = sum(blocked)
-            if nblocked == 0 or not all(blocked[i] for i in req):
+            if (nblocked == 0 or nblocked < min_bag_frac * len(bags)
+                    or not all(blocked[i] for i in req)):
                 continue
         else:
             if not all(not guard_satisfied(full, sig, F, entails) for sig, F in counterexamples):
@@ -641,6 +644,7 @@ class CoherenceConfig:
     p_fact: float = 0.2              # probability a random world probe carries a random fact
     assume_guard_prob: float = 0.5
     allow_split: bool = True         # repair by splitting into MDL sub-clusters
+    bag_guard_min_frac: float = 0.5  # bag mode: a guard must block this fraction of attributed bags
 
 
 _NUM_POOL = ["0", "1", "2", "3", "-1", "-2", "1/2", "1 + 1", "2*0", "1/0"]
@@ -874,7 +878,8 @@ class CoherenceRepairer:
         3. DELETE otherwise."""
         dom = self.calc.domain
         g, kept = choose_guard(s.rule, counterexamples or [], self._positives(s), dom.guard_preds, dom.entails,
-                               self.cfg.max_atoms, bags=bags, required=required)
+                               self.cfg.max_atoms, bags=bags, required=required,
+                               min_bag_frac=self.cfg.bag_guard_min_frac)
         if g is not None and kept >= self.calc.m:
             old = s.rule.guard
             s.rule = s.rule.with_guard(old & g)

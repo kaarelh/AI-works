@@ -16,7 +16,7 @@ Contents
   (So unguarded ``x/x -> 1`` is invalid: at ``x = 0`` the lhs is undefined.)
 * **Guard language** ``defined(v)``, ``nonzero(v)``, ``nonneg(v)`` (conjunctions)
   and a sound, incomplete syntactic **entailment** procedure ``entails(F, fact)``.
-* **Target calculus** ``TARGET_RULES`` (41 rewrite schemas, 13 of them guarded)
+* **Target calculus** ``TARGET_RULES`` (41 rewrite schemas, 11 of them guarded)
   plus the built-in, non-learned **arith** step (evaluate a numeral expression).
 * **Systematic fallacies** ``FALLACIES`` and a **human derivation generator**
   with sporadic noise (:class:`HumanConfig`, :func:`generate_corpus`).
@@ -214,9 +214,52 @@ def pred_implies(p: str, q: str) -> bool:
     return q in _STRONGER.get(p, {p})
 
 
+@lru_cache(maxsize=100_000)
+def fact_closure(F: Facts) -> Facts:
+    """Close a set of facts under sound *decomposition* rules:
+    p(t) => defined(t) for every p; defined(f(a, ..)) => defined(a), .. (all
+    operations are strict); defined(a/b) => nonzero(b); defined(sqrt a) =>
+    nonneg(a); defined(a^n), n < 0 => nonzero(a); nonzero(a*b), nonzero(a/b)
+    => nonzero(a), nonzero(b); nonzero(-a) => nonzero(a); nonzero(a^n), n != 0
+    => nonzero(a); nonzero(sqrt a), pos(sqrt a) => pos(a)."""
+    out = set(F)
+    work = list(F)
+    while work:
+        p, t = work.pop()
+        new = []
+        if type(t) is App and t.args:
+            h, args = t.head, t.args
+            new.extend(("defined", a) for a in args)
+            if h == "/":
+                new.append(("nonzero", args[1]))
+            elif h == "sqrt":
+                new.append(("nonneg", args[0]))
+            elif h == "^":
+                n = numeral_value(args[1])
+                if n is not None and n < 0:
+                    new.append(("nonzero", args[0]))
+            if p in ("nonzero", "pos"):
+                if h in ("*", "/"):
+                    new.extend([("nonzero", args[0]), ("nonzero", args[1])])
+                elif h == "neg":
+                    new.append(("nonzero", args[0]))
+                elif h == "^":
+                    n = numeral_value(args[1])
+                    if n is not None and n != 0:
+                        new.append(("nonzero", args[0]))
+                elif h == "sqrt":
+                    new.append(("pos", args[0]))
+        for f in new:
+            if f not in out:
+                out.add(f)
+                work.append(f)
+    return frozenset(out)
+
+
 def _known(F: Facts, pred: str, t: Term) -> bool:
+    C = fact_closure(F)
     for p in ("pos", "nonzero", "nonneg", "defined"):
-        if pred in _STRONGER[p] and (p, t) in F:
+        if pred in _STRONGER[p] and (p, t) in C:
             return True
     return False
 
@@ -527,9 +570,13 @@ class WorldOracle:
     ``counterexample(s, t, facts)`` searches for a point satisfying ``facts``
     where ``[[s]]`` and ``[[t]]`` differ (Kleene equality).  A returned point is
     a certain refutation (one-sided error): if ``s = t`` is valid no point is
-    ever returned.  Each call counts as one *query*.  Points mix special values
-    (0, +-1, +-2, +-3, +-1/2; probability ``p_special``) with random rationals
-    p/q, |p| <= 40, 1 <= q <= 15 (Schwartz-Zippel)."""
+    ever returned.  Each call counts as one *query*.  Up to half of the points
+    are boundary 'corners' (all variables 0; one variable at 0, -1 or 1 and the
+    rest random), because partiality failures (``x/x`` at ``x = 0``) live on
+    measure-zero sets that random sampling misses; the rest are random points
+    mixing special values (0, +-1, +-2, +-3, +-1/2; probability ``p_special``)
+    with random rationals p/q, |p| <= 40, 1 <= q <= 15 (Schwartz-Zippel for
+    polynomial identities)."""
 
     def __init__(self, seed: int = 0, n_points: int = 12, p_special: float = 0.4, max_tries: int = 300):
         self.rng = random.Random(seed)
@@ -543,14 +590,28 @@ class WorldOracle:
             return self.rng.choice(SPECIAL_VALUES)
         return Fraction(self.rng.randint(-40, 40), self.rng.randint(1, 15))
 
+    def _corners(self, names: List[str]) -> List[dict]:
+        """Structured boundary points: all-zero, then each variable at 0, -1, 1
+        with the other variables random."""
+        out = [{a: Fraction(0) for a in names}] if names else []
+        for c in (Fraction(0), Fraction(-1), Fraction(1)):
+            for a in names:
+                env = {b: self._value() for b in names}
+                env[a] = c
+                out.append(env)
+        return out
+
     def sample_points(self, names: Iterable[str], facts: Facts = frozenset(), n: Optional[int] = None) -> List[dict]:
+        """Up to ``n`` points satisfying ``facts``: first boundary 'corner'
+        points (at most n // 2), then random points."""
         names = sorted(set(names) | {a for _, t in facts for a in atoms(t)})
         n = self.n_points if n is None else n
         out = []
+        corners = self._corners(names)[: n // 2]
         tries = 0
         while len(out) < n and tries < self.max_tries:
             tries += 1
-            env = {a: self._value() for a in names}
+            env = corners.pop(0) if corners else {a: self._value() for a in names}
             try:
                 if all(fact_holds(f, env) for f in facts):
                     out.append(env)

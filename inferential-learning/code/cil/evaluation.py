@@ -76,36 +76,36 @@ def unsound_active(calc, seed: int = 0, n: int = 250) -> List:
 
 
 def fallacy_report(calc, fallacies: Sequence[alg.Fallacy] = alg.FALLACIES, seed: int = 0) -> Dict[str, dict]:
-    """For each fallacy: was a schema of its shape ever learned, what happened to
-    it, and does any ACTIVE *unsound* schema still license its instances?"""
+    """For each fallacy, what the learned calculus did with it.
+
+    status:
+      'survived'      an ACTIVE semantically unsound schema licenses (instances of) the fallacy;
+      'repaired'      (guard-dropping fallacies) the active schema of that shape carries a guard
+                      implying the true one, obtained by a coherence repair;
+      'guarded'       same, but the guard came from positive data (most-specific guards);
+      'deleted'       a schema of that shape was active and was removed (deleted, or split
+                      into pieces none of which is unsound and active);
+      'inactive'      schemas of that shape exist but never reached support m;
+      'never_learned' no schema of that shape."""
     out = {}
     for f in fallacies:
         shape = [s for s in calc.schemas if s.rule.variant_of(f.rule, check_guard=False)]
-        learned_any = bool(shape)
         accepting = [s for s in calc.active() if f.rule.subsumes(s.rule)
                      and not alg.schema_sound(s.rule, seed=seed, n=200)]
-        if f.kind == "guard_drop":
-            target = alg.TARGET_BY_NAME[f.tag]
-            act_shape = [s for s in calc.active() if s.rule.variant_of(target, check_guard=False)]
-            rels = [guard_relation(s.rule, target) for s in act_shape]
-            if accepting:
-                status = "survived"
-            elif any(r in ("equiv", "stronger") for r in rels) and any("REPAIRED" in "".join(s.log) for s in act_shape):
-                status = "repaired"
-            elif any(r in ("equiv", "stronger") for r in rels):
-                status = "guarded"
-            elif learned_any:
-                status = "deleted"
-            else:
-                status = "never_learned"
+        removed = any(s.status in ("deleted", "split") for s in shape)
+        act_shape = [s for s in calc.active() if s.rule.variant_of(f.rule, check_guard=False)]
+        if accepting:
+            status = "survived"
+        elif f.kind == "guard_drop" and any(
+                guard_relation(s.rule, alg.TARGET_BY_NAME[f.tag]) in ("equiv", "stronger") for s in act_shape):
+            status = "repaired" if any("REPAIRED" in " ".join(s.log) for s in act_shape) else "guarded"
+        elif removed:
+            status = "deleted"
+        elif shape:
+            status = "inactive"
         else:
-            if accepting:
-                status = "survived"
-            elif learned_any:
-                status = "deleted" if all(s.status in ("deleted", "split") or s.support < calc.m for s in shape) else "inactive"
-            else:
-                status = "never_learned"
-        out[f.name] = {"status": status, "learned_shape": learned_any,
+            status = "never_learned"
+        out[f.name] = {"status": status, "learned_shape": bool(shape),
                        "active_unsound_instances": len(accepting)}
     return out
 
