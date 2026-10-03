@@ -1,0 +1,162 @@
+% ===================================================================
+% Appendix to Section 2 (Setting): proofs of the anti-unification lemmas.
+% Source: research/theory/T1 §1.3 (Lemmas 1.2, 1.3; unchanged by verification).
+% ===================================================================
+\providecommand{\vars}{\mathrm{vars}}
+
+\section{Proofs for Section~\ref{sec:setting}}\label{app:setting}
+
+\Cref{thm:setting:lgg} is due to \citet{plotkin1970note} and
+\citet{reynolds1970transformational}. All other statements of
+\Cref{sec:setting} are proved here. The rank lemma and the recovery lemma are T1
+Lemmas~1.2--1.3, which the referees reported correct with no change needed; the
+other three are routine.
+
+\subsection{Proof of \Cref{lem:setting:closure} (closure facts)}
+
+(a) Let $D$ be the set of judgments with an $R$-derivation from $B$. $D$ contains
+$B$ (one-node derivations) and is closed under $R$: if $P\step j\in R$ and
+$P\subseteq D$, graft derivations of the finitely many members of $P$ under a new
+root $j$. So $\Cl_R(B)\subseteq D$. Conversely, if $X\supseteq B$ is $R$-closed,
+induction on the height of derivations shows that every node of every derivation
+from $B$ lies in $X$; so $D\subseteq\Cl_R(B)$. Extensivity and monotonicity in
+$B$ and in $R$ hold because a derivation from $B$ using steps of $R$ is also one
+from any $B'\supseteq B$ using steps of any $R'\supseteq R$. Idempotence: a
+derivation from $\Cl_R(B)$ becomes a derivation from $B$ after grafting a
+derivation from $B$ above each leaf. Finitarity: a derivation has finitely many
+leaves, so it is a derivation from a finite $B_0\subseteq B$.
+
+(b) A single step $P\step j\in R$ is a derivation of $j$ from $P$, so
+$R\subseteq\Sound(R)$, and monotonicity in the rule set gives
+$\Cl_R(B)\subseteq\Cl_{\Sound(R)}(B)$. Conversely, $\Cl_R(B)$ is closed under
+$\Sound(R)$: if $P\subseteq\Cl_R(B)$ and $j\in\Cl_R(P)$, then by (a)
+$j\in\Cl_R(\Cl_R(B))=\Cl_R(B)$; it contains $B$, so it contains
+$\Cl_{\Sound(R)}(B)$. Finally, $\Sound(A)=\{P\step j:j\in\Cl_A(P)\}$ depends
+only on $\Cl_A$, so $\Cl_A=\Cl_R$ gives $A\subseteq\Sound(A)=\Sound(R)$; and
+$\Sound(R)$ itself has the closure $\Cl_R$. \qed
+
+\subsection{Proof of \Cref{lem:setting:rank} (rank)}
+
+Throughout, $|t|$ is the number of symbol occurrences in $t$, metavariable
+occurrences included, and $\vars(t)$ is the set of distinct metavariables of $t$.
+A \emph{renaming} of a set $X$ of metavariables is a substitution whose
+restriction to $X$ is an injective map into metavariables. If $\tau=\sigma\theta$
+with $\theta$ a renaming of $\vars(\sigma)$, then $\sigma=\tau\theta^{-1}$, so
+$\sigma\equiv\tau$; conversely, $\sigma\equiv\tau$ means equality up to such a
+renaming, and then $\mu(\sigma)=\mu(\tau)$.
+
+Let $\tau=\sigma\theta$. Let $x_1,\dots,x_k$ be the distinct metavariables of
+$\sigma$, and let $x_i$ occur $m_i\ge1$ times in $\sigma$.
+
+\emph{Size.} Replacing each of the $m_i$ occurrences of $x_i$ (one symbol) by
+$\theta x_i$ (with $|\theta x_i|$ symbols) gives
+\[
+  |\tau|=|\sigma|+\sum_{i=1}^k m_i\big(|\theta x_i|-1\big).
+\]
+
+\emph{Metavariables.} Every metavariable of $\tau$ occurs in some $\theta x_i$, so
+\[
+  |\vars(\tau)|\le\sum_{i=1}^k|\vars(\theta x_i)|,
+\]
+with equality iff the sets $\vars(\theta x_i)$ are pairwise disjoint.
+
+\emph{Difference.} Since $|\vars(\sigma)|=k$,
+\begin{equation}\label{eq:app:setting:rank}
+  \mu(\tau)-\mu(\sigma)
+  \;\ge\;\sum_{i=1}^k\Big[m_i\big(|\theta x_i|-1\big)+1-|\vars(\theta x_i)|\Big].
+\end{equation}
+We bound each summand.
+\begin{itemize}
+\item If $\theta x_i$ is a metavariable, then $|\theta x_i|=1=|\vars(\theta x_i)|$
+  and the summand is $0$.
+\item Otherwise $\theta x_i$ contains at least one function or constant symbol and
+  at least one occurrence of each of its metavariables, so
+  $|\theta x_i|\ge|\vars(\theta x_i)|+1$. Using $m_i\ge1$, the summand is at least
+  $(|\theta x_i|-1)+1-|\vars(\theta x_i)|\ge1$.
+\end{itemize}
+Hence $\mu(\tau)\ge\mu(\sigma)$.
+
+\emph{Equality.} If $\mu(\tau)=\mu(\sigma)$, then every summand in
+\eqref{eq:app:setting:rank} is $0$ and the inequality there is tight. The first
+forces every $\theta x_i$ to be a metavariable; the second forces the sets
+$\vars(\theta x_i)=\{\theta x_i\}$ to be pairwise disjoint, i.e.\ the
+$\theta x_i$ to be pairwise distinct. So $\theta$ restricted to $\vars(\sigma)$ is
+a renaming. Conversely, if it is a renaming, then $|\tau|=|\sigma|$ and
+$|\vars(\tau)|=|\vars(\sigma)|$, so $\mu(\tau)=\mu(\sigma)$.
+
+\emph{Chains.} Suppose $\sigma_{l+1}\succ\sigma_l$ strictly, i.e.\
+$\sigma_l=\sigma_{l+1}\theta_l$ and $\sigma_l\not\equiv\sigma_{l+1}$. Then
+$\theta_l$ is not a renaming of $\vars(\sigma_{l+1})$ (otherwise the two would be
+equivalent), so $\mu(\sigma_l)>\mu(\sigma_{l+1})$, i.e.\
+$\mu(\sigma_l)\ge\mu(\sigma_{l+1})+1$. Summing along
+$\tau=\sigma_0\prec\sigma_1\prec\dots\prec\sigma_m$ gives
+$\mu(\tau)\ge\mu(\sigma_m)+m$, and $\mu(\sigma_m)\ge0$. \qed
+
+\subsection{Proof of \Cref{lem:setting:recover} (when the lgg recovers the schema)}
+
+Let $\sigma$ have metavariables $x_1,\dots,x_v$, let $\theta_1,\dots,\theta_n$ be
+ground substitutions ($n\ge1$), and let $t_j=\sigma\theta_j$. For each
+metavariable $x$ of $\sigma$ write $c_x=(\theta_1x,\dots,\theta_nx)$ for its
+\emph{column}, and let $\eta$ be the substitution $\eta(x):=\mathcal A(c_x)$.
+
+\emph{Claim.} For every subterm $\sigma'$ of $\sigma$,
+$\mathcal A(\sigma'\theta_1,\dots,\sigma'\theta_n)=\sigma'\eta$.
+
+By induction on $\sigma'$. If $\sigma'=x$ is a metavariable, both sides are
+$\mathcal A(c_x)$. If $\sigma'=f(\sigma'_1,\dots,\sigma'_r)$ (with $r=0$ for a
+constant), then every $\sigma'\theta_j=f(\sigma'_1\theta_j,\dots,\sigma'_r\theta_j)$
+has root $f$, so by definition $\mathcal A$ outputs $f$ applied to
+$\mathcal A$ of the argument columns $(\sigma'_k\theta_1,\dots,\sigma'_k\theta_n)$,
+which by the induction hypothesis are $\sigma'_k\eta$. Hence the output is
+$f(\sigma'_1\eta,\dots,\sigma'_r\eta)=\sigma'\eta$.
+
+Taking $\sigma'=\sigma$ and using \Cref{thm:setting:lgg},
+\[
+  \lgg(t_1,\dots,t_n)=\mathcal A(t_1,\dots,t_n)=\sigma\eta\preceq\sigma .
+\]
+
+\emph{When $\eta$ is a renaming.} By the definition of $\mathcal A$:
+\begin{itemize}
+\item $\eta(x)=\mathcal A(c_x)$ is a metavariable iff the entries of $c_x$ do not
+  all have the same root, i.e.\ iff (R) holds at $x$. If (R) fails at $x$,
+  $\eta(x)$ is a compound term or a constant.
+\item If (R) holds at $x$ and at $y$, then $\eta(x)=z_{c_x}$ and $\eta(y)=z_{c_y}$,
+  and these coincide iff $c_x=c_y$, i.e.\ iff (D) fails for the pair $x,y$.
+\end{itemize}
+So $\eta$ restricted to $\vars(\sigma)$ is a renaming iff (R) holds for every $x$
+and (D) holds for every pair $x\neq y$.
+
+\emph{Conclusion.} If (R) and (D) hold, $\eta$ is a renaming and
+$\lgg(t_1,\dots,t_n)=\sigma\eta\equiv\sigma$. If either fails, $\eta$ is not a
+renaming of $\vars(\sigma)$, so by \Cref{lem:setting:rank}
+$\mu(\sigma\eta)>\mu(\sigma)$; since equivalent schemas have equal rank,
+$\lgg(t_1,\dots,t_n)\not\equiv\sigma$, and it is strictly more specific. \qed
+
+\subsection{Proof of \Cref{lem:setting:guard} (guarded closure)}
+
+$P\subseteq\inst(\lgg(P))$ by \Cref{thm:setting:lgg}, and every $\phi\in\Psi_P$
+holds on $P$, so $P\subseteq\inst(\lgg(P),\Psi_P)$. Let
+$P\subseteq\inst(\sigma,\Psi)$. Then $P\subseteq\inst(\sigma)$, so
+$\sigma\succeq\lgg(P)$ and $\inst(\lgg(P))\subseteq\inst(\sigma)$. Every
+$\phi\in\Psi$ holds on all of $P$, so $\Psi\subseteq\Psi_P$ and
+$\bigcap_{\phi\in\Psi_P}\phi^{-1}(1)\subseteq\bigcap_{\phi\in\Psi}\phi^{-1}(1)$.
+Intersecting, $\inst(\lgg(P),\Psi_P)\subseteq\inst(\sigma,\Psi)$. \qed
+
+\subsection{Proof of \Cref{lem:setting:WS} ((WS) and coherence)}
+
+This is the remark following (WS) in T7 \S1.3. Let $\pos{\Gamma}{\Delta}$ be
+designated and $V$ as in (WS). $V$ makes every member of $\Gamma$ true, and no step
+of $\Rstar$ has true premises and a false conclusion, so the set of $V$-true
+judgments is an $\Rstar$-closed superset of $\Gamma$ and contains
+$\Cl_{\Rstar}(\Gamma)$. Since $V$ makes $\bot$ and every member of $\Delta$ false,
+$\bot\notin\Cl_{\Rstar}(\Gamma)$ and $\Delta\cap\Cl_{\Rstar}(\Gamma)=\emptyset$.
+
+Conversely, let $J_W=\emptyset$, let $\Ttrust\subseteq\Sound(\Rstar)$, and let
+$\pos{\Gamma}{\Delta}$ be a designated position that is in bounds. Then
+$e$ is well defined, because $\Gamma\subseteq\Cl_{\Rstar}(\Gamma)$ is disjoint from
+$\Delta\cup\{\bot\}$. Let $V$ be the indicator function of $\Cl_{\Rstar}(\Gamma)$.
+It extends $e$: it is $1$ on $\Gamma$ and $0$ on $\Delta\cup\{\bot\}$. The set
+$\Cl_{\Rstar}(\Gamma)$ is closed under $\Rstar$ and, by
+\Cref{lem:setting:closure}(b), under $\Sound(\Rstar)\supseteq\Ttrust$. So no step of
+$\Rstar\cup\Ttrust$ has $V$-true premises and a $V$-false conclusion, and (WS)
+holds. \qed

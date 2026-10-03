@@ -44,9 +44,14 @@ for trial in range(300):
         val = min(c * a + b for a, b in A)
         mins = [p for p in A if abs(c * p[0] + p[1] - val) < 1e-12]
         for p in mins:
-            # on hull boundary: no hull vertex strictly better for this c (always true) and p is
-            # on a supporting line of slope -c: check val equals hull's min
-            if abs(min(c*a+b for a, b in Hv) - val) > 1e-12: bad_onhull += 1
+            # (repaired after verification: the old test compared val with the hull minimum,
+            # which is a tautology.)  Now test that the minimiser p itself lies on the computed
+            # lower hull: it is a vertex, or it lies on the segment between two consecutive vertices.
+            on = p in Hv
+            for (x1, y1), (x2, y2) in zip(Hv, Hv[1:]):
+                if x1 <= p[0] <= x2 and abs((x2-x1)*(p[1]-y1) - (y2-y1)*(p[0]-x1)) < 1e-9:
+                    on = True
+            if not on: bad_onhull += 1
         sel.append(min(mins))
     for (a1, b1), (a2, b2) in zip(sel, sel[1:]):          # c decreasing
         if a2 < a1 or b2 > b1 + 1e-12: bad_mono += 1
