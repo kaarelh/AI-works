@@ -6,36 +6,41 @@
 %   research/lit/L3-learning-to-reason-and-limit-inquiry.md  Lemma A (as repaired)
 %   research/verification/{T1,T2,L3}-*.md
 %   code/results/adversarial_prover.md (Experiment C)
-% Proofs not given inline are in sections/app-search.tex.
+% Proofs not given inline, and remarks moved out of the main text, are in
+% sections/app-search.tex.
 % =====================================================================
+\providecommand{\ACCEPT}{\textsf{ACCEPT}}
+\providecommand{\Steps}{\mathrm{Steps}}
 
 \section{Search makes soundness a worst-case property}\label{sec:search}
 
-The architecture studied in this paper has three parts: a learned relation~$\hatV$ that says which steps are valid, a prover that searches for derivations all of whose steps $\hatV$ accepts, and a training signal that starts from human steps. This section isolates the first consequence of putting search on top of a learned checker. Once a prover searches, the only property of~$\hatV$ that bears on the soundness of the resulting reasoner is a worst-case one: whether its acceptance region contains a non-derivable step. Accuracy on typical steps, on human steps, or on most instances of a rule does not bear on it, because search can seek out exactly the steps on which~$\hatV$ is wrong.
+The architecture studied in this paper has three parts: a learned relation~$\hatV$ that says which steps are valid, a prover that searches for derivations all of whose steps $\hatV$ accepts, and a training signal that starts from human steps. Once a prover searches, the only property of~$\hatV$ that bears on the soundness of the resulting reasoner is a worst-case one: whether its acceptance region contains a non-derivable step. Accuracy on typical steps, on human steps, or on most instances of a rule does not bear on it, because search can seek out exactly the steps on which~$\hatV$ is wrong.
 
-None of the results below is deep, and several are trivial once set up; what they contribute is the setup and the quantifiers. Reasoner soundness is stepwise soundness (\cref{lem:search:stepwise}). Arbitrarily small average error is compatible with a reasoner that derives everything, and every PAC learner of calculi containing three basic introduction rules has a PAC variant, with essentially the same sample complexity, whose every output does so (\cref{thm:search:tonk,cor:search:pac}). In classical propositional logic every unsound \emph{pure} schema added to a complete calculus trivializes the reasoner, so errors are total but visible to coherence (\cref{prop:search:post,lem:search:purify}). Simplicity is the wrong bias for positive data (\cref{prop:search:mdl}). Average-case validity survives search in two regimes where its randomness is drawn after the rules or claims are fixed and outside the prover's control, and fails in a fixed world with prover-chosen instances (\cref{lem:search:commitment}). Voting ensembles of coherent verifiers can be incoherent in a way that coherence feedback cannot localize (\cref{thm:search:doctrinal}). Except in \cref{sec:search:commitment}, which measures truth in a scene, ``sound'' means sound relative to the human calculus~$\Rstar$ (or a target consequence relation), not relative to truth; going beyond~$\Rstar$ is the business of coherence and the world (\cref{sec:coherence,sec:twotier,sec:physics}).
+The phenomenon parallels two observations in the motivating notes \citep{hanni2026notes}. Solomonoff function induction ``doesn't work that well when there is a simple property distinguishing test from train'',\footnote{\texttt{ai/learning/solomonoff induction/solomonoff function induction.md}.} and a defeasible checker facing an untrusted prover ``might have lost all the safety'' (\cref{sec:intro:question}). For a learned checker the prover supplies the distinguishing property; in \cref{cor:search:pac} it is mere size beyond the largest training step. This section gives precise versions of both observations for learned step checkers.
+
+None of the results below is deep; what they contribute is the setup and the quantifiers. Reasoner soundness is stepwise soundness (\cref{lem:search:stepwise}). Arbitrarily small average error is compatible with a reasoner that derives everything, and every PAC learner of calculi containing three basic introduction rules has a PAC variant, with essentially the same sample complexity, whose every output does so (\cref{thm:search:tonk,cor:search:pac}). In classical propositional logic every unsound \emph{pure} schema added to a complete calculus trivializes the reasoner, so errors are total but visible to coherence (\cref{prop:search:post,lem:search:purify}). Simplicity is the wrong bias for positive data (\cref{prop:search:mdl}). Average-case validity survives search in two regimes, both with randomness drawn after the rules or claims are fixed and outside the prover's control (rules valid per random scene, with the library fixed first; fresh randomness per check), and fails in a fixed world with prover-chosen instances (\cref{lem:search:commitment}). Voting ensembles of coherent verifiers can be incoherent in a way that coherence feedback cannot localize (\cref{thm:search:doctrinal}). Except in \cref{sec:search:commitment}, ``sound'' means sound relative to the human calculus~$\Rstar$ (or a target consequence relation), not relative to truth; going beyond~$\Rstar$ is the business of coherence and the world (\cref{sec:coherence,sec:twotier,sec:physics}).
 
 % ---------------------------------------------------------------------
 \subsection{Reasoner soundness is stepwise soundness}\label{sec:search:stepwise}
 
-We recall the step language of \cref{sec:setting}. $J$ is a countable set of judgments; contexts are part of judgments, so hypothetical reasoning (``assume air pressure is~$0$'') lives inside the step language. A \emph{step} $\Pi\step j$ has a finite set $\Pi\subseteq J$ of premises and a conclusion $j\in J$; $\mathcal S$ is the set of all steps. For $A\subseteq\mathcal S$ and $B\subseteq J$, $\Cl_A(B)$ is the least $X\supseteq B$ such that $\Pi\subseteq X$ and $(\Pi\step j)\in A$ imply $j\in X$, i.e.\ the set of judgments with a finite $A$-derivation from~$B$. The derivable steps of the human calculus are $\Sound(\Rstar)=\{\Pi\step j: j\in\Cl_{\Rstar}(\Pi)\}$. A deterministic verifier~$\hatV$ has an \emph{acceptance region} $A=\{s\in\mathcal S:\hatV(s)=\textsc{accept}\}$, and an unbounded prover that chains accepted steps from premises~$B$ reaches exactly $\Cl_A(B)$.
+Steps, closure and $\Sound(\Rstar)$ are as in \cref{def:setting:step}; we write $\Pi$ for a premise set. A deterministic verifier~$\hatV$ has \emph{acceptance region} $A=\{s\in S:\hatV(s)=\ACCEPT\}$, and an unbounded prover chaining accepted steps from premises~$B$ reaches exactly $\Cl_A(B)$.
 
 \begin{lemma}[Reasoner soundness is stepwise soundness]\src{T1 Lemma 1.1}\label{lem:search:stepwise}
-For every $A\subseteq\mathcal S$,
+For every $A\subseteq S$,
 \[
 \forall B\subseteq J:\ \Cl_A(B)\subseteq\Cl_{\Rstar}(B)
 \qquad\Longleftrightarrow\qquad
 A\subseteq\Sound(\Rstar).
 \]
-\hfill\leanok{Cl\_subset\_Cl\_iff\_subset\_Sound}
+\hfill\leanok{StepSoundness.lemma\_1\_1}
 \end{lemma}
 
 \begin{proof}
-($\Leftarrow$) Let $(\Pi\step j)\in A$ with $\Pi\subseteq\Cl_{\Rstar}(B)$. As $\Cl_{\Rstar}$ is monotone and idempotent, $j\in\Cl_{\Rstar}(\Pi)\subseteq\Cl_{\Rstar}(\Cl_{\Rstar}(B))=\Cl_{\Rstar}(B)$. So $\Cl_{\Rstar}(B)$ is a superset of~$B$ closed under~$A$, and $\Cl_A(B)\subseteq\Cl_{\Rstar}(B)$ by leastness.
+($\Leftarrow$) If $(\Pi\step j)\in A$ and $\Pi\subseteq\Cl_{\Rstar}(B)$, then $j\in\Cl_{\Rstar}(\Pi)\subseteq\Cl_{\Rstar}(B)$ by monotonicity and idempotence. So $\Cl_{\Rstar}(B)\supseteq B$ is closed under~$A$, and contains $\Cl_A(B)$ by leastness.
 ($\Rightarrow$) For $(\Pi\step j)\in A$ take $B=\Pi$: $j\in\Cl_A(\Pi)\subseteq\Cl_{\Rstar}(\Pi)$.
 \end{proof}
 
-The lemma is trivial once set up; its content is that the right object is the \emph{set}~$A$, not a measure on it. There is no ``small error rate'' middle ground: one accepted step $\Pi\step j\notin\Sound(\Rstar)$ yields, from~$\Pi$, a conclusion that $\Rstar$ does not derive. The cautious verifiers of \cref{sec:caution} satisfy the stronger $A\subseteq\Rstar$.
+There is no ``small error rate'' middle ground: one accepted step $\Pi\step j\notin\Sound(\Rstar)$ yields, from~$\Pi$, a conclusion that $\Rstar$ does not derive. The cautious verifiers of \cref{sec:caution} satisfy the stronger $A\subseteq\Rstar$.
 
 % ---------------------------------------------------------------------
 \subsection{Average-case accuracy cannot give soundness}\label{sec:search:tonk}
@@ -50,15 +55,16 @@ Fix a propositional language with atoms $p_0,p_1,\dots$, the constant~$\top$ and
 \]
 and possibly of other classically sound rules. Put $\top^{(1)}=\top$, $\top^{(j+1)}=\top\wedge\top^{(j)}$, and consider the pure one-metavariable schema
 $T_j:=\{A\vee\top^{(j)}\step A:\ A\in\Fm\}$.
-Composed with $\vee\mathrm{I}_2$, $T_j$ is the rule ``from $\top^{(j)}$ infer anything'': a tonk \citep{prior1960runabout,belnap1962tonk} with its trigger hidden beyond a size horizon. For a distribution~$Q$ on~$\mathcal S$ and $h\subseteq\mathcal S$ write $\mathrm{err}_Q(h):=Q(h\,\triangle\,\Rstar)$.
+Composed with $\vee\mathrm{I}_2$, $T_j$ is the rule ``from $\top^{(j)}$ infer anything'': a tonk \citep{prior1960runabout,belnap1962tonk} with its trigger hidden beyond a size horizon. For a distribution~$Q$ on~$S$ and $h\subseteq S$ write $\mathrm{err}_Q(h):=Q(h\,\triangle\,\Rstar)$.
 
 \begin{theorem}[Tonk beyond the horizon]\src{T1 Thm 2.1}\label{thm:search:tonk}
 \leavevmode
 \begin{enumerate}[label=(\roman*)]
 \item Every formula~$C$ lies in $\Cl_{\Rstar\cup T_j}(\emptyset)$, by a derivation of $j+2$ steps of which only the last uses~$T_j$. For non-tautologous~$C$ that step is unsound, hence not in $\Sound(\Rstar)$.
-\item For every probability distribution~$Q$ on~$\mathcal S$ (over valid steps, invalid steps, or both), $Q(T_j)\to0$ as $j\to\infty$.
+\item For every probability distribution~$Q$ on~$S$ (over valid steps, invalid steps, or both), $Q(T_j)\to0$ as $j\to\infty$.
 \end{enumerate}
 So for every~$Q$ and $\varepsilon>0$ some $\Rstar\cup T_j$ has $\mathrm{err}_Q(\Rstar\cup T_j)\le Q(T_j)<\varepsilon$ and makes every formula derivable. If $\Rstar$ is given by finitely many pure schemas, so is $\Rstar\cup T_j$.
+\hspace*{\fill}\allowbreak\hspace*{\fill}\leanok{StepSoundness.thm\_2\_1\_error\_and\_trivial}
 \end{theorem}
 
 \begin{proof}
@@ -72,29 +78,28 @@ In the setting of \cref{thm:search:tonk}, let $\mathcal L$ be any learner mappin
 \mathcal L^+(X_{1..m}):=\mathcal L(X_{1..m})\ \cup\ T_{\hat\jmath}\ \cup\ \inst(\top\mathrm{I},\wedge\mathrm{I},\vee\mathrm{I}_2).
 \]
 Then for every~$Q$, $m\ge1$ and $\varepsilon\in(0,1)$: (a) $\mathrm{err}_Q(\mathcal L^+)\le\mathrm{err}_Q(\mathcal L)+Q(T_{\hat\jmath})$ and $\Pr[Q(T_{\hat\jmath})>\varepsilon]\le(1-\varepsilon)^m$. (b) Hence if $\mathcal L$ PAC-learns a class of targets~$\Rstar$, each containing $\top$I, $\wedge$I and $\vee$I$_2$, with sample complexity $m_{\mathcal L}(\varepsilon,\delta)$, then $\mathcal L^+$ PAC-learns the same class (improperly) with sample complexity at most $\max\{m_{\mathcal L}(\varepsilon/2,\delta/2),\lceil(2/\varepsilon)\ln(2/\delta)\rceil\}$. (c) Yet \emph{every} output of $\mathcal L^+$ makes every formula derivable from~$\emptyset$.
+\hspace*{\fill}\allowbreak\hspace*{\fill}\leanok{StepSoundness.cor\_2\_2\_trivializes} ((c))
 \end{corollary}
 
 \begin{proof}[Proof idea]
-Steps of $T_j$ have size $\ge j$, and $\hat\jmath$ exceeds every sample's size, so $T_{\hat\jmath}$ lies in a tail of~$Q$ that the sample has not reached; that tail has mass $>\varepsilon$ only if all $m$ samples missed a set of mass $>\varepsilon$. The three added schemas lie in~$\Rstar$, so they cannot increase the error, and with $T_{\hat\jmath}$ they carry the derivation of \cref{thm:search:tonk}(i). Full proof in Appendix~\ref{app:search}.
+$T_{\hat\jmath}$ lies beyond every sample, in a tail of~$Q$ that is light unless all $m$ samples missed a heavy set. The added schemas lie in~$\Rstar$ and, with $T_{\hat\jmath}$, carry the derivation of \cref{thm:search:tonk}(i). Appendix~\ref{app:search:pac}.
 \end{proof}
 
-The added schemas are needed for~(c) (Remark~\ref{rem:app:search:pac}). The corollary is about what a PAC guarantee can certify, not a prediction that natural learners output tonks: the guarantee is satisfied equally well by a learner whose every output trivializes the reasoner.
+The added schemas are needed for~(c) (\cref{rem:app:search:pac}). The corollary is about what a PAC guarantee can certify, not a prediction that natural learners output tonks. A soundness guarantee must be a $\sup_s$, not an $\E_{s\sim Q}$, because the prover chooses~$s$ after seeing the verifier; \cref{sec:caution} computes the price of this uniform requirement.
 
-\paragraph{Remarks.}
-(a) \Cref{thm:search:tonk,cor:search:pac} are trivial once set up. Their content is the quantifier: a soundness guarantee must be a $\sup_s$, not an $\E_{s\sim Q}$, because the prover chooses~$s$ after seeing the verifier.
-(b) \emph{Selection effect.} If a search produces a derivation of a judgment that $\Rstar$ does not derive from the premises used, then by \cref{lem:search:stepwise} it contains an accepted step outside $\Sound(\Rstar)$, whatever the verifier's error rate on human steps. This is the mechanism behind reward-model overoptimization \citep{gao2023scaling}, and it limits what process reward models trained on human step labels \citep{lightman2023verify} can certify (\cref{sec:search:practice}).
-(c) The uniform requirement is reliable learning \citep{rivest1988reliable}, perfect selective classification \citep{elyaniv2010selective}, or the ``accept'' side of KWIK \citep{li2008kwik}, applied to steps; \cref{sec:caution} computes its price.
+\paragraph{Selection effect.}
+A search that derives a judgment that $\Rstar$ does not derive from the premises used has found an accepted step outside $\Sound(\Rstar)$ (\cref{lem:search:stepwise}), whatever the verifier's error rate on human steps. This is one mechanism that can produce reward-model overoptimization \citep{gao2023scaling}, and it limits what process reward models trained on human step labels \citep{lightman2023verify} can certify (\cref{sec:search:practice}).
 
 \paragraph{Reading.}
-For the question ``can a learner learn which inferences are valid?'', \cref{thm:search:tonk} separates two things a guarantee might mean. ``Valid on typical steps'' (PAC accuracy, held-out accuracy on human steps, a process reward model's accuracy) is a statement about a measure, which can be arbitrarily close to perfect while the set it measures licenses every conclusion. ``Valid on every step it accepts'' is a statement about the set, and only it transfers to a reasoner. For justification the moral is the same: a conclusion reached by search inherits nothing from the checker's average accuracy. A learned checker must certify an inclusion $A\subseteq\Sound(\Rstar)$; the rest of the paper asks how imitation, coherence and the world can certify it.
+\Cref{thm:search:tonk} separates two things ``a learner learns which inferences are valid'' might mean. ``Valid on typical steps'' (PAC accuracy, held-out accuracy on human steps, a process reward model's accuracy) is a statement about a measure, which can be arbitrarily close to perfect while the set it measures licenses every conclusion. ``Valid on every step it accepts'' is a statement about the set, and only it transfers to a reasoner, and to the justification of what the reasoner concludes. A learned checker must certify an inclusion $A\subseteq\Sound(\Rstar)$; the rest of the paper asks how imitation, coherence and the world can certify it.
 
 % ---------------------------------------------------------------------
-\subsection{In classical propositional logic, every unsound pure schema trivializes}\label{sec:search:post}
+\subsection{In classical propositional logic, every unsound pure schema added to a complete calculus trivializes}\label{sec:search:post}
 
-One bad schema \emph{can} trivialize a reasoner (\cref{thm:search:tonk}). In classical propositional logic it always does, provided it mentions no specific atom. Errors are then total, but also maximally visible: the reasoner derives~$\bot$ from no premises.
+One bad schema \emph{can} trivialize a reasoner (\cref{thm:search:tonk}). In classical propositional logic it always does once it is added to a complete calculus, provided it mentions no specific atom. Errors are then total, but also maximally visible: the reasoner derives~$\bot$ from no premises. (Without the complete calculus a pure schema can be unsound without trivializing: $T_j$ alone derives nothing from~$\emptyset$, \cref{rem:app:search:pac}.)
 
-\begin{definition}[Pure schemas; substitution-closed step sets]\label{def:search:pure}
-A \emph{schema}~$\tau$ is a step whose formulas may contain metavariables; $\inst(\tau)$ is the set of its instances, obtained by substituting formulas for metavariables. Atoms are constants of the step language, so a schema may mention specific atoms, as in $x\vee p_0\step x$; least general generalization produces such schemas whenever a position of the data is constantly~$p_0$. A schema is \emph{pure} if no atom occurs in it. A step set is \emph{substitution-closed} if it is closed under uniform substitution of formulas for atoms; instance sets of pure schemas are. A step $\Pi\step\varphi$ is \emph{sound} if $\Pi\models\varphi$, and a schema or step set is sound if all its instances or steps are.
+\begin{definition}[Substitution-closed step sets]\label{def:search:pure}
+Recall pure schemas and purification $\tau^\circ$ (\cref{def:setting:schema}). Atoms are constants, so learned schemas may mention them: least general generalization produces $x\vee p_0\step x$ whenever a position of the data is constantly~$p_0$. A step set is \emph{substitution-closed} if it is closed under uniform substitution of formulas for atoms (instance sets of pure schemas are). A step $\Pi\step\varphi$ is \emph{sound} if $\Pi\models\varphi$, and a schema or step set is sound if all its instances or steps are.
 \end{definition}
 
 \begin{proposition}[Every unsound pure schema is a tonk]\src{T1 Prop 2.3, repaired scope}\label{prop:search:post}
@@ -105,13 +110,11 @@ Let $\Rstar_{\CPC}$ be sound and complete for classical propositional consequenc
 Let $\Pi\step\varphi\in A$ be unsound, with $v(\Pi)=1$, $v(\varphi)=0$; it lies in~$A_1$ since $\Rstar_{\CPC}$ is sound. Let $\sigma_v$ send each atom true under~$v$ to~$\top$ and each false one to~$\bot$. Then $\sigma_v\Pi\step\sigma_v\varphi\in A_1$ has variable-free formulas; each $\sigma_v\pi$ and $\neg\sigma_v\varphi$ is a tautology, so lies in $\Cl_{\Rstar_{\CPC}}(\emptyset)\subseteq\Cl_A(\emptyset)$ by completeness. The step adds $\sigma_v\varphi$, and $\Cl_A(\emptyset)\supseteq\Cn_{\CPC}(\{\sigma_v\varphi,\neg\sigma_v\varphi\})=\Fm$.
 \end{proof}
 
-This is essentially \citet{post1921}: classical propositional logic is Post-complete. The consequence-level form underlies the coherence results of \cref{sec:coherence}.
+This is essentially \citet{post1921}: classical propositional logic is Post-complete. The consequence-level form is \cref{thm:coherence:post}.
 
 \begin{example}[Schemas that mention atoms]\label{ex:search:atoms}
-Without substitution-closure the proposition fails. $\tau=(x\vee p_0\step x)$ is unsound (instance $p_1\vee p_0\step p_1$). Yet $\Cn_{\CPC}(\neg p_0)$ is closed under $\Rstar_{\CPC}\cup\inst(\tau)$, since $\neg p_0\models B\vee p_0$ implies $\neg p_0\models B$. So the reasoner derives the non-tautology $\neg p_0$ (from $\neg p_0\vee p_0$) but never~$p_0$: unsound, not trivial. A ground error $p_0\step p_1$ never fires from~$\emptyset$ at all.
+Without substitution-closure the proposition fails. $\tau=(x\vee p_0\step x)$ is unsound (instance $p_1\vee p_0\step p_1$). Yet $\Cn_{\CPC}(\neg p_0)$ is closed under $\Rstar_{\CPC}\cup\inst(\tau)$, since $\neg p_0\models B\vee p_0$ implies $\neg p_0\models B$. So the reasoner derives the non-tautology $\neg p_0$ (from $\neg p_0\vee p_0$) but never~$p_0$: unsound, not trivial. A ground error $p_0\step p_1$ never fires from~$\emptyset$ at all (Appendix~\ref{app:search:purify}).
 \end{example}
-
-The dichotomy is restored by \emph{purification}: let $\tau^\circ$ be $\tau$ with each atom occurring in it replaced by a fresh metavariable, distinct atoms by distinct metavariables.
 
 \begin{lemma}[Purification]\src{T1 Prop 2.3, repair}\label{lem:search:purify}
 In classical propositional logic, $\tau$ is sound if and only if $\tau^\circ$ is sound.
@@ -122,11 +125,11 @@ For any family of schemas~$\tau_l$, let $A=\Rstar_{\CPC}\cup\bigcup_l\inst(\tau_
 \end{corollary}
 
 \begin{proof}[Proof idea]
-Every instance of~$\tau$ is one of~$\tau^\circ$. Conversely, an instance of~$\tau^\circ$ substitutes formulas only for $\tau$'s own atom occurrences; renaming those atoms inside the metavariable fillers to fresh atoms gives an instance of~$\tau$, which a uniform substitution maps back onto the given one, and uniform substitution preserves validity. For the corollary, the instances of the pure $\tau_l^\circ$ form a substitution-closed set, so \cref{prop:search:post} applies to~$A^\circ$. Full proofs in Appendix~\ref{app:search}.
+Every instance of~$\tau^\circ$ is a uniform-substitution image of an instance of~$\tau$, and conversely every instance of~$\tau$ is one of~$\tau^\circ$. For the corollary, apply \cref{prop:search:post} to the substitution-closed set $\bigcup_l\inst(\tau_l^\circ)$. Appendix~\ref{app:search:purify}.
 \end{proof}
 
 \paragraph{Reading.}
-This is the positive face of \cref{thm:search:tonk}. An unsound pure schema cannot hide: it makes the reasoner incoherent in the empty context, which is exactly the signal of the coherence channel~(C). Coherence in the empty context is thus a complete soundness test for purified schema hypotheses over~$\CPC$; \cref{sec:coherence} turns it into identification of~$\CPC$ and \cref{sec:twotier} into an end-to-end learner. Two limits. Purification is used as a \emph{test}: one checks~$A^\circ$ to decide~$A$, without accepting the purified steps. And the test presupposes a structural target. A calculus with atom-specific principles (an axiom about one constant, a physical theory with named parameters) is not structural, and there coherence can miss errors as in \cref{ex:search:atoms}. Beyond classical propositional logic the dichotomy fails too; \cref{sec:coherence} determines what coherence detects in intuitionistic logic and arithmetic.
+This is the positive face of \cref{thm:search:tonk}. An unsound pure schema cannot hide: it makes the reasoner incoherent in the empty context, which is exactly the signal of the coherence channel~(C). Coherence in the empty context is thus a complete soundness test for purified schema hypotheses over~$\CPC$; \cref{sec:coherence} turns it into identification of~$\CPC$ and \cref{sec:twotier} into an end-to-end learner. Two limits. Purification is used as a \emph{test}: one checks~$A^\circ$ to decide~$A$, without accepting the purified steps. And the test presupposes a structural target: under atom-specific principles (an axiom about one constant, a physical theory with named parameters) coherence can miss errors as in \cref{ex:search:atoms}. Beyond classical propositional logic the dichotomy fails too; \cref{sec:coherence} determines what coherence detects in intuitionistic logic and arithmetic.
 
 % ---------------------------------------------------------------------
 \subsection{Simplicity is the wrong bias for positive data}\label{sec:search:mdl}
@@ -134,14 +137,14 @@ This is the positive face of \cref{thm:search:tonk}. An unsound pure schema cann
 A natural response to \cref{thm:search:tonk} is to prefer simple hypotheses. On positive data alone this points the wrong way.
 
 \begin{proposition}[MDL picks ``anything from anything'']\src{T1 Prop 2.4}\label{prop:search:mdl}
-Encode steps as ground terms and schemas as terms with metavariables, of size equal to the number of symbol occurrences, and let $\Hc_1=\{\inst(\sigma):\sigma\text{ a schema}\}$. For every nonempty set~$P$ of positive data, the single metavariable~$x$ is a shortest schema with $P\subseteq\inst(x)$, and $\inst(x)\supseteq\mathcal S$ accepts every step. It is the unique shortest one up to renaming unless $P$ is a single step of size~$1$.
+Encode steps as ground terms and schemas as terms with metavariables, of size equal to the number of symbol occurrences, and let $\Hc_1=\{\inst(\sigma):\sigma\text{ a schema}\}$. For every nonempty set~$P$ of positive data, the single metavariable~$x$ is a shortest schema with $P\subseteq\inst(x)$, and $\inst(x)\supseteq S$ accepts every step. It is the unique shortest one up to renaming unless $P$ is a single step of size~$1$.
 \end{proposition}
 
 \begin{proof}
 $x$ has the minimum size~$1$ and covers everything; any other size-$1$ schema is a constant~$c$, with $\inst(c)=\{c\}$.
 \end{proof}
 
-More generally, an MDL learner without a likelihood term picks a shortest hypothesis containing the data. Positive data never refute an over-general hypothesis \citep{gold1967language,angluin1980inductive}, and over-general hypotheses are typically short, so it over-generalizes. The positive-data remedies are \emph{least} generality, i.e.\ Plotkin's least general generalization \citep{plotkin1970note} and the version-space verifiers of \cref{sec:caution,sec:imitation}, and a likelihood with the size principle (\cref{sec:caution}). Even then, MAP selection is unsound whenever an over-general hypothesis is temporarily most probable, so \cref{sec:caution} replaces it by conservative thresholding. Simplicity has a role in this paper (\cref{sec:simplicity}), but not as the acceptance criterion for steps.
+More generally, an MDL learner without a likelihood term over-generalizes: positive data never refute an over-general hypothesis \citep{gold1967language,angluin1980inductive}, and over-general hypotheses are typically short. The positive-data remedies are \emph{least} generality \citep{plotkin1970note}, as in the version-space verifiers of \cref{sec:caution,sec:imitation}, and a likelihood with the size principle; since MAP selection is unsound whenever an over-general hypothesis is temporarily most probable, \cref{sec:caution} thresholds the posterior conservatively instead. Simplicity has a role in this paper (\cref{sec:simplicity}), but not as the acceptance criterion for steps.
 
 % ---------------------------------------------------------------------
 \subsection{When does average-case validity survive search? The commitment order}\label{sec:search:commitment}
@@ -163,15 +166,15 @@ The sequent level matters: rules that discharge assumptions ($\to$I, reductio) o
 \]
 where the derivation may be chosen after seeing~$x$; the bound holds simultaneously for all provers.
 \item \emph{Fixed world, prover-chosen instances.} Fix a world~$x_0$, a schema~$\rho$ and a distribution~$\mu$ on its instances, and call $\rho$ \emph{$(1-\varepsilon)$-valid on average} if $\mu\{\iota:\iota\text{ holds in }x_0\}\ge1-\varepsilon$. Suppose $\rho$ has an instance failing in~$x_0$. It must have one if $\mu\{\iota:\iota\text{ fails in }x_0\}>0$, and it may have one even when $\varepsilon=0$, if the failing instance lies off the support of~$\mu$. Then a prover that submits it obtains, with probability~$1$, a one-step derivation from premises true in~$x_0$ to a conclusion false in~$x_0$. No bound of the form~(i) holds in this regime.
-\item \emph{Fresh randomness per check.} Each claim is a polynomial identity $p\equiv q$ in $n$ variables over a field~$F$, committed by an adaptive prover. The verifier enforces $\deg(p-q)\le d$, computing the degree from an explicit expression; only then does it draw a point uniformly from $S_k^n$, $S_k\subseteq F$ finite, independently of everything before, and accept iff $p$ and $q$ agree there. Call the claim \emph{false} if $p-q$ is nonzero \emph{as a polynomial over~$F$}. A false $k$-th claim is accepted with probability at most $d/|S_k|$. So some false claim among the first~$N$ ($N$ fixed in advance) is accepted with probability at most $\sum_{k\le N}d/|S_k|$, uniformly over adaptive provers; for unboundedly many claims, $|S_k|\ge d\,2^k/\delta$ gives at most~$\delta$.
+\item \emph{Fresh randomness per check.} Each claim is a polynomial identity $p\equiv q$ in $n$ variables over a field~$F$, committed by an adaptive prover. The verifier enforces $\deg(p-q)\le d$, computing the degree from an explicit expression; only then does it draw a point uniformly from $U_k^n$, $U_k\subseteq F$ finite, independently of everything before, and accept iff $p$ and $q$ agree there. Call the claim \emph{false} if $p-q$ is nonzero \emph{as a polynomial over~$F$}. A false $k$-th claim is accepted with probability at most $d/|U_k|$. So some false claim among the first~$N$ ($N$ fixed in advance) is accepted with probability at most $\sum_{k\le N}d/|U_k|$, uniformly over adaptive provers; for unboundedly many claims, $|U_k|\ge d\,2^k/\delta$ gives at most~$\delta$.
 \end{enumerate}
 \end{lemma}
 
 \begin{proof}[Proof idea]
-(i) Union bound over the whole library: with probability $\ge1-\sum_i\varepsilon_i$ every~$\rho_i$ is valid in~$x$. This event does not depend on the prover, and on it induction on derivations preserves truth in~$x$. (ii) Nothing is random. (iii) Schwartz--Zippel for each claim, conditional on everything committed before its point is drawn, then a union bound. Full proof in Appendix~\ref{app:search}.
+(i) With probability $\ge1-\sum_i\varepsilon_i$ every~$\rho_i$ is valid in~$x$ (union bound over the library); this event does not depend on the prover, and on it every derivation preserves truth in~$x$. (ii) Nothing is random. (iii) Schwartz--Zippel per claim, conditional on the past, and a union bound. Appendix~\ref{app:search:commitment}.
 \end{proof}
 
-Part~(i) is the chaining lemma of PAC-semantics \citep{valiant2000robust} with the quantifier order made explicit; part~(iii) is the Schwartz--Zippel lemma \citep{schwartz1980fast,zippel1979probabilistic,demillo1978probabilistic}; the whole is folklore. The lemma gives two sufficient conditions and one failing regime. It is \emph{not} a characterization: we do not claim that average-case guarantees survive search \emph{only} in regimes (i) and~(iii). Each hypothesis is load-bearing (examples in Appendix~\ref{app:search:commitment}). In~(i), validity must hold \emph{per scene}; a guarantee per random (scene, instance) pair does not give it, and a prover who picks the instance inside the scene is in regime~(ii). In~(iii), the verifier must enforce the degree bound (repeated squaring can hide degree~$2^k$), and $p-q$ must be nonzero over the field used: $(a+b)^p-a^p-b^p$ vanishes over~$\mathbb F_p$, so evaluation mod~$p$ always accepts the freshman's dream.
+Part~(i) is the chaining lemma of PAC-semantics \citep{valiant2000robust} with the quantifier order made explicit; part~(iii) is the Schwartz--Zippel lemma \citep{schwartz1980fast,zippel1979probabilistic,demillo1978probabilistic}; the whole is folklore. The lemma gives two sufficient conditions and one failing regime; it is \emph{not} a characterization. Each hypothesis is load-bearing (Appendix~\ref{app:search:commitment}): validity \emph{per scene} in~(i), which a guarantee per random (scene, instance) pair does not give; and in~(iii) an enforced degree bound and a $p-q$ nonzero over the field used.
 
 \begin{table}[t]
 \centering\small
@@ -181,23 +184,23 @@ regime & what is random & drawn when & sound under search?\\
 \midrule
 (i) random scene, fixed library & scene $x\sim D$ & after the rules are fixed & yes, $\le\sum_i\varepsilon_i$\\
 (ii) one world, instance average & instance $\iota\sim\mu$ & never: the prover chooses & no\\
-(iii) fresh per-check randomness & evaluation point & after each claim & yes, $\le\sum_k d/|S_k|$\\
+(iii) fresh per-check randomness & evaluation point & after each claim & yes, $\le\sum_k d/|U_k|$\\
 learned verifier & training sample & before the search & no (\cref{cor:search:pac})\\
 \bottomrule
 \end{tabular}
-\caption{The commitment order (\cref{lem:search:commitment}). In the two sound regimes the randomness is drawn after the rules or claims are fixed and outside the prover's control.}
+\caption{The commitment order (\cref{lem:search:commitment}). In the two sound regimes the randomness is drawn after the rules or claims are fixed and outside the prover's control; in regime~(i) the rules must be valid per scene.}
 \label{tab:search:commitment}
 \end{table}
 
 \paragraph{Reading.}
-\Cref{tab:search:commitment} sorts the channels of this paper. Mathematics has one world, so a learned checker's in-distribution accuracy is randomness over instances that the prover chooses: regime~(ii), of which \cref{thm:search:tonk} is an instance. Its training sample is drawn before the prover searches, so a learned checker is never a regime-(iii) oracle. Fresh per-check randomness, by contrast, is a legitimate world channel~(W) in mathematics; part~(iii) gives conditions under which such an oracle is worst-case sound. The random evaluation used in the experiments of \cref{sec:experiments} fits this setting only for value errors of polynomial identities, such as the freshman's dream; a definedness error such as $x/x\step1$, which fails only at $x=0$, lies outside it. In physics, the uncertainty that matters for an export rule (which carries a result from an idealized context back to the world) is over situations, and regime~(i) makes PAC-semantics a worst-case-over-derivations semantics for bridges, with error at most the summed validity defects of the library. The caveat is distribution shift: olympiad problems are selected to stress idealizations, so the test distribution differs from the training one exactly where it matters (\cref{sec:physics}). For justification, the lemma gives sufficient conditions for a statistical warrant to compose with search: the chance event is drawn after the reasoner has committed, and outside its control.
+\Cref{tab:search:commitment} sorts the channels of this paper. Mathematics has one world, so a learned checker's in-distribution accuracy is randomness over instances that the prover chooses: regime~(ii), of which \cref{thm:search:tonk} is an instance. Its training sample is drawn before the prover searches, so a learned checker is never a regime-(iii) oracle. Fresh per-check randomness, by contrast, is a legitimate world channel~(W) in mathematics, worst-case sound under the conditions of part~(iii); in school algebra, part~(iii) covers value errors of polynomial identities such as the freshman's dream, not definedness errors such as $x/x\step1$ (\cref{ex:setting:alg2}). In physics the uncertainty that matters for an export rule (which carries a result from an idealized context back to the world) is over situations, so regime~(i) bounds the probability that some derivation from a fixed library of bridges fails in a random situation by the library's summed validity defects, up to distribution shift: olympiad problems are selected to stress idealizations (\cref{sec:physics}). For justification, the lemma gives sufficient conditions for a statistical warrant to compose with search: the chance event is drawn after the reasoner has committed, and outside its control.
 
 % ---------------------------------------------------------------------
 \subsection{Voting ensembles: incoherence without information}\label{sec:search:ensembles}
 
 A common response to an exploitable verifier is an ensemble that accepts a step if most members do. With coherence feedback this looks attractive: a derivation of~$\bot$ from premises certified coherent shows that something accepted is invalid. Stepwise voting, however, can produce an incoherence that implicates no member.
 
-We use the online protocol of \cref{sec:coherence} in minimal form. Hypotheses are step sets in a countable class~$\Hc$ with prior~$w$; the target $\Rstar\in\Hc$ is unknown. A family~$\Ac$ of \emph{designated contexts}, finite premise sets with $\bot\notin\Cl_{\Rstar}(A)$, is fixed. An \emph{argument}~$\pi$ from~$A$ is a finite derivation tree each of whose nodes is either a leaf labelled by an element of~$A$ or the conclusion of a step whose premises label its children (possibly none); $\mathrm{Steps}(\pi)$ is the set of its steps. In round~$t$ the learner holds $\VS_t\subseteq\Hc$ (initially~$\Hc$) and announces an accepted set~$\hat R_t$, whose steps the reasoner may chain. The environment then either (P) presents some $s\in\Rstar$, and the learner deletes every $R\in\VS_t$ with $s\notin R$; or (N) exhibits a \emph{detected incoherence}, an argument~$\pi$ from some $A\in\Ac$ to~$\bot$ with $\mathrm{Steps}(\pi)\subseteq\hat R_t$, and the learner deletes every $R\in\VS_t$ with $\mathrm{Steps}(\pi)\subseteq R$; or does nothing. Since chaining steps of~$\Rstar$ cannot reach~$\bot$ from~$A$, $\mathrm{Steps}(\pi)\not\subseteq\Rstar$ and the target is never deleted (the negative-bag lemma of \cref{sec:coherence}). \emph{Majority aggregation} announces $\hat R_t=\{s: w(\{R\in\VS_t:s\in R\})>\tfrac12 w(\VS_t)\}$.
+We use the online protocol of \cref{def:coherence:protocol}: hypotheses are step sets with prior~$w$, designated contexts~$\Ac$ are target-coherent, and a detected incoherence (an argument~$\pi$ from some $A\in\Ac$ to~$\bot$ with $\Steps(\pi)\subseteq\hat R_t$) deletes every hypothesis containing its steps, never the target (\cref{lem:coherence:bag}). \emph{Majority aggregation} announces $\hat R_t=\{s: w(\{R\in\VS_t:s\in R\})>\tfrac12 w(\VS_t)\}$.
 
 \begin{theorem}[Doctrinal paradox: uninformative incoherence]\src{T2 Thm 2.4, as repaired}\label{thm:search:doctrinal}
 Let $\Hc=\{h_1,h_2,h_3\}$ with uniform prior, where $h_i=\{\Gamma\step\varphi:\ T_i\cup\Gamma\models\varphi\}$ for
@@ -205,6 +208,7 @@ Let $\Hc=\{h_1,h_2,h_3\}$ with uniform prior, where $h_i=\{\Gamma\step\varphi:\ 
 T_1=\{p,q\},\qquad T_2=\{p,\neg q\},\qquad T_3=\{\neg p,q\},
 \]
 and let $\Ac=\{\emptyset\}$. Every $h_i$ is coherent, and any of them may be the target. Under majority aggregation, for every target there is an environment under which the prover exhibits the same detected incoherence in every round and no hypothesis is ever deleted. The environment presents only that incoherence, or interleaves it with uninformative positive data such as $\step p\vee\neg p$, which lie in every~$h_i$.
+\hspace*{\fill}\allowbreak\hspace*{\fill}\leanok{CoherenceGames.thm\_2\_4\_environment}
 \end{theorem}
 
 \begin{proof}[Proof idea]
@@ -212,17 +216,15 @@ While $\VS_t=\Hc$, the majority set is the set of steps in at least two~$h_i$. T
 \[
 \step p,\qquad \step q,\qquad p,q\step p\wedge q,\qquad \step\neg(p\wedge q),\qquad p\wedge q,\ \neg(p\wedge q)\step\bot
 \]
-uses only majority steps: $\step p\in h_1,h_2$; $\step q\in h_1,h_3$; $\step\neg(p\wedge q)\in h_2,h_3$; the last two are in all three. Yet $h_1$ lacks $\step\neg(p\wedge q)$, $h_2$ lacks $\step q$, and $h_3$ lacks $\step p$. So the detection deletes nothing, nor do tautologous data, and the situation repeats forever. Full proof in Appendix~\ref{app:search}.
+uses only majority steps ($\step p\in h_1,h_2$; $\step q\in h_1,h_3$; $\step\neg(p\wedge q)\in h_2,h_3$; the last two are in all three). Yet each $h_i$ lacks one of them, so the detection deletes nothing, nor do tautologous data. Appendix~\ref{app:search:doctrinal}.
 \end{proof}
 
-The environment must withhold discriminating data. If the target is~$h_1$ and $\step p$ is presented, $h_3$ is deleted, majority over $\{h_1,h_2\}$ is $h_1\cap h_2$, and the argument is unavailable ($\step q\notin h_2$). As the $h_i$ are pairwise incomparable, on a text enumerating the target every wrong hypothesis is eventually refuted. So the theorem concerns what coherence feedback can guarantee round by round against an unhelpful environment, not convergence on complete data.
-
-This is Kornhauser and Sager's doctrinal paradox \citep{kornhauser1986unpacking} and Pettit's discursive dilemma \citep{pettit2001deliberative}, transposed from judges to verifiers. \Citet{list2002aggregating} prove that no aggregation function satisfies universal domain, anonymity and systematicity while producing consistent and complete collective judgments, for agendas with at least two atoms and their conjunction (or disjunction, or material conditional). For oligarchic aggregation under mere deductive closure, see \citet{gardenfors2006representation} and \citet{dietrich2008judgment}.
+The environment must withhold discriminating data: on a text enumerating the target, every wrong hypothesis is eventually refuted and the uninformative detections stop (Appendix~\ref{app:search:doctrinal}). So the theorem concerns what coherence feedback can guarantee round by round against an unhelpful environment, not convergence on complete data. It is Kornhauser and Sager's doctrinal paradox \citep{kornhauser1986unpacking} and Pettit's discursive dilemma \citep{pettit2001deliberative}, transposed from judges to verifiers; its general form is the impossibility theorem of \citet{list2002aggregating}.
 
 \paragraph{Reading.}
-Each $h_i$ is a coherent calculus, yet the vote derives~$\bot$ from no premises, so by \cref{lem:search:stepwise} the majority acceptance region is unsound relative to \emph{every} candidate target: voting produces an accepted set that no member endorses. Worse, the incoherence does not say which member is wrong, so the coherence channel, which should supply the negative data that imitation lacks, is silenced. The repair (\cref{sec:coherence}): against a worst-case prover, every possible detection is guaranteed to remove at least half of the remaining prior weight only if the accepted set lies inside every member of a coalition of at least half the weight (\emph{oligarchic} acceptance). Each detection then costs at least one bit, which bounds detections only, not incompleteness. Oligarchy also requires truth maintenance: lemmas certified by an earlier coalition must be re-validated when the coalition changes, or the union over coalitions reproduces the paradox across time.
+Each $h_i$ is a coherent calculus, yet the vote derives~$\bot$ from no premises, so by \cref{lem:search:stepwise} the majority acceptance region is unsound relative to \emph{every} candidate target: voting produces an accepted set that no member endorses. Worse, the incoherence does not say which member is wrong, so the coherence channel, which should supply the negative data that imitation lacks, is silenced. The repair is oligarchic acceptance (\cref{def:coherence:oh}): announce the intersection of a coalition of at least half the remaining weight. Against a worst-case prover exactly this guarantees that every detection removes at least half of that weight, a bit per detection (\cref{prop:coherence:oligarchy,thm:coherence:halving}).
 
 % ---------------------------------------------------------------------
 \subsection{Search in practice}\label{sec:search:practice}
 
-Experiment~C (\cref{sec:experiments}) runs a black-box adversarial prover (bidirectional best-first search, 3000 verifier queries per false goal) against learned verifiers for partial field algebra, trained on simulated human derivations with noise and systematic fallacies \status{computed}. A gradient-boosting step classifier, given oracle-labelled positive \emph{and} negative examples, reaches test AUC~$0.995$ on held-out human-like steps. Calibrated to $99\%$ in-distribution balanced precision $\mathrm{TPR}/(\mathrm{TPR}+\mathrm{FPR})$, it still lets the prover prove $16.3$ of $23$ false goal equations (mean over three seeds). The learned calculus, least-general-generalization schemas repaired by step-level world feedback, proves $0$ of the $23$ false goals and $32.3$ of $33$ true identities, as does the ground-truth calculus. That learned verifiers are exploited by search is well known in machine-learning practice: reward-model overoptimization follows smooth scaling laws \citep{gao2023scaling}, and verifier-reranked accuracy peaks and then falls as more solutions are sampled \citep{cobbe2021training}. This section explains why in-distribution accuracy cannot rule it out. In-distribution accuracy is a statement about a measure fixed before the prover moves (\cref{lem:search:commitment}(ii)); soundness of the reasoner is a statement about a set (\cref{lem:search:stepwise}); and no bound on the former controls the latter (\cref{thm:search:tonk}). The theorems do not predict the \emph{rate} at which a given search finds errors; for neural verifiers it is graded, not all-or-nothing, as the overoptimization curves show.
+Experiment~C (\cref{sec:experiments:adversarial}) illustrates the gap \status{computed}: a gradient-boosting step classifier with in-distribution AUC~$0.995$, calibrated to $99\%$ in-distribution balanced precision, lets a black-box prover prove $16.3$ of $23$ false goal equations, while the learned calculus, after world feedback, proves none. That learned verifiers are exploited by search is well documented \citep{gao2023scaling,cobbe2021training}. The theorems explain why in-distribution accuracy, a statement about a measure fixed before the prover moves, cannot rule this out (\cref{lem:search:stepwise,thm:search:tonk,lem:search:commitment}). They do not predict the \emph{rate} at which a given search finds errors; for neural verifiers it is graded, as the overoptimization curves show.

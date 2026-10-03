@@ -3,7 +3,10 @@
 % Sources: research/theory/T4-informal-math-latent-formalization.md (repaired statements and proofs),
 %          research/verification/T4-informal-math-latent-formalization-verification.md,
 %          research/theory/T1-soundness-under-search.md (Thms 3.2, 4.2, 4.4, Cor 4.5),
+%          research/verification/reverification-round2.md (round-2 flags on Thm 6.2(d2), Prop 6.5(c)),
 %          research/theory/T4-checks/*.py (computations).
+% Also holds the secondary results moved out of the main text (shadow, IST, Benacerraf, barring,
+% continuum, monsters, sorites, Euclid) and the computational details.
 % =====================================================================
 \providecommand{\Stg}[2]{\mathrm{St}^{#1}_{#2}}
 \providecommand{\Adm}[1]{\mathcal V_{#1}}
@@ -25,10 +28,18 @@
 
 \section{Proofs for Section~\ref{sec:informal}}\label{app:informal}
 
-\Cref{lem:informal:argument}, \cref{prop:informal:equivocation}, \cref{thm:informal:soundness}, \cref{prop:informal:expansion}, \cref{prop:informal:transfer}, \cref{lem:informal:descent}, \cref{thm:informal:objects}(a), \cref{thm:informal:bags}, \cref{prop:informal:barring} and \cref{thm:informal:monsters} are proved in full in the main text. This appendix proves the remaining results of \cref{sec:informal} and verifies \cref{ex:informal:weaker}. Notation is as in \cref{sec:informal}. Throughout, $\Cl_R$ is a closure operator (extensive, monotone, idempotent; \cref{lem:setting:closure}), and for a first-order complete $h$ and finite $\Gamma\cup\{y\}\subseteq D_h$ we use freely that $\Gamma\models_hy$ iff $T_h\cup\rho_h\Gamma\models\rho_hy$ iff $T_h\der\bigwedge\rho_h\Gamma\to\rho_hy$ (Gödel completeness).
+\Cref{prop:informal:equivocation,thm:informal:soundness,prop:informal:expansion,prop:informal:transfer} are proved in full in the main text. This appendix proves the remaining results of \cref{sec:informal}, verifies \cref{ex:informal:weaker}, and states in full the secondary results that the main text only summarizes (\cref{prop:informal:shadow,prop:informal:ist,prop:informal:benacerraf,prop:informal:barring,prop:informal:continuum,thm:informal:monsters,prop:informal:sorites,rem:informal:euclid}). Results marked \status{computed} were checked by the scripts in \texttt{research/theory/T4-checks/} of the accompanying repository. Notation is as in \cref{sec:informal}. Throughout, $\Cl_R$ is a closure operator (extensive, monotone, idempotent; \cref{lem:setting:closure}), and for a first-order complete $h$ and finite $\Gamma\cup\{y\}\subseteq D_h$ we use freely that $\Gamma\models_hy$ iff $T_h\cup\rho_h\Gamma\models\rho_hy$ iff $T_h\der\bigwedge\rho_h\Gamma\to\rho_hy$ (Gödel completeness).
 
 % ---------------------------------------------------------------------
 \subsection{Sound bounded-gap verification}\label{app:informal:verify}
+
+\begin{proof}[Proof of \cref{lem:informal:argument}]
+Induction on $j$, by monotonicity and idempotence (\cref{lem:setting:closure}):
+\[
+\rho_hy_j\in\Cl_{R_h}(\rho_h\Gamma_j)\subseteq\Cl_{R_h}(\Cl_{R_h}(\rho_h\Prem))=\Cl_{R_h}(\rho_h\Prem);
+\]
+links are the case $\Gamma_j=\{y_i\}$. Then use soundness of $R_h$.
+\end{proof}
 
 \begin{proof}[Proof of \cref{thm:informal:ville}]
 Practice data are steps, so they range over a countable set and each $p_h$ is a probability mass function. Let $X_1,X_2,\dots$ be the practice data, i.i.d.\ from $p_{h^*}$ and independent of everything the prover and the verifier do. Every other datum is a truthful constraint $c:\Hc\to\{0,1\}$ with $c(h^*)=1$. Moreover $c(h')=1$ for every $h'\equiv_gh^*$: an escalation or link answer is a $\Stg{g}{h^*}$-label, and $\Stg{g}{h'}=\Stg{g}{h^*}$; a paradox exists only for hypotheses incoherent on some $A\in\Ac$, and $h'$ is coherent on every $A$ on which $h^*$ is; an object datum is a restriction of a member of $\Adm{h^*}=\Adm{h'}$.
@@ -47,7 +58,7 @@ Since every $c_j(h)\le1$, pathwise $Z_t\le Z^H_{n(t)}$, where $Z^H_n:=\sum_hw(h)
 \[
 \E\Big[\frac{p_h(X_{n+1})}{p_{h^*}(X_{n+1})}\,\Big|\,\mathcal F_n\Big]=\sum_{x:\,p_{h^*}(x)>0}p_h(x)\le1,
 \]
-so by Tonelli (all terms are nonnegative) $\E[Z^H_{n+1}\mid\mathcal F_n]\le Z^H_n$: $Z^H$ is a nonnegative supermartingale with $Z^H_0=\sum_hw(h)=1$. Ville's inequality \citep{ville1939etude} gives $\Prob[\sup_nZ^H_n\ge1/\delta']\le\delta'$. Let $G:=\{\sup_nZ^H_n<1/\delta'\}$; it depends only on the practice data, and $\Prob(G)\ge1-\delta'$. On $G$, for every prover and every $t$, $Z_t<1/\delta'$, so $w_t([h^*])>W^*\delta'\ge\delta$. If $q\notin\Stg{g}{h^*}$, then $q\notin\Stg{g}{h}$ for every $h\in[h^*]$, so the posterior mass of $\{h:q\notin\Stg{g}{h}\}$ is at least $w_t([h^*])>\delta$, and $q$ is not accepted.
+so by Tonelli (all terms are nonnegative) $\E[Z^H_{n+1}\mid\mathcal F_n]\le Z^H_n$: $Z^H$ is a nonnegative supermartingale with $Z^H_0=\sum_hw(h)=1$. Ville's inequality \citep{ville1939etude} gives $\Prob[\sup_nZ^H_n\ge1/\delta']\le\delta'$. Let $G:=\{\sup_nZ^H_n<1/\delta'\}$; it depends only on the practice data, and $\Prob(G)\ge1-\delta'$. On $G$, for every prover and every $t$, $Z_t<1/\delta'$, so $w_t([h^*])>W^*\delta'\ge\delta$. If $q\notin\Stg{g}{h^*}$, then $q\notin\Stg{g}{h}$ for every $h\in[h^*]$, so the posterior mass of $\{h:q\notin\Stg{g}{h}\}$ is at least $w_t([h^*])>\delta$, and $q$ is not accepted. This is the prior--posterior-ratio martingale of \citet{waudbysmith2020confidence}, and the argument is that of \cref{thm:caution:ville}.
 \end{proof}
 
 \begin{proof}[Proof of \cref{thm:informal:escalation}]
@@ -55,11 +66,15 @@ so by Tonelli (all terms are nonnegative) $\E[Z^H_{n+1}\mid\mathcal F_n]\le Z^H_
 
 (b) Use the notation of the previous proof. An honest query $q$ escalated at time $u$ has posterior mass $\pi_u:=w_{u-1}(\{h:q\notin\Stg{g}{h}\})\ge\delta$. The deterministic answer ``yes'' removes exactly these hypotheses, so it multiplies $Z$ by $1-\pi_u\le1-\delta$. Other constraints multiply $Z$ by at most~$1$. A practice datum $X$ multiplies $Z$ by $F:=\sum_hw_{\mathrm{prev}}(h)\,p_h(X)/p_{h^*}(X)$, where $w_{\mathrm{prev}}$ is the current posterior. Each practice datum is independent of everything that precedes it, including the prover's coins and choices (the prover does not foresee practice data), so $\E[F\mid\text{past}]\le1$. Let $M_n$ be the product of the factors $F$ over the first $n$ practice data; it is a nonnegative supermartingale with $M_0=1$. Since the members of $[h^*]$ keep weight $w(h)$ in $Z$, $Z_t\ge W^*$. Hence $W^*\le Z_t\le M_{n(t)}(1-\delta)^{\#\mathrm{ESC}_t}$, and on the event $\{\sup_nM_n<1/\delta''\}$, which has probability at least $1-\delta''$ by Ville's inequality, $\#\mathrm{ESC}_t\le\ln(1/(W^*\delta''))/\ln(1/(1-\delta))\le(\ln(1/W^*)+\ln(1/\delta''))/\delta$ for all~$t$.
 
-(c) Let the hypotheses be $h_u$, $u\in U$, with $\Stg{g}{h_u}=B\cup(U\setminus\{u\})$, and target $h_{u^*}$. Any enumeration $s_1,\dots,s_{n-1}$ of $U\setminus\{u^*\}$ is an elastic chain: $\bigcap\{S\in\Hc^g:S\supseteq\{s_1,\dots,s_{i-1}\}\}=B\cup\{s_1,\dots,s_{i-1}\}\not\ni s_i$. So $\el=n-1$, the upper bound of~(a). It is attained when the practice data lie in $B$: then $\VS$ consists exactly of the $h_u$ with $u\notin\{s_1,\dots,s_{i-1}\}$ when $s_i$ is queried, and $s_i$ is escalated. For the lower bound, take practice distributions supported on $B$ and identical for all hypotheses (shadow-measurable), and the honest prover that queries $s_1,\dots,s_{n-1}$ in order. Under target $h_{s_i}$ the step $s_i$ is invalid, and the answers to $s_1,\dots,s_{i-1}$ are the same (``yes'') under $h_{u^*}$ and $h_{s_i}$. So the law of the transcript up to the verifier's answer in round $i$ is the same under both targets, and $\delta'$-soundness under $h_{s_i}$ gives $\Prob_{h_{u^*}}[s_i\text{ accepted in round }i]\le\delta'$. Summing, the expected number of these honest queries that are not accepted (escalated or rejected) under $h_{u^*}$ is at least $(1-\delta')(n-1)=(1-\delta')(1/W^*-1)$ for the uniform prior; a verifier that never rejects, such as $V^{g,\delta}_t$, escalates them. With $\delta=W^*\delta'=\delta'/n$, the bound of~(b) is $n(\ln n+\ln(1/\delta''))/\delta'$, and the ratio to the lower bound is at most $2(\ln n+\ln(1/\delta''))/(\delta'(1-\delta'))=O((\ln(1/W^*)+\ln(1/\delta''))/\delta')$ for $n\ge2$ and $\delta'\le1/2$. This is the argument of T1 Thm~3.2 and Cor~4.5 (\cref{sec:caution}).
+(c) Let the hypotheses be $h_u$, $u\in U$, with $\Stg{g}{h_u}=B\cup(U\setminus\{u\})$, and target $h_{u^*}$. Any enumeration $s_1,\dots,s_{n-1}$ of $U\setminus\{u^*\}$ is an elastic chain: $\bigcap\{S\in\Hc^g:S\supseteq\{s_1,\dots,s_{i-1}\}\}=B\cup\{s_1,\dots,s_{i-1}\}\not\ni s_i$. So $\el=n-1$, the upper bound of~(a). It is attained when the practice data lie in $B$: then $\VS$ consists exactly of the $h_u$ with $u\notin\{s_1,\dots,s_{i-1}\}$ when $s_i$ is queried, and $s_i$ is escalated. For the lower bound, take practice distributions supported on $B$ and identical for all hypotheses (shadow-measurable), and the honest prover that queries $s_1,\dots,s_{n-1}$ in order. Under target $h_{s_i}$ the step $s_i$ is invalid, and the answers to $s_1,\dots,s_{i-1}$ are the same (``yes'') under $h_{u^*}$ and $h_{s_i}$. So the law of the transcript up to the verifier's answer in round $i$ is the same under both targets, and $\delta'$-soundness under $h_{s_i}$ gives $\Prob_{h_{u^*}}[s_i\text{ accepted in round }i]\le\delta'$. Summing, the expected number of these honest queries that are not accepted (escalated or rejected) under $h_{u^*}$ is at least $(1-\delta')(n-1)=(1-\delta')(1/W^*-1)$ for the uniform prior; a verifier that never rejects, such as $V^{g,\delta}_t$, escalates them. With $\delta=W^*\delta'=\delta'/n$, the bound of~(b) is $n(\ln n+\ln(1/\delta''))/\delta'$, and the ratio to the lower bound is at most $2(\ln n+\ln(1/\delta''))/(\delta'(1-\delta'))=O((\ln(1/W^*)+\ln(1/\delta''))/\delta')$ for $n\ge2$ and $\delta'\le1/2$. This is the argument of \cref{thm:caution:esc} and \cref{cor:caution:bayesopt}.
 \end{proof}
 
 % ---------------------------------------------------------------------
 \subsection{Identification}\label{app:informal:identify}
+
+\begin{proposition}[No learner sees past the shadow; trivial]\src{T4 Prop 3.2, repaired}\label{prop:informal:shadow}
+Suppose the law of the practice data is a function of $\Stg{g}{h^*}$ and the history, escalation and link answers are $\Stg{g}{h^*}$-labels, the law of the object data (which occurrences are shown or queried, and their values) is a function of $\Adm{h^*}$ and the history, $\Ac$ does not depend on the target, and queries come from the learner or from provers that depend on the target only through its shadow. If $h\equiv_gh'$, every data sequence has the same probability under target $h$ as under $h'$, so no learner distinguishes them. The closure-level version replaces $\Stg{g}{}$ by ${\models}$ and $\equiv_g$ by $\equiv_\infty$.
+\end{proposition}
 
 \begin{proof}[Proof of \cref{prop:informal:shadow}]
 Write the interaction as a sequence of rounds. In round $k+1$ the learner (and any prover whose strategy depends on the target only through its shadow) issues queries $Q_{k+1}$ drawn from a kernel that depends only on the history $H_k$ and its own coins; then the environment issues a datum $D_{k+1}$. By the assumptions, the conditional law of $D_{k+1}$ given $(H_k,Q_{k+1})$ is $K(\mathrm{sh},H_k,Q_{k+1})$ for a kernel $K$ and the shadow $\mathrm{sh}$ of the target: practice data depend on $\Stg{g}{h^*}$ and the history; escalation and link answers are $\Stg{g}{h^*}$-labels; object data depend on $\Adm{h^*}$ and the history; and paradoxes are computed by the learner from the fixed family $\Ac$ and the hypotheses themselves, independently of the target. (Since $h\equiv_gh'$ includes agreement on coherence, the same $\Ac$ satisfies the designation promise under both targets.) Let $P_h$ be the law of the interaction under target $h$. By induction on $k$, $P_h$ and $P_{h'}$ agree on $(H_k,Q_{k+1})$: the step from $k$ to $k+1$ composes the same kernels. Hence they agree on all cylinder sets, and so on the whole sequence. Any learner's output is a function of the history and its coins, so it has the same law under $h$ and $h'$. The closure-level version is the same argument with ${\models}$ in place of $\Stg{g}{}$.
@@ -116,6 +131,16 @@ Let $1\le g\le3$. Since $R_h\subseteq\Rstar$, $\Stg{g}{h}\subseteq\Stg{g}{h^*}$.
 $(p_0\step p_3)\in{\models_{h^*}}$, since $T^*$ implies $p_0\to p_3$; it is not in ${\models_h}$, since $p_0\not\models p_3$. So ${\models_h}|_{D^*}\subsetneq{\models_{h^*}}$ and $h\notin U^*$. Every object datum extends to an $h$-admissible valuation, since $\Mod(T^*)\subseteq\Mod(\emptyset)$ gives $\Adm{h^*}\subseteq\Adm{h}$; and every $A$ on which $h^*$ is coherent is $h$-coherent, since $T_h\subseteq T^*$. So $h$ survives every presentation in the sense of \cref{thm:informal:identify}(d), although $h\notin U^*$. At $g=4$, the derivation from $p_0$ by the three axiom steps and one tautological step puts $(p_0\step p_3)$ in $\Stg{4}{h^*}\setminus\Stg{4}{h}$, and practice refutes~$h$.
 \end{proof}
 
+\paragraph{A random test of \cref{thm:informal:identify}(d)} \status{computed}. On $2604$ random (target, rival) pairs over four atoms, the characterization $\{h\in U^*:\Stg{g}{h}\supseteq\Stg{g}{h^*}\}$, which (d) asserts only under step-expressiveness, differs from the true set of survivors $527$ times, and $S^g$ never; on the $1545$ pairs with a step-expressive target the two characterizations never differ (\texttt{verification\_checks.py}, check V1).
+
+\paragraph{The nonstandard instance of \cref{prop:informal:transfer}} \status{modulo the cited transfer principle}. Let $\rho$ read informal analysis into \emph{bounded} sentences of a countable sublanguage of the $\in$-language of the superstructure $V(\R)$, with constants for the standard objects the practice can name, and let $R$ be first-order logic with bounded axioms true in $V(\R)$. With $\Mint=\{V(\R)\}$ and $\Mint'=\{{}^*V(\R)\}$, Robinson's transfer principle \citep{robinson1966nonstandard}, which rests on Łoś's theorem, gives the hypothesis of \cref{prop:informal:transfer}: $R$ is sound for both structures, and they agree on every sentence in $\rho(D_h)$. Boundedness matters: the two structures are not elementarily equivalent in the full $\in$-language (``iterated power sets of $\R$ exist for every finite length'' fails at nonstandard lengths).
+
+\begin{proposition}[$\varepsilon$-$\delta$ versus internal set theory]\src{T4 Prop 3.6, repaired}\ \status{modulo cited theorems of Nelson}\label{prop:informal:ist}
+Let $\rho_{\IST}$ read informal analysis literally in Nelson's $\IST$ \citep{nelson1977internal}, with every contextual constant (``let $f$ be continuous'') read as standard ($T_{\IST}:=\IST+\{\mathrm{st}(c)\}$) and infinitesimal suppositions folded into bound variables ($\xi$ under ``$dx$ is infinitesimal'' becomes $\forall dx\,(dx\simeq0\wedge dx\ne0\to\xi)$). Let $D_{\mathrm{st}}$ be the occurrences read as sentences with standard parameters only, and let $h_{\mathrm W}=(\ZFC+\text{constants},\rho_{\mathrm W})$, where $\rho_{\mathrm W}(x)$ is the internal sentence Nelson's reduction algorithm assigns to $\rho_{\IST}(x)$. Then $h_{\mathrm W}\approx_{D_{\mathrm{st}}}h_{\IST}$.
+\end{proposition}
+
+Outside $D_{\mathrm{st}}$ nothing is claimed: $f(x)=Nx$ with $N$ unlimited is $\varepsilon$-$\delta$ continuous at $0$ but fails the literal reading $\forall x\,(x\simeq0\to f(x)\simeq f(0))$ at $x=1/N$. Nor is agreement of the $g$-step relations claimed: if infinitesimal proofs are shorter, noise-free bounded-gap practice generated by $h_{\IST}$ refutes $h_{\mathrm W}$ as a granularity hypothesis, leaving meaning unaffected. The proof uses Nelson's reduction algorithm and conservativity of $\IST$ over $\ZFC$, with transfer for the standard parameters.
+
 \begin{proof}[Proof of \cref{prop:informal:ist}]
 \emph{Cited facts} \citep{nelson1977internal}. (N1) $\IST$ is a conservative extension of $\ZFC$: an internal sentence provable in $\IST$ is provable in $\ZFC$. (N2) Reduction: for every $\IST$ formula $A(\vec t)$ there is an internal formula $B(\vec t)$ with the same free variables such that $\IST\der\forall^{\mathrm{st}}\vec t\,(A(\vec t)\leftrightarrow B(\vec t))$. (T) Transfer: for internal $\varphi(\vec x)$ with no other parameters, $\IST\der\forall^{\mathrm{st}}\vec x\,\varphi(\vec x)\to\forall\vec x\,\varphi(\vec x)$.
 
@@ -125,6 +150,12 @@ $(p_0\step p_3)\in{\models_{h^*}}$, since $T^*$ implies $p_0\to p_3$; it is not 
 
 \emph{Step 3.} For finite $\Gamma\cup\{y\}\subseteq D_{\mathrm{st}}$: $\Gamma\models_{\IST}y$ iff $T_{\IST}\der\bigwedge\rho_{\IST}\Gamma\to\rho_{\IST}y$ iff (Step 1) $T_{\IST}\der\bigwedge\rho_{\mathrm W}\Gamma\to\rho_{\mathrm W}y$ iff (Step 2, the formula being internal) $\ZFC\der\bigwedge\rho_{\mathrm W}\Gamma\to\rho_{\mathrm W}y$ iff $\Gamma\models_{\mathrm W}y$.
 \end{proof}
+
+\begin{proposition}[What numbers could not be]\src{T4 Prop 3.7}\ \status{modulo standard facts of $\ZF$}\label{prop:informal:benacerraf}
+Let $D_{\mathrm{ar}}$ be the occurrences of informal arithmetic sentences, read into the $\in$-language via von~Neumann numerals ($\rho_{\mathrm{vN}}$, $n+1=n\cup\{n\}$) or Zermelo numerals ($\rho_{\mathrm Z}$, $n+1=\{n\}$), with $+,\times$ defined by recursion. Then $(\ZF,\rho_{\mathrm{vN}})\approx_{D_{\mathrm{ar}}}(\ZF,\rho_{\mathrm Z})$, although the readings differ on ``$1\in3$'', which lies outside $D_{\mathrm{ar}}$.
+\end{proposition}
+
+The proof transports along the recursion-defined isomorphism given by Dedekind's categoricity theorem \citep{dedekind1888zahlen}. \Citet{benacerraf1965numbers} thus becomes a non-identifiability theorem: practice fixes $\approx$ on its domain and nothing else.
 
 \begin{proof}[Proof of \cref{prop:informal:benacerraf}]
 Let $\omega_{\mathrm{vN}}$ be the set of von~Neumann natural numbers, with successor $S_{\mathrm{vN}}(x)=x\cup\{x\}$, and let $\omega_{\mathrm Z}$ be the range of the function $z$ on $\omega_{\mathrm{vN}}$ defined by recursion, $z(0)=\emptyset$ and $z(S_{\mathrm{vN}}n)=\{z(n)\}$ (Replacement), with successor $S_{\mathrm Z}(x)=\{x\}$. $\ZF$ proves that both $(\omega_{\mathrm{vN}},\emptyset,S_{\mathrm{vN}})$ and $(\omega_{\mathrm Z},\emptyset,S_{\mathrm Z})$ are Dedekind--Peano systems: the successor is injective, $\emptyset$ is not a successor, and every subset containing $\emptyset$ and closed under successor is everything (for $\omega_{\mathrm Z}$, by induction along $z$). Define $+_\bullet,\times_\bullet$ on each by the recursion equations. By Dedekind's categoricity theorem \citep{dedekind1888zahlen}, provable in $\ZF$, there is a unique $f:\omega_{\mathrm{vN}}\to\omega_{\mathrm Z}$ with $f(0)=0$ and $f(S_{\mathrm{vN}}n)=S_{\mathrm Z}f(n)$; it is a bijection, and by induction it preserves $+$ and $\times$.
@@ -137,9 +168,15 @@ Occurrences with contextual constants (``let $n$ be a number'') are read with a 
 % ---------------------------------------------------------------------
 \subsection{Objects versus paradoxes}\label{app:informal:objects}
 
+\begin{proof}[Proof of \cref{lem:informal:descent}]
+From the false conclusion, repeatedly move to a false antecedent (or link source); stop when there is none. Each move goes one step down a dependency path, so there are at most $\mathrm{depth}(\alpha)$ moves, and only antecedents of visited lines are evaluated. Premises are true, so the walk stops at an inference or link with true antecedents (or source) and false conclusion (or target). If $v=v_M\circ\rho_h$ with $M\in\Mint_h$, a valid item would have a true conclusion in~$M$.
+\end{proof}
+
 In the correction games, $\VS$ is the set of surviving hypotheses. A learner is deterministic; the environment may choose the target adaptively, as long as some target is consistent with all its answers, and an item is legal only if it is legal for such a target.
 
-\begin{proof}[Proof of \cref{thm:informal:objects}(b), (c)]
+\begin{proof}[Proof of \cref{thm:informal:objects}]
+(a) Announce the set of steps carried by more than half of the surviving weight. Then (+) on $s\notin A_t$ and (\(-\)obj) on $s\in A_t$ each keep at most half of it, and $h^*$ always survives; so after $M$ corrections $w(h^*)\le2^{-M}w(\Hc)$. With the uniform prior this gives $M\le\lfloor\log_2|\Hc|\rfloor$.
+
 (b) Fix $r\ge1$. A (\(-\)obj) item $s\in A_t\setminus h^*$ is also a legal (\(-\)bag$_r$) item $B=\{s\}$, and it deletes the same hypotheses ($h\ni s$, i.e.\ $h\supseteq\{s\}$). (+) items are common to both games. So against any learner, the object environment's moves are a subset of the bag environment's, and every bag-game strategy achieves in the object game at most its bag-game worst case. Hence $\Mobj\le\Mbag{r}$. At $r=1$ a legal bag is a set $B\subseteq A_t$ with $|B|\le1$ and $B\not\subseteq h^*$, i.e.\ $B=\{s\}$ with $s\in A_t\setminus h^*$, so the games coincide.
 
 (c) Let $\Ldim(\emptyset)=-1$, and for nonempty $\mathcal C\subseteq2^S$ let $\Ldim(\mathcal C)$ be the largest $d$ such that there is a complete binary tree of depth $d$ whose internal nodes are labelled by elements of $S$ and such that every root-to-leaf path is realized by some $h\in\mathcal C$. A path is realized if, at each node labelled $s$, it goes right iff $s\in h$ \citep{littlestone1988learning}. For $s\in S$ write $\mathcal C^1_s:=\{h\in\mathcal C:s\in h\}$ and $\mathcal C^0_s:=\mathcal C\setminus\mathcal C^1_s$. If $\Ldim(\mathcal C)=d\ge0$, then $\min(\Ldim(\mathcal C^0_s),\Ldim(\mathcal C^1_s))<d$ for every $s$. Otherwise both subclasses would have trees of depth $d$, and a root labelled $s$ above them would give a tree of depth $d+1$ for $\mathcal C$.
@@ -148,6 +185,8 @@ In the correction games, $\VS$ is the set of surviving hypotheses. A learner is 
 
 \emph{Lower bound.} The environment maintains $\VS$ with a tree of depth $d=\Ldim(\VS)$. While $d\ge1$, let $s$ label the root. If $s\in A_t$, it answers (\(-\)obj) $s$ and commits to $\VS^0_s$. This is legal: any $h\in\VS^0_s$ has $s\in A_t\setminus h$, and $\VS^0_s\ne\emptyset$ because it contains the hypotheses realizing the left subtree. If $s\notin A_t$, it answers (+) $s$ and commits to $\VS^1_s$. Either way the new version space contains a subtree of depth $d-1$. So every learner suffers at least $\Ldim(\Hc)$ corrections, and $\Mobj(\Hc)=\Ldim(\Hc)$. This is Littlestone's theorem, transcribed. Equivalence queries with arbitrary hypotheses \citep{angluin1988queries} are the same game.
 \end{proof}
+
+On $248$ random classes the exact minimax value $\Mobj$ equals the Littlestone dimension \status{computed} (\texttt{verification\_checks.py}, check V4).
 
 \begin{proof}[Proof of \cref{thm:informal:paradoxes}]
 (a) The cautious learner announces $A_t=\bigcap\VS_t$. Since $h^*\in\VS_t$, $A_t\subseteq h^*$, so it never receives a negative item; let $s_1,s_2,\dots$ be the (+) items it receives. When $s_i$ arrives, $\VS_t=\{h:h\supseteq\{s_1,\dots,s_{i-1}\}\}$ and $s_i\notin A_t$, so $(s_i)$ is an elastic chain in $h^*$, and there are at most $\el(\Hc,h^*)\le\el^*(\Hc)$ corrections. The bound $\el^*\le|\Hc|-1$ is proved as in \cref{thm:informal:escalation}(a). Since $\Mbag{r}$ is the optimum over learners, $\Mbag{r}\le\el^*$.
@@ -170,6 +209,12 @@ Let $f(c)$ be the number of corrections this environment forces from $|C|=c$ unt
 \emph{The object.} Let $u\in\Adm{h_{j^*}}$ with $u(q_0)=1$ and $u(q_n)=0$. The axioms force $p_0,\dots,p_{j^*-1}$ true (forward along $p_{i-1}\to p_i$, $i<j^*$) and $p_{j^*},\dots,p_n$ false (backward from $\neg p_n$ along $i>j^*$). So $u(q_i)=1$ iff $i<j^*$, and descent (\cref{lem:informal:descent}) along the chain argument $q_0\step q_1\step\cdots\step q_n$ stops exactly at $b_{j^*}$.
 \end{proof}
 
+\paragraph{Exact minimax values} \status{computed}. For the single-culprit class with $n=6$, $\Mobj=1$ and $\Mbag{r}=1,2,3,4,5,5$ for $r=1,\dots,6$; for ``two culprits of six'' ($|\Hc|=15$), $\Mobj=2$ and $\Mbag{r}=2,4,4,4,4,4$ (\texttt{bag\_vs\_object\_game.py}). On $295$ random classes, $\Mobj\le M_{\mathrm{bag}}\le\el^*\le|\Hc|-1$ always held, with $\Mobj<M_{\mathrm{bag}}$ in $43$ of them (\texttt{verification\_checks.py}, check V3).
+
+\begin{proof}[Proof of \cref{thm:informal:bags}]
+Each $s\in A_t$ is missed by less than $\frac1{r+1}w(\VS)$, so a bag $B\subseteq A_t$ of size $\le r$ leaves (union bound) less than $\frac r{r+1}w(\VS)$; a (+) item $s\notin A_t$ leaves at most that. So $w(h^*)\le(\frac r{r+1})^M$, and $\ln(1+1/r)\ge\frac1{r+1}$.
+\end{proof}
+
 \begin{proof}[Proof of \cref{prop:informal:products}]
 Let the blocks be $X_1,\dots,X_k$, each of $b$ steps, and let $\Hc$ consist of the sets that omit exactly one step from each block. Write $C_X$ for the surviving candidate culprits of block $X$, and call $X$ \emph{unresolved} if $|C_X|\ge2$.
 
@@ -185,8 +230,20 @@ Let the blocks be $X_1,\dots,X_k$, each of $b$ steps, and let $\Hc$ consist of t
 Rejections of known-valid steps and acceptances of identified culprits are ignored. Each correction lowers $\Phi$ by at most one, so at least $\Phi_0=k\min(r,b-1)$ corrections occur. With $b=r+1$: $|\Hc|=(r+1)^k$, so $k=\log|\Hc|/\log(r+1)$, and $\Mbag{r}\ge kr$.
 \end{proof}
 
+Equality $\Mbag{r}=k\min(r,b-1)$ holds for $(b,k)\in\{(2,2),(3,2),(2,3)\}$ and all $r$ \status{computed} (\texttt{bag\_product.py}).
+
 \begin{proof}[Proof of \cref{prop:informal:ldim1}]
 $\Mobj(\Hc)=1$ means some first announcement $A$ is such that every legal feedback leaves a single hypothesis. A feedback item $s$ against $A$ (either kind) leaves exactly the hypotheses $h$ with $s\in A\,\triangle\,h$. The environment may return any $s\in A\,\triangle\,h^*$ for any $h^*\in\Hc$, so the sets $A\,\triangle\,h$, $h\in\Hc$, are pairwise disjoint. In the bag game, announce $A$. A (+) item $s\notin A$ lies in exactly one $A\,\triangle\,h$ and pins the target. A bag $B\subseteq A$ with $|B|\le r$ leaves the $h$ with $B\not\subseteq h$, i.e.\ with $B\cap(A\,\triangle\,h)\ne\emptyset$. Each element of $B$ lies in at most one such set, so at most $r$ hypotheses survive. Then announce the survivors one at a time. Any feedback against an announced $h\ne h^*$ deletes $h$: a (+) item $s\in h^*\setminus h$ deletes the hypotheses lacking $s$, and a bag $B\subseteq h$ with $B\not\subseteq h^*$ deletes the hypotheses containing $B$. So at most $r-1$ further corrections occur, at most $r$ in all. (If $|\Hc|\le r$, plain elimination costs at most $r-1$.)
+\end{proof}
+
+\emph{Evidence for \cref{conj:informal:bagprice}} \status{computed}. The ratio $\Mbag{r}/(r\cdot\Ldim)$ is at most $1$ on all $519$ (class, $r$) pairs of \texttt{bag\_size\_conjecture.py}, and the proved case \cref{prop:informal:ldim1} was also checked on $304$ random pairs (check V5). An independent search made during the adversarial verification of this section, exhaustive over all classes with $|S|\le4$ and covering about $4.7$ million random pairs with $|S|\le6$, also found no violation; it is recorded in \texttt{research/verification/} and is not among the scripts.
+
+\begin{proposition}[Free barring nullifies objects; trivial]\src{T4 Prop 4.7}\label{prop:informal:barring}
+If barring object data is free, objects constrain nothing: every hypothesis consistent with (P) and (C) can survive forever. If objects are truthful and each barred datum costs $c>0$ bits, a hypothesis that must bar $m$ data loses to $h^*$ in description length once $m>(\ell(h^*)-\ell(h))/c$.
+\end{proposition}
+
+\begin{proof}
+If barring is free, (O) refutes nothing, and only (P) and (C) remain. With cost $c$, $h$ scores $\ell(h)+mc$ against $\ell(h^*)$, since truthful objects never force $h^*$ to bar.
 \end{proof}
 
 % ---------------------------------------------------------------------
@@ -230,10 +287,20 @@ The formulas S, R and ZR contain $x\in x$ and so admit no stratification.
 (iv) By \cref{thm:informal:repair}(c), for $t\ge t_0$ the learner $\REP_t$ maximizes $(\cov,-\ell)$ over the coherent classes POS, SEP, STRAT and Z, whose description lengths increase in that order. Let $W$ be the total weight and $\mathrm{supp}$ the support, with all weights in the support positive; $\cov(c)=W$ iff $\mathrm{supp}\subseteq c$.
 \emph{Support $\subseteq\mathrm{DC}$.} STRAT and Z contain DC, so both have coverage $W$, and STRAT beats Z on $\ell$. POS has coverage $W$ iff the support avoids DIFF and EMP; SEP iff it avoids UNI, PAIR and EMP. The maximal coverage is $W$, and the shortest class achieving it is selected: POS if it qualifies, else SEP if it qualifies, else STRAT. So STRAT is selected iff the support meets both $\{\mathrm{DIFF},\mathrm{EMP}\}$ and $\{\mathrm{UNI},\mathrm{PAIR},\mathrm{EMP}\}$, as claimed; the full support DC selects STRAT.
 \emph{$\mathrm{ZR}\in\mathrm{supp}\subseteq\mathrm{DC}\cup\{\mathrm{ZR}\}$.} POS and STRAT miss ZR, so their coverage is below $W$. Z has coverage $W$, and SEP does iff the support avoids UNI, PAIR and EMP. Since SEP is shorter than Z, SEP is selected in that case and Z otherwise. The full support selects Z.
-\emph{Support $\mathrm{DC}\cup\{\mathrm{ZR},\mathrm V\}$.} $\cov(\mathrm{STRAT})=W-w(\mathrm{ZR})$; $\cov(\mathrm Z)=W-w(\mathrm V)$; $\cov(\mathrm{POS})=W-w(\mathrm{DIFF})-w(\mathrm{EMP})-w(\mathrm{ZR})<\cov(\mathrm{STRAT})$; $\cov(\mathrm{SEP})=W-w(\mathrm V)-w(\mathrm{UNI})-w(\mathrm{PAIR})-w(\mathrm{EMP})<\cov(\mathrm Z)$. So Z is selected iff $w(\mathrm{ZR})>w(\mathrm V)$, and ties go to the shorter STRAT.
-\emph{The partial example.} For support $\{\mathrm{INT},\mathrm{UNI},\mathrm{PAIR},\mathrm{ZR},\mathrm V\}$ with $w(\mathrm V)>w(\mathrm{ZR})$: $\cov(\mathrm{POS})=\cov(\mathrm{STRAT})=W-w(\mathrm{ZR})>W-w(\mathrm V)=\cov(\mathrm Z)$, and SEP misses UNI, PAIR and V. POS ties STRAT and is shorter, so POS is selected.
-All $93$ sub-supports (the nonempty subsets of DC, alone, with ZR, and with ZR and V) were checked against these conditions by \texttt{T4-checks/verification\_checks.py} (V2), with no mismatch.
+\emph{$\{\mathrm{ZR},\mathrm V\}\subseteq\mathrm{supp}\subseteq\mathrm{DC}\cup\{\mathrm{ZR},\mathrm V\}$.} No class covers everything. Weights outside the support are $0$, and
+\begin{align*}
+\cov(\mathrm{STRAT})&=W-w(\mathrm{ZR}),\qquad \cov(\mathrm Z)=W-w(\mathrm V),\\
+\cov(\mathrm{POS})&=\cov(\mathrm{STRAT})-w(\mathrm{DIFF})-w(\mathrm{EMP}),\\
+\cov(\mathrm{SEP})&=\cov(\mathrm Z)-w(\mathrm{UNI})-w(\mathrm{PAIR})-w(\mathrm{EMP}).
+\end{align*}
+So POS ties STRAT iff the support avoids DIFF and EMP, and is below it otherwise; SEP ties Z iff the support avoids UNI, PAIR and EMP, and is below it otherwise. Recall $\ell(\mathrm{POS})<\ell(\mathrm{SEP})<\ell(\mathrm{STRAT})<\ell(\mathrm Z)$. If $w(\mathrm{ZR})>w(\mathrm V)$, the maximal coverage $W-w(\mathrm V)$ is reached by Z, and by SEP exactly when it ties Z; SEP is shorter, so SEP is selected then and Z otherwise. If $w(\mathrm V)>w(\mathrm{ZR})$, the maximal coverage $W-w(\mathrm{ZR})$ is reached by STRAT, and by POS exactly when it ties STRAT, so POS is selected then and STRAT otherwise; for example $\{\mathrm{INT},\mathrm{UNI},\mathrm{PAIR},\mathrm{ZR},\mathrm V\}$ gives POS. If $w(\mathrm{ZR})=w(\mathrm V)$, STRAT and Z both reach the common maximum, POS and SEP reach it under their tie conditions, and the shortest class reaching it wins: POS if the support avoids DIFF and EMP, else SEP if it avoids UNI, PAIR and EMP, else STRAT. The full support $\mathrm{DC}\cup\{\mathrm{ZR},\mathrm V\}$ meets all of DIFF, EMP, UNI and PAIR, so Z is selected iff $w(\mathrm{ZR})>w(\mathrm V)$, and ties go to STRAT.
 \end{proof}
+
+\paragraph{Computation} \status{computed}. The script \texttt{verification\_checks.py} (check V2) compares the conditions of (iv) with the learner of \texttt{comprehension\_toy.py} on all $93$ nonempty sub-supports of DC, alone, with ZR, and with ZR and V, the last family at $w(\mathrm{ZR})>w(\mathrm V)$; there is no mismatch. The rule for supports containing ZR and V was also checked against the same learner on all $32$ subsets of DC (with ZR and V added) under weight patterns with $w(\mathrm{ZR})$ above, equal to and below $w(\mathrm V)$, again with no mismatch.
+
+\begin{proposition}[Continuum many maximal repairs]\src{T4 Prop 5.4}\label{prop:informal:continuum}
+The instances of naive comprehension have exactly $2^{\aleph_0}$ maximal consistent subsets; even $\Comp(x\ne x)$ alone has $2^{\aleph_0}$ pairwise incompatible maximal consistent extensions.
+\end{proposition}
 
 \begin{proof}[Proof of \cref{prop:informal:continuum}]
 For $n\ge1$ let $p_n$ be the sentence ``some object has exactly $n$ elements''. For a sentence $q$ let $J(q):=\Comp(x\notin x\wedge q)$, an instance of naive comprehension. For $A\subseteq\N_{\ge1}$ let
@@ -272,6 +339,20 @@ Budgeted searches find only certificates, so no $h_\sigma$ is ever refuted and $
 (d2) Let $s=(\Gamma\step y)\in{\models_{\mathrm{SV}}}$. Adding the derived step $\rho_\sigma\Gamma\step\rho_\sigma y$ to each library $R_\sigma$ keeps $R_\sigma$ sound, because the step is $\sigma$-valid. It puts $s$ in $\Stg{1}{\sigma}\subseteq\Stg{g}{\sigma}$ for every $\sigma$, so $s\in\Stg{g}{\mathrm{SV}}$. Alternatively, an expansion of $s$ into steps of $\Stg{g}{\mathrm{SV}}$, when one exists, is accepted step by step (\cref{prop:informal:expansion}).
 \end{proof}
 
+\begin{theorem}[Steps invalid under a sharpening have monsters; trivial]\src{T4 Thm 6.3, repaired}\label{thm:informal:monsters}
+If $\Gamma\cup\{y\}\subseteq D_{h_\sigma}$ and $(\Gamma\step y)\notin{\models_\sigma}$ for an admissible $\sigma$, some $M\models T_\sigma$ makes $\rho_\sigma\Gamma$ true and $\rho_\sigma y$ false: a $\sigma$-\emph{monster}.
+\end{theorem}
+
+\begin{proof}
+By definition of ${\models_\sigma}$, since $\Cl_{R_\sigma}$ is consequence over $T_\sigma$; Gödel completeness is what makes such $R_\sigma$ exist.
+\end{proof}
+
+The theorem concerns ${\models_\sigma}$, not $\Stg{g}{\sigma}$: steps in ${\models_{\mathrm{SV}}}\setminus\Stg{g}{\mathrm{SV}}$ have no monster.
+
+\begin{proposition}[Only unanimity chains; the sorites is tight]\src{T4 Prop 6.4}\ \status{known; re-derived}\label{prop:informal:sorites}
+(a) ${\models_{\mathrm{SV}}}$ is a consequence relation on $\bigcap_\sigma D_{h_\sigma}$. (b) For a probability $\mu$ on $\Sigma$ (with $\{\sigma:s\in{\models_\sigma}\}$ measurable), if each of the $n$ steps of an argument (links included) is valid with probability $\ge1-\varepsilon$, the argument is valid with probability $\ge1-n\varepsilon$; this is attained for every $\varepsilon\le1/n$, and at $\varepsilon=1/n$ by an argument valid under no sharpening.
+\end{proposition}
+
 \begin{proof}[Proof of \cref{prop:informal:sorites}]
 (a) Each ${\models_\sigma}$, restricted to finite subsets of $D_\sigma:=D_{h_\sigma}$, is reflexive ($\{x\}\models_\sigma x$ for $x\in D_\sigma$), monotone, and closed under cut ($\Gamma\models_\sigma x$ and $\Gamma\cup\{x\}\models_\sigma y$ give $\Gamma\models_\sigma y$), because $\Cl_{R_\sigma}$ is a closure operator. These properties are preserved by intersection over $\sigma$, on the common domain $\bigcap_\sigma D_\sigma$.
 (b) Let the argument have steps (inferences and links) $s_1,\dots,s_n$, and let $E_i:=\{\sigma:s_i\in{\models_\sigma}\}$. Under every $\sigma\in\bigcap_iE_i$, \cref{lem:informal:argument} gives $(\Prem\step y_m)\in{\models_\sigma}$. So, by the union bound, the (measurable) event that the argument is valid has probability at least $\mu(\bigcap_iE_i)\ge1-\sum_i\mu(E_i^c)\ge1-n\varepsilon$.
@@ -286,4 +367,14 @@ Budgeted searches find only certificates, so no $h_\sigma$ is ever refuted and $
 (c) Let $A_0=\bigcup_{j\le J}\inst(\mathcal S_j)$. Under schema-level selection with complete monster presentation, $\mathcal S_j$ survives iff none of its instances is refuted, iff all its instances lie in ${\models_T}$. For each surviving $\mathcal S_j$, the template $\pi_j$ instantiates to a derivation of each instance with at most $g$ rule applications, and its formulas have size at most $|\pi_j|$ times the size of the instance. Choosing the size bound of \cref{def:informal:latent} to be at least $\max_j|\pi_j|$ times the input size, every surviving step is in $\Stg{g}{C}$. The templates are finitely many derived rules of $C$, whose instances are the surviving practice.
 \emph{Pure propositional schemas.} Let $\mathcal S$ have metavariables $A_1,\dots,A_k$ and mention no atoms, with all instances valid. Its generic instance $\mathcal S[A_i:=p_i]$, for distinct atoms $p_i$, is valid, so it has a derivation $\pi$ in a complete propositional calculus with schematic rules. Applying the substitution $p_i\mapsto\varphi_i$ to every formula of $\pi$ yields a derivation, with the same number of applications, of $\mathcal S[A_i:=\varphi_i]$, because schematic rules are closed under uniform substitution. So $\pi$ is a uniform template.
 \emph{Failure in $\PA$.} Let $\theta(n)$ be $\neg\mathrm{Prf}_{\PA}(n,\ulcorner0=1\urcorner)$. Each instance $\theta(\bar n)$ is a true statement about a numeral, decided by a primitive recursive relation, and is therefore provable in $\PA$ (by $\Sigma_1$-completeness, since $\PA$ is consistent). Suppose a template with a schematic letter for the numeral instantiated to a derivation of $\theta(\bar n)$ for every $n$. In a standard Hilbert calculus, substituting a fresh variable $x$ for the schematic letter turns it into a derivation of $\theta(x)$, and generalization gives $\PA\der\forall x\,\theta(x)$, i.e.\ $\PA\der\Con(\PA)$. This contradicts Gödel's second incompleteness theorem.
+\emph{Calculus relativity.} The argument needs rules closed under substituting a fresh variable for a numeral. A complete calculus whose decidable library contains the zero-premise steps $\step\theta(\bar n)$ for every $n$ (a decidable set of true sentences) makes the schema uniformly $1$-step derivable. So uniform derivability, and hence the bound of~(c), is relative to the calculus and its library.
 \end{proof}
+
+\begin{remark}[Euclid: an analogy]\src{T4 \S6.2}\label{rem:informal:euclid}
+The notes suggest looking at Euclid, who ``didn't have a full set of axioms''. If a ``sharpening'' of a diagram is any configuration near it, Manders's \emph{co-exact} properties \citep{manders2008euclidean} are the super-determinate ones, his thesis that Euclid reads off only co-exact properties is the analogue of $\RCH$, and the system~E of \citet{avigad2009formal}, sound and complete for a class of sequents relative to ruler-and-compass semantics, plays the role of the robust core of \cref{thm:informal:robust}(c2). Perturbations are not sharpenings in the sense of \cref{def:informal:sharpening}, so this is an analogy only.
+\end{remark}
+
+% ---------------------------------------------------------------------
+\subsection{Language invention: what this section adds to the open problem}\label{app:informal:open}
+
+The hardest open problem of this section is the first problem of \cref{sec:open}: affordable soundness when the learner must invent language. A universal class (all computable $(L,R,\rho)$ with a description-length prior) restores realizability: \cref{thm:informal:ville} is sound with $W^*\ge2^{-K(h^*)}$, and, information-theoretically, objects need at most $K(h^*)$ corrections (\cref{thm:informal:objects}(a), weighted halving). But corrections are not soundness, since halving is bold; the sound verifier pays escalations, $\tilde\Theta(2^{K(h^*)})$ on unstructured parts of the class (\cref{thm:informal:escalation}(c), \cref{sec:caution}), and paradoxes cannot rescue it (\cref{thm:informal:paradoxes}). The problem is to find a class that is closed under the definitional extensions history made (say, predicates defined by formulas of bounded quantifier rank over the old language) and has escalation dimension, or correction complexity with objects, polynomial in the target's description length; or to prove that such closure forces exponential antichains like the single-culprit class. Definitions are schemas, so the anti-unification bounds of \cref{sec:imitation} may transfer to definition learning; whether proof-generated concepts can be learned with $O(\mathrm{depth})$ objects each is the concrete sub-question. Further open problems from this section are the bag-price conjecture (\cref{conj:informal:bagprice}), misspecified practice (such as Leibnizian infinitesimals), moving readings, a corpus test of $\RCH$, and identifiability of meaning without step-expressiveness.

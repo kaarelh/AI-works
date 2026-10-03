@@ -1,18 +1,19 @@
 % ===================================================================
-% Appendix to Section 2 (Setting): proofs of the anti-unification lemmas.
-% Source: research/theory/T1 §1.3 (Lemmas 1.2, 1.3; unchanged by verification).
+% Appendix to Section 2 (Setting): proofs of the anti-unification lemmas,
+% lggs of infinite sets, and the (WS) lemma with its remarks.
+% Source: research/theory/T1 §1.3 (Lemmas 1.2, 1.3; unchanged by verification);
+%         T7 §1.3 ((WS) and its equivalent form, as revised after verification).
 % ===================================================================
 \providecommand{\vars}{\mathrm{vars}}
+\providecommand{\Ttrust}{T_{\mathrm{trust}}}
 
 \section{Proofs for Section~\ref{sec:setting}}\label{app:setting}
 
 \Cref{thm:setting:lgg} is due to \citet{plotkin1970note} and
-\citet{reynolds1970transformational}. All other statements of
-\Cref{sec:setting} are proved here. The rank lemma and the recovery lemma are T1
-Lemmas~1.2--1.3, which the referees reported correct with no change needed; the
-other three are routine.
+\citet{reynolds1970transformational}, and the rank lemma is folklore in their
+lattice of schemas. All other statements of \Cref{sec:setting} are proved here.
 
-\subsection{Proof of \Cref{lem:setting:closure} (closure facts)}
+\subsection{Proof of \texorpdfstring{\Cref{lem:setting:closure}}{the closure lemma} (closure facts)}
 
 (a) Let $D$ be the set of judgments with an $R$-derivation from $B$. $D$ contains
 $B$ (one-node derivations) and is closed under $R$: if $P\step j\in R$ and
@@ -35,7 +36,7 @@ $\Cl_{\Sound(R)}(B)$. Finally, $\Sound(A)=\{P\step j:j\in\Cl_A(P)\}$ depends
 only on $\Cl_A$, so $\Cl_A=\Cl_R$ gives $A\subseteq\Sound(A)=\Sound(R)$; and
 $\Sound(R)$ itself has the closure $\Cl_R$. \qed
 
-\subsection{Proof of \Cref{lem:setting:rank} (rank)}
+\subsection{Proof of \texorpdfstring{\Cref{lem:setting:rank}}{the rank lemma} (rank)}
 
 Throughout, $|t|$ is the number of symbol occurrences in $t$, metavariable
 occurrences included, and $\vars(t)$ is the set of distinct metavariables of $t$.
@@ -92,7 +93,13 @@ $\mu(\sigma_l)\ge\mu(\sigma_{l+1})+1$. Summing along
 $\tau=\sigma_0\prec\sigma_1\prec\dots\prec\sigma_m$ gives
 $\mu(\tau)\ge\mu(\sigma_m)+m$, and $\mu(\sigma_m)\ge0$. \qed
 
-\subsection{Proof of \Cref{lem:setting:recover} (when the lgg recovers the schema)}
+\subsection{Proof of \texorpdfstring{\Cref{lem:setting:recover}}{the recovery lemma} (when the lgg recovers the schema)}
+
+\emph{Idea.} Substituting $\theta x$ for the occurrences of $x$ adds more symbols
+than distinct metavariables unless $\theta x$ is a metavariable, which is the rank
+lemma. Anti-unifying the $t_j$ copies $\sigma$ and puts
+$\mathcal A(\theta_1x,\dots,\theta_nx)$ at $x$; this is a metavariable iff (R)
+holds, and two of them coincide iff (D) fails. In detail:
 
 Let $\sigma$ have metavariables $x_1,\dots,x_v$, let $\theta_1,\dots,\theta_n$ be
 ground substitutions ($n\ge1$), and let $t_j=\sigma\theta_j$. For each
@@ -132,7 +139,21 @@ renaming of $\vars(\sigma)$, so by \Cref{lem:setting:rank}
 $\mu(\sigma\eta)>\mu(\sigma)$; since equivalent schemas have equal rank,
 $\lgg(t_1,\dots,t_n)\not\equiv\sigma$, and it is strictly more specific. \qed
 
-\subsection{Proof of \Cref{lem:setting:guard} (guarded closure)}
+\subsection{Least general generalizations of infinite sets}\label{app:setting:infinite}
+
+Every nonempty set $P$ of ground terms, finite or not, has a least general
+generalization, unique up to renaming. To see this, choose a nonempty finite
+$Q\subseteq P$ for which $\mu(\lgg(Q))$ is minimal ($\mu$ takes values in $\N$).
+Let $p\in P$. Since $Q\subseteq Q\cup\{p\}\subseteq\inst(\lgg(Q\cup\{p\}))$,
+\Cref{thm:setting:lgg} gives $\lgg(Q)\preceq\lgg(Q\cup\{p\})$, so by
+\Cref{lem:setting:rank} $\mu(\lgg(Q\cup\{p\}))\le\mu(\lgg(Q))$. By minimality the
+two ranks are equal, so by the equality case of \Cref{lem:setting:rank}
+$\lgg(Q\cup\{p\})\equiv\lgg(Q)$ and $p\in\inst(\lgg(Q))$. Hence
+$P\subseteq\inst(\lgg(Q))$. If $P\subseteq\inst(\tau)$, then
+$Q\subseteq\inst(\tau)$ and $\lgg(Q)\preceq\tau$. So $\lgg(Q)$ is a least general
+generalization of $P$; any two are $\preceq$ each other, hence equivalent. \qed
+
+\subsection{Proof of \texorpdfstring{\Cref{lem:setting:guard}}{the guarded closure lemma} (guarded closure)}
 
 $P\subseteq\inst(\lgg(P))$ by \Cref{thm:setting:lgg}, and every $\phi\in\Psi_P$
 holds on $P$, so $P\subseteq\inst(\lgg(P),\Psi_P)$. Let
@@ -142,12 +163,26 @@ $\phi\in\Psi$ holds on all of $P$, so $\Psi\subseteq\Psi_P$ and
 $\bigcap_{\phi\in\Psi_P}\phi^{-1}(1)\subseteq\bigcap_{\phi\in\Psi}\phi^{-1}(1)$.
 Intersecting, $\inst(\lgg(P),\Psi_P)\subseteq\inst(\sigma,\Psi)$. \qed
 
-\subsection{Proof of \Cref{lem:setting:WS} ((WS) and coherence)}
+\subsection{Sound evaluation and coherence}\label{app:setting:WS}
 
-This is the remark following (WS) in T7 \S1.3, in the form repaired after
-verification (without the clause $\Ttrust\subseteq\Sound(\Rstar)$). Write
-$R^+=\Rstar\cup\Ttrust$. Let $\pos{\Gamma}{\Delta}$ be designated and $V$ as in
-(WS). $V$ makes every member of $\Gamma$ true, and no step of $R^+$ has true
+\begin{lemma}[(WS) and coherence; trivial]\src{T7 \S1.3}\label{lem:setting:WS}
+Under (WS) every designated position is in bounds for $\Rstar\cup\Ttrust$, hence
+for $\Rstar$. Conversely, if $J_W=\emptyset$ and every designated position is in
+bounds for $\Rstar\cup\Ttrust$ (for instance, in bounds for $\Rstar$ with
+$\Ttrust\subseteq\Sound(\Rstar)$), then (WS) holds.
+\end{lemma}
+
+\emph{Remarks.} (WS) does not require $\Ttrust\subseteq\Sound(\Rstar)$: in
+arithmetic the target may consist of non-logical axioms with first-order logic
+trusted (\Cref{sec:twotier}), and the relevant target closure is then
+$\Cl_{\Rstar\cup\Ttrust}$. In formal mathematics $V$ is truth in the intended
+structure $\mathfrak M$: (WS) holds when designated positions are true of
+$\mathfrak M$, $W$ is truth in $\mathfrak M$ on its fragment, and target and
+trusted steps are $\mathfrak M$-sound.
+
+\begin{proof}
+Write $R^+=\Rstar\cup\Ttrust$. Let $\pos{\Gamma}{\Delta}$ be designated and $V$ as
+in (WS). $V$ makes every member of $\Gamma$ true, and no step of $R^+$ has true
 premises and a false conclusion, so the set of $V$-true judgments is an
 $R^+$-closed superset of $\Gamma$ and contains $\Cl_{R^+}(\Gamma)$. Since $V$
 makes $\bot$ and every member of $\Delta$ false, $\bot\notin\Cl_{R^+}(\Gamma)$
@@ -164,4 +199,5 @@ under $R^+$, so no step of $R^+$ has $V$-true premises and a $V$-false conclusio
 and (WS) holds. For the parenthetical instance: if $\Ttrust\subseteq\Sound(\Rstar)$,
 then $\Rstar\subseteq R^+\subseteq\Sound(\Rstar)$, so by
 \Cref{lem:setting:closure}(a),(b) $\Cl_{R^+}=\Cl_{\Rstar}$, and being in bounds
-for $\Rstar$ is the same as being in bounds for $R^+$. \qed
+for $\Rstar$ is the same as being in bounds for $R^+$.
+\end{proof}

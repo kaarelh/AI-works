@@ -1,9 +1,10 @@
 % ===================================================================
 % Appendix to Section 11 (Contexts, idealization, and checking physics)
 % Source: research/theory/T3-contexts-idealization-export.md, as repaired after
-%         verification (see its "Verification log": A1-A18, B1-B13, C1-C11);
-%         research/theory/T2-coherence-as-negative-data.md (Prop 7.1, proved in the
-%         main text).
+%         verification (see its "Verification log": A1-A18, B1-B13, C1-C11, and the
+%         round-2 items in research/verification/reverification-round2.md);
+%         research/theory/T2-coherence-as-negative-data.md (Prop 7.1).
+% Also holds the secondary results and computations moved out of physics.tex.
 % ===================================================================
 \providecommand{\fM}{\mathfrak{M}}
 \providecommand{\fF}{\mathcal{F}}
@@ -21,14 +22,13 @@
 \section{Proofs for Section~\ref{sec:physics}}\label{app:physics}
 
 The following results are proved completely in the main text:
-\cref{prop:physics:los,prop:physics:sup,thm:physics:eternalism,prop:physics:misdesignation,thm:physics:soundness,prop:physics:continuity,lem:physics:invisible,prop:physics:radius,thm:physics:coherencetol,thm:physics:judgment,prop:physics:gricean}.
-The minimal-repair drift stated after \cref{thm:physics:coherencetol} (T3 Prop~4.2) is
-immediate: enlarging a tolerance enlarges an interval, so coherence is preserved upward.
-\Cref{prop:physics:laymon} and the numerical
-claims marked \status{computed} are computations, reproduced by the scripts in
-\texttt{research/theory/T3-checks/}; they are not proved here. Everything else is
-proved below. Throughout, $w$ is a world, $\dom=\dom\fM_w$, and
-$\delta(F\times G):=\{\lambda[D{:=}\mu]:\lambda\in F,\ \mu\in G\}$.
+\cref{prop:physics:sup,thm:physics:eternalism,thm:physics:soundness,prop:physics:continuity,lem:physics:invisible,prop:physics:radius,thm:physics:coherencetol,thm:physics:judgment,prop:physics:gricean}.
+\Cref{prop:physics:laymon} and the numerical claims marked \status{computed} are
+computations, reproduced by the scripts in \texttt{research/theory/T3-checks/}; they are
+not proved here. Everything else is proved below. Secondary results that the main text only
+summarizes (further export certificates, certification of validity regions, the finite-sun
+bridge and the prototype's defects) are stated here in full. Throughout, $w$ is a world,
+$\dom=\dom\fM_w$, and $\delta(F\times G):=\{\lambda[D{:=}\mu]:\lambda\in F,\ \mu\in G\}$.
 
 % -------------------------------------------------------------------
 \subsection{Preliminaries on the filters of Definition~\ref{def:physics:filter}}
@@ -56,6 +56,16 @@ and $\{\lambda\}\in\fF_p(w)$.
 
 % -------------------------------------------------------------------
 \subsection{Proofs for \S\ref{sec:physics:semantics}}
+
+\begin{proof}[Proof of \cref{prop:physics:los}]
+(a) If $\Th_w(c)\models\psi$, compactness gives $\varphi_1,\dots,\varphi_k\in\Th_w(c)$
+entailing $\psi$, and $\tset{\psi}\supseteq\bigcap_i\tset{\varphi_i}\in\fF_c(w)$, so
+$\tset{\psi}\in\fF_c(w)$. (b) If $c$ is proper, every finite subset of $\Th_w(c)$ has a
+nonempty truth set (the intersection lies in the proper filter), hence a model; by
+compactness $\Th_w(c)$ is consistent. If $c$ is improper, $\tset{\bot}=\emptyset\in\fF_c(w)$.
+(c) A set lies in a filter iff it lies in every ultrafilter extending it, and \L{}o\'s's
+theorem \citep{los1955quelques} gives $\prod_U\fM_w\models\varphi$ iff $\tset{\varphi}\in U$.
+\end{proof}
 
 \begin{proof}[Proof of \cref{prop:physics:idealized}]
 (a) The root filter is principal at $\lambda^*$, where $p_{\rm atm}=1.0\times10^5$. The
@@ -107,7 +117,43 @@ $\fM_w(\lambda)\models\varphi$ and $\fM_w(\lambda')\not\models\varphi$.
 \end{proof}
 
 % -------------------------------------------------------------------
-\subsection{Proofs for \S\ref{sec:physics:coherence}: realizability}
+\subsection{Proofs for \S\ref{sec:physics:coherence}: eternalism and realizability}
+
+\begin{proof}[Proof of \cref{prop:physics:misdesignation}]
+(a) Take a classical derivation of $\bot$ from the designated, classically inconsistent
+$A$, in a Hilbert or sequent-step format. If every step instance in it were in $C$, chaining
+the steps (a consequence relation is monotone and closed under cut) would give
+$A\der_C\bot$, contradicting $\Ac$-coherence. So some step instance is not in $C$. It is a
+substitution instance of the most general instance of its schema, so by structurality that
+most general instance is not in $C$ either: the schema is not $C$-valid, and in particular
+$C\not\supseteq\Cn_{\CPC}$. (b) If $p,\neg p\der_C\bot$ for an atom $p$, substituting $\alpha$
+for $p$ gives $\alpha,\neg\alpha\der_C\bot$, and weakening gives $A\der_C\bot$, again
+contradicting coherence.
+\end{proof}
+
+The eternalist check summarized after \cref{thm:physics:eternalism} is the following.
+
+\begin{corollary}[Eternalist coherence penalizes correct reasoning]\src{T3 Cor 2.2, rev.}\label{cor:physics:eternalist}
+Call a check \emph{eternalist} if it flags a set $J$ of context-indexed judgments
+$(c,\Gamma,\varphi)$ whenever $\{\bigwedge\Gamma\to\varphi:(c,\Gamma,\varphi)\in J\}$ is
+unsatisfiable (context indices deleted, suppositions not added). It flags (i) every sound
+reductio whose internal judgment $(\SUP(A),\emptyset,\bot)$ is recorded; (ii) every sound
+idealization whose stipulation contradicts a recorded root judgment
+(\cref{prop:physics:idealized}(a)); (iii) every pair of sound contexts whose different
+answers to one query are both recorded (IPhO~2025 Theory Problems~2 and~3). If only the
+discharged $(@,\emptyset,\neg A)$ is recorded, nothing is flagged: what is penalized
+depends on how much of the reasoning is recorded.
+\end{corollary}
+\begin{proof}
+The stripped sets are unsatisfiable: in (i) the judgment $(\SUP(A),\emptyset,\bot)$ strips to
+$\bot$; in (ii) the stipulation and the recorded root judgment contradict each other; in (iii)
+$Q=1$ and $Q=2$ do, by standard names. Each judgment is nevertheless sound in its context
+(\cref{prop:physics:sup}, \cref{prop:physics:idealized}(a), and two proper contexts with
+different declarations). If only $(@,\emptyset,\neg A)$ is recorded for a sound reductio and
+the other recorded judgments are root judgments true at the actual point, then $\neg A$ also
+holds there, so the stripped set is satisfiable.
+\end{proof}
+
 
 $\AUX$ contexts are identified with their parents throughout. For a set $M\subseteq\fK$ and a
 sentence $A$, $\tset{A}$ in (R1) denotes $\{N\in\fK:N\models A\}$. Since $\SUP$ contexts
@@ -184,10 +230,22 @@ because each of $\{Q=1\}$, $\{Q=2\}$ is satisfiable. Both counterexamples are al
 brute-forced over all frames on $\Lambda=\{0,1\}^2$ (\texttt{realizability\_frame.py}).
 \end{proof}
 
+\paragraph{Brute-force checks of \cref{thm:physics:realizability}.} Brute force agrees with
+(a) on $6{,}500$ random instances with $0$ mismatches: $1{,}500$ from
+\texttt{realizability.py}, $3{,}000$ for the SUP-collapse from
+\texttt{realizability\_sup.py}, and $2{,}000$ from a deeper stress test. With uninformative
+bridges (a) fails on $117/600$ instances, so the hypothesis is needed. Over all frames on
+$\Lambda=\{0,1\}^2$, $8{,}000$ instances show $0$ violations of (b) and $598$ instances in
+the gap of (c) \status{computed}.\footnote{The deeper and the frame counts need non-default
+arguments: \texttt{realizability\_deep.py 11 2000}; \texttt{realizability\_frame.py 7 3000}
+and \texttt{realizability\_frame.py 8 5000}. The defaults run $400$ and $3{,}000$
+instances.} Informativeness is defined in finite form because $\fK$ is not compact:
+$\{Q\neq v:v\in\R\}$ is finitely satisfiable but has no model with a standard real sort.
+
 The exact frame criterion under limit semantics, summarized in the main text after
 \cref{thm:physics:realizability}, is the following.
 
-\begin{proposition}[Frame realizability under limit semantics]\src{T3 Prop 2.7, added after verification}\ \status{brute-force checked}\label{prop:physics:framerealizability}
+\begin{proposition}[Frame realizability under limit semantics]\src{T3 Prop 2.7}\ \status{brute-force checked}\label{prop:physics:framerealizability}
 Assume every $\DEF$ context in $J$ uses limit semantics, every used bridge is an informative
 value-export bridge, and $\SUP$ contexts have only $\SUP$ descendants. For a candidate actual
 point $\lambda$, define the points of the non-$\SUP$ contexts by $\lambda_@=\lambda$ and
@@ -246,6 +304,14 @@ $(c,\emptyset,Q=\bar t)$ and standard names happens only for $v=t$; and
 $\pi c\models\varepsilon_\beta(t)$ by the judgment $(\pi c,\emptyset,\varepsilon_\beta(t))$.
 \end{proof}
 
+\begin{corollary}[Reductio immunity; well-posedness where it matters]\src{T3 \S2.2 Cors, rev.}\label{cor:physics:immunity}
+Under the hypotheses of \cref{thm:physics:realizability}: (i) a $\SUP$ context deriving
+$\bot$ contributes exactly $\neg\bigwedge\Asm$ to its base, in both semantics; (ii) if an
+idealized context deriving $\bot$ is anchored, $J$ is frame-free unrealizable, and if it is
+not, that judgment imposes no constraint on frame-free realizability; in the frame semantics
+the first half holds, the second can fail; (iii) eternalist coherence is strictly stronger
+than frame-free realizability.
+\end{corollary}
 \begin{proof}[Proof of \cref{cor:physics:immunity}]
 (i) In the frame-free sense, by the collapse a judgment $(c,\Gamma,\bot)$ at a $\SUP$
 context $c$ with base $b$ becomes $\neg(\bigwedge\Asm(c)\wedge\bigwedge\Gamma)\in\Th^*(b)$.
@@ -377,7 +443,7 @@ model of $K_c$ satisfies every instance, so by (d) no $A$ and $\neg A$ are both 
 \end{proof}
 
 % -------------------------------------------------------------------
-\subsection{Proofs for \S\ref{sec:physics:export}}
+\subsection{Export certificates and proofs for \S\ref{sec:physics:export}}\label{app:physics:certificates}
 
 \begin{proof}[Proof of \cref{thm:physics:nofree}]
 In each case we exhibit $f$ meeting the hypotheses of \cref{lem:physics:invisible}.
@@ -392,14 +458,21 @@ Let $f$ be a $C^\infty$ bump supported in it with $f(\lambda^*)=1$. Then $Af\in 
 $Q+Af\in\mathcal C$, and $(Q+Af)|_S=Q|_S$. The germ at $0$ is the special case
 $S=[0,\lambda^*/2)$, since two functions that agree on $[0,\lambda^*/2)$ have the same germ.
 
-(c) Let $f(\lambda)=\lambda^{N+1}$. It is entire, so $Q+Af$ is (the restriction of) an entire
-function; its derivatives of order $\le N$ at $0$ vanish; and $f(\lambda^*)\neq0$.
+(c) Let $f(\lambda)=\lambda^{N+1}$. It is a polynomial, so $Q+Af\in\mathcal C$ by the closure
+hypothesis; its derivatives of order $\le N$ at $0$ vanish, so $Q+Af$ has the same $N$-jet
+as $Q$; and $f(\lambda^*)\neq0$. (Mere inclusion in the entire functions would not do: a
+singleton class admits an exact export rule.)
 
 (d) is (b) with the finite, hence closed, set $S=\{\lambda_1,\dots,\lambda_m\}$.
 
 \emph{Weaker hypothesis.} If only $\mathcal C\supseteq C^\infty$, a rule sound on $\mathcal C$ is
 sound on $C^\infty$, which satisfies $C^\infty+C^\infty\subseteq C^\infty$, so the rule
-abstains on every $Q\in C^\infty$. Outside $C^\infty$ it need not: let
+abstains on every $Q\in C^\infty$. In (d) it abstains on every $Q\in\mathcal C$: let $p$ be the
+polynomial interpolating $Q$ at the $\lambda_j$ and $f(\lambda)=\prod_j(\lambda-\lambda_j)$;
+then $p+Af\in C^\infty\subseteq\mathcal C$ has the information $I(Q)$ for every $A$, and
+$f(\lambda^*)\neq0$, so a non-abstaining output on $I(Q)$ would have to contain
+$p(\lambda^*)+Af(\lambda^*)$ for every $A$. In (b) the conclusion can fail outside
+$C^\infty$: let
 $\mathcal C=C^\infty\cup\{\sqrt\lambda\}$, $I$ the germ at $0$, and let the rule output
 $[\sqrt{\lambda^*},\sqrt{\lambda^*}]$ when shown the germ of $\sqrt\lambda$ and abstain
 otherwise. No smooth function has the germ of $\sqrt\lambda$ (it is not differentiable at
@@ -418,6 +491,29 @@ Gruntz's algorithm for limits of exp-log functions, modulo zero-equivalence of c
 \citep{richardson1968some}.
 \end{proof}
 
+In IPhO~2025 Theory Problem~2, part~C.3, the official premise ``$X$ is a few cm'' is false,
+but its conclusion is robust over the whole apparatus range: what justifies it is a uniform
+bound over that range, the form of \cref{thm:physics:neighbourhood}(a), not the value at the
+stated point.
+
+\paragraph{Further certificates.} The main text summarizes three certificates of the form
+of \cref{thm:physics:neighbourhood}.
+
+\begin{theorem}[Gronwall finite-horizon export]\src{T3 Thm 3.6, rev.: (b) new; \citealt{gronwall1919note}}\label{thm:physics:gronwall}
+Let $\dot x=f(x)$ and $\dot y=f(y)+g(t,y)$ have solutions on $[0,T]$, $L>0$, and
+$B(t)=|x_0-y_0|e^{Lt}+\frac\eta L(e^{Lt}-1)$. (a) If $f$ is $L$-Lipschitz on a set $K$
+containing both trajectories and $|g(t,y(t))|\le\eta$, then $|x(t)-y(t)|\le B(t)$. (b)
+\emph{Checkable form.} Let $K_r$ be the closed tube of radius $r$ around $x([0,T])$. If $f$
+is $L$-Lipschitz on $K_r$, $|g|\le\eta$ on $[0,T]\times K_r$, and $B(T)<r$, then $y$ stays
+in $K_r$ and the bound of (a) holds.
+\end{theorem}
+
+Every hypothesis of (b) concerns the computed idealized trajectory and explicit bounds,
+so the parent can certify it; those of (a) concern the unknown trajectory. The bound grows
+with $T$: qualitative long-time claims from structurally unstable idealizations do not
+export, finite-horizon quantitative ones do.
+
+
 \begin{proof}[Proof of \cref{thm:physics:gronwall}]
 (a) Let $u(t)=|x(t)-y(t)|$. From
 $x(t)-y(t)=x_0-y_0+\int_0^t\big(f(x)-f(y)-g(s,y)\big)ds$, the Lipschitz bound on $K$ and
@@ -432,6 +528,27 @@ so (a) applies on $[0,t_1]$ with $K=K_r$ and gives $|x-y|\le B(t)\le B(T)<r$. If
 continuity gives $|x-y|<r$ on a neighbourhood of $t_1$, contradicting the definition of
 $t_1$. Hence $t_1=T$.
 \end{proof}
+
+\begin{theorem}[Rigorous projectile certificate]\src{T3 Thm 3.7}\label{thm:physics:projectile}
+A point mass is launched with speed $v_0$ at angle $\theta\in(0,\pi/2)$ under gravity $g$,
+with neglected force per unit mass $a_n=-\kappa(t)v$, $0\le\kappa(t)\le k|v(t)|$ (quadratic
+drag with any $C_d\le C_{d,\max}$, or any antiparallel force dominated by it, time-varying
+ones included; lift is not covered). With $x:=kv_0^2/g<1$ and $R_0=v_0^2\sin2\theta/g$,
+\[
+R_0\Big[\frac1{1+x}-\frac{x\tan\theta}{(1+x)^2}\Big]\ \le\ R\ \le\ \frac{R_0}{1-x}.
+\]
+\end{theorem}
+
+\emph{Numbers} \status{computed}. Steel ball ($r=1$\,cm, $m=32.7$\,g, $C_d=0.47$,
+$v_0=10$\,m/s, $45^\circ$): $x=0.0276$, certified $R\in[9.653,10.483]$\,m, simulated $9.978$\,m.
+Ping-pong ball: $x=1.42$; the certificate is silent and the export blocked, while the
+simulated range is $49\%$ short of $R_0$, although the in-context derivation is word for
+word the same. Random $(x\in[0,0.9],\theta)$: $0/300$ violations; an independent test with
+bang-bang $\kappa(t)$: $0/400$. At $45^\circ$ the $5\%$ validity region is $x\le(1/0.95)^{1/2}-1=0.0260$
+certified, against $x\le0.0679$ true: sound and about $2.6\times$ conservative.
+As a schema in the sense of \cref{thm:physics:stipulation}(c), $\sigma$ is $x\le\eta$ with
+$\eta<1$, $\omega=\top$, and
+$\epsilon(v,\theta)=v\max\big(\frac\eta{1-\eta},\frac\eta{1+\eta}+\frac{\eta\tan\theta}{(1+\eta)^2}\big)$.
 
 \begin{proof}[Proof of \cref{thm:physics:projectile}]
 Write $v=(v_x,v_y)$, $v(0)=v_0(\cos\theta,\sin\theta)=(v_{0x},v_{0y})$, and
@@ -457,6 +574,17 @@ $R\ge X(T_{lo})\ge v_{0x}T_{lo}-\frac12xgT_{lo}^2=\frac{R_0}{1+x}-\frac{2xv_{0y}
 since $R_0\tan\theta=2v_{0y}^2/g$, this is the stated lower bound.
 \end{proof}
 
+\begin{theorem}[Error propagation through chains]\src{T3 Thm 3.8, rev.}\label{thm:physics:chains}
+(a) For a chain $\lambda^\circ=\lambda^{(0)},\dots,\lambda^{(k)}=\lambda^*$ with certified
+$|Q(\lambda^{(i)})-Q(\lambda^{(i-1)})|\le\delta_i$, $|Q(\lambda^*)-Q(\lambda^\circ)|\le\sum\delta_i$.
+(b) If the answer is $F(q_1,\dots,q_m)$ from exports with $|Q_j-q_j|\le\delta_j$, and $F$ is
+differentiable on the box $\prod_j[q_j\pm\delta_j]$ with $L_j=\sup|\partial_jF|$ there, then
+$|F(Q)-F(q)|\le\sum_jL_j\delta_j$. (c) If $\sum_jL_j\delta_j\ge|F(q)|$, not even the sign of
+$F(Q)$ is certified by this budget. For ``$100-99.9$'' with tolerances $0.2$ the budget is
+$0.4>0.1$, and indeed $Q_1-Q_2\in[-0.3,0.5]$.
+\end{theorem}
+A direct range enclosure can still certify a sign the budget cannot: $F(q)=q^2$ at $q=1$ with
+$\delta=0.6$ has budget $1.92$, yet $F(Q)\in[0.16,2.56]$.
 \begin{proof}[Proof of \cref{thm:physics:chains}]
 (a) Triangle inequality. (b) The segment from $q$ to $Q$ lies in the convex box, on which
 $F$ is differentiable; the mean value theorem gives $F(Q)-F(q)=\nabla F(\xi)\cdot(Q-q)$ for
@@ -528,7 +656,27 @@ parent filter set, which is an additional side condition.
 \end{proof}
 
 % -------------------------------------------------------------------
-\subsection{Proofs for \S\ref{sec:physics:learning}}
+\subsection{Validity regions and proofs for \S\ref{sec:physics:learning}}\label{app:physics:regions}
+
+\paragraph{Minimal repair and common-mode error.} Coherent tolerance vectors form an
+up-set: enlarging a tolerance enlarges an interval, so coherence is preserved upward, and a
+minimal coherent repair only ever widens tolerances. Exporting a pendulum's $T/T_0$ by the
+small-angle schema and the exact one at amplitudes up to $179.9^\circ$ drives the
+small-angle tolerance from $0.0077$ to $4.4$, and coherence never restricts the schema's
+regime \status{computed}. Two small-angle-based schemas never disagree, so both export
+ratio $1$ at $120^\circ$, where the truth is $1.373$.
+
+\begin{theorem}[Split conformal, and its failure under selection]\src{T3 Thm 4.3}\label{thm:physics:conformal}
+(a) If $e_1,\dots,e_{n+1}$ are exchangeable and $\hat\epsilon$ is the $k$-th smallest of
+$e_1,\dots,e_n$, $k=\lceil(n+1)(1-\alpha)\rceil$ ($\hat\epsilon=\infty$ if $k>n$), then
+$\Prob(e_{n+1}\le\hat\epsilon)\ge1-\alpha$ \citep{vovk2005algorithmic,lei2018distribution}. (b) If the solver picks the instance after
+$\hat\epsilon$ is fixed, from a regime where $\sup e>\hat\epsilon$, coverage on it is $0$.
+\end{theorem}
+
+Calibrated on $\theta_0\sim U[0^\circ,30^\circ]$ ($n=200$, $\alpha=0.1$), the small-angle schema
+gets coverage $0.913$; the adversary's $60^\circ$ has error $7.3\times10^{-2}$ against
+$\hat\epsilon=1.44\times10^{-2}$ \status{computed}. Mondrian (per-regime) calibration narrows
+the gap but cannot close it: this is the commitment problem of \cref{sec:search} again.
 
 \begin{proof}[Proof of \cref{thm:physics:conformal}]
 (a) If $k>n$ then $\hat\epsilon=\infty$ and there is nothing to prove; note $k\ge1$ for
@@ -542,6 +690,17 @@ $\Prob(e_{n+1}>\hat\epsilon)\le p\le(n+1-k)/(n+1)\le\alpha$ because $k\ge(n+1)(1
 Ties are handled by the strict inequality. (b) If the chosen instance has $e>\hat\epsilon$,
 it is not covered, and the solver can choose such an instance whenever one exists.
 \end{proof}
+
+\begin{theorem}[No certification without regularity]\src{T3 Thm 4.4}\label{thm:physics:noreg}
+Let $\mathcal C$ be closed under $e\mapsto e+Af$ for every continuous bump $f\ge0$ and $A>0$.
+A deterministic certifier that makes finitely many oracle queries and outputs a region $V$
+with $e\le\tau$ on $V$, soundly on $\mathcal C$, has $V$ inside the set of queried points. A
+randomized certifier that is sound almost surely satisfies this inclusion almost surely.
+\hfill\leanok{Export.no\_certification\_without\_regularity} (deterministic clause)
+\end{theorem}
+
+No free export and no free certification rest on one argument: simulation is an oracle for
+the top model, but without a regularity guarantee it certifies only the points queried.
 
 \begin{proof}[Proof of \cref{thm:physics:noreg}]
 We take an exact oracle (or any oracle whose answer is a fixed function of the value at the
@@ -567,6 +726,28 @@ enough for that outcome. By monotone convergence, some fixed $A$ makes the certi
 $e+Af\in\mathcal C$ with positive probability.
 \end{proof}
 
+With regularity, sound certification is possible at a tight price.
+
+\begin{theorem}[Conservative Lipschitz certifier]\src{T3 Thm 4.5}\label{thm:physics:lipschitz}
+Let $\Pi=[0,1]^d$, $e$ be $L$-Lipschitz in $\|\cdot\|_\infty$, and a \emph{validated oracle}
+return $e_{hi}(\pi)\in[e(\pi),e(\pi)+\eta]$ (interval ODE enclosures;
+\citealt{tucker2011validated,immler2018verified}). With $G_h$ the centres of the
+$\lceil1/h\rceil^d$ cubes of side $\le h$ tiling $\Pi$, output
+$V=\Pi\cap\bigcup_{\pi_j\in G_h}\{\pi:\|\pi-\pi_j\|_\infty\le(\tau-e_{hi}(\pi_j))/L\}$. (a)
+\emph{Soundness:} $e\le\tau$ on $V$ for every $L$-Lipschitz $e$, deterministically, against
+any solver. (b) \emph{Completeness:} if $\gamma>\eta$ and $h\le(\gamma-\eta)/L$, then
+$V\supseteq\{e\le\tau-\gamma\}$, with $\lceil L/(\gamma-\eta)\rceil^d$ calls. (c) \emph{Lower
+bound:} every deterministic certifier sound on the $L$-Lipschitz class and complete at
+margin $\gamma$ makes at least $\lfloor L/(2\gamma')\rfloor^d$ queries for every
+$\gamma'>\gamma$, even with an exact oracle.
+\hfill\leanok{Export.lip\_cert\_sound}\ \leanok{lip\_cert\_complete}\ \leanok{lip\_lower\_bound\_cube}
+\end{theorem}
+
+The bounds match up to $2^d$ and the oracle slack: the standard $\Omega((L/\gamma)^d)$
+barrier for Lipschitz problems \citep{nemirovsky1983problem}. The constant $L$ must be
+\emph{proved} in the top model; an $L$ estimated from simulations makes the projectile's
+region $x\in[0,0.066]$ (true: $x\le0.0679$) a calibrated guess, not a certificate.
+
 \begin{proof}[Proof of \cref{thm:physics:lipschitz}]
 (a) If $\pi\in V$, then $\|\pi-\pi_j\|_\infty\le(\tau-e_{hi}(\pi_j))/L$ for some centre
 $\pi_j$, so $e(\pi)\le e(\pi_j)+L\|\pi-\pi_j\|_\infty\le e_{hi}(\pi_j)+(\tau-e_{hi}(\pi_j))=\tau$.
@@ -584,6 +765,36 @@ $e_1=e_0+\max(0,\gamma'-L\|\pi-\pi_0\|_\infty)$. It is $L$-Lipschitz, equals $e_
 open ball, and $e_1(\pi_0)=\tau-\gamma+\gamma'>\tau$. All answers on $e_1$ agree with those
 on $e_0$, so the deterministic certifier outputs $V(e_1)=\Pi\ni\pi_0$, which is unsound.
 \end{proof}
+
+\begin{theorem}[Monotone certifier]\src{T3 Thm 4.6, rev.: query count, adversary}\label{thm:physics:monotone}
+Let $e$ be non-decreasing on $[0,1]$ (no continuity needed), with a validated upper oracle.
+\emph{Lazy bisection} starts with $lo=0$, $hi=1$ unqueried, queries $m=(lo+hi)/2$, sets
+$lo=m$ (``accepted'') if $e_{hi}(m)\le\tau$ and $hi=m$ otherwise, $k$ times, and outputs
+$V=[0,lo]$ if some query was accepted, $\emptyset$ otherwise. (a) It is sound. (b) With an
+exact oracle, $V$ misses at most an interval of length $2^{-k}$ of $\{e\le\tau\}$ (a variant
+that first queries both endpoints guarantees only $2^{-(k-2)}$). (c) Missing at most length
+$h$ on every non-decreasing $e$ needs $\lceil\log_2(1/h)\rceil$ queries, even with an exact
+oracle. (d) For down-sets in dimension $d\ge2$, $\Theta(h^{1-d})$ queries are necessary and
+sufficient \status{proof sketch}.
+\hfill\leanok{Export.lazy\_bisection\_sound}\ \leanok{lazy\_bisection\_miss}\ \leanok{mono\_lower\_bound} ((a)--(c))
+\end{theorem}
+
+For the small-angle schema, $e(\theta_0)=\frac2\pi K(\sin^2\frac{\theta_0}2)-1$ is provably
+increasing (a power series in $k^2=\sin^2\frac{\theta_0}2$ with positive coefficients), with
+rigorous enclosure $[k^2/4,\ k^2/4+\frac9{64}k^4/(1-k^2)]$. Twenty queries on $[0,0.9\pi]$
+certify $\theta_0\le7.243^\circ,16.168^\circ,22.810^\circ,49.946^\circ$ for
+$\tau=10^{-3},5\times10^{-3},10^{-2},5\times10^{-2}$ (exact thresholds $7.2441^\circ$,
+$16.1687^\circ$, $22.8138^\circ$, $50.1040^\circ$), each truncated downward and re-checked in
+interval arithmetic \status{computed}.
+
+\begin{proposition}[Laymon monotonicity can fail]\src{T3 Prop 4.7}\ \status{computed}\label{prop:physics:laymon}
+For a pendulum with quadratic drag $\beta$ at amplitude $6.75^\circ$, the signed relative
+period shift ($\times10^{-6}$) is $-3.0$, $-5.3$, $-7.7$, $-3.9$, $+10.9$, $+36.2$ at
+$\beta=0.0125$, $0.025$, $0.05$, $0.1$, $0.15$, $0.2$: amplitude decay shortens the period,
+damping lengthens it at second order. With $\tau=6\times10^{-6}$, a monotone certifier querying $\beta=0.1$
+($|e|=3.9\times10^{-6}$) certifies $[0,0.1]$, which contains $\beta=0.05$ with
+$|e|=7.7\times10^{-6}>\tau$.
+\end{proposition}
 
 \begin{proof}[Proof of \cref{thm:physics:monotone}]
 (a) $lo$ changes only to accepted points, so if $V=[0,lo]$ then $e_{hi}(lo)\le\tau$ was
@@ -622,8 +833,9 @@ $Q^{\fM_w(\lambda^*_w)}\in[q-\delta,q+\delta]$.
 \item \emph{Step.} By (TB1) the instance conditional $\bigwedge\varphi_i\to\psi$ (and every
   cited law) is valid in every $\fM_w(\lambda)$, $\lambda\in\dom$; its truth set is $\dom$,
   which lies in every filter on $\dom$. So the instance is $c$-sound for every context $c$.
-\item \emph{Root axioms} lie in $\Ax_\rho$, which is true at $\fM_w(\lambda^*_w)$ by the
-  definition of a reading, hence in the principal root filter.
+\item \emph{Root axioms} lie in $\Ax_\rho$, which is true at $\fM_w(\lambda^*_w)$ because
+  $\rho$ is a reading (a hypothesis of the theorem, secured by the Reading check when a
+  formal specification is supplied), hence in the principal root filter.
 \item \emph{$\SUP$ axioms:} $\tset{A}\in\fF_{\SUP(A)}(w)$ by definition.
 \item \emph{$\DEF$ axioms} are canonical (Ax legality). Under limit semantics
   $\{\lambda^\circ\}\in\fG$, and the generator $\delta(F\times\{\lambda^\circ\})\cap\dom$ lies
@@ -641,7 +853,11 @@ $Q^{\fM_w(\lambda^*_w)}\in[q-\delta,q+\delta]$.
   asymptotic form, cited only below a principal parent, \cref{lem:physics:asymptotic} does.
   Validated enclosures used in side conditions are correct by (TB3). The premises
   $\sigma_\beta$ and $\omega_c$ are derived in the parent, so in the induction of
-  \cref{thm:physics:soundness} they are true there at $w$.
+  \cref{thm:physics:soundness} they are true there at $w$. By schema indexing, $\omega_c$ is
+  the certificate $\omega_\beta$ of the catalogue entry, which by (TB2) has the semantic
+  property required in \cref{def:physics:calculus}; a solver-chosen sentence such as $\top$
+  could not be cited, which blocks the rope counterexample of
+  \cref{thm:physics:stipulation}(c).
 \end{itemize}
 Nothing in this argument depends on how the derivation was produced, so it holds for every
 solver. For a germ root $d$ with trusted declaration, the same argument yields
@@ -663,7 +879,59 @@ $W_{\rho^*}\subseteq\bigcup_{\rho\in\mathcal R}W_\rho$.
 \end{proof}
 
 % -------------------------------------------------------------------
-\subsection{Proofs for \S\ref{sec:physics:example}}
+\subsection{The worked example: further bridges, defects, and proofs}\label{app:physics:example}
+
+\paragraph{Exact formula.} A $40$-million-ray Monte Carlo gives MC/exact $=0.9997$--$1.0099$
+on five test bins of \cref{prop:physics:legexact}, consistent with ${\approx}0.6\%$ noise
+\status{computed}.
+
+\paragraph{Thin-leg bridge.} Without the lit-domain hypothesis the lower bound of
+\cref{prop:physics:thinleg} fails ($L=60a$, $\alpha=30^\circ$, $r=40a$,
+$\varphi=\pi$ gives $E=0$). The bound holds on $2.5\times10^6$ test points and is rigorous but
+conservative \status{computed}: it certifies $5\%$ from $r=21a,31a,44a,111a$ for
+$\sigma=1,0.5,0.3,0.1$, while the exact error exceeds $5\%$ only for $r\le10.5a,10.4a,27.6a,98a$ (root-finding on exact $\sigma$ level sets);
+near $\sigma=1/\sqrt2$ the gap reaches $23\times$, and it is unbounded as the tolerance
+shrinks, because the exact error $\approx\epsilon(2\sigma^2-1)/(2\sigma)$ vanishes to first order
+there. The export domain is an annulus $a\ll r<L\tan\alpha$ away from the shadow-side kink.
+
+\paragraph{Finite sun.} The sun is not a point; the next bridge accounts for its angular
+radius.
+
+\begin{proposition}[Finite-sun bridge]\src{T3 Prop 6.3, rev.: hypotheses}\label{prop:physics:finitesun}
+Let the admissible zenith angles be $[\alpha_{\min},\alpha_{\max}]\subseteq(0,\pi/2]$, the sun's
+angular radius $\delta_s<\alpha_{\min}$ with $\alpha_{\max}+\delta_s\le\pi/2$ (the whole disc above the horizon), and $\Delta=\arcsin(\sin\delta_s/\sin\alpha_{\min})$.
+If $r\le L\tan(\alpha_{\min}-\delta_s)$, $\epsilon<2/\sqrt5$ and $\sigma-\Delta/2>m$, then for
+any radiance profile over the solar disc,
+$\frac{E_\odot}{E_0}\in\big[(1-\frac\Delta{2\sigma})\,\mathrm{lo}(\epsilon,\sigma-\frac\Delta2),\ (1+\frac\Delta{2\sigma})\,\mathrm{hi}(\epsilon,\sigma-\frac\Delta2)\big]$,
+with $\mathrm{lo},\mathrm{hi}$ the bounds of \cref{prop:physics:thinleg}.
+\end{proposition}
+
+The proof writes $E_\odot/I_0$ as a convex combination of the $\alpha$-free geometric factor over
+the sun's azimuth spread, bounded by $\Delta$ via Napier's rule. An independent test with a
+limb-darkened disc found $0/859$ violations \status{computed}.
+
+\paragraph{Residual defects of the prototype.} A purely syntactic version of the checks
+accepts V6--V9 of \cref{tab:physics:checkerrun}: if C1 allows $\alpha$ in the answer, C3
+checks only the oscillation over $\alpha$ of answer over certified form, never its offset
+from $1$, and C4 does not enforce $\epsilon<2/\sqrt5$ or $\sigma_{\min}-\Delta/2>m$ (beyond
+$2/\sqrt5$ the upper bound turns negative and is silently dropped). The semantic version is
+still a toy. (i)~It hard-codes one top model and two bridge schemas. (ii)~SymPy and
+floating-point evaluation of the budget at a corner stand in for a kernel and interval
+arithmetic; that the corner is worst rests on monotonicity of the bounds, argued, not
+machine-checked. (iii)~C3 accepts only answers \emph{symbolically identical} to the
+certified form, so it is incomplete; a fuller checker would add a rigorously enclosed
+offset $|\text{answer}/\text{certified}-1|$ to the budget. (iv)~V2 and V5 are rejected
+because the SPS \emph{declares} the violation; the semantic protection is that C4
+recomputes side conditions from root data and C3 catches answer-changing undeclared imports
+(V11). (v)~V0 is a completeness gap, and V4 is caught only because the specification is
+formal. (vi)~Numeric inputs are not validated: a NaN tolerance is accepted.
+
+\paragraph{A germ-root example.} IPhO~2025 Theory Problem~2, part~C.4, is a germ-root
+problem whose leading-order $W^*=19.8$\,mJ differs from the exact optimum $20.1$\,mJ by
+about $1.5\%$ ($1.3\%$ before rounding), inside the marking interval $[19,21]$\,mJ, so the
+tolerance-aware check of \cref{thm:physics:chains} passes \status{computed}.
+
+\paragraph{Proofs.}
 
 \begin{proof}[Proof of \cref{prop:physics:legexact}]
 (a) The incoming direction is $u=(\sin\alpha\,e(0),-\cos\alpha)$. Reflection in the vertical
@@ -770,3 +1038,26 @@ $E_0(\varphi-\beta)/E_0(\varphi)=\sigma'/\sigma\in[1-\frac\Delta{2\sigma},1+\fra
 All factors are nonnegative ($\sigma>\Delta/2+m$), so multiplying and averaging over the convex
 combination gives the claim.
 \end{proof}
+
+% -------------------------------------------------------------------
+\subsection{The physicist's checks in detail}\label{app:physics:roles}
+
+This expands the paragraph after \cref{tab:physics:roles}. \emph{Dimensions} form a free
+abelian group, and dimension inference is unification modulo abelian groups
+\citep{kennedy1994dimension}. The Buckingham $\Pi$ theorem \citep{buckingham1914physically}
+turns ``express in terms of'' into a type signature: in IPhO~2025 Theory Problem~2,
+part~A.1, the force must be $mg\,\Phi(\rho Sh/m,P_0S/(mg))$, and the official
+$(m+\rho Sh)g$ is $\Phi=1+\pi_1$. Dropping a small $\Pi$ group assumes complete similarity,
+which fails in intermediate asymptotics \citep{barenblatt1996scaling}, so ``$\Pi_2\ll1$,
+ignore it'' is a bridge (role~4), not a type fact. \emph{Context symmetries} are
+context-indexed (time reversal holds without drag), and a declared symmetry gives free
+negative data: a non-equivariant candidate rule is refuted by a symmetry image of one of
+its own accepted instances (dimension inference as learning meaning from positive examples
+is discussed in \cref{sec:imitation}). \emph{Limiting cases} are cross-context regression
+tests whose validity is Norton's continuity (\cref{prop:physics:idealized}(c)), and
+\emph{order-of-magnitude} checks are export side conditions (\cref{thm:physics:chains}).
+Qualitative checks are one-sided refutations, as in qualitative simulation, which is sound
+but incomplete \citep{kuipers1986qualitative}. The closest precedent for the in-model layer
+is the Andes tutor \citep{vanlehn2005andes}, which checks each equation for units and
+against an author-supplied model, and never checks bridges, because the author fixes the
+idealizations.
