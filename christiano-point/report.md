@@ -46,7 +46,7 @@ Most headline statistics are volume statistics, such as "80% of the code is writ
 
 ![Where domains stand relative to their Christiano point](figures/domains-light.png)
 
-<sub>Dark-mode version: [`figures/domains-dark.png`](figures/domains-dark.png). Blue dots and whiskers are judgement estimates with ranges, from §§4–10. Orange diamonds are measured volume shares; their definitions differ by row.</sub>
+<sub>Dark-mode version: [`figures/domains-dark.png`](figures/domains-dark.png). Blue dots are central judgement estimates from §§4–10; whiskers are wide uncertainty ranges (roughly 80%), so they are broader than the central ranges in the table below. Orange diamonds are measured volume shares; their definitions differ by row.</sub>
 
 | Process | Volume crossover | Uplift $m$ now | AI share $1-1/m$ | Status | U-crossing |
 |---|---|---|---|---|---|
