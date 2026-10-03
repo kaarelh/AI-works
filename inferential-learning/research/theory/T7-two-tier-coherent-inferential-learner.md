@@ -700,7 +700,7 @@ Two caveats *(the first revised after verification)*.
   * If $\varphi_e(e)\!\uparrow$, then (b) and continuity of measure give $e\in S$.
   * If $\varphi_e(e)\!\downarrow$, then (a) gives $\Pr(\text{ever accepts})\le\delta<1/2$, so $e\notin S$.
   * So $S=\overline K$.
-* *Contradiction.* For a computable learner, given the computable data laws, oracle and prover, the probability of acceptance by time $t$ is a lower-semicomputable real, uniformly in $(e,t)$. So $S$ is $\Sigma_1$. But $\overline K$ is not $\Sigma_1$. ∎
+* *Contradiction.* For a computable learner, given the computable data laws, oracle and prover, the probability of acceptance by time $t$ is a lower-semicomputable real, uniformly in $(e,t)$. This also holds if the learner escalates. Escalation answers follow the practice $\Sigma^P_e$ (§5 conventions), which is the same in both cases and decidable by matching *(noted in round 2)*. So $S$ is $\Sigma_1$. But $\overline K$ is not $\Sigma_1$. ∎
 
 So TTL's form of soundness cannot be improved by any computable procedure: sound at time $t$ relative to $F^{(d_t)}_{\rm res}$, and relative to $F_{\rm res}$ only in the limit, with retractions. This is the Π₁-completeness of coherence (T2 Thm 5.3) turned into a statement about *anytime* soundness.
 
