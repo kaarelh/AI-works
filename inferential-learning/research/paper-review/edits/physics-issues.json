@@ -1,0 +1,226 @@
+[
+ {
+  "reviewer": "math-applied",
+  "file": "paper/sections/physics.tex",
+  "location": "Def physics:checker (line ~880: \"$\\sigma_\\beta$ and $\\omega_c$ are derived \\emph{in the parent}\"); Assumption physics:trusted (TB2); Thm physics:relative",
+  "severity": "major",
+  "problem": "Def calculus defines \u03c9_c semantically: {\u03bc : \u03bb[D:=\u03bc]\u2208dom}\u2208\ud835\udca2 for \u03bb\u2208\u2016\u03c9_c\u2016. But the checker only requires \u03c9_c to be derived in the parent, and (TB2) does not say \u03c9 comes from the catalogue. T3's (T2) said \"with its well-posedness clause\"; the paper drops even that. A solver can therefore cite \u03c9_c := \u22a4. Rope frame of Prop idealized(b) with the vacuously true \"neglect rope mass\" catalogue schema: the solver derives a=0 in the improper child (frame-valid steps plus ex falso), m_r \u2264 \u03b7 in the root, and \u22a4 trivially. Every check passes, and the checker accepts |a| \u2264 \u03b5 while |a| \u2265 |\u03a6|/\u03b7. That is exactly the counterexample of Thm stipulation(c). So \"All checks are deterministic\" together with \"for every solver whatsoever\" is false as written. Round-2 re-verification flagged this ('provenance of omega_c'); it was not fixed.",
+  "proposed_fix": "In Def checker, Schema indexing, replace \"$\\sigma_\\beta$ and $\\omega_c$ are derived \\emph{in the parent}\" with \"$\\sigma_\\beta$ and the well-posedness certificate $\\omega_\\beta$ \\emph{listed in the catalogue entry of $\\beta$} are derived \\emph{in the parent} (the solver may not choose $\\omega_c$)\". Append to (TB2): \"each catalogue entry carries a well-posedness certificate $\\omega_\\beta$ for its declaration: for every $w$ and $\\lambda\\in\\tset{\\omega_\\beta}_w$, $\\{\\mu:\\lambda[D{:=}\\mu]\\in\\dom\\fM_w\\}\\in\\fG$\". In the proof idea of Thm relative add \"(by (TB2), $\\omega_c$ is a genuine certificate)\"."
+ },
+ {
+  "reviewer": "math-applied",
+  "file": "paper/sections/physics.tex",
+  "location": "Def physics:sps (line ~864); Thm physics:relative; paragraph \"The residual \\emph{judgment layer} is exactly (J1) ... (J2) ... (J3)\" (line ~919)",
+  "severity": "major",
+  "problem": "Def SPS makes \u03c1 part of the solver's tuple: frame class, parameter roles, query and type, conventions, and hence Ax_\u03c1 and W_\u03c1. The checker checks only that root axioms lie in Ax_\u03c1. Nothing checks that Ax_\u03c1 holds on all of W_\u03c1, which Def frame(iii) assumes. A solver can declare the full \u03b1 \u2208 [30\u00b0,60\u00b0], so that (J1) W_\u03c1* \u2286 W_\u03c1 holds, while placing \u03b1 = 45\u00b0 in Ax_\u03c1. The checker then accepts \u03b1-specific answers that are false at other completions. (TB1) also quantifies over the solver's W_\u03c1. So \"exactly (J1)\u2013(J3)\" omits the judgment \"\u03c1 is a reading\". The worked example escapes only because \u03c1 is the trusted specification checked by C0. This was flagged in round-2 ('solver-supplied reading rho') and not fixed.",
+  "proposed_fix": "In Def SPS replace \"a reading $\\rho$ (the frame class ...)\" with \"a reading $\\rho$, which is the trusted problem specification or is checked against it: $W_\\rho$, $Q$, its type and $\\Ax_\\rho$ must be those of the specification, or $\\Ax_\\rho$ must be kernel-derivable from the specification's axioms\". Add to Def checker: \"\\emph{Reading:} $\\rho$ is the trusted specification (or passes C0)\". In the judgment-layer paragraph replace \"(J1) \\emph{reading containment}, $W_{\\rho^*}\\subseteq W_\\rho$\" with \"(J1) \\emph{reading adequacy}: $\\rho$ is a reading ($\\Ax_\\rho$ holds at every $w\\in W_\\rho$) and $W_{\\rho^*}\\subseteq W_\\rho$; when $\\rho$ is the setter's formal specification only the second half remains\"."
+ },
+ {
+  "reviewer": "math-applied",
+  "file": "paper/sections/physics.tex",
+  "location": "Thm physics:nofree (c), line ~594: \"$\\mathcal C$ consists of restrictions of entire functions\"",
+  "severity": "minor",
+  "problem": "Read as \ud835\udc9e \u2286 {entire functions}, the claim is false: a singleton class admits an exact export rule. The proof needs Q + A\u03bb^{N+1} \u2208 \ud835\udc9e, i.e. closure under adding polynomials, which T3 states as \"the class of\".",
+  "proposed_fix": "Replace with \"(c) $\\mathcal C+\\{\\text{polynomials}\\}\\subseteq\\mathcal C$ (e.g.\\ $\\mathcal C$ is the class of all restrictions of entire functions) and $I$ is the jet up to a finite order $N$\"."
+ },
+ {
+  "reviewer": "math-applied",
+  "file": "paper/sections/physics.tex",
+  "location": "Thm physics:judgment (b), line ~930",
+  "severity": "minor",
+  "problem": "The quantifiers are loose; round-2 flagged this. The counter-world must share the slice and the actual \u03bb* the checker sees. \"include worlds with actual \u03bc*\u22600\" does not guarantee that.",
+  "proposed_fix": "Replace \"If the admissible extensions include worlds with actual $\\mu^*\\neq0$ and are closed under\" with \"If, for the given slice $\\fM'(\\cdot,0)$ and actual $\\lambda^*$, some admissible extension has actual $\\mu^*\\neq0$, and the admissible extensions are closed under\"."
+ },
+ {
+  "reviewer": "math-applied",
+  "file": "paper/sections/physics.tex",
+  "location": "lines ~486\u2013491, after Cor physics:blame: \"with the root and the certified contexts as the \\emph{only} designated contexts ... no false alarms while the reading is correct (T2 Thm~2.2)\"",
+  "severity": "minor",
+  "problem": "Cor blame designates only certified contexts that have a properness witness. A certified but improper context can produce a false alarm even when the reading is correct. The reference also uses theory-file numbering instead of the paper's label.",
+  "proposed_fix": "Replace with \"with the designated contexts of \\cref{cor:physics:blame} (the root, and certified contexts with properness witnesses) as the only designated contexts, an oligarchic-halving learner makes at most $\\log_2(1/\\wstar)$ detections and no false alarms while the reading and the certifications are correct (\\cref{thm:coherence:halving}; false alarms are priced by \\cref{thm:coherence:robust})\"."
+ },
+ {
+  "reviewer": "math-applied",
+  "file": "paper/sections/physics.tex",
+  "location": "Remark physics:existence, lines ~429\u2013433",
+  "severity": "minor",
+  "problem": "It cites \"T6 Thm 4.1, Cor 4.2\", \"T6 Thm 4.5\" and \"T6 Prop 4.7\" by theory-file numbering, although these results are stated in the paper.",
+  "proposed_fix": "Replace with \\cref{thm:existence:mcs,cor:existence:contexts}, \\cref{thm:existence:rules} and \\cref{prop:existence:triangle} respectively."
+ },
+ {
+  "reviewer": "math-applied",
+  "file": "paper/sections/physics.tex",
+  "location": "line 192: \"Under limit semantics $\\fF_c(w)$ is principal or improper\"",
+  "severity": "minor",
+  "problem": "This is false for a limit-semantics context below a germ ancestor, whose filter is non-principal.",
+  "proposed_fix": "Replace with \"If $c$ and all its $\\DEF$ ancestors use limit semantics, $\\fF_c(w)$ is principal or improper\"."
+ },
+ {
+  "reviewer": "math-applied",
+  "file": "paper/sections/physics.tex",
+  "location": "Def physics:realization (R4), line ~358, and Thm physics:realizability(b)",
+  "severity": "minor",
+  "problem": "Bridge soundness in (R4), in Thm realizability(b) and in Prop framerealizability is \u03c9-free. Exp soundness in the calculus is \u03c9-relative. So realizability does not apply verbatim to judgment sets produced by the calculus (round-2 flag).",
+  "proposed_fix": "After Thm realizability add: \"Bridge soundness here is $\\omega$-free; for judgment sets produced by the calculus of \\cref{def:physics:calculus}, add $(\\pi c,\\emptyset,\\omega_c)$ to each bridge use and read (R4) as $M_{\\pi c}\\models\\sigma_\\beta\\wedge\\omega_c\\to\\varepsilon_\\beta(v)$; the anchoring arguments are unchanged.\""
+ },
+ {
+  "reviewer": "math-applied",
+  "file": "paper/sections/physics.tex",
+  "location": "tab:physics:checkerrun, line 1093: \"V7: ... (true error $0.159$)\"",
+  "severity": "minor",
+  "problem": "This does not reproduce. With the metric behind V6 (\u22480.5) and V9 (0.909), |E_true/answer\u22121|, the worst case over r\u2208[20a,34a], \u03c3\u22650.5 and \u03b1\u2208[30\u00b0,60\u00b0] is 0.150, at r=20a, \u03c3=0.5, \u03b1=30\u00b0. No script computes 0.159.",
+  "proposed_fix": "Replace \"(true error $0.159$)\" with \"(true error $0.150$)\", or state the metric and domain that give 0.159."
+ },
+ {
+  "reviewer": "math-applied",
+  "file": "paper/sections/physics.tex",
+  "location": "line 1048: \"the exact error exceeds $5\\%$ only for $r\\le10.5a,10.4a,27.6a,98a$\"",
+  "severity": "minor",
+  "problem": "The values are correct; I re-derived 10.50, 10.44, 27.57 and 98.08. But the shipped T3-checks/leg_exact.py \u00a7(6) still prints the superseded grid-band values 11.0a, 28.5a and 107.1a, and no script prints the paper's numbers.",
+  "proposed_fix": "Add \"(root-finding on exact $\\sigma$ level sets)\" after the list. Also update leg_exact.py \u00a7(6) to root-find (code)."
+ },
+ {
+  "reviewer": "math-applied",
+  "file": "paper/sections/physics.tex",
+  "location": "lines ~395\u2013399 (\"6,500 random instances (including 2,000 from a referee's deeper stress test)\" ... \"8,000 instances\")",
+  "severity": "minor",
+  "problem": "These counts reproduce only with non-default arguments: realizability_deep.py 11 2000, and realizability_frame.py 7 3000 plus 8 5000 (totals 2,734 and 598 confirmed). The defaults print N=400 and N=3,000.",
+  "proposed_fix": "Add a footnote with the invocations (\"realizability\\_deep.py 11 2000; realizability\\_frame.py 7 3000 and 8 5000\"), or change the script defaults."
+ },
+ {
+  "reviewer": "math-applied",
+  "file": "paper/sections/physics.tex",
+  "location": "checker run, (C4) description lines ~1073\u20131076; residual-defects paragraph lines ~1102\u20131114",
+  "severity": "minor",
+  "problem": "C4 is said to assert every hypothesis of Props thinleg and finitesun. The script checks \u03b1_max \u2264 \u03c0/2, not the paper's \u03b1_max+\u03b4_s \u2264 \u03c0/2; this is harmless at 60\u00b0. The prototype also accepts tol = NaN, which I confirmed by re-running it, and the defects list does not mention this.",
+  "proposed_fix": "In (C4) add \"(the script checks $\\alpha_{\\max}\\le\\pi/2$; the stronger $\\alpha_{\\max}+\\delta_s\\le\\pi/2$ holds trivially here)\"; to the residual defects add \"(vi) numeric inputs are not validated: a NaN tolerance is accepted\"."
+ },
+ {
+  "reviewer": "math-applied",
+  "file": "paper/sections/physics.tex",
+  "location": "line 1179: \"one problem and twelve adversarial variants\"",
+  "severity": "minor",
+  "problem": "V0 is the honest solution at 5% (a completeness test) and V10 is labelled a control. T3 counts eleven adversarial variants.",
+  "proposed_fix": "Replace with \"one problem and twelve variants (ten attacks, one control and one completeness test)\"."
+ },
+ {
+  "reviewer": "math-applied",
+  "file": "paper/sections/physics.tex",
+  "location": "line 966: \"after which the checker is sound relative to the top model alone\"",
+  "severity": "minor",
+  "problem": "This omits the trusted base (J3, i.e. TB1\u2013TB3).",
+  "proposed_fix": "Replace with \"after which the checker is sound relative to the top model and the trusted base (TB1)--(TB3) alone\"."
+ },
+ {
+  "reviewer": "math-applied",
+  "file": "paper/sections/physics.tex",
+  "location": "line 124: \"holds in all three problems\"",
+  "severity": "minor",
+  "problem": "The three problems are never named in the paper.",
+  "proposed_fix": "Replace with \"holds in all three problems analysed there (IPhO~2012 T1-A, EuPhO~2025 T1(a), IPhO~2025 T2)\"."
+ },
+ {
+  "reviewer": "math-applied",
+  "file": "paper/sections/physics.tex",
+  "location": "line 1125: \"$W^*=19.8$\\,mJ differs from the exact optimum $20.1$\\,mJ by $1.3\\%$\"",
+  "severity": "minor",
+  "problem": "The stated rounded values give 1.5%. The 1.3% figure comes from unrounded L9 values that are not shown.",
+  "proposed_fix": "Quote unrounded values, or write \"by about $1.5\\%$ ($1.3\\%$ before rounding, L9 \\S8.3)\"."
+ },
+ {
+  "reviewer": "math-applied",
+  "file": "paper/sections/physics.tex",
+  "location": "Prop physics:continuity (a), line 543: \"errs by at most $g$'s modulus of continuity on $B$\"",
+  "severity": "minor",
+  "problem": "The radius at which the modulus is evaluated is unspecified.",
+  "proposed_fix": "Replace with \"errs by at most $\\sup_{x\\in B}|g(x)-g(m)|$, which tends to $0$ with the tolerances by continuity of $g$\"."
+ },
+ {
+  "reviewer": "honesty",
+  "file": "paper/sections/physics.tex",
+  "location": "lines 47-48: 'Gold-level solving of IPhO-style problems under rubric grading has been reported for current AI systems (L9 \\S5.2)'",
+  "severity": "major",
+  "problem": "An external empirical claim is supported only by an internal memo. L9 \u00a75.2 names the published sources (HiPhO, arXiv 2509.07894; Physics Supernova, arXiv 2509.01659). It also records that the best model scored below gold on EuPhO 2025, the competition of the paper's own worked example; the sentence omits that.",
+  "proposed_fix": "Replace with: 'Gold-level scores on IPhO 2025 theory under rubric grading have been reported for current AI systems (the HiPhO benchmark, Yu et al. 2025, arXiv:2509.07894; Physics Supernova, Qiu et al. 2025, arXiv:2509.01659), but not on the modelling-heavy EuPhO 2025, where the best model scored below the gold threshold;' and add both entries to bib/physics.bib."
+ },
+ {
+  "reviewer": "user-fidelity",
+  "file": "paper/sections/physics.tex",
+  "location": "'the user' at lines 29, 37, 78, 123, 308, 497, 533, 556, 967, 1007, 1008, 1156; '(L10 \\S1.7)' line 38; '(L10 \\S1.8)' lines 81, 499, 558",
+  "severity": "major",
+  "problem": "The section calls the commissioner 'the user', and four quotations of his notes cite an internal memo (L10) instead of the source note. Line 533 ('The user is right that') grades a working note in an unsuitable tone.",
+  "proposed_fix": "29: 'the user's programme' -> 'the programme of the motivating question'. 37-38: 'the user's note asks' -> 'the motivating notes ask'; '(L10 \\S1.7)' -> '(\\texttt{ai/verification and generation/verification from truth.md})'. 78: 'The user's notes record why the two obvious repairs fail.' -> 'The motivating notes record the difficulty with two obvious moves.' 81 and 499: '(L10 \\S1.8)' -> '(\\texttt{philosophy/epistemology/probabilities/assigning probabilities in a conception of the world you know to be inadequate.md})'. 123: 'The user's hypothesis' -> 'The notes'''' hypothesis'. 308: 'This is T2's formal version of the user's air-pressure worry.' -> 'This is a formal version of the air-pressure example in the motivating question.' 497: 'The user warns' -> 'The motivating notes warn'. 533: 'The user is right that a reductio ... can be spurious, and the remedy' -> 'A reductio in an inadequate framework can indeed be spurious, as the notes suggest; the remedy'. 556: 'The user asks:' -> 'The notes ask:'; 558 '(L10 \\S1.8)' -> '(\\texttt{philosophy/philosophy of science/the domain of applicability of a scientific mode(l).md})'. 967: 'The user's episode on the problem' -> 'An episode in the introspective solution of this problem recorded in the notes (\\texttt{introspection/.../introspect-solving eupho 2025-T1.md})'. 1007-1008: 'from the user's notes' -> 'from that introspection note'; 'is the user's, reported by him to match the official one' -> 'is the one reached in that note, which records it as matching the official answer'. 1156: 'as the user notes' -> 'as the notes observe (\\texttt{physics/symmetry.md})'."
+ },
+ {
+  "reviewer": "user-fidelity",
+  "file": "paper/sections/physics.tex",
+  "location": "lines 559-561: 'This is why his ``constructive'''' reasoning is more trustworthy in messy domains.'",
+  "severity": "major",
+  "problem": "The hedge is removed and the source is misplaced. The idea comes from 'assigning probabilities in a conception of the world you know to be inadequate.md': 'maybe this is some argument in favor of trusting 'constructive' reasoning more than 'non-constructive' reasoning, at least in messy domains'. It is not from the domain-of-applicability note quoted just before. The paper turns 'maybe ... some argument' into a flat 'This is why ... is more trustworthy'. 'his' also lacks a referent once 'the user' is removed.",
+  "proposed_fix": "Replace with: 'This gives one precise reason behind a tentative suggestion in the notes: that the danger of reductio in inadequate frameworks is ``maybe ... some argument in favor of trusting `constructive'''' reasoning more than `non-constructive'''' reasoning, at least in messy domains'''' (\\texttt{assigning probabilities in a conception of the world you know to be inadequate.md}).'"
+ },
+ {
+  "reviewer": "user-fidelity",
+  "file": "paper/sections/physics.tex",
+  "location": "lines 47-49: 'the unmet target is principled checking, and capability work is the part the user's notes flag as risky.'",
+  "severity": "major",
+  "problem": "The commissioner's caution about publishing capability research is understated. The source (formalizing philosophy.pdf, July 2024 draft, \u00a72) reads: '(This is not to say that it is fine to publish insightful research on AI theorem-provers \u2014 in my opinion, publishing such research is omnicidal.)' 'flag as risky' misrepresents both the strength and the object of the view, which is publishing insightful prover research. This is the only place in the paper that mentions it.",
+  "proposed_fix": "Replace with: 'the unmet target is principled checking. The motivating notes also hold that publishing insightful research on AI theorem provers is gravely dangerous (``in my opinion, publishing such research is omnicidal'''', \\texttt{ai/verification and generation/formalizing philosophy.pdf}, a July 2024 draft). We have therefore avoided solver-side contributions, and the decision to publish rests with him.'"
+ },
+ {
+  "reviewer": "user-fidelity",
+  "file": "paper/sections/physics.tex",
+  "location": "lines 29-31: 'An olympiad solution is, in his words, ``a dance with many clear setups, with some relations to the physical problem of interest''''.'",
+  "severity": "minor",
+  "problem": "A hedge is dropped. The source reads 'at least existing solutions from the wild often do not look like that. there's more of a dance with many clear setups, ...'. The paper turns 'often ... more of a dance' into 'is ... a dance'.",
+  "proposed_fix": "Replace with: 'Existing olympiad solutions, the motivating notes observe, often do not reduce the problem to one clear mathematical problem: ``there's more of a dance with many clear setups, with some relations to the physical problem of interest'''' (\\texttt{ai/verification and generation/verification of physics olympiad solutions/the structure of physics olympiad solutions.md}).'"
+ },
+ {
+  "reviewer": "user-fidelity",
+  "file": "paper/sections/physics.tex",
+  "location": "line 999 ('the user ``peeked at the solution and it seems to assume that's not the case''''') and line 1089 ('(the user's slip: $I$ for $I_0$)')",
+  "severity": "minor",
+  "problem": "Line 999 gives no context: in the note, 'that's not the case' refers to whether a finger in the part-(b) photograph is 'significantly tilted', so the reader cannot tell what the solution assumes. Line 1089 labels one of the adversarial variants as the commissioner's personal 'slip', which reads poorly in a paper.",
+  "proposed_fix": "999: replace with 'the introspection note, on whether a finger in the part-(b) photograph is tilted: ``ok i peeked at the solution and it seems to assume that's not the case''''. 1089: replace '(the user's slip: $I$ for $I_0$)' with '(a natural slip, made and later corrected in the introspection note: $I$ for $I_0$)'."
+ },
+ {
+  "reviewer": "readability",
+  "file": "paper/sections/physics.tex",
+  "location": "lines 38, 48, 78, 85, 111, 113, 233, 237-238, 308, 334, 420, 429-433, 491, 499, 537, 558, 641, 759, 859, 1007, 1127, 1133, 1136, 1159; and 302, 639, 1125",
+  "severity": "major",
+  "problem": "About 25 memo references in running text: 'L10 \\S1.7', 'L9 \\S5.2', 'L7 \\S4', 'L9's solution format', 'L7's ``ill-posed idealizations must not export''', 'T2's formal version', 'T6 Thm~4.1', 'T2 Thm~2.2', 'T3 Prop~4.2', 'after L9 \\S3.7', and so on. Separately, 'IPhO~2025 T2 versus T3', 'T2 C.3' and 'T2 C.4' use the same labels as the memos T2/T3, while line 76 says 'Theory~2'.",
+  "proposed_fix": "Where the paper has the result, use \\cref: 491 '(T2 Thm~2.2)' \u2192 '(\\cref{thm:coherence:halving})'; 308 'This is T2's formal version of the user's air-pressure worry.' \u2192 'This is a formal version of the air-pressure worry of \\cref{sec:intro:question}.'; 759 '(T3 Prop~4.2)' \u2192 '(Appendix~\\ref{app:physics})'. Move pure literature pointers (L7/L9/L10 \u00a7...) into the result's \\src tag or a footnote, or delete them. Write IPhO problems as 'Theory Problem 2/3': 302 '(IPhO~2025 Theory Problems 2 and 3)'; 639 '(IPhO~2025 Theory Problem 2, part C.3)'; 1125 'IPhO~2025 Theory Problem 2, part C.4'."
+ },
+ {
+  "reviewer": "readability",
+  "file": "paper/sections/physics.tex",
+  "location": "lines 41-59 (second paragraph of the section: 'Mathematically, almost everything here is trivial once set up or standard. In T3's own accounting, \\cref{...16 labels...} are trivial once set up ...')",
+  "severity": "major",
+  "problem": "The section opening refers to an internal document ('T3's own accounting') and gives a 16-label \\cref list that no reader can parse. It also mixes in provenance ('Results are from T3 unless marked otherwise').",
+  "proposed_fix": "Replace with: 'Most results here are trivial once the definitions are in place. The imported ingredients are \\L{}o\\'s's theorem, Gronwall's inequality, split conformal prediction, the radius of information and the adversary argument of information-based complexity, Lipschitz covering bounds and interval inclusion monotonicity. New, as far as we know, are the frame-free realizability criterion (\\cref{thm:physics:realizability}(a)), the two-sided analysis of adversarial stipulation with its well-posedness certificate (\\cref{thm:physics:stipulation}), and a rigorous thin-leg certificate with a complete worked checker run (\\cref{sec:physics:example}). Proofs not given inline are in Appendix~\\ref{app:physics}.'"
+ },
+ {
+  "reviewer": "readability",
+  "file": "paper/sections/physics.tex",
+  "location": "lines 643-692 (Gronwall, projectile certificate + Numbers, chains), 766-860 (conformal, noreg, Lipschitz, monotone, Laymon), 1038-1066 (thin-leg, finite-sun), 1102-1117 (Residual defects), 395-406 (brute-force paragraph)",
+  "severity": "major",
+  "problem": "The physics section (19 pages) carries long technical certificate theorems and numerical tables in the main text. These are about 1,900 words that the argument of the section, that exports need finite-radius information and that a checker is sound relative to a judgment layer, does not depend on.",
+  "proposed_fix": "Move the listed passages to app:physics (add subsections), keeping all labels. After thm:physics:neighbourhood insert: 'Certificates of this form include a checkable Gronwall bound for finite-horizon exports (\\cref{thm:physics:gronwall}); a rigorous range certificate for projectiles under any drag dominated by quadratic drag (\\cref{thm:physics:projectile}), which for a steel ball certifies $R\\in[9.653,10.483]$\\,m against a simulated $9.978$\\,m and for a ping-pong ball is silent; and error budgets for chains of bridges (\\cref{thm:physics:chains}), under which `$100-99.9$' with tolerances $0.2$ certifies not even a sign.' After thm:physics:coherencetol insert: 'Calibration on exchangeable feedback gives average coverage and nothing under selection (\\cref{thm:physics:conformal}); without a regularity guarantee finitely many simulations certify only the queried points (\\cref{thm:physics:noreg}); with a \\emph{proved} Lipschitz constant or monotonicity, validated simulation becomes a sound certifier at a matching query cost (\\cref{thm:physics:lipschitz,thm:physics:monotone}), and monotonicity must be proved, since it fails for a damped pendulum (\\cref{prop:physics:laymon}).'"
+ },
+ {
+  "reviewer": "readability",
+  "file": "paper/sections/physics.tex",
+  "location": "start of sec:physics:export (line 567) and sec:physics:learning (line 739)",
+  "severity": "minor",
+  "problem": "Both subsections open with notation ('Fix a one-parameter deformation ...', 'A bridge schema $s$ has a dimensionless regime parameter ...') and never say what they establish.",
+  "proposed_fix": "Insert at 567: 'Contexts let an idealized model contradict the world; exports carry its conclusions back. This subsection shows that no export is free: information about the idealized model alone, however complete (its jet, its germ, finitely many values elsewhere), never justifies a finite-tolerance claim at the actual parameter (\\cref{thm:physics:nofree}). What justifies one is information of small radius about the de-idealized family (\\cref{prop:physics:radius}), and we list the forms such certificates take. The subsection ends with the attack this creates: a solver who may choose contexts can stipulate any answer unless side conditions are evaluated in the parent and contexts are declared deformations (\\cref{thm:physics:stipulation}).' Insert at 739: 'Export certificates need tolerances and validity regions, which are natural targets for learning. This subsection asks which signals learn them soundly against a solver who picks the regime. Coherence among exports catches only tolerances that are too narrow (\\cref{thm:physics:coherencetol}); exchangeable calibration gives average coverage and nothing under selection; and only a \\emph{proved} regularity property turns validated simulation of the top model into a sound certifier (\\cref{thm:physics:lipschitz,thm:physics:monotone}).'"
+ },
+ {
+  "reviewer": "readability",
+  "file": "paper/sections/physics.tex",
+  "location": "line 888-889 ('A first version of this definition lacked Ax legality ... the verification of T3 caught it'), 1091-1095 and 1102 ('first version accepted'), 396, 676, 1064 ('a referee's ...'), 1132 ('The brief listed ...'), 425-434 (rem:physics:existence with 'T6 Thm~4.1, Cor~4.2', 'T6 Thm~4.5', 'T6 Prop~4.7')",
+  "severity": "minor",
+  "problem": "The section narrates verification history ('first version', 'the verification of T3 caught it', 'a referee's test'). It refers to 'the brief', which the reader has never seen. rem:physics:existence restates existence-section results under memo labels.",
+  "proposed_fix": "888\u2013889: replace with 'Ax legality and schema indexing are necessary: without them the checker accepts the attack of \\cref{thm:physics:stipulation}(b).' In tab:physics:checkerrun, replace 'first version accepted' with 'accepted by a purely syntactic check' and move 'Residual defects of the prototype' to the appendix. Replace 'a referee's test' and 'a referee's bang-bang $\\kappa(t)$' with 'an independent test'. 1132: 'The brief listed' \u2192 'The notes list'. Replace rem:physics:existence with: '\\Cref{sec:existence} gives the multi-context counterpart: coherence on designated contexts is equivalent to a model nonempty there (\\cref{thm:existence:mcs,cor:existence:contexts}); bridges must be read as rules of proof over belief states, not conditionals between worlds (\\cref{thm:existence:rules}); and locally coherent contexts need not glue into one world (\\cref{prop:existence:triangle}).'"
+ }
+]
