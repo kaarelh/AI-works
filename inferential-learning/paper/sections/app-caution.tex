@@ -1,0 +1,323 @@
+% =====================================================================
+% Appendix: proofs for Section 4 (Cautious verification and its price)
+% Sources: research/theory/T1-soundness-under-search.md §3-4 (repaired statements),
+%          research/verification/T1-soundness-under-search-verification.md
+%          (referee reports A-1..A-18, B-1..B-7 and the repair log),
+%          research/theory/T1-code/ (computed claims).
+% =====================================================================
+\providecommand{\ACCEPT}{\textsf{ACCEPT}}
+\providecommand{\REJECT}{\textsf{REJECT}}
+\providecommand{\ESCALATE}{\textsf{ESCALATE}}
+\providecommand{\vars}{\mathrm{vars}}
+\providecommand{\Bell}{\mathrm{Bell}}
+\providecommand{\ccl}{\mathrm{cl}}
+\providecommand{\Htag}[1]{H^{\mathrm{tag}}_{#1}}
+\providecommand{\nesc}{\#\mathrm{ESC}}
+
+\section{Proofs for Section~\ref{sec:caution}}\label{app:caution}
+
+The following are proved in full in the main text: \Cref{thm:caution:vs}(a) and~(c), \Cref{thm:caution:unstructured}, \Cref{thm:caution:bayesdet}, and \Cref{cor:caution:bayesopt,cor:caution:structbayes}. This appendix proves the remaining results, checks the examples of \Cref{sec:caution}, and records the evidence for \Cref{conj:caution:binomial}. All statements are the versions repaired after adversarial verification (T1 Verification log). Where a repair changed a statement or a proof, this is noted.
+
+Throughout, a verifier's internal randomness is a single draw $\omega\sim\Lambda$ on a space~$\Omega$, made before the first round. Nothing is lost by this, since coins drawn later can be drawn up front. Steps are ground terms, $|t|$ is the number of symbol occurrences of~$t$, and $\mu(t)=|t|-|\vars(t)|$. We use the rank lemma (\Cref{lem:setting:rank}) and the characterization of the lgg (\Cref{thm:setting:lgg}).
+
+% ---------------------------------------------------------------------
+\subsection{Optimality of the VS verifier}\label{app:caution:vs}
+
+Fix human data $P_0$ and a deterministic, non-adaptive prover issuing $q_1,q_2,\dots$. For a step set~$T$ used as the target, the transcript after $i$ rounds is $\tau^T_i(\omega)=(e_1,\dots,e_i)$ with $e_j=(q_j,a_j,y_j)$. It is defined recursively by $a_j=V(P_0,\tau^T_{j-1}(\omega),q_j,\omega)$, and $y_j=\mathbf 1[q_j\in T]$ if $a_j=\ESCALATE$, while $y_j=\ast$ (no label) otherwise. A history $h=(e_1,\dots,e_t)$ is \emph{consistent} with a step set~$R$ if $y_j=\mathbf 1[q_j\in R]$ whenever $y_j\neq\ast$.
+
+\begin{lemma}[Coupling through the coins]\label{lem:app:caution:coupling}
+Let $h$ be a history of $t$ rounds that is consistent with two step sets $T$ and $T'$, with queries $q_1,\dots,q_t$. Then for every $\omega$, $\tau^T_t(\omega)=h$ iff $\tau^{T'}_t(\omega)=h$.
+\end{lemma}
+
+\begin{proof}
+We show by induction on $i\le t$ that $\tau^T_i(\omega)=h_{\le i}$ iff $\tau^{T'}_i(\omega)=h_{\le i}$. The case $i=0$ is trivial. Suppose the claim holds for $i-1$. If neither transcript equals $h_{\le i-1}$, neither extends to $h_{\le i}$. If both equal $h_{\le i-1}$, the verifier's answer $a_i=V(P_0,h_{\le i-1},q_i,\omega)$ is the same under both targets. If $a_i$ differs from the answer recorded in~$h$, neither transcript equals $h_{\le i}$. If it agrees and is not \ESCALATE, both transcripts equal $h_{\le i}$. If it agrees and is \ESCALATE, the labels are $\mathbf 1[q_i\in T]$ and $\mathbf 1[q_i\in T']$. Both equal the label recorded in~$h$, by consistency, so both transcripts equal $h_{\le i}$.
+\end{proof}
+
+\begin{proof}[Proof of \Cref{thm:caution:vs}(b)]
+Since $q\notin\bigcap\VS_h$, there is $R'\in\VS_h$ with $q\notin R'$. Then $R'\in\Hc$ and $P_0\subseteq R'$, and $R'$ contains every step labelled positive in~$h$ and no step labelled negative, so $h$ is consistent with~$R'$. By hypothesis, $h$ is consistent with~$\Rstar$. Let the prover issue $q_1,\dots,q_t,q_{t+1}:=q$. For $T\in\{\Rstar,R'\}$ put
+\[
+E_T:=\{\omega:\ \tau^T_t(\omega)=h\ \text{and}\ V(P_0,h,q,\omega)=\ACCEPT\}.
+\]
+By \Cref{lem:app:caution:coupling}, $E_{\Rstar}=E_{R'}$ as subsets of~$\Omega$, so $p=\Lambda(E_{\Rstar})=\Lambda(E_{R'})$. On $E_{R'}$, with target~$R'$, the invalid query $q\notin R'$ is accepted in round $t+1$. $V$ is $\delta$-sound, and $R'$ is an admissible target, so $\Lambda(E_{R'})\le\Prob_{R'}[\exists s:\ a_s=\ACCEPT\wedge q_s\notin R']\le\delta$.
+\end{proof}
+
+This joint-probability form replaces the original statement, which bounded the acceptance probability at~$h$ and is false when read conditionally (referee report A-1). The deterministic form~(c) follows because $\Lambda(E)\in\{0,1\}$ when $\Lambda$ is a point mass. Any history that a deterministic verifier produces against a target is consistent with that target, since the oracle is truthful.
+
+\emph{The reckless verifier.} Let $\Hc=\{R_1=\{a,c\},\,R_2=\{a,b,c\},\,R_3=\{a,b\}\}$ and $P_0=\emptyset$. The verifier draws $B\sim\mathrm{Bernoulli}(\varepsilon)$. If $B=1$ it accepts every query; otherwise it runs the VS verifier.
+\begin{itemize}
+\item It is $\varepsilon$-sound. When $B=0$ no invalid query is ever accepted, by \Cref{thm:caution:vs}(a), so the probability of an invalid acceptance is at most $\Prob[B=1]=\varepsilon$.
+\item Take target $R_2$, and let the prover query $c$ and then~$b$. Initially $\bigcap\VS=\{a\}$, so when $B=0$ the query $c$ is escalated. The history $h=((c,\ACCEPT,\ast))$ therefore has probability exactly~$\varepsilon$. It carries no label, so it is consistent with every hypothesis, and $\VS_h=\Hc$ with $\bigcap\VS_h=\{a\}\not\ni b$.
+\item Given~$h$ (that is, $B=1$), $b$ is accepted with probability~$1$. The joint probability is $\varepsilon\le\delta=\varepsilon$, as~(b) says.
+\end{itemize}
+A simulation reproduces this (\texttt{T1-code/thm31b\_counterexample.py}).
+
+\emph{Random human data.} Suppose instead that $P_0$ is random, with a countable range and a target-dependent law, and independent of~$\omega$. Let $d$ be an observed value with $d\subseteq R'$, where $R'$ is as above with $\VS_h$ computed from $P_0=d$. The coupling, applied conditionally on $P_0=d$, gives
+\[
+p(d):=\Prob_{\Rstar}[h,\ \text{then $q$ accepted}\mid P_0=d]=\Prob_{R'}[h,\ \text{then $q$ accepted}\mid P_0=d].
+\]
+Hence $\Prob_{R'}[P_0=d]\cdot p(d)\le\delta$, which is the weaker bound stated in the main text.
+
+% ---------------------------------------------------------------------
+\subsection{The escalation dimension}\label{app:caution:esc}
+
+\begin{proof}[Proof of \Cref{thm:caution:esc}]
+\emph{Upper bound.} Let $V$ be the VS verifier, and let $\Rstar\in\Hc$ with $P_0\subseteq\Rstar$. Consider any honest prover, which may be adaptive.
+\begin{enumerate}[label=(\arabic*)]
+\item $V$ never rejects. By \Cref{thm:caution:vs}(a), $\Rstar\in\VS$, so every query $q\in\Rstar$ lies in $\bigcup\VS$.
+\item Every label is~$1$. So $P^-=\emptyset$ throughout, and $P=P_0\cup E$, where $E$ is the set of queries escalated so far.
+\item Let $s_1,s_2,\dots$ be the escalated queries in order. When $s_i$ is escalated, $s_i\notin\bigcap\VS(P_0\cup\{s_1,\dots,s_{i-1}\})$, and $s_i\in\Rstar$.
+\end{enumerate}
+So the escalated queries form an elastic chain in~$\Rstar$, and since nothing is rejected, the cost equals their number, which is at most $\el(\Hc,\Rstar\mid P_0)$. As $V$ is $0$-sound, $\Esc(\Hc\mid P_0)\le\sup_R\el(\Hc,R\mid P_0)$.
+
+\emph{Lower bound.} Let $V$ be $\delta$-sound. Let $s_1,\dots,s_m$ be an elastic chain in some $R\in\Hc$ with $P_0\subseteq R$, with witnesses $R_i$. The prover queries $s_1,\dots,s_m$ in this order, which is honest for target~$R$. Fix~$i$. For $j<i$ we have $s_j\in R$ and $s_j\in R_i$, so the oracle's label on~$s_j$, if requested, is~$1$ under both targets. Induction on rounds, as in \Cref{lem:app:caution:coupling}, gives $\tau^R_{i-1}(\omega)=\tau^{R_i}_{i-1}(\omega)$ for every~$\omega$. Hence the answers in round~$i$ coincide, $a_i^R(\omega)=a_i^{R_i}(\omega)$. Under target $R_i$, which is admissible since $R_i\in\Hc$ and $P_0\subseteq R_i$, the query $s_i$ is invalid. So $\Lambda(a_i^{R_i}=\ACCEPT)\le\delta$, and therefore $\Lambda(a_i^R=\ACCEPT)\le\delta$. Every $s_i$ is valid for~$R$, so the expected cost under~$R$ is at least $\sum_{i=1}^m\Lambda(a^R_i\neq\ACCEPT)\ge(1-\delta)m$. If $\delta=0$, each $a_i^R\neq\ACCEPT$ almost surely, so the cost is $m$ almost surely. Every $0$-sound verifier thus pays at least $m$ for every finite $m\le\sup_R\el(\Hc,R\mid P_0)$, so $\Esc(\Hc\mid P_0)\ge\sup_R\el(\Hc,R\mid P_0)$.
+
+\emph{Size restriction.} The same argument applies verbatim when all queries and chain elements have size at most~$N$.
+\end{proof}
+
+The original proof of the lower bound cited the conditional reading of \Cref{thm:caution:vs}(b). The direct coupling above replaces it (referee report A-4). The cost of a randomized verifier is its expected cost (\Cref{def:setting:cost}).
+
+% ---------------------------------------------------------------------
+\subsection{Intersection-closed classes; single schemas}\label{app:caution:closure}
+
+\begin{proof}[Proof of \Cref{prop:caution:closure}]
+(i) By definition, $\bigcap\VS(P)$ is the intersection of the members of~$\Hc$ that contain~$P$, which is $\ccl(P)$. Intersection-closure puts it in $\Hc\cup\{\emptyset\}$. It contains~$P$, and every member containing~$P$ contains it. Against an honest prover there are no negative labels, and $P=P_0\cup E$, so the VS verifier accepts iff $q\in\ccl(P_0\cup E)$.
+
+(ii) Let $s_1,\dots,s_m$ be an elastic chain in~$R$, and put $C_i=\ccl(P_0\cup\{s_1,\dots,s_i\})$. Then $C_0=\ccl(P_0)$, and $C_{i-1}\subseteq C_i$ because $\ccl$ is monotone. The inclusion is strict: $s_i\in C_i$, while $s_i\notin\bigcap\VS(P_0\cup\{s_1,\dots,s_{i-1}\})=C_{i-1}$ by~(i). Finally $C_m\subseteq R$, because $R$ is a member containing $P_0\cup\{s_1,\dots,s_m\}$.
+
+Conversely, let $\ccl(P_0)=C_0\subsetneq\dots\subsetneq C_m\subseteq R$ be a chain of members of $\Hc\cup\{\emptyset\}$, and pick $s_i\in C_i\setminus C_{i-1}$. Then $s_i\in R$. For $i=1$, $\ccl(P_0)=C_0\not\ni s_1$. For $i\ge2$, $C_{i-1}\supsetneq C_0$ is nonempty, hence a member of~$\Hc$. It contains $P_0\subseteq C_0$ and each $s_j\in C_j\subseteq C_{i-1}$ for $j<i$, so $\ccl(P_0\cup\{s_1,\dots,s_{i-1}\})\subseteq C_{i-1}\not\ni s_i$. By~(i), $s_i\notin\bigcap\VS(P_0\cup\{s_1,\dots,s_{i-1}\})$, so the $s_i$ form an elastic chain in~$R$.
+\end{proof}
+
+\begin{proof}[Proof of \Cref{lem:caution:h1}]
+\emph{(1) Two schemas.} Let $\sigma,\tau$ be schemas, renamed apart. A ground term $t$ lies in $\inst(\sigma)\cap\inst(\tau)$ iff $t=\sigma\theta=\tau\theta'$ for ground substitutions $\theta,\theta'$. Since the variables are disjoint, $\theta\cup\theta'$ then unifies $\sigma$ and~$\tau$. If $\sigma$ and $\tau$ are not unifiable, the intersection is empty. Otherwise let $\eta$ be a most general unifier. Every unifier factors through~$\eta$, so $t=\sigma\eta\rho$ for some~$\rho$, and $t\in\inst(\sigma\eta)$. Conversely, every ground instance $\sigma\eta\rho=\tau\eta\rho$ lies in both sets. So $\inst(\sigma)\cap\inst(\tau)=\inst(\sigma\eta)\in H_1$.
+
+\emph{(2) Arbitrary families.} Let $\mathcal F\subseteq H_1$. The empty family has intersection $S=\inst(x)\in H_1$. If $\bigcap\mathcal F=\emptyset$, it lies in $H_1$. Otherwise $\bigcap\mathcal F$ contains a ground term~$t$, and every member of $\mathcal F$ is $\inst(\sigma)$ with $\sigma\theta=t$ for some~$\theta$. Then $|\sigma|\le|t|$, and every function or constant symbol of $\sigma$ occurs in~$t$. So, up to renaming, there are finitely many such $\sigma$, and $\mathcal F$ has finitely many distinct members. Its intersection is a finite intersection, which lies in $H_1$ by~(1).
+
+\emph{(3) Lggs of arbitrary nonempty sets.} Let $P\neq\emptyset$. For finite $F\subseteq F'\subseteq P$ we have $\lgg F\preceq\lgg F'$, since $F\subseteq F'\subseteq\inst(\lgg F')$. By the rank lemma, a strictly increasing chain of lggs has length at most $\mu(\lgg\{t\})=|t|$ for any $t\in P$. So there is a finite $F_0\subseteq P$ such that $\lgg F\equiv\lgg F_0$ for every finite $F$ with $F_0\subseteq F\subseteq P$. Put $g:=\lgg F_0$. For each $s\in P$, $\lgg(F_0\cup\{s\})\equiv g$, so $s\in\inst(g)$. If $P\subseteq\inst(\tau)$, then $F_0\subseteq\inst(\tau)$, so $g\preceq\tau$. Thus $g$ is the lgg of $P$, and $\inst(g)=\bigcap\{\inst(\tau):P\subseteq\inst(\tau)\}$.
+
+\emph{(4) The closure.} For nonempty~$P$, the members of $H_1$ that contain $P$ are the sets $\inst(\tau)$ with $P\subseteq\inst(\tau)$ (the empty set does not contain~$P$). So $\ccl(P)=\inst(\lgg P)$ by~(3), or by \Cref{thm:setting:lgg} when $P$ is finite.
+\end{proof}
+
+% ---------------------------------------------------------------------
+\subsection{One schema}\label{app:caution:single}
+
+\begin{proof}[Proof of \Cref{thm:caution:single}]
+\emph{(i)} Let $s_1,\dots,s_m$ be an elastic chain in $\inst(\sigma^*)$ relative to a nonempty $P_0\subseteq\inst(\sigma^*)$. Put $g_i:=\lgg(P_0\cup\{s_1,\dots,s_i\})$ for $0\le i\le m$. By \Cref{lem:caution:h1}, $\bigcap\VS(Q)=\inst(\lgg Q)$ for nonempty~$Q$. So the elasticity condition says $s_i\notin\inst(g_{i-1})$, while $s_i\in\inst(g_i)$. Now $P_0\cup\{s_1,\dots,s_{i-1}\}\subseteq\inst(g_i)$, so $g_{i-1}\preceq g_i$ by the lgg property, and the instance sets differ, so $g_{i-1}\prec g_i$ strictly. This uses the lgg property and no assumption on the signature; mere inclusion of instance sets would not give generality over a poor signature (referee report A-6). Also $g_m\preceq\sigma^*$, since $P_0\cup\{s_1,\dots,s_m\}\subseteq\inst(\sigma^*)$. By the rank lemma $\mu(g_{i-1})\ge\mu(g_i)+1$ for each~$i$, and $\mu(g_m)\ge\mu(\sigma^*)$. Summing, $\mu(\lgg P_0)=\mu(g_0)\ge\mu(\sigma^*)+m$.
+
+\emph{(ii)} Let $s_1,\dots,s_m$, $m\ge1$, be an elastic chain in $\inst(\sigma^*)$ relative to~$\emptyset$, with $|s_i|\le N$. Then $s_2,\dots,s_m$ is an elastic chain relative to $\{s_1\}$, because the version spaces involved are the same. By~(i), $m-1\le\mu(s_1)-\mu(\sigma^*)$. Since $s_1$ is ground, $\mu(s_1)=|s_1|\le N$. So $m\le1+N-\mu(\sigma^*)\le N+1$, as $\mu\ge0$. Taking the supremum over targets and applying \Cref{thm:caution:esc} with the size restriction gives $\Esc(H_1;N)\le N+1$.
+
+\emph{(iii)} Let $N\ge1$, and consider the steps
+\[
+t_0=g^{N-1}(a),\quad t_1=g^{N-1}(b),\quad t_j=g^{N-j}(a)\ \ (2\le j\le N),
+\]
+all of size at most~$N$ and all in $\inst(x)$. Let $L_j=\lgg(t_0,\dots,t_j)$. Then $L_0=t_0$. For $j\ge1$, every $t_i$ with $i\le j$ has the form $g^{N-j}(u_i)$. The $u_i$ have mixed roots: they are $a,b$ when $j=1$, and include $u_0=g^{j-1}(a)$ and $u_j=a$ when $j\ge2$. So anti-unification copies the prefix $g^{N-j}$ and places a metavariable at the bottom, giving $L_j\equiv g^{N-j}(z)$ and $\mu(L_j)=N-j$. Each $t_j$ escapes:
+\begin{itemize}
+\item $t_0$ escapes because $\emptyset\in H_1$, so $\bigcap\VS(\emptyset)=\emptyset$.
+\item $t_1\notin\inst(L_0)=\{g^{N-1}(a)\}$.
+\item For $j\ge2$, $t_j=g^{N-j}(a)\notin\inst(g^{N-j+1}(z))$, whose instances begin with $N-j+1$ copies of~$g$.
+\end{itemize}
+By \Cref{lem:caution:h1}, $t_0,\dots,t_N$ is therefore an elastic chain of length $N+1$ in $\inst(x)$. Together with~(ii) and $\mu(x)=0$, $\el(H_1,x\mid\emptyset;N)=N+1$, and $\Esc(H_1;N)=N+1$ by \Cref{thm:caution:esc}.
+\end{proof}
+
+\emph{Computation.} Exhaustive search over all ground terms of size at most~$N$ (\texttt{T1-code/elast.py}) gives a maximal elasticity of $4,5$ at $N=3,4$ over $\{a,b,g,p\}$, which is $N+1$. With a single constant, over $\{c,g,p\}$ at $N=3,4,5$, it gives $3,4,5=N$. We re-ran both for this paper.
+
+% ---------------------------------------------------------------------
+\subsection{Two-sided checking}\label{app:caution:bell}
+
+\begin{proof}[Proof of \Cref{prop:caution:bell}]
+Let the signature have constants $a,b_1,\dots,b_n$ and an $n$-ary symbol~$f$. Take the target $\Rstar=\inst(f(a,\dots,a))=\{f(a,\dots,a)\}$ and $P_0=\Rstar$. For a partition $\pi$ of $[n]$ with blocks indexed $1,\dots,|\pi|$, let $\pi(j)$ be the index of the block containing~$j$, and put
+\[
+s_\pi:=f(b_{\pi(1)},\dots,b_{\pi(n)}),\qquad\sigma_\pi:=f(x_{\pi(1)},\dots,x_{\pi(n)}).
+\]
+Three facts:
+\begin{enumerate}[label=(\arabic*)]
+\item $f(a,\dots,a)\in\inst(\sigma_\pi)$.
+\item $s_{\pi'}\in\inst(\sigma_\pi)$ iff $\pi$ refines $\pi'$. Indeed, $s_{\pi'}$ is an instance iff the assignment $x_{\pi(j)}\mapsto b_{\pi'(j)}$ is well defined, i.e.\ iff $\pi(j)=\pi(k)$ implies $\pi'(j)=\pi'(k)$.
+\item Each $s_\pi$ has size $n+1$ and is invalid.
+\end{enumerate}
+List the $\Bell(n)$ partitions as $\pi_1,\pi_2,\dots$ along a linear extension of refinement with the finest first, so that if $\pi_u$ properly refines $\pi_v$ then $u<v$. The prover queries $s_{\pi_1},s_{\pi_2},\dots$ in this order.
+
+Let $V$ be two-sided, and consider the query $s_{\pi_v}$. Every label received so far is negative, except for the positives in~$P_0$, and it concerns some $s_{\pi_u}$ with $u<v$. Such a step is not an instance of $\sigma_{\pi_v}$: by~(2) that would require $\pi_v$ to refine $\pi_u$, which for $u<v$ and $\pi_u\neq\pi_v$ contradicts the order. With~(1), $\inst(\sigma_{\pi_v})$ is in the current version space and contains $s_{\pi_v}$. So $s_{\pi_v}\in\bigcup\VS$, and $V$ cannot reject it. $V$ is $0$-sound and $s_{\pi_v}$ is invalid, so $V$ cannot accept it. Hence $V$ escalates every one of the $\Bell(n)$ queries.
+
+\emph{Fixed signature.} The two-sided VS verifier escalates $q$ only if $q\in\bigcup\VS\setminus\bigcap\VS$. Once escalated, $q$ is labelled and joins $P$ or $P^-$. From then on $q\in\bigcap\VS$ (accepted) or $q\notin\bigcup\VS$ (rejected), so no step is escalated twice. A ground term of size~$n$ is a string of $n$ symbols in Polish notation, so over a finite signature~$\Sigma$ there are at most $\sum_{n\le N}|\Sigma|^n\le(|\Sigma|+1)^N$ steps of size at most~$N$.
+\end{proof}
+
+The proposition originally claimed super-exponential cost without qualification. That needs a signature that grows with~$N$, and the fixed-signature bound was added (referee report A-7). \emph{Computation.} A brute-force search over all depth-one schemas $f(t_1,\dots,t_n)$ with $t_i\in\{a,b_j,\text{metavariables}\}$, together with~$x$, queried in order of decreasing number of blocks, gives $2$, $5$ and $15$ forced escalations for $n=2,3,4$. These are $\Bell(2),\Bell(3),\Bell(4)$ (\texttt{T1-code/checks37.py}, re-run).
+
+% ---------------------------------------------------------------------
+\subsection{Tagged rules}\label{app:caution:tagged}
+
+\begin{proof}[Proof of \Cref{thm:caution:tagged}]
+Let $G=\{\inst(\sigma):\sigma\text{ a schema}\}$ be the class of nonempty single-schema instance sets. For a set $Q$ of steps let $\VS^G(Q)=\{C\in G:Q\subseteq C\}$. For a set $P$ of tagged steps let $P^{(i)}=\{s:(i,s)\in P\}$.
+
+\emph{(1) Factorization.} A hypothesis $\bigcup_i\{i\}\times\inst(\sigma_i)$ contains $P$ iff $P^{(i)}\subseteq\inst(\sigma_i)$ for every~$i$. So $\VS(P)$ corresponds bijectively to $\prod_i\VS^G(P^{(i)})$, via $(\sigma_i)_i\mapsto(\inst\sigma_i)_i$. If $P\subseteq\Rstar$, each factor contains $\inst(\sigma_i^*)$ and is nonempty.
+
+\emph{(2) Intersection.} $(i,s)\in\bigcap\VS(P)$ iff $s\in C_i$ for every tuple $(C_1,\dots,C_k)$ in the product. Because the other factors are nonempty, this holds iff $s\in\bigcap\VS^G(P^{(i)})$. So $\bigcap\VS(P)=\bigcup_i\{i\}\times\bigcap\VS^G(P^{(i)})$.
+
+\emph{(3) Chains.} Let $(i_1,s_1),\dots,(i_m,s_m)\in\Rstar$. By~(2), $(i_u,s_u)$ escapes relative to $P_0$ and the earlier steps iff $s_u\notin\bigcap\VS^G(P_0^{(i_u)}\cup\{s_v:v<u,\ i_v=i_u\})$. So the sequence is elastic iff, for each~$i$, its tag-$i$ subsequence is an elastic chain for $\inst(\sigma^*_i)$ in~$G$ relative to $P_0^{(i)}$. Splitting an elastic sequence by tags gives $\le$, and concatenating maximal per-tag chains gives $\ge$. Hence $\el(\Htag k,\Rstar\mid P_0;N)=\sum_i\el_i$.
+
+\emph{(4) Per-rule bounds.} The classes $G$ and $H_1$ differ only by~$\emptyset$, which contains no nonempty set. So for nonempty data they have the same version spaces. If $P_0^{(i)}\neq\emptyset$, \Cref{thm:caution:single}(i) gives $\el_i\le\mu(\lgg P_0^{(i)})-\mu(\sigma_i^*)$. If $P_0^{(i)}=\emptyset$, drop the first element of a chain, and the rest is a chain relative to a singleton. The argument of \Cref{thm:caution:single}(ii) then gives $\el_i\le1+N-\mu(\sigma_i^*)$. Hence $\Esc(\Htag k;N)=\sup\el\le k(N+1)$ by \Cref{thm:caution:esc}.
+
+\emph{(5) Tightness.} Assume constants $a,b$ and a unary~$g$, and take $\sigma_i^*=x$ for all~$i$ and $P_0=\emptyset$. In~$G$, $\bigcap\VS^G(\emptyset)\subseteq\inst(a)\cap\inst(b)=\emptyset$, so the chain $t_0,\dots,t_N$ of \Cref{thm:caution:single}(iii) is elastic in~$G$. Concatenate its $k$ tagged copies $(i,t_0),\dots,(i,t_N)$ for $i=1,\dots,k$. By~(3) this is an elastic chain of length $k(N+1)$, so $\Esc(\Htag k;N)=k(N+1)$.
+\end{proof}
+
+The original justification asserted that $\Htag k$ is intersection-closed. It is not: for example, $(\{1\}\times\inst(a)\cup\{2\}\times\inst(c))\cap(\{1\}\times\inst(b)\cup\{2\}\times\inst(c))=\{2\}\times\inst(c)$ is neither a member nor empty. The factorization~(1)--(2) is what the proof uses (referee report A-8).
+
+% ---------------------------------------------------------------------
+\subsection{Untagged rules}\label{app:caution:untagged}
+
+\begin{proof}[Proof of \Cref{thm:caution:untagged}(i)]
+Assume $N\ge k+1$, and let $n+1:=\lfloor(N-1)/k\rfloor\ge1$. For $a\in\{0,\dots,n\}^k$ put $s_a:=p(g^{a_1}c,\dots,g^{a_k}c)$, which has size $1+\sum_j(a_j+1)\le1+k(n+1)\le N$. All $s_a$ lie in the target $\inst(p(x_1,\dots,x_k))$. Order the $(n+1)^k$ vectors by non-increasing $\sum_ja_j$, breaking ties arbitrarily, and query the $s_a$ in this order. Let $a$ be the current vector and $a'\neq a$ an earlier one. Then $\sum a'\ge\sum a$, so $a'_j>a_j$ for some~$j$; otherwise $a'\le a$ componentwise, and with $\sum a'\ge\sum a$ this would give $a'=a$. Put
+\[
+R'_a:=\bigcup_{j=1}^k\inst\big(p(x_1,\dots,x_{j-1},g^{a_j+1}(x_j),x_{j+1},\dots,x_k)\big)\in H_k .
+\]
+Every earlier $s_{a'}$ lies in the $j$-th schema for a $j$ with $a'_j\ge a_j+1$. The current $s_a$ lies in none, since its $j$-th argument has only $a_j$ copies of~$g$. So $R'_a$ witnesses that $s_a$ escapes, and the sequence is an elastic chain of length $(n+1)^k$ relative to $P_0=\emptyset$. By \Cref{thm:caution:esc}, $\Esc(H_k;N)\ge\lfloor(N-1)/k\rfloor^k$.
+\end{proof}
+
+\begin{proof}[Proof of \Cref{thm:caution:untagged}(ii)]
+Let $k\ge2$, and let $s_1,\dots,s_m$ be an elastic chain relative to $\emptyset$, with $|s_i|\le N$ and witnesses $R_i=\bigcup_{l\le k}\inst(\tau_{i,l})$. Unions of fewer than $k$ schemas are padded by repetition. Let $\pi_i$ be the partition of $[i-1]$ that assigns $j$ to block~$l$ when $l$ is the least index with $s_j\in\inst(\tau_{i,l})$. It has at most $k$ blocks.
+
+\emph{Chains of indices.} Call $i_0<i_1<\dots<i_r$ a \emph{chain} if, for each $b\ge1$, the indices $i_0,\dots,i_{b-1}$ all lie in one block of $\pi_{i_b}$, say block~$l$. Then $\tau_{i_b,l}$ covers $s_{i_0},\dots,s_{i_{b-1}}$, and it misses $s_{i_b}$ because $s_{i_b}\notin R_{i_b}$. So $s_{i_b}\notin\inst\lgg(s_{i_0},\dots,s_{i_{b-1}})\subseteq\inst(\tau_{i_b,l})$, and hence
+\[
+\lgg(s_{i_0})\prec\lgg(s_{i_0},s_{i_1})\prec\dots\prec\lgg(s_{i_0},\dots,s_{i_r})
+\]
+strictly. The first term is ground, with $\mu\le N$. By the rank lemma, $\mu$ drops by at least one at each step and stays nonnegative. So $r+1\le N+1$: every chain has length at most $N+1$. This is the argument of \Cref{thm:caution:single}, and it needs no common target schema.
+
+\emph{The recursion.} Let $g(d)$ be the largest $m$ for which there is a sequence $\pi_1,\dots,\pi_m$, with $\pi_i$ a partition of $[i-1]$ into at most $k$ blocks, all of whose chains have length at most~$d$. A two-element index set $\{i_0<i_1\}$ is always a chain, so $g(1)=1$. For $d\ge2$, split $[m-1]$ into the blocks of~$\pi_m$. Fix a block~$B$, and restrict each $\pi_j$ with $j\in B$ to $B\cap[j-1]$. This gives a sequence of the same kind indexed by~$B$. Its chains are chains of the original sequence, and appending~$m$ to any of them gives a chain again, because $B$ is one block of~$\pi_m$. So its chains have length at most $d-1$, and $|B|\le g(d-1)$. Hence $m-1\le k\,g(d-1)$. So $g(d)\le1+k\,g(d-1)$, and $g(d)\le\sum_{u<d}k^u=(k^d-1)/(k-1)$. With $d=N+1$, $m\le(k^{N+1}-1)/(k-1)$, and \Cref{thm:caution:esc} gives the bound on $\Esc(H_k;N)$.
+\end{proof}
+
+\begin{proof}[Proof of \Cref{thm:caution:untagged}(iii)]
+Identify $a,b$ with $0,1$, so that steps are points $x\in\{0,1\}^n$. A linear flat schema denotes a subcube, which fixes some coordinates and leaves the others free. For points $y,p$ and a set $J$ of coordinates, say $y$ \emph{agrees with $p$ on~$J$} if $y_j=p_j$ for all $j\in J$. The pair $(J,p|_J)$ with $|J|=k$ is a \emph{pattern}, and a set $P$ of points \emph{realizes} it if some $y\in P$ agrees with $p$ on~$J$.
+
+\emph{Escape criterion.} Let $P$ be the set of earlier chain elements. A subcube $Q$ with $p\notin Q$ fixes some coordinate $j$ to $1-p_j$, since otherwise $p\in Q$. So $Q$ lies in the half-cube $\{x_j=1-p_j\}$, which is itself a subcube avoiding~$p$. Hence $p$ escapes iff some union of at most $k$ half-cubes $\{x_j\neq p_j\}$, $j\in J$, covers~$P$. That holds iff no $y\in P$ agrees with $p$ on~$J$. Padding $J$ to size~$k$ (possible since $n\ge k$) preserves this. So $p$ escapes iff some pattern of~$p$ is not realized by~$P$.
+
+\emph{Upper bound.} There are $2^k\binom nk$ patterns. The first chain element realizes $\binom nk$ of them. Each later element escapes, so it realizes at least one pattern not realized before, and realized patterns stay realized. So the chain has length at most $1+(2^k-1)\binom nk$.
+
+\emph{Lower bound.} The target is the full cube $f(x_1,\dots,x_n)$. Query all points of weight at most~$k$ in order of non-decreasing weight. Let $x$ have weight $w\le k$, and choose $J\supseteq\operatorname{supp}(x)$ with $|J|=k$. An earlier point $y$ that agrees with $x$ on~$J$ has $y_j=1$ on $\operatorname{supp}(x)$, so $\operatorname{supp}(y)\supseteq\operatorname{supp}(x)$. Its weight is at most~$w$, so $y=x$, which is impossible for an earlier, distinct point. So every such point escapes, and the chain has length $\sum_{w=0}^k\binom nw$.
+
+\emph{Repeated metavariables.} A flat schema with repeated metavariables denotes the points that satisfy its constants and the equalities $x_i=x_j$ for positions sharing a metavariable. If such a schema avoids~$p$, then either a constant position $j$ has $p_j\neq$ the constant, so the schema lies in $\{x_j\neq p_j\}$, or all constants agree with~$p$ and some pair $i,j$ sharing a metavariable has $p_i\neq p_j$, so the schema lies in $\{x_i=x_j\}$. Each such set is determined by at most two coordinates of~$p$, and each of its points disagrees with $p$ on one of them. If $p$ escapes, there is therefore a set $J$ of at most $2k$ coordinates on which no earlier point agrees with~$p$. Padding $J$ to size $2k$ (for $n\ge2k$) and counting patterns as above gives a chain length of at most $1+(2^{2k}-1)\binom n{2k}$. The class contains the linear one, and elastic chains stay elastic in a larger class, so the lower bound persists.
+\end{proof}
+
+The original summary said ``$\Theta(n^k)$ for flat schemas''. That is proved only for linear flat schemas, and it needs $n\ge k$ (referee report A-9). \emph{Computation.} The exact values quoted in \Cref{sec:caution:cost} come from \texttt{T1-code/elast.py} (deep schemas), \texttt{subcube.py} (subcubes) and \texttt{abstr2.py} (the partition abstraction), and were re-run for this paper. Separately, explicit elastic sequences of length $\lfloor(N-1)/k\rfloor^k$ were checked for $(k,n)\in\{(2,1),(2,2),(2,3),(3,1),(3,2)\}$ (\texttt{checks37.py}).
+
+% ---------------------------------------------------------------------
+\subsection{The binomial conjecture: the case $k=2$, $h=3$, and the evidence}\label{app:caution:conj}
+
+\begin{proposition}[\Cref{conj:caution:binomial} for $(k,h)=(2,3)$]\src{T1 Conj 3.8, case proved during verification}\label{prop:app:caution:conj23}
+Let $\mathcal C$ be a family of subsets of~$U$, closed under arbitrary intersections, with $U\in\mathcal C$ and of height~$3$. Then every elastic sequence for the class of unions of one or two members of~$\mathcal C$, relative to~$\emptyset$, has length at most $6=\binom42$.
+\end{proposition}
+
+\begin{proof}
+\emph{Reduction.} Let $C_0=\bigcap\mathcal C$. Its points lie in every member, so they never escape and never occur in an elastic sequence. Removing $C_0$ from $U$ and from every member preserves intersection-closure, height and elastic sequences. So we may assume $C_0=\emptyset$.
+
+\emph{Ranks.} Let the rank $r(X)$ of a member be the length of the longest strict chain of members from $\emptyset$ to~$X$. If $X\subsetneq Y$ are members, then $r(X)<r(Y)$. Since $r(U)=3$, every member $X\neq U$ has $r(X)\le2$. The only member of rank~$0$ is~$\emptyset$. Members of rank~$1$ are \emph{atoms} and members of rank~$2$ are \emph{planes}.
+
+\emph{Fact~1.} If $X,Y$ are members with $X\not\subseteq Y$, then $X\cap Y$ is a member with $r(X\cap Y)<r(X)$. So the intersection of a plane with a member not containing it is $\emptyset$ or an atom, and the intersection of an atom with a member not containing it is~$\emptyset$.
+
+Let $s_1,\dots,s_m$ be elastic, with witnesses $Y_i^1\cup Y_i^2$ (taking $Y_i^1=Y_i^2$ for a single member) that cover $s_1,\dots,s_{i-1}$ and miss~$s_i$.
+
+\emph{Claim A: each atom contains at most one $s_i$.} Suppose $s_i,s_j\in A$ with $i<j$. Then $s_i\in Y^l_j$ for some~$l$, and $s_j\notin Y^l_j$, so $A\not\subseteq Y^l_j$. By Fact~1, $A\cap Y^l_j=\emptyset$, contradicting $s_i\in A\cap Y^l_j$.
+
+\emph{Claim B: each plane contains at most three $s_i$.} Let $X$ be a plane and $s_j$ the last sequence element in~$X$. The earlier elements of $X$ are covered by $Y^1_j\cup Y^2_j$. Since $s_j\notin Y^l_j$, $X\not\subseteq Y^l_j$, so each $X\cap Y^l_j$ is $\emptyset$ or an atom. By Claim~A, each contains at most one sequence element. So $X$ has at most two elements before~$s_j$.
+
+By Claims A and~B, every member other than~$U$ contains at most three sequence elements.
+
+\emph{The contradiction.} Suppose $m\ge7$. The members $Y^1_7,Y^2_7$ miss~$s_7$, so they differ from~$U$, and together they cover $s_1,\dots,s_6$. Each covers at most three, so each covers exactly three, disjointly. Atoms cover at most one, so both are planes; call them $X$ and~$Y$. Moreover, $X$ contains no element covered only by~$Y$, since it would then contain four sequence elements, contrary to Claim~B; and likewise for~$Y$. Say $s_6\in Y$. The witness $Z_1\cup Z_2$ of $s_6$ misses~$s_6$ and covers the three $X$-elements, which all lie among $s_1,\dots,s_5$.
+
+Let $Z$ be a member with $s_6\notin Z$. If $Z\not\supseteq X$, then $Z\cap X$ is $\emptyset$ or an atom, so $Z$ covers at most one $X$-element. If $Z\supsetneq X$, then $r(Z)\ge3$, so $Z=U\ni s_6$, which is impossible. Hence a member that covers two or more $X$-elements equals~$X$. One of $Z_1,Z_2$ covers at least two $X$-elements; say $Z_1=X$. Then $X$ contains neither of the two $Y$-elements among $s_1,\dots,s_5$, so $Z_2$ must cover both. But $s_6\in Y\setminus Z_2$, so $Z_2\cap Y$ is $\emptyset$ or an atom, which covers at most one of them by Claim~A. This is a contradiction, so $m\le6$.
+\end{proof}
+
+This argument was sketched by a referee and written out in full by the author of T1 (referee report A-5). The same verification pass made three corrections to the evidence:
+\begin{itemize}
+\item An earlier claim that ``a natural one-step decomposition proof fails on some extremal sequences'' had no surviving script. It is withdrawn and plays no role here.
+\item The run with height $h\le5$ used a universe of $14$ points. The elasticity cannot exceed the number of points, so ``$14$ versus the conjectured $15$'' is a ceiling artifact, not evidence.
+\item The graphic-matroid data were added. The ground set of $M(K_{h+1})$ is the edge set of $K_{h+1}$, with $\binom{h+1}2$ points. Its flats are the edge sets that are unions of complete graphs on the blocks of a partition of the vertices. Flats are closed under intersection, and the rank of the matroid is~$h$, so the family has height~$h$. \texttt{T1-code/graphic.py} computes the $2$-union elasticity as $3,6,10,15=\binom{h+1}2$ for $h=2,3,4,5$, so every edge can be placed in an elastic sequence. For $k=3$ it computes $6$ and $10$ for $K_4$ and $K_5$, which is the number of edges. We re-ran these computations for this paper.
+\end{itemize}
+
+% ---------------------------------------------------------------------
+\subsection{Time-uniform soundness}\label{app:caution:ville}
+
+\begin{lemma}[Ville's inequality \citep{ville1939etude}]\label{lem:app:caution:ville}
+If $(M_t)_{t\ge0}$ is a nonnegative supermartingale with $\E M_0\le1$, then $\Prob[\exists t:\ M_t\ge1/\delta']\le\delta'$ for every $\delta'\in(0,1]$.
+\end{lemma}
+
+\begin{proof}[Proof of \Cref{thm:caution:ville}]
+\emph{Observations and likelihoods.} In round~$u$ there is at most one observation~$O_u$: a human datum $X\in S$, an oracle answer $y\in\{0,1\}$ to an escalated query~$q_u$, or nothing. For each~$R$ let $\lambda_R(O_u)$ be $p_R(X)$, $\ell_R(y\mid q_u)$ or~$1$ accordingly, and let $L_t(R)=\prod_{u\le t}\lambda_R(O_u)$. Under the hypothesis of~(a), conditional on $\mathcal F_u$ the law of $O_{u+1}$ is $\lambda_{\Rstar}$ restricted to the type of round $u+1$. That type is $\mathcal F_u$-measurable: $V_\delta$ is deterministic, and $q_{u+1}$ and the schedule of human data are $\mathcal F_u$-measurable. In particular $\lambda_{\Rstar}(O_{u+1})>0$ almost surely, so $L_t(\Rstar)>0$ almost surely.
+
+\emph{(a) Supermartingale.} Observation spaces are countable. For each~$R$,
+\[
+\E\Big[\frac{\lambda_R(O_{u+1})}{\lambda_{\Rstar}(O_{u+1})}\,\Big|\,\mathcal F_u\Big]=\sum_{o:\ \lambda_{\Rstar}(o)>0}\lambda_R(o)\le1 .
+\]
+The quantity $L_u(R)/L_u(\Rstar)$ is $\mathcal F_u$-measurable, and the sum defining $Z_{u+1}$ has nonnegative terms. So conditional monotone convergence gives
+\[
+\E[Z_{u+1}\mid\mathcal F_u]=\sum_Rw(R)\frac{L_u(R)}{L_u(\Rstar)}\,\E\Big[\frac{\lambda_R(O_{u+1})}{\lambda_{\Rstar}(O_{u+1})}\,\Big|\,\mathcal F_u\Big]\le Z_u ,
+\]
+and $Z_0=\sum_Rw(R)=1$. By \Cref{lem:app:caution:ville}, the event $B=\{\exists t:\ Z_t\ge1/\delta'\}$ has probability at most~$\delta'$. Off~$B$, for every~$t$,
+\[
+w_t(\Rstar)=\wstar/Z_t>\wstar\delta'\ge\delta .
+\]
+If the query in round $t+1$ is some $q\notin\Rstar$, then $w_t(\{R:q\notin R\})\ge w_t(\Rstar)>\delta$, so $V_\delta$ does not accept it. Hence $\Prob[\exists t:\ V_\delta\text{ accepts an invalid }q_t]\le\Prob(B)\le\delta'$.
+
+\emph{(b) Deterministic oracle.} The answer to an escalated $q$ is $y=\mathbf 1[q\in\Rstar]$, and $\lambda_R(y)/\lambda_{\Rstar}(y)=\mathbf 1[\mathbf 1[q\in R]=\mathbf 1[q\in\Rstar]]\le1$. Let $X_1,X_2,\dots$ be the human data in order of arrival, and let $n(t)$ be the number that have arrived by round~$t$. Then, pathwise,
+\[
+Z_t\le Z^H_{n(t)},\qquad Z^H_n:=\sum_Rw(R)\prod_{j\le n}\frac{p_R(X_j)}{p_{\Rstar}(X_j)} .
+\]
+Since the $X_j$ are i.i.d.\ $p_{\Rstar}$, the computation of~(a), in the filtration $\mathcal G_n=\sigma(X_1,\dots,X_n)$, shows that $Z^H$ is a nonnegative supermartingale with $Z^H_0=1$. Let $G=\{\sup_nZ^H_n<1/\delta'\}$. It depends only on the human data, and $\Prob(G)\ge1-\delta'$ by \Cref{lem:app:caution:ville}. On~$G$, for every prover strategy and every arrival schedule, $Z_t<1/\delta'$ for all~$t$, and the argument of~(a) shows that no invalid step is ever accepted. The prover may know $\Rstar$, the verifier and all of $X_1,X_2,\dots$ in advance. It can choose only the timing of the data, and the bound holds for every timing.
+\end{proof}
+
+The hypothesis of~(a) was implicit in the original statement. The referees showed that it is needed, and it was made explicit (referee report B-2).
+
+\emph{A prover that foresees the noise.} Let $\Hc=2^{\{0,1\}}$ with the uniform prior, so $\wstar=1/4$, and let $\Rstar=\{0\}$. There are no human data. The oracle flips the true label with probability~$\eta$, independently at each query, so $\ell_R(y\mid q)=1-\eta$ if $y=\mathbf 1[q\in R]$ and $\eta$ otherwise. Set $\delta'=0.05$ and $\delta=\wstar\delta'$. The prover knows in advance whether the next answer will be flipped. If it will be, the prover queries the invalid step~$1$, and the answer reads ``valid''. If not, it queries the valid step~$0$, and the answer again reads ``valid''. So every answer is ``valid'', and each answer to a query of~$1$ multiplies the likelihood ratio of $\{0,1\}$ to $\{0\}$ by $(1-\eta)/\eta>1$. No answer ever lowers that ratio. Flips occur infinitely often, so the posterior mass of the hypotheses that exclude~$1$ eventually falls below~$\delta$, and the next query of~$1$ is accepted. The simulation \texttt{T1-code/prescient.py} gives acceptance probability $1.0$ at $\eta=0.1$ and at $\eta=0.3$, against the bound $0.05$. This prover violates the hypothesis of~(a), because $\mathcal F_t$ would have to contain the future noise. In~(b) no such prover exists, because there is no noise to foresee.
+
+% ---------------------------------------------------------------------
+\subsection{Tightness of the constant}\label{app:caution:tight}
+
+\begin{proof}[Proof of \Cref{prop:caution:tight}]
+Let $\Hc=\{\Rstar,R'\}$ with $w(\Rstar)=\wstar$ and $w(R')=1-\wstar$. While all human data seen are~$a$, after $t$ of them $L_t(\Rstar)=(1-u)^t$ and $L_t(R')=1$. Write $r_t=(1-u)^{-t}$. Then
+\[
+w_t(\{R:c\notin R\})=w_t(\Rstar)=\frac{\wstar}{\wstar+(1-\wstar)r_t}.
+\]
+$V_\delta$ with $\delta=\wstar\delta'$ accepts $c$ iff this is less than $\wstar\delta'$, i.e.\ iff $\wstar+(1-\wstar)r_t>1/\delta'$, i.e.\ iff $r_t>\theta=(1-\wstar\delta')/((1-\wstar)\delta')$. Note that $\theta\ge1$ since $\delta'\le1$, so $t^*\ge1$.
+\begin{itemize}
+\item Once a~$b$ arrives, $L(R')=0$, and $c$ is never accepted.
+\item If $c$ is queried at some $t<t^*$ while only $a$'s have arrived, it is not accepted. If it is escalated, the deterministic answer ``invalid'' sets $L(R')=0$, and again $c$ is never accepted.
+\end{itemize}
+So the prover's best strategy is to query $c$ exactly once, after the $t^*$-th datum. It succeeds iff the first $t^*$ data are all~$a$, which has probability $(1-u)^{t^*}$.
+
+By the choice of $t^*$, $r_{t^*}>\theta$, so $(1-u)^{t^*}<1/\theta$. By minimality, $r_{t^*-1}\le\theta$, so $(1-u)^{t^*}\ge(1-u)/\theta$. Also
+\[
+1/\theta=(1-\wstar)\delta'/(1-\wstar\delta')\le\delta',
+\]
+and $(1-u)/\theta\to\delta'$ as $u,\wstar\to0$. The exact values $0.989\,\delta'$ and $0.991\,\delta'$ quoted in the statement come from \texttt{T1-code/ville2.py}, which computes $(1-u)^{t^*}$ exactly; we re-ran it. It also gives, for example, $0.781\,\delta'$ at $u=0.5$, $\wstar=\delta'=0.01$.
+\end{proof}
+
+% ---------------------------------------------------------------------
+\subsection{The escalation bound}\label{app:caution:bayesesc}
+
+\begin{proof}[Proof of \Cref{thm:caution:bayesesc}]
+Let $\mathcal F_u$ be as in \Cref{thm:caution:ville}(a). $Z$ changes only in data rounds and in escalation rounds.
+
+\emph{Data round.} The update is $Z_u=Z_{u-1}F_u$, where $F_u=\sum_Rw_{u-1}(R)\,p_R(X_u)/p_{\Rstar}(X_u)$. This uses $w_{u-1}(R)=w(R)L_{u-1}(R)/(Z_{u-1}L_{u-1}(\Rstar))$. Since $w_{u-1}$ is $\mathcal F_{u-1}$-measurable and $X_u$ is fresh,
+\[
+\E[F_u\mid\mathcal F_{u-1}]=\sum_Rw_{u-1}(R)\sum_{x:\,p_{\Rstar}(x)>0}p_R(x)\le1 .
+\]
+
+\emph{Escalation round.} The deterministic answer is $y=\mathbf 1[q\in\Rstar]$, and the update is $Z_u=Z_{u-1}\sum_Rw_{u-1}(R)\,\mathbf 1[\mathbf 1[q\in R]=y]$.
+\begin{itemize}
+\item If $q$ is valid, the factor is $w_{u-1}(\{R:q\in R\})=1-w_{u-1}(\{R:q\notin R\})\le1-\delta$, because $q$ was not accepted.
+\item If $q$ is invalid, the factor is $w_{u-1}(\{R:q\notin R\})=1-w_{u-1}(\{R:q\in R\})\le1-\delta_r$, because $q$ was not rejected. In every case it is at most~$1$.
+\end{itemize}
+
+\emph{Counting.} Let $M_t=\prod_{\text{data rounds }u\le t}F_u$. This is a nonnegative supermartingale with $M_0=1$. Let $E^+_t$ and $E^-_t$ be the numbers of escalations of valid and of invalid queries up to time~$t$. Since $w_t(\Rstar)\le1$,
+\[
+\wstar\le\frac{\wstar}{w_t(\Rstar)}=Z_t\le M_t\,(1-\delta)^{E^+_t}(1-\delta_r)^{E^-_t}.
+\]
+By \Cref{lem:app:caution:ville}, with probability at least $1-\delta''$ we have $M_t<1/\delta''$ for all~$t$. On that event, $(1-\delta_m)^{E^+_t+E^-_t}>\wstar\delta''$, and using $\ln\frac1{1-x}\ge x$,
+\[
+\nesc_t=E^+_t+E^-_t\le\frac{\ln(1/\wstar)+\ln(1/\delta'')}{\delta_m}.
+\]
+Dropping the factor $(1-\delta_r)^{E^-_t}\le1$ gives $E^+_t\le(\ln(1/\wstar)+\ln(1/\delta''))/\delta$ against every prover. For an honest prover $E^-_t=0$.
+
+\emph{VS posterior.} Here a datum's likelihood is $\mathbf 1[X_u\in R]$, and $X_u\in\Rstar$. So $F_u=w_{u-1}(\{R:X_u\in R\})\le1$ and $M_t\le1$ deterministically. The same computation then gives $\nesc_t\le\ln(1/\wstar)/\delta_m$, and $E^+_t\le\ln(1/\wstar)/\delta$.
+\end{proof}
+
+T1 states the escalation bound with $\delta_m=\delta$ for honest provers. The bound on $E^+_t$ against every prover is read off the same computation: invalid escalations multiply $Z$ by at most~$1$. \Cref{cor:caution:structbayes} uses it in this form.

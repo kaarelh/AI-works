@@ -1,5 +1,5 @@
 """T6 check 7 (exploratory, informs an open problem): for the k-exclusive credence P_k, what is the smallest
-multiplicity m of a valid counting sequent it violates?  Search integer books lam in {-B..B}^F."""
+threshold m (called "multiplicity" before verification) of a valid counting sequent it violates?  Search integer books lam in {-B..B}^F."""
 import itertools
 import numpy as np
 
@@ -22,4 +22,4 @@ def search(k, B):
     return best
 
 for k, B in [(3, 2), (4, 1), (4, 2)]:
-    print("k=%d, |lam_i|<=%d: smallest violated multiplicity m, book, c =" % (k, B), search(k, B))
+    print("k=%d, |lam_i|<=%d: smallest violated threshold m, book, c =" % (k, B), search(k, B))

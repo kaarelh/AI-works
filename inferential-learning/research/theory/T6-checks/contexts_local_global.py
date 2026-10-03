@@ -46,6 +46,68 @@ for t in range(20000):
         assert set(tuple(g[x] for x in c) for g in G) == local[ci]
 print("(a) tree cover: %d random mutually-conservative systems, all globally consistent and conservative: OK" % tested)
 
+# (a2) [added after verification] random trees (2-5 nodes), random atom placement with running intersection
+# (each atom occupies a random connected subtree), random local theories; keep the edge-conservative ones.
+# Negative control: same, but atoms placed on arbitrary (possibly disconnected) node sets.
+def random_system(rng, connected):
+    nn = rng.randint(2, 5)
+    par = {v: rng.randrange(v) for v in range(1, nn)}
+    adj = {v: set() for v in range(nn)}
+    for v, p in par.items():
+        adj[v].add(p); adj[p].add(v)
+    atoms_of = {v: [] for v in range(nn)}
+    for a in range(rng.randint(2, 5)):
+        if connected:
+            sub = {rng.randrange(nn)}
+            while rng.random() < 0.6:
+                frontier = [u for s in sub for u in adj[s] if u not in sub]
+                if not frontier:
+                    break
+                sub.add(rng.choice(frontier))
+        else:
+            sub = {v for v in range(nn) if rng.random() < 0.5} or {rng.randrange(nn)}
+        for v in sub:
+            atoms_of[v].append("y%d" % a)
+    ctxs = [atoms_of[v] for v in range(nn)]
+    if any(len(c) == 0 or len(c) > 4 for c in ctxs):
+        return None
+    loc = []
+    for c in ctxs:
+        allm = list(itertools.product([0, 1], repeat=len(c)))
+        L = set(m for m in allm if rng.random() < 0.6)
+        if not L:
+            return None
+        loc.append(L)
+    for v, p in par.items():
+        sh = [x for x in ctxs[v] if x in ctxs[p]]
+        if proj(loc[v], ctxs[v], sh) != proj(loc[p], ctxs[p], sh):
+            return None
+    return ctxs, loc
+
+rng2 = random.Random(5)
+tested2 = 0
+while tested2 < 2000:
+    s = random_system(rng2, connected=True)
+    if s is None:
+        continue
+    ctxs, loc = s; tested2 += 1
+    G = global_models(ctxs, loc)
+    for ci, c in enumerate(ctxs):
+        assert set(tuple(g[x] for x in c) for g in G) == loc[ci], "counterexample to Thm 4.6!"
+neg = bad = 0
+while neg < 2000:
+    s = random_system(rng2, connected=False)
+    if s is None:
+        continue
+    ctxs, loc = s; neg += 1
+    G = global_models(ctxs, loc)
+    if any(set(tuple(g[x] for x in c) for g in G) != loc[ci] for ci, c in enumerate(ctxs)):
+        bad += 1
+print("(a2) %d random tree covers with running intersection and conservative edges: every local model extends: OK"
+      % tested2)
+print("     negative control (running intersection dropped, edges still conservative): %d of %d systems fail" % (bad, neg))
+assert bad > 0
+
 # (b) frustrated triangle
 contexts = [["a", "b"], ["b", "c"], ["c", "a"]]
 anti = set(m for m in itertools.product([0, 1], repeat=2) if m[0] != m[1])   # x <-> not y

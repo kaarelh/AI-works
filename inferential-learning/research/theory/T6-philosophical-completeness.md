@@ -12,7 +12,7 @@
 * **[cited]**: a known result. **(u)** means the bibliographic or technical details are from memory and unverified.
 * **[sketch]**, **[conjecture]**: as stated.
 
-Sanity-check scripts are in `theory/T6-checks/` (§10). I build on T2 and cite its numbering ("T2 Lemma 4.1", etc.). I do not reprove T2's results.
+Sanity-check scripts are in `theory/T6-checks/` (§10). `repair_checks.py` and part (a2) of `contexts_local_global.py` were added after adversarial verification; see the Verification log at the end. I build on T2 and cite its numbering ("T2 Lemma 4.1", etc.). I do not reprove T2's results.
 
 ---
 
@@ -24,27 +24,27 @@ Sanity-check scripts are in `theory/T6-checks/` (§10). I build on T2 and cite i
    * Sentences and models form a Galois connection $\mathrm{Mod}\dashv\mathrm{Th}$ (Sam's adjunction).
    * Sam's slogan is *strong* completeness: the image of $\mathrm{Th}$ is exactly the set of deductively closed sets (Prop 1.3). The user's slogan is *weak* completeness. Weak is strictly weaker: IPC is weakly but not strongly complete for Boolean valuations (Prop 1.6).
    * Both reduce to one statement: completeness ⟺ every *point* (completely meet-irreducible theory) is realized by a model (Thm 1.5). Every proof has two steps: (i) points exist (Zorn, free); (ii) points are realized (Henkin, Zariski, or trivially).
-   * Step (i) alone makes every calculus complete for its own points (Thm 1.4). So the proposition is a tautology if the "something" may be built from syntax. It is informative exactly when the semantic class is fixed independently.
+   * Every calculus is strongly complete for its own closed theories (Thm 1.4; no Zorn needed) and, if finitary, for its own points (Thm 1.5(a); step (i) alone). So the proposition is a tautology if the "something" may be built from syntax. It is informative exactly when the semantic class is fixed independently.
 2. **Positions (§2).**
    * Coherent maximal positions *are* the admissible valuations (Thm 2.2).
    * Scott relations are dually isomorphic to closed sets of valuations. The closure operators are explicit: overlap + weakening + cut on the syntax side, topological closure on the semantic side (Thm 2.4). This is Stone duality for the free Boolean algebra on the formulas (Rem 2.5).
    * Structurality ⟺ substitution-invariance, and every structural calculus is complete for its Lindenbaum bundle (Thm 2.6).
 3. **Credences (§3).**
    * Coherent ⟺ in the de Finetti polytope ⟺ satisfies every **counting sequent** (Thm 3.1).
-   * CCS-style local constraints are not sufficient, in two ways. Arity: for every $k$ there is a credence coherent on every sub-agenda over $<k$ atoms but incoherent (Thm 3.4). Multiplicity: the hierarchy is strict, and even all ordinary sequents' union bounds fail (Thm 3.5).
+   * CCS-style local constraints are not sufficient, in two ways. Arity: for every $k$ there is a credence coherent on every sub-agenda over $<k$ atoms but incoherent (Thm 3.4). Threshold: the hierarchy of counting sequents by their threshold $m$ is strict (the violated sequent repeats no formula), and even all ordinary sequents' union bounds fail (Thm 3.5). Each single finite agenda needs only finitely many counting sequents (its facets). What fails is any bound on arity or threshold that works uniformly across agendas.
    * Local additivity does suffice on logically closed agendas (Prop 3.6).
    * First-order: coherent ⟺ measure on complete theories (Thm 3.7). The Gaifman condition is a probabilistic ω-rule that pins true arithmetic (Thm 3.8). Every logical inductor's limit violates it (Cor 3.9).
-   * Finite VNM data are coherent iff there is no money pump (Prop 3.10).
+   * Finite VNM data are coherent iff no derivation of $L\succ L$ by mixing (independence) plus transitivity exists, a money-pump-like certificate (Prop 3.10).
 4. **Contexts (§4).**
-   * A monotone multi-context calculus is sound and complete for local-models (belief-state) semantics. Designated-context coherence ⟺ a bridge-compatible family of nonempty local belief states exists. The canonical one is the grounded equilibrium (Thm 4.1, Cor 4.2, Prop 4.3).
+   * A monotone multi-context calculus is sound and complete for local-models (belief-state) semantics. Designated-context coherence ⟺ a bridge-compatible family of local belief states exists that is nonempty at every designated context. The canonical one is the grounded equilibrium (Thm 4.1, Cor 4.2, Prop 4.3).
    * Bridges as rules of proof ≠ bridges as conditionals between worlds (Thm 4.5). A global world follows from local coherence on tree covers (Thm 4.6) but not on cycles (Prop 4.7, the frustrated triangle/Specker).
    * This yields Def 4.8: what "true in the context at hand" means.
 5. **Learned rules (§5).**
-   * Coherence on a designated context buys a Lindenbaum (syntactic) model (Thm 5.1). After Leibniz reduction it is the intended model iff the point is the theory of an intended valuation (Thm 5.2). For CPC every point is about **2**; finite-matrix logics talk about reduced generated submatrices (Prop 5.3). T2's residue of alternative meanings = a set of non-isomorphic things talked about (Ex 5.4).
+   * Coherence on a designated context buys a Lindenbaum (syntactic) model (Thm 5.1). After Leibniz reduction it is the intended model iff the point is the theory of a *generating* (surjective) intended valuation; in general one gets the reduction of the generated submatrix (Thm 5.2, Prop 5.3). For CPC every point is about **2**; finite-matrix logics talk about reductions of generated submatrices (Prop 5.3). T2's residue of alternative meanings = a set of non-isomorphic things talked about (Ex 5.4).
    * Non-standardness has two layers: coherent-but-false, and true-but-non-categorical. Two barriers make the caveat a theorem:
      * compactness (Thm 5.6);
-     * computability: a computable coherence notion matches "has an *intended* model" only if that is a Π₁ property (Thm 5.7). It fails for ℕ, for ℤ-solvability (MRDP) and for finite models.
-   * Anchoring pins exactly the definable vocabulary (Beth; Prop 5.8).
+     * computability: a computable coherence notion matches "has an *intended* model" only if that is a Π₁ property (Thm 5.7). It fails for ℕ, for ℤ-solvability (MRDP) and for finite models (in a vocabulary with a binary relation symbol).
+   * Anchoring pins exactly the definable vocabulary *uniformly over all possible anchorings* (Beth; Prop 5.8). A particular anchoring structure can pin more.
    * ℕ is pinned by second-order induction, initiality, Tennenbaum (the *unique computable* model of PA, answering "lowest-complexity structure?"), or the ω-rule. Each is an ingredient the barriers show no finitary computable coherence can supply.
 6. **Verdict (§6).**
    * Vindicated if "something" means "some model of the kind the semantics allows".
@@ -83,6 +83,8 @@ A **deductive system** on $S$ is a closure operator $C$ (Tarski): extensive, mon
 * A closure operator is determined by its fixed points, via $C(X)=\bigcap\{T\in\mathrm{Fix}(C):X\subseteq T\}$.
 * So $\mathrm{Fix}(C)=\mathrm{Fix}(\mathrm{Th}\circ\mathrm{Mod})$ iff $C=\mathrm{Th}\circ\mathrm{Mod}$. ∎
 
+*Note (added after verification).* The proof never uses soundness, so Prop 1.3 holds for every closure operator $C$. Soundness is stated only because it is the case of interest. [checked: `repair_checks.py` (A), 0 failures on random unsound finite frames]
+
 ### 1.3 Every calculus is complete for something
 
 **Theorem 1.4 (tautological completeness) [proved; TOSU].** Every closure operator $C$ on $\mathcal P(S)$ is strongly complete for the **canonical frame** $(S,\mathrm{Fix}(C),\ni)$, where a "model" is a closed set $T$ and $T\models\sigma$ iff $\sigma\in T$.
@@ -98,7 +100,7 @@ This theorem is the reason the philosophical proposition needs care. If "somethi
 **Theorem 1.5 (completeness = realization of points) [proved; the order theory is Birkhoff's subdirect representation, the logic is Lindenbaum's lemma].** Let $C$ be finitary.
 * **(a) Lindenbaum.** Every closed $T$ is the intersection of the points containing it. The intersection of the empty family is $S$.
 * **(b)** Let $C$ be sound for a frame $(S,M,\models)$. Then $C$ is strongly complete iff every point is the theory of a model: $\mathrm{Pt}(C)\subseteq\{\mathrm{Th}(\{m\}):m\in M\}$.
-* **(c)** Suppose there is a finite $F$ with $C(F)=S$ (a finite "explosive" set, e.g. $\{\bot\}$), and suppose $\mathrm{Th}(\{m\})\neq S$ for every $m$. Then $C$ is weakly complete iff every *maximal* proper closed set is the theory of a model.
+* **(c) (revised after verification: soundness hypothesis added)** Let $C$ be sound for $(S,M,\models)$. Suppose there is a finite $F$ with $C(F)=S$ (a finite "explosive" set, e.g. $\{\bot\}$), and suppose $\mathrm{Th}(\{m\})\neq S$ for every $m$. Then $C$ is weakly complete iff every *maximal* proper closed set is the theory of a model. Soundness is needed only for (⇒). Without it (⇒) fails. Example: $S=\{a,b,\bot\}$ with closed sets $\emptyset,\{a\},S$, and one model $m$ with $\mathrm{Th}(\{m\})=\{a,b\}$. Then $C$ is weakly complete, but the maximal proper closed set $\{a\}$ is not the theory of a model. [checked: `repair_checks.py` (A)]
 
 *Proof.*
 * (a) Let $\sigma\notin T$.
@@ -113,7 +115,7 @@ This theorem is the reason the philosophical proposition needs care. If "somethi
   * Each $\mathrm{Th}(\{m\})$ is closed by soundness and contains $P$. If all of them strictly contained $P$, all would contain the witnessing σ, and so would $P$. So $P=\mathrm{Th}(\{m\})$ for some $m$.
 * (c) Proper closed sets are closed under unions of chains: if the union were $S$, the finite $F$ would lie in one member $T$, giving $T\supseteq C(F)=S$. So by Zorn every proper closed set extends to a maximal one.
   * (⇐) A coherent $X$ lies in a maximal $T=\mathrm{Th}(\{m\})$, so $m\in\mathrm{Mod}(X)$.
-  * (⇒) If $T$ is maximal, weak completeness gives $m\in\mathrm{Mod}(T)$. Then $T\subseteq\mathrm{Th}(\{m\})\ne S$, and $\mathrm{Th}(\{m\})$ is closed, so maximality gives equality. ∎
+  * (⇒) If $T$ is maximal, weak completeness gives $m\in\mathrm{Mod}(T)$. Then $T\subseteq\mathrm{Th}(\{m\})\ne S$, and $\mathrm{Th}(\{m\})$ is closed *by soundness*, so maximality gives equality. ∎
 
 **Proposition 1.6 (weak ≠ strong: the user's slogan is weaker than Sam's) [proved, modulo the standard deduction theorem for IPC].** Intuitionistic propositional logic (IPC) is weakly complete, but not strongly complete, for the Boolean valuations BV.
 
@@ -124,11 +126,12 @@ This theorem is the reason the philosophical proposition needs care. If "somethi
   * If $\varphi\notin T$, then maximality and the deduction theorem give $T\vdash\varphi\to\bot=\neg\varphi$, so $\neg\varphi\in T$.
   * Hence $T$ contains every instance of excluded middle. As consequence relations, $\mathrm{CPC}=\mathrm{IPC}+\mathrm{EM}$, so $C_{\rm CPC}(T)=C_{\rm IPC}(T\cup\mathrm{EM})=T\not\ni\bot$.
   * So $T$ is maximal CPC-consistent, i.e. $T=\mathrm{Th}(v)$ for a Boolean $v$. ∎
+* *Alternative for weak completeness:* Glivenko's theorem (Glivenko 1929 [cited]): $X$ is IPC-consistent iff it is CPC-consistent.
 
 *Reading.* T2 Thm 3.6(a) showed that IPC and CPC have the same coherence data. Here is the semantic mirror. Every coherent intuitionistic position *is* about a classical world: the existence slogan holds. But those worlds do not *determine* intuitionistic consequence. IPC has non-maximal points, for instance a theory maximal among those omitting $p\vee\neg p$ (Lindenbaum, Thm 1.5(a)). Such points are prime and are realized only by Kripke or Heyting models; no Boolean valuation realizes them. In general:
 * weak completeness needs the *maximal* theories to be realized;
 * strong completeness needs *all* points to be realized;
-* the two coincide when every point is maximal. This is true in classical logic, by proof by cases: if $T$ is maximal omitting φ and ψ, ¬ψ ∉ T, then φ ∈ C(T,ψ) ∩ C(T,¬ψ) = C(T).
+* the two coincide when every point is maximal. This is true in classical logic, by proof by cases. Let $T$ be maximal among closed sets omitting φ, and suppose neither ψ nor ¬ψ is in $T$. By maximality, φ ∈ C(T,ψ) and φ ∈ C(T,¬ψ). Proof by cases gives C(T,ψ) ∩ C(T,¬ψ) = C(T) = T, so φ ∈ T, a contradiction. So $T$ is complete: it contains ψ or ¬ψ for every ψ. Since $T\neq S$ it is consistent, and a complete consistent theory is maximal consistent. (Sentence repaired after verification.)
 
 ### 1.5 The family of instances
 
@@ -193,7 +196,7 @@ Intersections of Scott relations are Scott relations. Write $\langle S\rangle$ f
 * *Soundness.* Every valuation satisfies (Ov) instances and preserves (Wk) and (Cut). For (Cut): if $v[\Gamma]=1$ and $v[\Delta]=0$, the two premises force $v(\varphi)=0$ and $v(\varphi)=1$.
 * *Completeness.* If $\Gamma_0\rhd\Delta_0\notin\langle S\rangle$, then $[\Gamma_0:\Delta_0]$ is $\langle S\rangle$-coherent: a witness inside it would yield $\Gamma_0\rhd\Delta_0$ by (Wk). Thm 2.2 gives $v\in\mathrm{Val}\langle S\rangle\subseteq\mathrm{Mod}(S)$ violating $\Gamma_0\rhd\Delta_0$. ∎
 
-**Theorem 2.4 (the duality, with both closure operators) [proved].** Give $2^{\mathrm{Fm}}$ the product (Cantor) topology. The Galois connection between sets of sequents and sets of valuations has:
+**Theorem 2.4 (the duality, with both closure operators) [proved; the correspondence between compact (finite-sequent) consequence relations and closed classes of valuations is standard: Scott 1974; Shoesmith & Smiley 1978].** Give $2^{\mathrm{Fm}}$ the product (Cantor) topology. The Galois connection between sets of sequents and sets of valuations has:
 * syntactic closure $S\mapsto\langle S\rangle$: generate by (Ov), (Wk), (Cut);
 * semantic closure $V\mapsto\overline V$: topological closure.
 
@@ -210,7 +213,7 @@ So Sam's "image" in the bilateral setting is exactly the Scott relations. The se
 * Every element of $B$ is a finite meet of clauses (CNF), and a filter is determined by its clauses. Filters of $B$ correspond to closed sets of $2^{\mathrm{Fm}}$ (Stone). Thm 2.4 identifies those closed sets with Scott relations.
 * Hence Scott relations ↔ closed sets ↔ filters of $B$.
 
-The point is that at this level of generality **the connectives play no role at all in the duality**. Completeness for positions is pure Boolean algebra over formulas-as-atoms. The connectives enter only through *which* closed set the rules carve out. This is Suszko's thesis (every structural Tarskian consequence is determined by non-truth-functional bivaluations; Suszko 1977 [cited (u)]), seen as a duality.
+The point is that at this level of generality **the connectives play no role at all in the duality**. Completeness for positions is pure Boolean algebra over formulas-as-atoms. The connectives enter only through *which* closed set the rules carve out. This is Suszko's thesis, seen as a duality. Every Tarskian consequence, structural or not, is determined by non-truth-functional bivaluations, namely the characteristic functions of its theories (Suszko 1977 [cited (u)]; Suszko stated it for structural logics).
 
 **Theorem 2.6 (structural calculi: substitution-invariance and Lindenbaum bundles) [proved].** Let $\mathrm{Fm}$ be a term algebra. Substitutions are endomorphisms σ. ⊢ is **structural** if $\Gamma\rhd\Delta\in{\vdash}$ implies $\sigma\Gamma\rhd\sigma\Delta\in{\vdash}$.
 * (a) ⊢ is structural iff $\mathrm{Val}(\vdash)$ is closed under $v\mapsto v\circ\sigma$. So structural Scott relations are dually isomorphic to closed, substitution-invariant sets of valuations.
@@ -242,9 +245,9 @@ Let $\mathrm{BV}$ be the Boolean valuations over finitely many atoms. Let $F$ be
 
 **Definition.** $P$ is **coherent** if $P=\sum_v\mu(v)\bar v$ for some probability μ on BV. Equivalently, $P$ lies in the **coherence polytope** $\Pi_F=\mathrm{conv}\{\bar v:v\in\mathrm{BV}\}$. In words: $P$ is the expected truth value under a random world.
 
-A **counting sequent** over $F$ is a pair $(\Phi,m)$, with Φ a finite multiset of members of $F$ and $m\in\mathbb Z$. It is **valid** if every $v\in\mathrm{BV}$ makes at least $m$ members of Φ true, counted with multiplicity. An ordinary multiple-conclusion sequent $\Gamma\rhd\Delta$ is the case $m=1$, $\Phi=\{\neg\gamma:\gamma\in\Gamma\}\cup\Delta$.
+A **counting sequent** over $F$ is a pair $(\Phi,m)$, with Φ a finite multiset of members of $F$ and $m\in\mathbb Z$. It is **valid** if every $v\in\mathrm{BV}$ makes at least $m$ members of Φ true, counted with multiplicity. Call $m$ its **threshold**. When $F$ contains complements $\gamma^\*$ (formulas equivalent to $\neg\gamma$), an ordinary multiple-conclusion sequent $\Gamma\rhd\Delta$ is the case $m=1$, $\Phi=\{\gamma^\*:\gamma\in\Gamma\}\cup\Delta$.
 
-**Theorem 3.1 (de Finetti, the polytope, and counting sequents) [proved].** Let $F$ be closed under negation, and let $P$ be negation-coherent: $P(\neg\varphi)=1-P(\varphi)$. The following are equivalent.
+**Theorem 3.1 (de Finetti, the polytope, and counting sequents) [proved; hypothesis restated after verification].** Let $F$ be a finite union of **complementary pairs** $\{\varphi,\varphi^\*\}$ with $\varphi^\*\equiv\neg\varphi$. (A finite agenda cannot be literally closed under ¬, since φ, ¬φ, ¬¬φ, … are distinct. The complement of $\varphi^\*$ is φ.) Let $P$ be negation-coherent: $P(\varphi^\*)=1-P(\varphi)$. The following are equivalent.
 * (i) $P$ is coherent.
 * (ii) There is no **Dutch book**: no $\lambda\in\mathbb R^F$ with $\lambda\cdot(\bar v-P)<0$ for every $v$. (λ_φ units of the bet on φ are traded at price $P(\varphi)$; the agent's net gain is $\lambda\cdot(\bar v-P)$.)
 * (iii) For all rational λ and $c$: if $\lambda\cdot\bar v\ge c$ for all $v$, then $\lambda\cdot P\ge c$.
@@ -257,9 +260,11 @@ A **counting sequent** over $F$ is a pair $(\Phi,m)$, with Φ a finite multiset 
   * If $P\notin\Pi_F$, some $a\cdot P<b\le a\cdot\bar v$ for all $v$. This violates (iii).
   * The book $\lambda=-a$ has gain $a\cdot P-a\cdot\bar v<0$ in every world, so it is a Dutch book.
 * (iii)⇒(iv): put $\lambda$ = the multiplicity vector and $c=m$.
-* (iv)⇒(iii): multiply λ and $c$ by a positive common denominator; this preserves both inequalities. For each φ with $\lambda_\varphi<0$, use $\lambda_\varphi v(\varphi)=|\lambda_\varphi|v(\neg\varphi)-|\lambda_\varphi|$, and the same identity for $P$ (negation coherence).
-  * Let Φ contain $\lambda_\varphi$ copies of φ when $\lambda_\varphi>0$, and $|\lambda_\varphi|$ copies of ¬φ when $\lambda_\varphi<0$. Let $m=c+\sum_{\lambda_\varphi<0}|\lambda_\varphi|$.
+* (iv)⇒(iii): multiply λ and $c$ by a positive common denominator; this preserves both inequalities. For each φ with $\lambda_\varphi<0$, use $\lambda_\varphi v(\varphi)=|\lambda_\varphi|v(\varphi^\*)-|\lambda_\varphi|$, and the same identity for $P$ (negation coherence).
+  * Let Φ contain $\lambda_\varphi$ copies of φ when $\lambda_\varphi>0$, and $|\lambda_\varphi|$ copies of $\varphi^\*$ when $\lambda_\varphi<0$. Let $m=c+\sum_{\lambda_\varphi<0}|\lambda_\varphi|$.
   * Then $\lambda\cdot\bar v\ge c$ iff $v$ makes at least $m$ members of Φ true, and $\lambda\cdot P\ge c$ iff $\sum_\Phi P\ge m$. ∎
+
+Negation coherence is used only in (iv)⇒(iii), and it is needed there. $P\equiv1$ satisfies every valid counting sequent, because validity forces $m\le|\Phi|$, yet $P\equiv1$ is incoherent.
 
 *Reading.*
 * The probabilistic completeness theorem says a credence is coherent iff it is a mixture of worlds. Its proof-theoretic side is not ordinary sequents but **counting sequents**: graded positions such as "at least two of these six claims hold".
@@ -299,7 +304,7 @@ Hence any family of necessary coherence constraints, each depending only on sub-
 
 The same holds if $F_k$ is enlarged to *all* formulas in at most two atoms, valued by the two-atom marginals of μ. By the computation in (a), these marginals do not depend on $J$. So $P_k$ can even be "pairwise coherent" in the strongest sense: every pair of atoms has a genuine joint distribution consistent with everything else. This is the probabilistic face of local-versus-global consistency (§4.3), and it is the frustration in Specker's three-box parable [cited: Specker 1960].
 
-**Theorem 3.5 (the counting-sequent hierarchy is strict; ordinary sequents do not suffice) [proved; checked by brute force for k = 3 and by search for k = 4].** With $F_k,P_k$ as in Thm 3.4:
+**Theorem 3.5 (the counting-sequent hierarchy by threshold is strict; ordinary sequents do not suffice) [proved; checked by brute force for k = 3, by search for k = 4, and by exact MILP for k = 3, 4, 5].** With $F_k,P_k$ as in Thm 3.4:
 * (a) $P_k$ violates the valid counting sequent
   $$\Phi=\{\neg A_1,\dots,\neg A_k\}\cup\{A_i\wedge A_j:i<j\},\qquad m=k-1.$$
 * (b) $P_k$ satisfies *every* valid counting sequent over $F_k$ with $m\le k-2$.
@@ -319,7 +324,11 @@ In particular, for $k=3$, $P_3$ satisfies the union bound of every valid ordinar
   * Therefore $m=\#(\emptyset)-s\ge(k-2)s+1\ge k-1$.
 * *The $m=1$ case for $k=3$.* A multiset counting sequent with $m=1$ is valid iff the ordinary sequent formed by its support is valid, and its $P$-sum is at least that of its support. So (b) with $k=3$ covers all ordinary sequents. ∎
 
-*Checks.* `prob_coherence.py` (c) enumerates all $3^{12}$ assignments of the 12 formulas of $F_3$ to premises, conclusions or neither. It finds 503,270 valid sequents and no violated union bound, while the LP confirms that $P_3$ is incoherent. Part (d) confirms the $m=2$ certificate. `multiplicity.py` searches integer books with $|\lambda_\varphi|\le2$. The smallest violated multiplicity it finds is $m=2$ for $k=3$ and $m=3$ for $k=4$, in agreement with (b).
+*Terminology (revised after verification).* The hierarchy is in the **threshold** $m$, not in repetitions of formulas. The violated sequent in (a) is a plain set with no repeated formula, and (b) allows arbitrary repetitions. Earlier versions of this note called $m$ the "multiplicity"; the script name `multiplicity.py` is kept.
+
+*Scope.* For any *single* finite agenda $F$, the finitely many facets of $\Pi_F$ give finitely many counting sequents that already characterize coherence (Thm 3.1). Thms 3.4–3.5 show that no bound on arity or threshold works *uniformly across agendas*. $F_k$ needs arity $k$ and threshold $k-1$.
+
+*Checks.* `prob_coherence.py` (c) enumerates all $3^{12}$ assignments of the 12 formulas of $F_3$ to premises, conclusions or neither. It finds 503,270 valid sequents and no violated union bound, while the LP confirms that $P_3$ is incoherent. Part (d) confirms the $m=2$ certificate. `multiplicity.py` searches integer books with $|\lambda_\varphi|\le2$. The smallest violated threshold it finds is $m=2$ for $k=3$ and $m=3$ for $k=4$, in agreement with (b). `repair_checks.py` (C) solves the exact MILP: minimize $\sum_\Phi P_k-m$ over valid counting sequents with integer multiplicities in $[0,8]$. For $k=3,4,5$ the minimum is 0 when $m\le k-2$. When $m\le k-1$ it is $-\frac1{k-1}$, and the repetition-free sequent of (a) attains it.
 
 **Proposition 3.6 (on logically closed agendas, local additivity suffices) [proved].** Let $F$ be (representatives of) a finite Boolean subalgebra of the Lindenbaum algebra, i.e. closed under ∧, ¬ up to equivalence and containing ⊤. Suppose $P$ respects equivalence. Then $P$ is coherent iff:
 * $P\ge0$;
@@ -336,7 +345,7 @@ Each constraint mentions at most three agenda formulas.
 
 *Exact answer to "which constraints are needed".*
 * On a logically closed agenda, the local additivity identities suffice. The user's $P(A\wedge B)+P(A\vee B)=P(A)+P(B)$ is a consequence of them.
-* On the arbitrary, unclosed agendas that a CCS probe actually sees (a list of statements), coherence needs the full family of counting sequents. That family has unbounded arity (Thm 3.4) and unbounded multiplicity (Thm 3.5).
+* On the arbitrary, unclosed agendas that a CCS probe actually sees (a list of statements), coherence of a given finite agenda is characterized by finitely many counting sequents, namely its facets. But no bound on their arity (Thm 3.4) or threshold (Thm 3.5) works uniformly across agendas. So no fixed stock of constraint *types* suffices: not pairwise, not $k$-wise, and not union bounds of ordinary sequents. (Revised after verification; the earlier wording "needs the full family" overstated this.)
 * For agendas of "marginals on a hypergraph of variables", pairwise consistency suffices for all value assignments iff the hypergraph is acyclic (Vorob'ev 1962 [cited (u)]; the possibilistic/relational analogue is Beeri, Fagin, Maier & Yannakakis 1983 [cited]). §4.3 proves the possibilistic tree case.
 * Deciding coherence of a credence on an arbitrary agenda (probabilistic satisfiability) is NP-complete (Georgakopoulos, Kavvadias & Papadimitriou 1988 [cited (u)]; cf. Pitowsky 1991 on correlation polytopes [cited (u)]). So the facet structure is genuinely complicated.
 
@@ -358,7 +367,7 @@ These imply $P(\varphi)=P(\psi)$ when $\vdash\varphi\leftrightarrow\psi$. (Apply
 
 So the probabilistic version of the user's proposition holds verbatim: **a credence function is coherent iff there is a probability distribution over things it could be talking about.** The non-standard caveat holds too. If $T\supseteq\mathrm{PA}+\neg\mathrm{Con(PA)}$ is complete, then $\delta_T$ is coherent and gives probability 1 to every PA-theorem and every true quantifier-free sentence. It "believes" there is a proof of $0=1$.
 
-**Theorem 3.8 (the Gaifman condition is a probabilistic ω-rule that pins true arithmetic) [proved; the probabilistic transcription of ω-completeness].** Work in the language of arithmetic. Let $P$ be coherent, let it give probability 1 to every true quantifier-free sentence, and let it satisfy the **Gaifman condition with respect to the numerals**:
+**Theorem 3.8 (the Gaifman condition is a probabilistic ω-rule that pins true arithmetic) [proved; the probabilistic transcription of ω-completeness; essentially a consequence of Gaifman 1964 (credit added after verification). Gaifman showed that a probability satisfying the Gaifman condition is determined by its values on quantifier-free sentences (exact formulation (u)). Here those values are the true diagram of ℕ].** Work in the language of arithmetic. Let $P$ be coherent, let it give probability 1 to every true quantifier-free sentence, and let it satisfy the **Gaifman condition with respect to the numerals**:
 $$P(\exists x\,\varphi(x))=\sup_n P\Big(\bigvee_{i\le n}\varphi(\underline i)\Big).$$
 Then $P(\varphi)=1$ if $\mathbb N\models\varphi$ and $P(\varphi)=0$ otherwise. That is, $P=\delta_{\mathrm{Th}(\mathbb N)}$. No arithmetic axioms are needed.
 
@@ -368,15 +377,22 @@ Then $P(\varphi)=1$ if $\mathbb N\models\varphi$ and $P(\varphi)=0$ otherwise. T
 * *Conjunction:* if $P(\varphi),P(\psi)\in\{0,1\}$, then coherence gives $P(\varphi)+P(\psi)-1\le P(\varphi\wedge\psi)\le\min(P(\varphi),P(\psi))$, which forces the min.
 * *Existential:* the instances $\varphi(\underline i)$ have fewer logical symbols, since numerals are non-logical terms. By the induction hypothesis they get their truth values. By the conjunction case and de Morgan, $P(\bigvee_{i\le n}\varphi(\underline i))=\max_{i\le n}P(\varphi(\underline i))$. So the sup is 1 iff some $\varphi(\underline i)$ is true, iff $\mathbb N\models\exists x\varphi$, because every natural number is a numeral's value. ∎
 
-**Corollary 3.9 (every logical inductor's limit is a non-standard credence) [proved modulo cited properties].** Let $\mathbb P$ be a logical inductor over a consistent r.e. theory $\Gamma\supseteq\mathrm{Q}$ in the language of arithmetic. Then its limit $\mathbb P_\infty$ violates the Gaifman condition with respect to the numerals.
+**Corollary 3.9 (every logical inductor's limit is a non-standard credence) [proved modulo cited properties; proof revised after verification].** Let $\mathbb P$ be a logical inductor over a consistent r.e. theory $\Gamma\supseteq\mathrm{Q}$ in the language of arithmetic. Then its limit $\mathbb P_\infty$ violates the Gaifman condition with respect to the numerals.
 
 *Proof.*
-* By Garrabrant et al. (2016) [cited (u): "limit coherence" and convergence], $\mathbb P_\infty$ exists and is coherent relative to Γ. So it gives 1 to every Γ-theorem, and in particular to every true quantifier-free sentence.
-* If it also satisfied the Gaifman condition, Thm 3.8 would give $\mathbb P_\infty=\delta_{\mathrm{Th}(\mathbb N)}$.
-* Then φ ∈ Th(ℕ) iff $\mathbb P_n(\varphi)>\frac12$ for all large $n$. Because the limit exists and is 0 or 1, this is both a Σ₂ and a Π₂ definition, so Th(ℕ) would be Δ₂.
-* That contradicts Tarski's theorem that Th(ℕ) is not arithmetical [cited]. ∎
+* By Garrabrant et al. (2016), Thm 4.1.2 "Limit Coherence" [cited; numbering from search snippets (u)], $\mathbb P_\infty$ exists and is coherent relative to Γ. So it gives 1 to every Γ-theorem, and in particular to every true quantifier-free sentence (Q proves them).
+* If it also satisfied the Gaifman condition, Thm 3.8 would give $\mathbb P_\infty=\delta_{\mathrm{Th}(\mathbb N)}$. Either of two arguments refutes this.
+* *Via non-dogmatism.*
+  * By the Gödel–Rosser theorem, Γ is incomplete: some σ has Γ ⊬ σ and Γ ⊬ ¬σ. Let ψ be whichever of σ, ¬σ is false in ℕ. Then Γ ⊬ ¬ψ.
+  * Non-Dogmatism (Garrabrant et al., Thm 4.6.2 [cited (u)]: if Γ ⊬ ¬φ then $\mathbb P_\infty(\varphi)>0$) gives $\mathbb P_\infty(\psi)>0=\delta_{\mathrm{Th}(\mathbb N)}(\psi)$.
+* *Via Δ₂.*
+  * A market is by definition a *computable* sequence of rational pricings (Garrabrant et al., Def 3.1.3 [cited; confirmed by search snippet, numbering (u)]). So "$\mathbb P_n(\varphi)>\frac12$" is decidable in $(n,\varphi)$.
+  * If $\mathbb P_\infty=\delta_{\mathrm{Th}(\mathbb N)}$, then φ ∈ Th(ℕ) iff $\exists N\,\forall n\ge N\ \mathbb P_n(\varphi)>\frac12$ (Σ₂) iff $\forall N\,\exists n\ge N\ \mathbb P_n(\varphi)>\frac12$ (Π₂). The two agree because the limit exists and is 0 or 1. So Th(ℕ) would be Δ₂.
+  * That contradicts Tarski's theorem that Th(ℕ) is not arithmetical [cited]. ∎
 
-So the probabilistic "something" is always available (Thm 3.7), and a *standard* something is fixed by an infinitary condition (Thm 3.8) that no computable or limit-computable credence satisfies (Cor 3.9). This is the probabilistic face of Thm 5.7 below.
+The Δ₂ argument proves more, with no reference to logical induction. **No limit-computable coherent credence that gives probability 1 to every true quantifier-free sentence satisfies the Gaifman condition** [proved: Thm 3.8 plus Tarski]. The quantifier-free hypothesis cannot be dropped. Let $T$ be the (decidable) theory of the one-element structure, where $S0=0=0+0=0\cdot0$. Then $\delta_T$ is computable and coherent, and it satisfies the Gaifman condition with respect to the numerals, because every element is a numeral's value. It fails only by giving $P(0=S0)=1$.
+
+So the probabilistic "something" is always available (Thm 3.7). A *standard* something is fixed by an infinitary condition (Thm 3.8) that no limit-computable coherent credence giving probability 1 to all true quantifier-free sentences satisfies (Cor 3.9 and the remark above; sentence qualified after verification). This is the probabilistic face of Thm 5.7 below.
 
 ### 3.4 Preferences (the user's "vnm stuff?")
 
@@ -388,7 +404,8 @@ So the probabilistic "something" is always available (Thm 3.7), and a *standard*
 *Proof.* This is Motzkin's transposition theorem (1936) [cited] applied to the rows $p_i-q_i$ (strict) and $r_j-s_j$ (weak). ∎
 
 *Reading.*
-* The certificate is a **money pump**. Normalize the coefficients and mix the stated comparisons. By the independence axiom the mixed better-lottery is strictly preferred to the mixed worse-lottery, yet the two lotteries are equal. The derivation is "$L\succ L$" from the data by the VNM rules: mixing (independence) plus transitivity.
+* The certificate is a derivation of "$L\succ L$" from the data by the VNM rules: mixing (independence) plus transitivity. Normalize the coefficients and mix the stated comparisons. By the independence axiom the mixed better-lottery is strictly preferred to the mixed worse-lottery, yet the two lotteries are equal.
+* Such a certificate is **money-pump-like**. Calling it a money pump is an interpretive gloss, since no trading or payment structure is formalized (wording revised after verification).
 * So VNM coherence on finite data is a weak completeness theorem. The "something being maximized" is a *real-valued* utility.
 * Non-standard (lexicographic, non-Archimedean) utilities appear only with infinitely many comparisons (Hausner 1954 [cited (u)]). That is the same compactness phenomenon as $\{x\ge n\}$ in §1.5. The continuity axiom plays the role of the ω-rule.
 
@@ -401,9 +418,14 @@ So the probabilistic "something" is always available (Thm 3.7), and a *standard*
 **Definition 4.0 (MCS).** Fix an index set $I$ of contexts. For each $i\in I$ fix:
 * a language $L_i$;
 * a class $M_i$ of local models with satisfaction $\models_i$;
-* the local consequence $C_i=\mathrm{Th}_i\circ\mathrm{Mod}_i$. So local logics are assumed locally complete: e.g. classical propositional or first-order logic over $L_i$, or the learned logic of §5 with its Lindenbaum semantics (Thm 1.4);
+* the local consequence $C_i=\mathrm{Th}_i\circ\mathrm{Mod}_i$. So local logics are assumed locally complete, e.g. classical propositional or first-order logic over $L_i$.
+  * *(Revised after verification.)* A learned logic $C_i$ of §5 also qualifies, with Lindenbaum semantics in this form: $M_i=\mathrm{Fix}(C_i)\setminus\{L_i\}$, the *proper* closed theories, with $T\models_i\varphi$ iff $\varphi\in T$.
+  * Then $\mathrm{Th}_i\circ\mathrm{Mod}_i=C_i$. If $C_i(X)\neq L_i$, then $C_i(X)$ is itself a model and the computation of Thm 1.4 applies. Otherwise $\mathrm{Mod}_i(X)=\emptyset$ and $\mathrm{Th}_i(\emptyset)=L_i$.
+  * Thm 1.4's frame with *all* of $\mathrm{Fix}(C_i)$ does **not** qualify. The trivial theory $L_i$ satisfies every formula, so no falsum as in the last bullet can exist;
 * local axioms $K_i\subseteq L_i$, the context's stipulations and imported background;
 * a local falsum $\bot_i$ with $\mathrm{Mod}_i(\bot_i)=\emptyset$.
+  * For a learned logic with the Lindenbaum semantics above, this means that $\bot_i$ is $C_i$-explosive: $C_i(\{\bot_i\})=L_i$, e.g. because ex falso is among the learned rules.
+  * If it is not, read Cor 4.2 with "$T_i\neq L_i$" in place of "$\bot_i\notin T_i$" (see the remark after Cor 4.2).
 
 **Bridge rules** have the form $b=(j_1{:}\varphi_1,\dots,j_n{:}\varphi_n\Rightarrow i{:}\psi)$ with $n\ge0$. The set of bridge rules may be infinite, e.g. schematic. Labelled formulas $i{:}\varphi$ are the McCarthy–Buvač $\mathrm{ist}(i,\varphi)$ (L7 §2).
 
@@ -439,6 +461,11 @@ It exists because the family of such families is closed under componentwise inte
 
 *Proof.* $\bot_i\in T_i$ iff $c^\Gamma_i=\emptyset$, by Thm 4.1(a). If some model is nonempty on $D$, then so is $c^\Gamma$, since $c_i\subseteq c^\Gamma_i$ by 4.1(b). ∎
 
+*Remark (learned local logics; added after verification).* With the Lindenbaum semantics of Def 4.0, $M_i=\mathrm{Fix}(C_i)\setminus\{L_i\}$, the same proof gives, with no falsum at all: $T_i\neq L_i$ iff $c^\Gamma_i\neq\emptyset$. The reason is that $\mathrm{Mod}_i(T_i)\neq\emptyset$ iff the closed set $T_i$ is proper.
+* So for a learned local logic, Cor 4.2 holds with D-coherence read as **non-triviality** of $T_i$ at each $i\in D$.
+* This coincides with "$\bot_i\notin T_i$" exactly when $\bot_i$ is $C_i$-explosive. Otherwise the two come apart: with $R=\emptyset$ and $K_i=\{\bot_i\}$, $\bot_i$ is derivable, yet $c^\Gamma_i\ni\{\bot_i\}$ is nonempty.
+* [checked: `repair_checks.py` (B), 3,000 random finite closure systems with an explosive falsum, 0 violations, plus the non-explosive counterexample]
+
 Non-designated contexts, such as suppositions under reductio, may have $c_i=\emptyset$. They are then "about nothing", and that is what a successful reductio shows. This is T2 §7's designation discipline as an existence theorem.
 
 **Proposition 4.3 (the canonical chain is the grounded equilibrium) [proved].** Call a belief state $S=(S_i)$ an **equilibrium** if
@@ -454,13 +481,22 @@ $$S_i=C_i\Big(K_i\cup\Gamma_i\cup\{\psi:(\cdots\Rightarrow i{:}\psi)\text{ has a
   * Any equilibrium $S$ is closed, contains $K\cup\Gamma$ and is bridge-closed, so $S\supseteq T$.
 * (b) Any equilibrium contains $T$, so a D-consistent equilibrium forces $T$ to be D-consistent. Conversely, $T$ itself is an equilibrium. ∎
 
-**Proposition 4.4 (non-monotone bridges break existence) [proved; TOSU].** Let context $i$ have consistent $K_i$ with $K_i\nvdash p$, and the single bridge rule "$i{:}p$ if not $i{:}p$" (negation as failure). Then context $i$ alone is coherent, yet there is no equilibrium.
+**Proposition 4.4 (non-monotone bridges break existence) [proved; TOSU; wording revised after verification].** Let context $i$ have consistent $K_i$ with $K_i\nvdash p$, and the single bridge rule "$i{:}p$ if not $i{:}p$" (negation as failure). Then $K_i$ is consistent (the context is coherent without its bridge), yet there is no equilibrium.
 * If $p\in S_i$, the rule is inapplicable and $S_i=C_i(K_i)\not\ni p$.
 * If $p\notin S_i$, the rule fires and $p\in S_i$.
 
-So existence for default-style bridges must come from stratification, not from coherence.
+So existence for default-style bridges needs an extra condition, such as stratification or the absence of odd loops through negation as failure. Coherence alone does not supply it, and stratification is sufficient, not necessary.
 
-*Relation to L7's context-tree calculus (L7 §8).* That calculus has stipulations (local axioms), imports $\pi(c){:}\varphi\Rightarrow c{:}\varphi$ for φ in the import filter $F_c$, discharge $c{:}\psi\Rightarrow\pi(c){:}A\to\psi$, and side-conditioned export $c{:}\varphi_\beta(t),\ \pi(c){:}\sigma_\beta(t)\Rightarrow\pi(c){:}\varepsilon_\beta(t)$. All of these are monotone bridge rules. So it is an MC system, and Thm 4.1 is its completeness theorem for local-models semantics; L7 Prop 1 proved soundness. For SUP contexts with full import, the canonical chain gives $c^\Gamma_c=c^\Gamma_{\pi(c)}\cap\mathrm{Mod}(A)$, which is exactly L7's $\mathrm{Mod}(c)$.
+*Relation to L7's context-tree calculus (L7 §8) [sketch; revised after verification].*
+* L7's calculus has stipulations (local axioms), imports $\pi(c){:}\varphi\Rightarrow c{:}\varphi$ for φ in the import filter $F_c$, discharge $c{:}\psi\Rightarrow\pi(c){:}A\to\psi$, and side-conditioned export $c{:}\varphi_\beta(t),\ \pi(c){:}\sigma_\beta(t)\Rightarrow\pi(c){:}\varepsilon_\beta(t)$. All of these are monotone bridge rules. So it is an MC system.
+* Thm 4.1 is its completeness theorem for local-models semantics *with bridges read as compatibility constraints*. In that semantics an exported ε shrinks the parent's belief state $c^\Gamma_{\pi(c)}$.
+* L7 §8.2 uses a different semantics. There $\mathrm{Mod}(@)=\mathrm{Mod}(K\cup O)$ and $\mathrm{Mod}(\pi(c))$ do not depend on exports, and bridges are required to be *sound*. L7 Prop 1 proves soundness for that semantics, assuming that every Step and Exp instance is sound.
+* **The two semantics coincide** when the local consequence is the complete base logic and every Step and Exp instance is sound. Then $T_c=\mathrm{Th}(\mathrm{Mod}_{\rm L7}(c))$ for every $c$:
+  * ⊆ is L7 Prop 1.
+  * ⊇ is by induction down the tree. At @, local completeness gives $T_@\supseteq C(K\cup O)$. An IDL child imports $F_c\cap T_{\pi(c)}=\mathrm{Imp}^\*(c)$. A SUP child imports all of $T_{\pi(c)}$ and has $A$.
+  * Hence $c^\Gamma_c=\mathrm{Mod}_{\rm L7}(c)$.
+* Without that hypothesis the two differ. Suppose an unsound export yields $@{:}Q=5$ while $K\cup O$ proves $Q=3$. Then MC derives $@{:}\bot$ and $c^\Gamma_@=\emptyset$, as LMS completeness requires, while L7's $\mathrm{Mod}(@)$ stays nonempty.
+* For SUP contexts with full import, the canonical chain always satisfies $c^\Gamma_c=c^\Gamma_{\pi(c)}\cap\mathrm{Mod}(A)$, the analogue of L7's $\mathrm{Mod}(c)$.
 
 ### 4.2 Rules of proof versus conditionals between worlds
 
@@ -471,9 +507,11 @@ A **world family** is $w=(w_i)$ with each $w_i\in M_i$ a *single* local model, s
 * (b) The inclusion is strict in general. Let $K_j=\{p\vee q\}$, $K_i=\{\neg r\}$, with bridges $j{:}p\Rightarrow i{:}r$ and $j{:}q\Rightarrow i{:}r$.
   * MC does not derive $i{:}\bot$: the canonical chain has $T_j=C(p\vee q)$, no bridge fires, and $c^\Gamma_i=\mathrm{Mod}(\neg r)\neq\emptyset$.
   * There is no world family: $w_j$ satisfies $p$ or $q$, so $w_i\models r$, contradicting $\neg r$.
-* (c) For classical propositional local logics, $\models_W$ is classical consequence in the disjoint union of the local languages ($i{:}\varphi\mapsto\varphi^{(i)}$, atoms tagged by context). Bridges become the axioms $\bigwedge_k\varphi_k^{(j_k)}\to\psi^{(i)}$. This is the "eternalist" translation.
+* (c) For classical propositional local logics, $\models_W$ is classical consequence in the disjoint union of the local languages ($i{:}\varphi\mapsto\varphi^{(i)}$, atoms tagged by context). The axioms are the tagged local axioms $K_i^{(i)}$ together with the bridge axioms $\bigwedge_k\varphi_k^{(j_k)}\to\psi^{(i)}$, and the premises Γ are tagged in the same way (tagged $K_i$ and Γ made explicit after verification). This is the "eternalist" translation.
 
-*Proof.* (a) Check the definitions. (b) As stated. (c) World families are exactly the Boolean valuations of the tagged language that satisfy the tagged axioms. Apply CPC completeness. ∎
+*Proof.* (a) Check the definitions. (b) As stated. (c) World families are exactly the Boolean valuations of the tagged language that satisfy the tagged $K_i$ and the tagged bridge axioms. Apply CPC completeness. ∎
+
+*Status (added after verification).* Thm 4.5 is the context-logic instance of a standard distinction: a rule of proof versus the corresponding conditional, i.e. global versus local consequence. In belief-state semantics $c\models j{:}\varphi$ is a box over $c_j$. Thm 4.5(b) is then the familiar failure of □ to distribute over ∨: □(p∨q) ⊭ □p ∨ □q. This gap is also why Ghidini & Giunchiglia use *sets* of local models. What is new here is only its use as a criterion for physics bridges.
 
 The script checks Thm 4.1(c) and Cor 4.2 by brute force on 400 random three-context systems, with 4 local models each and random bridges and premises: there are no mismatches. It also finds 2,348 (context, formula) pairs where world-family entailment strictly exceeds belief-state entailment.
 
@@ -486,7 +524,7 @@ The script checks Thm 4.1(c) and Cor 4.2 by brute force on 400 random three-cont
 
 Even with the world reading, the user's worry about "many frames … needn't be easily reconcilable" (L10 §1.3) has a precise form.
 
-**Theorem 4.6 (local-to-global on trees) [proved; `contexts_local_global.py` (a)].** Set up as follows.
+**Theorem 4.6 (local-to-global on trees) [proved; essentially the propositional join-tree / iterated Robinson-consistency argument (cf. Beeri et al. 1983); checked by `contexts_local_global.py` (a) on one fixed 3-node path cover with 7,131 random local theory systems, and (a2) on 2,000 random tree covers with 2–5 nodes, plus a negative control (description corrected after verification)].** Set up as follows.
 * The contexts are the vertices of a finite tree $\mathcal T$.
 * Context $i$ is classical propositional over an atom set $A_i$ with a consistent closed theory $T_i$.
 * **Running intersection:** for each atom $a$, $\{i:a\in A_i\}$ is connected in $\mathcal T$.
@@ -514,14 +552,17 @@ This is Specker's parable (1960) in logical form, and the simplest instance of w
 
 *Reading for physics contexts.*
 * An olympiad solution's contexts (idealizations, sub-models) need not jointly describe one world, and need not even be pairwise reconcilable into one.
-* Cor 4.2 guarantees a *family of local belief states* whenever the designated contexts are coherent. That is the right "something" for a context system.
+* Cor 4.2 guarantees a *family of local belief states, nonempty at every designated context*, whenever the designated contexts are coherent. Non-designated (suppositional) contexts may be forced empty. That is the right "something" for a context system.
 * Demanding a single world for all contexts at once is a strictly stronger, cover-dependent requirement. It holds automatically only on tree-like covers with conservative overlaps.
 
 ### 4.4 "True in the context at hand"
 
 **Definition 4.8.** Given a context system (MC with designated set $D\ni@$) and accepted premises Γ:
 * **φ is true in context $c$** iff $\Gamma\vdash_{\rm MC}c{:}\varphi$. By Thm 4.1, equivalently, φ holds in every local model that $c$'s canonical belief state leaves open. It is supervaluational truth over the context's admissible local models: "admissible completions of the intended model" (L7).
-* **φ is true *enough* in $c$** for a world claim ε iff some bridge $c{:}\varphi\Rightarrow @{:}\varepsilon$ (possibly with side conditions at @) is in the system, and that bridge is **sound**. Soundness means that whenever the canonical state of $c$ establishes φ and the side conditions hold in the actual world, ε holds in the actual world (L7 §8.2).
+* **φ is true *enough* in $c$** for a world claim ε (revised after verification: clauses (i) and (ii) were missing) iff:
+  * (i) φ is true in $c$, i.e. $\Gamma\vdash_{\rm MC}c{:}\varphi$;
+  * (ii) some bridge $c{:}\varphi\Rightarrow @{:}\varepsilon$ is in the system, possibly with side conditions σ at @, and its side conditions hold in the actual world. For a checker: $\Gamma\vdash_{\rm MC}@{:}\sigma$;
+  * (iii) that bridge is **sound**: whenever the canonical state of $c$ establishes φ and the side conditions hold in the actual world, ε holds in the actual world (L7 §8.2).
 
 *What this buys.* "True in the context at hand" is not truth in the world, and not mere derivability in an arbitrary string game. It is truth in all local models of a canonically determined belief state. By Thm 4.1, a checker that accepts exactly MC-derivations accepts exactly the claims that are true in this sense. That answers the user's "wtf is that???" with a semantics plus a completeness theorem.
 
@@ -547,6 +588,8 @@ So *if a learned mode of talking is coherent on a context, there is something it
 * (b) $\langle\mathrm{Fm},T\rangle$ validates $\Gamma\rhd\varphi$ iff $\sigma\Gamma\subseteq T\Rightarrow\sigma\varphi\in T$ for every substitution σ. That holds because $\sigma\varphi\in C_R(\sigma\Gamma)\subseteq C_R(T)=T$ by structurality.
 * (c) is Thm 2.2 plus Thm 2.6. ∎
 
+*Note.* The proof of (b) does not use the maximality from (a). It works for any $C_R$-theory $T\supseteq A$ omitting ⊥, e.g. $C_R(A)$ itself. Maximality matters only for the reduction results of §5.2.
+
 The model's universe, however, *is the language*. This is the "degenerate" model, and it is the formal content of the user's worry that the something may exist only "in the same sense that there is a 'proof' of the Gödel sentence". The next result says when this syntactic something is the intended one.
 
 ### 5.2 Identifying indiscernibles: when the syntactic model is the intended one
@@ -571,18 +614,24 @@ For a matrix $\langle\mathbf A,D\rangle$, the **Leibniz congruence** $\Omega_{\m
   * The isomorphism is then $[a]\mapsto[ha]$. It is well defined and injective by the claim, surjective since $h$ is, and it maps $T/\Omega$ onto $D/\Omega$ because $a\in T$ iff $ha\in D$.
 * (b) A maximal consistent $T$ is $v^{-1}(1)$ for a Boolean homomorphism $v:\mathrm{Fm}\to\mathbf 2$. This $v$ is onto, because $p\vee\neg p\mapsto1$ and $p\wedge\neg p\mapsto0$. The matrix $\langle\mathbf 2,\{1\}\rangle$ is reduced, because the only other congruence of $\mathbf 2$ identifies 0 with 1. Apply (a). ∎
 
-**Proposition 5.3 (what the points of a finite-matrix logic talk about) [proved, modulo the standard finitarity of finite-matrix logics].** Let $C$ be the consequence of a single finite matrix $\langle\mathbf A,D\rangle$; such a $C$ is finitary [cited, standard]. Then every point $P$ of $C$ has reduced Lindenbaum matrix isomorphic to the reduction of $\langle h(\mathrm{Fm}),D\cap h(\mathrm{Fm})\rangle$ for some homomorphism $h$. In other words, it is a reduced *generated submatrix* of $\langle\mathbf A,D\rangle$. Up to isomorphism there are finitely many.
+**Proposition 5.3 (what the points of a finite-matrix logic talk about) [proved, modulo the standard finitarity of finite-matrix logics].** Let $C$ be the consequence of a single finite matrix $\langle\mathbf A,D\rangle$; such a $C$ is finitary [cited, standard]. Then every point $P$ of $C$ has reduced Lindenbaum matrix isomorphic to the reduction of $\langle h(\mathrm{Fm}),D\cap h(\mathrm{Fm})\rangle$ for some homomorphism $h$. In other words, it is *the reduction of a generated submatrix* of $\langle\mathbf A,D\rangle$: a strict homomorphic image of a submatrix, not necessarily itself a submatrix (wording corrected after verification). Up to isomorphism there are finitely many.
 
 *Proof.* By Thm 1.5(b), applied to the frame whose models are homomorphisms $h:\mathrm{Fm}\to\mathbf A$, every point is $h^{-1}(D)$ for some $h$. Apply Thm 5.2(a) to $h$ onto its image. ∎
 
-So for classical logic, everything a coherent position can be about is, after identifying indiscernibles, the two truth values. Coherence pins the intended semantics. This is the semantic face of Post-completeness (T2 Thm 3.1) together with Carnap categoricity for bilateral data (T2 Thm 4.4). For learned calculi that are not Post-complete, distinct coherent completions talk about non-isomorphic things.
+So for classical logic, everything a coherent position can be about is, after identifying indiscernibles, the two truth values. Coherence pins the intended semantics.
+
+*Why (revised after verification).* Every point of CPC is maximal (the proof-by-cases argument after Prop 1.6), and maximal theories are Boolean (Thm 5.2(b)). Carnap categoricity for bilateral data (T2 Thm 4.4) supplies the bilateral side.
+* The earlier text credited this to Post-completeness (T2 Thm 3.1). It also claimed that for non-Post-complete calculi "distinct coherent completions talk about non-isomorphic things". That claim is false as stated.
+* Counterexample: IPC is not Post-complete, yet by Prop 1.6 every maximal IPC-consistent theory is a maximal CPC theory, and so it reduces to **2**.
+* What can differ is the *non-maximal points*: a calculus can have points that talk about non-isomorphic things (Ex 5.4).
+* Level P3 in the table of §5.4 is accordingly a condition on all points, not on Post-completeness.
 
 **Example 5.4 (the Kripkenstein residue as a set of things talked about) [proved; uses cited algebraizability of IPC].**
 * *IPC.* Let $h:\mathrm{Fm}\to\mathbf H_3$ be onto the three-element Heyting chain $0<\frac12<1$, e.g. $h(p)=\frac12$. Then $T=h^{-1}(1)$ is a prime, non-maximal theory, since $p\vee\neg p\mapsto\frac12$.
   * $\langle\mathbf H_3,\{1\}\rangle$ is reduced. Identifying $\frac12$ with 1 breaks compatibility. Identifying 0 with $\frac12$ forces $(0\to0)\,\theta\,(\frac12\to0)$, i.e. $1\,\theta\,0$.
   * $T$ is a point of IPC: it is maximal among theories omitting $p$. Take any ψ ∉ T. If $h(\psi)=\frac12$, then $\psi\leftrightarrow p\in T$. If $h(\psi)=0$, then $\neg\psi\in T$. Either way, adding ψ yields $p$.
   * So this coherent intuitionistic position talks about the three-element chain, while maximal positions talk about **2** (Prop 1.6). Different points of the same coherent logic are about genuinely different structures.
-* *Quantifier swap.* FOL plus the schema $\forall x\exists yR/\exists y\forall xR$ is coherent (T2 §6), and its models are exactly the one-element structures. What the learned fallacy is "about" is the singleton world. A designated context with two distinct objects kills it, because it has no singleton model.
+* *Quantifier swap.* FOL with equality plus the schema $\forall x\exists yR/\exists y\forall xR$ is coherent (T2 §6), and its models are exactly the one-element structures. What the learned fallacy is "about" is the singleton world. A designated context with two distinct objects kills it, because it has no singleton model.
 
 In general, consider multiple-conclusion hypotheses. By Thms 2.2, 2.4 and 2.6(a), T2 Thm 6.4's residue $\mathrm{Alt}(h^\*,\mathcal A)$ of coherent uniform alternatives corresponds exactly to the closed, substitution-invariant sets $V\subseteq\mathrm{Val}(h^\*)$ that realize every designated position. **Non-identifiability of meaning is non-uniqueness of the thing talked about.**
 
@@ -601,7 +650,7 @@ There is one caveat. If the assignment makes $\exists x\varphi(x)$ true but $\va
 * PA has definable Skolem functions (least-number principle). So for every complete consistent $T\supseteq\mathrm{PA}$, the parameter-free definable elements of any model of $T$ form an elementary submodel $\mathcal K(T)$.
 * $\mathcal K(T)$ is the **prime model** of $T$: unique up to isomorphism, and elementarily embeddable in every model of $T$.
 * $\mathcal K(\mathrm{Th}(\mathbb N))=\mathbb N$.
-* If $T\ni\neg\mathrm{Con(PA)}$, then $\mathcal K(T)$ is non-standard. Indeed "the least code of a PA-proof of $0=1$" is definable, and $T$ refutes each standard instance $\mathrm{Prf}(\underline n,\ulcorner0{=}1\urcorner)$, because these are true Δ₀ sentences provable in Q (assuming PA is consistent).
+* If $T\ni\neg\mathrm{Con(PA)}$, then $\mathcal K(T)$ is non-standard. Indeed "the least code of a PA-proof of $0=1$" is definable. $T$ refutes each standard instance $\mathrm{Prf}(\underline n,\ulcorner0{=}1\urcorner)$, because its negation is a true Δ₀ sentence (assuming PA is consistent) and hence provable in Q ⊆ T.
 
 *Reading.* This is the most precise version of the user's footnote ("there might only be such a thing in the same sense that there is a 'proof' of the Gödel sentence G"). The complete coherent theory $T$ has a *canonical* thing it talks about: exactly the objects it can define. The "proof" is one of them, a definable non-standard number.
 
@@ -624,19 +673,26 @@ The non-standard caveat is really two different phenomena.
 
 By contrast, every finite structure in a finite language is characterized up to isomorphism by a single first-order sentence [cited, standard]. Consider the user's icosahedron example (`math is a mere string game iff everything is.md`). After the physical icosahedron explodes, the mode of talking remains coherent, and the thing talked about is *pinned up to isomorphism*. The non-standard caveat bites only for infinite objects.
 
-**Theorem 5.7 (computability barrier: "coherent iff an *intended* model exists" forces Π₁ existence) [proved; the corollaries cite MRDP, Tarski and Trakhtenbrot].** Let $S$ be a decidable set of finite syntactic objects, and $K$ an intended class of models. Suppose some calculus has an r.e. set of incoherent finite sets, and that a finite $X\subseteq S$ is incoherent iff $X$ has no model in $K$. Then $\{X\text{ finite}:X\text{ has a }K\text{-model}\}$ is co-r.e. (Π₁). Consequently:
+**Theorem 5.7 (computability barrier: "coherent iff an *intended* model exists" forces Π₁ existence) [proved; TOSU. This is the standard argument "a complete r.e. calculus makes semantic consequence r.e.", applied here to the coherence slogan (status corrected after verification). The corollaries cite MRDP, Tarski and Trakhtenbrot].** Let $S$ be a decidable set of finite syntactic objects, and $K$ an intended class of models. Suppose some calculus has an r.e. set of incoherent finite sets, and that a finite $X\subseteq S$ is incoherent iff $X$ has no model in $K$. Then $\{X\text{ finite}:X\text{ has a }K\text{-model}\}$ is co-r.e. (Π₁). Consequently:
 * (a) $K=\{\mathbb N\}$ (sentences of arithmetic): impossible. $\{X:\mathbb N\models\bigwedge X\}$ is computably equivalent to Th(ℕ), which is not even arithmetical (Tarski).
 * (b) Diophantine equations, $K=\{\mathbb Z\}$: impossible. Solvability is Σ₁-complete (MRDP: Matiyasevich 1970, building on Davis–Putnam–Robinson), so it is not Π₁.
-* (c) First-order sentences, $K$ = finite structures: impossible. Finite satisfiability is Σ₁ and undecidable (Trakhtenbrot 1950), so it is not Π₁.
+* (c) First-order sentences in a vocabulary containing at least one binary relation symbol, $K$ = finite structures: impossible. Finite satisfiability is Σ₁ and undecidable (Trakhtenbrot 1950), so it is not Π₁. (Vocabulary hypothesis added after verification. For purely monadic vocabularies, finite satisfiability is decidable, by the finite model property of monadic FOL, and there is no barrier.)
 * (d) First-order sentences, $K$ = all structures: satisfiability is Π₁, consistent with Gödel completeness. Polynomial equations with $K=\bar k^n$: decidable (Gröbner bases), consistent with the Nullstellensatz.
 
 *Proof.* "No $K$-model" equals "incoherent", which is r.e., so its complement is co-r.e. For (a)–(c): a Σ₁ set that is also Π₁ is decidable, which contradicts the cited undecidability results. Th(ℕ) is not even Π₁. ∎
 
-*Reading.* This is the non-standard caveat as a theorem. **For any computable notion of coherence, "coherent iff there is something it could be talking about" can hold only if *having such a something* is a Π₁ property.** "Having a model of any kind" is Π₁, so Gödel's theorem is possible. "Having the standard model", "having an integer solution" and "having a finite model" are not, so no computable coherence notion matches them. The proposition is true exactly to the extent that "something" is construed liberally.
+*Reading.* This is the non-standard caveat as a theorem. **For any computable notion of coherence, "coherent iff there is something it could be talking about" can hold only if *having such a something* is a Π₁ property.** "Having a model of any kind" is Π₁, so Gödel's theorem is possible. "Having the standard model", "having an integer solution" and "having a finite model" (in a vocabulary with a binary relation symbol) are not, so no computable coherence notion matches them. The proposition is true exactly to the extent that "something" is construed liberally.
 
 **Proposition 5.8 (anchoring pins exactly the definable vocabulary) [cited: Beth 1953; the reading is ours].** Let $L_o\subseteq L$ be an "anchored" (observational, world-hooked) vocabulary and $T$ an $L$-theory. Say $T$ **pins $L$ given $L_o$** if any two models of $T$ with the same universe and the same $L_o$-interpretation are identical. By Beth's definability theorem, $T$ pins $L$ given $L_o$ iff every symbol of $L$ is explicitly $T$-definable from $L_o$.
 
-So world-anchoring (fixing the world's interpretation of the hooked vocabulary) determines what the rest of the language talks about iff the rest is definable from the hooked part. Theoretical terms that are not definable stay multiply realizable. This is the Ramsey–Lewis–Newman situation (Lewis 1970 [cited]).
+*Reading (revised after verification).* Beth's theorem quantifies over *all* models of $T$, i.e. over every possible anchoring structure.
+* So world-anchoring (fixing the world's interpretation of the hooked vocabulary) determines what the rest of the language talks about *uniformly, whatever the anchoring structure turns out to be*, iff the rest is definable from the hooked part.
+* Over the *actual* anchoring structure, pinning can hold without definability. Example: $L_o=\{<\}$, and $T$ says that $R$ is a nonempty initial segment with no largest element.
+  * Over $(\mathbb N,<)$ the only expansion is $R=\mathbb N$, so this anchoring pins $R$.
+  * Over $\omega+\omega$, both $R=\omega$ and $R={}$everything satisfy $T$, so $R$ is not $T$-definable from $<$.
+  * A trivial variant: $T=\{\exists!x\,R(x)\}$ over a one-element world.
+* Definability relative to a *fixed* structure, possibly with parameters, is the subject of Svenonius- and Chang–Makkai-type theorems [cited (u)].
+* So theoretical terms that are not definable are multiply realizable over *some* anchoring, though possibly not over the actual one. This is the Ramsey–Lewis–Newman situation (Lewis 1970 [cited]).
 
 ### 5.5 "How are the natural numbers pinned down?"
 
@@ -657,7 +713,7 @@ The user asks: "how are the natural numbers pinned down? … is there a way they
    * Weaker theories can have computable non-standard models, e.g. open induction (Shepherdson 1964 [cited (u)]). So *which* axioms matter.
 4. **The ω-rule / Gaifman condition (Thm 3.8).**
    * *Adds:* an infinitary rule saying "every number is a numeral". Coherence plus this rule plus computation yields exactly Th(ℕ), even probabilistically.
-   * *Price:* no computable or limit-computable reasoner obeys it (Cor 3.9).
+   * *Price:* no limit-computable coherent credence that gives probability 1 to all true quantifier-free sentences obeys it (Cor 3.9 and the remark after it).
 5. **World anchoring by computation** (T2 Lemma 3.7) adds nothing beyond coherence with Q. Computation fixes the Δ₀ facts, and every consistent extension of Q already agrees with them.
 
 Each pin uses something beyond finitary computable coherence:
@@ -680,8 +736,8 @@ Thms 5.6–5.7 say that this is forced. The user's own categoricity note propose
 | structural calculus (learned) | ⊥ not derivable on the designated context | a Lindenbaum matrix model (syntactic) | Thm 5.1 |
 | credences, finite agenda | no Dutch book; all counting sequents | a probability mixture of worlds | Thm 3.1 |
 | credences, first-order | Gaifman coherence | a mixture of complete theories, i.e. of models | Thm 3.7 |
-| finite preference data | no money pump | a real expected-utility function | Prop 3.10 |
-| context system with monotone bridges | ⊥ not derivable at designated contexts | a bridge-compatible family of nonempty local belief states (grounded equilibrium) | Thm 4.1, Cor 4.2, Prop 4.3 |
+| finite preference data | no derivation of $L\succ L$ by mixing + transitivity (money-pump-like) | a real expected-utility function | Prop 3.10 |
+| context system with monotone bridges | ⊥ not derivable at designated contexts | a bridge-compatible family of local belief states, nonempty at every designated context (grounded equilibrium) | Thm 4.1, Cor 4.2, Prop 4.3 |
 | first-order theory | consistent | a structure (made of witness terms) | Gödel/Henkin |
 | polynomial equations | $1\notin$ ideal | a point over $\bar k$ | Nullstellensatz |
 
@@ -701,10 +757,10 @@ Sam's stronger slogan also holds in each strongly complete case: the round trip 
 **Connection to the user's views.**
 * *Coherence plus "hooking onto the world".* This work splits the user's open question ("what is the structure of the hooking of a model onto the world?") into two parts.
   * *Coherence* answers "is there any world this way of talking could be about?". The answer is yes, in a canonical, partly syntactic sense.
-  * *Hooking* answers "is it this world?". Hooking is positive data in valuation space (T2 §4.1: world feedback says the actual valuation is admissible). It pins exactly the vocabulary that is definable from the hooked vocabulary (Prop 5.8).
-  * Neither does the other's job. A coherent theory hooked onto the world on its observational vocabulary still talks about many things, unless its theoretical vocabulary is definable or categoricity holds.
+  * *Hooking* answers "is it this world?". Hooking is positive data in valuation space (T2 §4.1: world feedback says the actual valuation is admissible). Uniformly over all possible anchorings, it pins exactly the vocabulary that is definable from the hooked vocabulary (Prop 5.8). The actual anchoring may pin more.
+  * Neither does the other's job. A coherent theory hooked onto the world on its observational vocabulary can still talk about many things, unless its theoretical vocabulary is definable, categoricity holds, or the actual anchoring structure happens to admit a unique expansion (Prop 5.8).
 * *C-models versus L-models* (`logical models as distinct from mental models.md`). The user imagined "a C-model … with some 'axioms and inference rules' such that if one tried to construct a mathematical object 'wrt which all these … would be valid', one would not be able to construct anything (QFT infinities?)". The results here sharpen this into two cases.
-  * Either the C-model is incoherent in its own calculus. Then no L-model of that calculus exists (soundness). Such a C-model can still be *used* by chunking: it is a multi-context system whose designated chunks are coherent, so it has local belief states (Cor 4.2), and possibly no global world (Prop 4.7).
+  * Either the C-model is incoherent in its own calculus. Then no L-model of that calculus exists (soundness). Such a C-model can still be *used* by chunking: it is a multi-context system whose designated chunks are coherent, so it has local belief states that are nonempty on those chunks (Cor 4.2), and possibly no global world (Prop 4.7).
   * Or it is coherent. Then an L-model exists, possibly syntactic (Thm 5.1).
   * So "a C-model without an L-model" is precisely an incoherent calculus used only through coherent chunks. It is a contextual family without a global section.
 * *Aboutness in math and physics* (`math is a mere string game iff everything is.md`). The user's view that "the talking-about-something-ness of the two situations is clearly the same" fits the frame. In both cases the something is a model of the mode of talking. What differs is only the *anchoring*: the physical icosahedron hooks some vocabulary to the world; the mathematical one hooks none, but is pinned up to isomorphism by finiteness (§5.4).
@@ -714,21 +770,25 @@ Sam's stronger slogan also holds in each strongly complete case: the round trip 
 
 ## 7. Honest assessment of depth
 
-* **Standard results reorganized:** Fact 1.2, Thm 1.5, Thm 2.2–2.6, Thm 3.1, Thm 3.7, Thm 5.1–5.2, and the citations in §5.5. Their value here is the *organization*.
+* **Standard results reorganized:** Fact 1.2, Thm 1.5, Thm 2.2–2.6, Thm 3.1, Thm 3.7, Thm 3.8, Thm 5.1–5.2, and the citations in §5.5. Their value here is the *organization*.
   * Completeness = realization of points.
   * Two steps: Zorn, then realization.
   * The tautological canonical frame shows exactly where content lives.
   * The weak/strong distinction separates the user's slogan from Sam's.
+* **Standard arguments, newly applied** (list revised after verification).
+  * **Thm 4.5** is the context-logic instance of the standard distinction between a rule of proof and the corresponding conditional: global versus local consequence, or □(p∨q) ⊭ □p∨□q. It is also why Ghidini & Giunchiglia use sets of local models. Only its use as a criterion for physics bridges is new here.
+  * **Thm 5.7**, the computability barrier, uses the textbook argument "a complete r.e. calculus makes semantic consequence r.e.". The same argument is behind "no complete r.e. axiomatization of Th(ℕ)", "no complete proof system for finite validity" and "no complete calculus for full second-order logic". Only its framing as the formal content of the non-standard caveat is new here.
+  * **Thm 3.8**, the probabilistic ω-rule pin, is essentially a consequence of Gaifman 1964.
 * **Small new pieces, as far as I know; all are elementary.**
   * The **counting-sequent** form of de Finetti's theorem (Thm 3.1(iv)). This is likely folklore in probability logic; cf. Paris 1994 (u).
-  * The **strictness theorems** for CCS-type constraints (Thm 3.4 on arity; Thm 3.5 on multiplicity, with the clean $m\ge k-1$ bound). Thm 3.5 includes the perhaps surprising fact that *all* valid ordinary sequents' union bounds together do not imply coherence.
-  * **Thm 4.5:** belief-state versus world-family semantics for contexts.
-  * **Thm 4.1** in exactly this form. LMS completeness results exist (Ghidini & Giunchiglia 2001; Serafini & Bouquet 2004) [cited (u)]; mine is the simplest monotone case, made to fit L7's calculus.
-  * **Thm 5.7**, the computability barrier. It is a one-line proof but, I think, the right formalization of the non-standard caveat.
-  * The **probabilistic ω-rule** pin (Thm 3.8) and its corollary for logical inductors (Cor 3.9).
+  * The **strictness theorems** for CCS-type constraints: Thm 3.4 on arity, and Thm 3.5 on the threshold, with the clean $m\ge k-1$ bound. Thm 3.5 includes the perhaps surprising fact that *all* valid ordinary sequents' union bounds together do not imply coherence. Both are statements about uniform bounds across agendas; any single finite agenda needs only its finitely many facets.
+  * **Thm 4.1** in exactly this form. LMS completeness results exist (Ghidini & Giunchiglia 2001; Serafini & Bouquet 2004) [cited (u)]; mine is the simplest monotone case, made to fit L7's calculus. It matches L7's own semantics only when all Step and Exp instances are sound (remark after Prop 4.4).
+  * The corollary for logical inductors (Cor 3.9), a short combination of cited facts.
 * **TOSU warnings.** Thms 1.4, 4.1 and 5.7 and Prop 1.3 are short once the definitions are right. Thm 3.5(b) is the only proof with an actual combinatorial argument.
 * **Unverified citations:** marked (u). The ones most worth checking before reuse:
-  * Garrabrant et al.'s limit coherence (used in Cor 3.9);
+  * Garrabrant et al.'s Limit Coherence (Thm 4.1.2), Non-Dogmatism (Thm 4.6.2) and the definition of a market as a computable sequence of pricings (Def 3.1.3). All three are used in Cor 3.9; the statements were confirmed by search snippets, but the numbering is (u);
+  * Gaifman's uniqueness-of-extension theorem as credited in Thm 3.8;
+  * the Svenonius and Chang–Makkai theorems cited after Prop 5.8;
   * Vorob'ev's exact theorem statement;
   * Hausner's non-Archimedean utility representation;
   * the Brewka–Eiter terminology for grounded equilibria.
@@ -740,7 +800,7 @@ Sam's stronger slogan also holds in each strongly complete case: the round trip 
 1. **Graded sequent calculi.**
    * Find a natural, finitely presented proof system for valid counting sequents over a propositional language. A cutting-planes-like system is a candidate (Chvátal 1973 [cited (u)]).
    * Prove completeness for de Finetti coherence.
-   * Find how the minimal multiplicity of a violated counting sequent relates to Dutch-book size and to LP distance from the polytope.
+   * Find how the minimal threshold of a violated counting sequent relates to Dutch-book size and to LP distance from the polytope.
 2. **Learning-theoretic Carnap tell-tales.** T2 Thm 4.4 gives a 12-datum tell-tale for CPC. For which finite reduced matrices $\langle\mathbf A,D\rangle$ is there a *finite* set of bilateral data plus designated coherence data that forces every point of every surviving structural calculus to reduce to $\langle\mathbf A,D\rangle$ (P3 in Prop 5.3's sense)?
 3. **Contextual coherence as a loss.** Make a graded measure of the gap between Cor 4.2 (local belief states exist) and a global world (Prop 4.7). Abramsky et al.'s "contextual fraction" [cited (u)] is a candidate.
    * Is it the right penalty for physics context systems?
@@ -770,9 +830,10 @@ Sam's stronger slogan also holds in each strongly complete case: the round trip 
 | `scott_duality.py` | Cor 2.3 on 300 random sequent sets (4 formulas); Thm 2.4 exhaustively for 3 formulas | all equal; 256/256 closed, Th injective |
 | `prob_coherence.py` | Ex 3.3 facets; Thm 3.4 for k = 3..6; Thm 3.5 for k = 3 (all $3^{12}$ sequents); the m = 2 certificate | 4 facets as stated; locally coherent / globally incoherent for all k; 503,270 valid sequents, 0 violated; certificate valid and violated |
 | `counting_sequents.py` | Thm 3.1(iv) via extracted Farkas certificates | 215/215 verified |
-| `multiplicity.py` | minimal violated multiplicity for $P_k$ | m = 2 (k = 3), m = 3 (k = 4), consistent with Thm 3.5(b) |
+| `multiplicity.py` | minimal violated threshold $m$ for $P_k$ | m = 2 (k = 3), m = 3 (k = 4), consistent with Thm 3.5(b) |
 | `mcs_completeness.py` | Thm 4.1(c), Cor 4.2 on 400 random systems; Thm 4.5(b) | 0 mismatches; disjunction example confirmed |
-| `contexts_local_global.py` | Thm 4.6 (7,131 random tree systems); Prop 4.7 (logical and probabilistic) | all global; triangle has no global model or distribution |
+| `contexts_local_global.py` | Thm 4.6: (a) 7,131 random local-theory systems on one fixed 3-node path cover; (a2, added after verification) 2,000 random tree covers (2–5 nodes) plus a negative control without running intersection. Prop 4.7 (logical and probabilistic) | all global; negative control: 437/2,000 fail; triangle has no global model or distribution |
+| `repair_checks.py` (added after verification) | (A) Thm 1.5(c) needs soundness, Prop 1.3 does not; (B) Lindenbaum semantics for Def 4.0/Cor 4.2; (C) Thm 3.5 by exact MILP, k = 3, 4, 5; (D) the $\mathbf H_4$ example for Thm 5.2 | counterexample confirmed; 0 failures on 1,602 sound frames; 0 violations on 3,000 systems; minima $0$ and $-rac1{k-1}$; generated subalgebra $\cong\mathbf H_3$ |
 | `misc_checks.py` | Nullstellensatz instances; single-conclusion closure = ∩-closure (exhaustive, 3 formulas) | as stated |
 
 ---
@@ -792,6 +853,7 @@ Sam's stronger slogan also holds in each strongly complete case: the round trip 
 * Burns, C., Ye, H., Klein, D., Steinhardt, J. (2023). Discovering latent knowledge in language models without supervision. *ICLR 2023*. ✓
 * Button, T., Walsh, S. (2018). *Philosophy and Model Theory*. OUP. ✓
 * Cauchy, A.-L. (1847). Mémoire sur une nouvelle théorie des imaginaires … (u)
+* Chang, C. C. (1964). Some new results in definability. *Bull. AMS* 70:808–813. (u)
 * Christiano, P., Yudkowsky, E., Herreshoff, M., Barasz, M. (2013). Definability of truth in probabilistic logic. MIRI draft. ✓
 * Chvátal, V. (1973). Edmonds polytopes and a hierarchy of combinatorial problems. *Discrete Math.* 4:305–337. (u)
 * Dedekind, R. (1888). *Was sind und was sollen die Zahlen?* ✓
@@ -802,6 +864,7 @@ Sam's stronger slogan also holds in each strongly complete case: the round trip 
 * Garrabrant, S., Benson-Tilsen, T., Critch, A., Soares, N., Taylor, J. (2016). Logical induction. arXiv:1609.03543. ✓ (theorem numbering (u))
 * Georgakopoulos, G., Kavvadias, D., Papadimitriou, C. (1988). Probabilistic satisfiability. *J. Complexity* 4:1–11. (u)
 * Ghidini, C., Giunchiglia, F. (2001). Local models semantics, or contextual reasoning = locality + compatibility. *AIJ* 127:221–259. ✓
+* Glivenko, V. (1929). Sur quelques points de la logique de M. Brouwer. *Bull. Acad. Royale de Belgique* 15:183–188. ✓
 * Gödel, K. (1930). Die Vollständigkeit der Axiome des logischen Funktionenkalküls. *Monatsh. Math. Phys.* 37:349–360. ✓
 * Hausner, M. (1954). Multidimensional utilities. In Thrall, Coombs, Davis (eds), *Decision Processes*. Wiley. (u)
 * Henkin, L. (1949). The completeness of the first-order functional calculus. *JSL* 14:159–166. ✓
@@ -810,6 +873,7 @@ Sam's stronger slogan also holds in each strongly complete case: the round trip 
 * Krivine, J.-L. (1964). Anneaux préordonnés. *J. Analyse Math.* 12:307–326. (u)
 * Lewis, D. (1970). How to define theoretical terms. *J. Phil.* 67:427–446. ✓
 * Łoś, J., Suszko, R. (1958). Remarks on sentential logics. *Indag. Math.* 20:177–183. ✓
+* Makkai, M. (1964). On a generalization of a theorem of E. W. Beth. *Acta Math. Acad. Sci. Hungar.* 15:227–235. (u)
 * Makkai, M., Reyes, G. (1977). *First Order Categorical Logic*. LNM 611. ✓
 * Matiyasevich, Y. (1970). Enumerable sets are Diophantine. *Soviet Math. Dokl.* 11:354–358. ✓
 * McCarthy, J. (1993). Notes on formalizing context. *IJCAI-93*, 555–560. ✓
@@ -819,6 +883,7 @@ Sam's stronger slogan also holds in each strongly complete case: the round trip 
 * Paris, J. (1994). *The Uncertain Reasoner's Companion*. CUP. ✓
 * Parsons, C. (1990). The uniqueness of the natural numbers. *Iyyun* 39:13–44. ✓
 * Pitowsky, I. (1991). Correlation polytopes: their geometry and complexity. *Math. Programming* 50:395–414. (u)
+* Rosser, J. B. (1936). Extensions of some theorems of Gödel and Church. *JSL* 1:87–91. ✓
 * Scott, D. (1974). Completeness and axiomatizability in many-valued logic. In *Proc. Tarski Symposium*, Proc. Symp. Pure Math. 25, AMS, 411–435. ✓
 * Serafini, L., Bouquet, P. (2004). Comparing formal theories of context in AI. *AIJ* 155:41–67. ✓ (per L7)
 * SGA 4 (Artin, Grothendieck, Verdier; Deligne's exposé on coherent toposes), LNM 269/270/305. (u)
@@ -828,6 +893,7 @@ Sam's stronger slogan also holds in each strongly complete case: the round trip 
 * Stengle, G. (1974). A Nullstellensatz and a Positivstellensatz in semialgebraic geometry. *Math. Ann.* 207:87–97. ✓
 * Stone, M. (1936). The theory of representations for Boolean algebras. *Trans. AMS* 40:37–111. ✓
 * Suszko, R. (1977). The Fregean axiom and Polish mathematical logic in the 1920s. *Studia Logica* 36:377–380. (u)
+* Svenonius, L. (1959). A theorem on permutations in models. *Theoria* 25:173–178. (u)
 * Tennenbaum, S. (1959). Non-archimedean models for arithmetic. *Notices AMS* 6:270. ✓
 * Trakhtenbrot, B. (1950). The impossibility of an algorithm for the decision problem for finite domains. *Doklady* 70:569–572. ✓
 * Väänänen, J., Wang, T. (2015). Internal categoricity in arithmetic and set theory. *NDJFL* 56:121–134. (u)
@@ -836,3 +902,87 @@ Sam's stronger slogan also holds in each strongly complete case: the round trip 
 * Vorob'ev, N. N. (1962). Consistent families of measures and their extensions. *Theory Probab. Appl.* 7:147–163. (u)
 * Wójcicki, R. (1988). *Theory of Logical Calculi*. Kluwer. ✓
 * Zariski, O. (1947). A new proof of Hilbert's Nullstellensatz. *Bull. AMS* 53:362–368. ✓
+
+---
+
+## Verification log
+
+Two independent adversarial referees checked this file. Referee A covered §§0–3, and Referee B covered §§4–5 together with the §0, §6 and §7 claims about them. Their full reports are reproduced in `verification/T6-verification.md`. I re-checked every reported issue myself, using computation where useful. Severity tags are the referees' own.
+
+**Re-checks run.**
+* `run_all.sh`, which re-runs all T6 scripts. Every number quoted in the file reproduces.
+* New script `T6-checks/repair_checks.py`:
+  * (A) the referee's counterexample to Thm 1.5(c) without soundness; 1,602 random sound finite frames with 0 failures of 1.5(b) or 1.5(c); 2,949 unsound frames with 0 failures of Prop 1.3 and 258 failures of 1.5(c), confirming that soundness is needed;
+  * (B) the Lindenbaum semantics for Def 4.0: 3,000 random closure systems with an explosive falsum, 0 violations, plus the non-explosive counterexample;
+  * (C) an exact MILP for Thm 3.5 with $k=3,4,5$;
+  * (D) the $\mathbf H_4$ example for the §0 gloss of Thm 5.2.
+* New part (a2) of `contexts_local_global.py`: 2,000 random tree covers with running intersection, with 0 failures. The negative control without running intersection has 437 failures out of 2,000.
+* `counting_sequents.py`: the docstring is corrected (Thm 3.1, complementary pairs). The output is unchanged: 215/215.
+* Literature check for Cor 3.9. Search snippets confirm Garrabrant et al.'s definition of a market as a *computable* sequence of pricings (Def 3.1.3), Limit Coherence (Thm 4.1.2) and Non-Dogmatism (Thm 4.6.2). The full text was not reachable (arXiv and intelligence.org are blocked by the egress proxy), so the numbering stays (u).
+
+**Outcome in brief.**
+* No issue was labelled fatal or major, and I found none.
+* Every minor issue was genuine and has been fixed, or the claim has been weakened or recast. No issue was rejected.
+* The substantive repairs are:
+  * the soundness hypothesis in Thm 1.5(c);
+  * the restated hypothesis of Thm 3.1;
+  * a revised proof of Cor 3.9, now with two independent arguments and an explicit computability premise, and the qualified "no limit-computable credence" sentence;
+  * the Lindenbaum semantics in Def 4.0, with the non-triviality reading of Cor 4.2;
+  * Def 4.8, which now requires that $c$ establishes φ;
+  * the retracted Post-completeness sentence after Prop 5.3;
+  * the vocabulary hypothesis in Thm 5.7(c);
+  * the reading of Prop 5.8 (uniform versus actual anchoring);
+  * the novelty claims in §7 for Thms 3.8, 4.5 and 5.7, which are now classed as standard arguments, newly applied.
+
+#### Referee A (§§0–3)
+
+| # | item | severity | genuine? | action |
+|---|---|---|---|---|
+| A1 | Prop 1.3 (soundness unused) | ok | n/a | **Clarified.** A note says that the proof does not use soundness [checked: `repair_checks.py` (A), 0 failures on 2,949 unsound frames]. |
+| A2 | Thm 1.4 | ok | n/a | No change. |
+| A3 | Thm 1.5(c) needs soundness | minor | **yes** | **Fixed (hypothesis added; marked "revised after verification").**<br>• (c) now assumes $C$ sound. The proof of (⇒) says where soundness is used ("$\mathrm{Th}(\{m\})$ is closed *by soundness*").<br>• The referee's 3-sentence counterexample is included in the statement and reproduced by `repair_checks.py` (A).<br>• Random tests: 0 failures with soundness; 258/2,949 failures of (c) without it.<br>• Prop 1.6 already proves soundness before applying (c), so it is unaffected. |
+| A4 | Prop 1.6 | ok | n/a | **Clarified.** Glivenko's theorem is added as a one-line alternative for weak completeness. |
+| A5 | Prop 1.6 Reading (garbled proof-by-cases sentence) | minor | yes | **Fixed.** The argument is written out: maximal omitting φ, neither ψ nor ¬ψ in $T$ ⇒ φ ∈ C(T,ψ) ∩ C(T,¬ψ) = T, contradiction ⇒ complete ⇒ maximal consistent. |
+| A6 | §0 item 1 ("complete for its own points (Thm 1.4)") | minor | yes | **Fixed.** §0 now reads "strongly complete for its own closed theories (Thm 1.4; no Zorn) and, if finitary, for its own points (Thm 1.5(a))". |
+| A7 | Thm 2.2 / Cor 2.3 | ok | n/a | No change. |
+| A8 | Thm 2.4 | ok | n/a | **Clarified.** The tag credits the compact-relation/closed-class correspondence to Scott 1974 and Shoesmith–Smiley 1978 as standard. |
+| A9 | Rem 2.5 (Suszko holds for all Tarskian consequences) | ok | n/a | **Clarified.** The text now says "every Tarskian consequence, structural or not", and notes that Suszko stated it for structural logics. |
+| A10 | Thm 2.6 | ok | n/a | No change. |
+| A11 | Thm 3.1 ("closed under negation" impossible for finite $F$) | minor | yes | **Fixed (hypothesis restated).**<br>• $F$ is now a finite union of complementary pairs $\{\varphi,\varphi^\*\}$ with $\varphi^\*\equiv\neg\varphi$, and $P(\varphi^\*)=1-P(\varphi)$.<br>• The proof of (iv)⇒(iii) and the $m=1$ sequent definition use $\varphi^\*$.<br>• A note records that negation coherence is needed: $P\equiv1$ satisfies every valid counting sequent but is incoherent.<br>• The docstring of `counting_sequents.py` is corrected ("Thm 3.2" → "Thm 3.1"; complementary pairs). |
+| A12 | Prop 3.2 / Ex 3.3 | ok | n/a | No change. |
+| A13 | Thm 3.4 | ok | n/a | No change. |
+| A14 | Thm 3.5 ("multiplicity" is really the threshold; "needs the full family" overstated) | minor | yes | **Fixed (wording; mathematics unchanged).**<br>• $m$ is now called the **threshold**. A terminology note says that the violated sequent of (a) repeats no formula.<br>• A *Scope* paragraph says that any single finite agenda is characterized by its finitely many facets, and that Thms 3.4–3.5 rule out only *uniform* bounds across agendas.<br>• §0, §3.2 ("Exact answer"), §7, §8 and §10 are updated to match.<br>• New exact MILP check (`repair_checks.py` (C), multiplicities in $[0,8]$): the minimum of $\sum_\Phi P_k-m$ is 0 for $m\le k-2$ and $-\frac1{k-1}$ for $m\le k-1$ ($k=3,4,5$), attained by the repetition-free sequent of (a). This reproduces the referee's MILP. |
+| A15 | Prop 3.6 | ok | n/a | No change. |
+| A16 | Thm 3.7 | ok | n/a | No change. |
+| A17 | Thm 3.8 (attribution to Gaifman 1964) | minor | yes | **Fixed.** The tag now credits Gaifman 1964: a Gaifman measure is determined by its quantifier-free restriction (exact formulation (u)). §7 moves Thm 3.8 from "new" to "standard". |
+| A18 | Cor 3.9 (silent computability premise; overstated sentence after it) | minor | yes | **Fixed (proof revised; sentence qualified).**<br>• The Δ₂ argument now states its premise: a market is a computable sequence of rational pricings (Garrabrant et al. Def 3.1.3, confirmed by search snippet).<br>• The referee's more robust second proof is added. Gödel–Rosser gives an independent sentence, and the false one, ψ, gets $\mathbb P_\infty(\psi)>0$ by Non-Dogmatism (Thm 4.6.2), so $\mathbb P_\infty\neq\delta_{\mathrm{Th}(\mathbb N)}$.<br>• A general remark is proved: no limit-computable coherent credence giving 1 to all true QF sentences satisfies the Gaifman condition. The referee's one-element-structure example shows that the QF hypothesis is needed.<br>• The "no computable or limit-computable credence" sentence and §5.5 item 4 are qualified accordingly. |
+| A19 | Prop 3.10 ("money pump" gloss) | minor | yes | **Fixed.** §0, the §6 table and the Reading now say "no derivation of $L\succ L$ by mixing + transitivity (money-pump-like)", and flag "money pump" as an interpretive gloss. |
+
+#### Referee B (§§4–5)
+
+| # | item | severity | genuine? | action |
+|---|---|---|---|---|
+| B1 | Thm 4.1 | ok | n/a | No change. |
+| B2 | Cor 4.2 (statement) | ok | n/a | No change to the statement. See B3 and B4. |
+| B3 | Def 4.0 / Cor 4.2 applied to learned logics with Lindenbaum semantics | minor | **yes** | **Fixed (Def 4.0 revised; remark added).**<br>• Def 4.0 now specifies Lindenbaum semantics as $M_i=\mathrm{Fix}(C_i)\setminus\{L_i\}$ (proper closed theories), shows $\mathrm{Th}_i\circ\mathrm{Mod}_i=C_i$, and says that Thm 1.4's full frame does not qualify, because the trivial theory satisfies everything.<br>• The falsum condition becomes "$\bot_i$ is $C_i$-explosive".<br>• A remark after Cor 4.2 proves the falsum-free version: $T_i\neq L_i$ iff $c^\Gamma_i\neq\emptyset$. So for learned logics, D-coherence should be read as non-triviality. It includes the referee's non-explosive counterexample ($R=\emptyset$, $K_i=\{\bot_i\}$).<br>• [checked: `repair_checks.py` (B), 3,000 random systems, 0 violations] |
+| B4 | §0 / §6 summaries drop "nonempty on D" | minor | yes | **Fixed.** §0 item 4, the §6 table, the §4.3 Reading and the §6 C-models paragraph now say "nonempty at every designated context", and note that suppositional contexts may be forced empty. |
+| B5 | Prop 4.3 | ok | n/a | No change. |
+| B6 | Prop 4.4 ("context i alone is coherent"; "must come from stratification") | minor | yes | **Fixed (wording).** "$K_i$ is consistent (the context is coherent without its bridge)". Existence "needs an extra condition, such as stratification or the absence of odd loops through negation as failure … stratification is sufficient, not necessary". |
+| B7 | Remark relating MC to L7's calculus | minor | yes | **Fixed (rewritten; [sketch]).**<br>• Thm 4.1 is now described as completeness for LMS *with bridges as compatibility constraints*. L7 §8.2's semantics keeps $\mathrm{Mod}(@)$ fixed and asks bridges to be sound.<br>• The two coincide when the local logic is the complete base logic and every Step/Exp instance is sound. Proof sketch: ⊆ by L7 Prop 1; ⊇ by induction down the tree.<br>• The referee's unsound-export example shows that they differ otherwise.<br>• The SUP identity is kept. |
+| B8 | Thm 4.5 ((c) omits tagged $K_i$ and Γ) | ok | yes (small) | **Fixed.** (c) and its proof now include the tagged $K_i^{(i)}$ and the tagged premises Γ. |
+| B9 | Thm 4.5 novelty claim | minor | yes | **Fixed.** A *Status* note after the proof, and §7, present Thm 4.5 as the context-logic instance of rule-of-proof versus conditional (global/local consequence; □(p∨q) ⊭ □p∨□q). It is listed under "standard arguments, newly applied". |
+| B10 | Thm 4.6 (script description) | ok | yes (description) | **Fixed.**<br>• The theorem tag and the §10 table now say that (a) uses one fixed 3-node path cover.<br>• New part (a2) tests 2,000 random tree covers with 2–5 nodes and random running-intersection placement: 0 failures. A negative control without running intersection gives 437/2,000 failures.<br>• The tag credits the join-tree/Robinson-consistency argument (Beeri et al. 1983). |
+| B11 | Prop 4.7 and the Vorob'ev/BFMY citation | ok | n/a | No change. |
+| B12 | Def 4.8 ("true enough" does not require $c$ to establish φ) | minor | yes | **Fixed (definition revised).** It now requires (i) $\Gamma\vdash_{\rm MC}c{:}\varphi$, (ii) the bridge's side conditions hold at @ ($\Gamma\vdash_{\rm MC}@{:}\sigma$ for a checker), and (iii) bridge soundness. |
+| B13 | Thm 5.1 | ok | n/a | **Clarified.** A note says that (b) holds for any $C_R$-theory $\supseteq A$ omitting ⊥. |
+| B14 | Thm 5.2 | ok | n/a | No change. |
+| B15 | §0 gloss of Thm 5.2 (needs a generating valuation) | minor | yes | **Fixed.** §0 now says "a *generating* (surjective) intended valuation; in general the reduction of the generated submatrix". The referee's example is reproduced in `repair_checks.py` (D): $h(p)=a$ in $\mathbf H_4$ generates $\{0,a,1\}\cong\mathbf H_3$, which is reduced. |
+| B16 | Prop 5.3 wording; the "not Post-complete ⇒ non-isomorphic completions" sentence | minor | yes | **Fixed (wording corrected; sentence retracted and replaced).**<br>• "Reduced generated submatrix" → "the reduction of a generated submatrix (a strict homomorphic image of a submatrix)".<br>• The Post-completeness sentence is retracted, using the IPC counterexample: IPC is not Post-complete, yet all its maximal theories reduce to **2** (Prop 1.6).<br>• The CPC fact is re-derived from "every point is maximal, and maximal theories are Boolean". The non-isomorphism is located in non-maximal points (Ex 5.4), and P3 is tied to points. |
+| B17 | Ex 5.4 | ok | n/a | **Clarified.** "FOL with equality". |
+| B18 | Thm 5.5 | ok | n/a | **Clarified.** The wording is now: "its negation is a true Δ₀ sentence, hence provable in Q ⊆ T". |
+| B19 | §5.4 layer (i) | ok | n/a | No change. |
+| B20 | Thm 5.6 | ok | n/a | No change. |
+| B21 | Thm 5.7 ((c) needs a binary relation symbol; novelty) | minor | yes | **Fixed.**<br>• (c) now assumes a vocabulary with at least one binary relation symbol, and notes that the monadic case is decidable. The Reading and §0 are updated.<br>• The tag and §7 recast Thm 5.7 as the textbook argument ("a complete r.e. calculus makes semantic consequence r.e."), newly applied. |
+| B22 | Prop 5.8 reading (actual vs uniform anchoring) | minor | yes | **Fixed (reading revised).**<br>• Beth is now read as pinning *uniformly over all anchorings* iff definable.<br>• The referee's $(\mathbb N,<)$ vs $\omega+\omega$ counterexample and the one-element variant are included, together with a pointer to Svenonius / Chang–Makkai for fixed structures [cited (u)].<br>• §0 and §6 are updated. |
+| B23 | §5.5 pins | ok | n/a | No change, except item 4, which is qualified as in A18. |
+| B24 | `run_all.sh` | ok | n/a | No change to the earlier scripts' outputs. `repair_checks.py` is added to `run_all.sh`. |

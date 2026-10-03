@@ -1,5 +1,6 @@
-"""T6 check 6: the counting-sequent characterization of probabilistic coherence (Thm 3.2).
-For random agendas (closed under negation) over 3 atoms and random credences: if the LP says incoherent,
+"""T6 check 6: the counting-sequent characterization of probabilistic coherence (Thm 3.1).
+For random agendas over 3 atoms that are unions of complementary pairs {phi, phi*} (phi* = the complement of phi,
+i.e. phi* is equivalent to not-phi) and random negation-coherent credences: if the LP says incoherent,
 extract a Farkas certificate, convert it into an integer counting sequent 'in every world at least m of the
 multiset Phi are true', verify it exactly, and check that sum_{phi in Phi} P(phi) < m."""
 import itertools, random
@@ -16,7 +17,7 @@ for trial in range(400):
     base = random.sample(range(1, (1 << W) - 1), 3)          # formulas as truth tables (bitmask over worlds)
     agenda = []
     for f in base:
-        agenda += [f, ((1 << W) - 1) ^ f]                      # close under negation
+        agenda += [f, ((1 << W) - 1) ^ f]                      # complementary pair {phi, phi*}
     truth = np.array([[(f >> w) & 1 for f in agenda] for w in range(W)], dtype=float)
     p = []
     for k in range(0, len(agenda), 2):

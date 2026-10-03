@@ -2,3 +2,10 @@ import InfLearn.Prelude
 import InfLearn.ConsOp
 import InfLearn.Prop.Basic
 import InfLearn.Steps
+import InfLearn.StepSoundness
+import InfLearn.PostCompleteness
+import InfLearn.Carnap
+import InfLearn.CoherenceGames
+import InfLearn.Blame
+import InfLearn.RateThreshold
+import InfLearn.Contexts

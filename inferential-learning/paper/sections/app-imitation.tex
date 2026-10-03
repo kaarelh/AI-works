@@ -1,0 +1,205 @@
+% =====================================================================
+% Appendix: proofs for Section 5 (Imitation: what positive examples fix)
+% Sources: research/theory/T1-soundness-under-search.md §5-§6 (as repaired),
+%          research/verification/T1-soundness-under-search-verification.md (B-8...B-19),
+%          research/lit/L1-positive-data-learning.md (§2.3 lemma, §9 T3 example),
+%          research/lit/L9-physics-solutions-verification.md (§3.1, TC1; sketch only).
+% =====================================================================
+\providecommand{\vars}{\mathrm{vars}}
+\providecommand{\rt}{\mathrm{root}}
+\providecommand{\Sub}{\mathrm{Sub}}
+\providecommand{\Acc}{\mathrm{Acc}}
+\providecommand{\Fail}{\mathfrak F}
+
+\section{Proofs for Section~\ref{sec:imitation}}\label{app:imitation}
+
+\Cref{lem:imitation:cautious}, \cref{thm:imitation:anchor}, \cref{thm:imitation:untagged}(a), \cref{cor:imitation:ood}, \cref{prop:imitation:collapse}, \cref{thm:imitation:indist} and \cref{cor:imitation:systematic} are proved in full in the main text. This appendix proves the remaining results of \cref{sec:imitation}. The proofs follow T1 \S\S5--6 in the form repaired after verification; the repairs are noted where they occur. The last subsection is a sketch and is labelled as such.
+
+Notation is as in \cref{sec:setting,sec:imitation}. Steps are ground terms over a signature $\Omega$ with at least two constants $a\neq b$. For a schema $\sigma$, $\vars(\sigma)$ is its set of metavariables and $v=|\vars(\sigma)|$. A substitution $\theta$ for $\sigma$ maps $\vars(\sigma)$ to ground terms. Anti-unification is the map $\mathcal A$ of \cref{sec:setting:schemas}, and $\lgg$ is computed by it (\cref{thm:setting:lgg}).
+
+% ---------------------------------------------------------------------
+\subsection{Three elementary facts}\label{app:imitation:facts}
+
+\begin{lemma}\label{lem:app:imitation:facts}
+\textup{(F1)} If $\tau=\sigma\theta$ and $\theta$ restricted to $\vars(\sigma)$ is not a renaming, then $\inst(\tau)\subsetneq\inst(\sigma)$.
+\textup{(F2)} The intersection of the instance sets of all schemas is empty.
+\textup{(F3)} For tagged calculi $H^{\mathrm{tag}}_k$ and clean data $D$, $\bigcap\VS(D)=\bigcup_{i\le k}\{i\}\times\hat R_i$, where $\hat R_i=\inst(\lgg(D^{(i)}))$ if $D^{(i)}\neq\emptyset$ and $\hat R_i=\emptyset$ otherwise.
+\end{lemma}
+
+\begin{proof}
+(F1) Inclusion holds because instances of $\tau$ are instances of $\sigma$. For strictness there are two cases. First, suppose some $\theta x$ is not a metavariable, say with root $g$. Choose a constant $c\neq g$; it exists because there are two constants. Let $t=\sigma\theta'$ with $\theta'x=c$ and $\theta'$ ground elsewhere. At a position of $\sigma$ where $x$ occurs, $t$ carries $c$, while every instance of $\tau$ carries a term with root $g$. So $t\notin\inst(\tau)$. Second, suppose every $\theta x$ is a metavariable. Then $\theta$ is not injective on $\vars(\sigma)$, say $\theta x=\theta y$ with $x\neq y$. Let $\theta'x=a$ and $\theta'y=b$. Every instance of $\tau$ has equal subterms at the positions of $x$ and $y$, and $\sigma\theta'$ does not. So $\sigma\theta'\notin\inst(\tau)$.
+
+(F2) The ground schemas $a$ and $b$ have disjoint instance sets $\{a\}$ and $\{b\}$.
+
+(F3) Write $I$ for the family of single-schema instance sets. Then $H^{\mathrm{tag}}_k=\{\bigcup_i\{i\}\times A_i:\ A_i\in I\}$, and $D\subseteq\bigcup_i\{i\}\times A_i$ iff $D^{(i)}\subseteq A_i$ for every $i$. So $\VS(D)$ is the set of all such unions with $(A_1,\dots,A_k)\in\prod_i\VS_i$, where $\VS_i:=\{A\in I:D^{(i)}\subseteq A\}$. Each $\VS_i$ is nonempty, since it contains $\inst(\sigma_i)$. Hence $(i,s)\in\bigcap\VS(D)$ iff $s\in A_i$ for every choice in the product, iff $s\in\bigcap\VS_i$. Finally, $\bigcap\VS_i=\inst(\lgg(D^{(i)}))$ for nonempty $D^{(i)}$ by \cref{thm:setting:lgg}, and $\bigcap\VS_i=\emptyset$ for empty $D^{(i)}$ by (F2).
+\end{proof}
+
+(F3) is the positive-data case of the factorization used for T1 Thm~3.6. The verification noted that $H^{\mathrm{tag}}_k$ is not literally intersection-closed, and the factorization is what the argument actually uses.
+
+% ---------------------------------------------------------------------
+\subsection{Proofs of \texorpdfstring{\cref{prop:imitation:telltale,prop:imitation:elastic}}{the anchor propositions}}\label{app:imitation:anchors}
+
+\begin{proof}[Proof of \cref{prop:imitation:telltale}]
+(a) If $T$ is an anchor and $T\subseteq R\in\Hc$, then $R\supseteq\Rstar$, so $R\not\subsetneq\Rstar$.
+
+(b) Let $T\neq\emptyset$ be a tell-tale, and suppose $T\subseteq R\in\Hc$ with $R\not\supseteq\Rstar$. Then $R\cap\Rstar\supseteq T$ is nonempty, so it is a member of $\Hc$ by intersection-closure of $\Hc\cup\{\emptyset\}$. And $T\subseteq R\cap\Rstar\subsetneq\Rstar$, which contradicts the tell-tale property. For $\Hc=\{\{1\},\{2\}\}$ and $\Rstar=\{1\}$: no member lies strictly inside $\{1\}$, so $\emptyset$ is a tell-tale; $\{2\}\supseteq\emptyset$ does not contain $\Rstar$, so $\emptyset$ is not an anchor. Here $\Hc\cup\{\emptyset\}$ is intersection-closed. For the existence claim, if $T$ is a tell-tale and $r\in\Rstar$, then $T\cup\{r\}$ is a nonempty tell-tale (fewer members contain it), hence an anchor; anchors are tell-tales by (a).
+
+(c) The class is an indexed family of uniformly recursive sets. $\{0\}$ is a tell-tale for $2\N$, since every $R_n$ contains the odd number $2n+1$ and so no member lies strictly inside $2\N$. $R_n$ is a tell-tale for itself. By Angluin's theorem \citep{angluin1980inductive} the class is identifiable in the limit from text. Every finite $T\subseteq2\N$ lies in $R_n$ for any $n$ with $2n\ge\max T$, and $R_n\not\supseteq2\N$. So $2\N$ has no anchor, and by \cref{thm:imitation:anchor}(b) the cautious verifier is never complete on a text for $2\N$. The same example shows that ``finite'' is needed in \cref{thm:imitation:anchor}(a): every member containing $2\N$ is $2\N$, so $\hat R(2\N)=2\N$.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:imitation:elastic}]
+If $\Rstar=\emptyset$, then $\emptyset$ is an anchor. Otherwise suppose $\Rstar$ has no anchor, and pick $w_0\in\Rstar$. Given $w_0,\dots,w_{n-1}\in\Rstar$, the finite set $\{w_0,\dots,w_{n-1}\}\subseteq\Rstar$ is not an anchor. So some $R_n\in\Hc$ contains it with $R_n\not\supseteq\Rstar$; pick $w_n\in\Rstar\setminus R_n$. Then $\{w_0,\dots,w_{n-1}\}\subseteq R_n\not\ni w_n$ for all $n\ge1$, which is infinite elasticity.
+\end{proof}
+
+This is the lemma of L1 \S2.3 in a direct form. The facts used after the proposition in the main text are standard: finite thickness implies finite elasticity, and the union theorem of \citet{wright1989identification} with the corrected definition of \citet{motoki1991correct}.
+
+% ---------------------------------------------------------------------
+\subsection{Proof of \texorpdfstring{\cref{thm:imitation:coupon}}{the coupon-collector theorem}}\label{app:imitation:coupon}
+
+By (F3), $\hat R(D)=\Rstar$ iff every rule $i$ is \emph{identified}, i.e.\ $\hat R_i=\inst(\sigma_i)$. Let $E_i$ be the event that rule $i$ is not identified; we bound each $\Prob(E_i)$ and take a union bound over $i$.
+
+\emph{Rules with $v_i\ge1$.} Let $N_i=|D^{(i)}|$, so $N_i\sim\mathrm{Bin}(N,\pi_i)$. Given $N_i=n$, the rule-$i$ substitutions $\Theta_1,\dots,\Theta_n$ are i.i.d.\ $\Lambda_i$. Say that (R) \emph{fails at $x$} if all $n$ roots $\rt(\Theta_jx)$ equal one symbol (vacuously so if $n=0$), and that (D) \emph{fails at $\{x,y\}$} if $\Theta_jx=\Theta_jy$ for all $j$. If $n\ge1$ and no witness event fails, \cref{lem:setting:recover} gives $\lgg(D^{(i)})\equiv\sigma_i$, so $\hat R_i=\inst(\sigma_i)$. Hence $E_i$ is contained in the union of the $v_i+\binom{v_i}2$ failure events.
+
+Fix $x$. The function $G\mapsto\min(F(G),1-F(G))$, with $F$ the law of $\rt(\Theta x)$, attains its maximum $\rho_{i,x}$. Indeed $G\mapsto F(G)=\sum_f\mathbf 1_G(f)F(f)$ is continuous on the compact space $\{0,1\}^\Omega$, because the series converges uniformly. Let $G$ attain the maximum. If all roots equal $f$, then all lie in $G$ (if $f\in G$) or all lie in $G^c$. So
+\[
+\Prob[\text{(R) fails at }x\mid N_i=n]\le F(G)^n+(1-F(G))^n\le2(1-\rho_{i,x})^n\le2(1-\rho_i)^n,
+\]
+since $\min(F(G),1-F(G))=\rho_{i,x}$ gives $\max(F(G),1-F(G))\le1-\rho_{i,x}$. For a pair,
+\[
+\Prob[\text{(D) fails at }\{x,y\}\mid N_i=n]=(1-r_{i,xy})^n\le(1-\rho_i)^n.
+\]
+By the union bound, $\Prob(E_i\mid N_i=n)\le c_i(1-\rho_i)^n$. For $n=0$ this is trivially true, since $c_i\ge2$. Averaging over $N_i$,
+\[
+\Prob(E_i)\le c_i\,\E\bigl[(1-\rho_i)^{N_i}\bigr]=c_i\sum_{n=0}^N\tbinom Nn\pi_i^n(1-\pi_i)^{N-n}(1-\rho_i)^n=c_i(1-\pi_i\rho_i)^N\le c_ie^{-N\pi_i\rho_i}.
+\]
+
+\emph{Ground rules.} If $v_i=0$ and $N_i\ge1$, then $D^{(i)}$ consists of copies of $\sigma_i$ and $\hat R_i=\{\sigma_i\}$. So $E_i=\{N_i=0\}$, and $\Prob(E_i)=(1-\pi_i)^N\le e^{-N\pi_i}=c_ie^{-N\pi_i\rho_i}$ under the conventions $\rho_i=c_i=1$. The verification noted that the general formula gives $c_i=0$ for ground rules; hence the separate convention.
+
+\emph{Sample size.} If $N\ge\frac1{\pi_i\rho_i}\ln\frac{kc_i}\delta$ for every $i$, each term is at most $\delta/k$, and the sum is at most $\delta$.
+
+\emph{Necessity.} Fix $i$, $x$, $f$ and $\rho\in(0,1]$ with $\Prob[\rt(\Theta x)=f]=1-\rho$. Let $A$ be the event that no datum is a rule-$i$ instance with $\rt(\Theta x)\neq f$. The data are i.i.d., and each datum is such an instance with probability $\pi_i\rho$, so $\Prob(A)=(1-\pi_i\rho)^N$. On $A$, either $N_i=0$, and then $\hat R_i=\emptyset\neq\inst(\sigma_i)$; or $N_i\ge1$, and then every column that anti-unification meets at an occurrence of $x$ has root $f$ throughout. In the second case $\lgg(D^{(i)})$ carries a term with root $f$ there. Since $\rho>0$, some ground term $t$ with root $\neq f$ is in the support. The instance of $\sigma_i$ with $x\mapsto t$ lies in $\inst(\sigma_i)$ but not in $\hat R_i$. So $\Prob[\hat R(D)\neq\Rstar]\ge(1-\pi_i\rho)^N$. \qed
+
+% ---------------------------------------------------------------------
+\subsection{Proof of the claims in \texorpdfstring{\cref{rem:imitation:rates}}{the remark on rates}}\label{app:imitation:rates}
+
+\emph{Teaching sets.} Let $\theta_1,\theta_2$ map the $v_i$ metavariables of $\sigma_i$ to $2v_i$ pairwise distinct constants. For each $x$, $\theta_1x\neq\theta_2x$ are distinct constants, so their roots differ and (R) holds. For $x\neq y$, $\theta_1x\neq\theta_1y$, so (D) holds. By \cref{lem:setting:recover}, $\lgg(\sigma_i\theta_1,\sigma_i\theta_2)\equiv\sigma_i$. In a tagged class this set (one per rule) is an anchor, by (F3).
+
+\emph{No distribution-free completeness rate} (the example is from L1 \S9). Let $g$ be binary, $h\ge1$, $m=2^h$, and let $u_j$ ($1\le j\le m$) be the complete $g$-tree of depth $h$ with leaf $j$ equal to $a$ and all other leaves equal to $b$. Let $J\subseteq[m]$ with $|J|\ge2$, and anti-unify $\{u_j:j\in J\}$. All internal positions carry $g$ and are copied. At leaf $\ell\in J$ the column contains $a$ (from $u_\ell$) and $b$ (from any other $u_j$, $j\in J$), so it becomes a metavariable $z_\ell$. Columns at distinct leaves $\ell,\ell'\in J$ differ (at index $\ell$ one has $a$, the other $b$), so $z_\ell\neq z_{\ell'}$. At leaves $\ell\notin J$ the column is constantly $b$. Hence the lgg has distinct metavariables exactly at the leaves in $J$ and $b$ elsewhere. Its instances among the $u$'s are exactly $\{u_j:j\in J\}$, because $u_k$ with $k\notin J$ has $a$ at a leaf where the lgg has $b$. For $|J|=1$ the lgg is $u_j$ itself.
+
+Take the target $\inst(x)\in H_1$ and the uniform law $Q$ on $\{u_1,\dots,u_m\}$. A sample of $n<m/2$ draws hits a set $J$ of at most $n$ indices, and by the above $\hat R(D)\cap\{u_1,\dots,u_m\}=\{u_j:j\in J\}$. So $Q(\Rstar\setminus\hat R(D))\ge(m-n)/m>1/2$ for every such sample. Any learner whose acceptance set is sound for every target in $H_1$ compatible with its data accepts a subset of $\hat R(D)$ (\cref{lem:imitation:cautious}(b)), so its completeness error is at least as large. Since $h$ is arbitrary, no bound on the number of samples that is independent of $Q$ can guarantee completeness error at most $1/2$. \qed
+
+% ---------------------------------------------------------------------
+\subsection{Proof of \texorpdfstring{\cref{thm:imitation:untagged}(b)}{the untagged sample bound}}\label{app:imitation:untagged}
+
+Fix a rule $i$ with $v_i\ge1$. Write $M:=v_i+\binom{v_i}2$ and $M':=v_i^2+1\ge M$. Consider the range space on substitutions (a countable set) whose ranges are
+\[
+\mathcal C_i:=\bigl\{\,\overline{F_1\cup\dots\cup F_k}:\ F_1,\dots,F_k\in\Fail_i\,\bigr\}.
+\]
+
+\emph{Step 1: traces of $\Fail_i$.} Let $\theta_1,\dots,\theta_n$ be substitutions. For fixed $x$, the sets $\{\theta:\rt(\theta x)=f\}$ for different $f$ are pairwise disjoint. So their traces on $\{\theta_1,\dots,\theta_n\}$ are pairwise disjoint subsets, of which at most $n$ are nonempty, giving at most $n+1$ distinct traces. Each pair $x\neq y$ contributes one set, hence one trace. So $\Fail_i$ has at most $v_i(n+1)+\binom{v_i}2\le M(n+1)$ distinct traces on $n$ points.
+
+\emph{Step 2: traces of $\mathcal C_i$.} The trace of $\overline{F_1\cup\dots\cup F_k}$ is determined by the traces of $F_1,\dots,F_k$. So $\mathcal C_i$ has at most $(M(n+1))^k\le(M'(n+1))^k$ traces on $n$ points.
+
+\emph{Step 3: VC dimension.} If $\mathcal C_i$ shatters $d$ points, then $2^d\le(M'(d+1))^k$, i.e.\ $\phi(d):=d-k\log_2(M'(d+1))\le0$. Let $L:=\log_2(4kM')\ge2$ and $d_i=2kL$. Then $\phi(d_i)>0$ iff $(4kM')^2>M'(2kL+1)$, iff $16k^2M'>2kL+1$. This holds because $L<4kM'$ gives $2kL+1<8k^2M'+1\le16k^2M'$. Moreover $\phi'(d)=1-k/((d+1)\ln2)>0$ for $d\ge d_i\ge4k$. So $\phi(d)>0$ for all $d\ge d_i$, and the VC dimension of $\mathcal C_i$ is less than $d_i$.
+
+\emph{Step 4: the $\varepsilon$-net theorem} \citep{haussler1987epsilon,blumer1989learnability}. Let a range space have VC dimension at most $d$, let $\mu$ be a probability measure, and let $0<\varepsilon,\delta'<1$. If
+\[
+m\ge\max\Bigl\{\frac4\varepsilon\log_2\frac2{\delta'},\ \frac{8d}\varepsilon\log_2\frac{13}\varepsilon\Bigr\},
+\]
+then with probability at least $1-\delta'$ an i.i.d.\ $\mu$-sample of size $m$ meets every range of $\mu$-measure at least $\varepsilon$. We use the theorem in this ``measure $\ge\varepsilon$'' form. The symmetrization proof gives it with the same constants. Alternatively, apply the standard ``measure $>\varepsilon$'' form with $\varepsilon=\zeta_i/2$, at the cost of a constant factor. (This boundary point was noted in verification.)
+
+\emph{Step 5: conclusion.} Apply Step~4 with $\mu=\Lambda_i$, $\varepsilon=\zeta_i$, $d=d_i$ and $\delta'=\delta/k'$. The sum in the statement exceeds the maximum. By definition of $\zeta_i$, every range in $\mathcal C_i$ has $\Lambda_i$-measure at least $\zeta_i$. So with probability at least $1-\delta/k'$ the $n_i$ rule-$i$ substitutions meet every range in $\mathcal C_i$, i.e.\ they are not contained in any union of $k$ failure sets. They are a subset of $\Sub_i(D)$, so neither is $\Sub_i(D)$. For a ground rule, one sample makes $\Sub_i(D)$ nonempty, and $\Fail_i=\emptyset$. A union bound over the $k'$ rules and part~(a) finish the proof. \qed
+
+% ---------------------------------------------------------------------
+\subsection{Proof of \texorpdfstring{\cref{prop:imitation:diversity}}{the low-variety proposition}}\label{app:imitation:diversity}
+
+This proposition replaces T1's original remark after Thm~5.4, which claimed that at most $k$ roots for a metavariable makes identification fail forever. Verification refuted that claim for $k'\ge2$, and part (b) is the counterexample.
+
+\emph{Failure sets and specializations.} For a metavariable $x$ of $\sigma_i$ and $f\in\Omega$ of arity $r$, let $\bar z=z_1,\dots,z_r$ be fresh distinct metavariables. Then $\inst(\sigma_i[x\mapsto f(\bar z)])=\{\sigma_i\theta:\rt(\theta x)=f\}$ and $\inst(\sigma_i[y\mapsto x])=\{\sigma_i\theta:\theta x=\theta y\}$. So covering substitutions by failure sets is the same as covering the corresponding instances by these specializations.
+
+\emph{(a)} Let $\pi_1,\dots,\pi_{k-k'+1}$ be the specializations in the hypothesis, and let
+\[
+R:=\bigcup_{j\neq i}\inst(\sigma_j)\ \cup\ \bigcup_{l\le k-k'+1}\inst(\pi_l).
+\]
+This is a union of at most $k$ schema instance sets, so $R\in H_k$. Every datum lies in $\Rstar$. A datum outside $\inst(\sigma_i)$ lies in some $\inst(\sigma_j)$ with $j\neq i$. A datum in $\inst(\sigma_i)$ lies in another rule or, by hypothesis, in some $\inst(\pi_l)$. So $D\subseteq R$, $R\in\VS(D)$ and $\hat R_{H_k}(D)\subseteq R$. The instance of $\sigma_i$ assumed to lie outside $R$ is in $\Rstar\setminus\hat R_{H_k}(D)$.
+
+\emph{The case $k'=1$.} If $x$ is instantiated in the data with roots among $f_1,\dots,f_k$ only, the $k$ specializations $\sigma_1[x\mapsto f_j(\bar z)]$ cover the data. Any instance whose $x$ has another root lies outside them. So identification fails for as long as this persists.
+
+\emph{(b)} Let $R=\inst(\tau_1)\cup\inst(\tau_2)\in\VS_{H_2}(D)$, with $D=\{p(a),p(b),q(a),q(b)\}$; possibly $\tau_1=\tau_2$. If some $\tau_l$ covers a $p$-term and a $q$-term, then $\tau_l\succeq\lgg(p(\cdot),q(\cdot))$, which is a metavariable because the roots differ. So $\tau_l$ is a metavariable and $R$ is everything. Otherwise each $\tau_l$ covers only $p$-terms or only $q$-terms of $D$. All four terms are covered, so one schema covers both $p$-terms and the other both $q$-terms. Then $\tau_1\succeq\lgg(p(a),p(b))=p(x)$ and $\tau_2\succeq q(y)$ (up to the order of the two schemas). In both cases $R\supseteq\Rstar$. Since $\Rstar\in\VS_{H_2}(D)$, $\hat R_{H_2}(D)=\Rstar$. If the substitution law of $x$ is supported on $\{a,b\}$, the two failure sets $\{\rt(\theta x)=a\}$ and $\{\rt(\theta x)=b\}$ have full measure, so $\zeta_1=0$. \qed
+
+% ---------------------------------------------------------------------
+\subsection{Proofs for \texorpdfstring{\cref{rem:imitation:guards}}{the remark on side conditions}}\label{app:imitation:guards}
+
+Let $\Phi$ be finite and let the target be $G^*:=\inst(\sigma^*,\Psi^*)\neq\emptyset$. Write $\mathrm{cl}(P):=\inst(\lgg(P),\Psi_P)$ for nonempty $P$, the least guarded instance set containing $P$ (\cref{lem:setting:guard}).
+
+\emph{Anchors exist.} Ascending generalization chains are finite (\cref{lem:setting:rank}), so the lgg of the (possibly infinite) set $G^*$ exists and equals $\lgg(T_0)$ for some finite $T_0\subseteq G^*$. For each $\phi\in\Phi$ that is not true on all of $G^*$, pick $t_\phi\in G^*$ with $\phi(t_\phi)=0$. Let $T:=T_0\cup\{t_\phi\}$. Then $\lgg(T)=\lgg(G^*)$, because $\lgg(T_0)\preceq\lgg(T)\preceq\lgg(G^*)=\lgg(T_0)$. Also $\Psi_T$ is exactly the set of predicates true on all of $G^*$. Hence $G^*\subseteq\inst(\lgg(T),\Psi_T)=\mathrm{cl}(T)$. Conversely, $\mathrm{cl}(T)\subseteq G^*$, since $G^*$ is a guarded instance set containing $T$. So $\mathrm{cl}(T)=G^*$, and every guarded instance set containing $T$ contains $G^*$: $T$ is an anchor.
+
+\emph{Chains.} Let $C_0\subsetneq C_1\subsetneq\dots\subsetneq C_m\subseteq G^*$ be closures, $C_j=\inst(g_j,\Psi_j)$ with $g_j=\lgg(C_j)$ and $\Psi_j=\Psi_{C_j}$. Inclusion gives $g_{j-1}\preceq g_j$ and $\Psi_{j-1}\supseteq\Psi_j$. If both were equalities, then $C_{j-1}=C_j$. So each step either strictly generalizes the schema (at most $\mu(g_0)-\mu(\sigma^*)$ times, by \cref{lem:setting:rank}, since $g_m\preceq\lgg(G^*)\preceq\sigma^*$) or strictly shrinks the guard set (at most $|\Phi|$ times). By T1 Prop.~3.3 and Thm~3.2 (\cref{sec:caution}) this bounds the escalations by $\mu(\lgg(P_0))-\mu(\sigma^*)+|\Phi|$. \qed
+
+% ---------------------------------------------------------------------
+\subsection{Proof of \texorpdfstring{\cref{thm:imitation:trimmed}}{the trimmed version space theorem}}\label{app:imitation:trimmed}
+
+\emph{(a)} If $D$ has at most $e$ invalid steps, then $|D\setminus\Rstar|\le e$, so $\Rstar\in\VS_e(D)$ and $\bigcap\VS_e(D)\subseteq\Rstar$. The per-tag case is identical. Soundness against every prover follows by \cref{lem:search:stepwise}, as in \cref{lem:imitation:cautious}.
+
+\emph{(b)} By (i), $\Rstar\in\VS_{(e_i)}(D)$, so $\bigcap\VS_{(e_i)}(D)\subseteq\Rstar$. Conversely, let $R\in\VS_{(e_i)}(D)$ and fix $i$. Its tag-$i$ component is $\inst(\tau)$ for a schema $\tau$, or empty. Let $V_i$ be the multiset of valid rule-$i$ samples and $V_i':=V_i\cap\inst(\tau)$. Then $|V_i\setminus V_i'|\le|D^{(i)}\setminus R^{(i)}|\le e_i$.
+\begin{itemize}
+\item $V_i'\neq\emptyset$, because $|V_i|>e_i$. In particular the tag-$i$ component is not empty.
+\item For each $x$ and $f$, more than $e_i$ members of $V_i$ have $\rt(\Theta x)\neq f$, and at most $e_i$ were removed. So some member of $V_i'$ has $\rt(\Theta x)\neq f$. Since this holds for every $f$, the roots at $x$ in $V_i'$ are not all equal, and (R) holds for $V_i'$.
+\item Likewise, for each $x\neq y$ some member of $V_i'$ has $\Theta x\neq\Theta y$, and (D) holds.
+\end{itemize}
+By \cref{lem:setting:recover}, $\lgg(V_i')\equiv\sigma_i$. Since $V_i'\subseteq\inst(\tau)$, $\tau\succeq\lgg(V_i')\equiv\sigma_i$, so $\inst(\tau)\supseteq\inst(\sigma_i)$. For a ground rule, $V_i'$ is a nonempty multiset of copies of $\sigma_i$, so $\tau\succeq\sigma_i$ directly. Hence $R\supseteq\Rstar$ for every $R\in\VS_{(e_i)}(D)$, and $\bigcap\VS_{(e_i)}(D)=\Rstar$. \qed
+
+\paragraph{Why the clause ``more than $e_i$ valid samples''.} This is the repair of verification item B-16. Take a ground rule $\sigma_i=c$, one valid sample $(i,c)$, no invalid samples and $e_i=1$. The rest of (ii) holds vacuously. But a hypothesis whose tag-$i$ component is $\emptyset$ or $\inst(d)$ with $d\neq c$ misses one tag-$i$ datum and lies in $\VS_{(e_i)}$. So $c\notin\bigcap\VS_{(e_i)}$.
+
+\paragraph{Why per-tag budgets.} Take two tags with $e_1=e_2=1$ and the global budget $e=2$. Let rule~1 be $\mathsf s(x)$ with valid samples $\mathsf s(a),\mathsf s(b),\mathsf s(c)$. These are $1$-robustly generic: for every $f$, at least two of them have a root $\neq f$. Let rule~2 be a ground $t$ with samples $t,t$. The hypothesis with components $\inst(\mathsf s(a))$ and $\inst(t)$ misses exactly two data, so it lies in $\VS_2(D)$. Hence $\mathsf s(d)\notin\bigcap\VS_2(D)$ for any constant $d\neq a$, and $\bigcap\VS_2(D)\neq\Rstar$. Under per-tag budgets, the tag-1 component must contain at least two of the three samples. These satisfy (R), so the component generalizes $\mathsf s(x)$.
+
+% ---------------------------------------------------------------------
+\subsection{Proof of \texorpdfstring{\cref{thm:imitation:iidnoise}}{the i.i.d. noise theorem}}\label{app:imitation:iidnoise}
+
+We use Hoeffding's inequality for $X\sim\mathrm{Bin}(N,p)$ and $s>0$: $\Prob[X-Np\ge sN]\le e^{-2Ns^2}$ and $\Prob[X-Np\le-sN]\le e^{-2Ns^2}$. Fix a rule $i$ and write $\alpha=\alpha_i$, $\beta=\beta_i$, $\rho=\rho_i$ and $\Delta=\Delta_i$, so that $\rho\beta=\alpha+2\Delta$ and $e_i=\lfloor(\alpha+\Delta)N\rfloor$.
+
+\emph{Noise count.} The number $X$ of invalid steps tagged $i$ is $\mathrm{Bin}(N,\alpha)$. Since $e_i+1>(\alpha+\Delta)N$,
+\[
+\Prob[X>e_i]=\Prob[X\ge e_i+1]\le\Prob[X-\alpha N\ge\Delta N]\le e^{-2N\Delta^2}.
+\]
+
+\emph{Witness counts, $v_i\ge1$.} For each metavariable $x$, let $G_x$ attain $\rho_{i,x}$ (\cref{app:imitation:coupon}). Let $C_x^{+}$ and $C_x^{-}$ count the valid rule-$i$ data with $\rt(\Theta x)\in G_x$ and $\notin G_x$, respectively. For each pair $x\neq y$, let $C_{xy}$ count those with $\Theta x\neq\Theta y$. These are $2v_i+\binom{v_i}2=c_i$ counts. Each is $\mathrm{Bin}(N,p)$ with $p\ge\beta\rho_{i,x}\ge\beta\rho$, resp.\ $p=\beta r_{i,xy}\ge\beta\rho$. So $pN\ge(\alpha+2\Delta)N$ and $(\alpha+\Delta)N\le pN-\Delta N$. Hence, for each count $C$,
+\[
+\Prob[C\le e_i]\le\Prob[C\le(\alpha+\Delta)N]\le\Prob[C-pN\le-\Delta N]\le e^{-2N\Delta^2}.
+\]
+Suppose all $c_i$ counts exceed $e_i$. For any $f$, the side of the split $G_x$ that does not contain $f$ consists of samples with root $\neq f$. So $\#\{\rt(\Theta x)\neq f\}\ge\min(C_x^+,C_x^-)>e_i$. The pair conditions hold directly, and the number of valid rule-$i$ samples is at least $C^+_x>e_i$. So the valid rule-$i$ samples are $e_i$-robustly generic.
+
+\emph{Ground rules.} With $\rho=1$, the single required event is that the number of valid rule-$i$ samples, which is $\mathrm{Bin}(N,\beta)$ with $\beta=\rho\beta$, exceeds $e_i$. Its failure probability is at most $e^{-2N\Delta^2}$ by the same computation; here $c_i=1$. This covers the gap noted in verification (B-17).
+
+\emph{Conclusion.} Outside an event of probability at most $(1+c_i)e^{-2N\Delta_i^2}$ for each $i$, hypotheses (i) and (ii) of \cref{thm:imitation:trimmed}(b) hold for all rules, and the trimmed verifier accepts exactly $\Rstar$. Take a union bound over $i$. \qed
+
+% ---------------------------------------------------------------------
+\subsection{Proof of \texorpdfstring{\cref{lem:imitation:split}}{the balanced-split lemma}}\label{app:imitation:split}
+
+Let $F$ be a probability law on the countable set $\Omega$, $m=\max_fF(f)$ (attained, because only finitely many atoms exceed any positive mass), $f_{\max}$ a maximizer, and $\rho=\max_G\min(F(G),1-F(G))$.
+
+\emph{$\rho\le1-m$.} For any $G$, the side of the split that does not contain $f_{\max}$ has mass at most $1-m$, so the minimum is at most $1-m$.
+
+\emph{$1-m\le2\rho$.} If $m\ge1/2$, the split $G=\{f_{\max}\}$ gives $\min(m,1-m)=1-m$, so $\rho\ge1-m$. If $m<1/2$, enumerate $\Omega$ and add symbols to $G$ one at a time until $F(G)\ge(1-m)/2$. This happens at a finite stage, since the partial sums tend to $1$. Before the last addition $F(G)<(1-m)/2$, and the last symbol has mass at most $m$. So finally $(1-m)/2\le F(G)<(1+m)/2$, hence $1-F(G)>(1-m)/2$, and $\rho\ge(1-m)/2$.
+
+\emph{Tightness.} For the uniform law on $2r+1$ symbols, $m=1/(2r+1)$, and the best split has $r$ against $r+1$ symbols, so $\rho=r/(2r+1)$. Then $1-m=2r/(2r+1)=2\rho$. \qed
+
+T1 originally stated the constant $3$; verification sharpened it to $2$ and found it tight (B-18; random laws gave ratios up to $1.974$).
+
+% ---------------------------------------------------------------------
+\subsection{Proof of \texorpdfstring{\cref{cor:imitation:necessity}}{the necessity corollary}}\label{app:imitation:necessity}
+
+Suppose $\beta_i\Prob[\rt(\Theta x)\neq f]\le\alpha$ for some $x,f$. Let $R''$ be $\Rstar$ with its tag-$i$ component replaced by $\inst(\sigma_i[x\mapsto f(\bar z)])$, which lies in $H^{\mathrm{tag}}_k$. By (F1), $R''\subsetneq\Rstar$. $Q$ is a law on $\Rstar$, and the $Q$-mass of $\Rstar\setminus R''$ is the probability that a datum is a tag-$i$ instance with $\rt(\Theta x)\neq f$, namely $\beta_i\Prob[\rt(\Theta x)\neq f]\le\alpha$. Apply \cref{thm:imitation:indist} to $R''\subsetneq\Rstar$. Every $q\in\Rstar\setminus R''\neq\emptyset$ has $\Prob_Q[\exists t:\ q\in\Acc_t]\le\delta$. So $\Prob_Q[\Rstar\subseteq\Acc_t]\le\delta$ for all $t$, which contradicts the hypothesis. The pair case uses $\sigma_i[y\mapsto x]$ in the same way. All of the alternative's ``noise'' sits on tag $i$, so robust soundness is only needed for laws whose noise on tag $i$ is at most $\alpha$; this is the per-tag reading. \qed
+
+The factor $\beta_i$ in the displayed conditions was added in verification (B-18). $\alpha$ is a fraction of all data, while the probabilities are under $\Lambda_i$.
+
+% ---------------------------------------------------------------------
+\subsection{Sketch for \texorpdfstring{\cref{rem:imitation:dimension}}{the dimension-inference remark}}\label{app:imitation:dimension}
+
+\status{proof sketch} The claims are elementary. They have not been through the project's adversarial verification, so we record only the argument.
+
+\emph{(i)} An equation whose monomials have exponent vectors $a_1,\dots,a_r$ is $g$-homogeneous iff $g(a_j-a_1)=0$ for all $j$. So all of $E$ is homogeneous iff $g$ vanishes on the generators of $K(E)$, iff it vanishes on $K(E)$. The projection $\pi:\mathbb Z^n\to\mathbb Z^n/K(E)$ is such a grading. By the homomorphism theorem every such $g$ factors uniquely as $\bar g\circ\pi$. An equation is homogeneous under every consistent grading iff its differences lie in $\bigcap_g\ker g=\ker\pi=K(E)$.
+
+\emph{Smith normal form.} If $M$ is an integer matrix whose rows generate $K(E)$ and $UMV=\mathrm{diag}(d_1,\dots,d_r,0,\dots)$ is its Smith normal form, with $U,V$ unimodular, then $\mathbb Z^n/K(E)\cong\bigoplus_j\mathbb Z/d_j\mathbb Z\oplus\mathbb Z^{n-r}$. If the target group is torsion-free, $g(cv)=0$ with $c\neq0$ forces $g(v)=0$. So $g$ vanishes on the saturation $\{v:\ cv\in K(E)\text{ for some }c\neq0\}$, and the finest torsion-free grading is $(\mathbb Z^n/K(E))/\mathrm{torsion}$.
+
+\emph{(ii)} Let $\mathrm{Adm}(L)$ be the set of equations whose differences lie in $L\le\mathbb Z^n$. Then $\mathrm{Adm}(L)\cap\mathrm{Adm}(L')=\mathrm{Adm}(L\cap L')$, and $\mathrm{Adm}$ determines $L$: the equation $1=q^v$ (Laurent monomials) is in $\mathrm{Adm}(L)$ iff $v\in L$. The version space of $E$ is $\{\mathrm{Adm}(L):K(E)\le L\}$, so $\hat R(E)=\mathrm{Adm}(K(E))$. For the target $L^*=\ker g^*$, choose generators $v_1,\dots,v_s$ (subgroups of $\mathbb Z^n$ are finitely generated). The equations $1=q^{v_j}$ form an anchor. More generally, a finite $E\subseteq\mathrm{Adm}(L^*)$ is an anchor iff $K(E)=L^*$: if $K(E)\subsetneq L^*$, then $\mathrm{Adm}(K(E))$ is consistent with $E$ and misses $\mathrm{Adm}(L^*)$. \Cref{thm:imitation:anchor} then gives the stated identification. Claims (iii)--(iv) of the remark are direct readings of these facts.

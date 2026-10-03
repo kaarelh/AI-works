@@ -41,8 +41,8 @@ position $\pos{\Gamma}{\Delta}$ is out of bounds}; a position is \emph{coherent}
 if it is in bounds. When $\bot$ is present it counts as always denied, so
 $\pos{\Gamma}{\emptyset}$ is coherent iff $\Gamma\nder\bot$. Without $\bot$,
 ``coherent'' means \emph{non-trivial} ($\Gamma$ does not entail every formula;
-for a structural relation, equivalently $\Gamma\nder q$ for an atom $q$ not in
-$\Gamma$).
+for a structural relation, equivalently $\Gamma\nder q$ for an atom $q$ not
+occurring in $\Gamma$).
 \end{definition}
 
 Restall's reading gives inference data and coherence data opposite polarity: an
@@ -50,8 +50,9 @@ inference says a position is \emph{out of} bounds, a coherence datum certifies
 that one is \emph{in} bounds. This is the bilateral picture of
 \citet{smiley1996rejection} and \citet{rumfitt2000yes} and the multiple-conclusion
 logic of \citet{shoesmith1978multiple}, anticipated in Carnap's ``full
-formalization'' \citep{carnap1943formalization}. \Cref{sec:coherence} shows that
-this polarity decides Carnap's categoricity problem for a learner.
+formalization'' \citep{carnap1943formalization}. \Cref{sec:coherence} uses this
+polarity to recast Carnap's categoricity problem as a learning problem in the dual
+(valuation) space.
 
 \begin{definition}[Steps, rule sets, closure]\src{T1 \S1.1}\label{def:setting:step}
 A \emph{step} $P\step j$ has a finite set $P\subseteq J$ of premises and a
@@ -204,7 +205,7 @@ $\Cn(\neg p_0)$ (T1 Prop.~2.3, scope remark). Purification restores the link
 (\Cref{sec:search}).
 
 \emph{Inference data are negative data about valuations.} The sequent
-$\Gamma\step\Delta$ excludes exactly the valuations realizing
+$\Gamma\der\Delta$ excludes exactly the valuations realizing
 $\pos{\Gamma}{\Delta}$; a coherence certification or a world report is
 \emph{positive} data about valuations (T2 \S4.1). Imitation and coherence inform
 the learner from opposite sides, and \Cref{sec:coherence} makes this precise as
@@ -260,7 +261,8 @@ $(y+1)/(y+1)\step1$ under no facts drops the guard from the learned rule
 as a schema of its own. Either way, positive data learn it as a rule.
 \end{example}
 
-These are experiments A and B of \Cref{sec:experiments}.
+The algebra example is experiment A and the natural-deduction example is
+experiment B of \Cref{sec:experiments}.
 
 % -------------------------------------------------------------------
 \subsection{Three channels}\label{sec:setting:channels}
@@ -278,9 +280,11 @@ These are experiments A and B of \Cref{sec:experiments}.
   bounds ($\bot\notin\Cl_{\Rstar}(\Gamma)$ and
   $\Delta\cap\Cl_{\Rstar}(\Gamma)=\emptyset$). By default $\Ac$ is fixed and
   known, independently of the target. A hypothesis $h$ is \emph{$\Ac$-coherent}
-  if $A\nder_h\bot$ for all $A\in\Ac$. A \emph{negative bag} is $\Steps(\pi)$ for
-  an argument $\pi$ from some $A\in\Ac$ to $\bot$; it contains an invalid step, or
-  chaining would give $A\der_{\Rstar}\bot$.
+  if $A\nder_h\bot$ for all $A\in\Ac$. A \emph{negative bag} is
+  $\Steps(\pi)\setminus\Ttrust$ for an argument $\pi$ from some $A\in\Ac$ to
+  $\bot$ (trusted steps $\Ttrust$ as in (W)); it contains an invalid step, or
+  chaining would give $\bot\in\Cl_{\Rstar\cup\Ttrust}(A)$, which designation
+  excludes (for $\Ttrust\neq\emptyset$ via (WS), \Cref{lem:setting:WS}).
 \item[(W)] The \emph{world} is an evaluable fragment $J_W\subseteq J$ with truth
   function $W:J_W\to\{0,1\}$, plus optional \emph{trusted steps} $\Ttrust$. Its
   kinds: (W1) \emph{truth values on a fragment} (closed propositional formulas,
@@ -295,35 +299,41 @@ These are experiments A and B of \Cref{sec:experiments}.
 Coherence is enforced \emph{only} on designated contexts: deriving $\bot$ from an
 undesignated supposition is a reductio and is never penalized. A negative bag is a
 multiple-instance label \citep{dietterich1997solving}, ``not all of these steps
-are valid''; it collapses to an ordinary negative example only for a learner that
-can test $A\step\bot$ directly against cut-closed hypotheses, so the bag structure
-matters exactly for step verifiers. Designations that are data about the target
+are valid''; it collapses to an ordinary negative example for a learner that can
+test $A\step\bot$ directly against cut-closed hypotheses, so the bag structure
+matters for step verifiers that are not themselves cut-closed. Designations that are data about the target
 carry more information (\Cref{sec:coherence}). Objects (W2) turn bags into
 singletons: if a structure makes the leaves of an argument true and its conclusion
 false, then starting at the conclusion and repeatedly moving to a false premise
 ends at a step with true premises and a false conclusion, which alone is blamed
 (the \emph{descent} lemma, \Cref{sec:twotier,sec:informal}). Fresh randomness (W3)
-is sound against adaptive provers only under conditions on commitment order,
-degree bounds and the field (L3 Lemma~A, \Cref{sec:search}); Schwartz--Zippel
-bounds its error \citep{schwartz1980fast,zippel1979probabilistic}.
+is sound against adaptive provers under sufficient conditions on commitment order,
+degree bounds and the field, and fails when the points are drawn before the prover
+searches (L3 Lemma~A, \Cref{sec:search}); Schwartz--Zippel bounds its error
+\citep{schwartz1980fast,zippel1979probabilistic}.
 
 \begin{assumption}[(WS), sound evaluation]\src{T7 \S1.3}\label{asm:setting:WS}
 For each designated $\pos{\Gamma}{\Delta}$, the partial evaluation with $e(j)=1$
 if $j\in\Gamma$ or $W(j)=1$, and $e(j)=0$ if $j\in\Delta\cup\{\bot\}$ or $W(j)=0$,
 is well defined and extends to a total $V:J\to\{0,1\}$ under which no step of
-$\Rstar\cup\Ttrust$ has true premises and a false conclusion; and
-$\Ttrust\subseteq\Sound(\Rstar)$.
+$\Rstar\cup\Ttrust$ has true premises and a false conclusion.
 \end{assumption}
 
-In formal mathematics $V$ is truth in the intended structure $\mathfrak M$: (WS)
-says that designated positions are true of $\mathfrak M$, $W$ is truth in
-$\mathfrak M$ on its fragment, and target and trusted steps are $\mathfrak
-M$-sound.
+(WS) does not require $\Ttrust\subseteq\Sound(\Rstar)$: in arithmetic the target
+may consist of non-logical axioms with first-order logic trusted
+(\Cref{sec:twotier}), and the relevant target closure is then
+$\Cl_{\Rstar\cup\Ttrust}$. In formal mathematics $V$ is truth in the intended
+structure $\mathfrak M$: (WS) holds when designated positions are true of
+$\mathfrak M$, $W$ is truth in $\mathfrak M$ on its fragment, and target and
+trusted steps are $\mathfrak M$-sound. When $J_W\neq\emptyset$ we assume the empty
+position $\pos{\emptyset}{\emptyset}$ is designated, so that world-only
+falsifications count (\Cref{def:setting:depth}).
 
 \begin{lemma}[(WS) and coherence; trivial]\src{T7 \S1.3}\label{lem:setting:WS}
-Under (WS) every designated position is in bounds for $\Rstar$. Conversely, if
-$J_W=\emptyset$, $\Ttrust\subseteq\Sound(\Rstar)$ and every designated position is
-in bounds, then (WS) holds.
+Under (WS) every designated position is in bounds for $\Rstar\cup\Ttrust$, hence
+for $\Rstar$. Conversely, if $J_W=\emptyset$ and every designated position is in
+bounds for $\Rstar\cup\Ttrust$ (for instance, in bounds for $\Rstar$ with
+$\Ttrust\subseteq\Sound(\Rstar)$), then (WS) holds.
 \end{lemma}
 Proof in Appendix~\ref{app:setting}.
 
@@ -364,9 +374,10 @@ $1-2/|S|$; over $\mathbb F_2$, where it is an identity, never: the field matters
 The instance $x/x\step1$ fails only at $x=0$, which random evaluation essentially
 never hits; the object $x=0$ does. In experiment A, coherence without (W) removes
 value errors like the freshman's dream but almost never learns guards that concern
-only definedness (such as $a\neq0$ for $0/a\step0$); what survives is sound for a
-total reading of division over $\mathbb C$ with $1/0=0$, a coherent alternative
-meaning \status{computed; \Cref{sec:experiments}}.
+only definedness (such as $a\neq0$ for $0/a\step0$); almost all of what survives
+($96.5\%$ of the surviving schemas for $N\ge200$) is sound for a total reading of
+division over $\mathbb C$ with $1/0=0$, a coherent alternative meaning
+\status{computed; \Cref{sec:experiments}}.
 \end{example}
 
 \paragraph{Reading.} The channels are the user's three proposed signals:
@@ -400,18 +411,21 @@ time-uniform guarantee); \emph{deterministically} (or $0$-)\emph{sound} if
 $\delta=0$; and \emph{uniformly $\delta$-sound} if some event $G$ with
 $\Prob(G)\ge1-\delta$, depending only on the human data and the verifier's coins,
 has no prover ever getting a step outside $S^\dagger$ accepted on $G$.
-\emph{Truth-soundness} takes $S^\dagger=\Rstar$ for the genuine $\Sigma^*$,
-\emph{practice-soundness} $S^\dagger=R^P$.
+\emph{Target-soundness} takes $S^\dagger=\Rstar$ for the genuine $\Sigma^*$,
+\emph{practice-soundness} $S^\dagger=R^P$. (\emph{Truth-soundness}, in
+\Cref{sec:twotier}, means deriving only truths of the intended structure.)
 \end{definition}
 
 Uniform $\delta$-soundness implies $\delta$-soundness, since every prover's bad
 event lies outside $G$. Asking for $S^\dagger=\Rstar$ is stronger than the
-condition $\hat R_t\subseteq\Sound(\Rstar)$ that chaining needs; our verifiers
-meet it. Soundness is relative to the target calculus, not to truth: improving on
-$\Rstar$ is the job of (C) and (W). Since coherence is $\Pi_1$ (T2 Thm~5.3), no
-computable learner is both eventually complete and sound at all times relative to
-the full-depth residue of fallacies (T7 Thm~5.7, \Cref{sec:twotier}); soundness is
-then stated relative to a refutation budget.
+condition $\hat R_t\subseteq\Sound(\Rstar)$ that chaining needs; the
+version-space verifiers of \Cref{sec:caution} meet it. Soundness is relative to the
+target calculus, not to truth: improving on $\Rstar$ is the job of (C) and (W).
+Since coherence is $\Pi_1$-complete (T2 Thm~5.3), no computable learner is, on
+every practice, both eventually complete and sound at all times relative to the
+full-depth residue of fallacies: some uniformly computable family of practices
+defeats it (T7 Thm~5.7, \Cref{sec:twotier}). Soundness is then stated relative to
+a refutation budget.
 
 \begin{definition}[Depth-relative soundness]\src{T7 Defs 1.5--1.6}\label{def:setting:depth}
 Assume (WS). A \emph{$d$-refutation} of a finite schema set $B$ is a derivation of
@@ -469,9 +483,12 @@ $\ist(\SUP(A),\psi)$ iff $A\to\psi$ holds in the parent (T3 Prop.~1.5); deriving
 $\bot$ there is a reductio of $A$, not an incoherence. An \emph{idealization}
 $\DEF$ deforms named parameters of a declared model family toward an ideal value
 (``air pressure $\to0$''). It may contradict the root, yet does not explode while
-it is well posed: truth in it is truth in every admissible completion (a filter of
-models). Coherence is enforced on the root and on contexts anchored to it by
-certified exports, never on suppositions or idealizations as such; designating
+it is proper: a context denotes a filter of parameter points of the model family,
+truth in it is truth on a set in that filter, and its theory is classically closed
+and consistent iff the filter is proper (T3 Def.~1.3, Prop.~1.4). Coherence is
+enforced on the root and on contexts anchored to it (certified, or exporting through
+an informative bridge into an anchored context), never on suppositions or
+idealizations as such; designating
 ``idealization plus full background'' as coherent would force every structural
 learner to give up a classical rule \emph{globally} (T2 Prop.~7.1), so only
 consistent chunks are designated \citep{brown2004chunk}. Contexts, export

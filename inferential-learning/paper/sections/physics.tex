@@ -1,0 +1,1168 @@
+% ===================================================================
+% Section 11. Contexts, idealization, and checking physics
+% Sources: research/theory/T3-contexts-idealization-export.md (all, as repaired
+%          after verification; see its "Verification log"),
+%          research/theory/T2-coherence-as-negative-data.md (Prop 7.1),
+%          research/theory/T6-philosophical-completeness.md (Sec. 4; forward pointer),
+%          research/lit/L7, L9, L10.
+% Proofs: sections/app-physics.tex.
+% ===================================================================
+\providecommand{\fM}{\mathfrak{M}}
+\providecommand{\fF}{\mathcal{F}}
+\providecommand{\fG}{\mathcal{G}}
+\providecommand{\fK}{\mathcal{K}}
+\providecommand{\tset}[1]{\lVert #1\rVert}
+\providecommand{\cder}{\Vdash}
+\providecommand{\dom}{\operatorname{dom}}
+\providecommand{\osc}{\operatorname{osc}}
+\providecommand{\AUX}{\mathsf{AUX}}
+\providecommand{\Anc}{\mathrm{Anc}}
+\providecommand{\Asm}{\mathrm{Asm}}
+\providecommand{\Ax}{\mathrm{Ax}}
+\providecommand{\ACCEPT}{\textsf{ACCEPT}}
+\providecommand{\REJECT}{\textsf{REJECT}}
+\providecommand{\rl}[1]{\textup{(#1)}}
+
+\section{Contexts, idealization, and checking physics}\label{sec:physics}
+
+Physics is where the user's programme meets its hardest test, and where the problem
+of contexts cannot be postponed. An olympiad solution is, in his words, ``a dance
+with many clear setups, with some relations to the physical problem of interest''.
+Some setups are suppositions made for reductio. Some are idealizations that
+contradict known facts (``assume the air pressure is $0$''). Some complete a problem
+that leaves something open (the sun's elevation is not given). A coherence loss that
+penalizes good arguments for both $P$ and $\neg P$ would penalize all three. A checker
+that asks whether each claim is true fails at once, because good solutions are full
+of literally false claims; the user's note asks what else it could check: ``check
+that a claim is true in the context at hand. But wtf is that???'' (L10 \S1.7).
+
+This section answers with a semantics (contexts as filters of models,
+\S\ref{sec:physics:semantics}), a theory of what coherence should constrain
+(\S\ref{sec:physics:coherence}), of export (\S\ref{sec:physics:export}) and of
+tolerances (\S\ref{sec:physics:learning}), and a checker that is sound against every
+solver relative to a provably ineliminable judgment layer, with a worked run
+(\S\S\ref{sec:physics:checker}--\ref{sec:physics:example}).
+
+We build a \emph{checker}, not a solver. Gold-level solving of IPhO-style problems
+under rubric grading has been reported for current AI systems (L9 \S5.2); the unmet
+target is principled checking, and capability work is the part the user's notes flag
+as risky. Mathematically, almost everything here is trivial once set up or standard. In T3's own
+accounting, \cref{prop:physics:los,prop:physics:sup,prop:physics:idealized,lem:physics:import,thm:physics:eternalism,thm:physics:soundness,cor:physics:blame,thm:physics:neighbourhood,thm:physics:chains,thm:physics:coherencetol,thm:physics:noreg,thm:physics:relative,thm:physics:judgment,thm:physics:superval,prop:physics:gricean}
+are trivial once set up (the content is in the definitions); \L{}o\'s's theorem, Gronwall's
+inequality, split conformal prediction, the radius of information, the adversary argument
+of information-based complexity behind
+\cref{lem:physics:invisible,thm:physics:nofree,thm:physics:noreg}, Lipschitz covering
+bounds and interval inclusion monotonicity are imported; and
+\cref{thm:physics:hygiene}(c) is an elementary illustration. The small but real
+contributions are the realizability criterion with anchoring
+(\cref{thm:physics:realizability}), the two-sided analysis of adversarial stipulation
+including the well-posedness certificate (\cref{thm:physics:stipulation}), the table of
+one-sided signals, and a rigorous thin-leg certificate with a complete checker run. Results
+are from T3 unless marked otherwise; proofs not given inline are in
+Appendix~\ref{app:physics}.
+
+% -------------------------------------------------------------------
+\subsection{The problem: eternalism, contexts, and three import regimes}\label{sec:physics:problem}
+
+The simplest coherence constraint is \emph{eternalist}: each proposition is true or
+false independently of context, and a learner is penalized whenever it can argue for
+both $P$ and $\neg P$. Physics reasoning violates this constantly and correctly. A
+hydrostatics problem stipulates $p_{\rm atm}=0$, while the background derives
+$p_{\rm atm}\approx1.0\times10^5$\,Pa. A reductio derives $\bot$ under a supposition.
+One exam treats the same physics in incompatible models: at IPhO~2025, Theory~2
+excludes surface tension and lets a gas phase appear exactly at the equilibrium
+threshold, while Theory~3 makes surface tension the mechanism of bubble growth (L9
+\S8.4). The user's notes record why the two obvious repairs fail. Conjoining every
+sentence with the whole background framework ``leads to just assigning probability 0
+to everything''; and proofs by contradiction inside a framework known to be
+inadequate ``might \dots\ really involve subverting the background framework'' (L10
+\S1.8).
+
+\paragraph{Three import regimes.} ``Suppose'' covers three operations that differ in
+what the new context imports from its parent (L7 \S4):
+\begin{center}\small
+\begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+\toprule
+Regime & Example & Imports & $\bot$ inside means & What leaves the context\\
+\midrule
+supposition & ``suppose $\sqrt2=p/q$'' & everything & success (reductio) & $\neg A$, or $A\to B$\\
+counterfactual & ``if the atmosphere vanished, the water would boil'' & a maximal compatible part & the revision was done badly & $A\mathrel{\Box\!\!\to}B$\\
+idealization & ``neglect drag'', ``$p_{\rm atm}=0$'', ``massless rope'' & a designated minimal fragment & the model is ill-posed & query answers, through a certified bridge\\
+\bottomrule
+\end{tabularx}
+\end{center}
+Physics idealizations are \emph{not} counterfactuals. ``If the air pressure were $0$,
+the water in the beaker would boil'' is a true counterfactual and irrelevant: the
+problem asks what follows in a designated model that imports incompressible
+hydrostatics and the data, and nothing else. Similarity semantics
+\citep{stalnaker1968theory,lewis1973counterfactuals} or AGM revision
+\citep{alchourron1985logic} imports exactly the background (the vapour pressure of
+water) that makes the context degenerate. Idealization is designated minimal import,
+as in chunk-and-permeate \citep{brown2004chunk}, McCarthy's $\ist(c,\varphi)$
+\citep{mccarthy1993notes}, multi-context systems with local-models semantics
+\citep{ghidini2001local}, Cartwright's models \citep{cartwright1983laws}, and
+compositional modelling with explicit assumptions
+\citep{falkenhainer1991compositional}. We keep their shape, ``classical inside,
+filtered between''; what none of them supplies is different coherence obligations for
+suppositions and idealizations, and certificates on the bridges.
+
+\paragraph{Anatomy of a solution.} The olympiad solutions decomposed in L9 (\S2.1,
+\S8) share one structure. A \emph{root} $c_P$ holds the problem text, figures and
+conventions; for grading, the ``world'' is $c_P$, not the actual world. A
+\emph{reading} $\rho$ maps $c_P$ to an admissible model family, possibly with free
+completion parameters, and types the query (``express in terms of $a,I_0,r,\varphi$'').
+\emph{Local models} are clear mathematical problems, joined by \emph{bridges}: exact
+ones (symmetry, decomposition, isomorphism) and approximate ones (a small parameter
+set to its limit, with an error claim), ending in an \emph{export}. Approximate bridges
+are stipulated by the problem, regime-stated by it, quantified by it, introduced by the
+solver with an estimate or silently, or conventional; only the solver-introduced ones
+need a certificate from the solver. The user's hypothesis that ``there's a local
+setting up of a clear thing'' holds in all three problems: the unclear part
+concentrates in the reading and in a few approximate bridges.
+
+% -------------------------------------------------------------------
+\subsection{Filter semantics for contexts}\label{sec:physics:semantics}
+
+\begin{definition}[Frames, worlds, readings]\src{T3 Def 1.1}\label{def:physics:frame}
+Let $L$ be a many-sorted first-order language with a sort $\R$ and parameter constants
+$p_1,\dots,p_n$ of that sort. (i)~A \emph{deformation frame} is a partial map
+$\fM:\Lambda\rightharpoonup\mathrm{Str}(L)$, $\Lambda\subseteq\R^n$, with
+$p_i^{\fM(\lambda)}=\lambda_i$; $\dom\fM$ is where the model exists (is well-posed). In
+every $\fM(\lambda)$ the sort $\R$ is the ordered field of reals with standard numerals;
+$\fK$ is the class of $L$-structures with this standard real sort. Ideal values at
+infinity are reparametrized ($m\to\infty$ as $1/m\to0$). (ii)~A \emph{world} is
+$w=(\fM_w,\lambda^*_w)$ with $\lambda^*_w\in\dom\fM_w$: a top-model family and the actual
+(or intended) parameter point. (iii)~A \emph{reading} $\rho$ yields a set $W_\rho$ of
+worlds, the \emph{admissible completions} (given parameters fixed, measured ones in
+intervals, free ones in ranges); a query term $Q$; and a set $\Ax_\rho$ of sentences true
+at $\fM_w(\lambda^*_w)$ for every $w\in W_\rho$. The \emph{laws} of a frame are the
+sentences true at every $\fM_w(\lambda)$, $\lambda\in\dom\fM_w$.
+\end{definition}
+
+For a projectile, $\fM(\lambda)$ solves $\ddot{\mathbf x}=-g\hat z-k|\dot{\mathbf
+x}|\dot{\mathbf x}$ with parameters $(g,v_0,\theta,k)$, and ``neglect air'' deforms $k$
+toward $0$.
+
+\begin{definition}[Contexts; filter semantics]\src{T3 Defs 1.2--1.3}\label{def:physics:filter}
+A \emph{context tree} has root $@$ and parent map $\pi$; each other context is
+$\SUP(A)$, a supposition of a sentence $A$; or $\DEF(D,\lambda^\circ,\fG)$, a
+\emph{declared deformation} with deformed parameters $D\subseteq\{1,\dots,n\}$, ideal
+values $\lambda^\circ\in\R^D$, and a proper filter $\fG$ on $\R^D$ converging to
+$\lambda^\circ$ (the \emph{path}); or $\AUX$, a definitional extension that shares its
+parent's semantics. A $\DEF$ context uses \emph{limit semantics} if $\fG$ is principal at
+$\lambda^\circ$, and \emph{germ semantics} if $\fG$ is the punctured neighbourhood filter,
+possibly restricted to a curve. Fix a world $w$, write
+$\tset{\varphi}_w=\{\lambda\in\dom\fM_w:\fM_w(\lambda)\models\varphi\}$ and
+$\lambda[D{:=}\mu]$ for $\lambda$ with its $D$-coordinates replaced by $\mu$. Each context
+$c$ gets a (possibly improper) filter $\fF_c(w)$ on $\dom\fM_w$: $\fF_@(w)$ is principal at
+$\lambda^*_w$; for $c=\SUP(A)$ with parent $p$, $\fF_c(w)$ is generated by
+$\fF_p(w)\cup\{\tset{A}_w\}$; for $c=\DEF(D,\lambda^\circ,\fG)$, it is generated by the sets
+$\{\lambda[D{:=}\mu]:\lambda\in F,\mu\in G\}\cap\dom\fM_w$, $F\in\fF_p(w)$, $G\in\fG$.
+\emph{Truth in a context} is $c\models_w\varphi$ iff $\tset{\varphi}_w\in\fF_c(w)$, and the
+context-free proposition $\ist(c,\varphi)$ is true at $w$ iff $c\models_w\varphi$. A context
+is \emph{proper} at $w$ if $\emptyset\notin\fF_c(w)$. A claim is \emph{supertrue} under
+$\rho$ if it is true at every $w\in W_\rho$.
+\end{definition}
+
+Below a root parent, a germ context makes $\varphi$ true iff $\varphi$ holds for all
+deformed parameters close enough to the ideal along the path, at the actual values of
+everything else; a limit context is evaluated at the single point
+$\lambda^*[D{:=}\lambda^\circ]$, and is improper if no model exists there.
+
+\begin{proposition}[Classicality without explosion; \L{}o\'s]\src{T3 Prop 1.4}\label{prop:physics:los}
+Let $\Th_w(c)=\{\varphi:c\models_w\varphi\}$. \textup{(a)} $\Th_w(c)$ is closed under
+first-order consequence. \textup{(b)} It is consistent iff $c$ is proper at $w$.
+\textup{(c)} $\Th_w(c)=\bigcap_U\Th(\prod_U\fM_w)$, where $U$ ranges over the
+ultrafilters on $\dom\fM_w$ extending $\fF_c(w)$ and $\prod_U\fM_w$ is the ultraproduct of
+the structures $\fM_w(\lambda)$.
+\end{proposition}
+\begin{proof}
+(a) If $\Th_w(c)\models\psi$, compactness gives $\varphi_1,\dots,\varphi_k\in\Th_w(c)$
+entailing $\psi$, and $\tset{\psi}\supseteq\bigcap_i\tset{\varphi_i}\in\fF_c(w)$. (b) If
+$c$ is proper, every finite subset of $\Th_w(c)$ has nonempty truth set, hence a model;
+use compactness. If not, $\tset{\bot}=\emptyset\in\fF_c(w)$. (c) A set lies in a filter
+iff it lies in every ultrafilter extending it, and \L{}o\'s's theorem
+\citep{los1955quelques} gives $\prod_U\fM_w\models\varphi$ iff $\tset{\varphi}\in U$.
+\end{proof}
+
+Under limit semantics the ultraproducts in (c) are just the standard model at
+$\lambda^*[D{:=}\lambda^\circ]$.
+Under germ semantics with a root parent the ultraproducts are nonstandard models in
+which the deformed parameters are infinitely close to the ideal along the path and the
+undeformed ones take \emph{exactly} their actual values. This gives McCarthy's $\ist$ a
+concrete semantics, and in the germ case it is the sense in which Robinson vindicated
+Leibnizian infinitesimals \citep{robinson1966nonstandard}. $\Th_w(c)$ may be incomplete
+(germs can oscillate); that is underdetermination the reading must settle.
+
+\begin{proposition}[Supposition is exact discharge]\src{T3 Prop 1.5}\label{prop:physics:sup}
+For $c=\SUP(A)$ with parent $p$: $c\models_w\psi$ iff $p\models_w A\to\psi$. In
+particular, $c$ is improper at $w$ iff $p\models_w\neg A$.
+\end{proposition}
+\begin{proof}
+$X\in\fF_c(w)$ iff $X\supseteq F\cap\tset{A}$ for some $F\in\fF_p(w)$, and
+$\tset{\psi}\supseteq F\cap\tset{A}$ iff $\tset{A\to\psi}\supseteq F$. Take $\psi=\bot$.
+\end{proof}
+
+\begin{proposition}[What idealized contexts may do]\src{T3 Prop 1.6, rev.}\label{prop:physics:idealized}
+\textup{(a)} \emph{Contradicting the root.} In a hydrostatics frame whose laws do not
+mention phase change, let $c$ deform $p_{\rm atm}$ toward $0$ (limit semantics). Then
+$c\models p_{\rm atm}=0$ and $@\models p_{\rm atm}=1.0\times10^5$, both contexts are
+proper, and no sentence is both true and false in one context. \textup{(b)}
+\emph{Inconsistent limit, consistent germ.} A rope of mass $m_r$ is pulled by a force
+$\Phi\neq0$, with $\dom=\{m_r>0\}$; deform $m_r$ toward $0$ below the root. The limit
+context is improper; the germ context is proper and proves $|a|>K$ for every numeral $K$.
+\textup{(c)} \emph{Norton's distinction.} Let $c_{\lim},c_{\rm germ}$ be the limit and
+germ children of the root for the same $D,\lambda^\circ$, with
+$\lambda^*[D{:=}\lambda^\circ]\in\dom$, and let $q(\mu)$ be the value of $Q$ at
+$\lambda^*[D{:=}\mu]$. Then $c_{\rm germ}\models Q\in I$ for every open interval
+$I\ni q(\lambda^\circ)$ iff $q(\mu)\to q(\lambda^\circ)$ along $\fG$ (where the deformed
+models exist).
+\end{proposition}
+
+Part (c) is Norton's ``limit property versus property of the limit system''
+\citep{norton2012approximation}: reasoning inside the limit model justifies a value
+exactly when the query is continuous along the path. D'Alembert's paradox is the
+failure case (potential-flow drag is $0$; drag as viscosity $\to0$ is not). Part (b) is
+the shape of idealizations that are inconsistent at the limit but consistent along it,
+such as Painlevé's rigid bodies with Coulomb friction \citep{stewart2000rigid} or a
+uniform isothermal gas ball in vacuum (L9 \S2.3). \emph{Germ semantics} handles them:
+well-posedness is required along the family, not at the limit. Different filters on one
+family give different contexts, so the path to the limit is part of the reading.
+
+\paragraph{Imports are fixed by the deformation.} L7 treated the import filter of an
+idealized context as a third learned object; L9 observed that it is problem-relative.
+
+\begin{definition}[Stability]\src{T3 Def 1.7}\label{def:physics:stable}
+$\varphi$ is \emph{$D$-stable} in $w$ if $\fM_w(\lambda)\models\varphi\iff\fM_w(\lambda')\models\varphi$
+for all $\lambda,\lambda'\in\dom\fM_w$ differing only in coordinates in $D$. Laws are
+$D$-stable, and so are \emph{undeformed data}: arithmetic formulas in the $p_i$, $i\notin D$.
+\end{definition}
+
+\begin{lemma}[Import soundness]\src{T3 Lemma 1.8, rev.: (b), (c) added}\label{lem:physics:import}
+\textup{(a)} If $\varphi$ is $D$-stable in $w$ and $p\models_w\varphi$, then $c\models_w\varphi$
+for every $\DEF$ child $c$ of $p$ deforming $D$, for any parent filter and path.
+\textup{(b)} \emph{Uniform converse.} Fix $\fM_w$ and $D$. If for every actual point
+$\lambda^*\in\dom\fM_w$ and every ideal value $\lambda^\circ\in\R^D$ the limit child $c$ of
+the root satisfies $@\models\varphi\Rightarrow c\models\varphi$, then $\varphi$ is $D$-stable.
+\textup{(c)} \emph{Scope.} For one fixed deformation the converse of (a) fails: with
+$D=\{k\}$, $\lambda^\circ=0$, limit semantics and $\varphi:=(k\le1)$, importing $\varphi$ is
+sound at every world, yet $\varphi$ is not $D$-stable if $\dom$ contains points differing
+only in $k$ with $k=0.5$ and $k=2$.
+\end{lemma}
+\begin{proof}[Proof idea]
+(a) For $\lambda\in\tset{\varphi}$, every $\lambda[D{:=}\mu]\in\dom$ differs from $\lambda$
+only on $D$, so the generator built from $F=\tset{\varphi}$ lies in $\tset{\varphi}$. (b) Put
+the actual point at a $\varphi$-point $\lambda$ and the ideal value at $\lambda'_D$. (c) The
+child always satisfies its stipulation $k=0$. Details in Appendix~\ref{app:physics}.
+\end{proof}
+
+\paragraph{Reading.} The imports that are sound \emph{uniformly} in the actual point and
+the ideal value are exactly what the declared top-model family makes stable. ``Water's
+vapour pressure is $2.3$\,kPa'' is a law of a frame with phase equilibrium; there it is
+importable, and the $p_{\rm atm}\to0$ context correctly boils. In incompressible
+hydrostatics without phases it is not in the language. So learning uniformly sound
+import filters reduces to learning which top-model family the problem intends: part of
+the reading (\S\ref{sec:physics:checker}).
+
+% -------------------------------------------------------------------
+\subsection{What coherence should constrain}\label{sec:physics:coherence}
+
+\begin{theorem}[No truth-functional eternal reading]\src{T3 Thm 2.1, rev.}\label{thm:physics:eternalism}
+Let $c$ be a $\DEF$ context, proper at $w$, with a stipulation $S_c$ such that
+$c\models_w S_c$ and $S_c$ is false at $\fM_w(\lambda^*_w)$ (e.g.\ $p_{\rm atm}=0$). Let
+$\tau(c,\varphi)$ translate ``$\varphi$ holds in $c$'' into a world sentence whose truth
+value at $w$ is $f(S_c^w,\varphi^w)$ for some $f:\{0,1\}^2\to\{0,1\}$. Then $\tau$ does not
+track in-context truth at $w$: $c\models_w\top$ and $c\not\models_w\neg S_c$, but
+$\tau(c,\top)^w=\tau(c,\neg S_c)^w$.
+\end{theorem}
+\begin{proof}
+$\top$ and $\neg S_c$ are both true at $w$, so both translations have value $f(0,1)$. And
+$c\models_w S_c$ with $\Th_w(c)$ consistent (\cref{prop:physics:los}(b)).
+\end{proof}
+
+Since $S_c$ is false at $w$, $\tau$ depends only on $f(0,\cdot)$. \emph{Stripping}
+($f=\wedge$) makes every in-context claim false at $w$, hence incoherent with the root;
+\emph{conditionalizing} ($f=\to$) makes every one true, hence vacuous; the other two
+choices collapse ``in $c$'' into ``at $w$'' or its negation. (Properness is needed: for
+the improper rope limit of \cref{prop:physics:idealized}(b), conditionalizing tracks
+in-context truth perfectly.)
+
+\begin{corollary}[Eternalist coherence penalizes correct reasoning]\src{T3 Cor 2.2, rev.}\label{cor:physics:eternalist}
+Call a check \emph{eternalist} if it flags a set $J$ of context-indexed judgments
+$(c,\Gamma,\varphi)$ whenever $\{\bigwedge\Gamma\to\varphi:(c,\Gamma,\varphi)\in J\}$ is
+unsatisfiable (context indices deleted, suppositions not added). It flags (i) every sound
+reductio whose internal judgment $(\SUP(A),\emptyset,\bot)$ is recorded; (ii) every sound
+idealization whose stipulation contradicts a recorded root judgment
+(\cref{prop:physics:idealized}(a)); (iii) every pair of sound contexts whose different
+answers to one query are both recorded (IPhO~2025 T2 versus T3). If only the discharged
+$(@,\emptyset,\neg A)$ is recorded, nothing is flagged: what is penalized depends on how
+much of the reasoning is recorded.
+\end{corollary}
+
+A learner trained to keep such sets coherent loses classical logic, and not only in
+the offending context. This is T2's formal version of the user's air-pressure worry.
+
+\begin{proposition}[Mis-designation forces global sub-classicality]\src{T2 Prop 7.1}\label{prop:physics:misdesignation}
+Let $C$ be a structural consequence relation that is $\Ac$-coherent ($A\nder_C\bot$ for
+$A\in\Ac$), where some designated $A\in\Ac$ is classically inconsistent. \textup{(a)}
+$C\not\supseteq\Cn_{\CPC}$; moreover, for every classical derivation of $\bot$ from $A$ in
+a Hilbert or sequent-step format (no discharge metarules), some rule schema used in it
+is not $C$-valid: its most general instance is not in $C$. \textup{(b)} If
+$A\supseteq\{\alpha,\neg\alpha\}$, then $p,\neg p\nder_C\bot$ for every atom $p$: $C$ is
+atomically paraconsistent everywhere.
+\end{proposition}
+\begin{proof}
+(a) If every step instance were in $C$, chaining would give $A\der_C\bot$; the missing
+instance is a substitution instance of its schema's most general instance, which by
+structurality is then missing too. (b) Substitute $\alpha$ for $p$ and weaken to $A$.
+\end{proof}
+
+\paragraph{Reading.} Designate ``$p_{\rm atm}=0$ plus the full background'' as coherent,
+and a coherence loss teaches a paraconsistent logic for \emph{all} reasoning: the learner
+must reject $p,\neg p\der\bot$ for atoms, in every context. The fix has three parts. Designate only
+consistent chunks \citep{brown2004chunk}. Keep the root \emph{phenomenological} (interval
+claims about measurables, observations, exports), with laws living in model contexts
+\citep{cartwright1983laws}; physics is a patchwork of locally valid inferential
+practices \citep{wilson2006wandering}, and a root holding unrestricted laws may itself be
+inconsistent (L7 \S12). And adopt \emph{meta-level eternalism}: $\ist(c,\varphi)$ is an
+eternal proposition about a finitely specified context \citep{mccarthy1993notes}, by
+\cref{thm:physics:eternalism} necessarily non-truth-functional in the world's facts.
+Which contexts, then, must be consistent?
+
+\subsubsection{The right constraint: realizability}
+
+\begin{definition}[Judgment sets, bridges, realizations]\src{T3 Def 2.3, rev.}\label{def:physics:realization}
+``Model'' and ``satisfiable'' refer to $\fK$; for a set $M$ of structures, $M\models\chi$
+means $N\models\chi$ for all $N\in M$. A \emph{judgment set} $J$ is a finite set of triples
+$(c,\Gamma,\varphi)$ over a context tree in which $\SUP$ contexts have only $\SUP$
+descendants; a set $C$ of $\DEF$ contexts is \emph{certified} (claimed well-posed). A
+\emph{bridge} $\beta$ has a pattern $\phi_\beta(v)$, a side condition $\sigma_\beta$ and an
+export formula $\varepsilon_\beta(v)$, $v\in V$. It is a \emph{value-export bridge} for $Q$
+if $\phi_\beta(v)$ is $Q=\bar v$ with standard names (distinct values denote distinct
+objects in $\fK$) and $\sigma_\beta$ does not depend on $v$; it is \emph{informative} if
+$\{\sigma_\beta\}\cup\{\varepsilon_\beta(v):v\in V_0\}$ has no model for some \emph{finite}
+$V_0\subseteq V$ (e.g.\ interval exports over unbounded $V$). A \emph{bridge use} is
+$(c,\beta,t)\in U$ with $c$ a $\DEF$ context and $(c,\emptyset,\phi_\beta(t))$,
+$(\pi c,\emptyset,\sigma_\beta)$, $(\pi c,\emptyset,\varepsilon_\beta(t))\in J$. A
+\emph{(frame-free) realization} assigns each context a set $M_c\subseteq\fK$ with
+(R0)~$M_@\neq\emptyset$; (R1)~$M_c=M_{\pi c}\cap\tset{A}$ for $c=\SUP(A)$; (R2)~$M_c$
+arbitrary, possibly empty, for $\DEF$ contexts; (R3)~every judgment holds: for
+$N\in M_c$, $N\models\bigwedge\Gamma$ implies $N\models\varphi$; (R4)~every used bridge is
+sound: for all $v$, $M_c\models\phi_\beta(v)$ implies $M_{\pi c}\models\sigma_\beta\to\varepsilon_\beta(v)$;
+(R5)~$M_c\neq\emptyset$ for $c\in C$. The \emph{SUP-collapse} $J^*$ replaces each
+$(c,\Gamma,\varphi)$ with $c$ a $\SUP$ context by $(b,\Gamma\cup\Asm(c),\varphi)$, where
+$b$ is the nearest non-$\SUP$ ancestor and $\Asm(c)$ the suppositions on the path;
+$\Th^*(c):=\{\bigwedge\Gamma\to\varphi:(c,\Gamma,\varphi)\in J^*\}$. The \emph{anchored set}
+$\Anc$ is the least set of non-$\SUP$ contexts containing $@$ and $C$ and containing $c$
+whenever $(c,\beta,t)\in U$ with $\beta$ informative and $\pi c\in\Anc$.
+\end{definition}
+
+Informativeness is defined in finite form because $\fK$ is not compact:
+$\{Q\neq v:v\in\R\}$ is finitely satisfiable but has no model with a standard real sort.
+
+\begin{theorem}[Realizability criterion]\src{T3 Thm 2.4, rev.: (a) frame-free; (b), (c) new}\label{thm:physics:realizability}
+Suppose every used bridge is an informative value-export bridge. \textup{(a)}
+\emph{Frame-free.} $J$ has a realization satisfying (R0)--(R5) iff $\Th^*(c)$ is
+satisfiable for every $c\in\Anc$. \textup{(b)} \emph{Necessity in the frame semantics.}
+Call $J$ \emph{frame-realizable} if for some world $w$, with the filters of
+\cref{def:physics:filter}, every judgment holds ($c\models_w\bigwedge\Gamma\to\varphi$),
+every $c\in C$ is proper, and every bridge use is sound at $w$ ($c\models_w\phi_\beta(v)$
+implies $\pi c\models_w\sigma_\beta\to\varepsilon_\beta(v)$). If $J$ is frame-realizable,
+the criterion of (a) holds, for limit or germ paths. \textup{(c)} \emph{Non-sufficiency.}
+The converse of (b) fails. CE1: a certified limit child $c$ of the root deforms $D=\{2\}$
+toward $0$, and $J=\{(@,\emptyset,p_1=1),(c,\emptyset,p_1=0)\}$; the criterion holds, but the
+root forces $\lambda^*_1=1$, and $c$, proper because certified, sits at
+$\lambda^*[2{:=}0]$, so $c\models p_1=1$. CE2: two certified siblings with the same
+declaration have equal filters, so $Q=1$ in one and $Q=2$ in the other cannot both hold.
+\end{theorem}
+\begin{proof}[Proof idea]
+By (R1), $\SUP$ contexts impose on their base exactly the constraints $\Th^*$. An
+\emph{anchoring lemma} says every anchored context has $M_c\neq\emptyset$: from an empty
+$M_c$ an informative bridge would export every $\varepsilon_\beta(v)$, forcing a model of
+$\{\sigma_\beta\}\cup\{\varepsilon_\beta(v):v\in V_0\}$ in $M_{\pi c}$. Conversely, put one
+model of $\Th^*(c)$ at each anchored context and $\emptyset$ elsewhere; standard names make
+(R4) bite only at $v=t$. Part (b) is the same argument with properness for
+nonemptiness. Full proof in Appendix~\ref{app:physics}.
+\end{proof}
+
+Brute force agrees with (a) on $6{,}500$ random instances (some written by a referee)
+with $0$ mismatches; with uninformative bridges (a) fails on $117/600$, so the hypothesis
+is needed; and over all frames on $\Lambda=\{0,1\}^2$, $8{,}000$ instances show $0$
+violations of (b) and $598$ in the gap of (c) \status{computed}. The locality of (a) is a
+\emph{consequence of (R2)}, not a fact about the frame semantics, where rigid parameters
+and shared filters force cross-context constraints. Under limit semantics these are
+characterized exactly (\cref{prop:physics:framerealizability}, Appendix~\ref{app:physics}):
+the theories of all contexts forced to be proper \emph{at one parameter point} must be
+jointly satisfiable with that point's values. That is pointwise adjunction, the structural
+core of discussive and preservationist logics
+\citep{jaskowski1969propositional,schotch1980inference}. Germ semantics is open.
+
+\begin{corollary}[Reductio immunity; well-posedness where it matters]\src{T3 \S2.2 Cors, rev.}\label{cor:physics:immunity}
+Under the hypotheses of \cref{thm:physics:realizability}: (i) a $\SUP$ context deriving
+$\bot$ contributes exactly $\neg\bigwedge\Asm$ to its base, in both semantics; (ii) an
+idealized context deriving $\bot$ makes $J$ frame-free unrealizable iff it is anchored, and
+in the frame semantics the ``if'' holds; (iii) eternalist coherence is strictly stronger
+than frame-free realizability.
+\end{corollary}
+
+\paragraph{Reading.} ``Arguments for $P$ and $\neg P$ in contradictory contexts should not
+be penalized'' is correct, and \cref{thm:physics:realizability}(a) says exactly which
+contexts \emph{must} be consistent: the root, and idealizations that are certified or
+export informatively. This is L7's ``ill-posed idealizations must not export'', now an
+iff. In the frame semantics the criterion is necessary but not sufficient, and the
+remaining constraints (CE1, CE2) are enforced in the checker by a declaration
+discipline, not by coherence (\S\ref{sec:physics:checker}).
+
+\begin{remark}[Belief states, worlds, contextuality]\label{rem:physics:existence}
+\Cref{sec:existence} proves a completeness theorem for monotone multi-context calculi
+with local-models semantics: truth in a context is truth in every local model of the
+canonical belief state, and coherence on designated contexts is equivalent to a model
+nonempty there (T6 Thm~4.1, Cor~4.2). It also shows that bridges must be read as
+\emph{rules of proof} over belief states, since reading them as conditionals between
+single worlds strictly strengthens entailment (T6 Thm~4.5); and that locally coherent
+contexts need not glue into one world, as in the odd cycle of three pairwise-conservative
+contexts, a logical form of contextuality \citep{abramsky2011sheaf} (T6 Prop~4.7).
+\end{remark}
+
+\subsubsection{A calculus, its soundness, and blame localization}
+
+\begin{definition}[Context calculus]\src{T3 \S2.3, rev.}\label{def:physics:calculus}
+Judgments are $c\cder\varphi$; $\hat R$ is the (learned) rule set and $\mathrm{Imp}_c$ the
+declared import set of $c$. \rl{Ax}~$c\cder\varphi$ for $\varphi\in\Ax(c)$, where
+$\Ax(@)=\Ax_\rho$, $\Ax(\SUP(A))=\{A\}$, and $\Ax(\DEF(D,\lambda^\circ,\fG))$ is the set of
+\emph{canonical stipulations}: $p_i=\lambda^\circ_i$ ($i\in D$) under limit semantics,
+$p_D\in U$ for definable $U\in\fG$ under germ semantics; stipulations about undeclared
+parameters are not axioms. \rl{Step}~From $c\cder\varphi_1,\dots,c\cder\varphi_k$ and an
+instance $\varphi_1,\dots,\varphi_k\step\psi$ of $\hat R$, infer $c\cder\psi$.
+\rl{Imp}~From $\pi c\cder\varphi$ with $\varphi\in\mathrm{Imp}_c$, infer $c\cder\varphi$.
+\rl{Dis}~For $c=\SUP(A)$: from $c\cder\psi$ infer $\pi c\cder A\to\psi$. \rl{Exp}~For a
+$\DEF$ context $c$: from $c\cder\phi_\beta(t)$, $\pi c\cder\sigma_\beta$ and
+$\pi c\cder\omega_c$, infer $\pi c\cder\varepsilon_\beta(t)$; here the
+\emph{well-posedness certificate} $\omega_c$ is a sentence such that for every $w$ and
+$\lambda\in\tset{\omega_c}_w$, $\{\mu:\lambda[D{:=}\mu]\in\dom\fM_w\}\in\fG$. An instance is
+\emph{sound at $w$} if it preserves truth there (for Step:
+$c\models_w\bigwedge_i\varphi_i\to\psi$), and \emph{sound} if sound at every $w\in W_\rho$.
+\end{definition}
+
+Step soundness is \emph{context-relative}: time reversal is sound in a drag-free $\DEF$
+context and unsound at the root.
+
+\begin{theorem}[Soundness]\src{T3 Thm 2.5}\label{thm:physics:soundness}
+If every Ax in a derivation of $c\cder\varphi$ is true at $w$ and every Step, Imp and Exp
+instance in it is sound at $w$, then $c\models_w\varphi$.
+\end{theorem}
+\begin{proof}
+Induction: Ax and Step by hypothesis and filter closure (\cref{prop:physics:los}(a));
+Imp and Exp by soundness of the instance; Dis by \cref{prop:physics:sup}.
+\end{proof}
+
+\begin{corollary}[Blame localization]\src{T3 Cor 2.6, rev.}\label{cor:physics:blame}
+Let $W_\rho\neq\emptyset$. Call $d$ \emph{designated} if it is the root, or a certified $\DEF$
+context with a \emph{properness witness} $w_d\in W_\rho$ at which $d$ is proper. Let $D$
+derive $d\cder\bot$, and let its \emph{cone} be all instances in its derivation tree,
+including those in sub-contexts whose conclusions reach $d$ by Dis or Exp. (a) At every
+$w$ at which $d$ is proper (every $w\in W_\rho$ if $d=@$), the cone contains an Ax false
+at $w$ or an instance unsound at $w$. (b) Items outside the cone are never implicated: an
+undischarged $\SUP$ contradiction, or a pair of contradictory $\ist$-claims. (c) If
+$\pi d\models_w\omega_d$ and $\pi d$ is proper at $w$, then $d$ is proper at $w$; so
+parent-derived certificates are properness witnesses.
+\end{corollary}
+\begin{proof}[Proof idea]
+(a) is the contrapositive of \cref{thm:physics:soundness}; (b) follows. (c) In each parent
+filter set pick $\lambda\in\tset{\omega_d}$; its deformed models exist for $\fG$-almost all
+$\mu$. \Cref{prop:physics:propagation} adds how $\bot$ in an anchored $\DEF$ context
+propagates to a designated one, and where the blame then falls.
+\end{proof}
+
+The cone is a \emph{negative bag} in the sense of \cref{sec:coherence}, with
+context-indexed items (context and Step, Imp or Exp instance; Ax judgments). The halving
+argument there uses only that the target never contains a whole detected bag, so with the
+root and the certified contexts as the \emph{only} designated contexts, an
+oligarchic-halving learner makes at most $\log_2(1/\wstar)$ detections and no false alarms
+while the reading is correct (T2 Thm~2.2). What root coherence cannot see is silent
+unsoundness: exports that are false but consistent with everything else
+(\S\ref{sec:physics:learning}).
+
+\subsubsection{Reductio hygiene, and $100=99.9$}
+
+The user warns that a proof by contradiction inside a known-inadequate framework may
+``really involve subverting the background framework \dots\ and there's a chance such an
+argument could equally be provided starting from the statement itself'' (L10 \S1.8). Let
+$c$ have an explicit \emph{imported fragment} $K_c$, a finite set of premises. A
+\emph{reductio of $A$ in $c$} is an $\hat R$-derivation of $\bot$ from $K_c\cup\{A\}$ in
+$\SUP(A)$; accepting it yields $c\cder\neg A$. An instance is \emph{$c$-sound at $w$} if
+$c\models_w\bigwedge\varphi_i\to\psi$.
+
+\begin{theorem}[Reductio hygiene]\src{T3 Thm 1.9, rev.: (c)--(e)}\label{thm:physics:hygiene}
+\textup{(a)} \emph{Soundness.} If $c\models_w K_c$ and every instance used is $c$-sound at
+$w$, every accepted reductio of $A$ yields $c\models_w\neg A$. \textup{(b)}
+\emph{Inconsistent imports refute everything.} If $K_c\der_{\hat R}\bot$, every sentence,
+$A$ and $\neg A$ alike, has a reductio in $c$, whatever the world. \textup{(c)}
+\emph{Derivation-local tests fail.} Let $K=\{A\to q,\neg A\to q,\neg q\}$. $K$ is
+unsatisfiable, but the reductio of $A$ uses only the satisfiable $\{A\to q,\neg q\}$ and
+that of $\neg A$ only the satisfiable $\{\neg A\to q,\neg q\}$; any test that is a function
+of the derivation alone and accepts every sound reductio from a consistent premise set
+accepts both. \textup{(d)} \emph{A consistency certificate suffices.} If a structure $N$
+satisfies $K_c$ and every instance used ($N\models\bigwedge\varphi_i\to\psi$), every
+reductio-refuted $A$ is false in $N$, so no $A$ and $\neg A$ are both refuted. The
+condition on instances is automatic for logically sound $\hat R$ and needed otherwise (if
+$c\models q$, the instance ${}\step q$ is $c$-sound, and $K_c=\{\neg q\}$, which has a model,
+refutes everything). If $c$ is proper at $w$, $c\models_w K_c$ and the instances are
+$c$-sound at $w$, a suitable $N=\fM_w(\lambda)$ exists: a properness witness is a
+certificate. \textup{(e)} \emph{Learning consequence.} A coherence loss fed with reductios
+from a context whose fragment is $\hat R$-inconsistent receives ``$A$ false'' and ``$\neg A$
+false'' for every $A$: jointly unsatisfiable, systematic, world-independent labels.
+\end{theorem}
+\begin{proof}[Proof idea]
+(a) $\SUP(A)$ refines $c$'s filter, so $c$-sound instances and $K_c$ stay true there;
+induction gives $\SUP(A)\models_w\bot$, and \cref{prop:physics:sup} gives $\neg A$. (b)
+Monotonicity in premises. (c) Truth tables; the reductio of $A$ is literally the sound
+reductio from the consistent $\{A\to q,\neg q\}$ (\texttt{hygiene.py}). (d) Induction
+inside $N$. Details in Appendix~\ref{app:physics}.
+\end{proof}
+
+\paragraph{Reading.} The user is right that a reductio in an inadequate framework can be
+spurious, and the remedy is not to abandon reductio. Hygiene is a \emph{global}
+certificate on the imported fragment, not a syntactic relevance condition on the
+derivation, which (c) shows cannot work. In physics the certificate is a well-posedness
+witness, an explicit or validated-numerical solution of the local model; L9's solution
+format demands one for every local model.
+
+\begin{proposition}[The continuity asymmetry]\src{T3 Prop 1.10}\label{prop:physics:continuity}
+Let premises $x_i=m_i$ hold only to tolerance, $x_i\in[m_i\pm r_i]$, with box $B$.
+\textup{(a)} A \emph{direct} derivation of $y=g(x)$, $g$ continuous on $B$, errs by at most
+$g$'s modulus of continuity on $B$. \textup{(b)} \emph{Exact-equality} reasoning derives
+$\bot$ from approximately true premises read as exact: $x=100$\,m (flat Earth) and
+$x=99.9$\,m (sphere), both true to $\pm0.2$\,m, give $0=0.1$ by substitution, while as
+intervals they give $x\in[99.8,100.1]\neq\emptyset$. \textup{(c)} \emph{Sound replacement.}
+If $A$ with the exact laws implies $f(x)=0$, and $F$ is an inclusion-monotone interval
+extension of $f$ with $0\notin F(B)$, the interval premises refute $A$ soundly; the
+condition is sufficient, not necessary.
+\end{proposition}
+\begin{proof}
+(a) Definition. (b) Arithmetic. (c) Inclusion monotonicity \citep{moore1966interval} gives
+$f(B)\subseteq F(B)\not\ni0$.
+\end{proof}
+
+\paragraph{Reading.} The user asks: ``how come we usually avoid this sort of catastrophic
+reasoning [$100=99.9$]? i don't think any nice `formal criterion' is going to be right?''
+(L10 \S1.8). Here is one, right in a precise and limited sense: ``$x=y$'' defines a closed
+set of data with empty interior, so derivability of $\bot$ is a \emph{discontinuous}
+function of the data, while derived values are continuous ones. This is why his
+``constructive'' reasoning is more trustworthy in messy domains. The fix is interval
+typing with a \emph{margin}; \cref{thm:physics:chains}(c) shows the catastrophe as a
+budget violation.
+
+% -------------------------------------------------------------------
+\subsection{Export: what can justify leaving a context}\label{sec:physics:export}
+
+Fix a one-parameter deformation (the multi-parameter case is identical) with ideal value
+$0$ and actual value $\lambda^*\in(0,\Lambda]$. A family is represented by its query
+function $Q:[0,\Lambda]\to\R$; a \emph{family class} is a set $\mathcal C$ of them. An
+\emph{information map} $I$ gives what an export rule may use (the jet at $0$, the germ, a
+restriction $Q|_S$, finitely many values). An \emph{export rule} $E$ maps
+$(I(Q),\lambda^*)$ to ``abstain'' or a finite interval $[q\pm\epsilon]$, and is \emph{sound
+on $\mathcal C$} if $Q(\lambda^*)\in E(I(Q),\lambda^*)$ whenever it does not abstain.
+
+\begin{lemma}[Invisible perturbation]\src{T3 Lemma 3.2}\label{lem:physics:invisible}
+If some $f$ with $f(\lambda^*)\neq0$ has $Q+Af\in\mathcal C$ and $I(Q+Af)=I(Q)$ for all
+$Q\in\mathcal C$, $A\in\R$, then every export rule sound on $\mathcal C$ abstains at
+$\lambda^*$ on every $Q\in\mathcal C$.
+\end{lemma}
+\begin{proof}
+An output $[q\pm\epsilon]$ on $I(Q)=I(Q+Af)$ would have to contain
+$Q(\lambda^*)+Af(\lambda^*)$ for every $A$.
+\end{proof}
+
+This is the standard adversary argument of information-based complexity
+\citep{traub1988information}.
+
+\begin{theorem}[No free export]\src{T3 Thm 3.3, rev.: closure hypothesis}\label{thm:physics:nofree}
+Every rule sound on $\mathcal C$ abstains at every $\lambda^*>0$, on every $Q\in\mathcal C$,
+if (a) $\mathcal C+C^\infty[0,\Lambda]\subseteq\mathcal C$ and $I$ is the full jet at $0$;
+or (b) $\mathcal C+C^\infty[0,\Lambda]\subseteq\mathcal C$ and $I$ is the germ at $0$, or
+$Q|_S$ for any $S$ whose closure omits $\lambda^*$; or (c) $\mathcal C$ consists of
+restrictions of entire functions and $I$ is the jet up to a finite order $N$; or (d)
+$\mathcal C+C^\infty[0,\Lambda]\subseteq\mathcal C$ and $I$ is any finite set of values
+$Q(\lambda_j)$, $\lambda_j\neq\lambda^*$. With only $\mathcal C\supseteq C^\infty$ in (a),
+(b), (d), the conclusion holds for $Q\in C^\infty$ but can fail outside it.
+\end{theorem}
+\begin{proof}[Proof idea]
+\Cref{lem:physics:invisible} with the flat $e^{-1/\lambda^2}$ in (a), a $C^\infty$ bump at
+$\lambda^*$ vanishing near $S$ in (b) and (d), and $\lambda^{N+1}$ in (c). For the weaker
+hypothesis, $\mathcal C=C^\infty\cup\{\sqrt\lambda\}$ with the germ admits a sound
+non-abstaining rule on $\sqrt\lambda$. Details in Appendix~\ref{app:physics}.
+\end{proof}
+
+For analytic families the full jet determines $Q(\lambda^*)$, but a sound use of a series
+needs a remainder bound (e.g.\ a Cauchy bound on a disc of radius $R>\lambda^*$), which is
+information \emph{away from} $0$: ``an expansion without a remainder bound is
+uncontrolled''. This vindicates McMullin's and Laymon's demand for de-idealization
+information \citep{mcmullin1985galilean,laymon1987scott}.
+
+\begin{proposition}[Minimax export is the radius of information]\src{T3 Prop 3.4; \citealt{traub1988information}}\label{prop:physics:radius}
+For an information value $i$ let $\mathcal C_i=\{Q\in\mathcal C:I(Q)=i\}$ and
+$r(i)=\frac12(\sup_{\mathcal C_i}Q(\lambda^*)-\inf_{\mathcal C_i}Q(\lambda^*))$. A sound rule
+with tolerance $\epsilon$ at $i$ exists iff $r(i)\le\epsilon$; the optimal one outputs the
+midrange.
+\end{proposition}
+\begin{proof}
+A sound interval must contain $\{Q(\lambda^*):Q\in\mathcal C_i\}$, and the midrange interval
+of radius $r(i)$ does.
+\end{proof}
+
+So an \emph{export certificate is information of small radius}: a uniform derivative
+bound, a Gronwall bound, an invariance that pins $Q$, a monotone sandwich between the
+ideal and a computed less-ideal value, or data near $\lambda^*$.
+
+\begin{theorem}[Certified-neighbourhood and rate-qualified export]\src{T3 Thm 3.5}\label{thm:physics:neighbourhood}
+(a) If the parent proves $\lambda^*\in U$ and a frame theorem gives
+$\sup_{\lambda\in U}|Q(\fM(\lambda))-q|\le\epsilon$, the parent may soundly assert $Q\in[q\pm\epsilon]$.
+(b) A germ claim $Q\sim q$ exports nothing at a fixed $\lambda^*$; with a rate
+$|Q/q-1|\le C\|\lambda\|^k$ on $U$ it exports $|Q/q-1|\le C\sup_U\|\lambda\|^k$. (c) If the
+problem declares a regime, the root is a germ context and asymptotic equivalence is the
+correctness relation itself; for exp-log expressions in one parameter it is decidable
+modulo zero-equivalence of constants \citep{gruntz1996computing,richardson1968some}.
+\end{theorem}
+
+Part (a) fixes the logical form of every side condition: a parent-certified set plus a
+uniform bound over it, not a value at a guessed point. (At IPhO~2025 T2 C.3 the official
+premise ``$X$ is a few cm'' is false, but its conclusion is robust over the whole apparatus
+range; L9 \S8.3.)
+
+\begin{theorem}[Gronwall finite-horizon export]\src{T3 Thm 3.6, rev.: (b) new; \citealt{gronwall1919note}}\label{thm:physics:gronwall}
+Let $\dot x=f(x)$ and $\dot y=f(y)+g(t,y)$ have solutions on $[0,T]$, $L>0$, and
+$B(t)=|x_0-y_0|e^{Lt}+\frac\eta L(e^{Lt}-1)$. (a) If $f$ is $L$-Lipschitz on a set $K$
+containing both trajectories and $|g(t,y(t))|\le\eta$, then $|x(t)-y(t)|\le B(t)$. (b)
+\emph{Checkable form.} Let $K_r$ be the closed tube of radius $r$ around $x([0,T])$. If $f$
+is $L$-Lipschitz on $K_r$, $|g|\le\eta$ on $[0,T]\times K_r$, and $B(T)<r$, then $y$ stays
+in $K_r$ and the bound of (a) holds.
+\end{theorem}
+
+Every hypothesis of (b) concerns the computed idealized trajectory and explicit bounds,
+so the parent can certify it; those of (a) concern the unknown trajectory. The bound grows
+with $T$: qualitative long-time claims from structurally unstable idealizations do not
+export, finite-horizon quantitative ones do.
+
+\begin{theorem}[Rigorous projectile certificate]\src{T3 Thm 3.7}\label{thm:physics:projectile}
+A point mass is launched with speed $v_0$ at angle $\theta\in(0,\pi/2)$ under gravity $g$,
+with neglected force per unit mass $a_n=-\kappa(t)v$, $0\le\kappa(t)\le k|v(t)|$ (quadratic
+drag with any $C_d\le C_{d,\max}$, or any antiparallel force dominated by it, time-varying
+ones included; lift is not covered). With $x:=kv_0^2/g<1$ and $R_0=v_0^2\sin2\theta/g$,
+\[
+R_0\Big[\frac1{1+x}-\frac{x\tan\theta}{(1+x)^2}\Big]\ \le\ R\ \le\ \frac{R_0}{1-x}.
+\]
+\end{theorem}
+\begin{proof}[Proof idea]
+Energy decreases, so $|v|\le v_0$ and $|a_n|\le xg$; this sandwiches the vertical
+acceleration, hence the flight time, and the horizontal velocity only decreases. Details in
+Appendix~\ref{app:physics}.
+\end{proof}
+
+\emph{Numbers} \status{computed}. Steel ball ($r=1$\,cm, $m=32.7$\,g, $C_d=0.47$,
+$v_0=10$\,m/s, $45^\circ$): $x=0.0276$, certified $R\in[9.653,10.483]$\,m, simulated $9.978$\,m.
+Ping-pong ball: $x=1.42$; the certificate is silent and the export blocked, while the
+simulated range is $49\%$ short of $R_0$, although the in-context derivation is word for
+word the same. Random $(x\in[0,0.9],\theta)$: $0/300$ violations; a referee's bang-bang
+$\kappa(t)$: $0/400$. At $45^\circ$ the $5\%$ validity region is $x\le(1/0.95)^{1/2}-1=0.0260$
+certified, against $x\le0.0679$ true: sound and about $2.6\times$ conservative.
+
+\begin{theorem}[Error propagation through chains]\src{T3 Thm 3.8, rev.}\label{thm:physics:chains}
+(a) For a chain $\lambda^\circ=\lambda^{(0)},\dots,\lambda^{(k)}=\lambda^*$ with certified
+$|Q(\lambda^{(i)})-Q(\lambda^{(i-1)})|\le\delta_i$, $|Q(\lambda^*)-Q(\lambda^\circ)|\le\sum\delta_i$.
+(b) If the answer is $F(q_1,\dots,q_m)$ from exports with $|Q_j-q_j|\le\delta_j$, and $F$ is
+differentiable on the box $\prod_j[q_j\pm\delta_j]$ with $L_j=\sup|\partial_jF|$ there, then
+$|F(Q)-F(q)|\le\sum_jL_j\delta_j$. (c) If $\sum_jL_j\delta_j\ge|F(q)|$, not even the sign of
+$F(Q)$ is certified by this budget. For ``$100-99.9$'' with tolerances $0.2$ the budget is
+$0.4>0.1$, and indeed $Q_1-Q_2\in[-0.3,0.5]$.
+\end{theorem}
+(a) is the triangle inequality, (b) the mean value theorem on the convex box. A direct
+range enclosure can still certify a sign the budget cannot: $F(q)=q^2$ at $q=1$ with
+$\delta=0.6$ has budget $1.92$, yet $F(Q)\in[0.16,2.56]$.
+
+\paragraph{Adversarial stipulation.} Context choice is an attack surface. Take a schema
+``neglect $p_D$'': pattern $Q=\bar v$ in the child, side condition $s(\vec p)\le\eta$ for a
+dimensionless smallness parameter (e.g.\ $kv_0^2/g$), conclusion $Q\in[v\pm\epsilon]$ in the
+parent.
+
+\begin{theorem}[Where side conditions live, and what contexts may be]\src{T3 Thm 3.9, rev.: (c)}\label{thm:physics:stipulation}
+(a) \emph{Child-evaluated side conditions are unsound.} If Exp accepts $c\cder s\le\eta$ for
+$\pi c\cder s\le\eta$, the export fires on every world (at $p_D=0$, $s=0$); on any
+$C^\infty$-closed class this is unsound for every $\epsilon$. The ping-pong ball gets the
+drag-free range $\pm5\%$, while its true range is $49\%$ short. (b) \emph{Free stipulations
+are unsound even with parent evaluation.} If contexts may set undeclared parameters, a
+solver stipulates $p_D=0$ and $g_c=g'$; the parent condition holds for the steel ball, and
+the child's $Q=R_0(g')$ is any desired value. (c) \emph{Sufficiency.} Suppose contexts are
+declared deformations with only canonical stipulations as axioms; $\sigma_\beta$ and a
+well-posedness certificate $\omega_c$ are derived in the parent; and the schema is a
+theorem of the frame: for all $w$, all $\lambda\in\dom\fM_w$ with
+$\fM_w(\lambda)\models\sigma_\beta$ and all $v$, if
+$\{\mu:\lambda[D{:=}\mu]\in\dom\fM_w,\ Q(\fM_w(\lambda[D{:=}\mu]))=v\}\in\fG$ then
+$\fM_w(\lambda)\models\varepsilon_\beta(v)$. Then every accepted export is sound, for every
+solver. Without $\omega_c$, (c) is false: in the rope frame of
+\cref{prop:physics:idealized}(b) under limit semantics, the improper child proves $a=0$, the
+schema holds vacuously, the parent proves $m_r\le\eta$, and Exp would accept $|a|\le\epsilon$
+while $|a|=|\Phi|/m_r\ge|\Phi|/\eta$.
+\end{theorem}
+\begin{proof}[Proof idea]
+(a), (b) are the constructions. For (c), the child-filter generator witnessing $Q=\bar v$,
+intersected with the parent sets for $\sigma_\beta$ and $\omega_c$, puts the schema's
+antecedent at every point of a parent filter set. Details in Appendix~\ref{app:physics}.
+\end{proof}
+
+\Cref{thm:physics:projectile} is such a schema: $\sigma$ is $x\le\eta$ with $\eta<1$,
+$\omega=\top$, and
+$\epsilon(v,\theta)=v\max\big(\frac\eta{1-\eta},\frac\eta{1+\eta}+\frac{\eta\tan\theta}{(1+\eta)^2}\big)$.
+Germ contexts naturally conclude $Q\simeq v$ (standard part $v$); the analogous asymptotic
+schema is sound below a principal parent given $\omega_c$
+(\cref{lem:physics:asymptotic}), and under a nested germ parent it also needs uniform
+convergence on a parent filter set.
+
+\paragraph{Reading.} This is the search problem of \cref{sec:search} transplanted to
+idealizations: a solver chooses contexts as a prover chooses steps. The remedy is the
+analogue of cautious acceptance: contexts restricted to declared deformations with
+canonical stipulations (Strevens's ``default values'' made into a syntactic discipline;
+\citealt{strevens2008depth}), side conditions evaluated in the parent, and a parent-derived
+well-posedness certificate.
+
+% -------------------------------------------------------------------
+\subsection{Learning tolerances and validity regions}\label{sec:physics:learning}
+
+A bridge schema $s$ has a dimensionless regime parameter $\pi\in\Pi$ and an error
+function $e_s(\pi)$, the relative difference between top model and idealization. How can
+one learn \emph{where} $e_s\le\tau$, soundly against a solver who chooses $\pi$?
+
+\begin{theorem}[Coherence cannot calibrate tolerances]\src{T3 Thm 4.1}\label{thm:physics:coherencetol}
+Schemas $s=1,\dots,m$ export $[q_{s,i}\pm\epsilon_s]$ for true values $V_i$; a
+\emph{coherence-only calibrator} chooses $\hat\epsilon$ from the discrepancies
+$(q_{s,i}-q_{s',i})$ alone. If the environment class is closed under \emph{common shifts}
+($(q,V)$ admissible implies $(q,V+b)$ admissible for $|b|\le\beta$: all models may share an
+omitted effect), every $\hat\epsilon$ sound on the class has $\hat\epsilon_s\ge\beta$; with
+unbounded shifts, $\hat\epsilon=\infty$.
+\end{theorem}
+\begin{proof}
+$(q,V\pm\beta)$ give the same data, hence the same $\hat\epsilon$, and soundness for both signs
+gives $2\beta\le2\hat\epsilon_s$.
+\end{proof}
+
+Worse, coherent tolerance vectors form an up-set, so a minimal coherent repair only ever
+widens tolerances (T3 Prop~4.2): exporting a pendulum's $T/T_0$ by the small-angle schema and
+the exact one at amplitudes up to $179.9^\circ$ drives the small-angle tolerance from $0.0077$
+to $4.4$, and coherence never restricts the schema's regime \status{computed}. Two
+small-angle-based schemas never disagree, so both export ratio $1$ at $120^\circ$, where the
+truth is $1.373$: common-mode error, which is why agreement among models sharing an
+idealization is not independent evidence \citep{levins1966strategy,odenbaugh2011buyer}.
+
+\begin{theorem}[Split conformal, and its failure under selection]\src{T3 Thm 4.3}\label{thm:physics:conformal}
+(a) If $e_1,\dots,e_{n+1}$ are exchangeable and $\hat\epsilon$ is the $k$-th smallest of
+$e_1,\dots,e_n$, $k=\lceil(n+1)(1-\alpha)\rceil$ ($\hat\epsilon=\infty$ if $k>n$), then
+$\Prob(e_{n+1}\le\hat\epsilon)\ge1-\alpha$ \citep{vovk2005algorithmic,lei2018distribution}. (b) If the solver picks the instance after
+$\hat\epsilon$ is fixed, from a regime where $\sup e>\hat\epsilon$, coverage on it is $0$.
+\end{theorem}
+
+Calibrated on $\theta_0\sim U[0^\circ,30^\circ]$ ($n=200$, $\alpha=0.1$), the small-angle schema
+gets coverage $0.913$; the adversary's $60^\circ$ has error $7.3\times10^{-2}$ against
+$\hat\epsilon=1.44\times10^{-2}$ \status{computed}. Mondrian (per-regime) calibration narrows
+the gap but cannot close it: this is the commitment problem of \cref{sec:search} again.
+
+\begin{theorem}[No certification without regularity]\src{T3 Thm 4.4}\label{thm:physics:noreg}
+Let $\mathcal C$ be closed under $e\mapsto e+Af$ for every continuous bump $f\ge0$ and $A>0$.
+A deterministic certifier that makes finitely many oracle queries and outputs a region $V$
+with $e\le\tau$ on $V$, soundly on $\mathcal C$, has $V$ inside the set of queried points. A
+randomized certifier that is sound almost surely satisfies this inclusion almost surely.
+\end{theorem}
+\begin{proof}[Proof idea]
+A bump at an unqueried $\pi\in V$, vanishing at the queries, leaves the adaptive transcript
+unchanged and lifts $e(\pi)$ above $\tau$. Details in Appendix~\ref{app:physics}.
+\end{proof}
+
+No free export and no free certification rest on one argument: simulation is an oracle for
+the top model, but without a regularity guarantee it certifies only the points queried.
+With regularity, sound certification is possible at a tight price:
+
+\begin{theorem}[Conservative Lipschitz certifier]\src{T3 Thm 4.5}\label{thm:physics:lipschitz}
+Let $\Pi=[0,1]^d$, $e$ be $L$-Lipschitz in $\|\cdot\|_\infty$, and a \emph{validated oracle}
+return $e_{hi}(\pi)\in[e(\pi),e(\pi)+\eta]$ (interval ODE enclosures;
+\citealt{tucker2011validated,immler2018verified}). With $G_h$ the centres of the
+$\lceil1/h\rceil^d$ cubes of side $\le h$ tiling $\Pi$, output
+$V=\Pi\cap\bigcup_{\pi_j\in G_h}\{\pi:\|\pi-\pi_j\|_\infty\le(\tau-e_{hi}(\pi_j))/L\}$. (a)
+\emph{Soundness:} $e\le\tau$ on $V$ for every $L$-Lipschitz $e$, deterministically, against
+any solver. (b) \emph{Completeness:} if $\gamma>\eta$ and $h\le(\gamma-\eta)/L$, then
+$V\supseteq\{e\le\tau-\gamma\}$, with $\lceil L/(\gamma-\eta)\rceil^d$ calls. (c) \emph{Lower
+bound:} every deterministic certifier sound on the $L$-Lipschitz class and complete at
+margin $\gamma$ makes at least $\lfloor L/(2\gamma')\rfloor^d$ queries for every
+$\gamma'>\gamma$, even with an exact oracle.
+\end{theorem}
+\begin{proof}[Proof idea]
+(a) Lipschitz extension from each centre. (b) Every point is within $h/2$ of a centre. (c)
+Against the constant $\tau-\gamma$, an unqueried packing ball of radius $\gamma'/L$ hides a
+cone of height $\gamma'$. Details in Appendix~\ref{app:physics}.
+\end{proof}
+
+The bounds match up to $2^d$ and the oracle slack: the standard $\Omega((L/\gamma)^d)$
+barrier for Lipschitz problems \citep{nemirovsky1983problem}. The constant $L$ must be
+\emph{proved} in the top model; an $L$ estimated from simulations makes the projectile's
+region $x\in[0,0.066]$ (true: $x\le0.0679$) a calibrated guess, not a certificate.
+
+\begin{theorem}[Monotone certifier]\src{T3 Thm 4.6, rev.: query count, adversary}\label{thm:physics:monotone}
+Let $e$ be non-decreasing on $[0,1]$ (no continuity needed), with a validated upper oracle.
+\emph{Lazy bisection} starts with $lo=0$, $hi=1$ unqueried, queries $m=(lo+hi)/2$, sets
+$lo=m$ (``accepted'') if $e_{hi}(m)\le\tau$ and $hi=m$ otherwise, $k$ times, and outputs
+$V=[0,lo]$ if some query was accepted, $\emptyset$ otherwise. (a) It is sound. (b) With an
+exact oracle, $V$ misses at most an interval of length $2^{-k}$ of $\{e\le\tau\}$ (a variant
+that first queries both endpoints guarantees only $2^{-(k-2)}$). (c) Missing at most length
+$h$ on every non-decreasing $e$ needs $\lceil\log_2(1/h)\rceil$ queries, even with an exact
+oracle. (d) For down-sets in dimension $d\ge2$, $\Theta(h^{1-d})$ queries are necessary and
+sufficient \status{proof sketch}.
+\end{theorem}
+\begin{proof}[Proof idea]
+(a) Monotonicity below an accepted point. (b) $hi-lo$ halves per query. (c) The step
+functions $2\tau\mathbf 1[\pi\ge t]$ give two-valued transcripts, so $q$ queries separate at
+most $2^q$ thresholds. Details in Appendix~\ref{app:physics}.
+\end{proof}
+
+For the small-angle schema, $e(\theta_0)=\frac2\pi K(\sin^2\frac{\theta_0}2)-1$ is provably
+increasing (a power series in $k^2=\sin^2\frac{\theta_0}2$ with positive coefficients), with
+rigorous enclosure $[k^2/4,\ k^2/4+\frac9{64}k^4/(1-k^2)]$. Twenty queries on $[0,0.9\pi]$
+certify $\theta_0\le7.243^\circ,16.168^\circ,22.810^\circ,49.946^\circ$ for
+$\tau=10^{-3},5\times10^{-3},10^{-2},5\times10^{-2}$ (exact thresholds $7.2441^\circ$,
+$16.1687^\circ$, $22.8138^\circ$, $50.1040^\circ$), each truncated downward and re-checked in
+interval arithmetic \status{computed}.
+
+\begin{proposition}[Laymon monotonicity can fail]\src{T3 Prop 4.7}\ \status{computed}\label{prop:physics:laymon}
+For a pendulum with quadratic drag $\beta$ at amplitude $6.75^\circ$, the signed relative
+period shift ($\times10^{-6}$) is $-3.0$, $-5.3$, $-7.7$, $-3.9$, $+10.9$, $+36.2$ at
+$\beta=0.0125$, $0.025$, $0.05$, $0.1$, $0.15$, $0.2$: amplitude decay shortens the period,
+damping lengthens it at second order. With $\tau=6\times10^{-6}$, a monotone certifier querying $\beta=0.1$
+($|e|=3.9\times10^{-6}$) certifies $[0,0.1]$, which contains $\beta=0.05$ with
+$|e|=7.7\times10^{-6}>\tau$.
+\end{proposition}
+
+\paragraph{Reading.} ``Better data, better predictions'', the monotonicity
+\citet{laymon1987scott} uses to explicate idealized data, is a property of a model--query
+pair, to be proved, not assumed. The division of labour for tolerances is then: coherence
+catches tolerances that are too narrow, never ones too wide; exchangeable feedback gives
+coverage on average and nothing against selection; sound worst-case validity regions need
+a \emph{proved} regularity property of the error plus validated evaluation, and then
+simulation of the top model is a sound oracle. For olympiad grading, world feedback proper
+is needed only to calibrate the top model itself.
+
+% -------------------------------------------------------------------
+\subsection{The Structured Physics Solution checker}\label{sec:physics:checker}
+
+\begin{definition}[Structured Physics Solution]\src{T3 Def 5.1; L9 \S7.1}\label{def:physics:sps}
+An \emph{SPS} is a tuple $(\rho,\mathcal T,D,X)$: a reading $\rho$ (the frame class with
+parameter roles: given, measured with intervals, free with ranges, deformable; the query and
+its type, i.e.\ dimension and allowed symbols; conventions); a context tree $\mathcal T$; a
+derivation $D$ in the calculus of \cref{def:physics:calculus} whose Exp instances cite
+schemas from a catalogue $\mathcal B$; and a final judgment $X=(@\cder Q\in[q\pm\delta])$. A
+declared-regime problem uses a top-level germ context $d$ whose declaration belongs to the
+trusted specification, and $X=(d\cder\chi)$.
+\end{definition}
+
+\begin{definition}[The checker]\src{T3 Def 5.2, rev.: Ax legality, schema indexing}\label{def:physics:checker}
+The checker accepts iff all of the following hold. \emph{Ax legality:} every Ax at the root
+is in $\Ax_\rho$, every Ax in $\SUP(A)$ is $A$, every Ax in a $\DEF$ context is a canonical
+stipulation of its declaration. \emph{Kernel and laws:} every Step is accepted by the
+kernel, and every law it cites is in the trusted law catalogue. \emph{Schema indexing:} every
+Exp cites a $\beta\in\mathcal B$ whose catalogue entry is indexed by \emph{exactly} the
+context's declaration $(D,\lambda^\circ,\fG)$; $\sigma_\beta$ and $\omega_c$ are derived
+\emph{in the parent}; asymptotic schemas are cited only below a principal parent.
+\emph{Imports:} every Imp into a $\DEF$ context is a catalogue law or an undeformed datum
+for its $D$ (imports into $\SUP$ children are unrestricted). \emph{Shape:} every non-root
+context is $\SUP$, $\DEF$ or $\AUX$, every $\AUX$ bridge is a kernel-checked theorem, and
+$X$ is derived at the root (or the declared germ root). All checks are deterministic.
+\end{definition}
+
+A first version of this definition lacked Ax legality and schema indexing, and accepted the
+attack of \cref{thm:physics:stipulation}(b); the verification of T3 caught it. Which
+parameters are ``deformable'' need not be trusted: if a solver declares $g$ deformable and
+uses $\DEF(\{k,g\},(0,g'))$, the ``neglect $k$'' schema, indexed by $\DEF(\{k\},0)$, cannot be
+cited. The deformable list matters only for fidelity to the intended problem.
+
+\begin{assumption}[Trusted base]\src{T3 \S5, rev.}\label{asm:physics:trusted}
+(TB1) The kernel and the law catalogue are sound: every accepted Step instance and every
+catalogue law is valid in every $\fM_w(\lambda)$, $\lambda\in\dom\fM_w$, $w\in W_\rho$
+(including top-model theorems used as certified-neighbourhood bridges). (TB2) Every
+$\beta\in\mathcal B$ is a theorem of the frame for its indexed declaration, in the pointwise
+form of \cref{thm:physics:stipulation}(c) or the asymptotic form of
+\cref{lem:physics:asymptotic}. (TB3) Validated numerics return correct enclosures.
+\end{assumption}
+
+\begin{theorem}[Relative soundness of the SPS checker]\src{T3 Thm 5.3, rev.}\label{thm:physics:relative}
+Assume (TB1)--(TB3). For every solver whatsoever, if the checker accepts
+$(\rho,\mathcal T,D,X)$ with a root judgment $X$, then $Q^{\fM_w(\lambda^*_w)}\in[q\pm\delta]$
+for every $w\in W_\rho$ (for a germ root, $d\models_w\chi$). Hence if the intended reading
+satisfies $W_{\rho^*}\subseteq W_\rho$ the export is supertrue for the intended problem, and
+if the actual system is in $W_{\rho^*}$ it is true of the world.
+\end{theorem}
+\begin{proof}[Proof idea]
+\Cref{thm:physics:soundness} at each $w\in W_\rho$: Step by (TB1); root axioms by the
+definition of $\Ax_\rho$; $\DEF$ axioms because canonical stipulations hold in the child
+filter (the check that blocks \cref{thm:physics:stipulation}(b)); imports by
+\cref{lem:physics:import}(a); exports by \cref{thm:physics:stipulation}(c) with (TB2), (TB3)
+and schema indexing. Nothing depends on how $D$ was produced. Details in
+Appendix~\ref{app:physics}.
+\end{proof}
+
+The residual \emph{judgment layer} is exactly (J1) \emph{reading containment},
+$W_{\rho^*}\subseteq W_\rho$; (J2) \emph{top-model adequacy}, that the actual system is a world
+in $W_{\rho^*}$ (needed only for world claims, not for olympiad grading, where $c_P$ is the
+root); and (J3) the \emph{trusted base} (TB1)--(TB3). (J3) is the trusted core of any proof
+checker. (J1) and (J2) cannot be removed:
+
+\begin{theorem}[The judgment layer is ineliminable]\src{T3 Thm 5.4, rev.}\label{thm:physics:judgment}
+(a) \emph{Reading.} Let $\mathcal R$ be the readings that the checker's inputs (text, figures,
+SPS) do not exclude. A checker sound for every intended $\rho^*\in\mathcal R$ accepts $X$ only
+if $X$ holds on $\bigcup_{\rho\in\mathcal R}W_\rho$. (b) \emph{Open world.} Extend the frame by
+an unmodelled effect $\mu$, with $\fM'(\lambda,0)=\fM(\lambda)$. If the admissible extensions
+include worlds with actual $\mu^*\neq0$ and are closed under $Q\mapsto Q+Af(\mu)$ for all
+$A\in\R$ and $C^\infty$ $f$ with $f(0)=0$, then every finite-tolerance world claim accepted
+by a checker that sees only the slice $\fM'(\cdot,0)$ and the SPS is false in some admissible
+extension.
+\end{theorem}
+\begin{proof}
+(a) If $X$ fails at some $w\in W_{\rho_0}$, $\rho_0\in\mathcal R$, the checker is unsound for
+$\rho^*=\rho_0$. (b) \Cref{lem:physics:invisible} in the $\mu$ direction, with $f(\mu^*)=1$.
+\end{proof}
+If $\mu^*=0$, or if laws bound $Q$, (b) can fail: then the open world has been closed by a
+modelling assumption, i.e.\ moved into (J2).
+
+\begin{theorem}[Supervaluational correctness; completion invariance]\src{T3 Thm 5.5, rev.}\label{thm:physics:superval}
+Write $Q^w=Q^{\fM_w(\lambda^*_w)}$, with $W_\rho$ ranging over all admissible completions (free
+parameters $\theta_f\in\Theta_f$, measured ones in their intervals). (a) ``$Q\in[q\pm\delta]$'' is
+supertrue iff $\sup_{w\in W_\rho}|Q^w-q|\le\delta$; a supertrue answer at precision $\delta$
+exists iff $\osc_{W_\rho}Q\le2\delta$, and the midrange is one. (b) A
+\emph{completion-invariance certificate} is a root derivation of $Q\in[q\pm\delta]$ from
+$\Ax_\rho$ in which $\theta_f$ enters only through ``$\theta_f\in\Theta_f$''. By
+\cref{thm:physics:relative} the conclusion of every accepted root derivation holds at every
+completion, so in the formal checker completion invariance is not a separate obligation but
+the content of deriving from $\Ax_\rho$ rather than from a narrowed axiom set. Informal forms
+are $\partial Q/\partial\theta_f=0$ on a connected $\Theta_f$ \emph{where $Q$ is
+differentiable in $\theta_f$}, or a variation bound; in \S\ref{sec:physics:example}, $E$ is
+constant in $\alpha$ only while the point stays lit for every admissible $\alpha$, and jumps
+to $0$ at $s=L\tan\alpha$. (c) Supertruth over $\bigcup\mathcal R$ is the
+\emph{largest} acceptance criterion sound under reading uncertainty.
+\end{theorem}
+
+\paragraph{Reading.} This answers ``check that a claim is true in the context at hand. But
+wtf is that???'': a claim is true in the context at hand iff it holds on the context's
+filter in every admissible completion of the reading. It is supervaluation
+\citep{fine1975vagueness} over completions of an underspecified problem. Checking it
+decomposes into kernel steps, stable imports, certified bridges with parent-evaluated side
+conditions, and a reading; only the reading is not mechanizable. Hence the strongest
+recommendation: \emph{the problem setter should supply a formal specification of the
+admissible completions}, after which the checker is sound relative to the top model alone.
+The user's episode on the problem of \S\ref{sec:physics:example} (``i suspected [the angle
+doesn't matter] but then i messed up a calculation'') is a failed completion-invariance
+obligation that a checker would flag at once.
+
+\begin{proposition}[Gricean determinacy is one-sided]\src{T3 Prop 5.6}\label{prop:physics:gricean}
+Call $\rho$ \emph{determinate at $\delta$} if $\osc_{W_\rho}Q\le2\delta$. If
+$W_{\rho'}\subseteq W_\rho$ then $\osc_{\rho'}Q\le\osc_\rho Q$. So ``the problem is well-posed''
+can refute only (some) over-wide readings, never over-narrow ones; and silent narrowing
+(fixing the sun's angle, choosing a specular mirror, importing an extra law, deciding ``the
+finger is horizontal'') never decreases determinacy, while it violates (J1).
+\end{proposition}
+\begin{proof}
+A supremum over a subset is at most the supremum over the set; dually for infima.
+\end{proof}
+
+The free internal signal for readings thus pushes \emph{toward} the unsafe error: silent
+narrowing is the solver's natural attack. With \cref{sec:coherence} and
+\cref{thm:physics:coherencetol} this completes a table of three one-sided signals:
+\begin{table}[ht]\centering\small
+\caption{Three objects, three free signals, three blind spots.}\label{tab:physics:onesided}
+\begin{tabular}{@{}llll@{}}
+\toprule
+Object & Free internal signal & Error it catches & Error it misses\\
+\midrule
+rules & coherence (\cref{sec:coherence}) & over-acceptance & under-acceptance\\
+tolerances & coherence across exports (\cref{thm:physics:coherencetol}) & too narrow & too wide\\
+readings & Gricean determinacy (\cref{prop:physics:gricean}) & (some) too wide & too narrow\\
+\bottomrule
+\end{tabular}
+\end{table}
+The opposite signal must come from outside: a formal specification by the setter (which
+moves (J1) into the checked part); intended-completion data (official solutions, marking
+schemes; the user ``peeked at the solution and it seems to assume that's not the case''); and
+round-trip checks such as rendering the model's observable and comparing it with the
+figure. These are also one-sided: passing a round trip does not certify a reading.
+\Cref{sec:philosophy} returns to the table.
+
+% -------------------------------------------------------------------
+\subsection{Worked example: EuPhO 2025 Theory 1(a), the polished chair leg}\label{sec:physics:example}
+
+The setup is reconstructed in L9 \S8.2 from the user's notes and has not been checked
+against the official text; the answer $E=\frac{aI_0}{2}|\sin\frac\varphi2|/r$ is the user's,
+reported by him to match the official one. \emph{Specification:} a vertical specular
+cylinder of radius $a$, lit over height $L$, stands on a flat floor; the sun is a parallel
+beam of irradiance $I$ at zenith angle $\alpha$, travelling in $+x$; the floor's direct
+illuminance is $I_0=I\cos\alpha$. The query is the reflected illuminance (``surplus'')
+$E(r,\varphi)$, with $\varphi$ measured from the anti-sun direction $+x$. Given $a,I_0,L$;
+free completion $\alpha\in[30^\circ,60^\circ]$, which the photograph does not fix;
+conventions: perfect specular reflectance, geometric optics, incoherent addition, sun
+radius $\delta_s=4.65$\,mrad, leg vertical; answer type: a function of $(a,I_0,r,\varphi)$
+with the dimension of $I_0$. Write $e(\vartheta)=(\cos\vartheta,\sin\vartheta)$.
+
+\begin{proposition}[Exact reflected illuminance]\src{T3 Prop 6.1}\ \status{SymPy-verified}\label{prop:physics:legexact}
+Parametrize the lit side by $\vartheta\in(\pi/2,3\pi/2)$ and the reflection height by
+$h\in[0,L]$; let $\psi=2\vartheta-\pi$, $s=h\tan\alpha$ and $c=\sin\frac\psi2$. (a) The
+reflected ray lands at
+$P=a\,e(\vartheta)+s\,e(\psi)=(s+ac)\,e(\psi)+a\cos\frac\psi2\,e(\psi+\frac\pi2)$. (b)
+$(\vartheta,s)\mapsto P$ is injective with $|\det\partial P/\partial(\vartheta,s)|=2s+ac$. (c)
+$E(P)=I_0\,ac/(2s+ac)$ for $s\le L\tan\alpha$, and $E=0$ off the image and where the preimage
+has $s>L\tan\alpha$; the total reflected flux $2aLI\sin\alpha$ equals the intercepted flux.
+(d) At a fixed floor point $E$ does not depend on $\alpha$; only the lit domain
+$s\le L\tan\alpha$ does.
+\end{proposition}
+
+Injectivity (the caustic of a convex cylindrical mirror is virtual) is proved by intersecting
+two reflected rays explicitly (Appendix~\ref{app:physics}). A $40$-million-ray Monte Carlo
+gives MC/exact $=0.9997$--$1.0099$ on five test bins, consistent with ${\approx}0.6\%$ noise
+\status{computed}. Part (d) is the completion-invariance certificate, \emph{exact} in the top
+model. The formula is elementary catoptrics; we have not found it in the sources checked,
+but the official solution may contain it, so its novelty is uncertain.
+
+\begin{proposition}[Thin-leg bridge, rigorous]\src{T3 Prop 6.2, rev.: lit domain}\label{prop:physics:thinleg}
+Let $E_0=\frac{aI_0}{2}\sigma/r$, $\sigma=|\sin\frac\varphi2|$, $\epsilon=a/r$,
+$m=\frac12\arcsin\epsilon$. If $\epsilon<2/\sqrt5$, $\sigma>m$ and $r\le L\tan\alpha$ (or
+$L=\infty$), then
+$1-\frac m\sigma\le\frac{E}{E_0}\le\frac{1+m/\sigma}{\sqrt{1-\epsilon^2}-\epsilon/2}$.
+\end{proposition}
+
+Without the lit-domain hypothesis the lower bound fails ($L=60a$, $\alpha=30^\circ$, $r=40a$,
+$\varphi=\pi$ gives $E=0$). The bound holds on $2.5\times10^6$ test points and is rigorous but
+conservative \status{computed}: it certifies $5\%$ from $r=21a,31a,44a,111a$ for
+$\sigma=1,0.5,0.3,0.1$, while the exact error exceeds $5\%$ only for $r\le10.5a,10.4a,27.6a,98a$;
+near $\sigma=1/\sqrt2$ the gap reaches $23\times$, and it is unbounded as the tolerance
+shrinks, because the exact error $\approx\epsilon(2\sigma^2-1)/(2\sigma)$ vanishes to first order
+there. The export domain is an annulus $a\ll r<L\tan\alpha$ away from the shadow-side kink:
+intermediate asymptotics \citep{barenblatt1996scaling}.
+
+\begin{proposition}[Finite-sun bridge]\src{T3 Prop 6.3, rev.: hypotheses}\label{prop:physics:finitesun}
+Let the admissible zenith angles be $[\alpha_{\min},\alpha_{\max}]\subseteq(0,\pi/2]$, the sun's
+angular radius $\delta_s<\alpha_{\min}$, and $\Delta=\arcsin(\sin\delta_s/\sin\alpha_{\min})$.
+If $r\le L\tan(\alpha_{\min}-\delta_s)$, $\epsilon<2/\sqrt5$ and $\sigma-\Delta/2>m$, then for
+any radiance profile over the solar disc,
+$\frac{E_\odot}{E_0}\in\big[(1-\frac\Delta{2\sigma})\,\mathrm{lo}(\epsilon,\sigma-\frac\Delta2),\ (1+\frac\Delta{2\sigma})\,\mathrm{hi}(\epsilon,\sigma-\frac\Delta2)\big]$,
+with $\mathrm{lo},\mathrm{hi}$ the bounds of \cref{prop:physics:thinleg}.
+\end{proposition}
+
+The proof writes $E_\odot/I_0$ as a convex combination of the $\alpha$-free geometric factor over
+the sun's azimuth spread, bounded by $\Delta$ via Napier's rule. A referee's test with a
+limb-darkened disc found $0/859$ violations \status{computed}.
+
+\paragraph{The checker run.} A mini-checker (\texttt{T3-checks/sps\_checker.py}; Experiment~E
+in \cref{sec:experiments}) encodes the specification with $L=60a$ and runs concrete versions
+of the checks of \cref{def:physics:checker}: (C0) reading containment against the formal
+specification; (C1) answer type: symbols $(a,I_0,r,\varphi)$ only, so no free-completion
+symbol, and dimension; (C2) every declared import is in the specification; (C3) completion
+invariance: the answer must coincide identically with the certified $\alpha$-free form;
+(C4) side conditions recomputed from the root's declared domain, every hypothesis of
+\cref{prop:physics:thinleg,prop:physics:finitesun} asserted, and the composed error budget
+evaluated at the worst corner. All admissible $\alpha$ light the disc
+$r\le60\tan(29.73^\circ)a=34.3a$. SymPy stands in for a proof kernel.
+
+\begin{table}[ht]\centering\small
+\caption{Mini-checker run on EuPhO 2025 T1(a), repaired version. ``First version'' marks
+attacks the original, syntactic checker accepted.}\label{tab:physics:checkerrun}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.47\textwidth}>{\raggedright\arraybackslash}X@{}}
+\toprule
+Submitted SPS & Outcome\\
+\midrule
+Honest: $\frac{aI_0}2\sin\frac\varphi2/r$, $r\in[20a,34a]$, $\sigma\ge0.5$, tolerance $10\%$ & \ACCEPT, certified error $\le8.88\%$ (exact point-sun error $\le2.56\%$; sun term $\le0.93\%$)\\
+V0: same, tolerance $5\%$ & \REJECT: budget $0.0888>0.05$ (completeness gap: the truth is within $5\%$)\\
+V1: overclaimed domain $r\ge5a$ & \REJECT: budget $0.380>0.10$\\
+V2: thin-leg side condition evaluated in the child ($a:=0$), declared & \REJECT{} (\cref{thm:physics:stipulation}(a)); a silent one cannot change the budget, which C4 recomputes\\
+V3: $\frac{aI_0}{2\cos\alpha}\sin\frac\varphi2/r$ (the user's slip: $I$ for $I_0$) & \REJECT{} by C1 ($\alpha$ in answer), C3 (half-oscillation $0.42$)\\
+V4: reading narrowed to $\alpha=45^\circ$ & \REJECT{} by C0, only because the specification is formal; else (J1)\\
+V5: declared extra import ``$10\%$ Lambertian'' & \REJECT: import not in the specification\\
+V6: $2E_{\rm thin}\cos(\alpha)^{1/1000}$ (true error ${\approx}0.5$) & \REJECT{} by C1, C3; first version accepted (``$\le0.0888$'')\\
+V7: $\frac{23}{20}E_{\rm thin}\cos(\alpha)^{1/50}$ (true error $0.159$) & \REJECT{} by C1, C3; first version accepted\\
+V8: $1.5E_{\rm thin}e^{\alpha/1000}$ & \REJECT{} by C1, C3; first version accepted\\
+V9: $r\ge1.05a$, $\sigma\ge1$, tolerance $0.7$ (true error $0.909$) & \REJECT{} by C4 ($\epsilon=0.952>2/\sqrt5$); first version accepted (``$\le0.635$'')\\
+V10: $1.09E_{\rm thin}$ (control) & \REJECT{} by C3: differs from the certified form\\
+V11: undeclared $10\%$ diffuse correction $1.1E_{\rm thin}$ & \REJECT{} by C3: differs from the certified form\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{Residual defects of the prototype.} The first version accepted V6--V9: C1 allowed
+$\alpha$ in the answer, C3 checked only the oscillation over $\alpha$ of answer over certified
+form, never its offset from $1$, and C4 never enforced $\epsilon<2/\sqrt5$ or
+$\sigma_{\min}-\Delta/2>m$ (beyond $2/\sqrt5$ the upper bound turns negative and was silently
+dropped). The repaired version is still a toy. (i)~It hard-codes one top model and two
+bridge schemas. (ii)~SymPy and floating-point evaluation of the budget at a corner stand in
+for a kernel and interval arithmetic; that the corner is worst rests on monotonicity of the
+bounds, argued, not machine-checked. (iii)~C3 accepts only answers \emph{symbolically
+identical} to the certified form, so it is incomplete; a fuller checker would add a rigorously
+enclosed offset $|\text{answer}/\text{certified}-1|$ to the budget. (iv)~V2 and V5 are rejected
+because the SPS \emph{declares} the violation; the semantic protection is that C4 recomputes
+side conditions from root data and C3 catches answer-changing undeclared imports (V11).
+(v)~V0 is a completeness gap, and V4 is caught only because the specification is formal. The
+episode is a small instance of the lesson of \cref{sec:search}: plausible syntactic checks
+accepted four simple attacks, and soundness returned only when every check was made semantic.
+
+\paragraph{What remains judgment.} The photo-to-model reading (a \emph{specular} cylinder, lit
+over its full height, its unsupplied reflectance, the meaning of ``illuminance surplus'', the
+$\alpha$ range) and the open world (taper, tilt, floor roughness, the seat's shadow). Each
+effect could be added as a declared deformation with its own bridge, moving it from judgment
+to checking; what cannot be moved is the claim that \emph{these} are all the effects the
+setters intend (\cref{thm:physics:judgment}). The one checkable test of the reading is the
+round trip: render the predicted floor pattern and compare it with the photograph. A second
+example: IPhO~2025 T2 C.4 is a germ-root problem whose leading-order $W^*=19.8$\,mJ differs
+from the exact optimum $20.1$\,mJ by $1.3\%$, inside the marking interval $[19,21]$\,mJ, so the
+tolerance-aware check of \cref{thm:physics:chains} passes (L9 \S8.3) \status{computed}.
+
+% -------------------------------------------------------------------
+\subsection{The four logical roles of physicists' checks}\label{sec:physics:roles}
+
+The brief listed dimensional analysis, limiting cases, symmetry and conservation as
+``coherence checks''. They play at least four logical roles (L9 \S3), and only the first two
+are coherence in the sense of \cref{sec:coherence}:
+\begin{table}[ht]\centering\small
+\caption{Logical roles of the physicist's checks (after L9 \S3.7).}\label{tab:physics:roles}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.2\textwidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+\toprule
+Role & Checks & What it certifies & Soundness status\\
+\midrule
+1. invariance of the rule set & dimensions (unit group); declared context symmetries & homogeneity, equivariance of derived equations & worst case, decidable; necessary only\\
+2. in-model theorem & conservation laws & a computation inside one local model & worst case within the model; silent on exports\\
+3. regression against another context & limiting cases & agreement with solved sub-models & sound only for regular limits (Norton)\\
+4. export side condition & order of magnitude; ``the neglected term is small'' & a bridge at a stated tolerance & sound with explicit budgets; heuristic otherwise\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\emph{Dimensions} are a type system: dimensions form a free abelian group and inference is
+unification modulo abelian groups \citep{kennedy1994dimension}; the Buckingham $\Pi$ theorem
+\citep{buckingham1914physically} turns ``express in terms of'' into a type signature (in
+IPhO~2025 A.1 the force must be $mg\,\Phi(\rho Sh/m,P_0S/(mg))$, and the official
+$(m+\rho Sh)g$ is $\Phi=1+\pi_1$). Dropping a small $\Pi$ group assumes complete similarity,
+which fails in intermediate asymptotics \citep{barenblatt1996scaling}, so ``$\Pi_2\ll1$,
+ignore it'' is a bridge (role 4), not a type fact. \emph{Symmetry} needs uniqueness, as the
+user notes: a symmetric problem implies only a symmetric \emph{set} of solutions. Context
+symmetries are context-indexed (time reversal holds without drag), and a declared symmetry
+gives free negative data: a non-equivariant candidate rule is refuted by a symmetry image of
+one of its own accepted instances (L9 TC2; dimension inference as learning meaning from
+positive examples is discussed in \cref{sec:imitation}). \emph{Limiting cases} are
+cross-context regression tests whose validity is Norton's continuity
+(\cref{prop:physics:idealized}(c)). \emph{Order-of-magnitude} checks are export side
+conditions (\cref{thm:physics:chains}). Qualitative checks are one-sided refutations, as in
+qualitative simulation, which is sound but incomplete \citep{kuipers1986qualitative}. The
+closest precedent for the in-model layer is the Andes tutor \citep{vanlehn2005andes}, which
+checks each equation for units and against an author-supplied model, and never checks
+bridges, because the author fixes the idealizations.
+
+\paragraph{What is and is not established.} Contradictory contexts are fine, and
+realizability says which must be consistent. ``True in the context at hand'' is truth on
+the context's filter in every admissible completion, and checking it reduces to kernel steps,
+stable imports, certified bridges and a reading. Reductio in inadequate frameworks needs a
+consistency certificate, and with approximate premises a margin. Untrusted solvers are
+handled for everything except the reading, whose characteristic attack, silent narrowing, no
+internal signal sees. Not established (\cref{sec:open}): any theorem about \emph{learning}
+readings (the deep part, J1); frame realizability under germ semantics; idealizations inside
+suppositions and non-value exports; automated proofs of the regularity constants of
+\cref{thm:physics:lipschitz,thm:physics:monotone}; a checker beyond one worked problem. The
+mini-checker shows that the checks are the right ones; it is not a system.
