@@ -30,13 +30,22 @@ derived per 1000 queries, certainly-invalid accepted steps, and a Goodhart
 curve: in-distribution precision vs. P(a search of budget B proves a false
 goal) as B grows.
 
+Extension (``--retrain``): PRM800K-style adversarial retraining of the
+gradient-boosted verifier on the exploits the prover finds, evaluated on the
+same false goals and on fresh held-out false goals.
+
 Usage:
-    python experiments/exp_adversarial_prover.py               # full run (4 workers, ~10 min)
-    python experiments/exp_adversarial_prover.py --quick       # smoke test (~2 min)
-    python experiments/exp_adversarial_prover.py --report-only # rebuild .md / plots from the JSON
+    python experiments/exp_adversarial_prover.py               # main run (4 workers)
+    python experiments/exp_adversarial_prover.py --retrain     # extension; then rebuilds the report
+    python experiments/exp_adversarial_prover.py --quick       # smoke test (~1 min; --quick --retrain ~1.5 min)
+    python experiments/exp_adversarial_prover.py --report-only # rebuild .md / plots from the JSON files
     python experiments/exp_adversarial_prover.py --resume      # skip search tasks already in the .partial.jsonl
-Writes results/adversarial_prover.json and .md (and *_quick.* for --quick),
-plus PNG plots.  Deterministic given the seeds (OMP_NUM_THREADS is pinned to 1).
+Writes results/adversarial_prover.json, adversarial_prover_retrain.json and
+adversarial_prover.md (``*_quick.*`` for --quick), plus PNG plots.
+Deterministic given the seeds (OMP_NUM_THREADS is pinned to 1).  CPU cost:
+about 35 CPU-minutes for the main run and 15 for the extension (single-core
+equivalents, measured without contention); wall time scales with the number
+of free cores.
 """
 from __future__ import annotations
 
@@ -64,8 +73,9 @@ from cil.baselines import StatisticalVerifier, binary_metrics, build_step_datase
 from cil.domains.algebra import ALGEBRA, TARGET_RULES, HumanConfig, WorldOracle, generate_corpus
 from cil.evaluation import acceptance_rates, make_invalid_steps, make_valid_steps, recovery_report, unsound_active
 from cil.learners import CoherenceConfig, CoherenceRepairer, LGGLearner, LearnedCalculus, prepare_training
-from cil.provers import (FALSE_GOALS, TRUE_GOALS, EdgeChecker, ProposalGenerator, RuleSetVerifier, arith_either,
-                         prove)
+from cil.baselines import LabeledExample
+from cil.provers import (FALSE_GOALS, FRESH_FALSE_GOALS, TRUE_GOALS, EdgeChecker, ProposalGenerator, RuleSetVerifier,
+                         arith_either, prove)
 
 RESULTS = os.path.join(ROOT, "results")
 
@@ -76,15 +86,15 @@ FULL = dict(
     n_fallacy_train=300,         # fallacy-instance negatives for the statistical baselines
     n_fallacy_heldout=200,
     noise=dict(noise_rate=0.05, fallacy_rate=0.3),
-    b_true=3000,                 # verifier-query budget per TRUE goal
-    b_false=4000,                # verifier-query budget per FALSE goal
-    stat_models={"gboost": ["t0.5", "p0.95", "p0.99", "p0.999", "p1.0"],
-                 "forest": ["t0.5", "p0.95", "p0.99", "p1.0"],
-                 "logreg": ["t0.5", "p0.95", "p0.99", "p1.0"]},
+    b_true=1500,                 # verifier-query budget per TRUE goal (the target calculus needs <= ~1100)
+    b_false=3000,                # verifier-query budget per FALSE goal
+    stat_models={"gboost": ["t0.5", "p0.9", "p0.95", "p0.99", "p1.0"],
+                 "forest": ["t0.5", "p0.99", "p1.0"],
+                 "logreg": ["t0.5", "p0.95", "p0.99"]},
     rule_verifiers=["target", "lgg_pos", "lgg_ms", "lgg_ms_clean", "lgg_coherence", "lgg_world_bag",
                     "lgg_world_step"],
     heldout_eval_n=300,
-    checkpoints=[1, 3, 10, 30, 100, 300, 1000, 2000, 3000, 4000],
+    checkpoints=[1, 3, 10, 30, 100, 300, 1000, 2000, 3000],
 )
 QUICK = dict(FULL, seeds=[0], n_train=150, n_heldout=100, n_fallacy_train=100, n_fallacy_heldout=60,
              b_true=800, b_false=1000, heldout_eval_n=60,
@@ -121,7 +131,7 @@ def corpus_steps(N: int, noisy: bool, seed: int):
     return prepare_training(generate_corpus(N, cfg, seed=seed), ALGEBRA)
 
 
-def build_data(seed: int):
+def build_data(seed: int, with_eval: bool = True):
     """Labelled training set and in-distribution held-out set (split into
     calibration / test halves by derivation parity) for one seed."""
     t0 = time.time()
@@ -133,10 +143,10 @@ def build_data(seed: int):
                               n_fallacy=CFG["n_fallacy_heldout"])
     cal = [e for e in held if e.group % 2 == 0]
     test = [e for e in held if e.group % 2 != 0]
-    return seed, {"train": train, "cal": cal, "test": test, "seconds": round(time.time() - t0, 1)}
+    return seed, {"train": train, "cal": cal, "test": test, "heldout_eval": eval_heldout(seed) if with_eval else None,
+                  "seconds": round(time.time() - t0, 1)}
 
 
-@lru_cache(maxsize=4)
 def eval_heldout(seed: int):
     """The held-out sets of exp_algebra_learning (synthetic valid / invalid steps, ID and OOD)."""
     n = CFG["heldout_eval_n"]
@@ -191,7 +201,7 @@ def train_stat(args):
     out["auc_test"] = roc_auc(sc_test, y_test)
     out["n_cal"], out["n_test"] = len(cal), len(test)
     out["thresholds"] = {}
-    H = eval_heldout(seed)
+    H = d["heldout_eval"]
     hscores = {k: v.score_batch([(s.before, s.after, s.facts) for s in steps]) for k, steps in H.items()}
     for name, tau in taus.items():
         m = binary_metrics(sc_test, y_test, tau)
@@ -314,8 +324,13 @@ def build_search_tasks():
         for name in CFG["rule_verifiers"]:
             tasks.append({"family": "rule", "seed": seed, "verifier": name})
     # expensive tasks first (high thresholds search to the full budget)
-    cost = {"p1.0": 6, "p0.999": 5, "p0.99": 4, "p0.95": 2, "t0.5": 2}
-    tasks.sort(key=lambda t: -(cost.get(t.get("threshold_name"), 3) + (1 if t.get("model") == "gboost" else 0)))
+    def cost(t):
+        if t["family"] != "statistical":
+            return 2 + (1 if t["verifier"] in ("lgg_world_step", "lgg_world_bag", "target", "lgg_ms_clean") else 0)
+        if t["threshold_name"] in ("p1.0", "p0.99") or t["model"] == "logreg":
+            return 10 + (1 if t["model"] == "forest" else 0)
+        return 1
+    tasks.sort(key=lambda t: -cost(t))
     return tasks
 
 
@@ -507,7 +522,7 @@ def make_report(R, quick: bool) -> str:
       "at random and boundary points with Kleene equality; 'x/x = 1' is false because the lhs is undefined at x = 0.")
     P("* **Metrics.**")
     P("  * *Derived false equations*: every term u reached from a root r gives a derived equation r = u. It is "
-      "counted as false when exact evaluation at 8 fixed points refutes it.")
+      "counted as false when exact evaluation at 5 fixed points refutes it.")
     P("  * *Certainly invalid accepted steps*: accepted edges from a node with r = u unrefuted to a node with "
       "r = v refuted (a lower bound on the invalid steps accepted).")
     P("  * *Search precision*: 1 minus the fraction of accepted edges that are certainly invalid. This is an upper "
@@ -743,6 +758,11 @@ def make_report(R, quick: bool) -> str:
                 for e in g["edges"]:
                     P(f"{'✗' if not e['valid'] else ' '} = {e['to']}    [{e['proposal']}; {e['why']}]")
                 P("```\n")
+    # ---------------- extension
+    rpath = os.path.join(RESULTS, f"{R['stem']}_retrain.json")
+    if os.path.exists(rpath):
+        with open(rpath) as f:
+            retrain_section(json.load(f), P)
     # ---------------- goals
     P("## Goals\n")
     P("False goals: " + "; ".join(f"`{g}`" for g in FALSE_GOALS) + ".\n")
@@ -835,8 +855,16 @@ def interpretation(R, A, P):
     if "lgg_ms_clean" in A and "lgg_ms" in A and "lgg_pos" in A:
         P(f"3. **Positive data suffice when they are clean and the guard language is adequate.**")
         P(f"   * `lgg_ms_clean` (most-specific guards, clean corpus) proves {mean('lgg_ms_clean', 'false_proved'):.1f} "
-          f"false and {mean('lgg_ms_clean', 'true_proved'):.1f}/{nT} true goals. This is the conservative "
-          "version-space verifier of theory T1, which is sound by construction in the realizable, noise-free case.")
+          f"false and {mean('lgg_ms_clean', 'true_proved'):.1f}/{nT} true goals. It plays the role of the "
+          "conservative version-space verifier of theory T1, which is sound by construction when the data are "
+          "noise-free and the target is realizable.")
+        resid = sorted({u.split(": ", 1)[-1] for sd in C["seeds"]
+                        for u in R["rule_info"][str(sd)]["lgg_ms_clean"].get("unsound_active", [])})
+        if resid:
+            nres = sum(bool(R["rule_info"][str(sd)]["lgg_ms_clean"].get("unsound_active")) for sd in C["seeds"])
+            P(f"   * Realizability fails at the edges even here. In {nres}/{len(C['seeds'])} seeds an over-specialised "
+              "schema is active whose true guard is outside the guard language, since guards only constrain "
+              "schematic variables: " + ", ".join(f"`{u}`" for u in resid) + ". The prover did not reach it.")
         P(f"   * On the noisy corpus the same learner (`lgg_ms`) proves {mean('lgg_ms', 'false_proved'):.1f} false "
           f"goals. Without guards (`lgg_pos`) it proves {mean('lgg_pos', 'false_proved'):.1f}.")
         P("   * Systematic human errors and noise therefore require negative information: coherence or world feedback.")
@@ -976,6 +1004,8 @@ def make_plots(R, stem):
     def mean(key, f):
         return statistics.mean(s[f] for s in A[key]["per_seed"])
 
+    abbrev = {"gboost": "GB", "forest": "RF", "logreg": "LR"}
+    pts = []        # (x, y, label) for the annotation pass
     for model, col in SERIES.items():
         mk = [k for k in keys if k.startswith(model + "@")]
         if not mk:
@@ -985,14 +1015,27 @@ def make_plots(R, stem):
         ys = [mean(k, "false_proved") for k in mk]
         ax.plot(xs, ys, color=col, linewidth=1.5, marker="o", markersize=7, markeredgecolor=SURF,
                 markeredgewidth=1.5, label=f"{MODEL_LABELS[model]} (thresholds)")
-        for k, x, y in zip(mk, xs, ys):
-            ax.annotate(k.split("@")[1], (x, y), textcoords="offset points", xytext=(5, 4), fontsize=7, color=INK2)
+        pts += [(x, y, f"{abbrev[model]} {k.split('@')[1]}") for k, x, y in zip(mk, xs, ys)]
     rk = [k for k in keys if "@" not in k]
     for k in rk:
         x, y = mean(k, "true_proved"), mean(k, "false_proved")
-        ax.plot([x], [y], marker="D", markersize=7, color=INK if k in ("target", "lgg_world_step", "lgg_world_bag")
-                else MUTED, markeredgecolor=SURF, markeredgewidth=1.5, linestyle="none")
-        ax.annotate(k, (x, y), textcoords="offset points", xytext=(-6, 6), ha="right", fontsize=7, color=INK)
+        ax.plot([x], [y], marker="D", markersize=7, color=INK if y == 0 else MUTED, markeredgecolor=SURF,
+                markeredgewidth=1.5, linestyle="none")
+        pts.append((x, y, k))
+    # merge the labels of (nearly) co-located points
+    clusters = []
+    for x, y, lab in pts:
+        for c in clusters:
+            if abs(c[0] - x) < 1.7 and abs(c[1] - y) < 1.4:
+                c[2].append(lab)
+                break
+        else:
+            clusters.append([x, y, [lab]])
+    for x, y, labs in clusters:
+        left, top = x > 0.75 * nT, y > 0.85 * nF
+        ax.annotate(", ".join(labs) if top else "\n".join(labs), (x, y), textcoords="offset points",
+                    xytext=((-8 if left else 6), (-7 if top else 4)), ha="right" if left else "left",
+                    va="top" if top else "bottom", fontsize=6.5, color=INK2, linespacing=1.1)
     ax.plot([], [], marker="D", color=INK, linestyle="none", label="rule-based verifiers")
     ax.set_xlabel(f"true identities proved (of {nT})  →  productivity", color=INK2, fontsize=9)
     ax.set_ylabel(f"false goals proved (of {nF})  →  unsoundness", color=INK2, fontsize=9)
@@ -1071,15 +1114,170 @@ def run_all(quick: bool, workers: int, resume: bool, stem: str):
     return R
 
 
+# ---------------------------------------------------------------------------
+# Extension: iterated adversarial retraining of the statistical verifier
+# ---------------------------------------------------------------------------
+#
+# PRM800K-style active learning: run the prover, harvest every accepted step
+# that is certainly invalid (an edge from an unrefuted to a refuted derived
+# equation), add the harvested steps (both orientations, oracle-confirmed) to
+# the training negatives, retrain, recalibrate the threshold to the same
+# in-distribution precision, repeat.  Exploits are harvested on FALSE_GOALS
+# only; FRESH_FALSE_GOALS are never used for harvesting (a held-out test of
+# whether the patches generalise).
+
+RETRAIN = dict(seeds=[0, 1], rounds=4, model="gboost", precision="p0.99")
+RETRAIN_QUICK = dict(seeds=[0], rounds=1, model="gboost", precision="p0.99")
+RT = {}            # current verifier for the forked search workers
+
+
+def _rt_goal(args):
+    kind, i, seed, rnd = args
+    goals = {"patch": FALSE_GOALS, "fresh": FRESH_FALSE_GOALS, "true": TRUE_GOALS}[kind]
+    g = goals[i]
+    harvested = [] if kind == "patch" else None
+    budget = CFG["b_true"] if kind == "true" else CFG["b_false"]
+    r = prove(g, EdgeChecker(RT["v"]), ProposalGenerator(), budget, seed=1000 * seed + 100 * (kind == "fresh") + i,
+              truth_seed=12345 + seed, collect_invalid=harvested)
+    return kind, i, {"goal": g.name, "proved": r.proved, "queries": r.queries, "first_false": r.first_false,
+                     "n_derived_false": len(r.derived_false), "invalid_edges_lb": r.invalid_edges}, \
+        [(u, v, g.facts) for u, v in (harvested or [])]
+
+
+def run_retraining(quick: bool, workers: int):
+    rcfg = RETRAIN_QUICK if quick else RETRAIN
+    ctx = mp.get_context("fork")
+    t0 = time.time()
+    out = {"config": dict(rcfg, b_false=CFG["b_false"], b_true=CFG["b_true"], n_train=CFG["n_train"]),
+           "fresh_goals": [str(g) for g in FRESH_FALSE_GOALS], "seeds": {}}
+    for seed in rcfg["seeds"]:
+        _, d = build_data(seed, with_eval=False)
+        conf = WorldOracle(seed=8800 + seed, n_points=20)
+        extra, seen = [], set()
+        rounds = []
+        for rnd in range(rcfg["rounds"] + 1):
+            v = StatisticalVerifier(rcfg["model"], seed=seed, n_hash=512).fit(d["train"] + extra)
+            sc_cal = v.score_batch([(e.before, e.after, e.facts) for e in d["cal"]])
+            sc_test = v.score_batch([(e.before, e.after, e.facts) for e in d["test"]])
+            y_cal, y_test = [e.label for e in d["cal"]], [e.label for e in d["test"]]
+            tau = calibrate_threshold(sc_cal, y_cal, float(rcfg["precision"][1:]))
+            idm = binary_metrics(sc_test, y_test, tau)
+            idm["auc"] = roc_auc(sc_test, y_test)
+            v._cache.clear()
+            v._ecache.clear()
+            RT["v"] = v.with_threshold(tau)
+            tasks = [("patch", i, seed, rnd) for i in range(len(FALSE_GOALS))]
+            tasks += [("fresh", i, seed, rnd) for i in range(len(FRESH_FALSE_GOALS))]
+            tasks += [("true", i, seed, rnd) for i in range(len(TRUE_GOALS))]
+            res = defaultdict(dict)
+            harvest = []
+            with ctx.Pool(workers) as pool:
+                for kind, i, rec, h in pool.imap_unordered(_rt_goal, tasks):
+                    res[kind][i] = rec
+                    harvest += h
+            # oracle-confirmed new negatives (both orientations), deduplicated across rounds
+            added = 0
+            for u, w, F in sorted(harvest, key=lambda x: (str(x[0]), str(x[1]))):
+                if (u, w, F) in seen:
+                    continue
+                seen.add((u, w, F))
+                seen.add((w, u, F))
+                if conf.counterexample(u, w, F, n=20) is None:
+                    continue
+                extra.append(LabeledExample(u, w, F, 0, "exploit", -10 ** 6 - len(extra)))
+                extra.append(LabeledExample(w, u, F, 0, "exploit", -10 ** 6 - len(extra)))
+                added += 2
+            R = {k: [res[k][i] for i in sorted(res[k])] for k in res}
+            rounds.append({
+                "round": rnd, "threshold": tau, "train_size": len(d["train"]) + len(extra) - added,
+                "id": idm, "exploits_harvested": len(harvest), "negatives_added": added,
+                "patch_false_proved": sum(x["proved"] for x in R["patch"]),
+                "fresh_false_proved": sum(x["proved"] for x in R["fresh"]),
+                "true_proved": sum(x["proved"] for x in R["true"]),
+                "derived_false_per_1k": 1000 * sum(x["n_derived_false"] for k in R for x in R[k])
+                / max(1, sum(x["queries"] for k in R for x in R[k])),
+                "goals": R,
+            })
+            print(f"[{time.time() - t0:.0f}s] retrain seed {seed} round {rnd}: tau {tau:.4f}, ID tpr "
+                  f"{idm['tpr']:.3f} fpr {idm['fpr']:.4f}; false proved patch {rounds[-1]['patch_false_proved']}"
+                  f"/{len(FALSE_GOALS)}, fresh {rounds[-1]['fresh_false_proved']}/{len(FRESH_FALSE_GOALS)}, true "
+                  f"{rounds[-1]['true_proved']}/{len(TRUE_GOALS)}; +{added} negatives", flush=True)
+        out["seeds"][str(seed)] = rounds
+    out["seconds"] = round(time.time() - t0, 1)
+    return out
+
+
+def retrain_section(RT_, P):
+    """Report section for the adversarial-retraining extension."""
+    c = RT_["config"]
+    seeds = sorted(RT_["seeds"])
+    nF, nX, nT = len(FALSE_GOALS), len(FRESH_FALSE_GOALS), len(TRUE_GOALS)
+    P("## 7. Extension: patching the statistical verifier with its own exploits\n")
+    P(f"This is PRM800K-style adversarial data collection with the {MODEL_LABELS.get(c['model'], c['model'])} "
+      f"verifier at `{c['precision']}`, over {c['rounds']} rounds and seeds {seeds}. Each round has four steps:")
+    P("1. Run the prover.")
+    P(f"2. Harvest every certainly-invalid accepted step from the searches on the {nF} false goals of the main "
+      "experiment.")
+    P("3. Confirm each harvested step with the oracle and add it to the training negatives in both orientations.")
+    P("4. Retrain the model and recalibrate the threshold to the same in-distribution precision.")
+    P("")
+    P(f"The {nX} *fresh* false goals are never harvested. They test whether the patches generalise: "
+      + "; ".join(f"`{g}`" for g in RT_["fresh_goals"]) + ".\n")
+    P(f"Budgets: {c['b_false']} queries per false goal, {c['b_true']} per true goal. Runtime {RT_['seconds']:.0f} s. "
+      "Columns:")
+    P("* *+neg.*: harvested negatives added after the round.")
+    P("* *false (harvest)*: false goals proved among those used for harvesting.")
+    P("* *false (fresh)*: fresh false goals proved.")
+    P("* *false eq./1k q.*: false equations derived per 1000 queries over all searches of the round.\n")
+    P("| seed | round | train size | τ | ID AUC | ID TPR | ID FPR | false (harvest) | false (fresh) | true proved | false eq./1k q. | +neg. |")
+    P("|---|---|---|---|---|---|---|---|---|---|---|---|")
+    for sd in seeds:
+        for r in RT_["seeds"][sd]:
+            P(f"| {sd} | {r['round']} | {r['train_size']} | {r['threshold']:.4f} | {r['id']['auc']:.4f} | "
+              f"{r['id']['tpr']:.3f} | {r['id']['fpr']:.4f} | {r['patch_false_proved']}/{nF} | "
+              f"{r['fresh_false_proved']}/{nX} | {r['true_proved']}/{nT} | {r['derived_false_per_1k']:.1f} | "
+              f"{r['negatives_added']} |")
+    P("")
+    first = [RT_["seeds"][sd][0] for sd in seeds]
+    last = [RT_["seeds"][sd][-1] for sd in seeds]
+    P("**Reading.** Between the first and the last round, averaged over seeds:")
+    P(f"* false goals proved on the harvested set go from "
+      f"{statistics.mean(r['patch_false_proved'] for r in first):.1f} to "
+      f"{statistics.mean(r['patch_false_proved'] for r in last):.1f};")
+    P(f"* on the fresh set they go from {statistics.mean(r['fresh_false_proved'] for r in first):.1f} to "
+      f"{statistics.mean(r['fresh_false_proved'] for r in last):.1f};")
+    P(f"* true identities proved go from {statistics.mean(r['true_proved'] for r in first):.1f} to "
+      f"{statistics.mean(r['true_proved'] for r in last):.1f};")
+    P(f"* false equations derived per 1000 queries go from "
+      f"{statistics.mean(r['derived_false_per_1k'] for r in first):.1f} to "
+      f"{statistics.mean(r['derived_false_per_1k'] for r in last):.1f}.")
+    P("")
+    P("Each patch removes the exploits that were found. Whether the prover finds new ones is the question the "
+      "rounds answer. Compare the conservative calculus, which needs a single counterexample per unsound schema "
+      "(section 5).\n")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--quick", action="store_true")
     ap.add_argument("--report-only", action="store_true")
     ap.add_argument("--resume", action="store_true")
     ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--retrain", action="store_true",
+                    help="run only the adversarial-retraining extension (writes <stem>_retrain.json), then rebuild "
+                         "the report from the existing main JSON if there is one")
     args = ap.parse_args()
     stem = "adversarial_prover_quick" if args.quick else "adversarial_prover"
     os.makedirs(RESULTS, exist_ok=True)
+    if args.retrain:
+        CFG.update(QUICK if args.quick else FULL)
+        RT_ = run_retraining(args.quick, args.workers)
+        with open(os.path.join(RESULTS, f"{stem}_retrain.json"), "w") as f:
+            json.dump(RT_, f, indent=1)
+        print(f"wrote results/{stem}_retrain.json")
+        if not os.path.exists(os.path.join(RESULTS, f"{stem}.json")):
+            return
+        args.report_only = True
     if args.report_only:
         with open(os.path.join(RESULTS, f"{stem}.json")) as f:
             R = json.load(f)

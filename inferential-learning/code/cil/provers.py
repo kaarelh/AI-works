@@ -50,7 +50,7 @@ from .rules import RewriteRule, diff_chain, guard_satisfied
 from .terms import App, Term, atoms, match_tuple, parse, replace, subst, subterm, subterms, variables
 
 __all__ = [
-    "Goal", "FALSE_GOALS", "TRUE_GOALS", "RuleSetVerifier", "EdgeChecker", "ProposalGenerator", "arith_either",
+    "Goal", "FALSE_GOALS", "TRUE_GOALS", "FRESH_FALSE_GOALS", "RuleSetVerifier", "EdgeChecker", "ProposalGenerator", "arith_either",
     "SearchResult", "prove", "check_proof", "proposal_rules",
 ]
 
@@ -352,6 +352,24 @@ TRUE_GOALS: List[Goal] = [
 ]
 
 
+# Fresh false goals, never used to harvest exploits (held out in the
+# adversarial-retraining experiment).
+FRESH_FALSE_GOALS: List[Goal] = [
+    _g("drop_summand", "x + y", "x"),
+    _g("add_vs_mul2", "2*x", "x + 2"),
+    _g("sq_vs_double", "x^2", "2*x"),
+    _g("div_comm", "x/y", "y/x"),
+    _g("sqrt_id", "sqrt(x)", "x"),
+    _g("mulpow_drop", "(x*y)^2", "x^2*y"),
+    _g("sub_add", "x - (y + z)", "x - y + z"),
+    _g("negmul", "-(x*y)", "(-x)*(-y)"),
+    _g("recip_add", "1/(x + y)", "1/x + 1/y"),
+    _g("two_eq_three", "2", "3"),
+    _g("y_eq_y_minus_1", "y", "y - 1"),
+    _g("cancel_noguard_y", "(y + 1)/(y + 1)", "1", note="guard dropped (y = -1)"),
+]
+
+
 # ---------------------------------------------------------------------------
 # Search
 # ---------------------------------------------------------------------------
@@ -369,7 +387,7 @@ class _Truth:
     """Refutes derived equations ``root = u`` at fixed sample points (exact
     rational evaluation, Kleene equality); one-sided: a refutation is certain."""
 
-    def __init__(self, roots: Sequence[Term], facts, seed: int, n_points: int = 8):
+    def __init__(self, roots: Sequence[Term], facts, seed: int, n_points: int = 5):
         names = sorted(set(alg.ATOMS) | {a for r in roots for a in atoms(r)})
         orc = alg.WorldOracle(seed=seed, n_points=n_points)
         self.points = orc.sample_points(names, facts, n_points)
@@ -420,7 +438,7 @@ class SearchResult:
 
 def prove(goal: Goal, checker: EdgeChecker, proposer: ProposalGenerator, budget: int, seed: int = 0,
           max_size: Optional[int] = None, depth_weight: float = 0.5, track_false: bool = True,
-          truth_seed: int = 12345) -> SearchResult:
+          truth_seed: int = 12345, collect_invalid: Optional[list] = None) -> SearchResult:
     """Bidirectional best-first search for a proof of ``goal`` (see module doc).
 
     Node priority on each side: subterm-multiset distance to the *other*
@@ -428,7 +446,9 @@ def prove(goal: Goal, checker: EdgeChecker, proposer: ProposalGenerator, budget:
     with the better best node is expanded next.  All candidates of an
     expansion are checked in one batch (each counts as one query); the search
     stops when the trees meet or the budget is spent.  Terms larger than
-    ``max_size`` (default ``2 * max(|lhs|, |rhs|) + 12``) are not proposed."""
+    ``max_size`` (default ``2 * max(|lhs|, |rhs|) + 12``) are not proposed.
+    If ``collect_invalid`` is a list, every certainly-invalid accepted edge
+    ``(u, v)`` is appended to it (used for adversarial retraining)."""
     rng = random.Random(seed)
     roots = [goal.lhs, goal.rhs]
     facts = goal.facts
@@ -486,6 +506,8 @@ def prove(goal: Goal, checker: EdgeChecker, proposer: ProposalGenerator, budget:
                     res.first_false = qi
                 if not truth.refuted(side, u):
                     res.invalid_edges += 1
+                    if collect_invalid is not None:
+                        collect_invalid.append((u, v))
             if v in parent[other]:
                 res.proved = True
                 res.queries = qi

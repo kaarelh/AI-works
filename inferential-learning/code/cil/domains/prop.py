@@ -512,15 +512,15 @@ class SeqRule:
         return match(mine, other.canonical().term()) is not None
 
     def guard_candidates(self) -> List[Term]:
-        """Patterns available to the guard language: the non-trivial formula
-        patterns occurring in the rule (subterms of succedents and explicit
-        extra assumptions that contain a metavariable), smallest first."""
+        """Patterns available to the guard language: the formula patterns
+        occurring in the rule (subterms of succedents and explicit extra
+        assumptions, other than bot), smallest first."""
         fs = []
         for e, a in self.prems + (self.concl,):
             fs.append(a)
             if type(e) is App:
                 fs.extend(e.args)
-        out = {u for u in subformulas(fs) if not u.ground and not (type(u) is App and u.head == "ctx")}
+        out = {u for u in subformulas(fs) if u != BOT and not (type(u) is App and u.head == "ctx")}
         return sorted(out, key=fkey)
 
     def with_guard(self, g: MemGuard, name: Optional[str] = None) -> "SeqRule":

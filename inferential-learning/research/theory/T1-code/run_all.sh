@@ -20,3 +20,13 @@ echo "## noise: collapse, trimming, systematic fallacy (Prop 6.1, Thm 6.2, Cor 6
 python3 noise.py
 echo "## Ville tightness (Prop 4.3)"
 python3 ville2.py
+echo "## added during verification"
+echo "## Conj 3.8 tight at k=2: graphic matroid flats M(K_{h+1}) give C(h+1,2)"
+python3 graphic.py
+echo "## Remark after Thm 5.4: k=k'=2 identification despite zeta=0"
+python3 union_remark.py
+echo "## Thm 4.2(a) needs noise unforeseeable by the prover"
+python3 prescient.py
+echo "## (slow) python3 thm31b_counterexample.py  -- conditional acceptance 1 at a history of probability eps"
+echo "## Thm 3.7(i) explicit sequences; Prop 3.5 Bell(n) forced escalations"
+python3 checks37.py

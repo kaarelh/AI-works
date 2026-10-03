@@ -154,6 +154,14 @@ def _abstract_core(core: Term) -> Term:
     return App("step", tuple(seqs))
 
 
+def abstract_groups(cores: Sequence[Term]) -> List[List[int]]:
+    """Partition core indices by their shared-subterm abstraction."""
+    g: Dict[Term, List[int]] = {}
+    for i, c in enumerate(cores):
+        g.setdefault(_abstract_core(c), []).append(i)
+    return [g[k] for k in sorted(g, key=str)]
+
+
 def bucket_key(h: SeqTrainStep, mode: str):
     if mode == "tag":
         return ("tag", h.tag)
@@ -287,8 +295,9 @@ def _merge_cost(A: "_Cl", B: "_Cl", sw: float, beta: float):
     return g, T, cost
 
 
-def mdl_cluster_seq(cores: Sequence[Term], schema_weight: float = 1.0, beta: float = 2.0, full_limit: int = 160,
-                    gen_support: int = 0) -> List[Tuple[Term, List[int]]]:
+def mdl_cluster_seq(cores: Sequence[Term], schema_weight: float = 1.0, beta: float = 0.0, full_limit: int = 160,
+                    gen_support: int = 0, groups: Optional[Sequence[Sequence[int]]] = None
+                    ) -> List[Tuple[Term, List[int]]]:
     """MDL agglomerative anti-unification of step cores (one unit of weight per
     distinct core).  Two-part code of a cluster:
 
@@ -299,37 +308,31 @@ def mdl_cluster_seq(cores: Sequence[Term], schema_weight: float = 1.0, beta: flo
     captures *shared* structure, so unrelated (noise) cores of the same skeleton
     stay apart.  Merges are greedy best-first while they reduce the total code
     length; ``gen_support > 0`` adds the stage-2 generalisation of clusters that
-    each have at least that many members."""
+    each have at least that many members.
+
+    ``groups`` (a partition of the core indices) makes the clustering
+    hierarchical: each group is clustered first, then the resulting clusters
+    are merged with exact cluster-level costs.  This avoids the order dependence
+    of the sequential pass used for large groups (more than ``full_limit``
+    cores), which can otherwise absorb cores of a different shape into an
+    early, still small cluster."""
     import heapq
+    if groups is not None:
+        start = []
+        nxt = 0
+        for g in groups:
+            sub = mdl_cluster_seq([cores[i] for i in g], schema_weight, beta, full_limit, 0, None)
+            for schema, mem in sub:
+                members = [g[j] for j in mem]
+                c = _Cl(schema, members, len(members), {}, 0.0, nxt)
+                c.T, c.cost = _cluster_T(schema, [cores[i] for i in members], schema_weight, beta)
+                start.append(c)
+                nxt += 1
+        return _finish(_agglomerate(start, schema_weight, beta), gen_support, schema_weight, beta)
     cl = [_Cl(c, [i], 1, {}, schema_weight * c.size, i) for i, c in enumerate(cores)]
 
     def agglomerate(clusters):
-        alive = {c.cid: c for c in clusters}
-        nxt = max(alive) + 1 if alive else 0
-        heap = []
-        ids = sorted(alive)
-        for a in range(len(ids)):
-            A = alive[ids[a]]
-            for b in range(a + 1, len(ids)):
-                B = alive[ids[b]]
-                g, T, cost = _merge_cost(A, B, schema_weight, beta)
-                d = cost - A.cost - B.cost
-                if d < 0:
-                    heapq.heappush(heap, (d, A.cid, B.cid, g, T, cost))
-        while heap:
-            d, ia, ib, g, T, cost = heapq.heappop(heap)
-            if ia not in alive or ib not in alive:
-                continue
-            A, B = alive.pop(ia), alive.pop(ib)
-            C = _Cl(g, A.members + B.members, A.M + B.M, T, cost, nxt)
-            nxt += 1
-            for D in sorted(alive.values(), key=lambda c: c.cid):
-                g2, T2, c2 = _merge_cost(C, D, schema_weight, beta)
-                d2 = c2 - C.cost - D.cost
-                if d2 < 0:
-                    heapq.heappush(heap, (d2, D.cid, C.cid, g2, T2, c2))
-            alive[C.cid] = C
-        return [alive[k] for k in sorted(alive)]
+        return _agglomerate(clusters, schema_weight, beta)
 
     if len(cl) > full_limit:
         order = sorted(range(len(cl)), key=lambda i: (cores[i].size, i))
@@ -349,7 +352,54 @@ def mdl_cluster_seq(cores: Sequence[Term], schema_weight: float = 1.0, beta: flo
                 D = seq[j]
                 seq[j] = _Cl(g, D.members + c.members, D.M + c.M, T, cost, D.cid)
         cl = seq
-    final = agglomerate(cl)
+    return _finish(agglomerate(cl), gen_support, schema_weight, beta)
+
+
+def _cluster_T(schema: Term, members: Sequence[Term], sw: float, beta: float):
+    """Exact (T, cost) of a cluster from its member cores."""
+    from .terms import nonvar_size
+    T: Dict[str, float] = {}
+    for c in members:
+        sg = match(schema, c) or {}
+        for v, t in sg.items():
+            T[v] = T.get(v, 0.0) + t.size
+    vs = set(variables(schema))
+    for v in vs:
+        T.setdefault(v, 0.0)
+    return T, sw * schema.size + sum(T.values()) + beta * len(members) * len(vs)
+
+
+def _agglomerate(clusters, schema_weight, beta):
+    import heapq
+    alive = {c.cid: c for c in clusters}
+    nxt = max(alive) + 1 if alive else 0
+    heap = []
+    ids = sorted(alive)
+    for a in range(len(ids)):
+        A = alive[ids[a]]
+        for b in range(a + 1, len(ids)):
+            B = alive[ids[b]]
+            g, T, cost = _merge_cost(A, B, schema_weight, beta)
+            d = cost - A.cost - B.cost
+            if d < 0:
+                heapq.heappush(heap, (d, A.cid, B.cid, g, T, cost))
+    while heap:
+        d, ia, ib, g, T, cost = heapq.heappop(heap)
+        if ia not in alive or ib not in alive:
+            continue
+        A, B = alive.pop(ia), alive.pop(ib)
+        C = _Cl(g, A.members + B.members, A.M + B.M, T, cost, nxt)
+        nxt += 1
+        for D in sorted(alive.values(), key=lambda c: c.cid):
+            g2, T2, c2 = _merge_cost(C, D, schema_weight, beta)
+            d2 = c2 - C.cost - D.cost
+            if d2 < 0:
+                heapq.heappush(heap, (d2, D.cid, C.cid, g2, T2, c2))
+        alive[C.cid] = C
+    return [alive[k] for k in sorted(alive)]
+
+
+def _finish(final, gen_support, schema_weight, beta):
     if gen_support:
         nxt = max((c.cid for c in final), default=0) + 1
         while True:
@@ -389,7 +439,7 @@ class SeqLearner:
     def __init__(self, key_mode: str = "tag", cluster: str = "mdl", gen_support: int = 0,
                  guard_mode: str = "most_specific", guard_tol: float = 0.1, m: int = 2,
                  schema_weight: float = 1.0, full_limit: int = 160, weigh_tokens: bool = False,
-                 beta: float = 2.0):
+                 beta: float = 0.0):
         self.weigh_tokens = weigh_tokens
         self.beta = beta
         self.key_mode = key_mode
@@ -416,7 +466,8 @@ class SeqLearner:
             res0 = mdl_cluster([(c, OK) for c in cores], mults, self.schema_weight, self.full_limit, self.gen_support)
             res = [(l, mem) for (l, _), mem in res0]
         else:
-            res = mdl_cluster_seq(cores, self.schema_weight, self.beta, self.full_limit, self.gen_support)
+            res = mdl_cluster_seq(cores, self.schema_weight, self.beta, self.full_limit, self.gen_support,
+                                  groups=abstract_groups(cores))
         sch = [l for l, _ in res]
         sizes = [sum(mults[i] for i in mem) for _, mem in res]
         assign: Dict[int, List[int]] = defaultdict(list)
@@ -492,12 +543,19 @@ class SeqLearner:
 # ---------------------------------------------------------------------------
 
 
+SET_BASIS = (EMPTY_CTX, App("ctx", (BOT,)))
+
+
 def post_probes(rule: SeqRule, rng: random.Random, max_probes: int = 8, basis=(BOT, TOP)) -> List[dict]:
-    """Instantiations of the rule's formula metavariables by the closed basis
-    {bot, ~bot} (all combinations if few, else a random sample that always
-    contains all-bot and all-top); set metavariables become empty."""
+    """Instantiations of the rule's metavariables by closed values: formula
+    metavariables range over {bot, ~bot}, set metavariables over {{}, {bot}}
+    (the two truth values, as in the proof of Post-completeness).  All
+    combinations if few, else a random sample that always contains the all-first
+    and all-last combinations."""
     fv = rule.formula_vars()
-    combos = list(itertools.product(range(len(basis)), repeat=len(fv)))
+    sv = rule.set_vars()
+    sizes = [len(basis)] * len(fv) + [len(SET_BASIS)] * len(sv)
+    combos = list(itertools.product(*[range(n) for n in sizes]))
     if len(combos) > max_probes:
         keep = {combos[0], combos[-1]}
         rest = [c for c in combos if c not in keep]
@@ -505,9 +563,9 @@ def post_probes(rule: SeqRule, rng: random.Random, max_probes: int = 8, basis=(B
         combos = sorted(keep) + rest[:max_probes - 2]
     out = []
     for c in combos:
-        s = {v: basis[i] for v, i in zip(fv, c)}
-        for v in rule.set_vars():
-            s[v] = EMPTY_CTX
+        s = {v: basis[i] for v, i in zip(fv, c[:len(fv)])}
+        for v, i in zip(sv, c[len(fv):]):
+            s[v] = SET_BASIS[i]
         out.append(s)
     return out
 
@@ -517,11 +575,13 @@ def _inst_seq(e, a, sigma, G) -> Seq:
     return Seq(G | set(E), subst(a, sigma))
 
 
-def run_probe(prover: Prover, rid, rule: SeqRule, sigma: dict, budget: int) -> Optional[ProofNode]:
-    """Prove the instantiated premises, then try to derive |- bot using the
-    instantiated conclusion (added as a lemma).  The rule's guard is *assumed*:
-    its instance is put into the context of the probe."""
-    G = frozenset(subst(p, sigma) for p in rule.guard.pats)
+def run_probe(prover: Prover, rid, rule: SeqRule, sigma: dict, budget: int,
+              ctx: FrozenSet[Term] = frozenset()) -> Optional[ProofNode]:
+    """Prove the instantiated premises, then try to derive ``ctx |- bot`` using
+    the instantiated conclusion (added as a lemma).  The rule's guard is
+    *assumed*: its instance is put into the context of the probe.  ``ctx`` is a
+    designated coherent context (needed for rules that mention atoms)."""
+    G = frozenset(subst(p, sigma) for p in rule.guard.pats) | ctx
     proofs = []
     for e, a in rule.prems:
         p = _inst_seq(e, a, sigma, G)
@@ -532,7 +592,7 @@ def run_probe(prover: Prover, rid, rule: SeqRule, sigma: dict, budget: int) -> O
     concl = _inst_seq(rule.concl[0], rule.concl[1], sigma, G)
     if concl not in prover.success:
         prover.add_lemma(ProofNode(concl, rid, proofs, sigma))
-    return prover.prove(Seq((), BOT), extra_pool=list(concl.ctx) + [concl.succ], budget=budget)
+    return prover.prove(Seq(ctx, BOT), extra_pool=list(concl.ctx) + [concl.succ], budget=budget)
 
 
 def coherence_search(rules: List[Tuple[object, SeqRule]], focus: Sequence[object], designated: Sequence[FrozenSet],
@@ -546,10 +606,16 @@ def coherence_search(rules: List[Tuple[object, SeqRule]], focus: Sequence[object
     bags = []
     for rid in focus:
         rule = rmap[rid]
-        for sigma in post_probes(rule, rng, max_probes):
-            node = run_probe(pr, rid, rule, sigma, probe_budget)
-            if node is not None:
-                bags.append((node, ("probe", rid, sigma)))
+        ctxs = [frozenset()] + ([G for G in designated if G] if rule.constants() else [])
+        done = False
+        for G in ctxs:
+            for sigma in post_probes(rule, rng, max_probes):
+                node = run_probe(pr, rid, rule, sigma, probe_budget, G)
+                if node is not None:
+                    bags.append((node, ("probe", rid, sigma, G)))
+                    done = True
+                    break
+            if done:
                 break
         if stop_first and bags:
             return bags, pr
@@ -569,7 +635,7 @@ def rerun_source(rules: List[Tuple[object, SeqRule]], source, probe_budget: int,
         rmap = dict(rules)
         if source[1] not in rmap:
             return None
-        return run_probe(pr, source[1], rmap[source[1]], source[2], probe_budget)
+        return run_probe(pr, source[1], rmap[source[1]], source[2], probe_budget, source[3])
     return pr.prove(Seq(source[1], BOT), budget=blind_budget)
 
 
@@ -591,28 +657,43 @@ def proof_instances(node: ProofNode) -> List[Tuple[object, dict, FrozenSet[Term]
     return out
 
 
-def min_weight_hitting_set(bags: Sequence[set], weight: Dict[object, float], max_size: int = 3) -> List:
-    """Exact minimum-weight hitting set among sets of size <= max_size (ties:
-    fewer elements, then smaller ids), greedy beyond."""
-    elems = sorted({e for b in bags for e in b}, key=str)
-    best = None
-    for k in range(1, max_size + 1):
-        for combo in itertools.combinations(elems, k):
-            cs = set(combo)
-            if all(b & cs for b in bags):
-                key = (sum(weight.get(e, 1.0) for e in combo), k, [str(e) for e in combo])
-                if best is None or key < best[0]:
-                    best = (key, list(combo))
-    if best is not None:
-        return best[1]
-    remaining = [set(b) for b in bags]
-    chosen = []
+def min_weight_hitting_set(bags: Sequence[set], weight: Dict[object, float], max_nodes: int = 20000) -> List:
+    """Exact minimum-weight hitting set by branch and bound (branch on the
+    elements of an unhit bag, cheapest first; prune by the incumbent weight).
+    Ties are broken deterministically.  Falls back to the greedy solution if
+    ``max_nodes`` is exceeded."""
+    bags = [frozenset(b) for b in bags if b]
+    if not bags:
+        return []
+    w = lambda e: weight.get(e, 1.0)
+    # greedy incumbent
+    remaining = list(bags)
+    greedy = []
     while remaining:
         cnt = Counter(e for b in remaining for e in b)
-        e = min(cnt, key=lambda x: (weight.get(x, 1.0) / cnt[x], str(x)))
-        chosen.append(e)
+        e = min(cnt, key=lambda x: (w(x) / cnt[x], str(x)))
+        greedy.append(e)
         remaining = [b for b in remaining if e not in b]
-    return chosen
+    best = [sum(w(e) for e in greedy), sorted(greedy, key=str)]
+    nodes = [0]
+
+    def bb(chosen, cw, open_bags):
+        nodes[0] += 1
+        if nodes[0] > max_nodes:
+            return
+        if not open_bags:
+            key = sorted(chosen, key=str)
+            if cw < best[0] - 1e-9 or (abs(cw - best[0]) < 1e-9 and [str(x) for x in key] < [str(x) for x in best[1]]):
+                best[0], best[1] = cw, key
+            return
+        bag = min(open_bags, key=len)
+        for e in sorted(bag, key=lambda x: (w(x), str(x))):
+            if cw + w(e) > best[0] + 1e-9:
+                continue
+            bb(chosen + [e], cw + w(e), [b for b in open_bags if e not in b])
+
+    bb([], 0.0, bags)
+    return best[1]
 
 
 # ---------------------------------------------------------------------------
@@ -626,13 +707,19 @@ class PruneConfig:
 
     designated   coherent contexts certified by the environment (default: the empty
                  context plus ``n_designated`` satisfiable contingent sets)
-    use_world    sparse world feedback on ``n_world`` observed valuations"""
+    use_world    sparse world feedback on ``n_world`` observed valuations
+    weight       blame prior for the hitting set: 'repair' (default) = number of
+                 human steps lost by the rule's cheapest repair that blocks the
+                 incriminated instances (guard / split / delete); 'support' = the
+                 rule's support (equivalent when deletion is the only repair)"""
 
     use_world: bool = False
     n_world: int = 2
     n_designated: int = 4
     designated: Optional[List[FrozenSet[Term]]] = None
-    rounds: int = 8
+    rounds: int = 30
+    weight: str = "repair"
+    hs_iters: int = 6
     blind_budget: int = 1500
     probe_budget: int = 300
     max_depth: int = 10
@@ -647,7 +734,14 @@ class PruneConfig:
 
 class CoherencePruner:
     """Coherence (and optional sparse world feedback) driven repair of a
-    :class:`LearnedSeqCalculus` (modified in place)."""
+    :class:`LearnedSeqCalculus` (modified in place).
+
+    An *incriminated instance* is ``(sigma, Gamma, premises, conclusion)``: a step
+    of a derivation of bottom (or a step refuted by the world).  A *repair* of a
+    rule must block all its incriminated instances: a minimal ``mem`` guard
+    (monster-barring), a split of its cluster by MDL keeping only children that
+    do not license an incriminated instance (undoing an over-generalisation), or
+    deletion.  Each repair loses some human steps; the cheapest one is used."""
 
     def __init__(self, calc: LearnedSeqCalculus, cfg: PruneConfig, learner: Optional[SeqLearner] = None):
         self.calc = calc
@@ -661,14 +755,114 @@ class CoherencePruner:
         self.probed_ok: set = set()
         self.world_ok: set = set()
         self.search_nodes = 0
+        self._verifying = False
+        self._split_cache: Dict[int, Optional[list]] = {}
+        self._kept_cache: Dict[Tuple[int, MemGuard], int] = {}
         self.examples: List[dict] = []
 
     @property
     def queries(self) -> int:
         return self.world.queries if self.world else 0
 
+    # -- repair planning ---------------------------------------------------------
+    def _kept(self, lr: LearnedRule, g: MemGuard) -> int:
+        k = (lr.sid, g)
+        r = self._kept_cache.get(k)
+        if r is None:
+            rule = lr.rule.with_guard(g)
+            r = sum(1 for i in lr.members if self.calc.member_ok(lr, self.calc.steps[i], rule))
+            self._kept_cache[k] = r
+        return r
+
+    def _guard_option(self, lr: LearnedRule, bad) -> Tuple[Optional[MemGuard], int]:
+        """Minimal mem-guard blocking every incriminated instance, keeping the
+        most human members (ties: fewer atoms)."""
+        atoms = [p for p in lr.rule.guard_candidates() if p not in lr.rule.guard.pats]
+        best = None
+        for k in range(1, self.cfg.max_atoms + 1):
+            for combo in itertools.combinations(atoms, k):
+                g = lr.rule.guard & MemGuard(combo)
+                if any(g.holds(b[0], b[1]) for b in bad):
+                    continue
+                kept = self._kept(lr, g)
+                key = (-kept, k, str(g))
+                if best is None or key < best[0]:
+                    best = (key, g, kept)
+        if best is None:
+            return None, 0
+        return best[1], best[2]
+
+    def _split_children(self, lr: LearnedRule) -> Optional[list]:
+        """MDL re-clustering of the rule's members: [(rule, members, n_licensed)]."""
+        if lr.sid in self._split_cache:
+            return self._split_cache[lr.sid]
+        out = None
+        core_map: Dict[Term, List[int]] = {}
+        for i in lr.members:
+            core_map.setdefault(self.calc.steps[i].core, []).append(i)
+        cores = list(core_map)
+        if len(cores) >= 2:
+            beta = self.learner.beta if self.learner is not None else 0.0
+            parts = mdl_cluster_seq(cores, beta=beta, groups=abstract_groups(cores))
+            if len(parts) >= 2:
+                out = []
+                for l, mem in parts:
+                    members = sorted(i for ci in mem for i in core_map[cores[ci]])
+                    rule = SeqRule.from_term(l, TRUE_GUARD)
+                    if self.learner is not None and self.learner.guard_mode == "most_specific":
+                        rule = rule.with_guard(self.learner.most_specific_guard(rule, members, self.calc.steps))
+                    n = sum(1 for i in members
+                            if match_step(rule, self.calc.steps[i].prems, self.calc.steps[i].concl) is not None)
+                    out.append((rule, members, n))
+        self._split_cache[lr.sid] = out
+        return out
+
+    def _plan(self, lr: LearnedRule, bad) -> tuple:
+        """(cost = human steps lost, preference, kind, data) of the cheapest
+        repair that blocks every incriminated instance in ``bad``."""
+        sup = lr.support
+        opts = [(float(sup), 2, "delete", None)]
+        g, kept = self._guard_option(lr, bad)
+        if g is not None:
+            opts.append((float(sup - kept), 0, "guard", (g, kept)))
+        if self.cfg.allow_split:
+            ch = self._split_children(lr)
+            if ch:
+                keep = [c for c in ch if not any(licenses(c[0], b[2], b[3]) is not None for b in bad)]
+                covered = sum(n for _, _, n in keep)
+                opts.append((float(max(sup - covered, 0)), 1, "split", keep))
+        return min(opts, key=lambda o: (o[0], o[1]))
+
+    def blame_weight(self, lr: LearnedRule, bad=()) -> float:
+        """Cost of blaming ``lr`` for the incriminated instances ``bad``."""
+        if self.cfg.weight == "support":
+            return float(max(lr.support, 1))
+        return self._plan(lr, bad)[0] + 0.5 + 1e-3 * lr.support
+
+    def _apply(self, lr: LearnedRule, bad, rnd: int, evidence: str) -> dict:
+        cost, _, kind, data = self._plan(lr, bad)
+        if kind == "guard":
+            g, kept = data
+            lr.rule = lr.rule.with_guard(g)
+            lr.log.append(f"round {rnd}: GUARDED [{g}] ({evidence}; keeps {kept}/{lr.support})")
+            return {"sid": lr.sid, "action": "guard", "guard": str(g), "lost": cost}
+        if kind == "split":
+            kids = []
+            for rule, members, _ in data:
+                sid = len(self.calc.rules)
+                rule = rule.with_guard(rule.guard, name=f"L{sid}")
+                ch = LearnedRule(sid, rule, members, tag=lr.tag, parent=lr.sid, log=[f"split from L{lr.sid}"])
+                self.calc.rules.append(ch)
+                kids.append(sid)
+            lr.status = "split"
+            lr.log.append(f"round {rnd}: SPLIT into {kids} ({evidence}; loses {cost:.0f} steps)")
+            return {"sid": lr.sid, "action": "split", "children": kids, "lost": cost}
+        lr.status = "deleted"
+        lr.log.append(f"round {rnd}: DELETED ({evidence})")
+        return {"sid": lr.sid, "action": "delete", "lost": cost}
+
     # -- world probes -----------------------------------------------------------
-    def _world_probes(self, lr: LearnedRule) -> List[Tuple[dict, FrozenSet, Tuple[Seq, ...], Seq]]:
+    def _world_probes(self, lr: LearnedRule):
         """Instantiate metavariables with literals over one atom (not mentioned by
         the rule) and ask the world whether the instance step is refuted at an
         observed valuation.  Returns the refuted instances."""
@@ -676,7 +870,9 @@ class CoherencePruner:
         a = next(x for x in self.world.atoms[::-1] if x not in rule.constants())
         lits = [App(a), neg(App(a))]
         fv = rule.formula_vars()
-        combos = list(itertools.product(range(2), repeat=len(fv)))
+        sv = rule.set_vars()
+        sizes = [2] * len(fv) + [2] * len(sv)
+        combos = list(itertools.product(*[range(n) for n in sizes]))
         if len(combos) > self.cfg.world_probes:
             keep = {combos[0], combos[-1]}
             rest = [c for c in combos if c not in keep]
@@ -684,9 +880,9 @@ class CoherencePruner:
             combos = sorted(keep) + rest[:self.cfg.world_probes - 2]
         out = []
         for c in combos:
-            s = {v: lits[i] for v, i in zip(fv, c)}
-            for v in rule.set_vars():
-                s[v] = EMPTY_CTX
+            s = {v: lits[i] for v, i in zip(fv, c[:len(fv)])}
+            for v, i in zip(sv, c[len(fv):]):
+                s[v] = SET_BASIS[i]
             G = frozenset(subst(p, s) for p in rule.guard.pats)
             prems = tuple(_inst_seq(e, x, s, G) for e, x in rule.prems)
             concl = _inst_seq(rule.concl[0], rule.concl[1], s, G)
@@ -694,7 +890,7 @@ class CoherencePruner:
                 out.append((s, G, prems, concl))
         return out
 
-    # -- one round ---------------------------------------------------------------
+    # -- coherence search -------------------------------------------------------
     def _search(self):
         cfg = self.cfg
         rules = self.calc.rule_list()
@@ -720,64 +916,14 @@ class CoherencePruner:
                     out.append((n2, src))
         return out
 
-    def _choose_guard(self, lr: LearnedRule, bad: Sequence[Tuple[dict, FrozenSet]]) -> Tuple[Optional[MemGuard], int]:
-        """Minimal mem-guard blocking every incriminated instance, keeping the most
-        human members (ties: fewer atoms)."""
-        atoms = [p for p in lr.rule.guard_candidates() if p not in lr.rule.guard.pats]
-        best = None
-        for k in range(1, self.cfg.max_atoms + 1):
-            for combo in itertools.combinations(atoms, k):
-                g = lr.rule.guard & MemGuard(combo)
-                if not all(not g.holds(s, G) for s, G in bad):
-                    continue
-                r2 = lr.rule.with_guard(g)
-                kept = sum(1 for i in lr.members if self.calc.member_ok(lr, self.calc.steps[i], r2))
-                key = (-kept, k, str(g))
-                if best is None or key < best[0]:
-                    best = (key, g, kept)
-        if best is None:
-            return None, 0
-        return best[1], best[2]
-
-    def _split(self, lr: LearnedRule) -> Optional[List[LearnedRule]]:
-        core_map: Dict[Term, List[int]] = {}
-        for i in lr.members:
-            core_map.setdefault(self.calc.steps[i].core, []).append(i)
-        cores = list(core_map)
-        if len(cores) < 2:
-            return None
-        beta = self.learner.beta if self.learner is not None else 2.0
-        parts = mdl_cluster_seq(cores, beta=beta)
-        if len(parts) < 2:
-            return None
-        children = []
-        for l, mem in parts:
-            sid = len(self.calc.rules)
-            members = sorted(i for ci in mem for i in core_map[cores[ci]])
-            rule = SeqRule.from_term(l, TRUE_GUARD, name=f"L{sid}")
-            if self.learner is not None and self.learner.guard_mode == "most_specific":
-                rule = rule.with_guard(self.learner.most_specific_guard(rule, members, self.calc.steps))
-            ch = LearnedRule(sid, rule, members, tag=lr.tag, parent=lr.sid, log=[f"split from L{lr.sid}"])
-            self.calc.rules.append(ch)
-            children.append(ch)
-        return children
-
-    def _repair(self, lr: LearnedRule, bad, rnd: int, evidence: str) -> dict:
-        g, kept = self._choose_guard(lr, bad)
-        if g is not None and kept >= self.calc.m:
-            old = lr.rule.guard
-            lr.rule = lr.rule.with_guard(g)
-            lr.log.append(f"round {rnd}: GUARDED [{g}] ({evidence}; keeps {kept}/{len(lr.members)})")
-            return {"sid": lr.sid, "action": "guard", "guard": str(g)}
-        if self.cfg.allow_split:
-            ch = self._split(lr)
-            if ch:
-                lr.status = "split"
-                lr.log.append(f"round {rnd}: SPLIT into {[c.sid for c in ch]} ({evidence})")
-                return {"sid": lr.sid, "action": "split", "children": [c.sid for c in ch]}
-        lr.status = "deleted"
-        lr.log.append(f"round {rnd}: DELETED ({evidence})")
-        return {"sid": lr.sid, "action": "delete"}
+    def _world_blame(self, insts, incriminated, evidence) -> set:
+        blamed = set()
+        for rid, s, G, prems, concl in insts:
+            if self.world.step_refuted(prems, concl) is not None:
+                blamed.add(rid)
+                incriminated[rid].append((s, G, prems, concl))
+                evidence.setdefault(rid, "step refuted by the world inside a derivation of bottom")
+        return blamed
 
     def run(self) -> List[dict]:
         cfg = self.cfg
@@ -793,7 +939,7 @@ class CoherencePruner:
                         continue
                     ref = self._world_probes(lr)
                     if ref:
-                        incriminated[lr.sid].extend((s, G) for s, G, _, _ in ref)
+                        incriminated[lr.sid].extend(ref)
                         evidence[lr.sid] = f"{len(ref)} instances refuted by the world"
                         n_world_cex += len(ref)
                     else:
@@ -801,43 +947,75 @@ class CoherencePruner:
             # 2. coherence: derivations of bottom from designated contexts
             bags = self._search()
             bag_sets = []
+            sources = []
             for node, src in bags:
                 insts = proof_instances(node)
                 if len(self.examples) < 3:
                     from .domains.prop import format_proof
                     self.examples.append({"round": rnd, "source": str(src[0]),
                                           "proof": format_proof(node, names={lr.sid: f"L{lr.sid}" for lr in self.calc.rules})})
-                blamed = set()
-                if self.world is not None:
-                    for rid, s, G, prems, concl in insts:
-                        if self.world.step_refuted(prems, concl) is not None:
-                            blamed.add(rid)
-                            incriminated[rid].append((s, G))
-                            evidence.setdefault(rid, "step refuted by the world inside a derivation of bottom")
+                if src not in sources:
+                    sources.append(src)
+                blamed = self._world_blame(insts, incriminated, evidence) if self.world is not None else set()
                 if not blamed:
                     bag_sets.append(({rid for rid, *_ in insts}, insts))
-            # 3. coherence-only blame: minimum weight hitting set (weight = support)
-            hs = []
+            # 3. blame: implicit minimum-weight hitting set -- block the candidate set,
+            #    search again, add any new bag, repeat
+            hs: List[int] = []
+            hs_iters = 0
             if bag_sets:
-                weight = {lr.sid: float(max(lr.support, 1)) for lr in self.calc.rules}
-                hs = min_weight_hitting_set([b for b, _ in bag_sets], weight)
+                rules = self.calc.rule_list()
+                extra_src = [("blind", G) for G in self.designated]
+                while True:
+                    forced = set(incriminated)
+                    open_bags = [(b, insts) for b, insts in bag_sets if not (b & forced)]
+                    inst_of: Dict[int, list] = defaultdict(list)
+                    for b, insts in open_bags:
+                        for rid, s_, G_, p_, c_ in insts:
+                            inst_of[rid].append((s_, G_, p_, c_))
+                    weight = {rid: self.blame_weight(self.calc.by_id(rid), inst_of[rid]) for rid in inst_of}
+                    hs = min_weight_hitting_set([b for b, _ in open_bags], weight) if open_bags else []
+                    if hs_iters >= cfg.hs_iters:
+                        break
+                    hs_iters += 1
+                    blocked = forced | set(hs)
+                    rest = [x for x in rules if x[0] not in blocked]
+                    new = None
+                    for src in sources + [x for x in extra_src if x not in sources]:
+                        n2 = rerun_source(rest, src, cfg.probe_budget, cfg.blind_budget, cfg.max_depth)
+                        if n2 is not None:
+                            new = (n2, src)
+                            break
+                    if new is None:
+                        break
+                    insts = proof_instances(new[0])
+                    blamed = self._world_blame(insts, incriminated, evidence) if self.world is not None else set()
+                    if not blamed:
+                        bag_sets.append(({rid for rid, *_ in insts}, insts))
                 for rid in hs:
                     for b, insts in bag_sets:
                         if rid in b:
-                            incriminated[rid].extend((s, G) for r2, s, G, _, _ in insts if r2 == rid)
+                            incriminated[rid].extend((s_, G_, p_, c_) for r2, s_, G_, p_, c_ in insts if r2 == rid)
                     evidence.setdefault(rid, f"hitting set of {len(bag_sets)} negative bags")
             actions = []
             for sid in sorted(incriminated):
                 lr = self.calc.by_id(sid)
                 if lr.status != "active":
                     continue
-                actions.append(self._repair(lr, incriminated[sid], rnd, evidence.get(sid, "")))
+                actions.append(self._apply(lr, incriminated[sid], rnd, evidence.get(sid, "")))
             self.calc.refresh_support()
             self.history.append({"round": rnd, "bags": len(bags), "bags_hitting_set": len(bag_sets),
-                                 "world_cex": n_world_cex, "hitting_set": hs, "actions": actions,
-                                 "queries": self.queries})
+                                 "hs_iters": hs_iters, "world_cex": n_world_cex, "hitting_set": hs,
+                                 "actions": actions, "queries": self.queries})
             if not bags and not incriminated:
+                if not self._verifying and (self.probed_ok or self.world_ok):
+                    # verification round: budget-limited probe failures are not
+                    # monotone (junk rules widen the search), so re-probe everything
+                    self._verifying = True
+                    self.probed_ok, self.world_ok = set(), set()
+                    continue
                 break
+            self._verifying = False
         return self.history
 
 

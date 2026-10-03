@@ -397,18 +397,21 @@ class StatisticalVerifier:
             return make_pipeline(MaxAbsScaler(), LogisticRegression(C=1.0, max_iter=5000))
         if model == "gboost":
             from sklearn.ensemble import HistGradientBoostingClassifier
-            return HistGradientBoostingClassifier(max_iter=300, learning_rate=0.1, max_leaf_nodes=31,
+            return HistGradientBoostingClassifier(max_iter=200, learning_rate=0.1, max_leaf_nodes=31,
                                                   early_stopping=False, random_state=seed)
         if model == "forest":
             from sklearn.ensemble import RandomForestClassifier
-            return RandomForestClassifier(n_estimators=200, min_samples_leaf=1, random_state=seed, n_jobs=1)
+            return RandomForestClassifier(n_estimators=50, min_samples_leaf=2, random_state=seed, n_jobs=1)
         raise ValueError(model)
 
-    def _matrix(self, steps):
-        X = self.feat.transform(steps)
-        if self.model_name == "gboost":
+    def _dense(self, X):
+        """Tree models predict much faster on dense float32 input."""
+        if self.model_name in ("gboost", "forest"):
             return X.toarray().astype(np.float32)
         return X
+
+    def _matrix(self, steps):
+        return self._dense(self.feat.transform(steps))
 
     def fit(self, examples: Sequence[LabeledExample]) -> "StatisticalVerifier":
         X = self._matrix([(e.before, e.after, e.facts) for e in examples])
@@ -434,9 +437,7 @@ class StatisticalVerifier:
         facts = frozenset(facts)
         todo = [v for v in dict.fromkeys(vs) if (u, v, facts) not in self._ecache]
         if todo:
-            X = self.feat.transform_both([(u, v, facts) for v in todo])
-            if self.model_name == "gboost":
-                X = X.toarray().astype(np.float32)
+            X = self._dense(self.feat.transform_both([(u, v, facts) for v in todo]))
             p = self.clf.predict_proba(X)[:, 1]
             for k, v in enumerate(todo):
                 e = float(max(p[2 * k], p[2 * k + 1]))

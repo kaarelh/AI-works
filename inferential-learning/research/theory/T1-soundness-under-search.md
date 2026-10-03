@@ -16,9 +16,9 @@ The user's architecture has three parts: a learned relation $\hat V$ ("this step
 
 1. **Soundness is a uniform property, and search makes it the only one that matters.**
    * A reasoner is sound iff every accepted step is a derivable step (Lemma 1.1).
-   * Average-case accuracy says nothing about this. For **every** distribution $Q$ on steps and every $\varepsilon>0$, there is a rule set built from pure schemas with $Q$-error $<\varepsilon$ that derives every formula. It needs one bad step, a tonk-like padding rule $A\vee(\top\wedge\cdots\wedge\top)\vdash A$ (Thm 2.1).
-   * Any PAC learner can be modified into one that is still PAC with the same rates but whose every output trivializes the reasoner (Cor 2.2).
-   * In classical propositional logic, every unsound *schema* trivializes, by Post completeness (Prop 2.3).
+   * Average-case accuracy says nothing about this. For **every** distribution $Q$ on steps and every $\varepsilon>0$, there is a rule set with $Q$-error $<\varepsilon$ that derives every formula. It consists of finitely many pure schemas if $R^*$ does. It needs one bad step, a tonk-like padding rule $A\vee(\top\wedge\cdots\wedge\top)\vdash A$ (Thm 2.1).
+   * Any PAC learner can be modified into one that is still PAC, with the same rates up to $O(\varepsilon^{-1}\log\delta^{-1})$ extra samples, but whose every output trivializes the reasoner (Cor 2.2).
+   * In classical propositional logic, every unsound *pure* schema (one whose only non-logical symbols are metavariables) trivializes, by Post completeness (Prop 2.3). A schema that mentions specific atoms can be unsound without trivializing. Replacing its atoms by metavariables restores the dichotomy, and in CPC this replacement preserves soundness.
    * A simplicity (MDL/Occam) learner on positive data chooses the universal schema "anything from anything" (Prop 2.4).
 2. **Version-space verification is sound by construction. Its price is exactly a "positive elasticity".**
    * The verifier accepts a step iff every hypothesis consistent with the data accepts it. This is sound against all provers and optimal among sound verifiers (Thm 3.1).
@@ -26,27 +26,28 @@ The user's architecture has three parts: a learned relation $\hat V$ ("this step
    * Computed values:
      * a **single schema** learned by anti-unification costs at most $1+\mu(t_1)-\mu(\sigma^*)\le N+1$ escalations, which is tight. Here $\mu=$ size minus number of distinct variables and $N$ is the step size (Thm 3.4).
      * **$k$ tagged rules** cost the sum of the per-rule costs (Thm 3.6).
-     * **untagged unions of $k$ schemas** cost at least $\lfloor (N-1)/k\rfloor^k$, even when the truth is a single rule. The cost is at most $(k^{N+1}-1)/(k-1)$. For flat schemas it is $\Theta(n^k)$ (Thm 3.7). I conjecture $\binom{h+k-1}{k}$ for any intersection-closed class of height $h$ (Conj 3.8).
+     * **untagged unions of $k$ schemas** cost at least $\lfloor (N-1)/k\rfloor^k$, even when the truth is a single rule. The cost is at most $(k^{N+1}-1)/(k-1)$. For *linear* flat schemas (subcubes of $\{a,b\}^n$, $n\ge k$) it is $\Theta(n^k)$. With repeated metavariables it lies between $\Omega(n^k)$ and $O(n^{2k})$ (Thm 3.7).
+     * I conjecture $\binom{h+k-1}{k}$ for any intersection-closed class of height $h$ (Conj 3.8). If true, this is tight at $k=2$ (graphic matroids). It is proved for $(k,h)=(2,3)$.
      * **unstructured** classes cost $|H|-1$, tight (Thm 3.9).
-   * Certifying *invalidity* as well (two-sided KWIK) costs at least $\mathrm{Bell}(N-1)$ for a single schema (Prop 3.5). It is never needed for soundness.
+   * Certifying *invalidity* as well (two-sided KWIK) costs at least $\mathrm{Bell}(N-1)$ for a single schema, over a signature that grows with $N$ (Prop 3.5). Over a fixed finite signature it costs at most $2^{O(N)}$. It is never needed for soundness.
 3. **The Bayesian-conservative verifier** accepts iff the posterior probability of invalidity is $<\delta$.
    * With the version-space posterior, $\delta\le w^*$ gives deterministic soundness, and this threshold is tight (Thm 4.1).
-   * With a well-specified likelihood (noisy human data, noisy oracle), take $\delta\le w^*\delta'$. Then **the probability that any invalid step is ever accepted, at any time, for any adaptive prover, is at most $\delta'$**. The constant 1 is tight (Thm 4.2, Prop 4.3). With a deterministic oracle, the good event does not depend on the prover.
+   * With a well-specified likelihood (noisy human data, noisy oracle), take $\delta\le w^*\delta'$. Then **the probability that any invalid step is ever accepted, at any time, for any adaptive prover that cannot foresee the data or the oracle's (fresh) noise, is at most $\delta'$**. This is the prior–posterior-ratio martingale argument of Waudby-Smith & Ramdas (2020). The constant 1 is tight (Thm 4.2, Prop 4.3). With a deterministic oracle, the good event does not depend on the prover, and the prover may know everything.
    * Escalations are at most $\ln(1/(w^*\delta''))/\delta$ (Thm 4.4). Any $\delta'$-sound verifier needs at least $(1-\delta')(1/w^*-1)$ on unstructured classes (Cor 4.5). This is exponential in description length.
    * Combining with the version space gives $\min\{\text{escalation dimension},\ \ln(1/w^*)/\delta\}$ (Cor 4.6).
    * **Structure, not the prior, is what makes sound learned verification affordable.**
 4. **Positive data alone.**
    * The version-space verifier is sound at all times.
-   * It becomes complete iff the target has a finite **anchor**: a finite $T$ such that every hypothesis containing $T$ contains the target (Thm 5.1). This is strictly stronger than Angluin's tell-tale. The two coincide for intersection-closed classes (Prop 5.2).
+   * It becomes complete iff the target has a finite **anchor**: a finite $T$ such that every hypothesis containing $T$ contains the target (Thm 5.1). This is strictly stronger than Angluin's tell-tale. For intersection-closed classes, every nonempty tell-tale is an anchor, so existence of either implies existence of the other (Prop 5.2). The anchor condition is the Lange–Zeugmann condition for strong-monotonic learning.
    * For tagged schemas, exact identification holds with probability $\ge1-\sum_i c_i e^{-N\pi_i\rho_i}$, where $\pi_i$ is a rule's frequency and $\rho_i$ the variability of its instances (Thm 5.3). This is coupon-collector behaviour.
    * For untagged $k$-unions it holds once each rule's instances cannot be covered by $k$ "failure sets", with ε-net sample complexity (Thm 5.4).
    * Exact identification means the verifier accepts *exactly* the human calculus. This gives systematic generalization to derivations of any length and formulas of any size (Cor 5.5).
 5. **Noise.**
    * One wrongly-tagged human step turns the lgg of $\wedge$E into "from anything infer anything" (Prop 6.1).
    * The **trimmed version space** (hypotheses that miss at most $e$ data points) is sound when there are at most $e$ errors. It is complete when every *witness event* of every rule occurs more than $e$ times (Thm 6.2). Under i.i.d. noise this needs witness frequency to exceed error frequency (Thm 6.3).
-   * This is optimal up to a factor of 3. Any positive-data verifier robust to error rate $\alpha$ must refuse every generalization supported by less than $\alpha$ of the data (Thm 6.4).
+   * This is optimal up to a factor of 2, and the factor 2 is tight. Any positive-data verifier robust to error rate $\alpha$ must refuse every generalization supported by less than $\alpha$ of the data (Thm 6.4).
    * **Schema-generated (systematic) errors are indistinguishable from rules at every rate** (Cor 6.5).
-   * Removing them needs negative information. In classical propositional logic, *coherence* (deriving $\bot$ in the empty context) detects every unsound schema (Prop 6.6; see T2 Thm 3.1). In arithmetic it does not.
+   * Removing them needs negative information. In classical propositional logic, *coherence* (deriving $\bot$ in the empty context) detects every unsound *pure* schema. It detects every unsound schema once atoms occurring in schemas are replaced by metavariables (Prop 6.6; see T2 Thm 3.1). Applied directly to a schema that mentions specific atoms, it can miss the error. In arithmetic it does not detect every error.
 
 **Upshot for the user's program.** "Learn inference rules from positive examples" works, provably, for formal math with rule citations. Use anti-unification as the learning algorithm and the version space as the verifier. The result is deterministically sound from the first example and exactly correct after coupon-collector many examples. No negative data or human escalation is needed beyond that. Each bullet is a formal statement below:
 * Losing rule citations (informal steps) costs a polynomial of degree $k$ in escalations.
@@ -74,7 +75,7 @@ $$\forall B\subseteq J:\ \mathrm{Cl}_A(B)\subseteq\mathrm{Cl}_{R^*}(B)\qquad\Lon
 * (⇐) $\mathrm{Cl}_{R^*}$ is monotone and idempotent. Let $(\Pi,j)\in A$ with $\Pi\subseteq \mathrm{Cl}_{R^*}(B)$. Then $j\in\mathrm{Cl}_{R^*}(\Pi)\subseteq\mathrm{Cl}_{R^*}(\mathrm{Cl}_{R^*}(B))=\mathrm{Cl}_{R^*}(B)$. So $\mathrm{Cl}_{R^*}(B)$ is a superset of $B$ that is closed under $A$, and by leastness $\mathrm{Cl}_A(B)\subseteq\mathrm{Cl}_{R^*}(B)$.
 * (⇒) For $(\Pi,j)\in A$: $j\in\mathrm{Cl}_A(\Pi)\subseteq\mathrm{Cl}_{R^*}(\Pi)$. ∎
 
-So a verifier is safe for *arbitrarily long* derivations iff its acceptance region contains no non-derivable step. Conversely, one accepted non-derivable step $(\Pi,j)$ with derivable premises yields a false conclusion. There is no "small error rate" middle ground.
+So a verifier is safe for *arbitrarily long* derivations iff its acceptance region contains no non-derivable step. Conversely, one accepted non-derivable step $(\Pi,j)$ with derivable premises yields a conclusion that is not derivable in $R^*$. There is no "small error rate" middle ground.
 
 Soundness here is **relative to the human calculus**, not to truth. Improving on $R^*$ is the job of coherence and world feedback (T2, T3). In what follows I require the stronger condition $A\subseteq R^*$ (only rule instances are accepted). The version-space verifiers below satisfy it.
 
@@ -91,7 +92,7 @@ It is **0-sound** if $\delta=0$. It is **uniformly $\delta$-sound** if there is 
 
 **Definition 1.3 (escalation cost).**
 * A prover is **honest** if all its queries are in $R^*$.
-* The cost of a run is the number of rounds in which a valid query is not accepted outright (escalated or rejected).
+* The cost of a run is the number of rounds in which a valid query is not accepted outright (escalated or rejected). For a randomized verifier, the cost on a given target and query sequence is the *expected* cost. For 0-sound verifiers this distinction never matters below, because the lower bounds hold almost surely.
 * $\mathrm{Esc}(H\mid P_0)$ is the infimum, over 0-sound verifiers, of the supremum over targets $R^*\in H$ with $R^*\supseteq P_0$ and over honest query sequences, of the cost. Write $\mathrm{Esc}(H)=\mathrm{Esc}(H\mid\emptyset)$.
 
 This cost is one-sided. Invalid queries from a dishonest prover are its own problem: they can be rejected or escalated and charged to the prover. §3.3 shows why this one-sidedness is essential.
@@ -146,32 +147,44 @@ Let $\top^{(j)}$ denote $\top\wedge(\top\wedge\cdots)$ with $j$ conjuncts, and d
 $$T_j:=\{(\{A\vee\top^{(j)}\},A):A\text{ a formula}\}.$$
 
 **Theorem 2.1 (tonk beyond the horizon) [proved].**
-* (i) Every formula $C$ is in $\mathrm{Cl}_{R^*\cup T_j}(\emptyset)$, via a derivation of $j+2$ steps of which exactly one is invalid.
+* (i) Every formula $C$ is in $\mathrm{Cl}_{R^*\cup T_j}(\emptyset)$, via a derivation of $j+2$ steps. Only the last step uses $T_j$, and for non-tautologous $C$ that step is invalid.
 * (ii) For every probability distribution $Q$ on $S$ (over valid steps, invalid steps or both), $Q(T_j)\to0$ as $j\to\infty$.
 
-So for every $Q$ and every $\varepsilon>0$, the hypothesis $R^*\cup T_j$ is a union of finitely many pure schemas, has $Q$-error $<\varepsilon$, and trivializes the reasoner.
+So for every $Q$ and every $\varepsilon>0$, the hypothesis $R^*\cup T_j$ has $Q$-error $<\varepsilon$ and trivializes the reasoner. If $R^*$ is given by finitely many pure schemas, so is $R^*\cup T_j$.
 
 *Proof.*
-* (i) Derive $\top$ ($\top$I), then $\top^{(2)},\dots,\top^{(j)}$ ($j-1$ applications of $\wedge$I). Next derive $C\vee\top^{(j)}$ ($\vee$I$_2$), and finally $C$ ($T_j$). The step from $T_j$ is invalid because $C\vee\top$ is a tautology for every $C$.
+* (i) Derive $\top$ ($\top$I), then $\top^{(2)},\dots,\top^{(j)}$ ($j-1$ applications of $\wedge$I). Next derive $C\vee\top^{(j)}$ ($\vee$I$_2$), and finally $C$ ($T_j$). The premise of the $T_j$ step, $C\vee\top^{(j)}$, is a tautology. So for non-tautologous $C$ the step is unsound, and hence not in $R^*$.
 * (ii) The sets $T_j$ are pairwise disjoint, so $\sum_jQ(T_j)\le1$. ∎
 
-**Corollary 2.2 (PAC learners can be maximally unsound) [proved].** Let $\mathcal L$ be any learner. From a sample $X_1..X_m\sim Q$, let $\mathcal L^+$ output $\mathcal L(X_{1..m})\cup T_{\hat\jmath}$, where $\hat\jmath:=1+\max_i|X_i|$. Then for every $Q$:
+**Corollary 2.2 (PAC learners can be maximally unsound) [proved] (revised after verification).** Let $\mathcal L$ be any learner. From a sample $X_1..X_m\sim Q$, let $\mathcal L^+$ output
+$$\mathcal L(X_{1..m})\ \cup\ T_{\hat\jmath}\ \cup\ \mathrm{inst}(\top\text{I},\wedge\text{I},\vee\text{I}_2),\qquad\hat\jmath:=1+\max_i|X_i|.$$
+Then for every $Q$:
 $$\Pr\big[Q(T_{\hat\jmath})>\varepsilon\big]\le(1-\varepsilon)^m.$$
-So $\mathrm{err}_Q(\mathcal L^+)\le\mathrm{err}_Q(\mathcal L)+\varepsilon$ with probability $\ge1-(1-\varepsilon)^m$ more. If $\mathcal L$ is a PAC learner, so is $\mathcal L^+$, with $O(\varepsilon^{-1}\log\delta^{-1})$ extra samples. But **every** output of $\mathcal L^+$ makes every formula derivable.
+The three added schemas lie in $R^*$, so adding them never increases the error $Q(h\,\Delta\,R^*)$. Since $\mathrm{err}_Q(\mathcal L^+)\le\mathrm{err}_Q(\mathcal L)+Q(T_{\hat\jmath})$, we get $\mathrm{err}_Q(\mathcal L^+)\le\mathrm{err}_Q(\mathcal L)+\varepsilon$ with probability $\ge1-(1-\varepsilon)^m$. If $\mathcal L$ is a PAC learner, so is $\mathcal L^+$, with $O(\varepsilon^{-1}\log\delta^{-1})$ extra samples. But **every** output of $\mathcal L^+$ makes every formula derivable, because the derivation of Thm 2.1(i) uses only $\top$I, $\wedge$I, $\vee$I$_2$ and $T_{\hat\jmath}$. (Without the three added schemas this fails in general. For example, $\mathcal L\equiv\emptyset$ gives the output $T_{\hat\jmath}$, whose closure from $\emptyset$ is empty.)
 
 *Proof.* Every step of $T_j$ has size $\ge|\top^{(j)}|\ge j$, so $T_j\subseteq\{s:|s|\ge j\}$.
 * Let $N_\varepsilon=\min\{N:Q(|s|\ge N)\le\varepsilon\}$, which exists since $Q(|s|\ge N)\downarrow0$.
 * If $\hat\jmath\ge N_\varepsilon$, then $Q(T_{\hat\jmath})\le\varepsilon$.
 * Otherwise all $m$ samples have size $<N_\varepsilon-1$. Since $Q(|s|\ge N_\varepsilon-1)>\varepsilon$, this has probability $\le(1-\varepsilon)^m$. ∎
 
-**Proposition 2.3 (in classical logic every unsound schema is a tonk) [proved; essentially Post 1921].** Let $R^*_{\rm CPC}$ be sound and complete for classical propositional consequence, with $\top,\bot,\neg$ available. Let $A\supseteq R^*_{\rm CPC}$ be closed under uniform substitution, as the instance set of any family of schemas is. If $A$ contains an unsound step, then $\mathrm{Cl}_A(\emptyset)$ is the set of all formulas.
+**Proposition 2.3 (in classical logic every unsound *pure* schema is a tonk) [proved; essentially Post 1921] (scope revised after verification).** Let $R^*_{\rm CPC}$ be sound and complete for classical propositional consequence, with $\top,\bot,\neg$ available. Let $A=R^*_{\rm CPC}\cup A_1$, where $A_1$ is closed under uniform substitution of formulas for atoms. Examples of such $A_1$: the set of all steps, or the instance set of any family of **pure** schemas, i.e. schemas in which no object-language atom occurs as a constant. If $A$ contains an unsound step, then $\mathrm{Cl}_A(\emptyset)$ is the set of all formulas.
 
 *Proof.*
-* Let $(\Pi,\varphi)\in A$ be unsound, witnessed by a valuation $v$ with $v(\Pi)=1$ and $v(\varphi)=0$.
-* Substitute $\top$ for each atom true under $v$ and $\bot$ for each false atom. This gives a step $(\Pi',\varphi')\in A$ with variable-free formulas, each $\pi\in\Pi'$ true and $\varphi'$ false.
+* Let $(\Pi,\varphi)\in A$ be unsound, witnessed by a valuation $v$ with $v(\Pi)=1$ and $v(\varphi)=0$. It lies in $A_1$, since $R^*_{\rm CPC}$ is sound.
+* Substitute $\top$ for each atom true under $v$ and $\bot$ for each false atom. This gives a step $(\Pi',\varphi')\in A_1$ with variable-free formulas, each $\pi\in\Pi'$ true and $\varphi'$ false.
 * By completeness, each $\pi\in\Pi'$ and $\neg\varphi'$ are derivable from $\emptyset$. The step yields $\varphi'$, hence $\bot$, hence everything. ∎
 
-(The full consequence-relation version, and its use for learning, is T2 Thm 3.1.) For schema-structured hypotheses in classical logic, *any* error is total.
+(The full consequence-relation version, and its use for learning, is T2 Thm 3.1.) For hypotheses built from pure schemas in classical logic, *any* error is total.
+
+*Scope: schemas that mention atoms (added after verification).* In the encoding of §1.3, object-language atoms are constants of $\Sigma$. So a learned schema can mention specific atoms, for example the lgg of data in which some column is constantly $p_0$. Such instance sets are not closed under substitution, and **the proposition fails for them**.
+* *Counterexample.* $\tau=(\{x\vee p_0\},x)$ is unsound: its instance $(\{p_1\vee p_0\},p_1)$ is invalid. Yet $\mathrm{Cn}(\neg p_0)$ is closed under $R^*_{\rm CPC}\cup\mathrm{inst}(\tau)$, because $\neg p_0\models B\vee p_0$ implies $\neg p_0\models B$. So $\mathrm{Cl}(\emptyset)\subseteq\mathrm{Cn}(\neg p_0)\not\ni p_0$. The reasoner is unsound, since it derives $\neg p_0$, but it is not trivial.
+* *A simpler case.* A single ground error step $(\{p_0\},p_1)$ never fires from $\emptyset$.
+
+*Repair by purification.* Let $\tau^\circ$ be $\tau$ with each atom occurring in it replaced by a fresh metavariable. Since classical consequence is structural, **$\tau$ is sound iff $\tau^\circ$ is sound** [proved]:
+* (⇐) $\mathrm{inst}(\tau)\subseteq\mathrm{inst}(\tau^\circ)$.
+* (⇒) Let $\bar p$ be the atoms of $\tau$. An instance of $\tau^\circ$ has the form $\tau[\bar x\mapsto\bar A,\ \bar p\mapsto\bar B]$, where $\bar p$ is replaced only at $\tau$'s own occurrences. Pick fresh atoms $\bar r$ that occur nowhere in $\bar A,\bar B,\tau$. Then $\tau[\bar x\mapsto\bar A[\bar p\mapsto\bar r]]$ is an instance of $\tau$, hence valid. Its image under the uniform substitution $\bar p\mapsto\bar B,\ \bar r\mapsto\bar p$ is the given instance, and uniform substitution preserves classical validity.
+
+Hence the proposition applies to $A^\circ:=R^*_{\rm CPC}\cup\bigcup_l\mathrm{inst}(\tau_l^\circ)$, and $A=R^*_{\rm CPC}\cup\bigcup_l\mathrm{inst}(\tau_l)$ is sound iff $A^\circ$ is sound iff $\bot\notin\mathrm{Cl}_{A^\circ}(\emptyset)$.
 
 **Proposition 2.4 (simplicity is the wrong bias for positive data) [proved].** In the single-schema class, the shortest schema consistent with any positive data is a single metavariable $x$, which accepts every step.
 
@@ -199,13 +212,17 @@ The positive part of $P$ starts as $P_0$.
 
 **Theorem 3.1 (soundness and optimality) [proved].**
 * (a) The VS verifier is 0-sound and uniformly so: $R^*\in\mathrm{VS}$ at all times, so $\bigcap\mathrm{VS}\subseteq R^*$.
-* (b) Fix the human data $P_0$, as in Definition 1.3. Let a (possibly randomized) verifier be $\delta$-sound, and suppose that at some history consistent with $R^*$ it accepts, with probability $p$, a query $q\notin\bigcap\mathrm{VS}$, where VS is computed from $P_0$ and all labels in the history. Then $p\le\delta$.
+* (b) **(revised after verification)** Fix the human data $P_0$, as in Definition 1.3. Let a (possibly randomized) verifier be $\delta$-sound. Fix a target $R^*\supseteq P_0$ and a history $h$ consistent with $R^*$: queries $q_1..q_t$ with the verifier's answers and the oracle labels. Fix a query $q\notin\bigcap\mathrm{VS}$, where VS is computed from $P_0$ and all labels in $h$. Let
+  $$p:=\Pr_{R^*}\big[\text{the run produces }h\text{ and then accepts }q\big]$$
+  for the prover that issues $q_1,\dots,q_t,q$. This is a **joint** (unconditional) probability, taken over the verifier's coins. Then $p\le\delta$.
+  * In particular, a deterministic $\delta$-sound verifier with $\delta<1$ never accepts any $q\notin\bigcap\mathrm{VS}$ at any history consistent with $R^*$. With fixed queries its history is deterministic, so $p\in\{0,1\}$.
+  * For randomized verifiers the *conditional* acceptance probability given $h$ is **not** bounded by $\delta$. Example: $H=\{R_1=\{a,c\},R_2=\{a,b,c\},R_3=\{a,b\}\}$ and $P_0=\emptyset$. The verifier accepts everything with probability $\varepsilon$ ("reckless mode"), and otherwise runs the VS verifier. It is $\varepsilon$-sound. Under $R^*=R_2$, the history $h=(c,\mathrm{ACC})$ occurs only in reckless mode. There $\bigcap\mathrm{VS}=\{a\}\not\ni b$, yet $\Pr[b\text{ accepted}\mid h]=1$. The joint probability is $\varepsilon$, as (b) says.
 
 *Proof.*
 * (a) All labels are truthful.
-* (b) Pick $R'\in\mathrm{VS}$ with $q\notin R'$, so $P_0\subseteq R'$. Under target $R'$, the oracle answers in the history have the same probability, since all are consistent with $R'$, and the verifier's coins have the same law. A prover that issues the same queries and then queries $q$ therefore gets an invalid step accepted with probability $p$. ∎
+* (b) Pick $R'\in\mathrm{VS}$ with $q\notin R'$, so $P_0\subseteq R'$ and $R'$ agrees with every label in $h$. Run the same prover under target $R'$. Each round's answer has the same conditional law given the past under $R'$ as under $R^*$: the verifier's coins have the same law, and the oracle returns the same labels on $h$. So $\Pr_{R'}[h\text{ and then }q\text{ accepted}]=p$. Since $q\notin R'$, $\delta$-soundness for target $R'$ gives $p\le\delta$. ∎
 
-With *random* human data the same argument applies whenever the data law of $R'$ gives the observed data positive probability. Otherwise the data can refute $R'$, which is the Bayesian setting of §4.
+With *random* human data the same argument gives $\Pr_{R'}[\text{observed data}]\cdot p\le\delta$, where $p$ is the joint probability above given the observed data. The bound weakens as the observed data become unlikely under $R'$. When the data refute $R'$ it disappears, and that is the Bayesian setting of §4.
 
 **Definition (positive elasticity).** For $R\in H$ with $R\supseteq P_0$, an **elastic chain in $R$** is a sequence $s_1,\dots,s_m\in R$ with $s_i\notin\bigcap\mathrm{VS}(P_0\cup\{s_1..s_{i-1}\})$ for every $i$. Equivalently, there are $R_i\in H$ with $P_0\cup\{s_{<i}\}\subseteq R_i\not\ni s_i$. Let $\mathrm{el}(H,R\mid P_0)$ be the supremum of chain lengths. (Wright's elasticity, made bounded and relative to a target; L1 §2.3, L2 Thm 5.)
 
@@ -215,7 +232,7 @@ The VS verifier attains it. Moreover, every $\delta$-sound randomized verifier h
 
 *Proof.*
 * *Upper bound.* Against an honest prover the VS verifier never rejects, because $q\in R^*\subseteq\bigcup\mathrm{VS}$. Its escalated queries $s_1,s_2,\dots$ satisfy $s_i\notin\bigcap\mathrm{VS}$ at the time of the query, where VS contains $P_0$ and the earlier escalated positives. So they form an elastic chain in $R^*$. (Accepted queries add nothing, since they already lie in $\bigcap\mathrm{VS}$.)
-* *Lower bound.* Take an elastic chain $s_1..s_m$ in $R$, and let the honest prover for target $R$ query it in order. By Thm 3.1(b), applied with target $R_i$, round $i$ is accepted outright with probability $\le\delta$. ∎
+* *Lower bound* (proof revised after verification). Take an elastic chain $s_1..s_m$ in $R$, with witnesses $R_i\in H$, $P_0\cup\{s_{<i}\}\subseteq R_i\not\ni s_i$. Let the prover query $s_1,\dots,s_m$ in order, non-adaptively. For each $j<i$ we have $s_j\in R\cap R_i$, so the oracle gives the same label under targets $R$ and $R_i$. Hence the joint law of the transcript up to and including the verifier's answer in round $i$ is the same under $R$ and under $R_i$ (a coupling through the verifier's coins). Under $R_i$, $s_i$ is invalid, so by $\delta$-soundness $\Pr_{R_i}[s_i\text{ accepted in round }i]\le\delta$. Hence $\Pr_R[s_i\text{ accepted in round }i]\le\delta$. Summing over $i$, the expected cost under the honest target $R$ is $\ge(1-\delta)m$. With $\delta=0$ the cost is $m$ almost surely. (This is the joint-probability form of Thm 3.1(b).) ∎
 
 **Proposition 3.3 (intersection-closed classes) [known in substance: closure algorithm; Natarajan 1987, Helmbold, Sloan & Warmuth 1990].** Suppose $H\cup\{\emptyset\}$ is closed under arbitrary intersections. Then:
 * $\bigcap\mathrm{VS}(P)=\mathrm{cl}(P)$, the least member containing $P$;
@@ -230,19 +247,26 @@ The single-schema class $H_1=\{\mathrm{inst}(\sigma)\}\cup\{\emptyset\}$ qualifi
 * $\mathrm{inst}(\sigma)\cap\mathrm{inst}(\tau)=\mathrm{inst}(\mathrm{mgu})$ or $\emptyset$.
 * An arbitrary nonempty intersection contains some ground $t$. Each member of the family is a generalization of $t$, and $t$ has only finitely many generalizations, so the intersection reduces to a finite one.
 
-**Theorem 3.4 (single schema learned by anti-unification) [proved].** For $H_1$, target $\sigma^*$, and nonempty $P_0\subseteq\mathrm{inst}(\sigma^*)$:
+**Theorem 3.4 (single schema learned by anti-unification) [proved] (displays restated after verification).** For $H_1$, target $\sigma^*$, and nonempty $P_0\subseteq\mathrm{inst}(\sigma^*)$:
 $$\mathrm{el}(H_1,\sigma^*\mid P_0)\ \le\ \mu(\mathrm{lgg}\,P_0)-\mu(\sigma^*).$$
 With $P_0=\emptyset$ and steps of size $\le N$:
-$$\mathrm{Esc}(H_1;\,|s|\le N)\le 1+N-\mu(\sigma^*).$$
-This is tight. If $\Sigma$ has two constants $a,b$ and a unary $g$, there is an honest sequence of $N+1$ escalations for $\sigma^*=x$.
+$$\mathrm{el}(H_1,\sigma^*\mid\emptyset;\,|s|\le N)\le 1+N-\mu(\sigma^*),\qquad\text{hence}\qquad\mathrm{Esc}(H_1;\,|s|\le N)\le N+1.$$
+This is tight. If $\Sigma$ has two constants $a,b$ and a unary $g$, there is an honest sequence of $N+1$ escalations for $\sigma^*=x$, so $\mathrm{Esc}(H_1;\,|s|\le N)=N+1$.
 
 *Proof.*
-* *Upper bound.* By Prop 3.3, a chain is a strictly increasing generalization chain $\mathrm{lgg}(P_0)\prec g_1\prec\dots\prec g_m\preceq\sigma^*$. By Lemma 1.2, $\mu$ drops by $\ge1$ per step and stays $\ge\mu(\sigma^*)$. With $P_0=\emptyset$, the first query is always escalated, since $\bigcap\mathrm{VS}(\emptyset)=\emptyset$, and then $\mu(\text{first query})\le N$.
+* *Upper bound.* By Prop 3.3, a chain gives members $\mathrm{cl}(P_0)=C_0\subsetneq C_1\subsetneq\dots\subsetneq C_m\subseteq\mathrm{inst}(\sigma^*)$. Choose the representatives $g_i:=\mathrm{lgg}(C_i)$.
+  * Each $C_i$ is some $\mathrm{inst}(\tau_i)$, and $g_i\preceq\tau_i$, so $\mathrm{inst}(g_i)=C_i$.
+  * $C_{i-1}\subseteq C_i\subseteq\mathrm{inst}(g_i)$ gives $g_{i-1}\preceq g_i$. The inequality is strict, because the instance sets differ. This uses no assumption on the signature.
+  * $g_0=\mathrm{lgg}(P_0)$, and $g_m\preceq\sigma^*$.
+
+  So $\mathrm{lgg}(P_0)=g_0\prec g_1\prec\dots\prec g_m\preceq\sigma^*$. By Lemma 1.2, $\mu$ drops by $\ge1$ per step and stays $\ge\mu(\sigma^*)$. With $P_0=\emptyset$, the first query is always escalated, since $\bigcap\mathrm{VS}(\emptyset)=\emptyset$, and then $\mu(\text{first query})\le N$.
 * *Tightness.* Query $g^{N-1}(a)$, $g^{N-1}(b)$, $g^{N-2}(a)$, $g^{N-3}(a)$, …, $a$. The lggs are $g^{N-1}(a)$, $g^{N-1}(x)$, $g^{N-2}(x)$, …, $x$, with $\mu=N,N-1,\dots,0$. Each query lies outside the previous lgg. [computed: exhaustive search over all ground terms of size $\le N$ for $N\le4$ gives exactly $N+1$; with only one constant it gives $N$.] ∎
 
 This sharpens L2 Thm 5(c), which has $2|s|$. In words, after the human corpus $P_0$ the residual escalation budget is the **generality gap** $\mu(\mathrm{lgg}P_0)-\mu(\sigma^*)$. It is zero once the corpus has identified the rule (§5).
 
-**Proposition 3.5 (two-sided KWIK is super-exponential) [proved].** Suppose the verifier must also *certify* invalidity, rejecting only steps outside $\bigcup\mathrm{VS}$, and every escalation is counted. Then for $H_1$ there are a target and a prover forcing at least $\mathrm{Bell}(n)$ escalations on steps of size $n+1$.
+**Proposition 3.5 (two-sided KWIK is super-exponential over growing signatures) [proved] (revised after verification).** Suppose the verifier must also *certify* invalidity, rejecting only steps outside $\bigcup\mathrm{VS}$, and every escalation is counted. Then for $H_1$ over a signature with $n+1$ constants and an $n$-ary symbol, there are a target and a prover forcing at least $\mathrm{Bell}(n)$ escalations on steps of size $n+1$.
+
+The signature must grow with the step size for this. Over a **fixed** finite signature the two-sided cost on steps of size $\le N$ is at most the number of such steps, $2^{O(N)}$, because an escalated step is labelled and never escalated again. So "super-exponential" is in $N$ only when the signature grows with $N$.
 
 *Proof.*
 * Use constants $a,b_1,\dots,b_n$, an $n$-ary $f$, target $R^*=\{f(a,\dots,a)\}$, and $P_0=R^*$.
@@ -250,22 +274,26 @@ This sharpens L2 Thm 5(c), which has $2|s|$. In words, after the human corpus $P
 * $s_{\pi'}\in\mathrm{inst}(\sigma_\pi)$ iff $\pi$ refines $\pi'$.
 * Query the $s_\pi$ along a linear extension of refinement, finest first. When $s_\pi$ is queried, no coarser $s_{\pi'}$ has been labelled. So $\sigma_\pi$ is alive, $s_\pi\in\bigcup\mathrm{VS}$, and the verifier cannot reject. Each $s_\pi$ is invalid, so it must be escalated. ∎
 
-So certifying *validity* costs $\le N+1$, while certifying *invalidity* costs $\ge\mathrm{Bell}(N-1)$ (compare L2 Thm 5(d) for conjunctions). A step checker never needs the second: an unaccepted step is merely unusable. **One-sidedness is what makes learned verification cheap.**
+So certifying *validity* costs $\le N+1$ over every signature. Certifying *invalidity* costs $\ge\mathrm{Bell}(N-1)$ over a signature with $N$ constants and an $(N-1)$-ary symbol, and in general it is bounded only by the number of steps (compare L2 Thm 5(d) for conjunctions). [computed during verification: `T1-code/checks37.py` (brute force) gives forced escalations $2,5,15=\mathrm{Bell}(2),\mathrm{Bell}(3),\mathrm{Bell}(4)$ for $n=2,3,4$.] A step checker never needs the second: an unaccepted step is merely unusable. **One-sidedness is what makes learned verification cheap.**
 
-**Theorem 3.6 (k tagged rules) [proved].**
+**Theorem 3.6 (k tagged rules) [proved] (justification revised after verification).**
 * Tagged steps $(i,s)$, $i\in[k]$, record which rule the step cites, as formal proofs do (Lean lemma names, Metamath labels, ND rule names).
-* $H^{\rm tag}_k=\{\bigcup_i\{i\}\times\mathrm{inst}(\sigma_i)\}$ is a product of $k$ intersection-closed classes on disjoint domains, hence intersection-closed.
-* Its chains are interleavings of per-rule chains, so
-$$\mathrm{el}=\sum_i\mathrm{el}_i\le\sum_i\big(\mu(\mathrm{lgg}P_0^{(i)})-\mu(\sigma_i^*)\big)\quad(\le k(N+1)\text{ from empty data}).$$
+* Let $H^{\rm tag}_k=\{\bigcup_i\{i\}\times\mathrm{inst}(\sigma_i)\}$.
+  * This class is *not* literally intersection-closed: a componentwise intersection can empty one rule's component while the others stay nonempty.
+  * What the proof uses is that the **version space factors**. For data $P$ with rule-$i$ part $P^{(i)}$, $\mathrm{VS}(P)=\prod_i\mathrm{VS}_i(P^{(i)})$, where each factor is a nonempty version space of single schemas (it contains $\sigma_i^*$). Hence $\bigcap\mathrm{VS}(P)=\bigcup_i\{i\}\times\bigcap\mathrm{VS}_i(P^{(i)})$.
+  * So a tagged step $(i,s)$ escapes iff $s$ escapes in the single-schema class with data $P^{(i)}$.
+* Hence elastic chains are exactly the interleavings of per-rule elastic chains, and
+$$\mathrm{el}=\sum_i\mathrm{el}_i,\qquad \mathrm{el}_i\le\begin{cases}\mu(\mathrm{lgg}P_0^{(i)})-\mu(\sigma_i^*)&\text{if }P_0^{(i)}\ne\emptyset,\\ 1+N-\mu(\sigma_i^*)&\text{if }P_0^{(i)}=\emptyset,\end{cases}$$
+  by Thm 3.4. In particular $\mathrm{el}\le k(N+1)$ from empty data.
 * This is tight, by independent chains. ∎
 
 **Theorem 3.7 (untagged unions of k schemas) [proved].** Let $H_k=\{\bigcup_{l\le k}\mathrm{inst}(\tau_l)\}$, with steps of size $\le N$.
 * **(i) Lower bound.** Let $\Sigma$ contain a $k$-ary $p$, a unary $g$ and a constant $c$, and let $n+1=\lfloor(N-1)/k\rfloor$. There is an honest sequence for the *single-rule* target $R^*=\mathrm{inst}(p(x_1,\dots,x_k))\in H_1\subseteq H_k$ that forces $(n+1)^k$ escalations. So
   $$\mathrm{Esc}(H_k;N)\ge\lfloor (N-1)/k\rfloor^k,\qquad\text{while}\qquad\mathrm{Esc}(H_1;N)\le N+1.$$
 * **(ii) Upper bound.** For $k\ge2$, $\mathrm{Esc}(H_k;N)\le(k^{N+1}-1)/(k-1)$.
-* **(iii) Flat case, $\Theta(n^k)$.** Let the steps be $\{a,b\}^n$, encoded as $f(c_1,\dots,c_n)$, and let $H$ be unions of $k$ linear flat schemas (subcubes). Then
+* **(iii) Flat case, $\Theta(n^k)$ for linear schemas.** Let the steps be $\{a,b\}^n$ with $n\ge k$, encoded as $f(c_1,\dots,c_n)$, and let $H$ be unions of $k$ linear flat schemas (subcubes). Then
   $$\sum_{w=0}^k\binom nw\le\mathrm{Esc}\le 1+(2^k-1)\binom nk.$$
-  With repeated metavariables allowed, $\mathrm{Esc}\le1+(2^{2k}-1)\binom n{2k}$ for $n\ge2k$.
+  With repeated metavariables allowed, $\mathrm{Esc}\le1+(2^{2k}-1)\binom n{2k}$ for $n\ge2k$. The class is then larger, so the linear lower bound still applies, and $\mathrm{Esc}$ lies between $\Omega(n^k)$ and $O(n^{2k})$. Only the linear case is pinned to $\Theta(n^k)$.
 
 *Proof.*
 * **(i)** The steps are $p(g^{a_1}c,\dots,g^{a_k}c)$ with $a\in\{0..n\}^k$, each of size $\le1+k(n+1)\le N$. Query them in order of non-increasing $\sum_ja_j$.
@@ -288,14 +316,21 @@ $$\mathrm{el}=\sum_i\mathrm{el}_i\le\sum_i\big(\mu(\mathrm{lgg}P_0^{(i)})-\mu(\s
 * Deep schemas, signature $\{c,g/1,p/2\}$, $k=2$: the exact values for $N=3,4,5$ are $4,8,13$ (universes of 4, 8, 17 terms). For $\{a,b,g,p\}$ they are $8,13$ at $N=3,4$.
 * The partition abstraction used in (ii) attains $2^d-1$ for $k=2$, $d=3,4$, so the Ramsey-type method cannot do better. Any polynomial bound must use intersection-closure.
 
-**Conjecture 3.8 (binomial bound) [conjecture].** Let $C$ be closed under intersections, with height $h$: the longest chain from $\mathrm{cl}(\emptyset)$ to the universe, the universe included. Then the elasticity of $k$-unions of $C$ is at most $\binom{h+k-1}{k}$.
+**Conjecture 3.8 (binomial bound) [conjecture].** Let $C$ be closed under intersections, with height $h$: the longest chain from $\mathrm{cl}(\emptyset)$ to the universe, the universe included. Then the elasticity of $k$-unions of $C$ (unions of $1$ to $k$ members) is at most $\binom{h+k-1}{k}$.
 
-Status:
+Status (evidence corrected after verification):
 * It is exact for $k=1$ (chains) and for $h=2$ (singletons give $k+1$).
-* Randomized hill-climbing over intersection-closed families with $k=2$ found maxima of $3,6,10,14$ at $h=2,3,4,5$ [computed], against the conjectured $3,6,10,15$.
+* **If true, it is tight at $k=2$ for every height tested.** The flats of the graphic matroid $M(K_{h+1})$ form an intersection-closed family of height $h$, and their 2-union elasticity is exactly $\binom{h+1}2$: the values are $3,6,10,15$ for $h=2,3,4,5$ [computed: `T1-code/graphic.py`]. For $k=3$, $K_4$ and $K_5$ give only $6$ and $10$, below $\binom{h+2}3=10,20$. Here the edge count caps the elasticity.
+* **The case $(k,h)=(2,3)$ is proved** [proved during verification]. Points of $\mathrm{cl}(\emptyset)$ never escape, so assume WLOG $\mathrm{cl}(\emptyset)=\emptyset$. Call members of rank 1 *atoms* and members of rank 2 *planes*. Every member other than the universe has rank $\le2$.
+  * Any member $Y\not\ni s$ meets a plane $X\ni s$ in a member of rank $\le1$, i.e. in $\emptyset$ or an atom.
+  * *At most one sequence element per atom.* If $s_i,s_j\in A$ with $i<j$, any member containing $s_i$ but not $s_j$ meets $A$ in a nonempty proper sub-member of the atom $A$, which is impossible.
+  * *At most three sequence elements per plane.* The two witness members of the last element in a plane $X$ meet $X$ in at most two atoms, so they cover at most two earlier elements of $X$.
+  * Now suppose $s_1..s_7$ is elastic. The witness of $s_7$ is two members of rank $\le2$ covering six elements, so they are planes $X,Y$, each holding exactly three of $s_1..s_6$, disjointly. Say $s_6\in Y$.
+  * The witness of $s_6$ must cover the three $X$-elements. A member $\ne X$ covers at most one of them, so one witness member is $X$ itself, since a member $\supsetneq X$ would be the universe. $X$ contains none of the two $Y$-elements among $s_1..s_5$. So the other witness member must cover both of them, but it meets $Y$ in at most an atom. This is a contradiction. Hence the elasticity is $\le6=\binom42$.
+* *Search.* Randomized hill-climbing with $k=2$ (`icclimb.py`) found maxima $6$ and $10$ at $h\le3,4$, on universes of $9$ and $12$ points. These equal the conjectured values. The $h\le5$ run used a universe of only **14 points**, and the elasticity is at most the number of points. So its maximum of 14 is a ceiling artifact. It is neither evidence of slack below 15 nor a test of the conjecture, since a counterexample needs $\ge16$ points. An independent search during verification, on 11–12 points with $h\le4$, found no counterexample.
 * For schemas, $h\le N+1$, so the conjecture gives $\mathrm{Esc}(H_k;N)\le\binom{N+k}{k}$. This would match (i) up to $e^{O(k)}$, so the truth would be $\Theta_k(N^k)$.
 
-A natural one-step decomposition proof (split off the members containing $s_1$) fails on some extremal sequences [computed].
+*Withdrawn after verification.* An earlier version said that "a natural one-step decomposition proof (split off the members containing $s_1$) fails on some extremal sequences [computed]". No script for this survives (`T1-code/` has none), so the claim and its tag are withdrawn.
 
 **Theorem 3.9 (unstructured classes) [proved; KWIK enumeration bound, Li, Littman & Walsh 2008].** For finite $H$, $\mathrm{Esc}(H)\le|H|-1$: each escalation of an honest step outside $\bigcap\mathrm{VS}$ removes $\ge1$ hypothesis, and $R^*$ is never removed. The class $\{U\setminus\{u\}:u\in U\}$ attains $|U|-1$, by querying $U\setminus\{u^*\}$ in any order. A class of $2^L$ hypotheses described by $L$ bits can therefore need $2^L-1$ escalations. Single schemas of size $\le N$ already number $2^{\Omega(N)}$, yet need $\le N+1$.
 
@@ -306,12 +341,12 @@ A natural one-step decomposition proof (split off the members containing $s_1$) 
 Setup:
 * $H$ is countable with prior $w$, and $w^*:=w(R^*)>0$.
 * Each $R$ carries a model: a distribution $p_R$ on $S$ for human data (errors may be included), and an oracle kernel $\ell_R(y\mid q)$ (deterministic: $\mathbf 1[y=\mathbf 1[q\in R]]$).
-* The truth is well-specified: human data are i.i.d. $p_{R^*}$, and oracle answers follow $\ell_{R^*}(\cdot\mid q_t)$ given the past.
+* The truth is well-specified: human data are i.i.d. $p_{R^*}$, and oracle answers follow $\ell_{R^*}(\cdot\mid q_t)$ given the past. For Thm 4.2(a), "the past" must include **everything the prover knows** when it chooses its next action. So the prover cannot foresee future human data or oracle noise, and the noise is fresh at every query, not persistent across repeated queries (made explicit after verification).
 * After the observations of rounds $\le t$, the likelihood is $L_t(R)$, the posterior is $w_t(R)\propto w(R)L_t(R)$, and
   $$Z_t:=\sum_Rw(R)\,L_t(R)/L_t(R^*),\qquad\text{so that}\qquad w_t(R^*)=w^*/Z_t.$$
 * **Verifier $V_\delta$:** ACC iff $w_t(\{R:q\notin R\})<\delta$; optionally REJ iff $w_t(\{R:q\in R\})<\delta_r$; ESC otherwise.
 
-**Theorem 4.1 (version-space posterior: deterministic soundness) [proved].** Let $w_t^{\rm VS}(R)\propto w(R)\mathbf 1[R\text{ consistent with all data}]$, and suppose all labels are truthful. If $\delta\le w^*$, then $V_\delta$ never accepts an invalid step, for any prover and at any time.
+**Theorem 4.1 (version-space posterior: deterministic soundness) [proved].** Let $w_t^{\rm VS}(R)\propto w(R)\mathbf 1[R\text{ consistent with all data}]$, and suppose all data are truthful (human positives $\subseteq R^*$ and all oracle labels). If $\delta\le w^*$, then $V_\delta$ never accepts an invalid step, for any prover and at any time. The guarantee is per target: it covers every $R^*$ with $w(R^*)\ge\delta$.
 
 Conversely, for every $\delta>w^*$ there is a two-hypothesis class on which $V_\delta$ accepts an invalid step at time 0.
 
@@ -321,24 +356,30 @@ Conversely, for every $\delta>w^*$ there is a two-hypothesis class on which $V_\
 
 (L2 Thm 1 is the same.)
 
-**Theorem 4.2 (Ville: time-uniform soundness against adaptive provers) [proved].** Assume the model is well-specified and $\delta\le w^*\delta'$.
-* (a) For every prover, $\Pr[\exists t,\ V_\delta\text{ accepts some }q_t\notin R^*]\le\delta'$.
-* (b) With a deterministic oracle the guarantee is **uniform**: there is an event of probability $\ge1-\delta'$, depending only on the human data, on which no prover strategy ever gets an invalid step accepted.
+**Theorem 4.2 (Ville: time-uniform soundness against adaptive provers) [proved; (a) is the prior–posterior-ratio martingale argument of Waudby-Smith & Ramdas 2020] (hypothesis of (a) made explicit after verification).** Assume the model is well-specified and $\delta\le w^*\delta'$.
+* (a) Assume moreover the following. Conditional on $\mathcal F_t$, the next observation has the model law: a fresh $X\sim p_{R^*}$, or an answer $\sim\ell_{R^*}(\cdot\mid q_{t+1})$. Here $\mathcal F_t$ contains the history and **all of the prover's information**, including its internal randomness. That is, the prover cannot foresee the data or the noise, and the noise is fresh. Then for every such prover, $\Pr[\exists t,\ V_\delta\text{ accepts some }q_t\notin R^*]\le\delta'$.
+* (b) With a deterministic oracle the guarantee is **uniform**: there is an event of probability $\ge1-\delta'$, depending only on the human data, on which no prover strategy ever gets an invalid step accepted. Here the prover may know everything, including all future human data. Only the human data need to be i.i.d. $p_{R^*}$.
+
+*Without the hypothesis of (a), (a) fails completely.* Take $H=2^{\{0,1\}}$ with uniform prior, $R^*=\{0\}$, symmetric flip noise $\eta$, and $\delta'=0.05$. A prover that queries the invalid step 1 only in rounds where it knows the answer will be flipped to "valid", and the valid step 0 otherwise, only ever raises the posterior of $\{0,1\}$ relative to $\{0\}$. It gets 1 accepted with probability $1.0$ at $\eta=0.1$ and at $\eta=0.3$ [computed during verification: `T1-code/prescient.py`]. A prover that cannot foresee the noise respects the bound.
 
 *Proof.*
-* Let $\mathcal F_t$ contain everything up to round $t$, including the prover's choice of what happens in round $t+1$. Given $\mathcal F_t$, the observation $O_{t+1}$ is either a fresh $X\sim p_{R^*}$ or an answer $\sim\ell_{R^*}(\cdot\mid q_{t+1})$ with $q_{t+1}$ $\mathcal F_t$-measurable. In either case, for every $R$,
+* Let $\mathcal F_t$ be as in (a): everything up to round $t$, including all of the prover's information and its choice of what happens in round $t+1$. Given $\mathcal F_t$, the observation $O_{t+1}$ is either a fresh $X\sim p_{R^*}$ or an answer $\sim\ell_{R^*}(\cdot\mid q_{t+1})$ with $q_{t+1}$ $\mathcal F_t$-measurable. In either case, for every $R$,
   $$\mathbb E\Big[\tfrac{\ell_R(O_{t+1})}{\ell_{R^*}(O_{t+1})}\Big|\mathcal F_t\Big]=\sum_{o:\ell_{R^*}(o)>0}\ell_R(o)\le1.$$
 * By Tonelli (nonnegative terms), $\mathbb E[Z_{t+1}\mid\mathcal F_t]\le Z_t$, and $Z_0=\sum_Rw(R)=1$. Note that $L_t(R^*)>0$ a.s.
 * Ville's inequality (Ville 1939) gives $\Pr[\sup_tZ_t\ge1/\delta']\le\delta'$.
 * Off this event, $w_t(R^*)>w^*\delta'\ge\delta$ for all $t$. Any invalid $q$ has $w_t(q\notin R)\ge w_t(R^*)>\delta$, so it is never accepted. This proves (a).
-* For (b), deterministic oracle answers multiply each term by $\mathbf 1[R\text{ agrees with }R^*\text{ on }q]\le1$. So $Z_t\le Z^H_{n(t)}:=\sum_Rw(R)\prod_{j\le n(t)}p_R(X_j)/p_{R^*}(X_j)$, which is computed from the human data alone. Apply Ville to $Z^H$. ∎
+* For (b), deterministic oracle answers multiply each term by $\mathbf 1[R\text{ agrees with }R^*\text{ on }q]\le1$. So $Z_t\le Z^H_{n(t)}:=\sum_Rw(R)\prod_{j\le n(t)}p_R(X_j)/p_{R^*}(X_j)$ pathwise, and $Z^H$ is computed from the human data alone. Apply Ville to $Z^H$ in the human data's own filtration. ∎
 
-The key phenomenon is that **there is no union bound over queries**. The prover may try $10^{100}$ steps, and one event of probability $\ge1-\delta'$ covers all of them. This is because invalid acceptance requires one global event: the posterior of the truth falling below $\delta$. A per-step scorer, such as a regressor trained to output $P(\text{valid})$, has no such single latent event, and Thm 2.1 shows its per-step errors can be found one at a time. (L2 Thm 2 states (a). Statement (b), and the tightness below, are additions here.)
+The key phenomenon is that **there is no union bound over queries**. The prover may try $10^{100}$ steps, and one event of probability $\ge1-\delta'$ covers all of them. This is because invalid acceptance requires one global event: the posterior of the truth falling below $\delta$. A per-step scorer, such as a regressor trained to output $P(\text{valid})$, has no such single latent event, and Thm 2.1 shows its per-step errors can be found one at a time.
+
+*Credit (revised after verification).* (a) is the prior–posterior-ratio (PPR) martingale of Waudby-Smith & Ramdas (2020) applied to validity relations, and L2 Thm 2 states it. (b) is an easy corollary of the observation that truthful constraints multiply $Z$ by at most 1. L2 Thm 1 already uses that observation for constraints the prover generates itself. The tightness below (Prop 4.3) is the addition here.
 
 **Proposition 4.3 (the constant 1 is tight) [proved; computed].**
 * Take $R^*=\{a,b\}$ with $p_{R^*}(a)=1-u$, $p_{R^*}(b)=u$, and $R'=\{a,c\}$ with $p_{R'}(a)=1$, where $c$ is invalid.
 * The likelihood ratio after $t$ copies of $a$ is $(1-u)^{-t}$, and $R'$ dies at the first $b$.
-* $V_{w^*\delta'}$ accepts $c$ iff the ratio exceeds $\theta:=(1-w^*\delta')/((1-w^*)\delta')$. Let $t^*$ be the least $t$ with $(1-u)^{-t}>\theta$. The probability of acceptance is $(1-u)^{t^*}\in\big[(1-u)/\theta,\,1/\theta\big)$, and $1/\theta=(1-w^*)\delta'/(1-w^*\delta')\le\delta'$.
+* $V_{w^*\delta'}$ accepts $c$ iff the ratio exceeds $\theta:=(1-w^*\delta')/((1-w^*)\delta')$. Let $t^*$ be the least $t$ with $(1-u)^{-t}>\theta$.
+* The prover waits for $t^*$ human data rounds and queries $c$ exactly then. If it queries $c$ earlier, $c$ is escalated, and the deterministic answer "invalid" kills $R'$.
+* The probability of acceptance is $(1-u)^{t^*}\in\big[(1-u)/\theta,\,1/\theta\big)$, and $1/\theta=(1-w^*)\delta'/(1-w^*\delta')\le\delta'$.
 * As $u,w^*\to0$, this tends to $\delta'$. The exact values are $0.989\,\delta'$ at $u=0.05,\ w^*=\delta'=0.01$, and $0.991\,\delta'$ at $u=0.01$, $w^*=10^{-3}$, $\delta'=0.05$.
 
 **Theorem 4.4 (escalation bound) [proved].** With a deterministic oracle and thresholds $\delta,\delta_r$, let $\delta_m=\min(\delta,\delta_r)$, or $\delta_m=\delta$ for honest provers.
@@ -351,11 +392,15 @@ The key phenomenon is that **there is no union bound over queries**. The prover 
 * Let $M_t:=\prod_{\text{data rounds}}F_u$, a nonnegative supermartingale with $M_0=1$. Then $w^*\le Z_t\le M_t(1-\delta_m)^{\#\mathrm{ESC}_t}$, and Ville bounds $\sup M$.
 * For the VS posterior, $F_u=w_{u-1}(X_u\in R)\le1$. ∎
 
-**Corollary 4.5 (essentially tight for unstructured classes) [proved].** On $\{U\setminus\{u\}\}$ with the uniform prior ($w^*=1/|U|$), any $\delta'$-sound verifier has worst-case honest cost $\ge(1-\delta')(1/w^*-1)$, by Thm 3.2 with Thm 3.9's chain. Meanwhile $V_{w^*\delta'}$ pays $\le\ln(1/w^*)/(w^*\delta')$. So the Bayes rule is optimal up to $\ln(1/w^*)/\delta'$, and with a description-length prior $w^*=2^{-L}$ the cost is $\tilde\Theta(2^L)$ (cf. L2 Thm 4).
+Against dishonest provers the bound needs a reject option with $\delta_r>0$. Without REJ, $\delta_m=0$ and the bound is vacuous: escalating an invalid query that almost all of the posterior already excludes multiplies $Z$ by nearly 1, so it makes no progress.
 
-**Corollary 4.6 (structure + Bayes) [proved].** The VS-posterior verifier with $\delta\le w^*$ is 0-sound, and its escalations on valid queries are at most
+**Corollary 4.5 (essentially tight for unstructured classes) [proved].** On $\{U\setminus\{u\}\}$ with the uniform prior ($w^*=1/|U|$), any $\delta'$-sound verifier has worst-case honest cost $\ge(1-\delta')(1/w^*-1)$, by Thm 3.2 with Thm 3.9's chain. Meanwhile $V_{w^*\delta'}$ pays $\le\ln(1/w^*)/(w^*\delta')$. So the Bayes rule is optimal up to the factor $\ln(1/w^*)/\big(\delta'(1-\delta')(1-w^*)\big)=O(\ln(1/w^*)/\delta')$, for $w^*,\delta'\le1/2$. With a description-length prior $w^*=2^{-L}$ the cost is $\tilde\Theta(2^L)$ (cf. L2 Thm 4). (Ratio stated exactly after verification.)
+
+The $1/\delta'$ is an artifact of the threshold. On this class with the uniform prior, the VS posterior with $\delta=w^*$ accepts exactly $\bigcap\mathrm{VS}$, because every consistent hypothesis has posterior $\ge w^*$. So it *is* the VS verifier: 0-sound, with cost $\le|U|-1$ (Thm 3.9), which is exactly optimal.
+
+**Corollary 4.6 (structure + Bayes) [proved] (wording revised after verification).** The VS-posterior verifier with threshold $\delta$ never accepts an invalid step, for any prover and any target with $w(R^*)\ge\delta$ (Thm 4.1). This is not "0-sound" in the sense of Def 1.2 unless every target has prior $\ge\delta$, which fails for infinite $H$. Its escalations on valid queries are at most
 $$\min\{\mathrm{el}(H,R^*\mid P_0),\ \ln(1/w^*)/\delta\}.$$
-*Proof.* An escalated valid $q$ had $w(q\notin R)\ge\delta>0$, so $q\notin\bigcap\mathrm{VS}$, and negatives only enlarge $\bigcap\mathrm{VS}$. So the escalated valid queries form an elastic chain. ∎
+*Proof.* An escalated valid $q$ had $w(q\notin R)\ge\delta>0$. So $q\notin\bigcap\mathrm{VS}(P,N)$, and since negatives only shrink VS, $\bigcap\mathrm{VS}(P,N)\supseteq\bigcap\mathrm{VS}(P)$. Here $P$ is $P_0$ plus the earlier escalated valid queries. So the escalated valid queries form an elastic chain. The second term is Thm 4.4 (VS case, honest prover). ∎
 
 **Discussion: structure, not the prior, makes it feasible.**
 * For single schemas with a description-length prior, $\ln(1/w^*)/\delta\approx2^{c|\sigma^*|}$, while $\mathrm{el}\le N+1$.
@@ -373,7 +418,7 @@ $$\min\{\mathrm{el}(H,R^*\mid P_0),\ \ln(1/w^*)/\delta\}.$$
 The VS verifier fed only human positives accepts $\bigcap\mathrm{VS}(P_t)\subseteq R^*$. **It is sound at every time**, whatever the data.
 
 **Theorem 5.1 (eventual completeness ⇔ finite anchor) [proved].** Call a finite $T\subseteq R^*$ an **anchor** if every $R\in H$ with $T\subseteq R$ satisfies $R\supseteq R^*$. Then:
-* $\bigcap\mathrm{VS}(P)=R^*$ iff $P$ contains an anchor.
+* For finite $P$: $\bigcap\mathrm{VS}(P)=R^*$ iff $P$ contains an anchor. ("For finite $P$" added after verification. For infinite $P$ the "only if" fails: in Prop 5.2's class, $\bigcap\mathrm{VS}(2\mathbb N)=2\mathbb N$, but there is no anchor.)
 * On a text ($P_t\uparrow R^*$), or under i.i.d. sampling with $\mathrm{supp}\,D=R^*$ (a.s.), the verifier is eventually exactly $R^*$ iff $R^*$ has an anchor.
 
 *Proof.*
@@ -383,12 +428,14 @@ The VS verifier fed only human positives accepts $\bigcap\mathrm{VS}(P_t)\subset
 
 **Proposition 5.2 (anchors vs. tell-tales) [proved].**
 * An anchor is an Angluin tell-tale: no $R$ satisfies $T\subseteq R\subsetneq R^*$.
-* For intersection-closed classes the converse holds: if $T\subseteq R\not\supseteq R^*$, then $R\cap R^*$ is a member with $T\subseteq R\cap R^*\subsetneq R^*$.
+* **(Revised after verification.)** Let $H\cup\{\emptyset\}$ be intersection-closed. Then every **nonempty** tell-tale is an anchor. If $\emptyset\ne T\subseteq R\not\supseteq R^*$, then $R\cap R^*\supseteq T$ is nonempty, hence a member, with $T\subseteq R\cap R^*\subsetneq R^*$.
+  * The empty tell-tale need not be an anchor. For $H=\{\{1\},\{2\}\}$ and $R^*=\{1\}$, $\emptyset$ is a tell-tale but $\{2\}\supseteq\emptyset$ does not contain $R^*$.
+  * As existence conditions the two coincide, for $R^*\ne\emptyset$: if $T$ is a tell-tale, so is $T\cup\{r\}$ for any $r\in R^*$.
 * In general the converse fails. Take $R^*=2\mathbb N$ and $R_n=\{0,2,..,2n\}\cup\{2n+1\}$.
   * The class is identifiable in the limit (tell-tales $\{0\}$ and $R_n$).
   * Every finite $T\subseteq R^*$ lies in some $R_n\not\supseteq R^*$, so $R^*$ has no anchor and the verifier never becomes complete.
 
-*Moral.* Identification in the limit (a guess that converges) is weaker than certified verification (all consistent hypotheses agree). A learner that guesses $R^*$ would be unsound if the truth were a large $R_n$. Anchors are the ⊆-tell-tales of strong-monotonic learning (Lange–Zeugmann; see L1 §2.3).
+*Moral.* Identification in the limit (a guess that converges) is weaker than certified verification (all consistent hypotheses agree). A learner that guesses $R^*$ would be unsound if the truth were a large $R_n$. Anchors are the ⊆-tell-tales of strong-monotonic learning (Lange & Zeugmann 1992; see L1 §2.3, where the exact form of their characterization is flagged as recalled from memory). So the anchor condition itself is theirs, in non-effective form. Only its reading as the completeness condition for *certified verification* is new here.
 
 **Theorem 5.3 (tagged schemas: exact identification, coupon-collector rate) [proved].**
 * Human data are i.i.d. $(I,X)$ with $\Pr(I=i)=\pi_i$ and $X=\sigma_i\Theta$, $\Theta\sim\Lambda_i$.
@@ -404,7 +451,8 @@ So $N\ge\max_i\frac{1}{\pi_i\rho_i}\ln\frac{k\,c_i}{\delta}$ suffices. Order $1/
 *Proof.* Condition on $N_i=n$ rule-$i$ samples. By Lemma 1.3, identification fails only if some witness event fails.
 * (R$_x$) fails only if all $n$ roots lie in $G$ or all lie in $G^c$, which has probability $\le2(1-\rho_i)^n$.
 * (D$_{xy}$) fails with probability $(1-r)^n\le(1-\rho_i)^n$.
-* A union bound gives $c_i(1-\rho_i)^n$. Then $\mathbb E(1-\rho)^{N_i}=(1-\pi_i\rho)^N\le e^{-N\pi_i\rho}$. ∎
+* A union bound gives $c_i(1-\rho_i)^n$. For $n=0$ this is $c_i\ge2$, a valid bound. Then $\mathbb E(1-\rho)^{N_i}=(1-\pi_i\rho)^N\le e^{-N\pi_i\rho}$.
+* For a ground rule ($v_i=0$, so $c_i=0$), the only failure is $N_i=0$, which has probability $(1-\pi_i)^N\le e^{-N\pi_i}$. This is the separate term in the statement. ∎
 
 [computed] Toy natural deduction with 6 rules ($\wedge$I, $\wedge$E$_{1,2}$, $\vee$I$_{1,2}$, MP), random formulas over 4 atoms, and 400 trials per $N$:
 
@@ -430,11 +478,14 @@ So $N\ge\max_i\frac{1}{\pi_i\rho_i}\ln\frac{k\,c_i}{\delta}$ suffices. Order $1/
 * (a) Let $R=\bigcup_l\mathrm{inst}(\tau_l)\in\mathrm{VS}$. Partition rule-$i$'s samples by the first covering $l$. If no class were generic, each class would lie in a failure set, giving a cover by $k$ failure sets. So some class $Q$ is generic, and $\tau_l\succeq\mathrm{lgg}(Q)=\sigma_i$. Hence $R\supseteq R^*$.
 * (b) Bound the growth function of $\mathfrak F_i$. For fixed $x$, the sets $\{\mathrm{root}(\theta x)=f\}$ are disjoint, so $\Pi_{\mathfrak F_i}(n)\le M(n+1)$, where $M=v_i+\binom{v_i}2$.
 * So complements of $k$-unions have growth $\le(M(n+1))^k$. Shattering $D$ points needs $2^D\le(M(D+1))^k$, which fails at $D=2k\log_2(4kM)$.
-* Apply the ε-net theorem (Haussler & Welzl 1987; Blumer, Ehrenfeucht, Haussler & Warmuth 1989) with $\varepsilon=\zeta_i$. ∎
+* Apply the ε-net theorem (Haussler & Welzl 1987; Blumer, Ehrenfeucht, Haussler & Warmuth 1989) with $\varepsilon=\zeta_i$. Since $\zeta_i$ is an infimum that may be attained, this uses the "mass $\ge\varepsilon$" form of the theorem. The symmetrization proof gives that form with the same constants. Alternatively, use $\varepsilon=\zeta_i/2$ at a constant-factor cost. ∎
 
-*Remark.*
-* $\zeta_i>0$ requires $k$ to be smaller than the variety of instantiations. If some metavariable is only ever instantiated with $\le k$ distinct root symbols, the data are explained equally well by $k$ specialized rules, and identification fails forever.
-* "Allow up to $k$ rules" is therefore a real assumption about data diversity, and it is the positive-data face of Thm 3.7(i).
+*Remark (revised after verification).*
+* $\zeta_i>0$ requires $k$ to be smaller than the variety of instantiations. When this fails, the *sufficient* condition (a) fails, but identification need not fail.
+* **A sufficient condition for failure.** Suppose some rule $i$'s samples can be covered by $k-k'+1$ failure sets, i.e. by the corresponding specializations of $\sigma_i$: $x\mapsto f(\bar z)$, or $y:=x$. Suppose also that some instance of $\sigma_i$ lies outside these specializations and outside the other $k'-1$ rules. Then the other rules plus these specializations form a member of $H_k$ that is consistent with the data and misses that instance, so $\bigcap\mathrm{VS}\ne R^*$.
+  * For $k'=1$ this recovers the original remark. If a metavariable is only ever instantiated with $\le k$ root symbols, $k$ specialized rules explain the data, and identification fails for as long as this persists.
+* **For $k'\ge2$, $\le k$ roots does not block identification.** Take $k=k'=2$, $R^*=\mathrm{inst}\,p(x)\cup\mathrm{inst}\,q(y)$ and $P=\{p(a),p(b),q(a),q(b)\}$. Here $x$ takes only $2=k$ roots, so $\zeta_1=0$. Yet every 2-union covering $P$ either has one schema covering both $p$-terms, and hence $\succeq p(x)$, or has a schema covering a $p$-term and a $q$-term, and hence is a bare variable. The same holds for the $q$-terms. So $\bigcap\mathrm{VS}_{H_2}(P)=R^*$ [proved; also computed: `T1-code/union_remark.py`].
+* "Allow up to $k$ rules" is therefore a real assumption about data diversity, and it is the positive-data face of Thm 3.7(i). For $k'\ge2$ the exact diversity threshold is not determined here. A cover by $k-k'+1$ failure sets blocks identification, given the instance condition above. No cover by $k$ failure sets guarantees identification, by (a). The cases in between are open.
 
 **Corollary 5.5 (exact identification ⇒ systematic out-of-distribution generalization) [proved].** Once $\bigcap\mathrm{VS}(P)=R^*$:
 * the verifier accepts exactly $R^*$;
@@ -466,30 +517,37 @@ Inferentialist reading: the anchor is a finite set of *uses* that fixes the infe
 * The verifier then accepts every one-premise step, and from any derivable formula it derives everything.
 * [computed] A mis-tagged "$p_0\vee p_1\vdash p_0$" does exactly this. A 15% rate of affirming the consequent, tagged MP, turns MP's lgg into $\mathsf{s2}(\mathsf{imp}(v_0,v_1),v_2,v_3)$: from $A\to B$ and anything, infer anything.
 
-**Theorem 6.2 (trimmed version space) [proved].** Let $\mathrm{VS}_e(P)=\{R\in H:|P\setminus R|\le e\}$, counted with multiplicity, and let the verifier accept $\bigcap\mathrm{VS}_e$.
-* (a) For any $H$: if $P$ contains $\le e$ invalid steps, the verifier is sound (uniformly over provers).
-* (b) For tagged schemas with budgets $e_i$, suppose for each $i$:
+**Theorem 6.2 (trimmed version space) [proved] (part (b) revised after verification).** Let $\mathrm{VS}_e(P)=\{R\in H:|P\setminus R|\le e\}$, counted with multiplicity. For tagged classes with **per-tag budgets** let
+$$\mathrm{VS}_{(e_i)}(P)=\{R\in H:\ |P^{(i)}\setminus R^{(i)}|\le e_i\ \text{for every }i\},$$
+where $P^{(i)}$ and $R^{(i)}$ are the tag-$i$ parts. The verifier accepts $\bigcap\mathrm{VS}_e$, respectively $\bigcap\mathrm{VS}_{(e_i)}$.
+* (a) For any $H$: if $P$ contains $\le e$ invalid steps, the $\mathrm{VS}_e$ verifier is sound (uniformly over provers). Likewise the $\mathrm{VS}_{(e_i)}$ verifier is sound if, for every $i$, at most $e_i$ invalid steps are tagged $i$.
+* (b) For tagged schemas and the per-tag verifier $\bigcap\mathrm{VS}_{(e_i)}$, suppose for each $i$:
   * (i) $\le e_i$ invalid steps are tagged $i$;
-  * (ii) the valid rule-$i$ samples are **$e_i$-robustly generic**: for every $x$ and $f$, more than $e_i$ samples have $\mathrm{root}(\Theta x)\neq f$; and for every $x\ne y$, more than $e_i$ samples have $\Theta x\ne\Theta y$.
+  * (ii) the valid rule-$i$ samples are **$e_i$-robustly generic**. There are more than $e_i$ of them. For every $x$ and $f$, more than $e_i$ of them have $\mathrm{root}(\Theta x)\neq f$. For every $x\ne y$, more than $e_i$ of them have $\Theta x\ne\Theta y$. The first clause follows from the second when $v_i\ge1$, and it is the only content of (ii) for ground rules.
 
   Then the verifier accepts exactly $R^*$.
 
 *Proof.*
-* (a) $R^*\in\mathrm{VS}_e$.
-* (b) A tag-$i$ hypothesis $\mathrm{inst}(\tau)\in\mathrm{VS}_{e_i}$ covers all but $\le e_i$ of the valid samples. By (ii), the remaining valid samples still satisfy (R) and (D), so they are generic. Then $\tau\succeq\sigma_i$ by Lemma 1.3. ∎
+* (a) $R^*\in\mathrm{VS}_e$, respectively $R^*\in\mathrm{VS}_{(e_i)}$.
+* (b) A hypothesis in $\mathrm{VS}_{(e_i)}$ has a tag-$i$ component $\mathrm{inst}(\tau)$ that covers all but $\le e_i$ of the valid rule-$i$ samples. By (ii), the remaining valid samples are nonempty and still satisfy (R) and (D): for each $f$, at least one remaining sample has root $\ne f$, and likewise for (D). So they are generic, and $\tau\succeq\sigma_i$ by Lemma 1.3. For a ground rule, the remaining samples are copies of $\sigma_i$, so $\tau\succeq\sigma_i$ directly.
+* Without the clause "more than $e_i$ valid samples", a ground rule with $\le e_i$ valid samples fails: $\emptyset$ or $\mathrm{inst}(d)$ for $d\ne\sigma_i$ lies in the version space. ∎
+
+*Remark.* Part (b) needs the per-tag budgets. With one global budget $e=\sum_ie_i$, a hypothesis may spend the whole budget on one tag, deleting more than $e_i$ of its valid samples, and (ii) no longer protects that rule's genericity.
 
 The accepted set is $\mathrm{inst}$ of the most general common instance (unification) of the lggs of the $(|P|-e)$-subsets. [computed] With $e=1$ (resp. 2), one (resp. two) mis-tagged errors are removed exactly. With $e=1$ and two errors, the lgg collapses again.
 
-**Theorem 6.3 (i.i.d. noise: witness frequency must beat error frequency) [proved].**
+**Theorem 6.3 (i.i.d. noise: witness frequency must beat error frequency) [proved] (ground rules covered after verification).**
 * Each datum is a valid rule-$i$ step with probability $\beta_i$ (law $\Lambda_i$), or an invalid step tagged $i$ with probability $\alpha_i$ (arbitrary law).
-* Let $\rho_i$ be as in Thm 5.3, with the split $G$ attaining the maximum. Assume the margin $\Delta_i:=(\rho_i\beta_i-\alpha_i)/2>0$, and set $e_i=\lfloor(\alpha_i+\Delta_i)N\rfloor$.
+* Let $\rho_i$ be as in Thm 5.3, with the split $G$ attaining the maximum. For a ground rule ($v_i=0$) set $\rho_i:=1$ and $c_i:=1$.
+* Assume the margin $\Delta_i:=(\rho_i\beta_i-\alpha_i)/2>0$, and set $e_i=\lfloor(\alpha_i+\Delta_i)N\rfloor$.
 
-Then
+Then the per-tag trimmed verifier $\bigcap\mathrm{VS}_{(e_i)}$ of Thm 6.2(b) satisfies
 $$\Pr[\text{trimmed verifier}=R^*]\ \ge\ 1-\sum_i(1+c_i)\,e^{-2N\Delta_i^2}.$$
 
 *Proof.*
 * The number of invalid steps tagged $i$ is $\mathrm{Bin}(N,\alpha_i)$, so by Hoeffding $\Pr[>e_i]\le e^{-2N\Delta_i^2}$.
-* For robust genericity, it suffices that $\#\{\mathrm{root}\in G\}$, $\#\{\mathrm{root}\notin G\}$ and $\#\{\Theta x\ne\Theta y\}$ all exceed $e_i$. Every $f$ lies on one side of the split, and the other side's count is $\le\#\{\mathrm{root}\neq f\}$.
+* For robust genericity when $v_i\ge1$, it suffices that $\#\{\mathrm{root}\in G\}$, $\#\{\mathrm{root}\notin G\}$ and $\#\{\Theta x\ne\Theta y\}$ all exceed $e_i$, counted over valid rule-$i$ samples. Every $f$ lies on one side of the split, and the other side's count is $\le\#\{\mathrm{root}\neq f\}$. These events also give more than $e_i$ valid samples.
+* For a ground rule, the single event needed is that the number of valid rule-$i$ samples exceeds $e_i$. That count is $\mathrm{Bin}(N,\beta_i)$, and $\beta_i=\rho_i\beta_i$ because $\rho_i=1$.
 * Each of these counts is $\mathrm{Bin}(N,\ge\rho_i\beta_i)$, with mean $\ge(\alpha_i+2\Delta_i)N$. Hoeffding again, and a union bound over the $c_i$ events. ∎
 
 **Theorem 6.4 (indistinguishability: the frequency threshold is necessary) [proved; in the spirit of Kearns & Li 1993].**
@@ -501,8 +559,14 @@ Then under $D$, every fixed $q\in R'\setminus R^*$ is accepted with probability 
 *Proof.* $D$ is an admissible noisy law for target $R^*$, and the data distribution is the same in both scenarios. ∎
 
 *Consequences for schemas.*
-* For tagged schemas, apply Thm 6.4 to $\sigma'$ and each maximal proper specialization $\sigma''$: $x\mapsto f(\bar z)$, or $x:=y$. Completeness under noise rate $\alpha$ requires every witness frequency $\Pr[\mathrm{root}(\Theta x)\ne f]$ and $\Pr[\Theta x\ne\Theta y]$ to exceed $\alpha$.
-* Since $\rho_x\le1-\max_fF_x(f)\le3\rho_x$, Thm 6.3 matches this necessity up to a factor of 3 plus margins.
+* For tagged schemas, apply Thm 6.4 to $\sigma'$ and each maximal proper specialization $\sigma''$: $x\mapsto f(\bar z)$, or $x:=y$. Completeness under noise rate $\alpha$ requires every witness frequency, measured as a fraction of *all* data, to exceed $\alpha$. That is, $\beta_i\Pr_{\Lambda_i}[\mathrm{root}(\Theta x)\ne f]>\alpha$ and $\beta_i\Pr_{\Lambda_i}[\Theta x\ne\Theta y]>\alpha$. With per-tag noise, $\alpha$ here may be read as $\alpha_i$, since the alternative law places its "noise" on tag $i$ only. (The factor $\beta_i$ was added after verification.)
+* Write $F_x$ for the root law of $\Theta x$ and $m:=\max_fF_x(f)$. Then $\rho_x\le1-m\le2\rho_x$ [proved, constant sharpened from 3 after verification].
+  * The side of any split that avoids the most likely root has mass $\le1-m$.
+  * If $m\ge\frac12$, the split $\{f_{\max}\}$ gives $\rho_x\ge1-m$.
+  * If $m<\frac12$, add roots to $G$ one at a time until $F_x(G)\ge\frac{1-m}2$. The final mass is $<\frac{1-m}2+m=\frac{1+m}2$, so both sides have mass $\ge\frac{1-m}2$.
+  * The constant 2 is tight: the uniform law on an odd number of roots gives $(1-m)/\rho_x=2$.
+  
+  So Thm 6.3 matches this necessity up to a factor of 2 plus margins.
 * **There is an unavoidable trade-off.** A positive-data verifier that tolerates error rate $\alpha$ must refuse every rule-generality supported by less than $\alpha$ of the data. With human error rates around 1%, rules used in less than about 1% of steps need negative information.
 
 **Corollary 6.5 (systematic errors are rules) [proved].** Let $H$ be closed under adding a schema (tagged multi-schema rules, or untagged unions with unbounded $k$). Let human errors be **schema-generated**: $D_{\rm err}$ is supported on $\mathrm{inst}(\tau)$ with $\mathrm{inst}(\tau)\not\subseteq R^*$. Then the human data law is a *clean* law for $R^*\cup\mathrm{inst}(\tau)\in H$, at every error rate.
@@ -513,11 +577,18 @@ The line between *sporadic* and *systematic* errors is therefore exact:
 * errors removable by positive data are those rarer than the witness frequencies of the genuine rules;
 * "rule-like" errors at any rate need **negative information**: escalation, coherence, or world feedback.
 
-**Proposition 6.6 (in CPC, coherence refutes every systematic error) [proved; cf. T2 Thm 3.1].** In classical propositional logic, a substitution-closed $A\supseteq R^*_{\rm CPC}$ is sound iff $\bot\notin\mathrm{Cl}_A(\emptyset)$, by Prop 2.3 plus ex falso.
+**Proposition 6.6 (in CPC, coherence refutes every systematic error in pure schemas) [proved; cf. T2 Thm 3.1] (scope revised after verification).** In classical propositional logic, let $A=R^*_{\rm CPC}\cup A_1$ with $A_1$ closed under uniform substitution, for example the instance set of a family of **pure** schemas. Then $A$ is sound iff $\bot\notin\mathrm{Cl}_A(\emptyset)$, by Prop 2.3 plus ex falso. For learned schemas that mention specific atoms, apply the test to their purifications. By the scope remark after Prop 2.3, $A$ is sound iff $\bot\notin\mathrm{Cl}_{A^\circ}(\emptyset)$.
 
-For example, the fallacy "affirming the consequent" yields $\bot$ from $\bot\to\top$ and $\top$. So a coherence test *in the empty (or actual) context*, rather than in hypothetical contexts where deriving $\bot$ is legitimate reductio, catches every unsound learned schema. The test also returns a **negative bag**: the derivation of $\bot$, at least one of whose steps is invalid. This is the hand-off to T2.
+For example, the fallacy "affirming the consequent" yields $\bot$ from $\bot\to\top$ and $\top$. So a coherence test *in the empty (or actual) context*, rather than in hypothetical contexts where deriving $\bot$ is legitimate reductio, catches every unsound learned *pure* schema. After purification it catches every unsound learned schema. The test also returns a **negative bag**: the derivation of $\bot$, at least one of whose steps is invalid. This is the hand-off to T2.
 
-In arithmetic the analogue fails. Unsound but consistent additions exist (e.g. $\neg\mathrm{Con}(\mathrm{PA})$), so coherence must be supplemented by world feedback (computation refuting false $\Pi_1$ claims; T2 §3.5).
+*Limits (added after verification).*
+* Run directly on schemas that mention atoms, the test can miss errors. For example, $\mathsf{s1}(\mathsf{or}(x,p_1),x)$, "from $x\vee p_1$ infer $x$", added to a complete CPC calculus never yields $\bot$ from $\emptyset$, since every derivable formula is true whenever $p_1$ is false (Prop 2.3, scope remark).
+* Purification costs nothing in soundness, because in CPC $\tau$ is sound iff $\tau^\circ$ is. But it enlarges the accepted set. Relative to a human calculus $R^*$ smaller than all classically valid steps, it may accept valid steps outside $R^*$.
+
+In arithmetic the analogue fails, and in a specific way (remark corrected after verification).
+* False $\Pi_1$ additions are already caught by coherence over PA. If $\pi$ is a false $\Pi_1$ sentence, then $\neg\pi$ is a true $\Sigma_1$ sentence, so $\mathrm{PA}\vdash\neg\pi$ by $\Sigma_1$-completeness, and $\mathrm{PA}+\pi\vdash\bot$ (T2 Thm 3.10(a)). Computation (Δ₀ world feedback) adds nothing here (T2 Lemma 3.7).
+* The residual failures are false $\Sigma_1$ (and higher) additions such as $\neg\mathrm{Con}(\mathrm{PA})$. They are consistent with PA, so coherence does not refute them, and no finite computation refutes a false $\Sigma_1$ sentence either.
+* What handles them is *caution*: accept a $\Sigma_1$ claim only with a witness (T2 Thm 3.10(c)). Otherwise one must accept stronger principles, such as $\mathrm{Con}(\mathrm{PA})$ or reflection. Beyond $\Delta_2$ no computable learner suffices (T2 Thm 3.10(e)).
 
 ---
 
@@ -530,7 +601,9 @@ In arithmetic the analogue fails. Unsound but consistent additions exist (e.g. $
 | 2-unions, $\{a,b,g,p\}$, $N=3,4$ | $8,13$; 3-unions at $N=3$: $10$ (whole universe) |
 | subcubes, $k=2$, $n=2,3,4$ | $4,7,11=\sum_{w\le2}\binom nw$ (lower bound in Thm 3.7(iii) exact) |
 | partition abstraction, $k=2$, $d=3,4$ | $7,15=2^d-1$ (Ramsey recursion tight for the abstraction) |
-| intersection-closed families, hill-climbing, $k=2$, $h=2..5$ | $3,6,10,14$ (Conj 3.8 predicts $\le3,6,10,15$) |
+| intersection-closed families, hill-climbing, $k=2$, $h\le3,4,5$ on 9, 12, 14 points | $6,10,14$; no counterexample. The $h\le5$ value 14 equals the universe size, a ceiling artifact rather than evidence (corrected after verification) |
+| graphic-matroid flats $M(K_{h+1})$, $k=2$, $h=2..5$ (`graphic.py`, added after verification) | $3,6,10,15=\binom{h+1}2$: Conj 3.8 is tight at $k=2$ if true |
+| untagged 2-unions, $R^*=p(x)\cup q(y)$, $P=\{p(a),p(b),q(a),q(b)\}$ (`union_remark.py`, added after verification) | $\bigcap\mathrm{VS}_{H_2}(P)=R^*$ although $\zeta_1=0$ (Remark after Thm 5.4) |
 | Ville example | ratio to $\delta'$: 0.78 at $u=.5$; 0.99 at $u=.01$ |
 | toy ND identification, noise collapse, trimming | as reported in §5–§6 |
 
@@ -549,14 +622,16 @@ In arithmetic the analogue fails. Unsound but consistent additions exist (e.g. $
   * the closure-algorithm facts (Prop 3.3, Natarajan; Helmbold–Sloan–Warmuth);
   * the Plotkin lattice;
   * the KWIK enumeration bound;
-  * Ville's inequality and test martingales (Shafer, Shen, Vereshchagin & Vovk 2011).
+  * Ville's inequality and test martingales (Shafer, Shen, Vereshchagin & Vovk 2011);
+  * Thm 4.2(a), which is the prior–posterior-ratio martingale of Waudby-Smith & Ramdas (2020), as L2 notes. Thm 4.2(b) is an easy corollary, since truthful constraints multiply $Z$ by at most 1 (cf. L2 Thm 1);
+  * the anchor condition, which is the Lange–Zeugmann condition for strong-monotonic learning (credit revised after verification).
 * *New here, as far as I know:*
   * the exact single-schema budget $1+\mu-\mu^*$;
   * the tagged/untagged separation ($k(N+1)$ vs. $\ge\lfloor(N-1)/k\rfloor^k$);
-  * the $\mathrm{Bell}$ lower bound for two-sided checking;
-  * the prover-uniform form of Thm 4.2(b) and the tightness of its constant;
-  * anchors vs. tell-tales for *verification*;
-  * the witness-event sample complexity and its noise version, with matching necessity up to a factor of 3;
+  * the $\mathrm{Bell}$ lower bound for two-sided checking, over growing signatures;
+  * the tightness of the constant in Thm 4.2 (Prop 4.3);
+  * the reading of anchors (vs. tell-tales) as the completeness condition for *certified verification*;
+  * the witness-event sample complexity and its noise version, with matching necessity up to a factor of 2, which is tight;
   * the exact statement that schema-generated errors are indistinguishable from rules.
 
   None of these is deep. Their value is that together they pin down when the user's program works.
@@ -565,7 +640,7 @@ In arithmetic the analogue fails. Unsound but consistent additions exist (e.g. $
 1. *Realizability is load-bearing.* If the true calculus is not in $H$ (e.g. two untagged rules, but $H=H_1$), the lgg overgeneralizes and soundness fails. The Bayesian hierarchy repairs this only probabilistically, at exponential escalation cost in the complexity of what is missing.
 2. Soundness is relative to the *human* calculus. The rules learned are exactly as good as humans' rules (including naive comprehension, if humans use it).
 3. The first-order-term model of steps idealizes away AC contexts, binders and variable-arity rules (see the remarks after Cor 5.5).
-4. Untagged unions: the gap between the polynomial lower bound and the exponential upper bound is open (Conj 3.8).
+4. Untagged unions: the gap between the polynomial lower bound and the exponential upper bound is open (Conj 3.8). The conjecture is proved only for $(k,h)=(2,3)$, and if true it is tight at $k=2$.
 5. Informal mathematics, where steps are derived and gappy, is not covered by these classes.
 
 **What this says about the user's questions.**
@@ -584,7 +659,7 @@ In arithmetic the analogue fails. Unsound but consistent additions exist (e.g. $
   * search-proof soundness.
 
   Coherence is needed only for systematic errors, or, in T2's terms, for rules too rare to be learned robustly.
-* *Before formalization.* Without rule citations, untagged unions cost $\Omega((N/k)^k)$ escalations in the worst case. Identification still holds under diversity ($\zeta_i>0$), but requires a bound $k$ on the number of rules that is smaller than the instantiation variety. This quantifies one way in which "inventing a language with named rules" (the user's note on how math got formalized) makes inference learnable.
+* *Before formalization.* Without rule citations, untagged unions cost $\Omega((N/k)^k)$ escalations in the worst case. Identification still holds under diversity ($\zeta_i>0$, which needs a bound $k$ on the number of rules smaller than the instantiation variety). This is a sufficient condition. For a single rule, low variety provably blocks identification. With several rules it need not (Remark after Thm 5.4, revised after verification). This quantifies one way in which "inventing a language with named rules" (the user's note on how math got formalized) makes inference learnable.
 
 **Open problems.**
 1. Prove or refute Conj 3.8. Even $N^{O(k)}$ for deep schemas would suffice for the qualitative picture.
@@ -611,6 +686,7 @@ In arithmetic the analogue fails. Unsound but consistent additions exist (e.g. $
 * Haussler, D. & Welzl, E. (1987). ε-nets and simplex range queries. *Discrete & Computational Geometry* 2:127–151 ✓.
 * Helmbold, D., Sloan, R. & Warmuth, M. (1990). Learning nested differences of intersection-closed concept classes. *Machine Learning* 5:165–196 ✓.
 * Kearns, M. & Li, M. (1993). Learning in the presence of malicious errors. *SIAM J. Comput.* 22:807–837 ✓.
+* Lange, S. & Zeugmann, T. (1992). Types of monotonic language learning and their characterization. COLT, 377–390 (title/venue per L1 ✓; page numbers and the exact form of the characterization unverified).
 * Li, L., Littman, M. & Walsh, T. (2008). Knows what it knows: a framework for self-aware learning. ICML ✓.
 * Lightman, H. et al. (2023). Let's verify step by step. arXiv:2305.20050 ✓.
 * Natarajan, B. K. (1987). On learning Boolean functions. STOC ✓.
@@ -621,4 +697,52 @@ In arithmetic the analogue fails. Unsound but consistent additions exist (e.g. $
 * Rivest, R. & Sloan, R. (1988). Learning complicated concepts reliably and usefully. AAAI ✓.
 * Shafer, G., Shen, A., Vereshchagin, N. & Vovk, V. (2011). Test martingales, Bayes factors and p-values. *Statistical Science* 26:84–101 ✓.
 * Ville, J. (1939). *Étude critique de la notion de collectif*. Gauthier-Villars ✓.
+* Waudby-Smith, I. & Ramdas, A. (2020). Confidence sequences for sampling without replacement. NeurIPS (prior–posterior-ratio martingale) ✓ (per L2).
 * Wright, K. (1989). Identification of unions of languages drawn from an identifiable class. COLT, 328–333 ✓; corrected by Motoki, Shinohara & Wright (1991), COLT ✓.
+
+---
+
+## Verification log
+
+Two independent adversarial referees checked this file: referee A covered §1–§3, referee B covered §4–§6 and the related novelty claims in §8. The full reports are in `../verification/T1-soundness-under-search-verification.md`. I re-checked every issue by hand. Where computation helped, I re-ran the referee scripts (`graphic.py`, `checks37.py`, `union_remark.py`, `prescient.py`, `rho.py`, `thm31b.py`); all reproduced. Scripts that back claims now made in this file were copied into `T1-code/` and added to `run_all.sh`. Theorem numbering is unchanged, and materially changed items are marked "(revised after verification)".
+
+**Major issues (all genuine, all fixed).**
+
+| # | item | verdict | action |
+|---|---|---|---|
+| A1 | Thm 3.1(b) | Genuine. Read as a conditional probability at a history, (b) is false for randomized verifiers. An $\varepsilon$-sound "reckless with probability $\varepsilon$" verifier reaches $h=(c,\mathrm{ACC})$ with probability $\varepsilon$ and then accepts $b\notin\bigcap\mathrm{VS}$ with conditional probability 1 (re-run: $\Pr[h]=0.0098$, $\Pr[\mathrm{ACC}\,b\mid h]=1.000$). | **Restated** with $p$ the *joint* probability of "history $h$, then $q$ accepted". Added the deterministic special case and the counterexample. Proof made explicit. The random-data remark now reads $\Pr_{R'}(\text{data})\cdot p\le\delta$. |
+| A2 / B18 | Prop 2.3 gloss; Summary; Prop 6.6 coverage claim | Genuine, one root cause. Atoms are constants of $\Sigma$ (§1.3), so learned schemas can mention atoms, and their instance sets are not substitution-closed. Two counterexamples were checked by hand. $(\{x\vee p_0\},x)$ is unsound but only adds $\neg p_0$, since $\mathrm{Cn}(\neg p_0)$ is closed. $\mathsf{s1}(\mathsf{or}(x,p_1),x)$ never yields $\bot$. | Hypothesis restated as $A=R^*_{\rm CPC}\cup A_1$ with $A_1$ substitution-closed, e.g. instance sets of **pure** schemas. Added a scope remark with the counterexamples. Added **purification** (atoms → fresh metavariables) and proved that in CPC $\tau$ is sound iff $\tau^\circ$ is. So coherence on $A^\circ$ decides soundness of $A$. Prop 6.6, its gloss and the Summary were restricted accordingly. *Note for T2:* T2 Thm 3.1 is stated for structural closure operators and is unaffected, but any T2 gloss about *learned* schemas should be checked for atom constants. That is outside T1's scope. |
+
+**Minor issues.**
+
+| # | item | verdict | action |
+|---|---|---|---|
+| A3 | Cor 2.2 "every output trivializes" | Genuine: fails if $\mathcal L$'s output lacks $\top$I, $\wedge$I, $\vee$I$_2$ (e.g. $\mathcal L\equiv\emptyset$). | $\mathcal L^+$ now also adds $\mathrm{inst}(\top\text{I},\wedge\text{I},\vee\text{I}_2)\subseteq R^*$. These cannot increase the error. Summary now says "same rates up to $O(\varepsilon^{-1}\log\delta^{-1})$ extra samples". |
+| A4 | Thm 3.2 lower-bound citation | Genuine: it cited the false conditional form of 3.1(b). | Replaced by a direct coupling argument for a non-adaptive honest prover. Def 1.3 now defines randomized cost as expected cost. |
+| A5 | Conj 3.8 evidence | Genuine. The $h\le5$ hill-climb ran on 14 points, so "14 vs 15" is a ceiling artifact. The "[computed]" one-step-decomposition claim has no script (only a 2-line stub survives in scratch). | Evidence corrected. Added that $M(K_{h+1})$ flats attain $\binom{h+1}2$ at $k=2$ for $h=2..5$ (re-run `graphic.py`: 3,6,10,15). Added a full proof of the case $(k,h)=(2,3)$: I checked the referee's sketch step by step and wrote it out. Withdrew the decomposition claim. §7 table, §8 weakness 4 and the Summary updated. |
+| A6 | Thm 3.4 displays and "chain = generalization chain" | Genuine (presentational). | Target-dependent quantity written as $\mathrm{el}(H_1,\sigma^*\mid\emptyset;N)$, with $\mathrm{Esc}(H_1;N)\le N+1$ ($=N+1$ with two constants and a unary symbol). Proof now uses the representatives $g_i=\mathrm{lgg}(C_i)$, with inclusion giving strict generality. |
+| A7 | Prop 3.5 "super-exponential" | Genuine: it needs a signature that grows with $N$. Over a fixed finite signature the two-sided cost is $\le$ the number of steps, $2^{O(N)}$. | Title, statement and the Bell comparison qualified. The fixed-signature upper bound was added. Re-ran `checks37.py`: Bell$(2..4)=2,5,15$ forced escalations. |
+| A8 | Thm 3.6 "intersection-closed" | Genuine: $H^{\rm tag}_k$ is not literally intersection-closed. Conclusion correct. | Justification replaced by the factorization $\mathrm{VS}=\prod_i\mathrm{VS}_i$. The bound is split by whether $P_0^{(i)}=\emptyset$. |
+| A9 | Thm 3.7(iii) / Summary "$\Theta(n^k)$ for flat schemas" | Genuine: $\Theta(n^k)$ is proved only for linear flat schemas; $n\ge k$ is needed. | Summary and (iii) qualified: linear $\Theta(n^k)$; repeated metavariables between $\Omega(n^k)$ and $O(n^{2k})$; $n\ge k$ added. |
+| B2 | Thm 4.2(a) unstated hypothesis | Genuine. A prover that foresees fresh oracle noise defeats (a) with probability 1 (re-run `prescient.py`: 1.0 at $\eta=0.1,0.3$). | Hypothesis stated explicitly, in §4's setup and in (a): $\mathcal F_t$ includes all of the prover's information, and the noise is fresh and unforeseeable. Noted that (b) needs no such assumption, and included the counterexample. |
+| B3 | Thm 4.2 novelty/citation | Genuine: (a) is the PPR martingale of Waudby-Smith & Ramdas (2020), and (b) is an easy corollary. | Credit paragraph and reference added. §8 "new" list corrected. |
+| B7 | Cor 4.6 "0-sound" | Genuine: the guarantee only covers targets with $w(R^*)\ge\delta$. | Reworded. Proof made explicit about $P$ and $N$. |
+| B9 | Prop 5.2 converse for $T=\emptyset$ | Genuine: $H=\{\{1\},\{2\}\}$, $R^*=\{1\}$. | Converse restricted to nonempty tell-tales. Counterexample and the existence-level equivalence added. Anchors credited to Lange–Zeugmann in §5 and §8, and the reference was added. |
+| B11 | Remark after Thm 5.4 "identification fails forever" | Genuine for $k'\ge2$. Hand proof for $k=k'=2$, $P=\{p(a),p(b),q(a),q(b)\}$: every covering 2-union contains $p(x)\cup q(y)$. Re-ran `union_remark.py`. | Remark rewritten. A proved sufficient condition for failure ($k-k'+1$ failure sets plus an uncovered instance) recovers the original for $k'=1$. The $k'\ge2$ counterexample was added. The intermediate cases are open. §8 softened. |
+| B14 | Thm 6.2(b): ground rules; per-tag vs global budget | Genuine: a ground rule with $\le e_i$ valid samples fails, and (b) needs per-tag budgets. | $\mathrm{VS}_{(e_i)}$ is defined explicitly, and (ii) now requires $>e_i$ valid samples. A remark explains why a global budget fails. |
+| B15 | Thm 6.3 ground rules | Genuine: the missing event "valid count $>e_i$". | For $v_i=0$: $\rho_i:=1$, $c_i:=1$. The verifier is specified as per-tag. |
+| B16 | Thm 6.4 consequences: factor 3, missing $\beta_i$ | Genuine: the tight constant is 2 (greedy split; uniform law on an odd number of roots gives exactly 2; re-ran `rho.py`: max 1.974 over 20k random laws). $\beta_i$ factor missing. | Factor 2 proved, with tightness. $\beta_i$ inserted. Summary and §8 updated. |
+| B19 | Prop 6.6 arithmetic remark | Genuine. False $\Pi_1$ additions are already caught by coherence over PA (Σ₁-completeness), and $\neg\mathrm{Con}(\mathrm{PA})$ is a false Σ₁ sentence that computation cannot refute. | Rewritten per T2 Thm 3.10(a),(c),(e) and Lemma 3.7. |
+
+**Items reported "ok", with optional nits.**
+* *Nits applied:*
+  * Lemma 1.1 ("non-derivable" in place of "false").
+  * Thm 2.1 ("for non-tautologous $C$"; finitely many schemas only if $R^*$ is).
+  * Thm 4.1 ("all data truthful"; per-target guarantee).
+  * Prop 4.3 (the prover queries $c$ exactly at $t^*$).
+  * Thm 4.4 ($\delta_r=0$ makes the dishonest-prover bound vacuous).
+  * Cor 4.5 (exact ratio; with $\delta=w^*$ the VS posterior *is* the VS verifier, which is exactly optimal).
+  * Thm 5.1 ("for finite $P$").
+  * Thm 5.3 (ground-rule case spelled out in the proof).
+  * Thm 5.4(b) (the "$\ge\varepsilon$" form of the ε-net theorem).
+* *No change needed:* Thm 3.1(a), Prop 2.4, Prop 3.3, Lemmas 1.2–1.3, Thm 3.7 main statements, Thm 3.9, Cor 5.5, side-condition extension, Prop 6.1, Cor 6.5.
