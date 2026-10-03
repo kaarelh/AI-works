@@ -749,12 +749,15 @@ class CoherencePruner:
     """Coherence (and optional sparse world feedback) driven repair of a
     :class:`LearnedSeqCalculus` (modified in place).
 
-    An *incriminated instance* is ``(sigma, Gamma, premises, conclusion)``: a step
-    of a derivation of bottom (or a step refuted by the world).  A *repair* of a
-    rule must block all its incriminated instances: a minimal ``mem`` guard
-    (monster-barring), a split of its cluster by MDL keeping only children that
-    do not license an incriminated instance (undoing an over-generalisation), or
-    deletion.  Each repair loses some human steps; the cheapest one is used."""
+    An *instance* is ``(sigma, Gamma, premises, conclusion)``, a step of a
+    derivation of bottom or a step refuted by the world.  The evidence against
+    a rule is a list of *groups* of its instances: one group per negative bag
+    (the rule's instances in that bag) and a singleton group per world-refuted
+    step.  A *repair* must block at least one instance of every group (a bag is
+    broken as soon as one of its steps is no longer licensed): a minimal ``mem``
+    guard (monster-barring), a split of its cluster by MDL dropping the children
+    needed to break every group (undoing an over-generalisation), or deletion.
+    Each repair loses some human steps; the cheapest one is used."""
 
     def __init__(self, calc: LearnedSeqCalculus, cfg: PruneConfig, learner: Optional[SeqLearner] = None):
         self.calc = calc
@@ -795,7 +798,7 @@ class CoherencePruner:
         for k in range(1, self.cfg.max_atoms + 1):
             for combo in itertools.combinations(atoms, k):
                 g = lr.rule.guard & MemGuard(combo)
-                if any(g.holds(b[0], b[1]) for b in bad):
+                if not all(any(not g.holds(i[0], i[1]) for i in grp) for grp in bad):
                     continue
                 kept = self._kept(lr, g)
                 key = (-kept, k, str(g))
@@ -841,10 +844,35 @@ class CoherencePruner:
         if self.cfg.allow_split:
             ch = self._split_children(lr)
             if ch:
-                keep = [c for c in ch if not any(licenses(c[0], b[2], b[3]) is not None for b in bad)]
+                keep = self._split_keep(ch, bad)
                 covered = sum(n for _, _, n in keep)
                 opts.append((float(max(sup - covered, 0)), 1, "split", keep))
         return min(opts, key=lambda o: (o[0], o[1]))
+
+    def _split_keep(self, ch, bad) -> list:
+        """Children kept by a split: greedily drop, for each group not yet broken,
+        the children licensing its cheapest-to-block instance."""
+        keep = list(range(len(ch)))
+        cache: Dict[Tuple[int, int, int], bool] = {}
+
+        def L(k, gi, ii):
+            key = (k, gi, ii)
+            if key not in cache:
+                inst = bad[gi][ii]
+                cache[key] = licenses(ch[k][0], inst[2], inst[3]) is not None
+            return cache[key]
+
+        for gi, grp in enumerate(bad):
+            if any(not any(L(k, gi, ii) for k in keep) for ii in range(len(grp))):
+                continue                      # some instance of the group is already unlicensed
+            best = None
+            for ii in range(len(grp)):
+                drop = [k for k in keep if L(k, gi, ii)]
+                cost = sum(ch[k][2] for k in drop)
+                if best is None or cost < best[0]:
+                    best = (cost, drop)
+            keep = [k for k in keep if k not in best[1]]
+        return [ch[k] for k in keep]
 
     def blame_weight(self, lr: LearnedRule, bad=()) -> float:
         """Cost of blaming ``lr`` for the incriminated instances ``bad``."""
@@ -934,7 +962,7 @@ class CoherencePruner:
         for rid, s, G, prems, concl in insts:
             if self.world.step_refuted(prems, concl) is not None:
                 blamed.add(rid)
-                incriminated[rid].append((s, G, prems, concl))
+                incriminated[rid].append([(s, G, prems, concl)])
                 evidence.setdefault(rid, "step refuted by the world inside a derivation of bottom")
         return blamed
 
@@ -952,7 +980,7 @@ class CoherencePruner:
                         continue
                     ref = self._world_probes(lr)
                     if ref:
-                        incriminated[lr.sid].extend(ref)
+                        incriminated[lr.sid].extend([inst] for inst in ref)
                         evidence[lr.sid] = f"{len(ref)} instances refuted by the world"
                         n_world_cex += len(ref)
                     else:
@@ -982,10 +1010,10 @@ class CoherencePruner:
                 while True:
                     forced = set(incriminated)
                     open_bags = [(b, insts) for b, insts in bag_sets if not (b & forced)]
-                    inst_of: Dict[int, list] = defaultdict(list)
+                    inst_of: Dict[int, list] = defaultdict(list)     # rid -> one group per bag
                     for b, insts in open_bags:
-                        for rid, s_, G_, p_, c_ in insts:
-                            inst_of[rid].append((s_, G_, p_, c_))
+                        for rid in sorted(b):
+                            inst_of[rid].append([(s_, G_, p_, c_) for r2, s_, G_, p_, c_ in insts if r2 == rid])
                     weight = {rid: self.blame_weight(self.calc.by_id(rid), inst_of[rid]) for rid in inst_of}
                     hs = min_weight_hitting_set([b for b, _ in open_bags], weight) if open_bags else []
                     if hs_iters >= cfg.hs_iters:
@@ -1008,7 +1036,7 @@ class CoherencePruner:
                 for rid in hs:
                     for b, insts in bag_sets:
                         if rid in b:
-                            incriminated[rid].extend((s_, G_, p_, c_) for r2, s_, G_, p_, c_ in insts if r2 == rid)
+                            incriminated[rid].append([(s_, G_, p_, c_) for r2, s_, G_, p_, c_ in insts if r2 == rid])
                     evidence.setdefault(rid, f"hitting set of {len(bag_sets)} negative bags")
             actions = []
             for sid in sorted(incriminated):

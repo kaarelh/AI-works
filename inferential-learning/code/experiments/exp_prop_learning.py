@@ -433,6 +433,28 @@ def run_post(quick: bool) -> dict:
     out["learned_base"] = {"rules": [str(r) for _, r in lbase],
                            "hand": bold_table(lbase, HAND_CANDIDATES, examples=2, names=names)}
     out["trace"] = pruning_trace()
+    # coherence does not fix meaning: without its elimination rule, "|- A | B" is a
+    # coherent axiom (| then means 'true'); with |E present it is refuted
+    lem_or = parse_rule("/ G |- A | B")
+    no_orE = [(r.name, r) for r in CLASSICAL_RULES if r.name != "orE"]
+    a1 = BoldLearner(no_orE).offer([("CAND", lem_or)])
+    a2 = BoldLearner(base).offer([("CAND", lem_or)])
+    def or_as_top(t):
+        if type(t) is App and t.head == "or":
+            return parse_formula("top")
+        if type(t) is App and t.args:
+            return App(t.head, tuple(or_as_top(a) for a in t.args))
+        return t
+
+    def tr(r):
+        te = lambda e: e if type(e) is Var else App("ctx", tuple(or_as_top(f) for f in e.args))
+        return SeqRule([(te(e), or_as_top(a)) for e, a in r.prems], (te(r.concl[0]), or_as_top(r.concl[1])), r.guard)
+
+    certified = all(rule_sound(tr(r)) for _, r in no_orE + [("CAND", lem_or)])
+    out["alt_meaning"] = {"rule": str(lem_or), "coherent_without_orE": a1["accepted"],
+                          "certified_or_as_top": certified,
+                          "coherent_with_orE": a2["accepted"], "classically_valid": rule_sound(lem_or),
+                          "proof_with_orE": format_proof(a2["proof"]) if a2["proof"] is not None else None}
     out["seconds"] = round(time.time() - t0, 1)
     return out
 
@@ -650,8 +672,9 @@ def make_report(res: dict, quick: bool) -> str:
              "(ii) blind backward search for Γ_d ⊢ ⊥. "
              "Bags are diversified (re-search with a bag member blocked). Blame = implicit minimum-weight hitting "
              "set (block the candidate set, search again, until coherent within budget); weight of blaming a rule = "
-             "human steps lost by its cheapest repair that blocks the incriminated instances; repairs: minimal "
-             "`mem` guard (monster-barring), split the cluster by MDL (undo an over-generalisation), delete. "
+             "human steps lost by its cheapest repair that breaks every bag it is blamed for (blocks at least one of "
+             "its instances in each bag); repairs: minimal `mem` guard (monster-barring), split the cluster by MDL "
+             "(undo an over-generalisation), delete. "
              "`world` = the same plus sparse world feedback: 2 observed valuations (of 16) answer whether a single "
              "step is refuted at an observed world (rule instances with metavariables ↦ literals, and steps of "
              "bags).")
@@ -794,7 +817,8 @@ def interpretation(res):
     if co:
         resid = [u for p in P("coherence", list(NOISE), 0) + P("world", list(NOISE), 0) for u in p["unsound_rules"]]
         ns = sum(_nonstructural(u) for u in resid)
-        L.append(f"\n**3. Coherence alone (no world) removes them — Post-completeness at work.** After coherence "
+        L.append(f"\n**3. Coherence alone (no world) removes almost all of them — Post-completeness at work — "
+                 f"and what it misses is mostly non-structural.** After coherence "
                  f"pruning (N ≥ 20, {len(co)} runs with errors): runs with an unsound active rule "
                  f"{sum(p['n_unsound'] > 0 for p in co)}, adversary derives ⊢ ⊥ in "
                  f"{sum(p['attack']['derives_bottom'] for p in co)}, total adversary exploits "
@@ -964,6 +988,17 @@ def post_section(P):
                 L.append(f"\n{x['offered']} after {o['order'][0]}:\n```\n{x['proof']}\n```")
                 break
         break
+    AM = P.get("alt_meaning")
+    if AM:
+        L.append(f"\n**Coherence does not fix meanings by itself.** `{AM['rule']}` (classically valid: "
+                 f"{AM['classically_valid']}) is coherent over classical ND *without* ∨E: {AM['coherent_without_orE']} "
+                 f"(∨ then behaves like ⊤: introduction rules plus an axiom, no elimination; certified: reading every "
+                 f"A ∨ B as ⊤ makes all these rules classically sound: {AM.get('certified_or_as_top')}); with ∨E present it is "
+                 f"refuted: coherent = {AM['coherent_with_orE']}. A coherence-only learner whose blame removes ∨E "
+                 "instead of the bad axiom ends in this coherent alternative meaning; harmony between introduction "
+                 "and elimination rules (here: keeping the human ∨E practice) is what excludes it.")
+        if AM.get("proof_with_orE"):
+            L.append(f"```\n{AM['proof_with_orE']}\n```")
     LB = P["learned_base"]
     c = Counter((r["classically_valid"], r["coherent"]) for r in LB["hand"] if "non-structural" not in r["name"])
     L.append(f"\n**Base = a learned calculus** (`vs`, N = 100 clean, after coherence; {len(LB['rules'])} active rules): "
