@@ -107,14 +107,21 @@ def recovery_report(calc, targets: Sequence[SeqRule] = CLASSICAL_RULES) -> Dict[
 
 def fallacy_report(calc) -> Dict[str, dict]:
     """For each systematic fallacy: 'survived' (an active unsound rule licenses
-    its schema, i.e. the fallacy schema is an instance of it), 'removed' (a rule
-    of that shape was learned at some point but none survives), 'inactive'
-    (learned with support < m) or 'never_learned'."""
+    its schema or a special case of it: the fallacy schema is an instance of the
+    rule, or the rule is an instance of the fallacy schema, e.g. affirming the
+    consequent for the atom p only), 'removed' (a rule of that shape was learned
+    at some point but none survives), 'inactive' (learned, but no active unsound
+    rule of that shape: support < m, or only sound special cases) or
+    'never_learned'."""
     out = {}
     for name, (frule, _) in FALLACY_RULES.items():
         shape = [lr for lr in calc.rules if lr.rule.variant_of(frule, check_guard=False)
                  or (frule.subsumes(lr.rule))]
-        surv = [lr for lr in calc.active() if lr.rule.subsumes(frule) and not rule_sound(lr.rule)]
+        # REVIEW FIX: an active unsound *special case* of the fallacy (frule.subsumes(lr.rule)), e.g.
+        # 'G |- p -> X1 ; G |- X1 / G |- p', was previously reported as 'inactive' although it is active
+        # and unsound; it now counts as 'survived' (the unsound-rule counts were always correct).
+        surv = [lr for lr in calc.active() if (lr.rule.subsumes(frule) or frule.subsumes(lr.rule))
+                and not rule_sound(lr.rule)]
         if surv:
             st = "survived"
         elif any(lr.status in ("deleted", "split") or "GUARDED" in " ".join(lr.log) for lr in shape):

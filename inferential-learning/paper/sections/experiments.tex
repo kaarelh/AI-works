@@ -1,1 +1,210 @@
-\section{Experiments}\label{sec:experiments} (placeholder: being written)
+% =====================================================================
+% Section 12. Experiments
+% Sources (every number below is copied from these files; nothing is re-estimated):
+%   code/README.md (main results, review notes of 2026-10-03)
+%   code/results/algebra_learning.md      (Experiment A; JSON: algebra_learning.json)
+%   code/results/prop_learning.md         (Experiment B; regenerated after the review fixes)
+%   code/results/adversarial_prover.md    (Experiment C, incl. section 7 "--retrain")
+%   research/theory/T7-checks/ttl_sim.py           (D; re-run, identical to tab:twotier:sim)
+%   research/theory/T3-checks/sps_checker.py       (E; re-run, identical to tab:physics:checkerrun)
+%   research/theory/T5-checks/c1_...c5_*.py        (F; re-run)
+%   research/theory/T4-checks/comprehension_toy.py (G; re-run)
+% Figures: code/results/algebra_unsound.png, code/results/adversarial_prover_goodhart.png
+% =====================================================================
+
+\section{Experiments}\label{sec:experiments}
+
+This section reports seven small computational experiments. They \emph{illustrate} theorems of the earlier sections in settings where the target calculus is known, validity can be decided or tested, and adversaries can be run. They are not evidence that the methods scale, whether to real human mathematics, to neural verifiers, or to domains where world feedback is scarce. Experiments A--C use the Python package \texttt{cil} in \texttt{code/}; D--G are check scripts of the theory notes, re-run for this section. All are deterministic given the seeds. A--C use seeds $0,1,2$ throughout, and ``$a\pm b$'' is the mean and the population standard deviation over these three seeds, not a confidence interval; rows that pool several values of $N$ give the standard deviation over the pooled runs. Full tables are in the reports \texttt{code/results/*.md}. An independent review re-ran everything and fixed two reporting errors in B and a latent one in A; no stored result changed \status{computed}.
+
+% ---------------------------------------------------------------------
+\subsection{A: algebra, from imitation to a sound calculus, and the meadow}\label{sec:experiments:algebra}
+
+\paragraph{Setup.} The target has 41 oriented rewrite schemas for field algebra over \emph{partial} terms (\Cref{ex:setting:alg}). Eleven carry guards built from $\mathsf{defined}$, $\mathsf{nonzero}$ and $\mathsf{nonneg}$ atoms on schematic variables, such as $x/x\to1$ if $\mathsf{nonzero}(x)$; numeral arithmetic is trusted, not learned. A simulator writes $N$ human derivations in which every valid step instantiates a target schema and cites its name. Noise is \texttt{sporadic} ($5\%$ random mutations under random rule names), \texttt{fallacies} (each opportunity for one of five systematic fallacies taken with probability $0.3$: the freshman's dream, unguarded $x/x\to1$, unguarded $\sqrt{x^2}\to x$, $(a+b)/(c+d)\to a/c+b/d$, $-(a+b)\to-a+b$), \texttt{both}, or none. The learner clusters rewrite cores by MDL and takes Plotkin's least general generalization \citep{plotkin1970note} of each cluster, bucketing by the cited rule (\texttt{tagged}) or by shape (\texttt{untagged}). The verifier is conservative: it accepts a numeral evaluation or an instance of an active schema with human support $m\ge2$ whose guard follows from the context. A Lakatos-style loop \citep{lakatos1976proofs} of at most six rounds probes the schemas, derives with them, detects contradictions, blames and repairs (minimal guard, else split the cluster, else delete). In mode \texttt{numeral} the only signal is coherence (C): two derivations of distinct numerals from one ground term, or a derivation contradicting arithmetic. Modes \texttt{bag} and \texttt{step} add a world oracle (W), on whole derivations with blame by spectrum fault localization \citep{abreu2007accuracy}, or on single steps. The oracle compares partial values with Kleene equality at boundary and random rational points \citep{schwartz1980fast,zippel1979probabilistic}. Held-out valid and invalid steps in distribution (ID, about 10-node terms) and out of it (OOD, about 40 nodes) are labelled by an independent 60-point oracle, and a white-box attack targets every active schema.
+
+\begin{table}[ht]
+\centering\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+verifier & exact /41 & unsound & FA ID / OOD & C ID / OOD & exploits & oracle queries\\
+\midrule
+imitation only & $30.0\pm0.0$ & $15.7\pm0.5$ & $0.506$ / $0.507$ & $1.00$ / $1.00$ & $65\pm2$ & 0\\
++ coherence only (\texttt{numeral}) & $33.0\pm0.0$ & $8.3\pm0.5$ & $0.166$ / $0.156$ & $1.00$ / $1.00$ & $27.3\pm5.6$ & 0\\
++ world, derivations (\texttt{bag}) & $41.0\pm0.0$ & $0.0\pm0.0$ & $0.000$ / $0.000$ & $1.00$ / $1.00$ & $0.0\pm0.0$ & $11524\pm1461$\\
++ world, steps (\texttt{step}) & $41.0\pm0.0$ & $0.0\pm0.0$ & $0.000$ / $0.000$ & $1.00$ / $1.00$ & $0.0\pm0.0$ & $13329\pm450$\\
+\addlinespace
+boosted trees, with labels & n/a & n/a & $0.533$ / $0.503$ & $0.888$ / $0.728$ & n/a & labels\\
+\bottomrule
+\end{tabular}
+\caption{Experiment A at $N=500$, noise \texttt{both}, tagged learner, three seeds \status{computed}. \emph{Exact}: schema and guard recovered; \emph{unsound}: active schemas failing the soundness test; FA and C: acceptance of held-out invalid and valid steps; \emph{exploits}: accepted invalid steps found by the white-box attack. Of the 11 guarded rules, 0, 3, 11 and 11 are recovered exactly. The gradient-boosting baseline (34 features, threshold $0.5$) is trained on the same corpus with validity labels.}
+\label{tab:experiments:algebra}
+\end{table}
+
+\paragraph{Imitation and world feedback.} \Cref{sec:imitation:experiment} reports the positive-data part: shapes are recovered once a rule has a few instances (in $67\%$ of rule--run pairs with two, $100\%$ with five or more) and generalize out of distribution, but no guard is ever displayed, all five fallacies reach support at $N=500$ (\Cref{cor:imitation:systematic}), and spurious schemas from sporadic noise grow with $N$ (\Cref{thm:imitation:iidnoise}). The first row of \Cref{tab:experiments:algebra} is the outcome. With step-level world feedback, $0$ of the $90$ runs of the coherence grid ($N$ from 20 to 500, three noise settings, both learners, three seeds) end with an unsound schema, the largest false-accept rate on any held-out set is $0.000$, and for $N\ge200$ the loop recovers $40.6\pm0.8$ of the 41 schemas exactly, guards included, at ID/OOD completeness $0.993\pm0.015$ / $0.992\pm0.018$. Bag-level feedback leaves an unsound schema in $2/90$ runs (for example $0\cdot(x-a)\to0$). The guarantee is only as good as the red-teaming of one's own rules: with four probes per schema and round, bag feedback leaves $2.0\pm0.8$ unsound schemas; with thirteen, none.
+
+\begin{figure}[ht]
+\centering
+{\graphicspath{{./}{../../}}% the second prefix serves build-test/<name>/, where the section is compiled alone
+\includegraphics[width=0.85\textwidth]{../code/results/algebra_unsound.png}}
+\caption{Experiment A: unsound active schemas against the number of human derivations $N$ (noise \texttt{both}, mean of three seeds), tagged learner (left) and untagged learner (right) \status{computed}. Imitation alone (grey) gets worse with $N$; coherence without a world (blue) removes about half; world feedback (orange, green) leaves one schema in one run.}
+\label{fig:experiments:algebra}
+\end{figure}
+
+\paragraph{Coherence without a world converges to the meadow.} Pure coherence removes the errors that change the \emph{value} of a numeral expression. In paired runs of the tagged learner it deleted the freshman's dream in all 11 runs in which imitation had produced it, $(a+b)/(c+d)\to a/c+b/d$ in $17/17$ and $-(a+b)\to-a+b$ in $20/21$, and repaired unguarded $x/x\to1$ into the guarded rule in $31/35$. It almost never learned a guard that concerns only definedness: $a\cdot0\to0$ ended with a guard weaker than $\mathsf{defined}(a)$ in all 54 runs with $N\ge100$. Of the 90 pure-coherence runs, 88 end with an unsound schema (\Cref{fig:experiments:algebra}).
+
+What survives has a meaning. Every unsound learned schema was re-tested in a \emph{total} semantics: complex values, $x/0:=0$, the principal square root, non-integer powers set to $0$. This is a version of the \emph{meadows} of \citet{bergstra2007rational}, and the convention of Lean's Mathlib (\cref{sec:philosophy}). All 41 target rules hold in it, all five fallacies fail in it, and seven of the 11 guards are unnecessary in it. For $N\ge200$, $304$ of the $315$ schemas that survive pure coherence ($96.5\%$) are sound in it. Of the other eleven, ten mention an object constant (as in $x\cdot z\to x$; pure coherence compares only numeral expressions) and one is a value error. For $N<200$ the share is $86.3\%$, since a smaller calculus derives fewer contradictions. Conversely, apart from one run, the guards that pure coherence \emph{did} learn are guards the total semantics also needs: $x/x\to1$ and $\sqrt{x^2}\to x$ came out exact whenever learned in general form, and in Experiment~C the coherence-only calculus guards $\sqrt{ab}\to\sqrt a\sqrt b$ in every seed by exactly the one atom, $\mathsf{nonneg}(a)$, that the total semantics requires. So pure coherence converged, not to the intended partial calculus, but to a coherent calculus for another meaning of ``$/$'' and ``$\sqrt{\ }$''. This is the algebraic counterpart of the Kripkensteinian residue of \Cref{thm:coherence:residue}: a coherent uniform alternative that agrees with everything positive examples and contradictions can supply. Only a channel that observes ``undefined'', here the world oracle at the corner point $x=0$, separates the two meanings (\Cref{ex:setting:alg2}).
+
+\paragraph{Checks.} Soundness of schemas is a random test with 250 assignments that include undefined and irrational values. The review re-tested every active schema of five final calculi with $20{,}000$ random assignments plus a grid of special values and found no unsound one. Fresh seeds $3,4,5$ ($N=200$) reproduce the pattern: 14 to 15 unsound schemas after imitation, 8 to 9 after pure coherence, none after world feedback.
+
+% ---------------------------------------------------------------------
+\subsection{B: natural deduction, Post probes and the bold extension of IPC}\label{sec:experiments:prop}
+
+\paragraph{Setup.} Formulas use atoms $p,q,r$ ($s$ only out of distribution) and $\to,\wedge,\vee,\neg,\bot$; steps are sequent-style natural-deduction inferences (\Cref{ex:setting:nd}). The target is classical natural deduction with 13 rules, the assumption rule carrying the side condition $A\in\Gamma$ as a $\mathsf{mem}$ guard; $\IPC$ drops reductio. Simulated humans prove random tautologies backwards. Their fallacies, each taken with probability $0.3$ and cited as ${\to}$E, are affirming the consequent (AC), denying the antecedent (DA) and an illegitimate discharge (ID); \texttt{noise} corrupts $5\%$ of steps. The learner \texttt{vs} buckets steps by cited rule, anti-unifies them under an MDL criterion, adds most-specific $\mathsf{mem}$ guards and verifies with support $m=2$. Coherence pruning uses five designated contexts: $\emptyset$ and four satisfiable premise sets. Negative bags (\Cref{lem:coherence:bag}) come from blind search for $\Gamma_d\der\bot$ and from \emph{Post probes}, which substitute $\bot$ or $\neg\bot$ for a rule's metavariables, prove its premises and refute its conclusion (\Cref{prop:search:post,lem:twotier:post}). Blame is a minimum-weight hitting set, weighted by the human steps the cheapest repair loses. The \texttt{world} phase adds two observed valuations of the 16. Rule soundness is decided exactly by truth tables. An adversary searches with the learned rules for derivations of 34 invalid goals, $\der\bot$ among them; \emph{sound completeness} is the share of 25 random tautologies the sound active rules prove within budget (target calculus: $0.88\pm0.03$).
+
+\begin{table}[ht]
+\centering\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{@{}lccccccc@{}}
+\toprule
+phase & unsound & tonk-like & exploits /34 & $\der\bot$ & rules /13 & sound compl. & world queries\\
+\midrule
+imitation only & $45.6\pm19.3$ & $30.2\pm12.2$ & $34.0\pm0.0$ & 9/9 & 13.0 & $0.87\pm0.04$ & 0\\
++ coherence, no world & $1.2\pm0.9$ & $0.0$ & $1.7\pm4.1$ & 0/9 & 13.0 & $0.87\pm0.04$ & 0\\
++ sparse world & $0.2\pm0.4$ & $0.0$ & $0.0$ & 0/9 & 13.0 & $0.87\pm0.04$ & $910\pm309$\\
+\bottomrule
+\end{tabular}
+\caption{Experiment B, learner \texttt{vs}, noise \texttt{both}, $N\in\{50,100,200\}$: 9 runs, sd over the 9 runs \status{computed}. \emph{Tonk-like}: unsound rules whose conclusion is unconstrained by the premises; $\der\bot$: runs in which the adversary derives $\der\bot$; \emph{rules}: target rules recovered exactly or with a stronger guard. Held-out invalid steps accepted: $0.86\pm0.02$, $0.00\pm0.01$, $0.00$.}
+\label{tab:experiments:prop}
+\end{table}
+
+\paragraph{Imitation, coherence, world.} Imitation recovers all 13 rules, but on noisy data MDL anti-unification merges corrupted steps that share a skeleton into tonk-like rules \citep{prior1960runabout}, and the adversary proves all 34 invalid goals (\Cref{tab:experiments:prop}). Coherence alone cuts the unsound rules from $45.6$ to $1.2$ and closes every route to $\der\bot$, at no cost in completeness. Over all 72 runs of \texttt{vs} ($N$ from 5 to 200, four noise settings), 47 runs have an unsound rule after imitation, 19 after coherence and 6 after world feedback, and $\der\bot$ is derivable in 32, 0 and 0. On clean data no phase has an unsound rule for $N\ge50$, and the assumption rule's side condition is learned from positives, as most specific guard. A fallacy counts as surviving if an active unsound rule licenses it or a special case of it. For $N\ge50$, AC survives imitation in all 18 runs with fallacies, DA in 14 and ID in 10, and coherence removes all of them except one closed instance of DA that mentions atoms, outside the structural hypothesis of \Cref{cor:coherence:fallacies}; world feedback removes that one too. At $N\le10$ coherence leaves unsound rules in 4 of 18 runs, AC itself among them: a small learned calculus may lack the rules needed to \emph{derive} the contradiction. Plotkin's learner without clustering (\texttt{aggressive}, 18 runs) produces $4.8\pm2.3$ tonk-like rules per run and lets the adversary derive $\der\bot$ in every run; after pruning, in none. Blame needs a prior (\Cref{thm:twotier:blame}): for this learner at $N=50$ on noise \texttt{both}, blaming the least-supported rule recovers $0.3\pm0.5$ target rules and no completeness, while blaming by cost of the cheapest repair recovers all 13 with completeness $0.87\pm0.04$.
+
+\paragraph{Post-completeness probes.} A \emph{bold} learner over classical natural deduction adds a candidate schema iff no derivation of $\der\bot$ is found with it. Of 177 structural candidates (19 hand-picked, 8 pairwise LGGs of target rules, 150 random), the 59 classically valid ones were all accepted, and the 118 invalid ones were all refuted by an explicit derivation of $\der\bot$, as \Cref{thm:coherence:post,thm:coherence:cpc} predict. The derivations are short: median $2.5$ and maximum $6$ steps for the LGGs of target rules, median $6$ and maximum $17$ for the random schemas. For AC, the probe $A:=\bot$, $B:=\neg\bot$ gives
+\[
+\bot\der\bot\ (\text{ax}),\quad \bot\der\neg\bot\ (\neg\text{I}),\quad \der\bot\to\neg\bot\ ({\to}\text{I}),\quad \der\neg\bot\ (\neg\text{I}),\quad \der\bot\ (\text{AC}).
+\]
+Non-structural rules escape (\Cref{prop:twotier:structurality}): $\der p$ is coherent with every designated context and falls only to an observed valuation, and $p\der q$ falls to the designated context $\{p,\neg q\}$. Of the 45 unsound rules that survive pruning in any run, 38 mention specific atoms. Offered tonk's two rules one at a time, the bold learner accepts whichever comes first and rejects the other (\Cref{prop:coherence:tonk}). One observed valuation is a complete test for a schematic rule with $k$ metavariables only if all $2^k$ literal instantiations are probed. The code probes at most eight, and the three schematic rules that survive the world phase in some run each have $k\ge4$; probing all instantiations removed them. What world feedback adds is exact blame, since a refuted step names its rule: $5.0\pm2.1$ pruning rounds against $9.1\pm5.9$ without it ($N\ge20$, 36 runs).
+
+\paragraph{The bold extension of intuitionistic logic.} Over intuitionistic natural deduction the bold learner accepted excluded middle, double-negation elimination, reductio, Peirce's law, weak excluded middle and Dummett's linearity, each underivable in $\IPC$ (a Kripke countermodel was found for each), and rejected the classically invalid candidates by derivations of $\der\bot$. Completeness on classical tautologies rose from $0.72$ to $0.80$ (classical natural deduction: $0.84$). The same happens when $\IPC$ is first \emph{learned}: from 60 simulated intuitionistic proofs, \texttt{vs} with coherence recovers the 12 rules (10 exactly, 2 with a stronger guard), never learns reductio, has no classically or Kripke-unsound rule, and its bold phase then accepts the same six principles. This is \Cref{thm:coherence:ipc}: coherence cannot separate the intermediate logics, so a maximal coherent structural learner never outputs $\IPC$, and the residue of \Cref{thm:coherence:residue}(ii) shows up as a drift toward $\CPC$. Only the cautious, imitation-based tier keeps $\IPC$.
+
+\paragraph{Caveats.} The designated contexts are certified satisfiable with ground-truth satisfiability, a modelling assumption (\Cref{asm:setting:WS}), and ``coherent'' means that no derivation of $\bot$ was found within budget. Most-specific guards make $\wedge$E and $\vee$E stronger than the target, since the simulated humans only eliminate from open assumptions: sound, but incomplete out of distribution. Fresh seeds 3 and 4 ($N=50$, \texttt{both}) reproduce the pattern.
+
+% ---------------------------------------------------------------------
+\subsection{C: an adversarial prover against statistical and rule-learned verifiers}\label{sec:experiments:adversarial}
+
+\paragraph{Setup.} All verifiers are trained on the same $N=500$ noisy algebra derivations of Experiment~A, except one trained on a clean corpus. The statistical verifiers, akin to process reward models, are logistic regression, gradient-boosted trees and a random forest on hashed subterm-shape $n$-grams, rule signatures and tree-edit features. They receive oracle labels for positives and for negatives (refuted human steps, perturbations, fallacy instances), so they get \emph{more} supervision than the positive-only rule learner. Thresholds are calibrated in distribution to a balanced precision $\mathrm{TPR}/(\mathrm{TPR}+\mathrm{FPR})$; ``$@\mathrm pX$'' means precision $X$. The rule-learned verifiers are A's learner without guards (\texttt{lgg\_pos}), with most-specific guards (\texttt{lgg\_ms}; \texttt{lgg\_ms\_clean} on the clean corpus), after pure coherence, and after world feedback; the ground-truth calculus is a control. The prover sees only accept or reject. It runs a bidirectional best-first search whose proposals are target rules, fallacies and near-miss schemas with guards ignored, arithmetic, random mutations, and goal-directed leaps and grafts, with 3000 verifier queries for each of 23 false goal equations and 1500 for each of 33 true identities. A derived equation counts as false when exact evaluation at 5 fixed points refutes it, so these counts are lower bounds.
+
+\begin{table}[ht]
+\centering\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+verifier & ID bal.\ prec. & ID recall & false goals /23 & true goals /33 & false eq./$10^3$ q.\\
+\midrule
+boosted trees, threshold $0.5$ & $0.9752\pm0.0048$ & $0.958\pm0.003$ & $22.3\pm0.9$ & $31.0\pm0.0$ & $281.0\pm46.9$\\
+boosted trees $@\mathrm p0.99$ & $0.9925\pm0.0049$ & $0.885\pm0.030$ & $16.3\pm2.4$ & $28.3\pm1.7$ & $259.2\pm45.7$\\
+boosted trees $@\mathrm p1.0$ & $1.0000\pm0.0000$ & $0.450\pm0.048$ & $1.7\pm0.5$ & $4.7\pm0.5$ & $43.4\pm14.5$\\
+random forest $@\mathrm p0.99$ & $0.9918\pm0.0014$ & $0.796\pm0.018$ & $13.0\pm0.8$ & $24.0\pm2.2$ & $168.0\pm30.2$\\
+logistic regr.\ $@\mathrm p0.99$ & $0.9749\pm0.0209$ & $0.061\pm0.060$ & $3.3\pm1.9$ & $1.7\pm1.7$ & $104.4\pm35.8$\\
+\addlinespace
+\texttt{lgg\_pos} (no guards) & $0.9064\pm0.0057$ & $1.000\pm0.000$ & $20.7\pm0.9$ & $32.3\pm0.5$ & $269.0\pm41.3$\\
+\texttt{lgg\_ms} (most-specific guards) & $0.9158\pm0.0052$ & $0.995\pm0.002$ & $14.0\pm0.8$ & $32.3\pm0.5$ & $141.2\pm7.6$\\
+\texttt{lgg\_ms\_clean} (clean corpus) & $1.0000\pm0.0000$ & $0.988\pm0.005$ & $0.0\pm0.0$ & $32.3\pm0.5$ & $0.0\pm0.0$\\
+LGG + coherence, no world & $1.0000\pm0.0000$ & $0.997\pm0.001$ & $5.0\pm0.0$ & $32.3\pm0.5$ & $98.7\pm8.4$\\
+LGG + world (bag or step) & $1.0000\pm0.0000$ & $0.997\pm0.001$ & $0.0\pm0.0$ & $32.3\pm0.5$ & $0.0\pm0.0$\\
+ground-truth calculus & $1.0000\pm0.0000$ & $0.997\pm0.001$ & $0.0\pm0.0$ & $32.3\pm0.5$ & $0.0\pm0.0$\\
+\bottomrule
+\end{tabular}
+\caption{Experiment C: in-distribution metrics on held-out human-like steps, and outcomes under black-box adversarial search, three seeds \status{computed}. Bag- and step-level world feedback give identical rows. Six further statistical configurations are in \texttt{code/results/adversarial\_prover.md}.}
+\label{tab:experiments:adversarial}
+\end{table}
+
+\paragraph{Accuracy in distribution does not transfer to the search distribution.} The boosted-tree verifier reaches test AUC $0.995$ on held-out human-like steps. Calibrated to in-distribution balanced precision $0.9925$, it still lets the prover prove $16.3\pm2.4$ of the 23 false goals, with a median of 514 queries to a false proof (\Cref{tab:experiments:adversarial}). At the strictest threshold, with no false accept on the calibration set, recall falls to $0.45$; it then proves $4.7$ of 33 true identities, and still $1.7$ false goals. All 11 statistical configurations derive false equations under search. Of their 1082 invalid proof edges, $81\%$ come from goal-directed leaps, grafts and random mutations, and only $1\%$ from the known fallacies: steps that look like human steps and are not. \Cref{fig:experiments:goodhart} plots the probability of a false proof against the budget and against in-distribution precision. This is \Cref{thm:search:tonk} and \Cref{lem:search:commitment}(ii) in a closed domain: in-distribution accuracy is a property of a measure fixed before the prover moves, soundness a property of a set. That learned reward models are exploited by optimization is documented at scale, notably by the overoptimization scaling laws of \citet{gao2023scaling}; the experiment adds a domain in which every exploited step can be certified invalid.
+
+\begin{figure}[ht]
+\centering
+{\graphicspath{{./}{../../}}%
+\includegraphics[width=0.95\textwidth]{../code/results/adversarial_prover_goodhart.png}}
+\caption{Experiment C \status{computed}. Left: fraction of the $3\times23$ (seed, false goal) searches that found a false proof within $B$ verifier queries, for boosted trees at five thresholds and the positive-only rule learners; the ground-truth calculus, \texttt{lgg\_ms\_clean} and the world-repaired calculi never do. Right: the same probability at budgets 30, 300 and 3000 against in-distribution balanced precision.}
+\label{fig:experiments:goodhart}
+\end{figure}
+
+\paragraph{Rule-learned verifiers fail only through named schemas.} All 154 invalid proof edges of the rule-learned verifiers are licensed by a schema that the soundness test flags; the most used is the noise-born projection $x+y\to y$, which alone collapses arithmetic ($1=1+1=2$). A counterexample deletes or guards such a schema and removes its whole family of exploits; a classifier has no such unit of repair. After world feedback the learned calculus proves no false goal and $32.3$ of 33 true identities, like the ground-truth calculus. With clean data and an adequate guard language positive data suffice: \texttt{lgg\_ms\_clean} proves no false goal, as the version-space verifier of \Cref{thm:caution:vs} should, although in one seed an over-specialized schema $0/(y+3)\to0$, whose true guard the guard language cannot express, is active and was not reached. Together, the four rule-based verifiers with no false goal derive no false equation in $900{,}305$ queries. Coherence without a world leaves A's residue: in-distribution balanced precision $1.0000$, yet 5 false goals per seed, all definedness errors such as $0/x=0$ and $(x-x)/y=0$, each true when $1/0=0$. In-distribution precision does not rank verifiers by soundness, even among rule-based ones.
+
+\paragraph{Patching the classifier with its own exploits.} The natural remedy is adversarial data collection, as for PRM800K \citep{lightman2023verify}: harvest the certainly invalid accepted steps from the searches on the 23 false goals, add them as negatives, retrain and recalibrate. Over four rounds (boosted trees at $\mathrm p0.99$, seeds 0 and 1 only), false goals proved on the harvested set fell from $15.5$ to $0.0$ and false equations per thousand queries from $195.7$ to $14.3$. The patched verifier still proved $1.5$ of 12 fresh false goals and $2.0$ of 35 goals against a second, differently configured prover, while true identities proved fell from $28.0$ to $24.5$. Retraining is an effective practical mitigation; its soundness is relative to the attacks it was patched against. All of this is one small closed domain, an informed black-box prover (``not proved'' is not ``unprovable'') and small baselines on hand-built features; the experiment does not measure how often larger learned verifiers are exploited, and the theorems do not predict that rate.
+
+% ---------------------------------------------------------------------
+\subsection{D: the two-tier learner}\label{sec:experiments:ttl}
+
+\texttt{ttl\_sim.py} runs the two-tier learner on a propositional practice with nine genuine and four fallacious tagged rules and $1\%$ sporadic noise, against a prover that enumerates and truth-table checks every step over ten formulas; re-running it reproduced \Cref{tab:twotier:sim} exactly \status{computed}. The positive-only cautious tier is unsound in 72 of 80 runs (\Cref{prop:twotier:practice}); the two-tier learner is unsound in none and exact in all 40 runs with $N\ge250$ (\Cref{thm:twotier:main,cor:twotier:cpc}). Only the singleton-conflict case of $\CPC$ with a per-schema world audit is simulated; Experiment~B is a related pipeline, not an implementation of the two-tier learner.
+
+% ---------------------------------------------------------------------
+\subsection{E: a physics mini-checker}\label{sec:experiments:physics}
+
+\texttt{sps\_checker.py} runs the checks of \Cref{def:physics:checker} on the chair-leg solution of \Cref{sec:physics:example}; \Cref{tab:physics:checkerrun} lists the outcomes, which a re-run reproduced \status{computed}. The honest solution is accepted with certified error at most $0.0888$ within its $10\%$ tolerance, and all twelve variants are rejected, one of them (the honest solution with a $5\%$ tolerance) as a completeness gap. The first version of the checker \emph{accepted} four simple attacks (V6--V9) until each syntactic check was made semantic: relative soundness (\Cref{thm:physics:relative}) is only as good as the checks, a small instance of the lesson of \Cref{sec:search}.
+
+% ---------------------------------------------------------------------
+\subsection{F: simplicity}\label{sec:experiments:simplicity}
+
+Five scripts check the quantitative claims of \Cref{sec:simplicity} (\Cref{tab:experiments:simplicity}), and each confirms its statement: a simplicity penalty with private randomness separates a good model from memorized errors on a window of steepness $c$, but it is blind to validity, so with realistic rates no $c$ keeps every valid rule and removes every error.
+
+\begin{table}[ht]
+\centering\footnotesize
+\begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{0.19\textwidth}@{}}
+\toprule
+script & computed outcome & checks\\
+\midrule
+\texttt{c1} & The note's example: rates $8.99\cdot10^{-3}$ (model) and $1.12\cdot10^{-6}$ (error); the good model wins on a window of $c$ spanning a factor $8037$; standard MDL switches to the error model at $N=894{,}054$. & \Cref{cor:simplicity:example}\\
+\texttt{c2} & Parities on $\{0,1\}^{10}$, $N=200$: per-input mixture $200.0$ bits, shared mixture $10.00$. With 16 errors, a product model one bit short has risk $0.546$ against $0.116$; shared-randomness code lengths stay in $[0.116,0.126]$: a kink only with private randomness. & \Cref{thm:simplicity:pricing,thm:simplicity:kink}\\
+\texttt{c3} & Threshold rule: $0$ violations in $6000$ (instance, $c$) pairs; no minimizer off the lower hull; product optimum $=$ product of local optima. & \Cref{thm:simplicity:separable,lem:simplicity:hull}\\
+\texttt{c4} & Rules toy: affirming the consequent (rate $5.42\cdot10^{-3}$) outranks reductio, cases, ex falso and induction, so simplicity alone has no good window; with coherence, Post and world filters, $c\in(9.04\cdot10^{-6},1.21\cdot10^{-4})$ removes all but conditional perfection, the residue. The cancellation guard is dropped for $c>1.81\cdot10^{-4}$. With ${\to}$I rare, the coherent optimum at $c=5\cdot10^{-4}$ sacrifices ${\to}$I to keep AC. Held-out log-loss is minimized by the smallest $c$. & \Cref{tab:simplicity:toy}, \Cref{thm:simplicity:blind,prop:simplicity:guard,prop:simplicity:sacrifice,thm:simplicity:validation}\\
+\texttt{c5} & With two or more error contexts per block, an $O(1)$-bit in-context copier beats the norm model on every error context ($3.03$ against $4.64$ bits at two, $1.33$ against $4.68$ at sixteen). & \Cref{prop:simplicity:block}\\
+\bottomrule
+\end{tabularx}
+\caption{Experiment F: the scripts \texttt{research/theory/T5-checks/c*.py}, re-run \status{computed}.}
+\label{tab:experiments:simplicity}
+\end{table}
+
+% ---------------------------------------------------------------------
+\subsection{G: the comprehension toy}\label{sec:experiments:comprehension}
+
+\texttt{comprehension\_toy.py} runs the repair setting of \Cref{def:informal:repair} on the menu of \Cref{tab:informal:menu} \status{computed; re-run}. As a sanity check of \Cref{lem:informal:facts}, positive comprehension has the model $u\in u$, and none of the seven menu sets proved inconsistent by hand (Russell's set alone, and the pairs and triples behind (F5)) has a model with at most three elements, which is consistent with the lemma but no proof of it. For every practice the unconstrained MDL choice is naive comprehension, Frege's Basic Law~V, which coherence refutes. The coverage-maximal coherent repair then follows the practice, as \Cref{thm:informal:frz}(iv) states:
+
+\begin{center}\footnotesize
+\begin{tabular}{@{}lccccl@{}}
+\toprule
+practice (weights) & POS & STRAT & SEP & Z & selected\\
+\midrule
+INT 5, UNI 5, PAIR 3, DIFF 4, EMP 1 & 13 & 18 & 9 & 18 & STRAT (tie, broken by $\ell$)\\
+\quad + V 1 (Frege's universal extension) & 14 & 19 & 9 & 18 & STRAT\\
+\quad + ZR 3 (Zermelo's diagonal subsets) & 14 & 19 & 12 & 21 & Z\\
+\quad same, with V 4 & 17 & 22 & 12 & 21 & STRAT\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent The entries are coverages. On the Dedekind--Cantor operations stratification and separation tie and description length decides; once diagonal subsets outweigh the universal set, Z wins; reverse the weights and stratification wins. The theorem's full case analysis (93 sub-supports) is checked separately by \texttt{T4-checks/run\_all.sh}.
+
+% ---------------------------------------------------------------------
+\subsection{What the experiments do and do not show}\label{sec:experiments:limits}
+
+They show the mechanisms of the theorems at work in small, fully checkable domains: positive data fix shapes but not guards (A, B); systematic errors reach support (A, B, D); coherence refutes uniform errors through Post's substitution and leaves a residue of coherent alternative meanings (the meadow in A and C, intermediate logics in B); a world channel that can see the residue removes it (A--C); and accuracy in distribution says nothing about soundness under search (C). They show no more than that. \emph{Realizability is assumed}: valid human steps are exact instances of the target rules, the guard language contains the true guards, and the simulated humans are the target plus known fallacies and noise; real practice satisfies none of this (\Cref{sec:informal}). \emph{Soundness is measured, not proved}: in A and C it is random testing, and ``0'' means that no counterexample was found; B decides rule soundness exactly, but its coherence verdicts and adversaries are budgeted searches. \emph{World feedback is cheap in algebra}: random evaluation is an almost perfect oracle for polynomial identities, and a run of A uses about $10^4$ queries; in physics, and in mathematics with undecidable fragments, B's two observed valuations or the certified bridges of \Cref{sec:physics} are the more realistic picture. \emph{Few seeds}: three per configuration (two for C's retraining), although fresh seeds reproduce the patterns of A and B. \emph{Toy scale}: closed small domains, heuristic and informed adversaries, small statistical baselines. Nothing here measures how often large neural verifiers are exploited, only why accuracy cannot rule it out.
+
+\paragraph{Reproduction.} Python~3.11 with numpy, scipy, scikit-learn, matplotlib, mpmath and pytest (sympy for some checks). The full-grid JSON results are checked in, and \texttt{--report-only} rebuilds every report and plot of A--C from them in seconds; \texttt{--quick} runs a smoke test of each in one to two minutes. Wall-clock times on a shared 4-core machine:
+{\small
+\begin{verbatim}
+cd code
+python3 -m pytest -q                             # 85 tests, 1.5 min
+./run_all_quick.sh                               # everything quick, 16 min
+python3 experiments/exp_algebra_learning.py      # A, 19 min, 3 workers
+python3 experiments/exp_prop_learning.py --workers 6         # B, 58 min
+python3 experiments/exp_adversarial_prover.py    # C, 22 min
+python3 experiments/exp_adversarial_prover.py --retrain      # 14 min
+cd ../research/theory
+(cd T7-checks && python3 ttl_sim.py)             # D, 22 s
+(cd T3-checks && python3 sps_checker.py)         # E, 1 s
+(cd T5-checks && for f in c?_*.py; do python3 $f; done)      # F
+(cd T4-checks && python3 comprehension_toy.py)   # G
+\end{verbatim}
+}
+\noindent \texttt{code/README.md} lists every script with its reproduction status in the review.

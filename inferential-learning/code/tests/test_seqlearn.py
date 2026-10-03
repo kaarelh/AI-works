@@ -58,6 +58,18 @@ def test_fallacies_survive_positive_learning_and_coherence_removes_them(fallacy_
     assert sum(v in ("exact", "guard_stronger") for v in rep.values()) == len(CLASSICAL_RULES), rep
 
 
+def test_active_unsound_special_case_of_a_fallacy_counts_as_survived():
+    # review regression test: affirming the consequent restricted to the atom p is still the fallacy
+    rule = parse_rule("G |- p -> X1 ; G |- X1 / G |- p [mem p -> X1]")
+    steps = prepare_training([type("D", (), {"steps": [
+        type("S", (), {"prems": (seq(f"p -> {b} |- p -> {b}"), seq(f"p -> {b} |- {b}")), "concl": seq(f"p -> {b} |- p"),
+                       "tag": "impE", "kind": "fallacy:AC"})() for b in ("q", "r")]})()])
+    calc = LearnedSeqCalculus([LearnedRule(0, rule, [0, 1], tag="impE")], steps, m=2)
+    assert calc.active() and not rule_sound(rule)
+    assert FALLACY_RULES["AC"][0].subsumes(rule) and not rule.subsumes(FALLACY_RULES["AC"][0])
+    assert fallacy_report(calc)["AC"]["status"] == "survived"
+
+
 def test_world_feedback_pruning(fallacy_steps):
     learner = SeqLearner(key_mode="tag")
     calc = learner.fit(steps=fallacy_steps)

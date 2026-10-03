@@ -844,15 +844,32 @@ def interpretation(res):
                      "calculus that searches for it).")
     wo = P("world", ["fallacies", "noise", "both"], 20)
     if wo:
+        # REVIEW FIX (report claim): the text used to say that one observed valuation is a complete soundness
+        # test for every schematic rule.  That holds only if all 2^k literal instantiations of the rule's k
+        # metavariables are probed; PruneConfig.world_probes = 8 caps the probes per rule (all of them iff
+        # k <= 3), and schematic rules with k >= 4 do survive the world phase.  Counted here from the data.
+        wsurv = [u for p in P("world", list(NOISE), 0) for u in p["unsound_rules"]]
+        wsch = [u for u in wsurv if not _nonstructural(u)]
+        kmin = min((_n_metavars(u) for u in wsch), default=None)
         L.append(f"\n**4. Sparse world feedback** (2 of 16 valuations; N ≥ 20, {len(wo)} runs): runs with an unsound "
                  f"active rule {sum(p['n_unsound'] > 0 for p in wo)}, oracle queries {_ms([p.get('queries', 0) for p in wo], '{:.0f}')}, "
                  f"pruning rounds {_ms([p.get('rounds', 0) for p in wo], '{:.1f}')} vs "
-                 f"{_ms([p.get('rounds', 0) for p in co], '{:.1f}')} for coherence alone. For schematic rules even one "
-                 "observed valuation is a complete soundness test: instantiating metavariables by the literals a / ¬a "
-                 "realises every truth-table row at the observed world (Post's substitution again), and a refuted step "
-                 "pinpoints the guilty rule, so no hitting-set guesswork is needed. Its real value is (i) exact blame "
-                 "and (ii) non-structural rules, which coherence cannot reach.")
+                 f"{_ms([p.get('rounds', 0) for p in co], '{:.1f}')} for coherence alone. In principle one observed "
+                 "valuation is a complete soundness test for a schematic rule: instantiating its k metavariables by "
+                 "the literals a / ¬a in all 2^k ways realises every truth-table row at the observed world (Post's "
+                 "substitution again), and a refuted step pinpoints the guilty rule, so no hitting-set guesswork is "
+                 f"needed. The implementation probes at most {PruneConfig().world_probes} instantiations per rule "
+                 "(all of them only when k ≤ 3), so the test is complete only for small rules: of the "
+                 f"{len(wsurv)} unsound rules that survive the world phase in any run, {len(wsch)} are schematic"
+                 + (f", each with k ≥ {kmin} metavariables" if wsch else "") + ". Its real value is (i) exact "
+                 "blame and (ii) non-structural rules, which coherence cannot reach.")
     return L
+
+
+def _n_metavars(rule_str: str) -> int:
+    """Number of formula and set metavariables of a stored rule."""
+    r = parse_rule(rule_str)
+    return len(r.formula_vars()) + len(r.set_vars())
 
 
 def exhibits(res):
@@ -917,10 +934,38 @@ def blame_section(recs):
     return L
 
 
+_FSTAT_CACHE = {}
+
+
+def fallacy_status(p, f):
+    """Status of fallacy ``f`` in phase record ``p``.
+
+    REVIEW FIX: runs made before the fix in :func:`cil.prop_eval.fallacy_report` stored 'inactive' (or
+    'removed') when an ACTIVE unsound *special case* of the fallacy schema survived (e.g. affirming the
+    consequent for the atom p only).  Such a case is upgraded to 'survived' here, from the stored list of
+    unsound active rules.  That list is truncated to 20 rules; the only truncated phase with a fallacy not
+    marked 'survived' (vs, N=100, both, seed 1, positive, ID) was re-checked by refitting: no special case."""
+    st = p["fallacies"][f]
+    if st == "survived":
+        return st
+    frule = FALLACY_RULES[f][0]
+    for u in p.get("unsound_rules", []):
+        k = (f, u)
+        if k not in _FSTAT_CACHE:
+            try:
+                _FSTAT_CACHE[k] = frule.subsumes(parse_rule(u))
+            except (SyntaxError, ValueError):
+                _FSTAT_CACHE[k] = False
+        if _FSTAT_CACHE[k]:
+            return "survived"
+    return st
+
+
 def fallacy_section(recs):
     L = ["\n## Fallacy fates (`vs`, noise `fallacies` and `both`)\n",
-         "Counts over runs: survived (an active unsound rule licenses the fallacy schema) / removed / inactive "
-         "(support < m) / never learned.\n",
+         "Counts over runs: survived (an active unsound rule licenses the fallacy schema or a special case of it, "
+         "e.g. affirming the consequent for the atom p only) / removed / inactive (learned, but no active unsound "
+         "rule of that shape) / never learned.\n",
          "| N | phase | AC | DA | ID |", "|---|---|---|---|---|"]
     vs = [r for r in _recs(recs, learner="vs", weight="repair", guard="ms") if r["task"]["noise"] in ("fallacies", "both")]
     for N in sorted({r["task"]["N"] for r in vs}):
@@ -928,7 +973,7 @@ def fallacy_section(recs):
             ps = [r["phases"][ph] for r in vs if r["task"]["N"] == N and ph in r["phases"]]
             cells = []
             for f in ("AC", "DA", "ID"):
-                c = Counter(p["fallacies"][f] for p in ps)
+                c = Counter(fallacy_status(p, f) for p in ps)
                 cells.append(f"{c.get('survived', 0)}/{c.get('removed', 0)}/{c.get('inactive', 0)}/{c.get('never_learned', 0)}")
             L.append(f"| {N} | {ph} | " + " | ".join(cells) + " |")
     return L

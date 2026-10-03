@@ -90,7 +90,10 @@ def fallacy_report(calc, fallacies: Sequence[alg.Fallacy] = alg.FALLACIES, seed:
     out = {}
     for f in fallacies:
         shape = [s for s in calc.schemas if s.rule.variant_of(f.rule, check_guard=False)]
-        accepting = [s for s in calc.active() if f.rule.subsumes(s.rule)
+        # REVIEW FIX: an active unsound schema MORE general than the fallacy (s.rule.subsumes(f.rule)) also
+        # licenses its instances; only special cases were counted before.  No stored run is affected (checked
+        # against results/algebra_learning.json: no unsound active schema strictly generalises a fallacy).
+        accepting = [s for s in calc.active() if (f.rule.subsumes(s.rule) or s.rule.subsumes(f.rule))
                      and not alg.schema_sound(s.rule, seed=seed, n=200)]
         removed = any(s.status in ("deleted", "split") for s in shape)
         act_shape = [s for s in calc.active() if s.rule.variant_of(f.rule, check_guard=False)]
