@@ -513,7 +513,7 @@ Throughout this section, "a learner" means any (randomized) procedure that recei
 * A learner's inputs are the human samples, the queries of the prover (and of the red team, if any), the answers of $\mathrm{Ref}_d$ and $W$, its own coins and, optionally, escalation answers.
 * Lower bounds use a fixed prover (and red team). That is a fixed strategy mapping the history and its own coins to queries, the same in every scenario.
 * **Escalation answers**, if a learner uses them, **follow the practice**. The answer to an escalated $q$ is drawn from a law that depends only on $q$ and on the practice (its schemas, frequencies and laws), e.g. $1[q\in R^P]$.
-  * So escalation answers have the same law in any two scenarios **with the same practice**. That is the situation of Props 5.2–5.3, Thm 5.6, and Thm 5.7, where the practice $\Sigma^P_e$ is the same in both cases and the answers are computable.
+  * So escalation answers have the same law in any two scenarios **with the same practice**. That is the situation of Props 5.2–5.3 and Thm 5.6. It is also that of Thm 5.7, whose practice $\Sigma^P_e$ is the same in both cases and whose escalation answers are computable.
   * It is **not** the situation of Thm 5.5 or of the floor remark in Thm 6.6(e), whose scenarios have different practices. There, practice-following escalation acts as a membership query for the practice and can separate the scenarios in one query. Those results assume Thm 5.5's observational-equivalence condition (OE) instead. *(Round 1 cited this convention for Thm 5.5, where it does not apply.)*
 * A target-truthful labeller ($y=1[q\in R^\*]$) would be a different and stronger channel, T1's labelled setting. It would defeat Thms 5.5–5.6.
 * Fix a practice $\Sigma^P$ with its frequencies, instance laws and noise law, and fix $\mathcal A,W,T_{\rm rust}$. A target $\Sigma\subseteq\Sigma^P$ is **admissible** if it satisfies (WS) and $F_\Sigma:=\Sigma^P\setminus\Sigma$ satisfies Def 1.1, i.e. each member has an instance outside $\mathrm{Sound}(R_\Sigma)$.
@@ -565,7 +565,7 @@ A learner without refutation evidence sees identically distributed data in both 
 * (b) Without uniformity, coherence is toothless (T2 Prop 6.3: $\mathbf C_2+\{\rhd p_{17}\}$).
 * (c) Without structure, positive data cannot generalize at all: $\bigcap\mathrm{VS}(P)=P$ for exception-list classes (T1 §4 discussion). ∎
 
-**Theorem 5.5 (burn-in is necessary: the rare refuter) [proved] (revised after verification).** Let $0<\pi<1$, and let $\sigma,\tau,\mu$ be schemas such that:
+**Theorem 5.5 (burn-in is necessary: the rare refuter) [proved] (revised after verification; channel assumption corrected in round 2).** Let $0<\pi<1$, and let $\sigma,\tau,\mu$ be schemas such that:
 * $\{\sigma,\tau\}$ and $\{\sigma,\mu\}$ are clean at every depth (hence so is $\{\tau\}$);
 * $\{\mu,\tau\}$ is a $d$-conflict.
 
@@ -579,14 +579,14 @@ The practices differ, so practice-following escalation does not have the same la
 
 **(OE) Observational equivalence of the non-sample channels.** At each round, every input to the learner other than the human sample is generated from the history by the same kernel in both scenarios. These inputs are the prover's and red team's queries, the answers of $\mathrm{Ref}_d$ and $W$, escalation answers if any, and the learner's coins.
 * $\mathrm{Ref}_d$ and $W$ satisfy (OE) by Lemma 2.1(c), even for queried sets containing μ. The fixed prover and red team satisfy it by assumption.
-* Escalation satisfies (OE) if the learner does not escalate, or if escalation answers are a function of the query and the history alone.
+* Escalation satisfies (OE) if the learner does not escalate. It also does if escalation answers are drawn from a law that depends only on the query and the history, the same in both scenarios.
 * TTL's assertion tier qualifies. It is a function of the human sample and of the oracle answers (Prop 3.3(a)), and escalation answers are not added to the sample (§3.1).
 * **Practice-following escalation violates (OE), and for it the conclusion below is false.** Some μ-instance $s_\mu$ lies outside $\mathrm{Sound}(R_{\{\sigma,\tau\}})$, by the transfer argument of the proof with τ and μ exchanged.
   * A human following practice $\{\sigma,\tau,\mu\}$ confirms $s_\mu$; one following $\{\sigma,\tau\}$ rejects it.
-  * Consider the learner that escalates $s_\mu$ once and accepts $s$ from time 1 on iff the answer is "reject". It accepts $s$ with probability 0 in scenario 1 and probability 1 in scenario 2, at every $t\ge1$ [computed: `two_point_bounds.py`].
+  * Take a prover that queries $s_\mu$ at round 1 and $s$ at every later round. Take the learner that escalates $s_\mu$ and accepts $s$ iff the answer was "reject". It accepts $s$ with probability 0 in scenario 1 and with probability 1 in scenario 2, at every round $t\ge2$ [computed: `two_point_bounds.py`].
 * A target-truthful labeller violates (OE) too: it separates the scenarios with one escalated τ-instance $s$ as below.
 
-Then for every learner satisfying (OE) and every $t$: if under scenario 1 the learner accepts at time $t$ some τ-instance $s\notin\mathrm{Sound}(R_{\{\sigma,\mu\}})$ with probability at most δ, then under scenario 2 it accepts $s$ at time $t$ with probability at most $\delta(1-\pi)^{-t}$.
+Then for every learner satisfying (OE), every $t$ and every τ-instance $s\notin\mathrm{Sound}(R_{\{\sigma,\mu\}})$: if under scenario 1 the learner accepts $s$ at time $t$ with probability at most δ, then under scenario 2 it accepts $s$ at time $t$ with probability at most $\delta(1-\pi)^{-t}$.
 
 Hence, if $\delta+\delta'<1$, accepting $s$ at time $t$ in scenario 2 with probability $\ge1-\delta'$ requires
 $$t\ \ge\ \frac{\ln\frac{1-\delta'}{\delta}}{\ln\frac1{1-\pi}}\ \ge\ \frac{1-\pi}{\pi}\,\ln\frac{1-\delta'}{\delta}.$$
@@ -734,7 +734,7 @@ So TTL's form of soundness cannot be improved by any computable procedure: sound
 * The world is $D_W=$ closed (atom-free) formulas, with $W=$ truth-table value. This is "computation".
 * $\mathcal A$ consists of any truthful positions, and contains $[\emptyset:\emptyset]$ (§1.3 convention).
 
-**Lemma 6.1 (closed-instance refutability; Post's substitution) [proved].** A pure schema τ is classically invalid iff some substitution of ⊤/⊥ for its metavariables yields a closed instance whose premises are $W$-true and whose conclusion is $W$-false. Such an instance has size $|\tau|$, and there are at most $2^{v(\tau)}$ candidates, where $v(\tau)$ is the number of metavariables.
+**Lemma 6.1 (closed-instance refutability; Post's substitution) [proved].** A pure schema τ is classically invalid iff some substitution of ⊤/⊥ for its metavariables yields a closed instance whose premises are $W$-true and whose conclusion is $W$-false. As a one-step derivation, such an instance has size at most $|\tau|$. Judgments that coincide after the substitution are counted once (Def 1.5; "at most" since round 2). There are at most $2^{v(\tau)}$ candidates, where $v(\tau)$ is the number of metavariables.
 
 *Proof.* (⇐) A falsified instance is an invalid instance. (⇒) Let $\tau\theta$ be an instance and $v$ a valuation making its premises true and its conclusion false. Put $c_x:=\top$ if $v(\theta x)=1$ and $c_x:=\bot$ otherwise. By induction on the structure of τ, every subformula of $\tau[c_x/x]$ has the same value as the corresponding subformula of $\tau\theta$ under $v$. Metavariable positions agree by the choice of $c_x$, and the connectives are truth-functional. Closed formulas take the same value under every valuation. ∎ (This is step 2 of T2 Thm 3.1.)
 
@@ -742,7 +742,8 @@ For sequent judgments with a context metavariable Γ, substitute the one-element
 
 **Corollary 6.2 (TTL on CPC is exact, truth-sound and uses at most $|F|$ refutations) [proved] (counts corrected after verification).** Let $d\ge\max_{\tau\in F}|\tau|$. Implement $\mathrm{Ref}_d$ via Lemma 6.1: return the first, in a fixed enumeration order, closed ⊤/⊥ instance of a schema of $B$ that has $W$-true premises and a $W$-false conclusion, if one exists, and NONE otherwise.
 * This oracle is exact for size-$\le d$ refutations. If every schema of $B$ is classically valid, $B$ has no refutation at any size: take a classical valuation agreeing with the truthful position and with $W$; it falsifies no valid step. Otherwise Lemma 6.1 gives a one-step refutation of size $\le d$.
-* Its refutations are one-step and fully evaluable, so every descent is unblocked. It is an instance of the prefer-unblocked tie-breaking of §3.1.
+* Its refutations are one-step and fully evaluable, so every descent is unblocked.
+* *(Corrected in round 2.)* The earlier text called it an instance of the prefer-unblocked tie-breaking of §3.1. It need not be one, because its answer need not be the smallest refutation. It is, however, exact and deterministic. That is all that Lemma 3.1 and Steps 1–4 of the proof of Thm 4.1 use; the tie-breaking rule enters only in Step 5, for (iv). Its answers do not depend on $d$ once $d\ge\max_{\tau\in F}|\tau|$, so (iv) holds trivially for it.
 
 Then on $G$, with $\Pr(G)\ge1-\delta$:
 * **(a)** The minimal conflicts are exactly the singletons $\{\tau\}$ for $\tau\in F$. So (SB$_d$) holds, $\mathrm{Coll}_d=\emptyset$ and $F^{(d)}_{\rm res}=\emptyset$.
@@ -892,8 +893,21 @@ Take $d\ge\max_\tau f_\tau$ and $[\emptyset:\emptyset]\in\mathcal A$, and let $\
   * *An encoding that works.* Add auxiliary decidable judgments $\mathrm{Sub}(\varphi,x,t,\psi)$ ("ψ is $\varphi[t/x]$") to $D_W$, and write induction as
     $$\mathrm{Sub}(\varphi,x,0,a),\ \mathrm{Sub}(\varphi,x,Sx,b)\ /\ \vdash a\wedge\forall x(\varphi\to b)\to\forall x\varphi,$$
     with the human data recording the Sub premises. This is a first-order pattern, and the lgg of generic instances recovers it [computed: `ind_sub_lgg.py`]. Its instances with a false Sub premise are harmless, since Sub judgments enter derivations only as $W$-true leaves.
-  * With that encoding and under (Floor), a practice has at most $\min(K,1/\pi_{\min})$ axiom schemas. So $T_k=\mathrm{PA}+\mathrm{Con(PA)}+\dots+\mathrm{Con}(T_{k-1})$ is identified from positive data for every $k$ within the bound. Each $\mathrm{Con}(T_j)$ is genuine, and none is ever refuted.
-  * *What the floor buys (corrected).* It buys **uniform sample bounds**. Without it there are none. Consider targets $T_{k-1}$ and $T_k$, where the tag $\mathrm{Con}(T_{k-1})$ has frequency π under $T_k$. A learner that is δ-sound for $T_{k-1}$ cannot accept $\mathrm{Con}(T_{k-1})$ under $T_k$ with probability $\ge1-\delta'$ before $\ln\frac{1-\delta'}\delta/\ln\frac1{1-\pi}$ samples. This is the two-point argument of Thm 5.5, conditioning on that tag's absence; $\mathrm{Con}(T_{k-1})\notin\mathrm{Sound}(R_{T_{k-1}})$ by Gödel II. [proved; TOSU]
+  * With that encoding and under (Floor), a practice has at most $\min(K,\lfloor1/(2\Delta)\rfloor)$ axiom schemas, since $\Delta\le\Delta_i\le\rho_i\beta_i/2\le\pi_i/2$ for every tag. *(The earlier bound $1/\pi_{\min}$ used an undefined quantity; corrected in round 2.)* So $T_k=\mathrm{PA}+\mathrm{Con(PA)}+\dots+\mathrm{Con}(T_{k-1})$ is identified from positive data for every $k$ within the bound.
+    * Each $\mathrm{Con}(T_j)$ is a ground axiom, so the ground-rule convention of Def 1.2 applies to it. Each is genuine, and none is ever refuted.
+  * *What the floor buys (corrected in round 1, and again in round 2).* It buys **uniform sample bounds**. Without it there are none. [proved; TOSU; computed: `two_point_bounds.py`]
+    * *Setting.* Compare the targets $T_{k-1}$ and $T_k$, both with $F=\emptyset$. Under $T_k$ the extra tag $\mathrm{Con}(T_{k-1})$ has frequency π, and the other tags have their $T_{k-1}$ frequencies scaled by $1-\pi$. The per-tag laws are the same in both. Fix the prover that queries $\vdash\mathrm{Con}(T_{k-1})$ every round, and assume (OE) of Thm 5.5. The practices differ, so practice-following escalation of that very step would separate the two targets at once (§5 conventions).
+    * *Accepting the step is unsound under $T_{k-1}$.* $\mathrm{Con}(T_{k-1})$ is not a theorem of $T_{k-1}$ (Gödel II). So $\vdash\mathrm{Con}(T_{k-1})$ is not derivable in the target calculus with trusted logic, even with all $W$-true Sub judgments as premises; a fortiori it lies outside $R^\*\cup R_{F_{\rm res}}=R_{T_{k-1}}$. It is true, though, so this is soundness for the target calculus (Thm 4.1(i)), not truth-soundness.
+    * *Claim.* Suppose that under $T_{k-1}$ a learner accepts the step at time $t$ with probability $\le\delta$. Then under $T_k$ it accepts it at time $t$ with probability at most $1-(1-\delta)(1-\pi)^t$. Hence, if $\delta+\delta'<1$, acceptance with probability $\ge1-\delta'$ under $T_k$ requires
+      $$t\ \ge\ \frac{\ln\frac{1-\delta}{\delta'}}{\ln\frac1{1-\pi}}\ \ge\ \frac{1-\pi}{\pi}\ln\frac{1-\delta}{\delta'},$$
+      which is unbounded as $\pi\to0$.
+    * *Proof.* Let $E_t$ be the event that the tag $\mathrm{Con}(T_{k-1})$ does not occur among the first $t$ samples. As in the proof of Thm 5.5, $P_k^{\otimes t}$ restricted to $E_t$ equals $(1-\pi)^tP_{k-1}^{\otimes t}$, and the learner's acceptance probability given the samples is the same function φ in both scenarios. So
+      $$\Pr_k(\text{accept})=\int_{E_t}\phi\,dP_k^{\otimes t}+\int_{E_t^c}\phi\,dP_k^{\otimes t}\ \le\ (1-\pi)^t\Pr_{k-1}(\text{accept})+1-(1-\pi)^t\ \le\ 1-(1-\delta)(1-\pi)^t.$$
+    * *Tightness.* Consider the learner that, with probability δ fixed by one coin at time 0, accepts the step from the start, and otherwise accepts it once its tag has occurred. Under $T_{k-1}$ it is uniformly δ-sound, since the tag never occurs there. Under $T_k$ it attains the bound. [computed: the linear-programming optimum over all tag sequences equals $1-(1-\delta)(1-\pi)^t$ in all 108 cases checked.]
+    * *Why this is not Thm 5.5's bound.* It is Thm 5.5's argument mirrored, not repeated.
+      * In Thm 5.5 the rare tag (the refuter μ) lives in the scenario where acceptance is **unsound**. Conditioning on its absence bounds the soundness side, and the bound scales with $\ln(1/\delta)$.
+      * Here the rare tag lives in the scenario where acceptance is **sound**. Conditioning on its absence bounds the completeness side, and the bound scales with $\ln(1/\delta')$: the learner must see the tag at least once.
+    * *The round-1 bound is false.* Round 1 transplanted Thm 5.5's bound $\ln\frac{1-\delta'}\delta/\ln\frac1{1-\pi}$ here. Take $\pi=1/2$, $\delta=10^{-6}$ and $\delta'=0.1$: that bound demands $t\ge19.8$. The learner "accept iff the tag has occurred" is 0-sound under $T_{k-1}$, and at $t=4$ it accepts under $T_k$ with probability $0.9375\ge1-\delta'$. The corrected bound demands $t\ge3.3$ [computed].
   * T2 Thm 3.9 shows more over a class containing $T_\omega$ and every $T_k$: no learner identifies the target in the limit from positive data, coherence and Δ₀ feedback. But $T_\omega$ has infinitely many axioms, so it lies outside Def 1.1's finite practices. Within those, the floor is what yields uniform bounds; the earlier text presented T2 Thm 3.9 as showing that the floor is necessary for identification.
 * **(f) Reflection as designation.** If $\mathcal A$ asserts Con(PA), then $\neg\mathrm{Con(PA)}$ becomes a singleton conflict (T2 Thm 3.9(iii)). This is a justification beyond PA-proof, made explicit as a *designation* rather than smuggled in as a rule.
 
@@ -902,7 +916,7 @@ Take $d\ge\max_\tau f_\tau$ and $[\emptyset:\emptyset]\in\mathcal A$, and let $\
 * (b) As stated.
 * (c) By construction, using the Σ₁-completeness of $W$-witnessing.
 * (d) For a computable family of Σ₂ candidate axioms $\varphi_e$, put "$\vdash\varphi_e$" in the practice. A learner that eventually removes it iff $\varphi_e$ is false decides Σ₂-truth in the limit; apply T2 Thm 3.10(e).
-* (e) The floor bounds the number of tags, and T1 Thm 6.3 applies to the Sub-encoded practice. The uniform-bound remark is Thm 5.5's argument verbatim, with $\mathrm{Con}(T_{k-1})$ in the role of the rare tag. The limit statement is T2 Thm 3.9.
+* (e) The floor bounds the number of tags, and T1 Thm 6.3 applies to the Sub-encoded practice, with the ground-rule convention of Def 1.2 for the ground axioms. The uniform-bound remark is proved in place. *(Round 2: it is the mirror image of Thm 5.5's argument, not that argument verbatim.)* The limit statement is T2 Thm 3.9.
 * (f) Immediate. ∎
 
 *Summary for arithmetic.*
@@ -930,7 +944,7 @@ The Gödel/Rosser alternatives are the Kripkensteinian residue of arithmetic (T2
 | `matrix_witness.py` | is there a 2- or 3-element matrix validating S, DN and AC, with $A_1$ satisfiable and ⊥ undesignated? | none; full-depth cleanness of the rival diagnosis $\{S,DN,AC\}$ is left open |
 | `ttl_sim.py` | end-to-end TTL on a propositional practice with fallacies and noise, against an exhaustive adversarial prover | the table in §6.1 (regenerated after verification): TTL unsound in 0/80 runs, exact in 20/20 at $N=250$ and $N=500$; the positive-only cautious tier is unsound in 72/80 |
 
-*Scripts added during verification.* The first seven were written by referees and re-run by the author; `prop32_voting.py`, `ind_sub_lgg.py` and the fixed `thm56_finite_d.py` are the author's.
+*Scripts added during verification.* The first seven were written by referees and re-run by the author. `prop32_voting.py`, `ind_sub_lgg.py` and the fixed `thm56_finite_d.py` are the author's, and `two_point_bounds.py` was added by the author in round 2.
 
 | script | what it checks | result |
 |---|---|---|
@@ -943,6 +957,7 @@ The Gödel/Rosser alternatives are the Kripkensteinian residue of arithmetic (T2
 | `thm56_finite_d.py` | Thm 5.6(c): fallback suboptimal at finite $d$ (well-founded derivations; the referee's version admitted circular ones) | sizes 9 ({MP, AC} on $A_1$) and 13 ({AC} on $A_2$); $A=\emptyset$ for $9\le d\le12$, $A=\{\mathrm{MP}\}$ for $d\ge13$ |
 | `prop32_voting.py` | Prop 3.2: old vs revised voting audit | old: DA survives and 1 descent > $(m+1)|F|=0$; revised: DA removed, AC kept, MP kept under a bad position |
 | `ind_sub_lgg.py` | Thm 6.6(e) repair: Sub-encoded induction | the lgg of 5 generic instances equals the pattern up to renaming |
+| `two_point_bounds.py` (round 2) | Thm 5.5 and the Thm 6.6(e) floor remark: best learner under (OE), by linear programming over all tag sequences ($t\le6$); round-1 floor bound; practice-following escalation | optimum $=\min(1,\delta(1-\pi)^{-t})$ (Thm 5.5) and $=1-(1-\delta)(1-\pi)^t$ (floor), 0 mismatches in 2×108 cases; round-1 floor bound violated ($\pi=\tfrac12,\delta=10^{-6},\delta'=0.1$: demands $t\ge19.8$, attained at $t=4$); with one practice-following escalation, Thm 5.5's cap 0 becomes 1 |
 
 ---
 
@@ -1005,7 +1020,7 @@ None of the three parts is a proof of validity. Together they give a guarantee *
 1. *Realizability and tags.* Everything rests on T1's tagged single-schema class with latent fallacy tags. Mis-cited fallacies (AC cited as MP) need per-tag unions (T1 Thm 5.4), whose escalation behaviour is only polynomially bounded under a conjecture (T1 Conj 3.8).
    * *(Added after verification.)* First-order patterns also exclude ∀-elimination, the induction schema, and degree-indexed axiom families. Cor 6.5 is therefore conditional, and Thm 6.6(e) needs an auxiliary-judgment encoding. An identification theorem for higher-order-pattern schemas would remove this weakness.
 2. *The fallback's cost.* Computing $\bigcup\mathcal C_d$ can be exponential in $|F|$. I have no lower bound on its *query* complexity in the conflict-oracle model.
-3. *The audit is offline.* Thm 5.5 says that some abstention is necessary. But the burn-in $N_1$ is set from *known* floor constants, as in PAC learning. A data-driven stopping rule with the same guarantee is open.
+3. *The audit is offline.* Thm 5.5 says that some abstention is necessary, for learners that learn about the practice only from the stream (its condition (OE)). With membership queries to the human the two-point bound fails, and I have no lower bound for that setting *(added in round 2)*. But the burn-in $N_1$ is set from *known* floor constants, as in PAC learning. A data-driven stopping rule with the same guarantee is open.
 4. *(WS) is strong.* Designated positions must be truthful, and in formal mathematics they must be true of 𝔐. For physics (T3), designated positions are idealized chunks, and (WS) holds only for chunks certified consistent (T3 Thm 1.9(d)). Extending Thm 4.1 to T3's anchored contexts is the obvious next step.
 5. *The Bayesian middle way* (Remark 2.4′) might give anytime soundness for high-prior targets without a burn-in. I sketched it but did not prove it.
 
@@ -1108,3 +1123,36 @@ All referee scripts used as evidence are now in `T7-checks/`, with a header sayi
 | B18 | Prop 5.8 wording | ok (optional) | — | Adopted: "at most $m$ positions (it is not known which) violate (WS)". |
 
 *Items whose statement or proof changed non-trivially, for re-verification:* (WS) and its equivalent form (§1.3); Lemma 2.1(a); Prop 2.4(c); Lemma 2.5 (local $e^+_\pi$, new (d)); Prop 3.2; Prop 3.3(a)(b); Thm 4.1 (i)–(iv) and proof Step 1; Prop 5.2(a); Thm 5.5; Thm 5.6(b)(c); Prop 6.3(b); Cor 6.2(c); Cor 6.5; §6.2 Remark 2; Thm 6.6(a),(c),(d),(e).
+
+### Round 2
+
+A re-verification of the round-1 repairs found two major and one minor residual issue. I re-checked each one, agreed with all three, and repaired them as below. A fourth, minor item on Cor 6.2 appears in `verification/reverification-round2.md` but is cut off there; R2-4 records my best guess at it. I also re-read the six round-1 majors against the new changes; that check follows the table. New check script: `two_point_bounds.py` (author, round 2).
+
+| # | item | severity | genuine? | action |
+|---|---|---|---|---|
+| R2-1 | Thm 5.5: the round-1 statement assumed that escalation answers "follow the practice (§5 conventions)". That convention gives equal laws only for scenarios with the *same* practice, and Thm 5.5's two practices differ. | major | Yes, and it is worse than a proof gap: with practice-following escalation the conclusion is false. Some μ-instance $s_\mu$ lies outside $\mathrm{Sound}(R_{\{\sigma,\tau\}})$. A human with practice $\{\sigma,\tau,\mu\}$ confirms it, and one with practice $\{\sigma,\tau\}$ rejects it, so one escalation separates the scenarios. [computed: `two_point_bounds.py` (C), the cap 0 becomes 1.] | **Fixed.** The statement now assumes **(OE)**: every non-sample input is generated from the history by the same kernel in both scenarios. (OE) is shown to hold for $\mathrm{Ref}_d$ and $W$ (Lemma 2.1(c)), for the fixed prover and red team, for non-escalating learners and for TTL's tier. It is shown to fail for practice-following and target-truthful escalation. The proof is rewritten with the identity $P_1^{\otimes t}\vert_{E_t}=(1-\pi)^tP_2^{\otimes t}$ and a common kernel $K_t$. Tightness is checked by linear programming over all tag sequences: 0 mismatches in 108 cases. The §5 conventions are rewritten, so that the escalation convention is scoped to same-practice results (Props 5.2–5.3, Thms 5.6–5.7). A scope remark on membership queries is added, and §0, §4 Remark 4, §9 weak point 3 and the Reading are qualified. |
+| R2-2 | Thm 6.6(e), "what the floor buys": the bound $\ln\frac{1-\delta'}\delta/\ln\frac1{1-\pi}$ is false. In Thm 5.5 the rare tag lives in the scenario where acceptance is unsound; here $\mathrm{Con}(T_{k-1})$ lives in $T_k$, where acceptance is sound. | major | Yes. Counterexample: take $\pi=1/2$, $\delta=10^{-6}$, $\delta'=0.1$. The round-1 bound demands $t\ge19.8$. The learner "accept iff the tag has occurred" is 0-sound under $T_{k-1}$ and accepts with probability 0.9375 at $t=4$ [computed]. | **Fixed by correcting the bound.** The correct mirror-image bound is $\Pr_k(\text{accept at }t)\le1-(1-\delta)(1-\pi)^t$. Hence $t\ge\ln\frac{1-\delta}{\delta'}/\ln\frac1{1-\pi}$ when $\delta+\delta'<1$. It is proved in place and shown tight, both by an explicit learner and by linear programming (0 mismatches in 108 cases). It is still unbounded as $\pi\to0$, so "no uniform bound without the floor" survives. The text explains why the bound scales with $\ln(1/\delta')$, not $\ln(1/\delta)$. (OE) and the reading as calculus-soundness (Con is true) are added, and the proof line of (e) is corrected. The undefined $1/\pi_{\min}$ in the tag bound is replaced by $\lfloor1/(2\Delta)\rfloor$. |
+| R2-3 | Lemma 2.5(d) needs size to count distinct judgments, which Def 1.5 did not say. Thm 4.1 Step 1's $(1+c_i)$ count needs T1 Thm 6.3's ground-rule convention, while Def 1.2 cited T1 Thm 5.3, which has $c_i=0$ and leaves $\rho_i$ undefined for ground rules. | minor | Yes, both. | **Fixed.** Def 1.5: a derivation is a sequence (DAG) of distinct judgments, size counts distinct judgments, and tree derivations compress without growing. The computed minimal refutations repeat no judgment, so their numbers (9, 13, 29) are unchanged. The proof of Lemma 2.5(d) now orders the extracted judgments by fixed-point stage and shows that they are distinct. Thm 5.6(c) cites Def 1.5. Def 1.2 now sets $c_i:=1$, $\rho_i:=1$ for ground rules (T1 Thm 6.3), so $c_i\ge1$ for every tag. §3.1, Thm 4.1(iii) and Step 1 cite this one convention. In noisy mode a ground tag gives two events, which are T1 Thm 6.2(b)(i)–(ii). In noise-free mode, T1 Thm 5.3's separate ground-rule term becomes $c_ie^{-N\pi_i\rho_i}$. |
+| R2-4 | Cor 6.2 (oracle specification). `verification/reverification-round2.md` lists this as a minor item. Its text is cut off there after confirming exactness, unblocked descents and the counts in (c), and it was not in the task statement. | minor | Partly reconstructed. The one inaccuracy I found in the oracle specification is the sentence calling the closed-instance oracle "an instance of the prefer-unblocked tie-breaking". Its answer need not be the smallest refutation. | **Fixed (best guess at the truncated item).** Cor 6.2 now says that the oracle is exact and deterministic, which is all that Lemma 3.1 and Steps 1–4 of Thm 4.1 use; the tie-breaking rule enters only in Step 5, which is trivial here because the answers do not depend on $d$ once $d\ge\max_\tau|\tau|$. A related change follows from R2-3: in Lemma 6.1 the closed instance has size **at most** $|\tau|$. **The re-verifier should confirm whether this was the intended point.** |
+
+*Consistency of the round-1 majors with the round-2 changes.*
+* **Prop 2.4(c).** Unaffected. The schema-level equality and the instance-level superset use neither escalation nor the size convention.
+* **Prop 3.2.** Unaffected. It uses Lemma 2.5 only through (c) and the consistency certificate.
+* **Prop 5.2(a).** Its admissible targets share the practice, so this is a case where the escalation convention does apply. A sentence in the proof now says so.
+* **Thm 5.6.** All scenarios in (a) and (b) share the practice, so the convention applies.
+  * (b) uses Lemma 2.5(d), whose size bound now rests on Def 1.5.
+  * The sizes 9 and 13 in (c) count distinct judgments, as Def 1.5 now says.
+* **Cor 6.5.** Unaffected; it remains conditional on realizability.
+* **Thm 6.6(e).** The identification part is unaffected. The ground axioms ($\mathrm{Con}(T_j)$, Q) fall under the Def 1.2 convention. The floor remark is replaced (R2-2), and the applicability of T1 Thm 6.3 rests, as before, on the Sub-encoding.
+* **Thm 5.7** (not a round-1 major, but it uses the conventions). It has the same practice in both cases. The proof now notes that practice-following escalation answers are computable, so the reduction is unaffected.
+
+*Items to re-verify after round 2:*
+* Def 1.2 (ground-rule convention) and Def 1.5 (derivations and size);
+* the proof of Lemma 2.5(d);
+* Thm 4.1(iii) and proof Step 1, both modes;
+* the §5 standing conventions;
+* Thm 5.5: statement with (OE), proof, tightness and the scope remark;
+* Thm 6.6(e): the floor remark, its proof line, and the tag-count bound;
+* the last bullet of the proof of Thm 5.7;
+* Lemma 6.1 (size at most $|\tau|$) and the oracle bullets of Cor 6.2 (R2-4);
+* `two_point_bounds.py`.

@@ -1,6 +1,6 @@
 # Verification record: T7-two-tier-coherent-inferential-learner
 
-*Target file: `research/theory/T7-two-tier-coherent-inferential-learner.md`. Two independent adversarial referees checked the file: Referee A covered §§1–4, and Referee B covered §§5–6. Their reports are reproduced verbatim below as JSON, followed by the author-repairer's log, which is also appended to the theory file. The repair checks, together with the referee scripts used as evidence, are in `research/theory/T7-checks/`: `prop32_voting.py`, `ind_sub_lgg.py`, `thm56_finite_d.py` (fixed version), `overlap.py`, `depth_nonmono.py`, `noisefree.py`, `ind_lgg.py`, `lemma61.py` and `matrix4.py`.*
+*Target file: `research/theory/T7-two-tier-coherent-inferential-learner.md`. Two independent adversarial referees checked the file: Referee A covered §§1–4, and Referee B covered §§5–6. Their reports are reproduced verbatim below as JSON, followed by the author-repairer's log, which is also appended to the theory file. The repair checks, together with the referee scripts used as evidence, are in `research/theory/T7-checks/`: `prop32_voting.py`, `ind_sub_lgg.py`, `thm56_finite_d.py` (fixed version), `overlap.py`, `depth_nonmono.py`, `noisefree.py`, `ind_lgg.py`, `lemma61.py` and `matrix4.py`. Round 2 added `two_point_bounds.py`.*
 
 **Outcome in brief.**
 * No fatal issues.
@@ -14,6 +14,14 @@
 * All minor issues are genuine and fixed. No issue was rejected.
 * The `ttl_sim.py` table has been regenerated from the script.
 * One referee script (`thm56_finite_d.py`) admitted circular derivations. Its printed size of 5 was wrong, but the reported size of 9 is right. The fixed version is in `T7-checks/`.
+
+**Round 2 in brief** (details in the section "Round 2" at the end).
+* A re-verification of the round-1 repairs found two major residual issues and one minor one. All three are genuine and fixed:
+  * **Thm 5.5.** The round-1 escalation convention does not apply, because the two scenarios have different practices. With practice-following escalation the theorem is false. It now assumes an explicit observational-equivalence condition (OE), with a rewritten proof.
+  * **Thm 6.6(e), "what the floor buys".** The transplanted bound was false. It is replaced by the correct mirror-image bound $t\ge\ln\frac{1-\delta}{\delta'}/\ln\frac1{1-\pi}$, which is proved and shown tight.
+  * **Size and ground-rule conventions (minor).** Def 1.5 now counts distinct judgments. Def 1.2 now states $c_i:=1$, $\rho_i:=1$ for ground rules, and Thm 4.1 Step 1 uses it.
+  * **Cor 6.2 (minor).** `reverification-round2.md` lists this item, but its text is cut off. Best guess: the oracle was wrongly called an instance of the prefer-unblocked rule; this is corrected (R2-4), pending confirmation.
+* New author script: `T7-checks/two_point_bounds.py`.
 
 ---
 
@@ -431,3 +439,57 @@ All referee scripts used as evidence are now in `T7-checks/`, with a header sayi
 | B18 | Prop 5.8 wording | ok (optional) | — | Adopted: "at most $m$ positions (it is not known which) violate (WS)". |
 
 *Items whose statement or proof changed non-trivially, for re-verification:* (WS) and its equivalent form (§1.3); Lemma 2.1(a); Prop 2.4(c); Lemma 2.5 (local $e^+_\pi$, new (d)); Prop 3.2; Prop 3.3(a)(b); Thm 4.1 (i)–(iv) and proof Step 1; Prop 5.2(a); Thm 5.5; Thm 5.6(b)(c); Prop 6.3(b); Cor 6.2(c); Cor 6.5; §6.2 Remark 2; Thm 6.6(a),(c),(d),(e).
+
+---
+
+## Round 2
+
+### Re-verifier findings (as transmitted to the author)
+
+A re-verification of the round-1 repairs reported these residual issues. They are reproduced from the task statement given to the author-repairer. The re-verifier's full report was not transmitted.
+
+1. **MAJOR — Thm 5.5 (burn-in is necessary: the rare refuter), revised scenario-independence conventions.** The revised statement assumes "escalation answers follow the practice (§5 conventions)". But the §5 convention only gives the same law in every scenario with that practice, and in Thm 5.5 the two scenarios need not have the same practice. So the convention does not deliver what the proof needs. Fix the statement or conventions so that the two-point argument is valid, for example by stating explicitly an observational-equivalence assumption on all channels including escalations, or by restricting to channels without escalation. Then re-check the proof.
+2. **MAJOR — Thm 6.6(e), the remark "What the floor buys" and its proof line.** The stated bound $t\ge\ln((1-\delta')/\delta)/\ln(1/(1-\pi))$ is false. In Thm 5.5 the rare tag lives in the scenario where acceptance is unsound, whereas here the rare tag $\mathrm{Con}(T_{k-1})$ lives in the other scenario. Correct or retract the remark, deriving the right two-point bound, if any, carefully.
+3. **MINOR.** Lemma 2.5(d) needs a size convention under which size counts distinct judgments (derivations as DAGs or sequences); make Def 1.5 consistent with it. Thm 4.1 proof Step 1 uses ground-rule conventions ($c_i:=1$, $\rho_i:=1$) without stating them; state them.
+4. **MINOR — Cor 6.2 (oracle specification; Lemma 6.1-based exactness).** This item was not in the task statement. It appears in `verification/reverification-round2.md`, where its text is cut off after: "Exactness is correct: if B contains a fallacy τ, its closed ⊤/⊥ instance is a one-step refutation of size ≤ |τ| ≤ d relative to [∅:∅]; otherwise there is no refutation at any size. All descents are unblocked, and the counts in (c), at most |F|+1 calls and at most |F| successful descents, and the cos…". See R2-4 below.
+
+The re-verifier also asked the author to re-read the round-1 majors and make sure that their repairs are consistent with the round-2 changes:
+* Prop 2.4(c);
+* the Prop 3.2 voting audit;
+* the conditional-probability form of Prop 5.2(a);
+* the optimality clause of Thm 5.6;
+* the scope of Cor 6.5 for complete decidable theories;
+* whether T1 Thm 6.3 applies to the induction schema in Thm 6.6(e).
+
+### Author-repairer log, round 2 (also appended to the theory file)
+
+A re-verification of the round-1 repairs found two major and one minor residual issue. I re-checked each one, agreed with all three, and repaired them as below. A fourth, minor item on Cor 6.2 appears in `verification/reverification-round2.md` but is cut off there; R2-4 records my best guess at it. I also re-read the six round-1 majors against the new changes; that check follows the table. New check script: `two_point_bounds.py` (author, round 2).
+
+| # | item | severity | genuine? | action |
+|---|---|---|---|---|
+| R2-1 | Thm 5.5: the round-1 statement assumed that escalation answers "follow the practice (§5 conventions)". That convention gives equal laws only for scenarios with the *same* practice, and Thm 5.5's two practices differ. | major | Yes, and it is worse than a proof gap: with practice-following escalation the conclusion is false. Some μ-instance $s_\mu$ lies outside $\mathrm{Sound}(R_{\{\sigma,\tau\}})$. A human with practice $\{\sigma,\tau,\mu\}$ confirms it, and one with practice $\{\sigma,\tau\}$ rejects it, so one escalation separates the scenarios. [computed: `two_point_bounds.py` (C), the cap 0 becomes 1.] | **Fixed.** The statement now assumes **(OE)**: every non-sample input is generated from the history by the same kernel in both scenarios. (OE) is shown to hold for $\mathrm{Ref}_d$ and $W$ (Lemma 2.1(c)), for the fixed prover and red team, for non-escalating learners and for TTL's tier. It is shown to fail for practice-following and target-truthful escalation. The proof is rewritten with the identity $P_1^{\otimes t}\vert_{E_t}=(1-\pi)^tP_2^{\otimes t}$ and a common kernel $K_t$. Tightness is checked by linear programming over all tag sequences: 0 mismatches in 108 cases. The §5 conventions are rewritten, so that the escalation convention is scoped to same-practice results (Props 5.2–5.3, Thms 5.6–5.7). A scope remark on membership queries is added, and §0, §4 Remark 4, §9 weak point 3 and the Reading are qualified. |
+| R2-2 | Thm 6.6(e), "what the floor buys": the bound $\ln\frac{1-\delta'}\delta/\ln\frac1{1-\pi}$ is false. In Thm 5.5 the rare tag lives in the scenario where acceptance is unsound; here $\mathrm{Con}(T_{k-1})$ lives in $T_k$, where acceptance is sound. | major | Yes. Counterexample: take $\pi=1/2$, $\delta=10^{-6}$, $\delta'=0.1$. The round-1 bound demands $t\ge19.8$. The learner "accept iff the tag has occurred" is 0-sound under $T_{k-1}$ and accepts with probability 0.9375 at $t=4$ [computed]. | **Fixed by correcting the bound.** The correct mirror-image bound is $\Pr_k(\text{accept at }t)\le1-(1-\delta)(1-\pi)^t$. Hence $t\ge\ln\frac{1-\delta}{\delta'}/\ln\frac1{1-\pi}$ when $\delta+\delta'<1$. It is proved in place and shown tight, both by an explicit learner and by linear programming (0 mismatches in 108 cases). It is still unbounded as $\pi\to0$, so "no uniform bound without the floor" survives. The text explains why the bound scales with $\ln(1/\delta')$, not $\ln(1/\delta)$. (OE) and the reading as calculus-soundness (Con is true) are added, and the proof line of (e) is corrected. The undefined $1/\pi_{\min}$ in the tag bound is replaced by $\lfloor1/(2\Delta)\rfloor$. |
+| R2-3 | Lemma 2.5(d) needs size to count distinct judgments, which Def 1.5 did not say. Thm 4.1 Step 1's $(1+c_i)$ count needs T1 Thm 6.3's ground-rule convention, while Def 1.2 cited T1 Thm 5.3, which has $c_i=0$ and leaves $\rho_i$ undefined for ground rules. | minor | Yes, both. | **Fixed.** Def 1.5: a derivation is a sequence (DAG) of distinct judgments, size counts distinct judgments, and tree derivations compress without growing. The computed minimal refutations repeat no judgment, so their numbers (9, 13, 29) are unchanged. The proof of Lemma 2.5(d) now orders the extracted judgments by fixed-point stage and shows that they are distinct. Thm 5.6(c) cites Def 1.5. Def 1.2 now sets $c_i:=1$, $\rho_i:=1$ for ground rules (T1 Thm 6.3), so $c_i\ge1$ for every tag. §3.1, Thm 4.1(iii) and Step 1 cite this one convention. In noisy mode a ground tag gives two events, which are T1 Thm 6.2(b)(i)–(ii). In noise-free mode, T1 Thm 5.3's separate ground-rule term becomes $c_ie^{-N\pi_i\rho_i}$. |
+| R2-4 | Cor 6.2 (oracle specification). `verification/reverification-round2.md` lists this as a minor item. Its text is cut off there after confirming exactness, unblocked descents and the counts in (c), and it was not in the task statement. | minor | Partly reconstructed. The one inaccuracy I found in the oracle specification is the sentence calling the closed-instance oracle "an instance of the prefer-unblocked tie-breaking". Its answer need not be the smallest refutation. | **Fixed (best guess at the truncated item).** Cor 6.2 now says that the oracle is exact and deterministic, which is all that Lemma 3.1 and Steps 1–4 of Thm 4.1 use; the tie-breaking rule enters only in Step 5, which is trivial here because the answers do not depend on $d$ once $d\ge\max_\tau|\tau|$. A related change follows from R2-3: in Lemma 6.1 the closed instance has size **at most** $|\tau|$. **The re-verifier should confirm whether this was the intended point.** |
+
+*Consistency of the round-1 majors with the round-2 changes.*
+* **Prop 2.4(c).** Unaffected. The schema-level equality and the instance-level superset use neither escalation nor the size convention.
+* **Prop 3.2.** Unaffected. It uses Lemma 2.5 only through (c) and the consistency certificate.
+* **Prop 5.2(a).** Its admissible targets share the practice, so this is a case where the escalation convention does apply. A sentence in the proof now says so.
+* **Thm 5.6.** All scenarios in (a) and (b) share the practice, so the convention applies.
+  * (b) uses Lemma 2.5(d), whose size bound now rests on Def 1.5.
+  * The sizes 9 and 13 in (c) count distinct judgments, as Def 1.5 now says.
+* **Cor 6.5.** Unaffected; it remains conditional on realizability.
+* **Thm 6.6(e).** The identification part is unaffected. The ground axioms ($\mathrm{Con}(T_j)$, Q) fall under the Def 1.2 convention. The floor remark is replaced (R2-2), and the applicability of T1 Thm 6.3 rests, as before, on the Sub-encoding.
+* **Thm 5.7** (not a round-1 major, but it uses the conventions). It has the same practice in both cases. The proof now notes that practice-following escalation answers are computable, so the reduction is unaffected.
+
+*Items to re-verify after round 2:*
+* Def 1.2 (ground-rule convention) and Def 1.5 (derivations and size);
+* the proof of Lemma 2.5(d);
+* Thm 4.1(iii) and proof Step 1, both modes;
+* the §5 standing conventions;
+* Thm 5.5: statement with (OE), proof, tightness and the scope remark;
+* Thm 6.6(e): the floor remark, its proof line, and the tag-count bound;
+* the last bullet of the proof of Thm 5.7;
+* Lemma 6.1 (size at most $|\tau|$) and the oracle bullets of Cor 6.2 (R2-4);
+* `two_point_bounds.py`.

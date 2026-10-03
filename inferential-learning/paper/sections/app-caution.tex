@@ -18,7 +18,7 @@
 
 The following are proved in full in the main text: \Cref{thm:caution:vs}(a) and~(c), \Cref{thm:caution:unstructured}, \Cref{thm:caution:bayesdet}, and \Cref{cor:caution:bayesopt,cor:caution:structbayes}. This appendix proves the remaining results, checks the examples of \Cref{sec:caution}, and records the evidence for \Cref{conj:caution:binomial}. All statements are the versions repaired after adversarial verification (T1 Verification log). Where a repair changed a statement or a proof, this is noted.
 
-Throughout, a verifier's internal randomness is a single draw $\omega\sim\Lambda$ on a space~$\Omega$, made before the first round. Nothing is lost by this, since coins drawn later can be drawn up front. Steps are ground terms, $|t|$ is the number of symbol occurrences of~$t$, and $\mu(t)=|t|-|\vars(t)|$. We use the rank lemma (\Cref{lem:setting:rank}) and the characterization of the lgg (\Cref{thm:setting:lgg}).
+Throughout, a verifier's internal randomness is a single draw $\omega\sim\Lambda$ on a space~$\Omega_V$, made before the first round. Nothing is lost by this, since coins drawn later can be drawn up front. Steps are ground terms, $|t|$ is the number of symbol occurrences of~$t$, and $\mu(t)=|t|-|\vars(t)|$. We use the rank lemma (\Cref{lem:setting:rank}) and the characterization of the lgg (\Cref{thm:setting:lgg}).
 
 % ---------------------------------------------------------------------
 \subsection{Optimality of the VS verifier}\label{app:caution:vs}
@@ -38,7 +38,7 @@ Since $q\notin\bigcap\VS_h$, there is $R'\in\VS_h$ with $q\notin R'$. Then $R'\i
 \[
 E_T:=\{\omega:\ \tau^T_t(\omega)=h\ \text{and}\ V(P_0,h,q,\omega)=\ACCEPT\}.
 \]
-By \Cref{lem:app:caution:coupling}, $E_{\Rstar}=E_{R'}$ as subsets of~$\Omega$, so $p=\Lambda(E_{\Rstar})=\Lambda(E_{R'})$. On $E_{R'}$, with target~$R'$, the invalid query $q\notin R'$ is accepted in round $t+1$. $V$ is $\delta$-sound, and $R'$ is an admissible target, so $\Lambda(E_{R'})\le\Prob_{R'}[\exists s:\ a_s=\ACCEPT\wedge q_s\notin R']\le\delta$.
+By \Cref{lem:app:caution:coupling}, $E_{\Rstar}=E_{R'}$ as subsets of~$\Omega_V$, so $p=\Lambda(E_{\Rstar})=\Lambda(E_{R'})$. On $E_{R'}$, with target~$R'$, the invalid query $q\notin R'$ is accepted in round $t+1$. $V$ is $\delta$-sound, and $R'$ is an admissible target, so $\Lambda(E_{R'})\le\Prob_{R'}[\exists s:\ a_s=\ACCEPT\wedge q_s\notin R']\le\delta$.
 \end{proof}
 
 This joint-probability form replaces the original statement, which bounded the acceptance probability at~$h$ and is false when read conditionally (referee report A-1). The deterministic form~(c) follows because $\Lambda(E)\in\{0,1\}$ when $\Lambda$ is a point mass. Any history that a deterministic verifier produces against a target is consistent with that target, since the oracle is truthful.
@@ -138,7 +138,7 @@ List the $\Bell(n)$ partitions as $\pi_1,\pi_2,\dots$ along a linear extension o
 
 Let $V$ be two-sided, and consider the query $s_{\pi_v}$. Every label received so far is negative, except for the positives in~$P_0$, and it concerns some $s_{\pi_u}$ with $u<v$. Such a step is not an instance of $\sigma_{\pi_v}$: by~(2) that would require $\pi_v$ to refine $\pi_u$, which for $u<v$ and $\pi_u\neq\pi_v$ contradicts the order. With~(1), $\inst(\sigma_{\pi_v})$ is in the current version space and contains $s_{\pi_v}$. So $s_{\pi_v}\in\bigcup\VS$, and $V$ cannot reject it. $V$ is $0$-sound and $s_{\pi_v}$ is invalid, so $V$ cannot accept it. Hence $V$ escalates every one of the $\Bell(n)$ queries.
 
-\emph{Fixed signature.} The two-sided VS verifier escalates $q$ only if $q\in\bigcup\VS\setminus\bigcap\VS$. Once escalated, $q$ is labelled and joins $P$ or $P^-$. From then on $q\in\bigcap\VS$ (accepted) or $q\notin\bigcup\VS$ (rejected), so no step is escalated twice. A ground term of size~$n$ is a string of $n$ symbols in Polish notation, so over a finite signature~$\Sigma$ there are at most $\sum_{n\le N}|\Sigma|^n\le(|\Sigma|+1)^N$ steps of size at most~$N$.
+\emph{Fixed signature.} The two-sided VS verifier escalates $q$ only if $q\in\bigcup\VS\setminus\bigcap\VS$. Once escalated, $q$ is labelled and joins $P$ or $P^-$. From then on $q\in\bigcap\VS$ (accepted) or $q\notin\bigcup\VS$ (rejected), so no step is escalated twice. A ground term of size~$n$ is a string of $n$ symbols in Polish notation, so over a finite signature~$\Omega$ there are at most $\sum_{n\le N}|\Omega|^n\le(|\Omega|+1)^N$ steps of size at most~$N$.
 \end{proof}
 
 The proposition originally claimed super-exponential cost without qualification. That needs a signature that grows with~$N$, and the fixed-signature bound was added (referee report A-7). \emph{Computation.} A brute-force search over all depth-one schemas $f(t_1,\dots,t_n)$ with $t_i\in\{a,b_j,\text{metavariables}\}$, together with~$x$, queried in order of decreasing number of blocks, gives $2$, $5$ and $15$ forced escalations for $n=2,3,4$. These are $\Bell(2),\Bell(3),\Bell(4)$ (\texttt{T1-code/checks37.py}, re-run).
@@ -174,7 +174,7 @@ Every earlier $s_{a'}$ lies in the $j$-th schema for a $j$ with $a'_j\ge a_j+1$.
 \end{proof}
 
 \begin{proof}[Proof of \Cref{thm:caution:untagged}(ii)]
-Let $k\ge2$, and let $s_1,\dots,s_m$ be an elastic chain relative to $\emptyset$, with $|s_i|\le N$ and witnesses $R_i=\bigcup_{l\le k}\inst(\tau_{i,l})$. Unions of fewer than $k$ schemas are padded by repetition. Let $\pi_i$ be the partition of $[i-1]$ that assigns $j$ to block~$l$ when $l$ is the least index with $s_j\in\inst(\tau_{i,l})$. It has at most $k$ blocks.
+Let $k\ge2$, and let $s_1,\dots,s_m$ be an elastic chain relative to $\emptyset$, with $|s_i|\le N$ and witnesses $R_i=\bigcup_{l\le k}\inst(\tau_{i,l})$. Unions of fewer than $k$ schemas are padded by repetition (only the witness of $s_1$ can be empty, and it plays no role, since $\pi_1$ partitions $\emptyset$). Let $\pi_i$ be the partition of $[i-1]$ that assigns $j$ to block~$l$ when $l$ is the least index with $s_j\in\inst(\tau_{i,l})$. It has at most $k$ blocks.
 
 \emph{Chains of indices.} Call $i_0<i_1<\dots<i_r$ a \emph{chain} if, for each $b\ge1$, the indices $i_0,\dots,i_{b-1}$ all lie in one block of $\pi_{i_b}$, say block~$l$. Then $\tau_{i_b,l}$ covers $s_{i_0},\dots,s_{i_{b-1}}$, and it misses $s_{i_b}$ because $s_{i_b}\notin R_{i_b}$. So $s_{i_b}\notin\inst\lgg(s_{i_0},\dots,s_{i_{b-1}})\subseteq\inst(\tau_{i_b,l})$, and hence
 \[
