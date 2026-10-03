@@ -1,0 +1,100 @@
+\section{Lean formalization}\label{app:lean}
+
+A subset of the discrete results is formalized in Lean~4 with Mathlib (tag \texttt{v4.32.0}). The formalization is in the directory \texttt{lean/}, in the library \texttt{InfLearn}. It has 17 modules and about 14{,}600 lines.
+\begin{itemize}
+\item There is no \texttt{sorry}, no \texttt{axiom} declaration and no \texttt{native\_decide}.
+\item \texttt{lake build} reports no errors and no warnings.
+\item \texttt{lake build Audit} runs \texttt{\#print axioms} on 483 main declarations. Each depends only on the standard axioms \texttt{propext}, \texttt{Classical.choice} and \texttt{Quot.sound}, or on a subset of them. The output is in \texttt{lean/audit-output.txt}.
+\end{itemize}
+Theorems carrying the tag \leanok{\dots} in the text are formalized in the sense of \cref{tab:lean:map}. The column ``fidelity'' takes one of four values:
+\begin{itemize}
+\item \emph{exact}: the paper statement, possibly in a more general form;
+\item \emph{special case}: a strict special case, as described in \texttt{lean/README.md};
+\item \emph{weaker}: a weaker conclusion than the paper states;
+\item \emph{variant}: a closely related statement, neither stronger nor weaker.
+\end{itemize}
+
+\paragraph{Modelling conventions.} The following conventions apply throughout.
+\begin{itemize}
+\item \textbf{Language.} The object language is propositional, with atoms $p_0,p_1,\dots$ and the connectives $\bot,\top,\neg,\wedge,\vee,\to$. Results stated for arbitrary Boolean signatures are proved for every fragment of this set. As a consequence, the truth-table tell-tale has $13+1$ data rather than $11+1$, because $\bot$ and $\top$ are constants of the language. The bilateral completeness theorems are proved for sequents over an arbitrary type of formulas.
+\item \textbf{Consequence operators} are arbitrary closure operators. Finitarity is not assumed.
+\item \textbf{Learners, verifiers and certifiers} are arbitrary, non-computable functions. Interactive lower bounds are proved against deterministic agents only.
+\item \textbf{Probability} appears in two forms only. One is non-negative summable weights on a countable step set. The other is finite distributions, on the $2^k$ worlds or on a finite class of labellers.
+\item \textbf{Real analysis.} Smooth bumps are replaced by Lipschitz tents, because the compiled Mathlib subset does not include derivatives.
+\end{itemize}
+
+\paragraph{Not formalized.} The following are outside the formalization:
+\begin{itemize}
+\item all probabilistic and anytime results, including Ville's inequality and the Bayes-conservative verifiers (\cref{sec:caution:bayes});
+\item anti-unification and the schema-specific escalation bounds;
+\item the noise results of \cref{sec:imitation};
+\item arithmetic (\cref{sec:coherence:arith});
+\item the two-tier main theorem (\cref{thm:twotier:main});
+\item the kink theorem and the other Kolmogorov-complexity results of \cref{sec:simplicity};
+\item first-order and real-parameter context semantics, with the exception of the export results listed below;
+\item the Structured Physics Solution checker theorem;
+\item the identification results of \cref{sec:informal}.
+\end{itemize}
+These rest on the paper proofs and on the adversarial verification described in \cref{sec:intro}.
+
+{\small
+\begin{longtable}{>{\raggedright\arraybackslash}p{3.4cm}>{\raggedright\arraybackslash}p{6.6cm}>{\raggedright\arraybackslash}p{2.0cm}l}
+\caption{Map from paper results to Lean declarations. The namespace prefix \texttt{InfLearn.} is omitted.}\label{tab:lean:map}\\
+\toprule
+Paper & Lean declaration(s) & Module & Fidelity\\
+\midrule\endfirsthead
+\toprule
+Paper & Lean declaration(s) & Module & Fidelity\\
+\midrule\endhead
+\cref{lem:setting:closure} & \texttt{Cl\_eq\_sInter}, \texttt{ClOp}, \texttt{Cl\_subset\_Cl\_iff\_subset\_Sound} & Steps & exact\\
+\cref{lem:search:stepwise} & \texttt{StepSoundness.lemma\_1\_1} & StepSoundness & exact\\
+\cref{thm:search:tonk} & \texttt{StepSoundness.thm\_2\_1\_i}, \texttt{thm\_2\_1\_ii}, \texttt{thm\_2\_1\_error\_and\_trivial} & StepSoundness & exact\\
+\cref{cor:search:pac} & \texttt{StepSoundness.cor\_2\_2\_trivializes} & StepSoundness & weaker\\
+\cref{thm:search:doctrinal} & \texttt{CoherenceGames.thm\_2\_4}, \texttt{thm\_2\_4\_environment} & CoherenceGames & exact\\
+\cref{thm:caution:vs} (a) & \texttt{StepSoundness.thm\_3\_1\_a} & StepSoundness & exact\\
+\cref{thm:caution:vs} (b) & \texttt{StepSoundness.thm\_3\_1\_b}, \texttt{vsVerifier\_optimal} & StepSoundness & special case\\
+\cref{thm:caution:esc} & \texttt{Unstructured.thm\_3\_2}, \texttt{vsVerifier\_attains} & Unstructured & special case\\
+\cref{thm:caution:unstructured} & \texttt{Unstructured.thm\_3\_9\_Esc\_le\_card}, \texttt{thm\_3\_9\_coSingleton} & Unstructured & special case\\
+\cref{lem:coherence:bag} & \texttt{CoherenceGames.negative\_bag} & CoherenceGames & exact\\
+\cref{thm:coherence:halving} & \texttt{CoherenceGames.thm\_2\_2}, \texttt{thm\_2\_2\_iii\_iv} & CoherenceGames & special case (finite $\Hc$)\\
+\cref{prop:coherence:oligarchy} & \texttt{CoherenceGames.prop\_2\_3} & CoherenceGames & special case (finite)\\
+\cref{thm:coherence:robust} & \texttt{CoherenceGames.thm\_2\_5} & CoherenceGames & special case (finite)\\
+\cref{thm:coherence:post} & \texttt{Post.eq\_Cn2\_or\_eq\_trivial}, \texttt{structural\_extensions\_Cn2}, \texttt{frag\_eq\_Cn2F\_or\_eq\_trivial}, \texttt{impFrag\_postComplete} & PostCompleteness & exact\\
+\cref{thm:coherence:cpc} & \texttt{Post.eq\_Cn2\_iff\_exists\_coherent}, \texttt{learner\_identifies}, \texttt{learner\_mindChanges\_le}, \texttt{versionSpace\_eq\_singleton\_iff} & PostCompleteness & exact except finite-basis clause\\
+\cref{lem:coherence:duality} & \texttt{Carnap.Val\_mrel}, \texttt{lemma\_4\_1\_b}, \texttt{intClosure\_BV\_eq} & Carnap & exact\\
+\cref{thm:coherence:carnap} & \texttt{Carnap.carnap\_problem}, \texttt{carnap\_single}, \texttt{carnap\_not\_learnable\_single} & Carnap & exact\\
+\cref{thm:coherence:rank} & \texttt{Carnap.denialRank\_eq\_zero\_iff} (and \texttt{\_one\_iff}, \texttt{\_two\_iff}, \texttt{\_top\_iff}) & Carnap & exact\\
+\cref{thm:coherence:telltale} & \texttt{Carnap.structural\_eq\_BV}, \texttt{ttLearner\_finite\_identification}, \texttt{no\_finite\_telltale}, \texttt{BV\_not\_BC\_learnable} & Carnap & exact (13+1 data)\\
+\cref{lem:twotier:reiter} & \texttt{Blame.isMaxClean\_iff}, \texttt{iInter\_maxClean\_eq}, \texttt{existsUnique\_minTransversal\_iff} & Blame & exact\\
+\cref{lem:twotier:post} & \texttt{Post.schema\_invalid\_iff\_closedRefutation}, \texttt{card\_candidates\_le} & PostCompleteness & exact\\
+\cref{thm:simplicity:pricing} (product part) & \texttt{NoAdaptation.thm\_2\_1\_i\_ennreal\_maxF}, \texttt{unifHyp\_loss}, \texttt{uniform\_marginals\_of\_transitive} & NoAdaptation & exact for the lower bound; the minimax equality is not formalized\\
+\cref{lem:simplicity:hull} & \texttt{RateThreshold.onLowerHull\_iff}, \texttt{lemma\_3\_1\_ii}, \texttt{lemma\_3\_1\_iii\_hyp} & RateThreshold & special case (finite)\\
+\cref{thm:simplicity:separable} & \texttt{RateThreshold.prod\_isMin\_iff}, \texttt{rate\_threshold}, \texttt{thm\_3\_2} & RateThreshold & exact\\
+\cref{cor:simplicity:selectable} & \texttt{RateThreshold.selectable\_iff} & RateThreshold & exact\\
+\cref{thm:simplicity:blind} & \texttt{RateThreshold.rate\_blindness} & RateThreshold & special case (separable)\\
+\cref{prop:simplicity:inversion} & \texttt{RateThreshold.valid\_not\_minimizer}, \texttt{pareto\_dominated} & RateThreshold & exact\\
+\cref{thm:existence:bilindenbaum} & \texttt{Bilateral.thm\_2\_2\_a}, \texttt{thm\_2\_2\_b}, \texttt{coherent\_iff\_realizable} & Bilateral & exact\\
+\cref{cor:existence:bilateral} & \texttt{Bilateral.cor\_2\_3} & Bilateral & exact\\
+\cref{thm:existence:duality} & \texttt{Bilateral.scottClosedIso}, \texttt{isScott\_iff\_Th\_Val\_eq} & Bilateral & exact (no filters)\\
+\cref{thm:existence:structural} & \texttt{Bilateral.thm\_2\_6\_a}, \texttt{structuralClosedIso}, \texttt{thm\_2\_6\_b\_realize} & Bilateral & exact (fixed signature)\\
+\cref{thm:existence:arity} & \texttt{Specker.thm\_3\_4}, \texttt{specker\_parable} & Specker & exact\\
+\cref{prop:existence:triangle} (probabilistic part) & \texttt{Specker.frustrated\_triangle} & Specker & exact\\
+\cref{lem:informal:descent} & \texttt{Blame.LineArg.descent\_depth}, \texttt{ArgTree.descent\_tree\_not\_mem} & Blame & exact\\
+\cref{thm:informal:objects} (a),(b) & \texttt{CoherenceGames.thm\_4\_3\_a}, \texttt{ParadoxLowerBound.thm\_4\_3\_b} & CoherenceGames, ParadoxLowerBound & exact\\
+\cref{thm:informal:paradoxes} (b),(c) & \texttt{ParadoxLowerBound.thm\_4\_4\_b}, \texttt{thm\_4\_4\_c} & ParadoxLowerBound & exact (deterministic learners; one concrete chain)\\
+\cref{thm:informal:bags} & \texttt{CoherenceGames.thm\_4\_5} & CoherenceGames & exact\\
+\cref{prop:physics:los} (a),(b) & \texttt{Contexts.cn2\_closed\_ThIn}, \texttt{consistent\_ThIn\_iff} & Contexts & special case (propositional)\\
+\cref{prop:physics:sup} & \texttt{Contexts.holdsIn\_sup\_iff} & Contexts & special case (propositional)\\
+\cref{lem:physics:import} & \texttt{Contexts.import\_sound} & Contexts & special case (propositional)\\
+\cref{thm:physics:eternalism} & \texttt{Contexts.not\_exists\_truthFunctional\_reading} & Contexts & special case\\
+\cref{prop:physics:misdesignation} & \texttt{Contexts.misdesignation\_not\_Cn2\_le}, \texttt{atomic\_paraconsistent} & Contexts & exact\\
+\cref{thm:physics:hygiene} & \texttt{Contexts.refutes\_of\_inconsistent}, \texttt{derivation\_local\_test\_accepts\_both}, \texttt{certificate\_not\_both} & Contexts & exact for (b)--(d)\\
+\cref{lem:physics:invisible}, \cref{thm:physics:nofree} (b)--(d) & \texttt{Export.invisible\_perturbation}, \texttt{no\_free\_export\_samples}, \texttt{no\_free\_export\_finite\_jet}, \texttt{no\_free\_export\_germ} & Export & exact for (d); variant for (b); special case for (c)\\
+\cref{prop:physics:radius} & \texttt{Export.exists\_interval\_iff\_radius\_le} & Export & exact\\
+\cref{thm:physics:coherencetol} & \texttt{Export.coherence\_cannot\_calibrate} & Export & exact\\
+\cref{thm:physics:noreg} & \texttt{Export.no\_certification\_without\_regularity} & Export & weaker (deterministic)\\
+\cref{thm:physics:lipschitz} & \texttt{Export.lip\_cert\_sound}, \texttt{lip\_cert\_complete}, \texttt{lip\_lower\_bound\_cube} & Export & exact\\
+\cref{thm:physics:monotone} & \texttt{Export.lazy\_bisection\_sound}, \texttt{lazy\_bisection\_miss}, \texttt{mono\_lower\_bound} & Export & exact\\
+\bottomrule
+\end{longtable}
+}
