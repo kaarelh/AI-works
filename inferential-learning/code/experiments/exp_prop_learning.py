@@ -645,7 +645,9 @@ def make_report(res: dict, quick: bool) -> str:
     L.append("* **Coherence pruning** (`coherence`): designated coherent contexts = ∅ plus 4 satisfiable "
              "contingent premise sets. Negative bags = derivations of ⊥ found by (i) *Post probes*: instantiate a "
              "rule's metavariables with ⊥/¬⊥ (set metavariables with {}/{⊥}), assume its guard, prove the premises "
-             "with the current calculus and try to refute the conclusion; (ii) blind backward search for Γ_d ⊢ ⊥. "
+             "with the current calculus and try to refute the conclusion (second stage with the cut formula "
+             "C → ⊥ in the search pool, needed because the learned eliminations only apply to open assumptions); "
+             "(ii) blind backward search for Γ_d ⊢ ⊥. "
              "Bags are diversified (re-search with a bag member blocked). Blame = implicit minimum-weight hitting "
              "set (block the candidate set, search again, until coherent within budget); weight of blaming a rule = "
              "human steps lost by its cheapest repair that blocks the incriminated instances; repairs: minimal "
@@ -805,10 +807,12 @@ def interpretation(res):
                  "the rule into 'from provable closed premises infer a refutable closed conclusion', a short derivation "
                  "of ⊢ ⊥ that the Post probes find. "
                  f"Of the {len(resid)} unsound rules that survive pruning in any run (coherence or world phase), "
-                 f"{ns} are *non-structural* (they mention specific atoms, typically split-children of an "
-                 "over-general rule that require a specific contingent formula as an open assumption): Post's "
-                 "substitution is unavailable for them, so neither the empty context nor random designated contexts "
-                 "refute them; 2 observed valuations witness them only by chance.")
+                 f"{ns} are *non-structural* (they mention specific atoms): Post's substitution is unavailable for "
+                 "them, so only a designated context or an observed valuation that happens to satisfy their premises "
+                 "and falsify their conclusion refutes them. The other "
+                 f"{len(resid) - ns} are schematic: each has a derivation of ⊢ ⊥ (Post), which the budgeted search "
+                 "did not find" + (f" (e.g. `{next(u for u in resid if not _nonstructural(u))}`)."
+                                   if len(resid) > ns else "."))
         if co_small:
             L.append(f"At N ≤ 10 ({len(co_small)} runs) coherence leaves unsound rules in "
                      f"{sum(p['n_unsound'] > 0 for p in co_small)} runs: with few human proofs the learned calculus may "

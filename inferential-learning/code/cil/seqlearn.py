@@ -597,10 +597,15 @@ def run_probe(prover: Prover, rid, rule: SeqRule, sigma: dict, budget: int,
     concl = _inst_seq(rule.concl[0], rule.concl[1], sigma, G)
     if concl not in prover.success:
         prover.add_lemma(ProofNode(concl, rid, proofs, sigma))
-    # the cut formulas C -> bot let the refutation use the derived conclusion even
-    # when the learned eliminations only apply to open assumptions (->I then ->E)
-    cuts = [imp(concl.succ, BOT)] + [imp(g, BOT) for g in sorted(concl.ctx - ctx, key=fkey)]
-    return prover.prove(Seq(ctx, BOT), extra_pool=list(concl.ctx) + [concl.succ] + cuts, budget=budget)
+    pool = list(concl.ctx) + [concl.succ]
+    node = prover.prove(Seq(ctx, BOT), extra_pool=pool, budget=budget)
+    if node is None:
+        # second stage: the cut formulas C -> bot let the refutation use the derived
+        # conclusion even when the learned eliminations only apply to open
+        # assumptions (->I, then ->E with the lemma)
+        cuts = [imp(concl.succ, BOT)] + [imp(g, BOT) for g in sorted(concl.ctx - ctx, key=fkey)]
+        node = prover.prove(Seq(ctx, BOT), extra_pool=pool + cuts, budget=budget)
+    return node
 
 
 def coherence_search(rules: List[Tuple[object, SeqRule]], focus: Sequence[object], designated: Sequence[FrozenSet],

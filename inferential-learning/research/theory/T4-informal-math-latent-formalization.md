@@ -750,6 +750,8 @@ Then:
    * Every instance in $I_A$ is $J(q)$ with $q$ false in $M_A$, or Comp($x\neq x$). Each of these defines the empty class, which is witnessed by $e_0$.
 3. Consistency has finite character, so by Zorn's lemma each $I_A$ extends to a maximal consistent $J_A$. If $A\neq B$, then $J_A\neq J_B$ by 1. ∎
 
+There are only countably many instances, so the number of maximal consistent subsets is exactly $2^{\aleph_0}$. The proof uses only pure logic. With Extensionality as background, the same argument works with Zermelo numerals $z_0=\emptyset$, $z_{k+1}=\{z_k\}$ in place of the $e_i$, $a_n=\{z_0,\dots,z_{n-1}\}$, and $A\subseteq\mathbb N_{\ge2}$. The model is then extensional and well-founded. Each $z_k$ has at most one element, so $p_1$ always holds, which is why $n=1$ is excluded. (A referee's remark, checked.)
+
 **Incurvati & Murzi (2017)**, "Maximally consistent sets of instances of naive comprehension", *Mind* 126(502):371–384 [cited; author list verified this session]. They prove more: there are multiple incompatible maximal consistent sets, *none of them recursively axiomatizable* under minimal assumptions. This generalizes McGee's 1992 theorem for the T-schema (McGee 1992 details unverified). So:
 * (a) "the maximal consistent repair" does not exist;
 * (b) no computable learner can output a recursive axiomatization, i.e. an r.e. index, of a maximal one. *(Qualified after verification.)* Limit approximations do exist. Enumerate the instances and add each one if the set stays consistent. This greedy construction needs one $0'$ query per instance, since consistency is $\Pi_1$. So some maximal consistent sets are $\Delta_2$, and by Shoenfield's limit lemma a computable learner can converge to one pointwise in the limit.
@@ -894,7 +896,7 @@ L10 (§1.2, T5) records the user's proposal. Score hypotheses by $\lambda\cdot K
 * (i) For fixed λ and $N\to\infty$, every systematic error with $\pi_r>0$ is eventually learned. *Imitation with any fixed simplicity weight learns the teacher's systematic mistakes.*
 * (ii) With $\lambda=\kappa N$, $r$ is included iff its **compression rate** $\kappa_r:=\pi_rg_r/\ell(r)$ exceeds κ.
 
-*Proof.* $J_\lambda$ is a sum of independent per-rule terms $\min(\lambda\ell(r),N\pi_rg_r)$. ∎
+*Proof.* $J_\lambda$ is a sum of independent per-rule terms $\min(\lambda\ell(r),N\pi_rg_r)$. ∎ This is the standard separable-penalty (hard-thresholding) fact, and it duplicates T5 Thm 3.2.
 
 **Corollary 7.2 [proved] (conventions made explicit after verification).** Let $\mathcal T$ be finite, $\pi_r>0$ for every valid $r$, κ > 0, and take max over an empty set of fallacies to be 0. Then some steepness κ makes the MAP exactly the set of valid rules iff
 $$\min_{r\ \rm valid}\kappa_r>\max_{f\ \rm fallacy}\kappa_f.$$
