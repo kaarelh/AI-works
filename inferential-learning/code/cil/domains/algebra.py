@@ -689,6 +689,125 @@ def schema_sound(rule: RewriteRule, seed: int = 0, n: int = 300) -> bool:
 
 
 # ---------------------------------------------------------------------------
+# An alternative, TOTAL semantics (diagnostic only; never used by learners)
+# ---------------------------------------------------------------------------
+#
+# "Complex meadow" semantics: values are complex numbers, every operation is
+# total: x/0 := 0 (so 0^n := 0 for n < 0), a^e := 0 for a non-integer
+# exponent e, sqrt is the principal complex square root, 0^0 = 1.  It agrees
+# with the partial real semantics wherever the latter is defined and real.  A
+# calculus that is sound for it but not for the partial semantics has learned
+# a *different meaning* of '/', 'sqrt' and '^' (cf. meadows, Bergstra & Tucker;
+# and the x/0 = 0 convention of some proof assistants).  Used to diagnose what
+# pure coherence (no world feedback) converges to.
+
+_TOT_EPS = mpmath.mpf("1e-30")
+
+
+def _tot_zero(v) -> bool:
+    return abs(v) < _TOT_EPS
+
+
+def _mpc(x):
+    """Coerce a Fraction / int / mpf / mpc to ``mpmath.mpc``."""
+    if isinstance(x, Fraction):
+        x = _to_mpf(x)
+    return mpmath.mpc(x)
+
+
+def evaluate_total(t: Term, env: Dict[str, object]):
+    """Value of ``t`` (an ``mpmath.mpc``) in the total complex-meadow semantics.
+    ``env`` maps atom names and '?'-prefixed schematic variable names to
+    numbers (anything ``mpmath.mpc`` accepts)."""
+    if type(t) is Var:
+        return _mpc(env["?" + t.name])
+    h, args = t.head, t.args
+    if not args:
+        if h.isdigit():
+            return mpmath.mpc(int(h))
+        return _mpc(env[h])
+    vals = [evaluate_total(a, env) for a in args]
+    if h == "+":
+        return vals[0] + vals[1]
+    if h == "-":
+        return vals[0] - vals[1]
+    if h == "*":
+        return vals[0] * vals[1]
+    if h == "/":
+        return mpmath.mpc(0) if _tot_zero(vals[1]) else vals[0] / vals[1]
+    if h == "neg":
+        return -vals[0]
+    if h == "^":
+        a, e = vals
+        if abs(e.imag) > _TOT_EPS or abs(e.real - mpmath.nint(e.real)) > _TOT_EPS:
+            return mpmath.mpc(0)
+        n = int(mpmath.nint(e.real))
+        if abs(n) > MAX_EXP:
+            raise EvalSkip("exponent too large")
+        if n == 0:
+            return mpmath.mpc(1)
+        if n < 0:
+            if _tot_zero(a):
+                return mpmath.mpc(0)
+            a, n = 1 / a, -n
+        return a ** n
+    if h == "sqrt":
+        return mpmath.sqrt(vals[0])
+    raise ValueError(f"unknown function symbol {h!r}")
+
+
+def _tot_guard_holds(pred: str, v) -> bool:
+    if pred == "defined":
+        return True
+    if pred == "nonzero":
+        return not _tot_zero(v)
+    real = abs(v.imag) <= _TOT_EPS
+    if pred == "nonneg":
+        return real and v.real >= -_TOT_EPS
+    if pred == "pos":
+        return real and v.real > _TOT_EPS
+    raise ValueError(pred)
+
+
+def schema_counterexample_total(rule: RewriteRule, rng: random.Random, n: int = 300) -> Optional[dict]:
+    """Random search for an assignment (complex values: special values, random
+    rationals, sqrt 2, random complex rationals) satisfying the rule's guard
+    under which ``[[lhs]] != [[rhs]]`` in the complex-meadow semantics."""
+    vs = rule.vars()
+    obj = sorted(atoms(rule.lhs) | atoms(rule.rhs))
+
+    def value():
+        r = rng.random()
+        if r < 0.35:
+            return _mpc(rng.choice(SPECIAL_VALUES))
+        if r < 0.65:
+            return _mpc(Fraction(rng.randint(-40, 40), rng.randint(1, 15)))
+        if r < 0.72:
+            return mpmath.mpc(rng.choice([1, -1]) * mpmath.sqrt(rng.choice([2, 3])))
+        return mpmath.mpc(_to_mpf(Fraction(rng.randint(-20, 20), rng.randint(1, 9))),
+                          _to_mpf(Fraction(rng.randint(-20, 20), rng.randint(1, 9))))
+
+    for _ in range(n):
+        env = {a: value() for a in obj}
+        for v in vs:
+            env["?" + v] = value()
+        if not all(_tot_guard_holds(p, env["?" + v]) for p, v in rule.guard.atoms):
+            continue
+        try:
+            a, b = evaluate_total(rule.lhs, env), evaluate_total(rule.rhs, env)
+        except EvalSkip:
+            continue
+        if abs(a - b) > mpmath.mpf("1e-25") * max(mpmath.mpf(1), abs(a), abs(b)):
+            return env
+    return None
+
+
+def schema_sound_total(rule: RewriteRule, seed: int = 0, n: int = 300) -> bool:
+    """Is the schema sound in the total complex-meadow semantics (random test)?"""
+    return schema_counterexample_total(rule, random.Random(seed), n) is None
+
+
+# ---------------------------------------------------------------------------
 # Random terms
 # ---------------------------------------------------------------------------
 

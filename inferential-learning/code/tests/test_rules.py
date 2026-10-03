@@ -82,3 +82,14 @@ def test_inference_schema_generic():
     sch = InferenceSchema.induce(inst)
     assert sch.instance((parse("imp(u, v)"), parse("u")), parse("v")) is not None
     assert sch.instance((parse("imp(u, v)"), parse("v")), parse("u")) is None
+
+
+def test_rule_from_str_roundtrip():
+    from cil.rules import rule_from_str
+    for r in list(TARGET_BY_NAME.values()):
+        r2 = rule_from_str(str(r))
+        assert r2.name == r.name and r2.variant_of(r)
+    r = rule_from_str("L44: 0/(a/3) -> 0")
+    assert r.lhs == parse("0/(a/3)") and not r.guard and r.name == "L44"
+    r = rule_from_str("?X1/(?X2/?X3) -> ?X1*?X3/?X2   [if defined(?X1) & nonzero(?X3)]")
+    assert r.variant_of(rule_from_strings("a/(b/c)", "(a*c)/b", [("defined", "a"), ("nonzero", "c")]))

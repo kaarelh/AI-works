@@ -109,3 +109,21 @@ def test_fact_closure_sound_random():
                 assert fact_holds(f, env), (f, F)
                 n += 1
     assert n > 300
+
+
+def test_total_semantics_alternative_meaning():
+    """The complex-meadow semantics (x/0 := 0, principal complex sqrt) is a
+    coherent alternative meaning: every target rule is sound in it, every
+    fallacy is unsound in it, and exactly the 'definedness' guards are
+    unnecessary in it."""
+    from cil.domains.algebra import evaluate_total, schema_sound_total
+    assert evaluate_total(parse("1/0"), {}) == 0
+    assert evaluate_total(parse("sqrt(-4)"), {}) == 2j
+    assert evaluate_total(parse("0^(-2)"), {}) == 0
+    for r in TARGET_RULES:
+        assert schema_sound_total(r, seed=1, n=300), r
+    for f in FALLACIES:
+        assert not schema_sound_total(f.rule, seed=2, n=400), f.name
+    sound_drops = {r.name for r in TARGET_RULES
+                   if r.guard and schema_sound_total(r.with_guard(TRUE_GUARD), seed=1, n=400)}
+    assert sound_drops == {"mul_zero", "zero_mul", "sub_self", "zero_div", "div_div", "pow_zero", "sq_sqrt"}

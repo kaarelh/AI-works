@@ -186,3 +186,87 @@ for n in [3, 4, 5, 10]:
     print(f"    n={n}: E[prop H after H] = {ms_expectation(n)} = {float(ms_expectation(n)):.4f}")
 assert ms_expectation(4) == F(17, 42)
 print("[9] Miller-Sanjurjo n=4 value 17/42 confirmed")
+
+# ---------------------------------------------------------------------------
+# 10. Rule of proof vs premise (Smiley; Carroll).  Necessitation phi/Box phi is
+#     sound on EVERY Kripke frame, but the axiom schema p -> Box p is valid on a
+#     frame iff R is a subset of the identity (each world sees at most itself).
+#     Brute force over all frames with <= 3 worlds and all valuations of p.
+# ---------------------------------------------------------------------------
+def frames(n):
+    pairs = [(i, j) for i in range(n) for j in range(n)]
+    for mask in range(2 ** len(pairs)):
+        yield n, {pairs[k] for k in range(len(pairs)) if mask >> k & 1}
+
+count = 0
+for n in [1, 2, 3]:
+    for _, R in frames(n):
+        valid = True
+        for vmask in range(2 ** n):
+            V = {w for w in range(n) if vmask >> w & 1}
+            for w in range(n):
+                box_p = all((v in V) for (u, v) in R if u == w)
+                if (w in V) and not box_p:
+                    valid = False
+        assert valid == all(u == v for (u, v) in R)
+        # necessitation preserves validity on every frame: if p valid (V = all worlds) then Box p true everywhere
+        assert all(all(v in set(range(n)) for (u, v) in R if u == w) for w in range(n))
+        count += 1
+print(f"[10] {count} frames: p->Box p valid iff R subset of identity; necessitation rule sound on all frames")
+
+# ---------------------------------------------------------------------------
+# 11. Carroll's regress in a toy engine.  Sentences are atoms or implications.
+#     Closure under an engine E (set of rule-functions).  With E = {} adding
+#     any number of conditional premises derives nothing new; with E = {MP} a
+#     single-instance rule A,B / Z is simulated by the premise A->(B->Z), but
+#     the premise version derives strictly more (the conditional itself and what
+#     follows from it as an object).
+# ---------------------------------------------------------------------------
+def imp(a, b):
+    return ("->", a, b)
+
+def closure(S, rules, max_rounds=20):
+    S = set(S)
+    for _ in range(max_rounds):
+        new = set()
+        for r in rules:
+            new |= r(S)
+        if new <= S:
+            return S
+        S |= new
+    return S
+
+def MP(S):
+    return {x[2] for x in S if isinstance(x, tuple) and x[0] == "->" and x[1] in S}
+
+def single_rule(prem, concl):
+    return lambda S: {concl} if set(prem) <= S else set()
+
+A, B, Z, C = "A", "B", "Z", "C"
+tortoise_store = {A, B, imp(A, imp(B, Z)), imp(imp(A, imp(B, Z)), imp(A, imp(B, Z)))}
+assert closure(tortoise_store, []) == tortoise_store          # no engine: nothing follows
+assert Z in closure({A, B, imp(A, imp(B, Z))}, [MP])          # one built-in rule suffices
+cA = imp(A, imp(B, Z))
+S0 = {A, B, imp(cA, C)}                                        # background mentions the conditional as an object
+rule_version = closure(S0, [MP, single_rule([A, B], Z)])
+premise_version = closure(S0 | {cA}, [MP])
+assert rule_version <= premise_version and C in premise_version and C not in rule_version
+print("[11] empty engine: conditionals inert; {MP}: rule A,B/Z simulated by premise; premise version strictly stronger (derives C)")
+
+# ---------------------------------------------------------------------------
+# 12. Imitation absorbs systematic errors (formal Cohen convergence).  Two-part
+#     MDL: H0 = target calculus + noise; H1 = target + fallacy F as a rule.
+#     Humans use F on a fraction phi of steps; alternatives per step M.
+#     Code length difference grows linearly in n, so for ANY fixed simplicity
+#     weight lambda, F is eventually absorbed: n* ~ lambda*K(F)/(H(phi)+phi*log2 M).
+# ---------------------------------------------------------------------------
+from math import log2
+def H2(x):
+    return 0.0 if x in (0, 1) else -(x * log2(x) + (1 - x) * log2(1 - x))
+def excess_bits_H0(n, phi, M):
+    # H0 must code F-steps as noise: best noise rate = phi; per-step cost H(phi) + phi*log2(M)
+    return n * (H2(phi) + phi * log2(M))
+for (lam, KF, phi, M) in [(1, 200, 0.01, 50), (10, 200, 0.01, 50), (10, 200, 0.001, 50)]:
+    nstar = lam * KF / (H2(phi) + phi * log2(M))
+    print(f"    lambda={lam:3d} K(F)={KF} bits phi={phi}: F absorbed after n* ~ {nstar:,.0f} human steps")
+print("[12] fixed lambda => every systematic (compressible, frequent) error is eventually learned by imitation-MDL")

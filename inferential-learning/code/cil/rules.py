@@ -35,6 +35,7 @@ inference) therefore quantifies over the whole chain.
 from __future__ import annotations
 
 import itertools
+import re
 from dataclasses import dataclass, field
 from typing import Callable, Dict, FrozenSet, Iterable, List, Optional, Sequence, Tuple
 
@@ -45,7 +46,7 @@ __all__ = [
     "GuardAtom", "Guard", "TRUE_GUARD", "Fact", "Facts", "EntailFn",
     "RewriteRule", "InferenceSchema", "Step",
     "diff_chain", "minimal_core", "licenses", "explanations", "all_rewrites",
-    "induce_schema", "guard_satisfied", "rule_from_strings",
+    "induce_schema", "guard_satisfied", "rule_from_strings", "rule_from_str",
 ]
 
 GuardAtom = Tuple[str, str]            # (predicate, variable name)
@@ -205,6 +206,28 @@ def rule_from_strings(lhs: str, rhs: str, guard: Iterable[GuardAtom] = (), name:
     """Build a rule from infix strings; bare identifiers are schematic vars."""
     from .terms import parse_pattern
     return RewriteRule(parse_pattern(lhs), parse_pattern(rhs), Guard(guard), name)
+
+
+_GUARD_ATOM = re.compile(r"(\w+)\(\?([^)]+)\)")
+_RULE_NAME = re.compile(r"^([A-Za-z_][\w']*): ")
+
+
+def rule_from_str(s: str) -> RewriteRule:
+    """Inverse of ``str(RewriteRule)``: parses ``[name: ]lhs -> rhs[   [if g & ...]]``
+    where schematic variables are written ``?v`` and bare identifiers are
+    object constants (used to re-analyse rules stored in result JSON files)."""
+    from .terms import parse
+    s = s.strip()
+    name = ""
+    m = _RULE_NAME.match(s)
+    if m:
+        name, s = m.group(1), s[m.end():]
+    guard = TRUE_GUARD
+    if "[if " in s:
+        s, g = s.split("[if ", 1)
+        guard = Guard((p, v) for p, v in _GUARD_ATOM.findall(g))
+    lhs, rhs = s.split(" -> ")
+    return RewriteRule(parse(lhs.strip()), parse(rhs.strip()), guard, name)
 
 
 @dataclass(frozen=True)

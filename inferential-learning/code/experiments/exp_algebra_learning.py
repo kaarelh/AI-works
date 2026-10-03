@@ -15,10 +15,15 @@ Baselines: a liberal learner (support threshold m = 1, no coherence) and a
 supervised average-case ML verifier (gradient boosting on step features).
 
 Usage:
-    python experiments/exp_algebra_learning.py            # full grid (~30 min on 4 cores)
-    python experiments/exp_algebra_learning.py --quick    # smoke test (~2 min)
+    python experiments/exp_algebra_learning.py                 # full grid (3 worker processes)
+    python experiments/exp_algebra_learning.py --resume        # continue an interrupted run
+    python experiments/exp_algebra_learning.py --report-only   # rebuild .md / plots from the JSON
+    python experiments/exp_algebra_learning.py --quick         # smoke test (~1 min)
 Writes results/algebra_learning.json, results/algebra_learning.md and PNG plots.
-Everything is deterministic given the seeds below.
+Every finished task is also appended to results/<stem>.partial.jsonl, so an
+interrupted run loses nothing (``--resume`` skips the finished tasks).
+Everything is deterministic given the seeds below (checked across
+PYTHONHASHSEED values); no single task takes more than ~30 s.
 """
 from __future__ import annotations
 
@@ -36,8 +41,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 
-from cil.domains.algebra import (ALGEBRA, FALLACIES, GUARDED_TARGETS, TARGET_RULES, HumanConfig, WorldOracle,
-                                 generate_corpus)
+from cil.domains.algebra import (ALGEBRA, FALLACIES, GUARDED_TARGETS, TARGET_BY_NAME, TARGET_RULES, HumanConfig,
+                                 WorldOracle, generate_corpus, schema_sound_total)
+from cil.rules import TRUE_GUARD, rule_from_str
+from cil.terms import atoms
 from cil.evaluation import (MLVerifier, acceptance_rates, adversarial_attack, fallacy_report, make_invalid_steps,
                             make_valid_steps, recovery_report, unsound_active)
 from cil.learners import CoherenceConfig, CoherenceRepairer, LGGLearner, prepare_training
@@ -113,13 +120,15 @@ def evaluate(accepts, seed: int):
 
 def evaluate_calc(calc, seed: int, attack: bool = True):
     rec = recovery_report(calc)
+    unsound = unsound_active(calc, seed=seed)
     res = {
         "recovery": rec,
         "n_exact": sum(v == "exact" for v in rec.values()),
         "n_shape": sum(v in ("exact", "guard_stronger", "guard_weaker", "guard_incomparable") for v in rec.values()),
         "n_guarded_exact": sum(rec[n] == "exact" for n in GUARDED_TARGETS),
         "n_active": len(calc.active()),
-        "n_unsound_active": len(unsound_active(calc, seed=seed)),
+        "n_unsound_active": len(unsound),
+        "unsound_rules": [str(s.rule) for s in unsound],
         "fallacies": fallacy_report(calc, seed=seed),
         "heldout": evaluate(calc.accepts, seed),
     }
@@ -231,6 +240,64 @@ def fallacy_outcomes(records):
         for f, d in r["fallacies"].items():
             out[f][d["status"]] += 1
     return out
+
+
+_TOTAL_CACHE = {}
+
+
+def sound_in_total_semantics(rule_str: str) -> bool:
+    """Is a stored (unsound w.r.t. the partial real semantics) rule sound in the
+    alternative total 'complex meadow' semantics?  Cached by rule identity."""
+    r = rule_from_str(rule_str)
+    k = r.key()
+    if k not in _TOTAL_CACHE:
+        _TOTAL_CACHE[k] = schema_sound_total(r, seed=0, n=400)
+    return _TOTAL_CACHE[k]
+
+
+_KNOWN_SHAPES = [r for r in TARGET_RULES] + [f.rule for f in FALLACIES]
+_NOISE_CACHE = {}
+
+
+def spurious(rule_str: str) -> bool:
+    """A stored learned rule is *spurious* if it is not an instance (or
+    variant) of any target rule or fallacy schema, ignoring guards (it was
+    born from sporadic noise or from over-generalisation)."""
+    if rule_str not in _NOISE_CACHE:
+        r = rule_from_str(rule_str)
+        _NOISE_CACHE[rule_str] = not any(k.subsumes(r) for k in _KNOWN_SHAPES)
+    return _NOISE_CACHE[rule_str]
+
+
+def mentions_constants(rule_str: str) -> bool:
+    """Does a stored rule mention an object constant (an unknown such as x)?"""
+    r = rule_from_str(rule_str)
+    return bool(atoms(r.lhs) | atoms(r.rhs))
+
+
+def main_records(records, kind, **kw):
+    """Records of the main grid (default budget, split repair enabled)."""
+    return group(records, kind=kind, **kw)
+
+
+def paired_fallacy_fates(records, lname):
+    """For every coherence run, look up the positive-only run with the same
+    (learner, N, noise, seed); for each fallacy that SURVIVED positive-only
+    learning, record its status after coherence (per mode)."""
+    pos = {(r["N"], r["noise"], r["seed"]): r for r in main_records(records, "positive", learner=lname)}
+    out = defaultdict(lambda: defaultdict(Counter))      # mode -> fallacy -> Counter(status)
+    exact_after = defaultdict(lambda: defaultdict(Counter))  # mode -> fallacy -> Counter(base-rule recovery)
+    for r in main_records(records, "coherence", learner=lname):
+        p = pos.get((r["N"], r["noise"], r["seed"]))
+        if p is None:
+            continue
+        for f in FALLACIES:
+            if p["fallacies"][f.name]["status"] != "survived":
+                continue
+            out[r["mode"]][f.name][r["fallacies"][f.name]["status"]] += 1
+            if f.kind == "guard_drop":
+                exact_after[r["mode"]][f.name][r["recovery"][f.tag]] += 1
+    return out, exact_after
 
 
 def make_report(records, quick: bool):
@@ -378,6 +445,25 @@ def make_report(records, quick: bool):
           f"{sum(r['n_unsound_active'] > 0 for r in g)}/{len(g)} runs (most-specific guards are sound when the "
           f"positive data are).\n")
 
+    # spurious schemas: noise coincidences and over-generalisation
+    P("### Spurious schemas: sporadic noise defeats a *fixed* support threshold as N grows\n")
+    P("Mean number of active unsound schemas that are *spurious*, i.e. not an instance or variant of any target "
+      "rule or fallacy (e.g. `?X1 + ?X2 -> ?X2`, `3 -> 2`, `?X1*?X2 -> ?X1`), after positive-only learning. With "
+      "sporadic noise they arise when two independent random mutations coincide in one bucket and so reach support "
+      "m = 2. The number of noise steps grows like N, so the number of such coincidences grows faster. On clean data "
+      "they can only come from over-generalisation; `clean` columns isolate that effect.\n")
+    cols = [("tagged", ("clean",)), ("tagged", ("sporadic", "both")), ("untagged", ("clean",)),
+            ("untagged", ("sporadic", "both")), ("tagged_m1", ("sporadic", "both"))]
+    P("| N | " + " | ".join(f"`{l}` {'/'.join(ns)}" for l, ns in cols) + " |")
+    P("|---|" + "---|" * len(cols))
+    for N in Ns:
+        cells = []
+        for lname, ns in cols:
+            g = [r for r in group(records, kind="positive", learner=lname, N=N) if r["noise"] in ns]
+            cells.append(_ms([sum(spurious(u) for u in r["unsound_rules"]) for r in g]) if g else "-")
+        P(f"| {N} | " + " | ".join(cells) + " |")
+    P("")
+
     # sample complexity view
     P("### Recovery vs number of human instances of a rule (`tagged`, all noise settings, positive only)\n")
     P("Fraction of (rule, run) pairs whose schema *shape* was recovered, by the number of valid human instances of "
@@ -445,6 +531,124 @@ def make_report(records, quick: bool):
                 cells.append(", ".join(f"{k} {v}" for k, v in sorted(c.items())))
             P(f"| {lname} | {mode} | " + " | ".join(cells) + " |")
     P("")
+
+    # ---------------- (iii) paired view
+    P("### (iii) Do coherence / world feedback remove the fallacies that positive learning produced?\n")
+    P("Paired runs: for each coherence run we look up the positive-only run with the same learner, N, noise and "
+      "seed; a fallacy is counted only if positive-only learning ended with an *active unsound* schema licensing it "
+      "(`survived`). Cells: status after the Lakatos loop. For the guard-dropping fallacies the second line gives "
+      "the recovery status of the *true guarded rule* afterwards (`exact` = guard recovered up to equivalence). "
+      "Note that with `guard_mode = none` the unguarded x/x→1 and sqrt(x²)→x are learned even from clean data "
+      "(positive examples never display a guard), so these rows include `clean` runs.\n")
+    for lname in ["tagged", "untagged"]:
+        fates, exact_after = paired_fallacy_fates(records, lname)
+        if not fates:
+            continue
+        P(f"**learner `{lname}`**\n")
+        P("| mode | " + " | ".join(f.name for f in FALLACIES) + " |")
+        P("|---|" + "---|" * len(FALLACIES))
+        for mode in ["numeral", "bag", "step"]:
+            cells = []
+            for f in FALLACIES:
+                c = fates[mode][f.name]
+                cell = ", ".join(f"{k} {v}" for k, v in sorted(c.items())) or "–"
+                if f.kind == "guard_drop" and exact_after[mode][f.name]:
+                    e = exact_after[mode][f.name]
+                    cell += "<br>true rule: " + ", ".join(f"{k} {v}" for k, v in sorted(e.items()))
+                cells.append(cell)
+            P(f"| {mode} | " + " | ".join(cells) + " |")
+        P("")
+
+    # ---------------- guard learning per guarded target
+    P("### Guard learning, per guarded target rule (all main-grid runs with N ≥ 100)\n")
+    P("Recovery status of each guarded target rule after positive-only learning and after each feedback mode "
+      "(`exact` = schema and guard recovered; `weaker` = schema learned with a guard weaker than the truth, i.e. "
+      "unsound; `stronger` = over-guarded, sound but incomplete; `missing`/`specialized` = not learned in general "
+      "form).\n")
+    P("| rule | target guard | positive only | numeral | bag | step |")
+    P("|---|---|---|---|---|---|")
+    short = {"exact": "exact", "guard_weaker": "weaker", "guard_stronger": "stronger",
+             "guard_incomparable": "incomp.", "missing": "missing", "specialized": "spec."}
+    for name in GUARDED_TARGETS:
+        cells = []
+        for mode in ["none", "numeral", "bag", "step"]:
+            if mode == "none":
+                g = [r for r in main_records(records, "positive") if r["learner"] in ("tagged", "untagged")
+                     and r["N"] >= 100 and r["N"] in cohNs]
+            else:
+                g = [r for r in main_records(records, "coherence", mode=mode) if r["N"] >= 100]
+            c = Counter(short[r["recovery"][name]] for r in g)
+            cells.append(", ".join(f"{k} {v}" for k, v in c.most_common()))
+        P(f"| {name} | {TARGET_BY_NAME[name].guard} | " + " | ".join(cells) + " |")
+    P("")
+
+    # ---------------- alternative meaning diagnosis
+    P("### What does *pure coherence* converge to? An alternative meaning\n")
+    P("Every learned schema that is unsound for the intended (partial, real) semantics was re-tested in an "
+      "alternative **total** semantics, the 'complex meadow': complex values, x/0 := 0, principal complex square "
+      "root, non-integer powers := 0 (`cil.domains.algebra.schema_sound_total`; it agrees with the intended "
+      "semantics wherever the latter is defined and real). All 41 target rules are sound in it and all 5 fallacies "
+      "are unsound in it (unit test `test_total_semantics_alternative_meaning`). Exactly 7 of the 11 guards are "
+      "unnecessary in it (mul_zero, zero_mul, sub_self, zero_div, div_div, pow_zero, sq_sqrt), and sqrt_mul needs "
+      "only one of its two atoms.\n")
+    P("| learner | stage | runs | unsound active schemas (total) | of which sound in the total semantics | runs where *all* are |")
+    P("|---|---|---|---|---|---|")
+    alt_rows = {}
+    for lname in ["tagged", "untagged"]:
+        for mode in ["none", "numeral", "bag", "step"]:
+            if mode == "none":
+                g = [r for r in main_records(records, "positive", learner=lname) if r["N"] in cohNs]
+            else:
+                g = main_records(records, "coherence", learner=lname, mode=mode)
+            if not g:
+                continue
+            tot = sum(len(r["unsound_rules"]) for r in g)
+            ok = sum(sound_in_total_semantics(u) for r in g for u in r["unsound_rules"])
+            allok = sum(all(sound_in_total_semantics(u) for u in r["unsound_rules"]) for r in g)
+            alt_rows[(lname, mode)] = (tot, ok, allok, len(g))
+            P(f"| {lname} | {'positive only' if mode == 'none' else mode} | {len(g)} | {tot} | {ok} | {allok}/{len(g)} |")
+    P("")
+    # by N, pure coherence only
+    P("Pure-coherence (`numeral`) runs by N. Survivors are the active unsound schemas left at the end. "
+      "*Object-constant* exceptions mention an unknown such as `z`, as in `?X1*z -> ?X1` or `z -> b`. They are "
+      "coherent too (true in every model with z = 1, resp. z = b), but pure coherence never reaches them, because "
+      "it only compares *numeral* expressions. *Other* exceptions are value errors that the learned calculus was "
+      "too poor to turn into a numeral contradiction.\n")
+    P("| N | runs | survivors | sound in total semantics | exceptions: object constants | exceptions: other |")
+    P("|---|---|---|---|---|---|")
+    by_regime = {}
+    for N in cohNs:
+        g = main_records(records, "coherence", mode="numeral", N=N)
+        surv = [u for r in g for u in r["unsound_rules"]]
+        ok = [u for u in surv if sound_in_total_semantics(u)]
+        oc = [u for u in surv if not sound_in_total_semantics(u) and mentions_constants(u)]
+        other = [u for u in surv if not sound_in_total_semantics(u) and not mentions_constants(u)]
+        by_regime[N] = (len(surv), len(ok), len(oc), len(other))
+        P(f"| {N} | {len(g)} | {len(surv)} | {len(ok)} | {len(oc)} | {len(other)} |")
+    P("")
+    big = [v for N, v in by_regime.items() if N >= 200]
+    small = [v for N, v in by_regime.items() if N < 200]
+    if big:
+        tb, okb, ocb, otb = (sum(x[i] for x in big) for i in range(4))
+        P(f"**Reading.** For N ≥ 200, {okb} of the {tb} schemas that survive pure coherence "
+          f"({100 * okb / max(tb, 1):.1f}%) are sound in the total semantics. Of the rest, {ocb} mention object "
+          f"constants and {otb} are other value errors. Coherence here means positive data plus contradiction with "
+          "trusted arithmetic. It removes every error that changes the *value* of a numeral expression (the "
+          "freshman's dream gives 2 = 4, unguarded x/x→1 gives 0/0 = 1 = 0, unguarded sqrt(x²)→x gives "
+          "1 = sqrt((-1)²) = -1). It cannot see *partiality*. So it converges to a calculus for a different, "
+          "coherent meaning of '/', '^' and 'sqrt', in which 1/0 = 0. Only feedback that can observe 'undefined' "
+          "(the world oracle) separates the two meanings. This is a concrete instance of the non-identifiability "
+          "left after coherence (brief, H7; orchestrator ideas, 4(d)).")
+    if small:
+        ts, oks, ocs, ots = (sum(x[i] for x in small) for i in range(4))
+        P(f" For N < 200 the share is {100 * oks / max(ts, 1):.1f}% ({ots} other exceptions): with a small learned "
+          "calculus fewer derivations reach a numeral, so fewer contradictions are derivable. Coherence is only "
+          "as strong as the deductive power of the calculus it is applied to.\n")
+    exc = Counter(u.split(": ", 1)[-1] for r in main_records(records, "coherence", mode="numeral")
+                  for u in r["unsound_rules"] if not sound_in_total_semantics(u))
+    if exc:
+        P("All exceptions (unsound in *both* semantics), with the number of runs:\n")
+        P(", ".join(f"`{u}` ({c})" for u, c in exc.most_common()) + "\n")
 
     P("### Which unsound schemas survive *pure coherence* (`numeral` mode)?\n")
     surv = Counter()
@@ -587,18 +791,41 @@ def make_plots(records):
     return files
 
 
+def _load_records(stem):
+    """Records of a previous (possibly interrupted) run: the final JSON plus
+    the per-task checkpoint lines (deduplicated by task key)."""
+    recs = {}
+    js = os.path.join(RESULTS, stem + ".json")
+    if os.path.exists(js):
+        with open(js) as f:
+            for r in json.load(f)["records"]:
+                recs[task_key(r)] = r
+    part = os.path.join(RESULTS, stem + ".partial.jsonl")
+    if os.path.exists(part):
+        with open(part) as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    try:
+                        r = json.loads(line)
+                    except json.JSONDecodeError:   # truncated last line of a killed run
+                        continue
+                    recs[task_key(r)] = r
+    return list(recs.values())
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--quick", action="store_true")
-    ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--workers", type=int, default=3)
     ap.add_argument("--out", default=None)
-    ap.add_argument("--resume", action="store_true", help="only run tasks missing from the saved JSON")
+    ap.add_argument("--resume", action="store_true", help="only run tasks missing from the saved JSON / checkpoint")
     ap.add_argument("--report-only", action="store_true",
                     help="regenerate the markdown report and plots from the saved JSON")
     args = ap.parse_args()
     os.makedirs(RESULTS, exist_ok=True)
+    stem = args.out or ("algebra_learning_quick" if args.quick else "algebra_learning")
     if args.report_only:
-        stem = args.out or ("algebra_learning_quick" if args.quick else "algebra_learning")
         with open(os.path.join(RESULTS, stem + ".json")) as f:
             records = json.load(f)["records"]
         with open(os.path.join(RESULTS, stem + ".md"), "w") as f:
@@ -607,31 +834,40 @@ def main():
             make_plots(records)
         return
     tasks = build_tasks(args.quick)
-    stem = args.out or ("algebra_learning_quick" if args.quick else "algebra_learning")
+    part_path = os.path.join(RESULTS, stem + ".partial.jsonl")
     records = []
-    if args.resume and os.path.exists(os.path.join(RESULTS, stem + ".json")):
-        with open(os.path.join(RESULTS, stem + ".json")) as f:
-            records = json.load(f)["records"]
+    if args.resume:
+        wanted = {task_key(t) for t in tasks}
+        records = [r for r in _load_records(stem) if task_key(r) in wanted]
         done = {task_key(r) for r in records}
         tasks = [t for t in tasks if task_key(t) not in done]
-    print(f"{len(tasks)} tasks", flush=True)
+    elif os.path.exists(part_path):
+        os.remove(part_path)
+    print(f"{len(tasks)} tasks to run ({len(records)} already done), {args.workers} workers", flush=True)
     t0 = time.time()
-    ctx = mp.get_context("fork")
-    with ctx.Pool(args.workers, maxtasksperchild=40) as pool:
-        for i, rec in enumerate(pool.imap_unordered(run_task, tasks, chunksize=1)):
-            records.append(rec)
-            if (i + 1) % 20 == 0:
-                print(f"  {i + 1}/{len(tasks)} done, {time.time() - t0:.0f}s", flush=True)
+    if tasks:
+        ctx = mp.get_context("fork")
+        with ctx.Pool(args.workers, maxtasksperchild=40) as pool, open(part_path, "a") as part:
+            for i, rec in enumerate(pool.imap_unordered(run_task, tasks, chunksize=1)):
+                records.append(rec)
+                part.write(json.dumps(rec, default=str) + "\n")
+                part.flush()
+                if (i + 1) % 20 == 0 or i + 1 == len(tasks):
+                    print(f"  {i + 1}/{len(tasks)} done, {time.time() - t0:.0f}s", flush=True)
     key = lambda r: (r["kind"], r.get("learner", ""), r.get("mode", ""), bool(r.get("nosplit")),
                      r.get("budget") or "", r["noise"], r["N"], r["seed"])
+    records = json.loads(json.dumps(records, default=str))   # normalise (Counter -> dict etc.)
     records.sort(key=key)
     with open(os.path.join(RESULTS, stem + ".json"), "w") as f:
-        json.dump({"records": records, "wall_seconds": time.time() - t0}, f, indent=1, default=str)
+        json.dump({"records": records, "wall_seconds_last_invocation": time.time() - t0,
+                   "n_tasks": len(records)}, f, indent=1, default=str)
     report = make_report(records, args.quick)
     with open(os.path.join(RESULTS, stem + ".md"), "w") as f:
         f.write(report)
     if not args.quick:
         make_plots(records)
+    if os.path.exists(part_path):
+        os.remove(part_path)
     print(f"done in {time.time() - t0:.0f}s", flush=True)
 
 
