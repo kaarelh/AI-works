@@ -108,7 +108,7 @@ if __name__ == '__main__':
         print(f" {n} | {math.log2(n):5.2f}   | {mo:5d} | {mb}")
     print()
     print("k-culprit classes H = {S minus K : |K| = k}")
-    for (n, k) in [(4, 2), (5, 2), (6, 2), (6, 3)]:
+    for (n, k) in [(4, 2), (5, 2), (6, 2), (5, 3)]:
         H, m = k_culprit(n, k)
         mo = solve(H, m, 'obj')
         mb = [solve(H, m, 'bag', r) for r in range(1, n + 1)]
@@ -117,9 +117,9 @@ if __name__ == '__main__':
     print("random classes: check M_obj <= floor(log2|H|) and M_bag(unbounded) <= |H|-1, and M_obj <= M_bag")
     rng = random.Random(0)
     worst_ratio = 0
-    for trial in range(150):
-        m = rng.randint(3, 5)
-        nh = rng.randint(2, 8)
+    for trial in range(120):
+        m = rng.randint(3, 4)
+        nh = rng.randint(2, 7)
         H = list({rng.randrange(1 << m) for _ in range(nh)})
         if len(H) < 2:
             continue

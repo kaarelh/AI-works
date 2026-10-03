@@ -9,7 +9,8 @@ Checks:
  (5) rigorous thin-leg bridge bound  E/E0 in [1 - m/sig, (1 + m/sig)/(sqrt(1-eps^2) - eps/2)],
      eps = a/r, sig = sin(phi/2), m = arcsin(eps)/2, checked on a dense grid;
  (6) export domains for a 5% tolerance (rigorous bound vs exact error);
- (7) finite-sun-size bridge composed with the thin-leg bridge."""
+ (7) finite-sun-size bridge composed with the thin-leg bridge;
+ (8) exact thin-leg error on the checker's domain; (9) injectivity of the reflected-ray map."""
 import numpy as np, sympy as sp
 
 # ---------- (1)-(3) symbolic ----------
@@ -127,3 +128,11 @@ PS, SS = np.meshgrid(psis, ss); X, Y, C = floor_point(PS, SS); Rr = np.hypot(X, 
 dom = (Rr >= 20) & (Rr <= 34) & (np.abs(np.sin(Phi/2)) >= 0.5)
 rat = E_exact(PS, SS)/E_thin(Rr, Phi)
 print(f"\n(8) exact thin-leg error on domain: max |E/E0-1| = {np.max(np.abs(rat[dom]-1)):.4f} (rigorous bound there: {max(b-1 if i else 1-b for i,b in enumerate(bound(1/20, 0.5))):.4f})")
+
+# (9) injectivity: two forward reflected rays (psi1 != psi2, s >= 0) never meet.
+# Ray(psi): P = t e(psi) + a cos(psi/2) n(psi), t >= a sin(psi/2); intersection parameters solved in closed form.
+rng = np.random.default_rng(2); x = rng.uniform(0, np.pi, 2_000_000); y = rng.uniform(0, np.pi, 2_000_000)
+x, y = np.minimum(x, y), np.maximum(x, y); d = y - x; S2 = np.sin(2*d); keep = np.abs(S2) > 1e-9
+t1 = (np.cos(x)*np.cos(2*d) - np.cos(y))/S2; t2 = (np.cos(x) - np.cos(y)*np.cos(2*d))/S2
+both_forward = keep & (t1 >= np.sin(x) - 1e-12) & (t2 >= np.sin(y) - 1e-12)
+print(f"\n(9) random ray pairs: {keep.sum()}, forward intersections found: {both_forward.sum()}")

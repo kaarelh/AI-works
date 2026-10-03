@@ -72,11 +72,10 @@ def check(sps):
     if ok: rep.append(f"ACCEPT: |E_true/answer - 1| <= {bound:.4f} on r in [{r_min}a, {sps['domain']['r_max_over_a']}a], sin(phi/2) >= {sig_min}, all alpha in spec")
     return ok, rep
 
+# L = 60a, alpha_min = 30 deg: every admissible completion lights the disk r <= 60 tan(30 deg - 0.27 deg) a = 34.3 a.
 honest = dict(reading={alpha: SPEC['free'][alpha]}, answer=a*I0/2*sp.sin(phi/2)/r, conventions=["specular", "reflectance=1", "geometric_optics"],
               bridges=[dict(name="thin-leg", evaluated_in="parent", note=""), dict(name="point-sun", evaluated_in="parent", note="")],
-              domain=dict(r_min_over_a=25.0, r_max_over_a=10.0*0 + 10.9, sigma_min=0.6), tol=0.05)
-# L = 60a, alpha_min = 30 deg: every admissible completion lights the disk r <= 60 tan(30 deg - 0.27 deg) a = 34.3 a.
-honest['domain'] = dict(r_min_over_a=20.0, r_max_over_a=34.0, sigma_min=0.5); honest['tol'] = 0.10
+              domain=dict(r_min_over_a=20.0, r_max_over_a=34.0, sigma_min=0.5), tol=0.10)
 variants = {
   "honest (L=60a, r in [20a,34a], sin(phi/2)>=0.5, 10%)": honest,
   "V1 overclaims domain (r >= 5a)": {**honest, 'domain': dict(r_min_over_a=5.0, r_max_over_a=34.0, sigma_min=0.5)},
