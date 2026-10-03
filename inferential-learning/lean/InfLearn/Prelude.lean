@@ -1,5 +1,13 @@
 import Mathlib.Data.Finset.Card
+import Mathlib.Data.Finset.Lattice.Fold
 import Mathlib.Data.Set.Finite.Basic
 import Mathlib.Order.Closure
+import Mathlib.Order.CompleteLattice.Basic
 import Mathlib.Data.Fintype.Card
+import Mathlib.Data.Fintype.Pi
+import Mathlib.Data.Real.Basic
+import Mathlib.Analysis.SpecialFunctions.Log.Basic
+import Mathlib.Tactic.Linarith
+import Mathlib.Tactic.Positivity
+import Mathlib.Tactic.FinCases
 import Mathlib.Tactic.Common

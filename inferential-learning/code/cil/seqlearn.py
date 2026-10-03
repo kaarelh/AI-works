@@ -258,6 +258,118 @@ class LearnedSeqCalculus:
 # ---------------------------------------------------------------------------
 
 
+class _Cl:
+    __slots__ = ("schema", "members", "M", "T", "cost", "cid")
+
+    def __init__(self, schema, members, M, T, cost, cid):
+        self.schema, self.members, self.M, self.T, self.cost, self.cid = schema, members, M, T, cost, cid
+
+
+def _occ(t: Term, acc: Dict[str, int]):
+    if type(t) is Var:
+        acc[t.name] = acc.get(t.name, 0) + 1
+    elif not t.ground:
+        for a in t.args:
+            _occ(a, acc)
+
+
+def _merge_cost(A: "_Cl", B: "_Cl", sw: float, beta: float):
+    from .terms import lgg_tuples_subst, nonvar_size
+    (g,), (thA, thB) = lgg_tuples_subst([(A.schema,), (B.schema,)])
+    T: Dict[str, float] = {}
+    for X, th in ((A, thA), (B, thB)):
+        for w, t in th.items():
+            occ: Dict[str, int] = {}
+            _occ(t, occ)
+            T[w] = T.get(w, 0.0) + X.M * nonvar_size(t) + sum(c * X.T.get(v, 0.0) for v, c in occ.items())
+    M = A.M + B.M
+    cost = sw * g.size + sum(T.values()) + beta * M * len(T)
+    return g, T, cost
+
+
+def mdl_cluster_seq(cores: Sequence[Term], schema_weight: float = 1.0, beta: float = 2.0, full_limit: int = 160,
+                    gen_support: int = 0) -> List[Tuple[Term, List[int]]]:
+    """MDL agglomerative anti-unification of step cores (one unit of weight per
+    distinct core).  Two-part code of a cluster:
+
+        schema_weight * |schema|  +  sum_members ( sum_vars |sigma(v)| + beta * #vars )
+
+    ``beta`` is the cost of one variable binding (beta = 0 is the cost model of
+    :func:`cil.learners.mdl_cluster`).  With beta > 0 a schema only pays off if it
+    captures *shared* structure, so unrelated (noise) cores of the same skeleton
+    stay apart.  Merges are greedy best-first while they reduce the total code
+    length; ``gen_support > 0`` adds the stage-2 generalisation of clusters that
+    each have at least that many members."""
+    import heapq
+    cl = [_Cl(c, [i], 1, {}, schema_weight * c.size, i) for i, c in enumerate(cores)]
+
+    def agglomerate(clusters):
+        alive = {c.cid: c for c in clusters}
+        nxt = max(alive) + 1 if alive else 0
+        heap = []
+        ids = sorted(alive)
+        for a in range(len(ids)):
+            A = alive[ids[a]]
+            for b in range(a + 1, len(ids)):
+                B = alive[ids[b]]
+                g, T, cost = _merge_cost(A, B, schema_weight, beta)
+                d = cost - A.cost - B.cost
+                if d < 0:
+                    heapq.heappush(heap, (d, A.cid, B.cid, g, T, cost))
+        while heap:
+            d, ia, ib, g, T, cost = heapq.heappop(heap)
+            if ia not in alive or ib not in alive:
+                continue
+            A, B = alive.pop(ia), alive.pop(ib)
+            C = _Cl(g, A.members + B.members, A.M + B.M, T, cost, nxt)
+            nxt += 1
+            for D in sorted(alive.values(), key=lambda c: c.cid):
+                g2, T2, c2 = _merge_cost(C, D, schema_weight, beta)
+                d2 = c2 - C.cost - D.cost
+                if d2 < 0:
+                    heapq.heappush(heap, (d2, D.cid, C.cid, g2, T2, c2))
+            alive[C.cid] = C
+        return [alive[k] for k in sorted(alive)]
+
+    if len(cl) > full_limit:
+        order = sorted(range(len(cl)), key=lambda i: (cores[i].size, i))
+        seq: List[_Cl] = []
+        for i in order:
+            c = cl[i]
+            best = None
+            for j, D in enumerate(seq):
+                g, T, cost = _merge_cost(D, c, schema_weight, beta)
+                d = cost - D.cost - c.cost
+                if d < 0 and (best is None or d < best[0]):
+                    best = (d, j, g, T, cost)
+            if best is None:
+                seq.append(c)
+            else:
+                _, j, g, T, cost = best
+                D = seq[j]
+                seq[j] = _Cl(g, D.members + c.members, D.M + c.M, T, cost, D.cid)
+        cl = seq
+    final = agglomerate(cl)
+    if gen_support:
+        nxt = max((c.cid for c in final), default=0) + 1
+        while True:
+            big = [c for c in final if c.M >= gen_support]
+            best = None
+            for i in range(len(big)):
+                for j in range(i + 1, len(big)):
+                    g, T, cost = _merge_cost(big[i], big[j], schema_weight, beta)
+                    d = cost - big[i].cost - big[j].cost
+                    if best is None or d < best[0]:
+                        best = (d, big[i], big[j], g, T, cost)
+            if best is None:
+                break
+            _, A, B, g, T, cost = best
+            final = [c for c in final if c is not A and c is not B]
+            final.append(_Cl(g, A.members + B.members, A.M + B.M, T, cost, nxt))
+            nxt += 1
+    return [(c.schema, sorted(c.members)) for c in final]
+
+
 def _sigma_cost(schema: Term, core: Term) -> Optional[int]:
     s = match(schema, core)
     if s is None:
@@ -276,8 +388,10 @@ class SeqLearner:
 
     def __init__(self, key_mode: str = "tag", cluster: str = "mdl", gen_support: int = 0,
                  guard_mode: str = "most_specific", guard_tol: float = 0.1, m: int = 2,
-                 schema_weight: float = 1.0, full_limit: int = 160, weigh_tokens: bool = False):
+                 schema_weight: float = 1.0, full_limit: int = 160, weigh_tokens: bool = False,
+                 beta: float = 2.0):
         self.weigh_tokens = weigh_tokens
+        self.beta = beta
         self.key_mode = key_mode
         self.cluster = cluster
         self.gen_support = gen_support
@@ -298,8 +412,12 @@ class SeqLearner:
                 g = lgg_tuples([(cores[i],) for i in ix])[0] if len(ix) > 1 else cores[ix[0]]
                 out.append((g, ix))
             return out
-        res = mdl_cluster([(c, OK) for c in cores], mults, self.schema_weight, self.full_limit, self.gen_support)
-        sch = [l for (l, _), _ in res]
+        if self.weigh_tokens:
+            res0 = mdl_cluster([(c, OK) for c in cores], mults, self.schema_weight, self.full_limit, self.gen_support)
+            res = [(l, mem) for (l, _), mem in res0]
+        else:
+            res = mdl_cluster_seq(cores, self.schema_weight, self.beta, self.full_limit, self.gen_support)
+        sch = [l for l, _ in res]
         sizes = [sum(mults[i] for i in mem) for _, mem in res]
         assign: Dict[int, List[int]] = defaultdict(list)
         for ci, c in enumerate(cores):
@@ -628,11 +746,12 @@ class CoherencePruner:
         cores = list(core_map)
         if len(cores) < 2:
             return None
-        parts = mdl_cluster([(c, OK) for c in cores], [1] * len(cores), gen_support=0)
+        beta = self.learner.beta if self.learner is not None else 2.0
+        parts = mdl_cluster_seq(cores, beta=beta)
         if len(parts) < 2:
             return None
         children = []
-        for (l, _), mem in parts:
+        for l, mem in parts:
             sid = len(self.calc.rules)
             members = sorted(i for ci in mem for i in core_map[cores[ci]])
             rule = SeqRule.from_term(l, TRUE_GUARD, name=f"L{sid}")
