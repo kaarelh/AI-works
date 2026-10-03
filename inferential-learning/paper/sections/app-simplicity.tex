@@ -1,0 +1,424 @@
+% =====================================================================
+% Appendix: proofs for Section 8 (Simplicity and normativity from imitation)
+% Sources: research/theory/T5-steeper-simplicity-and-normativity-from-imitation.md (as repaired;
+%          see its Verification log), research/verification/T5-verification.md,
+%          research/theory/T4-informal-math-latent-formalization.md §7.
+% =====================================================================
+\providecommand{\Risk}{\mathcal R}
+\providecommand{\hRisk}{\hat{\mathcal R}}
+\providecommand{\hullm}{\mathrm{hull}^{-}}
+\providecommand{\Adm}{\mathfrak A}
+\providecommand{\val}{\mathrm{val}}
+\providecommand{\Ax}{\mathrm{Ax}}
+\providecommand{\KL}{\mathrm{KL}}
+\providecommand{\Unif}{\mathrm{Unif}}
+\providecommand{\conv}{\mathrm{conv}}
+\providecommand{\Muniv}{\mathbf M}
+\providecommand{\muniv}{\mathbf m}
+
+\section{Proofs for Section~\ref{sec:simplicity}}\label{app:simplicity}
+
+Several results of \cref{sec:simplicity} are proved in full in the main text: \cref{prop:simplicity:sequence,prop:simplicity:fixed,prop:simplicity:block,lem:simplicity:listdecode,lem:simplicity:corr,thm:simplicity:separable,cor:simplicity:selectable,cor:simplicity:example,prop:simplicity:cheap,prop:simplicity:inversion,prop:simplicity:language,prop:simplicity:sacrifice}, and \cref{lem:simplicity:hull}(i)--(ii). This appendix proves the remaining ones. The proofs follow T5 in the form repaired after verification, and the repairs are noted where they occur.
+
+Conventions:
+\begin{itemize}
+\item Logarithms are base 2 unless written $\ln$.
+\item $\kappa$ denotes a machine constant. It absorbs $O(1)$ terms and may grow from one result to the next, but it is fixed before $d$, $n$ or $m$.
+\item $p_h$ is a shortest program for $h$, and $K(p_h)=K(h)+O(1)$ \citep{li2008introduction}.
+\item Prefix complexities of concatenated self-delimiting descriptions add, up to $O(1)$.
+\end{itemize}
+
+% ---------------------------------------------------------------------
+\subsection{Proof of \texorpdfstring{\cref{lem:simplicity:empirical}}{the empirical-selection lemma}}\label{app:simplicity:empirical}
+
+\emph{Both minimizers exist.} By Kraft, $\{h:\ell(h)\le L\}$ has at most $2^L$ elements. Fix $h_0$. Losses lie in $[0,B]$, so $\Risk(h_0),\hRisk_N(h_0)\le B$. Any $h$ with $\ell(h)>\ell(h_0)+B/c$ therefore has
+\[
+J_c(h),\ \hat J_c(h)\ \ge c\ell(h)>c\ell(h_0)+B\ge J_c(h_0),\ \hat J_c(h_0).
+\]
+So both infima are minima over a finite set. In particular a population minimizer $h_c$ exists, and both $\ell(h_c)$ and $\ell(\hat h)$ are at most $\ell(h_0)+B/c$.
+
+\emph{Uniform deviation.} For a fixed $h$, $-\log h(y_i\mid x_i)$ are i.i.d.\ in $[0,B]$. By Hoeffding's inequality,
+\[
+\Prob\big[|\hRisk_N(h)-\Risk(h)|\ge\varepsilon\big]\le2e^{-2N\varepsilon^2/B^2}.
+\]
+Setting the right side equal to $\delta2^{-\ell(h)}$ gives $\varepsilon=\varepsilon_N(h):=B\sqrt{(\ell(h)\ln2+\ln(2/\delta))/(2N)}$. A union bound over $h$, using $\sum_h2^{-\ell(h)}\le1$, shows that with probability at least $1-\delta$ all deviations are at most $\varepsilon_N(h)$ simultaneously.
+
+\emph{Excess risk.} On this event,
+\[
+J_c(\hat h)\le\hat J_c(\hat h)+\varepsilon_N(\hat h)\le\hat J_c(h_c)+\varepsilon_N(\hat h)\le\Phi(c)+\varepsilon_N(h_c)+\varepsilon_N(\hat h).
+\]
+Both $\varepsilon_N$ terms are at most $B\sqrt{((\ell(h_0)+B/c)\ln2+\ln(2/\delta))/(2N)}$.
+
+\emph{Uniqueness.} If $J_c(h)\ge\Phi(c)+\gamma$ for every $h\neq h_c$, then a bound below $\gamma$ forces $\hat h=h_c$.
+\qed
+
+% ---------------------------------------------------------------------
+\subsection{Proof of \texorpdfstring{\cref{thm:simplicity:pricing}}{the pricing theorem}}\label{app:simplicity:pricing}
+
+\emph{The minimax value in (i).} Let the distinct inputs be $x$, with multiplicities $n_x$. Write $L(h,f)=\sum_xn_x[-\log h(f(x)\mid x)]$. For a distribution $Q$ on $\mathcal C$,
+\[
+\E_{f\sim Q}L(h,f)=\sum_xn_x\big[H(Q_x)+\KL(Q_x\,\|\,h(\cdot\mid x))\big]\ \ge\ \sum_xn_xH(Q_x)=\sum_iH(Q_{x_i}),
+\]
+with equality iff $h(\cdot\mid x)=Q_x$ for every $x$. Hence $\min_h\max_fL\ge\max_Q\sum_iH(Q_{x_i})$, and the maximum over the compact simplex is attained, since the objective is continuous.
+
+For the reverse inequality:
+\begin{itemize}
+\item \emph{Restricting $h$.} If $h(y\mid x)=0$ for some $y\in\mathcal C(x)$, then $\max_fL(h,f)=\infty$. Mass outside $\mathcal C(x)$ only hurts. The function $h\mapsto\max_fL(h,f)$ is lower semicontinuous, with compact sublevel sets on the product of simplices. So a minimizer $h^\circ$ exists, and it puts mass at least some $\tau_0>0$ on each $y\in\mathcal C(x)$.
+\item \emph{Sion's theorem.} For $\tau\le\tau_0$, let $H_\tau$ be the convex set of product hypotheses with $h(y\mid x)\ge\tau$ for $y\in\mathcal C(x)$. On $H_\tau\times\Delta(\mathcal C)$ the function $(h,Q)\mapsto\E_QL(h,f)$ is continuous, convex in $h$ and linear in $Q$, and $\Delta(\mathcal C)$ is compact. By Sion's minimax theorem \citep{sion1958general},
+\[
+\min_h\max_fL=\inf_{h\in H_\tau}\max_Q\E_QL=\max_Q\inf_{h\in H_\tau}\E_QL.
+\]
+\item \emph{Letting $\tau\to0$.} For each $Q$, the hypothesis $h(\cdot\mid x)=(1-\tau')Q_x+\tau'\Unif(\mathcal C(x))$ with $\tau'=\tau|Y|$ lies in $H_\tau$. Since $\KL(Q_x\,\|\,(1-\tau')Q_x+\tau'U)\le-\log(1-\tau')$, we get $\inf_{H_\tau}\E_QL\le\sum_iH(Q_{x_i})-N\log(1-\tau')$, uniformly in $Q$. Letting $\tau\to0$ gives $\min_h\max_fL\le\max_Q\sum_iH(Q_{x_i})$.
+\end{itemize}
+
+\emph{When the bound $\sum_i\log|\mathcal C(x_i)|$ is attained.} We have $H(Q_x)\le\log|\mathcal C(x)|$, with equality iff $Q_x$ is uniform on $\mathcal C(x)$. Since the maximum is attained, the value equals $\sum_i\log|\mathcal C(x_i)|$ iff some $Q$ has uniform marginals on every $\mathcal C(x_i)$.
+
+\emph{The group condition.} Suppose $G$ acts on $\mathcal C$ with $(g\cdot f)(x)=\sigma_{g,x}(f(x))$, transitively on each $\mathcal C(x)$. Let $Q=\Unif(\mathcal C)$, which is $G$-invariant. Then
+\[
+Q_x(\sigma_{g,x}y)=Q\{f:f(x)=\sigma_{g,x}y\}=Q\{g\cdot f':\sigma_{g,x}(f'(x))=\sigma_{g,x}(y)\}=Q\{g\cdot f':f'(x)=y\}=Q\{f':f'(x)=y\}=Q_x(y),
+\]
+where the second equality substitutes $f=g\cdot f'$ and the fourth uses the $G$-invariance of $Q$. By transitivity $Q_x$ is uniform on $\mathcal C(x)$. For parities, $g_b\cdot f_a=f_{a\oplus b}$ and $\sigma_{g_b,x}(y)=y\oplus f_b(x)$. This is transitive on $\mathcal C(x)=\{0,1\}$ for $x\neq0$, and trivially so on $\mathcal C(0)=\{0\}$. A group acting transitively on $\mathcal C$ alone does not suffice: in the example of the main text, $\mathrm{Sym}(\mathcal C)$ acts transitively on $\mathcal C$, but not compatibly with the $\mathcal C(x)$.
+
+\emph{(ii)} The uniform distribution over the distinct labelings $\mathcal L=\{f(x_{1:N})\}$ pays $\log|\mathcal L|$ against every $f$. Conversely, the labelings are disjoint events, so every $P$ gives some labeling probability at most $1/|\mathcal L|$ \citep{shtarkov1987universal}.
+
+\emph{(iii)} We have $\xi_{\rm fun}(y\mid x)\ge w_qq(y\mid x)$ and $\xi_{\rm seq}\ge w_q\prod_iq(y_i\mid x_i)$; take logarithms. For tightness, take the models const~0 and const~1 with $w=\frac12$, on $N$ ones. Then $\xi_{\rm fun}(1\mid x)=\frac12$ at every input, so it pays $N$ bits. And $\xi_{\rm seq}(1^N)=\frac12$, so it pays one bit. The chain-rule conditionals of $\xi_{\rm seq}$ depend on past labels; that dependence \emph{is} the shared randomness.
+\qed
+
+% ---------------------------------------------------------------------
+\subsection{The kink}\label{app:simplicity:kink}
+
+The setting is that of \cref{sec:simplicity:kink}. Put $\sigma_h:=s_h\chi_a\in[-1,1]$, so that $\hat s_h(a)=\E_x\sigma_h$.
+
+\begin{lemma}[Randomness of $E$ removes the $2p$ slack]\src{T5 Lemma 2.5c, added after verification}\label{lem:simplicity:random}
+For every product $h$,
+\[
+\Risk(h)\ge1-\log_2\big(1+(1-2p)\,\hat s_h(a)+\varepsilon_h\big),\qquad\varepsilon_h:=\sqrt{32\ln2\cdot p\,\big(\delta_E^++K(h)+\kappa_n\big)/n},
+\]
+where $\delta_E^+=\max(\delta_E,0)$ and $\kappa_n=\log_2n+2\log_2(\log_2n+2)+\kappa$.
+\end{lemma}
+
+\begin{proof}
+\emph{An exact identity.} Always $h(y\mid x)\le\frac{1+s_h(x)(-1)^y}2$, with equality when $h(0\mid x)+h(1\mid x)=1$; this is because $h(0)+h(1)\le1$. Also $(-1)^{y^*(x)}=\chi_a(x)(1-2\cdot1_E(x))$. By Jensen, $\Risk(h)\ge-\log_2\E_xh(y^*\mid x)$, and
+\[
+\E_xh(y^*\mid x)\le\tfrac12+\tfrac12\E_x\big[\sigma_h(1-2\cdot1_E)\big]=\tfrac12+\tfrac12\hat s_h(a)-\tfrac1n\textstyle\sum_{x\in E}\sigma_h(x).
+\]
+
+\emph{Reduction.} Let $\eta_0:=\big|\frac1{pn}\sum_{x\in E}\sigma_h(x)-\hat s_h(a)\big|$, the deviation of $E$'s average of $\sigma_h$ from the population average. Then $\frac1n\sum_E\sigma_h\ge p(\hat s_h(a)-\eta_0)$, so
+\[
+\E_xh(y^*\mid x)\le\tfrac12+\tfrac{1-2p}2\hat s_h(a)+p\eta_0\quad\text{and}\quad\Risk(h)\ge1-\log_2\big(1+(1-2p)\hat s_h(a)+2p\eta_0\big).
+\]
+It suffices to show $2p\eta_0\le\varepsilon_h$.
+
+\emph{Small deviations.} If $\eta_0<1/n$, then $2p\eta_0<2p/n$. And $(2p/n)^2\le32\ln2\cdot p\kappa_n/n\le\varepsilon_h^2$, because $p<1$ and $\kappa_n\ge1$.
+
+\emph{Counting.} For $\eta>0$, let $B_\eta$ be the set of $pn$-subsets $E'\subseteq X$ with $\big|\frac1{pn}\sum_{E'}\sigma_h-\hat s_h(a)\big|\ge\eta$. A uniformly random $pn$-subset is a sample without replacement from the population $\{\sigma_h(x)\}_{x\in X}$, whose mean is $\hat s_h(a)$ and whose range has length at most~2. Hoeffding's inequality for sampling without replacement \citep[\S6]{hoeffding1963probability} gives $|B_\eta|\le2e^{-pn\eta^2/2}\binom n{pn}$.
+
+\emph{Coding.} Otherwise $\eta_0\ge1/n$. Since $\eta_0\le2$, we may pick $\eta=2^{-k}$ with $\eta\le\eta_0<2\eta$ and $-1\le k\le d$; then $E\in B_\eta$.
+\begin{itemize}
+\item $B_\eta$ is computable from $p_h$, from $a$ (whose length gives $d$), from $pn$ (written in $d+1$ bits) and from $k$ (written in $\log_2(d+2)+1$ bits). Here $\sigma_h=s_h\chi_a$ is computed by running $p_h$ on all of~$X$. So
+\[
+K(E\mid a,p_h)\le\log_2|B_\eta|+\kappa_n\le L_E-\frac{pn\eta^2}{2\ln2}+\kappa_n.
+\]
+\item Also $L_E-\delta_E=K(E\mid a,K(a))\le K(E\mid a)+O(1)\le K(p_h)+K(E\mid a,p_h)+O(1)$, and $K(p_h)=K(h)+O(1)$.
+\item Combining these, with $\kappa$ absorbing the constants, gives $\frac{pn\eta^2}{2\ln2}\le\delta_E+K(h)+\kappa_n$.
+\end{itemize}
+Hence $\eta_0^2<4\eta^2\le8\ln2\,(\delta_E^++K(h)+\kappa_n)/(pn)$, i.e.\ $(2p\eta_0)^2<\varepsilon_h^2$.
+\end{proof}
+
+A numerical check \status{computed; T5 repair\_checks}. The identity holds to machine precision. For random $E$ with $d=12$ and $p\in\{1/64,0.15,0.2,0.24\}$, the observed $\eta_0$ is at most $0.08$, and the bound $\frac12+\frac{1-2p}2\hat s+p\eta_0$ is never violated.
+
+\begin{proof}[Proof of \cref{thm:simplicity:kink}]
+\emph{(a), upper bounds.}
+\begin{itemize}
+\item $P_u$ is computable from the $d-u$ known bits of $a$ together with $d$, $u$ and $p$. So $K(P_u)\le d-u+\kappa'$, using $K(p)=O(\log d)$.
+\item The true parity is a component of weight $2^{-u}$. Its likelihood is exactly $(1-p)^{n-pn}p^{pn}=2^{-nH(p)}$, because $|E|=pn$. Hence $-\log P_u(y^*)\le u+nH(p)$.
+\end{itemize}
+
+\emph{(a), lower bound on $-\log P_u(y^*)$.} Every other component $f_{a'}$ disagrees with $y^*$ on $w\ge n/2-pn$ points. This is because $f_a\oplus f_{a'}$ has weight $n/2$, and flipping $E$ changes at most $pn$ of them. So the likelihood of $f_{a'}$ is
+\[
+2^{-nH(p)}(p/(1-p))^{w-pn}\le2^{-nH(p)}(p/(1-p))^{n(1/2-2p)},
+\]
+and therefore $-\log P_u(y^*)\ge u+nH(p)-\log_2\big(1+2^u(p/(1-p))^{n(1/2-2p)}\big)$. The exponent is positive because $p<1/4$. The last term is below $2^{-2800}$ already at $d=10$, $p=1/64$ \status{computed}.
+
+\emph{(a), lower bound on $K(P_u)$.} Given a program for $P_u$ and $(d,u)$, compute the $a'$ that maximizes $P_u(f_{a'})$, the probability of the label vector~$f_{a'}$.
+\begin{itemize}
+\item Every $a'$ with the true $(d-u)$-prefix has $P_u(f_{a'})\ge2^{-u}(1-p)^n$, from its own component.
+\item Every other $a'$ is at Hamming distance exactly $n/2$ from every component, so $P_u(f_{a'})=(p(1-p))^{n/2}$.
+\item The first is larger, because $\frac n2\log_2\frac{1-p}p>\frac n2\ge d\ge u$.
+\end{itemize}
+So the argmax has the true prefix, and $d\le K(a)\le K(P_u)+u+O(\log d)$.
+
+\emph{(a), selection.} For every $u$,
+\[
+\lambda K(P_u)-\log P_u(y^*)\ge\lambda(d-u-\kappa')+u+nH(p)-o(1),
+\]
+while the value at $u=d$ is at most $\lambda\kappa'+d+nH(p)$. A minimizer $u^*$ therefore satisfies $(\lambda-1)(d-u^*)\le2\lambda\kappa'+o(1)$. In the computable version the code length is exactly $d-u$. The objective at $u$ then exceeds the objective at $u=d$ by $(\lambda-1)(d-u)+(o_d-o_u)$, where $o_u:=u+nH(p)+\log P_u(y^*)=\log_2\big(1+\sum_{a'\neq a}q_{a'}/q_a\big)\ge0$, the sum running over the other components of $P_u$ with likelihoods $q_{a'}$, is non-decreasing in $u$ because the families are nested. So for $\lambda>1$ it is minimized only at $u=d$.
+
+\emph{(b).} Suppose $\hat s_h(a)\ge2^{-t}$. Then, by \cref{lem:simplicity:listdecode},
+\[
+d\le K(a)\le K(h)+K(a\mid p_h)+O(1)\le K(h)+2t+2\log_2(t+1)+2\log_2d+O(1).
+\]
+This contradicts the hypothesis on $K(h)$ once $\kappa$ exceeds the $O(1)$. So $\hat s_h(a)<2^{-t}$.
+\begin{itemize}
+\item \Cref{lem:simplicity:corr} gives $\Risk(h)\ge-\log_2(\frac12+2^{-t-1}+p)=1-\log_2(1+2^{-t}+2p)$.
+\item \Cref{lem:simplicity:random}, with $K(h)\le d$ (so $\varepsilon_h\le\varepsilon_E$) and $1-2p>0$, gives $\Risk(h)\ge1-\log_2(1+(1-2p)2^{-t}+\varepsilon_E)$.
+\item Finally, $\log_2(1+z)\le z/\ln2$.
+\end{itemize}
+
+\emph{(c).}
+\begin{itemize}
+\item $P_h(y):=\prod_xh(y_x\mid x)$ is a semi-distribution on $\{0,1\}^n$, computable from $p_h$ \emph{and} $d$. A program for $h$ need not determine $d$; omitting this was the error corrected after verification.
+\item By the conditional coding theorem, $K(y^*\mid p_h,d)\le-\log P_h(y^*)+O(1)=n\Risk(h)+O(1)$. So $K(y^*)\le K(h)+n\Risk(h)+2\log_2d+O(1)$.
+\item From $y^*$ one computes $a$. The correlation of $(-1)^{y^*}$ with $\chi_a$ is $1-2p$, and with any other $\chi_{a'}$ it is $|-2\E[\chi_{a\oplus a'}1_E]|\le2p<1-2p$. Then $E=\{y^*\neq f_a\}$. So $K(a,E)\le K(y^*)+O(1)$.
+\item Symmetry of information gives $K(a,E)=K(a)+K(E\mid a,K(a))+O(1)\ge d+L_E-\delta_E-O(1)$.
+\end{itemize}
+Combining the last three items proves~(c).
+\end{proof}
+
+% ---------------------------------------------------------------------
+\subsection{Proof of \texorpdfstring{\cref{lem:simplicity:hull}}{the hull lemma}(iii)}\label{app:simplicity:hull}
+
+Fix $z=(\ell_z,r_z)\in Z$ and $c>0$, and write $\varphi_c(y)=\langle(c,1),y\rangle$. Compare $z$ with the other points of $Z$:
+\begin{itemize}
+\item \emph{Points to the left}, $Z_<=\{z':\ell'<\ell_z\}$, a finite set. Here $\varphi_c(z)\le\varphi_c(z')$ iff $c\le\sigma(z'):=(r'-r_z)/(\ell_z-\ell')$, strictly iff $c<\sigma(z')$.
+\item \emph{Points to the right}, $Z_>=\{z':\ell'>\ell_z\}$. Here $\varphi_c(z)\le\varphi_c(z')$ iff $c\ge\tau(z'):=(r_z-r')/(\ell'-\ell_z)$, strictly iff $c>\tau(z')$.
+\item \emph{Other points with the same $\ell$} have a different $r$, and $z$ beats them iff $r_z<r'$, for every~$c$.
+\end{itemize}
+Let $s_-:=\min_{Z_<}\sigma$, with $s_-=\infty$ if $Z_<=\emptyset$, and $s_+:=\max(0,\sup_{Z_>}\tau)$. If $\sup_{Z_>}\tau>0$, the supremum is attained, because $\tau(z')\le r_z/(\ell'-\ell_z)$ and only finitely many points have $\ell'\le\ell_z+r_z/s$ for any $s>0$.
+
+So the set of $c>0$ at which $z$ is the \emph{unique} minimizing point is the open interval $(s_+,s_-)$ when $r_z<r'$ for all same-$\ell$ points, and is empty otherwise.
+
+\emph{If $(s_+,s_-)\neq\emptyset$, then $z$ is a vertex.} Take $c$ in the interval.
+\begin{itemize}
+\item On $Z+\R^2_{\ge0}$, $\varphi_c$ is uniquely minimized at $z$, because $\varphi_c(z'+v)>\varphi_c(z')$ for $v\geq0$, $v\neq0$.
+\item A point of $\hat C$ is a finite convex combination of points of $Z+\R^2_{\ge0}$. Its $\varphi_c$-value equals $\varphi_c(z)$ only if every point in the combination is~$z$. So $z$ is the unique minimizer of $\varphi_c$ over $\hat C$.
+\item Hence $z$ is an extreme point of $\hat C$, supported by a line of slope $-c$, i.e.\ a vertex of $\hullm(Z)$.
+\end{itemize}
+
+\emph{If $z$ is a vertex, then $(s_+,s_-)\neq\emptyset$.} First, extreme points of $\conv(S)$ lie in $S$, and a point $z'+v$ with $v\neq0$ is the midpoint of $z'+v/2$ and $z'+3v/2$. So vertices lie in~$Z$.
+\begin{itemize}
+\item Since $z\in\hullm(Z)$, some $c_0>0$ has $z$ minimizing $\varphi_{c_0}$. So $s_+\le c_0\le s_-$, and same-$\ell$ points have $r'>r_z$.
+\item Suppose $s_+=s_-=c_0$. Then some $z_L\in Z_<$ has $\sigma(z_L)=c_0$, since $Z_<$ is finite, and some $z_R\in Z_>$ has $\tau(z_R)=c_0$, since the supremum is attained when positive.
+\item Then $z_L$, $z$ and $z_R$ lie on one line of slope $-c_0$, with $\ell_L<\ell_z<\ell_R$. So $z$ is a proper convex combination of $z_L$ and $z_R$, and not extreme. This is a contradiction.
+\end{itemize}
+
+\emph{The interval and the hypothesis-level claim.} The interval is $(s_+,s_-)$, where $s_\mp$ are the absolute slopes of the edges to the adjacent vertices; at a risk-minimal vertex $s_+=0$. Hypotheses with the same point have equal $J_c$ for every $c$, so a hypothesis is the unique minimizer on the interval iff no other hypothesis has its point.
+\qed
+
+\smallskip
+\noindent A computed check \status{computed; T5 c3(ii), test repaired after verification}: 300 random point sets and 400 values of $c$ each gave no minimizer off the hull, no monotonicity violation, and every vertex selectable.
+
+% ---------------------------------------------------------------------
+\subsection{Proof of \texorpdfstring{\cref{thm:simplicity:idealized}}{the idealized rate threshold}}\label{app:simplicity:idealized}
+
+Write $R_j(h)=\E_{z}[-\log h(y^*(j,z)\mid j,z)]$ for the normalized risk on region $j$, so that $\Risk(h)=\sum_j\pi_jR_j(h)$. Let $s(t)=2t+2\log_2(t+1)$, $u_j=2^{1-d_j/4}$, and $C:=\sum_j(2\log_2d_j+2\log_2m+\kappa)+\kappa$.
+
+\emph{Upper bound.} Let $h_S$ know $a_j$ for $j\in S$ and flip a fair coin elsewhere. Describing $j$, $d_j$ and $a_j$ for each $j\in S$ gives $K(h_S)\le\sum_{j\in S}(d_j+2\log_2d_j+2\log_2m)+\kappa$, and $\Risk(h_S)=\sum_{j\notin S}\pi_j$. With $S=\{j:c\,d_j<\pi_j\}$,
+\[
+J_c(h_S)\le\textstyle\sum_j\min(c\,d_j,\pi_j)+cC\le\sum_j\min(c\,d_j,\pi_j)+\Delta_0(c).
+\]
+
+\emph{Lower bound: complexity.} Fix $h$. Let $t_j$ be the least $t\in\N$ with $\hat s_{h,j}(a_j)\ge2^{-t}$, or $\infty$ if there is none. For $t_j\ge1$ we have $\hat s_{h,j}(a_j)<2^{1-t_j}$.
+\begin{itemize}
+\item Given $p_h$, $j$ and $d_j$, we can either list-decode $a_j$ (\cref{lem:simplicity:listdecode}, applied on region $j$) or write it literally. So $K(a_j\mid p_h)\le\min\{s(t_j),d_j\}+2\log_2d_j+2\log_2m+\kappa$.
+\item Then $\sum_jd_j\le K(a_1,\dots,a_m)\le K(h)+\sum_jK(a_j\mid p_h)+\kappa$.
+\item Since $d-\min\{s,d\}=(d-s)^+$, this gives $K(h)\ge\sum_j(d_j-s(t_j))^+-C$.
+\end{itemize}
+
+\emph{Lower bound: risk.} \Cref{lem:simplicity:corr} with $p=0$, applied on region $j$, gives
+\[
+R_j(h)\ge-\log_2\tfrac{1+\hat s_{h,j}(a_j)}2>\omega(t_j)\quad\text{for }t_j\ge1,
+\]
+and $R_j\ge0$ always. For $t_j=\infty$ we have $\hat s\le0$, so $R_j\ge1$. Hence $J_c(h)\ge\sum_j\varphi_j(t_j)-cC$, where
+\[
+\varphi_j(0):=c\,d_j,\qquad\varphi_j(t):=c(d_j-s(t))^++\pi_j\omega(t)\ (t\ge1),\qquad\varphi_j(\infty):=\pi_j.
+\]
+Since $s(t)\le4t$ for $t\ge1$, we have $\varphi_j(t)\ge\psi_j(t):=c(d_j-4t)+\pi_j\omega(t)$.
+\begin{itemize}
+\item \emph{Correction after verification.} The original proof continued with $\omega(t)\ge1-2^{1-t}$. That is false for $t\ge2$, since $\log_2(1+u)\ge u$ on $[0,1]$. The exact floor $\omega$ is used from here on.
+\item $\omega$ is increasing and concave: with $u=2^{1-t}$, $\omega'(t)=u/(1+u)$, which is positive and decreasing in~$t$.
+\end{itemize}
+
+\emph{Per-region bound.} We claim $\min_t\varphi_j(t)\ge\min(c\,d_j,\pi_j)-4c-\pi_ju_j$. The values at $t=0$ and $t=\infty$ already satisfy it.
+\begin{itemize}
+\item If $d_j<4$, the right side is negative and the claim is trivial.
+\item If $d_j\ge4$: on $t\in[1,d_j/4]$ the bound $\psi_j$ is concave, so it is at least $\min(\psi_j(1),\psi_j(d_j/4))=\min(c(d_j-4),\ \pi_j\omega(d_j/4))$. For $t>d_j/4$ we have $\varphi_j(t)\ge\pi_j\omega(t)\ge\pi_j\omega(d_j/4)$, since $\omega$ is increasing. Hence $\min_t\varphi_j\ge\min\big(c(d_j-4),\ \pi_j(1-\log_2(1+u_j))\big)$.
+\end{itemize}
+
+\emph{Absorption.} The first entry is at least $\min(c\,d_j,\pi_j)-4c$. For the second, use $\log_2(1+u)-u\le(\frac1{\ln2}-1)u\le0.443u$, together with
+\[
+0.886\,d\,2^{-d/4}\le4\quad\text{for all }d,
+\]
+whose left side has maximum $1.88$.
+\begin{itemize}
+\item If $c\,d_j\ge\pi_j$, we need $\pi_j(\log_2(1+u_j)-u_j)\le4c$. This follows from $0.443\pi_ju_j\le4\pi_j/d_j\le4c$.
+\item If $c\,d_j<\pi_j$, we need $c(d_j-4)\le\pi_j(1-\log_2(1+u_j)+u_j)$. This follows from $c(d_j-4)<\pi_j(1-4/d_j)$ and $\log_2(1+u_j)-u_j\le0.443u_j\le4/d_j$.
+\end{itemize}
+Summing over $j$ gives $\Phi(c)\ge\sum_j\min(c\,d_j,\pi_j)-c(C+4m)-\sum_j\pi_ju_j=\sum_j\min(c\,d_j,\pi_j)-\Delta_0(c)$.
+
+A numerical check \status{computed; T5 repair\_checks}: the per-region bound was checked for $d\in[1,63]\cup\{80,100,200,400\}$, $c=2^{e/4}$ with $e\in[-60,9]$, and seven values of $\pi$, with both $s(t)$ and $4t$. There were no violations.
+
+\emph{Identification.} Let $J_c(h)\le\Phi(c)+\xi$. For each $j$,
+\[
+\varphi_j(t_j)\le J_c(h)+cC-\sum_{i\neq j}\varphi_i(t_i)\le\Phi(c)+\xi+cC-\sum_{i\neq j}\big[\min(c\,d_i,\pi_i)-4c-\pi_iu_i\big].
+\]
+Using the upper bound on $\Phi$, this gives $\varphi_j(t_j)\le\min(c\,d_j,\pi_j)+2\Delta_0(c)+\xi=\min(c\,d_j,\pi_j)+\Delta$.
+\begin{itemize}
+\item \emph{Clause (a).} If $\hat s_{h,j}(a_j)\ge\frac12$, then $t_j\le1$, and $\varphi_j(t_j)\ge c(d_j-4)$, since $s(1)=4$. Under the hypothesis of (a) this exceeds $\pi_j+\Delta\ge\min(c\,d_j,\pi_j)+\Delta$, a contradiction.
+\item \emph{Clause (b).} If $\hat s_{h,j}(a_j)<\frac12$, then $t_j\ge2$. On $[2,d_j/4]$, which is nonempty because $d_j\ge8$, the bound $\psi_j$ is concave. For $t\ge d_j/4$, including $t=\infty$, the bound is at least $\pi_j\omega(d_j/4)$. So $\varphi_j(t_j)\ge\min\big(c(d_j-8)+\pi_j\omega(2),\ \pi_j\omega(d_j/4)\big)$. Under the two hypotheses of (b), both entries exceed $c\,d_j+\Delta\ge\min(c\,d_j,\pi_j)+\Delta$, a contradiction.
+\item \emph{The implied forms} use $\omega(d/4)=1-\log_2(1+u)\ge1-u/\ln2$ and $1/\omega(2)=2.4094$.
+\end{itemize}
+
+A numerical check \status{computed; T5 repair\_checks}: under the new conditions, $\varphi_j(t)>c\,d_j+\Delta$ for every integer $t\ge2$ in 8474 random admissible instances. The counterexample of \cref{rem:simplicity:repaired} violates the new second condition, by a factor of 1.01--1.06.
+\qed
+
+% ---------------------------------------------------------------------
+\subsection{Proof of \texorpdfstring{\cref{cor:simplicity:shapes}}{the shapes corollary}}\label{app:simplicity:shapes}
+
+\emph{The coin region.} On the coin region every hypothesis has cross-entropy at least one bit per unit mass, with equality iff it is uniform there. So $\Risk(h)\ge\pi_0+\sum_{j\ge1}\pi_jR_j(h)$, and the region plays no role in the complexity argument. The lower bound of \cref{thm:simplicity:idealized} therefore holds with $\pi_0$ added. The witnesses $h_S$ are uniform on the coin region, at an extra $O(1)$ bits to recognize it. Hence $|\Phi(c)-\Psi(c)|\le cC'+\epsilon$ with $\Psi(c):=\pi_0+\sum_j\min(c\,d_j,\pi_j)$, for all $c\ge0$. At $c=0$ both sides equal~$\pi_0$.
+
+\emph{Legendre duality.} $\Phi(c)=\inf_{y\in\hat C}\langle(c,1),y\rangle$ is the support function of $\hat C$. The lower boundary $\breve\rho$ of its closure is convex and lower semicontinuous, so $\breve\rho(k)=\sup_{c\ge0}[\Phi(c)-ck]$. Likewise $P(k):=\sup_{c\ge0}[\Psi(c)-ck]$.
+\begin{itemize}
+\item $\Psi$ is concave and piecewise linear, with breakpoints at $c=s_j$ and slope $\sum_{j:s_j>c}d_j$ between them.
+\item Its conjugate $P$ is the polygon described in the statement: it starts at $P(0)=\Psi(\infty)=1$, has an edge of slope $-s_j$ and length $d_j$ for each $j$ in decreasing order of $s_j$, and is flat at $\pi_0$ afterwards. For $k<0$, $P(k)=+\infty$.
+\end{itemize}
+
+\emph{The sandwich.} Then
+\[
+\breve\rho(k)\ge\sup_c[\Psi(c)-c(k+C')]-\epsilon=P(k+C')-\epsilon,\qquad\breve\rho(k)\le\sup_c[\Psi(c)-c(k-C')]+\epsilon=P(k-C')+\epsilon.
+\]
+
+\emph{Rescaling.} Replacing $d_j$ by $Ld_j$ and $s_j$ by $s_j/L$ keeps every $\pi_j$. It raises $C'$ only logarithmically in $L$, so the band is $o(L)$, and $\epsilon=\sum_j\pi_j2^{1-Ld_j/4}\to0$.
+\qed
+
+% ---------------------------------------------------------------------
+\subsection{Proof of \texorpdfstring{\cref{thm:simplicity:example}}{the parity example}}\label{app:simplicity:example}
+
+\emph{Upper bound.} We list the three models.
+\begin{itemize}
+\item The coin has $K\le\kappa$ and $\Risk=1$.
+\item The good model has $K\le d+\kappa'$ and $\Risk=H(p)$ exactly, since $|E|=pn$.
+\item The error-memorizing model $y^*$ has $K\le d+L_E+\kappa\log n$ (index $E$ among the $pn$-subsets, and give $pn$) and $\Risk=0$.
+\end{itemize}
+
+\emph{Lower bound.} Fix $h$ and $t$.
+\begin{itemize}
+\item If $K(h)\le d-\tau_t$, then \cref{thm:simplicity:kink}(b) gives $J_c(h)\ge\Risk(h)\ge1-\beta_t/\ln2$.
+\item Otherwise, \cref{thm:simplicity:kink}(c) and $\Risk\ge0$ give $J_c(h)\ge cK+\max(0,(K_{\rm tot}-K)/n)$ with $K=K(h)>d-\tau_t$. As a function of $K$ this is piecewise linear: its slope is $c-1/n$ below $K_{\rm tot}$ and $c$ above. Note that $K_{\rm tot}-d+\tau_t=L_E-\delta_E+s(t)\ge0$, because $L_E-\delta_E=K(E\mid a,K(a))\ge0$.
+  \begin{itemize}
+  \item If $c\ge1/n$, the minimum over $K\ge d-\tau_t$ is at $K=d-\tau_t$, with value $c(d-\tau_t)+(L_E-\delta_E+s(t))/n\ge c(d-\tau_t)+(L_E-\delta_E-\kappa)/n$.
+  \item If $c<1/n$, the minimum is at $K=K_{\rm tot}$, with value $cK_{\rm tot}$.
+  \end{itemize}
+\end{itemize}
+In every case $J_c(h)$ is at least the minimum of the three lower-bound terms.
+
+The $2\log_2d$ in $K_{\rm tot}$ comes from the corrected \cref{thm:simplicity:kink}(c), and the coin term uses the sharper $\beta_t$. Neither changes the switch points beyond their $O(\log)$ slack.
+\qed
+
+% ---------------------------------------------------------------------
+\subsection{Proof of \texorpdfstring{\cref{thm:simplicity:blind}}{rate blindness}(ii) in the idealized setting}\label{app:simplicity:blind}
+
+Let $h$ be near-optimal, and let $c$ be such that each of $v$ and $e$ satisfies the hypothesis of clause (a) or that of clause (b) of \cref{thm:simplicity:idealized}. Suppose $v$ is learned, i.e.\ $\hat s_{h,v}\ge\frac12$.
+\begin{itemize}
+\item Then $v$ does not satisfy the hypothesis of (a), so it satisfies that of (b). In particular $\pi_v\ge\pi_v\omega(d_v/4)>c\,d_v$, i.e.\ $\pi_v/d_v>c$.
+\item If $e$ satisfied the hypothesis of (a), then $\pi_e<c\,d_e$. That would give $\pi_e/d_e<c<\pi_v/d_v$, contradicting $\pi_v/d_v\le\pi_e/d_e$.
+\item So $e$ satisfies the hypothesis of (b), and is learned.
+\end{itemize}
+\qed
+
+% ---------------------------------------------------------------------
+\subsection{Proof of \texorpdfstring{\cref{thm:simplicity:validation}}{non-identifiability of the steepness}}\label{app:simplicity:validation}
+
+\emph{(i).}
+\begin{itemize}
+\item \emph{Monotone risk.} By \cref{lem:simplicity:hull}(ii), for grid values $c_1<c_i$ and any population minimizers $h$ at $c_1$ and $h'$ at $c_i$, $\Risk(h)\le\Risk(h')$.
+\item \emph{Eventually exact.} For each grid value, \cref{lem:simplicity:empirical} gives $J_c(\hat h_c)\to\Phi(c)$ in probability. Only finitely many hypotheses have $\ell\le\ell(h_0)+B/c$, so the gap between $\Phi(c)$ and the best non-minimizer is positive. Hence, with probability tending to one, $\hat h_c$ is a population minimizer for every grid value simultaneously.
+\item \emph{Uniform validation.} Held-out log-losses of the finitely many selected hypotheses converge uniformly to their risks, since losses lie in $[0,B]$.
+\end{itemize}
+So, with probability tending to one, selection by held-out log-loss picks a grid value whose selected hypothesis has least risk. By the first item, the smallest grid value always attains this least risk, and it is the unique choice when its risk is strictly smallest. At finite $N$ the second item may fail at small $c$, where the bound of \cref{lem:simplicity:empirical} is weakest. That is the caveat in the statement.
+
+\emph{(ii).} Strict propriety holds pointwise in $x$ \citep{gneiting2007strictly}. Integrating over $\mu$, the teacher channel strictly maximizes the expected score among channels that differ from it on a set of positive $\mu$-mass. With a growing held-out set, empirical scores converge uniformly over finitely many candidates. So the criterion selects, among candidates, one with the largest expected score, i.e.\ the smallest divergence from $P^*$ in the score's divergence.
+
+\emph{(iii).} Any statistic of imitation data has the same law in the two worlds of \cref{thm:simplicity:blind}(iv), while the good $c$ differs between them.
+\qed
+
+% ---------------------------------------------------------------------
+\subsection{The rates in \texorpdfstring{\cref{prop:simplicity:guard}}{guard erosion}}\label{app:simplicity:guard}
+
+Measure log-loss relative to the option \emph{none}, which gives every candidate probability $1/M$.
+\begin{itemize}
+\item \emph{$G$-contexts, unguarded or guarded.} The $\sigma$-model gains $g$ per step, by the definition of the per-step gain. Mass $\pi_G$.
+\item \emph{$\neg G$-contexts, unguarded.} The teacher's step is a non-$\sigma$ step. It receives probability $\varepsilon/M$ instead of $1/M$, a loss of $\log_2(1/\varepsilon)$ per step. Mass $\pi_{\neg G}$.
+\item \emph{$\neg G$-contexts, guarded.} The teacher's step receives $1/(M-1)$ instead of the unguarded $\varepsilon/M$, a gain of $\Delta_G=\log_2(M/\varepsilon)-\log_2(M-1)$ per step over the unguarded option. Note $\Delta_G>\log_2(1/\varepsilon)$, by $\log_2\frac M{M-1}$; this corrects the earlier bound ``at most $\pi_{\neg G}\log_2(1/\varepsilon)/k_G$'' for the guard's rate.
+\end{itemize}
+So the unguarded option lowers risk by $\pi_Gg-\pi_{\neg G}\log_2(1/\varepsilon)=k_\sigma\rho_\sigma$ at cost $k_\sigma$. The guard lowers it by a further $\pi_{\neg G}\Delta_G=k_G\rho_G$ at cost $k_G$. These are the three points used in the main-text proof. If the guarded option also models the teacher's alternative step in $\neg G$-contexts, its gain there only increases, and the argument is unchanged with the larger $\Delta_G$.
+
+For the case $\rho_G\ge\rho_\sigma$: the middle point lies on or above the chord from $(0,0)$ to the guarded point. The lower hull of the three points is then that chord, with slope $-(k_\sigma\rho_\sigma+k_G\rho_G)/(k_\sigma+k_G)$, and apart from ties the selection jumps from guarded to none at that $c$. In the second numerical instance of the main text the jump is at $c=(0.0022+0.0087)/34\approx3.2\cdot10^{-4}$.
+\qed
+
+% ---------------------------------------------------------------------
+\subsection{Proofs for the division of labour}\label{app:simplicity:division}
+
+Throughout, the components are finite, $\val(S)=\sum_{j\in S}\nu_j$, and by separability minimizing $J_c$ over admissible sets is maximizing $\val$ over~$\Adm$. Two facts are used repeatedly.
+\begin{itemize}
+\item If $V_+\cup\{e\}\notin\Adm$, then $e$ has a witness inside $V_+$. Indeed, a minimal $W\subseteq V_+$ with $W\cup\{e\}\notin\Adm$ is minimal among all subsets of $V$.
+\item Conversely, a witness inside $V_+$ makes $V_+\cup\{e\}$ inadmissible, by down-closure.
+\end{itemize}
+
+\begin{proof}[Proof of \cref{thm:simplicity:division}]
+\emph{Step 0: $S^*(c)$ is admissible.} Apply error-independence with $U=V_+$.
+
+\emph{Step 1: optimal sets have no negative components.} Let $S$ be admissible and optimal. Removing the components with $\nu<0$ keeps admissibility (down-closure) and raises the value. So $S\subseteq\{\nu\ge0\}$.
+
+\emph{Step 2: optimal sets contain no error inadmissible with $V_+$.} Let $E_1:=(S\cap F)\setminus\{e:V_+\cup\{e\}\in\Adm\}$, and suppose $E_1\neq\emptyset$.
+\begin{itemize}
+\item Each $e\in E_1$ has a witness inside $V_+$. Every such witness $W$ is nonempty, because $\{e\}\subseteq S$ is admissible.
+\item Since $(S\cap V)\cup\{e\}\subseteq S$ is admissible, $S\cap V$ contains no witness of $e$. So $B:=V_+\setminus S$ meets every witness of every $e\in E_1$ inside $V_+$. In particular $B\neq\emptyset$, and $\sum_B\nu>0$.
+\item If $E_1$ contains some $e\in F_+$, then $\sum_B\nu\ge\beta(e)>\sum_{F_+}\nu\ge\sum_{E_1}\nu$, using valid dominance and $E_1\subseteq\{\nu\ge0\}$. Otherwise $E_1\subseteq\{\nu=0\}$, and $\sum_{E_1}\nu=0<\sum_B\nu$.
+\item Let $S':=V_+\cup((S\cap F)\setminus E_1)$. It is admissible by error-independence with $U=V_+$. Since $S\cap V\subseteq V_+\cup\{\nu=0\}$, we have $\sum_{S\cap V}\nu=\sum_{V_+}\nu-\sum_B\nu$, and therefore $\val(S')=\val(S)+\sum_B\nu-\sum_{E_1}\nu>\val(S)$.
+\end{itemize}
+This contradicts optimality, so $E_1=\emptyset$.
+
+\emph{Step 3: comparison with $S^*(c)$.} Hence $S\cap V\subseteq V_+\cup\{\nu=0\}$ and $S\cap F\subseteq\{e:V_+\cup\{e\}\in\Adm,\ \nu_e\ge0\}$. So $\val(S)\le\val(S^*(c))$. Since $S^*(c)$ is admissible, it is optimal, and $\val(S)=\val(S^*(c))$. Every element of $S^*(c)$ has positive value, and $S$ is contained in $S^*(c)\cup\{\nu=0\}$, so equality forces $S\supseteq S^*(c)$ and $S\setminus S^*(c)\subseteq\{\nu=0\}$. Conversely, every admissible $S^*(c)\cup Z$ with $Z\subseteq\{\nu=0\}$ has the optimal value.
+
+\emph{Correction after verification.} The original last step argued that ``adding $V_+\setminus S$ keeps admissibility''. That can fail when $S$ contains zero-valued valid rules. For example, take $V=\{v_+,v_0\}$ with $\nu(v_0)=0$, and an error $e$ whose only witness is $\{v_+,v_0\}$. Then $S=\{v_0,e\}$ is admissible, but $S\cup\{v_+\}$ is not. The direct comparison in Step 3 avoids this.
+
+\emph{The attributions in the statement.} When $\Adm$ is the intersection of the coherence, world and postulate families, $V_+\cup\{e\}\notin\Adm$ iff it fails at least one of them. An error with $\nu_e\le0$ (rate at most $c$) is excluded by simplicity, up to zero-value ties. A valid rule with $\nu_v\le0$ is not in $V_+$, whatever the filters.
+\end{proof}
+
+\begin{proof}[Proof of \cref{cor:simplicity:window}]
+Recall that $\max\emptyset=0$ and $k_j>0$.
+
+\emph{If.} Suppose $\max\{\rho_e:V\cup\{e\}\in\Adm\}<c<\min_v\rho_v$.
+\begin{itemize}
+\item Then $V_+=V$, and no valid rule has value $0$.
+\item Every $e$ with $V\cup\{e\}\in\Adm$ has $\rho_e<c$, so $\nu_e<0$. Hence $S^*(c)=V$.
+\item By \cref{thm:simplicity:division}, the optimal sets are the admissible $V\cup Z$ with $Z\subseteq\{\nu=0\}\cap F$. A zero-valued error has $\rho_e=c$, so $V\cup\{e\}\notin\Adm$. By down-closure $V\cup Z$ is then inadmissible unless $Z=\emptyset$.
+\end{itemize}
+So $V$ is the unique optimum, and separation holds.
+
+\emph{Only if.} We show that separation fails if either inequality fails.
+\begin{itemize}
+\item \emph{If $c\ge\rho_v$ for some $v$,} then $\nu_v\le0$ and $v\notin S^*(c)$. Since $S^*(c)$ is optimal, some optimal set omits~$v$.
+\item \emph{If $c<\min_v\rho_v$, but some $e$ with $V\cup\{e\}\in\Adm$ has $\rho_e\ge c$:}
+  \begin{itemize}
+  \item if $\rho_e>c$, then $e\in F_+$ and $e\in S^*(c)$, which is optimal;
+  \item if $\rho_e=c$, then $\nu_e=0$, and $S^*(c)\cup\{e\}$ is admissible by error-independence with $U=V$, and optimal.
+  \end{itemize}
+  Either way some optimal set contains an error.
+\end{itemize}
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:simplicity:postulates}(a)]
+The postulates enter only through $\Adm$, so \cref{thm:simplicity:division} applies at each~$c$.
+
+\emph{The characterization at each $c$.} If $c\ge\rho_e$, then $\nu_e\le0$, and $e$ is excluded up to zero-value ties. If $c<\rho_e$, then $e\in F_+$. In that case $e\in S^*(c)$ iff $V_+(c)\cup\{e\}\in\Adm$, iff no witness of $e$ lies inside $V_+(c)$, by the two facts at the head of this subsection. Moreover $\nu_e>0$, so $e$ lies in every optimal set iff it lies in $S^*(c)$.
+
+\emph{Exclusion at every $c$.}
+\begin{itemize}
+\item \emph{If.} Suppose some witness $W$ has $\min_{w\in W}\rho_w\ge\rho_e$. Then $W\subseteq V_+(c)$ for every $c<\rho_e$, so $e$ is excluded at every such $c$, and also at every $c\ge\rho_e$. This covers the case $W=\emptyset$, i.e.\ $\{e\}$ already inadmissible.
+\item \emph{Only if.} Suppose every witness has a member of rate below $\rho_e$. There are finitely many witnesses, so we can choose $c\in\big(\max_W\min_{w\in W}\rho_w,\ \rho_e\big)$, with $\max\emptyset=0$; this uses $\rho_e>0$. At that $c$ no witness lies inside $V_+(c)$, so $e\in S^*(c)$, and $e$ survives in every optimal set.
+\end{itemize}
+\end{proof}
+
+\noindent\emph{The two counterexamples} quoted in the main text were recomputed \status{computed; T5 repair\_checks}. One is to \cref{cor:simplicity:window} without valid dominance. The other is to the original Step~3 of \cref{thm:simplicity:division}.

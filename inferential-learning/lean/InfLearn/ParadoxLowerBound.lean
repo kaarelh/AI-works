@@ -14,7 +14,7 @@ B11), for **deterministic learners**.
   `nothing` (a silent round). `(−obj) s` is the negative item `neg {s}`; `(−bag_r) B` is
   `neg B` with `|B| ≤ r`. Which negative items the environment may use is a parameter
   `Bags : Set (Set S)`: `objBags` (singletons: the object game), `bagBags r` (finite bags of size
-  `≤ r`: the bag game), or `chainBags n` (bags of genuine paradoxes, §3 below).
+  `≤ r`: the bag game), or `chainBags n` (bags of genuine paradoxes, §2 below).
 * `FbLegal Bags h A ev`: `ev` is a legal reply to the announcement `A` when the target is `h`:
   `(+) s` needs `s ∈ h \ A`; `neg P` needs `P ∈ Bags`, `P ⊆ A`, `P ⊄ h`. Silence is always
   legal. (`FbLegal.ne`: feedback is only possible when `A ≠ h`.)
@@ -24,8 +24,10 @@ B11), for **deterministic learners**.
   against `L` is the same thing as a feedback sequence `e : ℕ → Event S`;
   `ann L e t = L (hist e t)` is the announcement in round `t`.
 * `PlayLegal Bags L h e`: every round's item is legal. `NonSilent`: the environment never stays
-  silent when some legal feedback item exists (Def. 4.2: "if `A_t ≠ h*` the environment returns
-  one feedback item"; in the games below some item is legal whenever `A_t ≠ h*`).
+  silent when some legal feedback item exists. In all games below some item is legal whenever
+  `A_t ≠ h*` (`exists_feedback_bagBags` for `r ≥ 1`, `exists_feedback_objBags`,
+  `exists_feedback_chain`), so by `nonSilent_iff` this is exactly Def. 4.2's rule "if
+  `A_t ≠ h*`, the environment returns one feedback item".
 * A *correction* is a round with feedback (`CoherenceGames.corrections e n` counts those among
   the first `n` rounds).
 * `Forces Bags H L m`: some target and some legal, non-silent play make `L` suffer `m`
@@ -84,8 +86,14 @@ restricted to `chainBags n` (bags of genuine paradoxes, derived from the logic).
 * Only deterministic learners are treated (as the task asked); randomized learners are not.
 * The chain hypotheses are the specific CPC readings `Cn_CPC({q_i → q_{i+1} : i ≠ j})`; the
   paper's generic "any chain of obvious lemmas" is covered only through this instance. The game
-  layer abstracts from the logic exactly as Def. 4.2 does (`S` = the suspect steps; certified
-  steps are dropped from bags).
+  layer abstracts from the logic exactly as Def. 4.2 does (`S` = the suspect steps; steps
+  certified by the whole class, e.g. all classically valid steps, are dropped from bags).
+  Dropping steps certified only by the *current* version space (`b_i` for eliminated `i`) would
+  turn the reported bag `S` into the candidate set `C`; that bag deletes the same surviving
+  hypotheses (none), so it carries no extra information, and our general learners, which see
+  the whole history, lose nothing from it.
+* The game-level lower bounds hold for arbitrary deterministic learners (functions of the
+  feedback history), which is more general than the version-space learners of the paper.
 * T4 Thm 4.4(a) (`M_bag ≤ el* ≤ |𝓗| - 1`) and Thm 4.3(c) (`M_obj = Ldim`) are not formalised
   here; Thm 4.3(b) is proved in the game formulation of this file.
 -/
@@ -215,6 +223,35 @@ theorem le_of_forces_achieves {Bags : Set (Set S)} {H : ι → Set S} {L : Learn
   obtain ⟨j, e, hl, -, hm⟩ := hF
   exact hm.trans (hA j e hl m)
 
+/-- If some legal feedback item exists whenever the announcement misses the target, `NonSilent`
+is exactly Def. 4.2's rule "if `A_t ≠ h*`, the environment returns one feedback item". -/
+theorem nonSilent_iff {Bags : Set (Set S)} {L : Learner S} {h : Set S} {e : ℕ → Event S}
+    (hex : ∀ A : Set S, A ≠ h → ∃ ev : Event S, ev.isFeedback = true ∧ FbLegal Bags h A ev) :
+    NonSilent Bags L h e ↔ ∀ t, ann L e t ≠ h → (e t).isFeedback = true := by
+  constructor
+  · intro hns t hne
+    exact hns t (hex _ hne)
+  · rintro hns t ⟨ev, hf, hl⟩
+    exact hns t (hl.ne hf)
+
+/-- In the bag game with `r ≥ 1` some feedback item is legal whenever `A ≠ h*`. -/
+theorem exists_feedback_bagBags {r : ℕ} (hr : 1 ≤ r) {h A : Set S} (hne : A ≠ h) :
+    ∃ ev : Event S, ev.isFeedback = true ∧ FbLegal (bagBags r) h A ev := by
+  classical
+  obtain ⟨s, hs⟩ : ∃ s, ¬ (s ∈ A ↔ s ∈ h) := by
+    by_contra hc
+    simp only [not_exists, not_not] at hc
+    exact hne (Set.ext hc)
+  by_cases hsA : s ∈ A
+  · have hsh : s ∉ h := fun hsh => hs ⟨fun _ => hsh, fun _ => hsA⟩
+    refine ⟨.neg ↑({s} : Finset S), rfl, ⟨{s}, rfl, by simpa using hr⟩, ?_, ?_⟩
+    · simpa using hsA
+    · simpa using hsh
+  · have hsh : s ∈ h := by
+      by_contra hsh
+      exact hs ⟨fun h' => absurd h' hsA, fun h' => absurd h' hsh⟩
+    exact ⟨.pos s, rfl, hsh, hsA⟩
+
 /-- The minimax value is well defined. -/
 theorem IsValue.unique {Bags : Set (Set S)} {H : ι → Set S} {m m' : ℕ}
     (h : IsValue Bags H m) (h' : IsValue Bags H m') : m = m' := by
@@ -280,9 +317,11 @@ theorem exists_nonSilent_extension {Bags : Set (Set S)} {L : Learner S} {h : Set
   · by_cases ht : t < m
     · simpa [he', extEnv, ht] using hfb t ht
     · rw [hgreedy t ht]
+      have hex' : ∃ ev : Event S, ev.isFeedback = true ∧ FbLegal Bags h (L (hist e' t)) ev :=
+        hex
       unfold greedy
-      rw [dif_pos hex]
-      exact (Classical.choose_spec hex).1
+      rw [dif_pos hex']
+      exact hex'.choose_spec.1
   · unfold corrections
     rw [Finset.filter_true_of_mem, Finset.card_range]
     intro t ht
@@ -444,6 +483,12 @@ theorem fbLegal_bagBags_one_iff {h A : Set S} {ev : Event S} :
     · obtain ⟨s, rfl⟩ := Finset.card_eq_one.1 h1
       exact ⟨s, by simp⟩
 
+/-- In the object game some feedback item is legal whenever `A ≠ h*`. -/
+theorem exists_feedback_objBags {h A : Set S} (hne : A ≠ h) :
+    ∃ ev : Event S, ev.isFeedback = true ∧ FbLegal objBags h A ev := by
+  obtain ⟨ev, hf, hl⟩ := exists_feedback_bagBags le_rfl hne
+  exact ⟨ev, hf, fbLegal_bagBags_one_iff.1 hl⟩
+
 theorem forces_bagBags_one_iff {H : ι → Set S} {L : Learner S} {m : ℕ} :
     Forces (bagBags 1) H L m ↔ Forces objBags H L m := by
   have hl : ∀ h e, PlayLegal (bagBags 1) L h e ↔ PlayLegal objBags L h e := fun h e =>
@@ -486,7 +531,7 @@ def single (n : ℕ) (j : Fin n) : Set (Fin n) := {i | i ≠ j}
 @[simp] theorem mem_single {i j : Fin n} : i ∈ single n j ↔ i ≠ j := Iff.rfl
 
 theorem subset_single_iff {P : Set (Fin n)} {j : Fin n} : P ⊆ single n j ↔ j ∉ P :=
-  ⟨fun h hj => h hj rfl, fun h i hi hij => h (hij ▸ hi)⟩
+  ⟨fun h hj => h hj rfl, fun h _ hi hij => h (hij ▸ hi)⟩
 
 theorem single_injective : Function.Injective (single n) := by
   intro j k h
@@ -646,7 +691,7 @@ theorem advB_step (r : ℕ) (A : Set (Fin n)) (C : Finset (Fin n))
       exact ⟨fun h' => hj'.1 h'.symm, hiA⟩
     · simp only
       omega
-  · push_neg at h
+  · simp only [not_exists, not_and, not_not] at h
     obtain ⟨hBC, hBcard⟩ := (Finset.exists_subset_card_eq hr.le).choose_spec
     set B := (Finset.exists_subset_card_eq hr.le).choose
     refine ⟨rfl, Finset.coe_subset.2 hBC, ?_, ?_, ?_⟩
@@ -657,7 +702,7 @@ theorem advB_step (r : ℕ) (A : Set (Fin n)) (C : Finset (Fin n))
       exact hj
     · simp only
       omega
-  · push_neg at h
+  · simp only [not_exists, not_and, not_not] at h
     refine ⟨rfl, subset_rfl, Finset.coe_nonempty.2 (Finset.card_pos.1 (show 0 < C.card by omega)), ?_, ?_⟩
     · intro j hj
       refine ⟨⟨C, rfl, by omega⟩, fun x hx => h x hx, ?_⟩
@@ -971,11 +1016,11 @@ theorem object_refutes_iff (j : Fin n) (u : Valuation) (hu : Satisfies u (Tch n 
       omega
 
 /-- Such an admissible object exists for every target. -/
-theorem exists_object (j : Fin n) : ∃ u, Satisfies u (Tch n j ∪ ctx n) ∧ Refutes u (chainStep n j) :=
-  ⟨vj j, (satisfiable_Tch_ctx j).choose_spec ▸ satisfies_union.2
-    ⟨vj_satisfies_Tch j, vj_satisfies_ctx j⟩,
-    (object_refutes_iff j (vj j) (satisfies_union.2 ⟨vj_satisfies_Tch j, vj_satisfies_ctx j⟩)
-      j).2 rfl⟩
+theorem exists_object (j : Fin n) :
+    ∃ u, Satisfies u (Tch n j ∪ ctx n) ∧ Refutes u (chainStep n j) := by
+  have hu : Satisfies (vj j) (Tch n j ∪ ctx n) :=
+    satisfies_union.2 ⟨vj_satisfies_Tch j, vj_satisfies_ctx j⟩
+  exact ⟨vj j, hu, (object_refutes_iff j (vj j) hu j).2 rfl⟩
 
 end ChainLogic
 
@@ -999,6 +1044,33 @@ theorem chainBags_subset_bagBags : chainBags n ⊆ bagBags n := by
   rw [chainBags_eq]
   rintro _ rfl
   exact ⟨Finset.univ, by simp, by simp⟩
+
+/-- In the chain game some feedback item is legal whenever `A ≠ h*` (so `NonSilent` is
+Def. 4.2's rule, by `nonSilent_iff`). -/
+theorem exists_feedback_chain {j : Fin n} {A : Set (Fin n)} (hne : A ≠ chainH n j) :
+    ∃ ev : Event (Fin n), ev.isFeedback = true ∧ FbLegal (chainBags n) (chainH n j) A ev := by
+  rw [chainH_eq] at hne ⊢
+  by_cases h : ∃ i, i ≠ j ∧ i ∉ A
+  · obtain ⟨i, hij, hiA⟩ := h
+    exact ⟨.pos i, rfl, hij, hiA⟩
+  · simp only [not_exists, not_and, not_not] at h
+    have hjA : j ∈ A := by
+      by_contra hjA
+      apply hne
+      ext i
+      simp only [mem_single]
+      constructor
+      · intro hi hij
+        exact hjA (hij ▸ hi)
+      · intro hij
+        exact h i hij
+    have hA : A = Set.univ := Set.eq_univ_of_forall fun i => by
+      by_cases hij : i = j
+      · exact hij ▸ hjA
+      · exact h i hij
+    refine ⟨.neg Set.univ, rfl, by rw [chainBags_eq]; rfl, by rw [hA], ?_⟩
+    rw [subset_single_iff, not_not]
+    trivial
 
 open scoped Classical in
 /-- The adversary of T4 Thm 4.4(c), with state `C` = the surviving candidate culprits:
@@ -1028,7 +1100,7 @@ theorem advC_step (A : Set (Fin n)) (C : Finset (Fin n)) (hφ : 1 ≤ C.card - 1
       exact ⟨fun h' => hj'.1 h'.symm, hiA⟩
     · simp only
       omega
-  · push_neg at h
+  · simp only [not_exists, not_and, not_not] at h
     have hiA := h'.choose_spec
     refine ⟨rfl, subset_rfl, Finset.coe_nonempty.2 (Finset.card_pos.1 (show 0 < C.card by omega)), ?_, ?_⟩
     · intro j hj
@@ -1037,7 +1109,7 @@ theorem advC_step (A : Set (Fin n)) (C : Finset (Fin n)) (hφ : 1 ≤ C.card - 1
       exact hiA (h j hj)
     · simp only
       omega
-  · push_neg at h'
+  · simp only [not_exists, not_not] at h'
     refine ⟨rfl, subset_rfl, Finset.coe_nonempty.2 (Finset.card_pos.1 (show 0 < C.card by omega)), ?_, ?_⟩
     · intro j _
       refine ⟨by rw [chainBags_eq]; rfl, fun x _ => h' x, ?_⟩
@@ -1080,7 +1152,7 @@ theorem thm_4_4_c_obj_value (hn : 2 ≤ n) : IsValue objBags (chainH n) 1 := by
 * with paradox feedback the minimax number of corrections is `n - 1 = |𝓗| - 1`;
 * with object feedback it is `1`, and each admissible object for `h_j` refutes exactly `b_j`. -/
 theorem thm_4_4_c (hn : 2 ≤ n) :
-    (∀ j : Fin n, bot ∉ Cl (hypC n j) (ctx n)) ∧
+    (∀ j : Fin n, Formula.bot ∉ Cl (hypC n j) (ctx n)) ∧
     chainBags n = {Set.univ} ∧
     IsValue (chainBags n) (chainH n) (n - 1) ∧
     IsValue objBags (chainH n) 1 ∧
@@ -1095,6 +1167,11 @@ end ParadoxLowerBound
 end InfLearn
 
 #print axioms InfLearn.ParadoxLowerBound.forces_of_adversary
+#print axioms InfLearn.ParadoxLowerBound.exists_nonSilent_extension
+#print axioms InfLearn.ParadoxLowerBound.nonSilent_iff
+#print axioms InfLearn.ParadoxLowerBound.exists_feedback_bagBags
+#print axioms InfLearn.ParadoxLowerBound.exists_feedback_objBags
+#print axioms InfLearn.ParadoxLowerBound.IsValue.unique
 #print axioms InfLearn.ParadoxLowerBound.achieves_of_potential
 #print axioms InfLearn.ParadoxLowerBound.thm_4_3_b
 #print axioms InfLearn.ParadoxLowerBound.thm_4_3_b_eq
@@ -1114,6 +1191,7 @@ end InfLearn
 #print axioms InfLearn.ParadoxLowerBound.object_descent
 #print axioms InfLearn.ParadoxLowerBound.object_refutes_iff
 #print axioms InfLearn.ParadoxLowerBound.exists_object
+#print axioms InfLearn.ParadoxLowerBound.exists_feedback_chain
 #print axioms InfLearn.ParadoxLowerBound.thm_4_4_c_lower
 #print axioms InfLearn.ParadoxLowerBound.thm_4_4_c_upper
 #print axioms InfLearn.ParadoxLowerBound.thm_4_4_c_value

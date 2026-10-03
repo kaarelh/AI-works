@@ -6,14 +6,13 @@
 %   research/verification/T6-verification.md
 %   the user's note logic/a 'philosophical version' of goedel's completeness theorem.md
 %   research/lit/L4-inferentialism-and-categoricity.md (Prop 3.1; Carnap, Restall, Beth)
-%   research/lit/L5-logic-facts.md (Lindenbaum, Los-Suszko, Suszko, Scott, Beth, Craig)
+%   research/lit/L5-logic-facts.md (Lindenbaum, Los-Suszko, Suszko, Scott, Beth)
 %   research/lit/L10-user-notes-digest.md (sec 1.5, sec 1.10: the user's DLK notes)
 %   lean/README.md (T6 is not formalized; T2 Lemma 4.1(a) is, as Carnap.Val_mrel)
 % Sanity-check scripts: research/theory/T6-checks/ (run_all.sh).
 % Proofs not given inline are in sections/app-existence.tex.
 % =====================================================================
 \providecommand{\BV}{\mathrm{BV}}
-\providecommand{\Taut}{\mathrm{Taut}}
 \providecommand{\RobQ}{\mathsf{Q}}
 \providecommand{\Pt}{\mathrm{Pt}}
 \providecommand{\Fix}{\mathrm{Fix}}
@@ -30,521 +29,355 @@
 
 \section{Coherence and existence: a ``philosophical completeness theorem''}\label{sec:existence}
 
-Sections~\ref{sec:coherence} and~\ref{sec:twotier} used coherence as a learning signal. This section asks what coherence \emph{means}: if a learned mode of talking is coherent, is there something it is talking about? The user's notes pose the question directly (\texttt{logic/a 'philosophical version' of g\"odel's completeness theorem.md}):
+Sections~\ref{sec:coherence} and~\ref{sec:twotier} used coherence as a learning signal. This section asks what coherence \emph{means}: if a learned mode of talking is coherent, is there something it is talking about? The user's notes pose exactly this question (\texttt{logic/a 'philosophical version' of g\"odel's completeness theorem.md}):
 \begin{quote}\small
 ``a mode of talking makes sense (is coherent) iff there is something it could be talking about'' \\
 as long as the `mode of talking' is a first-order theory and `something' is a model of it, then this is literally the completeness theorem \\
 is a generalization of the completeness thm available that justifies this philosophical proposition more broadly?
 \end{quote}
-The note adds candidate instances (``probabilities describe world iff coherent'', after \citealt{christiano2013definability}; ``maybe something could be said about vnm stuff also?'') and a remark of Sam's: ``completeness is an adjunction between sentences and models \dots\ if you are in image, then round trip is just identity. what is this image?'' Elsewhere the user records the caveat that, in general, ``there might only be such a thing in the same sense that there is a `proof' of the G\"odel sentence G'' (L10 \S1.5).
+The note suggests further instances (``probabilities describe world iff coherent'', after \citealt{christiano2013definability}; ``maybe something could be said about vnm stuff also?'') and records a remark of Sam's: ``completeness is an adjunction between sentences and models \dots\ if you are in image, then round trip is just identity. what is this image?'' Elsewhere the user adds the caveat that ``there might only be such a thing in the same sense that there is a `proof' of the G\"odel sentence G'' (L10 \S1.5).
 
-\paragraph{Answer in brief.} Yes: there is a whole family of ``coherent iff there is something it could be talking about'' theorems. They share one anatomy, and the anatomy shows exactly where the proposition stops being true.
-\begin{enumerate}[label=(\arabic*),leftmargin=*]
-\item Sentences and models always form a Galois connection $\Mod\dashv\Th$. Sam's slogan is \emph{strong} completeness, and the image he asks about is exactly the family of deductively closed sets (\Cref{prop:existence:image}). The user's slogan is \emph{weak} completeness, which is strictly weaker (\Cref{prop:existence:ipc}). Both reduce to one statement: completeness holds iff the \emph{points} of the calculus are realized by models (\Cref{thm:existence:points}). Every proof has two steps: points exist (Zorn), and points are realized (Henkin, Zariski, Carath\'eodory, or trivially).
-\item Every calculus is strongly complete for its own closed theories (\Cref{thm:existence:tautological}). So the proposition is a tautology if the ``something'' may be built from syntax; it has content exactly when the semantics is fixed independently of the calculus.
-\item Instances (\S\S\ref{sec:existence:positions}--\ref{sec:existence:contexts}). Coherent positions are partial descriptions of admissible valuations, and this bilateral completeness is Stone duality. Coherent credences are mixtures of worlds, certified by \emph{counting sequents}; no CCS-style family of bounded-arity constraints characterizes coherence, which is a caution for consistency-based probing of language models. Coherent context systems have models, but the models are families of \emph{belief states}, not of worlds, and locally coherent contexts need not glue into one world.
-\item A learned calculus that is coherent on a designated context has a model there, but a syntactic one; after identifying indiscernibles it is the intended model only under conditions we characterize, and the Kripkensteinian residue of \Cref{sec:coherence} becomes a set of non-isomorphic things talked about (\S\ref{sec:existence:learned}).
-\item \emph{Intended} existence is not delivered by coherence. Compactness forbids categoricity for infinite structures, and a computability barrier shows that a computable coherence notion can match ``has an intended model'' only if that property is $\Pi_1$ (\Cref{thm:existence:computability}). Pinning $\N$ needs second-order quantification, a universal property, Tennenbaum's computability, or an $\omega$-rule.
-\end{enumerate}
-\emph{Credit.} Almost everything here is a standard result, reorganized; the organization is the contribution. The Galois connection is \citet{birkhoff1940lattice} and \citet{ore1944galois}; points and Lindenbaum's lemma are Birkhoff's subdirect representation and Lindenbaum's construction; bilateral completeness is \citet{scott1974completeness} and \citet{shoesmith1978multiple}; probabilistic coherence is \citet{definetti1937prevision} and \citet{gaifman1964concerning}; local-models semantics is \citet{ghidini2001local}. New, as far as we know, and all elementary: the counting-sequent form of de Finetti's theorem (likely folklore in probability logic; cf.\ \citealt{paris1994uncertain}), the strictness results for CCS-style constraints (\Cref{thm:existence:arity,thm:existence:threshold}), the multi-context completeness theorem in exactly this form (\Cref{thm:existence:mcs}), and the corollary on logical inductors (\Cref{cor:existence:inductors}). \Cref{thm:existence:rules,thm:existence:computability} are standard arguments, newly applied. None of this section is formalized in Lean; sanity-check scripts are in \texttt{research/theory/T6-checks/}. Proofs not given inline are in Appendix~\ref{app:existence}.
+\paragraph{Answer in brief.} There is a whole family of ``coherent iff there is something it could be talking about'' theorems with one anatomy: completeness holds iff the \emph{points} of a calculus are realized by models (\S\ref{sec:existence:galois}). Sam's slogan is strong completeness and the user's is weak completeness; they differ. Every calculus is complete for models built from its own syntax, so the proposition has content only for an independently specified semantics. Instances: positions (Stone duality, \S\ref{sec:existence:positions}), credences (de Finetti with \emph{counting sequents}; no bounded-arity, CCS-style constraint family characterizes coherence, \S\ref{sec:existence:credences}), and contexts (the somethings are belief states, not worlds, \S\ref{sec:existence:contexts}). A coherent learned calculus has a model, but a syntactic one; the Kripkensteinian residue of \Cref{sec:coherence} becomes a set of non-isomorphic things talked about; and a compactness and a computability barrier show that coherence cannot deliver the \emph{intended} model (\S\ref{sec:existence:learned}). The verdict is in \S\ref{sec:existence:verdict}.
+
+\emph{Credit.} Almost everything here is a standard result, reorganized; the organization is the contribution. The Galois connection is \citet{birkhoff1940lattice} and \citet{ore1944galois}; bilateral completeness is \citet{scott1974completeness} and \citet{shoesmith1978multiple}; probabilistic coherence is \citet{definetti1937prevision} and \citet{gaifman1964concerning}; local-models semantics is \citet{ghidini2001local}. New as far as we know, and all elementary: the counting-sequent form of de Finetti's theorem (probably folklore; cf.\ \citealt{paris1994uncertain}), the strictness results for CCS-style constraints (\Cref{thm:existence:arity,thm:existence:threshold}), the multi-context completeness theorem in exactly this form (\Cref{thm:existence:mcs}), and the corollary on logical inductors (\Cref{cor:existence:inductors}). \Cref{thm:existence:rules,thm:existence:computability} are standard arguments, newly applied. Nothing in this section is formalized in Lean; sanity checks are in \texttt{research/theory/T6-checks/}.
 
 % ---------------------------------------------------------------------
 \subsection{The adjunction, and the anatomy of a completeness theorem}\label{sec:existence:galois}
 
-\begin{definition}[Semantic frame]\src{T6 Def 1.1}\label{def:existence:frame}
-A \emph{semantic frame} is a triple $(S,M,\models)$: a set $S$ of ``sentences'' (formulas, sequents, equations, inequalities, labelled claims), a set or class $M$ of ``models'' (structures, valuations, points, measures, belief states), and a relation ${\models}\subseteq M\times S$. For $\Sigma\subseteq S$ and $K\subseteq M$ put $\Mod(\Sigma)=\{m:m\models\sigma\text{ for all }\sigma\in\Sigma\}$ and $\Th(K)=\{\sigma:m\models\sigma\text{ for all }m\in K\}$.
+\begin{definition}[Semantic frames and completeness]\src{T6 Def 1.1, \S1.1}\label{def:existence:frame}
+A \emph{semantic frame} $(S,M,\models)$ consists of a set $S$ of ``sentences'', a set or class $M$ of ``models'' and a relation ${\models}\subseteq M\times S$. Put $\Mod(\Sigma)=\{m:m\models\sigma\ \forall\sigma\in\Sigma\}$ and $\Th(K)=\{\sigma:m\models\sigma\ \forall m\in K\}$. A \emph{deductive system} is a closure operator $C$ on $\mathcal P(S)$ (extensive, monotone, idempotent), with closed sets (\emph{theories}) $\Fix(C)$; it is \emph{finitary} if $C(X)$ is the union of the $C(X_0)$ over finite $X_0\subseteq X$. $C$ is \emph{sound} if $C\le\Th\circ\Mod$ pointwise, \emph{strongly complete} if $C=\Th\circ\Mod$, and \emph{weakly complete} if every \emph{coherent} $X$ (i.e.\ $C(X)\neq S$) has $\Mod(X)\neq\emptyset$.
 \end{definition}
 
 \begin{lemma}[Galois connection]\src{T6 Fact 1.2}\status{known}\label{lem:existence:galois}
-$K\subseteq\Mod(\Sigma)$ iff $\Sigma\subseteq\Th(K)$. Hence $\Th\circ\Mod$ and $\Mod\circ\Th$ are closure operators on $\mathcal P(S)$ and $\mathcal P(M)$, and $\Mod$, $\Th$ restrict to mutually inverse inclusion-reversing bijections between their fixed points, two dually isomorphic complete lattices.
+$K\subseteq\Mod(\Sigma)$ iff $\Sigma\subseteq\Th(K)$. Hence $\Th\circ\Mod$ and $\Mod\circ\Th$ are closure operators, and $\Mod,\Th$ are mutually inverse inclusion-reversing bijections between their fixed points \citep{birkhoff1940lattice,ore1944galois}.
 \end{lemma}
 
-Viewing $(\mathcal P(S),\subseteq)$ and $(\mathcal P(M),\supseteq)$ as categories, the first clause says $\Mod\dashv\Th$. This is the precise content of ``completeness is an adjunction between sentences and models''. The adjunction exists for \emph{every} frame; a completeness theorem is a statement about its fixed points.
+Read as an adjunction between $(\mathcal P(S),\subseteq)$ and $(\mathcal P(M),\supseteq)$, this is $\Mod\dashv\Th$: the precise content of ``completeness is an adjunction between sentences and models''. The adjunction exists for \emph{every} frame; a completeness theorem is a statement about its fixed points.
 
-\begin{definition}[Deductive systems and completeness]\src{T6 \S1.1}\label{def:existence:completeness}
-A \emph{deductive system} on $S$ is a Tarskian closure operator $C$ (extensive, monotone, idempotent); $\Fix(C)$ is its set of closed sets (\emph{theories}). $C$ is \emph{finitary} if $C(X)=\bigcup\{C(X_0):X_0\subseteq X\text{ finite}\}$. Relative to a frame, $C$ is \emph{sound} if $C\le\Th\circ\Mod$ pointwise (equivalently, every $\Th(\{m\})$ is $C$-closed), and \emph{strongly complete} if $C=\Th\circ\Mod$. A set $X$ is \emph{$C$-coherent} if $C(X)\neq S$, and $C$ is \emph{weakly complete} if every $C$-coherent $X$ has $\Mod(X)\neq\emptyset$.
-\end{definition}
-
-\begin{proposition}[Sam's image is the closed sets iff completeness holds]\src{T6 Prop 1.3}\label{prop:existence:image}
-For every closure operator $C$ on $\mathcal P(S)$: $\{\Th(K):K\subseteq M\}=\Fix(C)$ iff $C$ is strongly complete.
+\begin{proposition}[Sam's image]\src{T6 Prop 1.3}\label{prop:existence:image}
+For every closure operator $C$: $\{\Th(K):K\subseteq M\}=\Fix(C)$ iff $C$ is strongly complete.
 \end{proposition}
 
 \begin{proof}
-Since $\Th\circ\Mod\circ\Th=\Th$, the image of $\Th$ is $\Fix(\Th\circ\Mod)$. A closure operator is determined by its fixed points, $C(X)=\bigcap\{T\in\Fix(C):X\subseteq T\}$. So $\Fix(C)=\Fix(\Th\circ\Mod)$ iff $C=\Th\circ\Mod$.
+The image of $\Th$ is $\Fix(\Th\circ\Mod)$, as $\Th\Mod\Th=\Th$; and a closure operator is determined by its fixed points, $C(X)=\bigcap\{T\in\Fix(C):X\subseteq T\}$.
 \end{proof}
 
-The proof does not use soundness; we state it for every $C$ (the verification found the original soundness hypothesis idle). Trivial once set up: in words, the round trip fixes exactly the sets closed under the inference rules iff the rules are complete.
+Trivial once set up (and soundness is not needed): the round trip fixes exactly the sets closed under the rules iff the rules are complete.
 
 \begin{theorem}[Tautological completeness]\src{T6 Thm 1.4}\label{thm:existence:tautological}
-Every closure operator $C$ on $\mathcal P(S)$ is strongly complete for its \emph{canonical frame} $(S,\Fix(C),\ni)$, in which a model is a closed set $T$ and $T\models\sigma$ iff $\sigma\in T$.
+Every closure operator $C$ is strongly complete for its \emph{canonical frame} $(S,\Fix(C),\ni)$, whose models are the theories $T$, with $T\models\sigma$ iff $\sigma\in T$.
 \end{theorem}
 
 \begin{proof}
-$\Mod(X)=\{T\in\Fix(C):X\subseteq T\}$, so $\Th(\Mod(X))=\bigcap\{T\in\Fix(C):X\subseteq T\}=C(X)$.
+$\Th(\Mod(X))=\bigcap\{T\in\Fix(C):X\subseteq T\}=C(X)$.
 \end{proof}
 
-\paragraph{Reading.} This one-line theorem is why the user's proposition needs care. If ``something it could be talking about'' may be \emph{any} object, the proposition is trivially true: every mode of talking is about its own theories. Real completeness theorems have content only because their models are specified \emph{before and independently of} the calculus: truth tables, Tarskian structures, points of $\bar k^n$, probability measures. For a learner this is a warning in advance: that a learned calculus is ``about something'' is cheap; what matters is whether it is about something we can access independently.
-
-\begin{definition}[Points]\src{T6 \S1.4}\label{def:existence:point}
-A closed $T\in\Fix(C)$ is a \emph{point} (completely meet-irreducible) if $T\neq S$ and some $\sigma\notin T$ belongs to every closed $T'\supsetneq T$; equivalently, $T$ is maximal among closed sets omitting $\sigma$. $\Pt(C)$ is the set of points.
-\end{definition}
+\paragraph{Reading.} If ``something it could be talking about'' may be \emph{any} object, the user's proposition is trivially true: every mode of talking is about its own theories. Real completeness theorems have content because their models (truth tables, structures, points of $\bar k^n$, measures) are specified \emph{before and independently of} the calculus. For a learner of inference rules this is a warning in advance: that a learned calculus is ``about something'' is cheap; what matters is whether it is about something we can access independently.
 
 \begin{theorem}[Completeness is realization of points]\src{T6 Thm 1.5, as repaired}\label{thm:existence:points}
-Let $C$ be finitary.
-\textup{(a) Lindenbaum.} Every closed $T$ is the intersection of the points containing it (the empty intersection being $S$).
-\textup{(b)} If $C$ is sound for $(S,M,\models)$, then $C$ is strongly complete iff every point is the theory of a model: $\Pt(C)\subseteq\{\Th(\{m\}):m\in M\}$.
-\textup{(c)} Let $C$ be sound, let some finite $F$ have $C(F)=S$ (a finite explosive set such as $\{\bot\}$), and let $\Th(\{m\})\neq S$ for every $m$. Then $C$ is weakly complete iff every \emph{maximal} proper closed set is the theory of a model. Soundness is needed for ($\Rightarrow$): with $S=\{a,b,\bot\}$, closed sets $\emptyset,\{a\},S$ and one model $m$ with $\Th(\{m\})=\{a,b\}$, $C$ is weakly complete but $\{a\}$ is not the theory of a model.
+Call a theory $T$ a \emph{point} if $T\neq S$ and, for some $\sigma\notin T$, $T$ is maximal among theories omitting $\sigma$; write $\Pt(C)$. Let $C$ be finitary.
+\textup{(a) Lindenbaum.} Every theory is the intersection of the points containing it.
+\textup{(b)} If $C$ is sound, it is strongly complete iff every point is the theory of a model: $\Pt(C)\subseteq\{\Th(\{m\}):m\in M\}$.
+\textup{(c)} If $C$ is sound, some finite $F$ has $C(F)=S$, and $\Th(\{m\})\neq S$ for all $m$, then $C$ is weakly complete iff every \emph{maximal} proper theory is the theory of a model. Without soundness, ($\Rightarrow$) fails.
 \end{theorem}
 
-\begin{proof}[Proof idea]
-(a) By finitarity, the closed supersets of $T$ omitting $\sigma$ are closed under unions of chains; Zorn gives a maximal one, which is a point. (b) Write $C(X)$ as an intersection of points by (a) and realize each. Conversely a point $P=\bigcap_{m\in\Mod(P)}\Th(\{m\})$ is an intersection of closed sets (soundness) containing it, and complete meet-irreducibility forces one of them to equal $P$. (c) is the same argument for maximal theories. Full proof in Appendix~\ref{app:existence:galois}.
-\end{proof}
+\emph{Proof idea.} (a) Zorn, using finitarity; (b) realize each point in the decomposition (a), and conversely use complete meet-irreducibility. Full proof and the counterexample for (c) in Appendix~\ref{app:existence:galois}. So every completeness proof has two steps: (i) points exist, which is Zorn and free; (ii) points are realized by models of the independently given kind, which is where content lives (Henkin witnesses, Zariski's lemma, Carath\'eodory extension). Categorical logic has the same slogan: Deligne's theorem that coherent toposes have enough points is equivalent to completeness for coherent logic \citep{makkai1977first}.
 
-So every completeness proof has two steps: (i) points exist, which is Zorn and free for finitary calculi; (ii) points are realized by models of the independently given kind, which is where content lives. Categorical logic gives a strong form of the slogan ``completeness = enough points'': Deligne's theorem that coherent toposes have enough points is equivalent to G\"odel completeness for coherent logic \citep{makkai1977first}.
-
-\begin{proposition}[Weak $\neq$ strong: the user's slogan is weaker than Sam's]\src{T6 Prop 1.6}\label{prop:existence:ipc}
+\begin{proposition}[Weak $\neq$ strong]\src{T6 Prop 1.6}\label{prop:existence:ipc}
 $\IPC$ is sound and weakly complete, but not strongly complete, for the Boolean valuations $\BV$.
 \end{proposition}
 
 \begin{proof}
-Every Boolean theory is $\IPC$-closed, and $p\vee\neg p\in\Th(\BV)$ is not $\IPC$-provable. For weak completeness, apply \Cref{thm:existence:points}(c) with $F=\{\bot\}$: if $T$ is maximal $\IPC$-consistent and $\varphi\notin T$, maximality and the deduction theorem give $\neg\varphi\in T$; so $T$ contains every instance of excluded middle, hence is $\CPC$-closed, hence the theory of a Boolean valuation. Alternatively, by Glivenko's theorem \citep{glivenko1929quelques} a set is $\IPC$-consistent iff it is $\CPC$-consistent.
+$p\vee\neg p$ holds in all of $\BV$ but is not $\IPC$-provable. For weak completeness use \Cref{thm:existence:points}(c) with $F=\{\bot\}$: a maximal $\IPC$-consistent $T$ contains $\varphi$ or $\neg\varphi$ for each $\varphi$ (deduction theorem), so it contains excluded middle, so it is a maximal classical theory. Alternatively, use Glivenko's theorem \citep{glivenko1929quelques}.
 \end{proof}
 
-\begin{lemma}[Classical points are maximal]\src{T6 \S1.4, reading of Prop 1.6, as repaired}\label{lem:existence:cpcpoints}
-Every point of $\Cn_2$ is a maximal consistent theory.
+\begin{lemma}[Classical points are maximal]\src{T6 reading of Prop 1.6, as repaired}\label{lem:existence:cpcpoints}
+Every point of $\Cn_2$ is a maximal consistent theory. (Proof by cases; Appendix~\ref{app:existence:galois}.)
 \end{lemma}
 
-\begin{proof}
-Let $T$ be maximal among theories omitting $\varphi$, and suppose $\psi,\neg\psi\notin T$. Maximality gives $\varphi\in\Cn_2(T,\psi)\cap\Cn_2(T,\neg\psi)$, and proof by cases gives $\Cn_2(T,\psi)\cap\Cn_2(T,\neg\psi)=T$, so $\varphi\in T$: contradiction. So $T$ is complete, and being proper it is consistent; a complete consistent theory is maximal consistent.
-\end{proof}
-
-\paragraph{Reading.} Weak completeness needs the \emph{maximal} theories to be realized; strong completeness needs \emph{all} points to be realized; the two coincide when every point is maximal, as in classical logic. $\IPC$ has non-maximal points, such as a theory maximal among those omitting $p\vee\neg p$, and these are realized only by Heyting or Kripke models. This is the semantic mirror of \Cref{thm:coherence:ipc}: intuitionistic and classical logic have the same coherence data, and every coherent intuitionistic position \emph{is} about a classical world. The existence slogan holds; but the worlds do not determine intuitionistic consequence. Existence of somethings for every coherent position does not imply that the somethings determine what follows from what.
+\paragraph{Reading.} Weak completeness needs the \emph{maximal} theories to be realized, strong completeness \emph{all} points; they coincide when every point is maximal, as in classical logic. $\IPC$ has non-maximal points, realized only by Heyting or Kripke models. This mirrors \Cref{thm:coherence:ipc}: intuitionistic and classical logic have the same coherence data, every coherent intuitionistic position \emph{is} about a classical world, and yet those worlds do not determine intuitionistic consequence. Having somethings for every coherent position does not mean the somethings fix what follows from what.
 
 \begin{table}[t]
 \centering\small
-\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{3.3cm}@{}}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{3.1cm}>{\raggedright\arraybackslash}p{2.9cm}>{\raggedright\arraybackslash}p{3.5cm}@{}}
 \toprule
-mode of talking (calculus) & something (models) & realization of points & theorem\\
+mode of talking (calculus) & something & realization of points & theorem\\
 \midrule
-finite sequents (overlap, weakening, cut) & valuations $\Fm\to2$ & trivial: points are valuations & \citet{scott1974completeness}; \S\ref{sec:existence:positions}\\
-first-order sentences (any complete calculus) & $L$-structures & Henkin witnesses & \citet{godel1930vollstandigkeit,henkin1949completeness}\\
-polynomial equations over $k$ (ideal rules, radical rule) & points of $\bar k^n$ & Zariski's lemma & Nullstellensatz \citep{hilbert1893vollen,zariski1947new}\\
-finite linear inequalities (nonnegative combination) & points of $\R^n$ & LP duality & \citet{farkas1902theorie}\\
-real polynomial (in)equalities (Positivstellensatz certificates) & points of $\R^n$ & real closure & \citet{stengle1974nullstellensatz}\\
-credences on a finite agenda (counting sequents) & mixtures of valuations & separating hyperplane & \citet{definetti1937prevision}; \S\ref{sec:existence:credences}\\
+finite sequents (Ov, Wk, Cut) & valuations $\Fm\to2$ & trivial & \citet{scott1974completeness}; \S\ref{sec:existence:positions}\\
+first-order sentences & structures & Henkin witnesses & \citet{godel1930vollstandigkeit,henkin1949completeness}\\
+polynomial equations over $k$ (ideal, radical) & points of $\bar k^n$ & Zariski's lemma & \citet{hilbert1893vollen,zariski1947new}\\
+finite linear inequalities & points of $\R^n$ & LP duality & \citet{farkas1902theorie}\\
+real polynomial (in)equalities & points of $\R^n$ & real closure & \citet{stengle1974nullstellensatz}\\
+credences, finite agenda (counting sequents) & mixtures of valuations & separating hyperplane & \citet{definetti1937prevision}; \S\ref{sec:existence:credences}\\
 first-order credences (Gaifman coherence) & measures on complete theories & Carath\'eodory & \citet{gaifman1964concerning}; \S\ref{sec:existence:credences}\\
-finite preference data (mixing, transitivity) & utility functions & Motzkin transposition & \citet{vonneumann1944theory}; \S\ref{sec:existence:credences}\\
-labelled claims (local rules, bridges) & families of belief states & canonical chain & \S\ref{sec:existence:contexts}\\
+finite preference data & utility functions & Motzkin & \citet{vonneumann1944theory}; \S\ref{sec:existence:credences}\\
+labelled claims (local rules, bridges) & belief-state families & canonical chain & \S\ref{sec:existence:contexts}\\
 \bottomrule
 \end{tabularx}
-\caption{One anatomy, many completeness theorems \src{T6 \S1.5}. In each row coherence buys existence in a \emph{closure} of the naive model class: points over $\bar k$, not $k$; non-Archimedean solutions of infinite linear systems; non-standard models; finitely additive credences on infinite agendas.}
+\caption{One anatomy, many completeness theorems \src{T6 \S1.5}. In every row coherence buys existence only in a \emph{closure} of the naive model class.}
 \label{tab:existence:instances}
 \end{table}
 
-\Cref{tab:existence:instances} lists the family. The Nullstellensatz row is Sam's other pointer: the weak Nullstellensatz (``$1=0$ is not derivable from $f_1=\dots=f_m=0$ by ideal manipulations iff the $f_i$ have a common zero in $\bar k^n$'') is a weak completeness theorem; the strong one, $I(V(J))=\sqrt J$, is strong completeness, so the image Sam asks about is the radical ideals; and the points are the maximal ideals ($k[\bar x]$ is a Jacobson ring), realized by Zariski's lemma as Galois orbits of points of $\bar k^n$. Each row also carries a \emph{non-standard caveat}: coherence buys existence in a closure of the naive model class. $x^2+1=0$ is coherent over $\mathbb Q$ but has no rational zero; the infinite system $\{x\ge n:n\in\N\}$ has no finite refutation and no real solution; $2x=1$ is LP-coherent with no integer solution, and integrality needs a new rule. Historically, Cauchy's (1847) treatment of complex numbers as real polynomials modulo $x^2+1$ is this anatomy at work: a coherent way of talking about $\sqrt{-1}$, with the Lindenbaum quotient as its object.
+\Cref{tab:existence:instances} lists the family. The Nullstellensatz row is Sam's other pointer: the weak Nullstellensatz (``$1=0$ is not derivable from $f_1=\dots=f_m=0$ by ideal manipulations iff the $f_i$ have a common zero in $\bar k^n$'') is weak completeness; the strong one, $I(V(J))=\sqrt J$, is strong completeness, so Sam's image is the radical ideals; the points are the maximal ideals, realized by Zariski's lemma. Every row carries a \emph{non-standard caveat}: $x^2+1=0$ is coherent over $\mathbb Q$ with no rational zero; $\{x\ge n:n\in\N\}$ has no finite refutation and no real solution; $2x=1$ is LP-coherent with no integer solution. Cauchy's (1847) treatment of complex numbers as real polynomials modulo $x^2+1$ is the anatomy at work: a coherent way of talking about $\sqrt{-1}$, with the Lindenbaum quotient as its object.
 
 % ---------------------------------------------------------------------
 \subsection{Positions: bilateral completeness is Stone duality}\label{sec:existence:positions}
 
-Fix any set $\Fm$; until \Cref{thm:existence:structural} the connectives play no role. A \emph{sequent} is $\Gamma\step\Delta$ with $\Gamma,\Delta\subseteq\Fm$ finite. A \emph{valuation} is any $v:\Fm\to\{0,1\}$, compositional or not, and $v\models\Gamma\step\Delta$ iff $v$ falsifies some $\gamma\in\Gamma$ or verifies some $\delta\in\Delta$. A \emph{position} $\pos{X}{Y}$ (arbitrary sets) asserts all of $X$ and denies all of $Y$; given a set ${\der}$ of sequents, $\pos XY$ is \emph{incoherent} if some $\Gamma\step\Delta\in{\der}$ has $\Gamma\subseteq X$ and $\Delta\subseteq Y$ (Restall's reading, \citealt{restall2005multiple}; \Cref{def:coherence:valuations}). $\Val(\der)$ is the set of valuations satisfying every sequent in ${\der}$.
+Fix any set $\Fm$; until \Cref{thm:existence:structural} connectives play no role. A sequent $\Gamma\step\Delta$ has finite $\Gamma,\Delta\subseteq\Fm$; a \emph{valuation} is any $v:\Fm\to\{0,1\}$, and $v\models\Gamma\step\Delta$ iff $v$ falsifies some $\gamma\in\Gamma$ or verifies some $\delta\in\Delta$. A \emph{position} $\pos XY$ asserts all of $X$ and denies all of $Y$; it is \emph{incoherent} for a set ${\der}$ of sequents if some $\Gamma\step\Delta\in{\der}$ has $\Gamma\subseteq X$, $\Delta\subseteq Y$ (\citealt{restall2005multiple}; \Cref{def:coherence:valuations}). A \emph{Scott relation} is a set of sequents closed under (Ov) $\Gamma\step\Delta$ if $\Gamma\cap\Delta\neq\emptyset$; (Wk) from $\Gamma\step\Delta$ infer $\Gamma\cup\Gamma'\step\Delta\cup\Delta'$; (Cut) from $\Gamma,\varphi\step\Delta$ and $\Gamma\step\varphi,\Delta$ infer $\Gamma\step\Delta$. $\langle S\rangle$ is the least Scott relation containing $S$, and $\Val(\der)$ the set of valuations satisfying ${\der}$.
 
-\begin{definition}[Scott relation]\src{T6 Def 2.1}\label{def:existence:scott}
-A \emph{Scott relation} is a set ${\der}$ of sequents closed under (Ov) $\Gamma\step\Delta$ whenever $\Gamma\cap\Delta\neq\emptyset$; (Wk) from $\Gamma\step\Delta$ infer $\Gamma\cup\Gamma'\step\Delta\cup\Delta'$; (Cut) from $\Gamma,\varphi\step\Delta$ and $\Gamma\step\varphi,\Delta$ infer $\Gamma\step\Delta$. $\langle S\rangle$ is the least Scott relation containing a set $S$ of sequents.
-\end{definition}
-
-\begin{theorem}[Bilateral Lindenbaum: coherent maximal positions are valuations]\src{T6 Thm 2.2}\status{known}\label{thm:existence:bilindenbaum}
-Let ${\der}$ be a Scott relation.
-\textup{(a)} Every $\der$-coherent position $\pos XY$ is realized by some $v\in\Val(\der)$: $v[X]=1$ and $v[Y]=0$.
-\textup{(b)} The maximal $\der$-coherent positions are exactly the pairs $\pos{v^{-1}(1)}{v^{-1}(0)}$ with $v\in\Val(\der)$.
+\begin{theorem}[Bilateral Lindenbaum]\src{T6 Thm 2.2}\status{known}\label{thm:existence:bilindenbaum}
+Let ${\der}$ be a Scott relation. \textup{(a)} Every coherent position $\pos XY$ is realized by some $v\in\Val(\der)$: $v[X]=1$, $v[Y]=0$. \textup{(b)} The maximal coherent positions are exactly the $\pos{v^{-1}(1)}{v^{-1}(0)}$ with $v\in\Val(\der)$.
 \end{theorem}
-
-\begin{proof}[Proof idea]
-Sequents are finite, so the coherent extensions of $\pos XY$ are closed under unions of chains, and Zorn gives a maximal one. (Ov) makes it disjoint. (Cut) makes it exhaustive: if $\varphi$ can be added neither to the assertions nor to the denials, weaken the two witnessing sequents to a common context and cut on $\varphi$, showing that the position was already incoherent. Full proof in Appendix~\ref{app:existence:positions}. The theorem is due to \citet{scott1974completeness} and \citet{shoesmith1978multiple}.
-\end{proof}
 
 \begin{corollary}[Strong bilateral completeness]\src{T6 Cor 2.3}\label{cor:existence:bilateral}
 For every set $S$ of sequents, $\Th(\Mod(S))=\langle S\rangle$.
 \end{corollary}
 
-\begin{theorem}[The duality, with both closure operators]\src{T6 Thm 2.4}\status{known}\label{thm:existence:duality}
-Give $2^{\Fm}$ the product (Cantor) topology. The Galois connection between sets of sequents and sets of valuations has syntactic closure $S\mapsto\langle S\rangle$ (generate by Ov, Wk, Cut) and semantic closure $V\mapsto\overline V$ (topological closure). Hence ${\der}\mapsto\Val(\der)$ and $V\mapsto\Th(V)$ are mutually inverse dual lattice isomorphisms between Scott relations and closed subsets of $2^{\Fm}$.
+\emph{Proof idea} \citep{scott1974completeness,shoesmith1978multiple}. Zorn gives a maximal coherent extension, since sequents are finite; (Ov) makes it disjoint, and (Cut) makes it exhaustive: if $\varphi$ can be added to neither side, weaken the two witnessing sequents to a common context and cut on $\varphi$. Full proofs in Appendix~\ref{app:existence:positions}.
 
-\hfill\leanok{Carnap.Val\_mrel}\ (semantic closure)
+\begin{theorem}[The duality]\src{T6 Thm 2.4}\status{known}\label{thm:existence:duality}
+Give $2^{\Fm}$ the product topology. The Galois connection between sets of sequents and sets of valuations has syntactic closure $S\mapsto\langle S\rangle$ and semantic closure $V\mapsto\overline V$, the topological closure. Hence ${\der}\mapsto\Val(\der)$ is a dual lattice isomorphism from Scott relations onto closed subsets of $2^{\Fm}$, with inverse $\Th$.
+\hfill\leanok{Carnap.Val\_mrel}\,(semantic half)
 \end{theorem}
 
-\begin{proof}
-The syntactic closure is \Cref{cor:existence:bilateral}. The semantic closure is \Cref{lem:coherence:duality}(a): each sequent excludes exactly the basic clopen set $\{v:v[\Gamma]=1,v[\Delta]=0\}$, so $\Mod(\Th(V))=\overline V$. \Cref{lem:existence:galois} gives the dual isomorphism of the fixed points.
-\end{proof}
-
-\begin{remark}[This is Stone duality]\src{T6 Rem 2.5}\label{rem:existence:stone}
-Let $B$ be the free Boolean algebra on $\Fm$, every formula an independent generator; its Stone space is $2^{\Fm}$. The sequent $\Gamma\step\Delta$ is the clause $\bigvee_{\gamma\in\Gamma}\neg\gamma\vee\bigvee_{\delta\in\Delta}\delta$ of $B$, every element of $B$ is a finite meet of clauses, and filters of $B$ correspond to closed sets of $2^{\Fm}$ \citep{stone1936theory}. So Scott relations, closed sets of valuations and filters of $B$ correspond. At this level of generality \emph{the connectives play no role in the duality}; they enter only through \emph{which} closed set the rules carve out. This is Suszko's thesis seen as a duality: every Tarskian consequence is determined by its (non-truth-functional) bivaluations, the characteristic functions of its theories (\citealt{suszko1977fregean} stated it for structural logics).
-\end{remark}
+The syntactic half is \Cref{cor:existence:bilateral}, the semantic half is \Cref{lem:coherence:duality}(a): each sequent excludes a basic clopen set. This is Stone duality \citep{stone1936theory} for the free Boolean algebra $B$ on $\Fm$, every formula an independent generator: $\Gamma\step\Delta$ is the clause $\bigvee_\Gamma\neg\gamma\vee\bigvee_\Delta\delta$ of $B$, and Scott relations, closed sets of valuations and filters of $B$ correspond. So \emph{at this level the connectives play no role in the duality}; they enter only through \emph{which} closed set the rules carve out. This is Suszko's thesis seen as a duality: a Tarskian consequence is determined by the characteristic functions of its theories, which are bivaluations that need not be truth-functional \citep{suszko1977fregean}.
 
 \begin{theorem}[Structural calculi and Lindenbaum bundles]\src{T6 Thm 2.6}\label{thm:existence:structural}
-Let $\Fm$ be a term algebra, substitutions its endomorphisms $\sigma$, and call ${\der}$ \emph{structural} if $\Gamma\step\Delta\in{\der}$ implies $\sigma\Gamma\step\sigma\Delta\in{\der}$.
-\textup{(a)} A Scott relation ${\der}$ is structural iff $\Val(\der)$ is closed under $v\mapsto v\circ\sigma$; so structural Scott relations are dual to closed, substitution-invariant sets of valuations.
-\textup{(b)} For $v\in\Val(\der)$ let $L_v=\langle\Fm,v^{-1}(1)\rangle$, a logical matrix whose algebra is the language itself. If ${\der}$ is structural, each $L_v$ validates every sequent of ${\der}$ under every assignment; ${\der}$ is exactly the set of sequents valid in all $L_v$; and every coherent position is realized in some $L_v$ by the identity assignment.
+Let $\Fm$ be a term algebra and call ${\der}$ \emph{structural} if it is closed under substitutions $\sigma$. \textup{(a)} A Scott relation ${\der}$ is structural iff $\Val(\der)$ is closed under $v\mapsto v\circ\sigma$. \textup{(b)} If ${\der}$ is structural, each matrix $L_v=\langle\Fm,v^{-1}(1)\rangle$, $v\in\Val(\der)$, validates ${\der}$ under every assignment; ${\der}$ is exactly the set of sequents valid in all $L_v$; and every coherent position is realized in some $L_v$ by the identity assignment.
 \end{theorem}
 
-Proof in Appendix~\ref{app:existence:positions}; it is a direct computation from $v\circ\sigma\models\Gamma\step\Delta$ iff $v\models\sigma\Gamma\step\sigma\Delta$.
+The proof (Appendix~\ref{app:existence:positions}) rests on $v\circ\sigma\models\Gamma\step\Delta$ iff $v\models\sigma\Gamma\step\sigma\Delta$.
 
-\paragraph{Reading.} \Cref{thm:existence:bilindenbaum} is the cleanest form of the user's proposition: a position is coherent iff it partially describes an admissible valuation, ``some way the sentences could all come out''. \Cref{thm:existence:structural} upgrades the something to a compositional model, the Lindenbaum bundle, the multiple-conclusion analogue of the theorem of \citet{los1958remarks} and \citet{wojcicki1988theory}. Whether the \emph{intended} compositional semantics is reached depends on the rules: if ${\der}$ contains the truth-table sequents and one coherence datum, $\Val(\der)=\BV$ exactly (\Cref{thm:coherence:telltale}). With single-conclusion data only, the admissible valuations include the intersection closure $\BV^\cap$ (\Cref{thm:coherence:carnap}), so what a single-conclusion coherence loss licenses talk \emph{about} includes undecided, ``gappy'' worlds; \S\ref{sec:existence:learned} says what they are.
+\paragraph{Reading.} \Cref{thm:existence:bilindenbaum} is the cleanest form of the user's proposition: a position is coherent iff it partially describes an admissible valuation, ``some way the sentences could all come out''. \Cref{thm:existence:structural} upgrades the something to a compositional model whose algebra is the language itself, the multiple-conclusion analogue of \citet{los1958remarks} and \citet{wojcicki1988theory}. Whether the \emph{intended} semantics is reached depends on the rules: with the truth-table sequents and one coherence datum, $\Val(\der)=\BV$ (\Cref{thm:coherence:telltale}); with single-conclusion data only, the admissible valuations include the ``gappy'' $\BV^\cap$ (\Cref{thm:coherence:carnap}), so a single-conclusion coherence loss licenses talk about undecided worlds.
 
 % ---------------------------------------------------------------------
 \subsection{Credences: de Finetti, counting sequents, and why local constraints fail}\label{sec:existence:credences}
 
-The user's second candidate instance is probabilistic: ``probabilities describe world iff coherent''. This is also the setting of consistency-based probing of language models, which the user has worked on.
-
-\paragraph{Setup.} Let $F$ be a finite agenda that is a union of \emph{complementary pairs} $\{\varphi,\varphi^*\}$ with $\varphi^*\equiv\neg\varphi$ (a finite agenda cannot be literally closed under $\neg$), let $\BV$ be the Boolean valuations of the finitely many atoms involved, and write $\bar v=(v(\varphi))_{\varphi\in F}$. A credence $P:F\to[0,1]$ is \emph{negation-coherent} if $P(\varphi^*)=1-P(\varphi)$, and \emph{coherent} if $P=\sum_v\mu(v)\bar v$ for a probability $\mu$ on $\BV$, i.e.\ $P$ lies in the \emph{coherence polytope} $\Pi_F=\conv\{\bar v:v\in\BV\}$.
-
-\begin{definition}[Counting sequents]\src{T6 \S3.1}\label{def:existence:counting}
-A \emph{counting sequent} over $F$ is a pair $(\Phi,m)$ of a finite multiset $\Phi$ of members of $F$ and an integer \emph{threshold} $m$. It is \emph{valid} if every $v\in\BV$ makes at least $m$ members of $\Phi$ true, counted with multiplicity, and $P$ \emph{satisfies} it if $\sum_{\varphi\in\Phi}P(\varphi)\ge m$. An ordinary sequent $\Gamma\step\Delta$ is the case $m=1$, $\Phi=\{\gamma^*:\gamma\in\Gamma\}\cup\Delta$.
-\end{definition}
+Let $F$ be a finite agenda that is a union of \emph{complementary pairs} $\{\varphi,\varphi^*\}$, $\varphi^*\equiv\neg\varphi$ (a finite agenda cannot be closed under $\neg$); $\BV$ the Boolean valuations of its atoms; $\bar v=(v(\varphi))_{\varphi\in F}$. A credence $P:F\to[0,1]$ is \emph{negation-coherent} if $P(\varphi^*)=1-P(\varphi)$, and \emph{coherent} if $P=\sum_v\mu(v)\bar v$ for a probability $\mu$ on $\BV$, i.e.\ $P$ lies in the \emph{coherence polytope} $\Pi_F=\conv\{\bar v\}$. A \emph{counting sequent} $(\Phi,m)$ is a finite multiset $\Phi$ of members of $F$ with an integer \emph{threshold} $m$; it is \emph{valid} if every $v\in\BV$ makes at least $m$ members of $\Phi$ true (with multiplicity), and $P$ \emph{satisfies} it if $\sum_{\varphi\in\Phi}P(\varphi)\ge m$. An ordinary sequent $\Gamma\step\Delta$ is the case $m=1$, $\Phi=\{\gamma^*:\gamma\in\Gamma\}\cup\Delta$.
 
 \begin{theorem}[de Finetti, with counting sequents]\src{T6 Thm 3.1, as repaired}\label{thm:existence:definetti}
-For negation-coherent $P$ on $F$ as above, the following are equivalent:
-\textup{(i)} $P$ is coherent;
-\textup{(ii)} there is no Dutch book: no $\lambda\in\R^F$ with $\lambda\cdot(\bar v-P)<0$ for every $v\in\BV$;
-\textup{(iii)} for all rational $\lambda,c$: if $\lambda\cdot\bar v\ge c$ for all $v$, then $\lambda\cdot P\ge c$;
-\textup{(iv)} $P$ satisfies every valid counting sequent.
-Negation coherence is needed for (iv)$\Rightarrow$(i): $P\equiv1$ satisfies every valid counting sequent but is incoherent.
+For negation-coherent $P$ the following are equivalent: \textup{(i)} $P$ is coherent; \textup{(ii)} there is no Dutch book, i.e.\ no $\lambda\in\R^F$ with $\lambda\cdot(\bar v-P)<0$ for all $v\in\BV$; \textup{(iii)} for rational $\lambda,c$, if $\lambda\cdot\bar v\ge c$ for all $v$ then $\lambda\cdot P\ge c$; \textup{(iv)} $P$ satisfies every valid counting sequent. Negation coherence is needed: $P\equiv1$ satisfies (iv) but is incoherent.
 \end{theorem}
 
-\begin{proof}[Proof idea]
-(i)$\Rightarrow$(ii),(iii) by taking expectations. $\Pi_F$ is a rational polytope, so a point outside it is separated by a rational facet inequality, which violates (iii) and yields a Dutch book. A rational inequality valid on $\BV$ is converted into a counting sequent by clearing denominators and replacing each negative coefficient on $\varphi$ by a positive one on $\varphi^*$, using negation coherence. Full proof in Appendix~\ref{app:existence:credences}.
-\end{proof}
+\emph{Proof idea.} $\Pi_F$ is a rational polytope, so a point outside it violates a rational facet inequality, which gives a Dutch book; clearing denominators and moving negative coefficients from $\varphi$ to $\varphi^*$ turns the inequality into a counting sequent. Appendix~\ref{app:existence:credences}.
 
-\paragraph{Reading.} The probabilistic completeness theorem says a credence is coherent iff it is a mixture of worlds; its proof-theoretic side is not ordinary sequents but \emph{counting sequents}, graded positions such as ``at least two of these six claims hold''. An ordinary valid sequent yields the generalized union bound $\sum_{\gamma\in\Gamma}(1-P(\gamma))+\sum_{\delta\in\Delta}P(\delta)\ge1$, the multiple-conclusion form of Adams's uncertainty-sum bound \citep{adams1966probability}. \texttt{counting\_sequents.py} extracts a violated integer counting sequent from the Farkas certificate of each of 215 random incoherent, negation-coherent credences.
+\paragraph{Reading.} The probabilistic completeness theorem says a credence is coherent iff it is a mixture of worlds. Its proof-theoretic side is not ordinary sequents but \emph{counting sequents}, graded positions such as ``at least two of these six claims hold''. An ordinary sequent gives only the union bound $\sum_\Gamma(1-P(\gamma))+\sum_\Delta P(\delta)\ge1$, the multiple-conclusion form of Adams's uncertainty-sum bound \citep{adams1966probability}.
 
-\paragraph{Which consistency constraints suffice?} The user's notes on consistency-based probing (\texttt{ai/DLK/}) use three constraints on a probe's credences: negation coherence $P(\neg Q)=1-P(Q)$, the identity $P(A\wedge B)+P(A\vee B)=P(A)+P(B)$, and modus ponens read as the tautology $\neg P\vee\neg(P\to Q)\vee Q$, i.e.\ the union bound $P(Q)\ge P(P)+P(P\to Q)-1$. Contrast-consistent search (CCS) trains a probe on contrast pairs with exactly a negation-consistency loss plus a confidence loss \citep{burns2023discovering}.
+\paragraph{Which consistency constraints suffice?} The user's notes on consistency-based probing (\texttt{ai/DLK/}) impose negation coherence $P(\neg Q)=1-P(Q)$, the identity $P(A\wedge B)+P(A\vee B)=P(A)+P(B)$, and modus ponens read as the tautology $\neg P\vee\neg(P\to Q)\vee Q$, i.e.\ the union bound $P(Q)\ge P(P)+P(P\to Q)-1$. Contrast-consistent search (CCS) trains a probe with exactly a negation-consistency loss plus a confidence loss \citep{burns2023discovering}.
 
-\begin{proposition}[Negation coherence is far from enough]\src{T6 Prop 3.2}\label{prop:existence:negonly}
-On the agenda $\{p,q,p\wedge q\}$ plus complements, $P(p)=P(q)=0.2$, $P(p\wedge q)=0.9$ is negation-coherent and violates the valid sequent $p\wedge q\step p$.
-\end{proposition}
-
-\begin{example}[The modus ponens polytope]\src{T6 Ex 3.3}\status{computed}\label{ex:existence:mp}
-For $(P(p),P(q),P(p\to q))=(a,b,c)$ the coherence polytope is the tetrahedron with vertices $(0,0,1),(0,1,1),(1,0,0),(1,1,1)$, with facets $a+c\ge1$ (from $\step p,p\to q$), $b\ge a+c-1$ (modus ponens), $b\le c$ (from $q\step p\to q$) and $c\le1$. On this tiny agenda the user's MP constraint, two other single-sequent bounds and a trivial bound are \emph{exactly} coherence.
+\begin{example}[Small agendas]\src{T6 Prop 3.2, Ex 3.3}\status{computed}\label{ex:existence:mp}
+On $\{p,q,p\wedge q\}$ plus complements, $P(p)=P(q)=0.2$, $P(p\wedge q)=0.9$ is negation-coherent but violates the union bound of $p\wedge q\step p$. For $(P(p),P(q),P(p\to q))=(a,b,c)$ the coherence polytope is the tetrahedron with facets $a+c\ge1$ (from $\step p,p\to q$), $b\ge a+c-1$ (modus ponens), $b\le c$ (from $q\step p\to q$) and $c\le1$: on this tiny agenda the user's MP constraint plus two other union bounds \emph{is} coherence.
 \end{example}
 
-The next two theorems show that this does not scale. For $k\ge3$ let
-\[
-F_k=\{A_i,\neg A_i:i\le k\}\cup\{A_i\wedge A_j,\neg(A_i\wedge A_j):i<j\le k\},\qquad P_k(A_i)=\tfrac1{k-1},\quad P_k(A_i\wedge A_j)=0,
-\]
-with complements on the negations.
+This does not scale. For $k\ge3$ let $F_k=\{A_i,\neg A_i:i\le k\}\cup\{A_i\wedge A_j,\neg(A_i\wedge A_j):i<j\le k\}$, and $P_k(A_i)=\frac1{k-1}$, $P_k(A_i\wedge A_j)=0$, with complements on negations.
 
 \begin{theorem}[No bounded-arity family of constraints suffices]\src{T6 Thm 3.4}\label{thm:existence:arity}
-\textup{(a)} For every sub-agenda $F'\subseteq F_k$ whose formulas jointly mention at most $k-1$ atoms, $P_k|_{F'}$ extends to a coherent credence on $F_k$.
-\textup{(b)} $P_k$ is incoherent.
-Hence every family of necessary coherence constraints each of which depends only on sub-agendas over fewer than $k$ atoms is satisfied by $P_k$ and does not characterize coherence. In particular pairwise (CCS-style) constraints fail, and so does every bounded arity.
+\textup{(a)} For every $F'\subseteq F_k$ whose formulas jointly mention at most $k-1$ atoms, $P_k|_{F'}$ extends to a coherent credence on $F_k$. \textup{(b)} $P_k$ is incoherent. Hence no family of necessary coherence constraints each depending only on sub-agendas over fewer than $k$ atoms characterizes coherence; in particular pairwise (CCS-style) constraints fail, and so does every bounded arity.
 \end{theorem}
 
 \begin{proof}
-(a) Let $J$ be the mentioned atoms, $|J|\le k-1$. Put mass $\frac1{k-1}$ on each valuation that makes exactly one $A_j$ ($j\in J$) true and the remaining mass $1-\frac{|J|}{k-1}\ge0$ on the all-false valuation. This $\mu$ gives $A_j$ probability $\frac1{k-1}$ for $j\in J$ and every conjunction probability $0$, so it agrees with $P_k$ on $F'$. (b) If $\mu$ represented $P_k$, the events $A_i$ would be pairwise $\mu$-disjoint, so $\mu(\bigvee_iA_i)=\frac k{k-1}>1$.
+(a) With $J$ the mentioned atoms, put mass $\frac1{k-1}$ on each world making exactly one $A_j$, $j\in J$, true, and the rest, $1-\frac{|J|}{k-1}\ge0$, on the all-false world. (b) A representing $\mu$ would make the $A_i$ pairwise disjoint, so $\mu(\bigvee_iA_i)=\frac k{k-1}>1$.
 \end{proof}
 
-The same holds if $F_k$ is enlarged to \emph{all} formulas in at most two atoms, valued by the two-atom marginals of the $\mu$ in (a), which do not depend on $J$. So $P_k$ is ``pairwise coherent'' in the strongest sense: every pair of atoms has a genuine joint distribution consistent with everything else. This is the probabilistic face of the local-versus-global failure in \S\ref{sec:existence:contexts}, and the frustration in Specker's parable of the three boxes \citep{specker1960logik}.
+The same holds if $F_k$ is enlarged to all formulas in at most two atoms, valued by the two-atom marginals of the $\mu$ in (a), which do not depend on $J$: $P_k$ is ``pairwise coherent'' in the strongest sense, every pair of atoms having a genuine joint distribution, and still globally incoherent. This is the frustration in Specker's parable of the three boxes \citep{specker1960logik}.
 
 \begin{theorem}[The counting-sequent hierarchy by threshold is strict]\src{T6 Thm 3.5, as repaired}\label{thm:existence:threshold}
-\textup{(a)} $P_k$ violates the valid counting sequent $\Phi=\{\neg A_1,\dots,\neg A_k\}\cup\{A_i\wedge A_j:i<j\}$, $m=k-1$, which repeats no formula.
-\textup{(b)} $P_k$ satisfies every valid counting sequent over $F_k$ with threshold $m\le k-2$, with arbitrary repetitions.
-In particular ($m=1$), $P_k$ satisfies the union bound of every valid ordinary multiple-conclusion sequent over $F_k$, and is incoherent.
+\textup{(a)} $P_k$ violates the valid counting sequent $\Phi=\{\neg A_1,\dots,\neg A_k\}\cup\{A_i\wedge A_j:i<j\}$, $m=k-1$, which repeats no formula. \textup{(b)} $P_k$ satisfies every valid counting sequent over $F_k$ with $m\le k-2$, with arbitrary repetitions; in particular ($m=1$) the union bound of every valid ordinary multiple-conclusion sequent.
 \end{theorem}
 
-\begin{proof}[Proof of (a); idea of (b)]
-(a) In a world with $t$ atoms true, $(k-t)+\binom t2$ members of $\Phi$ hold, and $(k-t)+\binom t2\ge k-1$ iff $(t-1)(t-2)\ge0$. But $\sum_\Phi P_k=k\cdot\frac{k-2}{k-1}<k-1$. (b) Only the all-false world and the $k$ singleton worlds are needed: validity there, plus integrality, forces every violated valid counting sequent to have $m\ge k-1$. Full proof in Appendix~\ref{app:existence:credences}.
-\end{proof}
+\emph{Proof.} (a) In a world with $t$ true atoms, $(k-t)+\binom t2\ge k-1$ members of $\Phi$ hold, as $(t-1)(t-2)\ge0$; but $\sum_\Phi P_k=\frac{k(k-2)}{k-1}<k-1$. (b) uses only the all-false and singleton worlds plus integrality (Appendix~\ref{app:existence:credences}). An exhaustive enumeration for $k=3$ (503{,}270 valid ordinary sequents, none violated) and an exact MILP for $k=3,4,5$ agree. \qed
 
-The hierarchy is in the \emph{threshold} $m$, not in repetitions of formulas. Exhaustive enumeration for $k=3$ (\texttt{prob\_coherence.py}: all $3^{12}$ ordinary sequents, 503{,}270 of them valid, none violated) and an exact MILP for $k=3,4,5$ (\texttt{repair\_checks.py}) agree with the theorem. \emph{Scope:} for any \emph{single} finite agenda, the finitely many facets of $\Pi_F$ give finitely many counting sequents that already characterize coherence; \Cref{thm:existence:arity,thm:existence:threshold} rule out only bounds on arity or threshold that work \emph{uniformly across agendas}. $F_k$ needs arity $k$ and threshold $k-1$.
+\emph{Scope.} For any \emph{single} finite agenda the finitely many facets of $\Pi_F$ give finitely many counting sequents that characterize coherence; what \Cref{thm:existence:arity,thm:existence:threshold} rule out is a bound on arity or threshold that works \emph{uniformly across agendas} ($F_k$ needs arity $k$ and threshold $k-1$). Moreover, deciding coherence on arbitrary agendas is NP-hard ($P(\varphi)=1$, $P(\varphi^*)=0$ is coherent iff $\varphi$ is satisfiable), so no efficiently checkable constraint family characterizes it unless $\mathrm P=\mathrm{NP}$. Closing the agenda changes the picture:
 
 \begin{proposition}[On logically closed agendas, local additivity suffices]\src{T6 Prop 3.6}\label{prop:existence:closed}
-Let $F$ represent a finite Boolean subalgebra of the Lindenbaum algebra (closed under $\wedge,\neg$ up to equivalence, containing $\top$), and let $P$ respect equivalence. Then $P$ is coherent iff $P\ge0$, $P(\top)=1$, and $P(\varphi)=P(\varphi\wedge\psi)+P(\varphi\wedge\neg\psi)$ for all $\varphi,\psi\in F$. Each constraint mentions at most three agenda formulas.
+If $F$ represents a finite Boolean subalgebra of the Lindenbaum algebra and $P$ respects equivalence, then $P$ is coherent iff $P\ge0$, $P(\top)=1$ and $P(\varphi)=P(\varphi\wedge\psi)+P(\varphi\wedge\neg\psi)$ for all $\varphi,\psi\in F$; each constraint mentions at most three formulas, and the user's identity follows from them.
 \end{proposition}
 
-The proof (Appendix~\ref{app:existence:credences}) puts mass $P(a)$ on a world for each atom $a$ of the finite Boolean algebra. The user's identity $P(A\wedge B)+P(A\vee B)=P(A)+P(B)$ follows from these constraints. Deciding coherence on an arbitrary agenda is NP-hard, since the credence $P(\varphi)=1$, $P(\varphi^*)=0$ is coherent iff $\varphi$ is satisfiable; so no efficiently checkable family of constraints characterizes coherence unless $\mathrm{P}=\mathrm{NP}$.
+\paragraph{A caution for consistency-based probing.} A CCS-style probe reads credences off a model on an \emph{unclosed} list of statements and enforces negation consistency, perhaps with further pairwise or local constraints. By \Cref{ex:existence:mp,thm:existence:arity,thm:existence:threshold}, no fixed stock of constraint \emph{types} (not pairwise, not $k$-wise for fixed $k$, not even all union bounds of ordinary sequents) guarantees that the probe's credences are a mixture of worlds, i.e.\ that they are ``about'' anything at all. Global coherence needs the agenda's facets, or an agenda closed under the connectives (\Cref{prop:existence:closed}). And even global coherence buys only \emph{some} distribution over \emph{some} worlds (\Cref{thm:existence:gaifman}), not the actual one: coherence is eliminative, not confirmational (\Cref{sec:coherence:eliminative}). A natural experiment, which we have not run, is to train probes with negation-only, pairwise and counting-sequent losses on agendas with $k$-way exclusive alternatives and measure their distance from the coherence polytope.
 
-\paragraph{A caution for consistency-based probing.} A CCS-style probe reads credences off a model on an unclosed list of statements, and enforces negation consistency, perhaps with a few more pairwise or local constraints. \Cref{prop:existence:negonly,thm:existence:arity,thm:existence:threshold} say that no such fixed stock of constraint \emph{types}, not pairwise, not $k$-wise for fixed $k$, and not even all union bounds of ordinary sequents, guarantees that the probe's credences are a mixture of worlds, i.e.\ that they are ``about'' anything at all. Global coherence is a property of the whole agenda: it needs the agenda's facets, or closure of the agenda under the connectives (\Cref{prop:existence:closed}). And even global coherence only buys \emph{some} distribution over \emph{some} worlds (\Cref{thm:existence:gaifman} below), not the actual one; that coherence is eliminative rather than confirmational was argued in \Cref{sec:coherence:eliminative}. A natural experiment, which we have not run, is to train probes with negation-only, pairwise and counting-sequent losses on agendas with $k$-way exclusive alternatives and to measure their distance from the coherence polytope.
-
-\paragraph{First-order credences.} Let $L$ be a countable first-order language. $P:\Sent_L\to[0,1]$ is \emph{(Gaifman-)coherent} if (G1) $P(\varphi)=1$ whenever $\der\varphi$, and (G2) $P(\varphi\vee\psi)=P(\varphi)+P(\psi)$ whenever $\der\neg(\varphi\wedge\psi)$ \citep{gaifman1964concerning}; this is the notion of the MIRI draft cited by the user \citep{christiano2013definability}. It implies $P(\varphi)=P(\psi)$ whenever $\der\varphi\leftrightarrow\psi$.
+\paragraph{First-order credences.} For a countable first-order language $L$, $P:\Sent_L\to[0,1]$ is \emph{(Gaifman-)coherent} if (G1) $P(\varphi)=1$ whenever $\der\varphi$, and (G2) $P(\varphi\vee\psi)=P(\varphi)+P(\psi)$ whenever $\der\neg(\varphi\wedge\psi)$ \citep{gaifman1964concerning}; this is the notion of the draft cited by the user \citep{christiano2013definability}.
 
 \begin{theorem}[Coherent credences are mixtures of complete theories]\src{T6 Thm 3.7}\status{known}\label{thm:existence:gaifman}
-Let $S_L$ be the Stone space of complete consistent $L$-theories, with basic clopens $[\varphi]=\{T:\varphi\in T\}$. Then $P$ is coherent iff there is a (unique) Borel probability $\mu$ on $S_L$ with $P(\varphi)=\mu([\varphi])$ for all $\varphi$.
+Let $S_L$ be the Stone space of complete consistent $L$-theories, with clopens $[\varphi]=\{T:\varphi\in T\}$. Then $P$ is coherent iff $P(\varphi)=\mu([\varphi])$ for a (unique) Borel probability $\mu$ on $S_L$.
 \end{theorem}
 
-\begin{proof}[Proof idea]
-$P$ induces a finitely additive probability on the clopen algebra, which is the Lindenbaum--Tarski algebra. A clopen set that is a countable disjoint union of clopens is, by compactness, a finite one, so countable additivity is automatic, and Carath\'eodory extends uniquely. Full proof in Appendix~\ref{app:existence:credences}.
-\end{proof}
+\emph{Proof idea.} $P$ is a finitely additive probability on the clopen algebra; by compactness this is automatically countably additive there, and Carath\'eodory extends it (Appendix~\ref{app:existence:credences}). By G\"odel completeness, a coherent credence is the expected truth value of $\varphi$ in a random model: the user's proposition holds verbatim. So does the caveat: for complete $T\supseteq\PA+\neg\Con(\PA)$, $\delta_T$ is coherent, gives $1$ to every true quantifier-free sentence, and ``believes'' there is a proof of $0=1$.
 
-By G\"odel completeness each $T\in S_L$ is the theory of a model, so a coherent credence is the expected truth value of $\varphi$ in a random model, drawn up to elementary equivalence: the probabilistic version of the user's proposition holds verbatim. So does the non-standard caveat. If $T\supseteq\PA+\neg\Con(\PA)$ is complete, the point mass $\delta_T$ is coherent, gives probability $1$ to every theorem of $\PA$ and every true quantifier-free sentence, and ``believes'' that there is a proof of $0=1$.
-
-\begin{theorem}[The Gaifman condition is a probabilistic $\omega$-rule that pins true arithmetic]\src{T6 Thm 3.8, as repaired}\label{thm:existence:omega}
-In the language of arithmetic, let $P$ be coherent, let $P(\sigma)=1$ for every true quantifier-free sentence $\sigma$, and let $P$ satisfy the \emph{Gaifman condition with respect to the numerals}: $P(\exists x\,\varphi(x))=\sup_nP\big(\bigvee_{i\le n}\varphi(\nml i)\big)$. Then $P=\delta_{\Th(\N)}$: $P(\varphi)=1$ if $\N\models\varphi$ and $0$ otherwise. No arithmetic axioms are needed.
+\begin{theorem}[The Gaifman condition is a probabilistic $\omega$-rule]\src{T6 Thm 3.8, as repaired}\label{thm:existence:omega}
+In the language of arithmetic, let $P$ be coherent, give probability $1$ to every true quantifier-free sentence, and satisfy the \emph{Gaifman condition} $P(\exists x\,\varphi(x))=\sup_nP\big(\bigvee_{i\le n}\varphi(\nml i)\big)$. Then $P=\delta_{\Th(\N)}$. No arithmetic axioms are needed.
 \end{theorem}
 
-\begin{proof}[Proof idea]
-Induction on the number of logical symbols of sentences in $\neg,\wedge,\exists$. Coherence forces $\{0,1\}$-valued credences through $\neg$ and $\wedge$; numerals carry no logical symbols, so the instances of $\exists x\,\varphi$ are covered by the induction hypothesis, and the Gaifman condition evaluates $\exists$ correctly because every natural number is the value of a numeral. Full proof in Appendix~\ref{app:existence:credences}.
-\end{proof}
+\emph{Proof idea.} Induction on logical symbols: coherence forces $\{0,1\}$-values through $\neg,\wedge$; numerals carry no logical symbols, and every number is a numeral's value (Appendix~\ref{app:existence:credences}). This is essentially a consequence of \citet{gaifman1964concerning}: a probability with the Gaifman property is determined by its quantifier-free values, here the true diagram of $\N$.
 
-This is essentially a consequence of \citet{gaifman1964concerning}, who showed that a probability satisfying the Gaifman condition is determined by its values on quantifier-free sentences; here those values are the true diagram of $\N$.
-
-\begin{corollary}[Every logical inductor's limit is a non-standard credence]\src{T6 Cor 3.9, as repaired}\label{cor:existence:inductors}
-Let $\Prob$ be a logical inductor \citep{garrabrant2016logical} over a consistent r.e.\ theory $\Gamma\supseteq\RobQ$ in the language of arithmetic. Then its limit $\Prob_\infty$ violates the Gaifman condition with respect to the numerals. More generally, no limit-computable coherent credence that gives probability $1$ to every true quantifier-free sentence satisfies the Gaifman condition. The quantifier-free hypothesis cannot be dropped.
+\begin{corollary}[Logical inductors' limits are non-standard]\src{T6 Cor 3.9, as repaired}\label{cor:existence:inductors}
+Let $\Prob$ be a logical inductor \citep{garrabrant2016logical} over a consistent r.e.\ $\Gamma\supseteq\RobQ$. Then $\Prob_\infty$ violates the Gaifman condition. More generally, no limit-computable coherent credence giving $1$ to every true quantifier-free sentence satisfies it; the quantifier-free hypothesis cannot be dropped.
 \end{corollary}
 
-\begin{proof}[Proof idea]
-By the Limit Coherence property of logical inductors, $\Prob_\infty$ is coherent and gives $1$ to every theorem of $\Gamma$, hence to every true quantifier-free sentence. If it satisfied the Gaifman condition, \Cref{thm:existence:omega} would give $\Prob_\infty=\delta_{\Th(\N)}$. Two independent arguments refute this. By Non-Dogmatism, the false member $\psi$ of an independent G\"odel--Rosser pair gets $\Prob_\infty(\psi)>0$. Alternatively, since market prices are computable, $\Th(\N)$ would be $\Delta_2$, contradicting Tarski's undefinability theorem. The second argument gives the general statement; the theory of the one-element structure shows the quantifier-free hypothesis is needed. Full proof in Appendix~\ref{app:existence:credences}.
-\end{proof}
+\emph{Proof idea.} By Limit Coherence, $\Prob_\infty$ is coherent and gives $1$ to true quantifier-free sentences, so \Cref{thm:existence:omega} would make it $\delta_{\Th(\N)}$. Non-Dogmatism refutes this (the false member of a G\"odel--Rosser pair gets positive probability), and so, independently, does Tarski's theorem, as $\Th(\N)$ would be $\Delta_2$. Appendix~\ref{app:existence:credences}.
 
-\paragraph{Reading.} The probabilistic ``something'' is always available (\Cref{thm:existence:gaifman}). A \emph{standard} something is fixed by an infinitary condition (\Cref{thm:existence:omega}) that no limit-computable coherent credence giving probability $1$ to all true quantifier-free sentences satisfies. A Gaifman-style probe of a language model's arithmetic credences would compare $P(\exists x\,\varphi(x))$ with $\max_{i\le n}P(\varphi(\nml i))$: a large gap marks belief in a witness that is never named. This is the probabilistic face of the computability barrier (\Cref{thm:existence:computability}).
+\paragraph{Reading.} The probabilistic ``something'' is always available; a \emph{standard} something is fixed by an infinitary condition that no limit-computable coherent credence of this kind meets. A Gaifman-style probe of a language model's arithmetic would compare $P(\exists x\,\varphi(x))$ with $\max_{i\le n}P(\varphi(\nml i))$: a large gap marks belief in a witness that is never named.
 
-\begin{proposition}[Finite preference data: coherent iff a real utility exists]\src{T6 Prop 3.10}\label{prop:existence:vnm}
-Let $X$ be a finite set of outcomes, and let the data be finitely many strict comparisons $p_i\succ q_i$ and weak comparisons $r_j\succsim s_j$ of lotteries in $\Delta(X)\subseteq\R^X$. Some $u\in\R^X$ has $u\cdot(p_i-q_i)>0$ and $u\cdot(r_j-s_j)\ge0$ for all $i,j$ iff there are no $\lambda,\kappa\ge0$, $\lambda\neq0$, with $\sum_i\lambda_i(p_i-q_i)+\sum_j\kappa_j(r_j-s_j)=0$.
+\begin{proposition}[Finite preference data]\src{T6 Prop 3.10}\label{prop:existence:vnm}
+Finitely many strict comparisons $p_i\succ q_i$ and weak comparisons $r_j\succsim s_j$ of lotteries over a finite set $X$ have an expected-utility representation $u\in\R^X$ ($u\cdot(p_i-q_i)>0$, $u\cdot(r_j-s_j)\ge0$) iff no $\lambda,\kappa\ge0$ with $\lambda\neq0$ satisfy $\sum_i\lambda_i(p_i-q_i)+\sum_j\kappa_j(r_j-s_j)=0$.
 \end{proposition}
 
 \begin{proof}
-Motzkin's transposition theorem \citep{motzkin1936beitrage} applied to the strict rows $p_i-q_i$ and the weak rows $r_j-s_j$.
+Motzkin's transposition theorem \citep{motzkin1936beitrage}.
 \end{proof}
 
-This answers the user's ``vnm stuff''. The certificate is a derivation of $L\succ L$ from the data by the rules of \citet{vonneumann1944theory}: normalize the coefficients and mix the stated comparisons; by independence the mixed better lottery is strictly preferred to the mixed worse one, yet they are equal. Calling it a money pump is an interpretive gloss, since no trading structure is formalized. So finite EU-coherence is a weak completeness theorem whose something is a real-valued utility.
+This answers ``vnm stuff'': the certificate is a derivation of $L\succ L$ by mixing (independence) and transitivity \citep{vonneumann1944theory}, money-pump-like (an interpretive gloss; no trading is formalized), and the something is a real-valued utility.
 
 % ---------------------------------------------------------------------
 \subsection{Contexts: a completeness theorem for ``true in the context at hand''}\label{sec:existence:contexts}
 
-The user's contexts (\Cref{sec:physics}) raise the question of what a coherent \emph{system} of contexts is about. We use a simple monotone multi-context calculus whose labelled formulas $i{:}\varphi$ are McCarthy's $\ist(i,\varphi)$ \citep{mccarthy1993notes}, and the local-models semantics of \citet{ghidini2001local}, simplified.
+What is a coherent \emph{system of contexts} (\Cref{sec:physics}) about? We use a monotone multi-context calculus whose labelled formulas $i{:}\varphi$ are McCarthy's $\ist(i,\varphi)$ \citep{mccarthy1993notes}, with a simplified local-models semantics \citep{ghidini2001local}.
 
-\begin{definition}[Multi-context systems and the calculus MC]\src{T6 Def 4.0, as repaired}\label{def:existence:mcs}
-Fix an index set $I$ of contexts. For each $i\in I$ fix a language $L_i$; a class $M_i$ of local models with satisfaction $\models_i$, such that the local consequence is $C_i=\Th_i\circ\Mod_i$ (e.g.\ classical propositional or first-order logic; for a \emph{learned} local logic $C_i$, take $M_i=\Fix(C_i)\setminus\{L_i\}$, the \emph{proper} closed theories, with $T\models_i\varphi$ iff $\varphi\in T$, which gives $\Th_i\circ\Mod_i=C_i$); local axioms $K_i\subseteq L_i$ (stipulations and imported background); and a local falsum $\bot_i$ with $\Mod_i(\bot_i)=\emptyset$ (for a learned logic: $C_i(\{\bot_i\})=L_i$). A \emph{bridge rule} is $b=(j_1{:}\varphi_1,\dots,j_n{:}\varphi_n\Rightarrow i{:}\psi)$ with $n\ge0$; there may be infinitely many. For a set $\Gamma$ of labelled premises, $\Der(\Gamma)=(T_i)_{i\in I}$ is the least family with $T_i\supseteq K_i\cup\Gamma_i$ (where $\Gamma_i=\{\varphi:i{:}\varphi\in\Gamma\}$), each $T_i$ $C_i$-closed (rule Loc), and closed under bridges (rule Br: if $\varphi_k\in T_{j_k}$ for all $k$ then $\psi\in T_i$). It exists because such families are closed under componentwise intersection. $\Gamma\der_{\MC}i{:}\varphi$ iff $\varphi\in T_i$.
-\end{definition}
-
-\begin{definition}[Belief-state semantics]\src{T6 \S4.1}\label{def:existence:lms}
-A \emph{chain} or \emph{belief state} is $c=(c_i)_{i\in I}$ with $c_i\subseteq M_i$, the local models context $i$ leaves open. $c\models i{:}\varphi$ iff every $m\in c_i$ satisfies $\varphi$ (so an empty $c_i$, an ``ill-posed'' context, satisfies everything). $c$ is a \emph{model} if $c\models i{:}\varphi$ for all $\varphi\in K_i$ and $c$ is \emph{bridge-compatible}: whenever $c\models j_k{:}\varphi_k$ for all premises of a bridge rule, $c\models i{:}\psi$. $\Gamma\models_{\LMS}i{:}\varphi$ iff every model $c\models\Gamma$ has $c\models i{:}\varphi$.
+\begin{definition}[Multi-context systems, MC, belief states]\src{T6 Def 4.0, as repaired; \S4.1}\label{def:existence:mcs}
+For each context $i\in I$ fix a language $L_i$, local models $M_i$ with $C_i=\Th_i\circ\Mod_i$ (e.g.\ classical logic; for a \emph{learned} logic $C_i$, the proper theories $M_i=\Fix(C_i)\setminus\{L_i\}$ with $T\models_i\varphi$ iff $\varphi\in T$), local axioms $K_i$, and a falsum $\bot_i$ with $\Mod_i(\bot_i)=\emptyset$. A \emph{bridge rule} is $j_1{:}\varphi_1,\dots,j_n{:}\varphi_n\Rightarrow i{:}\psi$. For labelled premises $\Gamma$, $\Der(\Gamma)=(T_i)_i$ is the least family with $T_i\supseteq K_i\cup\Gamma_i$, each $T_i$ $C_i$-closed, and closed under bridges; $\Gamma\der_{\MC}i{:}\varphi$ iff $\varphi\in T_i$. A \emph{belief state} is $c=(c_i)$, $c_i\subseteq M_i$, with $c\models i{:}\varphi$ iff every $m\in c_i$ satisfies $\varphi$. It is a \emph{model} if it satisfies every $K_i$ and is \emph{bridge-compatible} (if $c\models j_k{:}\varphi_k$ for all premises then $c\models i{:}\psi$); $\Gamma\models_{\LMS}i{:}\varphi$ iff every model of $\Gamma$ satisfies $i{:}\varphi$.
 \end{definition}
 
 \begin{theorem}[Soundness and completeness; the canonical chain]\src{T6 Thm 4.1}\label{thm:existence:mcs}
-Let $(T_i)=\Der(\Gamma)$ and $c^\Gamma_i=\Mod_i(T_i)$.
-\textup{(a)} $c^\Gamma$ is a model of the system and of $\Gamma$.
-\textup{(b)} Every model $c\models\Gamma$ has $c_i\subseteq c^\Gamma_i$ for all $i$: $c^\Gamma$ is the largest, least committal, model.
-\textup{(c)} $\Gamma\der_{\MC}i{:}\varphi$ iff $\Gamma\models_{\LMS}i{:}\varphi$.
+Let $c^\Gamma_i=\Mod_i(T_i)$ for $(T_i)=\Der(\Gamma)$. \textup{(a)} $c^\Gamma$ is a model of $\Gamma$. \textup{(b)} Every model $c$ of $\Gamma$ has $c_i\subseteq c^\Gamma_i$: $c^\Gamma$ is the least committal model. \textup{(c)} $\Gamma\der_{\MC}i{:}\varphi$ iff $\Gamma\models_{\LMS}i{:}\varphi$.
 \end{theorem}
 
-\begin{proof}[Proof idea]
-$c^\Gamma\models i{:}\varphi$ iff $\varphi\in\Th_i\Mod_i(T_i)=T_i$, which gives (a). For (b), the theories $U_i=\Th_i(c_i)$ of any model form a family that contains $K\cup\Gamma$, is locally closed and is bridge-closed, so it contains $\Der(\Gamma)$. (c) follows. Full proof in Appendix~\ref{app:existence:contexts}.
-\end{proof}
+\emph{Proof idea.} $c^\Gamma\models i{:}\varphi$ iff $\varphi\in\Th_i\Mod_i(T_i)=T_i$; and the theories $\Th_i(c_i)$ of any model form a closed, bridge-closed family containing $K\cup\Gamma$, hence contain $\Der(\Gamma)$. Appendix~\ref{app:existence:contexts}.
 
 \begin{corollary}[Context coherence iff existence]\src{T6 Cor 4.2}\label{cor:existence:contexts}
-Let $D\subseteq I$ be the \emph{designated} contexts (the actual context, observations, idealized contexts used for export; \Cref{def:setting:channels}). The system is \emph{$D$-coherent}, i.e.\ $\Gamma\nder_{\MC}i{:}\bot_i$ for every $i\in D$, iff there is a model $c\models\Gamma$ with $c_i\neq\emptyset$ for every $i\in D$.
+Let $D\subseteq I$ be the \emph{designated} contexts (\Cref{def:setting:channels}). $\Gamma\nder_{\MC}i{:}\bot_i$ for every $i\in D$ iff some model $c$ of $\Gamma$ has $c_i\neq\emptyset$ for every $i\in D$.
 \end{corollary}
 
 \begin{proof}
-$\bot_i\in T_i$ iff $c^\Gamma_i=\emptyset$, by \Cref{thm:existence:mcs}(a). If some model is nonempty on $D$, so is $c^\Gamma$, by \Cref{thm:existence:mcs}(b).
+$\bot_i\in T_i$ iff $c^\Gamma_i=\emptyset$ by \Cref{thm:existence:mcs}(a), and $c^\Gamma$ is the largest model by (b).
 \end{proof}
 
 \begin{remark}[Learned local logics]\src{T6 remark after Cor 4.2, added after verification}\label{rem:existence:learnedlocal}
-With the Lindenbaum semantics $M_i=\Fix(C_i)\setminus\{L_i\}$ the same proof gives, with no falsum at all, $T_i\neq L_i$ iff $c^\Gamma_i\neq\emptyset$. So for a learned local logic, \Cref{cor:existence:contexts} holds with $D$-coherence read as \emph{non-triviality} of $T_i$ at each $i\in D$. This coincides with $\bot_i\notin T_i$ exactly when $\bot_i$ is $C_i$-explosive; with no rules and $K_i=\{\bot_i\}$, $\bot_i$ is derivable yet $c^\Gamma_i\ni\{\bot_i\}$ is nonempty.
+With the semantics $M_i=\Fix(C_i)\setminus\{L_i\}$, $c^\Gamma_i\neq\emptyset$ iff $T_i\neq L_i$, so for learned local logics designated coherence must be read as \emph{non-triviality} of $T_i$; this coincides with $\bot_i\notin T_i$ exactly when $\bot_i$ is $C_i$-explosive.
 \end{remark}
 
-Non-designated contexts, such as suppositions under reductio, may have $c_i=\emptyset$: they are then about nothing, which is what a successful reductio shows. This is the designation discipline of \Cref{sec:coherence} as an existence theorem.
+Non-designated contexts, such as suppositions under reductio, may have $c_i=\emptyset$: they are about nothing, which is what a successful reductio shows. This is the designation discipline of \Cref{sec:coherence} as an existence theorem. The canonical chain is also the least equilibrium in the sense of \citet{brewka2007equilibria}; with non-monotone (default) bridges equilibria can fail to exist even when every context is coherent, so coherence alone does not guarantee existence there (\Cref{prop:existence:equilibrium}, Appendix~\ref{app:existence:contexts}).
 
-\begin{proposition}[Equilibria; non-monotone bridges]\src{T6 Props 4.3, 4.4, as repaired}\label{prop:existence:equilibrium}
-Call $S=(S_i)$ an \emph{equilibrium} if $S_i=C_i\big(K_i\cup\Gamma_i\cup\{\psi:(\cdots\Rightarrow i{:}\psi)\text{ has all premises in }S\}\big)$ for all $i$ (the monotone case of \citealt{brewka2007equilibria}).
-\textup{(a)} $\Der(\Gamma)$ is the least equilibrium, and there is an equilibrium consistent at every $i\in D$ iff the system is $D$-coherent.
-\textup{(b)} With non-monotone bridges this fails: if $K_i$ is consistent and $K_i\nder p$, the single bridge ``$i{:}p$ if not $i{:}p$'' (negation as failure) leaves a context that is coherent without its bridge, yet admits no equilibrium.
-\end{proposition}
-
-Proof in Appendix~\ref{app:existence:contexts}. So existence for default-style bridges needs an extra condition, such as stratification (sufficient, not necessary); coherence alone does not supply it.
-
-\paragraph{Rules of proof versus conditionals between worlds.} A \emph{world family} is $w=(w_i)$ with each $w_i\in M_i$ a \emph{single} local model satisfying $K_i$, and satisfying each bridge rule as a \emph{material conditional}: if $w_{j_k}\models\varphi_k$ for all $k$ then $w_i\models\psi$. Write $\models_W$ for consequence over world families.
+\paragraph{Rules of proof versus conditionals between worlds.} A \emph{world family} $w=(w_i)$ picks a \emph{single} model $w_i\in M_i$ of $K_i$ for each $i$ and satisfies each bridge as a \emph{material conditional}: if $w_{j_k}\models\varphi_k$ for all $k$ then $w_i\models\psi$. Write $\models_W$ for consequence over world families.
 
 \begin{theorem}[Belief states, not worlds]\src{T6 Thm 4.5, as repaired}\label{thm:existence:rules}
-\textup{(a)} ${\models_{\LMS}}\subseteq{\models_W}$: a world family is a model chain of singletons.
-\textup{(b)} The inclusion is strict. Let $K_j=\{p\vee q\}$, $K_i=\{\neg r\}$ (classical propositional local logics), with bridges $j{:}p\Rightarrow i{:}r$ and $j{:}q\Rightarrow i{:}r$. Then MC does not derive $i{:}\bot$, but there is no world family.
-\textup{(c)} For classical propositional local logics, $\models_W$ is classical consequence in the disjoint union of the local languages (atoms tagged by context, $i{:}\varphi\mapsto\varphi^{(i)}$), from the tagged local axioms $K_i^{(i)}$, the tagged premises $\Gamma$, and the bridge axioms $\bigwedge_k\varphi_k^{(j_k)}\to\psi^{(i)}$: the ``eternalist'' translation.
+\textup{(a)} ${\models_{\LMS}}\subseteq{\models_W}$. \textup{(b)} The inclusion is strict: with classical local logics, $K_j=\{p\vee q\}$, $K_i=\{\neg r\}$ and bridges $j{:}p\Rightarrow i{:}r$, $j{:}q\Rightarrow i{:}r$, MC does not derive $i{:}\bot$, but there is no world family. \textup{(c)} For classical propositional local logics, $\models_W$ is classical consequence in the disjoint union of the local languages from the tagged axioms $K_i^{(i)}$, the tagged premises and the bridge axioms $\bigwedge_k\varphi_k^{(j_k)}\to\psi^{(i)}$ (the ``eternalist'' translation).
 \end{theorem}
 
 \begin{proof}
-(a) Check the definitions. (b) $T_j=\Cn_2(p\vee q)$ contains neither $p$ nor $q$, so no bridge fires and $c^\Gamma_i=\Mod(\neg r)\neq\emptyset$. But any $w_j$ satisfies $p$ or $q$, so $w_i\models r$, contradicting $\neg r$. (c) World families are exactly the Boolean valuations of the tagged language satisfying the tagged axioms and bridge axioms; apply classical completeness.
+(a) A world family is a model chain of singletons. (b) $T_j=\Cn_2(p\vee q)$ contains neither $p$ nor $q$, so no bridge fires and $c^\Gamma_i=\Mod(\neg r)\neq\emptyset$; but any $w_j$ satisfies $p$ or $q$, forcing $w_i\models r$. (c) World families are the Boolean valuations of the tagged language satisfying the tagged axioms.
 \end{proof}
 
-This is the context-logic instance of a standard distinction, a rule of proof versus the corresponding conditional (global versus local consequence): in belief-state semantics $c\models j{:}\varphi$ is a box over $c_j$, and (b) is the failure of $\Box(p\vee q)\models\Box p\vee\Box q$. It is also why \citet{ghidini2001local} use \emph{sets} of local models. What is new is its use as a criterion for physics bridges. \texttt{mcs\_completeness.py} confirms \Cref{thm:existence:mcs}(c) and \Cref{cor:existence:contexts} on 400 random three-context systems, and finds 2{,}348 (context, formula) pairs where world-family entailment strictly exceeds belief-state entailment.
+This is the context-logic instance of a standard distinction, rule of proof versus conditional (global versus local consequence): $c\models j{:}\varphi$ is a box over $c_j$, and (b) is the failure of $\Box(p\vee q)\models\Box p\vee\Box q$; it is why \citet{ghidini2001local} use \emph{sets} of local models. New is only its use as a criterion for physics bridges. \texttt{mcs\_completeness.py} confirms \Cref{thm:existence:mcs}(c) on 400 random three-context systems and finds 2{,}348 pairs where $\models_W$ strictly exceeds $\models_{\LMS}$.
 
-\paragraph{Reading.} MC treats a bridge as a rule of proof: ``export what context $j$ \emph{establishes}''. The tagged theory treats it as a conditional between worlds: ``whatever world $j$ is about, if $\varphi$ holds there then $\psi$ holds in $i$'s world''. Only the first is right for idealized contexts. A physics bridge (``if the idealized model establishes $Q=q$, then in the world $Q\approx q\pm\varepsilon$'', \Cref{sec:physics:export}) is certified for claims the idealization establishes, not for case splits over the idealization's undetermined possibilities. Under the conditional reading, an idealization that settles only $p\vee q$ would export $r$ by reasoning by cases over idealized worlds, none of which is actual. So \emph{a context system makes sense iff there is something it could be about} holds with belief states as the somethings (\Cref{cor:existence:contexts}), and fails with worlds as the somethings (\Cref{thm:existence:rules}(b)).
+\paragraph{Reading.} MC reads a bridge as ``export what context $j$ \emph{establishes}''; the eternalist translation reads it as ``whatever world $j$ is about, if $\varphi$ holds there, $\psi$ holds in $i$'s world''. Only the first is right for idealizations: a physics bridge (``if the idealized model establishes $Q=q$, then in the world $Q\approx q\pm\varepsilon$'', \Cref{sec:physics:export}) is certified for what the idealization establishes, not for case splits over its undetermined possibilities, none of which is actual. So \emph{a context system makes sense iff there is something it could be about} holds with belief states as the somethings (\Cref{cor:existence:contexts}) and fails with worlds (\Cref{thm:existence:rules}(b)).
 
-\paragraph{Local coherence versus a global world.} The user worries that many frames ``needn't be easily reconcilable'' (L10 \S1.3). Even under the world reading this has a precise form.
+\paragraph{Local coherence versus a global world.} The user worries that frames ``needn't be easily reconcilable'' (L10 \S1.3). Even under the world reading this has a precise form.
 
 \begin{theorem}[Local-to-global on trees]\src{T6 Thm 4.6}\label{thm:existence:tree}
-Let the contexts be the vertices of a finite tree; let context $i$ be classical propositional over an atom set $A_i$ with a consistent closed theory $T_i$; assume \emph{running intersection} (for each atom $a$, $\{i:a\in A_i\}$ is connected) and \emph{mutual conservativity on edges} ($T_i\cap L(A_i\cap A_j)=T_j\cap L(A_i\cap A_j)$ for adjacent $i,j$). Then every model of every $T_i$ extends to a global valuation satisfying all $T_j$; in particular $\bigcup_iT_i$ is consistent.
+Let the contexts be the vertices of a finite tree, context $i$ classical propositional over atoms $A_i$ with a consistent closed theory $T_i$. Assume running intersection ($\{i:a\in A_i\}$ is connected for each atom $a$) and mutual conservativity on edges ($T_i\cap L(A_i\cap A_j)=T_j\cap L(A_i\cap A_j)$). Then every model of every $T_i$ extends to a valuation satisfying all $T_j$.
 \end{theorem}
 
-The proof (Appendix~\ref{app:existence:contexts}) is the propositional join-tree, or iterated Robinson-consistency, argument (cf.\ \citealt{beeri1983desirability}): a projection lemma turns conservativity into agreement of model sets on overlaps, and models are glued breadth-first.
+This is the join-tree, or iterated Robinson-consistency, argument (cf.\ \citealt{beeri1983desirability}): conservativity makes model sets agree on overlaps, and models glue breadth-first (Appendix~\ref{app:existence:contexts}).
 
 \begin{proposition}[The frustrated triangle]\src{T6 Prop 4.7}\label{prop:existence:triangle}
-On atoms $\{a,b\},\{b,c\},\{c,a\}$ let $T_{ab}=\Cn_2(a\leftrightarrow\neg b)$, $T_{bc}=\Cn_2(b\leftrightarrow\neg c)$, $T_{ca}=\Cn_2(c\leftrightarrow\neg a)$. Each theory is consistent, each pair is mutually conservative on its shared atom (both contain only tautologies in it), and the union is inconsistent. Probabilistically, the pair marginals uniform on $\{01,10\}$ agree on every single-variable marginal, but no joint distribution has them.
+On atoms $\{a,b\},\{b,c\},\{c,a\}$ let $T_{ab}=\Cn_2(a\leftrightarrow\neg b)$, $T_{bc}=\Cn_2(b\leftrightarrow\neg c)$, $T_{ca}=\Cn_2(c\leftrightarrow\neg a)$. Each is consistent, each pair is mutually conservative on its shared atom, and the union is inconsistent; likewise pair marginals uniform on $\{01,10\}$ agree on all single marginals but have no joint distribution.
 \end{proposition}
 
 \begin{proof}
-An odd cycle of negations: $a\leftrightarrow\neg b\leftrightarrow c\leftrightarrow\neg a$. A joint distribution would be supported on valuations with $a\neq b\neq c\neq a$, of which there are none.
+An odd cycle of negations has no Boolean solution; each theory has only tautologies in a single atom.
 \end{proof}
 
-This is Specker's parable in logical form \citep{specker1960logik}, and the simplest instance of what \citet{abramsky2011sheaf} call \emph{contextuality}: local sections that agree on overlaps but admit no global section. Acyclicity of the cover is exactly what rules this out \citep{beeri1983desirability}.
-
-\paragraph{Reading.} An olympiad solution's contexts need not jointly describe one world, nor even be reconcilable into one. \Cref{cor:existence:contexts} guarantees a family of local belief states, nonempty at every designated context, whenever the designated contexts are coherent; that is the right something for a context system (\Cref{rem:physics:existence}). Demanding one world for all contexts at once is strictly stronger and cover-dependent, and holds automatically only on tree-like covers with conservative overlaps.
+This is Specker's parable in logical form \citep{specker1960logik} and the simplest instance of \emph{contextuality}: local sections agreeing on overlaps with no global section \citep{abramsky2011sheaf}. Acyclicity of the cover is what rules it out \citep{beeri1983desirability}. So an olympiad solution's contexts need not describe one world, nor be reconcilable into one. What coherence of the designated contexts guarantees is local belief states, nonempty where designated (\Cref{cor:existence:contexts}; cf.\ \Cref{rem:physics:existence}); one world for all contexts is strictly stronger and cover-dependent.
 
 \begin{definition}[True in the context at hand]\src{T6 Def 4.8, as repaired}\label{def:existence:truecontext}
-Given an MC system with designated set $D\ni@$ and accepted premises $\Gamma$: $\varphi$ is \emph{true in context $c$} iff $\Gamma\der_{\MC}c{:}\varphi$, equivalently (\Cref{thm:existence:mcs}) $\varphi$ holds in every local model that $c$'s canonical belief state leaves open. $\varphi$ is \emph{true enough in $c$ for a world claim $\varepsilon$} iff (i) $\varphi$ is true in $c$; (ii) some bridge $c{:}\varphi\Rightarrow@{:}\varepsilon$, possibly with side conditions $\sigma$ at $@$, is in the system and its side conditions hold in the actual world (for a checker: $\Gamma\der_{\MC}@{:}\sigma$); and (iii) that bridge is \emph{sound}: whenever the canonical state of $c$ establishes $\varphi$ and the side conditions hold in the actual world, $\varepsilon$ holds in the actual world.
+$\varphi$ is \emph{true in context $c$} iff $\Gamma\der_{\MC}c{:}\varphi$, i.e.\ (\Cref{thm:existence:mcs}) $\varphi$ holds in every local model that $c$'s canonical belief state leaves open. $\varphi$ is \emph{true enough in $c$ for a world claim $\varepsilon$} iff (i) $\varphi$ is true in $c$; (ii) a bridge $c{:}\varphi\Rightarrow@{:}\varepsilon$, possibly with side conditions $\sigma$, is in the system and $\sigma$ holds in the actual world (for a checker, $\Gamma\der_{\MC}@{:}\sigma$); and (iii) that bridge is \emph{sound}: whenever $c$ establishes $\varphi$ and $\sigma$ holds in the actual world, so does $\varepsilon$.
 \end{definition}
 
-This answers the user's ``verification from truth \dots\ but wtf is that???'' with a semantics plus a completeness theorem: truth in the context at hand is supervaluational truth over the context's admissible local models, and a checker that accepts exactly MC-derivations accepts exactly the claims true in this sense (compare \Cref{thm:physics:superval}). What it does not buy is the justification of bridges: bridge soundness is world-relative, and is certified by stability arguments or world feedback (\Cref{sec:physics:export}), never by coherence, which can only demand $c^\Gamma_i\neq\emptyset$ at designated contexts. The context-tree calculus of the literature memo L7 (\S8), with stipulations, imports, discharge and side-conditioned exports, consists of monotone bridge rules, so it is an MC system; \Cref{thm:existence:mcs} is its completeness theorem when bridges are read as compatibility constraints, and this semantics agrees with L7's own, in which bridges are required to be sound, when every step and export instance is sound \status{proof sketch; Appendix~\ref{app:existence:contexts}}.
+This answers the user's ``verification from truth \dots\ but wtf is that???'': truth in the context at hand is supervaluational truth over the context's admissible local models, and a checker accepting exactly MC-derivations accepts exactly what is true in this sense (compare \Cref{thm:physics:superval}). It does not justify bridges: bridge soundness is world-relative and is certified by stability arguments or world feedback (\Cref{sec:physics:export}), never by coherence, which can only demand $c^\Gamma_i\neq\emptyset$ at designated contexts. The context-tree calculus of the literature memo L7 is an MC system, and its own semantics agrees with ours when every step and export instance is sound \status{proof sketch; Appendix~\ref{app:existence:contexts}}.
 
 % ---------------------------------------------------------------------
 \subsection{What coherence of a learned calculus buys, and what pins the model down}\label{sec:existence:learned}
 
-Let $R$ be a learned set of rule schemas, $C_R$ the least structural finitary consequence operation containing $R$ (single-conclusion), and $\langle R\rangle$ the least structural Scott relation containing it (bilateral). The designated contexts $A\in\Ac$ are certified $R$-coherent: $\bot\notin C_R(A)$, or the position $\pos AD$ is $\langle R\rangle$-coherent. As in \Cref{sec:coherence}, this is all the learner knows.
+Let $R$ be a learned set of rule schemas, $C_R$ the least structural finitary consequence operation containing it, and $\langle R\rangle$ the least structural Scott relation. The designated contexts $A\in\Ac$ are certified coherent: $\bot\notin C_R(A)$, or $\pos AD$ is $\langle R\rangle$-coherent. As in \Cref{sec:coherence}, this is all the learner knows.
 
 \begin{theorem}[What coherence buys]\src{T6 Thm 5.1}\label{thm:existence:buys}
-For each designated $A$:
-\textup{(a)} there is a $C_R$-theory $T\supseteq A$ maximal among theories omitting $\bot$;
-\textup{(b)} the \emph{Lindenbaum matrix} $\langle\Fm,T\rangle$ validates every rule of $C_R$ under every assignment, and the identity assignment designates all of $A$ and not $\bot$ \citep{los1958remarks,wojcicki1988theory};
-\textup{(c)} bilaterally, every designated coherent position $\pos AD$ is realized by some $v\in\Val\langle R\rangle$, and $L_v$ is a matrix model of $\langle R\rangle$.
+For each designated $A$: \textup{(a)} some $C_R$-theory $T\supseteq A$ is maximal among theories omitting $\bot$; \textup{(b)} the \emph{Lindenbaum matrix} $\langle\Fm,T\rangle$ validates every rule of $C_R$ under every assignment, and the identity assignment designates all of $A$ and not $\bot$ \citep{los1958remarks,wojcicki1988theory}; \textup{(c)} bilaterally, each designated coherent $\pos AD$ is realized by some $v\in\Val\langle R\rangle$, and $L_v$ is a matrix model of $\langle R\rangle$.
 \end{theorem}
 
 \begin{proof}
-(a) is \Cref{thm:existence:points}(a) for the closed set $C_R(A)$ and $\sigma=\bot$. (b) $\langle\Fm,T\rangle$ validates $\Gamma\step\varphi$ iff $\sigma\Gamma\subseteq T$ implies $\sigma\varphi\in T$ for every substitution $\sigma$; if $\varphi\in C_R(\Gamma)$, structurality gives $\sigma\varphi\in C_R(\sigma\Gamma)\subseteq C_R(T)=T$. (c) is \Cref{thm:existence:bilindenbaum,thm:existence:structural}.
+(a) is \Cref{thm:existence:points}(a). (b) If $\varphi\in C_R(\Gamma)$ and $\sigma\Gamma\subseteq T$, structurality gives $\sigma\varphi\in C_R(\sigma\Gamma)\subseteq C_R(T)=T$. (c) is \Cref{thm:existence:bilindenbaum,thm:existence:structural}.
 \end{proof}
 
-The proof of (b) works for any $C_R$-theory $T\supseteq A$ omitting $\bot$, e.g.\ $C_R(A)$; maximality matters only for the reductions below. So \emph{if a learned mode of talking is coherent on a context, there is something it is talking about there}: a model of the learned rules in which the context's claims hold. But the model's universe \emph{is the language}. This is the formal content of the user's worry that the something may exist only ``in the same sense that there is a `proof' of the G\"odel sentence''. When is the syntactic something the intended one?
-
-\begin{definition}[Leibniz congruence and reduction]\src{T6 \S5.2}\label{def:existence:leibniz}
-For a matrix $\langle\mathbf A,D\rangle$, the \emph{Leibniz congruence} $\Omega_{\mathbf A}(D)$ is the largest congruence $\theta$ of $\mathbf A$ compatible with $D$ ($a\,\theta\,b$ and $a\in D$ imply $b\in D$); it exists because joins of compatible congruences are compatible. The \emph{reduction} is $\langle\mathbf A/\Omega,D/\Omega\rangle$: identify elements that no formula context can tell apart \citep{blok1989algebraizable,font2016abstract}. For a theory $T$, write $\Omega(T)=\Omega_{\Fm}(T)$.
-\end{definition}
+(The proof of (b) works for any $C_R$-theory $T\supseteq A$ omitting $\bot$.) So \emph{if a learned mode of talking is coherent on a context, there is something it is talking about there}. But the model's universe \emph{is the language}: the formal content of the user's worry about the ``proof'' of the G\"odel sentence. When is the syntactic something the intended one? For a matrix $\langle\mathbf A,D\rangle$ the \emph{Leibniz congruence} $\Omega_{\mathbf A}(D)$ is the largest congruence compatible with $D$ ($a\,\theta\,b$ and $a\in D$ imply $b\in D$), and the \emph{reduction} $\langle\mathbf A/\Omega,D/\Omega\rangle$ identifies elements no formula context can tell apart \citep{blok1989algebraizable,font2016abstract}; write $\Omega(T)$ for $\Omega_{\Fm}(T)$.
 
 \begin{theorem}[The syntactic model collapses to the intended one]\src{T6 Thm 5.2}\label{thm:existence:leibniz}
-\textup{(a)} Let $h:\Fm\to\mathbf A$ be a \emph{surjective} homomorphism (a generating valuation) and $T=h^{-1}(D)$. Then $\langle\Fm/\Omega(T),T/\Omega(T)\rangle\cong\langle\mathbf A/\Omega_{\mathbf A}(D),D/\Omega_{\mathbf A}(D)\rangle$; in particular, if $\langle\mathbf A,D\rangle$ is reduced, the reduced Lindenbaum matrix of $T$ \emph{is} $\langle\mathbf A,D\rangle$.
-\textup{(b)} Every maximal consistent theory of $\CPC$ has reduced Lindenbaum matrix $\cong\langle\twoM,\{1\}\rangle$.
+\textup{(a)} If $h:\Fm\to\mathbf A$ is a \emph{surjective} homomorphism and $T=h^{-1}(D)$, then $\langle\Fm/\Omega(T),T/\Omega(T)\rangle\cong\langle\mathbf A/\Omega_{\mathbf A}(D),D/\Omega_{\mathbf A}(D)\rangle$; if $\langle\mathbf A,D\rangle$ is reduced, the reduced Lindenbaum matrix of $T$ \emph{is} $\langle\mathbf A,D\rangle$. \textup{(b)} Every maximal consistent theory of $\CPC$ has reduced Lindenbaum matrix $\cong\langle\twoM,\{1\}\rangle$.
 \end{theorem}
 
-\begin{proof}[Proof idea]
-(a) One shows $\Omega(T)=h^{-1}(\Omega_{\mathbf A}D)$: the preimage is compatible with $T$, and any congruence compatible with $T$, joined with $\ker h$, pushes forward along the surjection $h$ to a congruence compatible with $D$. Then $[a]\mapsto[ha]$ is the isomorphism. (b) A maximal consistent theory is $v^{-1}(1)$ for a Boolean homomorphism $v$, which is onto $\twoM$, and $\langle\twoM,\{1\}\rangle$ is reduced. Full proof in Appendix~\ref{app:existence:learned}.
-\end{proof}
-
-Surjectivity matters: in general one gets the reduction of the \emph{generated} submatrix. For example $h(p)=a$ in the four-element Heyting chain generates a copy of the three-element chain (\texttt{repair\_checks.py}).
+\emph{Proof idea.} $\Omega(T)=h^{-1}(\Omega_{\mathbf A}D)$, because a congruence compatible with $T$, joined with $\ker h$, pushes forward along $h$ to one compatible with $D$ (Appendix~\ref{app:existence:learned}). Surjectivity matters: in general one gets the reduction of the \emph{generated} submatrix.
 
 \begin{proposition}[What the points of a finite-matrix logic talk about]\src{T6 Prop 5.3, as repaired}\label{prop:existence:finitematrix}
-Let $C$ be the consequence of a single finite matrix $\langle\mathbf A,D\rangle$ (such $C$ is finitary). Every point $P$ of $C$ has reduced Lindenbaum matrix isomorphic to the reduction of $\langle h(\Fm),D\cap h(\Fm)\rangle$ for some homomorphism $h$: the reduction of a generated submatrix, a strict homomorphic image of a submatrix and not necessarily itself a submatrix. Up to isomorphism there are finitely many.
+Let $C$ be the consequence of a finite matrix $\langle\mathbf A,D\rangle$. Every point of $C$ has reduced Lindenbaum matrix isomorphic to the reduction of a generated submatrix $\langle h(\Fm),D\cap h(\Fm)\rangle$ (a strict homomorphic image of a submatrix, not necessarily a submatrix); up to isomorphism there are finitely many.
 \end{proposition}
 
 \begin{proof}
-$C$ is sound and strongly complete for the frame whose models are homomorphisms $h:\Fm\to\mathbf A$, so by \Cref{thm:existence:points}(b) every point is $h^{-1}(D)$ for some $h$. Apply \Cref{thm:existence:leibniz}(a) to $h$ onto its image. Finiteness: $\mathbf A$ has finitely many subalgebras, each with finitely many quotients.
+$C$ is finitary, sound and strongly complete for the homomorphisms $h:\Fm\to\mathbf A$, so every point is some $h^{-1}(D)$ by \Cref{thm:existence:points}(b); apply \Cref{thm:existence:leibniz}(a) to $h$ onto its image.
 \end{proof}
 
-So for classical logic everything a coherent position can be about is, after identifying indiscernibles, the two truth values: every point of $\CPC$ is maximal (\Cref{lem:existence:cpcpoints}), and maximal theories are Boolean (\Cref{thm:existence:leibniz}(b)). The reason is \emph{not} Post-completeness alone: $\IPC$ is not Post-complete, yet every maximal $\IPC$-consistent theory is a maximal classical theory (\Cref{prop:existence:ipc}) and so reduces to $\twoM$. What can differ between calculi is the non-maximal points.
+So for classical logic everything a coherent position can be about is, after identifying indiscernibles, the two truth values, because every point of $\CPC$ is maximal (\Cref{lem:existence:cpcpoints}) and maximal theories are Boolean. The reason is \emph{not} Post-completeness: $\IPC$ is not Post-complete, yet its maximal consistent theories are classical (\Cref{prop:existence:ipc}) and reduce to $\twoM$. What differs between calculi is the non-maximal points.
 
-\begin{example}[The Kripkensteinian residue as a set of things talked about]\src{T6 Ex 5.4}\label{ex:existence:residue}
-\textup{(i)} Let $h:\Fm\to\HthreeA$ map onto the three-element Heyting chain $0<\frac12<1$, with $h(p)=\frac12$, and $T=h^{-1}(1)$. Then $T$ is a point of $\IPC$, maximal among theories omitting $p$, but not maximal, since $h(p\vee\neg p)=\frac12$; and $\langle\HthreeA,\{1\}\rangle$ is reduced. So this coherent intuitionistic position talks about the three-element chain, while maximal positions talk about $\twoM$: different points of one coherent logic are about genuinely different structures.
-\textup{(ii)} First-order logic with equality plus the fallacious schema $\forall x\exists y\,R\step\exists y\forall x\,R$ is coherent (\Cref{ex:coherence:survivors}), and its models are exactly the one-element structures. What the learned fallacy is ``about'' is the singleton world; a designated context with two distinct objects kills it.
+\begin{example}[The residue as a set of things talked about]\src{T6 Ex 5.4}\label{ex:existence:residue}
+\textup{(i)} Map $\Fm$ onto the three-element Heyting chain $\HthreeA=\{0<\frac12<1\}$ with $h(p)=\frac12$. Then $T=h^{-1}(1)$ is a non-maximal point of $\IPC$ (maximal among theories omitting $p$) whose reduced matrix is $\langle\HthreeA,\{1\}\rangle$: one coherent intuitionistic position talks about the three-element chain while the maximal ones talk about $\twoM$. \textup{(ii)} First-order logic with equality plus the fallacy $\forall x\exists y\,R\step\exists y\forall x\,R$ is coherent (\Cref{ex:coherence:survivors}); its models are exactly the one-element structures, which is what the learned fallacy is ``about''.
 \end{example}
 
-In general, for multiple-conclusion hypotheses, \Cref{thm:existence:bilindenbaum,thm:existence:duality,thm:existence:structural} put the residue $\Alt(\hstar,\Ac)$ of coherent uniform alternatives (\Cref{thm:coherence:residue}) in exact correspondence with the closed, substitution-invariant sets $V\subseteq\Val(\hstar)$ that realize every designated position. \emph{Non-identifiability of meaning is non-uniqueness of the thing talked about.}
+In general, for multiple-conclusion hypotheses, \Cref{thm:existence:duality,thm:existence:structural} put the residue $\Alt(\hstar,\Ac)$ of coherent uniform alternatives (\Cref{thm:coherence:residue}) in exact correspondence with the closed, substitution-invariant $V\subseteq\Val(\hstar)$ realizing every designated position. \emph{Non-identifiability of meaning is non-uniqueness of the thing talked about.}
 
-\paragraph{First-order term models.} For a consistent first-order theory the Lindenbaum construction becomes Henkin's \citep{henkin1949completeness}: add witness constants, extend to a complete Henkin theory, and take closed terms modulo provable equality, which is the Leibniz reduction. The user's note \texttt{ai/DLK/logic.md} argues that ``any assignment of truth-values to sentences which does not violate inference rules can be extended to a full model (this is cool because a model also needs to assign actual functions and objects and stuff \dots)''. This is correct for complete consistent assignments: the objects are classes of witness terms and the functions are term formation. This answers his ``can we think about this in model-theoretic terms? i.e.\ ML model has a model attached to it?''. The caveat: if the assignment makes $\exists x\,\varphi(x)$ true but $\varphi(c)$ false for every \emph{named} $c$, the model must contain unnamed objects; that is the Gaifman failure of \Cref{cor:existence:inductors}.
+\paragraph{First-order term models.} For a consistent first-order theory, the Lindenbaum construction is Henkin's \citep{henkin1949completeness}: witnesses, a complete Henkin theory, closed terms modulo provable equality (the Leibniz reduction). The user's DLK note says that ``any assignment of truth-values to sentences which does not violate inference rules can be extended to a full model (this is cool because a model also needs to assign actual functions and objects \dots)''. This is correct for complete consistent assignments: the objects are classes of witness terms. If the assignment makes $\exists x\,\varphi(x)$ true and every named instance false, the model needs unnamed objects, the Gaifman failure of \Cref{cor:existence:inductors}.
 
-\begin{theorem}[Prime models: what a complete arithmetic talks about]\src{T6 Thm 5.5}\status{known}\label{thm:existence:prime}
-For every complete consistent $T\supseteq\PA$, the parameter-free definable elements of any model of $T$ form an elementary submodel $\mathcal K(T)$, the \emph{prime model} of $T$: unique up to isomorphism and elementarily embeddable in every model of $T$ \citep{kaye1991models}. $\mathcal K(\Th(\N))=\N$. If $\neg\Con(\PA)\in T$, then $\mathcal K(T)$ is non-standard.
+\begin{theorem}[Prime models]\src{T6 Thm 5.5}\status{known}\label{thm:existence:prime}
+For complete consistent $T\supseteq\PA$ the definable elements of any model of $T$ form the prime model $\mathcal K(T)$, unique up to isomorphism and elementarily embeddable in every model of $T$ \citep{kaye1991models}; $\mathcal K(\Th(\N))=\N$; if $\neg\Con(\PA)\in T$, $\mathcal K(T)$ is non-standard.
 \end{theorem}
 
-The first claims use that $\PA$ has definable Skolem functions (the least-number principle). For the last: ``the least code of a $\PA$-proof of $0=1$'' is definable, while $T$ refutes each standard instance $\Prf(\nml n,\ulcorner0{=}1\urcorner)$, whose negation is a true $\Delta_0$ sentence (as $\PA$ is consistent) and hence provable in $\RobQ\subseteq T$. This is the most precise version of the user's footnote: the complete coherent theory has a \emph{canonical} thing it talks about, exactly the objects it can define, and the ``proof'' is one of them, a definable non-standard number.
+For the last clause: ``the least code of a $\PA$-proof of $0=1$'' is definable, while $T$ refutes each standard instance $\Prf(\nml n,\ulcorner0{=}1\urcorner)$, whose negation is a true $\Delta_0$ sentence and so provable in $\RobQ\subseteq T$. This is the precise form of the user's footnote: a complete coherent theory has a canonical thing it talks about, the objects it can define, and the ``proof'' is one of them, a definable non-standard number.
 
-\paragraph{Two layers of non-standardness.} \emph{Layer (i), coherent but false:} $\PA+\neg\Con(\PA)$ is consistent and false, even $\Pi_1$-sound (L4 Prop~3.1); this is finitary, one sentence, and comes from incompleteness of the calculus relative to the intended model (coherence is not truth, \Cref{thm:coherence:popper}(b)). \emph{Layer (ii), true but not categorical:} $\Th(\N)$ itself has non-standard models; this is a limit phenomenon from compactness. \Cref{tab:existence:pinning} separates the levels of pinning.
-
-\begin{table}[t]
-\centering\small
-\begin{tabularx}{\textwidth}{@{}llXX@{}}
-\toprule
-level & name & theories with model class $\mathcal M$ & logics and learned calculi\\
-\midrule
-P0 & coherent & $\mathcal M\neq\emptyset$ & $\Val\neq\emptyset$ on designated contexts\\
-P1 & complete & all models elementarily equivalent & Post-complete (\Cref{thm:coherence:post})\\
-P2 & $\kappa$-categorical & unique model of size $\kappa$ (e.g.\ dense linear orders, $\aleph_0$) & ---\\
-P3 & categorical & unique model up to isomorphism & all points reduce to one matrix (\Cref{thm:existence:leibniz,prop:existence:finitematrix})\\
-\bottomrule
-\end{tabularx}
-\caption{Levels of pinning for a mode of talking \src{T6 \S5.4, as repaired}. Level P3 for calculi is a condition on \emph{all points}, not on Post-completeness.}
-\label{tab:existence:pinning}
-\end{table}
+\paragraph{Two layers of non-standardness.} \emph{(i) Coherent but false}: $\PA+\neg\Con(\PA)$ is consistent, false, even $\Pi_1$-sound (L4 Prop~3.1); this is finitary and comes from incompleteness (coherence is not truth, \Cref{thm:coherence:popper}(b)). \emph{(ii) True but not categorical}: $\Th(\N)$ itself has non-standard models, a limit phenomenon from compactness. Pinning comes in levels: P0 coherent (a model exists); P1 complete (all models elementarily equivalent; for logics, Post-complete, \Cref{thm:coherence:post}); P2 $\kappa$-categorical; P3 categorical (unique model up to isomorphism; for calculi, all \emph{points} reduce to one matrix, \Cref{prop:existence:finitematrix}).
 
 \begin{theorem}[Compactness barrier]\src{T6 Thm 5.6}\status{known}\label{thm:existence:compactness}
-A first-order theory with an infinite model has models of every infinite cardinality $\ge|L|$ (L\"owenheim--Skolem--Tarski). So no first-order mode of talking reaches P3 for an infinite structure.
+A first-order theory with an infinite model has models of every infinite cardinality $\ge|L|$ (L\"owenheim--Skolem--Tarski), so no first-order mode of talking reaches P3 for an infinite structure.
 \end{theorem}
 
-By contrast, every finite structure in a finite language is characterized up to isomorphism by a single first-order sentence. In the user's icosahedron example (\texttt{math is a mere string game iff everything is.md}), after the physical icosahedron explodes the mode of talking stays coherent and the thing talked about is still pinned up to isomorphism. The non-standard caveat bites only for infinite objects.
+Every finite structure in a finite language, by contrast, is characterized up to isomorphism by one sentence. In the user's icosahedron example (\texttt{math is a mere string game iff everything is.md}), after the physical icosahedron explodes the mode of talking stays coherent and its object is still pinned up to isomorphism; the caveat bites only for infinite objects.
 
 \begin{theorem}[Computability barrier]\src{T6 Thm 5.7, as repaired}\label{thm:existence:computability}
-Let $S$ be a decidable set of finite syntactic objects and $K$ an intended class of models. Suppose some calculus has an r.e.\ set of incoherent finite sets, and a finite $X\subseteq S$ is incoherent iff $X$ has no model in $K$. Then $\{X\text{ finite}:X\text{ has a }K\text{-model}\}$ is co-r.e.\ ($\Pi_1$). Consequently such a calculus is impossible for:
-\textup{(a)} sentences of arithmetic with $K=\{\N\}$, since $\{X:\N\models\bigwedge X\}$ is computably equivalent to $\Th(\N)$, which is not even arithmetical;
-\textup{(b)} Diophantine equations with $K=\{\mathbb Z\}$, since solvability is $\Sigma_1$-complete \citep{matiyasevich1970enumerable};
-\textup{(c)} first-order sentences in a vocabulary with at least one binary relation symbol, with $K$ the finite structures, since finite satisfiability is $\Sigma_1$ and undecidable \citep{trakhtenbrot1950impossibility}. (For purely monadic vocabularies finite satisfiability is decidable and there is no barrier.)
-\textup{(d)} By contrast, for first-order sentences with $K$ all structures, satisfiability is $\Pi_1$, consistent with G\"odel's theorem; for polynomial equations with $K=\bar k^n$ it is decidable, consistent with the Nullstellensatz.
+Let $S$ be a decidable set of finite syntactic objects and $K$ an intended class of models. If some calculus has an r.e.\ set of incoherent finite sets, and a finite $X\subseteq S$ is incoherent iff it has no model in $K$, then $\{X:X\text{ has a }K\text{-model}\}$ is co-r.e.\ ($\Pi_1$). Consequently no such calculus exists for \textup{(a)} arithmetic with $K=\{\N\}$ ($\Th(\N)$ is not arithmetical); \textup{(b)} Diophantine equations with $K=\{\mathbb Z\}$ (solvability is $\Sigma_1$-complete, \citealt{matiyasevich1970enumerable}); \textup{(c)} first-order sentences in a vocabulary with a binary relation symbol, with $K$ the finite structures (finite satisfiability is $\Sigma_1$ and undecidable, \citealt{trakhtenbrot1950impossibility}; for monadic vocabularies it is decidable). \textup{(d)} For $K$ all structures, satisfiability is $\Pi_1$, as G\"odel's theorem requires; for polynomial equations over $\bar k$ it is decidable.
 \end{theorem}
 
 \begin{proof}
-``No $K$-model'' coincides with ``incoherent'', which is r.e., so its complement is co-r.e. In (b) and (c) the set is also $\Sigma_1$, and a set that is both $\Sigma_1$ and $\Pi_1$ is decidable, contradicting the cited undecidability results. In (a), $\Th(\N)$ would be $\Pi_1$, contradicting Tarski's undefinability theorem (e.g.\ \citealt{boolos2007computability}).
+``No $K$-model'' is ``incoherent'', which is r.e. In (b), (c) the set is also $\Sigma_1$, hence would be decidable; in (a) $\Th(\N)$ would be $\Pi_1$, contradicting Tarski's undefinability theorem (e.g.\ \citealt{boolos2007computability}).
 \end{proof}
 
-This is the textbook argument ``a complete r.e.\ calculus makes semantic consequence r.e.'', the one behind ``no complete r.e.\ axiomatization of $\Th(\N)$'' and ``no complete proof system for finite validity''. Its framing is what is new: \emph{for any computable notion of coherence, ``coherent iff there is something it could be talking about'' can hold only if having such a something is a $\Pi_1$ property.} ``Having a model of any kind'' is $\Pi_1$, so G\"odel's theorem is possible; ``having the standard model'', ``having an integer solution'' and ``having a finite model'' are not, so no computable coherence notion matches them. The proposition is true exactly to the extent that ``something'' is construed liberally.
+This is the textbook argument ``a complete r.e.\ calculus makes semantic consequence r.e.''; what is new is the framing. \emph{For any computable notion of coherence, ``coherent iff there is something it could be talking about'' can hold only if having such a something is a $\Pi_1$ property.} ``Having some model'' is $\Pi_1$; ``having the standard model'', ``having an integer solution'' and ``having a finite model'' are not. The proposition is true exactly to the extent that ``something'' is construed liberally.
 
 \begin{proposition}[Anchoring pins exactly the definable vocabulary]\src{T6 Prop 5.8, reading as repaired}\label{prop:existence:beth}
-Let $L_o\subseteq L$ be an anchored (observational, world-hooked) vocabulary and $T$ an $L$-theory. Say $T$ \emph{pins $L$ given $L_o$} if any two models of $T$ with the same universe and the same interpretation of $L_o$ are identical. By Beth's definability theorem \citep{beth1953padoa}, $T$ pins $L$ given $L_o$ iff every symbol of $L$ is explicitly $T$-definable from $L_o$.
+Let $L_o\subseteq L$ be the anchored (world-hooked) vocabulary and $T$ an $L$-theory. Any two models of $T$ with the same universe and the same interpretation of $L_o$ coincide iff every symbol of $L$ is explicitly $T$-definable from $L_o$ \citep{beth1953padoa}.
 \end{proposition}
 
-\paragraph{Reading.} Beth's theorem quantifies over all models of $T$, i.e.\ over every possible anchoring structure. So world-anchoring determines what the rest of the language talks about \emph{uniformly, whatever the anchoring structure turns out to be}, iff the rest is definable from the hooked part. Over the \emph{actual} anchoring structure pinning can hold without definability: let $L_o=\{<\}$ and let $T$ say that $R$ is a nonempty initial segment with no largest element; over $(\N,<)$ the only expansion is $R=\N$, while over $\omega+\omega$ both $R=\omega$ and $R=\omega+\omega$ satisfy $T$, so $R$ is not $T$-definable from $<$. So theoretical terms that are not definable are multiply realizable over \emph{some} anchoring, though perhaps not over the actual one; this is the Ramsey--Lewis situation \citep{lewis1970how}.
+\paragraph{Reading.} Beth's theorem quantifies over all models of $T$, i.e.\ over every possible anchoring structure: anchoring determines the rest of the language \emph{uniformly, whatever the anchoring structure} iff the rest is definable. Over the \emph{actual} structure pinning can hold without definability: if $T$ says that $R$ is a nonempty initial segment of $<$ without a largest element, then over $(\N,<)$ the only expansion is $R=\N$, while over $\omega+\omega$ both $R=\omega$ and $R=\omega+\omega$ work. Undefinable theoretical terms are multiply realizable over \emph{some} anchoring, though perhaps not over the actual one (the Ramsey--Lewis situation, \citealt{lewis1970how}).
 
-\paragraph{How are the natural numbers pinned down?} The user asks this in his notes, adding ``is there a way they are the `lowest-complexity-structure' which satisfy some axioms??''. Coherence (P0) and first-order completeness (P1) cannot do it (\Cref{thm:existence:compactness,thm:existence:computability}). The known pin-downs, with what each adds:
-\begin{enumerate}[label=(\arabic*),leftmargin=*]
-\item \emph{Second-order induction} \citep{dedekind1888zahlen}: second-order $\PA$ with full semantics is categorical. It adds quantification over \emph{all} subsets, and there is no complete r.e.\ calculus for full second-order consequence (G\"odel's first theorem plus categoricity), as \Cref{thm:existence:computability}(a) predicts. Internal categoricity \citep{parsons1990uniqueness,mcgee1997how,button2018philosophy} moves the argument into a deductive system with open-ended induction; it pins the structure relative to whatever language is available, not the theory.
-\item \emph{Initiality.} $\N$ is the initial algebra of $(0,S)$, equivalently the least Herbrand model of $\{N(0),N(x)\to N(Sx)\}$ \citep{vanemden1976semantics}, and it is an initial segment of every model of $\PA$. This adds a universal property, ``nothing else is a number'', which is not first-order expressible: the closed-world step that logic programming makes by fiat.
-\item \emph{Computability} (\Cref{thm:existence:tennenbaum} below): $\N$ is the unique computable model of $\PA$.
-\item \emph{The $\omega$-rule}, or the Gaifman condition (\Cref{thm:existence:omega}): coherence plus ``every number is a numeral'' plus computation of the quantifier-free facts yields exactly $\Th(\N)$, but no limit-computable credence of the relevant kind obeys it (\Cref{cor:existence:inductors}).
-\item \emph{World anchoring by computation} adds nothing beyond coherence with $\RobQ$ (\Cref{lem:coherence:delta0}).
-\end{enumerate}
+\paragraph{How are the natural numbers pinned down?} The user asks this, adding ``is there a way they are the `lowest-complexity-structure' which satisfy some axioms??''. Coherence and first-order completeness cannot do it (\Cref{thm:existence:compactness,thm:existence:computability}). The known pins each add something: \emph{second-order induction} \citep{dedekind1888zahlen} adds quantification over all subsets, and no complete r.e.\ calculus exists for its consequence, as \Cref{thm:existence:computability}(a) predicts; internal categoricity \citep{parsons1990uniqueness,mcgee1997how,button2018philosophy} pins the structure relative to the available language, not the theory. \emph{Initiality} ($\N$ is the initial $(0,S)$-algebra, the least Herbrand model of $\{N(0),N(x)\to N(Sx)\}$, \citealt{vanemden1976semantics}, and an initial segment of every model of $\PA$) adds a universal property, ``nothing else is a number'', which is not first-order. The \emph{$\omega$-rule}, or Gaifman condition, adds an infinitary rule that no limit-computable credence of the relevant kind obeys (\Cref{cor:existence:inductors}). World anchoring by computation adds nothing beyond coherence with $\RobQ$ (\Cref{lem:coherence:delta0}). And:
 
 \begin{theorem}[Tennenbaum]\src{T6 \S5.5}\status{known}\label{thm:existence:tennenbaum}
-In no countable non-standard model of $\PA$ is addition computable, and in none is multiplication computable \citep{tennenbaum1959non,kaye1991models}. Hence $\N$ is, up to isomorphism, the unique computable model of $\PA$.
+In no countable non-standard model of $\PA$ is addition computable, and in none is multiplication computable \citep{tennenbaum1959non,kaye1991models}. Hence $\N$ is the unique computable model of $\PA$ up to isomorphism.
 \end{theorem}
 
-This is a theorem-level ``yes'' to the user's ``lowest-complexity structure'' question: among models of $\PA$, $\N$ is the only one whose operations can be computed at all. Two caveats. ``Computable'' is defined using the natural numbers of the meta-language, so the pin is relative to the meta-level numbers, as the user himself notes (\texttt{logic/confusions/soundness.md}). And which axioms matter: weaker theories such as open induction have computable non-standard models \citep{shepherdson1964nonstandard}. Every pin on the list uses something beyond finitary computable coherence: second-order quantification, a universal property, a complexity bound measured in $\N$ itself, or an infinitary rule. \Cref{thm:existence:compactness,thm:existence:computability} say that this is forced.
+This is a theorem-level ``yes'' to the ``lowest-complexity structure'' question, with two caveats: ``computable'' is defined using the meta-language's natural numbers, as the user himself notes (\texttt{logic/confusions/soundness.md}); and the axioms matter, since weaker theories such as open induction have computable non-standard models \citep{shepherdson1964nonstandard}. Every pin uses something beyond finitary computable coherence: second-order quantification, a universal property, a complexity bound measured in $\N$, or an infinitary rule. \Cref{thm:existence:compactness,thm:existence:computability} say this is forced.
 
 % ---------------------------------------------------------------------
 \subsection{Verdict}\label{sec:existence:verdict}
 
-\begin{table}[t]
-\centering\small
-\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{2.6cm}@{}}
-\toprule
-mode of talking & coherent & something it could be about & theorem\\
-\midrule
-positions under a multiple-conclusion calculus & no excluded position is occupied & an admissible valuation & \Cref{thm:existence:bilindenbaum}\\
-structural (learned) calculus & $\bot$ not derivable on the designated context & a Lindenbaum matrix model (syntactic) & \Cref{thm:existence:buys}\\
-credences on a finite agenda & no Dutch book; all counting sequents & a probability mixture of worlds & \Cref{thm:existence:definetti}\\
-first-order credences & Gaifman coherence & a mixture of complete theories, i.e.\ of models & \Cref{thm:existence:gaifman}\\
-finite preference data & no derivation of $L\succ L$ by mixing and transitivity & a real expected-utility function & \Cref{prop:existence:vnm}\\
-context system, monotone bridges & $\bot_i$ not derivable at designated contexts & bridge-compatible local belief states, nonempty at every designated context & \Cref{thm:existence:mcs}, \Cref{cor:existence:contexts}\\
-first-order theory & consistent & a structure made of witness terms & G\"odel, Henkin\\
-polynomial equations & $1\notin$ the ideal & a point over $\bar k$ & Nullstellensatz\\
-\bottomrule
-\end{tabularx}
-\caption{Where the user's proposition is a theorem \src{T6 \S6}.}
-\label{tab:existence:verdict}
-\end{table}
+\paragraph{Where yes.} ``Coherent iff there is something it could be talking about'' is a theorem, with a non-trivial realization step, for positions (an admissible valuation, \Cref{thm:existence:bilindenbaum}), learned structural calculi (a Lindenbaum matrix, \Cref{thm:existence:buys}), finite credences (a mixture of worlds, \Cref{thm:existence:definetti}), first-order credences (a mixture of models, \Cref{thm:existence:gaifman}), finite preferences (a real utility, \Cref{prop:existence:vnm}), context systems with monotone bridges (local belief states, nonempty at designated contexts, \Cref{cor:existence:contexts}), first-order theories (Henkin) and polynomial equations (the Nullstellensatz). Sam's slogan holds in each strongly complete case (\Cref{prop:existence:image,thm:existence:duality}).
 
-\paragraph{Where yes.} In each sense of \Cref{tab:existence:verdict}, ``coherent iff there is something it could be talking about'' is a theorem with a full proof, and Sam's stronger slogan holds in each strongly complete case: the round trip fixes exactly the closed sets (\Cref{prop:existence:image}; \Cref{thm:existence:duality} for positions). The user's claim that a rule-respecting truth assignment ``can be extended to a full model'' is correct for complete consistent assignments.
+\paragraph{Where no.} (1) The something may be made of syntax (\Cref{thm:existence:tautological,thm:existence:buys}); the proposition is substantive only for an independently specified semantics, and which semantics is right is answered by which models we can independently access: the truth values, $\N$ through computation, the world through observation. (2) Weak $\neq$ strong (\Cref{prop:existence:ipc}). (3) Intended existence needs more than coherence: layer (i) is defeated only by truth-tracking principles (reflection, stronger theories, Popperian policies, \Cref{thm:coherence:popper}), layer (ii) only by infinitary, second-order or meta-level ingredients, and both limits are forced (\Cref{thm:existence:compactness,thm:existence:computability}). (4) The something for a context system is a family of belief states, not of worlds (\Cref{thm:existence:rules}), and a global world exists automatically only on tree-like covers (\Cref{thm:existence:tree,prop:existence:triangle}). (5) Probabilistic coherence is global: local constraints on an unclosed agenda do not make a probe about any mixture of worlds (\Cref{thm:existence:arity,thm:existence:threshold}).
 
-\paragraph{Where no, or only with qualifications.}
-\begin{enumerate}[label=(\arabic*),leftmargin=*]
-\item \emph{The something may be made of syntax} (\Cref{thm:existence:tautological,thm:existence:buys}). The proposition is substantive only when the class of somethings is specified independently, and then each theorem has a non-trivial realization step. Which semantics is the right one is answered by which models we can \emph{independently access}: the two truth values, $\N$ through computation, the world through observation.
-\item \emph{Weak $\neq$ strong} (\Cref{prop:existence:ipc}). Somethings for every coherent position need not determine the consequence relation.
-\item \emph{Intended existence needs more than coherence.} Layer (i), coherent but false, is defeated only by truth-tracking principles: reflection, stronger theories, Popperian policies (\Cref{thm:coherence:popper}). Layer (ii), true but non-categorical, is defeated only by infinitary, second-order or meta-level ingredients. Both are forced: by compactness for infinite structures (\Cref{thm:existence:compactness}), and by computability for every computable coherence notion (\Cref{thm:existence:computability}).
-\item \emph{Contexts.} The right something for a context system is a family of belief states, not of worlds (\Cref{thm:existence:rules}); a single global world exists automatically only on tree-like covers (\Cref{thm:existence:tree,prop:existence:triangle}).
-\item \emph{Probabilistic coherence is global.} A probe satisfying pairwise or local constraints on an unclosed agenda need not be about any mixture of worlds (\Cref{thm:existence:arity,thm:existence:threshold}); on logically closed agendas local constraints suffice (\Cref{prop:existence:closed}).
-\end{enumerate}
+\paragraph{What this means for the learner.} The user's split between coherence and ``hooking onto the world'' becomes two precise questions. Coherence answers ``is there \emph{any} world this way of talking could be about?'': yes, canonically, but partly syntactically. Hooking answers ``is it \emph{this} world?'': world feedback is positive data in valuation space (\Cref{sec:coherence:carnap}), and uniformly over anchorings it pins exactly the definable vocabulary (\Cref{prop:existence:beth}). Neither does the other's job. This is the division of labour of \Cref{sec:coherence,sec:twotier,sec:physics} seen semantically: coherence removes what is incoherent with the target, its residue $\Alt$ is a set of non-isomorphic somethings, and only world channels or extra pins select among them. The user's ``C-model without an L-model'' (\texttt{logical models as distinct from mental models.md}) becomes an incoherent calculus used only through coherent chunks: local belief states (\Cref{cor:existence:contexts}) without a global section (\Cref{prop:existence:triangle}). And the computability barrier is a formal reason why there is no final formula for $\N$: pins such as reflection or stronger theories must be added on other grounds, matching the open-ended picture of justification in \Cref{sec:philosophy}.
 
-\paragraph{What this means for the learner.} The user's split between coherence and ``hooking onto the world'' becomes two precise questions. Coherence answers ``is there \emph{any} world this way of talking could be about?'', and the answer is yes, canonically, but partly syntactically (\Cref{thm:existence:buys}). Hooking answers ``is it \emph{this} world?''. World feedback is positive data in valuation space (\Cref{sec:coherence:carnap}); uniformly over all possible anchorings it pins exactly the vocabulary definable from the hooked vocabulary (\Cref{prop:existence:beth}), though the actual anchoring may pin more. Neither does the other's job: a coherent calculus hooked to the world on its observational vocabulary can still talk about many things. This matches the division of labour of \Cref{sec:coherence,sec:twotier,sec:physics}: coherence removes what is incoherent with the target, and its residue $\Alt$ is precisely a set of non-isomorphic somethings; only world channels or extra pins (categoricity, anchoring, infinitary rules) select among them. The user's ``C-model without an L-model'' (\texttt{logical models as distinct from mental models.md}) also gets a precise form: it is an incoherent calculus used only through coherent chunks, a contextual family with local belief states (\Cref{cor:existence:contexts}) but no global section (\Cref{prop:existence:triangle}). And the computability barrier is a formal reason why there is no final formula for $\N$: one can only add pins, such as reflection or stronger theories, on other grounds, which matches the open-ended picture of justification in \Cref{sec:philosophy}.
-
-\paragraph{Verdict.} The philosophical proposition is \emph{true in a precise generalized sense}: for positions, credences, preferences, context systems and learned structural calculi, coherence is equivalent to the existence of a model of the kind the semantics allows, with an explicit realization step in each case. It is \emph{false in the intended sense}: coherence does not deliver the standard or intended something. Intended existence needs categoricity, anchoring, or an infinitary condition, and no computable coherence notion can certify it beyond $\Pi_1$ properties.
+\paragraph{Verdict.} The philosophical proposition is \emph{true in a precise generalized sense}: for positions, credences, preferences, context systems and learned structural calculi, coherence is equivalent to the existence of a model of the kind the semantics allows. It is \emph{false in the intended sense}: standard or intended existence needs categoricity, anchoring or an infinitary condition, and no computable coherence notion can certify it beyond $\Pi_1$.

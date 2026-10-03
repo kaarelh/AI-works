@@ -52,7 +52,9 @@ repaired in its *Verification log*), in the deterministic interaction protocol o
   `thm_3_9_coSingleton_lower`: for target `R* = U \ {u*}`, **every** duplicate-free
   enumeration of `U \ {u*}` (in any order) issued by a prover forces **every** deterministic
   0-sound verifier to escalate or reject each of these `|U| − 1` valid queries.
-  `exists_honest_prover_coSingleton`: such a prover can be chosen fully honest when `|U| ≥ 2`.
+  `exists_honest_prover_coSingleton`: such a prover can be chosen fully honest when `|U| ≥ 2`;
+  `thm_3_9_coSingleton_forces` packages both: one honest, non-adaptive prover (independent of
+  the verifier) forces cost `|U| − 1` on every deterministic 0-sound verifier.
 * `thm_3_9_coSingleton`: `Esc(coSingleton U) = |U| − 1 = |coSingleton U| − 1`, attained by the
   VS verifier; so the bound `Esc H ≤ |H| − 1` is tight.
 * `exists_class_Esc_eq`: for every `N` there is a class of `N` hypotheses with
@@ -296,8 +298,9 @@ theorem Issues.map_query_run (hπ : Issues π l) :
     rw [hπ.query_eq (by omega), List.take_concat_get']
 
 /-- Consistency transfers between targets that both contain all queries of the history. -/
-theorem consistent_of_queries {R' : Set (Step J)} {h : History J} (hc : Consistent R h)
-    (hq : ∀ e ∈ h, e.query ∈ R ∧ e.query ∈ R') : Consistent R' h := by
+theorem consistent_of_queries {R' : Set (Step J)} {h : History J}
+    (hc : StepSoundness.Consistent R h) (hq : ∀ e ∈ h, e.query ∈ R ∧ e.query ∈ R') :
+    StepSoundness.Consistent R' h := by
   intro e he b hb
   have h1 := hc e he b hb
   have h2 := hq e he
@@ -441,7 +444,7 @@ theorem length_le_worstCost (hV : DetSound (fun R => R) V H P0) {R : Set (Step J
     exact le_worstCost hR hP0 _ _ hon
 
 theorem maxEl_le_worstCost (hV : DetSound (fun R => R) V H P0) : maxEl H P0 ≤ worstCost V H P0 :=
-  iSup₂_le fun R hR => iSup_le fun hP0 => iSup₂_le fun _ hl => length_le_worstCost hV hR hP0 hl
+  iSup₂_le fun _ hR => iSup_le fun hP0 => iSup₂_le fun _ hl => length_le_worstCost hV hR hP0 hl
 
 /-- **T1 Thm 3.2 (escalation dimension = positive elasticity), deterministic verifiers.**
 `Esc(H | P0) = sup_{R ∈ H, R ⊇ P0} el(H, R | P0)`. -/
@@ -633,6 +636,7 @@ theorem card_coSingleton (U : Finset (Step J)) : (coSingleton U).card = U.card :
   unfold coSingleton
   apply Finset.card_image_of_injOn
   intro v hv w hw hvw
+  simp only at hvw
   by_contra hne
   have : w ∈ (↑U : Set (Step J)) \ {v} := ⟨hw, fun h => hne (Set.mem_singleton_iff.1 h).symm⟩
   rw [hvw] at this
@@ -697,6 +701,22 @@ theorem exists_honest_prover_coSingleton (hu : u ∈ U) (hU : 2 ≤ U.card) :
   · obtain ⟨h1, h2⟩ := (hl _).1 (List.getElem_mem h0)
     exact ⟨h1, h2⟩
 
+/-- **T1 Thm 3.9, lower bound, packaged.** For `|U| ≥ 2`, `u* ∈ U` and target
+`R* = U \ {u*}`: there is a (non-adaptive) honest prover such that **every** deterministic
+0-sound verifier for `{U \ {u} : u ∈ U}` (with `P0 = ∅`) escalates or rejects in each of the
+first `|U| − 1` rounds, i.e. pays cost `|U| − 1`. The prover does not depend on the verifier. -/
+theorem thm_3_9_coSingleton_forces (hu : u ∈ U) (hU : 2 ≤ U.card) :
+    ∃ π : Prover J, Honest ((↑U : Set (Step J)) \ {u}) π ∧
+      ∀ V : Verifier J, DetSound (fun R => R) V (↑(coSingleton U)) ∅ →
+        (∀ e ∈ run V ((↑U : Set (Step J)) \ {u}) π (U.card - 1),
+          e.answer = Answer.esc ∨ e.answer = Answer.rej) ∧
+        cost V ((↑U : Set (Step J)) \ {u}) π (U.card - 1) = U.card - 1 := by
+  obtain ⟨l, π, hnd, hl, hπ, hhon⟩ := exists_honest_prover_coSingleton hu hU
+  refine ⟨π, hhon, fun V hV => ?_⟩
+  obtain ⟨hlen, -, h2, h3⟩ := thm_3_9_coSingleton_lower hV hu hnd hl hπ
+  rw [hlen] at h2 h3
+  exact ⟨h2, h3⟩
+
 /-- **T1 Thm 3.9 (attained).** For the co-singleton class `H = {U \ {u} : u ∈ U}`,
 `Esc(H) = |U| − 1 = |H| − 1`, and the VS verifier attains it. -/
 theorem thm_3_9_coSingleton (U : Finset (Step J)) :
@@ -753,5 +773,6 @@ end InfLearn
 #print axioms InfLearn.Unstructured.elasticChain_length_le
 #print axioms InfLearn.Unstructured.thm_3_9_coSingleton_lower
 #print axioms InfLearn.Unstructured.exists_honest_prover_coSingleton
+#print axioms InfLearn.Unstructured.thm_3_9_coSingleton_forces
 #print axioms InfLearn.Unstructured.thm_3_9_coSingleton
 #print axioms InfLearn.Unstructured.exists_class_Esc_eq
