@@ -10,44 +10,53 @@
 
 The thread asks what coherence ("don't have good arguments for both P and ¬P") can and cannot do for a learner of inference rules. The answers, compressed:
 
-1. **Coherence is negative data, and it is informative only for bold learners that aggregate oligarchically.** A derivation of ⊥ from a context certified coherent is a *negative bag*: at least one step in it is invalid. Suppose the learner's accepted rule set at each time is the set of steps on which a weighted half of its surviving hypotheses agree (an "oligarchy"). Then the number of detected incoherences is at most $\log_2(1/w(h^\*))$ (Thm 2.2). Oligarchy is *necessary* for such a guarantee (Prop 2.3). Majority-vote aggregation of individually coherent hypotheses can produce incoherence forever while learning nothing: this is the doctrinal paradox (Thm 2.4). A sound (cautious) learner never receives any coherence signal at all (Prop 2.9).
+1. **Coherence is negative data. It is informative only for bold learners, and oligarchic aggregation makes each detection informative.** A derivation of ⊥ from a context certified coherent is a *negative bag*: at least one step in it is invalid. Suppose the learner's accepted rule set at each time is the set of steps on which a weighted half of its surviving hypotheses agree (an "oligarchy"). Then the number of detected incoherences is at most $\log_2(1/w(h^\*))$ (Thm 2.2).
+   * Oligarchy is necessary for *guaranteed per-round halving* of detections against a worst-case prover (Prop 2.3). It is not necessary for a logarithmic bound as such.
+   * Suppose the environment withholds discriminating positive data. Then majority-vote aggregation of individually coherent hypotheses can produce the same uninformative incoherence forever. This is the doctrinal paradox (Thm 2.4).
+   * A sound (cautious) learner never receives any coherence signal at all (Prop 2.9).
+   * The detection bound controls only one of the two error types. On Prop 2.9's class every oligarchic learner makes $|\mathcal H|-1$ incompleteness errors, as many as the cautious learner, while a non-oligarchic learner makes none of either type. Per-round halving of both error types can be impossible (Prop 2.9(d),(e)). So boldness buys a two-sided trade-off, not a free lunch. *(Revised after verification.)*
 
-2. **What coherence can never see.** Given positive data and coherence, the hypotheses that are never refuted are exactly the *coherent over-generalizations* of the target: $U(h^\*)=\{h\supseteq h^\*: h \text{ coherent}\}$ (Thm 2.6). By compactness, the union of a chain of coherent hypotheses is coherent (Prop 2.7). So coherence never removes the limit points that drive Gold's impossibility theorem (Cor 2.8). It prunes from above, but it cannot cure superfiniteness.
+2. **What coherence can never see.** Given positive data and coherence, the hypotheses that are never refuted are exactly the *coherent over-generalizations* of the target: $U(h^\*)=\{h\supseteq h^\*: h \text{ coherent}\}$ (Thm 2.6). By compactness, the union of a chain of coherent hypotheses is coherent (Prop 2.7). Suppose the designated contexts are *fixed and known independently of the target*. Then coherence never removes the *limit points* (infinite ascending chains together with their unions) that drive Gold's impossibility theorem (Cor 2.8). It prunes from above, but it cannot remove limit points. If instead designations are target-dependent data, they are genuine negative data. With classical negation, a complete designation stream plus the text is an informant, and the limit-point obstruction disappears (Prop 2.8′). *(Revised after verification.)*
 
-3. **Post-completeness is exactly what makes coherence sufficient.** Every structural (substitution-closed) consequence relation extending classical propositional consequence is either classical or trivial (Thm 3.1). This holds for the full consequence relation, not only for theorems, and needs no finitarity. Hence a learner that uses positive data plus a *single* coherence datum identifies CPC with no simplicity or minimality bias (Thm 3.3).
+3. **Post-completeness is exactly what makes coherence sufficient.** Every structural (substitution-closed) consequence relation extending classical propositional consequence is either classical or trivial (Thm 3.1). This consequence-level form of Post-completeness is standard (Wójcicki 1988; Pogorzelski & Wojtylak 2008). The proof, included for completeness, needs no finitarity. Hence a learner that uses positive data plus a *single* coherence datum identifies CPC with no simplicity or minimality bias (Thm 3.3).
    * Subtleties: in theorem-free fragments such as $\{\wedge,\vee\}$, there is exactly one extra structural extension, the *almost inconsistent* one (Prop 3.2). Coherence must then use a non-empty context.
-   * With theorem-only data, boldness yields the *structural completion*. This is correct for CPC (structural completeness) and wrong for IPC because of admissible underivable rules (Props 3.4–3.5).
+   * The largest structural consequence relation with a given theorem set is its *structural completion* (Prop 3.4). In a language with theorems, this is $\mathbf C_2$ for CPC (structural completeness). For IPC it is strictly larger than IPC, because of admissible underivable rules (Prop 3.5).
 
 4. **Where coherence cannot pin the target.**
    * Intuitionistic logic: by Glivenko, every intermediate logic has *literally the same* coherence data as CPC. A Jankov chain then gives a class that no learner using positive data and coherence can identify (Thm 3.6).
    * Arithmetic:
      * Δ₀ world feedback is *subsumed* by coherence for every theory extending Q (Lemma 3.7).
      * A Turing-progression chain defeats every learner that uses positive data, coherence relative to true contexts, and a Δ₀ oracle (Thm 3.9).
-     * Coherence with PA is an exact *truth detector for Π₁ sentences*, but not for Σ₁ sentences. The correct boldness is therefore *Popperian*: be bold on universal claims and cautious on existential ones. A naively bold learner builds an arbitrary Lindenbaum completion.
+     * Coherence with PA is an exact *truth detector for Π₁ sentences*, but not for Σ₁ sentences. The correct boldness is therefore *Popperian*: be bold on universal claims and cautious on existential ones. This is the standard Σ₁/Π₁ asymmetry of formal learning theory (Putnam 1965; Kelly 1996), read for coherence-learners. A naively bold learner builds a Lindenbaum completion that depends on the enumeration and can be Σ₁-unsound.
      * No learner fed computable data decides Σ₂-truth in the limit (Thm 3.10).
-   * Complete theories (RCF, Presburger arithmetic, Tarski's elementary geometry) are coherence-pinned (Prop 3.11). This matters for physics, whose algebraic core is RCF.
+   * Complete theories (RCF, Presburger arithmetic, Tarski's elementary geometry) are coherence-pinned *at the level of theorems* (Prop 3.11(a)). The user's setting is the level of rules applied in contexts with parameters. There a single coherence datum pins the target if hypotheses are closed under ∃-elimination (Prop 3.11(b)). Without that closure, RCF has unsound coherent rule-level extensions that survive the empty context and even a non-empty one (Prop 3.11(c)). This matters for physics, whose algebraic core is RCF. *(Revised after verification.)*
 
-5. **The learning-theoretic Carnap problem is Gold's problem in the dual (valuation) space, with a twist.** A sequent excludes a basic clopen set of valuations, so inference data are *negative data about valuations*. Coherence and world feedback are *positive* data about valuations.
+5. **The learning-theoretic Carnap problem is Gold's problem in the dual (valuation) space, with a twist.** A sequent excludes a basic clopen set of valuations, so inference data are *negative data about valuations*. Coherence certifications ("this position is in bounds") and world feedback are *positive* data about valuations.
    * Single-conclusion data determine the admissible valuations only up to ∩-closure, even when the data are complete (Thm 4.2). For CPC the indistinguishable alternatives are exactly the characteristic functions of non-maximal CPC-theories, plus the all-true valuation.
-   * A *denial-rank trichotomy* (Thm 4.3) sorts every non-Boolean valuation by how many denials are needed to exclude it. It is excluded by coherence (0 denials), by ordinary inference (1 denial), or only by "exhaustiveness" data with 2 denials. Carnap's tautology-valuation has rank 2. So the user's coherence loss provably cannot fix classical meanings; an exhaustiveness loss is needed.
-   * Bilateral (multiple-conclusion) data plus structurality identify the Boolean meanings from a **finite tell-tale of 12 data points**: 11 atomic two-conclusion sequents and 1 coherence datum (Thm 4.4).
+   * A *denial-rank trichotomy* (Thm 4.3) sorts every non-Boolean valuation by how many denials are needed to exclude it:
+     * rank 0: excluded by a 0-denial *non-contradiction* constraint such as $p,\neg p\rhd$, the sequent-level principle behind the coherence loss;
+     * rank 1: excluded by ordinary inference;
+     * rank 2: excluded only by "exhaustiveness" data with 2 denials. Carnap's tautology-valuation has rank 2.
+     
+     So the user's coherence loss cannot fix classical meanings, whether it is read as in-bounds certifications or as the non-contradiction constraint behind them, and neither can imitation. An exhaustiveness loss is needed. *(Clarified after verification.)*
+   * Bilateral (multiple-conclusion) data plus structurality identify the Boolean meanings from a **finite tell-tale of 12 data points**: the 11 atomic multiple-conclusion sequents $\mathrm{TT}(p,q)$ (3 with two conclusions, 1 with none, 7 single-conclusion) and 1 coherence datum (Thm 4.4). Without structurality, BV is not identifiable in the limit at all (Thm 4.4(d), revised after verification).
    * A compositional prior (a single 2-valued matrix) also solves the problem, from single-conclusion data alone (Prop 4.5). This is the analogue of restricting the hypothesis class in Gold's setting.
 
 6. **tonk, harmony, conservativity.**
    * Under transitivity, tonk trivializes. Coherence catches it in 2 steps, *provided* the logic has a theorem or the designated context is non-empty (Prop 5.1). In a theorem-free setting with only the empty context designated, tonk survives coherence.
-   * Coherence is strictly weaker than conservativity (Prop 5.2).
+   * Coherence is strictly weaker than conservativity (Prop 5.2), with coherence read as non-triviality (§1).
    * Coherence is Π₁-complete and so decidable in the limit with at most one mind change. Conservativity over an r.e. base is Π₂-complete, so it is *not decidable in the limit by any computable learner* (Thm 5.3).
 
 7. **Fallacies and Kripkenstein.**
    * Coherence eliminates a fallacy iff "target + generalized fallacy" is incoherent on some designated context (Thm 6.1).
    * Over CPC, *every* structurally generalized propositional fallacy is eliminated, with a polynomial-size witness obtained by substituting ⊤ and ⊥ (Cor 6.2).
-   * Natural survivors: quantifier swap (survives the empty context, dies in any context with two distinct objects); the gambler's fallacy without an accepted independence premise; affirming the consequent restricted to background laws, i.e. conditional perfection (survives iff the completion is consistent).
+   * Natural survivors: quantifier swap (survives the empty context, dies in any context with two distinct objects); the gambler's fallacy without an accepted independence premise; affirming the consequent restricted to background laws, i.e. conditional perfection (survives *if* the per-law converse is consistent with the context; the converse direction fails).
    * The residue after coherence is the set of *coherent uniform alternatives* (Thm 6.4). Structurality does the anti-gerrymander work, coherence does the anti-conflict work, and data do the anti-under-generalization work. What remains is genuine incompleteness: the Gödel/Rosser alternatives are the Kripkensteinian residue of arithmetic.
 
 8. **Contexts.** Designating a single classically inconsistent context as coherent forces every structural learner to give up a classical rule schema *globally*. For example, it must become atomically paraconsistent (Prop 7.1). This is the formal version of the user's air-pressure worry, and it is why idealized contexts must be designated as consistent chunks $\Gamma\cup K_\Gamma$.
 
 The headline answer to "does something of this shape provably work for formal math?":
-* **Yes for propositional logic and for complete first-order theories.** There, positive data, structural generalization and a single coherence datum provably identify the target. The proof is short, and the content is Post-completeness.
+* **Yes for propositional logic, and for complete first-order theories at the level of theorems.** There, positive data, structural generalization and a single coherence datum provably identify the target. The proof is short, and the content is Post-completeness. For complete theories at the level of rules applied in contexts with parameters, the same holds provided hypotheses are closed under ∃-elimination; otherwise one coherence datum is not enough (Prop 3.11, revised after verification).
 * **No for arithmetic and other incomplete theories.** Coherence plus any computable world feedback leaves a residue of coherent alternatives that is provably ineliminable. The right supplements are Popperian asymmetry for Π₁ claims, and reflection or holistic coherence with *stronger accepted theories*.
 
 ---
@@ -59,6 +68,7 @@ The headline answer to "does something of this shape provably work for formal ma
 * A *(single-conclusion) sequent* is $\Gamma\rhd\varphi$ with $\Gamma\subseteq_{\rm fin}\mathrm{Fm}$.
 * A *multiple-conclusion sequent* is $\Gamma\rhd\Delta$ with $\Gamma,\Delta$ finite. Following Restall (2005, "Multiple conclusions") [cited], read it as *the position $[\Gamma:\Delta]$, asserting all of Γ while denying all of Δ, is out of bounds*.
 * When ⊥ is present it is a formula, and "coherent" means "⊥ not derivable".
+* In a language without ⊥ (e.g. $\{\wedge,\vee\}$ or pure $\{\to\}$), "coherent" means *non-trivial*: $h$ is $A$-coherent iff $h(A)\neq\mathrm{Fm}$. For structural $h$ this is equivalent to $A\nvdash_h q$ for an atom $q$ not occurring in $A$: substitute arbitrary formulas for $q$. For hypotheses that contain ex falso ($\bot\rhd\varphi$) the two readings agree. *(Clarified after verification.)*
 
 **Hypotheses** come in three equivalent-looking but importantly different guises.
 1. *Step sets* $R$ (a learned step verifier): a set of sequents read as one-step inferences. An *argument* π from $A$ is a finite derivation tree whose leaves are in $A$ and whose internal nodes are steps; $\mathrm{Steps}(\pi)$ is the finite set of steps it uses. Reflexivity and weakening are free. $\mathrm{Der}(R)$ is the least consequence relation containing $R$: arguments chain, so cut is built in.
@@ -72,6 +82,7 @@ The headline answer to "does something of this shape provably work for formal ma
 * *Positive data*: sequents valid in the target (imitation of human inferences).
 * *Coherence data*: a family $\mathcal A$ of *designated contexts*, finite premise sets certified coherent: $A\nvdash^\*\bot$ for $A\in\mathcal A$. In the bilateral version, positions $[A:D]$ are certified in bounds: $A\nvdash^\* D$.
   * Designated contexts are where coherence is enforced. Hypothetical contexts (reductio) are *not* designated, so deriving ⊥ in them is never penalized (§7).
+  * Unless stated otherwise, $\mathcal A$ is a *fixed* family known to the learner, so every possible target is $\mathcal A$-coherent and the coherence information does not depend on the target. When designations are instead data about the target (contexts certified coherent *for this target*), they carry genuine negative information; see Prop 2.8′.
 * A hypothesis $h$ is **$\mathcal A$-coherent** if $A\nvdash_h\bot$ for all $A\in\mathcal A$. The *effective class* is $\mathcal H_{\mathcal A}=\{h\in\mathcal H: h\ \mathcal A\text{-coherent}\}$.
 * *World feedback*: truth values, in an intended structure, of sentences from a restricted class (e.g. Δ₀ sentences in arithmetic).
 
@@ -88,12 +99,15 @@ The headline answer to "does something of this shape provably work for formal ma
 
 **Lemma 2.1 (negative bag) [proved; TOSU].** Let π be an argument from a designated $A\in\mathcal A$ to ⊥.
 * Then $\mathrm{Steps}(\pi)\not\subseteq R^\*$: at least one step is target-invalid.
-* Every step-set hypothesis $R$ with $\mathrm{Steps}(\pi)\subseteq R$ is refuted.
-* For consequence-relation hypotheses, the refuted set is $\{h: A\vdash_h\bot\}$, independent of π.
+* Every step-set hypothesis $R$ with $\mathrm{Steps}(\pi)\subseteq R$ is refuted *by the witness π*.
+* *(Revised after verification.)* Two notions of "refuted" must be kept apart.
+  * *Logically*, the designation $A\nvdash^\*\bot$ excludes every hypothesis $h$ with $A\vdash_h\bot$, independently of π. For step sets this is every $R$ with $A\vdash_{\mathrm{Der}(R)}\bot$. This holds equally for step sets and for consequence relations.
+  * *By witness*, a learner that deletes using π deletes $\{h:\mathrm{Steps}(\pi)\subseteq h\}$. This set depends on π and can be a strict subset of $\{h:A\vdash_h\bot\}$, even for consequence relations. Example: target CPC, $A=\{p\}$, π with steps $p\rhd q$ and $q\rhd\bot$. Let $h$ be the least consequence relation containing $p\rhd\bot$, without explosion. Then $A\vdash_h\bot$, but neither step of π is in $h$.
+  * A learner that can test $A\rhd\bot\in h$ directly by membership deletes the full logical set. For it π is unnecessary, and the information was already in the designation (cf. Prop 2.9(c)). So π matters *computationally*, as a finite witness that can be checked by membership.
 
-*Proof.* If every step were valid, then chaining (cut) would give $A\vdash^\*\bot$, contradicting designation. A hypothesis containing all the steps derives ⊥ from $A$ and so is not $\mathcal A$-coherent, while the target is. ∎
+*Proof.* If every step were valid, then chaining (cut) would give $A\vdash^\*\bot$, contradicting designation. A hypothesis containing all the steps derives ⊥ from $A$ and so is not $\mathcal A$-coherent, while the target is. The example in the third bullet is checked directly. ∎
 
-So a coherence violation is a *multiple-instance* label: "not all of these steps are valid". This is a positive bag for the concept "invalid step", in the sense of Dietterich, Lathrop & Lozano-Pérez (1997) [cited]. When hypotheses are cut-closed, the bag collapses to an ordinary negative example of the sequent $A\rhd\bot$. The bag structure matters exactly when the learned object is a *step verifier that is not itself cut-closed*: a process-reward model, a neural step scorer, or a majority of verifiers. That case is the interesting one for H1.
+So a coherence violation is a *multiple-instance* label: "not all of these steps are valid". This is a positive bag for the concept "invalid step", in the sense of Dietterich, Lathrop & Lozano-Pérez (1997) [cited]. Suppose hypotheses are cut-closed and the learner can test membership of $A\rhd\bot$ directly. Then the bag collapses to an ordinary negative example of the sequent $A\rhd\bot$. The bag structure matters exactly when the learned object is a *step verifier that is not itself cut-closed*: a process-reward model, a neural step scorer, or a majority of verifiers. That case is the interesting one for H1.
 
 ### 2.2 Oligarchic halving
 
@@ -105,12 +119,13 @@ So a coherence violation is a *multiple-instance* label: "not all of these steps
   * **(N)** exhibits a *detected incoherence*, an argument π from some $A\in\mathcal A$ to ⊥ with $\mathrm{Steps}(\pi)\subseteq\hat R_t$; the learner deletes every $R\supseteq\mathrm{Steps}(\pi)$;
   * nothing.
 * The environment is adversarial. It may be the learner's own proof search.
+* *Two error types.* A (P)-round presenting $s\notin\hat R_t$ is an *incompleteness error*: a valid step the learner did not accept. An (N)-round is a *detection*. *(Definition made explicit after verification.)*
 
 **Learner OH (oligarchic halving).** Choose any $S_t\subseteq \mathrm{VS}_t$ with $w(S_t)\ge \tfrac12 w(\mathrm{VS}_t)$ and announce $\hat R_t=\bigcap_{R\in S_t}R$, the steps on which the whole coalition agrees.
 
 **Theorem 2.2 [proved].** Under OH:
 * (i) $R^\*$ is never deleted.
-* (ii) The number of type-(N) rounds is at most $\log_2\!\big(1/w(R^\*)\big)$, which is $\le\log_2|\mathcal H|$ for the uniform prior.
+* (ii) Assume $w(R^\*)>0$. The number of type-(N) rounds (detections) is at most $\log_2\!\big(1/w(R^\*)\big)$, which is $\le\log_2|\mathcal H|$ for the uniform prior. The bound says nothing about incompleteness errors: oligarchic learners can make $|\mathcal H|-1$ of them (Prop 2.9(d)).
 * (iii) Whenever $R^\*\in S_t$, the accepted set is sound: $\mathrm{Der}(\hat R_t)\subseteq \mathrm{Der}(R^\*)$.
 * (iv) In every round, $\mathrm{Der}(\hat R_t)\subseteq\mathrm{Der}(R)$ for all $R\in S_t$. So $\hat R_t$ is a single compositional rule set: chaining never takes the reasoner outside what each coalition member accepts.
 
@@ -122,25 +137,42 @@ So a coherence violation is a *multiple-instance* label: "not all of these steps
 *Remarks.*
 * (a) The free choice of $S_t$ encodes the learner's *style*.
   * "Simplest half" (largest prior mass, i.e. MDL) gives a simplicity-biased reasoner.
-  * "Boldest half" (the hypotheses accepting the most steps) gives a completeness-seeking reasoner.
-  * The bound holds for both.
+  * "Boldest half" (the hypotheses accepting the most steps) is the boldest choice *within oligarchy*. It still accepts only steps shared by a weighted half, so $\hat R_t$ lies inside a single surviving hypothesis. It can therefore be exactly as incomplete as the cautious learner (Prop 2.9(d)). *(Revised after verification: earlier text called it "completeness-seeking" without qualification.)*
+  * The detection bound holds for every choice of style.
+  * The classical sources for this halving argument are Barzdin–Freivalds and Littlestone (1988). The only new ingredient is the reduction from negative bags to coalitions.
 * (b) **Truth maintenance is required.** Lemmas proved under $\hat R_t$ are certified only by the coalition $S_t$. If the coalition later changes and old lemmas are kept, the effective accepted set becomes a union over coalitions. The doctrinal-paradox failure of Thm 2.4 then reappears *across time*. A learner must therefore re-validate cached lemmas against the current coalition.
 * (c) The bound counts *detected* incoherences only. Silent unsoundness is the subject of §2.5.
 
 ### 2.3 Halving forces oligarchy; majority fails
 
-**Proposition 2.3 (characterization) [proved].** Let $\mathrm{VS}$ be finite. Assume the worst case: any finite $P\subseteq\hat R$ can occur as $\mathrm{Steps}(\pi)$ of a detected incoherence (the adversarial prover can pad derivations). Then the following are equivalent:
+**Proposition 2.3 (characterization of per-round halving) [proved] (revised after verification).** Let $\mathrm{VS}$ be countable (finite or infinite) with $w(\mathrm{VS})>0$, and let $\hat R$ be the announced set. Assume the worst case: any finite $P\subseteq\hat R$ with $P\not\subseteq\bigcap\mathrm{VS}$ can occur as $\mathrm{Steps}(\pi)$ of a detected incoherence.
+* $P\not\subseteq\bigcap\mathrm{VS}$ says exactly that the detection is legal for some target in VS (Lemma 2.1).
+* The adversarial prover can pad derivations.
+
+Then the following are equivalent:
 * every possible detection deletes at least half of $w(\mathrm{VS})$;
 * $\hat R\subseteq\bigcap S$ for some $S\subseteq\mathrm{VS}$ with $w(S)\ge\tfrac12 w(\mathrm{VS})$.
 
-*Proof.*
-* (⇐) As in Thm 2.2.
-* (⇒) For each $R\in\mathrm{VS}$ with $\hat R\not\subseteq R$, pick a step $s_R\in\hat R\setminus R$, and let $P_0$ be the finite set of these steps. A detection with $\mathrm{Steps}(\pi)=P_0$ deletes exactly $S:=\{R\in\mathrm{VS}:P_0\subseteq R\}=\{R\in\mathrm{VS}:\hat R\subseteq R\}$. By hypothesis $w(S)\ge\frac12 w(\mathrm{VS})$, and $\hat R\subseteq\bigcap S$. ∎
+*Scope.* This characterizes *per-round* halving against a worst-case prover. It does not say that a logarithmic detection bound requires oligarchy.
+* Coalitions of weight $\ge\frac13 w(\mathrm{VS}_t)$ give $D\le\log_{3/2}(1/w(R^\*))$ by the argument of Thm 2.2.
+* Finitely many non-oligarchic rounds add only a constant.
 
-**Theorem 2.4 (doctrinal paradox: uninformative incoherence) [proved].**
-* *Setup.* Let $\mathcal H=\{h_1,h_2,h_3\}$ with $h_i=\mathrm{Cn}_{\rm CPC}(T_i)$ (all sequents valid from $T_i$), where $T_1=\{p,q\}$, $T_2=\{p,\neg q\}$, $T_3=\{\neg p,q\}$. Let $\mathcal A=\{\emptyset\}$. Every $h_i$ is coherent, and any of them may be the target.
-* *Majority aggregation* is $\hat R_{\rm maj}=\{s: s\in h_i\text{ for at least two }i\}$.
-* *Claim.* The prover can exhibit the same detected incoherence in every round, and no hypothesis is ever deleted.
+*Proof.*
+* (⇐) A legal detection $P\subseteq\hat R\subseteq\bigcap S$ deletes $\{R\in\mathrm{VS}:P\subseteq R\}\supseteq S$.
+* (⇒) The step universe is countable because Fm is. Enumerate $\hat R=\{s_1,s_2,\dots\}$ (finite or infinite), let $P_k=\{s_1,\dots,s_k\}$, and let $S_k=\{R\in\mathrm{VS}:P_k\subseteq R\}$.
+  * If $P_k\not\subseteq\bigcap\mathrm{VS}$, then $P_k$ is a possible detection deleting exactly $S_k$, so $w(S_k)\ge\frac12 w(\mathrm{VS})$.
+  * If $P_k\subseteq\bigcap\mathrm{VS}$, then $S_k=\mathrm{VS}$.
+  * The $S_k$ decrease to $S:=\bigcap_k S_k=\{R\in\mathrm{VS}:\hat R\subseteq R\}$.
+  * By countable additivity (continuity from above; $w$ is finite), $w(S)=\lim_k w(S_k)\ge\frac12 w(\mathrm{VS})>0$. Trivially $\hat R\subseteq\bigcap S$.
+  * For finite VS one can instead take $P_0=\{s_R\}$, with one step $s_R\in\hat R\setminus R$ for each $R$ with $\hat R\not\subseteq R$. ∎
+
+**Theorem 2.4 (doctrinal paradox: uninformative incoherence) [proved] (precision added after verification).**
+* *Setup.* Let $\mathcal H=\{h_1,h_2,h_3\}$ with uniform prior and $h_i=\mathrm{Cn}_{\rm CPC}(T_i)$ (all sequents valid from $T_i$), where $T_1=\{p,q\}$, $T_2=\{p,\neg q\}$, $T_3=\{\neg p,q\}$. Let $\mathcal A=\{\emptyset\}$. Every $h_i$ is coherent, and any of them may be the target.
+* *Majority aggregation* over the current version space is $\hat R_t=\{s: w(\{R\in\mathrm{VS}_t:s\in R\})>\frac12w(\mathrm{VS}_t)\}$. While $\mathrm{VS}_t=\mathcal H$, this is $\hat R_{\rm maj}=\{s: s\in h_i\text{ for at least two }i\}$.
+* *Claim.* For every target there is an environment under which the prover exhibits the same detected incoherence in every round and no hypothesis is ever deleted. The environment presents only π, or interleaves π with uninformative positive data such as $\rhd p\vee\neg p$, which lie in every $h_i$.
+* *Caveat.* The environment must withhold discriminating positive data.
+  * Suppose the target is $h_1$ and $\rhd p$ is presented. Then $h_3$ is deleted. Majority over $\{h_1,h_2\}$ is $h_1\cap h_2$, which is oligarchic, and π is no longer available ($\rhd q\notin h_2$).
+  * The $h_i$ are pairwise incomparable, so on any complete text every wrong hypothesis is eventually text-refuted, and the uninformative incoherences stop.
 
 *Proof.* Consider the argument π with steps $\rhd p$, $\rhd q$, $p,q\rhd p\wedge q$, $\rhd\neg(p\wedge q)$, $p\wedge q,\neg(p\wedge q)\rhd\bot$.
 * Every step is in $\hat R_{\rm maj}$:
@@ -149,9 +181,17 @@ So a coherence violation is a *multiple-instance* label: "not all of these steps
   * $\rhd\neg(p\wedge q)\in h_2,h_3$;
   * the last two steps are in all three.
 * Yet $\mathrm{Steps}(\pi)\not\subseteq h_i$ for each $i$: $h_1$ lacks $\rhd\neg(p\wedge q)$, $h_2$ lacks $\rhd q$, and $h_3$ lacks $\rhd p$.
-* By Lemma 2.1 the deletion set is empty. VS and $\hat R_{\rm maj}$ never change, so π is available forever. ∎
+* By Lemma 2.1 the deletion set is empty. Tautological (P)-data delete nothing either. So VS and $\hat R_{\rm maj}$ never change, and π is available forever. ∎
 
-This is Kornhauser & Sager's (1986) doctrinal paradox and Pettit's discursive dilemma, transposed to verifier ensembles [cited]. List & Pettit (2002) prove a general impossibility for aggregating judgments into consistent, complete collective sets. Characterizations of oligarchic rules as the deductively closed ones are due to Dietrich & List and to Nehring & Puppe [cited; exact theorem statements (unverified)]. Prop 2.3 is the learning-theoretic face of that literature.
+This is Kornhauser & Sager's (1986) doctrinal paradox and Pettit's (2001) discursive dilemma, transposed to verifier ensembles [cited].
+* List & Pettit (2002) prove that no aggregation function satisfies all of the following, for agendas containing at least two atomic propositions together with their conjunction (or disjunction, or material conditional) [cited]:
+  * universal domain;
+  * anonymity;
+  * systematicity;
+  * consistent and complete collective judgment sets.
+* Oligarchic aggregation is characterized as the rules that yield deductively closed (but not necessarily complete) collective judgments by Gärdenfors (2006) and Dietrich & List (2008). See also Dokow & Holzman (2010) on abstentions, and Nehring & Puppe for related characterizations [cited; exact hypotheses and theorem statements (unverified)].
+
+Prop 2.3 is the learning-theoretic face of that literature.
 
 > **Moral for H1.** An ensemble of individually coherent verifiers that is chained *stepwise by vote* can be incoherent *and* yield no information about which member is wrong. Coherence feedback is informative only if acceptance is *unanimity within a coalition*. With a halving coalition, each detection then costs at least one bit.
 
@@ -159,11 +199,13 @@ This is Kornhauser & Sager's (1986) doctrinal paradox and Pettit's discursive di
 
 Designations can be wrong. For example, "air pressure = 0" plus full background is classically inconsistent (§7). Replace deletion with multiplicative penalties.
 * Let $\beta\in[0,1)$. On an (N)-round, multiply $w(R)$ by β for every $R\supseteq\mathrm{Steps}(\pi)$.
-* Choose $S_t$ with $w_t(S_t)\ge\frac12 W_t$, where $W_t$ is the total current weight.
+* Choose $S_t$ with $w_t(S_t)\ge\frac12 W_t$, where $W_t$ is the total current weight ($W_0=1$), and announce $\hat R_t=\bigcap S_t$.
+* (P)-rounds delete every $R\not\ni s$ as before. Positive data are assumed noise-free here; for noisy positive data see the note after the proof.
 * Call an (N)-round a *false alarm* if its context $A$ is in fact target-incoherent.
 
-**Theorem 2.5 [proved].** If $m$ of the (N)-rounds are false alarms, the number $D$ of (N)-rounds satisfies
+**Theorem 2.5 [proved; the Littlestone–Warmuth (1994) weighted-majority bound].** If $m$ of the (N)-rounds are false alarms, the number $D$ of (N)-rounds satisfies
 $$D\ \le\ \frac{\ln(1/w_0(R^\*))+m\ln(1/\beta)}{\ln\!\big(2/(1+\beta)\big)}.$$
+For β = 0 and m = 0 read $0\cdot\ln(1/0)=0$, which gives Thm 2.2. For β = 0 and m > 0 the bound is vacuous, because $R^\*$ can be deleted. The bound itself is Littlestone & Warmuth's (1994). The only new ingredient is the bag-to-coalition reduction of Thm 2.2.
 
 *Proof.*
 * Each (N)-round penalizes a set containing $S_t$, so $W_{t+1}\le W_t-(1-\beta)\tfrac12W_t=\tfrac{1+\beta}{2}W_t$.

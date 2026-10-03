@@ -31,15 +31,20 @@ Pipeline (propositional domain, :mod:`cil.domains.prop`)
    coherent contexts (the empty context, and contingent premise sets certified
    satisfiable by the environment).  Two search modes: *blind* backward search
    for ``Gamma_d |- bot``, and *Post probes*: instantiate a rule's metavariables
-   with the closed basis {bot, ~bot}, prove its premises with the current
-   calculus, and try to refute the instantiated conclusion (the constructive
-   content of Post-completeness).  Each derivation is a *negative bag*.  Bags
-   are diversified by re-searching with each bag member blocked.  Blame: minimum
-   weight hitting set with weight = support (prefer removing rarely supported
-   rules), or, with sparse world feedback, exact step-level blame (a step is
-   refuted at an observed valuation).  Repair: minimal ``mem`` guard that blocks
-   the incriminated instances and keeps >= m human members (monster-barring),
-   else split the cluster by MDL (undo an inductive leap), else delete.
+   with the closed basis {bot, ~bot} (set metavariables with {}, {bot}), assume
+   its guard, prove its premises with the current calculus, and try to refute
+   the instantiated conclusion (the constructive content of
+   Post-completeness).  Each derivation is a *negative bag*.  Bags are
+   diversified by re-searching with each bag member blocked.  Blame: an
+   *implicit* minimum-weight hitting set (block the candidate set, search
+   again, add the new bag, repeat), where the weight of blaming a rule is the
+   number of human steps lost by its cheapest repair that blocks the
+   incriminated instances (with deletion as the only repair this is the
+   support: prefer removing rarely supported rules); with sparse world feedback,
+   exact step-level blame (a step is refuted at an observed valuation).
+   Repairs: minimal ``mem`` guard that blocks the incriminated instances
+   (monster-barring), split of the cluster by MDL keeping the children that do
+   not license an incriminated instance (undo an over-generalisation), delete.
 
 5. :class:`BoldLearner`: adds candidate schemas as long as the calculus stays
    coherent (Post-completeness experiment).

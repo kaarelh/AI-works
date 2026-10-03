@@ -18,7 +18,7 @@ The user's architecture has three parts: a learned relation $\hat V$ ("this step
    * A reasoner is sound iff every accepted step is a derivable step (Lemma 1.1).
    * Average-case accuracy says nothing about this. For **every** distribution $Q$ on steps and every $\varepsilon>0$, there is a rule set with $Q$-error $<\varepsilon$ that derives every formula. It consists of finitely many pure schemas if $R^*$ does. It needs one bad step, a tonk-like padding rule $A\vee(\top\wedge\cdots\wedge\top)\vdash A$ (Thm 2.1).
    * Any PAC learner can be modified into one that is still PAC, with the same rates up to $O(\varepsilon^{-1}\log\delta^{-1})$ extra samples, but whose every output trivializes the reasoner (Cor 2.2).
-   * In classical propositional logic, every unsound *pure* schema (one whose only non-logical symbols are metavariables) trivializes, by Post completeness (Prop 2.3). A schema that mentions specific atoms can be unsound without trivializing. Replacing its atoms by metavariables restores the dichotomy, and in CPC this replacement preserves soundness.
+   * In classical propositional logic, every unsound *pure* schema (one in which no specific object-language atom occurs) trivializes, by Post completeness (Prop 2.3). A schema that mentions specific atoms can be unsound without trivializing. Replacing its atoms by metavariables restores the dichotomy, and in CPC this replacement preserves soundness.
    * A simplicity (MDL/Occam) learner on positive data chooses the universal schema "anything from anything" (Prop 2.4).
 2. **Version-space verification is sound by construction. Its price is exactly a "positive elasticity".**
    * The verifier accepts a step iff every hypothesis consistent with the data accepts it. This is sound against all provers and optimal among sound verifiers (Thm 3.1).
@@ -44,13 +44,13 @@ The user's architecture has three parts: a learned relation $\hat V$ ("this step
    * Exact identification means the verifier accepts *exactly* the human calculus. This gives systematic generalization to derivations of any length and formulas of any size (Cor 5.5).
 5. **Noise.**
    * One wrongly-tagged human step turns the lgg of $\wedge$E into "from anything infer anything" (Prop 6.1).
-   * The **trimmed version space** (hypotheses that miss at most $e$ data points) is sound when there are at most $e$ errors. It is complete when every *witness event* of every rule occurs more than $e$ times (Thm 6.2). Under i.i.d. noise this needs witness frequency to exceed error frequency (Thm 6.3).
+   * The **trimmed version space** (hypotheses that miss at most $e$ data points) is sound when there are at most $e$ errors. With per-rule budgets $e_i$, it is complete when every *witness event* of every rule $i$ occurs more than $e_i$ times (Thm 6.2). Under i.i.d. noise this needs witness frequency to exceed error frequency (Thm 6.3).
    * This is optimal up to a factor of 2, and the factor 2 is tight. Any positive-data verifier robust to error rate $\alpha$ must refuse every generalization supported by less than $\alpha$ of the data (Thm 6.4).
    * **Schema-generated (systematic) errors are indistinguishable from rules at every rate** (Cor 6.5).
    * Removing them needs negative information. In classical propositional logic, *coherence* (deriving $\bot$ in the empty context) detects every unsound *pure* schema. It detects every unsound schema once atoms occurring in schemas are replaced by metavariables (Prop 6.6; see T2 Thm 3.1). Applied directly to a schema that mentions specific atoms, it can miss the error. In arithmetic it does not detect every error.
 
 **Upshot for the user's program.** "Learn inference rules from positive examples" works, provably, for formal math with rule citations. Use anti-unification as the learning algorithm and the version space as the verifier. The result is deterministically sound from the first example and exactly correct after coupon-collector many examples. No negative data or human escalation is needed beyond that. Each bullet is a formal statement below:
-* Losing rule citations (informal steps) costs a polynomial of degree $k$ in escalations.
+* Losing rule citations (informal steps) costs at least a polynomial of degree $k$ in escalations. The proved upper bound is exponential, and $\Theta_k(N^k)$ is conjectured (Conj 3.8).
 * Human errors are tolerated when they are rarer than the evidence for each rule's generality.
 * Systematic human errors are where coherence or world feedback (threads T2/T3) must take over.
 
@@ -745,4 +745,5 @@ Two independent adversarial referees checked this file: referee A covered §1–
   * Thm 5.1 ("for finite $P$").
   * Thm 5.3 (ground-rule case spelled out in the proof).
   * Thm 5.4(b) (the "$\ge\varepsilon$" form of the ε-net theorem).
+* *Also corrected by the author during this pass, not flagged by the referees:* the Upshot bullet "losing rule citations costs a polynomial of degree $k$" now says *at least* degree $k$, with $\Theta_k(N^k)$ only conjectured. Thm 3.7(ii)'s proved upper bound is exponential.
 * *No change needed:* Thm 3.1(a), Prop 2.4, Prop 3.3, Lemmas 1.2–1.3, Thm 3.7 main statements, Thm 3.9, Cor 5.5, side-condition extension, Prop 6.1, Cor 6.5.
