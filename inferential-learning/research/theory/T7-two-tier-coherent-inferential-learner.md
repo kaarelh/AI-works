@@ -20,7 +20,7 @@ The orchestrator asked for one theorem of roughly this form. For every target ca
    * A tier that is cautious over that version space is sound *for practice*. It therefore asserts every frequent fallacy (Prop 2.2).
    * A tier that is cautious over hypotheses allowed to declare practice rules erroneous asserts nothing at all (Prop 2.4).
    * What works is **presumption of validity, applied only after an audit**. The assertion tier asserts the identified practice minus every schema the audit implicates. It waits until practice identification and the audit are complete, and abstains before that.
-   * The waiting is necessary. No learner that is sound whether or not a schema is a fallacy can accept that schema before the rarest rule needed to refute it could have been seen: with $\delta+\delta'<1$ it needs $N\ge\ln\frac{1-\delta'}{\delta}\big/\ln\frac1{1-\pi}$ samples (Thm 5.5, a standard two-point rare-event bound).
+   * The waiting is necessary. No learner that is sound whether or not a schema is a fallacy can accept that schema before the rarest rule needed to refute it could have been seen: with $\delta+\delta'<1$ it needs $N\ge\ln\frac{1-\delta'}{\delta}\big/\ln\frac1{1-\pi}$ samples (Thm 5.5, a standard two-point rare-event bound). *(Qualified in round 2.)* This holds for learners that learn about the practice only from the i.i.d. stream (Thm 5.5's assumption (OE)). A channel that lets the learner ask the human about the refuting rule directly defeats the two-point argument.
 2. **Coherence condemns sets, and the blame problem is real.**
    * Given bag-valued evidence, the practice schemas that can be soundly condemned *as schemas* are exactly those in the union of the minimal conflicts. This is the hitting-set duality of model-based diagnosis (Reiter 1987) (Lemma 2.3).
    * At stable depth, every genuine rule that lies in a minimal conflict has an instance that *no* learner sound in all admissible scenarios can accept (Thm 5.6(b)). So TTL's fallback is optimal among schema-level policies. *(Revised after verification:* at finite depth this can fail (Thm 5.6(c)), and individual instances shared with a rival diagnosis can still be asserted (Prop 2.4(c)).)
@@ -102,7 +102,8 @@ Let $\mathcal S$ be a language of **schemas**: first-order terms with metavariab
 * Human steps are i.i.d. and tagged by a practice schema $i\in\Sigma^P$. Tag $i$ occurs with probability $\pi_i$.
 * Given tag $i$, the step is a valid instance $\sigma_i\Theta$ with $\Theta\sim\Lambda_i$ with probability $1-a_i$. Otherwise it is an arbitrary step outside $\mathrm{inst}(\sigma_i)$, tagged $i$: *sporadic noise*.
 * Write $\beta_i=\pi_i(1-a_i)$ and $\alpha_i=\pi_ia_i$.
-* $\rho_i$ and $c_i$ are as in T1 Thm 5.3. The **margin** is $\Delta_i:=(\rho_i\beta_i-\alpha_i)/2$.
+* $\rho_i$ and $c_i$ are as in T1 Thm 5.3, except for a **ground rule** (a schema without metavariables), where $\rho_i:=1$ and $c_i:=1$. This is the convention of T1 Thm 6.3 *(made explicit in round 2)*. For a ground tag the only witness event needed is that more than $e_i$ valid samples occur, and every valid sample is a witness. With this convention $c_i\ge1$ for every tag, since $c_i=2v_i+\binom{v_i}2\ge2$ when $v_i\ge1$.
+* The **margin** is $\Delta_i:=(\rho_i\beta_i-\alpha_i)/2$.
 
 Assumptions:
 * **(Floor)** Known constants $\Delta>0$, $c$, $K$, $\bar\alpha_i$ satisfy $\Delta_i\ge\Delta$, $c_i\le c$ and $\alpha_i\le\bar\alpha_i$, with $\Delta_i$ computed using $\bar\alpha_i$. Fallacy tags are subject to the floor too.
@@ -145,7 +146,12 @@ In formal mathematics, $V$ is truth in the intended structure 𝔐. (WS) then ho
 ### 1.4 Refutations, conflicts, residue, collateral
 
 **Definition 1.5 (refutations).**
-* Let $B\subseteq\mathcal S$ be a finite set of schemas and $d\in\mathbb N$. A **$d$-refutation of $B$** is a derivation of total size $\le d$ (symbols in all its judgments) with these properties:
+* *Derivations and their size (made explicit in round 2).*
+  * A derivation is a finite sequence of **distinct** judgments, equivalently a DAG with one node per judgment. Each judgment is either a *leaf* or the conclusion of one designated step whose premises occur earlier in the sequence. The last judgment is the conclusion.
+  * Its **size** $|\pi|$ is the total number of symbols in its distinct judgments. A judgment used several times is counted once.
+  * A tree derivation compresses to such a sequence. For each judgment, keep the step at one of its occurrences of least height, and order the judgments by that height. The result uses only steps of the tree, its leaves are leaves of the tree, and it is no larger.
+  * Lemma 2.5(d) needs this convention: it extracts a refutation from the judgments of π, and the extracted premise derivations may share judgments. In the computed examples (Thm 4.1(iv), Thm 5.6(c)), no minimal refutation repeats a judgment, so tree size gives the same numbers.
+* Let $B\subseteq\mathcal S$ be a finite set of schemas and $d\in\mathbb N$. A **$d$-refutation of $B$** is a derivation of size $\le d$ with these properties:
   * it is relative to some $[A:D]\in\mathcal A$, and every leaf $\ell$ (a judgment not produced by a step of the derivation) has $e_{[A:D]}(\ell)=1$, i.e. it is an assertion of the position or a $W$-true evaluable judgment;
   * every step is in $R_B\cup T_{\rm rust}$;
   * its conclusion $j$ has $e_{[A:D]}(j)=0$ (⊥, a denied judgment, or a world-false judgment).
@@ -290,7 +296,8 @@ Say the descent is *unblocked* if, at every visited node, either all premises ha
 * (c) If σ were genuine, then $s\in\mathrm{inst}(\sigma)\subseteq R^\*$, contradicting (a).
 * (d) Each premise of $s$ with value 1 is $e$-true, or is the conclusion of a trusted step of π whose premises have value 1. Recursively, it has a derivation inside π from $e$-true judgments using trusted steps only.
   * The conclusion of $s$ is $e$-false, or it is a premise of a trusted step of π whose conclusion has value 0 and whose other premises have value 1. Recursively, a chain of trusted steps of π leads from it to an $e$-false judgment, with side premises derivable as before.
-  * Together with $s$ this is a refutation of $\{\sigma\}$ whose judgments are judgments of π, so its size is at most $|\pi|\le d$. ∎
+  * Together with $s$ this is a refutation of $\{\sigma\}$ in the sense of Def 1.5 *(made precise in round 2)*. List first the 1-valued judgments used, in the order in which the fixed-point computation gave them value 1. Then list the conclusion of $s$ and the chain of 0-valued judgments below it, ending at the $e$-false one. Each judgment's step has its premises earlier in the list. The judgments are distinct: 1- and 0-valued judgments differ because $e^+_\pi$ is consistent, and each 0-valued judgment of the chain received its value strictly later than the next one. Its leaves are $e$-true, its steps are $s$ and trusted steps, and its conclusion is $e$-false.
+  * All its judgments are judgments of π, and size counts distinct judgments (Def 1.5), so its size is at most $|\pi|\le d$. Under a tree-size convention this bound could fail, because the premise derivations of $s$ and the side premises of the chain may share judgments. ∎
 
 This is L6 TC1 and T4 Lemma 4.1, which are in turn Shapiro's *contradiction backtracing* from algorithmic debugging and model inference (Shapiro 1981, 1983) [cited]. Two additions are specific to this setting. First, trusted steps carry values *backward* through unevaluable nodes; arithmetic needs this, because $\forall x\theta$ is not Δ₀ (§6.3). Second, items (c) and (d): blame lands on *schemas*, with no collateral, and each blamed schema is a singleton conflict. When the descent is blocked, all we have is the bag $\{\sigma\in B:\sigma\text{ used in }\pi\}$.
 
@@ -313,7 +320,7 @@ $\mathrm{Ref}_d$ returns the lexicographically least refutation among the smalle
 
 **Phase 0** ($t<N_1$), where
 $$N_1:=\Big\lceil\tfrac1{2\Delta^2}\ln\tfrac{(1+c)K}{\delta}\Big\rceil.$$
-In the noise-free case (*noise-free mode*) use instead $N_1:=\lceil\lambda^{-1}\ln\frac{cK}{\delta}\rceil$, with a known $\lambda\le\min_i\pi_i\rho_i$ (T1 Thm 5.3). Here $c\ge\max_i\max(c_i,1)$, and $\rho_i:=1$ for ground rules *(revised after verification)*. T1 Thm 5.3 has $c_i=0$ for ground rules, so if every tag were a ground rule, $\ln(cK/\delta)$ with $c=0$ would be undefined, although the failure probability $(1-\pi_i)^{N}$ is positive; this is the convention of T1 Thm 6.3. During Phase 0:
+In the noise-free case (*noise-free mode*) use instead $N_1:=\lceil\lambda^{-1}\ln\frac{cK}{\delta}\rceil$, with a known $\lambda\le\min_i\pi_i\rho_i$ (T1 Thm 5.3). Here $c$ and $\rho_i$ are as in (Floor) and Def 1.2, with the ground-rule convention $c_i:=1$, $\rho_i:=1$ *(revised after verification; stated once, in Def 1.2, in round 2)*. So $c\ge1$ and $\ln(cK/\delta)$ is defined. T1 Thm 5.3's own value $c_i=0$ for ground rules would leave it undefined when every tag is a ground rule, although the failure probability $(1-\pi_i)^{N}$ is positive. During Phase 0:
 * the assertion tier **abstains**. A query may be escalated to a human. If all its judgments lie in $D_W$, it may instead be answered by the **world channel**, which accepts it iff it is not $W$-falsified.
   * *(Clarified after verification.)* World-channel answers are **not** acceptances of the assertion tier. They are truth-sound when $W$ is truth in 𝔐, but need not lie in $\mathrm{Sound}(R^\*)$. Example: for $\Sigma^\*=\{\wedge\mathrm I,\wedge\mathrm E_1,\wedge\mathrm E_2\}$, the step $(\top\,/\,\top\vee\bot)$ is $W$-truth-preserving but not $R^\*$-derivable.
   * Thm 4.1(i) concerns the assertion tier only. A reasoner that also chains world-channel steps is covered by Cor 4.2 (truth-soundness), not by the closure inclusion of Thm 4.1(i). The same holds if the world channel stays open in Phase 1.
@@ -457,7 +464,8 @@ This is the answer to "how cautious acceptance interacts with the coalition": **
   * if the fallback is triggered at $B_0$: $\Sigma^\*\setminus\mathrm{Coll}_d(B_0)\subseteq A\subseteq\Sigma^\*\cup F^{(d)}_{\rm res}$, with $A=(\Sigma^\*\setminus\mathrm{Coll}_d)\cup F^{\rm surv}_d$ when $B_0=\Sigma^P$.
   
   So under (SB$_d$), or whenever no descent is blocked, the tier is **complete for the target**. It accepts every genuine step, and the only fallacies it accepts are residual ones: the target modulo the Kripkensteinian residue. The sample size is
-  $$N_1=\Big\lceil\tfrac1{2\Delta^2}\ln\tfrac{(1+c)K}{\delta}\Big\rceil\quad\big(\text{noise-free mode, with }e_i:=0\text{: }\lceil\lambda^{-1}\ln\tfrac{cK}{\delta}\rceil,\ \lambda\le\min_i\pi_i\rho_i,\ c\ge\max_i\max(c_i,1)\big).$$
+  $$N_1=\Big\lceil\tfrac1{2\Delta^2}\ln\tfrac{(1+c)K}{\delta}\Big\rceil\quad\big(\text{noise-free mode, with }e_i:=0\text{: }\lceil\lambda^{-1}\ln\tfrac{cK}{\delta}\rceil,\ \lambda\le\min_i\pi_i\rho_i,\ c\ge\max_ic_i\ge1\big),$$
+  with the ground-rule convention $c_i:=1$, $\rho_i:=1$ of Def 1.2.
 * **(iv) Depth schedule.** Re-run the audit on the frozen $\hat P$ at depths $d_1<d_2<\cdots$, with truth maintenance.
   * $A$ changes only finitely often, and is constant once $d\ge d_1^\*$. Here $d_1^\*$ is the largest depth at which some answer $\mathrm{Ref}_d(B)$, $B\subseteq\Sigma^P$, changes. With the default tie-breaking this is the largest minimal-refutation size of a subset of $\Sigma^P$ that is not clean at every depth.
   * *(Added after verification.)* The changes need not be retractions. Because the union of minimal conflicts is not monotone in $d$, $A$ is not monotone in $d$ either: a new small conflict can make an old larger one non-minimal, and so restore a schema withheld as collateral. [computed: `depth_nonmono.py`: practice {MP, AC}, $A=\{\mathrm{AC},\mathrm{MP}\}$ for $d<9$, $A=\emptyset$ for $9\le d<29$, $A=\{\mathrm{MP}\}$ for $d\ge29$.] Restored schemas are genuine or residual at the larger depth, so soundness is unaffected.
@@ -469,9 +477,10 @@ This is the answer to "how cautious acceptance interacts with the coalition": **
 * *Step 1: identification.* Let $G$ be the event of T1 Thm 6.3 at sample size $N_1$, with budgets $e_i=\lfloor(\bar\alpha_i+\Delta)N_1\rfloor$: for every tag $i$, at most $e_i$ invalid steps are tagged $i$, and the valid tag-$i$ samples are $e_i$-robustly generic.
   * In the proof of T1 Thm 6.3, replace $\alpha_i$ by $\bar\alpha_i\ge\alpha_i$ and $\Delta_i$ by $\Delta\le\Delta_i$. The invalid count has mean at most $\bar\alpha_iN$. Each witness count has mean at least $(\bar\alpha_i+2\Delta)N$. Hoeffding and a union bound give
     $$\Pr(G^c)\le\sum_i(1+c_i)e^{-2N_1\Delta^2}\le(1+c)Ke^{-2N_1\Delta^2}\le\delta.$$
+  * *Ground tags (convention stated in round 2).* With $c_i:=1$ and $\rho_i:=1$ (Def 1.2, as in T1 Thm 6.3), a ground tag contributes $1+c_i=2$ events: at most $e_i$ invalid tag-$i$ steps, and more than $e_i$ valid ones. The valid count is $\mathrm{Bin}(N_1,\beta_i)$, with mean $\beta_iN_1=\rho_i\beta_iN_1\ge(\bar\alpha_i+2\Delta)N_1$, so Hoeffding applies as for the witness counts. These two events are conditions (i) and (ii) of T1 Thm 6.2(b) for a ground rule.
   * On $G$, T1 Thm 6.2(b) shows that the trimmed verifier of tag $i$ accepts exactly $\mathrm{inst}(\sigma_i)$.
   * A finite intersection of instance sets with a common instance is the instance set of the mgu. So $\hat\sigma_i$ is $\sigma_i$ up to renaming, and $\hat P=\Sigma^P$.
-  * In noise-free mode ($e_i:=0$, so $\hat\sigma_i=\mathrm{lgg}(P_i)$), let $G$ be the event of T1 Thm 5.3. That theorem bounds $\Pr(G^c)$ by $\sum_ic_ie^{-N_1\pi_i\rho_i}$, with the ground-rule term $e^{-N_1\pi_i}$; with $\rho_i:=1$ and $c_i$ replaced by $\max(c_i,1)$ for ground rules, this is $\le cKe^{-N_1\lambda}\le\delta$. *(Corrected after verification: with the noisy budget $e_i=\lfloor\Delta N_1\rfloor>0$, Thm 5.3's event does not imply identification.)*
+  * In noise-free mode ($e_i:=0$, so $\hat\sigma_i=\mathrm{lgg}(P_i)$), let $G$ be the event of T1 Thm 5.3. That theorem bounds $\Pr(G^c)$ by $\sum_ic_ie^{-N_1\pi_i\rho_i}$, where ground rules have $c_i=0$ and contribute a separate term $e^{-N_1\pi_i}$ each. Under the convention of Def 1.2 ($c_i:=1$, $\rho_i:=1$ for ground rules) that separate term is exactly $c_ie^{-N_1\pi_i\rho_i}$. So the bound is $\sum_ic_ie^{-N_1\pi_i\rho_i}\le cKe^{-N_1\lambda}\le\delta$. *(Corrected after verification: with the noisy budget $e_i=\lfloor\Delta N_1\rfloor>0$, Thm 5.3's event does not imply identification.)*
   * $G$ depends only on the human data. Human answers to escalated queries are not part of the sample (§3.1).
 * *Step 2: audit.* On $G$, Lemma 3.1 applies to $\hat P=\Sigma^P$. This gives (iii), the cleanness claim in (i), and the audit part of (ii).
 * *Step 3: soundness.* Before $N_1$ the tier accepts nothing. After $N_1$ the accepted set is $R_A$ with $A\subseteq\Sigma^\*\cup F^{(d)}_{\rm res}$, so $R_A\subseteq R^\*\cup R_{F^{(d)}_{\rm res}}$. The closure inclusion is T1 Lemma 1.1, applied with the calculus $R^\*\cup R_{F^{(d)}_{\rm res}}$ (or $R^\*\cup T_{\rm rust}\cup R_{F^{(d)}_{\rm res}}$) as "target".
@@ -492,7 +501,7 @@ This is the answer to "how cautious acceptance interacts with the coalition": **
 3. *Why freeze.* Freezing $\hat P$ at $N_1$ keeps the probability accounting to a single event.
    * Continuing to learn is possible: a union bound over $N\ge N_1$ costs an additive $\ln\frac1{1-e^{-2\Delta^2}}\approx\ln\frac1{2\Delta^2}$ inside the logarithm.
    * In that case the audit must be re-run whenever $\hat P$ changes.
-4. *Before $N_1$.* Abstention can be softened. Steps all of whose judgments are evaluable can be settled by the world channel, and steps derivable in a *trusted base* can be accepted. Both are separate channels (§3.1): they are truth-sound (Cor 4.2), but not covered by the $R^\*$-closure inclusion of (i) unless they lie in $\mathrm{Sound}(R^\*)$. Thm 5.5 shows that no learner can do much better on the fallacy-candidate schemas.
+4. *Before $N_1$.* Abstention can be softened. Steps all of whose judgments are evaluable can be settled by the world channel, and steps derivable in a *trusted base* can be accepted. Both are separate channels (§3.1): they are truth-sound (Cor 4.2), but not covered by the $R^\*$-closure inclusion of (i) unless they lie in $\mathrm{Sound}(R^\*)$. Thm 5.5 shows that no learner satisfying its assumption (OE) can do much better on the fallacy-candidate schemas. In particular this covers learners without a practice-revealing escalation channel *(qualified in round 2)*.
 
 ---
 
@@ -500,14 +509,18 @@ This is the answer to "how cautious acceptance interacts with the coalition": **
 
 Throughout this section, "a learner" means any (randomized) procedure that receives the same kinds of information as TTL, possibly with a given channel removed: the human data stream, refutation-oracle answers and $W$.
 
-*Standing conventions (made explicit after verification).*
-* Escalation answers, if a learner uses them, follow the practice, so they have the same law in every scenario with that practice. A target-truthful labeller ($y=1[q\in R^\*]$) would be a different and stronger channel, T1's labelled setting, and would defeat Thms 5.5–5.6.
-* Lower bounds use a fixed prover whose queries do not depend on the scenario.
+*Standing conventions (made explicit after verification; escalation clause corrected in round 2).*
+* A learner's inputs are the human samples, the queries of the prover (and of the red team, if any), the answers of $\mathrm{Ref}_d$ and $W$, its own coins and, optionally, escalation answers.
+* Lower bounds use a fixed prover (and red team). That is a fixed strategy mapping the history and its own coins to queries, the same in every scenario.
+* **Escalation answers**, if a learner uses them, **follow the practice**. The answer to an escalated $q$ is drawn from a law that depends only on $q$ and on the practice (its schemas, frequencies and laws), e.g. $1[q\in R^P]$.
+  * So escalation answers have the same law in any two scenarios **with the same practice**. That is the situation of Props 5.2–5.3, Thm 5.6, and Thm 5.7, where the practice $\Sigma^P_e$ is the same in both cases and the answers are computable.
+  * It is **not** the situation of Thm 5.5 or of the floor remark in Thm 6.6(e), whose scenarios have different practices. There, practice-following escalation acts as a membership query for the practice and can separate the scenarios in one query. Those results assume Thm 5.5's observational-equivalence condition (OE) instead. *(Round 1 cited this convention for Thm 5.5, where it does not apply.)*
+* A target-truthful labeller ($y=1[q\in R^\*]$) would be a different and stronger channel, T1's labelled setting. It would defeat Thms 5.5–5.6.
 * Fix a practice $\Sigma^P$ with its frequencies, instance laws and noise law, and fix $\mathcal A,W,T_{\rm rust}$. A target $\Sigma\subseteq\Sigma^P$ is **admissible** if it satisfies (WS) and $F_\Sigma:=\Sigma^P\setminus\Sigma$ satisfies Def 1.1, i.e. each member has an instance outside $\mathrm{Sound}(R_\Sigma)$.
 * By §1.3, (WS) for Σ is equivalent to Σ being clean at every depth.
 * All admissible targets share the data law and the oracle answers (Lemma 2.1(c)), and satisfy (Floor) with the same constants.
 
-**Proposition 5.1 (positive data) [proved; TOSU] (hypothesis added after verification).** Let $\Sigma_1\subsetneq\Sigma_2$ be calculi such that every subset of $\Sigma_2$ is clean at every depth, and such that $R_{\Sigma_2}\not\subseteq\mathrm{Sound}(R_{\Sigma_1})$, i.e. some rule of $\Sigma_2\setminus\Sigma_1$ is not derivable in $\Sigma_1$. Suppose a learner receives only refutation evidence: oracle answers on schema sets of its choice, but no human steps.
+**Proposition 5.1 (positive data) [proved; TOSU] (hypothesis added after verification).** Let $\Sigma_1\subsetneq\Sigma_2$ be calculi such that every subset of $\Sigma_2$ is clean at every depth, and such that $R_{\Sigma_2}\not\subseteq\mathrm{Sound}(R_{\Sigma_1})$, i.e. some rule of $\Sigma_2\setminus\Sigma_1$ is not derivable in $\Sigma_1$. Suppose a learner receives only refutation evidence: oracle answers on schema sets of its choice, but no human steps and no escalation answers.
 * Its view is the same under targets $\Sigma_1$ and $\Sigma_2$, by Lemma 2.1(c).
 * So if it accepts a step of $R_{\Sigma_2}\setminus\mathrm{Sound}(R_{\Sigma_1})$, a nonempty set by hypothesis, with probability $p$ under one target, it does so with probability $p$ under the other. It is either unsound for $\Sigma_1$ (plain soundness, $\mathrm{Sound}(R_{\Sigma_1})$) or incomplete for $\Sigma_2$.
 * Example: $\Sigma_1=\{\wedge\mathrm I,\wedge\mathrm E_1,\wedge\mathrm E_2\}$ and $\Sigma_2=\Sigma_1\cup\{\vee\mathrm I_1\}$, with classical evaluation. Here $\vee\mathrm I_1$ is not derivable in $\Sigma_1$.
@@ -529,7 +542,7 @@ Throughout this section, "a learner" means any (randomized) procedure that recei
   An adaptive prover that knows $F$ queries such an instance at once. In CPC with $\Sigma^\*$ complete and τ pure, it queries the closed ⊤/⊥ falsified instance of Lemma 6.1, and that single step makes every formula derivable from ∅ (Prop 2.2).
 
 *Proof of (a).*
-* The prover is fixed. The learner's information (data, oracle answers, $W$, escalation answers) has the same law under every $\Sigma\in\mathcal T$. Coupling the learner's coins, the run up to and including the answer to $q$ has the same law, so $p(h,q)$ is scenario-independent.
+* The prover is fixed. The learner's information (data, oracle answers, $W$, escalation answers) has the same law under every $\Sigma\in\mathcal T$. For escalation answers this is because all admissible targets share the practice (§5 conventions). Coupling the learner's coins, the run up to and including the answer to $q$ has the same law, so $p(h,q)$ is scenario-independent.
 * If $q\notin\mathrm{Sound}(R_\Sigma\cup R_{F^{(d)}_{\rm res}(\Sigma)})$ for some admissible Σ, then under Σ the event "$h$ and then $q$ accepted" is an unsound acceptance.
 * *TTL passes.* On $G$ the audit runs on $\hat P=\Sigma^P$, identically in all admissible scenarios.
   * Every schema it removes by descent is outside every admissible Σ. Indeed $V_\Sigma$ extends $e$ and falsifies no trusted step, so $e^+_\pi$ agrees with $V_\Sigma$ (proof of Lemma 2.5). The output step then has $V_\Sigma$-true premises and a $V_\Sigma$-false conclusion, so it is not in $R_\Sigma$.
@@ -556,33 +569,49 @@ A learner without refutation evidence sees identically distributed data in both 
 * $\{\sigma,\tau\}$ and $\{\sigma,\mu\}$ are clean at every depth (hence so is $\{\tau\}$);
 * $\{\mu,\tau\}$ is a $d$-conflict.
 
-(The schema called ρ in the earlier version is renamed μ, to avoid a clash with the variability $\rho_i$.) Compare two scenarios with the same $\mathcal A,W,T_{\rm rust}$; both targets are admissible in the sense of the §5 conventions.
-* **Scenario 1:** target $\{\sigma,\mu\}$, $F=\{\tau\}$. Tags σ, τ, μ have frequencies $(1-\pi)q_\sigma$, $(1-\pi)q_\tau$, $\pi$.
-* **Scenario 2:** target $\{\sigma,\tau\}$, $F=\emptyset$. Tags σ, τ have frequencies $q_\sigma$, $q_\tau$.
+(The schema called ρ in the earlier version is renamed μ, to avoid a clash with the variability $\rho_i$.) Compare two scenarios with the same $\mathcal A,W,T_{\rm rust}$. Each target is admissible for its own scenario's practice (§5 conventions).
+* **Scenario 1:** practice $\{\sigma,\tau,\mu\}$, target $\{\sigma,\mu\}$, $F=\{\tau\}$. Tags σ, τ, μ have frequencies $(1-\pi)q_\sigma$, $(1-\pi)q_\tau$, $\pi$, where $q_\sigma+q_\tau=1$.
+* **Scenario 2:** practice $\{\sigma,\tau\}$, target $\{\sigma,\tau\}$, $F=\emptyset$. Tags σ, τ have frequencies $q_\sigma$, $q_\tau$.
 
-The per-tag instance laws are the same in both. The prover is fixed and does not depend on the scenario, and escalation answers follow the practice (§5 conventions). Then for every learner and every $t$: if under scenario 1 the learner accepts at time $t$ some τ-instance $s\notin\mathrm{Sound}(R_{\{\sigma,\mu\}})$ with probability at most δ, then under scenario 2 it accepts $s$ at time $t$ with probability at most $\delta(1-\pi)^{-t}$.
+The per-tag laws of σ and τ (instance laws and noise) are the same in both scenarios. The prover (and red team) is fixed (§5 conventions).
+
+The practices differ, so practice-following escalation does not have the same law in the two scenarios. *(Corrected in round 2: the revised statement of round 1 invoked the §5 escalation convention here, which does not deliver equal laws.)* The theorem assumes instead:
+
+**(OE) Observational equivalence of the non-sample channels.** At each round, every input to the learner other than the human sample is generated from the history by the same kernel in both scenarios. These inputs are the prover's and red team's queries, the answers of $\mathrm{Ref}_d$ and $W$, escalation answers if any, and the learner's coins.
+* $\mathrm{Ref}_d$ and $W$ satisfy (OE) by Lemma 2.1(c), even for queried sets containing μ. The fixed prover and red team satisfy it by assumption.
+* Escalation satisfies (OE) if the learner does not escalate, or if escalation answers are a function of the query and the history alone.
+* TTL's assertion tier qualifies. It is a function of the human sample and of the oracle answers (Prop 3.3(a)), and escalation answers are not added to the sample (§3.1).
+* **Practice-following escalation violates (OE), and for it the conclusion below is false.** Some μ-instance $s_\mu$ lies outside $\mathrm{Sound}(R_{\{\sigma,\tau\}})$, by the transfer argument of the proof with τ and μ exchanged.
+  * A human following practice $\{\sigma,\tau,\mu\}$ confirms $s_\mu$; one following $\{\sigma,\tau\}$ rejects it.
+  * Consider the learner that escalates $s_\mu$ once and accepts $s$ from time 1 on iff the answer is "reject". It accepts $s$ with probability 0 in scenario 1 and probability 1 in scenario 2, at every $t\ge1$ [computed: `two_point_bounds.py`].
+* A target-truthful labeller violates (OE) too: it separates the scenarios with one escalated τ-instance $s$ as below.
+
+Then for every learner satisfying (OE) and every $t$: if under scenario 1 the learner accepts at time $t$ some τ-instance $s\notin\mathrm{Sound}(R_{\{\sigma,\mu\}})$ with probability at most δ, then under scenario 2 it accepts $s$ at time $t$ with probability at most $\delta(1-\pi)^{-t}$.
 
 Hence, if $\delta+\delta'<1$, accepting $s$ at time $t$ in scenario 2 with probability $\ge1-\delta'$ requires
 $$t\ \ge\ \frac{\ln\frac{1-\delta'}{\delta}}{\ln\frac1{1-\pi}}\ \ge\ \frac{1-\pi}{\pi}\,\ln\frac{1-\delta'}{\delta}.$$
 * The second inequality uses $\ln\frac1{1-\pi}\le\frac\pi{1-\pi}$ and $\ln\frac{1-\delta'}\delta>0$. It fails without $\delta+\delta'<1$: for $\delta=\delta'=0.6$ and $\pi=1/2$ the two sides are $-0.585$ and $-0.405$ *(hypothesis added after verification)*.
-* The first bound is attained. The learner that, at time $t$, accepts τ-instances iff no μ-tag occurs among the first $t$ samples has scenario-1 error exactly $(1-\pi)^t$ at time $t$, and scenario-2 completeness 1.
+* The first bound is attained. The learner that, at time $t$, accepts τ-instances iff no μ-tag occurs among the first $t$ samples has scenario-1 error exactly $(1-\pi)^t$ at time $t$, and scenario-2 completeness 1. It does not escalate, so it satisfies (OE). [computed: `two_point_bounds.py` solves, by linear programming over all tag sequences of length $t\le6$, for the best learner under (OE): the optimum equals $\min(1,\delta(1-\pi)^{-t})$ in all 108 cases.]
 
-*Proof.*
-* Let $E_t$ be the event that none of the first $t$ samples has tag μ, so $\Pr_1(E_t)=(1-\pi)^t$.
-* Conditioned on $E_t$, the first $t$ samples under scenario 1 are i.i.d. with exactly scenario 2's law, because the frequencies renormalize to $q_\sigma,q_\tau$.
-* Oracle answers depend only on the queried schema sets (Lemma 2.1(c)). They are identical in both scenarios, even if the learner queries sets containing μ. The prover's queries and the escalation answers do not depend on the scenario, by assumption. Without that assumption, a target-truthful labeller could separate the scenarios with one escalated τ-instance.
-* Hence $\Pr_1(\text{accept }s\text{ at }t)\ge(1-\pi)^t\Pr_2(\text{accept }s\text{ at }t)$.
+*Proof (rewritten in round 2).*
+* Let $P_j$ be the law of one human sample in scenario $j$, and let $E_t$ be the event that none of the first $t$ samples has tag μ, so $\Pr_1(E_t)=(1-\pi)^t$.
+* On samples whose tag is not μ, $P_1=(1-\pi)P_2$ as measures: the frequencies are $(1-\pi)q_\sigma,(1-\pi)q_\tau$, and the per-tag laws coincide. Hence $P_1^{\otimes t}$ restricted to $E_t$ equals $(1-\pi)^tP_2^{\otimes t}$.
+* The samples are i.i.d. and independent of everything generated before them. By (OE), every other input is generated from the history by the same kernels in both scenarios. By induction over rounds, the law of the learner's whole view through time $t$ is therefore $P_j^{\otimes t}(dx)\,K_t(x,\cdot)$, with the same kernel $K_t$ for $j=1,2$. Whether $s$ is accepted at time $t$ is a function of that view. Write $\phi(x):=K_t(x,\{\text{accept }s\text{ at }t\})\in[0,1]$.
+* Hence
+  $$\Pr_1(\text{accept }s\text{ at }t)\ \ge\ \int_{E_t}\phi\,dP_1^{\otimes t}\ =\ (1-\pi)^t\int\phi\,dP_2^{\otimes t}\ =\ (1-\pi)^t\Pr_2(\text{accept }s\text{ at }t).$$
 * Such an $s$ exists. Otherwise every τ-instance would be derivable in $\{\sigma,\mu\}$, and the refutation of $\{\mu,\tau\}$ would become a refutation of $\{\sigma,\mu\}$ by T1 Lemma 1.1, contradicting cleanness.
 * In scenario 2, $s$ is a genuine instance. ∎
 
 This is the standard two-point rare-event lower bound, of the kind behind PAC sample-complexity lower bounds. Its only content here is that the relevant rare event is the absence of the *refuter* μ.
+
+*Scope of (OE) (added in round 2).* The bound concerns learners whose only source of information about the practice is the i.i.d. stream. A learner that may ask the human whether a given step is acceptable (membership queries) escapes it in this two-point form, as shown above. A lower bound for that setting would need the refuter to be unknown among many candidates. I do not pursue it.
 
 *Concrete instance.* Use the context $A_1=\{q,\ p\to q,\ p\to\bot\}$ with no world. Take $\sigma=\wedge$I, $\tau=$ AC and $\mu=$ MP.
 * The closure of $A_1$ under AC alone is $\{q,p\to q,p\to\bot,p\}$ [computed]. *(Corrected after verification.)* Under $\{\wedge\mathrm I,\mathrm{AC}\}$ the closure is infinite, since it contains all conjunctions of those four formulas. It contains no ⊥, because ∧I creates no implications and AC needs an implication premise with consequent $q$ or ⊥.
 * $\{\wedge\mathrm I,\mathrm{MP}\}$ is classically sound.
 * AC then MP yields ⊥ in two steps.
 
-*Reading (corrected after verification).* Suppose modus ponens is rare, with frequency π. Then no learner that is sound whether or not AC is a fallacy can accept AC, in the scenario where AC is genuine, before about $\pi^{-1}\ln(1/\delta)$ samples. That is roughly the time by which MP, the rule that would expose AC if it were a fallacy, has been seen with confidence; MP has then been seen about $\ln(1/\delta)$ times. The upper bound $N_1$ has the same order: in noise-free mode it is $\lambda^{-1}\ln(cK/\delta)$, with $\lambda\le\pi\rho_{\rm MP}$. This matches up to the $\ln K$ factor and the variability $\rho_{\rm MP}$.
+*Reading (corrected after verification).* Suppose modus ponens is rare, with frequency π. Then no learner that is sound whether or not AC is a fallacy, and that learns about the practice only from the stream (OE), can accept AC, in the scenario where AC is genuine, before about $\pi^{-1}\ln(1/\delta)$ samples. That is roughly the time by which MP, the rule that would expose AC if it were a fallacy, has been seen with confidence; MP has then been seen about $\ln(1/\delta)$ times. The upper bound $N_1$ has the same order: in noise-free mode it is $\lambda^{-1}\ln(cK/\delta)$, with $\lambda\le\pi\rho_{\rm MP}$. This matches up to the $\ln K$ factor and the variability $\rho_{\rm MP}$.
 
 **Theorem 5.6 (blame: world or bilateral evidence is necessary for completeness) [proved] (revised after verification).**
 
@@ -596,7 +625,7 @@ This is the standard two-point rare-event lower bound, of the kind behind PAC sa
 * so μ, which lies in $\mathrm{Coll}_d$ in scenario 1, is collateral for **every** sound learner. *(The earlier clause "and TTL's fallback, which withholds $\bigcup\mathcal C_d$, is optimal" does not follow from this two-point argument. It is replaced by (b) and (c).)*
 
 *Proof of (a).*
-* The practice $\Sigma_0\cup\{\mu,\tau\}$ and its frequencies coincide in the two scenarios, and oracle answers are target-independent (Lemma 2.1(c)).
+* The practice $\Sigma_0\cup\{\mu,\tau\}$ and its frequencies coincide in the two scenarios, so the data and the practice-following escalation answers have the same laws (§5 conventions). Oracle answers are target-independent (Lemma 2.1(c)).
 * Some μ-instance $s$ lies outside $\mathrm{Sound}(R_{\Sigma_0\cup\{\tau\}})$. Otherwise, by T1 Lemma 1.1, the refutation of $\{\mu,\tau\}$ would transfer to the clean set $\Sigma_0\cup\{\tau\}$.
 * μ is not residual in scenario 2, because $\Sigma_0\cup\{\tau,\mu\}$ contains the conflict $\{\mu,\tau\}$. So soundness in scenario 2 caps the probability of accepting $s$ at δ. The same cap holds in scenario 1, where $s$ is genuine. ∎
 
@@ -621,7 +650,7 @@ Consequences:
 * *Conclusion.* All admissible scenarios share the data law and the oracle answers, the prover is fixed, and escalation answers follow the practice. So the probability that $s_g$ is accepted at a given time is the same under $M$ as under the true target. δ-soundness under $M$, relative to $R_M\cup R_{F^{(d)}_{\rm res}(M)}=R_M$, bounds it by δ. ∎
 
 **(c) At finite depth the fallback can be strictly suboptimal (added after verification) [proved; computed: `thm56_finite_d.py`].**
-* *Setting.* No world, practice {MP, AC}, $\mathcal A=\{[A_1:\emptyset],[A_2:\emptyset]\}$ with $A_2=\{\varphi,\ \bot\to\varphi\}$ and $\varphi=q\wedge(q\wedge q)$. Size counts symbols in distinct judgments.
+* *Setting.* No world, practice {MP, AC}, $\mathcal A=\{[A_1:\emptyset],[A_2:\emptyset]\}$ with $A_2=\{\varphi,\ \bot\to\varphi\}$ and $\varphi=q\wedge(q\wedge q)$. Size is as in Def 1.5: symbols in distinct judgments.
 * *Refutation sizes.* The minimal refutation sizes are 9 for {MP, AC} (on $A_1$) and 13 for {AC} (on $A_2$: AC infers ⊥ from φ and ⊥→φ). {MP} is clean at every depth.
 * *What TTL does.* For $9\le d\le12$, $\mathcal C_d=\{\{\mathrm{MP},\mathrm{AC}\}\}$. The descent is blocked, and the fallback returns $A=\emptyset$, withholding MP.
 * *Why that is suboptimal.* The admissible targets are only {MP} and ∅, because {AC} is refuted at size 13. Asserting $R_{\rm MP}$ after burn-in is sound under both: under {MP} trivially, and under ∅ because MP is residual, at depth $d$ and at every depth. That learner is strictly more complete than TTL$(d)$.
