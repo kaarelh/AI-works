@@ -10,7 +10,7 @@ those notes. The formalization has
 * every audited declaration depends only on Lean's standard axioms `propext`,
   `Classical.choice` and `Quot.sound`. See `audit-output.txt`.
 
-About 9,400 lines of Lean in 11 modules, plus `Audit.lean`.
+About 14,600 lines of Lean in 17 modules, plus `Audit.lean`.
 
 ## Building
 
@@ -31,13 +31,16 @@ but only the part that is needed. Lake builds just the modules transitively impo
 project. All of Mathlib enters through `InfLearn/Prelude.lean`, which imports
 `Finset`/`Fintype`/`Set.Finite`, `Order.Closure`, `CompleteLattice`, `Real.Basic`,
 `Analysis.SpecialFunctions.Log.Basic`, and the tactics `linarith`, `positivity`,
-`fin_cases` and `Mathlib.Tactic.Common`. That is about 1,700 Mathlib modules, not the
-whole library.
+`fin_cases` and `Mathlib.Tactic.Common`. That is about 1,700 Mathlib modules (1,671 `.olean`
+files under `Mathlib/`), not the whole library. The six wave-2 modules (`Bilateral`,
+`Specker`, `ParadoxLowerBound`, `Unstructured`, `Export`, `NoAdaptation`) also import only
+`InfLearn.Prelude` or project modules, so they did not enlarge this subset.
 
 * **Where the cache is reachable:** run `lake exe cache get` first, then `lake build` only
-  compiles the 11 project modules, which takes about a minute.
+  compiles the 17 project modules, which takes a few minutes. Each of the larger modules
+  needs 10–30 s.
 * **Without the cache:** `lake build` compiles that Mathlib subset from source, which takes
-  a long time.
+  a long time (hours on a small machine).
 
 Rule for contributors: import `InfLearn.Prelude`, or the project's own modules, rather than
 adding new Mathlib imports. A new Mathlib import outside the compiled subset would force a
@@ -48,22 +51,24 @@ messages. These messages are expected and are not warnings.
 
 ### Axiom audit
 
-`Audit.lean` imports the whole library and runs `#print axioms` on 295 main declarations,
+`Audit.lean` imports the whole library and runs `#print axioms` on 483 main declarations,
 including the foundations and every theorem listed in the tables below. It is a separate
 `lean_lib` target named `Audit`. Its output, from `lake build Audit` with a header and a
 computed summary added, is in `audit-output.txt`. Summary:
 
 | axioms reported | declarations |
 |---|---|
-| `propext, Classical.choice, Quot.sound` | 246 |
-| `propext, Quot.sound` | 39 |
-| `propext` | 9 |
-| none | 1 |
+| `propext, Classical.choice, Quot.sound` | 429 |
+| `propext, Quot.sound` | 42 |
+| `propext` | 10 |
+| none | 2 |
 | `sorryAx` or any non-standard axiom | **0** |
 
-A `grep` for `sorry`, `axiom`, `native_decide`, `admit`, `opaque`, `implemented_by`,
-`unsafe` and `extern` over `InfLearn/` matches only English words in comments ("axiom ⊳ p",
-"admitted").
+A case-insensitive `grep` for `sorry`, `axiom`, `native_decide`, `admit`, `opaque`,
+`implemented_by`, `unsafe` and `extern` over `InfLearn/` and `InfLearn.lean` matches only the
+`#print axioms` audit lines and English words in comments and docstrings ("axiom ⊳ p",
+"the axioms of the reading `h_j`", "group axioms", "admitted", "admits", and section headings
+such as "Axiom audit").
 
 ## Layout
 
@@ -80,26 +85,48 @@ A `grep` for `sorry`, `axiom`, `native_decide`, `admit`, `opaque`, `implemented_
 | `InfLearn/Blame.lean` | T7 Lemma 2.3 (hitting-set duality); T4 Lemma 4.1 (descent). |
 | `InfLearn/RateThreshold.lean` | T5 Lemma 3.1, Thm 3.2, Thm 4.1(ii) (partial); T4 Prop 7.1, Cor 7.2, Prop 7.3. |
 | `InfLearn/Contexts.lean` | T3 Props 1.4, 1.5, 1.6(a), Lemma 1.8(a), Thm 1.9, Thm 2.1 (propositional toy model); T2 Prop 7.1. |
+| `InfLearn/Unstructured.lean` | T1 Thm 3.2 (escalation dimension = positive elasticity, deterministic verifiers) and Thm 3.9 (unstructured classes, KWIK bound, the co-singleton class). Builds on `StepSoundness`. |
+| `InfLearn/Export.lean` | T3 Lemma 3.2, Thm 3.3(b)–(d), Prop 3.4 (no free export, radius of information); T3 Thm 4.1, Thm 4.4, Thm 4.5, Thm 4.6 (coherence cannot calibrate; certification of validity regions). Real-valued, over arbitrary parameter types or `[0,1]^d`. |
+| `InfLearn/ParadoxLowerBound.lean` | T4 Thm 4.3(b) and Thm 4.4(b),(c): the correction game of Def 4.2 with deterministic learners, the single-culprit class, and the chain (sorites) paradox with its CPC hypotheses. Builds on `CoherenceGames`. |
+| `InfLearn/NoAdaptation.lean` | T5 Thm 2.1(i) (no adaptation with private randomness): Gibbs' inequality, the entropy lower bound, the uniform hypothesis, the group condition, and the paper's counterexample. |
+| `InfLearn/Bilateral.lean` | T6 §2: Scott relations, bilateral Lindenbaum (Thm 2.2), strong bilateral completeness (Cor 2.3), the duality with closed sets of valuations (Thm 2.4), structural relations and Lindenbaum matrices (Thm 2.6). Builds on `Carnap`. |
+| `InfLearn/Specker.lean` | T6 Thm 3.4 (no bounded-arity family of coherence constraints suffices), the remark after it, Specker's parable, and the probabilistic half of T6 Prop 4.7 (frustrated triangle). |
 | `InfLearn.lean` | Root module; imports everything. |
 | `Audit.lean` | Axiom audit (`lake build Audit`). |
 
 Each module has its own namespace (`InfLearn.StepSoundness`, `InfLearn.Post`,
 `InfLearn.Carnap`, `InfLearn.CoherenceGames`, `InfLearn.Blame`, `InfLearn.RateThreshold`,
-`InfLearn.Contexts`), so names do not clash.
+`InfLearn.Contexts`, `InfLearn.Unstructured`, `InfLearn.Export`,
+`InfLearn.ParadoxLowerBound`, `InfLearn.NoAdaptation`, `InfLearn.Bilateral`,
+`InfLearn.Specker`), so names do not clash. Integrating the six wave-2 modules needed no
+renaming: `lake build` of the full root module succeeded unchanged. Inside `Unstructured`,
+`StepSoundness.Consistent` is written qualified because `InfLearn.Consistent` (consistency
+of a consequence operator, from `Prop/Basic`) is also in scope.
 
 ### Modelling conventions shared by all modules
 
 * **Language.** The object language is fixed: atoms `p₀, p₁, …` and the connectives ⊥, ⊤, ¬,
   ∧, ∨, →. Results stated in the notes for "any language with Boolean connectives" are proved
   for every *fragment* of this connective set (`FragFm L`). Other Boolean connectives, such as
-  XOR or NAND, are not representable.
+  XOR or NAND, are not representable. Exception: T6 Thms 2.2–2.4 (`Bilateral`) are proved for
+  sequents over an *arbitrary* type of formulas, as in the notes ("fix a set Fm"). T6 Thm 2.6
+  (term algebras) is proved only for this fixed language.
 * **Consequence operators** are arbitrary closure operators on `Set Formula`, possibly
   infinitary. "Structural" means `σ(C X) ⊆ C(σ X)` for every substitution σ.
 * **Steps** have finite premise sets (`Finset`). Derivations are the inductive closure `Cl`.
 * **Learners and verifiers** are arbitrary (noncomputable) functions. Computability claims
   are not formalized.
-* **Probability** appears only in T1 Thm 2.1(ii): a distribution on the countable step set is
-  modelled as a non-negative summable weight function. Randomized verifiers are not modelled.
+* **Probability.** T1 Thm 2.1(ii) models a distribution on the countable step set as a
+  non-negative summable weight function. `Specker` and `NoAdaptation` use finite distributions:
+  non-negative real weight vectors summing to 1, on the `2^k` Boolean worlds or on a finite
+  class `F` of labelers. Randomized verifiers, learners and certifiers are **not** modelled:
+  every interactive lower bound (T1 Thms 3.1(b), 3.2, 3.9; T4 Thm 4.4; T3 Thms 4.4–4.6) is
+  proved against deterministic agents only.
+* **Real analysis.** Derivatives and `ContDiff` are outside the compiled Mathlib subset. So
+  `Export` replaces the paper's smooth bumps by Lipschitz tents `max 0 (r - dist x c)`, and
+  takes the link between derivative jets and polynomial coefficients as a hypothesis (T3
+  Thm 3.3(b),(c)). Polynomials (`Mathlib.Algebra.Polynomial`), metric spaces, `Real.log`, the
+  product topology and `ENNReal` are available.
 
 ## Theorem map
 
@@ -109,14 +136,22 @@ Faithfulness legend:
 * **special case**: a strict special case of the paper statement, as described in the notes
   column.
 * **weaker**: a weaker conclusion than the paper claims.
+* **variant**: a closely related statement whose hypothesis is neither stronger nor weaker
+  than the paper's (used once, for T3 Thm 3.3(b), where tents replace smooth bumps).
 * **—**: not formalized.
 
 The *paper* column gives the LaTeX label in `../paper/sections/*.tex` and the number that
 label currently gets in the draft. Numbers are computed from the section order in
 `paper/main.tex` and from the current drafts, so they will change as the paper evolves; the
-labels are the stable reference. The coherence (§6), two-tier (§7) and simplicity (§8)
-sections are not drafted yet. For those rows the column shows the planned section from
-`paper/OUTLINE.md`.
+labels are the stable reference. The computation counts the numbered environments (theorem,
+lemma, proposition, corollary, conjecture, definition, example, assumption and remark share
+one counter per section) in each section file. Each `\input` in `main.tex` counts as one
+section, including files not yet written (`intro` = §1, `experiments` = §12, `open` = §14).
+In this numbering the sections are: setting §2, search §3, caution §4, imitation §5,
+coherence §6, two-tier §7, simplicity §8, existence §9, informal §10, physics §11 and
+philosophy §13. The paper's source tags (`\src{T… …}`) were used to match notes to labels.
+Numbers were last recomputed on 2026-10-03, after the coherence, two-tier, simplicity and
+existence sections were drafted.
 
 ### Foundations (paper §2)
 

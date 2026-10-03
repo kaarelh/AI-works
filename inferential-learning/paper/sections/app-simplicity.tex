@@ -18,7 +18,7 @@
 
 \section{Proofs for Section~\ref{sec:simplicity}}\label{app:simplicity}
 
-Several results of \cref{sec:simplicity} are proved in full in the main text: \cref{prop:simplicity:sequence,prop:simplicity:fixed,prop:simplicity:block,lem:simplicity:listdecode,lem:simplicity:corr,thm:simplicity:separable,cor:simplicity:selectable,cor:simplicity:example,prop:simplicity:cheap,prop:simplicity:inversion,prop:simplicity:language,prop:simplicity:sacrifice}, and \cref{lem:simplicity:hull}(i)--(ii). This appendix proves the remaining ones. The proofs follow T5 in the form repaired after verification, and the repairs are noted where they occur.
+Several results of \cref{sec:simplicity} are proved in full in the main text: \cref{prop:simplicity:sequence,prop:simplicity:block,thm:simplicity:separable,cor:simplicity:selectable,prop:simplicity:inversion}, \cref{lem:simplicity:hull}(i)--(ii), and \cref{thm:simplicity:blind} outside its idealized case. The language-relativity construction is also given in full there. This appendix proves the remaining results, and states and proves the two lemmas on which the kink rests. The proofs follow T5 in the form repaired after verification, and the repairs are noted where they occur.
 
 Conventions:
 \begin{itemize}
@@ -74,9 +74,10 @@ For the reverse inequality:
 \emph{When the bound $\sum_i\log|\mathcal C(x_i)|$ is attained.} We have $H(Q_x)\le\log|\mathcal C(x)|$, with equality iff $Q_x$ is uniform on $\mathcal C(x)$. Since the maximum is attained, the value equals $\sum_i\log|\mathcal C(x_i)|$ iff some $Q$ has uniform marginals on every $\mathcal C(x_i)$.
 
 \emph{The group condition.} Suppose $G$ acts on $\mathcal C$ with $(g\cdot f)(x)=\sigma_{g,x}(f(x))$, transitively on each $\mathcal C(x)$. Let $Q=\Unif(\mathcal C)$, which is $G$-invariant. Then
-\[
-Q_x(\sigma_{g,x}y)=Q\{f:f(x)=\sigma_{g,x}y\}=Q\{g\cdot f':\sigma_{g,x}(f'(x))=\sigma_{g,x}(y)\}=Q\{g\cdot f':f'(x)=y\}=Q\{f':f'(x)=y\}=Q_x(y),
-\]
+\begin{align*}
+Q_x(\sigma_{g,x}y)&=Q\{f:f(x)=\sigma_{g,x}y\}=Q\{g\cdot f':\sigma_{g,x}(f'(x))=\sigma_{g,x}(y)\}\\
+&=Q\{g\cdot f':f'(x)=y\}=Q\{f':f'(x)=y\}=Q_x(y),
+\end{align*}
 where the second equality substitutes $f=g\cdot f'$ and the fourth uses the $G$-invariance of $Q$. By transitivity $Q_x$ is uniform on $\mathcal C(x)$. For parities, $g_b\cdot f_a=f_{a\oplus b}$ and $\sigma_{g_b,x}(y)=y\oplus f_b(x)$. This is transitive on $\mathcal C(x)=\{0,1\}$ for $x\neq0$, and trivially so on $\mathcal C(0)=\{0\}$. A group acting transitively on $\mathcal C$ alone does not suffice: in the example of the main text, $\mathrm{Sym}(\mathcal C)$ acts transitively on $\mathcal C$, but not compatibly with the $\mathcal C(x)$.
 
 \emph{(ii)} The uniform distribution over the distinct labelings $\mathcal L=\{f(x_{1:N})\}$ pays $\log|\mathcal L|$ against every $f$. Conversely, the labelings are disjoint events, so every $P$ gives some labeling probability at most $1/|\mathcal L|$ \citep{shtarkov1987universal}.
@@ -87,7 +88,33 @@ where the second equality substitutes $f=g\cdot f'$ and the fourth uses the $G$-
 % ---------------------------------------------------------------------
 \subsection{The kink}\label{app:simplicity:kink}
 
-The setting is that of \cref{sec:simplicity:kink}. Put $\sigma_h:=s_h\chi_a\in[-1,1]$, so that $\hat s_h(a)=\E_x\sigma_h$.
+The setting is that of \cref{sec:simplicity:kink}. For a product $h$ put $s_h(x)=h(0\mid x)-h(1\mid x)$ and $\chi_{a'}(x)=(-1)^{\langle a',x\rangle}$, so that $\hat s_h(a')=\E_x[s_h\chi_{a'}]$. Put $\sigma_h:=s_h\chi_a\in[-1,1]$, so that $\hat s_h(a)=\E_x\sigma_h$.
+
+\begin{lemma}[List decoding; standard]\src{T5 Lemma 2.5a}\label{lem:simplicity:listdecode}
+For $t\in\N$, $|\{a':\hat s_h(a')\ge2^{-t}\}|\le2^{2t}$. Hence, if $\hat s_h(a)\ge2^{-t}$, then
+\[
+K(a\mid p_h)\le2t+2\log_2(t+1)+2\log_2d+O(1).
+\]
+\end{lemma}
+
+\begin{proof}
+Parseval gives $\sum_{a'}\hat s_h(a')^2=\E_x[s_h^2]\le1$, so at most $2^{2t}$ coefficients are at least $2^{-t}$. Given $p_h$, compute every $\hat s_h(a')$ exactly (finite rational sums), and list those that are at least $2^{-t}$. Then specify $d$ and $t$ self-delimitingly, followed by the $2t$-bit index of $a$ in the list. The $2\log_2d$ term is needed because a program for $h$ need not determine~$d$. For real $t$, apply the lemma to $\lceil t\rceil$.
+\end{proof}
+
+The list-size bound is the standard Parseval (Johnson-type) bound for the Hadamard code, as used by \citet{goldreich1989hard} and \citet{kushilevitz1993learning}. Only its combination with the coding theorem is used here.
+
+\begin{lemma}[Risk versus correlation]\src{T5 Lemma 2.5b}\label{lem:simplicity:corr}
+For every product $h$,
+\[
+\Risk(h)\ge-\log_2\Big(\frac{1+\hat s_h(a)}2+p\Big).
+\]
+\end{lemma}
+
+\begin{proof}
+By Jensen, $\Risk(h)\ge-\log_2\E_xh(y^*(x)\mid x)$. Since $h(0\mid x)+h(1\mid x)\le1$, we have $h(y\mid x)\le\frac{1+s_h(x)(-1)^y}2$. So off $E$, $h(y^*\mid x)=h(f_a(x)\mid x)\le\frac{1+\sigma_h(x)}2$; on $E$ it is at most~$1$. As $\frac{1+\sigma_h}2\ge0$, we get $\E_xh(y^*\mid x)\le\frac{1+\hat s_h(a)}2+p$.
+\end{proof}
+
+As a function of $\hat s_h(a)$ alone the bound is tight: an $h$ that is right on $E$ and has $\hat s_h(a)=0$ attains $\E_xh(y^*\mid x)=\frac12+p$. So removing the additive $p$ requires that $E$ be random relative to~$h$, which the next lemma, added after verification, exploits.
 
 \begin{lemma}[Randomness of $E$ removes the $2p$ slack]\src{T5 Lemma 2.5c, added after verification}\label{lem:simplicity:random}
 For every product $h$,
@@ -269,7 +296,7 @@ Using the upper bound on $\Phi$, this gives $\varphi_j(t_j)\le\min(c\,d_j,\pi_j)
 \item \emph{The implied forms} use $\omega(d/4)=1-\log_2(1+u)\ge1-u/\ln2$ and $1/\omega(2)=2.4094$.
 \end{itemize}
 
-A numerical check \status{computed; T5 repair\_checks}: under the new conditions, $\varphi_j(t)>c\,d_j+\Delta$ for every integer $t\ge2$ in 8474 random admissible instances. The counterexample of \cref{rem:simplicity:repaired} violates the new second condition, by a factor of 1.01--1.06.
+A numerical check \status{computed; T5 repair\_checks}: under the new conditions, $\varphi_j(t)>c\,d_j+\Delta$ for every integer $t\ge2$ in 8474 random admissible instances. The counterexample to the original clause (b), given after \cref{thm:simplicity:idealized}, violates the new second condition by a factor of 1.01--1.06.
 \qed
 
 % ---------------------------------------------------------------------
@@ -314,6 +341,22 @@ In every case $J_c(h)$ is at least the minimum of the three lower-bound terms.
 
 The $2\log_2d$ in $K_{\rm tot}$ comes from the corrected \cref{thm:simplicity:kink}(c), and the coin term uses the sharper $\beta_t$. Neither changes the switch points beyond their $O(\log)$ slack.
 \qed
+
+\begin{proof}[Proof of \cref{cor:simplicity:example}]
+\emph{Correlation.} By the upper bound of \cref{thm:simplicity:example}, $\Risk(h)\le J_c(h)\le c(d+\kappa')+H(p)+\xi$. \Cref{lem:simplicity:corr} gives $2^{-\Risk(h)}\le\frac{1+\hat s_h(a)}2+p$, i.e.\ $\hat s_h(a)\ge2^{1-\Risk(h)}-1-2p$. Substitute the bound on $\Risk(h)$.
+
+\emph{Memorization.} By \cref{thm:simplicity:kink}(c), $K(h)\ge K_{\rm tot}-n\Risk(h)$, so
+\[
+J_c(h)\ge cK_{\rm tot}-(cn-1)\Risk(h).
+\]
+Combine this with $J_c(h)\le c(d+\kappa')+H(p)+\xi$ and with $L_E\ge nH(p)-\log_2(n+1)$. This gives
+\[
+(cn-1)\Risk(h)\ge c(L_E-\delta_E-2\log_2d-\kappa-\kappa')-H(p)-\xi\ge(cn-1)H(p)-c\Lambda-\xi.
+\]
+Divide by $cn-1>0$.
+\end{proof}
+
+Numbers for illustration \status{computed; T5 repair\_checks}: at $d=20$, $p=2^{-10}$ and $\kappa=\kappa'=\xi=0$, $c=10^{-4}$ gives $\hat s\ge0.980$ and $\Risk\ge H(p)-2.8\cdot10^{-5}$, and $c=10^{-3}$ gives $\hat s\ge0.955$.
 
 % ---------------------------------------------------------------------
 \subsection{Proof of \texorpdfstring{\cref{thm:simplicity:blind}}{rate blindness}(ii) in the idealized setting}\label{app:simplicity:blind}
@@ -420,5 +463,13 @@ The postulates enter only through $\Adm$, so \cref{thm:simplicity:division} appl
 \item \emph{Only if.} Suppose every witness has a member of rate below $\rho_e$. There are finitely many witnesses, so we can choose $c\in\big(\max_W\min_{w\in W}\rho_w,\ \rho_e\big)$, with $\max\emptyset=0$; this uses $\rho_e>0$. At that $c$ no witness lies inside $V_+(c)$, so $e\in S^*(c)$, and $e$ survives in every optimal set.
 \end{itemize}
 \end{proof}
+
+\begin{proof}[Proof of \cref{prop:simplicity:sacrifice}]
+\emph{The repaired set is admissible.} First, $(V_+\setminus B)\cup\{e\}\in\Adm$. Otherwise a minimal $W\subseteq V_+\setminus B$ with $W\cup\{e\}\notin\Adm$ would be a witness of $e$ inside $V_+$ that $B$ misses. Second, for $e'\in S_{\rm clean}\cap F$, $(V_+\setminus B)\cup\{e'\}\subseteq V_+\cup\{e'\}\in\Adm$, so it is admissible by down-closure. By error-independence with $U=V_+\setminus B$, the set $S'=(V_+\setminus B)\cup\{e\}\cup(S_{\rm clean}\cap F)$ is admissible.
+
+\emph{Its value.} Since $e$ has a witness inside $V_+$, $V_+\cup\{e\}\notin\Adm$, so $e\notin S_{\rm clean}$. Hence $\val(S')=\val(S_{\rm clean})-\sum_B\nu+\nu_e=\val(S_{\rm clean})+\nu_e-\beta(e)>\val(S_{\rm clean})$.
+\end{proof}
+
+In 1\,882 random instances with $\beta(e)<\nu_e$, the clean set was strictly suboptimal every time \status{computed; verification}.
 
 \noindent\emph{The two counterexamples} quoted in the main text were recomputed \status{computed; T5 repair\_checks}. One is to \cref{cor:simplicity:window} without valid dominance. The other is to the original Step~3 of \cref{thm:simplicity:division}.
