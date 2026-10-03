@@ -1,8 +1,10 @@
 % =====================================================================
-% Appendix: proofs for Section 8 (Simplicity and normativity from imitation)
+% Appendix: further results and proofs for Section 8 (Simplicity and normativity from imitation)
 % Sources: research/theory/T5-steeper-simplicity-and-normativity-from-imitation.md (as repaired;
 %          see its Verification log), research/verification/T5-verification.md,
-%          research/theory/T4-informal-math-latent-formalization.md §7.
+%          research/verification/reverification-round2.md,
+%          research/theory/T4-informal-math-latent-formalization.md §7,
+%          research/theory/T5-checks/ (scripts c1-c5, repair_checks.py).
 % =====================================================================
 \providecommand{\Risk}{\mathcal R}
 \providecommand{\hRisk}{\hat{\mathcal R}}
@@ -16,9 +18,9 @@
 \providecommand{\Muniv}{\mathbf M}
 \providecommand{\muniv}{\mathbf m}
 
-\section{Proofs for Section~\ref{sec:simplicity}}\label{app:simplicity}
+\section{Further results and proofs for Section~\ref{sec:simplicity}}\label{app:simplicity}
 
-Several results of \cref{sec:simplicity} are proved in full in the main text: \cref{prop:simplicity:sequence,prop:simplicity:block,thm:simplicity:separable,cor:simplicity:selectable,prop:simplicity:inversion}, \cref{lem:simplicity:hull}(i)--(ii), and \cref{thm:simplicity:blind} outside its idealized case. The language-relativity construction is also given in full there. This appendix proves the remaining results, and states and proves the two lemmas on which the kink rests. The proofs follow T5 in the form repaired after verification, and the repairs are noted where they occur.
+This appendix states the secondary results that \cref{sec:simplicity} only summarizes: \cref{lem:simplicity:empirical,prop:simplicity:sequence,thm:simplicity:idealized,cor:simplicity:shapes,thm:simplicity:example,cor:simplicity:example}, the relation to the literature on algorithmic statistics, and the further pathologies. It also proves the results of the main text whose proofs are not given there. Proved in full in the main text are \cref{thm:simplicity:separable,cor:simplicity:selectable,prop:simplicity:inversion}, \cref{lem:simplicity:hull}(i)--(ii), and \cref{thm:simplicity:blind} outside its idealized case. The kink rests on three lemmas, stated and proved in Appendix~\ref{app:simplicity:kink}. Appendix~\ref{app:simplicity:scripts} lists the scripts behind the \textsf{computed} figures and the statements changed during verification.
 
 Conventions:
 \begin{itemize}
@@ -26,11 +28,23 @@ Conventions:
 \item $\kappa$ denotes a machine constant. It absorbs $O(1)$ terms and may grow from one result to the next, but it is fixed before $d$, $n$ or $m$.
 \item $p_h$ is a shortest program for $h$, and $K(p_h)=K(h)+O(1)$ \citep{li2008introduction}.
 \item Prefix complexities of concatenated self-delimiting descriptions add, up to $O(1)$.
+\item Where a result compares the class with a semimeasure or an infinite mixture, the class is enlarged to lower-semicomputable semimeasures and computable real-valued predictors.
 \end{itemize}
 
 % ---------------------------------------------------------------------
-\subsection{Proof of \texorpdfstring{\cref{lem:simplicity:empirical}}{the empirical-selection lemma}}\label{app:simplicity:empirical}
+\subsection{Empirical selection}\label{app:simplicity:empirical}
 
+\begin{lemma}[Empirical selection tracks population selection]\src{T5 Lemma 1.2}\label{lem:simplicity:empirical}
+In the computable version, suppose $h(y\mid x)\ge2^{-B}$ for all $h$. With probability at least $1-\delta$, simultaneously for all $h$, $|\hRisk_N(h)-\Risk(h)|\le B\sqrt{(\ell(h)\ln2+\ln(2/\delta))/(2N)}$. On this event, each minimizer $\hat h$ of $\hat J_c$ satisfies, for every fixed $h_0$,
+\[
+J_c(\hat h)\le\Phi(c)+2B\sqrt{((\ell(h_0)+B/c)\ln2+\ln(2/\delta))/(2N)}.
+\]
+In particular, a unique population minimizer with gap $\gamma$ is recovered once this bound is below $\gamma$.
+\end{lemma}
+
+This is a standard Occam-type bound: Hoeffding's inequality with a Kraft union bound.
+
+\begin{proof}
 \emph{Both minimizers exist.} By Kraft, $\{h:\ell(h)\le L\}$ has at most $2^L$ elements. Fix $h_0$. Losses lie in $[0,B]$, so $\Risk(h_0),\hRisk_N(h_0)\le B$. Any $h$ with $\ell(h)>\ell(h_0)+B/c$ therefore has
 \[
 J_c(h),\ \hat J_c(h)\ \ge c\ell(h)>c\ell(h_0)+B\ge J_c(h_0),\ \hat J_c(h_0).
@@ -50,7 +64,14 @@ J_c(\hat h)\le\hat J_c(\hat h)+\varepsilon_N(\hat h)\le\hat J_c(h_c)+\varepsilon
 Both $\varepsilon_N$ terms are at most $B\sqrt{((\ell(h_0)+B/c)\ln2+\ln(2/\delta))/(2N)}$.
 
 \emph{Uniqueness.} If $J_c(h)\ge\Phi(c)+\gamma$ for every $h\neq h_c$, then a bound below $\gamma$ forces $\hat h=h_c$.
-\qed
+\end{proof}
+
+% ---------------------------------------------------------------------
+\subsection{Relation to the literature}\label{app:simplicity:structure}
+
+\emph{Tempered posteriors.} The tempered posterior $\propto2^{-\ell}\prod_ih(y_i\mid x_i)^\eta$ has its MAP at the minimizer of $\ell/\eta+N\hRisk_N$, so the note's $\lambda$ is $1/\eta$: a learning rate $\eta<1$ \citep{grunwald2012safe,grunwald2017inconsistency,zhang2006epsilon,bissiri2016general,bhattacharya2019fractional}. With $\lambda=cN$ the posterior tends to the non-concentrating Gibbs measure $\propto2^{-(\ell+\Risk/c)}$ \citep{catoni2007pac}, whose mode the proposal selects. SafeBayes learns $\eta$ from data to repair misspecification; \cref{thm:simplicity:validation} suggests why no such criterion finds the note's $\eta$, since an imitation model is well specified \emph{for the teacher} (our reading, not checked against the papers).
+
+\emph{Algorithmic statistics.} Kolmogorov's structure function $h_x(\alpha)=\min\{\log|S|:x\in S,K(S)\le\alpha\}$ lies, to logarithmic precision, above the sufficiency line $K(x)-\alpha$, and, within these constraints and to logarithmic precision, every shape is realized by the structure function of some data \citep{vereshchagin2004kolmogorov}; see also \citet{gacs2001algorithmic,vereshchagin2017algorithmic}. Set and probability models share randomness. The \emph{product-model structure function} $\rho^\times(k)=\min\{\Risk(h):\ell(h)\le k\}$ need not have slope $-1$ and can kink (\cref{thm:simplicity:kink}): that is the note's insight in this language. All sufficient statistics tie at $\lambda=1$, so $\lambda=1+\epsilon$ selects roughly the minimal one and larger $\lambda$ selects \emph{insufficient} models \status{proof sketch}, as the note wants, since the errors are structure. The objective $c\ell+\Risk$ is the algorithmic rate--distortion Lagrangian with log-loss distortion \citep{vereshchagin2010rate}; classical two-part MDL \citep{rissanen1978modeling,barron1991minimum,grunwald2007minimum} has $\lambda=1$ (whether Barron and Cover also use $\lambda>1$ we have not checked).
 
 % ---------------------------------------------------------------------
 \subsection{Proof of \texorpdfstring{\cref{thm:simplicity:pricing}}{the pricing theorem}}\label{app:simplicity:pricing}
@@ -86,9 +107,32 @@ where the second equality substitutes $f=g\cdot f'$ and the fourth uses the $G$-
 \qed
 
 % ---------------------------------------------------------------------
+\subsection{Universality: sequences and blocks}\label{app:simplicity:sequence}
+
+\begin{proposition}[The sequence pathology, exactly]\src{T5 Prop 2.3, as repaired}\label{prop:simplicity:sequence}
+Let $\Muniv$ be a universal lower-semicomputable conditional semimeasure on label sequences, with $\Muniv\ge2^{-K(q)-c_0}q$ for every computable $q$ \citep{li2008introduction}, and let $c_{\Muniv}=K(\Muniv)$. For every $\lambda>1$,
+\[
+\lambda K(\Muniv)-\log\Muniv(y_{1:N}\mid x_{1:N})\le\lambda c_{\Muniv}+K(q)+c_0-\log q(y_{1:N}\mid x_{1:N}).
+\]
+This beats $q$'s own objective whenever $K(q)>c_{\Muniv}+(c_{\Muniv}+c_0)/(\lambda-1)$.
+\end{proposition}
+
+\begin{proof}
+Take logarithms in the dominance inequality and add $\lambda c_{\Muniv}$.
+\end{proof}
+
+As $\lambda\to\infty$ the threshold tends to $c_{\Muniv}$, not $0$. In the function case, even the universal \emph{conditional} semimeasure $\muniv(y\mid x)\asymp2^{-K(y\mid x)}$ is a fixed predictor \src{T5 Thm 2.4}. For binary $Y$ we have $K(y\mid x)=O(1)$, so $\Risk(\muniv)\ge\log_2\frac1{1-2^{-\kappa_U}}>0$ for every teacher, where $\kappa_U$ is a machine constant.
+
+\begin{proof}[Proof of \cref{prop:simplicity:block}]
+Let $Z_i=\sum_\theta w_\theta\prod_{k<i}q_\theta(y_{b,k}\mid\cdot)$. Then $h_w(y_{b,i}\mid\cdot)=Z_{i+1}/Z_i$, so the block likelihood telescopes to $Z_{|b|+1}/Z_1\ge Z_{|b|+1}\ge w_\theta\prod_iq_\theta(y_{b,i}\mid\cdot)$, using $Z_1=\sum_\theta w_\theta\le1$. This holds for history-dependent personas and inputs too, because everything is conditioned on the realized history. For a finite rational family, $h_w$ has rational outputs and is computed by one program from $w$ and $(q_\theta)$.
+\end{proof}
+
+% ---------------------------------------------------------------------
 \subsection{The kink}\label{app:simplicity:kink}
 
 The setting is that of \cref{sec:simplicity:kink}. For a product $h$ put $s_h(x)=h(0\mid x)-h(1\mid x)$ and $\chi_{a'}(x)=(-1)^{\langle a',x\rangle}$, so that $\hat s_h(a')=\E_x[s_h\chi_{a'}]$. Put $\sigma_h:=s_h\chi_a\in[-1,1]$, so that $\hat s_h(a)=\E_x\sigma_h$.
+
+\emph{Overview.} In (a), the true component of $P_u$ has weight $2^{-u}$ and likelihood exactly $2^{-nH(p)}$, and every other component disagrees with $y^*$ on at least $n/2-pn$ points. In (b), Parseval allows at most $2^{2t}$ parities to correlate at least $2^{-t}$ with $h$, so a short $h$ that correlated with $f_a$ would encode $a$ in fewer than $d$ bits; Jensen's inequality turns small correlation into risk near one bit; and Hoeffding's inequality for sampling without replacement \citep{hoeffding1963probability}, with a counting argument, uses the randomness of $E$ relative to $h$ to remove the slack $2p$. Part (c) is the coding theorem.
 
 \begin{lemma}[List decoding; standard]\src{T5 Lemma 2.5a}\label{lem:simplicity:listdecode}
 For $t\in\N$, $|\{a':\hat s_h(a')\ge2^{-t}\}|\le2^{2t}$. Hence, if $\hat s_h(a)\ge2^{-t}$, then
@@ -114,9 +158,9 @@ For every product $h$,
 By Jensen, $\Risk(h)\ge-\log_2\E_xh(y^*(x)\mid x)$. Since $h(0\mid x)+h(1\mid x)\le1$, we have $h(y\mid x)\le\frac{1+s_h(x)(-1)^y}2$. So off $E$, $h(y^*\mid x)=h(f_a(x)\mid x)\le\frac{1+\sigma_h(x)}2$; on $E$ it is at most~$1$. As $\frac{1+\sigma_h}2\ge0$, we get $\E_xh(y^*\mid x)\le\frac{1+\hat s_h(a)}2+p$.
 \end{proof}
 
-As a function of $\hat s_h(a)$ alone the bound is tight: an $h$ that is right on $E$ and has $\hat s_h(a)=0$ attains $\E_xh(y^*\mid x)=\frac12+p$. So removing the additive $p$ requires that $E$ be random relative to~$h$, which the next lemma, added after verification, exploits.
+As a function of $\hat s_h(a)$ alone the bound is tight: an $h$ that is right on $E$ and has $\hat s_h(a)=0$ attains $\E_xh(y^*\mid x)=\frac12+p$. So removing the additive $p$ requires that $E$ be random relative to~$h$, which the next lemma exploits.
 
-\begin{lemma}[Randomness of $E$ removes the $2p$ slack]\src{T5 Lemma 2.5c, added after verification}\label{lem:simplicity:random}
+\begin{lemma}[Randomness of $E$ removes the $2p$ slack]\src{T5 Lemma 2.5c}\label{lem:simplicity:random}
 For every product $h$,
 \[
 \Risk(h)\ge1-\log_2\big(1+(1-2p)\,\hat s_h(a)+\varepsilon_h\big),\qquad\varepsilon_h:=\sqrt{32\ln2\cdot p\,\big(\delta_E^++K(h)+\kappa_n\big)/n},
@@ -152,7 +196,7 @@ K(E\mid a,p_h)\le\log_2|B_\eta|+\kappa_n\le L_E-\frac{pn\eta^2}{2\ln2}+\kappa_n.
 Hence $\eta_0^2<4\eta^2\le8\ln2\,(\delta_E^++K(h)+\kappa_n)/(pn)$, i.e.\ $(2p\eta_0)^2<\varepsilon_h^2$.
 \end{proof}
 
-A numerical check \status{computed; T5 repair\_checks}. The identity holds to machine precision. For random $E$ with $d=12$ and $p\in\{1/64,0.15,0.2,0.24\}$, the observed $\eta_0$ is at most $0.08$, and the bound $\frac12+\frac{1-2p}2\hat s+p\eta_0$ is never violated.
+A numerical check \status{computed}. The identity holds to machine precision. For random $E$ with $d=12$ and $p\in\{1/64,0.15,0.2,0.24\}$, the observed $\eta_0$ is at most $0.08$, and the bound $\frac12+\frac{1-2p}2\hat s+p\eta_0$ is never violated.
 
 \begin{proof}[Proof of \cref{thm:simplicity:kink}]
 \emph{(a), upper bounds.}
@@ -194,7 +238,7 @@ This contradicts the hypothesis on $K(h)$ once $\kappa$ exceeds the $O(1)$. So $
 
 \emph{(c).}
 \begin{itemize}
-\item $P_h(y):=\prod_xh(y_x\mid x)$ is a semi-distribution on $\{0,1\}^n$, computable from $p_h$ \emph{and} $d$. A program for $h$ need not determine $d$; omitting this was the error corrected after verification.
+\item $P_h(y):=\prod_xh(y_x\mid x)$ is a semi-distribution on $\{0,1\}^n$, computable from $p_h$ \emph{and} $d$. A program for $h$ need not determine $d$, which is why (c) carries the term $2\log_2d$.
 \item By the conditional coding theorem, $K(y^*\mid p_h,d)\le-\log P_h(y^*)+O(1)=n\Risk(h)+O(1)$. So $K(y^*)\le K(h)+n\Risk(h)+2\log_2d+O(1)$.
 \item From $y^*$ one computes $a$. The correlation of $(-1)^{y^*}$ with $\chi_a$ is $1-2p$, and with any other $\chi_{a'}$ it is $|-2\E[\chi_{a\oplus a'}1_E]|\le2p<1-2p$. Then $E=\{y^*\neq f_a\}$. So $K(a,E)\le K(y^*)+O(1)$.
 \item Symmetry of information gives $K(a,E)=K(a)+K(E\mid a,K(a))+O(1)\ge d+L_E-\delta_E-O(1)$.
@@ -233,11 +277,37 @@ So the set of $c>0$ at which $z$ is the \emph{unique} minimizing point is the op
 \qed
 
 \smallskip
-\noindent A computed check \status{computed; T5 c3(ii), test repaired after verification}: 300 random point sets and 400 values of $c$ each gave no minimizer off the hull, no monotonicity violation, and every vertex selectable.
+\noindent A computed check \status{computed}: 300 random point sets and 400 values of $c$ each gave no minimizer off the hull, no monotonicity violation, and every vertex selectable.
 
 % ---------------------------------------------------------------------
-\subsection{Proof of \texorpdfstring{\cref{thm:simplicity:idealized}}{the idealized rate threshold}}\label{app:simplicity:idealized}
+\subsection{The rate threshold for arbitrary hypotheses}\label{app:simplicity:idealized}
 
+With $\ell=K$ and all hypotheses allowed, a hypothesis might share information across regions, or learn components only partially. For independent parities neither helps, up to explicit slack.
+
+Take regions $X_j=\{j\}\times\{0,1\}^{d_j}$, $j\le m$, with $\mu(j,z)=\pi_j2^{-d_j}$, and teacher $y^*(j,z)=\langle a_j,z\rangle\bmod2$, with $K(a_1,\dots,a_m)\ge\sum_jd_j$. The rate of component $j$ is $\pi_j/d_j$, and $\hat s_{h,j}$ is the correlation of $h$ with $a_j$ on region $j$. The function $\omega(t)=1-\log_2(1+2^{1-t})$ is the exact per-region risk floor (\cref{lem:simplicity:corr} with $p=0$). It is increasing and concave, with $\omega(2)=0.415$.
+
+\begin{theorem}[Rate threshold, idealized]\src{T5 Thm 3.3, as repaired}\label{thm:simplicity:idealized}
+For all $c>0$,
+\[
+\Big|\Phi(c)-\sum_j\min(c\,d_j,\pi_j)\Big|\le\Delta_0(c):=c\Big(\sum_j(2\log_2d_j+2\log_2m+4+\kappa)+\kappa\Big)+\sum_j\pi_j2^{1-d_j/4}.
+\]
+Moreover, suppose every $d_j\ge8$. Let $J_c(h)\le\Phi(c)+\xi$ and $\Delta=2\Delta_0(c)+\xi$. Then for each $j$:
+\begin{enumerate}[label=(\alph*)]
+\item if $\pi_j<c\,d_j-\Delta-4c$, then $\hat s_{h,j}<\frac12$, so $h$ has not learned component $j$;
+\item if $\pi_j\,\omega(d_j/4)>c\,d_j+\Delta$ and $\pi_j\,\omega(2)>\Delta+8c$, then $\hat s_{h,j}\ge\frac12$, so $h$ has learned it.
+\end{enumerate}
+The two conditions in (b) are implied by $\pi_j>c\,d_j+\Delta+\pi_j2^{1-d_j/4}/\ln2$ and $\pi_j>2.41(\Delta+8c)$.
+\end{theorem}
+
+The constant $1/\omega(2)\approx2.41$ is the best this method gives. The second condition in (b) cannot be weakened to $\pi_j>2\Delta+16c$, even together with the first: with $m=1$, $\pi_1=1$, $d_1=40$, $c\approx10^{-8}$, $h(f_a(z)\mid z)=0.745$ and $\xi:=J_c(h)$, both of these hold, yet $\hat s=0.49$ \status{computed}.
+
+\emph{Proof idea.} The upper bound is witnessed by a hypothesis that knows $a_j$ when $c\,d_j<\pi_j$, and flips coins elsewhere. For the lower bound, on each region we either list-decode $a_j$ from $p_h$ or write it out literally. Joint randomness then gives
+\[
+K(h)\ge\sum_j(d_j-s(t_j))^+-O\Big(\sum_j\log d_j+m\log m\Big),
+\]
+where $s(t)=2t+2\log_2(t+1)$ and $2^{-t_j}$ is $h$'s correlation scale on region $j$. The risk on region $j$ is at least $\omega(t_j)$. Since $\omega$ is concave, each per-region minimization reduces to its endpoints.
+
+\begin{proof}
 Write $R_j(h)=\E_{z}[-\log h(y^*(j,z)\mid j,z)]$ for the normalized risk on region $j$, so that $\Risk(h)=\sum_j\pi_jR_j(h)$. Let $s(t)=2t+2\log_2(t+1)$, $u_j=2^{1-d_j/4}$, and $C:=\sum_j(2\log_2d_j+2\log_2m+\kappa)+\kappa$.
 
 \emph{Upper bound.} Let $h_S$ know $a_j$ for $j\in S$ and flip a fair coin elsewhere. Describing $j$, $d_j$ and $a_j$ for each $j\in S$ gives $K(h_S)\le\sum_{j\in S}(d_j+2\log_2d_j+2\log_2m)+\kappa$, and $\Risk(h_S)=\sum_{j\notin S}\pi_j$. With $S=\{j:c\,d_j<\pi_j\}$,
@@ -262,7 +332,7 @@ and $R_j\ge0$ always. For $t_j=\infty$ we have $\hat s\le0$, so $R_j\ge1$. Hence
 \]
 Since $s(t)\le4t$ for $t\ge1$, we have $\varphi_j(t)\ge\psi_j(t):=c(d_j-4t)+\pi_j\omega(t)$.
 \begin{itemize}
-\item \emph{Correction after verification.} The original proof continued with $\omega(t)\ge1-2^{1-t}$. That is false for $t\ge2$, since $\log_2(1+u)\ge u$ on $[0,1]$. The exact floor $\omega$ is used from here on.
+\item The exact floor $\omega$ matters here: the cruder $1-2^{1-t}$ is not a lower bound for $t\ge2$, since $\log_2(1+u)>u$ on $(0,1)$.
 \item $\omega$ is increasing and concave: with $u=2^{1-t}$, $\omega'(t)=u/(1+u)$, which is positive and decreasing in~$t$.
 \end{itemize}
 
@@ -283,7 +353,7 @@ whose left side has maximum $1.88$.
 \end{itemize}
 Summing over $j$ gives $\Phi(c)\ge\sum_j\min(c\,d_j,\pi_j)-c(C+4m)-\sum_j\pi_ju_j=\sum_j\min(c\,d_j,\pi_j)-\Delta_0(c)$.
 
-A numerical check \status{computed; T5 repair\_checks}: the per-region bound was checked for $d\in[1,63]\cup\{80,100,200,400\}$, $c=2^{e/4}$ with $e\in[-60,9]$, and seven values of $\pi$, with both $s(t)$ and $4t$. There were no violations.
+The per-region bound was also checked numerically, with no violations \status{computed}, for $d\in[1,63]\cup\{80,100,200,400\}$, for $c=2^{e/4}$ with $e\in[-60,9]$ and for seven values of $\pi$, with both $s(t)$ and $4t$.
 
 \emph{Identification.} Let $J_c(h)\le\Phi(c)+\xi$. For each $j$,
 \[
@@ -296,12 +366,23 @@ Using the upper bound on $\Phi$, this gives $\varphi_j(t_j)\le\min(c\,d_j,\pi_j)
 \item \emph{The implied forms} use $\omega(d/4)=1-\log_2(1+u)\ge1-u/\ln2$ and $1/\omega(2)=2.4094$.
 \end{itemize}
 
-A numerical check \status{computed; T5 repair\_checks}: under the new conditions, $\varphi_j(t)>c\,d_j+\Delta$ for every integer $t\ge2$ in 8474 random admissible instances. The counterexample to the original clause (b), given after \cref{thm:simplicity:idealized}, violates the new second condition by a factor of 1.01--1.06.
-\qed
+A numerical check \status{computed}: under the conditions of (b), $\varphi_j(t)>c\,d_j+\Delta$ for every integer $t\ge2$ in 8474 random admissible instances. The counterexample after the theorem violates the second condition of (b) by a factor of 1.01--1.06.
+\end{proof}
 
 % ---------------------------------------------------------------------
-\subsection{Proof of \texorpdfstring{\cref{cor:simplicity:shapes}}{the shapes corollary}}\label{app:simplicity:shapes}
+\subsection{Every convex frontier is realizable}\label{app:simplicity:shapes}
 
+\begin{corollary}[Every convex frontier is realizable, after rescaling]\src{T5 Cor 3.4, as repaired}\label{cor:simplicity:shapes}
+Let $s_1>\dots>s_m>0$ be rational and $d_j\ge1$ integers, with $\sum_js_jd_j\le1$. Set $\pi_j=s_jd_j$, and add a fair-coin region of mass $\pi_0=1-\sum_j\pi_j$. Let $P$ be the convex polygon from $(0,1)$ whose successive edges have slope $-s_j$ and horizontal length $d_j$, and which is flat at height $\pi_0$ afterwards. Then the lower boundary $\breve\rho$ of the closure of $\hat C$ satisfies
+\[
+P(k+C')-\epsilon\le\breve\rho(k)\le P(k-C')+\epsilon,
+\]
+where $C'=O(\sum_j\log d_j+m\log m+m\kappa)$ and $\epsilon=\sum_j\pi_j2^{1-d_j/4}$.
+\end{corollary}
+
+Scaling every $d_j$ up by $L$ and every $s_j$ down by $L$ makes the bands negligible. So every convex, decreasing, piecewise-linear frontier that starts at height $1$, has rational slopes and drops by at most one bit is realized after rescaling, up to the bands. This is the product-model analogue of the ``all shapes'' theorem of \citet{vereshchagin2004kolmogorov}, with the same moral: whether a good model is a vertex is a property of the data, not a theorem. The proof is Legendre duality.
+
+\begin{proof}
 \emph{The coin region.} On the coin region every hypothesis has cross-entropy at least one bit per unit mass, with equality iff it is uniform there. So $\Risk(h)\ge\pi_0+\sum_{j\ge1}\pi_jR_j(h)$, and the region plays no role in the complexity argument. The lower bound of \cref{thm:simplicity:idealized} therefore holds with $\pi_0$ added. The witnesses $h_S$ are uniform on the coin region, at an extra $O(1)$ bits to recognize it. Hence $|\Phi(c)-\Psi(c)|\le cC'+\epsilon$ with $\Psi(c):=\pi_0+\sum_j\min(c\,d_j,\pi_j)$, for all $c\ge0$. At $c=0$ both sides equal~$\pi_0$.
 
 \emph{Legendre duality.} $\Phi(c)=\inf_{y\in\hat C}\langle(c,1),y\rangle$ is the support function of $\hat C$. The lower boundary $\breve\rho$ of its closure is convex and lower semicontinuous, so $\breve\rho(k)=\sup_{c\ge0}[\Phi(c)-ck]$. Likewise $P(k):=\sup_{c\ge0}[\Psi(c)-ck]$.
@@ -316,11 +397,32 @@ A numerical check \status{computed; T5 repair\_checks}: under the new conditions
 \]
 
 \emph{Rescaling.} Replacing $d_j$ by $Ld_j$ and $s_j$ by $s_j/L$ keeps every $\pi_j$. It raises $C'$ only logarithmically in $L$, so the band is $o(L)$, and $\epsilon=\sum_j\pi_j2^{1-Ld_j/4}\to0$.
-\qed
+\end{proof}
 
 % ---------------------------------------------------------------------
-\subsection{Proof of \texorpdfstring{\cref{thm:simplicity:example}}{the parity example}}\label{app:simplicity:example}
+\subsection{The note's example, verified}\label{app:simplicity:example}
 
+Return to the setting of \cref{thm:simplicity:kink}. Let $\tau_t=2t+2\log_2(t+1)+2\log_2d+\kappa$ and $K_{\rm tot}=d+L_E-\delta_E-2\log_2d-\kappa$.
+
+\begin{theorem}[Parity version of the note's example]\src{T5 Thm 3.5, as repaired}\label{thm:simplicity:example}
+For every $c>0$ and $t\in\N$,
+\[
+\Phi(c)\le\min\{1+c\kappa,\ c(d+\kappa')+H(p),\ c(d+L_E+\kappa\log n)\}
+\]
+and
+\[
+\Phi(c)\ge\min\{1-\beta_t/\ln2,\ c(d-\tau_t)+(L_E-\delta_E-\kappa)/n,\ c\,K_{\rm tot}\}.
+\]
+The terms correspond to the coin, the good model and the bad model, which switch near $c=(1-H(p))/d$ and $c=H(p)/L_E\approx1/n$.
+\end{theorem}
+
+\begin{corollary}[Identification in the parity example]\src{T5 Cor 3.5a}\label{cor:simplicity:example}
+If $J_c(h)\le\Phi(c)+\xi$, then $\hat s_h(a)\ge2^{1-c(d+\kappa')-H(p)-\xi}-1-2p$. If moreover $cn>1$, then $\Risk(h)\ge H(p)-(\xi+c\Lambda)/(cn-1)$, where $\Lambda=\log_2(n+1)+\delta_E+2\log_2d+\kappa+\kappa'$.
+\end{corollary}
+
+So for $c$ well inside the window $(\approx1/n,\approx(1-H(p))/d)$, i.e.\ with $cn\gg1$, $c\,d\ll1$ and $p$ small (the bound on $\hat s_h(a)$ is vacuous once $2^{1-H(p)}-1\le2p$, e.g.\ at $p=0.2$), every near-optimal hypothesis (small $\xi$) correlates strongly with $f_a$ and memorizes almost none of the errors. Near either end of the window the bounds become vacuous. For example, at $d=20$, $p=2^{-10}$ and $\kappa=\kappa'=\xi=0$, $c=10^{-4}$ gives $\hat s\ge0.980$ and $\Risk\ge H(p)-2.8\cdot10^{-5}$, and $c=10^{-3}$ gives $\hat s\ge0.955$ \status{computed}.
+
+\begin{proof}[Proof of \cref{thm:simplicity:example}]
 \emph{Upper bound.} We list the three models.
 \begin{itemize}
 \item The coin has $K\le\kappa$ and $\Risk=1$.
@@ -337,10 +439,8 @@ A numerical check \status{computed; T5 repair\_checks}: under the new conditions
   \item If $c<1/n$, the minimum is at $K=K_{\rm tot}$, with value $cK_{\rm tot}$.
   \end{itemize}
 \end{itemize}
-In every case $J_c(h)$ is at least the minimum of the three lower-bound terms.
-
-The $2\log_2d$ in $K_{\rm tot}$ comes from the corrected \cref{thm:simplicity:kink}(c), and the coin term uses the sharper $\beta_t$. Neither changes the switch points beyond their $O(\log)$ slack.
-\qed
+In every case $J_c(h)$ is at least the minimum of the three lower-bound terms. The $2\log_2d$ in $K_{\rm tot}$ and the slack in $\beta_t$ move the switch points only within their $O(\log)$ slack.
+\end{proof}
 
 \begin{proof}[Proof of \cref{cor:simplicity:example}]
 \emph{Correlation.} By the upper bound of \cref{thm:simplicity:example}, $\Risk(h)\le J_c(h)\le c(d+\kappa')+H(p)+\xi$. \Cref{lem:simplicity:corr} gives $2^{-\Risk(h)}\le\frac{1+\hat s_h(a)}2+p$, i.e.\ $\hat s_h(a)\ge2^{1-\Risk(h)}-1-2p$. Substitute the bound on $\Risk(h)$.
@@ -355,8 +455,6 @@ Combine this with $J_c(h)\le c(d+\kappa')+H(p)+\xi$ and with $L_E\ge nH(p)-\log_
 \]
 Divide by $cn-1>0$.
 \end{proof}
-
-Numbers for illustration \status{computed; T5 repair\_checks}: at $d=20$, $p=2^{-10}$ and $\kappa=\kappa'=\xi=0$, $c=10^{-4}$ gives $\hat s\ge0.980$ and $\Risk\ge H(p)-2.8\cdot10^{-5}$, and $c=10^{-3}$ gives $\hat s\ge0.955$.
 
 % ---------------------------------------------------------------------
 \subsection{Proof of \texorpdfstring{\cref{thm:simplicity:blind}}{rate blindness}(ii) in the idealized setting}\label{app:simplicity:blind}
@@ -375,10 +473,10 @@ Let $h$ be near-optimal, and let $c$ be such that each of $v$ and $e$ satisfies 
 \emph{(i).}
 \begin{itemize}
 \item \emph{Monotone risk.} By \cref{lem:simplicity:hull}(ii), for grid values $c_1<c_i$ and any population minimizers $h$ at $c_1$ and $h'$ at $c_i$, $\Risk(h)\le\Risk(h')$.
-\item \emph{Eventually exact.} For each grid value, \cref{lem:simplicity:empirical} gives $J_c(\hat h_c)\to\Phi(c)$ in probability. Only finitely many hypotheses have $\ell\le\ell(h_0)+B/c$, so the gap between $\Phi(c)$ and the best non-minimizer is positive. Hence, with probability tending to one, $\hat h_c$ is a population minimizer for every grid value simultaneously.
-\item \emph{Uniform validation.} Held-out log-losses of the finitely many selected hypotheses converge uniformly to their risks, since losses lie in $[0,B]$.
+\item \emph{Eventually exact.} For each grid value, \cref{lem:simplicity:empirical} gives $J_c(\hat h_c)\to\Phi(c)$ in probability. Only finitely many hypotheses have $\ell\le\ell(h_0)+B/c$, so the gap between $\Phi(c)$ and the best non-minimizer is positive. Hence, with probability tending to one, $\hat h_c$ is a population minimizer for every grid value simultaneously. Without a unique population minimizer, which minimizer is selected may change with $N$; with one, $\hat h_c=h_c$ eventually.
+\item \emph{Uniform validation.} The selected hypotheses lie, with probability tending to one, in the finite set of population minimizers at the grid values. Held-out log-losses converge uniformly to risks over that set, since losses lie in $[0,B]$, and its distinct risk values are separated by a positive gap.
 \end{itemize}
-So, with probability tending to one, selection by held-out log-loss picks a grid value whose selected hypothesis has least risk. By the first item, which holds for any choice of minimizers (including ties at a hull breakpoint), the smallest grid value always attains this least risk, and it is the unique choice when its risk is strictly smallest. At finite $N$ the second item may fail at small $c$, where the bound of \cref{lem:simplicity:empirical} is weakest. That is the caveat in the statement.
+So, with probability tending to one, selection by held-out log-loss picks a grid value whose selected hypothesis has least risk among the selected ones. By the first item, which holds for any choice of minimizers (including ties at a hull breakpoint), the smallest grid value always attains this least risk, and it is the unique choice when its risk is strictly smallest. At finite $N$ the second item may fail at small $c$, where the bound of \cref{lem:simplicity:empirical} is weakest. That is the caveat in the statement.
 
 \emph{(ii).} Strict propriety holds pointwise in $x$ \citep{gneiting2007strictly}. Integrating over $\mu$, the teacher channel strictly maximizes the expected score among channels that differ from it on a set of positive $\mu$-mass. With a growing held-out set, empirical scores converge uniformly over finitely many candidates. So the criterion selects, among candidates, one with the largest expected score, i.e.\ the smallest divergence from $P^*$ in the score's divergence.
 
@@ -386,18 +484,33 @@ So, with probability tending to one, selection by held-out log-loss picks a grid
 \qed
 
 % ---------------------------------------------------------------------
-\subsection{The rates in \texorpdfstring{\cref{prop:simplicity:guard}}{guard erosion}}\label{app:simplicity:guard}
+\subsection{Proof of \texorpdfstring{\cref{prop:simplicity:guard}}{guard erosion}}\label{app:simplicity:guard}
 
 Measure log-loss relative to the option \emph{none}, which gives every candidate probability $1/M$.
 \begin{itemize}
 \item \emph{$G$-contexts, unguarded or guarded.} The $\sigma$-model gains $g$ per step, by the definition of the per-step gain. Mass $\pi_G$.
 \item \emph{$\neg G$-contexts, unguarded.} The teacher's step is a non-$\sigma$ step. It receives probability $\varepsilon/M$ instead of $1/M$, a loss of $\log_2(1/\varepsilon)$ per step. Mass $\pi_{\neg G}$.
-\item \emph{$\neg G$-contexts, guarded.} The teacher's step receives $1/(M-1)$ instead of the unguarded $\varepsilon/M$, a gain of $\Delta_G=\log_2(M/\varepsilon)-\log_2(M-1)$ per step over the unguarded option. Note $\Delta_G>\log_2(1/\varepsilon)$, by $\log_2\frac M{M-1}$; this corrects the earlier bound ``at most $\pi_{\neg G}\log_2(1/\varepsilon)/k_G$'' for the guard's rate.
+\item \emph{$\neg G$-contexts, guarded.} The teacher's step receives $1/(M-1)$ instead of the unguarded $\varepsilon/M$, a gain of $\Delta_G=\log_2(M/\varepsilon)-\log_2(M-1)$ per step over the unguarded option. Note $\Delta_G>\log_2(1/\varepsilon)$, by $\log_2\frac M{M-1}$.
 \end{itemize}
-So the unguarded option lowers risk by $\pi_Gg-\pi_{\neg G}\log_2(1/\varepsilon)=k_\sigma\rho_\sigma$ at cost $k_\sigma$. The guard lowers it by a further $\pi_{\neg G}\Delta_G=k_G\rho_G$ at cost $k_G$. These are the three points used in the main-text proof. If the guarded option also models the teacher's alternative step in $\neg G$-contexts, its gain there only increases, and the argument is unchanged with the larger $\Delta_G$.
+So the unguarded option lowers risk by $\pi_Gg-\pi_{\neg G}\log_2(1/\varepsilon)=k_\sigma\rho_\sigma$ at cost $k_\sigma$. The guard lowers it by a further $\pi_{\neg G}\Delta_G=k_G\rho_G$ at cost $k_G$. If the guarded option also models the teacher's alternative step in $\neg G$-contexts, its gain there only increases, and the argument is unchanged with the larger $\Delta_G$.
+
+In (bits, risk) relative to \emph{none}, the three options are therefore the points $(0,0)$, $(k_\sigma,-k_\sigma\rho_\sigma)$ and $(k_\sigma+k_G,-k_\sigma\rho_\sigma-k_G\rho_G)$. The middle point is a vertex of their lower hull iff $\rho_\sigma>\rho_G$. Within the $\sigma$-applicable region apply \cref{lem:simplicity:hull}, and across regions \cref{thm:simplicity:separable}: if $\rho_G<\rho_\sigma$, the guarded option is selected for $c<\rho_G$, the unguarded one for $c\in(\rho_G,\rho_\sigma)$, and none for $c>\rho_\sigma$.
 
 For the case $\rho_G\ge\rho_\sigma$: the middle point lies on or above the chord from $(0,0)$ to the guarded point. The lower hull of the three points is then that chord, with slope $-(k_\sigma\rho_\sigma+k_G\rho_G)/(k_\sigma+k_G)$, and apart from ties the selection jumps from guarded to none at that $c$. In the second numerical instance of the main text the jump is at $c=(0.0022+0.0087)/34\approx3.2\cdot10^{-4}$.
 \qed
+
+% ---------------------------------------------------------------------
+\subsection{Further pathologies}\label{app:simplicity:further}
+
+These four complement \cref{prop:simplicity:guard} \src{T5 \S4.4}.
+
+\emph{Error envelopes} \src{T5 Prop 4.5}. Suppose the error set $E$ lies inside a region $S$ with $K(S\mid f)=k_S$, $\mu(S)=\sigma$ and error density $\theta=\mu(E)/\sigma$ in $S$, and let $p=\mu(E)$. The hypothesis ``$f$, with flip rate $\theta$ on $S$ and $0$ off $S$'' costs $k_S+O(1)$ bits more than the good model and lowers its risk from $H(p)$ to $\sigma H(\theta)$ (a direct computation). So it is learned at its \emph{own} rate, which can far exceed the rate of the full error component; and if $\theta>\frac12$, the learner predicts the \emph{error label} on all of $S$, imitating a coarse version of the error. For example, $p=2^{-10}$, $\sigma=2^{-8}$, $\theta=\frac14$ and $k_S=30$ give a risk reduction of $0.0112-0.0032=0.0080$ bits, a rate of $2.7\cdot10^{-4}$, against $1.1\cdot10^{-6}$ for the full error. In the note's example $E$ is K-random, so no such envelope exists (\cref{thm:simplicity:kink}(c)). Real systematic errors are the opposite case: low-complexity patterns of exactly this kind.
+
+\emph{Parasitic errors} \src{T5 \S4.4(d3), as repaired}. The separability of \cref{thm:simplicity:separable} fails when an error is cheap given a valid rule, $K(e\mid v)\ll K(e)$: once $v$ is included, the marginal rate of $e$ is $r_e/K(e\mid v)$. The freshman's dream is a one-symbol mutation of $(ab)^n=a^nb^n$; the unguarded rule is the guarded one minus its guard; ``or as xor'' is $\vee$ plus one clause. Valid rules thus subsidize their own mis-generalizations. The selection path is the lower hull of the subset points under the \emph{joint} code, and bundles can enter it together. For example \status{computed}, take a valid $v$ with $k_v=10$ and $r_v=0.01$ (rate $10^{-3}$), and an error $e$ with $K(e)=100$, $K(e\mid v)=1$ and $r_e=0.01$. At $c=1.5\cdot10^{-3}$, relative to the empty set, $\{v\}$ changes $J_c$ by $+0.005$, $\{e\}$ by $+0.14$, and $\{v,e\}$ by $11c-0.02=-0.0035$. So $\{v,e\}$ is optimal, although $v$'s own rate and $e$'s unconditional rate ($10^{-4}$) are both below $c$: the bundle's rate $0.02/11\approx1.8\cdot10^{-3}$ exceeds $c$, and $v$ survives only because it buys $e$ cheaply.
+
+\emph{Distribution dependence} \src{T5 \S4.4(d7)}. Rates scale with frequency under $\mu$. A valid rule that is rare in the training distribution, e.g.\ used mainly in hard problems, is discarded, and stays discarded as $N\to\infty$ with $\lambda=cN$. Under a shift to a distribution where it matters, the learned norm is wrong. The verifier of \cref{sec:simplicity:division} then stays sound but becomes incomplete; with guard erosion it can become unsound.
+
+\emph{Language relativity} \src{T5 \S4.4(d6), as repaired}. Take separable components $j\le m$ with risk reductions $r_j$, a target set $S^\circ$ with $r_j>0$ for $j\in S^\circ$, and $c>0$. Choose integers $k_j\ge0$ with $k_j<r_j/c$ on $S^\circ$ and $k_j>r_j/c$ off it, and give $h_S$ length $m+\sum_{j\in S}k_j$. The Kraft sum is $2^{-m}\prod_j(1+2^{-k_j})\le1$, so a prefix code with these lengths exists. Then $J_c(h_S)$ is a constant plus $\sum_{j\in S}(c\,k_j-r_j)$, whose terms are negative exactly on $S^\circ$, so $S^\circ$ is the unique selection (no failures in 3000 random instances \status{computed}). For universal machines $U$ and $V$ the invariance theorem bounds the damage: $|K_U-K_V|\le c_{UV}$, so a marginal cost $K(h_{S\cup\{j\}})-K(h_S)$ changes by at most $2c_{UV}$, and rates by the factor $k/(k\pm2c_{UV})$. That is negligible for 10\,000-bit errors and decisive for 20-bit schemas, which is the inference-rule regime. A learner whose description language is shaped by human concepts, for instance by pretraining on human text, therefore gives human-natural errors short codes, and raises exactly the rates of the fallacies humans find natural.
 
 % ---------------------------------------------------------------------
 \subsection{Proofs for the division of labour}\label{app:simplicity:division}
@@ -409,6 +522,8 @@ Throughout, the components are finite, $\val(S)=\sum_{j\in S}\nu_j$, and by sepa
 \end{itemize}
 
 \begin{proof}[Proof of \cref{thm:simplicity:division}]
+\emph{Overview.} An optimal set has no negative-value component. If it contained an error that is inadmissible together with $V_+$, it would have to omit some $B\subseteq V_+$ meeting that error's witnesses; valid dominance makes restoring $B$ and dropping the error better, and error-independence keeps the result admissible.
+
 \emph{Step 0: $S^*(c)$ is admissible.} Apply error-independence with $U=V_+$.
 
 \emph{Step 1: optimal sets have no negative components.} Let $S$ be admissible and optimal. Removing the components with $\nu<0$ keeps admissibility (down-closure) and raises the value. So $S\subseteq\{\nu\ge0\}$.
@@ -424,7 +539,7 @@ This contradicts optimality, so $E_1=\emptyset$.
 
 \emph{Step 3: comparison with $S^*(c)$.} Hence $S\cap V\subseteq V_+\cup\{\nu=0\}$ and $S\cap F\subseteq\{e:V_+\cup\{e\}\in\Admiss,\ \nu_e\ge0\}$. So $\val(S)\le\val(S^*(c))$. Since $S^*(c)$ is admissible, it is optimal, and $\val(S)=\val(S^*(c))$. Every element of $S^*(c)$ has positive value, and $S$ is contained in $S^*(c)\cup\{\nu=0\}$, so equality forces $S\supseteq S^*(c)$ and $S\setminus S^*(c)\subseteq\{\nu=0\}$. Conversely, every admissible $S^*(c)\cup Z$ with $Z\subseteq\{\nu=0\}$ has the optimal value.
 
-\emph{Correction after verification.} The original last step argued that ``adding $V_+\setminus S$ keeps admissibility''. That can fail when $S$ contains zero-valued valid rules. For example, take $V=\{v_+,v_0\}$ with $\nu(v_0)=0$, and an error $e$ whose only witness is $\{v_+,v_0\}$. Then $S=\{v_0,e\}$ is admissible, but $S\cup\{v_+\}$ is not. The direct comparison in Step 3 avoids this.
+\emph{Why Step 3 compares values directly.} Adding $V_+\setminus S$ to an optimal $S$ need not keep admissibility when $S$ contains zero-valued valid rules. For example, take $V=\{v_+,v_0\}$ with $\nu(v_0)=0$, and an error $e$ whose only witness is $\{v_+,v_0\}$. Then $S=\{v_0,e\}$ is admissible, but $S\cup\{v_+\}$ is not.
 
 \emph{The attributions in the statement.} When $\Admiss$ is the intersection of the coherence, world and postulate families, $V_+\cup\{e\}\notin\Admiss$ iff it fails at least one of them. An error with $\nu_e\le0$ (rate at most $c$) is excluded by simplicity, up to zero-value ties. A valid rule with $\nu_v\le0$ is not in $V_+$, whatever the filters.
 \end{proof}
@@ -452,6 +567,8 @@ So $V$ is the unique optimum, and separation holds.
 \end{itemize}
 \end{proof}
 
+\emph{Valid dominance is essential} in \cref{thm:simplicity:division,cor:simplicity:window}. Take $V=\{v\}$ with rate $10^{-3}$, and an error $e$ of rate $2\cdot10^{-3}$, both with $k=10$, whose witness is $\{v\}$. No error survives relative to $V$, yet for $c<10^{-3}$ the optimum is $\{e\}$ \status{computed}.
+
 \begin{proof}[Proof of \cref{prop:simplicity:postulates}(a)]
 The postulates enter only through $\Admiss$, so \cref{thm:simplicity:division} applies at each~$c$.
 
@@ -470,6 +587,30 @@ The postulates enter only through $\Admiss$, so \cref{thm:simplicity:division} a
 \emph{Its value.} Since $e$ has a witness inside $V_+$, $V_+\cup\{e\}\notin\Admiss$, so $e\notin S_{\rm clean}$. Hence $\val(S')=\val(S_{\rm clean})-\sum_B\nu+\nu_e=\val(S_{\rm clean})+\nu_e-\beta(e)>\val(S_{\rm clean})$.
 \end{proof}
 
-In 1\,882 random instances with $\beta(e)<\nu_e$, the clean set was strictly suboptimal every time \status{computed; verification}.
+In 1\,882 random instances with $\beta(e)<\nu_e$, the clean set was strictly suboptimal every time \status{computed}.
 
-\noindent\emph{The two counterexamples} quoted in the main text were recomputed \status{computed; T5 repair\_checks}. One is to \cref{cor:simplicity:window} without valid dominance. The other is to the original Step~3 of \cref{thm:simplicity:division}.
+% ---------------------------------------------------------------------
+\subsection{Computations and repairs}\label{app:simplicity:scripts}
+
+The figures marked \textsf{computed} in \cref{sec:simplicity} and in this appendix come from the scripts in \texttt{research/theory/T5-checks/} of the accompanying repository and from the brute-force checks of the adversarial verification (\cref{tab:simplicity:scripts}). \Cref{sec:experiments} re-runs \texttt{c1}--\texttt{c5}.
+
+\begin{table}[ht]
+\centering\footnotesize
+\begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{0.3\textwidth}@{}}
+\toprule
+script & what it computes & used in\\
+\midrule
+\texttt{c1} & the note's own numbers: rates of the model and of the error, the window of $c$, the MDL switch point & \cref{sec:simplicity:hull}\\
+\texttt{c2} & per-input versus Bayes mixture for parities; list mixtures missing $u$ bits; shared versus product code lengths & \cref{thm:simplicity:pricing,thm:simplicity:kink}\\
+\texttt{c3} & threshold rule and hull: random instances and point sets, values of $c$ & \cref{thm:simplicity:separable,lem:simplicity:hull}\\
+\texttt{c4} & rules toy: gains and rates of fallacies and valid rules, guard erosion, sacrifice, witness rates of postulates, held-out log-loss & \cref{prop:simplicity:guard,prop:simplicity:sacrifice,prop:simplicity:postulates,thm:simplicity:validation}, \cref{tab:simplicity:toy}\\
+\texttt{c5} & in-context copier versus norm model & \cref{prop:simplicity:block}\\
+\texttt{repair\_checks} & the minimax example; the $p$-crossover and $\varepsilon_E$; the identity and concentration of \cref{lem:simplicity:random}; the $o(1)$ term; the counterexample and per-region checks for \cref{thm:simplicity:idealized}; the numbers for \cref{cor:simplicity:example}; the guard's second instance; the parasitic bundle; the Kraft construction; the counterexamples in Appendix~\ref{app:simplicity:division} & \cref{thm:simplicity:pricing,thm:simplicity:kink,thm:simplicity:idealized,cor:simplicity:example,prop:simplicity:guard,thm:simplicity:division}, Appendix~\ref{app:simplicity:further}\\
+verifier & brute force: 17\,806 instances of the division theorem, 1\,882 of repair by sacrifice & \cref{thm:simplicity:division,prop:simplicity:sacrifice}\\
+\bottomrule
+\end{tabularx}
+\caption{Scripts behind the \textsf{computed} figures of \cref{sec:simplicity} (\texttt{research/theory/T5-checks/}; the verifier's checks are recorded in \texttt{research/verification/T5-verification.md}).}
+\label{tab:simplicity:scripts}
+\end{table}
+
+\paragraph{Statements changed during verification.} Results tagged ``as repaired'' were changed during adversarial verification; the records are in \texttt{research/verification/}. The substantive changes are: clause (b) of \cref{thm:simplicity:idealized}, strengthened (the counterexample after the theorem refutes the earlier form); the term $2\log_2d$ in \cref{thm:simplicity:kink}(c) and the assumption $K(p)=O(\log d)$; \cref{lem:simplicity:random}, added to remove the slack $2p$ from \cref{thm:simplicity:kink}(b); the uniqueness condition in \cref{lem:simplicity:hull}(iii); the exact minimax value and the group condition in \cref{thm:simplicity:pricing}(i); the threshold in \cref{prop:simplicity:sequence}; the guard gain $\Delta_G$ in \cref{prop:simplicity:guard}, which an earlier bound understated; the zero-value case in the proof of \cref{thm:simplicity:division}; the fixed-grid form of \cref{thm:simplicity:validation}(i); the Kraft construction for language relativity; and, for parasitic errors, the withdrawal of a claim that conditional rates fix the order in which components enter.
