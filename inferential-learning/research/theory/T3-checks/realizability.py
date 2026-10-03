@@ -1,10 +1,13 @@
-"""Brute-force check of the Realizability Theorem (T3, Thm 2.3) on random small context skeletons.
+"""Brute-force check of the Realizability Theorem (T3, Thm 2.4(a): frame-free realizability, Def 2.3) on random small context skeletons.
+(Docstring updated after verification: earlier drafts numbered this Thm 2.3 and the criterion R1-R3.)
 Each context has valuations (p, Q) with p in {0,1}, Q in {0,1,2}. Root semantic value is a single
 world w; a non-root context's value M_c is an arbitrary set of valuations (possibly empty).
 Judgments (c, Gamma, phi) hold iff every v in M_c satisfying Gamma satisfies phi.
 Bridge uses (c, a, sigma) export 'Q_c = a' to 'Q_parent = a' (eps = 0: informative) under side
 condition sigma; schema soundness quantifies over all a'. Certified contexts/positions must be
-nonempty. Claim: brute-force realizability == criterion (R1-R3) with the anchored set."""
+nonempty. Claim: brute-force realizability == the anchored criterion of Thm 2.4(a).
+NOTE: 'certified positions' (certP) are an extension not covered by Thm 2.4 as stated; instances using them
+test a slightly more general statement."""
 import itertools, random
 VALS = [(p, q) for p in (0, 1) for q in (0, 1, 2)]
 ATOMS = {"p": lambda v: v[0] == 1, "~p": lambda v: v[0] == 0, "bot": lambda v: False, "top": lambda v: True}

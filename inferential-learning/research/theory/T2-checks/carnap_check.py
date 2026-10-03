@@ -58,8 +58,34 @@ for k in range(0,5):
     for S in itertools.combinations(bool_vals,k):
         inter.add(tuple(min([s[i] for s in S],default=1) for i in range(n)))
 print("valuations respecting all single-conclusion valid sequents (|G|<=2):",len(sc),"; intersection-closure size:",len(inter), "equal:",set(sc)==inter)
-# add empty-succedent (coherence) sequents
+# add empty-succedent (0-denial, non-contradiction) sequents
 zero=[(G,()) for k in range(1,3) for G in itertools.combinations(range(n),k) if valid(G,())]
 sc0=[v for v in sc if all(sat(v,s) for s in zero)]
-print("adding 0-denial (coherence) sequents:",len(sc0), "(should be closure minus all-true):", set(sc0)==inter-{tuple([1]*n)})
-# denial rank of each non-boolean valuation in sc-universe
+print("adding 0-denial (non-contradiction) sequents:",len(sc0), "(should be closure minus all-true):", set(sc0)==inter-{tuple([1]*n)})
+# denial rank of each valuation (Thm 4.3), added after verification:
+# d(v) = min |Delta| over Delta subset false(v) such that some finite Gamma subset true(v) has Gamma |=_BV Delta.
+# Since Gamma may be all of true(v) on this finite fragment, Gamma |= Delta iff every Boolean u extending true(v)
+# makes some member of Delta true (empty Delta: no Boolean u extends true(v)).
+from collections import Counter
+bset=set(bool_vals)
+def rank(v):
+    T=[i for i in range(n) if v[i]]; Fl=[i for i in range(n) if not v[i]]
+    ext=[u for u in bool_vals if all(u[i] for i in T)]
+    if not ext: return 0
+    for k in range(1,len(Fl)+1):
+        for D in itertools.combinations(Fl,k):
+            if all(any(u[j] for j in D) for u in ext): return k
+    return 'inf'
+def cls(v):
+    T=[i for i in range(n) if v[i]]
+    ext=[u for u in bool_vals if all(u[i] for i in T)]
+    if not ext: return 0                      # inconsistent
+    closure=[i for i in range(n) if all(u[i] for u in ext)]
+    if set(closure)!=set(T): return 1         # consistent, not closed
+    if v in bset: return 'inf'                # Boolean
+    return 2                                  # closed, consistent, non-maximal
+cnt=Counter(); mism=0
+for v in allv:
+    r=rank(v); c=cls(v); cnt[r]+=1
+    if r!=c: mism+=1
+print("Thm 4.3 denial ranks over all",len(allv),"valuations:",dict(cnt),"; mismatches with class:",mism)

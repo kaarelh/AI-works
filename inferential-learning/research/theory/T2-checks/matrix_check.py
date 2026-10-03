@@ -1,6 +1,8 @@
 import itertools
 # All 2-element matrices interpreting not (unary), and/or/imp (binary), designated {1}.
-# Check which validate a finite set of single-conclusion CPC rules and are non-trivial (do not validate p |- q).
+# Check which validate a finite set of single-conclusion CPC rules.
+# (With designated set {1} fixed, p |- q always fails, so non-triviality is automatic; the dead
+#  'triv' computation was removed after verification.)
 un=list(itertools.product([0,1],repeat=2))        # f(0),f(1)
 bi=list(itertools.product([0,1],repeat=4))        # f(00),f(01),f(10),f(11)
 def B(f,a,b): return f[2*a+b]
@@ -33,7 +35,5 @@ for N in un:
                 if all(x==1 for x in prem(p,q)) and conc(p,q)!=1: ok=False;break
             if not ok: break
         if ok:
-            # nontrivial: p |- q fails
-            triv = all(not (p==1 and q==0) for p,q in itertools.product([0,1],repeat=2))
             good.append((N,A,O,I))
 print(len(good), good)

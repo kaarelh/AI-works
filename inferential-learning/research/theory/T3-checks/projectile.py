@@ -1,6 +1,9 @@
 """Projectile with quadratic drag: rigorous differential-inequality export certificate
 vs simulation; the dimensionless side condition x = k v0^2/g; analytic vs simulation-certified
-validity regions for a 5% range tolerance."""
+validity regions for a 5% range tolerance.
+(Revised after verification: the certificate now uses the lower bound x tan(th)/(1+x)^2 of T3 Thm 3.7, as in
+learn_regions.py; an earlier version used the weaker, also valid, x tan(th)/(1-x)^2 and printed different numbers.
+The true region is now also located by root-finding instead of a grid.)"""
 import numpy as np
 from scipy.integrate import solve_ivp
 g = 9.81
@@ -15,7 +18,7 @@ def sim_range(kk, v0, th):
 def certificate(x, th):
     """R/R0 interval from |a_drag| <= k v0^2 = x g, xdd<=0, valid iff x<1"""
     if x >= 1: return None
-    return (1/(1+x) - x*np.tan(th)/(1-x)**2, 1/(1-x))
+    return (1/(1+x) - x*np.tan(th)/(1+x)**2, 1/(1-x))
 for name, m, r, Cd in [("steel", 7800*4/3*np.pi*0.01**3, 0.01, 0.47), ("ping-pong", 0.0027, 0.02, 0.5)]:
     kk = 0.5*1.2*Cd*np.pi*r**2/m; v0, th = 10.0, np.pi/4
     R0 = v0**2*np.sin(2*th)/g; x = kk*v0**2/g
@@ -31,7 +34,9 @@ print("analytic certificate region: x <= %.4f" % max(cert_ok))
 # simulation: in dimensionless form R/R0 depends on x only (fix v0=10, vary k)
 v0 = 10.0; R0 = v0**2/g
 err = np.array([abs(sim_range(x*g/v0**2, v0, th)/R0 - 1) for x in xs])
-print("true region (sim): x <= %.4f ; err slope near 0: %.3f" % (xs[np.argmax(err > tol)-1], err[5]/xs[5]))
+from scipy.optimize import brentq
+x_true = brentq(lambda x: abs(sim_range(x*g/v0**2, v0, th)/R0 - 1) - tol, 0.03, 0.12, xtol=1e-7)
+print("true region (sim): x <= %.4f (grid), %.5f (root-finding); err slope near 0: %.3f" % (xs[np.argmax(err > tol)-1], x_true, err[5]/xs[5]))
 # check dimensionless claim: R/R0 depends only on x (vary v0 with x fixed)
 for v in [3.0, 10.0, 30.0]:
     x = 0.05; print("v0=%4.1f x=0.05 R/R0=%.6f" % (v, sim_range(x*g/v**2, v, th)/(v**2/g)))

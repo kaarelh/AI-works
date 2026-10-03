@@ -59,7 +59,7 @@ from dataclasses import dataclass, field
 from typing import Dict, FrozenSet, Iterable, List, Optional, Sequence, Tuple
 
 from .domains.prop import (BOT, EMPTY_CTX, TOP, TRUE_GUARD, MemGuard, PStep, ProofNode, Prover, PropWorld, Seq,
-                           SeqRule, ctx_term, designated_contexts, fkey, licenses, match_step, neg)
+                           SeqRule, ctx_term, designated_contexts, fkey, imp, licenses, match_step, neg)
 from .learners import mdl_cluster
 from .terms import App, Term, Var, lgg_tuples, match, match_tuple, subst, subterms, variables
 
@@ -597,7 +597,10 @@ def run_probe(prover: Prover, rid, rule: SeqRule, sigma: dict, budget: int,
     concl = _inst_seq(rule.concl[0], rule.concl[1], sigma, G)
     if concl not in prover.success:
         prover.add_lemma(ProofNode(concl, rid, proofs, sigma))
-    return prover.prove(Seq(ctx, BOT), extra_pool=list(concl.ctx) + [concl.succ], budget=budget)
+    # the cut formulas C -> bot let the refutation use the derived conclusion even
+    # when the learned eliminations only apply to open assumptions (->I then ->E)
+    cuts = [imp(concl.succ, BOT)] + [imp(g, BOT) for g in sorted(concl.ctx - ctx, key=fkey)]
+    return prover.prove(Seq(ctx, BOT), extra_pool=list(concl.ctx) + [concl.succ] + cuts, budget=budget)
 
 
 def coherence_search(rules: List[Tuple[object, SeqRule]], focus: Sequence[object], designated: Sequence[FrozenSet],
@@ -828,7 +831,7 @@ class CoherencePruner:
         sup = lr.support
         opts = [(float(sup), 2, "delete", None)]
         g, kept = self._guard_option(lr, bad)
-        if g is not None:
+        if g is not None and kept >= self.calc.m:     # a guard keeping < m steps = deletion
             opts.append((float(sup - kept), 0, "guard", (g, kept)))
         if self.cfg.allow_split:
             ch = self._split_children(lr)

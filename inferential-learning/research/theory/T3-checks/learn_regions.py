@@ -21,13 +21,24 @@ def monotone_certify(tau, lo=0.0, hi=np.pi*0.9, queries=20):
         if e_enclosure(mid)[1] <= tau: best, lo = mid, mid
         else: hi = mid
     return best, q
+import math, mpmath as mpm
+def e_up_iv(deg):
+    """interval-arithmetic upper enclosure at theta0 = deg (degrees, given as a decimal string): rigorous"""
+    mpm.iv.dps = 40
+    th = mpm.iv.mpf(deg)*mpm.iv.pi/180; k2 = mpm.iv.sin(th/2)**2
+    return k2/4 + mpm.iv.mpf(9)/64*k2**2/(1 - k2)
 print("(a) small-angle bridge, monotone certification with rigorous enclosure oracle")
+print("    (revised after verification: reported thresholds are truncated DOWNWARD to 0.001 deg and the")
+print("     enclosure at the reported value is re-verified in mpmath interval arithmetic)")
 for tau in [1e-3, 5e-3, 1e-2, 5e-2]:
     t, q = monotone_certify(tau)
-    # exact threshold
-    ths = np.linspace(0, np.pi*0.9, 200001); tex = ths[np.argmax(e_exact(ths) > tau) - 1]
-    assert e_exact(t) <= tau
-    print(f"   tau={tau:.0e}: certified theta0 <= {np.degrees(t):6.2f} deg in {q} queries; exact threshold {np.degrees(tex):6.2f} deg")
+    t_rep = math.floor(np.degrees(t)*1000)/1000          # round down: certifying less is always sound
+    up = e_up_iv(f"{t_rep:.3f}")
+    assert up.b <= mpm.mpf(tau), (tau, t_rep, up)         # rigorous: e <= e_up <= tau at the reported angle
+    mpm.mp.dps = 30
+    tex = mpm.findroot(lambda x: 2/mpm.pi*mpm.ellipk(mpm.sin(x/2)**2) - 1 - tau, mpm.radians(30))
+    print(f"   tau={tau:.0e}: certified theta0 <= {t_rep:.3f} deg ({q} lazy-bisection queries; interval check e_up <= tau passed);"
+          f" exact threshold {float(mpm.degrees(tex)):.4f} deg")
 
 # (b) projectile with quadratic drag; x = k v0^2 / g
 g = 9.81
@@ -55,7 +66,11 @@ okc = [x for x in xs if cert(x, th) and cert(x, th)[0] >= 1 - tol and cert(x, th
 print("   analytic certified region (5%%, 45 deg): x <= %.4f" % max(okc))
 v0 = 10.0; R0 = v0**2/g
 xg = np.linspace(1e-4, 0.3, 300); err = np.array([abs(sim_range(x*g/v0**2, v0, th)/R0 - 1) for x in xg])
-print("   simulated true region: x <= %.4f" % xg[np.argmax(err > tol) - 1])
+from scipy.optimize import brentq
+x_true = brentq(lambda x: abs(sim_range(x*g/v0**2, v0, th)/R0 - 1) - tol, 0.03, 0.12, xtol=1e-7)
+x_cert = (1/(1 - tol))**0.5 - 1      # closed form: at 45 deg the lower bound 1/(1+x) - x/(1+x)^2 = 1/(1+x)^2 is binding
+print("   simulated true region: x <= %.4f (grid), %.5f (root-finding)" % (xg[np.argmax(err > tol) - 1], x_true))
+print("   closed-form certificate threshold x = (1/0.95)^(1/2) - 1 = %.6f; ratio true/certified = %.2f" % (x_cert, x_true/x_cert))
 # random check of the certificate over angles and x
 rng = np.random.default_rng(0); bad = 0
 for _ in range(300):

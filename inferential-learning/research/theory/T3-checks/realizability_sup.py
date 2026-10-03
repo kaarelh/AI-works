@@ -1,4 +1,4 @@
-"""Extension of realizability.py with a SUPPOSITIONAL context (T3 Thm 2.3, SUP-collapse form).
+"""Extension of realizability.py with a SUPPOSITIONAL context (T3 Thm 2.4(a), SUP-collapse form; numbered Thm 2.3 in an earlier draft).
 Context 0 = root (single world), 1 = IDL child of 0 (free semantic value, possibly empty),
 2 = SUP child of 0 or of 1 with assumption A: its value is forced, M_2 = M_parent ∩ ||A||.
 Claim: realizable  <=>  the anchored criterion holds after collapsing context 2 into its parent

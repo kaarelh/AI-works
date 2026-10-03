@@ -432,8 +432,39 @@ def run_post(quick: bool) -> dict:
     names = {lr.sid: f"L{lr.sid}" for lr in calc.rules}
     out["learned_base"] = {"rules": [str(r) for _, r in lbase],
                            "hand": bold_table(lbase, HAND_CANDIDATES, examples=2, names=names)}
+    out["trace"] = pruning_trace()
     out["seconds"] = round(time.time() - t0, 1)
     return out
+
+
+def pruning_trace(N=100, noise="fallacies", seed=0) -> dict:
+    """A worked example: learned unsound rules, the adversary's derivations, and
+    what each round of coherence pruning did."""
+    ds = generate_corpus(N, PropHumanConfig(**NOISE[noise]), seed=seed)
+    learner = SeqLearner(**LEARNERS["vs"])
+    calc = learner.fit(steps=prepare_training(ds))
+    names = {lr.sid: f"L{lr.sid}" for lr in calc.rules}
+    before = [f"L{lr.sid} (support {lr.support}): {lr.rule.show()}" for lr in unsound_active(calc)]
+    att = adversarial_attack(calc, seed, n_random=8, budget=1000)
+    pr = CoherencePruner(calc, PruneConfig(seed=seed), learner)
+    hist = pr.run()
+    rounds = []
+    for h in hist:
+        acts = []
+        for a in h["actions"]:
+            lr = calc.by_id(a["sid"])
+            note = ""
+            if a["action"] == "guard":
+                note = " -> now " + ("sound" if rule_sound(lr.rule) else "UNSOUND")
+                if lr.support < calc.m:
+                    note += ", inactive (support < m: equivalent to deletion)"
+            acts.append(f"L{lr.sid}: {lr.log[-1] if lr.log else a['action']}{note}")
+        rounds.append({"round": h["round"], "bags": h["bags"], "actions": acts})
+    att2 = adversarial_attack(calc, seed, n_random=8, budget=1000)
+    return {"setting": f"vs, N = {N}, noise {noise}, seed {seed}", "unsound_before": before,
+            "attack_before": {"n_exploits": att["n_exploits"], "n_goals": att["n_goals"], "examples": att["examples"]},
+            "rounds": rounds, "bags": pr.examples[:2], "unsound_after": [str(lr.rule) for lr in unsound_active(calc)],
+            "attack_after": att2["n_exploits"], "recovery_after": recovery_report(calc)}
 
 
 def _seq(s):
@@ -643,6 +674,7 @@ def make_report(res: dict, quick: bool) -> str:
                  "(an incoherent calculus 'proves' everything, so raw completeness, stored as `completeness_any`, is "
                  "meaningless before pruning). In parentheses: the target calculus under the same prover and budget.\n")
         L += learning_tables(recs)
+        L += exhibits(res)
         L += blame_section(recs)
         L += fallacy_section(recs)
     if "post" in res:
@@ -792,6 +824,31 @@ def interpretation(res):
                  "realises every truth-table row at the observed world (Post's substitution again), and a refuted step "
                  "pinpoints the guilty rule, so no hitting-set guesswork is needed. Its real value is (i) exact blame "
                  "and (ii) non-structural rules, which coherence cannot reach.")
+    return L
+
+
+def exhibits(res):
+    """Worked example (computed in the post part): learned unsound rules, the
+    adversary's derivations, and the pruning rounds."""
+    T = res.get("post", {}).get("trace")
+    if not T:
+        return []
+    L = [f"\n### Worked example ({T['setting']})\n",
+         "Unsound active rules after positive learning (L*n* = learned rule *n*):\n"]
+    L += [f"* `{u}`" for u in T["unsound_before"]]
+    A = T["attack_before"]
+    L.append(f"\nThe adversary derives {A['n_exploits']} of its {A['n_goals']} invalid goals; e.g. (every step accepted "
+             "by the learned verifier):\n")
+    for ex in A["examples"][:2]:
+        L.append(f"Goal `{ex['goal']}`:\n```\n{ex['proof']}\n```")
+    L.append("Coherence pruning (no world feedback):\n")
+    for rd in T["rounds"]:
+        L.append(f"* round {rd['round']}: {rd['bags']} negative bags" +
+                 ("; " + "; ".join(f"`{a}`" for a in rd["actions"]) if rd["actions"] else "; nothing to repair"))
+    for b in T["bags"][:1]:
+        L.append(f"\nA negative bag of round {b['round']} ({b['source']} search):\n```\n{b['proof']}\n```")
+    L.append(f"\nAfter pruning: unsound active rules {len(T['unsound_after'])}, adversary exploits {T['attack_after']}, "
+             f"recovery {dict(Counter(T['recovery_after'].values()))}.")
     return L
 
 

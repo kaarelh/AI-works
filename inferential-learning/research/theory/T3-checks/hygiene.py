@@ -1,4 +1,4 @@
-"""T3 Thm 1.4(c): local essential use does not certify a reductio.
+"""T3 Thm 1.9(c) (numbered 1.4(c) in an earlier draft): local essential use does not certify a reductio.
 K = {A->q, ~A->q, ~q} is inconsistent; the reductio of A uses {A->q, ~q} (satisfiable without A),
 the reductio of ~A uses {~A->q, ~q} (satisfiable without ~A). Both pass the local test.
 Also: the 100 = 99.9 example under exact vs interval reading."""

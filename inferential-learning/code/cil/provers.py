@@ -35,7 +35,9 @@ invalid steps the verifier accepted during the search.
 
 :class:`RuleSetVerifier` is the exact rule-based verifier for a fixed rule
 list (used for the ground-truth target calculus).  Benchmark goals for the
-algebra domain are in :data:`FALSE_GOALS` and :data:`TRUE_GOALS`.
+algebra domain are in :data:`FALSE_GOALS` and :data:`TRUE_GOALS` (several true
+goals are false goals plus the facts that make them true), and
+:data:`FRESH_FALSE_GOALS` (held out from exploit harvesting).
 """
 from __future__ import annotations
 
@@ -43,11 +45,11 @@ import heapq
 import random
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
-from typing import Callable, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 from .domains import algebra as alg
 from .rules import RewriteRule, diff_chain, guard_satisfied
-from .terms import App, Term, atoms, match_tuple, parse, replace, subst, subterm, subterms, variables
+from .terms import App, Term, atoms, match, match_tuple, parse, replace, subst, subterms, variables
 
 __all__ = [
     "Goal", "FALSE_GOALS", "TRUE_GOALS", "FRESH_FALSE_GOALS", "RuleSetVerifier", "EdgeChecker", "ProposalGenerator", "arith_either",
@@ -220,7 +222,7 @@ class ProposalGenerator:
                     sites = []
                     for p, u in subterms(t):
                         if type(u) is App and u.head == r.rhs.head:
-                            s = _match(r.rhs, u)
+                            s = match(r.rhs, u)
                             if s is not None:
                                 sites.append((p, s))
                 for p, s in sites:
@@ -257,11 +259,6 @@ class ProposalGenerator:
             rng.shuffle(rest)
             uniq = head + rest[: self.max_props - len(head)]
         return uniq
-
-
-def _match(pat: Term, t: Term):
-    from .terms import match
-    return match(pat, t)
 
 
 # ---------------------------------------------------------------------------

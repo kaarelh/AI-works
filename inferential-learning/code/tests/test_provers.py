@@ -1,19 +1,20 @@
-import pytest
-
 from cil.domains.algebra import TARGET_RULES, WorldOracle
-from cil.provers import (FALSE_GOALS, TRUE_GOALS, EdgeChecker, Goal, ProposalGenerator, RuleSetVerifier,
-                         arith_either, check_proof, prove)
+from cil.provers import (FALSE_GOALS, FRESH_FALSE_GOALS, TRUE_GOALS, EdgeChecker, ProposalGenerator,
+                         RuleSetVerifier, arith_either, check_proof, prove)
 from cil.rules import rule_from_strings
 from cil.terms import parse
 
 
 def test_goal_labels_agree_with_the_world():
     oracle = WorldOracle(seed=11, n_points=80)
-    for g in FALSE_GOALS:
+    for g in FALSE_GOALS + FRESH_FALSE_GOALS:
         assert oracle.counterexample(g.lhs, g.rhs, g.facts) is not None, str(g)
     for g in TRUE_GOALS:
         assert oracle.counterexample(g.lhs, g.rhs, g.facts) is None, str(g)
-    assert len({g.name for g in FALSE_GOALS + TRUE_GOALS}) == len(FALSE_GOALS) + len(TRUE_GOALS)
+    allg = FALSE_GOALS + TRUE_GOALS + FRESH_FALSE_GOALS
+    assert len({g.name for g in allg}) == len(allg)
+    # fresh goals are new equations, not restatements of the harvested ones
+    assert not {(g.lhs, g.rhs) for g in FRESH_FALSE_GOALS} & {(g.lhs, g.rhs) for g in FALSE_GOALS}
 
 
 def test_target_verifier_respects_guards():
