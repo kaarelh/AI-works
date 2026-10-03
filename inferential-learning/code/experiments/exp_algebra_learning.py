@@ -23,7 +23,10 @@ Writes results/algebra_learning.json, results/algebra_learning.md and PNG plots.
 Every finished task is also appended to results/<stem>.partial.jsonl, so an
 interrupted run loses nothing (``--resume`` skips the finished tasks).
 Everything is deterministic given the seeds below (checked across
-PYTHONHASHSEED values); no single task takes more than ~30 s.
+PYTHONHASHSEED values); no single task takes more than ~30 s.  The full grid
+(687 tasks) took 1127 s wall time on 3 worker processes (4-core container).
+``--report-only`` (a few seconds) recomputes every table and the alternative-
+semantics diagnosis from the saved JSON.
 """
 from __future__ import annotations
 
@@ -300,6 +303,91 @@ def paired_fallacy_fates(records, lname):
     return out, exact_after
 
 
+def interpretation(records, P, nT):
+    """Hand-written reading of the results; every number is computed from the records."""
+    cohNs = sorted({r["N"] for r in records if r["kind"] == "coherence"})
+    if not cohNs:
+        return
+    big = [N for N in cohNs if N >= 200]
+    P("## Interpretation and caveats\n")
+    P("**1. Positive examples give the *shapes* of the rules, and they generalise systematically.** Schema shapes "
+      "are recovered once a rule has a few human instances (see the table *Recovery vs number of human "
+      "instances*). Because a schema is size-independent, acceptance of valid steps out of distribution (C-OOD, "
+      "terms of about 38 nodes against 10 for human steps on average) tracks acceptance in distribution (C-ID) throughout.")
+    g = group(records, kind="positive", learner="tagged", N=max(cohNs), noise="clean")
+    if g:
+        P(f" But positive data never display a *guard*. Even on clean data at N = {max(cohNs)}, the tagged learner "
+          f"ends with {_ms([r['n_unsound_active'] for r in g])} unsound active schemas (essentially the 11 guarded rules "
+          f"learned without their guards) and accepts {_ms([100 * r['heldout']['invalid_ood']['all'] for r in g], '{:.0f}')}% of "
+          "invalid OOD steps. Systematic fallacies reach support m and pass the conservative threshold. Sporadic "
+          "noise produces spurious schemas whose number *grows* with N (table *Spurious schemas*). So a fixed "
+          "support threshold is not a soundness guarantee. This is Gold's problem in miniature: positive data "
+          "never rule out an over-general hypothesis.\n")
+    step_big = [r for r in main_records(records, "coherence", mode="step") if r["N"] in big]
+    bag_all = main_records(records, "coherence", mode="bag")
+    step_all = main_records(records, "coherence", mode="step")
+    if step_all:
+        P(f"**2. Coherence with world feedback makes the verifier sound in every measured respect, at almost no "
+          f"cost in completeness.** Over all {len(step_all)} main-grid step-feedback runs, "
+          f"{sum(r['n_unsound_active'] > 0 for r in step_all)} end with an unsound active schema, the largest "
+          f"false-accept rate on held-out invalid steps (ID or OOD) is "
+          f"{max(max(r['heldout']['invalid_id']['all'], r['heldout']['invalid_ood']['all']) for r in step_all):.3f}, "
+          f"and the white-box prover finds {sum(r['attack']['accepted_invalid'] for r in step_all)} accepted invalid "
+          "steps in total.")
+        if step_big:
+            P(f" For N ≥ {min(big)}, step feedback recovers {_ms([r['n_exact'] for r in step_big])}/{nT} target "
+              f"schemas *exactly*, guards included, with completeness ID/OOD "
+              f"{_ms([r['heldout']['valid_id']['all'] for r in step_big], '{:.3f}')} / "
+              f"{_ms([r['heldout']['valid_ood']['all'] for r in step_big], '{:.3f}')}.")
+        fails = [r for r in bag_all if r["n_unsound_active"] > 0]
+        P(f" Bag-level feedback knows only that a whole derivation is wrong, and assigns blame by spectrum fault "
+          f"localisation. It is almost as good: {len(fails)}/{len(bag_all)} runs end with an unsound active schema"
+          + (" (" + "; ".join(f"N={r['N']}, {r['noise']}, seed {r['seed']}, {r['learner']}: "
+                              + ", ".join(f"`{u.split(': ', 1)[-1]}`" for u in r['unsound_rules']) for r in fails) + ")"
+             if fails else "")
+          + ". Its cost is somewhat lower exact recovery: after mis-blame, some valid schemas are over-guarded "
+          "(see `stronger` for cancel_factor and div_div in the per-rule guard table) or deleted. Reduced probing budgets (section 3c) do leave unsound schemas. "
+          "The guarantee is only as good as the red-teaming of one's own rules.\n")
+    fates, _ = paired_fallacy_fates(records, "tagged")
+    if fates:
+        def frac(mode, f, st):
+            c = fates[mode][f]
+            return f"{c.get(st, 0)}/{sum(c.values())}"
+        P("**3. Pure coherence (no world) removes value errors but not partiality errors, and converges to an "
+          "alternative meaning.** In paired runs (tagged learner), pure coherence deletes the freshman's dream in "
+          f"{frac('numeral', 'freshman_dream', 'deleted')} of the runs where positive learning produced it, "
+          f"(a+b)/(c+d)→a/c+b/d in {frac('numeral', 'frac_split', 'deleted')} and −(a+b)→−a+b in "
+          f"{frac('numeral', 'neg_distrib', 'deleted')}. It repairs unguarded x/x→1 into the guarded rule in "
+          f"{frac('numeral', 'cancel_unguarded', 'repaired')} and unguarded sqrt(x²)→x in "
+          f"{frac('numeral', 'sqrt_unguarded', 'repaired')}. It almost never learns the guards that only concern "
+          "definedness, such as defined(a) for a*0→0 or nonzero(a) for 0/a→0 (see the per-rule guard table). What survives is sound in a "
+          "*total* semantics with 1/0 = 0 over the complex numbers (section *What does pure coherence converge "
+          "to?*). World feedback that can observe 'undefined' is what separates the intended meaning from this "
+          "coherent alternative.\n")
+    ml = [r for r in records if r["kind"] == "ml" and r["N"] == max(r2["N"] for r2 in records if r2["kind"] == "ml")]
+    if ml:
+        P(f"**4. An average-case verifier is not a substitute.** A gradient-boosted step classifier trained on the "
+          f"same corpus *with* validity labels (N = {ml[0]['N']}) accepts "
+          f"{_ms([100 * r['heldout']['invalid_ood']['all'] for r in ml], '{:.0f}')}% of invalid OOD steps and only "
+          f"{_ms([100 * r['heldout']['valid_ood']['all'] for r in ml], '{:.0f}')}% of valid OOD steps. Any "
+          "proof search that can propose such steps will exploit it (brief, H1).\n")
+    P("**Caveats.**")
+    P("* *Realisability.* Valid human steps are exact instances of the target schemas, and the guard language "
+      "contains the true guards, but only over schematic variables (see the `tagged_ms` control for what breaks "
+      "when a guard would have to mention a subterm or a constant). Real human mathematics satisfies neither "
+      "assumption.")
+    P("* *Soundness is measured, not proved.* Schema soundness uses random testing (`schema_sound`, 250 "
+      "assignments including undefined values). The held-out sets are 4 × 300 steps per seed labelled by a "
+      "60-point oracle. The white-box prover is a heuristic adversary (8 attacks per active schema). '0' means "
+      "'no counterexample found by these procedures'.")
+    P("* *World feedback is cheap here.* Random evaluation is an almost perfect oracle for polynomial identities "
+      "(Schwartz–Zippel), and boundary 'corner' points expose partiality. The loop uses about 10⁴ oracle queries "
+      "per run. In physics, or in mathematics with undecidable fragments, such feedback is far scarcer.")
+    P("* *Tagging helps.* When humans name the rule they use, buckets separate rules for free. The untagged learner "
+      "needs stage-2 generalisation plus SPLIT repair (section 3b). Without SPLIT it loses rules to deletion.")
+    P("* *Few seeds* (3 per configuration). The standard deviations are over seeds, not confidence intervals.\n")
+
+
 def make_report(records, quick: bool):
     L = []
     P = L.append
@@ -387,6 +475,11 @@ def make_report(records, quick: bool):
                   f"mean false-accept OOD {_mean([r['heldout']['invalid_ood']['all'] for r in g]):.4f}.")
         P("")
 
+    if not quick:
+        P("Plots (noise = `both`, mean over seeds): `results/algebra_exact_recovery.png`, "
+          "`results/algebra_false_accept.png`, `results/algebra_unsound.png`.\n")
+    interpretation(records, P, nT)
+
     # ---------------- Table 1: positive-only learning curves
     P("## 1. Positive examples only (no coherence)\n")
     P("Exact = schema and guard recovered up to renaming/equivalence; shape = lhs→rhs recovered (guard may differ); "
@@ -426,9 +519,10 @@ def make_report(records, quick: bool):
     P("### Are fallacies learned from positive data? (noise = `fallacies`/`both`)\n")
     P("Count of runs in which an *active unsound* schema licensing the fallacy exists (status `survived`). "
       "Note: with `guard_mode = none` the guard-dropping fallacies (unguarded x/x→1, sqrt(x²)→x) are learned "
-      "whenever the rule itself is learned, because positive examples never display a guard; with most-specific "
-      "guards (`tagged_ms`) they are learned only when humans actually commit them (a single unguarded use removes "
-      "the guard from the intersection).\n")
+      "whenever the rule itself is learned, because positive examples never display a guard. With most-specific "
+      "guards (`tagged_ms`) they are learned when humans actually commit them (a single unguarded use removes "
+      "the guard from the intersection), or when the schema is too specialised for its guard to be expressible "
+      "(see the control below).\n")
     P("| learner | N | " + " | ".join(f.name for f in FALLACIES) + " |")
     P("|---|---|" + "---|" * len(FALLACIES))
     for lname in ["tagged", "tagged_ms"]:
@@ -441,9 +535,16 @@ def make_report(records, quick: bool):
     P("")
     g = group(records, kind="positive", learner="tagged_ms", noise="clean")
     if g:
+        bad = [(r["N"], r["seed"], u.split(": ", 1)[-1]) for r in g for u in r["unsound_rules"]]
         P(f"Control: `tagged_ms` on clean data ends with ≥1 unsound active schema in "
-          f"{sum(r['n_unsound_active'] > 0 for r in g)}/{len(g)} runs (most-specific guards are sound when the "
-          f"positive data are).\n")
+          f"{sum(r['n_unsound_active'] > 0 for r in g)}/{len(g)} runs. Most-specific guards are sound on clean data "
+          "*except* when the learned schema is so specialised that its true guard is not expressible in the guard "
+          "language, which only constrains schematic variables. Examples are the ground schema `x/x -> 1` (true "
+          "guard nonzero(x), on an object constant) and `sqrt((?X1 + ?X2)^2) -> ?X1 + ?X2` (true guard "
+          "nonneg(?X1 + ?X2), on a compound term). Cases: "
+          + "; ".join(f"N={n}, seed {sd}: `{u}`" for n, sd, u in bad) + ". "
+          "World feedback removes such schemas rather than repairing them, because no guard over variables blocks "
+          "their counterexamples. A guard language over lhs *subterms* would allow a repair.\n")
 
     # spurious schemas: noise coincidences and over-generalisation
     P("### Spurious schemas: sporadic noise defeats a *fixed* support threshold as N grows\n")
@@ -610,10 +711,10 @@ def make_report(records, quick: bool):
     P("")
     # by N, pure coherence only
     P("Pure-coherence (`numeral`) runs by N. Survivors are the active unsound schemas left at the end. "
-      "*Object-constant* exceptions mention an unknown such as `z`, as in `?X1*z -> ?X1` or `z -> b`. They are "
-      "coherent too (true in every model with z = 1, resp. z = b), but pure coherence never reaches them, because "
-      "it only compares *numeral* expressions. *Other* exceptions are value errors that the learned calculus was "
-      "too poor to turn into a numeral contradiction.\n")
+      "*Object-constant* exceptions mention an unknown such as `z`, as in `?X1*z -> ?X1` or `z -> b`. Pure "
+      "coherence never reaches them, because it only compares *numeral* expressions. Most of them hold under some "
+      "assumption about the unknowns (z = 1, z = b, x ≠ 0 for the ground `x/x -> 1`). *Other* exceptions are "
+      "value errors that the learned calculus was too poor to turn into a numeral contradiction.\n")
     P("| N | runs | survivors | sound in total semantics | exceptions: object constants | exceptions: other |")
     P("|---|---|---|---|---|---|")
     by_regime = {}
@@ -632,10 +733,12 @@ def make_report(records, quick: bool):
         tb, okb, ocb, otb = (sum(x[i] for x in big) for i in range(4))
         P(f"**Reading.** For N ≥ 200, {okb} of the {tb} schemas that survive pure coherence "
           f"({100 * okb / max(tb, 1):.1f}%) are sound in the total semantics. Of the rest, {ocb} mention object "
-          f"constants and {otb} are other value errors. Coherence here means positive data plus contradiction with "
-          "trusted arithmetic. It removes every error that changes the *value* of a numeral expression (the "
-          "freshman's dream gives 2 = 4, unguarded x/x→1 gives 0/0 = 1 = 0, unguarded sqrt(x²)→x gives "
-          "1 = sqrt((-1)²) = -1). It cannot see *partiality*. So it converges to a calculus for a different, "
+          f"constants and {otb} {'is an other value error' if otb == 1 else 'are other value errors'}. "
+          "Coherence here means positive data plus contradiction with trusted arithmetic. It removes the errors "
+          "that change the *value* of some numeral expression. For example, the freshman's dream rewrites (1+1)² "
+          "to 1² + 1² = 2, while arithmetic gives 4. Unguarded sqrt(x²)→x rewrites sqrt((-1)²) to -1, while "
+          "arithmetic gives 1. Unguarded x/x→1 and 0/x→0 rewrite 0/0 to both 1 and 0. Pure coherence cannot see "
+          "*partiality*. So it converges to a calculus for a different, "
           "coherent meaning of '/', '^' and 'sqrt', in which 1/0 = 0. Only feedback that can observe 'undefined' "
           "(the world oracle) separates the two meanings. This is a concrete instance of the non-identifiability "
           "left after coherence (brief, H7; orchestrator ideas, 4(d)).")
@@ -749,22 +852,31 @@ def make_report(records, quick: bool):
 
 
 def make_plots(records):
+    """Three PNGs (exact recovery, OOD false-accept rate, unsound active
+    schemas) vs N, for noise = both; the same numbers are in the report tables."""
     try:
         import matplotlib
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
+        from matplotlib.ticker import NullLocator
     except Exception:
         return []
     files = []
-    colors = {"none": "#8a8f98", "numeral": "#d08c2d", "bag": "#4a7fc1", "step": "#2e9e6b"}
-    for metric, ylabel, fname in [("n_exact", "exact recovery (of 41)", "algebra_exact_recovery.png"),
-                                  ("fa_ood", "false-accept rate, invalid OOD steps", "algebra_false_accept.png"),
+    # neutral gray = baseline; categorical slots 1-3 (validated all-pairs) for the feedback modes;
+    # distinct markers / dashes so overlapping lines (bag and step often coincide) stay readable
+    style = {"none": dict(color="#8a8f98", marker="o", ls="-", label="positive only"),
+             "numeral": dict(color="#2a78d6", marker="s", ls="-", label="pure coherence (numeral)"),
+             "bag": dict(color="#eb6834", marker="^", ls="--", label="bag-level world feedback"),
+             "step": dict(color="#1baf7a", marker="o", ls=":", label="step-level world feedback")}
+    ink, muted = "#0b0b0b", "#52514e"
+    Ns = sorted({r["N"] for r in records if r["kind"] == "coherence"})
+    for metric, ylabel, fname in [("n_exact", "target schemas recovered exactly (of 41)", "algebra_exact_recovery.png"),
+                                  ("fa_ood", "false-accept rate on invalid OOD steps", "algebra_false_accept.png"),
                                   ("n_unsound_active", "unsound active schemas", "algebra_unsound.png")]:
-        fig, axes = plt.subplots(1, 2, figsize=(10, 3.8), sharey=True)
+        fig, axes = plt.subplots(1, 2, figsize=(10, 3.9), sharey=True)
         for ax, lname in zip(axes, ["tagged", "untagged"]):
             for mode in ["none", "numeral", "bag", "step"]:
                 xs, ys = [], []
-                Ns = sorted({r["N"] for r in records if r["kind"] == "coherence"})
                 for N in Ns:
                     if mode == "none":
                         g = group(records, kind="positive", learner=lname, N=N, noise="both")
@@ -776,13 +888,21 @@ def make_plots(records):
                     xs.append(N)
                     ys.append(_mean(vals))
                 if xs:
-                    ax.plot(xs, ys, marker="o", color=colors[mode], label=mode if mode != "none" else "positive only")
+                    st = style[mode]
+                    ax.plot(xs, ys, color=st["color"], marker=st["marker"], ls=st["ls"], lw=2, ms=7,
+                            label=st["label"])
             ax.set_xscale("log")
-            ax.set_title(f"{lname} learner, noise = both")
-            ax.set_xlabel("human derivations N")
-            ax.grid(alpha=0.3)
-        axes[0].set_ylabel(ylabel)
-        axes[0].legend(fontsize=8)
+            ax.xaxis.set_minor_locator(NullLocator())
+            ax.set_xticks(Ns)
+            ax.set_xticklabels([str(N) for N in Ns])
+            ax.set_title(f"{lname} learner, noise = both (mean of 3 seeds)", color=ink, fontsize=10)
+            ax.set_xlabel("human derivations N", color=muted)
+            ax.grid(alpha=0.25)
+            ax.tick_params(colors=muted)
+            for sp in ("top", "right"):
+                ax.spines[sp].set_visible(False)
+        axes[0].set_ylabel(ylabel, color=muted)
+        axes[0].legend(fontsize=8, frameon=False)
         fig.tight_layout()
         path = os.path.join(RESULTS, fname)
         fig.savefig(path, dpi=130)

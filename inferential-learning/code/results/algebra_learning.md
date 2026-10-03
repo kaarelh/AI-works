@@ -28,6 +28,28 @@ At N = 500 derivations with sporadic noise and systematic fallacies (`both`):
 * Over all 90 `bag` runs (N ∈ [20, 50, 100, 200, 500], noise ∈ clean/fallacies/both, both learners): runs ending with ≥1 unsound active schema: 2; runs with ≥1 white-box exploit: 2; mean false-accept OOD 0.0003.
 * Over all 90 `step` runs (N ∈ [20, 50, 100, 200, 500], noise ∈ clean/fallacies/both, both learners): runs ending with ≥1 unsound active schema: 0; runs with ≥1 white-box exploit: 0; mean false-accept OOD 0.0000.
 
+Plots (noise = `both`, mean over seeds): `results/algebra_exact_recovery.png`, `results/algebra_false_accept.png`, `results/algebra_unsound.png`.
+
+## Interpretation and caveats
+
+**1. Positive examples give the *shapes* of the rules, and they generalise systematically.** Schema shapes are recovered once a rule has a few human instances (see the table *Recovery vs number of human instances*). Because a schema is size-independent, acceptance of valid steps out of distribution (C-OOD, terms of about 38 nodes against 10 for human steps on average) tracks acceptance in distribution (C-ID) throughout.
+ But positive data never display a *guard*. Even on clean data at N = 500, the tagged learner ends with 11.7 ± 0.5 unsound active schemas (essentially the 11 guarded rules learned without their guards) and accepts 34 ± 1% of invalid OOD steps. Systematic fallacies reach support m and pass the conservative threshold. Sporadic noise produces spurious schemas whose number *grows* with N (table *Spurious schemas*). So a fixed support threshold is not a soundness guarantee. This is Gold's problem in miniature: positive data never rule out an over-general hypothesis.
+
+**2. Coherence with world feedback makes the verifier sound in every measured respect, at almost no cost in completeness.** Over all 90 main-grid step-feedback runs, 0 end with an unsound active schema, the largest false-accept rate on held-out invalid steps (ID or OOD) is 0.000, and the white-box prover finds 0 accepted invalid steps in total.
+ For N ≥ 200, step feedback recovers 40.6 ± 0.8/41 target schemas *exactly*, guards included, with completeness ID/OOD 0.993 ± 0.015 / 0.992 ± 0.018.
+ Bag-level feedback knows only that a whole derivation is wrong, and assigns blame by spectrum fault localisation. It is almost as good: 2/90 runs end with an unsound active schema (N=200, clean, seed 1, tagged: `?X1 - ?X1 -> 0`; N=500, both, seed 0, untagged: `0*(?X1 - a) -> 0`). Its cost is somewhat lower exact recovery: after mis-blame, some valid schemas are over-guarded (see `stronger` for cancel_factor and div_div in the per-rule guard table) or deleted. Reduced probing budgets (section 3c) do leave unsound schemas. The guarantee is only as good as the red-teaming of one's own rules.
+
+**3. Pure coherence (no world) removes value errors but not partiality errors, and converges to an alternative meaning.** In paired runs (tagged learner), pure coherence deletes the freshman's dream in 11/11 of the runs where positive learning produced it, (a+b)/(c+d)→a/c+b/d in 17/17 and −(a+b)→−a+b in 20/21. It repairs unguarded x/x→1 into the guarded rule in 31/35 and unguarded sqrt(x²)→x in 20/24. It almost never learns the guards that only concern definedness, such as defined(a) for a*0→0 or nonzero(a) for 0/a→0 (see the per-rule guard table). What survives is sound in a *total* semantics with 1/0 = 0 over the complex numbers (section *What does pure coherence converge to?*). World feedback that can observe 'undefined' is what separates the intended meaning from this coherent alternative.
+
+**4. An average-case verifier is not a substitute.** A gradient-boosted step classifier trained on the same corpus *with* validity labels (N = 500) accepts 50 ± 1% of invalid OOD steps and only 73 ± 3% of valid OOD steps. Any proof search that can propose such steps will exploit it (brief, H1).
+
+**Caveats.**
+* *Realisability.* Valid human steps are exact instances of the target schemas, and the guard language contains the true guards, but only over schematic variables (see the `tagged_ms` control for what breaks when a guard would have to mention a subterm or a constant). Real human mathematics satisfies neither assumption.
+* *Soundness is measured, not proved.* Schema soundness uses random testing (`schema_sound`, 250 assignments including undefined values). The held-out sets are 4 × 300 steps per seed labelled by a 60-point oracle. The white-box prover is a heuristic adversary (8 attacks per active schema). '0' means 'no counterexample found by these procedures'.
+* *World feedback is cheap here.* Random evaluation is an almost perfect oracle for polynomial identities (Schwartz–Zippel), and boundary 'corner' points expose partiality. The loop uses about 10⁴ oracle queries per run. In physics, or in mathematics with undecidable fragments, such feedback is far scarcer.
+* *Tagging helps.* When humans name the rule they use, buckets separate rules for free. The untagged learner needs stage-2 generalisation plus SPLIT repair (section 3b). Without SPLIT it loses rules to deletion.
+* *Few seeds* (3 per configuration). The standard deviations are over seeds, not confidence intervals.
+
 ## 1. Positive examples only (no coherence)
 
 Exact = schema and guard recovered up to renaming/equivalence; shape = lhs→rhs recovered (guard may differ); unsound = active learned schemas that are semantically unsound; FA-OOD = false-accept rate on invalid OOD steps; C-OOD = completeness (acceptance) on valid OOD steps.
@@ -192,7 +214,7 @@ Exact = schema and guard recovered up to renaming/equivalence; shape = lhs→rhs
 
 ### Are fallacies learned from positive data? (noise = `fallacies`/`both`)
 
-Count of runs in which an *active unsound* schema licensing the fallacy exists (status `survived`). Note: with `guard_mode = none` the guard-dropping fallacies (unguarded x/x→1, sqrt(x²)→x) are learned whenever the rule itself is learned, because positive examples never display a guard; with most-specific guards (`tagged_ms`) they are learned only when humans actually commit them (a single unguarded use removes the guard from the intersection).
+Count of runs in which an *active unsound* schema licensing the fallacy exists (status `survived`). Note: with `guard_mode = none` the guard-dropping fallacies (unguarded x/x→1, sqrt(x²)→x) are learned whenever the rule itself is learned, because positive examples never display a guard. With most-specific guards (`tagged_ms`) they are learned when humans actually commit them (a single unguarded use removes the guard from the intersection), or when the schema is too specialised for its guard to be expressible (see the control below).
 
 | learner | N | freshman_dream | cancel_unguarded | sqrt_unguarded | frac_split | neg_distrib |
 |---|---|---|---|---|---|---|
@@ -211,7 +233,7 @@ Count of runs in which an *active unsound* schema licensing the fallacy exists (
 | tagged_ms | 200 | 4/6 | 5/6 | 6/6 | 6/6 | 6/6 |
 | tagged_ms | 500 | 6/6 | 6/6 | 6/6 | 6/6 | 6/6 |
 
-Control: `tagged_ms` on clean data ends with ≥1 unsound active schema in 4/21 runs (most-specific guards are sound when the positive data are).
+Control: `tagged_ms` on clean data ends with ≥1 unsound active schema in 4/21 runs. Most-specific guards are sound on clean data *except* when the learned schema is so specialised that its true guard is not expressible in the guard language, which only constrains schematic variables. Examples are the ground schema `x/x -> 1` (true guard nonzero(x), on an object constant) and `sqrt((?X1 + ?X2)^2) -> ?X1 + ?X2` (true guard nonneg(?X1 + ?X2), on a compound term). Cases: N=10, seed 2: `x/x -> 1`; N=20, seed 2: `x/x -> 1`; N=100, seed 2: `sqrt((?X1 + ?X2)^2) -> ?X1 + ?X2   [if defined(?X1) & defined(?X2)]`; N=500, seed 1: `0/(y + 3) -> 0`. World feedback removes such schemas rather than repairing them, because no guard over variables blocks their counterexamples. A guard language over lhs *subterms* would allow a repair.
 
 ### Spurious schemas: sporadic noise defeats a *fixed* support threshold as N grows
 
@@ -441,7 +463,7 @@ Every learned schema that is unsound for the intended (partial, real) semantics 
 | untagged | bag | 45 | 1 | 1 | 45/45 |
 | untagged | step | 45 | 0 | 0 | 45/45 |
 
-Pure-coherence (`numeral`) runs by N. Survivors are the active unsound schemas left at the end. *Object-constant* exceptions mention an unknown such as `z`, as in `?X1*z -> ?X1` or `z -> b`. They are coherent too (true in every model with z = 1, resp. z = b), but pure coherence never reaches them, because it only compares *numeral* expressions. *Other* exceptions are value errors that the learned calculus was too poor to turn into a numeral contradiction.
+Pure-coherence (`numeral`) runs by N. Survivors are the active unsound schemas left at the end. *Object-constant* exceptions mention an unknown such as `z`, as in `?X1*z -> ?X1` or `z -> b`. Pure coherence never reaches them, because it only compares *numeral* expressions. Most of them hold under some assumption about the unknowns (z = 1, z = b, x ≠ 0 for the ground `x/x -> 1`). *Other* exceptions are value errors that the learned calculus was too poor to turn into a numeral contradiction.
 
 | N | runs | survivors | sound in total semantics | exceptions: object constants | exceptions: other |
 |---|---|---|---|---|---|
@@ -451,7 +473,7 @@ Pure-coherence (`numeral`) runs by N. Survivors are the active unsound schemas l
 | 200 | 18 | 151 | 145 | 5 | 1 |
 | 500 | 18 | 164 | 159 | 5 | 0 |
 
-**Reading.** For N ≥ 200, 304 of the 315 schemas that survive pure coherence (96.5%) are sound in the total semantics. Of the rest, 10 mention object constants and 1 are other value errors. Coherence here means positive data plus contradiction with trusted arithmetic. It removes every error that changes the *value* of a numeral expression (the freshman's dream gives 2 = 4, unguarded x/x→1 gives 0/0 = 1 = 0, unguarded sqrt(x²)→x gives 1 = sqrt((-1)²) = -1). It cannot see *partiality*. So it converges to a calculus for a different, coherent meaning of '/', '^' and 'sqrt', in which 1/0 = 0. Only feedback that can observe 'undefined' (the world oracle) separates the two meanings. This is a concrete instance of the non-identifiability left after coherence (brief, H7; orchestrator ideas, 4(d)).
+**Reading.** For N ≥ 200, 304 of the 315 schemas that survive pure coherence (96.5%) are sound in the total semantics. Of the rest, 10 mention object constants and 1 is an other value error. Coherence here means positive data plus contradiction with trusted arithmetic. It removes the errors that change the *value* of some numeral expression. For example, the freshman's dream rewrites (1+1)² to 1² + 1² = 2, while arithmetic gives 4. Unguarded sqrt(x²)→x rewrites sqrt((-1)²) to -1, while arithmetic gives 1. Unguarded x/x→1 and 0/x→0 rewrite 0/0 to both 1 and 0. Pure coherence cannot see *partiality*. So it converges to a calculus for a different, coherent meaning of '/', '^' and 'sqrt', in which 1/0 = 0. Only feedback that can observe 'undefined' (the world oracle) separates the two meanings. This is a concrete instance of the non-identifiability left after coherence (brief, H7; orchestrator ideas, 4(d)).
  For N < 200 the share is 86.3% (20 other exceptions): with a small learned calculus fewer derivations reach a numeral, so fewer contradictions are derivable. Coherence is only as strong as the deductive power of the calculus it is applied to.
 
 All exceptions (unsound in *both* semantics), with the number of runs:

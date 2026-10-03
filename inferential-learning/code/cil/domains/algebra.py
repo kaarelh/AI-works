@@ -23,6 +23,10 @@ Contents
 * **World oracle** :class:`WorldOracle`: random-point evaluation
   (Schwartz-Zippel style) with points drawn from a mixture of special small
   values and random rationals, restricted to points satisfying the facts.
+* **Alternative total semantics** (diagnostic only): :func:`evaluate_total`,
+  :func:`schema_sound_total` -- the 'complex meadow' (x/0 := 0, principal
+  complex sqrt), a coherent alternative meaning of the operators that pure
+  coherence cannot distinguish from the intended partial semantics.
 """
 from __future__ import annotations
 
