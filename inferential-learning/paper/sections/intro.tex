@@ -2,7 +2,7 @@
 
 \subsection{The question}\label{sec:intro:question}
 
-Consider a learning process that learns \emph{which inferences are valid}, and thereby learns to make valid inferences. The motivating design has six parts.
+Consider a learning process that learns \emph{which inferences are valid}, and thereby learns to make valid inferences. The following design, and the three success criteria below, were posed by Kaarel H\"anni. Many of the questions behind them are recorded in his public working notes \citep{hanni2026notes}. We call these \emph{the motivating notes} and quote them verbatim, citing them by file path. As their own README says, they are working notes rather than asserted claims, and the readings of them given here are ours. The design has six parts.
 \begin{itemize}
 \item It starts by imitating human inferences. These are the steps of formal or informal mathematical proofs, or of physics olympiad solutions.
 \item It treats an argument as valid when it is a sequence of valid inferences.
@@ -11,13 +11,15 @@ Consider a learning process that learns \emph{which inferences are valid}, and t
 \item On an inferentialist picture of meaning \citep{brandom1994making}, learning which inferences are valid is roughly learning what the words mean.
 \item Arguments happen in \emph{contexts}. A physics problem says ``assume air pressure is $0$'', and from background knowledge one can prove that it is not. Arguments for $P$ and for $\neg P$ in such contexts should not be penalized, yet some coherence constraint is clearly needed.
 \end{itemize}
-Does anything of this shape work, even with unlimited compute? Does it give rise to a reasoner that derives many correct conclusions? Can one \emph{prove} that it does? The bar rises in three steps:
+Does anything of this shape work, even with unlimited compute? Does it give rise to a reasoner that derives many correct conclusions? Can the arguments it accepts be trusted when they come from an untrusted, possibly adversarial, generator? Can one \emph{prove} any of this? The bar rises in three steps:
 \begin{itemize}
 \item a setup that provably works for formal mathematics;
 \item one that would have worked for mathematics \emph{before} we knew how to formalize proofs;
-\item a principled system for checking physics olympiad solutions.
+\item a principled system for solving physics olympiad problems or for checking their solutions. We take the checking reading (\cref{sec:physics}).
 \end{itemize}
 Behind all of these sits a broader question: what does principled justification look like beyond mathematical proof?
+
+The motivating notes put verification first. Formal proof checking is what could make it safe to obtain superhuman mathematical work from an untrusted system. A defeasible checker that faces an untrusted prover, by contrast, ``might have lost all the safety'' (\texttt{ai/verification and generation/formalizing philosophy.pdf}). We therefore treat soundness against an adversarial arguer as the central requirement throughout, and we build checkers, not provers.
 
 This report answers these questions as precisely as we could. The main results are summarized below and collected in \cref{tab:intro:answers}. Each is stated as a theorem in the body, with a full proof in the appendix. Most theorems are paired with an impossibility result showing that its hypotheses cannot be dropped.
 
@@ -29,59 +31,61 @@ This report answers these questions as precisely as we could. The main results a
   \item A reasoner searches for derivations whose steps its learned checker accepts. It is sound iff every accepted step is derivable (\cref{lem:search:stepwise}). One accepted bad step is fatal.
   \item For every distribution over steps and every $\varepsilon>0$, a single tonk-like schema with mass $<\varepsilon$ makes every formula derivable (\cref{thm:search:tonk}). Every PAC learner can be modified to stay PAC while producing outputs that trivialize the reasoner (\cref{cor:search:pac}).
   \item Majority-vote ensembles of individually coherent verifiers can derive $\bot$ forever without any member being refuted (\cref{thm:search:doctrinal}).
-  \item Accuracy on human steps, which is what step-level reward models optimize, is therefore the wrong target. An experiment shows a step classifier with in-distribution AUC $0.995$ that a search procedure exploits to prove most of a set of false equations (\cref{sec:experiments}).
+  \item Accuracy on human steps, which is what step-level reward models optimize, is therefore not a soundness certificate. In a small closed algebra domain, a boosted-tree step classifier with in-distribution AUC $0.995$ is exploited by search to prove most of a set of false equations (\cref{sec:experiments}). The phenomenon is known in practice \citep{gao2023scaling}; the theorem explains why it is unavoidable.
   \end{itemize}
 \item \textbf{Cautious acceptance is the canonical sound verifier, and structure makes it affordable} (\cref{sec:caution}).
   \begin{itemize}
   \item Accepting exactly what every surviving hypothesis accepts is sound against every adaptive prover. It is also the largest sound policy (\cref{thm:caution:vs}).
   \item Its worst-case cost in human escalations is exactly a positive-elasticity dimension of the class (\cref{thm:caution:esc}).
-  \item For rule schemas learned by anti-unification this cost is linear in step size. Unstructured classes cost exponentially (\cref{tab:caution:cost}).
-  \item A Bayesian version is time-uniformly sound via Ville's inequality (\cref{thm:caution:ville}).
+  \item For rules cited by name, learned by anti-unification, this cost is linear in step size. Without citations it is at least $\lfloor (N-1)/k\rfloor^k$ even for one rule, and unstructured classes cost exponentially (\cref{tab:caution:cost}).
+  \item A Bayesian version is time-uniformly sound via Ville's inequality, using the prior--posterior-ratio martingale of \citet{waudbysmith2020confidence} (\cref{thm:caution:ville}).
+  \item This is reliable or KWIK-style learning \citep{rivest1988learning,li2008knows} applied to step checkers; what is specific here is the escalation dimension and its values for rule schemas.
   \end{itemize}
 \item \textbf{Imitation identifies rules but not norms} (\cref{sec:imitation}).
   \begin{itemize}
-  \item Positive examples identify a schematic calculus exactly, at coupon-collector rates (\cref{thm:imitation:coupon}).
+  \item For rules cited by name, positive examples identify a schematic calculus exactly, at coupon-collector rates (\cref{thm:imitation:coupon}). Uncited rules need a diversity condition (\cref{thm:imitation:untagged}).
   \item Exact identification generalizes to derivations of any size (\cref{cor:imitation:ood}). This is a precise sense in which finite usage fixes inferential role for unbounded use.
   \item Systematic human errors are indistinguishable from rules at every rate (\cref{cor:imitation:systematic}).
   \end{itemize}
 \item \textbf{Coherence is eliminative negative data, and its power is exactly Post-completeness} (\cref{sec:coherence}).
   \begin{itemize}
-  \item A derivation of $\bot$ from a context certified consistent is a \emph{negative bag}: some step in it is invalid. Only bold learners ever receive this signal, with at most $\log_2(1/w^*)$ detections (\cref{thm:coherence:halving}).
-  \item Every structural extension of classical consequence is classical or trivial. So one coherence datum pins down classical logic with no simplicity bias (\cref{thm:coherence:post,thm:coherence:cpc}, machine-checked).
-  \item Coherence is blind among intermediate logics (\cref{thm:coherence:ipc}). In arithmetic it is Popperian, detecting $\Pi_1$ truth but not $\Sigma_1$ truth, and runs out at $\Sigma_2$ (\cref{thm:coherence:popper}).
-  \item Carnap's categoricity problem is Gold's problem in the dual space of valuations. Single-conclusion data cannot fix the classical meanings, while finitely many bilateral data plus one coherence datum can (\cref{thm:coherence:carnap,thm:coherence:telltale}).
+  \item A derivation of $\bot$ from a context certified consistent is a \emph{negative bag}: some step in it is invalid. Only bold learners ever receive this signal. A halving-type learner, in the tradition of Barzdin--Freivalds and \citet{littlestone1988learning}, suffers at most $\log_2(1/w^*)$ detections (\cref{thm:coherence:halving}).
+  \item Every structural extension of classical consequence is classical or trivial. This is Post-completeness in consequence form \citep{post1921}. So one coherence datum pins down classical logic with no simplicity bias (\cref{thm:coherence:post,thm:coherence:cpc}, machine-checked). In general, coherence pins the target exactly when the target has no coherent uniform proper extension.
+  \item By Glivenko's theorem, coherence is blind among intermediate logics (\cref{thm:coherence:ipc}). In arithmetic it is Popperian, detecting $\Pi_1$ truth but not $\Sigma_1$ truth, and runs out at $\Sigma_2$ (\cref{thm:coherence:popper}).
+  \item Carnap's categoricity problem is, in part, Gold's problem in the dual space of valuations (\cref{tab:coherence:goldcarnap}). Single-conclusion data cannot fix the classical meanings, while finitely many bilateral data plus one coherence datum can (\cref{thm:coherence:carnap,thm:coherence:telltale}); the bilateral idea is that of Shoesmith--Smiley, Rumfitt and Restall.
   \item What survives everything is the set of coherent uniform alternatives: a precise ``Kripkensteinian residue'' (\cref{thm:coherence:residue}).
   \end{itemize}
 \item \textbf{An end-to-end theorem for formal mathematics} (\cref{sec:twotier}).
   \begin{itemize}
   \item The naive two-tier design (cautious assertion plus a bold red team) is provably unsound, because practice contains fallacies (\cref{prop:twotier:practice}).
   \item The corrected learner audits, then asserts. It assigns blame through the union of minimal conflicts, which is Reiter's duality (\cref{lem:twotier:reiter}), and states soundness relative to a refutation depth.
-  \item It is sound against every adaptive prover and red team, and it converges to the target modulo an explicit residue (\cref{thm:twotier:main}).
-  \item Each ingredient is necessary (\cref{tab:twotier:necessary}).
-  \item For classical propositional logic and for complete decidable theories the residue is empty.
+  \item Assume realizability, with each systematic fallacy used under its own latent rule tag. Assume also a known frequency floor, truthful designation and an exact depth-$d$ refutation oracle. Then the learner is sound against every adaptive prover and red team. Its asserted calculus is the target plus the depth-$d$ residue, minus a set of collateral genuine rules when blame is ambiguous (\cref{thm:twotier:main}). If fallacies are cited under the names of genuine rules, the theorem does not apply as stated.
+  \item Several ingredients are shown to be necessary by matching lower bounds (\cref{tab:twotier:necessary}).
+  \item For classical propositional logic the residue is empty and convergence is exact. For complete decidable theories this holds conditionally on a realizability hypothesis that is not established for standard axiomatizations (\cref{cor:twotier:decidable}).
   \end{itemize}
 \item \textbf{Informal mathematics before formalization} (\cref{sec:informal}).
   \begin{itemize}
   \item We model informal practice as the shadow of an unknown latent formalization. A bounded-gap conservative verifier is sound against adaptive provers. It must check links between contexts as well as steps, since Cauchy's sum theorem is an equivocation (\cref{prop:informal:equivocation}).
-  \item Validity is identified exactly up to informal-validity equivalence, and no finer. Ontology is not identifiable: standard and nonstandard reals agree on the practice (\cref{thm:informal:identify,prop:informal:transfer}).
-  \item Counterexample objects need at most $\log_2|\Hc|$ corrections, whereas paradoxes can need $|\Hc|-1$; the sorites is the tight case (\cref{thm:informal:objects,thm:informal:paradoxes}).
+  \item Under complete closure-level presentation, validity is identified exactly up to informal-validity equivalence, and no finer. Bounded-gap data identify the short-step relation and only bracket meaning, which is pinned when long inferences decompose into short steps (\cref{thm:informal:identify}, \cref{ex:informal:weaker}). Ontology is never identifiable: standard and nonstandard reals agree on the practice (\cref{prop:informal:transfer}).
+  \item Counterexample objects need at most $\log_2|\Hc|$ corrections, by the classical halving argument, whereas paradoxes can need $|\Hc|-1$ on some classes; a sorites-shaped chain is the tight case (\cref{thm:informal:objects,thm:informal:paradoxes}).
   \item The history Frege$\to$Russell$\to$Zermelo comes out as constrained repair selected by coverage of practice (\cref{thm:informal:frz}).
-  \item A robust-core theorem explains why informal mathematics survived formalization (\cref{thm:informal:robust}).
+  \item A robust-core theorem shows the following. Suppose pre-formal practice used only steps valid under every admissible sharpening of its vague concepts; this is a hypothesis from the motivating notes, untested here. Then its proofs survive every such formalization (\cref{thm:informal:robust}).
+  \item Selection of steps by counterexample objects, together with G\"odel completeness, explains why the surviving informal steps are derivable, though not why they are short (\cref{prop:informal:emergence}).
   \end{itemize}
 \item \textbf{Contexts and the principled checking of physics} (\cref{sec:physics}).
   \begin{itemize}
   \item Contexts denote filters of models from a declared deformation family. Suppositions are exact discharge. Idealizations may contradict the background.
-  \item Eternalism is provably impossible (\cref{thm:physics:eternalism}). Coherence belongs on the root and the anchored contexts only (\cref{thm:physics:realizability}).
+  \item No truth-functional eternalist reading of in-context claims tracks in-context truth (\cref{thm:physics:eternalism}, an observation once set up). Eternalism survives only at the meta level, as McCarthy's $\ist(c,\varphi)$. Coherence belongs on the root and the anchored contexts only (\cref{thm:physics:realizability}).
   \item Designating ``idealization plus full background'' as coherent forces a globally paraconsistent logic (\cref{prop:physics:misdesignation}). This is a formal version of the air-pressure worry.
-  \item Exporting a conclusion from an idealization needs information of finite radius about the de-idealized family: there is no free export (\cref{thm:physics:nofree}). Context choice is an attack surface (\cref{thm:physics:stipulation}).
+  \item Exporting a conclusion from an idealization needs information of finite radius about the de-idealized family. There is no free export, by the standard adversary argument of information-based complexity \citep{traub1988information} (\cref{thm:physics:nofree}). Context choice is an attack surface (\cref{thm:physics:stipulation}).
   \item A Structured Physics Solution checker is sound against adversarial solvers relative to a judgment layer (\cref{thm:physics:relative}). That layer, consisting of the reading of the problem and the adequacy of the top model, is ineliminable (\cref{thm:physics:judgment}).
   \item ``True in the context at hand'' becomes supertruth over admissible completions (\cref{thm:physics:superval}).
-  \item The approach is worked through a EuPhO problem end to end (\cref{sec:physics:example}).
+  \item The approach is worked through one EuPhO problem (\cref{sec:physics:example}). Its setup was reconstructed from the motivating notes, not checked against the official text, and the checker run is a problem-specific prototype.
   \end{itemize}
 \item \textbf{Two questions from the motivating notes.}
   \begin{itemize}
-  \item A \emph{steeper simplicity penalty} on function induction with private randomness does produce the hoped-for kink at the simple model (\cref{thm:simplicity:kink}). But selection is a rate threshold. Rare valid rules are lost and cheap fallacies kept, and the threshold cannot be calibrated from imitation data (\cref{sec:simplicity}).
-  \item The \emph{``philosophical completeness theorem''} (``a mode of talking is coherent iff there is something it could be talking about'') holds in a generalized weak sense, for positions, credences and context systems. It fails in the intended sense. Bounded-arity coherence constraints of the kind used in consistency-based probing do not characterize coherence (\cref{sec:existence}).
+  \item A \emph{steeper simplicity penalty} on function induction with private randomness does produce the hoped-for kink at the simple model, proved for parity teachers (\cref{thm:simplicity:kink}); kinks beyond parities are open. But selection is a rate threshold. Rare valid rules are lost and cheap fallacies kept, and the threshold cannot be calibrated from imitation data (\cref{sec:simplicity}).
+  \item The notes ask for a \emph{``philosophical version'' of G\"odel's completeness theorem}: ``a mode of talking makes sense (is coherent) iff there is something it could be talking about''. In the generalized sense the question asks for, the answer is positive, for positions, credences and context systems. Coherence cannot certify existence of the \emph{intended} (standard) model, a limitation the notes themselves anticipate. Bounded-arity coherence constraints of the kind used in consistency-based probing do not characterize coherence (\cref{sec:existence}).
   \end{itemize}
 \end{enumerate}
 
@@ -98,9 +102,9 @@ Three conclusions sit on top of these results (\cref{sec:philosophy}):
 \toprule
 Success criterion & Status\\
 \midrule
-A setup that provably works for formal mathematics & \textbf{Yes, with explicit scope.} The two-tier learner (\cref{thm:twotier:main}) is sound and exactly convergent for classical propositional logic and complete decidable theories (\cref{cor:twotier:cpc,cor:twotier:decidable}). It is Popperian for arithmetic, with sharp impossibility results beyond $\Sigma_1$ (\cref{thm:twotier:arith}).\\
-A setup that would have worked before formalization & \textbf{Yes, relative to realizability.} A bounded-gap verifier over latent formalizations is sound and identifies validity exactly up to informal-validity equivalence (\cref{sec:informal}). Open: affordable soundness when the learner must invent the formal language.\\
-A principled system for checking physics olympiad solutions & \textbf{Yes, as a checker with a declared residue.} It is sound against adversarial solvers relative to the reading and the top model (\cref{thm:physics:relative}). That residue is provably ineliminable (\cref{thm:physics:judgment}). We deliberately built a checker, not a solver.\\
+A setup that provably works for formal mathematics & \textbf{Yes for classical propositional logic; conditionally beyond.} The two-tier learner (\cref{thm:twotier:main}) is sound under its stated assumptions. It converges exactly for classical propositional logic (\cref{cor:twotier:cpc}). For complete decidable theories, exactness holds conditionally on a realizability hypothesis that is not established for standard axiomatizations (\cref{cor:twotier:decidable}); without it the learner stays sound but loses some rules. It is Popperian for arithmetic, with sharp impossibility results beyond $\Sigma_1$ (\cref{thm:twotier:arith}).\\
+A setup that would have worked before formalization & \textbf{Conditionally.} Suppose the practice's latent formalization lies in the learner's class. Then a bounded-gap verifier over latent formalizations is sound against adaptive provers. For a finite class under complete presentation, it identifies the practice's step relation and brackets its meaning, which is identified exactly up to informal-validity equivalence when long inferences decompose into short steps (\cref{sec:informal}). History violated the realizability condition at its decisive steps ($\varepsilon$--$\delta$, uniform convergence, ideals). What the criterion really requires, affordable soundness with language invention, remains open (\cref{sec:open}).\\
+A principled system for checking physics olympiad solutions & \textbf{A principled design with a relative soundness theorem, not yet a system.} Solutions written in the Structured Physics Solution format are checked soundly against adversarial solvers, relative to a trusted base (kernel, laws and proved bridge schemas), the reading of the problem and the top model (\cref{thm:physics:relative}). The reading and top-model layer is provably ineliminable (\cref{thm:physics:judgment}). The design is illustrated on one EuPhO problem by a problem-specific prototype, which also rejects adversarial variants. No general checker has been built. We deliberately built a checker, not a solver.\\
 \bottomrule
 \end{tabularx}
 \caption{The three success criteria, and what this report establishes for each.}\label{tab:intro:answers}
@@ -108,16 +112,16 @@ A principled system for checking physics olympiad solutions & \textbf{Yes, as a 
 
 \subsection{How the results were established}\label{sec:intro:method}
 
-The work was carried out by many cooperating agent instances, coordinated by one orchestrating instance. It proceeded in four stages.
+The work was carried out by many cooperating instances of a language model, coordinated by one instance. It proceeded in four stages.
 \begin{itemize}
 \item Literature memos on eleven strands.
-\item Seven theory threads, which developed the mathematics.
-\item Adversarial verification. Every main result was attacked by two or three independent referees instructed to refute it, with brute-force computation on small cases where possible. The results were then repaired, and the repaired items were re-verified by fresh referees.
-\item Drafting, followed by a fidelity check of each section against its verified source.
+\item Seven theory documents (T1--T7), which developed the mathematics.
+\item Adversarial verification. Every main result was attacked by two or three independent referees instructed to refute it, with brute-force computation on small cases where possible. The results were then repaired, and fresh referees re-checked the repaired items.
+\item Drafting, followed by a fidelity check of each section against its verified source, and a review of the whole paper.
 \end{itemize}
-In the first verification round the referees found four false statements and about twenty significant gaps. Each was repaired, weakened or retracted. One theorem needed a second repair round. The full records are in \texttt{research/verification/} of the accompanying repository, and the repaired statements are the ones used here.
+In the first verification round the referees found four false statements and about twenty significant gaps. Each was repaired, weakened or retracted. The second round found two further major problems in \cref{sec:twotier}, in \cref{thm:twotier:burnin} and \cref{thm:twotier:arith}(e), and two in glosses of a literature memo. These were repaired too. The \cref{sec:twotier} repairs were checked by a further referee and by computation. The full records are in \texttt{research/verification/} of the accompanying repository, and the repaired statements are the ones used here.
 
-A core of discrete results is machine-checked in Lean~4 with Mathlib (\cref{app:lean}). It covers about fifty paper results in 14{,}600 lines with no \texttt{sorry}. Among them are:
+A core of discrete results is machine-checked in Lean~4 \citep{demoura2021lean4} with Mathlib \citep{mathlib2020} (\cref{app:lean}). It covers about fifty paper results in 14{,}600 lines with no \texttt{sorry}; about a third of them are formalized as special cases, weaker statements or variants (\cref{tab:lean:map}). Among them are:
 \begin{itemize}
 \item the Post-completeness and coherence theorems;
 \item Carnap's problem in learning form, with the bilateral tell-tale;
@@ -127,13 +131,29 @@ A core of discrete results is machine-checked in Lean~4 with Mathlib (\cref{app:
 \item the rate threshold and the rate-inversion counterexample;
 \item no free export from samples, and the Lipschitz certifier.
 \end{itemize}
-Experiments in a small symbolic toolkit illustrate the phenomena (\cref{sec:experiments}). They concern school algebra with real systematic errors, propositional natural deduction, adversarial proof search against learned verifiers, and a prototype physics checker.
+Experiments in a small symbolic toolkit illustrate the phenomena (\cref{sec:experiments}). They concern school algebra with simulated derivations containing well-known systematic student errors, propositional natural deduction, adversarial proof search against learned verifiers, and a prototype physics checker. They are illustrations, not evidence of scalability.
 
 We have tried to mark scope honestly:
 \begin{itemize}
 \item Many results are ``trivial once set up''. Their contribution is the setup, and we say so.
-\item Several ingredients are classical, and we credit them. Examples are Gold, Angluin, Plotkin, Natarajan, Rivest--Sloan, KWIK, Ville and the prior--posterior-ratio martingale, Post, Glivenko, Carnap and the bilateralists, chunk-and-permeate, information-based complexity, de Finetti and Gaifman.
-\item The soundness guarantees are relative to stated assumptions, chiefly realizability of the target in a structured hypothesis class and truthful designation of contexts. Computational cost is mostly not addressed.
+\item Many ingredients are classical, and we credit them where they are used. Among them:
+  \begin{itemize}
+  \item learning from positive data and anti-unification: Gold, Angluin, Plotkin and Reynolds, Natarajan and Helmbold--Sloan--Warmuth, Wright and Motoki--Shinohara, Lange--Zeugmann;
+  \item reliable and selective learning: Rivest--Sloan, El-Yaniv--Wiener, KWIK;
+  \item martingales and online bounds: Ville and Waudby-Smith--Ramdas, Barzdin--Freivalds and Littlestone;
+  \item logic: Post and Pogorzelski, Glivenko, Carnap, Shoesmith--Smiley, Rumfitt, Restall and Scott;
+  \item diagnosis and inductive inference: Reiter and Shapiro; Putnam, Gold and Kelly;
+  \item contexts and numerical analysis: chunk-and-permeate (Brown--Priest), information-based complexity (Traub--Wasilkowski--Wo\'zniakowski);
+  \item probability and logic: de Finetti and Gaifman.
+  \end{itemize}
+\item The soundness guarantees are relative to stated assumptions: chiefly realizability of the target in a structured hypothesis class and truthful data and designations, together with the technical hypotheses stated with each theorem. Computational cost is mostly not addressed.
+\end{itemize}
+
+\paragraph{Conventions.} Results carry three kinds of marker.
+\begin{itemize}
+\item A superscript tag such as \src{T1 Thm 3.1} gives a result's provenance. T1--T7 are the theory documents in \texttt{research/theory/} of the accompanying repository, and L1--L11 are the literature memos in \texttt{research/lit/}. ``As repaired'' means the statement was changed during adversarial verification, with records in \texttt{research/verification/}.
+\item A superscript \textsf{Lean:\,name} names a Lean declaration (\cref{app:lean}).
+\item Status labels mark results that are known (cited), computed by a script, a proof sketch, or a conjecture.
 \end{itemize}
 
 \subsection{Reader's guide}\label{sec:intro:guide}
@@ -147,4 +167,4 @@ The report is long because it treats three domains and two side questions in ful
 \item \textbf{Logic and the semantics of coherence:} \cref{sec:existence}.
 \item \textbf{Experiments and code:} \cref{sec:experiments}.
 \end{itemize}
-\Cref{sec:open} collects open problems. Proofs are in the appendices, one per section.
+\Cref{sec:open} collects open problems. Full proofs, computed evidence and secondary results are in the appendices, one per section.

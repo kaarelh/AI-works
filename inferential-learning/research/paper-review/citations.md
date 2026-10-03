@@ -277,3 +277,352 @@ Status legend:
 * "checked from knowledge": standard reference whose authors, title, venue and year match the canonical record.
 
 The table is grouped by the file whose definition `merge_bib.py` keeps.
+
+**bib/caution.bib** (18 entries kept from this file)
+
+| key | first author, year | also defined in | status |
+|---|---|---|---|
+| `cohen2020pessimism` | Michael K. Cohen 2020 | - | real; checked by web search |
+| `cohen2022fully` | Michael K. Cohen 2022 | - | real; checked by web search |
+| `elyaniv2010foundations` | Ran El-Yaniv 2010 | imitation.bib, setting.bib | real; checked from knowledge |
+| `gold1967language` | E. Mark Gold 1967 | coherence.bib, imitation.bib, informal.bib, search.bib, setting.bib | real; checked from knowledge |
+| `helmbold1990learning` | David Helmbold 1990 | imitation.bib | real; checked from knowledge |
+| `kivinen1995learning` | Jyrki Kivinen 1995 | - | real; checked by web search |
+| `li2008knows` | Lihong Li 2008 | imitation.bib, setting.bib | real; checked from knowledge |
+| `li2011knows` | Lihong Li 2011 | - | real; checked from knowledge |
+| `motoki1991correct` | Tatsuya Motoki 1991 | imitation.bib | real; checked by web search |
+| `natarajan1987learning` | Balas K. Natarajan 1987 | imitation.bib | real; checked from knowledge |
+| `plotkin1970note` | Gordon D. Plotkin 1970 | experiments.bib, search.bib, setting.bib, twotier.bib | real; checked from knowledge |
+| `ramdas2023game` | Aaditya Ramdas 2023 | - | real; checked from knowledge |
+| `reynolds1970transformational` | John C. Reynolds 1970 | setting.bib, twotier.bib | real; checked from knowledge |
+| `rivest1988learning` | Ronald L. Rivest 1988 | setting.bib | pages 635--640, not 635--639 (web-checked) |
+| `shafer2011test` | Glenn Shafer 2011 | - | real; checked from knowledge |
+| `ville1939etude` | Jean Ville 1939 | informal.bib | real; checked from knowledge |
+| `waudbysmith2020confidence` | Ian Waudby-Smith 2020 | informal.bib | real; checked from knowledge |
+| `wright1989identification` | Keith Wright 1989 | imitation.bib | real; checked from knowledge |
+
+**bib/coherence.bib** (64 entries kept from this file)
+
+| key | first author, year | also defined in | status |
+|---|---|---|---|
+| `angluin1980inductive` | Angluin 1980 | imitation.bib, search.bib | real; checked from knowledge |
+| `barzdin1972prediction` | Janis M. Barzdin 1972 | informal.bib | real; checked by web search |
+| `belnap1962tonk` | Belnap 1962 | imitation.bib, search.bib | real; checked from knowledge |
+| `blum1975toward` | Lenore Blum 1975 | - | real; checked from knowledge |
+| `bonnay2016compositionality` | Denis Bonnay 2016 | - | real; checked from knowledge |
+| `boolos2007computability` | George S. Boolos 2007 | existence.bib, twotier.bib | real; checked from knowledge |
+| `bovens2003bayesian` | Luc Bovens 2003 | - | real; checked from knowledge |
+| `bovens2003solving` | Luc Bovens 2003 | - | real; checked from knowledge |
+| `carnap1943formalization` | Rudolf Carnap 1943 | setting.bib | real; checked from knowledge |
+| `chagrov1997modal` | Alexander Chagrov 1997 | - | real; checked from knowledge |
+| `clark1978negation` | Keith L. Clark 1978 | - | real; checked from knowledge |
+| `cook2005whats` | Roy T. Cook 2005 | - | real; checked from knowledge |
+| `daniels1979wide` | Norman Daniels 1979 | philosophy.bib | real; checked from knowledge |
+| `definetti1974theory` | Bruno de Finetti 1974 | - | real; checked from knowledge |
+| `dietrich2008judgment` | Dietrich 2008 | search.bib | real; checked from knowledge |
+| `dietterich1997solving` | Thomas G. Dietterich 1997 | informal.bib, setting.bib | real; checked from knowledge |
+| `dummett1991logical` | Michael Dummett 1991 | - | real; checked from knowledge |
+| `feferman1962transfinite` | Solomon Feferman 1962 | twotier.bib | real; checked from knowledge |
+| `gardenfors2006representation` | G"ardenfors 2006 | search.bib | real; checked by web search |
+| `garson2013what` | James W. Garson 2013 | - | real; checked from knowledge |
+| `geis1971invited` | Michael L. Geis 1971 | - | real; checked from knowledge |
+| `glivenko1929quelques` | V. Glivenko 1929 | existence.bib | real; checked from knowledge |
+| `godel1931formal` | Kurt G"odel 1931 | existence.bib, twotier.bib | real; checked from knowledge |
+| `gold1965limiting` | E. Mark Gold 1965 | - | real; checked from knowledge |
+| `goodman1955fact` | Nelson Goodman 1955 | philosophy.bib, twotier.bib | real; checked from knowledge |
+| `harrop1960concerning` | Ronald Harrop 1960 | - | real; checked from knowledge |
+| `iemhoff2001admissible` | Rosalie Iemhoff 2001 | - | real; checked from knowledge |
+| `jankov1968construction` | V. A. Jankov 1968 | - | real; checked from knowledge |
+| `joyce1998nonpragmatic` | James M. Joyce 1998 | - | real; checked from knowledge |
+| `kelly1996logic` | Kevin T. Kelly 1996 | setting.bib | real; checked from knowledge |
+| `kleene1952introduction` | Stephen Cole Kleene 1952 | - | real; checked from knowledge |
+| `kripke1982wittgenstein` | Saul A. Kripke 1982 | imitation.bib | real; checked from knowledge |
+| `lewis1946analysis` | Clarence Irving Lewis 1946 | - | real; checked from knowledge |
+| `littlestone1988learning` | Nick Littlestone 1988 | informal.bib, twotier.bib | real; checked from knowledge |
+| `littlestone1994weighted` | Nick Littlestone 1994 | twotier.bib | real; checked from knowledge |
+| `macintyre1996decidability` | Angus Macintyre 1996 | - | real; checked from knowledge |
+| `mendelson1964introduction` | Elliott Mendelson 1964 | - | real; checked from knowledge |
+| `olsson2005against` | Erik J. Olsson 2005 | - | real; checked from knowledge |
+| `olsson2005impossibility` | Erik J. Olsson 2005 | - | real; checked from knowledge |
+| `pogorzelski1971structural` | W. A. Pogorzelski 1971 | - | real; checked from knowledge |
+| `pogorzelski2008completeness` | Witold A. Pogorzelski 2008 | - | real; checked from knowledge |
+| `post1921` | Post 1921 | search.bib, twotier.bib | real; checked from knowledge |
+| `post1943formal` | Emil L. Post 1943 | twotier.bib | real; checked from knowledge |
+| `prawitz1965natural` | Dag Prawitz 1965 | setting.bib | real; checked from knowledge |
+| `predd2009probabilistic` | Joel B. Predd 2009 | - | real; checked from knowledge |
+| `prior1960runabout` | Prior 1960 | experiments.bib, search.bib, setting.bib | real; checked from knowledge |
+| `putnam1965trial` | Hilary Putnam 1965 | - | real; checked from knowledge |
+| `rautenberg1981two` | Wolfgang Rautenberg 1981 | - | real; checked by web search |
+| `read2000harmony` | Stephen Read 2000 | - | real; checked from knowledge |
+| `restall2005multiple` | Greg Restall 2005 | existence.bib, setting.bib, twotier.bib | real; checked from knowledge |
+| `ripley2015anything` | David Ripley 2015 | - | real; checked from knowledge |
+| `rosser1936extensions` | J. Barkley Rosser 1936 | existence.bib, twotier.bib | real; checked from knowledge |
+| `rumfitt2000yes` | Ian Rumfitt 2000 | setting.bib, twotier.bib | real; checked from knowledge |
+| `rybakov1997admissibility` | Vladimir V. Rybakov 1997 | - | real; checked from knowledge |
+| `sawin2013computable` | Will Sawin 2013 | - | real; checked by web search |
+| `shoenfield1959degrees` | Joseph R. Shoenfield 1959 | twotier.bib | real; checked from knowledge |
+| `shoesmith1978multiple` | D. J. Shoesmith 1978 | existence.bib, setting.bib | real; checked from knowledge |
+| `smiley1996rejection` | Timothy Smiley 1996 | setting.bib, twotier.bib | real; checked from knowledge |
+| `smullyan1961theory` | Raymond M. Smullyan 1961 | twotier.bib | real; checked from knowledge |
+| `tarski1953undecidable` | Alfred Tarski 1953 | - | real; checked from knowledge |
+| `turing1939systems` | Alan M. Turing 1939 | twotier.bib | real; checked from knowledge |
+| `vanfraassen1966singular` | Bas C. van Fraassen 1966 | - | real; checked from knowledge |
+| `wilkie1996model` | A. J. Wilkie 1996 | - | real; checked from knowledge |
+| `wojcicki1988theory` | Ryszard W'ojcicki 1988 | existence.bib, setting.bib | real; checked from knowledge |
+
+**bib/existence.bib** (42 entries kept from this file)
+
+| key | first author, year | also defined in | status |
+|---|---|---|---|
+| `abramsky2011sheaf` | Samson Abramsky 2011 | physics.bib | real; checked from knowledge |
+| `adams1966probability` | Ernest W. Adams 1966 | informal.bib | real; checked from knowledge |
+| `beeri1983desirability` | Catriel Beeri 1983 | - | real; checked from knowledge |
+| `beth1953padoa` | Evert W. Beth 1953 | - | real; checked from knowledge |
+| `birkhoff1940lattice` | Garrett Birkhoff 1940 | - | real; checked from knowledge |
+| `blok1989algebraizable` | Willem J. Blok 1989 | - | real; checked from knowledge |
+| `brewka2007equilibria` | Gerhard Brewka 2007 | - | real; checked from knowledge |
+| `burns2023discovering` | Collin Burns 2023 | - | real; checked from knowledge |
+| `button2018philosophy` | Tim Button 2018 | - | real; checked from knowledge |
+| `christiano2013definability` | Paul Christiano 2013 | - | real; checked from knowledge |
+| `dedekind1888zahlen` | Richard Dedekind 1888 | informal.bib | real; checked from knowledge |
+| `definetti1937prevision` | Bruno de Finetti 1937 | - | real; checked from knowledge |
+| `farkas1902theorie` | Julius Farkas 1902 | - | real; checked from knowledge |
+| `font2016abstract` | Josep Maria Font 2016 | - | real; checked from knowledge |
+| `gaifman1964concerning` | Haim Gaifman 1964 | - | real; checked from knowledge |
+| `garrabrant2016logical` | Scott Garrabrant 2016 | - | real; checked by web search |
+| `ghidini2001local` | Chiara Ghidini 2001 | physics.bib | real; checked from knowledge |
+| `godel1930vollstandigkeit` | Kurt G"odel 1930 | informal.bib | real; checked from knowledge |
+| `henkin1949completeness` | Leon Henkin 1949 | - | real; checked from knowledge |
+| `hilbert1893vollen` | David Hilbert 1893 | - | real; checked from knowledge |
+| `kaye1991models` | Richard Kaye 1991 | - | real; checked from knowledge |
+| `lewis1970how` | David Lewis 1970 | - | real; checked from knowledge |
+| `los1958remarks` | Jerzy Lo's 1958 | setting.bib | real; checked from knowledge |
+| `makkai1977first` | Michael Makkai 1977 | - | real; checked from knowledge |
+| `matiyasevich1970enumerable` | Yuri Matiyasevich 1970 | - | real; checked from knowledge |
+| `mccarthy1993notes` | John McCarthy 1993 | physics.bib, setting.bib | real; checked from knowledge |
+| `mcgee1997how` | Vann McGee 1997 | - | real; checked from knowledge |
+| `motzkin1936beitrage` | Theodore S. Motzkin 1936 | - | real; checked from knowledge |
+| `ore1944galois` | Oystein Ore 1944 | - | real; checked from knowledge |
+| `paris1994uncertain` | Jeff B. Paris 1994 | - | real; checked from knowledge |
+| `parsons1990uniqueness` | Charles Parsons 1990 | - | real; checked from knowledge |
+| `scott1974completeness` | Dana Scott 1974 | - | real; checked from knowledge |
+| `shepherdson1964nonstandard` | John C. Shepherdson 1964 | - | real; checked by web search |
+| `specker1960logik` | Ernst Specker 1960 | - | real; checked from knowledge |
+| `stengle1974nullstellensatz` | Gilbert Stengle 1974 | - | real; checked from knowledge |
+| `stone1936theory` | Marshall H. Stone 1936 | - | real; checked from knowledge |
+| `suszko1977fregean` | Roman Suszko 1977 | - | real; checked from knowledge |
+| `tennenbaum1959non` | Stanley Tennenbaum 1959 | - | real; checked by web search |
+| `trakhtenbrot1950impossibility` | Boris A. Trakhtenbrot 1950 | - | real; checked from knowledge |
+| `vanemden1976semantics` | Maarten H. van Emden 1976 | - | real; checked from knowledge |
+| `vonneumann1944theory` | John von Neumann 1944 | - | real; checked from knowledge |
+| `zariski1947new` | Oscar Zariski 1947 | - | real; checked from knowledge |
+
+**bib/experiments.bib** (7 entries kept from this file)
+
+| key | first author, year | also defined in | status |
+|---|---|---|---|
+| `abreu2007accuracy` | Abreu 2007 | - | real; checked from knowledge |
+| `bergstra2007rational` | Bergstra 2007 | - | real; checked from knowledge |
+| `gao2023scaling` | Gao 2023 | search.bib | real; checked from knowledge |
+| `lakatos1976proofs` | Imre Lakatos 1976 | informal.bib, simplicity.bib, twotier.bib | real; checked from knowledge |
+| `lightman2023verify` | Lightman 2023 | search.bib | real; checked from knowledge |
+| `schwartz1980fast` | Schwartz 1980 | search.bib, setting.bib, simplicity.bib | real; checked from knowledge |
+| `zippel1979probabilistic` | Zippel 1979 | search.bib, setting.bib, simplicity.bib | real; checked from knowledge |
+
+**bib/imitation.bib** (11 entries kept from this file)
+
+| key | first author, year | also defined in | status |
+|---|---|---|---|
+| `blumer1989learnability` | Anselm Blumer 1989 | - | real; checked from knowledge |
+| `brandom1994making` | Robert B. Brandom 1994 | twotier.bib | real; checked from knowledge |
+| `buckingham1914physically` | Edgar Buckingham 1914 | physics.bib | real; checked from knowledge |
+| `haussler1987epsilon` | David Haussler 1987 | - | real; checked from knowledge |
+| `kearns1993learning` | Michael Kearns 1993 | - | real; checked from knowledge |
+| `kennedy1994dimension` | Andrew Kennedy 1994 | physics.bib | real; checked from knowledge |
+| `lange1992types` | Steffen Lange 1992 | - | real; checked by web search |
+| `lange2008learning` | Steffen Lange 2008 | - | real; checked from knowledge |
+| `rossmanith2001stochastic` | Peter Rossmanith 2001 | - | real; checked from knowledge |
+| `shinohara1994rich` | Takeshi Shinohara 1994 | - | real; checked by web search |
+| `stephan2001learning` | Frank Stephan 2001 | - | real; checked by web search |
+
+**bib/informal.bib** (34 entries kept from this file)
+
+| key | first author, year | also defined in | status |
+|---|---|---|---|
+| `angluin1988queries` | Dana Angluin 1988 | - | real; checked from knowledge |
+| `avigad2009formal` | Jeremy Avigad 2009 | - | real; checked from knowledge |
+| `avigad2021reliability` | Jeremy Avigad 2021 | - | real; checked by web search |
+| `azzouni2004derivation` | Jody Azzouni 2004 | - | uncited (harmless) |
+| `benacerraf1965numbers` | Paul Benacerraf 1965 | - | real; checked from knowledge |
+| `cantor1891elementare` | Georg Cantor 1891 | - | real; checked from knowledge |
+| `easwaran2015rebutting` | Kenny Easwaran 2015 | - | real; checked by web search |
+| `edgington1997vagueness` | Dorothy Edgington 1997 | - | real; checked by web search |
+| `fine1975vagueness` | Kit Fine 1975 | physics.bib | real; checked from knowledge |
+| `frege1893grundgesetze` | Gottlob Frege 1893 | - | real; checked from knowledge |
+| `hales2007jordan` | Thomas C. Hales 2007 | - | real; checked from knowledge |
+| `holmes2015nf` | M. Randall Holmes 2015 | - | real; checked from knowledge |
+| `incurvati2017maximally` | Luca Incurvati 2017 | - | real; checked by web search |
+| `jiang2023draft` | Albert Q. Jiang 2023 | - | uncited (harmless) |
+| `keefe2000theories` | Rosanna Keefe 2000 | - | real; checked from knowledge |
+| `kreisel1967informal` | Georg Kreisel 1967 | - | real; checked from knowledge |
+| `kyburg1961probability` | Henry E. Kyburg 1961 | - | real; checked from knowledge |
+| `manders2008euclidean` | Kenneth Manders 2008 | - | real; checked from knowledge |
+| `mathias2002term` | A. R. D. Mathias 2002 | - | real; checked from knowledge |
+| `mcgee1992maximal` | Vann McGee 1992 | - | real; checked from knowledge |
+| `moore1982zermelo` | Gregory H. Moore 1982 | - | real; checked from knowledge |
+| `nelson1977internal` | Edward Nelson 1977 | - | real; checked from knowledge |
+| `quine1937new` | W. V. Quine 1937 | - | real; checked from knowledge |
+| `quine1955frege` | W. V. Quine 1955 | - | real; checked from knowledge |
+| `robinson1966nonstandard` | Abraham Robinson 1966 | physics.bib | real; checked from knowledge |
+| `sabato2012multi` | Sivan Sabato 2012 | - | real; checked from knowledge |
+| `shapiro1983algorithmic` | Ehud Y. Shapiro 1983 | twotier.bib | real; checked from knowledge |
+| `specker1953axiom` | Ernst P. Specker 1953 | - | real; checked from knowledge |
+| `thurston1994proof` | William P. Thurston 1994 | - | real; checked from knowledge |
+| `varzi2007supervaluationism` | Achille C. Varzi 2007 | - | real; checked from knowledge |
+| `weber2011why` | Keith Weber 2011 | - | real; checked from knowledge |
+| `wiedijk2000debruijn` | Freek Wiedijk 2000 | - | real; checked by web search |
+| `williamson1994vagueness` | Timothy Williamson 1994 | - | real; checked from knowledge |
+| `zermelo1908untersuchungen` | Ernst Zermelo 1908 | - | real; checked from knowledge |
+
+**bib/philosophy.bib** (5 entries kept from this file)
+
+| key | first author, year | also defined in | status |
+|---|---|---|---|
+| `carroll1895tortoise` | Carroll 1895 | - | real; checked from knowledge |
+| `cohen1981irrationality` | Cohen 1981 | - | DUPLICATE of cohen1981can (pages differ) |
+| `dummett1973justification` | Dummett 1973 | - | real; checked from knowledge |
+| `salmon1967foundations` | Salmon 1967 | - | real; checked from knowledge |
+| `stich1980justification` | Stich 1980 | simplicity.bib | real; checked from knowledge |
+
+**bib/physics.bib** (30 entries kept from this file)
+
+| key | first author, year | also defined in | status |
+|---|---|---|---|
+| `alchourron1985logic` | Carlos E. Alchourr'on 1985 | - | real; checked from knowledge |
+| `barenblatt1996scaling` | Grigory I. Barenblatt 1996 | - | real; checked from knowledge |
+| `brown2004chunk` | Bryson Brown 2004 | setting.bib | real; checked from knowledge |
+| `cartwright1983laws` | Nancy Cartwright 1983 | - | real; checked from knowledge |
+| `falkenhainer1991compositional` | Brian Falkenhainer 1991 | - | real; checked from knowledge |
+| `gronwall1919note` | T. H. Gronwall 1919 | - | real; checked from knowledge |
+| `gruntz1996computing` | Dominik Gruntz 1996 | - | real; checked from knowledge |
+| `immler2018verified` | Fabian Immler 2018 | - | real; checked from knowledge |
+| `jaskowski1969propositional` | Stanislaw Ja'skowski 1969 | - | real; checked from knowledge |
+| `kuipers1986qualitative` | Benjamin Kuipers 1986 | - | real; checked by web search |
+| `laymon1987scott` | Ronald Laymon 1987 | - | real; checked by web search |
+| `lei2018distribution` | Jing Lei 2018 | - | real; checked from knowledge |
+| `levins1966strategy` | Richard Levins 1966 | - | real; checked from knowledge |
+| `lewis1973counterfactuals` | David Lewis 1973 | - | real; checked from knowledge |
+| `los1955quelques` | Jerzy Lo's 1955 | - | real; checked from knowledge |
+| `mcmullin1985galilean` | Ernan McMullin 1985 | - | real; checked from knowledge |
+| `moore1966interval` | Ramon E. Moore 1966 | - | real; checked from knowledge |
+| `nemirovsky1983problem` | Arkadi S. Nemirovsky 1983 | - | real; checked from knowledge |
+| `norton2012approximation` | John D. Norton 2012 | - | real; checked from knowledge |
+| `odenbaugh2011buyer` | Jay Odenbaugh 2011 | - | real; checked by web search |
+| `richardson1968some` | Daniel Richardson 1968 | - | real; checked from knowledge |
+| `schotch1980inference` | Peter K. Schotch 1980 | - | real; checked from knowledge |
+| `stalnaker1968theory` | Robert C. Stalnaker 1968 | - | real; checked from knowledge |
+| `stewart2000rigid` | David E. Stewart 2000 | - | real; checked from knowledge |
+| `strevens2008depth` | Michael Strevens 2008 | - | real; checked by web search |
+| `traub1988information` | Joseph F. Traub 1988 | - | real; checked from knowledge |
+| `tucker2011validated` | Warwick Tucker 2011 | - | real; checked from knowledge |
+| `vanlehn2005andes` | Kurt VanLehn 2005 | - | real; checked from knowledge |
+| `vovk2005algorithmic` | Vladimir Vovk 2005 | - | real; checked from knowledge |
+| `wilson2006wandering` | Mark Wilson 2006 | - | real; checked from knowledge |
+
+**bib/search.bib** (11 entries kept from this file)
+
+| key | first author, year | also defined in | status |
+|---|---|---|---|
+| `cobbe2021training` | Cobbe 2021 | - | real; checked from knowledge |
+| `demillo1978probabilistic` | DeMillo 1978 | - | real; checked from knowledge |
+| `elyaniv2010selective` | El-Yaniv 2010 | - | DUPLICATE of elyaniv2010foundations |
+| `juba2013implicit` | Juba 2013 | - | real; checked from knowledge |
+| `khardon1997learning` | Khardon 1997 | - | real; checked from knowledge |
+| `kornhauser1986unpacking` | Kornhauser 1986 | - | real; checked from knowledge |
+| `li2008kwik` | Li 2008 | - | DUPLICATE of li2008knows |
+| `list2002aggregating` | List 2002 | - | real; checked from knowledge |
+| `pettit2001deliberative` | Pettit 2001 | - | real; checked from knowledge |
+| `rivest1988reliable` | Rivest 1988 | - | DUPLICATE of rivest1988learning |
+| `valiant2000robust` | Valiant 2000 | - | real; checked from knowledge |
+
+**bib/setting.bib** (1 entries kept from this file)
+
+| key | first author, year | also defined in | status |
+|---|---|---|---|
+| `gentzen1935untersuchungen` | Gerhard Gentzen 1935 | - | real; checked from knowledge |
+
+**bib/simplicity.bib** (25 entries kept from this file)
+
+| key | first author, year | also defined in | status |
+|---|---|---|---|
+| `armstrong2018occam` | Stuart Armstrong 2018 | - | real; checked by web search |
+| `barron1991minimum` | Andrew R. Barron 1991 | - | real; checked from knowledge |
+| `bhattacharya2019fractional` | Anirban Bhattacharya 2019 | - | real; checked from knowledge |
+| `bissiri2016general` | Pier Giovanni Bissiri 2016 | - | real; checked from knowledge |
+| `carnap1952meaning` | Rudolf Carnap 1952 | - | real; checked from knowledge |
+| `catoni2007pac` | Olivier Catoni 2007 | - | real; checked from knowledge |
+| `cohen1981can` | L. Jonathan Cohen 1981 | - | kept copy; pages 317--370 = article+commentaries |
+| `gacs2001algorithmic` | P'eter G'acs 2001 | - | real; checked from knowledge |
+| `gneiting2007strictly` | Tilmann Gneiting 2007 | - | real; checked from knowledge |
+| `goldreich1989hard` | Oded Goldreich 1989 | - | real; checked from knowledge |
+| `grunwald2007minimum` | Peter D. Gr"unwald 2007 | - | real; checked from knowledge |
+| `grunwald2012safe` | Peter Gr"unwald 2012 | - | real; checked from knowledge |
+| `grunwald2017inconsistency` | Peter Gr"unwald 2017 | - | real; checked from knowledge |
+| `hoeffding1963probability` | Wassily Hoeffding 1963 | twotier.bib | real; checked from knowledge |
+| `kushilevitz1993learning` | Eyal Kushilevitz 1993 | - | real; checked from knowledge |
+| `li2008introduction` | Ming Li 2008 | - | real; checked from knowledge |
+| `lieberman2007quantifying` | Erez Lieberman 2007 | - | real; checked from knowledge |
+| `quine1960word` | Willard Van Orman Quine 1960 | - | real; checked from knowledge |
+| `rissanen1978modeling` | Jorma Rissanen 1978 | - | real; checked from knowledge |
+| `shtarkov1987universal` | Yuri M. Shtarkov 1987 | - | real; checked from knowledge |
+| `sion1958general` | Maurice Sion 1958 | - | real; checked from knowledge |
+| `vereshchagin2004kolmogorov` | Nikolai K. Vereshchagin 2004 | - | real; checked by web search |
+| `vereshchagin2010rate` | Nikolai K. Vereshchagin 2010 | - | real; checked from knowledge |
+| `vereshchagin2017algorithmic` | Nikolay Vereshchagin 2017 | - | real; checked from knowledge |
+| `zhang2006epsilon` | Tong Zhang 2006 | - | real; checked from knowledge |
+
+**bib/twotier.bib** (14 entries kept from this file)
+
+| key | first author, year | also defined in | status |
+|---|---|---|---|
+| `benor1986complexity` | Michael Ben-Or 1986 | - | real; checked from knowledge |
+| `berge1989hypergraphs` | Claude Berge 1989 | - | real; checked from knowledge |
+| `bioch1995complexity` | Jan C. Bioch 1995 | - | real; checked from knowledge |
+| `davenport1988real` | James H. Davenport 1988 | - | real; checked from knowledge |
+| `dekleer1987diagnosing` | Johan de Kleer 1987 | - | real; checked from knowledge |
+| `fischer1974super` | Michael J. Fischer 1974 | - | real; checked from knowledge |
+| `fredman1996complexity` | Michael L. Fredman 1996 | - | real; checked from knowledge |
+| `gurvich1999generating` | Vladimir Gurvich 1999 | - | real; checked from knowledge |
+| `miller1991logic` | Dale Miller 1991 | - | real; checked from knowledge |
+| `presburger1929vollstandigkeit` | Moj.zesz Presburger 1929 | - | real; checked from knowledge |
+| `reiter1987theory` | Raymond Reiter 1987 | - | real; checked from knowledge |
+| `robinson1965machine` | J. Alan Robinson 1965 | - | real; checked from knowledge |
+| `shapiro1981inductive` | Ehud Y. Shapiro 1981 | - | real; checked from knowledge |
+| `tarski1951decision` | Alfred Tarski 1951 | - | real; checked from knowledge |
+## 7. Sources used for web verification
+
+* Rivest & Sloan, AAAI 1988, pp. 635–640: https://mlanthology.org/aaai/1988/rivest1988aaai-learning/
+* Sawin & Demski, MIRI TR 2013-10: https://intelligence.org/2014/12/16/new-report-computable-probability-distributions-converge/
+* Cohen & Hutter, COLT 2020, PMLR 125:1344–1373: http://proceedings.mlr.press/v125/cohen20a.html
+* Cohen, Hutter & Nanda, JMLR 23(334):1–30: https://jmlr.org/papers/v23/21-0618.html
+* Kivinen, Math. Systems Theory 28:141–172: https://link.springer.com/article/10.1007/BF01191474
+* Motoki, Shinohara & Wright, COLT 1991, p. 375: https://mlanthology.org/colt/1991/motoki1991colt-correct/
+* Easwaran, Phil. Perspectives 29(1):146–162: https://philpapers.org/rec/EASRAU
+* Incurvati & Murzi, Mind 126(502):371–384: https://academic.oup.com/mind/article-abstract/126/502/371/2937026
+* Laymon, Phil. Sci. 54(2):194–221: https://www.journals.uchicago.edu/doi/abs/10.1086/289370
+* Odenbaugh & Alexandrova, Biol. Phil. 26:757–771: https://www.semanticscholar.org/paper/e2641327c12605947ad5613f6501a773bd07b06c
+* Garrabrant et al., Logical Induction, Thms 4.1.1, 4.1.2, 4.6.2: https://arxiv.org/abs/1609.03543 (search snippets)
+* Wiedijk, The De Bruijn Factor: https://www.cs.ru.nl/~freek/factor/
+* Avigad, Synthese 198:7377–7399: https://philpapers.org/rec/AVIROM
+* Lange & Zeugmann, COLT 1992: https://dl.acm.org/doi/10.1145/130385.130427
+* Shepherdson 1964, Bull. Acad. Polon. 12(2):79–86 (cited in https://link.springer.com/article/10.1007/s00153-024-00929-2)
+* Barzdin & Freivalds, Soviet Math. Dokl. 13:1224–1228 (cited in follow-up literature)
+* Gärdenfors, Econ. Phil. 22(2):181–190: https://ideas.repec.org/a/cup/ecnphi/v22y2006i02p181-190_00.html
+* Tennenbaum history (Kreisel/McAloon strengthening): https://en.wikipedia.org/wiki/Tennenbaum%27s_theorem
+* Kuipers, QSIM "sound but incomplete": https://arxiv.org/pdf/1110.0020
+* Rautenberg, Studia Logica 40:315–353 (strong finite axiomatizability of 2-element matrices): search snippets, e.g. https://apcz.umk.pl/LLP/article/viewFile/3427/3391
+* Armstrong & Mindermann, NeurIPS 2018: https://arxiv.org/abs/1712.05812
+* Vereshchagin & Vitányi, IEEE TIT 50(12):3265–3290: https://homepages.cwi.nl/~paulv/papers/structure.pdf
+* Edgington's verities and the Lewis–Kamp framework: https://philarchive.org/archive/WILDSL-3 and https://link.springer.com/article/10.1007/s11229-015-0724-2
+* Strevens, "default values": https://www.strevens.org/research/expln/Idealization.pdf
+* Shinohara, Inf. Comput. 108:175–186; Stephan & Ventsov, TCS 268:221–273 (search snippets)
