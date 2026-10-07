@@ -1,0 +1,218 @@
+% =====================================================================
+% Section 4: universal axioms from their instances (question Q1).
+% Sources (final records only):
+%   research/tracks/cases/notes-final.md, Part 1: Prop A1, Thm A2, Prop A2', Thm A3, Prop A4, A4', A5,
+%       Ex. A6, A7, A7', A8, Prop A9, A10, A11; verification log (referee F1, F2, F5) and referee.md;
+%   research/tracks/single/notes-final.md: Cor D.1 (first-order targets in DT°);
+%   research/tracks/untagged/notes-final.md: Lemma 5.5, Prop 5.6 (U7), Prop 5.13 (U20), u6; referee U7;
+%   research/tracks/experiments/notes-final.md: E1, Prop E7; code/results/e1_universal.md.
+% Local macros (prefix univ); \providecommand so that a later move to preamble.tex does not clash.
+% =====================================================================
+\providecommand{\univR}[1]{\textup{(R$_{#1}$)}}
+\providecommand{\univD}[1]{\textup{(D$_{#1}$)}}
+\providecommand{\univRich}{\textup{(Rich$_{\mathrm{c}}$)}}
+\providecommand{\univcl}{\mathrm{cl}}
+\providecommand{\univroot}{\mathrm{root}}
+
+\section{Universal axioms from their instances}\label{sec:univ}
+
+The first question is: ``does the same thing work for learning an axiom of the form forall x phi(x) from a bunch of sentences of the form phi(x)?'' ``The same thing'' is the method developed for PA induction: a cautious verifier over a class of templates, sound at all times and exact once the data contain an anchor (\cref{sec:setting,sec:single}). We read the data as instances $\varphi(t)$ at terms $t$. (Read literally, with $x$ a free variable, a datum $\varphi(x)$ is in closure-normal form already the axiom $\forall x\varphi$; \cref{prop:univ:gen}.) The answer has four parts.
+\begin{enumerate}[label=(\arabic*)]
+\item \emph{The instance schema $\varphi(z)$ is learned, easily.} It is a first-order pattern. First-order anti-unification and the $\DT$ learner both learn it, with Plotkin's anchors \evR\ and \evD; for one variable, two instances such as $\varphi(0)$, $\varphi(S0)$ suffice (\cref{thm:univ:anchor,prop:univ:dt}). In $\SO$ these anchors fail. Rates have exact formulas (\cref{thm:univ:rates}). In a first-order syntax that lets a metavariable take a bound variable, \emph{capture} instances, possibly false in every structure, must be excluded by a guard (\cref{prop:univ:capture}).
+\item \emph{The instance schema is not the sentence.} ``All closed instances are true, hence $\forall x\varphi$'' is truth-safe for all $\varphi$ in $M$ iff the closed-term substructure of $M$ is elementary (\cref{prop:univ:tv}): in $\N$, not in $\R$, $V$ or a nonstandard model of $\PA$. It is not derivable: $\Q\vdash0+\num n=\num n$ for each $n$, but $\Q\nvdash\forall x\,(0+x=x)$ (\cref{ex:univ:q}).
+\item \emph{A cautious learner takes this $\omega$-step silently} when parameters are admissible values (\cref{prop:univ:open}). A closedness guard prevents it; a datum at a parameter licenses it, as ordinary generalization. Evaluating closed instances never refutes a false universal whose closed instances are true (\cref{prop:univ:refute}).
+\item \emph{Without labels}, $\forall x\varphi$ is learned by a sound merge of instances (\cref{sec:univ:merge}).
+\end{enumerate}
+The results come from the research record of the track ``cases'', checked by an adversarial referee with independent code, and from the tracks ``untagged'' and ``experiments''. Proofs are in \cref{app:univ}.
+
+% ---------------------------------------------------------------------
+\subsection{The target}\label{sec:univ:target}
+
+Fix a first-order language $L$ with at least one constant and an $L$-formula $\varphi(x_1,\dots,x_k)$, $k\ge1$, without parameters, in which each $x_i$ occurs free. A term is \emph{closed} if it has neither variables nor parameters.
+
+\begin{definition}[Instance schema; witness events]\src{cases \S1.1}\label{def:univ:target}
+The \emph{instance schema} of $\varphi$ has a $0$-ary term metavariable $z_i$ at each \emph{free} occurrence of $x_i$: $\sigma_\varphi:=\varphi[z_1/x_1,\dots,z_k/x_k]$, a first-order pattern. The \emph{closed instances} are $\instc(\varphi)=\{\varphi(\bar t):\bar t\text{ closed}\}$, the \emph{open instances} $\insto(\varphi)=\{\varphi(\bar t):\bar t\text{ terms over }L\cup\mathrm{Par}\}$, with $\mathrm{Par}$ the parameters; data are read under universal closure. For data $D=\{\varphi(\bar t_1),\dots,\varphi(\bar t_N)\}$, $\bar t_j=(t_{j,1},\dots,t_{j,k})$, Plotkin's events (\cref{sec:setting}) read: \univR{i}: the roots of $t_{1,i},\dots,t_{N,i}$ are not all equal; \univD{ii'} ($i<i'$): some $j$ has $t_{j,i}\neq t_{j,i'}$. \evR\ and \evD\ are their conjunctions.
+\end{definition}
+
+Which sentences are instances of $\sigma_\varphi$ depends on the admissible values (\cref{sec:setting}). Under the $\lambda$ convention, the default, a $0$-ary term metavariable takes a term without bound variables, so $\inst(\sigma_\varphi)=\insto(\varphi)$ if parameters are admissible and $\instc(\varphi)$ if not. In the \emph{named} (N) and \emph{de Bruijn first-order} (dB) syntaxes a metavariable may also take a bound-variable name or index, and $\inst(\sigma_\varphi)$ contains \emph{capture instances} (\cref{sec:univ:capture}). The question has content for languages with closed terms, such as $L_A$; in $L_\in$ every instance is at parameters, and a datum $\varphi(\bar p)$ with distinct parameters already is the axiom. Several results need closed terms of different shapes:
+\begin{itemize}
+\item[\univRich] for every $k$ there are pairwise distinct closed $t_1,\dots,t_k$ and pairwise distinct closed $t'_1,\dots,t'_k$ with $\univroot(t_i)\neq\univroot(t'_i)$ for all $i$
+\end{itemize}
+(in $L_A$: $t_i=S^i0$, $t'_i=0+S^i0$; the record calls this (H)).
+
+% ---------------------------------------------------------------------
+\subsection{Anchors}\label{sec:univ:anchor}
+
+We use the classical facts recalled in \cref{sec:setting} \citep{plotkin1970note,reynolds1970transformational}: a finite nonempty set $D$ has a least general generalization $\lgg(D)$, which covers $D$ and satisfies $\tau\gen\lgg(D)$ for every first-order schema $\tau$ covering $D$; and (Plotkin's recovery lemma) for instances $D$ of a first-order schema $\sigma$, $\lgg(D)\equiv\sigma$ iff \evR\ and \evD\ hold. $\Hk1(\FO)$ denotes the single first-order schemas of the syntax at hand ($\lambda$, N or dB).
+
+\begin{proposition}[Instance sets determine schemas]\label{prop:univ:determine}\status{proved; computed}\src{cases A1}
+Assume \univRich. Let $\sigma$ be a first-order schema with $0$-ary term metavariables and $\tau$ any first-order schema. Then $\inst(\sigma)\subseteq\inst(\tau)$ iff every instance of $\sigma$ at closed terms lies in $\inst(\tau)$ iff $\tau\gen\sigma$, in each syntax.
+\end{proposition}
+
+\begin{proof}
+Only the step to $\tau\gen\sigma$ needs proof. With $\theta(z_i):=t_i$ and $\theta'(z_i):=t'_i$ from \univRich, the closed instances $\sigma\theta,\sigma\theta'$ satisfy \evR\ and \evD, so $\lgg(\sigma\theta,\sigma\theta')\equiv\sigma$; $\tau$ covers both, so $\tau\gen\sigma$.
+\end{proof}
+
+\begin{theorem}[Anchors for the instance schema]\label{thm:univ:anchor}\status{proved; computed}\src{cases Thm A2}
+Assume \univRich, and let $D=\{\varphi(\bar t_1),\dots,\varphi(\bar t_N)\}\subseteq\instc(\varphi)$, $N\ge1$. In each syntax the following are equivalent:
+\textup{(i)} $D$ is an anchor for $\instc(\varphi)$ in $\Hk1(\FO)$, i.e.\ every first-order schema covering $D$ contains $\instc(\varphi)$;
+\textup{(ii)} $\lgg(D)\equiv\sigma_\varphi$;
+\textup{(iii)} \evR\ and \evD\ hold.
+Without \univRich, (iii)$\Leftrightarrow$(ii)$\Rightarrow$(i).
+\end{theorem}
+
+\begin{proof}
+(ii)$\Leftrightarrow$(iii) is the recovery lemma with $\theta_j(z_i):=t_{j,i}$. (ii)$\Rightarrow$(i): a covering $\tau$ has $\tau\gen\lgg(D)\equiv\sigma_\varphi$. (i)$\Rightarrow$(ii): $\lgg(D)$ covers $D$, hence contains $\instc(\varphi)$, hence $\lgg(D)\gen\sigma_\varphi$ by \cref{prop:univ:determine}; and $\sigma_\varphi\gen\lgg(D)$ as $\sigma_\varphi$ covers $D$. Only closed instances occur, so the syntax does not matter.
+\end{proof}
+
+\noindent\emph{Corner cases} \src{cases \S1.3; experiments E1}. Repeated occurrences of $x_i$ give equal columns and need no further event. Several variables need \evD: on diagonal data $\varphi(t,t)$ the $\lgg$ for $x+y=y+x$ is $z+z=z+z$, a sound specialization. Closed subterms of $\varphi$ and bound occurrences of the name $x_i$ give constant columns, which merge with an $x_i$-column only if \evR\ fails: for $x+S0=Sx$, data terms $S0$ and $0$ recover $\sigma_\varphi$, while $S0$ and $SS0$ give $S(z)+S0=SS(z)$. One datum is never an anchor; two with componentwise different roots and pairwise distinct components are. Numerals have roots $0$ and $S$ only, so from numeral data every anchor of $z+0=z$ contains $0+0=0$, which is also an instance of $0+z=z$; this slows the rates and matters for unlabelled mixtures (\cref{sec:many}).
+\emph{Evidence} \src{cases q1\_lgg (1), (2); referee r1}: on $141\,736$ data sets (pairs and triples from $12$ closed terms, six formulas) ``$\lgg\equiv\sigma_\varphi$ iff \evR$\wedge$\evD'' held throughout; the referee's code agreed on $36\,000$ data sets from $600$ random formulas with binders.
+
+The induction method uses the much larger class $\DT$. For first-order targets it needs no more data; without determinacy it does.
+
+\begin{proposition}[Anchors in $\DT$ and in $\SO$]\label{prop:univ:dt}\status{proved; computed}\src{cases A2$'$; single D.1; untagged 5.5}
+Work under the $\lambda$ convention.
+\begin{enumerate}[label=(\alph*)]
+\item Let $\sigma\in\FO$ (0-ary metavariables of term or formula sort, possibly under binders) and $D=\{\sigma\theta_1,\dots,\sigma\theta_N\}$ with values without bound variables (parameters allowed). If \evR\ and \evD\ hold, every $T\in\DT$ covering $D$ satisfies $T\gen\sigma$. In particular, data $D\subseteq\insto(\varphi)$ with \evR\ and \evD\ are an anchor for $\inst(\sigma_\varphi)$ in $\Hk1(\DT)$, and $\Min(D)=\{\sigma_\varphi\}$.
+\item Under \univRich, if $D\subseteq\instc(\varphi)$ violates \evR\ or \evD, then $\lgg(D)\in\FO\subseteq\DT$ covers $D$ and misses a closed instance. So the anchors for $\instc(\varphi)$ in $\Hk1(\DT)$ are exactly those of \cref{thm:univ:anchor}.
+\item In $\SO$ this fails: for $\varphi=(x+0=x)$ the data $0+0=0$, $S0+0=S0$ satisfy \evR, but $f(S0)+f(0)=f(S0)$, with $f:\iota\to\iota$ and no pattern occurrence, covers them ($f:=\lambda h.0$, resp.\ $\lambda h.h$) and misses $SS0+0=SS0$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}[Proof idea]
+(a) By \evR, the rigid skeleton of a covering $T$ lies in that of $\sigma$ (rigid-prefix lemma, \cref{sec:single}). A pattern occurrence $M(\bar u^1)$ at $c_1$ determines a body $B_M$: $\sigma|_{c_1}$ with $\bar u^1$ abstracted. At another occurrence $M(\bar u^s)$ at $c_s$, $B_M[\bar u^s]$ and $\sigma|_{c_s}$ agree on all data; an identity lemma (\cref{lem:univ:identity}) shows that templates in which the metavariables of $\sigma$ occur only as leaves and which agree at values satisfying \evR\ and \evD\ are equal. So $T[M:=\lambda\bar h.B_M]=\sigma$. (b) A failed event survives in $\lgg(D)$. (c) A body with $\beta[0]=0$ is $h$ or $0$, so $\beta[S0]\in\{S0,0\}$. Details in \cref{app:univ:anchor}.
+\end{proof}
+
+Part (c) has analogues with binders (e.g.\ $\forall y\,(G(0,S0)+G(y,y)=y+F(y))$ for $\forall y\,(x+y=y+x)$, \cref{app:univ:anchor}): a metavariable without a pattern occurrence can use different arguments on different data, the phenomenon that also makes $\SO$ anchors for induction stronger (\cref{sec:zf}). For one variable, (a) is the \emph{two-point lemma} used in \cref{sec:many}; in general it is the ``if'' half of the first-order case of the anchor theorem of \cref{sec:single}, proved directly. \emph{Evidence}: a bounded search over covering $\DT$ templates agreed with \evR$\wedge$\evD\ on $99/99$ pairs (five formulas, three with binders), the referee's on $60/60$, and every formula had an $\SO$ non-anchor with the $\DT$ events \src{cases q1\_dt, q1\_lgg (5); referee r1 (3), r5}. The search is bounded; the statement is proved.
+
+% ---------------------------------------------------------------------
+\subsection{Rates}\label{sec:univ:rates}
+
+Let $\bar t\sim\Lambda$ i.i.d., $p_{i,f}:=\Lambda(\univroot(t_i)=f)$, $c_{ii'}:=\Lambda(t_i=t_{i'})$, and let $P_N$ be the probability that $N$ instances violate \evR\ or \evD, i.e.\ (under \univRich) are not an anchor in $\Hk1(\FO)$ or $\Hk1(\DT)$.
+
+\begin{theorem}[Failure probabilities]\label{thm:univ:rates}\status{proved; computed}\src{cases Thm A3}
+\textup{(a)} For $k=1$, $P_N=\sum_fp_f^N$.
+\textup{(b)} For $k=2$, $P_N=\sum_fa_f^N+\sum_gb_g^N+c^N-\sum_{f,g}d_{fg}^N-\sum_fe_f^N$, with $a_f=\Lambda(\univroot(t_1)=f)$, $b_g=\Lambda(\univroot(t_2)=g)$, $c=\Lambda(t_1=t_2)$, $d_{fg}=\Lambda(\univroot(t_1)=f,\univroot(t_2)=g)$, $e_f=\Lambda(\univroot(t_1)=f,\,t_1=t_2)$. For independent components with term law $\mu$ and root law $p$: $P_N=2S-S^2+c^N-C$, $S=\sum_fp_f^N$, $C=\sum_fc_f^N$, $c_f=\sum_{\univroot(t)=f}\mu(t)^2$.
+\textup{(c)} In general $P_N\le\sum_{i,f}p_{i,f}^N+\sum_{i<i'}c_{ii'}^N\le(2k+\binom k2)(1-\rho)^N\le(2k+\binom k2)e^{-N\rho}$, where $\rho=\min(\min_i\rho_i,\min_{i<i'}\Lambda(t_i\neq t_{i'}))$ and $\rho_i=\max_G\min(\Lambda(\univroot(t_i)\in G),\Lambda(\univroot(t_i)\notin G))$ is the best split of the roots, as in the coupon-collector bound of \citet{claude2026whatfollows}.
+\end{theorem}
+
+\noindent The proof is inclusion--exclusion over the events $\neg$\univR{i}, $\neg$\univD{ii'} and a union bound (\cref{app:univ:rates}). For a Galton--Watson law with root law $0{:}\,.4$, $S{:}\,.3$, $+{:}\,.2$, $\cdot{:}\,.1$, the exact values at $N=2,4,6,10$ are $.300$, $.035$, $.0049$, $.00011$ ($k=1$) and $.52$, $.070$, $.0098$, $.00022$ ($k=2$), in agreement with $20\,000$ Monte Carlo runs; the exact failure probability is below $0.01$ from $N=6$, while the bound (c) needs $N=11$ and $13$ \src{cases q1\_lgg (4); referee r1 (5)}.
+
+\emph{Experiment E1} \src{experiments E1, Prop E7; code/results/e1\_universal.md}. The implemented $\DTF$ verifier and first-order $\lgg$, run on instances of $x+0=x$, $x\cdot0=0$, $0+x=x$, $\neg Sx=0$, $x<Sx$ and $x+y=y+x$ ($2000$ runs each), became exact at the same $N$ in every run. With mixed data (numerals $0..7$, random closed terms, parameters) the mean $N$ until exact (runs capped at $40$ instances) was $3.27$ against $3.25$ predicted by (a); with numerals only, $8.42$ against $8.11$ ($1.85$ standard errors; the five one-variable targets share their runs, since exactness depends only on heads, so this is one sample; the referee's simulation of the head process gives $8.117$). For $x+y=y+x$: $4.18$ and $11.85$. The experiments section (\cref{sec:exp}) plots the curves. On $0+0=0$, $1+0=1$ the learned $z+0=z$ accepts $w_0+0=w_0$, the axiom in parameter form, but not the string $\forall x\,(x+0=x)$, which is a different datum (\cref{sec:setting}).
+
+% ---------------------------------------------------------------------
+\subsection{Parameters, guards and capture}\label{sec:univ:capture}
+
+Write $\univcl_{\mathcal H}(h^*)=\bigcap\{h\in\mathcal H:h\supseteq h^*\}$. Once the data contain an anchor, the cautious verifier accepts exactly this closure, so it is sound iff the target is closed in the class (\cref{sec:setting}).
+
+\begin{proposition}[Open instances and the hidden $\omega$-step]\label{prop:univ:open}\status{proved; computed}\src{cases Prop A4}
+\textup{(a)} For distinct parameters $\bar p$, $\varphi(\bar p)\in\insto(\varphi)$ has universal closure $\forall\bar x\varphi$; $\insto(\varphi)$ and $\forall\bar x\varphi$ are interderivable in first-order logic (instantiation, resp.\ generalization).
+\textup{(b)} Assume \univRich\ and the $\lambda$ convention with parameters admissible. In $\Hk1(\FO)$ and in $\Hk1(\DT)$, $\univcl(\instc(\varphi))=\inst(\sigma_\varphi)=\insto(\varphi)\supsetneq\instc(\varphi)$. So once closed data contain an anchor, the cautious verifier accepts $\varphi(\bar p)$: it takes the $\omega$-rule step ``all closed instances, hence $\forall\bar x\varphi$'', which no datum licenses. In (N) and (dB) the closure $\inst(\sigma_\varphi)$ also contains the capture instances of \cref{prop:univ:capture}.
+\textup{(c)} With the guard $\mathrm{closed}(z_i)$ (``the value contains no variable and no parameter''), $\instc(\varphi)$ is realizable in every syntax. By the most-specific-guard rule (\cref{sec:setting}), closed data teach the guard, and the learner accepts neither $\varphi(\bar p)$ nor any capture instance; one datum with a parameter at $z_i$ deletes $\mathrm{closed}(z_i)$.
+\end{proposition}
+
+\noindent Proof in \cref{app:univ:capture}; the key point of (b) is that every class member containing $\instc(\varphi)$ contains two closed instances forming an anchor. \emph{Computed}: from $0+0=0$, $0+S0=S0$ the guarded learner learns $0+z=z$ with $\mathrm{closed}(z)$ and rejects $0+p=p$; after the datum $0+(p+S0)=p+S0$ it accepts $0+q=q$, i.e.\ $\forall x\,(0+x=x)$ \src{cases q1\_lgg (3)}. The class $\DT$ has no guards, so the $\DT$ learner on closed data takes the $\omega$-step after the first anchor whenever parameters are admissible, as E1 shows.
+
+In a first-order syntax the step can be worse \src{cases referee F1}. A value $\theta(z_i)$ is \emph{captured} if it contains a variable bound at some free occurrence of $x_i$ (in (N), a name in the scope of a binder of that name; in (dB), an index that refers to an enclosing binder). $\Cap(\varphi)$ is the set of instances $\sigma_\varphi\theta$ with a captured value.
+
+\begin{proposition}[Capture]\label{prop:univ:capture}\status{proved; computed}\src{cases Prop A4$'$}
+Work in syntax (N) or (dB).
+\begin{enumerate}[label=(\alph*)]
+\item $\inst(\sigma_\varphi)=\instc(\varphi)\cup\insto(\varphi)\cup\Cap(\varphi)$ (the middle term if parameters are admissible), and $\Cap(\varphi)\cap\insto(\varphi)=\emptyset$.
+\item $\Cap(\varphi)\neq\emptyset$ iff: in (N) with sentences as data, some name is bound at \emph{every} free occurrence of some $x_i$; in (N) with free names read as parameters, some free occurrence of some $x_i$ is in the scope of a binder; in (dB), every free occurrence of some $x_i$ lies under a binder.
+\item Capture instances can be false in every structure while all genuine instances hold in every structure with two elements ($\exists y\,\neg(y=x)$ gives $\exists y\,\neg(y=y)$), or false in $\N$ while $\forall x\varphi$ is logically valid ($\exists y\,(y=Sx)$ gives $\exists y\,(y=Sy)$).
+\item Hence, if $\Cap(\varphi)\neq\emptyset$, the unguarded cautious verifier accepts after an anchor sentences outside $\insto(\varphi)$, for suitable $\varphi$ some false in every structure: it is unsound outright, not merely $\omega$-incomplete.
+\item With guards $\mathrm{closed}(z_i)$ and $\mathrm{nocap}(z_i)$ (no captured value: the free-for condition, i.e.\ the $\lambda$ convention as a guard), closed data teach both, and after an anchor the accepted set is $\instc(\varphi)$. A datum at a parameter deletes $\mathrm{closed}(z_i)$ but not $\mathrm{nocap}(z_i)$, and the accepted set becomes $\insto(\varphi)$. Capture instances are never accepted.
+\end{enumerate}
+\end{proposition}
+
+\noindent Proof in \cref{app:univ:capture}. Under the $\lambda$ convention $\Cap(\varphi)$ does not arise. The de Bruijn \emph{first-order} encoding does not prevent capture, which there happens by index ($\exists\neg(\#0=z)$ with $z:=\#0$). \emph{Computed} \src{cases q1\_capture; referee F1, F2}: for $\exists y\,\neg(y=x)$, $\lgg(\varphi(0),\varphi(S0))=\exists y\,\neg(y=z)$ has the instance $\exists y\,\neg(y=y)$, false in all equality structures of sizes $1$--$5$; for seven formulas the decomposition of (a) and the criterion of (b) were checked on all substituted terms of size $\le3$; the guards of (e) behave as stated, while the unguarded verifier accepts $\exists y\,\neg(y=y)$.
+
+% ---------------------------------------------------------------------
+\subsection{The \texorpdfstring{$\omega$}{omega}-gap}\label{sec:univ:omega}
+
+For an $L$-structure $M$ let $M_0:=\{t^M:t\text{ closed}\}$ be its \emph{closed-term substructure}.
+
+\begin{proposition}[When closed instances decide universals]\label{prop:univ:tv}\status{proved; known in substance}\src{cases Prop A5}
+For an $L$-structure $M$ the following are equivalent: \textup{(i)} for every $L$-formula $\varphi(\bar x)$, $M\models\forall\bar x\varphi$ iff $M\models\varphi(\bar t)$ for all closed $\bar t$; \textup{(ii)} $M_0\preceq M$. In particular (i) holds for term-generated $M$ ($M_0=M$), e.g.\ $\N$, and for every model of true arithmetic.
+\end{proposition}
+
+\begin{proof}
+(ii)$\Rightarrow$(i): if all $\varphi(\bar t)$ hold in $M$, they hold in $M_0$ by elementarity, and the elements of $M_0$ are the $t^M$; so $M_0\models\forall\bar x\varphi$, hence $M\models\forall\bar x\varphi$, again by elementarity. The converse direction of (i) is $\forall$-elimination. (i)$\Rightarrow$(ii) is the Tarski--Vaught criterion \citep{tarski1957arithmetical}: if $M\models\exists x\,\psi(x,\bar s)$ with $\bar s$ closed but no closed $t$ has $M\models\psi(t,\bar s)$, then (i) for $\neg\psi(x,\bar s)$ gives $M\models\forall x\,\neg\psi(x,\bar s)$, a contradiction. In a model of true arithmetic $M_0\cong\N$, and $M$ and $\N$ satisfy the same sentences with numerals, so $M_0\preceq M$.
+\end{proof}
+
+\begin{example}[Where the step fails]\label{ex:univ:fail}\status{proved}\src{cases Ex.~A6, A7, A7$'$}
+\textup{(a)} In $\R$ as an ordered field (with $0$, $1$, $+$, $-$, $\cdot$, $<$), closed terms denote integers, so $\neg(t\cdot t=1+1)$ holds for every closed $t$, but $\forall x\,\neg(x\cdot x=1+1)$ fails ($\sqrt2$). The theory $\mathrm{RCF}$ of real closed fields refutes it; the ordered-field axioms $\mathrm{OF}$ do not ($\mathbb Q$).
+\textup{(b)} Sets with $\emptyset$, $p(a,b)=\{a,b\}$, $u(a,b)=a\cup b$: closed terms denote exactly the hereditarily finite sets. With $\mathrm{Ind}(x):=\emptyset\in x\wedge\forall y{\in}x\ u(y,p(y,y))\in x$ (a $\Delta_0$ formula), every closed instance of $\neg\mathrm{Ind}(x)$ is true in $V$, and $\forall x\,\neg\mathrm{Ind}(x)$ is refuted by Infinity.
+\textup{(c)} If $M\models\PA+\neg\Con(\PA)$ (such $M$ exist if $\PA$ is consistent) and $\mathrm{Prf}$ is a $\Delta_0$ proof predicate, every closed instance $\neg\mathrm{Prf}(t,\ulcorner\bot\urcorner)$ is a true $\Delta_0$ sentence and holds in $M$, while $M\models\exists x\,\mathrm{Prf}(x,\ulcorner\bot\urcorner)$. Even within arithmetic the step is truth-safe only in the right model.
+\end{example}
+
+\begin{example}[Not derivable]\label{ex:univ:q}\status{proved; computed}\src{cases Ex.~A8}
+$\Q\vdash0+\num n=\num n$ for every $n$ (Q4, then Q5 and induction on $n$ outside $\Q$). But $\Q$ plus all closed instances of $0+x=x$ does not prove $\forall x\,(0+x=x)$: there is a model of $\Q$ on $\N\cup\{a,b\}$, standard on $\N$, with $Sa=a$, $Sb=b$ and $0+a=b$ (\cref{app:univ:omega}).
+\end{example}
+
+\noindent That $\Q\nvdash\forall x\,(0+x=x)$ is well known; the model is from the research record, checked by hand case by case and by machine \src{cases q1\_qmodel; referee r1 (4)}. With data at parameters the gap disappears:
+
+\begin{proposition}[Parameters and generalization]\label{prop:univ:gen}\status{proved}\src{cases Prop A9}
+In closure-normal form a datum $\varphi(\bar p)$ with distinct parameters (none occurs in $\varphi$) \emph{is} the sentence $\forall\bar x\varphi$, its universal closure; with trusted generalization $\forall\bar x\varphi$ is derived from it in one step.
+\end{proposition}
+
+% ---------------------------------------------------------------------
+\subsection{Consequences for a learner}\label{sec:univ:learner}
+
+\begin{table}[t]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.38\textwidth}>{\raggedright\arraybackslash}X@{}}
+\toprule
+syntax, guards and data & after an anchor the cautious verifier accepts\\
+\midrule
+$\lambda$ convention, no parameters admissible & $\instc(\varphi)$: exact\\
+$\lambda$ convention with parameters ($\FO$ or $\DT$), closed data & $\insto(\varphi)\ni\varphi(\bar p)$: the $\omega$-step; truth-sound iff $\forall\bar x\varphi$ is true\\
+first-order schemas with guard $\mathrm{closed}(z_i)$, closed data & $\instc(\varphi)$: exact, no $\omega$-step\\
+a datum at a parameter ($\lambda$, or (N)/(dB) with $\mathrm{nocap}$) & $\insto(\varphi)$: exact for the target $\insto(\varphi)$; $\forall\bar x\varphi$ by generalization\\
+(N) or (dB) without guards, $\Cap(\varphi)\neq\emptyset$ & $\inst(\sigma_\varphi)\supseteq\Cap(\varphi)$: unsound; capture instances can be false in every structure\\
+\bottomrule
+\end{tabularx}
+\caption{What the cautious single-schema verifier accepts once genuine data contain an anchor (\univRich\ assumed). Rows 2--5: \cref{prop:univ:open}(b), (c), \cref{prop:univ:capture}(e), (d).}
+\label{tab:univ:learner}
+\end{table}
+
+\begin{proposition}[What is soundly learnable]\label{prop:univ:learner}\status{proved}\src{cases A10}
+\textup{(1)} From closed instances the soundly learnable object is $\instc(\varphi)$, with anchors \evR$\wedge$\evD\ and the rates of \cref{thm:univ:rates}. If parameters are admissible values, a learner sound for it needs a closedness guard; in (N) and (dB) it also needs $\mathrm{nocap}$ whenever some free $x_i$ lies under a binder (automatic under the $\lambda$ convention).
+\textup{(2)} The $\omega$-step is truth-safe in the intended $M$ for every $\varphi$ iff $M_0\preceq M$ (\cref{prop:univ:tv}).
+\textup{(3)} It is derivable from the instances only by an $\omega$-rule (\cref{ex:univ:q}).
+\textup{(4)} If the community uses instances at parameters, as proof-assistant practice does when it applies $\forall x,\,\varphi\,x$ to a variable, the target is $\insto(\varphi)$ and $\forall\bar x\varphi$ is obtained soundly (\cref{prop:univ:gen}); in (N) and (dB) $\mathrm{nocap}$ is still needed.
+\end{proposition}
+
+\noindent \Cref{tab:univ:learner} summarizes (1) and (4). Refutation by the world (\cref{sec:setting}) helps only partly:
+
+\begin{proposition}[Refutation and the $\omega$-gap]\label{prop:univ:refute}\status{proved}\src{cases A11}
+Let $\forall\bar x\varphi$ be false in the intended $M$ while all closed instances are true.
+\textup{(a)} No refutation that ends by evaluating closed instances condemns $\forall\bar x\varphi$.
+\textup{(b)} A coherence refutation from designated true premises $\Gamma$ exists iff $\Gamma\cup\{\forall\bar x\varphi\}$ is inconsistent ($\mathrm{RCF}$ and $\ZF$ refute the examples of \cref{ex:univ:fail}(a),(b); $\mathrm{OF}$ does not refute (a)).
+\textup{(c)} In a term-generated $M$ such as $\N$ this cannot happen (\cref{prop:univ:tv}); if the channel decides the closed instances of $\varphi$ (as a full $\Delta_0$ evaluator does for $\Delta_0$ formulas), search finds a false one.
+\textup{(d)} Capture instances are refuted by pure logic when logically false; when false only in $M$, a designated theory must prove the negation: $\Q\nvdash\forall y\,\neg(y=Sy)$ ($Sa=a$ in the model of \cref{ex:univ:q}), $\PA$ proves it. No evaluation of closed instances bears on them.
+\end{proposition}
+
+\noindent So where the $\omega$-step is truth-safe a false universal has a false closed instance; elsewhere ($\R$, $V$) a wrong step is caught only through the designated theory, and sometimes not at all. Against capture the world channel alone does not protect an unguarded first-order learner; the guard, or the $\lambda$ convention, does.
+
+% ---------------------------------------------------------------------
+\subsection{Without labels: \texorpdfstring{$\forall x\varphi$}{forall x phi} as a sound merge}\label{sec:univ:merge}
+
+In the untagged setting of \cref{sec:many}, unlabelled data from several targets are clustered by \DTRC: two clusters merge iff their union is \emph{$d$-coherent}, i.e.\ some minimal covering $\DT$ template of it has no instance refuted by the world oracle within budget $d$; each final cluster gets its own cautious verifier. Regard each instance $\varphi(t_j)$ as its own ground target; learning $\forall x\varphi$ then means merging them, across ``targets''.
+
+\begin{proposition}[$\forall x\varphi$ as a sound merge]\label{prop:univ:merge}\status{proved; computed}\src{untagged Prop 5.6 (U7)}
+Let $\varphi$ have one variable and $D=\{\varphi(t_1),\dots,\varphi(t_n)\}$ be closed instances, two with different heads.
+\textup{(a)} $\Min(D)=\{\sigma_\varphi\}$, so $D$ is $d$-coherent iff $\sigma_\varphi$ has no $d$-refuted instance.
+\textup{(b)} $\inst(\sigma_\varphi)\ni\varphi(a)$ for a parameter $a$, which is $\forall x\varphi$; so all instances are true iff $\forall x\varphi$ is.
+\textup{(c)} If $\forall x\varphi$ is true, every subset of $D$ is coherent, and \textup{\DTRC} forms one cluster under every merge policy and accepts $\inst(\sigma_\varphi)\ni\varphi(a)$: the axiom is learned, nothing false is accepted. Soundness for the $n$ ground ``targets'' fails, as it must: instances and axiom give the same data and oracle answers.
+\textup{(d)} If $\forall x\varphi$ is false and some instance is $d$-refuted, $D$ is not merged; data whose terms share a head may still merge into an unrefuted specialization such as $\varphi(Sz)$.
+\textup{(e)} ``Never refuted'' means ``$\forall x\varphi$ true'' if the oracle refutes every false instance at some depth. R-$\Delta_0$ does so for quantifier-free $\varphi$: a false instance of an arithmetic template without binders in its rigid part has a false quantifier-free instance, which R-$\Delta_0$ refutes (\cref{lem:univ:qf}). It need not for quantified $\varphi$, since it verifies universals only by equational derivations from true closed equations. At a finite budget a false universal with a large least counterexample can merge (the residue of \cref{sec:many}). An oracle that evaluates only closed instances certifies ``true at every closed term'': in $\N$ the $\omega$-rule; in the field $\R$, $\neg(z\cdot z=1+1)$ is an unsound merge it never refutes (a decision procedure for $\mathrm{RCF}$ would).
+\end{proposition}
+
+\noindent Proofs in \cref{app:univ:merge}. The record corrected (b) and (e) after the referee: $a$ must be fresh, and (e) needs an oracle complete for the false instances. \emph{Computed} \src{untagged u6}: numeral instances of $x+0=x$, $x\cdot0=0$, $x+Sy=S(x+y)$, as $12$ ground targets, form three clusters, and \textup{\DTRC} accepts $a+0=a$, i.e.\ $\forall x\,(x+0=x)$; instances of the false $\forall x\,(x\cdot x=x)$ at $0,1$ stay apart ($z\cdot z=z$ is refuted at $2$); instances of $\neg(x\cdot x=2)$ at $0,1,2$ merge. What certifies the universal is the absence of a counterexample, not a derivation.
+
+% ---------------------------------------------------------------------
+\subsection{Summary}\label{sec:univ:summary}
+
+For the instance schema the answer is yes: it is a first-order pattern, its anchors are Plotkin's \evR\ and \evD\ in the first-order class and in $\DT$, two instances suffice, and rates have exact formulas. For the axiom the answer is ``only where $M_0\preceq M$'': the passage from all closed instances to $\forall\bar x\varphi$ is an $\omega$-rule step, truth-safe exactly then and not derivable in general. A cautious learner takes it silently when parameters are admissible; a closedness guard stops it, and data at parameters license it as generalization. In a first-order syntax that lets metavariables take bound variables, capture makes the unguarded learner unsound outright, and a learned $\mathrm{nocap}$ guard repairs it. Without labels, $\forall x\varphi$ is learned by a sound merge. Open \src{cases \S6}: the exact $\SO$ anchor condition for universal axioms over languages with closed terms, an analogue of the shielding condition for induction (\cref{sec:zf}); only counterexamples are known.

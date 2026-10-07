@@ -1,0 +1,143 @@
+\section{Details for the setting}\label{app:setting}
+% =====================================================================
+% Appendix to Section 2 (Setting)
+% Sources: research/tracks/single/notes-final.md (section 1, Lemmas 1.1-1.2, Thm A, Lemma R; verification
+%   log rows A, R); research/prior/induction/second-order-notes.md (C1(b)); research/tracks/experiments/
+%   notes-final.md (1.2, 1.3, Prop E1-lit, Prop E1-al, Remark after Cor E1-pf, E0b; referee F2).
+% =====================================================================
+
+
+This appendix fixes the de Bruijn representation (\cref{app:setting:debruijn}), proves the basic lemmas and the matching theorem (\cref{app:setting:lemmas,app:setting:matching}), proves that equivalence of determinate templates is renaming (\cref{app:setting:renaming}), explains why arguments must be metavariable-free (\cref{app:setting:nested}), and treats parameter alignment (\cref{app:setting:align}).
+
+% ---------------------------------------------------------------------
+\subsection{The de Bruijn representation}\label{app:setting:debruijn}
+
+\paragraph{Trees.}
+Terms, formulas, bodies and templates are finite ordered trees. A node is labelled by a function symbol or constant of the signature, a parameter, an index $\#k$ ($k\in\N$), a hole $z_m$ (only in bodies), a relation symbol or $=$, a connective, a binder $\forall$ or $\exists$ (one child; it binds index $0$ in its child), or a metavariable (only in templates; its children are the arguments). Every node has a sort, $\iota$ (terms) or $o$ (formulas). Terms contain no binders. $|u|$ is the number of nodes of $u$; an occurrence $M(t_1,\dots,t_n)$ counts $1+\sum_i|t_i|$.
+
+\paragraph{Positions.}
+A position is a finite sequence of positive integers: $\varepsilon$ is the root and $p\cdot i$ is the $i$-th child of $p$. $u|_p$ is the subtree at $p$; $p\le q$ means that $p$ is a prefix of $q$, and $p\perp q$ that neither is a prefix of the other. $b_u(p)$, or $b(p)$, is the number of binder nodes at proper prefixes of $p$.
+
+\paragraph{Free indices.}
+An occurrence of $\#k$ at position $q$ of $u$ is \emph{bound in $u$} if $k<b_u(q)$; it is then bound by the $(k{+}1)$-th binder above $q$. Otherwise it is \emph{free} and denotes the free index $k-b_u(q)$ of $u$, counted from the root of $u$. $\FV(u)$ is the set of free indices of $u$. A sentence $s$ has $\FV(s)=\emptyset$, and for a position $p$ of $s$, $\FV(s|_p)\subseteq\{0,\dots,b_s(p)-1\}$: the free index $j$ of $s|_p$ refers to the $(j{+}1)$-th binder above $p$ in $s$. In a template, the arguments of an occurrence at $p$ are read relative to $p$: their indices refer to binders of $T$ above $p$.
+
+\paragraph{Shifting, substitution, abstraction, plugging.}
+\begin{itemize}
+\item $\uparrow^e u$ adds $e$ to every free index occurrence of $u$ and leaves bound ones unchanged.
+\item For a term or formula $u$ and a map $\bar u$ from a set $Y\supseteq\FV(u)$ of indices to terms, $u[\bar u]$ replaces each free occurrence of the index $y$, at a position $q$ (where it is written $\#(y+b_u(q))$), by $\uparrow^{b_u(q)}\bar u_y$.
+\item For pairwise distinct indices $y_1,\dots,y_n$ with $\FV(u)\subseteq\{y_1,\dots,y_n\}$, the \emph{abstraction} $u[z_m/y_m]$ replaces each free occurrence of $y_m$ by the hole $z_m$. The result has no free indices, so $\lambda\bar z.u[z_m/y_m]$ is a body.
+\item For a body $\lambda\bar z.\beta$, plugging $\beta[u_1,\dots,u_n]$ replaces each occurrence of $z_m$, at position $q$ of $\beta$, by $\uparrow^{b_\beta(q)}u_m$. Since $\beta$ has no free indices, $\FV(\beta[\bar u])=\bigcup\{\FV(u_m): z_m\text{ occurs in }\beta\}$.
+\end{itemize}
+Abstraction inverts plugging at distinct indices: $(u[z_m/y_m])[y_1,\dots,y_n]=u$, since a hole at depth $e$ is replaced by $\uparrow^e\#y_m=\#(y_m+e)$, which is the original occurrence. Index arithmetic is counted at unit cost.
+
+\paragraph{Instances.}
+For a template $T$ and a substitution $\theta$, $T\theta$ replaces the subtree at each $p\in\Occ(T)$, which is $M(\bar t)$, by $\theta(M)[\bar t]$. The indices of $\bar t$ are shifted under the binders of $\theta(M)$, so they keep referring to the binders of $T$ above $p$. For a template substitution $\sigma$, $T\sigma$ is defined in the same way; inside a template body $\gamma$, plugging also replaces the holes that occur in the arguments of occurrences $N(\bar u)$ of $\gamma$, so these arguments stay metavariable-free.
+
+% ---------------------------------------------------------------------
+\subsection{Proofs of the basic lemmas}\label{app:setting:lemmas}
+
+\begin{proof}[Proof of \cref{lem:setting:preservation} (preservation)]
+Positions strictly below an occurrence lie in its argument list, so a position $p\in\mathrm{skel}(T)$ is not below any occurrence, and no occurrence position is a prefix of $p$. $T\theta$ arises from $T$ by replacing the subtrees at the occurrence positions only; hence the label at $p$ is unchanged. If $p\in\Occ(T)$ carries $M(\bar t)$, the replacement at $p$ is $\theta(M)[\bar t]$, and the replacements at the other occurrences, which are incomparable with $p$ ($\Occ(T)$ is an antichain), do not affect it. No further reduction takes place: bodies contain no metavariables, and arguments contain none either. For template substitutions the argument is the same.
+\end{proof}
+
+\begin{lemma}[Substitution facts]\status{proved}\src{single Lemma 1.2}\label{lem:setting:subst}
+Let $\lambda\bar z.\beta$ be a body.
+\textup{(i)} Composition: $(\beta[\bar t])[\bar u]=\beta[\bar t[\bar u]]$.
+\textup{(ii)} Injectivity: if $z_m$ occurs in $\beta$ and $\beta[\bar a]=\beta[\bar a']$, then $a_m=a'_m$.
+\textup{(iii)} If the root of $\beta$ is not a hole, $\beta[\bar a]$ has the same root; formula bodies always have such roots.
+\end{lemma}
+
+\begin{proof}
+(i) Fix an occurrence of $z_m$ at depth $e=b_\beta(q)$ in $\beta$. On the left, $\beta[\bar t]$ has $\uparrow^e t_m$ there, and $[\bar u]$ replaces a free index $y$ of $t_m$, sitting at depth $e'$ inside $t_m$ and hence written $\#(y+e+e')$, by $\uparrow^{e+e'}\bar u_y$. On the right, $t_m[\bar u]$ has $\uparrow^{e'}\bar u_y$ at that place, and plugging shifts it by $e$ more. The indices of $\beta$ itself are all bound in $\beta$, so $[\bar u]$ does not touch them on the left. Both sides agree everywhere else.
+(ii) At an occurrence of $z_m$ at depth $e$, $\beta[\bar a]$ has $\uparrow^ea_m$ and $\beta[\bar a']$ has $\uparrow^ea'_m$; shifting is injective.
+(iii) Plugging changes only hole positions, and the root is not a hole. Holes have sort $\iota$, so the root of a formula body is never a hole.
+\end{proof}
+
+% ---------------------------------------------------------------------
+\subsection{Proof of the matching theorem}\label{app:setting:matching}
+
+\begin{proof}[Proof of \cref{thm:setting:matching}]
+\emph{(a) Uniqueness.} Let $T\theta=s$, let $M(y_1,\dots,y_n)$ be a pattern occurrence at $p$, and write $\theta(M)=\lambda\bar z.\beta$. By \cref{lem:setting:preservation}, $s|_p=\beta[y_1,\dots,y_n]$. $\beta$ has no free indices, so the free occurrences of indices in $s|_p$ are exactly the images of the holes of $\beta$, and the free index $y_m$ comes from $z_m$; since the $y_m$ are pairwise distinct, $\beta=(s|_p)[z_m/y_m]$, and $\FV(s|_p)\subseteq\{y_1,\dots,y_n\}$ is necessary. Every metavariable has a pattern occurrence, so $\theta$ is determined by $s$.
+
+\emph{(b) Correctness.} If a matcher exists, the skeleton walk succeeds (\cref{lem:setting:preservation}), step 2 computes it by (a), and the checks succeed. Conversely, suppose all steps succeed, and let $\theta$ be the computed substitution. The skeleton walk compares labels and arities at every position of $\mathrm{skel}(T)$, so $s$ and $T\theta$ agree there, and every occurrence position of $T$ is a position of $s$ of the right sort. At the chosen pattern occurrence of $M$, $\theta(M)[\bar y]=((s|_p)[z_m/y_m])[\bar y]=s|_p$ (\cref{app:setting:debruijn}); at the other occurrences the check establishes $\theta(M)[\bar t]=s|_q$. Hence $T\theta=s$.
+
+\emph{(b) Time.} The skeleton walk costs $O(|\mathrm{skel}(T)|)$. Abstraction at the chosen pattern occurrence $p_M$ is one pass over $s|_{p_M}$, which replaces each free $y_m$ by $z_m$ and fails on any other free index: $O(|s|_{p_M}|)$. The check at another occurrence $M(\bar t)$ at $q$ walks the body $\beta$ of $\theta(M)$ and $s|_q$ in lock step, counting the binders of $\beta$ passed. A non-hole node of $\beta$ is compared with the current node of $s|_q$ and consumes it. A hole $z_m$ at depth $e$ is compared with $\uparrow^e t_m$ by walking $t_m$ and the current subtree of $s|_q$ in lock step, shifting on the fly; on success it consumes $|t_m|\ge1$ nodes of $s|_q$, and the walk stops at the first mismatch. So at most $|s|_q|+1$ nodes of $\beta$ are visited, and the check costs $O(|s|_q|+|\bar t|)$. Occurrence positions are pairwise incomparable, so the subtrees $s|_q$ at distinct occurrences are disjoint and $\sum_q|s|_q|\le|s|$; and $\sum_q|\bar t_q|\le|T|$. The total is $O(|T|+|s|)$.
+
+\emph{(c) Generality by freezing.} Let $\mathrm{freeze}$ replace each occurrence $N(\bar u)$ of a metavariable of $T'$ by $\hat N(\bar u)$, where $\hat N$ is a fresh function symbol (if $N$ is term-valued) or relation symbol (if $N$ is formula-valued) of the same arity. Then $\mathrm{freeze}(T')$ is a sentence over the extended signature. If $T'=T\sigma$, let $\theta(M):=\lambda\bar z.\mathrm{freeze}(\gamma_M)$, where $\sigma(M)=\lambda\bar z.\gamma_M$. This is a ground body over the extended signature, and $T\theta=\mathrm{freeze}(T\sigma)=\mathrm{freeze}(T')$, because freezing commutes with plugging. Conversely, let $T\theta=\mathrm{freeze}(T')$, with $\theta(M)=\lambda\bar z.\beta_M$. In $\mathrm{freeze}(T')$ every frozen symbol is applied to arguments that contain no frozen symbol (the arguments of $T'$ are metavariable-free). By (a), $\beta_M$ is an abstraction of a subtree of $\mathrm{freeze}(T')$, so in $\beta_M$, too, every frozen symbol is applied to arguments without frozen symbols, built from holes, indices bound in $\beta_M$, and parameters. Replacing each $\hat N$ by $N$ therefore turns $\beta_M$ into a template body $\gamma_M$, and $\sigma(M):=\lambda\bar z.\gamma_M$ gives $T\sigma=T'$. The test is an instance of (b) over the extended signature, so it takes linear time.
+
+\emph{(d) Rigid templates without determinacy} (prior C1(b), proved in the prior session). Let $T\in\SO$. Walk $\mathrm{skel}(T)$ against $s$ as in (b). Distinct metavariables have independent bodies, so $s\in\inst(T)$ iff the walk succeeds and, for each metavariable $M$ with occurrences $M(\bar t_1),\dots,M(\bar t_k)$ at $p_1,\dots,p_k$, there is a body $\beta$ with $\beta[\bar t_j]=s|_{p_j}$ for all $j$. Decide this by recursion over a relative position $r$ (a position of $s|_{p_1}$), with the column $c_j:=(s|_{p_j})|_r$ and the number $e$ of binders above $r$ inside the body (the same for all $j$, because the body is common). A body subtree at $r$ is either
+\begin{itemize}
+\item a hole $z_m$ (\emph{projection}), possible iff $c_j=\uparrow^e t_{j,m}$ for all $j$; or
+\item a node with label $h$ and independent subtrees at the children (\emph{imitation}), possible iff all $c_j$ have the label $h$ with the same arity, $h$ is a signature symbol, a parameter, or an index $\#i$ with $i<e$ (bound inside the body), and the recursion succeeds at every child.
+\end{itemize}
+This is the projection/imitation analysis of second-order matching \citep{huet1978proving}, restricted to metavariable-free arguments. The children's subproblems share no unknowns, so the recursion visits each position of $s|_{p_1}$ at most once, and each projection test is a comparison of polynomial size. Hence membership is polynomial. The number of bodies satisfies $\#(r)=\#\{m:\text{projection to }z_m\text{ works at }r\}+[\text{imitation works at }r]\cdot\prod_i\#(r\cdot i)$. For $T=P(0)$ and a sentence $s$ with $k$ occurrences of the constant $0$, such as a conjunction of $k/2$ copies of $0=0$, both projection and imitation work at each $0$, and only imitation works elsewhere, so there are $2^k$ matchers, with $k=\Theta(|s|)$.
+\end{proof}
+
+\emph{Evidence} (single, \texttt{e1\_matching.out}). On 1500 random $\DT$ templates (one or two metavariables of six types, derived occurrences with random arguments) and random substitutions, a full projection/imitation count finds exactly one matcher and the algorithm of (b) returns the generating substitution in every case; on 1500 perturbed queries it agrees with the $\SO$ test of (d); and $400/400$ random pairs $T\gen T\sigma$ are recognized by freezing. The single-track referee's independent matcher, used in all of that referee's checks, produced no covering or recovery error \src{single referee, item A}.
+
+% ---------------------------------------------------------------------
+\subsection{Proof that equivalence is renaming}\label{app:setting:renaming}
+
+\begin{proof}[Proof of \cref{lem:setting:renaming}]
+``If'' is clear. Conversely, let $T'=T\sigma$ and $T=T'\sigma'$. Then $T=T\tau$ with $\tau=\sigma;\sigma'$ (apply $\sigma'$ to the bodies of $\sigma$).
+
+\emph{Step 1: $\tau$ is the identity.} Let $M(\bar y)$ be a pattern occurrence of $M$ in $T$, at $p$, and write $\tau(M)=\lambda\bar z.\gamma$. By \cref{lem:setting:preservation}, $\gamma[\bar y]=T|_p=M(\bar y)$. The root of $\gamma$ is not a hole (a hole plugs to an index), and not a rigid symbol (it would survive plugging). So $\gamma=N(\gamma_1,\dots,\gamma_k)$, and plugging gives $N=M$, $k=n$ and $\gamma_j[\bar y]=y_j$. Each $\gamma_j$ is a metavariable-free term at the root level of $\gamma$, so it contains no binder and no index (an index there would be free in the body). Since $\gamma_j[\bar y]$ is the index $y_j$, $\gamma_j$ is a hole $z_i$ with $y_i=y_j$, so $i=j$ because the $y$'s are distinct. Hence $\tau(M)=\lambda\bar z.M(\bar z)$ for every $M$.
+
+\emph{Step 2: the shape of $\sigma$.} Write $\sigma(M)=\lambda\bar z.\gamma'$. Applying $\sigma'$ to $\gamma'$ gives $M(\bar z)$ by Step 1. The root of $\gamma'$ is not a rigid symbol (it would survive $\sigma'$) and not a hole (it would stay a hole). So it is an occurrence $N(\bar u)$ of a metavariable $N$ of $T'$; since $\bar u$ is metavariable-free, $\gamma'=N(\bar u)$. Write $\sigma'(N)=\lambda\bar w.\delta$; then $\delta[\bar u]=M(\bar z)$, and as in Step 1, $\delta=M(\delta_1,\dots,\delta_n)$ with each $\delta_j$ a term over holes, function symbols and parameters, and $\delta_j[\bar u]=z_j$. A non-hole $\delta_j$ would give a non-hole root, so $\delta_j=w_{\pi(j)}$ and $u_{\pi(j)}=z_j$; $\pi$ is injective because the $z_j$ are distinct. Distinct $M$ give distinct $N$, since $\sigma'(N)$ has root $M$. Every metavariable of $T'=T\sigma$ occurs in some $\sigma(M)$, and each $\sigma(M)$ is the single occurrence $N(\bar u)$, so $M\mapsto N$ is a bijection.
+
+\emph{Step 3: the arguments are permuted.} $N$ has a pattern occurrence in $T'$. Occurrences of $T'$ arise only by plugging, so it is $N(\bar u[\bar t])$ for some occurrence $M(\bar t)$ of $T$. Each $u_l[\bar t]$ is an index, and each $u_l$ is a term over holes, function symbols and parameters, so $u_l$ is a hole $z_{\rho(l)}$. The $u_l[\bar t]$ are pairwise distinct, so $\rho$ is injective, and $u_{\pi(j)}=z_j$ gives $\rho\circ\pi=\mathrm{id}$. Hence the arity of $N$ equals $n$ and $\rho$ is a permutation, and $\sigma(M)=\lambda\bar z.N(z_{\rho(1)},\dots,z_{\rho(n)})$. So $T'$ is $T$ with $M$ renamed to $N$ and its argument places permuted by $\rho$.
+\end{proof}
+
+% ---------------------------------------------------------------------
+\subsection{Why arguments are metavariable-free}\label{app:setting:nested}
+
+\begin{remark}[Nested arguments]\status{proved; computed}\src{prior induction referee; single \S4}\label{rem:setting:nested}
+The prior session also considered the class $\mathrm{DT}$ in which arguments may contain metavariables, as in $M(F(x))$. For $D=\{\Ind(x=x),\Ind(0=x)\}$ the templates
+\[T_k=\bigl(0=0\wedge\forall x\,(f(x)=x\to f^k(Sx)=Sx)\bigr)\to\forall x\,f(x)=x,\qquad k\ge1,\]
+are in $\mathrm{DT}$ ($f(x)$ in the conclusion is a pattern occurrence), cover $D$ (via $f:=\lambda z.z$ and $f:=\lambda z.0$), are pairwise incomparable (the instance with $f:=\lambda z.z+0$ lies in $T_k$ only), and are each minimal (the prior referee's hand proof). So $\Min_{\mathrm{DT}}(D)$ is infinite. The prior enumeration-based learner also failed to compute the cautious verifier of $\mathrm{DT}$ for targets with nested arguments, and was unsound for one such target, $\forall x(f(x)=f(x))\wedge f(f(0))=f(f(0))$. In $\DT$, $\Min(D)$ is finite for every $D$ (\cref{sec:single}); for this $D$ it has exactly four elements (computed by the single track, by saturation and by brute force up to size $24$).
+\end{remark}
+
+% ---------------------------------------------------------------------
+\subsection{Parameter alignment}\label{app:setting:align}
+
+\paragraph{Renaming-closed instances.}
+Let $\mathrm{par}(u)$ be the set of parameters occurring in $u$. A \emph{renaming} is an injective map on parameter names, applied to every parameter occurrence. For a template $T$, let
+\[\inst^{\sim}(T)=\{(\rho T)\theta:\ \rho\text{ injective on }\mathrm{par}(T),\ \theta\text{ a substitution}\}.\]
+Renamings are required to be injective because a bijective renaming of parameters leaves the universal closure unchanged up to bound names, while identifying two parameters changes it. $T$ \emph{covers $D$ up to renaming} if $D\subseteq\inst^{\sim}(T)$. Let $T\gen^{\sim}T'$ iff $T'=(\rho T)\sigma$ for a renaming $\rho$ injective on $\mathrm{par}(T)$ and a template substitution $\sigma$; equivalently, $\mathrm{freeze}(T')\in\inst^{\sim}(T)$. This is a preorder that contains $\gen$, and $T\gen^{\sim}T'$ implies $\inst^{\sim}(T)\supseteq\inst^{\sim}(T')$. (Compose: if $T'=(\rho T)\sigma$ and $T''=(\rho'T')\sigma'$, then $T''=((\rho'\rho)T)(\rho'\sigma)\sigma'$, and $\rho'\rho$ is injective on $\mathrm{par}(T)$ because $\mathrm{par}(T')\supseteq\rho(\mathrm{par}(T))$ by \cref{lem:setting:preservation}.) For parameter-free $T$, $\inst^{\sim}(T)=\inst(T)$.
+
+\paragraph{Alignments.}
+Let $D$ be finite and nonempty, and let $r\in D$ be a datum with fewest parameters. An \emph{alignment} $\alpha=(G,(\iota_d)_{d\in D\setminus\{r\}})$ consists of a set $G\subseteq\mathrm{par}(r)$ and injections $\iota_d:G\to\mathrm{par}(d)$. The aligned data $\alpha(D)$ rename, in $r$, each $q\in G$ to a global name $g_q$; in each $d\neq r$, each $\iota_d(q)$ to $g_q$; and every other parameter of every datum to a name of its own, used nowhere else. Write $\alpha_d$ for the bijective renaming applied to $d$. $\mathrm{Align}(D)$ is finite. For a class $\mathcal C$, let
+\[\Min^{\mathrm{al}}_{\mathcal C}(D)=\text{the }\gen^{\sim}\text{-minimal elements (one per }\equiv^{\sim}\text{-class) of }\bigcup_{\alpha\in\mathrm{Align}(D)}\Min_{\mathcal C}(\alpha(D)),\]
+where $\Min_{\mathcal C}$ is the literal minimal set of \cref{def:setting:instances}. If some datum has no parameter there is one alignment, and $\Min^{\mathrm{al}}_{\mathcal C}(D)$ is $\Min_{\mathcal C}(D)$ up to $\equiv^{\sim}$.
+
+\paragraph{Literal finitariness.}
+The proof below uses one property of $\mathcal C$:
+\begin{itemize}
+\item[(F)] for every finite nonempty $X$, $\Min_{\mathcal C}(X)$ is finite (up to $\equiv$), and every $T\in\mathcal C$ that covers $X$ literally satisfies $T\gen T_0$ for some $T_0\in\Min_{\mathcal C}(X)$.
+\end{itemize}
+For $\mathcal C=\DT$, with parameters treated as constants, (F) is the finiteness theorem for minimal covering templates in \cref{sec:single} (Theorem B of the single track). For $\mathcal C=\DTF$ it is Proposition E1-lit of the experiments track, proved there through a normal form for literal covering. Both classes are closed under renaming of parameters.
+
+\begin{proposition}[Alignment-complete minimal templates]\status{proved; computed}\src{experiments Prop E1-al}\label{prop:setting:align}
+Let $\mathcal C\in\{\DT,\DTF\}$ and let $D$ be finite and nonempty.
+\textup{(a)} Every member of $\Min^{\mathrm{al}}_{\mathcal C}(D)$ lies in $\mathcal C$ and covers $D$ up to renaming.
+\textup{(b)} Every $T\in\mathcal C$ that covers $D$ up to renaming satisfies $T\gen^{\sim}M$ for some member $M$.
+\textup{(c)} $\Min^{\mathrm{al}}_{\mathcal C}(D)$ is finite; its members are $\gen^{\sim}$-minimal among all templates in $\mathcal C$ that cover $D$ up to renaming; and if $D\subseteq\inst^{\sim}(T^*)$ with $T^*\in\mathcal C$, some member $M$ satisfies $T^*\gen^{\sim}M$.
+\end{proposition}
+
+For $\DTF$ this is Proposition E1-al of the experiments track (computed check: E0b, below). The same proof gives it for $\DT$, with (F) supplied by the finiteness theorem of \cref{sec:single} instead of its $\DTF$ analogue.
+
+\begin{proof}
+Let $\mathcal C\in\{\DT,\DTF\}$; it satisfies (F).
+
+\emph{(a) Members cover $D$ up to renaming.} Let $M\in\Min_{\mathcal C}(\alpha(D))$. It covers $\alpha(D)$ literally: $\alpha_d(d)=M\theta_d$ for every $d$. The rigid parameters of $M$ occur in $M\theta_d=\alpha_d(d)$ (\cref{lem:setting:preservation}), and $\alpha_d$ is a bijection from $\mathrm{par}(d)$ onto $\mathrm{par}(\alpha_d(d))$. So $\alpha_d^{-1}$ is injective on $\mathrm{par}(M)$, and $d=(\alpha_d^{-1}M)(\alpha_d^{-1}\theta_d)$, where $\alpha_d^{-1}\theta_d$ renames the parameters in the bodies. Hence $d\in\inst^{\sim}(M)$.
+
+\emph{(b) Every template covering $D$ up to renaming lies above a member.} Let $T\in\mathcal C$ with $d=(\rho_dT)\theta_d$ for every $d\in D$, each $\rho_d$ injective on $\mathrm{par}(T)$. By \cref{lem:setting:preservation}, $\rho_d(\mathrm{par}(T))\subseteq\mathrm{par}(d)$. Put $G:=\rho_r(\mathrm{par}(T))\subseteq\mathrm{par}(r)$ and $\iota_d:=\rho_d\circ\rho_r^{-1}:G\to\mathrm{par}(d)$, which is injective; so $\alpha:=(G,(\iota_d))\in\mathrm{Align}(D)$. Let $T'$ be $T$ with each parameter $p$ renamed to $g_{\rho_r(p)}$; then $T\gen^{\sim}T'\gen^{\sim}T$. For every $d$ and $p\in\mathrm{par}(T)$, $\alpha_d(\rho_d(p))=g_{\rho_r(p)}$: for $d=r$ by the definition of $\alpha$, and for $d\neq r$ because $\rho_d(p)=\iota_d(\rho_r(p))$. Hence $\alpha_d(d)=(\alpha_d\rho_dT)(\alpha_d\theta_d)=T'(\alpha_d\theta_d)$, so $T'$ covers $\alpha(D)$ literally. By (F), $T'\gen M'$ for some $M'\in\Min_{\mathcal C}(\alpha(D))$, and $M'\gen^{\sim}M$ for some $\gen^{\sim}$-minimal element $M$ of the finite union. So $T\gen^{\sim}M\in\Min^{\mathrm{al}}_{\mathcal C}(D)$.
+
+\emph{(c) Finiteness, minimality, and a member below the target.} $\mathrm{Align}(D)$ is finite and each $\Min_{\mathcal C}(\alpha(D))$ is finite, so $\Min^{\mathrm{al}}_{\mathcal C}(D)$ is finite. If some $T\in\mathcal C$ covering $D$ up to renaming satisfied $M\sgen^{\sim}T$ for a member $M$, then by (b) $T\gen^{\sim}M''$ for a member $M''$, so $M\sgen^{\sim}M''$ with both in the union, contradicting the minimality of $M$ there. If $D\subseteq\inst^{\sim}(T^*)$ with $T^*\in\mathcal C$, apply (b) to $T^*$.
+\end{proof}
+
+\begin{example}[Literal minimal templates are not enough]\status{proved; computed}\src{experiments E1, E0b}\label{ex:setting:align}
+Let $D=\{0=0\wedge w_0=w_0,\ w_0=0\wedge w_1=w_1\}$ (each datum canonicalized on its own). Literally, $\Min_{\DTF}(D)=\{f_0=0\wedge f_1=f_1\}$, with $0$-ary term metavariables. But $T=(f=0\wedge w_0=w_0)$ covers $D$ up to renaming (in the second datum, $f:=w_0$ and the template's $w_0$ is renamed to $w_1$), and $f_0=0\wedge f_1=f_1\sgen T$ (map $f_1$ to $w_0$). So no literal minimal template lies below $T$. The alignment that identifies $w_0$ of the first datum with $w_1$ of the second produces $T$ (up to renaming) as a member of $\Min^{\mathrm{al}}_{\DTF}(D)$. Version~1 of the experiments record stated the last property of \cref{prop:setting:align} for $\Min_{\mathcal C}$; the referee's counterexample above refutes it, and the alignment-complete set is the repair.
+
+\emph{Computed} (experiments, E0b): for random generating templates $T^*$ with a rigid parameter (2--3 data each), no literal minimal template lies below $T^*$ in $17/200$ (arithmetic) and $36/200$ (set theory) data sets; with $\Min^{\mathrm{al}}$ there are no failures, with or without a rigid parameter. The implementation caps the number of alignments at 4096 and reports truncation; none occurred. On the data of experiment E2 the two sets agree on all 720 data sets (the referee: 360 of 360, with independent code).
+\end{example}

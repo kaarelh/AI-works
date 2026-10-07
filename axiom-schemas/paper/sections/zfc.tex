@@ -1,0 +1,522 @@
+\section{The ZF(C) schemas, and PA induction as the contrast}\label{sec:zf}
+% Section 5: the ZF(C) schemas (question Q2) and PA induction as the contrast.
+% Sources: research/tracks/cases/notes-final.md (Part 2), research/prior/induction/*-notes.md and referee reports,
+% research/tracks/single/notes-final.md (Cor D.3, Thm B), research/tracks/experiments/notes-final.md (E2).
+% Local macros (prefix zf); \providecommand so that a later move to preamble.tex does not clash.
+\providecommand{\zfN}[1]{\textup{(N$_{#1}$)}}
+\providecommand{\zfR}[1]{\textup{(R$_{#1}$)}}
+\providecommand{\zfB}{\textup{(B)}}
+\providecommand{\zfDpat}[1]{\textup{(D$^{\mathrm{PAT}}_{#1}$)}}
+\providecommand{\zfDdt}[1]{\textup{(D$^{\mathrm{DT}}_{#1}$)}}
+\providecommand{\zfDroot}[1]{\textup{(D$^{\mathrm{root}}_{#1}$)}}
+\providecommand{\zfLinf}{L_{\infty}}
+
+The second question asks whether the method developed for PA induction also learns each axiom schema of ZFC from
+a collection of its instances. The answer is yes, and more easily than for induction. Every ZFC axiom other than
+Separation and Replacement is a single sentence, its own anchor. Every ZF schema, in each textbook formulation
+considered here, is a higher-order pattern \citep{miller1991logic}: its one metavariable is applied only to distinct
+bound variables. Two instances are an anchor iff their bodies have different main symbols and jointly use every
+argument place, in every class between $\PAT$ and $\SO$ (\Cref{thm:zf:anchor}), and pattern anti-unification
+recovers each schema from any anchor (\Cref{cor:zf:patlgg}). Plain first-order anti-unification works iff the
+metavariable is applied to literally the same argument tuple at every occurrence, which depends on the formulation
+and on how bound variables are written (\Cref{thm:zf:classify}). Where it fails, no finite union of first-order
+schemas covers the schema without a false member (\Cref{thm:zf:nounion}). PA induction is the contrast. It is not a
+pattern, and first-order and pattern anti-unification are both unsound on it. The determinate class $\DT$ learns it,
+and there the anchor condition is again root variation plus non-vacuity (\Cref{thm:zf:indanchor}); without
+determinacy a stronger condition is needed (\Cref{prop:zf:indso}). The difference is
+structural: $L_\in$ has no function symbols, so an instance of a ZF schema only renames variables inside the body,
+while induction substitutes the terms $0$ and $Sx$.
+
+\Cref{sec:zf:forms} fixes formulations and encodings, \Cref{sec:zf:fo,sec:zf:fofail} treat first-order learners,
+\Cref{sec:zf:pattern} gives anchor theorems and rates for pattern targets, \Cref{sec:zf:pa} treats induction, and
+\Cref{tab:zf:summary} summarizes. Proofs and the computational evidence are in \Cref{app:zf}. Untagged mixtures of
+these schemas are treated in \Cref{sec:many}.
+
+\paragraph{Conventions.} Data are instances in closure-normal form (\Cref{sec:setting}): the textbook outer prefix
+$\forall\bar w$ is dropped (its variables become parameters), while the frame's own variables stay bound. For a class
+$H$, a finite $D\subseteq\inst(T^*)$ is an \emph{anchor in $H$} if every $T\in H$ with $D\subseteq\inst(T)$ has
+$\inst(T)\supseteq\inst(T^*)$; the cautious verifier over $H$ is then exact, and it is sound before whenever $T^*$ is
+closed in $H$ (\Cref{sec:setting}). We use two facts about first-order anti-unification
+\citep{plotkin1970note,reynolds1970transformational}. Every first-order schema covering a finite set $P$ is at least
+as general as $\lgg(P)$, so ``every covering schema has a false instance'' means ``$\lgg(P)$ has one''. And the lgg
+gives equal columns of disagreeing subterms equal metavariables. A \emph{guarded} first-order schema $(\sigma,G)$
+admits only substitutions that satisfy the guards $G$. Here these are freshness guards $\mathrm{fresh}(v,Z)$ (``$v$ is
+not free in the value of $Z$'') or loose-index guards $\mathrm{loose}(Z)\subseteq I$. The \emph{most specific guard
+rule} learns, together with $\lgg(D)$, every such guard that all data satisfy \citep{claude2026whatfollows}.
+
+% ---------------------------------------------------------------------------------------------------------------
+\subsection{Formulations and encodings}\label{sec:zf:forms}
+
+ZFC consists of Extensionality, Pairing, Union, Power set, Infinity, the schemas of Separation and Replacement,
+Foundation and Choice (and Empty set in some texts). Collection and $\in$-induction are theorem schemas of ZF
+\status{known}: Collection via ranks or reflection (see e.g.\ \citealp{levy1979basic}; we did not check the exact location),
+$\in$-induction via transitive closures and Foundation. Conversely, $\in$-induction with $\varphi(x):=x\notin S$ proves Foundation for $S$. We
+include both because texts and libraries state them as schemas. \Cref{tab:zf:forms} lists the templates. The Kunen-
+and Jech-style wordings follow \citet[ch.~I]{kunen1980set} and \citet[ch.~1]{jech2003set} from memory; an
+independent referee's recollection agrees, but we did not re-check them against the books. As far as we know Kunen
+treats $\exists!$ as an abbreviation, so $\ReplU$, with $\exists!$ as a primitive binder, is our encoding choice.
+
+\begin{table}[t]
+\centering\small
+\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}X l@{}}
+\toprule
+name & template $T^*$ (closure-normal form) & arguments of $P$\\
+\midrule
+$\Sep$ (Kunen) & $\forall z\,\exists y\,\forall x\,(x\in y\leftrightarrow x\in z\wedge P(x,z))$ & $(x,z)$\\
+$\Sep_{\mathrm J}$ (Jech) & $\forall X\,\exists Y\,\forall u\,(u\in Y\leftrightarrow u\in X\wedge P(u))$ & $(u)$\\
+$\EInd$ & $\forall x\,(\forall y\,(y\in x\to P(y))\to P(x))\to\forall x\,P(x)$ & $(y)$, $(x)$, $(x)$\\
+$\Coll$ & $\forall A\,(\forall x\,(x\in A\to\exists y\,P(x,y,A))\to\exists Y\,\forall x\,(x\in A\to\exists y\,(y\in
+  Y\wedge P(x,y,A))))$ & $(x,y,A)$ twice\\
+$\ReplU$ & as $\Coll$, with $\exists!y$ in place of the first $\exists y$ & $(x,y,A)$ twice\\
+$\ReplS$ & $\forall A\,(\forall x\,(x\in A\to\exists y\,(P(x,y,A)\wedge\forall u\,(P(x,u,A)\to u=y)))\to\exists
+  Y\,\forall x\,(x\in A\to\exists y\,(y\in Y\wedge P(x,y,A))))$ & $(x,y,A)$, $(x,u,A)$, $(x,y,A)$\\
+$\ReplJ$ (Jech) & $\forall x\,\forall y\,\forall u\,(P(x,y)\wedge P(x,u)\to y=u)\to\forall X\,\exists Y\,\forall
+  y\,(y\in Y\leftrightarrow\exists x\,(x\in X\wedge P(x,y)))$ & $(x,y)$, $(x,u)$, $(x,y)$\\
+$\Found$ & $\forall S\,(\exists x\,x\in S\to\exists x\,(x\in S\wedge\forall y\,(y\in x\to\neg y\in S)))$ & ground\\
+\bottomrule
+\end{tabularx}
+\caption[The ZF schemas as templates]{The ZF schemas as templates with one formula metavariable $P$ (closure-normal
+form). Plugging a body $\lambda\bar z.\varphi$ whose free variables are holes and parameters gives a sentence.}
+\label{tab:zf:forms}
+\end{table}
+
+\begin{proposition}[Single axioms]\label{prop:zf:ground}
+\status{proved}\src{cases \S2.1; single Cor D.3}
+Each ZFC axiom other than the two schemas, Choice included, is a single sentence $s$. Its target $\{s\}$ lies in
+every class, $\{s\}$ is an anchor in every class, and matching is equality. \emph{Proof:} every template covering
+$\{s\}$ contains the whole target.
+\end{proposition}
+
+\begin{definition}[Encodings of bound variables]\label{def:zf:enc}
+\status{known}\src{cases \S1}
+(a) \emph{Named first-order}: bound variables are names, treated as constants. Instantiation is textual, so a value
+may contain a name that a binder of the frame captures. Unless said otherwise the data use the textbook names of
+\Cref{tab:zf:forms}; under \emph{$\alpha$-variation} the frame's binders get arbitrary distinct names.
+(b) \emph{de Bruijn first-order}: bound variables are indices $\#k$ ($\#0$ is the innermost binder). A metavariable at
+binder depth $d$ may take a formula with loose indices $<d$, and only well-formed results are instances.
+(c) \emph{$\lambda$ (pattern)}: templates as in \Cref{sec:setting}. Values are bodies whose free variables are holes
+and parameters, so capture cannot occur and freshness is built in.
+\end{definition}
+
+% ---------------------------------------------------------------------------------------------------------------
+\subsection{Which ZF schemas are first-order patterns}\label{sec:zf:fo}
+
+Let $T^*=F[P(\bar a_1),\dots,P(\bar a_m)]$ be a pattern template over $L_\in$ with a metavariable-free,
+parameter-free frame $F$ and one metavariable $P$ of arity $n$, applied at its $k$-th occurrence to distinct bound
+variables $\bar a_k$. Let $N_k$ be the tuple of \emph{names} of $\bar a_k$ (named encoding) and $I_k$ the tuple of
+their \emph{indices} at occurrence $k$ (de Bruijn).
+
+\begin{theorem}[Classification]\label{thm:zf:classify}
+\status{proved}\src{cases Thm B1}
+(a) $T^*\in\PAT\subseteq\DT$.
+(b) With textbook names, $\inst(T^*)$ is the instance set of a single first-order schema with freshness guards iff
+$N_1=\dots=N_m$. The schema is then $F[Z,\dots,Z]$, with $\mathrm{fresh}(v,Z)$ for each frame-bound name $v$ not in
+$N_1$.
+(c) In de Bruijn notation the same holds with $I_1=\dots=I_m$ and the guard $\mathrm{loose}(Z)\subseteq I_1$. Well-formedness
+implies this guard iff $I_1=\{0,\dots,d-1\}$, where $d$ is the least binder depth of an occurrence.
+\end{theorem}
+\begin{proof}[Proof idea]
+If the tuples are equal, every occurrence reads the same text. If two differ, take the instances with bodies
+$\bigwedge_i(z_i=z_i)$ and its negation. Their lgg has different metavariables at the two occurrences. Filling one with
+the closed $\top$ and the others with $\bot$ respects every freshness guard, but no body produces the result
+(\Cref{app:zf:enc}).
+\end{proof}
+
+\begin{table}[t]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}l >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X c@{}}
+\toprule
+schema & named first-order (textbook names) & de Bruijn first-order & named, $\alpha$-varied\\
+\midrule
+$\Sep$ & yes, guard $\mathrm{fresh}(y,Z)$ & yes, guard ``$\#1$ not loose'' (not implied) & yes\\
+$\Sep_{\mathrm J}$ & yes, guards $\mathrm{fresh}(X,Z)$, $\mathrm{fresh}(Y,Z)$ & yes, guard
+  $\mathrm{loose}(Z)\subseteq\{\#0\}$ (not implied) & yes\\
+$\EInd$ & \textbf{no} ($y$ vs.\ $x$) & \textbf{yes}, guard implied by well-formedness & no\\
+$\Coll$, $\ReplU$ & yes, guard $\mathrm{fresh}(Y,Z)$ & \textbf{no} ($A$ is $\#2$ vs.\ $\#3$) & \textbf{no}\\
+$\ReplS$, $\ReplJ$ & no ($y$ vs.\ $u$) & no & no\\
+$\Coll$, $\ReplU$, $\varphi(x,y)$ only & yes, guards $\mathrm{fresh}(Y,Z)$, $\mathrm{fresh}(A,Z)$ & yes, guard
+  $\mathrm{loose}(Z)\subseteq\{\#0,\#1\}$ (not implied) & no\\
+\bottomrule
+\end{tabularx}
+\caption[Which ZF schemas are first-order patterns]{Is the schema a guarded first-order pattern? (By
+\Cref{thm:zf:classify,prop:zf:alpha}; every schema is in $\PAT$.) Without its guard, every guarded entry has a false
+instance (\Cref{prop:zf:false}).}
+\label{tab:zf:classify}
+\end{table}
+
+\Cref{tab:zf:classify} applies the criterion. It corrects two natural expectations. $\in$-induction is a de Bruijn
+first-order pattern, since all its occurrences read $\#0$. And freshness is automatic only in the $\lambda$ encoding,
+not in the de Bruijn first-order one.
+
+\begin{proposition}[$\alpha$-variation]\label{prop:zf:alpha}
+\status{proved}\src{cases Prop B1$\alpha$}
+Under $\alpha$-variation (with name metavariables and guards $\mathrm{fresh}$ and $\mathrm{distinct}$), the
+$\alpha$-variants of instances of $T^*$ form the instance set of a single guarded first-order schema iff all
+occurrences of $P$ are applied to the same tuple of \emph{binders}. This is true for $\Sep$ and $\Sep_{\mathrm J}$,
+and false for $\EInd$, $\Coll$, $\ReplU$, $\ReplS$ and $\ReplJ$.
+\end{proposition}
+
+\begin{proposition}[What the first-order lgg does]\label{prop:zf:folgg}
+\status{proved}\src{cases Prop B2}
+Suppose the bodies' main symbols are not all equal. Then the first-order lgg (either encoding, textbook names) is $F$
+with a metavariable at each $P$-position, and positions $k,l$ share it iff no body uses an argument place at which
+$\bar a_k$ and $\bar a_l$ differ. If all positions share one metavariable, the lgg with its most specific guards accepts
+only instances of $T^*$.
+\end{proposition}
+So on anchor data the first-order lgg decouples exactly the occurrences that \Cref{thm:zf:classify} cannot tie.
+
+% ---------------------------------------------------------------------------------------------------------------
+\subsection{Where first-order anti-unification fails}\label{sec:zf:fofail}
+
+Let $\top:=\forall w\,(w=w)$ and $\bot:=\neg\top$.
+
+\begin{proposition}[Two instances give a false lgg instance]\label{prop:zf:false}
+\status{proved}\src{cases \S2.4}
+In each of the following cases two genuine instances give an lgg with a false sentence instance that respects the
+most specific guards and is refuted in ZF. (The complete list is in \Cref{app:zf:fofail}. For $\ReplS$ in the named
+encoding with textbook names there is no such pair; see \Cref{prop:zf:coll}.)
+(i) $\EInd$, named. From $\EInd(x=x)$ and $\EInd(\neg x\in a)$ the lgg is $\forall x(\forall y(y\in x\to Z_1)\to
+Z_2)\to\forall x\,Z_2$. Its instance $\forall x(\forall y(y\in x\to\neg y=y)\to\forall w\neg w\in x)\to\forall x\forall
+w\,\neg w\in x$ has a valid antecedent and says that every set is empty.
+(ii) $\ReplJ$, named. From $\ReplJ(x\in y)$ and $\ReplJ(\neg x=a)$ the occurrence $P(x,u)$ gets its own metavariable.
+Filling it with $\neg u=u$ and the others with $y=y$ gives a valid antecedent and a universal set at $X=\{\emptyset\}$.
+(iii) $\Coll$, $\ReplU$, $\ReplS$, de Bruijn or $\alpha$-varied. From the bodies $y=x$ and $\neg x=A$ the consequent's
+occurrence is decoupled. With $y=x$ in the antecedent ($\bot$ at $\ReplS$'s uniqueness occurrence) and $\bot$ in the
+consequent, the instance is equivalent to $\forall A\,\neg\exists x\,x\in A$.
+(iv) Guard violations. Without its guard, Separation's lgg has Russell's instance (\Cref{prop:zf:russell}). Without
+$\mathrm{fresh}(Y,\cdot)$, the named lggs of $\Coll$, $\ReplU$ and $\ReplS$ have the instance with body $y=Y$ (for
+$\ReplS$, $\neg u=u$ at the uniqueness occurrence), which forces $Y\in Y$.
+\end{proposition}
+
+\begin{theorem}[No finite union of first-order schemas]\label{thm:zf:nounion}
+\status{proved}\src{cases Lemma C1, Thm C2}
+In each case below, every finite set of guarded first-order schemas whose instances include all instances of the
+schema has a false instance that is refutable in ZF: (i) $\EInd$, named; (ii) $\ReplJ$, both encodings; (iii)
+$\Coll$, $\ReplU$, $\ReplS$, de Bruijn; (iv) $\Coll$, $\ReplU$, $\ReplS$, named under $\alpha$-variation.
+\end{theorem}
+\begin{proof}[Proof idea]
+Suppose a schema covers a sentence and has fewer nodes than the depth of one of its leaves $\ell$. Then it has a
+formula metavariable $Z$ at a proper prefix $q$ of $\ell$. If the subterm at $q$ is unique, the schema also covers the
+sentence with $\top$ or $\bot$ at $q$, and closed values respect every guard (\Cref{lem:zf:deepleaf}). Take instances
+with deep bodies, such as $\EInd(\neg^{2n}\forall w\,\neg w\in x)$, and a leaf in the occurrence that cannot be tied.
+For each prefix, one of $\top,\bot$ gives a false sentence (\Cref{app:zf:fofail}).
+\end{proof}
+With textbook names, the one non-first-order case not covered is $\ReplS$ in the named encoding. It is a genuine
+exception:
+
+\begin{proposition}[A truth-sound over-generalization]\label{prop:zf:coll}
+\status{proved}\src{cases Props C3, C3$'$}
+Let
+\[L_S:=\forall A\,(\forall x\,(x\in A\to\exists y\,(Z_1\wedge\forall u\,(Z_2\to u=y)))\to\exists Y\,\forall x\,(x\in
+A\to\exists y\,(y\in Y\wedge Z_1))).\]
+This is the named lgg of $\ReplS$ data on which the bodies' roots vary and some body uses $y$.
+Take it with the guards learned from anchor data: $\mathrm{fresh}(Y,Z_1)$, $\mathrm{fresh}(u,Z_1)$,
+$\mathrm{fresh}(Y,Z_2)$, $\mathrm{fresh}(y,Z_2)$.
+(a) Every guarded instance of $L_S$ is a theorem of ZF, and $\inst(L_S)\supsetneq\inst(\ReplS)$.
+(b) For any theory $B$, all guarded instances of $L_S$ are theorems of $B$ iff $B$ proves the Collection schema.
+\end{proposition}
+\begin{proof}[Proof idea]
+The antecedent implies $\forall x{\in}A\,\exists y\,Z_1$, and Collection gives the consequent. Conversely, $Z_1:=\varphi$
+and $Z_2:=\bot$ give a formula equivalent to $\Coll(\varphi)$, since $\forall u(\bot\to u=y)$ is valid. This formula is
+not an instance of $\ReplS$ (\Cref{app:zf:fofail}).
+\end{proof}
+So here the first-order learner is truth-sound but not exact, and no refutation can ever detect its
+over-generalization. With Jech's image consequent the decoupling gives false instances instead, and under
+$\alpha$-variation the phenomenon disappears. By (b), the lgg is truth-sound over ZF without Foundation exactly if ZF
+without Foundation proves Collection. We do not know whether it does, and leave this open.
+
+\begin{proposition}[Separation: the guard and Russell's instance]\label{prop:zf:russell}
+\status{proved}\src{cases Prop D1}
+(a) The unguarded lgg of Separation data (either encoding) has Russell's instance $\forall z\exists y\forall x(x\in
+y\leftrightarrow x\in z\wedge\neg x\in y)$. It is refuted in pure logic from $\exists z\exists x\,x\in z$.
+(b) The most specific guard rule always learns $\mathrm{fresh}(y,Z)$, since no genuine body mentions $y$. The learned
+guards equal the target's iff some body uses $x$ and some body uses $z$. For $\Coll$ and $\ReplU$ (named), the learned
+guards equal the target's, $\{\mathrm{fresh}(Y,Z)\}$, iff every argument place is used.
+\end{proposition}
+\begin{proof}
+(a) For $x_0\in z$ and the $y$ given by the sentence, $x_0\in y\leftrightarrow\neg x_0\in y$. (b) A freshness guard
+for $v$ is learned iff no datum's value mentions $v$.
+\end{proof}
+
+% ---------------------------------------------------------------------------------------------------------------
+\subsection{Pattern targets: anchors, pattern anti-unification and rates}\label{sec:zf:pattern}
+
+Let $T^*$ be as in \Cref{sec:zf:fo} and $D=\{T^*[P:=\lambda\bar z.\varphi_j]:j\le N\}$. Let \evR{} say that the main
+symbols of the bodies $\varphi_j$ are not all equal, and \zfN{i} ($i\le n$) that some $\varphi_j$ has the hole $z_i$
+free.
+
+\begin{theorem}[Anchors for the ZF schemas]\label{thm:zf:anchor}
+\status{proved}\src{cases Thm E; single Cor D.3}
+For every class $H$ with $\PAT\subseteq H\subseteq\SO$, a finite $D\subseteq\inst(T^*)$ is an anchor in $H$ iff
+\evR{} and \zfN{i} hold for all $i\le n$. In particular one instance never suffices, and two can.
+\end{theorem}
+\begin{proof}[Proof idea]
+``If'', for $H=\SO$. By \evR{}, a covering template's rigid part is a prefix of the frame, and its metavariables sit
+at frame positions or slot roots. Let a metavariable $M$ have several occurrences. Then \evR{} forces the parts of
+$T^*$ below them to have slots and inner frame symbols at the same places. Each variable bound above the first
+occurrence is recovered as a hole of $M$'s body, either from a frame leaf or, via \zfN{i}, from a slot argument. This
+gives a body $B_M$ with $T[M:=\lambda\bar h.B_M]=T^*$. ``Only if'': replace each $P(\bar a_k)$ by a pattern with the
+common root (e.g.\ $\neg Q(\bar a_k)$), or drop an unused argument (\Cref{app:zf:anchor}).
+\end{proof}
+Minimal anchors, as bodies, are: $x\in z$ and $\neg(x=a)$ for $\Sep$; $x\in x$ and $\neg(x=x)$ for $\EInd$; $y=x$ and
+$\neg(x=A)$ for $\Coll$, $\ReplU$, $\ReplS$; $x\in y$ and $\neg(x=a)$ for $\ReplJ$. If a community never lets $\varphi$
+mention the bounding set $z$, the learner stays at the sound specialization $P(x)$, which is Jech's form. Since
+$L_\in$ has no function symbols, the ``shielding'' that separates $\SO$ from $\DT$ for induction
+(\Cref{prop:zf:indso}) and for universal axioms over arithmetic (\Cref{sec:univ}) cannot occur. For $H=\DT$ the
+theorem is also the one-metavariable case of the general anchor theorem of \Cref{sec:single}.
+
+\paragraph{Several metavariables.} ZF needs one metavariable, but untagged mixtures behave like templates with
+several (\Cref{sec:many}). Then a Plotkin-(D)-type event appears, and it depends on the class. Let $T^*$ be a pattern
+template over $L_\in$ with metavariables $P,Q,\dots$ and bodies $\varphi_{P,j}$. For a map
+$\pi:[n_P]\to[n_Q]\cup\mathrm{Par}$, let $\varphi\circ\pi$ replace each hole $z_i$ by $z_{\pi(i)}$ (or by the
+parameter $\pi(i)$). The events are:
+\zfDpat{PQ}: no bijection $\pi$ has $\varphi_{Q,j}=\varphi_{P,j}\circ\pi$ for all $j$;
+\zfDdt{P\to Q}: no map $\pi$ has this property;
+\zfDroot{PQ}: some $j$ has $\mathrm{root}(\varphi_{P,j})\ne\mathrm{root}(\varphi_{Q,j})$.
+Then \zfDroot{PQ} implies \zfDdt{P\to Q}, which implies \zfDpat{PQ}.
+
+\begin{theorem}[Several metavariables]\label{thm:zf:multi}
+\status{proved}\src{cases Thm E$'$}
+Assume \zfR{P} and all \zfN{P,i}, for every metavariable $P$. Then $D$ is an anchor in $\PAT$ iff \zfDpat{PQ} holds for all $P\ne Q$. It is an
+anchor in $\DT$ iff \zfDdt{P\to Q} holds for all ordered pairs. In $\SO$, \zfDroot{} for all pairs implies that $D$ is
+an anchor, which implies \zfDdt{} for all ordered pairs; the second implication cannot be reversed. Without \zfR{P}
+or \zfN{P,i}, $D$ is an anchor in no class between $\PAT$ and $\SO$.
+\end{theorem}
+\begin{proof}[Proof idea]
+The proof of \Cref{thm:zf:anchor} works once each slot of $M$'s first occurrence faces a slot of the \emph{same}
+metavariable at every other occurrence. If it faces a $Q$-slot instead, there is a fixed argument map from $P$'s
+bodies to $Q$'s, which the events exclude. Conversely, a violating map lets one rewrite every $Q(\bar b)$ as an
+occurrence of $P$ (\Cref{app:zf:anchor}).
+\end{proof}
+The three classes differ. Take $T_B:=\forall x\forall y(P(x,y)\to Q(x))$ with bodies $(x\in y,x\in x)$ and
+$(\neg x=y,\neg x=x)$. Pattern anti-unification returns $T_B$, but $\forall x\forall y(P(x,y)\to P(x,x))\in\DT$ covers
+the data and misses $\forall x\forall y(x\in y\to\neg x=x)$. Take $T_A:=\forall x\forall y(P(x,y)\to Q(x,y))$ with
+bodies $(x\in y,y\in x)$ and $(\neg x=y,\neg x=x)$. Here $D$ is a $\DT$ anchor, but $\forall x\forall y(G(x,y,x)\to
+G(x,x,y))\in\SO$ covers it and misses the same sentence. Whether \zfDroot{} is necessary in $\SO$ is open; we
+conjecture that it is not.
+
+\begin{corollary}[Pattern anti-unification recovers every ZF schema]\label{cor:zf:patlgg}
+\status{proved}\src{cases Cor F, F$'$}
+The least general pattern generalization $L_{\mathrm{pat}}(D)$ exists and is unique
+\citep{pfenning1991unification,baumgartner2017higher}. For $D\subseteq\inst(T^*)$, $L_{\mathrm{pat}}(D)\preceq T^*$,
+and $L_{\mathrm{pat}}(D)\equiv T^*$ iff \evR{} and every \zfN{i} hold. With several metavariables,
+$L_{\mathrm{pat}}(D)\equiv T^*$ iff the $\PAT$ events of \Cref{thm:zf:multi} hold.
+\end{corollary}
+\begin{proof}
+$T^*\in\PAT$ covers $D$. Under the events, \Cref{thm:zf:anchor} (resp.\ \ref{thm:zf:multi}) for $H=\PAT$ gives
+$L_{\mathrm{pat}}(D)\gen T^*$. Otherwise its $\PAT$ witnesses lie above $L_{\mathrm{pat}}(D)$ and miss an instance.
+\end{proof}
+The merge rule must identify columns that are equal up to a permutation of the arguments: Replacement's $P(x,y)$ and
+$P(x,u)$ columns agree only up to $y\leftrightarrow u$.
+
+\begin{theorem}[Rates]\label{thm:zf:rates}
+\status{proved}\src{cases Thm G}
+Let the bodies be i.i.d.\ from $\mu$. Let $C_{F,I}$ be the set of bodies with root $F$ (no condition if $F={*}$) in
+which no $z_i$, $i\in I$, is free. Then
+\[\Pr[D_N\text{ is not an anchor}]=\sum_{(F,I)\ne({*},\emptyset)}(-1)^{[F\ne{*}]+|I|+1}\mu(C_{F,I})^N\;\le\;\sum_f
+p_f^N+\sum_i(1-q_i)^N,\]
+where $p_f=\mu(\mathrm{root}=f)$ and $q_i=\mu(z_i\text{ free})$.
+\end{theorem}
+\begin{proof}
+Inclusion--exclusion over the events ``all roots are $f$'' (pairwise disjoint) and ``$z_i$ is never free''.
+\end{proof}
+
+% ---------------------------------------------------------------------------------------------------------------
+\subsection{PA induction: the contrast}\label{sec:zf:pa}
+
+A \emph{motive} is a formula $\varphi$ of $L_A$ with $\FV(\varphi)\subseteq\{x\}$, and
+$\Ind(\varphi)=\varphi(0)\wedge\forall x(\varphi\to\varphi[Sx/x])\to\forall x\varphi$. The target is
+$\inst(T_{\Ind})$ with $T_{\Ind}=P(0)\wedge\forall x(P(x)\to P(Sx))\to\forall x\,P(x)$. Since $P(0)$ and $P(Sx)$ are
+not pattern occurrences, $T_{\Ind}\in\DT\setminus\PAT$. Here \evR{} says that the motives' main symbols are not all
+equal, and \evN{} that some motive has $x$ free. The results are from the prior record, for parameter-free motives
+unless said otherwise.
+
+\paragraph{First-order learners.} A first-order schema is \emph{sound} if its sentence instances are true in $\N$.
+The false instances below are closed and capture-free, so the results hold in the named and in the de Bruijn
+encoding, with fixed or varying bound-variable names.
+
+\begin{proposition}[Two raw instances suffice for unsoundness]\label{prop:zf:indtwo}
+\status{proved}\src{prior induction B1, B3}
+(a) $\lgg(\Ind(x+0=x),\Ind(0+x=x))=(0+0=0)\wedge\forall x(z_1+z_2=x\to z_3+z_4=Sx)\to\forall x(z_1+z_2=x)$. It has
+the false instance $(0+0=0)\wedge\forall x(0+0=x\to0+S0=Sx)\to\forall x(0+0=x)$. One raw instance never forces
+unsoundness, and some pairs, such as $\Ind(x=x)$ and $\Ind(Sx=Sx)$, have a sound lgg.
+(b) If \evR{} and \evN{} hold, then $\lgg(D)=\zfLinf:=Z_1\wedge\forall x(Z_2\to Z_3)\to\forall x\,Z_2$, which has the
+false instance $(0=0)\wedge\forall x(0=S0\to0=S0)\to\forall x(0=S0)$. For i.i.d.\ motives,
+$\Pr[\lgg(D_N)\ne\zfLinf]\le p_{\max}^{N-1}+(1-q)^N$.
+\end{proposition}
+So the diversity that identifies $T_{\Ind}$ among determinate templates (\Cref{thm:zf:indanchor}) destroys the
+first-order lgg, at the same coupon-collector rate.
+
+\begin{theorem}[No finite union of first-order schemas]\label{thm:zf:indunion}
+\status{proved}\src{prior induction B2}
+Let $g_0(t)=t$, $g_{n+1}(t)=0+g_n(t)$ and $F'=\{\Ind(g_n(x)=x):n\ge0\}$. Every first-order schema covering two members
+of $F'$ has a false instance that is refutable in $\Q$. Hence $k$ sound first-order schemas cover at most $k$ members
+of $F'$, and no finite union of first-order schemas covers the raw induction instances (or those of open induction)
+soundly.
+\end{theorem}
+\begin{proof}[Proof idea]
+For $n<m$ the lgg descends through $n$ copies of $0+\cdot$ and stops at mixed roots. It is
+$L_n=(g_n(a)=0)\wedge\forall x(g_n(b)=x\to g_n(c)=Sx)\to\forall x(g_n(b)=x)$, which contains the false sentence
+$I^*_M=(g_M(0)=0)\wedge\forall x(g_M(0)=x\to g_M(S0)=Sx)\to\forall x(g_M(0)=x)$ for every $M\ge n$ (\Cref{app:zf:pa}).
+\end{proof}
+The occurrence and freshness guards learnable from $F'$ do not help (\Cref{app:zf:pa}). A guard ``is an induction instance'' trivially would, and that is what the Sub
+encoding below implements. Worse, some unsound lggs are never caught by evaluating closed sentences.
+
+\begin{theorem}[An unsound lgg that closed truths never refute]\label{thm:zf:K0}
+\status{proved}\src{prior induction referee R1}
+Let $K_0:=(z_1+0=z_1)\wedge\forall x(z_1+x=z_2\to z_1+Sx=Sz_2)\to\forall x(z_1+x=z_2)$, the lgg of $\Ind(0+x=x)$ and
+$\Ind(S0+x=Sx)$. Its instance $(0+0=0)\wedge\forall x(0+x=0\to0+Sx=S0)\to\forall x(0+x=0)$ is false. Yet the true
+closed quantifier-free sentences together with all sentence instances of $K_0$ are consistent. So no sound derivation
+from true closed quantifier-free premises (or $\Delta_0$ ones, with $<$ primitive) refutes an instance of $K_0$.
+\end{theorem}
+\begin{proof}[Proof idea]
+Take an instance that is not trivially true. A convergent rewrite system over the numerals and a new constant $g$ gives
+an algebra containing $\N$ in which the step clause fails at $g$. Amalgamating these algebras over $\N$ gives a model of
+all instances and all true closed quantifier-free sentences (\Cref{app:zf:pa}).
+\end{proof}
+$K_0$ is refuted once the recursion axiom $\forall x\forall y(x+Sy=S(x+y))$ is a designated premise \src{prior
+induction B5(d)}. That PA is not finitely axiomatizable \citep{rylln1952axiomatizability} is a different matter:
+\Cref{thm:zf:indunion} is about the syntax of substitution, and PA is $\Q$ plus one guarded first-order pattern
+(\Cref{prop:zf:indeq}).
+
+\paragraph{Pattern anti-unification and determinate templates.}
+
+\begin{proposition}[Pattern anti-unification is unsound on induction]\label{prop:zf:indpat}
+\status{proved}\src{prior induction C9}
+Under \evR{} and \evN, the least general pattern generalization of $D\subseteq\inst(T_{\Ind})$ is
+$T_{\mathrm{pat}}:=Z\wedge\forall x(P(x)\to Q(x))\to\forall x\,P(x)$. It has the false non-instance
+$(0=0)\wedge\forall x(x=0\to x=0)\to\forall x(x=0)$.
+\end{proposition}
+
+\begin{theorem}[Anchors for induction in $\DT$]\label{thm:zf:indanchor}
+\status{proved}\src{prior induction C3; single Cor D.3}
+A finite $D\subseteq\inst(T_{\Ind})$ is an anchor in $\DT$ iff \evR{} and \evN. The same holds in the size-bounded
+classes $\DT_s$ for $s\ge7$, and, by the general anchor theorem of \Cref{sec:single}, in closure-normal form with
+parameters. Two instances suffice; one never does.
+\end{theorem}
+\begin{proof}[Proof idea]
+By \evR{} and root preservation the motive slots disagree, so a covering template's rigid part is a prefix of the
+five-node frame of $\Ind$. Its metavariables are formula-valued. Each is either 0-ary, and then occurs once (the closed
+slots have different logical sizes), or unary with a pattern occurrence $M(x)$. Fix a motive with $x$ free; injectivity
+of substitution forces the other arguments to be $x$, $Sx$ or $0$, as in $T_{\Ind}$. Witnesses for ``only if'' are
+$Z_1\to\forall x\,Z_2$ and root-specialized templates such as $(\neg Z_1\wedge Z_2)\to Z_3$ (\Cref{app:zf:pa}).
+\end{proof}
+Here $|T|$ counts symbols, an occurrence $M(\bar t)$ counting $1+\sum_i|t_i|$; so $|T_{\Ind}|=14$.
+
+\begin{proposition}[Generalizations, lgg, size threshold]\label{prop:zf:indgen}
+\status{proved}\src{prior induction C4, C6.2}
+(a) Up to renaming, exactly 26 templates of $\DT$ contain $\inst(T_{\Ind})$. Each takes a prefix of the frame, puts
+fresh metavariables at the cut slots, and partitions the motive slots present, where $P(0)$ and $P(Sx)$ join a class
+only together with a $P(x)$ slot. For every anchor these 26 are exactly the covering templates, so
+$\lgg_{\DT}(D)=T_{\Ind}$.
+(b) $\inst(T_{\Ind})$ is the intersection of the members of $\DT_s$ that contain it iff $s\ge12$. For $7\le s\le11$,
+the cautious verifier over $\DT_s$ accepts on every anchor the false sentence
+$(0=0\wedge\forall x(x=x\to Sx=Sx))\to\forall x(x=0)$.
+\end{proposition}
+\Cref{prop:zf:indpat} reads $T_{\mathrm{pat}}$ off this list: it is the least generalization without non-pattern
+occurrences. Part (b) is the closure criterion of \Cref{sec:setting} at work: soundness needs the target to be an
+intersection of class members, not a member.
+
+\begin{proposition}[Without determinacy]\label{prop:zf:indso}
+\status{proved}\src{prior induction C7}
+Call a free occurrence of $x$ \emph{unshielded} if it lies inside no proper term $t\ne x$ with
+$\FV(t)\subseteq\{x\}$, and let \zfB{} say that some motive has one. In $\SO$, $D$ is an anchor iff \evR{} and \zfB.
+For example, $\{\Ind(Sx=S0),\Ind(\neg Sx=0)\}$ satisfies \evR{} and \evN, but $Z\to\forall x\,P(Sx)$ covers it.
+\end{proposition}
+Before an anchor the $\DT$ verifier is sound, but the version space can lack a least element:
+$\{\Ind(x=x),\Ind(0=x)\}$ has four minimal covering templates in $\DT$, and one of them is below $T_{\Ind}$
+\src{single Thm B; corrects prior C8.2}.
+
+\paragraph{Encodings that make induction first-order.}
+
+\begin{proposition}[Sub encoding]\label{prop:zf:sub}
+\status{proved}\src{prior induction C5, P1, P2, P6}
+Record each induction as the step from $\mathrm{Sub}(\varphi,x,0,\alpha)$ and $\mathrm{Sub}(\varphi,x,Sx,\beta)$ to
+$\alpha\wedge\forall x(\varphi\to\beta)\to\forall x\varphi$, where the decidable judgment $\mathrm{Sub}(\varphi,x,t,\psi)$
+says that $\psi=\varphi[t/x]$ \citep{claude2026whatfollows}. With $x$ fixed, this is a first-order pattern in
+$P,\alpha,\beta$. The lgg
+of genuine data recovers it iff \evR{} and \evN, with $\Pr[\text{no anchor}]=\sum_f p_f^N+(1-q)^N-\sum_f r_f^N$, where
+$r_f$ is the probability of root $f$ with $x$ not free. If the induction variable varies, the variables must also not
+all be equal (or must be $\alpha$-normalized). With the decidable guard ``all Sub premises are true'', the cautious
+verifier accepts only genuine inductions.
+\end{proposition}
+\begin{proof}
+These are Plotkin's events: $\varphi$, $\varphi[0/x]$ and $\varphi[Sx/x]$ share their root, and they are pairwise
+distinct iff $x$ is free in $\varphi$.
+\end{proof}
+So the second-order learner on raw sentences loses nothing against a first-order learner on Sub-annotated data.
+
+\begin{proposition}[PA is $\Q$ plus one first-order pattern]\label{prop:zf:indeq}
+\status{proved}\src{prior induction B6}
+Let $\IndEq(P):=\forall x(x=0\to P)\wedge\forall y(\forall x(x=y\to P)\to\forall x(x=Sy\to P))\to\forall x\,P$, with
+$P$ a 0-ary metavariable and $x,y$ fixed \citep{tarski1965simplified}.
+(a) First-order logic proves $\IndEq(\varphi)\leftrightarrow\Ind(\varphi)$ for every motive $\varphi$, up to renaming a
+bound variable. With parameters, the guard $y\notin\FV(P)$ is needed.
+(b) $\lgg(\IndEq(\psi_1),\dots,\IndEq(\psi_N))=\IndEq(\lgg(\psi_1,\dots,\psi_N))$, which is $\IndEq(P)$ iff \evR{} holds.
+(c) $\Q+\inst(\IndEq)\vdash\PA$.
+\end{proposition}
+\begin{proof}[Proof idea]
+(a) $\forall x(x=t\to\varphi)\leftrightarrow\varphi[t/x]$ for $x\notin\FV(t)$; take $t=0,y,Sy$. (c) Parameter-free
+induction for all formulas yields induction with parameters, by inducting on
+$\forall\bar p[\varphi(0,\bar p)\wedge\forall z(\varphi(z,\bar p)\to\varphi(Sz,\bar p))\to\varphi(x,\bar p)]$; compare
+\citet{kaye1988parameter} (\Cref{app:zf:pa}).
+\end{proof}
+So the obstruction in \Cref{thm:zf:indunion} is the meta-level substitution in $\varphi(0)$ and $\varphi(Sx)$, not
+induction. Proof assistants record or recompute the motive. Lean~4's $\mathtt{Nat.rec}$ takes it as an implicit
+argument, and the $\mathtt{induction}$ tactic records it as a $\lambda$ \citep{demoura2021lean4}. Metamath's set.mm
+states induction with implicit-substitution hypotheses and distinct-variable conditions \citep{megill2019metamath};
+as a first-order pattern this needs freshness guards (\Cref{app:zf:pa}). In $\DT$ terms the motive is the unique
+matcher of $T_{\Ind}$, so for closed $\forall$-form steps recording it changes neither anchors nor rates.
+
+\paragraph{Experiment.} The implemented $\DTF$ learner of \Cref{sec:exp} was given tagged instances with random
+bodies. It was exact in 23, 27 and 30 of 30 runs at $N=2$, 3 and 8 for Separation; 23, 24, 30 for Replacement
+($\exists!$ spelled out, image consequent); 27, 29, 30 for $\EInd$; and 25, 30, 30 for induction. It accepted no
+non-instance in 927 probes. The genuine pattern lgg did as well on Separation and Replacement, slightly worse on
+$\EInd$ (24/30 at $N=2$), and was never exact on induction,
+where 224 of 229 probes at $N=2$ were non-instances. First-order lggs were unsound except on $\EInd$ in de Bruijn
+indices, consistent with \Cref{tab:zf:classify} \src{experiments E2}.
+
+% ---------------------------------------------------------------------------------------------------------------
+\subsection{Summary}\label{sec:zf:summary}
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{@{}l c c c c c >{\raggedright\arraybackslash}X@{}}
+\toprule
+& \multicolumn{3}{c}{first-order} & & & \\
+\cmidrule(lr){2-4}
+target & named & dB & named, $\alpha$ & $\PAT$ & $\DT$ & anchor condition\\
+\midrule
+ground axioms (incl.\ $\Found$, $\AC$) & yes & yes & yes & yes & yes & the sentence itself\\
+$\Sep$ & g & g & g & yes & yes & \evR, \zfN{x}, \zfN{z}\\
+$\Sep_{\mathrm J}$ & g & g & g & yes & yes & \evR, \zfN{u}\\
+$\EInd$ & no$^{\dagger}$ & yes & no & yes & yes & \evR, \zfN{x}\\
+$\Coll$, $\ReplU$ & g & no$^{\dagger}$ & no$^{\dagger}$ & yes & yes & \evR, \zfN{x}, \zfN{y}, \zfN{A}\\
+$\ReplS$ & no$^{\ddagger}$ & no$^{\dagger}$ & no$^{\dagger}$ & yes & yes & \evR, \zfN{x}, \zfN{y}, \zfN{A}\\
+$\ReplJ$ & no$^{\dagger}$ & no$^{\dagger}$ & no & yes & yes & \evR, \zfN{x}, \zfN{y}\\
+\midrule
+$\Ind$, raw & no$^{\dagger}$ & no$^{\dagger}$ & no$^{\dagger}$ & no$^{\S}$ & yes & $\DT$: \evR, \evN; $\SO$: \evR,
+  \zfB\\
+$\Ind$, Sub-encoded & yes & -- & -- & -- & -- & first-order lgg: \evR, \evN\\
+$\IndEq$ & g & -- & -- & -- & -- & first-order lgg: \evR\\
+\bottomrule
+\end{tabularx}
+\caption[Summary of the section]{All targets of this section. ``yes'': a first-order pattern (resp.\ in the class).
+``g'': a first-order pattern with a freshness or loose-index guard; it has false instances without the guard.
+``no$^\dagger$'': no finite union of guarded first-order schemas covers the target without a false member
+(\Cref{thm:zf:nounion,thm:zf:indunion}). ``no$^\ddagger$'': not first-order, but the first-order lgg is truth-sound
+iff the base theory proves Collection (\Cref{prop:zf:coll}). ``no$^\S$'': not a pattern, and the pattern lgg is
+unsound (\Cref{prop:zf:indpat}). ``--'': not analysed. For the ZF schemas the anchor condition is the same in every
+class between $\PAT$ and $\SO$ (\Cref{thm:zf:anchor}). Two instances suffice in every row except the ground axioms,
+where one does.}
+\label{tab:zf:summary}
+\end{table}
+
+\Cref{tab:zf:summary} collects the answers. All ZF schemas lie in the pattern fragment. Pattern anti-unification and
+the $\DT$ learner each learn them from two suitable instances, and are sound at all times. For first-order learners
+the robust statement is \Cref{thm:zf:classify,prop:zf:alpha}: a schema is a first-order pattern iff its
+metavariable's argument tuple is literally the same at every occurrence in the chosen syntax. PA induction lies
+outside the pattern fragment. The determinate class handles it, with the same anchor events as the first-order learner
+on Sub-annotated data; without determinacy the anchors need the stronger event \zfB.

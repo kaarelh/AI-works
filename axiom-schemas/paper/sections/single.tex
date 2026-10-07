@@ -1,0 +1,298 @@
+% Section 3: learning ONE determinate template.  Source: research/tracks/single/notes-final.md (+ referee.md).
+% Local notation (prefixed with the section key; also used in app-single.tex).
+\newcommand{\singleskel}{\mathrm{skel}}
+\newcommand{\singleslots}{\mathrm{slots}}
+\newcommand{\singleroot}{\mathrm{root}}
+\newcommand{\singlebd}{\mathrm{b}}
+\newcommand{\singleEsc}{\mathrm{Esc}}
+\newcommand{\singleSym}{\mathsf{Sym}}
+\newcommand{\singleScope}{\mathsf{Scope}}
+\newcommand{\singleEq}{\mathsf{Eq}}
+\newcommand{\singleFail}{\mathrm{Fail}}
+
+\section{Learning one schema}\label{sec:single}
+
+This section is the general theory of learning a \emph{single} template of the class $\DT$ from positive data. Fix a target $T^*\in\DT$ and a finite set $D\subseteq\inst(T^*)$ of its instances. The cautious verifier of \Cref{sec:setting} accepts
+\[
+\Acc(D)=\bigcap\{\inst(T):\ T\in\DT,\ D\subseteq\inst(T)\}.
+\]
+Since $T^*$ is one of the templates intersected, $\Acc(D)\subseteq\inst(T^*)$: the verifier is sound at all times, against every prover. The questions are about completeness and cost. We show that the version space is finitary and contains a template below the target (\Cref{sec:single:min}); that $\Acc(D)$ is a polynomial-time test of ``features'' of the data (\Cref{sec:single:feat}); that $D$ is an anchor iff three witness events hold, which reduce to Plotkin's events for first-order targets and to two simple events for PA induction and every ZF schema (\Cref{sec:single:anchor}); exponential rates for random data (\Cref{sec:single:rates}); a tight quadratic escalation bound, which refutes an earlier linear conjecture (\Cref{sec:single:esc}); finite elasticity and explicit anchors for unions (\Cref{sec:single:unions}); and the complexity of the version space (\Cref{sec:single:complexity}). The cost of verifying unions and of the refutation test of \DTRC\ is in \Cref{sec:many}.
+
+The results come from the research track ``single''; the gray tags name them, and ``earlier'' refers to the analysis of PA induction that preceded this work (\texttt{research/prior/induction}). Full proofs are in \Cref{app:single}. As in \Cref{sec:setting}, parameters are constants, bound variables are de Bruijn indices in definitions and proofs, and examples use named variables.
+
+% =====================================================================
+\subsection{Notation and data notions}\label{sec:single:prelim}
+
+We recall the notation of \Cref{sec:setting}. Positions are ordered by the prefix order $\le$; $p\perp q$ means that neither is a prefix of the other; $s|_p$ is the subterm or subformula at $p$; $\singlebd(p)$ is the number of binders strictly above $p$, so the bound variables in scope at $p$ are the indices $0,\dots,\singlebd(p)-1$. The \emph{root symbol} is the head symbol, an index counting as a symbol. $|s|$ is the number of positions. In a template, $\Occ(T)$ is the set of positions of metavariable occurrences $M(\bar t)$ (an antichain; the $t_i$ are metavariable-free), and the \emph{skeleton} $\singleskel(T)$ is the set of the other positions outside argument lists. A body $\lambda\bar z.\beta$ is closed except for the holes $z_m$ (parameters and binders may occur); plugging $\beta[\bar u]$ substitutes $u_m$ for $z_m$ with the usual shifting. For a map $\bar u$ on free indices, $s[\bar u]$ substitutes $u_y$ for each free index $y$ of $s$. $T\gen T'$ if $T'=T\sigma$ for a substitution by template bodies; then $\inst(T)\supseteq\inst(T')$. By the matching theorem of \Cref{sec:setting}, a sentence $s\in\inst(T)$, $T\in\DT$, has a unique matcher $\theta$, read off pattern occurrences: $\theta(M)=\lambda\bar z.(s|_p)[z_m/y_m]$ for a pattern occurrence $M(\bar y)$ at $p$; membership and generality are decided in linear time. If $T$ \emph{covers} $D$ (i.e.\ $D\subseteq\inst(T)$), $\theta_d$ is the matcher of $d\in D$ and $\beta^d_M:=\theta_d(M)$.
+
+\begin{definition}[Common prefix, slots, scopes, features]\label{def:single:features}\src{single \S1}
+Let $D$ be a nonempty finite set of sentences.
+\begin{itemize}
+\item The \emph{common prefix} $C(D)$: the root is in $C(D)$ iff all data have the same root symbol, and $p\cdot i\in C(D)$ iff $p\in C(D)$ and all $d|_{p\cdot i}$ have the same root symbol. The \emph{slots} $\singleslots(D)$ are the positions outside $C(D)$ whose parent is in $C(D)$ (or the root, if it is outside). $A(D):=C(D)\cup\singleslots(D)$ (\emph{admissible} positions). The \emph{scope} of a slot is $Y_\sigma(D):=\bigcup_{d\in D}\FV(d|_\sigma)$.
+\item A sentence $q$ has the \emph{feature} $\singleSym(p)$ ($p\in C(D)$) if $q|_p$ exists and has the root symbol common to the data at $p$; $\singleScope(\sigma)$ ($\sigma$ a slot) if $\FV(q|_\sigma)\subseteq Y_\sigma(D)$; and $\singleEq(\sigma,r,\bar u)$ ($\sigma$ a slot, $r\in A(D)$, $\sigma\perp r$ of the same sort, $\bar u$ a map from $Y_\sigma(D)$ to metavariable-free terms in scope at $r$) if $\FV(q|_\sigma)\subseteq Y_\sigma(D)$ and $q|_r=(q|_\sigma)[\bar u]$.
+\item A \emph{$D$-feature} is a feature that every datum has; $\Feat(D)$ is the set of sentences with every $D$-feature.
+\end{itemize}
+\end{definition}
+
+So a $D$-feature says: here all data have the same symbol; or no datum has a bound variable at this slot outside this set; or, in every datum, the content at $r$ is the content at slot $\sigma$ with its free variables replaced by $\bar u$.
+
+\begin{lemma}[Basic facts]\label{lem:single:basic}\status{proved}\src{single \S\S1, 3}
+\leavevmode
+\begin{enumerate}[label=(\alph*)]
+\item \emph{Preservation.} If $p\in\singleskel(T)$, then $(T\theta)|_p$ has the root symbol of $T|_p$; if $p\in\Occ(T)$ carries $M(\bar t)$, then $(T\theta)|_p=\theta(M)[\bar t]$.
+\item \emph{Substitution.} For $\beta$ closed except for holes: (i) $(\beta[\bar t])[\bar u]=\beta[\bar t[\bar u]]$; (ii) if $z_m$ occurs in $\beta$ and $\beta[\bar a]=\beta[\bar a']$, then $a_m=a'_m$; (iii) if the root of $\beta$ is not a hole, $\beta[\bar a]$ has the same root. Formula bodies always have symbol roots.
+\item \emph{Rigid prefix.} If $T$ covers $D$, then $\singleskel(T)\subseteq C(D)$ with the same symbols, and $\Occ(T)\subseteq A(D)$.
+\item \emph{Forcing.} Let $\sigma\perp r$ be positions of every datum and $Y=\bigcup_d\FV(d|_\sigma)$. At most one $\bar u$ on $Y$ satisfies $d|_r=(d|_\sigma)[\bar u]$ for all $d\in D$; one exists iff one exists for every pair $\{d,d'\}\subseteq D$; and it is found in time $O(\sum_d|d|)$.
+\item \emph{Equivalence is renaming.} For $T,T'\in\DT$: $T\gen T'\gen T$ iff $T'$ arises from $T$ by renaming metavariables bijectively and permuting each metavariable's argument places.
+\end{enumerate}
+\end{lemma}
+
+\noindent Proofs in \Cref{app:single:basic}. Part~(d) is the second-order form of the fact behind Plotkin's lgg: an equation between two positions is either violated by the data or determined by them.
+
+% =====================================================================
+\subsection{Minimal covering templates}\label{sec:single:min}
+
+$\Min(D)$ is the set of $\gen$-minimal covering templates in $\DT$. A covering $T\in\DT$ is \emph{saturated} if (S1) every argument place is used ($z_m$ occurs in some $\beta^d_M$, for every $M$ and $m$), and (S2) for every $M$ the roots of the $\beta^d_M$, $d\in D$, are not all equal (a hole $z_m$ counting as the root $z_m$).
+
+\begin{theorem}[Minimal covering templates]\label{thm:single:min}\status{proved; computed}\src{single Thm B}
+Let $D$ be nonempty and finite.
+\begin{enumerate}[label=(\alph*)]
+\item Every covering $T\in\DT$ satisfies $T\gen T'$ for some saturated covering $T'$.
+\item In a saturated covering template, $\singleskel\subseteq C(D)$; every pattern occurrence of a metavariable sits at a slot $\sigma$ and has argument \emph{set} $Y_\sigma(D)$; every occurrence sits in $A(D)$; and the arguments of each occurrence are determined by $D$, its position and the pattern slot of its metavariable. So there are at most $2^{|A(D)|}\,|\singleslots(D)|^{|A(D)|}$ saturated covering templates up to renaming.
+\item Every minimal covering template is saturated. So $\Min(D)$ is finite up to renaming, and every covering template is $\gen$ some member of $\Min(D)$.
+\item If $D\subseteq\inst(T^*)$, $T^*\in\DT$, some $T_m\in\Min(D)$ has $T^*\gen T_m$, hence $\inst(T_m)\subseteq\inst(T^*)$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}[Proof idea]
+(a) Two specializations, each keeping coverage and determinacy: drop an argument place that no value uses; or, if all values of $M$ have the same root, make it rigid ($M\mapsto\lambda\bar z.z_m$, or $M\mapsto\lambda\bar z.f(M_1(\bar z,\cdot),\dots)$ with fresh $M_j$ that also take the variable bound by $f$, if $f$ binds). Pattern occurrences stay pattern occurrences, and $(|C(D)|-|\singleskel|,\sum_M\mathrm{arity}(M))$ decreases lexicographically. (b) At a pattern occurrence $d|_\sigma=\beta^d_M[\bar y]$, so (S2) puts $\sigma$ outside $C(D)$ and (S1) gives the argument set; other arguments are forced by \Cref{lem:single:basic}(b)(ii). (c) uses \Cref{lem:single:basic}(e). \Cref{app:single:min}.
+\end{proof}
+
+Part~(d) is what the clustering method of \Cref{sec:many} needs: data of one schema always have a minimal covering template below it, hence a sound one; the theorem is the finiteness hypothesis used there. Metavariable-free arguments are essential. The earlier analysis conjectured finiteness (``C8.3'') for the class with nested arguments, where it fails: its referee found the infinite antichain $(0=0\wedge\forall x(f(x)=x\to f^k(Sx)=Sx))\to\forall x\,f(x)=x$, $k\ge1$, of minimal covering templates of $\{\Ind(x=x),\Ind(0=x)\}$. With metavariable-free arguments the arguments are forced, and C8.3 holds.
+
+\begin{example}[Induction data, no anchor]\label{ex:single:c82}\status{computed}\src{single \S4}
+For $D=\{\Ind(x=x),\Ind(0=x)\}$ (both motives have root $=$, so $D$ is no anchor), $\Min(D)$ consists of exactly the four templates
+\[
+\bigl(\zeta_1=\zeta_2\wedge\forall x(f(x)=x\to f(Sx)=Sx)\bigr)\to\forall x\,f(x)=x,\qquad\zeta_1,\zeta_2\in\{0,f(0)\},
+\]
+of which only $\zeta_1=f(0)$, $\zeta_2=0$ lies below $T_{\Ind}$. The earlier analysis reported eight, from a search bounded by size $23$; the template with $\zeta_1=\zeta_2=f(0)$ has size $24$, and five of the eight lie strictly above it. Brute force at size $\le24$ and the referee's independent enumerator confirm the four (\Cref{app:single:min}).
+\end{example}
+
+% =====================================================================
+\subsection{The cautious verifier is a feature test}\label{sec:single:feat}
+
+Let $T_0(D)$ be the skeleton $C(D)$ with a fresh metavariable $M_\sigma(Y_\sigma)$ at every slot (arguments in increasing order). For an Eq-feature $\varphi=\singleEq(\sigma_0,r,\bar u)$ of $D$, let $T_\varphi$ be $C(D)$ cut at $r$, with $M_\sigma(Y_\sigma)$ at every slot not below $r$ and the derived occurrence $M_{\sigma_0}(\bar u)$ at $r$. Both are in $\DT$ and cover $D$.
+
+\begin{theorem}[The cautious verifier checks features]\label{thm:single:feat}\status{proved; computed}\src{single Thm C}
+For every nonempty finite set $D$ of sentences,
+\[
+\Acc(D)=\Feat(D)=\inst(T_0(D))\cap\bigcap\{\inst(T_\varphi):\varphi\text{ an Eq-feature of }D\}.
+\]
+\end{theorem}
+
+\begin{proof}[Proof idea]
+$\inst(T_0(D))$ consists of the sentences with all Sym and Scope features, and $T_\varphi$ adds $\varphi$; these templates cover $D$, so $\Acc(D)\subseteq\Feat(D)$. Conversely, a covering $T$ is $\gen$ a saturated $T'$ (\Cref{thm:single:min}(a)), and by \Cref{thm:single:min}(b) $\inst(T')$ is cut out by $D$-features: Sym on its skeleton, Scope at one pattern slot per metavariable, and an Eq feature for every other occurrence. So $\Feat(D)\subseteq\inst(T)$. \Cref{app:single:feat}.
+\end{proof}
+
+\begin{corollary}[A polynomial verifier]\label{cor:single:poly}\status{proved}\src{single Cor C.1}
+With $m=|A(D)|\le\min_d|d|$ and $n=\sum_d|d|$, the $D$-features are listed in time $O(m^2n)$, there are $O(m^2)$ of them, and a query $q$ is decided in time $O(m^2|q|)$. No enumeration of $\Min(D)$ is needed.
+\end{corollary}
+
+\noindent\emph{Reading.} The verifier accepts $q$ iff $q$ has the data's common skeleton, no slot of $q$ mentions a bound variable that no datum mentions there, and every equation ``content at $r$ $=$ content at slot $\sigma$ with variables replaced by $\bar u$'' that holds in all data holds in $q$. The last clause is the second-order analogue of Plotkin's ``equal columns get equal variables'' \citep{plotkin1970note,reynolds1970transformational}. $T_0(D)$ is the higher-order pattern anti-unifier without merging; merging columns equal up to renaming, as the pattern lgg does \citep{pfenning1991unification,baumgartner2017higher}, is the case of an Eq feature whose $\bar u$ is a permutation. $\DT$ adds \emph{derived} occurrences, and the price is that the version space can have exponentially many minimal elements (\Cref{prop:single:blowup}); their intersection is still described by polynomially many equations. Second-order generalization beyond patterns is also studied by \citet{hirata2004generalization} and in the frameworks surveyed by \citet{cerna2023antiunification}; we have not checked whether $\DT$ or \Cref{thm:single:feat} appears there. The earlier induction learner enumerated $\Min(D)$ and intersected, which is exponential in the worst case; the feature test replaces it.
+
+\emph{Evidence.} $\Min(D)$ from saturated templates agreed with an independent brute-force enumerator in all $103$ completed random cases, and $\Feat(D)$ with the intersection of all enumerated covering templates on $7621$ queries; the referee's independent code, with bounds containing $T_0(D)$ and every $T_\varphi$, agreed on $125{,}109$ queries over $519$ data sets (\Cref{app:single:computations}).
+
+% =====================================================================
+\subsection{Anchors}\label{sec:single:anchor}
+
+Let $T^*\in\DT$ and $D=\{s_1,\dots,s_N\}$, $s_i=T^*\theta_i$, $N\ge1$, $\beta^i_M:=\theta_i(M)$. For $\sigma\in\Occ(T^*)$ carrying $M(\bar t_\sigma)$ let $Y^*_\sigma:=\bigcup_m\FV(t_{\sigma,m})$. Consider pairs $(\sigma,r)$ with $\sigma\in\Occ(T^*)$, $r\in\singleskel(T^*)\cup\Occ(T^*)$, $\sigma\perp r$, of the same sort; such a pair is \emph{valid} if $r$ carries an occurrence $M(\bar t_r)$ of the \emph{same} metavariable with $\bar t_r=\bar t_\sigma[\bar u_0]$ for some $\bar u_0$. A valid pair gives an equation that holds on all of $\inst(T^*)$.
+
+\begin{definition}[Witness events; richness]\label{def:single:events}\src{single \S6}
+\leavevmode
+\begin{itemize}
+\item \evRs\ (root variation at every occurrence): for every $\sigma\in\Occ(T^*)$ the roots of $s_1|_\sigma,\dots,s_N|_\sigma$ are not all equal. (At a pattern occurrence this is Plotkin's \evR\ for the values; at a derived occurrence $M(\bar t)$ it concerns the plugged values $\beta^i_M[\bar t]$.)
+\item \evN\ (non-vacuity): for every metavariable $M$ and argument place $m$, some $\beta^i_M$ contains $z_m$.
+\item \evU\ (no coincidence): for no non-valid pair $(\sigma,r)$ is there a $\bar u$ on $Y^*_\sigma$ with $s_i|_r=(s_i|_\sigma)[\bar u]$ for all $i$.
+\item \Rich: the signature has a relation symbol of arity $\ge1$, and, if $T^*$ has a term-valued metavariable, closed terms with two different root symbols exist (automatic with parameters). \Rich\ holds for arithmetic and set theory.
+\end{itemize}
+\end{definition}
+
+\begin{theorem}[Anchor theorem]\label{thm:single:anchor}\status{proved; computed}\src{single Thm D}
+If \evRs, \evN\ and \evU\ hold, $D$ is an anchor for $\inst(T^*)$ in $\DT$; this needs no assumption. Under \Rich, every anchor satisfies \evRs, \evN\ and \evU.
+\end{theorem}
+
+\begin{proof}[Proof idea]
+($\Leftarrow$) \evRs\ gives $C(D)=\singleskel(T^*)$ and $\singleslots(D)=\Occ(T^*)$, and \evN\ gives $Y_\sigma(D)=Y^*_\sigma$; so instances of $T^*$ have every Sym and Scope feature. By \evU\ every Eq-feature comes from a valid pair, and forcing identifies its $\bar u$ with $\bar u_0$; such equations hold on $\inst(T^*)$. So $\inst(T^*)\subseteq\Feat(D)=\Acc(D)$. ($\Rightarrow$) When an event fails, the corresponding Sym, Scope or Eq property is a $D$-feature, and \Rich\ supplies an instance of $T^*$ violating it: a value with another root, a value that uses the unused hole, or values that separate the two sides of the coincidence. \Cref{app:single:anchor}.
+\end{proof}
+
+So the candidate events of the brief are right in spirit but must be read occurrence-wise: root variation must hold at \emph{derived} occurrences too, and Plotkin's distinctness \evD\ is only the simplest coincidence.
+
+\begin{corollary}[Specializations]\label{cor:single:special}\status{proved; computed}\src{single Cor D.1--D.3}
+\leavevmode
+\begin{enumerate}[label=(\alph*)]
+\item \emph{First-order targets} (all metavariables $0$-ary, possibly under binders): \evRs$\wedge$\evN$\wedge$\evU\ is equivalent to Plotkin's \evR$\wedge$\evD. So $\DT$ has the same anchors on first-order targets as the class of first-order patterns \citep{plotkin1970note,reynolds1970transformational}: the larger class costs no data. For the instance schema of $\forall x\varphi(x)$ (\Cref{sec:univ}), two instances whose terms have different roots are an anchor (with several variables, \evD\ is needed as well).
+\item \emph{Formula metavariables only:} \evRs\ is equivalent to \evR, and under \evR$\wedge$\evN, \evU\ is equivalent to (D$^+$): for $M\neq M'$ and occurrences $\sigma$ of $M$, $r$ of $M'$, no $\bar u$ has $\beta^i_{M'}[\bar t_r]=(\beta^i_M[\bar t_\sigma])[\bar u]$ for all $i$. \emph{With a single formula metavariable, $D$ is an anchor iff \evR\ and \evN\ hold.}
+\item \emph{PA induction and ZF.} Hence, in closure-normal form: $T_{\Ind}=P(0)\wedge\forall x(P(x)\to P(Sx))\to\forall xP(x)$ is anchored iff the motives do not all have the same main symbol and some motive has $x$ free (the earlier anchor theorem for induction); Separation $\forall a\exists b\forall x(x\in b\leftrightarrow x\in a\wedge P(x,a))$ iff \evR, \evN$_x$, \evN$_a$ ($b$ cannot occur in $P$: freshness is built in); spelled-out Replacement, whose three occurrences $P(x,y,a)$, $P(x,z,a)$, $P(x,y,a)$ are all pattern occurrences, iff \evR, \evN$_x$, \evN$_y$, \evN$_a$; $\in$-induction iff \evR\ and \evN. Single axioms are ground templates, each its own anchor. One datum is never an anchor of a schema, two can be.
+\end{enumerate}
+In (a)--(c) the ``if'' directions need no assumption and the ``only if'' directions use \Rich.
+\end{corollary}
+
+\noindent \Cref{sec:zf} treats the ZF schemas in all formulations, encodings and classes. \emph{Evidence:} \Cref{thm:single:anchor} agreed with feature-based anchor status on $248/248$ random targets with one or two metavariables of all types (referee, independently: $540/540$, and $519/519$ against brute force), and (a), (c) on all of $571$ and about $2000$ random data sets (\Cref{app:single:computations}).
+
+The weaker candidates are not enough, and \Rich\ cannot be dropped.
+
+\begin{proposition}[Weaker events do not suffice]\label{prop:single:weaker}\status{proved; computed}\src{single Prop D.4, D.5, Ex.~D.6}
+\leavevmode
+\begin{enumerate}[label=(\alph*)]
+\item \evR+\evN+\evD: $T^*=\forall x(0=f(x))$, $D=\{\forall x(0=0),\forall x(0=x)\}$. \evRs\ and \evN\ hold and \evD\ is vacuous, but $\forall x(f(0)=f(x))$ covers $D$ and misses $\forall x(0=Sx)$.
+\item \evU\ for pattern occurrences only: $T^*=\forall x\forall y(Sf(x,y)=0)\wedge\forall x\forall y(f(x,Sy)=0)$ with the values $\lambda z_1z_2.z_1$, $\lambda z_1z_2.z_2$, $\lambda z_1z_2.Sz_1$. \evRs, \evN, \evD\ hold, and \evU\ holds for every pair whose first component is the pattern occurrence. But the content at the rigid $S$ above $f(x,y)$ equals the content at the derived occurrence $f(x,Sy)$ under $x\mapsto Sx$, so $\forall x\forall y(f'(y,Sx)=0)\wedge\forall x\forall y(f'(y,x)=0)$ covers $D$ and misses $T^*[f:=\lambda z_1z_2.0]$.
+\item Projections: $T^*=\forall x\forall y(f(x,y)=0)\wedge\forall x(x=0)$ with values $\lambda z_1z_2.z_1$, $\lambda z_1z_2.z_2$ satisfies \evRs, \evN, but $\forall x\forall y(f(x,y)=0)\wedge\forall x(f(x,x)=0)$ covers $D$. So \evU\ matters even for one metavariable with pattern occurrences only.
+\end{enumerate}
+\end{proposition}
+
+\noindent On random data \evR$\wedge$\evN$\wedge$\evD\ and \evRs$\wedge$\evN$\wedge$\evD\ were wrong in $27$ and $17$ of $248$ cases (always ``says anchor, is not''; referee: $45$, $29$ of $540$), while \evU\ restricted to pattern occurrences was never wrong, so (b) needs special structure. \emph{\Rich\ cannot be dropped:}\src{single Ex.~D.7} in pure set theory without parameters the only term bodies are projections, so $T^*=\forall x(f(x)\in x)$ has $\inst(T^*)=\{\forall x(x\in x)\}$, and one datum is an anchor although \evRs\ fails. The exact anchor condition without \Rich\ is open.
+
+% =====================================================================
+\subsection{Rates}\label{sec:single:rates}
+
+Let $\Lambda$ be a law with countable support on ground substitutions for $T^*$, $\theta_1,\theta_2,\dots$ i.i.d.\ $\sim\Lambda$, and $D_N=\{T^*\theta_1,\dots,T^*\theta_N\}$. Let $\rho_\sigma:=1-\max_h\Lambda(\singleroot((T^*\theta)|_\sigma)=h)$ for $\sigma\in\Occ(T^*)$, and $\nu_{M,m}:=\Lambda(z_m\in\theta(M))$. For a non-valid pair $(\sigma,r)$ (their set is $U(T^*)$) and a map $\bar u$ let $A_{\sigma,r,\bar u}:=\{\theta:(T^*\theta)|_r=((T^*\theta)|_\sigma)[\bar u]\}$, $\kappa_{\sigma,r}:=\Lambda^{\otimes2}\{(\theta,\theta'):\text{no }\bar u\text{ has }\theta,\theta'\in A_{\sigma,r,\bar u}\}$ and $\chi_{\sigma,r}:=\sup_{\bar u}\Lambda(A_{\sigma,r,\bar u})$. Let $c(T^*):=|\Occ(T^*)|+\sum_M\mathrm{arity}(M)+|U(T^*)|$ and $\lambda$ the minimum of all $\rho_\sigma,\nu_{M,m},\kappa_{\sigma,r}$. For a \emph{ground} target (e.g.\ a single ZFC axiom) $c(T^*)=0$; we set $\lambda:=1$, and in general $\bar c:=\max(c(T^*),1)$. A ground $T^*$ has $\Acc(\{T^*\})=\{T^*\}$, so $D_N$ is an anchor iff $N\ge1$.
+
+\begin{theorem}[Sample complexity]\label{thm:single:rates}\status{proved; computed}\src{single Thm E}
+The upper bounds need no assumption; the lower bounds use \Rich.
+\begin{enumerate}[label=(\alph*)]
+\item For $N\ge1$,
+\begin{multline*}
+\Pr[D_N\text{ is not an anchor}]\ \le\ \sum_{\sigma}(1-\rho_\sigma)^{N-1}+\sum_{M,m}(1-\nu_{M,m})^N\\
++\sum_{(\sigma,r)\in U(T^*)}(1-\kappa_{\sigma,r})^{\lfloor N/2\rfloor}\ \le\ c(T^*)(1-\lambda)^{\lfloor N/2\rfloor},
+\end{multline*}
+and $\Pr[D_N\text{ is not an anchor}]\ge\max\bigl(\max_\sigma(1-\rho_\sigma)^N,\ \max_{M,m}(1-\nu_{M,m})^N,\ \max_{(\sigma,r)}\chi_{\sigma,r}^N\bigr)$. ($D_0=\emptyset$ is never an anchor: $\Acc(\emptyset)=\emptyset$.)
+\item $\lambda>0$ iff the set $\{T^*\theta:\theta\in\operatorname{supp}\Lambda\}$ satisfies \evRs, \evN, \evU. Then the cautious verifier is exact with probability $\ge1-\delta$ once $N\ge1+(2/\lambda)\ln(\bar c/\delta)$; for a ground $T^*$, once $N\ge1$.
+\item \emph{Tagged data.} For $k$ targets $T^*_i\in\DT$ (ground ones allowed) cited by tags of probability $\pi_i$, with parameters $\bar c_i,\lambda_i$, the per-tag cautious verifier (the version space factors over tags, \citealp{claude2026whatfollows}) fails to be exact after $N$ tagged data with probability at most $\sqrt e\sum_i\bar c_i\exp(-3N\pi_i\lambda_i/8)$. Order $1/(\pi_i\lambda_i)$ data are necessary in general: the failure probability is at least $(1-\pi_i)^N$ (no tag-$i$ datum; exact for a ground tag), and at least $(1-\pi_i\rho)^N$ if some head at a pattern occurrence of $T^*_i$ has probability $1-\rho$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}[Proof idea]
+By the ``if'' half of \Cref{thm:single:anchor}, failure lies in the union of the failures of the events. All roots at $\sigma$ agree with probability $\sum_hp_h^N\le(1-\rho_\sigma)^{N-1}$; a coincidence on $D_N$ implies one on each of $\lfloor N/2\rfloor$ disjoint, independent pairs. A union bound gives (a); (c) averages over the binomial number of data per tag. \Cref{app:single:rates}.
+\end{proof}
+
+For one formula metavariable (induction, the ZF schemas) the coincidence terms vanish (\Cref{cor:single:special}(b)) and the bound is $(1-\rho)^{N-1}+\sum_m(1-\nu_m)^N$; for induction this is the earlier exact rate $\sum_fp_f^N+(1-q)^N-\sum_fr_f^N$ up to its inclusion--exclusion term. The coincidence terms need not be tight:
+
+\begin{proposition}[Coincidence terms]\label{prop:single:kappa}\status{proved; computed}\src{single Prop E.2}
+For $(\sigma,r)\in U(T^*)$: (i) the probability of a coincidence at $(\sigma,r)$ on $D_N$ is $\ge\chi_{\sigma,r}^N$, and under \Rich\ such a coincidence makes $D_N$ a non-anchor; (ii) $\chi_{\sigma,r}^2\le1-\kappa_{\sigma,r}$; (iii) if $\Lambda$ has finite support and $\mathcal K$ is the family of maximal support sets lying in a common $A_{\sigma,r,\bar u}$, the coincidence probability equals $\sum_{\emptyset\neq\mathcal J\subseteq\mathcal K}(-1)^{|\mathcal J|+1}\Lambda(\bigcap\mathcal J)^N\in[\chi^N,|\mathcal K|\chi^N]$. So its exact rate is $\chi$, which can be smaller than the rate $\sqrt{1-\kappa}$ of the upper bound; they agree if $|\mathcal K|=1$.
+\end{proposition}
+
+\noindent For $T^*=\forall x(0=f(x))$ with $f\sim\{\lambda z.0:0.4,\ \lambda z.z:0.3,\ \lambda z.Sz:0.3\}$, the exact non-anchor probability at $N=8$ is $0.057714$, between the coincidence lower bound $0.057648$ and the upper bound $0.059942$; the root and non-vacuity lower bounds alone give $0.000655$. Exact computations by the referee, which decide anchor status by feature search rather than by the events of \Cref{thm:single:anchor}, confirm the bound (\Cref{app:single:rates}).
+
+% =====================================================================
+\subsection{Escalations}\label{sec:single:esc}
+
+In the protocol of \Cref{sec:setting}, a query the verifier does not accept is \emph{escalated}: an oracle labels it, and a valid query joins the data. Against an honest prover (all queries are target instances) the cautious verifier's escalated queries form a chain $q_1,\dots,q_m$ with $q_j\notin\Acc(\{q_1,\dots,q_{j-1}\})$, and every such chain is forced by the honest prover that asks it in order \citep{claude2026whatfollows}. $\singleEsc(\mathcal H;N)$ is the supremum of the lengths of such chains inside members of $\mathcal H$, from no data, on sentences of size $\le N$; the first query is always escalated, as $\Acc(\emptyset)=\emptyset$. For first-order schemas over a term signature, $\singleEsc(H_1;N)\le N+1$ \citep{claude2026whatfollows}. Every chain is honest for the universal template (a $0$-ary formula metavariable).
+
+Let $\Pi(D):=(C(D),(Y_\sigma(D))_\sigma,E(D))$, where $E(D)$ is the set of pairs $(\sigma,r)$ carrying an Eq-feature. As data grow, $C$ shrinks, scopes grow, and while both are fixed $E$ shrinks; and by \Cref{thm:single:feat} a query outside $\Acc(D)$ changes $\Pi$ (\Cref{lem:single:monotone}).
+
+\begin{theorem}[Escalation bound]\label{thm:single:esc}\status{proved; computed}\src{single Thm F}
+Let $d$ have $n$ positions and let $q_j\notin\Acc(\{d,q_2,\dots,q_{j-1}\})$ for $j=2,\dots,m$ (no honesty needed). Then
+\[
+m-1\ \le\ n+\sum_{p}\singlebd(p)+\#\{(\sigma,r):\sigma\perp r\}\ \le\ n+n\,\singlebd_{\max}+n(n-1),
+\]
+with $p,\sigma,r$ ranging over positions of $d$. Hence $\singleEsc(\DT;N)\le1+N+2N(N-1)\le2N^2+1$.
+\end{theorem}
+
+\begin{proof}[Proof idea]
+Each escalation ($\alpha$) shrinks $C$ (at most $n$ times), or ($\beta$) enlarges a scope (a position is a slot during one interval, and its scope grows inside $\{0,\dots,\singlebd(\sigma)-1\}$), or ($\gamma$) removes a pair from $E$ (a removed pair never returns). \Cref{app:single:esc}.
+\end{proof}
+
+First-order targets already give $\singleEsc(\DT;N)\ge N+1$ ($N\ge5$), via $S^k0=0$, $S^ka=0$, $S^{k-1}0=0$, \dots, $0=0$, $0=S0$, $\neg(0=0)$ with $k=N-3$. The quadratic term is real:
+
+\begin{proposition}[Quadratic escalations]\label{prop:single:quadratic}\status{proved; computed}\src{single Prop F.8}
+Let $d_1=\forall y_1\dots\forall y_m(0=0\wedge\dots\wedge0=0)$ with $m$ atoms, $d_2$ the same with every left-hand side replaced by a parameter $a$, and $q_{j,k}$ ($j\le m$, $k<m$) the same with the $j$-th left-hand side replaced by the bound variable of index $k$.
+(i) In the order $d_1,d_2,q_{1,0},\dots,q_{1,m-1},q_{2,0},\dots,q_{m,m-1}$, each sentence lies outside the acceptance set of its predecessors (it violates a Scope feature). All have size $5m-1$. Hence $2+\lfloor(N+1)/5\rfloor^2\le\singleEsc(\DT;N)\le2N^2+1$ for $N\ge4$: $\singleEsc(\DT;N)=\Theta(N^2)$.
+(ii) $\Ind(d_1),\Ind(d_2),\Ind(q_{j,k})$, in the same order, are instances of $T_{\Ind}$ of size $20m+1$, and each lies outside the acceptance set of its predecessors.
+\end{proposition}
+
+\noindent The earlier analysis conjectured (``C11'') that escalations are at most \emph{linear} in the size of the first escalated datum. By (ii), $1+m^2$ escalations follow a first datum of size $n=20m+1$, which exceeds $c\,n$ once $m>20c+1$. So \emph{C11 is false}: for $\DT$, for the class with nested arguments (whose acceptance sets are smaller), for the universal template and for the induction target. The refutation is asymptotic (for $m=2,\dots,5$ the counts $5,10,17,26$ are below $n=41,\dots,101$). The quadratic bound holds and is tight. Its quadratic part comes from scope growth, which needs deep binder nesting:
+
+\begin{proposition}[Binder-free data]\label{prop:single:binderfree}\status{proved; computed}\src{single Prop F.9}
+For a chain as in \Cref{thm:single:esc}, at most $n-1$ steps of kind ($\gamma$) remove a pair whose source has empty scope. If $d$ has no binder, $m-1\le2n-1$; on binder-free sentences $N+1\le\singleEsc\le2N$ ($N\ge5$).
+\end{proposition}
+
+\begin{conjecture}[Equation kills are linear]\label{conj:single:kill}\status{conjecture}\src{single Conj.~F.7}
+The number of ($\gamma$)-steps is $O(n)$; hence $\singleEsc(\DT;N)=O(N(1+\singlebd_{\max}))$ for binder depth $\le\singlebd_{\max}$.
+\end{conjecture}
+
+\noindent The evidence is weak: greedy adversarial searches found at most about $1.4m$ kill steps on $m\le12$ slots, but they also missed the scope-growth chains of \Cref{prop:single:quadratic}. Surviving equations need not form an equivalence relation; they compose like a preorder and obey a triangle rule (\Cref{lem:single:triangle}, suggested by the referee), and chains of preorders on $m$ points can have length of order $m^2$.
+
+% =====================================================================
+\subsection{Finite elasticity and unions}\label{sec:single:unions}
+
+A class has \emph{finite elasticity} if there are no infinite $w_0,w_1,\dots$ and members $L_1,L_2,\dots$ with $\{w_0,\dots,w_{n-1}\}\subseteq L_n\not\ni w_n$ for all $n$ \citep{wright1989identification,motoki1991correct}. Let $H_k(\DT)=\{\bigcup_{l\le k}\inst(T_l):T_l\in\DT\}$ and $\Acc_k(D)=\bigcap\{U\in H_k(\DT):D\subseteq U\}$.
+
+\begin{corollary}[Elasticity and unions]\label{cor:single:unions}\status{proved; known}\src{single Cor F.2--F.4, Prop F.3}
+(i) $\{\inst(T):T\in\DT\}$ has finite elasticity (an elastic sequence is an escalation chain, bounded by \Cref{thm:single:esc}), but not finite thickness: $\forall x(0=0)\wedge(0=0)$ is an instance of $\forall xP(x)\wedge P(t)$ for every closed $t$, and these instance sets differ.
+(ii) Finite elasticity survives unions of at most $k$ members \citep{wright1989identification,motoki1991correct}. So $H_k(\DT)$ has finite elasticity, every target in it has a finite anchor \citep{claude2026whatfollows}, and the cautious verifier over $H_k(\DT)$ is sound at all times and exact from some finite time on, on every text.
+(iii) With a $k$-ary relation symbol, a unary function symbol and a constant, $\singleEsc(H_k(\DT);N)\ge\lfloor(N-1)/k\rfloor^k$; over $=,+,S,0$, $\singleEsc(H_k(\DT);N)\ge(\lfloor(N-1)/k\rfloor-1)^k$ for $N\ge2k+1$, already for one target.
+\end{corollary}
+
+For an explicit condition, let the target be $\bigcup_{i\le k'}\inst(T^*_i)$, $k'\le k$, $T^*_i\in\DT$, and $\Theta_i=\{\theta:T^*_i\theta\in D\}$. Let $\singleFail(T^*)$ consist of the failure sets of the three events: $\{\theta:\singleroot((T^*\theta)|_\sigma)=h\}$, $\{\theta:z_m\notin\theta(M)\}$, and $\{\theta:(T^*\theta)|_r=((T^*\theta)|_\sigma)[\bar u]\}$ for non-valid $(\sigma,r)$.
+
+\begin{proposition}[Explicit untagged anchors]\label{prop:single:untagged-anchor}\status{proved; computed}\src{single Prop F.5}
+If for each $i$ the set $\Theta_i$ is nonempty and not covered by $k$ members of $\singleFail(T^*_i)$, then $D$ is an anchor for the union in $H_k(\DT)$. For a ground $T^*_i$ (a single axiom) $\singleFail(T^*_i)=\emptyset$, and the condition says that the axiom itself is a datum.
+\end{proposition}
+
+\noindent \emph{Proof idea:} a covering $k$-union splits each $\Theta_i$ into at most $k$ nonempty parts; if no part were an anchor, each would lie in a failure set (``if'' half of \Cref{thm:single:anchor}), so some part is an anchor (\Cref{app:single:unions}). Nonemptiness was missing in the first version and matters for ZFC's single axioms: with target $\inst(T_{\Ind})\cup\{\Ext\}$ and $k=2$, the union verifier rejects Extensionality until it is a datum. For one formula metavariable, $\singleFail$ reduces to ``all roots equal $f$'' and ``argument $m$ unused'', the failure family of the earlier untagged PA analysis (\Cref{sec:many}).
+
+\begin{proposition}[The union verifier]\label{prop:single:union-verifier}\status{proved; computed}\src{single Prop F.6}
+$q\in\Acc_k(D)$ iff every partition of $D$ into at most $k$ nonempty blocks has a block $B$ with $q\in\Acc(B)$. So $\Acc_k$ is decidable in time (number of such partitions)$\times$poly.
+\end{proposition}
+
+\noindent \Cref{sec:many} shows that this is polynomial for $k\le2$ but coNP-complete for each fixed $k\ge3$. On unlabelled data from PA induction and $\in$-induction (three instances each), $k=1$ accepts the false $(0=0\wedge\forall x(x=x\to Sx=Sx))\to\forall x\,x=0$, while $k=2,3$ accept all five fresh instances tried and reject it and two other non-instances (reproduced by the referee).\src{single e9}
+
+% =====================================================================
+\subsection{Complexity of the version space}\label{sec:single:complexity}
+
+Matching and generality are linear, $\Acc(D)$ is polynomial (\Cref{cor:single:poly}), and whether $D$ is an anchor for a \emph{given} $T^*$ is polynomial (at most $|\Occ(T^*)|\,|T^*|$ pairs, each decided by forcing). But $\Min(D)$ itself can be huge:
+
+\begin{proposition}[Exponentially many minimal templates]\label{prop:single:blowup}\status{proved; computed}\src{single Prop G.2}
+Let $C_n$ be the conjunction of $n$ copies of $0=0$ and $D_n=\{\forall x(x=x)\wedge C_n,\ \forall x(0=0)\wedge C_n\}$, of total size $8n+8$. Then $|\Min(D_n)|=4^n$ (each of the $2n$ zeros of $C_n$ may be rigid or a derived occurrence $f(0)$), while $\Acc(D_n)=D_n$.
+\end{proposition}
+
+\begin{proposition}[Existence of an lgg]\label{prop:single:lgg}\status{proved; computed}\src{single Prop G.3}
+$D$ has a least covering template iff (i) no Eq-feature of $D$ has $r\in C(D)$, and (ii) in the graph on $\singleslots(D)$ with an edge $\sigma\to r$ for each slot-to-slot Eq-feature, every weakly connected component $K$ has a \emph{source} $s$ with $s\to x$ for all $x\in K\setminus\{s\}$. Then the lgg is $C(D)$ with $M_K(Y_s)$ at each source $s$ and $M_K(\bar u_{s,x})$ at the other slots $x$ of $K$, where $\bar u_{s,x}$ is the forced map.
+\end{proposition}
+
+\begin{corollary}[An anchor determines its template]\label{cor:single:anchor-lgg}\status{proved; computed}\src{single Cor G.4}
+Under \Rich, if $D$ is an anchor for $\inst(T^*)$ in $\DT$, then $T^*$ is the least covering template of $D$ (up to renaming), and \Cref{prop:single:lgg} computes it in polynomial time.
+\end{corollary}
+
+\noindent So $\Min(D)$ cannot be output in polynomial time and the verifier must not enumerate it; but existence of an lgg is decided, and the lgg computed, in polynomial time, and an anchor always has one. This extends the earlier result ``$T_{\Ind}$ is the lgg of every induction anchor'' to all of $\DT$. Before an anchor the version space need not have a least element (\Cref{ex:single:c82}). The referee's brute force agreed with \Cref{prop:single:lgg} on all $115$ decided random cases, and in all $63$ anchor cases the lgg was the target. Proofs in \Cref{app:single:complexity}.
+
+% =====================================================================
+\subsection{Summary, caveats and open problems}\label{sec:single:summary}
+
+For one target in $\DT$, positive data suffice and checking is cheap: the verifier is sound from the first datum, a polynomial feature test, exact after two well-chosen instances for PA induction and every ZF schema, and fails with exponentially small probability on random data. What one template does not give cheaply is bounded escalation (quadratic in the data size) and, for unions, more than the existence of anchors. \Cref{tab:single:summary} collects the results.
+
+\begin{table}[t]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.26\textwidth}X@{}}
+\toprule
+result & content\\
+\midrule
+\Cref{thm:single:min} & every covering template lies above a minimal one; $\Min(D)$ finite; one minimal template lies below the target (earlier C8.3: true for $\DT$, false with nested arguments)\\
+\Cref{ex:single:c82} & $4$ minimal templates for $\{\Ind(x=x),\Ind(0=x)\}$ (earlier count $8$ corrected)\\
+\Cref{thm:single:feat}, \Cref{cor:single:poly} & $\Acc(D)=\Feat(D)$, decided in polynomial time\\
+\Cref{thm:single:anchor}, \Cref{cor:single:special} & anchor iff \evRs, \evN, \evU\ (``only if'' under \Rich); first-order: \evR+\evD; one formula metavariable: \evR+\evN\\
+\Cref{prop:single:weaker} & weaker candidate events fail; \Rich\ cannot be dropped\\
+\Cref{thm:single:rates}, \Cref{prop:single:kappa} & exponential tails for one template and for tagged data; ground targets included\\
+\Cref{thm:single:esc}, \Cref{prop:single:quadratic,prop:single:binderfree} & $\singleEsc(\DT;N)=\Theta(N^2)$; earlier C11 (linear) refuted; $\le2N$ without binders\\
+\Cref{conj:single:kill} & equation kills linear (conjecture)\\
+\Cref{cor:single:unions}, \Cref{prop:single:untagged-anchor,prop:single:union-verifier} & finite elasticity, infinite thickness; unions have anchors, explicit ones; union verifier via partitions\\
+\Cref{prop:single:blowup,prop:single:lgg}, \Cref{cor:single:anchor-lgg} & $|\Min(D)|$ up to $4^n$; lgg existence polynomial; an anchor's lgg is the target\\
+\bottomrule
+\end{tabularx}
+\caption{Results of \Cref{sec:single}. All are proved except \Cref{conj:single:kill} (conjecture) and \Cref{ex:single:c82} (computed); \Cref{cor:single:unions}(ii) uses known results. All were also checked by computation, most also by an independent referee implementation (\Cref{app:single:computations}).}
+\label{tab:single:summary}
+\end{table}
+
+\paragraph{Caveats.} (1) The ``only if'' half of \Cref{thm:single:anchor} needs \Rich, which always holds with parameters. (2) Minimality is with respect to $\gen$; whether $\inst(T)\supseteq\inst(T')$ implies $T\gen T'$ in $\DT$ is open, and not needed, since the verifier and the anchor theorem concern instance sets. (3) Parameters are constants: data sharing a parameter at one place give templates that mention it, which is sound but not renaming-invariant; the implementation aligns parameters (\Cref{sec:setting,sec:exp}). (4) A ground axiom is its own anchor, but in unions it is learned only if it is a datum. (5) \Cref{prop:single:kappa,prop:single:binderfree}, \Cref{lem:single:triangle} and the remark on \Rich\ were added after the referee report; their proofs were checked again for this paper and by computation, but not by the independent referee.
+
+\paragraph{Open problems.} The anchor condition without \Rich; \Cref{conj:single:kill}; polynomial-delay enumeration and counting of $\Min(D)$; size-bounded subclasses of $\DT$ (in the earlier induction analysis, templates of size $\le11$ make the cautious verifier accept a false induction-shaped sentence after any anchor, size $12$ suffices for soundness\src{prior induction C6.2}); lower bounds for the coincidence terms with infinite support.
