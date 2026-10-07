@@ -1,0 +1,43 @@
+@Nat.rec : {motive : Nat → Sort u_1} → motive Nat.zero → ((n : Nat) → motive n → motive n.succ) → (t : Nat) → motive t
+@Nat.recAux : {motive : Nat → Sort u_1} → motive 0 → ((n : Nat) → motive n → motive (n + 1)) → (t : Nat) → motive t
+theorem t2 : ∀ (m n : Nat),
+  @Eq Nat (@HAdd.hAdd Nat Nat Nat (@instHAdd Nat instAddNat) m n)
+    (@HAdd.hAdd Nat Nat Nat (@instHAdd Nat instAddNat) n m) :=
+fun m n =>
+  @Nat.recAux
+    (fun n =>
+      @Eq Nat (@HAdd.hAdd Nat Nat Nat (@instHAdd Nat instAddNat) m n)
+        (@HAdd.hAdd Nat Nat Nat (@instHAdd Nat instAddNat) n m))
+    (@of_eq_true
+      (@Eq Nat m
+        (@HAdd.hAdd Nat Nat Nat (@instHAdd Nat instAddNat) (@OfNat.ofNat Nat (nat_lit 0) (instOfNatNat (nat_lit 0))) m))
+      (@Eq.trans Prop
+        (@Eq Nat m
+          (@HAdd.hAdd Nat Nat Nat (@instHAdd Nat instAddNat) (@OfNat.ofNat Nat (nat_lit 0) (instOfNatNat (nat_lit 0)))
+            m))
+        (@Eq Nat m m) True
+        (@congrArg Nat Prop
+          (@HAdd.hAdd Nat Nat Nat (@instHAdd Nat instAddNat) (@OfNat.ofNat Nat (nat_lit 0) (instOfNatNat (nat_lit 0)))
+            m)
+          m (@Eq Nat m) (Nat.zero_add m))
+        (@eq_self Nat m)))
+    (fun k ih =>
+      @Decidable.byContradiction
+        (@Eq Nat
+          (@HAdd.hAdd Nat Nat Nat (@instHAdd Nat instAddNat) m
+            (@HAdd.hAdd Nat Nat Nat (@instHAdd Nat instAddNat) k
+              (@OfNat.ofNat Nat (nat_lit 1) (instOfNatNat (nat_lit 1)))))
+          (@HAdd.hAdd Nat Nat Nat (@instHAdd Nat instAddNat)
+            (@HAdd.hAdd Nat Nat Nat (@instHAdd Nat instAddNat) k
+              (@OfNat.ofNat Nat (nat_lit 1) (instOfNatNat (nat_lit 1))))
+            m))
+        (instDecidableEqNat
+          (@HAdd.hAdd Nat Nat Nat (@instHAdd Nat instAddNat) m
+            (@HAdd.hAdd Nat Nat Nat (@instHAdd Nat instAddNat) k
+              (@OfNat.ofNat Nat (nat_lit 1) (instOfNatNat (nat_lit 1)))))
+          (@HAdd.hAdd Nat Nat Nat (@instHAdd Nat instAddNat)
+            (@HAdd.hAdd Nat Nat Nat (@instHAdd Nat instAddNat) k
+              (@OfNat.ofNat Nat (nat_lit 1) (instOfNatNat (nat_lit 1))))
+            m))
+        fun a => t2._proof_1_1 m k a)
+    n

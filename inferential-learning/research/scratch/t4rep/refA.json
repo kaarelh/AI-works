@@ -1,0 +1,130 @@
+{
+  "file": "/home/user/AI-works/inferential-learning/research/theory/T4-informal-math-latent-formalization.md",
+  "items_checked": [
+   "Formal model definitions (§1.1-1.4, Def 1.1, Assumption BG, channels P/C/O, §2.1 consistency / VS_t, Def 2.1)",
+   "Lemma 2.2 (argument soundness)",
+   "Prop 2.3 (equivocation / Cauchy sum theorem)",
+   "Thm 2.4 (deterministic soundness)",
+   "Thm 2.5 (time-uniform soundness, class prior) + Remark 'gauge redundancy helps'",
+   "Prop 2.6 (resource-bounded checking) [in §2, checked as a bonus]",
+   "Thm 2.7 (escalation costs)",
+   "Prop 2.8 (expansion makes the verifier complete)",
+   "Def 3.1 and Prop 3.2 (no learner sees past the shadow) [checked because Thm 3.4(b) uses it]",
+   "Lemma 3.3 (informal completeness)",
+   "Thm 3.4(a)-(c)",
+   "Thm 3.4(d) (bounded-gap data)",
+   "Prop 3.5 (transfer / ontology unidentifiable)",
+   "Prop 3.6 (eps-delta vs IST)",
+   "Prop 3.7 (Benacerraf)",
+   "Re-ran T4-checks/run_all.sh (all scripts run; none of them cover §§1-3)",
+   "New brute-force scripts: scratchpad/thm34d.py, thm34d_full.py (Thm 3.4(d)) and l33.py (Lemma 3.3, Thm 3.4(a),(c); 1500 random propositional instances)"
+  ],
+  "issues": [
+   {
+    "item": "Thm 3.4(d) (bounded-gap data: survivor characterization)",
+    "severity": "fatal",
+    "description": "The claim that the eventual survivors are exactly the h in U* with St^g_h ⊇ St^g_{h*} is false. Bounded-gap practice data plus complete object data never refute a rival whose informal consequence relation is strictly weaker than h*'s on D*, provided it still contains every g-short step of h*. Such a rival is not in U*, yet it survives forever. The proof's 'Case 2 is unchanged' is where it breaks: in (c), Case 2 relied on ⊨_{h*} ⊆ ⊨_h on D*, which came from the failure of Case 1 under a complete closure-level presentation. In (d), the failure of Case 1 gives only St^g_{h*} ⊆ St^g_h. The second half of (d) is still true: the accepted relation equals St^g_{h*}, because h* survives and every survivor contains St^g_{h*}. The commentary 'a hypothesis that makes the same inferences in coarser steps is never excluded' is therefore incomplete: rivals with strictly fewer valid inferences (a different meaning) are never excluded either. So with realistic bounded-gap data (BG2), ≈ is NOT identified. Only St^g_{h*} is identified. This undercuts §3.5 item 2 ('verification depends on nothing else, Thms 2.4 and 3.4(c,d)') and §3.5 4(b), and it is misused in Prop 3.6.",
+    "evidence": "Counterexample. Language: 0-ary predicates p0..p3 (a propositional fragment of FOL), one context. D* = occurrences read as p0, ¬p0, p3, ¬p3, with ∼ toggling, so D* is negation-closed. h*: T* = {p0→p1, p1→p2, p2→p3}, and R* = a one-step tautological-consequence library plus the 0-premise axiom steps ⊢τ for τ in T*. h: same L and ρ, T_h = ∅, R_h = the tautology library. Both are first-order complete. For g ≤ 3, an R*-derivation with ≤ g applications uses ≤ g−1 < 3 chain axioms, and any proper subset of the chain has only tautological consequences on {p0, p3}. So St^g_{h*} = St^g_h on D*. But ({p0}⇒p3) ∈ ⊨_{h*} \\ ⊨_h, so h ∉ U*. Mod(T*) ⊆ Mod(∅) gives V_{h*} ⊆ V_h, so no object datum refutes h. Every A that is coherent for h* is coherent for h. So h survives. The script /tmp/claude-0/-home-user-AI-works/c4435474-536f-5a96-a73c-7d0c5ea93659/scratchpad/thm34d.py finds 7 (target, rival) mismatches for each of g=1,2,3 and 0 for g=4. When p1 and p2 are also readable (thm34d_full.py), it finds 0 mismatches.",
+    "suggested_fix": "Correct the statement to: survivors = {h : St^g_h ⊇ St^g_{h*} and ⊨_h|_{D*} ⊆ ⊨_{h*}}. Coherence on 𝒜 is then automatic, and the proof is Case 1 for St^g plus the Case-2 argument, which never used ⊨_{h*} ⊆ ⊨_h. Alternatively, add the hypothesis that h* is step-expressive on D* (every ⊨_{h*}-step on D* is a chain of St^g_{h*}-steps through D*). Then St^g_h ⊇ St^g_{h*} implies ⊨_h ⊇ ⊨_{h*} on D* by cut-closure (Lemma 2.2), and the original characterization holds; the script confirms this. Update the 'What (d) says' paragraph, §3.5 item 2 and 4(b), and Prop 3.6 to match."
+   },
+   {
+    "item": "Prop 3.6 (ε-δ versus IST) [cited; sketch]",
+    "severity": "major",
+    "description": "(1) The sketch's key step ('the reduction algorithm IS a contextual reading into ZFC, so h_W ≈_D h_IST') does not hold for literal infinitesimal talk. Nelson's reduction algorithm yields IST ⊢ ∀^st t (A(t) ↔ B(t)) only for standard values of the parameters. Leibnizian lines ('let dx be infinitesimal; then ...') and arbitrary contextual objects ('let f be continuous') introduce parameters that IST does not prove standard. For such occurrences, ρ_IST and any ZFC reading are not IST-provably equivalent, so ≈_D is not established. (2) The final bullet misapplies Thm 3.4(d) in the wrong direction. (d) protects rivals with COARSER g-step relations (supersets). If infinitesimal proofs are shorter, then St^g_{IST} contains steps that are not in St^g_W, and noise-free bounded-gap Leibnizian data refute h_W outright by Case 1. That data is decisive against h_W as a hypothesis, though not against its ≈-class.",
+    "evidence": "(1) Take an unlimited N and the contextual f(x)=Nx. f is ε-δ continuous at 0, but under the literal IST reading ∀x(x≃0 → f(x)≃f(0)) it fails at x=1/N. The two readings agree only when f is standard. (2) By Thm 3.4(d) Case 1, any s ∈ St^g_{h*} \\ St^g_h refutes h. With h* = h_IST and h = h_W, the premise 'infinitesimal proofs are plausibly shorter' says exactly that such an s exists.",
+    "suggested_fix": "Specify that ρ_IST reads every contextual constant with an st(·) assumption, and folds infinitesimal suppositions into bound variables, e.g. (c, ξ) ↦ ∀dx(dx≃0 ∧ dx≠0 → ξ). Then IST conservativity plus transfer give the ≈_D claim on that domain. Restrict D accordingly. Replace 'never decisive against h_W' with: 'decisive against h_W as a granularity hypothesis, but h_W and h_IST lie in the same ≈-class, so the identified meaning is unaffected.'"
+   },
+   {
+    "item": "Lemma 3.3 (informal completeness)",
+    "severity": "minor",
+    "description": "(a) Clause (iii) as written ('A ⊭_h y for some y') is false whenever X ⊋ D_h, which is the typical case for a partial ρ. Any y outside D_h makes the step invalid by the domain clause, whatever A is. (b) The gloss 'So ⊨_h, V_h and the coherence data determine one another' overclaims in two ways. V_h = ∅ (T_h inconsistent) does not determine D_h, and so does not determine ⊨_h. Coherence on a fixed family 𝒜 of designated contexts cannot determine ⊨_h. (c) Novelty: §0 and §8 list this lemma among 'the parts with real mathematical content'. It is a direct corollary of Lindenbaum/compactness plus Gödel completeness: the classical-negation-respecting bivaluations closed under a first-order consequence relation are exactly the model-induced valuations. That is standard. Parts (i) and (ii) and the proofs are otherwise correct.",
+    "evidence": "(a) Take A={x, ∼x} with x ∈ D_h, so A is incoherent, and take any y0 ∈ X \\ D_h. Then A ⊭_h y0. (b) h1 and h2 with inconsistent T and D_{h1} ≠ D_{h2} both have V = ∅ but different ⊨. Brute force (scratchpad/l33.py; 1500 random propositional instances with random partial negation-closed readings, including inconsistent T) found 0 failures for (i), and 0 for (iii) once y is restricted to D_h.",
+    "suggested_fix": "Write (iii) as 'iff A ⊭_h y for some y ∈ D_h'. Weaken the gloss to '⊨_h determines V_h and coherence; V_h determines ⊨_h when V_h ≠ ∅'. Describe the lemma as a standard corollary of completeness and compactness rather than new content."
+   },
+   {
+    "item": "Thm 3.4(a)-(c)",
+    "severity": "minor",
+    "description": "The statements are correct, and I verified the proofs line by line, including the step in (c) that U* is never refuted by object data when D_h ⊋ D*. Three precision gaps remain. (a) needs D_h ≠ ∅, a hypothesis of Lemma 3.3 that Thm 3.4 does not restate. (b) uses the closure-level (≡_∞) analogue of Prop 3.2, which is stated only for ≡_g with St^g-labelled oracles. (c) is information-theoretic, not effective. In Case 1, refuting h requires certifying s ∉ ⊨_h, which is co-r.e. and not semi-decidable for, e.g., T_h = ZFC. So 'survivors after finitely many data' is not computable, unlike the budgeted VS_t of §2.1. Also, the 'conservative verifier' in (c) must be a closure-level V^∞, since V^g accepts only g-steps.",
+    "evidence": "(a) h1 = (consistent T, empty ρ) and h2 = (inconsistent T, empty ρ) have ⊨ = ∅ for both, but V_{h1} = {∅-function} and V_{h2} = ∅, so h1 ≈ h2 but not h1 ≡_∞ h2. (c) Random brute force (scratchpad/l33.py, 1500 instances) found 0 failures of 'survivors = U*' or of (a).",
+    "suggested_fix": "Add D_h ≠ ∅. State Prop 3.2 for g = ∞ explicitly. Note that (c) describes the ideal version space (refutation by non-derivability is not semi-decidable), and name the verifier V^∞."
+   },
+   {
+    "item": "Thm 2.5 and the Remark 'gauge redundancy helps' (also §0 item 1)",
+    "severity": "minor",
+    "description": "The theorem and its proof are correct. The Ville supermartingale argument carries over from T1 Thm 4.2. Deterministic object, paradox and oracle data contribute indicator likelihood ratios ≤ 1. Shadow-measurability gives w_t([h*]) = W*/Z_t. The accompanying claims overstate what W* counts. W* is the prior mass of the ≡_g class: formalizations with identical St^g, V and coherence. It is not the mass of the meaning (≈) class. The Remark lists 'equivalent axiomatizations' and 'ε-δ or infinitesimal readings' as contributing. Equivalent axiomatizations generally change derivation lengths and hence St^g. Prop 3.6 explicitly declines to claim that the ε-δ and infinitesimal readings have equal g-step relations. §0's 'redundant formalizations of the same meaning help' is therefore misleading.",
+    "evidence": "Def 3.1: ≡_g requires St^g_h = St^g_{h'}. Prop 3.6, 2nd bullet: 'Whether the g-step relations also coincide is not claimed.' Under Lemma 3.3, ≡_g ⊆ ≈, usually strictly.",
+    "suggested_fix": "Restrict the Remark to formalizations with the same g-shadow (e.g. renamings). Alternatively, state that the ≈-class mass matters only for a closure-level verifier."
+   },
+   {
+    "item": "Thm 2.7 (escalation costs)",
+    "severity": "minor",
+    "description": "(a) and (b) are correct. In (a), escalated honest steps form an elastic chain because VS_t ⊆ {h : St^g_h ⊇ earlier positives}, and el ≤ |H^g| − 1 ≤ |H/≡_g| − 1. In (b), T1 Thm 4.4 carries over with Z_t ≥ W*. Two problems remain. (1) Part (c) says both bounds are 'tight up to the constants of T1', but its proof cites only T1 Thm 3.9, which concerns (a). For (b), T1 Cor 4.5 gives a lower bound of (1−δ')(1/W*−1) against an upper bound of ln(1/(W*δ''))/(W*δ'). The gap is a factor of about ln(1/W*)/δ', not a constant. (2) Def 2.1 allows ESC = 'ask the prover to expand'. That produces no label and shrinks no version space, so such escalations are unbounded. The bounds hold only for oracle-answered escalations.",
+    "evidence": "With uniform prior on the single-culprit class (W* = 1/n) and δ = W*δ', the upper bound is about n·ln(n/δ'')/δ' and the lower bound about (1−δ')(n−1).",
+    "suggested_fix": "Say that (b) is tight up to a factor ln(1/W*)/δ' (T1 Cor 4.5), and count only escalations answered by the oracle."
+   },
+   {
+    "item": "Formal model definitions (§1, §2.1, Def 2.1)",
+    "severity": "minor",
+    "description": "(1) §1.3 says 'Larger steps, those h*-valid but not g-valid, also occur' in practice. §2.1 checks practice data against St^g_h, so a single larger human step refutes h* even at η = 0. Thms 2.4 and 2.5 implicitly need every practice datum to be in St^g_{h*}, or need larger steps modelled as noise in the likelihood. (2) 'The size bound makes St^g_h decidable' also needs ρ_h computable with decidable domain, decidable R_h (a decidable library), and a treatment of languages with infinitely many symbols. (3) ρ_h A, the paradox definition and 'coherent on A' are undefined when A ⊄ dom ρ_h, yet Def 3.1 compares coherence across hypotheses with different domains. (4) §2.1 says VS_t is computable for enumerable H. But for infinite VS_t, the unanimity test in Def 2.1 is a Π1 condition and asks for infinitely many certificates, so V^g_t is not computable.",
+    "evidence": "(1) §1.3 last paragraph versus §2.1 bullet 1 and the proof of Thm 2.4, bullet 1. (4) Def 2.1: 'g-valid under every h ∈ VS_t, with a certificate for each'.",
+    "suggested_fix": "State that (P) contains only St^g_{h*} steps (larger human steps are routed to expansion or treated as noise). List the effectivity assumptions. Fix a convention for A ⊄ dom ρ_h. Restrict computability claims to finite H, or to the Bayesian version with finite truncation (Prop 2.6)."
+   },
+   {
+    "item": "Lemma 2.2 (argument soundness)",
+    "severity": "minor",
+    "description": "The proof is correct. Cl_R is monotone and idempotent, and soundness lifts to the closure. There is one precision gap: the conclusion 'ρ_h(y_j) ∈ Cl(ρ_h Prem α)' is undefined for a premise line outside dom ρ_h. The same edge case carries into Thm 2.4's 'conclusion is h*-valid', because ⊨_{h*} requires Prem ∪ {y_m} ⊆ D*. The lemma is standard, cf. T1 Lemma 1.1.",
+    "evidence": "Take α with an unused premise y ∉ dom ρ_h. All inference and link lines are valid, but ρ_h(y) is undefined and (Prem ⇒ y_m) ∉ ⊨_h by the domain clause.",
+    "suggested_fix": "Assume Prem α ⊆ dom ρ_h, or state the claim for lines in dom ρ_h only."
+   },
+   {
+    "item": "Prop 3.5 (transfer: ontology unidentifiable)",
+    "severity": "minor",
+    "description": "The general proposition and its proof are correct: R sound for M transfers to M' via elementary equivalence, and V depends only on complete theories. The instance does not satisfy the stated hypothesis. V(ℝ) and *V(ℝ) are not elementarily equivalent in the full first-order ∈-language with standard constants. Robinson's transfer (Łoś for bounded ultrapowers) covers only bounded formulas with standard parameters. Moreover, if R contains any unbounded sentence true in V(ℝ) but false in *V(ℝ), then R is unsound for M' and h' is not a latent formalization.",
+    "evidence": "ψ := ∀n∈ℕ ∃s ('s is a function on {0..n} with s(0)=ℝ, s(k+1)=s(k)∪P(s(k))'). ψ holds in V(ℝ). It fails in *V(ℝ): an internal s ∈ *V_M satisfies the defining condition iff it satisfies its V_M-bounded version, and transfer of the bounded truth 'every such s ∈ V_M has n ≤ M' shows that no internal sequence has nonstandard length.",
+    "suggested_fix": "Replace the hypothesis with: 'M and M' agree on every sentence in ρ(dom ρ), and R is sound for both'. In the example, take R = FOL + bounded axioms true in V(ℝ), so transfer gives soundness for *V(ℝ)."
+   },
+   {
+    "item": "Prop 3.2 (no learner sees past the shadow)",
+    "severity": "minor",
+    "description": "The proposition is labelled [proved, TOSU], but no proof is written. The claim also needs assumptions that are not stated: the law of the object presentation (which objects and occurrences are shown) must be a function of V_{h*}; escalation and link oracles must label by St^g_{h*}, not ⊨_{h*}; and a separate closure-level (≡_∞) version is needed for Thm 3.4(b).",
+    "evidence": "§3.1 assumes shadow-measurability only for practice data. Object data are said to be 'restrictions of members of V_{h*}', with no statement about their distribution.",
+    "suggested_fix": "State the assumptions and give the two-line proof by induction on the history."
+   },
+   {
+    "item": "Prop 2.3 commentary and §2.1 historical remarks",
+    "severity": "minor",
+    "description": "The proposition and its counterexample are correct. Link 3 (pointwise ⇒ uniform) is the invalid item, and the square-wave Fourier series is a valid countermodel to {1,2}⇒6. The historical glosses are loose. Seidel (1847) and Stokes (1847) diagnosed 'arbitrarily/infinitely slow convergence'. They did not name 'uniform convergence'; that term is due to Gudermann and Weierstrass. Abel's 1826 counterexample was the sawtooth series Σ(−1)^{n+1} sin(nx)/n; the text does not claim otherwise. In §2.1, Frege's 1903 'way out' was shown inconsistent by Leśniewski in 1938 (reported by Sobociński 1949), before Quine's 1955 paper. '52 years' counts only from Quine. I am confident of this but did not re-verify it this session.",
+    "evidence": "§2.3 text: \"Seidel's and Stokes's 1847 diagnosis ('uniform convergence')\". §2.1: \"Frege's 1903 'way out' ... for 52 years\".",
+    "suggested_fix": "Rephrase as 'Seidel's and Stokes's 1847 diagnosis (non-uniform, \"infinitely slow\" convergence)', and as 'refuted by Leśniewski (1938; Sobociński 1949) and Quine (1955)'."
+   },
+   {
+    "item": "Thm 2.4 (deterministic soundness)",
+    "severity": "ok",
+    "description": "Verified. With noise-free data, h* is never refuted. Practice and oracle labels are St^g_{h*}. The promise ⊥ ∉ Cl_{R*}(ρ*A) rules out paradoxes for h*. Object data extend to V_{h*}. Budgeted checks are sound. Hence h* ∈ VS_t, and unanimity implies g-validity under h*. The only caveats are the inherited Lemma 2.2 domain edge case and the 'larger steps in practice' modelling point listed under the formal model.",
+    "evidence": "Line-by-line check of the proof.",
+    "suggested_fix": "None beyond those noted."
+   },
+   {
+    "item": "Prop 2.6 (resource-bounded checking)",
+    "severity": "ok",
+    "description": "Verified. Requiring certificates shrinks the accepted set, and treating untruncated hypotheses as rejecting only increases the computed rejecting mass. Soundness is preserved.",
+    "evidence": "Monotonicity of the acceptance criteria.",
+    "suggested_fix": "None."
+   },
+   {
+    "item": "Prop 2.8 (expansion completeness)",
+    "severity": "ok",
+    "description": "Verified, given its hypotheses. Step-expressiveness turns a finite R*-derivation into a chain of 1-steps. Survivors that agree on St^1 accept each 1-step and each identical-reading link (0 applications). The hypothesis can be weakened to ∩_{VS_t} St^1_h ⊇ St^1_{h*}, which Thm 3.4(d) delivers at g = 1, since its accepted-relation half is correct. The step-expressiveness hypothesis carries the content.",
+    "evidence": "Direct check.",
+    "suggested_fix": "Optionally use the weaker hypothesis."
+   },
+   {
+    "item": "Prop 3.7 (Benacerraf)",
+    "severity": "ok",
+    "description": "Verified. ZF proves that both numeral systems are Dedekind–Peano systems. The recursion-defined isomorphism preserves the recursive + and ×. Transport along it gives ZF ⊢ ρ_vN(x) ↔ ρ_Z(x) for closed arithmetic sentences, hence equal ⊨ on D_ar. The arithmetic of '1∈3' is right: Zermelo 3 = {{{∅}}} ∌ {∅}. One small point: for occurrences with contextual constants, the two readings are not provably equivalent sentence by sentence, but the consequence relations still coincide via ∀-closure and transport.",
+    "evidence": "Standard set theory; checked the numeral computation.",
+    "suggested_fix": "None needed. Optionally restrict D_ar to closed sentences, or note the transport argument."
+   }
+  ],
+  "overall": "One claim in Sections 1-3 is false. Thm 3.4(d) says that, with bounded-gap practice data and complete object data, the survivors are exactly the h in U* with St^g_h ⊇ St^g_{h*}. In fact, rivals whose informal consequence relation on D* is strictly WEAKER than h*'s also survive forever, as long as they contain h*'s g-short steps. A 4-atom propositional counterexample is verified by brute force (scratchpad/thm34d.py). The accepted relation still equals St^g_{h*}, so the 'verifier converges to h*'s g-step relation' claim survives. But meaning (≈) is not identified from bounded-gap data unless h* is step-expressive on D* (verified: with that added, there are no mismatches). This propagates to §3.5 items 2 and 4(b) and to Prop 3.6. Prop 3.6 (a labelled sketch) has two further problems. Its reduction-algorithm argument does not cover nonstandard parameters, which is exactly the literal infinitesimal talk it is about. It also applies Thm 3.4(d) in the wrong direction: shorter IST steps would refute h_W. Everything else checks out: Lemma 2.2, Prop 2.3, Thm 2.4, Thm 2.5, Thm 2.7(a,b), Prop 2.8, Lemma 3.3(i,ii), Thm 3.4(a-c), the general Prop 3.5 and Prop 3.7. Random brute force over 1500 propositional instances found no failures of Lemma 3.3 or Thm 3.4(a,c). There are minor precision issues: Lemma 3.3(iii) needs y ∈ D_h; Prop 3.5's nonstandard-analysis instance does not satisfy its elementary-equivalence hypothesis; the claimed tightness of Thm 2.7(b) is off by a factor of about ln(1/W*)/δ'; the gauge-redundancy remark credits ε-δ/IST readings to W* although they are not ≡_g-equivalent; and the model has gaps around larger steps in practice, effectivity, and the domain of ρ. Lemma 3.3 is a standard corollary of completeness, so calling it real mathematical content overstates its novelty. The existing T4-checks scripts run cleanly but do not cover §§1-3."
+}

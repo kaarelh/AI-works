@@ -36,6 +36,10 @@ A standalone follow-up to `../inferential-learning/` (the report *What Follows f
 | `research/tracks/` | the four research records, referee reports and scripts |
 | `research/prior/` | earlier refereed work on PA induction and untagged PA |
 | `research/paper-review/` | whole-paper review reports, issue lists, editor decisions, final check |
+| `research/conversation.md` | the questions asked in the session and the answers given, from the original request to this paper |
+| `research/prior/pa-answer/` | findings and scripts from checking the answers on Peano arithmetic |
+| `research/scratch/` | unreviewed working scripts and outputs: track checks, reruns, editing helpers, and the v1 code that produced `code/results_v1/` |
+| `research/workflows/` | the orchestration scripts that ran the research, writing, review and editing agents |
 
 ## Building and reproducing
 

@@ -1,0 +1,178 @@
+{
+  "file": "/home/user/AI-works/inferential-learning/research/theory/T4-informal-math-latent-formalization.md",
+  "items_checked": [
+   "Lemma 4.1 (descent along false lines), lines 373-391",
+   "Definition 4.2 (correction game) and the 'Availability' paragraph, lines 395-402",
+   "Theorem 4.3 (a),(b) (objects: logarithmic), lines 404-414",
+   "Theorem 4.4(a) (bag upper bound via el*), lines 417, 429",
+   "Theorem 4.4(b) (single-culprit class: M_obj=1, M_bag^(r)=min(r,n-1)), lines 418-443",
+   "Theorem 4.4(c) (chain/sorites paradox lower bound n-1 and the single-object descent), lines 421-446",
+   "Computed-values table and random-class claims after Thm 4.4 (244/32, 295, smallest counterexample, antichain remark), lines 448-457",
+   "Theorem 4.5 (super-majority learner, ln(1/w)/ln(1+1/r) <= (r+1)ln|H|), lines 461-469",
+   "Proposition 4.6 (product classes, linear dependence on r), lines 471-482",
+   "Paragraph after Prop 4.6: Theta~(r log|H|), Sabato-Tishby comparison, 'settles TC4' claim, line 484",
+   "Conjecture M_bag^(r) <= r*M_obj and its computational evidence (bag_size_conjecture.py), line 484",
+   "'Relation to T2' and 'Moral' paragraphs, lines 486-488",
+   "Proposition 4.7 (free barring nullifies objects; MDL charge), lines 498-500",
+   "Theorem 5.1 (a)-(e) abstract repair theorem, lines 510-533",
+   "Comprehension toy menu classification (positive/stratified/sep-form) and hypothesis class R, lines 539-563",
+   "Facts F1-F6, lines 565-580",
+   "Theorem 5.2 (i)-(iv) incl. selection-by-coverage claims, lines 582-591",
+   "Historical reading of the toy (Cantor diagonal = ZR, NF/Cantor, Zermelo 1908, Holmes, Specker), lines 593-598",
+   "Proposition 5.4 (2^aleph0 maximal consistent sets of NC instances), lines 604-616",
+   "Incurvati-Murzi / McGee citation and consequences (a),(b), lines 618-622",
+   "Section 5.4 remarks (Replacement, Frege's way out dates), lines 624-628",
+   "Re-ran all T4-checks scripts relevant to Sections 4-5 (bag_vs_object_game, bag_vs_elasticity, bag_product, bag_size_conjecture, comprehension_toy); all outputs reproduce the table values",
+   "Independent C/C++ exact minimax solver written from scratch: reproduced single-culprit (n<=7), k-culprit, product (b,k) in {(2,2),(3,2),(2,3),(4,2),(2,4)} values; brute-force check of super-majority learner against Thm 4.5 bound"
+  ],
+  "issues": [
+   {
+    "item": "Theorem 5.2(iv), first bullet ('Dedekind-Cantor operations only'), and the remark 'Only NC is shortest and STRAT is shorter than Z matter below' (lines 563, 587)",
+    "severity": "major",
+    "description": "As written the bullet is false. It says that for any support ⊆ {INT, UNI, PAIR, DIFF, EMP}, coverage plus ℓ selects STRAT. But when the support is a proper subset, POS or SEP can cover everything too, and the stated ordering ℓ(POS) < ℓ(SEP) < ℓ(STRAT) then picks one of them. The bullet's own justification ('POS misses DIFF and EMP') quietly assumes DIFF and EMP carry positive weight. So the remark that only two ℓ-comparisons matter is also false over the stated range: ℓ(POS) < ℓ(STRAT) and ℓ(SEP) < ℓ(STRAT) decide the outcome for such supports. The same problem affects the second bullet if 'add ZR' is read with '⊆' (support {ZR, INT, DIFF} selects SEP). The summary's line 'Dedekind–Cantor set operations alone select the stratified repair' inherits the error: a purely positive Dedekind-style practice (∩, ∪, pairs) selects POS (positive set theory), not NF.",
+    "evidence": "Using the paper's own learner (T4-checks/comprehension_toy.learner with refuted={'NC'}): support {INT,UNI} -> POS; {INT,UNI,PAIR} -> POS; {INT,DIFF} -> SEP; {ZR,INT,DIFF} -> SEP. Only the full support {INT,UNI,PAIR,DIFF,EMP} -> STRAT. By hand: STRAT is selected iff support ∩ {DIFF,EMP} ≠ ∅ (so POS misses something) and support ∩ {UNI,PAIR,EMP} ≠ ∅ (so SEP misses something).",
+    "suggested_fix": "Replace '⊆' with '=' (all five operations used with positive weight), or state the exact condition: support ⊆ {INT,UNI,PAIR,DIFF,EMP}, support ∩ {DIFF,EMP} ≠ ∅ and support ∩ {UNI,PAIR,EMP} ≠ ∅. Say the same for the ZR stage ('support ⊇ the full Dedekind–Cantor set plus ZR'). Delete or correct 'Only ... matter below', and adjust the summary sentence."
+   },
+   {
+    "item": "Theorem 4.3(a) (and the object game in general): novelty and citation",
+    "severity": "minor",
+    "description": "The object game is exactly Angluin's equivalence-query model with arbitrary (improper) hypotheses, in which a counterexample is any element of A Δ h*. Equivalently it is Littlestone's mistake-bound model. Its optimal value is known: M_obj(H) = Ldim(H) (Littlestone 1988). The ⌊log2|H|⌋ and log2(1/w(h*)) bounds are the classical (weighted) halving algorithm (Barzdin–Freivalds 1972; Littlestone 1988; Angluin 1988). The theorem is correct, but it is marked [proved] with no citation, and the paper misses the exact characterization, which also sharpens the conjecture to 'M_bag^(r) ≤ r·Ldim(H)'.",
+    "evidence": "My independent solver computed M_obj and the Littlestone dimension on 693 random classes (|S| ≤ 6, |H| ≤ 10) and found M_obj = Ldim in every case. Prop 4.6's M_obj = k is Ldim additivity over products on disjoint domains.",
+    "suggested_fix": "Cite halving and Littlestone 1988, and state M_obj(H) = Ldim(H). Restate Thm 4.3(a) as Ldim(H) ≤ ⌊log2|H|⌋ and the conjecture as M_bag^(r)(H) ≤ r·Ldim(H)."
+   },
+   {
+    "item": "Theorem 4.4(a)",
+    "severity": "minor",
+    "description": "The statement and proof are correct, but 'min{el*(H), |H|−1}' is redundant. el* ≤ |H|−1 always holds, because every link of an elastic chain removes at least one hypothesis from the version space while the target survives. T2.7(a) itself states this inequality.",
+    "evidence": "An elastic chain s_1..s_m needs s_i ∉ ∩VS({s_<i}), so some h ∈ VS({s_<i}) lacks s_i and is removed. Hence m ≤ |H|−1. On the 295 classes of bag_vs_elasticity.py (seed 7), my solver found M_bag ≤ el* in every case and min(el*, |H|−1) = el* in every case.",
+    "suggested_fix": "Write M_bag^(r)(H) ≤ el*(H) (≤ |H|−1)."
+   },
+   {
+    "item": "Theorem 4.4(b)",
+    "severity": "ok",
+    "description": "Verified. The lower-bound recursion f(c) = c−1 for c ≤ r and f(c) = min(1+f(r), 1+f(c−1)) = r for c > r is right. The upper-bound strategy (announce S while |C| > r, then announce S∖{b_c}) works: every feedback deletes h_c.",
+    "evidence": "The independent exact minimax gives M_obj(H_n) = 1 and M_bag^(r)(H_n) = min(r, n−1) for all n ≤ 7 and all r ≤ n. This matches the paper's table and bag_vs_object_game.py output.",
+    "suggested_fix": "None."
+   },
+   {
+    "item": "Theorem 4.4(c) (chain paradox)",
+    "severity": "minor",
+    "description": "The mathematics is correct: under the valuation p_i = [i < j], h_j is coherent on A; no proper subset of the b_i yields ⊥; the bag S deletes nothing; and the unique u ∈ V_{h_j*} with u(q_0)=1, u(q_n)=0 is p_i = [i < j*], so descent stops at b_{j*}. The illustrative reading is backwards, though. With q_k = 'a pile of k grains is a heap', the designated context A = {q_0, ∼q_n} asserts that 0 grains form a heap and n grains do not, which no community designates.",
+    "evidence": "Line 422: q_k is 'a pile of k grains is a heap', b_i = (q_{i−1} ⇒ q_i), and A = {q_0, ∼q_n}.",
+    "suggested_fix": "Take q_k = 'a pile of N−k grains is a heap', or use the steps ∼q_{i−1} ⇒ ∼q_i with A = {∼q_0, q_n}."
+   },
+   {
+    "item": "Claims after the table: '244 random classes ... M_obj < M_bag in 32' and 'Bags ... are worthless on antichains such as H_n' (line 457)",
+    "severity": "minor",
+    "description": "(1) The cited script (bag_vs_elasticity.py) produces neither figure. It tests 295 classes, not 244, never checks M_obj ≤ M_bag ≤ min(el*, |H|−1), and does not count M_obj < M_bag. On those 295 classes the true count of M_obj < M_bag is 43. The same paragraph then cites 295 classes for the same script. (2) The general remark that bags are worthless on antichains is false.",
+    "evidence": "(1) I re-ran the seed-7 class generation with my solver: 295 classes, 43 with M_obj < M_bag, 0 violations of M_bag ≤ el*, 195 with M_bag = el* (the last figure matches the text). (2) H = {{1},{0,3},{0,4}} (masks [2,9,17], |S|=5) is an antichain with M_bag = 1 < el* = 2, confirmed with the project's own solve() and elasticity(). The learner announces {0}: target {1} gives (+)1 or bag {0}, target {0,3} gives (+)3, target {0,4} gives (+)4, and each identifies the target. Out of 2121 random antichains, 177 have M_bag < el*.",
+    "suggested_fix": "Report the figures the script actually produces, or add the script that produces 244/32, and add the asserted inequality chain to it. Change the antichain sentence to 'they are worthless on H_n (and on some other antichains)'."
+   },
+   {
+    "item": "Theorem 4.5",
+    "severity": "ok",
+    "description": "The proof is correct. Each s ∈ A_t is missed by weight < w(VS)/(r+1). A bag of ≤ r such steps leaves weight < r/(r+1)·w(VS). A (+) item leaves ≤ r/(r+1)·w(VS). Also ln(1+1/r) ≥ 1/(r+1). One small type mismatch: the left side M_bag^(r)(H) is a minimax over all targets, while the right side depends on h*.",
+    "evidence": "I brute-forced the worst case of the super-majority learner itself against an adaptive adversary on about 300 random classes (|S| ≤ 5, r = 1, 2, 3). It always stayed within ln|H|/ln(1+1/r) (maximum ratio 1.0), and its feedback was never uninformative.",
+    "suggested_fix": "Phrase it as: 'the super-majority learner makes at most ln(1/w(h*))/ln(1+1/r) corrections on target h*; hence M_bag^(r)(H) ≤ (r+1)ln|H|'."
+   },
+   {
+    "item": "Proposition 4.6",
+    "severity": "minor",
+    "description": "The statement is correct, but the proof has small gaps. (i) The object strategy 'accept everything' fails as worded: announcing S every round lets the environment name the same culprit forever. The learner must reject culprits already identified. (ii) The lower bound M_obj ≥ k is never argued. (iii) The environment case analysis for the bag lower bound skips two cases: a block with ≥ 2 candidates whose candidates are all rejected, and rejection of known-valid steps. It also needs a potential argument rather than 'exactly as in the one-block game'.",
+    "evidence": "Exact values from my solver: (b,k) = (4,2): M_bag^(r) = 2, 4, 6, 6, 6 for r = 1..5; (2,4): 4 for r = 1, 2, 3; plus the paper's (2,2), (3,2), (2,3). All equal k·min(r, b−1), and M_obj = k. The missing arguments: for M_obj ≥ k, the adversary always answers inside one unresolved block, so each correction resolves at most one block. For the bags, use Φ = Σ_blocks min(r, |C_X|−1). It starts at k·min(r, b−1) and drops by at most 1 per correction, since (+) removes one candidate and a size-r bag takes |C_X| > r to r. The learner cannot finish while Φ > 0.",
+    "suggested_fix": "Write 'accept every step not yet refuted', add the one-line adversary argument for M_obj ≥ k, and replace the case list with the potential Φ."
+   },
+   {
+    "item": "Claim 'This settles the open part of L8's TC4 for finite classes' (line 484)",
+    "severity": "minor",
+    "description": "This overstates the result. L8 TC4 asks for a mistake bound in terms of the Littlestone dimension and log r. T4 shows that no Ldim·polylog(r) bound exists (products give M_bag ≥ r·Ldim), and it gives an upper bound in terms of ln|H|. Whether any bound f(r)·Ldim(H), independent of |H|, holds is exactly the open conjecture. Since Ldim can be far below log|H| (for example, the singletons class has Ldim 1 and log|H| = log n), the ln|H| upper bound does not settle the Ldim question. The novelty of the Θ̃(r) price is also uncertain: it may relate to known Littlestone-dimension bounds for k-fold aggregations (I believe Ghazi–Golowich–Kumar–Manurangsi 2021 is one source, but this is unverified).",
+    "evidence": "Line 484 next to L8 lines 586-590 ('A mistake bound in terms of the Littlestone dimension of the instance class and log r would be the right result').",
+    "suggested_fix": "Say 'refutes the expected log r form (lower bound r·Ldim on products) and gives an O(r log|H|) upper bound; an Ldim-based upper bound is the open conjecture below'. Mark novelty as uncertain."
+   },
+   {
+    "item": "Conjecture M_bag^(r) ≤ r·M_obj (line 484) and its evidence",
+    "severity": "ok",
+    "description": "The conjecture is honestly labelled and its evidence reproduces: 519 pairs, maximum ratio 1.0. My much stronger search found no counterexample. One small imprecision: 'equality on single-culprit and product classes' holds only for r ≤ n−1 (respectively r ≤ b−1). For larger r, M_bag^(r)(H_n) = n−1 < r. The case M_obj = 1 can actually be proved: then some A makes the sets AΔh pairwise disjoint. Announcing A, a size-≤r bag leaves at most r candidates, after which one-at-a-time elimination costs at most r−1. When |H| ≤ r, elimination alone costs at most r−1. So M_bag^(r) ≤ r.",
+    "evidence": "Searches, all with zero violations: (1) Exhaustive over all 65,519 classes with |S| = 4 and r = 2, 3, 4: 196,557 pairs, 434 equalities. Exhaustive over all classes with |S| = 3: 494 pairs. (2) About 4.69M random (class, r) pairs with |S| ∈ {4,5,6} and |H| ≤ 13. (3) Hill-climbing that maximizes M_bag − r·M_obj (|S| = 5..8, |H| ≤ 13, r = 2, 3): the maximum is exactly 0. (4) k-culprit classes, where the bound is tight. K(8,2), r=3: M_bag = 6 = 3·2. K(10,2) and K(11,2), r=4: 8 = 4·2. K(9,2), r=3: 6. K(7,3) and K(8,3), r=2: 4 and 5, both ≤ 6.",
+    "suggested_fix": "Restate as M_bag^(r) ≤ r·Ldim(H). Add the proved M_obj = 1 case, the exhaustive |S| = 4 evidence, and tightness on 2-culprit classes. Qualify the 'equality' remark with r ≤ n−1 (respectively r ≤ b−1)."
+   },
+   {
+    "item": "Definition 4.2 / 'Availability' paragraph (lines 398-402)",
+    "severity": "minor",
+    "description": "(1) The bag channel is implicitly taken to be always available. Whenever A_t ⊋ h*, the environment may return the singleton bag {s} for s ∈ A_t∖h*, so the game assumes every accepted invalid step is refutable by some paradox. Coherence data do not provide this in general: coherent-but-wrong hypotheses exist, as T2 and §3 note. The paper discusses availability for objects but not the analogous condition for bags. Without it, the bounds are bounds on corrections, not on unsound rounds. The super-majority learner of Thm 4.5 can then stay silently unsound forever with zero corrections. (2) The claim that object-completeness 'holds for propositional and finite-model-property fragments' is false when H = H^g. Steps that are h*-valid but not g-valid lie in A_t∖St^g_{h*} and have no countermodel.",
+    "evidence": "Line 398 allows any B ⊆ A_t with |B| ≤ r and B ⊄ h*, so |B| = 1 is always legal. Line 395 sets H = H^g, and line 402 asserts object-completeness for propositional/FMP fragments.",
+    "suggested_fix": "Add a 'bag-availability (refutability)' caveat next to object-completeness. State object-completeness relative to ⊨_{h*}, or assume St^g_{h*} = ⊨_{h*} on the relevant steps. Note that the correction bounds still hold for the restricted real environment, because restricting the environment only lowers the worst case."
+   },
+   {
+    "item": "'Moral' paragraph (line 488)",
+    "severity": "minor",
+    "description": "The claim that the sorites-type uninformativeness 'explains why the paradoxes of set theory (Russell, Burali-Forti) did not by themselves select a repair (§5)' contradicts §5's own analysis. At the level of comprehension instances, Russell's paradox is a size-1 bag ({Comp(R)}, the 4-line derivation of F1), which is as informative as an object. In §5, non-selection comes from several incomparable maximal coherent uniform restrictions (Thm 5.1(e), 5.2(iii)). That would persist even with perfect instance-level blame.",
+    "evidence": "F1 (line 566) uses only Comp(R). Thm 5.2(iii) traces non-uniqueness to POS, STRAT and Z being pairwise jointly incoherent, not to bag size.",
+    "suggested_fix": "Rephrase: paradoxes in set theory localized blame well at the instance level; what they could not do is choose the generalization (the uniform restriction), which needed coverage, as §5 shows. Keep the sorites as the example of uninformative blame."
+   },
+   {
+    "item": "Proposition 4.7",
+    "severity": "minor",
+    "description": "This is TOSU and essentially correct, but the first sentence is loosely quantified. 'The learner may discard object data at no cost' does not by itself make objects worthless: a learner allowed to bar may simply decline to, and the Thm 4.3 bounds then still hold. The intended statement is about a selection criterion, such as an MDL score, that charges nothing for barring, so barring is never penalized. The cost clause tacitly assumes h* never needs to bar, i.e. objects are truthful, which is in tension with the motivation 'objects not independently certified'.",
+    "evidence": "Lines 498-500.",
+    "suggested_fix": "Say: 'If the learner's selection criterion assigns zero cost to barring (equivalently, an adversarially-chosen learner may bar), object data impose no constraint...'. State the truthful-objects assumption explicitly in the MDL clause."
+   },
+   {
+    "item": "Theorem 5.1",
+    "severity": "minor",
+    "description": "Correct and trivial, as the paper says. Small precision gaps: MDL_t's argmin should range over c ∈ R. In (d), the convergence w_t/‖w_t‖_1 → w_∞ must be in ℓ1, or w_∞ must be a probability vector. Members of R are typically infinite sets of instances, so with mere pointwise convergence and escaping mass, the normalized coverages need not converge to cov_∞.",
+    "evidence": "Lines 518 and 525.",
+    "suggested_fix": "Write argmin_{c∈R}, and require ℓ1 convergence (by Scheffé's lemma, pointwise convergence to a probability vector is enough)."
+   },
+   {
+    "item": "Facts F1-F6 and the menu classification",
+    "severity": "ok",
+    "description": "All verified by hand. F1: the Russell instance. F2: the one-point model u∈u makes every positive formula true. F3: FinCof(ℕ) is a Boolean algebra containing ℕ, ∅ and finite pairs, and is closed under ∩, ∪, ∖ and complement; the coding e is bijective, giving comprehension and Extensionality. F4: HF is closed under separation, ∅, pairs and binary unions. F5: {V, ZR} gives Russell's set via a := universe, and {S, CMP} gives it via a := {x : x∈x}. F6: the stated witnesses (with S ∈ POS∖Z for POS ⊄ Z). The positive/stratified/sep-form columns are right: x∈x is unstratifiable, and PAIR and CMP are stratified. The script's finite-model sanity checks agree.",
+    "evidence": "comprehension_toy.py Part A: no model of size ≤ 3 for any claimed-inconsistent set. Part B reproduces the coverage table: 13/18/9/18, 14/19/12/21, 17/22/12/21.",
+    "suggested_fix": "None."
+   },
+   {
+    "item": "Theorem 5.2 (i)-(iii) and bullets 2-3 of (iv) with full supports",
+    "severity": "ok",
+    "description": "(i) holds because ℓ(NC) is stipulated minimal. (ii) holds with budget 4 (F1), and t_0 = k(NC). (iii) The coherent members of R are POS, STRAT, SEP and Z; SEP ⊊ Z, and POS, STRAT and Z are pairwise incomparable, so these three are exactly the maximal ones, pairwise jointly incoherent. (iv) With support = Dedekind–Cantor set ∪ {ZR}, only Z covers everything. Adding V gives cov(Z) − cov(STRAT) = w(ZR) − w(V). POS never strictly beats STRAT, because POS ∩ support ⊆ STRAT. SEP ⊆ Z never beats Z. So 'Z iff w(ZR) > w(V)' is right, with ties going to STRAT by ℓ.",
+    "evidence": "Hand computation, confirmed by comprehension_toy.py stages 3-4 (Z for w(ZR)=3 > w(V)=1, STRAT for w(V)=4 > w(ZR)=3).",
+    "suggested_fix": "None beyond the '⊆' issue reported separately."
+   },
+   {
+    "item": "Toy modelling choices: ZR as 'Cantor's diagonal set' and the stipulated ℓ ordering (lines 552, 563, 588, 594-596)",
+    "severity": "minor",
+    "description": "(1) ZR = {x∈a : x∉x} is Zermelo's 1908 set. Cantor's 1891 diagonal set is {x∈a : x∉f(x)}, a different separation instance with a function parameter. NF proves the stratified variant {x∈a : x∉f({x})}, which gives |USC(X)| < |P(X)|. So 'practice that already contains diagonal arguments selects Separation' identifies Cantor's diagonal practice with ZR-instances, and that is a modelling stretch the text does not flag. (2) The outcome 'Dedekind–Cantor practice selects STRAT' rests entirely on the stipulation ℓ(STRAT) < ℓ(Z). The justification 'Z is a uniform condition plus three named extra instances' is one encoding choice among several. The historical moral 'simplicity would have favoured NF' therefore restates the chosen ℓ rather than deriving anything.",
+    "evidence": "Line 552 labels ZR as 'Cantor's diagonal set / Zermelo 1908'. Line 563 stipulates the ℓ order.",
+    "suggested_fix": "Label ZR as 'Zermelo's 1908 subset (the diagonal set for f = id)'. Note that Cantor-style diagonal sets with a function parameter are a richer menu item. Flag the STRAT-vs-Z outcome under Dedekind–Cantor practice as ℓ-dependent."
+   },
+   {
+    "item": "Proposition 5.4",
+    "severity": "ok",
+    "description": "Verified. J(q) ∧ q ⊢ ⊥ via the Russell set, so I_A decides every p_n, and A ≠ B makes I_A ∪ I_B inconsistent. M_A satisfies p_n iff n ∈ A for n ≥ 1, since the a_n have exactly n distinct empty elements and the e_i have none. Every instance in I_A defines the empty class, witnessed by e_0. Finite character plus Zorn gives distinct, pairwise incompatible maximal extensions J_A, all containing Comp(x≠x). (M_A violates Extensionality, which the statement does not require. With A ⊆ ℕ_{≥2} and Zermelo numerals in place of the e_i, one gets an extensional, well-founded model, so the result survives with Extensionality as background.)",
+    "evidence": "Hand check. comprehension_toy.py also finds small models for Comp(R∧p) and Comp(R∧¬p) separately and none for both, consistent with step 1.",
+    "suggested_fix": "Optionally note 'exactly 2^ℵ0' (countably many instances), and that the proof works over pure logic."
+   },
+   {
+    "item": "Consequences drawn from Incurvati–Murzi after Prop 5.4 (lines 61, 618-622)",
+    "severity": "minor",
+    "description": "(b) 'no computable learner can even output a single maximal one' is true only when 'output' means outputting an r.e. index or axiomatization. A maximal consistent set of instances can be built greedily from a 0′ oracle for consistency (consistency is Π1), so some are Δ2. By Shoenfield's limit lemma, a computable learner can therefore converge pointwise in the limit to a maximal consistent set, much as REP_t-style budgeted learners do. The summary (line 61) also drops the 'under minimal assumptions' qualifier of the Incurvati–Murzi result. The citation itself (Mind 126(502):371-384, 2017; generalizing McGee 1992) matches my recollection.",
+    "evidence": "The greedy construction: enumerate the instances and add each one if the set stays consistent. Each check needs one 0′ query, so the resulting maximal set is ≤_T 0′.",
+    "suggested_fix": "Say 'no computable learner can output a recursive axiomatization (r.e. index) of a maximal one, though Δ2 limit approximations exist'. Restore 'under minimal assumptions' in the summary."
+   },
+   {
+    "item": "Section 5.4 remark 'Frege's way out lasted 1903–1955' (line 628; also line 153)",
+    "severity": "minor",
+    "description": "This is historically imprecise. Leśniewski showed in 1938 that Frege's way out is inconsistent for domains with at least two objects; Sobociński reported it in 1949. Quine's 1955 Mind paper (64:145-159) was a later, independent treatment. The '52 years' figure is therefore an overstatement. The point being made, that coherence of the selected repair is uncertified, is unaffected.",
+    "evidence": "Sobociński (1949), 'L'analyse de l'antinomie russellienne par Leśniewski', Methodos 1–2. This is from memory, so treat the exact volume and pages as unverified.",
+    "suggested_fix": "Write 'until Leśniewski (1938; published by Sobociński 1949) and independently Quine (1955)'."
+   },
+   {
+    "item": "Lemma 4.1 (descent)",
+    "severity": "ok",
+    "description": "Correct. The walk from the false conclusion always moves to a strictly earlier false line, never stops at a premise, and stops at an inference with all antecedents true or at a link with a true source. It uses ≤ depth moves and ≤ Σ fan-in evaluations. h-admissibility (v ⊆ v_M∘ρ_h with M ∈ 𝕄_h) together with soundness of R_h makes the blamed item ⊨_h-invalid, which also covers links, since link validity ⊆ ⊨_h. Inferences with Γ = ∅ are handled vacuously. The 'new' points (descent ending at a link) are modest reframings of Shapiro-style contradiction backtracing, but they are not wrong.",
+    "evidence": "Line-by-line check of lines 379-385.",
+    "suggested_fix": "None needed. Optionally soften 'Two points are new here'."
+   }
+  ],
+  "overall": "I found no false statement among the main mathematical results of Sections 4–5. Lemma 4.1, Theorems 4.3, 4.4(a–c) (including the chain-paradox lower bound n−1), Theorem 4.5, Proposition 4.6, Theorem 5.1, Facts F1–F6, Theorem 5.2(i)–(iii) and Proposition 5.4 all check out line by line. I confirmed them with an exact minimax solver written from scratch (C/C++), separate from the project's scripts. It reproduces every table value and the product values for (b,k) up to (4,2) and (2,4), and the super-majority learner stays within the Thm 4.5 bound under brute-force adversaries. The project's own check scripts re-run cleanly and reproduce the stated tables.\n\n**One real defect (major, local fix).** Thm 5.2(iv), first bullet, is false as written. With support ⊆ {INT, UNI, PAIR, DIFF, EMP}, the learner selects POS for {INT, UNI} and SEP for {INT, DIFF}; only the full support selects STRAT. The paper's own learner function shows this. The remark that only two ℓ-comparisons matter is also wrong.\n\n**The conjecture M_bag^(r) ≤ r·M_obj** survives a much stronger search with no counterexample: exhaustive over all classes on |S| ≤ 4, about 4.7M random pairs, hill-climbing on |S| ≤ 8, and k-culprit classes up to n = 11. It is tight on 2-culprit classes as well as on single-culprit and product classes. The case M_obj = 1 is provable. Since M_obj equals the Littlestone dimension exactly, Thm 4.3 is the classical halving/Littlestone result and should be cited; the conjecture is best restated as M_bag^(r) ≤ r·Ldim.\n\n**Minor issues:**\n- The provenance numbers \"244 / 32\" are not produced by the cited script; it gives 295 classes and 43.\n- The claim that bags are worthless on antichains is false; the antichain {{1},{0,3},{0,4}} is a counterexample.\n- \"Settles TC4\" overstates the result, because the Ldim-based upper bound remains open.\n- Bag-availability is implicit in Def 4.2, and object-completeness is misstated relative to St^g.\n- The \"Moral\" paragraph contradicts §5: Russell's paradox is a size-1 bag.\n- The proof of Prop 4.6 has small gaps.\n- The sorites example is indexed backwards.\n- The toy models ZR as Cantor's diagonal set and stipulates the ℓ ordering on which the STRAT-vs-Z outcome rests.\n- The claim that no computable learner can output a maximal set needs a qualifier, because Δ2 limit approximations exist.\n- The dates for Frege's way out are off: Leśniewski showed it inconsistent in 1938.\n\nScripts used: /tmp/claude-0/-home-user-AI-works/c4435474-536f-5a96-a73c-7d0c5ea93659/scratchpad/g/{game.c, game64.cpp, exh.c, drv.py, t1–t11.py}."
+}

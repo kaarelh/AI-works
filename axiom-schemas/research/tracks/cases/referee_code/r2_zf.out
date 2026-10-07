@@ -1,0 +1,68 @@
+(1) Thm B1 criterion: argument tuples per P-occurrence
+   Sep    named [('x', 'z')]                             FO-named True  | dB [(0, 2)]                     FO-dB True
+   SepJ   named [('u',)]                                 FO-named True  | dB [(0,)]                       FO-dB True
+   EInd   named [('y',), ('x',), ('x',)]                 FO-named False | dB [(0,), (0,), (0,)]           FO-dB True
+   Coll   named [('x', 'y', 'A'), ('x', 'y', 'A')]       FO-named True  | dB [(1, 0, 2), (1, 0, 3)]       FO-dB False
+   ReplU  named [('x', 'y', 'A'), ('x', 'y', 'A')]       FO-named True  | dB [(1, 0, 2), (1, 0, 3)]       FO-dB False
+   ReplS  named [('x', 'y', 'A'), ('x', 'u', 'A'), ('x', 'y', 'A')] FO-named False | dB [(1, 0, 2), (2, 0, 3), (1, 0, 3)] FO-dB False
+   ReplJ  named [('x', 'y'), ('x', 'u'), ('x', 'y')]     FO-named False | dB [(2, 1), (2, 0), (0, 1)]     FO-dB False
+
+(2) Prop B2: blocks of the FO lgg on random body pairs with (R) vs prediction
+   Sep    pairs with (R): 336  agree named 336  dB 336
+   SepJ   pairs with (R): 353  agree named 353  dB 353
+   EInd   pairs with (R): 339  agree named 339  dB 339
+   Coll   pairs with (R): 338  agree named 338  dB 338
+   ReplU  pairs with (R): 344  agree named 344  dB 344
+   ReplS  pairs with (R): 352  agree named 352  dB 352
+   ReplJ  pairs with (R): 355  agree named 355  dB 355
+
+(3) Sec. 2.4 false instances: instance of the (guarded) FO lgg, not a schema instance
+   EInd F1 [data x=x, ~x in a]        named blocks [(0,), (1, 2)]         inst-of-lgg True  guards-ok True  schema-instance False closed True
+   ReplJ [x in y, ~x=a] A:=y=y,B:=~u=u named blocks [(0, 2), (1,)]         inst-of-lgg True  guards-ok True  schema-instance False closed True
+   ReplJ dB A1:=bot,A2:=bot,A3:=y=y   db    blocks [(0,), (1,), (2,)]     inst-of-lgg True  guards-ok True  schema-instance False closed True
+   Coll dB [y=x, ~x=A] A1:=y=y, A2:=bot db    blocks [(0,), (1,)]           inst-of-lgg True  guards-ok True  schema-instance False closed True
+   ReplU dB A1:=y=x, A2:=bot          db    blocks [(0,), (1,)]           inst-of-lgg True  guards-ok True  schema-instance False closed True
+   ReplS dB A1:=y=x, A2:=bot, A3:=bot db    blocks [(0,), (1,), (2,)]     inst-of-lgg True  guards-ok True  schema-instance False closed True
+   guard violations (instance of the unguarded lgg, rejected by the learned guards):
+   Sep Russell [x in z, ~x=a]         named blocks [(0,)]                 inst-of-lgg True  guards-ok False schema-instance False closed True
+   Sep Russell dB                     db    blocks [(0,)]                 inst-of-lgg True  guards-ok False schema-instance False closed True
+   Coll named capture y=Y             named blocks [(0, 1)]               inst-of-lgg True  guards-ok False schema-instance False closed False
+   Coll dB tied [y=x, ~x in y]        db    blocks [(0, 1)]               inst-of-lgg True  guards-ok True  schema-instance True  closed True
+   Coll dB index-capture  #0=#2 :  inst-of-lgg True  guards-ok False  learned loose set {0, 1}
+
+(4) Thm B1 only-if witness s3 (top at one block, bot elsewhere) for every non-FO case
+   EInd   named blocks [(0,), (1, 2)]       s3 inst-of-lgg True guards-ok True schema-instance False
+   Coll   db    blocks [(0,), (1,)]         s3 inst-of-lgg True guards-ok True schema-instance False
+   ReplU  db    blocks [(0,), (1,)]         s3 inst-of-lgg True guards-ok True schema-instance False
+   ReplS  named blocks [(0, 2), (1,)]       s3 inst-of-lgg True guards-ok True schema-instance False
+   ReplS  db    blocks [(0,), (1,), (2,)]   s3 inst-of-lgg True guards-ok True schema-instance False
+   ReplJ  named blocks [(0, 2), (1,)]       s3 inst-of-lgg True guards-ok True schema-instance False
+   ReplJ  db    blocks [(0,), (1,), (2,)]   s3 inst-of-lgg True guards-ok True schema-instance False
+
+(5) Prop C3: named ReplS, data with (R) and N_y
+   ReplS named [y=x, ~x=A] B2:=bot    named blocks [(0, 2), (1,)]         inst-of-lgg True  guards-ok True  schema-instance False closed True
+   learned fresh-guards per metavariable: {('?', 'A0'): ['Y', 'u'], ('?', 'A1'): ['Y', 'y']}
+
+(6) Prop D1(b): learned guards == target guards  <=>  (N_x and N_z) for Sep; (N_x,N_y,N_A) for Coll/ReplU
+   Sep    pairs 519 agree 519
+   Coll   pairs 508 agree 508
+   ReplU  pairs 510 agree 510
+
+(7) Thm C2 deep-leaf: uniqueness along the path; pure-logic check of the case analysis on all
+    membership structures of size <= 3 (necessary condition for the hand proof)
+   EInd   named n=1 leaf depth 10  path subterms unique: True  prefixes 10, with a top/bot making s[q<-v] |= target: 10 []
+   ReplJ  named n=1 leaf depth  9  path subterms unique: True  prefixes  9, with a top/bot making s[q<-v] |= target:  9 []
+   ReplJ  db    n=1 leaf depth  9  path subterms unique: True  prefixes  9, with a top/bot making s[q<-v] |= target:  9 []
+   Coll   db    n=1 leaf depth 11  path subterms unique: True  prefixes 11, with a top/bot making s[q<-v] |= target: 11 []
+   ReplU  db    n=1 leaf depth 11  path subterms unique: True  prefixes 11, with a top/bot making s[q<-v] |= target: 11 []
+   ReplS  db    n=1 leaf depth 11  path subterms unique: True  prefixes 11, with a top/bot making s[q<-v] |= target: 11 []
+   EInd   named n=2 leaf depth 12  path subterms unique: True  prefixes 12, with a top/bot making s[q<-v] |= target: 12 []
+   ReplJ  named n=2 leaf depth 11  path subterms unique: True  prefixes 11, with a top/bot making s[q<-v] |= target: 11 []
+   ReplJ  db    n=2 leaf depth 11  path subterms unique: True  prefixes 11, with a top/bot making s[q<-v] |= target: 11 []
+   Coll   db    n=2 leaf depth 13  path subterms unique: True  prefixes 13, with a top/bot making s[q<-v] |= target: 13 []
+   ReplU  db    n=2 leaf depth 13  path subterms unique: True  prefixes 13, with a top/bot making s[q<-v] |= target: 13 []
+   ReplS  db    n=2 leaf depth 13  path subterms unique: True  prefixes 13, with a top/bot making s[q<-v] |= target: 13 []
+
+real	0m5.008s
+user	0m4.909s
+sys	0m0.004s

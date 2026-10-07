@@ -76,9 +76,16 @@ On the philosophical side, every learning signal is one-sided. Principled justif
 | `research/theory/` | theory documents T1–T7 with their check scripts |
 | `research/verification/` | adversarial verification records |
 | `research/paper-review/` | whole-paper review reports and issue lists |
+| `research/scratch/` | unreviewed working scripts and outputs from the theory and verification rounds, some cited by name in `research/verification/`; see its README |
+| `research/workflows/` | the orchestration scripts that ran the research, verification, writing and review agents |
+| `web/what-follows.html` | the results web page, as a standalone HTML file |
 
 ## Building
 
 * Paper: `cd paper && ./build.sh` (needs TeX Live with `latexmk`-style tools; `pdflatex` and `bibtex` are enough).
 * Lean: `cd lean && lake exe cache get && lake build`. See `lean/README.md` for building without the Mathlib cache.
 * Code: `cd code && python -m pytest -q && ./run_all_quick.sh`.
+
+## Follow-up
+
+The questions asked after this report, about Peano arithmetic, rules versus axioms, Gold's theorem and learning the induction schema, and the answers given, are in [`../axiom-schemas/research/conversation.md`](../axiom-schemas/research/conversation.md). They led to the standalone paper in [`../axiom-schemas/`](../axiom-schemas/).
