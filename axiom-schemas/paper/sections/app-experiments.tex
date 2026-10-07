@@ -1,0 +1,205 @@
+\section{Implementation and experiments: proofs and details}\label{app:exp}
+% =====================================================================
+% Appendix to Section 7. Sources: research/tracks/experiments/notes-final.md (v2) sections 1.3, 3.1-3.6, 4, 8;
+% referee.md; code/results/*.md; code/experiments/recheck/*.out.
+% Proofs were re-checked while transcribing; deviations from the record are noted in comments marked NOTE.
+% =====================================================================
+
+This appendix proves the statements of \cref{sec:exp}: the normal form for minimal covering templates (\cref{app:exp:normal}), the soundness of the oracles (\cref{app:exp:oracle}), the guarantees for \DTRC{} and the separation of the mixtures (\cref{app:exp:dtrc}), and the facts about hard pairs and false merges (\cref{app:exp:stress}). It ends with further numbers (\cref{app:exp:numbers}) and the commands that reproduce them (\cref{app:exp:repro}). We use the de Bruijn conventions and the substitution facts of \cref{app:setting}: plugging is compositional, injective in every hole that occurs in the body, and preserves the root symbol of a body whose root is not a hole; formula bodies never have a hole as root.
+
+% ---------------------------------------------------------------------
+\subsection{The normal form}\label{app:exp:normal}
+
+\begin{proof}[Proof of \cref{prop:exp:normal}]
+Parameters are compared by name throughout; ``covers'' means literal covering.
+
+\emph{(a)} Let $N$ be a normal configuration. An own occurrence $M_\sigma(\bar y_\sigma)$ is a pattern occurrence: its arguments are distinct variables bound above $\sigma$. Put $\theta_d(M_\sigma):=\lambda\bar z.\beta_d(\sigma)$. This is a body, since $\bar y_\sigma$ lists every index free in $d|_\sigma$, and abstraction inverts plugging, so the occurrence produces $d|_\sigma$. A derived occurrence $M_{c(\pi)}(\bar t)$ at $\pi$ produces $\beta_d(c(\pi))[\bar t]=d|_\pi$ by the definition of $\to$; its arguments are subterms of the data with no metavariables, and their free indices are free in $d|_\pi$ (every hole of $\beta(c(\pi))$ occurs in some $\beta_d(c(\pi))$), so they refer to binders above $\pi$. Positions not at or below $A$ carry labels common to all data. Hence $N\theta_d=d$ for every $d$. Every metavariable has its pattern occurrence at its own slot, so $N\in\DT$; term metavariables are own only at term slots of $\mathcal T(D)$, whose columns are closed, so they are $0$-ary and $N\in\DTF$.
+
+\emph{(b)} Let $T\in\DTF$ and $d=T\theta_d$ for all $d\in D$. Each of the following steps replaces $T$ by $T\sigma$ for a template substitution $\sigma$ (so the new template is $\preceq T$), keeps it in $\DTF$, and keeps it covering $D$.
+
+\emph{Step 0 (where occurrences sit).} By the preservation lemma of \cref{sec:setting}, every position of the skeleton of $T$ carries the same label in $T$ and in every datum. So the skeleton lies in the common part of $C(D)$, and every occurrence position, whose parent is a skeleton position or which is the root, is a common position or a slot of $C(D)$. No occurrence lies strictly below an F-slot $\nu$. Otherwise $\nu$ is a skeleton position. Some slot $\sigma$ below $\nu$ has an open column; it is not a skeleton position, because the data disagree there, so some occurrence sits at a position $\pi$ with $\nu<\pi\le\sigma$. Then $\pi$ lies inside the atom at $\nu$, so the occurrence is a $0$-ary term metavariable, and $d|_\pi=\theta_d(f)$ is closed for every $d$. But for some $d$ the subterm $d|_\sigma$ of $d|_\pi$ contains an index bound above $\sigma$, hence above $\nu$ (atoms contain no binders), hence above $\pi$; so $d|_\pi$ is not closed. Consequently every occurrence of $T$ sits at a node of $\mathcal T(D)$; and every slot of $\mathcal T(D)$, F-slots included, lies at or below an occurrence (an F-slot in the skeleton would have an occurrence strictly below it).
+
+\emph{Step 1 (push down).} Let $M$ have a pattern occurrence $M(\bar z)$ at a node $p$ of $\mathcal T(D)$ that is not a slot. Then all data carry the same label $h$ at $p$, and $\theta_d(M)=\lambda\bar z.\beta_d$ with $\beta_d$ the abstraction of $d|_p$ over $\bar z$. Specialize $M:=\lambda\bar z.B$:
+\begin{itemize}
+\item $h$ a connective or quantifier: $B=h(N_1(\bar z_1),\dots)$ with fresh formula metavariables; $\bar z_i=\bar z$, or under a quantifier the newly bound variable followed by $\bar z$;
+\item $h$ a relation symbol, $p$ not an F-slot: every slot below $p$ has a closed column; $B$ is the common part of the $\beta_d$ with a fresh $0$-ary term metavariable at each such slot;
+\item $h$ a function symbol ($M$ is then a $0$-ary term metavariable): $B=h(f_1,\dots,f_m)$ with fresh $0$-ary $f_i$;
+\item $h$ a leaf: $B$ is $h$ if $h$ is $0$ or a parameter (the same name in all data), and the hole $z_k$ if $h$ is a bound variable, which must then be among the arguments $\bar z$ of $M$; $M$ disappears.
+\end{itemize}
+The new metavariables take the bodies read off the $\beta_d$ (children of $\beta_d$, or the closed columns at the slots), so the result covers $D$; at $M$'s other occurrences $M(\bar t)$ the plugged body is $B[\bar t]$, which agrees with $\beta_d[\bar t]$ on the common part, and on the closed parts the values coincide. The new metavariables have pattern occurrences at $p$'s children or at the slots below $p$, and new term metavariables are $0$-ary. Each step adds the node $p$ of $\mathcal T(D)$ to the skeleton, and the skeleton stays inside $\mathcal T(D)$ by Step 0, so the process terminates. Afterwards every pattern occurrence sits at a slot of $\mathcal T(D)$.
+
+\emph{Step 2 (own slots and arguments).} For each metavariable $M$ choose a pattern occurrence $M(\bar y)$, at a slot $\sigma$. Every index free in the column at $\sigma$ is among $\bar y$, since the matcher reads $\theta_d(M)$ off this occurrence and bodies have no free index. If some $y_m$ is free in no $d|_\sigma$, the hole $z_m$ occurs in no $\theta_d(M)$; specialize $M:=\lambda\bar z.M'(\bar z\setminus z_m)$. Repeating, the arguments are exactly the indices of $\bar y_\sigma$; reordering them gives an equivalent template. So $M$ is $M_\sigma$ up to renaming, with $\theta_d(M_\sigma)=\beta_d(\sigma)$. Distinct metavariables get distinct own slots, since a position carries one occurrence. Other occurrences of $M$, pattern or not, are treated as derived.
+
+\emph{Step 3 (forced arguments).} Let $M_\sigma(\bar u)$ be an occurrence at $\pi$. Then $\beta_d(\sigma)[\bar u]=d|_\pi$ for all $d$. Every hole of $M_\sigma$ occurs in some $\beta_d(\sigma)$ (Step 2), and plugging is injective in a hole that occurs, so $\bar u$ is determined: $\sigma\to\pi$ and $\bar u=\bar t(\sigma,\pi)$. This also shows the uniqueness of $\bar t(\sigma,\pi)$ claimed in \cref{def:exp:normal}. Now $T$ is a configuration: $S'$ is the set of own slots, $A=\Occ(T)$ is an antichain of nodes of $\mathcal T(D)$ that covers every slot (Step 0), and each derived occurrence names its source. Only the independence of $S'$ may fail.
+
+\emph{Step 4 (independence).} Let $\sigma\in S'$ be derivable from $\rho\in S'\setminus\{\sigma\}$, with $\bar t=\bar t(\rho,\sigma)$. The free indices of $\bar t$ are free in some $d|_\sigma$ (every hole of $\beta(\rho)$ occurs in some $\beta_d(\rho)$), so they are among $\bar y_\sigma$, and $\lambda\bar z.M_\rho(\bar t')$, with $\bar t'$ the abstraction of $\bar t$ over $\bar y_\sigma$, is a template body. Specialize $M_\sigma$ to it. An occurrence $M_\sigma(\bar u)$ at $\pi$ becomes $M_\rho(\bar t'[\bar u])$, and $\beta_d(\rho)[\bar t'[\bar u]]=(\beta_d(\rho)[\bar t'])[\bar u]=\beta_d(\sigma)[\bar u]=d|_\pi$; so by Step 3 it is the derived occurrence $M_\rho(\bar t(\rho,\pi))$. $M_\rho$ keeps its own occurrence, and $|S'|$ drops by one. Iterating gives a normal configuration $N\preceq T$.
+
+\emph{(c)} There are finitely many own sets, antichains and choices, and $\bar t(\sigma,\pi)$ is unique, so there are finitely many normal configurations; let $\Min^{\mathrm{lit}}_F(D)$ be the minimal ones, one per $\equiv$-class. A covering $T$ is $\gen N$ for a normal $N$ by (b), and $N$ lies above a minimal normal configuration. If a covering $T'$ satisfied $M\sgen T'$ for some $M\in\Min^{\mathrm{lit}}_F(D)$, then by (b) $T'\gen N_1$ for a normal $N_1$, and $M\sgen N_1$ (if $N_1\gen M$ then $T'\gen M$), contradicting the minimality of $M$ among normal configurations. The last clause is (b) applied to $T^*$.
+\end{proof}
+
+For parameter-free $T^*$ literal covering and covering up to renaming coincide, so $D\subseteq\inst(T^*)$ gives a member of $\Min^{\mathrm{lit}}_F(D)$ below $T^*$ \src{experiments Cor E1-pf}. For templates with rigid parameters this fails (\cref{app:setting}), and $\Min_F(D)$ is computed over alignments: the alignment proposition of \cref{app:setting}, whose finiteness hypothesis (F) for $\DTF$ is \cref{prop:exp:normal}(c), gives (a)--(c) for $\Min_F(D)$.
+
+\emph{Computed checks} \src{experiments E0, E0b; referee \S3}. E0 compares the code with the prior referee's bounded enumerator of covering templates (de Bruijn levels, imported read-only) on $48$ arithmetic data sets: $40$ pairs of induction instances and $8$ others. It enumerates $3703$ covering $\DTF$ templates of size $\le14$ and $2515$ $\DT$ templates of size $\le13$. Every enumerated template lies above a computed minimum, every computed minimum within the size bounds is enumerated, and none lies strictly below one. The coverage is narrow: no ${<}$, ${\in}$, ${\leftrightarrow}$ or parameters, and $41$ of the $48$ sets have $|\Min|=1$. E0b draws a random generating template $T^*$ with the referee's generator and $2$--$3$ of its instances, $200$ data sets per language and with or without a rigid parameter in $T^*$, and checks: (a) the computed minima cover $D$, lie in $\DTF$ and are pairwise incomparable; (b) some minimum is $\preceq T^*$; (c) along random specialization walks from $T^*$ ($\le8$ steps), every covering template reached lies above a minimum and none strictly below one.
+
+\begin{center}\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}llccccccc@{}}
+\toprule
+language & rigid param.\ in $T^*$ & $\Min$ & data sets & minima & (a) fail & (b) fail & walk templates & (c) fail\\
+\midrule
+PA & no & literal & 200 & 200 & 0 & 0 & 380 & 0\\
+PA & no & aligned & 200 & 200 & 0 & 0 & 380 & 0\\
+PA & yes & literal & 200 & 200 & 0 & \textbf{17} & 317 & \textbf{6}\\
+PA & yes & aligned & 200 & 203 & 0 & 0 & 320 & 0\\
+ZF & no & literal & 200 & 200 & 0 & 0 & 408 & 0\\
+ZF & no & aligned & 200 & 206 & 0 & 0 & 408 & 0\\
+ZF & yes & literal & 200 & 204 & 0 & \textbf{36} & 381 & \textbf{27}\\
+ZF & yes & aligned & 200 & 220 & 0 & 0 & 419 & 0\\
+\bottomrule
+\end{tabular}
+\end{center}
+The literal failures are exactly those predicted for rigid parameters. The aligned set also differs from the literal one on $38/200$ (PA) and $72/200$ (ZF) parameter-free data sets: the data's bodies carry parameters, and alignment finds more specific templates with rigid parameters.
+
+% ---------------------------------------------------------------------
+\subsection{Soundness of the oracles}\label{app:exp:oracle}
+
+\begin{proof}[Proof of \cref{prop:exp:oracle}]
+Both evaluators work on a formula together with an environment. The universal closure of a datum is evaluated by treating its parameters as universally quantified. We prove, by induction on the formula: a verdict True (False) is correct for every admissible interpretation of the environment.
+
+\emph{PA.} The environment maps variables to numerals or to \emph{symbols}, which stand for arbitrary natural numbers; ``admissible'' means any values of the symbols. Atoms: at numerals the evaluation is exact. With symbols, terms built from $0,S,+,\cdot$ denote polynomials with nonnegative integer coefficients; $s=t$ holds for all values iff the polynomials $p_s,p_t$ are equal, since polynomials that agree on $\N^k$ are equal; if $p_s-p_t$ has all coefficients $\ge0$ and a positive constant term then $s>t$ for all values; the other classifications are symmetric, and everything else is unknown. Connectives: Kleene's strong tables are monotone in the information order, so known values stay correct. Supervaluation: for fixed values of the symbols, the actual truth values of the unknown leaves form one of the enumerated assignments, and the known leaves have their computed values by induction; so a verdict common to all assignments is correct. Quantifiers: bounded quantifiers with numeral bounds are enumerated exactly. For an unbounded $\forall x$, a verdict for the body with $x$ a fresh symbol holds for all values of $x$; a numeral counterexample is a counterexample; and in the case split every number is one of $0,\dots,K-1$ or $x'+K$ with $x'\in\N$, so if all cases are True then $\forall x$ is true and if one case is False there is a counterexample. One-point forms ($\forall x(x=t\to\varphi)$ with $x$ not in $t$) are equivalent to $\varphi[t/x]$. $\exists$ is dual. Stripping a vacuous quantifier is valid in a nonempty domain. A local budget overrun returns unknown, which is always sound.
+
+\emph{ZF.} The environment maps variables to HF sets or to generics. A \emph{realization} $\nu$ maps each generic $G$ to a set $\nu(G)\notin E_G$, where $E_G$ is the transitive closure of the concrete values in scope when $G$ was introduced, with $\nu(G)\neq\nu(H)$ for every generic $H$ in scope at that time. Two generics in one environment were introduced in nested scopes, so the later one was introduced with the earlier in scope. Atoms: between HF sets, membership and equality are exact (HF sets are standard; equality by Extensionality). $G\in c$ is False if $c\in E_G$ or every element of $c$ lies in $E_G$: in both cases $c\subseteq E_G$ ($E_G$ is transitive) and $\nu(G)\notin E_G$. $G=c$ is False if $c\in E_G$. $G\in G$ is False by Foundation. $G=H$ is False for distinct generics, by the freshness condition. Every other mixed atom is unknown. Connectives and supervaluation: as for PA, for each fixed realization. Unbounded $\forall x$: the cases are $x\in E$ (the transitive closure of the concrete values in scope), $x$ equal to an in-scope generic, and $x$ a fresh generic $H$ with $E_H=E$. Fix a realization $\nu$ and a set $a$. Either $a\in E$, or $a=\nu(G)$ for an in-scope $G$, or $\nu$ extended by $H\mapsto a$ is a realization. So if every case is True under every realization, the body holds for every $a$. If some case is False under every realization, there is a counterexample; for the fresh case this needs some set outside $E$ and different from the finitely many values of the in-scope generics, and such a set exists because no set contains all sets. Extra HF search values are concrete counterexamples or witnesses. $\exists$ is dual. Memoization is keyed on the formula and the environment's values, and generic identifiers are unique, so a verdict is reused only for the same environment.
+
+\emph{Constant propagation} (both). The rewrite rules ($A\wedge\top\equiv A$, $A\to\bot\equiv\neg A$, $\neg\neg A\equiv A$, $Qx\,\top\equiv\top$, \dots) are logical equivalences in every structure with a nonempty domain; $t=t$ is logically true; closed arithmetic atoms are evaluated exactly; $t<t$ is false in $\N$; $x\in x$ is false in $V$ by Foundation. So the simplified formula has the same truth value as the original in $\N$ (resp.\ $V$) under every environment.
+
+The ZF argument uses Foundation, Extensionality on HF sets, the existence of HF sets, and that no set contains all sets; not Infinity.
+\end{proof}
+
+The proof states the freshness condition on generics relative to the generics \emph{in scope} when a generic is introduced; the record says ``created before''. Only generics of one environment are ever compared, so the two readings agree.
+
+\emph{Independent checks} \src{experiments \S3.2; recheck R3, R4, R11}. The referee's evaluators were copied unchanged and re-run against the revised oracles. The independent PA evaluator is three-valued and decides only through exact bounded quantifiers, counterexamples and witnesses. The independent ZF evaluator evaluates exactly in finite structures $V_4\cup\{\text{extra objects}\}$ in which the HF sets are standard, the extras are never elements of HF sets, membership into and among the extras is arbitrary but irreflexive, and equality is identity. These structures satisfy exactly what the proof uses, so every True or False verdict must hold in them. R3 compared the verdicts logged during \DTRC{} runs on the mixtures with mistakes and on the near-miss sets: $2197$ PA verdicts and $413$ ZF verdicts of quantifier depth $\le4$ plus $179$ of depth $5$--$6$, with $0$ contradictions. R4 compared $3000$ random PA and $600$ random ZF sentences, with $0$ contradictions. R11 is a mutation test of the ZF check: dropping the in-scope-generic case is detected $39/600$ times and dropping the fresh-generic case $292/600$ times; mutations of the generic-versus-HF atom rules are not detected, because those rules rarely decide a verdict, and the referee verified them by hand.
+
+% ---------------------------------------------------------------------
+\subsection{Proofs for \texorpdfstring{\DTRC}{DTRC} and the separation of the mixtures}\label{app:exp:dtrc}
+
+\begin{proof}[Proof of \cref{thm:exp:dtrc}]
+\emph{No datum is discarded}: genuine data are true and the oracle is sound.
+
+\emph{Invariant: every cluster is contained in some $D_i$.} It holds for singletons. When clusters $A\subseteq D_i$ and $B\subseteq D_j$ are tested, the test fails if $i\neq j$, by (S), and succeeds if $i=j$, by \cref{prop:exp:mono}(b) applied to $A\cup B\subseteq\inst(T_i)$. So merges preserve the invariant. A pair is marked failed only if it is cross-label, and every later pair of clusters containing its two parts is cross-label as well; so the inheritance of failures never blocks a within-label merge.
+
+\emph{The final clusters are the nonempty $D_i$.} Each merge reduces the number of clusters, so the agglomeration terminates. Every pair of current clusters stays in the implementation's queue (with minimum score $0$) until it is tested or inherits a failure. At the end, therefore, every pair of final clusters has failed, directly or by inheritance, and is cross-label. With the invariant, the final clusters are exactly the nonempty $D_i$.
+
+\emph{Soundness.} By \cref{prop:exp:mono}(b) and its proof there is $T_0\in\Min_F(D_i)$ with $T_0\preceq T_i$, and no sound refuter refutes it. So $T_0$ is among the intersected templates, and $\Acc(D_i)\subseteq\inst(T_0)\subseteq\inst(T_i)$.
+
+\emph{Exactness.} If $D_i$ contains an anchor of $T_i$, every member of $\Min_F(D_i)$ covers the anchor, so its instance set contains $\inst(T_i)$. The set of unrefuted members is nonempty (it contains $T_0$), so $\Acc(D_i)\supseteq\inst(T_i)$.
+
+\emph{(H-ref).} If verdicts do not depend on the call history, the final verification of $D_i$ sees the same verdicts as the tagged refutation-filtered verifier on $D_i$, so the acceptance sets coincide.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:exp:share}]
+Call a cluster \emph{pure} if it is contained in some $\inst(T_l)$. All clusters are pure at all times: a test whose union lies in no $\inst(T_l)$ fails by (S$^+$), and a successful merge or addition therefore has a pure union. Inheritance of failures is correct: if a test on $A\cup X$ failed, then $A\cup X$ lies in no $\inst(T_l)$ (otherwise it passes, by \cref{prop:exp:mono}(b)), and neither does any superset.
+
+\emph{$l$ is injective.} If two final clusters $C\neq C'$ of the agglomeration had $l(C)=l(C')=l$, then $C\cup C'\subseteq\inst(T_l)$ would pass the merge test, and the pair is never marked failed (by the inheritance remark); so the phase would not have ended.
+
+\emph{The sharing pass.} Let $C'$ be the growing cluster, initially the phase-one cluster $C$ with $l(C)=l$. For $d\in D\cap\inst(T_l)$, $C'\cup\{d\}\subseteq\inst(T_l)$ passes by \cref{prop:exp:mono}(b). For $d\notin\inst(T_l)$, $C'\cup\{d\}$ lies in no $\inst(T_j)$: not in $\inst(T_l)$ because of $d$, and not in $\inst(T_j)$ for $j\neq l$ because $C\subseteq C'$ is contained in exactly one target's instance set, by (P); so the test fails by (S$^+$). By induction $C'$ stays inside $\inst(T_l)$, and it ends as $C\cup(D\cap\inst(T_l))=D\cap\inst(T_l)$, since genuine data are never discarded.
+
+\emph{Acceptance.} $\Acc(C^+)\subseteq\inst(T_l)$ by \cref{prop:exp:budget}; with an anchor in $C^+$, equality holds as in the proof of \cref{thm:exp:dtrc}; and under (H-ref) the tagged learner with membership labels sees the same data $C^+$ and the same verdicts.
+\end{proof}
+
+% NOTE: the record's Prop E4-share says "exact whenever the tagged learner with membership labels is"; without
+% (H-ref) that holds only when the exactness comes from an anchor, so the paper states anchor-exactness and the
+% (H-ref) equality separately.
+The record's statement of \cref{prop:exp:share} adds that \DTRC{}+share is exact whenever the membership-labelled tagged learner is. Without (H-ref) this follows only when that learner's exactness comes from an anchor (its exactness can also come from refutations that \DTRC{}'s refuter, with another call history, need not find), so we state anchor-exactness and the (H-ref) equality separately.
+
+\begin{lemma}[Root symbols under derivation]\status{proved}\src{experiments Lemma E8.1}\label{lem:exp:heads}
+In $\mathcal T(D)$, if $\sigma\to\pi$ then for every $d\in D$: $d|_\pi=d|_\sigma$ if $\sigma$ is a term slot, and $d|_\pi$ has the root symbol of $d|_\sigma$ if $\sigma$ is a formula slot. Consequently a \emph{clash slot} (a slot at which two data $a,b$ have different root symbols $r_a\neq r_b$) derives only slots at which $a$ and $b$ have the root symbols $r_a$ and $r_b$; it derives no interior node.
+\end{lemma}
+
+\begin{proof}
+Term slots of $\mathcal T(D)$ have closed columns, so $\beta_d(\sigma)=d|_\sigma$ has no hole, and $\beta_d(\sigma)[\bar t]=d|_\sigma$. A formula body's root is not a hole, and plugging preserves the root of such a body. Interior nodes of $\mathcal T(D)$ carry a label common to all data.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:exp:numerals}]
+Write $d=T^*[z:=t_d]$. Since $T^*$ has no parameter and some datum has none, there is a single alignment and $\Min_F(D)=\Min^{\mathrm{lit}}_F(D)$ up to renaming. All positions outside the $z$-positions are common.
+
+($\Leftarrow$) If the roots of the $t_d$ are not all equal, every $z$-position is a slot, with the same closed column $(t_d)_d$, and there is no other slot. An own set contains at most one of these slots, since each derives the others. By \cref{lem:exp:heads} a derived occurrence at $\pi$ needs $d|_\pi=t_d$ for all $d$, impossible at an interior node, where all data share a root. So the only normal configuration has one own $z$-slot and derived occurrences at the others: it is $T^*$.
+
+($\Rightarrow$) If all $t_d$ have root $h$, the $z$-positions are interior nodes with label $h$. Own slots lie strictly below $z$-positions and are term slots with closed columns; by \cref{lem:exp:heads} such a slot derives only nodes $\pi$ with $d|_\pi=d|_\sigma$, which excludes the $z$-positions and the nodes above them (a term never equals a proper subterm). So every normal configuration, hence every member of $\Min_F(D)$, carries $h$ rigidly at the $z$-positions, and rigid symbols survive instantiation. An instance of $T^*$ whose substituted term has another root ($0$ if $h\neq0$, $S0$ if $h=0$) is therefore an instance of no member, and $\Acc(D)\neq\inst(T^*)$.
+
+For i.i.d.\ terms the probability that all $N$ roots coincide is $\sum_hp_h^N$. In E1 every parameter instance canonicalizes to the same datum, so among $N\ge2$ distinct data some datum is parameter-free.
+\end{proof}
+
+\paragraph{The mixture targets.}
+In the implementation the ZF-mix targets are $\Ext=\forall x\forall y(\forall z(z\in x\leftrightarrow z\in y)\to x=y)$, $\Pair=\forall x\forall y\exists z\forall u(u\in z\leftrightarrow u=x\vee u=y)$, $\Union=\forall x\exists y\forall z(z\in y\leftrightarrow\exists u(u\in x\wedge z\in u))$, $\Pow=\forall x\exists y\forall z(z\in y\leftrightarrow\forall u(u\in z\to u\in x))$, $\Inf=\exists x(\exists y(y\in x\wedge\forall z\,\neg z\in y)\wedge\forall y(y\in x\to\exists z(z\in x\wedge\forall u(u\in z\leftrightarrow u\in y\vee u=y))))$, $\Found=\forall x(\exists y\,y\in x\to\exists y(y\in x\wedge\forall z(z\in y\to\neg z\in x)))$, $T_{\Sep}=\forall x\exists y\forall z(z\in y\leftrightarrow z\in x\wedge P(z,x))$, $\ReplS=\forall x(\forall y(y\in x\to\exists z(P(y,z,x)\wedge\forall u(P(y,u,x)\to u=z)))\to\exists y\forall z(z\in y\leftrightarrow\exists u(u\in x\wedge P(u,z,x))))$, and $T_{\EInd}$. The PA-mix targets are Q1--Q7 as in \cref{sec:setting}, $T_{\Ind}$, and the three instance schemas.
+
+\begin{proof}[Proof of \cref{prop:exp:mixsep}]
+\emph{Cases A--D.} Inspection of the targets shows, for every listed pair, a position $p$ above all metavariable positions of both targets at which the two targets differ, while all positions not below $p$ carry the same rigid symbols in both (in case D there are two such positions). In case A, $p$ is the root: Q1--Q7 have root $\forall$, $T_{\Ind}$ root $\to$, the instance schemas root $=$; $\Inf$ has root $\exists$, $T_{\EInd}$ root $\to$, and the other ZF targets root $\forall$. In case B, $p$ is the node right below the common prefix $\forall x$ or $\forall x\forall y$. There the roots differ, except for Q4--Q6 and Q5--Q7, where both data carry an equation whose term disagreement contains a bound variable, so $p$ is an F-slot. In case C, $p$ is the right side of $\leftrightarrow$ in the comprehension frame $\forall x\exists y\forall z(z\in y\leftrightarrow\cdot)$, where the targets read $\exists u(\dots)$, $\forall u(\dots)$, and $z\in x\wedge\varphi$. In case D the two positions are the antecedent under $\forall x$ ($\exists$ against $\forall$) and the body under the consequent's $\exists y$ ($\wedge$ against $\forall$).
+
+Hence for instances $a,b$, $\mathcal T(\{a,b\})$ is the shared prefix with one slot (two in D), and its interior nodes carry the shared labels. Each slot is a clash slot, or in case B possibly an F-slot, whose root pair is $(=,=)$ while the interior nodes are quantifiers. By \cref{lem:exp:heads} no slot derives an interior node, and in case D neither slot derives the other, since their root pairs $(\exists,\forall)$ and $(\wedge,\forall)$ differ. So the only normal configuration puts an own metavariable at each slot, applied to the variables free in its column. In C these are $z$ and $x$ (each of the three right sides mentions both, and a Separation body cannot mention $y$); in D, $x$ for the antecedent and $y,x$ for the consequent body. Parameters occur only inside the slots' columns, so every alignment gives the same template, and $\Min_F(\{a,b\})$ is this single template. The instances are false: $\bot$; $\forall\bar x\,\bot$ (the domain is nonempty); Russell's $\forall x\exists y\forall z(z\in y\leftrightarrow\neg z\in z)$, which fails at $z:=y$; and $\forall x(\top\to\exists y\,\bot)$.
+
+\emph{Case E.} All slots have closed term columns, so by \cref{lem:exp:heads} $\sigma\to\pi$ requires identical columns.
+(i)~$U_{\mathrm{add0}}$--$U_{\mathrm{mul0}}$: $a=(t+0=t)$, $b=(s\cdot0=0)$. The left sides clash ($+$ against $\cdot$); the right sides $t$ and $0$ form a slot unless $t=0$. No two of these columns are identical, and no column can be derived at a common node, so $\Min_F=\{z_0=z_1\}$ or $\{z_0=0\}$, with the false instance $1=0$.
+(ii)~$U_{\mathrm{mul0}}$--$U_{\mathrm{0add}}$: $a=(t\cdot0=0)$, $b=(0+u=u)$; symmetric to (i).
+(iii)~$U_{\mathrm{add0}}$--$U_{\mathrm{0add}}$: $a=(t+0=t)$ with $t\neq0$ (otherwise $a\in\inst(U_{\mathrm{0add}})$) and $b=(0+u=u)$ with $u\neq0$. The left sides share $+$, with slots $\sigma_1$ (column $(t,0)$) and $\sigma_2$ (column $(0,u)$). A node $\pi$ with $a|_\pi=t$ is $\sigma_1$ or the root of the right side, where $b$ has $u\neq0$; a node with $b|_\pi=u$ is $\sigma_2$ or the root of the right side, where $a$ has $t\neq0$; slots inside the right side have columns of proper subterms. So $\sigma_1,\sigma_2$ derive no other node and are derived from none, and every normal configuration has the form $z_0+z_1=R$ with $z_0,z_1$ occurring only there and $R$ built from the common prefix of $t$ and $u$. Setting every metavariable of $R$ to $0$ gives a term $r$; with $z_0:=S(r)$ and $z_1:=0$ the instance $S(r)+0=r$ is false in $\N$ for every value of its parameters.
+\end{proof}
+
+% ---------------------------------------------------------------------
+\subsection{Hard pairs and false merges}\label{app:exp:stress}
+
+\begin{proof}[Proof of \cref{prop:exp:hard}]
+(a) $\mathrm{Union}_W$ and $\mathrm{Power}_W$ share the prefix $\forall a\exists b\forall x(\cdot\to x\in b)$ and clash at the antecedent ($\exists$ against $\forall$), whose column mentions $x$ and $a$ but not $b$. By \cref{lem:exp:heads} this slot derives no other node, so the universal-set schema $U$ is the unique normal configuration and the unique minimal covering template. Its instance with $P:=\top$ simplifies to $\exists b\forall x\,(x\in b)$ (the quantifier $\forall a$ is vacuous). With no concrete value in scope, $E=\emptyset$ and there is no generic, so the only case for $b$ is a fresh generic $G$; then $\forall x\,(x\in G)$ is False in its case $x:=G$, because $G\in G$ is False. So the oracle returns False, soundly by \cref{prop:exp:oracle}: in $V$, a set $b$ with $\forall x\,(x\in b)$ would satisfy $b\in b$. The impossibility for oracles sound in $\HF\cup\{u\}$ is proved in \cref{sec:many}.
+
+(b) Let $e=\EInd(\varphi)$ and $e'=\mathrm{EInd2}(\psi)$, where the roots of $\varphi$ and $\psi$ differ, $\varphi$ does not begin with $\forall$, and $\varphi$ or $\psi$ uses its variable. The common prefix is $(\forall x(\forall y(y\in x\to\square_1)\to\square_2))\to\forall x\,\square_3$, with columns $(\varphi(y),\forall z(z\in y\to\psi(z)))$ at $\square_1$ and $(\varphi(x),\psi(x))$ at $\square_2$ and $\square_3$. All three are clash slots. The columns at $\square_2$ and $\square_3$ are identical (each sits under one binder), so each derives the other. The root pairs of $\square_1$ and $\square_2$ are $(\mathrm{root}\,\varphi,\forall)$ and $(\mathrm{root}\,\varphi,\mathrm{root}\,\psi)$. If they differ, \cref{lem:exp:heads} excludes derivations between $\square_1$ and $\square_2,\square_3$. If they coincide ($\psi$ begins with $\forall$), a size argument excludes them: terms of $L_\in$ are variables or parameters, so plugging does not change the size of a body, while $\forall z(z\in y\to\psi(z))$ is larger than $\psi(x)$ and $\psi(t)$. No slot derives an interior node (\cref{lem:exp:heads}). So the only normal configuration, up to renaming, has own slots $\square_1,\square_2$ and $\square_3$ derived from $\square_2$; it is $T_{EE}$: $P_0$ is unary, since only $y$ occurs in the column at $\square_1$ and $z\in y$ mentions it, and $P_1$ is unary, since some motive uses its variable. Its instance with $P_0:=\bot$, $P_1(x):=\forall z\,\neg z\in x$ has the premise $\forall x(\forall y(y\in x\to\bot)\to\forall z\,\neg z\in x)$, i.e.\ $\forall x(x=\emptyset\to x=\emptyset)$, which is true, and the conclusion $\forall x\,\forall z\,\neg z\in x$, which fails at $x=\{\emptyset\}$.
+% NOTE: the record states (b) for "the motives' heads differ and the EInd motive does not begin with forall".
+% If neither motive uses its variable, P_1 is 0-ary and the template is valid (its premise fails at x = emptyset
+% whenever P_1 is false), so the hypothesis "some motive uses its variable" was added.
+If neither motive uses its variable, $P_1$ is $0$-ary and the template is valid: when $P_1$ is false its premise $\forall x\,\neg\forall y(y\in x\to P_0(y))$ fails at $x=\emptyset$. This case, not covered by the record's statement, is why (b) assumes that some motive uses its variable.
+
+The remaining claims are computed (E9, E9b), and the false and valid instances quoted after \cref{prop:exp:hard} are checked by the same kind of reading: with $P_0:=\bot$ and $P_1(x):=\forall y{\in}x\,\forall z{\in}y\,\bot$ the premise of the surviving template is $\forall x(\alpha(x)\to\alpha(x))$, and $\forall x\,\alpha(x)$ fails at $\{\{\emptyset\}\}$; the valid merges are covered by \cref{lem:exp:valid}(5), and Separation with swapped conjuncts is equivalent to Separation.
+\end{proof}
+
+\paragraph{The false templates met in E4(b).}
+Each was found refuted by the post-hoc refuter; the false instances were checked by hand \src{experiments \S3.6}.
+\begin{itemize}
+\item PA, numerals, seed $0$, budget $80$: $\bigl(\forall x(P_0(x,0)\to P_1(x,0))\wedge\forall x(\forall y(P_0(y,x)\to P_1(y,x))\to\forall y(P_0(y,Sx)\to P_2(y,x)))\bigr)\to\forall x\forall y(P_0(y,x)\to P_1(y,x))$. With $P_0:=\top$, $P_1(y,x):=(x=0)$, $P_2:=\top$ the premises are $\forall x(\top\to0=0)$ and $\forall x(\dots\to\forall y(\top\to\top))$, both true, and the conclusion $\forall x\,(x=0)$ is false.
+\item PA, numerals, seed $1$, budget $80$: $\bigl(\forall x(P_0(x,0)\to P_1(x,1))\wedge\forall x(\forall y(P_0(y,x)\to P_1(y,x))\to\forall y(P_0(y,Sx)\to P_1(y,Sx)))\bigr)\to\forall x\forall y(P_0(y,x)\to P_1(y,x))$. With $P_0:=\top$, $P_1(y,x):=\neg x=0$ the premises $\neg 1=0$ and $\forall x(\neg x=0\to\neg Sx=0)$ are true, and the conclusion $\forall x\,\neg x=0$ fails at $0$.
+\item ZF, budget $80$, seeds $0$--$2$: five merges of a Separation-capture mistake with Separation instances, e.g.\ $\forall a\exists b\forall x\,(x\in b\leftrightarrow x\in a\wedge\forall u\,P(u,x,b,a))$. With $P:=\neg x\in b$ the body becomes $x\in b\leftrightarrow x\in a\wedge\neg x\in b$, contradictory for $x\in a$, so the sentence fails at $a=\{\emptyset\}$. The post-hoc witnesses of the other four reduce in the same way to $x\in b\leftrightarrow x\in a\wedge\neg x\in b$, or to $x\in b\leftrightarrow x\in a\wedge\neg w_0\in b$, which fails at $a=\{\emptyset\}$, $w_0=\emptyset$ (if $\emptyset\in b$ the right side is false at $x=\emptyset$; if not, it is true).
+\item PA, both regimes, seed $0$, budgets $80$ and $400$: $T_F$ of \cref{prop:exp:qF}.
+\end{itemize}
+
+% ---------------------------------------------------------------------
+\subsection{Further numbers}\label{app:exp:numbers}
+
+\paragraph{E2, further exhibits.} Accepted sentences certified false by the oracle ($N=2$): Replacement, first-order de Bruijn, $\forall x(\forall y(y\in x\to\exists z(y\in x\wedge\forall u(\neg\forall v\,(v=v)\to u=z)))\to\exists y\forall z(z\in y\leftrightarrow\exists u(u\in x\wedge\forall v\,(v=v))))$; $\in$-induction, named, $(\forall x(\forall y(y\in x\to y\in w_0)\to\neg x\in w_0))\to\forall x\,\neg x\in w_0$, false with $w_0=\{\{\emptyset\}\}$; induction, first-order de Bruijn, $(0=w_0\wedge\forall x(x=0\to 0=x))\to\forall x\,(x=0)$; induction, genuine pattern $\lgg$, $(0=0\wedge\forall x(w_0=Sx+(0+x)\to 0=1\cdot Sx))\to\forall x\,(w_0=Sx+(0+x))$. Per-probe counts are in \texttt{code/results/e2\_schemas.md}.
+
+\paragraph{E4(b), outcome of the mixed clusters.} \Cref{tab:exp:e4} lists, per data regime and refuter budget, the seeds in which a false template was accepted and the residual templates, checked with a post-hoc refuter (budget $4000$ for PA, $1500$ for ZF) and by hand (\cref{lem:exp:valid}, \cref{app:exp:stress}).
+
+\begin{table}[ht]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}llc>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+\toprule
+data & budget & seeds with a false accepted template & false templates & valid residual templates\\
+\midrule
+PA, mixed & 80, 400 & 0 & $T_F$ & $(z<0\wedge\dots)\to\dots$, $(0=Sz\wedge\dots)\to\dots$\\
+PA, mixed & 2000 & none & -- & the same, and $(P(0)\wedge\forall x(P(x)\to P(Sx)))\to\forall x\,P(Sx)$\\
+PA, numerals & 80 & 0, 1 & $T_F$; two induction-step templates & false-antecedent forms with $x<0+0$, $x<0\cdot0$, $0=Sz$; the $\forall x\,P(Sx)$ form; $0+z=z$\\
+PA, numerals & 400 & 0 & $T_F$ & the same\\
+PA, numerals & 2000 & none & -- & the same, and the form with $x<0$\\
+ZF & 80 & 0, 1, 2 & five Separation-capture templates & $\forall x(P(x)\to x=x)\to\forall x\,(x=x)$\\
+ZF & 400 & none & -- & the same\\
+\bottomrule
+\end{tabularx}
+\caption{E4(b): mixed clusters with injected mistakes \src{experiments E4; code/results/e4\_stress.md}.}
+\label{tab:exp:e4}
+\end{table}
+
+The fates of the mistakes per run (discarded as refuted, singleton, or merged), the ARI on clean data, held-out acceptance and the oracle-call counts are in \texttt{code/results/e4\_stress.md}. Refuted mistakes number $2$--$3$ per run.
+
+% ---------------------------------------------------------------------
+\subsection{Reproduction}\label{app:exp:repro}
+
+All commands run from \texttt{axiom-schemas/code/}; the experiment scripts are in \texttt{experiments/}. \texttt{sh run\_all.sh} runs the tests and E0--E9 (593\,s wall time on 4 shared cores); E10 and E9b take a few seconds. Outputs other than timings reproduce exactly. The results of the first version are kept in \texttt{code/results\_v1/}.
+
+\begin{sloppypar}
+The scripts are \texttt{e0\_crossval.py} (run as \texttt{14 40 F} and \texttt{13 40 full}), \texttt{e0b\_property.py 200}, \texttt{e1\_universal.py}, \texttt{e2\_schemas.py}, \texttt{e3\_mix.py}, \texttt{e4\_stress.py}, \texttt{e5\_curves.py}, \texttt{e6\_kunion.py}, \texttt{e7\_blowup.py}, \texttt{e9\_separation.py}, \texttt{e9b\_nosimplify.py} and \texttt{e10\_pairtable.py 100}, each writing \texttt{results/eN\_*.md}; \texttt{python3 -m pytest -q tests} runs the 43 unit tests, and \texttt{sh experiments/recheck/run\_recheck.sh} re-runs the referee's oracle checks (outputs in \texttt{experiments/recheck/*.out}). Seeds are listed in each results file.
+\end{sloppypar}
