@@ -1,0 +1,200 @@
+[
+ {
+  "file": "sections/app-setting.tex",
+  "location": "prop:setting:align (b) and (c), and the proof of (b): \"By \\cref{lem:setting:preservation}, $\\rho_d(\\mathrm{par}(T))\\subseteq\\mathrm{par}(d)$\"",
+  "severity": "fatal",
+  "problem": "(b) and the last clause of (c) are false for C=DT\u00b0_F and for C=DT\u00b0. The minimality clause of (c) is also false for DT\u00b0. The proof step is invalid: the preservation lemma covers only skeleton positions. A parameter that occurs only in an argument of a non-pattern occurrence disappears from every datum whose value does not use that hole, so G need not be a subset of par(r). Counterexamples, computed with dtrc (scratch/align_cex.py and align_cex2.py): (1) DT\u00b0_F. Take D={0=0\u2227(\u2200x 0=0 \u2227 0=0), 0=0\u2227(\u2200x x=x \u2227 w0=w0), w0=w0\u2227(\u2200x x=0 \u2227 w1=0)}. Then T=Q\u2227(\u2200xP(x)\u2227P(c)) covers D, there is a single alignment, Min^al(D)={f0=f0\u2227(\u2200xP0(x)\u2227f1=f2)}, and T is not \u2ab0~ that member. The same happens with T*=(Q\u2228\u00acQ)\u2227(\u2200xP(x)\u2192P(c)), all of whose instances are valid; this also breaks experiments prop:exp:oracle(b). (2) DT\u00b0. Take D'={\u2200x(0=0)\u22270=0, \u2200x(x=x)\u2227w0=w0, \u2200x(x=0)\u2227w0=0}. Then Min^al(D')={\u2200x(f0(x)=f1(x))\u2227f2=f1(u)}. This member is strictly above T=\u2200x(g(x)=h(x))\u2227g(c)=h(c), which covers D', and T is above no member. The same gap is in the record's proof of experiments Prop E1-al.",
+  "fix": "Replace (b) and (c) by: \"(b) Every $T\\in\\mathcal C$ that covers $D$ up to renaming and all of whose parameters occur in $\\mathrm{skel}(T)$ satisfies $T\\gen^{\\sim}M$ for some member $M$. (c) $\\Min^{\\mathrm{al}}_{\\mathcal C}(D)$ is finite; no template as in (b) lies strictly below a member; and if $D\\subseteq\\inst^{\\sim}(T^*)$ with $T^*\\in\\mathcal C$ and every parameter of $T^*$ in $\\mathrm{skel}(T^*)$ (in particular if $T^*$ is parameter-free), some member $M$ satisfies $T^*\\gen^{\\sim}M$.\" In the proof of (b), write \"Every parameter of $T$ lies in $\\mathrm{skel}(T)$, so by \\cref{lem:setting:preservation} $\\rho_d(\\mathrm{par}(T))\\subseteq\\mathrm{par}(d)$.\" In the proof of (c), write \"If some $T$ as in (b) satisfied ...\". Add a remark giving counterexample (1) and saying that a parameter occurring only inside an argument of a non-pattern occurrence need not occur in the reference datum. Note that the record's E1-al carries the same restriction, and that experiments.tex:44 and prop:exp:oracle(b) inherit it. Alternative: define alignments as partial injective identifications across all data, not anchored at r. This makes (b) true in general but needs a code change.",
+  "reviewer": "math-setting-single",
+  "multi_file": false
+ },
+ {
+  "file": "sections/app-setting.tex",
+  "location": "l.111: \"If some datum has no parameter there is one alignment, and $\\Min^{\\mathrm{al}}_{\\mathcal C}(D)$ is $\\Min_{\\mathcal C}(D)$ up to $\\equiv^{\\sim}$.\"",
+  "severity": "fatal",
+  "problem": "False. The single alignment (G=\u2205) renames every parameter apart, so Min^al(D)=Min(\u03b1(D)), and this can differ from the literal Min(D). For D={\u2200x(0=0)\u22270=0, \u2200x(x=x)\u2227w0=w0, \u2200x(x=0)\u2227w0=0} in DT\u00b0_F, the literal Min(D) is {\u2200xP0(x)\u2227f0=f1, \u2200xP0(x)\u2227P0(w0)}, while Min(\u03b1(D)) is {\u2200xP0(x)\u2227f0=f1} (computed). The writer's justification overlooks parameters in derived arguments. The definition also does not match the code: AlignedMinCover.minimal() returns the literal MinCover(D) when there is at most one alignment. app-experiments' proof of prop:exp:numerals cites this sentence; it is still fine there only because those data are parameter-free.",
+  "fix": "Replace with: \"If some datum has no parameter there is exactly one alignment ($G=\\emptyset$); it renames all parameters apart, so no member has a parameter in its skeleton. It can differ from the literal $\\Min_{\\mathcal C}(D)$ of the canonicalized data: for $D=\\{\\forall x(0{=}0)\\wedge0{=}0,\\ \\forall x(x{=}x)\\wedge w_0{=}w_0,\\ \\forall x(x{=}0)\\wedge w_0{=}0\\}$ the literal set also contains $\\forall xP(x)\\wedge P(w_0)$. (The implementation uses the literal set in this case.)\"",
+  "reviewer": "math-setting-single",
+  "multi_file": false
+ },
+ {
+  "file": "sections/app-setting.tex",
+  "location": "l.106, preorder parenthetical: \"and $\\rho'\\rho$ is injective on $\\mathrm{par}(T)$ because $\\mathrm{par}(T')\\supseteq\\rho(\\mathrm{par}(T))$ by \\cref{lem:setting:preservation}\"",
+  "severity": "minor",
+  "problem": "The intermediate claim is false. With T=\u2200xP(x)\u2227P(a)\u2227b=b and \u03c3(P)=\u03bbz.R, the parameter a vanishes from T', and \u03c1': b\u21a6a is allowed, so \u03c1'\u03c1 need not be injective on par(T). The conclusion (\u2ab0~ is a preorder) still holds.",
+  "fix": "Replace with: \"after changing $\\rho'$, on the parameters of $\\rho T$ that do not occur in $T'$, to fresh distinct names (such parameters occur only inside arguments whose holes $\\sigma$ discards, so $T''$ is unchanged), $\\rho'\\rho$ is injective on $\\mathrm{par}(T)$\".",
+  "reviewer": "math-setting-single",
+  "multi_file": false
+ },
+ {
+  "file": "sections/app-setting.tex",
+  "location": "proof of prop:setting:align(a) (l.132): \"The rigid parameters of $M$ occur in ... So $\\alpha_d^{-1}$ is injective on $\\mathrm{par}(M)$\"",
+  "severity": "minor",
+  "problem": "A member M can have parameters inside derived arguments that do not occur in \u03b1_d(d); the DT\u00b0 member in the align counterexample has one. On these \u03b1_d^{-1} is undefined, so the step does not apply. The conclusion is still true.",
+  "fix": "\"Extend $\\alpha_d^{-1}$ injectively to $\\mathrm{par}(M)$ by sending the parameters of $M$ that do not occur in $\\alpha_d(d)$ to fresh distinct names; they occur in $M$ only inside arguments that $\\theta_d$ discards. Then $d=(\\alpha_d^{-1}M)(\\alpha_d^{-1}\\theta_d)$.\"",
+  "reviewer": "math-setting-single",
+  "multi_file": false
+ },
+ {
+  "file": "sections/app-setting.tex",
+  "location": "prop:setting:align: \\src{experiments Prop E1-al} with $\\mathcal C\\in\\{\\DT,\\DTF\\}$",
+  "severity": "minor",
+  "problem": "The record proves only the DTF case (writer-notes, setting item 3). The text says so afterwards, but the provenance tag claims both cases.",
+  "fix": "\\src{experiments Prop E1-al ($\\DTF$); $\\DT$ case new here}",
+  "reviewer": "consistency",
+  "multi_file": false
+ },
+ {
+  "file": "sections/setting.tex",
+  "location": "sec:setting:params (l.205): \"and proves that it has the properties of $\\Min(D)$ (\\cref{prop:setting:align})\"",
+  "severity": "major",
+  "problem": "This overclaims, given the counterexamples to prop:setting:align. The aligned set has the properties of Min(D) only for templates whose parameters all occur in their skeleton.",
+  "fix": "Replace with \"and proves that it has the properties of $\\Min(D)$ for templates all of whose parameters occur in their skeleton, in particular for parameter-free targets (\\cref{prop:setting:align}); a parameter that occurs only inside an argument of a non-pattern occurrence is not covered\".",
+  "reviewer": "math-setting-single",
+  "multi_file": false
+ },
+ {
+  "file": "sections/setting.tex",
+  "location": "def:setting:protocol (l.135): \"rejects iff $q\\notin\\bigcup\\mathrm{VS}(D,N)$\" together with \"(with $\\bigcap\\emptyset$ = all sentences)\"",
+  "severity": "minor",
+  "problem": "When VS(D,N)=\u2205 the verifier both accepts and rejects every query.",
+  "fix": "\"rejects iff $\\mathrm{VS}(D,N)\\neq\\emptyset$ and $q\\notin\\bigcup\\mathrm{VS}(D,N)$\".",
+  "reviewer": "math-setting-single",
+  "multi_file": false
+ },
+ {
+  "file": "sections/setting.tex",
+  "location": "def:setting:oracle: 'A fixed finite set of false sentences, used at every $d$, is an oracle; this is how the implementation is read (\\cref{sec:exp}).'",
+  "severity": "major",
+  "problem": "This directly contradicts experiments.tex: 'It is sound, budgeted, and history-dependent ..., so it is not a fixed oracle $\\Ref_d$ (\\cref{sec:setting})'. The fixed-oracle reading applies to the audited untagged prototype (prop:many:audit), not to the \u00a77 package.",
+  "fix": "Replace 'this is how the implementation is read (\\cref{sec:exp})' by 'this is how the audited prototype of \\cref{sec:many:examples} is read (\\cref{prop:many:audit}); the budgeted, history-dependent refuter of \\cref{sec:exp} is treated directly there'.",
+  "reviewer": "consistency",
+  "multi_file": false
+ },
+ {
+  "file": "sections/experiments.tex; sections/app-setting.tex",
+  "location": "exp: 'the learner uses $\\Min_F(D)$, the minimal elements of the union of $\\Min^{\\mathrm{lit}}_F(\\alpha(D))$ over all alignments'; app-setting ex:setting:align 'Literally, $\\Min_{\\DTF}(D)=...$'; setting sec:setting:params 'they use $\\Min^{\\mathrm{al}}$ throughout (\\cref{sec:exp})'",
+  "severity": "major",
+  "problem": "The aligned set is \\Min^{al}_{\\DTF} in \u00a72/App. A but \\Min_F in \u00a77, while \\Min_{\\DTF} in App. A means the literal set (\u00a77's \\Min^{lit}_F). NOTATION prescribes \\Min^{al}. \u00a72 says \u00a77 uses \\Min^{al}, a symbol that never appears there.",
+  "fix": "In experiments.tex at the definition write: 'the learner uses $\\Min_F(D):=\\Min^{\\mathrm{al}}_{\\DTF}(D)$ of \\cref{app:setting:align}, the minimal elements of the union of $\\Min^{\\mathrm{lit}}_F(\\alpha(D))=\\Min_{\\DTF}(\\alpha(D))$ over all alignments $\\alpha$'. Alternatively, replace \\Min_F by \\Min^{\\mathrm{al}}_F throughout experiments.tex and app-experiments.tex.",
+  "reviewer": "consistency",
+  "multi_file": true
+ },
+ {
+  "file": "sections/app-experiments.tex; sections/experiments.tex; sections/app-setting.tex",
+  "location": "app-exp: 'the alignment proposition of \\cref{app:setting}', 'substitution facts of \\cref{app:setting}', 'By the preservation lemma of \\cref{sec:setting}'; exp: '\\cref{app:setting} proves (a)--(c) for it', 'counterexample ... (\\cref{app:setting})'; app-setting: '(Theorem B of the single track)', 'Proposition E1-lit of the experiments track', 'Proposition E1-al of the experiments track'",
+  "severity": "minor",
+  "problem": "Cross-references between the alignment proposition and the normal form are given in words or as research-record IDs, although all the labels now exist.",
+  "fix": "app-exp: -> '\\cref{prop:setting:align}', '\\cref{lem:setting:subst}', 'By \\cref{lem:setting:preservation}'. exp: -> '\\cref{prop:setting:align} proves (a)--(c) for it', '(\\cref{ex:setting:align})'. app-setting: '(F) is \\cref{thm:single:min}(c). For $\\mathcal C=\\DTF$ it is \\cref{prop:exp:normal}(c).' and 'For $\\DTF$ this is the experiments' alignment result (computed check: E0b, below); the same proof gives it for $\\DT$, with (F) supplied by \\cref{thm:single:min} instead of \\cref{prop:exp:normal}.'",
+  "reviewer": "consistency",
+  "multi_file": true
+ },
+ {
+  "file": "sections/{setting,single,app-single,universal,app-universal,zfc,app-zfc,many,app-many,experiments}.tex",
+  "location": "word-only references such as 'the matching theorem of \\Cref{sec:setting}', 'rigid-prefix lemma, \\cref{sec:single}', 'the general anchor theorem of \\Cref{sec:single}', 'the closure criterion of \\Cref{sec:setting}', 'the two-point lemma used in \\cref{sec:many}', 'finitariness theorem of \\cref{sec:single}', '(single Cor G.4)', '(single Thm C)', '(single Prop G.3)', 'track single, Theorem H'",
+  "severity": "minor",
+  "problem": "About 80 references name a specific result in words but point only to a section (full list in review-consistency.md, item m1).",
+  "fix": "Apply the replacement table in review-consistency.md m1. Examples: matching theorem -> \\cref{thm:setting:matching}; preservation -> \\cref{lem:setting:preservation}; rigid-prefix lemma -> \\cref{lem:single:basic}(c); general anchor theorem (zfc \u00d73) -> \\cref{cor:single:special}(c); first-order case of the anchor theorem -> \\cref{cor:single:special}(a); closure criterion / 'closed in the class (\\cref{sec:setting})' -> \\cref{lem:setting:closed}; two-point lemma -> \\cref{lem:many:twopoint}; finitariness theorem -> \\cref{thm:single:min}; feature verifier -> \\cref{thm:single:feat}; '(single Cor G.4)' -> \\cref{cor:single:anchor-lgg}; '(single Prop G.3)' -> \\cref{prop:single:lgg}; 'Theorem H ... \\Cref{sec:many}' -> \\cref{thm:many:complexity}; Plotkin's recovery lemma -> \\cref{lem:setting:recover}; shielding -> \\cref{prop:zf:indso}; 4^n -> \\cref{prop:single:blowup}; residue -> \\cref{thm:many:residue}; HF\u222a{u} impossibility -> \\cref{prop:many:univset}; pattern AU on induction -> \\cref{prop:zf:indpat}.",
+  "reviewer": "consistency",
+  "multi_file": true
+ },
+ {
+  "file": "sections/single.tex; sections/experiments.tex; sections/app-experiments.tex; sections/universal.tex; sections/app-universal.tex; sections/app-setting.tex; sections/many.tex; sections/app-many.tex; sections/setting.tex; sections/zfc.tex; sections/app-zfc.tex",
+  "location": "single: '(``C8.3'')', '(``C11'')', 'So C11 is false', table 'earlier C8.3/C11', 'the candidate events of the brief', 'missing in the first version'; experiments: 'the first record' \u00d78; app-exp: 'the record says', 'The record's statement'; universal: 'the record calls this (H)', 'The record corrected (b) and (e) after the referee'; app-setting: 'Version~1 of the experiments record', 'The single-track referee'; many/app-many: 'An earlier version of the record', 'The first version of the research record', '(untagged Prop 6.1)', 'As far as the record knows'",
+  "severity": "minor",
+  "problem": "Internal provenance jargon and verification history appear in running text. Readers cannot know 'the brief', 'C11' or 'the first record'.",
+  "fix": "Move result IDs into \\src and verification history into app:ver. single: 'the earlier analysis conjectured that $\\Min(D)$ is finite also with nested arguments \\src{prior induction C8.3}'; 'The earlier analysis conjectured that escalations are at most linear ... \\src{prior induction C11}. ... So this conjecture is false'; table: '(earlier finiteness conjecture: true for $\\DT$, false with nested arguments)', '(earlier linear conjecture refuted)'; 'So the events one would first try (root variation and distinctness, as for first-order patterns) are right in spirit'. experiments: keep one intro sentence 'Withdrawn claims of an earlier version are listed in \\cref{app:ver}' and replace each 'the first record ...' by a neutral sentence plus '(withdrawn; \\cref{app:ver})'. Delete the universal 'the record ...' clauses. Replace '(untagged Prop 6.1)' by a \\src tag.",
+  "reviewer": "consistency",
+  "multi_file": true
+ },
+ {
+  "file": "sections/setting.tex; sections/app-setting.tex; sections/single.tex; sections/many.tex; sections/app-many.tex; sections/zfc.tex; sections/app-zfc.tex",
+  "location": "'the prior session' (setting \u00d72, app-setting \u00d72, e.g. 'Part (d) was proved in the prior session'); 'the earlier analysis' (single); 'the prior work (of this project)' (many, app-many); 'The results are from the prior record' (zfc), 'as in the prior record', 'checked locally by the prior track' (app-zfc)",
+  "severity": "minor",
+  "problem": "The same earlier PA-induction analysis has five different names across sections.",
+  "fix": "Define it once in \u00a72 (e.g. 'the earlier analysis of PA induction that preceded this work') and use 'the earlier analysis' in all sections, with item IDs in \\src{prior induction ...}. For example: setting 'class $\\mathrm{DT}$ of the earlier analysis'; zfc 'The results are from the earlier analysis'; app-zfc 'checked locally in the earlier analysis'.",
+  "reviewer": "consistency",
+  "multi_file": true
+ },
+ {
+  "file": "sections/many.tex; sections/experiments.tex; sections/zfc.tex; sections/setting.tex; sections/single.tex; sections/universal.tex",
+  "location": "def:many:setting, def:many:dtrc, def:exp:normal (\\status{definition}); def:zf:enc (\\status{known}); definitions in setting/single/universal (no status); statuses 'proved; known in substance', 'proved; known (Gold)', 'computed (consistency check)', 'computed; reproduced by the referee', 'computed; independently confirmed by the referee', 'proved, using standard coding facts cited from memory'",
+  "severity": "minor",
+  "problem": "Definitions carry status markers in three different ways, and several status strings fall outside NOTATION's list (proved|computed|conjecture|known|proof sketch).",
+  "fix": "Adopt the majority convention (definitions carry \\src only) and record it in NOTATION.md. Delete \\status{definition} in many.tex (2\u00d7) and experiments.tex (1\u00d7) and \\status{known} on def:zf:enc. Normalize the other statuses to NOTATION values, e.g. \\status{proved; known}, \\status{computed}, and move the qualifiers ('Gold', 'consistency check', 'reproduced by the referee', 'coding facts cited from memory') into the statement text or \\src.",
+  "reviewer": "consistency",
+  "multi_file": true
+ },
+ {
+  "file": "sections/setting.tex; sections/universal.tex; sections/app-universal.tex",
+  "location": "setting \u00a72.3 'In the \\emph{named} encoding (N)' and, 8 lines later, '\\evN{} (every argument place is used)'; universal 'Work in syntax (N) or (dB)', tab:univ:learner",
+  "severity": "minor",
+  "problem": "'(N)' denotes both the named first-order encoding and the non-vacuity event \\evN used in \u00a73, \u00a75 and \u00a76.",
+  "fix": "Rename the encoding to '(Nm)' in setting.tex, universal.tex and app-universal.tex, e.g. 'the \\emph{named} encoding (Nm)', 'Work in syntax (Nm) or (dB)', '(Nm)/(dB) with nocap'.",
+  "reviewer": "consistency",
+  "multi_file": true
+ },
+ {
+  "file": "sections/setting.tex; sections/single.tex; sections/zfc.tex",
+  "location": "setting after lem:setting:closed: 'closed in the size-bounded class $\\mathrm{DT}_s$ iff $s\\ge12$'; single Open problems: 'templates of size $\\le11$ make the cautious verifier accept ...'; zfc thm:zf:indanchor uses $\\DT_s$ before 'Here $|T|$ counts symbols'",
+  "severity": "minor",
+  "problem": "In \u00a72, \\mathrm{DT} (without \u00b0) is the nested-argument class of rem:setting:nested, but the result (prop:zf:indgen) concerns DT\u00b0. Single omits the lower bound 7 that zfc states (7\u2264s\u226411). zfc defines size after first using it.",
+  "fix": "setting: 'closed in the class $\\DT_s$ of templates of size at most $s$ (size as in \\cref{prop:zf:indgen})'. single: 'templates of size $7$ to $11$ make ...'. zfc: move 'Here $|T|$ counts symbols, an occurrence $M(\\bar t)$ counting $1+\\sum_i|t_i|$; so $|T_{\\Ind}|=14$.' before thm:zf:indanchor.",
+  "reviewer": "consistency",
+  "multi_file": true
+ },
+ {
+  "file": "paper/sections/{setting,single,universal,zfc,many,experiments}.tex",
+  "location": "main text sections 2-7 as a whole (pdf pp. 10-61)",
+  "severity": "major",
+  "problem": "The main text is about 51.3 pp against a target of about 40 (setting 6.6, single 9.4, universal 7.3, zfc 8.8, many 10.3, experiments 9.0 pp, measured as about 4,200 source characters per printed page). Most of the excess is duplicated definitions and results, plus secondary results, proofs and computational detail that could sit in the appendices.",
+  "fix": "Apply the cuts listed in the following issues (sections A-C of review-readability.md). Estimated savings: setting -0.35 (net of a +0.4 glossary), single -3.0, universal -1.7, zfc -2.1, many -2.3, experiments -2.6 (net of a +0.3 E1 figure). Total about -12 pp, giving about 39.3 pp. Optional cuts O1-O6 give about 1.3 pp more. Every moved environment keeps its label, so all \\cref references still resolve, and the main text keeps the one-line pointer given in each fix.",
+  "reviewer": "readability",
+  "multi_file": true
+ },
+ {
+  "file": "paper/sections/setting.tex",
+  "location": "end of \u00a72 (after sec:setting:params), or app:setting as Table A.1 with a pointer from \u00a72",
+  "severity": "major",
+  "problem": "The main text uses more than 25 parenthesized condition names, defined in six places. Events: (R), (R*), (N), (N_i), (D), (D_ii'), (U), (D^+), (D^PAT), (D^DT), (D^root), (B). Richness and saturation: (Rich), (Rich_c), (S1), (S2). Oracles: (OS), (Dec). Untagged learning: (X), (Abs), cross-separation, anchor-pair separation, RS_d(D), global separation, noise-separation. Experiments: (H1)-(H5), (H-ref). Several are close variants of each other (four separation notions), and nothing collects them.",
+  "fix": "Add a table 'Named conditions' with three columns: name; one-line meaning; where defined. Rows (each with its label): (R) values of each metavariable not all of one root (lem:setting:recover); (R*) root variation at every occurrence (def:single:events); (N)/(N_i) every argument place is used (def:single:events, \u00a75); (D)/(D_ii') Plotkin distinctness (lem:setting:recover, def:univ:target); (U) no coincidence (def:single:events); (D^+), (D^PAT), (D^DT), (D^root) (cor:single:special(b), thm:zf:multi); (B) unshielded x (prop:zf:indso); (Rich) (def:single:events); (Rich_c) (\u00a74.1); (S1),(S2) saturation (\u00a73.2); (OS),(Dec) (def:setting:oracle); cross-separation (thm:many:splits); (X) (thm:many:pigeonhole); anchor-pair separation (\u00a76.3); RS_d(D) and global separation (def:many:dtrc); (Abs) (thm:many:slots); noise-separated (prop:many:noise); (H1)-(H5), (H-ref) (thm:exp:dtrc, prop:exp:share). Costs about 0.4 pp, which is in the budget; place it in app:setting if space is tight.",
+  "reviewer": "readability",
+  "multi_file": false
+ },
+ {
+  "file": "paper/sections/setting.tex",
+  "location": "\\paragraph{Universal axioms.}, lines 199-200",
+  "severity": "minor",
+  "problem": "The instance schema, inst_c and inst_o are defined here, again in def:univ:target, and a third time in universal.tex line 37.",
+  "fix": "Replace lines 199-200 with '\\paragraph{Universal axioms.} The instance schema $\\sigma_\\varphi$ of $\\forall\\bar x\\varphi$, with its closed and open instances, is defined in \\cref{def:univ:target}.' Keep def:univ:target and universal.tex line 37.",
+  "reviewer": "readability",
+  "multi_file": false
+ },
+ {
+  "file": "paper/sections/setting.tex",
+  "location": "line 119 (paragraph 'Part (a) is the special case of Miller''s pattern unification\u2026'); line 161 (sentences 'Identification in the limit is due to \u2026 applied to sentences.')",
+  "severity": "minor",
+  "problem": "Two literature and history asides sit in the middle of the core definitions.",
+  "fix": "Move line 119 to the end of app:setting:matching. Move the literature sentences of line 161 to discussion.tex sec:disc:lit (editor). In line 161, also write $\\DT_s$ instead of $\\mathrm{DT}_s$ and cite \\cref{prop:zf:indgen} for the s\u226512 example. Saves about 0.2 pp.",
+  "reviewer": "readability",
+  "multi_file": false
+ },
+ {
+  "file": "paper/sections/setting.tex",
+  "location": "ex:setting:classes(4): 'These two data anchor $z+0=z$ in $\\DT$'",
+  "severity": "minor",
+  "problem": "'Anchor' is used before def:setting:protocol (\u00a72.5) defines it.",
+  "fix": "Add '(anchors: \\cref{def:setting:protocol})' after 'in $\\DT$ (\\cref{sec:univ})'.",
+  "reviewer": "readability",
+  "multi_file": false
+ },
+ {
+  "file": "paper/sections/setting.tex",
+  "location": "\\subsection sec:setting:fo (lines 86-96), between the class definitions and Matching",
+  "severity": "minor",
+  "problem": "First-order encodings, capture and guards are used only in \u00a74 and \u00a75, yet they stand between templates and the matching/protocol/anchor material that every later section needs. \u00a72 also lacks a closing statement of the facts it provides.",
+  "fix": "Move \\subsection{First-order encodings, capture and guards} (lines 86-96, with lem:setting:recover) unchanged to after \u00a72.6 'Refutation oracles'. Optionally end \u00a72 with: 'The rest of the paper uses three facts: the cautious verifier is sound iff the target is closed in the class (\\cref{lem:setting:closed}), exact iff the data contain an anchor, and refutation is one-sided (\\cref{lem:setting:onesided}).'",
+  "reviewer": "readability",
+  "multi_file": false
+ }
+]

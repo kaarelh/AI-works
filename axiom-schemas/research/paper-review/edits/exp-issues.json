@@ -1,0 +1,380 @@
+[
+ {
+  "file": "sections/experiments.tex (+ app-experiments.tex proof of prop:exp:share)",
+  "location": "prop:exp:share: \"after the sharing pass the cluster of $T_l$ is $C^+=D\\cap\\inst(T_l)$, in any order; and $\\Acc(C^+)\\subseteq\\inst(T_l)$, with equality whenever $C^+$ contains an anchor\"; proof: \"Let $C'$ be the growing cluster, initially the phase-one cluster $C$ with $l(C)=l$\"; E3 Reading \"as \\cref{prop:exp:share} predicts\"",
+  "severity": "fatal",
+  "problem": "The proof only shows that each phase-1 cluster C grows to D\u2229inst(T_{l(C)}). It never shows that every target labels a phase-1 cluster, and in fact one need not. Counterexample, computed with the implementation (research/paper-review/scratch/share_cex.py): targets U_add0=(z+0=z), U_0add=(0+z=z) and T3=(1+z=Sz), all valid; data D={0+0=0, 0+2=2, 1+0=1, 1+1=2}. Every set lying in no single instance set contains a cross pair whose minimal template is false (z+z=w; z0+z1=Sz2; z0+Sz1=2), so (S+) holds even for an ideal refuter. Phase 1, merging the largest common prefix first, builds {1+0=1, 1+1=2} (lies only in inst(T3)) and {0+0=0, 0+2=2} (lies only in inst(U_0add)), so (P) holds. The sharing pass adds nothing. U_add0 owns no cluster, and DTRC+share rejects 2+0=2 and 3+0=3. The membership-labelled tagged learner sees {0+0=0, 1+0=1}, an anchor with Min={z+0=z}, and is exact. So the claim \"the cluster of T_l is C+ \u2026 with equality whenever C+ contains an anchor\" is false for this T_l. So is the record's claim that DTRC+share is exact whenever the membership-labelled learner is, even for anchor-based exactness. Nested targets (U_add00 \u2286 U_add0 in E4(a)) also own no cluster.",
+  "fix": "Replace the conclusion by: \"Then distinct phase-1 clusters have distinct labels; after the sharing pass each phase-1 cluster $C$, with $l:=l(C)$, has become $C^+=D\\cap\\inst(T_l)$, in any order; and $\\Acc(C^+)\\subseteq\\inst(T_l)$, with equality whenever $C^+$ contains an anchor of $T_l$. Under \\textup{(H-ref)} $\\Acc(C^+)$ is the acceptance set of the tagged learner with membership labels for $T_l$. A target that labels no phase-1 cluster gets no cluster of its own and may be learned incompletely even when its membership-labelled data contain an anchor.\" In the proof, write \"For each phase-1 cluster $C$, with $l:=l(C)$, let $C'$ be the growing cluster, initially $C$.\" After the proof, add the counterexample: targets $z+0=z$, $0+z=z$, $1+z=Sz$; data $\\{0+0=0,0+2=2,1+0=1,1+1=2\\}$; $2+0=2$ is rejected. In E3's Reading, replace \"as \\cref{prop:exp:share} predicts\" by \"consistent with \\cref{prop:exp:share} (here every target with data labels a phase-1 cluster)\".",
+  "reviewer": "math-many-exp",
+  "multi_file": false
+ },
+ {
+  "file": "sections/experiments.tex",
+  "location": "paragraph \"E6 and E7\": \"$k=9$ accepts $0/8$ from two induction instances (the spare slot keeps them apart) and $8/8$ from three. No false non-instance was accepted. This reproduces the prior untagged result (\\cref{sec:many})\"",
+  "severity": "major",
+  "problem": "One of the two three-instance runs (e6_kunion.md) uses the motives x=x, \u00acx=0, x+0=x. Its split {Ind(x=x), Ind(x+0=x)} | {Ind(\u00acx=0)} has a root-homogeneous block, which is not a DT\u00b0 anchor (anchor theorem (R)+(N); \u00a76 slot accounting). I computed (scratch/e6_dtf_vs_dt.py) that the DT\u00b0 template (f(0)=0 \u2227 \u2200x(f(x)=x\u2192f(Sx)=Sx))\u2192\u2200x f(x)=x covers both data, has only true instances (so it avoids every sound negative), and misses the query Ind(x\u00b70=0). Hence DT\u00b0 at k=9, and the prior and \u00a76 theory, predict rejection. In DT\u00b0_F the pair has Min = {T_Ind, (f0=0\u2227\u2200x(P(x)\u2192P(Sx)))\u2192\u2200xP(x)}; the second is refuted. So 8/8 arises only because f(x) \u2209 DT\u00b0_F, and only relative to the negatives. The run whose third motive is \u2203y.x<y does agree with the theory.",
+  "fix": "Replace the last two sentences by: \"\u2026 and $8/8$ from three. With third motive $\\exists y\\,x<y$ this agrees with the slot accounting of \\cref{sec:many} (every 2-block split has an anchor block). With third motive $x+0=x$ it does not: $\\{\\Ind(x=x),\\Ind(x+0=x)\\}$ is root-homogeneous, and the $\\DT$ template $(f(0)=0\\wedge\\forall x(f(x)=x\\to f(Sx)=Sx))\\to\\forall x\\,f(x)=x$ covers it, has only true instances, and misses held-out queries such as $\\Ind(x\\cdot0=0)$. $\\DTF$ lacks this template, so here the implemented class accepts more than $\\DT$ would. No false non-instance was accepted. The other rows reproduce the prior untagged result \\src{experiments E6; prior pa-untagged}.\"",
+  "reviewer": "math-many-exp",
+  "multi_file": false
+ },
+ {
+  "file": "sections/experiments.tex",
+  "location": "prop:exp:hard(b), last sentence: \"Other merges of this pair are valid, and some false ones are refuted only at budget $400$.\"",
+  "severity": "major",
+  "problem": "As stated, every other EInd/EInd2 merge is valid, which the same sentence then contradicts. The record (Prop E9(b)) says only that some merges are valid (EInd(x=x) with EInd2(x=x)). It also says that when the EInd motive begins with \u2200z\u2208y the template is false (refuted at budget 400).",
+  "fix": "\"Some other merges of this pair are valid (e.g.\\ $\\EInd(x=x)$ with $\\mathrm{EInd2}(x=x)$), and some false ones are refuted only at budget $400$.\"",
+  "reviewer": "math-many-exp",
+  "multi_file": false
+ },
+ {
+  "file": "sections/experiments.tex",
+  "location": "E5 paragraph: \"The curves are dominated by the first appearance of each ground axiom; the schemas are exact after $5$--$20$ examples\"",
+  "severity": "major",
+  "problem": "In \u00a77, \"schema targets\" are T_Ind and the three instance schemas (caption of tab:exp:e3). In e5_curves.md the instance schemas take far longer. For DTRC, U_0add first stays exact only after more than 120 examples in four of five numeral streams, and U_add0 at 120 or later in four of five. The record restricts the claim to Ind, Sep, Rep and EInd.",
+  "fix": "\"\u2026 the schemas $T_{\\Ind}$, Separation, Replacement and $\\in$-induction are exact after $5$--$20$ examples, the instance schemas only after their $0$-instance appears (for \\DTRC{} on $U_{\\mathrm{0add}}$, beyond $120$ examples in four of five numeral streams).\"",
+  "reviewer": "math-many-exp",
+  "multi_file": false
+ },
+ {
+  "file": "sections/experiments.tex",
+  "location": "prop:exp:numerals \"numerals uniform in $0..7$ form an anchor iff they include $0$\"; E3 Reading \"$n$ numerals form an anchor with probability $1-(7/8)^n$\"",
+  "severity": "minor",
+  "problem": "By the proposition itself, an anchor needs two root symbols: the numeral 0 and a nonzero numeral. The exact probability is 1\u2212(7/8)^n\u2212(1/8)^n (n=4: 0.41357 vs 0.41382).",
+  "fix": "\"form an anchor iff they include $0$ and a nonzero numeral\"; \"with probability $1-(7/8)^n-(1/8)^n$\".",
+  "reviewer": "math-many-exp",
+  "multi_file": false
+ },
+ {
+  "file": "sections/experiments.tex",
+  "location": "after prop:exp:hard: \"The one survivor in E9 is false but is refuted only at budget $400$.\"",
+  "severity": "minor",
+  "problem": "tab:exp:e9 shows 1 distinct unrefuted ZF-hard template in the pairs protocol and 2 in the sets protocol. The second is (\u2200x(\u2200y\u2208x\u2200z\u2208y P0(z)\u2192P1(x)))\u2192\u2200xP1(x). I computed (scratch/e9_survivors.py) that both are unrefuted at budget 80 and refuted at 400 in the one-hot pass.",
+  "fix": "\"The surviving templates in E9 (one in the pairs protocol, two in the sets protocol, all from EInd/EInd2 pairs) are false and are refuted at budget $400$.\"",
+  "reviewer": "math-many-exp",
+  "multi_file": false
+ },
+ {
+  "file": "sections/experiments.tex",
+  "location": "E3 paragraph: \"$T_{\\Ind}$ is exact for every learner in every seed\"",
+  "severity": "minor",
+  "problem": "This is false for the pattern-lgg baseline in the same table. That baseline is never exact on induction (E2: 0/30 at every N; prior C9); its 8/20 are instance schemas.",
+  "fix": "\"$T_{\\Ind}$ is exact for \\DTRC, \\DTRC+share and both tagged learners in every seed (the pattern $\\lgg$ never is)\"",
+  "reviewer": "math-many-exp",
+  "multi_file": false
+ },
+ {
+  "file": "sections/experiments.tex",
+  "location": "E3 Reading: \"Skeleton clustering with the true $k$ is unsound on PA (it lumps Q4 and Q6 into $\\forall x\\,P(x)$)\"",
+  "severity": "minor",
+  "problem": "The per-target results (e3_mix.json) and a re-run (scratch/skel.py) show something else. Skeleton clustering lumps Q5 and Q7 into \u2200x\u2200yP(x,y) (numeral seeds 0, 1, 4; mixed seeds 0\u20134). It lumps Q4 and Q6 into \u2200xP(x) only in mixed seed 0. It also lumps U_add0 and U_0add data into templates such as z0+z1=SSz2. The refuted exhibit in e3_mix.md, \u2200x\u2200y x<2, is an instance of \u2200x\u2200yP(x,y).",
+  "fix": "\"\u2026 unsound on PA (it lumps Q5 and Q7 into $\\forall x\\forall y\\,P(x,y)$, in one run also Q4 and Q6 into $\\forall x\\,P(x)$, and data of $U_{\\mathrm{add0}}$ and $U_{\\mathrm{0add}}$ into templates such as $z_0+z_1=SSz_2$)\"",
+  "reviewer": "math-many-exp",
+  "multi_file": false
+ },
+ {
+  "file": "sections/experiments.tex",
+  "location": "caption of tab:exp:e2: \"their soundness fails (text)\"",
+  "severity": "minor",
+  "problem": "The text and the E2 probes (0 of 182) show that first-order lggs are sound on \u2208-induction in de Bruijn indices.",
+  "fix": "\"\u2026 their soundness fails except on $\\in$-induction in de Bruijn indices (text).\"",
+  "reviewer": "math-many-exp",
+  "multi_file": false
+ },
+ {
+  "file": "sections/experiments.tex",
+  "location": "after tab:exp:e2: \"The ZF schemas \u2026 are learned from $2$--$3$ instances by $\\DTF$ and by the genuine pattern $\\lgg$\"",
+  "severity": "minor",
+  "problem": "Replacement is exact in only 23/30 runs at N=2 and 24/30 at N=3; it reaches 30/30 only at N=8.",
+  "fix": "\"\u2026 are learned in most runs from $2$--$3$ instances (in every run by $N=8$) by $\\DTF$ and by the genuine pattern $\\lgg$ \u2026\"",
+  "reviewer": "math-many-exp",
+  "multi_file": false
+ },
+ {
+  "file": "sections/experiments.tex",
+  "location": "end of \\paragraph{Template refuter and \\DTRC{}}: \"This is $\\DTRC$ of \\cref{sec:many} with the class $\\DTF$, a fixed merge order and a budgeted refuter.\"",
+  "severity": "minor",
+  "problem": "The implementation also differs in four other ways. (a) It inherits failed pairs, which is exact only for an ideal refuter (prop:exp:mono(a)). (b) It sets Acc(C)=C when all members of Min_F(C) are refuted, where \u00a76 uses \u2205. (c) It discards refuted data. (d) It has an optional sharing pass.",
+  "fix": "Append: \"It differs in four details: failed pairs are inherited (exact for an ideal refuter by \\cref{prop:exp:mono}(a)); refuted data are discarded; a cluster all of whose minimal templates are refuted accepts its data (in \\cref{sec:many}: nothing); and the sharing pass is optional.\"",
+  "reviewer": "math-many-exp",
+  "multi_file": false
+ },
+ {
+  "file": "sections/experiments.tex",
+  "location": "after prop:exp:budget: \"So a budgeted refuter harms \\DTRC{} only through clustering\"",
+  "severity": "minor",
+  "problem": "This holds for soundness only. Fewer refutations also cost exactness inside a pure cluster: prop:exp:budget says more refutations enlarge Acc(C), and in E2 induction at N=2 is exact in 27/30 runs with refutation versus 25/30 without.",
+  "fix": "\"So a budgeted refuter harms the soundness of \\DTRC{} only through clustering: \u2026\"",
+  "reviewer": "math-many-exp",
+  "multi_file": false
+ },
+ {
+  "file": "sections/experiments.tex",
+  "location": "\"In brief\" paragraph: \"for these mixtures we prove refutation separation\"",
+  "severity": "minor",
+  "problem": "cor:exp:mixsep proves separation for an ideal refuter. For the implemented budgeted refuter, separation is the computed E9 result.",
+  "fix": "\"for these mixtures we prove refutation separation for an ideal refuter, and the implemented refuter achieved it on every sampled merge\"",
+  "reviewer": "math-many-exp",
+  "multi_file": false
+ },
+ {
+  "file": "sections/experiments.tex",
+  "location": "E4(b): \"ZF: $6$ mistakes (Separation with the comprehension variable free in the body, \u2026, complement comprehension)\"",
+  "severity": "minor",
+  "problem": "datasets.zf_mistakes(rng,6) cycles sep_capture, eind_wrong, naive. The complement-comprehension sentence is identical both times, so there are only 5 distinct mistakes. The fate counts in e4_stress.md sum to 5 per ZF run.",
+  "fix": "\"ZF: $6$ mistakes ($5$ distinct sentences: \u2026)\"",
+  "reviewer": "math-many-exp",
+  "multi_file": false
+ },
+ {
+  "file": "sections/experiments.tex",
+  "location": "intro 'In brief: on Q1 and Q2 ... and on Q2 it accepted no non-instance in 927 probes'; headings 'E1: ... (Q1)', 'E2: ... (Q2)', 'E3: ... (Q3)'",
+  "severity": "major",
+  "problem": "The intro fixes 'Questions 1--3 (not to be confused with the axioms Q1--Q7)'. This section also uses Q4/Q6 for axioms ('the axiom Q4 is the datum ...', 'lumps Q4 and Q6'), so 'on Q2 it accepted no non-instance' reads as a claim about the injectivity axiom.",
+  "fix": "'on Questions 1 and 2 the implemented learner behaves as the theory predicts, and on Question 2 it accepted ...'; headings '(Question 1)', '(Question 2)', '(Question 3)'.",
+  "reviewer": "consistency",
+  "multi_file": false
+ },
+ {
+  "file": "sections/experiments.tex",
+  "location": "prop:exp:numerals: 'numerals uniform in $0..7$ form an anchor iff they include $0$'; E3 reading: 'probability $1-(7/8)^n$'",
+  "severity": "minor",
+  "problem": "Draws are with replacement (code/dtrc/datasets.py: rng.randrange(8)). An all-zero draw gives the single datum 0+0=0, which is not an anchor, so the 'iff' is false in that case. The exact probability is 1-(7/8)^n-(1/8)^n, as the E1 prediction already uses.",
+  "fix": "'form an anchor iff they include $0$ and a nonzero numeral' and 'with probability $1-(7/8)^n-(1/8)^n$'.",
+  "reviewer": "consistency",
+  "multi_file": false
+ },
+ {
+  "file": "sections/experiments.tex",
+  "location": "'\\DTRC{} as implemented: ... (4) ... or $C$ if all are refuted; ... This is $\\DTRC$ of \\cref{sec:many} with the class $\\DTF$, a fixed merge order and a budgeted refuter.'",
+  "severity": "minor",
+  "problem": "def:many:dtrc sets $\\Acc_d(C)=\\emptyset$ when no minimal template is unrefuted; the implementation asserts C.",
+  "fix": "'... a fixed merge order, a budgeted refuter, and the convention that a cluster whose minimal templates are all refuted asserts its own data (\\cref{def:many:dtrc} asserts nothing).'",
+  "reviewer": "consistency",
+  "multi_file": false
+ },
+ {
+  "file": "sections/experiments.tex",
+  "location": "E6: 'one slot $\\forall x\\,P(x)$ takes all of $\\Q$ ... This reproduces the prior untagged result (\\cref{sec:many})'",
+  "severity": "minor",
+  "problem": "cor:many:paslots computes c=4 on positive data for Q in parameter form. E6 keeps leading quantifiers, so all of Q fits in one slot (c=1). The record means prior/pa-untagged, not \u00a76, and the reader is not told why the counts differ.",
+  "fix": "'This is the slot accounting of \\cref{thm:many:slots}: with leading quantifiers kept, all of $\\Q$'s axioms are instances of $\\forall x\\,P(x)$, so $c=1$ on positive data (against $c=4$ for the parameter form of \\cref{cor:many:paslots}), and $c=7$ with negatives in both presentations.'",
+  "reviewer": "consistency",
+  "multi_file": false
+ },
+ {
+  "file": "sections/experiments.tex",
+  "location": "E3 Reading: 'with sharing it matches the membership-labelled learner target by target and seed by seed, as \\cref{prop:exp:share} predicts.'",
+  "severity": "minor",
+  "problem": "The equality in prop:exp:share needs (H-ref), which 'the implemented refuter violates'; the proposition only predicts exactness from anchors.",
+  "fix": "'... seed by seed; \\cref{prop:exp:share} predicts this where exactness comes from anchors (the equality in general needs (H-ref), which the implemented refuter does not satisfy).'",
+  "reviewer": "consistency",
+  "multi_file": false
+ },
+ {
+  "file": "sections/experiments.tex",
+  "location": "intro: 'for these mixtures we prove refutation separation'",
+  "severity": "minor",
+  "problem": "cor:exp:mixsep proves (S) only 'with an ideal refuter'; for the budgeted refuter it is observed in E9, not proved.",
+  "fix": "'for these mixtures we prove refutation separation for an ideal refuter, and the budgeted refuter found every needed refutation (E9)'.",
+  "reviewer": "consistency",
+  "multi_file": false
+ },
+ {
+  "file": "sections/experiments.tex",
+  "location": "before prop:exp:hard: 'the bounding forms $\\mathrm{Union}_W$, $\\mathrm{Power}_W$ of \\cref{sec:many}'; prop:exp:hard(a) $U=\\forall a\\exists b\\forall x(P(x,a)\\to x\\in b)$",
+  "severity": "minor",
+  "problem": "\u00a76 writes Union_W and U in parameter form ($U(F)=\\exists x\\forall y(F(y)\\to y\\in x)$, unary F). \u00a77 uses the same names for different formulas (leading \u2200a, binary P).",
+  "fix": "Add before prop:exp:hard: '(here with the leading $\\forall a$ kept, as everywhere in this section, so $U$ has the binary metavariable $P(x,a)$ instead of the parameter form $U(F)$ of \\cref{prop:many:univset})'.",
+  "reviewer": "consistency",
+  "multi_file": false
+ },
+ {
+  "file": "sections/app-experiments.tex",
+  "location": "\\paragraph{E2, further exhibits}: \"$\\in$-induction, named, $(\\forall x(\\forall y(y\\in x\\to y\\in w_0))\\to\\neg x\\in w_0))\\to\\forall x\\,\\neg x\\in w_0$\"",
+  "severity": "minor",
+  "problem": "This exhibit comes from code/results_v1/e2_schemas.md. The current code/results/e2_schemas.md, which the paragraph cites, lists (\u2200x(\u2200y(y\u2208x\u2192x=y)\u2192\u00acx\u2208w0))\u2192\u2200x\u00acx\u2208w0. The other three exhibits match the v2 file.",
+  "fix": "Replace by \"$\\in$-induction, named, $(\\forall x(\\forall y(y\\in x\\to x=y)\\to\\neg x\\in w_0))\\to\\forall x\\,\\neg x\\in w_0$, false with $w_0=\\{\\{\\emptyset\\}\\}$ (the premise only says $\\emptyset\\notin w_0$)\".",
+  "reviewer": "math-many-exp",
+  "multi_file": false
+ },
+ {
+  "file": "sections/app-experiments.tex",
+  "location": "after the E0b table: 'differs from the literal one on $38/200$ (PA) and $72/200$ (ZF) parameter-free data sets: the data's bodies carry parameters'",
+  "severity": "minor",
+  "problem": "The phrase contradicts itself and app:setting:align, which shows the two sets coincide when some datum is parameter-free. The rows meant are those whose generating template has no rigid parameter.",
+  "fix": "'... on $38/200$ (PA) and $72/200$ (ZF) data sets whose generating template has no rigid parameter: the data's bodies carry parameters, ...'.",
+  "reviewer": "consistency",
+  "multi_file": false
+ },
+ {
+  "file": "sections/app-experiments.tex, sections/experiments.tex",
+  "location": "app: \"differs from the literal one on $38/200$ (PA) and $72/200$ (ZF) parameter-free data sets\"; experiments.tex: \"the literal one failed exactly when the generating template had a rigid parameter\"",
+  "severity": "minor",
+  "problem": "(i) These data sets carry parameters, as the same sentence says. What is parameter-free is the generating template T*. (ii) The literal Min failed in only 17/200 (PA) and 36/200 (ZF) of the rigid-parameter data sets, and never otherwise, so \"exactly when\" should be \"only when\".",
+  "fix": "(i) \"on $38/200$ (PA) and $72/200$ (ZF) data sets generated from a parameter-free $T^*$\"; (ii) \"the literal one failed only when the generating template had a rigid parameter ($17/200$ PA, $36/200$ ZF)\".",
+  "reviewer": "math-many-exp",
+  "multi_file": false
+ },
+ {
+  "file": "sections/experiments.tex; sections/universal.tex",
+  "location": "E1 paragraph: 'Details and curves are in \\cref{sec:univ}' / universal: 'The experiments section (\\cref{sec:exp}) plots the curves.'",
+  "severity": "major",
+  "problem": "figures/e1_anchor_cdf.png is included in no section (grep includegraphics finds only e5_curves.png). Each section sends the reader to the other, and fig:univ:e1, which the exp writer assumed exists, does not. The figure is informative (observed vs predicted 1-sum_h p_h^N, two regimes).",
+  "fix": "In experiments.tex after the E1 paragraph insert: \\begin{figure}[t]\\centering\\includegraphics[width=0.62\\textwidth]{figures/e1_anchor_cdf.png}\\caption{E1: probability that the $\\DTF$ learner is exact after $N$ instances of $x+0=x$, observed in $2000$ runs (circles) against the prediction $1-\\sum_hp_h^N$ of \\cref{thm:univ:rates}(a) and \\cref{prop:exp:numerals} (lines), mixed and numerals-only regimes \\src{experiments E1}.}\\label{fig:exp:e1}\\end{figure}. Replace 'Details and curves are in \\cref{sec:univ}' by '\\Cref{fig:exp:e1} shows the curves, and \\cref{sec:univ:rates} discusses the numbers'. In universal.tex replace 'The experiments section (\\cref{sec:exp}) plots the curves.' by '\\Cref{fig:exp:e1} plots the curves.'",
+  "reviewer": "consistency",
+  "multi_file": true
+ },
+ {
+  "file": "sections/experiments.tex; sections/app-experiments.tex",
+  "location": "data sets '10 of Replacement $\\ReplS$ ($\\exists!$ spelled out, image consequent)'; prop:exp:mixsep target list; tab:exp:cases; tab:exp:e2 row $\\ReplS$; app-exp 'The mixture targets' definition of $\\ReplS$",
+  "severity": "major",
+  "problem": "\\ReplS is defined in NOTATION/tab:zf:forms as Kunen-style Replacement with a Collection-shaped consequent. The implemented schema has Jech's image consequent, so it is neither \\ReplS nor \\ReplJ (zfc.tex says this explicitly). With the shared macro the paper seems to contradict itself: prop:zf:coll says the named first-order lgg of ReplS is truth-sound, while E2 reports that first-order lggs are unsound on the row labelled ReplS in both encodings.",
+  "fix": "Introduce a separate name, e.g. local macro \\expReplE = $\\mathrm{Repl}_{\\mathrm{E}}$, at first use: '10 of Replacement $\\mathrm{Repl}_{\\mathrm{E}}$ ($\\exists!$ spelled out as in $\\ReplS$, with the image consequent of $\\ReplJ$; neither formulation of \\cref{tab:zf:forms})'. Replace \\ReplS by it throughout experiments.tex and app-experiments.tex. After the E2 sentence on first-order lggs add '(for $\\ReplS$ itself the named first-order lgg is truth-sound, \\cref{prop:zf:coll}; the image consequent is what yields false instances, as remarked after \\cref{prop:zf:coll})'. In many.tex sec:many:examples, after 'Replacement with $\\exists!$ spelled out' add 'and image consequent'.",
+  "reviewer": "consistency",
+  "multi_file": false
+ },
+ {
+  "file": "sections/experiments.tex; sections/app-experiments.tex",
+  "location": "'Minimal covering templates': 'Let $C(D)$ be the common-prefix tree ... and the slots ... In $\\mathcal T(D)$, each common atom node ... is cut to a leaf slot'",
+  "severity": "major",
+  "problem": "\\mathcal T(D), the central object of def:exp:normal, prop:exp:normal and lem:exp:heads, is used but never introduced. \u00a77's C(D) also includes the slots, whereas def:single:features (and app-many, app-zfc, app-universal) define C(D) without slots and A(D)=C(D)\u222aslots.",
+  "fix": "Replace by: 'Let $A(D)$ be the common-prefix tree of $D$ with its slots, as in \\cref{def:single:features} (positions where all data carry the same label and arity at and above $p$, parameters compared by name, together with the slots). Let $\\mathcal T(D)$ be $A(D)$ with each common atom node whose subtree contains a slot with an open column cut to a leaf slot (an \\emph{F-slot}); so every term slot of $\\mathcal T(D)$ has a closed column.' In app-experiments Step 0 write 'the common part of $A(D)$'.",
+  "reviewer": "consistency",
+  "multi_file": false
+ },
+ {
+  "file": "sections/experiments.tex; sections/app-setting.tex",
+  "location": "exp: 'the learner uses $\\Min_F(D)$, the minimal elements of the union of $\\Min^{\\mathrm{lit}}_F(\\alpha(D))$ over all alignments'; app-setting ex:setting:align 'Literally, $\\Min_{\\DTF}(D)=...$'; setting sec:setting:params 'they use $\\Min^{\\mathrm{al}}$ throughout (\\cref{sec:exp})'",
+  "severity": "major",
+  "problem": "The aligned set is \\Min^{al}_{\\DTF} in \u00a72/App. A but \\Min_F in \u00a77, while \\Min_{\\DTF} in App. A means the literal set (\u00a77's \\Min^{lit}_F). NOTATION prescribes \\Min^{al}. \u00a72 says \u00a77 uses \\Min^{al}, a symbol that never appears there.",
+  "fix": "In experiments.tex at the definition write: 'the learner uses $\\Min_F(D):=\\Min^{\\mathrm{al}}_{\\DTF}(D)$ of \\cref{app:setting:align}, the minimal elements of the union of $\\Min^{\\mathrm{lit}}_F(\\alpha(D))=\\Min_{\\DTF}(\\alpha(D))$ over all alignments $\\alpha$'. Alternatively, replace \\Min_F by \\Min^{\\mathrm{al}}_F throughout experiments.tex and app-experiments.tex.",
+  "reviewer": "consistency",
+  "multi_file": true
+ },
+ {
+  "file": "sections/app-experiments.tex; sections/experiments.tex; sections/app-setting.tex",
+  "location": "app-exp: 'the alignment proposition of \\cref{app:setting}', 'substitution facts of \\cref{app:setting}', 'By the preservation lemma of \\cref{sec:setting}'; exp: '\\cref{app:setting} proves (a)--(c) for it', 'counterexample ... (\\cref{app:setting})'; app-setting: '(Theorem B of the single track)', 'Proposition E1-lit of the experiments track', 'Proposition E1-al of the experiments track'",
+  "severity": "minor",
+  "problem": "Cross-references between the alignment proposition and the normal form are given in words or as research-record IDs, although all the labels now exist.",
+  "fix": "app-exp: -> '\\cref{prop:setting:align}', '\\cref{lem:setting:subst}', 'By \\cref{lem:setting:preservation}'. exp: -> '\\cref{prop:setting:align} proves (a)--(c) for it', '(\\cref{ex:setting:align})'. app-setting: '(F) is \\cref{thm:single:min}(c). For $\\mathcal C=\\DTF$ it is \\cref{prop:exp:normal}(c).' and 'For $\\DTF$ this is the experiments' alignment result (computed check: E0b, below); the same proof gives it for $\\DT$, with (F) supplied by \\cref{thm:single:min} instead of \\cref{prop:exp:normal}.'",
+  "reviewer": "consistency",
+  "multi_file": true
+ },
+ {
+  "file": "sections/{setting,single,app-single,universal,app-universal,zfc,app-zfc,many,app-many,experiments}.tex",
+  "location": "word-only references such as 'the matching theorem of \\Cref{sec:setting}', 'rigid-prefix lemma, \\cref{sec:single}', 'the general anchor theorem of \\Cref{sec:single}', 'the closure criterion of \\Cref{sec:setting}', 'the two-point lemma used in \\cref{sec:many}', 'finitariness theorem of \\cref{sec:single}', '(single Cor G.4)', '(single Thm C)', '(single Prop G.3)', 'track single, Theorem H'",
+  "severity": "minor",
+  "problem": "About 80 references name a specific result in words but point only to a section (full list in review-consistency.md, item m1).",
+  "fix": "Apply the replacement table in review-consistency.md m1. Examples: matching theorem -> \\cref{thm:setting:matching}; preservation -> \\cref{lem:setting:preservation}; rigid-prefix lemma -> \\cref{lem:single:basic}(c); general anchor theorem (zfc \u00d73) -> \\cref{cor:single:special}(c); first-order case of the anchor theorem -> \\cref{cor:single:special}(a); closure criterion / 'closed in the class (\\cref{sec:setting})' -> \\cref{lem:setting:closed}; two-point lemma -> \\cref{lem:many:twopoint}; finitariness theorem -> \\cref{thm:single:min}; feature verifier -> \\cref{thm:single:feat}; '(single Cor G.4)' -> \\cref{cor:single:anchor-lgg}; '(single Prop G.3)' -> \\cref{prop:single:lgg}; 'Theorem H ... \\Cref{sec:many}' -> \\cref{thm:many:complexity}; Plotkin's recovery lemma -> \\cref{lem:setting:recover}; shielding -> \\cref{prop:zf:indso}; 4^n -> \\cref{prop:single:blowup}; residue -> \\cref{thm:many:residue}; HF\u222a{u} impossibility -> \\cref{prop:many:univset}; pattern AU on induction -> \\cref{prop:zf:indpat}.",
+  "reviewer": "consistency",
+  "multi_file": true
+ },
+ {
+  "file": "sections/single.tex; sections/experiments.tex; sections/app-experiments.tex; sections/universal.tex; sections/app-universal.tex; sections/app-setting.tex; sections/many.tex; sections/app-many.tex; sections/setting.tex; sections/zfc.tex; sections/app-zfc.tex",
+  "location": "single: '(``C8.3'')', '(``C11'')', 'So C11 is false', table 'earlier C8.3/C11', 'the candidate events of the brief', 'missing in the first version'; experiments: 'the first record' \u00d78; app-exp: 'the record says', 'The record's statement'; universal: 'the record calls this (H)', 'The record corrected (b) and (e) after the referee'; app-setting: 'Version~1 of the experiments record', 'The single-track referee'; many/app-many: 'An earlier version of the record', 'The first version of the research record', '(untagged Prop 6.1)', 'As far as the record knows'",
+  "severity": "minor",
+  "problem": "Internal provenance jargon and verification history appear in running text. Readers cannot know 'the brief', 'C11' or 'the first record'.",
+  "fix": "Move result IDs into \\src and verification history into app:ver. single: 'the earlier analysis conjectured that $\\Min(D)$ is finite also with nested arguments \\src{prior induction C8.3}'; 'The earlier analysis conjectured that escalations are at most linear ... \\src{prior induction C11}. ... So this conjecture is false'; table: '(earlier finiteness conjecture: true for $\\DT$, false with nested arguments)', '(earlier linear conjecture refuted)'; 'So the events one would first try (root variation and distinctness, as for first-order patterns) are right in spirit'. experiments: keep one intro sentence 'Withdrawn claims of an earlier version are listed in \\cref{app:ver}' and replace each 'the first record ...' by a neutral sentence plus '(withdrawn; \\cref{app:ver})'. Delete the universal 'the record ...' clauses. Replace '(untagged Prop 6.1)' by a \\src tag.",
+  "reviewer": "consistency",
+  "multi_file": true
+ },
+ {
+  "file": "sections/many.tex; sections/experiments.tex; sections/zfc.tex; sections/setting.tex; sections/single.tex; sections/universal.tex",
+  "location": "def:many:setting, def:many:dtrc, def:exp:normal (\\status{definition}); def:zf:enc (\\status{known}); definitions in setting/single/universal (no status); statuses 'proved; known in substance', 'proved; known (Gold)', 'computed (consistency check)', 'computed; reproduced by the referee', 'computed; independently confirmed by the referee', 'proved, using standard coding facts cited from memory'",
+  "severity": "minor",
+  "problem": "Definitions carry status markers in three different ways, and several status strings fall outside NOTATION's list (proved|computed|conjecture|known|proof sketch).",
+  "fix": "Adopt the majority convention (definitions carry \\src only) and record it in NOTATION.md. Delete \\status{definition} in many.tex (2\u00d7) and experiments.tex (1\u00d7) and \\status{known} on def:zf:enc. Normalize the other statuses to NOTATION values, e.g. \\status{proved; known}, \\status{computed}, and move the qualifiers ('Gold', 'consistency check', 'reproduced by the referee', 'coding facts cited from memory') into the statement text or \\src.",
+  "reviewer": "consistency",
+  "multi_file": true
+ },
+ {
+  "file": "paper/sections/{setting,single,universal,zfc,many,experiments}.tex",
+  "location": "main text sections 2-7 as a whole (pdf pp. 10-61)",
+  "severity": "major",
+  "problem": "The main text is about 51.3 pp against a target of about 40 (setting 6.6, single 9.4, universal 7.3, zfc 8.8, many 10.3, experiments 9.0 pp, measured as about 4,200 source characters per printed page). Most of the excess is duplicated definitions and results, plus secondary results, proofs and computational detail that could sit in the appendices.",
+  "fix": "Apply the cuts listed in the following issues (sections A-C of review-readability.md). Estimated savings: setting -0.35 (net of a +0.4 glossary), single -3.0, universal -1.7, zfc -2.1, many -2.3, experiments -2.6 (net of a +0.3 E1 figure). Total about -12 pp, giving about 39.3 pp. Optional cuts O1-O6 give about 1.3 pp more. Every moved environment keeps its label, so all \\cref references still resolve, and the main text keeps the one-line pointer given in each fix.",
+  "reviewer": "readability",
+  "multi_file": true
+ },
+ {
+  "file": "paper/sections/experiments.tex",
+  "location": "E1 paragraph, line 155 ('Details and curves are in \\cref{sec:univ}'); also universal.tex line 101 ('The experiments section (\\cref{sec:exp}) plots the curves')",
+  "severity": "major",
+  "problem": "Each section says the other one plots the E1 curves, and neither includes a figure; figures/e1_anchor_cdf.png is unused. I viewed the figure: it shows observed against predicted Pr[exact after N] for mixed and numeral data, the most direct picture of the Question 1 rate answer. The E1 numbers are also printed in both sections.",
+  "fix": "In experiments.tex line 155, replace 'Details and curves are in \\cref{sec:univ}' with '\\Cref{fig:exp:e1} compares observed and predicted curves; for $x+y=y+x$ the means are $4.18$ and $11.85$. On $0+0=0$, $1+0=1$ the learned $z+0=z$ accepts $w_0+0=w_0$, the axiom in parameter form, but not the different datum $\\forall x\\,(x+0=x)$.' Then add \\begin{figure}[t]\\centering\\includegraphics[width=0.6\\textwidth]{figures/e1_anchor_cdf.png}\\caption{E1: probability that the learner is exact after $N$ instances of $x+0=x$, observed ($2000$ runs) and predicted by \\cref{thm:univ:rates}(a), for mixed terms and for numerals only \\src{experiments E1}.}\\label{fig:exp:e1}\\end{figure}. Replace universal.tex line 101 with '\\emph{Experiment E1} (\\cref{sec:exp:results}, \\cref{fig:exp:e1}) confirms (a): the implemented $\\DTF$ verifier and the first-order $\\lgg$ became exact at the same $N$ in every run, at the predicted mean ($3.27$ observed against $3.25$ predicted with mixed terms; $8.42$ against $8.11$ with numerals only, one correlated sample).'",
+  "reviewer": "readability",
+  "multi_file": false
+ },
+ {
+  "file": "paper/sections/experiments.tex",
+  "location": "thm:exp:dtrc (line 85) and prop:exp:share (line 105); also lines 89, 142, 248, 282 and app-experiments.tex lines 88-112",
+  "severity": "major",
+  "problem": "The hypotheses are named '(T) targets\u2026; (D) data\u2026; (R) a sound refuter; (S)\u2026', plus '(S$^+$)' and '(P)'. The preamble macros \\evD and \\evR typeset the witness events as '(D)' and '(R)', which are used throughout the paper, so in \u00a77 the same printed labels carry two meanings.",
+  "fix": "Rename (T)->(H1), (D)->(H2), (R)->(H3), (S)->(H4), (S$^+$)->(H4$^+$), (P)->(H5), and keep (H-ref). Apply this at experiments.tex lines 85, 89, 105, 142, 248, 282 (Limitations (3) and (7)) and in app-experiments.tex \u00a7F.3 (lines 88-112).",
+  "reviewer": "readability",
+  "multi_file": false
+ },
+ {
+  "file": "paper/sections/experiments.tex",
+  "location": "paragraph 'Minimal covering templates', lines 26-44 (definition of C(D), F-slots and columns; def:exp:normal; prop:exp:normal with proof idea; the alignment paragraph)",
+  "severity": "major",
+  "problem": "About 0.9 pp of implementation-internal theory. It uses the undefined symbol $\\mathcal T(D)$ (line 27) and recounts referee history ('the first record stated (c)\u2026'). Its proof is already in app:exp:normal.",
+  "fix": "Move these blocks to app:exp:normal, defining $\\mathcal T(D)$ there. Replace them with: '\\paragraph{Minimal covering templates.} The learner computes $\\Min_F(D)$, the minimal covering templates in $\\DTF$ up to parameter renaming, from the finitely many \\emph{normal configurations} of the data''s common-prefix tree (\\cref{def:exp:normal,prop:exp:normal}): every covering template of $\\DTF$ lies above one, and for a parameter-free target one lies below the target. Parameters are aligned as in \\cref{app:setting:align}. The aligned and literal sets differed on none of the $720$ data sets of E2 and in one call of all \\DTRC{} runs of E3.' Saves about 0.75 pp.",
+  "reviewer": "readability",
+  "multi_file": false
+ },
+ {
+  "file": "paper/sections/experiments.tex",
+  "location": "\\subsection sec:exp:theory, lines 73-149",
+  "severity": "major",
+  "problem": "About 2 pp re-proving the \u00a76 theory for DT\u00b0_F: prop:exp:mono, thm:exp:dtrc, prop:exp:budget, prop:exp:share, prop:exp:numerals, prop:exp:mixsep, cor:exp:mixsep, all with proof ideas, plus the sentence 'The first record claimed exactness exactly\u2026' (app:ver row 22). Readers need the statements, not the proofs.",
+  "fix": "Keep thm:exp:dtrc (hypotheses renamed, no proof idea), prop:exp:mixsep with tab:exp:cases, and cor:exp:mixsep. Move prop:exp:mono, prop:exp:budget with line 102, prop:exp:share, prop:exp:numerals with line 114, the proof ideas of mixsep and its corollary, and line 92's first sentence to app:exp:dtrc. Before the theorem, insert: 'The theorems of \\cref{sec:many} carry over to $\\DTF$, $\\Min_F$ and the budgeted, history-dependent refuter (proofs in \\cref{app:exp:dtrc}). Within-target merges always succeed, and per-cluster soundness does not depend on the budget, because a pure cluster always intersects a never-refuted template below its target (\\cref{prop:exp:mono,prop:exp:budget}). So a budgeted refuter harms \\DTRC{} only through clustering.' After it, insert: 'With overlapping instance sets the per-cluster statement is the right one. Under hypotheses (H4$^+$) and (H5), the sharing pass gives each target''s cluster every datum that instantiates it; it is target-sound, exact with an anchor, and, if verdicts do not depend on the call history, it matches the tagged learner with membership labels (\\cref{prop:exp:share}). In the numerals regime every anchor of $U_{\\mathrm{add0}}$ or $U_{\\mathrm{0add}}$ contains $0+0=0$ (\\cref{prop:exp:numerals}), so a partition gives this datum to at most one of them, the sharing pass to both.' Saves about 1.1 pp.",
+  "reviewer": "readability",
+  "multi_file": false
+ },
+ {
+  "file": "paper/sections/experiments.tex",
+  "location": "prop:exp:oracle proof idea (lines 53-55); the parenthetical in line 22 '(With leading quantifiers stripped, \u2026 \\src{referee R13}.)'",
+  "severity": "minor",
+  "problem": "A proof idea and a 78-word parenthetical about a referee re-run.",
+  "fix": "Move the proof idea to app:exp:oracle and keep the statement plus the incompleteness sentences. Move the parenthetical in line 22 to app:exp:numbers. Saves about 0.37 pp.",
+  "reviewer": "readability",
+  "multi_file": false
+ },
+ {
+  "file": "paper/sections/experiments.tex",
+  "location": "prop:exp:hard with its proof idea and line 248 (lines 239-248)",
+  "severity": "minor",
+  "problem": "Stress-test propositions and constant-propagation detail.",
+  "fix": "Move them to app:exp:stress and replace them with: 'Two hard ZF pairs mark the limits (\\cref{prop:exp:hard}). $\\mathrm{Union}_W$ and $\\mathrm{Power}_W$ have the universal-set schema of \\cref{sec:many} as their unique minimal covering template; the ZF oracle refutes it, but no oracle sound for $\\HF$ plus a universal element does. A merge of $\\in$-induction with $\\in$-induction along $z\\in y\\in x$ is typically false but was refuted only at budget $400$, and only with constant propagation; other merges of that pair are valid, so (H4) fails for these pairs in general.'",
+  "reviewer": "readability",
+  "multi_file": false
+ },
+ {
+  "file": "paper/sections/experiments.tex",
+  "location": "lem:exp:valid with its proof (lines 269-275); 'first record' sentences at lines 179, 204, 267",
+  "severity": "minor",
+  "problem": "An appendix-level lemma, and withdrawn-claim history that app:ver rows 19-21 already list.",
+  "fix": "Move lem:exp:valid and its proof to app:exp:stress; end line 267 with '\u2026the remaining residual merges are valid (\\cref{lem:exp:valid}).' In line 267, delete 'The first record''s claim that PA mistakes merge only into valid templates is withdrawn; the referee found this exhibit.' and change 'the first record''s oracle returns unknown, the revised one False' to 'an earlier version of the oracle returned unknown, the current one False'. In line 204, delete 'The first record''s headline $54/55$ \u2026 \\src{referee F4}.' In line 179, replace the withdrawn-claim sentence with '(The formula-level variant is the baseline of an earlier version; \\cref{app:ver}, row 20.)'",
+  "reviewer": "readability",
+  "multi_file": false
+ },
+ {
+  "file": "paper/sections/experiments.tex",
+  "location": "\u00a77.3 paragraph headings (E1, E2, E3, E5, E6/E7, E9, E4); code/experiments/e5_curves.py line 25 (figures/e5_curves.png panel titles)",
+  "severity": "minor",
+  "problem": "The experiments appear out of numerical order (E4 last, after E9), and E0, E0b, E8 and E10 appear only in passing. In the E5 figure, the middle panel is titled 'PA, v1 instance distribution' and the left one '\u2026(main)', while the caption says 'mixed regime'; 'v1' is internal jargon.",
+  "fix": "Use content headings without E-numbers ('Universal axioms', 'Single schemas', 'Untagged mixtures', 'Learning curves', 'The $k$-union verifier; why $\\DTF$', 'Separation evidence', 'Stress tests') and keep the record numbers only in \\src tags. In e5_curves.py line 25, set TITLES to 'PA, numerals only' and 'PA, mixed regime', then regenerate figures/e5_curves.png.",
+  "reviewer": "readability",
+  "multi_file": false
+ },
+ {
+  "file": "paper/sections/{zfc,many,universal,experiments}.tex",
+  "location": "optional extra cuts O1-O6",
+  "severity": "minor",
+  "problem": "A margin is useful if the estimates prove optimistic. Two blocks overlap: tab:zf:classify duplicates the first three columns of tab:zf:summary, and the \u00a76.10 MDL prose duplicates app:many:mdl.",
+  "fix": "O1: move tab:zf:classify to app:zf:enc and name the guards in tab:zf:summary's caption for the 'g' cells (-0.35 pp; the intro's \\cref still resolves). O2: keep the first two sentences and the bold sentence of many.tex \u00a76.10 and move the rest to app:many:mdl (-0.25). O3: move prop:univ:capture(a),(b) to app:univ:capture (-0.15). O4: shorten experiments.tex E6/E7 (line 217) to one sentence each (-0.1). O5: sweep the remaining 'the referee's independent \u2026 agreed' clauses into \\src tags and the appendices (-0.3). O6: move the per-seed counts of many.tex lines 466-479 to ex:many:zf (-0.15).",
+  "reviewer": "readability",
+  "multi_file": true
+ }
+]
