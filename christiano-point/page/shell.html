@@ -1,0 +1,689 @@
+<title>The Christiano Point</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400;1,8..60,600&amp;display=swap">
+<style>
+/* Layout: a long-form technical report. At >= 1100px a sticky contents rail sits left of one
+   reading column (~66ch); tables, the figure and display math may run wider, up to the column's
+   full width. Below 1100px: a single column with the contents in a collapsible <details>. */
+:root {
+  /* palette: cool paper, navy-black ink, one blue accent; orange is reserved for "volume" marks */
+  --paper: #f4f6f9;
+  --surface: #fbfcfd;
+  --ink: #111a2b;
+  --ink-2: #3b4658;
+  --ink-3: #5d6879;
+  --rule: #d8dee6;
+  --rule-strong: #a9b3c1;
+  --accent: #2a78d6;
+  --accent-ink: #1b5cab;
+  --accent-wash: #e2ecf8;
+  --code-bg: #e8ecf2;
+  --shadow: rgba(17, 26, 43, 0.12);
+  --chip-solid: var(--ink);
+  /* chart (validated for colour-vision deficiency) */
+  --c-uplift: #2a78d6;
+  --c-volume: #dc5c28;
+  --c-grid: #dde3ea;
+  --c-ref: #7a8597;
+  /* type */
+  --f-text: "Source Serif 4", "Source Serif Pro", Georgia, Cambria, "Times New Roman", serif;
+  --f-ui: "IBM Plex Sans", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* measures */
+  --measure: 36rem;
+  --wide: 56rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0e131b;
+    --surface: #151c27;
+    --ink: #e4e9f0;
+    --ink-2: #b2bccb;
+    --ink-3: #8995a6;
+    --rule: #253041;
+    --rule-strong: #3c495d;
+    --accent: #3987e5;
+    --accent-ink: #7fb1f0;
+    --accent-wash: #15253b;
+    --code-bg: #1b2431;
+    --shadow: rgba(0, 0, 0, 0.45);
+    --chip-solid: #a3afc0;
+    --c-uplift: #3987e5;
+    --c-volume: #d95926;
+    --c-grid: #222c3a;
+    --c-ref: #6f7b8d;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0e131b;
+  --surface: #151c27;
+  --ink: #e4e9f0;
+  --ink-2: #b2bccb;
+  --ink-3: #8995a6;
+  --rule: #253041;
+  --rule-strong: #3c495d;
+  --accent: #3987e5;
+  --accent-ink: #7fb1f0;
+  --accent-wash: #15253b;
+  --code-bg: #1b2431;
+  --shadow: rgba(0, 0, 0, 0.45);
+  --chip-solid: #a3afc0;
+  --c-uplift: #3987e5;
+  --c-volume: #d95926;
+  --c-grid: #222c3a;
+  --c-ref: #6f7b8d;
+  color-scheme: dark;
+}
+
+/* ---------- base ---------- */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--f-text);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  font-optical-sizing: auto;
+  font-kerning: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+@media (min-width: 760px) { body { font-size: 1.125rem; } }
+*, *::before, *::after { box-sizing: border-box; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+::selection { background: var(--accent-wash); color: var(--ink); }
+
+a { color: var(--accent-ink); text-decoration-line: underline; text-decoration-thickness: 1px; text-underline-offset: 0.18em; text-decoration-color: var(--rule-strong); }
+a:hover { text-decoration-color: currentColor; }
+strong, b { font-weight: 600; }
+code {
+  font-family: var(--f-mono); font-size: 0.84em; background: var(--code-bg); color: var(--ink);
+  padding: 0.08em 0.32em; border-radius: 3px; overflow-wrap: anywhere;
+}
+a code { color: var(--accent-ink); }
+
+/* ---------- page frame ---------- */
+.page {
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: clamp(16px, 4vw, 48px);
+  padding-block: 1.5rem 3rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "head" "main" "foot";
+}
+.masthead { grid-area: head; min-width: 0; }
+main { grid-area: main; min-width: 0; }
+.colophon { grid-area: foot; min-width: 0; }
+.rail { display: none; }
+@media (min-width: 1100px) {
+  .page {
+    grid-template-columns: 14.5rem minmax(0, 1fr);
+    grid-template-areas: "rail head" "rail main" "rail foot";
+    column-gap: clamp(2.5rem, 4vw, 4rem);
+    padding-block-start: 2.5rem;
+  }
+  .rail { display: block; grid-area: rail; min-width: 0; }
+  .toc-mobile { display: none; }
+}
+
+/* ---------- masthead ---------- */
+.masthead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+  padding-block-end: 2rem;
+  border-bottom: 1px solid var(--rule);
+}
+@media (min-width: 1100px) { .masthead { margin-block-end: 2.5rem; } }
+@media (min-width: 720px) {
+  .masthead { grid-template-columns: minmax(0, 1fr) 18.75rem; column-gap: 2.5rem; align-items: end; }
+}
+.masthead-text { min-width: 0; }
+.masthead-text > * { margin: 0; }
+.masthead-text > * + * { margin-block-start: 0.85rem; }
+.kicker {
+  font-family: var(--f-mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink-3);
+}
+h1 {
+  font-family: var(--f-ui); font-weight: 600;
+  font-size: clamp(1.85rem, 1.25rem + 2.3vw, 2.6rem);
+  line-height: 1.1; letter-spacing: -0.018em;
+  text-wrap: balance; max-width: 22ch;
+}
+.masthead-text > h1 { margin-block-start: 0.5rem; }
+.subtitle {
+  font-style: italic; font-size: 1.1875rem; line-height: 1.45; color: var(--ink-2);
+  max-width: 34rem; text-wrap: pretty;
+}
+.byline { font-family: var(--f-ui); font-size: 0.9375rem; font-weight: 500; color: var(--ink); }
+.repo-note {
+  font-family: var(--f-ui); font-size: 0.8125rem; line-height: 1.55; color: var(--ink-2);
+  max-width: 36rem;
+}
+.crossing { margin: 0; max-width: 18.75rem; min-width: 0; }
+.crossing svg { display: block; width: 100%; height: auto; }
+.crossing-note {
+  font-family: var(--f-ui); font-size: 0.75rem; line-height: 1.45; color: var(--ink-3);
+  margin-block-start: 0.4rem;
+}
+.crossing-note i { font-family: var(--f-text); }
+.xd-axis { stroke: var(--rule-strong); stroke-width: 1; fill: none; }
+.xd-drop { stroke: var(--rule-strong); stroke-width: 1; fill: none; }
+.xd-human { stroke: var(--ink-2); stroke-width: 2; fill: none; stroke-linecap: round; }
+.xd-ai { stroke: var(--accent); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.xd-point { fill: var(--ink); stroke: var(--paper); stroke-width: 2; }
+.xd-leader { stroke: var(--ink-3); stroke-width: 1; fill: none; }
+.xd-text { fill: var(--ink-2); font-family: var(--f-ui); font-size: 11.5px; }
+.xd-label { fill: var(--ink); font-family: var(--f-ui); font-size: 12px; font-weight: 600; }
+.xd-var { font-family: var(--f-text); font-style: italic; }
+
+.skip {
+  position: absolute; left: 16px; top: env(safe-area-inset-top, 0px); z-index: 3;
+  transform: translateY(-200%);
+  background: var(--surface); color: var(--accent-ink);
+  padding: 0.4rem 0.7rem; border: 1px solid var(--rule-strong); border-radius: 3px;
+  font-family: var(--f-ui); font-size: 0.875rem; text-decoration: none;
+}
+.skip:focus-visible { transform: none; }
+
+/* ---------- contents ---------- */
+.toc { font-family: var(--f-ui); font-size: 0.8125rem; line-height: 1.35; }
+.toc-label {
+  font-family: var(--f-mono); font-size: 0.6875rem; font-weight: 500; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--ink-3); margin: 0 0 0.5rem;
+}
+.toc-label.toc-sub { margin-block-start: 1.1rem; }
+.toc-list { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--rule); }
+.toc-list li { margin: 0; }
+.toc-list a {
+  display: grid; grid-template-columns: 1.6em minmax(0, 1fr); column-gap: 0.4em;
+  padding: 0.28rem 0.4rem 0.28rem 0.8rem; margin-left: -1px;
+  border-left: 2px solid transparent;
+  color: var(--ink-2); text-decoration: none;
+}
+.toc-list a:hover { color: var(--ink); background: var(--accent-wash); }
+.toc-num { font-family: var(--f-mono); font-size: 0.95em; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.toc-list a:focus-visible { outline-offset: -2px; }
+.toc-list a[aria-current] { color: var(--ink); border-left-color: var(--accent); }
+.toc-list a[aria-current] .toc-num { color: var(--accent-ink); }
+.toc-rail {
+  position: sticky; top: env(safe-area-inset-top, 0px);
+  max-height: 100vh; max-height: 100dvh; overflow-y: auto; overscroll-behavior: contain;
+  padding-block: 0.6rem 2rem;
+}
+.toc-mobile { margin-block-end: 2.25rem; border-block-end: 1px solid var(--rule); }
+.toc-mobile > summary { font-size: 0.875rem; }
+.toc-mobile .toc { padding-block-end: 1rem; }
+.toc-mobile .toc-list a { padding-block: 0.4rem; }
+
+/* ---------- sections and flow ---------- */
+main > section { scroll-margin-top: 1rem; }
+main > section + section {
+  border-top: 1px solid var(--rule);
+  margin-block-start: 3.5rem;
+  padding-block-start: 2.75rem;
+}
+section > * { margin-block: 0; max-width: var(--measure); }
+section > * + * { margin-block-start: 1.1rem; }
+section > :is(.table-wrap, figure, .math-display) { max-width: var(--wide); }
+section > :is(.table-wrap, figure, .math-display, .callout, blockquote, details) { margin-block: 1.6rem; }
+section > :is(.table-wrap, figure, .math-display, .callout, blockquote, details):last-child { margin-block-end: 0; }
+section > h2 + * { margin-block-start: 1.4rem; }
+section > h3 { margin-block-start: 2.6rem; }
+section > h3 + * { margin-block-start: 0.8rem; }
+[id] { scroll-margin-top: 1rem; }
+
+h2, h3 { font-family: var(--f-ui); font-weight: 600; text-wrap: pretty; overflow-wrap: anywhere; color: var(--ink); }
+h2 {
+  display: flex; align-items: baseline; gap: 0.55em;
+  font-size: clamp(1.4rem, 1.2rem + 0.8vw, 1.7rem); line-height: 1.2; letter-spacing: -0.012em;
+}
+h3 {
+  display: flex; align-items: baseline; gap: 0.6em;
+  font-size: clamp(1.1875rem, 1.1rem + 0.35vw, 1.3125rem); line-height: 1.3; letter-spacing: -0.005em;
+}
+.secnum {
+  flex: none; font-family: var(--f-mono); font-weight: 500; font-size: 0.78em;
+  color: var(--accent-ink); font-variant-numeric: tabular-nums; letter-spacing: 0;
+}
+h3 .secnum { font-size: 0.82em; }
+
+p { text-wrap: pretty; overflow-wrap: break-word; }
+.lede { font-size: 1.1875rem; line-height: 1.55; }
+@media (min-width: 760px) { .lede { font-size: 1.25rem; } }
+.small { font-size: 0.875rem; line-height: 1.55; color: var(--ink-2); }
+em, i { font-style: italic; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* lists */
+section ul, section ol { padding-inline-start: 1.35em; }
+section li { overflow-wrap: break-word; }
+section li + li { margin-block-start: 0.7rem; }
+section li > :is(p, ul, ol, blockquote, .math-display) { margin-block: 0.5rem 0; }
+section li > :is(p, ul, ol, blockquote, .math-display):first-child { margin-block-start: 0; }
+section li::marker { color: var(--ink-3); }
+section ol > li::marker { font-family: var(--f-ui); font-size: 0.9em; font-variant-numeric: tabular-nums; }
+
+/* links in running text */
+a.xref { text-decoration: none; white-space: nowrap; }
+/* arrows in prose: the web fonts' latin subsets lack U+2192, so pick a symbol-capable face explicitly */
+.arr { font-family: system-ui, "Segoe UI Symbol", "Apple Symbols", sans-serif; font-size: 0.9em; position: relative; top: -0.06em; }
+a.xref:hover { text-decoration: underline; text-decoration-thickness: 1px; }
+a.cite {
+  position: relative; top: -0.32em;
+  font-family: var(--f-mono); font-size: 0.75em; line-height: 0; letter-spacing: -0.02em;
+  color: var(--ink-3); text-decoration: none; white-space: nowrap; padding-inline: 0.05em;
+}
+a.cite:hover { color: var(--accent-ink); }
+:is(td, th) a.cite { font-size: 0.8em; }
+a.cite + a.cite { margin-inline-start: 0.12em; }
+
+/* quotations */
+blockquote {
+  margin-inline: 0; padding-inline-start: 1.15rem;
+  border-inline-start: 2px solid var(--rule-strong); color: var(--ink-2);
+}
+blockquote > * { margin: 0; }
+blockquote > * + * { margin-block-start: 0.75rem; }
+
+/* key-findings callout */
+.callout {
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 4px;
+  padding: 1.25rem clamp(1rem, 3vw, 1.6rem) 1.4rem;
+  max-width: calc(var(--measure) + 3.2rem);
+}
+.callout > * { margin: 0; }
+.callout > * + * { margin-block-start: 0.9rem; }
+.callout > h3 { font-size: 1.1875rem; }
+.callout > ol > li + li { margin-block-start: 0.9rem; }
+.callout ul { padding-inline-start: 1.1em; }
+@media (max-width: 559px) {
+  /* on phones the callout runs edge to edge so the nested findings keep a readable line */
+  .callout {
+    margin-inline: calc(-1 * clamp(16px, 4vw, 48px)); padding-inline: clamp(16px, 4vw, 48px);
+    border-inline: 0; border-radius: 0; max-width: none;
+  }
+}
+
+/* order of crossing (§11.1): one stage per line */
+ol.stages { list-style: none; padding-inline-start: 0; counter-reset: stage; }
+ol.stages > li {
+  counter-increment: stage; position: relative;
+  padding-inline-start: 2rem; padding-block: 0.1rem;
+}
+ol.stages > li + li { margin-block-start: 0.35rem; }
+ol.stages > li::before {
+  content: counter(stage); position: absolute; left: 0; top: 0.3em;
+  width: 1.35rem; height: 1.35rem; border-radius: 50%;
+  border: 1px solid var(--rule-strong); color: var(--ink-2); background: var(--surface);
+  font-family: var(--f-mono); font-size: 0.75rem; line-height: 1.25rem; text-align: center;
+}
+ol.stages > li:not(:last-child)::after {
+  /* connector from this stage's number down to the next one */
+  content: ""; position: absolute; left: calc(0.675rem - 0.5px);
+  top: calc(0.3em + 1.35rem); bottom: calc(-0.35rem - 0.3em);
+  border-left: 1px solid var(--rule-strong);
+}
+
+/* ---------- tables ---------- */
+.table-wrap {
+  overflow-x: auto; overscroll-behavior-x: contain;
+  /* scroll hints: soft edge shadows appear only while more table is hidden on that side */
+  background:
+    linear-gradient(to right, var(--paper) 40%, transparent) left center / 2.5rem 100% no-repeat local,
+    linear-gradient(to left, var(--paper) 40%, transparent) right center / 2.5rem 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, var(--shadow), transparent) left center / 0.8rem 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, var(--shadow), transparent) right center / 0.8rem 100% no-repeat scroll;
+}
+.table-wrap:focus-visible { outline-offset: -2px; }
+section > .table-wrap:not(:has(tr > :nth-child(3))) { max-width: var(--measure); }
+@media (max-width: 699px) {
+  /* on phones, prose-heavy tables (.wide) keep readable columns and scroll inside .table-wrap,
+     with the row labels pinned so a scrolled row still says what it is */
+  .table-wrap.wide table { min-width: 34rem; }
+  .table-wrap.wide table:has(tr > :nth-child(5)) { min-width: 42rem; }
+  .table-wrap.wide table:has(tr > :nth-child(6)) { min-width: 46rem; }
+  .table-wrap.wide :is(thead, tbody) th:first-child {
+    position: sticky; left: 0; z-index: 1;
+    background: var(--paper); box-shadow: inset -1px 0 0 var(--rule);
+  }
+  .table-wrap.wide tr.highlight > th:first-child { background: var(--accent-wash); }
+}
+table {
+  width: 100%; border-collapse: collapse;
+  font-family: var(--f-ui); font-size: 0.875rem; line-height: 1.45;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+caption {
+  caption-side: top; text-align: left; font-weight: 600; font-size: 0.875rem;
+  color: var(--ink-2); padding-block-end: 0.5rem;
+}
+th, td { text-align: left; vertical-align: top; padding: 0.55rem 0.7rem; min-width: 6.5em; }
+thead th {
+  vertical-align: bottom; font-weight: 600; font-size: 0.8125rem; color: var(--ink-2);
+  border-bottom: 1.5px solid var(--ink-3); padding-block: 0.4rem 0.45rem;
+}
+tbody th, tbody td { border-bottom: 1px solid var(--rule); }
+tbody tr:last-child > * { border-bottom-color: var(--rule-strong); }
+tbody th { font-weight: 500; color: var(--ink); }
+:is(th, td):first-child { padding-inline-start: 0.4rem; }
+:is(th, td):last-child { padding-inline-end: 0.4rem; }
+:is(th, td).num { text-align: right; white-space: nowrap; }
+:is(th, td).tight { min-width: 0; white-space: nowrap; }
+tr.highlight > * { background: var(--accent-wash); }
+tr.highlight > th { font-weight: 600; }
+tr.highlight > td { font-weight: 500; }
+/* compact numeric tables size to their content instead of spanning the column */
+.table-wrap table.compact { width: auto; min-width: min(100%, 22rem); }
+table.compact :is(th, td) { padding-inline: clamp(0.5rem, 2vw, 0.9rem); min-width: 0; }
+table.compact td.num { white-space: normal; }
+table.compact :is(th, td).num { padding-inline-start: clamp(0.75rem, 3vw, 1.75rem); }
+table.compact :is(th, td):first-child { padding-inline-start: 0.4rem; }
+table.compact :is(th, td):last-child { padding-inline-end: 0.4rem; }
+td p { margin: 0; }
+td p + p { margin-block-start: 0.4rem; }
+
+/* status chips: form encodes state (filled, half, ring, dashed); the word says it */
+:is(.status-past, .status-at, .status-before, .status-well, .status-far) {
+  display: inline-flex; align-items: center; gap: 0.38em;
+  font-family: var(--f-ui); font-size: 0.78rem; font-weight: 500; line-height: 1.25; letter-spacing: 0.01em;
+  padding: 0.12em 0.5em 0.14em 0.42em; border: 1px solid transparent; border-radius: 3px;
+  white-space: nowrap; vertical-align: 0.04em;
+}
+:is(.status-past, .status-at, .status-before, .status-well, .status-far)::before {
+  content: ""; flex: none; width: 0.62em; height: 0.62em; border-radius: 50%;
+  border: 1.5px solid currentColor;
+}
+.status-past { background: var(--chip-solid); border-color: var(--chip-solid); color: var(--paper); }
+.status-past::before { background: currentColor; }
+.status-at { border-color: var(--ink-2); color: var(--ink); }
+.status-at::before { background: linear-gradient(90deg, currentColor 50%, transparent 50%); }
+.status-before { border-color: var(--ink-3); color: var(--ink-2); }
+.status-well { border-color: var(--ink-3); border-style: dashed; color: var(--ink-2); }
+.status-far { border-color: var(--ink-3); border-style: dotted; color: var(--ink-3); }
+.status-far::before { border-style: dotted; }
+
+/* ---------- math ---------- */
+.math { white-space: nowrap; }
+.math svg { display: inline; overflow: visible; max-width: 100%; }
+/* a % max-width counts as zero when a table sizes its columns, so math in cells is never capped */
+:is(th, td) .math svg { max-width: none; }
+.nowrap { white-space: nowrap; }
+.math-display {
+  overflow-x: auto; overflow-y: hidden; text-align: center; padding-block: 0.3rem;
+  background:
+    linear-gradient(to right, var(--paper) 40%, transparent) left center / 2.5rem 100% no-repeat local,
+    linear-gradient(to left, var(--paper) 40%, transparent) right center / 2.5rem 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, var(--shadow), transparent) left center / 0.8rem 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, var(--shadow), transparent) right center / 0.8rem 100% no-repeat scroll;
+}
+.math-display svg { display: inline-block; max-width: none; overflow: visible; }
+
+/* ---------- figures ---------- */
+figure { margin-inline: 0; }
+figcaption {
+  font-family: var(--f-ui); font-size: 0.8125rem; line-height: 1.5; color: var(--ink-2);
+  margin-block-start: 0.85rem; max-width: var(--measure);
+}
+figcaption > * { margin: 0; }
+figcaption > * + * { margin-block-start: 0.4rem; }
+section > figure#figure { padding-block: 1.25rem 1rem; border-block: 1px solid var(--rule); margin-block-end: 0; }
+
+/* ---------- details ---------- */
+details > summary {
+  display: flex; align-items: center; gap: 0.55em; cursor: pointer; list-style: none;
+  font-family: var(--f-ui); font-weight: 500; font-size: 0.875rem; color: var(--ink);
+  padding-block: 0.6rem;
+}
+details > summary::-webkit-details-marker { display: none; }
+details > summary::before {
+  content: ""; flex: none; width: 0.42em; height: 0.42em; margin-inline: 0.15em 0.1em;
+  border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg); transition: transform 0.15s ease;
+}
+details[open] > summary::before { transform: rotate(45deg) translate(-0.1em, -0.1em); }
+section > details { border-block: 1px solid var(--rule); }
+section > details > :not(summary) { margin-block: 0.4rem 1rem; }
+
+/* ---------- sources ---------- */
+ol.sources { padding-inline-start: 2.4em; font-size: 0.9375rem; line-height: 1.5; }
+ol.sources > li { padding-inline-start: 2.75em; border-radius: 3px; }
+ol.sources > li + li { margin-block-start: 0.55rem; }
+ol.sources > li::marker { font-family: var(--f-mono); font-size: 0.82em; color: var(--ink-3); }
+ol.sources a { overflow-wrap: anywhere; }
+ol.sources > li:target { background: var(--accent-wash); box-shadow: 0 0 0 0.35rem var(--accent-wash); }
+.vtag {
+  display: inline-block; min-width: 2.4em; margin-inline-end: 0.5em; padding-inline: 0.3em;
+  font-family: "IBM Plex Mono", "Segoe UI Symbol", "Apple Symbols", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.75em; font-weight: 500; line-height: 1.5; text-align: center;
+  border: 1px solid var(--rule-strong); border-radius: 3px; color: var(--ink-2);
+  vertical-align: 0.1em; white-space: nowrap;
+}
+.vtag.v2 { background: var(--chip-solid); border-color: var(--chip-solid); color: var(--paper); }
+.vtag.v1 { border-color: var(--ink-2); color: var(--ink); }
+.vtag.v0 { border-style: dashed; color: var(--ink-3); }
+.vtag.vmix { border-color: var(--ink-2); color: var(--ink-2); }
+p .vtag { margin-inline: 0.1em 0.25em; }
+/* in the source list the tag hangs in the item's left padding so wrapped lines align with the text */
+ol.sources > li > .vtag:first-child { width: 3em; min-width: 0; margin-inline: -3.667em 0.667em; }
+
+/* ---------- chart ---------- */
+.chart { position: relative; }
+.chart-legend {
+  list-style: none; margin: 0 0 0.75rem; padding: 0;
+  display: flex; flex-wrap: wrap; gap: 0.4rem 1.6rem;
+  font-family: var(--f-ui); font-size: 0.8125rem; color: var(--ink-2);
+}
+.chart-legend li { display: flex; align-items: center; gap: 0.5rem; margin: 0; min-width: 0; }
+.chart-legend li > span, .tip-val, .tip-lab { min-width: 0; }
+.chart-legend svg { flex: none; display: block; }
+.chart-plot { min-width: 0; }
+.chart-plot > svg { display: block; width: 100%; height: auto; }
+.chart text { font-family: var(--f-ui); }
+.cp-grid { stroke: var(--c-grid); stroke-width: 1; }
+.cp-ref { stroke: var(--c-ref); stroke-width: 1; }
+.cp-ref-label { fill: var(--ink-2); font-size: 11.5px; font-weight: 500; }
+.cp-tick { fill: var(--ink-3); font-size: 11px; font-variant-numeric: tabular-nums; }
+.chart .cp-tick { font-family: var(--f-mono); }
+.cp-axis-title { fill: var(--ink-2); font-size: 12px; }
+.cp-label {
+  fill: var(--ink); font-size: 13px;
+  paint-order: stroke; stroke: var(--paper); stroke-width: 4px; stroke-linejoin: round;
+}
+.cp-note {
+  fill: var(--ink-2); font-size: 11px;
+  paint-order: stroke; stroke: var(--paper); stroke-width: 3px; stroke-linejoin: round;
+}
+/* marks: strokes are painted under the fill, so a 4px stroke leaves a true 2px paper ring */
+.cp-whisker { stroke: var(--c-uplift); stroke-width: 2; stroke-linecap: butt; fill: none; }
+.cp-dot { fill: var(--c-uplift); stroke: var(--paper); stroke-width: 4; paint-order: stroke; }
+.cp-vol { fill: var(--c-volume); stroke: var(--paper); stroke-width: 4; stroke-linejoin: round; paint-order: stroke; }
+.cp-hit { fill: var(--paper); fill-opacity: 0; }
+.cp-row { cursor: default; }
+.cp-row:focus { outline: none; }
+/* one active row at a time (set by the chart script for hover and focus alike) */
+.cp-row.is-active .cp-hit { fill: var(--accent-wash); fill-opacity: 1; }
+.cp-row:focus-visible .cp-hit { stroke: var(--accent); stroke-width: 1.5; }
+.cp-row.is-active :is(.cp-dot, .cp-vol, .cp-note, .cp-label) { stroke: var(--accent-wash); }
+.chart-tip {
+  position: absolute; z-index: 2; pointer-events: none; max-width: 17rem;
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--rule-strong); border-radius: 4px;
+  box-shadow: 0 6px 18px var(--shadow);
+  padding: 0.5rem 0.7rem 0.55rem;
+  font-family: var(--f-ui); font-size: 0.8125rem; line-height: 1.4;
+}
+.tip-title { font-weight: 600; margin-block-end: 0.3rem; }
+.tip-row { display: flex; align-items: baseline; gap: 0.45rem; }
+.tip-row + .tip-row { margin-block-start: 0.15rem; }
+.tip-key { flex: none; width: 0.85rem; height: 2px; align-self: center; background: transparent; }
+.tip-key.u { background: var(--c-uplift); }
+.tip-key.v { background: var(--c-volume); }
+.tip-val { font-weight: 600; font-variant-numeric: tabular-nums; }
+.tip-lab { color: var(--ink-2); }
+/* the data disclosure hangs directly under the figure's closing rule */
+section > details.chart-data { border-block: 0; margin-block-start: 0.35rem; }
+section > details.chart-data > summary { color: var(--ink-2); }
+.chart-data > :not(summary) { margin-block: 0.3rem 0.9rem; }
+
+/* ---------- footer ---------- */
+.colophon {
+  margin-block-start: 4rem; padding-block-start: 1.25rem; border-top: 1px solid var(--rule);
+  font-family: var(--f-ui); font-size: 0.8125rem; line-height: 1.55; color: var(--ink-2);
+}
+.colophon p { margin: 0; max-width: var(--wide); }
+.colophon p + p { margin-block-start: 0.4rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+@media print {
+  .rail, .toc-mobile { display: none; }
+  .page { display: block; }
+}
+</style>
+
+<div class="page" lang="en">
+<a class="skip" href="#main">Skip to content</a>
+
+<div class="rail">
+<nav class="toc toc-rail" aria-label="Contents">
+<p class="toc-label">Contents</p>
+<ol class="toc-list">
+<li><a href="#s0"><span class="toc-num">0</span><span>Summary</span></a></li>
+<li><a href="#s1"><span class="toc-num">1</span><span>The concept and where it comes from</span></a></li>
+<li><a href="#s2"><span class="toc-num">2</span><span>What “contribution” can mean</span></a></li>
+<li><a href="#s3"><span class="toc-num">3</span><span>Questions worth asking</span></a></li>
+<li><a href="#s4"><span class="toc-num">4</span><span>Domains that crossed long ago, and what happened next</span></a></li>
+<li><a href="#s5"><span class="toc-num">5</span><span>Software engineering</span></a></li>
+<li><a href="#s6"><span class="toc-num">6</span><span>Frontier AI development and frontier algorithmic progress</span></a></li>
+<li><a href="#s7"><span class="toc-num">7</span><span>Mathematics</span></a></li>
+<li><a href="#s8"><span class="toc-num">8</span><span>Physics, biology, chemistry and materials</span></a></li>
+<li><a href="#s9"><span class="toc-num">9</span><span>ML research outside the labs, and alignment research</span></a></li>
+<li><a href="#s10"><span class="toc-num">10</span><span>All economic activity</span></a></li>
+<li><a href="#s11"><span class="toc-num">11</span><span>Synthesis</span></a></li>
+<li><a href="#s12"><span class="toc-num">12</span><span>Forecasts and what to watch</span></a></li>
+<li><a href="#s13"><span class="toc-num">13</span><span>Caveats</span></a></li>
+<li><a href="#s14"><span class="toc-num">14</span><span>Sources</span></a></li>
+</ol>
+<p class="toc-label toc-sub">Appendices</p>
+<ol class="toc-list">
+<li><a href="#appA"><span class="toc-num">A</span><span>Proofs for §2</span></a></li>
+<li><a href="#appB"><span class="toc-num">B</span><span>The AI R&amp;D multiplier model</span></a></li>
+</ol>
+</nav>
+</div>
+
+<header class="masthead">
+<div class="masthead-text">
+<p class="kicker">Research report</p>
+<h1>The Christiano point, domain by domain</h1>
+<p class="subtitle">Where AI’s contribution has overtaken humans’, or is about to. State of play on 2 October 2026.</p>
+<p class="byline">Written by Claude for Kaarel Hänni</p>
+<p class="repo-note">The two small models behind <a class="xref" href="#s2">§2</a> and <a class="xref" href="#s6">§6</a>, and the source of the summary figure, live in the AI-works repository on GitHub under <a href="https://github.com/kaarelh/AI-works/tree/claude/vibrant-wright-pdohvb/christiano-point/models"><code>christiano-point/models</code></a>; the Markdown original is <a href="https://github.com/kaarelh/AI-works/blob/claude/vibrant-wright-pdohvb/christiano-point/report.md"><code>report.md</code></a>. <a class="xref" href="#s14">§14</a> lists sources and how far each was checked. Read <a class="xref" href="#s13">§13</a> (caveats) before quoting any number.</p>
+</div>
+<div class="crossing">
+<svg viewBox="0 0 300 150" role="img" aria-labelledby="xd-title" xmlns="http://www.w3.org/2000/svg">
+<title id="xd-title">Christiano’s crossing-over point: the human contribution x stays roughly flat, the AI contribution y rises and crosses it; at the crossing, output x + y is twice the human-only output, so m = 2.</title>
+<path class="xd-axis" d="M44 10V124H290"></path>
+<text class="xd-text" transform="translate(30 67) rotate(-90)" text-anchor="middle">contribution to output</text>
+<text class="xd-text" x="290" y="139" text-anchor="end">time</text>
+<text class="xd-text" x="52" y="22">output = <tspan class="xd-var">x</tspan> + <tspan class="xd-var">y</tspan></text>
+<path class="xd-drop" d="M205.1 88V124"></path>
+<path class="xd-human" d="M44 86.6L286 82.2"></path>
+<path class="xd-ai" d="M44 120.7L54.1 120.7L64.2 120.5L74.3 120.2L84.3 119.7L94.4 118.9L104.5 117.8L114.6 116.4L124.7 114.6L134.8 112.4L144.8 109.7L154.9 106.7L165 103.1L175.1 99L185.2 94.4L195.3 89.3L205.3 83.5L215.4 77.2L225.5 70.2L235.6 62.6L245.7 54.3L255.8 45.3L265.8 35.6L275.9 25.2L286 14"></path>
+<path class="xd-leader" d="M196 62L203 78"></path>
+<circle class="xd-point" cx="205.1" cy="83.7" r="4"></circle>
+<text class="xd-label" x="194" y="46" text-anchor="end">Christiano point</text>
+<text class="xd-text" x="194" y="59" text-anchor="end">(<tspan class="xd-var">m</tspan> = 2)</text>
+<text class="xd-text" x="252" y="27" text-anchor="end">AI, <tspan class="xd-var">y</tspan></text>
+<text class="xd-text" x="286" y="100" text-anchor="end">humans, <tspan class="xd-var">x</tspan></text>
+</svg>
+<p class="crossing-note">Christiano’s picture: output is <i>x</i> + <i>y</i>. Where AI’s contribution <i>y</i> equals humans’ <i>x</i>, output is twice what humans alone produce.</p>
+</div>
+</header>
+
+<main id="main">
+<details class="toc-mobile">
+<summary>Contents</summary>
+<nav class="toc" aria-label="Contents">
+<ol class="toc-list">
+<li><a href="#s0"><span class="toc-num">0</span><span>Summary</span></a></li>
+<li><a href="#s1"><span class="toc-num">1</span><span>The concept and where it comes from</span></a></li>
+<li><a href="#s2"><span class="toc-num">2</span><span>What “contribution” can mean</span></a></li>
+<li><a href="#s3"><span class="toc-num">3</span><span>Questions worth asking</span></a></li>
+<li><a href="#s4"><span class="toc-num">4</span><span>Domains that crossed long ago, and what happened next</span></a></li>
+<li><a href="#s5"><span class="toc-num">5</span><span>Software engineering</span></a></li>
+<li><a href="#s6"><span class="toc-num">6</span><span>Frontier AI development and frontier algorithmic progress</span></a></li>
+<li><a href="#s7"><span class="toc-num">7</span><span>Mathematics</span></a></li>
+<li><a href="#s8"><span class="toc-num">8</span><span>Physics, biology, chemistry and materials</span></a></li>
+<li><a href="#s9"><span class="toc-num">9</span><span>ML research outside the labs, and alignment research</span></a></li>
+<li><a href="#s10"><span class="toc-num">10</span><span>All economic activity</span></a></li>
+<li><a href="#s11"><span class="toc-num">11</span><span>Synthesis</span></a></li>
+<li><a href="#s12"><span class="toc-num">12</span><span>Forecasts and what to watch</span></a></li>
+<li><a href="#s13"><span class="toc-num">13</span><span>Caveats</span></a></li>
+<li><a href="#s14"><span class="toc-num">14</span><span>Sources</span></a></li>
+</ol>
+<p class="toc-label toc-sub">Appendices</p>
+<ol class="toc-list">
+<li><a href="#appA"><span class="toc-num">A</span><span>Proofs for §2</span></a></li>
+<li><a href="#appB"><span class="toc-num">B</span><span>The AI R&amp;D multiplier model</span></a></li>
+</ol>
+</nav>
+</details>
+
+<!-- SECTION:s00 -->
+<!-- SECTION:s01 -->
+<!-- SECTION:s02 -->
+<!-- SECTION:s03-04 -->
+<!-- SECTION:s05 -->
+<!-- SECTION:s06 -->
+<!-- SECTION:s07 -->
+<!-- SECTION:s08-09 -->
+<!-- SECTION:s10 -->
+<!-- SECTION:s11-12 -->
+<!-- SECTION:s13-14 -->
+<!-- SECTION:appendices -->
+</main>
+
+<footer class="colophon">
+<p>The Christiano point, domain by domain. Written by Claude for Kaarel Hänni; state of play on 2 October 2026.</p>
+<p>Markdown original, models and figure source: <a href="https://github.com/kaarelh/AI-works/tree/claude/vibrant-wright-pdohvb/christiano-point">github.com/kaarelh/AI-works, christiano-point</a>.</p>
+</footer>
+
+</div>
+
+<script>
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll(".toc-rail a[href^='#']"));
+  var items = [];
+  links.forEach(function (a) {
+    var s = document.getElementById(a.getAttribute("href").slice(1));
+    if (s) items.push({ s: s, a: a });
+  });
+  if (!items.length) return;
+  var current = null, ticking = false;
+  function update() {
+    ticking = false;
+    var line = window.innerHeight * 0.3, pick = items[0];
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].s.getBoundingClientRect().top <= line) pick = items[i]; else break;
+    }
+    if (pick === current) return;
+    if (current) current.a.removeAttribute("aria-current");
+    pick.a.setAttribute("aria-current", "location");
+    current = pick;
+  }
+  window.addEventListener("scroll", function () {
+    if (!ticking) { ticking = true; requestAnimationFrame(update); }
+  }, { passive: true });
+  window.addEventListener("resize", update);
+  update();
+})();
+</script>
