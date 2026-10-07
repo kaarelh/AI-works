@@ -2,6 +2,8 @@
 
 Date: 2026-10-02. Input: `for-hugo.zip` (paper `paulsen-static-proof.pdf` and LaTeX, Lean 4 project `lean/`).
 
+This is the historical review of the original input and the first streamlined version. The current paper and formalisation are in [`linear-paulsen/`](linear-paulsen/); their verification record is [`linear-paulsen/lean/final-audit.md`](linear-paulsen/lean/final-audit.md). The 7 October revision adds the trace-distance estimate, ordinary resolvent covariance and the formalised εd/4 lower bound. Claims below about the original package, including its lack of a formal lower bound, should be read in that dated context.
+
 ## 1. Is the Lean statement correct?
 
 **Yes.** `Paulsen.SharpPaulsenBound` (`lean/Paulsen/Definitions.lean`) is a faithful formalisation of the real Paulsen problem with the linear bound:

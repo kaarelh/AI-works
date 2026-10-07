@@ -1,12 +1,10 @@
 import Paulsen.Paper.Toolbox
 
-/-!
-# Helper for `Paulsen.Paper.Intro`: the trace argument of `rem:optimal`.
+/-! # The trace proof of the block lower bound
 
-With `E` a projection (the principal block of `XXᵀ`), `A = W₁W₁ᵀ` and `B = W₁W₂ᵀ` the
-principal and off-diagonal blocks of `WWᵀ` (`W₁ᵀW₁ + W₂ᵀW₂ = I`), and `Δ = E - A`:
-`tr(A - A²) = ‖B‖_F²`, `tr(EΔ) ≥ tr Δ`, hence
-`‖Δ‖² + 2‖B‖² ≤ S` forces `tr Δ ≤ S`.
+For orthogonal projections `E ≤ P` and `E ≤ J`, the deficit
+`tr E - tr (J Q)` is at most `tr (P (I-Q))`, hence at most half the
+squared distance between equal-rank projections `P` and `Q`.
 -/
 
 namespace Paulsen.Paper.IntroAux
@@ -16,55 +14,56 @@ open scoped BigOperators
 
 noncomputable section
 
-theorem frob_eq_trace {m D : ℕ} (M : Matrix (Fin m) (Fin D) ℝ) :
-    ∑ i, ∑ j, M i j ^ 2 = (M * M.transpose).trace := by
-  simp only [Matrix.trace, Matrix.diag_apply, Matrix.mul_apply, Matrix.transpose_apply, pow_two]
+/-- The trace of a product of two orthogonal projections is nonnegative. -/
+theorem projection_trace_mul_nonneg {n : ℕ} (E Q : Matrix (Fin n) (Fin n) ℝ)
+    (hEs : E.transpose = E) (hE : E * E = E)
+    (hQs : Q.transpose = Q) (hQ : Q * Q = Q) : 0 ≤ (E * Q).trace := by
+  have h := Finset.sum_nonneg (s := Finset.univ) fun i (_ : i ∈ Finset.univ) =>
+    Finset.sum_nonneg (s := Finset.univ) fun j (_ : j ∈ Finset.univ) => sq_nonneg ((E*Q) i j)
+  rw [entry_sq_sum_eq_trace, Matrix.transpose_mul, hEs, hQs] at h
+  have he : (Q * E * (E * Q)).trace = (E * Q).trace := by
+    calc
+      _ = (Q * (E*E) * Q).trace := by simp only [Matrix.mul_assoc]
+      _ = (Q * E * Q).trace := by rw [hE]
+      _ = (Q * Q * E).trace := Matrix.trace_mul_cycle _ _ _
+      _ = (E*Q).trace := by rw [hQ, Matrix.trace_mul_comm]
+  rwa [he] at h
 
-/-- The trace argument of `rem:optimal`. -/
-theorem optimal_core {m m' D : ℕ} (E : Matrix (Fin m) (Fin m) ℝ) (hEs : E.transpose = E)
-    (hEE : E * E = E) (W₁ : Matrix (Fin m) (Fin D) ℝ) (W₂ : Matrix (Fin m') (Fin D) ℝ)
-    (hW : W₁.transpose * W₁ + W₂.transpose * W₂ = 1) (S : ℝ)
-    (hS : ∑ i, ∑ j, (E i j - (W₁ * W₁.transpose) i j) ^ 2 +
-      2 * ∑ i, ∑ j, (W₁ * W₂.transpose) i j ^ 2 ≤ S) :
-    E.trace - (W₁ * W₁.transpose).trace ≤ S := by
-  set A := W₁ * W₁.transpose with hAdef
-  have hAs : A.transpose = A := by
-    rw [hAdef, Matrix.transpose_mul, Matrix.transpose_transpose]
-  have hδ : ∑ i, ∑ j, (E i j - A i j) ^ 2 =
-      E.trace - 2 * (E * A).trace + (A * A).trace := by
-    have h := frob_eq_trace (E - A)
-    simp only [Matrix.sub_apply] at h
-    rw [h, Matrix.transpose_sub, hEs, hAs, Matrix.sub_mul, Matrix.mul_sub, Matrix.mul_sub,
-      Matrix.trace_sub, Matrix.trace_sub, Matrix.trace_sub, hEE, Matrix.trace_mul_comm A E]
+/-- The difference of nested orthogonal projections is an orthogonal projection. -/
+theorem projection_sub_projection {n : ℕ} (P E : Matrix (Fin n) (Fin n) ℝ)
+    (hPs : P.transpose = P) (hEs : E.transpose = E)
+    (hP : P*P=P) (hE : E*E=E) (hPE : P*E=E) :
+    (P-E).transpose = P-E ∧ (P-E)*(P-E)=P-E := by
+  have hEP : E*P=E := by
+    have h := congrArg Matrix.transpose hPE
+    simpa only [Matrix.transpose_mul, hPs, hEs] using h
+  constructor
+  · rw [Matrix.transpose_sub, hPs, hEs]
+  · noncomm_ring [hP, hE, hPE, hEP]
+
+/-- The projection trace deficit on a coordinate block is bounded by half the
+squared distance. `P*E=E` and `J*E=E` encode `E ≤ P` and `E ≤ J`. -/
+theorem optimal_core {n : ℕ} (P Q E J : Matrix (Fin n) (Fin n) ℝ)
+    (hPs : P.transpose=P) (hQs : Q.transpose=Q)
+    (hEs : E.transpose=E) (hJs : J.transpose=J)
+    (hP : P*P=P) (hQ : Q*Q=Q) (hE : E*E=E) (hJ : J*J=J)
+    (htr : P.trace=Q.trace) (hPE : P*E=E) (hJE : J*E=E) :
+    2 * (E.trace - (J*Q).trace) ≤ sqDistance P Q := by
+  have hR := projection_sub_projection P E hPs hEs hP hE hPE
+  have hS := projection_sub_projection J E hJs hEs hJ hE hJE
+  have hQc : (1-Q).transpose=1-Q := by rw [Matrix.transpose_sub, Matrix.transpose_one, hQs]
+  have hQcc : (1-Q)*(1-Q)=1-Q := by noncomm_ring [hQ]
+  have hnonneg := projection_trace_mul_nonneg (P-E) (1-Q) hR.1 hR.2 hQc hQcc
+  have hnonneg' := projection_trace_mul_nonneg (J-E) Q hS.1 hS.2 hQs hQ
+  simp only [Matrix.sub_mul, Matrix.mul_sub, Matrix.mul_one, Matrix.trace_sub] at hnonneg hnonneg'
+  have hdist : sqDistance P Q = 2 * (P.trace - (P*Q).trace) := by
+    rw [sqDistance_eq_trace_sub, Matrix.transpose_sub, hPs, hQs,
+      Matrix.sub_mul, Matrix.mul_sub, Matrix.mul_sub, hP, hQ,
+      Matrix.trace_sub, Matrix.trace_sub, Matrix.trace_sub,
+      Matrix.trace_mul_comm Q P, ← htr]
     ring
-  have hβ : ∑ i, ∑ j, (W₁ * W₂.transpose) i j ^ 2 = A.trace - (A * A).trace := by
-    rw [frob_eq_trace, Matrix.transpose_mul, Matrix.transpose_transpose]
-    have hW2 : W₂.transpose * W₂ = 1 - W₁.transpose * W₁ := by rw [← hW]; abel
-    calc (W₁ * W₂.transpose * (W₂ * W₁.transpose)).trace
-        = (W₁ * (W₂.transpose * W₂) * W₁.transpose).trace := by simp only [Matrix.mul_assoc]
-      _ = _ := by
-        rw [hW2, Matrix.mul_sub, Matrix.sub_mul, Matrix.trace_sub, Matrix.mul_one, hAdef]
-        simp only [Matrix.mul_assoc]
-  have hpsd : (E * A).trace ≤ A.trace := by
-    have hP : (1 - E).transpose * (1 - E) = 1 - E := by
-      rw [Matrix.transpose_sub, Matrix.transpose_one, hEs, Matrix.sub_mul, Matrix.mul_sub,
-        Matrix.mul_sub, Matrix.one_mul, Matrix.mul_one, Matrix.one_mul, hEE]
-      abel
-    have h0 : 0 ≤ ∑ i, ∑ j, (((1 : Matrix (Fin m) (Fin m) ℝ) - E) * W₁) i j ^ 2 :=
-      Finset.sum_nonneg fun i _ => Finset.sum_nonneg fun j _ => sq_nonneg _
-    rw [frob_eq_trace, Matrix.transpose_mul, Matrix.trace_mul_comm, Matrix.mul_assoc,
-      ← Matrix.mul_assoc (1 - E).transpose, hP, ← Matrix.mul_assoc, Matrix.trace_mul_comm,
-      ← Matrix.mul_assoc, Matrix.mul_sub, Matrix.mul_one, Matrix.trace_sub] at h0
-    rw [hAdef, Matrix.trace_mul_comm E]
-    linarith
-  have h1 : 0 ≤ ∑ i, ∑ j, (E i j - A i j) ^ 2 :=
-    Finset.sum_nonneg fun i _ => Finset.sum_nonneg fun j _ => sq_nonneg _
-  have h2 : 0 ≤ ∑ i, ∑ j, (W₁ * W₂.transpose) i j ^ 2 :=
-    Finset.sum_nonneg fun i _ => Finset.sum_nonneg fun j _ => sq_nonneg _
-  rw [hδ] at h1 hS
-  rw [hβ] at h2 hS
+  rw [hdist]
   linarith
 
 end
-
 end Paulsen.Paper.IntroAux

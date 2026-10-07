@@ -1,12 +1,14 @@
 import Paulsen.Paper.ModerateAuxLin
+import Paulsen.ResolventRationalCovariance
+import Paulsen.ResolventDrift
 
 /-!
 # Helpers for `Paulsen.Paper.Moderate`: rational calculus of the filter
 
 With `N = N̄` the normalized normal map, `S = NᵀN` and `Ω = NNᵀ`:
 * push-through: `(ρI+S)⁻¹ Nᵀ = Nᵀ (ρI+Ω)⁻¹`;
-* `Nᵀ C_ρ N = ρ S (I-S) (ρI+S)⁻¹` for `C_ρ = ρ(I_𝒵 - Ω)(ρI+Ω)⁻¹`;
-* `ρ S(I-S)(ρI+S)⁻¹ ⪯ ρ I`;
+* `Nᵀ C_ρ N = ρ S (ρI+S)⁻¹` for `C_ρ = ρI_𝒵(ρI+Ω)⁻¹`;
+* `ρ S(ρI+S)⁻¹ ⪯ ρ I`;
 * the spectral identity `∑_y ((1-μ)/(ρ+μ)) y yᵀ = (I-S)(ρI+S)⁻¹`.
 -/
 
@@ -71,85 +73,52 @@ theorem resolventS_inv_comm (U : Frame n d) {ρ : ℝ} (hρ : 0 < ρ) :
   rw [hS, Matrix.mul_sub, Matrix.sub_mul, hB, hB', Matrix.mul_smul, Matrix.smul_mul,
     Matrix.mul_one, Matrix.one_mul]
 
-/-- `Nᵀ C_ρ N = ρ S (I-S) (ρI+S)⁻¹`. -/
+/-- `Nᵀ C_ρ N = ρ S (ρI+S)⁻¹`. -/
 theorem filtered_compress {U : Frame n d} (hU : IsParseval U) {ρ : ℝ} (hρ : 0 < ρ) :
     (normalizedNormalMapMatrix U).transpose *
-        (ρ • ((horizontalProjectionMatrix U - normalizedNormalCovariance U) *
+        (ρ • (horizontalProjectionMatrix U *
           (ρ • 1 + normalizedNormalCovariance U)⁻¹)) * normalizedNormalMapMatrix U =
-      ρ • (normalizedFisher U * (1 - normalizedFisher U) *
-        (ρ • 1 + normalizedFisher U)⁻¹) := by
-  set N := normalizedNormalMapMatrix U
-  set S := normalizedFisher U
-  have hNI : N.transpose * horizontalProjectionMatrix U = N.transpose := by
+      ρ • (normalizedFisher U * (ρ • 1 + normalizedFisher U)⁻¹) := by
+  have hNI : (normalizedNormalMapMatrix U).transpose * horizontalProjectionMatrix U =
+      (normalizedNormalMapMatrix U).transpose := by
     have h := congrArg Matrix.transpose (horizontalProjectionMatrix_normalizedNormalMap hU)
     rwa [Matrix.transpose_mul, horizontalProjectionMatrix_transpose] at h
-  have hleft : N.transpose * (horizontalProjectionMatrix U - normalizedNormalCovariance U) =
-      (1 - S) * N.transpose := by
-    rw [Matrix.mul_sub, hNI, Matrix.sub_mul, Matrix.one_mul]
-    simp only [normalizedNormalCovariance, S, normalizedFisher, ← Matrix.mul_assoc]
-    rfl
-  calc N.transpose * (ρ • ((horizontalProjectionMatrix U - normalizedNormalCovariance U) *
-          (ρ • 1 + normalizedNormalCovariance U)⁻¹)) * N
-        = ρ • ((N.transpose * (horizontalProjectionMatrix U - normalizedNormalCovariance U)) *
-          (ρ • 1 + normalizedNormalCovariance U)⁻¹ * N) := by
-          simp only [Matrix.mul_smul, Matrix.smul_mul, Matrix.mul_assoc]
-    _ = ρ • ((1 - S) * (N.transpose * (ρ • 1 + normalizedNormalCovariance U)⁻¹) * N) := by
-          rw [hleft]; simp only [Matrix.mul_assoc]
-    _ = ρ • ((1 - S) * ((ρ • 1 + S)⁻¹ * S)) := by
-          rw [← resolvent_pushthrough U hρ]; simp only [Matrix.mul_assoc]; rfl
-    _ = ρ • (S * (1 - S) * (ρ • 1 + S)⁻¹) := by
-          rw [resolventS_inv_comm U hρ]
-          congr 1
-          rw [← Matrix.mul_assoc]
-          congr 1
-          rw [Matrix.sub_mul, Matrix.mul_sub, Matrix.one_mul, Matrix.mul_one]
+  simp only [Matrix.mul_smul, Matrix.smul_mul]
+  congr 1
+  rw [← Matrix.mul_assoc (normalizedNormalMapMatrix U).transpose, hNI,
+    ← resolvent_pushthrough U hρ, Matrix.mul_assoc]
+  change (ρ • 1 + normalizedFisher U)⁻¹ * normalizedFisher U = _
+  exact resolventS_inv_comm U hρ
 
 theorem normalizedFisher_transpose (U : Frame n d) :
     (normalizedFisher U).transpose = normalizedFisher U := by
   simp [normalizedFisher, Matrix.transpose_mul]
 
-/-- `ρ S (I-S)(ρI+S)⁻¹ ⪯ ρ I`. -/
+/-- `ρ S(ρI+S)⁻¹ ⪯ ρ I`. -/
 theorem rational_quadratic_le (U : Frame n d) {ρ : ℝ} (hρ : 0 < ρ) (y : Fin n → ℝ) :
-    matrixQuadratic (ρ • (normalizedFisher U * (1 - normalizedFisher U) *
-        (ρ • 1 + normalizedFisher U)⁻¹)) y ≤ ρ * ∑ i, y i ^ 2 := by
+    matrixQuadratic (ρ • (normalizedFisher U * (ρ • 1 + normalizedFisher U)⁻¹)) y ≤
+      ρ * ∑ i, y i ^ 2 := by
   set S := normalizedFisher U
   set B := ρ • (1 : Matrix (Fin n) (Fin n) ℝ) + S
   have hB' : B * B⁻¹ = 1 := Matrix.mul_nonsing_inv _ (resolventS_isUnit U hρ)
   set a := B⁻¹ *ᵥ y
   set b := S *ᵥ a
-  set c := S *ᵥ b
   have hy : y = ρ • a + b := by
     have : y = B *ᵥ a := by simp only [a, Matrix.mulVec_mulVec, hB', Matrix.one_mulVec]
     rw [this]
     simp only [B, Matrix.add_mulVec, Matrix.smul_mulVec, Matrix.one_mulVec, b]
-  have hSt : S.transpose = S := normalizedFisher_transpose U
-  have hsymm : ∀ u v : Fin n → ℝ, u ⬝ᵥ (S *ᵥ v) = (S *ᵥ u) ⬝ᵥ v := by
-    intro u v
-    rw [Matrix.dotProduct_mulVec, ← Matrix.mulVec_transpose, hSt]
-  have hpsd : ∀ u : Fin n → ℝ, 0 ≤ u ⬝ᵥ (S *ᵥ u) := by
-    intro u
-    simpa only [star_trivial] using (normalizedFisher_posSemidef U).dotProduct_mulVec_nonneg u
-  have hval : matrixQuadratic (ρ • (S * (1 - S) * B⁻¹)) y = ρ * (y ⬝ᵥ (b - c)) := by
+  have hab : 0 ≤ a ⬝ᵥ b := by
+    simpa only [star_trivial] using (normalizedFisher_posSemidef U).dotProduct_mulVec_nonneg a
+  have haa : 0 ≤ a ⬝ᵥ a := by rw [dot_self_eq]; positivity
+  have hval : matrixQuadratic (ρ • (S * B⁻¹)) y = ρ * (y ⬝ᵥ b) := by
     rw [mq_eq_dot, Matrix.smul_mulVec, dotProduct_smul, smul_eq_mul]
     congr 1
-    simp only [← Matrix.mulVec_mulVec, Matrix.sub_mulVec, Matrix.one_mulVec, Matrix.mulVec_sub]
-    rfl
-  have hac : a ⬝ᵥ c = b ⬝ᵥ b := hsymm a b
-  have hab := hpsd a
-  have hbc := hpsd b
-  have hbb : 0 ≤ b ⬝ᵥ b := by rw [dot_self_eq]; positivity
-  have haa : 0 ≤ a ⬝ᵥ a := by rw [dot_self_eq]; positivity
+    rw [← Matrix.mulVec_mulVec]
   rw [hval, ← dot_self_eq y, hy]
-  simp only [add_dotProduct, dotProduct_add, smul_dotProduct, dotProduct_smul, dotProduct_sub,
-    smul_eq_mul]
-  have hba : b ⬝ᵥ a = a ⬝ᵥ b := dotProduct_comm _ _
-  change 0 ≤ a ⬝ᵥ b at hab
-  change 0 ≤ b ⬝ᵥ c at hbc
-  rw [hba, hac]
+  simp only [add_dotProduct, dotProduct_add, smul_dotProduct, dotProduct_smul, smul_eq_mul]
+  rw [dotProduct_comm b a]
   have h1 : 0 ≤ ρ * (ρ * (ρ * (a ⬝ᵥ a))) := by positivity
   have h2 : 0 ≤ ρ * (ρ * (a ⬝ᵥ b)) := by positivity
-  have h3 : 0 ≤ ρ * (ρ * (b ⬝ᵥ b)) := by positivity
-  have h4 : 0 ≤ ρ * (b ⬝ᵥ c) := by positivity
   nlinarith
 
 /-- Two matrices agreeing on an orthonormal basis are equal. -/

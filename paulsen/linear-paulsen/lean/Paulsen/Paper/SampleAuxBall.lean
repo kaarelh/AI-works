@@ -22,7 +22,11 @@ theorem gaussianReal_Icc_le (μ : ℝ) {v : ℝ≥0} (hv : v ≠ 0) {a b : ℝ} 
     rw [gaussianReal_apply μ hv, ← Real.volume_Icc, ← setLIntegral_const]
     apply setLIntegral_mono measurable_const
     intro x _
-    exact ENNReal.ofReal_le_ofReal (gaussianPDFReal_le_max μ v x)
+    apply ENNReal.ofReal_le_ofReal
+    rw [gaussianPDFReal_def]
+    apply mul_le_of_le_one_right (by positivity)
+    apply Real.exp_le_one_iff.mpr
+    exact div_nonpos_of_nonpos_of_nonneg (neg_nonpos.mpr (sq_nonneg _)) (by positivity)
   have hfin : ENNReal.ofReal ((Real.sqrt (2 * Real.pi * v))⁻¹) * ENNReal.ofReal (b - a) ≠ ⊤ :=
     ENNReal.mul_ne_top ENNReal.ofReal_ne_top ENNReal.ofReal_ne_top
   calc (gaussianReal μ v).real (Set.Icc a b)

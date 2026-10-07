@@ -77,8 +77,17 @@ theorem integral_matrixQuadratic_sqLaplacian {n d : ℕ} (U : Frame n d) (ρ : �
 
 /-- A union budget: `2n e^{-b} ≤ 1/10` once `b ≥ log n + 200`. -/
 theorem union_budget {n : ℕ} (hn : 0 < n) {b : ℝ} (hb : Real.log n + 200 ≤ b) :
-    2 * (n : ℝ) * Real.exp (-b) ≤ 1 / 10 :=
-  (Smooth.gaussian_row_union_failure_budget hn hb).trans (by norm_num)
+    2 * (n : ℝ) * Real.exp (-b) ≤ 1 / 10 := by
+  have hnR : (0 : ℝ) < n := Nat.cast_pos.mpr hn
+  calc
+    _ ≤ 2 * n * Real.exp (-(Real.log n + 200)) := by gcongr
+    _ = 2 * Real.exp (-200) := by
+      rw [neg_add, Real.exp_add, Real.exp_neg (Real.log n), Real.exp_log hnR]
+      field_simp
+    _ ≤ 1 / 10 := by
+      rw [Real.exp_neg, ← div_eq_mul_inv]
+      apply (div_le_iff₀ (Real.exp_pos _)).mpr
+      linarith [Real.add_one_le_exp (200 : ℝ)]
 
 /-- `μ(Sᶜ) ≥ 1 - μ(S)` for a probability measure (no measurability needed). -/
 theorem measureReal_compl_ge {α : Type*} [MeasurableSpace α] (μ : Measure α)

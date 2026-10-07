@@ -1,4 +1,5 @@
 import Paulsen.Paper.SampleAuxS1
+import Paulsen.SmoothQuadraticTail
 
 /-!
 # Helpers for `ModerateSample`: the event (S2)
@@ -15,14 +16,23 @@ open scoped BigOperators
 noncomputable section
 
 /-- Gaussian tail of `(𝒜Z)_i` from its variance. -/
-theorem diagMap_tail {n d : ℕ} {U : Frame n d} (hU : IsParseval U) {ρ : ℝ} (i : Fin n)
+theorem diagMap_tail {n d : ℕ} {U : Frame n d} (_hU : IsParseval U) {ρ : ℝ} (i : Fin n)
     {v u : ℝ} (hv : 0 < v) (hu : 0 ≤ u)
     (hvar : ∫ g, diagMap U (moderateNoise U ρ g) i ^ 2 ∂gaussAmb n d ≤ v) :
     (gaussAmb n d).real {g | u < |diagMap U (moderateNoise U ρ g) i|} ≤
       2 * Real.exp (-u ^ 2 / (2 * v)) := by
-  set L := Smooth.normalDiagonalNoiseDual U ρ i
-  have hL : ∀ g, L g = diagMap U (moderateNoise U ρ g) i := fun g =>
-    Smooth.normalDiagonalNoiseDual_apply hU ρ i g
+  let w : Fin n × Fin d → ℝ := fun p => if p.1 = i then U i p.2 else 0
+  set L := linDual (noiseF U ρ) w
+  have hL : ∀ g, L g = diagMap U (moderateNoise U ρ g) i := by
+    intro g
+    rw [linDual_apply]
+    simp only [w, Fintype.sum_prod_type, ite_mul, zero_mul, Finset.sum_ite_irrel,
+      Finset.sum_const_zero, Finset.sum_ite_eq', Finset.mem_univ, if_true]
+    simp only [diagMap, Matrix.mul_apply, Matrix.transpose_apply,
+      moderateNoise_apply]
+    apply Finset.sum_congr rfl
+    intro c _
+    ring
   have hnorm : ‖L‖ ^ 2 ≤ v := by
     rw [← integral_sq_dual_stdGaussian]
     simp_rw [hL]

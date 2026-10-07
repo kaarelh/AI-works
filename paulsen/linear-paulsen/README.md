@@ -9,8 +9,8 @@ Start with [the paper PDF](paper/linear-paulsen.pdf).
 
 The paper proves that every real ε-nearly equal-norm Parseval frame of n vectors in ℝᵈ is within squared Frobenius distance Cεd of an equal-norm Parseval frame, where C is universal. It also proves the equivalent projection form, with bound Cnβ. The proof has four parts:
 
-- **Static balancing.** A box-constrained log-determinant minimisation corrects the diagonal. It is controlled by the barrier constant (half-set hitting time) of the squared-Gram graph.
-- **Drifted moderate-row seed.** A filtered Gaussian tangent perturbation with a deterministic drift, used when d ≳ log n.
+- **Static balancing.** A box-constrained log-determinant minimisation corrects the diagonal. It is controlled by the barrier constant (half-set hitting time) of the squared-Gram graph; a trace identity bounds the squared correction cost by half the total diagonal error.
+- **Drifted moderate-row seed.** A Gaussian tangent perturbation with ordinary resolvent covariance `ρ(ρI+Ω)⁻¹` and a deterministic drift, used when d ≳ log n.
 - **Many-row seed.** A row-tangent Gaussian with row renormalisation and a centred remainder estimate, used when n ≳ d².
 - **Bounded rank.** The Hamilton–Moitra argument, used when d is bounded.
 
@@ -21,6 +21,7 @@ The Lean development formalises the paper statement by statement, with exactly t
 From `paper/`, with a standard TeX Live installation:
 
 ```sh
+pdflatex -interaction=nonstopmode -halt-on-error linear-paulsen.tex
 pdflatex -interaction=nonstopmode -halt-on-error linear-paulsen.tex
 pdflatex -interaction=nonstopmode -halt-on-error linear-paulsen.tex
 ```

@@ -1,7 +1,8 @@
 import Paulsen.Paper.Gaussian
-import Paulsen.Linear.ModerateDrift
-import Paulsen.SmoothRationalCovariance
-import Paulsen.SmoothExpectedExpansion
+import Paulsen.Linear.DriftAlgebra
+import Paulsen.ResolventRationalCovariance
+import Paulsen.ResolventDrift
+import Paulsen.Paper.ResolventTangent
 import Paulsen.Paper.ModerateAuxMisc
 
 /-!
@@ -17,8 +18,8 @@ Representation (ambient horizontal coordinates, as in the library):
   the identity of `𝒵` is `horizontalProjectionMatrix U`; eigenvalues `μ` are
   `normalizedFisherEigenvalue U j`, the modes `μ > 0` are `highNormalizedModes U 0`,
   `f_y = normalizedNormalPotential U j`, `Z_y = normalizedNormalFrame U j`;
-* `r_μ = Smooth.residualWeight ρ μ`, `R_ρ = Smooth.modeSum U (Smooth.residualWeight ρ)`;
-* the filtered noise `Z ∼ N(0, C_ρ/n)` is `moderateNoise U ρ g = Smooth.moderateNoiseFrame U ρ g`
+* `r_μ = Resolvent.residualWeight ρ μ`, `R_ρ = Resolvent.modeSum U (Resolvent.residualWeight ρ)`;
+* the filtered noise `Z ∼ N(0, C_ρ/n)` is `moderateNoise U ρ g = Resolvent.moderateNoiseFrame U ρ g`
   with `g ∼ stdGaussian (FrameVector n d)`.
 
 All statements are proved. Generic helper lemmas live in namespace `Paulsen.Paper.ModerateAux`
@@ -393,32 +394,32 @@ theorem eq_finfty {n d : ℕ} (U : Frame n d) (hd : 0 < d) (hn : 0 < n)
 
 /-- Definition (Filtered covariance).
 
-TeX: "For $\rho>0$ let $C_\rho=\rho(I-\Omega)(\rho I+\Omega)^{-1}$ on $\mathcal Z$, let
+TeX: "For $\rho>0$ let $C_\rho=\rho(\rho I+\Omega)^{-1}$ on $\mathcal Z$, let
 $Z\sim N(0,C_\rho/n)$, and $Y=Y_Z$."
 
 In ambient coordinates the identity of `𝒵` is the horizontal projection. -/
 def filteredCovariance {n d : ℕ} (U : Frame n d) (ρ : ℝ) :
     Matrix (Fin n × Fin d) (Fin n × Fin d) ℝ :=
-  ρ • ((horizontalProjectionMatrix U - normalizedNormalCovariance U) *
+  ρ • (horizontalProjectionMatrix U *
     (ρ • 1 + normalizedNormalCovariance U)⁻¹)
 
 /-- The filtered Gaussian noise `Z ∼ N(0, C_ρ/n)`, as the ambient horizontal frame `H = VZ`. -/
 abbrev moderateNoise {n d : ℕ} (U : Frame n d) (ρ : ℝ) (g : FrameVector n d) : Frame n d :=
-  Smooth.moderateNoiseFrame U ρ g
+  Resolvent.moderateNoiseFrame U ρ g
 
 /-- Faithfulness of the filtered noise (bridge to the library): the library noise
-`Smooth.moderateNoiseFrame U ρ g = frameOfVector (F g)` has factor `F` with
+`Resolvent.moderateNoiseFrame U ρ g = frameOfVector (F g)` has factor `F` with
 `F Fᵀ = C_ρ / n`, and is horizontal. -/
 theorem moderateNoise_spec {n d : ℕ} (U : Frame n d) (hU : IsParseval U)
     (hp : ∀ i, 0 < rowNormSq U i) {ρ : ℝ} (hρ : 0 < ρ) :
-    Smooth.normalizedTangentNoiseFactor U ρ * (Smooth.normalizedTangentNoiseFactor U ρ).transpose =
+    Resolvent.normalizedTangentNoiseFactor U ρ * (Resolvent.normalizedTangentNoiseFactor U ρ).transpose =
       (1 / (n : ℝ)) • filteredCovariance U ρ ∧
-    filteredCovariance U ρ = Smooth.covariance U ρ ∧
+    filteredCovariance U ρ = Resolvent.covariance U ρ ∧
     ∀ g, U.transpose * moderateNoise U ρ g = 0 := by
-  have hC : filteredCovariance U ρ = Smooth.covariance U ρ :=
-    (Smooth.covariance_rational_formula hU hp hρ).symm
+  have hC : filteredCovariance U ρ = Resolvent.covariance U ρ :=
+    (Resolvent.covariance_rational_formula hU hp hρ).symm
   refine ⟨?_, hC, fun g => ModerateAux.moderateNoiseFrame_horizontal' hU ρ g⟩
-  rw [Smooth.normalizedTangentNoiseFactor_covariance hU hρ.le, hC]
+  rw [Resolvent.normalizedTangentNoiseFactor_covariance hU hρ.le, hC]
 
 /-- `lem:filter` (a).
 
@@ -430,13 +431,13 @@ theorem lem_filter_a {n d : ℕ} (U : Frame n d) (hU : IsParseval U)
         matrixQuadratic (horizontalProjectionMatrix U) v) ∧
     ∀ v : Fin n × Fin d → ℝ, horizontalProjectionMatrix U *ᵥ v = v →
       normalizedNormalCovariance U *ᵥ v = 0 → filteredCovariance U ρ *ᵥ v = v := by
-  have hC : filteredCovariance U ρ = Smooth.covariance U ρ :=
-    (Smooth.covariance_rational_formula hU hp hρ).symm
+  have hC : filteredCovariance U ρ = Resolvent.covariance U ρ :=
+    (Resolvent.covariance_rational_formula hU hp hρ).symm
   constructor
   · intro v
     rw [hC]
-    refine ⟨ModerateAux.mq_nonneg_of_posSemidef _ (Smooth.covariance_posSemidef hU hρ.le) v, ?_⟩
-    have h := ModerateAux.mq_nonneg_of_posSemidef _ (Smooth.covariance_le_horizontal U hρ.le) v
+    refine ⟨ModerateAux.mq_nonneg_of_posSemidef _ (Resolvent.covariance_posSemidef hU hρ.le) v, ?_⟩
+    have h := ModerateAux.mq_nonneg_of_posSemidef _ (Resolvent.covariance_le_horizontal U hρ.le) v
     rw [matrixQuadratic_sub] at h
     linarith
   · intro v hv hΩ
@@ -457,29 +458,29 @@ theorem lem_filter_a {n d : ℕ} (U : Frame n d) (hU : IsParseval U)
         _ = ρ⁻¹ • v := by rw [← h1]
     unfold filteredCovariance
     rw [Matrix.smul_mulVec, ← Matrix.mulVec_mulVec, hAinv, Matrix.mulVec_smul,
-      Matrix.sub_mulVec, hv, hΩ, sub_zero, smul_smul, mul_inv_cancel₀ hρ.ne', one_smul]
+      hv, smul_smul, mul_inv_cancel₀ hρ.ne', one_smul]
 
 /-- `lem:filter` (b).
 
-TeX: "$\Cov(\mathcal AZ)=n^{-1}D_p^{1/2}\,\rho S(I-S)(\rho I+S)^{-1}D_p^{1/2}\preceq
+TeX: "$\Cov(\mathcal AZ)=n^{-1}D_p^{1/2}\,\rho S(\rho I+S)^{-1}D_p^{1/2}\preceq
 (\rho/n)D_p$."  (Quadratic-form encoding of the covariance.) -/
 theorem lem_filter_b {n d : ℕ} (U : Frame n d) (hU : IsParseval U)
     (hp : ∀ i, 0 < rowNormSq U i) {ρ : ℝ} (hρ : 0 < ρ) (x : Fin n → ℝ) :
     ∫ g, (∑ i, x i * diagMap U (moderateNoise U ρ g) i) ^ 2 ∂gaussAmb n d =
       (1 / (n : ℝ)) * matrixQuadratic
         (Matrix.diagonal (fun i => Real.sqrt (rowNormSq U i)) *
-          (ρ • (normalizedFisher U * (1 - normalizedFisher U) *
+          (ρ • (normalizedFisher U *
             (ρ • 1 + normalizedFisher U)⁻¹)) *
           Matrix.diagonal (fun i => Real.sqrt (rowNormSq U i))) x ∧
     (1 / (n : ℝ)) * matrixQuadratic
         (Matrix.diagonal (fun i => Real.sqrt (rowNormSq U i)) *
-          (ρ • (normalizedFisher U * (1 - normalizedFisher U) *
+          (ρ • (normalizedFisher U *
             (ρ • 1 + normalizedFisher U)⁻¹)) *
           Matrix.diagonal (fun i => Real.sqrt (rowNormSq U i))) x ≤
       (ρ / n) * ∑ i, rowNormSq U i * x i ^ 2 := by
   refine ⟨ModerateAux.integral_diag_pairing_sq hU hp hρ x, ?_⟩
   set Dh := Matrix.diagonal (fun i => Real.sqrt (rowNormSq U i))
-  set M := ρ • (normalizedFisher U * (1 - normalizedFisher U) * (ρ • 1 + normalizedFisher U)⁻¹)
+  set M := ρ • (normalizedFisher U * (ρ • 1 + normalizedFisher U)⁻¹)
   have hq : matrixQuadratic (Dh * M * Dh) x = matrixQuadratic M (Dh *ᵥ x) := by
     rw [ModerateAux.mq_eq_dot, ModerateAux.mq_eq_dot, ModerateAux.dot_mulVec_transpose,
       Matrix.diagonal_transpose]
@@ -495,94 +496,43 @@ theorem lem_filter_b {n d : ℕ} (U : Frame n d) (hU : IsParseval U)
 
 /-- `lem:filter` (c).
 
-TeX: "$I-C_\rho=\Omega+R_\rho$ with $R_\rho=\sum_{\mu>0}r_\mu\,Z_y\otimes Z_y$,
-$r_\mu=\mu(1-\mu)/(\rho+\mu)\ge0$, and
-\[ \sum_{\mu>0}r_\mu\le d,\qquad \sum_{\mu>0}\frac{r_\mu}{\sqrt\mu}\le\frac d{2\sqrt\rho},
- \qquad\sum_{\mu>0}\frac{r_\mu}\mu\le\frac d\rho . \]" -/
+TeX: "$I-C_\rho=\alpha\Omega+R_\rho$, $\alpha=(1+\rho)^{-1}$ with $R_\rho=\sum_{\mu>0}r_\mu\,Z_y\otimes Z_y$,
+$r_\mu=\alpha\mu(1-\mu)/(\rho+\mu)\ge0$, and
+\[ \sum_{\mu>0}r_\mu\le d,\qquad \sum_{\mu>0}\frac{r_\mu}{\sqrt\mu}\le\frac d{2\sqrt\rho}. \]" -/
 theorem lem_filter_c {n d : ℕ} (U : Frame n d) (hU : IsParseval U)
     (hp : ∀ i, 0 < rowNormSq U i) {ρ : ℝ} (hρ : 0 < ρ) :
     horizontalProjectionMatrix U - filteredCovariance U ρ =
-      normalizedNormalCovariance U + Smooth.modeSum U (Smooth.residualWeight ρ) ∧
-    (∀ j ∈ highNormalizedModes U 0, Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) =
-      normalizedFisherEigenvalue U j * (1 - normalizedFisherEigenvalue U j) /
-        (ρ + normalizedFisherEigenvalue U j) ∧
-      0 ≤ Smooth.residualWeight ρ (normalizedFisherEigenvalue U j)) ∧
-    ∑ j ∈ highNormalizedModes U 0, Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) ≤
+      Resolvent.baseWeight ρ • normalizedNormalCovariance U + Resolvent.modeSum U (Resolvent.residualWeight ρ) ∧
+    (∀ j ∈ highNormalizedModes U 0, Resolvent.residualWeight ρ (normalizedFisherEigenvalue U j) =
+      Resolvent.baseWeight ρ * (normalizedFisherEigenvalue U j * (1 - normalizedFisherEigenvalue U j) /
+        (ρ + normalizedFisherEigenvalue U j)) ∧
+      0 ≤ Resolvent.residualWeight ρ (normalizedFisherEigenvalue U j)) ∧
+    ∑ j ∈ highNormalizedModes U 0, Resolvent.residualWeight ρ (normalizedFisherEigenvalue U j) ≤
       (d : ℝ) ∧
-    ∑ j ∈ highNormalizedModes U 0, Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) /
-        Real.sqrt (normalizedFisherEigenvalue U j) ≤ (d : ℝ) / (2 * Real.sqrt ρ) ∧
-    ∑ j ∈ highNormalizedModes U 0, Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) /
-        normalizedFisherEigenvalue U j ≤ (d : ℝ) / ρ := by
-  have hC : filteredCovariance U ρ = Smooth.covariance U ρ :=
-    (Smooth.covariance_rational_formula hU hp hρ).symm
+    ∑ j ∈ highNormalizedModes U 0, Resolvent.residualWeight ρ (normalizedFisherEigenvalue U j) /
+        Real.sqrt (normalizedFisherEigenvalue U j) ≤ (d : ℝ) / (2 * Real.sqrt ρ) := by
+  have hC : filteredCovariance U ρ = Resolvent.covariance U ρ :=
+    (Resolvent.covariance_rational_formula hU hp hρ).symm
   have hdef : ∑ j ∈ highNormalizedModes U 0, (1 - normalizedFisherEigenvalue U j) ≤ (d : ℝ) :=
     normalizedPositiveResidualMass_le hU hp 0
-  refine ⟨by rw [hC]; exact Smooth.residual_decomposition hU hp hρ.le, ?_, ?_,
-    Smooth.residual_inverse_sqrt_sum_le hU hp hρ, ?_⟩
+  refine ⟨by rw [hC]; exact Resolvent.residual_decomposition hU hp hρ.le, ?_, ?_,
+    Resolvent.residual_inverse_sqrt_sum_le hU hp hρ⟩
   · intro j _
-    exact ⟨rfl, Smooth.residualWeight_nonneg hρ.le (normalizedFisherEigenvalue_nonneg U j)
+    exact ⟨rfl, Resolvent.residualWeight_nonneg hρ.le (normalizedFisherEigenvalue_nonneg U j)
       (normalizedFisherEigenvalue_le_one hU hp j)⟩
   · calc _ ≤ ∑ j ∈ highNormalizedModes U 0, (1 - normalizedFisherEigenvalue U j) :=
-          Finset.sum_le_sum (fun j _ => Smooth.residualWeight_le_deficit hρ.le
+          Finset.sum_le_sum (fun j _ => Resolvent.residualWeight_le_deficit hρ.le
             (normalizedFisherEigenvalue_nonneg U j) (normalizedFisherEigenvalue_le_one hU hp j))
       _ ≤ _ := hdef
-  · calc _ ≤ ∑ j ∈ highNormalizedModes U 0, (1 - normalizedFisherEigenvalue U j) / ρ :=
-          Finset.sum_le_sum (fun j _ => Smooth.residualWeight_div_le hρ
-            (normalizedFisherEigenvalue_nonneg U j) (normalizedFisherEigenvalue_le_one hU hp j))
-      _ = (∑ j ∈ highNormalizedModes U 0, (1 - normalizedFisherEigenvalue U j)) / ρ :=
-          (Finset.sum_div _ _ _).symm
-      _ ≤ _ := div_le_div_of_nonneg_right hdef hρ.le
 
-/-- Remark after `lem:filter` (properties of the rational filter).
-
-TeX: "Only these properties of the filter $\phi(\mu)=\rho(1-\mu)/(\rho+\mu)$ are used:
-$\phi(0)=1$ (so $C_\rho=I$ on $\ker \Omega$), $0\le\phi(\mu)\le1-\mu$,
-$\mu\phi(\mu)\le\rho$, and the sums in (c)." -/
-theorem rem_filter_rational {ρ μ : ℝ} (hρ : 0 < ρ) (hμ0 : 0 ≤ μ) (hμ1 : μ ≤ 1) :
-    ρ * (1 - 0) / (ρ + 0) = 1 ∧ 0 ≤ ρ * (1 - μ) / (ρ + μ) ∧
-    ρ * (1 - μ) / (ρ + μ) ≤ 1 - μ ∧ μ * (ρ * (1 - μ) / (ρ + μ)) ≤ ρ := by
-  have hd : 0 < ρ + μ := by linarith
-  refine ⟨by rw [sub_zero, mul_one, add_zero, div_self hρ.ne'], div_nonneg (mul_nonneg hρ.le (by linarith)) hd.le, ?_, ?_⟩
-  · rw [div_le_iff₀ hd]
-    nlinarith [mul_nonneg hμ0 (sub_nonneg.mpr hμ1)]
-  · rw [show μ * (ρ * (1 - μ) / (ρ + μ)) = ρ * (μ * (1 - μ) / (ρ + μ)) by ring]
-    have : μ * (1 - μ) / (ρ + μ) ≤ 1 := by
-      rw [div_le_iff₀ hd]; nlinarith [mul_nonneg hμ0 hμ0]
-    nlinarith
-
-/-- Remark after `lem:filter` (the hard cutoff).
-
-TeX: "The hard cutoff $(1-\mu)\one[\mu<\rho]$
-satisfies them with $\sum r_\mu/\sqrt\mu\le d/\sqrt\rho$, which doubles some
-constants below" (for the hard cutoff, `r_μ = 1 - μ - φ(μ) = (1-μ) 𝟙[μ ≥ ρ]`). -/
-theorem rem_filter_hard {n d : ℕ} (U : Frame n d) (hU : IsParseval U)
-    (hp : ∀ i, 0 < rowNormSq U i) {ρ : ℝ} (hρ : 0 < ρ) :
-    (∀ μ : ℝ, 0 ≤ μ → μ ≤ 1 →
-      (if (0 : ℝ) < ρ then 1 - (0 : ℝ) else 0) = 1 ∧
-      0 ≤ (if μ < ρ then 1 - μ else 0) ∧ (if μ < ρ then 1 - μ else 0) ≤ 1 - μ ∧
-      μ * (if μ < ρ then 1 - μ else 0) ≤ ρ) ∧
-    ∑ j ∈ highNormalizedModes U 0,
-        (if normalizedFisherEigenvalue U j < ρ then 0 else 1 - normalizedFisherEigenvalue U j) /
-          Real.sqrt (normalizedFisherEigenvalue U j) ≤ (d : ℝ) / Real.sqrt ρ := by
-  refine ⟨?_, ?_⟩
-  · intro μ hμ0 hμ1
-    refine ⟨by simp [hρ], ?_, ?_, ?_⟩
-    · split_ifs <;> linarith
-    · split_ifs <;> linarith
-    · split_ifs with h
-      · nlinarith [mul_nonneg hμ0 hμ0]
-      · linarith
-  · have hsρ : 0 < Real.sqrt ρ := Real.sqrt_pos.mpr hρ
-    calc _ ≤ ∑ j ∈ highNormalizedModes U 0, (1 - normalizedFisherEigenvalue U j) / Real.sqrt ρ := by
-          apply Finset.sum_le_sum; intro j hj
-          have hμ1 := normalizedFisherEigenvalue_le_one hU hp j
-          split_ifs with h
-          · simp only [zero_div]; exact div_nonneg (by linarith) hsρ.le
-          · exact div_le_div_of_nonneg_left (by linarith) hsρ
-              (Real.sqrt_le_sqrt (not_lt.mp h))
-      _ = (∑ j ∈ highNormalizedModes U 0, (1 - normalizedFisherEigenvalue U j)) / Real.sqrt ρ :=
-          (Finset.sum_div _ _ _).symm
-      _ ≤ _ := div_le_div_of_nonneg_right (normalizedPositiveResidualMass_le hU hp 0) hsρ.le
+/-- Elementary properties of the ordinary resolvent weight `φ(μ)=ρ/(ρ+μ)`.
+The residual trace bounds, rather than a hard cutoff, control the drift. -/
+theorem rem_filter_rational {ρ μ : ℝ} (hρ : 0 < ρ) (hμ0 : 0 ≤ μ) (_hμ1 : μ ≤ 1) :
+    ρ / (ρ + 0) = 1 ∧ 0 ≤ ρ / (ρ + μ) ∧
+    ρ / (ρ + μ) ≤ 1 ∧ μ * (ρ / (ρ + μ)) ≤ ρ := by
+  refine ⟨by simp [hρ.ne'], Resolvent.retainedWeight_nonneg hρ.le hμ0,
+    Resolvent.retainedWeight_le_one hρ.le hμ0, ?_⟩
+  simpa only [mul_comm, Resolvent.retainedWeight] using Resolvent.retainedWeight_mul_le hρ.le hμ0
 
 /-! ## 5.2 Commutator identities -/
 
@@ -668,12 +618,12 @@ theorem lem_commutator_b {n d : ℕ} (U : Frame n d) (hU : IsParseval U) (f : Fi
 
 /-! ## 5.3 The second-order mean and the drift -/
 
-/-- `b₀ = (1/n) L(p^{-1})`. -/
-def baseBias {n d : ℕ} (U : Frame n d) (i : Fin n) : ℝ :=
-  (1 / (n : ℝ)) * (projectionLaplacian (frameProjection U) *ᵥ fun j => (rowNormSq U j)⁻¹) i
+/-- `b₀ = (α/n) L(p^{-1})`, with `α=(1+ρ)⁻¹`. -/
+def baseBias {n d : ℕ} (U : Frame n d) (ρ : ℝ) (i : Fin n) : ℝ :=
+  (Resolvent.baseWeight ρ / (n : ℝ)) * (projectionLaplacian (frameProjection U) *ᵥ fun j => (rowNormSq U j)⁻¹) i
 
-/-- `m_* = (1/n) ∑_{μ>0} (r_μ/μ) Γ_{f_y}` (ambient), the library's `Linear.driftMean`. -/
-abbrev driftMean {n d : ℕ} (U : Frame n d) (ρ : ℝ) : Frame n d := Linear.driftMean U ρ
+/-- `m_* = (1/n) ∑_{μ>0} (r_μ/μ) Γ_{f_y}` (ambient), the resolvent's `Resolvent.driftMean`. -/
+abbrev driftMean {n d : ℕ} (U : Frame n d) (ρ : ℝ) : Frame n d := Resolvent.driftMean U ρ
 
 /-- `b_* := 𝒜 m_*`. -/
 def residualBias {n d : ℕ} (U : Frame n d) (ρ : ℝ) : Fin n → ℝ := diagMap U (driftMean U ρ)
@@ -807,12 +757,12 @@ Am_*$ by \cref{lem:commutator}(a), and with $\fro{N_{f_y}}=\sqrt\mu$,
 theorem lem_mean_residual {n d : ℕ} (U : Frame n d) (hs : ModerateStanding U) {ρ : ℝ}
     (hρ : 0 < ρ) :
     (∀ i, (1 / (n : ℝ)) * ∑ j ∈ highNormalizedModes U 0,
-        Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) *
+        Resolvent.residualWeight ρ (normalizedFisherEigenvalue U j) *
           horizontalQuadraticDiagonal U (normalizedNormalFrame U j) i = residualBias U ρ i) ∧
     (∀ j ∈ highNormalizedModes U 0, Real.sqrt (frobSq (ambientNormal U
       (normalizedNormalPotential U j))) = Real.sqrt (normalizedFisherEigenvalue U j)) ∧
     Real.sqrt (frobSq (driftMean U ρ)) ≤ 2 / n * Real.sqrt (2 / ((d : ℝ) / n)) *
-      ∑ j ∈ highNormalizedModes U 0, Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) /
+      ∑ j ∈ highNormalizedModes U 0, Resolvent.residualWeight ρ (normalizedFisherEigenvalue U j) /
         Real.sqrt (normalizedFisherEigenvalue U j) ∧
     2 / n * Real.sqrt (2 / ((d : ℝ) / n)) * ((d : ℝ) / (2 * Real.sqrt ρ)) =
       Real.sqrt (2 * ((d : ℝ) / n) / ρ) := by
@@ -826,43 +776,43 @@ theorem lem_mean_residual {n d : ℕ} (U : Frame n d) (hs : ModerateStanding U) 
       (normalizedNormalPotential U j))) = Real.sqrt (normalizedFisherEigenvalue U j) := by
     intro j _
     rw [ModerateAux.sqrt_frobSq_eq, normalizedNormalPotential_image_norm]
-  refine ⟨fun i => (Linear.driftMean_diagonal hU ρ i).symm, hNf, ?_, ?_⟩
+  refine ⟨fun i => (Resolvent.driftMean_diagonal hU ρ i).symm, hNf, ?_, ?_⟩
   · have hterm : ∀ j ∈ highNormalizedModes U 0,
-        ‖normalFrobVector ((Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) /
+        ‖normalFrobVector ((Resolvent.residualWeight ρ (normalizedFisherEigenvalue U j) /
           normalizedFisherEigenvalue U j) • Linear.driftGamma U (normalizedNormalPotential U j))‖ ≤
         2 * Real.sqrt (2 / ((d : ℝ) / n)) *
-          (Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) /
+          (Resolvent.residualWeight ρ (normalizedFisherEigenvalue U j) /
             Real.sqrt (normalizedFisherEigenvalue U j)) := by
       intro j hj
       have hμ : 0 < normalizedFisherEigenvalue U j := (Finset.mem_filter.mp hj).2
       have hsμ : 0 < Real.sqrt (normalizedFisherEigenvalue U j) := Real.sqrt_pos.mpr hμ
-      have hw := Smooth.residualWeight_nonneg hρ.le (normalizedFisherEigenvalue_nonneg U j)
+      have hw := Resolvent.residualWeight_nonneg hρ.le (normalizedFisherEigenvalue_nonneg U j)
         (normalizedFisherEigenvalue_le_one hU (ModerateAux.standing_p_pos hs) j)
       rw [Linear.normalFrobVector_smul', norm_smul, Real.norm_eq_abs,
         abs_of_nonneg (div_nonneg hw hμ.le)]
       have hg := (lem_commutator_a U hU (normalizedNormalPotential U j) (Real.sqrt_nonneg _)
         (hM j)).2.2.2.2
       rw [ModerateAux.sqrt_frobSq_eq, hNf j hj] at hg
-      have key : Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) /
+      have key : Resolvent.residualWeight ρ (normalizedFisherEigenvalue U j) /
           normalizedFisherEigenvalue U j * Real.sqrt (normalizedFisherEigenvalue U j) =
-          Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) /
+          Resolvent.residualWeight ρ (normalizedFisherEigenvalue U j) /
             Real.sqrt (normalizedFisherEigenvalue U j) := by
         rw [div_mul_eq_mul_div, div_eq_div_iff hμ.ne' hsμ.ne', mul_assoc,
           Real.mul_self_sqrt hμ.le]
-      calc _ ≤ Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) /
+      calc _ ≤ Resolvent.residualWeight ρ (normalizedFisherEigenvalue U j) /
             normalizedFisherEigenvalue U j *
             (2 * Real.sqrt (2 / ((d : ℝ) / n)) * Real.sqrt (normalizedFisherEigenvalue U j)) :=
             mul_le_mul_of_nonneg_left hg (div_nonneg hw hμ.le)
         _ = _ := by rw [← key]; ring
     rw [ModerateAux.sqrt_frobSq_eq]
-    unfold driftMean Linear.driftMean
+    unfold driftMean Resolvent.driftMean
     rw [Linear.normalFrobVector_smul', norm_smul, Linear.normalFrobVector_sum', Real.norm_eq_abs,
       abs_of_nonneg (by positivity)]
     calc 1 / (n : ℝ) * ‖∑ j ∈ highNormalizedModes U 0, normalFrobVector
-          ((Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) /
+          ((Resolvent.residualWeight ρ (normalizedFisherEigenvalue U j) /
             normalizedFisherEigenvalue U j) • Linear.driftGamma U (normalizedNormalPotential U j))‖
         ≤ 1 / (n : ℝ) * ∑ j ∈ highNormalizedModes U 0, 2 * Real.sqrt (2 / ((d : ℝ) / n)) *
-          (Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) /
+          (Resolvent.residualWeight ρ (normalizedFisherEigenvalue U j) /
             Real.sqrt (normalizedFisherEigenvalue U j)) :=
           mul_le_mul_of_nonneg_left ((norm_sum_le _ _).trans (Finset.sum_le_sum hterm))
             (by positivity)
@@ -889,7 +839,7 @@ theorem sqrt_frobSq_driftMean_le {n d : ℕ} {U : Frame n d} (hs : ModerateStand
     (hρ : 0 < ρ) :
     Real.sqrt (frobSq (driftMean U ρ)) ≤ Real.sqrt (2 * ((d : ℝ) / n) / ρ) := by
   have h := lem_mean_residual U hs hρ
-  have hc := (lem_filter_c U hs.parseval (standing_p_pos hs) hρ).2.2.2.1
+  have hc := (lem_filter_c U hs.parseval (standing_p_pos hs) hρ).2.2.2
   rw [← h.2.2.2]
   exact h.2.2.1.trans (mul_le_mul_of_nonneg_left hc (by positivity))
 
@@ -904,25 +854,25 @@ end ModerateAux
 /-- `lem:mean` (Mean).
 
 TeX: "$\E q(Z)=a\one-p-b_0-b_*$ with $b_*:=\mathcal Am_*$, where
-\[ b_0=\frac1nL(p^{-1}),\quad \norm{b_0}_\infty\le\frac{12\eps}n,\qquad
+\[ b_0=\frac\alpha nL(p^{-1}),\quad \norm{b_0}_\infty\le\frac{12\eps}n,\qquad
  m_*=\frac1n\sum_{\mu>0}\frac{r_\mu}\mu\,\Gamma_{f_y},\quad
  \fro{m_*}^2\le\frac{2a}\rho . \]" -/
 theorem lem_mean {n d : ℕ} (U : Frame n d) (hs : ModerateStanding U) {ε : ℝ} (hε0 : 0 < ε)
     (hε : ε ≤ 1 / 2) (hnear : IsNearlyEqualNorm ε U) {ρ : ℝ} (hρ : 0 < ρ) :
     (∀ i, ∫ g, horizontalQuadraticDiagonal U (moderateNoise U ρ g) i ∂gaussAmb n d =
-      (d : ℝ) / n - rowNormSq U i - baseBias U i - residualBias U ρ i) ∧
-    (∀ i, |baseBias U i| ≤ 12 * ε / n) ∧
+      (d : ℝ) / n - rowNormSq U i - baseBias U ρ i - residualBias U ρ i) ∧
+    (∀ i, |baseBias U ρ i| ≤ 12 * ε / n) ∧
     driftMean U ρ = (1 / (n : ℝ)) • ∑ j ∈ highNormalizedModes U 0,
-      (Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) /
+      (Resolvent.residualWeight ρ (normalizedFisherEigenvalue U j) /
         normalizedFisherEigenvalue U j) • Linear.driftGamma U (normalizedNormalPotential U j) ∧
     U.transpose * driftMean U ρ = 0 ∧
     frobSq (driftMean U ρ) ≤ 2 * ((d : ℝ) / n) / ρ := by
   have hU := hs.parseval
   have hn := ModerateAux.standing_n_pos hs
   have hp := ModerateAux.standing_p_pos hs
-  refine ⟨?_, ?_, rfl, Linear.driftMean_horizontal hU ρ, ?_⟩
+  refine ⟨?_, ?_, rfl, Resolvent.driftMean_horizontal hU ρ, ?_⟩
   · intro i
-    -- `E q(Z) = n⁻¹ Q(C_ρ)` with `Q` linear in the covariance and `C_ρ = I - Ω - R_ρ`
+    -- `E q(Z) = n⁻¹ Q(C_ρ)` with `Q` linear in the covariance and `C_ρ = I - αΩ - R_ρ`
     obtain ⟨-, -, hunf, hbase⟩ := lem_mean_unfiltered_base U hU hp i
     have hres := (lem_mean_residual U hs hρ).1 i
     have hnR : (0 : ℝ) < n := Nat.cast_pos.mpr hn
@@ -934,42 +884,50 @@ theorem lem_mean {n d : ℕ} (U : Frame n d) (hs : ModerateStanding U) {ε : ℝ
         ∑ j, horizontalQuadraticDiagonal U (baseNormalDirection U j) i := by
       rw [normalizedNormalCovariance_base_decomposition, map_sum]
       simp only [normalQuadraticCovariance_outer]
-    have hQR : normalQuadraticCovariance U i (Smooth.modeSum U (Smooth.residualWeight ρ)) =
-        ∑ j ∈ highNormalizedModes U 0, Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) *
+    have hQR : normalQuadraticCovariance U i (Resolvent.modeSum U (Resolvent.residualWeight ρ)) =
+        ∑ j ∈ highNormalizedModes U 0, Resolvent.residualWeight ρ (normalizedFisherEigenvalue U j) *
           horizontalQuadraticDiagonal U (normalizedNormalFrame U j) i := by
-      simp only [Smooth.modeSum, map_sum, map_smul, smul_eq_mul,
+      simp only [Resolvent.modeSum, map_sum, map_smul, smul_eq_mul,
         normalQuadraticCovariance_normalDirectionOuter]
-    have hcov : Smooth.covariance U ρ = horizontalProjectionMatrix U -
-        normalizedNormalCovariance U - Smooth.modeSum U (Smooth.residualWeight ρ) := by
-      have hh := Smooth.residual_decomposition hU hp hρ.le
+    have hcov : Resolvent.covariance U ρ = horizontalProjectionMatrix U -
+        Resolvent.baseWeight ρ • normalizedNormalCovariance U - Resolvent.modeSum U (Resolvent.residualWeight ρ) := by
+      have hh := Resolvent.residual_decomposition hU hp hρ.le
       rw [sub_sub, ← hh]; abel
     change ∫ g, horizontalQuadraticDiagonal U (frameOfVector
-      (Matrix.toEuclideanLin (Smooth.normalizedTangentNoiseFactor U ρ) g)) i
+      (Matrix.toEuclideanLin (Resolvent.normalizedTangentNoiseFactor U ρ) g)) i
         ∂stdGaussian (FrameVector n d) = _
     rw [integral_horizontalQuadraticDiagonal_eq_covariance,
-      Smooth.normalizedTangentNoiseFactor_covariance hU hρ.le, map_smul, hcov, map_sub, map_sub,
-      smul_eq_mul, mul_sub, mul_sub, hQI, hQB, hQR, ← hres, baseBias, ← hbase]
+      Resolvent.normalizedTangentNoiseFactor_covariance hU hρ.le, map_smul, hcov, map_sub, map_sub, map_smul,
+      smul_eq_mul, mul_sub, mul_sub, hQI, hQB, hQR, ← hres, baseBias]
+    simp only [smul_eq_mul]
+    linear_combination -(Resolvent.baseWeight ρ) * hbase
   · intro i
     have h := (lem_mean_base_bound U hs hε0 hε hnear i i).2.2
-    rw [baseBias, abs_mul, abs_of_pos (by positivity : (0 : ℝ) < 1 / n)]
-    calc 1 / (n : ℝ) * |(projectionLaplacian (frameProjection U) *ᵥ
-          fun j => (rowNormSq U j)⁻¹) i| ≤ 1 / (n : ℝ) * (12 * ε) :=
-          mul_le_mul_of_nonneg_left h (by positivity)
+    rw [baseBias, abs_mul, abs_of_nonneg (div_nonneg (Resolvent.baseWeight_nonneg hρ.le) (Nat.cast_nonneg n))]
+    calc Resolvent.baseWeight ρ / (n : ℝ) * |(projectionLaplacian (frameProjection U) *ᵥ
+          fun j => (rowNormSq U j)⁻¹) i| ≤ Resolvent.baseWeight ρ / (n : ℝ) * (12 * ε) :=
+          mul_le_mul_of_nonneg_left h (by exact div_nonneg (Resolvent.baseWeight_nonneg hρ.le) (Nat.cast_nonneg n))
+      _ ≤ 1 / (n : ℝ) * (12 * ε) := by
+          gcongr
+          exact Resolvent.baseWeight_le_one hρ.le
       _ = 12 * ε / n := by ring
   · exact ModerateAux.frobSq_driftMean_le hs hρ
 
 /-- `rem:drift` (Why a drift): basis-free formula for `m_*`.
 
 TeX: "(Since $m_*$ does not depend on the choice of eigenbasis, it can also be written
-$m_*=\frac1nV^T\bigl[(D_p^{-1/2}(I-S)(\rho I+S)^{-1}D_p^{-1/2})\circ(I-2P)\bigr]U$.)"
+$m_*=\frac\alpha nV^T\bigl[(D_p^{-1/2}(I-S)(\rho I+S)^{-1}D_p^{-1/2})\circ(I-2P)\bigr]U$.)"
 (ambient: `V m_* = (1/n)(I-P)[…]U`; `D_p^{-1/2} = leverageNormalizer U`.) -/
 theorem rem_drift_formula {n d : ℕ} (U : Frame n d) (hU : IsParseval U)
     (hp : ∀ i, 0 < rowNormSq U i) {ρ : ℝ} (hρ : 0 < ρ) :
-    driftMean U ρ = (1 / (n : ℝ)) • (frameComplementProjection U *
+    driftMean U ρ = (Resolvent.baseWeight ρ / (n : ℝ)) • (frameComplementProjection U *
       Matrix.hadamard (leverageNormalizer U * (1 - normalizedFisher U) *
           (ρ • 1 + normalizedFisher U)⁻¹ * leverageNormalizer U)
         (projectionReflection U) * U) :=
-  ModerateAux.driftMean_formula U hρ
+  by
+    rw [driftMean, Resolvent.driftMean_eq_baseWeight_smul, ModerateAux.driftMean_formula U hρ, smul_smul]
+    congr 1
+    ring
 
 /-- `rem:drift`: the size of the drift.
 
@@ -1066,15 +1024,8 @@ theorem lem_expected_graph_unfiltered {n d : ℕ} (U : Frame n d) (hs : Moderate
     rw [hL] at hg
     exact hg
 
-/-- Proof of `lem:expected-graph`, base and residual losses.
-
-TeX: "\emph{Base loss.} $Y_{\zeta_k}=T_{e_k}/\sqrt{p_k}$, so by
-\cref{lem:commutator}(b) and $p_k\ge a/2$,
-$\sum_kx^T\Lap(Y_{\zeta_k})x\le\frac2a\cdot2\sum_{k,j}P_{kj}^2(x_k-x_j)^2
-=\frac8a\,x^TLx$; the base part $\Omega/n$ therefore removes at most $\frac8dL$.
-\emph{Residual loss.} $\Lap(Y_{Z_y})=\mu^{-1}\Lap(T_{f_y})\preceq\frac8{a\mu}L$ by
-\cref{lem:commutator}(b) and \eqref{eq:finfty}, so $R_\rho/n$ removes at most
-$\frac8{an}\sum_\mu\frac{r_\mu}\mu L\le\frac8\rho L$." -/
+/-- Base covariance graph bound used by the expected-graph proof.
+The resolvent comparison `I-Cρ ⪯ Ω/ρ` turns this one base bound into the full loss bound. -/
 theorem lem_expected_graph_losses {n d : ℕ} (U : Frame n d) (hs : ModerateStanding U)
     {ρ : ℝ} (hρ : 0 < ρ) (x : Fin n → ℝ) :
     (∀ k, tangentY U (baseNormalDirection U k) =
@@ -1083,14 +1034,7 @@ theorem lem_expected_graph_losses {n d : ℕ} (U : Frame n d) (hs : ModerateStan
       2 / ((d : ℝ) / n) * (2 * ∑ k, ∑ j, frameProjection U k j ^ 2 * (x k - x j) ^ 2) ∧
     2 / ((d : ℝ) / n) * (2 * ∑ k, ∑ j, frameProjection U k j ^ 2 * (x k - x j) ^ 2) =
       8 / ((d : ℝ) / n) * matrixQuadratic (projectionLaplacian (frameProjection U)) x ∧
-    (1 / (n : ℝ)) * (8 / ((d : ℝ) / n)) = 8 / d ∧
-    (∀ j ∈ highNormalizedModes U 0,
-      matrixQuadratic (sqLaplacian (tangentY U (normalizedNormalFrame U j))) x ≤
-        8 / ((d : ℝ) / n * normalizedFisherEigenvalue U j) *
-          matrixQuadratic (projectionLaplacian (frameProjection U)) x) ∧
-    8 / ((d : ℝ) / n * n) * ∑ j ∈ highNormalizedModes U 0,
-        Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) / normalizedFisherEigenvalue U j ≤
-      8 / ρ := by
+    (1 / (n : ℝ)) * (8 / ((d : ℝ) / n)) = 8 / d := by
   have hU := hs.parseval
   have ha := ModerateAux.standing_a_pos hs
   have hnR := ModerateAux.standing_nR_pos hs
@@ -1125,102 +1069,60 @@ theorem lem_expected_graph_losses {n d : ℕ} (U : Frame n d) (hs : ModerateStan
           (tangentY U (ambientNormal U (Pi.single k 1)))) x :=
           mul_le_mul_of_nonneg_right hpk hm
       _ ≤ _ := mul_le_mul_of_nonneg_left hb (by positivity)
-  refine ⟨hi, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨hi, ?_, ?_, ?_⟩
   · calc _ ≤ ∑ k, 2 / ((d : ℝ) / n) * (2 * ∑ j, frameProjection U k j ^ 2 * (x k - x j) ^ 2) :=
           Finset.sum_le_sum (fun k _ => hbase k)
       _ = _ := by rw [← Finset.mul_sum, ← Finset.mul_sum]
   · rw [hU.laplacian_energy]; ring
   · field_simp
-  · intro j hj
-    have hμ : 0 < normalizedFisherEigenvalue U j := (Finset.mem_filter.mp hj).2
-    rw [normalizedNormalFrame_eq, ModerateAux.tangentY_smul, ModerateAux.mq_sqLaplacian_smul,
-      inv_pow, Real.sq_sqrt hμ.le]
-    have hb := (lem_commutator_b U hU (normalizedNormalPotential U j) (Real.sqrt_nonneg _)
-      (fun i => eq_finfty U hs.pos (ModerateAux.standing_n_pos hs) (fun i => (hs.rows i).1)
-        j i)).2.2.1 x
-    rw [Real.sq_sqrt (by positivity)] at hb
-    calc (normalizedFisherEigenvalue U j)⁻¹ * matrixQuadratic (sqLaplacian
-          (tangentY U (ambientNormal U (normalizedNormalPotential U j)))) x
-        ≤ (normalizedFisherEigenvalue U j)⁻¹ * (4 * (2 / ((d : ℝ) / n)) *
-          matrixQuadratic (projectionLaplacian (frameProjection U)) x) :=
-          mul_le_mul_of_nonneg_left hb (inv_nonneg.mpr hμ.le)
-      _ = _ := by field_simp; ring
-  · have hc := (lem_filter_c U hU hp hρ).2.2.2.2
-    rw [show (d : ℝ) / n * n = d by field_simp]
-    calc 8 / (d : ℝ) * ∑ j ∈ highNormalizedModes U 0,
-          Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) / normalizedFisherEigenvalue U j
-        ≤ 8 / (d : ℝ) * ((d : ℝ) / ρ) := mul_le_mul_of_nonneg_left hc (by positivity)
-      _ = 8 / ρ := by field_simp
-
 /-- `lem:expected-graph`.
 
-TeX: "$\displaystyle\E\Lap(Y)\succeq\frac a{4n}\mathsf K-\Bigl(\frac2n+\frac8d+\frac8\rho\Bigr)L$."
+TeX: "$\displaystyle\E\Lap(Y)\succeq\frac a{4n}\mathsf K-\Bigl(\frac2n+\frac8{d\rho}\Bigr)L$."
 -/
 theorem lem_expected_graph {n d : ℕ} (U : Frame n d) (hs : ModerateStanding U) {ρ : ℝ}
     (hρ : 0 < ρ) (x : Fin n → ℝ) :
     (d : ℝ) / n / (4 * n) * matrixQuadratic (completeLaplacian n) x -
-        (2 / n + 8 / d + 8 / ρ) * matrixQuadratic (projectionLaplacian (frameProjection U)) x ≤
+        (2 / n + 8 / (d * ρ)) * matrixQuadratic (projectionLaplacian (frameProjection U)) x ≤
       ∫ g, matrixQuadratic (sqLaplacian (tangentY U (moderateNoise U ρ g))) x ∂gaussAmb n d := by
   have hU := hs.parseval
-  have hp := ModerateAux.standing_p_pos hs
   have hnR := ModerateAux.standing_nR_pos hs
   have hdR := ModerateAux.standing_dR_pos hs
-  have ha := ModerateAux.standing_a_pos hs
-  have hL0 : 0 ≤ matrixQuadratic (projectionLaplacian (frameProjection U)) x := by
-    rw [hU.laplacian_energy]; positivity
-  have key : ∫ g, matrixQuadratic (sqLaplacian (tangentY U (moderateNoise U ρ g))) x
-        ∂gaussAmb n d =
-      ∫ g, matrixQuadratic (sqLaplacian (tangentY U (unfilteredNoise U g))) x ∂gaussAmb n d -
-      (1 / (n : ℝ)) * ∑ k, matrixQuadratic (sqLaplacian (tangentY U (baseNormalDirection U k))) x -
-      (1 / (n : ℝ)) * ∑ j ∈ highNormalizedModes U 0,
-        Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) *
-          matrixQuadratic (sqLaplacian (tangentY U (normalizedNormalFrame U j))) x := by
+  have hf : ∫ g, matrixQuadratic (sqLaplacian (tangentY U (moderateNoise U ρ g))) x
+      ∂gaussAmb n d = (1 / (n : ℝ)) * tangentCovarianceGraph U x (Resolvent.covariance U ρ) := by
     simp only [ModerateAux.mq_sqLaplacian_tangentY]
-    exact ModerateAux.integral_filtered_graph_eq hU hp hρ x
-  have hu := (lem_expected_graph_unfiltered U hs).2.2 x
-  obtain ⟨_, hb1, hb2, hb3, hr1, hr2⟩ := lem_expected_graph_losses U hs hρ x
-  have hbase : (1 / (n : ℝ)) * ∑ k, matrixQuadratic (sqLaplacian
-      (tangentY U (baseNormalDirection U k))) x ≤
+    have hY : ∀ g, (moderateNoise U ρ g * U.transpose +
+        U * (moderateNoise U ρ g).transpose) =
+        gaussianMatrixImage (Resolvent.retainedTangentFactor U ρ) g :=
+      fun g => (Resolvent.moderateNoiseFrame_tangent U ρ g).symm
+    simp_rw [hY]
+    exact Resolvent.integral_retainedTangent_graphEnergy_eq hU hρ.le x
+  have hu : ∫ g, matrixQuadratic (sqLaplacian (tangentY U (unfilteredNoise U g))) x
+      ∂gaussAmb n d = (1 / (n : ℝ)) * tangentCovarianceGraph U x (horizontalProjectionMatrix U) := by
+    simp only [ModerateAux.mq_sqLaplacian_tangentY]
+    exact ModerateAux.integral_unfiltered_graph U hU x
+  have hb : tangentCovarianceGraph U x (normalizedNormalCovariance U) =
+      ∑ k, matrixQuadratic (sqLaplacian (tangentY U (baseNormalDirection U k))) x := by
+    rw [normalizedNormalCovariance_base_decomposition, map_sum]
+    simp only [ModerateAux.tcg_outer, ModerateAux.mq_sqLaplacian_tangentY]
+  have hcmp := tangentCovarianceGraph_nonneg U x _ (Resolvent.covariance_loss_le_normal U hρ)
+  simp only [map_sub, map_smul, smul_eq_mul] at hcmp
+  have hscaled := mul_nonneg (show (0 : ℝ) ≤ 1 / n by positivity) hcmp
+  have hbase := lem_expected_graph_losses U hs hρ x
+  have hbase' : (1 / (n : ℝ)) * tangentCovarianceGraph U x (normalizedNormalCovariance U) ≤
       8 / d * matrixQuadratic (projectionLaplacian (frameProjection U)) x := by
+    rw [hb]
     calc _ ≤ (1 / (n : ℝ)) * (8 / ((d : ℝ) / n) *
           matrixQuadratic (projectionLaplacian (frameProjection U)) x) :=
-          mul_le_mul_of_nonneg_left (hb1.trans_eq hb2) (by positivity)
-      _ = _ := by rw [← mul_assoc, hb3]
-  have hres : (1 / (n : ℝ)) * ∑ j ∈ highNormalizedModes U 0,
-      Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) *
-        matrixQuadratic (sqLaplacian (tangentY U (normalizedNormalFrame U j))) x ≤
-      8 / ρ * matrixQuadratic (projectionLaplacian (frameProjection U)) x := by
-    have h1 : ∑ j ∈ highNormalizedModes U 0,
-        Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) *
-          matrixQuadratic (sqLaplacian (tangentY U (normalizedNormalFrame U j))) x ≤
-        ∑ j ∈ highNormalizedModes U 0,
-          Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) *
-            (8 / ((d : ℝ) / n * normalizedFisherEigenvalue U j) *
-              matrixQuadratic (projectionLaplacian (frameProjection U)) x) := by
-      apply Finset.sum_le_sum; intro j hj
-      exact mul_le_mul_of_nonneg_left (hr1 j hj) (Smooth.residualWeight_nonneg hρ.le
-        (normalizedFisherEigenvalue_nonneg U j) (normalizedFisherEigenvalue_le_one hU hp j))
-    have h2 : (1 / (n : ℝ)) * ∑ j ∈ highNormalizedModes U 0,
-          Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) *
-            (8 / ((d : ℝ) / n * normalizedFisherEigenvalue U j) *
-              matrixQuadratic (projectionLaplacian (frameProjection U)) x) =
-        8 / ((d : ℝ) / n * n) * (∑ j ∈ highNormalizedModes U 0,
-          Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) /
-            normalizedFisherEigenvalue U j) *
-          matrixQuadratic (projectionLaplacian (frameProjection U)) x := by
-      rw [Finset.mul_sum, Finset.mul_sum, Finset.sum_mul]
-      apply Finset.sum_congr rfl; intro j hj
-      have hμ : 0 < normalizedFisherEigenvalue U j := (Finset.mem_filter.mp hj).2
-      field_simp
-    calc _ ≤ (1 / (n : ℝ)) * ∑ j ∈ highNormalizedModes U 0,
-          Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) *
-            (8 / ((d : ℝ) / n * normalizedFisherEigenvalue U j) *
-              matrixQuadratic (projectionLaplacian (frameProjection U)) x) :=
-          mul_le_mul_of_nonneg_left h1 (by positivity)
-      _ = _ := h2
-      _ ≤ _ := mul_le_mul_of_nonneg_right hr2 hL0
-  rw [key]
-  linarith
+          mul_le_mul_of_nonneg_left (hbase.2.1.trans_eq hbase.2.2.1) (by positivity)
+      _ = _ := by rw [← mul_assoc, hbase.2.2.2]
+  have hbound := mul_le_mul_of_nonneg_left hbase' (show 0 ≤ 1 / ρ by positivity)
+  have hcoef : (1 / ρ) * (8 / (d : ℝ)) = 8 / (d * ρ) := by ring
+  simp only [← mul_assoc] at hbound
+  rw [hcoef] at hbound
+  have hexpand := (lem_expected_graph_unfiltered U hs).2.2 x
+  rw [hu] at hexpand
+  rw [hf]
+  nlinarith only [hscaled, hbound, hexpand]
 
 /-- Remark after `thm:moderate` (quantitative claim).
 
@@ -1230,7 +1132,7 @@ theorem rem_after_moderate {n d : ℕ} (U : Frame n d) (hs : ModerateStanding U)
     (∑ i, x i * residualBias U ρ i) ^ 2 ≤
       2 * ((d : ℝ) / n) / ρ * matrixQuadratic (projectionLaplacian (frameProjection U)) x := by
   have hU := hs.parseval
-  have hm := Linear.driftMean_horizontal hU ρ
+  have hm := Resolvent.driftMean_horizontal hU ρ
   obtain ⟨h1, h2, -⟩ := diagMap_adjoint U (driftMean U ρ) hU hm x
   have hfro := ModerateAux.frobSq_driftMean_le hs hρ
   have hL0 : 0 ≤ matrixQuadratic (projectionLaplacian (frameProjection U)) x := by

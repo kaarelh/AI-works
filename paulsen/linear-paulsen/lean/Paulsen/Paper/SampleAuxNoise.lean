@@ -16,11 +16,11 @@ noncomputable section
 
 /-- Shorthand for the noise factor `(C_ρ/n)^{1/2}`. -/
 abbrev noiseF {n d : ℕ} (U : Frame n d) (ρ : ℝ) : Matrix (Fin n × Fin d) (Fin n × Fin d) ℝ :=
-  Smooth.normalizedTangentNoiseFactor U ρ
+  Resolvent.normalizedTangentNoiseFactor U ρ
 
 /-- Shorthand for the tangent factor `g ↦ vec Y`. -/
 abbrev tangentF {n d : ℕ} (U : Frame n d) (ρ : ℝ) : Matrix (Fin n × Fin n) (Fin n × Fin d) ℝ :=
-  Smooth.retainedTangentFactor U ρ
+  Resolvent.retainedTangentFactor U ρ
 
 theorem moderateNoise_apply {n d : ℕ} (U : Frame n d) (ρ : ℝ) (g : FrameVector n d)
     (i : Fin n) (c : Fin d) :
@@ -29,16 +29,16 @@ theorem moderateNoise_apply {n d : ℕ} (U : Frame n d) (ρ : ℝ) (g : FrameVec
 theorem tangentY_moderateNoise_apply {n d : ℕ} (U : Frame n d) (ρ : ℝ) (g : FrameVector n d)
     (i j : Fin n) :
     tangentY U (moderateNoise U ρ g) i j = Matrix.toEuclideanLin (tangentF U ρ) g (i, j) := by
-  have h := congrFun (congrFun (Smooth.moderateNoiseFrame_tangent U ρ g) i) j
+  have h := congrFun (congrFun (Resolvent.moderateNoiseFrame_tangent U ρ g) i) j
   exact h.symm
 
 theorem opNorm_noiseF_sq {n d : ℕ} {U : Frame n d} (hU : IsParseval U) {ρ : ℝ} (hρ : 0 ≤ ρ) :
     opNorm (noiseF U ρ) ^ 2 ≤ 1 / (n : ℝ) :=
-  Smooth.normalizedTangentNoiseFactor_operator_norm_sq_le hU hρ
+  Resolvent.normalizedTangentNoiseFactor_operator_norm_sq_le hU hρ
 
 theorem opNorm_tangentF_sq {n d : ℕ} {U : Frame n d} (hU : IsParseval U) {ρ : ℝ}
     (hρ : 0 ≤ ρ) : opNorm (tangentF U ρ) ^ 2 ≤ 2 / (n : ℝ) :=
-  Smooth.retainedTangentFactor_operator_norm_sq_le hU hρ
+  Resolvent.retainedTangentFactor_operator_norm_sq_le hU hρ
 
 theorem matrixQuadratic_single {ι : Type*} [Fintype ι] [DecidableEq ι] (M : Matrix ι ι ℝ)
     (p : ι) : matrixQuadratic M (Pi.single p 1) = M p p := by

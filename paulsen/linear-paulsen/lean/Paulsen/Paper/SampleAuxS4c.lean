@@ -158,8 +158,18 @@ theorem centered_norm_sq_var_le (D : Matrix ι κ ℝ) {v : ℝ} (hv : opNorm D 
   rw [variance_eq_integral (by unfold euclideanQuadratic; fun_prop),
     integral_euclideanQuadratic_stdGaussian _ hpsd.isHermitian] at hvar
   rw [hvar]
-  have := Smooth.posSemidef_entry_sq_sum_le_norm_mul_trace _ hpsd hop
-  unfold frobSq
+  have hfrob : frobSq (D.transpose * D) ≤ v * (D.transpose * D).trace := by
+    unfold frobSq
+    rw [← eigenvalues_sq_sum_eq_entry_sq_sum _ hpsd.isHermitian]
+    have htrace := hpsd.isHermitian.trace_eq_sum_eigenvalues
+    simp only [RCLike.ofReal_real_eq_id, id_eq] at htrace
+    rw [htrace, Finset.mul_sum]
+    apply Finset.sum_le_sum
+    intro i _
+    have hi := (le_abs_self (hpsd.isHermitian.eigenvalues i)).trans
+      ((abs_eigenvalue_le_euclidean_operator_norm _ hpsd.isHermitian i).trans hop)
+    have hp := hpsd.eigenvalues_nonneg i
+    nlinarith
   linarith
 
 theorem integrable_centered_norm_sq_sq (D : Matrix ι κ ℝ) (c : ℝ) :

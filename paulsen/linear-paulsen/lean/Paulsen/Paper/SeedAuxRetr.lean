@@ -23,7 +23,15 @@ theorem retr_basic (U W : Frame n d) (hU : IsParseval U) (hUW : U.transpose * W 
     IsParseval ((U + t • W) * invSqrt (1 + t ^ 2 • (W.transpose * W))) ∧
     frameProjection ((U + t • W) * invSqrt (1 + t ^ 2 • (W.transpose * W))) =
       (U + t • W) * (1 + t ^ 2 • (W.transpose * W))⁻¹ * (U + t • W).transpose := by
-  have hgram := gram_horizontal_perturbation U W t hU hUW
+  have hgram : (U + t • W).transpose * (U + t • W) =
+      1 + t ^ 2 • (W.transpose * W) := by
+    have hWU : W.transpose * U = 0 := by
+      simpa only [Matrix.transpose_mul, Matrix.transpose_transpose, Matrix.transpose_zero] using
+        congrArg Matrix.transpose hUW
+    change U.transpose * U = 1 at hU
+    simp only [Matrix.transpose_add, Matrix.transpose_smul, Matrix.add_mul, Matrix.mul_add,
+      Matrix.mul_smul, Matrix.smul_mul, smul_smul, hU, hUW, hWU, smul_zero,
+      add_zero, zero_add, pow_two]
   obtain ⟨-, hST, hSS, hSGS, -⟩ := gram_facts W (sq_nonneg t) (le_refl (opNorm W ^ 2))
   refine ⟨hgram, ?_, ?_⟩
   · unfold IsParseval

@@ -2,6 +2,8 @@ import Paulsen.Paper.Moderate
 import Paulsen.Paper.SampleAuxBall3
 import Paulsen.Paper.SampleAuxBump
 import Paulsen.Paper.SampleAuxFinal
+import Mathlib.Analysis.Real.Pi.Bounds
+import Mathlib.Analysis.Complex.ExponentialBounds
 
 /-!
 # Paper blueprint, Section 5.5: a good sample (`sections/moderate.tex`)
@@ -29,7 +31,7 @@ noncomputable section
 /-- `ℓ_i = (1/n) ∑_μ r_μ ‖(Y_{Z_y})_i‖²`, the variance that `R_ρ/n` removes from row `i`. -/
 def residualRowLoss {n d : ℕ} (U : Frame n d) (ρ : ℝ) (i : Fin n) : ℝ :=
   (1 / (n : ℝ)) * ∑ j ∈ highNormalizedModes U 0,
-    Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) *
+    Resolvent.residualWeight ρ (normalizedFisherEigenvalue U j) *
       rowNormSq (tangentY U (normalizedNormalFrame U j)) i
 
 /-- `δ₀ = 1/6400`. -/
@@ -51,9 +53,9 @@ theorem exceptionalSet_card {n d : ℕ} (U : Frame n d) (hs : ModerateStanding U
     (hρ : 0 < ρ) :
     (∀ j ∈ highNormalizedModes U 0, frobSq (tangentY U (normalizedNormalFrame U j)) = 2) ∧
     ∑ i, residualRowLoss U ρ i ≤ 2 / n * ∑ j ∈ highNormalizedModes U 0,
-      Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) ∧
+      Resolvent.residualWeight ρ (normalizedFisherEigenvalue U j) ∧
     2 / n * ∑ j ∈ highNormalizedModes U 0,
-      Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) ≤ 2 * ((d : ℝ) / n) ∧
+      Resolvent.residualWeight ρ (normalizedFisherEigenvalue U j) ≤ 2 * ((d : ℝ) / n) ∧
     ((exceptionalSet U ρ).card : ℝ) ≤ bMax ∧ bMax = 12800 := by
   have hU := hs.parseval
   have hd : (0 : ℝ) < d := Nat.cast_pos.mpr hs.pos
@@ -69,13 +71,13 @@ theorem exceptionalSet_card {n d : ℕ} (U : Frame n d) (hs : ModerateStanding U
       frobSq (tangentY U (normalizedNormalFrame U j)) = 2 := fun j hj =>
     normalTangentFrame_sq_sum hU j (Finset.mem_filter.mp hj).2
   have hsum : ∑ i, residualRowLoss U ρ i = 2 / n * ∑ j ∈ highNormalizedModes U 0,
-      Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) := by
+      Resolvent.residualWeight ρ (normalizedFisherEigenvalue U j) := by
     unfold residualRowLoss
     rw [← Finset.mul_sum, Finset.sum_comm]
     have he : ∀ j ∈ highNormalizedModes U 0,
-        ∑ i, Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) *
+        ∑ i, Resolvent.residualWeight ρ (normalizedFisherEigenvalue U j) *
           rowNormSq (tangentY U (normalizedNormalFrame U j)) i =
-        Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) * 2 := by
+        Resolvent.residualWeight ρ (normalizedFisherEigenvalue U j) * 2 := by
       intro j hj
       rw [← Finset.mul_sum, ← hY j hj]
       rfl
@@ -89,7 +91,7 @@ theorem exceptionalSet_card {n d : ℕ} (U : Frame n d) (hs : ModerateStanding U
     intro j hj
     exact mul_nonneg (hfc.2.1 j hj).2 (rowNormSq_nonneg _ i)
   have hmass : 2 / n * ∑ j ∈ highNormalizedModes U 0,
-      Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) ≤ 2 * ((d : ℝ) / n) := by
+      Resolvent.residualWeight ρ (normalizedFisherEigenvalue U j) ≤ 2 * ((d : ℝ) / n) := by
     have h := mul_le_mul_of_nonneg_left hfc.2.2.1 (show (0 : ℝ) ≤ 2 / n by positivity)
     calc _ ≤ 2 / (n : ℝ) * d := h
       _ = _ := by ring
@@ -520,7 +522,7 @@ theorem sample_S3_variance {n d : ℕ} (U : Frame n d) (hs : ModerateStanding U)
     linarith
   have hnum2 : 25 + 65 / 10000 * (n : ℝ) ≤ 1 / 100 * n := by linarith
   refine ⟨hn2, hnum1, hnum2, fun i hi => ?_⟩
-  have hℓ : Smooth.positiveResidualRowLoss U ρ i ≤ delta0 * ((d : ℝ) / n) := by
+  have hℓ : Resolvent.positiveResidualRowLoss U ρ i ≤ delta0 * ((d : ℝ) / n) := by
     rw [← residualRowLoss_formula_eq U hρ i]
     simp only [exceptionalSet, Finset.mem_filter, Finset.mem_univ, true_and, not_lt] at hi
     exact hi
@@ -528,7 +530,7 @@ theorem sample_S3_variance {n d : ℕ} (U : Frame n d) (hs : ModerateStanding U)
   set T1 := Finset.univ.filter (fun k => (d : ℝ) / n / 16 < frameProjection U i k ^ 2)
   set T2 := Finset.univ.filter (fun k => (d : ℝ) / n / (32 * n) < baseNormalTangentVariance U i k)
   set T3 := Finset.univ.filter
-    (fun k => (d : ℝ) / n / (32 * n) < Smooth.positiveResidualEntryLoss U ρ i k)
+    (fun k => (d : ℝ) / n / (32 * n) < Resolvent.positiveResidualEntryLoss U ρ i k)
   have hc : (0 : ℝ) < (d : ℝ) / n / (32 * n) := by positivity
   have hT2 : (T2.card : ℝ) ≤ 1440 * (n : ℝ) / d := by
     have hnn : ∀ k, 0 ≤ baseNormalTangentVariance U i k := fun k => by
@@ -539,9 +541,9 @@ theorem sample_S3_variance {n d : ℕ} (U : Frame n d) (hs : ModerateStanding U)
     have h := card_filter_lt_le (fun k => baseNormalTangentVariance U i k) hnn hc hS
     rwa [hc5] at h
   have hT3 : (T3.card : ℝ) ≤ 32 * delta0 * n := by
-    have hnn : ∀ k, 0 ≤ Smooth.positiveResidualEntryLoss U ρ i k := fun k =>
-      Smooth.positiveResidualEntryLoss_nonneg hU hp ρ i k
-    have h := card_filter_lt_le (fun k => Smooth.positiveResidualEntryLoss U ρ i k) hnn hc hℓ
+    have hnn : ∀ k, 0 ≤ Resolvent.positiveResidualEntryLoss U ρ i k := fun k =>
+      Resolvent.positiveResidualEntryLoss_nonneg hU hp ρ i k
+    have h := card_filter_lt_le (fun k => Resolvent.positiveResidualEntryLoss U ρ i k) hnn hc hℓ
     rwa [hc6] at h
   set X := insert i (T1 ∪ T2 ∪ T3)
   have hX : ∀ k, k ∉ X → k ≠ i ∧ (d : ℝ) / n / (16 * n) ≤
@@ -552,7 +554,12 @@ theorem sample_S3_variance {n d : ℕ} (U : Frame n d) (hs : ModerateStanding U)
     obtain ⟨hki, ⟨hk1, hk2⟩, hk3⟩ := hk
     refine ⟨hki, ?_⟩
     rw [integral_sq_tangentY_eq]
-    have hlow := Smooth.retainedTangentEntryVariance_lower hU hp hρ.le i k (Ne.symm hki)
+    have hlow := Resolvent.retainedTangentEntryVariance_lower hU hp hρ.le i k (Ne.symm hki)
+    have hbase : Resolvent.baseWeight ρ * baseNormalTangentVariance U i k ≤
+        baseNormalTangentVariance U i k := by
+      apply mul_le_of_le_one_left _ (Resolvent.baseWeight_le_one hρ.le)
+      simp only [baseNormalTangentVariance, Matrix.of_apply]
+      exact mul_nonneg (by positivity) (Finset.sum_nonneg fun _ _ => sq_nonneg _)
     have hsc := sample_S3_unfiltered_scalar ha (hs.rows i).1 (hs.rows k).1 (hp34 i) (hp34 k)
       hk1
     have hsc' : (d : ℝ) / n / 8 / n ≤ (rowNormSq U i + rowNormSq U k -

@@ -7,7 +7,7 @@ import Paulsen.FrameComplement
 import Paulsen.RadialExistence
 
 /-!
-# Helper for `Paulsen.Paper.Toolbox`: `lem:energy`, `lem:scaled`, `lem:potential` (except
+# Helper for `Paulsen.Paper.Toolbox`: `lem:energy`, whitening, `lem:potential` (except
 convexity), `lem:scaling-ineq`.
 -/
 
@@ -67,58 +67,34 @@ theorem diagonal_sq {n : ℕ} (w : Fin n → ℝ) :
     Matrix.diagonal w ^ 2 = Matrix.diagonal (fun i => w i ^ 2) := by
   rw [Matrix.diagonal_pow]; rfl
 
-/-- `lem:scaled`, with `invSqrt` and `frobSq` unfolded. -/
-theorem lem_scaled' {n d : ℕ} (U : Frame n d) (hU : IsParseval U) (w : Fin n → ℝ)
-    (hw : ∀ i, 0 < w i) {m : ℝ} (hm : 0 < m) (hmw : ∀ i, m ≤ w i) :
-    let M := cfc (fun x : ℝ => (Real.sqrt x)⁻¹) (U.transpose * Matrix.diagonal w ^ 2 * U)
-    IsParseval (Matrix.diagonal w * U * M) ∧
-    LinearMap.range (Matrix.mulVecLin (Matrix.diagonal w * U * M)) =
-      LinearMap.range (Matrix.mulVecLin (Matrix.diagonal w * U)) ∧
-    sqDistance (frameProjection (Matrix.diagonal w * U * M)) (frameProjection U) =
-      2 * ∑ i, ∑ j, (((1 : Matrix (Fin n) (Fin n) ℝ) - frameProjection U) *
-        (Matrix.diagonal w * U * M)) i j ^ 2 ∧
-    2 * ∑ i, ∑ j, (((1 : Matrix (Fin n) (Fin n) ℝ) - frameProjection U) *
-        (Matrix.diagonal w * U * M)) i j ^ 2 ≤
-      2 * matrixQuadratic (projectionLaplacian (frameProjection U)) w / m ^ 2 := by
-  intro M
-  have hG : (U.transpose * Matrix.diagonal w ^ 2 * U) =
-      (Matrix.diagonal w * U).transpose * (Matrix.diagonal w * U) := by
+/-- Positive row scaling followed by inverse-square-root whitening is Parseval.
+This fact is independent of any distance estimate for the scaling. -/
+theorem rowScale_invSqrt_parseval {n d : ℕ} (U : Frame n d) (hU : IsParseval U)
+    (w : Fin n → ℝ) (hw : ∀ i, 0 < w i) :
+    IsParseval (Matrix.diagonal w * U *
+      cfc (fun x : ℝ => (Real.sqrt x)⁻¹) (U.transpose * Matrix.diagonal w ^ 2 * U)) := by
+  let G := U.transpose * Matrix.diagonal w ^ 2 * U
+  let M := cfc (fun x : ℝ => (Real.sqrt x)⁻¹) G
+  have hG : G = (Matrix.diagonal w * U).transpose * (Matrix.diagonal w * U) := by
+    dsimp [G]
     rw [diagonal_sq, Matrix.transpose_mul, Matrix.diagonal_transpose]
     simp only [Matrix.mul_assoc]
     rw [← Matrix.mul_assoc (Matrix.diagonal w) (Matrix.diagonal w), Matrix.diagonal_mul_diagonal]
     simp only [pow_two]
-  have hGpd : (U.transpose * Matrix.diagonal w ^ 2 * U).PosDef := by
+  have hGpd : G.PosDef := by
     rw [hG]
     exact rowScale_gram_posDef U w hU (fun i => (hw i).ne')
-  obtain ⟨hMpd, -, hMGM⟩ := invSqrt_spec' _ hGpd
+  obtain ⟨hMpd, _, hMGM⟩ := invSqrt_spec' G hGpd
   have hMt : M.transpose = M := by
-    have := hMpd.isHermitian
-    unfold Matrix.IsHermitian at this
-    rwa [Matrix.conjTranspose_eq_transpose_of_trivial] at this
-  have hpars : IsParseval (Matrix.diagonal w * U * M) := by
-    unfold IsParseval
-    rw [Matrix.transpose_mul, hMt]
-    calc M * (Matrix.diagonal w * U).transpose * (Matrix.diagonal w * U * M) =
-        M * ((Matrix.diagonal w * U).transpose * (Matrix.diagonal w * U)) * M := by
-          simp only [Matrix.mul_assoc]
-      _ = 1 := by rw [← hG]; exact hMGM
-  have hV : IsParseval (rowScale U w * M) := hpars
-  refine ⟨hpars, ?_, ?_, ?_⟩
-  · rw [Matrix.mulVecLin_mul]
-    apply LinearMap.range_comp_of_range_eq_top
-    rw [LinearMap.range_eq_top]
-    intro y
-    refine ⟨((U.transpose * Matrix.diagonal w ^ 2 * U) * M) *ᵥ y, ?_⟩
-    rw [Matrix.mulVecLin_apply, Matrix.mulVec_mulVec, ← Matrix.mul_assoc, hMGM,
-      Matrix.one_mulVec]
-  · rw [sqDistance_symm]
-    exact projection_sqDistance_eq_twice_residual U _ hU hpars
-  · rw [← projection_sqDistance_eq_twice_residual U _ hU hpars]
-    have h := diagonal_scaling_projection_distance_le U w M hU hV m hm hmw
-    have : (2 / m ^ 2) * matrixQuadratic (projectionLaplacian (frameProjection U)) w =
-        2 * matrixQuadratic (projectionLaplacian (frameProjection U)) w / m ^ 2 := by ring
-    rw [← this]
-    exact h
+    have h := hMpd.isHermitian
+    unfold Matrix.IsHermitian at h
+    exact (Matrix.conjTranspose_eq_transpose_of_trivial M).symm.trans h
+  change (Matrix.diagonal w * U * M).transpose * (Matrix.diagonal w * U * M) = 1
+  rw [Matrix.transpose_mul, hMt]
+  calc
+    _ = M * ((Matrix.diagonal w * U).transpose * (Matrix.diagonal w * U)) * M := by
+      simp only [Matrix.mul_assoc]
+    _ = 1 := by rw [← hG]; exact hMGM
 
 /-- Parseval frames have `d ≤ n`. -/
 theorem parseval_dim_le {n d : ℕ} {U : Frame n d} (hU : IsParseval U) : d ≤ n := by

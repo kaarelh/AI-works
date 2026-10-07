@@ -14,7 +14,7 @@ noncomputable section
 /-- `E Y_{ik}² ` is the library's retained entry variance. -/
 theorem integral_sq_tangentY_eq {n d : ℕ} (U : Frame n d) (ρ : ℝ) (i k : Fin n) :
     ∫ g, tangentY U (moderateNoise U ρ g) i k ^ 2 ∂gaussAmb n d =
-      Smooth.retainedTangentEntryVariance U ρ i k := by
+      Resolvent.retainedTangentEntryVariance U ρ i k := by
   simp_rw [tangentY_moderateNoise_apply]
   exact integral_sq_gaussianCoordinate_eq_covariance (tangentF U ρ) (i, k)
 
@@ -22,11 +22,11 @@ theorem integral_sq_tangentY_eq {n d : ℕ} (U : Frame n d) (ρ : ℝ) (i k : Fi
 theorem residualRowLoss_formula_eq {n d : ℕ} (U : Frame n d) {ρ : ℝ} (hρ : 0 < ρ)
     (i : Fin n) :
     (1 / (n : ℝ)) * ∑ j ∈ highNormalizedModes U 0,
-      Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) *
+      Resolvent.residualWeight ρ (normalizedFisherEigenvalue U j) *
         rowNormSq (tangentY U (normalizedNormalFrame U j)) i =
-      Smooth.positiveResidualRowLoss U ρ i := by
-  unfold Smooth.positiveResidualRowLoss
-  simp_rw [Smooth.positiveResidualEntryLoss_formula, max_eq_right hρ.le, ← Finset.mul_sum]
+      Resolvent.positiveResidualRowLoss U ρ i := by
+  unfold Resolvent.positiveResidualRowLoss
+  simp_rw [Resolvent.positiveResidualEntryLoss_formula, max_eq_right hρ.le, ← Finset.mul_sum]
   congr 1
   rw [Finset.sum_comm]
   apply Finset.sum_congr rfl

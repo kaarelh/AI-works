@@ -1,12 +1,14 @@
 import Paulsen.Paper.ModerateAuxFilter
+import Paulsen.Paper.ResolventTangent
 
 /-!
 # Helpers for `Paulsen.Paper.Moderate`: Gaussian second moments and the expected graph
 
 * the covariance of `𝒜Z` (`lem:filter`(b)) by the push-through identity;
 * the row bound for `T_{e_k}` (`lem:commutator`(b));
-* the decomposition `E𝓛(Y) = E𝓛(Y_{Z₀}) - (1/n)∑_k 𝓛(Y_{ζ_k}) - (1/n)∑_μ r_μ 𝓛(Y_{Z_y})`
-  (Section 5.4, "Since `E Y_{ij}²` is linear in the covariance ...").
+* covariance linearity and the decomposition
+  `E𝓛(Y) = E𝓛(Y_{Z₀}) - (α/n)∑_k 𝓛(Y_{ζ_k}) - (1/n)∑_μ r_μ 𝓛(Y_{Z_y})`,
+  where `α = (1+ρ)⁻¹`. The paper bounds the entire loss directly by `Ω/ρ`.
 -/
 
 namespace Paulsen.Paper.ModerateAux
@@ -43,8 +45,8 @@ theorem diag_pairing_eq {U H : Frame n d} (hUH : U.transpose * H = 0) (x : Fin n
     frameComplementProjection_transpose, hQH]
 
 theorem moderateNoiseFrame_horizontal' {U : Frame n d} (hU : IsParseval U) (ρ : ℝ)
-    (g : FrameVector n d) : U.transpose * Smooth.moderateNoiseFrame U ρ g = 0 :=
-  Smooth.normalizedTangentNoiseFactor_horizontal hU ρ g.ofLp
+    (g : FrameVector n d) : U.transpose * Resolvent.moderateNoiseFrame U ρ g = 0 :=
+  Resolvent.normalizedTangentNoiseFactor_horizontal hU ρ g.ofLp
 
 theorem normalMap_eq_normalized_mul {U : Frame n d} (hp : ∀ i, 0 < rowNormSq U i) :
     normalMapMatrix U = normalizedNormalMapMatrix U *
@@ -58,18 +60,18 @@ theorem normalMap_eq_normalized_mul {U : Frame n d} (hp : ∀ i, 0 < rowNormSq U
 /-- `lem:filter`(b), the covariance identity. -/
 theorem integral_diag_pairing_sq {U : Frame n d} (hU : IsParseval U)
     (hp : ∀ i, 0 < rowNormSq U i) {ρ : ℝ} (hρ : 0 < ρ) (x : Fin n → ℝ) :
-    ∫ g, (∑ i, x i * (Smooth.moderateNoiseFrame U ρ g * U.transpose) i i) ^ 2
+    ∫ g, (∑ i, x i * (Resolvent.moderateNoiseFrame U ρ g * U.transpose) i i) ^ 2
         ∂stdGaussian (FrameVector n d) =
       (1 / (n : ℝ)) * matrixQuadratic
         (Matrix.diagonal (fun i => Real.sqrt (rowNormSq U i)) *
-          (ρ • (normalizedFisher U * (1 - normalizedFisher U) *
+          (ρ • (normalizedFisher U *
             (ρ • 1 + normalizedFisher U)⁻¹)) *
           Matrix.diagonal (fun i => Real.sqrt (rowNormSq U i))) x := by
-  set F := Smooth.normalizedTangentNoiseFactor U ρ
+  set F := Resolvent.normalizedTangentNoiseFactor U ρ
   set w : Fin n × Fin d → ℝ := normalMapMatrix U *ᵥ x
   set Dh := Matrix.diagonal (fun i => Real.sqrt (rowNormSq U i))
   have hpt : ∀ g : FrameVector n d,
-      (∑ i, x i * (Smooth.moderateNoiseFrame U ρ g * U.transpose) i i) =
+      (∑ i, x i * (Resolvent.moderateNoiseFrame U ρ g * U.transpose) i i) =
         ∑ p, (Matrix.toEuclideanLin F g) p * w p := by
     intro g
     rw [diag_pairing_eq (moderateNoiseFrame_horizontal' hU ρ g), Fintype.sum_prod_type]
@@ -78,14 +80,14 @@ theorem integral_diag_pairing_sq {U : Frame n d} (hU : IsParseval U)
     simp only [w, normalMapMatrix_mulVec]
     rfl
   simp_rw [hpt]
-  rw [integral_sq_linear_stdGaussian, Smooth.normalizedTangentNoiseFactor_covariance hU hρ.le,
-    Smooth.covariance_rational_formula hU hp hρ, Matrix.smul_mulVec, dotProduct_smul,
+  rw [integral_sq_linear_stdGaussian, Resolvent.normalizedTangentNoiseFactor_covariance hU hρ.le,
+    Resolvent.covariance_rational_formula hU hp hρ, Matrix.smul_mulVec, dotProduct_smul,
     smul_eq_mul, mq_eq_dot]
   congr 1
   have hw : w = normalizedNormalMapMatrix U *ᵥ (Dh *ᵥ x) := by
     simp only [w, Dh, Matrix.mulVec_mulVec, ← normalMap_eq_normalized_mul hp]
   have hDt : Dh.transpose = Dh := Matrix.diagonal_transpose _
-  set C := ρ • ((horizontalProjectionMatrix U - normalizedNormalCovariance U) *
+  set C := ρ • (horizontalProjectionMatrix U *
     (ρ • 1 + normalizedNormalCovariance U)⁻¹)
   set N := normalizedNormalMapMatrix U
   calc w ⬝ᵥ (C *ᵥ w) = (Dh *ᵥ x) ⬝ᵥ (N.transpose *ᵥ (C *ᵥ (N *ᵥ (Dh *ᵥ x)))) := by
@@ -193,41 +195,42 @@ theorem integral_unfiltered_entry_sq (U : Frame n d) (hU : IsParseval U) (i j : 
 theorem integral_filtered_graph_eq {U : Frame n d} (hU : IsParseval U)
     (hp : ∀ i, 0 < rowNormSq U i) {ρ : ℝ} (hρ : 0 < ρ) (x : Fin n → ℝ) :
     ∫ g, graphEnergy (Matrix.of fun i j =>
-        ((Smooth.moderateNoiseFrame U ρ g * U.transpose +
-          U * (Smooth.moderateNoiseFrame U ρ g).transpose) i j) ^ 2) x
+        ((Resolvent.moderateNoiseFrame U ρ g * U.transpose +
+          U * (Resolvent.moderateNoiseFrame U ρ g).transpose) i j) ^ 2) x
         ∂stdGaussian (FrameVector n d) =
       ∫ g, graphEnergy (Matrix.of fun i j =>
         ((unfilteredFrame U g * U.transpose + U * (unfilteredFrame U g).transpose) i j) ^ 2) x
         ∂stdGaussian (FrameVector n d) -
-      (1 / (n : ℝ)) * ∑ k, graphEnergy (Matrix.of fun i j =>
+      (Resolvent.baseWeight ρ / (n : ℝ)) * ∑ k, graphEnergy (Matrix.of fun i j =>
         ((baseNormalDirection U k * U.transpose + U * (baseNormalDirection U k).transpose) i j)
           ^ 2) x -
       (1 / (n : ℝ)) * ∑ j ∈ highNormalizedModes U 0,
-        Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) *
+        Resolvent.residualWeight ρ (normalizedFisherEigenvalue U j) *
           graphEnergy (Matrix.of fun i k =>
             ((normalizedNormalFrame U j * U.transpose +
               U * (normalizedNormalFrame U j).transpose) i k) ^ 2) x := by
-  have hY : ∀ g, (Smooth.moderateNoiseFrame U ρ g * U.transpose +
-      U * (Smooth.moderateNoiseFrame U ρ g).transpose) =
-      gaussianMatrixImage (Smooth.retainedTangentFactor U ρ) g :=
-    fun g => (Smooth.moderateNoiseFrame_tangent U ρ g).symm
+  have hY : ∀ g, (Resolvent.moderateNoiseFrame U ρ g * U.transpose +
+      U * (Resolvent.moderateNoiseFrame U ρ g).transpose) =
+      gaussianMatrixImage (Resolvent.retainedTangentFactor U ρ) g :=
+    fun g => (Resolvent.moderateNoiseFrame_tangent U ρ g).symm
   simp_rw [hY]
-  have h1 := Smooth.integral_retainedTangent_graphEnergy_eq hU hρ.le x
+  have h1 := Resolvent.integral_retainedTangent_graphEnergy_eq hU hρ.le x
   change ∫ g, graphEnergy (Matrix.of fun i j =>
-    (Matrix.toEuclideanLin (Smooth.retainedTangentFactor U ρ) g (i, j)) ^ 2) x
+    (Matrix.toEuclideanLin (Resolvent.retainedTangentFactor U ρ) g (i, j)) ^ 2) x
       ∂stdGaussian (FrameVector n d) = _
   rw [h1, integral_unfiltered_graph U hU]
-  have hcov : Smooth.covariance U ρ = horizontalProjectionMatrix U -
-      normalizedNormalCovariance U - Smooth.modeSum U (Smooth.residualWeight ρ) := by
-    have hh := Smooth.residual_decomposition hU hp hρ.le
+  have hcov : Resolvent.covariance U ρ = horizontalProjectionMatrix U -
+      Resolvent.baseWeight ρ • normalizedNormalCovariance U - Resolvent.modeSum U (Resolvent.residualWeight ρ) := by
+    have hh := Resolvent.residual_decomposition hU hp hρ.le
     rw [sub_sub, ← hh]; abel
-  rw [hcov, map_sub, map_sub, normalizedNormalCovariance_base_decomposition, map_sum]
+  rw [hcov, map_sub, map_sub, map_smul, normalizedNormalCovariance_base_decomposition, map_sum]
+  simp only [smul_eq_mul]
   simp only [tcg_outer]
-  have hR : tangentCovarianceGraph U x (Smooth.modeSum U (Smooth.residualWeight ρ)) =
-      ∑ j ∈ highNormalizedModes U 0, Smooth.residualWeight ρ (normalizedFisherEigenvalue U j) *
+  have hR : tangentCovarianceGraph U x (Resolvent.modeSum U (Resolvent.residualWeight ρ)) =
+      ∑ j ∈ highNormalizedModes U 0, Resolvent.residualWeight ρ (normalizedFisherEigenvalue U j) *
         graphEnergy (Matrix.of fun i k => ((normalizedNormalFrame U j * U.transpose +
           U * (normalizedNormalFrame U j).transpose) i k) ^ 2) x := by
-    rw [Smooth.modeSum, map_sum]
+    rw [Resolvent.modeSum, map_sum]
     apply Finset.sum_congr rfl; intro j _
     rw [map_smul, smul_eq_mul, ← tcg_outer]
     rfl

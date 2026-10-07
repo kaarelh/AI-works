@@ -1,7 +1,5 @@
 import Paulsen.Paper.Gaussian
-import Paulsen.Linear.ModerateDrift
-import Paulsen.SmoothRationalCovariance
-import Paulsen.SmoothExpectedExpansion
+import Paulsen.Linear.DriftAlgebra
 
 /-!
 # Helpers for `Paulsen.Paper.Moderate`: quadratic forms and edge Laplacians

@@ -87,9 +87,10 @@ $\eps=4k/n$. Let $X=X_1\oplus X_2$, where $X_1$ is an ENP frame of $n_1-k$
 vectors in $\R^{d_1}$ and $X_2$ one of $n_1+k$ vectors in $\R^{d_1}$
 (\cref{cor:exist}). Then $X$ is Parseval, and its squared row norms
 $a(1\mp2k/n)^{-1}$ make it an $\eps$-nearly ENP frame. Let $W$ be ENP, [...]
-so $\Delta=E-A$ has $\tr\Delta=ka=\eps d/4$. [...]
-i.e.\ $\fro{XX^T-WW^T}^2\ge\tr\Delta$, and by \cref{lem:align}
-$\fro{X-W}^2\ge\frac12\tr\Delta=\eps d/8$."
+let $E$ be the first summand projection and $J$ its coordinate block projection.
+Since $E\preceq XX^T$ and $E\preceq J$,
+$\tr(XX^T(I-WW^T))\ge\tr(E(I-WW^T))\ge d_1-\tr(JWW^T)=ka$.
+Thus $\fro{XX^T-WW^T}^2\ge2ka$ and $\fro{X-W}^2\ge ka=\eps d/4$."
 
 Here `n = (n₁-k)+(n₁+k)` and `d = d₁+d₁`. -/
 theorem rem_optimal (n₁ k d₁ : ℕ) (hk : 1 ≤ k) (hkn : 4 * k ≤ n₁) (hkd : d₁ ≤ n₁ - k)
@@ -107,9 +108,9 @@ theorem rem_optimal (n₁ k d₁ : ℕ) (hk : 1 ≤ k) (hkn : 4 * k ≤ n₁) (h
     IsNearlyEqualNormParseval ε (optimalExample X₁ X₂) ∧
     ∀ W : Frame ((n₁ - k) + (n₁ + k)) (d₁ + d₁), IsEqualNormParseval W →
       (k : ℝ) * (D / N) = ε * D / 4 ∧
-      (k : ℝ) * (D / N) ≤
+      2 * ((k : ℝ) * (D / N)) ≤
           sqDistance (frameProjection (optimalExample X₁ X₂)) (frameProjection W) ∧
-      ε * D / 8 ≤ sqDistance (optimalExample X₁ X₂) W := by
+      ε * D / 4 ≤ sqDistance (optimalExample X₁ X₂) W := by
   intro N D ε
   have hkn1 : k ≤ n₁ := by omega
   have hmR : ((n₁ - k : ℕ) : ℝ) = (n₁ : ℝ) - k := by rw [Nat.cast_sub hkn1]
@@ -207,74 +208,81 @@ theorem rem_optimal (n₁ k d₁ : ℕ) (hk : 1 ≤ k) (hkn : 4 * k ≤ n₁) (h
     rcases a with i | i
     · rw [hrow1]; exact hb1
     · rw [hrow2]; exact hb2
-  -- the lower bound for an ENP frame `W`
-  let W₁ : Matrix (Fin (n₁ - k)) (Fin (d₁ + d₁)) ℝ := fun i l => W (σ (Sum.inl i)) l
-  let W₂ : Matrix (Fin (n₁ + k)) (Fin (d₁ + d₁)) ℝ := fun j l => W (σ (Sum.inr j)) l
-  have hWsplit : W₁.transpose * W₁ + W₂.transpose * W₂ = 1 := by
-    have h := hW.1
-    unfold IsParseval at h
-    rw [← h]
-    ext l l'
-    simp only [Matrix.add_apply, Matrix.mul_apply, Matrix.transpose_apply, W₁, W₂]
-    rw [← Equiv.sum_comp σ (fun r => W r l * W r l'), Fintype.sum_sum_type]
-  have hQ : ∀ a b, frameProjection W (σ a) (σ b) = ∑ l, W (σ a) l * W (σ b) l := by
-    intro a b; simp only [frameProjection, Matrix.mul_apply, Matrix.transpose_apply]
-  have hdist : sqDistance (frameProjection (optimalExample X₁ X₂)) (frameProjection W) =
-      ∑ a, ∑ b, (Matrix.fromBlocks (X₁ * X₁.transpose) 0 0 (X₂ * X₂.transpose) a b -
-        frameProjection W (σ a) (σ b)) ^ 2 := by
-    unfold sqDistance
-    rw [← Equiv.sum_comp σ]
-    apply Finset.sum_congr rfl; intro a _
-    rw [← Equiv.sum_comp σ]
-    apply Finset.sum_congr rfl; intro b _
-    rw [hPσ]
-  have hS : ∑ i, ∑ j, ((X₁ * X₁.transpose) i j - (W₁ * W₁.transpose) i j) ^ 2 +
-      2 * ∑ i, ∑ j, (W₁ * W₂.transpose) i j ^ 2 ≤
-      sqDistance (frameProjection (optimalExample X₁ X₂)) (frameProjection W) := by
-    rw [hdist]
-    simp only [Fintype.sum_sum_type, Matrix.fromBlocks_apply₁₁, Matrix.fromBlocks_apply₁₂,
-      Matrix.fromBlocks_apply₂₁, Matrix.fromBlocks_apply₂₂, Matrix.zero_apply, zero_sub, neg_sq,
-      hQ]
-    have e11 : ∀ i j, (∑ l, W (σ (Sum.inl i)) l * W (σ (Sum.inl j)) l) =
-        (W₁ * W₁.transpose) i j := fun i j => by
-      simp only [Matrix.mul_apply, Matrix.transpose_apply, W₁]
-    have e12 : ∀ i j, (∑ l, W (σ (Sum.inl i)) l * W (σ (Sum.inr j)) l) =
-        (W₁ * W₂.transpose) i j := fun i j => by
-      simp only [Matrix.mul_apply, Matrix.transpose_apply, W₁, W₂]
-    have e21 : ∀ i j, (∑ l, W (σ (Sum.inr i)) l * W (σ (Sum.inl j)) l) =
-        (W₁ * W₂.transpose) j i := fun i j => by
-      simp only [Matrix.mul_apply, Matrix.transpose_apply, W₁, W₂]
-      apply Finset.sum_congr rfl; intro l _; ring
-    simp only [e11, e12, e21, Finset.sum_add_distrib]
-    have h22 : 0 ≤ ∑ i, ∑ j, ((X₂ * X₂.transpose) i j -
-        ∑ l, W (σ (Sum.inr i)) l * W (σ (Sum.inr j)) l) ^ 2 :=
-      Finset.sum_nonneg fun i _ => Finset.sum_nonneg fun j _ => sq_nonneg _
-    have hswap : ∑ i, ∑ j, (W₁ * W₂.transpose) j i ^ 2 =
-        ∑ i, ∑ j, (W₁ * W₂.transpose) i j ^ 2 := Finset.sum_comm
-    linarith
-  have hEs : (X₁ * X₁.transpose).transpose = X₁ * X₁.transpose := by
-    rw [Matrix.transpose_mul, Matrix.transpose_transpose]
-  have hEE : (X₁ * X₁.transpose) * (X₁ * X₁.transpose) = X₁ * X₁.transpose :=
-    hX₁.1.frameProjection_idempotent
-  have hcore := IntroAux.optimal_core (X₁ * X₁.transpose) hEs hEE W₁ W₂ hWsplit _ hS
-  have htrE : (X₁ * X₁.transpose).trace = (d₁ : ℝ) := by
-    rw [Matrix.trace_mul_comm, show X₁.transpose * X₁ = 1 from hX₁.1, Matrix.trace_one,
-      Fintype.card_fin]
-  have htrA : (W₁ * W₁.transpose).trace = ((n₁ : ℝ) - k) * (D / N) := by
-    have : ∀ i, (W₁ * W₁.transpose) i i = rowNormSq W (σ (Sum.inl i)) := by
-      intro i
-      simp only [Matrix.mul_apply, Matrix.transpose_apply, W₁, rowNormSq, pow_two]
-    simp only [Matrix.trace, Matrix.diag_apply, this, hW.2 _, Finset.sum_const, Finset.card_univ,
+  -- Embed the first summand projection E and its coordinate support J.
+  let E₀ := X₁ * X₁.transpose
+  let E := (Matrix.fromBlocks E₀ (0 : Matrix (Fin (n₁-k)) (Fin (n₁+k)) ℝ) 0
+    (0 : Matrix (Fin (n₁+k)) (Fin (n₁+k)) ℝ)).submatrix σ.symm σ.symm
+  let J := (Matrix.fromBlocks (1 : Matrix (Fin (n₁-k)) (Fin (n₁-k)) ℝ)
+    (0 : Matrix (Fin (n₁-k)) (Fin (n₁+k)) ℝ) 0
+    (0 : Matrix (Fin (n₁+k)) (Fin (n₁+k)) ℝ)).submatrix σ.symm σ.symm
+  have hE₀s : E₀.transpose=E₀ := by
+    dsimp [E₀]; rw [Matrix.transpose_mul, Matrix.transpose_transpose]
+  have hE₀ : E₀*E₀=E₀ := hX₁.1.frameProjection_idempotent
+  have hEs : E.transpose=E := by
+    simp only [E, Matrix.transpose_submatrix, Matrix.fromBlocks_transpose,
+      hE₀s, Matrix.transpose_zero]
+  have hJs : J.transpose=J := by
+    simp only [J, Matrix.transpose_submatrix, Matrix.fromBlocks_transpose,
+      Matrix.transpose_one, Matrix.transpose_zero]
+  have hE : E*E=E := by
+    simp only [E, Matrix.submatrix_mul_equiv, Matrix.fromBlocks_multiply,
+      Matrix.mul_zero, Matrix.zero_mul, add_zero, zero_add, hE₀]
+  have hJ : J*J=J := by
+    simp only [J, Matrix.submatrix_mul_equiv, Matrix.fromBlocks_multiply,
+      Matrix.mul_zero, Matrix.zero_mul, add_zero, zero_add, Matrix.one_mul]
+  have hPE : frameProjection (optimalExample X₁ X₂) * E=E := by
+    rw [hP]
+    simp only [E, Matrix.submatrix_mul_equiv, Matrix.fromBlocks_multiply,
+      Matrix.mul_zero, Matrix.zero_mul, add_zero, zero_add]
+    change (Matrix.fromBlocks (E₀*E₀) (0 : Matrix (Fin (n₁-k)) (Fin (n₁+k)) ℝ) 0
+      (0 : Matrix (Fin (n₁+k)) (Fin (n₁+k)) ℝ)).submatrix σ.symm σ.symm = _
+    rw [hE₀]
+  have hJE : J*E=E := by
+    simp only [J, E, Matrix.submatrix_mul_equiv, Matrix.fromBlocks_multiply,
+      Matrix.mul_zero, Matrix.zero_mul, add_zero, zero_add, Matrix.one_mul]
+  have htrace (A : Matrix (Fin (n₁-k) ⊕ Fin (n₁+k)) (Fin (n₁-k) ⊕ Fin (n₁+k)) ℝ) :
+      (A.submatrix σ.symm σ.symm).trace=A.trace := by
+    change (∑ i, A (σ.symm i) (σ.symm i)) = ∑ i, A i i
+    exact Equiv.sum_comp σ.symm (fun i => A i i)
+  have htrE : E.trace = (d₁ : ℝ) := by
+    rw [htrace]
+    simp only [Matrix.trace, Matrix.diag_apply, Fintype.sum_sum_type,
+      Matrix.fromBlocks_apply₁₁, Matrix.fromBlocks_apply₂₂, Matrix.zero_apply,
+      Finset.sum_const_zero, add_zero]
+    change (frameProjection X₁).trace = _
+    exact hX₁.1.frameProjection_trace
+  let Qb := (frameProjection W).submatrix σ σ
+  have hQb : frameProjection W = Qb.submatrix σ.symm σ.symm := by
+    ext i j
+    simp only [Qb, Matrix.submatrix_apply, Equiv.apply_symm_apply]
+  have htrJQ : (J * frameProjection W).trace = ((n₁ : ℝ)-k)*(D/N) := by
+    rw [hQb]
+    change ((Matrix.fromBlocks (1 : Matrix (Fin (n₁-k)) (Fin (n₁-k)) ℝ)
+      (0 : Matrix (Fin (n₁-k)) (Fin (n₁+k)) ℝ) 0
+      (0 : Matrix (Fin (n₁+k)) (Fin (n₁+k)) ℝ)).submatrix σ.symm σ.symm *
+      Qb.submatrix σ.symm σ.symm).trace = _
+    rw [Matrix.submatrix_mul_equiv, htrace]
+    simp only [Matrix.trace, Matrix.diag_apply, Matrix.mul_apply, Fintype.sum_sum_type,
+      Matrix.fromBlocks_apply₁₁, Matrix.fromBlocks_apply₁₂, Matrix.fromBlocks_apply₂₁,
+      Matrix.fromBlocks_apply₂₂, Matrix.zero_apply, zero_mul, Finset.sum_const_zero,
+      add_zero, zero_add, Matrix.one_apply, ite_mul, one_mul]
+    simp only [Finset.sum_ite_eq, Finset.mem_univ, if_true]
+    change (∑ i : Fin (n₁-k), frameProjection W (σ (Sum.inl i)) (σ (Sum.inl i))) = _
+    have hr : ∀ i, rowNormSq W i = D/N := hW.2
+    simp only [frameProjection_diagonal, hr, Finset.sum_const, Finset.card_univ,
       Fintype.card_fin, nsmul_eq_mul, hmR]
-    rfl
-  have hkey : (k : ℝ) * (D / N) ≤
+  have hcore := IntroAux.optimal_core (frameProjection (optimalExample X₁ X₂))
+    (frameProjection W) E J (frameProjection_transpose _) (frameProjection_transpose _)
+    hEs hJs hpars.frameProjection_idempotent hW.1.frameProjection_idempotent hE hJ
+    (by rw [hpars.frameProjection_trace, hW.1.frameProjection_trace]) hPE hJE
+  have hkey : 2 * ((k : ℝ) * (D / N)) ≤
       sqDistance (frameProjection (optimalExample X₁ X₂)) (frameProjection W) := by
-    have : (X₁ * X₁.transpose).trace - (W₁ * W₁.transpose).trace = (k : ℝ) * (D / N) := by
-      rw [htrE, htrA, hDN]; field_simp; ring
-    linarith
+    have heq : E.trace-(J*frameProjection W).trace = (k : ℝ)*(D/N) := by
+      rw [htrE, htrJQ, hDN]; field_simp; ring
+    rwa [heq] at hcore
   have halign := (lem_align (optimalExample X₁ X₂) W hpars hW.1).2.2.2.2.2
   refine ⟨by rw [hε, hDN, hD]; field_simp; ring, hkey, ?_⟩
-  have : ε * D / 8 = (k : ℝ) * (D / N) / 2 := by
+  have : ε * D / 4 = (k : ℝ) * (D / N) := by
     rw [hε, hDN, hD]; field_simp; ring
   rw [this]
   linarith

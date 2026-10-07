@@ -1,5 +1,6 @@
 import Paulsen.Paper.ModerateSample
 import Paulsen.Paper.SeedAuxRetr
+import Paulsen.Linear.Assembly
 
 /-!
 # Paper blueprint, Sections 5.6–5.7: the drifted retraction, the graph of the seed, and the
@@ -51,7 +52,7 @@ def retractionRemainder {n d : ℕ} (U : Frame n d) (D t : ℝ) (g : FrameVector
   (frameProjection (driftedFrame U D t g) i i - (d : ℝ) / n) -
     ((1 - t ^ 2) * (rowNormSq U i - (d : ℝ) / n) +
       2 * t * diagMap U (moderateNoise U (D ^ 2 * t ^ 2) g) i -
-      t ^ 2 * baseBias U i +
+      t ^ 2 * baseBias U (D ^ 2 * t ^ 2) i +
       t ^ 2 * (horizontalQuadraticDiagonal U (moderateNoise U (D ^ 2 * t ^ 2) g) i -
         ∫ g', horizontalQuadraticDiagonal U (moderateNoise U (D ^ 2 * t ^ 2) g') i
           ∂gaussAmb n d) +
@@ -84,7 +85,7 @@ theorem drift_basics {n d : ℕ} {U : Frame n d} (hs : ModerateStanding U) {ρ :
     opNorm (driftMean U ρ) ^ 2 ≤ 2 * ((d : ℝ) / n) / ρ ∧
     (∀ i, rowNormSq (tangentY U (driftMean U ρ)) i ≤ 2 * ((d : ℝ) / n) / ρ) ∧
     (∀ i, ∫ g, horizontalQuadraticDiagonal U (moderateNoise U ρ g) i ∂gaussAmb n d =
-      (d : ℝ) / n - rowNormSq U i - baseBias U i - residualBias U ρ i) := by
+      (d : ℝ) / n - rowNormSq U i - baseBias U ρ i - residualBias U ρ i) := by
   obtain ⟨-, -, -, -, -, -, hhalf⟩ := standing_basics hs
   obtain ⟨hEq, -, -, hUm, hfrob⟩ := lem_mean U hs (by norm_num) le_rfl hhalf hρ
   have hop : opNorm (driftMean U ρ) ^ 2 ≤ 2 * ((d : ℝ) / n) / ρ :=
@@ -93,23 +94,23 @@ theorem drift_basics {n d : ℕ} {U : Frame n d} (hs : ModerateStanding U) {ρ :
   exact ((tangentY_facts U _ hs.parseval hUm).2.1 i).trans hop
 
 /-- `|b₀| ≤ 12ε/n` for every `ε ∈ [0, 1/2]` (for `ε = 0` by letting `ε' ↓ 0` in `lem:mean`). -/
-theorem baseBias_bound {n d : ℕ} {U : Frame n d} (hs : ModerateStanding U) {ε : ℝ}
-    (hε0 : 0 ≤ ε) (hε : ε ≤ 1 / 2) (hnear : IsNearlyEqualNorm ε U) (i : Fin n) :
-    |baseBias U i| ≤ 12 * ε / n := by
+theorem baseBias_bound {n d : ℕ} {U : Frame n d} (hs : ModerateStanding U) {ε ρ : ℝ}
+    (hρ : 0 < ρ) (hε0 : 0 ≤ ε) (hε : ε ≤ 1 / 2) (hnear : IsNearlyEqualNorm ε U) (i : Fin n) :
+    |baseBias U ρ i| ≤ 12 * ε / n := by
   obtain ⟨-, hn, ha, -, -, -, -⟩ := standing_basics hs
   have hmono : ∀ ε', ε ≤ ε' → IsNearlyEqualNorm ε' U := by
     intro ε' hε' j
     have := hnear j
     constructor <;> nlinarith [this.1, this.2]
-  have hall : ∀ ε', 0 < ε' → ε ≤ ε' → ε' ≤ 1 / 2 → |baseBias U i| ≤ 12 * ε' / n := by
+  have hall : ∀ ε', 0 < ε' → ε ≤ ε' → ε' ≤ 1 / 2 → |baseBias U ρ i| ≤ 12 * ε' / n := by
     intro ε' h1 h2 h3
-    exact (lem_mean U hs h1 h3 (hmono ε' h2) (by norm_num : (0 : ℝ) < 1)).2.1 i
+    exact (lem_mean U hs h1 h3 (hmono ε' h2) hρ).2.1 i
   rcases hε0.lt_or_eq with hpos | hzero
   · exact hall ε hpos le_rfl hε
   · subst hzero
     by_contra hcon
     push Not at hcon
-    set b := |baseBias U i| with hb
+    set b := |baseBias U ρ i| with hb
     have hb0 : 0 < b := by simpa using hcon
     set ε' := min (1 / 2) (b * n / 24) with hε'
     have hε'pos : 0 < ε' := lt_min (by norm_num) (by positivity)
@@ -383,7 +384,7 @@ theorem lem_retraction_terms {n d : ℕ} (U : Frame n d) (hs : ModerateStanding 
       6 * t * D * t * Real.sqrt ((d : ℝ) / n * Real.log (2 * n) / n) ∧
     6 * t * D * t * Real.sqrt ((d : ℝ) / n * Real.log (2 * n) / n) =
       6 * D * ((d : ℝ) / n) * t ^ 2 * Real.sqrt (Real.log (2 * n) / d) ∧
-    t ^ 2 * |baseBias U i| ≤ 12 * ε * t ^ 2 / n ∧
+    t ^ 2 * |baseBias U (D ^ 2 * t ^ 2) i| ≤ 12 * ε * t ^ 2 / n ∧
     t ^ 3 * |Linear.horizontalQuadraticCross U (moderateNoise U (D ^ 2 * t ^ 2) g)
         (driftMean U (D ^ 2 * t ^ 2)) i| ≤
       t ^ 3 * Real.sqrt (800 * ((d : ℝ) / n)) *
@@ -434,10 +435,10 @@ theorem lem_retraction_terms {n d : ℕ} (U : Frame n d) (hs : ModerateStanding 
       Real.sqrt_mul (sq_nonneg _), Real.sqrt_sq ha.le]
     ring
   -- (4)
-  have t4 : t ^ 2 * |baseBias U i| ≤ 12 * ε * t ^ 2 / n := by
-    have h := baseBias_bound hs hε0 hε hnear i
+  have t4 : t ^ 2 * |baseBias U (D ^ 2 * t ^ 2) i| ≤ 12 * ε * t ^ 2 / n := by
+    have h := baseBias_bound hs hρ hε0 hε hnear i
     have := mul_le_mul_of_nonneg_left h (sq_nonneg t)
-    calc t ^ 2 * |baseBias U i| ≤ t ^ 2 * (12 * ε / n) := this
+    calc t ^ 2 * |baseBias U (D ^ 2 * t ^ 2) i| ≤ t ^ 2 * (12 * ε / n) := this
       _ = 12 * ε * t ^ 2 / n := by ring
   -- (5)
   have hYZ : Real.sqrt (rowNormSq (tangentY U Z) i) ≤ Real.sqrt (800 * a) :=
@@ -583,7 +584,7 @@ theorem lem_retraction_explicit : IsRetractionConstant (2 * 10 ^ 9) := by
       have : 0 ≤ a * t ^ 3 := by positivity
       nlinarith
     have hdecomp : frameProjection (driftedFrame U D t g) i i - a =
-        (1 - t ^ 2) * (rowNormSq U i - a) + 2 * t * diagMap U Z i - t ^ 2 * baseBias U i +
+        (1 - t ^ 2) * (rowNormSq U i - a) + 2 * t * diagMap U Z i - t ^ 2 * baseBias U (D ^ 2 * t ^ 2) i +
         t ^ 2 * (horizontalQuadraticDiagonal U Z i -
           ∫ g', horizontalQuadraticDiagonal U (moderateNoise U (D ^ 2 * t ^ 2) g') i
             ∂gaussAmb n d) +
@@ -598,7 +599,7 @@ theorem lem_retraction_explicit : IsRetractionConstant (2 * 10 ^ 9) := by
       rw [abs_mul, abs_of_nonneg ht1']; exact t1
     have e2 : |2 * t * diagMap U Z i| ≤ 6 * D * a * t ^ 2 * Real.sqrt (Real.log (2 * n) / d) := by
       rw [abs_mul, abs_of_pos (by positivity : (0 : ℝ) < 2 * t), ← t3]; exact t2
-    have e3 : |t ^ 2 * baseBias U i| ≤ 12 * ε * t ^ 2 / n := by
+    have e3 : |t ^ 2 * baseBias U (D ^ 2 * t ^ 2) i| ≤ 12 * ε * t ^ 2 / n := by
       rw [abs_mul, abs_of_pos ht2p]; exact t4
     have e4 : |t ^ 2 * (horizontalQuadraticDiagonal U Z i -
           ∫ g', horizontalQuadraticDiagonal U (moderateNoise U (D ^ 2 * t ^ 2) g') i
@@ -762,7 +763,7 @@ theorem seed_graph_core {CE : ℝ} (hCE : 0 < CE) (hret : IsRetractionConstant C
 
 TeX: "For $x$ supported on $\mathfrak B$, \cref{lem:expected-graph},
 $x^T\mathsf Kx\ge(n-b)\norm x^2$ and \ref{S4} give
-\[ x^T\Lap(P+tY)x\ge\Bigl(1-\eta'-t^2\bigl(\tfrac2n+\tfrac8d\bigr)-\tfrac8{D^2}\Bigr)x^TLx
+\[ x^T\Lap(P+tY)x\ge\Bigl(1-\eta'-t^2\bigl(\tfrac2n\bigr)-\tfrac8{dD^2}\Bigr)x^TLx
  +at^2\Bigl(\tfrac14\bigl(1-\tfrac bn\bigr)-2\eta'\Bigr)\norm x^2
  \ge\frac{at^2}8\norm x^2 , \]
 since the first coefficient is positive and $\frac14\cdot\frac9{10}-\frac1{16}\ge\frac18$.
@@ -776,12 +777,12 @@ theorem seed_graph_block {CE : ℝ} (hCE : 0 < CE) (hret : IsRetractionConstant 
     (htCE' : t ^ 2 ≤ 1 / (128 * CE))
     (hb : ((exceptionalSet U (D ^ 2 * t ^ 2)).card : ℝ) ≤ (n : ℝ) / 10)
     (g : FrameVector n d) (hg : GoodSample U (D ^ 2 * t ^ 2) t sampleH η' g) :
-    0 < 1 - η' - t ^ 2 * (2 / n + 8 / d) - 8 / D ^ 2 ∧
+    0 < 1 - η' - t ^ 2 * (2 / n) - 8 / ((d : ℝ) * D ^ 2) ∧
     (1 / 8 : ℝ) ≤ 1 / 4 * (9 / 10) - 1 / 16 ∧
     ∀ x : Fin n → ℝ, (∀ j, j ∉ exceptionalSet U (D ^ 2 * t ^ 2) → x j = 0) →
       (d : ℝ) / n * ((n : ℝ) - (exceptionalSet U (D ^ 2 * t ^ 2)).card) * vectorNormSq x ≤
           (d : ℝ) / n * matrixQuadratic (completeLaplacian n) x ∧
-      (1 - η' - t ^ 2 * (2 / n + 8 / d) - 8 / D ^ 2) *
+      (1 - η' - t ^ 2 * (2 / n) - 8 / ((d : ℝ) * D ^ 2)) *
           matrixQuadratic (projectionLaplacian (frameProjection U)) x +
         (d : ℝ) / n * t ^ 2 *
           (1 / 4 * (1 - ((exceptionalSet U (D ^ 2 * t ^ 2)).card : ℝ) / n) - 2 * η') *
@@ -824,18 +825,18 @@ theorem seed_graph_block {CE : ℝ} (hCE : 0 < CE) (hret : IsRetractionConstant 
   have ht2 : t ^ 2 ≤ 1 := pow_le_one₀ ht.le ht1
   have hD2 : 1 / D ^ 2 ≤ 1 / 6500 ^ 2 :=
     one_div_le_one_div_of_le (by norm_num) (pow_le_pow_left₀ (by norm_num) hD6500 2)
-  have hc1 : 0 < 1 - η' - t ^ 2 * (2 / n + 8 / d) - 8 / D ^ 2 := by
+  have hc1 : 0 < 1 - η' - t ^ 2 * (2 / n) - 8 / ((d : ℝ) * D ^ 2) := by
     have h1 : 2 / (n : ℝ) ≤ 1 / 10 ^ 6 := by
       rw [div_le_div_iff₀ hn (by norm_num)]; linarith
-    have h2 : 8 / (d : ℝ) ≤ 8 / 10 ^ 6 :=
-      div_le_div_of_nonneg_left (by norm_num) (by norm_num) hd
+    have h2 : 8 / ((d : ℝ) * D ^ 2) ≤ 8 / D ^ 2 := by
+      apply div_le_div_of_nonneg_left (by norm_num) (by positivity)
+      nlinarith [sq_nonneg D]
     have h3 : 8 / D ^ 2 ≤ 8 / 6500 ^ 2 := by
       have := mul_le_mul_of_nonneg_left hD2 (by norm_num : (0 : ℝ) ≤ 8)
       simpa [div_eq_mul_inv] using this
-    have h4 : t ^ 2 * (2 / n + 8 / d) ≤ 2 / n + 8 / d := by
-      have : 0 ≤ 2 / (n : ℝ) + 8 / d := by positivity
-      nlinarith
-    norm_num at h1 h2 h3 ⊢
+    have h4 : t ^ 2 * (2 / n) ≤ 2 / (n : ℝ) := by
+      exact mul_le_of_le_one_left (by positivity) ht2
+    norm_num at h1 h3 ⊢
     linarith
   refine ⟨hc1, by norm_num, fun x hx => ?_⟩
   -- (1) `xᵀ𝖪x ≥ (n - b)‖x‖²`
@@ -861,7 +862,7 @@ theorem seed_graph_block {CE : ℝ} (hCE : 0 < CE) (hret : IsRetractionConstant 
   have hN : 0 ≤ vectorNormSq x := vectorNormSq_nonneg x
   have hcr := (abs_le.mp hS4a).1
   have hly := (abs_le.mp hS4b).1
-  have hρt : t ^ 2 * (8 / (D ^ 2 * t ^ 2)) = 8 / D ^ 2 := by field_simp
+  have hρt : t ^ 2 * (8 / ((d : ℝ) * (D ^ 2 * t ^ 2))) = 8 / ((d : ℝ) * D ^ 2) := by field_simp
   have hKt : t ^ 2 * (a / (4 * n) * matrixQuadratic (completeLaplacian n) x) ≥
       a * t ^ 2 * (1 / 4 * (1 - b / n)) * vectorNormSq x := by
     have h1 : a * ((n : ℝ) - b) * vectorNormSq x / (4 * n) ≤
@@ -874,7 +875,7 @@ theorem seed_graph_block {CE : ℝ} (hCE : 0 < CE) (hret : IsRetractionConstant 
     rw [h2, h3] at h1
     have := mul_le_mul_of_nonneg_left h1 (sq_nonneg t)
     linarith
-  have e2 : (1 - η' - t ^ 2 * (2 / n + 8 / d) - 8 / D ^ 2) *
+  have e2 : (1 - η' - t ^ 2 * (2 / n) - 8 / ((d : ℝ) * D ^ 2)) *
         matrixQuadratic (projectionLaplacian (frameProjection U)) x +
       a * t ^ 2 * (1 / 4 * (1 - b / n) - 2 * η') * vectorNormSq x ≤
       matrixQuadratic (sqLaplacian (frameProjection U +
@@ -886,9 +887,9 @@ theorem seed_graph_block {CE : ℝ} (hCE : 0 < CE) (hret : IsRetractionConstant 
       matrixQuadratic (sqLaplacian (tangentY U (moderateNoise U (D ^ 2 * t ^ 2) g))) x by
         linarith) (sq_nonneg t)
     have h2 := mul_le_mul_of_nonneg_left hEG (sq_nonneg t)
-    have h3 : t ^ 2 * (8 / (D ^ 2 * t ^ 2)) *
+    have h3 : t ^ 2 * (8 / ((d : ℝ) * (D ^ 2 * t ^ 2))) *
         matrixQuadratic (projectionLaplacian (frameProjection U)) x =
-        8 / D ^ 2 * matrixQuadratic (projectionLaplacian (frameProjection U)) x := by
+        8 / ((d : ℝ) * D ^ 2) * matrixQuadratic (projectionLaplacian (frameProjection U)) x := by
       rw [hρt]
     linarith
   -- (3)

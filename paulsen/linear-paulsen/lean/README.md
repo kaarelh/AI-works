@@ -3,7 +3,7 @@
 This project formalises *A linear bound for the Paulsen problem* (`../paper/linear-paulsen.pdf`). The formalisation is **statement by statement and constant by constant**:
 
 - Every numbered definition, lemma, theorem, corollary and proposition has a Lean counterpart that carries exactly the constants of the text. So does every numbered display that makes a claim and every remark that makes a quantitative claim.
-- Explicit constants include, among others: the balancing cost 15/4, the seed bound 3Θ, `R = √b/λ` in the dense-core lemma, the Gaussian tail constants 1/8, 2/π² and 32, the net bound 16, the counts 0.9(n−1) and 0.95n, δ₀ = 1/6400, and every constant recipe inside the proofs.
+- Explicit constants include, among others: the balancing cost 1/2, the seed bound 3Θ, `R = √b/λ` in the dense-core lemma, the Gaussian tail constants 1/8, 2/π² and 32, the net bound 16, the counts 0.9(n−1) and 0.95n, δ₀ = 1/6400, and every constant recipe inside the proofs.
 - Each Lean declaration quotes the corresponding TeX in its docstring.
 - Everything is proved, with no proof placeholders and no project-specific axioms.
 
@@ -49,14 +49,9 @@ Frames are real `n × d` matrices whose rows are the frame vectors. Parseval mea
 
 [`BLUEPRINT.md`](BLUEPRINT.md) maps every paper label to its Lean name.
 
-The rest of `Paulsen/` is the supporting library: frames, projections, the log-determinant potential, Gaussian measures, the noises, and Hamilton–Moitra. It includes `Paulsen/Linear/`, an earlier formal route to the same theorem with larger constants. Some of its definitions are reused (for example the drift `Γ_f`, `m_*` and the barrier predicates). Its theorems with worse constants are not used, and the audit checks this.
+The rest of `Paulsen/` is the supporting library: frames, projections, the log-determinant potential, Gaussian measures, the noises, and Hamilton–Moitra. It includes `Paulsen/Linear/`, an earlier formal route to the same theorem with larger constants. Some of its definitions are reused (for example `Γ_f` and the barrier predicates). The current Gaussian uses the ordinary resolvent covariance `ρ(ρI+Ω)⁻¹`; `Resolvent*.lean` implements its factor, covariance, residual and drift. The drift equals `(1+ρ)⁻¹` times the earlier drift, and reuses its algebraic identities. The audit excludes specified earlier proof routes whose constants would be too weak for the current argument.
 
-Lines of code:
-
-| Part | Lines |
-|---|---|
-| `Paulsen/Paper/` | 16,100 |
-| library | 29,700 |
+The scaling-distance proof is in `ScalingTraceDistance.lean`: a weighted trace identity replaces the former energy estimate. The optimality example in `IntroAuxOptimal.lean` uses a projection trace deficit and yields εd/4.
 
 ## Build and audit
 
@@ -70,8 +65,8 @@ lake build
 The default targets are `Paulsen` and [`Audit.lean`](Audit.lean). The audit checks:
 
 1. The final theorems have exactly the types `SharpPaulsenBound` and `SharpProjectionBound`.
-2. Every theorem in the `Paulsen` namespace depends only on `propext`, `Classical.choice` and `Quot.sound`. Hence every paper statement is fully proved.
-3. Every `lem_*`, `thm_*`, `cor_*`, `eq_*` and `prop_*` statement of `Paulsen.Paper` (82 of them) lies in the dependency cone of the final theorems. The only exceptions are listed in the file: two existential forms whose explicit versions are used, the facts (5.2) and the definitional restatement of (1.1). Remarks are proved standalone.
-4. No library lemma with a constant weaker than the paper's is used. Examples: balancing cost 8, Gaussian tail constant 1/16, the 17/20 dense core, the 80/d expected-graph bound, the old seed thresholds.
+2. Every imported theorem in the `Paulsen` namespace depends only on `propext`, `Classical.choice` and `Quot.sound`. Hence every paper statement is fully proved.
+3. Every `lem_*`, `thm_*`, `cor_*`, `eq_*` and `prop_*` statement of `Paulsen.Paper` lies in the dependency cone of the final theorems. The only exceptions are listed in the file: two existential forms whose explicit versions are used, the spectral facts `eq_S`, the definitional restatement `eq_nearly_iff`, and the summary `thm_main_constant_chain`. Remarks are proved standalone.
+4. Specified earlier proof routes are excluded: balancing cost 8, Gaussian tail constant 1/16, the 17/20 dense core, the 80/d expected-graph bound and the old seed thresholds. A coarse fourth-moment bound is reused only to establish integrability; the paper's sharper quantitative bound is proved separately.
 
-See [`final-audit.md`](final-audit.md) for the recorded output.
+The audit also requires the new trace and resolvent constructions to occur in the final dependency chain. See [`final-audit.md`](final-audit.md) for the recorded output. To check the plain-Mathlib restatements separately, run `lake env lean IndependentCheck.lean`.

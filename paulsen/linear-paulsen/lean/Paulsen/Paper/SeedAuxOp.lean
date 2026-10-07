@@ -47,8 +47,12 @@ theorem opNorm_mul_le {ι κ υ : Type*} [Fintype ι] [Fintype κ] [Fintype υ] 
 
 /-- `‖Hx‖² ≤ ‖H‖² ‖x‖²`. -/
 theorem frameEnergy_le_opNorm_sq {n d : ℕ} (H : Frame n d) (x : Fin d → ℝ) :
-    frameEnergy H x ≤ opNorm H ^ 2 * vectorNormSq x :=
-  frameEnergy_le_operator_norm_sq H x
+    frameEnergy H x ≤ opNorm H ^ 2 * vectorNormSq x := by
+  have h := (Matrix.toEuclideanLin H).toContinuousLinearMap.le_opNorm (WithLp.toLp 2 x)
+  have hs := pow_le_pow_left₀ (norm_nonneg _) h 2
+  simpa only [opNorm, mul_pow, EuclideanSpace.real_norm_sq_eq, Matrix.toLpLin_apply,
+    LinearMap.coe_toContinuousLinearMap', WithLp.ofLp_toLp, frameEnergy, vectorNormSq,
+    Matrix.mulVec, dotProduct] using hs
 
 /-- An energy bound gives an operator-norm bound. -/
 theorem opNorm_le_of_frameEnergy {n d : ℕ} (V : Frame n d) {c : ℝ} (hc : 0 ≤ c)

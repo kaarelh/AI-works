@@ -7,7 +7,7 @@ import Mathlib.Tactic.Ring
 # Real finite frames and the sharp Paulsen statement
 
 SharpPaulsenBound below specifies the target proposition.
-Its proof is Paulsen.sharpPaulsenBound in Paulsen.SharpBound.
+Its paper proof is Paulsen.Paper.thm_main in Paulsen.Paper.Assembly.
 Frames are matrices whose rows are the frame vectors.
 -/
 
@@ -52,7 +52,7 @@ def IsNearlyEqualNormParseval {n d : ℕ} (ε : ℝ) (U : Frame n d) : Prop :=
   IsNearlyParseval ε U ∧ IsNearlyEqualNorm ε U
 
 /-- The unrestricted real Paulsen bound, with one constant for all dimensions and errors.
-This definition is proved in Paulsen.SharpBound. -/
+This proposition is proved by Paulsen.Paper.thm_main in Paulsen.Paper.Assembly. -/
 def SharpPaulsenBound : Prop :=
   ∃ C : ℝ, 0 < C ∧
     ∀ (n d : ℕ), 0 < d → d ≤ n →

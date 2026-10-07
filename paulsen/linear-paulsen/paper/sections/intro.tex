@@ -24,8 +24,8 @@ an ENP frame $W\in\R^{n\times d}$ with $\fro{X-W}^2\le C\eps d$.
 The bound is optimal up to the constant (\cref{rem:optimal}). Kwok, Lau, Lee and
 Ramachandran~\cite{KLLR} proved the first bound independent of $n$,
 $O(\eps d^{13/2})$; Hamilton and Moitra~\cite{HM} improved it to
-$O(\eps d^2)$; Lau and Ramachandran announced the linear bound~\cite{LR}, via a
-different route. \Cref{app:formal} describes a Lean~4 formalisation of
+$O(\eps d^2)$; Lau and Ramachandran announced the linear bound~\cite{LR}.
+\Cref{app:formal} describes a Lean~4 formalisation of
 \cref{thm:main,thm:projection}.
 
 For a Parseval $U$ write $P=UU^T$ for the orthogonal projection onto its column
@@ -51,19 +51,15 @@ Let $d=2d_1$, $n=2n_1$, and $1\le k\le n_1/4$ with $n_1-k\ge d_1$; put
 $\eps=4k/n$. Let $X=X_1\oplus X_2$, where $X_1$ is an ENP frame of $n_1-k$
 vectors in $\R^{d_1}$ and $X_2$ one of $n_1+k$ vectors in $\R^{d_1}$
 (\cref{cor:exist}). Then $X$ is Parseval, and its squared row norms
-$a(1\mp2k/n)^{-1}$ make it an $\eps$-nearly ENP frame. Let $W$ be ENP, and let $E$
-and $A$ be the principal blocks of $XX^T$ and $WW^T$ on the first $n_1-k$ rows.
-Then $E$ is a projection of trace $d_1$ and $A$ a positive contraction of trace
-$(n_1-k)a$, so $\Delta=E-A$ has $\tr\Delta=ka=\eps d/4$. Since
-$\tr(E\Delta)=\tr\Delta+\tr((I-E)A)\ge\tr\Delta$,
+$a(1\mp2k/n)^{-1}$ make it an $\eps$-nearly ENP frame. Let $W$ be ENP, put
+$P=XX^T$, $Q=WW^T$, and write $P=\Diag(E,F)$ in the two row blocks, with
+$E,F$ projections of rank $d_1$. The corresponding principal blocks $A,B$ of
+$Q$ satisfy $0\preceq A,B\preceq I$ and $\tr A=(n_1-k)a=d_1-ka$. Therefore
 \[
- \tr(A-A^2)=-\tr\Delta+2\tr(E\Delta)-\tr\Delta^2\ge\tr\Delta-\fro\Delta^2 .
+ \tr(PQ)=\tr(EA)+\tr(FB)\le\tr A+\tr F=d-ka,
+ \qquad \fro{P-Q}^2=2d-2\tr(PQ)\ge2ka.
 \]
-As $WW^T$ is a projection, its off-diagonal block has squared norm $\tr(A-A^2)$,
-while that of $XX^T$ vanishes; hence
-$\fro{XX^T-WW^T}^2\ge\fro\Delta^2+2(\tr\Delta-\fro\Delta^2)\ge2\tr\Delta-\fro{XX^T-WW^T}^2$,
-i.e.\ $\fro{XX^T-WW^T}^2\ge\tr\Delta$, and by \cref{lem:align}
-$\fro{X-W}^2\ge\frac12\tr\Delta=\eps d/8$.
+By \cref{lem:align}, $\fro{X-W}^2\ge ka=\eps d/4$.
 \end{remark}
 
 \paragraph{Conventions.} $c,C$ denote positive absolute constants whose value
@@ -101,7 +97,7 @@ $\gtrsim at^2/n$, and the random walk with rates $P_{ij}^2$ reaches any half of
 the vertices in time $O(1/(at^2))$: the \emph{barrier constant}
 (\cref{def:barrier,lem:core}) is $O(1/(at^2))$. The static balancing theorem
 (\cref{thm:balancing}) then removes exactly every diagonal error $\beta$ with
-$\beta\cdot O(1/(at^2))\le\frac12$, at cost $\frac{15}4n\beta=O(t^2d)$. The
+$\beta\cdot O(1/(at^2))\le\frac12$, at cost $\frac12n\beta=O(t^2d)$. The
 $\ell_\infty$ (rather than spectral) formulation is essential: the scaling must
 stay in a box $\norm{s}_\infty\le1$, and an $\ell_2$ argument loses a factor
 $\sqrt n$.
@@ -131,11 +127,11 @@ with no relation required between $\eta$ and $d$.
 \paragraph{Seed 2: moderate rows ($d\ge A\log 2n$, \cref{sec:moderate}).}
 Perturb $U$ in the horizontal tangent space of the Grassmannian, so that the
 frame stays exactly Parseval, with a Gaussian whose covariance is filtered:
-$C_\rho=\rho(I-\Omega)(\rho I+\Omega)^{-1}$, where $\Omega$ is the normalised
+$C_\rho=\rho(\rho I+\Omega)^{-1}$, where $\Omega$ is the normalised
 Gram operator of the linear diagonal map $\mathcal A$ and $\rho=D^2t^2$ for a
 large constant $D$. The filter makes the linear diagonal change
 $O(t\sqrt{\rho a\log n/n})=O(Dat^2\sqrt{\log n/d})$, negligible when
-$d\gg\log n$, while leaving the weak (connecting) directions untouched. The
+$d\gg\log n$, while largely retaining the weak (connecting) directions. The
 price is a second-order bias $t^2b_*$, which is not small in $\ell_\infty$. A
 commutator identity shows that $b_*=\mathcal Am_*$ for an explicit
 deterministic tangent direction $m_*$ with $\fro{m_*}^2\le2a/\rho$

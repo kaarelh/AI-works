@@ -25,8 +25,7 @@ real symmetric idempotent matrices of rank $d$. Both statements are also
 restated in plain Mathlib vocabulary (positive semidefiniteness, dot products,
 traces, \texttt{Matrix.rank}), and the restatements are derived from them.
 
-\paragraph{Structure.} The directory \texttt{Paulsen/Paper} (about $16{,}100$
-lines) contains, for every numbered definition, lemma, theorem, corollary and
+\paragraph{Structure.} The directory \texttt{Paulsen/Paper} contains, for every numbered definition, lemma, theorem, corollary and
 proposition of this paper, for every numbered display that makes a claim, and
 for every remark that makes a quantitative claim, a Lean statement with
 \emph{exactly the constants of the text}. Each declaration quotes the
@@ -42,6 +41,10 @@ text:
 \cref{sec:toolbox,sec:manyrow,sec:moderate,app:gauss}. The remaining files form a supporting
 library (frames, projections, the log-determinant potential, Gaussian measures,
 the noises of \cref{sec:manyrow,sec:moderate}, the Hamilton--Moitra argument).
+The trace identity used in \cref{thm:balancing} is proved in
+\texttt{ScalingTraceDistance}; the ordinary resolvent covariance and its
+Gaussian factor, residual and drift are developed in the \texttt{Resolvent*}
+modules. The optimality example uses a projection trace-deficit estimate.
 \begin{center}
 \small
 \begin{tabular}{@{}ll@{}}
@@ -88,16 +91,19 @@ $\eps_0\le\frac12$ in \cref{thm:moderate}.
 \texttt{Audit.lean} checks four things:
 \begin{itemize}
 \item the final theorems have the target types;
-\item every theorem of the project depends only on the axioms \texttt{propext},
-\texttt{Classical.choice} and \texttt{Quot.sound}, so that no statement is left
-unproved;
+\item each imported project theorem uses only \texttt{propext},
+\texttt{Classical.choice} and \texttt{Quot.sound}; no proof placeholders or
+additional axioms occur;
 \item every lemma, theorem, corollary, proposition and numbered claim of
 \texttt{Paulsen/Paper} lies in the dependency cone of the two final theorems;
-\item the proofs use none of the library lemmas whose constants are weaker than
-those of the text.
+\item the proofs use the trace-distance and resolvent constructions, and avoid
+specified older routes that would not establish the constants of the text.
 \end{itemize}
 The exceptions to the third check are two existential forms whose explicit
-versions are used, the eigenvalue facts \eqref{eq:S}, and the definitional
-restatement of \eqref{eq:nearly}. The remarks are proved as standalone
-statements. Every module was also replayed in the kernel with
-\texttt{leanchecker}.
+versions are used, the eigenvalue facts \eqref{eq:S}, the definitional
+restatement of \eqref{eq:nearly}, and the summary of the final constant chain. The remarks are proved as standalone
+statements. The identification of barriers with random-walk hitting times and
+the explanatory discussion of the proof strategy are informal; the quantitative
+estimates used by the proof are formalised. Build and audit outputs, including
+the date and scope of each verification run, are recorded in
+\texttt{lean/final-audit.md}.

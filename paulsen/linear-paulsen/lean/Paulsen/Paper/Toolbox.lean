@@ -4,6 +4,7 @@ import Paulsen.Linear.BlockBarrier
 import Paulsen.MedianBarrier
 import Paulsen.FrameAlignment
 import Paulsen.ScalingDistance
+import Paulsen.ScalingTraceDistance
 import Paulsen.NormalTangentGraph
 import Paulsen.PolarGram
 import Paulsen.DiagonalScalingPotential
@@ -172,30 +173,6 @@ theorem lem_energy {n d : ℕ} (U : Frame n d) (hU : IsParseval U) :
           (1 / 2) * frobSq (diagonalCommutator x (frameProjection U)) := by
   exact ToolboxAux.lem_energy' U hU
 
-/-- `lem:scaled` (Scaled projections).
-
-TeX: "For $w\in\R^n_{>0}$ put $D=\Diag(w)$, $M=(U^TD^2U)^{-1/2}$ and $W=DUM$. Then
-$W$ is Parseval with column space $D\im U$, and
-\[ \fro{WW^T-P}^2=2\fro{(I-P)W}^2\le\frac{2\,w^TLw}{\min_iw_i^2} . \]"
-
-Encoding: `min_i w_i` is replaced by any `m > 0` with `m ≤ w_i` for all `i` (equivalent,
-as the bound is antitone in `m`). -/
-theorem lem_scaled {n d : ℕ} (U : Frame n d) (hU : IsParseval U) (w : Fin n → ℝ)
-    (hw : ∀ i, 0 < w i) {m : ℝ} (hm : 0 < m) (hmw : ∀ i, m ≤ w i) :
-    IsParseval (Matrix.diagonal w * U *
-        invSqrt (U.transpose * Matrix.diagonal w ^ 2 * U)) ∧
-    LinearMap.range (Matrix.mulVecLin (Matrix.diagonal w * U *
-        invSqrt (U.transpose * Matrix.diagonal w ^ 2 * U))) =
-      LinearMap.range (Matrix.mulVecLin (Matrix.diagonal w * U)) ∧
-    sqDistance (frameProjection (Matrix.diagonal w * U *
-        invSqrt (U.transpose * Matrix.diagonal w ^ 2 * U))) (frameProjection U) =
-      2 * frobSq ((1 - frameProjection U) * (Matrix.diagonal w * U *
-        invSqrt (U.transpose * Matrix.diagonal w ^ 2 * U))) ∧
-    2 * frobSq ((1 - frameProjection U) * (Matrix.diagonal w * U *
-        invSqrt (U.transpose * Matrix.diagonal w ^ 2 * U))) ≤
-      2 * matrixQuadratic (projectionLaplacian (frameProjection U)) w / m ^ 2 := by
-  exact ToolboxAux.lem_scaled' U hU w hw hm hmw
-
 /-! ## 2.2 Diagonal scaling -/
 
 /-- `F(s) = ½ log det(Uᵀ D_s² U)` with `D_s = Diag(e^s)`. -/
@@ -247,7 +224,7 @@ theorem lem_scaling_ineq {n d : ℕ} (U : Frame n d) (hU : IsParseval U)
 
 TeX: "Let $L$ be a weighted Laplacian on $[n]$. For $S\subseteq[n]$, an
 \emph{$S$-barrier} is a vector $\psi\ge0$ with $(L\psi)_i\ge1$ for every
-$i\notin S$. The \emph{barrier constant} $H(L)\in(0,\infty]$ is the least $H$ such
+$i\notin S$. The \emph{barrier constant} $H(L)\in[0,\infty]$ is the least $H$ such
 that every $S$ with $|S|\ge n/2$ has an $S$-barrier with $\norm\psi_\infty\le H$
 ($H(L)=\infty$ if some such $S$ has no barrier)."
 
@@ -397,25 +374,11 @@ theorem balancing_core {n d : ℕ} (hn : 0 < n) (U : Frame n d) (hU : IsParseval
     (hkkt1 : ∀ i, 0 < s i → scaledDiagonal U s i ≤ q i)
     (hkkt2 : ∀ i, s i < T → q i ≤ scaledDiagonal U s i) :
     let z : Fin n → ℝ := fun i => Real.exp (2 * s i)
-    let w : Fin n → ℝ := fun i => Real.exp (s i)
-    let f : Fin n → ℝ := fun i => q i - rowNormSq U i
-    let c : ℝ := ((⨆ i, z i ^ 2) + ⨅ i, z i ^ 2) / 2
-    let L := projectionLaplacian (frameProjection U)
     (∀ i j, s i - s j ≤ -Real.log (1 - β * H)) ∧
     (⨆ i, z i) ≤ ((1 - β * H) ^ 2)⁻¹ * (⨅ i, z i) ∧
-    (∀ i, scaledDiagonal U s i = q i) ∧
-    matrixQuadratic L z ≤ ∑ i, z i ^ 2 * f i ∧
-    ∑ i, z i ^ 2 * f i = ∑ i, (z i ^ 2 - c) * f i ∧
-    ∑ i, (z i ^ 2 - c) * f i ≤ 1 / 2 * osc (fun i => z i ^ 2) * ∑ i, |f i| ∧
-    (∀ i j, 4 * (⨅ k, w k) ^ 2 * (w i - w j) ^ 2 ≤ (z i - z j) ^ 2) ∧
-    sqDistance (scaledProjection U s) (frameProjection U) ≤
-      2 * matrixQuadratic L w / (⨅ k, w k) ^ 2 ∧
-    2 * matrixQuadratic L w / (⨅ k, w k) ^ 2 ≤ matrixQuadratic L z / (2 * (⨅ k, z k) ^ 2) ∧
-    matrixQuadratic L z / (2 * (⨅ k, z k) ^ 2) ≤
-      osc (fun i => z i ^ 2) / (4 * (⨅ k, z k) ^ 2) * ∑ i, |f i| ∧
-    osc (fun i => z i ^ 2) / (4 * (⨅ k, z k) ^ 2) * ∑ i, |f i| ≤
-      ((((1 - β * H) ^ 2)⁻¹) ^ 2 - 1) / 4 * ∑ i, |f i| := by
-  intro z w f c L
+    (∀ i, scaledDiagonal U s i = q i) := by
+  intro z
+  let w : Fin n → ℝ := fun i => Real.exp (s i)
   haveI : Nonempty (Fin n) := ⟨⟨0, hn⟩⟩
   have hH0 : 0 ≤ H := by
     obtain ⟨ψ, ⟨hψ0, -⟩, hψH⟩ := hH Finset.univ (by simp; omega)
@@ -433,9 +396,6 @@ theorem balancing_core {n d : ℕ} (hn : 0 < n) (U : Frame n d) (hU : IsParseval
     show columnSpaceProjection (Matrix.diagonal (fun j => Real.sqrt (z j)) * U) i i =
       columnSpaceProjection (Matrix.diagonal (fun j => Real.exp (s j)) * U) i i
     rw [this]
-  have hfsum : ∑ i, f i = 0 := by
-    show ∑ i, (q i - rowNormSq U i) = 0
-    rw [Finset.sum_sub_distrib, hq, hU.total_rowNormSq, sub_self]
   have hineq := fun i => lem_scaling_ineq U hU z hz i
   -- the median barrier
   obtain ⟨k, hlow, hhigh⟩ := finite_median_index z
@@ -499,137 +459,47 @@ theorem balancing_core {n d : ℕ} (hn : 0 < n) (U : Frame n d) (hU : IsParseval
       intro i
       exact ((Finset.sum_eq_sum_iff_of_le (fun j _ => hkkt2 j (hupper j))).mp
         (hq.trans hrsum.symm) i (Finset.mem_univ i)).symm
-  -- the energy estimate
-  have hLz : ∀ x : Fin n → ℝ, ∀ i, (L *ᵥ x) i =
-      weightedLaplacian (fun i j => frameProjection U i j ^ 2) x i := by
-    intro x i
-    rw [(lem_energy U hU).1 x i, ToolboxAux.weightedLaplacian_offdiag]
-  have hquad : ∀ x : Fin n → ℝ, matrixQuadratic L x = ∑ i, x i * (L *ᵥ x) i := by
-    intro x
-    unfold matrixQuadratic
-    simp only [Matrix.mulVec, dotProduct, Finset.mul_sum, mul_assoc]
-  have hG4 : matrixQuadratic L z ≤ ∑ i, z i ^ 2 * f i := by
-    rw [hquad]
-    apply Finset.sum_le_sum; intro i _
-    rw [hLz]
-    have h1 := (hineq i).1
-    rw [hsqrt, hG3] at h1
-    calc z i * weightedLaplacian (fun i j => frameProjection U i j ^ 2) z i
-        ≤ z i * (z i * (q i - rowNormSq U i)) := mul_le_mul_of_nonneg_left h1 (hz i).le
-      _ = z i ^ 2 * f i := by ring
-  have hG5 : ∑ i, z i ^ 2 * f i = ∑ i, (z i ^ 2 - c) * f i :=
-    ToolboxAux.sum_centre (fun i => z i ^ 2) f hfsum c
-  have hG6 : ∑ i, (z i ^ 2 - c) * f i ≤ 1 / 2 * osc (fun i => z i ^ 2) * ∑ i, |f i| :=
-    ToolboxAux.centred_sum_le (fun i => z i ^ 2) f
-  have hmw : 0 < ⨅ k, w k := ToolboxAux.inf_pos_fin hn w hw
-  have hG7 : ∀ i j, 4 * (⨅ k, w k) ^ 2 * (w i - w j) ^ 2 ≤ (z i - z j) ^ 2 := by
-    intro i j
-    rw [hzw i, hzw j]
-    exact ToolboxAux.sq_diff_sq_ge (w i) (w j) _ hmw.le (ToolboxAux.inf_le_fin w i)
-      (ToolboxAux.inf_le_fin w j)
-  -- the distance
-  obtain ⟨hWp, -, hWd, hWle⟩ := lem_scaled U hU w hw hmw (fun i => ToolboxAux.inf_le_fin w i)
-  have hPs : scaledProjection U s = frameProjection (Matrix.diagonal w * U *
-      invSqrt (U.transpose * Matrix.diagonal w ^ 2 * U)) :=
-    columnSpaceProjection_eq_of_parseval_right_mul _ _ hWp
-  have hG8 : sqDistance (scaledProjection U s) (frameProjection U) ≤
-      2 * matrixQuadratic L w / (⨅ k, w k) ^ 2 := by
-    rw [hPs, hWd]; exact hWle
-  have hmz : (⨅ k, z k) = (⨅ k, w k) ^ 2 := by
-    apply le_antisymm
-    · obtain ⟨k₀, hk₀⟩ := ToolboxAux.inf_attained hn w
-      rw [← hk₀, ← hzw k₀]; exact ToolboxAux.inf_le_fin z k₀
-    · apply le_ciInf; intro i; rw [hzw i]
-      exact pow_le_pow_left₀ hmw.le (ToolboxAux.inf_le_fin w i) 2
-  have hen := (lem_energy U hU).2.2.2.2
-  have hzL : 4 * (⨅ k, w k) ^ 2 * matrixQuadratic L w ≤ matrixQuadratic L z := by
-    rw [(hen w).1, (hen z).1]
-    have : 4 * (⨅ k, w k) ^ 2 *
-        ((1 / 2) * ∑ i, ∑ j, frameProjection U i j ^ 2 * (w i - w j) ^ 2) =
-        (1 / 2) * ∑ i, ∑ j, frameProjection U i j ^ 2 *
-          (4 * (⨅ k, w k) ^ 2 * (w i - w j) ^ 2) := by
-      simp only [Finset.mul_sum]
-      apply Finset.sum_congr rfl; intro i _
-      apply Finset.sum_congr rfl; intro j _
-      ring
-    rw [this]
-    apply mul_le_mul_of_nonneg_left _ (by norm_num)
-    apply Finset.sum_le_sum; intro i _; apply Finset.sum_le_sum; intro j _
-    exact mul_le_mul_of_nonneg_left (hG7 i j) (sq_nonneg _)
-  have hG9 : 2 * matrixQuadratic L w / (⨅ k, w k) ^ 2 ≤
-      matrixQuadratic L z / (2 * (⨅ k, z k) ^ 2) := by
-    have hm2 : 0 < (⨅ k, w k) ^ 2 := by positivity
-    have : 2 * matrixQuadratic L w / (⨅ k, w k) ^ 2 =
-        (4 * (⨅ k, w k) ^ 2 * matrixQuadratic L w) / (2 * (⨅ k, z k) ^ 2) := by
-      rw [hmz]; field_simp; ring
-    rw [this]
-    exact div_le_div_of_nonneg_right hzL (by positivity)
-  have hmz0 : 0 < ⨅ k, z k := ToolboxAux.inf_pos_fin hn z hz
-  have hG10 : matrixQuadratic L z / (2 * (⨅ k, z k) ^ 2) ≤
-      osc (fun i => z i ^ 2) / (4 * (⨅ k, z k) ^ 2) * ∑ i, |f i| := by
-    have h := (hG4.trans_eq hG5).trans hG6
-    have : osc (fun i => z i ^ 2) / (4 * (⨅ k, z k) ^ 2) * ∑ i, |f i| =
-        (1 / 2 * osc (fun i => z i ^ 2) * ∑ i, |f i|) / (2 * (⨅ k, z k) ^ 2) := by
-      field_simp; ring
-    rw [this]
-    exact div_le_div_of_nonneg_right h (by positivity)
-  have hG11 : osc (fun i => z i ^ 2) / (4 * (⨅ k, z k) ^ 2) * ∑ i, |f i| ≤
-      ((((1 - β * H) ^ 2)⁻¹) ^ 2 - 1) / 4 * ∑ i, |f i| := by
-    apply mul_le_mul_of_nonneg_right _ (Finset.sum_nonneg fun i _ => abs_nonneg _)
-    have hosc : osc (fun i => z i ^ 2) ≤
-        ((((1 - β * H) ^ 2)⁻¹) ^ 2 - 1) * (⨅ k, z k) ^ 2 := by
-      unfold osc
-      have hsup : (⨆ i, z i ^ 2) ≤ (((1 - β * H) ^ 2)⁻¹) ^ 2 * (⨅ k, z k) ^ 2 := by
-        apply ciSup_le; intro i
-        have := hpair i j₀
-        rw [hj₀] at this
-        calc z i ^ 2 ≤ (((1 - β * H) ^ 2)⁻¹ * (⨅ k, z k)) ^ 2 :=
-              pow_le_pow_left₀ (hz i).le this 2
-          _ = _ := by ring
-      have hinf : (⨅ k, z k) ^ 2 ≤ ⨅ i, z i ^ 2 := by
-        apply le_ciInf; intro i
-        exact pow_le_pow_left₀ hmz0.le (ToolboxAux.inf_le_fin z i) 2
-      linarith
-    rw [div_le_div_iff₀ (by positivity) (by norm_num)]
-    nlinarith [hosc]
-  exact ⟨hG1, hG2, hG3, hG4, hG5, hG6, hG7, hG8, hG9, hG10, hG11⟩
+  exact ⟨hG1, hG2, hG3⟩
 
-/-- Proof of `thm:balancing`, with its explicit constants (the origin of `15/4`).
+/-- The trace identity controls the distance by the actual row-scale ratio. -/
+theorem scaling_projection_distance {n d : ℕ} (hn : 0 < n) (U : Frame n d)
+    (hU : IsParseval U) (s : Fin n → ℝ) (κ : ℝ)
+    (hratio : ∀ i j, Real.exp (s i) ≤ κ * Real.exp (s j)) :
+    sqDistance (scaledProjection U s) (frameProjection U) ≤
+      (κ-1)/2 * ∑ i, |scaledDiagonal U s i - rowNormSq U i| := by
+  let w : Fin n → ℝ := fun i => Real.exp (s i)
+  let m := ⨅ i, w i
+  have hm : 0 < m := ToolboxAux.inf_pos_fin hn w (fun i => Real.exp_pos _)
+  obtain ⟨j, hj⟩ := ToolboxAux.inf_attained hn w
+  have hhi : ∀ i, w i ≤ κ*m := by
+    intro i
+    change w i ≤ κ * (⨅ j, w j)
+    rw [← hj]
+    exact hratio i j
+  have h := rowScale_projection_trace_bound U hU w (fun i => Real.exp_pos _)
+    m (κ*m) (fun i => ToolboxAux.inf_le_fin w i) hhi
+  apply (mul_le_mul_iff_right₀ hm).mp
+  change m * sqDistance (columnSpaceProjection (rowScale U w)) (frameProjection U) ≤
+    m * ((κ-1)/2 * ∑ i, |columnSpaceProjection (rowScale U w) i i - rowNormSq U i|)
+  calc
+    _ ≤ (κ*m-m)/2 * ∑ i, |columnSpaceProjection (rowScale U w) i i-rowNormSq U i| := h
+    _ = _ := by ring
 
-TeX: "Let $z=e^{2s}$ with median $m$, so $1\le\min z\le m\le\max z\le e^{2}$. [...] By
-\cref{lem:median}, $\max z/\min z\le(1-\beta H)^{-2}\le4$, i.e.\ $\osc(s)\le\log2<1$.
-[...] in both cases $r=q$. For the distance let $w=e^{s}$, $f=q-p$, and let $c$ be the
-midpoint of the range of $z^2$. [...]
-\[ z^TLz\le\sum_iz_i^2f_i=\sum_i(z_i^2-c)f_i\le\tfrac12\osc(z^2)\norm f_1 . \]
-As $(z_i-z_j)^2\ge4\min w^2\,(w_i-w_j)^2$, \cref{lem:energy,lem:scaled} give
-\[ \fro{P(s)-P}^2\le\frac{2\,w^TLw}{\min w^2}\le\frac{z^TLz}{2\min z^2}
- \le\frac{\osc(z^2)}{4\min z^2}\norm f_1\le\frac{4^2-1}4\norm f_1 . \]" -/
+/-- Proof of `thm:balancing`: the median barrier gives scale ratio at most two;
+the trace identity then gives cost at most half the L1 diagonal change. -/
 theorem thm_balancing_steps {n d : ℕ} (hn : 0 < n) (U : Frame n d) (hU : IsParseval U) {H : ℝ}
     (hH : Linear.FrameBarrierBound U H) (q : Fin n → ℝ) (hq : ∑ i, q i = (d : ℝ))
     {β : ℝ} (hβ0 : 0 ≤ β) (hβ : ∀ i, |q i - rowNormSq U i| ≤ β) (hβH : β * H ≤ 1 / 2)
     (s : Fin n → ℝ) (hs : s ∈ Set.Icc (0 : Fin n → ℝ) 1)
     (hmin : IsMinOn (balancingPotential U q) (Set.Icc (0 : Fin n → ℝ) 1) s) :
     let z : Fin n → ℝ := fun i => Real.exp (2 * s i)
-    let w : Fin n → ℝ := fun i => Real.exp (s i)
-    let f : Fin n → ℝ := fun i => q i - rowNormSq U i
-    let c : ℝ := ((⨆ i, z i ^ 2) + ⨅ i, z i ^ 2) / 2
-    let L := projectionLaplacian (frameProjection U)
     (∀ i, 1 ≤ z i ∧ z i ≤ Real.exp 2) ∧
     (⨆ i, z i) ≤ ((1 - β * H) ^ 2)⁻¹ * (⨅ i, z i) ∧ ((1 - β * H) ^ 2)⁻¹ ≤ 4 ∧
     osc s ≤ Real.log 2 ∧ Real.log 2 < 1 ∧
     (∀ i, scaledDiagonal U s i = q i) ∧
-    matrixQuadratic L z ≤ ∑ i, z i ^ 2 * f i ∧
-    ∑ i, z i ^ 2 * f i = ∑ i, (z i ^ 2 - c) * f i ∧
-    ∑ i, (z i ^ 2 - c) * f i ≤ 1 / 2 * osc (fun i => z i ^ 2) * ∑ i, |f i| ∧
-    (∀ i j, 4 * (⨅ k, w k) ^ 2 * (w i - w j) ^ 2 ≤ (z i - z j) ^ 2) ∧
     sqDistance (scaledProjection U s) (frameProjection U) ≤
-      2 * matrixQuadratic L w / (⨅ k, w k) ^ 2 ∧
-    2 * matrixQuadratic L w / (⨅ k, w k) ^ 2 ≤ matrixQuadratic L z / (2 * (⨅ k, z k) ^ 2) ∧
-    matrixQuadratic L z / (2 * (⨅ k, z k) ^ 2) ≤
-      osc (fun i => z i ^ 2) / (4 * (⨅ k, z k) ^ 2) * ∑ i, |f i| ∧
-    osc (fun i => z i ^ 2) / (4 * (⨅ k, z k) ^ 2) * ∑ i, |f i| ≤
-      (4 ^ 2 - 1) / 4 * ∑ i, |f i| := by
-  intro z w f c L
+      1 / 2 * ∑ i, |q i - rowNormSq U i| := by
+  intro z
   obtain ⟨-, hk1, hk2⟩ := eq_kkt U hU q s hs hmin
   have hs0 : ∀ i, 0 ≤ s i := fun i => hs.1 i
   have hs1 : ∀ i, s i ≤ 1 := fun i => hs.2 i
@@ -645,11 +515,11 @@ theorem thm_balancing_steps {n d : ℕ} (hn : 0 < n) (U : Frame n d) (hU : IsPar
     have := Real.log_lt_sub_one_of_pos (by norm_num : (0 : ℝ) < 2) (by norm_num : (2 : ℝ) ≠ 1)
     linarith
   have hT : -Real.log (1 - β * H) < 1 := lt_of_le_of_lt hlog hlog2
-  obtain ⟨g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11⟩ := balancing_core hn U hU hH q hq hβ0 hβ
+  obtain ⟨g1, g2, g3⟩ := balancing_core hn U hU hH q hq hβ0 hβ
     (by linarith) hT s hs0 hs1 hk1 hk2
   have hκ : ((1 - β * H) ^ 2)⁻¹ ≤ 4 := by
     rw [inv_le_comm₀ (by positivity) (by norm_num)]; nlinarith
-  refine ⟨?_, g2, hκ, ?_, hlog2, g3, g4, g5, g6, g7, g8, g9, g10, ?_⟩
+  refine ⟨?_, g2, hκ, ?_, hlog2, g3, ?_⟩
   · intro i
     constructor
     · show 1 ≤ Real.exp (2 * s i)
@@ -660,10 +530,17 @@ theorem thm_balancing_steps {n d : ℕ} (hn : 0 < n) (U : Frame n d) (hU : IsPar
     obtain ⟨i₀, hi₀⟩ := ToolboxAux.sup_attained hn s
     obtain ⟨j₀, hj₀⟩ := ToolboxAux.inf_attained hn s
     rw [← hi₀, ← hj₀]; exact (g1 i₀ j₀).trans hlog
-  · refine g11.trans (mul_le_mul_of_nonneg_right ?_ (Finset.sum_nonneg fun i _ => abs_nonneg _))
-    have h0 : 0 ≤ ((1 - β * H) ^ 2)⁻¹ := by positivity
-    have : (((1 - β * H) ^ 2)⁻¹) ^ 2 ≤ 4 ^ 2 := pow_le_pow_left₀ h0 hκ 2
-    linarith
+  · have hratio : ∀ i j, Real.exp (s i) ≤ 2 * Real.exp (s j) := by
+      intro i j
+      calc
+        Real.exp (s i) = Real.exp (s i-s j) * Real.exp (s j) := by
+          rw [← Real.exp_add]; congr 1; ring
+        _ ≤ Real.exp (Real.log 2) * Real.exp (s j) :=
+          mul_le_mul_of_nonneg_right (Real.exp_le_exp.mpr ((g1 i j).trans hlog))
+            (Real.exp_pos _).le
+        _ = _ := by rw [Real.exp_log (by norm_num)]
+    have h := scaling_projection_distance hn U hU s 2 hratio
+    simpa only [g3, show ((2:ℝ)-1)/2 = 1/2 by norm_num] using h
 
 /-- The two Gram matrices of a row scaling agree: `(DU)ᵀ(DU) = Uᵀ D² U`. -/
 theorem rowScale_gram_eq {n d : ℕ} (U : Frame n d) (w : Fin n → ℝ) :
@@ -675,7 +552,7 @@ theorem rowScale_gram_eq {n d : ℕ} (U : Frame n d) (w : Fin n → ℝ) :
   simp only [pow_two]
 
 /-- Proof-internal: assemble the frame of `thm:balancing` from a balanced scaling `s`:
-whiten the row scaling `DU`, `D = Diag(e^s)` (`lem:scaled`), and align by an orthogonal
+whiten the row scaling `DU`, `D = Diag(e^s)`, and align by an orthogonal
 right factor (`lem:align`). -/
 theorem balancing_assemble {n d : ℕ} (hn : 0 < n) (U : Frame n d) (hU : IsParseval U)
     (q s : Fin n → ℝ) {ρ K : ℝ}
@@ -690,9 +567,9 @@ theorem balancing_assemble {n d : ℕ} (hn : 0 < n) (U : Frame n d) (hU : IsPars
           W = Matrix.diagonal w * U *
             invSqrt ((Matrix.diagonal w * U).transpose * (Matrix.diagonal w * U)) * R := by
   have hw : ∀ i, 0 < (fun i => Real.exp (s i)) i := fun i => Real.exp_pos _
-  have hmw : 0 < ⨅ k, (fun i => Real.exp (s i)) k := ToolboxAux.inf_pos_fin hn _ hw
-  obtain ⟨hWp, -, -, -⟩ := lem_scaled U hU (fun i => Real.exp (s i)) hw hmw
-    (fun i => ToolboxAux.inf_le_fin _ i)
+  have hWp : IsParseval (Matrix.diagonal (fun i => Real.exp (s i)) * U *
+      invSqrt (U.transpose * Matrix.diagonal (fun i => Real.exp (s i)) ^ 2 * U)) :=
+    ToolboxAux.rowScale_invSqrt_parseval U hU (fun i => Real.exp (s i)) hw
   have hPs : scaledProjection U s = frameProjection (Matrix.diagonal (fun i => Real.exp (s i)) *
       U * invSqrt (U.transpose * Matrix.diagonal (fun i => Real.exp (s i)) ^ 2 * U)) :=
     columnSpaceProjection_eq_of_parseval_right_mul _ _ hWp
@@ -736,7 +613,7 @@ theorem balancing_empty {d : ℕ} (U : Frame 0 d) (hU : IsParseval U) (q : Fin 0
 TeX: "Suppose $H(L_P)\le H<\infty$, and $q\in\R^n$ satisfies $\sum_iq_i=d$ and
 $\beta H\le\frac12$, where $\beta=\norm{q-p}_\infty$. Then
 there is a Parseval $W$ with $\diag(WW^T)=q$ and
-\[ \fro{U-W}^2\le\fro{UU^T-WW^T}^2\le\tfrac{15}4\norm{q-p}_1 . \]
+\[ \fro{U-W}^2\le\fro{UU^T-WW^T}^2\le\tfrac12\norm{q-p}_1 . \]
 $W$ is obtained from $U$ by a row scaling with ratio of scales at most $2$,
 whitening, and an orthogonal right factor."
 
@@ -747,7 +624,7 @@ theorem thm_balancing {n d : ℕ} (U : Frame n d) (hU : IsParseval U) {H : ℝ}
     ∃ W : Frame n d, IsParseval W ∧ (∀ i, frameProjection W i i = q i) ∧
       sqDistance U W ≤ sqDistance (frameProjection U) (frameProjection W) ∧
       sqDistance (frameProjection U) (frameProjection W) ≤
-        15 / 4 * ∑ i, |q i - rowNormSq U i| ∧
+        1 / 2 * ∑ i, |q i - rowNormSq U i| ∧
       ∃ w : Fin n → ℝ, (∀ i, 0 < w i) ∧ (∀ i j, w i ≤ 2 * w j) ∧
         ∃ R ∈ Matrix.orthogonalGroup (Fin d) ℝ,
           W = Matrix.diagonal w * U *
@@ -755,14 +632,8 @@ theorem thm_balancing {n d : ℕ} (U : Frame n d) (hU : IsParseval U) {H : ℝ}
   rcases Nat.eq_zero_or_pos n with hn0 | hn
   · subst hn0; exact balancing_empty U hU q _ _
   obtain ⟨s, hs, hmin⟩ := exists_balancing_minimizer U hU q (T := 1) zero_le_one
-  obtain ⟨-, -, -, hosc, -, hrq, -, -, -, -, h8, h9, h10, h11⟩ :=
+  obtain ⟨-, -, -, hosc, -, hrq, hcost⟩ :=
     thm_balancing_steps hn U hU hH q hq hβ0 hβ hβH s hs hmin
-  have hcost : sqDistance (scaledProjection U s) (frameProjection U) ≤
-      15 / 4 * ∑ i, |q i - rowNormSq U i| := by
-    have h := ((h8.trans h9).trans h10).trans h11
-    have h15 : ((4 : ℝ) ^ 2 - 1) / 4 = 15 / 4 := by norm_num
-    rw [h15] at h
-    exact h
   have hosc' : ∀ i j, s i - s j ≤ Real.log 2 := by
     intro i j
     have := ToolboxAux.le_sup_fin s i
@@ -841,14 +712,14 @@ theorem rem_balancing_forces_positive {n d : ℕ} (U : Frame n d) (hU : IsParsev
 /-- Remark after `thm:balancing` (second claim).
 
 TeX: "With $\beta H<1$ and a box of side $T>-\log(1-\beta H)$ the same proof gives scale
-ratio $(1-\beta H)^{-1}$ and cost $\frac14((1-\beta H)^{-4}-1)\norm{q-p}_1$." -/
+ratio $(1-\beta H)^{-1}$ and cost $\frac{\beta H}{2(1-\beta H)}\norm{q-p}_1$." -/
 theorem rem_balancing_general {n d : ℕ} (U : Frame n d) (hU : IsParseval U) {H : ℝ}
     (hH : Linear.FrameBarrierBound U H) (q : Fin n → ℝ) (hq : ∑ i, q i = (d : ℝ))
     {β : ℝ} (hβ0 : 0 ≤ β) (hβ : ∀ i, |q i - rowNormSq U i| ≤ β) (hβH : β * H < 1) :
     ∃ W : Frame n d, IsParseval W ∧ (∀ i, frameProjection W i i = q i) ∧
       sqDistance U W ≤ sqDistance (frameProjection U) (frameProjection W) ∧
       sqDistance (frameProjection U) (frameProjection W) ≤
-        1 / 4 * (((1 - β * H) ^ 4)⁻¹ - 1) * ∑ i, |q i - rowNormSq U i| ∧
+        (β * H) / (2 * (1 - β * H)) * ∑ i, |q i - rowNormSq U i| ∧
       ∃ w : Fin n → ℝ, (∀ i, 0 < w i) ∧ (∀ i j, w i ≤ (1 - β * H)⁻¹ * w j) ∧
         ∃ R ∈ Matrix.orthogonalGroup (Fin d) ℝ,
           W = Matrix.diagonal w * U *
@@ -867,16 +738,23 @@ theorem rem_balancing_general {n d : ℕ} (U : Frame n d) (hU : IsParseval U) {H
     (T := -Real.log (1 - β * H) + 1) (by linarith)
   have hk := ToolboxAux.box_kkt (balancingPotential U q) (fun i => scaledDiagonal U s i - q i) s
     (balancingPotential_hasFDerivAt U hU q s) hs hmin
-  obtain ⟨g1, -, g3, -, -, -, -, g8, g9, g10, g11⟩ := balancing_core hn U hU hH q hq hβ0 hβ hβH
+  obtain ⟨g1, -, g3⟩ := balancing_core hn U hU hH q hq hβ0 hβ hβH
     (T := -Real.log (1 - β * H) + 1) (by linarith) s (fun i => hs.1 i) (fun i => hs.2 i)
     (fun i hi => sub_nonpos.mp (hk.1 i hi)) (fun i hi => sub_nonneg.mp (hk.2 i hi))
   have hcost : sqDistance (scaledProjection U s) (frameProjection U) ≤
-      1 / 4 * (((1 - β * H) ^ 4)⁻¹ - 1) * ∑ i, |q i - rowNormSq U i| := by
-    have h := ((g8.trans g9).trans g10).trans g11
-    have hc : ((((1 - β * H) ^ 2)⁻¹) ^ 2 - 1) / 4 = 1 / 4 * (((1 - β * H) ^ 4)⁻¹ - 1) := by
-      rw [inv_pow, ← pow_mul]; ring
-    rw [hc] at h
-    exact h
+      (β * H) / (2 * (1 - β * H)) * ∑ i, |q i - rowNormSq U i| := by
+    have hratio : ∀ i j, Real.exp (s i) ≤ (1-β*H)⁻¹ * Real.exp (s j) := by
+      intro i j
+      calc
+        Real.exp (s i) = Real.exp (s i-s j) * Real.exp (s j) := by
+          rw [← Real.exp_add]; congr 1; ring
+        _ ≤ Real.exp (-Real.log (1-β*H)) * Real.exp (s j) :=
+          mul_le_mul_of_nonneg_right (Real.exp_le_exp.mpr (g1 i j)) (Real.exp_pos _).le
+        _ = _ := by rw [Real.exp_neg, Real.exp_log hδ]
+    have h := scaling_projection_distance hn U hU s ((1-β*H)⁻¹) hratio
+    have hc : ((1-β*H)⁻¹-1)/2 = (β*H)/(2*(1-β*H)) := by
+      field_simp; ring
+    simpa only [g3, hc] using h
   obtain ⟨W, hW1, hW2, hW3, hW4, w, hw, hratio, R, hR, hWeq⟩ :=
     balancing_assemble hn U hU q s g3 g1 hcost
   refine ⟨W, hW1, hW2, hW3, hW4, w, hw, fun i j => ?_, R, hR, hWeq⟩
@@ -1050,14 +928,14 @@ abbrev IsSeed {n d : ℕ} (X V : Frame n d) (Θ t : ℝ) : Prop := Linear.IsSeed
 /-- Proof of `cor:seed`, with its explicit constants.
 
 TeX: "Apply \cref{thm:balancing} to $V$ with $q=a\one$: $\beta H\le\frac12$, and
-$\fro{V-W}^2\le\frac{15}4n\cdot\frac{at^2}{2\Theta}\le t^2d$. Then
+$\fro{V-W}^2\le\frac12n\cdot\frac{at^2}{2\Theta}\le t^2d$. Then
 $\fro{X-W}^2\le2\fro{X-V}^2+2\fro{V-W}^2\le(2\Theta+2)t^2d\le3\Theta t^2d$." -/
 theorem cor_seed_proof {n d : ℕ} (hd : 0 < d) (hdn : d ≤ n) {X V : Frame n d} {Θ t : ℝ}
     (hΘ : 2 ≤ Θ) (ht : 0 < t) (hs : IsSeed X V Θ t) :
     ((d : ℝ) / n * t ^ 2 / (2 * Θ)) * (Θ / ((d : ℝ) / n * t ^ 2)) ≤ 1 / 2 ∧
     ∃ W : Frame n d, IsEqualNormParseval W ∧
-      sqDistance V W ≤ 15 / 4 * (n : ℝ) * ((d : ℝ) / n * t ^ 2 / (2 * Θ)) ∧
-      15 / 4 * (n : ℝ) * ((d : ℝ) / n * t ^ 2 / (2 * Θ)) ≤ t ^ 2 * (d : ℝ) ∧
+      sqDistance V W ≤ 1 / 2 * (n : ℝ) * ((d : ℝ) / n * t ^ 2 / (2 * Θ)) ∧
+      1 / 2 * (n : ℝ) * ((d : ℝ) / n * t ^ 2 / (2 * Θ)) ≤ t ^ 2 * (d : ℝ) ∧
       sqDistance X W ≤ (2 * Θ + 2) * t ^ 2 * (d : ℝ) ∧
       (2 * Θ + 2) * t ^ 2 * (d : ℝ) ≤ 3 * Θ * t ^ 2 * (d : ℝ) := by
   have hn : 0 < n := lt_of_lt_of_le hd hdn
@@ -1080,14 +958,14 @@ theorem cor_seed_proof {n d : ℕ} (hd : 0 < d) (hdn : d ≤ n) {X V : Frame n d
     calc ∑ i, |(d : ℝ) / n - rowNormSq V i| ≤ ∑ _i : Fin n, ((d : ℝ) / n * t ^ 2 / (2 * Θ)) :=
           Finset.sum_le_sum (fun i _ => hs.diag i)
       _ = _ := by simp
-  have hVW' : sqDistance V W ≤ 15 / 4 * (n : ℝ) * ((d : ℝ) / n * t ^ 2 / (2 * Θ)) := by
+  have hVW' : sqDistance V W ≤ 1 / 2 * (n : ℝ) * ((d : ℝ) / n * t ^ 2 / (2 * Θ)) := by
     have := hVW.trans hcost
     nlinarith
-  have h3 : 15 / 4 * (n : ℝ) * ((d : ℝ) / n * t ^ 2 / (2 * Θ)) ≤ t ^ 2 * (d : ℝ) := by
-    have : 15 / 4 * (n : ℝ) * ((d : ℝ) / n * t ^ 2 / (2 * Θ)) = 15 / (8 * Θ) * (t ^ 2 * d) := by
+  have h3 : 1 / 2 * (n : ℝ) * ((d : ℝ) / n * t ^ 2 / (2 * Θ)) ≤ t ^ 2 * (d : ℝ) := by
+    have : 1 / 2 * (n : ℝ) * ((d : ℝ) / n * t ^ 2 / (2 * Θ)) = 1 / (4 * Θ) * (t ^ 2 * d) := by
       field_simp; ring
     rw [this]
-    have hc : 15 / (8 * Θ) ≤ 1 := by rw [div_le_one (by positivity)]; linarith
+    have hc : 1 / (4 * Θ) ≤ 1 := by rw [div_le_one (by positivity)]; linarith
     nlinarith [mul_pos ht2 hdR]
   have h4 : sqDistance X W ≤ (2 * Θ + 2) * t ^ 2 * (d : ℝ) := by
     have htri := sqDistance_triangle X V W

@@ -7,14 +7,15 @@ import Lean.Elab.Command
 
 1. The final theorems have exactly the target types `Paulsen.SharpPaulsenBound` and
    `Paulsen.SharpProjectionBound`.
-2. Every theorem of the project depends only on `propext`, `Classical.choice` and
+2. Every imported theorem of the project depends only on `propext`, `Classical.choice` and
    `Quot.sound` (so no statement of `Paulsen/Paper` is left unproved).
 3. The proofs of the two final theorems go through the paper's statements: every
    `lem_*`, `thm_*`, `cor_*`, `eq_*` and `prop_*` theorem of `Paulsen.Paper` is in their
    dependency cone, except the few listed below, which are proved but not needed
    (existential forms whose explicit versions are used, and a definitional
    restatement). Remarks (`rem_*`) are proved as standalone statements.
-4. No library lemma with a constant worse than the paper's is used.
+4. The trace-distance estimate and ordinary resolvent are in the final proof chain.
+   Specified older Gaussian and worse-constant routes are excluded.
 -/
 
 example : Paulsen.SharpPaulsenBound := Paulsen.Paper.thm_main
@@ -64,7 +65,26 @@ run_cmd do
         required := required + 1
         unless deps.contains name do
           throwError "The final proofs do not use the paper statement {name}"
+  let revisedRoute := #[
+    ``Paulsen.scaling_trace_identity,
+    ``Paulsen.scaling_distance_trace_bound,
+    ``Paulsen.rowScale_projection_trace_bound,
+    ``Paulsen.Paper.scaling_projection_distance,
+    ``Paulsen.Resolvent.moderateNoiseFrame,
+    ``Paulsen.Resolvent.factorRoot_sq,
+    ``Paulsen.Resolvent.normalizedTangentNoiseFactor_covariance,
+    ``Paulsen.Resolvent.covariance_rational_formula,
+    ``Paulsen.Resolvent.covariance_loss_le_normal,
+    ``Paulsen.Resolvent.residual_decomposition,
+    ``Paulsen.Resolvent.driftMean_diagonal,
+    ``Paulsen.Resolvent.retainedTangentFactor_covariance]
+  for name in revisedRoute do
+    unless deps.contains name do
+      throwError "The final proofs do not use the revised construction {name}"
   let forbidden := #[
+    `Paulsen.Smooth.moderateNoiseFrame,
+    `Paulsen.Smooth.covariance,
+    `Paulsen.Smooth.normalizedTangentNoiseFactor,
     `Paulsen.Linear.sharpPaulsenBound, `Paulsen.Linear.manyRowBound,
     `Paulsen.Linear.moderateParsevalBound, `Paulsen.Linear.balancing_cost_barrier,
     `Paulsen.Linear.IsSeed.hasCorrection, `Paulsen.Linear.exists_drifted_retraction,
@@ -77,5 +97,5 @@ run_cmd do
     `Paulsen.sharp_correction_of_poisson, `Paulsen.BoundedPoissonSolvability]
   for name in forbidden do
     if deps.contains name then
-      throwError "The final proofs use the worse-constant library declaration {name}"
-  logInfo m!"The final proofs depend on {deps.size} project declarations, including all {required} required paper statements; no worse-constant library lemma is used."
+      throwError "The final proofs use the superseded library declaration {name}"
+  logInfo m!"The final proofs depend on {deps.size} project declarations, including all {required} required paper statements and all {revisedRoute.size} required trace/resolvent declarations; no forbidden earlier route is used."
