@@ -1,0 +1,167 @@
+################# untagged
+FINAL SUMMARY: Revised the untagged track after the adversarial referee and wrote the final record, /home/user/AI-works/axiom-schemas/research/tracks/untagged/notes-final.md. It has full statements and proofs, the experiment protocol with final numbers, and a point-by-point verification log (§12).
+
+The referee refuted nothing (20 items: 15 "holds", 5 "holds-with-fix"). One v1 claim is withdrawn: the caveat after Cor 3.3 that Plotkin failure families are m-noncovering for every m. It is false once parameters are canonicalized and is replaced by Prop 3.4.
+
+**Fixes.**
+- Cor 3.3(b) now has cross-separation as a hypothesis, and Theorem 3.2 is stated per target.
+- The root count is eight (=, ¬, ∧, ∨, →, ↔, ∀, ∃).
+- (Dec) is strengthened: Ref_d membership is decidable and S has a fixed enumeration.
+- Thm 5.2(v) now reads "O(n²) coherence tests"; the online policy needs n·k′ + k′(k′−1)/2 tests.
+- Prop 5.6: the parameter in (b) must be fresh, and (e) is restricted to oracles complete on false instances at Ref_∞.
+- Theorem 5.7 is rebuilt on MRDP, H_e(z) = ∃x̄(z = SS c(x̄) ∧ P_e = Q_e), so the stated oracle R-Δ₀ suffices; the full-Δ₀-oracle variant is kept as an alternative.
+- Prop 5.8(b) notes the refutable-singleton exception.
+- Prop 5.9(d) requires |C| > e, and Robust DTRC requires s > e.
+- The U3-comp computation is now described as a consistency check, not independent evidence.
+- The stale comment in u5 is removed.
+
+**New results.**
+- Prop 3.4 (head classes): after canonicalization, the |F|+p+1 head specializations of φ(z) cover inst(φ(z)).
+- Prop 3.5: exact spare-slot threshold for one-variable quantifier-free schemas when m ≤ h, with Plotkin's (R)+(D) per class at m = h.
+- Prop 3.6: closed form κ = (h−1)r + |cl(T_r)| for unary signatures. Consequence: numeral-only data are never exact with a spare slot, whereas DTRC is.
+- Prop 5.10: cost of one coherence test. |Min| = 1 for quantifier-free X and for X containing an anchor; 4^n in the worst case; polynomial for a single negative; open in general.
+- Remark 5.11: without separation, no learner is both exact and target-sound on some clean data with anchors.
+- Prop 5.12: the implementation provably equals DTRC with a fixed finite oracle.
+- Prop 5.13: quantifier-free arithmetic templates leave no unsound residue at depth ∞.
+- §7.2(b): ZFC with the Axiom of Choice.
+
+**Code.**
+- dtrc.py v2: global negative set, decision log, audit against the final negative set, run_fixpoint, |Min| statistics, separation_check.
+- Every experiment was re-run with the final libraries. Results are identical to v1 apart from labels, timings, pool-search counts and set-printing order; v1 outputs are in code/v1_outputs/.
+- New scripts:
+  - u9: clean fragmentation;
+  - u10: ZFC, 12/12 Axiom of Choice cross templates refuted, 10 pure clusters in each of 3 seeds;
+  - u12: head classes, 2000/2000, 60/60, 254/254, 2509/2509;
+  - u13: all 598 ZF cross templates from the referee's enumerator now refuted (v1 left 120 unrefuted);
+  - u14: all 24 audited DTRC runs pass on the first pass.
+- Refutation separation was verified on every cross pair of the PA, ZF and ZFC runs (147/201/175, 467/371/348 and 614/294/428 pairs).
+-- U1 [ proved ] Pigeonhole theorem: if k = k', there are tagged anchors A_i, and sound negatives N satisfy (X) (every template covering anchor data of two targets meets N), then Acc_k(D,N) = R*. Cor 2.2: the learner generates a sufficient finite negative set N(D,d) itself, without labels, of size ≤ μ·Σ|A_i||A_j| (uses W and the strengthened Dec).
+-- U1-PA [ computed ] PA (Q1–Q7 + T_ind, k = 8): every cross pair has one minimal covering template, refuted by one of 4 sentences (0=S0, 0=0→0=S0, a1+0=0, a1·0=S0); three suffice by absorption.
+-- U2 [ proved ] Splits are unrefutable (Thm 3.1). Under cross-separation, target i is exact with m = k−k'+1 slots iff every N-avoiding family of ≤ m templates covering D_i has union ⊇ inst(σ_i) (Thm 3.2, per target). Cor 3.3(b) is corrected to require cross-separation plus target-separation.
+-- U2-caveat-v1 [ refuted ] v1 claim, withdrawn: Plotkin failure families are m-noncovering for every m because parameters are infinitely many names. False under parameter canonicalization; replaced by Prop 3.4.
+-- U17a [ proved ] Prop 3.4: modulo parameter renaming, the h = |F|+p+1 head specializations of a one-variable template φ(z) cover inst(φ(z)); each is needed (5+p for arithmetic).
+-- U17b [ proved ] Prop 3.5: for quantifier-free, parameter-free φ(z) with ≤1 parameter per z-value, under cross-separation and disjoint instance sets: exact if m < |cl(T)|; if a class is missing, exact iff m < |cl(T)|; with all h classes and m = h, exact iff each non-constant class block satisfies Plotkin's (R)+(D).
+-- U17c [ proved ] Prop 3.6: for unary signatures (constants C, one unary S), κ(T) = (h−1)r + |cl(T_r)| and target i is exact iff m < κ(T). With numeral-only data the k-union learner never accepts ∀xφ when it has a spare slot.
+-- U3 [ proved ] Slot accounting: under (Abs), target i gets k − c_i slots. Raw DT° PA: c = 4 on positive data, c = 7 with three Δ₀ negatives. The κ = c+χ check (24/24) is a consistency check of the implementation, not independent evidence.
+-- U4 [ proved ] A bound is necessary: Acc_∞(D,N) = D for every sound N, and H_∞ is not identifiable in the limit from text (Gold).
+-- U5 [ proved ] DTRC theorem (under W, OS, Dec): (i) within-target merges are never refuted; (ii) under RS_d(D) the final clustering is the target partition for every merge policy; (iii) the output is sound at all times and exact once each cluster has an anchor; (iv) the failure probability equals the tagged one; (v) O(n²) coherence tests, n·k' + k'(k'−1)/2 for the online policy.
+-- U18 [ proved ] Prop 5.10: a coherence test costs |Min(X)| refutation checks. |Min| = 1 for quantifier-free X (Plotkin lgg) and for X containing an anchor; 4^n in the worst case (track single G.2); with a single negative the test is equivalent to n ∉ Acc(X), which is polynomial; open for general N. |Min| = 1 in all 705 PA/ZF tests.
+-- U6 [ proved ] Without separation, Acc_d ⊆ R* ∪ Res_d(D), and the output is truth-sound if residual templates are truth-sound. Exactness can fail by fragmentation even on clean data with anchors and disjoint instance sets (u9 Example B).
+-- U22 [ proved ] Remark 5.11: P = {t+0=t, 0+S0=S0} and P' = {0+t=t, S0+0=S0} share data D containing anchors for both; no learner is both exact for P and target-sound for P' on D.
+-- U7 [ proved ] ∀xφ from instances is a sound cross merge: two instances with different heads form an anchor for φ(z) (Lemma 5.5); DTRC accepts ∀xφ iff φ(z) is unrefuted. 'Never refuted' implies truth when the oracle is complete on false instances at Ref_∞ (e.g. quantifier-free φ with R-Δ₀ over ℕ), but not in general and not in ℝ.
+-- U20 [ proved ] Prop 5.13: with R-Δ₀ at unbounded depth, an arithmetic DT° template with no binder in its rigid part that is never refuted is truth-sound. Permanent unsound residues therefore need quantifiers in the template.
+-- U8 [ proved ] Depth relativization is necessary: no computable learner is both sound relative to Res_∞ at all times and eventually exact on all practices separated at some unknown finite depth. Construction via MRDP, H_e(z) = ∃x̄(z = SS c(x̄) ∧ P_e = Q_e), refutable by R-Δ₀ witnesses.
+-- U9 [ proved ] Coherence is downward closed but not transitive. Whole-cluster DTRC keeps clusters coherent (except refutable singletons); single linkage does not. Under separation all variants agree.
+-- U10 [ proved ] Noise: refutable mistakes are isolated; under separation, mistakes never bridge targets; absorption and fragmentation are possible. Robust DTRC (s > e, e-trimmed verifier for |C| > e) is sound with ≤ e absorbed mistakes per cluster.
+-- U19 [ proved ] Prop 5.12: an audited run of the v2 implementation (global negative set N, audit, run_fixpoint) is exactly DTRC with the fixed sound oracle Ref_d = N_final, so all theorems apply. Every run passes on the first pass, results are unchanged from v1, and the 598 referee-enumerated ZF cross templates are now all refuted (v1: 120 unrefuted).
+-- U11 [ proved ] MDL: a naive code splits induction by main connective (Prop 6.2). A well-specified mixture code gains at most O(log n) from splitting (Prop 6.3, standard coding facts cited from memory). Computed: misspecified adaptive codes split for n ≥ 1.6e4, while DPC under the well-specified law keeps T_ind whole.
+-- U12 [ computed ] PA: all cross merges refuted by Δ₀ + ∀-instantiation. DTRC recovers 7–8 pure clusters (3 seeds), T_ind exact, 200/200 held-out accepted, 0/91 false accepts. RS verified on all 147/201/175 cross pairs.
+-- U13 [ computed ] ZF: all 36 cross merges refuted (22 by HF counterexample, 14 by logic, 3 via Russell). DTRC recovers 9 pure clusters (3 seeds), schemas exact, 180/180 held-out, 0/30 naive comprehension accepted. RS verified on 467/371/348 cross pairs.
+-- U21 [ computed ] ZFC: the Axiom of Choice is a ground axiom whose 12 cross templates with the ZF targets are all refuted. DTRC recovers 10 pure clusters in 3/3 seeds, schemas exact, AC accepted, RS verified on 614/294/428 cross pairs.
+-- U14 [ proved ] Weak Union + weak Power merge into the universal-set schema ∃x∀y(F(y)→y∈x). No logic or HF refutation exists at any depth (model HF ∪ {u}), but coherence with a Separation instance or ∀x¬x∈x refutes it; bootstrapped coherence repairs DTRC.
+-- U15 [ computed ] K0 pair in DT°: two minimal templates (a T_ind specialization and a K0-shaped one). The intersection verifier excludes J*_0; the K0-shaped template is harmful only after absorption.
+-- U16 [ computed ] mincov agrees with brute-force enumeration (0 counterexamples at size ≤ 20 on 8 induction pairs), supporting hypothesis W on the fragment used; extended by the referee to all PA/ZF cross pairs and clusters.
+OPEN: 1. Hypothesis (W) for DT° in general. Track single's Thm B claims it but was not refereed when this was written.
+2. Spare-slot thresholds beyond the first level: m > h with binary symbols (a product-covering problem), several metavariables, templates with parameters (minimal templates modulo renaming are non-unique), and T_ind with m ≥ 8 slots. For first-order targets this is decidable via known covering and complement results (cited from memory), but no witness-event characterization is known.
+3. Complexity of a coherence test, i.e. of "∃T ∈ Min(X) avoiding N" for |N| > 1 (polynomial for |N| = 1).
+4. Bounding the separation depth from the targets (no uniform computable bound exists, by Thm 5.7).
+5. A natural permanent Σ1/Π2 residue arising from a merge (Prop 5.13 shows that in arithmetic it needs quantifiers in the template).
+6. Fragmentation-free robust clustering (Remark 5.11 shows that anchors alone are not enough).
+7. An MDL theorem showing that a natural universal code selects the target partition.
+8. Guarantees for bootstrapped coherence with learned clusters.
+=== REFEREE overall: A strong, careful track; no result is refuted. All proofs were checked line by line, and the main theorems (pigeonhole 2.1/2.2, spare slots 3.1/3.2, slot accounting 4.1, DTRC 5.2, residue 5.4, two-point Lemma 5.5, depth impossibility 5.7, noise 5.9, MDL 6.2/6.3, universal-set Prop 7.1) are correct. Six need local fixes:
+- Cor 3.3(b) needs cross-separation as a hypothesis.
+- The m-noncovering caveat is wrong under parameter canonicalization.
+- Prop 5.6(e) needs an oracle complete on closed instances and Ref_∞.
+- Thm 5.7 needs H_e with bounded existentials only, or full Δ₀ evaluation.
+- Thm 5.4(d) needs a clean-data example.
+- 'Cost O(n^2)' should read 'O(n^2) coherence tests'.
+All eleven experiments reproduce exactly. The refuters are sound by code reading and by fuzzing 4206 true sentences. mincov completeness, which every separation claim depends on, was confirmed by an independent enumerator on all PA and ZF cross pairs and on the within-target sets used (0 counterexamples). Implemented refutation is not monotone in ≼, but an audit shows no effect on reported results.
+  * U2 -> holds-with-fix | Theorems 3.1 and 3.2 are correct. (1) Cor 3.3(b) silently needs cross-separation: its proof uses the contrapositive of Thm 3.2(a), and target-separation does not imply cross-separation (a template >= sigma_i that also covers a D_j datum is not incomparable with sigma_i). (2) The caveat that Plotkin failure families are m-noncovering for every m is false under the setting's own parameter canonicalization: the head classes are finite (0, S, +, *, fresh parameter). (3) 'Seven root specializations' 
+  * U5 -> holds-with-fix | Theory correct under W, OS, Dec. (1) 'Cost O(n^2)' counts coherence tests only; one test may need Min(X), which can have 4^Theta(n) elements (track single, Prop G.2). The online bound also needs + k'(k'-1)/2 for the final pairwise pass. (2) The implemented refutation samples instances from template-specific pools, so it is not a fixed Ref_d and not monotone in ≼: 72 covering templates above the refuted naive-comprehension template are reported unrefuted, although each contains Russell's logicall
+  * U6 -> holds-with-fix | Thm 5.4(d) is stated for clean D ⊆ R* but illustrated only by the noisy u8 example.
+  * U7 -> holds-with-fix | Lemma 5.5 is correct (two-point identity, skeleton, legal bodies, and agreement with track single's (U) condition). Prop 5.6(e) overstates: 'no instance refuted => phi(t) true for all closed t' requires an oracle complete on closed instances. That holds for quantifier-free phi under evaluation, but not for the notes' R-Δ₀, which verifies universals only via EUF + Diag(N); u8's wrong-base sentence is a false sentence of this kind that is never refuted. The ω-rule reading also concerns Ref_∞, not 
+  * U8 -> holds-with-fix | The reduction is correct: same data law for P_e and P'_e, continuity gives a single time t, and co-K would be Σ1. Gap: fact (4) needs the false Δ₀ sentence ¬H_e(c̄) to be refuted. With R-Δ₀ as defined in §1 this means verifying H_e(c̄), and a Kleene-T formula has bounded universals that this oracle can only verify via EUF.
+################# experiments
+FINAL SUMMARY: I revised the experiments track to answer every point in the referee report. All 18 verdicts and 9 missing items are resolved; the code is fixed and every experiment was re-run; I contested none of the verdicts.
+
+**Corrected record:** `/home/user/AI-works/axiom-schemas/research/tracks/experiments/notes-final.md`. The v1 notes and results are kept unchanged (`notes.md`, `code/results_v1/`).
+
+**Reproduction.** 43 unit tests pass. `sh run_all.sh` took 593 s. The referee's independent oracle checks were copied unchanged into `code/experiments/recheck/` and re-run against the v2 oracle: 0 contradictions in PA 2197 verdicts, ZF 413 + 179, and 3000 + 600 random sentences. Their mutation test still catches injected bugs (39/600 and 292/600).
+
+**Where the referee was right, and what changed:**
+- **Prop E1 was false for templates with rigid parameters.** I restated it as E1-lit, for literal covering, which is what the v1 proof actually proves. A corollary covers parameter-free targets, which is every experiment. A new Prop E1-al proves the general statement for an alignment-complete Min, computed over all per-datum parameter alignments; it is now DTRC's default. On random generating templates with a rigid parameter, the literal Min misses the target 17/200 times (PA) and 36/200 (ZF); the aligned Min misses it 0 times.
+- **E3, E4 and E5 inherited the gap and are restated.** Thm E4 now states exactness per cluster. Equality with the tagged learner needs an explicit assumption that refuter verdicts do not depend on call history.
+- **The v1 claim that PA mistakes merge only into valid templates is withdrawn.** Prop E10 gives the referee's false sentence q_F with a proof by hand that it is false. I added a case split to the PA oracle, which now refutes q_F. DTRC v2 still accepts q_F at refuter budgets 80 and 400; at budget 2000 it does not. Every residual merge in E4 now has either a validity proof (Lemma V) or a false instance checked by hand. The count of probes the oracle refuted is a lower bound on unsoundness, not a certificate.
+- **E3 now uses the numerals-only regime the task specified.** Schema-level exactness is reported separately from single axioms, and held-out sets no longer overlap training.
+- **The pattern-lgg baseline is replaced** by a genuine term-level pattern lgg. The old one is kept, labelled formula-level.
+- **E9 now reports distinct minimal templates** and adds a set of hard ZF pairs.
+
+**New results:**
+- **Separation for the mixes (Prop E8):** every cross pair of PA-mix or ZF-mix targets has only minimal templates with an explicit false instance. Together with E3(a), this proves v1's conjecture for the mixes. A computed check found 0 mismatches over 9100 data pairs.
+- **Sharing pass (Prop E4-share):** a datum such as 0+0=0 may join every cluster it fits, so overlapping targets both get their anchor.
+- **Refuter and oracle improvements:** the template refuter now tries ⊤/⊥ assignments, then varies one metavariable with the rest fixed. Both oracles simplify sentences with propositional constants first.
+- **Hard ZF pairs (Prop E9):**
+  - UnionW/PowerW merge into the universal-set schema. HF-plus-logic refuters cannot refute it; ours does, because its generic objects obey Foundation.
+  - EInd/EInd2: without the new simplification 0 of 12 merges are refuted, with it 10 of 12.
+
+**Numbers, 5 seeds:**
+
+| | DTRC | DTRC + sharing | tagged, gold labels | tagged, membership labels |
+|---|---|---|---|---|
+| PA, numerals only | 13/20 | 17/20 | 13/20 | 17/20 |
+| PA, v1 instance mix | 19/20 | 20/20 | 20/20 | 20/20 |
+| ZF | 15/15 | 15/15 | 15/15 | 15/15 |
+
+DTRC has ARI 1 and 0 non-target probes in every run. With the sharing pass, the examples-to-exactness curves match the membership-labelled tagged learner exactly.
+-- E1-lit [ proved ] For finite D: every normal configuration is a DT°_F template that literally covers D; every DT°_F template that literally covers D is >= some normal configuration; Min_lit(D) is finite and minimal among literal covers; if D is in inst_lit(T*) then some member is <= T*.
+-- E1-pf [ proved ] For parameter-free T*: if D is in inst(T*) then some member of Min_lit(D) is <= T*. Every parameter-free covering template is >= some member.
+-- E1-v1 [ refuted ] v1's Prop E1, stated for covering up to parameter renaming, is false for templates with rigid parameters. Counterexample: D={0=0 & w0=w0, w0=0 & w1=w1}.
+-- E1-al [ proved ] Min^al(D), the minimal elements of the union of Min_lit over all per-datum parameter alignments, is finite. Its members cover D and are minimal among all covering DT°_F templates. Every covering template is >= a member, and some member is <= any DT°_F target T*, rigid parameters allowed.
+-- E2 [ proved ] v2 oracles are sound. A True/False verdict of the PA evaluator, which now has a case split x in {0..K-1} or x'+K, local budgets and constant propagation, is truth in N. A True/False verdict of the ZF evaluator, with generic objects and constant propagation, is truth in V (assuming V satisfies ZF).
+-- E3 [ proved ] (a) With an ideal refuter, if all members of Min(D) are refuted then all members of Min(D') are refuted for every D' containing D. (b) A merge inside the instance set of a true DT°_F target always succeeds, for any sound refuter. Min is Min^al, or Min_lit with parameter-free targets.
+-- E4 [ proved ] Assume true DT°_F targets, unambiguous data, a sound refuter and refutation separation (S). Then DTRC discards nothing, returns exactly the target partition, and is target-sound. Each cluster is exact when its data contain an anchor. It equals the tagged learner if refuter verdicts do not depend on call history (H-ref).
+-- E4-share [ proved ] Assume (S+) and that every phase-1 cluster lies in exactly one target. Then after the sharing pass, the cluster of target l is exactly the data in inst(T_l). DTRC+share is then target-sound, and exact whenever the tagged learner with membership labels is.
+-- E5 [ proved ] If a cluster lies in inst(T*) for a true DT°_F target T*, its acceptance set lies in inst(T*) for every sound refuter, whatever the budget.
+-- E6 [ proved ] epsilon-induction is a first-order pattern in de Bruijn indices but not in the named or level encodings. Separation and Replacement are first-order patterns in neither, without guards.
+-- E7 [ proved ] For one-variable instance schemas, Min(D)={T*} iff the substituted terms do not all share a head symbol. Hence P(not exact after N) = sum_h p_h^N.
+-- E8 [ proved ] For all PA-mix target pairs (Q1-Q7, Ind, U_add0, U_mul0, U_0add) and all ZF-mix target pairs, with a in inst(T_i)\inst(T_j) and b in inst(T_j)\inst(T_i), every member of Min({a,b}) has an explicit false instance. The cases are: bottom; forall-bottom; a Russell instance; top -> exists-bottom; S(r)+0=r.
+-- E8.2-E8.3 [ proved ] With an ideal refuter, (S) holds for all unambiguous PA-mix and ZF-mix data, so v1's Conj-S holds for the mixes. In general, (S) reduces to cross pairs of single data.
+-- E9 [ proved ] UnionW/PowerW merge into the universal-set schema. It is false, and the generic ZF oracle refutes it via Foundation. EInd/EInd2 merges are false when the motives differ: needs constant propagation, 0/12 refuted without it vs 10/12 with it. They are valid for some motives, e.g. x=x. Sep/SepU can merge into a valid swapped-Separation template.
+-- E10 [ proved ] In E4(b), PA seed 0, two mistakes merge into the false template T_F, and DTRC accepts the false sentence q_F. This happened in v1, and in v2 still at budgets 80 and 400; at budget 2000 it is refuted. The v2 oracle refutes q_F via the case split. The probe count is only a lower bound on unsoundness.
+-- LemmaV [ proved ] Every residual template observed in E4 that the post-hoc refuter did not refute is valid. Each of the five refuted ones has a false instance checked by hand.
+-- C-stress-v1 [ refuted ] v1 claim: 'PA mistakes merge only into valid templates'.
+-- C-Q2-v1 [ refuted ] v1 claim: 'the pattern lgg equals DT°_F on the three ZF schemas'. It was partly by construction. The genuine term-level pattern lgg is exact on EInd at N=2 in 24/30 runs, vs 27/30 for DT°_F.
+-- E3-mix [ computed ] DTRC on the mixes, 5 seeds. ARI is 1.0 everywhere and non-target probes are 0. Schema targets exact, numerals-only PA: DTRC 13/20 (gold tagged 13/20); DTRC+share 17/20 (membership tagged 17/20). v1 PA distribution: 19/20, 20/20, 20/20. ZF 15/15. Single axioms 35/35 and 30/30.
+-- E5-curves [ computed ] On every stream, DTRC+share and the membership-tagged learner give identical examples-to-exactness curves. DTRC and the gold-label tagged learner differ only through the ambiguous datum 0+0=0.
+-- E9-sep [ computed ] With the budget-80 refuter, all 2200 PA-mix and 540 ZF-mix cross pair merges are refuted; they involve only 15 and 5 distinct templates. Valid near-miss merges, e.g. n+?t=S^n ?t, are not refuted. In the hard ZF set, 431/432 pair merges are refuted.
+OPEN: 1. Separation for similar targets: characterise, from the targets alone, when two targets admit only refutable cross merges. The failures observed come from a false antecedent, a true conclusion, an instance shared with a third target, or nesting. EInd/EInd2 and Sep/SepU can merge either refutably or validly, depending on the instances.
+2. Refuter budget: is there a natural refuter that refutes every false minimal template of a cross pair within a budget polynomial in the data size? The E4 mistake merges needed up to 2000 PA instances, and one EInd/EInd2 template needs budget 400.
+3. ZF witnesses: extend the generic objects with constructions such as {G} and G ∪ {c}, so that the oracle can refute sentences like ∀a∃b∀x(x∈b ↔ a∈x).
+4. Sharing pass: give a guarantee without the hypothesis that each phase-1 cluster lies in exactly one target's instance set.
+5. Merge order: without (S), the final partition can depend on the greedy merge order, and there is no theorem for that case.
+6. Full DT°: Min can blow up when term metavariables have positive arity. The single track's feature test is not implemented here.
+=== REFEREE overall: The implementation is solid and every reported table reproduces exactly; my full re-run of run_all.sh took 674 s. All 31 tests pass. No MinCover cap was hit in any DTRC run.
+
+**What holds.**
+- **Oracles.** Both oracles are sound under every independent test I built: 0 contradictions in 6,283 comparisons against a bounded PA evaluator and against exact evaluation in finite structures that satisfy exactly the ZF proof's assumptions. A mutation test shows the ZF check has power.
+- **Proofs.** The proofs of E2, E6 and E7 and the main argument of Thm E4 are correct.
+- **E5 curves.** The DTRC-vs-tagged differences are entirely due to ambiguous data.
+
+**What needs correcting.**
+1. **A false claim.** "PA mistakes merge only into valid templates" is false. In E4(b) seed 0, at both budgets, DTRC accepts a sentence that is false in N. The oracle cannot refute it, so the probes miss it.
+2. **E1 is false as stated for templates with rigid parameters.** Parameter names are compared literally although matching is up to renaming. I give a counterexample, and 21 of 300 random ZF templates fail E1(c). E3(b), E4 and E5 inherit the gap. It does not affect any reported number: the targets are parameter-free, and an alignment-complete Min agrees with the computed one on all E2 data.
+3. **E9 is far weaker than presented.** Its 2190, 540, 1052 and 223 merges involve only 12, 5, 42 and 5 distinct templates, almost all trivially refutable.
+4. **E3's headline depends on the instance distribution.** It uses closed-term and parameter instances, not numerals only. With numerals only, U_add0 is exact in 1 of 5 seeds for DTRC (3 of 5 tagged). Most "exact" counts are ground axioms, and held-out acceptance is inflated by overlap with training.
+5. **The pattern-lgg baseline is coarser than genuine pattern anti-unification.**
+
+The qualitative answers to Q1–Q3 stand with these caveats. The paper should include the fixes and the seed-0 exhibit.
+  * E1 -> holds-with-fix | False as stated once a template has rigid parameters. Data are renamed per datum (w0, w1, ... by first occurrence), templates match up to injective renaming of their parameters, but mincover compares parameter names literally. So computed Min(D) can miss covering templates and fail 'some min <= T*'. Counterexample (R1): D={0=0 & w0=w0, w0=0 & w1=w1}. Computed Min is {?f0=0 & ?f1=?f1}, yet ?f=0 & w0=w0 is a covering DT°_F template strictly below it and above no computed min. In R5, 21 of 300 rand
+  * E3 -> holds-with-fix | (a) is correct with an ideal refuter, for either reading of Min, literal or alignment-complete. (b) uses E1(c) 'some min <= T*', which fails for T* with rigid parameters.
+  * E4 -> holds-with-fix | The invariant argument is correct: all pairs are pushed, failed pairs are cross-label under (S) and E3(b), so inheritance never blocks a same-label merge. Three caveats. (1) It inherits E1(c), so targets must be parameter-free. (2) The 'only if' half of 'contains inst(T_i) exactly for those i where tagged is exact' can fail when instance sets of targets overlap. (3) 'Same refuter verdicts' is an assumption: the refuter caches per template and accumulates data-guided tries, so verdicts depend on 
+  * E5 -> holds-with-fix | Correct, given E1(c) for T*, so T* must have no rigid parameters.
+  * C-Q2 -> holds-with-fix | Every number reproduces. The 'pattern lgg' baseline is built on the DT°_F common-prefix tree, so an atom whose term disagreement contains a bound variable is generalised to ?P(x,..). A genuine pattern anti-unifier would keep the atom and use f(x,..). Example: {Sep(x in a), Sep(a in x)} gives exactly T_SEP, where the genuine lgg is strictly more specific. So 'pattern lgg = DT°_F on the ZF schemas' is partly by construction. On the E2 data this affects 3 of 30 EInd runs at N=2.
+  * C-Q3 -> holds-with-fix | Reproduced exactly: ARI 1, 54/55 and 45/45 exact, 0 non-target probes. Four caveats. (1) The universal axioms were not observed through numerals only, as the task specified. Instances were numerals 0.6, closed terms 0.25 and a parameter 0.15, and the parameter instance w0+0=w0 is the axiom itself. With numerals only, exactness drops: U_add0 1/5 (DTRC) vs 3/5 (tagged), U_mul0 2/5 vs 2/5, U_0add 4/5 vs 2/5. (2) 35 of the 55 PA and 30 of the 45 ZF 'exact' counts are single ground axioms that merely
+  * C-separation -> holds-with-fix | The counts are true but the evidence is degenerate. The 2190 PA-mix merges involve only 12 distinct minimal templates (?P0 1240, Ax.?P0(x) 720, ...). ZF-mix has 5, PA near-miss 42 and ZF near-miss 5. All are refuted by bot or naive comprehension; the refuter stats show 21 and 16 oracle calls. E9 also missed the valid near-miss merge 5+?t=S^5 ?t (U_add0/U_add1) that E4 exhibits.
+  * C-stress -> false | The sub-claim 'PA mistakes merge only into valid templates' (also in notes §4 E4(b)) is false. In pa_mix(0, mistakes=8, true_nontargets=3), at both budget 80 and 400, ind_wrong_step and ind_wrong_concl merge into a false template. DTRC then accepts the sentence ((Ex.0=0 & ~0=2) & (Ax.(Ey.x=0 & ~x=2) -> (Ey.y<Sx & ~Sx=2))) -> (Ax.Ey.y<Sx & ~Sx=2). It is false in N: both premises are true and the conclusion fails at x=1. It is an instance of no target. The oracle cannot refute it because that need
+  * Conj-S -> unclear | It remains a conjecture, and the E9 support is weak (only trivial templates). For the PA-mix and ZF-mix target pairs it looks provable. By E3(a) it reduces to pairs of single data. A short case analysis then works: different roots give ?P; forall prefixes give forall ?P; ?f+?g=?h and ?f+?g=S?h are refuted by 0+0=S0 once the ambiguous 0+0=0 is excluded; naive comprehension is refuted by the Russell instance. For similar targets (S) fails: the PA near-miss pair U_add0/U_add1 has a valid merge.
