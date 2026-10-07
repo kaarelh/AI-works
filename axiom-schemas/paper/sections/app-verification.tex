@@ -1,12 +1,15 @@
 % Appendix: how the results were established (key ver).
 % Sources: research/00-brief.md; research/tracks/*/referee.md and the verification logs at the end of
 % research/tracks/*/notes-final.md; research/prior/induction/*-referee.md; research/prior/pa-untagged/findings.txt;
-% paper/writer-notes.txt; code/README.md, code/run_all.sh, code/results/pytest.txt, code/results/run_all_time.txt.
+% paper/writer-notes.txt; code/README.md, code/run_all.sh, code/results/pytest.txt, code/results/run_all_time.txt;
+% research/paper-review/ (review-*.md, edits/DECISIONS.md, edits/E1-results.txt and E2-results.txt: the review of the
+% paper draft and the editors' reports, whose 'FOR FINAL' items are applied here: rows 31-37, updated rows 11, 16, 18,
+% 24, 29, the review item of app:ver:unref, two formal conjectures in app:ver:open).
 \section{How the results were established}\label{app:ver}
 
 The results come from a process with built-in adversarial checking. This appendix describes the process, lists what it
-corrected, and says what it did not cover. All roles below (researchers, referees, section writers) were played by
-separate instances of Claude (Anthropic). No human has checked the mathematics or the code, and nothing has been verified
+corrected, and says what it did not cover. All roles below (researchers, referees, section writers, reviewers and
+editors) were played by separate instances of Claude (Anthropic). No human has checked the mathematics or the code, and nothing has been verified
 in a proof assistant. ``Independent'' means a separate session that wrote its own code and imported none of the author's
 code; it does not mean an independent person. Author and referee were instances of the same model, so an error that the
 model tends to make could survive both. The brute-force checks, which do not depend on the theory under test, are the
@@ -15,11 +18,12 @@ part of the verification least exposed to this.
 % ---------------------------------------------------------------------------------------------------------------
 \subsection{Process}\label{app:ver:process}
 
-\paragraph{Prior work.} The questions followed an analysis of PA induction (\url{research/prior/}). It supplied the
+\paragraph{The earlier analysis.} The questions followed the earlier analysis of PA induction (\cref{sec:setting}),
+whose record is in \url{research/prior/}; gray tags and the tables below call it ``prior''. It supplied the
 determinate-template learner for induction, the first-order impossibility results and the Sub and $\IndEq$ encodings
 (\cref{sec:zf:pa}). It had three tracks: motive-annotated instances, raw instances with first-order patterns, and
 second-order templates. A referee attacked each track once with independent code
-(\url{research/prior/induction/*-referee.md}). The notes were not revised afterwards, so this paper uses the prior
+(\url{research/prior/induction/*-referee.md}). The notes were not revised afterwards, so this paper uses those
 results as the referee reports correct them (\cref{tab:ver:corr}, rows 1--5). Three reviewers checked a short analysis
 of untagged PA (\url{research/prior/pa-untagged/}) by proof and with brute-force version spaces (row 6).
 
@@ -31,7 +35,8 @@ for the change. Four tracks then worked in parallel, each developed by one resea
 \cref{sec:many}) and ``experiments'' (the package \texttt{dtrc}, \cref{sec:exp}). Each researcher wrote a record
 (\texttt{notes.md}) with complete proofs, a status for every claim, and scripts with saved outputs. When a track needed
 another track's result that had not yet been refereed, it stated that result as a hypothesis. For example, the untagged
-track assumed the finiteness of minimal covering templates, which is now \cref{thm:single:min}.
+track assumed the finiteness of minimal covering templates, which is now \cref{thm:single:min}. Each record went
+through one round of refereeing; results added afterwards were not refereed again (\cref{app:ver:unref}).
 
 \paragraph{Adversarial refereeing.} A referee then received each record with the task of finding errors. The referee
 checked every proof line by line and re-ran the author's scripts against their saved outputs. The referee also tested
@@ -53,6 +58,18 @@ disagree, the paper follows the statement that a referee checked. For example, t
 template of \cref{ex:single:c82} lies below two of the eight earlier templates. The single record and its referee say
 instead that five of the eight lie strictly above it, and the paper follows them. Each theorem-like statement carries
 a status and a gray tag naming its source, which leads to its proof, its scripts and its referee verdict.
+
+\paragraph{Review of the paper.} The draft of \cref{sec:setting,sec:single,sec:univ,sec:zf,sec:many,sec:exp} and their
+appendices was then reviewed by five reviewers, each with one lens: mathematical correctness (three reviewers, for
+\cref{sec:setting,sec:single}, for \cref{sec:univ,sec:zf} and for \cref{sec:many,sec:exp}), consistency across
+sections, and readability. The mathematical reviewers checked every statement against the final records and every
+appendix proof line by line, compared every number of \cref{sec:exp} with the result files, and wrote their own scripts,
+among them an implementation of de Bruijn terms, $\DT$ matching and features that imports no project code. They found
+two false propositions, both among the results that no referee had attacked: an alignment result for parameters and the
+guarantee of the sharing pass. They also found several overclaims and missing hypotheses (\cref{tab:ver:corr}, rows
+31--37). One editor per section then applied the fixes under common decisions, re-ran the counterexamples, and reported
+every change (\url{research/paper-review/}). The introduction, the discussion and this appendix were not reviewed in that
+round; they were revised afterwards to match the edited sections.
 
 \begingroup\footnotesize
 \setlength{\tabcolsep}{4pt}
@@ -102,8 +119,8 @@ Rows 18--22; no reported number wrong\\
 \subsection{Corrections}\label{app:ver:corr}
 
 \Cref{tab:ver:corr} lists the substantive corrections, with the finder named in the group heading unless the row says
-otherwise. The referee reports, the verification logs and \url{paper/writer-notes.txt} list the minor ones: wording,
-constants, citations, and hypotheses made explicit.
+otherwise. The referee reports, the verification logs, \url{paper/writer-notes.txt} and the review reports of
+\url{research/paper-review/} list the minor ones: wording, constants, citations, and hypotheses made explicit.
 
 \begingroup\footnotesize
 \setlength{\tabcolsep}{4pt}
@@ -120,7 +137,7 @@ constants, citations, and hypotheses made explicit.
 \endhead
 \bottomrule
 \endfoot
-\multicolumn{4}{@{}l}{\emph{Prior work, found by its referees A, B, C and reviewers}}\\
+\multicolumn{4}{@{}l}{\emph{The earlier analysis (prior), found by its referees A, B, C and reviewers}}\\
 1 & Minimal covering templates are finitely many, also with metavariables inside arguments (C8.3). &
 False: $\{\Ind(x=x),\Ind(0=x)\}$ has an infinite antichain of minimal covering templates; the enumeration-based learner
 was unsound for a target with nested arguments. &
@@ -159,7 +176,7 @@ structure. The unguarded verifier is unsound outright. &
 False with parameter or repeated arguments; the theorem survives. &
 \cref{app:zf:anchor}.\\
 11 & The named lgg of spelled-out Replacement is truth-sound, via Collection (cases C3). &
-Correct; sharpened in revision: truth-sound over $B$ iff $B$ proves Collection. &
+Correct for anchor data; sharpened in revision: truth-sound over $B$ iff $B$ proves Collection. Non-anchor data: row 33. &
 \cref{prop:zf:coll}.\\
 12 & Spare-slot threshold under target-separation (untagged Cor.~3.3(b)). &
 The proof needs cross-separation. &
@@ -174,7 +191,8 @@ This counts tests; one test may need $4^{\Theta(n)}$ refutation checks. &
 Its refutation was not monotone: $120$ of $598$ ZF cross templates stayed unrefuted above a refuted one. &
 Audit (\cref{prop:many:audit}); no result changed.\\
 16 & If no instance of $\varphi(z)$ is refuted, $\forall x\varphi$ is true (untagged Prop.~5.6(e)). &
-This needs an oracle that refutes all false closed instances. R-$\Delta_0$ is one only for quantifier-free $\varphi$. &
+This needs an oracle that refutes all false closed instances. R-$\Delta_0$ is one for quantifier-free $\varphi$, not for
+every quantified $\varphi$, and then only at unbounded depth (at a fixed depth, relative to $\Res_d$). &
 \cref{prop:many:forall,prop:many:qf}.\\
 17 & Depth relativization is necessary (untagged Thm~5.7), via Kleene's $T$. &
 R-$\Delta_0$ cannot verify the bounded universals of $T$. &
@@ -182,7 +200,8 @@ Rebuilt on MRDP (\cref{thm:many:depth}).\\
 18 & The computed $\Min(D)$ has a member below every target (experiments Prop.~E1, v1). &
 False with rigid parameters: names were compared literally, while matching is up to renaming. $21$ of $300$ random
 ZF data sets failed. &
-\cref{prop:exp:normal,prop:setting:align}.\\
+\cref{prop:exp:normal} and \cref{prop:setting:align}, the latter only for templates whose parameters all occur in their skeleton
+(row 31).\\
 19 & ``PA mistakes merge only into valid templates.'' &
 False: \DTRC{} accepted the false sentence $q_F$ at refuter budgets $80$ and $400$. &
 Withdrawn (\cref{prop:exp:qF}).\\
@@ -201,7 +220,7 @@ Redone (\cref{tab:exp:e3,tab:exp:e9}); \cref{prop:exp:mixsep}.\\
 Only with the most specific freshness guards. &
 \cref{prop:zf:folgg}.\\
 24 & Every non-first-order ZF case has a false lgg instance from two data (cases \S2.4). &
-Not $\ReplS$ in the named encoding with textbook names. &
+Not $\ReplS$ in the named encoding with textbook names, on anchor data (row 33). &
 \cref{prop:zf:false}.\\
 25 & \DTRC{} with the $k$-union learner is exact when \DTRC{} is and $k=k'$ (untagged Rem.~5.3). &
 Needs an anchor in every target's data. &
@@ -216,11 +235,46 @@ NP-complete by the later single Thm~H, whose proof uses a false datum. &
 Valid if no motive uses its variable. &
 \cref{prop:exp:hard}.\\
 29 & \DTRC{} with sharing is exact when the membership-tagged learner is (experiments E4-share). &
-Only if that exactness comes from an anchor. &
+Only if that exactness comes from an anchor, and only for targets that label a phase-one cluster (row 32). &
 \cref{prop:exp:share}.\\
 30 & Termination of the rewriting in the proof of Theorem R1. &
 Imprecise in the first case. &
 \cref{app:zf:pa}.\\
+\multicolumn{4}{@{}l}{\emph{Review of the paper, found by its reviewers}}\\
+31 & The aligned minimal templates have the properties of $\Min(D)$ for every template; if some datum is
+parameter-free, the aligned and the literal set agree (experiments Prop.~E1-al; extended to $\DT$ in writing). &
+False if a parameter of the template occurs only inside an argument of a non-pattern occurrence. For a target with only
+logically valid instances the unique aligned (and literal) minimal template has false instances, so the cautious learner
+is unsound; the second claim fails too. &
+Restricted to templates whose parameters all occur in their skeleton (\cref{prop:setting:align},
+\cref{rem:setting:alignfail}); experiment targets are parameter-free.\\
+32 & With sharing, each target's cluster grows to all its data, so \DTRC{}+share is exact where the membership-labelled
+learner is through an anchor (experiments E4-share; row 29). &
+A target may label no phase-one cluster. With three valid targets ($z+0=z$, $0+z=z$, $1+z=Sz$) and four data meeting
+all hypotheses, \DTRC{}+share rejects $2+0=2$, while the membership-labelled learner has an anchor and is exact. &
+\cref{prop:exp:share} restricted, \cref{ex:exp:share}; every E3 target labels one (computed).\\
+33 & $\ReplS$, named, textbook names: no two instances give a false lgg instance (writing; row 24). &
+Only for anchor data. From $\ReplS(x\in y)$ and $\ReplS(y\in A)$ the lgg has only term metavariables, so no
+freshness guard is learned, and one of its instances is refutable in ZF. &
+Restricted to anchor data (\cref{prop:zf:false,prop:zf:coll}; \cref{app:zf:fofail}).\\
+34 & The $\omega$-step fails in nonstandard models of PA, and is derivable only by an $\omega$-rule (cases A10). &
+It is truth-safe in every model of true arithmetic, nonstandard ones included (\cref{prop:univ:tv}); and
+$\forall\bar x\varphi$ is often first-order derivable, \cref{ex:univ:q} shows only that it need not be. &
+``In a model of $\PA+\neg\Con(\PA)$'' (\cref{ex:univ:fail}); ``in general not derivable, even over $\Q$''
+(\cref{prop:univ:learner}).\\
+35 & In (Nm) and (dB) the learner needs $\mathrm{nocap}$ in addition whenever a free $x_i$ lies under a binder; one
+parameter datum makes it accept $\insto(\varphi)$ (cases A10, A4$'$). &
+$\mathrm{closed}$ already excludes capture; capture must be excluded exactly when $\Cap(\varphi)\neq\emptyset$, which can
+fail with $x_i$ under a binder; for $k\ge2$ every $z_i$ needs a parameter datum. &
+\cref{lem:univ:capcrit}, \cref{prop:univ:capture}(e), \cref{prop:univ:learner}, \cref{tab:univ:learner}.\\
+36 & E6: the $k=9$ union verifier accepts from three induction instances, which reproduces the earlier untagged result
+(experiments E6). &
+With third motive $x+0=x$ this is an artifact of $\DTF$: a $\DT$ template with $f(x)$ covers the root-homogeneous block,
+has only true instances and misses a held-out instance. &
+Caveat in \cref{sec:exp:results} (E6), limitation (6) of \cref{sec:exp:limits}.\\
+37 & $T_{\Ind}$ has eight root specializations, so the open threshold case is $m\ge8$ (untagged \S\S3, 10). &
+$L_A$ contains $<$: there are nine (eight in the prototype's language). &
+\cref{rem:many:numerals}, \cref{app:many:bound}.\\
 \end{longtable}
 \endgroup
 
@@ -232,24 +286,35 @@ where possible by computation, often with the referee's code. The section writer
 referee attacked them. They are:
 \begin{itemize}
 \item single: \cref{prop:single:kappa,prop:single:binderfree}, \cref{lem:single:triangle} (suggested by the referee),
-  the example showing that \Rich{} is needed (after \cref{prop:single:weaker}), \cref{thm:many:complexity,lem:many:types}
-  (single Thm~H), and the repairs in rows 7 and 8 and in \cref{cor:single:unions};
-\item cases: \cref{prop:univ:capture}, \cref{prop:zf:alpha} with case (iv) of \cref{thm:zf:nounion}, part (b) of
-  \cref{prop:zf:coll}, \cref{thm:zf:multi} with \cref{lem:zf:facing}, and the several-metavariable part of
-  \cref{cor:zf:patlgg};
+  \cref{ex:single:rich} (\Rich{} is needed), \cref{thm:many:complexity,lem:many:types} (single Thm~H), the encoded
+  lower bound over $=,+,S,0$ in \cref{prop:single:union-esc} (single Cor.~F.4, made explicit after the referee round),
+  and the repairs in rows 7 and 8;
+\item cases: \cref{prop:univ:capture} with its capture criterion (now \cref{lem:univ:capcrit}), \cref{prop:zf:alpha}
+  with case (iv) of \cref{thm:zf:nounion}, part (b) of \cref{prop:zf:coll}, \cref{thm:zf:multi} with
+  \cref{lem:zf:facing}, and the several-metavariable part of \cref{cor:zf:patlgg};
 \item untagged: \cref{prop:many:heads,prop:many:onevar,prop:many:unary}, \cref{prop:many:testcost},
   \cref{prop:many:ambiguity}, \cref{prop:many:audit}, \cref{prop:many:qf}, the ZFC computation of
   \cref{ex:many:zf}, and the MRDP construction for \cref{thm:many:depth};
-\item experiments (version~2): \cref{prop:setting:align} (Prop.~E1-al), \cref{prop:exp:share},
-  \cref{lem:exp:heads}, \cref{prop:exp:mixsep,cor:exp:mixsep,prop:exp:hard,lem:exp:valid}, and experiment E0b; the
+\item experiments (version~2): \cref{prop:setting:align} (Prop.~E1-al) and \cref{prop:exp:share}, both false as first
+  stated (rows 31, 32); \cref{lem:exp:heads}; \cref{prop:exp:mixsep} with \cref{cor:exp:mixsep};
+  \cref{prop:exp:hard}; \cref{lem:exp:valid}; and experiment E0b. The
   extended oracles of \cref{prop:exp:oracle} passed the referee's re-run evaluators;
-\item prior work: Theorem R1 (\cref{thm:zf:K0}) was proved by a referee, and no second referee checked it; the writer of
+\item the earlier analysis: Theorem R1 (\cref{thm:zf:K0}) was proved by a referee, and no second referee checked it; the writer of
   \cref{sec:zf} re-checked it (row 30). The other prior results used here were confirmed by the prior referees, and
   several are also special cases of refereed track results (\cref{thm:setting:matching}, \cref{cor:single:special},
   \cref{thm:single:min});
-\item writing: the extension of \cref{prop:setting:align} from $\DTF$ to $\DT$, the extension of
-  \cref{prop:univ:dt}(a) to parameter data and $0$-ary formula metavariables (via \cref{lem:univ:identity}), rows
-  23--30, and the direct proofs in \cref{app:zf:pa}.
+\item writing: the extension of \cref{prop:setting:align} from $\DTF$ to $\DT$ (restricted as in row 31), the
+  extension of \cref{prop:univ:dt}(a) to parameter data and $0$-ary formula metavariables (via \cref{lem:univ:identity}),
+  rows 23--30, and the direct proofs in \cref{app:zf:pa};
+\item review of the paper (written or changed by reviewers and section editors, and checked by them by hand and by
+  computation): the restricted statements and proofs of \cref{prop:setting:align,prop:exp:share}, with
+  \cref{rem:setting:alignfail} and \cref{ex:exp:share}; the new proof of \cref{prop:exp:mono}(a); the computed check that
+  every E3 target labels a phase-one cluster; the $\DT$-versus-$\DTF$ caveat of E6; the non-anchor $\ReplS$ pair in
+  \cref{app:zf:fofail}; the corrected \cref{prop:univ:capture}(e) and \cref{prop:univ:learner}; \cref{conj:zf:root} as a
+  formal statement, and the remark in \cref{app:zf:anchor} that the $\DT$ case of \cref{thm:zf:multi} is a case of
+  \cref{thm:single:anchor}; \cref{ex:single:features}, the example for \evU{} after \cref{def:single:events}, and
+  \cref{ex:many:run}; the count of nine root specializations of $T_{\Ind}$ (row 37); and the renumbering of $\Q$'s
+  axioms in \cref{cor:many:paslots} and \cref{tab:many:pacross}, which follows \cref{sec:setting:examples}.
 \end{itemize}
 Some things were not checked at all. Bounded searches are evidence, not proof. The textbook wordings of the ZF axioms
 were recalled, not checked against the books. Citations marked as unverified remain so, and the experiments use small
@@ -258,13 +323,15 @@ synthetic data.
 % ---------------------------------------------------------------------------------------------------------------
 \subsection{Conjectures and open problems}\label{app:ver:open}
 
-The paper states one formal conjecture, \cref{conj:single:kill}. Its evidence is weak: the greedy searches behind it also
-missed the quadratic chains of \cref{prop:single:quadratic}. From bounded searches, the paper also conjectures that
-root-level distinctness is not necessary for $\SO$ anchors with several metavariables (\cref{thm:zf:multi}). Two
-hypotheses are assumed rather than proved in general. The first is refutation separation: it is proved for $\Q$ with
-induction and for the experimental mixtures (\cref{prop:exp:mixsep}), computed for ZF and ZFC, and false for some similar
-targets (\cref{lem:exp:valid,prop:many:univset}). The second is (H-ref), which the implemented refuter violates
-(\cref{thm:exp:dtrc}). The question whether ZF without Foundation proves Collection is open to us (row 11). Two problems
+The paper states two formal conjectures. The evidence for \cref{conj:single:kill} is weak: the greedy searches behind
+it also missed the quadratic chains of \cref{prop:single:quadratic}. \Cref{conj:zf:root}, that root-level distinctness
+is not necessary for $\SO$ anchors with several metavariables, rests on bounded searches (\cref{app:zf:evidence}). Two
+hypotheses are assumed rather than proved in general. The first is refutation separation. It is proved for $\Q$'s
+axioms with $T_{\Ind}$ and, for an ideal refuter, for the experimental mixtures (\cref{cor:exp:mixsep}); for ZF and ZFC it
+was verified on every sampled cross pair (one or two sampled instances per schema) and on every run's data
+(\cref{sec:many:examples}); and it fails for some similar targets (\cref{lem:exp:valid,prop:many:univset}). The second is
+(H-ref), which the implemented refuter violates (\cref{thm:exp:dtrc}); the sharing pass needs, besides, (H4$^+$) and (H5)
+and helps only targets that label a phase-one cluster (\cref{prop:exp:share}). The question whether ZF without Foundation proves Collection is open to us (row 11). Two problems
 that one record left open are settled in another: finiteness (\cref{thm:single:min}) and the complexity of the
 refutation test (\cref{thm:many:complexity}). \Cref{sec:disc:open} collects all open problems of the records.
 
@@ -283,12 +350,15 @@ tests in about $10$\,s, and \texttt{sh run\_all.sh} regenerates every table, dat
 \texttt{notes.md} (first version), \texttt{referee.md} and \texttt{notes-final.md} (ending with the verification log),
 the author's scripts with their \texttt{.out} files (run there as \texttt{python3 <script> [args]}; the untagged
 prototype is in \url{code/} with \texttt{run\_all.sh}), and the referee's code in \url{referee_checks/} (single;
-experiments, \texttt{sh run\_checks.sh}, about $10$\,min) or \url{referee_code/} (cases, untagged). The prior work is in
+experiments, \texttt{sh run\_checks.sh}, about $10$\,min) or \url{referee_code/} (cases, untagged). The earlier analysis is in
 \url{prior/induction/}, with the referees' code in \url{referee_A/}, \url{referee_C/} and \texttt{rb*.py} and the Lean
 checks in \url{lean/}, and in \url{prior/pa-untagged/}. Some cases and prior scripts import the first-order lgg from the
 parent report's code, in the directory \url{research/theory/T1-code/} of \url{inferential-learning/}, which lies next to
 \url{axiom-schemas/}.
 Each section's computations are listed in
 \cref{app:single:computations,app:univ:comp,app:zf:evidence,app:many:examples,app:exp:repro}.
+\item \emph{Review of the paper} (\url{research/paper-review/}): the review reports \url{review-*.md}, the per-section
+issue lists, decisions and editors' reports in \url{edits/}, and the reviewers' scripts in \url{scratch/} (run as
+\texttt{python3 -I <script>}; some import the package \texttt{dtrc} from \url{code/} through a path set at their top).
 \item \emph{Paper} (\url{paper/}): the section files, \url{writer-notes.txt} and \texttt{build.sh}.
 \end{itemize}

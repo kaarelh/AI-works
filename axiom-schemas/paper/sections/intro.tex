@@ -4,6 +4,11 @@
 % Sources: research/00-brief.md (questions, verbatim); the final records research/tracks/*/notes-final.md
 % (results in brief, caveats, open problems) and their referee reports; research/prior/.
 % Every claim below points to the section result that states it with its hypotheses.
+% Final pass after the paper review (research/paper-review/edits/E1-results.txt, E2-results.txt, DECISIONS.md):
+% omega-step wording (holds in every model of true arithmetic), "not derivable in general", (Rich) and (Rich_c)
+% qualifiers on "only if" anchor claims, ReplS truth-soundness only for the lgg of anchor data, capture-guard
+% corrections, separation proved for PA and (ideal refuter) the experimental mixtures but only sampled for ZF/ZFC,
+% sharing pass guaranteed only for targets labelling a phase-one cluster; crisp answers added in sec:intro:answers.
 % =====================================================================
 
 A mathematical community uses axioms: single sentences, such as Extensionality, and schemas, such as induction in Peano
@@ -19,9 +24,9 @@ hypothesis in the class that contains the data contains it. If the target is a m
 intersection of members), this verifier is sound at all times against every prover, and it is exact once the data
 contain an \emph{anchor}, a finite set of instances that every covering hypothesis extends to the whole target
 (\cref{sec:setting:learning}). For rules cited by name the parent report used first-order anti-unification
-\citep{plotkin1970note,reynolds1970transformational}. PA induction does not fit:
-$\Ind(\varphi)=(\varphi(0)\wedge\forall x(\varphi\to\varphi[Sx/x]))\to\forall x\varphi$ substitutes terms into the motive
-$\varphi$. A follow-up analysis (unpublished; its record is in the accompanying repository, and we re-prove what we use)
+\citep{plotkin1970note,reynolds1970transformational}. PA induction does not fit: $\Ind(\varphi)=(\varphi(0)\wedge\forall
+x(\varphi\to\varphi[Sx/x]))\to\forall x\varphi$ substitutes terms into the motive $\varphi$. A follow-up analysis
+(\emph{the earlier analysis}; unpublished, its record is in the accompanying repository, and we re-prove what we use)
 learned induction with \emph{determinate} second-order templates. In these every metavariable has an occurrence applied
 to distinct bound variables, such as $P(x)$ in $T_{\Ind}=P(0)\wedge\forall x(P(x)\to P(Sx))\to\forall x\,P(x)$, and
 arguments contain no metavariables (\cref{rem:setting:nested} shows why). Matching is unique and linear, and two
@@ -51,14 +56,38 @@ metavariable occurrence is applied to distinct bound variables; determinate temp
 has at least one such occurrence and the others may have any metavariable-free arguments, as $P(0)$ and $P(Sx)$; and
 rigid second-order templates $\SO$ without this requirement. So $\FO\subseteq\PAT\subseteq\DT\subseteq\SO$. Data are
 formulas whose free variables are parameters, read under universal closure; bound variables are de Bruijn indices, and
-values of metavariables contain no free bound variable, so capture cannot occur (the $\lambda$ convention). Besides data,
-a learner may use a \emph{refutation oracle}: sound but one-sided evidence that a sentence is false, such as a
+values of metavariables contain no free bound variable, so capture cannot occur (the $\lambda$ convention). Besides
+data, a learner may use a \emph{refutation oracle}: sound but one-sided evidence that a sentence is false, such as a
 $\Delta_0$ counterexample in $\N$ or a hereditarily finite counterexample to a $\Pi_1$ sentence of set theory
 (\cref{sec:setting:refutation}).
 
 \subsection{The answers in brief}\label{sec:intro:answers}
 
-\Cref{tab:intro:anchors} collects the anchor conditions.
+\begin{itemize}[leftmargin=1.5em]
+\item \emph{Question~1: yes for the instance schema, not for the sentence.} The instance schema $\varphi(z)$ is a
+  first-order pattern; two instances whose terms have different head symbols are an anchor (with several variables,
+  Plotkin's distinctness is needed too), for first-order anti-unification and the determinate learner alike. Passing
+  from the closed instances to $\forall x\varphi$ is an $\omega$-rule step: truth-safe for every $\varphi$ exactly when
+  the closed-term substructure is elementary (as in $\N$, not in $\R$), and not derivable in general. A cautious learner
+  takes this step silently when parameters are admissible values; a learned closedness guard prevents it, and data with
+  a parameter at every variable license it as ordinary generalization.
+\item \emph{Question~2: yes, and more easily than for induction.} The axioms other than Separation and Replacement are
+  single sentences, each its own anchor. Every ZF schema, in each formulation considered, is a Miller pattern, and in
+  every class from $\PAT$ to $\SO$ finitely many instances are an anchor iff their bodies' main symbols are not all
+  equal and every argument place is used by some body; two instances can suffice. Pattern anti-unification and the
+  determinate learner recover each schema from any anchor. Plain first-order anti-unification works only for some
+  formulations and encodings. PA induction is not a pattern; first-order and pattern anti-unification fail on it, and
+  the determinate learner learns it.
+\item \emph{Question~3: yes, under a condition on the world that we make explicit.} The method \DTRC{} clusters untagged
+  data by refuting the templates that would merge them, then verifies each cluster cautiously. If every template
+  covering data of two targets has a refuted instance (\emph{refutation separation}), it recovers the hidden labels, is
+  target-sound at all times and is exact once each target's data contain an anchor, so it needs no more data than a
+  learner given the labels. Separation is proved for $\Q$'s axioms with induction and checked on sampled ZF and ZFC
+  data. Without it \DTRC{} is sound only relative to a residue of unrefuted merges, and no computable learner can avoid
+  depending on the refutation depth.
+\end{itemize}
+The rest of this subsection gives the results behind these answers; \cref{tab:intro:anchors} collects the anchor
+conditions.
 
 \begin{table}[t]
 \centering\small
@@ -71,7 +100,7 @@ target & $\FO$ (first-order lgg) & $\PAT$ (pattern lgg) & $\DT$ & $\SO$\\
 \midrule
 single axiom ($\Ext$, $\AC$, \dots) & \multicolumn{4}{l}{the axiom itself, in every class}\\
 instance schema of $\forall\bar x\varphi$ & \evR+\evD & \evR+\evD & \evR+\evD & \evR+\evD\ do not suffice\\
-ZF schema & only some formulations; otherwise no sound finite union & \evR+\evN & \evR+\evN & \evR+\evN\\
+ZF schema & only some formulations; most others: no sound finite union & \evR+\evN & \evR+\evN & \evR+\evN\\
 PA induction & unsound; no sound finite union & not in $\PAT$; pattern lgg unsound & \evR+\evN & \evR+(B)\\
 any $T^*\in\DT$ & & & \evRs+\evN+\evU & \\
 \bottomrule
@@ -80,176 +109,157 @@ any $T^*\in\DT$ & & & \evRs+\evN+\evU & \\
 learner where there is one). \evR: the root symbols of the values (terms, bodies, motives) are not all equal; \evD:
 Plotkin's distinctness; \evN: every argument place is used by some value; (B): some motive has a free occurrence of $x$
 inside no compound term whose only variable is $x$; \evRs, \evU: root variation at every occurrence and no coincidence.
-``If'' directions need no assumption; some ``only if'' directions use mild richness assumptions. Sources, by row:
-\cref{prop:zf:ground}; \cref{thm:univ:anchor,prop:univ:dt} (the $\PAT$ entry follows from $\FO\subseteq\PAT\subseteq\DT$;
-the exact $\SO$ condition is open); \cref{tab:zf:classify,thm:zf:nounion,thm:zf:anchor};
+``If'' directions need no assumption; some ``only if'' directions use mild richness assumptions (\Rich, or enough closed
+terms). Sources, by row: \cref{prop:zf:ground}; \cref{thm:univ:anchor,prop:univ:dt} (the $\PAT$ entry follows from
+$\FO\subseteq\PAT\subseteq\DT$; the exact $\SO$ condition is open); \cref{tab:zf:classify,thm:zf:nounion,thm:zf:anchor};
 \cref{prop:zf:indtwo,thm:zf:indunion,prop:zf:indpat,thm:zf:indanchor,prop:zf:indso}; \cref{thm:single:anchor}.}
 \label{tab:intro:anchors}
 \end{table}
 
 \paragraph{Question 1 (\cref{sec:univ}).}
-Yes for the instance schema; but the instance schema is not the axiom.
-\begin{itemize}
-\item The instance schema $\sigma_\varphi=\varphi(z_1,\dots,z_k)$ is a first-order pattern. Closed instances are an
-  anchor in $\FO$ and in $\DT$ iff Plotkin's events hold: \evR\ the terms at each $x_i$ do not all have the same root
-  symbol, and \evD\ for $i\neq i'$ some datum puts different terms at $x_i$ and $x_{i'}$
-  (\cref{thm:univ:anchor,prop:univ:dt}). For one variable $\varphi(0)$ and $\varphi(S0)$ suffice, and the failure
-  probability after $N$ i.i.d.\ instances is exactly $\sum_fp_f^N$, $p_f$ the probability of root $f$
-  (\cref{thm:univ:rates}). In $\SO$ these events do not suffice.
-\item \emph{The $\omega$-gap.} ``Every closed instance holds in $M$, hence $\forall\bar x\varphi$ does'' is valid for all
-  $\varphi$ iff the closed-term substructure of $M$ is an elementary substructure (\cref{prop:univ:tv}, by the
-  Tarski--Vaught criterion \citep{tarski1957arithmetical}). This holds in $\N$, but not in the ordered field $\R$, where
-  $\neg(x\cdot x=1+1)$ is true at every closed term, nor in the universe of sets or in nonstandard models of $\PA$
-  (\cref{ex:univ:fail}). The step is not derivable: $\Q\vdash0+\num n=\num n$ for each $n$, but
-  $\Q\nvdash\forall x\,(0+x=x)$ (\cref{ex:univ:q}). When parameters are admissible values, the cautious learner takes the
-  step silently after the first anchor by accepting $\varphi(\bar p)$, which is $\forall\bar x\varphi$
-  (\cref{prop:univ:open}). For first-order schemas, a guard ``the value is closed'', learned from closed data, prevents
-  this ($\DT$ has no guards); a datum at a parameter licenses the step as ordinary generalization
-  (\cref{prop:univ:gen}).
-\item \emph{Capture.} If a metavariable may take a bound variable (named variables, or de Bruijn indices treated as
-  constants), the schema gains capture instances, such as $\exists y\,\neg(y=y)$ from $\exists y\,\neg(y=x)$, which can be
-  false in every structure; the unguarded verifier is then unsound outright. A learned no-capture guard, or the $\lambda$
-  convention, repairs this (\cref{prop:univ:capture}, \cref{tab:univ:learner}).
-\end{itemize}
+Plotkin's events are \evR: the terms at each $x_i$ do not all have the same root symbol, and \evD: for $i\neq i'$ some
+datum puts different terms at $x_i$ and $x_{i'}$. Closed instances satisfying them are an anchor for the instance schema
+$\sigma_\varphi=\varphi(z_1,\dots,z_k)$ in $\FO$ and in $\DT$, and if the language has enough closed terms, as $L_A$
+does, only these are (\cref{thm:univ:anchor,prop:univ:dt}); in $\SO$ the events do not suffice. For one variable the
+probability that $N$ i.i.d.\ instances violate \evR\ is exactly $\sum_fp_f^N$, $p_f$ the probability of root $f$
+(\cref{thm:univ:rates}). The $\omega$-step is truth-safe in $M$ for every $\varphi$ iff the closed-term substructure of
+$M$ is elementary (\cref{prop:univ:tv}, by the Tarski--Vaught criterion \citep{tarski1957arithmetical}). This holds in
+$\N$ and in every model of true arithmetic, but not in the ordered field $\R$, where $\neg(x\cdot x=1+1)$ is true at
+every closed term, nor in the universe $V$ of sets or in a model of $\PA+\neg\Con(\PA)$ (\cref{ex:univ:fail}). In
+general the step is not derivable: $\Q\vdash0+\num n=\num n$ for each $n$, but $\Q$ with all these instances does not
+prove $\forall x\,(0+x=x)$ (\cref{ex:univ:q}). With parameters admissible, the cautious learner in $\FO$ or $\DT$
+accepts $\varphi(\bar p)$, which is $\forall\bar x\varphi$, after the first anchor (\cref{prop:univ:open}). For
+first-order schemas a closedness guard learned from closed data prevents this ($\DT$ has no guards); data with a
+parameter at every variable make the step ordinary generalization (\cref{prop:univ:gen}). If a metavariable may take a
+bound variable (named variables, or de Bruijn indices treated as constants), the schema can gain capture instances, such
+as $\exists y\,\neg(y=y)$ from $\exists y\,\neg(y=x)$, false in every structure; whenever capture instances exist, the
+unguarded verifier accepts some after an anchor. Learned guards repair this: closedness excludes capture as well, and a
+no-capture guard keeps it excluded once parameter data have removed closedness (\cref{prop:univ:capture},
+\cref{tab:univ:learner}).
 
 \paragraph{Question 2 (\cref{sec:zf}).}
-Yes, and more easily than for induction.
-\begin{itemize}
-\item The ZFC axioms other than Separation and Replacement are single sentences, each its own anchor
-  (\cref{prop:zf:ground}). Every ZF schema, in each textbook formulation considered (\cref{tab:zf:forms}), is a Miller
-  pattern: $L_\in$ has no function symbols, so an instance only renames variables inside the body
-  (\cref{thm:zf:classify}). In every class between $\PAT$ and $\SO$, instances are an anchor iff \evR\ the bodies' main
-  symbols are not all equal and \evN\ every argument place is used by some body (\cref{thm:zf:anchor}). One instance never
-  suffices; two can. Pattern anti-unification \citep{pfenning1991unification,baumgartner2017higher} and the $\DT$ learner
-  recover every schema from any anchor (\cref{cor:zf:patlgg}), at exact rates (\cref{thm:zf:rates}).
-\item First-order anti-unification works iff the metavariable is applied to literally the same variables at every
-  occurrence, which depends on the formulation and on how bound variables are written
-  (\cref{thm:zf:classify,prop:zf:alpha}, \cref{tab:zf:classify}). Separation passes, with a freshness guard that is
-  learned from the data; without it the lgg has Russell's instance (\cref{prop:zf:russell}). In the other failing cases
-  with textbook names or de Bruijn indices, no finite union of guarded first-order schemas covers the schema without a
-  false member (\cref{thm:zf:nounion,prop:zf:false}). The one exception, spelled-out Replacement with textbook names,
-  over-generalizes truth-soundly: all guarded instances of its lgg are theorems of ZF, and over any base theory exactly
-  when that theory proves Collection (\cref{prop:zf:coll}). No refutation can expose it.
-\item \emph{PA induction} is not a Miller pattern. On raw instances, first-order anti-unification is unsound from two
-  instances, no finite union of first-order schemas is sound, some unsound lggs are never refuted by true closed
-  quantifier-free sentences, and pattern anti-unification is unsound too
-  (\cref{prop:zf:indtwo,thm:zf:indunion,thm:zf:K0,prop:zf:indpat}). The $\DT$ learner is exact under \evR+\evN\
-  (\cref{thm:zf:indanchor}), and $T_{\Ind}$ is the least of the 26 $\DT$ templates covering any anchor
-  (\cref{prop:zf:indgen}). The obstruction is the substitution $\varphi[Sx/x]$, not induction: recording it, or Tarski's
-  substitution-free form $\IndEq$ \citep{tarski1965simplified}, makes induction a first-order pattern, and $\Q$ plus the
-  instances of $\IndEq$ axiomatizes $\PA$ (\cref{prop:zf:sub,prop:zf:indeq}).
-\end{itemize}
+The ZF schemas, in each textbook formulation considered (\cref{tab:zf:forms}), are patterns because $L_\in$ has no
+function symbols: an instance only renames variables inside the body (\cref{thm:zf:classify}). Their anchors are
+characterized in \cref{thm:zf:anchor}; pattern anti-unification \citep{pfenning1991unification,baumgartner2017higher}
+and the $\DT$ learner recover each schema from any anchor (\cref{cor:zf:patlgg}), with exact failure probabilities
+(\cref{thm:zf:rates}). First-order anti-unification works iff the metavariable is applied to literally the same
+variables at every occurrence, which depends on the formulation and on how bound variables are written
+(\cref{thm:zf:classify,prop:zf:alpha}; \cref{tab:zf:classify} in \cref{app:zf}). Separation passes, with a freshness
+guard learned from the data; without it the lgg has Russell's instance (\cref{prop:zf:russell}). In the other failing
+cases with textbook names or de Bruijn indices, no finite union of guarded first-order schemas covers the schema without
+a false member (\cref{thm:zf:nounion,prop:zf:false}). The one exception is spelled-out Replacement with textbook names:
+the lgg of anchor data, with the guards learned from them, over-generalizes truth-soundly, as all its guarded instances
+are theorems of ZF, and of a base theory exactly when that theory proves Collection; no refutation can expose it
+(\cref{prop:zf:coll}).
+
+PA induction is not a pattern. On raw instances first-order anti-unification can be unsound from two instances and is
+unsound on every anchor, no finite union of first-order schemas is truth-sound, some unsound lggs are never refuted by
+true closed quantifier-free sentences, and pattern anti-unification is unsound too
+(\cref{prop:zf:indtwo,thm:zf:indunion,thm:zf:K0,prop:zf:indpat}). The $\DT$ learner is exact under \evR+\evN\
+(\cref{thm:zf:indanchor}), and $T_{\Ind}$ is the least of the 26 $\DT$ templates covering any anchor
+(\cref{prop:zf:indgen}). The obstruction is the substitution $\varphi[Sx/x]$, not induction: recording it, or Tarski's
+substitution-free form $\IndEq$ \citep{tarski1965simplified}, makes induction a first-order pattern, and $\Q$ plus the
+instances of $\IndEq$ axiomatizes $\PA$ (\cref{prop:zf:sub,prop:zf:indeq}).
 
 \paragraph{The general theory (\cref{sec:single}).}
 These anchor conditions are cases of one theorem. For a target $T^*\in\DT$, finite data have finitely many minimal
 covering templates, one of them below $T^*$ (\cref{thm:single:min}). The cautious verifier is a polynomial-time test of
 ``features'' of the data (\cref{thm:single:feat}), although there can be $4^n$ minimal templates
-(\cref{prop:single:blowup}). Data are an anchor iff root variation at every occurrence, non-vacuity and no coincidence
-hold (\cref{thm:single:anchor}); this is \evR+\evD\ for first-order targets and \evR+\evN\ for one formula metavariable
-(\cref{cor:single:special}). Failure probabilities decay exponentially (\cref{thm:single:rates}), and the worst-case
-number of escalations (queries passed to an oracle) is $\Theta(N^2)$ in the sentence size, which refutes an earlier
-conjecture that it is linear (\cref{thm:single:esc,prop:single:quadratic}).
+(\cref{prop:single:blowup}). Root variation at every occurrence, non-vacuity and no coincidence make data an anchor;
+under a richness assumption \Rich, which always holds with parameters, every anchor satisfies them and its least
+covering template is the target (\cref{thm:single:anchor,cor:single:anchor-lgg}). For first-order targets these events
+are \evR+\evD, for one formula metavariable \evR+\evN\ (\cref{cor:single:special}). Failure probabilities decay
+exponentially (\cref{thm:single:rates}), and the worst-case number of escalations (queries passed to an oracle) is
+$\Theta(N^2)$ in the sentence size, which refutes an earlier conjecture that it is linear
+(\cref{thm:single:esc,prop:single:quadratic}).
 
 \paragraph{Question 3 (\cref{sec:many}).}
-We propose \DTRC{} (Determinate Templates with Refutation Clustering). It works under an assumption about the world,
-\emph{refutation separation}, and we show what happens without it.
-\begin{itemize}
-\item \emph{Positive data need a bound.} Without a bound on the number of targets, the cautious union learner accepts
-  only the data, whatever sound negatives it has (\cref{prop:many:bound}; \citealp{gold1967language}). With a bound,
-  spare slots cost data diversity that no sound negative can buy, because splitting a target into sound specializations
-  is never refuted (\cref{thm:many:splits,thm:many:slots,rem:many:numerals}). With the exact bound and negatives that
-  refute every template covering anchor data of two targets, untagged learning is as easy as tagged learning (the
-  \emph{pigeonhole theorem}, \cref{thm:many:pigeonhole}); the learner can find such negatives itself.
-\item \emph{The method.} \DTRC{} needs no bound. Starting from singletons, it merges two clusters iff their union has a minimal
-  covering $\DT$ template with no instance refuted within depth $d$; it verifies each final cluster cautiously against
-  all its unrefuted minimal templates and asserts the union. Within-target merges are never refuted. Under refutation
-  separation (every template covering data of two targets has a $d$-refuted instance) the clusters are the hidden label
-  classes for every merge order, and the output is sound at all times and exact once each target's data contain an
-  anchor; if separation holds for all instances, the failure probability is bounded by the tagged learner's
-  (\cref{thm:many:dtrc}). Refutation does the work that citations do in tagged data.
-\item \emph{Without separation} \DTRC{} is sound relative to a residue of unrefuted cross-target merges, truth-sound if
-  these are, and exactness can fail by fragmentation (\cref{thm:many:residue}); on some data no learner with a
-  target-blind oracle is both exact for one valid practice and target-sound for another (\cref{prop:many:ambiguity}).
-  Learning $\forall x\varphi$ from its instances is the simplest sound merge (\cref{prop:many:forall});
-  with $\Delta_0$ evaluation in $\N$ and quantifier-free $\varphi$, ``never refuted'' means ``true''
-  (\cref{prop:many:qf}).
-\item \emph{Depth relativization is necessary}: no computable learner is both sound relative to the full-depth residue
-  and eventually exact on every practice that is separated at some finite depth (\cref{thm:many:depth}, via the MRDP
-  theorem \citep{matiyasevich1993hilbert}).
-\item \emph{Cost}: the exact $k$-union verifier is polynomial for $k\le2$ and coNP-complete for each fixed $k\ge3$; the
-  refutation test of \DTRC{} is NP-complete, and polynomial once the cluster contains an anchor
-  (\cref{thm:many:complexity}; not independently refereed).
-\item \emph{Natural cases}: $\Q$'s axioms with induction, ZF and ZFC are separated at small depth by $\Delta_0$
-  evaluation, hereditarily finite counterexamples and logic, with Russell's paradox separating the comprehension-shaped
-  axioms (proved for $\Q$ with induction and for the mixtures of \cref{sec:exp}, computed for ZF and ZFC;
-  \cref{sec:many:examples}). Weak forms of Union and Power merge into a false universal-set schema that only a coherence
-  refutation catches (\cref{prop:many:univset}). Minimum description length is no substitute for refutation: it tracks
-  the statistics of usage, not the logical boundaries of schemas (\cref{sec:many:mdl}).
-\end{itemize}
+From positive data a bound on the number of targets is necessary: without one the cautious union learner accepts only
+the data, whatever sound negatives it has (\cref{prop:many:bound}; \citealp{gold1967language}). With a bound, spare
+slots cost data diversity that no sound negative can buy, because splitting a target into sound specializations is never
+refuted (\cref{thm:many:splits,thm:many:slots}). With the exact bound and negatives that refute every template covering
+anchor data of two targets, untagged learning is as easy as tagged learning, and the learner can find such negatives
+itself (\cref{thm:many:pigeonhole}). \textup{\DTRC} (Determinate Templates with Refutation Clustering) needs no bound.
+Starting from singletons, it repeatedly merges two clusters whose union has a minimal covering $\DT$ template with no
+instance refuted within depth $d$, verifies each final cluster cautiously against its unrefuted minimal templates, and
+asserts the union. Within-target merges are never refuted; so under separation the clusters are the hidden label classes
+for every merge order, and the guarantees stated above follow, with the tagged learner's failure probability if
+separation holds for all instances (\cref{thm:many:dtrc}). Refutation does the work that citations do in tagged data.
+
+Without separation \DTRC{} is sound relative to a residue of unrefuted cross-target merges, truth-sound if these are,
+and exactness can fail by fragmentation (\cref{thm:many:residue}); on some data no learner with a target-blind oracle is
+both exact for one valid practice and target-sound for another (\cref{prop:many:ambiguity}). Learning $\forall x\varphi$
+from its instances is such a merge, truth-sound iff $\forall x\varphi$ is true (\cref{prop:many:forall}). With
+$\Delta_0$ evaluation in $\N$ and quantifier-free $\varphi$, ``refuted at no depth'' means ``true''
+(\cref{prop:many:qf}); at a fixed depth this holds only relative to the residue, and for quantified $\varphi$ it can
+fail. No computable learner is both sound relative to the full-depth residue and eventually exact on every practice
+separated at some finite depth (\cref{thm:many:depth}, via the MRDP theorem \citep{matiyasevich1993hilbert}). The exact
+$k$-union verifier is polynomial for $k\le2$ and coNP-complete for each fixed $k\ge3$; the refutation test of \DTRC{} is
+NP-complete, and polynomial under \Rich\ once the cluster contains an anchor (\cref{thm:many:complexity}; not
+independently refereed). On natural targets, $\Delta_0$ evaluation in $\N$ provably separates $\Q$'s axioms and
+induction; hereditarily finite counterexamples and logic, with Russell's paradox for the comprehension-shaped axioms,
+separate ZF and ZFC on every sampled cross pair and in every run (\cref{sec:many:examples}); and \cref{sec:exp} proves
+separation of its PA and ZF mixtures for an ideal refuter (\cref{cor:exp:mixsep}). Weak forms of Union and Power merge
+into a false universal-set schema that neither logic nor hereditarily finite counterexamples refute, only coherence
+(\cref{prop:many:univset}). Minimum
+description length is no substitute for refutation: it tracks the statistics of usage, not the logical boundaries of
+schemas (\cref{sec:many:mdl}).
 
 \paragraph{Experiments (\cref{sec:exp}).}
 An implementation of the learner (in the class $\DTF$, with $0$-ary term metavariables) and of \DTRC{} matches the
-predicted rates on Question~1 (mean $3.27$ instances to exactness, $3.25$ predicted). It is exact on each ZF schema and on
-induction in most runs from $2$ or $3$ tagged instances, with no non-instance accepted in $927$ probes
-(\cref{tab:exp:e2}). On mixtures of the PA and of the ZF axioms it recovers the hidden labels in every run, and with
-ambiguous data shared between clusters it matches a tagged learner target by target (\cref{tab:exp:e3}). It also shows
-the limits: the evidence for separation is narrow (\cref{tab:exp:e9}); similar targets merge into valid templates
+predicted rates on Question~1 (mean $3.27$ instances to exactness, $3.25$ predicted). On Separation, a Replacement
+variant, $\in$-induction and PA induction it is exact in most runs from $2$ or $3$ tagged instances, with no
+non-instance accepted in $927$ probes (\cref{tab:exp:e2}). On mixtures of the PA and of the ZF axioms it recovers the
+hidden labels in every run. With a pass that shares ambiguous data between clusters it matched a tagged learner given
+every label a datum deserves, target by target, in every run (\cref{tab:exp:e3}); this is guaranteed only for targets
+that label a cluster of the first phase, as all did here (\cref{prop:exp:share,ex:exp:share}). The limits show too: the
+evidence for separation beyond the mixtures is narrow (\cref{tab:exp:e9}); similar targets merge into valid templates
 (\cref{lem:exp:valid}); and with injected mistakes and refuter budgets of $80$ and $400$, \DTRC{} accepted a false
 sentence, whose merge only a budget of $2000$ refuted (\cref{prop:exp:qF}).
 
 \subsection{Contributions}\label{sec:intro:contrib}
 
-\begin{enumerate}[label=(\arabic*)]
-\item A theory of learning one determinate template: finiteness of the minimal covering templates, a polynomial feature
-  verifier, a general anchor theorem with counterexamples to weaker conditions, rates, tight escalation bounds and
-  complexity results (\cref{sec:single}).
-\item For universal axioms: anchors and exact rates for the instance schema, the $\omega$-gap and its model-theoretic
-  criterion, and the roles of parameters, capture and guards (\cref{sec:univ}).
-\item For ZF(C): all schemas are Miller patterns, with the anchor condition \evR+\evN\ in every class from $\PAT$ to $\SO$;
-  a criterion for when they are first-order patterns; impossibility results for first-order learners and a truth-sound
-  over-generalization; anchor theorems for several metavariables, which differ between $\PAT$, $\DT$ and $\SO$
-  (\cref{thm:zf:multi}); and PA induction as the contrast (\cref{sec:zf}).
-\item The method \DTRC{} and its theory: the need for a bound, the pigeonhole theorem, the main theorem under separation,
-  the residue, sound merges, the necessity of depth relativization, noise and complexity; separation for PA, ZF and ZFC,
-  and natural failures of it (\cref{sec:many}).
-\item An implementation with baselines and experiments, including a reported failure (\cref{sec:exp}).
-\item Corrections to earlier claims of this project, such as the refuted conjecture of linear escalation bounds
-  (\cref{app:ver}).
-\end{enumerate}
+Besides the answers, the paper gives a general theory of learning one determinate template (\cref{sec:single}); anchor
+conditions for several metavariables, which differ between $\PAT$, $\DT$ and $\SO$ and are exact for the first two
+(\cref{thm:zf:multi}); the method \DTRC{} with its theory of bounds, separation, residues, depth, noise and cost
+(\cref{sec:many}); an implementation with baselines, a proof of separation for its mixtures with an ideal refuter, and a
+reported failure (\cref{sec:exp}); and corrections to earlier claims of this project, such as the conjecture of linear
+escalation bounds (\cref{app:ver}).
 
 \subsection{What is not achieved}\label{sec:intro:limits}
 
 \begin{itemize}
-\item \emph{Separation is assumed, not guaranteed.} It is proved for $\Q$ with induction and for the experimental
-  mixtures, and computed for ZF and ZFC. It fails for some similar targets (\cref{lem:exp:valid,prop:many:univset}), no
-  computable learner can know the separating depth (\cref{thm:many:depth}), and a characterization of separation in terms
-  of the targets is open.
+\item \emph{Separation is assumed, not guaranteed.} It is proved for $\Q$'s axioms with induction and, for an ideal
+  refuter, for the experimental mixtures, and only computed on sampled ZF and ZFC pairs. It fails for some similar
+  targets (\cref{lem:exp:valid,prop:many:univset}), no computable learner can know the separating depth
+  (\cref{thm:many:depth}), and a characterization of separation in terms of the targets is open.
 \item \emph{Refutation is one-sided and incomplete.} It never certifies that a template is the target
-  (\cref{lem:setting:onesided}). Truth-sound over-generalizations are invisible to it (\cref{prop:zf:coll}), some unsound
-  templates are never refuted by closed truths (\cref{thm:zf:K0}), and outside term-generated structures a false universal
-  can have only true closed instances. Our oracles are incomplete and the implemented refuter has a budget, so ``not
+  (\cref{lem:setting:onesided}). Truth-sound over-generalizations are invisible to it (\cref{prop:zf:coll}), some
+  unsound templates are never refuted by closed truths (\cref{thm:zf:K0}), and where the $\omega$-step is not
+  truth-safe, a false universal can have only true closed instances, which no evaluation of closed instances refutes
+  (\cref{prop:univ:tv,prop:univ:refute}). Our oracles are incomplete and the implemented refuter has a budget, so ``not
   refuted'' certifies nothing.
-\item \emph{Cost.} Exponentially many minimal templates, a coNP-complete union verifier for $k\ge3$, an NP-complete
-  refutation test and quadratic escalations, all in the worst case. The implementation uses the restricted class $\DTF$
-  and not the feature verifier, and the experiments are small and use synthetic data, not a corpus from a proof library.
-\item \emph{Mistakes.} The theorems assume a valid practice and correct data. Unrefutable mistakes can be absorbed into a
-  cluster or fragment it (\cref{prop:many:noise}), a frequent coherent family of mistakes cannot be told from a rule by
-  positive data, and mistakes made the implementation accept a false sentence (\cref{prop:exp:qF}).
-\item \emph{Rare targets.} A target seen once is never generalized, a single axiom is learned only if it occurs among the
-  data, and an unrefuted singleton mistake looks like a single axiom (\cref{sec:exp:limits}).
-\item \emph{Scope.} We learn which instances a community uses, not the theory they generate; from closed instances, the
-  truth of $\forall x\varphi$ is certified only as far as the oracle reaches. Open problems remain in every part;
-  \cref{sec:disc} collects them.
+\item \emph{Cost.} In the worst case there are exponentially many minimal templates and quadratically many escalations,
+  the union verifier is coNP-complete for $k\ge3$ and the refutation test NP-complete. The implementation uses $\DTF$
+  without the feature verifier, on small synthetic data, not a corpus from a proof library.
+\item \emph{Mistakes.} The theorems assume a valid practice and correct data. Unrefutable mistakes can be absorbed into
+  a cluster or fragment it (\cref{prop:many:noise}), a frequent coherent family of mistakes cannot be told from a rule
+  by positive data, and mistakes made the implementation accept a false sentence (\cref{prop:exp:qF}).
+\item \emph{Rare targets and scope.} A target seen once is never generalized, a single axiom is learned only if it
+  occurs among the data, and an unrefuted singleton mistake looks like a single axiom (\cref{sec:exp:limits}). We learn
+  which instances a community uses, not the theory they generate, and from closed instances the truth of $\forall
+  x\varphi$ is certified only as far as the oracle reaches. Open problems remain in every part; \cref{sec:disc} collects
+  them.
 \end{itemize}
 
 \subsection{Reader's guide}\label{sec:intro:guide}
 
-\Cref{sec:setting} fixes the data, the template classes, matching, the protocol and refutation oracles. \Cref{sec:single}
-is the theory of one determinate template, used by the sections after it. \Cref{sec:univ,sec:zf,sec:many} answer
-Questions 1--3; each ends with a summary that can be read first
-(\cref{sec:univ:summary,sec:zf:summary,sec:many:summary}). \Cref{sec:exp} reports the experiments, and \cref{sec:disc}
-discusses the answers, related work and open problems. The appendices give the full proofs, one per section, and
-\cref{app:ver} describes how the results were checked and what was corrected on the way. Theorem-like statements carry a
-status (\textsf{proved}, \textsf{computed}, \textsf{known}, \textsf{conjecture}, or a combination) and a gray tag naming
-the result in the research record of the accompanying repository, which holds the scripts, their outputs and the reports
-of adversarial referees with independent code. Refuted conjectures stay labelled as refuted.
+\Cref{sec:setting} fixes the framework and lists the named conditions (\cref{tab:setting:glossary}). \Cref{sec:single}
+is the theory of one determinate template, used by the later sections. \Cref{sec:univ,sec:zf,sec:many} answer Questions
+1--3, each ending with a summary that can be read first (\cref{sec:univ:summary,sec:zf:summary,sec:many:summary}).
+\Cref{sec:exp} reports the experiments, and \cref{sec:disc} discusses the answers, related work and open problems. The
+appendices, one per section, hold the full proofs and the secondary results the main text points to (numbered with a
+letter, as \cref{prop:zf:indgen}); \cref{app:ver} says how the results were checked and what was corrected. Theorem-like
+statements carry a status (\textsf{proved}, \textsf{computed}, \textsf{known}, \textsf{conjecture}, or a combination)
+and a gray tag naming the result in the research record of the accompanying repository, which also holds the scripts and
+the reports of adversarial referees; refuted conjectures stay labelled as refuted.
