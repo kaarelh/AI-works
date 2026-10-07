@@ -1,0 +1,929 @@
+[
+ {
+  "reviewer": "honesty",
+  "summary": "The body of the paper is careful about scope and credit: it uses \"trivial once set up\" labels, credits known results where they are proved, labels computed results and sketches, and states the experiments' limits. Its checking-first framing (checker, not solver or prover) is consistent, and the Lean claims and almost all experimental numbers match the sources. The honesty problems sit mostly in the abstract, the intro's answers in brief and success table, and the philosophy tables, which are stronger than the theorems they summarize. The worst case (fatal): the abstract, intro and philosophy say the bounded-gap verifier identifies validity exactly up to informal-validity equivalence. That is the refuted pre-repair form of T4 Thm 3.4(d); the body's thm:informal:identify(d) only brackets meaning. Major problems:\n- \"Exactly convergent for complete decidable theories\" is conditional on a realizability hypothesis the body says is not established.\n- Physics success criterion 3 is answered \"Yes\", but the body says the checker is a toy run on one problem.\n- The abstract and intro omit the end-to-end theorem's idealizations (distinct fallacy tags, floor, exact oracle, collateral loss) and never state realizability in the abstract.\n- The robust-core hypothesis is presented as an explanation or fact.\n- Several slogans overstate the theorems: objects \"are\" exponentially more informative; Carnap \"is\" Gold, though the body says \"only in part\"; eternalism \"provably impossible\", though only truth-functional readings are excluded.\n- The verification record is misstated (\"one theorem needed a second repair round\").\n- \u00a76 reports a single quick smoke-test run where the full grid shows coherence leaving unsound rules.\n- A \"testable prediction\" for LLM training does not follow from an identifiability result.\n- Philosophy claims \"proofs that it relies on nothing else\" and that it \"undercuts\" Dummett.\n- Novelty is claimed for Ville tightness and for local-vs-global coherence (the marginal problem, Vorob'ev and Pitowsky). The LMS completeness credit that T6 itself gives is omitted.\n- The intro states classical results (Post, Glivenko, Littlestone halving, Waudby-Smith\u2013Ramdas, information-based complexity) without credit.\n- The kink is stated generally but proved only for parities.\n- An external AI-olympiad claim is cited only to an internal memo.\nMinor: duplicate bib entries (Rivest\u2013Sloan, KWIK, El-Yaniv\u2013Wiener each listed twice), plus several local overstatements. The full report is at research/paper-review/honesty.md.",
+  "issues": [
+   {
+    "file": "paper/sections/abstract.tex",
+    "location": "line 10: 'A bounded-gap verifier is sound against adaptive provers and identifies validity exactly up to informal-validity equivalence.'",
+    "severity": "fatal",
+    "problem": "This restates the refuted pre-repair T4 Thm 3.4(d) (fatal item A1 in the T4 verification log). In the body, thm:informal:identify(d) says bounded-gap data identify only the g-step relation and bracket meaning; ex:informal:weaker gives a weaker rival that survives. Identification up to informal-validity equivalence holds only for closure-level complete presentation (part (c)), or under step-expressiveness.",
+    "proposed_fix": "Replace with: 'A bounded-gap verifier is sound against adaptive provers, relative to realizability of the latent formalization. Under complete closure-level data the practice's validity relation is identified exactly up to informal-validity equivalence and no finer. Bounded-gap data identify only the short-step relation and bracket meaning, exactly so when long inferences decompose into short steps through the practice's own sentences.'"
+   },
+   {
+    "file": "paper/sections/intro.tex",
+    "location": "line 66 ('Validity is identified exactly up to informal-validity equivalence, and no finer') and line 102 (success table, row 2)",
+    "severity": "fatal",
+    "problem": "The same refuted identification claim as in the abstract, stated without the closure-level or step-expressiveness qualification that thm:informal:identify(c),(d) requires.",
+    "proposed_fix": "Line 66: 'Under complete closure-level presentation, validity is identified exactly up to informal-validity equivalence, and no finer. Bounded-gap data identify the g-step relation and only bracket meaning, which is pinned under step-expressiveness (\\cref{thm:informal:identify}(c),(d), \\cref{ex:informal:weaker}).' Line 102: replace 'is sound and identifies validity exactly up to informal-validity equivalence' with 'is sound and, for a finite class under complete presentation, identifies the practice's step relation and brackets its meaning (exactly up to informal-validity equivalence under step-expressiveness)'."
+   },
+   {
+    "file": "paper/sections/philosophy.tex",
+    "location": "line 168 (answers table, 'identifies validity exactly up to informal-validity equivalence') and the \u00a714.5 bullet 'More than role is not identifiable'",
+    "severity": "fatal",
+    "problem": "Repeats the refuted unqualified identification claim (T4 Thm 3.4(d), fatal item A1).",
+    "proposed_fix": "Line 168: '...is sound against adaptive provers and, for a finite class under complete presentation, identifies the practice's step relation and brackets its meaning (exactly up to informal-validity equivalence under step-expressiveness).' \u00a714.5 bullet: begin with 'Under complete closure-level data, practice, coherence and object data identify a latent formalization exactly up to informal-validity equivalence, and no further; bounded-gap data only bracket it (\\cref{thm:informal:identify}).'"
+   },
+   {
+    "file": "paper/sections/intro.tex",
+    "location": "line 101 (success table, row 1: 'sound and exactly convergent for classical propositional logic and complete decidable theories')",
+    "severity": "major",
+    "problem": "cor:twotier:decidable is 'conditional on realizability', and the body says 'The realizability hypothesis is not established for the listed theories' (\u2200E and induction are not first-order patterns; exactness fails without the hypothesis). The table states exact convergence for complete decidable theories without qualification.",
+    "proposed_fix": "Replace with: 'The two-tier learner (\\cref{thm:twotier:main}) is sound, and exactly convergent for classical propositional logic (\\cref{cor:twotier:cpc}). For complete decidable theories exactness holds conditional on a realizability hypothesis that is not established for any standard axiomatization, since \u2200E and induction are not first-order patterns (\\cref{cor:twotier:decidable}); without it the learner stays sound but loses those rules. It is Popperian for arithmetic...'"
+   },
+   {
+    "file": "paper/sections/philosophy.tex",
+    "location": "line 167 (answers table: 'Yes for classical propositional logic and complete decidable theories')",
+    "severity": "major",
+    "problem": "The same overclaim: exactness for complete decidable theories depends on an unestablished realizability hypothesis.",
+    "proposed_fix": "Replace with: 'Yes for classical propositional logic. For complete decidable theories, only conditionally on a realizability hypothesis not yet established (\\cref{cor:twotier:decidable}). Arithmetic is Popperian. There are sharp limits at $\\Sigma_2$ and for Turing progressions.'"
+   },
+   {
+    "file": "paper/sections/intro.tex",
+    "location": "line 103 (success table, row 3: 'Yes, as a checker with a declared residue') and line 78 ('worked through a EuPhO problem end to end')",
+    "severity": "major",
+    "problem": "The physics section says 'Not established: ... a checker beyond one worked problem. The mini-checker ... is not a system, and its own soundness is argued, not proved'. The EuPhO setup 'has not been checked against the official text'. thm:physics:relative also needs solutions in the formal SPS calculus and a trusted base (TB1\u2013TB3) with proved bridge catalogues. Answering 'Yes' to 'a principled system for checking physics olympiad solutions' overstates this.",
+    "proposed_fix": "Row 3: '\\textbf{Partly: a checker design with a relative soundness theorem.} Solutions written in the Structured Physics Solution format are checked soundly against adversarial solvers, relative to a trusted base (kernel, law and bridge catalogues), the reading of the problem and the top model (\\cref{thm:physics:relative}). The reading and top-model layer is provably ineliminable (\\cref{thm:physics:judgment}). The design is illustrated on one EuPhO problem, whose setup was reconstructed and not checked against the official text, by a problem-specific prototype. No general checker has been built. We deliberately built a checker, not a solver.' Line 78: append '(setup reconstructed, not checked against the official text; the checker run is a problem-specific prototype)'."
+   },
+   {
+    "file": "paper/sections/philosophy.tex",
+    "location": "answers table row 'Can physics olympiad solutions be checked in a principled way?'",
+    "severity": "major",
+    "problem": "States a sound checker exists without the body's caveats: one toy prototype on one problem, and a trusted base of proved bridge schemas.",
+    "proposed_fix": "Append: 'The design is illustrated on one problem by a problem-specific prototype; a checker beyond one worked problem is not established (\\cref{sec:physics:roles}, last paragraph). Soundness is also relative to a trusted base of kernel, laws and proved bridge schemas.'"
+   },
+   {
+    "file": "paper/sections/intro.tex",
+    "location": "line 59: 'It is sound against every adaptive prover and red team, and it converges to the target modulo an explicit residue'",
+    "severity": "major",
+    "problem": "thm:twotier:main assumes several things the intro omits: realizability with fallacy tags 'latent but distinct' (each fallacy cited under its own rule name), known floor constants, (WS), and an exact depth-d refutation oracle. Completeness modulo the residue holds only under (SB_d) or unblocked descent; otherwise collateral genuine rules are lost. Twotier Remark (2) says the theorem does not apply as stated when fallacies are cited under genuine names, as in experiments A and B.",
+    "proposed_fix": "Replace with: 'Assuming realizability (each systematic fallacy used under its own latent rule tag), a known frequency floor, truthful designation and an exact depth-d refutation oracle, it is sound against every adaptive prover and red team. Its asserted calculus is the target plus the depth-d residue, minus a set of collateral genuine rules when blame is ambiguous (\\cref{thm:twotier:main}). If fallacies are cited under genuine rules' names the theorem does not apply as stated.'"
+   },
+   {
+    "file": "paper/sections/abstract.tex",
+    "location": "lines 6-10 (no statement of realizability or truthful data); line 9 ('We prove an end-to-end theorem for a two-tier learner')",
+    "severity": "major",
+    "problem": "The abstract states soundness, exact identification and the end-to-end theorem without the conditions the paper calls load-bearing: realizability, truthful or well-specified data, distinct fallacy tags and an exact refutation oracle. The intro (line 136) states them; the abstract does not.",
+    "proposed_fix": "Line 6: replace 'Cautious acceptance over schematic hypotheses is sound against every adaptive prover.' with 'If the target is realizable in the hypothesis class and the data are truthful, cautious acceptance over schematic hypotheses is sound against every adaptive prover.' Line 9: append 'under realizability with distinct fallacy tags and an exact refutation oracle'. Before 'Every main result...' add: 'All guarantees are relative to stated assumptions, chiefly realizability of the target in a structured hypothesis class and truthful data and designations.'"
+   },
+   {
+    "file": "paper/sections/twotier.tex",
+    "location": "line 386 (Reading after cor:twotier:cpc: 'From imitation of human proofs containing systematic fallacies and sporadic slips...')",
+    "severity": "minor",
+    "problem": "The phrase drops the theorem's assumption that each fallacy has its own latent tag, which the practice definition requires.",
+    "proposed_fix": "Replace with '...From imitation of human proofs containing systematic fallacies, each used under its own latent tag, and sporadic slips, plus truth-table evaluation of closed formulas, ...'."
+   },
+   {
+    "file": "paper/sections/intro.tex",
+    "location": "line 69: 'A robust-core theorem explains why informal mathematics survived formalization'",
+    "severity": "major",
+    "problem": "thm:informal:robust is conditional on RCH_g, the user's untested hypothesis; 'a corpus test of RCH' is listed as open. The informal section says correctly that IF practice used only robust steps, its proofs survive. The intro presents this as an explanation of history.",
+    "proposed_fix": "Replace with: 'A robust-core theorem shows that if pre-formal practice used only steps valid under every admissible sharpening of its vague concepts (the user's robust-core hypothesis, untested here), its proofs survive every formalization (\\cref{thm:informal:robust}).'"
+   },
+   {
+    "file": "paper/sections/philosophy.tex",
+    "location": "line 132 ('It was a bounded-gap practice over a latent calculus ... paradoxes were rare and uninformative') and line 174 ('Practice used only the robust core of its vague concepts')",
+    "severity": "major",
+    "problem": "Model assumptions (BG) and the robust-core hypothesis are stated as historical facts. 'Paradoxes were ... uninformative' contradicts \u00a710, where Russell's paradox 'is a bag of size one'. The line-174 answer also omits that prop:informal:emergence needs an idealized complete monster presentation and an extra unproved hypothesis (3) for a bounded gap.",
+    "proposed_fix": "Line 132: 'In our model it is a bounded-gap practice over a latent calculus. If the robust-core hypothesis holds, its proofs survive every admissible formalization. In the episodes of \\cref{tab:informal:history} the corrective work was done mostly by counterexample objects, and the few paradoxes were the set-theoretic antinomies (\\cref{sec:informal}).' Line 174: 'In the model, under an idealized complete presentation of monsters, monster pressure leaves exactly the steps valid in every model of the theory, and G\u00f6del completeness turns those into derivations. A bounded gap needs a further, unproved hypothesis (\\cref{prop:informal:emergence}(c)). If practice used only the robust core of its vague concepts, its proofs survive every formalization (\\cref{thm:informal:robust}).'"
+   },
+   {
+    "file": "paper/sections/abstract.tex",
+    "location": "line 10: 'Counterexample objects are exponentially more informative than paradoxes.'; also line 8 'Carnap's categoricity problem turns out to be Gold's problem'; line 11 'eternalism is provably impossible'",
+    "severity": "major",
+    "problem": "Three abstract slogans are stronger than the body. (1) The objects/paradox separation is a worst case on specific classes: M_obj \u2264 M_bag, with equality at r=1, and \u00a710 says objects 'can be' exponentially more informative. (2) coherence.tex line 352 says Carnap's problem is Gold's twin 'only in part' (identifiability versus learnability). (3) thm:physics:eternalism excludes only truth-functional readings f(S_c,\u03c6); McCarthy's ist(c,\u03c6), which the paper adopts, is itself a context-free proposition.",
+    "proposed_fix": "(1) 'Counterexample objects can be exponentially more informative than paradoxes: at most log2|H| corrections, against up to |H|-1 on some classes.' (2) 'Carnap's categoricity problem can be read, in part, as Gold's problem in the dual space of valuations.' (3) 'Contexts are given a filter semantics; no truth-functional eternal reading of in-context claims tracks truth in an idealized context.'"
+   },
+   {
+    "file": "paper/sections/intro.tex",
+    "location": "line 52 ('Carnap's categoricity problem is Gold's problem in the dual space of valuations') and line 74 ('Eternalism is provably impossible')",
+    "severity": "major",
+    "problem": "Both are stronger than the body. The Carnap-Gold identity is 'only in part' (tab:coherence:goldcarnap). The eternalism theorem excludes only truth-functional translations and is listed as trivial once set up.",
+    "proposed_fix": "Line 52: 'Carnap's categoricity problem is, in part, Gold's problem in the dual space of valuations (\\cref{tab:coherence:goldcarnap}): single-conclusion data cannot fix ...'. Line 74: 'No truth-functional eternal reading tracks truth in an idealized context (\\cref{thm:physics:eternalism}, an observation once set up).'"
+   },
+   {
+    "file": "paper/sections/philosophy.tex",
+    "location": "line 168: 'Counterexample objects are exponentially more informative than paradoxes'",
+    "severity": "minor",
+    "problem": "The same overgeneralization as in the abstract: the separation holds on specific classes, not for every class.",
+    "proposed_fix": "Replace with 'Counterexample objects can be exponentially more informative than paradoxes (log2|H| against |H|-1 on some classes)'."
+   },
+   {
+    "file": "paper/sections/intro.tex",
+    "location": "line 118: 'One theorem needed a second repair round.' (and line ~113 'the repaired items were re-verified by fresh referees')",
+    "severity": "major",
+    "problem": "reverification-round2.md lists two round-2 major problems in T7 (Thm 5.5 burn-in; Thm 6.6(e), whose bound was false) and two in L3; L3's verification log has no round-2 section. twotier.tex line 46 says three second-round repairs 'were checked by their author and by computation, not by a further independent referee'. The intro understates this and implies everything was independently re-verified.",
+    "proposed_fix": "Replace with: 'Each was repaired, weakened or retracted, and fresh referees re-checked the repairs. That second round found two further major problems in \u00a77 (\\cref{thm:twotier:burnin}, \\cref{thm:twotier:arith}(e)) and two in glosses of literature memo L3. The \u00a77 repairs, and the size convention of \\cref{def:twotier:refutation}, were checked by their author and by computation only, not by a further referee.'"
+   },
+   {
+    "file": "paper/sections/abstract.tex",
+    "location": "line 15: 'Every main result passed adversarial verification.'",
+    "severity": "major",
+    "problem": "The final forms of thm:twotier:burnin and thm:twotier:arith(e) were not re-verified by an independent referee (twotier.tex line 46), so the blanket claim overstates the record.",
+    "proposed_fix": "Replace with: 'Every main result was attacked by independent referees and repaired where needed; a few second-round repairs (\u00a77) were checked only by their author and by computation.'"
+   },
+   {
+    "file": "paper/sections/coherence.tex",
+    "location": "line 171 ('accepted all 13 valid and refuted all 44 invalid structural candidate schemas ... (computed; quick run)') and line 421 ('Experiment B shows the negative-data role end to end (computed; quick run) ... removed every unsound rule ... the adversary proved none of its goals'); also lines 191, 367 and the header comment",
+    "severity": "major",
+    "problem": "These report a single quick smoke-test run (prop_learning_quick.md: one run at N=50) instead of the full grid used in \u00a7\u00a77 and 12. The full grid has 177 candidates (59 valid, 118 invalid). With noise 'both' at N\u2208{50,100,200}, coherence leaves 1.2\u00b10.9 unsound rules and 1.7\u00b14.1 exploits; 19 of 72 runs end with an unsound rule after coherence. The claim that coherence 'removed every unsound rule' overstates the full results and contradicts \u00a712.",
+    "proposed_fix": "Line 171: '...a bold learner over classical natural deduction accepted all 59 valid and refuted all 118 invalid structural candidate schemas (of 177), each by an explicit derivation of \u22a2\u22a5 (median 2.5 steps for generalizations of target rules, 6 for random schemas), while the non-structural \u22a2p survived all eight designated contexts (computed).' Line 421: 'Experiment B shows the negative-data role end to end (computed; \\Cref{tab:experiments:prop}). With systematic fallacies (AC, DA and an illegitimate discharge, all cited as \u2192E) and 5% corrupted steps, at N\u2208{50,100,200}, imitation ends with 45.6\u00b119.3 unsound active rules, and the adversary derives \u22a2\u22a5 in 9 of 9 runs. Coherence pruning on five designated contexts, with blame by a minimum-weight hitting set, leaves 1.2\u00b10.9 unsound rules, closes every route to \u22a2\u22a5 and keeps all 13 target rules. Over all 72 runs (N from 5 to 200), 19 still end with an unsound rule after coherence; most survivors are non-structural (38 of 45 mention specific atoms). At N\u226410, AC itself can survive, because a small learned calculus cannot derive the contradiction.' In lines 191 and 367 drop 'quick run' (the same facts are in the full report), and cite prop_learning.md in the header comment."
+   },
+   {
+    "file": "paper/sections/coherence.tex",
+    "location": "line 312: 'A testable prediction for language-model training: imitation plus a contradiction penalty yields consistent but noncommittal reasoners.'",
+    "severity": "major",
+    "problem": "Theorems coherence:carnap and coherence:rank show only that such data do not exclude gappy valuations, which is a non-identifiability result. They do not predict what a trained model converges to. Calling this a prediction derived from the theorem is a non sequitur.",
+    "proposed_fix": "Replace with: 'A conjecture for language-model training, not implied by the theorem (which concerns identifiability, not training dynamics): imitation plus a contradiction penalty does not by itself push a learner toward committal (Boolean) valuations, so it may leave consistent but noncommittal reasoners.'"
+   },
+   {
+    "file": "paper/sections/philosophy.tex",
+    "location": "line 32: 'For each assumption there is a matching impossibility result showing that dropping it breaks the guarantee ... What they provide is an explicit list of what the process relies on, together with proofs that it relies on nothing else.'",
+    "severity": "major",
+    "problem": "Three problems. Realizability has no impossibility theorem; it is shown load-bearing only by example. Dropping the world channel does not break soundness: TTL with coherence alone is sound (prop:twotier:coherenceonly(a)), and the world is needed only for completeness under ambiguous blame. The three-item list is incomplete, since the guarantees also rely on (Floor), distinct fallacy tags and an exact refutation oracle. So 'proofs that it relies on nothing else' is false.",
+    "proposed_fix": "Replace with: 'For several of these assumptions there is a matching impossibility result (\\cref{tab:twotier:necessary}). Realizability is shown to be load-bearing by example rather than by a theorem, and the world channel is needed for completeness under ambiguous blame, not for soundness (\\cref{thm:twotier:blame,prop:twotier:coherenceonly}). ... What they provide is an explicit list of what the stated guarantees rely on (the three items above, together with the technical hypotheses of \\cref{thm:twotier:main}: a known frequency floor, fallacies used under their own latent tags, and an exact depth-$d$ refutation oracle), with proofs that the guarantees hold under them.'"
+   },
+   {
+    "file": "paper/sections/philosophy.tex",
+    "location": "line 91: 'This undercuts the simple form of Dummett's acquisition argument.'",
+    "severity": "major",
+    "problem": "The identifiable rules (thm:coherence:telltale) are for propositional connectives; the undecidable truths are arithmetic \u03a32 sentences, which involve different vocabulary. The manifestation and acquisition argument targets truth-conditional (bivalent) meaning, and Dummett grants that rules of use are manifestable. The paper's own Carnap results show that single-conclusion rules do not fix classical truth conditions. 'Undercuts' overreaches.",
+    "proposed_fix": "Replace the last three sentences with: 'This bears on, but does not refute, Dummett's acquisition argument. The argument targets truth-conditional meaning. What the learner acquires is the rules (for the propositional connectives, \\cref{thm:coherence:telltale}), which Dummett agrees are manifestable. The theorems show only that acquiring rules exactly is compatible with truth values, here of arithmetic $\\Sigma_2$ sentences, staying beyond computable reach.'"
+   },
+   {
+    "file": "paper/sections/caution.tex",
+    "location": "line 33 ('four are new: ... and the tightness of the Ville constant') and line 257 ('New here is only the tightness of the constant')",
+    "severity": "major",
+    "problem": "Ville's inequality is known to be essentially tight: equality holds for continuous-path test martingales, and near-equality for small increments. prop:caution:tight (0.989\u03b4') is a worked instance in this protocol, not a new result. Claiming novelty for it is a novelty claim for a known phenomenon.",
+    "proposed_fix": "Line 33: 'As far as we know, three are new: the exact single-schema budget, the tagged/untagged separation and the Bell-number bound for two-sided checking over growing signatures. \\Cref{prop:caution:tight} checks that Ville's constant cannot be improved in this protocol, as expected since Ville's inequality is essentially tight for test martingales with small increments \\citep{ramdas2023game}.' Line 257: 'New here is only the check that the constant is tight in this protocol (\\Cref{prop:caution:tight}), an instance of the known near-tightness of Ville's inequality; the application to step validity is routine.'"
+   },
+   {
+    "file": "paper/sections/existence.tex",
+    "location": "line 42 (Credit paragraph: 'New as far as we know ... the strictness results for CCS-style constraints (thm:existence:arity, thm:existence:threshold), the multi-context completeness theorem in exactly this form (thm:existence:mcs)')",
+    "severity": "major",
+    "problem": "Two credit gaps. (a) thm:existence:arity, that locally consistent marginals need not admit a global distribution, is an instance of the classical marginal problem (Vorob'ev 1962) and of Boole's and Pitowsky's correlation polytopes; NP-hardness of probabilistic coherence is Georgakopoulos, Kavvadias and Papadimitriou (1988). Only the threshold hierarchy looks new. (b) The source file T6 (line 785) says 'LMS completeness results exist (Ghidini & Giunchiglia 2001; Serafini & Bouquet 2004); mine is the simplest monotone case'. The paper drops this credit.",
+    "proposed_fix": "Replace the two clauses with: '...the threshold hierarchy for counting-sequent constraints (\\Cref{thm:existence:threshold}; the arity result \\Cref{thm:existence:arity} is an instance of the classical fact that locally consistent marginals need not admit a joint distribution, cf. the marginal problem of Vorob'ev (1962) and Pitowsky's correlation polytopes, and NP-hardness of probabilistic satisfiability is due to Georgakopoulos, Kavvadias and Papadimitriou (1988)), and the simplest monotone case of multi-context completeness, fitted to L7's calculus (\\Cref{thm:existence:mcs}; completeness results for local-models semantics already exist, \\citealt{ghidini2001local}; Serafini and Bouquet 2004)'. Add the bib entries and flag their details as to be checked."
+   },
+   {
+    "file": "paper/sections/intro.tex",
+    "location": "answers in brief: item (2) ('time-uniformly sound via Ville's inequality'), item (4) ('Every structural extension of classical consequence is classical or trivial'; 'blind among intermediate logics'; 'at most log2(1/w*) detections'), item (6) ('Counterexample objects need at most log2|H| corrections'), item (7) ('there is no free export'); and the credit list at line 135",
+    "severity": "major",
+    "problem": "These bullets state classical results as findings with no attribution: Post 1921 and Pogorzelski 1971 (structural completeness), Glivenko, Barzdin\u2013Freivalds and Littlestone halving and mistake bounds, the Waudby-Smith\u2013Ramdas prior\u2013posterior-ratio martingale, and the information-based-complexity adversary argument (Traub\u2013Wasilkowski\u2013Wo\u017aniakowski). The body credits them, but a reader of the intro would take them for new results. The line-135 credit list also omits Littlestone, Reiter, Shapiro, Wright\u2013Motoki, Lange\u2013Zeugmann, Scott, Putnam/Gold/Kelly and Helmbold\u2013Sloan\u2013Warmuth, and does not name Waudby-Smith\u2013Ramdas, Brown\u2013Priest or Traub\u2013Wasilkowski\u2013Wo\u017aniakowski.",
+    "proposed_fix": "Add parentheticals: (2) 'via Ville's inequality (the prior\u2013posterior-ratio martingale of \\citet{waudbysmith2020confidence})'; (4) '(\\citealt{post1921}; in consequence form \\citealt{pogorzelski1971structural})', '(Glivenko)', 'with at most log2(1/w*) detections (halving: Barzdin\u2013Freivalds, \\citealt{littlestone1988learning})'; (6) '(the classical halving and mistake bound)'; (7) '(the adversary argument of information-based complexity, \\citealt{traub1988information})'. Replace line 135's list with: 'Gold, Angluin, Plotkin and Reynolds, Natarajan and Helmbold\u2013Sloan\u2013Warmuth, Wright and Motoki\u2013Shinohara, Lange\u2013Zeugmann, Rivest\u2013Sloan, El-Yaniv\u2013Wiener, KWIK, Ville and Waudby-Smith\u2013Ramdas, Barzdin\u2013Freivalds and Littlestone, Post and Pogorzelski, Glivenko, Carnap, Shoesmith\u2013Smiley, Rumfitt, Restall and Scott, Reiter and Shapiro, Putnam, Gold and Kelly, chunk-and-permeate (Brown\u2013Priest), information-based complexity (Traub\u2013Wasilkowski\u2013Wo\u017aniakowski), de Finetti and Gaifman.'"
+   },
+   {
+    "file": "paper/sections/intro.tex",
+    "location": "line 83: 'A steeper simplicity penalty on function induction with private randomness does produce the hoped-for kink at the simple model (thm:simplicity:kink).'",
+    "severity": "major",
+    "problem": "thm:simplicity:kink is proved only for a parity teacher with a random error set; \u00a78.1 says '(proved for parity models)' and open problem 6 asks about 'kinks beyond parities'. The intro states the kink generally. The \u00a78.7 verdict ('so the product frontier kinks') has the same gap.",
+    "proposed_fix": "Intro: '...does produce the hoped-for kink at the simple model, proved for parity teachers (\\cref{thm:simplicity:kink}); kinks beyond parities are open.' In simplicity.tex \u00a78.7 (Verdict) write '...so the product frontier kinks for parity teachers (\\Cref{thm:simplicity:kink})'."
+   },
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "lines 47-48: 'Gold-level solving of IPhO-style problems under rubric grading has been reported for current AI systems (L9 \\S5.2)'",
+    "severity": "major",
+    "problem": "An external empirical claim is supported only by an internal memo. L9 \u00a75.2 names the published sources (HiPhO, arXiv 2509.07894; Physics Supernova, arXiv 2509.01659). It also records that the best model scored below gold on EuPhO 2025, the competition of the paper's own worked example; the sentence omits that.",
+    "proposed_fix": "Replace with: 'Gold-level scores on IPhO 2025 theory under rubric grading have been reported for current AI systems (the HiPhO benchmark, Yu et al. 2025, arXiv:2509.07894; Physics Supernova, Qiu et al. 2025, arXiv:2509.01659), but not on the modelling-heavy EuPhO 2025, where the best model scored below the gold threshold;' and add both entries to bib/physics.bib."
+   },
+   {
+    "file": "paper/sections/search.tex",
+    "location": "line 86: \\citep{rivest1988reliable}, \\citep{elyaniv2010selective}, \\citep{li2008kwik}; line 85 'This is the mechanism behind reward-model overoptimization'",
+    "severity": "minor",
+    "problem": "Line 86 uses keys that duplicate rivest1988learning, elyaniv2010foundations and li2008knows. Each paper is listed twice in the compiled bibliography (main.txt lines 8238/8241, 8448/8452, 8611/8615). Line 85 asserts a causal explanation of an empirical phenomenon in neural reward models.",
+    "proposed_fix": "Line 86: use \\citep{rivest1988learning}, \\citep{elyaniv2010foundations} and \\citep{li2008knows}, and delete the three duplicate entries from bib/search.bib. Line 85: 'This is one mechanism that can produce reward-model overoptimization \\citep{gao2023scaling}...'."
+   },
+   {
+    "file": "paper/sections/intro.tex",
+    "location": "line 38 ('For rule schemas learned by anti-unification this cost is linear in step size'); line 32 ('is therefore the wrong target. An experiment shows...'); line 130 ('school algebra with real systematic errors'); line 120 (Lean coverage)",
+    "severity": "minor",
+    "problem": "Four local overstatements. (1) Linear cost holds only for rules cited by name; untagged cost is at least \u230a(N\u22121)/k\u230b^k. (2) 'Wrong target' is stronger than the theorem, which shows in-distribution accuracy is not a soundness certificate, and the toy setting of the experiment is not mentioned. (3) 'Real systematic errors' suggests real student data, but the derivations are simulated. (4) About 15 of the 49 Lean-mapped results are special cases, weaker results or variants.",
+    "proposed_fix": "(1) 'For rules cited by name this cost is linear in step size. Without citations it is at least \u230a(N\u22121)/k\u230b^k even for one rule. Unstructured classes cost exponentially.' (2) '...is therefore not a soundness certificate. In a small closed algebra domain, a boosted-tree step classifier with in-distribution AUC 0.995 is exploited by search to prove most of a set of false equations.' (3) 'school algebra with simulated derivations containing well-known systematic student errors'. (4) After 'about fifty paper results' add '(about a third in a special-case, weaker or variant form; \\cref{tab:lean:map})'."
+   },
+   {
+    "file": "paper/sections/abstract.tex",
+    "location": "line 7 ('Positive examples identify a schematic calculus exactly, at coupon-collector rates'); line 8 ('Its power is exactly Post-completeness'); line 13 ('We also settle two questions')",
+    "severity": "minor",
+    "problem": "(1) Coupon-collector identification is for rules cited by name; uncited rules need a diversity condition. (2) The Post-completeness slogan overstates: coherence pins the target iff the target has no coherent proper extension, and it also acts on non-Post-complete targets (Popperian for arithmetic). (3) 'Settle' is too strong: the kink is shown only for parities and the 'philosophical completeness theorem' gets a split verdict.",
+    "proposed_fix": "(1) 'For rules cited by name, positive examples identify a schematic calculus exactly...'. (2) 'It pins the target down exactly when the target has no coherent proper extension, as classical logic has none by Post-completeness.' (Make the same change in intro.tex line 47.) (3) 'We also answer, in part, two questions...'."
+   },
+   {
+    "file": "paper/sections/coherence.tex",
+    "location": "line 204 ('Whether a fixed finite family of contexts suffices for RCF is open.') and line 321 (thm:coherence:telltale(d): 'not identifiable in the limit at all, even with the coherence datum')",
+    "severity": "minor",
+    "problem": "Round-2 re-verification of T2 (reverification-round2.md) reports two things the paper does not reflect. A short argument settles the RCF question negatively. And the no-tell-tale argument for (d) covers only text plus the single coherence datum; with the full stream of certified positions the data form an informant. The paper still calls the first open and states the second without qualification.",
+    "proposed_fix": "Line 204: '(A second-round referee sketched a negative answer, that no fixed finite family suffices without \u2203-closure; we have not checked it.)' Alternatively, verify the argument and state it. Line 321: '...is not identifiable in the limit from text plus the single coherence datum: ...'."
+   },
+   {
+    "file": "paper/sections/experiments.tex",
+    "location": "line 17 ('no stored result changed'); line 55 ('the convention of Lean's Mathlib'; 'So pure coherence converged ...')",
+    "severity": "minor",
+    "problem": "(1) The code/README review notes say the fallacy-fate counts in B's report changed after the fix (e.g. AC at N=10). (2) Mathlib shares only x/0=0; its Real.sqrt of a negative number is 0, not a complex principal root, so the total semantics as a whole is not 'the convention of Lean's Mathlib'. (3) 'Converged' omits that 11 of 315 survivors (10 of them non-structural) are not sound in the meadow.",
+    "proposed_fix": "(1) '...fixed two reporting errors in B and a latent one in A; the fallacy-fate counts in B's report changed (e.g. AC at N=10), and no other number changed.' (2) 'This is a version of the meadows of \\citet{bergstra2007rational}; its $x/0:=0$ is the convention of Lean's Mathlib.' (Make the same change in philosophy.tex line 87.) (3) 'So pure coherence converged, up to 11 of 315 surviving schemas (10 of them non-structural), not to the intended partial calculus but to...'."
+   },
+   {
+    "file": "paper/sections/simplicity.tex",
+    "location": "line 249 ('every near-optimal hypothesis (small \u03be) correlates strongly with f_a and memorizes almost none of the errors'); line 296 ('cheap systematic fallacies, which are common in student algebra and in Euler-style manipulation')",
+    "severity": "minor",
+    "problem": "(1) The bound of cor:simplicity:example(i), \u015d \u2265 2^{1\u2212c(d+\u03ba')\u2212H(p)\u2212\u03be}\u22121\u22122p, is vacuous unless 2^{1\u2212H(p)}\u22121 > 2p, which fails from about p\u22480.15. So the window claim also needs p small; a round-2 referee flagged this prose. (2) The empirical claim about student algebra and Euler has no citation.",
+    "proposed_fix": "(1) '...i.e. with cn\u226b1, cd\u226a1 and p small (bound (i) is vacuous once 2^{1\u2212H(p)}\u22121 \u2264 2p, e.g. at p=0.2), every near-optimal hypothesis...'. (2) Either cite a source on systematic student algebra errors, or write 'which, we expect, include common student-algebra errors and Euler-style manipulations'."
+   },
+   {
+    "file": "paper/sections/philosophy.tex",
+    "location": "line 24 ('Daniels' independence constraint is, formally, the conditional-independence assumption ...'); line 138 ('a precise, if modest, answer to the rule-following question')",
+    "severity": "minor",
+    "problem": "(1) Daniels' constraint is not formally a conditional-independence assumption; this is an interpretive link. (2) The anchor result fixes inferential role only relative to the hypothesis class and its vocabulary; \u00a75's qualification (i) says quus-like alternatives 'are excluded by the choice of hypothesis class, not by the data'. That is exactly where Kripke's skeptic presses.",
+    "proposed_fix": "(1) 'Daniels' independence constraint can be read as the conditional-independence assumption ...'. (2) Append: 'This answer is relative to the hypothesis class and its vocabulary, which the data do not fix (Goodman's point; \\cref{sec:imitation:ood}, qualification (i)).'"
+   }
+  ]
+ },
+ {
+  "reviewer": "citations",
+  "summary": "I found no hallucinated or wrong publication among the 262 bibliography entries; full report in /home/user/AI-works/inferential-learning/research/paper-review/citations.md.\n\n- **Entries:** all 262 are real works with correct authors, title, venue and year (26 checked by web search, the rest from knowledge). LaTeX reports no undefined citations and BibTeX no warnings.\n- **Duplicates (major):**\n  - Four papers are in the bib twice under different keys, so the reference list shows them twice with fake year suffixes (Rivest & Sloan 1988a/b, El-Yaniv & Wiener 2010a/b, Li et al. 2008a/b, Cohen 1981a/b).\n  - Three of these come from bib/search.bib and are cited only at search.tex:86; the fourth comes from bib/philosophy.bib and is cited at philosophy.tex:50.\n  - The two Cohen copies also give different page ranges.\n- **Attribution (major):** philosophy.tex:24 says the coherence impossibility theorems show independence is necessary. They are proved assuming independence; what shows it is needed is the paper's own remark rem:coherence:consensus. It also calls Daniels' constraint \"formally\" a conditional-independence assumption, which overstates it.\n- **Other attributions:** 36 of the 40 most important are correct as stated; the other four have small nuances:\n  - Edgington's verities are not a measure over precisifications.\n  - The separate +/\u00d7 form of Tennenbaum's theorem is due to Kreisel and McAloon.\n  - The halving entry needs no change.\n  - The impossibility-theorems entry is fine where it appears in coherence.tex.\n- **Hedges:** five \"as we recall / unchecked\" hedges remain in the text. Web search confirms four of them; Lange\u2013Zeugmann is confirmed only in substance, so write \"cf.\" there if its exact form cannot be checked. The Garrabrant et al. numbers are Thm 4.1.1 (Convergence), 4.1.2 (Limit Coherence) and 4.6.2 (Non-Dogmatism).\n- **Minor attribution fixes:**\n  - \"Post's hierarchy theorem\" is a non-standard name and uncited.\n  - Sequent-style natural deduction is Gentzen 1936, not 1935.\n  - The English Zermelo quotation needs its translation source.\n  - Rawls and Reichenbach are named but not cited.\n  - The history table cites no sources.\n  - Lean 4, Mathlib and scikit-learn are uncited.\n- **Metadata:** one wrong page range (Rivest\u2013Sloan should be 635\u2013640) and missing pages or numbers in about 25 entries.\n- **Fixing bib entries:** merge_bib.py keeps only the first copy of a key (in sorted file order) and silently drops the rest. A correction must go into that first file; the report's table names it for every key.",
+  "issues": [
+   {
+    "file": "paper/sections/search.tex",
+    "location": "line 86: \"(c) The uniform requirement is reliable learning \\citep{rivest1988reliable}, perfect selective classification \\citep{elyaniv2010selective}, or the ``accept'' side of KWIK \\citep{li2008kwik}\"",
+    "severity": "major",
+    "problem": "These keys (defined in bib/search.bib) duplicate rivest1988learning, elyaniv2010foundations and li2008knows (first defined in bib/caution.bib), which every other section cites. Each of the three papers therefore appears twice in the reference list, and every in-text citation of them becomes 'Rivest and Sloan, 1988a', 'El-Yaniv and Wiener, 2010a', 'Li et al., 2008a' (confirmed in main.bbl and main.txt). Readers will assume six distinct works.",
+    "proposed_fix": "Change the line to: \"reliable learning \\citep{rivest1988learning}, perfect selective classification \\citep{elyaniv2010foundations}, or the ``accept'' side of KWIK \\citep{li2008knows}\". Then delete the entries rivest1988reliable, elyaniv2010selective and li2008kwik from paper/bib/search.bib and rerun merge_bib.py."
+   },
+   {
+    "file": "paper/sections/philosophy.tex",
+    "location": "line 50: \"Imitation converges to ``competence'' in the sense of \\citet{cohen1981irrationality}\"",
+    "severity": "major",
+    "problem": "cohen1981irrationality (bib/philosophy.bib, pp. 317\u2013331) and cohen1981can (bib/simplicity.bib, pp. 317\u2013370) are the same paper (L. J. Cohen, BBS 4(3), 1981), with different page ranges. The paper renders as 'Cohen 1981a' and 'Cohen 1981b'.",
+    "proposed_fix": "Replace \\citet{cohen1981irrationality} with \\citet{cohen1981can} in philosophy.tex:50 and delete cohen1981irrationality from paper/bib/philosophy.bib. In paper/bib/simplicity.bib, either set pages = {317--331} (target article) or keep 317--370 and add note = {With open peer commentary and author's response}."
+   },
+   {
+    "file": "paper/sections/philosophy.tex",
+    "location": "line 24: \"Daniels' ``independence constraint'' is, formally, the conditional-independence assumption that the coherence impossibility theorems show to be necessary (\\cref{sec:coherence:eliminative}).\"",
+    "severity": "major",
+    "problem": "This misdescribes both works. The Bovens\u2013Hartmann and Olsson impossibility theorems are proved under conditional independence; even the project's own L11 memo says 'given independence'. They show coherence is not truth-conducive even then, not that independence is necessary. What shows independence is needed is the paper's own Remark rem:coherence:consensus (no amplification under a common cause). Daniels' constraint is that the sets of considered judgments supporting background theories and principles be partly disjoint, not a probabilistic independence assumption, so 'is, formally,' overstates the match.",
+    "proposed_fix": "Replace the sentence with: \"Daniels' ``independence constraint'', that the background theories not rest on the same considered judgments as the principles, can be read as the requirement that the corroborating channel's errors be independent of the human ones; without it, agreement moves the odds by at most a bounded factor (\\cref{rem:coherence:consensus}), and even with it no informative coherence measure is truth-conducive in general (\\cref{sec:coherence:eliminative}).\""
+   },
+   {
+    "file": "paper/sections/app-existence.tex",
+    "location": "line 152: \"by Limit Coherence the limit ... exists ... (We cite these properties by name; we have confirmed the statements but not the theorem numbering of the arXiv version.)\"",
+    "severity": "minor",
+    "problem": "The hedge on Garrabrant et al.'s theorem numbering is left in the published text, and existence of the limit P\u221e is credited to Limit Coherence; in the source it is Theorem 4.1.1 (Convergence). Web snippets of arXiv:1609.03543 confirm Thm 4.1.1 Convergence, Thm 4.1.2 Limit Coherence and Thm 4.6.2 Non-Dogmatism.",
+    "proposed_fix": "Write \"by Convergence and Limit Coherence (\\citealt[Thms 4.1.1, 4.1.2]{garrabrant2016logical}) the limit ... exists and is a coherent probability relative to $\\Gamma$; and by Non-Dogmatism (\\citealt[Thm 4.6.2]{garrabrant2016logical}) ...\" and delete the parenthetical hedge sentence."
+   },
+   {
+    "file": "paper/sections/imitation.tex",
+    "location": "line 81: \"As we recall their characterization (we have not re-checked its exact form), strong-monotonic learnability is, up to effectivity, the existence of anchors.\"",
+    "severity": "minor",
+    "problem": "The text attributes a result while openly saying it has not been checked. Web search confirms that Lange & Zeugmann (COLT 1992) characterize strong-monotonic learning from text by recursively generable finite sets, but not the exact quantifier form.",
+    "proposed_fix": "Replace with: \"Their characterization of strong-monotonic learning from text by uniformly recursively generable finite sets $T_j\\subseteq L_j$ with $T_j\\subseteq L_k\\Rightarrow L_j\\subseteq L_k$ \\citep{lange1992types,lange2008learning} is, up to effectivity, the existence of anchors.\" If the survey's theorem cannot be checked, write \"cf.\" before the citation instead of asserting the exact form."
+   },
+   {
+    "file": "paper/sections/app-coherence.tex",
+    "location": "line 71: \\citep[as we recall the result; we have not re-checked its exact statement]{rautenberg1981two}",
+    "severity": "minor",
+    "problem": "The hedge is unnecessary: Rautenberg (Studia Logica 40, 1981, 315\u2013353) proves strong finite axiomatizability of every 2-element matrix (confirmed by web search).",
+    "proposed_fix": "Replace with \\citep{rautenberg1981two}."
+   },
+   {
+    "file": "paper/sections/simplicity.tex",
+    "location": "line 65: \"and essentially every compatible shape occurs \\citep{vereshchagin2004kolmogorov} (exact side conditions unchecked by us)\"",
+    "severity": "minor",
+    "problem": "The hedge is unnecessary: Vereshchagin & Vit\u00e1nyi (IEEE TIT 50(12), 2004) show that, within the obvious constraints and to logarithmic precision, every shape is realized by some data's structure function (confirmed by web search).",
+    "proposed_fix": "Replace with: \"and, within these constraints and to logarithmic precision, every shape is realized by the structure function of some data \\citep{vereshchagin2004kolmogorov}\"."
+   },
+   {
+    "file": "paper/sections/simplicity.tex",
+    "location": "line 420: \"As we recall their result, \\citet{armstrong2018occam} show that simplicity alone does not identify such splits.\"",
+    "severity": "minor",
+    "problem": "'As we recall' is left in the text; the result is confirmed by web search (NeurIPS 2018, No Free Lunch for planner/reward decomposition even under a simplicity prior).",
+    "proposed_fix": "Replace with: \"\\citet{armstrong2018occam} show that a policy does not determine its decomposition into planner and reward, and that a simplicity prior over decompositions does not single out the intended one.\""
+   },
+   {
+    "file": "paper/sections/informal.tex",
+    "location": "line 416: \"its use for the sorites over precisifications is Edgington's \\citep{edgington1997vagueness}\"",
+    "severity": "minor",
+    "problem": "Edgington applies the Adams-style bound to verities (degrees of closeness to clear truth). She mentions the Lewis\u2013Kamp measure-over-precisifications reading without committing to it, so 'over precisifications' is not her view.",
+    "proposed_fix": "Replace with: \"its use for the sorites is Edgington's, with her verities in place of a measure over precisifications \\citep{edgington1997vagueness}\"."
+   },
+   {
+    "file": "paper/sections/existence.tex",
+    "location": "line 371 (Theorem thm:existence:tennenbaum): \"In no countable non-standard model of PA is addition computable, and in none is multiplication computable \\citep{tennenbaum1959non,kaye1991models}\"",
+    "severity": "minor",
+    "problem": "Tennenbaum's 1959 abstract gives non-recursiveness of the model. The separate statements for + and \u00d7 are the strengthenings by Kreisel (with Scott) and McAloon.",
+    "proposed_fix": "Replace the citation with \"(\\citealt{tennenbaum1959non}; the separate statements for $+$ and $\\times$ are due to Kreisel and McAloon, see \\citealt{kaye1991models})\"."
+   },
+   {
+    "file": "paper/sections/coherence.tex",
+    "location": "line 251 (proof of thm:coherence:trilemma); also twotier.tex:428, app-coherence.tex:136, app-twotier.tex:251: \"Post's hierarchy theorem\"",
+    "severity": "minor",
+    "problem": "The fact used, that a \u03a3n-complete set is not \u03a0n (strictness of the arithmetical hierarchy), is the Kleene\u2013Mostowski hierarchy theorem; Post's theorem is the link between the hierarchy and Turing jumps. The name is non-standard and is never cited.",
+    "proposed_fix": "At all four occurrences replace \"Post's hierarchy theorem\" with \"the arithmetical hierarchy theorem \\citep[\\S57]{kleene1952introduction}\". The key kleene1952introduction is already in bib/coherence.bib."
+   },
+   {
+    "file": "paper/sections/coherence.tex",
+    "location": "lines 244\u2013246: credit to \\citet{sawin2013computable} sits after Thm popper, before Thm trilemma",
+    "severity": "minor",
+    "problem": "The external credit for the trilemma theorem is in the paragraph before it, attached to the previous theorem. A reader of the theorem (whose header has only \\src{L3 Thm D}) does not see it.",
+    "proposed_fix": "Change the header to \\begin{theorem}[The coherence/$\\Pi_1$/$\\Pi_2$ trilemma; cf.\\ \\citealt{sawin2013computable}] and replace line 244's last sentence with \"The same boundary appears for credences (\\Cref{thm:coherence:trilemma}).\""
+   },
+   {
+    "file": "paper/sections/setting.tex",
+    "location": "line 80: \"natural deduction in sequent style; \\citealt{gentzen1935untersuchungen,prawitz1965natural}\"",
+    "severity": "minor",
+    "problem": "Gentzen 1935 introduced tree-style natural deduction and LK; natural deduction in sequent form appears in Gentzen's 1936 consistency paper.",
+    "proposed_fix": "Add to bib/setting.bib: @article{gentzen1936widerspruchsfreiheit, author={Gerhard Gentzen}, title={Die {W}iderspruchsfreiheit der reinen {Z}ahlentheorie}, journal={Mathematische Annalen}, volume={112}, pages={493--565}, year={1936}}. Then cite \\citealt{gentzen1936widerspruchsfreiheit,prawitz1965natural}. Alternatively write \"natural deduction \\citep{gentzen1935untersuchungen,prawitz1965natural}, in sequent style\"."
+   },
+   {
+    "file": "paper/sections/informal.tex",
+    "location": "line 361: restrict ``sufficiently to exclude all contradictions'' yet keep ``all that is valuable'' \\citep{zermelo1908untersuchungen}",
+    "severity": "minor",
+    "problem": "An English quotation is attributed to a German paper. The wording is van Heijenoort's translation (p. 200).",
+    "proposed_fix": "Add to bib/informal.bib: @book{vanheijenoort1967from, editor={Jean van Heijenoort}, title={From {F}rege to {G}{\\\"o}del: A Source Book in Mathematical Logic, 1879--1931}, publisher={Harvard University Press}, address={Cambridge, MA}, year={1967}}. Then cite \\citep{zermelo1908untersuchungen} followed by \"(trans.\\ \\citealt[p.~200]{vanheijenoort1967from})\"."
+   },
+   {
+    "file": "paper/sections/informal.tex",
+    "location": "table tab:informal:history (lines ~443\u2013460), caption \"(from the project's literature memo L6, \\S1, where dates are checked)\"",
+    "severity": "minor",
+    "problem": "Every historical claim in the table (Cauchy/Abel/Seidel\u2013Stokes, Amp\u00e8re/Weierstrass, Dirichlet's principle, Steiner's 7776, Lam\u00e9/Kummer, Poincar\u00e9 1900/1904, Frege/Russell, Zermelo/Replacement) is uncited; the caption points to an internal memo. The facts are correct, but the report gives no published sources.",
+    "proposed_fix": "Add sources in the table or caption:\n- Cauchy row: \\citep[App.~1]{lakatos1976proofs}\n- Frege and Zermelo rows: \\citep{vanheijenoort1967from} (contains Russell's letter, Zermelo 1908, Fraenkel/Skolem 1922)\n- Steiner row: Eisenbud & Harris, 3264 and All That (CUP 2016)\n- Lam\u00e9 row: Edwards, Fermat's Last Theorem (Springer GTM 50, 1977)\n- Dirichlet row: Monna, Dirichlet's Principle (Oosthoek 1975)\nAdd the new entries to bib/informal.bib, and change the caption to \"(sources in the table; dates as checked in the project's literature memo L6)\"."
+   },
+   {
+    "file": "paper/sections/philosophy.tex",
+    "location": "line 24 (\"narrow ... wide reflective equilibrium\") and line 36 (\"Reichenbachian vindications\")",
+    "severity": "minor",
+    "problem": "'Reflective equilibrium' and the narrow/wide distinction are Rawls's, and Reichenbach's vindication is named; neither author is cited anywhere in the paper.",
+    "proposed_fix": "Add to bib/philosophy.bib:\n@book{rawls1971theory, author={John Rawls}, title={A Theory of Justice}, publisher={Harvard University Press}, year={1971}}\n@article{rawls1974independence, author={John Rawls}, title={The Independence of Moral Theory}, journal={Proceedings and Addresses of the American Philosophical Association}, volume={48}, pages={5--22}, year={1974}}\n@book{reichenbach1938experience, author={Hans Reichenbach}, title={Experience and Prediction}, publisher={University of Chicago Press}, year={1938}}\nThen write \"\\emph{narrow} reflective equilibrium \\citep{rawls1971theory,rawls1974independence}\" and \"Reichenbachian vindications \\citep{reichenbach1938experience}\"."
+   },
+   {
+    "file": "paper/sections/app-lean.tex",
+    "location": "line 3: \"formalized in Lean~4 with Mathlib\"; also experiments.tex:193 \"numpy, scipy, scikit-learn ...\"",
+    "severity": "minor",
+    "problem": "The proof assistant, its library and the ML library behind the experiments are not cited.",
+    "proposed_fix": "Write \"Lean~4 \\citep{demoura2021lean4} with Mathlib \\citep{mathlib2020}\" in app-lean.tex and \"scikit-learn \\citep{pedregosa2011scikit}\" in experiments.tex. Add to bib/experiments.bib:\n@inproceedings{demoura2021lean4, author={Leonardo de Moura and Sebastian Ullrich}, title={The {L}ean 4 Theorem Prover and Programming Language}, booktitle={CADE-28}, series={LNCS}, volume={12699}, pages={625--635}, year={2021}}\n@inproceedings{mathlib2020, author={{The mathlib Community}}, title={The {L}ean Mathematical Library}, booktitle={Proc. 9th ACM SIGPLAN Int. Conf. on Certified Programs and Proofs (CPP)}, pages={367--381}, year={2020}}\n@article{pedregosa2011scikit, author={Fabian Pedregosa and others}, title={Scikit-learn: Machine Learning in {P}ython}, journal={JMLR}, volume={12}, pages={2825--2830}, year={2011}}"
+   },
+   {
+    "file": "paper/bib/caution.bib",
+    "location": "entry rivest1988learning (first-defining file; copy in bib/setting.bib)",
+    "severity": "minor",
+    "problem": "The page range is wrong: the AAAI-88 paper is pp. 635\u2013640 (mlanthology), not 635\u2013639.",
+    "proposed_fix": "Set pages = {635--640} in bib/caution.bib (the copy that merge_bib.py keeps), and in bib/setting.bib for consistency."
+   },
+   {
+    "file": "paper/bib/caution.bib",
+    "location": "entries natarajan1987learning, li2008knows, motoki1991correct, cohen2022fully",
+    "severity": "minor",
+    "problem": "Pages and numbers are missing.",
+    "proposed_fix": "Add:\n- natarajan1987learning: pages = {296--304}\n- li2008knows: pages = {568--575}\n- motoki1991correct: pages = {375}\n- cohen2022fully: number = {334}, pages = {1--30}\nMirror these in imitation.bib and setting.bib, where the same keys are duplicated."
+   },
+   {
+    "file": "paper/bib/coherence.bib",
+    "location": "entries barzdin1972prediction, sawin2013computable; and in bib/imitation.bib: lange1992types, stephan2001learning",
+    "severity": "minor",
+    "problem": "Pages, numbers and the report number are missing.",
+    "proposed_fix": "Add:\n- barzdin1972prediction: pages = {1224--1228}\n- sawin2013computable: number = {2013-10}; note = {Result from a July 2013 workshop; released December 2014}\n- lange1992types (imitation.bib): pages = {377--390}\n- stephan2001learning (imitation.bib): number = {2}, pages = {221--273}"
+   },
+   {
+    "file": "paper/bib/informal.bib",
+    "location": "entries easwaran2015rebutting, weber2011why, avigad2009formal, mcgee1992maximal, specker1953axiom, cantor1891elementare, varzi2007supervaluationism, sabato2012multi, hales2007jordan, edgington1997vagueness",
+    "severity": "minor",
+    "problem": "Pages and numbers are missing in ten entries. jiang2023draft and azzouni2004derivation are never cited (harmless).",
+    "proposed_fix": "Add:\n- easwaran2015rebutting: number={1}, pages={146--162}\n- weber2011why: number={3}, pages={329--344}\n- avigad2009formal: pages={700--768}\n- mcgee1992maximal: number={3}, pages={235--241}\n- specker1953axiom: number={9}, pages={972--975}\n- cantor1891elementare: pages={75--78}\n- varzi2007supervaluationism: pages={633--676}\n- sabato2012multi: pages={2999--3039}\n- hales2007jordan: pages={882--894}\n- edgington1997vagueness: pages={294--316}\nOptionally delete the uncited jiang2023draft and azzouni2004derivation."
+   },
+   {
+    "file": "paper/bib/search.bib",
+    "location": "entries cobbe2021training, valiant2000robust, kornhauser1986unpacking; plus existence.bib (shepherdson1964nonstandard, adams1966probability), physics.bib (kennedy1994dimension, stalnaker1968theory, los1955quelques), simplicity.bib (shtarkov1987universal, grunwald2012safe, vereshchagin2017algorithmic)",
+    "severity": "minor",
+    "problem": "cobbe2021training gives its authors as 'Cobbe, Karl and others'; the other entries lack pages or numbers.",
+    "proposed_fix": "search.bib:\n- cobbe2021training: author = {Karl Cobbe and Vineet Kosaraju and Mohammad Bavarian and Mark Chen and Heewoo Jun and Lukasz Kaiser and Matthias Plappert and Jerry Tworek and Jacob Hilton and Reiichiro Nakano and Christopher Hesse and John Schulman}\n- valiant2000robust: number={2}, pages={231--253}\n- kornhauser1986unpacking: number={1}, pages={82--117}\nexistence.bib:\n- shepherdson1964nonstandard: number={2}, pages={79--86}\n- adams1966probability: pages={265--316}\nphysics.bib:\n- kennedy1994dimension: pages={348--362}\n- stalnaker1968theory: pages={98--112}\n- los1955quelques: pages={98--113}\nsimplicity.bib:\n- shtarkov1987universal: pages={175--186}\n- grunwald2012safe: pages={169--183}\n- vereshchagin2017algorithmic: pages={669--737}"
+   }
+  ]
+ },
+ {
+  "reviewer": "user-fidelity",
+  "summary": "I found no fatal issues: nearly all verbatim quotations of Kaarel H\u00e4nni's notes check out against the source files, and the simplicity-penalty section (\u00a78) is especially careful. The problems are in framing, attribution and hedging.\n\n1. **\"The user.\"** The paper calls him \"the user\" on 56 lines in 10 files, including the \u00a77.9 heading that appears in the table of contents. Naming is also inconsistent: elsewhere he appears as \"K. H\u00e4nni\" or as \"the notes that motivated this work\". The intro never says who posed the question.\n2. **Citation and status of the notes.**\n   - The notes are never cited: there is no bib entry and no URL.\n   - The paper calls them both \"publicly available\" (\u00a713) and \"unpublished\" (\u00a78 footnote).\n   - Their README says they are working notes, not claims asserted as in a paper. The paper ignores this and grades them as asserted claims (\"The user is right that\u2026\").\n3. **Removed hedges.**\n   - \"maybe this is some argument in favor of trusting 'constructive' reasoning\" became \"This is why his 'constructive' reasoning is more trustworthy\".\n   - \"I think this is an argument that any assignment\u2026\" became \"the note says that any assignment\u2026\".\n   - \"existing solutions from the wild often \u2026 more of a dance\" became \"an olympiad solution is a dance\".\n   - An explanation offered for \"this particular case\" (functions) is generalized to all pre-formal mathematics.\n4. **Over-attributions.**\n   - Brainstormed probing-project constraints (from the notes' DLK folder) are presented as what \"the user's notes impose\". One is listed next to a collaborator's suggestion; another is \"one choice would e.g. be\", right after \"seems like an arbitrary choice\".\n   - A passing remark is called \"the architecture the user sketches\".\n   - \"justification is an infinite endeavour\" is not in the notes; they say thinking and mathematics are \"infinite endeavors\".\n   - \"C-model without an L-model\" is put in quotation marks; it is not his phrase, and the source note is marked \"now disendorsed probably\".\n   - A third party is cited only as \"Sam\".\n5. **Misrepresented views.**\n   - His pluralism about frames (\"very useful\", \"needn't be easily reconcilable\") is called a \"worry\".\n   - The \"philosophical completeness theorem\" is said to \"fail in the intended sense\". This credits him with a standard-model reading that his own G\u00f6del-sentence footnote already rules out.\n   - The setup is framed as reflective equilibrium, said to \"match\" his suspicion of limit framings. This ignores his note proposing an alternative to reflective equilibrium.\n   - His view that publishing insightful AI theorem-prover research is \"omnicidal\" is softened to \"flag as risky\". Open problem 8 then advises how strong-prover work should be done.\n   - \"Eternalism is provably impossible\" is said about an option he raised. Only truth-functional readings are refuted, and the paper itself adopts meta-level eternalism.\n6. **Success criteria.** The intro table answers \"Yes\" to his criterion 3, though \u00a711 says the mini-checker \"is not a system\". It answers \"Yes\" to criterion 2, though \u00a710 says history violated realizability at every decisive step. The verification-first motivation is missing from the intro.\n\nThe title footnote (\"authorship and publication to be decided by him\") is right in substance but should cite the notes and state their status. The full report is at /home/user/AI-works/inferential-learning/research/paper-review/user-fidelity.md.",
+  "issues": [
+   {
+    "file": "paper/sections/intro.tex",
+    "location": "\u00a71.1, lines 5-20 ('The motivating design has six parts.' ... 'Does it give rise to a reasoner that derives many correct conclusions?')",
+    "severity": "major",
+    "problem": "The intro never says who posed the design and the three success criteria, and never cites the notes. Later sections nonetheless refer to 'the user', 'his', and 'K. H\u00e4nni's notes'. The verification-first motivation that runs through the notes is absent: checking untrusted work safely (formalizing philosophy.pdf: a defeasible checker facing an untrusted prover 'might have lost all the safety'). Line 14 adds a capability-flavoured question ('a reasoner that derives many correct conclusions') that is not in the brief.",
+    "proposed_fix": "Line 5: replace 'The motivating design has six parts.' with 'The following design, and the three success criteria below, were posed by Kaarel H\\\"anni; many of the questions behind them are recorded in his public working notes \\citep{hanni2026notes}, which we call \\emph{the motivating notes} and quote verbatim by file path. The design has six parts.' Line 14: replace 'Does it give rise to a reasoner that derives many correct conclusions?' with 'Can the arguments it accepts be trusted when they come from an untrusted, possibly adversarial, generator?' After line 20, add: 'The motivating notes put verification first. Formal proof checking is what could make it safe to obtain superhuman mathematical work from an untrusted system, and a defeasible checker facing an untrusted prover ``might have lost all the safety'''' (\\texttt{ai/verification and generation/formalizing philosophy.pdf}). We therefore treat soundness against adversarial search as the central requirement, and we build checkers, not solvers.'"
+   },
+   {
+    "file": "paper/sections/intro.tex",
+    "location": "Table tab:intro:answers, rows 2-3 (lines 102-103)",
+    "severity": "major",
+    "problem": "The table overclaims against his criteria. Criterion 2 ('would have worked ... before we knew how to formalize') is answered 'Yes, relative to realizability'. But informal.tex:467 says history violated realizability 'at every decisive step', so the setup as built would not have worked historically. Criterion 3 asks for 'a principled system for checking physics olympiad solutions' and is answered 'Yes'. But physics.tex:1179-1180 says the mini-checker 'is not a system' and has been run on one problem.",
+    "proposed_fix": "Row 2 status: '\\textbf{Conditionally.} If the practice's latent formalization lies in the learner's class, a bounded-gap verifier over latent formalizations is sound and identifies validity exactly up to informal-validity equivalence (\\cref{sec:informal}). History violated this condition at every decisive step ($\\varepsilon$-$\\delta$, uniform convergence, ideals). What the criterion really requires is affordable soundness with language invention, which remains open.' Row 3 status: '\\textbf{A principled design, not yet a system.} A Structured Physics Solution checker is sound against adversarial solvers relative to the reading and the top model (\\cref{thm:physics:relative}); that residue is provably ineliminable (\\cref{thm:physics:judgment}). It is demonstrated on one EuPhO problem with twelve adversarial variants. We deliberately built a checker, not a solver.'"
+   },
+   {
+    "file": "paper/sections/intro.tex",
+    "location": "line 84 ('The ``philosophical completeness theorem'''' (``a mode of talking is coherent iff ...'''') ... It fails in the intended sense.')",
+    "severity": "major",
+    "problem": "The quotation is altered: the note reads 'a mode of talking makes sense (is coherent) iff there is something it could be talking about'. 'It fails in the intended sense' also credits the note with a standard-model reading. The note in fact asks for 'a generalization of the completeness thm ... that justifies this philosophical proposition more broadly'. Its author already flags elsewhere (3f, footnote 5) that coherence may only yield something like the 'proof' of the G\u00f6del sentence. The same wording appears at philosophy.tex:173 and existence.tex:385.",
+    "proposed_fix": "Replace the bullet with: '\\item The note asking for a \\emph{``philosophical version'''' of G\\\"odel's completeness theorem} (``a mode of talking makes sense (is coherent) iff there is something it could be talking about'''') gets a positive answer in the generalized sense it asks for: for positions, credences and context systems. Coherence cannot certify existence of the \\emph{intended} (standard) model, a limitation the notes themselves anticipate. Bounded-arity coherence constraints of the kind used in consistency-based probing do not characterize coherence (\\cref{sec:existence}).'"
+   },
+   {
+    "file": "paper/main.tex",
+    "location": "line 6, \\author{... \\thanks{Prepared in response to questions by Kaarel H\\\"anni. Draft; authorship and publication to be decided by him.}}",
+    "severity": "major",
+    "problem": "The footnote is right in substance (publication left to him, consistent with his caution and with the README's request for coauthorship or acknowledgment). But it neither cites the notes nor says what kind of document they are. The notes' README says he does 'not think of [himself] as publicly asserting the things I'm saying in them in quite the way that I would be if I e.g. published a paper', and that 'various claims I make in these notes are wrong'. The paper evaluates the notes as asserted claims throughout.",
+    "proposed_fix": "Replace the \\thanks text with: 'Prepared in response to questions posed by Kaarel H\\\"anni; the design and success criteria in \\S\\ref{sec:intro:question} are his. Quotations from his public working notes \\citep{hanni2026notes} are verbatim and cited by file path. As the notes'''' README says, they are working notes rather than claims asserted as in a paper, and the readings here are ours. Draft; authorship and publication to be decided by him.'"
+   },
+   {
+    "file": "paper/bib/philosophy.bib",
+    "location": "(missing entries); cited nowhere in paper",
+    "severity": "major",
+    "problem": "The paper quotes about 25 note files by path but never gives a reference or URL for the notes repository. 'An Advent of Thought' is the source of the 'infinite endeavors' and G\u00f6del-sentence-footnote material, and it was posted publicly on the AI Alignment Forum from 14 March 2025; it is not cited either.",
+    "proposed_fix": "Add: @misc{hanni2026notes, author={Kaarel H{\\\"a}nni}, title={notes}, year={2026}, howpublished={\\url{https://github.com/kaarelh/notes}}, note={Public working notes, posted June 2026, MIT licence; cited by file path}} and @misc{hanni2025advent, author={Kaarel H{\\\"a}nni}, title={An Advent of Thought}, year={2025}, howpublished={AI Alignment Forum, \\url{https://www.alignmentforum.org/posts/nkeYxjdrWBJvwbnTr/an-advent-of-thought}}}. Regenerate all.bib with merge_bib.py. Cite \\citep{hanni2026notes} at first mention (intro \u00a71.1) and \\citealt{hanni2025advent} wherever 1f/3f/99n are used (philosophy.tex:36, existence.tex:38, twotier.tex:468)."
+   },
+   {
+    "file": "paper/sections/simplicity.tex",
+    "location": "line 30: 'proposed in K.~H\\\"anni's notes ...\\footnote{The note `beating solomonoff induction at grokking a notion' (unpublished). Quotations are verbatim.}'",
+    "severity": "major",
+    "problem": "'(unpublished)' contradicts philosophy.tex:158 ('notes that are publicly available') and the facts: the note is in the public MIT-licensed repository. 'K. H\u00e4nni's notes' is also the only place the paper names him in the body; elsewhere it says 'the user'.",
+    "proposed_fix": "Replace with: 'proposed in the motivating notes, and answers the question it raises.\\footnote{The note \\texttt{philosophy/philosophy of thinking/beating solomonoff induction at grokking a notion.md} in \\citet{hanni2026notes}, a public working note; it lists this as one of several ideas. Quotations are verbatim.}'"
+   },
+   {
+    "file": "paper/sections/existence.tex",
+    "location": "'the user' at lines 32, 38, 75, 151, 198, 204, 295, 310, 342, 350; '(L10 \\S1.5)' at line 38",
+    "severity": "major",
+    "problem": "The section calls the commissioner 'the user' throughout, which is unsuitable for a paper. Line 38 cites an internal research memo (L10 \u00a71.5) instead of the note that holds the quotation. Line 295's 'This answers' presents a proposal as settling an open question the notes pose.",
+    "proposed_fix": "32: 'The user's notes pose exactly this question (\\texttt{logic/...})' -> 'The motivating notes pose exactly this question (\\texttt{logic/a 'philosophical version' of g\\\"odel's completeness theorem.md})'. 38: 'Elsewhere the user adds the caveat that' -> 'Elsewhere the notes add the caveat that'; '(L10 \\S1.5)' -> '(\\texttt{.../advent of reason/real attempt 2024/3f math, thinking, and technology are equi-infinite.md}, footnote 5; \\citealt{hanni2025advent})'. 75, 151, 204: 'the user's proposition' -> 'the note's proposition'. 198: 'the draft cited by the user' -> 'the draft cited in the note'. 295: 'This answers the user's ``maybe you just check ...''''' -> 'This proposes an answer to the notes'''' question ``maybe you just check ...'''''. 310: 'the user's worry about the ``proof'''' of the G\\\"odel sentence' -> 'the notes'''' caveat about the ``proof'''' of the G\\\"odel sentence'. 342: 'the user's footnote' -> 'the notes'''' G\\\"odel-sentence footnote'. 350: 'In the user's icosahedron example' -> 'In the icosahedron example of the notes'. (Lines 40, 166, 169, 193, 273, 336, 368, 374 and 383 are covered by separate issues.)"
+   },
+   {
+    "file": "paper/sections/existence.tex",
+    "location": "lines 38, 40, 57 (\\begin{proposition}[Sam's image]), 121 ('Sam's other pointer', 'Sam's image'), 379 ('Sam's slogan holds')",
+    "severity": "major",
+    "problem": "A third party is cited only by first name, which is unidentifiable in a paper. The note says only 'from sam:'. The quotation also elides the note's own answer to 'what is this image?': the next line of the note is 'this is all sets of sentences closed under inference rules. this is by the completeness theorem'. As a result, Proposition 'Sam's image' reads as if the paper answers a question the note leaves open.",
+    "proposed_fix": "38: replace 'records a remark of Sam's: ``completeness is an adjunction ... what is this image?''''' with 'records, under the heading ``from sam'''' (presumably Sam Eisenstat, whom the notes'''' README acknowledges; to be confirmed with the author), the remark ``completeness is an adjunction between sentences and models'''', the question ``what is this image?'''' and its answer, ``this is all sets of sentences closed under inference rules. this is by the completeness theorem''''.' 40: 'Sam's slogan is strong completeness and the user's is weak completeness' -> 'The adjunction remark, as the note answers it, is strong completeness; the note's proposition is weak completeness'. 57: rename the proposition to [The image of the round trip], and after its proof add 'This is the note's own answer, for arbitrary closure operators.' 121: 'Sam's other pointer' -> 'the note's other pointer'; 'so Sam's image is' -> 'so the image is'. 379: 'Sam's slogan holds' -> 'The adjunction slogan holds'."
+   },
+   {
+    "file": "paper/sections/existence.tex",
+    "location": "line 273: 'The user worries that frames ``needn't be easily reconcilable'''' (L10 \\S1.3).'",
+    "severity": "major",
+    "problem": "This inverts the note's attitude. 'a few notes on frames.md' says: 'there are many different background contexts, not one, and it is very useful that this is so. what's more, these different frames needn't be easily reconcilable', and 'frames are machines letting you do things'. That is pluralism, not a worry. It is one of the views the paper should represent accurately. The citation is also to an internal memo.",
+    "proposed_fix": "Replace with: 'The motivating notes hold that claims always sit in background frames, that ``there are many different background contexts, not one, and it is very useful that this is so'''', and that ``these different frames needn't be easily reconcilable'''' (\\texttt{philosophy/philosophy of thinking/a few notes on frames.md}). The following makes precise when locally coherent frames nevertheless glue into one world, and when they cannot.'"
+   },
+   {
+    "file": "paper/sections/existence.tex",
+    "location": "lines 166 ('The user's notes on consistency-based probing (\\texttt{ai/DLK/}) impose negation coherence ..., the identity ..., and modus ponens ...'), 169 ('the user's MP constraint'), 193 ('the user's identity')",
+    "severity": "major",
+    "problem": "The DLK constraints are over-attributed and overstated.\n- They come from meeting notes of a probing project and are not 'imposed'.\n- The additivity identity is listed directly under 'suggestion from Alex: ...' (DLK notes.md lines 147-152).\n- The MP constraint is introduced as 'One choice would e.g. be' (june meeting notes.md l.72), right after 'that seems like an arbitrary choice'.\n- Negation coherence is the CCS paper's own loss, restated in the notes' framework tables.",
+    "proposed_fix": "166: 'Notes from a consistency-based probing project (\\texttt{ai/DLK/}) record candidate constraints: negation coherence $P(\\neg Q)=1-P(Q)$ (the CCS loss), the identity $P(A\\wedge B)+P(A\\vee B)=P(A)+P(B)$ (listed alongside a collaborator's suggestion), and, tentatively (``one choice would e.g.\\ be''''), modus ponens read as the tautology $\\neg P\\vee\\neg(P\\to Q)\\vee Q$, i.e.\\ the union bound ...' 169: 'the user's MP constraint' -> 'the MP constraint considered in those notes'. 193: 'the user's identity follows from them' -> 'the additivity identity from those notes follows from them'."
+   },
+   {
+    "file": "paper/sections/existence.tex",
+    "location": "line 336: 'The user's DLK note says that ``any assignment of truth-values to sentences which does not violate inference rules can be extended to a full model ...''''. This is correct for complete consistent assignments'",
+    "severity": "major",
+    "problem": "The hedge is dropped and then the claim is corrected. The note (ai/DLK/logic.md) reads: 'I think this is an argument that any assignment of truth-values ... can be extended to a full model', after 'is consistent, I think'. Presenting it as a flat claim and then saying it is correct only for complete assignments makes the author sound more certain and more wrong than he was.",
+    "proposed_fix": "Replace with: 'A DLK note tentatively argues (``I think this is an argument that'''') that ``any assignment of truth-values to sentences which does not violate inference rules can be extended to a full model (this is cool because a model also needs to assign actual functions and objects \\dots)''''. The argument goes through for complete consistent assignments: ...'"
+   },
+   {
+    "file": "paper/sections/existence.tex",
+    "location": "line 383: 'The user's split between coherence and ``hooking onto the world'''' ... The user's ``C-model without an L-model'''' (\\texttt{logical models as distinct from mental models.md}) becomes ...'",
+    "severity": "major",
+    "problem": "Two misquotations.\n- 'C-model without an L-model' is in quotation marks but is not his phrase. The source is a draft LessWrong comment headed 'text below now disendorsed probably', and the paper does not say so.\n- 'hooking onto the world' is not verbatim: the note has 'the hooking of a model onto the world' (individual sentences being meaningful.md), and twotier.tex:466 quotes it correctly.\n- The 'split' between coherence and hooking is the digest's synthesis, not the note's.",
+    "proposed_fix": "Replace the first sentence with: 'The notes ask about ``the hooking of a model onto the world'''' (\\texttt{individual sentences being meaningful.md}); against coherence this becomes two precise questions.' Replace the C-model sentence with: 'A draft comment in the notes, marked ``text below now disendorsed probably'''', imagines a conception (a C-model) given with ``axioms and inference rules'''' for which no model can be constructed (\\texttt{logical models as distinct from mental models.md}). In our terms such a conception is an incoherent calculus used only through coherent chunks: ...'"
+   },
+   {
+    "file": "paper/sections/existence.tex",
+    "location": "line 385: 'It is \\emph{not vindicated in the intended sense}: standard or intended existence needs ...'",
+    "severity": "major",
+    "problem": "'Intended sense' reads as the sense the note intended. The note asked for a generalization 'more broadly', and the notes already reject standard-model existence via coherence (3f, footnote 5). The verdict therefore credits the note with a position it does not hold. The same issue appears in philosophy.tex:173 and intro.tex:84.",
+    "proposed_fix": "Replace with: 'It does not deliver \\emph{intended-model} existence, which the notes'''' G\\\"odel-sentence footnote already anticipates: standard or intended existence needs categoricity, anchoring or an infinitary condition, and no computable coherence notion can certify it beyond $\\Pi_1$.' In philosophy.tex:173, replace 'Yes in the weak sense, and no in the intended sense' with 'Yes in the generalized sense the note asks for; intended-model existence is not certifiable by coherence, as the notes anticipate'."
+   },
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "'the user' at lines 29, 37, 78, 123, 308, 497, 533, 556, 967, 1007, 1008, 1156; '(L10 \\S1.7)' line 38; '(L10 \\S1.8)' lines 81, 499, 558",
+    "severity": "major",
+    "problem": "The section calls the commissioner 'the user', and four quotations of his notes cite an internal memo (L10) instead of the source note. Line 533 ('The user is right that') grades a working note in an unsuitable tone.",
+    "proposed_fix": "29: 'the user's programme' -> 'the programme of the motivating question'. 37-38: 'the user's note asks' -> 'the motivating notes ask'; '(L10 \\S1.7)' -> '(\\texttt{ai/verification and generation/verification from truth.md})'. 78: 'The user's notes record why the two obvious repairs fail.' -> 'The motivating notes record the difficulty with two obvious moves.' 81 and 499: '(L10 \\S1.8)' -> '(\\texttt{philosophy/epistemology/probabilities/assigning probabilities in a conception of the world you know to be inadequate.md})'. 123: 'The user's hypothesis' -> 'The notes'''' hypothesis'. 308: 'This is T2's formal version of the user's air-pressure worry.' -> 'This is a formal version of the air-pressure example in the motivating question.' 497: 'The user warns' -> 'The motivating notes warn'. 533: 'The user is right that a reductio ... can be spurious, and the remedy' -> 'A reductio in an inadequate framework can indeed be spurious, as the notes suggest; the remedy'. 556: 'The user asks:' -> 'The notes ask:'; 558 '(L10 \\S1.8)' -> '(\\texttt{philosophy/philosophy of science/the domain of applicability of a scientific mode(l).md})'. 967: 'The user's episode on the problem' -> 'An episode in the introspective solution of this problem recorded in the notes (\\texttt{introspection/.../introspect-solving eupho 2025-T1.md})'. 1007-1008: 'from the user's notes' -> 'from that introspection note'; 'is the user's, reported by him to match the official one' -> 'is the one reached in that note, which records it as matching the official answer'. 1156: 'as the user notes' -> 'as the notes observe (\\texttt{physics/symmetry.md})'."
+   },
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "lines 559-561: 'This is why his ``constructive'''' reasoning is more trustworthy in messy domains.'",
+    "severity": "major",
+    "problem": "The hedge is removed and the source is misplaced. The idea comes from 'assigning probabilities in a conception of the world you know to be inadequate.md': 'maybe this is some argument in favor of trusting 'constructive' reasoning more than 'non-constructive' reasoning, at least in messy domains'. It is not from the domain-of-applicability note quoted just before. The paper turns 'maybe ... some argument' into a flat 'This is why ... is more trustworthy'. 'his' also lacks a referent once 'the user' is removed.",
+    "proposed_fix": "Replace with: 'This gives one precise reason behind a tentative suggestion in the notes: that the danger of reductio in inadequate frameworks is ``maybe ... some argument in favor of trusting `constructive'''' reasoning more than `non-constructive'''' reasoning, at least in messy domains'''' (\\texttt{assigning probabilities in a conception of the world you know to be inadequate.md}).'"
+   },
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "lines 47-49: 'the unmet target is principled checking, and capability work is the part the user's notes flag as risky.'",
+    "severity": "major",
+    "problem": "The commissioner's caution about publishing capability research is understated. The source (formalizing philosophy.pdf, July 2024 draft, \u00a72) reads: '(This is not to say that it is fine to publish insightful research on AI theorem-provers \u2014 in my opinion, publishing such research is omnicidal.)' 'flag as risky' misrepresents both the strength and the object of the view, which is publishing insightful prover research. This is the only place in the paper that mentions it.",
+    "proposed_fix": "Replace with: 'the unmet target is principled checking. The motivating notes also hold that publishing insightful research on AI theorem provers is gravely dangerous (``in my opinion, publishing such research is omnicidal'''', \\texttt{ai/verification and generation/formalizing philosophy.pdf}, a July 2024 draft). We have therefore avoided solver-side contributions, and the decision to publish rests with him.'"
+   },
+   {
+    "file": "paper/sections/open.tex",
+    "location": "item 8, third bullet: 'We have deliberately not built a strong prover, and we would recommend that any such work keep the checker separate from the generator.'",
+    "severity": "major",
+    "problem": "A paper prepared for, and to be published at the discretion of, someone who regards publishing insightful AI theorem-prover research as 'omnicidal' here offers design advice for 'any such work' on strong provers. This can be read as endorsing that work, and it is not consistent with the commissioner's stated view.",
+    "proposed_fix": "Replace with: 'We have deliberately not built a strong prover. The motivating notes regard publishing insightful research on AI theorem provers as gravely dangerous; the results here concern checking, and we make no recommendations for prover development.'"
+   },
+   {
+    "file": "paper/sections/philosophy.tex",
+    "location": "\u00a713.1, lines 24-36 ('narrow reflective equilibrium ... wide reflective equilibrium'; 'This also matches a recurring theme in the notes that prompted this work: suspicion of limit framings ...')",
+    "severity": "major",
+    "problem": "The section frames the setup as reflective equilibrium and claims it 'matches' the notes' suspicion of limit framings. It does not mention the commissioner's note 'Trajectories of moral-reflective flight \u2014 an alternative to reflective equilibrium'. That note finds reflective equilibrium, as a picture of a mind's development, 'pretty flat/dead' and contrasts 'a mind converging to a point in a compact space' with 'a jagged trajectory off to infinity'; see also 99n, 'one shouldn't conceive of development as convergence to a point'. The paper's main theorem is convergence to a fixed target. The relation to his view is partly one of tension, not agreement.",
+    "proposed_fix": "Replace the last sentence of the first bullet (line 36) with: 'The notes that prompted this work are suspicious of limit framings and hold that thinking and mathematics are ``infinite endeavors'''' with no final formula \\citep{hanni2025advent}. They also propose ``trajectories of reflective flight'''' as an alternative to reflective equilibrium, which they find ``pretty flat/dead'''' as a picture of a mind's development (\\texttt{philosophy/ethics/Trajectories of moral-reflective flight \u2014 an alternative to reflective equilibrium.md}). Our results bear on that view only in a limited way. They concern a \\emph{fixed} target calculus, where convergence is the right notion, and they say nothing about the open-ended development of concepts and calculi (language invention, \\cref{sec:open}) that the notes have in mind.'"
+   },
+   {
+    "file": "paper/sections/twotier.tex",
+    "location": "'the user' at lines 32, 246, 386, 460 (\\subsection{Reading in the user's terms}, shown in the TOC as \u00a77.9), 466",
+    "severity": "major",
+    "problem": "The commissioner is called 'the user', including in a subsection title that appears in the table of contents. Line 32 also puts the paraphrased request ('a setup of this shape that provably works for formal math', from 00-brief.md, 'paraphrased faithfully') in quotation marks as if it were verbatim.",
+    "proposed_fix": "32: 'The user's first success criterion is ``a setup of this shape that provably works for formal math'''':' -> 'The first success criterion of the motivating question is a setup of this shape that provably works for formal mathematics:'. 246: 'For the user's question' -> 'For the motivating question'. 386: 'This is the user's first success criterion in its strongest form.' -> 'This meets the first success criterion in its strongest form.' 460: '\\subsection{Reading in the user's terms}' -> '\\subsection{Reading in the terms of the motivating question}'. 466: 'the user's ``hooking of a model onto the world''''' -> 'the notes'''' ``hooking of a model onto the world'''' (\\texttt{individual sentences being meaningful.md})'."
+   },
+   {
+    "file": "paper/sections/twotier.tex",
+    "location": "line 468: 'This matches the user's view that justification is an infinite endeavour'",
+    "severity": "major",
+    "problem": "The view is misattributed. The notes (Advent of Thought 1f-3f) say that thinking, mathematics, technology and 'how should one think?' are 'infinite endeavors'. They do not say this of justification. The paper turns the digest's gloss into a view of his.",
+    "proposed_fix": "Replace with: 'This is in the spirit of the motivating notes'''' view that thinking and mathematics are ``infinite endeavors'''' \\citep[note 1f]{hanni2025advent}: here every intermediate stage is sound relative to what has been checked.'"
+   },
+   {
+    "file": "paper/sections/informal.tex",
+    "location": "'the user' at lines 36, 166 (and 'His caveat'), 437",
+    "severity": "major",
+    "problem": "The commissioner is called 'the user' (lines 142 and 467 are covered by separate issues). Line 166 calls the note's proposition 'the user's ``philosophical completeness theorem''''', but the note's own title is 'a 'philosophical version' of g\u00f6del's completeness theorem'.",
+    "proposed_fix": "36: 'The user asks it in two sharper forms.' -> 'The motivating notes ask it in two sharper forms.' 166: 'This is the user's ``philosophical completeness theorem''''' -> 'This is the notes'''' ``philosophical version'''' of the completeness theorem'; 'His caveat is visible' -> 'The notes'''' caveat is visible'. 437: 'The user suggests looking at Euclid' -> 'The notes suggest looking at Euclid'."
+   },
+   {
+    "file": "paper/sections/informal.tex",
+    "location": "line 142: 'The architecture the user sketches, a checker that asks the arguer to ``explain\\slash justify\\slash derive'''' what it does not recognize, is ...'",
+    "severity": "major",
+    "problem": "This over-attributes. The source ('is verification really easier than solving the problem yourself?.md') is a personal reflection on judging two friends' physics answers: 'are things much better when you can interact with a guy who claims to have a solution ...? eg if they are using some primitives you don't already trust, then you can ask them to explain/justify/derive those'. It does not sketch a checker architecture. The design comes from the project's digest.",
+    "proposed_fix": "Replace with: 'A checker that asks the arguer to ``explain\\slash justify\\slash derive'''' what it does not recognize (the phrase comes from a remark in the notes about questioning a solver who uses untrusted primitives, \\texttt{ai/verification and generation/is verification really easier than solving the problem yourself?.md}) is \\emph{sound at all times} ...'"
+   },
+   {
+    "file": "paper/sections/abstract.tex",
+    "location": "line 11: 'Contexts are given a filter semantics in which eternalism is provably impossible.' (also intro.tex line 74: 'Eternalism is provably impossible')",
+    "severity": "major",
+    "problem": "Eternalism was one option the commissioner raised. Theorem thm:physics:eternalism refutes only truth-functional translations of in-context claims into world sentences. physics.tex:334 then adopts 'meta-level eternalism' (ist(c,\u03c6) as an eternal proposition). 'Eternalism is provably impossible' therefore overstates what is refuted about his option, and it contradicts the paper's own recommendation.",
+    "proposed_fix": "abstract.tex: replace with 'Contexts are given a filter semantics. No truth-functional eternalist reading of in-context claims tracks in-context truth, so eternalism survives only at the meta level, as McCarthy's $\\mathrm{ist}(c,\\varphi)$.' intro.tex:74: replace with 'No truth-functional eternalist reading of in-context claims works (\\cref{thm:physics:eternalism}); eternalism survives only at the meta level. Coherence belongs on the root and the anchored contexts only (\\cref{thm:physics:realizability}).'"
+   },
+   {
+    "file": "paper/sections/coherence.tex",
+    "location": "'the user' at lines 34, 171, 204 (twice)",
+    "severity": "major",
+    "problem": "The commissioner is called 'the user' in body text, which is unsuitable for a paper.",
+    "proposed_fix": "34: 'The user's second ingredient is a coherence loss' -> 'The second ingredient of the motivating design is a coherence loss'. 171: 'a setup of the user's shape' -> 'a setup of the requested shape'. 204: 'At the level the user cares about' -> 'At the level of the motivating question'; 'the formal content of the user's air-pressure worry' -> 'the formal content of the air-pressure example in the motivating question'."
+   },
+   {
+    "file": "paper/sections/setting.tex",
+    "location": "'the user' at lines 383, 466 (also imitation.tex lines 128, 269)",
+    "severity": "major",
+    "problem": "The commissioner is called 'the user'. Line 466 also puts a phrase from the paraphrased brief ('compute is not a constraint, but it must actually work') in quotation marks. imitation.tex:128 paraphrases 'we created a language in which formal proofs can be written' as 'inventing a language into which proofs can be translated'. The source note stresses the opposite: 'we didn't do anything close to word-by-word translation', and the conversion is 'fairly complicated'.",
+    "proposed_fix": "setting.tex 383: 'The channels are the user's three proposed signals' -> 'The channels are the three signals proposed in the motivating question'. setting.tex 466: 'This is how the set-up takes the user's ``compute is not a constraint, but it must actually work''''.' -> 'This is how the set-up takes the requirement that compute is not a constraint but the method must actually work.' imitation.tex 128: 'The user's note that mathematics was formalized by \\emph{inventing a language} into which proofs can be translated' -> 'The observation in the motivating notes that mathematics was formalized not by translating existing proofs but by creating ``a language in which formal proofs can be written''''. imitation.tex 269: 'For the user's program' -> 'For the programme of the motivating question'."
+   },
+   {
+    "file": "paper/sections/caution.tex",
+    "location": "line 217: '``inventing a language'''' with named rules, the user's description of how mathematics was formalized,'",
+    "severity": "minor",
+    "problem": "The phrase is in quotation marks but is not verbatim (the note says 'we created a language in which formal proofs can be written'), and the sentence uses 'the user'.",
+    "proposed_fix": "Replace with: 'creating ``a language in which formal proofs can be written'''' with named rules, as the motivating notes describe the formalization of mathematics,'."
+   },
+   {
+    "file": "paper/sections/twotier.tex",
+    "location": "line 464: 'Descent is the user's own ``go back to what caused the contradiction'''', made into an algorithm with a guarantee.'",
+    "severity": "minor",
+    "problem": "The quotation is not verbatim. The source ('how do i resolve contradictions, tensions?.md') reads: 'one way to resolve a tension/contradiction is to go back to what caused one (or each) of the contradicting views/predictions/claims'.",
+    "proposed_fix": "Replace with: 'Descent turns into an algorithm with a guarantee the lesson recorded in the notes: ``one way to resolve a tension/contradiction is to go back to what caused one (or each) of the contradicting views/predictions/claims'''' (\\texttt{philosophy/philosophy of thinking/how do i resolve contradictions, tensions?.md}).'"
+   },
+   {
+    "file": "paper/sections/informal.tex",
+    "location": "line 36: 'And, as a hypothesis: pre-formal mathematicians used only the part of their concepts that later survived formalization, because ``the `rest of the concept' \\dots was untrustworthy ...''''",
+    "severity": "minor",
+    "problem": "Scope is lost. The note offers this as 'an attempt at an explanation for this particular case', namely theorems about functions proved before the modern definition. The paper generalizes it to all pre-formal mathematics without saying so.",
+    "proposed_fix": "Replace with: 'And, offered as ``an attempt at an explanation'''' for the case of early theorems about functions (\\texttt{philosophy/metaphilosophy/why is it a good idea to make vague notions precise?.md}): mathematicians used only the part of the concept that later survived formalization, because ``the `rest of the concept'''' \\dots\\ was untrustworthy/messy \\dots\\ and for this reason unusable whenever people were proving things''''. We call its generalization to pre-formal practice the \\emph{robust-core hypothesis}.'"
+   },
+   {
+    "file": "paper/sections/informal.tex",
+    "location": "line 467: 'The user's own note says as much: in mathematics ``we created a language in which formal proofs can be written''''.'",
+    "severity": "minor",
+    "problem": "'says as much' stretches the source. The note says that formal proofs required a newly created language. It does not say that \u03b5-\u03b4, uniform convergence or the fundamental group were inventions of language. The sentence also uses 'the user'.",
+    "proposed_fix": "Replace with: 'Compare the observation in the notes that in mathematics ``we created a language in which formal proofs can be written'''' rather than translating existing proofs.'"
+   },
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "lines 29-31: 'An olympiad solution is, in his words, ``a dance with many clear setups, with some relations to the physical problem of interest''''.'",
+    "severity": "minor",
+    "problem": "A hedge is dropped. The source reads 'at least existing solutions from the wild often do not look like that. there's more of a dance with many clear setups, ...'. The paper turns 'often ... more of a dance' into 'is ... a dance'.",
+    "proposed_fix": "Replace with: 'Existing olympiad solutions, the motivating notes observe, often do not reduce the problem to one clear mathematical problem: ``there's more of a dance with many clear setups, with some relations to the physical problem of interest'''' (\\texttt{ai/verification and generation/verification of physics olympiad solutions/the structure of physics olympiad solutions.md}).'"
+   },
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "line 999 ('the user ``peeked at the solution and it seems to assume that's not the case''''') and line 1089 ('(the user's slip: $I$ for $I_0$)')",
+    "severity": "minor",
+    "problem": "Line 999 gives no context: in the note, 'that's not the case' refers to whether a finger in the part-(b) photograph is 'significantly tilted', so the reader cannot tell what the solution assumes. Line 1089 labels one of the adversarial variants as the commissioner's personal 'slip', which reads poorly in a paper.",
+    "proposed_fix": "999: replace with 'the introspection note, on whether a finger in the part-(b) photograph is tilted: ``ok i peeked at the solution and it seems to assume that's not the case''''. 1089: replace '(the user's slip: $I$ for $I_0$)' with '(a natural slip, made and later corrected in the introspection note: $I$ for $I_0$)'."
+   },
+   {
+    "file": "paper/sections/existence.tex",
+    "location": "line 368 ('The user asks this, adding ``is there a way they are the `lowest-complexity-structure' ...??''''') and line 374 ('as the user himself notes (\\texttt{logic/confusions/soundness.md})')",
+    "severity": "minor",
+    "problem": "Line 368 omits that the note asks how the natural numbers are pinned down 'in a brain, to a thinker, or something', so the paper answers only the model-theoretic version without saying so. Line 374 says 'as the user himself notes' that 'computable' depends on the meta-language's \u2115. The note discusses the meta-syntax's \u2115 possibly being non-standard, not computability.",
+    "proposed_fix": "368: 'The notes ask this of numbers as pinned down ``in a brain, to a thinker, or something'''', adding ``is there a way they are the `lowest-complexity-structure'''' which satisfy some axioms??''''. We answer only the model-theoretic version.' 374: 'as the user himself notes' -> 'a point the notes make about the meta-syntax's $\\mathbb N$ in general'."
+   },
+   {
+    "file": "paper/sections/philosophy.tex",
+    "location": "lines 148-153: 'Other aspects are not captured by anything studied here: the ``hooking'''' ...; the activities a concept supports; the questions it lets one ask.'",
+    "severity": "minor",
+    "problem": "All three aspects come from the commissioner's notes ('hooking of a model onto the world'; the chair notion supporting 'sitting and working and dining'; 'to gain the chair notion is to gain the question'), but they are not credited. The paper therefore hides that its qualified view of meaning is his own pluralism, in which compositional inference warranting is 'one aspect' of meaning.",
+    "proposed_fix": "After 'We do not claim otherwise.' add: 'All three are emphasized in the motivating notes, which treat inferential role (``compositional inference warranting'''') as one aspect of meaning among several (\\texttt{philosophy/philosophy of language/meaning and truth/}; \\texttt{beating solomonoff induction at grokking a notion.md}).'"
+   },
+   {
+    "file": "paper/sections/philosophy.tex",
+    "location": "line 158 ('Most of them are recorded in notes that are publicly available.') and line 170 (table entry '``Check that a claim is true in the context at hand. But wtf is that?''''')",
+    "severity": "minor",
+    "problem": "Line 158 gives no citation and contradicts simplicity.tex's '(unpublished)'. Line 170 changes a quotation's capitalization and punctuation (the original is '... in the context at hand. but wtf is that???'). The profanity is also quoted four times across the paper (physics.tex 38 and 960, existence.tex 295, here), which reads poorly in a table of questions.",
+    "proposed_fix": "158: replace with 'Most of them are recorded in H\\\"anni's public working notes \\citep{hanni2026notes}; the table paraphrases them, and the readings are ours.' 170: replace the table cell with 'What is it for a claim to be true ``in the context at hand''''? (\\texttt{verification from truth.md})'. Keep the verbatim quotation only once, in \u00a711 line 37."
+   },
+   {
+    "file": "paper/sections/abstract.tex",
+    "location": "line 13: 'We also settle two questions raised in the notes that motivated this work'",
+    "severity": "minor",
+    "problem": "'settle' overstates. The paper's own table answers the simplicity question 'Partly', and the completeness question in a split verdict.",
+    "proposed_fix": "Replace 'settle' with 'answer': 'We also answer two questions raised in the notes that motivated this work: ...'"
+   },
+   {
+    "file": "paper/sections/intro.tex",
+    "location": "line 18: '\\item a principled system for checking physics olympiad solutions.'",
+    "severity": "minor",
+    "problem": "The commissioner's third criterion was 'a principled system for solving physics olympiad problems, or for checking physics olympiad solutions' (00-brief.md). The paper drops the solving option without saying so. The choice is deliberate and defensible, but it should be stated.",
+    "proposed_fix": "Replace with: '\\item a principled system for solving physics olympiad problems or for checking their solutions; we take the checking reading (\\cref{sec:physics}).'"
+   },
+   {
+    "file": "paper/sections/search.tex",
+    "location": "\u00a73 opening paragraph (around line 13-15), before the tonk theorem",
+    "severity": "minor",
+    "problem": "The paper does not credit that its central mechanism parallels the commissioner's own observations: a rare, cheaply described exception exploited off-distribution makes a learned checker unsafe under search. His note 'solomonoff function induction.md' says function induction 'doesn't work that well when there is a simple property distinguishing test from train', and formalizing philosophy.pdf warns that with an untrusted prover a defeasible system 'might have lost all the safety'.",
+    "proposed_fix": "Add after the first paragraph: 'The phenomenon parallels two observations in the motivating notes: Solomonoff function induction ``doesn't work that well when there is a simple property distinguishing test from train'''' (\\texttt{ai/learning/solomonoff induction/solomonoff function induction.md}), and a defeasible checker facing an untrusted prover ``might have lost all the safety'''' (\\texttt{ai/verification and generation/formalizing philosophy.pdf}). \\Cref{thm:search:tonk} makes both precise for step checkers.'"
+   },
+   {
+    "file": "paper/sections/app-existence.tex",
+    "location": "line 127: 'The user's identity follows: ...' (also app-coherence.tex line 123: 'in the user's rule-level setting')",
+    "severity": "minor",
+    "problem": "The appendices also call the commissioner 'the user'.",
+    "proposed_fix": "app-existence.tex 127: 'The user's identity follows' -> 'The additivity identity from the DLK notes follows'. app-coherence.tex 123: 'in the user's rule-level setting' -> 'in the rule-level setting of the motivating question'."
+   }
+  ]
+ },
+ {
+  "reviewer": "readability",
+  "summary": "The main text is about 80k words of LaTeX (PDF pp. 8\u2013158, roughly 150 pages). It can lose about 13\u201314k words (\u224817%, roughly 25 pages) without losing any result. About 60% of the cut is moving proof- and computation-heavy passages into the per-section appendices: two-tier ~2.6k words, existence ~1.3k, physics ~1.5k, simplicity ~1k. The rest is deleting duplicates. Experiments D\u2013G restate tables shown elsewhere. Experiment B is narrated five times; Experiment A's positive-data results sit in the imitation section. The reliable-learning/KWIK framing appears five times. The coherence protocol is defined twice, the philosophy answers table repeats the intro, and the two-tier closing section repeats philosophy. The biggest readability failures are these. (1) Provenance tags like [T1 Thm 3.1] are never explained, and about 60 memo labels (T2 Thm 5.3, L9 \u00a78.3, ...) stand in running text where paper labels exist. (2) \"The user\" appears about 50 times with no antecedent; \"Sam\", \"the brief\", \"theory thread T7\" and \"In T3's own accounting\" are also unexplained. (3) Experiment B is reported with quick-run numbers in coherence.tex and full-run numbers in experiments.tex. (4) \"True in the context at hand\" gets two different definitions, each called the answer. (5) Duplicate bib keys make the same paper appear as 1988a/1988b, and Cohen 1981 appears twice with conflicting page ranges. Six subsections open with notation instead of saying what they establish; replacement openings are proposed. The full report, with a line-referenced cut table, is at /home/user/AI-works/inferential-learning/research/paper-review/readability.md.",
+  "issues": [
+   {
+    "file": "paper/sections/coherence.tex",
+    "location": "lines 171 (last sentence), 191 (last sentence), 367, 421 (paragraph 'Experiment~B shows the negative-data role end to end \\status{computed; quick run}')",
+    "severity": "major",
+    "problem": "Experiment B is reported with quick-run numbers (prop_learning_quick.md): 13 valid and 44 invalid candidates refuted; 'imitation ended with 22 unsound active rules, 13 of them tonk-like'. experiments.tex (line 82, tab:experiments:prop) and twotier.tex 457 report the full run: 59 valid and 118 invalid; 45.6\u00b119.3 unsound and 30.2 tonk-like. A reader sees two incompatible accounts of the same named experiment. The story is also told five times (coherence \u00d74, twotier, experiments).",
+    "proposed_fix": "Keep experiments.tex as the only full account. At 171, replace the last sentence with: 'In Experiment~B (\\cref{sec:experiments:prop}) a bold learner over classical natural deduction accepted all 59 valid and refuted all 118 invalid structural candidate schemas, each by an explicit derivation of $\\vdash\\bot$, while the non-structural $\\vdash p$ survived.' At 191, replace the last sentence with 'Experiment~B shows the predicted drift toward $\\CPC$ (\\cref{sec:experiments:prop}).' At 367, delete the Experiment B sentence. Replace 421 with: 'Experiment~B (\\cref{tab:experiments:prop}) shows the negative-data role end to end: coherence pruning cut the unsound rules left by imitation from $45.6$ to $1.2$ on average and closed every route to $\\vdash\\bot$, at no cost in completeness; at $N\\le10$ it left unsound rules in 4 of 18 runs, because a small learned calculus may lack the rules needed to derive the contradiction. Outside a Post-complete target, fallacies can survive.'"
+   },
+   {
+    "file": "paper/sections/existence.tex",
+    "location": "def:existence:truecontext and paragraph at line 295 ('This answers the user's ``maybe you just check ... wtf is that???'' (\\texttt{verification from truth.md})')",
+    "severity": "major",
+    "problem": "Two different formal definitions of 'true in the context at hand' are each presented as 'the answer'. Here it is MC-derivability, i.e. supervaluation over the local models of a canonical belief state. In physics.tex 942\u2013969 (thm:physics:superval and its Reading, 'This answers ...') it is truth on the context's filter in every admissible completion. The intro and the philosophy table cite only the physics version, so the reader is left asking which notion the paper means.",
+    "proposed_fix": "Make the physics version the answer and present this one as its counterpart. At 295, replace 'This answers the user's ``maybe you just check that a claim is true in the context at hand. but wtf is that???'' (\\texttt{verification from truth.md}): truth in the context at hand is' with 'This is the multi-context counterpart of the answer given in \\cref{thm:physics:superval}: truth in the context at hand is'. In the same paragraph, replace 'The context-tree calculus of the literature memo L7 is an MC system' with 'Context-tree calculi of the chunk-and-permeate kind \\citep{brown2004chunk} are MC systems'."
+   },
+   {
+    "file": "paper/sections/intro.tex",
+    "location": "sec:intro:method, insert before 'We have tried to mark scope honestly' (line ~132); also lines 111-116",
+    "severity": "major",
+    "problem": "Nearly every result carries a superscript provenance tag such as [T1 \u00a71.1; T2 \u00a71] or [T1 Thm 3.1, as repaired], plus 'Lean: name' and status labels such as '(computed; T5 c4)'. The paper never says what T1\u2013T7 or L1\u2013L11 are, what 'as repaired' means, or how to read the status labels. The intro mentions only 'seven theory threads' and 'literature memos', in internal workflow vocabulary ('coordinated by one orchestrating instance').",
+    "proposed_fix": "Add: '\\paragraph{Conventions.} A superscript tag such as \\src{T1 Thm 3.1} gives a result's provenance. T1--T7 are the theory documents research/theory/T1-soundness-under-search.md, T2-coherence-as-negative-data.md, T3-contexts-idealization-export.md, T4-informal-math-latent-formalization.md, T5-steeper-simplicity-and-normativity-from-imitation.md, T6-philosophical-completeness.md and T7-two-tier-coherent-inferential-learner.md of the accompanying repository; L1--L11 are the literature memos in research/lit/. ``as repaired'' means the statement was changed during adversarial verification (records in research/verification/). A superscript \\textsf{Lean:\\,name} names the Lean declaration (Appendix~\\ref{app:lean}). Status labels mark results that are \\textsf{known}, \\textsf{computed} by a script (\\cref{sec:experiments}), a \\textsf{proof sketch} or a \\textsf{conjecture}. Running text cites only results of this paper.' Also rewrite lines 111\u2013116: 'The work was carried out by cooperating instances of Claude in four stages: literature surveys on eleven topics (L1--L11); seven theory documents (T1--T7); adversarial verification ...; drafting, with a fidelity check of each section against its verified source.'"
+   },
+   {
+    "file": "paper/sections/intro.tex",
+    "location": "end of first paragraph of sec:intro:question (line ~6); global: 'the user' in setting 383,466; caution 217; imitation 128,269; coherence 34,171,204; twotier 32,246,386,460,464,466,468; informal 142,166; physics 29,37,49,78,123,308,499,533,556,967,999,1007-1008,1089; existence 19 occurrences",
+    "severity": "major",
+    "problem": "'The user' appears about 50 times in the main text. Variants include 'the user's air-pressure worry', 'the user himself notes', 'in his words' (physics 30) and 'His caveat' (informal 166). The paper never says who the user is. The intro states the questions without attributing them, so 'the user' first appears in Section 2 with no antecedent. This reads as leaked chat-log vocabulary.",
+    "proposed_fix": "Add to the first paragraph of sec:intro:question: 'The questions are those of Kaarel H\\\"anni, posed in his research notes; we quote the notes verbatim and refer to them as ``the notes''.' Then replace throughout: 'the user's X' \u2192 'the notes' X' (or 'H\\\"anni's X'); 'the user asks/warns/worries' \u2192 'the notes ask/warn/worry'; 'the user himself notes' \u2192 'the notes observe'; 'in his words' \u2192 'in the notes' words'. Specifically: twotier 32 'The user's first success criterion' \u2192 'The first success criterion of \\cref{sec:intro:question}'; physics 1089 '(the user's slip: $I$ for $I_0$)' \u2192 '(a slip recorded in the notes)'; physics 1007\u20131008 'the answer ... is the user's, reported by him to match the official one' \u2192 'the answer is the one in the notes, where it is reported to match the official solution'."
+   },
+   {
+    "file": "paper/sections/setting.tex",
+    "location": "lines 91, 204, 210, 312, 424, 427, 480, 482, 488, 493",
+    "severity": "major",
+    "problem": "Running text cites memo items, a reader cannot look up, in places where the paper itself contains the result: '(T1 Lemma~1.1)', '(T1 Prop.~2.3, scope remark)', '(T2 \\S4.1)', '(L3 Lemma~A, ...)', '(T2 Thm~5.3)', '(T7 Thm~5.7, ...)', '(T3 \\S1)', '(T3 Prop.~1.5)', '(T3 Def.~1.3, Prop.~1.4)', '(T2 Prop.~7.1)'.",
+    "proposed_fix": "Replace with paper references. 91: delete '(T1 Lemma~1.1)'; \\cref{lem:search:stepwise} is already given. 204: '(\\cref{ex:search:atoms})'. 210: '(\\cref{sec:coherence:carnap})'. 312: '(\\cref{lem:search:commitment})'. 424: '(\\cref{thm:coherence:complexity})'. 427: '(\\cref{thm:twotier:depth})'. 480: delete '(T3 \\S1)'. 482: '(\\cref{prop:physics:sup})'. 488: '(\\cref{def:physics:filter,prop:physics:los})'. 493: '(\\cref{prop:physics:misdesignation})'."
+   },
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "lines 38, 48, 78, 85, 111, 113, 233, 237-238, 308, 334, 420, 429-433, 491, 499, 537, 558, 641, 759, 859, 1007, 1127, 1133, 1136, 1159; and 302, 639, 1125",
+    "severity": "major",
+    "problem": "About 25 memo references in running text: 'L10 \\S1.7', 'L9 \\S5.2', 'L7 \\S4', 'L9's solution format', 'L7's ``ill-posed idealizations must not export''', 'T2's formal version', 'T6 Thm~4.1', 'T2 Thm~2.2', 'T3 Prop~4.2', 'after L9 \\S3.7', and so on. Separately, 'IPhO~2025 T2 versus T3', 'T2 C.3' and 'T2 C.4' use the same labels as the memos T2/T3, while line 76 says 'Theory~2'.",
+    "proposed_fix": "Where the paper has the result, use \\cref: 491 '(T2 Thm~2.2)' \u2192 '(\\cref{thm:coherence:halving})'; 308 'This is T2's formal version of the user's air-pressure worry.' \u2192 'This is a formal version of the air-pressure worry of \\cref{sec:intro:question}.'; 759 '(T3 Prop~4.2)' \u2192 '(Appendix~\\ref{app:physics})'. Move pure literature pointers (L7/L9/L10 \u00a7...) into the result's \\src tag or a footnote, or delete them. Write IPhO problems as 'Theory Problem 2/3': 302 '(IPhO~2025 Theory Problems 2 and 3)'; 639 '(IPhO~2025 Theory Problem 2, part C.3)'; 1125 'IPhO~2025 Theory Problem 2, part C.4'."
+   },
+   {
+    "file": "paper/sections/coherence.tex",
+    "location": "line 260: 'Incoherent computable credences can gradually verify the $\\Pi_2$ sentences convergently (L3 Thm~G(f), a standard construction given there as a sketch)'",
+    "severity": "major",
+    "problem": "The claim 'weak coherence costs exactly the $\\Pi_2$ class' rests only on an internal literature memo, and the memo itself gives just a sketch. The paper contains neither a proof nor a citation, so the reader cannot check it.",
+    "proposed_fix": "Either add the construction to Appendix~\\ref{app:coherence:costs} and mark the sentence \\status{proof sketch}, or replace from 'Incoherent computable credences ...' to the end of the paragraph with: 'Whether incoherent computable credences can gradually verify the $\\Pi_2$ sentences convergently we leave open here.'"
+   },
+   {
+    "file": "paper/bib/search.bib",
+    "location": "entries rivest1988reliable, elyaniv2010selective, li2008kwik (cited in sections/search.tex line 86)",
+    "severity": "major",
+    "problem": "These keys duplicate rivest1988learning, elyaniv2010foundations and li2008knows. The compiled bibliography therefore lists the same paper twice, and the text cites 'Rivest and Sloan, 1988a' and '1988b', 'El-Yaniv and Wiener, 2010a/2010b' and 'Li et al., 2008a/2008b' for one paper each (main.txt lines 857, 989\u2013990, 1275\u20131276).",
+    "proposed_fix": "Delete the three entries from bib/search.bib and regenerate bib/all.bib. In search.tex 86, use the canonical keys, or delete Remark (c) altogether (it duplicates setting.tex 466\u2013472 and caution.tex 29)."
+   },
+   {
+    "file": "paper/bib/simplicity.bib",
+    "location": "entry cohen1981can (pages 317--370) vs bib/philosophy.bib cohen1981irrationality (pages 317--331)",
+    "severity": "major",
+    "problem": "The same paper, Cohen, 'Can Human Irrationality Be Experimentally Demonstrated?', BBS 4(3), has two keys with conflicting page ranges. It is cited from simplicity.tex 61 and 387 and from philosophy.tex 50, so it appears twice in the bibliography with different pages.",
+    "proposed_fix": "Keep one key, e.g. cohen1981can, with pages 317--370 if the open-peer-commentary is meant, else 317--331. Replace \\citet{cohen1981irrationality} in philosophy.tex 50 and delete the other entry."
+   },
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "lines 41-59 (second paragraph of the section: 'Mathematically, almost everything here is trivial once set up or standard. In T3's own accounting, \\cref{...16 labels...} are trivial once set up ...')",
+    "severity": "major",
+    "problem": "The section opening refers to an internal document ('T3's own accounting') and gives a 16-label \\cref list that no reader can parse. It also mixes in provenance ('Results are from T3 unless marked otherwise').",
+    "proposed_fix": "Replace with: 'Most results here are trivial once the definitions are in place. The imported ingredients are \\L{}o\\'s's theorem, Gronwall's inequality, split conformal prediction, the radius of information and the adversary argument of information-based complexity, Lipschitz covering bounds and interval inclusion monotonicity. New, as far as we know, are the frame-free realizability criterion (\\cref{thm:physics:realizability}(a)), the two-sided analysis of adversarial stipulation with its well-posedness certificate (\\cref{thm:physics:stipulation}), and a rigorous thin-leg certificate with a complete worked checker run (\\cref{sec:physics:example}). Proofs not given inline are in Appendix~\\ref{app:physics}.'"
+   },
+   {
+    "file": "paper/sections/twotier.tex",
+    "location": "lines 121-123, 180, 193-204, 236, 299-302, 311, 319, 391, 412, 414-431",
+    "severity": "major",
+    "problem": "At 21 pages this is the longest section, and much of it is proof and computation detail that interrupts the main line: the Bayesian middle-way remark; 'Two details were found by verification'; the oracle-cost paragraph and the voting-audit proposition with its computed example; the non-monotonicity example; the (OE)/LP discussion and concrete instance after the burn-in theorem; thm:twotier:blame(c); the Hilbert illustration; prop:twotier:coherenceonly(b) detail; 'why learn at all?'; and the six-part arithmetic theorem with 'Three computations'. Together these are about 2,600 words.",
+    "proposed_fix": "Move these items to the existing app:twotier:* subsections, keeping the labels. Leave behind: (i) 'When at most $m$ positions may violate (WS), a per-position voting audit keeps $\\Sigma^*$ and removes every fallacy refuted at $m+1$ complete positions (\\cref{prop:twotier:voting}, Appendix~\\ref{app:twotier:voting}).' (ii) For thm:twotier:arith, keep (a), (b) and (d) as one-line items; move (c), (e), (f) and the computations to app:twotier:arith, leaving 'Popperian $\\Sigma_1$-caution, the learnability of finite reflection-extended practices under the floor, and reflection as designation are in Appendix~\\ref{app:twotier:arith}.' (iii) Keep only the first sentence of the paragraph at 299."
+   },
+   {
+    "file": "paper/sections/twotier.tex",
+    "location": "sec:twotier:reading, lines 460-469 ('Reading in the user's terms', ~750 words); also line 457 ('The propositional experiment')",
+    "severity": "major",
+    "problem": "The closing subsection repeats the three channels, the 'learning meanings' argument, Goodman's mutual adjustment and the warrant. Philosophy 13.1\u201313.2 and the intro say the same things. Line 457 restates Experiment B, which experiments.tex already reports in full.",
+    "proposed_fix": "Replace 460\u2013469 with: '\\subsection{Summary}\\label{sec:twotier:reading} Learning which inferences are valid is learning the \\emph{audited practice}. Imitation finds the practice's rules, fallacies included, and is the only channel that says anything positive about a rule (\\cref{lem:twotier:onesided,prop:twotier:positive}). Confrontation with designated positions and the world sorts them, withholding every rule in a minimal conflict and, where descent applies, only the culprit (\\cref{lem:twotier:reiter,lem:twotier:descent}). Assertion comes last, after the burn-in (\\cref{thm:twotier:burnin}). Coherence fixes the learned role only up to which member of a conflicting set is given up: in the MP/AC example only the world or a denial decides whether `$\\to$' means $\\to$ or $\\leftarrow$. The residue $F_{\\mathrm{res}}$ is empty for $\\CPC$ and, given realizability, for complete decidable theories; in arithmetic it contains $\\neg\\Con(\\PA)$ under presumption of validity. \\Cref{sec:philosophy} discusses the resulting warrant.' Move the open-problem list to open.tex. Replace 457 with: 'Experiment~B (\\cref{sec:experiments:prop}) runs a related pipeline, not an implementation of TTL, and shows this section's phenomena: coherence pruning closes every route to $\\vdash\\bot$, Post probes refute every invalid structural schema, non-structural rules escape (\\cref{prop:twotier:structurality}), and world feedback mainly speeds up blame (5.0 versus 9.1 pruning rounds): localization, not refutation.'"
+   },
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "lines 643-692 (Gronwall, projectile certificate + Numbers, chains), 766-860 (conformal, noreg, Lipschitz, monotone, Laymon), 1038-1066 (thin-leg, finite-sun), 1102-1117 (Residual defects), 395-406 (brute-force paragraph)",
+    "severity": "major",
+    "problem": "The physics section (19 pages) carries long technical certificate theorems and numerical tables in the main text. These are about 1,900 words that the argument of the section, that exports need finite-radius information and that a checker is sound relative to a judgment layer, does not depend on.",
+    "proposed_fix": "Move the listed passages to app:physics (add subsections), keeping all labels. After thm:physics:neighbourhood insert: 'Certificates of this form include a checkable Gronwall bound for finite-horizon exports (\\cref{thm:physics:gronwall}); a rigorous range certificate for projectiles under any drag dominated by quadratic drag (\\cref{thm:physics:projectile}), which for a steel ball certifies $R\\in[9.653,10.483]$\\,m against a simulated $9.978$\\,m and for a ping-pong ball is silent; and error budgets for chains of bridges (\\cref{thm:physics:chains}), under which `$100-99.9$' with tolerances $0.2$ certifies not even a sign.' After thm:physics:coherencetol insert: 'Calibration on exchangeable feedback gives average coverage and nothing under selection (\\cref{thm:physics:conformal}); without a regularity guarantee finitely many simulations certify only the queried points (\\cref{thm:physics:noreg}); with a \\emph{proved} Lipschitz constant or monotonicity, validated simulation becomes a sound certifier at a matching query cost (\\cref{thm:physics:lipschitz,thm:physics:monotone}), and monotonicity must be proved, since it fails for a damped pendulum (\\cref{prop:physics:laymon}).'"
+   },
+   {
+    "file": "paper/sections/existence.tex",
+    "location": "lines 336-375 (First-order term models ... Tennenbaum), 184-197 (threshold theorem, Scope, closed agendas), 220-229 (vNM)",
+    "severity": "major",
+    "problem": "The existence section (14 pages) answers a side question. Lines 336\u2013375 (about 1,050 words: prime models, compactness and computability barriers, Beth, 'how are the natural numbers pinned down', Tennenbaum) are a survey of classical results that the verdict paragraphs only summarize. The threshold, scope, closed-agenda and vNM material adds another ~470 words of detail.",
+    "proposed_fix": "Move 336\u2013375 to app:existence:learned and 184\u2013197 and 220\u2013229 to app:existence:credences, keeping labels. Replace 336\u2013375 with: '\\paragraph{What pins the intended model.} Two layers of non-standardness remain. Coherent but false theories such as $\\PA+\\neg\\Con(\\PA)$ have a prime model containing a definable non-standard `proof of $0=1$'. True theories need not be categorical, since by compactness no first-order mode of talking pins down an infinite structure (\\cref{thm:existence:compactness}). For any computable coherence notion, `coherent iff there is something it could be talking about' can hold only if having such a something is $\\Pi_1$ (\\cref{thm:existence:computability}). Anchoring a vocabulary pins exactly what is definable from it (\\cref{prop:existence:beth}). Every known pin of $\\N$ (second-order induction, initiality, the $\\omega$-rule, Tennenbaum's theorem) adds something beyond finitary computable coherence (Appendix~\\ref{app:existence:learned}).' Keep de Finetti, the arity theorem, the probing caution and the Gaifman/inductor results in the main text."
+   },
+   {
+    "file": "paper/sections/simplicity.tex",
+    "location": "lines 51-59 (lem:simplicity:empirical), 63-65 (second literature paragraph), 91-103 (prop:simplicity:sequence), 194-250 (thm:simplicity:idealized, 'The repair', cor:simplicity:shapes, thm:simplicity:example, cor:simplicity:example), 328-329",
+    "severity": "major",
+    "problem": "The section answers a side question but spends about 1,200 words on technical bounds: an Occam lemma, the idealized rate threshold with explicit slack constants and its repair history, the convex-frontier corollary, and the parity-example theorem and corollary. The verdict uses none of these beyond one sentence.",
+    "proposed_fix": "Move them to app:simplicity (the app labels already exist), keeping 'The note's own numbers' (251) and the Reading (253) in the main text. Insert after cor:simplicity:selectable: 'With $\\ell=K$ and all hypotheses allowed, the rate threshold survives for independent parities up to explicit $O(\\log)$ slack (\\cref{thm:simplicity:idealized}), every convex frontier is realizable after rescaling (\\cref{cor:simplicity:shapes}), and in the note's example every near-optimal hypothesis inside the window $(\\approx1/n,\\approx(1-H(p))/d)$ correlates with the parity and memorizes almost none of the errors (\\cref{thm:simplicity:example,cor:simplicity:example}); all are proved in Appendix~\\ref{app:simplicity}.' Condense 'Further pathologies' to one sentence per italic heading."
+   },
+   {
+    "file": "paper/sections/experiments.tex",
+    "location": "lines 135-186 (subsections D, E, F, G) and 193-210 (Reproduction verbatim block)",
+    "severity": "major",
+    "problem": "D restates tab:twotier:sim (and its 72/80 and 0/80 counts). E restates tab:physics:checkerrun and repeats 'the first version accepted V6\u2013V9'. F's table repeats numbers already stated inline in Section 8. G repeats thm:informal:frz(iv). The shell-command block belongs in code/README.md. Together these are about 1,150 words.",
+    "proposed_fix": "Replace 135\u2013186 with: '\\subsection{D--G: re-runs of the check scripts}\\label{sec:experiments:checks} Four check scripts were re-run for this section and reproduce the numbers quoted where the results are stated: \\texttt{ttl\\_sim.py} (\\cref{tab:twotier:sim}), \\texttt{sps\\_checker.py} (\\cref{tab:physics:checkerrun}), the simplicity scripts \\texttt{c1}--\\texttt{c5} (the \\textsf{computed} figures of \\cref{sec:simplicity}) and \\texttt{comprehension\\_toy.py} (\\cref{thm:informal:frz}(iv)).' Keep the old labels sec:experiments:ttl/:physics/:simplicity/:comprehension on this subsection, or update their uses. Move 193\u2013210 to code/README.md or an appendix, and leave 'Reproduction instructions and run times are in \\texttt{code/README.md}.'"
+   },
+   {
+    "file": "paper/sections/imitation.tex",
+    "location": "sec:imitation:experiment, lines 284-288 (paragraph at 286, ~500 words)",
+    "severity": "major",
+    "problem": "Experiment A's positive-data results are reported here in full: shape recovery at 0/67/92/100%, OOD acceptance 1.00 against the classifier's 89%/73%, 11.7\u00b10.5 unsound schemas, fallacies 6/6, noise counts 102\u00b111 and 18.5\u00b13.6. experiments.tex 43 then says '\\Cref{sec:imitation:experiment} reports the positive-data part', so Experiment A is split across two sections.",
+    "proposed_fix": "Move the numbers of 286 into experiments.tex 43 ('Imitation and world feedback') and remove its back-reference. In imitation.tex, replace 286 with: 'Experiment~A (\\cref{sec:experiments:algebra}) illustrates each limit on school algebra: rule shapes are recovered once a rule has a few instances and generalize out of distribution, but no guard is ever displayed, all five systematic fallacies reach support, and spurious schemas from sporadic noise grow with $N$ under a fixed support threshold.' Keep 288."
+   },
+   {
+    "file": "paper/sections/search.tex",
+    "location": "line 200 (protocol restated 'in minimal form'), line 223 (last sentence on truth maintenance), line 228 (sec:search:practice)",
+    "severity": "minor",
+    "problem": "The online coherence protocol is defined here and again as def:coherence:protocol (coherence.tex 45\u201347). The truth-maintenance sentence duplicates coherence.tex 81. The Experiment C paragraph duplicates experiments.tex 122, including the AUC 0.995 and 16.3/23 figures and the gao2023scaling citation.",
+    "proposed_fix": "Replace the protocol paragraph at 200 with: 'We use the online protocol of \\cref{def:coherence:protocol}: hypotheses are step sets with prior $w$, designated contexts $\\Ac$ are target-coherent, and a detected incoherence deletes every hypothesis containing its steps. \\emph{Majority aggregation} announces $\\hat R_t=\\{s: w(\\{R\\in\\VS_t:s\\in R\\})>\\tfrac12 w(\\VS_t)\\}$.' Alternatively, move sec:search:ensembles into coherence.tex just before 'Oligarchic acceptance'. Delete the last sentence of 223. Replace 228 with: 'Experiment~C (\\cref{sec:experiments:adversarial}) illustrates the gap: a step classifier with in-distribution AUC $0.995$ lets a black-box prover prove $16.3$ of $23$ false goal equations, while the learned calculus proves none. That learned verifiers are exploited by search is well documented \\citep{gao2023scaling,cobbe2021training}; the theorems explain why in-distribution accuracy cannot rule it out, though not the rate.'"
+   },
+   {
+    "file": "paper/sections/search.tex",
+    "location": "line 21 ('We recall the step language ...'), lines 83-87 (Remarks (a),(c)), 96-98 (def:search:pure), 114, line 16/38/84 ('trivial once set up' x3)",
+    "severity": "minor",
+    "problem": "Line 21 re-defines steps, closure and Sound(R*) from def:setting:step in a different notation: $\\mathcal S$ and $\\Pi$ instead of $S$ and $P$, and an acceptance region $A$ where setting uses $\\hat R_t$, with \\textsc{accept} instead of \\ACCEPT. def:search:pure and line 114 re-define pure schemas and purification from def:setting:schema. Remark (c) is the third copy of the reliable-learning/KWIK sentence. 'Trivial once set up' occurs three times in this section.",
+    "proposed_fix": "Replace 21 with: 'Steps, closure and $\\Sound(\\Rstar)$ are as in \\cref{def:setting:step}. A deterministic verifier $\\hatV$ has acceptance region $A=\\{s:\\hatV(s)=\\ACCEPT\\}$, and an unbounded prover chaining accepted steps from $B$ reaches exactly $\\Cl_A(B)$.' Replace def:search:pure with: 'Recall pure schemas and purification $\\tau^\\circ$ (\\cref{def:setting:schema}). A step set is \\emph{substitution-closed} if it is closed under uniform substitution of formulas for atoms (instance sets of pure schemas are); a step $\\Pi\\step\\varphi$ is \\emph{sound} if $\\Pi\\models\\varphi$.' Keep the label and delete line 114. Delete Remarks (a) and (c) and the first clause of line 38. In twotier.tex 360, change \\cref{def:search:pure} to \\cref{def:setting:schema}. Use one notation ($S$, $\\Pi$, \\ACCEPT) throughout."
+   },
+   {
+    "file": "paper/sections/setting.tex",
+    "location": "lines 207-212, 299-305, 375-380, 466-472, 475-495",
+    "severity": "minor",
+    "problem": "Several setting paragraphs are duplicates. 207\u2013212 ('inference data are negative data about valuations') duplicates coherence.tex 273. 299\u2013305 (negative bag as a multiple-instance label) duplicates coherence.tex 57. 375\u2013380 gives Experiment A's 96.5% meadow figure, duplicating experiments.tex 55. 466\u2013472 is the first of five copies of the reliable-learning/KWIK framing. The 'Contexts: a preview' subsection (475\u2013495, about 220 words) duplicates the physics opening.",
+    "proposed_fix": "207\u2013212 \u2192 'Inference data and coherence data inform the learner from opposite sides; \\cref{sec:coherence:carnap} makes this precise.' In 299\u2013305, replace from 'A negative bag is a multiple-instance label' to 'not themselves cut-closed.' with 'A negative bag is a multiple-instance label (\\cref{lem:coherence:bag}).' In 375\u2013380, replace from 'In experiment A, coherence without (W)' with 'Without (W), coherence in experiment A converges to a coherent calculus for the total reading $1/0=0$, a different meaning of `/' (\\cref{sec:experiments:algebra}).' 466\u2013472 \u2192 '\\paragraph{Reading.} The prover is unbounded and adaptive, so soundness is a worst-case property (\\cref{sec:search}); its price is counted separately in escalations, samples, detections and oracle calls (\\cref{sec:caution}).' Cut 475\u2013495 to three sentences: suppositions are exact discharge (\\cref{prop:physics:sup}); idealizations are filters over declared deformations that may contradict the root without exploding (\\cref{prop:physics:los}); coherence is enforced only on the root and anchored contexts (\\cref{thm:physics:realizability,prop:physics:misdesignation})."
+   },
+   {
+    "file": "paper/sections/imitation.tex",
+    "location": "lines 36-54 (def:imitation:cautious, lem:imitation:cautious, proof, paragraph), line 128 (Reading), lines 272-281 (rem:imitation:dimension incl. 'This remark has not been through the project's adversarial verification.'), memo labels at 81, 89, 96, 182, 185, 201, 212, 266, 277",
+    "severity": "minor",
+    "problem": "lem:imitation:cautious restates thm:caution:vs(a) and prop:caution:closure for positive data; its own \\src tag says so. Line 54 is the fifth copy of the KWIK/selective-classification sentence. The Reading at 128 duplicates caution.tex 217 ('inventing a language'). The dimension remark overlaps physics.tex 1152\u20131159 and uses internal phrasing. Memo labels appear in running text, e.g. '(T1 Thm~3.6; ...)', '(L1 \\S2.2)', '\\status{computed; T1 \\S6}'.",
+    "proposed_fix": "Replace 36\u201354 with: 'With no oracle, the VS verifier of \\cref{def:caution:vs} accepts $\\hat R(D):=\\bigcap\\VS(D)$, $\\VS(D)=\\{R\\in\\Hc:D\\subseteq R\\}$. By \\cref{thm:caution:vs}(a) and \\cref{prop:caution:closure} it is sound against every prover at every time, it is the largest acceptance region sound for every target compatible with $D$, it is monotone in $D$, and for $H_1$ it is $\\inst(\\lgg D)$.' Attach \\label{def:imitation:cautious} and \\label{lem:imitation:cautious} to this text. At 128, replace 'The user's note that mathematics ... at coupon-collector cost.' with 'This is the positive-data counterpart of the gap between cited and uncited rules in \\cref{tab:caution:cost}.' Move rem:imitation:dimension to app:imitation:dimension with the header status '\\status{proof sketch; not adversarially verified}'. Replace the memo labels with \\cref{thm:caution:tagged}, \\cref{thm:caution:untagged} and \\cref{prop:twotier:practice}, or move them into \\src tags."
+   },
+   {
+    "file": "paper/sections/philosophy.tex",
+    "location": "lines 156-178 (subsection 'Answers to the questions that prompted the investigation' and tab:philosophy:answers); line 158 'notes that are publicly available'",
+    "severity": "minor",
+    "problem": "The table is the third summary of the same answers, after the abstract and the intro list with tab:intro:answers. Line 158 says the notes are 'publicly available', but simplicity.tex 30 footnotes the note as '(unpublished)'.",
+    "proposed_fix": "Delete tab:philosophy:answers and its introductory paragraph. Replace them with: 'The motivating questions, and where each is answered, are listed in \\cref{sec:intro:answers} and \\cref{tab:intro:answers}.' Add the one row missing from the intro to intro item (6): 'Selection of steps by counterexample objects, plus G\\\"odel completeness, explains why surviving informal steps are derivable, though not why they are short (\\cref{prop:informal:emergence}).' Make the description of the notes consistent with simplicity.tex 30, as either public with a URL or unpublished."
+   },
+   {
+    "file": "paper/sections/caution.tex",
+    "location": "lines 35-37 (Conventions + recall of rank/witness events with 'T1 Lemma~1.2/1.3'), 164-169 (thm:caution:untagged(iii)), 176 (Exact values), 182 (Evidence paragraph, 'as corrected after verification'), 261-271 (noisy-oracle example + prop:caution:tight), 324 '(T2 Prop.~2.9(a); ...)'",
+    "severity": "minor",
+    "problem": "The conventions re-define the escalation cost already given in def:setting:cost. The rank and witness-event recall carries memo labels. Brute-force evidence and the tightness construction are appendix material in the main text. Line 324 cites a memo where the paper label prop:coherence:caution exists.",
+    "proposed_fix": "Cut 35\u201337 to 'Protocol, soundness and cost are as in \\cref{def:setting:protocol,def:setting:soundness,def:setting:cost}; we use the rank lemma and witness events (R), (D) of \\cref{lem:setting:rank,lem:setting:recover}.' Move (iii), the 'Exact values' paragraph and the Evidence paragraph (keep its first sentence) to app:caution:untagged and app:caution:conj. Move the noisy-oracle example and prop:caution:tight to app:caution:tight, leaving 'The constant $\\delta\\le\\wstar\\delta'$ cannot be improved (\\cref{prop:caution:tight}).' At 324, write '(\\cref{prop:coherence:caution})'."
+   },
+   {
+    "file": "paper/sections/coherence.tex",
+    "location": "lines 246-261 (thm:coherence:trilemma, prop:coherence:costs and following paragraph), 451-469 (rem:coherence:consensus, lem:coherence:projection), 81 (truth-maintenance duplicate), 326 ('the T2 verifier found'), 448 ('(L11 TC4)')",
+    "severity": "minor",
+    "problem": "The credence results and the eliminative-coherence remarks are long digressions from the section's line (about 600 words). The memo references 'the T2 verifier' and 'L11 TC4' cannot be followed by a reader.",
+    "proposed_fix": "Move 246\u2013261 to app:coherence:costs and leave: 'The same $\\Sigma_2$ boundary appears for credences: computable, weakly coherent, $\\Pi_1$-convergent credences are dogmatic on infinitely many true $\\Pi_2$ sentences (\\cref{thm:coherence:trilemma}); \\cref{prop:coherence:costs} records what weak coherence costs.' Condense 451\u2013469 to one paragraph that cites the appendix. 326: 'the T2 verifier found' \u2192 'an exhaustive search found'. 448: move '(L11 TC4)' into a \\src tag on the remark."
+   },
+   {
+    "file": "paper/sections/informal.tex",
+    "location": "line 85 '(T4 Prop~2.6)'; 113 ('There is \\emph{no union bound over queries} (as in \\cref{sec:caution})'); 120-123 (proof idea of thm:informal:ville); 189-191, 264, 288 (computational detail, 'V1', 'V3', 'a referee's search'); 207-222 (prop:informal:ist, prop:informal:benacerraf); 459 (caption 'the project's literature memo L6'); 469 (last paragraph)",
+    "severity": "minor",
+    "problem": "The Ville theorem and the union-bound remark are transported almost verbatim from Section 4. Computational verification records ('mismatches the true survivors 527 times', 'V1', 'V3', 'a referee's search') sit in running text. Line 85 rests a claim on a memo. The last paragraph duplicates open.tex item 1.",
+    "proposed_fix": "Delete the sentence at 113. Replace the proof idea of thm:informal:ville with 'As for \\cref{thm:caution:ville}, with shadow-measurability giving $w_t([h^*])=W^*/Z_t$; Appendix~\\ref{app:informal}.' At 85, replace '(T4 Prop~2.6)' with '(immediate: the accepted set only shrinks)'. Move the computational details at 189\u2013191, 264 and 288 to app:informal:identify and app:informal:objects. Move 207\u2013222 to the appendix and leave: 'The same holds for $\\varepsilon$-$\\delta$ analysis versus Nelson's IST on standard sentences, and for von~Neumann versus Zermelo numerals on arithmetic sentences (\\cref{prop:informal:ist,prop:informal:benacerraf}).' Caption 459: replace the parenthesis with \\src{L6 \\S1}. Replace 469 with 'The hardest open problem, affordable soundness with language invention, is stated in \\cref{sec:open}(1).'"
+   },
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "start of sec:physics:export (line 567) and sec:physics:learning (line 739)",
+    "severity": "minor",
+    "problem": "Both subsections open with notation ('Fix a one-parameter deformation ...', 'A bridge schema $s$ has a dimensionless regime parameter ...') and never say what they establish.",
+    "proposed_fix": "Insert at 567: 'Contexts let an idealized model contradict the world; exports carry its conclusions back. This subsection shows that no export is free: information about the idealized model alone, however complete (its jet, its germ, finitely many values elsewhere), never justifies a finite-tolerance claim at the actual parameter (\\cref{thm:physics:nofree}). What justifies one is information of small radius about the de-idealized family (\\cref{prop:physics:radius}), and we list the forms such certificates take. The subsection ends with the attack this creates: a solver who may choose contexts can stipulate any answer unless side conditions are evaluated in the parent and contexts are declared deformations (\\cref{thm:physics:stipulation}).' Insert at 739: 'Export certificates need tolerances and validity regions, which are natural targets for learning. This subsection asks which signals learn them soundly against a solver who picks the regime. Coherence among exports catches only tolerances that are too narrow (\\cref{thm:physics:coherencetol}); exchangeable calibration gives average coverage and nothing under selection; and only a \\emph{proved} regularity property turns validated simulation of the top model into a sound certifier (\\cref{thm:physics:lipschitz,thm:physics:monotone}).'"
+   },
+   {
+    "file": "paper/sections/twotier.tex",
+    "location": "start of sec:twotier:special (line 358)",
+    "severity": "minor",
+    "problem": "The subsection opens directly with '\\paragraph{Classical propositional logic.}' and gives no statement of what the three specializations show.",
+    "proposed_fix": "Insert: '\\Cref{thm:twotier:main} is stated relative to a residue and to realizability. This subsection evaluates both for three targets. For classical propositional logic the residue is empty, closed-instance evaluation gives singleton blame, and TTL is exact (\\cref{cor:twotier:cpc}); coherence alone is sound but may withhold genuine rules, and one denial per fallacy repairs this (\\cref{prop:twotier:coherenceonly}). For complete decidable theories the same holds conditionally on a realizability hypothesis that is not established for the usual axiomatizations (\\cref{cor:twotier:decidable}). Arithmetic is Popperian, with a permanent residue beyond $\\Sigma_1$ (\\cref{thm:twotier:arith}).'"
+   },
+   {
+    "file": "paper/sections/caution.tex",
+    "location": "start of sec:caution:cost (line 112)",
+    "severity": "minor",
+    "problem": "The subsection opens directly with thm:caution:single, without saying what is computed or why.",
+    "proposed_fix": "Insert: '\\Cref{thm:caution:esc} reduces the cost of caution to a property of the class. This subsection computes it for the classes that matter here; \\cref{tab:caution:cost} collects the results. The main contrast is between rules cited by name, where caution costs at most $N+1$ escalations per rule, and uncited rules, where even one rule can force $\\lfloor(N-1)/k\\rfloor^k$. Unstructured classes cost exponentially in description length, and certifying invalidity too costs a Bell number.'"
+   },
+   {
+    "file": "paper/sections/coherence.tex",
+    "location": "start of sec:coherence:arith (line 207, before 'Hypotheses are r.e. theories')",
+    "severity": "minor",
+    "problem": "The subsection opens with notation and does not state its findings.",
+    "proposed_fix": "Insert: 'Arithmetic is where coherence stops being a complete test. Coherence with a $\\Sigma_1$-complete base already does everything $\\Delta_0$ world feedback can (\\cref{lem:coherence:delta0}); no r.e.\\ hypothesis is maximal, and Turing progressions are not identifiable (\\cref{thm:coherence:rosser,thm:coherence:turing}). The right use of coherence is Popperian: it detects false $\\Pi_1$ claims but not false $\\Sigma_1$ claims, and no computable channel decides $\\Sigma_2$ truth in the limit (\\cref{thm:coherence:popper}).'"
+   },
+   {
+    "file": "paper/sections/existence.tex",
+    "location": "start of sec:existence:learned (line 298)",
+    "severity": "minor",
+    "problem": "The subsection opens with notation ('Let $R$ be a learned set of rule schemas ...') and does not say what it shows.",
+    "proposed_fix": "Insert: 'We return from general completeness theorems to the learner. Coherence of a learned structural calculus on a designated context always yields a model, but a syntactic one (\\cref{thm:existence:buys}). That model reduces to the intended one exactly when the intended semantics is a surjective image of the language (\\cref{thm:existence:leibniz}). Compactness and computability then bound how far coherence can pin down an intended infinite structure (\\cref{thm:existence:compactness,thm:existence:computability}).'"
+   },
+   {
+    "file": "paper/sections/existence.tex",
+    "location": "line 38 ('records a remark of Sam's'), 40 ('Sam's slogan'), 57 (prop:existence:image titled 'Sam's image'), 121 ('Sam's other pointer'), 379; file paths at 32, 166, 295, 350, 374, 383; memo labels at 38, 273, 296, 344",
+    "severity": "minor",
+    "problem": "'Sam' is unidentified, and the paper names a proposition after him. Paths of private notes appear in running text: \\texttt{logic/a 'philosophical version' of g\\\"odel's completeness theorem.md}, \\texttt{ai/DLK/}, \\texttt{verification from truth.md}, \\texttt{math is a mere string game iff everything is.md}, \\texttt{logic/confusions/soundness.md}, \\texttt{logical models as distinct from mental models.md}. Memo labels such as 'L10 \\S1.5' and 'L4 Prop~3.1' also appear.",
+    "proposed_fix": "Retitle prop:existence:image as '[The image of $\\Th$]'. At 38, write 'records a colleague's remark:', or give the full name with permission. Elsewhere, 'Sam's slogan' \u2192 'this slogan' and 'Sam's other pointer' \u2192 'the other pointer in the notes'. Replace each file path with '(the notes)', putting the path in a footnote if wanted. Move the L10/L4 references into \\src tags or delete them."
+   },
+   {
+    "file": "paper/sections/twotier.tex",
+    "location": "line 46 ('All results come from theory thread T7 ...'); script names at 119, 143, 180, 204, 236, 300, 311, 317-319, 370, 410, 430 (\\texttt{overlap.py}, \\texttt{noisefree.py}, \\texttt{prop32\\_voting.py}, \\texttt{depth\\_nonmono.py}, \\texttt{two\\_point\\_bounds.py}, \\texttt{thm56\\_finite\\_d.py}, \\texttt{hilbert\\_blame.py}, \\texttt{lemma61.py}, \\texttt{ind\\_lgg.py}); verification history at 180, 269",
+    "severity": "minor",
+    "problem": "The section uses workflow vocabulary ('theory thread T7'), cites check-script file names in running text, and narrates verification history ('Two details were found by verification and simulation', 'Both qualifications were added in verification').",
+    "proposed_fix": "46: replace 'All results come from theory thread T7, which went through two rounds of adversarial verification; several statements below are the repaired ones, and we say so where it matters.' with 'All results of this section passed two rounds of adversarial verification.' Keep the disclosure about the second-round repairs. Replace script names with a uniform \\status{computed} and list the scripts in one appendix table mapping each to the claims it checks. At 180 and 269, keep the mathematical content (the counterexample showing why each hypothesis is needed) and drop 'found/added in verification'."
+   },
+   {
+    "file": "paper/sections/simplicity.tex",
+    "location": "line 126 ('(the last assumption was added after verification)'), 219 ('\\emph{The repair.} The original clause (b) ... was false'), 328 ('An earlier claim ... was false and is retracted'); status tags 'T5 c1', 'T5 c2(a), repair\\_checks', 'T5 c4', 'T5 c5'",
+    "severity": "minor",
+    "problem": "Running text narrates the history of corrections. A reader of a paper needs the correct statement and, where useful, the counterexample showing a hypothesis is needed; the record of which earlier draft was false does not belong here. The internal script labels in the status tags mean nothing to a reader.",
+    "proposed_fix": "Delete '(the last assumption was added after verification)'. Rewrite 219 as: 'The second condition in (b) cannot be weakened to $\\pi_j>2\\Delta+16c$: with $m=1$, $\\pi_1=1$, $d_1=40$, $c\\approx10^{-8}$ and $h(f_a(z)\\mid z)=0.745$, $\\hat s=0.49$.' Move this to app:simplicity:idealized together with the theorem. Delete 'An earlier claim, that conditional rates fix the order of entry, was false and is retracted.' Use \\status{computed} and list scripts c1\u2013c5 in the appendix table."
+   },
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "line 888-889 ('A first version of this definition lacked Ax legality ... the verification of T3 caught it'), 1091-1095 and 1102 ('first version accepted'), 396, 676, 1064 ('a referee's ...'), 1132 ('The brief listed ...'), 425-434 (rem:physics:existence with 'T6 Thm~4.1, Cor~4.2', 'T6 Thm~4.5', 'T6 Prop~4.7')",
+    "severity": "minor",
+    "problem": "The section narrates verification history ('first version', 'the verification of T3 caught it', 'a referee's test'). It refers to 'the brief', which the reader has never seen. rem:physics:existence restates existence-section results under memo labels.",
+    "proposed_fix": "888\u2013889: replace with 'Ax legality and schema indexing are necessary: without them the checker accepts the attack of \\cref{thm:physics:stipulation}(b).' In tab:physics:checkerrun, replace 'first version accepted' with 'accepted by a purely syntactic check' and move 'Residual defects of the prototype' to the appendix. Replace 'a referee's test' and 'a referee's bang-bang $\\kappa(t)$' with 'an independent test'. 1132: 'The brief listed' \u2192 'The notes list'. Replace rem:physics:existence with: '\\Cref{sec:existence} gives the multi-context counterpart: coherence on designated contexts is equivalent to a model nonempty there (\\cref{thm:existence:mcs,cor:existence:contexts}); bridges must be read as rules of proof over belief states, not conditionals between worlds (\\cref{thm:existence:rules}); and locally coherent contexts need not glue into one world (\\cref{prop:existence:triangle}).'"
+   },
+   {
+    "file": "paper/sections/coherence.tex",
+    "location": "line 204 (last sentence of Reading, misdesignation), line 352 (end of Reading, 'And rules can be identifiable when truths are not ...')",
+    "severity": "minor",
+    "problem": "Two claims are stated here and again elsewhere. The misdesignation result is restated in setting.tex 489\u2013494, twotier prop:twotier:designation and physics.tex 308\u2013323. 'Rules can be identifiable when truths are not' is developed in philosophy.tex.",
+    "proposed_fix": "Cut the last sentence of 204 to 'Designation is soundness-critical in the other direction too (\\cref{prop:physics:misdesignation}).' Cut the last sentence of 352 to 'Rules can be identifiable when truths are not (\\cref{sec:philosophy:labour}).'"
+   },
+   {
+    "file": "paper/sections/intro.tex",
+    "location": "Reader's guide (sec:intro:guide) and overall plan",
+    "severity": "minor",
+    "problem": "The reader's guide promises 'Proofs are in the appendices', yet many proofs and long computed-evidence paragraphs are inline. The main text is about 80k words, and no cut plan has been applied. The full plan in readability.md \u00a71 (C1\u2013C19) cuts about 13\u201314k words (\u224817%, ~25 pages) without losing a result. Most of it moves material into existing app:* subsections, keeping labels.",
+    "proposed_fix": "Apply the cut plan in research/paper-review/readability.md \u00a71, starting with twotier (C1\u2013C4), existence (C6\u2013C7), physics (C8\u2013C10), simplicity (C5) and experiments D\u2013G (C11). Then update the reader's guide's last sentence to: 'Proofs, computed evidence and secondary results are in the appendices, one per section; the main text keeps every result's statement or a one-line pointer to it.'"
+   }
+  ]
+ }
+]

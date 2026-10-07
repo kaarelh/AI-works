@@ -1,0 +1,416 @@
+% =====================================================================
+% Section 6. Coherence: what contradictions fix
+% Sources (repaired statements only):
+%   research/theory/T2-coherence-as-negative-data.md, all sections, with its
+%       "## Verification log" (A1-A12, B1-B15, C1-C19), and the round-2 items for T2
+%       in research/verification/reverification-round2.md
+%   research/verification/T2-coherence-as-negative-data-verification.md
+%   research/lit/L3-learning-to-reason-and-limit-inquiry.md (Thm D, Thm D', Thm G(f), Lemma E',
+%       as repaired; the "ceiling" slogan of its first version is retracted and NOT used)
+%   research/lit/L4-inferentialism-and-categoricity.md (Carnap, Restall, Rumfitt,
+%       Belnap, Prior, Kripke)
+%   research/lit/L5-logic-facts.md (Post-completeness, Glivenko, Goedel-Rosser,
+%       Shoenfield; Cor 2.4, Prop 2.5)
+%   research/lit/L11-justification-and-reflective-equilibrium.md (section 3.4, TC3, TC4)
+%   code/results/prop_learning.md (Experiment B, full run; the full account is in
+%       sections/experiments.tex, which this section only cites)
+%   lean/InfLearn/{CoherenceGames,PostCompleteness,Carnap}.lean
+% Proofs not given inline, the credence results (thm:coherence:trilemma,
+% prop:coherence:costs) and the consensus/projection results
+% (rem:coherence:consensus, lem:coherence:projection) are in sections/app-coherence.tex.
+% =====================================================================
+\providecommand{\Steps}{\mathrm{Steps}}
+\providecommand{\Taut}{\mathrm{Taut}}
+\providecommand{\Cai}{C_{\mathrm{ai}}}
+\providecommand{\CFm}{C_{\Fm}}
+\providecommand{\Cadm}{C_{\mathrm{adm}}}
+\providecommand{\BV}{\mathrm{BV}}
+\providecommand{\TTs}{\mathrm{TT}}
+\providecommand{\tonk}{\mathbin{\mathrm{tonk}}}
+\providecommand{\RobQ}{\mathsf{Q}}
+\providecommand{\valtop}{v_{\top}}
+\providecommand{\valtaut}{v_{\Taut}}
+\providecommand{\hstar}{h^{*}}
+\providecommand{\dstar}{\der^{*}}
+
+\section{Coherence: what contradictions fix}\label{sec:coherence}
+
+Imitation cannot tell a systematic human error from a rule (\Cref{cor:imitation:systematic}). The second ingredient of the motivating design (\cref{sec:intro:question}) is a coherence loss: penalize having good arguments for both $P$ and $\neg P$ \citep{hanni2026notes}. In our setting this is channel~(C) of \Cref{def:setting:channels}: a family $\Ac$ of \emph{designated contexts} is certified coherent, and a derivation of $\bot$ from one of them shows that one of its steps is invalid. In brief: coherence is negative data, but only for \emph{bold} learners, and it controls only one of two error types (\Cref{sec:coherence:negative}); it pins the target exactly when the target sits at the top of its coherent version space, as classical propositional logic does by Post-completeness, and it is blind for intuitionistic logic (\Cref{sec:coherence:post}); in arithmetic it is Popperian (\Cref{sec:coherence:arith}); Carnap's categoricity problem is, in part, Gold's problem in the dual space; among structural meanings it is solved by data with two denials plus one coherence datum (\Cref{sec:coherence:carnap}); coherence catches tonk but not non-conservativity (\Cref{sec:coherence:tonk}); what survives is the Kripkensteinian residue of coherent uniform alternatives (\Cref{sec:coherence:fallacies}); and this use of coherence is eliminative, untouched by the coherentist impossibility theorems (\Cref{sec:coherence:eliminative}).
+
+Most results are known in substance. Post-completeness \citep{post1921,wojcicki1988theory}, Glivenko's theorem, Gold's limit-point argument, halving and weighted majority \citep{littlestone1988learning,littlestone1994weighted}, the multiple-conclusion answer to Carnap \citep{carnap1943formalization,shoesmith1978multiple}, Belnap's conservativity \citep{belnap1962tonk} and the $\Sigma_1/\Pi_1$ asymmetry of limiting inquiry \citep{putnam1965trial,gold1965limiting,kelly1996logic} are classical. New, as far as we know, are the reduction of contradictions to coalitions, the two-sided trade-off, the denial-rank trichotomy and twelve-datum tell-tale as learning results, the rule-level analysis of complete theories, and the reading of all of these as statements about what a coherence loss can teach.
+
+$\Cn_2$ is classical propositional consequence ($\varphi\in\Cn_2(X)$ iff every Boolean valuation making $X$ true makes $\varphi$ true), $\Taut=\Cn_2(\emptyset)$, and $\CFm(X)=\Fm$ is the trivial operator. Hypotheses are step sets (\Cref{def:setting:step}) or finitary consequence relations $h$, with $h(A)=\{\varphi:A\der_h\varphi\}$; $h$ is \emph{$\Ac$-coherent} if $A\nder_h\bot$ for all $A\in\Ac$, read as non-triviality $h(A)\neq\Fm$ in languages without $\bot$. Unless stated otherwise $\Ac$ is \emph{fixed and known}, independently of the target.
+
+% ---------------------------------------------------------------------
+\subsection{Coherence as negative data}\label{sec:coherence:negative}
+
+Here hypotheses are step sets $R$ in a countable class $\Hc$ with prior $w$, $\sum_Rw(R)=1$, and target $\Rstar$; every $A\in\Ac$ is target-coherent. An \emph{argument} $\pi$ from $A$ to $\bot$ is a derivation of $\bot$ from $A$; $\Steps(\pi)$ is its finite set of steps.
+
+\begin{definition}[Online coherence protocol]\src{T2 \S2.2}\label{def:coherence:protocol}
+In round $t$ the learner holds a version space $\VS_t\subseteq\Hc$ ($\VS_0=\Hc$) and announces an \emph{accepted set} $\hat R_t$, whose steps the reasoner may chain. The environment, possibly adversarial, possibly the learner's own proof search, then either \textup{(P)} presents some $s\in\Rstar$, and the learner deletes every $R\in\VS_t$ with $s\notin R$; or \textup{(N)} exhibits an argument $\pi$ from some $A\in\Ac$ to $\bot$ with $\Steps(\pi)\subseteq\hat R_t$, and the learner deletes every $R\in\VS_t$ with $\Steps(\pi)\subseteq R$; or does nothing. A (P)-round with $s\notin\hat R_t$ is an \emph{incompleteness error}; an (N)-round is a \emph{detection}.
+\end{definition}
+
+\begin{lemma}[Negative bags; trivial]\src{T2 Lemma 2.1, as repaired}\label{lem:coherence:bag}
+Let $\pi$ be an argument from a designated $A$ to $\bot$. \textup{(a)} $\Steps(\pi)\not\subseteq\Rstar$. \textup{(b)} Every $R\supseteq\Steps(\pi)$ has $\bot\in\Cl_R(A)$, witnessed by $\pi$. \textup{(c)} The designation alone excludes every $h$ with $A\der_h\bot$; deletion by the witness removes only $\{h:\Steps(\pi)\subseteq h\}$, which can be strictly smaller even for consequence relations (target $\Cn_2$, $A=\{p\}$, $\pi$ with steps $p\step q$, $q\step\bot$, and $h$ the least consequence relation containing $p\step\bot$). \hfill\leanok{CoherenceGames.negative\_bag} ((a),(b))
+\end{lemma}
+
+\begin{proof}
+(a) Otherwise chaining gives $\bot\in\Cl_{\Rstar}(A)$. (b) Chain in $R$. (c) $h(X)=X\cup\{\bot\}$ if $p\in X$, else $h(X)=X$.
+\end{proof}
+
+So a contradiction is a multiple-instance label \citep{dietterich1997solving}: ``not all of these steps are valid''. For a learner that can test $A\step\bot\in h$ by membership it collapses to an ordinary negative example and $\pi$ is only a checkable witness; the bag structure matters for step verifiers that are not cut-closed, such as process reward models and ensembles.
+
+\begin{proposition}[Caution receives no signal]\src{T2 Prop 2.9(a)--(c), as repaired}\label{prop:coherence:caution}
+\textup{(a)} If $\hat R_t\subseteq\Rstar$, no detection can occur; since deletions never remove $\Rstar$, a \emph{certified-sound} learner ($\hat R_t\subseteq\bigcap\VS_t$) never sees one.
+\textup{(b)} Certified soundness can be expensive. For $k\ge1$ and distinct atoms $a_i,p_i$ ($1\le i\le k$), $\ell^1_i=p_i$, $\ell^0_i=\neg p_i$, let $h_b=\{\Gamma\step\varphi:\{a_i\to\ell_i^{b_i}\}_{i\le k}\cup\Gamma\models\varphi\}$ for $b\in\{0,1\}^k$, and $\Ac=\{\emptyset\}$. Every certified-sound learner makes $2^k-1=|\Hc|-1$ incompleteness errors on some text.
+\textup{(c)} If $\Ac$ is fixed and known and membership in and $\Ac$-coherence of each $h\in\Hc$ are decidable, coherence is prior knowledge (a restriction of $\Hc$), not data.
+\end{proposition}
+
+(a) and (c) are immediate; (b) is proved in Appendix~\ref{app:coherence:tradeoff}. So coherence feedback is a dividend paid on boldness, and with $\Ac$ fixed and coherence decidable it is not even data. It is an informative \emph{signal} when consistency is undecidable ($\Pi_1$; \Cref{thm:coherence:complexity}), so that a prover must find contradictions for the learner, and when designations are data about the target (\Cref{prop:coherence:informant}).
+
+\paragraph{Oligarchic acceptance.} How should a bold learner accept, so that each contradiction teaches it something? Not by voting: stepwise majority over coherent verifiers can derive $\bot$ while implicating no member (\Cref{thm:search:doctrinal}).
+
+\begin{definition}[Oligarchic halving]\src{T2 \S2.2}\label{def:coherence:oh}
+OH chooses a \emph{coalition} $S_t\subseteq\VS_t$ with $w(S_t)\ge\frac12w(\VS_t)$ and announces $\hat R_t=\bigcap_{R\in S_t}R$.
+\end{definition}
+
+\begin{theorem}[Oligarchic halving]\src{T2 Thm 2.2}\label{thm:coherence:halving}
+Under OH with $w(\Rstar)>0$: \textup{(i)} $\Rstar$ is never deleted; \textup{(ii)} there are at most $\log_2(1/w(\Rstar))$ detections (at most $\log_2|\Hc|$ for the uniform prior), and the bound says nothing about incompleteness errors; \textup{(iii)} if $\Rstar\in S_t$, then $\Cl_{\hat R_t}(B)\subseteq\Cl_{\Rstar}(B)$ for all $B$; \textup{(iv)} always $\Cl_{\hat R_t}(B)\subseteq\Cl_R(B)$ for all $R\in S_t$, so chaining never leaves what each coalition member accepts. \hfill\leanok{CoherenceGames.thm\_2\_2} (finite classes)
+\end{theorem}
+
+\noindent\emph{Proof idea.} In a detection every member of $S_t$ contains $\hat R_t\supseteq\Steps(\pi)$, so the whole coalition is deleted, while $\Rstar$ never is (\Cref{lem:coherence:bag}(a)). Appendix~\ref{app:coherence:halving}.
+
+The halving argument is that of \citet{barzdin1972prediction} and \citet{littlestone1988learning}; new is only the reduction of a bag to a coalition. Oligarchy needs \emph{truth maintenance}: lemmas certified by an old coalition must be re-validated, or the union over coalitions reproduces the doctrinal paradox across time.
+
+\begin{proposition}[Per-round halving forces oligarchy]\src{T2 Prop 2.3, as repaired}\label{prop:coherence:oligarchy}
+Let $\VS$ be countable with $w(\VS)>0$, and assume every finite $P\subseteq\hat R$ with $P\not\subseteq\bigcap\VS$ (i.e.\ legal for some target in $\VS$) can occur as $\Steps(\pi)$. Then every possible detection deletes at least $\frac12w(\VS)$ iff $\hat R\subseteq\bigcap S$ for some $S\subseteq\VS$ with $w(S)\ge\frac12w(\VS)$. \hfill\leanok{CoherenceGames.prop\_2\_3} (finite version spaces)
+\end{proposition}
+
+Proof in Appendix~\ref{app:coherence:oligarchy}. The scope is per-round halving against a worst-case prover; coalitions of weight $\frac13$ still give $\log_{3/2}(1/w(\Rstar))$. This is the learning-theoretic face of the judgment-aggregation result that, for rich agendas, aggregation yielding deductively closed collective judgments is oligarchic \citep{gardenfors2006representation,dietrich2008judgment}. Designations can be wrong (``air pressure is $0$'' plus full background knowledge is inconsistent), so we also need a robust version.
+
+\begin{theorem}[Mis-designated contexts]\src{T2 Thm 2.5}\label{thm:coherence:robust}
+On a detection multiply $w(R)$ by $\beta\in[0,1)$ for every $R\supseteq\Steps(\pi)$; choose $S_t$ with $w_t(S_t)\ge\frac12W_t$ ($W_t$ the total weight, $W_0=1$) and announce $\bigcap S_t$; positive data are noise-free. If $m$ of the $D$ detections are \emph{false alarms} (their context is target-incoherent), then
+$D\le\bigl(\ln(1/w_0(\Rstar))+m\ln(1/\beta)\bigr)/\ln\bigl(2/(1+\beta)\bigr)$, with $0\cdot\ln(1/0):=0$. \hfill\leanok{CoherenceGames.thm\_2\_5} (finite classes)
+\end{theorem}
+
+This is the bound of \citet{littlestone1994weighted}, with their proof (Appendix~\ref{app:coherence:halving}). A structural learner that trusts a false alarm fully fares worse: it must become sub-classical everywhere (\Cref{prop:physics:misdesignation}).
+
+\begin{proposition}[Boldness is a two-sided trade-off]\src{T2 Prop 2.9(d),(e), added after verification}\label{prop:coherence:tradeoff}
+\textup{(a)} On the class of \Cref{prop:coherence:caution}(b) with uniform prior, every learner with $\hat R_t\subseteq R$ for some $R\in\VS_t$ in every round, in particular every OH learner, makes $2^k-1$ incompleteness errors on some text for some target. The non-oligarchic union learner $\hat R_t=\bigcup\VS_t$ makes no error of either type there, and is silently unsound.
+\textup{(b)} On the class of \Cref{thm:search:doctrinal}, no accepted set guarantees that every possible incompleteness error and every possible detection deletes half the weight.
+\end{proposition}
+
+Proof in Appendix~\ref{app:coherence:tradeoff}. \emph{Reading.} Oligarchy makes each contradiction worth a bit, robustly, but does not make boldness cheap: on this class every oligarchic learner pays exactly the price of caution in missed valid steps, and a learner that avoids this price must at some round accept a set inside no surviving hypothesis, hence a target-invalid step. The two-sided minimax is open (\Cref{sec:open}); \Cref{sec:twotier} resolves the trade-off architecturally, with cautious assertion and a bold sandbox under attack.
+
+\paragraph{What coherence cannot see.} Now let hypotheses be finitary consequence relations with target $\dstar$, let $h\oplus D$ be the least consequence relation containing $h\cup D$, and let the environment be complete. Call $h$ \emph{text-refutable} if ${\dstar}\not\subseteq h$, \emph{coherence-refutable} if it is $\Ac$-incoherent, and \emph{refutable by coherence with data} if $h\oplus D$ is $\Ac$-incoherent for some finite $D\subseteq{\dstar}$ (accepted human conclusions used as premises).
+
+\begin{theorem}[Silent over-generalizations; trivial]\src{T2 Thm 2.6}\label{thm:coherence:silent}
+\textup{(i)} $h$ is refutable by coherence with data iff $h\oplus{\dstar}$ is $\Ac$-incoherent. \textup{(ii)} The hypotheses refuted in none of the three ways are exactly $U(\dstar)=\{h:{\dstar}\subseteq h,\ h\ \Ac\text{-coherent}\}$. \textup{(iii)} Each $h\in U(\dstar)\setminus\{\dstar\}$ is unsound, and if it is a possible target, every finite stage of every data stream for $\dstar$ is one for $h$.
+\end{theorem}
+
+\noindent\emph{Proof idea.} (i) A finite derivation of $\bot$ in the directed union $h\oplus{\dstar}$ lies in some $h\oplus D$. Appendix~\ref{app:coherence:halving}.
+
+\begin{proposition}[Coherent chains have coherent unions]\src{T2 Prop 2.7}\label{prop:coherence:chains}
+The union of a chain of $\Ac$-coherent finitary consequence relations is one: cut and $A\step\bot$ involve finitely many sequents, which lie in one member.
+\end{proposition}
+
+\begin{corollary}[Fixed designations do not remove limit points]\src{T2 Cor 2.8, as repaired}\label{cor:coherence:limitpoints}
+Let $\Ac$ be fixed and known independently of the target. If the possible targets include a strictly increasing chain $h_1\subsetneq h_2\subsetneq\cdots$ of $\Ac$-coherent hypotheses together with $h_\omega=\bigcup_nh_n$, no learner, computable or not, identifies them in the limit (EX or BC) from text plus coherence information.
+\end{corollary}
+
+\begin{proof}
+The coherence information is target-independent, so fold it into the learner. A learner for $h_\omega$ has a locking sequence $\sigma$ \citep{blum1975toward}, or its BC analogue; its finite content lies in some $h_k$, and on a text for $h_k$ extending $\sigma$ the learner conjectures $h_\omega$ forever.
+\end{proof}
+
+This is Gold's limit-point theorem \citep{gold1967language}. The hypothesis ``$\Ac$ fixed'' is essential: designations that are data about the target, as when a problem setter certifies a setup consistent with the true theory, are genuine negative data.
+
+\begin{proposition}[Target-dependent designations are negative data; trivial]\src{T2 Prop 2.8$'$, repair}\label{prop:coherence:informant}
+Suppose the environment designates only target-coherent finite contexts, and eventually all of them. If every hypothesis satisfies classical reductio ($\Gamma\der_h\varphi$ iff $\Gamma\cup\{\neg\varphi\}\der_h\bot$), text plus designations is an informant, and every countable such class is EX-identifiable by enumeration. Example: for $h_n=\Cn_2\{\neg p_i:i<n\}$ and $h_\omega=\Cn_2\{\neg p_i:i\in\omega\}$, $\{p_j\}$ is $h_n$-coherent iff $j\ge n$, so the limit point is identified.
+\end{proposition}
+
+Proof in Appendix~\ref{app:coherence:informant}. So with fixed designations coherence prunes only over-generalizations that are not limit points, and positive-data structure (\Cref{sec:imitation}) decides the rest; text plus coherence \emph{refutes} every wrong hypothesis exactly when $U(\dstar)\cap\Hc=\{\dstar\}$ (a condition for refutation, not for identifiability). \emph{Reading:} a coherence loss removes over-acceptance that \emph{conflicts}; the silent over-generalizations $U(\dstar)$ are the precise content of ``coherent but wrong'', and whether they exist depends on the target, not on the learner.
+
+% ---------------------------------------------------------------------
+\subsection{Post-completeness: when coherence suffices}\label{sec:coherence:post}
+
+A consequence operator $C$ is \emph{structural} if $\sigma C(X)\subseteq C(\sigma X)$ for every substitution $\sigma$: rules are uniform schemas, so a learner that generalizes steps to schemas (\Cref{sec:setting:schemas}) is a structural learner.
+
+\begin{theorem}[Structural Post-completeness; known]\src{T2 Thm 3.1}\label{thm:coherence:post}
+If $\Fm$ contains $\neg$ and one of $\wedge,\vee,\to$, all interpreted by their truth functions, every structural closure operator $C\supseteq\Cn_2$, finitary or not, is $\Cn_2$ or $\CFm$. The same holds for pure $\{\to\}$. \hfill\leanok{Post.eq\_Cn2\_or\_eq\_trivial}\ \leanok{Post.frag\_postComplete\_neg}\ \leanok{Post.impFrag\_postComplete}
+\end{theorem}
+
+\noindent\emph{Proof idea.} Take $\varphi\in C(X)\setminus\Cn_2(X)$ and a falsifying row $v$. Substituting a tautology or a contradiction for each atom according to $v$, as in the proof of \Cref{prop:search:post}, maps $X$ into $\Taut\subseteq C(\emptyset)$ and $\varphi$ to a contradiction, so structurality gives $C(\emptyset)=\Fm$. Appendix~\ref{app:coherence:post}.
+
+At the level of theorems this is \citet{post1921}; the consequence-level form is standard too \citep{pogorzelski1971structural,wojcicki1988theory,pogorzelski2008completeness}. One falsifying row of one bad rule yields a derivation of $\bot$ from no premises. Without a theorem in the language there is one more extension: in the $\{\wedge,\vee\}$ fragment ($\Cn_2(\emptyset)=\emptyset$) let $\Cai(\emptyset)=\emptyset$ and $\Cai(X)=\Fm$ for $X\neq\emptyset$ (\emph{almost inconsistent}).
+
+\begin{proposition}[The theorem-free fragment; presumably folklore]\src{T2 Prop 3.2}\label{prop:coherence:almost}
+In the $\{\wedge,\vee\}$ language the structural closure operators extending $\Cn_2$ are exactly $\Cn_2$, $\Cai$ and $\CFm$.
+\end{proposition}
+
+Proof in Appendix~\ref{app:coherence:post}. So there coherence must be enforced on a non-empty designated context. For sequents $D$ let $\langle D\rangle$ be the least structural consequence relation containing $D$, and for a designated $\Cn_2$-consistent $A_0$ let $\mathcal S(D,A_0)=\{h\text{ structural}:D\subseteq h,\ A_0\nder_h\bot\}$.
+
+\begin{theorem}[Coherence pins classical logic]\src{T2 Thm 3.3, as repaired}\label{thm:coherence:cpc}
+Let the language be as in \Cref{thm:coherence:post}.
+\textup{(a)} For $D\subseteq\Cn_2$: $\mathcal S(D,A_0)=\{\Cn_2\}$ iff $\langle D\rangle=\Cn_2$, and a finite $D$ suffices (with $\to$ in the language, Hilbert-style bases with modus ponens as the only rule, plus $\step\neg\bot$ and $\step\top$ when these constants are primitive; without $\to$, by \citealt{rautenberg1981two}; Appendix~\ref{app:coherence:post}).
+\textup{(b)} Let $\Hc=(h_i)$ be any uniformly decidable family of structural consequence relations with $\Cn_2\in\Hc$. The learner outputting the least $i$ such that $h_i$ contains the data so far and $A_0\nder_{h_i}\bot$ identifies $\Cn_2$ in the limit from every text, with at most $i^*$ mind changes ($i^*$ the least index of $\Cn_2$), for \emph{every} ordering of $\Hc$: no simplicity or minimality bias is needed.
+\textup{(c)} Each assumption is needed: $\Cn_2+\{\step p\}$ ($p$ not in $A_0$) is non-structural, $A_0$-coherent and contains every text; $\CFm$ contains every text; in the theorem-free $\{\wedge,\vee\}$ fragment, $\Cai$ survives the empty context. \hfill\leanok{Post.versionSpace\_eq\_singleton\_iff}\ \leanok{Post.learner\_identifies} (all but the finite-basis clause of (a))
+\end{theorem}
+
+\begin{proof}[Proof idea]
+(a) Members of $\mathcal S$ extend $\langle D\rangle=\Cn_2$, so are $\Cn_2$ or $\CFm$, and $A_0$ excludes $\CFm$. (b) For $j<i^*$, either the text refutes $h_j$, or $h_j\supsetneq\Cn_2$ is $\CFm$ and $A_0$ rejects it. Details, and why the $\wedge,\vee$ clauses must be $\to$-axioms rather than sequent rules, in Appendix~\ref{app:coherence:post}.
+\end{proof}
+
+\paragraph{Reading.} This is a setup of the requested shape that provably works for formal propositional mathematics. The algorithm is trivial; the content is \Cref{thm:coherence:post}: substituting $\top/\bot$ along a falsifying row turns an invalid rule into ``from tautologies infer a contradiction'', so a uniform learner cannot hide an invalid schema from coherence. It must generalize schematically, though: closure under \emph{renaming} atoms is not enough (Appendix~\ref{app:coherence:post}). In Experiment~B (\cref{sec:experiments:prop}) a bold learner over classical natural deduction accepted all 59 valid and refuted all 118 invalid structural candidate schemas, each by an explicit derivation of $\vdash\bot$, while the non-structural $\vdash p$ survived every designated context.
+
+Learning theorems is enough here: $\Cn_2$ is the largest structural closure operator with theorems $\Taut$, so a bold learner can learn the theorems and take the structural completion. For $\IPC$, derivability and admissibility differ (Harrop's rule) but have the same theorems and the same coherence profile, so theorems plus coherence data cannot tell them apart (\cref{prop:coherence:adm} in Appendix~\ref{app:coherence:post}).
+
+\begin{theorem}[Intuitionistic logic: coherence is blind]\src{T2 Thm 3.6}\label{thm:coherence:ipc}
+\textup{(a)} For every intermediate logic $L$ and finite $A$: $A\der_L\bot$ iff $A\der_{\CPC}\bot$.
+\textup{(b)} A learner outputting a maximal coherent structural hypothesis never outputs $\IPC$.
+\textup{(c)} There is a strictly increasing chain of finitely axiomatizable intermediate logics $L_1\subsetneq L_2\subsetneq\cdots$ whose union $L_\omega$ is intermediate, and no learner identifies $\{L_k:k\le\omega\}$ from text plus coherence information, for any $\Ac$, even with target-dependent designations.
+\textup{(d)} The conservative learner outputting $\langle D_n\rangle$ BC-identifies every finitely axiomatizable structural target.
+\end{theorem}
+
+\noindent\emph{Proof idea.} (a) is Glivenko's theorem \citep{glivenko1929quelques}. (c) uses Jankov formulas of an infinite antichain of finite Heyting algebras \citep{jankov1968construction,chagrov1997modal}; by (a) all designations are the same for every member, so \Cref{cor:coherence:limitpoints} applies. Appendix~\ref{app:coherence:ipc}.
+
+So for $\IPC$ the work is done by \emph{minimality} (\Cref{sec:imitation}), not coherence: minimality is right when the target is at the bottom of its coherent version space, coherence plus boldness when it is at the top, and classical logic is at both ends. In Experiment~B a bold learner over intuitionistic natural deduction drifts toward $\CPC$, accepting excluded middle, Peirce's law and other $\IPC$-underivable schemas (\cref{sec:experiments:prop}).
+
+\paragraph{Complete theories.} Much of the algebra in a physics calculation is real-closed-field reasoning, and $\RCF$ is complete. Is it pinned like $\CPC$?
+
+\begin{proposition}[Complete theories: theorems, and rules under $\exists$-closure]\src{T2 Prop 3.11, repaired}\label{prop:coherence:complete}
+Let $T$ be a complete consistent first-order theory.
+\textup{(a)} The only consistent closed theory in the language of $T$ containing $T$ is $T$; if $T$ is decidable, the learner of \Cref{thm:coherence:cpc}(b), run on a uniformly decidable family of theories containing $T$, identifies $T$ from a text and the coherence datum $\emptyset$.
+\textup{(b)} Add parameters (fresh constants); the target is $\der_T$ ($\Gamma\der_T\varphi$ iff $T\cup\Gamma\vdash\varphi$). If $h\supseteq{\der_T}$ is closed under substituting terms for parameters and under $\exists$-elimination (from $\Gamma\der_h\exists x\psi$ and $\Gamma,\psi(d)\der_h\chi$, $d$ fresh, infer $\Gamma\der_h\chi$), and $\emptyset\nder_h\bot$, then $h={\der_T}$.
+\textup{(c)} Without $\exists$-closure (b) fails, even for a non-empty context. For $T=\RCF$, the least parameter-structural $h_2\supseteq{\der_{\RCF}}$ containing all instances of $t^3-4t+1=0\step t>1$ has $h_2(\emptyset)=\Cn_{\RCF}(\emptyset)$ and $h_2(\{c^3-4c+1=0\})=\Cn_{\RCF}(\{c^3-4c+1=0,\ c>1\})$: coherent on both, yet unsound (the cubic has three real roots and Galois group $S_3$). The context $\{c^3-4c+1=0,\ c<0\}$ catches it.
+\end{proposition}
+
+\noindent\emph{Proof idea.} (b) An invalid $\Gamma(\bar c)\der_h\varphi(\bar c)$ gives $T\vdash\exists\bar x(\bigwedge\Gamma\wedge\neg\varphi)$; a fresh instance derives $\bot$ in $h$, and $\exists$-elimination discharges the parameters one at a time. (c) The rule fires only on terms the context forces to be roots. Appendix~\ref{app:coherence:complete}.
+
+\emph{Reading.} At the level of theorems, $\RCF$, Presburger arithmetic and Tarski's geometry are pinned as cleanly as $\CPC$. At the level of the motivating question, rules applied in contexts with parameters, a set of uniform rules is \emph{not} pinned by one coherence datum; it is pinned if its hypotheses are closed under $\exists$-elimination, a discharge meta-rule rather than a step. Without it, no fixed finite family of designated contexts suffices: for even $d$ large enough, $t^d=1+1\step t>0$ never fires in a context of the family, so it is coherent there but unsound (Appendix~\ref{app:coherence:complete}, which also discusses $\sin$ and $\exp$) \status{proof sketch}. Designation is soundness-critical in the other direction too (\Cref{prop:physics:misdesignation}).
+
+% ---------------------------------------------------------------------
+\subsection{Arithmetic: coherence is Popperian}\label{sec:coherence:arith}
+
+Arithmetic is where coherence stops being a complete test. Coherence with a $\Sigma_1$-complete base already does everything $\Delta_0$ world feedback can (\cref{lem:coherence:delta0}); no r.e.\ hypothesis is maximal, and Turing progressions are not identifiable (\cref{thm:coherence:rosser,thm:coherence:turing}). The right use of coherence is Popperian: it detects false $\Pi_1$ claims but not false $\Sigma_1$ claims, and no computable channel decides $\Sigma_2$ truth in the limit (\cref{thm:coherence:popper}).
+
+Hypotheses are r.e.\ theories $T\supseteq\PA$, world feedback is a $\Delta_0$-oracle, and $\N$ is the intended model; $\RobQ$ is Robinson arithmetic.
+
+\begin{lemma}[$\Delta_0$ feedback is subsumed by coherence; standard]\src{T2 Lemma 3.7}\label{lem:coherence:delta0}
+A consistent $T\supseteq\RobQ$ proves every true $\Delta_0$ sentence and no false one, so no $\Delta_0$ feedback refutes it.
+\end{lemma}
+
+\begin{proof}
+$\RobQ$ is $\Sigma_1$-complete \citep{boolos2007computability}; if $T$ proved a false $\delta$ it would also prove $\neg\delta$.
+\end{proof}
+
+\begin{theorem}[No maximal r.e.\ hypothesis; cited]\src{T2 Thm 3.8, as repaired}\label{thm:coherence:rosser}
+Every consistent r.e.\ $T\supseteq\RobQ$ has a $\rho$ with $T+\rho$ and $T+\neg\rho$ consistent \citep{godel1931formal,rosser1936extensions,tarski1953undecidable}.
+\end{theorem}
+
+So a bold learner with r.e.\ hypotheses and $\Ac=\{\emptyset\}$ has no maximal choice. (If $\Ac$ contains all finite sets of true sentences, $T$ is $\Ac$-coherent iff $T\subseteq\Th(\N)$, and at most one refinement survives.)
+
+\begin{theorem}[Turing-chain impossibility]\src{T2 Thm 3.9, as repaired}\label{thm:coherence:turing}
+Let $T_0=\PA$, $T_{k+1}=T_k+\Con(T_k)$, $T_\omega=\bigcup_kT_k$ \citep{turing1939systems,feferman1962transfinite}, and let $\Ac$ be any fixed family of finite sets of \emph{true} sentences. No learner identifies a class containing $\{T_k:k\le\omega\}$ from text, $\Ac$-coherence and a $\Delta_0$-oracle.
+\end{theorem}
+
+\begin{proof}
+All $T_k$ are sound, so all side information is target-independent; the chain is strict by G\"odel~II; apply \Cref{cor:coherence:limitpoints}.
+\end{proof}
+
+The $\Sigma_1$-unsound $T_k+\neg\Con(T_k)$ are natural \emph{hypotheses}: consistent, unrefuted by $\Delta_0$ data, and refuted by coherence only relative to accepted premises proving $\Con(T_k)$. Restricting designations to true contexts is essential: with $\{\neg\Con(T_k)\}$ designated as data about the target, the chain becomes identifiable (\Cref{prop:coherence:informant}).
+
+\begin{theorem}[Coherence as a $\Pi_1$-truth detector; the $\Sigma_2$ barrier]\src{T2 Thm 3.10, as repaired}\label{thm:coherence:popper}
+\textup{(a)} For $\Pi_1$ $\pi$, $\PA+\pi$ is consistent iff $\pi$ is true. \textup{(b)} For $\Sigma_1$ $\sigma$, truth implies consistency of $\PA+\sigma$, not conversely ($\sigma=\neg\Con(\PA)$).
+\textup{(c)} The \emph{Popperian} learner (``true'' on a $\Pi_1$ sentence until $\PA$ refutes it; ``false'' on a $\Sigma_1$ sentence until $\PA$ proves it) converges to the truth on $\Sigma_1\cup\Pi_1$ with at most one mind change per sentence.
+\textup{(d)} The \emph{naively bold} learner (accept $\varphi_n$ iff consistent with $\PA$ plus the earlier accepted sentences) converges to a Lindenbaum completion that depends on the enumeration, and on every enumeration beginning with $\neg\Con(\PA)$ it is $\Sigma_1$-unsound.
+\textup{(e)} Every computable learner using a computable text, coherence searches and a $\Delta_0$-oracle fails to converge to the truth value of some $\Sigma_2$ sentence.
+\end{theorem}
+
+\noindent\emph{Proof idea.} (a) A false $\Pi_1$ sentence has a true, hence $\PA$-provable, $\Sigma_1$ negation. (e) Convergent computable guesses define a $\Delta_2$ set \citep{shoenfield1959degrees}, and the true $\Sigma_2$ sentences are $\Sigma_2$-complete. Appendix~\ref{app:coherence:popper}.
+
+This is Popper's asymmetry in its standard learning-theoretic form \citep{putnam1965trial,gold1965limiting,kelly1996logic}, read for coherence-learners. The same boundary appears for credences: computable, weakly coherent, $\Pi_1$-convergent credences are dogmatic on infinitely many true $\Pi_2$ sentences (\cref{thm:coherence:trilemma}, a self-contained form of a theorem of \citealt{sawin2013computable}), and \cref{prop:coherence:costs} records what weak coherence costs (both in Appendix~\ref{app:coherence:costs}).
+
+\paragraph{Reading.} In arithmetic, computation adds nothing beyond coherence with a $\Sigma_1$-complete base. What matters is where boldness is applied: on universal claims, which coherence can refute, not on existential ones, which need a witness. Beyond $\Delta_2$ no computable channel decides truth in the limit (\Cref{thm:coherence:popper}(e)); only the weaker gradual verification, with credence tending to $1$ exactly on truths, reaches further (\Cref{prop:coherence:costs}). The G\"odel--Rosser alternatives are a permanent residue, removed only by accepting stronger principles (reflection, $\Con(\PA)$, a stronger theory): a justification that is not a $\PA$-proof (\Cref{sec:philosophy}).
+
+% ---------------------------------------------------------------------
+\subsection{Carnap's problem is Gold's problem}\label{sec:coherence:carnap}
+
+Under inferentialism, learning valid inferences should be learning meanings. \citet{carnap1943formalization} observed that the classical rules do not fix the truth tables: the all-true valuation, and ``true iff tautologous'', respect every classical inference.
+
+\begin{definition}[Meanings]\src{T2 \S4.1}\label{def:coherence:valuations}
+A \emph{valuation} is any $v:\Fm\to\{0,1\}$, identified with its true-set in Cantor space $2^{\Fm}$; a \emph{meaning} is a set $V$ of valuations; $\BV$ is the set of Boolean ones. For finite $\Gamma,\Delta$, $\Gamma\models^1_V\varphi$ iff every $v\in V$ with $v[\Gamma]=1$ has $v(\varphi)=1$, and $\Gamma\models^{\mathrm m}_V\Delta$ iff no $v\in V$ has $v[\Gamma]=1$, $v[\Delta]=0$. $\Val(S)$ is the set of valuations satisfying the sequents $S$; $V^\cap$ closes $V$ under intersections of true-sets, including the empty one $\valtop\equiv1$; $\valtaut$ is the characteristic function of $\Taut$. $V$ is \emph{structural} if $v\in V$ implies $v\circ\sigma\in V$ for all substitutions $\sigma$.
+\end{definition}
+
+The sequent $\Gamma\step\Delta$ excludes exactly the clopen set of valuations realizing the position $\pos{\Gamma}{\Delta}$. So \emph{inference data are negative data about valuations}, while \emph{coherence certifications} (``$\pos AD$ is in bounds'') and world feedback are \emph{positive} data: Restall's reading of consequence \citep{restall2005multiple} turned into a statement about data.
+
+\begin{lemma}[Duality]\src{T2 Lemma 4.1}\label{lem:coherence:duality}
+\textup{(a)} $\Val(\models^{\mathrm m}_V)=\overline V$. \textup{(b)} For closed $V$, $C_V(X)=\bigcap\{v\in V:X\subseteq v\}$ is finitary and the valuations satisfying every valid single-conclusion sequent form $V^\cap$. \textup{(c)} $\BV^\cap$ is the set of characteristic functions of classical theories, including $\Fm$. \hfill\leanok{Carnap.Val\_mrel}\ \leanok{Carnap.lemma\_4\_1\_b}\ \leanok{Carnap.intClosure\_BV\_eq}
+\end{lemma}
+
+\begin{theorem}[Carnap's problem in learning form]\src{T2 Thm 4.2, as repaired}\label{thm:coherence:carnap}
+${\models^1_{\BV}}={\models^1_W}$ whenever $\BV\subseteq W\subseteq\BV^\cap$. So no data that are a function of the single-conclusion relation (text, informant, or metarules with discharge read \emph{globally}, as closure conditions) distinguish $\BV$ from $W$. The non-Boolean members of $\BV^\cap$ are the $v_T$ for theories $T$ that are not maximal consistent (including $T=\Fm$): $\valtop$ violates the table for $\neg$; $\valtaut$ and every non-maximal consistent $v_T$ violate those for $\neg,\vee,\to$; all respect $\wedge$. $\BV^\cap$ is closed and structural. \hfill\leanok{Carnap.carnap\_single}
+\end{theorem}
+
+\noindent\emph{Proof idea.} By \Cref{lem:coherence:duality}(b) every $w\in W$ satisfies $\models^1_{\BV}$. Appendix~\ref{app:coherence:carnap}.
+
+Under the \emph{local} reading of rule validity \citep{garson2013what}, $\to$I excludes $\valtaut$, but only by imposing the two-conclusion $\step\varphi,\varphi\to\psi$. The right measure is the number of denials.
+
+\begin{theorem}[Denial-rank trichotomy]\src{T2 Thm 4.3}\label{thm:coherence:rank}
+With $\neg$ in the language, let the \emph{denial rank} $d(v)$ be the least $|\Delta|$ over classically valid $\Gamma\step\Delta$ (finite) that $v$ violates ($\infty$ if none). Then $d(v)=0$ iff $v$'s true-set is inconsistent; $d(v)=1$ iff it is consistent but not closed; $d(v)=2$ iff it is a consistent, closed, non-maximal theory; $d(v)=\infty$ iff $v\in\BV$. \hfill\leanok{Carnap.denialRank\_eq\_two\_iff}
+\end{theorem}
+
+\noindent\emph{Proof idea.} A consistent closed non-maximal $T$ omits some $\varphi$ and $\neg\varphi$, violating $\step\varphi,\neg\varphi$. Appendix~\ref{app:coherence:carnap}.
+
+\begin{table}[t]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}Xcl@{}}
+\toprule
+exclusion data (sequents) & rank & excludes\\
+\midrule
+\emph{non-contradiction}, no denial: $p,\neg p\step$ (``not both $P$ and $\neg P$'') & 0 & $\valtop$, inconsistent valuations\\
+imitation of single-conclusion inferences & 1 & non-closed valuations\\
+\emph{exhaustiveness}: $\step p,\neg p$ (``not deny both''), $p\vee q\step p,q$ & 2 & $\valtaut$, all gappy theories\\
+\bottomrule
+\end{tabularx}
+\caption{What each shape of data excludes (\Cref{thm:coherence:rank}). Coherence \emph{certifications} are positive data about meanings: certifying $\pos AD$ excludes exactly the meanings that do not realize $\pos AD$ (for the empty position, only $V=\emptyset$), and adding $\valtop$ to a meaning never makes it fail a certification.}
+\label{tab:coherence:rank}
+\end{table}
+
+\paragraph{Reading.} ``Coherence'' covers two kinds of data (\Cref{tab:coherence:rank}): certifications that a position is in bounds (positive about $V$), and 0-denial constraints such as $p,\neg p\step$ (negative about $V$), which remove $\valtop$. Neither removes $\valtaut$. A learner trained on imitation plus a coherence loss, in either sense, is provably free to settle on gappy valuations: consistent, inferentially competent, never committing on open questions. These are van Fraassen's supervaluations \citep{vanfraassen1966singular}, the honest semantics of ``settled by the premises''. Pinning classical meaning needs a loss with \emph{two} denials. Bilateral signed sequents \citep{smiley1996rejection,rumfitt2000yes} carry the same rank-2 information. For language-model training this raises a question the theorems do not settle, since they concern identifiability, not training dynamics: imitation plus a contradiction penalty does not rule out consistent but noncommittal reasoners, and whether training drifts toward them is empirical.
+
+With rank-2 data finitely many data suffice. Let $\TTs$ be the eleven truth-table schemata: $\varphi,\neg\varphi\step$ and $\step\varphi,\neg\varphi$; $\varphi\wedge\psi\step\varphi$, $\varphi\wedge\psi\step\psi$, $\varphi,\psi\step\varphi\wedge\psi$; $\varphi\step\varphi\vee\psi$, $\psi\step\varphi\vee\psi$, $\varphi\vee\psi\step\varphi,\psi$; $\step\varphi,\varphi\to\psi$, $\psi\step\varphi\to\psi$, $\varphi,\varphi\to\psi\step\psi$. $\TTs(p,q)$ are their instances in distinct atoms.
+
+\begin{theorem}[Bilateral determinacy with a twelve-datum tell-tale]\src{T2 Thm 4.4, as repaired}\label{thm:coherence:telltale}
+Let the language be $\{\neg,\wedge,\vee,\to\}$ (with $\bot,\top$ add $\bot\step$ and $\step\top$; the Lean version has $13+1$ data).
+\textup{(a)} $\Val(\TTs)=\BV$, which is closed.
+\textup{(b)} If $V$ is structural, every $v\in V$ satisfies the eleven sequents $\TTs(p,q)$, and $V\neq\emptyset$ (one coherence datum), then $V=\BV$.
+\textup{(c)} So among structural meanings $\BV$ is identified finitely by twelve data; without the coherence datum $V=\emptyset$ survives, the Gold over-generalization.
+\textup{(d)} Without structurality $\BV$ is not identifiable in the limit from text plus the coherence datum $\pos{\ }{\ }$, or any other target-independent certifications: every finite set of valid sequents is valid in a closed meaning $\BV\cup\{v'_\chi\}$, $v'_\chi$ a Boolean valuation flipped at a formula $\chi$ the set does not mention. (If every target-certified position is supplied, text plus certifications is an informant, as in \Cref{prop:coherence:informant}, and this obstruction disappears; the next one does not.) And the dense non-structural $\BV\setminus\{u_0\}$ has the same valid sequents and in-bounds positions as $\BV$. \hfill\leanok{Carnap.structural\_eq\_BV}\ \leanok{Carnap.BV\_not\_BC\_learnable}
+\end{theorem}
+
+\noindent\emph{Proof idea.} (b) Any Boolean $u$ is $v\circ\sigma$ for $\sigma$ sending atoms to $p_0\vee\neg p_0$ or its negation. (d) No tell-tale, then the locking-sequence argument. Appendix~\ref{app:coherence:carnap}.
+
+The three two-conclusion schemata in $\TTs$ are exactly the rank-2 data that $\valtaut$ violates. Brute-force checks confirm (a), \Cref{thm:coherence:carnap} and the denial ranks on small formula sets, and find no non-Boolean structural survivor of the twelve data among two- and three-element matrices, each datum being necessary (Appendix~\ref{app:coherence:carnap}) \status{computed}. A second remedy restricts the hypothesis class, as in Gold's setting:
+
+\begin{proposition}[A compositional prior suffices]\src{T2 Prop 4.5}\label{prop:coherence:compositional}
+Exactly one two-element matrix with designated value $1$ validates explosion, $\neg\neg p\step p$, $p\step\neg\neg p$, the three $\wedge$ rules, $\vee$-introduction, disjunctive syllogism, modus ponens, $q\step p\to q$ and $\neg p\step p\to q$: the standard one.
+\end{proposition}
+
+Proof in Appendix~\ref{app:coherence:carnap}; compare \citet{bonnay2016compositionality}, whose compositionality is more general. World feedback alone fixes nothing, since the actual valuation is Boolean and never refutes $V\supseteq\BV$; under the compositional prior it identifies the tables once every row has been observed \src{T2 Prop 4.6}.
+
+\begin{table}[t]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}lXX@{}}
+\toprule
+ & Gold (sequent space) & Carnap (valuation space)\\
+\midrule
+hypothesis & consequence relation & set $V$ of admissible valuations\\
+positive data & valid sequents (text) & coherence certifications; world feedback\\
+negative data & coherence certifications & sequents, incl.\ 0-denial ones\\
+over-generalization & trivial logic & $\valtop$, $\valtaut$, \dots\\
+failure & \emph{learnability}: finite data never exclude supersets & \emph{identifiability}: complete single-conclusion data fix $V$ only up to $(\overline V)^\cap$\\
+remedy & one coherence datum plus Post-completeness & two-denial data, or a compositional prior\\
+\bottomrule
+\end{tabularx}
+\caption{Gold's and Carnap's problems as two instances of one duality \src{T2 \S4.5; L4 \S3}.}
+\label{tab:coherence:goldcarnap}
+\end{table}
+
+\paragraph{Reading.} Carnap's problem is a semantic twin of Gold's only in part (\Cref{tab:coherence:goldcarnap}). Gold's trivial logic ($V=\emptyset$) is removed by a coherence certification, Carnap's $\valtop$ by a 0-denial sequent, and $\valtaut$, the Horn blindness of single-conclusion data, by neither. So imitation plus coherence fixes inferential role, not classical truth conditions. That does not matter for deriving; it matters for interpreting world feedback (``$A$ is false'' licenses $\neg A$ only through the bilateral bridge). Rules can be identifiable when truths are not (\cref{sec:philosophy:labour}).
+
+% ---------------------------------------------------------------------
+\subsection{Tonk, harmony and conservativity}\label{sec:coherence:tonk}
+
+\citet{prior1960runabout}'s tonk ($\varphi\step\varphi\tonk\psi$, $\varphi\tonk\psi\step\psi$) is the paradigm of a rule search exploits (\Cref{thm:search:tonk}); \citet{belnap1962tonk} demanded that new rules be \emph{conservative}.
+
+\begin{proposition}[Tonk]\src{T2 Prop 5.1}\label{prop:coherence:tonk}
+Under cut, tonk gives $\varphi\der\psi$ for all $\varphi,\psi$, and coherence refutes it in two steps ($a\step a\tonk\bot\step\bot$) if $\Ac$ has a non-empty context or the logic has a theorem. In a theorem-free base with $\Ac=\{\emptyset\}$ it survives: classical $\{\wedge,\vee\}$ plus tonk is $\Cai$. Without cut tonk need not trivialize \citep{cook2005whats,ripley2015anything}.
+\end{proposition}
+
+\begin{proof}
+One cut gives the first claim. In the theorem-free case every rule has premises, so nothing is derivable from $\emptyset$, while from any premise tonk yields everything.
+\end{proof}
+
+Transitivity lets one bad rule poison everything, and lets coherence catch it. Boldness is order-dependent when individually coherent rules are jointly incoherent: offered tonk's two rules one at a time, a bold learner keeps whichever comes first (\cref{sec:experiments:prop}).
+
+\begin{proposition}[Coherence is not conservativity]\src{T2 Prop 5.2, as repaired}\label{prop:coherence:conservativity}
+Intuitionistic $\to$ plus $\neg$-introduction, $\neg$-elimination and $\neg\neg$-elimination is the $\{\to,\neg\}$ fragment of $\CPC$: coherent, but not conservative over $\IPC_\to$ (it proves Peirce's law). $\neg\neg$-elimination alone would be conservative. Conservativity implies coherence when coherence is non-triviality on the old vocabulary, or $\bot$ with ex falso is in the base, but not in general ($\IPC_\to+\{\step\bot\}$, with $\bot$ new and without ex falso).
+\end{proposition}
+
+Proof in Appendix~\ref{app:coherence:tonk}. So Belnap's learner rejects classical negation over intuitionistic positive logic, and the coherence learner accepts it. Harmony \emph{with normalization} gives conservativity \citep{prawitz1965natural,dummett1991logical}, but local harmony alone does not: Read's bullet \citep{read2000harmony} has local reductions yet derives $\bot$ from nothing. Over a Post-complete base the two notions coincide \src{L5 Cor 2.4}: if $C'$ is structural on $L'\supseteq L$ with $C'|_L\supseteq\Cn_2$ ($L$ as in \Cref{thm:coherence:post}), then $C'|_L$ is $\Cn_2$ or $\CFm$, so $C'$ is conservative iff it is coherent on one classically consistent context. Belnap's existence condition is, over classical logic, non-triviality; harmony matters only over sub-classical bases.
+
+\begin{theorem}[Coherence is $\Pi_1$, conservativity $\Pi_2$]\src{T2 Thm 5.3}\label{thm:coherence:complexity}
+For finite rule systems (elementary formal systems; \citealt{post1943formal,smullyan1961theory}): \textup{(a)} $\{R:R\nder\bot\}$ is $\Pi_1$-complete; \textup{(b)} for some fixed finite base $B$, $\{N:B+N\text{ conservative over }B\}$ is $\Pi_2$-complete; \textup{(c)} so coherence is decidable in the limit with one mind change, while conservativity is not decidable in the limit by any computable learner, only refutable in the limit \citep{kelly1996logic}; \textup{(d)} for decidable $B$ (e.g.\ $\CPC$, $\IPC$) conservativity is $\Pi_1$.
+\end{theorem}
+
+\noindent\emph{Proof idea.} (a) Simulate $\varphi_e(e)$ by rules and add ``halt $\step\bot$''. (b) Reduce totality of $\varphi_e$ to conservativity of one new symbol over a universal base. Appendix~\ref{app:coherence:tonk}.
+
+\emph{Reading.} A coherence filter can be built into a convergent learner (\Cref{thm:coherence:cpc}(b)); a conservativity filter cannot in general. Coherence plus decidable local checks such as harmony are the learner-friendly norms. Where non-conservativity is the point, as for theoretical terms in physics, a concept whose rules smuggle in a substantive inference (Dummett's \emph{Boche}) is coherent, and only world feedback can test it.
+
+% ---------------------------------------------------------------------
+\subsection{Fallacies and the Kripkensteinian residue}\label{sec:coherence:fallacies}
+
+A learner with a \emph{generalization operator} $\mathcal G$ (e.g.\ structural closure of least generalizations) turns finitely many fallacious human steps $F$ into rules $\mathcal G(F)$. Let $\hstar$ be the target consequence relation.
+
+\begin{theorem}[Elimination criterion; trivial]\src{T2 Thm 6.1}\label{thm:coherence:elimination}
+Coherence (with data) eventually refutes the generalized fallacy iff $\hstar\oplus\mathcal G(F)$ is $\Ac$-incoherent; for OH the refutation is charged to the budget of \Cref{thm:coherence:halving}. If $\hstar$ is sound for a class of intended structures and each $A\in\Ac$ holds in one that also validates $\mathcal G(F)$, the fallacy survives.
+\end{theorem}
+
+\begin{proof}
+$\hstar\oplus\mathcal G(F)$ contains every positive datum; apply \Cref{thm:coherence:silent}. A structure validating $\hstar$, $\mathcal G(F)$ and $A$ shows coherence on $A$.
+\end{proof}
+
+\begin{corollary}[All structural propositional fallacies die, quickly]\src{T2 Cor 6.2}\label{cor:coherence:fallacies}
+If $\mathcal G$ is structural closure and $\hstar\supseteq\Cn_2$ is structural and coherent on a designated context (so $\hstar=\Cn_2$), every classically invalid rule is eliminated: substituting $\top/\bot$ along a falsifying row makes its premises tautologies and its conclusion a contradiction (\Cref{tab:coherence:fallacies}). Given the row, the $\bot$-derivation has polynomial size in any Frege system \status{proof sketch for the size bound}; finding the row is an NP search.
+\end{corollary}
+
+\begin{proof}
+$\hstar\oplus\mathcal G(F)$ is a structural proper extension of $\Cn_2$, hence $\CFm$ (\Cref{thm:coherence:post}).
+\end{proof}
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+fallacy & rule & witness\\
+\midrule
+affirming the consequent & $q,\ p\to q\ /\ p$ & $p:=\bot,\ q:=\top$\\
+denying the antecedent & $\neg p,\ p\to q\ /\ \neg q$ & $p:=\bot,\ q:=\top$\\
+conversion & $p\to q\ /\ q\to p$ & $p:=\bot,\ q:=\top$\\
+illicit contraposition & $p\to q\ /\ \neg p\to\neg q$ & $p:=\bot,\ q:=\top$\\
+``or'' read as ``xor'' & $p\vee q,\ p\ /\ \neg q$ & $p:=q:=\top$\\
+\bottomrule
+\end{tabular}
+\caption{Propositional fallacies and their Post witnesses \status{computed}.}
+\label{tab:coherence:fallacies}
+\end{table}
+
+Experiment~B (\cref{tab:experiments:prop}) shows the negative-data role end to end: with systematic fallacies and noise ($N\ge50$), coherence pruning cut the unsound rules left by imitation from $45.6$ to $1.2$ on average, and the budgeted adversary no longer derived $\vdash\bot$, at no cost in completeness. It is not complete: 19 of 72 runs still end with an unsound rule, most surviving unsound rules are non-structural, and at $N\le10$ even affirming the consequent can survive, because a small learned calculus may lack the rules needed to derive the contradiction. Outside a Post-complete target, fallacies can survive: the quantifier swap is coherent until a context forces two objects, the gambler's fallacy until independence is accepted, and conditional perfection until two exclusive laws share a consequent (\cref{ex:coherence:survivors} in Appendix~\ref{app:coherence:residue}).
+
+\begin{proposition}[Without uniformity, coherence is toothless; trivial]\src{T2 Prop 6.3}\label{prop:coherence:quus}
+If $\hstar\oplus F$ is $\Ac$-coherent, the non-structural $\hstar\oplus F$ survives forever; e.g.\ $\Cn_2+\{\step p_{17}\}$, the ``quus'' of propositional logic, when every designated context is consistent with $p_{17}$.
+\end{proposition}
+
+\begin{theorem}[The Kripkensteinian residue]\src{T2 Thm 6.4, as repaired}\label{thm:coherence:residue}
+$\Alt_{\mathcal G}(\hstar,\Ac)=\{h\ \mathcal G\text{-closed}:h\supseteq\hstar,\ h\ \Ac\text{-coherent}\}$ is, in the limit of complete data, the set of $\mathcal G$-closed hypotheses never refuted by positive data and coherence (\Cref{thm:coherence:silent}).
+\textup{(i)} $\mathcal G$ structural, $\hstar=\Cn_2$, $\Ac\neq\emptyset$: $\Alt=\{\Cn_2\}$.
+\textup{(ii)} $\mathcal G$ structural, $\hstar=\IPC$, $\Ac$ a non-empty family of classically consistent contexts: $\Alt=\{h\text{ structural}:\IPC\subseteq h\subseteq\CPC\}$, all intermediate logics.
+\textup{(iii)} $\mathcal G$ deductive closure, $\hstar=\PA$, $\Ac=\{\emptyset\}$: $\Alt$ is the set of all consistent closed extensions of $\PA$ (the r.e.\ ones, if hypotheses are r.e.), e.g.\ $\PA+\neg\Con(\PA)$, whose completions (not r.e.) have only non-standard models. Designating all finite sets of true sentences removes exactly the unsound ones; the sound $T_k$ of \Cref{thm:coherence:turing} remain, and by that theorem no learner identifies them together with $T_\omega$ from text plus true-context coherence.
+\end{theorem}
+
+\noindent\emph{Proof idea.} (i) is \Cref{thm:coherence:post}. For (ii) $\subseteq$, a classically invalid sequent in a structural $h\supseteq\IPC$ becomes, under $\sigma_v$, an $\IPC$-provable premise set with an $\IPC$-refutable conclusion. Appendix~\ref{app:coherence:residue}.
+
+\paragraph{Division of labour.} \emph{Community practice} (positive data) eliminates under-generalizations. \emph{Uniformity} (structurality, least generalization) eliminates gerrymanders such as \Cref{prop:coherence:quus}; it is vocabulary-relative (Goodman's point), and it turns an instance-level fallacy into a schema that coherence can refute. \emph{Coherence} eliminates uniform alternatives that conflict with accepted uniform rules: tonk, affirming the consequent, ``quus'' as a second rule for $+$. \emph{Nothing} in the setup eliminates coherent uniform alternatives that agree with all data. For classical propositional logic there are none; for arithmetic they are the G\"odel--Rosser and non-standard alternatives, a precise mathematical counterpart of Kripkenstein for arithmetic \citep{kripke1982wittgenstein}, removable only by accepting reflection or stronger theories on other grounds (\Cref{sec:philosophy}).
+
+% ---------------------------------------------------------------------
+\subsection{A remark on eliminative versus confirmational coherence}\label{sec:coherence:eliminative}
+
+Coherentist epistemology has impossibility results: no informative coherence measure is truth-conducive ceteris paribus \citep{bovens2003solving,bovens2003bayesian,olsson2005against,olsson2005impossibility}. They do not threaten the use of coherence in this section, and they do refute a tempting other use.
+
+\begin{remark}[Three uses of coherence]\src{L11 \S3.4, TC4}\label{rem:coherence:uses}
+\textup{(U1) Eliminative}: ``$h$ derives $\bot$ from a context certified consistent, so $h$ has an invalid rule.'' This is modus tollens, not a measure. Conditioning a prior on ``$h$ is $\Ac$-coherent'' multiplies every coherent hypothesis by $1/\Prob(\text{coherent})$: under truthful designation the target's posterior weakly rises and odds among coherent rivals are unchanged. The impossibility theorems, about degrees of coherence of consistent information sets, do not apply; the prices are \Cref{thm:coherence:silent} and the need for truthful designation. \textup{(U2) Probabilistic consistency} of credences: de Finetti constraints, satisfied by the noncommittal assignment, the credal analogue of gappy valuations. \textup{(U3) Agreement as evidence}: annotators or sampled derivations agree. This is the witness scenario of \citet{lewis1946analysis} that the impossibility theorems address, and they bite in full.
+\end{remark}
+
+Appendix~\ref{app:coherence:eliminative} makes (U3) and (U1) quantitative: unanimity among annotators who share an error source, or among samples of one model, moves the odds that a step is valid by a bounded factor however many agree (\cref{rem:coherence:consensus}); and coherentizing credences by projection is safe exactly when the constraints are sound, and strictly harmful when the actual world violates them (\cref{lem:coherence:projection}).
+
+\paragraph{Reading.} The setup's use of coherence is eliminative, hence immune to the coherentist impossibility theorems, but weak: it never confirms, it only removes what conflicts. Corroboration must come from channels with independent errors: computation, randomized evaluation, measurement (\Cref{sec:setting:channels}). Where the target is coherence-pinned, uniqueness of the coherent extension, not truth-conduciveness of coherence, does the work. \Cref{sec:philosophy} reads this division as vindicated wide reflective equilibrium \citep{goodman1955fact,daniels1979wide}.

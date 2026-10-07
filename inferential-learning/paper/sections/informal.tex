@@ -1,0 +1,378 @@
+% =====================================================================
+% Section 10: Informal mathematics: learning a latent formalization
+% Sources (repaired statements only):
+%   research/theory/T4-informal-math-latent-formalization.md  (all; see its Verification log:
+%       fatal fix to Thm 3.4(d); major fixes to Prop 3.6, Thm 5.2(iv), Thm 6.2(c), Prop 6.5)
+%   research/verification/T4-informal-math-latent-formalization-verification.md
+%   research/verification/reverification-round2.md  (round-2 flags on Thm 6.2(d2), Prop 6.5(c), Thm 5.2(iv))
+%   research/lit/L6-informal-math-and-formalization-history.md  (history, three channels)
+%   research/lit/L10-user-notes-digest.md  (the motivating notes' questions; robust-core hypothesis)
+%   research/theory/T4-checks/*.py  (computations; run_all.sh)
+% Proofs not given inline, the IST and Benacerraf propositions, and all computational
+% checks are in sections/app-informal.tex.
+% =====================================================================
+\providecommand{\ACCEPT}{\textsf{ACCEPT}}
+\providecommand{\REJECT}{\textsf{REJECT}}
+\providecommand{\ESCALATE}{\textsf{ESCALATE}}
+\providecommand{\Stg}[2]{\mathrm{St}^{#1}_{#2}}
+\providecommand{\Adm}[1]{\mathcal V_{#1}}
+\providecommand{\Mint}{\mathbb M}
+\providecommand{\Sent}{\mathrm{Sent}}
+\providecommand{\Prem}{\mathrm{Prem}}
+\providecommand{\Ch}{\mathrm{Ch}}
+\providecommand{\Ldim}{\mathrm{Ldim}}
+\providecommand{\Mobj}{M_{\mathrm{obj}}}
+\providecommand{\Mbag}[1]{M^{(#1)}_{\mathrm{bag}}}
+\providecommand{\Comp}{\mathrm{Comp}}
+\providecommand{\cov}{\mathrm{cov}}
+\providecommand{\MDL}{\mathrm{MDL}}
+\providecommand{\REP}{\mathrm{REP}}
+\providecommand{\RCH}{\mathrm{RCH}}
+\providecommand{\ZF}{\mathsf{ZF}}
+\providecommand{\ZFC}{\mathsf{ZFC}}
+\providecommand{\IST}{\mathsf{IST}}
+\providecommand{\nneg}{{\sim}}
+
+\section{Informal mathematics: learning a latent formalization}\label{sec:informal}
+
+This section is the paper's answer to the second success criterion: a setup that \emph{would have worked for mathematical proofs before anyone knew how to formalize them}. The motivating notes \citep{hanni2026notes} ask it in two sharper forms.\footnote{The quotations in this paragraph are from \texttt{philosophy/\allowbreak emergence of structures/\allowbreak how come mathematicians ended up with such a nice notion of proof?.md} and \texttt{philosophy/\allowbreak metaphilosophy/\allowbreak why is it a good idea to make vague notions precise?.md}.} ``How come mathematicians ended up with such a nice notion of proof? \dots\ this nice structure of a formal proof is sorta there in their activities. how did it come to be there?'' And, offered as ``an attempt at an explanation'' for the case of early theorems about functions: mathematicians used only the part of the concept that later survived formalization, because ``the `rest of the concept' \dots\ was untrustworthy/messy \dots\ and for this reason unusable whenever people were proving things''. We call its generalization to pre-formal practice the \emph{robust-core hypothesis}.
+
+We model a pre-formal practice as the shadow of an unknown \emph{latent formalization}: a language, a calculus with a library, a partial \emph{reading} of informal sentences into the language, and an intended semantics (\cref{sec:informal:model}). We show that a verifier checking steps \emph{and} re-uses of sentences across contexts against every surviving latent formalization is sound against adaptive provers (\cref{sec:informal:verify}); that practice identifies meaning at best up to sameness of informal consequence, and ontology not at all (\cref{sec:informal:identify}); that counterexample objects can be exponentially more informative than paradoxes (\cref{sec:informal:objects}); that Frege $\to$ Russell $\to$ Zermelo is a theorem about simplicity, coherence and coverage in a toy (\cref{sec:informal:frz}); and that steps valid under every admissible sharpening survive every formalization, while selection by objects plus Gödel completeness explains why surviving steps are derivable, though not why they are short (\cref{sec:informal:robust}).
+
+Two caveats govern the section. Every positive result assumes \emph{realizability} (the target lies in the learner's fixed class), whereas the decisive historical steps ($\varepsilon$-$\delta$, uniform convergence, ideals) were inventions of language; \emph{affordable soundness with language invention} is the hardest open problem we leave (\cref{sec:open}). And most results are simple once the definitions are in place. The genuine mathematical content is the paradox side of the object--paradox separation (\cref{thm:informal:paradoxes,prop:informal:products}; its novelty relative to the Littlestone-dimension literature is uncertain) and the comprehension-toy facts (\cref{lem:informal:facts}); the deep ingredients are cited (Gödel completeness, Robinson's transfer, Nelson's conservativity, Incurvati and Murzi's theorem).
+
+% ---------------------------------------------------------------------
+\subsection{The model}\label{sec:informal:model}
+
+\begin{definition}[Occurrences, steps, arguments, links]\src{T4 \S1.1}\label{def:informal:arg}
+$\Xi$ is a countable set of informal sentence strings and $C$ a set of \emph{contexts} (definitions, conventions, notation and local suppositions in force). An \emph{occurrence} is $x=(c,\xi)\in X:=C\times\Xi$, with $\mathrm{str}(x):=\xi$. An \emph{informal step} is $\Gamma\step y$ with $\Gamma\subseteq_{\mathrm{fin}}X$, $y\in X$. An \emph{informal argument}~$\alpha$ is a list of lines $y_1,\dots,y_m\in X$, each a \emph{premise}, an \emph{inference} $\Gamma_j\step y_j$ with $\Gamma_j$ among earlier lines, or a \emph{link} $y_i\leadsto y_j$ with $i<j$ and $\mathrm{str}(y_i)=\mathrm{str}(y_j)$ (``the same claim, used in another context''). $\Prem(\alpha)$ is its set of premises, $y_m$ its conclusion, and its depth the length of its longest dependency path.
+\end{definition}
+
+Links are the formal locus of \emph{equivocation}: a sentence proved in one context is re-used in another, where it may be read differently.
+
+\begin{definition}[Latent formalization]\src{T4 Def 1.1, \S1.2}\label{def:informal:latent}
+A \emph{latent formalization} is a quadruple $h=(L_h,R_h,\rho_h,\Mint_h)$ consisting of a countable language $L_h$ with a sentence~$\bot$; a set $R_h$ of formal steps $\Pi\step\varphi$ over $\Sent(L_h)$ (instances of finitely many schemas plus a library of definitions and derived lemmas); a partial \emph{reading} $\rho_h:X\rightharpoonup\Sent(L_h)$ with domain $D_h$; and a class $\Mint_h$ of $L_h$-structures for which $R_h$ is sound and $\bot$ is false.
+\begin{enumerate}[label=(\roman*)]
+\item $\Gamma\step y$ is \emph{valid under $h$}, written $(\Gamma\step y)\in{\models_h}$ or $\Gamma\models_hy$, iff $\Gamma\cup\{y\}\subseteq D_h$ and $\rho_h(y)\in\Cl_{R_h}(\rho_h\Gamma)$.
+\item It is \emph{$g$-valid}, $(\Gamma\step y)\in\Stg{g}{h}$, iff moreover $\rho_h(y)$ has an $R_h$-derivation from $\rho_h\Gamma$ with at most $g$ rule applications and formulas of size bounded by a fixed function of $g$ and the input. We assume $\rho_h$ computable with decidable domain, $R_h$ decidable, and derivations restricted to the input's symbols plus a finite, computably given part of $L_h$ depending on~$g$; then $\Stg{g}{h}$ is decidable and $\Stg{g}{h}\subseteq{\models_h}$, which is all that is used.
+\item A link $y_i\leadsto y_j$ is \emph{valid under $h$} iff $(\{y_i\}\step y_j)\in\Stg{g}{h}$ (typically $\rho_h(y_i)=\rho_h(y_j)$: zero applications).
+\item The \emph{admissible valuations} are $\Adm{h}:=\{v_M\circ\rho_h:M\in\Mint_h\}$, with $v_M(\varphi)=[M\models\varphi]$.
+\item $h$ is \emph{first-order complete} if $L_h$ is first-order, $\Mint_h=\Mod(T_h)$, and $\Cl_{R_h}(\Gamma)=\{\varphi:T_h\cup\Gamma\models\varphi\}$.
+\end{enumerate}
+\end{definition}
+
+De~Bruijn's ratio of formal to informal proof size is roughly constant (about~$4$, \citealt{wiedijk2000debruijn}) only relative to a definitional library, as Mathias's $4.5\times10^{12}$-symbol term for Bourbaki's ``$1$'' shows \citep{mathias2002term}; so $g$ is measured over $R_h$ with its library.
+
+\begin{assumption}[(BG), bounded gap]\src{T4 \S1.3}\label{asm:informal:BG}
+There is a target $h^*=(L^*,\Rstar,\rho^*,\Mint^*)$, with $D^*:=D_{h^*}$, such that (BG1) $h^*\in\Hc$ (\emph{realizability}); (BG2) each accepted human step is, with probability $1-\eta$, drawn from a distribution over $\Stg{g}{h^*}$, and otherwise noise, sporadic or systematic (instances of a fallacy schema); (BG3) human links are $h^*$-valid up to the same noise.
+\end{assumption}
+
+Steps that are valid but not $g$-short are routed out of the practice stream: they are escalated with a request to expand them (\cref{prop:informal:expansion}), or count as noise.
+
+\begin{definition}[The three channels]\src{T4 \S1.4}\label{def:informal:channels}
+(P) \emph{Practice}: the stream of (BG2); escalation answers are practice data labelled by $\Stg{g}{h^*}$. (C) \emph{Coherence}: a family $\Ac$ of finite \emph{designated contexts} $A\subseteq X$ with the promise $\bot\notin\Cl_{\Rstar}(\rho^*A)$; a \emph{paradox for $h$} is an $R_h$-derivation of $\bot$ from $\rho_hA$, $A\in\Ac$, and refutes~$h$. Suppositions are not designated, so reductio is never penalized. (O) \emph{Objects}: a finite partial valuation $v:X\rightharpoonup\{0,1\}$ with the promise $v\subseteq u$ for some $u\in\Adm{h^*}$; it refutes $h$ iff $v|_{D_h}$ extends to no member of $\Adm{h}$. Interactively, the learner holds an object and queries its values (``checks the step on an example''). \emph{Computation} is the special case of an intended object $M_0\in\Mint^*$ queried on a decidable fragment, like Euler's six-decimal value of $\sum1/n^2$. \emph{Convention}: $\rho_hA:=\rho_h(A\cap D_h)$, so a sentence $h$ cannot read asserts nothing under~$h$.
+\end{definition}
+
+(O) is the world channel (W) of \cref{def:setting:channels} inside mathematics: objects (W2), with computation (W1, W3) as a special case. The model fixes $\rho^*$ (\cref{sec:informal:robust} makes it vague instead) and the class of languages.
+
+% ---------------------------------------------------------------------
+\subsection{Sound bounded-gap verification}\label{sec:informal:verify}
+
+At time $t$, $h$ is \emph{consistent with the data} if it labels every practice step and escalation answer correctly by $\Stg{g}{h}$, agrees with every link answer, and has not been refuted by a paradox or an object datum found within the search budget so far. $\VS_t$ is the set of such~$h$. Every refutation is a certificate, so budgeted search never refutes an unrefutable hypothesis.
+
+\begin{definition}[Bounded-gap conservative verifier]\src{T4 Def 2.1}\label{def:informal:verifier}
+On a query $q$ (an informal step or a link), $V^g_t$ answers \ACCEPT{} iff $q$ is $g$-valid, resp.\ link-valid, under \emph{every} $h\in\VS_t$, with a certificate for each; otherwise \ESCALATE{} (ask the oracle, or ask the prover to expand~$q$).
+\end{definition}
+
+$V^g_t$ is computable for finite $\Hc$; for infinite $\Hc$ unanimity is a $\Pi_1$ condition, and the effective version is the Bayesian verifier below, truncated to finitely many hypotheses. Any budgeted proof search that counts ``not found'' as ``not valid'' only shrinks the accepted set, so it preserves the soundness results below, though not the escalation bounds.
+
+\begin{lemma}[Argument soundness]\src{T4 Lemma 2.2, repaired}\label{lem:informal:argument}
+If every line of $\alpha$ lies in $D_h$ and every inference and link of $\alpha$ (a link as the step $\{y_i\}\step y_j$) lies in ${\models_h}$, then $\rho_h(y_j)\in\Cl_{R_h}(\rho_h\Prem(\alpha))$ for every line $y_j$. Hence every line is true in every $M\in\Mint_h$ that makes the premises true.
+\end{lemma}
+
+Induction on lines, by monotonicity and idempotence of $\Cl_{R_h}$ (Appendix~\ref{app:informal:verify}).
+
+\begin{proposition}[Equivocation: step-checking alone is unsound; trivial]\src{T4 Prop 2.3}\label{prop:informal:equivocation}
+There are $h$ and $\alpha$ such that every inference of $\alpha$ is $h$-valid and every link joins equal strings, yet $\Prem(\alpha)\step y_m$ is $h$-invalid.
+\end{proposition}
+
+\begin{proof}[Proof (Cauchy's sum theorem)]
+Let $\rho_h$ read ``$\sum f_n$ converges'' as uniform convergence in context $c_1$ (Cauchy's proof) and as pointwise convergence in $c_2$ (the statement). Lines: (1), (2) premises $(c_2,$ ``each $f_n$ is continuous''$)$, $(c_2,$ ``$\sum f_n$ converges''$)$; (3), (4) links of (2), (1) into $c_1$; (5) the valid inference to $(c_1,$ ``the sum is continuous''$)$; (6) a link of (5) back into $c_2$. Links (4) and (6) are valid; link (3), pointwise to uniform, is not; and $\{1,2\}\step6$ fails on Abel's series $\sum_n(-1)^{n+1}\sin(nx)/n$, whose sum is $x/2$ on $(-\pi,\pi)$, extended periodically.
+\end{proof}
+
+So the verifier checks links. Lakatos's ``hidden lemma'' in Cauchy's proof \citep[App.~1]{lakatos1976proofs} is, here, an invalid link.
+
+\begin{theorem}[Deterministic soundness; trivial once set up]\src{T4 Thm 2.4}\label{thm:informal:soundness}
+Assume (BG1) and noise-free truthful data: practice and escalation answers lie in and are labelled by $\Stg{g}{h^*}$, link answers agree with $h^*$, designated contexts are $h^*$-coherent, object data are $h^*$-admissible. Then for every prover (randomized, adaptive, unbounded, knowing $h^*$, the verifier and the history) and every $t$, everything $V^g_t$ accepts lies in $\Stg{g}{h^*}\subseteq{\models_{h^*}}$; so every argument assembled from accepted items has an $h^*$-valid conclusion (unused premises outside $D^*$ dropped), true in every $M\in\Mint^*$ satisfying its premises.
+\end{theorem}
+
+\begin{proof}
+No datum can refute $h^*$, so $h^*\in\VS_t$, and unanimity implies $g$-validity under $h^*$; then apply \cref{lem:informal:argument}.
+\end{proof}
+
+Incoherent survivors only shrink the intersection: Frege's inconsistent 1903 ``way out'' \citep{quine1955frege} would have made a conservative verifier timid, never unsound. With noisy practice $h^*$ can be refuted, so we use a posterior; the threshold then involves the prior mass of the target's observational-equivalence class $[h^*]$ (\cref{def:informal:equiv}).
+
+\begin{theorem}[Time-uniform soundness with a class prior]\src{T4 Thm 2.5; T1 Thm 4.2}\label{thm:informal:ville}
+Let $\Hc$ be countable with prior $w$ and assume (BG1). Each $h$ has a practice likelihood $p_h$ (including noise); practice data are i.i.d.\ from $p_{h^*}$, each independent of everything before it (the prover does not foresee them); likelihoods are \emph{shadow-measurable} ($p_h=p_{h'}$ whenever $h\equiv_gh'$); all other data (escalation and link answers, paradoxes, objects) are truthful and multiply the weight of $h$ by $1$ if consistent with $h$, by $0$ otherwise. Let $V^{g,\delta}_t$ accept $q$ iff the posterior gives $\{h:q\notin\Stg{g}{h}\}$ mass below $\delta$, and put $W^*:=w([h^*])$. If $\delta\le W^*\delta'$, there is an event of probability at least $1-\delta'$, depending only on the practice data, on which no prover ever gets a query outside $\Stg{g}{h^*}$ accepted.
+\end{theorem}
+
+The proof (Appendix~\ref{app:informal:verify}) is that of \cref{thm:caution:ville}, with shadow-measurability giving the whole class $[h^*]$ the likelihood of $h^*$. $W^*$ counts the $\equiv_g$-class (renamings; the ontological variants of \cref{prop:informal:transfer}), not the meaning class: at gap $g$, soundness is paid for at the level of $g$-shadows. Its price is escalations. Let $\Hc^g:=\{\Stg{g}{h}:h\in\Hc\}$, with positive elasticity $\el(\Hc^g,\Stg{g}{h^*})$ (\cref{def:caution:elastic}; also \cref{def:informal:game}).
+
+\begin{theorem}[Escalation costs]\src{T4 Thm 2.7, repaired; T1 \S\S3--4}\label{thm:informal:escalation}
+Let the prover be honest and count only escalations answered by the oracle (expansion requests yield no label). (a) With noise-free data $V^g_t$ escalates at most $\el(\Hc^g,\Stg{g}{h^*})\le|\Hc/{\equiv_g}|-1$ times. (b) In the setting of \cref{thm:informal:ville}, with probability $\ge1-\delta''$, $V^{g,\delta}_t$ escalates at most $(\ln(1/W^*)+\ln(1/\delta''))/\delta$ times in all. (c) If the $n$ hypotheses' $g$-step relations are $B\cup(U\setminus\{u\})$, $u\in U$, then (a) equals $n-1$ and is attained, and with the uniform prior every $\delta'$-sound verifier fails to accept (escalates or rejects), in expectation, at least $(1-\delta')(n-1)$ queries of some honest prover, so (b) with $\delta=W^*\delta'$ is tight up to a factor $O((\ln(1/W^*)+\ln(1/\delta''))/\delta')$.
+\end{theorem}
+
+Proof in Appendix~\ref{app:informal:verify}, by reduction to the escalation theorems of \cref{sec:caution}. Expansion closes the gap. Call $h^*$ \emph{step-expressive} if every $(\Gamma\step y)\in{\models_{h^*}}$ is the conclusion of an informal argument from $\Gamma$ whose inferences lie in $\Stg{1}{h^*}$ (one rule application each) and whose links join occurrences with equal $\rho^*$-readings.
+
+\begin{proposition}[Expansion makes the verifier complete; trivial]\src{T4 Prop 2.8}\label{prop:informal:expansion}
+If $h^*$ is step-expressive and $\bigcap_{h\in\VS_t}\Stg{1}{h}\supseteq\Stg{1}{h^*}$, then every $h^*$-valid step has an argument all of whose steps and links $V^1_t$ accepts.
+\end{proposition}
+
+\begin{proof}
+Each inference of the expansion lies in $\Stg{1}{h^*}$, and each link is in $\Stg{1}{h^*}$ with zero applications; all lie in every survivor's $\Stg{1}{h}$.
+\end{proof}
+
+Under complete presentation, the hypothesis on $\VS_t$ is what \cref{thm:informal:identify}(d) delivers at $g=1$.
+
+\paragraph{Reading.}
+A checker that asks the arguer to ``explain\slash justify\slash derive'' what it does not recognize\footnote{The phrase comes from a remark in the notes about questioning a solver who uses primitives one does not already trust: \texttt{ai/\allowbreak verification and generation/\allowbreak is verification really easier than solving the problem yourself?.md}.} is \emph{sound at all times} and \emph{complete via expansion} once the atomic level is learned. No measure over steps enters the guarantee. For contexts, \cref{prop:informal:equivocation} says that a sentence true in one context is not thereby usable in another: the re-use is an inference to be checked, the zero-length case of the export rules of \cref{sec:physics}.
+
+% ---------------------------------------------------------------------
+\subsection{What practice can identify}\label{sec:informal:identify}
+
+\begin{definition}[Equivalences]\src{T4 Def 3.1}\label{def:informal:equiv}
+$h\approx h'$ iff ${\models_h}={\models_{h'}}$ (this fixes $D_h=\{x:\{x\}\models_hx\}$); $h\approx_Dh'$ iff they agree on steps with all occurrences in~$D$. $h\equiv_gh'$ iff $\Stg{g}{h}=\Stg{g}{h'}$, $\Adm{h}=\Adm{h'}$, and $h,h'$ are coherent on the same $A\in\Ac$; $\equiv_\infty$ is the same with ${\models}$ for $\Stg{g}{}$.
+\end{definition}
+
+If all data and queries depend on the target only through its $g$-shadow, no learner distinguishes $\equiv_g$-equivalent targets (\cref{prop:informal:shadow}, stated and proved in Appendix~\ref{app:informal:identify}). Which shadow determines which? Call $D_h$ \emph{negation-closed} if an informal operation $x\mapsto\nneg x$ (``it is not the case that \dots'') preserves $D_h$ with $T_h\der\rho_h(\nneg x)\leftrightarrow\neg\rho_h(x)$, and call $v:D_h\to\{0,1\}$ a \emph{coherent valuation of ${\models_h}$} if $v(\nneg x)=1-v(x)$ and $v(y)=1$ whenever $\Gamma\models_hy$ for a finite $\Gamma\subseteq v^{-1}(1)$.
+
+\begin{lemma}[Informal completeness]\src{T4 Lemma 3.3, repaired}\ \status{standard corollary of compactness and completeness}\label{lem:informal:completeness}
+Let $h$ be first-order complete with negation-closed $D_h\neq\emptyset$. (i) $\Adm{h}$ is exactly the set of coherent valuations of ${\models_h}$. (ii) $\Gamma\models_hy$ iff $\Gamma\cup\{y\}\subseteq D_h$ and every $v\in\Adm{h}$ with $v(\Gamma)=1$ has $v(y)=1$. (iii) A finite $A\subseteq D_h$ is $h$-coherent iff $v(A)=1$ for some $v\in\Adm{h}$, iff $A\not\models_hy$ for some $y\in D_h$. So ${\models_h}$ determines $\Adm{h}$ and coherence; conversely $\Adm{h}$ determines ${\models_h}$ if $\Adm{h}\ne\emptyset$, and coherence of all finite subsets of $D_h$ determines it, but coherence on a fixed family $\Ac$ does not.
+\end{lemma}
+
+\paragraph{Reading.}
+This is the notes' ``philosophical version'' of the completeness theorem (``a mode of talking makes sense (is coherent) iff there is something it could be talking about'') for a practice's informal shadow: \emph{the coherent ways of evaluating the practice's sentences are exactly its admissible objects.} It is a direct corollary of Lindenbaum, compactness and completeness \citep{godel1930vollstandigkeit} (proof in Appendix~\ref{app:informal:identify}). The notes' caveat (``as long as the `mode of talking' is a first-order theory and `something' is a model of it'') is visible in $\Mint_h=\Mod(T_h)$: if only standard objects are presented, strengthenings such as $T+\Con(T)$ survive, over-generalizations of the practice's validity relation though not errors about truth (\cref{sec:existence}).
+
+For a step set $S$ and $D\subseteq X$, let $\Ch_D(S)$ be the steps $\Gamma\step y$ derivable from $\Gamma$ by an argument whose lines lie in $D$ and whose inferences and links lie in~$S$. $h^*$ is \emph{step-expressive on $D^*$ at gap $g$} if $\Ch_{D^*}(\Stg{g}{h^*})={\models_{h^*}}$ (implied by step-expressiveness, for $g\ge1$).
+
+\begin{theorem}[Identification up to $\approx$ on the practice's domain]\src{T4 Thm 3.4, (d) repaired}\label{thm:informal:identify}
+Let every $h\in\Hc$ be first-order complete with negation-closed nonempty domain (one fixed $\nneg$), let $T^*$ be consistent, and let $\Ac$ consist of subsets of~$D^*$.
+\begin{enumerate}[label=(\alph*)]
+\item $h\equiv_\infty h'$ iff $h\approx h'$.
+\item Under the closure-level version of \cref{prop:informal:shadow}, no learner identifies the target more finely than~$\approx$.
+\item Let $\Hc$ be finite with $h^*\in\Hc$ (BG1), and the presentation \emph{complete} (every element of ${\models_{h^*}}$ appears in (P), every finite restriction of every member of $\Adm{h^*}$ in (O)). After finitely many data the survivors are exactly $U^*:=\{h:h\approx_{D^*}h^*\}$, and unanimity on ${\models_h}$ accepts on $D^*$ exactly ${\models_{h^*}}$. (This concerns the ideal version space: refutation by a practice datum needs a certificate of non-validity, which is co-r.e.)
+\item If instead (P) presents $\Stg{g}{h^*}$ completely, the survivors are eventually exactly
+\[
+S^g:=\{h\in\Hc:\ \Stg{g}{h}\supseteq\Stg{g}{h^*}\ \text{and}\ {\models_h}|_{D^*}\subseteq{\models_{h^*}}\},
+\]
+$V^g$ accepts exactly $\Stg{g}{h^*}$, and every survivor's meaning is bracketed: $\Ch_{D^*}(\Stg{g}{h^*})\subseteq{\models_h}|_{D^*}\subseteq{\models_{h^*}}$. If $h^*$ is step-expressive on $D^*$ at gap $g$, then $S^g=\{h\in U^*:\Stg{g}{h}\supseteq\Stg{g}{h^*}\}$; without it, survivors can have strictly weaker meaning. Here all refutations are semi-decidable, so the budgeted $\VS_t$ reaches $S^g$.
+\end{enumerate}
+\end{theorem}
+
+Proof in Appendix~\ref{app:informal:identify}. The key is an upper-bracket lemma (\cref{lem:app:informal:bracket}): among hypotheses with $D_h\supseteq D^*$, objects refute exactly those that validate on $D^*$ a step $h^*$ does not, by restricting an $h^*$-countermodel, and paradoxes refute no others.
+
+\begin{example}[A weaker rival survives bounded-gap data]\src{T4 Thm 3.4(d), verification A1}\label{ex:informal:weaker}
+Read $D^*$ as $p_0,\neg p_0,p_3,\neg p_3$; let $T^*=\{p_0\to p_1,p_1\to p_2,p_2\to p_3\}$ with axiom steps plus one-step tautological consequence, and let the rival have $T_h=\emptyset$. For $g\le3$ the $g$-step relations agree on $D^*$, but $(p_0\step p_3)\in{\models_{h^*}}\setminus{\models_h}$, and neither objects nor paradoxes refute the rival ($\Mod(T^*)\subseteq\Mod(\emptyset)$); at $g=4$ it is refuted. Verified in Appendix~\ref{app:informal:identify}, together with a random test of~(d).
+\end{example}
+
+\paragraph{Reading.}
+Bounded-gap data identify the \emph{$g$-step relation} and \emph{bracket} meaning: practice bounds it from below, objects from above (they refute a hypothesis for validating too much, never too little). \emph{Coarser} rivals (same inferences, larger steps) survive by Gold's asymmetry \citep{gold1967language}, now about obviousness; \emph{weaker} rivals miss inferences of $h^*$ that are not chains of short steps through the practice's own sentences. So a practice is guaranteed to fix its meaning when its long inferences so decompose, and otherwise it may not; expansion is the remedy.
+
+The equivalence classes are large: practices fix inferential role and leave ontology and latent language open.
+
+\begin{proposition}[Ontology is unidentifiable at every gap]\src{T4 Prop 3.5, repaired}\label{prop:informal:transfer}
+Let $h=(L,R,\rho,\Mint)$ and $h'=(L,R,\rho,\Mint')$ be latent formalizations such that every member of $\Mint'$ agrees with some member of $\Mint$ on all sentences in $\rho(D_h)$, and vice versa. Then $h\equiv_gh'$ for every~$g$, and $h\equiv_\infty h'$.
+\end{proposition}
+
+\begin{proof}
+$R,\rho$ are shared, so $\Stg{g}{}$, ${\models}$ and paradoxes are; and $v_M\circ\rho$ depends only on the truth values of $\rho(D_h)$ in~$M$.
+\end{proof}
+
+\emph{Instance} \status{modulo the cited transfer principle}. For readings into \emph{bounded} sentences over the superstructure $V(\R)$, Robinson's transfer principle \citep{robinson1966nonstandard} makes $\{V(\R)\}$ and $\{{}^*V(\R)\}$ such a pair, so \emph{whether the intended reals of practice contain infinitesimals} cannot be learned from any data in this language. Likewise $\varepsilon$-$\delta$ analysis and a literal reading in Nelson's internal set theory agree in informal consequence on sentences with standard parameters (\cref{prop:informal:ist}), and von~Neumann and Zermelo numerals on arithmetic sentences (\cref{prop:informal:benacerraf}), which turns \citet{benacerraf1965numbers} into a non-identifiability theorem. Details for all three cases are in Appendix~\ref{app:informal:identify}.
+
+\paragraph{Reading: $\approx$ is inferentialist meaning.}
+Inferential role, incompatibility (here incoherence, \cref{lem:informal:completeness}(iii)) and Sellarsian language-entry transitions (here object evaluations, \cref{lem:informal:completeness}(i)) are all functions of ${\models_h}$ on $D^*$, and soundness refers only to ${\models_{h^*}}$. Everything finer (ontology, latent language, junk like ``$1\in3$'') never changes a practice inference and is unidentifiable. Granularity is partly identifiable, but it is pragmatics (which steps are \emph{acceptable}), not semantics (which are \emph{valid}). Whether $\varepsilon$-$\delta$ and infinitesimals differ in what they are about the practice cannot settle; the verifier needs only~$\approx$.
+
+% ---------------------------------------------------------------------
+\subsection{Counterexample objects versus paradoxes}\label{sec:informal:objects}
+
+\begin{lemma}[Descent along false lines]\src{T4 Lemma 4.1}\label{lem:informal:descent}
+If $v$ is defined on the lines of $\alpha$, true on the premises and false on the conclusion, then $\alpha$ contains an inference with true antecedents and false conclusion, or a link with true source and false target, found within $\mathrm{depth}(\alpha)$ moves evaluating only antecedents of visited lines. If $v$ is $h$-admissible, the item is $h$-invalid. \hfill\leanok{Blame.LineArg.descent\_depth}\ \leanok{Blame.ArgTree.descent\_tree\_not\_mem}
+\end{lemma}
+
+From the false conclusion, repeatedly move to a false antecedent or link source (Appendix~\ref{app:informal:objects}). This is Shapiro's contradiction backtracing \citep{shapiro1983algorithmic} for informal arguments, Lakatos's conversion of a global counterexample into a local one \citep{lakatos1976proofs}, and Easwaran's demand that proofs be fine enough to convert rebutting into undercutting defeaters \citep{easwaran2015rebutting}. Descent can end at a link: the blame then falls on an equivocation, not a rule (Lakatos's ``global but not local'' case).
+
+\begin{definition}[Correction game]\src{T4 Def 4.2}\label{def:informal:game}
+Let $\Hc\subseteq2^S$ be finite, $S$ a finite step universe, $h^*\in\Hc$. Each round the learner announces $A_t\subseteq S$; if $A_t\ne h^*$ the environment returns (+) some $s\in h^*\setminus A_t$, or (\(-\)obj) some $s\in A_t\setminus h^*$, or (\(-\)bag$_r$) some $B\subseteq A_t$ with $|B|\le r$, $B\not\subseteq h^*$; the learner deletes the hypotheses $h\not\ni s$, $h\ni s$, $h\supseteq B$ respectively. A \emph{correction} is a round with feedback. $\Mobj(\Hc)$ (feedback (+) or (\(-\)obj)) and $\Mbag{r}(\Hc)$ (feedback (+) or (\(-\)bag$_r$)) are the optimal worst-case numbers of corrections; $M_{\mathrm{bag}}:=\Mbag{|S|}$. The positive elasticity $\el(\Hc,h^*)$ is the supremum of lengths of sequences $s_1,s_2,\ldots\in h^*$ with $s_i\notin\bigcap\{h\in\Hc:h\supseteq\{s_1,\dots,s_{i-1}\}\}$, and $\el^*(\Hc):=\max_{h^*}\el(\Hc,h^*)$.
+\end{definition}
+
+In reality a negative channel can be silent (objects need presentable countermodels; coherent-but-wrong hypotheses yield no paradox, \cref{sec:coherence}); the bounds below then still bound corrections, but unsound rounds may pass silently.
+
+\begin{theorem}[Objects: logarithmic]\src{T4 Thm 4.3}\ \status{classical}\label{thm:informal:objects}
+(a) $\Mobj(\Hc)\le\lfloor\log_2|\Hc|\rfloor$; with a prior $w$, weighted halving makes at most $\log_2(1/w(h^*))$ corrections, so with $w=2^{-\ell}$ \emph{the number of counterexamples needed is at most the description length of the target}. (b) $\Mobj(\Hc)\le\Mbag{r}(\Hc)$ for all $r\ge1$, with equality at $r=1$. (c) $\Mobj(\Hc)=\Ldim(\Hc)$, the Littlestone dimension. \hfill\leanok{(a)\ CoherenceGames.thm\_4\_3\_a;\ (b)\ ParadoxLowerBound.thm\_4\_3\_b}
+\end{theorem}
+
+Part (a) is classical halving \citep{barzdin1972prediction,littlestone1988learning,angluin1988queries}: announce the steps carried by more than half of the surviving weight. The object game is the mistake-bound model, hence (c) \citep{littlestone1988learning}. Proofs in Appendix~\ref{app:informal:objects}.
+
+\begin{theorem}[Paradoxes: linear, tightly]\src{T4 Thm 4.4}\label{thm:informal:paradoxes}
+(a) $\Mbag{r}(\Hc)\le\el^*(\Hc)\le|\Hc|-1$. (b) \emph{Single culprit}: for $S=\{b_1,\dots,b_n\}$ and $\Hc_n=\{S\setminus\{b_j\}:j\le n\}$, $\Mobj(\Hc_n)=1$ and $\Mbag{r}(\Hc_n)=\min(r,n-1)$; so $M_{\mathrm{bag}}(\Hc_n)=|\Hc_n|-1$ against $\log_2|\Hc_n|$, and (a) is tight. (c) \emph{The chain paradox}: take sentences $q_0,\dots,q_n$, suspect steps $b_i=(q_{i-1}\step q_i)$, and the designated context $\{q_0,\nneg q_n\}$, e.g.\ $q_k=$ ``a pile of $n-k$ grains is a heap''. Let $h_j$ validate every $b_i$ with $i\ne j$ (axioms $p_{i-1}\to p_i$, $i\ne j$). Every $h_j$ is coherent on the designated context; every paradox uses all the $b_i$, so every bag is $S$; every learner using paradoxes suffers $n-1$ corrections; and one admissible object pins down the culprit by descent. \hfill\leanok{(b)\ ParadoxLowerBound.thm\_4\_4\_b;\ (c)\ thm\_4\_4\_c} (deterministic learners)
+\end{theorem}
+
+Proof in Appendix~\ref{app:informal:objects}; for (a), the cautious learner $A_t=\bigcap\VS_t$ receives only (+) items, which form an elastic chain. ``Paradoxes are worthless'' ($M_{\mathrm{bag}}=\el^*$) is false in general: $\Hc=\{\emptyset,\{0\},\{0,1\}\}$ has $M_{\mathrm{bag}}=1<2=\el^*$ (announce $\{0\}$); exact minimax values for small classes are in Appendix~\ref{app:informal:objects}. Real paradoxes have few \emph{suspect} steps, since steps every survivor accepts drop out of the bag.
+
+\begin{theorem}[Bags of size at most $r$]\src{T4 Thm 4.5}\label{thm:informal:bags}
+The \emph{super-majority learner} $A_t=\{s:w(\{h\in\VS:s\in h\})>\frac{r}{r+1}w(\VS)\}$ makes at most $\ln(1/w(h^*))/\ln(1+1/r)$ corrections. With the uniform prior, $\Mbag{r}(\Hc)\le\ln|\Hc|/\ln(1+1/r)\le(r+1)\ln|\Hc|$. \hfill\leanok{CoherenceGames.thm\_4\_5}
+\end{theorem}
+
+Each correction keeps at most a $\frac r{r+1}$ fraction of the surviving weight (proof in Appendix~\ref{app:informal:objects}).
+
+\begin{proposition}[Linear dependence on $r$ is necessary]\src{T4 Prop 4.6}\label{prop:informal:products}
+For the product of $k$ single-culprit blocks of size $b\ge2$ ($|\Hc|=b^k$), $\Mobj=k$ and $\Mbag{r}\ge k\min(r,b-1)$. With $b=r+1$: $\Mbag{r}\ge r\log|\Hc|/\log(r+1)$ while $\Mobj=\log|\Hc|/\log(r+1)$.
+\end{proposition}
+
+Proof in Appendix~\ref{app:informal:objects}. So adversarial multiple-instance feedback costs $\tilde\Theta(r\log|\Hc|)$ over classes of a given size, whereas in the i.i.d.\ multiple-instance setting \citep{dietterich1997solving} bag size enters far more mildly \citep{sabato2012multi}; and the form ``$\Ldim\times\mathrm{polylog}(r)$'' is refuted, as products have $\Ldim=k$.
+
+\begin{proposition}[Bag price when $\Mobj=1$]\src{T4 Prop 4.6\(^\prime\)}\label{prop:informal:ldim1}
+If $\Mobj(\Hc)=1$ then $\Mbag{r}(\Hc)\le r$.
+\end{proposition}
+
+\begin{conjecture}[Bag price]\src{T4 \S4.2}\label{conj:informal:bagprice}
+$\Mbag{r}(\Hc)\le r\cdot\Ldim(\Hc)$ for every finite~$\Hc$.
+\end{conjecture}
+
+\Cref{prop:informal:ldim1} (proof in Appendix~\ref{app:informal:objects}) is the case $\Ldim=1$. The conjecture is tight on single-culprit classes ($r\le n-1$), products ($r\le b-1$) and some two-culprit classes, and computer searches found no violation (Appendix~\ref{app:informal:objects}).
+
+Objects can also be neutralized. A step blamed by an object can be repaired by changing $R$ (\emph{lemma-incorporation}), changing $\rho$ so that the monster no longer satisfies the premise (\emph{monster-barring} by redefinition), rejecting or re-interpreting the datum (\emph{monster-barring} by exclusion, \emph{monster-adjustment}), or extending $L$ (a \emph{proof-generated concept} naming the hidden lemma) \citep{lakatos1976proofs}.
+
+If barring is free, objects constrain nothing; if each barred datum costs $c>0$ bits, a hypothesis that must bar $m$ truthful data loses to $h^*$ in description length once $m>(\ell(h^*)-\ell(h))/c$ (\cref{prop:informal:barring}, Appendix~\ref{app:informal:objects}). So objects are powerful only if certified independently (by the community, or by computation) or if revisions of $\rho$ are paid for, which is Lakatos's own preference ordering.
+
+\paragraph{Reading.}
+Coherence says that \emph{some} step of a paradox is bad; an object says \emph{which}. The sorites is the canonical uninformative paradox. The oligarchic halving of \cref{sec:coherence} bounds \emph{detected incoherences} by $\log_2(1/w(h^*))$, yet total corrections, counting rejections of valid steps, can still be $|\Hc|-1$: coherence bounds the price of boldness, not of learning; objects bound both. Russell's paradox, by contrast, is a bag of size one; what it could not do is choose the \emph{generalization} (\cref{sec:informal:frz}). A learner of inference rules must generate and evaluate objects, not only search for~$\bot$.
+
+% ---------------------------------------------------------------------
+\subsection{Frege \texorpdfstring{$\to$}{->} Russell \texorpdfstring{$\to$}{->} Zermelo}\label{sec:informal:frz}
+
+\begin{definition}[Repair setting]\src{T4 \S5.1}\label{def:informal:repair}
+$I$ is a set of rule instances; $\mathrm{Coh}\subseteq\mathcal P(I)$ is a coherence predicate, downward closed and of finite character; $\mathcal R\subseteq\mathcal P(I)$ is a finite class of \emph{uniformly specified restrictions} with description lengths $\ell$. Practice at time $t$ is a finitely supported weight $w_t:I\to[0,\infty)$, with coverage $\cov_t(c):=\sum_{i\in c}w_t(i)$. Budget-$t$ $\bot$-search refutes $c$ iff $c$ has a refutation of size $\le t$; incoherent $c$ has one of size $k(c)<\infty$. $\MDL_t:=\arg\min\{\ell(c):c\in\mathcal R,\ \mathrm{supp}(w_t)\subseteq c\}$, and $\REP_t$ is the lexicographic $\arg\max$ of $(\cov_t,-\ell)$ over the members of $\mathcal R$ not refuted with budget~$t$.
+\end{definition}
+
+\begin{theorem}[Abstract repair; trivial]\src{T4 Thm 5.1, repaired}\label{thm:informal:repair}
+(a) If $I\in\mathcal R$ is strictly shortest, $\MDL_t=I$ for all $t$. (b) Coherent members are never refuted; incoherent $c$ is refuted for $t\ge k(c)$. (c) For $t\ge t_0:=\max\{k(c):c\in\mathcal R\text{ incoherent}\}$, $\REP_t$ maximizes $(\cov_t,-\ell)$ over the coherent members of $\mathcal R$. (d) If $w_t/\|w_t\|_1\to w_\infty$ in $\ell_1$ and the coherent maximizer of $\cov_\infty$ is unique, $\REP_t$ is eventually equal to it. (e) If $c_1,c_2\in\mathcal R$ are coherent and $c_1\cup c_2$ is not, no coherent set contains both, and while $\mathrm{supp}(w_t)\subseteq c_1\cap c_2$ only $\ell$ chooses between them.
+\end{theorem}
+
+Proof in Appendix~\ref{app:informal:frz}. The content is in an instance that makes every step of the story checkable. In first-order logic with $\in,=$, let $\Comp(\varphi):=\forall a\forall b\exists y\forall x\,(x\in y\leftrightarrow\varphi(x,a,b))$, with $\varphi$ from the menu $\Phi$ of \cref{tab:informal:menu}. A formula is \emph{stratified} (as in Quine's NF, \citealt{quine1937new}) if it has a typing $t$ with $t(v)=t(u)+1$ for $u\in v$ and $t(u)=t(v)$ for $u=v$; $x\in x$ has none. $\mathcal R$ consists of NC (the whole menu), POS (positive formulas), STRAT (stratified; NF-like), SEP (of the form $x\in a\wedge\psi$), and $\mathrm Z:=\mathrm{SEP}\cup\{\mathrm{EMP},\mathrm{PAIR},\mathrm{UNI}\}$ (Zermelo-like). The description lengths are \emph{stipulated}: $\ell(\mathrm{NC})<\ell(\mathrm{POS})<\ell(\mathrm{SEP})<\ell(\mathrm{STRAT})<\ell(\mathrm Z)$, and outcomes depend on this choice.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{@{}lllccc@{}}
+\toprule
+name & $\varphi(x,a,b)$ & role & pos. & strat. & $x\in a\wedge\psi$ \\
+\midrule
+V & $x=x$ & Frege's extension of ``object'' & \checkmark & \checkmark & \\
+EMP & $x\ne x$ & empty set & & \checkmark & \\
+S & $x\in x$ & & \checkmark & & \\
+R & $x\notin x$ & Russell's set & & & \\
+INT & $x\in a\wedge x\in b$ & intersection (Dedekind) & \checkmark & \checkmark & \checkmark \\
+UNI & $x\in a\vee x\in b$ & union & \checkmark & \checkmark & \\
+PAIR & $x=a\vee x=b$ & pairs & \checkmark & \checkmark & \\
+DIFF & $x\in a\wedge x\notin b$ & difference (Cantor) & & \checkmark & \checkmark \\
+CMP & $x\notin a$ & complement & & \checkmark & \\
+ZR & $x\in a\wedge x\notin x$ & Zermelo's 1908 subset & & & \checkmark \\
+\bottomrule
+\end{tabular}
+\caption{The comprehension menu $\Phi$ \src{T4 \S5.2}. ZR is Cantor's diagonal set $\{x\in a:x\notin f(x)\}$ \citep{cantor1891elementare} for $f=\mathrm{id}$; identifying diagonal practice with ZR is a modelling simplification.}
+\label{tab:informal:menu}
+\end{table}
+
+\begin{lemma}[Comprehension facts]\src{T4 \S5.2, F1--F6}\label{lem:informal:facts}
+(F1) NC is incoherent ($\Comp(\mathrm R)$ with $x:=y$ refutes it in four lines). (F2) POS is coherent, even for all positive formulas. (F3) $\mathrm{STRAT}\cap\Phi$ is coherent. (F4) $\mathrm Z\cap\Phi$ is coherent. (F5) POS, STRAT, Z are pairwise jointly incoherent. (F6) $\mathrm{SEP}\subsetneq\mathrm Z$, and POS, STRAT, Z are pairwise $\subseteq$-incomparable.
+\end{lemma}
+
+The models are a one-element $u\in u$ (F2), $\N$ coding the finite and cofinite sets (F3) and the hereditarily finite sets (F4); $\{\mathrm V,\mathrm{ZR}\}$ and $\{\mathrm S,\mathrm{CMP}\}$ each yield Russell's set (F5). Proof in Appendix~\ref{app:informal:frz}.
+
+\begin{theorem}[The Frege--Russell--Zermelo trajectory]\src{T4 Thm 5.2, (iv) repaired}\label{thm:informal:frz}
+(i) For every practice $\MDL=\mathrm{NC}$: Frege's Basic Law~V \citep{frege1893grundgesetze} as the compression of ``every concept has an extension''. (ii) Coherence refutes it with a four-line budget. (iii) The maximal coherent members of $\mathcal R$ are exactly POS, STRAT and Z, pairwise jointly incoherent: there is no minimal repair. (iv) Coverage selects ($t\ge t_0$; $\mathrm{DC}:=\{\mathrm{INT},\mathrm{UNI},\mathrm{PAIR},\mathrm{DIFF},\mathrm{EMP}\}$, the Dedekind--Cantor operations, all supports with positive weights):
+\begin{itemize}
+\item support $\mathrm{DC}$: STRAT and Z cover everything and $\ell$ selects \textbf{STRAT}. For supports $\subseteq\mathrm{DC}$: STRAT iff the support meets both $\{\mathrm{DIFF},\mathrm{EMP}\}$ and $\{\mathrm{UNI},\mathrm{PAIR},\mathrm{EMP}\}$; otherwise POS if it avoids DIFF and EMP (a positive practice selects positive set theory); otherwise SEP;
+\item support $\mathrm{DC}\cup\{\mathrm{ZR}\}$: only Z covers everything, and \textbf{Z} is selected; for $\mathrm{ZR}\in$ support $\subseteq\mathrm{DC}\cup\{\mathrm{ZR}\}$, Z iff the support meets $\{\mathrm{UNI},\mathrm{PAIR},\mathrm{EMP}\}$, else SEP;
+\item support $\mathrm{DC}\cup\{\mathrm{ZR},\mathrm V\}$: Z iff $w(\mathrm{ZR})>w(\mathrm V)$, ties to STRAT. For $\{\mathrm{ZR},\mathrm V\}\subseteq$ support $\subseteq\mathrm{DC}\cup\{\mathrm{ZR},\mathrm V\}$: if $w(\mathrm{ZR})>w(\mathrm V)$, SEP if the support avoids UNI, PAIR, EMP, else Z; if $w(\mathrm V)>w(\mathrm{ZR})$, POS if it avoids DIFF, EMP, else STRAT (e.g.\ $\{\mathrm{INT},\mathrm{UNI},\mathrm{PAIR},\mathrm{ZR},\mathrm V\}$ gives POS); if $w(\mathrm{ZR})=w(\mathrm V)$, POS if it avoids DIFF, EMP, else SEP if it avoids UNI, PAIR, EMP, else STRAT.
+\end{itemize}
+\end{theorem}
+
+Proof in Appendix~\ref{app:informal:frz}, from \cref{thm:informal:repair}(c) and the membership table; the conditions are also checked there against the learner by computation, and experiment~G (\cref{sec:experiments}) reproduces the dynamics.
+
+\emph{Historical reading} (``a nice thing shadowed in'' practice, not a claim about what Zermelo did). \Citet{zermelo1908untersuchungen} proves from Separation that every set $M$ has a subset $\{x\in M:x\notin x\}$ not in $M$: ZR at arbitrary $a$, the diagonal argument as a theorem. So \emph{practice containing Zermelo-style diagonal subsets selects Separation over stratification, and Frege's universal extension is the price}. Without diagonal practice, and under the stipulated $\ell$, NF-like stratification (on NF's consistency see \citealt{holmes2015nf}) would have won only for a practice using difference or $\emptyset$ and also union, pairs or $\emptyset$; a purely positive practice selects positive set theory. A second separating datum lies outside the toy: NF refutes choice \citep{specker1953axiom}, which Zermelo defended by its uses \citep{moore1982zermelo}. His stated method, to restrict ``sufficiently to exclude all contradictions'' yet keep ``all that is valuable'' \citep{zermelo1908untersuchungen} (trans.\ \citealt[p.~200]{vanheijenoort1967from}), is $\REP$'s constrained optimization; the theorem adds that the optimum exists only in a uniform class and is chosen by coverage. Without uniformity it is far worse.
+
+The instances of naive comprehension have exactly $2^{\aleph_0}$ maximal consistent subsets, and even $\Comp(x\ne x)$ alone has $2^{\aleph_0}$ pairwise incompatible maximal consistent extensions (\cref{prop:informal:continuum}, Appendix~\ref{app:informal:frz}). \Citet{incurvati2017maximally} prove more: under minimal assumptions, multiple incompatible maximal consistent sets of instances of naive comprehension exist and \emph{none is recursively axiomatizable}, generalizing McGee's theorem for the T-schema \citep{mcgee1992maximal}. So ``the maximal repair'' does not exist and no learner can output a recursive axiomatization of one. \emph{Uniformity of the restriction class is what makes the learning problem well posed.} The toy omits Replacement (coverage of a \emph{conclusion}), the cumulative-hierarchy conception (a choice of $\ell$), and undecidable coherence, which by \cref{thm:informal:soundness} costs escalations, never soundness.
+
+\paragraph{Reading.}
+Imitation plus simplicity produces the over-general rule (\cref{sec:search}); coherence refutes it, here with sharp blame; but coherence cannot choose the repair, since the maximal coherent generalizations are several. Coverage of what the practice does chooses: Lakatos's ``heuristic falsifiers'', Zermelo's ``all that is valuable''. What coverage leaves open is a Kripkensteinian residue (\cref{sec:coherence}): coherent meanings of ``set'' that agree on everything the practice has used.
+
+% ---------------------------------------------------------------------
+\subsection{The robust core and the emergence of a notion of proof}\label{sec:informal:robust}
+
+\begin{definition}[Sharpenings; robust core]\src{T4 Def 6.1}\label{def:informal:sharpening}
+Fix a first-order $L$, a base theory $T_0$ and vague words $W$. A \emph{sharpening} $\sigma$ gives each $w\in W$ an explicit $L$-definition; $\Sigma$ is the set of \emph{admissible} joint sharpenings. Each $\sigma$ gives a first-order complete $h_\sigma=(L,R_\sigma,\rho_\sigma,\Mod(T_\sigma))$, with $T_\sigma=T_0$ plus $\sigma$'s definitions and $\rho_\sigma$ reading each $w$ by its definition. \emph{Local supervaluational validity} is ${\models_{\mathrm{SV}}}:=\bigcap_\sigma{\models_\sigma}$; put $\Stg{g}{\mathrm{SV}}:=\bigcap_\sigma\Stg{g}{\sigma}$. A precise object $M\models T_0$ expands uniquely to $M_\sigma\models T_\sigma$; an occurrence is \emph{super-determinate} at $M$ if all $M_\sigma$ agree on it, and object data are \emph{SV-truthful} if reported only for super-determinate occurrences. The \emph{robust-core hypothesis} $\RCH_g$: every non-noise practice step lies in $\Stg{g}{\mathrm{SV}}$ and every practice link is valid under every~$\sigma$.
+\end{definition}
+
+Local validity (truth-preservation at each sharpening) differs from the \emph{global} validity (preservation of supertruth) usually called supervaluational \citep{fine1975vagueness,williamson1994vagueness,keefe2000theories,varzi2007supervaluationism}; local validity is the right notion for ``survives every formalization''.
+
+\begin{theorem}[Robust core]\src{T4 Thm 6.2, repaired}\label{thm:informal:robust}
+\begin{enumerate}[label=(\alph*)]
+\item \emph{Survival.} Under $\RCH_g$, an argument whose inferences and links are non-noise practice items has, for every $\sigma$, its conclusion in $\Cl_{R_\sigma}(\rho_\sigma\Prem)$; a theorem so proved from premises every $T_\sigma$ proves is a theorem of every admissible sharpening, whichever a later formalization adopts.
+\item \emph{SV-truthful data never refute a sharpening.} Let $\{h_\sigma\}\subseteq\Hc$, and let practice lie in $\Stg{g}{\mathrm{SV}}$, escalation and link answers be given only when all $\sigma$ agree (``yes'' on $\Stg{g}{\mathrm{SV}}$, ``no'' outside $\bigcup_\sigma\Stg{g}{\sigma}$), designated contexts be coherent under every $\sigma$, and objects be SV-truthful. Then every $h_\sigma$ survives forever, and $V^g_t$ accepts only steps in $\Stg{g}{\mathrm{SV}}$: it is sound for every sharpening at once. If moreover $\Hc$ is finite and every element of $\Stg{g}{\mathrm{SV}}$ eventually appears in (P), then $V^g_t$ eventually accepts exactly $\Stg{g}{\mathrm{SV}}$.
+\item \emph{Nothing more is soundly acceptable.} Under these data, (c1) an acceptance set sound for every possible target $h_\sigma$ lies in ${\models_{\mathrm{SV}}}$; (c2) one that is $g$-sound for every target lies in $\Stg{g}{\mathrm{SV}}$, which $V^g_t$ attains when $\Hc=\{h_\sigma\}$. The gap ${\models_{\mathrm{SV}}}\setminus\Stg{g}{\mathrm{SV}}$ is in general nonempty.
+\item \emph{Permanent abstention.} Steps in $\bigcup_\sigma\Stg{g}{\sigma}\setminus\Stg{g}{\mathrm{SV}}$ are never accepted. (d1) Those outside ${\models_{\mathrm{SV}}}$ are invalid under some admissible sharpening, and only a definition (shrinking $\Sigma$) or lemma-incorporation removes them; (d2) those in ${\models_{\mathrm{SV}}}$ are valid but not short under every sharpening; adding the step as a library lemma to every $R_\sigma$ removes them, and so does an expansion into steps of $\Stg{g}{\mathrm{SV}}$ when one exists.
+\end{enumerate}
+\end{theorem}
+
+Proof in Appendix~\ref{app:informal:robust}, which also shows the gap in (c) and that for infinite $\Sigma$ the robust core can be undecidable.
+
+A step in the domain that is invalid under an admissible $\sigma$ has a $\sigma$-\emph{monster}, a model of $T_\sigma$ making its premises true and its conclusion false (\cref{thm:informal:monsters}, by completeness; Appendix~\ref{app:informal:robust}). Steps in ${\models_{\mathrm{SV}}}\setminus\Stg{g}{\mathrm{SV}}$ have none, and a monster need not be presentable under SV-truthful reporting. \emph{Cauchy, again}: the sum-theorem step is valid only under the uniform sharpening of ``converges'', so it lies outside the robust core, and Abel's series is a monster for the pointwise one. Lakatos's responses change $\Sigma$ or the language: monster-barring drops the pointwise sharpening; lemma-incorporation adds ``uniformly''; a proof-generated concept introduces a word whose only sharpening is uniform convergence. The robust-core hypothesis predicts \emph{where} pre-formal mathematics broke: at the non-robust steps.
+
+Only unanimity chains: if each of $n$ steps is valid with probability $\ge1-\varepsilon$ under a measure on sharpenings, the argument is guaranteed validity only with probability $1-n\varepsilon$, and a sorites valid under no sharpening attains this at $\varepsilon=1/n$ (\cref{prop:informal:sorites}, known; Appendix~\ref{app:informal:robust}). The bound is Adams's \citep{adams1966probability}, its use for the sorites is Edgington's, with her verities in place of a measure over precisifications \citep{edgington1997vagueness}, and the disjoint-failure tightness is the lottery paradox's \citep{kyburg1961probability}. ``Valid on most readings'' is to vagueness what majority vote is to verifier ensembles (the doctrinal paradox of \cref{sec:search}): it does not compose, and unanimity is the weakest property that guarantees validity whatever the admissible sharpening turns out to be.
+
+\begin{proposition}[How the nice notion of proof came to be there]\src{T4 Prop 6.5, repaired}\label{prop:informal:emergence}
+Let $T$ be an r.e.\ first-order theory, $\rho^*$ a reading, and $A_0$ the practice's initial repertoire of steps (within $D^*$). Suppose the community drops any step refuted by a presented monster (a model of $T$), and every step outside ${\models_T}$ is eventually refuted.
+\begin{enumerate}[label=(\alph*)]
+\item \emph{Derivability}: the survivors are $A_\infty=A_0\cap{\models_T}$, and the $\rho^*$-images of any argument chained from them interpolate into a derivation in any complete calculus for~$T$.
+\item \emph{No gap bound follows}: for $A_0$ the instances of the single schema ``from $\chi$ infer $\theta$'' ($\chi,\theta$ arithmetic sentences) and $T=\PA$, $A_\infty$ is undecidable and no $g$ has $A_\infty\subseteq\Stg{g}{}$ for any complete calculus for $\PA$ meeting the effectivity assumptions of \cref{def:informal:latent}.
+\item \emph{A bounded gap needs two extra hypotheses}: if $A_0$ is the instance set of finitely many schemas, selection acts on \emph{schemas} (a schema is dropped when any instance is refuted), and each surviving schema is \emph{uniformly derivable} (a derivation template with at most $g$ rule applications, in the schema's metavariables, instantiates to a derivation of each instance), then all surviving steps are in $\Stg{g}{}$ of a complete calculus for $T$, the shadow of finitely many derived rules. Uniform derivability is automatic for pure propositional schemas and fails in general: in a standard Hilbert calculus for $\PA$ (rules closed under substituting a fresh variable for a numeral), ``infer $\theta(\bar n)$'' with $\theta(n)=$ ``$n$ codes no $\PA$-proof of $0=1$'' has all instances provable, but a uniform template would yield a $\PA$-proof of $\Con(\PA)$; uniform derivability is relative to the calculus and its library.
+\end{enumerate}
+\end{proposition}
+
+Proof in Appendix~\ref{app:informal:robust}: (a) is completeness, and in (b) a gap bound would make $A_\infty$ decidable. In the vague case, (a) applied to each $(T_\sigma,\rho_\sigma)$ gives survivors $A_0\cap{\models_{\mathrm{SV}}}$, though complete monster presentation is then in tension with SV-truthful reporting.
+
+\paragraph{Reading: how the nice notion of proof came to be there.}
+The model's partial answer has three ingredients. (1) \emph{Local checkability}: steps are checked on objects line by line (\cref{lem:informal:descent}), so monster pressure selects steps that preserve truth in every object. (2) \emph{Completeness}: for r.e.\ $T$, Gödel's theorem turns ``truth-preserving in every object of an elementary class'' into ``derivable in a finite calculus'', with no bound on length. (3) \emph{Schema-level selection of uniformly derivable schemas}, an extra hypothesis not derived here, which alone yields a bounded gap. So the formal structure is ``sorta there'' in the activity because the activity was \emph{selected by objects}, and completeness says that being so selected is being shadowed by a calculus. Caveats: complete monster presentation is an idealization (the selection took centuries); for intended-model semantics such as $\{\N\}$, (2) fails and selection heads toward true arithmetic, which no calculus captures; and selection only removes steps, so the surviving calculus need not be complete for $T$. With \cref{thm:informal:robust} this also answers the robust-core question: \emph{if} pre-formal practice used only steps valid under every admissible sharpening, its proofs survive every formalization among them, and the conservative verifier never accepts beyond that core.
+
+The notes suggest looking at Euclid, who ``didn't have a full set of axioms''; reading a diagram's sharpenings as nearby configurations, Manders's co-exact properties and the system~E of Avigad, Dean and Mumma give an analogue, not an instance, of the robust core (\cref{rem:informal:euclid}, Appendix~\ref{app:informal:robust}).
+
+% ---------------------------------------------------------------------
+\subsection{Historical reading, and what a learner before formalization needed}\label{sec:informal:history}
+
+\begin{table}[t]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+\toprule
+episode & faulty informal rule & negative evidence & repair \\
+\midrule
+Cauchy 1821 & convergent series of continuous functions has continuous sum & object: Fourier series (Abel 1826); hidden lemma (Seidel, Stokes 1847) \citep[App.~1]{lakatos1976proofs} & uniform convergence ($L$) \\
+Ampère 1806 & continuous functions differentiable except at isolated points & object: Weierstrass's function (1872) & function concept broadened ($\rho$) \\
+Riemann 1851/57 & Dirichlet's principle & object: Weierstrass's variational problem (1870) \citep{monna1975dirichlet} & side conditions (Hilbert) ($R$) \\
+Steiner 1848 & $7776$ conics & excess component of double lines \citep{eisenbud20163264} & $3264$; genericity \\
+Lamé 1847 & unique factorization in cyclotomic integers & failure known (Kummer 1844) \citep{edwards1977fermat} & ideal numbers ($L$) \\
+Poincaré 1900 & homology characterizes $S^3$ & object: homology sphere (1904) & fundamental group ($L$) \\
+Frege 1893 & Basic Law V & paradox: Russell (1902) \citep{vanheijenoort1967from} & restricted comprehension ($R$) \\
+Zermelo 1908 & no Replacement & coverage: $\aleph_\omega$ not provable \citep{vanheijenoort1967from} & Replacement, 1922 ($R$) \\
+\bottomrule
+\end{tabularx}
+\caption{Negative evidence in informal mathematics, and the component of $(L,R,\rho,\Mint)$ revised; sources in the rows, dates as checked in \src{L6 \S1}.}
+\label{tab:informal:history}
+\end{table}
+
+\emph{How informal mathematics stayed reliable} (\cref{tab:informal:history}). (i) The dominant negative datum was an \emph{object}, not a contradiction; only the set-theoretic antinomies were pure derivations of $\bot$. Objects localize blame, at logarithmic rather than linear cost (\cref{thm:informal:objects,thm:informal:paradoxes}); mathematicians still check how particular steps apply to specific examples \citep{weber2011why}, and Euler accepted $\pi^2/6$ on six-decimal agreement. (ii) The faulty rules were \emph{average-case} sound: right on the tame objects practitioners had in mind, wrong on degenerate ones (Steiner's count fails for \emph{every} input, because of an excess component). Rigour arrived when mathematicians \emph{became} adversarial over objects (Weierstrass, Peano, Russell). This is \cref{sec:search} in history: a checker trained on human steps inherits the tameness assumption, and a strong prover finds the monsters. (iii) Lags ran from weeks to decades, so guarantees must be time-uniform (\cref{thm:informal:ville}). (iv) Labels are noisy both ways; some ``known errors'' are not errors \citep{hales2007jordan}, and whether Cauchy's theorem was false depends on the reading (\cref{prop:informal:equivocation,thm:informal:monsters}). Modularity \citep{avigad2021reliability}, a track record of heavy use, and a social process good at locating weak points \citep{thurston1994proof} tell the object search where to look. Kreisel's squeezing argument \citep{kreisel1967informal} pins informal \emph{logical} validity to derivability; the axioms cannot be squeezed, and they are what coherence and coverage leave non-unique.
+
+\emph{What a learner before formalization would have needed}: (1) a class of latent formalizations with a growing definitional library, so that practice has a bounded gap; (2) conservative acceptance by unanimity, applied to links as well as steps, with a time-uniform Bayesian version (\cref{thm:informal:soundness,thm:informal:ville}); (3) an expansion protocol (\cref{prop:informal:expansion}); (4) an object generator, adversarial over objects, with descent (\cref{lem:informal:descent,thm:informal:objects}); (5) paid revisions of readings (\cref{prop:informal:barring}); (6) coverage of practice to choose among coherent repairs within a uniform class (\cref{thm:informal:frz,prop:informal:continuum}); (7) acceptance restricted to the robust core when concepts are vague, with non-robust steps flagged as where monsters live (\cref{thm:informal:robust,thm:informal:monsters}); (8) a human corpus treated as noisy and corrigible.
+
+\emph{The answer to success criterion 2} is yes, in a precise and conditional sense. A learner with (1)--(8) whose class contains the practice's latent formalization is sound at all times against adaptive provers; for a finite class under complete presentation it identifies the practice's step relation, brackets its meaning and converges to the robust core; and in the comprehension toy it reproduces Frege--Russell--Zermelo, with coverage, not coherence, choosing the repair. But \emph{soundness is relative to realizability of the latent formalization class} (BG1), and history violated realizability at every decisive step: $\varepsilon$-$\delta$, uniform convergence, ideals and the fundamental group were inventions of language. Compare the observation in the notes that in mathematics ``we created a language in which formal proofs can be written'' rather than translating existing proofs. The hardest open problem, affordable soundness with language invention, is the first problem of \cref{sec:open}; Appendix~\ref{app:informal:open} records what this section adds to it.

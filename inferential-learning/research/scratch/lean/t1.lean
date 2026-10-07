@@ -1,0 +1,25 @@
+import InfLearn.StepSoundness
+open List
+#check @List.take_succ
+#check @List.prefix_concat_iff
+#check @List.mem_take_iff_getElem
+#check @List.getElem_append_left
+#check @List.getElem_append_right
+#check @List.take_append_of_le_length
+#check @List.getElem_concat_length
+#check @List.Nodup.getElem_inj_iff
+#check @List.countP_append
+#check @List.countP_eq_length_filter
+#check @List.getD_eq_getElem
+#check @List.take_prefix
+#check @List.IsPrefix.getElem
+#check @List.take_length
+#check @List.take_of_length_le
+#check @List.countP_mono_left
+#check @Finset.card_le_card
+#check @Finset.card_lt_card
+#check @ENat.coe_le_coe
+#check (⨆ n : ℕ, (n : ℕ∞))
+#check @List.take_append
+#check @List.take_concat_get'
+#check @List.filter_append

@@ -1,0 +1,316 @@
+% =====================================================================
+% Section 4: Cautious verification and its price
+% Sources (repaired statements only):
+%   research/theory/T1-soundness-under-search.md
+%     §3: Thm 3.1 (as repaired: joint-probability form), Thm 3.2 (proof as repaired),
+%         Prop 3.3, Thm 3.4 (as restated; degenerate case of (ii) per round-2
+%         re-verification), Prop 3.5 (signature caveat), Thm 3.6 (justification as
+%         repaired), Thm 3.7 (linear-flat scope), Conj 3.8 (evidence as corrected),
+%         Thm 3.9;
+%     §4: Thm 4.1, Thm 4.2 (hypothesis of (a) explicit), Prop 4.3, Thm 4.4,
+%         Cor 4.5, Cor 4.6 (wording as repaired); Lemmas 1.2-1.3 are recalled
+%         from Section 2 (lem:setting:rank, lem:setting:recover).
+%   research/verification/T1-soundness-under-search-verification.md
+%   research/verification/reverification-round2.md (T1 Thm 3.4 degenerate case)
+%   research/lit/L2-reliable-selective-kwik.md (literature)
+%   lean/InfLearn/StepSoundness.lean (Thm 3.1(a) and the deterministic case of (b))
+%   lean/InfLearn/Unstructured.lean (Thm 3.2 and Thm 3.9, deterministic verifiers)
+%   research/theory/T1-code/ (computed claims; re-run for this section)
+% Proofs not given inline are in sections/app-caution.tex. Moved there in the
+% readability pass: the full statement of thm:caution:untagged(iii)
+% (prop:app:caution:flat), the exact computed values, the evidence for
+% conj:caution:binomial, the noisy-oracle counterexample and prop:caution:tight.
+% =====================================================================
+\providecommand{\ACCEPT}{\textsf{ACCEPT}}
+\providecommand{\REJECT}{\textsf{REJECT}}
+\providecommand{\ESCALATE}{\textsf{ESCALATE}}
+\providecommand{\vars}{\mathrm{vars}}
+\providecommand{\Bell}{\mathrm{Bell}}
+\providecommand{\ccl}{\mathrm{cl}}
+\providecommand{\Htag}[1]{H^{\mathrm{tag}}_{#1}}
+\providecommand{\nesc}{\#\mathrm{ESC}}
+
+\section{Cautious verification and its price}\label{sec:caution}
+
+\Cref{sec:search} reduced the soundness of a search-driven reasoner to a set inclusion: everything the verifier accepts must lie in $\Sound(\Rstar)$, and average-case accuracy does not certify this. This section shows how a learner can certify the inclusion, and what it costs. The answer is caution. Accept a step only if every hypothesis consistent with the evidence accepts it, reject it only if none does, and otherwise escalate it to a human or an oracle. This is reliable learning \citep{rivest1988learning}, perfect selective classification \citep{elyaniv2010foundations} and the ``accept'' side of KWIK \citep{li2008knows}, applied to steps. It is sound against every prover from the first datum on, and it is the most permissive $0$-sound verifier (\Cref{thm:caution:vs}).
+
+Its price is paid in escalations, never in soundness. The worst case is exactly a bounded, target-relative form of Wright's elasticity (\Cref{thm:caution:esc}), computed for the main classes in \cref{tab:caution:cost}. A Bayesian version adds time-uniform soundness from noisy data, with no union bound over queries (\Cref{sec:caution:bayes}), but its escalation cost is exponential in description length unless structure intervenes. In one line: \emph{structure, not the prior, makes sound learned verification affordable.}
+
+The results are elementary. As far as we know, three are new: the exact single-schema budget, the tagged/untagged separation and the Bell-number bound for two-sided checking over growing signatures. \Cref{prop:caution:tight} checks that Ville's constant cannot be improved in this protocol, as expected since Ville's inequality is essentially tight for test martingales with small increments \citep{ramdas2023game}.
+
+Protocol, soundness and cost are as in \cref{def:setting:protocol,def:setting:soundness,def:setting:cost}. Human data $P_0\subseteq\Rstar$ are fixed unless said otherwise, and $\Esc(\Hc;N)$ restricts queries to steps of size at most~$N$. We use the rank lemma and the witness events (R), (D) of \cref{lem:setting:rank,lem:setting:recover}.
+
+% ---------------------------------------------------------------------
+\subsection{The version-space verifier is sound and optimal}\label{sec:caution:vs}
+
+\begin{definition}[Version space; VS verifier]\src{T1 \S3}\label{def:caution:vs}
+Let $\Hc\subseteq2^S$ be realizable. For sets $P$ (positive) and $P^-$ (negative) of labelled steps, $\VS(P,P^-)=\{R\in\Hc:\ P\subseteq R,\ R\cap P^-=\emptyset\}$, and $\VS(P)=\VS(P,\emptyset)$. The \emph{VS verifier} starts with $P=P_0$, $P^-=\emptyset$, and answers a query~$q$ with \ACCEPT{} if $q\in\bigcap\VS(P,P^-)$, with \REJECT{} if $q\notin\bigcup\VS(P,P^-)$, and with \ESCALATE{} otherwise; an escalated $q$ joins $P$ or $P^-$ according to the oracle's label. For a history~$h$, $\VS_h$ is the version space computed from $P_0$ and the labels in~$h$.
+\end{definition}
+
+In the terms of \citet{elyaniv2010foundations}, this is the consistent selective strategy: it escalates exactly on the disagreement region of the version space.
+
+\begin{theorem}[Soundness and optimality of caution]\src{T1 Thm 3.1, as repaired}\label{thm:caution:vs}
+\leavevmode
+\begin{enumerate}[label=(\alph*)]
+\item The VS verifier is uniformly $0$-sound. For every target $\Rstar\in\Hc$ with $P_0\subseteq\Rstar$ and every prover, $\Rstar\in\VS(P,P^-)$ at all times. So everything it accepts lies in~$\Rstar$, and a reasoner that chains accepted steps is sound (\Cref{lem:search:stepwise}).
+\item Let $V$ be any (possibly randomized) $\delta$-sound verifier for $\Hc$ with human data $P_0$. Fix a target $\Rstar\in\Hc$ with $P_0\subseteq\Rstar$, a history $h$ of $t$ rounds (queries $q_1,\dots,q_t$, answers, oracle labels) whose labels agree with~$\Rstar$, and a query $q\notin\bigcap\VS_h$. Let $p$ be the \emph{joint} (unconditional) probability, over $V$'s coins, that against~$\Rstar$ the prover issuing $q_1,\dots,q_t,q$ produces $h$ and then has $q$ accepted. Then $p\le\delta$.
+\item In particular, a deterministic $\delta$-sound verifier with $\delta<1$ accepts no $q\notin\bigcap\VS_h$ at any history~$h$ that it produces against a target in~$\Hc$. History by history, its acceptance region lies inside $\bigcap\VS_h$, the set the VS verifier accepts.
+\end{enumerate}
+\hfill\leanok{StepSoundness.thm\_3\_1\_a} (a)\ \leanok{StepSoundness.thm\_3\_1\_b} (c)
+\end{theorem}
+
+\begin{proof}
+(a) All labels are truthful, so the target never leaves the version space, and hence $\bigcap\VS\subseteq\Rstar$.
+
+(b) Pick $R'\in\VS_h$ with $q\notin R'$; it is an admissible target that agrees with every label in~$h$. Coupling the runs against $\Rstar$ and $R'$ through the verifier's coins, the event ``$h$, then $q$ accepted'' has probability~$p$ under both (Appendix~\ref{app:caution:vs}). As $q\notin R'$, $\delta$-soundness for~$R'$ gives $p\le\delta$.
+
+(c) A deterministic verifier answering fixed queries has $p\in\{0,1\}$, so $p\le\delta<1$ forces $p=0$.
+\end{proof}
+
+The joint form in~(b) is essential. Read conditionally on~$h$, (b) is false: a verifier that accepts everything with probability~$\varepsilon$, and otherwise runs the VS verifier, is $\varepsilon$-sound, yet after some histories it accepts steps outside $\bigcap\VS_h$ with conditional probability~$1$ (Appendix~\ref{app:caution:vs}). With random human data the coupling must also transport the data, giving only $\Prob_{R'}[\text{data}]\cdot p\le\delta$; this is where \Cref{sec:caution:bayes} takes over. The theorem shows that the VS verifier is the \emph{largest} $0$-sound acceptance rule, so its escalations are forced on every $0$-sound verifier.
+
+\paragraph{Reading.} A learner can \emph{guess} the calculus (the simplest or most probable hypothesis), which is unsound under search (\Cref{sec:search}). Or it can \emph{certify} steps, accepting only what every calculus consistent with the evidence accepts, which is sound from the first datum without negative data. Gold's problem \citep{gold1967language} does not threaten certification. An over-general hypothesis, tonk included, never licenses a step by itself, because the target stays in the version space as a guardian. Over-generality costs only completeness. Since contexts are part of judgments, this covers hypothetical steps verbatim ($\to$I; ``assume the air pressure is~$0$'').
+
+% ---------------------------------------------------------------------
+\subsection{The escalation dimension is a positive elasticity}\label{sec:caution:esc}
+
+\begin{definition}[Elastic chain; positive elasticity]\src{T1 \S3}\label{def:caution:elastic}
+Let $R\in\Hc$ with $P_0\subseteq R$. An \emph{elastic chain in~$R$} (relative to $P_0$) is a sequence $s_1,\dots,s_m\in R$ with $s_i\notin\bigcap\VS(P_0\cup\{s_1,\dots,s_{i-1}\})$ for every~$i$. Equivalently, there are \emph{witnesses} $R_i\in\Hc$ with $P_0\cup\{s_1,\dots,s_{i-1}\}\subseteq R_i\not\ni s_i$. The \emph{positive elasticity} $\el(\Hc,R\mid P_0)$ is the supremum of the lengths of such chains, and $\el(\Hc,R\mid P_0;N)$ restricts the $s_i$ to size at most~$N$.
+\end{definition}
+
+Wright's finite elasticity \citep{wright1989identification,motoki1991correct} forbids infinite sequences of this kind and suffices for identification in the limit from text. Positive elasticity is its bounded version, with the points in the target.
+
+\begin{theorem}[Escalation dimension $=$ positive elasticity]\src{T1 Thm 3.2, proof as repaired}\label{thm:caution:esc}
+For every class $\Hc$ and human data $P_0$,
+\[
+\Esc(\Hc\mid P_0)\;=\;\sup_{R\in\Hc,\ R\supseteq P_0}\el(\Hc,R\mid P_0).
+\]
+The VS verifier attains it: against an honest prover for target~$\Rstar$, it never rejects and escalates at most $\el(\Hc,\Rstar\mid P_0)$ times. Conversely, if $s_1,\dots,s_m$ is an elastic chain in some $R\in\Hc$, the honest prover for~$R$ that queries $s_1,\dots,s_m$ in order forces every $\delta$-sound (possibly randomized) verifier to expected cost at least $(1-\delta)m$, and every $0$-sound verifier to cost~$m$ almost surely. The same holds for steps of size at most~$N$.
+\hfill\leanok{Unstructured.thm\_3\_2}\ \leanok{Unstructured.vsVerifier\_attains} (deterministic $0$-sound verifiers, no size bound)
+\end{theorem}
+
+\begin{proof}[Proof idea]
+Against an honest prover, the VS verifier escalates $q$ exactly when $q\notin\bigcap\VS(P_0\cup E)$, with $E$ the earlier escalated queries, so these form an elastic chain in~$\Rstar$. Conversely, $R$ and the witness $R_i$ label $s_1,\dots,s_{i-1}$ alike, so the transcripts up to round~$i$ have the same law under both; $s_i$ is invalid under~$R_i$, so it is accepted with probability at most~$\delta$ under both. Appendix~\ref{app:caution:esc}.
+\end{proof}
+
+So the cost of caution depends only on the class, the target and~$P_0$, not on the prover, the human distribution or a prior. It is KWIK's adversarial abstention count \citep{li2008knows,li2011knows}, made one-sided; \citet{rivest1988learning} and \citet{elyaniv2010foundations} bound instead the distributional mass of abstention.
+
+\begin{proposition}[Intersection-closed classes]\src{T1 Prop 3.3}\ \status{known in substance}\label{prop:caution:closure}
+Suppose $\Hc\cup\{\emptyset\}$ is closed under arbitrary intersections. For $P$ contained in some member, let $\ccl(P)$ be the intersection of all members of~$\Hc$ that contain~$P$. Then:
+\begin{enumerate}[label=(\roman*)]
+\item $\bigcap\VS(P)=\ccl(P)$, the least member of $\Hc\cup\{\emptyset\}$ containing~$P$. So, against an honest prover, the VS verifier is the \emph{closure algorithm}: it accepts iff $q\in\ccl(P_0\cup E)$, where $E$ is the set of steps escalated so far.
+\item $\el(\Hc,R\mid P_0)$ is the largest $m$ for which there is a strict chain $\ccl(P_0)=C_0\subsetneq C_1\subsetneq\dots\subsetneq C_m\subseteq R$ of members of $\Hc\cup\{\emptyset\}$.
+\end{enumerate}
+\end{proposition}
+
+\noindent\emph{Proof idea.} An elastic chain gives the strict chain $C_i=\ccl(P_0\cup\{s_1,\dots,s_i\})$; conversely, pick $s_i\in C_i\setminus C_{i-1}$ (Appendix~\ref{app:caution:closure}). This is the closure algorithm of \citet{helmbold1990learning}; its use for one-sided learning from positive examples goes back to \citet{natarajan1987learning}. We claim nothing new beyond reading the chain length as an escalation count.
+
+\begin{lemma}[Single schemas are intersection-closed]\src{T1 \S3, after Prop 3.3}\label{lem:caution:h1}
+$H_1=\{\inst(\sigma):\sigma\text{ a schema}\}\cup\{\emptyset\}$ is closed under arbitrary intersections. For nonempty~$P$, $\ccl(P)=\inst(\lgg P)$.
+\end{lemma}
+
+\noindent\emph{Proof idea.} Two instance sets meet in the instance set of a most general common instance, or not at all, and a ground term has only finitely many generalizations up to renaming (Appendix~\ref{app:caution:closure}).
+
+\paragraph{Reading.} Caution climbs a lattice from below. Each escalation moves the accepted set one strict step up, and the price is the longest climb from what the human data force to the target. For schemas the lattice is Plotkin's \citep{plotkin1970note,reynolds1970transformational}, the closure algorithm is anti-unification, and each step up costs a unit of rank. A learner that acquires a connective's inferential role from its uses climbs in this way, and the elasticity bounds how often it must ask before its accepted inferences cover that role.
+
+% ---------------------------------------------------------------------
+\subsection{What caution costs: from named rules to unstructured classes}\label{sec:caution:cost}
+
+\Cref{thm:caution:esc} reduces the cost of caution to a property of the class. This subsection computes it for the classes that matter here (\cref{tab:caution:cost}). The main contrast is between rules cited by name, where caution costs at most $N+1$ escalations per rule, and uncited rules, where even one rule can force $\lfloor(N-1)/k\rfloor^k$. Unstructured classes cost exponentially in description length, and certifying invalidity too costs a Bell number.
+
+\begin{theorem}[One schema, learned by anti-unification]\src{T1 Thm 3.4, as restated}\label{thm:caution:single}
+Let the target be $\inst(\sigma^*)\in H_1$, written $\sigma^*$ inside~$\el$.
+\begin{enumerate}[label=(\roman*)]
+\item For nonempty $P_0\subseteq\inst(\sigma^*)$: $\ \el(H_1,\sigma^*\mid P_0)\le\mu(\lgg P_0)-\mu(\sigma^*)$.
+\item From no data: $\ \el(H_1,\sigma^*\mid\emptyset;N)\le\max\{0,\,1+N-\mu(\sigma^*)\}$. Hence $\Esc(H_1;N)\le N+1$.
+\item This is tight. If the signature contains two constants $a,b$ and a unary symbol~$g$, then for the universal schema $\sigma^*=x$, $\el(H_1,x\mid\emptyset;N)=N+1$. So $\Esc(H_1;N)=N+1$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}[Proof idea]
+(i) With $g_i=\lgg(P_0\cup\{s_1,\dots,s_i\})$, \Cref{lem:caution:h1} gives $s_i\notin\inst(g_{i-1})$, so $\lgg P_0=g_0\prec\dots\prec g_m\preceq\sigma^*$ strictly, and the rank lemma bounds~$m$. (ii) From no data the first query escalates, and it has rank at most~$N$. (iii) Query $g^{N-1}(a)$, $g^{N-1}(b)$, $g^{N-2}(a)$, $g^{N-3}(a)$, \dots, $a$. The successive lggs are $g^{N-1}(a)$, $g^{N-1}(x)$, $g^{N-2}(x)$, \dots, $x$, of ranks $N,N-1,\dots,0$, and each query lies outside the previous lgg. Full proof, and an exhaustive check, in Appendix~\ref{app:caution:single}.
+\end{proof}
+
+After a corpus~$P_0$, the residual budget is at most the \emph{generality gap} $\mu(\lgg P_0)-\mu(\sigma^*)$. It is zero once the corpus satisfies the witness events (\Cref{lem:setting:recover,sec:imitation}). These numbers are small only because the protocol is one-sided.
+
+\begin{proposition}[Certifying invalidity is expensive]\src{T1 Prop 3.5, as revised}\label{prop:caution:bell}
+Call a verifier \emph{two-sided} if it is $0$-sound and rejects only steps outside $\bigcup\VS$, and count all its escalations, of valid and invalid queries alike.
+Over a signature with constants $a,b_1,\dots,b_n$ and an $n$-ary symbol~$f$, there are a target in $H_1$ and a prover that force every two-sided verifier for $H_1$ to escalate at least $\Bell(n)$ times on steps of size $n+1$. Over a \emph{fixed} finite signature, the two-sided VS verifier escalates on steps of size at most~$N$ at most as often as there are such steps, $2^{O(N)}$.
+\end{proposition}
+
+\begin{proof}[Proof idea]
+Let target and $P_0$ be $\{f(a,\dots,a)\}$. For a partition~$\pi$ of $[n]$, $s_\pi$ puts $b_j$ and $\sigma_\pi$ a metavariable $x_j$ on the $j$-th block; $s_{\pi'}\in\inst(\sigma_\pi)$ iff $\pi$ refines~$\pi'$. Query the $s_\pi$ finest first: each is invalid, yet $\sigma_\pi$ is still consistent when $s_\pi$ is queried. Full proof, and a brute-force check for $n\le4$, in Appendix~\ref{app:caution:bell}.
+\end{proof}
+
+So certifying validity costs at most $N+1$ escalations over any signature, and certifying invalidity at least $\Bell(N-1)$ over a signature with $N$ constants and an $(N-1)$-ary symbol; compare the exponential KWIK cost of conjunctions \citep{li2011knows} and the negative results for two-sided reliable learning \citep{kivinen1995learning}. A step checker never needs it: \emph{one-sidedness is what makes learned verification cheap.}
+
+\begin{theorem}[$k$ rules cited by name]\src{T1 Thm 3.6, as repaired}\label{thm:caution:tagged}
+Steps are tagged (\cref{def:setting:schema}) with the rule $i\in[k]$ they cite, as in formal proofs (Lean lemma names, Metamath labels, natural-deduction rule names). Let
+\[
+\Htag k=\Big\{\textstyle\bigcup_{i\le k}\{i\}\times\inst(\sigma_i)\Big\},
+\]
+with target schemas $\sigma^*_1,\dots,\sigma^*_k$ and human data $P_0$ whose tag-$i$ part is $P_0^{(i)}$. Then
+\[
+\el(\Htag k,\Rstar\mid P_0;N)=\sum_{i=1}^k\el_i,\qquad
+\el_i\le\begin{cases}\mu(\lgg P_0^{(i)})-\mu(\sigma_i^*)&\text{if }P_0^{(i)}\neq\emptyset,\\ \max\{0,\,1+N-\mu(\sigma^*_i)\}&\text{if }P_0^{(i)}=\emptyset,\end{cases}
+\]
+where $\el_i$ is the positive elasticity of $\inst(\sigma^*_i)$ among single-schema instance sets, relative to $P_0^{(i)}$, on steps of size at most~$N$. In particular $\Esc(\Htag k;N)\le k(N+1)$, with equality under the hypothesis of \Cref{thm:caution:single}(iii).
+\end{theorem}
+
+\begin{proof}[Proof idea]
+$\Htag k$ is not intersection-closed, but its version space \emph{factors}, $\VS(P)=\prod_i\VS_i(P^{(i)})$ with nonempty single-schema factors, so $\bigcap\VS(P)=\bigcup_i\{i\}\times\bigcap\VS_i(P^{(i)})$. Elastic chains are thus interleavings of per-rule chains, each bounded by \Cref{thm:caution:single} (Appendix~\ref{app:caution:tagged}).
+\end{proof}
+
+Without citations the picture changes, even when only one rule is in use.
+
+\begin{theorem}[$k$ rules without citations]\src{T1 Thm 3.7, scope as repaired}\label{thm:caution:untagged}
+Let $H_k=\{\bigcup_{l\le k}\inst(\tau_l)\}$ be the class of untagged unions of at most $k$ schemas.
+\begin{enumerate}[label=(\roman*)]
+\item \emph{Lower bound, even for one rule.} Suppose the signature contains a $k$-ary $p$, a unary~$g$ and a constant~$c$. Then an honest sequence for the single-rule target $\inst(p(x_1,\dots,x_k))\in H_1\subseteq H_k$ forces $\lfloor(N-1)/k\rfloor^k$ escalations on steps of size at most~$N$. So $\Esc(H_k;N)\ge\lfloor(N-1)/k\rfloor^k$, whereas $\Esc(H_1;N)\le N+1$.
+\item \emph{Upper bound.} For $k\ge2$, $\Esc(H_k;N)\le(k^{N+1}-1)/(k-1)$.
+\item \emph{Linear flat schemas.} On the steps $\{a,b\}^n$, $n\ge k$, the unions of at most $k$ linear flat schemas (that is, of at most $k$ subcubes) have $\Esc=\Theta(n^k)$. With repeated metavariables, $\Esc$ lies between $\Omega(n^k)$ and $O(n^{2k})$. Exact bounds are in \Cref{prop:app:caution:flat}.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}[Proof idea]
+(i) Query $p(g^{a_1}c,\dots,g^{a_k}c)$, $a\in\{0,\dots,n\}^k$, $n+1=\lfloor(N-1)/k\rfloor$, by non-increasing $\sum_ja_j$. Each earlier step lies in the union of the $k$ schemas $p(x_1,\dots,g^{a_j+1}(x_j),\dots,x_k)$, which misses the current one. (ii) Chains of indices that the witnesses keep in one block give strictly increasing lggs, so they have length at most $N+1$; a Ramsey-type recursion finishes. Full proofs, the subcube count behind~(iii) and exact small values are in Appendix~\ref{app:caution:untagged}.
+\end{proof}
+
+\begin{conjecture}[Binomial bound]\src{T1 Conj 3.8}\ \status{conjecture}\label{conj:caution:binomial}
+Let $\mathcal C$ be a family of subsets of~$U$ that is closed under intersections and contains~$U$. Let $h$ be its \emph{height}: the number of inclusions in the longest strict chain of members from $\bigcap\mathcal C$ to~$U$. Then the positive elasticity of the unions of $1$ to $k$ members of~$\mathcal C$, relative to $P_0=\emptyset$ and with target~$U$, is at most $\binom{h+k-1}{k}$.
+\end{conjecture}
+
+\noindent\emph{Evidence.} The bound is exact for $k=1$ (\Cref{prop:caution:closure}) and for $h=2$. The case $(k,h)=(2,3)$ is proved, graphic matroids show that the bound would be tight at $k=2$, and computer searches found no counterexample (Appendix~\ref{app:caution:conj}). For schemas $h\le N+1$, so the conjecture would give $\Esc(H_k;N)\le\binom{N+k}{k}$. This would match~(i) up to $e^{O(k)}$, making the truth $\Theta_k(N^k)$.
+
+\begin{theorem}[Unstructured classes]\src{T1 Thm 3.9}\ \status{known: KWIK enumeration}\label{thm:caution:unstructured}
+For finite $\Hc$, $\Esc(\Hc)\le|\Hc|-1$. The class $\{U\setminus\{u\}:u\in U\}$ attains $|U|-1$.
+\hfill\leanok{Unstructured.thm\_3\_9\_Esc\_le\_card}\ \leanok{Unstructured.thm\_3\_9\_coSingleton} (deterministic verifiers)
+\end{theorem}
+
+\begin{proof}
+Each escalation of an honest~$q$ removes from the version space a hypothesis that misses~$q$, never the target. For the class, query $\Rstar=U\setminus\{u^*\}$ in any order; the witness $U\setminus\{s\}$ contains all queries before~$s$ and misses~$s$.
+\end{proof}
+
+This is KWIK's enumeration bound \citep{li2008knows}: $2^L$ hypotheses of $L$ bits can need $2^L-1$ escalations. Single schemas of size $\le N$ (with a binary symbol) also number $2^{\Omega(N)}$, yet need at most $N+1$. The price is measured by lattice height, not cardinality.
+
+\begin{table}[t]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.30\textwidth}X>{\raggedright\arraybackslash}p{0.17\textwidth}@{}}
+\toprule
+class (steps of size $\le N$) & worst-case escalations & result\\
+\midrule
+intersection-closed class & longest strict chain of members from $\ccl(P_0)$ into the target & \Cref{prop:caution:closure}\\
+one schema, after a corpus $P_0$ & $\le\mu(\lgg P_0)-\mu(\sigma^*)$ (generality gap) & \Cref{thm:caution:single}(i)\\
+one schema, no data & $\le\max\{0,1+N-\mu(\sigma^*)\}$; worst case $N+1$, tight & \Cref{thm:caution:single}(ii,iii)\\
+$k$ rules cited by name (tagged) & $\sum_i\el_i\le k(N+1)$, tight & \Cref{thm:caution:tagged}\\
+$k$ rules without citations & $\ge\lfloor(N-1)/k\rfloor^k$ even for a one-rule target; $\le(k^{N+1}-1)/(k-1)$; conjecturally $\le\binom{N+k}k$ & \Cref{thm:caution:untagged}(i,ii), \Cref{conj:caution:binomial}\\
+$k$ linear flat schemas on $\{a,b\}^n$ & $\Theta(n^k)$; between $\Omega(n^k)$ and $O(n^{2k})$ with repeated metavariables & \Cref{thm:caution:untagged}(iii)\\
+unstructured finite class & $|\Hc|-1$, tight; $2^L-1$ for $L$-bit hypotheses & \Cref{thm:caution:unstructured}\\
+two-sided, one schema & $\ge\Bell(N-1)$ over a growing signature; $\le2^{O(N)}$ over a fixed one & \Cref{prop:caution:bell}\\
+\midrule
+Bayes-conservative, VS posterior, $\delta\le\wstar$ & $\le\ln(1/\wstar)/\delta$; $\tilde\Theta(2^L)$ on unstructured classes with $\wstar=2^{-L}$ & \Cref{thm:caution:bayesesc}, \Cref{cor:caution:bayesopt}\\
+structure plus Bayes & $\min\{\el(\Hc,\Rstar\mid P_0),\ \ln(1/\wstar)/\delta\}$ & \Cref{cor:caution:structbayes}\\
+\bottomrule
+\end{tabularx}
+\caption{The price of caution: escalations (human interventions on valid steps) needed by a sound verifier against an honest prover. ``Tight'' means attained over a signature with two constants and a unary symbol. All entries are proved except the conjectured bound.}
+\label{tab:caution:cost}
+\end{table}
+
+\paragraph{Reading.} \Cref{tab:caution:cost} quantifies one way in which creating ``a language in which formal proofs can be written'' with named rules, as the motivating notes \citep{hanni2026notes} describe the formalization of mathematics, makes inference learnable. Formal proofs cite their rules, and then caution costs linearly in step size, additively over rules. Informal proofs and physics solutions cite none. The verifier must then pay at least $\lfloor(N-1)/k\rfloor^k$ even when one rule is in use, since it must rule out that the steps seen so far are covered by $k$ narrower rules. The proved upper bound is exponential, and $\Theta_k(N^k)$ is conjectured. Informal steps are moreover multi-step elements of $\Sound(\Rstar)$, treated in \Cref{sec:informal}.
+
+% ---------------------------------------------------------------------
+\subsection{Bayes-conservative verification and Ville's inequality}\label{sec:caution:bayes}
+
+A posterior relaxes the version space's demand of truthful data, and makes very large classes usable, which eases (but does not remove) the demand of realizability. MAP acceptance is unsound whenever an over-general hypothesis is temporarily most probable (\Cref{sec:search:mdl}). Caution instead thresholds the posterior probability of invalidity.
+
+\begin{definition}[Bayes-conservative verifier]\src{T1 \S4}\label{def:caution:bayes}
+Let $\Hc$ be countable with prior~$w$ and $\wstar=w(\Rstar)>0$. Each $R\in\Hc$ carries a law $p_R$ on~$S$ for human data (which may model errors, or follow the size principle) and an oracle kernel $\ell_R(y\mid q)$, $y\in\{0,1\}$, which is \emph{deterministic} if $\ell_R(y\mid q)=\mathbf 1[y=\mathbf 1[q\in R]]$. The model is \emph{well specified}: human data are i.i.d.\ $p_{\Rstar}$, and oracle answers follow $\ell_{\Rstar}(\cdot\mid q_t)$. After the observations of rounds $\le t$, the likelihood is $L_t(R)$, the posterior is $w_t(R)\propto w(R)L_t(R)$, and
+\[
+Z_t:=\sum_{R\in\Hc}w(R)\,\frac{L_t(R)}{L_t(\Rstar)},\qquad\text{so that}\qquad w_t(\Rstar)=\frac{\wstar}{Z_t}.
+\]
+The verifier $V_\delta$ answers $q$ with \ACCEPT{} iff $w_t(\{R:q\notin R\})<\delta$, optionally with \REJECT{} iff $w_t(\{R:q\in R\})<\delta_r$, and with \ESCALATE{} otherwise. The \emph{VS posterior} is $w^{\VS}_t(R)\propto w(R)\,\mathbf 1[R\text{ is consistent with all data}]$.
+\end{definition}
+
+\begin{theorem}[VS posterior: deterministic soundness]\src{T1 Thm 4.1}\label{thm:caution:bayesdet}
+Suppose all data are truthful: human positives lie in~$\Rstar$, and oracle labels are correct. If $\delta\le\wstar$, then $V_\delta$ with the VS posterior never accepts an invalid step, for any prover and at any time. The guarantee is per target: it covers every target with $w(\Rstar)\ge\delta$. Conversely, for every $\delta>\wstar$ there is a two-hypothesis class on which $V_\delta$ accepts an invalid step at time~$0$.
+\end{theorem}
+
+\begin{proof}
+Truthful data never contradict the target, so $w^{\VS}_t(\Rstar)=\wstar/w(\VS_t)\ge\wstar$. For an invalid~$q$, $w_t(\{R:q\notin R\})\ge w_t(\Rstar)\ge\wstar\ge\delta$, so $q$ is not accepted. For the converse, take $\Hc=\{\Rstar,R'\}$ with $R'\supsetneq\Rstar$, $w(\Rstar)=\wstar$ and $q\in R'\setminus\Rstar$. Then $w_0(\{R:q\notin R\})=\wstar<\delta$.
+\end{proof}
+
+The truth is a \emph{guardian}: an invalid step can be accepted only once the target's own posterior has fallen below~$\delta$. With noisy data this can happen, but only on one global event.
+
+\begin{theorem}[Time-uniform soundness]\src{T1 Thm 4.2, as repaired}\label{thm:caution:ville}
+Assume the model is well specified and $\delta\le\wstar\delta'$.
+\begin{enumerate}[label=(\alph*)]
+\item Suppose that, conditional on $\mathcal F_t$, the next observation has its model law: a fresh $X\sim p_{\Rstar}$, or an answer $y\sim\ell_{\Rstar}(\cdot\mid q_{t+1})$. Here $\mathcal F_t$ contains the history and \emph{all of the prover's information}, including its internal randomness and its choice of $q_{t+1}$. So the prover cannot foresee human data or oracle noise, and the noise is fresh at every query. Then for every such prover
+\[
+\Prob\big[\exists t:\ V_\delta\text{ accepts some }q_t\notin\Rstar\big]\le\delta'.
+\]
+\item If the oracle is deterministic, the guarantee is \emph{uniform}. There is an event of probability at least $1-\delta'$, depending only on the human data, on which no prover strategy ever gets an invalid step accepted. This holds even for a prover that knows the target and all future human data. Only the human data need to be i.i.d.\ $p_{\Rstar}$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}[Proof idea]
+Under~(a), each observation multiplies the $R$-term of~$Z_t$ by a likelihood ratio of conditional mean $\sum_{o:\ell_{\Rstar}(o)>0}\ell_R(o)\le1$. So $Z$ is a nonnegative supermartingale with $Z_0=1$, and Ville's inequality \citep{ville1939etude} gives $\Prob[\sup_tZ_t\ge1/\delta']\le\delta'$; off this event $w_t(\Rstar)=\wstar/Z_t>\delta$ for all~$t$. In~(b), $Z_t$ is bounded pathwise by a supermartingale of the human data alone. Appendix~\ref{app:caution:ville}.
+\end{proof}
+
+\emph{Credit.} Part~(a) is the prior--posterior-ratio martingale of \citet{waudbysmith2020confidence}, applied to validity relations. Part~(b) is an easy corollary. See \citet{ville1939etude,shafer2011test,ramdas2023game} on Ville's inequality and test martingales. The closest existing analogues are conservative Bayesian agents that defer to a mentor \citep{cohen2020pessimism,cohen2022fully}. New here is only the check that the constant is tight in this protocol (\Cref{prop:caution:tight}), an instance of the known near-tightness of Ville's inequality; the application to step validity is routine.
+
+\emph{No union bound over queries.} A prover may try $10^{100}$ steps, and one event of probability at least $1-\delta'$ covers them all, because accepting \emph{any} invalid step requires the posterior of the truth to fall below~$\delta$. A per-step scorer has no such single event, and its errors can be found one at a time (\Cref{thm:search:tonk}).
+
+The hypothesis of~(a) is needed: a prover that knows in advance when the oracle's answer will be flipped gets an invalid step accepted with probability~$1$ (Appendix~\ref{app:caution:ville}). The constant $\delta\le\wstar\delta'$ cannot be improved (\Cref{prop:caution:tight}).
+
+\begin{theorem}[Escalation bound]\src{T1 Thm 4.4}\label{thm:caution:bayesesc}
+Let the oracle be deterministic, let the human data satisfy the hypothesis of \Cref{thm:caution:ville}(a), and let $\delta_m=\min(\delta,\delta_r)$. Write $\nesc_t$ for the number of escalations up to time~$t$.
+\begin{enumerate}[label=(\roman*)]
+\item With probability at least $1-\delta''$, simultaneously for all~$t$, $\ \nesc_t\le\big(\ln(1/\wstar)+\ln(1/\delta'')\big)/\delta_m$.
+\item With the VS posterior, deterministically, $\ \nesc_t\le\ln(1/\wstar)/\delta_m$.
+\end{enumerate}
+For an honest prover, or when only escalations of valid queries are counted, $\delta_m$ may be replaced by~$\delta$. Without a reject option ($\delta_r=0$), the bound on escalations of invalid queries is vacuous.
+\end{theorem}
+
+\begin{proof}[Proof idea]
+$Z_t$ evolves multiplicatively. A human datum multiplies it by a factor of conditional mean at most~$1$. Escalating a valid (invalid)~$q$ multiplies it by at most $1-\delta$ ($1-\delta_r$), since $q$ was not accepted (rejected). Combine with $Z_t=\wstar/w_t(\Rstar)\ge\wstar$ and Ville's inequality for the data factors. Appendix~\ref{app:caution:bayesesc}.
+\end{proof}
+
+\begin{corollary}[Bayes is essentially optimal on unstructured classes]\src{T1 Cor 4.5}\label{cor:caution:bayesopt}
+On $\Hc=\{U\setminus\{u\}:u\in U\}$ with the uniform prior ($\wstar=1/|U|$), every $\delta'$-sound verifier has worst-case honest cost at least $(1-\delta')(1/\wstar-1)$, while $V_{\wstar\delta'}$ with the VS posterior is $0$-sound and pays at most $\ln(1/\wstar)/(\wstar\delta')$. The ratio of the two bounds is $\ln(1/\wstar)/\big(\delta'(1-\delta')(1-\wstar)\big)$, which is $O(\ln(1/\wstar)/\delta')$ for $\wstar,\delta'\le1/2$. With a description-length prior $\wstar=2^{-L}$, the cost is $\tilde\Theta(2^L)$.
+\end{corollary}
+
+\begin{proof}
+Apply \Cref{thm:caution:esc} to the chain of \Cref{thm:caution:unstructured}, of length $1/\wstar-1$, and use \Cref{thm:caution:bayesesc}(ii) and \Cref{thm:caution:bayesdet}.
+\end{proof}
+
+The factor $1/\delta'$ is an artifact of the threshold: with $\delta=\wstar$ the VS posterior accepts exactly $\bigcap\VS$ on this class (every consistent hypothesis has posterior at least~$\wstar$), so it is the VS verifier itself, which is exactly optimal.
+
+\begin{corollary}[Structure plus Bayes]\src{T1 Cor 4.6, as repaired}\label{cor:caution:structbayes}
+With truthful data, the VS-posterior verifier with threshold~$\delta$ never accepts an invalid step, for any prover and every target with $w(\Rstar)\ge\delta$. Its escalations of valid queries number at most
+\[
+\min\big\{\el(\Hc,\Rstar\mid P_0),\ \ln(1/\wstar)/\delta\big\}.
+\]
+\end{corollary}
+
+\noindent\emph{Proof idea.} Soundness is \Cref{thm:caution:bayesdet}. Escalated valid queries lie outside the current $\bigcap\VS$, so they form an elastic chain in~$\Rstar$; the second term is \Cref{thm:caution:bayesesc}(ii). Appendix~\ref{app:caution:bayesesc}.
+
+The guarantee is not $0$-soundness (\Cref{def:setting:soundness}) unless every target has prior at least~$\delta$, which fails for infinite~$\Hc$.
+
+\paragraph{Structure, not the prior.} For single schemas with a description-length prior, $\ln(1/\wstar)/\delta\ge\ln(1/\wstar)/\wstar$ is exponential in $|\sigma^*|$, while $\el\le N+1$. The prior earns its keep elsewhere. If $\Hc$ contains every finite step set (calculi with unboundedly many ground rules, so exception lists are hypotheses), the bare version space never generalizes: $\bigcap\VS(P)=P$. Under the hypotheses of \Cref{thm:caution:ville}, the Bayesian verifier is sound with probability at least $1-\delta'$ for every target with $w(\Rstar)\ge\delta/\delta'$, i.e.\ under a description-length prior, every rule system of description length at most $\log_2(\delta'/\delta)$. Hence a three-layer recipe:
+\begin{itemize}
+\item a structured version-space core, for cheap escalations and exact soundness when realizable;
+\item a Bayesian hierarchy over it, as insurance against unrealizability;
+\item conservative thresholds, never MAP.
+\end{itemize}
+One caveat: \Cref{thm:caution:ville} needs well-specification. Systematic human errors are exactly a misspecification the model does not anticipate, and the posterior then concentrates on ``rule plus fallacy'' as a rule (\Cref{sec:imitation}).
+
+% ---------------------------------------------------------------------
+\subsection{What caution buys, and what it cannot do}\label{sec:caution:reading}
+
+\emph{Learning which inferences are valid.} A cautious learner learns exactly what its evidence forces, never adopts a rule it cannot certify, and pays for completeness in escalations, of which the positive elasticity is the exact worst case. With rules cited by name and varied human data, positive data alone bring it to exactly the human calculus after coupon-collector many steps, soundly at every moment (\Cref{sec:imitation}).
+
+\emph{Coherence.} A cautious verifier gets no signal from coherence. Its accepted steps lie in~$\Rstar$, so no argument from a designated context to~$\bot$ uses only accepted steps (\cref{prop:coherence:caution}). Coherence informs only \emph{bold} learners. Hence the two tiers of \Cref{sec:twotier}: cautious assertion, and a bold sandbox attacked by a red team.
+
+\emph{Limits.} Realizability is load-bearing. If the true calculus lies outside the class, for example two untagged rules while $\Hc=H_1$, the lgg over-generalizes and soundness fails. The Bayesian hierarchy repairs this only probabilistically, at a cost exponential in the complexity of what is missing. Soundness is relative to the \emph{human} calculus, naive comprehension included if humans use it, and improving on it is the job of coherence and the world (\Cref{sec:coherence,sec:twotier,sec:informal}). The first-order term model leaves out associative-commutative contexts, binders and variable-arity rules, where the bounds of \Cref{tab:caution:cost} would need re-proof. Which contexts may be designated, and how results are exported, is left to \Cref{sec:physics}.
+
+\emph{Justification.} Certified acceptance models a warrant that survives search. A step is warranted when every hypothesis the evidence leaves open licenses it (relative to~$\Hc$ and the human calculus, not to truth), and no amount of adversarial search erodes such a warrant, unlike a statistical one (\Cref{sec:search}). The Bayesian version (\Cref{thm:caution:ville}) trades certainty for a single chance of error~$\delta'$, fixed in advance, that does not grow with the number of steps tried or the running time, as long as the searcher cannot foresee the data or the noise. Both are conditional reliabilist vindications, the second also fallibilist, relative to explicit assumptions (realizability; truthful or well-specified data), and later sections show that each assumption is needed (\Cref{sec:philosophy}).

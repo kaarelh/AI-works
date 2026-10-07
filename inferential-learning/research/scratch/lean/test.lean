@@ -1,0 +1,12 @@
+import InfLearn.Steps
+open InfLearn
+#check @Function.update_self
+#check @Function.update_of_ne
+#check @Set.ssubset_iff_of_subset
+#check @List.getElem_append_left
+#check @List.getElem_concat_length
+#check @List.IsPrefix.length_le
+#check @List.ext_getElem
+#check @Option.getD_some
+#check @isClosed_singleton
+#check @List.getElem_append

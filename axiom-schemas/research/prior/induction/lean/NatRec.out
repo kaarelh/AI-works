@@ -1,0 +1,21 @@
+@Nat.rec : {motive : Nat → Sort u_1} → motive Nat.zero → ((n : Nat) → motive n → motive n.succ) → (t : Nat) → motive t
+'Nat.rec' does not depend on any axioms
+theorem t : ∀ (n : Nat),
+  @Eq Nat
+    (@HAdd.hAdd Nat Nat Nat (@instHAdd Nat instAddNat) n (@OfNat.ofNat Nat (nat_lit 0) (instOfNatNat (nat_lit 0)))) n :=
+fun n =>
+  @Nat.recAux
+    (fun n =>
+      @Eq Nat
+        (@HAdd.hAdd Nat Nat Nat (@instHAdd Nat instAddNat) n (@OfNat.ofNat Nat (nat_lit 0) (instOfNatNat (nat_lit 0))))
+        n)
+    (@Eq.refl Nat
+      (@HAdd.hAdd Nat Nat Nat (@instHAdd Nat instAddNat) (@OfNat.ofNat Nat (nat_lit 0) (instOfNatNat (nat_lit 0)))
+        (@OfNat.ofNat Nat (nat_lit 0) (instOfNatNat (nat_lit 0)))))
+    (fun k ih =>
+      @Eq.refl Nat
+        (@HAdd.hAdd Nat Nat Nat (@instHAdd Nat instAddNat)
+          (@HAdd.hAdd Nat Nat Nat (@instHAdd Nat instAddNat) k
+            (@OfNat.ofNat Nat (nat_lit 1) (instOfNatNat (nat_lit 1))))
+          (@OfNat.ofNat Nat (nat_lit 0) (instOfNatNat (nat_lit 0)))))
+    n

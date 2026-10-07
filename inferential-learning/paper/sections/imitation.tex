@@ -1,0 +1,271 @@
+% =====================================================================
+% Section 5. Imitation: what positive examples fix
+% Sources (repaired statements only):
+%   research/theory/T1-soundness-under-search.md  §5 (Thm 5.1, Prop 5.2, Thm 5.3,
+%       Thm 5.4 and the repaired Remark after it, Cor 5.5, side conditions),
+%       §6 (Prop 6.1, Thms 6.2-6.4 with "Consequences for schemas", Cor 6.5)
+%   research/verification/T1-soundness-under-search-verification.md (B-8 ... B-19)
+%   research/lit/L1-positive-data-learning.md (Gold, Angluin, Wright, Shinohara,
+%       Plotkin, Lange-Zeugmann; finite-elasticity lemma; VC example; teaching)
+%   research/lit/L9-physics-solutions-verification.md §3.1, TC1 (remark, sketch)
+%   research/theory/T7 Prop 2.2 (imitation identifies practice)
+%   code/results/algebra_learning.md (Experiment A; numbers in app-imitation.tex)
+% Proofs not given inline, the dimension remark (rem:imitation:dimension) and the
+% Experiment A numbers are in sections/app-imitation.tex.
+% =====================================================================
+\providecommand{\vars}{\mathrm{vars}}
+\providecommand{\rt}{\mathrm{root}}
+\providecommand{\Sub}{\mathrm{Sub}}
+\providecommand{\Acc}{\mathrm{Acc}}
+\providecommand{\Fail}{\mathfrak F}
+
+\section{Imitation: what positive examples fix}\label{sec:imitation}
+
+The first channel is imitation. The learner sees human steps, possibly with the names of the rules they cite, and nothing else; no step is ever labelled invalid. This section asks what such data fix when acceptance must be cautious, as search requires (\Cref{sec:search,sec:caution}). The answer has two halves.
+
+With the right hypothesis class (schemas, learned by least general generalization), positive examples fix the rules \emph{exactly}. A cautious verifier fed only human steps is sound at every time. It becomes exactly complete after finitely many examples iff the target has a finite \emph{anchor} (\Cref{thm:imitation:anchor}). For rules that humans cite by name this happens at a coupon-collector rate (\Cref{thm:imitation:coupon}); without citations it needs a diversity condition (\Cref{thm:imitation:untagged}). Once exact, the verifier generalizes systematically: it accepts exactly the target calculus, on steps and derivations of any size, whatever the distribution of the human data (\Cref{cor:imitation:ood}). This is the formal sense in which finite usage fixes inferential role for unbounded use.
+
+The other half is that positive data cannot tell what humans do from what is valid. One mislabelled step collapses a learned rule into ``anything follows'' (\Cref{prop:imitation:collapse}). Sporadic errors can be trimmed when they are rarer than the evidence for each rule's generality, and this threshold is necessary up to a factor of two (\Cref{thm:imitation:trimmed,thm:imitation:iidnoise,cor:imitation:necessity}). Systematic errors are indistinguishable from rules at every rate (\Cref{cor:imitation:systematic}). Removing them needs negative information (\Cref{sec:coherence,sec:twotier}).
+
+Most results below are elementary or known in substance, and we say which. New here, as far as we know, are three things: anchors read as the completeness condition of \emph{certified} verification; the witness-event sample complexities and their noise versions, with necessity up to a factor of two; and the exact statement that schema-generated errors are rules. None is deep. Together they pin down when imitation works. Throughout, the signature $\Omega$ in which steps are encoded (\Cref{sec:setting:schemas}) has at least two constants. Then a proper specialization of a schema has strictly fewer instances, and the instance sets of all schemas have empty intersection (Appendix~\ref{app:imitation:facts}).
+
+% ---------------------------------------------------------------------
+\subsection{Cautious learning from positive data}\label{sec:imitation:cautious}
+
+Let $\Hc\subseteq2^S$ be a hypothesis class of step sets (\Cref{def:setting:hyp}) containing the target $\Rstar$, and let the data $D$ be a finite multiset of human steps. Until \Cref{sec:imitation:noise} the data are clean, $D\subseteq\Rstar$.
+
+\begin{lemma}[The cautious verifier; trivial]\src{T1 \S5; Thm 3.1, Prop 3.3, positive data}\label{def:imitation:cautious}\label{lem:imitation:cautious}
+With no oracle, the VS verifier of \Cref{def:caution:vs} is the \emph{cautious verifier}: it accepts exactly $\hat R(D):=\bigcap\VS(D)$, where $\VS(D)=\{R\in\Hc:\ D\subseteq R\}$ and $\bigcap\emptyset:=S$.
+\textup{(a)} If $D\subseteq\Rstar$, then $\hat R(D)\subseteq\Rstar$, so the reasoner that chains accepted steps is sound against every prover at every time.
+\textup{(b)} Every acceptance set contained in all $R\in\VS(D)$ (i.e.\ sound for every target compatible with $D$) is contained in $\hat R(D)$.
+\textup{(c)} $D\subseteq D'$ implies $\hat R(D)\subseteq\hat R(D')$.
+\textup{(d)} If $\Hc\cup\{\emptyset\}$ is closed under intersections and $\VS(D)\neq\emptyset$, $\hat R(D)$ is the least member of $\Hc\cup\{\emptyset\}$ containing $D$; for $H_1$ and $D\neq\emptyset$ it is $\inst(\lgg(D))$.
+
+\hfill\leanok{thm\_3\_1\_a\_static}\ \leanok{thm\_3\_1\_b\_static}
+\end{lemma}
+
+\noindent Parts (a) and (b) are \Cref{thm:caution:vs}(a) and its static maximality without negative data, (c) is immediate, and (d) is \Cref{prop:caution:closure}(i) with \Cref{lem:caution:h1}. Soundness is deterministic and distribution-free, so every question below is about \emph{completeness}: when does $\hat R(D)$ reach $\Rstar$?
+
+% ---------------------------------------------------------------------
+\subsection{Anchors: when positive data suffice}\label{sec:imitation:anchors}
+
+\begin{definition}[Anchor]\src{T1 Thm 5.1}\label{def:imitation:anchor}
+A finite $T\subseteq\Rstar$ is an \emph{anchor} (for $\Rstar$ in $\Hc$) if every $R\in\Hc$ with $T\subseteq R$ satisfies $R\supseteq\Rstar$.
+\end{definition}
+
+\begin{theorem}[Eventual completeness iff finite anchor]\src{T1 Thm 5.1, as repaired}\label{thm:imitation:anchor}
+\textup{(a)} For finite $D\subseteq\Rstar$: $\hat R(D)=\Rstar$ iff $D$ contains an anchor.
+\textup{(b)} Let the data be a \emph{text} for $\Rstar$ (finite $D_1\subseteq D_2\subseteq\cdots\subseteq\Rstar$ with $\bigcup_tD_t=\Rstar$), or i.i.d.\ draws from a law with support $\Rstar$. If $\Rstar$ has an anchor, $\hat R(D_t)=\Rstar$ for all large $t$ (a.s.\ in the i.i.d.\ case); if not, $\hat R(D_t)\neq\Rstar$ for every $t$.
+\end{theorem}
+
+\begin{proof}
+(a) If $D\supseteq T$ for an anchor $T$, every $R\in\VS(D)$ contains $\Rstar$, so $\hat R(D)\supseteq\Rstar$; the reverse inclusion is \Cref{lem:imitation:cautious}(a). Conversely, if $\hat R(D)=\Rstar$, then $D$ is itself an anchor, since every $R\in\Hc$ containing $D$ lies in $\VS(D)$. (b) A text eventually contains any finite $T\subseteq\Rstar$, and then (a) and monotonicity give exactness forever. $S$ is countable, so i.i.d.\ data with support $\Rstar$ form a text a.s.
+\end{proof}
+
+``Finite'' matters in (a): in the class of \Cref{prop:imitation:telltale}(c), $\hat R(2\N)=2\N$ but $2\N$ has no anchor.
+
+\begin{proposition}[Anchors versus tell-tales]\src{T1 Prop 5.2, as repaired}\label{prop:imitation:telltale}
+Call a finite $T\subseteq\Rstar$ an (Angluin) \emph{tell-tale} if no $R\in\Hc$ satisfies $T\subseteq R\subsetneq\Rstar$.
+\textup{(a)} Every anchor is a tell-tale.
+\textup{(b)} If $\Hc\cup\{\emptyset\}$ is closed under intersections, every \emph{nonempty} tell-tale is an anchor; the empty one need not be ($\Hc=\{\{1\},\{2\}\}$, $\Rstar=\{1\}$). As existence conditions the two coincide when $\Rstar\neq\emptyset$.
+\textup{(c)} In general the converse fails: $\Hc=\{2\N\}\cup\{R_n\}_{n\in\N}$ with $R_n=\{0,2,\dots,2n,2n+1\}$ is identifiable in the limit from text, but $2\N$ has no anchor, so on a text for $2\N$ the cautious verifier never becomes complete.
+\end{proposition}
+
+Proof in Appendix~\ref{app:imitation:anchors}. \emph{Credit.} Identification in the limit is due to \citet{gold1967language}, and tell-tales characterize it for indexed families \citep{angluin1980inductive}. Anchors are the ``$\subseteq$-tell-tales'' of strong-monotonic learning, where every conjecture is contained in the target. Lange and Zeugmann characterize strong-monotonic learning from text by recursively generable finite sets $T_j\subseteq L_j$ such that $T_j\subseteq L_k$ implies $L_j\subseteq L_k$ \citep[cf.][]{lange1992types,lange2008learning}; up to effectivity, this is the existence of anchors. What is new here is only the reading of anchors as the completeness condition of certified verification. For intersection-closed classes, anchors exist iff $\Rstar$ is the least member of $\Hc$ containing some finite set (\Cref{lem:imitation:cautious}(d) and \Cref{thm:imitation:anchor}(a)).
+
+Anchors exist in the schema classes with a bounded number of rules, by finite elasticity \citep{wright1989identification,motoki1991correct}.
+
+\begin{proposition}[Finite elasticity gives anchors]\src{L1 \S2.3, Lemma}\label{prop:imitation:elastic}
+Say $\Hc$ has \emph{infinite elasticity} if there are $w_0,w_1,\dots\in S$ and $R_1,R_2,\dots\in\Hc$ with $\{w_0,\dots,w_{n-1}\}\subseteq R_n\not\ni w_n$ for all $n\ge1$, and \emph{finite elasticity} otherwise. If $\Hc$ has finite elasticity, every $\Rstar\in\Hc$ has an anchor.
+\end{proposition}
+
+Proof in Appendix~\ref{app:imitation:anchors}. A ground step is an instance of only finitely many schemas up to renaming (a generalization is never larger than its instances), so $H_1$ has finite thickness, hence finite elasticity. Finite elasticity survives unions of at most $k$ members \citep[as corrected by \citealt{motoki1991correct}]{wright1989identification}. So $H_1$, $H^{\mathrm{tag}}_k$ and $H_k$ all have anchors, as do richer classes such as Shinohara's length-bounded elementary formal systems with at most $k$ clauses \citep{shinohara1994rich}, which model learning theorem sets rather than steps.
+
+\paragraph{Reading.} ``Learning which inferences are valid'' can mean \emph{guessing} $\Rstar$ in the limit, as in Gold's paradigm, or \emph{certifying} a step: every hypothesis compatible with the evidence licenses it. Under search only the second protects. A learner that guesses $2\N$ in \Cref{prop:imitation:telltale}(c) converges, but it is unsound whenever the truth is a large $R_n$, and a prover can find the difference. An anchor is a finite body of usage that, given $\Hc$, justifies a rule for all of its uses. This is the kind of justification by imitation that survives adversarial search. It is relative to $\Hc$, a point we return to after \Cref{cor:imitation:ood}.
+
+% ---------------------------------------------------------------------
+\subsection{Rates: cited rules and the coupon collector}\label{sec:imitation:rates}
+
+Formal proofs cite their rules (natural-deduction rule names, Lean lemma names, Metamath labels). Take tagged calculi $H^{\mathrm{tag}}_k$ (\Cref{def:setting:hyp}) with target rules $\sigma_1,\dots,\sigma_k$, and let $v_i=|\vars(\sigma_i)|$. The version space factors over tags, as in \Cref{thm:caution:tagged} (Appendix~\ref{app:imitation:facts}). So the cautious verifier is the \emph{per-rule lgg verifier} $\hat R(D)=\bigcup_i\{i\}\times\inst(\lgg(D^{(i)}))$, where $D^{(i)}$ is the tag-$i$ data (a tag with $D^{(i)}=\emptyset$ contributes nothing), and rule $i$ is identified once its data satisfy the witness events (R) and (D) of \Cref{lem:setting:recover}. Human data are i.i.d.\ pairs $(I,\sigma_I\Theta)$ with $\Prob(I=i)=\pi_i$ and $\Theta\sim\Lambda_i$ given $I=i$. For a metavariable $x$ of $\sigma_i$, and distinct metavariables $x\neq y$ of $\sigma_i$, let
+\[
+\rho_{i,x}:=\max_{G\subseteq\Omega}\min\bigl(\Prob[\rt(\Theta x)\in G],\ \Prob[\rt(\Theta x)\notin G]\bigr),\qquad r_{i,xy}:=\Prob[\Theta x\neq\Theta y],
+\]
+let $\rho_i$ be the minimum of all these numbers, and $c_i:=2v_i+\binom{v_i}2$. For a ground rule ($v_i=0$) put $\rho_i:=c_i:=1$.
+
+\begin{theorem}[Exact identification at a coupon-collector rate]\src{T1 Thm 5.3}\label{thm:imitation:coupon}
+For $N$ i.i.d.\ tagged human steps, $\Prob[\hat R(D)\neq\Rstar]\le\sum_{i=1}^kc_i\,e^{-N\pi_i\rho_i}$. So $N\ge\max_i\frac1{\pi_i\rho_i}\ln\frac{k\,c_i}{\delta}$ suffices for exact identification with probability at least $1-\delta$. Order $1/(\pi_i\rho_i)$ samples are also necessary: if $\Prob[\rt(\Theta x)=f]=1-\rho$ for some rule $i$, metavariable $x$, symbol $f$ and $\rho\in(0,1]$, then $\Prob[\hat R(D)\neq\Rstar]\ge(1-\pi_i\rho)^N$.
+\end{theorem}
+
+\noindent\emph{Proof idea.} Given $n$ rule-$i$ samples, (R) fails at $x$ only if all roots fall on one side of the best split (probability at most $2(1-\rho_i)^n$), and (D) fails at $x,y$ with probability at most $(1-\rho_i)^n$. A union bound, averaged over $n\sim\mathrm{Bin}(N,\pi_i)$, gives $c_i(1-\pi_i\rho_i)^N$ (Appendix~\ref{app:imitation:coupon}).
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+$N$ & 12 & 24 & 48 & 96 & 192\\
+\midrule
+empirical exact-identification rate & .003 & .41 & .98 & 1.00 & 1.00\\
+bound $1-30e^{-N/12}$ of \Cref{thm:imitation:coupon} & vacuous & vacuous & .45 & .99 & .999997\\
+\bottomrule
+\end{tabular}
+\caption{Toy natural deduction with six tagged rules ($\wedge$I, $\wedge$E$_{1,2}$, $\vee$I$_{1,2}$, MP), random formulas over four atoms, 400 trials per $N$; $\pi_i=1/6$, $\rho_i=1/2$, $c_i\le5$ \status{computed; \texttt{research/\allowbreak theory/\allowbreak T1-code/\allowbreak toy\_nd.py}}.}
+\label{tab:imitation:coupon}
+\end{table}
+
+\Cref{tab:imitation:coupon} compares the bound with simulation. The coupons are the witness events of each rule; in spirit this is stochastic finite learning, as \citet{rossmanith2001stochastic} studied for pattern languages.
+
+\begin{remark}[Teaching sets, corpora, and distribution dependence]\src{L1 \S4.2, \S9}\label{rem:imitation:rates}
+Given $2v_i$ distinct constants, two instances of $\sigma_i$ whose metavariables are replaced by two disjoint sets of distinct constants satisfy (R) and (D). So a textbook with two well-chosen examples per rule is an anchor, while a corpus needs about $\ln(kc_i/\delta)/(\pi_i\rho_i)$ steps. No distribution-free completeness rate exists, even for single schemas. For every $m=2^h$, the complete binary trees of depth $\log_2m$ with one distinguished leaf carry a law under which every sound learner has completeness error above $1/2$ after fewer than $m/2$ samples (Appendix~\ref{app:imitation:rates}). Soundness is distribution-free; completeness cannot be, and $\pi_i\rho_i$ is what the distribution must supply.
+\end{remark}
+
+\paragraph{Reading.} A rule used in a fraction $\pi_i$ of human steps, with variability $\rho_i$, is pinned down after about $\ln(kc_i/\delta)/(\pi_i\rho_i)$ steps; further examples add nothing. What makes this cheap is the citation of rules, which lets the version space factor. This is the positive-data counterpart of the gap between cited and uncited rules in \Cref{tab:caution:cost}. Without names the problem becomes a union problem with a diversity condition (\Cref{thm:imitation:untagged}).
+
+% ---------------------------------------------------------------------
+\subsection{Uncited rules: a diversity condition}\label{sec:imitation:untagged}
+
+Now let steps carry no citations: $\Rstar=\bigcup_{i\le k'}\inst(\sigma_i)$, in the class $H_k=\{\bigcup_{l\le k}\inst(\tau_l)\}$ with $k\ge k'$. Some bound $k$ is unavoidable. With unbounded $k$ every finite set of ground steps is a hypothesis, the class is superfinite in Gold's sense, and $\hat R(D)=D$: the cautious verifier never generalizes \citep{gold1967language}. For rule $i$ let $\Sub_i(D):=\{\theta|_{\vars(\sigma_i)}:\ \sigma_i\theta\in D\}$, with \emph{failure sets}
+\[
+\Fail_i:=\bigl\{\{\theta:\rt(\theta x)=f\}:\ x\in\vars(\sigma_i),\ f\in\Omega\bigr\}\ \cup\ \bigl\{\{\theta:\theta x=\theta y\}:\ x\neq y\bigr\}.
+\]
+By \Cref{lem:setting:recover}, a nonempty set $Q$ of substitutions has $\lgg\{\sigma_i\theta:\theta\in Q\}\equiv\sigma_i$ (call $Q$ \emph{generic}) iff $Q$ lies in no single failure set.
+
+\begin{theorem}[Untagged unions: anchors and sample complexity]\src{T1 Thm 5.4}\label{thm:imitation:untagged}
+\textup{(a)} If for each $i\le k'$ the set $\Sub_i(D)$ is nonempty and not contained in a union of $k$ failure sets from $\Fail_i$, then $\hat R_{H_k}(D)=\Rstar$. In particular, $k+1$ pairwise-generic instances of each rule form an anchor of size $k'(k+1)$.
+\textup{(b)} Let the rule-$i$ data be i.i.d.\ $\sigma_i\Theta$, $\Theta\sim\Lambda_i$. For $v_i\ge1$ let
+\[
+\zeta_i:=\inf_{F_1,\dots,F_k\in\Fail_i}\Lambda_i\bigl(\overline{F_1\cup\dots\cup F_k}\bigr),\qquad d_i:=2k\log_2\bigl(4k(v_i^2+1)\bigr).
+\]
+If every $\zeta_i>0$ and the data contain, for each rule with $v_i\ge1$, at least
+\[
+n_i\ \ge\ \frac{8d_i}{\zeta_i}\log_2\frac{13}{\zeta_i}+\frac4{\zeta_i}\log_2\frac{2k'}{\delta}
+\]
+independent rule-$i$ samples, and one sample of each ground rule, then $\hat R_{H_k}(D)=\Rstar$ with probability at least $1-\delta$.
+\end{theorem}
+
+For (a), a hypothesis in $\VS(D)$ splits $\Sub_i(D)$ among its $k$ schemas; some part is generic, so its schema generalizes $\sigma_i$. Part (b) bounds the VC dimension of complements of $k$-unions of failure sets by $d_i$ and applies the $\varepsilon$-net theorem \citep{haussler1987epsilon,blumer1989learnability} with $\varepsilon=\zeta_i$ (Appendix~\ref{app:imitation:untagged}). The condition $\zeta_i>0$ asks for more instantiation variety than $k$ rules can absorb, and some such condition is needed:
+
+\begin{proposition}[When variety is too low]\src{T1 Remark after Thm 5.4, as repaired}\label{prop:imitation:diversity}
+\textup{(a)} Suppose that for some $i$ the data in $\inst(\sigma_i)$ not covered by the other $k'-1$ rules are covered by $k-k'+1$ specializations of $\sigma_i$ of the forms $\sigma_i[x\mapsto f(\bar z)]$ ($\bar z$ fresh) or $\sigma_i[y\mapsto x]$, and that some instance of $\sigma_i$ lies outside these specializations and the other rules. Then $\hat R_{H_k}(D)\neq\Rstar$.
+\textup{(b)} For $k'\ge2$, low variety need not block identification: for $k=k'=2$, $\Rstar=\inst(p(x))\cup\inst(q(y))$ and $D=\{p(a),p(b),q(a),q(b)\}$, $\hat R_{H_2}(D)=\Rstar$, although $x$ takes only $2=k$ roots.
+\end{proposition}
+
+For $k'=1$, (a) says that identification fails while a metavariable is instantiated with at most $k$ root symbols (and others are possible). Proofs are in Appendix~\ref{app:imitation:diversity}. For $k'\ge2$ the exact threshold, between ``no cover by $k$ failure sets'' and ``a cover by $k-k'+1$ plus an uncovered instance'', is open. So ``allow up to $k$ rules'' is a real assumption about the diversity of usage: without rule names, imitation must see each rule used in more ways than the $k-k'+1$ spare schemas of the class can absorb. This is the positive-data face of the escalation lower bound for untagged unions (\Cref{thm:caution:untagged}).
+
+% ---------------------------------------------------------------------
+\subsection{Systematic generalization: finite usage fixes inferential role}\label{sec:imitation:ood}
+
+\begin{corollary}[Systematic out-of-distribution generalization; trivial]\src{T1 Cor 5.5}\label{cor:imitation:ood}
+If $\hat R(D)=\Rstar$, the verifier accepts exactly $\Rstar$ and the reasoner derives exactly $\Cl_{\Rstar}(B)$ for every $B$, including conclusions that need derivations far longer, and judgments far larger, than any in the data, independently of the distribution that produced the data.
+\end{corollary}
+
+\begin{proof}
+$\hat R(D)=\Rstar$ gives $\Cl_{\hat R(D)}=\Cl_{\Rstar}$.
+\end{proof}
+
+\Cref{thm:imitation:coupon,thm:imitation:untagged} supply its hypothesis, and \Cref{lem:imitation:cautious} keeps the verifier sound before that. The result is a learner of inference rules from imitation that is sound at all times against adaptive search, exact after about $\max_i\ln(kc_i/\delta)/(\pi_i\rho_i)$ cited steps, and \emph{systematic}: correctness on terms of size $40$ is the same event as on terms of size $10$. A learned step scorer comes with none of these guarantees (\Cref{sec:search,sec:imitation:experiment}).
+
+\paragraph{Reading.} Under an inferentialist picture of meaning \citep{brandom1994making}, the meaning of a connective is its inferential role, the steps in which it may figure. \Cref{cor:imitation:ood} says that a finite set of uses (an anchor; for cited natural-deduction rules, two generic instances per rule) fixes that role for unbounded use. Three qualifications make this precise.
+(i)~The role is fixed \emph{relative to $\Hc$}. An anchor leaves open, within $\Hc$, only hypotheses that contain $\Rstar$, so the cautious verifier accepts exactly $\Rstar$; it says nothing about hypotheses outside $\Hc$. Quus-like alternatives \citep{kripke1982wittgenstein} are excluded by the choice of hypothesis class, not by the data. Which of simplicity, coherence and convention does that work is the subject of \Cref{sec:simplicity,sec:coherence,sec:philosophy}.
+(ii)~On clean data, overgeneralizations such as \emph{tonk} are never adopted, because the lgg is the \emph{least} generalization covering usage. The learner adds to a connective's role only what usage forces. This is a learning-theoretic analogue of Belnap's conservativeness requirement \citep{belnap1962tonk}, and it is why simplicity is the wrong bias here (\Cref{prop:search:mdl}).
+(iii)~The role fixed is that of \emph{practice}: a fallacy used systematically becomes part of it (\Cref{sec:imitation:noise}).
+\emph{Contexts.} Contexts are part of judgments (\Cref{def:setting:judgment}), so steps inside suppositions are data like any other, and the theorems apply to them unchanged as long as contexts are encoded as first-order terms (\Cref{rem:imitation:guards}). But they must \emph{be} in the data. Theorems determine a structural consequence relation only up to the interval between derivable and admissible rules, which is non-degenerate for intuitionistic logic (the Kreisel--Putnam rule is admissible but not derivable). So, unless the hypothesis class enforces a deduction theorem, assertions alone cannot in general teach reasoning under hypotheses.
+
+\begin{remark}[Side conditions]\src{T1 \S5, extensions}\label{rem:imitation:guards}
+With guards from a finite family $\Phi$ (\Cref{def:setting:schema}), the guarded single-schema class stays intersection-closed. Its closure is the lgg with the strongest guard true on all data (\Cref{lem:setting:guard}), anchors exist, and the escalation budget of \Cref{sec:caution} grows by at most $|\Phi|$ (Appendix~\ref{app:imitation:guards}). But a positive example shows that a guard \emph{held}, never that it was \emph{needed}. A guard is learned only from the absence of violating uses. It is lost as soon as one human use omits it (\Cref{ex:setting:alg}), and it cannot be learned at all if $\Phi$ cannot express it. Set-valued contexts and binders lie outside first-order anti-unification; modulo AC it is finitary rather than unitary, and the bounds above would need re-proof.
+\end{remark}
+
+% ---------------------------------------------------------------------
+\subsection{Noise: sporadic and systematic errors}\label{sec:imitation:noise}
+
+Human data contain errors, and the two kinds behave completely differently.
+
+\begin{proposition}[One error collapses the lgg]\src{T1 Prop 6.1}\label{prop:imitation:collapse}
+Let $D$ consist of $\wedge$E$_1$ instances $\mathsf s(\mathsf{and}(A_j,B_j),A_j)$ whose $A_j$ do not all have the same root, plus one invalid step $\mathsf s(\varphi,\psi)$ tagged $\wedge$E$_1$, with $\varphi$ not a conjunction. Then $\lgg(D)=\mathsf s(z,w)$ with $z\neq w$: the learned rule accepts every one-premise step, and from any derivable formula it derives everything.
+\end{proposition}
+
+\begin{proof}
+The premise column mixes the root $\mathsf{and}$ with the root of $\varphi$; the conclusion column has mixed roots because the $A_j$ do. Both become metavariables, distinct because the columns differ ($\mathsf{and}(A_1,B_1)\neq A_1$).
+\end{proof}
+
+\noindent\status{computed} A mis-tagged ``$p_0\vee p_1\step p_0$'' does exactly this. A $15\%$ rate of affirming the consequent, cited as MP, turns MP's lgg into $\mathsf s_2(\mathsf{imp}(v_0,v_1),v_2,v_3)$: from $A\to B$ and anything, infer anything. This is the tonk of \Cref{thm:search:tonk}, produced by learning: the lgg is least among generalizations of \emph{all} the data, errors included.
+
+The remedy for sporadic errors is to let hypotheses miss a few data. Counting with multiplicity, let $\VS_e(D)=\{R\in\Hc:\ |D\setminus R|\le e\}$, and with per-tag budgets $\VS_{(e_i)}(D)=\{R\in\Hc:\ |D^{(i)}\setminus R^{(i)}|\le e_i\ \text{for all }i\}$, where $D^{(i)},R^{(i)}$ are the tag-$i$ parts. The \emph{trimmed verifiers} accept $\bigcap\VS_e(D)$, resp.\ $\bigcap\VS_{(e_i)}(D)$.
+
+\begin{theorem}[Trimmed version space]\src{T1 Thm 6.2, as repaired}\label{thm:imitation:trimmed}
+\textup{(a)} For any $\Hc$: if $D$ contains at most $e$ invalid steps, then $\bigcap\VS_e(D)\subseteq\Rstar$; likewise $\bigcap\VS_{(e_i)}(D)\subseteq\Rstar$ if at most $e_i$ invalid steps are tagged $i$, for each $i$. The verifier is then sound against every prover.
+\textup{(b)} For tagged schemas and the per-tag verifier, suppose that for each $i$: \textup{(i)} at most $e_i$ invalid steps are tagged $i$; and \textup{(ii)} the valid rule-$i$ samples are \emph{$e_i$-robustly generic}: there are more than $e_i$ of them; for every $x,f$, more than $e_i$ of them have $\rt(\Theta x)\neq f$; and for every $x\neq y$, more than $e_i$ of them have $\Theta x\neq\Theta y$. Then $\bigcap\VS_{(e_i)}(D)=\Rstar$.
+\end{theorem}
+
+\noindent\emph{Proof idea.} (a) $\Rstar$ lies in the trimmed version space. (b) A hypothesis in $\VS_{(e_i)}$ covers all but at most $e_i$ valid rule-$i$ samples. By (ii) the rest is nonempty and still satisfies (R) and (D), so its tag-$i$ schema generalizes $\sigma_i$. Full proof in Appendix~\ref{app:imitation:trimmed}.
+
+Two features of (b) are needed, with counterexamples in Appendix~\ref{app:imitation:trimmed}. The clause ``more than $e_i$ of them'' is the only content of (ii) for ground rules, and without it the theorem fails for them. The budgets must be \emph{per tag}: one global budget lets a hypothesis spend everything on one rule. \status{computed} With $e=1$ (resp.\ $2$), one (resp.\ two) mis-tagged errors are removed exactly; with $e=1$ and two errors the lgg collapses again.
+
+Under i.i.d.\ noise the budgets can be set from the rates. Suppose each datum independently is a valid rule-$i$ step with probability $\beta_i$ (with $\Theta\sim\Lambda_i$), or an invalid step tagged $i$ with probability $\alpha_i$ (with arbitrary law); in terms of \Cref{def:setting:practice}, $\beta_i=\pi_i(1-a_i)$ and $\alpha_i=\pi_ia_i$.
+
+\begin{theorem}[i.i.d.\ noise: witness frequency must beat error frequency]\src{T1 Thm 6.3, as repaired}\label{thm:imitation:iidnoise}
+Let $\rho_i,c_i$ be as in \Cref{thm:imitation:coupon} ($\rho_i=c_i=1$ for ground rules). If every margin $\Delta_i:=(\rho_i\beta_i-\alpha_i)/2$ is positive and $e_i:=\lfloor(\alpha_i+\Delta_i)N\rfloor$, then
+$\Prob\bigl[\bigcap\VS_{(e_i)}(D)=\Rstar\bigr]\ge1-\sum_i(1+c_i)\,e^{-2N\Delta_i^2}$.
+\end{theorem}
+
+\noindent\emph{Proof idea.} The number of invalid steps tagged $i$ is $\mathrm{Bin}(N,\alpha_i)$ and exceeds $e_i$ with probability at most $e^{-2N\Delta_i^2}$ (Hoeffding). Robust genericity follows from $c_i$ counts (valid rule-$i$ samples with root in $G$ and in $G^c$ for the best split $G$ at each $x$; with $\Theta x\neq\Theta y$ for each pair), each $\mathrm{Bin}(N,p)$ with $p\ge\rho_i\beta_i=\alpha_i+2\Delta_i$. Appendix~\ref{app:imitation:iidnoise}.
+
+The budgets grow linearly with $N$; a fixed support threshold is not a soundness guarantee under sporadic noise, because coincidences between random errors grow with $N$ (\Cref{sec:imitation:experiment}; Appendix~\ref{app:imitation:experiment}). The threshold $\rho_i\beta_i>\alpha_i$ is necessary up to a factor of two, because a noisy law for one target is a clean law for another.
+
+\begin{definition}[Robust soundness]\src{T1 Thm 6.4}\label{def:imitation:robust}
+A \emph{positive-data verifier} maps the data so far (and private coins) to an acceptance set $\Acc_t$. It is \emph{$(\delta,\alpha)$-robustly sound} for $\Hc$ if for every $\Rstar\in\Hc$ and every law $Q$ on $S$ with $Q(S\setminus\Rstar)\le\alpha$, i.i.d.\ data from $Q$ give $\Prob[\exists t:\ \Acc_t\not\subseteq\Rstar]\le\delta$.
+\end{definition}
+
+\begin{theorem}[Indistinguishability; trivial]\src{T1 Thm 6.4}\label{thm:imitation:indist}
+Let the verifier be $(\delta,\alpha)$-robustly sound for $\Hc$, let $\Rstar\subsetneq R'$ both lie in $\Hc$, and let $Q$ be a law on $R'$ with $Q(R'\setminus\Rstar)\le\alpha$. Under i.i.d.\ data from $Q$, every $q\in R'\setminus\Rstar$ has $\Prob[\exists t:\ q\in\Acc_t]\le\delta$. So if $\delta<1$, the verifier is not complete for the target $R'$ under its clean law $Q$.
+\end{theorem}
+
+\begin{proof}
+$Q$ is an admissible noisy law for the target $\Rstar$, and $q\in\Acc_t$ implies $\Acc_t\not\subseteq\Rstar$; the data law is the same in both scenarios.
+\end{proof}
+
+The argument is in the spirit of \citet{kearns1993learning}. For schemas it yields a matching necessity. Let $m_{i,x}:=\max_f\Prob[\rt(\Theta x)=f]$.
+
+\begin{lemma}[Balanced splits]\src{T1 \S6 after Thm 6.4, repaired}\label{lem:imitation:split}
+$\rho_{i,x}\le1-m_{i,x}\le2\rho_{i,x}$, and the constant $2$ is attained by the uniform law on an odd number of symbols.
+\end{lemma}
+
+\begin{corollary}[Witness frequencies must exceed the noise rate]\src{T1 \S6 after Thm 6.4, repaired}\label{cor:imitation:necessity}
+Let $\Hc=H^{\mathrm{tag}}_k$ and let $Q$ be a clean law for $\Rstar$ under which a datum is a rule-$i$ instance $\sigma_i\Theta$, $\Theta\sim\Lambda_i$, with probability $\beta_i$. If a $(\delta,\alpha)$-robustly sound verifier with $\delta<1$ has $\Prob_Q[\Rstar\subseteq\Acc_t]>\delta$ for some $t$, then for all $x,f$ and all $x\neq y$,
+\[
+\beta_i\,\Prob[\rt(\Theta x)\neq f]>\alpha\qquad\text{and}\qquad\beta_i\,\Prob[\Theta x\neq\Theta y]>\alpha.
+\]
+With per-tag noise budgets, $\alpha$ may be read as $\alpha_i$.
+\end{corollary}
+
+\noindent\emph{Proof idea.} If a witness frequency is at most $\alpha$, then $Q$ is an $\alpha$-noisy law for the target in which $\sigma_i$ is replaced by $\sigma_i[x\mapsto f(\bar z)]$ (resp.\ $\sigma_i[y\mapsto x]$), and \Cref{thm:imitation:indist} applies. Proofs in Appendices~\ref{app:imitation:split} and~\ref{app:imitation:necessity}.
+
+So \Cref{thm:imitation:iidnoise} asks for $\rho_{i,x}\beta_i>\alpha_i$ and $r_{i,xy}\beta_i>\alpha_i$ (plus margins), while necessity asks for $(1-m_{i,x})\beta_i>\alpha_i$ and $r_{i,xy}\beta_i>\alpha_i$. By \Cref{lem:imitation:split} the two differ by at most a factor of two in the root frequencies and agree on the equality frequencies; the factor two in the lemma is attained. The trade-off is unavoidable. A positive-data verifier that tolerates error rate $\alpha$ must refuse every generalization supported by less than a fraction $\alpha$ of the data. With human error rates around $1\%$, the generality of a rule used in less than about $1\%$ of steps needs negative information.
+
+\begin{corollary}[Systematic errors are rules]\src{T1 Cor 6.5}\label{cor:imitation:systematic}
+Let human errors be \emph{schema-generated}: the data law is $Q=(1-\alpha)Q_0+\alpha Q_{\mathrm{err}}$, with $Q_0$ supported on $\Rstar$ and $Q_{\mathrm{err}}$ on $\inst(\tau)$ for a schema $\tau$ with $\inst(\tau)\not\subseteq\Rstar$. Suppose $R':=\Rstar\cup\inst(\tau)\in\Hc$, as holds whenever $\Hc$ is closed under adding a schema (tagged calculi with a fresh tag for $\tau$; untagged unions with room for one more schema). Then $Q$ is a \emph{clean} law for $R'$ at every error rate $\alpha$. Hence a $(\delta,\alpha)$-robustly sound verifier with $\delta<1$ accepts each $q\in\inst(\tau)\setminus\Rstar$ with probability at most $\delta$ under $Q$. So with probability at least $1-\delta$ it never accepts all of $R'$, a calculus in which $\tau$ is a genuine rule used at the same rate.
+\end{corollary}
+
+\begin{proof}
+$Q(S\setminus R')=0$; apply \Cref{thm:imitation:indist} to $\Rstar\subsetneq R'$.
+\end{proof}
+
+So no positive-data method, with any amount of data, can both tolerate schema-generated errors at rate $\alpha$ and learn genuine rules used at rate $\alpha$. This also removes the protection of the Bayes-conservative verifier (\Cref{sec:caution}). Its time-uniform guarantee assumes a well-specified likelihood. A model of errors as sporadic is misspecified for $Q$, and the clean hypothesis $R'$ fits $Q$ exactly.
+
+\begin{remark}[Imitation identifies practice]\src{T7 Prop 2.2; T1 \S6}\label{rem:imitation:practice}
+With latent but distinct fallacy tags (\Cref{def:setting:practice}), the theorems above apply to the practice $\Sigma^P=\Sigma^*\sqcup F$ tag by tag. On the event of \Cref{thm:imitation:iidnoise} the trimmed verifier accepts exactly $R^P=\Rstar\cup R_F$, including an instance of every fallacy outside $\Sound(\Rstar)$, which a prover will query. In classical logic with a complete $\Sigma^*$ and a pure fallacy schema, one closed instance with true premises and a false conclusion trivializes the reasoner (\Cref{prop:twotier:practice}; cf.\ \Cref{prop:search:post}). If fallacies are cited under genuine rules' names, a learner with one schema per tag collapses the rule instead (\Cref{prop:imitation:collapse}).
+\end{remark}
+
+\paragraph{Reading.} The line between sporadic and systematic errors is exact. Positive data remove an error only if it is rarer than the witness frequencies of the genuine rules. Rule-like errors, at any rate, need \emph{negative} information: escalation (\Cref{sec:caution}), coherence (\Cref{sec:coherence}), or the world (\Cref{sec:twotier,sec:physics}). For the program of the motivating notes \citep{hanni2026notes}, imitation learns which inferences are \emph{used}, and which are \emph{valid} only insofar as use is valid. Getting from the first to the second is what the coherence and world channels are for, and positive data provably cannot do it. In the language of justification, imitation can certify a step as licensed by the practice, never as licensed by anything beyond it. This is why the cautious tier of \Cref{sec:twotier} is sound only relative to practice, and why coherence must act on a separate, bold tier.
+
+% ---------------------------------------------------------------------
+\subsection{An exactly solvable case: dimensions as inferential roles}\label{sec:imitation:dimension}
+
+The dimension of a physical quantity is its inferential role: which sums and equations it may enter. For dimensions, learning meaning from positive examples is solvable in closed form (\Cref{rem:imitation:dimension}; proof sketch in Appendix~\ref{app:imitation:dimension}): the finest grading that makes the observed equations homogeneous is computed by Smith normal form, every target has a finite anchor, positive data never refute ``everything dimensionless'' but the cautious learner never adopts it, and the choice of base dimensions is a convention that no inference can see.
+
+% ---------------------------------------------------------------------
+\subsection{Imitation in practice}\label{sec:imitation:experiment}
+
+Experiment~A (\Cref{sec:experiments:algebra}) illustrates each limit on school algebra: rule shapes are recovered once a rule has a few instances and generalize out of distribution, but no guard is ever displayed, all five systematic fallacies reach support, and spurious schemas from sporadic noise grow with $N$ under a fixed support threshold. Appendix~\ref{app:imitation:experiment} gives the positive-data numbers.
+
+In short, what positive data fix is: rule shapes, given an anchor (at coupon-collector cost for cited rules, under a diversity condition for uncited ones); their extension to unbounded use; side conditions only as ``strongest guard true on all data''; and sporadic errors rarer than every witness frequency. What they cannot fix is: the choice of $\Hc$, the necessity of a guard, generalizations rarer than the error rate, and any schema-generated error. \Cref{sec:coherence,sec:twotier} show what coherence and world feedback do about the latter.
+

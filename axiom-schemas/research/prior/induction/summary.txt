@@ -1,0 +1,356 @@
+################# annotated
+ALGORITHM: LEARN-IND, applied per rule tag (the community cites "induction"). Data: motive-annotated induction records, encoded as ground first-order step terms. Default encoding (E1, the paper's Sub encoding): ind(phi,v) = st( Sub(phi,v,0,phi[0/v]), Sub(phi,v,Sv,phi[Sv/v]), (phi[0/v] & forall v(phi -> phi[Sv/v])) -> forall v phi ). Sub(phi,x,t,psi) is W-decidable and true iff phi is a well-formed formula, x is an object variable, t is a term free for x, and psi = phi[t/x]. The target pattern is sigma_x = the same term with metavariables P, A, B and x fixed; with X as a fourth metavariable if the induction variable is not normalized.
+
+Steps:
+(1) Canonicalize each record. Put the two Sub premises in a fixed order (0 before Sx) and the base-case conjunct first. Optionally alpha-normalize the induction variable to x; this is sound under trusted FOL.
+(2) W-filter: drop records with a W-false Sub premise. They are useless as steps, and dropping data never harms soundness.
+(3) Generalize. Noise-free: L = lgg(D), Plotkin/Reynolds anti-unification (T1 lgg_list). With per-tag noise budget e: use the trimmed version space, the intersection over |E| = e of inst(lgg(D\E)).
+(4) Verify a query q. Accept iff q matches L (first-order matching, linear time) and all Sub premises of q are W-true. Reject if a Sub premise is W-false. Otherwise escalate. This is the cautious verifier of the guarded single-schema class with guard psi_Sub ("all Sub premises are W-true"), via the paper's lem:setting:guard.
+(5) In the two-tier learner, every tag's learned schema goes through the audit, including latent fallacy tags such as step-by-2.
+
+Identification diagnostic: L equals the pattern iff the data contain an anchor. An anchor is two motives with different main symbols, at least one with x free, plus two distinct induction variables if not alpha-normalized.
+
+Equivalent encodings, also analysed:
+- (E2) Lean-style. Motive recorded as M = lam(x,phi). The premise-free conclusion keeps the beta-redexes: (M 0 & forall n(M n -> M(Sn))) -> forall n M n. Beta is a trusted step. One metavariable. Anchor: two motives with different main symbols; vacuity is irrelevant.
+- (E3) Metamath-style, after set.mm finds/nnind. Premises |- x=0->(ph<->ps), |- x=y->(ph<->ch), |- x=Sy->(ph<->th), |- ps, |- ch->th; conclusion |- ph. Needs freshness guards: either learned as "strongest guards true on all data", or recorded as W-decidable NF premises.
+CAVEATS: 1. P7d values are exact only within finite motive universes (motive size <= 8), so they are lower bounds. That they are the true maxima (10 for x+0=x) is conjecture P7e.
+2. The exact coupon formula in P5 assumes the main symbol, vacuity and induction variable are independent. Without that, use the union bound sum p^N + (1-q)^N.
+3. Bounded semantic checks (ev_closure over [0,B)) are evidence only. Every quoted counterexample was verified by hand. Premises called PA-provable are FOL= facts or easy PA theorems; one needs PA, not just Q: ~(Sy=SSy).
+4. P9 transcribes set.mm's finds to PA with "not free" guards and conclusion |- ph, dropping the x = A hypothesis. Its minimality claim says nothing about set.mm's own "does not occur" convention.
+5. P11.4 holds only for W = Delta0 truth with the empty position. Richer W, or designated true sentences, give singleton blame (P11.5).
+6. Lean: the brief says Nat.rec takes an explicit motive. In fact the motive is an implicit binder; only the elaborated induction term (Nat.recAux) carries it explicitly.
+7. Citations I am unsure of:
+   - the exact content of Huet's 1976 thesis on anti-unification;
+   - Stirling's 2009 decidability of higher-order matching;
+   - the AC/equational generalization reference (Alpuente, Escobar, Espert, Meseguer 2014).
+8. The untagged-class threshold ("not covered by k-1 failure sets") comes from earlier in this session and was not re-checked here.
+9. The tuple-gap bound P7b is a general strengthening of thm:caution:single(i). It is proved here but has not been through the paper's adversarial verification.
+10. Other files in the same directory (b1_*, b2_*, b3_*, b4_*, raw_*, raw-impossibility-notes.md) belong to a concurrent track and were not written or checked by me.
+-- P0 Reduction to the metavariable tuple [ proved ]
+   S: Let sigma have metavariables x1..xv, each occurring at least once. For ground instances t_j = sigma theta_j: lgg(t_1..t_n) = sigma eta, where tup(eta x1..eta xv) = lgg of the tuples tup(theta_j x1..theta_j xv), with the same metavariable names. Moreover sigma eta <= sigma eta' iff tup(eta) <= tup(eta'). So strict lgg chains of sigma-instances and strict tuple-lgg chains correspond one to one.
+-- P1 Anchors, induction variable fixed (Sub encoding) [ proved ]
+   S: Let T = {ind(phi_1..phi_n)} be genuine (true Sub premises). TFAE: (i) T is an anchor for inst(sigma_x) in the per-tag class H1, equivalently for the genuine set G in the W-guarded class; (ii) lgg(T) is sigma_x up to renaming; (iii) the main symbols of the phi_j are not all equal AND x is free in some phi_j. Minimum anchor size is 2. Any two instances with different main symbols, at least one non-vacuous, form an anchor. One instance never does.
+-- P2 Anchors, induction variable a metavariable X [ proved ]
+   S: lgg(T) equals sigma = ind_raw(P,X,A,B) iff three conditions hold: the main symbols are not all equal; some phi_j has its own induction variable v_j free; and the v_j are not all equal. The minimum anchor size is still 2, e.g. x+0=x on x and ~(Sy=0) on y. If all records use one variable v, the lgg is exactly the v-fixed rule.
+-- P3 Failure modes and canonicalization [ computed ]
+   S: The only merges anti-unification can perform are P = A = B, which happens iff all motives are vacuous; X never merges with a formula column. (1) Motives sharing one main symbol: the learned rule is induction restricted to that symbol; sound but incomplete. (2) All motives vacuous: the learned rule is vacuous induction only; sound but incomplete. (3) Premise order varying across records: the lgg is not below sigma_x and is unsound. (4) Conjunct order varying: unsound. (5) A record whose conclusion's A differs from its Sub premise's A: unsound. Canonical ordering repairs (3) and (4). Unordered premise sets would need AC-anti-unification, which is finitary rather than unitary.
+-- P4 Alpha-completeness of the x-fixed rule under trusted FOL [ proved ]
+   S: With FOL trusted, the conclusion of every genuine induction on any variable v is derivable from one x-fixed instance by trusted steps. Identifying sigma_x therefore gives the same derivable theorems as identifying sigma. At step level an induction on y is still escalated unless it is expanded as a macro.
+-- P5 Coupon-collector rate: constants and exact failure probability [ proved ]
+   S: Usage law: = 0.6, -> 0.2, forall 0.1, other 0.1; non-vacuity rate q >= 0.4; x fixed. Then c = 9 and rho = 0.4, and Thm imitation:coupon gives N >= ln(900)/0.4 = 17.006, i.e. N = 18 for delta = 0.01. Collapsing coinciding events gives the refined bound 2(0.6)^N + (1-q)^N, i.e. N = 11. Exactly, if root and vacuity are independent: P(fail) = 1 - (1 - sum_f p_f^N)(1 - (1-q)^N). The smallest N with P(fail) <= 0.01 is 10; the necessity bound 0.6^N gives N >= 9.015. X metavariable with variable law n 0.7, x 0.2, k 0.1: c = 14, rho = 0.3, theorem N = 25, exact N = 14. Lean encoding: c = 2, theorem N = 14, exact 10. Metamath encoding: c = 14, theorem N = 19, exact 10.
+-- P6 Soundness before identification, exactness after, realizability [ proved ]
+   S: (1) R* = inst(sigma_x) is H1-realizable, but inst(sigma_x) contains improper instances: a false Sub premise with a false conclusion, P a term, or P a Sub judgment. The genuine set G is not H1-realizable. (2) Leaf lemma: if no step of R or T_trust concludes a Sub judgment and the base's Sub judgments are W-true, then every Sub judgment in a derivation is a W-true leaf. Hence Cl_{R+T}(B) = Cl_{R_W+T}(B), where R_W keeps the steps with W-true Sub premises. (3) inst(sigma_x) intersected with SubTrue equals G. (4) The W-guarded cautious verifier accepts inst(lgg D) intersected with SubTrue. Before identification it accepts only genuine inductions, for motives of every size, at all times against every prover. After an anchor it accepts exactly G, for motives of any size and under any data law. It never accepts step-by-2 instances. (5) Soundness and completeness should be measured on G; improper instances never enter derivations.
+-- P7a-c Escalation cost from one example: paper gap, tuple gap, tightness [ proved ]
+   S: (a) Paper bound (thm:caution:single(i)): escalations <= mu(s0) - mu(sigma_x) = 8m + 2k - 5, where m = |phi0| and k = number of free x occurrences; 8m + 2k - 4 if X is a metavariable. For phi0 = x+0=x this is 39 (40). (b) New tuple-gap bound, valid for any sigma whose metavariables all occur: el(H1, sigma | P0) <= mu(tup eta0) - 1 = sum_i |eta0 x_i| - |vars eta0|. This is at most the paper bound, with equality iff each non-trivially instantiated metavariable occurs once. For one Sub example it equals 3m + k (3m + k + 1 for X meta): 17 (18) for x+0=x. For the Lean encoding it is m (5, paper bound 17); for the Metamath encoding 4m + k (22, paper bound 48). (c) Bound (b) is tight for target inst(sigma). Given infinitely many constants, an honest prover whose queries lie in inst(sigma) forces exactly sum_i |theta0 x_i| escalations from every 0-sound H1 verifier.
+-- P7d Escalations against genuine-only provers (W-guarded verifier) [ computed ]
+   S: From the single example ind(x+0=x), the longest strictly increasing chain of lggs built from genuine queries has length 10 in motive universes of size <= 6, <= 7 and <= 8 (up to 21,923 motives). The tuple bound is 17 and the paper bound 39. For other starting motives (universe of size <= 7): x=0: 6; 0=0: 5; x=x: 7; x<Sx: 9; Sx=x: 9; ~(Sx=0): 9; x+y=y+x: 12; 0+0=0: 8; x+x=x: 11; ~(x=0): 7; SSx=0: 10. All are strictly below 3m+k and at most 2m+k.
+-- P7e Conjecture: true genuine-only maxima [ conjecture ]
+   S: The universe-limited values of P7d are the true maxima. In particular, the worst-case number of escalations of the W-guarded verifier after the single example x+0=x is 10.
+-- P8 Lean-style redex encoding [ proved ]
+   S: Pattern: st((app(lam(x,P),0) & forall n(app(lam(x,P),n) -> app(lam(x,P),Sn))) -> forall n app(lam(x,P),n)), with one metavariable P. lgg(T) equals the pattern iff the motives' main symbols are not all equal; vacuity is irrelevant. Every instance with a well-formed motive body beta-normalizes to the induction axiom. Costs: c = 2, coupon N = 14 by the theorem and 10 exactly; one-example escalation bound m, tight with genuine queries.
+-- P9 Metamath-style encoding: guards, anchors, validity [ proved ]
+   S: (a) A first-order pattern in phi, psi, chi, theta (plus X, Y if the variables vary), whose premises are |- judgments. (b) Within F = {x notfree psi, x notfree chi, x notfree theta, y notfree phi, x != y}, a guard set is sound iff it contains y-notfree-phi and (x-notfree-chi or x-notfree-theta). Sound means the rule is derivable in PA: the closures of the premises imply the closure of the conclusion in every model of the induction axiom for phi. set.mm's DV list, transcribed to PA, is sound but not minimal. (c) Canonical data: lgg equals the pattern iff the main symbols differ and some motive has x free; with X, Y metavariables both variable columns must also vary. (d) Guard learning keeps the spurious guard y-notfree-psi forever under canonical usage. So the full set.mm rule is never anchored by canonical uses; the learner converges to a sound sub-rule that is complete on canonical uses. (e) Recording the minimal guards as W-decidable NF premises gives a plain pattern with the same anchors. (f) Validity means being a sound derived rule. There are no improper instances, but premises H1-H3 must be derived by trusted equality logic.
+-- P10 Noise: taxonomy, trimming, sharp threshold [ proved ]
+   S: (a) Shape-consistent improper records are still instances of sigma_x and do not affect the lgg; W filters them. Shape-breaking records collapse the lgg into an unsound schema; one step-by-2 record turns S(x) into S(v2). (b) The trimmed per-tag verifier with budget e is exact under e-robust genericity: more than e records with main symbol != f for every f, and more than e non-vacuous records. Robust genericity is sufficient, not necessary. (c) For this usage law the i.i.d. threshold is sharp: identification is possible iff the error rate alpha < min(0.4, q)*beta, up to the margin.
+-- P11 Step-by-2 fallacy: identification and audit blame [ proved ]
+   S: (1) Under its own tag, sigma2 is identified by exactly the anchors of P1. (2) It is unsound: P = ~(x=S0) has W-true Sub premises, a true antecedent and false forall x P. (3) Cited as induction under per-tag H1 it is sporadic noise, removed by trimming iff alpha < min(0.4,q)*beta; cor:imitation:systematic does not apply because sigma union sigma2 is not in H1. (4) With W = Delta0 truth plus Sub, only the empty position designated, and Q1, Q2 as learned schemas: {step-by-2} alone has NO refutation at any depth. So every refutation of Sigma* + {step-by-2} has a blocked descent, the audit blames only a bag (computed: {step-by-2, Q1, Q2}), and the fallback removes Q1 and Q2 as collateral. (5) Singleton blame is restored by designating <Q1,Q2 |- >, trusting Q, or letting W decide Th(N,0,S).
+-- K1 What Lean and Metamath record (checked) [ known ]
+   S: Lean 4.32.0: Nat.rec : {motive : Nat -> Sort u_1} -> motive Nat.zero -> ((n : Nat) -> motive n -> motive n.succ) -> (t : Nat) -> motive t. The motive is implicit at the surface, correcting the brief's 'explicit'. The elaborated induction term is @Nat.recAux (fun n => ...) with the motive given explicitly as a lambda. set.mm (develop branch, 2026-10-04): finds has hypotheses x = (/) -> (ph <-> ps), x = y -> (ph <-> ch), x = suc y -> (ph <-> th), x = A -> (ph <-> ta), |- ps, y e. om -> (ch -> th); conclusion A e. om -> ta; DV conditions x y, x A, x ps, x ch, x th, x ta, y ph. nnind is analogous over NN.
+=== REFEREE overall: The track is mostly correct and well evidenced. I re-implemented anti-unification, substitution and W independently and attacked each claim on a richer motive law: mul, or, iff, ex, up to six variable names, and binders that shadow the induction variable. The following survived: the anchor characterizations P1 and P2 (40,000 random sets each, 0 mismatches), P0, the tuple-gap bound and its tightness P7a-c, soundness and exactness of the guarded verifier P6, the Metamath guard characterization P9 (tested exactly in finite structures satisfying full induction), the step-by-2 bag-only theorem P11, and the Lean/set.mm facts K1 (re-run on Lean 4.32.0; set.mm re-downloaded).
+
+Two substantive defects:
+(1) P8's Lean-style encoding has variable capture under its named binder ∀n, which gives an explicit accepted false instance. A one-line guard or a nameless binder fixes it.
+(2) P5's sample-size claims are wrong at the lower end of the stated range q>=0.4 (12/11, not 11/10).
+
+Minor repairs: the leaf-lemma typing assumption (P6), 'at least' versus 'exactly' (P7c), and wording in P3, P9 and P10.
+
+Conjecture P7e (worst case 10 from x+0=x) stays a conjecture. It still gives 10 in larger universes (size<=9 over {x,y}, size<=8 over {x,y,z}, with and without mul), and I add a proved upper bound of 3m+k-2 = 15.
+
+Not checked: the untagged k-1 failure-set threshold, the other P7d starting motives except x+y=y+x (12, confirmed), and the exact content of Huet's 1976 thesis.
+
+Report: /tmp/claude-0/-home-user-AI-works/c4435474-536f-5a96-a73c-7d0c5ea93659/scratchpad/induction/annotated-referee.md. Scripts and outputs: /tmp/claude-0/-home-user-AI-works/c4435474-536f-5a96-a73c-7d0c5ea93659/scratchpad/induction/referee_A/
+algorithm issues: LEARN-IND is sound in the E1 (Sub) and E3 (Metamath with guards or NF premises) encodings: acceptance inst(lgg D) ∩ SubTrue ⊆ G against every prover, exact after an anchor. The trimmed version with at most e errors is also sound. Canonicalizing premise and conjunct order is necessary and sufficient.
+
+Issues:
+(1) E2 (Lean-style redex) with a named outer binder n is unsound because of capture. P := x=0 ∨ ¬(x=n) is an accepted instance after identification and its beta-normal form is false. Fix: a nameless outer binder or the guard n ∉ FV(P).
+(2) The leaf lemma, which justifies 'improper instances are harmless', assumes trusted FOL steps cannot conclude Sub judgments. Untyped MP can, so the proof needs typed or ⊢-wrapped trusted steps, or a semantic argument. Soundness of the W-guarded verifier is unaffected.
+(3) The sample-size numbers in P5 (refined N=11, exact N=10) hold only for non-vacuity rate q>=0.415 and q>=0.425 respectively, not for the stated q>=0.4. At q=0.4 they are 12 and 11, and the E3 'exact 10' becomes 11.
+Minor: 'exactly' should be 'at least' in P7(c); P3 and P10(a) wording.
+  * Algorithm LEARN-IND -> holds-with-fix
+     issue: Steps 1-4 implement the cautious verifier of the guarded single-schema class with Phi={psi_Sub}. It accepts inst(lgg D) ∩ SubTrue, which is contained in G. The trimmed version space is attained at |E|=e. Canonicalization is necessary and sufficient. The E2 (Lean-style) variant as written is unsound because of variable capture (see P8).
+     fix: Restrict E2 to a nameless outer binder, or add the guard n ∉ FV(P). E1 and E3 need no change.
+  * P0 Reduction to the metavariable tuple -> holds
+  * P1 Anchors, induction variable fixed (Sub encoding) -> holds
+  * P2 Anchors, induction variable a metavariable X -> holds
+  * P3 Failure modes and canonicalization -> holds-with-fix
+     issue: The counterexamples are correct; I checked all three by hand (false at y=0; at y=0, x=1; at y=1). Two statements are imprecise. 'The only merges are P=A=B' is true only for the top-level P/A/B columns: with a shared root, deeper sub-columns merge (harmless, since the lgg stays below sigma_x). 'Induction restricted to that symbol' is only an upper bound; the learned rule can be more specific, for example eq(add(..),..).
+     fix: Say 'at the top-level columns' and 'at most the restriction to that symbol'. The AC citation (Alpuente, Escobar, Espert, Meseguer, Inf. Comput. 235, 2014) is correct.
+  * P4 Alpha-completeness of the x-fixed rule under trusted FOL -> holds
+  * P5 Coupon-collector rate: constants and exact failure probability -> holds-with-fix
+     issue: c=9, rho=0.4 and theorem N=18 are correct for every q>=0.4. For X a metavariable, c=14, rho=0.3, N=25 and exact N=14 are also correct, including at q=0.4. The error: the claim says 'q >= 0.4' but the author computed only q in {1, 0.95}. Refined N=11 needs q>=0.4150 and exact N=10 needs q>=0.4246. At q=0.4 they are 12 and 11; the exact P(fail) at N=10 is 0.01206. The E3 'exact 10' is likewise 11 at q=0.4. Nit: at pi=5% the requirement is 341, not 340, and the k-tag factor ln(k c) is dropped.
+     fix: State q>=0.43 (or q=1 as simulated), or give N=12 (refined) and N=11 (exact) for q=0.4.
+  * P6 Soundness before identification, exactness after, realizability -> holds-with-fix
+     issue: Realizability, inst(sigma_x) ∩ SubTrue = G, the guarded verifier's soundness and exactness, and measuring on G are all correct. The leaf lemma's hypothesis 'no step of T_trust concludes a Sub judgment' fails for an untyped encoding of trusted FOL: MP st(A, imp(A,B), B) has instances with B := Sub(...), and E1 uses bare formulas, not ⊢-wrapped ones. The conclusion is still true for a W-true base by a semantic argument (value Sub terms as atoms by W; every step used then preserves truth). The verifier's soundness does not depend on the leaf lemma.
+     fix: Type the trusted steps (wrap formulas in ⊢ as App. twotier(e) does, or sort FOL metavariables over formulas), or replace the syntactic proof by the semantic induction.
+  * P7a-c Escalation cost from one example: paper gap, tuple gap, tightness -> holds-with-fix
+     issue: (a) 39/40 and the E3 value 48 are recomputed correctly. (b) The tuple-gap proof is correct. (c) The chain is correct. Wording: 'forces exactly sum|theta0 x_i| escalations from every 0-sound verifier' is too strong; a 0-sound verifier may escalate more. The correct form is 'at least, for every 0-sound verifier; exactly, for the VS verifier'.
+     fix: Change 'exactly' to 'at least, with equality for the VS verifier'.
+  * P7d Escalations against genuine-only provers -> holds
+  * P7e Conjecture: true genuine-only maxima -> unclear
+     issue: It remains a conjecture. No counterexample appears in larger universes, with a third variable, or with mul. New easy bound (proved): before the last escalation every query has phi0's root (any other root gives sigma_x at once, since s0 is non-vacuous), and such states have mu >= 4. So the genuine-only chain is at most 3m+k-2, i.e. 15 for x+0=x. The gap between 10 and 15 is open.
+     fix: Keep the conjecture label. Optionally add the 3m+k-2 upper bound and the extended-universe evidence.
+  * P8 Lean-style redex encoding -> holds-with-fix
+     issue: The soundness clause is false as stated. The pattern instantiates P under the named binder 'forall n', so a motive body with n free is captured; capture-avoiding beta cannot undo capture that happens at first-order instantiation. Counterexample: P := (x=0 ∨ ¬(x=n)) is well-formed and an instance of lgg(anchor) ≡ the pattern. Its beta-normal form (0=0 ∨ ¬0=n) ∧ ∀n((n=0 ∨ ¬n=n) → (Sn=0 ∨ ¬Sn=n)) → ∀n(n=0 ∨ ¬n=n) has a true antecedent and a false consequent ∀n(n=0). Genuine parameterized records are also mis-encoded: the record for x+n=n+x beta-reduces to a formula with consequent ∀n(n+n=n+n). The author's beta check skipped motives with free n, and their universes use only x and y. The anchor claim, c=2, N=14/10 and the cost bound m are correct.
+     fix: Use a nameless (de Bruijn or locally nameless) outer binder, as Lean's kernel does, or add the guard n ∉ FV(P) and alpha-rename community parameters away from n. The guard costs at most one extra escalation.
+  * P9 Metamath-style encoding: guards, anchors, validity -> holds
+  * P10 Noise: taxonomy, trimming, sharp threshold -> holds-with-fix
+     issue: (b) and (c) are correct applications of thm:imitation:trimmed, iidnoise and necessity; with m=0.6>=1/2 the sufficient and necessary conditions coincide at min(0.4,q)β. In (a), 'shape-consistent improper records do not affect the lgg' is true only once an anchor is present. Before that they can generalize the lgg, though it stays below sigma_x. The W-filter removes them anyway.
+     fix: Rephrase (a) as 'keep the lgg below sigma_x; filtered by W'.
+  * P11 Step-by-2 fallacy: identification and audit blame -> holds
+  * K1 What Lean and Metamath record -> holds
+################# raw-impossibility
+ALGORITHM: ANALYZED (the report's algorithm on raw data). For the induction tag compute tau = lgg(D_Ind) by Plotkin-Reynolds anti-unification over the term encoding of formulas: object variables are constants, all(x, body) is a binary symbol. The cautious verifier accepts inst(tau), or the intersection of VS_{H_k}(D) for untagged unions. The TTL audit then runs with W = truth of closed quantifier-free (Delta_0) sentences, trusted classical first-order natural deduction with equality, the prefer-unblocked refutation oracle, and descent (lem:twotier:descent).
+
+PROPOSED for raw data ("lgg, audit, escalate"):
+(1) tau := lgg(D_tag).
+(2) Search refutations of {tau} up to size d. On raw induction data an unblocked one always exists, through one of two instances:
+  - I*_a = (g_a(0)=0) & Ax(g_a(0)=x -> g_a(S0)=Sx) -> Ax(g_a(0)=x). Its refutation has 11 judgments and size 82 for a=0, 139+44(a-1) for a>=1.
+  - The L_inf instance (0=0) & Ax(0=S0 -> 0=S0) -> Ax(0=S0), with 8 judgments and size 78.
+(3) On an unblocked refutation with clean data:
+  - withhold tau, with singleton blame and no collateral;
+  - record the certificate "no sound first-order schema covers D_tag" (B4c). Under noise of at most e items, the certificate requires every e-deleted subset's lgg to be refuted.
+(4) Escalate the representation for that tag. Either use the report's Sub-encoding, or rewrite each raw datum Ind(phi) into the substitution-free form IndEq(phi) = Ax(x=0 -> phi) & Ay(Ax(x=y -> phi) -> Ax(x=Sy -> phi)) -> Ax phi. Getting phi is a trivial, decidable second-order match: read phi off the conclusion Ax phi, then check A = phi[0/x] and C = phi[Sx/x]. Then run plain lgg on the IndEq data. It is sound at all times, and exact (equal to IndEq(P)) after two instances whose motives have different main symbols. Without step (4), the first-order learner provably cannot learn raw induction.
+CAVEATS: 1. 'Sound' means every sentence instance is true in N. Every false instance exhibited is a closed, well-sorted, capture-free sentence. So the negative results hold under sentence or universal-closure semantics, named or de Bruijn encoding, fixed or varying bound-variable names, and parameter-free or parametric induction. The positive B6 needs the freshness guard 'y not free in P' under universal-closure semantics.
+2. B2 covers unguarded first-order patterns, plus the occurrence and freshness guards learnable from F'. A guard family containing 'is an induction instance' trivially escapes it; the report's Sub premises are such a device.
+3. In the B1(e) brute force, 'no false instance found' is a finite-pool search failure. Only the classes proved sound in the notes are claimed sound.
+4. B5(d) shows that the natural refutation for family F is blocked without designating Q3. I do not claim that F has no singleton refutation from Delta_0 plus logic. F' was chosen so that closed equations suffice.
+5. Truth checks are exact: the decision procedure covers single-variable universal sentences with quantifier-free bodies. The IndEq-versus-Ind agreement in B6 is only a bounded-domain sanity check; equivalence is proved by hand.
+6. Citations I am less sure of: Huet's 1976 thesis as a source of first-order anti-unification; Mostowski 1952 and Kreisel-Levy 1968 for reflexivity; the exact chapter in Simpson for ACA_0 being finitely axiomatizable; which Parsons result was meant (Parsons 1970/1972 concern the IΣ_n fine structure).
+7. Higher-order context, verified by search: Pfenning LICS 1991; Baumgartner-Kutsia-Levy-Villaret JAR 58 (2017); Hirata-Ogawa-Harao ILP 2004 (second-order generalization); Huet-Lang 1978 (second-order matching); Stirling LMCS 2009 (higher-order matching decidable). The induction schema is not a Miller pattern, since P is applied to 0 and Sx.
+8. Other tracks write into the same directory (a1_*, a2_*, a3_*, common.py, lean/, setmm.mm). My files are raw_common.py, raw_search.py, b1_pairs.py, b1b_bruteforce.py, b2_family.py, b2b_guards.py, b3_refutation.py, b4_equational.py, their .out files, and raw-impossibility-notes.md.
+-- B1 Two raw instances suffice; one never does [ proved ]
+   S: (a) A single raw instance I is covered by the sound ground schema I, so no 1-element set forces unsoundness.
+(b) Let D2 = {Ind(x+0=x), Ind(0+x=x)}. Then lgg(D2) = (0+0=0) & Ax(z1+z2=x -> z3+z4=Sx) -> Ax(z1+z2=x), with four distinct metavariables. Every first-order schema covering D2 has the false instance I*_1 = (0+0=0) & Ax(0+0=x -> 0+S0=Sx) -> Ax(0+0=x). This is the paper's false instance, which the paper derived from four instances; two suffice, and the lgg of the four is strictly more general.
+(c) Other 2-element sets that work: {Ind(0+x=x), Ind(0+(0+x)=x)}, {Ind(x=x), Ind(0=x)}, and any pair whose motives have different main symbols with x free in at least one.
+(d) Not every pair works: lgg(Ind(x=x), Ind(Sx=Sx)) is sound.
+(e) The minimum total motive size of an unsound pair is 6 (e.g. {0=x, x=0}). If both motives must be true for all x, the minimum is 8 (e.g. {x=x, 0+x=x}).
+-- B2 Pairwise-unsound infinite family; no finite union of first-order schemas covers Ind soundly [ proved ]
+   S: Let g_0(t) = t and g_{n+1}(t) = 0+g_n(t), phi_n = (g_n(x) = x), and F' = {Ind(phi_n)}.
+- B2.1: For n < m, lgg(Ind phi_n, Ind phi_m) = L_n = (g_n(a)=0) & Ax(g_n(b)=x -> g_n(c)=Sx) -> Ax(g_n(b)=x). More generally, the lgg of any subset of F' with at least two members, minimum index n, is L_n.
+- B2.2: I*_M = (g_M(0)=0) & Ax(g_M(0)=x -> g_M(S0)=Sx) -> Ax(g_M(0)=x) is false, is an instance of L_a for every a <= M, and is refutable in Q (closed equations plus first-order logic).
+Theorem:
+(a) Every first-order schema covering two members of F' has a false, Q-refutable sentence instance. So a sound schema covers at most one member of F'.
+(b) A union of k sound schemas covers at most k members of F'. So no finite union of first-order schemas covers Ind, or even F', soundly. This includes atomic and open induction.
+(c) No finite union of schema instance sets equals Ind, or lies between F' and Th(N), or between F' and the sentences consistent with Q.
+(d) The same holds for the family F = {Ind(S^n0+x = S^n x)}, with lgg K_n = (S^n z1+0 = S^n z1) & Ax(S^n z1+x = S^n z2 -> S^n z1+Sx = S^{n+1} z2) -> Ax(S^n z1+x = S^n z2) and false instance z1 = z2 := 0.
+Remark: the occurrence and freshness guards learnable from F' do not rescue L_n (pad with 0*x).
+-- B3 Collapse to the bare frame L_inf at a coupon-collector rate [ proved ]
+   S: (a) If D, a subset of Ind, contains two motives with different main symbols and some motive has x free, then lgg(D) = L_inf = A & Ax(B -> C) -> Ax B. In particular lgg(Ind) = L_inf. L_inf has the false instance (0=0) & Ax(0=S0 -> 0=S0) -> Ax(0=S0).
+(b) For i.i.d. motives with p_max = max_f P(root = f) and q = P(x free), P[lgg(D_N) != L_inf] <= p_max^(N-1) + (1-q)^N. So the H_1 cautious verifier becomes unsound at the same kind of rate at which it becomes exact on realizable rules (thm:imitation:coupon).
+-- B4 Cautious verifier: unsound, empty sound version space, certificate of unrealizability [ proved ]
+   S: (a) H_1: if D_Ind contains two members of F' (or a root-diverse pair with x free), inst(lgg(D_Ind)) contains a false sentence, and no sound member of H_1 contains D_Ind.
+(b) H_k: if D contains at least k+1 members of F' with maximum index M, every h in VS_{H_k}(D) contains the false I*_M. So the cautious verifier, the intersection of VS(D), accepts I*_M, and no sound member of H_k is consistent with D.
+(c) With clean data, a refutation of lgg(D) certifies that no sound first-order schema covers D. With at most e noisy items, the certificate requires that every subset obtained by deleting at most e items has a refuted lgg.
+-- B5 World feedback gives singleton blame; TTL ends with no induction [ proved ]
+   S: Setting: W = Delta_0 truth, trusted first-order natural deduction with equality, empty position designated.
+(a) For every n there is an unblocked refutation of every schema with I*_n as an instance: tau-step; leaves a=0 and b=S(a); assumption a=x; congruence; transitivity; ->I; AI; &I; ->E; AE at S0, with W = 0. Here a = g_n(0) and b = g_n(S0). The descent outputs the tau-step. Sizes are 82 (n=0) and 139+44(n-1) (n>=1) with contexts counted, or 64+28n in compressed Hilbert format. The n=1 case is the paper's instance.
+(b) L_inf has an unblocked refutation of size 78.
+(c) Hence TTL (prefer-unblocked oracle, depth at least the refutation size) removes the induction tag's learned schema with singleton blame and no collateral. No asserted schema then covers two members of F'. With the rest of the practice equal to Q, the result is sound but lacks induction (Q does not prove Ax(0+x=x), which is known).
+(d) For family F, the natural refutation of K_0 needs Q's recursion axiom Q3. Relative to the empty position the descent is blocked and only the bag {K_0, Q3} is condemned; designating the position asserting Q3 makes it unblocked.
+-- B6 The substitution-free (Tarski-style) form makes induction a one-metavariable first-order pattern [ proved ]
+   S: Let IndEq(P) = Ax(x=0 -> P) & Ay(Ax(x=y -> P) -> Ax(x=Sy -> P)) -> Ax P.
+(a) For FV(phi) a subset of {x}, IndEq(phi) and Ind(phi) are provably equivalent in first-order logic. So IndEq(P) is sound under sentence semantics; under universal-closure semantics it needs the freshness guard 'y not free in P'.
+(b) The lgg of IndEq data is IndEq(lgg of the motives). It is always sound (realizable) and equals IndEq(P) iff the motive roots are not all equal, so two root-diverse instances form an anchor.
+(c) Q + inst(IndEq) proves PA: PA is axiomatized by 7 ground axioms plus one sound first-order pattern.
+-- B7 Relation to non-finite axiomatizability (Ryll-Nardzewski) [ known ]
+   S: Known: Ryll-Nardzewski (Fund. Math. 39, 1952) showed that no finitely many sentences in the language of arithmetic prove all induction instances, i.e. PA is not finitely axiomatizable. Stronger and standard: PA is reflexive, so no consistent extension of PA is finitely axiomatizable.
+Proved separations:
+(i) Non-finite axiomatizability does not prevent axiomatization by finitely many first-order patterns, since PA = Q + inst(IndEq) (B6c).
+(ii) B2 does not depend on deductive strength. It uses only Q-refutability of the I*_n, so it holds equally where the theory proving all induction instances is finitely axiomatizable (e.g. ACA_0, which I believe is finitely axiomatizable).
+B2 concerns the syntax of meta-level substitution in the pattern language; Ryll-Nardzewski concerns consequence. Vaught (JSL 32, 1967) axiomatizability by a schema uses second-order-style schemas with a schematic relation symbol, which are strictly stronger than first-order patterns.
+-- B8 Noise persistence [ proved ]
+   S: Mistakes only make the lgg more general, so B1-B4 persist under noise. If the clean data contain at least e+2 members of F', every e-trimmed lgg is still at least as general as some L_a, hence unsound and refutable.
+=== REFEREE overall: The core impossibility results are correct and survive independent recomputation: B1 (2 instances suffice), B2 (the pairwise-unsound family F'; no finite union of first-order schemas covers raw induction soundly), B3, B4, B6 (IndEq) and B8. All of the author's scripts reproduce exactly.
+
+The main problem is an overclaim about world feedback. The notes (section 0.3 and section 2 step 2) and the JSON algorithm say every over-general raw-induction lgg is refuted by Delta_0 plus logic with an unblocked descent through I*_a or the L_inf instance. That is false. I proved (Theorem R1, full proof in the report) that K_0 = lgg(Ind(0+x=x), Ind(S0+x=Sx)), which covers the genuine family F, is consistent with all true closed quantifier-free sentences, so it has no refutation at all from the empty position. In the notes' own setting, TTL then either keeps a false schema or removes the genuine axiom Q3 as collateral. B5 is therefore holds-with-fix: (a)–(c) are correct under their stated hypotheses, and (d)'s hedge should become R1. B7 is holds-with-fix for three imprecisions. The fix to the algorithm is to escalate to IndEq on a decidable syntactic test before the audit, rather than waiting for a refutation.
+
+Files, all in /tmp/claude-0/-home-user-AI-works/c4435474-536f-5a96-a73c-7d0c5ea93659/scratchpad/induction/:
+- Report: raw-impossibility-referee.md
+- Scripts and outputs: rb_core.py, rb_cc.py, rb1_checks.py/.out, rb2_algorithm.py/.out, rb3_refutability.py/.out, rb3b_refl.py/.out, rb4_indeq.py/.out, rb5_sizes.py/.out
+algorithm issues: The analyzed algorithm (report lgg, cautious verifier, TTL audit) is described correctly. The proposed 'lgg, audit, escalate' has a false step 2 and a fragile trigger in step 4.
+
+(1) Step 2 says 'an unblocked refutation always exists, through one of two instances (I*_a or the L_inf instance)'. This fails in two ways.
+- The instance can be of a third kind. Of the 2357 unsound lggs of quantifier-free motive pairs of size <=5, 522 contain neither named instance; 496 of these have certified unblocked refutations through other instances. Example: lgg(Ind(x*0=0), Ind(0*x=0)) = (0*0=0) & Ax(v0*v1=0 -> v2*v3=0) -> Ax(v0*v1=0), refuted via (0*0=0) & Ax(S0*S0=0 -> 0*0=0) -> Ax(S0*S0=0).
+- A refutation may not exist at all. By Theorem R1, K_0 = lgg(Ind(0+x=x), Ind(S0+x=Sx)) is consistent with all true closed quantifier-free (and primitive-< Delta_0) sentences. So it has no refutation relative to the empty position.
+
+(2) Step 4 escalates only after an unblocked refutation, so it never fires on family-F data. TTL then either keeps K_0 and accepts the false J*_0 = (0+0=0) & Ax(0+x=0 -> 0+Sx=S0) -> Ax(0+x=0), or, with undesignated Q in the practice, falls back and removes Q3 as collateral. It also never fires on root-homogeneous data with a sound lgg, such as {Ind(0=x), Ind(S0=x)}, so the learner never generalizes on such data.
+
+Repair: trigger escalation syntactically, before the audit. Test whether all data of the tag match P(0) & Ax(P(x) -> P(Sx)) -> Ax P(x); this is decidable and trivial (read P off the conclusion, check the other two slots up to alpha-renaming of the bound variable). Then rewrite to IndEq. That tag is realizable (B6), sound at all times, and exact after two root-diverse motives. Alternatively, designate Q: this makes the K_0 refutation unblocked, but whether every unsound raw-induction lgg is then refutable is open.
+
+Minor: the JSON gives the a=0 refutation as 11 judgments; it has 9 (size 82 is right).
+
+The B4(c) certificate (and its noise-robust version) and the IndEq anchor (two root-diverse motives; P[not exact after N] <= p_max^(N-1)) are correct.
+  * B1 Two raw instances suffice; one never does -> holds
+  * B2 Pairwise-unsound family F'; no finite sound union of first-order schemas -> holds
+  * B3 Collapse to L_inf at coupon rate -> holds
+  * B4 Cautious verifier unsound; empty sound version space; certificate -> holds
+  * B5 World feedback gives singleton blame; TTL ends with no induction -> holds-with-fix
+     issue: (a)–(c) are valid under their stated hypothesis that D_Ind contains an F' member or is root-diverse; I recounted the sizes as 82, 139, 183, 227, 271, 315 and 78. But the universal versions are false: notes section 0.3 says 'each over-general schema is refuted ... descent unblocked'. New Theorem R1 (proved in the report): Th_qf(N) together with all sentence instances of K_0 = lgg(Ind(0+x=x), Ind(S0+x=Sx)) is consistent. So {K_n} has NO refutation at any depth relative to the empty position, singleton or otherwise. In the notes' setting (practice = Q plus the induction tag, Q undesignated) every refutation is blocked, the audit falls back, and Q3 (x+Sy=S(x+y)) is removed as collateral once d>=163. If Q is not in the practice, K_0 is residual and the false J*_0 is asserted forever. The B5(d) hedge 'I do not claim F has no singleton refutation' understates this. Minor: the JSON says the a=0 refutation has 11 judgments; it has 9.
+     fix: State (c) only under its hypothesis. Replace the (d) hedge with Theorem R1 and its consequences (collateral Q3, or residual K_0). Correct the judgment count for a=0 to 9.
+  * B6 IndEq is a sound one-metavariable first-order pattern; PA = Q + inst(IndEq) -> holds
+  * B7 Relation to Ryll-Nardzewski non-finite axiomatizability -> holds-with-fix
+     issue: Citations check out: Ryll-Nardzewski, Fund. Math. 39:239-263; Vaught, JSL 32(4):473-479 (r.e. theories directly interpreting VS); Tarski, Arch. math. Logik 7:61-79 (Springer issue date 1964); Kaye-Paris-Dimitracopoulos, JSL 53:1082-1097; Baumgartner-Kutsia-Levy-Villaret, JAR 58(2):293-310. Three imprecisions: (1) the JSON's 'no consistent extension of PA is finitely axiomatizable' lacks 'in the language of PA', and as written it contradicts the ACA_0 example the JSON itself gives. (2) 'Vaught schemas are strictly stronger than first-order patterns' is not a precise claim; neither class contains the other, since pattern metavariables range over terms and are substituted with capture. (3) Separation (ii) is true but empty, because B2 involves no theory.
+     fix: Add 'in the same language'. Replace 'strictly stronger' with the precise statement: the raw induction set is the instance set of a single Vaught schema, but by B2 it is not covered soundly by any finite union of first-order patterns. Rephrase (ii) as 'B2 uses only Plotkin's property and Q-refutability'.
+  * B8 Noise persistence -> holds
+################# second-order
+ALGORITHM: SOCL, a second-order cautious learner. The hypothesis class is DT, the determinate second-order templates.
+
+**Class DT.**
+- A template is a formula of first-order arithmetic in which function metavariables F(t1..tn) (type iota^n->iota) and predicate metavariables M(t1..tn) (type iota^n->o) may occur.
+- In Church encoding it is a beta-normal eta-long lambda-term with free metavariables, of type o, with no free object variables.
+- An instance is T theta beta-normalized, where theta assigns closed lambda-terms lambda z.beta with beta first-order and metavariable-free. Since bodies are first-order, beta-reduction is one-step plugging.
+- T is *determinate* if every metavariable has a pattern occurrence: an occurrence M(y1..yn) at a rigid position (not inside another metavariable's arguments), applied to pairwise distinct variables bound above it. A 0-ary metavariable needs only a rigid occurrence.
+- Example: T_ind = P(0) & Ax(P(x) -> P(Sx)) -> Ax P(x) is determinate. Its pattern occurrence is P(x) under the conclusion's Ax; P(0) and P(Sx) are *derived* occurrences.
+
+**Learning and verifying (input: finite multiset D of sentences).**
+1. *Common prefix.* Compute C(D): the positions on which all data agree, top-down, using de Bruijn trees. This is Plotkin–Reynolds anti-unification with the disagreement positions kept as slots sigma, each with a content column c_i(sigma).
+2. *Own pattern filler.* Each slot can take its own pattern metavariable M_sigma(ybar_sigma), where ybar_sigma are the bound variables occurring in the column. Then theta_i(M_sigma) = lambda ybar. c_i(sigma) (Miller pattern).
+3. *Derived fillers.* For each ordered pair of slots (sigma, pi), find ubar with c_i(sigma) = c_i(pi)[ubar/ybar_pi] for all i. The components of ubar are forced: substitution into a formula with a free occurrence of the variable is injective. Each solution gives a derived filler M_pi(ubar) at sigma.
+4. *Minimal templates.* The covering templates are the prefixes of C(D) with fillers in {fresh 0-ary metavariable (for closed columns), own pattern, derived occurrence}. This is complete by the rigid-prefix lemma. Keep the minimal ones Min(D) under subsumption, tested by freezing metavariables and matching. With a size bound s ≥ 12, enumerate within the bound.
+5. *Verification.* Accept a step q iff q is in inst(T) for every T in Min(D). Each test is a determinate match: read every metavariable off one pattern occurrence, then check the remaining occurrences by lazy evaluation, in O(|T|·|q|).
+
+**On raw induction data.** Once D contains two motives with different main symbols, at least one with x free (conditions (R) and (N)), Min(D) = {T_ind}. The verifier then reduces to:
+- read P := lambda x.phi off the conclusion Ax phi;
+- check that the antecedent is phi[0/x] & Ax(phi -> phi[Sx/x]).
+
+This is linear time.
+
+**Before an anchor.** The verifier is still sound, because T_ind is in DT. It accepts only a specialization, e.g. the induction instances with motives of the form t(x)=x.
+
+**Noise.** Use the trimmed version, accepting the intersection over {T in DT : |D \ inst T| ≤ e}. It is sound with at most e mistakes, and exact once the clean data are e-robustly diverse.
+
+**What not to use.**
+- First-order lgg: unsound (Track B).
+- Pattern-restricted higher-order anti-unification (Pfenning 1991; Baumgartner–Kutsia–Levy–Villaret 2017): its lgg here is A & Ax(P(x)->Q(x)) -> Ax P(x), which is unsound.
+- Non-determinate second-order templates (SO°): they need the stronger anchor condition (B), and matching can have exponentially many matchers.
+CAVEATS: - **Scope of the computations.** The enumerations cover the fragment 0, S, +, =, ~, &, ->, A. Arguments have size ≤ 3 (≤ 2 in c0 and c6), arity is ≤ 2, and templates have size ≤ 14 (≤ 10 for the brute-force cross-check; ≤ 23 for c6). The theorems (C1, C3, C4, C6, C7, C8.1, C9, C10) are proved by hand for the full language and all sizes; the computations corroborate them. C6.2(b) has a complete hand proof, and the computation is a check.
+- **Size measure.** The thresholds 7, 12 and 14 depend on it: a symbol counts 1, a bound-variable occurrence counts 1, and M(tbar) counts 1+sum|t_i|. Under another measure the numbers change but the phenomenon does not.
+- **Instance semantics.** Instances are sentences. Metavariables receive closed lambda-terms, so a 0-ary metavariable under Ax cannot capture x, unlike Track B's first-order schemas.
+- **Parameters.** Ind is parameter-free. With parameters, Ap(Ind(phi(x,p))), I expect C3 to carry over with pattern occurrence P(x,pbar), but have not checked it.
+- **SO° with nested arguments.** Non-determinate templates whose arguments contain metavariables (e.g. P(F(x)) with F not determinate) are outside both C7 and the computations.
+- **Open items.**
+  - Untagged unions of ≤ k DT templates (mixed with ground axioms) are not re-proved. The failure events coincide with the Sub-encoded ones, so I expect the earlier session's per-root result to transfer.
+  - The finitary claim (C8.3) and the escalation bound (C11) are conjectures.
+- **Citations I am less sure of.** Baxter 1977 (NP-completeness of second-order matching); the exact content of Cerna–Kutsia 2019, Hirata–Ogawa–Harao 2004, Feng–Muggleton 1992 and Libal–Miller 2016; whether the BKLV implementation outputs T12 verbatim; Lean's elab_as_elim/kabstract mechanics; Isabelle's induct method details.
+- **Unrun case.** A same-connective non-anchor pair needing size ≥ 31 was too slow to enumerate and was dropped from c6.
+-- C1 Matching for determinate templates [ proved ]
+   S: (a) For T in DT and a sentence s, there is at most one theta (on the metavariables of T) with T theta↓ = s. It is computed as follows: walk the rigid part of T against s; read each metavariable off one pattern occurrence M(ybar) at rigid position p as lambda zbar.(s|p)[zbar/ybar], failing if s|p has another free bound variable; then check T theta↓ = s. The time is O(|T|·|s|), and linear for T_ind. (b) For SO° templates (all metavariable occurrences rigid, with metavariable-free arguments, no determinacy), membership s ∈ inst(T) is decidable in polynomial time, but there can be 2^Omega(|s|) matchers. Example: P(0) against a sentence with k zeros has exactly 2^k matchers.
+-- C2 Rigid-prefix lemma; complete data-directed enumeration [ proved ]
+   S: If D ⊆ inst(T), then every rigid non-metavariable symbol of T occurs at the same position in every datum. Hence the rigid skeleton of T is a prefix of the common prefix C(D), and the maximal metavariable occurrences sit at cut points. Consequently, choosing a prefix of C(D), fillers M(tbar) at its cut points, and a sharing of metavariables (with coverage pruning) enumerates exactly the covering SO° templates within given arity and argument-size bounds.
+-- C3 Anchor theorem for determinate templates [ proved ]
+   S: Let D ⊆ Ind be finite. D is an anchor for Ind in DT (every determinate template of any size covering D contains every induction instance) iff:
+- (R) the motives of D do not all have the same main symbol, and
+- (N) some motive of D has x free.
+
+The same holds in DT_s for every s ≥ 7 (size counts symbols, a bound-variable occurrence counts 1, M(tbar) counts 1+sum|t_i|, and |T_ind| = 14). So two instances suffice, e.g. {Ind(x=x), Ind(~x=0)}, and one never does.
+-- C4 Generalizations of T_ind; T_ind is the lgg of every anchor [ proved ]
+   S: Up to renaming, the T in DT with Ind ⊆ inst(T) are exactly 26 frame generalizations: a prefix of the 5-node frame, with fresh fillers at the cut slots and a sharing of a, b, c, d in which a or c may only join a class containing b or d, with forced arguments b, d -> x, c -> Sx, a -> 0. For every D with (R) and (N), these are exactly the covering templates, and T_ind is the least of them, so lgg_DT(D) = T_ind.
+-- C5 Same anchors as the Sub-encoded first-order learner; rates [ proved ]
+   S: (a) For D ⊆ Ind, the following are equivalent:
+- D is a DT-anchor;
+- the Plotkin lgg of the Sub-encoded steps st(Sub(phi,x,0,a), Sub(phi,x,Sx,b), a & Ax(phi->b) -> Ax phi) recovers the Sub-induction schema;
+- (R) and (N) hold.
+
+(b) For i.i.d. motives with p_f = mu(root=f), q = mu(x free) and r_f = mu(root=f, x not free):
+P[D_N is not an anchor] = sum_f p_f^N + (1-q)^N - sum_f r_f^N ≤ p_max^(N-1) + (1-q)^N, and it is ≥ max(p_max^N, (1-q)^N).
+The DT cautious verifier is sound for every N and exact from the first anchor on (thm:imitation:anchor).
+-- C6.1 Cautious verifier: soundness iff the target is H-closed [ proved ]
+   S: For any class H and target h*, let cl_H(h*) = intersection of {h in H : h ⊇ h*}.
+(a) If cl_H(h*) = h*, then the cautious verifier is sound for every D ⊆ h*.
+(b) If D contains an anchor, it accepts exactly cl_H(h*).
+So, given an anchor, soundness holds iff h* is H-closed. Realizability (h* ∈ H) is sufficient but not necessary.
+-- C6.2 Size threshold for bounded determinate classes [ proved ]
+   S: In DT_s (|T_ind| = 14):
+- (a) for s ≥ 7, anchors are exactly the D with (R) and (N);
+- (b) cl_{DT_s}(Ind) = Ind iff s ≥ 12;
+- (c) for s ≥ 12, the bounded cautious verifier is sound for all D ⊆ Ind and exact on anchors;
+- (d) for 7 ≤ s ≤ 11, on anchors it accepts cl(Ind), which is strictly larger than Ind. This set contains the false non-induction sentences s* = (0=0 & Ax(x=x -> Sx=Sx)) -> Ax(x=0) and s0* = (0=0 & Ax(0=0 -> 0=0)) -> Ax(x=0).
+-- C7 Anchors without determinacy (class SO°) [ proved ]
+   S: In SO° (all metavariable occurrences rigid, metavariable-free arguments, any arity, no pattern occurrence required), D ⊆ Ind is an anchor iff (R) holds and (B) holds:
+- (B) some motive has an unshielded free occurrence of x, i.e. one inside no proper term t ≠ x with FV(t) ⊆ {x}.
+
+(B) implies (N). Counterexample to (R)&(N) sufficing: {Ind(Sx=S0), Ind(~Sx=0)} is covered by B -> Ax P(Sx) (size 6) and by T_S = P(S0) & Ax(P(Sx) -> P(SSx)) -> Ax P(Sx), both of which miss Ind(x=x).
+-- C8.1 DT is not unitary [ proved ]
+   S: Let D = {Ax(x=0) & (Ax(x=x) & 0=0), Ax(~x=0) & (Ax(~x=x) & ~0=0)}. Every DT template covering D is ≥ G1 = Ax P(x) & (Ax Q(x) & P(0)) or ≥ G2 = Ax P(x) & (Ax Q(x) & Q(0)). G1 and G2 are incomparable. No DT template has instance set inst(G1) ∩ inst(G2), so D has no lgg in DT and the cautious acceptance set is not a single template's instance set.
+-- C8.2 Version space before an anchor (induction data) [ computed ]
+   S: For non-anchor induction data, the number of minimal determinate covering templates (up to equivalence) can be greater than 1. For example, {Ind(x=x), Ind(0=x)} has 8 and {Ind(x=0), Ind(Sx=0)} has 2. Other sets have a unique one: {Ind(x=x), Ind(x+0=x)} gives T_ind[P := lambda x. f(x)=x]; the vacuous pair gives (A & Ax(A->A)) -> Ax A; the quantified pair gives T_ind[P := lambda x. Ay Q(x,y)]. In every case one minimal template is a specialization of T_ind, so acceptance stays inside Ind.
+-- C8.3 Finitary [ conjecture ]
+   S: For every finite D, DT has finitely many minimal covering templates up to equivalence, and every covering template lies above one of them.
+-- C9 Pattern anti-unification is unsound on raw induction [ proved ]
+   S: Let PAT be the class in which every metavariable occurrence is a Miller pattern; this is the class of Pfenning 1991 and Baumgartner–Kutsia–Levy–Villaret 2017. For D ⊆ Ind with (R) and (N), the least general pattern generalization is T12 = A & Ax(P(x) -> Q(x)) -> Ax P(x). It has the false instance (0=0) & Ax(x=0 -> x=0) -> Ax(x=0).
+-- C10 Noise [ proved ]
+   S: Suppose at most e data are non-induction sentences, and the clean motives are e-robustly diverse: for every symbol f, more than e clean motives have root ≠ f, and more than e have x free. Then the trimmed DT verifier, accepting the intersection over {T : |D \ inst T| ≤ e}, accepts exactly Ind.
+-- C11 Escalation count [ conjecture ]
+   S: Against an adversarial prover, the cautious DT verifier makes finitely many escalations before exactness, at most linear in the size of the first escalated datum.
+-- C12 Literature and proof assistants [ known ]
+   S: Huet–Lang 1978: second-order matching is decidable with finitely many matchers. Miller 1991: patterns have unitary unification. Pfenning 1991 and BKLV 2017: pattern anti-unification has unique lggs. Stirling 2009: higher-order matching is decidable. The induction template lies just outside the pattern fragment: its conclusion is a pattern occurrence, but P(0) and P(Sx) are not. CIC proof assistants (Coq/Rocq, Lean) record the motive as an explicit recursor argument (Nat.rec (motive := ...)), and their induction tactics compute it by abstracting the goal, which is the matching of C1. Metamath's set.mm uses implicit-substitution hypotheses, the analogue of the Sub premises.
+=== REFEREE overall: The core mathematics is sound. I checked the proofs line by line and re-implemented everything independently (de Bruijn levels, own matcher, enumerator, pattern anti-unifier and first-order lgg). The following all survived on a richer motive language with or, exists, times and internal binders, with zero counterexamples:
+- C1 unique linear-time matching;
+- C3, the DT anchor theorem: two instances with different main symbols, one non-vacuous;
+- C4: 26 generalizations, lgg = T_ind;
+- C5: same anchors as the Sub-encoded lgg;
+- C6: the H-closure lemma and the size threshold 12;
+- C7: the SO° characterization with (B);
+- C8.1: non-unitarity;
+- C9: the pattern lgg is T12 and unsound;
+- C10: noise.
+
+My enumerator also reproduces the authors' covering counts exactly (7241/11 and 7803/26).
+
+Two real defects:
+1. C8.3 (finitary) is false for DT as defined: an explicit infinite antichain of minimal covering templates for {Ind(x=x), Ind(0=x)}. C8.2's counts are therefore DT°-with-bounds artifacts.
+2. SOCL ignores nested arguments, so it does not compute the DT version space and is unsound for some DT targets.
+
+Both are repaired at no cost to the induction results by restricting the class to DT° (metavariable-free arguments).
+
+Smaller points:
+- C7's computational agreement depends on the pool: with arity ≤ 2, some non-(B) sets are anchors.
+- C12 has Lean/Coq inaccuracies: the motive is implicit in Lean 4, and 'motive is not type correct' is Lean's error, not Coq's.
+- C11 remains an open conjecture.
+algorithm issues: A1 (substantive). SOCL as specified is not the DT cautious verifier, and it can be unsound for a target in DT. DT allows metavariables inside arguments, but SOCL's step 3 only uses derived fillers M(ū) with one fixed, metavariable-free ū, and so_enum only enumerates SO° fillers. Counterexample (referee_C/r6_socl_nested.py, run with the authors' own enumerator):
+- Target: T* = Ax(f(x)=f(x)) & (f(f(0)) = f(f(0))), which is in DT.
+- Data: D = {Ax(Sx=Sx) & SS0=SS0, Ax(x+0=x+0) & (0+0)+0=(0+0)+0}, both in inst(T*).
+- SOCL computes Min(D) = {Ax f0(x)=f0(x) & f1=f1} and therefore accepts q = Ax(Sx=Sx) & 0=0, which is not in inst(T*).
+
+The general lemma (C6.1) is fine; the computed version space is wrong. Induction is unaffected, because T_ind is in DT°.
+
+A2. In DT, Min(D) can be infinite (C8.3 counterexample), so 'accept iff q is in every T in Min(D)' is not an algorithm there.
+
+Fix for both: use DT° (metavariable-free arguments) as the class. Then C2 gives completeness, Min(D) is plausibly finite, and C3, C4, C6.2, C8.1, C9 and C10 hold verbatim.
+
+A3 (minor). In DT_s with s = 12 or 13, an anchor does not give Min(D) = {T_ind} (T_ind has size 14), although Acc is still Ind. Learning before an anchor costs exponential time in general; only verification after the anchor is linear.
+
+All scripts are in /tmp/claude-0/-home-user-AI-works/c4435474-536f-5a96-a73c-7d0c5ea93659/scratchpad/induction/referee_C/; the report is /tmp/claude-0/-home-user-AI-works/c4435474-536f-5a96-a73c-7d0c5ea93659/scratchpad/induction/second-order-referee.md.
+  * C1 Matching for determinate templates -> holds
+  * C2 Rigid-prefix lemma; complete data-directed enumeration -> holds
+  * C3 Anchor theorem for determinate templates -> holds
+  * C4 Generalizations of T_ind; T_ind is the lgg of every anchor -> holds
+  * C5 Same anchors as the Sub-encoded first-order learner; rates -> holds
+  * C6.1 Cautious verifier: soundness iff the target is H-closed -> holds
+  * C6.2 Size threshold for bounded determinate classes -> holds
+  * C7 Anchors without determinacy (class SO°) -> holds
+  * C8.1 DT is not unitary -> holds
+  * C8.2 Version space before an anchor (induction data) -> holds-with-fix
+     issue: The counts (8 for {Ind(x=x), Ind(0=x)}, 2, 1, ...) come from an enumerator with no metavariables in arguments and argument size ≤ 2. They are counts for DT° within bounds, not for DT as defined. In DT the count for {Ind(x=x), Ind(0=x)} is infinite (see C8.3). The qualitative claims (can be more than 1; one minimal template is ≤ T_ind; acceptance stays inside Ind) hold.
+     fix: Restate as counts in DT° with argument size ≤ 2, and note that in DT the minimal set can be infinite.
+  * C8.3 Finitary -> false
+     issue: Counterexample in DT as defined. D = {Ind(x=x), Ind(0=x)}, T_k = (0=0 & Ax(f(x)=x -> f^k(Sx)=Sx)) -> Ax f(x)=x for k ≥ 1, and U_k with f^k(x) at b. Each is determinate and covers D (f = id, f = const 0). They are pairwise incomparable even as instance sets: with f = λz.z+0 the c-slot has k copies of +0. Each is minimal: a covering T ≤ T_k must be T_k[f := λz.β]; β[x] must be a single occurrence g(ū); determinacy forces ū = (z); so T is a renaming. Hence infinitely many minimal covering templates. Note ∩_k inst(T_k) = inst(T_1) ∩ inst(T_2), so finiteness of Min fails but the acceptance set here is still finitely describable.
+     fix: Restrict the class to DT° (metavariable-free arguments). There the conjecture is plausible because derived arguments are forced by injectivity of substitution (proof not given). Otherwise drop the conjecture for DT.
+  * C9 Pattern anti-unification is unsound on raw induction -> holds
+  * C10 Noise -> holds
+  * C11 Escalation count -> unclear
+     issue: Correctly labelled a conjecture. The proof idea assumes a finite Min(D), which fails in DT (C8.3). In DT° a feature-counting sketch suggests a finite, roughly O(|first datum|^2), bound: Acc(D) is the set of sentences with every expressible feature of D, and each escalation kills at least one feature. Linearity is unproven. No counterexample found.
+     fix: State for DT° and prove a polynomial bound via features, or keep as an open problem.
+  * C12 Literature and proof assistants -> holds-with-fix
+     issue: Checked against the local Lean 4.32 source. (1) Lean 4 Nat.rec's motive is an implicit argument {motive : Nat → Sort u}; it is recorded in the term but is not 'the first explicit argument'. Coq's P is explicit. (2) elab_as_elim's mkMotive does use kabstract. The induction tactic uses mkLambdaFVars over the targets, after generalize for non-fvar targets, plus kabstract for complex arguments. (3) 'motive is not type correct' is Lean's error (Rewrite.lean, App.lean), not Coq's; Coq's analogue is 'Abstracting over the term ... leads to a term ... which is ill-typed' (not checked against Coq source). (4) 'Recording the motive is redundant' holds for closed ∀-form steps, but in CIC terms the conclusion is motive t, a non-pattern occurrence, and recovery from the minor premise holds only up to conversion. The Metamath claim is correct. The citations look right; the Baxter 1977 thesis exists, though I did not verify the NP-completeness statement.
+     fix: Correct the Lean/Coq details and qualify the redundancy reading.

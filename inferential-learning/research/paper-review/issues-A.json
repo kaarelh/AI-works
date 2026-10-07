@@ -1,0 +1,565 @@
+[
+ {
+  "reviewer": "math-core",
+  "summary": "I checked the formal core of the setting, search, caution, imitation and coherence sections and their appendices line by line, against the verified sources T1, T2 and L3, their Verification logs, and the round-2 re-verification. No fatal error: all key results I re-derived are correct as stated and proved. That covers lem:search:stepwise, thm:search:tonk and its PAC corollary, the purification lemma, the commitment lemma and the doctrinal paradox. It covers thm:caution:vs, :esc, the single-schema, tagged, untagged and Bell bounds, and :ville with its tightness numbers (recomputed: 0.9889, 0.9907, 0.781). It covers thm:imitation:coupon, the untagged, noise and necessity results, and cor:imitation:systematic. It covers thm:coherence:halving, :robust, :post, :cpc, :ipc, :popper, the trilemma, :carnap, :rank, :telltale and :residue(ii). Every \\leanok name in these sections is a real declaration in lean/InfLearn.\n\nWhat remains is 1 major and 16 minor issues:\n- The major one: the explicit finite basis in the proof of Thm 6.15(a) (thm:coherence:cpc) has no axiom for \u22a5 or \u22a4. These are primitive constants of the paper's own language, so \"\u27e8D\u27e9 = Cn\u2082\" fails as written. Round 2 flagged this and it was not repaired.\n- Thm 4.7(ii) and Thm 4.9 give a negative bound in a degenerate case.\n- Several overclaims or stale remarks that round 2 flagged survive in the paper: the Table 6 caption uses the wrong quantifier; Thm 6.29(d) claims \"not identifiable at all\" beyond its proof; an RCF question is called \"open\" though a short argument settles it; Thm 6.38(iii) lists non-r.e. completions and says the T_k \"cannot be discriminated\"; the Clark's-completion remark needs a qualifier; a parenthetical in Prop 6.8(b) needs the worst-case hypothesis; \u00a73.3 drops the complete-calculus hypothesis in its heading.\n- Lean-tag bookkeeping: prop:coherence:adm's tag is attached to its IPC part (c) but formalizes only half of (b), and the result is missing from tab:lean:map. lem:imitation:cautious is also missing from the map. The lem:coherence:bag, thm:coherence:robust and thm:coherence:post tags overstate or understate their scope.\n- Minor typos, duplicate bib keys, and one appendix that cites T1 instead of the paper's results.\n\nThe full report is at /home/user/AI-works/inferential-learning/research/paper-review/math-core.md.",
+  "issues": [
+   {
+    "file": "paper/sections/app-coherence.tex",
+    "location": "Proof of thm:coherence:cpc, paragraph 'Explicit finite bases' (and the parenthetical in coherence.tex Thm 6.15(a))",
+    "severity": "major",
+    "problem": "The paper's formulas include primitive constants \u22a5 and \u22a4 (setting.tex \u00a72.1; also the Lean language), and the coherence datum is A_0 \u22ac_h \u22a5. The displayed basis is the \u0141ukasiewicz axioms, the \u2227/\u2228 \u2192-axioms and MP, with no axiom about \u22a5 or \u22a4. So \u22a5 behaves as an unsubstitutable atom: \u22a2\u00ac\u22a5, \u22a2\u22a4 and \u22a2\u22a5\u2192p are not in \u27e8D\u27e9, and the proof's conclusion 'Hence \u27e8D\u27e9=Cn_2' is false in the paper's language. Round-2 re-verification flagged this (T2 'Thm 3.3(a), revised example basis', item (1)). It was not repaired, and Lean does not formalize the finite-basis clause.",
+    "proposed_fix": "After '...$\\step(p\\to r)\\to((q\\to r)\\to(p\\vee q\\to r))$.' insert: 'If $\\bot$ or $\\top$ is a primitive constant, add the axioms $\\step\\neg\\bot$, resp. $\\step\\top$; with the third axiom and $K$ these give $\\step\\bot\\to p$.' In the Kalm\u00e1r sentence add 'and $\\vdash\\neg\\bot$, $\\vdash\\top$ (base cases for the constants)'. In coherence.tex Thm 6.15(a) change the parenthetical to '(with $\\to$ in the language, Hilbert-style bases with modus ponens as the only rule, plus $\\step\\neg\\bot$ and $\\step\\top$ when these constants are primitive; ...)'."
+   },
+   {
+    "file": "paper/sections/caution.tex",
+    "location": "thm:caution:single (ii), and the P_0^{(i)}=\u2205 case of the display in thm:caution:tagged (also app-caution.tex proof of (ii))",
+    "severity": "minor",
+    "problem": "If \u03c3* has no instance of size \u2264 N (e.g. ground \u03c3* with |\u03c3*|=N+5), then el=0 but 1+N\u2212\u03bc(\u03c3*)<0, so the stated inequality is false. The proof assumes m\u22651. Round 2 noted this degenerate case for T1 Thm 3.4.",
+    "proposed_fix": "State (ii) as $\\el(H_1,\\sigma^*\\mid\\emptyset;N)\\le\\max\\{0,1+N-\\mu(\\sigma^*)\\}$, and in thm:caution:tagged replace $1+N-\\mu(\\sigma^*_i)$ by $\\max\\{0,1+N-\\mu(\\sigma^*_i)\\}$. In the appendix proof of (ii) add '(if no instance of $\\sigma^*$ has size $\\le N$, then $m=0$)'. Esc \u2264 N+1 and \u2264 k(N+1) are unaffected."
+   },
+   {
+    "file": "paper/sections/coherence.tex",
+    "location": "Caption of tab:coherence:rank ('they exclude only meanings realizing no certified position')",
+    "severity": "minor",
+    "problem": "Wrong quantifier. A certification of \u27e8A|D\u27e9 excludes every meaning that fails to realize that particular position, so a meaning is excluded as soon as it misses some certified position, not only when it realizes none. Example: certifying \u27e8\u03c7,\u00ac\u03c7| \u27e9 excludes BV. Round 2 flagged this (T2 Sec 4.2 reading (i)).",
+    "proposed_fix": "Replace the second caption sentence with: 'Coherence \\emph{certifications} are positive data about meanings: certifying $\\pos AD$ excludes exactly the meanings that do not realize $\\pos AD$ (for the empty position, only $V=\\emptyset$), and adding $\\valtop$ to a meaning never makes it fail a certification.'"
+   },
+   {
+    "file": "paper/sections/coherence.tex",
+    "location": "thm:coherence:telltale (d): 'Without structurality BV is not identifiable in the limit at all, even with the coherence datum'",
+    "severity": "minor",
+    "problem": "The proof, and Lean BV_not_BC_learnable, cover text plus the single target-independent datum \u27e8 | \u27e9. With all target-certified positions supplied, text plus certifications is an informant (cf. prop:coherence:informant). Then \u27e8\u03c7,\u00ac\u03c7| \u27e9 separates BV\u222a{v'_\u03c7} from BV and the class becomes identifiable. 'At all' therefore overclaims. Round 2 flagged this (T2 Thm 4.4(d)).",
+    "proposed_fix": "Replace with 'Without structurality $\\BV$ is not identifiable in the limit from text plus the coherence datum $\\pos{\\ }{\\ }$, or any other target-independent certifications:'. Append: '(If every target-certified position is supplied, text plus certifications is an informant, as in \\Cref{prop:coherence:informant}, and this obstruction disappears.)'. Adjust the 'Non-learnability' paragraph in app-coherence.tex the same way."
+   },
+   {
+    "file": "paper/sections/coherence.tex",
+    "location": "Reading after prop:coherence:complete: '(Whether a fixed finite family of contexts suffices for RCF is open.'",
+    "severity": "minor",
+    "problem": "Round-2 re-verification (T2 Prop 3.11(c)) notes this is settled negatively. Each context in a finite family \ud835\udc9c defines a semialgebraic set over \u211a whose components contain points with algebraic coordinates of degree \u2264 D(\ud835\udc9c). A term forced to be a root of f is constant on components, so it takes such a value. For even d > D\u2032(\ud835\udc9c), the rule t^d=1+1 \u25b7 t>0 (Eisenstein, degree-d root) therefore never fires in a designated context or from \u2205. It is coherent on \ud835\udc9c yet unsound (c=\u22122^{1/d}).",
+    "proposed_fix": "Replace the sentence with: '(No fixed finite family of contexts suffices: the rule $t^{d}=1+1\\step t>0$ with $d$ even and large enough never fires in any context of the family, because points of semialgebraic sets defined over $\\mathbb Q$ have algebraic coordinates of bounded degree, so it is coherent on the family but unsound; this observation is due to the second-round referee.)', or delete the sentence."
+   },
+   {
+    "file": "paper/sections/coherence.tex",
+    "location": "thm:coherence:residue (iii) (and app-coherence.tex proof of (iii))",
+    "severity": "minor",
+    "problem": "\u00a76.3 fixes 'Hypotheses are r.e. theories', but (iii) lists 'PA+\u00acCon(PA) and its non-standard completions', which are not r.e. Also, 'the sound T_k ... remain, and cannot be discriminated' overstates thm:coherence:turing. Distinct T_j, T_k are separated by text; what fails is identification of the chain together with T_\u03c9. Round 2 flagged both points (T2 Thm 6.4(iii)).",
+    "proposed_fix": "Replace (iii) with: '$\\mathcal G$ deductive closure, $\\hstar=\\PA$, $\\Ac=\\{\\emptyset\\}$: $\\Alt$ is the set of all consistent closed extensions of $\\PA$ (the r.e. ones, if hypotheses are r.e.), e.g. $\\PA+\\neg\\Con(\\PA)$, whose completions (not r.e.) have only non-standard models. Designating all finite sets of true sentences removes exactly the unsound ones; the sound $T_k$ of \\Cref{thm:coherence:turing} remain, and by that theorem no learner identifies them together with $T_\\omega$ from text plus true-context coherence.' Make the matching change in the appendix."
+   },
+   {
+    "file": "paper/sections/coherence.tex",
+    "location": "ex:coherence:survivors (4), last sentence: 'The per-law converse is not Clark's completion, which is consistent there.'",
+    "severity": "minor",
+    "problem": "This holds only if rain and sprinkler are treated as abducibles, i.e. only the head wet is completed. Clark's full completion also makes the clause-less predicates false (\u00acrain, \u00acsprinkler), which is inconsistent with A={wet}. Round 2 flagged this (T2 \u00a76 example 4).",
+    "proposed_fix": "Replace with: 'The per-law converse is not Clark's completion \\citep{clark1978negation}: completing only the head $\\mathit{wet}$ (with $\\mathit{rain},\\mathit{sprinkler}$ abducible) gives $\\mathit{wet}\\leftrightarrow\\mathit{rain}\\vee\\mathit{sprinkler}$, which is consistent there.'"
+   },
+   {
+    "file": "paper/sections/coherence.tex",
+    "location": "Reading after tab:coherence:rank: 'A testable prediction ...: imitation plus a contradiction penalty yields consistent but noncommittal reasoners.'",
+    "severity": "minor",
+    "problem": "thm:coherence:carnap and thm:coherence:rank show only that such data do not exclude gappy valuations ('provably free to settle on'). They give no reason to expect that training yields them, so 'yields' is an overclaim.",
+    "proposed_fix": "Replace with: 'A testable question for language-model training: imitation plus a contradiction penalty does not rule out consistent but noncommittal reasoners; whether training drifts toward them is empirical.'"
+   },
+   {
+    "file": "paper/sections/search.tex",
+    "location": "\\subsection title of sec:search:post and its first paragraph ('In classical propositional logic it always does, provided it mentions no specific atom')",
+    "severity": "minor",
+    "problem": "The heading and sentence drop the hypothesis that the schema is added to a complete calculus R*_CPC. A pure schema alone can be unsound without trivializing: T_j alone has empty closure from \u2205 (rem:app:search:pac). Round 2 flagged this (T1 Prop 2.3 gloss).",
+    "proposed_fix": "Retitle to 'In classical propositional logic, every unsound pure schema added to a complete calculus trivializes'. Change the sentence to 'In classical propositional logic it always does once it is added to a complete calculus, provided it mentions no specific atom.'"
+   },
+   {
+    "file": "paper/sections/app-coherence.tex",
+    "location": "Proof of prop:coherence:tradeoff (b), final parenthetical 'Equivalently, by \\cref{prop:coherence:oligarchy}, detection-halving needs R\u0302 \u2286 h_i \u2229 h_j ...'",
+    "severity": "minor",
+    "problem": "This equivalence holds only under the worst-case hypothesis of prop:coherence:oligarchy, that every finite P \u2286 R\u0302 with P \u2284 \u2229VS is a possible detection. Part (b) itself uses a genuine \u22a5-derivation, and under that reading the 'needs' claim is false. Round 2 flagged this (T2 Prop 2.9(e)).",
+    "proposed_fix": "Begin the sentence with: 'Under the worst-case hypothesis of \\cref{prop:coherence:oligarchy} (every finite $P\\subseteq\\hat R$ with $P\\not\\subseteq\\bigcap\\VS$ is a possible detection), detection-halving needs ...'."
+   },
+   {
+    "file": "paper/sections/coherence.tex",
+    "location": "prop:coherence:adm, tag \\leanok{Post.le\\_Cn2\\_of\\_empty\\_eq\\_Taut} placed after part (c)",
+    "severity": "minor",
+    "problem": "The tag follows the IPC admissibility part (c), so it reads as formalizing (c). The Lean theorem (PostCompleteness.lean:171) proves only 'structural C with C(\u2205)=Taut \u21d2 C \u2264 Cn\u2082', the maximality half of (b); C_adm is not defined in Lean, and the README says 'special case'. The proposition also has no row in tab:lean:map, although app-lean says tagged results are formalized 'in the sense of' that table.",
+    "proposed_fix": "Move the tag to the end of (b) as '\\leanok{Post.le\\_Cn2\\_of\\_empty\\_eq\\_Taut} ((b): $\\Cadm\\le\\Cn_2$ only)', and add the row '\\cref{prop:coherence:adm} (b) & \\texttt{Post.le\\_Cn2\\_of\\_empty\\_eq\\_Taut} & PostCompleteness & special case (maximality half of (b))' to tab:lean:map in app-lean.tex."
+   },
+   {
+    "file": "paper/sections/app-lean.tex",
+    "location": "tab:lean:map rows for lem:imitation:cautious (missing) and lem:coherence:bag",
+    "severity": "minor",
+    "problem": "lem:imitation:cautious is tagged in imitation.tex (thm_3_1_a_static, thm_3_1_b_static) but has no row. The lem:coherence:bag row says 'exact', but Lean covers only (a) and (b) (negative_bag, refuted_of_superset); the README says bullet 3 is not formalized.",
+    "proposed_fix": "Add the row '\\cref{lem:imitation:cautious} (a),(b) & \\texttt{StepSoundness.thm\\_3\\_1\\_a\\_static}, \\texttt{thm\\_3\\_1\\_b\\_static} & StepSoundness & exact for (a),(b)'. Change the bag row to '\\texttt{CoherenceGames.negative\\_bag}, \\texttt{refuted\\_of\\_superset} & CoherenceGames & exact for (a),(b)'."
+   },
+   {
+    "file": "paper/sections/coherence.tex",
+    "location": "Lean tags of thm:coherence:robust, lem:coherence:bag, thm:coherence:post",
+    "severity": "minor",
+    "problem": "(1) thm:coherence:robust is tagged thm_2_5 without '(finite classes)', unlike Thms 6.5 and 6.6, though the README fidelity is special case (finite). (2) lem:coherence:bag's tag follows part (c), which is not formalized. (3) thm:coherence:post's statement covers fragments (\u00ac plus one of \u2227,\u2228,\u2192), but the tag names only the full-language Post.eq_Cn2_or_eq_trivial; the fragment theorem is Post.frag_postComplete_neg. (4) Namespaces are inconsistent: Post.\u2026 is qualified, while negative_bag and carnap_single are not.",
+    "proposed_fix": "Write '\\leanok{thm\\_2\\_5} (finite classes)' and '\\leanok{negative\\_bag} ((a),(b))', and add '\\leanok{Post.frag\\_postComplete\\_neg}' to thm:coherence:post. Optionally qualify the other tags as CoherenceGames.\u2026 and Carnap.\u2026 to match tab:lean:map."
+   },
+   {
+    "file": "paper/sections/search.tex",
+    "location": "Opening paragraph (line 16): 'Average-case validity survives search in two regimes where its randomness is drawn after the rules or claims are fixed ...'",
+    "severity": "minor",
+    "problem": "The summary omits that regime (i) needs validity per scene. The lemma and its follow-up stress that a per-(scene, instance) guarantee does not suffice. Round 2 flagged the same omission in L3's summaries.",
+    "proposed_fix": "Replace with: 'Average-case validity survives search in two regimes, both with randomness drawn after the rules or claims are fixed and outside the prover's control (rules valid per random scene with the library fixed first; fresh randomness per check), and fails in a fixed world with prover-chosen instances (\\cref{lem:search:commitment}).'"
+   },
+   {
+    "file": "paper/sections/search.tex",
+    "location": "Remark (c) after cor:search:pac (line 86): \\citep{rivest1988reliable}, \\citep{elyaniv2010selective}, \\citep{li2008kwik}",
+    "severity": "minor",
+    "problem": "These keys are duplicate bib entries (same titles) for the works that setting, caution and imitation cite as rivest1988learning, elyaniv2010foundations and li2008knows, so each work appears twice in the bibliography.",
+    "proposed_fix": "In search.tex replace the keys with rivest1988learning, elyaniv2010foundations and li2008knows, and remove the duplicate entries from bib/*.bib."
+   },
+   {
+    "file": "paper/sections/imitation.tex",
+    "location": "\u00a75.3: '(a term with $D^{(i)}=\\emptyset$ contributes nothing)' and 'For distinct metavariables $x,y$ of $\\sigma_i$ let $\\rho_{i,x}:=$ ...'",
+    "severity": "minor",
+    "problem": "'term' should be 'tag', and \u03c1_{i,x} is defined for a single metavariable, not for distinct pairs.",
+    "proposed_fix": "Use '(a tag with $D^{(i)}=\\emptyset$ contributes nothing)' and 'For a metavariable $x$ of $\\sigma_i$, and distinct metavariables $x\\neq y$, let ...'."
+   },
+   {
+    "file": "paper/sections/app-imitation.tex",
+    "location": "app:imitation:guards, last sentence: 'By T1 Prop. 3.3 and Thm 3.2 (\\cref{sec:caution})'",
+    "severity": "minor",
+    "problem": "The sentence cites the source notes' numbering instead of the paper's own results.",
+    "proposed_fix": "Replace with 'By \\cref{prop:caution:closure}(ii) and \\cref{thm:caution:esc} this bounds the escalations by ...'."
+   }
+  ]
+ },
+ {
+  "reviewer": "math-advanced",
+  "summary": "I re-checked the 15 named results of the two-tier, simplicity and existence sections by hand against the repaired T5, T6 and T7 files, including both repair rounds of T7. All 15 are mathematically correct as stated, with the repaired versions used throughout. That covers thm:twotier:main and its N_1 formula in both modes, prop:twotier:practice, thm:twotier:burnin under (OE), thm:twotier:depth, cor:twotier:cpc, thm:twotier:arith(a)-(f), thm:simplicity:kink, separable, validation (ii)-(iii) and division, and thm:existence:points, bilindenbaum, arity, omega and computability. I also recomputed every quoted constant numerically (N_1 = 16, eps_E = 0.0144, p < 0.1421, the note's rates and window, the guard rates, 1/omega(2) = 2.409, and the two-point counterexamples); all reproduce. Every Lean name cited in these sections exists and is sorry-free in audit-output.txt.\n\nThe problems are at the edges of the results.\n- existence.tex says almost nothing in the section is formalized and omits Lean tags for six results, contradicting app-lean.tex and the Bilateral and Specker modules.\n- intro.tex and philosophy.tex claim exact convergence for complete decidable theories without the realizability proviso, which twotier.tex itself says is unestablished.\n- twotier.tex line 412 says \"over N the converse holds\", the opposite of the lemma it cites.\n- The \"true enough\" definition in existence.tex is degenerate as stated. The round-2 re-verification flagged this and it was never repaired.\n\nThe rest are minor: a missing uniqueness hypothesis in thm:simplicity:validation(i), a misplaced Lean tag, DLO completeness, an overclaim about learning first-order logic, a proof gap for \"asserted forever\" in thm:twotier:arith(b), Reading paragraphs that drop the collateral and the residue, an incomplete list of unrefereed round-2 repairs, and the counting-sequent scope needing negation coherence. The full report is in /home/user/AI-works/inferential-learning/research/paper-review/math-advanced.md.",
+  "issues": [
+   {
+    "file": "paper/sections/existence.tex",
+    "location": "line 42 ('Credit': 'Apart from the semantic half of thm:existence:duality ... nothing in this section is formalized in Lean'); line 140 tag '\\leanok{Carnap.Val_mrel}(semantic half, propositional Fm)'; theorem environments bilindenbaum, bilateral, structural, arity, triangle",
+    "severity": "major",
+    "problem": "The coverage claim is false and contradicts app-lean.tex lines 76-81. lean/InfLearn/Bilateral.lean proves T6 Thm 2.2 (thm_2_2_a, thm_2_2_b), Cor 2.3 (cor_2_3), the full duality for an arbitrary formula type (Val_Th, scottClosedIso) and Thm 2.6 (thm_2_6_a, thm_2_6_b_realize). Specker.lean proves Thm 3.4 (thm_3_4) and frustrated_triangle. All are sorry-free in audit-output.txt. The section omits \\leanok tags for six results and understates the one tag it has.",
+    "proposed_fix": "Replace the sentence with: \"\\Cref{thm:existence:bilindenbaum,cor:existence:bilateral,thm:existence:duality} are formalized in Lean for an arbitrary set $\\Fm$ (module \\texttt{Bilateral}), \\Cref{thm:existence:structural} for the fixed propositional term algebra, and \\Cref{thm:existence:arity} and the probabilistic half of \\Cref{prop:existence:triangle} in module \\texttt{Specker} (\\Cref{tab:lean:map}); nothing else in this section is formalized;\". Tag changes: line 140 becomes \\hfill\\leanok{Bilateral.scottClosedIso}\\ \\leanok{Bilateral.Val\\_Th}. Add \\leanok{Bilateral.thm\\_2\\_2\\_a}\\ \\leanok{Bilateral.thm\\_2\\_2\\_b} to thm:existence:bilindenbaum, \\leanok{Bilateral.cor\\_2\\_3} to cor:existence:bilateral, \\leanok{Bilateral.thm\\_2\\_6\\_a}\\ \\leanok{Bilateral.thm\\_2\\_6\\_b\\_realize} to thm:existence:structural, \\leanok{Specker.thm\\_3\\_4} to thm:existence:arity, and \\leanok{Specker.frustrated\\_triangle} to prop:existence:triangle. Also update the source comment on line 11."
+   },
+   {
+    "file": "paper/sections/intro.tex",
+    "location": "line 101, Table tab:intro:answers, row 'A setup that provably works for formal mathematics'",
+    "severity": "major",
+    "problem": "The row says the learner 'is sound and exactly convergent for classical propositional logic and complete decidable theories (cor:twotier:cpc, cor:twotier:decidable)'. cor:twotier:decidable is conditional on realizability, and twotier.tex line 410 says that hypothesis 'is not established for the listed theories'. It fails for a literal forall-E schema, whose lgg is over-general (ind_lgg.py). Without realizability TTL is only eventually sound under the depth schedule, and exactness fails.",
+    "proposed_fix": "Replace the cell with: \"\\textbf{Yes, with explicit scope.} The two-tier learner (\\cref{thm:twotier:main}) is sound and exactly convergent for classical propositional logic (\\cref{cor:twotier:cpc}). For complete decidable theories the residue is empty, and exact convergence holds provided the target calculus is realizable as first-order patterns (\\cref{cor:twotier:decidable}); this is open for the usual axiomatizations of RCF, ACF$_p$ and Presburger arithmetic, and fails for a literal $\\forall$-elimination schema. It is Popperian for arithmetic, with sharp impossibility results beyond $\\Sigma_1$ (\\cref{thm:twotier:arith}).\""
+   },
+   {
+    "file": "paper/sections/philosophy.tex",
+    "location": "line 167, row 'Does that plus coherence get formal math working?'",
+    "severity": "major",
+    "problem": "The row says 'Yes for classical propositional logic and complete decidable theories', dropping the realizability proviso of cor:twotier:decidable. It is the same overclaim as in the intro.",
+    "proposed_fix": "Replace with: \"Yes for classical propositional logic (\\cref{cor:twotier:cpc}); for complete decidable theories, yes provided the target calculus is realizable in the schema class, which is open for RCF, ACF$_p$ and Presburger arithmetic (\\cref{cor:twotier:decidable}). Arithmetic is Popperian. There are sharp limits at $\\Sigma_2$ and for Turing progressions.\""
+   },
+   {
+    "file": "paper/sections/twotier.tex",
+    "location": "line 412: 'Over $\\R$, coherence with a designated truth catches what this computation misses; over $\\N$ the converse holds (\\Cref{lem:coherence:delta0}).'",
+    "severity": "major",
+    "problem": "The 'converse' would be 'computation catches what coherence misses'. The cited lemma states the opposite ('Delta_0 feedback is subsumed by coherence ... no Delta_0 feedback refutes [a consistent T containing Q]'). T7 \u00a76.2 Remark 2 glosses the phrase as 'Delta_0 computation adds no refutations beyond coherence', which is the same direction as the R case, not its converse. The paper dropped that gloss, so the sentence now asserts the reverse of its citation.",
+    "proposed_fix": "Replace with: \"Over $\\R$, coherence with a designated truth catches what this computation misses. Over $\\N$ there is no converse: $\\Delta_0$ computation refutes nothing that coherence from $\\RobQ$ does not already refute (\\Cref{lem:coherence:delta0}); what it adds there is localization (\\Cref{thm:twotier:arith}(a)).\""
+   },
+   {
+    "file": "paper/sections/existence.tex",
+    "location": "line 292, def:existence:truecontext, clause (iii) 'that bridge is sound: whenever $c$ establishes $\\varphi$ and $\\sigma$ holds in the actual world, so does $\\varepsilon$'",
+    "severity": "major",
+    "problem": "Given Gamma, the canonical state of c and the actual world are fixed, so 'whenever' ranges over one case. Under (i) and (ii), clause (iii) is then equivalent to 'epsilon is actually true', and 'true enough' collapses to 'phi derivable in c, some bridge to epsilon exists, and epsilon is true'. That loses the world-relative bridge soundness the next paragraph says must be certified. The round-2 re-verification flagged the clause as degenerate, and it was never repaired in T6 or in the paper.",
+    "proposed_fix": "Replace (iii) with: \"(iii) that bridge is \\emph{sound} in the sense of \\Cref{def:physics:calculus}: every instance of it preserves truth at every world $w\\in W_\\rho$ admitted by the background, i.e.\\ whenever $c$ establishes $\\varphi$ and $\\sigma$ holds at $w$, $\\varepsilon$ holds at $w$ (quantifying only over the actual world would make (iii) equivalent to the truth of $\\varepsilon$).\""
+   },
+   {
+    "file": "paper/sections/simplicity.tex",
+    "location": "line 301, thm:simplicity:validation(i): 'choosing $c$ by held-out log-loss picks, with probability tending to one as $N\\to\\infty$, a grid value whose selected hypothesis has least risk; the smallest grid value always qualifies'",
+    "severity": "minor",
+    "problem": "The claim needs a unique population minimizer at each grid value; the round-2 re-verifier said the result is 'essentially correct when each grid c has a unique population minimizer'. Lemma empirical only recovers a unique minimizer with a gap. With ties, the empirical choice at a grid value can alternate between co-minimizers of different risk. The hypothesis is still missing.",
+    "proposed_fix": "After 'for a fixed finite grid in the computable version with a noise floor' insert 'and with a unique population minimizer at each grid value'. Optionally add: '(if some grid value lies exactly at a hull breakpoint, the selected hypothesis there may alternate between co-minimizers of different risk)'."
+   },
+   {
+    "file": "paper/sections/twotier.tex",
+    "location": "line 136, lem:twotier:reiter: '\\hfill\\leanok{Blame.iInter\\_maxClean\\_eq}' after part (c)",
+    "severity": "minor",
+    "problem": "The single tag sits after part (c) and renders as 'Lean: Blame.iInter_maxClean_eq', which names the part-(b) theorem. Part (c) is formalized as existsUnique_minTransversal_iff and part (a) as isMaxClean_iff, as the following paragraph and app-lean.tex line 68 state.",
+    "proposed_fix": "Replace the tag with: \\hfill\\leanok{Blame.isMaxClean\\_iff}\\ \\leanok{Blame.iInter\\_maxClean\\_eq}\\ \\leanok{Blame.existsUnique\\_minTransversal\\_iff}, placed after the whole lemma."
+   },
+   {
+    "file": "paper/sections/twotier.tex",
+    "location": "line 397: 'such as real closed fields ..., Presburger arithmetic ..., $\\mathrm{ACF}_p$ or dense linear orders'",
+    "severity": "minor",
+    "problem": "The theory of dense linear orders is complete only without endpoints (or with a fixed endpoint configuration). Plain DLO is not complete, and Lemma twotier:complete uses completeness of T.",
+    "proposed_fix": "Replace 'or dense linear orders' with 'or dense linear orders without endpoints'. Make the same change wherever DLO is called complete, including the realizability caveat at line 410 ('Dense linear orders are finitely axiomatized')."
+   },
+   {
+    "file": "paper/sections/twotier.tex",
+    "location": "line 414 (Arithmetic setting): '(the logic can be learned first, at the propositional level, by \\Cref{cor:twotier:cpc})'",
+    "severity": "minor",
+    "problem": "The parenthesis suggests the trusted first-order logic can be learned first. Only its propositional fragment is covered by cor:twotier:cpc. The quantifier rules are not first-order patterns, as line 410 itself shows for forall-E, so they cannot be learned by TTL and must stay trusted.",
+    "proposed_fix": "Replace with: '(its propositional fragment can be learned first by \\Cref{cor:twotier:cpc}; the quantifier rules are not first-order patterns and must be trusted, \\Cref{cor:twotier:decidable})'."
+   },
+   {
+    "file": "paper/sections/app-twotier.tex",
+    "location": "line 247, proof of thm:twotier:arith(b): 'and by \\Cref{thm:twotier:main}(iii) $\\tau\\in A$ at every depth'",
+    "severity": "minor",
+    "problem": "Part (iii) gives only $A\\subseteq\\Sigma^*\\cup\\Fres d$, not $\\tau\\in A$. A residual fallacy can still be withheld by the fallback if it lies in a minimal conflict with other fallacies. 'Asserted forever' holds because the practice is exactly PA plus tau and is clean at every depth, but neither the proof nor the statement (twotier.tex line 420) says so.",
+    "proposed_fix": "In app-twotier.tex replace the clause with 'and since $\\Sigma^P=\\Sigma^*\\cup\\{\\tau\\}$ is clean at every depth, the first call $\\Refut_d(\\Sigma^P)$ returns NONE at every $d$, so $A=\\Sigma^P\\ni\\tau$ at every depth (given $\\hat P=\\Sigma^P$)'. In twotier.tex line 420 write 'For the practice $\\Sigma^P=\\PA\\cup\\{\\tau\\}$ with $\\tau=(\\step\\neg\\Con(\\PA))$ (so $\\Sigma^*=\\PA$, $F=\\{\\tau\\}$) and positions with $\\Delta_0$ assertions and denials, ...'."
+   },
+   {
+    "file": "paper/sections/twotier.tex",
+    "location": "line 246 (Reading after thm:twotier:main: 'It identifies the target calculus exactly, modulo a residue ...') and line 462 ('the resulting checker cannot be fooled by any prover')",
+    "severity": "minor",
+    "problem": "Line 246 leaves out the collateral: in the fallback A misses Coll_d(B_0), and by thm:twotier:blame(b) this loss is forced at stable depth, so identification is not exact even modulo the residue. Line 462 leaves out the residue: thm:twotier:main(i) gives soundness only relative to R* plus the depth-d residue, and in arithmetic the false \u00acCon(PA) is accepted.",
+    "proposed_fix": "Line 246: 'It identifies the target calculus exactly when blame is localized (no descent blocked, or (SB$_d$)), and otherwise up to the collateral $\\Coll_d(B_0)$, which every sound learner must give up at stable depth (\\Cref{thm:twotier:blame}(b)); in both cases modulo a residue that no refutational channel at depth $d$ can see.' Line 462: '... the resulting checker cannot be fooled by any prover beyond the depth-$d$ residue $\\Fres d$ (\\Cref{thm:twotier:main}(i)).'"
+   },
+   {
+    "file": "paper/sections/twotier.tex",
+    "location": "line 46 ('Depth, honestly': 'The second-round repairs (assumption (OE) ..., the floor bound ... and the size convention ...) were checked by their author and by computation, not by a further independent referee'); also abstract.tex line 15",
+    "severity": "minor",
+    "problem": "The list of unrefereed round-2 repairs is incomplete. Two more had no independent check: R2-3, the ground-rule convention rho_i = c_i = 1, which the (1+c)K union bound in the N_1 formula of thm:twotier:main relies on, as does thm:twotier:arith(e); and R2-4, the oracle specification of cor:twotier:cpc, about which the T7 author wrote 'The re-verifier should confirm whether this was the intended point'. Separately, the abstract's 'Every main result passed adversarial verification' is stronger than this note admits.",
+    "proposed_fix": "twotier.tex: replace the parenthesis with '(assumption (OE) in \\Cref{thm:twotier:burnin}, the floor bound in \\Cref{thm:twotier:arith}(e), the size convention of \\Cref{def:twotier:refutation}, the ground-rule convention $\\rho_i=c_i=1$ behind the $N_1$ formula, and the oracle specification of \\Cref{cor:twotier:cpc})'. abstract.tex line 15: 'Every main result passed adversarial verification; a few second-round repairs, listed where they occur, were checked only by their author and by computation.'"
+   },
+   {
+    "file": "paper/sections/existence.tex",
+    "location": "line 190 ('Scope': 'For any single finite agenda the finitely many rational inequalities defining $\\Pi_F$ ... give finitely many counting sequents that characterize coherence')",
+    "severity": "minor",
+    "problem": "Pi_F always lies in the affine subspace P(phi)+P(phi*)=1. Turning its defining (in)equalities into counting sequents uses negation coherence: counting sequents alone cannot impose P(phi)+P(phi*) <= 1, since P identically 1 satisfies every valid counting sequent (thm:existence:definetti). The round-2 re-verification flagged the sentence as too broad, and the hypothesis is still missing.",
+    "proposed_fix": "Replace with: 'For any single finite agenda (a union of complementary pairs) and negation-coherent $P$, the finitely many rational facet inequalities of $\\Pi_F$ give finitely many counting sequents that characterize coherence (\\Cref{thm:existence:definetti}); what \\Cref{thm:existence:arity,thm:existence:threshold} rule out ...' (rest unchanged)."
+   }
+  ]
+ },
+ {
+  "reviewer": "math-applied",
+  "summary": "I re-derived about 30 results in informal.tex, physics.tex and their appendices against T3 and T4, including every repair recorded in their Verification logs and the full Def 5.2 checklist. All proofs check line by line. The worked numbers reproduce from T3-checks: the sps_checker table, the thin-leg thresholds, the Monte Carlo bins, the projectile, small-angle, conformal and drag figures, and the realizability counts. T4-checks/run_all.sh also reproduces in full.\n\nTwo real gaps remain, both at the checker/theorem interface, and both were flagged as minor in round-2 re-verification but never propagated:\n- M1: the well-posedness certificate \u03c9_c may be supplied by the solver. With \u03c9_c := \u22a4, the paper's own rope counterexample is accepted, so \"sound for every solver whatsoever\" is false as literally stated.\n- M2: the reading \u03c1, including Ax_\u03c1, comes from the solver and is never checked. So the judgment layer is not \"exactly\" (J1)\u2013(J3).\n\nOne cross-section overclaim survives the concurrent edits: intro.tex line 79 says mis-designation forces a \"globally paraconsistent logic\", but the proposition proves global sub-classicality.\n\nThe rest is minor:\n- an imprecise hypothesis in Thm nofree(c);\n- loose quantifiers in Thm judgment(b);\n- an incomplete partial-support statement in Thm frz(iv), whose V2 check tests a condition the theorem never states (I verified a corrected rule on 160 cases);\n- overclaims in Thm robust(d2) and Prop emergence(c);\n- V7's \"true error 0.159\" does not reproduce (I get 0.150);\n- leg_exact.py still prints superseded thresholds;\n- brute-force counts need non-default script arguments;\n- small wording and reference issues.\n\nFull report: /home/user/AI-works/inferential-learning/research/paper-review/math-applied.md",
+  "issues": [
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "Def physics:checker (line ~880: \"$\\sigma_\\beta$ and $\\omega_c$ are derived \\emph{in the parent}\"); Assumption physics:trusted (TB2); Thm physics:relative",
+    "severity": "major",
+    "problem": "Def calculus defines \u03c9_c semantically: {\u03bc : \u03bb[D:=\u03bc]\u2208dom}\u2208\ud835\udca2 for \u03bb\u2208\u2016\u03c9_c\u2016. But the checker only requires \u03c9_c to be derived in the parent, and (TB2) does not say \u03c9 comes from the catalogue. T3's (T2) said \"with its well-posedness clause\"; the paper drops even that. A solver can therefore cite \u03c9_c := \u22a4. Rope frame of Prop idealized(b) with the vacuously true \"neglect rope mass\" catalogue schema: the solver derives a=0 in the improper child (frame-valid steps plus ex falso), m_r \u2264 \u03b7 in the root, and \u22a4 trivially. Every check passes, and the checker accepts |a| \u2264 \u03b5 while |a| \u2265 |\u03a6|/\u03b7. That is exactly the counterexample of Thm stipulation(c). So \"All checks are deterministic\" together with \"for every solver whatsoever\" is false as written. Round-2 re-verification flagged this ('provenance of omega_c'); it was not fixed.",
+    "proposed_fix": "In Def checker, Schema indexing, replace \"$\\sigma_\\beta$ and $\\omega_c$ are derived \\emph{in the parent}\" with \"$\\sigma_\\beta$ and the well-posedness certificate $\\omega_\\beta$ \\emph{listed in the catalogue entry of $\\beta$} are derived \\emph{in the parent} (the solver may not choose $\\omega_c$)\". Append to (TB2): \"each catalogue entry carries a well-posedness certificate $\\omega_\\beta$ for its declaration: for every $w$ and $\\lambda\\in\\tset{\\omega_\\beta}_w$, $\\{\\mu:\\lambda[D{:=}\\mu]\\in\\dom\\fM_w\\}\\in\\fG$\". In the proof idea of Thm relative add \"(by (TB2), $\\omega_c$ is a genuine certificate)\"."
+   },
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "Def physics:sps (line ~864); Thm physics:relative; paragraph \"The residual \\emph{judgment layer} is exactly (J1) ... (J2) ... (J3)\" (line ~919)",
+    "severity": "major",
+    "problem": "Def SPS makes \u03c1 part of the solver's tuple: frame class, parameter roles, query and type, conventions, and hence Ax_\u03c1 and W_\u03c1. The checker checks only that root axioms lie in Ax_\u03c1. Nothing checks that Ax_\u03c1 holds on all of W_\u03c1, which Def frame(iii) assumes. A solver can declare the full \u03b1 \u2208 [30\u00b0,60\u00b0], so that (J1) W_\u03c1* \u2286 W_\u03c1 holds, while placing \u03b1 = 45\u00b0 in Ax_\u03c1. The checker then accepts \u03b1-specific answers that are false at other completions. (TB1) also quantifies over the solver's W_\u03c1. So \"exactly (J1)\u2013(J3)\" omits the judgment \"\u03c1 is a reading\". The worked example escapes only because \u03c1 is the trusted specification checked by C0. This was flagged in round-2 ('solver-supplied reading rho') and not fixed.",
+    "proposed_fix": "In Def SPS replace \"a reading $\\rho$ (the frame class ...)\" with \"a reading $\\rho$, which is the trusted problem specification or is checked against it: $W_\\rho$, $Q$, its type and $\\Ax_\\rho$ must be those of the specification, or $\\Ax_\\rho$ must be kernel-derivable from the specification's axioms\". Add to Def checker: \"\\emph{Reading:} $\\rho$ is the trusted specification (or passes C0)\". In the judgment-layer paragraph replace \"(J1) \\emph{reading containment}, $W_{\\rho^*}\\subseteq W_\\rho$\" with \"(J1) \\emph{reading adequacy}: $\\rho$ is a reading ($\\Ax_\\rho$ holds at every $w\\in W_\\rho$) and $W_{\\rho^*}\\subseteq W_\\rho$; when $\\rho$ is the setter's formal specification only the second half remains\"."
+   },
+   {
+    "file": "paper/sections/intro.tex",
+    "location": "line 79: \"Designating ``idealization plus full background'' as coherent forces a globally paraconsistent logic (\\cref{prop:physics:misdesignation}).\"",
+    "severity": "major",
+    "problem": "This overstates the proposition. It proves global sub-classicality: some classical schema used in refuting the designated set is not C-valid. It yields atomic paraconsistency only under (b), when the designated set literally contains \u03b1 and \u00ac\u03b1. physics.tex's own title (\"forces global sub-classicality\") and its Reading paragraph make exactly this distinction. In the p_atm example the background typically derives p_atm \u2260 0 rather than stating it.",
+    "proposed_fix": "Replace with: \"Designating ``idealization plus full background'' as coherent forces a learner to drop some classical schema in every context, and to become atomically paraconsistent everywhere if the background states the negated stipulation outright (\\cref{prop:physics:misdesignation}).\""
+   },
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "Thm physics:nofree (c), line ~594: \"$\\mathcal C$ consists of restrictions of entire functions\"",
+    "severity": "minor",
+    "problem": "Read as \ud835\udc9e \u2286 {entire functions}, the claim is false: a singleton class admits an exact export rule. The proof needs Q + A\u03bb^{N+1} \u2208 \ud835\udc9e, i.e. closure under adding polynomials, which T3 states as \"the class of\".",
+    "proposed_fix": "Replace with \"(c) $\\mathcal C+\\{\\text{polynomials}\\}\\subseteq\\mathcal C$ (e.g.\\ $\\mathcal C$ is the class of all restrictions of entire functions) and $I$ is the jet up to a finite order $N$\"."
+   },
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "Thm physics:judgment (b), line ~930",
+    "severity": "minor",
+    "problem": "The quantifiers are loose; round-2 flagged this. The counter-world must share the slice and the actual \u03bb* the checker sees. \"include worlds with actual \u03bc*\u22600\" does not guarantee that.",
+    "proposed_fix": "Replace \"If the admissible extensions include worlds with actual $\\mu^*\\neq0$ and are closed under\" with \"If, for the given slice $\\fM'(\\cdot,0)$ and actual $\\lambda^*$, some admissible extension has actual $\\mu^*\\neq0$, and the admissible extensions are closed under\"."
+   },
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "lines ~486\u2013491, after Cor physics:blame: \"with the root and the certified contexts as the \\emph{only} designated contexts ... no false alarms while the reading is correct (T2 Thm~2.2)\"",
+    "severity": "minor",
+    "problem": "Cor blame designates only certified contexts that have a properness witness. A certified but improper context can produce a false alarm even when the reading is correct. The reference also uses theory-file numbering instead of the paper's label.",
+    "proposed_fix": "Replace with \"with the designated contexts of \\cref{cor:physics:blame} (the root, and certified contexts with properness witnesses) as the only designated contexts, an oligarchic-halving learner makes at most $\\log_2(1/\\wstar)$ detections and no false alarms while the reading and the certifications are correct (\\cref{thm:coherence:halving}; false alarms are priced by \\cref{thm:coherence:robust})\"."
+   },
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "Remark physics:existence, lines ~429\u2013433",
+    "severity": "minor",
+    "problem": "It cites \"T6 Thm 4.1, Cor 4.2\", \"T6 Thm 4.5\" and \"T6 Prop 4.7\" by theory-file numbering, although these results are stated in the paper.",
+    "proposed_fix": "Replace with \\cref{thm:existence:mcs,cor:existence:contexts}, \\cref{thm:existence:rules} and \\cref{prop:existence:triangle} respectively."
+   },
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "line 192: \"Under limit semantics $\\fF_c(w)$ is principal or improper\"",
+    "severity": "minor",
+    "problem": "This is false for a limit-semantics context below a germ ancestor, whose filter is non-principal.",
+    "proposed_fix": "Replace with \"If $c$ and all its $\\DEF$ ancestors use limit semantics, $\\fF_c(w)$ is principal or improper\"."
+   },
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "Def physics:realization (R4), line ~358, and Thm physics:realizability(b)",
+    "severity": "minor",
+    "problem": "Bridge soundness in (R4), in Thm realizability(b) and in Prop framerealizability is \u03c9-free. Exp soundness in the calculus is \u03c9-relative. So realizability does not apply verbatim to judgment sets produced by the calculus (round-2 flag).",
+    "proposed_fix": "After Thm realizability add: \"Bridge soundness here is $\\omega$-free; for judgment sets produced by the calculus of \\cref{def:physics:calculus}, add $(\\pi c,\\emptyset,\\omega_c)$ to each bridge use and read (R4) as $M_{\\pi c}\\models\\sigma_\\beta\\wedge\\omega_c\\to\\varepsilon_\\beta(v)$; the anchoring arguments are unchanged.\""
+   },
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "tab:physics:checkerrun, line 1093: \"V7: ... (true error $0.159$)\"",
+    "severity": "minor",
+    "problem": "This does not reproduce. With the metric behind V6 (\u22480.5) and V9 (0.909), |E_true/answer\u22121|, the worst case over r\u2208[20a,34a], \u03c3\u22650.5 and \u03b1\u2208[30\u00b0,60\u00b0] is 0.150, at r=20a, \u03c3=0.5, \u03b1=30\u00b0. No script computes 0.159.",
+    "proposed_fix": "Replace \"(true error $0.159$)\" with \"(true error $0.150$)\", or state the metric and domain that give 0.159."
+   },
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "line 1048: \"the exact error exceeds $5\\%$ only for $r\\le10.5a,10.4a,27.6a,98a$\"",
+    "severity": "minor",
+    "problem": "The values are correct; I re-derived 10.50, 10.44, 27.57 and 98.08. But the shipped T3-checks/leg_exact.py \u00a7(6) still prints the superseded grid-band values 11.0a, 28.5a and 107.1a, and no script prints the paper's numbers.",
+    "proposed_fix": "Add \"(root-finding on exact $\\sigma$ level sets)\" after the list. Also update leg_exact.py \u00a7(6) to root-find (code)."
+   },
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "lines ~395\u2013399 (\"6,500 random instances (including 2,000 from a referee's deeper stress test)\" ... \"8,000 instances\")",
+    "severity": "minor",
+    "problem": "These counts reproduce only with non-default arguments: realizability_deep.py 11 2000, and realizability_frame.py 7 3000 plus 8 5000 (totals 2,734 and 598 confirmed). The defaults print N=400 and N=3,000.",
+    "proposed_fix": "Add a footnote with the invocations (\"realizability\\_deep.py 11 2000; realizability\\_frame.py 7 3000 and 8 5000\"), or change the script defaults."
+   },
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "checker run, (C4) description lines ~1073\u20131076; residual-defects paragraph lines ~1102\u20131114",
+    "severity": "minor",
+    "problem": "C4 is said to assert every hypothesis of Props thinleg and finitesun. The script checks \u03b1_max \u2264 \u03c0/2, not the paper's \u03b1_max+\u03b4_s \u2264 \u03c0/2; this is harmless at 60\u00b0. The prototype also accepts tol = NaN, which I confirmed by re-running it, and the defects list does not mention this.",
+    "proposed_fix": "In (C4) add \"(the script checks $\\alpha_{\\max}\\le\\pi/2$; the stronger $\\alpha_{\\max}+\\delta_s\\le\\pi/2$ holds trivially here)\"; to the residual defects add \"(vi) numeric inputs are not validated: a NaN tolerance is accepted\"."
+   },
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "line 1179: \"one problem and twelve adversarial variants\"",
+    "severity": "minor",
+    "problem": "V0 is the honest solution at 5% (a completeness test) and V10 is labelled a control. T3 counts eleven adversarial variants.",
+    "proposed_fix": "Replace with \"one problem and twelve variants (ten attacks, one control and one completeness test)\"."
+   },
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "line 966: \"after which the checker is sound relative to the top model alone\"",
+    "severity": "minor",
+    "problem": "This omits the trusted base (J3, i.e. TB1\u2013TB3).",
+    "proposed_fix": "Replace with \"after which the checker is sound relative to the top model and the trusted base (TB1)--(TB3) alone\"."
+   },
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "line 124: \"holds in all three problems\"",
+    "severity": "minor",
+    "problem": "The three problems are never named in the paper.",
+    "proposed_fix": "Replace with \"holds in all three problems analysed there (IPhO~2012 T1-A, EuPhO~2025 T1(a), IPhO~2025 T2)\"."
+   },
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "line 1125: \"$W^*=19.8$\\,mJ differs from the exact optimum $20.1$\\,mJ by $1.3\\%$\"",
+    "severity": "minor",
+    "problem": "The stated rounded values give 1.5%. The 1.3% figure comes from unrounded L9 values that are not shown.",
+    "proposed_fix": "Quote unrounded values, or write \"by about $1.5\\%$ ($1.3\\%$ before rounding, L9 \\S8.3)\"."
+   },
+   {
+    "file": "paper/sections/physics.tex",
+    "location": "Prop physics:continuity (a), line 543: \"errs by at most $g$'s modulus of continuity on $B$\"",
+    "severity": "minor",
+    "problem": "The radius at which the modulus is evaluated is unspecified.",
+    "proposed_fix": "Replace with \"errs by at most $\\sup_{x\\in B}|g(x)-g(m)|$, which tends to $0$ with the tolerances by continuity of $g$\"."
+   },
+   {
+    "file": "paper/sections/informal.tex",
+    "location": "Thm informal:frz (iv), third bullet (line 353); also the claim \"all $93$ sub-supports agree with the stated conditions\" (line 358; app-informal.tex line 235)",
+    "severity": "minor",
+    "problem": "For supports containing both ZR and V, the theorem states only the full-support rule and one POS example. Yet V2 \"checks\" this family against an unstated rule, and only for w(ZR) > w(V): SEP if the support avoids UNI, PAIR, EMP, else Z. SEP is selected, for example, for {INT, ZR, V}, which the theorem never mentions.",
+    "proposed_fix": "Replace the third bullet with: \"support $\\mathrm{DC}\\cup\\{\\mathrm{ZR},\\mathrm V\\}$: Z iff $w(\\mathrm{ZR})>w(\\mathrm V)$, ties to STRAT. For $\\{\\mathrm{ZR},\\mathrm V\\}\\subseteq$ support $\\subseteq\\mathrm{DC}\\cup\\{\\mathrm{ZR},\\mathrm V\\}$: if $w(\\mathrm{ZR})>w(\\mathrm V)$, SEP if the support avoids UNI, PAIR, EMP, else Z; if $w(\\mathrm V)>w(\\mathrm{ZR})$, POS if it avoids DIFF, EMP, else STRAT (e.g.\\ $\\{\\mathrm{INT},\\mathrm{UNI},\\mathrm{PAIR},\\mathrm{ZR},\\mathrm V\\}$ gives POS); if $w(\\mathrm{ZR})=w(\\mathrm V)$, POS if it avoids DIFF, EMP, else SEP if it avoids UNI, PAIR, EMP, else STRAT.\" I verified this rule against comprehension_toy.learner on 160 cases (32 sub-supports \u00d7 5 weight patterns) with 0 mismatches."
+   },
+   {
+    "file": "paper/sections/informal.tex",
+    "location": "Thm informal:robust (d2), line 390: \"expansion or a library lemma removes them\"",
+    "severity": "minor",
+    "problem": "Prop expansion is about a single target and needs step-expressiveness. In the vague case an expansion must be one chain of steps that are g-short under every sharpening at once, and such a chain may not exist (round-2 flag). The appendix already says \"when one exists\".",
+    "proposed_fix": "Replace with \"adding the step as a library lemma to every $R_\\sigma$ removes them, and so does an expansion into steps of $\\Stg{g}{\\mathrm{SV}}$ when one exists\"."
+   },
+   {
+    "file": "paper/sections/informal.tex",
+    "location": "Prop informal:emergence (c), line 423: \"but a uniform template would yield a $\\PA$-proof of $\\Con(\\PA)$\"",
+    "severity": "minor",
+    "problem": "Uniform derivability depends on the calculus. The G\u00f6del-II argument needs rules closed under substituting a fresh variable for the numeral letter, as in a standard Hilbert calculus; the appendix says so. A complete calculus whose decidable library contains \u22a2\u03b8(n\u0304) for every n makes the schema uniformly 1-step derivable (round-2 flag).",
+    "proposed_fix": "Replace with \"fails in general: in a standard Hilbert calculus for $\\PA$ (rules closed under substituting a fresh variable for a numeral), ``infer $\\theta(\\bar n)$'' with $\\theta(n)=$ ``$n$ codes no $\\PA$-proof of $0=1$'' has all instances provable, but a uniform template would yield a $\\PA$-proof of $\\Con(\\PA)$; uniform derivability is relative to the calculus and its library\"."
+   },
+   {
+    "file": "paper/sections/experiments.tex",
+    "location": "line 186: \"On the Dedekind--Cantor operations stratification and separation tie\"",
+    "severity": "minor",
+    "problem": "STRAT ties Z, at coverage 18. SEP, pure separation, covers only 9.",
+    "proposed_fix": "Replace with \"On the Dedekind--Cantor operations stratification (STRAT) and the Zermelo-like class (Z: separation plus elementary sets) tie and description length decides\"."
+   }
+  ]
+ },
+ {
+  "reviewer": "consistency",
+  "summary": "Consistency and rendering review, checked against the current sources: intro, abstract, philosophy and open were revised at 06:31\u201306:34, so I rebuilt them in a scratch copy. That build has 0 errors, 0 undefined references or citations, and 265 pages.\n\n**Macros:** none of the 87 macros defined with \\providecommand/\\newcommand in sections/*.tex has two different definitions. The only one already defined before its section is \\Fm, and the definition is identical.\n\n**Notation:** consistent with NOTATION.md. informal.tex's channel (O) is explicitly mapped to (W2).\n\n**Rendering:** two major defects.\n- The division-of-labour table (tab:philosophy:labour) floats from Section 13 (p. 152) to the very last page (p. 265).\n- The Lean map table overflows by 222 pt. Three Fidelity cells are cut off at the page edge, and the Module column collides with its neighbour.\n\nSmaller rendering defects: overfull theorem headers in twotier.tex, doubled parentheses in assumption titles, and bookmarks without \\texorpdfstring.\n\n**Cited claims:** the 06:31\u201306:34 revision fixed many overclaims. These remain:\n- intro: \"coherence belongs on the root and anchored contexts only\" is true only in the frame-free semantics.\n- intro: \"forces a globally paraconsistent logic\" overstates a proposition that proves global sub-classicality.\n- philosophy: the trusted base is listed as \"provably ineliminable\".\n- Several smaller citation inaccuracies.\n\n**Verification statistics:**\n- \"Every main result was attacked by two or three independent referees\" is false. Referees covered disjoint sections, so each result had one referee in round 1.\n- \"Four false statements\" understates the count: at least eight of the twenty majors were counterexamples to statements as written.\n- No record supports \"checked by a further referee\".\n- The L3 round-2 glosses were not repaired in the memo.\n- T3's record is not in research/verification/.\n\n**Lean statistics:** 14,571 lines, 17 modules, 49+2 results and \"about a third\" non-exact all match lean/README.md and audit-output.txt. The table nevertheless disagrees with the body tags in several places: wrong theorem part, missing rows, wrong declaration, and fidelity labels.\n\nThe full report is at /home/user/AI-works/inferential-learning/research/paper-review/consistency.md.",
+  "issues": [
+   {
+    "file": "paper/sections/intro.tex",
+    "location": "line 119: \"Every main result was attacked by two or three independent referees instructed to refute it\"",
+    "severity": "fatal",
+    "problem": "This is false.\n- Each theory document had 2\u20133 referees, but on disjoint sections. T1: A covered \u00a7\u00a71\u20133, B \u00a7\u00a74\u20136. T2: A \u00a72, B \u00a73, C \u00a7\u00a74\u20137. T3: A \u00a7\u00a71\u20132, B \u00a7\u00a73\u20134, C \u00a7\u00a75\u20136. T4: A \u00a7\u00a71\u20133, B \u00a7\u00a74\u20135, C \u00a7\u00a76\u20137. T5, T6 and T7 each had two referees on disjoint halves. L3 had a single referee.\n- So in round 1 each result was attacked by exactly one referee.\n- Round 2 re-checked only the changed items, again with one referee each.\n- The sentence overstates the strength of the verification on which the whole report relies.",
+    "proposed_fix": "Replace the item with: \"\\item Adversarial verification. Each theory document was divided among two or three independent referees (the L3 memo had one), each instructed to refute the results in its part, with brute-force computation on small cases where possible. So every main result was attacked by one referee. The results were then repaired, and a fresh referee re-checked every item whose statement or proof had changed.\""
+   },
+   {
+    "file": "paper/sections/intro.tex",
+    "location": "line 122: \"In the first verification round the referees found four false statements and about twenty significant gaps. ... These were repaired too. The \\cref{sec:twotier} repairs were checked by a further referee and by computation. The full records are in \\texttt{research/verification/}\"",
+    "severity": "major",
+    "problem": "The counts are right (round 1: 4 fatal and 20 major issues, matching reverification-round2.md), but the paragraph mischaracterizes them.\n- **Not just gaps.** At least eight of the 20 majors were counterexamples to statements as written: T1 A-1 (thm:caution:vs(b) under the conditional reading), T1 A-2, T2 A9, T3 A1, T3 B1, T4 C2, T7 A1, T7 A2, and T7 B2 (the optimality clause of thm:twotier:blame, false at finite d).\n- **L3 not repaired.** The two round-2 majors on the L3 memo were not repaired. lit/L3-\u2026md was last modified at 02:07, before round 2 (03:49). It still contains the criticized gloss (line 46) and the 'Open' item (line 336).\n- **Further referee unrecorded.** Nothing in research/ records a further referee for the T7 round-2 repairs. T7's log ends with 'Items to re-verify after round 2'.\n- **T3 record missing.** T3's verification record is not in research/verification/; its log says the copy 'still has to be made'.",
+    "proposed_fix": "Replace the paragraph with: \"In the first verification round the referees rated four issues fatal and twenty major. The fatal issues were false statements, and at least eight of the major ones were also counterexamples to statements as written, among them the conditional reading of \\cref{thm:caution:vs}(b) and an optimality clause of \\cref{thm:twotier:blame} that fails at finite depth; the rest were gaps in proofs or hypotheses. Each was repaired, weakened or retracted. The second round found two further major problems in \\cref{sec:twotier}, in \\cref{thm:twotier:burnin} and \\cref{thm:twotier:arith}(e), which were repaired and checked by computation, and two in glosses of the L3 literature memo; the paper states the affected result (\\cref{prop:coherence:costs}) only in the form the referee confirmed, but the memo itself has not been revised. The records are in \\texttt{research/verification/} and in the Verification log section of each theory document (for T3 only there), and the repaired statements are the ones used here.\"\n\nIf a third-round referee did check the T7 repairs, add that record to research/verification/ instead of deleting the claim."
+   },
+   {
+    "file": "paper/sections/intro.tex",
+    "location": "line 78: \"Coherence belongs on the root and the anchored contexts only (\\cref{thm:physics:realizability}).\"",
+    "severity": "major",
+    "problem": "Only part (a) of the theorem supports this, and (a) is frame-free.\n- In the frame semantics, the condition is necessary (b) but not sufficient (c).\n- physics.tex says 'The locality of (a) is a consequence of (R2), not a fact about the frame semantics, where rigid parameters and shared filters force cross-context constraints'. It characterizes the exact condition under limit semantics in prop:physics:framerealizability.\n- T3's verification log (A1, remark (i)) calls this stronger reading an overclaim.",
+    "proposed_fix": "Replace with: \"In the frame-free semantics, coherence is needed exactly on the root and the anchored contexts (\\cref{thm:physics:realizability}(a)). In the frame semantics this is necessary but not sufficient; under limit semantics the exact condition is joint satisfiability of the contexts forced proper at one parameter point (\\cref{thm:physics:realizability}(b),(c), \\cref{prop:physics:framerealizability}).\""
+   },
+   {
+    "file": "paper/sections/intro.tex",
+    "location": "line 79: \"Designating ``idealization plus full background'' as coherent forces a globally paraconsistent logic (\\cref{prop:physics:misdesignation}).\"",
+    "severity": "major",
+    "problem": "The proposition, titled 'Mis-designation forces global sub-classicality', proves two weaker things than the sentence claims.\n- (a) Some classical schema used in the derivation of \u22a5 is not C-valid.\n- (b) Global atomic paraconsistency holds only if the designated context contains both \u03b1 and \u00ac\u03b1.\n- The Reading paragraph in physics.tex distinguishes exactly these two cases (the background contains p_atm\u22600 outright, or only derives it).",
+    "proposed_fix": "Replace with: \"Designating ``idealization plus full background'' as coherent forces a sub-classical logic everywhere: some classical schema used to derive $\\bot$ is lost in every context, and if the background contains the negated stipulation outright, atomic explosion fails everywhere (\\cref{prop:physics:misdesignation}). This is a formal version of the air-pressure worry.\""
+   },
+   {
+    "file": "paper/sections/philosophy.tex",
+    "location": "line 44: \\begin{table}[ht] (tab:philosophy:labour)",
+    "severity": "major",
+    "problem": "Rendering defect.\n- Section 13 starts on p. 152, but the table is printed on p. 265, the last page, after the bibliography and all appendices including the Lean map table.\n- The table is too tall for [ht], and without 'p' it cannot use a float page, so LaTeX defers it to the end of the document.\n- The 05:59 PDF had the same defect for both philosophy tables (pp. 261\u2013263).",
+    "proposed_fix": "Change to \\begin{table}[!htbp]. Alternatively use [p], or add \\clearpage after the table's \\end{table}. Then confirm in the PDF that Table 22 appears within Section 13."
+   },
+   {
+    "file": "paper/sections/app-lean.tex",
+    "location": "lines 40-41: {\\small \\begin{longtable}{>{\\raggedright\\arraybackslash}p{3.4cm}>{\\raggedright\\arraybackslash}p{6.6cm}>{\\raggedright\\arraybackslash}p{2.0cm}l}",
+    "severity": "major",
+    "problem": "Rendering defect.\n- The Fidelity column is 'l', so it cannot wrap: the overfull alignment is 222.6 pt.\n- Three cells are truncated at the page edge in the PDF: 'exact for the lower bound; the min\u2026', 'exact (deterministic learners; one c\u2026' and 'exact for (d); variant for (b); specia\u2026'.\n- The 2.0 cm Module column collides with the next column: 'CoherenceGamesexact', 'CoherenceGamesspecial case (finite H)', 'PostCompleteness' pushes 'exact' onto the next line, and 'Para- doxLower- Bound' is hyphenated.\n- Long \\texttt names overflow by up to 38 pt.",
+    "proposed_fix": "Use {\\footnotesize ...} instead of {\\small ...}. Drop the Module column, since the namespace prefix already names the module, and add 'Post. = PostCompleteness' to the caption. Use the spec \\begin{longtable}{@{}>{\\raggedright\\arraybackslash}p{2.8cm}>{\\raggedright\\arraybackslash}p{7.4cm}>{\\raggedright\\arraybackslash}p{4.2cm}@{}}, which totals 14.4 cm plus 4\u00d76 pt inside a 16.0 cm text width. Change the header rows to 'Paper & Lean declaration(s) & Fidelity'. Insert \\allowbreak after the dot in the longest names, e.g. \\texttt{Contexts.\\allowbreak not\\_exists\\_truthFunctional\\_reading}."
+   },
+   {
+    "file": "paper/sections/philosophy.tex",
+    "location": "line 115: \"\\item \\textbf{An explicit judgment layer.} What remains is provably ineliminable (\\cref{thm:physics:judgment}): ... that the trusted base is trustworthy.\"",
+    "severity": "major",
+    "problem": "thm:physics:judgment proves ineliminability only of the reading (a) and of top-model adequacy, the open world (b).\n- physics.tex says '(J1) and (J2) cannot be removed' and calls (J3), the trusted base, 'the trusted core of any proof checker'. It does not call (J3) ineliminable.\n- intro.tex and abstract.tex correctly say the ineliminable layer consists of the reading and the top model. The philosophy text therefore also contradicts them.",
+    "proposed_fix": "Replace the lead-in with: \"\\item \\textbf{An explicit judgment layer.} What remains is a judgment layer of three parts. The first two are provably ineliminable (\\cref{thm:physics:judgment}); the third is the trusted core of any proof checker:\". Keep the three sub-items."
+   },
+   {
+    "file": "paper/sections/intro.tex",
+    "location": "line 38: \"It is also the largest sound policy (\\cref{thm:caution:vs}).\"",
+    "severity": "minor",
+    "problem": "Maximality is proved only for deterministic verifiers (part (c)).\n- For randomized verifiers, part (b) bounds only a joint probability.\n- caution.tex warns that the conditional reading of (b) is false, and itself says 'the largest 0-sound acceptance rule'.",
+    "proposed_fix": "Replace with: \"It is also the largest deterministic sound policy, and a randomized $\\delta$-sound verifier gets anything outside it accepted only with joint probability at most $\\delta$ (\\cref{thm:caution:vs}).\""
+   },
+   {
+    "file": "paper/sections/intro.tex",
+    "location": "line 55: \"while finitely many bilateral data plus one coherence datum can (\\cref{thm:coherence:carnap,thm:coherence:telltale})\"",
+    "severity": "minor",
+    "problem": "thm:coherence:telltale(b),(c) identifies BV only among structural meanings.\n- Part (d) shows that without structurality BV is not identifiable in the limit at all, even with the coherence datum.",
+    "proposed_fix": "Replace with \"while, among structural meanings, finitely many bilateral data plus one coherence datum can (\\cref{thm:coherence:carnap,thm:coherence:telltale})\"."
+   },
+   {
+    "file": "paper/sections/intro.tex",
+    "location": "line 50: \"\\item \\textbf{Coherence is eliminative negative data, and its power is exactly Post-completeness} (\\cref{sec:coherence}).\"",
+    "severity": "minor",
+    "problem": "This bold item heading is 6.3 pt overfull (log: intro.tex lines 50--52).\n- Its wording is also narrower than the refined statement in the same item and in the abstract: 'pins the target exactly when the target has no coherent uniform proper extension'.",
+    "proposed_fix": "Replace the heading with \"\\textbf{Coherence is eliminative negative data; its power is generalized Post-completeness}\". Alternatively use \"\\textbf{Coherence is eliminative negative data}\" and leave the Post-completeness statement to the bullets."
+   },
+   {
+    "file": "paper/sections/philosophy.tex",
+    "location": "line 68: \"Coherence among exported tolerances never refutes a tolerance that is too wide. Widening an interval cannot create a contradiction (\\cref{thm:physics:coherencetol}).\"",
+    "severity": "minor",
+    "problem": "The cited theorem is not the fact being invoked.\n- The theorem says that under common shifts, every sound coherence-only calibrator has \u03b5\u0302 \u2265 \u03b2.\n- The up-set fact (widening cannot create a contradiction, and minimal coherent repairs only widen) is the remark after the theorem (T3 Prop 4.2) and tab:physics:onesided.",
+    "proposed_fix": "Replace with: \"Coherence among exported tolerances never refutes a tolerance that is too wide: coherent tolerance vectors form an up-set, so minimal coherent repairs only widen (the remark after \\cref{thm:physics:coherencetol}; \\cref{tab:physics:onesided}). And when all models may share an omitted effect, no coherence-only calibrator can certify a tolerance below its size (\\cref{thm:physics:coherencetol}).\""
+   },
+   {
+    "file": "paper/sections/philosophy.tex",
+    "location": "line 32: \"The world channel is needed for completeness under ambiguous blame, not for soundness (\\cref{thm:twotier:blame,prop:twotier:coherenceonly}).\"",
+    "severity": "minor",
+    "problem": "The cited results say that world *or bilateral* evidence is needed.\n- thm:twotier:blame is titled 'Blame: world or bilateral evidence is needed for completeness'.\n- prop:twotier:coherenceonly(b) says 'one denial repairs it'.",
+    "proposed_fix": "Replace with: \"World feedback or bilateral evidence (a designated denial) is needed for completeness under ambiguous blame, not for soundness (\\cref{thm:twotier:blame,prop:twotier:coherenceonly}).\""
+   },
+   {
+    "file": "paper/sections/philosophy.tex",
+    "location": "line 91: \"Yet no computable learner on the same channels decides $\\Sigma_2$ truth in the limit (\\cref{thm:coherence:popper}).\"",
+    "severity": "minor",
+    "problem": "The two results concern different domains and channels.\n- The tell-tale concerns propositional meanings, learned from bilateral sequents plus a coherence datum.\n- thm:coherence:popper(e) concerns arithmetic sentences, with a computable text, coherence searches and a \u03940 oracle.\n- The following sentences admit the change of domain, but 'on the same channels' remains inaccurate.",
+    "proposed_fix": "Replace with: \"Yet in arithmetic no computable learner using a computable text, coherence searches and a $\\Delta_0$ oracle decides $\\Sigma_2$ truth in the limit (\\cref{thm:coherence:popper}(e)).\""
+   },
+   {
+    "file": "paper/sections/philosophy.tex",
+    "location": "line 87: \"This is, as it happens, exactly the convention adopted by Lean's Mathlib and by Isabelle/HOL, where $x/0=0$.\"",
+    "severity": "minor",
+    "problem": "Only the division convention coincides.\n- The experiment's total semantics also uses complex values, the principal square root, and non-integer powers set to 0 (experiments.tex, sec:experiments:algebra).\n- Mathlib's Real.sqrt of a negative number is 0, which differs.\n- 'Exactly the convention' therefore overstates the match.",
+    "proposed_fix": "Replace with: \"Its division convention $x/0=0$ is, as it happens, the one adopted by Lean's Mathlib and by Isabelle/HOL; its other total conventions, such as complex square roots, differ from Mathlib's.\""
+   },
+   {
+    "file": "paper/sections/experiments.tex",
+    "location": "line 55 (sec:experiments:algebra): \"This is a version of the \\emph{meadows} of \\citet{bergstra2007rational}, and the convention of Lean's Mathlib (\\cref{sec:philosophy}).\"",
+    "severity": "minor",
+    "problem": "This applies 'the convention of Lean's Mathlib' to the whole total semantics.\n- That semantics has complex values and the principal square root, while Mathlib's real sqrt of a negative number is 0.\n- Only x/0=0 is shared.",
+    "proposed_fix": "Replace with: \"This is a version of the \\emph{meadows} of \\citet{bergstra2007rational}; its division convention $x/0=0$ is also that of Lean's Mathlib (\\cref{sec:philosophy}).\""
+   },
+   {
+    "file": "paper/sections/app-lean.tex",
+    "location": "line 55: \"\\cref{thm:caution:vs} (b) & \\texttt{StepSoundness.thm\\_3\\_1\\_b}, \\texttt{vsVerifier\\_optimal} & StepSoundness & special case\"",
+    "severity": "minor",
+    "problem": "The table row and the body tag disagree on which part is formalized.\n- caution.tex tags the theorem '(a) thm_3_1_a; (c) thm_3_1_b'.\n- thm_3_1_b is the deterministic statement, which is part (c) of the paper theorem.\n- lean/README.md describes it as 'the paper's explicit deterministic corollary'.",
+    "proposed_fix": "Change the row to: \"\\cref{thm:caution:vs} (c) & \\texttt{StepSoundness.thm\\_3\\_1\\_b}, \\texttt{vsVerifier\\_optimal} & StepSoundness & exact (deterministic part; the randomized bound (b) is not formalized)\\\\\" (or the 3-column equivalent after the layout fix)."
+   },
+   {
+    "file": "paper/sections/app-lean.tex",
+    "location": "line 70: \\cref{thm:simplicity:pricing} (product part) row, fidelity \"exact for the lower bound; the minimax equality is not formalized\"",
+    "severity": "minor",
+    "problem": "The row says the minimax equality is not formalized, but the body proves part of it.\n- simplicity.tex tags the theorem with \\leanok{NoAdaptation.minimax\\_of\\_transitive}.\n- That declaration proves the minimax value \u03a3_i log|F(x_i)| under the group condition.\n- lean/README.md formalizes the value part as 'weaker'. Only the general value max_Q \u03a3 H(Q_{x_i}) and the 'only if' direction are missing.",
+    "proposed_fix": "Add \\texttt{minimax\\_of\\_transitive} to the declarations. Set the fidelity to: \"exact for the lower bound; the value $\\sum_i\\log|\\mathcal C(x_i)|$ under the group condition; the general value $\\max_Q\\sum_iH(Q_{x_i})$ is not formalized\"."
+   },
+   {
+    "file": "paper/sections/app-lean.tex",
+    "location": "tab:lean:map (rows missing)",
+    "severity": "minor",
+    "problem": "Two results carry \\leanok tags in the body but have no row in tab:lean:map.\n- lem:imitation:cautious, tagged thm_3_1_a_static and thm_3_1_b_static in imitation.tex.\n- prop:coherence:adm, tagged Post.le_Cn2_of_empty_eq_Taut in coherence.tex.\n- app-lean states that tagged theorems 'are formalized in the sense of tab:lean:map'.",
+    "proposed_fix": "Add the rows \"\\cref{lem:imitation:cautious} (a),(b) & \\texttt{StepSoundness.thm\\_3\\_1\\_a\\_static}, \\texttt{thm\\_3\\_1\\_b\\_static}, \\texttt{subset\\_sInter\\_VS\\_iff}, \\texttt{reasoner\\_sound\\_for\\_all\\_VS\\_iff} & exact\\\\\" and \"\\cref{prop:coherence:adm} (b), first clause & \\texttt{Post.le\\_Cn2\\_of\\_empty\\_eq\\_Taut} & special case ($C_{\\mathrm{adm}}$ not defined)\\\\\". This follows lean/README.md."
+   },
+   {
+    "file": "paper/sections/app-lean.tex",
+    "location": "lines 79 and 84: thm:existence:structural \"exact (fixed signature)\"; thm:informal:paradoxes \"exact (deterministic learners; one concrete chain)\"",
+    "severity": "minor",
+    "problem": "These fidelity labels contradict the table's own legend ('special case: a strict special case') and lean/README.md.\n- The README rates T6 Thm 2.6(a),(b) 'special case', since it is proved only for the fixed signature.\n- A result proved only against deterministic learners is a special case of a statement about every learner. thm:caution:esc is already rated 'special case' for exactly this reason.",
+    "proposed_fix": "Change them to \"special case (fixed signature)\" and \"special case (deterministic learners; one concrete chain)\"."
+   },
+   {
+    "file": "paper/sections/app-lean.tex",
+    "location": "line 9: \"Theorems carrying the tag \\leanok{\\dots} in the text are formalized in the sense of \\cref{tab:lean:map}.\"",
+    "severity": "minor",
+    "problem": "28 results in tab:lean:map carry no \\leanok tag in the body. They include results the intro names as machine-checked:\n- tonk, cor:search:pac, doctrinal;\n- thm:caution:esc, thm:caution:unstructured;\n- lem:setting:closure;\n- bilindenbaum, cor:existence:bilateral, thm:existence:structural, thm:existence:arity, prop:existence:triangle;\n- lem:informal:descent, thm:informal:objects, thm:informal:paradoxes, thm:informal:bags;\n- all twelve physics results.\n\nNOTATION.md requires a \\leanok tag on every formalized result. A reader of the body cannot tell that these results are formalized.",
+    "proposed_fix": "Either (preferred, one file) replace the sentence with: \"Every result listed in \\cref{tab:lean:map} is formalized in the sense given there. In the body, the tag \\leanok{\\dots} marks some of them with a representative declaration.\" Or add \\hfill\\leanok{<first declaration in the table row>} to each of the 28 results, in search.tex, caution.tex, setting.tex, existence.tex, informal.tex and physics.tex."
+   },
+   {
+    "file": "paper/sections/existence.tex",
+    "location": "line 140: \"\\hfill\\leanok{Carnap.Val\\_mrel}\\,(semantic half, propositional $\\Fm$)\" on thm:existence:duality",
+    "severity": "minor",
+    "problem": "The body tag names a different declaration from the table, and a weaker one.\n- tab:lean:map and lean/README.md map thm:existence:duality to Bilateral.scottClosedIso / isScott_iff_Th_Val_eq.\n- That formalization is 'exact (no filters)' and holds over an arbitrary formula type.\n- The tag instead names a Carnap lemma and calls the result a semantic half for the propositional Fm only.",
+    "proposed_fix": "Replace with \"\\hfill\\leanok{Bilateral.scottClosedIso}\"."
+   },
+   {
+    "file": "paper/sections/coherence.tex",
+    "location": "\\leanok tags on lem:coherence:bag, thm:coherence:halving, prop:coherence:oligarchy, thm:coherence:robust, lem:coherence:duality, thm:coherence:carnap, thm:coherence:rank, thm:coherence:telltale",
+    "severity": "minor",
+    "problem": "The tags are inconsistent and cannot all be located.\n- These tags omit the module namespace: negative_bag, thm_2_2, prop_2_3, thm_2_5, Val_mrel, lemma_4_1_b, intClosure_BV_eq, carnap_single, denialRank_eq_two_iff, structural_eq_BV, BV_not_BC_learnable.\n- Other tags in the same section carry one (Post.eq_Cn2_or_eq_trivial).\n- Several names exist in more than one module, e.g. thm_2_2 and Bilateral.thm_2_2_a.\n- caution.tex (thm_3_1_a, thm_3_1_b) and imitation.tex (thm_3_1_a_static, thm_3_1_b_static) have the same problem.",
+    "proposed_fix": "Prefix the tags: \\leanok{CoherenceGames.negative\\_bag}, \\leanok{CoherenceGames.thm\\_2\\_2}, \\leanok{CoherenceGames.prop\\_2\\_3}, \\leanok{CoherenceGames.thm\\_2\\_5}, and \\leanok{Carnap.Val\\_mrel} and so on for the Carnap tags. Likewise use \\leanok{StepSoundness.thm\\_3\\_1\\_a} etc. in caution.tex:55 and imitation.tex:47."
+   },
+   {
+    "file": "paper/sections/twotier.tex",
+    "location": "theorem headers at lines 77, 306, 388, 406 (overfull 32, 14, 49, 26 pt)",
+    "severity": "minor",
+    "problem": "Long optional titles followed by an unbreakable \\src superscript run into the right margin.",
+    "proposed_fix": "Shorten the titles and keep the \\src tags:\n- line 77: [Refutation is one-sided and target-blind; trivial]\n- line 306: [Blame: completeness needs world or bilateral evidence]\n- line 388: [Coherence alone on $\\CPC$ is lossy; one denial repairs it]\n- line 406: [TTL on complete decidable theories, given realizability]\n\nRecompile and check that the log has no Overfull \\hbox for twotier.tex."
+   },
+   {
+    "file": "paper/sections/twotier.tex",
+    "location": "line 53: \\begin{assumption}[(Floor)] (also setting.tex:315 [(WS), sound evaluation], informal.tex:64 [(BG), bounded gap])",
+    "severity": "minor",
+    "problem": "amsthm adds its own parentheses, so these titles print with doubled parentheses: 'Assumption 7.1 ((Floor))', 'Assumption 2.14 ((WS), sound evaluation)' and 'Assumption 10.3 ((BG), bounded gap)'.",
+    "proposed_fix": "Use [Floor] in twotier.tex:53, [WS: sound evaluation] in setting.tex:315 and [BG: bounded gap] in informal.tex:64."
+   },
+   {
+    "file": "paper/sections/app-setting.tex",
+    "location": "lines 15, 38, 95, 135, 145: \\subsection{Proof of \\Cref{lem:setting:...} (...)}",
+    "severity": "minor",
+    "problem": "Some section titles lose content in the PDF bookmarks.\n- Here \\Cref in titles has no \\texorpdfstring, so hyperref drops it and the bookmarks read 'Proof of (closure facts)'.\n- The same happens to the math in physics.tex:495 ('$100=99.9$') and app-caution.tex:203 ('$k=2$, $h=3$').\n- The other appendices already use \\texorpdfstring.",
+    "proposed_fix": "Use e.g. \\subsection{Proof of \\texorpdfstring{\\Cref{lem:setting:closure}}{the closure lemma} (closure facts)}, and likewise for lines 38, 95, 135 and 145. In physics.tex:495 use \\texorpdfstring{$100=99.9$}{100 = 99.9}. In app-caution.tex:203 use \\texorpdfstring{$k=2$, $h=3$}{k = 2, h = 3}."
+   }
+  ]
+ }
+]

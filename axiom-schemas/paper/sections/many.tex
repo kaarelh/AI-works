@@ -1,0 +1,461 @@
+% Section 6: many axioms and schemas without labels (Question 3).
+% Sources: research/tracks/untagged/notes-final.md (results U1--U21; referee.md), research/tracks/single/notes-final.md
+% section 10 (Theorem H), research/prior/pa-untagged, research/prior/induction (raw-impossibility referee, Theorem R1).
+% Local macros (prefixed with the section key; defined here so that app-many.tex can use them).
+\providecommand{\manyTr}{\mathrm{Tr}}
+\providecommand{\manyVS}{\mathrm{VS}}
+\providecommand{\manyCov}{\mathrm{Cov}}
+\providecommand{\manyS}{\mathcal{S}}
+\providecommand{\manyFail}{\mathrm{Fail}}
+\providecommand{\manyRstar}{R^{*}}
+
+\section{Many axioms and schemas without labels}\label{sec:many}
+
+Question~3 asks for one method that also learns ``many axiom( scheme)s at once, even if they do not come with labels for
+instances of which axiom scheme they are''. The data now come from several targets $\sigma_1,\dots,\sigma_{k'}$, and
+nothing says which datum is an instance of which target. This section develops the theory of this setting and the method
+\DTRC{} (Determinate Templates with Refutation Clustering); \cref{tab:many:summary} collects the guarantees. In brief:
+\begin{itemize}
+\item From positive data alone a bound $k$ on the number of targets is necessary, and spare slots cost data diversity,
+  which no sound negative evidence can replace (\cref{sec:many:bound}).
+\item With the exact bound, negatives that refute every cross-target merge make untagged learning as easy as tagged
+  learning, and the learner can find them itself (\cref{thm:many:pigeonhole}).
+\item \DTRC{} needs no bound. Under \emph{refutation separation} it recovers the hidden labels, is target-sound at all
+  times, and is exact once every target's data contain an anchor, with the tagged failure probability
+  (\cref{thm:many:dtrc}). Without separation it is sound relative to a residue of unrefuted cross merges
+  (\cref{thm:many:residue}); learning $\forall x\varphi$ from instances is such a merge, a sound one
+  (\cref{prop:many:forall}). No computable learner can do without the refutation depth (\cref{thm:many:depth}).
+\item $\Delta_0$ evaluation in $\N$ separates PA at small depth (proved for Q1--Q7 and $T_{\Ind}$). Hereditarily finite
+  counterexamples and logic separate ZF and ZFC on every sampled pair and every run, Russell's paradox doing the work for
+  the comprehension-shaped axioms. Weak forms of Union and Power merge into a false universal-set schema that, of these
+  channels, only coherence refutes (\cref{sec:many:examples}).
+\end{itemize}
+
+%=====================================================================================================================
+\subsection{Setting}\label{sec:many:setting}
+
+Data are formulas in closure-normal form with de Bruijn bound variables (\cref{sec:setting:syntax}), and templates are in
+$\DT$. Parameters are constants, except for the head classes of \cref{app:many:bound}, which identify sentences up to
+renaming of parameters. Let $\manyS$ be the set of such formulas and $\manyTr\subseteq\manyS$ the
+set of those whose universal closure is true in the intended structure ($\N$ or $V$).
+
+\begin{definition}[practice, data, covering templates]\label{def:many:setting}
+\src{untagged \S1}
+A \emph{practice} is a finite set $\Sigma^*=\{\sigma_1,\dots,\sigma_{k'}\}\subseteq\DT$ of targets (ground templates,
+i.e.\ single axioms, allowed), with $\manyRstar:=\bigcup_i\inst(\sigma_i)$; it is \emph{valid} if
+$\manyRstar\subseteq\manyTr$, which we assume unless said otherwise. The data form a finite multiset $D\subseteq\manyRstar$
+with \emph{hidden} labels $D=D_1\sqcup\dots\sqcup D_{k'}$, $D_i\subseteq\inst(\sigma_i)$ (a datum in two instance sets
+carries one label). In the random model each datum picks target $i$ with probability $\pi_i$ and then an instance
+$\sigma_i\theta$, $\theta\sim\Lambda_i$. Refutation oracles $(\Ref_d)_d$, with (OS) and (Dec), are as in
+\cref{def:setting:oracle}; $\Hk{k}=\Hk{k}(\DT)$, the version space $\manyVS_k(D,N)$ and the \emph{cautious $k$-union
+learner} $\Acc_k(D,N)=\bigcap\manyVS_k(D,N)$ are as in \cref{def:setting:protocol}. For finite nonempty $X$,
+$\manyCov(X):=\{T\in\DT:X\subseteq\inst(T)\}$, and $\Min(X)$ is the set of its $\gen$-minimal members up to renaming.
+\end{definition}
+
+\begin{proposition}[minimal covering templates]\label{prop:many:W}
+\status{proved}\src{single Thm B}
+For finite nonempty $X\subseteq\manyS$: (a) $\Min(X)$ is finite up to renaming and computable from $X$; (b) every
+$T\in\manyCov(X)$ satisfies $T\gen T_0$, hence $\inst(T)\supseteq\inst(T_0)$, for some $T_0\in\Min(X)$; (c) if
+$X\subseteq\inst(\sigma)$ with $\sigma\in\DT$, some $T_0\in\Min(X)$ has $\inst(T_0)\subseteq\inst(\sigma)$. (This is
+\cref{thm:single:min}(c),(d).)
+\end{proposition}
+
+$A\subseteq\inst(\sigma)$ is an anchor (\cref{def:setting:protocol}, in $\Hk1(\DT)$) if $\inst(T)\supseteq\inst(\sigma)$ for
+every $T\in\manyCov(A)$.
+\Cref{thm:single:anchor,cor:single:special} characterize them (\evR{}+\evN{} for $T_{\Ind}$ and the ZF schemas, Plotkin's
+\evR{}+\evD{} for first-order patterns); a ground $\sigma$ has the anchor $\{\sigma\}$.
+
+\begin{lemma}[cautious soundness; finite form]\label{lem:many:cautious}
+\status{proved; known}\src{untagged Lemmas 1.1, 1.2}
+(a) If $k\ge k'$ and $N\cap\manyRstar=\emptyset$, then $\manyRstar\in\manyVS_k(D,N)$, so $\Acc_k(D,N)\subseteq\manyRstar$,
+and $\Acc_k$ is monotone in $D$ and in $N$ (\cref{thm:setting:vs}(a), \cref{lem:setting:onesided}(b)).
+(b) With $\Min_N(B):=\{T\in\Min(B):\inst(T)\cap N=\emptyset\}$, $\Acc_k(D,N)$ is the intersection of the sets
+$\bigcup_{B\in\pi}\inst(T_B)$ over all partitions $\pi$ of $D$ into at most $k$ nonempty blocks and all choices
+$T_B\in\Min_N(B)$. So for finite $N$ it is decidable (in time exponential in $|D|$).
+\end{lemma}
+\noindent For (b), assign each datum to the first slot covering it and apply \cref{prop:many:W}(b) to each block
+(\cref{app:many:setting}).
+
+%=====================================================================================================================
+\subsection{Positive data: a bound is necessary, and spare slots cost diversity}\label{sec:many:bound}
+
+\begin{proposition}[a bound is necessary]\label{prop:many:bound}
+\status{proved; known}\src{untagged Prop 4.3; Gold}
+Let $\Hk{\infty}:=\bigcup_k\Hk{k}$. For every finite $D\subseteq\manyRstar$ and every sound $N$, $\Acc_\infty(D,N)=D$.
+No learner, however it uses a fixed sound oracle, identifies $\Hk{\infty}$ in the limit from text.
+\end{proposition}
+\noindent\emph{Proof idea.} $D$ is a union of ground templates; for a true non-ground $\sigma$ the oracle answers
+identically on $\inst(\sigma)$ and its finite subsets, so Gold's argument applies (\cref{app:many:bound}).\medskip
+
+Negatives cannot replace a bound: every finite set of true data is itself a consistent hypothesis. Negatives remove
+over-general \emph{lumps}; a bound forbids \emph{splits}, which replace a target by finitely many specializations that
+together cover its data. Splits are sound, so one-sided refutation never removes them.
+
+\begin{theorem}[splits; threshold]\label{thm:many:splits}
+\status{proved}\src{untagged Thm 3.2}
+(a) For every $N$ with $N\cap\manyRstar=\emptyset$ and $k\ge k'$, $\manyVS_k(D,N)$ contains every $h\in\Hk{k}$ with
+$D\subseteq h\subseteq\manyRstar$. So if such an $h$ misses $q\in\manyRstar$, no sound negatives make the learner accept $q$.
+(b) Suppose moreover that every $D_j$ is nonempty and that $N$ \emph{cross-separates} $D$: every template covering data of
+two targets meets $N$. Put $m:=k-k'+1$. If every family of at most $m$ templates that covers $D_i$ and avoids $N$ has union
+$\supseteq\inst(\sigma_i)$, then $\inst(\sigma_i)\subseteq\Acc_k(D,N)$. If some such family misses a $q\in\inst(\sigma_i)$
+lying in no other target's instance set, then $q\notin\Acc_k(D,N)$. With pairwise disjoint instance sets this is an exact
+threshold.
+\end{theorem}
+\noindent\emph{Proof idea.} (a) $h\cap N\subseteq\manyRstar\cap N=\emptyset$. (b) Cross-separation makes the slots used by
+different targets disjoint, so target $i$ has at most $m$; conversely the bad family plus the other $k'-1$ targets is a
+$k$-slot hypothesis (\cref{app:many:bound}).\medskip
+
+Slot accounting refines this when targets share slots (\cref{thm:many:slots}). For $\Q$ plus induction at $k=k'=8$,
+positive data leave induction four slots: an induction instance whose motive has $x$ free and a main connective unseen in
+the data is accepted iff the induction data cannot be split into four blocks each root-homogeneous or all-vacuous; three
+sound negatives leave it one slot and restore the tagged anchor condition \evR{}+\evN{} (\cref{cor:many:paslots}). Spare
+slots cost diversity even for $\forall x\varphi$: if the target is the instance schema $\varphi(z)$ and $\varphi(a)$ lies in
+no other target's instance set, numeral-only data never make the learner accept $\varphi(a)$ once $k>k'$, since
+$\{\varphi(0)\}\cup\inst(\varphi(Su))$ is a sound split (\cref{thm:many:splits}(a)). Exact thresholds for one-variable schemas:
+\cref{rem:many:numerals}.
+
+%=====================================================================================================================
+\subsection{The pigeonhole theorem}\label{sec:many:pigeon}
+
+\begin{theorem}[pigeonhole]\label{thm:many:pigeonhole}
+\status{proved}\src{untagged Thm 2.1}
+Let $k=k'$, $D\subseteq\manyRstar$, $A_i\subseteq D_i$ a nonempty anchor for $\sigma_i$, and $N\cap\manyRstar=\emptyset$ with
+\emph{(X)}: for $i\neq j$, $a\in A_i$, $b\in A_j$, every $T\in\DT$ with $a,b\in\inst(T)$ meets $N$. Then
+$\Acc_k(D,N)=\manyRstar$.
+\end{theorem}
+\begin{proof}
+The inclusion $\subseteq$ is \cref{lem:many:cautious}(a). Let $h=\bigcup_{l\le k}\inst(\tau_l)$ be in
+$\manyVS_k(D,N)$, and let $L_i$ be the set of slots $l$ such that $\tau_l$ covers an element of $A_i$. The $L_i$ are
+nonempty and, by (X), pairwise disjoint; $k'$ of them in $k'$ slots are singletons $\{l_i\}$, so $\tau_{l_i}$ covers $A_i$
+and $\inst(\tau_{l_i})\supseteq\inst(\sigma_i)$.
+\end{proof}
+
+Only anchor data matter, and (X) forces the anchors to be disjoint. The negatives need no labels: let $N(D,d)$ contain the
+first $d$-refuted instance of every $d$-refuted $T\in\Min(\{a,b\})$, over all pairs $a,b\in D$. It is sound, and if every
+minimal template of every cross pair of anchor data is $d$-refuted (\emph{anchor-pair separation}), it satisfies (X) by
+\cref{prop:many:W}(b). Hence $\Acc_{k'}(D,N(D,d))$ is sound at all times, decidable, and exact as soon as $D$ contains
+anchors; at most $\mu\sum_{i<j}|A_i||A_j|$ negatives are needed, $\mu$ the largest $|\Min(\{a,b\})|$
+(\cref{cor:many:selfneg}). For PA (Q1--Q7 in parameter form, numbered as in \cref{sec:setting:examples}, and $T_{\Ind}$;
+raw $\DT$ encoding), every cross pair among Q1--Q7 and $T_{\Ind}$ has exactly one minimal covering template: $F_0$ or
+$F_0\to F_1$, with $0$-ary formula metavariables $F_0,F_1$; $z_0=z_1$; $p+z_0=z_1$; or $p\cdot z_0=z_1$. Four sentences refute them all: $0=S0$, $0=0\to0=S0$, $p+0=0$ and
+$p\cdot0=S0$ (computed; \cref{tab:many:pacross}). So at $k=8$ the untagged learner is exact after one occurrence of each
+$\Q$-axiom and two induction instances with different main connectives, one of them non-vacuous.
+
+%=====================================================================================================================
+\subsection{\texorpdfstring{\DTRC}{DTRC}: Determinate Templates with Refutation Clustering}\label{sec:many:dtrc}
+
+\begin{definition}[coherence, \DTRC, separation]\label{def:many:dtrc}
+\src{untagged \S\S5.1--5.2}
+A finite $X\subseteq\manyS$ is \emph{$d$-coherent} if some $T\in\Min(X)$ is not $d$-refuted (equivalently, by
+\cref{prop:many:W}, some covering template is not). \textbf{Algorithm} $\DTRC_d$:
+\begin{enumerate}[label=(\arabic*),nosep]
+\item normalize the data (closure-normal form, canonical parameter names, de Bruijn indices);
+\item starting from singleton clusters, repeatedly merge two clusters whose union is $d$-coherent, chosen by a
+  \emph{merge policy} (e.g.\ online: each datum joins the first cluster it is coherent with, then pairwise merges to a
+  fixpoint), until no pair has a coherent union;
+\item for each final cluster $C$ let $\Min^+_d(C)$ be its unrefuted minimal templates and
+  $\Acc_d(C):=\bigcap_{T\in\Min^+_d(C)}\inst(T)$ ($\emptyset$ if there are none);
+\item assert $\Acc_d:=\bigcup_C\Acc_d(C)$.
+\end{enumerate}
+The practice is \emph{$d$-separated on $D$}, $\RS_d(D)$, if every template covering data of two different targets is
+$d$-refuted, and \emph{globally} $d$-separated if every template covering instances of two different targets is.
+\end{definition}
+
+$\Acc_d(C)$ is the cautious single-template verifier of $C$ with negatives $\Ref_d$. Coherence is downward closed and
+antitone in $d$ (\cref{lem:many:mono}). By \cref{prop:many:W}, $\RS_d(D)$ holds iff every minimal template of every cross
+pair $(a,b)\in D_i\times D_j$ is $d$-refuted, a finite check that the implementation performs after each run.
+
+\begin{theorem}[\DTRC]\label{thm:many:dtrc}
+\status{proved}\src{untagged Thm 5.2}
+Let the practice be valid and the oracle satisfy (OS), (Dec).
+(i) \emph{Within-target merges are never refuted}: every $X\subseteq\inst(\sigma_i)$ is $d$-coherent for every $d$.
+(ii) \emph{Separation recovers the labels}: under $\RS_d(D)$ the final clustering is $\{D_i:D_i\neq\emptyset\}$ for every
+merge policy.
+(iii) \emph{Soundness at all times, exactness from anchors}: under $\RS_d(D)$, $\Acc_d\subseteq\manyRstar$, and
+$\Acc_d=\manyRstar$ once each $D_i$ contains an anchor of $\sigma_i$.
+(iv) \emph{Rates}: under global separation and i.i.d.\ data, $\Pr[\Acc_d\neq\manyRstar]\le\Pr[\text{some }D_i\text{
+contains no anchor}]\le\sum_i\Pr[D_i\text{ contains no anchor}]$; the middle term is the failure probability of the tagged
+learner, bounded explicitly in \cref{thm:single:rates}(c) (for $T_{\Ind}$ the exact inclusion--exclusion form is that of
+\cref{prop:zf:sub}, by \cref{thm:zf:indanchor}; for the ZF schemas see \cref{thm:zf:rates}).
+(v) \emph{Tests}: with $n$ distinct data the pairwise fixpoint makes $O(n^2)$ coherence tests; under $\RS_d(D)$ the online
+policy makes at most $nk'+k'(k'-1)/2$.
+\end{theorem}
+\begin{proof}[Proof idea]
+(i) Some $T_0\in\Min(X)$ has $\inst(T_0)\subseteq\inst(\sigma_i)\subseteq\manyTr$ (\cref{prop:many:W}(c)), and (OS) never
+refutes it. (ii) Pure clusters of different targets never merge, by separation; two final clusters of one target would
+merge, by (i). (iii) In the cluster $D_i$ the template $T_0$ of (i) is intersected; with an anchor, every member of
+$\Min(D_i)$ contains $\inst(\sigma_i)$. Details in \cref{app:many:dtrc}.
+\end{proof}
+
+\begin{example}[a small run]\label{ex:many:run}
+\status{proved}\src{instance of untagged Thm 5.2}
+Let the practice be $\{z+0=z,\ T_{\Ind}\}$ and $D=\{0+0=0,\ S0+0=S0,\ \Ind(x+0=x),\ \Ind(\neg x=0)\}$. A set containing an
+equation and an induction instance has the single covering template $F_0$, a $0$-ary formula metavariable (the roots $=$
+and $\to$ differ, so the root is a slot with no binder in scope), and $0=S0$ refutes it. So $\RS_d(D)$ holds once $d$
+reaches $0=S0$, and by \cref{thm:many:dtrc}(ii) \DTRC{} returns the clusters $\{0+0=0,S0+0=S0\}$ and
+$\{\Ind(x+0=x),\Ind(\neg x=0)\}$ under every merge policy. Both are anchors (\cref{cor:single:special}(a),(c): the values
+$0$ and $S0$ have different roots; the motives have roots $=$ and $\neg$, and $x$ is free in $x+0=x$), so by (iii) \DTRC{}
+accepts exactly $\inst(z+0=z)\cup\inst(T_{\Ind})$. Under \Rich, which holds in arithmetic, each cluster's only minimal
+template is its target (\cref{cor:single:anchor-lgg}).
+\end{example}
+
+Under separation, refutation does the job of citations in tagged data: within each recovered cluster the learner
+\emph{is} the tagged cautious learner, so tagged anchors and rates (\cref{thm:single:anchor,thm:single:rates}) transfer verbatim, and the number of
+targets is discovered, not given. The inequality in (iv) can be strict, since refuted non-target templates drop out before an anchor arrives. When a bound $k\ge k'$ is known, accepting
+only what both \DTRC{} and $\Acc_k(D,N(D,d))$ accept is target-sound at all times, with or without separation, and exact
+under $\RS_d(D)$ with $k=k'$ once every $D_i$ contains an anchor (\cref{rem:many:combine}).
+
+%=====================================================================================================================
+\subsection{Without separation: residue, sound merges, fragmentation}\label{sec:many:residue}
+
+\begin{theorem}[soundness relative to a residue]\label{thm:many:residue}
+\status{proved; computed}\src{untagged Thm 5.4}
+Call a final cluster \emph{mixed} if it contains data of two or more targets, and let
+$\Res_d(D):=\bigcup\{\inst(T):T\in\Min(X)\text{ not }d\text{-refuted},\ X\subseteq D\text{ $d$-coherent and mixed}\}$.
+(a) $\Acc_d\subseteq\manyRstar\cup\Res_d(D)$. (b) If every mixed final cluster $C$ has a truth-sound $T\in\Min_d^+(C)$
+(a \emph{sound merge}), then $\Acc_d\subseteq\manyTr$: truth-sound, though not target-sound. (c) Otherwise $\Acc_d$ is sound
+only relative to $\Res_d(D)$, which decreases in $d$; $\Res_\infty(D)$ consists of templates with no refutable instance.
+(d) Exactness can fail even on clean data with an anchor in every $D_i$ and disjoint instance sets: a sound cross merge
+can absorb part of an anchor (\emph{fragmentation}), depending on the merge policy.
+\end{theorem}
+
+For (d), let $\sigma_1=(z+0=z)$, $g=(0+S0=S0)$ a ground target and $D=\{0+0=0,\ S0+0=S0,\ g\}$, which contains the
+anchor $\{0+0=0,S0+0=S0\}$ of $\sigma_1$. In the order $g,0+0=0,S0+0=S0$, the pair $\{g,0+0=0\}$ merges through the
+\emph{true} template $0+z=z$, and $S0+0=S0$ cannot join (\cref{app:many:dtrc}); the output rejects $p+0=p$ and accepts
+the true non-target $0+p=p$. In the order $0+0=0,S0+0=S0,g$ it is exact (computed). This failure is intrinsic:
+
+\begin{proposition}[ambiguous practices]\label{prop:many:ambiguity}
+\status{proved; computed}\src{untagged Rem 5.11}
+For the valid practices $P=\{z+0=z,\ 0+S0=S0\}$ and $P'=\{0+z=z,\ S0+0=S0\}$, the data $D=\{0+0=0,\ S0+0=S0,\
+0+S0=S0\}$ lie in $\manyRstar_P\cap\manyRstar_{P'}$ and contain anchors for both. No learner (computable or not) with a
+target-blind oracle is on $D$ both exact for $P$ and target-sound for $P'$.
+\end{proposition}
+\begin{proof}
+Anchors: $\{0+0=0,S0+0=S0\}$, $\{0+S0=S0\}$ for $P$; $\{0+0=0,0+S0=S0\}$, $\{S0+0=S0\}$ for $P'$. The learner's output on
+$D$ is the same under both; exactness for $P$ needs $p+0=p$, which is not in $\manyRstar_{P'}$.
+\end{proof}
+Only separating data such as $SS0+0=SS0\in\manyRstar_P\setminus\manyRstar_{P'}$ resolve this; the $k'$-union learner with
+self-generated negatives is not exact on this $D$ either (computed), since the true template $0+z=z$ violates (X).
+Residual merges are \emph{target-sound} (a redundant axiom that is an instance of a target schema, e.g.\ Empty Set of
+Separation), \emph{sound} (true templates below no target, as for $\forall x\varphi$ below), or \emph{unsound unrefuted}
+($K_0$-shaped templates, the universal-set schema; \cref{sec:many:examples}).
+
+%=====================================================================================================================
+\subsection{Learning \texorpdfstring{$\forall x\varphi$}{forall x phi} from instances as a sound merge}\label{sec:many:forall}
+
+Regard each instance $\varphi(t)$ as its own ground target. The universal sentence is learned when \DTRC{} merges the
+instances.
+
+\begin{lemma}[two-point anchors]\label{lem:many:twopoint}
+\status{proved}\src{untagged Lem 5.5}
+Let $\varphi(z)$ have a single metavariable, a 0-ary $z$ (term or formula sort) occurring in it. If closed $t_1,t_2$ have
+different head symbols, $\{\varphi(t_1),\varphi(t_2)\}$ is an anchor for $\varphi(z)$ in $\DT$. So for every set of
+instances of $\varphi(z)$ containing two with different heads, $\inst(\varphi(z))$ is contained in the instance set of every
+covering template.
+\end{lemma}
+\noindent It is the one-metavariable case of \cref{prop:univ:dt}(a), and the case of \cref{thm:single:anchor} in which
+\evU{} holds automatically; the proof rests on a two-point identity (\cref{app:many:dtrc}).
+
+\begin{proposition}[universals from instances]\label{prop:many:forall}
+\status{proved; computed}\src{untagged Prop 5.6}
+Let $z$ be a term metavariable and $D=\{\varphi(t_1),\dots,\varphi(t_n)\}$ closed instances, two with different heads.
+(a) $D$ is $d$-coherent iff $\varphi(z)$ is not $d$-refuted. (b) $\inst(\varphi(z))$ contains $\varphi(a)$ for a
+parameter $a$ fresh for $\varphi$, which under the closure reading is $\forall x\varphi(x)$ (in parameter form; the string
+$\forall x\varphi$ is a different datum, \cref{sec:setting:syntax}); so $\varphi(z)$ is truth-sound iff $\forall x\varphi$
+is true. (c) If $\forall x\varphi$ is true, every subset of $D$ is coherent, \DTRC{} forms one cluster under every policy,
+and $\Acc_d\ni\varphi(a)$: the axiom is learned and nothing false accepted. (Target-soundness for the $n$ ground
+``targets'' fails, as it must: the instances and the axiom give the same data and oracle answers.) (d) If $\forall
+x\varphi$ is false and some instance of $\varphi(z)$ is $d$-refuted, the merge is refused, though root-homogeneous subsets
+may still merge into an unrefuted specialization such as $\varphi(Sz)$. (e) If the oracle refutes every false instance of
+$\varphi(z)$ at some depth, ``never refuted'' means ``$\forall x\varphi$ true''. R-$\Delta_0$ does so for quantifier-free
+$\varphi$ (\cref{prop:many:qf}) but not for every quantified $\varphi$, since it verifies universals only by equational
+derivations from true closed equations. At a finite depth, false universals with large least counterexamples merge (part
+of $\Res_d$). An oracle that only evaluates closed instances certifies ``true at every closed term'': in $\N$ this is the
+$\omega$-rule, sound but in general not derivable (\cref{ex:univ:q}); in $\R$ as an ordered field, where closed terms denote integers
+(\cref{ex:univ:fail}(a)), $\neg(z\cdot z=1+1)$ is an unsound unrefuted merge, which a decision procedure for real closed
+fields would refute.
+\end{proposition}
+
+\Cref{prop:univ:tv} characterizes when closed instances decide universals (the Tarski--Vaught criterion); computed
+examples, e.g.\ numeral instances of Q4--Q6 merging into their instance schemas, are in \cref{app:many:dtrc}.
+
+\begin{proposition}[quantifier-free templates]\label{prop:many:qf}
+\status{proved}\src{untagged Prop 5.13}
+Let $T\in\DT$ be an arithmetic template with no binder in its rigid part (so all its metavariables are 0-ary; formula
+metavariables may still take quantified closed formulas). If $T$ has a false instance, it has a false quantifier-free
+instance, which R-$\Delta_0$ refutes at some depth. Hence every such template in $\Res_\infty$ (for R-$\Delta_0$) is
+truth-sound.
+\end{proposition}
+\noindent Proof in \cref{app:many:dtrc}: at a falsifying assignment of the parameters, replace each formula value by
+$0=0$ or $0=S0$ according to its truth value.\medskip
+
+So without labels Question~1 has a positive answer by a sound merge. What certifies the universal is the absence of a
+counterexample, not a derivation; for quantifier-free $\varphi$ with R-$\Delta_0$ this is truth-sound in $\N$ in the limit
+of unbounded depth (at a fixed depth only relative to $\Res_d$), and otherwise only relative to the strength of the
+oracle. Unsound permanent residues in arithmetic need quantifiers in the template.
+
+%=====================================================================================================================
+\subsection{Depth relativization is necessary}\label{sec:many:depth}
+
+For a practice $\mathcal P$ with a data law, let $\Res_\infty(\mathcal P)$ be the union of the instance sets of the
+templates that cover instances (in the support of the data law) of two different targets of $\mathcal P$ and have no
+refutable instance.
+
+\begin{theorem}[depth relativization]\label{thm:many:depth}
+\status{proved}\src{untagged Thm 5.7}
+There is a uniformly computable family of practices (finite sets of $\DT$ targets in arithmetic, each with a data law,
+all with the oracle R-$\Delta_0$) such that no computable learner achieves both of the following, for every valid practice
+$\mathcal P$ of the family and some $\delta<\frac12$:
+(a) $\Pr[\exists t:\Acc_t\not\subseteq\manyRstar_{\mathcal P}\cup\Res_\infty(\mathcal P)]\le\delta$;
+(b) if $\mathcal P$ is separated at some finite depth and each target's data law yields an anchor with positive
+probability, then $\Pr[\exists t\,\forall t'\ge t:\Acc_{t'}=\manyRstar_{\mathcal P}]\ge1-\delta$.
+\end{theorem}
+\noindent\emph{Idea.} Via MRDP \citep{davis1961decision,matiyasevich1993hilbert}, whether a two-instance merge of a
+true-looking arithmetic schema is ever refuted encodes the halting problem (\cref{app:many:dtrc}).\medskip
+
+The obstruction is the $\Pi_1$-completeness of ``this merge is never refuted'', not lack of information. \DTRC{} with a
+depth schedule $d_t\to\infty$ meets (b), is sound relative to $\Res_{d_t}$ at time $t$ and to $\Res_\infty$ in the limit,
+and changes its mind finitely often on every separated practice. This is the form of soundness of the parent report
+\citep{claude2026whatfollows}, and the theorem shows it cannot be improved.
+
+%=====================================================================================================================
+\subsection{Whole-cluster tests and noise}\label{sec:many:linkage}
+
+Coherence is downward closed but not transitive, so \DTRC{} tests whole clusters: single linkage on the
+pairwise-coherence graph can build clusters with no unrefuted minimal template; under $\RS_d(D)$ single linkage, complete
+linkage and \DTRC{} agree (\cref{prop:many:linkage}). Refutable mistakes stay incoherent singletons, and under separation
+of the clean data mistakes never bridge targets; an unrefutable mistake can be absorbed into a target's cluster, making it
+unsound, or fragment it (\cref{prop:many:noise}). \emph{Robust} \DTRC{} asserts only clusters of multiplicity $\ge s>e$
+and verifies them with a trimmed verifier that tolerates $e$ mistakes. If the clean data are separated, every mistake is
+refutable or noise-separated, and every coherent set of mistakes has multiplicity $<s$, it asserts exactly the $D_i$ of
+multiplicity $\ge s$, soundly, and exactly once every subset of $D_i$ of size $\ge|D_i|-e$ contains an anchor.
+Fragmentation is not prevented, and a frequent coherent family of mistakes is a systematic error that no positive-data
+method can tell from a rule (\cref{ex:many:noise}).
+
+%=====================================================================================================================
+\subsection{Cost: the union verifier and the refutation test}\label{sec:many:cost}
+
+\Cref{thm:many:dtrc}(v) counts coherence tests. A test needs at most $|\Min(X)|$ refutation checks; $|\Min(X)|$ can be
+$4^n$ for two data of size $O(n)$ (\cref{prop:single:blowup}), but it is $1$ when $X$ is quantifier-free or contains an
+anchor (under \Rich), and with a single negative the test is polynomial (\cref{prop:many:testcost}). In every test of the
+PA and ZF runs below, $|\Min(X)|=1$. In general both the exact union verifier and the refutation test are hard; write
+$\Acc_k(D):=\Acc_k(D,\emptyset)$.
+
+\begin{theorem}[complexity]\label{thm:many:complexity}
+\status{proved; computed}\src{single Thm H}
+(a) For $k\le2$, ``$q\in\Acc_k(D)$'' is decidable in polynomial time (2-SAT). (b) For every fixed $k\ge3$ it is
+coNP-complete (from graph $k$-colourability). (c) With $k$ in the input it is coNP-complete already for quantifier-free
+data over $\wedge,=,S,0$ (from Set Cover); for binder-free data and fixed $k$ it is polynomial. (d) The refutation test of
+\DTRC{} step~2, ``does some $T\in\Min(X)$ avoid a given finite set $R$?'', is NP-complete, already for $|X|=2$ with one
+binder (from CNF-SAT); it is polynomial when $X$ has a least covering template, in particular when $X$ contains an anchor
+(under \Rich). $R\cap\Acc(X)\neq\emptyset$ is a polynomial sufficient condition for blocking a merge.
+\end{theorem}
+The proofs (\cref{app:many:cost}) use polynomially many \emph{failure types}; they were not refereed independently,
+and the results are worst-case. In the hardness proof of (d) one datum is
+false; whether the test stays hard when $X$ is true and $R$ false in a fixed structure, as in \DTRC, is open.
+
+%=====================================================================================================================
+\subsection{Without negatives: MDL and the size principle}\label{sec:many:mdl}
+
+Could compression replace refutation? Determinacy makes a two-part code well defined: each datum is coded by a covering
+template and its unique matcher. For $\Q$ plus induction, the question is whether MDL keeps $T_{\Ind}$ whole or splits it
+by the main connective of the motive. A naive code splits, by a margin linear in the number of induction data
+(\cref{prop:many:mdlnaive}); a well-specified code gains at most $O(\log n)$ from splitting (\cref{prop:many:mdlwell});
+and under a natural usage law even depth-aware adaptive codes split for $n\ge1.6\cdot10^4$, while under a law for which
+the code is well specified it keeps $T_{\Ind}$ whole (\cref{tab:many:mdl}). \textbf{MDL tracks the statistics of usage,
+not the logical boundaries of schemas}: it errs towards incompleteness for schemas and towards unsoundness for rarely used
+ground axioms, errors that the anchor condition and the refutation test of \DTRC{} control (\cref{app:many:mdl}).
+
+%=====================================================================================================================
+\subsection{Natural examples: PA, ZF and ZFC}\label{sec:many:examples}
+
+The computations use a separate prototype implementation of \DTRC{} (not the package of
+\cref{sec:exp}). Each run is audited so that it \emph{is} $\DTRC_d$ with a fixed finite oracle (\cref{prop:many:audit}),
+and every run passed.
+
+\paragraph{PA.} Every cross merge among Q1--Q7 and $T_{\Ind}$, and among the instance schemas of $\Q$'s axioms, is
+refuted by R-$\Delta_0$ (\cref{tab:many:pacross}); for Q1--Q7 and $T_{\Ind}$ this global separation is proved, for the instance schemas it is supported by samples. On three seeds of 40
+shuffled unlabelled data, \DTRC{} returned one pure cluster per target present (7 or 8); the induction cluster's only
+unrefuted minimal template was $T_{\Ind}$; 200/200 held-out induction instances and 0 of 91 non-instances (near misses)
+were accepted; separation on the data was verified on every run. Induction is never at risk of a cross merge, because every
+template covering a $\Q$-axiom and an induction instance contains all of $\inst(T_{\Ind})$ and is refuted; it is learned
+incompletely only for lack of diversity in its own data, as in the tagged case.
+
+\paragraph{ZF and ZFC.} The targets are Ext, Pair, Union, Power, Inf, Found, Separation $\exists b\forall c(c\in
+b\leftrightarrow c\in p\wedge P(c))$, Replacement with $\exists!$ spelled out and image consequent, and $\in$-induction, in
+closure-normal de Bruijn form; the three schemas are Miller patterns (\cref{sec:zf:pattern}). All 36 cross pairs (one sampled
+instance per schema) have a unique minimal covering template, refuted by an HF counterexample (22 pairs: $F_0$ or $F_0\to
+F_1$), by pure logic (14 pairs, e.g.\ $\exists xF_0(x)$), and in three of the latter by \textbf{Russell's paradox}:
+Union--Power, Union--Separation and Power--Separation all have the minimal template $\exists x\forall y(y\in
+x\leftrightarrow F_0(y))$, naive comprehension, whose instance $\exists x\forall y(y\in x\leftrightarrow\neg y\in y)$ is
+logically false (\cref{ex:many:zfcross}). On three seeds of 45 data \DTRC{} returned 9 pure clusters, each schema cluster
+exact (180/180 held-out instances), and 0/30 instances of naive comprehension accepted: Separation without its guard is not
+learned. The Axiom of Choice is one more ground axiom: its 12 cross templates are all refuted, and on ZFC data \DTRC{}
+returned 10 pure clusters with AC accepted, its anchor being $\{\AC\}$ (\cref{ex:many:zf}). So the two refutation channels
+of the setting separate the ZFC axioms on every sampled pair and every run. \Cref{sec:exp} reports an independent
+implementation with the same picture on PA and ZF mixtures, and proves pairwise separation of its $\forall$-closed forms for an ideal refuter (\cref{cor:exp:mixsep}).
+
+\paragraph{Where separation fails.} \emph{Sound merges}---$\forall x\varphi$ from instances, redundant targets, instances
+shared by two true generalizations---cannot and should not be prevented; they are why \DTRC{} is truth-sound rather than
+target-sound without separation. \emph{An unsound merge that only coherence refutes}: in bounding form,
+$\mathrm{Union}_W=\exists b\forall c(\exists d(d\in p\wedge c\in d)\to c\in b)$ and
+$\mathrm{Power}_W=\exists b\forall c(\forall d(d\in c\to d\in p)\to c\in b)$ have as unique minimal covering template the
+\emph{universal-set schema} $U(F)=\exists x\forall y(F(y)\to y\in x)$, whose instance $\exists x\forall y(y=y\to y\in x)$
+is false.
+
+\begin{proposition}[the universal-set schema]\label{prop:many:univset}
+\status{proved; computed}\src{untagged Prop 7.1}
+No instance of $U$ is refuted by R-logic, by R-HF, or by any oracle sound for the structure $M_0=\HF\cup\{u\}$ with $\in$ as
+in $\HF$ on $\HF$ and $y\in u$ for all $y\in M_0$. The template is refuted by coherence, together with the true $\Pi_1$
+sentence $\forall x\,\neg x\in x$ or with the closure of one Separation instance.
+\end{proposition}
+\noindent\emph{Proof idea.} Every instance holds in $M_0$ with $x:=u$, and R-HF's steps are sound in $M_0$; a witness $b$
+of $\exists x\forall y(y=y\to y\in x)$ gives $b\in b$ (\cref{app:many:examples}).\medskip
+
+With logic and HF only, \DTRC{} merges $\mathrm{Union}_W$ and $\mathrm{Power}_W$ and \emph{accepts the false
+universal-set sentence} (computed), an unsoundness inside the residue. The learned Separation cluster accepts Russell's
+instance of Separation; designating its closure as true (\emph{bootstrapped coherence}) and re-running gives 9 pure
+clusters, with the universal set rejected. Bootstrapping is sound exactly when the trusted clusters are pure, and circular
+otherwise. \emph{$K_0$}, the first-order lgg of $\Ind(0+x=x)$ and $\Ind(S0+x=Sx)$, has a false instance
+$J^*_0$ (the one shown in \cref{thm:zf:K0}), and R-$\Delta_0$ and logic refute none of its instances. In $\DT$ these data
+also have a sound $T_{\Ind}$-specialization, and the verifier intersects both, so $J^*_0$ is rejected; the $K_0$-shaped template harms only when a mistake removes the sound alternative
+(\cref{ex:many:noise}), and coherence with designated or learned $\Q$ refutes it (\cref{app:many:examples}).
+\emph{Permanent residue}: templates whose false instances are all consistent with the designated truths and $\Delta_0$-correct (e.g.\ families containing $\neg\Con(\PA)$-like
+$\Sigma_1$ sentences) are never refuted, and by \cref{thm:many:depth} no computable learner can tell in general whether a
+merge will be. In arithmetic they need quantifiers in the template (\cref{prop:many:qf}); a natural merge of this kind was
+not found (open). \Cref{prop:exp:qF} reports a finite-budget effect (a residue in $\Res_d$, not a permanent one): two
+injected mistakes merged into a false template at a small refutation budget, and a larger budget refuted the merge.
+
+%=====================================================================================================================
+\subsection{Summary: the answer to Question 3}\label{sec:many:summary}
+
+\DTRC{} answers Question~3 (\cref{tab:many:summary}). Under refutation separation untagged learning is as easy as
+tagged learning, and the number of targets need not be known; PA is separated at small depth (proved for Q1--Q7 and
+$T_{\Ind}$), and ZF and ZFC on every sampled pair and every run. Without separation \DTRC{} is sound relative to a residue
+that no computable learner can avoid in general. Four features are forced by the results above, and a naive version
+without them fails: (1)~test whole clusters and intersect all unrefuted minimal templates (coherence is not
+transitive, and a $K_0$-shaped template can sit next to the sound one); (2)~keep the refutation depth as a parameter and
+re-cluster as it grows; (3)~when a bound $k\ge k'$ is known, intersect with the $k$-union learner fed with \DTRC's own
+negatives, which restores target-soundness without separation (\cref{rem:many:combine}); (4)~implement refutation as a growing set of refuted sentences, audited after each run
+(\cref{prop:many:audit}). Open problems: \cref{sec:disc:open}.
+
+\begin{table}[ht]
+\centering\footnotesize\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.155\textwidth}>{\raggedright\arraybackslash}p{0.225\textwidth}X>{\raggedright\arraybackslash}p{0.11\textwidth}@{}}
+\toprule
+learner & assumption & guarantee & result\\
+\midrule
+union, no bound & sound negatives & accepts only the data & Prop.~\labelcref{prop:many:bound}\\
+$k$-union, $k\ge k'$ & sound negatives & target-sound; sound splits survive & Thm.~\labelcref{thm:many:splits}(a)\\
+$k$-union, $k\ge k'$ & cross-separation; disjoint instance sets & exact for $i$ iff no $k-k'+1$ avoiding templates cover $D_i$ and miss an instance & Thm.~\labelcref{thm:many:splits}(b)\\
+$k'$-union, $N(D,d)$ & anchor-pair separation & sound; exact once anchors are present & Thm.~\labelcref{thm:many:pigeonhole}\\
+$\DTRC_d$ & $\RS_d(D)$ & recovers labels; target-sound; exact from anchors & Thm.~\labelcref{thm:many:dtrc}\\
+$\DTRC_d$ & none & sound relative to $\Res_d(D)$; truth-sound if merges are & Thm.~\labelcref{thm:many:residue}\\
+any computable & --- & not both residue-sound and exact if separated & Thm.~\labelcref{thm:many:depth}\\
+\DTRC{} $\cap$ $k$-union & $k\ge k'$ known & target-sound; exact from anchors if $\RS_d(D)$, $k=k'$ & Rem.~\labelcref{rem:many:combine}\\
+robust \DTRC & $\RS_d$ on clean data; rare, noise-separated mistakes & sound; exact if $(|D_i|-e)$-subsets have anchors & Prop.~\labelcref{prop:many:noise}\\
+\bottomrule
+\end{tabularx}
+\caption{Guarantees for untagged data (``exact'': $\Acc=\manyRstar$, per target where stated). Fragmentation and ambiguous
+data limit exactness without separation (\cref{thm:many:residue}(d), \cref{prop:many:ambiguity}).}\label{tab:many:summary}
+\end{table}

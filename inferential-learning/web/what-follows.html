@@ -1,0 +1,717 @@
+<title>What Follows from What</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=STIX+Two+Text:ital,wght@0,400;0,500;1,400&family=Spectral:ital,wght@0,500;0,600;1,500&display=swap">
+<style>
+/* Layout: one reading column (~70ch) on a cool paper ground; wide blocks (tables, chart) break out to 64rem.
+   Signature device: natural-deduction inference figures (premises / bar / conclusion) used as section emblems. */
+:root {
+  --paper: #f3f5f8;
+  --surface: #ffffff;
+  --ink: #18202d;
+  --muted: #586378;
+  --rule: #d3d9e2;
+  --accent: #2f45a6;
+  --accent-soft: #e6e9f8;
+  --fix: #276b4e;
+  --fix-bg: #e3f1ea;
+  --residue: #96500f;
+  --residue-bg: #f6eadc;
+  --warn: #8a2f3a;
+  --bar-a: #2f45a6;
+  --bar-b: #96500f;
+  --font-display: "Spectral", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-math: "STIX Two Text", "Cambria Math", "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --step--1: 0.8125rem;
+  --step-0: 1rem;
+  --step-1: 1.1875rem;
+  --step-2: 1.5rem;
+  --step-3: 2rem;
+  --step-4: clamp(2.25rem, 1.6rem + 3vw, 3.5rem);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #11151c;
+    --surface: #181e28;
+    --ink: #e3e7ee;
+    --muted: #9aa4b4;
+    --rule: #2b3442;
+    --accent: #93a3ff;
+    --accent-soft: #1f2640;
+    --fix: #74c79f;
+    --fix-bg: #16302a;
+    --residue: #e7a462;
+    --residue-bg: #352717;
+    --warn: #f0939c;
+    --bar-a: #8597f5;
+    --bar-b: #e09a55;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #11151c;
+  --surface: #181e28;
+  --ink: #e3e7ee;
+  --muted: #9aa4b4;
+  --rule: #2b3442;
+  --accent: #93a3ff;
+  --accent-soft: #1f2640;
+  --fix: #74c79f;
+  --fix-bg: #16302a;
+  --residue: #e7a462;
+  --residue-bg: #352717;
+  --warn: #f0939c;
+  --bar-a: #8597f5;
+  --bar-b: #e09a55;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+  line-height: 1.6;
+  padding-inline: 16px;
+  padding-block: 0 4rem;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 64rem; margin-inline: auto; }
+.col { max-width: 44rem; }
+
+a { color: var(--accent); text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
+a:hover { text-decoration-thickness: 2px; }
+a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+h1, h2, h3 { font-family: var(--font-display); font-weight: 600; text-wrap: balance; line-height: 1.15; margin: 0; }
+h1 { font-size: var(--step-4); letter-spacing: -0.01em; }
+h2 { font-size: var(--step-3); }
+h3 { font-size: var(--step-1); font-weight: 600; }
+p { margin: 0; }
+.m { font-family: var(--font-math); font-size: 1.08em; white-space: nowrap; }
+code, .mono { font-family: var(--font-mono); font-size: 0.86em; }
+.muted { color: var(--muted); }
+.eyebrow {
+  font-family: var(--font-body); font-size: var(--step--1); font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+}
+
+/* ---------- hero ---------- */
+header.hero {
+  display: grid; gap: 1.5rem;
+  padding-block: 3.5rem 2.5rem;
+  border-bottom: 1px solid var(--rule);
+}
+.hero .sub { font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: var(--step-2); color: var(--muted); max-width: 40rem; }
+.hero .byline { font-size: var(--step--1); color: var(--muted); max-width: 44rem; }
+.hero-grid { display: grid; gap: 2rem; grid-template-columns: minmax(0, 1fr); align-items: end; }
+@media (min-width: 860px) { .hero-grid { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); } }
+
+/* inference figure */
+.infer { display: inline-grid; grid-template-columns: auto auto; column-gap: 0.6rem; align-items: center; font-family: var(--font-math); max-width: 100%; }
+.infer .prem { grid-column: 1; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.35rem 1.4rem; padding-inline: 0.5rem; padding-bottom: 0.3rem; font-size: var(--step-1); }
+.infer .bar { grid-column: 1; border-top: 1.5px solid var(--ink); }
+.infer .lab { grid-column: 2; grid-row: 2; font-size: var(--step--1); font-family: var(--font-body); color: var(--muted); white-space: nowrap; }
+.infer .conc { grid-column: 1; text-align: center; padding-top: 0.35rem; padding-inline: 0.5rem; font-size: var(--step-1); }
+.infer.big .prem span { font-style: italic; }
+.infer.big .prem { gap: 0.3rem 1rem; font-size: 1.05rem; }
+.infer.big .conc { font-style: italic; font-size: 1.05rem; text-wrap: balance; }
+.figure-card {
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 6px;
+  padding: 1.25rem 1rem; display: grid; gap: 0.75rem; justify-items: center; min-width: 0;
+}
+.figure-card .cap { font-size: var(--step--1); color: var(--muted); text-align: center; max-width: 26rem; }
+
+.facts { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; font-size: var(--step--1); color: var(--muted); }
+.facts b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* ---------- nav ---------- */
+nav.toc {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+  margin-inline: -16px; padding-inline: 16px;
+}
+nav.toc ul { list-style: none; margin: 0 auto; padding: 0.6rem 0; max-width: 64rem; display: flex; gap: 1.25rem; overflow-x: auto; scrollbar-width: none; }
+nav.toc ul::-webkit-scrollbar { display: none; }
+nav.toc a { white-space: nowrap; font-size: var(--step--1); font-weight: 500; color: var(--muted); text-decoration: none; }
+nav.toc a:hover { color: var(--accent); }
+
+/* ---------- sections ---------- */
+main { display: grid; gap: 4rem; padding-top: 3rem; }
+section { display: grid; gap: 1.25rem; scroll-margin-top: 3.5rem; }
+section > .head { display: grid; gap: 0.5rem; }
+.prose { display: grid; gap: 0.9rem; max-width: 44rem; }
+.prose ul { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.4rem; }
+
+/* success criteria */
+.criteria { display: grid; gap: 0; border-top: 1px solid var(--rule); }
+.crit { display: grid; gap: 0.5rem 1.5rem; grid-template-columns: minmax(0, 1fr); padding-block: 1.1rem; border-bottom: 1px solid var(--rule); }
+@media (min-width: 760px) { .crit { grid-template-columns: 15rem minmax(0, 1fr); } }
+.crit h3 { font-size: var(--step-1); }
+.crit .body { display: grid; gap: 0.5rem; min-width: 0; }
+.chip { display: inline-block; justify-self: start; font-size: var(--step--1); font-weight: 600; padding: 0.15rem 0.55rem; border-radius: 999px; line-height: 1.5; }
+.chip.yes { background: var(--fix-bg); color: var(--fix); }
+.chip.cond { background: var(--residue-bg); color: var(--residue); }
+.chip.design { background: var(--accent-soft); color: var(--accent); }
+
+/* division of labour */
+.labour { display: grid; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; background: var(--surface); }
+.lrow { display: grid; grid-template-columns: minmax(0, 1fr); border-top: 1px solid var(--rule); }
+.lrow:first-child { border-top: 0; }
+@media (min-width: 760px) { .lrow { grid-template-columns: 11rem minmax(0, 1fr) minmax(0, 1fr); } }
+.lrow > div { padding: 0.9rem 1rem; min-width: 0; }
+.lrow .sig { font-family: var(--font-display); font-weight: 600; font-size: var(--step-1); line-height: 1.25; }
+.lrow .sig small { display: block; font-family: var(--font-body); font-weight: 400; font-size: var(--step--1); color: var(--muted); margin-top: 0.2rem; }
+.lrow .fx { border-left: 3px solid var(--fix); }
+.lrow .rs { border-left: 3px solid var(--residue); background: color-mix(in srgb, var(--residue-bg) 45%, transparent); }
+.lrow .tag { display: block; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.2rem; }
+.lrow .fx .tag { color: var(--fix); }
+.lrow .rs .tag { color: var(--residue); }
+.lrow.headrow { display: none; }
+@media (min-width: 760px) {
+  .lrow.headrow { display: grid; background: var(--paper); }
+  .lrow.headrow > div { padding-block: 0.55rem; font-size: var(--step--1); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .lrow .tag { display: none; }
+}
+
+/* results by area */
+.areas { display: grid; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 860px) { .areas { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.area { background: var(--surface); padding: 1.1rem 1.1rem 1.2rem; display: grid; gap: 0.6rem; align-content: start; min-width: 0; }
+.area .where { font-size: var(--step--1); color: var(--muted); }
+.area ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.45rem; font-size: 0.95rem; }
+.area .lean { font-family: var(--font-mono); font-size: 0.74rem; color: var(--fix); white-space: normal; overflow-wrap: anywhere; }
+.area.wide { grid-column: 1 / -1; }
+.area .derivation { font-family: var(--font-math); font-size: 0.98rem; background: var(--paper); border-radius: 4px; padding: 0.5rem 0.7rem; overflow-x: auto; white-space: nowrap; }
+
+/* tables */
+.tablewrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 0.5rem 0.8rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-size: var(--step--1); font-weight: 600; color: var(--muted); background: var(--paper); white-space: nowrap; }
+td.num, th.num { text-align: right; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.good { color: var(--fix); font-weight: 600; }
+td.bad { color: var(--warn); font-weight: 600; }
+
+.exp { display: grid; gap: 0.9rem; }
+.exp h3 { font-size: var(--step-1); }
+.exp .note { font-size: var(--step--1); color: var(--muted); max-width: 48rem; }
+
+/* chart */
+.chart { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 1rem 1rem 0.9rem; display: grid; gap: 0.75rem; min-width: 0; }
+.chart .legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1.25rem; font-size: var(--step--1); color: var(--muted); }
+.chart .key { display: inline-flex; align-items: center; gap: 0.4rem; }
+.chart .sw { width: 0.8rem; height: 0.8rem; border-radius: 2px; display: inline-block; }
+.bars { display: grid; gap: 0.35rem; }
+.brow { display: grid; grid-template-columns: minmax(0, 13.5rem) minmax(0, 1fr) 4.2rem; gap: 0.75rem; align-items: center; font-size: 0.85rem; }
+.brow .name { min-width: 0; overflow-wrap: anywhere; }
+.brow .name small { color: var(--muted); }
+.track { position: relative; height: 1.1rem; background: var(--paper); border-radius: 2px; }
+.track .fill { position: absolute; inset: 0 auto 0 0; border-radius: 2px; }
+.track .fill.stat { background: var(--bar-b); }
+.track .fill.rule { background: var(--bar-a); }
+.track .zero { position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--fix); }
+.brow .val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.brow .prec { display: block; font-weight: 400; font-size: 0.72rem; color: var(--muted); }
+.axis { display: grid; grid-template-columns: minmax(0, 13.5rem) minmax(0, 1fr) 4.2rem; gap: 0.75rem; font-size: 0.72rem; color: var(--muted); }
+.axis .ticks { position: relative; height: 1rem; border-top: 1px solid var(--rule); }
+.axis .ticks span { position: absolute; top: 0.1rem; transform: translateX(-50%); font-variant-numeric: tabular-nums; }
+.axis .ticks span:first-child { transform: none; }
+.axis .ticks span:last-child { transform: translateX(-100%); }
+.group-label { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding-top: 0.4rem; }
+@media (max-width: 560px) {
+  .brow, .axis { grid-template-columns: minmax(0, 1fr) 3.6rem; }
+  .brow .name { grid-column: 1 / -1; }
+  .brow .track { grid-column: 1; }
+  .axis .blank { display: none; }
+}
+
+/* verification */
+.ledger { display: grid; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 760px) { .ledger { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.ledger > div { background: var(--surface); padding: 1rem; display: grid; gap: 0.4rem; align-content: start; min-width: 0; }
+.ledger .k { font-family: var(--font-display); font-weight: 600; font-size: var(--step-1); }
+.ledger p { font-size: 0.92rem; }
+
+/* shape of justification */
+.shape { display: grid; gap: 0.9rem; max-width: 46rem; }
+.shape .item { display: grid; grid-template-columns: 2.2rem minmax(0, 1fr); gap: 0.8rem; align-items: start; }
+.shape .glyph { font-family: var(--font-math); font-size: 1.35rem; line-height: 1.2; color: var(--accent); text-align: center; }
+.shape .item p { font-size: 0.97rem; }
+.shape .item b { font-weight: 600; }
+
+.onesided { display: grid; gap: 0.5rem; }
+
+/* open problems */
+.open { display: grid; gap: 0.9rem; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 760px) { .open { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.open > div { display: grid; gap: 0.3rem; align-content: start; padding-top: 0.8rem; border-top: 1px solid var(--rule); min-width: 0; }
+.open h3 { font-size: 1.05rem; }
+.open p { font-size: 0.93rem; color: var(--muted); }
+.open > div.first { grid-column: 1 / -1; }
+.open > div.first p { color: var(--ink); }
+
+.files { display: grid; gap: 0; border-top: 1px solid var(--rule); }
+.files > div { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.2rem 1.5rem; padding-block: 0.6rem; border-bottom: 1px solid var(--rule); }
+@media (min-width: 640px) { .files > div { grid-template-columns: 17rem minmax(0, 1fr); } }
+.files code { overflow-wrap: anywhere; }
+.files span { font-size: 0.93rem; }
+
+.callout { background: var(--accent-soft); border-radius: 6px; padding: 1rem 1.1rem; display: grid; gap: 0.5rem; max-width: 46rem; }
+.callout p { font-size: 0.95rem; }
+
+footer { margin-top: 4rem; padding-top: 1.25rem; border-top: 1px solid var(--rule); font-size: var(--step--1); color: var(--muted); display: grid; gap: 0.4rem; }
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="eyebrow">Research report · draft · October 2026</div>
+    <div class="hero-grid">
+      <div style="display:grid; gap:1rem; min-width:0">
+        <h1>What Follows from What</h1>
+        <p class="sub">Learning inference rules from imitation, coherence, and the world</p>
+        <p class="byline">Prepared by Claude (Anthropic) in response to questions posed by Kaarel Hänni in his public working notes. It is a draft. Authorship and publication are for him to decide.</p>
+        <div class="facts">
+          <span><b>274</b> pages with appendices</span>
+          <span><b>17</b> Lean 4 modules, about <b>14,600</b> lines, no <code>sorry</code></span>
+          <span><b>3</b> rounds of adversarial refereeing</span>
+          <span><b>4</b> small experiments</span>
+        </div>
+        <p style="font-size:0.95rem"><a href="main.pdf" target="_blank" rel="noopener">Open the full report (PDF, 2.8 MB)</a> · <a href="https://github.com/kaarelh/AI-works/tree/claude/sleepy-gauss-u4kem1/inferential-learning" target="_blank" rel="noopener">Repository folder</a></p>
+      </div>
+      <div class="figure-card" aria-label="The thesis written as an inference figure">
+        <div class="infer big">
+          <div class="prem"><span>imitation</span><span>coherence</span><span>the world</span><span>contexts</span></div>
+          <div class="bar"></div>
+          <div class="lab">(division of labour)</div>
+          <div class="conc">soundness against adaptive provers,<br>relative to a declared residue</div>
+        </div>
+        <p class="cap">The thesis as an inference figure. No single signal suffices. Each has a provable reach and a provable residue, and together they cover every direction of error except a residue that can be named.</p>
+      </div>
+    </div>
+  </header>
+</div>
+
+<nav class="toc" aria-label="Sections">
+  <ul>
+    <li><a href="#question">Question</a></li>
+    <li><a href="#answers">Answers</a></li>
+    <li><a href="#labour">Division of labour</a></li>
+    <li><a href="#results">Results by area</a></li>
+    <li><a href="#notes">Two questions from the notes</a></li>
+    <li><a href="#evidence">Experiments</a></li>
+    <li><a href="#checking">How it was checked</a></li>
+    <li><a href="#beyond">Justification beyond proof</a></li>
+    <li><a href="#open">Open problems</a></li>
+    <li><a href="#files">Files</a></li>
+  </ul>
+</nav>
+
+<div class="wrap">
+<main>
+
+  <section id="question">
+    <div class="head">
+      <div class="eyebrow">The question</div>
+      <h2>Can a learner come to know which inferences are valid?</h2>
+    </div>
+    <div class="prose">
+      <p>On an inferentialist picture, learning which inferences are valid is roughly learning meanings. The report studies a learner that acquires inference rules in three stages.</p>
+      <ul>
+        <li>It <b>imitates</b> human inferences: formal proofs, informal proofs, physics olympiad solutions. A valid argument is a sequence of valid inferences.</li>
+        <li>It is conditioned on <b>coherence</b>: there should be no good arguments for both <span class="m">P</span> and <span class="m">¬P</span>.</li>
+        <li>It receives occasional truth values from <b>the world</b>.</li>
+      </ul>
+      <p>Arguments live in <b>contexts</b>, including idealizations that contradict background knowledge, such as “assume air pressure is 0”. The question is whether this can be made to work, provably, for formal mathematics, for mathematics as it was before formalization, and for physics olympiad problems. Behind it is a larger question: what does principled justification look like beyond mathematical proof?</p>
+      <p class="muted" style="font-size:0.93rem">All guarantees are relative to stated assumptions, chiefly that the target is realizable in a structured hypothesis class and that data and designations are truthful. Computational cost is mostly not addressed.</p>
+    </div>
+  </section>
+
+  <section id="answers">
+    <div class="head">
+      <div class="eyebrow">The three success criteria</div>
+      <h2>What the report establishes</h2>
+    </div>
+    <div class="criteria">
+      <div class="crit">
+        <h3>A setup that provably works for formal mathematics</h3>
+        <div class="body">
+          <span class="chip yes">Yes for classical propositional logic; conditional beyond</span>
+          <p>A two-tier learner (audit, then assert, with bold conjectures in a sandbox) is sound against every adaptive prover under its stated assumptions, and converges exactly for classical propositional logic. For complete decidable theories, exactness holds only conditionally on a realizability hypothesis that is not established for standard axiomatizations; without it the learner stays sound but loses some rules. For arithmetic it is Popperian, with sharp impossibility results beyond <span class="m">Σ₁</span>.</p>
+        </div>
+      </div>
+      <div class="crit">
+        <h3>A setup that would have worked before formalization</h3>
+        <div class="body">
+          <span class="chip cond">Conditionally</span>
+          <p>If the practice’s latent formalization lies in the learner’s class, a bounded-gap verifier over latent formalizations is sound against adaptive provers. For a finite class under complete presentation it identifies the practice’s step relation and brackets its meaning, which is identified exactly up to informal-validity equivalence when long inferences decompose into short steps. History violated the realizability condition at its decisive steps (<span class="m">ε–δ</span>, uniform convergence, ideals). Affordable soundness when the learner must invent language remains open.</p>
+        </div>
+      </div>
+      <div class="crit">
+        <h3>A principled system for checking physics olympiad solutions</h3>
+        <div class="body">
+          <span class="chip design">A principled design with a soundness theorem, not yet a system</span>
+          <p>Solutions written in a Structured Physics Solution format are checked soundly against adversarial solvers, relative to a trusted base, the reading of the problem and the adequacy of the top model. That reading and top-model layer is provably ineliminable. The design is illustrated on one EuPhO problem by a problem-specific prototype. No general checker has been built. We deliberately built a checker, not a solver.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="labour">
+    <div class="head">
+      <div class="eyebrow">The main result, informally</div>
+      <h2>Each signal fixes something and leaves a residue</h2>
+      <p class="muted" style="max-width:44rem">The theorems combine into a division of labour. Every learning signal can refute errors in one direction only, so principled justification is a set of signals that jointly cover every direction of error, together with a declared residue.</p>
+    </div>
+    <div class="labour" role="table" aria-label="Division of labour among learning signals">
+      <div class="lrow headrow" role="row"><div role="columnheader">Signal</div><div role="columnheader">What it provably fixes</div><div role="columnheader">What it provably cannot fix</div></div>
+      <div class="lrow" role="row">
+        <div class="sig" role="cell">Imitation<small>positive human steps</small></div>
+        <div class="fx" role="cell"><span class="tag">Fixes</span>The rules actually followed. A schematic calculus of rules cited by name is identified exactly at coupon-collector rates, and this generalizes to derivations of any size.</div>
+        <div class="rs" role="cell"><span class="tag">Residue</span>Systematic human errors, which are indistinguishable from rules at every rate. Imitation converges to competence, not to validity.</div>
+      </div>
+      <div class="lrow" role="row">
+        <div class="sig" role="cell">Cautious acceptance<small>accept what every surviving hypothesis accepts</small></div>
+        <div class="fx" role="cell"><span class="tag">Fixes</span>Soundness against every adaptive prover, under realizability. The price is a combinatorial dimension of the class: linear in step size for named schemas, exponential for unstructured classes.</div>
+        <div class="rs" role="cell"><span class="tag">Residue</span>Nothing new by itself. A cautious learner never even sees a contradiction.</div>
+      </div>
+      <div class="lrow" role="row">
+        <div class="sig" role="cell">Coherence<small>derivations of <span class="m">⊥</span> from contexts certified consistent</small></div>
+        <div class="fx" role="cell"><span class="tag">Fixes</span>Every error incoherent with the target on a designated context. Classical logic exactly, from a single coherence datum (Post-completeness). The classical meanings of the connectives, among structural meanings, once denials are allowed.</div>
+        <div class="rs" role="cell"><span class="tag">Residue</span>Coherent uniform alternatives (the Kripkensteinian residue). The intermediate logics. <span class="m">Σ₁</span>-unsound extensions of arithmetic. Which valuation is actual.</div>
+      </div>
+      <div class="lrow" role="row">
+        <div class="sig" role="cell">Simplicity<small>a steeper penalty</small></div>
+        <div class="fx" role="cell"><span class="tag">Fixes</span>Expensive, idiosyncratic errors, through a rate threshold.</div>
+        <div class="rs" role="cell"><span class="tag">Residue</span>Cheap, frequent fallacies. Rare valid rules are lost. The threshold cannot be calibrated from imitation data.</div>
+      </div>
+      <div class="lrow" role="row">
+        <div class="sig" role="cell">The world<small>objects, computation, simulation</small></div>
+        <div class="fx" role="cell"><span class="tag">Fixes</span>Step-level blame by descent: <span class="m">log₂|H|</span> counterexamples suffice, against up to <span class="m">|H| − 1</span> paradoxes on some classes. Calibration of top models.</div>
+        <div class="rs" role="cell"><span class="tag">Residue</span>Errors invisible on every presentable object. Effects outside the top model.</div>
+      </div>
+      <div class="lrow" role="row">
+        <div class="sig" role="cell">Contexts<small>filter semantics</small></div>
+        <div class="fx" role="cell"><span class="tag">Fixes</span>Reasoning under contradictory idealizations without explosion. Coherence demanded only where it belongs. Certified exports.</div>
+        <div class="rs" role="cell"><span class="tag">Residue</span>The reading of the problem and the adequacy of the top model. Both are provably ineliminable judgments.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="results">
+    <div class="head">
+      <div class="eyebrow">Results by area</div>
+      <h2>The theorems</h2>
+      <p class="muted" style="max-width:44rem">Most theorems are paired with an impossibility result showing their hypotheses cannot be dropped. Green names are Lean declarations that machine-check the result or a stated special case of it.</p>
+    </div>
+    <div class="areas">
+
+      <div class="area">
+        <h3>Search makes soundness a worst-case property</h3>
+        <div class="where">Report §3</div>
+        <div class="infer" aria-label="The rule T_j">
+          <div class="prem"><span>C ∨ ⊤<sup>(j)</sup></span></div>
+          <div class="bar"></div>
+          <div class="lab">T<sub>j</sub></div>
+          <div class="conc">C</div>
+        </div>
+        <ul>
+          <li><b>Tonk beyond the horizon.</b> For every distribution over steps and every <span class="m">ε &gt; 0</span>, adding one schema <span class="m">T<sub>j</sub></span> of mass below <span class="m">ε</span> makes every formula derivable. One accepted bad step is fatal.</li>
+          <li>Every PAC learner of calculi with three basic introduction rules can be modified to stay PAC while trivializing the reasoner.</li>
+          <li><b>Doctrinal paradox.</b> Majority-vote ensembles of individually coherent verifiers can derive <span class="m">⊥</span> forever without any member being refuted.</li>
+        </ul>
+        <div class="lean">StepSoundness.thm_2_1_error_and_trivial</div>
+      </div>
+
+      <div class="area">
+        <h3>Cautious acceptance is the canonical sound verifier</h3>
+        <div class="where">Report §4</div>
+        <ul>
+          <li>Accepting exactly what every surviving hypothesis accepts is sound against every adaptive prover. It is the largest deterministic sound policy; a randomized <span class="m">δ</span>-sound verifier gets anything outside it accepted with joint probability at most <span class="m">δ</span>.</li>
+          <li>Its worst-case cost in human escalations equals a positive-elasticity dimension of the class: linear in step size for named schemas, at least <span class="m">⌊(N−1)/k⌋<sup>k</sup></span> without citations, exponential for unstructured classes.</li>
+          <li>A Bayesian version is time-uniformly sound by Ville’s inequality, via the prior–posterior-ratio martingale of Waudby-Smith and Ramdas.</li>
+        </ul>
+        <div class="lean">StepSoundness.thm_3_1_a · StepSoundness.thm_3_1_b</div>
+      </div>
+
+      <div class="area">
+        <h3>Imitation identifies rules, not norms</h3>
+        <div class="where">Report §5</div>
+        <ul>
+          <li>For rules cited by name, Plotkin’s least general generalization identifies a schematic calculus exactly at a coupon-collector rate: <span class="m">N ≳ max<sub>i</sub> (π<sub>i</sub>ρ<sub>i</sub>)<sup>−1</sup> ln(kc<sub>i</sub>/δ)</span>, and this order is necessary.</li>
+          <li>Exact identification generalizes to derivations of any size. Finite usage fixes inferential role for unbounded use, relative to the hypothesis class.</li>
+          <li>Systematic human errors are indistinguishable from rules at every rate.</li>
+        </ul>
+      </div>
+
+      <div class="area">
+        <h3>Coherence is eliminative negative data</h3>
+        <div class="where">Report §6</div>
+        <ul>
+          <li>A derivation of <span class="m">⊥</span> from a context certified consistent is a negative bag. Only bold learners receive it; a halving learner suffers at most <span class="m">log₂(1/w*)</span> detections.</li>
+          <li><b>Post-completeness.</b> Every structural extension of classical consequence is classical or trivial, so one coherence datum pins classical logic with no simplicity bias. Substituting <span class="m">⊤/⊥</span> turns any invalid rule into a derivation of <span class="m">⊢⊥</span>. For affirming the consequent:</li>
+        </ul>
+        <div class="derivation">⊥ ⊢ ⊥ (ax), &nbsp;⊥ ⊢ ¬⊥ (¬I), &nbsp;⊢ ⊥ → ¬⊥ (→I), &nbsp;⊢ ¬⊥ (¬I), &nbsp;⊢ ⊥ (AC)</div>
+        <ul>
+          <li>Glivenko: coherence is blind among intermediate logics. In arithmetic it detects <span class="m">Π₁</span> truth but not <span class="m">Σ₁</span> truth, and runs out at <span class="m">Σ₂</span>.</li>
+          <li><b>Carnap’s categoricity problem</b> is, in part, Gold’s problem in the dual space of valuations. Single-conclusion data cannot fix the classical meanings; finitely many bilateral data plus one coherence datum can.</li>
+        </ul>
+        <div class="lean">Post.versionSpace_eq_singleton_iff · Post.learner_identifies · Carnap.carnap_single · Carnap.denialRank_eq_two_iff</div>
+      </div>
+
+      <div class="area">
+        <h3>An end-to-end theorem for formal mathematics</h3>
+        <div class="where">Report §7</div>
+        <ul>
+          <li>The naive design, cautious assertion plus a bold red team, is provably unsound because practice contains fallacies.</li>
+          <li>The corrected learner audits, then asserts, assigning blame through the union of minimal conflicts (Reiter’s duality). Under realizability, a frequency floor, truthful designation and an exact depth-<span class="m">d</span> refutation oracle, with probability at least <span class="m">1 − δ</span> it is sound against every adaptive prover and red team.</li>
+          <li>Separate results show that positive data, caution, negative evidence, structurality, burn-in, depth relativization and truthful designation are each needed.</li>
+          <li><b>Arithmetic is Popperian.</b> False <span class="m">Π₁</span> axioms get singleton blame; <span class="m">¬Con(PA)</span> survives under presumption of validity; no computable policy sorts false <span class="m">Σ₂</span> axioms in the limit.</li>
+        </ul>
+      </div>
+
+      <div class="area">
+        <h3>Informal mathematics before formalization</h3>
+        <div class="where">Report §10</div>
+        <ul>
+          <li>Informal practice is modelled as the shadow of a latent formalization. A bounded-gap verifier must check links between contexts as well as steps: Cauchy’s sum theorem is an equivocation.</li>
+          <li>Under complete closure-level data, validity is identified up to informal-validity equivalence and no finer; bounded-gap data only bracket meaning. Ontology is never identifiable: standard and nonstandard reals agree on the practice.</li>
+          <li>Counterexample objects need at most <span class="m">log₂|H|</span> corrections; paradoxes can need <span class="m">|H| − 1</span>, with a sorites chain as the tight case.</li>
+          <li>Frege → Russell → Zermelo comes out as constrained repair selected by coverage of practice. A robust-core theorem holds conditional on the notes’ robust-core hypothesis, which is untested here.</li>
+        </ul>
+      </div>
+
+      <div class="area wide">
+        <h3>Contexts and the principled checking of physics</h3>
+        <div class="where">Report §11</div>
+        <ul>
+          <li>Contexts denote filters of models from a declared deformation family. Suppositions are exact discharge; idealizations may contradict the background without explosion.</li>
+          <li>No truth-functional eternalist reading of in-context claims tracks in-context truth. Designating “idealization plus full background” as coherent forces a structural learner to drop some classical schema in every context: a formal version of the air-pressure worry.</li>
+          <li><b>No free export.</b> Leaving an idealization needs information of finite radius about the de-idealized family (the adversary argument of information-based complexity). Context choice is an attack surface.</li>
+          <li>The Structured Physics Solution checker is sound against adversarial solvers relative to a judgment layer (the reading of the problem and the adequacy of the top model), and that layer is ineliminable. “True in the context at hand” becomes supertruth over admissible completions.</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="notes">
+    <div class="head">
+      <div class="eyebrow">Two questions from Hänni’s notes</div>
+      <h2>Simplicity, and a philosophical completeness theorem</h2>
+    </div>
+    <div class="areas">
+      <div class="area">
+        <h3>Does a steeper simplicity penalty lead from imitation to norms?</h3>
+        <div class="where">Report §8</div>
+        <ul>
+          <li>For function induction with private randomness the hoped-for kink at the simple model exists, proved for parity teachers. Kinks beyond parities are open.</li>
+          <li>Selection is a <b>rate threshold</b>: a component costing <span class="m">k</span> bits that lowers risk by <span class="m">r</span> is kept iff <span class="m">r/k &gt; c</span>.</li>
+          <li>Hence rate blindness (cheap frequent fallacies are kept, rare valid rules lost), rate inversion, guard erosion, and the steepness <span class="m">c</span> is not identifiable from imitation data.</li>
+          <li>Simplicity is useful as one filter in the division of labour, not as the source of norms.</li>
+        </ul>
+        <div class="lean">RateThreshold.rate_threshold · RateThreshold.prod_isMin_iff</div>
+      </div>
+      <div class="area">
+        <h3>“A mode of talking makes sense iff there is something it could be talking about”?</h3>
+        <div class="where">Report §9</div>
+        <ul>
+          <li>In the generalized sense asked for, yes: for positions (bilateral Lindenbaum), credences (de Finetti with counting sequents) and context systems.</li>
+          <li>Coherence cannot certify the <i>intended</i> model. That needs categoricity, anchoring of the vocabulary to the world, or an infinitary condition such as the probabilistic <span class="m">ω</span>-rule. No computable coherence notion certifies intended existence beyond <span class="m">Π₁</span>.</li>
+          <li>Bounded-arity constraints of the kind used in consistency-based probing do not characterize coherence (a Specker-style counterexample). The limits of logical inductors are non-standard.</li>
+        </ul>
+        <div class="lean">Specker.thm_3_4</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="evidence">
+    <div class="head">
+      <div class="eyebrow">Experiments</div>
+      <h2>Small, fully checkable illustrations</h2>
+      <p class="muted" style="max-width:44rem">These run in closed symbolic domains with realizable targets, cheap world feedback and three seeds per configuration. They illustrate the theorems; they are not evidence that the methods scale.</p>
+    </div>
+
+    <div class="exp">
+      <h3>Accuracy in distribution does not survive search</h3>
+      <p class="note">Experiment C. A black-box prover searches for proofs of 23 false algebra equations, with 3000 verifier queries per goal. Verifiers are trained on the same 500 noisy human-like derivations (one rule learner on a clean corpus). Bars show false goals proved, mean of three seeds; the small figure under each count is in-distribution balanced precision.</p>
+      <div class="chart" role="img" aria-label="Bar chart of false goals proved out of 23, by verifier">
+        <div class="legend">
+          <span class="key"><span class="sw" style="background:var(--bar-b)"></span>statistical step classifiers, trained with validity labels</span>
+          <span class="key"><span class="sw" style="background:var(--bar-a)"></span>rule-learned calculi</span>
+        </div>
+        <div class="bars">
+          <div class="group-label">Statistical</div>
+          <div class="brow"><div class="name">Boosted trees, threshold 0.5</div><div class="track"><div class="fill stat" style="width:96.96%"></div></div><div class="val">22.3<span class="prec">0.975</span></div></div>
+          <div class="brow"><div class="name">Boosted trees, precision 0.99</div><div class="track"><div class="fill stat" style="width:70.87%"></div></div><div class="val">16.3<span class="prec">0.993</span></div></div>
+          <div class="brow"><div class="name">Random forest, precision 0.99</div><div class="track"><div class="fill stat" style="width:56.52%"></div></div><div class="val">13.0<span class="prec">0.992</span></div></div>
+          <div class="brow"><div class="name">Logistic regression, precision 0.99</div><div class="track"><div class="fill stat" style="width:14.35%"></div></div><div class="val">3.3<span class="prec">0.975</span></div></div>
+          <div class="brow"><div class="name">Boosted trees, precision 1.0 <small>(recall 0.45)</small></div><div class="track"><div class="fill stat" style="width:7.39%"></div></div><div class="val">1.7<span class="prec">1.000</span></div></div>
+          <div class="group-label">Rule-learned</div>
+          <div class="brow"><div class="name">Least generalization, no guards</div><div class="track"><div class="fill rule" style="width:90%"></div></div><div class="val">20.7<span class="prec">0.906</span></div></div>
+          <div class="brow"><div class="name">With most-specific guards</div><div class="track"><div class="fill rule" style="width:60.87%"></div></div><div class="val">14.0<span class="prec">0.916</span></div></div>
+          <div class="brow"><div class="name">+ coherence, no world</div><div class="track"><div class="fill rule" style="width:21.74%"></div></div><div class="val">5.0<span class="prec">1.000</span></div></div>
+          <div class="brow"><div class="name">Most-specific guards, clean corpus</div><div class="track"><div class="zero"></div></div><div class="val">0<span class="prec">1.000</span></div></div>
+          <div class="brow"><div class="name">+ world feedback (bag or step)</div><div class="track"><div class="zero"></div></div><div class="val">0<span class="prec">1.000</span></div></div>
+          <div class="brow"><div class="name">Ground-truth calculus (control)</div><div class="track"><div class="zero"></div></div><div class="val">0<span class="prec">1.000</span></div></div>
+        </div>
+        <div class="axis" aria-hidden="true"><div class="blank"></div><div class="ticks"><span style="left:0">0</span><span style="left:21.74%">5</span><span style="left:43.48%">10</span><span style="left:65.22%">15</span><span style="left:86.96%">20</span><span style="left:100%">23</span></div><div class="blank"></div></div>
+      </div>
+      <p class="note">The boosted-tree verifier has test AUC 0.995 on held-out human-like steps. Of 1,082 invalid proof edges found against the statistical verifiers, 81% came from leaps, grafts and mutations and 1% from known fallacies. Every invalid edge against a rule-learned verifier is licensed by a named schema that a soundness test flags, so one counterexample removes a whole family of exploits. The coherence-only calculus keeps five false goals per seed, all definedness errors such as <span class="m">0/x = 0</span>, each true when <span class="m">1/0 = 0</span>. Patching the classifier with its own harvested exploits drove the harvested set to zero, but 1.5 of 12 fresh false goals and 2.0 of 35 goals against a second prover still went through.</p>
+    </div>
+
+    <div class="exp">
+      <h3>Algebra: from imitation to a sound calculus, and the meadow</h3>
+      <p class="note">Experiment A. 41 target rewrite schemas for field algebra over partial terms (11 guarded), five simulated systematic student errors plus 5% sporadic noise, <span class="m">N = 500</span> derivations, three seeds.</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Verifier</th><th class="num">Exact / 41</th><th class="num">Unsound schemas</th><th class="num">False accepts, OOD</th><th class="num">White-box exploits</th><th class="num">Oracle queries</th></tr></thead>
+          <tbody>
+            <tr><td>Imitation only</td><td class="num">30.0</td><td class="num bad">15.7</td><td class="num">0.507</td><td class="num">65</td><td class="num">0</td></tr>
+            <tr><td>+ coherence only</td><td class="num">33.0</td><td class="num bad">8.3</td><td class="num">0.156</td><td class="num">27.3</td><td class="num">0</td></tr>
+            <tr><td>+ world, whole derivations</td><td class="num">41.0</td><td class="num good">0.0</td><td class="num">0.000</td><td class="num">0</td><td class="num">11,524</td></tr>
+            <tr><td>+ world, single steps</td><td class="num">41.0</td><td class="num good">0.0</td><td class="num">0.000</td><td class="num">0</td><td class="num">13,329</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Across all 90 runs with step-level world feedback no unsound schema remained, and for <span class="m">N ≥ 200</span> the loop recovered 40.6 of 41 schemas exactly, guards included. Pure coherence converged to a different meaning: for <span class="m">N ≥ 200</span>, 304 of the 315 schemas that survive it are sound in a total semantics with <span class="m">x/0 = 0</span>, a version of Bergstra’s meadows and the convention of Lean’s Mathlib. This is the algebraic counterpart of the Kripkensteinian residue. Only a channel that observes “undefined” separates the two meanings.</p>
+    </div>
+
+    <div class="exp">
+      <h3>Natural deduction, Post probes, and the drift from intuitionistic logic</h3>
+      <p class="note">Experiment B. Classical natural deduction with 13 rules; simulated humans commit affirming the consequent, denying the antecedent and illegitimate discharge.</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Measure</th><th class="num">Imitation only</th><th class="num">+ coherence</th><th class="num">+ sparse world</th></tr></thead>
+          <tbody>
+            <tr><td>Runs where the adversary derives <span class="m">⊢⊥</span> (all 72 runs)</td><td class="num bad">32</td><td class="num good">0</td><td class="num good">0</td></tr>
+            <tr><td>Runs with an unsound rule (all 72 runs)</td><td class="num">47</td><td class="num">19</td><td class="num">6</td></tr>
+            <tr><td>Unsound rules per run (<span class="m">N</span> = 50–200)</td><td class="num">45.6</td><td class="num">1.2</td><td class="num">0.2</td></tr>
+            <tr><td>Completeness on random tautologies (target 0.88)</td><td class="num">0.87</td><td class="num">0.87</td><td class="num">0.87</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">A bold learner over classical natural deduction accepted all 59 valid structural candidate schemas and refuted all 118 invalid ones, each by an explicit derivation of <span class="m">⊢⊥</span> (median 6 steps for random schemas). Over intuitionistic natural deduction the same learner accepted excluded middle, double-negation elimination, reductio, Peirce’s law, weak excluded middle and Dummett’s linearity, raising completeness from 0.72 to 0.80 (classical: 0.84). Coherence cannot separate the intermediate logics, so the bold tier drifts toward classical logic, and only the cautious tier keeps intuitionistic logic.</p>
+    </div>
+
+    <div class="exp">
+      <h3>The two-tier learner against an exhaustive prover</h3>
+      <p class="note">A propositional practice with nine genuine rules, four systematic fallacies under their own tags and 1% mis-tagged noise; 20 trials per <span class="m">N</span>.</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th class="num"><span class="m">N</span></th><th class="num">Positive-only cautious tier unsound</th><th class="num">Two-tier learner unsound</th><th class="num">Two-tier learner exact</th></tr></thead>
+          <tbody>
+            <tr><td class="num">60</td><td class="num bad">12/20</td><td class="num good">0/20</td><td class="num">0/20</td></tr>
+            <tr><td class="num">120</td><td class="num bad">20/20</td><td class="num good">0/20</td><td class="num">10/20</td></tr>
+            <tr><td class="num">250</td><td class="num bad">20/20</td><td class="num good">0/20</td><td class="num">20/20</td></tr>
+            <tr><td class="num">500</td><td class="num bad">20/20</td><td class="num good">0/20</td><td class="num">20/20</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="exp">
+      <h3>A physics checker on EuPhO 2025 Theory 1(a)</h3>
+      <p class="note">The polished chair leg: sunlight reflected by a vertical specular cylinder of radius <span class="m">a</span> onto the floor. The setup was reconstructed from Hänni’s notes and not checked against the official text.</p>
+      <div class="prose" style="max-width:48rem">
+        <p style="font-size:0.95rem">In the top model the reflected illuminance is exactly <span class="m">E = I₀ac / (2s + ac)</span>, and at a fixed floor point it does not depend on the sun’s zenith angle, which the photograph leaves open. That independence is the completion-invariance certificate. A rigorous thin-leg bridge exports the answer <span class="m">E₀ = (aI₀/2)|sin(φ/2)|/r</span> to an annulus <span class="m">a ≪ r &lt; L tan α</span>.</p>
+        <p style="font-size:0.95rem">The prototype accepted the honest solution on <span class="m">r ∈ [20a, 34a]</span> with certified error at most 8.88%, and rejected all twelve variants: overclaimed domains, side conditions evaluated inside the idealization, a narrowed reading, undeclared imports and disguised wrong answers. One rejection (a 5% tolerance) is a completeness gap, since the truth is within 5%. Plausible syntactic versions of the checks accept four of the attacks; only semantic checks reject them.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="checking">
+    <div class="head">
+      <div class="eyebrow">How it was checked</div>
+      <h2>Refereed, repaired, machine-checked</h2>
+    </div>
+    <div class="ledger">
+      <div>
+        <div class="k">Adversarial refereeing</div>
+        <p>Seven theory documents were split among two or three referees each, so every main result had one referee told to refute it, with brute-force computation on small cases where possible.</p>
+        <p>Round 1 found <b>4 fatal</b> and <b>20 major</b> issues; the fatal ones were false statements, and at least 8 of the major ones were counterexamples. Each was repaired, weakened or retracted. Round 2 found 2 more major problems in the two-tier theory, and 2 in glosses in one literature memo. A third referee re-checked the two-tier repairs and found no fatal or major problem.</p>
+      </div>
+      <div>
+        <div class="k">Lean 4 with Mathlib</div>
+        <p>About fifty paper results in 17 modules, roughly 14,600 lines, with no <code>sorry</code>. About a third are formalized as special cases, weaker statements or variants, and the appendix map says which.</p>
+        <p>The axiom audit covers 483 declarations. Every one uses only the standard axioms (<code>propext</code>, <code>Classical.choice</code>, <code>Quot.sound</code>) or a subset of them.</p>
+      </div>
+      <div>
+        <div class="k">Code and paper review</div>
+        <p>The Python package <code>cil</code> has 85 tests and a 55-step quick reproduction script. An independent code review re-ran everything and fixed two reporting errors.</p>
+        <p>The draft went through a fidelity check of each section against its verified source, an eight-lens review of the whole paper and a final consistency pass, which corrected several overclaims in earlier drafts.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="beyond">
+    <div class="head">
+      <div class="eyebrow">Philosophy</div>
+      <h2>What principled justification beyond proof looks like</h2>
+    </div>
+    <div class="prose">
+      <p>The setup is Goodman’s mutual adjustment of rules and inferences, made into a learning problem. Without world feedback it is narrow reflective equilibrium; with it, wide. The theorems give conditional reliabilist vindications of that process: under explicit assumptions, mutual adjustment is sound against every adaptive arguer, at every time and not only in the limit. They are not a non-circular foundation for logic.</p>
+      <p><b>Every signal is one-sided.</b> Positive data never refute an over-generalization. Coherence never refutes over-caution, nor a coherent over-generalization. Coherence among tolerances never refutes one that is too wide. Demanding a well-posed problem refutes readings that are too wide and rewards readings that are too narrow. Each one-sided signal is an attack surface and calls for a complementary signal.</p>
+    </div>
+    <div class="shape">
+      <div class="item"><div class="glyph">⊢</div><p><b>Proof inside contexts.</b> Each step is checked against a calculus, formal where possible. Where the calculus is learned, acceptance is cautious, so the check holds against an arguer who searches for weaknesses.</p></div>
+      <div class="item"><div class="glyph">⇝</div><p><b>Certified bridges between contexts.</b> Leaving an idealization needs a certificate with information of finite radius about the de-idealized family. Side conditions are evaluated where they are true, in the parent context.</p></div>
+      <div class="item"><div class="glyph">◇</div><p><b>An explicit judgment layer.</b> That the problem was read correctly, that the top model is adequate, and that the trusted base is trustworthy. The first two are provably ineliminable. A principled justification minimizes this layer and declares it.</p></div>
+      <div class="item"><div class="glyph">∀</div><p><b>Correctness as supertruth.</b> For underspecified questions, “true here” means true in every admissible completion, to the demanded precision. Answer-invariance, which experienced solvers notice and rely on, is a certificate of supertruth.</p></div>
+      <div class="item"><div class="glyph">⊥</div><p><b>Learning signals with known limits.</b> Every learned component states the signal that trained it and the residue that signal leaves.</p></div>
+    </div>
+    <div class="prose">
+      <p>Mathematical proof is the limiting case: the judgment layer shrinks to reading the formal statement and trusting the axioms, every bridge is exact, and the calculus is fixed. Informal mathematics sits in between. Mathematical and physical justification differ in degree, measured by the size of the declared residue.</p>
+      <p><b>On meaning.</b> Inferential roles are learnable exactly from finite use, through schemas plus a small set of telling instances; the skeptic’s “quus” survives only as a non-uniform patch or a named coherent alternative. More than role is not identifiable, and ontology is not. Rules can be identifiable when truths are not: the classical connectives are pinned by finitely many bilateral data, while no computable learner decides <span class="m">Σ₂</span> arithmetic truth in the limit. This bears on Dummett’s acquisition argument without refuting it.</p>
+      <p><b>Where philosophies part.</b> Outside the residue of coherent, uniform, world-adequate alternatives, realist, Peircean, Dummettian, Carnapian and Quinean positions all count the learner correct. The residue is empty for classical propositional logic, contains every intermediate logic for an intuitionistic practice, contains <span class="m">PA + ¬Con(PA)</span> for arithmetic, and contains the meadow in the algebra experiment. A theorem can say where the philosophies part ways. It cannot settle who is right inside the residue.</p>
+    </div>
+  </section>
+
+  <section id="open">
+    <div class="head">
+      <div class="eyebrow">Limits</div>
+      <h2>Open problems</h2>
+    </div>
+    <div class="open">
+      <div class="first">
+        <h3>Affordable soundness when the learner must invent language</h3>
+        <p>Every guarantee assumes realizability, and history did not respect any fixed class: it invented uniform convergence, ideals, <span class="m">ε–δ</span> and the fundamental group. A universal class restores realizability but costs on the order of <span class="m">2<sup>K(h*)</sup></span> escalations. Needed is a class closed under the definitional extensions mathematics actually made, with small escalation dimension. This is the hardest open problem.</p>
+      </div>
+      <div><h3>Computational cost</h3><p>Bounds count samples, escalations and oracle calls, not computation. Version-space membership for untagged unions is likely NP-hard; refutation search is only semi-decidable.</p></div>
+      <div><h3>Learning the reading</h3><p>Which positive data identify the admissible worlds a problem text intends? Conjecture: official solutions with marking schemes form a tell-tale. Probably the central open problem for checking beyond mathematics.</p></div>
+      <div><h3>Sharp combinatorics</h3><p>A binomial conjecture for unions of intersection-closed classes; the exact exchange rate between paradoxes and counterexample objects; the query complexity of sound blame.</p></div>
+      <div><h3>Coherence beyond Post-completeness</h3><p>Which first-order and modal targets are coherence-pinned? Is there a principled learner of the right amount of reflection in arithmetic?</p></div>
+      <div><h3>Simplicity and normativity</h3><p>Kinks beyond parities; a data-free choice of the simplicity coefficient; assumptions under which description length identifies competence.</p></div>
+      <div><h3>Scale</h3><p>Whether cautious learned calculi stay affordable on real corpora is untested. We deliberately built no strong prover, and make no recommendations for prover development.</p></div>
+    </div>
+  </section>
+
+  <section id="files">
+    <div class="head">
+      <div class="eyebrow">Where everything is</div>
+      <h2>Files</h2>
+      <p class="muted" style="max-width:44rem">In <code>kaarelh/AI-works</code>, branch <code>claude/sleepy-gauss-u4kem1</code>, folder <code>inferential-learning/</code>.</p>
+    </div>
+    <div class="files">
+      <div><code>paper/main.pdf</code><span>The report. Main text pp. 8–141, full proofs and the Lean map in appendices A–K. <a href="main.pdf" target="_blank" rel="noopener">Open the copy attached to this page</a>.</span></div>
+      <div><code>lean/</code><span>Library <code>InfLearn</code>; theorem map in <code>lean/README.md</code>, axiom audit in <code>lean/audit-output.txt</code>.</span></div>
+      <div><code>code/</code><span>Package <code>cil</code>, experiments, results and tests; <code>run_all_quick.sh</code> reproduces everything.</span></div>
+      <div><code>research/theory/</code><span>Theory documents T1–T7, each with a verification log and check scripts.</span></div>
+      <div><code>research/verification/</code><span>Referee reports and re-verification rounds.</span></div>
+      <div><code>research/lit/</code><span>Literature memos L1–L11, including a digest of Hänni’s notes.</span></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p>Prepared by Claude (Anthropic) in response to questions from Kaarel Hänni’s public working notes (github.com/kaarelh/notes). The readings of the notes are the report’s own. Draft; authorship and publication are for him to decide.</p>
+</footer>
+</div>

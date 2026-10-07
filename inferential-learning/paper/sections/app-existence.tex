@@ -1,0 +1,309 @@
+% ===================================================================
+% Appendix to Section 9 (Coherence and existence)
+% Source: research/theory/T6-philosophical-completeness.md, as repaired after
+%         verification (see its "Verification log": A1-A19, B1-B24),
+%         research/verification/T6-verification.md and reverification-round2.md.
+% Contains the proofs, the secondary results moved from the main text
+% (thm:existence:threshold, prop:existence:closed, prop:existence:vnm,
+% thm:existence:tree) and the term-model/pins material (app:existence:pins).
+% ===================================================================
+\providecommand{\BV}{\mathrm{BV}}
+\providecommand{\RobQ}{\mathsf{Q}}
+\providecommand{\Pt}{\mathrm{Pt}}
+\providecommand{\Fix}{\mathrm{Fix}}
+\providecommand{\Sent}{\mathrm{Sent}}
+\providecommand{\Der}{\mathrm{Der}}
+\providecommand{\MC}{\mathrm{MC}}
+\providecommand{\LMS}{\mathrm{LMS}}
+\providecommand{\conv}{\mathrm{conv}}
+\providecommand{\Prf}{\mathrm{Prf}}
+\providecommand{\nml}[1]{\underline{#1}}
+\providecommand{\twoM}{\mathbf{2}}
+\providecommand{\HthreeA}{\mathbf{H}_3}
+
+\section{Proofs for Section~\ref{sec:existence}}\label{app:existence}
+
+The following results are proved completely in the main text:
+\cref{prop:existence:image,thm:existence:tautological,thm:existence:arity,cor:existence:contexts,prop:existence:triangle}.
+In \Cref{ex:existence:mp} the first claim is a one-line check (the union bound of $p\wedge q\step p$ is $(1-0.9)+0.2=0.3<1$), and the facet list is computed (\texttt{research/theory/T6-checks/prob\_coherence.py}); it is also easily verified by hand from the four vertices $(0,0,1),(0,1,1),(1,0,0),(1,1,1)$. Several secondary results are stated only here: \Cref{thm:existence:threshold,prop:existence:closed,prop:existence:vnm} (\S\ref{app:existence:credences}), \Cref{thm:existence:tree} (\S\ref{app:existence:contexts}), and the material on term models and pins (\S\ref{app:existence:pins}). There, \Cref{thm:existence:prime,thm:existence:compactness,thm:existence:tennenbaum} and Beth's theorem in \Cref{prop:existence:beth} are cited, not reproved; the non-standardness clause of \Cref{thm:existence:prime} and the examples after \Cref{prop:existence:beth} are argued where they are stated. Everything else is proved below. Throughout, ``theory'' means closed set.
+
+% -------------------------------------------------------------------
+\subsection{The abstract frame}\label{app:existence:galois}
+
+\begin{proof}[Proof of \Cref{lem:existence:galois}]
+Both sides of $K\subseteq\Mod(\Sigma)\iff\Sigma\subseteq\Th(K)$ say that $m\models\sigma$ for all $m\in K$, $\sigma\in\Sigma$. Both maps are inclusion-reversing. Taking $K=\Mod(\Sigma)$ gives $\Sigma\subseteq\Th\Mod(\Sigma)$, and taking $\Sigma=\Th(K)$ gives $K\subseteq\Mod\Th(K)$; so both composites are extensive and monotone. Applying the inclusion-reversing $\Mod$ to $\Sigma\subseteq\Th\Mod\Sigma$ gives $\Mod\Th\Mod\Sigma\subseteq\Mod\Sigma$, and the converse is extensivity of $\Mod\Th$ at $\Mod\Sigma$; so $\Mod\Th\Mod=\Mod$, and dually $\Th\Mod\Th=\Th$. Idempotence of both composites follows. The fixed points of $\Th\circ\Mod$ are exactly the sets $\Th(K)$, those of $\Mod\circ\Th$ the sets $\Mod(\Sigma)$, and the two identities show that $\Mod$ and $\Th$ are mutually inverse on them. Fixed-point sets of closure operators on power sets are closed under arbitrary intersections, so they are complete lattices.
+\end{proof}
+
+\begin{proof}[Proof of \Cref{thm:existence:points}]
+We first record a consequence of finitarity: \emph{the union $U$ of a nonempty chain of closed sets is closed.} Indeed $C(U)=\bigcup\{C(U_0):U_0\subseteq U\text{ finite}\}$, each finite $U_0$ lies in a single member $T$ of the chain, and $C(U_0)\subseteq C(T)=T\subseteq U$.
+
+(a) Let $T$ be closed and $\sigma\notin T$. The family of closed $T'\supseteq T$ with $\sigma\notin T'$ is nonempty (it contains $T$) and, by the observation, closed under unions of nonempty chains. By Zorn's lemma it has a maximal member $T_\sigma$. Then $T_\sigma\neq S$, and every closed $T'\supsetneq T_\sigma$ contains $\sigma$ by maximality; so $T_\sigma$ is a point containing $T$. Hence $\bigcap\{P\in\Pt(C):P\supseteq T\}\subseteq\bigcap_{\sigma\notin T}T_\sigma\subseteq T$, since $\tau\notin T$ implies $\tau\notin T_\tau$. The reverse inclusion is trivial. If $T=S$ there is no point above $T$ and the empty intersection is $S$.
+
+(b) ($\Leftarrow$) Soundness gives $C(X)\subseteq\Th(\Mod(X))$. Conversely, by (a), $C(X)=\bigcap_iP_i$ for the points $P_i\supseteq C(X)$. By hypothesis $P_i=\Th(\{m_i\})$, and $m_i\in\Mod(X)$ because $X\subseteq P_i$. So $\Th(\Mod(X))\subseteq\bigcap_i\Th(\{m_i\})=C(X)$.
+
+($\Rightarrow$) Let $P$ be a point, with witness $\sigma$. By strong completeness, $P=C(P)=\Th(\Mod(P))=\bigcap_{m\in\Mod(P)}\Th(\{m\})$. If $\Mod(P)=\emptyset$ the right-hand side is $S\neq P$; so $\Mod(P)\neq\emptyset$. Each $\Th(\{m\})$ with $m\in\Mod(P)$ is closed, by soundness, and contains $P$. If each of them strictly contained $P$, each would contain $\sigma$, and so would their intersection $P$, which is impossible. So $P=\Th(\{m\})$ for some $m$.
+
+(c) Proper closed sets are closed under unions of nonempty chains: the union $U$ is closed by the observation, and if $U=S$ then the finite set $F$ lies in a single member $T$ of the chain, so $T\supseteq C(F)=S$, a contradiction. By Zorn, every proper closed set extends to a maximal proper closed set.
+($\Leftarrow$) If $X$ is coherent, $C(X)$ is proper and extends to a maximal proper closed $T$; by hypothesis $T=\Th(\{m\})$, and $m\in\Mod(X)$.
+($\Rightarrow$) Let $T$ be maximal proper closed. Since $C(T)=T\neq S$, weak completeness gives $m\in\Mod(T)$. Then $T\subseteq\Th(\{m\})\neq S$, and $\Th(\{m\})$ is closed \emph{by soundness}; maximality gives $T=\Th(\{m\})$.
+\emph{Soundness is needed for ($\Rightarrow$).} Let $S=\{a,b,\bot\}$ with closed sets $\emptyset$, $\{a\}$, $S$ (so $C$ is finitary and $C(\{\bot\})=S$), and let $M=\{m\}$ with $\Th(\{m\})=\{a,b\}\neq S$. The $C$-coherent sets are $\emptyset$ and $\{a\}$, both satisfied by $m$, so $C$ is weakly complete; $\{a\}$ is maximal proper closed but differs from $\Th(\{m\})=\{a,b\}$, which is not closed, so $C$ is unsound ($C(\{b\})=S\not\subseteq\Th\Mod(\{b\})=\{a,b\}$). \texttt{repair\_checks.py}\,(A) reproduces it and finds no failure of (b) or (c) on 1{,}602 random sound finite frames.
+\end{proof}
+
+\begin{proof}[Details for \Cref{prop:existence:ipc}]
+\emph{Soundness.} Every Boolean valuation is a model of $\IPC$, so each $\Th(\{v\})$ is $\IPC$-closed. \emph{Failure of strong completeness.} $p\vee\neg p$ is true in every Boolean valuation, and refuted in the three-element Heyting algebra by $h(p)=\frac12$, so $\IPC\nder p\vee\neg p$. \emph{Weak completeness.} The hypotheses of \Cref{thm:existence:points}(c) hold with $F=\{\bot\}$, and $\Th(\{v\})\not\ni\bot$. Let $T$ be a maximal proper $\IPC$-closed set; proper means consistent, as $\{\bot\}$ is explosive. If $\varphi\notin T$, then $C_{\IPC}(T\cup\{\varphi\})$ is closed and strictly larger than $T$, hence equals $\Fm$; so $T,\varphi\der_{\IPC}\bot$ and, by the deduction theorem, $\neg\varphi=\varphi\to\bot\in T$. So $\varphi\in T$ or $\neg\varphi\in T$, whence $\varphi\vee\neg\varphi\in T$ for every $\varphi$. As consequence relations $\CPC=\IPC+\mathrm{EM}$, where $\mathrm{EM}$ is the set of instances of excluded middle; so $C_{\CPC}(T)=C_{\IPC}(T\cup\mathrm{EM})=C_{\IPC}(T)=T\not\ni\bot$. Thus $T$ is $\CPC$-consistent, and maximal $\CPC$-consistent (any $\CPC$-consistent superset is $\IPC$-consistent), hence $T=v^{-1}(1)$ for a Boolean $v$. \Cref{thm:existence:points}(c) concludes. Alternatively, weak completeness follows from Glivenko's theorem \citep{glivenko1929quelques}.
+\end{proof}
+
+\begin{proof}[Proof of \Cref{lem:existence:cpcpoints}]
+Let $T$ be maximal among $\Cn_2$-theories omitting $\varphi$, and suppose neither $\psi$ nor $\neg\psi$ is in $T$. By maximality $\varphi\in\Cn_2(T\cup\{\psi\})$ and $\varphi\in\Cn_2(T\cup\{\neg\psi\})$. By proof by cases, $\Cn_2(T\cup\{\psi\})\cap\Cn_2(T\cup\{\neg\psi\})=\Cn_2(T)=T$, so $\varphi\in T$, a contradiction. Hence $T$ is complete (it contains $\psi$ or $\neg\psi$ for every $\psi$). Since $T\neq\Fm$ it is consistent, and a complete consistent theory is maximal consistent.
+\end{proof}
+
+% -------------------------------------------------------------------
+\subsection{Positions}\label{app:existence:positions}
+
+\begin{proof}[Proof of \Cref{thm:existence:bilindenbaum}]
+(a) Order the coherent positions extending $\pos XY$ componentwise. A union of a nonempty chain $\pos{X_k}{Y_k}$ is coherent: an incoherence witness $\Gamma\step\Delta$ with $\Gamma\subseteq\bigcup X_k$, $\Delta\subseteq\bigcup Y_k$ involves finitely many formulas, so it lies in a single $\pos{X_k}{Y_k}$. Zorn gives a maximal coherent $\pos{X^*}{Y^*}$.
+\emph{Disjoint:} if $\varphi\in X^*\cap Y^*$, then $\{\varphi\}\step\{\varphi\}\in{\der}$ by (Ov) witnesses incoherence.
+\emph{Exhaustive:} suppose $\varphi\notin X^*\cup Y^*$. By maximality both $\pos{X^*\cup\{\varphi\}}{Y^*}$ and $\pos{X^*}{Y^*\cup\{\varphi\}}$ are incoherent, so there are $\Gamma_1,\varphi\step\Delta_1$ and $\Gamma_2\step\varphi,\Delta_2$ in ${\der}$ with $\Gamma_i\subseteq X^*$, $\Delta_i\subseteq Y^*$. (If $\varphi$ does not occur in a witness, that witness already shows $\pos{X^*}{Y^*}$ incoherent.) By (Wk) both hold with context $\Gamma_1\cup\Gamma_2$, $\Delta_1\cup\Delta_2$; (Cut) on $\varphi$ gives $\Gamma_1\cup\Gamma_2\step\Delta_1\cup\Delta_2\in{\der}$, which witnesses incoherence of $\pos{X^*}{Y^*}$: a contradiction.
+So $v=\chi_{X^*}$ is a valuation with $v^{-1}(0)=Y^*$. It satisfies every $\Gamma\step\Delta\in{\der}$, since otherwise $\Gamma\subseteq X^*$ and $\Delta\subseteq Y^*$. And $v[X]=1$, $v[Y]=0$.
+
+(b) For $v\in\Val(\der)$, the position $\pos{v^{-1}(1)}{v^{-1}(0)}$ is coherent, because $v$ satisfies every sequent of ${\der}$. It is maximal: a proper extension puts some $\varphi$ on both sides, which (Ov) makes incoherent. Conversely, a maximal coherent position is, by the proof of (a), of this form.
+\end{proof}
+
+\begin{proof}[Proof of \Cref{cor:existence:bilateral}]
+\emph{Soundness}, $\langle S\rangle\subseteq\Th(\Mod(S))$: the sequents valid in every $v\in\Mod(S)$ contain $S$ and form a Scott relation. Every valuation satisfies the (Ov) instances and preserves (Wk); for (Cut), if $v[\Gamma]=1$ and $v[\Delta]=0$, the premises force $v(\varphi)=0$ and $v(\varphi)=1$.
+\emph{Completeness.} If $\Gamma_0\step\Delta_0\notin\langle S\rangle$, then $\pos{\Gamma_0}{\Delta_0}$ is $\langle S\rangle$-coherent, since a witness inside it would yield $\Gamma_0\step\Delta_0$ by (Wk). \Cref{thm:existence:bilindenbaum} gives $v\in\Val\langle S\rangle\subseteq\Mod(S)$ realizing $\pos{\Gamma_0}{\Delta_0}$, i.e.\ violating $\Gamma_0\step\Delta_0$.
+\end{proof}
+
+\begin{proof}[Proof of \Cref{thm:existence:duality}]
+\emph{Syntactic closure.} By \Cref{cor:existence:bilateral}, $\Th\circ\Mod$ on sets of sequents is $S\mapsto\langle S\rangle$, so its fixed points are exactly the Scott relations.
+\emph{Semantic closure.} For $V\subseteq2^{\Fm}$, $\Mod(\Th(V))=\overline V$. The set $\Mod(\Th(V))$ is an intersection of the sets $\{v:v\models\Gamma\step\Delta\}$, each of which is clopen (it depends on finitely many coordinates); so it is closed, and it contains $V$; hence it contains $\overline V$. Conversely, let $w\notin\overline V$. Some basic open neighbourhood of $w$, determined by finitely many coordinates, misses $V$; it has the form $U(\Gamma,\Delta)=\{v:v[\Gamma]=1,\ v[\Delta]=0\}$ with $\Gamma=w^{-1}(1)\cap E$, $\Delta=w^{-1}(0)\cap E$ for a finite $E\subseteq\Fm$. Since $U(\Gamma,\Delta)\cap V=\emptyset$, every $v\in V$ satisfies $\Gamma\step\Delta$, so $\Gamma\step\Delta\in\Th(V)$; and $w\in U(\Gamma,\Delta)$ violates it. So $w\notin\Mod(\Th(V))$. This is \Cref{lem:coherence:duality}(a); it is formalized as \texttt{Bilateral.Val\_Th} for sequents over an arbitrary set $\Fm$ (and as \texttt{Carnap.Val\_mrel} for the propositional language).
+\emph{Duality.} By \Cref{lem:existence:galois}, $\Mod=\Val$ and $\Th$ are mutually inverse inclusion-reversing bijections between the fixed points on the two sides, i.e.\ between Scott relations and closed subsets of $2^{\Fm}$.
+\end{proof}
+
+The Stone-duality reading after \Cref{thm:existence:duality} needs only Stone's theorem \citep{stone1936theory}, the observation that the clopen set of the clause $\bigvee_{\gamma\in\Gamma}\neg\gamma\vee\bigvee_{\delta\in\Delta}\delta$ is $\{v:v\models\Gamma\step\Delta\}$, and conjunctive normal form in $B$. \texttt{scott\_duality.py} checks \Cref{cor:existence:bilateral} on 300 random sequent sets over four formulas, and \Cref{thm:existence:duality} exhaustively over three formulas (all 256 sets of valuations are Galois-closed, and $V\mapsto\Th(V)$ is injective).
+
+\begin{proof}[Proof of \Cref{thm:existence:structural}]
+For every substitution $\sigma$ and valuation $v$, $(v\circ\sigma)(\varphi)=v(\sigma\varphi)$, so
+\begin{equation}\label{eq:existence:subst}
+v\circ\sigma\models\Gamma\step\Delta\quad\text{iff}\quad v\models\sigma\Gamma\step\sigma\Delta.
+\end{equation}
+(a) ($\Rightarrow$) Let ${\der}$ be structural and $v\in\Val(\der)$. For $\Gamma\step\Delta\in{\der}$ we have $\sigma\Gamma\step\sigma\Delta\in{\der}$, so $v$ satisfies it, so $v\circ\sigma\models\Gamma\step\Delta$ by \eqref{eq:existence:subst}. Hence $v\circ\sigma\in\Val(\der)$.
+($\Leftarrow$) Let $\Val(\der)$ be substitution-invariant and $\Gamma\step\Delta\in{\der}$. For every $v\in\Val(\der)$, $v\circ\sigma\in\Val(\der)$ satisfies $\Gamma\step\Delta$, so $v\models\sigma\Gamma\step\sigma\Delta$. Thus $\sigma\Gamma\step\sigma\Delta\in\Th(\Val(\der))={\der}$, the last equality by \Cref{cor:existence:bilateral} since ${\der}$ is a Scott relation.
+The duality statement is the restriction of \Cref{thm:existence:duality}: a closed substitution-invariant $V$ equals $\Val(\Th(V))$, so $\Th(V)$ is structural by ($\Leftarrow$).
+
+(b) An assignment into $L_v=\langle\Fm,v^{-1}(1)\rangle$ is a homomorphism $\Fm\to\Fm$, i.e.\ a substitution $\sigma$, and it satisfies $\Gamma\step\Delta$ in the matrix iff not ($\sigma\Gamma\subseteq v^{-1}(1)$ and $\sigma\Delta\cap v^{-1}(1)=\emptyset$), iff $v\models\sigma\Gamma\step\sigma\Delta$, iff $v\circ\sigma\models\Gamma\step\Delta$. So $L_v$ validates $\Gamma\step\Delta$ iff $v\circ\sigma\models\Gamma\step\Delta$ for all $\sigma$. If ${\der}$ is structural and $\Gamma\step\Delta\in{\der}$, this holds by (a). If $\Gamma\step\Delta\notin{\der}$, the position $\pos\Gamma\Delta$ is coherent (a witness inside it would give $\Gamma\step\Delta$ by (Wk)), so \Cref{thm:existence:bilindenbaum} gives $v\in\Val(\der)$ with $v[\Gamma]=1$, $v[\Delta]=0$, and the identity assignment in $L_v$ violates $\Gamma\step\Delta$. Likewise, a coherent position $\pos XY$ is realized by some $v\in\Val(\der)$, and the identity assignment in $L_v$ designates $X$ and no member of $Y$.
+\end{proof}
+
+% -------------------------------------------------------------------
+\subsection{Credences}\label{app:existence:credences}
+
+\begin{proof}[Proof of \Cref{thm:existence:definetti}]
+(i)$\Rightarrow$(iii): if $P=\sum_v\mu(v)\bar v$ and $\lambda\cdot\bar v\ge c$ for all $v$, then $\lambda\cdot P=\sum_v\mu(v)\,\lambda\cdot\bar v\ge c$.
+(i)$\Rightarrow$(ii): $\sum_v\mu(v)\,\lambda\cdot(\bar v-P)=\lambda\cdot P-\lambda\cdot P=0$, so $\lambda\cdot(\bar v-P)$ cannot be negative for every $v$.
+(iii)$\Rightarrow$(i) and (ii)$\Rightarrow$(i): $\Pi_F$ is the convex hull of finitely many $0/1$ points, hence a polytope with rational vertices, hence (Weyl--Minkowski) $\Pi_F=\{x:a_i\cdot x\ge b_i,\ i\le r\}$ with rational $a_i,b_i$. If $P\notin\Pi_F$, one of these inequalities, say $a\cdot x\ge b$ (a facet inequality, or half of an affine-hull equation), has $a\cdot P<b\le a\cdot\bar v$ for all $v\in\BV$. This violates (iii) with $\lambda=a$, $c=b$. And $\lambda=-a$ is a Dutch book: $\lambda\cdot(\bar v-P)=a\cdot P-a\cdot\bar v<0$ for every $v$.
+(iii)$\Rightarrow$(iv): for a valid $(\Phi,m)$ let $\lambda_\varphi$ be the multiplicity of $\varphi$ in $\Phi$ and $c=m$. Then $\lambda\cdot\bar v$ is the number of members of $\Phi$ true in $v$, which is $\ge m$, so (iii) gives $\sum_\Phi P=\lambda\cdot P\ge m$.
+(iv)$\Rightarrow$(iii): let $\lambda,c$ be rational with $\lambda\cdot\bar v\ge c$ for all $v$. Multiplying both by a positive common denominator preserves both inequalities, so assume $\lambda\in\mathbb Z^F$, $c\in\mathbb Z$. For each coordinate $\varphi$ with $\lambda_\varphi<0$ use $\lambda_\varphi v(\varphi)=|\lambda_\varphi|\,v(\varphi^*)-|\lambda_\varphi|$, valid for every $v\in\BV$ since $v(\varphi^*)=1-v(\varphi)$, and the same identity for $P$, valid by negation coherence. Let $\Phi$ be the multiset containing $\lambda_\varphi$ copies of $\varphi$ for each $\lambda_\varphi>0$ and $|\lambda_\varphi|$ copies of $\varphi^*$ for each $\lambda_\varphi<0$ (multiplicities add if $\varphi^*$ also has a positive coefficient), and let $m=c+\sum_{\lambda_\varphi<0}|\lambda_\varphi|$. Then for every $v$, $\lambda\cdot\bar v=\#_\Phi(v)-\sum_{\lambda_\varphi<0}|\lambda_\varphi|$, where $\#_\Phi(v)$ counts the members of $\Phi$ true in $v$; so $(\Phi,m)$ is valid. Likewise $\lambda\cdot P=\sum_\Phi P-\sum_{\lambda_\varphi<0}|\lambda_\varphi|$, so (iv) gives $\lambda\cdot P\ge c$.
+Finally, $P\equiv1$ satisfies every valid counting sequent, since validity at any world forces $m\le|\Phi|$; but it is incoherent, as $\bar v$ never has $v(\varphi)=v(\varphi^*)=1$.
+\end{proof}
+
+\paragraph{The threshold hierarchy.} With $F_k$ and $P_k$ as in \Cref{thm:existence:arity}:
+
+\begin{theorem}[The counting-sequent hierarchy by threshold is strict]\src{T6 Thm 3.5, as repaired}\label{thm:existence:threshold}
+\textup{(a)} $P_k$ violates the valid counting sequent $\Phi=\{\neg A_1,\dots,\neg A_k\}\cup\{A_i\wedge A_j:i<j\}$, $m=k-1$, which repeats no formula. \textup{(b)} $P_k$ satisfies every valid counting sequent over $F_k$ with $m\le k-2$, with arbitrary repetitions; in particular ($m=1$) the union bound of every valid ordinary multiple-conclusion sequent.
+\end{theorem}
+
+\begin{proof}
+(a) In a world with $t$ true atoms, $(k-t)+\binom t2\ge k-1$ members of $\Phi$ hold, as $(t-1)(t-2)\ge0$; but $\sum_\Phi P_k=\frac{k(k-2)}{k-1}<k-1$.
+
+(b) Let $\Phi$ contain $a_t$ copies of $A_t$, $b_t$ of $\neg A_t$, $c_{ij}$ of $A_i\wedge A_j$ and $n_{ij}$ of $\neg(A_i\wedge A_j)$. Put $N=\sum n_{ij}$ and $x_t=b_t-a_t$, and write $\#(S)$ for the number of members of $\Phi$ (with multiplicity) true in the world whose true atoms are $S$.
+\emph{Two kinds of worlds.} $\#(\emptyset)=\sum_tb_t+N$. In the world $\{t\}$ all conjunctions are still false, $A_t$ becomes true and $\neg A_t$ false, so $\#(\{t\})=\#(\emptyset)-x_t$.
+\emph{The credence sum.} Directly,
+\[
+\textstyle\sum_\Phi P_k=\frac{\sum_ta_t}{k-1}+\frac{(k-2)\sum_tb_t}{k-1}+N=\#(\emptyset)-\frac{\sum_tx_t}{k-1}.
+\]
+\emph{Validity.} Let $s=\#(\emptyset)-m$. Validity at $\emptyset$ gives $s\ge0$, and validity at $\{t\}$ gives $x_t\le s$.
+\emph{Violation forces $m\ge k-1$.} Suppose $(\Phi,m)$ is valid and $\sum_\Phi P_k<m$, i.e.\ $\sum_tx_t>(k-1)s$. If $s=0$ this contradicts $x_t\le0$; so $s\ge1$. Since $a_t\ge0$, $x_t\le b_t$, so $\#(\emptyset)\ge\sum_tb_t\ge\sum_tx_t\ge(k-1)s+1$ by integrality. Therefore $m=\#(\emptyset)-s\ge(k-2)s+1\ge k-1$.
+Contrapositively, every valid counting sequent with $m\le k-2$ is satisfied.
+\emph{The $m=1$ case.} An ordinary sequent $\Gamma\step\Delta$ over $F_k$ corresponds to $\Phi=\{\gamma^*:\gamma\in\Gamma\}\cup\Delta$, $m=1$; it is valid iff the counting sequent is, and by negation coherence its union bound is $\sum_\Phi P_k\ge1$. Since $1\le k-2$ for $k\ge3$, (b) covers it.
+\end{proof}
+
+An exhaustive enumeration for $k=3$ (503{,}270 valid ordinary sequents, none violated) agrees. For $k=3,4,5$, \texttt{repair\_checks.py}\,(C) minimizes $\sum_\Phi P_k-m$ over valid counting sequents with multiplicities in $[0,8]$ by exact MILP: the minimum is $0$ for $m\le k-2$ and $-\frac1{k-1}$ for $m\le k-1$, attained by the repetition-free sequent of (a).
+
+\paragraph{Scope.} For any \emph{single} finite agenda (a union of complementary pairs) and negation-coherent $P$, the finitely many rational inequalities defining $\Pi_F$ (its facets, plus its affine hull when it is not full-dimensional) give finitely many counting sequents that characterize coherence (\Cref{thm:existence:definetti}; negation coherence is needed, since counting sequents alone cannot impose $P(\varphi)+P(\varphi^*)\le1$). What \Cref{thm:existence:arity,thm:existence:threshold} rule out is a bound on arity or threshold that works \emph{uniformly across agendas} ($F_k$ needs arity $k$ and threshold $k-1$). Moreover, deciding coherence on arbitrary agendas is NP-hard \citep{georgakopoulos1988probabilistic} ($P(\varphi)=1$, $P(\varphi^*)=0$ is coherent iff $\varphi$ is satisfiable), so no efficiently checkable constraint family characterizes it unless $\mathsf{P}=\mathsf{NP}$. Closing the agenda changes the picture:
+
+\begin{proposition}[On logically closed agendas, local additivity suffices]\src{T6 Prop 3.6}\label{prop:existence:closed}
+If $F$ represents a finite Boolean subalgebra of the Lindenbaum algebra and $P$ respects equivalence, then $P$ is coherent iff $P\ge0$, $P(\top)=1$ and $P(\varphi)=P(\varphi\wedge\psi)+P(\varphi\wedge\neg\psi)$ for all $\varphi,\psi\in F$; each constraint mentions at most three formulas, and the additivity identity $P(A\wedge B)+P(A\vee B)=P(A)+P(B)$ from the probing notes follows from them.
+\end{proposition}
+
+\begin{proof}
+($\Rightarrow$) If $P=\sum_v\mu(v)\bar v$, the three conditions hold valuation by valuation: $v(\varphi)=v(\varphi\wedge\psi)+v(\varphi\wedge\neg\psi)$ for every Boolean $v$.
+($\Leftarrow$) Taking $\varphi=\psi=\top$ gives $P(\top)=P(\top)+P(\bot)$, so $P(\bot)=0$. Let $a_1,\dots,a_N$ be the atoms (minimal nonzero elements) of the finite Boolean algebra $F$; distinct atoms are disjoint, and every nonzero element lies above some atom. Splitting successively,
+\[
+P(\varphi)=P(\varphi\wedge a_1)+P(\varphi\wedge\neg a_1)=\dots=\sum_{j\le N}P(\varphi\wedge a_j)+P\Big(\varphi\wedge\bigwedge_{j\le N}\neg a_j\Big),
+\]
+using $\varphi\wedge\neg a_1\wedge\dots\wedge\neg a_{j-1}\wedge a_j\equiv\varphi\wedge a_j$; all formulas involved lie in $F$ up to equivalence. The last term is $P(\bot)=0$, and $\varphi\wedge a_j$ is $a_j$ or $\bot$; so $P(\varphi)=\sum_{a_j\le\varphi}P(a_j)$. Each $a_j$ is consistent; pick $v_j\in\BV$ with $v_j(a_j)=1$. For $\varphi\in F$, $v_j(\varphi)=1$ iff $a_j\le\varphi$: if $a_j\not\le\varphi$ then $a_j\wedge\varphi\equiv\bot$, so $a_j\le\neg\varphi$. Put $\mu=\sum_jP(a_j)\delta_{v_j}$. It is nonnegative with total mass $\sum_jP(a_j)=P(\top)=1$, and $\mu(\varphi)=\sum_{a_j\le\varphi}P(a_j)=P(\varphi)$.
+The additivity identity follows: $P(A\vee B)=P((A\vee B)\wedge A)+P((A\vee B)\wedge\neg A)=P(A)+P(B\wedge\neg A)$ and $P(B)=P(B\wedge A)+P(B\wedge\neg A)$.
+\end{proof}
+
+\begin{lemma}[Elementary consequences of Gaifman coherence]\label{lem:existence:gaifmanbasic}
+Let $P$ satisfy (G1), (G2). Then: \textup{(i)} $P(\neg\varphi)=1-P(\varphi)$; \textup{(ii)} if $\der\varphi\leftrightarrow\psi$ then $P(\varphi)=P(\psi)$; \textup{(iii)} if $\der\varphi\to\psi$ then $P(\varphi)\le P(\psi)$; \textup{(iv)} $\max(P(\varphi),P(\psi))\le P(\varphi\vee\psi)\le P(\varphi)+P(\psi)$; \textup{(v)} $P(\varphi)+P(\psi)-1\le P(\varphi\wedge\psi)\le\min(P(\varphi),P(\psi))$.
+\end{lemma}
+
+\begin{proof}
+(i) Apply (G2) and (G1) to $\varphi\vee\neg\varphi$. (ii) $\varphi\vee\neg\varphi$ and $\psi\vee\neg\varphi$ are both provable, and both pairs are provably exclusive; so $P(\varphi)+P(\neg\varphi)=1=P(\psi)+P(\neg\varphi)$. (iii) $\psi$ is provably equivalent to $\varphi\vee(\psi\wedge\neg\varphi)$, a provably exclusive disjunction, so $P(\psi)=P(\varphi)+P(\psi\wedge\neg\varphi)\ge P(\varphi)$ by (ii) and (G2). (iv) The lower bound is (iii). For the upper bound, $P(\varphi\vee\psi)=P(\varphi)+P(\psi\wedge\neg\varphi)\le P(\varphi)+P(\psi)$ by (ii), (G2) and (iii). (v) The upper bound is (iii). For the lower bound, $1-P(\varphi\wedge\psi)=P(\neg\varphi\vee\neg\psi)\le P(\neg\varphi)+P(\neg\psi)$ by (i), (ii), (iv).
+\end{proof}
+
+\begin{proof}[Proof of \Cref{thm:existence:gaifman}]
+($\Leftarrow$) If $P(\varphi)=\mu([\varphi])$: a provable $\varphi$ lies in every complete consistent theory, so $[\varphi]=S_L$; and if $\der\neg(\varphi\wedge\psi)$, then $[\varphi]\cap[\psi]=\emptyset$ and $[\varphi\vee\psi]=[\varphi]\cup[\psi]$.
+($\Rightarrow$) By the completeness theorem, $[\varphi]=[\psi]$ iff $\der\varphi\leftrightarrow\psi$, and $[\varphi]\cap[\psi]=\emptyset$ iff $\der\neg(\varphi\wedge\psi)$. Every clopen subset of $S_L$ is compact, hence a finite union of basic clopens, hence of the form $[\varphi]$. So $\mu_0([\varphi]):=P(\varphi)$ is a well-defined function on the clopen algebra (\Cref{lem:existence:gaifmanbasic}(ii)), with $\mu_0(S_L)=P(\top)=1$, nonnegative, and finitely additive by (G2). It is countably additive on the clopen algebra: if $[\varphi]=\bigsqcup_n[\varphi_n]$, compactness of $[\varphi]$ and openness of the $[\varphi_n]$ give a finite subcover, and disjointness makes all other $[\varphi_n]$ empty. By Carath\'eodory's extension theorem $\mu_0$ extends to a probability on the $\sigma$-algebra generated by the clopens. Since $L$ is countable there are countably many clopens, and they form a basis, so every open set is a countable union of clopens and this $\sigma$-algebra is the Borel $\sigma$-algebra. Uniqueness: the clopens form a $\pi$-system generating it ($\pi$--$\lambda$ theorem).
+\end{proof}
+
+\begin{proof}[Proof of \Cref{thm:existence:omega}]
+Every sentence is provably equivalent to one built from atomic sentences by $\neg,\wedge,\exists$, and both $P$ (\Cref{lem:existence:gaifmanbasic}(ii)) and truth in $\N$ respect provable equivalence; so it suffices to treat such sentences. We show $P(\varphi)=[\N\models\varphi]$ by induction on the number of logical symbols, simultaneously for all such sentences.
+\emph{Atomic sentences} are quantifier-free. A true one has $P=1$ by hypothesis. If $\sigma$ is false, $\neg\sigma$ is a true quantifier-free sentence, so $P(\sigma)=1-P(\neg\sigma)=0$.
+\emph{Negation:} $P(\neg\varphi)=1-P(\varphi)$ (\Cref{lem:existence:gaifmanbasic}(i)).
+\emph{Conjunction:} if $P(\varphi),P(\psi)\in\{0,1\}$, the bounds of \Cref{lem:existence:gaifmanbasic}(v) coincide and give $P(\varphi\wedge\psi)=\min(P(\varphi),P(\psi))$.
+\emph{Existential:} numerals $\nml i=S\cdots S0$ contain no logical symbols, so each instance $\varphi(\nml i)$ has fewer logical symbols than $\exists x\,\varphi(x)$, and by induction $P(\varphi(\nml i))=[\N\models\varphi(\nml i)]$. By \Cref{lem:existence:gaifmanbasic}(iv), applied repeatedly, $\max_{i\le n}P(\varphi(\nml i))\le P(\bigvee_{i\le n}\varphi(\nml i))\le\sum_{i\le n}P(\varphi(\nml i))$, so $P(\bigvee_{i\le n}\varphi(\nml i))=\max_{i\le n}P(\varphi(\nml i))\in\{0,1\}$. By the Gaifman condition, $P(\exists x\,\varphi(x))$ is $1$ iff some $\varphi(\nml i)$ is true in $\N$, iff $\N\models\exists x\,\varphi(x)$, because every natural number is the value of a numeral.
+\end{proof}
+
+\begin{proof}[Proof of \Cref{cor:existence:inductors}]
+We use the following from \citet{garrabrant2016logical}: a market is a \emph{computable} sequence of rational pricings $(\Prob_n)$; by Convergence and Limit Coherence (\citealt[Thms 4.1.1, 4.1.2]{garrabrant2016logical}) the limit $\Prob_\infty(\varphi)=\lim_n\Prob_n(\varphi)$ exists and is a coherent probability relative to $\Gamma$; and by Non-Dogmatism (\citealt[Thm 4.6.2]{garrabrant2016logical}) $\Gamma\nder\neg\varphi$ implies $\Prob_\infty(\varphi)>0$.
+By Limit Coherence, $\Prob_\infty$ is Gaifman-coherent and gives $1$ to every theorem of $\Gamma$, in particular to every true quantifier-free sentence, which $\RobQ\subseteq\Gamma$ proves. Suppose it satisfied the Gaifman condition. Then $\Prob_\infty=\delta_{\Th(\N)}$ by \Cref{thm:existence:omega}. Two arguments refute this.
+\emph{Via Non-Dogmatism.} By the G\"odel--Rosser theorem \citep{godel1931formal,rosser1936extensions}, the consistent r.e.\ $\Gamma\supseteq\RobQ$ is incomplete: some $\sigma$ has $\Gamma\nder\sigma$ and $\Gamma\nder\neg\sigma$. Let $\psi$ be whichever of $\sigma,\neg\sigma$ is false in $\N$. Then $\Gamma\nder\neg\psi$ (as $\neg\neg\sigma$ is equivalent to $\sigma$), so $\Prob_\infty(\psi)>0=\delta_{\Th(\N)}(\psi)$.
+\emph{Via $\Delta_2$.} Since $(n,\varphi)\mapsto\Prob_n(\varphi)$ is computable, ``$\Prob_n(\varphi)>\frac12$'' is decidable. If the limit were $\delta_{\Th(\N)}$, then $\varphi\in\Th(\N)$ iff $\exists N\,\forall n\ge N\ \Prob_n(\varphi)>\frac12$ (a $\Sigma_2$ condition) iff $\forall N\,\exists n\ge N\ \Prob_n(\varphi)>\frac12$ (a $\Pi_2$ condition): if $\Prob_\infty(\varphi)=1$ both hold, and if $\Prob_\infty(\varphi)=0$ neither does. So $\Th(\N)$ would be $\Delta_2$, contradicting Tarski's theorem that $\Th(\N)$ is not arithmetical.
+\emph{The general statement.} The $\Delta_2$ argument used only that the credence is the pointwise limit of a computable sequence of rational-valued functions, that it is coherent, and that it gives $1$ to every true quantifier-free sentence; so no such credence satisfies the Gaifman condition.
+\emph{The quantifier-free hypothesis is needed.} Let $T$ be the theory of the one-element structure, in which $S0=0=0+0=0\cdot0$. $T$ is decidable, so $\delta_T$ is computable and coherent; and it satisfies the Gaifman condition with respect to the numerals, because the only element is the value of a numeral. It fails the hypothesis only by giving $P(0=S0)=1$.
+\end{proof}
+
+\paragraph{Preferences.} The note's ``vnm stuff'' has the same anatomy.
+
+\begin{proposition}[Finite preference data]\src{T6 Prop 3.10}\label{prop:existence:vnm}
+Finitely many strict comparisons $p_i\succ q_i$ and weak comparisons $r_j\succsim s_j$ of lotteries over a finite set $X$ have an expected-utility representation $u\in\R^X$ ($u\cdot(p_i-q_i)>0$, $u\cdot(r_j-s_j)\ge0$) iff no $\lambda,\kappa\ge0$ with $\lambda\neq0$ satisfy $\sum_i\lambda_i(p_i-q_i)+\sum_j\kappa_j(r_j-s_j)=0$.
+\end{proposition}
+
+\begin{proof}
+Motzkin's transposition theorem \citep{motzkin1936beitrage}.
+\end{proof}
+
+The certificate of incoherence is a derivation of $L\succ L$ by mixing (independence) and transitivity \citep{vonneumann1944theory}, money-pump-like (an interpretive gloss; no trading is formalized), and the something is a real-valued utility.
+
+% -------------------------------------------------------------------
+\subsection{Contexts}\label{app:existence:contexts}
+
+\begin{proof}[Proof of \Cref{thm:existence:mcs}]
+Note first that, since $C_i=\Th_i\circ\Mod_i$, every set of the form $\Th_i(K)$ is $C_i$-closed (\Cref{lem:existence:galois}: $\Th_i\Mod_i\Th_i=\Th_i$), and $\Th_i\Mod_i(T)=T$ for every $C_i$-closed $T$.
+(a) For every $i$ and $\varphi$: $c^\Gamma\models i{:}\varphi$ iff $\Mod_i(T_i)\subseteq\Mod_i(\varphi)$ iff $\varphi\in\Th_i\Mod_i(T_i)=T_i$. Hence $c^\Gamma$ satisfies $K_i\cup\Gamma_i\subseteq T_i$. It is bridge-compatible: if $c^\Gamma\models j_k{:}\varphi_k$ for all premises of a bridge rule, then $\varphi_k\in T_{j_k}$, so $\psi\in T_i$ by (Br), so $c^\Gamma\models i{:}\psi$.
+(b) Let $c\models\Gamma$ be a model and $U_i=\Th_i(c_i)$. Each $U_i$ is $C_i$-closed and contains $K_i\cup\Gamma_i$. The family $(U_i)$ is closed under bridges: if $\varphi_k\in U_{j_k}$ for all $k$, then $c\models j_k{:}\varphi_k$, so $c\models i{:}\psi$ by bridge-compatibility, i.e.\ $\psi\in U_i$. By leastness of $\Der(\Gamma)$, $T_i\subseteq U_i$, so every $m\in c_i$ satisfies $T_i$: $c_i\subseteq\Mod_i(T_i)=c^\Gamma_i$.
+(c) ($\Rightarrow$) If $\varphi\in T_i$ and $c\models\Gamma$ is a model, then by (b) every $m\in c_i\subseteq c^\Gamma_i$ satisfies $\varphi$. ($\Leftarrow$) If $\varphi\notin T_i$, then $c^\Gamma\not\models i{:}\varphi$ by (a), and $c^\Gamma$ is a model of $\Gamma$.
+\end{proof}
+
+\texttt{mcs\_completeness.py} confirms \Cref{thm:existence:mcs}(c) on 400 random three-context systems and finds 2{,}348 pairs where $\models_W$ strictly exceeds $\models_{\LMS}$ (\Cref{thm:existence:rules}).
+
+\begin{proof}[Proof of \Cref{thm:existence:rules}]
+(a) A world family is a model chain of singletons. (b) $T_j=\Cn_2(p\vee q)$ contains neither $p$ nor $q$, so no bridge fires and $c^\Gamma_i=\Mod(\neg r)\neq\emptyset$; but any $w_j$ satisfies $p$ or $q$, forcing $w_i\models r$. (c) World families are the Boolean valuations of the tagged language satisfying the tagged axioms.
+\end{proof}
+
+\begin{proof}[Proof of \Cref{rem:existence:learnedlocal}]
+With $M_i=\Fix(C_i)\setminus\{L_i\}$ we have $\Th_i\circ\Mod_i=C_i$: if $C_i(X)\neq L_i$, then $C_i(X)$ is itself a model and $\Th_i\Mod_i(X)=\bigcap\{T\in M_i:X\subseteq T\}=C_i(X)$; otherwise $\Mod_i(X)=\emptyset$ and $\Th_i(\emptyset)=L_i$. So \Cref{thm:existence:mcs} applies, and $c^\Gamma_i=\Mod_i(T_i)$ is nonempty iff $T_i$ is proper, since then $T_i\in c^\Gamma_i$, while no proper closed theory contains $L_i$. A falsum with $\Mod_i(\bot_i)=\emptyset$ is exactly a $C_i$-explosive $\bot_i$, and then $T_i\neq L_i$ iff $\bot_i\notin T_i$. Without explosiveness the two readings come apart: let $C_i$ be the identity closure (no learned rules), $K_i=\{\bot_i\}$ and no bridges into $i$; then $\bot_i\in T_i=\{\bot_i\}\neq L_i$, yet $\{\bot_i\}\in c^\Gamma_i$. \texttt{repair\_checks.py}\,(B) checks the equivalence on 3{,}000 random finite closure systems with an explosive falsum.
+\end{proof}
+
+\begin{proposition}[Equilibria; non-monotone bridges]\src{T6 Props 4.3, 4.4, as repaired}\label{prop:existence:equilibrium}
+Call $S=(S_i)$ an \emph{equilibrium} if $S_i=C_i\big(K_i\cup\Gamma_i\cup\{\psi:(\cdots\Rightarrow i{:}\psi)\text{ has all premises in }S\}\big)$ for all $i$ (the monotone case of \citealt{brewka2007equilibria}, with each context accepting exactly the closure of its knowledge base).
+\textup{(a)} $\Der(\Gamma)$ is the least equilibrium, and there is an equilibrium with $\bot_i\notin S_i$ for every $i\in D$ iff the system is $D$-coherent.
+\textup{(b)} Let context $i$ have consistent $K_i$ with $K_i\nder p$ and no premises ($\Gamma_i=\emptyset$), and add the single non-monotone bridge ``$i{:}p$ if not $i{:}p$'' (negation as failure). Then $K_i$ is consistent, so the context is coherent without its bridge, yet there is no equilibrium. So existence for default-style bridges needs an extra condition, such as stratification or the absence of odd loops through negation as failure; stratification is sufficient, not necessary, and coherence alone does not supply it.
+\end{proposition}
+
+\begin{proof}[Proof of \Cref{prop:existence:equilibrium}]
+Write $R(S)_i$ for the right-hand side of the equilibrium equation, and $T=\Der(\Gamma)$.
+(a) $T\supseteq R(T)$: each $T_i$ is $C_i$-closed and contains $K_i$, $\Gamma_i$ and, by (Br), the head of every bridge rule whose premises lie in $T$. Conversely the family $R(T)$ contains $K\cup\Gamma$, is locally closed, and is bridge-closed: a rule whose premises lie in $R(T)\subseteq T$ has its premises in $T$, so its head lies in $R(T)$ by definition. By leastness of $T$, $T\subseteq R(T)$. So $T=R(T)$ is an equilibrium. Any equilibrium $S=R(S)$ is locally closed, contains $K\cup\Gamma$ and is bridge-closed, so $S\supseteq T$. Hence a $D$-consistent equilibrium forces $T$ to be $D$-consistent, and conversely $T$ itself is an equilibrium.
+(b) If $p\in S_i$, the rule is inapplicable, so $S_i=C_i(K_i)\not\ni p$; if $p\notin S_i$, the rule fires and $p\in S_i$. Either way $S_i\neq R(S)_i$.
+\end{proof}
+
+\begin{theorem}[Local-to-global on trees]\src{T6 Thm 4.6}\label{thm:existence:tree}
+Let the contexts be the vertices of a finite tree, context $i$ classical propositional over atoms $A_i$ with a consistent closed theory $T_i$. Assume running intersection ($\{i:a\in A_i\}$ is connected for each atom $a$) and mutual conservativity on edges ($T_i\cap L(A_i\cap A_j)=T_j\cap L(A_i\cap A_j)$). Then every model of every $T_i$ extends to a valuation satisfying all $T_j$.
+\end{theorem}
+
+This is the join-tree, or iterated Robinson-consistency, argument (cf.\ \citealt{beeri1983desirability}): conservativity makes model sets agree on overlaps, and models glue breadth-first.
+
+\begin{proof}
+\emph{Projection lemma.} For a consistent closed theory $T$ over atoms $A$ and $B\subseteq A$: $\Mod(T)|_B=\Mod_B(T\cap L(B))$. The inclusion $\subseteq$ is clear. For $\supseteq$, let a $B$-valuation $w$ satisfy $T\cap L(B)$, and suppose $T$ together with the literals over $B$ true in $w$ were unsatisfiable. By compactness, $T\der\neg(l_1\wedge\dots\wedge l_r)$ for some literals $l_k$ true in $w$; this sentence lies in $T\cap L(B)$ and is false in $w$, a contradiction.
+By the lemma, mutual conservativity on an edge $\{i,j\}$ says $\Mod(T_i)|_{A_i\cap A_j}=\Mod(T_j)|_{A_i\cap A_j}$.
+\emph{Gluing.} Root the tree at $i_0$ and let $m_{i_0}\models T_{i_0}$ be given; assign the atoms of $A_{i_0}$ accordingly. Visit the remaining vertices in breadth-first order. When $c$ is visited, its parent $p$ has been visited and its children have not, so $p$ is the only visited neighbour of $c$ and the tree path from $c$ to any visited vertex passes through $p$. If an atom $a\in A_c$ is already assigned, it lies in $A_d$ for some visited $d$; by running intersection it lies in every $A_e$ on the path from $c$ to $d$, in particular in $A_p$. So the assigned atoms of $A_c$ lie in $A_c\cap A_p$. After $p$ was visited the global assignment restricted to $A_p$ was a model $m_p\models T_p$, and assigned atoms never change. So the current assignment on $A_c\cap A_p$ is $m_p|_{A_c\cap A_p}\in\Mod(T_p)|_{A_c\cap A_p}=\Mod(T_c)|_{A_c\cap A_p}$, and some $m_c\models T_c$ agrees with it; extend the assignment by $m_c$. Atoms in no $A_i$ are assigned arbitrarily. At the end the assignment restricted to each $A_c$ is $m_c\models T_c$.
+\end{proof}
+
+\texttt{contexts\_local\_global.py} checks the theorem on one fixed three-node path cover with 7{,}131 random local-theory systems and on 2{,}000 random tree covers with 2--5 nodes, with no failure; a negative control without running intersection fails in 437 of 2{,}000 cases.
+
+\paragraph{Relation to the context-tree calculus \status{proof sketch}.} The context-tree calculus\src{L7 \S8} from which \Cref{def:physics:calculus} is adapted has stipulations (local axioms), imports $\pi(c){:}\varphi\Rightarrow c{:}\varphi$ for $\varphi$ in the import filter $F_c$, discharge $c{:}\psi\Rightarrow\pi(c){:}A\to\psi$, and side-conditioned export $c{:}\varphi_\beta(t),\ \pi(c){:}\sigma_\beta(t)\Rightarrow\pi(c){:}\varepsilon_\beta(t)$. All are monotone bridge rules, so it is an MC system, and \Cref{thm:existence:mcs} is its completeness theorem for local-models semantics with bridges read as compatibility constraints; there an exported $\varepsilon$ shrinks the parent's belief state. The calculus's own semantics differs: the models of the root are fixed by background and observations and do not depend on exports, and bridges are required to be sound; soundness for that semantics holds when every step and export instance is sound. The two semantics coincide when the local consequence is the complete base logic and every step and export instance is sound: then $T_c=\Th(\Mod_{\mathrm{ct}}(c))$ for every $c$, where $\Mod_{\mathrm{ct}}$ is the model class of the calculus's own semantics, $\subseteq$ is its soundness proposition, and $\supseteq$ goes by induction down the tree (at the root by local completeness; an idealized child imports exactly $F_c\cap T_{\pi(c)}$; a supposition child imports all of $T_{\pi(c)}$ and its assumption). Without that hypothesis they differ: if an unsound export yields $@{:}Q=5$ while background and observations prove $Q=3$, MC derives $@{:}\bot$ and $c^\Gamma_@=\emptyset$, as \Cref{thm:existence:mcs} requires, while the root's model class in the calculus's own semantics stays nonempty. For supposition contexts with full import, the canonical chain always satisfies $c^\Gamma_c=c^\Gamma_{\pi(c)}\cap\Mod(A)$.
+
+% -------------------------------------------------------------------
+\subsection{Learned calculi}\label{app:existence:learned}
+
+\begin{proof}[Proof of \Cref{thm:existence:buys}]
+(a) is the Zorn step in the proof of \Cref{thm:existence:points}(a), applied to the closed set $C_R(A)$ and $\sigma=\bot$ (\S\ref{app:existence:galois}). (b) If $\varphi\in C_R(\Gamma)$ and $\sigma\Gamma\subseteq T$, structurality gives $\sigma\varphi\in C_R(\sigma\Gamma)\subseteq C_R(T)=T$; this works for any $C_R$-theory $T\supseteq A$ omitting $\bot$. (c) is \Cref{thm:existence:bilindenbaum,thm:existence:structural}.
+\end{proof}
+
+\paragraph{Existence of the Leibniz congruence.} The join of a family of congruences of $\mathbf A$ is the transitive closure of their union. If each congruence in the family is compatible with $D$, then $a$ and $b$ related by the join are connected by a chain $a=c_0\,\theta_1\,c_1\cdots\theta_r\,c_r=b$ with each $\theta_k$ in the family; each step preserves membership in $D$, so the join is compatible. The join of all compatible congruences is therefore the largest one.
+
+\begin{proof}[Proof of \Cref{thm:existence:leibniz}]
+(a) \emph{Claim: $\Omega(T)=h^{-1}(\Omega_{\mathbf A}D)$}, where $h^{-1}(\theta)=\{(a,b):(ha,hb)\in\theta\}$.
+The preimage of a congruence under a homomorphism is a congruence. It is compatible with $T$: if $(ha,hb)\in\Omega_{\mathbf A}D$ and $a\in T$, then $ha\in D$, so $hb\in D$ and $b\in T$.
+Maximality: let $\theta'$ be any congruence of $\Fm$ compatible with $T$. The kernel $\ker h$ is compatible with $T$, as $T=h^{-1}(D)$ is a union of $\ker h$-classes, so $\theta''=\theta'\vee\ker h$ is compatible with $T$. Let $\theta_{\mathbf A}=\{(ha,hb):(a,b)\in\theta''\}$. It is reflexive because $h$ is onto, and symmetric. It is transitive: if $(ha,hb),(hb',hc)\in\theta_{\mathbf A}$ come from pairs in $\theta''$ with $hb=hb'$, then $b\,\theta''\,b'$ because $\ker h\subseteq\theta''$, so $a\,\theta''\,c$. It is compatible with the operations: if $(x_l,y_l)\in\theta_{\mathbf A}$ come from $(a_l,b_l)\in\theta''$, then for an operation $f$, $(f(\bar x),f(\bar y))=(h f(\bar a),h f(\bar b))$ with $f(\bar a)\,\theta''\,f(\bar b)$. And it is compatible with $D$: if $(ha,hb)\in\theta_{\mathbf A}$ comes from $(a,b)\in\theta''$ and $ha\in D$, then $a\in T$, so $b\in T$ and $hb\in D$. Hence $\theta_{\mathbf A}\subseteq\Omega_{\mathbf A}D$, and $\theta'\subseteq\theta''\subseteq h^{-1}(\theta_{\mathbf A})\subseteq h^{-1}(\Omega_{\mathbf A}D)$.
+\emph{Isomorphism.} Define $[a]_{\Omega(T)}\mapsto[ha]_{\Omega_{\mathbf A}D}$. By the claim it is well defined and injective; it is onto because $h$ is; it is a homomorphism because $h$ is; and it maps $T/\Omega(T)$ onto $D/\Omega_{\mathbf A}D$ because $a\in T$ iff $ha\in D$. If $\langle\mathbf A,D\rangle$ is reduced, $\Omega_{\mathbf A}D$ is the identity and the right-hand side is $\langle\mathbf A,D\rangle$.
+(b) A maximal consistent theory of $\CPC$ is $v^{-1}(1)$ for a Boolean homomorphism $v:\Fm\to\twoM$. This $v$ is onto, since $v(p\vee\neg p)=1$ and $v(p\wedge\neg p)=0$. The matrix $\langle\twoM,\{1\}\rangle$ is reduced: the only congruence of $\twoM$ besides the identity identifies $0$ with $1$, which is not compatible with $\{1\}$. Apply (a).
+\end{proof}
+
+\texttt{repair\_checks.py}\,(D) checks a non-surjective example for the remark after \Cref{thm:existence:leibniz}: in the four-element Heyting chain $0<a<b<1$, $h(p)=a$ generates $\{0,a,1\}\cong\HthreeA$, which is reduced, so the reduced Lindenbaum matrix of $h^{-1}(1)$ is $\langle\HthreeA,\{1\}\rangle$, not the intended four-element matrix.
+
+\begin{proof}[Proof of \Cref{prop:existence:finitematrix}]
+$C$ is sound and strongly complete for the homomorphisms $h:\Fm\to\mathbf A$, and finitary by compactness of $\mathbf A^{\mathrm{Var}}$ (the standard argument: each condition $h(\gamma)\in D$ is clopen there, as $\mathbf A$ is finite). So every point is some $h^{-1}(D)$ by \Cref{thm:existence:points}(b); apply \Cref{thm:existence:leibniz}(a) to $h$ onto its image. Since $\mathbf A$ is finite, there are finitely many generated submatrices, hence finitely many reductions up to isomorphism.
+\end{proof}
+
+\begin{proof}[Verification of \Cref{ex:existence:residue}]
+(i) $h:\Fm\to\HthreeA$ is a Heyting homomorphism with $h(p)=\frac12$, $h(\bot)=0$, $h(\top)=1$, so it is onto. $T=h^{-1}(1)$ is an $\IPC$-theory by soundness of $\IPC$ for Heyting algebras, and $p\notin T$. \emph{$T$ is maximal among theories omitting $p$:} let $\psi\notin T$, so $h(\psi)\in\{0,\frac12\}$. If $h(\psi)=\frac12$ then $h(\psi\leftrightarrow p)=1$, so $\psi\leftrightarrow p\in T$ and any theory containing $T$ and $\psi$ contains $p$. If $h(\psi)=0$ then $h(\neg\psi)=1$, so $\neg\psi\in T$ and any theory containing $T$ and $\psi$ contains $\bot$, hence $p$. So every theory strictly above $T$ contains $p$, and $T$ is a point. It is not maximal consistent, since $h(p\vee\neg p)=\frac12\vee0=\frac12$ puts neither $p$ nor $\neg p$ in $T$. \emph{$\langle\HthreeA,\{1\}\rangle$ is reduced:} a congruence identifying $\frac12$ with $1$ is not compatible with $\{1\}$; one identifying $0$ with $\frac12$ also identifies $0\to0=1$ with $\frac12\to0=0$, hence everything, and is not compatible either. By \Cref{thm:existence:leibniz}(a) the reduced Lindenbaum matrix of $T$ is $\langle\HthreeA,\{1\}\rangle$.
+(ii) In a one-element structure $\forall x\exists y\,\varphi$ and $\exists y\forall x\,\varphi$ are equivalent for every formula $\varphi$, so every instance of the schema is sound there; with equality, a structure in which every instance of the schema holds must have one element (take $R(x,y)$ to be $x=y$: $\forall x\exists y\,x=y$ holds in every structure, and $\exists y\forall x\,x=y$ says there is one element). So the models of first-order logic plus the schema are exactly the one-element structures, and a designated context asserting two distinct objects has none.
+\end{proof}
+
+% -------------------------------------------------------------------
+\subsection{Term models, non-standardness and pins}\label{app:existence:pins}
+
+This subsection expands the paragraph ``What pins the intended model'' of \S\ref{sec:existence:learned}.
+
+\paragraph{First-order term models.} For a consistent first-order theory, the Lindenbaum construction is Henkin's \citep{henkin1949completeness}: witnesses, a complete Henkin theory, closed terms modulo provable equality (the Leibniz reduction). A note on consistency-based probing tentatively argues (``I think this is an argument that'') that ``any assignment of truth-values to sentences which does not violate inference rules can be extended to a full model (this is cool because a model also needs to assign actual functions and objects \dots)''.\footnote{\texttt{ai/DLK/logic.md}.} The argument goes through for complete consistent assignments: the objects are classes of witness terms. If the assignment makes $\exists x\,\varphi(x)$ true and every named instance false, the model needs unnamed objects, the Gaifman failure of \Cref{cor:existence:inductors}.
+
+\begin{theorem}[Prime models]\src{T6 Thm 5.5}\status{known}\label{thm:existence:prime}
+For complete consistent $T\supseteq\PA$ the definable elements of any model of $T$ form the prime model $\mathcal K(T)$, unique up to isomorphism and elementarily embeddable in every model of $T$ \citep{kaye1991models}; $\mathcal K(\Th(\N))=\N$; if $\neg\Con(\PA)\in T$, $\mathcal K(T)$ is non-standard.
+\end{theorem}
+
+For the last clause: ``the least code of a $\PA$-proof of $0=1$'' is definable, while $T$ refutes each standard instance $\Prf(\nml n,\ulcorner0{=}1\urcorner)$, whose negation is a true $\Delta_0$ sentence ($\PA$ being consistent) and so provable in $\RobQ\subseteq T$. This is the precise form of the notes' G\"odel-sentence footnote: a complete coherent theory has a canonical thing it talks about, the objects it can define, and the ``proof'' is one of them, a definable non-standard number.
+
+\paragraph{Two layers of non-standardness.} \emph{(i) Coherent but false}: $\PA+\neg\Con(\PA)$ is consistent, false, and even $\Pi_1$-sound (if it proves a $\Pi_1$ sentence $\pi$, then $\PA\vdash\Con(\PA)\vee\pi$; were $\pi$ false, $\PA$ would prove the true $\Sigma_1$ sentence $\neg\pi$ and hence $\Con(\PA)$, against G\"odel's second incompleteness theorem). This is finitary and comes from incompleteness (coherence is not truth, \Cref{thm:coherence:popper}(b)). \emph{(ii) True but not categorical}: $\Th(\N)$ itself has non-standard models, a limit phenomenon from compactness. Pinning comes in levels: P0 coherent (a model exists); P1 complete (all models elementarily equivalent; for logics, Post-complete, \Cref{thm:coherence:post}); P2 $\kappa$-categorical; P3 categorical (unique model up to isomorphism; for calculi, all \emph{points} reduce to one matrix, \Cref{prop:existence:finitematrix}).
+
+\begin{theorem}[Compactness barrier]\src{T6 Thm 5.6}\status{known}\label{thm:existence:compactness}
+A first-order theory with an infinite model has models of every infinite cardinality $\ge|L|$ (L\"owenheim--Skolem--Tarski), so no first-order mode of talking reaches P3 for an infinite structure.
+\end{theorem}
+
+Every finite structure in a finite language, by contrast, is characterized up to isomorphism by one sentence. In the icosahedron example of the notes,\footnote{\texttt{philosophy/philosophy of language/math is a mere string game iff everything is.md}.} after the physical icosahedron explodes the mode of talking stays coherent and its object is still pinned up to isomorphism; the caveat bites only for infinite objects.
+
+\begin{theorem}[Computability barrier]\src{T6 Thm 5.7, as repaired}\label{thm:existence:computability}
+Let $S$ be a decidable set of finite syntactic objects and $K$ an intended class of models. If some calculus has an r.e.\ set of incoherent finite sets, and a finite $X\subseteq S$ is incoherent iff it has no model in $K$, then $\{X:X\text{ has a }K\text{-model}\}$ is co-r.e.\ ($\Pi_1$). Consequently no such calculus exists for \textup{(a)} arithmetic with $K=\{\N\}$ ($\Th(\N)$ is not arithmetical); \textup{(b)} Diophantine equations with $K=\{\mathbb Z\}$ (solvability is $\Sigma_1$-complete, \citealt{matiyasevich1970enumerable}); \textup{(c)} first-order sentences in a vocabulary with a binary relation symbol, with $K$ the finite structures (finite satisfiability is $\Sigma_1$ and undecidable, \citealt{trakhtenbrot1950impossibility}; for monadic vocabularies it is decidable). \textup{(d)} For $K$ all structures, satisfiability is $\Pi_1$, as G\"odel's theorem requires; for polynomial equations over $\bar k$ it is decidable.
+\end{theorem}
+
+\begin{proof}
+``No $K$-model'' is ``incoherent'', which is r.e. In (b), (c) the set is also $\Sigma_1$, hence would be decidable; in (a) $\Th(\N)$ would be $\Pi_1$, contradicting Tarski's undefinability theorem (e.g.\ \citealt{boolos2007computability}).
+\end{proof}
+
+This is the textbook argument ``a complete r.e.\ calculus makes semantic consequence r.e.''; what is new is the framing. \emph{For any computable notion of coherence, ``coherent iff there is something it could be talking about'' can hold only if having such a something is a $\Pi_1$ property.} ``Having some model'' is $\Pi_1$; ``having the standard model'', ``having an integer solution'' and ``having a finite model'' (in a vocabulary with a binary relation symbol) are not. The proposition is true exactly to the extent that ``something'' is construed liberally.
+
+\begin{proposition}[Anchoring pins exactly the definable vocabulary]\src{T6 Prop 5.8, reading as repaired}\label{prop:existence:beth}
+Let $L_o\subseteq L$ be the anchored (world-hooked) vocabulary and $T$ an $L$-theory. Any two models of $T$ with the same universe and the same interpretation of $L_o$ coincide iff every symbol of $L$ is explicitly $T$-definable from $L_o$ \citep{beth1953padoa}.
+\end{proposition}
+
+\paragraph{Reading.} Beth's theorem quantifies over all models of $T$, i.e.\ over every possible anchoring structure: anchoring determines the rest of the language \emph{uniformly, whatever the anchoring structure} iff the rest is definable. Over the \emph{actual} structure pinning can hold without definability: if $T$ says that $R$ is a nonempty initial segment of $<$ without a largest element, then over $(\N,<)$ the only expansion is $R=\N$, while over $\omega+\omega$ both $R=\omega$ and $R=\omega+\omega$ work. Undefinable theoretical terms are multiply realizable over \emph{some} anchoring, though perhaps not over the actual one (the Ramsey--Lewis situation, \citealt{lewis1970how}).
+
+\paragraph{How are the natural numbers pinned down?} The notes ask this of numbers as pinned down ``in a brain, to a thinker, or something'', adding ``is there a way they are the `lowest-complexity-structure' which satisfy some axioms??''.\footnote{\texttt{philosophy/questions/how are the natural numbers pinned down?.md}.} We answer only the model-theoretic version. Coherence and first-order completeness cannot do it (\Cref{thm:existence:compactness,thm:existence:computability}). The known pins each add something: \emph{second-order induction} \citep{dedekind1888zahlen} adds quantification over all subsets, and no complete r.e.\ calculus exists for its consequence, as \Cref{thm:existence:computability}(a) predicts; internal categoricity \citep{parsons1990uniqueness,mcgee1997how,button2018philosophy} pins the structure relative to the available language, not the theory. \emph{Initiality} ($\N$ is the initial $(0,S)$-algebra, the least Herbrand model of $\{N(0),N(x)\to N(Sx)\}$, \citealt{vanemden1976semantics}, and an initial segment of every model of $\PA$) adds a universal property, ``nothing else is a number'', which is not first-order. The \emph{$\omega$-rule}, or Gaifman condition, adds an infinitary rule that no limit-computable credence of the relevant kind obeys (\Cref{cor:existence:inductors}). World anchoring by computation adds nothing beyond coherence with $\RobQ$ (\Cref{lem:coherence:delta0}). And:
+
+\begin{theorem}[Tennenbaum]\src{T6 \S5.5}\status{known}\label{thm:existence:tennenbaum}
+In no countable non-standard model of $\PA$ is addition computable, and in none is multiplication computable (\citealt{tennenbaum1959non}; the separate statements for $+$ and $\times$ are due to Kreisel and McAloon, see \citealt{kaye1991models}). Hence $\N$ is the unique computable model of $\PA$ up to isomorphism.
+\end{theorem}
+
+This is a theorem-level ``yes'' to the ``lowest-complexity structure'' question, with two caveats. First, ``computable'' is defined using the meta-language's natural numbers, a point the notes make about the meta-syntax's $\N$ in general.\footnote{\texttt{logic/confusions/soundness.md}.} Second, the axioms matter: weaker theories such as open induction have computable non-standard models \citep{shepherdson1964nonstandard}. Every pin uses something beyond finitary computable coherence: second-order quantification, a universal property, a complexity bound measured in $\N$, or an infinitary rule. \Cref{thm:existence:compactness,thm:existence:computability} say this is forced.

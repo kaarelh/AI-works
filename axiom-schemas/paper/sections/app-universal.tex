@@ -1,0 +1,190 @@
+% =====================================================================
+% Appendix to Section 4 (universal axioms, Question 1).
+% Sources: research/tracks/cases/notes-final.md Part 1 (proofs of A1-A11) and referee.md;
+%   research/tracks/untagged/notes-final.md (Lemma 5.5); research/tracks/single (Cor D.1).
+% The untagged results (Prop 5.6, 5.13) are stated and proved in many.tex / app-many.tex (DECISIONS item 3).
+% Uses the local macros \univ... defined at the top of sections/universal.tex.
+% =====================================================================
+
+\section{Proofs for \texorpdfstring{\Cref{sec:univ}}{the section on universal axioms} (universal axioms)}\label{app:univ}
+
+This appendix gives the proofs for \cref{sec:univ}, in its notation, together with the statements moved out of the main text (\cref{prop:univ:determine,lem:univ:capcrit,prop:univ:learner,prop:univ:refute}). The default is the $\lambda$ convention: a $0$-ary metavariable takes a term or formula without free bound variables (closed apart from parameters; a formula value may contain its own binders). We write bound variables as names; where indices matter (syntax (dB)) we say so. A \emph{value} is what a substitution assigns to a metavariable.
+
+% ---------------------------------------------------------------------
+\subsection{Anchors}\label{app:univ:anchor}
+
+\begin{proposition}[Instance sets determine schemas]\label{prop:univ:determine}\status{proved; computed}\src{cases A1}
+Assume \univRich. Let $\sigma$ be a first-order schema with $0$-ary term metavariables and $\tau$ any first-order schema. Then $\inst(\sigma)\subseteq\inst(\tau)$ iff every instance of $\sigma$ at closed terms lies in $\inst(\tau)$ iff $\tau\gen\sigma$, in each syntax.
+\end{proposition}
+
+\begin{proof}
+Only the step to $\tau\gen\sigma$ needs proof. With $\theta(z_i):=t_i$ and $\theta'(z_i):=t'_i$ from \univRich, the closed instances $\sigma\theta,\sigma\theta'$ satisfy \evR\ and \evD, so $\lgg(\sigma\theta,\sigma\theta')\equiv\sigma$ (\cref{lem:setting:recover}); $\tau$ covers both, so $\tau\gen\sigma$.
+\end{proof}
+
+\begin{proof}[Proof of \cref{thm:univ:anchor}]
+(ii)$\Leftrightarrow$(iii) is the recovery lemma (\cref{lem:setting:recover}) with $\theta_j(z_i):=t_{j,i}$. (ii)$\Rightarrow$(i): a covering $\tau$ has $\tau\gen\lgg(D)\equiv\sigma_\varphi$. (i)$\Rightarrow$(ii): $\lgg(D)$ covers $D$, hence contains $\instc(\varphi)$, hence $\lgg(D)\gen\sigma_\varphi$ by \cref{prop:univ:determine}; and $\sigma_\varphi\gen\lgg(D)$ as $\sigma_\varphi$ covers $D$. Only closed instances occur, so the syntax does not matter.
+\end{proof}
+
+\emph{Further corner cases of \cref{thm:univ:anchor}} \src{cases \S1.3; experiments E1}. Several variables need \evD: on diagonal data $\varphi(t,t)$ the $\lgg$ for $x+y=y+x$ is the sound specialization $z+z=z+z$. Repeated occurrences of $x_i$ give equal columns and need no further event. Closed subterms of $\varphi$ and bound occurrences of the name $x_i$ give constant columns, which merge with an $x_i$-column only if \evR\ fails: for $x+S0=Sx$, data terms $S0$ and $0$ recover $\sigma_\varphi$, while $S0$ and $SS0$ give $S(z)+S0=SS(z)$. Numerals have roots $0$ and $S$ only, so from numeral data every anchor of $z+0=z$ contains $0+0=0$, which is also an instance of $0+z=z$.
+\emph{Evidence} \src{cases q1\_lgg (1), (2); referee r1}: on $141\,736$ data sets (pairs and triples from $12$ closed terms, six formulas) ``$\lgg\equiv\sigma_\varphi$ iff \evR$\wedge$\evD'' held throughout; the referee's code agreed on $36\,000$ data sets from $600$ random formulas with binders.
+
+The proof of \cref{prop:univ:dt}(a) rests on one identity, which generalizes the two-point identity behind \cref{lem:many:twopoint} \src{untagged Lemma 5.5, step 1} from one metavariable to several.
+
+\begin{lemma}[Identity lemma]\label{lem:univ:identity}\status{proved}\src{untagged Lemma 5.5; cases A2$'$}
+Let $Z$ be a set of $0$-ary metavariables (of term or formula sort), and let $G,K$ be terms or formulas, possibly with binders, bound variables and parameters, in which members of $Z$ occur only as leaves. Let $\theta_1,\dots,\theta_N$ assign to each $z\in Z$ a value of its sort without free bound variables (closed apart from parameters; a formula value may contain its own binders), such that \evR\ for each $z\in Z$ the roots of $\theta_1(z),\dots,\theta_N(z)$ are not all equal, and \evD\ for distinct $z,z'\in Z$ of the same sort some $j$ has $\theta_j(z)\neq\theta_j(z')$. If $G\theta_j=K\theta_j$ for all $j$, then $G=K$.
+\end{lemma}
+
+\begin{proof}
+Induction on $|G|+|K|$. Substituting values for metavariable leaves changes nothing else; values contain no free bound variables, so no shifting or capture occurs under binders.
+\emph{Case $G=z\in Z$.} If $K=z$, we are done. If $K=z'\in Z$ with $z'\neq z$, then $\theta_j(z)=\theta_j(z')$ for all $j$, which is impossible for different sorts and contradicts \evD\ otherwise. Otherwise the root of $K$ is rigid: a function or relation symbol, a connective, a quantifier, a constant, a parameter or a bound variable. Then every $K\theta_j$ has that root, so all $\theta_j(z)=G\theta_j$ have the same root, contradicting \evR.
+\emph{Case $K\in Z$.} Symmetric.
+\emph{Otherwise} both roots are rigid. Comparing $G\theta_1=K\theta_1$ shows that they are the same symbol with the same binding structure, and the children of $G$ and $K$ satisfy the hypothesis. By induction the children are equal, so $G=K$.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:univ:dt}]
+(a) Let $\sigma\in\FO$ and $D=\{\sigma\theta_1,\dots,\sigma\theta_N\}$ with values without free bound variables satisfying \evR\ and \evD; let $T\in\DT$ cover $D$. Write $D_j:=\sigma\theta_j$, and for a position $c$ of $\sigma$ let $\kappa(c):=\sigma|_c$.
+
+\emph{Step 1 (skeleton).} All data carry $\sigma$'s symbol at each rigid position of $\sigma$. At a metavariable position of $\sigma$, carrying $z$, the roots of the $\theta_j(z)$ are not all equal by \evR. So the common prefix $C(D)$ of the data (\cref{def:single:features}) is the set of rigid positions of $\sigma$, and its slots are the metavariable positions of $\sigma$. By the rigid-prefix lemma (\cref{lem:single:basic}(c)), the rigid skeleton of $T$ lies in $C(D)$ with the same symbols, and every occurrence position of $T$ is in $C(D)$ or is a slot. In particular every occurrence position $c$ of $T$ is a position of $\sigma$, and $\kappa(c)$ is defined.
+
+\emph{Step 2 (bodies).} Let $M$ be a metavariable of $T$ of arity $n$, with a pattern occurrence at $c_1$, say $M(u_1,\dots,u_n)$ with pairwise distinct bound variables $u_m$ in scope at $c_1$. By the matching theorem (\cref{thm:setting:matching}), its value in $D_j$ is $\lambda\bar h.\,(D_j|_{c_1})[h_m/u_m]$, and $D_j|_{c_1}$ has no free bound variable outside $\{u_1,\dots,u_n\}$. Since $D_j|_{c_1}=\kappa(c_1)\theta_j$ and the values contain no free bound variables, the free bound variables of $\kappa(c_1)$ are those of $D_j|_{c_1}$, hence among the $u_m$. Let $B_M:=\kappa(c_1)[h_m/u_m]$. It is a template body: it has no free bound variable, and its metavariables are the members of $Z$ in $\kappa(c_1)$, all at leaves. Substituting $\theta_j$ commutes with abstracting the $u_m$, so $\lambda\bar h.B_M\theta_j$ is $M$'s value in $D_j$.
+
+\emph{Step 3 (other occurrences).} Let $M(\bar u^s)$ be any occurrence of $M$, at $c_s$. By preservation (\cref{lem:setting:preservation}), $D_j|_{c_s}=(B_M\theta_j)[\bar u^s]=(B_M[\bar u^s])\theta_j$. The second equality holds because plugging the metavariable-free arguments $\bar u^s$ into holes and substituting values for metavariable leaves act on different leaves, and values without free bound variables need no shifting under the binders of $B_M$. Also $D_j|_{c_s}=\kappa(c_s)\theta_j$. So $G:=B_M[\bar u^s]$ and $K:=\kappa(c_s)$ contain the members of $Z$ only as leaves and agree under every $\theta_j$. By \cref{lem:univ:identity}, $B_M[\bar u^s]=\kappa(c_s)$.
+
+\emph{Step 4.} Let $\rho$ be the template substitution $M\mapsto\lambda\bar h.B_M$ for all metavariables $M$ of $T$. On the rigid skeleton of $T$, $T\rho$ and $\sigma$ have the same symbols (Step 1). At every occurrence position $c_s$, $(T\rho)|_{c_s}=B_M[\bar u^s]=\kappa(c_s)=\sigma|_{c_s}$ (Step 3). Every position of $T$ outside argument lists is in the skeleton or is an occurrence, so $T\rho=\sigma$ and $T\gen\sigma$.
+
+For the instance schema take $\sigma=\sigma_\varphi$ and $D\subseteq\insto(\varphi)$: the values are terms over $L\cup\mathrm{Par}$, without bound variables. Every covering $T\in\DT$ satisfies $T\gen\sigma_\varphi$, hence $\inst(T)\supseteq\inst(\sigma_\varphi)$, so $D$ is an anchor for $\inst(\sigma_\varphi)$. Since $\sigma_\varphi$ covers $D$ and lies below every covering template, $\Min(D)=\{\sigma_\varphi\}$ up to $\equiv$.
+
+(b) If \evR\ or \evD\ fails, $\lgg(D)\not\equiv\sigma_\varphi$ by Plotkin's recovery lemma (\cref{lem:setting:recover}). If $\lgg(D)$ contained $\instc(\varphi)$, \cref{prop:univ:determine} would give $\lgg(D)\gen\sigma_\varphi$, and $\sigma_\varphi\gen\lgg(D)$ holds because $\sigma_\varphi$ covers $D$; so $\lgg(D)$ misses a closed instance. It is a legitimate first-order pattern under the $\lambda$ convention: its metavariables sit at disagreement positions of $D$, which lie at or below metavariable positions of $\sigma_\varphi$, where every datum has a closed term; so its values on $D$ are closed terms, and it covers $D$. It lies in $\FO\subseteq\DT$.
+
+(c) In $T=\bigl(f(S0)+f(0)=f(S0)\bigr)$ no bound variable is in scope, so $f$ has no pattern occurrence and $T\in\SO\setminus\DT$. $f:=\lambda h.0$ gives $0+0=0$, and $f:=\lambda h.h$ gives $S0+0=S0$; both data have different roots at $z$, so \evR\ holds. If $f:=\lambda h.\beta$ gave $SS0+0=SS0$, then $\beta[0]=0$ and $\beta[S0]=SS0$. A body whose root is $S$, $+$, $\cdot$ or a parameter keeps that root after plugging, so $\beta[0]=0$ forces $\beta\in\{0,h\}$, and then $\beta[S0]\in\{0,S0\}$.
+
+\emph{Analogues of (c) with binders} \src{cases q1\_dt; referee r5}: a metavariable without a pattern occurrence can use different arguments on different data, the phenomenon that also makes $\SO$ anchors for induction stronger (\cref{prop:zf:indso}). (i) $\varphi=\forall y\,(x+y=y+x)$, data at $0$ and $S0$, $T_1=\forall y\,(G(0,S0)+G(y,y)=y+F(y))$: take $G:=\lambda h_1h_2.h_1$, $F:=\lambda h.0$, resp.\ $G:=\lambda h_1h_2.h_2$, $F:=\lambda h.S0$. The occurrence $F(y)$ is a pattern occurrence, but $G$ has none. For the instance at $SS0$, $G(y,y)=y$ forces $G$'s body to be a hole, so $G(0,S0)\in\{0,S0\}\neq SS0$. (ii) $\varphi=(x+y=y+x)$, data $(0,S0)$ and $(S0,0)$, $T_2=(G(0,S0)=G(S0,0))$: take $G:=\lambda h_1h_2.(h_1+h_2)$, resp.\ $\lambda h_1h_2.(h_2+h_1)$. For the instance $0+SS0=SS0+0$ the body would be $\beta_1+\beta_2$ with $\beta_1[0,S0]=0$, forcing $\beta_1\in\{0,h_1\}$, and $\beta_1[S0,0]=SS0$, which is impossible.
+\end{proof}
+
+\emph{Evidence for \cref{prop:univ:dt}} \src{cases q1\_dt, q1\_lgg (5); referee r1 (3), r5}: a bounded search over covering $\DT$ templates agreed with \evR$\wedge$\evD\ on $99/99$ pairs (five formulas, three with binders), the referee's on $60/60$, and every formula had an $\SO$ non-anchor satisfying the $\DT$ events. The search is bounded; the statement is proved.
+
+\emph{Remarks.} (1) With one metavariable, \cref{lem:univ:identity} is the two-point identity, and \cref{prop:univ:dt}(a) is \cref{lem:many:twopoint}, including a $0$-ary formula metavariable. (2) For closed data, (a) also follows from a direct case analysis of the positions of $\kappa(c_1)$ and $\kappa(c_s)$, including hole positions that receive closed-term arguments at non-pattern occurrences \src{cases Prop A2$'$}. The proof above reorganizes it around \cref{lem:univ:identity} and allows parameters in the values; it is also the ``if'' half of \cref{cor:single:special}(a).
+
+% ---------------------------------------------------------------------
+\subsection{Rates}\label{app:univ:rates}
+
+\emph{\Cref{thm:univ:rates}(b) in full.} For $k=2$,
+\[P_N=\textstyle\sum_fa_f^N+\sum_gb_g^N+c^N-\sum_{f,g}d_{fg}^N-\sum_fe_f^N,\]
+with $a_f=\Lambda(\univroot(t_1)=f)$, $b_g=\Lambda(\univroot(t_2)=g)$, $c=\Lambda(t_1=t_2)$, $d_{fg}=\Lambda(\univroot(t_1)=f,\univroot(t_2)=g)$, $e_f=\Lambda(\univroot(t_1)=f,\,t_1=t_2)$. For independent components with term law $\mu$ and root law $p$: $P_N=2S-S^2+c^N-C$, with $S=\sum_fp_f^N$, $C=\sum_fc_f^N$, $c_f=\sum_{\univroot(t)=f}\mu(t)^2$.
+
+\emph{Numbers} \src{cases q1\_lgg (4); referee r1 (5)}. For a Galton--Watson law with root law $0{:}\,.4$, $S{:}\,.3$, $+{:}\,.2$, $\cdot{:}\,.1$ (depth $\le4$, independent components), the exact values at $N=2,4,6,10$ are $.300$, $.035$, $.0049$, $.00011$ ($k=1$) and $.52$, $.070$, $.0098$, $.00022$ ($k=2$), in agreement with $20\,000$ Monte Carlo runs. Here $\rho_i=0.5$ (split $\{0,\cdot\}$ against $\{S,+\}$) and $\Lambda(t_1\neq t_2)>0.5$, so $\rho=0.5$; bound (c) is below $0.01$ from $N=11$ ($k=1$, $2e^{-N/2}$) and $N=13$ ($k=2$, $5e^{-N/2}$) in its exponential form, and from $N=8$ and $N=9$ in its form $(2k+\binom k2)2^{-N}$.
+
+\begin{proof}[Proof of \cref{thm:univ:rates}]
+The data are i.i.d.\ $\sim\Lambda$. The failure event is the union of the events $\neg$\univR{i} and $\neg$\univD{ii'}.
+
+(a) $\neg$\univR{1} is the disjoint union over $f$ of $A_f$: ``all $N$ roots are $f$'', with $\Pr[A_f]=p_f^N$.
+
+(b) Let $A=\bigcup_fA_f$ (all roots of $t_1$ equal), $B=\bigcup_gB_g$ (all roots of $t_2$ equal, to $g$), and $E$: ``$t_1=t_2$ in every datum''. The $A_f$ are pairwise disjoint, and so are the $B_g$. $\Pr[A]=\sum_fa_f^N$, $\Pr[B]=\sum_gb_g^N$, $\Pr[E]=c^N$, $\Pr[A\cap B]=\sum_{f,g}d_{fg}^N$. On $E$ the roots of $t_1$ and $t_2$ coincide, so $\Pr[A\cap E]=\sum_fe_f^N=\Pr[B\cap E]$, and $A_f\cap B_g\cap E=\emptyset$ for $f\neq g$ while $A_f\cap B_f\cap E=A_f\cap E$; so $\Pr[A\cap B\cap E]=\sum_fe_f^N$. Inclusion--exclusion gives
+\[\Pr[A\cup B\cup E]=\textstyle\sum_fa_f^N+\sum_gb_g^N+c^N-\sum_{f,g}d_{fg}^N-2\sum_fe_f^N+\sum_fe_f^N,\]
+which is the formula. For independent components with term law $\mu$ and root law $p$: $a_f=b_f=p_f$, $d_{fg}=p_fp_g$ (so $\sum_{f,g}d_{fg}^N=S^2$), $c=\sum_t\mu(t)^2$ and $e_f=c_f$.
+
+(c) Union bound: $P_N\le\sum_i\Pr[\neg\text{\univR{i}}]+\sum_{i<i'}\Pr[\neg\text{\univD{ii'}}]$ with $\Pr[\neg\text{\univR{i}}]=\sum_fp_{i,f}^N$ and $\Pr[\neg\text{\univD{ii'}}]=c_{ii'}^N$. Let $G$ be a best split for $i$. The events ``all roots of $t_i$ are $f$'', for $f\in G$, are disjoint subsets of ``all roots of $t_i$ lie in $G$'', so $\sum_{f\in G}p_{i,f}^N\le\Lambda(\univroot(t_i)\in G)^N$; likewise for the complement. Both $\Lambda(\univroot(t_i)\in G)$ and $\Lambda(\univroot(t_i)\notin G)$ are at most $1-\rho_i$, so $\sum_fp_{i,f}^N\le2(1-\rho_i)^N\le2(1-\rho)^N$, and $c_{ii'}^N=(1-\Lambda(t_i\neq t_{i'}))^N\le(1-\rho)^N$. Summing gives $(2k+\binom k2)(1-\rho)^N$, and $1-\rho\le e^{-\rho}$.
+\end{proof}
+
+% ---------------------------------------------------------------------
+\subsection{Parameters, guards and capture}\label{app:univ:capture}
+
+\begin{proof}[Proof of \cref{prop:univ:open}]
+(a) $\varphi(\bar p)$ substitutes distinct parameters for the free occurrences of the distinct variables $\bar x$; as $\varphi$ has no parameters, the universal closure of $\varphi(\bar p)$ is $\forall\bar x\varphi$ up to the names of bound variables. A member $\varphi(\bar t)$ of $\insto(\varphi)$ follows from $\forall\bar x\varphi$ by $\forall$-elimination (the terms contain no bound variable, so the substitution is free), and its closure follows by generalization over its parameters. Conversely $\forall\bar x\varphi$ follows from $\varphi(\bar p)$ by generalization over $\bar p$.
+
+(b) Let $\mathcal H$ be $\Hk1(\FO)$ or $\Hk1(\DT)$ and $\tau\in\mathcal H$ with $\inst(\tau)\supseteq\instc(\varphi)$. The key point is that $\inst(\tau)$ then contains two closed instances forming an anchor: with $\theta(z_i):=t_i$ and $\theta'(z_i):=t'_i$ from \univRich, the closed instances $\sigma_\varphi\theta,\sigma_\varphi\theta'$ satisfy \evR\ and \evD, so $\tau\gen\sigma_\varphi$ by \cref{thm:univ:anchor} (for $\FO$) or \cref{prop:univ:dt}(a) (for $\DT$). As $\sigma_\varphi\in\FO\subseteq\DT$ contains $\instc(\varphi)$, $\univcl_{\mathcal H}(\instc(\varphi))=\inst(\sigma_\varphi)$, which is $\insto(\varphi)$ under the $\lambda$ convention with parameters. The inclusion $\instc(\varphi)\subseteq\insto(\varphi)$ is strict: every $z_i$ occurs in $\sigma_\varphi$, so the text of $\varphi(\bar p)$ determines the value $p_i$ at $z_i$, which is not closed. Once the data contain an anchor, the cautious verifier accepts the closure (\cref{lem:setting:closed}(b)), in particular $\varphi(\bar p)$. In (Nm) and (dB) the same argument gives $\univcl_{\Hk1(\FO)}(\instc(\varphi))=\inst(\sigma_\varphi)$, since \cref{thm:univ:anchor} holds in every syntax, and $\inst(\sigma_\varphi)\supseteq\Cap(\varphi)$ by \cref{prop:univ:capture}(a).
+
+(c) An instance of $\sigma_\varphi$ whose values are all closed is a closed instance; closed values contain no variable, so there is no capture. Hence $\inst(\sigma_\varphi,\{\mathrm{closed}(z_i)\}_i)=\instc(\varphi)$ in every syntax. By the most-specific-guard rule the learner's hypothesis on $D$ is $\lgg(D)$ with every guard of the family that holds on all data. On closed data the values of every metavariable of $\lgg(D)$ are subterms of closed terms, so $\mathrm{closed}$ is kept for all of them. Then $\varphi(\bar p)$ is not accepted: at a metavariable position $q$ of $\sigma_\varphi$ the hypothesis either has a metavariable at $q$ (metavariables of $\lgg(D)$ lie at or below the metavariable positions of $\sigma_\varphi$, since all data agree above them), whose value in $\varphi(\bar p)$ contains a parameter and violates $\mathrm{closed}$, or is rigid at $q$ with the root shared by all data's closed terms, which differs from a parameter. A capture instance is excluded the same way, because its value at some such position contains a bound variable. A datum with a parameter at $z_i$ violates $\mathrm{closed}$ for the metavariable of that column and deletes it.
+\end{proof}
+
+\emph{Computed} \src{cases q1\_lgg (3)}: from $0+0=0$, $0+S0=S0$ the guarded learner learns $0+z=z$ with $\mathrm{closed}(z)$ and rejects $0+p=p$; after the datum $0+(p+S0)=p+S0$ it accepts $0+q=q$, i.e.\ $\forall x\,(0+x=x)$. In E1, the guardless $\DTF$ learner on $0+0=0$, $1+0=1$ accepts $w_0+0=w_0$, the axiom in parameter form, but not the string $\forall x\,(x+0=x)$, which is a different datum (\cref{sec:setting:syntax}).
+
+\begin{lemma}[When capture instances exist]\label{lem:univ:capcrit}\status{proved; computed}\src{cases Prop A4$'$(b)}
+$\Cap(\varphi)\neq\emptyset$ iff: in (Nm) with sentences as data, some name is bound at \emph{every} free occurrence of some $x_i$; in (Nm) with free names read as parameters, some free occurrence of some $x_i$ is in the scope of a binder; in (dB), every free occurrence of some $x_i$ lies under a binder.
+\end{lemma}
+
+\begin{proof}
+(Nm), data are sentences: if a name $y$ is bound at every free occurrence of $x_i$, then $\theta(z_i):=y$ (other values closed) gives a sentence in $\Cap(\varphi)$. Conversely, if a sentence $\sigma_\varphi\theta\in\Cap(\varphi)$ has the captured name $y$ in $\theta(z_i)$, then every copy of $\theta(z_i)$, one at each free occurrence of $x_i$, contains $y$, and since the result has no free names, $y$ is bound at each of them. (Nm), free names read as parameters: $\theta(z_i):=y$ with $y$ bound above some occurrence is an admissible datum (copies of $y$ elsewhere are read as a parameter); conversely capture needs a binder above an occurrence. (dB): if every free occurrence of $x_i$ has binder depth $\ge1$, then $\theta(z_i):=\#0$ is well formed at all of them and captured; conversely a captured value contains some $\#m$, and well-formedness at each occurrence $o$ requires $m$ to be less than the depth of $o$, so every depth is $\ge1$.
+\end{proof}
+
+\noindent For example, $x=0\wedge\forall y\,(x=y)$ has no capture sentence in (Nm) and no capture instance in (dB), since its first occurrence of $x$ is under no binder; capture formulas exist in (Nm) when free names are read as parameters.
+
+\begin{proof}[Proof of \cref{prop:univ:capture}]
+(a) Let $\sigma_\varphi\theta$ be an instance (a sentence, or a formula whose free names are parameters). Suppose no value is captured. In (Nm) the substitution is then free for every $x_i$, and $\sigma_\varphi\theta=\varphi(\bar\theta)$ is a genuine instance: closed if the values are variable-free, and otherwise at terms whose variable names are bound at no occurrence. Such names are free in the result, so they are parameters (impossible if data must be sentences). In (dB), an index $\#m$ in a value at an occurrence $o$ refers to an enclosing binder if $m$ is less than the binder depth of $o$ (then the value is captured), and is loose otherwise (then the result is not well formed). So a non-captured value has no index, and $\sigma_\varphi\theta$ is a closed or parameter instance. Otherwise $\sigma_\varphi\theta\in\Cap(\varphi)$. The reverse inclusions hold by definition. Disjointness: every $z_i$ occurs in $\sigma_\varphi$, so the text $\sigma_\varphi\theta$ determines each $\theta(z_i)$ (the subtree at an occurrence of $z_i$), and whether it is captured is a property of that text. The values of a genuine open instance contain no bound variable, so they are not captured.
+
+(b) This is \cref{lem:univ:capcrit}.
+
+(c) $\exists y\,\neg(y=y)$ is false in every structure, while $\exists y\,\neg(y=t)$ holds in every structure with at least two elements, whatever $t$ denotes. $\forall x\exists y\,(y=Sx)$ is logically valid (take $y:=Sx$), while $\exists y\,(y=Sy)$ is false in $\N$, where $S$ has no fixed point.
+
+(d) By \cref{prop:univ:open}(b), $\univcl_{\Hk1(\FO)}(\instc(\varphi))=\inst(\sigma_\varphi)\supseteq\Cap(\varphi)$; the anchor argument of \cref{thm:univ:anchor} uses only closed instances, so it holds in (Nm) and (dB). Once the data contain an anchor the cautious verifier accepts the closure (\cref{lem:setting:closed}(b)). With $\varphi$ as in (c), the accepted capture instance $\exists y\,\neg(y=y)$ is false in every structure.
+
+(e) Closed values satisfy both guards, so closed data keep both, and $\inst(\sigma_\varphi,\{\mathrm{closed},\mathrm{nocap}\})=\instc(\varphi)$ because closedness implies $\mathrm{nocap}$. A genuine parameter instance satisfies $\mathrm{nocap}$, and violates $\mathrm{closed}(z_i)$ exactly for the $z_i$ whose value contains a parameter, so only those guards $\mathrm{closed}(z_i)$ are deleted; for $k\ge2$ a datum such as $\varphi(p,0)$ keeps $\mathrm{closed}(z_2)$. Once $\mathrm{closed}(z_i)$ is deleted for every $i$, $\inst(\sigma_\varphi,\{\mathrm{nocap}(z_i)\}_i)$ is the set of instances with no captured value, which by (a) is $\instc(\varphi)\cup\insto(\varphi)=\insto(\varphi)$. Genuine data never violate $\mathrm{nocap}$, so it is never deleted, and capture instances, which violate it, are never accepted.
+\end{proof}
+
+\emph{Computed} \src{cases q1\_capture; referee F1, F2}: for $\exists y\,\neg(y=x)$, $\lgg(\varphi(0),\varphi(S0))=\exists y\,\neg(y=z)$ has the instance $\exists y\,\neg(y=y)$, false in all equality structures of sizes $1$--$5$; for seven formulas the decomposition of \cref{prop:univ:capture}(a) and the criterion of \cref{lem:univ:capcrit} were checked on all substituted terms of size $\le3$; the guards of (e) behave as stated, while the unguarded verifier accepts $\exists y\,\neg(y=y)$. The de Bruijn \emph{first-order} encoding does not prevent capture, which there happens by index: the lgg is $\exists\neg(\#0=z)$, with capture instance $\exists\neg(\#0=\#0)$ ($z:=\#0$), which the learned guard ``no loose index in $z$'' rejects.
+
+% ---------------------------------------------------------------------
+\subsection{The \texorpdfstring{$\omega$}{omega}-gap: details}\label{app:univ:omega}
+
+\begin{proof}[Proof of \cref{prop:univ:tv}]
+$M_0$ is a substructure because $L$ has a constant. (ii)$\Rightarrow$(i): if all $\varphi(\bar t)$ hold in $M$, they hold in $M_0$ by elementarity, and the elements of $M_0$ are the $t^M$; so $M_0\models\forall\bar x\varphi$, hence $M\models\forall\bar x\varphi$, again by elementarity. The converse direction of (i) is $\forall$-elimination. (i)$\Rightarrow$(ii) is the Tarski--Vaught criterion \citep{tarski1957arithmetical}: if $M\models\exists x\,\psi(x,\bar s)$ with $\bar s$ closed but no closed $t$ has $M\models\psi(t,\bar s)$, then (i) for $\neg\psi(x,\bar s)$ gives $M\models\forall x\,\neg\psi(x,\bar s)$, a contradiction. In a model of true arithmetic $M_0\cong\N$, and $M$ and $\N$ satisfy the same sentences with numerals, so $M_0\preceq M$.
+\end{proof}
+
+\emph{\Cref{ex:univ:fail}(a).} Closed terms over $\{0,1,+,-,\cdot\}$ denote integers, by induction on terms. For an integer $n$, $n\cdot n\neq2$, so $\R\models\neg(t\cdot t=1+1)$ for every closed $t$; $\sqrt2$ refutes $\forall x\,\neg(x\cdot x=1+1)$. In a real closed field every positive element has a square root, and $1+1>0$, so $\mathrm{RCF}\vdash\exists x\,(x\cdot x=1+1)$. The rationals form an ordered field without $\sqrt2$, so $\mathrm{OF}\nvdash\exists x\,(x\cdot x=1+1)$. Here $M_0\cong\mathbb Z$, which is not elementary in $\R$, as \cref{prop:univ:tv} requires.
+
+\emph{\Cref{ex:univ:fail}(b).} $\emptyset$ is hereditarily finite, and $\HF$ is closed under $\{a,b\}$ and $a\cup b$, so every closed term denotes an $\HF$ set. Conversely, by $\in$-induction every $\HF$ set is denoted: $\{a\}=p(a,a)$ and $\{a_1,\dots,a_n\}=u(p(a_1,a_1),\{a_2,\dots,a_n\})$. A set $x$ with $\mathrm{Ind}(x)$ contains $\emptyset$, $\{\emptyset\}$, $\{\emptyset,\{\emptyset\}\},\dots$, which are pairwise distinct, so it is infinite; hence $V\models\neg\mathrm{Ind}(t)$ for every closed $t$. The axiom of Infinity provides an inductive set, so $\forall x\,\neg\mathrm{Ind}(x)$ is false and refuted by $\ZF$. Each closed instance is probably provable in very weak set theories; only its truth is used here.
+
+\emph{\Cref{ex:univ:fail}(c).} Assuming $\PA$ consistent, $\PA\nvdash\Con(\PA)$, so $\PA+\neg\Con(\PA)$ has a model $M$. A closed term $t$ denotes a standard number $n$, and $\neg\mathrm{Prf}(t,\ulcorner\bot\urcorner)$ is a true $\Delta_0$ sentence because $n$ codes no proof of $\bot$. True $\Delta_0$ sentences in $0,S,+,\cdot$ (bounded quantifiers defined from $+$, since $\Q$ says nothing about $<$) are provable in $\Q$ \citep[see e.g.][]{hajek1993metamathematics}, so they hold in $M$, while $M\models\exists x\,\mathrm{Prf}(x,\ulcorner\bot\urcorner)$. So $M_0$, the standard part, is not elementary in $M$. (A nonstandard model of true arithmetic, by contrast, satisfies (i) of \cref{prop:univ:tv}; what fails here is $M\equiv\N$.)
+
+\emph{\Cref{ex:univ:q}: the model of $\Q$} \src{cases Ex.~A8; q1\_qmodel; referee r1 (4)}. That $\Q\nvdash\forall x\,(0+x=x)$ is well known; we give an explicit model. The domain is $\N\cup\{a,b\}$ with $a,b\notin\N$; $n,m$ range over $\N$. The operations are standard on $\N$, and otherwise:
+\begin{itemize}
+\item successor: $Sa=a$, $Sb=b$;
+\item addition: $n+a=n+b=b$; $a+n=a$, $b+n=b$; $a+a=a+b=a$; $b+a=b+b=b$;
+\item multiplication: $x\cdot0=0$ for all $x$; $a\cdot n=b\cdot n=b$ for $n\ge1$; $n\cdot a=n\cdot b=a$ for $n\ge1$; $0\cdot a=0\cdot b=0$; $a\cdot a=a\cdot b=b\cdot a=b\cdot b=a$.
+\end{itemize}
+($\Q$'s axioms do not mention $<$, which may be interpreted arbitrarily.) We check Q1--Q7.
+\begin{itemize}
+\item Q1, Q2, Q3: $S$ is injective, $0$ is not a successor, and every $x\neq0$ is a successor ($n+1=S n$, $a=Sa$, $b=Sb$).
+\item Q4, $x+0=x$: standard on $\N$; $a+0=a$ and $b+0=b$.
+\item Q5, $x+Sy=S(x+y)$. For $y=m$: if $x\in\{a,b\}$ then $x+m=x$ and $Sx=x$; otherwise standard. For $y\in\{a,b\}$: $Sy=y$, and every $x+y$ lies in $\{a,b\}$, which $S$ fixes.
+\item Q6, $x\cdot0=0$: by definition.
+\item Q7, $x\cdot Sy=x\cdot y+x$. For $y=m$ and $x=a$: $a\cdot(m+1)=b$, and $a\cdot m+a$ is $0+a=b$ if $m=0$ and $b+a=b$ if $m\ge1$. For $x=b$: $b\cdot(m+1)=b$, and $b\cdot m+b$ is $0+b=b$ or $b+b=b$. For $y\in\{a,b\}$: $Sy=y$, so we need $z+x=z$ for $z=x\cdot y$. If $x=0$, $z=0$ and $0+0=0$. If $x=n\ge1$, $z=a$ and $a+n=a$. If $x=a$, $z=a$ and $a+a=a$. If $x=b$, $z=a$ and $a+b=a$.
+\end{itemize}
+In this model $0+a=b\neq a$, and every closed instance $0+t=t$ holds, since closed terms denote standard numbers. So $\Q$ together with all closed instances of $0+x=x$ does not prove $\forall x\,(0+x=x)$. The script \texttt{q1\_qmodel.py} checks all seven axioms on all tuples from $\{0,\dots,40\}\cup\{a,b\}$, and the referee's independent code on $\{0,\dots,60\}\cup\{a,b\}$.
+
+% ---------------------------------------------------------------------
+\subsection{Consequences for a learner}\label{app:univ:learner}
+
+\begin{proposition}[What is soundly learnable]\label{prop:univ:learner}\status{proved}\src{cases A10}
+\textup{(1)} From closed instances the soundly learnable object is $\instc(\varphi)$, with anchors \evR$\wedge$\evD\ and the rates of \cref{thm:univ:rates}. If parameters are admissible values, the cautious single-schema learner over $\Hk1(\FO)$ or $\Hk1(\DT)$ is sound for it only with a closedness guard. In (Nm) and (dB), even without parameters, it must also exclude capture instances whenever $\Cap(\varphi)\neq\emptyset$ (\cref{lem:univ:capcrit}), by $\mathrm{nocap}$ or by $\mathrm{closed}$, which implies it; under the $\lambda$ convention this is automatic.
+\textup{(2)} The $\omega$-step is truth-safe in the intended $M$ for every $\varphi$ iff $M_0\preceq M$ (\cref{prop:univ:tv}).
+\textup{(3)} In general it is not derivable from the instances in first-order logic, even over $\Q$ (\cref{ex:univ:q}); it is an $\omega$-rule step.
+\textup{(4)} If the community uses instances at parameters, as proof-assistant practice does when it applies $\forall x,\,\varphi\,x$ to a variable, the target is $\insto(\varphi)$ and $\forall\bar x\varphi$ is obtained soundly (\cref{prop:univ:gen}); in (Nm) and (dB) $\mathrm{nocap}$ is still needed when $\Cap(\varphi)\neq\emptyset$.
+\end{proposition}
+
+\begin{proof}
+(1) Anchors: \cref{thm:univ:anchor,prop:univ:dt}; rates: \cref{thm:univ:rates}. Without a closedness guard and with parameters admissible, the closure of $\instc(\varphi)$ contains $\varphi(\bar p)$ (\cref{prop:univ:open}(b)); the guard makes $\instc(\varphi)$ realizable and is learned from closed data (\cref{prop:univ:open}(c)). In (Nm) and (dB), an unguarded learner accepts capture instances after an anchor whenever $\Cap(\varphi)\neq\emptyset$ (\cref{prop:univ:capture}(d)), and these are not closed instances; $\mathrm{closed}$ excludes them (\cref{prop:univ:open}(c)), and so does $\mathrm{nocap}$ (\cref{prop:univ:capture}(e)). If $\Cap(\varphi)=\emptyset$, as under the $\lambda$ convention, no such guard is needed.
+(2) The statement ``for every $\varphi$ whose closed instances all hold in $M$, $M\models\forall\bar x\varphi$'' is condition (i) of \cref{prop:univ:tv}, hence equivalent to $M_0\preceq M$; \cref{ex:univ:fail} gives the negative cases.
+(3) \Cref{ex:univ:q}: $\Q$ plus all closed instances of $0+x=x$ does not prove $\forall x\,(0+x=x)$. (For other $\varphi$, e.g.\ logically valid ones, $\forall\bar x\varphi$ may well be derivable.)
+(4) If the target is $\insto(\varphi)$, it equals $\inst(\sigma_\varphi)$ under the $\lambda$ convention and is realizable, with anchors as in \cref{prop:univ:dt}(a); in (Nm) and (dB) it is realizable as $\sigma_\varphi$ with the guards $\mathrm{nocap}(z_i)$ (\cref{prop:univ:capture}(e)). It contains $\varphi(\bar p)$, from which $\forall\bar x\varphi$ follows by generalization (\cref{prop:univ:gen}).
+\end{proof}
+
+\begin{proposition}[Refutation and the $\omega$-gap]\label{prop:univ:refute}\status{proved}\src{cases A11}
+Let $\forall\bar x\varphi$ be false in the intended $M$ while all closed instances are true.
+\textup{(a)} No refutation that ends by evaluating closed instances condemns $\forall\bar x\varphi$.
+\textup{(b)} A coherence refutation from designated true premises $\Gamma$ exists iff $\Gamma\cup\{\forall\bar x\varphi\}$ is inconsistent ($\mathrm{RCF}$ and $\ZF$ refute the examples of \cref{ex:univ:fail}(a),(b); $\mathrm{OF}$ does not refute (a)).
+\textup{(c)} In a term-generated $M$ such as $\N$ this cannot happen (\cref{prop:univ:tv}); if the channel decides the closed instances of $\varphi$ (as a full $\Delta_0$ evaluator does for $\Delta_0$ formulas), search finds a false one.
+\textup{(d)} Capture instances are refuted by pure logic when logically false; when false only in $M$, a designated theory must prove the negation: $\Q\nvdash\forall y\,\neg(y=Sy)$ ($Sa=a$ in the model of \cref{ex:univ:q}), $\PA$ proves it. No evaluation of closed instances bears on them.
+\end{proposition}
+
+\begin{proof}
+(a) Every closed instance is true in $M$, so an evaluation of one returns ``true'' and refutes nothing.
+(b) A coherence refutation is a derivation of $\bot$ from $\Gamma\cup\{\forall\bar x\varphi\}$, which by completeness exists iff this set is inconsistent. $\mathrm{RCF}$ proves $\exists x\,(x\cdot x=1+1)$; $\mathbb Q$ is a model of $\mathrm{OF}+\forall x\,\neg(x\cdot x=1+1)$; $\ZF$ proves $\exists x\,\mathrm{Ind}(x)$ (\cref{app:univ:omega}).
+(c) If $M$ is term-generated, $M_0=M$, so by \cref{prop:univ:tv} a false $\forall\bar x\varphi$ has a false closed instance. Enumerating closed tuples and deciding each instance finds one at a finite stage. (The same holds whenever $M_0\preceq M$.)
+(d) $\neg\exists y\,\neg(y=y)$ is logically valid. In the model of \cref{ex:univ:q}, $Sa=a$, so $\Q\nvdash\forall y\,\neg(y=Sy)$. $\PA$ proves it by induction on $y$: $0\neq S0$ by Q1, and $y\neq Sy$ implies $Sy\neq SSy$ by Q2. A capture instance is neither a closed nor an open instance (\cref{prop:univ:capture}(a)), so no evaluation of closed instances concerns it.
+\end{proof}
+
+% ---------------------------------------------------------------------
+\subsection{Computations}\label{app:univ:comp}
+
+The computations cited in \cref{sec:univ} are the following scripts (directory \texttt{research/\allowbreak tracks/\allowbreak cases}): \texttt{q1\_lgg.py} for \cref{prop:univ:determine}, \cref{thm:univ:anchor} ($141\,736$ data sets), \cref{prop:univ:open}(c), \cref{thm:univ:rates} and \cref{prop:univ:dt}(c), about $85$\,s; \texttt{q1\_dt.py} with the bounded search \texttt{dt\_search.py} for \cref{prop:univ:dt}, $7$\,s; \texttt{q1\_capture.py} for \cref{prop:univ:capture} and \cref{lem:univ:capcrit}; \texttt{q1\_qmodel.py} for \cref{ex:univ:q}; and the referee's independent \texttt{r1\_q1.py} and \texttt{r5\_q1\_dt.py} in its subdirectory \texttt{referee\_code}. Experiment E1 is \texttt{experiments/\allowbreak e1\_universal.py}, run from \texttt{code} ($48$\,s, output \texttt{code/\allowbreak results/\allowbreak e1\_universal.md}). Each script is run as \texttt{python3} \textit{script} from its directory and writes an output file named after it; the numbers quoted are those recorded in the final research notes.

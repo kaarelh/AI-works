@@ -1,0 +1,160 @@
+% =====================================================================
+% Appendix: proofs for Section 3 (Search makes soundness a worst-case property)
+% Sources: research/theory/T1-soundness-under-search.md (Cor 2.2, Prop 2.3 and its repair),
+%          research/lit/L3-learning-to-reason-and-limit-inquiry.md (Lemma A, as repaired),
+%          research/theory/T2-coherence-as-negative-data.md (Thm 2.4, as repaired),
+%          research/verification/{T1,T2,L3}-*.md.
+% =====================================================================
+\providecommand{\Steps}{\mathrm{Steps}}
+
+\section{Proofs for Section~\ref{sec:search}}\label{app:search}
+
+\Cref{lem:search:stepwise}, \cref{thm:search:tonk}, \cref{prop:search:post} and \cref{prop:search:mdl} are proved in full in the main text. This appendix proves the remaining results of \cref{sec:search}, verifies the claims of \cref{ex:search:atoms}, and records the examples showing that the hypotheses of \cref{lem:search:commitment,thm:search:doctrinal} are needed. Notation is as in \cref{sec:search}; in particular $S$ is the set of all steps (\cref{def:setting:step}). Throughout, $\models$ is classical propositional consequence, and a step $\Pi\step\varphi$ over formulas is \emph{sound} if $\Pi\models\varphi$.
+
+% ---------------------------------------------------------------------
+\subsection{PAC learners can be maximally unsound}\label{app:search:pac}
+
+\begin{proof}[Proof of \cref{cor:search:pac}]
+For $N\ge0$ let $S_{\ge N}:=\{s\in S:|s|\ge N\}$.
+
+\emph{Step 1: $T_j\subseteq S_{\ge j}$.} Every step of~$T_j$ has the premise $A\vee\top^{(j)}$, and $\top^{(j)}$ contains $j$ occurrences of~$\top$. So every step of~$T_j$ has size at least~$j$.
+
+\emph{Step 2: the tail bound.} The sets $S_{\ge N}$ decrease in~$N$ and have empty intersection, so $Q(S_{\ge N})\downarrow0$ by continuity from above. Fix $\varepsilon\in(0,1)$ and let $N_\varepsilon:=\min\{N\ge0:Q(S_{\ge N})\le\varepsilon\}$.
+\begin{itemize}
+\item If $\hat\jmath\ge N_\varepsilon$, then $Q(T_{\hat\jmath})\le Q(S_{\ge\hat\jmath})\le Q(S_{\ge N_\varepsilon})\le\varepsilon$, by Step~1 and monotonicity.
+\item If $\hat\jmath<N_\varepsilon$, then $N_\varepsilon\ge2$, because $\hat\jmath\ge1$. By minimality of~$N_\varepsilon$, $Q(S_{\ge N_\varepsilon-1})>\varepsilon$. Moreover $\hat\jmath<N_\varepsilon$ means $|X_i|\le N_\varepsilon-2$ for every~$i$, i.e.\ no sample lies in $S_{\ge N_\varepsilon-1}$. Since the $X_i$ are i.i.d.\ from~$Q$, this event has probability $(1-Q(S_{\ge N_\varepsilon-1}))^m<(1-\varepsilon)^m$.
+\end{itemize}
+Hence $\Pr[Q(T_{\hat\jmath})>\varepsilon]\le\Pr[\hat\jmath<N_\varepsilon]\le(1-\varepsilon)^m$.
+
+\emph{Step 3: the error decomposition.} Write $h=\mathcal L(X_{1..m})$ and $Y=\inst(\top\mathrm{I},\wedge\mathrm{I},\vee\mathrm{I}_2)\subseteq\Rstar$. An element of $(h\cup T_{\hat\jmath}\cup Y)\setminus\Rstar$ lies in $h\setminus\Rstar$ or in~$T_{\hat\jmath}$, because $Y\subseteq\Rstar$. An element of $\Rstar\setminus(h\cup T_{\hat\jmath}\cup Y)$ lies in $\Rstar\setminus h$. So $(h\cup T_{\hat\jmath}\cup Y)\,\triangle\,\Rstar\subseteq(h\,\triangle\,\Rstar)\cup T_{\hat\jmath}$, and $\mathrm{err}_Q(\mathcal L^+)\le\mathrm{err}_Q(\mathcal L)+Q(T_{\hat\jmath})$ pointwise in the sample. This proves~(a).
+
+\emph{Step 4: PAC.} Let $m\ge\max\{m_{\mathcal L}(\varepsilon/2,\delta/2),\lceil(2/\varepsilon)\ln(2/\delta)\rceil\}$. Then $\Pr[\mathrm{err}_Q(\mathcal L)>\varepsilon/2]\le\delta/2$, since as usual the guarantee of~$\mathcal L$ holds for every sample size $m\ge m_{\mathcal L}(\varepsilon,\delta)$. By Step~2 applied with $\varepsilon/2$, $\Pr[Q(T_{\hat\jmath})>\varepsilon/2]\le(1-\varepsilon/2)^m\le e^{-m\varepsilon/2}\le\delta/2$. By Step~3 and a union bound, $\Pr[\mathrm{err}_Q(\mathcal L^+)>\varepsilon]\le\delta$. Both events are computed from the same sample, so no extra samples beyond the maximum are needed. The outputs of~$\mathcal L^+$ need not lie in the hypothesis class of~$\mathcal L$, so the guarantee is improper. This proves~(b).
+
+\emph{Step 5: trivialization.} Every output of $\mathcal L^+$ contains $Y\cup T_{\hat\jmath}$. The derivation in the proof of \cref{thm:search:tonk}(i), with $j=\hat\jmath$, uses only steps of~$Y$ (namely $\top$I, $\wedge$I and $\vee$I$_2$) and one step of~$T_{\hat\jmath}$. So $\Cl_{\mathcal L^+(X_{1..m})}(\emptyset)=\Fm$ for every sample. This proves~(c).
+\end{proof}
+
+\begin{remark}\label{rem:app:search:pac}
+Step~5 is where the three added schemas are needed. If $\mathcal L\equiv\emptyset$ and they are omitted, the output is $T_{\hat\jmath}$ alone. Every step of~$T_{\hat\jmath}$ has a premise, so $\emptyset$ is closed under it and $\Cl_{T_{\hat\jmath}}(\emptyset)=\emptyset$.
+\end{remark}
+
+% ---------------------------------------------------------------------
+\subsection{Schemas that mention atoms, and purification}\label{app:search:purify}
+
+\paragraph{Verification of \cref{ex:search:atoms}.}
+Let $\tau=(x\vee p_0\step x)$ and $A=\Rstar_{\CPC}\cup\inst(\tau)$.
+\begin{enumerate}[label=(\alph*)]
+\item \emph{$\tau$ is unsound.} Its instance $p_1\vee p_0\step p_1$ fails under $v(p_0)=1$, $v(p_1)=0$.
+\item \emph{$A$ is not trivial.} Let $X:=\Cn_{\CPC}(\neg p_0)$. Then $X\supseteq\emptyset$. $X$ is closed under $\Rstar_{\CPC}$, because $\Cl_{\Rstar_{\CPC}}(X)=\Cn_{\CPC}(X)=X$. $X$ is also closed under $\inst(\tau)$: if $B\vee p_0\in X$, every valuation with $v(p_0)=0$ satisfies $B\vee p_0$ and hence~$B$, so $\neg p_0\models B$ and $B\in X$. By leastness, $\Cl_A(\emptyset)\subseteq X$. Since $p_0\notin X$ (take $v(p_0)=0$), $\Cl_A(\emptyset)\ne\Fm$.
+\item \emph{$A$ is unsound.} The tautology $\neg p_0\vee p_0$ lies in $\Cl_{\Rstar_{\CPC}}(\emptyset)$, and the instance of~$\tau$ with $x:=\neg p_0$ yields $\neg p_0$, which is not a tautology.
+\item \emph{$\inst(\tau)$ is not substitution-closed.} The substitution $p_0\mapsto p_1$ maps the instance $p_2\vee p_0\step p_2$ to $p_2\vee p_1\step p_2$, which is not an instance of~$\tau$.
+\item \emph{A ground error does not fire.} For the single step $p_0\step p_1$, the set $\Cn_{\CPC}(\emptyset)$ is closed under $\Rstar_{\CPC}\cup\{p_0\step p_1\}$, because $p_0\notin\Cn_{\CPC}(\emptyset)$. So the closure from~$\emptyset$ is just the set of tautologies.
+\end{enumerate}
+
+\begin{proof}[Proof of \cref{lem:search:purify}]
+Let $\tau$ have metavariables $\bar x=x_1,\dots,x_k$, and let $p_{i_1},\dots,p_{i_l}$ be the distinct atoms occurring in~$\tau$. Let $y_1,\dots,y_l$ be fresh metavariables and $\tau^\circ:=\tau[p_{i_t}:=y_t]_{t\le l}$. Write $\tau[\bar x:=\bar A]$ for the instance of~$\tau$ obtained by substituting the formulas~$\bar A$ for~$\bar x$, and similarly for~$\tau^\circ$.
+
+($\Leftarrow$) Every instance of~$\tau$ is an instance of~$\tau^\circ$: $\tau[\bar x:=\bar A]=\tau^\circ[\bar x:=\bar A,\ \bar y:=(p_{i_1},\dots,p_{i_l})]$. So if $\tau^\circ$ is sound, so is~$\tau$.
+
+($\Rightarrow$) Assume $\tau$ is sound, and let $\iota=\tau^\circ[\bar x:=\bar A,\ \bar y:=\bar B]$ be an instance of~$\tau^\circ$. Then $\iota$ is $\tau$ with each occurrence of~$p_{i_t}$ \emph{in $\tau$ itself} replaced by~$B_t$, and each~$x_s$ replaced by~$A_s$. Occurrences of $p_{i_t}$ inside the~$A_s$ are left alone. There are infinitely many atoms, so we can choose distinct atoms $r_1,\dots,r_l$ that occur nowhere in $\bar A$, $\bar B$ or~$\tau$. Let $\rho$ be the renaming $p_{i_t}\mapsto r_t$ ($t\le l$), identity on all other atoms, and put $A'_s:=\rho(A_s)$. Then $\iota':=\tau[\bar x:=\bar A']$ is an instance of~$\tau$, hence sound.
+
+Let $\sigma$ be the simultaneous uniform substitution with $\sigma(p_{i_t})=B_t$, $\sigma(r_t)=p_{i_t}$ ($t\le l$), and identity on all other atoms. We claim $\sigma(\iota')=\iota$. The formulas of~$\iota'$ are built from the skeleton of~$\tau$, whose atoms are among the~$p_{i_t}$ and include no~$r_t$, with the fillers~$A'_s$ plugged in for the metavariables.
+\begin{itemize}
+\item On the skeleton, $\sigma$ replaces each $p_{i_t}$ by~$B_t$, exactly as the substitution $\bar y:=\bar B$ does in~$\tau^\circ$.
+\item Each filler $A'_s=\rho(A_s)$ contains no $p_{i_t}$, since $\rho$ renamed them all. It contains $r_t$ exactly where $A_s$ contains $p_{i_t}$, because $A_s$ contains no~$r_t$. All its other atoms are fixed by both $\rho$ and~$\sigma$. Hence $\sigma(A'_s)=A_s$.
+\end{itemize}
+So $\sigma(\iota')=\tau^\circ[\bar x:=\bar A,\ \bar y:=\bar B]=\iota$.
+
+Finally, uniform substitution preserves classical validity. Suppose $\Pi'\models\varphi'$ and let~$v$ be any valuation. Define $v'(p):=v(\sigma(p))$. By induction on formulas, $v'(\psi)=v(\sigma\psi)$ for every~$\psi$. So if $v$ satisfies $\sigma\Pi'$, then $v'$ satisfies~$\Pi'$, hence~$\varphi'$, and $v$ satisfies $\sigma\varphi'$. Applied to $\iota'$, this shows that $\iota=\sigma(\iota')$ is sound.
+\end{proof}
+
+\begin{proof}[Proof of \cref{cor:search:purify}]
+$\Rstar_{\CPC}$ is sound, so $A$ is sound iff every~$\tau_l$ is sound. By \cref{lem:search:purify}, this holds iff every~$\tau_l^\circ$ is sound, i.e.\ iff $A^\circ$ is sound.
+
+Next, $A_1^\circ:=\bigcup_l\inst(\tau_l^\circ)$ is substitution-closed. Let $\tau^\circ\theta$ be an instance, where $\theta$ maps metavariables to formulas, and let $\sigma$ be a uniform substitution of formulas for atoms. Since $\tau^\circ$ contains no atom, $\sigma(\tau^\circ\theta)=\tau^\circ(\sigma\circ\theta)$, which is again an instance.
+
+If $A^\circ$ is unsound, \cref{prop:search:post} gives $\Cl_{A^\circ}(\emptyset)=\Fm\ni\bot$. If $A^\circ$ is sound, then every step of~$A^\circ$ is in $\Sound(\Rstar_{\CPC})$ by completeness: $\Pi\models\varphi$ implies $\varphi\in\Cn_{\CPC}(\Pi)=\Cl_{\Rstar_{\CPC}}(\Pi)$. By \cref{lem:search:stepwise}, $\Cl_{A^\circ}(\emptyset)\subseteq\Cl_{\Rstar_{\CPC}}(\emptyset)=\Cn_{\CPC}(\emptyset)$, which does not contain~$\bot$.
+\end{proof}
+
+% ---------------------------------------------------------------------
+\subsection{The commitment-order lemma}\label{app:search:commitment}
+
+Recall \cref{def:search:scene}. An \emph{$R$-derivation} is a finite tree of sequents in which each node is either a leaf marked as a \emph{premise} (chosen freely by the prover) or, together with its children, forms an instance of some rule of~$R$: the children are the instance's premise sequents (none, for a premise-free rule) and the node is its conclusion sequent. The \emph{conclusion} of the derivation is the sequent at the root.
+
+\begin{proof}[Proof of \cref{lem:search:commitment}(i)]
+Let $G:=\{x:\rho_i\text{ is valid in }x\text{ for every }i\le m\}$. By the union bound over the whole library,
+\[
+\Pr_{x\sim D}[x\notin G]\ \le\ \sum_{i=1}^m\Pr_{x\sim D}[\rho_i\text{ is not valid in }x]\ \le\ \sum_{i=1}^m\varepsilon_i .
+\]
+Fix $x\in G$ and any $R$-derivation whose premises are all true in~$x$. We show by induction on height that every sequent in the tree is true in~$x$. Premise nodes are true by assumption. Every other node is the conclusion of an instance~$\iota$ of some~$\rho_i$, whose premise sequents are its children (possibly none) and are true in~$x$ by the induction hypothesis. Since $x\in G$, $\rho_i$ is valid in~$x$, so $\iota$ holds in~$x$ and its conclusion is true in~$x$. In particular the conclusion of the derivation is true in~$x$.
+
+So the event ``some $R$-derivation from premises true in~$x$ has a conclusion false in~$x$'' is contained in the complement of~$G$. Its probability (its outer probability, if it is not measurable) is therefore at most $\sum_i\varepsilon_i$. The event~$G$ is determined by~$x$ and the library~$R$ alone. Because $R$ is fixed before $x$ is drawn, $G$ does not depend on the prover, and the bound holds simultaneously for every prover, including one that sees~$x$ and chooses any number of derivations of any length. The sum runs over the whole library, not over the rules a particular derivation uses.
+\end{proof}
+
+\begin{remark}[Per-pair guarantees do not give per-scene validity]\label{rem:app:search:perpair}
+Suppose each scene in the support of~$D$ falsifies exactly one of $M$ instances of a rule~$\rho$, and the instance is drawn uniformly from these~$M$. Then $\Pr_{(x,\iota)}[\iota\text{ holds in }x]=1-1/M$, but $\rho$ is valid in no scene, so its per-scene validity is~$0$. A prover that sees~$x$ submits the falsified instance; this is regime~(ii) inside each scene.
+\end{remark}
+
+\begin{proof}[Proof of \cref{lem:search:commitment}(ii)]
+Let $\iota_0$ be an instance of~$\rho$ that fails in~$x_0$: its premise sequents are true in~$x_0$ and its conclusion sequent is false in~$x_0$. The tree consisting of~$\iota_0$ alone (its conclusion at the root, its premises as leaves) is a $\{\rho\}$-derivation from premises true in~$x_0$ with a conclusion false in~$x_0$. A prover that knows~$x_0$ submits it, and nothing in this regime is random, so this happens with probability~$1$. If $\mu\{\iota:\iota\text{ fails in }x_0\}>0$, such an~$\iota_0$ exists. If $\mu$ is supported on instances that hold in~$x_0$, the average validity is~$1$, i.e.\ $\varepsilon=0$, but a failing instance off the support of~$\mu$ may still exist, and the same prover uses it. So no bound in terms of~$\varepsilon$ holds.
+\end{proof}
+
+For part~(iii) we use the Schwartz--Zippel lemma \citep{schwartz1980fast,zippel1979probabilistic,demillo1978probabilistic}: if $f\in F[z_1,\dots,z_n]$ is nonzero of total degree at most~$d$ and $U\subseteq F$ is finite, then $\Pr_{a\sim\mathrm{Unif}(U^n)}[f(a)=0]\le d/|U|$.
+
+\begin{proof}[Proof of \cref{lem:search:commitment}(iii)]
+Formalize the protocol as follows. In round~$k$ the prover, which may be randomized, adaptive and computationally unbounded, commits to explicit expressions for $p_k,q_k\in F[z_1,\dots,z_n]$. The verifier computes an upper bound on $\deg(p_k-q_k)$ from the expressions and rejects if it exceeds~$d$. Otherwise it draws $a_k$ uniformly from $U_k^n$, independently of everything so far, and accepts iff $p_k(a_k)=q_k(a_k)$.
+
+Let $\mathcal H_k$ be the $\sigma$-algebra generated by everything that happens before $a_k$ is drawn: earlier claims, points and answers, and the prover's coins. The claim $(p_k,q_k)$ is $\mathcal H_k$-measurable, and $a_k$ is independent of~$\mathcal H_k$. Let $E_k$ be the event that claim~$k$ passes the degree check and $p_k-q_k$ is nonzero in $F[z_1,\dots,z_n]$, and $\mathrm{Acc}_k$ the event that it is accepted. By the Schwartz--Zippel lemma, applied conditionally on~$\mathcal H_k$,
+\[
+\Pr[E_k\cap\mathrm{Acc}_k\mid\mathcal H_k]\ =\ \mathbf 1_{E_k}\cdot\Pr_{a\sim\mathrm{Unif}(U_k^n)}\big[(p_k-q_k)(a)=0\big]\ \le\ d/|U_k| .
+\]
+Taking expectations, $\Pr[E_k\cap\mathrm{Acc}_k]\le d/|U_k|$. A false claim (one with $p_k-q_k\neq0$ over~$F$) that fails the degree check is rejected, so a false claim is accepted only on $E_k\cap\mathrm{Acc}_k$. By the union bound,
+\[
+\Pr\big[\exists k\le N:\ \text{claim $k$ is false and accepted}\big]\ \le\ \sum_{k\le N}d/|U_k| ,
+\]
+which is $Nd/|U|$ when $U_k=U$ for all~$k$. If $|U_k|\ge d\,2^k/\delta$ for all $k\ge1$, then $\sum_{k\ge1}d/|U_k|\le\sum_{k\ge1}\delta2^{-k}=\delta$, which bounds the probability that any false claim in an unbounded sequence is accepted. The prover's strategy enters only through the~$\mathcal H_k$, so the bounds hold uniformly over provers.
+\end{proof}
+
+\paragraph{Why the conditions of (iii) are needed.}
+\begin{itemize}
+\item \emph{Degree enforcement.} Over $F=\mathbb F_{2^k}$ with $U=F$, the claim $z^{2^k}\equiv z$ can be written with $k$ squarings. The polynomial $z^{2^k}-z$ is nonzero of degree~$2^k$, but it vanishes on all of~$F$, so random evaluation always accepts. The bound $d/|U|$ is vacuous here, since $d=2^k=|U|$. A verifier that read the degree off the length of the expression, roughly~$k$, would wrongly believe its error to be about $k/2^k$.
+\item \emph{The field.} For prime~$p$, $f=(a+b)^p-a^p-b^p=\sum_{0<i<p}\binom pi a^ib^{p-i}$ is nonzero over~$\mathbb Z$, but $p$ divides every $\binom pi$ with $0<i<p$, so $f=0$ in $\mathbb F_p[a,b]$. Evaluation mod~$p$ accepts this false integer identity with probability~$1$. Over~$\mathbb Q$ with $U\subseteq\mathbb Z$, the lemma applies with $d=p$.
+\item \emph{Order of commitment.} If the evaluation points were drawn before the prover committed to its claims, and visible to it, the prover could choose a nonzero $p-q$ that vanishes at those points. This is regime~(ii) again.
+\end{itemize}
+
+% ---------------------------------------------------------------------
+\subsection{The doctrinal paradox}\label{app:search:doctrinal}
+
+We use the online protocol of \cref{def:coherence:protocol}: (P)- and (N)-data, arguments~$\pi$ and their step sets $\Steps(\pi)$ are as defined there.
+
+\begin{proof}[Proof of \cref{thm:search:doctrinal}]
+\emph{Step 1: each $h_i$ is a coherent, cut-closed calculus.} The sets $T_1,T_2,T_3$ are satisfied by the valuations $(v(p),v(q))=(1,1),(1,0),(0,1)$ respectively. For every set~$\Gamma$, $\Cl_{h_i}(\Gamma)=\Cn_{\CPC}(T_i\cup\Gamma)$. For~$\supseteq$: if $T_i\cup\Gamma\models\varphi$, compactness gives a finite $\Gamma_0\subseteq\Gamma$ with $T_i\cup\Gamma_0\models\varphi$, so $\Gamma_0\step\varphi\in h_i$ and $\varphi\in\Cl_{h_i}(\Gamma)$. For~$\subseteq$: $\Cn_{\CPC}(T_i\cup\Gamma)$ contains~$\Gamma$ and is closed under~$h_i$, since $\Pi\subseteq\Cn_{\CPC}(T_i\cup\Gamma)$ and $T_i\cup\Pi\models\varphi$ imply $T_i\cup\Gamma\models\varphi$. In particular $\Cl_{h_i}(\emptyset)=\Cn_{\CPC}(T_i)$, which does not contain~$\bot$ because $T_i$ is satisfiable. So every~$h_i$ is $\Ac$-coherent and is a possible target.
+
+\emph{Step 2: memberships.} The following table records which $h_i$ contain each step of~$\pi$.
+\begin{center}\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+step & $h_1$ ($p,q$) & $h_2$ ($p,\neg q$) & $h_3$ ($\neg p,q$)\\
+\midrule
+$\step p$ & $\checkmark$ & $\checkmark$ & -- \\
+$\step q$ & $\checkmark$ & -- & $\checkmark$ \\
+$p,q\step p\wedge q$ & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
+$\step\neg(p\wedge q)$ & -- & $\checkmark$ & $\checkmark$ \\
+$p\wedge q,\ \neg(p\wedge q)\step\bot$ & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+The checkmarks are immediate: $p\in T_1,T_2$; $q\in T_1,T_3$; $\neg q\models\neg(p\wedge q)$ and $\neg p\models\neg(p\wedge q)$; and the third and fifth steps are valid outright. For the dashes: $T_3\models\neg p$, $T_2\models\neg q$ and $T_1\models p\wedge q$, and each $T_i$ is satisfiable, so $T_3\not\models p$, $T_2\not\models q$ and $T_1\not\models\neg(p\wedge q)$.
+
+\emph{Step 3: $\pi$ is a legal detection that deletes nothing.} The five steps form an argument~$\pi$ from~$\emptyset$ to~$\bot$: the first two yield $p$ and~$q$, the third yields $p\wedge q$, the fourth yields $\neg(p\wedge q)$, and the fifth yields~$\bot$. With uniform weights, $s$ is in the majority set over~$\Hc$ iff $s$ lies in at least two of the~$h_i$, since $2/3>1/2>1/3$. By the table, every step of~$\pi$ lies in at least two $h_i$, so $\Steps(\pi)\subseteq\hat R_{\mathrm{maj}}$, the majority set over~$\Hc$. Also by the table, $\Steps(\pi)\not\subseteq h_i$ for each~$i$. So the deletion set $\{R\in\Hc:\Steps(\pi)\subseteq R\}$ is empty.
+
+\emph{Step 4: induction on rounds.} Fix any target $h_{i^*}$. Consider the environment that, in each round, exhibits~$\pi$ or presents the positive datum $\step p\vee\neg p$, in any order. We show $\VS_t=\Hc$ for all~$t$. Initially $\VS_1=\Hc$. If $\VS_t=\Hc$, then $\hat R_t=\hat R_{\mathrm{maj}}\supseteq\Steps(\pi)$. So $\pi$ is a legal (N)-datum, since $\emptyset\in\Ac$, and by Step~3 it deletes nothing. The datum $\step p\vee\neg p$ lies in every~$h_i$, so it is a legal (P)-datum for the target and deletes $\{R:\step p\vee\neg p\notin R\}=\emptyset$. Hence $\VS_{t+1}=\Hc$. So $\VS_t=\Hc$ and $\hat R_t=\hat R_{\mathrm{maj}}$ for all~$t$, and $\pi$ is available in every round.
+\end{proof}
+
+\paragraph{Consequences recorded in the main text.}
+\begin{itemize}
+\item \emph{The vote is unsound relative to every target.} By Step~3, $\bot\in\Cl_{\hat R_{\mathrm{maj}}}(\emptyset)$. By Step~1, $\bot\notin\Cl_{h_i}(\emptyset)$ for each~$i$. By \cref{lem:search:stepwise} with $B=\emptyset$, $\hat R_{\mathrm{maj}}\not\subseteq\Sound(h_i)$ for each~$i$.
+\item \emph{Discriminating data break the paradox.} Let the target be~$h_1$ and present $\step p\in h_1$. This deletes~$h_3$, since $\step p\notin h_3$. Over $\VS=\{h_1,h_2\}$, with weight $1/3$ each, a step is a strict majority iff it lies in both, so $\hat R=h_1\cap h_2$. Since $\step q\notin h_2$, $\pi$ is no longer available. The $h_i$ are pairwise incomparable: $\step p\wedge q$ lies only in~$h_1$, $\step p\wedge\neg q$ only in~$h_2$, and $\step\neg p\wedge q$ only in~$h_3$. So on a text enumerating all of the target, each wrong hypothesis is eventually deleted by a datum it lacks, and from then on the uninformative detections stop.
+\end{itemize}
+
+\paragraph{Relation to judgment aggregation.}
+\Cref{thm:search:doctrinal} is the doctrinal paradox of \citet{kornhauser1986unpacking} and the discursive dilemma of \citet{pettit2001deliberative}, with verifiers in place of judges. Its general form is the theorem of \citet{list2002aggregating}: no aggregation function satisfies universal domain, anonymity and systematicity while producing consistent and complete collective judgments, for agendas with at least two atoms and their conjunction (or disjunction, or material conditional). For oligarchic aggregation under mere deductive closure, see \citet{gardenfors2006representation} and \citet{dietrich2008judgment}; \cref{prop:coherence:oligarchy} is its learning-theoretic counterpart.
