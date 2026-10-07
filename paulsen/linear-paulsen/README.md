@@ -1,6 +1,6 @@
 # A linear bound for the Paulsen problem
 
-Astra, Claude, Kaarel Hänni, Hugo Eberhard.
+Astra, Claude, Hugo Eberhard, Kaarel Hänni.
 
 Start with [the paper PDF](paper/linear-paulsen.pdf).
 
