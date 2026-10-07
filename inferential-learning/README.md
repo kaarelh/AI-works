@@ -76,8 +76,8 @@ On the philosophical side, every learning signal is one-sided. Principled justif
 | `research/theory/` | theory documents T1–T7 with their check scripts |
 | `research/verification/` | adversarial verification records |
 | `research/paper-review/` | whole-paper review reports and issue lists |
-| `research/scratch/` | unreviewed working scripts and outputs from the theory and verification rounds, some cited by name in `research/verification/`; see its README |
-| `research/workflows/` | the orchestration scripts that ran the research, verification, writing and review agents |
+| `research/scratch/` | *(on the working branch `claude/sleepy-gauss-u4kem1` only, not on `main`)* unreviewed working scripts and outputs from the theory and verification rounds, some cited by name in `research/verification/`; see its README |
+| `research/workflows/` | *(on the working branch `claude/sleepy-gauss-u4kem1` only, not on `main`)* the orchestration scripts that ran the research, verification, writing and review agents |
 | `web/what-follows.html` | the results web page, as a standalone HTML file |
 
 ## Building
