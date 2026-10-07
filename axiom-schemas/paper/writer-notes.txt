@@ -169,3 +169,112 @@ BIBLIOGRAPHY: new file bib/exp.bib with hubert1985comparing (ARI), kleene1952int
 
 \status{definition} is used on the one Definition environment, as many.tex does, although "definition" is not in NOTATION's list; every theorem-like environment carries \status and \src.
 
+==== intro
+I wrote intro.tex and abstract.tex. The full ./build.sh build is clean: 0 LaTeX errors, 0 undefined references, 0 undefined citations, 0 multiply defined labels, no overfull box over 10pt, 126 pages. The introduction runs from page 5 to the top of page 10, about 5 pages. The abstract is 246 words.
+
+**Two transient build problems, both from other people's files.** Neither remains in the final build.
+- One run failed with "Missing \begin{document}", 20 duplicated labels and bibtex finding no \bibdata. It looked like two builds running at once and corrupting main.aux. Re-running fixed it. If several writers build in parallel, one build per writer directory (or a lock) would avoid this.
+- In an earlier run, discussion.tex had an undefined `op:disc:cost`. It was resolved later.
+
+**intro.tex**
+- **Labels:** `sec:intro`, `sec:intro:questions`, `sec:intro:answers`, `sec:intro:contrib`, `sec:intro:limits`, `sec:intro:guide`, `tab:intro:anchors`.
+- **Opening:** the motivation is checking, not proving, as in \citep{claude2026whatfollows}. "The same thing" is described as the determinate-template method for induction, credited to an unpublished follow-up analysis whose record is in the repository; `rem:setting:nested` is cited for why arguments must contain no metavariables.
+- **Questions:** the three questions are quoted verbatim. They are named "Questions 1–3" so they are not confused with Robinson's axioms Q1–Q7.
+- **Table 1** (`tab:intro:anchors`) gives the anchor condition for each target (single axiom, instance schema, ZF schema, PA induction, any DT° target) in each class FO / PAT / DT° / SO°. The sources are listed row by row in the caption. The PAT entry for the instance schema is derived from FO ⊆ PAT ⊆ DT°, and the caption says so.
+- **Answers:** Questions 1, 2 and 3, the general theory, and the experiments, each with \cref pointers to the main results.
+- Then the contributions, what is not achieved, and a reader's guide.
+- **Hedges I added after checking the records:**
+  - Separation is "proved for Q with induction and the experimental mixtures, computed for ZF and ZFC".
+  - Thm H (`thm:many:complexity`) is marked "not independently refereed".
+  - The first-order failure results for the ZF schemas are scoped to "the other failing cases with textbook names or de Bruijn indices", with spelled-out Replacement as the one exception. Under α-variation, EInd and ReplJ are not covered by `thm:zf:nounion`.
+  - IndEq needs (R) alone, not (R)+(N), so the text does not claim "same anchors" for both encodings.
+  - The ω-step guard applies to first-order schemas only, since DT° has no guards.
+  - The rate claim for DTRC needs separation for all instances, not just for the data.
+  - DTRC matches the tagged learner target by target only with the sharing pass.
+
+**Inconsistencies other sections must fix**
+1. **The E1 figure is in neither section.** universal.tex l.101 says "The experiments section (\cref{sec:exp}) plots the curves". experiments.tex l.155 says "Details and curves are in \cref{sec:univ}". No `fig:univ:e1` exists, although the experiments writer's note says it does, and figures/e1_anchor_cdf.png is never included. One section must include the figure, or both must drop the claim.
+2. **many.tex numbers Q's axioms the untagged track's way, which conflicts with setting.tex.**
+   - l.319 "numeral instances of Q3--Q5" should be Q4--Q6 in §2's numbering (x+0=x, x+Sy=S(x+y), x·0=0).
+   - `cor:many:paslots` (l.140–147) says "F_0→F_1 for Q2 and Q7" and "Q3--Q6 share z_0=z_1; Q1, Q2, Q7 stay alone". In §2's numbering these should be Q2 and Q3; Q4--Q7; Q1, Q2, Q3. Its listing of the axioms is also in the untagged order.
+3. **experiments.tex question labels.** The headings "E1: universal axioms (Q1)", "(Q2)" and "(Q3)" collide with Robinson's Q1–Q3. Suggest "(Question 1)" etc., to match the intro.
+4. **Status on definitions is not uniform.**
+   - setting, single and universal give Definitions only \src.
+   - many and experiments use \status{definition}.
+   - zfc uses \status{known} on `def:zf:enc` and no status on `prop:zf:ground`'s neighbours.
+   The editor should pick one convention. The intro's reader's guide says only "Theorem-like statements carry a status (proved, computed, known, conjecture, or a combination)".
+5. **Empty-cluster convention differs between theory and code.** If every minimal template of a cluster is refuted, `def:many:dtrc` step (3) gives the cluster's acceptance as ∅, but the implementation (sec:exp, DTRC step 4) gives C. experiments.tex says its DTRC is that of §6 "with the class DT°_F, a fixed merge order and a budgeted refuter". It should mention this difference too, or say why it does not matter.
+6. **Harmless font warnings.** Putting \DTRC (small caps) inside \emph gives italic small-caps warnings, where LaTeX substitutes slanted small caps:
+   - many.tex l.305, 376, 379, 397, 421
+   - experiments.tex l.85, 260, 267
+   - app-many.tex l.391, 671
+
+   I removed the one in my own file.
+
+**For discussion.tex and app-verification.tex**
+- The intro's "What is not achieved" names these open problems and refers to \cref{sec:disc} for the full list: the anchor condition without (Rich), exact SO° anchors for universal axioms, spare-slot thresholds, the refutation test on true data, a natural permanent residue, and fragmentation-free robust clustering. The discussion should contain them.
+- Contribution (6) says app:ver lists the corrections to earlier claims, among them C11 refuted, C8.2 (4 templates, not 8) and C8.3 (holds for DT°, fails with nested arguments). app:ver should list them.
+
+==== disc
+I wrote the Discussion (sec:disc) and added bib/disc.bib. The full ./build.sh in paper/ is clean: 0 LaTeX errors, 0 undefined references or citations, 0 multiply defined labels, 0 overfull boxes over 10pt, 126 pages. One shared build collided with someone else's concurrent run and gave transient errors; I re-ran it clean, and also checked a private copy in my scratchpad.
+
+LENGTH: about 4.6 pages (pp. 61–65 in the current build), slightly over the 3–4 target. The 18-item open-problems list is about 1.1 pages of that. To cut further, turn the list into run-in paragraphs or drop the "Beyond the records" sentence.
+
+STRUCTURE
+- 8.1 What the answers mean (sec:disc:meaning), six paragraphs: instance schema vs universal sentence; first-order learnability depends on the formulation; why the pattern fragment matters; induction needs derived occurrences; refutation is the source of labels (includes MDL and the size principle); truth-soundness vs target-soundness.
+- 8.2 Relation to the literature (sec:disc:lit): anti-unification and ILP (incl. metarules); higher-order anti-unification and matching; learning from positive data; axiomatizability by schemas (Vaught, Ryll-Nardzewski); proof assistants (Lean motives, Metamath implicit substitution).
+- 8.3 Open problems (sec:disc:open): O1–O18, each with a pointer and a \src tag; label op:disc:cost = O17.
+- 8.4 Limitations (sec:disc:limits).
+- 8.5 Scope: checking, not proving (sec:disc:scope).
+- No theorem environments, no new results. Every claim points to a labelled result in another section. I kept the hedges, e.g. on ZF without Foundation proving Collection: "unknown to us, it may be known".
+
+NEW BIB KEYS (bib/disc.bib): bibliographic data confirmed by web search; none of the papers was read.
+- angluin1980finding, shinohara1991inductive, muggleton2015meta, cropper2020logical, libal2016functions, yokoyama2004deterministic, niederhauser2026unification (arXiv 2601.14211).
+- yokoyama2004deterministic ("deterministic second-order patterns") is the closest relative of DT° that I found. I only saw secondary descriptions of it, and the text says so. By those descriptions every argument of a metavariable must contain a bound variable, which P(0) does not. The comparison with DT° is listed as open problem O7. The intro or §3 may want to mention this class.
+
+FOR OTHER SECTIONS AND app:ver
+1. many.tex (cor:many:paslots, line ~143, and the text after prop:many:forall, line ~319) and app-many.tex (lines 75–80 and the table at 699–702) still use the untagged record's numbering of Q's axioms: Q3 = p+0=p, Q7 = ¬p=0→∃y p=Sy.
+   - This contradicts setting.tex, where Q3 is ¬x=0→∃y x=Sy and Q4 is x+0=x.
+   - In setting.tex's numbering, "Q3–Q6 share z0=z1; Q1, Q2, Q7 stay alone" should read "Q4–Q7 share; Q1, Q2, Q3 alone".
+   - "Numeral instances of Q3--Q5" should read Q4, Q5, Q6 (or give the formulas).
+2. Results added in revision, after each track's referee round, were not independently refereed. This holds for all tracks, not only for single's Thm H, E.2, F.9, F.10 and D.7:
+   - cases: A4′, Thm E′ (thm:zf:multi), B1α, C3′;
+   - untagged: Props 3.4–3.6, 5.10–5.13 and Rem 5.11.
+   Only single.tex and many.tex say so. zfc.tex and universal.tex do not mark thm:zf:multi, prop:zf:alpha, prop:zf:coll(b) or prop:univ:capture this way. app:ver should list all of them. Limitations names thm:many:complexity, prop:single:kappa, prop:single:binderfree and thm:zf:multi as examples.
+3. For app:ver, three items in the records are now out of date:
+   - untagged open problem 1 ((W), finiteness of minimal covering templates) is settled by single Thm B (thm:single:min);
+   - untagged open problem 3 (cost of the coherence test) is settled by single Thm H.5 (NP-complete), with the caveat that the hardness instance has a false datum;
+   - cases §6 says prior C11 is "open for PA as well", but single refutes C11 for the induction target too (prop:single:quadratic).
+4. single.tex's open-problems paragraph says templates of size "≤11" accept a false sentence after any anchor. zfc.tex and setting.tex correctly say 7≤s≤11.
+5. intro.tex was being edited concurrently. The discussion avoids restating the answers in brief, so the intro need not repeat the discussion's "what the answers mean" points.
+
+==== ver
+I wrote app-verification.tex (\section{How the results were established}\label{app:ver}). The whole paper builds cleanly with ./build.sh: 0 LaTeX errors, 0 undefined references or citations, 0 multiply defined labels, 0 overfull boxes over 10pt, 131 pages. The appendix runs from mid-page 126 to page 131, about 4.6 pages, a little over the 2–4 page target. If space is tight, cut tab:ver:tracks first, then compress the writing-stage rows 23–30.
+
+CONTENTS
+- Disclosure at the top: every role (researchers, referees, section writers) was played by a separate Claude instance. No human checked the mathematics or the code, and nothing was verified in a proof assistant. "Independent" means a separate session with its own code, not a separate person, so errors the model tends to make could get past both author and referee.
+- G.1 Process: the prior PA-induction work (three tracks, each refereed once, notes never revised, plus the untagged-PA analysis checked by three reviewers); the brief; the four tracks; adversarial refereeing; revision with verification logs; the writing stage.
+- tab:ver:tracks: each record, examples of its referee's independent checks, and the outcome.
+- G.2 tab:ver:corr: 30 numbered corrections, each with the original claim, what was wrong, and where the paper now stands.
+  - Prior work: C8.3, C8.2 (8→4), C11 refuted (Θ(N²)), the raw-instance refutation claim plus Theorem R1, the Lean redex capture and Nat.rec motive, the untagged-PA threshold k−1.
+  - Tracks: single Thm E / F.5 for ground templates and the overclaims in the summary; cases capture (F1), the Thm E proof step, C3′; untagged Cor 3.3(b), the withdrawn head-class caveat, O(n²) tests, the non-monotone refuter and audit, Prop 5.6(e), the MRDP rebuild; experiments v1 E1 with rigid parameters, q_F at budgets 80 and 400, the pattern-lgg baseline, the headline numbers and E9, Thm E4.
+  - Writing stage: 8 rows taken from writer-notes.txt.
+- G.3 What was not independently refereed, listed by label: results added in revision in each track, Theorem R1 (proved by a referee and checked by no second referee), and the writer-stage extensions (prop:setting:align extended to DT°; prop:univ:dt(a) extended via lem:univ:identity).
+- G.4 Conjectures and open problems: points to sec:disc:open for the full list.
+- G.5 Reproduction:
+  - code/: `python3 -m pytest -q tests` (I re-ran it: 43 passed in about 8 s), `sh run_all.sh` (593 s), `sh run_recheck.sh`;
+  - research records and referee code locations;
+  - the dependency on the parent report's T1 code.
+
+FOR OTHER SECTIONS / ORCHESTRATOR
+1. prop:setting:align (Prop E1-al) may be false. A concurrent review script, research/paper-review/scratch/align_cex.py, gives a counterexample, and I ran it and confirmed the output:
+   - T = ?Q ∧ ((∀x ?P(x)) ∧ ?P(c)) is in DT°_F, with the rigid parameter c appearing only as an argument of the derived occurrence ?P(c).
+   - T covers D = {0=0∧((∀x 0=0)∧0=0), 0=0∧((∀x x=x)∧w0=w0), w0=w0∧((∀x x=0)∧w1=0)} up to renaming. A vacuous body for P erases c in the first datum.
+   - No member of Min^al lies below T.
+   - The proof of (b) fails at "ρ_d(par(T)) ⊆ par(d) by preservation". Preservation does not cover parameters that occur only in metavariable arguments.
+   - This affects (b) and the last clause of (c), for DT° as well as DT°_F, and the experiments record's E1-al. It does not affect any experiment, because all targets there are parameter-free.
+   - My appendix lists prop:setting:align only as "not independently refereed". If setting.tex is repaired, add a row to tab:ver:corr.
+2. many.tex line 319 says "numeral instances of Q3--Q5", but the templates listed there are x+0=x, x·0=0 and x+Sy=S(x+y). In setting.tex's numbering those are Q4, Q6 and Q5, so it should read Q4–Q6 (the universal-section writer also flagged this). Other uses of untagged's Q numbering in many.tex and app-many.tex, for example tab:many:pacross, should be checked against setting.tex.
+3. Experiments notes-final §2.1 says the size-24 template "lies below two of the 8" prior templates. The single record and its referee say five of the 8 lie strictly above it. The paper follows single, and my appendix mentions the discrepancy. experiments.tex does not repeat the wrong count.
+4. Consistent with my appendix and nothing to fix: discussion.tex's list of results added in revision (thm:many:complexity, prop:single:kappa, prop:single:binderfree, thm:zf:multi), intro contribution (6) pointing to app:ver, and single.tex caveat (5).
+
