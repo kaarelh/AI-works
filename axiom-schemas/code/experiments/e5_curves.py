@@ -22,8 +22,7 @@ GRID = [5, 10, 20, 30, 50, 80, 120]
 SEEDS = [0, 1, 2, 3, 4]
 MIXES = ['PA', 'PA-mixed', 'ZF']
 LEARNERS = ('dtrc', 'dtrc_share', 'tagged_ref', 'tagged', 'tagged_member')
-TITLES = {'PA': 'PA, universal axioms through numerals only (main)', 'PA-mixed': 'PA, v1 instance distribution',
-          'ZF': 'ZF'}
+TITLES = {'PA': 'PA, numerals only', 'PA-mixed': 'PA, mixed regime', 'ZF': 'ZF'}
 
 
 def stream(mix, seed, n):

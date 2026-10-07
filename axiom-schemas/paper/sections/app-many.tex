@@ -11,7 +11,7 @@ element of $X$ as an instance. The finitariness facts of \cref{prop:many:W} are 
 
 \begin{proof}[Proof of \cref{lem:many:cautious}]
 (a) $\manyRstar=\bigcup_i\inst(\sigma_i)\in\Hk{k}$ because $k\ge k'$; it contains $D$ and avoids $N$. Larger $D$ or $N$
-shrink the version space, so they enlarge its intersection.
+shrink the version space, so they enlarge its intersection (\cref{thm:setting:vs}(a), \cref{lem:setting:onesided}(b)).
 (b) Each displayed union is in $\Hk{k}$ (at most $k$ blocks), contains $D$ and avoids $N$, so it lies in
 $\manyVS_k(D,N)$; hence $\Acc_k(D,N)$ is contained in the displayed intersection. Conversely let
 $h=\bigcup_l\inst(\tau_l)\in\manyVS_k(D,N)$. Assign each datum to the first slot covering it; this partitions $D$ into at
@@ -19,7 +19,7 @@ most $k$ nonempty blocks $B\subseteq\inst(\tau_l)$. By \cref{prop:many:W}(b), $\
 $\inst(T_B)\subseteq\inst(\tau_l)\subseteq h$ avoids $N$, so $T_B\in\Min_N(B)$ and $h\supseteq\bigcup_B\inst(T_B)$. So every
 member of the version space contains a displayed union, and the displayed intersection is contained in $\Acc_k(D,N)$.
 Decidability: there are finitely many partitions, each $\Min(B)$ is finite and computable, and avoidance of a finite $N$
-and membership of a query are decided by matching (\cref{sec:single}).
+and membership of a query are decided by matching (\cref{thm:setting:matching}).
 \end{proof}
 
 With $N=\emptyset$ and $\Acc(B):=\bigcap\manyCov(B)=\bigcap_{T\in\Min(B)}\inst(T)$ (and $\Acc(\emptyset):=\emptyset$), part (b)
@@ -43,6 +43,13 @@ $\Ref_d\subseteq\Ref_{d+1}$.
 %=====================================================================================================================
 \subsection{Positive data: bounds, spare slots and head classes}\label{app:many:bound}
 
+\begin{proof}[Proof of \cref{prop:many:bound}]
+$D$ is a finite union of ground templates and avoids $N$. For the second claim take a true non-ground $\sigma$: the class
+contains $\inst(\sigma)$ and all its finite subsets, all inside $\manyTr$, on which the oracle answers identically. So the
+learner is a function of the text, and Gold's locking-sequence argument for superfinite classes applies
+\citep{gold1967language}; it needs no computability.
+\end{proof}
+
 \begin{proof}[Proof of \cref{thm:many:splits}]
 (a) $h\subseteq\manyRstar$ and $N\cap\manyRstar=\emptyset$ give $h\cap N=\emptyset$, and $D\subseteq h\in\Hk{k}$.
 (b) Let $h=\bigcup_l\inst(\tau_l)\in\manyVS_k(D,N)$ and $L_j:=\{l:\tau_l\text{ covers a datum of }D_j\}$. Each $L_j$ is
@@ -54,6 +61,33 @@ avoids $N$ (the $\sigma_l$ lie in $\manyRstar$) and misses $q$. If the instance 
 condition fails, some admissible family misses some $q\in\inst(\sigma_i)$, which lies in no other instance set, so the
 second claim applies: the condition is necessary and sufficient.
 \end{proof}
+
+In general a target's slots may be shared with others, provided every shared slot contains the whole target.
+
+\begin{theorem}[slot accounting]\label{thm:many:slots}
+\status{proved}\src{untagged Thm 4.1}
+Fix a target $i$, a bound $k$ and a sound $N$, and let $\bar D_i:=D\setminus D_i$. Assume (Abs): every $N$-avoiding
+template covering a datum of $D_i$ and one of $\bar D_i$ contains $\inst(\sigma_i)$. Let $c_i$ be the least number of
+$N$-avoiding templates not containing $\inst(\sigma_i)$ that cover $\bar D_i$. (a) If every family of at most $k-c_i$
+$N$-avoiding templates covering $D_i$ has union $\supseteq\inst(\sigma_i)$, then $\inst(\sigma_i)\subseteq\Acc_k(D,N)$.
+(b) If some such family and some optimal cover of $\bar D_i$ both miss $q\in\inst(\sigma_i)$, then $q\notin\Acc_k(D,N)$.
+\end{theorem}
+
+\begin{corollary}[slot accounting for PA]\label{cor:many:paslots}
+\status{proved; computed}\src{untagged Cor 4.2}
+Let the targets be $\Q$'s axioms Q1--Q7 (numbered as in \cref{sec:setting:examples}) as ground sentences in
+closure-normal form ($\neg Sp=0$; $Sp=Sp'\to p=p'$; $\neg p=0\to\exists y\,p=Sy$; $p+0=p$; $p+Sp'=S(p+p')$; $p\cdot0=0$;
+$p\cdot Sp'=p\cdot p'+p$) and $T_{\Ind}$, so $k'=8$. (Abs) holds for induction for every motive: a template covering a
+$\Q$-axiom and an induction instance lies above $F_0$, or above $F_0\to F_1$ for Q2 and Q3 ($F_0,F_1$ $0$-ary formula
+metavariables), and both contain $\inst(T_{\Ind})$. On positive data $c=4$ (Q4--Q7 share $z_0=z_1$; Q1, Q2, Q3 stay
+alone), so at $k=8$ induction gets four slots: an induction instance whose motive has $x$ free and a main
+connective unseen in the data is accepted iff the induction data cannot be split into four blocks each root-homogeneous
+or all-vacuous (without vacuous motives: iff at least five main connectives occur). With the three negatives $0=S0$, $(p+0)=0$, $(p\cdot0)=S0$,
+$c=7$, induction gets one slot, and the tagged anchor condition \evR{}+\evN{} suffices. (In the Sub-encoded presentation
+of induction of the earlier analysis of untagged PA, $c=1$ \src{prior pa-untagged}.)
+\end{corollary}
+The computed check of $c=4$ and $c=7$ (24/24 cases, untagged u2) holds by construction given (Abs) and the anchor theorem
+for $T_{\Ind}$ (\cref{thm:zf:indanchor}), so it is a consistency check of the implementation, not independent evidence.
 
 \begin{proof}[Proof of \cref{thm:many:slots}]
 (a) Let $h\in\manyVS_k(D,N)$ with slots $\tau_l$. If some slot contains $\inst(\sigma_i)$ we are done. Otherwise, by (Abs),
@@ -67,26 +101,29 @@ $\inst(\sigma_i)$. (If $k\le c_i$, this shows that some slot of every $h$ contai
 \begin{proof}[Proof of \cref{cor:many:paslots}]
 \emph{(Abs).} At the top level of a sentence no bound variable is in scope, so a metavariable whose pattern occurrence
 is not under a binder is 0-ary. A $\Q$-axiom with root $\neg$ or $=$ and an induction instance (root $\to$) have no common
-root, so their minimal covering template is the bare $F_0$. Q2 and Q7 have root $\to$; their antecedents ($=$, resp.\
+root, so their minimal covering template is the bare $F_0$. Q2 and Q3 have root $\to$; their antecedents ($=$, resp.\
 $\neg$) differ in head from the induction antecedent ($\wedge$), and their consequents ($=$, resp.\ $\exists$) from the
 induction consequent ($\forall$); the two slots are closed and not equal in either datum, so the minimal covering template
-is $F_0\to F_1$. This holds for every motive (a remark of the referee). Every covering template lies above one of these
-(\cref{prop:many:W}), and both contain $\inst(T_{\Ind})$.
-\emph{$c=4$ with $N=\emptyset$.} Any template covering two of Q1, Q2, Q7, or one of them and one of Q3--Q6, lies above $F_0$
-or $F_0\to F_1$ (compare the roots and, for Q2--Q7, the heads of antecedents and consequents), hence contains
-$\inst(T_{\Ind})$. So Q1, Q2 and Q7 need a slot each and Q3--Q6 at least one; $z_0=z_1$ covers Q3--Q6 and contains no
-induction instance. \emph{$c=7$ with $N=\{0=S0,(p+0)=0,(p\cdot0)=S0\}$.} Q3 and Q4 have the lgg $p+z_0=z_1$ (common prefix
-$=,+,p$; closed slots), which has the instance $(p+0)=0\in N$; Q5 and Q6 have $p\cdot z_0=z_1\ni(p\cdot0)=S0$; the other
-pairs among Q3--Q6 have $z_0=z_1\ni0=S0$. All covering templates of these pairs lie above the lggs, so Q3--Q6 need a slot
+is $F_0\to F_1$. This holds for every motive. Every covering template lies above one of these (\cref{prop:many:W}), and
+both contain $\inst(T_{\Ind})$.
+\emph{$c=4$ with $N=\emptyset$.} Any template covering two of Q1, Q2, Q3, or one of them and one of Q4--Q7, lies above
+$F_0$ or $F_0\to F_1$ (compare the roots and, for Q2 and Q3, the heads of antecedents and consequents), hence contains
+$\inst(T_{\Ind})$. So Q1, Q2 and Q3 need a slot each and Q4--Q7 at least one; $z_0=z_1$ covers Q4--Q7 and contains no
+induction instance. \emph{$c=7$ with $N=\{0=S0,(p+0)=0,(p\cdot0)=S0\}$.} Q4 and Q5 have the lgg $p+z_0=z_1$ (common prefix
+$=,+,p$; closed slots), which has the instance $(p+0)=0\in N$; Q6 and Q7 have $p\cdot z_0=z_1\ni(p\cdot0)=S0$; the other
+pairs among Q4--Q7 have $z_0=z_1\ni0=S0$. All covering templates of these pairs lie above the lggs, so Q4--Q7 need a slot
 each. ($F_0$ is now refuted, $F_0\to F_1$ is not, so (Abs) still holds.) Then induction gets $k-7=1$ slot, and by
-\cref{thm:many:slots} it is learned exactly iff its data contain an anchor, which for $T_{\Ind}$ is \evR{}+\evN{}.
+\cref{thm:many:slots} it is learned exactly iff its data contain an anchor, which for $T_{\Ind}$ is \evR{}+\evN{}
+(\cref{thm:zf:indanchor}).
 \emph{The four-slot criterion.} Let $q$ be an induction instance whose motive has $x$ free and has a main connective that
-occurs in no datum. By the anchor theorem for $T_{\Ind}$, a block of induction data is a non-anchor iff its motives all
-have the same root $f$ or are all vacuous; then $T_{\Ind}[P:=\lambda x.f(\dots)]$, resp.\ $T_{\Ind}[P:=\lambda x.A]$, covers
-the block and misses $q$. If $\chi\le4$, these templates for an optimal partition, together with the cover $\{$Q1, Q2, Q7,
-$z_0=z_1\}$ of the $\Q$-data, form a hypothesis with $8$ slots missing $q$ (\cref{thm:many:slots}(b)). If $\chi>4$, every
-family of at most four templates covering the induction data has, by partition into first covering members, an anchor
-block, whose template contains $\inst(T_{\Ind})$ (\cref{thm:many:slots}(a)).
+occurs in no datum. By \cref{thm:zf:indanchor}, a block of induction data is a non-anchor iff its motives all have the same
+root $f$ or are all vacuous; then $T_{\Ind}[P:=\lambda x.f(\dots)]$, resp.\ $T_{\Ind}[P:=\lambda x.A]$, covers the block and
+misses $q$. Let $\chi$ be the least number of blocks in a partition of the induction data into blocks that are
+root-homogeneous or all-vacuous (without vacuous motives: the number of main connectives occurring). If $\chi\le4$, these
+templates for an optimal partition, together with the cover $\{$Q1, Q2, Q3, $z_0=z_1\}$ of the $\Q$-data, form a hypothesis
+with $8$ slots missing $q$ (\cref{thm:many:slots}(b)). If $\chi>4$, every family of at most four templates covering the
+induction data has, by partition into first covering members, an anchor block, whose template contains $\inst(T_{\Ind})$
+(\cref{thm:many:slots}(a)).
 \end{proof}
 
 \begin{corollary}[thresholds in terms of failure families]\label{cor:many:failure}
@@ -94,9 +131,9 @@ block, whose template contains $\inst(T_{\Ind})$ (\cref{thm:many:slots}(a)).
 Call $T$ a \emph{proper specialization} of $\sigma$ if $\inst(T)\subsetneq\inst(\sigma)$. A \emph{failure family}
 $\manyFail(\sigma)$ is a set of proper specializations such that every finite non-anchor $X\subseteq\inst(\sigma)$ lies in
 $\inst(F)$ for some $F\in\manyFail(\sigma)$. (Examples: for first-order patterns the head specializations $\sigma[x\mapsto
-f(\bar z)]$ and the identifications $\sigma[y\mapsto x]$, by Plotkin's \evR{}+\evD{}; for $T_{\Ind}$ the eight root
-specializations $T_{\Ind}[P:=\lambda x.f(\bar P(x))]$, $f\in\{=,\neg,\wedge,\vee,\to,\leftrightarrow,\forall,\exists\}$, and the
-vacuous one $T_{\Ind}[P:=\lambda x.A]$.) Let $m=k-k'+1$.
+f(\bar z)]$ and the identifications $\sigma[y\mapsto x]$, by Plotkin's \evR{}+\evD{}; for $T_{\Ind}$ the nine root
+specializations $T_{\Ind}[P:=\lambda x.f(\bar P(x))]$, $f\in\{=,<,\neg,\wedge,\vee,\to,\leftrightarrow,\forall,\exists\}$
+(eight in the untagged prototype, whose arithmetic has no $<$), and the vacuous one $T_{\Ind}[P:=\lambda x.A]$.) Let $m=k-k'+1$.
 (a) If $D_i\subseteq\bigcup_{j\le m}\inst(F_j)$ with $F_j\in\manyFail(\sigma_i)$, and some $q\in\inst(\sigma_i)\setminus
 \bigcup_j\inst(F_j)$ lies in no other $\inst(\sigma_l)$, then $q\notin\Acc_k(D,N)$ for every sound $N$.
 (b) Suppose $N$ cross-separates $D$, $N$ \emph{target-separates} $D_i$ (it meets every template that covers a datum of
@@ -117,18 +154,32 @@ $F_j\in\manyFail(\sigma_i)$. Conversely, a cover by proper specializations that 
 so (a) applies.
 \end{proof}
 
-The first version of the research record added that Plotkin's failure family is $m$-noncovering for every $m$, ``because
-parameters are infinitely many names''. The referee showed this false once data are read under universal closure (as
-here and in the code): renamed copies are the same datum, and the head classes are finitely many
-(\cref{prop:many:heads}). The claim was withdrawn. In the same way, on positive data ($N=\emptyset$) target $i$ is learned exactly if every
-partition of $D_i$ into at most $k$ blocks (at most $k-c_i$ under (Abs)) has an anchor block, and not if $D_i$ is covered
-by $k-k'+1$ proper specializations missing an instance of $\sigma_i$ that lies in no other target (untagged Prop 6.1). For
-PA the gap between $k-c$ and $k-k'+1$ is the whole story: $c=1$ for Sub-encoded steps, $c=4$ for raw sentences, and
-$c=7=k'-1$ with three negatives. The classical sufficient condition ``not covered by $k$ failure sets'' is vacuous for
-$T_{\Ind}$ at $k\ge8$, because the eight root specializations cover every induction instance.
+On positive data ($N=\emptyset$) target $i$ is learned exactly if every partition of $D_i$ into at most $k$ blocks (at most
+$k-c_i$ under (Abs)) has an anchor block, and not if $D_i$ is covered by $k-k'+1$ proper specializations missing an
+instance of $\sigma_i$ that lies in no other target \src{untagged Prop 6.1}. For PA the gap between $k-c$ and $k-k'+1$ is
+the whole story: $c=1$ for Sub-encoded steps, $c=4$ for raw sentences, and $c=7=k'-1$ with three negatives. The classical
+sufficient condition ``not covered by $k$ failure sets'' is vacuous for $T_{\Ind}$ at $k\ge9$, because the nine root
+specializations cover every induction instance. Plotkin's failure families are not $m$-noncovering for every $m$ once data
+are read under universal closure (\cref{prop:many:heads}; the earlier contrary claim is withdrawn, \cref{app:ver:corr}).
 
 \paragraph{Head classes.} In the rest of this subsection sentences are identified up to bijective renaming of parameters,
 as the closure reading demands and as the implementation does (parameters are renamed canonically by first occurrence).
+\Cref{rem:many:numerals} summarizes the results; \cref{prop:many:heads,prop:many:onevar,prop:many:unary} state and prove them.
+
+\begin{remark}[head classes and numerals]\label{rem:many:numerals}
+\status{proved; computed}\src{untagged U17}
+Because data are read under universal closure, a one-variable instance schema $\varphi(z)$ is covered by its
+$h=|F|+p+1$ head specializations ($F$ the function symbols, $p$ the number of parameters of $\varphi$; $5+p$ in
+arithmetic), one per head class of the value of $z$, a parameter outside $\varphi$ being one class
+(\cref{prop:many:heads}). So once $m\ge h$ (i.e.\ at least $h-1$ spare slots) the ``failure family'' covers everything.
+For quantifier-free, parameter-free $\varphi$, under the hypotheses of \cref{prop:many:onevar}, the exact threshold is known
+for $m\le h$ (\cref{prop:many:onevar}) and, over a unary signature, in closed form (\cref{prop:many:unary}). In particular
+\emph{numeral-only data never make the cautious $k$-union learner accept $\forall x\varphi$ with one spare slot} when
+$\varphi(a)$ lies in no other target's instance set: the sound split $\{\varphi(0)\}\cup\inst(\varphi(Su))$ misses
+$\varphi(a)$ (\cref{thm:many:splits}(a)). Brute-force checks agree with all three propositions (2000/2000, 60/60, 254/254,
+2509/2509 cases). Beyond this the spare-slot threshold is open (binary symbols with $m>h$, several metavariables,
+templates with parameters, $T_{\Ind}$ with $m\ge9$, where the nine root specializations already cover $\inst(T_{\Ind})$).
+\end{remark}
 
 \begin{proposition}[finitely many head classes]\label{prop:many:heads}
 \status{proved; computed}\src{untagged Prop 3.4}
@@ -248,14 +299,14 @@ harmless. Apply \cref{lem:many:cautious} and \cref{thm:many:pigeonhole}.
 Let $k\ge k'$ be known and accept $q$ iff $q\in\Acc_d\cap\Acc_k(D,N(D,d))$. This is target-sound at all times, by
 \cref{lem:many:cautious}, with or without separation. Under $\RS_d(D)$ with $k=k'$, once every $D_i$ contains an anchor, it
 equals $\manyRstar$: \DTRC{} is exact by \cref{thm:many:dtrc}(iii), and $\RS_d(D)$ makes every minimal template of every
-cross pair $d$-refuted, so $N(D,d)$ satisfies (X) and \cref{thm:many:pigeonhole} applies. (The research record says
-``exact whenever \DTRC{} is exact and $k=k'$''; \DTRC{} can be exact without anchors, because refuted templates of whole
-clusters drop out, while $N(D,d)$ contains only refutations of pair templates, so the anchor hypothesis is needed for the
-argument given.)
+cross pair $d$-refuted, so $N(D,d)$ satisfies (X) and \cref{thm:many:pigeonhole} applies. The anchor hypothesis is
+needed for this argument: \DTRC{} can be exact without anchors, because refuted templates of whole clusters drop out,
+while $N(D,d)$ contains only refutations of pair templates (\cref{app:ver:corr}).
 \end{remark}
 
 For PA (\cref{tab:many:pacross}) the four sentences $0=S0$, $0=0\to0=S0$, $p+0=0$, $p\cdot0=S0$ refute every cross template;
-since the $\Q$/induction templates $F_0$ and $F_0\to F_1$ are absorbing, three suffice (\cref{cor:many:paslots}).
+since the $\Q$/induction templates $F_0$ and $F_0\to F_1$ contain all of $\inst(T_{\Ind})$, three suffice for the
+$k$-union learner (\cref{cor:many:paslots}).
 
 %=====================================================================================================================
 \subsection{\texorpdfstring{\DTRC}{DTRC}: proofs}\label{app:many:dtrc}
@@ -272,8 +323,8 @@ each nonempty $D_i$ is exactly one final cluster, whatever the policy.
 \inst(\sigma_i)$ and $\Min^+_d(D_i)\neq\emptyset$. If $A_i\subseteq D_i$ is an anchor, every $T\in\Min(D_i)$ covers $A_i$, so
 $\inst(T)\supseteq\inst(\sigma_i)$ and $\Acc_d(D_i)\supseteq\inst(\sigma_i)$.
 (iv) Under global separation, (ii) and (iii) hold for every $D\subseteq\manyRstar$. So \DTRC{} fails to be exact only if some
-$D_i$ lacks an anchor, which is the failure event of the tagged learner given the labels. Averaging the tagged bound over
-the binomial number of target-$i$ data gives the rate.
+$D_i$ lacks an anchor, which is the failure event of the tagged learner given the labels; the union bound over $i$ gives
+the sum, and averaging the tagged bound over the binomial number of target-$i$ data gives the rate.
 (v) A pair answer depends only on the two clusters. There are $n(n-1)/2$ initial pairs; there are at most $n-1$ merges,
 and after each only pairs with the new cluster (at most $n$) need retesting. For the online policy under $\RS_d(D)$, by
 induction on the data there is at most one cluster per target at all times: a datum of target $i$ joins the first coherent
@@ -302,7 +353,7 @@ index) that survives substitution, and $K(t_j)=t_j$ forces $h=\mathrm{head}(t_1)
 contradiction; symmetrically for $K=z$. If neither is $z$, their heads agree (compare at $t_1$), and we recurse into the
 arguments; binders are harmless, because $z$ is not a bound variable and the $t_j$ are closed.
 \emph{Skeleton.} The two data agree everywhere except at and below the $z$-positions of $\varphi$, where their heads
-differ. By the rigid-prefix lemma of \cref{sec:single} the rigid skeleton of a covering template $T$ lies in the common
+differ. By \cref{lem:single:basic}(c) the rigid skeleton of a covering template $T$ lies in the common
 prefix of the data, so it avoids the $z$-positions and everything below them; every occurrence of $T$ is at a position of
 $\varphi$.
 \emph{Bodies.} For each metavariable $M$ of $T$ choose a pattern occurrence $M(\bar y)$ at position $p$. For any closed
@@ -317,22 +368,42 @@ $\inst(T)\supseteq\inst(\varphi(z))$.
 
 \begin{proof}[Proof of \cref{prop:many:forall}]
 (a) $\varphi(z)$ covers $D$, and by \cref{lem:many:twopoint} every covering template contains $\inst(\varphi(z))$; so some
-covering template is unrefuted iff $\varphi(z)$ is (\cref{lem:many:mono}). (b) In closure-normal form a parameter is read universally; it must
-be fresh, so that $\varphi(a)$ is not an instance at a special parameter. (c) If $\forall x\varphi$ is true, every instance
-is true, so every subset of $D$ is coherent (\cref{thm:many:dtrc}(i) with the single target $\varphi(z)$), no two clusters
-can remain at termination. In the single final cluster every unrefuted minimal template contains $\inst(\varphi(z))$
-(\cref{lem:many:twopoint}), and one of them is contained in it (\cref{prop:many:W}(c)), so $\Acc_d=\inst(\varphi(z))$. The oracle is a fixed function of the
-query, so the practices ``$n$ ground instances'' and ``$\varphi(z)$'' produce the same run. (d) By (a). (e) The first claim
-is the definition of completeness for false instances plus \cref{prop:many:qf}. R-$\Delta_0$ verifies universal
-statements only by equality reasoning from true closed equations, so a false sentence whose refutation needs a true
-universal premise that this reasoning cannot verify is never refuted; the noisy-PA computation (\cref{ex:many:noise})
-contains such a sentence, a wrong-base induction variant whose refutation needs the universal premise
-$\forall x(\neg x=0\to\neg Sx=0)$, an instance of Q1. At a finite budget, a merge through a false
-universal whose least counterexample lies beyond the budget is part of $\Res_d$ (\cref{thm:many:residue}). In $\R$ with
-$0,1,+,\cdot$ every closed term denotes a natural number (induction on terms) and no natural number squares to $2$, so
-every closed instance of $\neg(z\cdot z=1+1)$ is true, while $\neg(p\cdot p=1+1)$, read universally, is false; a decision
+covering template is unrefuted iff $\varphi(z)$ is (\cref{lem:many:mono}). (b) In closure-normal form a parameter is read
+universally; it must be fresh, so that $\varphi(a)$ is not an instance at a special parameter. If all instances are true,
+so is the closure of $\varphi(a)$, i.e.\ $\forall x\varphi$; conversely every instance follows from $\forall x\varphi$.
+(c) If $\forall x\varphi$ is true, every instance is true, so every subset of $D$ is coherent (\cref{thm:many:dtrc}(i) with
+the single target $\varphi(z)$), and no two clusters can remain at termination. In the single final cluster every
+unrefuted minimal template contains $\inst(\varphi(z))$ (\cref{lem:many:twopoint}), and one of them is contained in it
+(\cref{prop:many:W}(c)), so $\Acc_d=\inst(\varphi(z))$. The oracle is a fixed function of the query, so the practices
+``$n$ ground instances'' and ``$\varphi(z)$'' produce the same run. (d) By (a); a subset whose terms all have the same head,
+e.g.\ $S$, has other minimal templates such as $\varphi(Sz)$, which need not be refuted. (e) The first claim is the
+definition of completeness for false instances plus (b), and \cref{prop:many:qf} applied to $T=\varphi(z)$ gives it for
+R-$\Delta_0$ and quantifier-free $\varphi$. R-$\Delta_0$ verifies universal statements only by equality reasoning from true
+closed equations, so a false sentence whose refutation needs a true universal premise that this reasoning cannot verify is
+never refuted; the noisy-PA computation (\cref{ex:many:noise}) contains such a sentence, the wrong-base induction variant
+$(\neg S0=0\wedge\forall x(\neg x=0\to\neg Sx=0))\to\forall x\,\neg x=0$, whose refutation needs the universal premise
+$\forall x(\neg x=0\to\neg Sx=0)$, which follows from Q1 \src{untagged referee U7; u8}. At a finite budget, a merge through
+a false universal whose least counterexample lies beyond the budget is part of $\Res_d$ (\cref{thm:many:residue}). In $\R$
+as an ordered field every closed term denotes an integer (\cref{ex:univ:fail}(a)), and no integer squares to $2$, so every
+closed instance of $\neg(z\cdot z=1+1)$ is true, while $\neg(p\cdot p=1+1)$, read universally, is false; a decision
 procedure for real closed fields would refute it. $\Q\vdash0+\num n=\num n$ for each $n$ but $\Q\nvdash\forall x(0+x=x)$ is
-shown in \cref{sec:univ}.
+\cref{ex:univ:q}.
+\end{proof}
+
+\noindent Computed (untagged u6): numeral instances of Q4--Q6, as 12 ground targets, form three clusters with templates
+$z_0+0=z_0$, $z_0+Sz_1=S(z_0+z_1)$, $z_0\cdot0=0$, and \DTRC{} accepts $p+0=p$; instances of the false $n\cdot n=n$
+($n=0,1$) stay apart (refuted at $2$); $\neg(n\cdot n=2)$, $n\le2$, merge and the true $\neg(p\cdot p=2)$ is accepted.
+
+\begin{proof}[Proof of \cref{prop:many:qf}]
+Let $s=T\theta$ be false. Its universal closure is false in $\N$, so some assignment $\bar n$ of numerals to the
+parameters of $s$ makes $s[\bar n]$ false. Let $\theta'$ agree with $\theta$ on term metavariables, and for a formula
+metavariable $F$ let $\theta'(F):=(0=0)$ if $\theta(F)[\bar n]$ is true in $\N$ and $(0=S0)$ otherwise. Then $s':=T\theta'$
+is quantifier-free, since $T$'s rigid part, the term values and the new formula values are. Moreover $s'[\bar n]$ has the
+truth value of $s[\bar n]$: the rigid part has no binders, so it is a Boolean combination of equations between terms built
+from rigid symbols and unchanged term values, and of occurrences of formula metavariables, whose replacements have the
+same truth values at $\bar n$. So $s'$ is false. At depth at least $\max(\bar n,|s'|)$, R-$\Delta_0$ instantiates the
+parameters of $s'$ (which are among those of $s$) by $\bar n$ and evaluates the resulting closed quantifier-free sentence,
+so $s'\in\Ref_\infty$. If $T$ is in $\Res_\infty$, no instance is refuted, so $T$ has no false instance.
 \end{proof}
 
 \begin{proof}[Proof of \cref{thm:many:depth}]
@@ -365,10 +436,44 @@ $d$), and $\mathcal P_e$, $\mathcal P'_e$ have the same data law and oracle; so 
 computable from $(e,t)$ (for randomized learners, approximable from below), and $S$ is $\Sigma_1$. But $\omega\setminus K$
 is not $\Sigma_1$.
 \end{proof}
-The first version of this construction used Kleene's $T$ predicate, whose bounded universal quantifiers R-$\Delta_0$
-cannot verify; the referee found this gap, and the MRDP form above repairs it. Alternatively, keep the Kleene-$T$ form and
-take as oracle the full evaluation of closed $\Delta_0$ sentences with bounded quantifiers as primitives, which is also
-sound and decidable per depth.
+R-$\Delta_0$ cannot verify the bounded universal quantifiers of Kleene's $T$ predicate, which is why the construction
+uses MRDP (\cref{app:ver:corr}). Alternatively, keep the Kleene-$T$ form and take as oracle the full evaluation of
+closed $\Delta_0$ sentences with bounded quantifiers as primitives, which is also sound and decidable per depth.
+
+%=====================================================================================================================
+\subsection{Whole-cluster tests and noise}\label{app:many:noise}
+
+\begin{proposition}[whole-cluster versus pairwise tests]\label{prop:many:linkage}
+\status{proved; computed}\src{untagged Prop 5.8}
+Coherence is downward closed but not transitive. Every cluster built by \DTRC{} is coherent at all times (except a
+refutable singleton, which contributes nothing), whereas single linkage on the pairwise-coherence graph can build clusters
+with no unrefuted minimal template. Under $\RS_d(D)$, the coherent subsets of $D$ are exactly the subsets of the $D_i$, and
+single linkage, complete linkage and \DTRC{} agree. Without separation, \DTRC{} returns some maximal partition into
+coherent blocks, which may depend on the policy.
+\end{proposition}
+Example: $a=(0+0=0)$, $b=(S0+0=S0)$, $c=(0+S0=S0)$. The pairs $\{a,b\}$, $\{a,c\}$ have the unrefuted templates
+$z_0+0=z_0$, $0+z_0=z_0$, while $\{b,c\}$ and $\{a,b,c\}$ have only $z_0+z_1=S0$, resp.\ $z_0+z_1=z_2$, refuted by
+$0+0=S0$. Single linkage lumps all three; \DTRC{} returns $\{\{a,b\},\{c\}\}$ or $\{\{a,c\},\{b\}\}$.
+
+\paragraph{Noise.} Let $D=D_{\mathrm{clean}}\cup E$ with mistakes $E\cap\manyRstar=\emptyset$.
+
+\begin{proposition}[noise]\label{prop:many:noise}
+\status{proved; computed}\src{untagged Prop 5.9}
+(a) A refutable mistake stays an incoherent singleton. (b) Under $\RS_d(D_{\mathrm{clean}})$ no coherent set contains clean
+data of two targets, so mistakes never bridge targets. (c) An unrefutable mistake can be absorbed into a target's cluster
+and make it unsound, and (d) it can \emph{fragment} the target: $C\cup\{m\}\cup C'$ can be incoherent although $C\cup C'$
+is coherent. (e) For $|C|>e$ the \emph{trimmed verifier} $\Acc_d^e(C):=\bigcap\{\inst(T):T\text{ not }d\text{-refuted},\
+|C\setminus\inst(T)|\le e\}$ is contained in $\inst(\sigma_i)$ when $C$ has at most $e$ mistakes and its clean part lies in
+$D_i$, and equals $\inst(\sigma_i)$ when moreover every subset of $C$ of size $\ge|C|-e$ contains an anchor.
+\end{proposition}
+\emph{Robust \DTRC} asserts only clusters of multiplicity $\ge s>e$, verified with $\Acc^e_d$. If $\RS_d(D_{\mathrm{clean}})$
+holds, every mistake is refutable or \emph{noise-separated} (every template covering it and a clean datum is refuted), and
+every coherent set of mistakes has multiplicity $<s$, then the asserted clusters are exactly the $D_i$ of multiplicity
+$\ge s$, verified soundly, and exactly once every subset of $D_i$ of size $\ge|D_i|-e$ contains an anchor. Fragmentation
+is not prevented, and a frequent coherent family of mistakes is a systematic error that no positive-data method can tell
+from a rule. A computed example on PA (\cref{ex:many:noise}) shows absorption of the false instance
+$J^*_0=(0+0=0\wedge\forall x(0+x=0\to0+Sx=S0))\to\forall x(0+x=0)$ into a non-diverse induction cluster, its rejection by
+the trimmed verifier, and order-dependent fragmentation.
 
 \begin{proof}[Proof of \cref{prop:many:linkage}]
 Non-transitivity and policy dependence: the example after the proposition (all data quantifier-free, so the minimal
@@ -396,7 +501,7 @@ soundness and the stated exactness per cluster.
 \end{proof}
 
 \begin{example}[noisy PA]\label{ex:many:noise}
-\status{computed; reproduced by the referee}\src{untagged u8}
+\status{computed}\src{untagged u8; reproduced by the referee}
 To 60 clean PA data add three refutable mistakes (e.g.\ $p+0=Sp$), two unrefutable false ones ($J^*_0$, and the wrong-base
 variant $(\neg S0=0\wedge\forall x(\neg x=0\to\neg Sx=0))\to\forall x\,\neg x=0$, whose refutation needs Q1), and two true
 non-targets ($0+p=p$, $\neg Sp=p$). The refutable mistakes stay incoherent singletons; the other mistakes stay singletons of
@@ -429,26 +534,18 @@ $n\notin\Acc(X)$, decidable in polynomial time. (e) In every coherence test of t
 (a) By definition. (b) The data have no binders, so neither has the rigid part of a covering template; no bound variable
 is in scope, so pattern occurrences, and hence all metavariables, are 0-ary. Plotkin's lgg is least among first-order
 patterns \citep{plotkin1970note,reynolds1970transformational}. (c) $X$ is itself an anchor (its covering templates cover
-the anchor), so the anchor-determines-template result of \cref{sec:single} (single Cor G.4) makes $\sigma$ the least covering
-template, computed by its polynomial lgg construction. (d) If $n\notin\Acc(X)=\bigcap\manyCov(X)$, some covering $T$ misses
+the anchor), so \cref{cor:single:anchor-lgg} makes $\sigma$ the least covering template, computed by the polynomial lgg
+construction of \cref{prop:single:lgg}. (d) If $n\notin\Acc(X)=\bigcap\manyCov(X)$, some covering $T$ misses
 $n$, and so does a minimal $T_0$ below it; the converse is trivial. $\Acc(X)$ is decided in polynomial time by the feature
-verifier (single Thm C). (e) Computed (untagged u3, u5, u0).
+verifier (\cref{thm:single:feat,cor:single:poly}). (e) Computed (untagged u3, u5, u0).
 \end{proof}
 
-\paragraph{Features (recalled from \cref{sec:single}).} For a nonempty finite set $B$ of sentences: the \emph{common
-prefix} $C(B)$ contains the root iff all $d\in B$ have the same root symbol (an index counts as a symbol), and $p\cdot i$
-iff $p\in C(B)$ and all $d|_{p\cdot i}$ have the same root symbol; the \emph{slots} are the positions outside $C(B)$ whose
-parent is in $C(B)$ (or the root, if it is not in $C(B)$); $A(B):=C(B)\cup\mathrm{slots}(B)$; $Y_\sigma(B):=\bigcup_{d\in
-B}\FV(d|_\sigma)$, the indices free at $\sigma$. For positions $\sigma\perp r$ of the same sort and a sentence $d$, the
-\emph{matcher} $e_d$, if it exists, is the unique partial map on $\FV(d|_\sigma)$ with $d|_r=(d|_\sigma)[e_d]$, where $[\bar
-u]$ replaces each free index $y$ by $u_y$, shifted under the binders inside (\emph{forcing}). The \emph{features} of a
-sentence $q$ are: $\mathrm{Sym}(p)$, $p\in C(B)$ ($q|_p$ has the common root symbol); $\mathrm{Scope}(\sigma)$, $\sigma$ a slot
-($\FV(q|_\sigma)\subseteq Y_\sigma(B)$); and $\mathrm{Eq}(\sigma,r,\bar u)$, $\sigma$ a slot, $r\in A(B)$, $\sigma\perp r$, same
-sort, $\bar u$ a map from $Y_\sigma(B)$ to terms in scope at $r$ ($\FV(q|_\sigma)\subseteq Y_\sigma(B)$ and
-$q|_r=(q|_\sigma)[\bar u]$). $\Feat(B)$ is the set of sentences having every feature that all $d\in B$ have. The feature
-theorem of \cref{sec:single} (single Thm C) states $\Acc(B)=\Feat(B)$, decidable in polynomial time. With
-\eqref{eq:many:partition}, ``$q\in\Acc_k(D)$'' is in coNP for every $k$: a partition into at most $k$ blocks $B$ with
-$q\notin\Acc(B)$ is a certificate of non-membership.
+\paragraph{Features.} Common prefix $C(B)$, slots, $A(B)$, scopes $Y_\sigma(B)$, the features $\mathrm{Sym}(p)$,
+$\mathrm{Scope}(\sigma)$, $\mathrm{Eq}(\sigma,r,\bar u)$ and $\Feat(B)$ are as in \cref{def:single:features}, and
+$\Acc(B)=\Feat(B)$, decidable in polynomial time (\cref{thm:single:feat,cor:single:poly}). For positions $\sigma\perp r$ of the
+same sort and a sentence $d$, the \emph{matcher} $e_d$, if it exists, is the unique partial map on $\FV(d|_\sigma)$ with
+$d|_r=(d|_\sigma)[e_d]$ (forcing, \cref{lem:single:basic}(d)). With \eqref{eq:many:partition}, ``$q\in\Acc_k(D)$'' is in
+coNP for every $k$: a partition into at most $k$ blocks $B$ with $q\notin\Acc(B)$ is a certificate of non-membership.
 
 \begin{lemma}[failure types]\label{lem:many:types}
 \status{proved; computed}\src{single Lemma H.1}
@@ -504,7 +601,7 @@ Computed (single e11): on 600 random cases (mixtures of 1--3 random $\DT$ templa
 non-trivial compatibility graphs.
 
 \begin{proof}[Proof of \cref{thm:many:complexity}(a)]
-$k=1$ is the feature theorem. For $k=2$: by \eqref{eq:many:partition}, $q\notin\Acc_2(D)$ iff $q\notin\Acc(D)$ or there are
+$k=1$ is \cref{thm:single:feat}. For $k=2$: by \eqref{eq:many:partition}, $q\notin\Acc_2(D)$ iff $q\notin\Acc(D)$ or there are
 types $\tau_1,\tau_2$ and a partition $D=B_1\sqcup B_2$ with $B_l$ fitting $\tau_l$. Fix $(\tau_1,\tau_2)$ and, for Eq-types that
 need one, witnesses $w_l\in B_l$ (polynomially many tuples). With variables $x_d$ (``$d\in B_1$''), ``$B_l$ fits $\tau_l$'' is
 a conjunction of clauses with at most two literals: $\neg x_d$ for $d$ not allowed by $\tau_1$; $x_d$ for $d$ not allowed by
@@ -563,7 +660,7 @@ which for fixed $k$ is decided by trying all $k$-tuples.
 
 \begin{proof}[Proof of \cref{thm:many:complexity}(d)]
 \emph{In NP.} Some $T\in\Min(X)$ avoids $R$ iff some covering template does (it lies above a minimal one), iff some saturated
-covering template does (minimal templates are saturated, \cref{sec:single}). A saturated template is determined by an
+covering template does (minimal templates are saturated, \cref{thm:single:min}(c)). A saturated template is determined by an
 occurrence set inside $A(X)$ and a pattern slot per metavariable, a certificate of polynomial size, checked by matching.
 \emph{NP-hard} (from CNF-SAT; \citealp{garey1979computers}). Take variables $x_1,\dots,x_n$, distinct parameters
 $a_1,\dots,a_n$, and $X=\{d_1,d_2\}$ with $d_1:=\forall x\bigwedge_j(x=a_j)$, $d_2:=\forall x\bigwedge_j(a_j=a_j)$. The common prefix
@@ -578,18 +675,27 @@ matcher takes $f_j:=\lambda z.z$ and both choices of $\zeta_j$ fit; where the le
 then $\zeta_j=a_j$ fits only $Sx=a_j$ while $\zeta_j=Sa_j$ fits only $Sx=Sa_j$. So $n_C\in\inst(T_A)$ iff the assignment ``$x_j$ true
 iff $j\in A$'' falsifies $C$, and some $T\in\Min(X)$ avoids $R:=\{n_C:C\in\varphi\}$ iff $\varphi$ is satisfiable. The size is
 $O(n|\varphi|)$. \emph{Polynomial cases.} Whether $X$ has a least covering template is decidable in polynomial time, and then
-it is computed (single Prop G.3), and $\Min(X)$ is that template; under \Rich{} an anchor gives one (single Cor G.4). If
+it is computed (\cref{prop:single:lgg}), and $\Min(X)$ is that template; under \Rich{} an anchor gives one
+(\cref{cor:single:anchor-lgg}). If
 $r\in R\cap\Acc(X)$, every covering template has $r$ as an instance.
 \end{proof}
 In this reduction $d_1$ is false, so the hardness does not transfer to \DTRC's use (true data, false negatives in a fixed
 world); that case is open. Computed (single e11, e14): the 2-SAT verifier equals the brute-force partition verifier on all
 5{,}918 queries; for 12 graphs (including $K_3$, $C_5$, $K_4$, the Petersen graph) $q_G\in\Acc_k(D_G)$ iff $\chi(G)>k$ for
 $k=1,\dots,4$; on 25 random set systems $q\in\Acc_k(D)$ iff no $k$ sets cover; for $n\le6$, $|\Min(X)|=2^n$ in the SAT
-reduction, and the test equals satisfiability on 360/360 random CNFs. These results were added to the single track's
-record after its referee round and were not refereed independently.
+reduction, and the test equals satisfiability on 360/360 random CNFs. These results were not refereed independently
+(\cref{app:ver:unref}).
 
 %=====================================================================================================================
 \subsection{MDL}\label{app:many:mdl}
+
+MDL with likelihood errs in two directions. For schemas it errs towards incompleteness: a split is a sound but incomplete
+hypothesis, which never accepts induction on an unused connective. For rarely used ground axioms it errs towards
+unsoundness: two ground axioms used $m$ times each are merged by the naive code into their lgg once $m$ times the body
+cost is below the template saving, and for $0+0=0$ and $0\cdot0=0$ that lgg, $z=0$, is false. The refutation test of
+\DTRC{} catches the second error, and the anchor condition (data diversity) controls the first. This is the size principle
+\citep{tenenbaum2001generalization} and MDL \citep{rissanen1978modeling} meeting a hypothesis space whose boundaries are
+logical rather than statistical. The definitions and results follow.
 
 For a finite set $H$ of templates and data $D$, each datum $d$ is assigned a covering template $T_d\in H$ (the cheapest if
 several), with unique matcher $\theta_d$, and $L(H,D)=\sum_{T\in H}L_{\mathrm{tmpl}}(T)+\sum_{d\in D}[L_{\mathrm{idx}}(T_d)+
@@ -621,11 +727,12 @@ $n\log_2((7+|F|)/8)$ and the body cost falls by $n_{\Ind}\lambda$.
 \end{proof}
 
 \begin{proposition}[well-specified codes gain at most $O(\log n)$]\label{prop:many:mdlwell}
-\status{proved, using standard coding facts cited from memory}\src{untagged Prop 6.3}
+\status{proved}\src{untagged Prop 6.3}
 Let the data be i.i.d.\ from a law $P_0$ (template index and instance law), and let the code for $H_{\mathrm{true}}$ be a
 Bayesian mixture over an $r$-parameter family containing $P_0$ with regret at most $\frac r2\log_2n+C$
-\citep{rissanen1986stochastic,clarke1990information}. Then for every fixed split hypothesis and $K>0$,
-$P[L(H_F,D)\le L(H_{\mathrm{true}},D)-\frac r2\log_2n-K-C']\le2^{-K}$, for a constant $C'$.
+\citep{rissanen1986stochastic,clarke1990information} (a standard fact, cited from memory). Then for every fixed split hypothesis and $K>0$, for a constant
+$C'$,
+\[P\bigl[L(H_F,D)\le L(H_{\mathrm{true}},D)-\tfrac r2\log_2n-K-C'\bigr]\le2^{-K}.\]
 \end{proposition}
 \begin{proof}
 The data part of $L(H_F,\cdot)$ is a prefix code for the data sequence given the template list, i.e.\ a sub-probability
@@ -633,8 +740,12 @@ $Q$; by the no-hypercompression inequality (see \citealp{grunwald2007minimum}), 
 The data part of $L(H_{\mathrm{true}},\cdot)$ is at most $-\log_2P_0(D)+\frac r2\log_2n+C$, and the template parts are
 constants; take $C'$ to absorb $C$ and the template parts.
 \end{proof}
-The referee checked both proofs; the regret and no-hypercompression facts are standard but were cited from memory in the
-research record and not re-checked there.
+The regret bound and the no-hypercompression inequality are standard, but we cite them from memory and did not re-check
+them. With a well-specified code, splitting cannot win linearly; the decision falls to lower-order terms, which favour
+fewer templates. This does not prove that MDL selects the target partition. Computed (\cref{tab:many:mdl}): the naive code
+splits from $n\approx10^3$; under the natural law G1 even the depth-aware code DPC splits for $n\ge1.6\cdot10^4$, because
+usage really differs across connectives (terms under a quantifier see a bound variable); under G2, for which DPC is well
+specified, DPC keeps $T_{\Ind}$ whole with a margin growing like $\log n$, while the misspecified PC eventually splits.
 
 \begin{table}[ht]
 \centering
@@ -680,8 +791,10 @@ of $\Min(C)$ not reported refuted: every excluded member covers an element of $N
 avoids $N_{\mathrm{final}}$ by the audit.
 \end{proof}
 Refuter soundness is supported by code reading and by the referee's fuzzing (0 of 3000 true arithmetic and 1206 true
-set-theoretic sentences refuted). Every \DTRC{} run of the record passed the audit on the first pass (24 runs checked), and
-the re-audit after the separation check found no inconsistent decision. Caveats: completeness of the computed minimal
+set-theoretic sentences refuted). Every \DTRC{} run passed the audit on the first pass (24 runs checked), and the re-audit
+after the separation check found no inconsistent decision. (The prototype's first version decided refutation by
+template-specific searches, which is not monotone in $\gen$; the global refuted set and the audit replaced it, and no
+result changed, \cref{app:ver:corr}.) Caveats: completeness of the computed minimal
 templates was checked against brute-force enumeration (by the author on induction pairs; by the referee's independent
 enumerator on all PA and ZF cross pairs, several within-schema sets, the $K_0$ pair and the $J^*_0$ clusters), always with no
 covering template outside the computed ones; internal caps never changed a result; templates are matched literally, not
@@ -690,17 +803,18 @@ modulo renaming of their parameters, which can only under-accept.
 \begin{table}[ht]
 \centering
 \caption{PA cross merges: the unique minimal covering template of each cross pair and an R-$\Delta_0$ refutation (computed,
-untagged u1; the referee's independent enumeration of all covering templates of size $\le14$ agrees). Q$_i^s$ is the
-instance schema of Q$_i$ (closed terms for the parameters), an alternative presentation of $\Q$.}\label{tab:many:pacross}
+untagged u1; the referee's independent enumeration of all 68 covering templates of size $\le14$ of the 49 tested cross pairs,
+21 $\Q$--$\Q$ and $7\times4$ $\Q$--induction, agrees). Numbering as in \cref{sec:setting:examples}, in parameter form. Q$_i^s$ is the instance
+schema of Q$_i$ (closed terms for the parameters), an alternative presentation of $\Q$.}\label{tab:many:pacross}
 \begin{tabular}{lll}
 \toprule
 cross pair & minimal template & refuting instance\\
 \midrule
-different roots (Q1--Q3 etc.); Q$_i$--Ind, root $\neq\to$ & $F_0$ & $0=S0$\\
-Q2--Q7, Q2--Ind, Q7--Ind & $F_0\to F_1$ & $0=0\to0=S0$\\
-Q3--Q5, Q3--Q6, Q4--Q5, Q4--Q6 & $z_0=z_1$ & $0=S0$\\
-Q3--Q4 & $p+z_0=z_1$ & $p+0=0$ at $p:=1$\\
-Q5--Q6 & $p\cdot z_0=z_1$ & $p\cdot0=S0$ at $p:=0$\\
+different roots (Q1--Q4 etc.); Q$_i$--Ind, root $\neq\to$ & $F_0$ & $0=S0$\\
+Q2--Q3, Q2--Ind, Q3--Ind & $F_0\to F_1$ & $0=0\to0=S0$\\
+Q4--Q6, Q4--Q7, Q5--Q6, Q5--Q7 & $z_0=z_1$ & $0=S0$\\
+Q4--Q5 & $p+z_0=z_1$ & $p+0=0$ at $p:=1$\\
+Q6--Q7 & $p\cdot z_0=z_1$ & $p\cdot0=S0$ at $p:=0$\\
 Q$_i^s$--Q$_j^s$ (21 pairs, 4 samples each) & various & all refuted\\
 \bottomrule
 \end{tabular}
@@ -709,10 +823,11 @@ Q$_i^s$--Q$_j^s$ (21 pairs, 4 samples each) & various & all refuted\\
 In the instance-schema presentation, one $\mathrm{Q2}^s$ sample lacked an $S$-free instance and gave the sound
 specialization $SSz_0=Sz_1\to Sz_0=z_1$. The PA near-miss set had 104 sentences (50 step-by-two and 50 wrong-base induction
 variants, 4 mutated axioms); 13 variants are genuine inductions (vacuous motives) and were accepted, the other 91 rejected.
-Held-out data come from other seeds; the referee found no leakage.
+Held-out data come from other seeds; the referee found no leakage. Separation on the data was verified for all 147, 201
+and 175 cross pairs of the three PA runs.
 
 \begin{example}[ZF cross merges]\label{ex:many:zfcross}
-\status{computed; independently confirmed by the referee}\src{untagged u4, u13}
+\status{computed}\src{untagged u4, u13; confirmed by the referee}
 The ZF targets in closure-normal form: Ext $\forall x(x\in p\leftrightarrow x\in p')\to p=p'$; Pair $\exists c(p\in c\wedge p'\in c)$; Union
 $\exists b\forall c(c\in b\leftrightarrow\exists d(d\in p\wedge c\in d))$; Power $\exists b\forall c(c\in b\leftrightarrow\forall d(d\in c\to d\in p))$;
 Inf (empty set and successor written out with $\in$); Found $\exists y(y\in p)\to\exists y(y\in p\wedge\forall z(z\in y\to\neg z\in p))$;
@@ -726,10 +841,16 @@ $(\forall xF_0(x))\to F_1$ (Ext--Rep, Ext--EInd), $F_0\to\exists xF_1(x)$ (Found
 (Rep--EInd), and naive comprehension $\exists x\forall y(y\in x\leftrightarrow F_0(y))$ (Union--Power, Union--Sep, Power--Sep), refuted
 through Russell's instance (Herbrand: $y:=x$). The referee's independent enumerator listed all 598 covering templates of
 size $\le14$ of 63 ZF cross pairs (two samples per schema): none outside the computed minimal ones, all refuted with the
-global-negative-set oracle (with the first implementation, 120 of them had been reported unrefuted, all above refuted naive
-comprehension). Within each schema, three random instances have the schema as unique minimal template (confirmed by the
+global-negative-set oracle (the prototype's first version had left 120 of them unrefuted, all above refuted naive
+comprehension; \cref{app:ver:corr}). Within each schema, three random instances have the schema as unique minimal template (confirmed by the
 referee for Separation, $\in$-induction and Replacement).
 \end{example}
+
+\begin{proof}[Proof of \cref{prop:many:univset}]
+Every instance holds in $M_0$ with $x:=u$; $\HF$ is a transitive part of $M_0$, so R-HF's steps ($\Delta_0$ facts about
+$\HF$, HF witnesses and counterexamples) are sound in $M_0$; R-logic refutes only logical falsehoods. A witness $b$ of
+$\exists x\forall y(y=y\to y\in x)$ gives $b\in b$; or $r=\{y\in b:y\notin y\}$ gives $r\in r\leftrightarrow r\notin r$.
+\end{proof}
 
 \begin{example}[\DTRC{} on ZF and ZFC]\label{ex:many:zf}
 \status{computed}\src{untagged u5, u10}
@@ -750,22 +871,21 @@ UnionW--PowerW pair, the referee's enumerator found 81 of 91 covering templates 
 schema, as \cref{prop:many:univset} predicts.
 \end{example}
 
-\paragraph{$K_0$.} $K_0=(z_1+0=z_1)\wedge\forall x(z_1+x=z_2\to z_1+Sx=Sz_2)\to\forall x(z_1+x=z_2)$ is the first-order lgg (named
-encoding) of $\Ind(0+x=x)$ and $\Ind(S0+x=Sx)$. The prior work's referee proved that the true closed quantifier-free sentences
-of $\N$ together with all sentence instances of $K_0$ are consistent (by building, for each instance, a model of the
-quantifier-free diagram in which the step clause fails, and amalgamating); so no sound first-order refutation from
-quantifier-free truths exists, and in particular R-$\Delta_0$ and logic refute none of its instances, among them the false
-$J^*_0$. In $\DT$ the pair has two minimal covering templates (computed; the referee's enumerator found no other among 6258
-covering templates of size $\le24$): $T_{\Ind}[P:=\lambda x.(f(0)+x=f(x))]$ and the $K_0$-shaped template of
-\cref{ex:many:noise}. The intersection verifier excludes $J^*_0$ (it is not an instance of the first). The $K_0$-shaped
-template is refuted by coherence with designated $\Q$ (a derivation found in the prior work: the descent through Q3 is
-unblocked once Q3 is designated).
+\paragraph{$K_0$.} $K_0=(z_1+0=z_1)\wedge\forall x(z_1+x=z_2\to z_1+Sx=Sz_2)\to\forall x(z_1+x=z_2)$ is the first-order lgg
+(named encoding) of $\Ind(0+x=x)$ and $\Ind(S0+x=Sx)$. By \cref{thm:zf:K0}, no sound refutation from quantifier-free truths
+exists, so R-$\Delta_0$ and logic refute none of its instances, among them the false $J^*_0$. In $\DT$ the pair has two
+minimal covering templates (computed; the referee's enumerator found no other among 6258 covering templates of size
+$\le24$): $T_{\Ind}[P:=\lambda x.(f(0)+x=f(x))]$ and the $K_0$-shaped template of \cref{ex:many:noise}. The intersection
+verifier excludes $J^*_0$ (it is not an instance of the first). The $K_0$-shaped template has $J^*_0$ as an instance
+($f:=\lambda h.0$) and is refuted by coherence with designated $\Q$: the refutation of $J^*_0$ through the recursion axiom
+Q5, $\forall x\forall y\,(x+Sy=S(x+y))$, goes through once Q5 is designated \src{prior induction B5(d)}
+(see the text after \cref{thm:zf:K0}).
 
 \paragraph{Computations.} The scripts are in \url{research/tracks/untagged/code} (Python 3.11, no external packages;
 \url{sh run_all.sh}, about 15 minutes), with outputs \url{<script>.out}: u0 (minimal templates vs brute force), u1
 (\cref{tab:many:pacross}), u2 ($c=4/7/7$), u3 (\DTRC{} on PA), u4, u5, u5b (ZF cross merges, \DTRC{} on ZF, weak forms), u6
 ($\forall x\varphi$ from numerals; non-transitivity), u7 (\cref{tab:many:mdl}), u8 (\cref{ex:many:noise}), u9 (clean
-fragmentation), u10 (ZFC), u12 (head classes), u13, u14 (monotone oracle, audit). Theorem H's checks are
+fragmentation), u10 (ZFC), u12 (head classes), u13, u14 (monotone oracle, audit). The checks of \cref{thm:many:complexity} are
 \url{research/tracks/single/e11_union_complexity.py} and \url{e14_dtrc_step2.py}; the referee's independent code is in
 \url{research/tracks/untagged/referee_code}.
 
@@ -777,6 +897,6 @@ fragmentation), u10 (ZFC), u12 (head classes), u13, u14 (monotone oracle, audit)
 \citep{rissanen1978modeling,rissanen1986stochastic,clarke1990information,krichevsky1981performance,grunwald2007minimum}; the size
 principle \citep{tenenbaum2001generalization}; conceptual clustering \citep{michalski1983learning}, in whose spirit the
 clustering is. Covering problems for first-order patterns, relevant to the open spare-slot thresholds, are decidable by
-results on complement problems and ground reducibility \citep{lassez1987explicit,comon2003ground} (cited from memory in the
-research record, not re-checked there). As far as the record knows, the refutation test, the separation theorem, the depth
-impossibility, the head-class thresholds and the implementation audit are new.
+results on complement problems and ground reducibility \citep{lassez1987explicit,comon2003ground} (cited from memory, not
+re-checked). As far as we know, the refutation test, the separation theorem, the depth impossibility, the head-class
+thresholds and the implementation audit are new.

@@ -2,7 +2,7 @@
 
 Command: `python3 experiments/e5_curves.py`; seeds [0, 1, 2, 3, 4]; grid N = [5, 10, 20, 30, 50, 80, 120].
 
-## PA, universal axioms through numerals only (main) (mean number of exact targets out of 11)
+## PA, numerals only (mean number of exact targets out of 11)
 
 | learner | N=5 | N=10 | N=20 | N=30 | N=50 | N=80 | N=120 |
 |---|---|---|---|---|---|---|---|
@@ -30,7 +30,7 @@ First grid N from which the target stays exact (per seed):
 | U_mul0 | 80,80,80,20,20 | 80,80,80,20,20 | 80,80,80,20,20 | 80,80,80,20,20 | 80,80,80,20,20 |
 | U_0add | >120,30,>120,>120,>120 | 30,30,50,20,20 | >120,30,80,20,20 | >120,30,80,20,20 | 30,30,50,20,20 |
 
-## PA, v1 instance distribution (mean number of exact targets out of 11)
+## PA, mixed regime (mean number of exact targets out of 11)
 
 | learner | N=5 | N=10 | N=20 | N=30 | N=50 | N=80 | N=120 |
 |---|---|---|---|---|---|---|---|
@@ -39,7 +39,7 @@ First grid N from which the target stays exact (per seed):
 | tagged_ref | 2.0 | 3.2 | 5.2 | 6.2 | 8.6 | 10.0 | 11.0 |
 | tagged | 2.0 | 3.2 | 5.2 | 6.2 | 8.6 | 10.0 | 11.0 |
 | tagged_member | 2.0 | 3.6 | 5.6 | 6.6 | 9.0 | 10.0 | 11.0 |
-| time DTRC (s) | 0.1 | 0.1 | 0.2 | 0.2 | 0.4 | 1.1 | 1.4 |
+| time DTRC (s) | 0.0 | 0.0 | 0.2 | 0.2 | 0.3 | 0.9 | 1.1 |
 | oracle calls DTRC | 33 | 50 | 140 | 169 | 272 | 494 | 505 |
 
 First grid N from which the target stays exact (per seed):
@@ -67,7 +67,7 @@ First grid N from which the target stays exact (per seed):
 | tagged_ref | 1.8 | 3.6 | 5.2 | 6.8 | 7.8 | 9.0 | 9.0 |
 | tagged | 1.8 | 3.6 | 5.2 | 6.8 | 7.8 | 9.0 | 9.0 |
 | tagged_member | 1.8 | 3.6 | 5.2 | 6.8 | 7.8 | 9.0 | 9.0 |
-| time DTRC (s) | 0.5 | 0.6 | 1.3 | 1.9 | 5.0 | 6.9 | 7.2 |
+| time DTRC (s) | 0.5 | 0.6 | 1.2 | 1.8 | 4.6 | 6.9 | 6.9 |
 | oracle calls DTRC | 69 | 75 | 180 | 261 | 571 | 919 | 887 |
 
 First grid N from which the target stays exact (per seed):
@@ -84,4 +84,4 @@ First grid N from which the target stays exact (per seed):
 | Rep | 10,20,10,5,5 | 10,20,10,5,5 | 10,20,10,5,5 | 10,20,10,5,5 | 10,20,10,5,5 |
 | EInd | 5,5,5,20,20 | 5,5,5,20,20 | 5,5,5,20,20 | 5,5,5,20,20 | 5,5,5,20,20 |
 
-Wall time: 195.6s
+Wall time: 184.9s

@@ -9,153 +9,87 @@
 %     code/experiments/recheck/*.out (referee's oracle checks re-run against v2).
 %   research/prior/induction/second-order-notes.md (C9) and research/prior/pa-untagged/ for the prior results
 %     that E2 and E6 reproduce.
+% Paper review (research/paper-review/): Prop E4-share is corrected here (per phase-one cluster; counterexample
+%   ex:exp:share, computed with scratch/share_cex.py and re-run); E6's DT-vs-DT_F caveat (scratch/e6_dtf_vs_dt.py);
+%   E9 survivors (scratch/e9_survivors.py); skeleton-clustering lumps (scratch/skel.py). The check that every target
+%   with data labels a phase-one cluster in every E3 run was computed for this revision (DTRC without sharing,
+%   seeds 0-4, both PA regimes and ZF). Figure e5_curves.png was regenerated with new panel titles (numbers unchanged).
 % =====================================================================
+% Local name for the implemented Replacement schema (exists! spelled out, image consequent); it is neither
+% formulation of tab:zf:forms.
+\providecommand{\expReplE}{\mathrm{Repl}_{\mathrm{E}}}
 
-We implemented the determinate-template learner and \DTRC{} to check the theory of \cref{sec:single,sec:univ,sec:zf,sec:many} on data it did not choose, and to see what goes wrong when its hypotheses fail: when refutation has a budget, when targets look alike, and when the data contain mistakes. The package \texttt{dtrc} (pure Python, \texttt{axiom-schemas/code/}) is independent of the prototype of \cref{sec:many}. An adversarial referee re-ran every experiment with independent checks and found one false empirical claim and one false proposition in the first version of the record (the \emph{first record} below); both are corrected here and listed in \cref{app:ver}. \emph{Computed} means that a seeded script was run; re-running reproduces every number except timings. Proofs, further numbers and commands are in \cref{app:exp}.
+We implemented the determinate-template learner and \DTRC{} to check the theory of \cref{sec:single,sec:univ,sec:zf,sec:many} on data it did not choose, and to see what goes wrong when its hypotheses fail: when refutation has a budget, when targets look alike, and when the data contain mistakes. An adversarial referee re-ran every experiment with independent checks; the resulting corrections and withdrawn claims are listed in \cref{app:ver}. \emph{Computed} means that a seeded script was run; re-running reproduces every number except timings. We describe the implementation (\cref{sec:exp:impl}), its guarantees (\cref{sec:exp:theory}), the results (\cref{sec:exp:results}) and the limitations (\cref{sec:exp:limits}); proofs, further numbers and commands are in \cref{app:exp}.
 
-In brief: on Q1 and Q2 the implemented learner behaves as the theory predicts, and on Q2 it accepted no non-instance in $927$ probes. On untagged mixtures of the PA and ZF axioms, \DTRC{} recovered the hidden labels in every run, and with a sharing pass for ambiguous data it matched, target by target, a tagged learner given every label a datum deserves; for these mixtures we prove refutation separation. But with injected mistakes and a small refutation budget, \DTRC{} \emph{accepted a false sentence}; similar targets can merge into valid templates that no world-based refutation separates; and the evidence for separation beyond the mixtures is narrow.
+In brief: on Questions~1 and~2 the implemented learner behaves as the theory predicts, and on Question~2 it accepted no non-instance in $927$ probes. On untagged mixtures of the PA and ZF axioms (Question~3), \DTRC{} recovered the hidden labels in every run, and with a sharing pass for ambiguous data it matched, target by target, a tagged learner given every label a datum deserves. For these mixtures we prove refutation separation for an ideal refuter, and the implemented refuter achieved it on every sampled merge. But with injected mistakes and a small refutation budget, \DTRC{} \emph{accepted a false sentence}; similar targets can merge into valid templates that no world-based refutation separates; and the evidence for separation beyond the mixtures is narrow.
 
 % ---------------------------------------------------------------------
 \subsection{What was implemented}\label{sec:exp:impl}
 
 \paragraph{Data and the class.}
-Formulas over $L_A$ and $L_\in$ use de Bruijn indices and named parameters. Each datum is in closure-normal form and is canonicalized on its own (parameters renamed $w_0,w_1,\dots$ by first occurrence). Leading universal quantifiers are \emph{not} stripped: the axiom Q4 is the datum $\forall x\,(x+0=x)$, and the schema $z+0=z$ accepts $w_0+0=w_0$ but not Q4. With this choice the PA-mixture targets below have disjoint instance sets except for the sentence $0+0=0$, and the ZF-mixture targets are pairwise disjoint (\cref{prop:exp:mixsep}). (With leading quantifiers stripped, Q4 becomes an instance of $z+0=z$ and Q6 of $z\cdot0=0$; the referee re-ran \DTRC{} so and found ARI $1$ on unambiguous data, Q4 and Q6 absorbed into the clusters of these schemas, and no non-target probe \src{referee R13}.) The matcher decides membership up to an injective renaming of the template's parameters; in this section $\inst$, ``covers'' and $\gen$ are read in this sense ($\inst^\sim$, $\gen^\sim$ of \cref{app:setting}), and anchors are taken in the class $\{\inst(T):T\in\DTF\}$.
-
-The implemented class is $\DTF$ (\cref{sec:setting}). Every target used below lies in it, so the cautious verifier stays sound; positive-arity term metavariables blow up the minimal covering sets (E7); and every $\DT$ anchor is a $\DTF$ anchor, so the classes differ only before an anchor arrives.
+Formulas over $L_A$ and $L_\in$ use de Bruijn indices and named parameters; each datum is in closure-normal form, canonicalized on its own (parameters $w_0,w_1,\dots$ by first occurrence). Leading universal quantifiers are \emph{not} stripped: the axiom Q4 is the datum $\forall x\,(x+0=x)$, and $z+0=z$ accepts $w_0+0=w_0$ but not Q4. So the PA-mixture targets below have disjoint instance sets except for $0+0=0$, and the ZF-mixture targets are pairwise disjoint (\cref{cor:exp:mixsep}; stripped quantifiers: \cref{app:exp:numbers}). Matching is up to injective renaming of the template's parameters, and $\inst$, ``covers'' and $\gen$ are read in this sense ($\inst^\sim$, $\gen^\sim$ of \cref{app:setting:align}); anchors are taken in the class $\{\inst(T):T\in\DTF\}$. The class is $\DTF$ (\cref{def:setting:template}): every target below lies in it, so the cautious verifier stays sound; positive-arity term metavariables blow up the minimal covering sets (E7); and every $\DT$ anchor is a $\DTF$ anchor, so the classes differ only before a $\DT$ anchor arrives.
 
 \paragraph{Minimal covering templates.}
-Let $C(D)$ be the \emph{common-prefix tree} of a finite set $D$ of data: the positions $p$ such that all data carry the same label and arity at $p$ and above it (parameters compared by name), and the \emph{slots}, the maximal positions at which they disagree. The \emph{column} at $p$ is $(d|_p)_{d\in D}$; it is \emph{open} if some $d|_p$ contains a variable bound above $p$. In $\mathcal T(D)$, each common atom node whose subtree contains a slot with an open column is cut to a leaf slot (an \emph{F-slot}); so every term slot of $\mathcal T(D)$ has a closed column.
-
-\begin{definition}[Normal configurations]\status{definition}\src{experiments \S1.3}\label{def:exp:normal}
-For a slot $\sigma$ of $\mathcal T(D)$ let $\bar y_\sigma$ list the variables free in its column, $M_\sigma$ a fresh metavariable of the slot's sort and arity $|\bar y_\sigma|$, and $\beta_d(\sigma)$ the abstraction of $d|_\sigma$ over $\bar y_\sigma$. A node $\pi$ is \emph{derivable} from $\sigma$, $\sigma\to\pi$, if metavariable-free terms $\bar t=:\bar t(\sigma,\pi)$ satisfy $\beta_d(\sigma)[\bar t]=d|_\pi$ for all $d\in D$ ($\bar t$ is then unique). A \emph{normal configuration} is a set $S'$ of slots, none derivable from another, an antichain $A\supseteq S'$ of nodes of $\mathcal T(D)$ with every slot at or below a member of $A$, and a choice of $c(\pi)\in S'$ with $c(\pi)\to\pi$ for each $\pi\in A\setminus S'$. Its template has $M_\sigma(\bar y_\sigma)$ at $\sigma\in S'$, $M_{c(\pi)}(\bar t(c(\pi),\pi))$ at $\pi\in A\setminus S'$, and the common labels elsewhere.
-\end{definition}
-
-\begin{proposition}[Normal form]\status{proved; computed}\src{experiments Props E1-lit, E1-al; E0, E0b}\label{prop:exp:normal}
-Let $D$ be finite and nonempty, and compare parameters by name.
-\textup{(a)} Every normal configuration lies in $\DTF$ and covers $D$.
-\textup{(b)} Every $T\in\DTF$ covering $D$ satisfies $T\gen N$ for a normal configuration $N$.
-\textup{(c)} Hence the minimal normal configurations form a finite set $\Min^{\mathrm{lit}}_F(D)$; every covering $T\in\DTF$ lies above a member; members are minimal among all covering templates in $\DTF$; and if $D\subseteq\inst(T^*)$ with $T^*\in\DTF$, some member lies below $T^*$.
-\end{proposition}
-
-\begin{proof}[Proof idea]
-For (b): rigid symbols survive instantiation, so the skeleton of $T$ lies in $C(D)$, and no occurrence sits strictly below an F-slot (it would be a $0$-ary term metavariable with a closed value containing an open column). Push pattern occurrences down through common labels; drop argument places no datum uses; the remaining arguments are forced; replace an own slot derivable from another by the derived occurrence. Each step specializes $T$ and keeps it covering. Details in \cref{app:exp:normal}.
-\end{proof}
-
-With parameters compared up to renaming, the learner uses $\Min_F(D)$, the minimal elements of the union of $\Min^{\mathrm{lit}}_F(\alpha(D))$ over all \emph{alignments} $\alpha$ of the data's parameters; \cref{app:setting} proves (a)--(c) for it, given the finiteness that \cref{prop:exp:normal}(c) supplies. The literal set is not enough: the first record stated (c) for renaming-closed covering, and the referee found a counterexample with a rigid parameter (\cref{app:setting}). The aligned and literal sets differed on none of the $720$ data sets of E2 and in one call of all \DTRC{} runs of E3; no cap on alignments or configurations was hit. Computed checks against the prior referee's enumerator (E0) and on $800$ random data sets in both languages (E0b) found no failure of the aligned set; the literal one failed exactly when the generating template had a rigid parameter (\cref{app:exp:normal}).
+They are computed from the finitely many \emph{normal configurations} of the data's common-prefix tree (\cref{def:exp:normal,prop:exp:normal}), with parameters aligned (\cref{app:setting:align}): $\Min_F(D):=\Min^{\mathrm{al}}_{\DTF}(D)$ is the set of minimal elements of the union of $\Min^{\mathrm{lit}}_F(\alpha(D))=\Min_{\DTF}(\alpha(D))$ over all alignments $\alpha$. By \cref{prop:setting:align} it has the properties of $\Min(D)$ with respect to templates all of whose parameters occur in their skeleton, such as our parameter-free targets; the literal set fails for rigid parameters (\cref{ex:setting:align}; checks E0, E0b in \cref{app:exp:normal}). On the experiment data the aligned and literal sets almost never differ (\cref{app:exp:normal}).
 
 \paragraph{World oracles.}
-Two three-valued evaluators return True, False or unknown. \emph{PA} (truth in $\N$) evaluates numerals exactly, decides atoms with symbolic variables by polynomial normal forms, enumerates bounded quantifiers with numeral bounds, searches numeral counterexamples and witnesses, and case-splits an unbounded quantifier into $x\in\{0,1\}$ and $x=x'+2$. \emph{ZF} (truth in $V$) uses hereditarily finite sets of rank $\le3$ and \emph{generic objects}: an unbounded quantifier is split into $x$ in the transitive closure $E$ of the concrete values in scope, $x$ an in-scope generic, or $x$ a fresh generic. Both use Kleene's strong connectives \citep{kleene1952introduction} with supervaluation over unknown leaves \citep{vanfraassen1966singular}. Both first simplify by \emph{constant propagation}: propositional laws valid in every nonempty structure, after replacing by $\top$ or $\bot$ the atoms whose value does not depend on the variables ($t=t$; closed arithmetic atoms; $t<t$; $x\in x$, false by Foundation).
+Two three-valued evaluators return True, False or unknown: for $\N$, exact on numerals, with polynomial normal forms for atoms and bounded enumeration, numeral search and case splits for quantifiers; for $V$, with hereditarily finite sets of rank $\le3$ and \emph{generic objects} standing for unknown sets outside the transitive closure of the values in scope. Both use Kleene's strong connectives with supervaluation over unknown leaves, after constant propagation (\cref{app:exp:oracle}).
 
 \begin{proposition}[The oracles are sound]\status{proved; computed}\src{experiments Prop E2; recheck R3, R4, R11}\label{prop:exp:oracle}
 If the PA evaluator returns True (False) on a datum, its universal closure is true (false) in $\N$. If $V\models\ZF$ and the ZF evaluator returns True (False) on a datum, its universal closure is true (false) in $V$.
 \end{proposition}
 
-\begin{proof}[Proof idea]
-Induction on the formula. For ZF the claim is made for every \emph{realization} of the generics: each denotes a set outside the transitive closure fixed when it was introduced, distinct from the generics then in scope. The atom rules are sound (e.g.\ $G\in G$ is false by Foundation), the three cases of a quantifier cover every set, Kleene's tables are monotone, and supervaluation enumerates a superset of the realizable assignments. Details in \cref{app:exp:oracle}.
-\end{proof}
-
-The referee's independent evaluators found $0$ contradictions on $2197$ PA and $592$ ZF verdicts logged during \DTRC{} runs and on $3600$ random sentences (\cref{app:exp:oracle}). Neither oracle is complete: no witness is constructed from a generic or a term, so $\forall a\exists b\forall x\,(x\in b\leftrightarrow a\in x)$ is not refuted and $\forall x\,(x=0\vee\exists y\,x=Sy)$ stays undecided. Both are truth oracles, not provability oracles.
+The referee's independent evaluators found no contradiction on $2197$ PA and $592$ ZF logged verdicts and $3600$ random sentences. Neither oracle is complete: no witness is constructed from a generic or a term, so $\forall a\exists b\forall x\,(x\in b\leftrightarrow a\in x)$ is not refuted and $\forall x\,(x=0\vee\exists y\,x=Sy)$ stays undecided. Both are truth oracles, not provability oracles.
 
 \paragraph{Template refuter and \DTRC{}.}
-A template is \emph{refuted} once the oracle returns False on one of its instances. The refuter tries, within a budget (default $80$ instances): all $\top/\bot$ assignments to the formula metavariables; one metavariable running through a pool of small bodies while the others are $\top$ (or $\bot$); enumerations of small bodies; and bodies read off the data. It is \emph{sound}, \emph{budgeted}, and \emph{history-dependent} (it caches verdicts and accumulates data-guided tries), so it is not a fixed oracle $\Ref_d$ (\cref{sec:setting}); the guarantees below are stated for it directly. Every ``refuted'' count is a lower bound on what an \emph{ideal} refuter, one that refutes every template with a false instance, would refute.
-
-\DTRC{} as implemented: (1)~canonicalize and discard data the oracle refutes; (2)~agglomerate from singletons, trying pairs of clusters in decreasing order of common-prefix size, where the merge of $A$ and $B$ succeeds iff some member of $\Min_F(A\cup B)$ is not refuted, and a failed pair stays failed for clusters containing its parts; (3)~optionally a \emph{sharing pass}: for each final cluster $C$ and each kept datum $d\notin C$, in data order, add $d$ to $C$ if the test on $C\cup\{d\}$ succeeds (clusters may then overlap); (4)~per cluster, $\Acc(C)=\bigcap\{\inst(T):T\in\Min_F(C)\text{ not refuted}\}$, or $C$ if all are refuted; (5)~assert $\bigcup_C\Acc(C)$. This is $\DTRC$ of \cref{sec:many} with the class $\DTF$, a fixed merge order and a budgeted refuter.
+A template is \emph{refuted} once the oracle returns False on one of its instances. Within a budget (default $80$ instances) the refuter tries $\top/\bot$ assignments to the formula metavariables, pools and enumerations of small bodies, and bodies read off the data (\cref{app:exp:oracle}). It is sound, \emph{budgeted} and \emph{history-dependent} (it caches verdicts and accumulates data-guided tries), so it is not a fixed oracle $\Ref_d$ (\cref{def:setting:oracle}); the guarantees below are stated for it directly, and every ``refuted'' count is a lower bound for an \emph{ideal} refuter, which refutes every template with a false instance. \DTRC{} as implemented:
+\begin{enumerate}[label=(\arabic*),nosep]
+\item canonicalize the data; discard those the oracle refutes;
+\item agglomerate from singletons, trying pairs by decreasing common-prefix size (ties in data order): merging $A$ and $B$ succeeds iff some member of $\Min_F(A\cup B)$ is unrefuted, and a failed pair stays failed for clusters containing its parts;
+\item optionally, a \emph{sharing pass}: for each final cluster $C$ and each kept datum $d\notin C$, in data order, add $d$ to $C$ if the test on $C\cup\{d\}$ succeeds (clusters may then overlap);
+\item per cluster, $\Acc(C)=\bigcap\{\inst(T):T\in\Min_F(C)\text{ not refuted}\}$, or $C$ if all are refuted;
+\item assert $\bigcup_C\Acc(C)$.
+\end{enumerate}
+This is $\DTRC$ of \cref{def:many:dtrc} with the class $\DTF$, a fixed merge order and a budgeted refuter, with four further differences: failed pairs are inherited (lossless for an ideal refuter by \cref{prop:exp:mono}(a), a heuristic otherwise); refuted data are discarded; a cluster whose minimal templates are all refuted accepts its own data (\cref{def:many:dtrc}: nothing); and with a parameter-free datum, hence a single alignment, the literal set $\Min^{\mathrm{lit}}_F$ is used, which for parameter-free targets changes no guarantee below (\cref{app:exp:dtrc}).
 
 \paragraph{Baselines.}
-(i)~First-order $\lgg$ per tag \citep{plotkin1970note,reynolds1970transformational}, with binders named by level or with de Bruijn indices; instantiation may capture. (ii)~Higher-order pattern $\lgg$ per tag, in our reading of the merge rule of \citet{baumgartner2017higher} (their implementation was not run): the \emph{genuine} version generalizes a term disagreement containing a bound variable by a term variable $f(x,\dots)$; the \emph{formula-level} version of the first record generalizes the whole atom instead. (iii)~The cautious $k$-union verifier over $\DTF$, with and without refutation negatives. (iv)~\emph{Skeleton clustering}: \DTRC{} without refutation, stopped at the true number of targets. (v)~The tagged refutation-filtered verifier with \emph{gold labels} (the target a datum was generated from) or \emph{membership labels} (every target it instantiates).
+(i)~First-order $\lgg$ per tag \citep{plotkin1970note,reynolds1970transformational}, with binders named by level or as de Bruijn indices (instantiation may capture). (ii)~Higher-order pattern $\lgg$ per tag, in our reading of the merge rule of \citet{baumgartner2017higher} (their implementation was not run): the \emph{genuine} version generalizes a term disagreement containing a bound variable by a term variable $f(x,\dots)$; the \emph{formula-level} version, an earlier baseline, generalizes the whole atom. (iii)~The cautious $k$-union verifier over $\DTF$, with and without refutation negatives. (iv)~\emph{Skeleton clustering}: \DTRC{} without refutation, stopped at the true number of targets. (v)~The tagged refutation-filtered verifier with \emph{gold labels} (the generating target) or \emph{membership labels} (every target a datum instantiates).
 
 \paragraph{Data sets and metrics.}
-\emph{PA-mix}: Q1--Q7; $30$ induction instances with random motives; $8$, $6$, $4$ instances of $U_{\mathrm{add0}}=(z+0=z)$, $U_{\mathrm{mul0}}=(z\cdot0=0)$, $U_{\mathrm{0add}}=(0+z=z)$. In the main regime $z$ is a numeral uniform in $0..7$ (numerals written as digits); in the \emph{mixed} regime of the first record it is a numeral ($0.6$), a random closed term of depth $\le2$ ($0.25$) or a parameter ($0.15$). \emph{ZF-mix}: $\Ext,\Pair,\Union,\Pow,\Inf,\Found$; $12$ instances of $T_{\Sep}$, $10$ of Replacement $\ReplS$ ($\exists!$ spelled out, image consequent), $10$ of $T_{\EInd}$, with random small bodies. Stress sets are described with E4 and E9. Held-out sets contain schema instances only, disjoint from the training data. Metrics: the adjusted Rand index (ARI; \citealp{hubert1985comparing}) on unambiguous data; \emph{exactness}, by a sufficient syntactic test for $\Acc=\inst(T^*)$ (every unrefuted minimal template is $\gen T^*$ and one is $\preceq T^*$), reported separately for ground axioms, where it only means that the axiom stayed a singleton; held-out acceptance; and \emph{probes}: sampled accepted sentences, how many are instances of no target, and how many of those the oracle refutes. Probe counts are lower bounds on unsoundness (\cref{prop:exp:qF}).
+\emph{PA-mix}: Q1--Q7; $30$ induction instances with random motives; $8$, $6$, $4$ instances of $U_{\mathrm{add0}}=(z+0=z)$, $U_{\mathrm{mul0}}=(z\cdot0=0)$, $U_{\mathrm{0add}}=(0+z=z)$. In the main (\emph{numerals}) regime $z$ is a numeral uniform in $0..7$; in the \emph{mixed} regime it is a numeral ($0.6$), a random closed term of depth $\le2$ ($0.25$) or a parameter ($0.15$). \emph{ZF-mix}: $\Ext,\Pair,\Union,\Pow,\Inf,\Found$; $12$ instances of $T_{\Sep}$, $10$ of Replacement $\expReplE$ ($\exists!$ spelled out as in $\ReplS$, with the image consequent of $\ReplJ$; neither formulation of \cref{tab:zf:forms}), $10$ of $T_{\EInd}$, with random small bodies. Held-out sets contain schema instances only, disjoint from the training data. Metrics: the adjusted Rand index (ARI; \citealp{hubert1985comparing}) on unambiguous data; \emph{exactness}, by a sufficient syntactic test for $\Acc=\inst(T^*)$ (every unrefuted minimal template is $\gen T^*$ and one is $\preceq T^*$), reported separately for ground axioms, where it only means that the axiom stayed a singleton; held-out acceptance; and \emph{probes}: sampled accepted sentences, how many are instances of no target, and how many of those the oracle refutes, a lower bound on unsoundness (\cref{prop:exp:qF}).
 
 % ---------------------------------------------------------------------
 \subsection{Guarantees for the implemented learner}\label{sec:exp:theory}
 
-The following are the analogues of the theorems of \cref{sec:many} for $\DTF$, $\Min_F$ and the budgeted, history-dependent refuter. The world is $\N$ or $V$, and the refuter is sound.
-
-\begin{proposition}[Merge monotonicity; within-target merges succeed]\status{proved}\src{experiments Prop E3}\label{prop:exp:mono}
-\textup{(a)} Let $D\subseteq D'$ and the refuter be ideal. If every member of $\Min_F(D)$ is refuted, so is every member of $\Min_F(D')$.
-\textup{(b)} If $\emptyset\neq X\subseteq\inst(T^*)$ with $T^*\in\DTF$ and all instances of $T^*$ true, then some $T_0\in\Min_F(X)$ with $T_0\preceq T^*$ is never refuted, so the merge test on $X$ succeeds for every sound refuter and budget.
-\end{proposition}
-
-\begin{proof}
-(a) A member of $\Min_F(D')$ covers $D$, so it lies above a member of $\Min_F(D)$ and contains that member's false instance. (b) \Cref{prop:exp:normal}(c), with alignments, gives $T_0$; its instances are true.
-\end{proof}
+The theorems of \cref{sec:many} (\cref{thm:many:dtrc,thm:many:residue}) carry over to $\DTF$, $\Min_F$ and the budgeted, history-dependent refuter (world $\N$ or $V$; proofs in \cref{app:exp:dtrc}). Within-target merges always succeed, and a cluster inside the instance set of a target with true instances always intersects a never-refuted template below that target, whatever the budget (\cref{prop:exp:mono,prop:exp:budget}). So a budgeted refuter harms soundness only through clustering: a mixed cluster is truth-sound if one of its unrefuted minimal templates is valid, and may accept false sentences otherwise (\cref{prop:exp:qF}). Exactness does depend on the budget: more refutations enlarge $\Acc(C)$.
 
 \begin{theorem}[\DTRC{} under refutation separation]\status{proved}\src{experiments Thm E4}\label{thm:exp:dtrc}
-Assume (T) targets $T_1,\dots,T_k\in\DTF$ with all instances true; (D) data $D=D_1\sqcup\dots\sqcup D_k$, $D_i\subseteq\inst(T_i)$, each datum an instance of exactly one target; (R) a sound refuter; and (S) every merge test on $A\cup B$ with $\emptyset\neq A\subseteq D_i$, $\emptyset\neq B\subseteq D_j$, $i\neq j$, fails. Then \DTRC{} without sharing discards no datum, its final clusters are the nonempty $D_i$, and $\Acc(D_i)\subseteq\inst(T_i)$ (target-soundness), with equality whenever $D_i$ contains an anchor of $T_i$. If moreover \textup{(H-ref)} verdicts do not depend on the call history, $\Acc(D_i)$ equals the tagged verifier's acceptance set on $D_i$.
+Assume \textup{(H1)} targets $T_1,\dots,T_k\in\DTF$, all of whose parameters occur in their skeletons \textup{(}e.g.\ parameter-free\textup{)}, with all instances true; \textup{(H2)} data $D=D_1\sqcup\dots\sqcup D_k$, $D_i\subseteq\inst(T_i)$, each datum an instance of exactly one target; \textup{(H3)} a sound refuter; and \textup{(H4)} every merge test on $A\cup B$ with $\emptyset\neq A\subseteq D_i$, $\emptyset\neq B\subseteq D_j$, $i\neq j$, fails. Then \textup{\DTRC{}} without sharing discards no datum, its final clusters are the nonempty $D_i$, and $\Acc(D_i)\subseteq\inst(T_i)$ (target-soundness), with equality whenever $D_i$ contains an anchor of $T_i$. If moreover \textup{(H-ref)} verdicts do not depend on the call history, $\Acc(D_i)$ equals the tagged verifier's acceptance set on $D_i$.
 \end{theorem}
 
-\begin{proof}[Proof idea]
-Clusters stay inside one $D_i$: cross merges fail by (S), within-label merges succeed by \cref{prop:exp:mono}(b). So inherited failures never block a within-label merge, and agglomeration ends with one cluster per label. The never-refuted $T_0\preceq T_i$ is intersected, which gives soundness; with an anchor every covering template contains $\inst(T_i)$. Details in \cref{app:exp:dtrc}.
-\end{proof}
+Exactness is stated per cluster because instance sets may overlap; the implemented refuter violates (H-ref) \src{referee F8}. The sharing pass handles ambiguous data (\cref{prop:exp:share}). If \textup{(H4$^+$)} every test on a set lying in no single instance set fails, and \textup{(H5)} every cluster of the agglomeration lies in exactly one instance set, then each such cluster grows to all data of its target, stays target-sound, is exact with an anchor, and under (H-ref) matches the tagged learner with membership labels. A target that labels no such cluster gains nothing and can be learned incompletely although its data contain an anchor (\cref{ex:exp:share}). With numerals every anchor of $U_{\mathrm{add0}}$ or $U_{\mathrm{0add}}$ contains $0+0=0$ (\cref{prop:exp:numerals}), so a partition gives this datum to at most one of them, the sharing pass to both.
 
-The first record claimed exactness \emph{exactly} where the tagged learner is exact; the ``only if'' half fails when instance sets overlap, hence the per-cluster statement. The implemented refuter violates (H-ref) \src{referee F8}.
-
-\begin{proposition}[Per-cluster soundness does not depend on the budget]\status{proved}\src{experiments Prop E5}\label{prop:exp:budget}
-If $C\subseteq\inst(T^*)$ with $T^*\in\DTF$ and all instances of $T^*$ true, then $\Acc(C)\subseteq\inst(T^*)$ for every sound refuter; more refutations only enlarge $\Acc(C)$.
-\end{proposition}
-
-\begin{proof}
-$T_0$ of \cref{prop:exp:mono}(b) is intersected, so $\Acc(C)\subseteq\inst(T_0)\subseteq\inst(T^*)$; fewer intersected templates give a larger set.
-\end{proof}
-
-So a budgeted refuter harms \DTRC{} only through clustering: an unrefuted merge across targets or with a mistake. Such a mixed cluster is truth-sound if one of its unrefuted minimal templates is valid, and may accept false sentences otherwise (\cref{prop:exp:qF}).
-
-\begin{proposition}[The sharing pass]\status{proved}\src{experiments Prop E4-share}\label{prop:exp:share}
-Assume (T), (R), data $D\subseteq\bigcup_l\inst(T_l)$ (a datum may instantiate several targets), (S$^+$) every merge or sharing test on a set contained in no $\inst(T_l)$ fails, and (P) each final cluster $C$ of the agglomeration lies in exactly one $\inst(T_l)$. Then distinct final clusters of the agglomeration have distinct targets; after the sharing pass the cluster of $T_l$ is $C^+=D\cap\inst(T_l)$, in any order; and $\Acc(C^+)\subseteq\inst(T_l)$, with equality whenever $C^+$ contains an anchor of $T_l$. Under \textup{(H-ref)} $\Acc(C^+)$ is the acceptance set of the tagged learner with membership labels.
-\end{proposition}
-
-The proof is in \cref{app:exp:dtrc}. In the numerals regime every anchor of $U_{\mathrm{add0}}$ or $U_{\mathrm{0add}}$ contains $0+0=0$, by the following proposition; a partition gives this datum to at most one of them, the sharing pass to both.
-
-\begin{proposition}[One-variable instance schemas]\status{proved; computed}\src{experiments Prop E7; referee R2}\label{prop:exp:numerals}
-Let $T^*$ have one $0$-ary term metavariable $z$, at rigid positions, no other metavariable and no parameter, and let $D\subseteq\inst(T^*)$ contain a parameter-free datum. Then $\Min_F(D)=\{T^*\}$ iff the terms substituted for $z$ do not all have the same root symbol ($0$ and each parameter count as root symbols); otherwise $\Acc(D)\neq\inst(T^*)$. So for i.i.d.\ terms with root law $(p_h)$, $\Pr[\text{not exact after }N]=\sum_hp_h^N$, and numerals uniform in $0..7$ form an anchor iff they include $0$.
-\end{proposition}
-
-This is Plotkin's \evR{} for the implemented class (\cref{sec:univ}); the referee found no violation in $3000$ random data sets over $9$ templates. Proof in \cref{app:exp:dtrc}.
-
-\begin{proposition}[Separating the mixture targets]\status{proved; computed}\src{experiments Prop E8; E10}\label{prop:exp:mixsep}
-Let $T_i\neq T_j$ both be PA-mix targets (Q1--Q7, $T_{\Ind}$, $U_{\mathrm{add0}}$, $U_{\mathrm{mul0}}$, $U_{\mathrm{0add}}$) or both ZF-mix targets ($\Ext$, $\Pair$, $\Union$, $\Pow$, $\Inf$, $\Found$, $T_{\Sep}$, $\ReplS$, $T_{\EInd}$), and $a\in\inst(T_i)\setminus\inst(T_j)$, $b\in\inst(T_j)\setminus\inst(T_i)$. Then every member of $\Min_F(\{a,b\})$ has a form in \cref{tab:exp:cases} and the false instance shown there.
-\end{proposition}
-
-\begin{table}[t]
-\centering\small
-\begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{4.3cm}l@{}}
-\toprule
-case & target pairs & members of $\Min_F(\{a,b\})$ & false instance\\
-\midrule
-A & root clash. PA: Q$_i$--$T_{\Ind}$, Q$_i$--$U$, $T_{\Ind}$--$U$ (31 pairs); ZF: $\Inf$--any, $T_{\EInd}$--any (15) & $P$ & $\bot$\\
-B & clash below a common $\forall$-prefix. PA: Q$_i$--Q$_j$ (21); ZF: the other 17 pairs among $\Ext,\Pair,\Union,\Pow,\Found,T_{\Sep},\ReplS$ & $\forall x\,P(x)$ or $\forall x\forall y\,P(x,y)$ & $\forall\bar x\,\bot$\\
-C & comprehension clash. ZF: $\Union$--$\Pow$, $\Union$--$T_{\Sep}$, $\Pow$--$T_{\Sep}$ & $\forall x\exists y\forall z\,(z\in y\leftrightarrow P(z,x))$ & $P:=\neg z\in z$\\
-D & ZF: $\Found$--$\ReplS$ & $\forall x\,(A(x)\to\exists y\,B(y,x))$ & $A:=\top$, $B:=\bot$\\
-E & PA: two of $U_{\mathrm{add0}},U_{\mathrm{mul0}},U_{\mathrm{0add}}$ (3) & $z_0=z_1$, $z_0=0$, or $z_0+z_1=R$ & $1=0$; $S(r)+0=r$\\
-\bottomrule
-\end{tabularx}
-\caption{Minimal covering templates of cross pairs of mixture targets (\cref{prop:exp:mixsep}). In case E, $z_0,z_1$ occur only where shown, $R$ is built from the common prefix of the two substituted terms, and $r$ is $R$ with all metavariables set to $0$. Russell's instance in C fails at $z:=y$.}
-\label{tab:exp:cases}
-\end{table}
-
-\begin{proof}[Proof idea]
-In cases A--D the targets differ at a position above all their metavariables (in B possibly an F-slot), and agree rigidly elsewhere. A slot where two data have different root symbols derives only nodes with the same pair of root symbols (\cref{lem:exp:heads}), so the only normal configuration has an own metavariable at each slot. In case E derivation between the closed term slots would need identical columns, which do not occur. Details in \cref{app:exp:dtrc}.
-\end{proof}
+For the mixtures, (H4) holds with an ideal refuter: every minimal covering template of a cross pair of mixture targets has one of five shapes, each with a false instance such as $\bot$, $\forall\bar x\,\bot$, Russell's instance or $1=0$ (\cref{prop:exp:mixsep}, \cref{tab:exp:cases}); a computed check (E10) of $9100$ random pairs found this in every case.
 
 \begin{corollary}[Separation of the mixtures]\status{proved}\src{experiments Cors E8.2, E8.3}\label{cor:exp:mixsep}
-With an ideal refuter, (S) holds iff every member of $\Min_F(\{a,b\})$ is refuted for all cross pairs $a\in D_i$, $b\in D_j$. Hence (S), and with it \cref{thm:exp:dtrc}, holds for PA-mix and ZF-mix data in which no datum instantiates two targets; $0+0=0$ is the only sentence that does.
+With an ideal refuter, \textup{(H4)} holds iff every member of $\Min_F(\{a,b\})$ is refuted for all cross pairs $a\in D_i$, $b\in D_j$. Hence \textup{(H4)}, and with it \cref{thm:exp:dtrc}, holds for PA-mix and ZF-mix data in which no datum instantiates two targets; $0+0=0$ is the only sentence that does.
 \end{corollary}
-
-\begin{proof}
-``Only if'' is the case $|A|=|B|=1$; ``if'' follows from \cref{prop:exp:mono}(a) with $\{a,b\}\subseteq A\cup B$. Then apply \cref{prop:exp:mixsep}; disjointness is read off its proof.
-\end{proof}
-
-A computed check (E10) of $9100$ random data pairs found the predicted shape and a certified false instance in every case.
 
 % ---------------------------------------------------------------------
 \subsection{Results}\label{sec:exp:results}
 
-\paragraph{E1: universal axioms (Q1).}
-On six universal axioms ($2000$ runs each) the $\DTF$ verifier and the first-order $\lgg$ became exact at the same $N$ in every run. For the five one-variable axioms the mean $N$ was $3.27$ (predicted $3.25$, mixed regime) and $8.42$ (predicted $8.11$, numerals); these rows share seeds and form one sample, in which $8.42$ is $1.85$ standard errors off, and the referee's $200\,000$-run simulation gives $8.117$. Details and curves are in \cref{sec:univ} \src{experiments E1}.
+\paragraph{Universal axioms (Question~1; E1).}
+On six universal axioms ($2000$ runs each) the $\DTF$ verifier and the first-order $\lgg$ became exact at the same $N$ in every run. For the five one-variable axioms the mean $N$ was $3.27$ (predicted $3.25$, mixed regime) and $8.42$ (predicted $8.11$, numerals); these rows share seeds and form one sample, in which $8.42$ is $1.85$ standard errors off, and the referee's $200\,000$-run simulation gives $8.117$. \Cref{fig:exp:e1} shows the curves, and \cref{sec:univ:rates} discusses the numbers \src{experiments E1}.
 
-\paragraph{E2: each schema from tagged instances (Q2).}
-\Cref{tab:exp:e2} gives exactness. No learner is exact from one instance: a datum is covered by itself as a ground template. Probes ($N=2$ and $6$, $8$ seeds): the $\DTF$ learner accepted $0$ non-instances in $927$ probes. Both pattern $\lgg$s accepted none on the three ZF schemas; on induction $224$ of $229$ probes at $N=2$ were non-instances, $58$ of them refuted (genuine; formula-level $213/220$, $46$), in line with the prior result that pattern anti-unification generalizes induction data to $(A\wedge\forall x(P(x)\to Q(x)))\to\forall xP(x)$, which has false instances (\cref{sec:zf}) \src{prior induction C9}. First-order $\lgg$s were unsound on Separation (capture of the comprehension variable), Replacement and induction in both encodings, and on $\in$-induction in the named encoding; on $\in$-induction in de Bruijn indices, a first-order pattern there (\cref{sec:zf}), they were sound and complete ($0$ non-instances in $182$ probes). An exhibit certified false: $\forall x\exists y\forall z\,(z\in y\leftrightarrow z\in x\wedge\neg w_0\in y)$ (Separation, both encodings). More in \cref{app:exp:numbers}.
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.42\textwidth]{figures/e1_anchor_cdf.png}
+\caption{E1: probability that the $\DTF$ learner is exact after $N$ instances of $x+0=x$, observed ($2000$ runs) and predicted by \cref{thm:univ:rates}(a) and \cref{prop:exp:numerals}, mixed and numerals-only regimes \src{experiments E1}.}
+\label{fig:exp:e1}
+\end{figure}
+
+\paragraph{Single schemas from tagged instances (Question~2; E2).}
+\Cref{tab:exp:e2} gives exactness; no learner is exact from one instance, since a datum covers itself as a ground template. In probes ($N=2$ and $6$, $8$ seeds) the $\DTF$ learner accepted $0$ non-instances in $927$. Both pattern $\lgg$s accepted none on the ZF schemas, but on induction $224$ of $229$ probes at $N=2$ were non-instances, $58$ of them refuted (genuine; formula-level $213/220$, $46$), as \cref{prop:zf:indpat} predicts \src{prior induction C9}. First-order $\lgg$s were unsound (exhibits in \cref{app:exp:numbers}) on Separation (capture of the comprehension variable), Replacement and induction in both encodings, and on $\in$-induction in the named encoding; in de Bruijn indices, where $\in$-induction is a first-order pattern (\cref{thm:zf:classify}), they were sound and complete on it ($0$ non-instances in $182$ probes). On Replacement the false instances come from the image consequent of $\expReplE$; for $\ReplS$ the named first-order $\lgg$ is truth-sound (\cref{prop:zf:coll} and the remark after it).
 
 \begin{table}[t]
 \centering\small
@@ -167,19 +101,19 @@ On six universal axioms ($2000$ runs each) the $\DTF$ verifier and the first-ord
 schema & plain & +refutation & genuine & formula-level & named & de Bruijn\\
 \midrule
 $T_{\Sep}$ & 23/27/30 & 23/27/30 & 23/27/30 & 23/27/30 & 25/28/30 & 25/28/30\\
-$\ReplS$ & 23/24/30 & 23/24/30 & 23/24/30 & 23/24/30 & 28/28/30 & 28/28/30\\
+$\expReplE$ & 23/24/30 & 23/24/30 & 23/24/30 & 23/24/30 & 28/28/30 & 28/28/30\\
 $T_{\EInd}$ & 27/29/30 & 27/29/30 & 24/29/30 & 27/29/30 & 24/29/30 & 24/29/30\\
 $T_{\Ind}$ & 25/30/30 & 27/30/30 & 0/0/0 & 0/0/0 & 25/30/30 & 25/30/30\\
 \bottomrule
 \end{tabular}
-\caption{E2: runs out of $30$ at $N=2/3/8$ tagged instances. For first-order $\lgg$s only completeness (all $30$ held-out instances accepted) is shown; their soundness fails (text) \src{experiments E2}.}
+\caption{E2: runs out of $30$ at $N=2/3/8$ tagged instances. For first-order $\lgg$s only completeness (all $30$ held-out instances accepted) is shown; their soundness fails except on $\in$-induction in de Bruijn indices (text) \src{experiments E2}.}
 \label{tab:exp:e2}
 \end{table}
 
-The ZF schemas, Miller patterns in de Bruijn form (\cref{sec:zf}), are learned from $2$--$3$ instances by $\DTF$ and by the genuine pattern $\lgg$, which is slightly later on $\in$-induction because it keeps atoms that $\DTF$ lifts to formula metavariables. The first record's claim that the pattern $\lgg$ equals $\DTF$ on the ZF schemas was an artifact of the formula-level baseline and is withdrawn \src{referee F6}.
+The ZF schemas, Miller patterns in de Bruijn form, are learned in most runs from $2$--$3$ instances (in every run by $N=8$) by $\DTF$ and by the genuine pattern $\lgg$, which is slightly later on $\in$-induction because it keeps atoms that $\DTF$ lifts to formula metavariables. (An earlier claim that the pattern $\lgg$ equals $\DTF$ on the ZF schemas rested on the formula-level baseline and is withdrawn; \cref{app:ver}.)
 
-\paragraph{E3: \DTRC{} on untagged mixtures (Q3).}
-\Cref{tab:exp:e3} gives totals over seeds $0$--$4$ for PA-mix with numerals. $T_{\Ind}$ is exact for every learner in every seed, $U_{\mathrm{mul0}}$ in seeds $1$--$4$ (seed $0$ has no $0\cdot0=0$). The first four learners of the table differ only on $U_{\mathrm{add0}}$ and $U_{\mathrm{0add}}$; seed $3$ has no $0+0=0$ and hence no anchor of either. In the mixed regime \DTRC{} is exact on $19/20$ schema targets, \DTRC{}+share and both tagged learners on $20/20$; skeleton clustering gets $17/20$ with $197$ non-target probes. On ZF-mix, \DTRC{}, skeleton clustering and both tagged learners have ARI $1$, all $15$ schema targets and $30$ axioms exact, and no non-target probe; the pattern $\lgg$ is also exact, the first-order $\lgg$s give $223$ (named) and $128$ (de Bruijn) non-target probes. A \DTRC{} run took at most $0.8$\,s (PA) or $6$\,s (ZF) \src{experiments E3}.
+\paragraph{Untagged mixtures (Question~3; E3).}
+Totals over seeds $0$--$4$ for PA-mix with numerals are in \cref{tab:exp:e3}. $T_{\Ind}$ is exact for \DTRC{}, \DTRC{}+share and both tagged learners in every seed (the pattern $\lgg$ never is), $U_{\mathrm{mul0}}$ in seeds $1$--$4$ (seed $0$ has no $0\cdot0=0$); these four learners differ only on $U_{\mathrm{add0}}$ and $U_{\mathrm{0add}}$, and seed $3$ has no $0+0=0$, hence no anchor of either. In the mixed regime \DTRC{} is exact on $19/20$ schema targets, the other three on $20/20$. On ZF-mix, \DTRC{}, skeleton clustering and both tagged learners have ARI $1$, all $15$ schema targets and $30$ axioms exact, and no non-target probe; the pattern $\lgg$ is also exact, and the first-order $\lgg$s give $223$ (named) and $128$ (de Bruijn) non-target probes \src{experiments E3}.
 
 \begin{table}[t]
 \centering\small
@@ -201,82 +135,37 @@ pattern $\lgg$ per tag & -- & 8/20 & -- & 453/500 & 221 / 99 / 33\\
 \label{tab:exp:e3}
 \end{table}
 
-Reading. \DTRC{} recovers the labels in every run. Its exactness differs from the gold-labelled learner's only through the ambiguous $0+0=0$ (the totals coincide, with different targets exact); with sharing it matches the membership-labelled learner target by target and seed by seed, as \cref{prop:exp:share} predicts. With numerals the instance schemas are often not exact for any learner: $n$ numerals form an anchor with probability $1-(7/8)^n$ (\cref{prop:exp:numerals}). The first record's headline $54/55$ and $45/45$ counted ground axioms ($35$ and $30$ of them) \src{referee F4}. Skeleton clustering with the true $k$ is unsound on PA (it lumps Q4 and Q6 into $\forall x\,P(x)$) and perfect on ZF, whose targets have distinct skeletons.
+Reading. \DTRC{} recovers the labels in every run, and its exactness differs from the gold-labelled learner's only through the ambiguous $0+0=0$ (equal totals, different targets exact). With sharing it matches the membership-labelled learner target by target and seed by seed, consistently with \cref{prop:exp:share}: in every run each target with data labels a cluster of the agglomeration and (H5) holds (computed), and the proposition predicts the agreement where exactness comes from an anchor (in general it needs (H-ref), which the implemented refuter lacks). With numerals the instance schemas are often not exact for any learner: $n$ numerals uniform in $0..7$ form an anchor with probability $1-(7/8)^n-(1/8)^n$ (\cref{prop:exp:numerals}). Skeleton clustering with the true $k$ is unsound on PA (it lumps Q5 and Q7 into $\forall x\forall y\,P(x,y)$, in one run also Q4 and Q6 into $\forall x\,P(x)$, and data of $U_{\mathrm{add0}}$ and $U_{\mathrm{0add}}$ into templates such as $z_0+z_1=SSz_2$) and perfect on ZF, whose targets have distinct skeletons.
 
-\paragraph{E5: examples to exactness.}
-Streams are drawn i.i.d.\ from a mixture (PA: each Q axiom $0.02$, induction $0.50$, $U_{\mathrm{add0}}$ $0.16$, $U_{\mathrm{mul0}}$ $0.12$, $U_{\mathrm{0add}}$ $0.08$; ZF: each axiom $0.03$, Separation $0.30$, Replacement $0.27$, $\in$-induction $0.25$); see \cref{fig:exp:e5}. \DTRC{}+share coincides with the membership-labelled tagged learner in every stream, in the means and in the first $N$ from which each target stays exact, per target and seed. All differences between \DTRC{} and the gold-labelled learner concern $U_{\mathrm{add0}}$, $U_{\mathrm{0add}}$ and come from $0+0=0$. The curves are dominated by the first appearance of each ground axiom; the schemas are exact after $5$--$20$ examples \src{experiments E5; referee R9}.
+\paragraph{Learning curves (E5).}
+Streams are drawn i.i.d.\ from a mixture of all targets (weights and curves in \cref{app:exp:numbers}, \cref{fig:exp:e5}). \DTRC{}+share coincides with the membership-labelled tagged learner in every stream, per target and seed, in the means and in the first $N$ from which a target stays exact. All differences between \DTRC{} and the gold-labelled learner concern $U_{\mathrm{add0}}$, $U_{\mathrm{0add}}$ and come from $0+0=0$. $T_{\Ind}$, Separation, Replacement and $\in$-induction are exact after $5$--$20$ examples; with numerals the instance schemas are exact only after their $0$-instance appears (for \DTRC{} on $U_{\mathrm{0add}}$, beyond $120$ examples in four of five streams) \src{experiments E5; referee R9}.
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\textwidth]{figures/e5_curves.png}
-\caption{E5: targets learned exactly after $N$ examples, mean over seeds $0$--$4$ (rows of one stream share seeds). Left: PA, numerals ($11$ targets); middle: PA, mixed regime; right: ZF ($9$ targets) \src{experiments E5}.}
-\label{fig:exp:e5}
-\end{figure}
+\paragraph{The $k$-union verifier; why $\DTF$ (E6, E7).}
+Without clustering, the cautious $k$-union verifier on $\Q$ plus induction follows the slot accounting of \cref{thm:many:slots} (counts in \cref{app:exp:numbers}): with refutation negatives, $k=8$ learns induction from the anchor pair $\Ind(x=x),\Ind(\neg x=0)$, and $k=9$ from three instances but not from these two. With third motive $\exists y\,x<y$ this matches the theory; with third motive $x+0=x$ it does not: the block $\{\Ind(x=x),\Ind(x+0=x)\}$ is root-homogeneous, and the $\DT$ template $(f(0)=0\wedge\forall x(f(x)=x\to f(Sx)=Sx))\to\forall x\,f(x)=x$ covers it, has only true instances and misses $\Ind(x\cdot0=0)$; it is not in $\DTF$, so here the implemented class accepts more than $\DT$ would. No false non-instance was accepted \src{experiments E6; prior pa-untagged}. For pairs of mixture data, full $\DT$ gives up to $64$ (PA) and $32$ (ZF) minimal templates and $3$ timeouts on ZF pairs, $\DTF$ at most $4$ and $8$ (cf.\ \cref{prop:single:blowup}) \src{experiments E7}.
 
-\paragraph{E6 and E7.}
-\emph{The $k$-union verifier on $\Q$ plus induction, without clustering.} Without negatives, $k=8$ and $k=9$ accept $0/8$ held-out induction instances: one slot $\forall x\,P(x)$ takes all of $\Q$, and each induction datum gets its own slot. With refutation negatives, $k=8$ accepts $8/8$ from the anchor pair alone; $k=9$ accepts $0/8$ from two induction instances (the spare slot keeps them apart) and $8/8$ from three. No false non-instance was accepted. This reproduces the prior untagged result (\cref{sec:many}) \src{experiments E6; prior pa-untagged}. \emph{Why $\DTF$.} Over all pairs of mixture data, full $\DT$ gives up to $64$ (PA) and $32$ (ZF) minimal templates and $3$ timeouts (over $2$\,s) on ZF pairs; $\DTF$ gives at most $4$ and $8$, consistent with the exponential lower bound of \cref{sec:single} \src{experiments E7}.
+\paragraph{Separation evidence (E9).}
+At budget $80$ every cross merge on the mixtures is refuted ($2200$ PA and $540$ ZF pair merges; all counts in \cref{tab:exp:e9}, \cref{app:exp:numbers}), but the thousands of merges reduce to $15$ (PA) and $5$ (ZF) distinct templates, refuted by trivial instances (such as $1=0$, $1+0=0$, $\forall\bar x\,\bot$, $\top\to\bot$) or a comprehension instance. That is \cref{prop:exp:mixsep}, not evidence of separation between \emph{similar} targets \src{referee F3}. The \emph{near-miss} and \emph{hard} sets (\cref{app:exp:stress}) contain similar targets, such as $z+0=z$ and $z+1=Sz$, or $\in$-induction and $\in$-induction along $z\in y\in x$ ($\mathrm{EInd2}$). On PA, $7$ of $1080$ pair merges stay unrefuted, all valid, e.g.\ $n+z=S^nz$ from $n+0=n$ and $n+1=\num{n+1}$ (\cref{lem:exp:valid}), so no world-based refuter separates them.
 
-\paragraph{E9: refutation separation, and how narrow the evidence is.}
-\Cref{tab:exp:e9} tests cross merges at budget $80$. On the mixtures every merge is refuted, but the thousands of merges reduce to $15$ (PA) and $5$ (ZF) distinct templates, refuted by trivial instances (such as $1=0$, $1+0=0$, $\forall\bar x\,\bot$, $\top\to\bot$) or a comprehension instance in the first two passes. That is \cref{prop:exp:mixsep}, and no evidence of separation between \emph{similar} targets \src{referee F3}. The \emph{PA near-miss} set adds $z+1=Sz$, $z\cdot1=z$, the nested $z+0+0=z+0$ and two reorderings of induction; its unrefuted merges are valid, e.g.\ $n+z=S^nz$ from $n+0=n$ and $n+1=\num{n+1}$ (\cref{lem:exp:valid}), so no world-based refuter separates them. The \emph{hard ZF} set has $T_{\Sep}$, Separation from $\bigcup a$, $\ReplS$, Collection, $T_{\EInd}$, $\in$-induction along $z\in y\in x$ ($\mathrm{EInd2}$), the minimal-element schema, and the bounding forms $\mathrm{Union}_W$, $\mathrm{Power}_W$ of \cref{sec:many}.
+Two hard ZF pairs mark the limits (\cref{prop:exp:hard}). $\mathrm{Union}_W$ and $\mathrm{Power}_W$ have the universal-set schema (with a binary metavariable) as unique minimal covering template; the ZF oracle refutes it, but no oracle sound for $\HF$ plus a universal element does (\cref{prop:many:univset}). A merge of $\in$-induction with $\mathrm{EInd2}$ is typically false and is refuted only with constant propagation ($10$ of $12$ random merges with it, $0$ without; E9b); the hard set's unrefuted merges ($1$ of $432$ pairs, $2$ of $432$ sets, all of this kind) are false and are refuted at budget $400$. Some other merges of that pair are valid, as is Separation with Separation from $\bigcup a$ on the body $x\in a$, so (H4) fails for these pairs in general.
 
-\begin{table}[t]
-\centering\small
-\begin{tabular}{@{}lcccc@{}}
-\toprule
-targets & merges & refuted & distinct minimal templates & distinct unrefuted\\
-\midrule
-PA-mix & 2200 / 2200 & 2200 / 2200 & 15 / 13 & 0 / 0\\
-ZF-mix & 540 / 540 & 540 / 540 & 5 / 5 & 0 / 0\\
-PA near-miss & 1080 / 1080 & 1073 / 1080 & 61 / 36 & 5 / 0\\
-ZF near-miss & 225 / 225 & 225 / 225 & 5 / 5 & 0 / 0\\
-ZF hard & 432 / 432 & 431 / 430 & 14 / 15 & 1 / 2\\
-\bottomrule
-\end{tabular}
-\caption{E9: cross-target merges, pairs of single data / sets of one or two data per target; data instantiating both targets excluded; budget $80$ \src{experiments E9}.}
-\label{tab:exp:e9}
-\end{table}
+\paragraph{Stress tests (E4).}
+\emph{(a) Near-miss targets} (the near-miss sets of E9; 3 seeds). On ZF all $6$ targets are exact in every seed. On PA the three forms of induction are always separated, $z+0+0=z+0$ merges into $z+0=z$, and in seed $0$ data of $z+0=z$ and $z+1=Sz$ merge into $5+z=S^5z$ and $4+z=S^4z$; every accepted template of a mixed cluster is valid (\cref{lem:exp:valid}).
 
-\begin{proposition}[Two hard ZF pairs]\status{proved; computed}\src{experiments Prop E9; E9, E9b}\label{prop:exp:hard}
-\textup{(a)} The unique minimal covering template of $\mathrm{Union}_W=\forall a\exists b\forall x\,(\exists y(y\in a\wedge x\in y)\to x\in b)$ and $\mathrm{Power}_W=\forall a\exists b\forall x\,(\forall y(y\in x\to y\in a)\to x\in b)$ is the universal-set schema $U=\forall a\exists b\forall x\,(P(x,a)\to x\in b)$. The ZF oracle refutes its instance $P:=\top$, whereas no oracle sound for $\HF$ plus a universal element refutes any instance (\cref{sec:many}).
-\textup{(b)} Let $\mathrm{EInd2}(\psi)=\forall x\,(\forall y{\in}x\,\forall z{\in}y\,\psi(z)\to\psi(x))\to\forall x\,\psi(x)$. When the motives' root symbols differ, the $\in$-induction motive does not begin with $\forall$, and some motive uses its variable (the most frequent case), the minimal template of an $\EInd$ datum and an $\mathrm{EInd2}$ datum is $T_{EE}=(\forall x(\forall y(y\in x\to P_0(y))\to P_1(x)))\to\forall x\,P_1(x)$, which is false. Other merges of this pair are valid, and some false ones are refuted only at budget $400$.
-\end{proposition}
-
-\begin{proof}[Proof idea]
-(a) After simplification the instance is $\exists b\forall x\,(x\in b)$; the only case for $b$ is a fresh generic $G$, and $x:=G$ fails because $G\in G$ is false: generics obey Foundation. (b) $P_0:=\bot$, $P_1(x):=\forall z\,\neg z\in x$ give the true premise $\forall x\,(x=\emptyset\to x=\emptyset)$ and a conclusion that fails at $\{\emptyset\}$. Details in \cref{app:exp:stress}.
-\end{proof}
-
-Constant propagation is needed for (b): without it $\forall y\,(y\in x\to\bot)$ and $\forall z\,\neg z\in x$ are different unknown leaves, and $0$ of $12$ random $\EInd/\mathrm{EInd2}$ merges are refuted, against $10$ of $12$ with it (E9b). The one survivor in E9 is false but is refuted only at budget $400$. Valid merges also occur ($\EInd(x=x)$ with $\mathrm{EInd2}(x=x)$; Separation with Separation from $\bigcup a$ on the body $x\in a$), so (S) fails for these pairs in general.
-
-\paragraph{E4: stress sets.}
-\emph{(a) Near-miss targets} (3 seeds; the PA set of E9, and on ZF Separation, its conjunct-swapped form, $\ReplS$, $T_{\EInd}$, $\Found$ and the minimal-element schema). On ZF all $6$ targets are exact in every seed. On PA the three forms of induction are always separated, $z+0+0=z+0$ merges into $z+0=z$, and in seed $0$ data of $z+0=z$ and $z+1=Sz$ merge into $5+z=S^5z$ and $4+z=S^4z$; every accepted template of a mixed cluster is valid (\cref{lem:exp:valid}).
-
-\emph{(b) Injected mistakes.} PA: $8$ mistakes (induction-like sentences with a wrong step $\varphi(x)\to\varphi(x)$, a wrong base $\varphi(S0)$, or the true conclusion $\forall x\,\varphi(Sx)$; and $n+0=0$) and $3$ true non-targets. ZF: $6$ mistakes (Separation with the comprehension variable free in the body, $\forall x(\varphi\to\varphi)\to\forall x\varphi$, complement comprehension). Clean targets stay exact (PA $11/11$ mixed and $9$--$10/11$ numerals, ZF $9/9$). Refuted mistakes are discarded; the others become singletons or merge. Every mixed cluster was checked with a post-hoc refuter and by hand (\cref{app:exp:numbers}).
+\emph{(b) Injected mistakes.} PA: $8$ mistakes (induction-like sentences with a wrong step $\varphi(x)\to\varphi(x)$, a wrong base $\varphi(S0)$, or the true conclusion $\forall x\,\varphi(Sx)$; and $n+0=0$) and $3$ true non-targets. ZF: $6$ mistakes, $5$ of them distinct (Separation with the comprehension variable free in the body, $\forall x(\varphi\to\varphi)\to\forall x\varphi$, and complement comprehension, which occurs twice). Clean targets stay exact (PA $11/11$ mixed and $9$--$10/11$ numerals, ZF $9/9$). Refuted mistakes are discarded; the others become singletons or merge. Every mixed cluster was checked with a post-hoc refuter and by hand (\cref{tab:exp:e4}).
 
 \begin{proposition}[A false sentence is accepted]\status{proved; computed}\src{experiments Prop E10; referee F1, R15}\label{prop:exp:qF}
-In E4(b), PA-mix seed $0$, both regimes, the wrong-step and the $\forall x\,\varphi(Sx)$ mistakes merge at refuter budgets $80$ and $400$ into a cluster whose only accepted template is
+In the stress test with injected mistakes, PA-mix seed $0$, both regimes, the wrong-step and the $\forall x\,\varphi(Sx)$ mistakes merge at refuter budgets $80$ and $400$ into a cluster whose only accepted template is
 \begin{multline*}T_F=\bigl(\exists x(P_0(x,0)\wedge\neg P_1(x,0))\wedge\forall x\bigl(\exists y(P_0(y,x)\wedge\neg P_1(y,x))\to\exists y(y<Sx\wedge\neg P_1(y,Sx))\bigr)\bigr)\\\to\forall x\,\exists y\,(y<Sx\wedge\neg P_1(y,Sx)).\end{multline*}
-Its instance $q_F$ with $P_0(y,x):=(x=0)$ and $P_1(y,z):=(z=2)$,
-\begin{multline*}q_F=\bigl(\exists x(0=0\wedge\neg\,0=2)\wedge\forall x\bigl(\exists y(x=0\wedge\neg\,x=2)\to\exists y(y<Sx\wedge\neg\,Sx=2)\bigr)\bigr)\\\to\forall x\,\exists y\,(y<Sx\wedge\neg\,Sx=2),\end{multline*}
-is false in $\N$ and an instance of no PA-mix target. \DTRC{} accepts $q_F$ at budgets $80$ and $400$, not at $2000$.
+Its instance $q_F$ with $P_0(y,x):=(x=0)$ and $P_1(y,z):=(z=2)$ is false in $\N$ and an instance of no PA-mix target. \textup{\DTRC{}} accepts $q_F$ at budgets $80$ and $400$, not at $2000$.
 \end{proposition}
 
 \begin{proof}
-The first premise is true. The second is true: at $x=0$ take $y=0$, since $1\neq2$; at $x\ge1$ its antecedent is false. The conclusion fails at $x=1$. The rest is computed (E4(b); recheck R15).
+The first premise of $q_F$, $\exists x(0=0\wedge\neg\,0=2)$, is true. The second, $\forall x(\exists y(x=0\wedge\neg\,x=2)\to\exists y(y<Sx\wedge\neg\,Sx=2))$, is true: at $x=0$ take $y=0$, since $1\neq2$; at $x\ge1$ its antecedent is false. The conclusion $\forall x\,\exists y\,(y<Sx\wedge\neg\,Sx=2)$ fails at $x=1$. The rest is computed (E4(b); recheck R15).
 \end{proof}
 
-Refuting $q_F$ needs a case split on $x=0$ for the $\Pi_1$ premise: the first record's oracle returns unknown, the revised one False, but the refuter does not reach $q_F$ within $400$ tries, and the probes, which never sampled $q_F$, reported ``$0$ refuted''. The first record's claim that PA mistakes merge only into valid templates is withdrawn; the referee found this exhibit. So \emph{with mistakes in the data, \DTRC{}'s union is not truth-sound even in arithmetic}, and \emph{probe counts are lower bounds on unsoundness}. The other false templates met (two induction-step templates and five Separation-capture templates, all at budget $80$) disappear at budget $400$, and at $2000$ no false merge remains; the remaining residual merges are valid:
-
-\begin{lemma}[Valid residual templates]\status{proved}\src{experiments Lemma V}\label{lem:exp:valid}
-Every instance of the following is true in $\N$ (1--4) or $V$ (5): (1)~$S^n0+z=S^nz$; (2)~$z+1=Sz$, $z+0=z$, $0+z=z$; (3)~$(\alpha\wedge\dots)\to\dots$ with first conjunct $\alpha$ one of $z<0$, $0=Sz$, $\exists x(x<t\wedge\dots)$ for $t\in\{0,0+0,0\cdot0\}$; (4)~$(P(0)\wedge\forall x(P(x)\to P(Sx)))\to\forall x\,P(Sx)$; (5)~$\forall x(P(x)\to x=x)\to\forall x(x=x)$ and $\forall x(\forall y(y\in x\to P(y))\to x=x)\to\forall x(x=x)$.
-\end{lemma}
-
-\begin{proof}
-(1) $n+t=S^nt$. (2) True schemas. (3) $\alpha$ is false. (4) Induction gives $\forall x\,P(x)$. (5) The conclusion is true.
-\end{proof}
-
-\emph{(c) Unequal frequencies} (PA: induction $60$, $U_{\mathrm{add0}}$ $20$, $U_{\mathrm{mul0}}$ $3$, $U_{\mathrm{0add}}$ $1$; ZF: Separation $30$, Replacement $4$, $\in$-induction $1$; 3 seeds). Induction and Separation are exact in $3/3$, Replacement and $U_{\mathrm{mul0}}$ in $2/3$, $U_{\mathrm{add0}}$ in $1/3$ ($2/3$ with sharing; $0+0=0$ is its only anchor). Targets with one instance are never generalized. No non-target probe \src{experiments E4}.
+The current oracle refutes $q_F$ by a case split on $x=0$ for the $\Pi_1$ premise (an earlier version returned unknown), but the refuter does not reach $q_F$ within $400$ tries, and the probes, which never sampled it, reported ``$0$ refuted''. So \emph{with mistakes in the data, the union asserted by \textup{\DTRC{}} is not truth-sound even in arithmetic}, and \emph{probe counts are lower bounds on unsoundness}. The other false templates met (two induction-step templates and five Separation-capture templates, all at budget $80$; \cref{app:exp:stress}) disappear at budget $400$, and at $2000$ no false merge remains; the remaining residual merges are valid (\cref{lem:exp:valid}).
 
 % ---------------------------------------------------------------------
 \subsection{Limitations}\label{sec:exp:limits}
 
-(1)~Budgeted refutation can accept false sentences (\cref{prop:exp:qF}); whether a natural refuter refutes every false minimal template of a cross pair within a budget polynomial in the data is open. (2)~Valid residual merges cannot be separated by any world-based method; \DTRC{} is then truth-sound, not target-sound (\cref{sec:many}). (3)~The sharing pass needs (S$^+$) and (P); a guarantee without (P) is open. (4)~The oracles construct no witnesses. (5)~A one-instance target is never generalized, and an unrefuted singleton mistake looks like a ground axiom. (6)~$\DTF$ excludes positive-arity term metavariables, and the feature test of \cref{sec:single} is not implemented. (7)~Without (S) the partition can depend on the merge order. (8)~Separation is proved for the mixtures only; characterizing it for similar targets is open. (9)~Scale: pure Python, about ten minutes for all experiments.
+(1)~Budgeted refutation can accept false sentences (\cref{prop:exp:qF}). (2)~No world-based method separates valid residual merges; \DTRC{} is then truth-sound, not target-sound (\cref{lem:setting:onesided}(a), \cref{thm:many:residue}(b)). (3)~The sharing pass needs (H4$^+$) and (H5), and helps only targets that label a cluster of the agglomeration (\cref{ex:exp:share}). (4)~The oracles construct no witnesses. (5)~A one-instance target is never generalized (E4(c), with unequal frequencies: \cref{app:exp:numbers}), and an unrefuted singleton mistake looks like a ground axiom. (6)~$\DTF$ lacks positive-arity term metavariables, so it can accept more than $\DT$ (E6); the feature test of \cref{thm:single:feat} is not implemented. (7)~Without (H4) the partition can depend on the merge order. (8)~Separation is proved for the mixtures only. (9)~Scale: pure Python, about ten minutes for all experiments. Open problems: \cref{sec:disc:open}.

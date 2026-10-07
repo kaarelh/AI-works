@@ -14,22 +14,26 @@
 %       second-order-referee.md (A1, C8.3)
 %   Parent report (claude2026whatfollows): def:setting:protocol, def:setting:soundness,
 %       lem:imitation:cautious, thm:imitation:anchor, thm:caution:vs, lem:setting:recover, lem:setting:guard.
+%   research/paper-review (review of the paper draft): the restriction of prop:setting:align and
+%       rem:setting:alignfail (scratch/align_cex.py, align_cex2.py).
 % Definitions carry \src only (they claim nothing); every claim carries \status and \src.
+% Moved to app-setting.tex in the length revision: lem:setting:renaming (statement and proof), the
+%   literature note on matching, the proof of lem:setting:closed.
 % =====================================================================
 
 
-This section fixes the data format, templates and their classes, matching, the learning protocol with the cautious verifier and anchors, refutation oracles, and the running examples. The learning framework is that of the report \citet{claude2026whatfollows}, called \emph{the parent report} below; we restate what we use from it. Technical definitions and longer proofs are in \cref{app:setting}.
+This section fixes the framework of the three questions. The learning framework is that of \citet{claude2026whatfollows}, \emph{the parent report}; the unpublished follow-up analysis of PA induction (\cref{sec:intro}) is \emph{the earlier analysis}; we restate what we use from both. The rest of the paper relies on three facts: matching in $\DT$ is unique and linear (\cref{thm:setting:matching}); the cautious verifier is sound iff the target is closed in the class, and exact iff the data contain an anchor (\cref{lem:setting:closed}); and refutation is one-sided (\cref{lem:setting:onesided}). \Cref{tab:setting:glossary} lists the named conditions of the paper; \cref{app:setting} has the technical definitions and longer proofs.
 
 % ---------------------------------------------------------------------
 \subsection{Data in closure-normal form}\label{sec:setting:syntax}
 
-We use two first-order languages: arithmetic $L_A=\{0,S,+,\cdot,=,<\}$ and set theory $L_\in=\{\in,=\}$, with connectives $\neg,\wedge,\vee,\to,\leftrightarrow$ and quantifiers $\forall,\exists$; bounded quantifiers such as $\forall y{<}t\,\varphi$ and $\exists y{\in}t\,\varphi$ are abbreviations. The general results hold for every first-order signature; where a result needs a richness assumption it says so.
+We use arithmetic $L_A=\{0,S,+,\cdot,=,<\}$ and set theory $L_\in=\{\in,=\}$, with $\neg,\wedge,\vee,\to,\leftrightarrow,\forall,\exists$; bounded quantifiers are abbreviations. The general results hold for every first-order signature, with a richness assumption where stated.
 
 \paragraph{Closure-normal form.}
-Formulas may contain \emph{parameters} $a,b,c,p,q,w_0,w_1,\dots$, an infinite supply of extra constants. A \emph{datum} is a formula whose free variables are parameters, read under its universal closure (\emph{closure-normal form}). This removes the outer prefix of variable length that schema instances with parameters carry: a Separation instance $\forall\bar w\,\forall z\exists y\forall x\,(x\in y\leftrightarrow x\in z\wedge\varphi(x,z,\bar w))$ becomes $\forall z\exists y\forall x\,(x\in y\leftrightarrow x\in z\wedge\varphi(x,z,\bar w))$ with parameters $\bar w$, so all instances share one frame. The quantifiers of the frame stay; in particular, \emph{leading universal quantifiers are not stripped}. Thus $\forall x\,(x+0=x)$ and $p+0=p$ are different data: their closures are equivalent, but only the second is an instance of the instance schema $z+0=z$ (\cref{sec:univ}).
+Formulas may contain \emph{parameters} $a,b,c,p,q,w_0,w_1,\dots$, an infinite supply of extra constants. A \emph{datum} is a formula whose free variables are parameters, read under its universal closure. This removes the outer prefix of variable length that schema instances carry ($\forall\bar w$ in a Separation instance $\forall\bar w\,\forall z\exists y\forall x\,(x\in y\leftrightarrow x\in z\wedge\varphi(x,z,\bar w))$), so all instances share one frame. The frame's quantifiers stay; in particular, \emph{leading universal quantifiers are not stripped}: $\forall x\,(x+0=x)$ and $p+0=p$ are different data with equivalent closures, and only the second is an instance of the instance schema $z+0=z$ (\cref{sec:univ}).
 
 \paragraph{Bound variables.}
-In the theory and the code, bound variables are de Bruijn indices \citep{debruijn1972lambda}: at a position with $b$ binders above it, index $k<b$ refers to the $(k{+}1)$-th binder going up, and $k\ge b$ is \emph{free}. So formulas are equal iff they are $\alpha$-equivalent. In the text we write named variables. A \emph{sentence} has no free index; parameters are allowed. Positions $p$ (with prefix order $p\le q$ and incomparability $p\perp q$), subtrees $u|_p$, the number $b(p)$ of binders above $p$, free indices $\FV(u)$ and shifting are defined in \cref{app:setting:debruijn}. The \emph{root symbol} of a term or formula is its head symbol (an index, or a hole $z_m$, counts as its own symbol).
+In the theory and the code, bound variables are de Bruijn indices \citep{debruijn1972lambda}; in the text we write named variables. A \emph{sentence} has no free index (parameters are allowed). Positions $p$ (prefix order $p\le q$, incomparability $p\perp q$), subtrees $u|_p$, the number $b(p)$ of binders above $p$, free indices $\FV(u)$ and shifting are defined in \cref{app:setting:debruijn}. The \emph{root symbol} of a term or formula is its head symbol (an index, or a hole $z_m$, counts as its own symbol).
 
 % ---------------------------------------------------------------------
 \subsection{Templates and four classes}\label{sec:setting:templates}
@@ -37,15 +41,7 @@ In the theory and the code, bound variables are de Bruijn indices \citep{debruij
 \begin{definition}[Bodies, templates, classes]\src{brief \S3; single \S1; cases \S1}\label{def:setting:template}
 A \emph{body} of type $\iota^n\to s$ ($s\in\{\iota,o\}$) is $\lambda z_1\dots z_n.\beta$ with $\beta$ an object term ($s=\iota$) or formula ($s=o$) that has no free indices but may contain \emph{holes} $z_1,\dots,z_n$ (leaves of sort $\iota$), parameters and binders. \emph{Plugging} $\beta[u_1,\dots,u_n]$ replaces each $z_m$ by $u_m$, with the free indices of $u_m$ shifted by the binders of $\beta$ above that hole.
 
-A \emph{metavariable} $M$ has type $\iota^n\to o$ (\emph{formula metavariable}: $P,Q,F,\dots$) or $\iota^n\to\iota$ (\emph{term metavariable}: $f,g,\dots$; $z$ if $0$-ary). A \emph{template} $T$ is built like a sentence, except that at a position of sort $s$ there may be an \emph{occurrence} $M(t_1,\dots,t_n)$ of some $M:\iota^n\to s$, whose arguments $t_i$ are \emph{metavariable-free} terms (they may contain indices bound above the occurrence, and parameters). $\Occ(T)$ is the set of occurrence positions; it is an antichain. The \emph{rigid skeleton} $\mathrm{skel}(T)$ is the set of the other positions outside argument lists. An occurrence is a \emph{pattern occurrence} if its arguments are pairwise distinct bound variables (for $n=0$: always). A template without metavariables is \emph{ground}, i.e.\ a single sentence. The classes are:
-\begin{itemize}
-\item $\SO$: all such templates (rigid occurrences, metavariable-free arguments);
-\item $\DT$ (\emph{determinate templates}): every metavariable has at least one pattern occurrence; other occurrences may have any metavariable-free arguments, e.g.\ $P(0)$, $P(Sx)$;
-\item $\DTF$: members of $\DT$ whose term metavariables are $0$-ary (the class implemented, \cref{sec:exp});
-\item $\PAT$ (higher-order \emph{pattern templates} \citep{miller1991logic}): every occurrence is a pattern occurrence;
-\item $\FO$ (\emph{first-order patterns}): every metavariable is $0$-ary.
-\end{itemize}
-So $\FO\subseteq\PAT\subseteq\DT\subseteq\SO$ and $\FO\subseteq\DTF\subseteq\DT$.
+A \emph{metavariable} $M$ has type $\iota^n\to o$ (\emph{formula metavariable}: $P,Q,F,\dots$) or $\iota^n\to\iota$ (\emph{term metavariable}: $f,g,\dots$; $z$ if $0$-ary). A \emph{template} $T$ is built like a sentence, except that at a position of sort $s$ there may be an \emph{occurrence} $M(t_1,\dots,t_n)$ of some $M:\iota^n\to s$, whose arguments $t_i$ are \emph{metavariable-free} terms (they may contain indices bound above the occurrence, and parameters). $\Occ(T)$ is the set of occurrence positions; it is an antichain. The \emph{rigid skeleton} $\mathrm{skel}(T)$ is the set of the other positions outside argument lists. An occurrence is a \emph{pattern occurrence} if its arguments are pairwise distinct bound variables (for $n=0$: always). A template without metavariables is \emph{ground}, i.e.\ a single sentence. The classes are: $\SO$, all such templates (rigid occurrences, metavariable-free arguments); $\DT$, the \emph{determinate templates}, in which every metavariable has at least one pattern occurrence, while other occurrences may have any metavariable-free arguments, e.g.\ $P(0)$, $P(Sx)$; $\DTF$, the members of $\DT$ whose term metavariables are $0$-ary (the class implemented, \cref{sec:exp}); $\PAT$, the higher-order \emph{pattern templates} \citep{miller1991logic}, in which every occurrence is a pattern occurrence; and $\FO$, the \emph{first-order patterns}, in which every metavariable is $0$-ary. So $\FO\subseteq\PAT\subseteq\DT\subseteq\SO$ and $\FO\subseteq\DTF\subseteq\DT$.
 \end{definition}
 
 Since bodies have no free indices and their own binders are de Bruijn binders, plugging cannot capture: in named notation, values of metavariables are closed $\lambda$-terms whose only free names are parameters. We call this the \emph{$\lambda$ convention}; it is the default.
@@ -73,27 +69,10 @@ $f(S0)+f(0)=f(S0)$ & --- & no & no & no & yes\\
 \end{table}
 
 \begin{example}[The four classes]\status{proved}\src{single Cor D.3; cases A2$'$; prior induction C1}\label{ex:setting:classes}
-See \cref{tab:setting:classes}.
-(1)~The instance schema $z+0=z$ of $\forall x\,(x+0=x)$ is a first-order pattern; under the $\lambda$ convention its instances are $t+0=t$ for terms $t$ over $L_A$ and parameters, e.g.\ $S0+0=S0$ and $p+0=p$.
-(2)~$T_{\Sep}$ is Separation in the form of \citet{kunen1980set} (wording recalled, not re-checked against the book; \cref{sec:zf}). Its one occurrence $P(x,z)$ is a pattern occurrence, so $T_{\Sep}\in\PAT\setminus\FO$. The side condition ``$y$ not free in $\varphi$'' is built in: a body for $P$ has no free variables but holes and parameters, and $y$ is not an argument.
-(3)~In $T_{\Ind}$ the two occurrences $P(x)$ are pattern occurrences, while $P(0)$ and $P(Sx)$ are not. So $T_{\Ind}\in\DTF\setminus\PAT$: induction is not a Miller pattern.
-(4)~$f(S0)+f(0)=f(S0)$, with $f:\iota\to\iota$, has no pattern occurrence. It covers $0+0=0$ ($f:=\lambda h.0$) and $S0+0=S0$ ($f:=\lambda h.h$), but not $SS0+0=SS0$: a body with $\beta[0]=0$ is $h$ or $0$, so $\beta[S0]\in\{S0,0\}$. These two data anchor $z+0=z$ in $\DT$ (\cref{sec:univ}), but not in $\SO$. Matching is ambiguous in $\SO$, too: $P(0)$, with $P:\iota\to o$, matches a sentence with $k$ occurrences of $0$ in $2^k$ ways.
+See \cref{tab:setting:classes}. (1)~The instances of $z+0=z$ are $t+0=t$ for terms $t$ over $L_A$ and parameters. (2)~$T_{\Sep}$ is Separation as in \citet{kunen1980set} (wording recalled, not re-checked against the book). Its occurrence $P(x,z)$ is a pattern occurrence, so $T_{\Sep}\in\PAT\setminus\FO$. The side condition ``$y$ not free in $\varphi$'' is built in: a body for $P$ has no free variables but holes and parameters, and $y$ is not an argument. (3)~In $T_{\Ind}$ the occurrences $P(x)$ are pattern occurrences, $P(0)$ and $P(Sx)$ are not: $T_{\Ind}\in\DTF\setminus\PAT$. (4)~$f(S0)+f(0)=f(S0)$ has no pattern occurrence. It covers $0+0=0$ ($f:=\lambda h.0$) and $S0+0=S0$ ($f:=\lambda h.h$), but not $SS0+0=SS0$: a body with $\beta[0]=0$ is $h$ or $0$, so $\beta[S0]\in\{S0,0\}$. These two data anchor $z+0=z$ in $\DT$ (\cref{prop:univ:dt}; anchors: \cref{def:setting:protocol}), but not in $\SO$.
 \end{example}
 
-Arguments must be metavariable-free. With metavariables inside arguments (class $\mathrm{DT}$ of the prior session, e.g.\ $M(F(x))$) the set of minimal covering templates can be infinite, and the prior enumeration-based learner was unsound for such a target (\cref{rem:setting:nested}). In $\DT$ it is finite (\cref{sec:single}).
-
-% ---------------------------------------------------------------------
-\subsection{First-order encodings, capture and guards}\label{sec:setting:fo}
-
-Classical anti-unification works on first-order trees, where a metavariable is a leaf that any subtree may replace. Under binders this differs from the $\lambda$ convention. Besides the template encoding ($\lambda$) we therefore use two \emph{first-order encodings}, compared in \cref{sec:univ,sec:zf}. In the \emph{named} encoding (N), variables are names (constants of the tree signature) and binders are nodes $\mathrm{all}(x,\cdot)$; in the \emph{de Bruijn} encoding (dB), bound variables are indices treated as constants, and only well-formed results count. A \emph{first-order schema} is a tree with metavariables at some positions, and in (N) and (dB) its instances may \emph{capture}: a value may mention a variable bound by the frame. For example, $\exists y\neg(y=z)$ has the capture instance $\exists y\neg(y=y)$, false in every structure, and the unguarded first-order form $\forall z\exists y\forall x(x\in y\leftrightarrow x\in z\wedge A)$ of Separation has Russell's instance $A:=\neg(x\in y)$ \src{cases A4$'$, D1}. Side conditions are therefore expressed by \emph{guards}, decidable predicates of the values from a fixed family, such as $\mathrm{fresh}(v,A)$ ($v$ not free in the value of $A$), $\mathrm{loose}(A)\subseteq I$ (in (dB)), $\mathrm{closed}(z)$ and $\mathrm{nocap}(z)$. The \emph{most-specific-guard rule} of the parent report (its lem:setting:guard) keeps every guard of the family that holds on all data; one datum that violates a guard deletes it.
-
-For first-order trees every finite nonempty $D$ has a \emph{least general generalization} $\lgg(D)$, unique up to renaming: the common prefix of the data, with one metavariable per distinct disagreement column \citep{plotkin1970note,reynolds1970transformational}.
-
-\begin{lemma}[When the lgg recovers a schema]\status{known}\src{parent lem:setting:recover}\label{lem:setting:recover}
-Let $\sigma$ be a first-order schema and $D=\{\sigma\theta_1,\dots,\sigma\theta_N\}$. Then $\lgg(D)\preceq\sigma$, and $\lgg(D)\equiv\sigma$ iff \evR{} for each metavariable $z$ of $\sigma$ the roots of $\theta_1(z),\dots,\theta_N(z)$ are not all equal, and \evD{} for distinct metavariables $z\neq z'$ some $j$ has $\theta_j(z)\neq\theta_j(z')$.
-\end{lemma}
-
-\Cref{sec:single} gives the analogue for $\DT$: \evR{} becomes root variation at every occurrence, \evRs{}; \evD{} becomes the no-coincidence event \evU{}; and a third event \evN{} (every argument place is used) appears.
+Arguments must be metavariable-free: with metavariables inside arguments, as in $M(F(x))$ (the class $\mathrm{DT}$ of the earlier analysis), the set of minimal covering templates can be infinite, and the earlier enumeration-based learner was unsound (\cref{rem:setting:nested}); in $\DT$ it is finite (\cref{thm:single:min}).
 
 % ---------------------------------------------------------------------
 \subsection{Matching}\label{sec:setting:matching}
@@ -106,44 +85,36 @@ Let $T\in\SO$ and let $\theta$ be a substitution or a template substitution. If 
 Let $T\in\DT$ and let $s$ be a sentence.
 \begin{enumerate}[label=(\alph*)]
 \item At most one substitution $\theta$ satisfies $T\theta=s$.
-\item The following decides $s\in\inst(T)$ and returns $\theta$ in time $O(|T|+|s|)$ (unit-cost index arithmetic): walk $\mathrm{skel}(T)$ against $s$, failing on a clash; for each metavariable $M$ pick a pattern occurrence $M(y_1,\dots,y_n)$ at $p$ and set $\theta(M):=\lambda\bar z.(s|_p)[z_m/y_m]$, failing if $s|_p$ has a free index outside $\{y_1,\dots,y_n\}$; check every other occurrence $M(\bar t)$ at $q$ by comparing $s|_q$ with $\theta(M)[\bar t]$ lazily.
+\item The following decides $s\in\inst(T)$ and returns $\theta$ in time $O(|T|+|s|)$ (unit-cost index arithmetic): walk $\mathrm{skel}(T)$ against $s$; read each $M$ off one pattern occurrence $M(\bar y)$ at $p$ as $\theta(M):=\lambda\bar z.(s|_p)[z_m/y_m]$, failing if $s|_p$ has another free index; check the other occurrences $M(\bar t)$ at $q$ by comparing $s|_q$ with $\theta(M)[\bar t]$ lazily.
 \item For $T,T'\in\DT$: $T\gen T'$ iff $\mathrm{freeze}(T')\in\inst(T)$, where $\mathrm{freeze}$ turns each metavariable of $T'$ into a fresh rigid symbol of the same type. So generality is decidable in linear time.
 \item For $T\in\SO$, membership $s\in\inst(T)$ is decidable in polynomial time, but there can be $2^{\Omega(|s|)}$ matchers.
 \end{enumerate}
 \end{theorem}
 
 \begin{proof}[Proof idea]
-At a pattern occurrence $M(\bar y)$ at $p$, \cref{lem:setting:preservation} gives $s|_p=\theta(M)[\bar y]$; as the $y_m$ are distinct indices and $\theta(M)$ has no free indices, $\theta(M)=\lambda\bar z.(s|_p)[z_m/y_m]$ is forced. The rest of (b) is evaluation, and it is linear because occurrence positions form an antichain, so the parts of $s$ inspected at different occurrences are disjoint. For (c), $T\sigma=T'$ yields a ground matcher of $\mathrm{freeze}(T')$, and conversely. For (d), distinct metavariables do not interact, and for each a projection/imitation recursion \citep[cf.][]{huet1978proving} decides whether a common body exists; $P(0)$ gives $2^k$ matchers. Full proof and computed checks in \cref{app:setting:matching}.
+At a pattern occurrence, $s|_p=\theta(M)[\bar y]$ (\cref{lem:setting:preservation}) forces $\theta(M)$; the rest is evaluation, linear because occurrence positions form an antichain. (d) is projection/imitation. Details: \cref{app:setting:matching}.
 \end{proof}
-
-Part (a) is the special case of Miller's pattern unification \citep{miller1991logic} with one side ground and each metavariable read off one occurrence. General second-order matching has finitely many matchers \citep{huet1978proving}; its NP-hardness, usually attributed to Baxter's 1977 thesis (not checked by us), needs arguments that contain metavariables, which $\SO$ excludes. Part (d) was proved in the prior session.
-
-\begin{lemma}[Equivalence is renaming]\status{proved}\src{single Lemma R}\label{lem:setting:renaming}
-For $T,T'\in\DT$: $T\equiv T'$ iff $T'$ arises from $T$ by a bijective renaming of metavariables and a permutation of each metavariable's argument places.
-\end{lemma}
-
-The proof (\cref{app:setting:renaming}) shows that a template substitution mapping $T$ to itself fixes every pattern occurrence, hence is the identity.
 
 % ---------------------------------------------------------------------
 \subsection{Protocol, cautious verifier and anchors}\label{sec:setting:learning}
 
 \paragraph{Targets, data, hypotheses.}
-A \emph{target} is a set $R^*$ of sentences, typically $\inst(\sigma)$ or $\bigcup_{i\le k'}\inst(\sigma_i)$ for templates $\sigma_i$. The practice is assumed correct, i.e.\ all data lie in $R^*$ (mistakes: \cref{sec:many}). Data come as a \emph{text} (finite $D_1\subseteq D_2\subseteq\cdots\subseteq R^*$ with union $R^*$) or i.i.d.: each datum picks schema $i$ with probability $\pi_i$, then an instance $\sigma_i\Theta$ with $\Theta\sim\Lambda_i$. \emph{Tagged} data carry the index $i$ (as a proof assistant records the axiom it uses); \emph{untagged} data do not. The hypothesis classes are $\Hk{1}(\mathcal C)=\{\inst(T):T\in\mathcal C\}$; tagged calculi $\Htag{k}(\mathcal C)$, $k$-tuples of templates, one per tag; and $\Hk{k}(\mathcal C)=\{\bigcup_{l\le k}\inst(T_l):T_l\in\mathcal C\}$.
+A \emph{target} is a set $R^*$ of sentences, typically $\inst(\sigma)$ or $\bigcup_{i\le k'}\inst(\sigma_i)$ for templates $\sigma_i$. The practice is assumed correct, i.e.\ all data lie in $R^*$ (mistakes: \cref{prop:many:noise}). Data come as a \emph{text} (finite $D_1\subseteq D_2\subseteq\cdots\subseteq R^*$ with union $R^*$) or i.i.d.: each datum picks schema $i$ with probability $\pi_i$, then an instance $\sigma_i\Theta$ with $\Theta\sim\Lambda_i$. \emph{Tagged} data carry the index $i$ (as a proof assistant records the axiom it uses); \emph{untagged} data do not. The hypothesis classes are $\Hk{1}(\mathcal C)=\{\inst(T):T\in\mathcal C\}$; tagged calculi $\Htag{k}(\mathcal C)$, $k$-tuples of templates, one per tag; and $\Hk{k}(\mathcal C)=\{\bigcup_{l\le k}\inst(T_l):T_l\in\mathcal C\}$.
 
 \begin{definition}[Protocol; cautious verifier; anchors]\src{parent def:setting:protocol, def:caution:vs}\label{def:setting:protocol}
 In rounds $t=1,2,\dots$ a \emph{prover} submits a sentence $q_t$ and the \emph{verifier} answers $\mathsf{ACCEPT}$, $\mathsf{REJECT}$ or $\mathsf{ESCALATE}$; on $\mathsf{ESCALATE}$ an oracle says whether $q_t\in R^*$, and the labelled query joins the evidence. The prover may be randomized, adaptive and computationally unbounded; it knows the target, the verifier's code, the data and the history, but not future data or coins. It models any proof search, the learner's own included. A deterministic verifier is \emph{sound for} $S^\dagger$ if no prover ever gets a sentence outside $S^\dagger$ accepted; \emph{target-sound} if $S^\dagger=R^*$; \emph{truth-sound} if $S^\dagger=\mathrm{Tr}$, the set of data whose closure is true in the intended structure ($\N$, or the universe $V$ of sets, assumed to satisfy $\ZFC$).
-For a class $\mathcal H$, positive evidence $D$ and negative evidence $N$, the \emph{version space} is $\mathrm{VS}(D,N)=\{h\in\mathcal H:D\subseteq h,\ h\cap N=\emptyset\}$. The \emph{version-space verifier} accepts $q$ iff $q\in\bigcap\mathrm{VS}(D,N)$, rejects iff $q\notin\bigcup\mathrm{VS}(D,N)$, and escalates otherwise. Its acceptance set $\Acc_{\mathcal H}(D,N)=\bigcap\mathrm{VS}(D,N)$ (with $\bigcap\emptyset$ = all sentences) is the \emph{cautious verifier}; $\Acc_{\mathcal H}(D)=\Acc_{\mathcal H}(D,\emptyset)$, $\Acc(D)=\Acc_{\Hk{1}(\DT)}(D)$, $\Acc_k(D,N)=\Acc_{\Hk{k}(\DT)}(D,N)$.
+For a class $\mathcal H$, positive evidence $D$ and negative evidence $N$, the \emph{version space} is $\mathrm{VS}(D,N)=\{h\in\mathcal H:D\subseteq h,\ h\cap N=\emptyset\}$. The \emph{version-space verifier} accepts $q$ iff $q\in\bigcap\mathrm{VS}(D,N)$, rejects iff $\mathrm{VS}(D,N)\neq\emptyset$ and $q\notin\bigcup\mathrm{VS}(D,N)$, and escalates otherwise. Its acceptance set $\Acc_{\mathcal H}(D,N)=\bigcap\mathrm{VS}(D,N)$ (with $\bigcap\emptyset$ = all sentences) is the \emph{cautious verifier}; $\Acc_{\mathcal H}(D)=\Acc_{\mathcal H}(D,\emptyset)$, $\Acc(D)=\Acc_{\Hk{1}(\DT)}(D)$, and $\Acc_k(D,N)=\Acc_{\Hk{k}(\DT)}(D,N)$, with version space $\mathrm{VS}_k(D,N)$.
 A finite $A\subseteq h^*$ is an \emph{anchor} for $h^*$ in $\mathcal H$ if every $h\in\mathcal H$ with $A\subseteq h$ contains $h^*$. The \emph{closure} of $h^*$ is $\mathrm{cl}_{\mathcal H}(h^*)=\bigcap\{h\in\mathcal H:h\supseteq h^*\}$; $h^*$ is \emph{$\mathcal H$-closed} if $\mathrm{cl}_{\mathcal H}(h^*)=h^*$.
 \end{definition}
 
-For positive data, $\Acc(D)=\bigcap\{\inst(T):T\in\DT\text{ covers }D\}$. For nonempty $D$, every covering template lies above one of the finitely many minimal ones (\cref{sec:single}), so $\Acc(D)=\bigcap_{T\in\Min(D)}\inst(T)$, and \cref{sec:single} decides membership in polynomial time without listing $\Min(D)$. Two remarks. $\Acc(\emptyset)=\emptyset$, because two distinct ground templates have disjoint instance sets; so $\emptyset$ is never an anchor. And the $0$-ary formula metavariable $P$ has every sentence as an instance, so with positive data nothing is rejected outright; the verifier's cost is its number of escalations (\cref{sec:single}).
+For nonempty positive data every covering template lies above one of finitely many minimal ones (\cref{thm:single:min}(c)), so $\Acc(D)=\bigcap_{T\in\Min(D)}\inst(T)$, decidable in polynomial time (\cref{thm:single:feat,cor:single:poly}). $\Acc(\emptyset)=\emptyset$ (distinct ground templates have disjoint instance sets), so $\emptyset$ is never an anchor. As the $0$-ary formula metavariable $P$ has every sentence as an instance, positive data reject nothing outright; the cost is the number of escalations (\cref{sec:single:esc}).
 
 \begin{theorem}[Caution is sound]\status{known}\src{parent thm:caution:vs}\label{thm:setting:vs}
 \textup{(a)} If $R^*\in\mathcal H$ and the data lie in $R^*$, then $R^*\in\mathrm{VS}(D,N)$ at all times (positive labels lie in $R^*$, negative ones outside), so the version-space verifier is target-sound against every prover at every time.
 \textup{(b)} A deterministic verifier that is sound for every target in $\mathcal H$ accepts, at each history it produces against a target in $\mathcal H$, only sentences in that history's $\bigcap\mathrm{VS}$: the cautious verifier is the most permissive sound one.
 \end{theorem}
 
-Realizability can be weakened to closedness; this is the sense in which soundness is relative to the class.
+The cautious verifier is reliable learning \citep{rivest1988learning}, or perfect selective classification \citep{elyaniv2010foundations}, applied to sentences. Realizability can be weakened to closedness; this is the sense in which soundness is relative to the class.
 
 \begin{lemma}[Sound iff closed]\status{proved}\src{prior induction C6.1; parent thm:imitation:anchor}\label{lem:setting:closed}
 Let $\mathcal H$ be any class of sets of sentences, $h^*$ a target, and $D\subseteq h^*$ finite (positive data only).
@@ -154,52 +125,69 @@ Let $\mathcal H$ be any class of sets of sentences, $h^*$ a target, and $D\subse
 \end{enumerate}
 \end{lemma}
 
-\begin{proof}
-(a) $\mathrm{VS}(D)\supseteq\{h\in\mathcal H:h\supseteq h^*\}$; and a larger $D$ gives a smaller version space. (b) An anchor makes $\mathrm{VS}(D)=\{h\in\mathcal H:h\supseteq h^*\}$. (c) If $\Acc_{\mathcal H}(D)=h^*$, every $h\in\mathrm{VS}(D)$ contains $h^*$, so $D$ is an anchor; the converse is (b). A text eventually contains any finite subset of $h^*$; with monotonicity this gives the rest.
-\end{proof}
-
-For example, PA induction is closed in the size-bounded class $\mathrm{DT}_s$ iff $s\ge12$, two symbols below the size $14$ of $T_{\Ind}$; for $7\le s\le11$ the closure is strictly larger, so on anchor data the verifier accepts a false sentence, whatever further data arrive \src{prior induction C6.2}. Identification in the limit is due to \citet{gold1967language}, with tell-tales characterizing it for indexed families \citep{angluin1980inductive}; up to effectivity, anchors are the $\subseteq$-tell-tales of strong-monotonic learning \citep{lange1992types}. Caution is reliable learning \citep{rivest1988learning} and perfect selective classification \citep{elyaniv2010foundations} applied to sentences. For tagged data the version space factors over tags: $(i,q)$ is accepted iff $q\in\Acc(D^{(i)})$, with $D^{(i)}$ the data of tag $i$. For untagged unions a bound $k$ is unavoidable, since otherwise $\Acc(D)=D$ \citep{gold1967language}; see \cref{sec:many}.
+The proof is in \cref{app:setting:lemmas}. For example, PA induction is closed in the class $\DT_s$ of templates of size at most $s$ iff $s\ge12$ ($|T_{\Ind}|=14$); for $7\le s\le11$ the closure is larger, so on anchor data the verifier accepts a false sentence, whatever further data arrive (\cref{prop:zf:indgen}). For tagged data the version space factors: $(i,q)$ is accepted iff $q\in\Acc(D^{(i)})$, for $D^{(i)}$ the data of tag $i$. For untagged unions a bound $k$ is unavoidable, since otherwise $\Acc(D)=D$ (\cref{prop:many:bound}; \citealp{gold1967language}).
 
 % ---------------------------------------------------------------------
 \subsection{Refutation oracles}\label{sec:setting:refutation}
 
-Positive data never exclude a hypothesis that contains them. The second source of evidence is the \emph{world}: sound but one-sided evidence that a sentence is false.
+Positive data never exclude a hypothesis that contains them. The second source of evidence is the world: sound but one-sided evidence that a sentence is false.
 
 \begin{definition}[Refutation oracle]\src{untagged \S1; parent lem:twotier:onesided}\label{def:setting:oracle}
-A \emph{refutation oracle} is a family $\Ref_0\subseteq\Ref_1\subseteq\cdots$ of sets of data (refuted within budget or depth $d$) with (OS) $\Ref_d\cap\mathrm{Tr}=\emptyset$ for all $d$ (one-sided soundness), and (Dec) membership in $\Ref_d$, and whether $\inst(T)\cap\Ref_d\neq\emptyset$ ($T$ is \emph{$d$-refuted}), are decidable uniformly in $d$ and $(T,d)$. $\Ref_\infty=\bigcup_d\Ref_d$. A fixed finite set of false sentences, used at every $d$, is an oracle; this is how the implementation is read (\cref{sec:exp}).
+A \emph{refutation oracle} is a family $\Ref_0\subseteq\Ref_1\subseteq\cdots$ of sets of data (refuted within budget or depth $d$) with (OS) $\Ref_d\cap\mathrm{Tr}=\emptyset$ for all $d$ (one-sided soundness), and (Dec) membership in $\Ref_d$, and whether $\inst(T)\cap\Ref_d\neq\emptyset$ ($T$ is \emph{$d$-refuted}), are decidable uniformly in $d$ and $(T,d)$. $\Ref_\infty=\bigcup_d\Ref_d$. A fixed finite set of false sentences, used at every $d$, is an oracle; this is how the audited prototype of \cref{sec:many:examples} is read (\cref{prop:many:audit}). \Cref{sec:exp} treats its budgeted, history-dependent refuter directly.
 \end{definition}
 
-The oracles used are sound and none is complete \src{untagged \S1; experiments Prop E2}. \emph{R-$\Delta_0$} instantiates parameters and leading universal quantifiers of an arithmetic sentence by numerals and evaluates within depth $d$ (numeral counterexamples refute $\forall$, numeral witnesses verify $\exists$). \emph{R-HF} gives hereditarily finite counterexamples to $\Pi_1$-shaped set-theoretic sentences, sound by $\Delta_0$-absoluteness. \emph{R-logic} certifies logical falsity by a propositionally unsatisfiable set of ground instances of the Skolem form. \emph{R-coh} (coherence) is R-logic applied to the sentence together with designated true sentences. The implementation's evaluators for $\N$ and $V$ are sound in the same sense (\cref{sec:exp}).
+The oracles used are sound, \emph{target-blind} (their answers are a fixed function of the query) and incomplete \src{untagged \S1; experiments Prop E2}. \emph{R-$\Delta_0$} at depth $d$ instantiates parameters and leading universal quantifiers of an arithmetic sentence of size $\le d$ by numerals $\le d$, refutes $\forall$ (verifies $\exists$) by a numeral $\le d$, and verifies $\forall$ (refutes $\exists$) only by equality reasoning from the true closed equations of $\N$. \emph{R-HF} gives hereditarily finite counterexamples to $\Pi_1$-shaped set-theoretic sentences, sound by $\Delta_0$-absoluteness. \emph{R-logic} certifies logical falsity by a propositionally unsatisfiable set of ground instances of the Skolem form; \emph{R-coh} (coherence) applies it to the sentence together with designated true sentences. The implementation's evaluators are sound in the same sense (\cref{prop:exp:oracle}).
 
 \begin{lemma}[Refutation is one-sided]\status{proved}\src{untagged Lemma 1.1; parent lem:twotier:onesided}\label{lem:setting:onesided}
 Let the oracle satisfy (OS) and $R^*\subseteq\mathrm{Tr}$.
-\textup{(a)} A template $T$ with $\inst(T)\subseteq\mathrm{Tr}$ is never refuted, at any depth; in particular no target instance is. So refutation cannot tell the target from a truth-sound over-generalization, and never certifies that a template is the target.
-\textup{(b)} If $R^*\in\mathcal H$, $D\subseteq R^*$ and $N\subseteq\Ref_\infty$, then $R^*\in\mathrm{VS}(D,N)$, so $\Acc_{\mathcal H}(D,N)\subseteq R^*$: refuted sentences can serve as negatives without loss of target-soundness. $\Acc_{\mathcal H}(D,N)$ is monotone in $D$ and $N$.
+\textup{(a)} A template $T$ with $\inst(T)\subseteq\mathrm{Tr}$ is never refuted, at any depth, as $\Ref_d\cap\mathrm{Tr}=\emptyset$; in particular no target instance is. So refutation cannot tell the target from a truth-sound over-generalization, and never certifies that a template is the target.
+\textup{(b)} If $R^*\in\mathcal H$, $D\subseteq R^*$ and $N\subseteq\Ref_\infty$, then $R^*\in\mathrm{VS}(D,N)$ (as $R^*\subseteq\mathrm{Tr}$ avoids $N$), so $\Acc_{\mathcal H}(D,N)\subseteq R^*$: refuted sentences are safe negatives. $\Acc_{\mathcal H}(D,N)$ is monotone in $D$ and $N$.
 \end{lemma}
 
-\begin{proof}
-(a) $\Ref_d\cap\mathrm{Tr}=\emptyset$. (b) $R^*$ contains $D$ and avoids $N$, since $N\cap\mathrm{Tr}=\emptyset$ and $R^*\subseteq\mathrm{Tr}$. Larger $D$ or $N$ shrink the version space.
-\end{proof}
+Two consequences recur: a false $\forall x\varphi$ with only true closed instances is never refuted by evaluating closed instances (\cref{prop:univ:refute}(a)), and a truth-sound over-generalization, such as a named lgg of spelled-out Replacement, is never exposed (\cref{prop:zf:coll}).
 
-Two consequences recur. A false $\forall x\varphi$ whose closed instances are all true is never refuted by evaluating closed instances (\cref{sec:univ}). And a truth-sound over-generalization is never exposed; the named first-order lgg of spelled-out Replacement data with textbook variable names is one (\cref{sec:zf}).
+\paragraph{First-order baselines.}
+The baseline of \cref{sec:univ,sec:zf} is first-order anti-unification: bound variables are encoded by names (Nm) or de Bruijn indices (dB), instances may capture bound variables, side conditions become guards, and Plotkin's lgg recovers a schema iff the events \evR{} and \evD{} hold. \Cref{sec:setting:fo} gives the definitions and \cref{lem:setting:recover}.
 
 % ---------------------------------------------------------------------
 \subsection{Running examples}\label{sec:setting:examples}
 
 \paragraph{Arithmetic.}
-Robinson's arithmetic $\Q$ \citep{tarski1953undecidable} has the axioms Q1 $\forall x\,\neg(Sx=0)$; Q2 $\forall x\forall y\,(Sx=Sy\to x=y)$; Q3 $\forall x\,(\neg x=0\to\exists y\,x=Sy)$; Q4 $\forall x\,(x+0=x)$; Q5 $\forall x\forall y\,(x+Sy=S(x+y))$; Q6 $\forall x\,(x\cdot0=0)$; Q7 $\forall x\forall y\,(x\cdot Sy=x\cdot y+x)$. Each is a ground template. In closure-normal form an axiom may also be presented with parameters (Q4 as $a+0=a$) or only through closed instances (e.g.\ $\num{3}+0=\num{3}$, instances of $z+0=z$); these are different data sets, and \cref{sec:univ,sec:many,sec:exp} say which they use. $\PA$ is $\Q$ plus
+The axioms of Robinson's arithmetic $\Q$ \citep{tarski1953undecidable}, numbered as throughout the paper, are Q1 $\forall x\,\neg(Sx=0)$; Q2 $\forall x\forall y\,(Sx=Sy\to x=y)$; Q3 $\forall x\,(\neg x=0\to\exists y\,x=Sy)$; Q4 $\forall x\,(x+0=x)$; Q5 $\forall x\forall y\,(x+Sy=S(x+y))$; Q6 $\forall x\,(x\cdot0=0)$; Q7 $\forall x\forall y\,(x\cdot Sy=x\cdot y+x)$. Each is a ground template. In closure-normal form an axiom may also be presented with parameters (Q4 as $a+0=a$) or only through closed instances (e.g.\ $\num{3}+0=\num{3}$, instances of $z+0=z$); these are different data sets, and \cref{sec:univ,sec:many,sec:exp} say which they use (the instance schema of a universal axiom is defined in \cref{def:univ:target}). $\PA$ is $\Q$ plus
 \[\Ind(\varphi)=\bigl(\varphi(0)\wedge\forall x\,(\varphi\to\varphi[Sx/x])\bigr)\to\forall x\,\varphi,\]
-where the motive $\varphi$ has at most $x$ free besides parameters; $\inst(T_{\Ind})$ is the set of these instances ($P:=\lambda x.\varphi$). For example $\Ind(x+0=x)$ is $(0+0=0\wedge\forall x(x+0=x\to Sx+0=Sx))\to\forall x(x+0=x)$. Induction is our main schema outside $\PAT$; \cref{sec:zf} shows that first-order and pattern anti-unification are unsound on it while the $\DT$ learner is exact.
+where the motive $\varphi$ has at most $x$ free besides parameters; $\inst(T_{\Ind})$ is the set of these instances ($P:=\lambda x.\varphi$). It is our main schema outside $\PAT$ (\cref{sec:zf}).
 
 \paragraph{Set theory.}
-The ZFC axioms other than the two schemas ($\Ext$, $\Pair$, $\Union$, $\Pow$, $\Inf$, $\Found$, $\AC$) are single sentences, hence ground templates, each its own anchor; e.g.\ $\Ext$ is $\forall a\forall b(\forall x(x\in a\leftrightarrow x\in b)\to a=b)$, or $\forall x(x\in a\leftrightarrow x\in b)\to a=b$ with parameters. Separation, Replacement and the theorem schemas Collection and $\in$-induction are pattern templates, e.g.\ $T_{\Sep}$ and
-$T_{\EInd}=\forall x\,(\forall y\,(y\in x\to P(y))\to P(x))\to\forall x\,P(x)$.
-\Cref{sec:zf} lists all formulations used \citep{kunen1980set,jech2003set}.
+The ZFC axioms other than the two schemas ($\Ext$, $\Pair$, $\Union$, $\Pow$, $\Inf$, $\Found$, $\AC$) are single sentences, hence ground templates, each its own anchor. Separation, Replacement and the theorem schemas Collection and $\in$-induction are pattern templates, e.g.\ $T_{\Sep}$ and $T_{\EInd}=\forall x\,(\forall y\,(y\in x\to P(y))\to P(x))\to\forall x\,P(x)$; \cref{sec:zf} lists the formulations.
 
-\paragraph{Universal axioms.}
-Let $\varphi(x_1,\dots,x_k)$ be a formula in which each $x_i$ occurs free. Its \emph{instance schema} is $\sigma_\varphi=\varphi[z_1/x_1,\dots,z_k/x_k]$, with $0$-ary term metavariables $z_i$ at the free occurrences of the $x_i$; it is a first-order pattern. Its \emph{closed instances} $\instc(\varphi)=\{\varphi(\bar t):\bar t\text{ closed}\}$ and \emph{open instances} $\insto(\varphi)$ ($\bar t$ may contain parameters) are the two data regimes of \cref{sec:univ}. Under the $\lambda$ convention $\inst(\sigma_\varphi)$ is $\insto(\varphi)$ if parameters are allowed and $\instc(\varphi)$ otherwise; in (N) and (dB) it also contains capture instances $\Cap(\varphi)$ \src{cases \S1.1, A4$'$}.
+\begin{table}[!t]
+\centering\footnotesize\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}p{0.215\textwidth}p{0.575\textwidth}p{0.17\textwidth}@{}}
+\toprule
+name & meaning & defined in\\
+\midrule
+\evR, \evD & Plotkin's events: the values' roots vary; metavariables differ & Lem.~\labelcref{lem:setting:recover}\\
+\evRs, \evN, \evU & root variation per occurrence; non-vacuity; no coincidence & Def.~\labelcref{def:single:events}\\
+(D$^+$), (D$^{\mathrm{PAT}}$), \dots & \evU{} for formula metavariables, resp.\ for several metavariables & Cor.~\labelcref{cor:single:special}, Thm.~\labelcref{thm:zf:multi}\\
+(B) & some induction motive has an unshielded free $x$ & Prop.~\labelcref{prop:zf:indso}\\
+\Rich, (Rich$_{\mathrm c}$) & enough root symbols (true with parameters); enough closed terms & Def.~\labelcref{def:single:events}, \S\labelcref{sec:univ:target}\\
+(S1), (S2) & saturation: argument places used; roots not all equal & \S\labelcref{sec:single:min}\\
+(F) & $\Min(X)$ is finite and below every covering template & Thm.~\labelcref{thm:single:min}, App.~\labelcref{app:setting:align}\\
+anchor, closure, sound & anchors, closed targets, target- and truth-soundness & Def.~\labelcref{def:setting:protocol}\\
+(OS), (Dec) & the oracle is one-sided sound; refutation is decidable & Def.~\labelcref{def:setting:oracle}\\
+$\RS_d(D)$, global sep. & templates covering data (instances) of two targets are refuted & Def.~\labelcref{def:many:dtrc}\\
+cross-separation, (X) & negatives meet templates covering two targets' data (anchor data) & Thms.~\labelcref{thm:many:splits,thm:many:pigeonhole}\\
+anchor-pair separation & the minimal templates of cross pairs of anchor data are refuted & \S\labelcref{sec:many:pigeon}\\
+(Abs) & avoiding templates covering data of $i$ and $j\neq i$ contain $\inst(\sigma_i)$ & Thm.~\labelcref{thm:many:slots}\\
+noise-separated & templates covering a mistake and a clean datum are refuted & Prop.~\labelcref{prop:many:noise}\\
+(H1)--(H5), (H-ref) & implemented-learner hypotheses; history-independent verdicts & Thm.~\labelcref{thm:exp:dtrc}, Prop.~\labelcref{prop:exp:share}\\
+\bottomrule
+\end{tabular}
+\caption{Named conditions used in the paper.}
+\label{tab:setting:glossary}
+\end{table}
 
 % ---------------------------------------------------------------------
 \subsection{Parameters in theory and implementation}\label{sec:setting:params}
 
-The theory treats parameters as constants: $\inst(T)$ is the set of \emph{literal} instances, and a template that mentions a parameter rigidly matches only that parameter. This is sound but not invariant under renaming of parameters; it arises when data share a parameter at the same place \src{single \S13}. The implementation canonicalizes each datum (parameters renamed $w_0,w_1,\dots$ by first occurrence) and matches up to an injective renaming of the template's parameters. For parameter-free templates the two readings agree. For templates with rigid parameters, the minimal covering templates must then be computed over all parameter alignments of the data; \cref{app:setting:align} defines this set $\Min^{\mathrm{al}}(D)$ and proves that it has the properties of $\Min(D)$ (\cref{prop:setting:align}), while the literal $\Min(D)$ can miss them (\cref{ex:setting:align}). The experiments keep leading quantifiers, so their targets are parameter-free, and they use $\Min^{\mathrm{al}}$ throughout (\cref{sec:exp}).
+The theory treats parameters as constants: $\inst(T)$ is the set of \emph{literal} instances, and a template that mentions a parameter rigidly matches only that parameter. This is sound but not invariant under renaming of parameters \src{single \S13}. The implementation canonicalizes each datum (parameters renamed $w_0,w_1,\dots$ by first occurrence) and matches up to injective renaming of the template's parameters, which agrees with the theory for parameter-free templates. Otherwise the minimal covering templates must be computed over all parameter alignments of the data: \cref{app:setting:align} defines this set $\Min^{\mathrm{al}}(D)$ and proves that it has the properties of $\Min(D)$ for templates all of whose parameters occur in their skeleton, in particular for parameter-free targets (\cref{prop:setting:align}), while the literal $\Min(D)$ can miss them (\cref{ex:setting:align}). A parameter that occurs only inside an argument of a non-pattern occurrence is not covered (\cref{rem:setting:alignfail}). The experiments' targets are parameter-free, and they use $\Min^{\mathrm{al}}$ throughout (written $\Min_F$ in \cref{sec:exp}).

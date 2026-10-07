@@ -1,9 +1,10 @@
 \section{Proofs for Section~\ref{sec:zf}}\label{app:zf}
 % Appendix to Section 5: proofs for the ZF schemas and PA induction, and the computational evidence.
 
-This appendix gives the proofs for \Cref{sec:zf}, in the order of that section, and lists the computational evidence
-behind it (\Cref{app:zf:evidence}). Proofs are adapted from the research records named in the source tags and were
-re-checked in transcription.
+This appendix gives the proofs for \Cref{sec:zf}, in the order of that section, the theory of pattern templates with
+several metavariables (\Cref{thm:zf:multi}), two results on induction that the main text summarizes
+(\Cref{prop:zf:indgen,prop:zf:sub}), and the computational evidence (\Cref{app:zf:evidence}). Proofs are adapted from
+the research records named in the source tags and were re-checked in transcription.
 
 \subsection{Preliminaries}\label{app:zf:prelim}
 
@@ -15,7 +16,7 @@ $\mathrm{skel}(T)$ is the set of positions outside metavariable occurrences and 
 \status{proved}\src{prior induction C2(a); single Lemma P}
 Let $T\in\SO$ and $D\subseteq\inst(T)$. Every datum has, at every position of $\mathrm{skel}(T)$, the symbol that $T$
 has there. Hence $\mathrm{skel}(T)\subseteq C(D)$, and every occurrence of a metavariable of $T$ lies in $C(D)$ or is a
-slot of $D$.
+slot of $D$. (This is the $\SO$ form of \Cref{lem:single:basic}(c).)
 \end{lemma}
 \begin{proof}
 In $\SO$ all occurrences are rigid and have metavariable-free arguments, so an instance replaces each occurrence by a
@@ -68,6 +69,28 @@ consequent. $\ReplS$ reads $P(\#1,\#0,\#2)$, $P(\#2,\#0,\#3)$, $P(\#1,\#0,\#3)$.
 $P(\#2,\#0)$, $P(\#0,\#1)$. With $\varphi(x,y)$ only, $\Coll$ reads $P(\#1,\#0)$ twice at depths 3 and 4. There $\#2$ is
 $A$ in the antecedent and $Y$ in the consequent, so the guard $\mathrm{loose}(Z)\subseteq\{\#0,\#1\}$ is needed: without
 it, $Z:=(\#0=\#2)$ reads $y=A$ in the antecedent and $y=Y$ in the consequent, and the instance forces $Y\in Y$.
+
+\begin{table}[t]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}l >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X c@{}}
+\toprule
+schema & named first-order (textbook names) & de Bruijn first-order & named, $\alpha$-varied\\
+\midrule
+$\Sep$ & yes, guard $\mathrm{fresh}(y,Z)$ & yes, guard ``$\#1$ not loose'' (not implied) & yes\\
+$\Sep_{\mathrm J}$ & yes, guards $\mathrm{fresh}(X,Z)$, $\mathrm{fresh}(Y,Z)$ & yes, guard
+  $\mathrm{loose}(Z)\subseteq\{\#0\}$ (not implied) & yes\\
+$\EInd$ & \textbf{no} ($y$ vs.\ $x$) & \textbf{yes}, guard implied by well-formedness & no\\
+$\Coll$, $\ReplU$ & yes, guard $\mathrm{fresh}(Y,Z)$ & \textbf{no} ($A$ is $\#2$ vs.\ $\#3$) & \textbf{no}\\
+$\ReplS$, $\ReplJ$ & no ($y$ vs.\ $u$) & no & no\\
+$\Coll$, $\ReplU$, $\varphi(x,y)$ only & yes, guards $\mathrm{fresh}(Y,Z)$, $\mathrm{fresh}(A,Z)$ & yes, guard
+  $\mathrm{loose}(Z)\subseteq\{\#0,\#1\}$ (not implied) & no\\
+\bottomrule
+\end{tabularx}
+\caption[Which ZF schemas are first-order patterns]{Is the schema a guarded first-order pattern? (By
+\Cref{thm:zf:classify,prop:zf:alpha}; every schema is in $\PAT$.) Without its guard, every guarded entry has a false
+instance (\Cref{prop:zf:false}).}
+\label{tab:zf:classify}
+\end{table}
 
 \begin{proof}[Proof of \Cref{prop:zf:alpha}]
 \src{cases Prop B1$\alpha$} The hypothesis class is first-order schemas over the named signature, with formula
@@ -137,6 +160,19 @@ computed lgg of the two named data, respects its most specific guards, and is no
   $\bot$, $\bot$, each give an instance equivalent to $\forall A\neg\exists x\,x\in A$.
 \end{enumerate}
 
+\paragraph{$\ReplS$, named, non-anchor data} \src{paper review, univzf\_repls\_pair.py; computed}. \Cref{prop:zf:coll} concerns data with
+\evR{} and \zfN{y}. Without \evR, false instances arise when freshness guards are available only for formula
+metavariables, the guard family used throughout \Cref{sec:zf}. The bodies $x\in y$ and $y\in A$ both
+have root $\in$, so the named lgg of $\ReplS(x\in y)$ and $\ReplS(y\in A)$ is
+\[\forall A\,(\forall x\,(x\in A\to\exists y\,(V_0\in V_1\wedge\forall u\,(V_2\in V_3\to u=y)))\to\exists Y\,\forall
+x\,(x\in A\to\exists y\,(y\in Y\wedge V_0\in V_1))),\]
+with term metavariables only, so no such guard is learned. Its instance $V_0:=Y$, $V_1:=y$, $V_2:=V_3:=u$ has $Y$ free
+in the antecedent, i.e.\ a parameter there, and $y\in Y\wedge Y\in y$ in the consequent. At $A=\{\emptyset\}$ and
+$Y=\emptyset$ the antecedent holds ($y:=\{\emptyset\}$; no set satisfies $u\in u$), while the consequent needs $y\in
+Y'\in y$, which contradicts Foundation; so the instance is false and refutable in ZF. If freshness guards were also
+learned for term metavariables ($\mathrm{fresh}(Y,V_0)$ holds on these data), this instance would be excluded; we have
+not analysed that guard family.
+
 \begin{lemma}[Deep leaf]\label{lem:zf:deepleaf}
 \status{proved}\src{cases Lemma C1}
 Let $s$ be a sentence of $L_\in$, $\ell$ a variable leaf of $s$, and $\tau$ a first-order schema with
@@ -189,8 +225,11 @@ consequent containing $\ell$. Above the slot, $v:=\bot$ turns the consequent int
 x\bot$, or $\exists Y\forall x(x\in A\to\bot)$ (that is, ``$A$ is empty''); inside the slot (including the conjunction and
 the atom $x\in A$), make the slot false. In each case the consequent is false for $A\ne\emptyset$, so
 $\forall A(\text{true}\to\text{false for nonempty }A)$ is false. Uniqueness: in de Bruijn the slot's atom $x\in A$
-reads $\#1\in\#3$, while the frame atoms read $\#0\in\#2$ (consequent) and $\#1\in\#2$ (antecedent). The argument tuple
-$(\#1,\#0,\#3)$ (resp.\ that of $\ReplS$'s third occurrence) differs from the others.
+reads $\#1\in\#3$, while the frame atoms read $\#0\in\#1$ (antecedent) and $\#0\in\#2$ (consequent), and the slot atom
+$x\in A$ of the other occurrences reads $\#1\in\#2$ (antecedent occurrence) and, for $\ReplS$, $\#2\in\#3$ (uniqueness
+occurrence). Every path subterm inside the slot contains the atom $\#1\in\#3$, and every path subterm above it contains
+the slot; so all are unique. The argument tuple $(\#1,\#0,\#3)$ (resp.\ that of $\ReplS$'s third occurrence) differs
+from the others.
 
 (iv) $\Coll$, $\ReplU$, $\ReplS$, named under $\alpha$-variation. The same $\varphi_n$, with $s_n$ an $\alpha$-variant
 of the instance in which all frame binders have distinct names. The designated leaf is the $y$ of the atom $y=x$ in the
@@ -271,6 +310,47 @@ another root. If \zfN{i} fails, replace each $P(\bar a_k)$ by $P'(\bar a_k$ with
 and misses $T^*[P:=\lambda\bar z.(z_i=z_i)]$.
 \end{proof}
 
+\paragraph{Several metavariables.} ZF needs one metavariable, but untagged mixtures behave like templates with several
+(\Cref{sec:many}). Then a Plotkin-(D)-type event appears, and it depends on the class. Let $T^*$ be a pattern template
+over $L_\in$ with a metavariable-free, parameter-free frame, metavariables $P,Q,\dots$ (arities $n_P,n_Q,\dots$),
+every occurrence a pattern occurrence, and data $D_j=T^*[P:=\lambda\bar z.\varphi_{P,j},\dots]$. Let \zfR{P} and
+\zfN{P,i} be \evR{} and \zfN{i} for the bodies of $P$. For a map $\pi:[n_P]\to[n_Q]\cup\mathrm{Par}$, let
+$\varphi\circ\pi$ replace each hole $z_i$ by $z_{\pi(i)}$ (or by the parameter $\pi(i)$). The events are:
+\zfDpat{PQ}: no bijection $\pi$ has $\varphi_{Q,j}=\varphi_{P,j}\circ\pi$ for all $j$;
+\zfDdt{P\to Q}: no map $\pi$ has this property;
+\zfDroot{PQ}: some $j$ has $\mathrm{root}(\varphi_{P,j})\ne\mathrm{root}(\varphi_{Q,j})$.
+Then \zfDroot{PQ} implies \zfDdt{P\to Q}, which implies \zfDpat{PQ}. Under \zfN{P,i} for all $P,i$, \zfDdt{P\to Q}
+for all ordered pairs is the event (D$^+$) of \Cref{cor:single:special}(b): a map $\bar u$ from the variables at an
+occurrence $P(\bar a)$ to terms at an occurrence $Q(\bar b)$ with $\varphi_{Q,j}[\bar b]=(\varphi_{P,j}[\bar a])[\bar
+u]$ for all $j$ sends every $a_i$, which occurs by \zfN{P,i}, to some $b_{i'}$ or a parameter, and so is a map $\pi$;
+conversely every such $\pi$ gives such a $\bar u$. So the $\DT$ case of \Cref{thm:zf:multi} is also a case of \Cref{thm:single:anchor}.
+
+\begin{theorem}[Several metavariables]\label{thm:zf:multi}
+\status{proved}\src{cases Thm E$'$}
+Assume \zfR{P} and all \zfN{P,i}, for every metavariable $P$. Then $D$ is an anchor in $\PAT$ iff \zfDpat{PQ} holds
+for all $P\ne Q$. It is an anchor in $\DT$ iff \zfDdt{P\to Q} holds for all ordered pairs. In $\SO$, \zfDroot{} for
+all pairs implies that $D$ is an anchor, which implies \zfDdt{} for all ordered pairs; the second implication cannot
+be reversed. Without \zfR{P} or \zfN{P,i}, $D$ is an anchor in no class between $\PAT$ and $\SO$.
+\end{theorem}
+The proof of \Cref{thm:zf:anchor} works once each slot of $M$'s first occurrence faces a slot of the \emph{same}
+metavariable at every other occurrence. If it faces a $Q$-slot instead, there is a fixed argument map from $P$'s
+bodies to $Q$'s (\Cref{lem:zf:facing}), which the events exclude. Conversely, a violating map lets one rewrite every
+$Q(\bar b)$ as an occurrence of $P$.
+
+The three classes differ. Take $T_B:=\forall x\forall y(P(x,y)\to Q(x))$ with bodies $(x\in y,x\in x)$ and
+$(\neg x=y,\neg x=x)$. Pattern anti-unification returns $T_B$, but $\forall x\forall y(P(x,y)\to P(x,x))\in\DT$ covers
+the data and misses $\forall x\forall y(x\in y\to\neg x=x)$. Take $T_A:=\forall x\forall y(P(x,y)\to Q(x,y))$ with
+bodies $(x\in y,y\in x)$ and $(\neg x=y,\neg x=x)$. Here $D$ is a $\DT$ anchor, but $\forall x\forall y(G(x,y,x)\to
+G(x,x,y))\in\SO$ covers it and misses the same sentence. So, unlike the one-metavariable case, $\SO$ and $\DT$ anchors
+differ even over $L_\in$: a metavariable without a pattern occurrence may choose different arguments on different
+data. Whether \zfDroot{} is necessary in $\SO$ is open; the bounded searches of \Cref{app:zf:evidence} suggest:
+
+\begin{conjecture}\label{conj:zf:root}
+\status{conjecture}\src{cases \S2.9, \S6}
+\zfDroot{} is not necessary for anchors in $\SO$: some data satisfying \zfR{P}, all \zfN{P,i} and all \zfDdt{P\to Q}
+but violating \zfDroot{PQ} for some pair are anchors in $\SO$.
+\end{conjecture}
+
 \begin{lemma}[Facing]\label{lem:zf:facing}
 \status{proved}\src{cases Thm E$'$}
 In the setting of \Cref{thm:zf:multi}, let $T\in\SO$ cover $D$, let $M$ be a metavariable of $T$ with occurrences
@@ -316,7 +396,7 @@ the $P$- and $Q$-bodies have different roots. So $D$ is not an anchor in $\PAT$ 
 \zfDdt{P\to Q} fails via $\pi$, the same construction with arguments $b_{\pi(i)}$ or the parameter $\pi(i)$ gives
 $T'\in\DT$ ($P$ keeps its pattern occurrences, and the new occurrences have metavariable-free arguments), which covers $D$
 and misses the same instances. In (c), an $\SO$ anchor is a $\DT$ anchor, hence satisfies \zfDdt{} by (b).
-Non-reversibility is the example $T_A$ of \Cref{sec:zf:pattern}. There \zfDpat{} and \zfDdt{} hold: the only map fitting
+Non-reversibility is the example $T_A$ above. There \zfDpat{} and \zfDdt{} hold: the only map fitting
 the first datum is the swap, which fails on the second. The template $\forall x\forall y(G(x,y,x)\to G(x,x,y))$ covers
 the data with $G:=\lambda h_1h_2h_3.\,h_3\in h_2$, resp.\ $\lambda h_1h_2h_3.\neg h_1=h_2$. It misses $\forall x\forall
 y(x\in y\to\neg x=x)$, because a body with $\beta[x,y,x]=(x\in y)$ is $h_1\in h_2$ or $h_3\in h_2$, so that
@@ -374,8 +454,8 @@ $g_M(S0)=Sx$, while $\forall x(g_M(0)=x)$ fails at $1$. It is refuted in $\Q$ fr
 $g_M(S0)=S(g_M(0))$, which $\Q$ proves by $\Sigma_1$-completeness, and $\neg(g_M(0)=S0)$. Assume $g_M(0)=x$; by
 congruence and transitivity $g_M(S0)=Sx$. Discharging and generalizing gives the step clause, modus ponens gives
 $\forall x(g_M(0)=x)$, and instantiating at $S0$ contradicts $\neg(g_M(0)=S0)$.
-Now a schema covering $\Ind(\varphi_n)$ and $\Ind(\varphi_m)$ is $\gen L_n$ and contains $I^*_n$. A union of $k$ sound
-schemas covering $k+1$ members of $F'$ would put two of them into one schema. If a finite union $\bigcup\inst(\tau_l)$
+Now a schema covering $\Ind(\varphi_n)$ and $\Ind(\varphi_m)$ is $\gen L_n$ and contains $I^*_n$. A union of $k$
+truth-sound schemas covering $k+1$ members of $F'$ would put two of them into one schema. If a finite union $\bigcup\inst(\tau_l)$
 contained $F'$, some $\tau_l$ would cover two members of $F'$ and hence contain the false, $\Q$-refutable sentence
 $I^*_n$; so no such union lies between $F'$ and $\Th(\N)$, or between $F'$ and a consistent extension of $\Q$. The
 motives of $F'$ are atomic, so the same holds for open induction.
@@ -387,6 +467,9 @@ $I^*_n$.
 
 \begin{proof}[Proof of \Cref{thm:zf:K0}]
 \src{prior induction referee R1}
+Idea: for each instance that is not trivially true, a convergent rewrite system over the numerals and a new constant
+$g$ gives an algebra containing $\N$ in which the step clause fails at $g$; amalgamating these algebras over $\N$ gives
+a model of all instances and all true closed quantifier-free sentences. In detail:
 In a sentence instance, $z_1:=t$ is closed (it occurs outside the binder) and $z_2:=u$ has $\FV(u)\subseteq\{x\}$.
 Let $k$ be the value of $t$, and let $\hat u(g)$ be $u$ with $x$ replaced by a new constant $g$ and each maximal closed
 subterm replaced by its numeral.
@@ -422,9 +505,8 @@ with standard bounds then range over standard elements, so $\Delta_0$ truth is p
 
 \begin{proof}[Proof of \Cref{thm:zf:indanchor}]
 \src{prior induction C3}
-We write the proof for parameter-free motives, as in the prior record. (With parameters, the statement for $\DT$ is the
-one-formula-metavariable case of the general anchor theorem of \Cref{sec:single}, \src{single Cor D.3}; we also checked
-that the steps below go through unchanged.)
+We write the proof for parameter-free motives, as in the earlier analysis. (With parameters, the statement for $\DT$
+is \Cref{cor:single:special}(c) \src{single Cor D.3}; we also checked that the steps below go through unchanged.)
 \emph{``If''.} Fix $\varphi^\circ\in D$ with $x$ free \evN{} and let $T\in\DT$ cover $D$.
 \emph{Step 1.} By \evR{} and fact (i) the four motive slots have different roots in different data, so by
 \Cref{lem:zf:rigid} $\mathrm{skel}(T)$ is a prefix of the five-node frame. The occurrences of $T$ sit at some of the
@@ -452,6 +534,21 @@ $\Ind(\varphi)$ with root $f$ (because $\varphi[0/x]$ has root $f$), and misses 
 $\Ind(x=x)$. These witnesses lie in $\DT_s$ for every $s\ge7$.
 \end{proof}
 
+The following result is summarized after \Cref{thm:zf:indanchor}; sizes are as defined there.
+
+\begin{proposition}[Generalizations, lgg, size threshold]\label{prop:zf:indgen}
+\status{proved}\src{prior induction C4, C6.2}
+(a) Up to renaming, exactly 26 templates of $\DT$ contain $\inst(T_{\Ind})$. Each takes a prefix of the frame, puts
+fresh metavariables at the cut slots, and partitions the motive slots present, where $P(0)$ and $P(Sx)$ join a class
+only together with a $P(x)$ slot. For every anchor these 26 are exactly the covering templates, so
+$\lgg_{\DT}(D)=T_{\Ind}$.
+(b) $\inst(T_{\Ind})$ is the intersection of the members of $\DT_s$ that contain it iff $s\ge12$. For $7\le s\le11$,
+the cautious verifier over $\DT_s$ accepts on every anchor the false sentence
+$(0=0\wedge\forall x(x=x\to Sx=Sx))\to\forall x(x=0)$.
+\end{proposition}
+\Cref{prop:zf:indpat} reads $T_{\mathrm{pat}}$ off the list in (a): it is the least generalization without
+non-pattern occurrences. Part (b) is \Cref{lem:setting:closed} at work.
+
 \begin{proof}[Proof of \Cref{prop:zf:indgen}]
 \src{prior induction C4, C6.2; referee C}
 (a) Every frame generalization is $\gen T_{\Ind}$ by the substitution of Step 4 above, so it contains $\inst(T_{\Ind})$.
@@ -470,7 +567,7 @@ is $\inst(T_{\Ind})$. ``Only if'' ($s\le11$): sharing a metavariable between $d$
 rigid nodes) and fillers of sizes $\ge1,2,\ge2,2$, so size $\ge12$; sharing between $d$ and $c$ needs $\ge13$. So templates
 of size $\le11$ impose at most $a=d[0/x]$, $a=b[0/x]$, $c=b[Sx/x]$ and a frame prefix. The sentence
 $s^*=(0=0\wedge\forall x(x=x\to Sx=Sx))\to\forall x(x=0)$ satisfies all three equations, but $b\ne d$; so it is no
-induction instance, and it is false. Combine with the closure criterion of \Cref{sec:setting}.
+induction instance, and it is false. Combine with \Cref{lem:setting:closed}.
 \end{proof}
 
 \begin{proof}[Proof of \Cref{prop:zf:indpat}]
@@ -508,6 +605,20 @@ with $S(z_m)$ at $q$, $M\mapsto\lambda\bar z.P(Sz_m)$, and then $M$ does not occ
 (v) $M$ only at a depth-0 slot $\rho$: $M\mapsto\lambda\bar z.T_{\Ind}|_\rho$. Then $T\sigma=T_{\Ind}$.
 \end{proof}
 
+The Sub encoding summarized in \Cref{sec:zf:pa}:
+
+\begin{proposition}[Sub encoding]\label{prop:zf:sub}
+\status{proved}\src{prior induction C5, P1, P2, P6}
+Record each induction as the step from $\mathrm{Sub}(\varphi,x,0,\alpha)$ and $\mathrm{Sub}(\varphi,x,Sx,\beta)$ to
+$\alpha\wedge\forall x(\varphi\to\beta)\to\forall x\varphi$, where the decidable judgment $\mathrm{Sub}(\varphi,x,t,\psi)$
+says that $\psi=\varphi[t/x]$ \citep{claude2026whatfollows}. With $x$ fixed, this is a first-order pattern in
+$P,\alpha,\beta$. The lgg of genuine data recovers it iff \evR{} and \evN, so the failure probability is that of
+\Cref{thm:zf:rates} for one argument place: $\sum_f p_f^N+(1-q)^N-\sum_f r_f^N$, where $r_f$ is the probability of
+root $f$ with $x$ not free. If the induction variable varies, the variables must also not all be equal (or must be
+$\alpha$-normalized). With the decidable guard ``all Sub premises are true'', the cautious verifier accepts only genuine
+inductions.
+\end{proposition}
+
 \begin{proof}[Proof of \Cref{prop:zf:sub}]
 \src{prior induction C5, P1, P2, P6}
 The metavariables $P,\alpha,\beta$ receive $\varphi$, $\varphi[0/x]$ and $\varphi[Sx/x]$. By fact (i) the three \evR{}
@@ -541,7 +652,7 @@ complexity, which is why parameter-free $\mathrm{I}\Sigma_n^-$ is weaker than $\
 \end{proof}
 
 \paragraph{Recorded motives in Lean and Metamath} \src{prior induction C12, P8, P9; referees A, C}.
-In Lean~4 (version 4.32.0, checked locally by the prior track and its referee), $\mathtt{Nat.rec}$ takes the motive
+In Lean~4 (version 4.32.0, checked locally in the earlier analysis and by its referee), $\mathtt{Nat.rec}$ takes the motive
 $\{\mathit{motive}:\mathtt{Nat}\to\mathtt{Sort}\ u\}$ as an \emph{implicit} argument. The $\mathtt{induction}$ tactic
 elaborates to $\mathtt{Nat.recAux}\ (\mathtt{fun}\ n\Rightarrow\dots)$, so the kernel term records the motive as a
 $\lambda$. For eliminators marked \texttt{elab\_as\_elim} the elaborator infers the motive by abstracting the
@@ -560,10 +671,13 @@ H4 $\psi$ and H5 $\chi\to\theta$, and the conclusion is $\varphi$. This is a fir
 $\varphi,\psi,\chi,\theta$. A set of guards from $\{x\notin\FV(\psi),x\notin\FV(\chi),x\notin\FV(\theta),y\notin
 \FV(\varphi),x\ne y\}$ makes every instance a derived rule of PA iff it contains $y\notin\FV(\varphi)$ and one of
 $x\notin\FV(\chi)$, $x\notin\FV(\theta)$ \status{proved}.
-\emph{Sufficiency}: fix a valuation $v$ and let $X=\{a:\varphi(v[x{:=}a])\}$. H1 and H4 give $0\in X$. For $a\in X$ put
-$w=v[x{:=}a,y{:=}a]$ and $w'=v[x{:=}a{+}1,y{:=}a]$. Then $\varphi(w)$ holds since $y\notin\FV(\varphi)$, and H2 gives
-$\chi(w)$. Then H5 gives $\theta(w')$, either at $w'$ (if $x\notin\FV(\chi)$) or at $w$ (if $x\notin\FV(\theta)$). H3 at
-$w'$ gives $\varphi(w')$, so $a+1\in X$, and induction gives $X=\N$.
+\emph{Sufficiency}: fix a model $M$ of $\PA$ in which the universal closures of the premises hold, a valuation $v$ in
+$M$, and let $X=\{a\in M:M\models\varphi(v[x{:=}a])\}$. H1 and H4 give $0\in X$. For $a\in X$ put $w=v[x{:=}a,y{:=}a]$
+and $w'=v[x{:=}a{+}1,y{:=}a]$. Then $\varphi(w)$ holds since $y\notin\FV(\varphi)$, and H2 gives $\chi(w)$. Then H5 gives
+$\theta(w')$, either at $w'$ (if $x\notin\FV(\chi)$) or at $w$ (if $x\notin\FV(\theta)$). H3 at $w'$ gives
+$\varphi(w')$, so $a+1\in X$. $X$ is definable in $M$ from the parameters of $v$, so induction in $M$ gives $X=M$.
+Hence in every model of $\PA$ the universal closures of the premises imply that of the conclusion, i.e.\ the rule is a
+derived rule of $\PA$.
 \emph{Necessity}: $\varphi=\neg x=SSy$, $\psi=\neg0=SSy$, $\chi=\neg y=SSy$, $\theta=\neg Sy=SSy$ violates only
 $y\notin\FV(\varphi)$, has PA-provable premises, and concludes the false $\neg x=SSy$. The instance $\varphi=(x=0)$,
 $\psi=(0=0)$, $\chi=\theta=(x=0)$ violates only the two $x$-guards. So set.mm's conditions, read as ``not free'', are sound
@@ -595,7 +709,7 @@ implementation that imports none of the author's code. Bounded searches are evid
   We did not run the published implementation of \citet{baumgartner2017higher}. For several metavariables, the
   pattern-lgg criterion held on $3\times1500$ random data sets and the $\DT$ criterion on $2\times150$ pairs. Every
   $\SO$ pair with \zfDroot{} was an anchor, and none violating \zfDdt{} was. The few pairs with \zfDdt{} but not
-  \zfDroot{} were $\SO$ anchors under the bounded search, which suggests the conjecture of \Cref{sec:zf:pattern}. The
+  \zfDroot{} were $\SO$ anchors under the bounded search, which suggests \Cref{conj:zf:root}. The
   exact rates agree with Monte Carlo.
 \item \emph{Induction} \src{prior induction b1--b4, c0--c5; referees B, C}. An exactly false lgg instance was found for
   2357 of the 2556 pairs of quantifier-free motives of size $\le5$; the smallest unsound pair has motive sizes $3+3$.
@@ -607,5 +721,5 @@ implementation that imports none of the author's code. Bounded searches are evid
   \Cref{prop:zf:indso} needs unbounded arity. The 26 generalizations and the threshold 12 were reproduced. The Sub-lgg
   and $\DT$ verdicts coincide on all pairs and 2925 triples. $\IndEq$ and $\Ind$ agree on 30\,000 random pairs of a
   motive and a finite structure.
-\item \emph{Experiment E2} \src{experiments E2}: see \Cref{sec:zf:pa} and \Cref{sec:exp}.
+\item \emph{Experiment E2} \src{experiments E2}: see \Cref{tab:exp:e2} and \Cref{sec:exp}.
 \end{itemize}
