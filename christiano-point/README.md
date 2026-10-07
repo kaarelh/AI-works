@@ -13,6 +13,9 @@ A research report on the *Christiano point*: the point at which AI's contributio
 Start with [the report](report.md). Its §0 is a two-page summary.
 
 - **report.md**: the report. It covers the concept and its sources, six inequivalent readings of "contribution" and how they relate, domain-by-domain evidence, synthesis, forecasts, caveats and sources.
+- **page/**: the HTML page version of the report.
+  - `the-christiano-point.html` is the built, self-contained page, with an interactive chart and the maths pre-rendered as SVG. It was published as a claude.ai artifact.
+  - `shell.html`, `chart.html` and `fragments/` are its sources, and `assemble.js` rebuilds it (needs Node with `mathjax-full`: `npm install && npm run build`).
 - **figures/**: the summary figure, in light and dark versions.
 - **models/**:
   - `crossover_definitions.py` numerically checks the facts in §2 and Appendix A: uplift, Euler/Aumann–Shapley and two-player Shapley shares in the task model.
