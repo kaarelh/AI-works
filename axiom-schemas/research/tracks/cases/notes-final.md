@@ -1006,11 +1006,14 @@ identical to the recorded one (diff empty).
 | `z7_multi.py` **[new]** | Thm E′: PAT via pattern lgg (4500 data sets), DT° via bounded search (300 pairs), separating examples, SO° | `z7_multi.out` | 12 s |
 | `z8_alpha.py` **[new]** | Prop B1α, §2.4(8), Thm C2(iv) | `z8_alpha.out` | 1 s |
 | `z9_anchor_search.py S 10 3 2 1` **[new]** | Thm E, bounded single-group search, 7 schemas × 20 pairs, DT° and SO° | `z9_<S>.out` | 2–186 s each |
-| `z9_anchor_search.py ReplJ 3 3 2 2` **[new]** | Thm E on ReplJ including the 3-slot groups of arity 2 | `z9_ReplJ_deep.out` | see below |
+| `z9_anchor_search.py ReplJ 3 3 2 2` **[new]** | Thm E on ReplJ including the 3-slot groups of arity 2 | `z9_ReplJ_deep.out` | 757 s |
 
 `z9` summary (DT° agreement with (R) ∧ (N); SO° verdict = DT° verdict on every pair; covering single-group templates
 examined DT° / SO°): Sep 20/20 (2034 / 2722); SepJ 20/20 (2090 / 2820); EInd 20/20 (515 / 1155); Coll 20/20 (4548 / 6010);
-ReplU 20/20 (4548 / 6010); ReplS 20/20 (9458 / 11890); ReplJ 20/20 (5450 / 6834). ReplJ deep run: RESULT_DEEP.
+ReplU 20/20 (4548 / 6010); ReplS 20/20 (9458 / 11890); ReplJ 20/20 (5450 / 6834). ReplJ deep run (arity ≤ 2 for all group sizes, so the
+group of all three ReplJ slots is included): 3 anchor + 3 non-anchor pairs, DT° agreement 6/6, SO° verdict = DT°
+verdict on all 6; each anchor pair has 3456 (DT°) / 3891 (SO°) covering single-group templates, none missing a probe;
+757 s.
 
 ## 5. Caveats and uncertain citations
 
