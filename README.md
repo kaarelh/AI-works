@@ -8,6 +8,7 @@ Research projects by Kaarel Hänni and collaborators, much of it done with Claud
 | [`inferential-learning/`](inferential-learning/) | *What Follows from What*: learning inference rules from imitation, coherence and the world, across formal mathematics, informal mathematics and physics. | [report (PDF)](inferential-learning/paper/main.pdf) |
 | [`axiom-schemas/`](axiom-schemas/) | *Learning Axioms and Axiom Schemas from Their Instances*: universal axioms, the ZFC schemas and PA induction, and many schemas at once from unlabelled instances. | [paper (PDF)](axiom-schemas/paper/main.pdf) |
 | [`christiano-point/`](christiano-point/) | *The Christiano point, domain by domain*: when AI's contribution to a domain overtakes humans', assessed across mathematics, physics, biology, software, ML research, AI development and the economy. | [report](christiano-point/report.md) |
+| [`foom-coom-transition/`](foom-coom-transition/) | *The foom-coom transition*: when to stop improving computational efficiency and use the remaining compute for what one values, with empirical fits, a subjective forecast and astronomical resource scales. | [report](foom-coom-transition/report.md) · [PDF](foom-coom-transition/report.pdf) |
 
 The papers and reports are drafts unless their own README says otherwise.
 
