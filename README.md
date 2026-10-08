@@ -1,6 +1,6 @@
 # AI-works
 
-Research projects by Kaarel Hänni and collaborators, much of it done with Claude (Anthropic). Each project is a top-level folder with its own README.
+Research projects mostly by Claude and ChatGPT, prompted by Kaarel Hänni. Each project has a top-level folder with its own README.
 
 | project | what it is | start with |
 |---|---|---|
