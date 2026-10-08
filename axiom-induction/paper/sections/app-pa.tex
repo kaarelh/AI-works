@@ -1,0 +1,208 @@
+% =====================================================================
+% Appendix to Section 7 (key: pa). Full proofs, computation details and tables.
+% Sources: research/tracks/pa/notes-final.md (all sections; §9 verification log), referee.md and
+% referee_code/r1-r8; checks c1-c10, test_nd (research/tracks/pa/checks/*.out);
+% research/tracks/experiments/notes-final.md Props X9-X11 and checks/check_models.out.
+% =====================================================================
+\providecommand{\pabrk}{\hfil\penalty0\hfilneg}
+\providecommand{\paR}[1]{\mathsf{R}_{#1}}
+
+\section{Proofs and computations for \texorpdfstring{\Cref{sec:pa}}{Section 7}}\label{app:pa}
+
+Proofs follow track pa's final notes (and track experiments' for Props X9--X11); steps they leave out are named. Track pa's referee re-checked every derivation of \cref{prop:pa:equiv,prop:pa:recursion,prop:pa:detour} and of \cref{rem:pa:zf} with an independent checker, recomputed the cost tables, the toy tower and the Euler example by independent code, and read the proofs of \cref{prop:pa:chain,prop:pa:thn,prop:pa:refute,prop:pa:regret,prop:pa:spare,prop:pa:nc,prop:pa:incons}, \cref{rem:pa:pointwise} and \cref{prop:pa:isigma}(a), finding them correct for the stated models after the corrections recorded in \cref{app:ver}. Added in the revision and therefore not refereed: the proof of \cref{prop:pa:lower}, \cref{prop:pa:occam}, \cref{sec:pa:theorems} (\cref{prop:pa:memo,prop:pa:gibbs,prop:pa:wellspec,prop:pa:must}), the full proof of \cref{prop:pa:refl}, \cref{lem:pa:motive}, \cref{prop:pa:readonce}, \cref{rem:pa:shift,rem:pa:overlap}, and experiments' \cref{prop:pa:atomic,prop:pa:redundant}. They were checked by the tracks and again while writing this appendix. Nothing is checked in a proof assistant.
+
+% ---------------------------------------------------------------------
+\subsection{The checker and the reproduction}\label{app:pa:checker}
+
+\texttt{checks/nd.py} checks natural-deduction derivations line by line. Rules: hyp (open a hypothesis, to be discharged), ax (an instance of an axiom of the theory), tc (tautological consequence of earlier lines, by truth tables over their prime subformulas), $\to$I, $\forall$E (with a capture check), $\forall$I and $\exists$E (with eigenvariable conditions), $\exists$I, refl and subst (equality). A derivation must end with no open hypotheses. Schematic derivations are written in a unary predicate symbol $P$; substituting a formula for $P$, after renaming the derivation's bound and eigenvariables away from it, maps derivations to derivations (the substitution theorem for predicate symbols; \citealp{shoenfield1967mathematical}, location not verified). \texttt{test\_nd.py} replays the four derivations of \cref{prop:pa:equiv} on 200 random concrete motives with a parameter (seed 20261008): 200/200 check. Negative tests: the checker rejects all of 10 unsound steps (a $\forall$I eigenvariable free in a hypothesis, a tc step that is not a tautology, an $\exists$E eigenvariable that is not fresh in the conclusion or in a hypothesis, a mismatched subst, capture in $\forall$E, a wrong goal, an open hypothesis, tc through a quantifier, a wrong $\exists$I witness). The referee's independent re-checker (own substitution, $\alpha$-normal form, truth tables, rule semantics and statements of all axioms and schemas) accepts all 20 derivations of the first version and rejects all 173 corrupted variants (a negated conclusion on some line, or a bad eigenvariable).
+
+A script matched every number quoted in track pa's notes against the outputs (87 quotes, 0 failures; three planted errors were caught). All twelve outputs were byte-identical on a second run. Seeds: \texttt{c1} 7, \texttt{c2} \texttt{random.Random(n)} per $n$ (as in u7), \texttt{c3} 1, \texttt{c4} 11 and 12, \texttt{c5} 5 and 6, \texttt{c6} 41 and 42, \texttt{c8} 31, 33, 11--13.
+
+% ---------------------------------------------------------------------
+\subsection{Equivalent axiomatisations}\label{app:pa:equiv}
+
+\paragraph{Proof of \Cref{prop:pa:equiv}.} Write ``$\varphi$ is progressive'' for $\forall x(\theta_\varphi\to\varphi)$.
+(A) Assume $\varphi(0)$ and $\forall x(\varphi\to\varphi(Sx))$; we show progressiveness. Let $\theta_\varphi(x)$. By Q3, $x=0$, and then $\varphi(x)$; or $x=Sw$. In the second case $w+S0=S(w+0)=Sw$ by Q5 and Q4, so $w<x$ by $\Dlt$; hence $\varphi(w)$, hence $\varphi(Sw)$, i.e.\ $\varphi(x)$. $\CVI(\varphi)$ gives $\forall x\varphi$.
+(B) Assume $\varphi$ progressive and apply $\Ind$ to $\theta_\varphi$. Base: $y<0$ gives $y+Sz=0$ for some $z$ ($\Dlt$), so $S(y+z)=0$ by Q5, contradicting Q1; so $\theta_\varphi(0)$. Step: assume $\theta_\varphi(x)$ and $y<Sx$. Then $y+Sz=Sx$ for some $z$, so $S(y+z)=Sx$ (Q5) and $y+z=x$ (Q2). By Q3, $z=0$ or $z=Sv$. If $z=0$, then $y=x$ (Q4) and $\varphi(x)$ follows from $\theta_\varphi(x)$ by progressiveness. If $z=Sv$, then $y+Sv=x$, so $y<x$ and $\varphi(y)$ by $\theta_\varphi(x)$. So $\theta_\varphi(Sx)$, and $\forall x\theta_\varphi(x)$; progressiveness gives $\forall x\varphi$.
+(C1) If $\LNP(\varphi)$ fails, $\exists x\varphi$ holds and every $x$ with $\varphi(x)$ has some $y<x$ with $\varphi(y)$. Then $\neg\varphi$ is progressive, so $\CVI(\neg\varphi)$ gives $\forall x\neg\varphi$, a contradiction.
+(C2) Let $\varphi$ be progressive and suppose $\exists x\neg\varphi$. $\LNP(\neg\varphi)$ gives an $x$ with $\neg\varphi(x)$ and $\forall y<x\,\varphi(y)$; progressiveness gives $\varphi(x)$, a contradiction.
+The base axioms cited by the checked derivations are exactly those named: (A) $\CVI$, $\Dlt$, Q3--Q5; (B) $\Dlt$, $\Ind$, Q1--Q5; (C1), (C2) only the schema. \qed
+
+For restricted motive classes the classical equivalences ($\ISigma n\Leftrightarrow\mathrm{I}\Pi_n\Leftrightarrow\mathrm{L}\Sigma_n\Leftrightarrow\mathrm{L}\Pi_n$; \citealp{kaye1991models,hajek1993metamathematics}, theorem numbers not checked) need bounded collection, because $\theta_\varphi$ adds a bounded quantifier, and some fail for parameter-free schemes \citep{kaye1988parameter}; $\DT$ templates cannot say ``motive in $\Sigma_n$'', so only the full-schema equivalence matters here.
+
+\paragraph{Proof of \Cref{prop:pa:usage}.} $\CL(\PA_S;D_n)=\text{prior}_S+\sum_{i\le n}(c_S(f_i)+L_\Qg(\varphi_i))$. The prior is a constant, and the $L_\Qg$ terms are the same under every $S$. The differences $c_S(f_i)-c_{S'}(f_i)$ are i.i.d.\ and bounded, so the strong law gives the limit. The posterior odds are $2^{-\Delta\CL}$, which tend to $0$ or $\infty$ exponentially when the limit is nonzero. \qed
+
+\paragraph{Proof of \Cref{prop:pa:lower}.} For $\CVI(P)$; $\Ind(P)$ is the same with its 11-symbol antecedent ($\Ind(P)$ fails in the structure $\{0,a\}$ with $S0=0$, $Sa=a$, $P=\{0\}$, and it is not an instance of $\CVI$, whose antecedent has root $\forall$). Both theories have 9 axioms, so a citation costs $\log_210+\log_29+2\beta$ (it writes $P(x)$). The term positions of both forms lie under binders or are $0$, so no $\forall$E step can have produced them from a shorter variable without capture; formulas on the chain below have full size. Let $\pi$ derive $\CVI(P)$ from $\PA_{\Ind}$.
+1. \emph{$\pi$ cites an axiom.} $\CVI(P)$ is not valid: read $<$ as the full relation and $P$ as empty; then $\forall y(y<x\to P(y))$ fails for every $x$ (take $y=x$), so the antecedent holds, while $\forall xP(x)$ fails. So some line is a citation, costing at least $\log_210+\log_29$.
+2. \emph{Another line writes at least 13 symbols.} Follow the premises back from the last line through $\forall$E (premise $\forall vA$ with $A[t/v]$ the current formula), $\forall$I (premise the matrix) and $\exists$E (premise with the same conclusion). Every formula on this chain is $\CVI(P)$ with a quantifier prefix and terms in place of variables, which keeps the connective skeleton. The chain ends at a line of another rule. It is not ax: the $\Q$ axioms and $\Dlt$ do not contain $P$; an $\Ind$ instance is an implication whose antecedent is a conjunction, while every chain formula, prefix removed, has an antecedent with root $\forall$; and no instance has a $\forall$-prefix. It is not refl or $\exists$I (wrong root). A hyp, tc or subst line writes a formula with $\CVI(P)$'s skeleton, at least 18 symbols (13 skeleton symbols and one at each of 5 term positions); a hyp line still writes it, even if discharged later. A $\to$I line writes its discharged antecedent, which has the skeleton of $\CVI(P)$'s antecedent: at least 13 symbols. So some non-citation line costs at least $\log_210+13\beta$.
+3. Premise references cost $\ge0$. So $\mathrm{bits}(\pi)\ge2\log_210+\log_29+13\beta$, which exceeds the citation by $\log_210+11\beta$. \qed
+
+\paragraph{\Cref{prop:pa:recursion}.} Each law is proved by one induction: in $T_{\mathrm{left}}$, $x+0=x$ on $x$ ($0+0=0$; $Sx+0=S(x+0)=Sx$) and $\forall y(x+Sy=S(x+y))$ on $x$; in $T_{\mathrm{right}}$, $0+x=x$ on $x$ and $Sp+x=S(p+x)$ on $x$ with parameter $p$. The four derivations (11, 22, 11 and 21 lines) are checked; they cite only $\TInd$ and the other convention's two laws.
+
+\begin{table}[ht]\centering\footnotesize
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+derivation (checked) & lines & symbols & writes of $P$ & overhead & template prior\\
+\midrule
+$\Sep$ from $\ReplJ(\lambda xy.\,\varphi(x)\wedge y=x)$ & 36 & 207 & 19 & 1209.3 & 72 ($\Sep$)\\
+$\ReplS$ from $\Coll$ & 15 & 108 & 12 & 574.1 & 185 ($\ReplS$)\\
+$\ReplJ$ from $\Coll$ and two $\Sep$ instances & 43 & 237 & 21 & 1432.0 & 167 ($\ReplJ$)\\
+$\Found$ from $\EInd(\neg x\in S)$ & 21 & 138 & 0 & 758.1 & 109 ($\Found$)\\
+\bottomrule
+\end{tabular}
+\caption{ZF: overheads in bits per use ($\Lsch$, $\beta=\log_223$). $\Sep$ is $\forall X\exists Y\forall u(u\in Y\leftrightarrow u\in X\wedge\varphi)$; $\ReplJ$ is the image form $\forall x\forall y\forall z(\psi\wedge\psi[z/y]\to y=z)\to\forall X\exists Y\forall y(y\in Y\leftrightarrow\exists x(x\in X\wedge\psi))$; $\ReplS$ the bounding form with $\exists!$ spelled out; $\Coll$, $\EInd$, $\Found$ as in AS Table 6. The checker caught a capture error in a first version of the $\Sep$ constructor. Computed; upper bounds (pa \S1.4).}\label{tab:pa:zf}
+\end{table}
+
+\paragraph{Further numbers for \Cref{rem:pa:usage}.} On a 0.1 grid of $(p_{\Ind},p_{\CVI})$, $\PA_{\Ind}$ is the best minimal theory for $p_{\Ind}\ge0.7$, $\PA_{\CVI}$ in a broad middle region and $\PA_{\LNP}$ for large $p_{\LNP}$; $\PA_{\mathrm{all}}$, if allowed, wins every mixed cell. It pays $81+86$ prior bits and $\log_2(11/9)\approx0.29$ bits per citation more than $\PA_{\Ind}$, and is ahead in expectation after $12$, $2$, $1$, $8$ schema uses for $(p_{\CVI},p_{\LNP})=(0.01,0)$, $(0.05,0)$, $(0.10,0.05)$, $(0,0.01)$; one $\CVI$ use alone saves 1468 bits. Under $\Lnaive$ the overhead grows by about $\beta(K-1)$ bits per motive symbol, $K$ the number of written copies of $P$: $\CVI$ from $\PA_{\Ind}$ ($K=14$) costs 1621, 1915, 2515, 3832 bits at $|\varphi|=5,10,20,40$ (schematic: 1468), and $\Ind$ from $\PA_{\CVI}$ ($K=18$) 1088, 1487, 2264, 4030 (schematic: 880); mean of 5 random motives per size, seed 7.
+
+% ---------------------------------------------------------------------
+\subsection{The MDL finding}\label{app:pa:mdl}
+
+\paragraph{Proof of \Cref{prop:pa:chain}.} For an induction datum $\Ind(\varphi)$ whose motive has root $f$, $P_{H_F}=w\Qg(f)\Qg(\varphi\mid f)=w\Qg(\varphi)=P_{T^*}$; ground data have the same weight under both. \qed
+
+\paragraph{Proof of \Cref{prop:pa:occam}.} (a) The total code is the prior, plus the KT code of the citation index, plus a sum over contexts of the KT code of the symbols coded there. Sequential KT in a context equals the Dirichlet($\frac12$) marginal of that context's counts, whatever their order (known; it is the P\'olya-urn form of the Dirichlet-multinomial; \citealp{krichevsky1981performance}). By hypothesis the two hypotheses have the same count vectors in every context outside $C$, so those terms cancel; $H'$ has no counts in $C$. The index and prior terms remain.
+(b) $\KT(k;A)\ln2=\ln\Gamma(N+\frac A2)-\ln\Gamma(\frac A2)-\sum_{a:k_a>0}[\ln\Gamma(k_a+\frac12)-\ln\Gamma(\frac12)]$. Stirling, $\ln\Gamma(m+a)=(m+a-\frac12)\ln m-m+\frac12\ln2\pi+o(1)$, applied to the $j+1$ growing arguments ($j$ the number of nonzero counts) gives $N\ln N-\sum_ak_a\ln k_a+\frac{A-1}2\ln N+\frac{1-j}2\ln2\pi+j\ln\Gamma(\frac12)-\ln\Gamma(\frac A2)+o(1)$; the first two terms are $N\hat H(k)$ in nats.
+(c) Let $\tau_0$ be the template of $H$ whose data visit $c$. $H'$'s counts are those of $H$ for the other templates and $m_{c,a}$ for the templates that correspond to $(\tau_0,a)$. Hence $n\hat H(n')=n\hat H(n)+m_c\hat H(m_c)$ (chain rule for empirical entropies), and the entropy terms of (a) cancel exactly. The $\log_2$ terms give $\frac{|H'|-1}2-\frac{|H|-1}2-\frac{|A_c|-1}2$ times $\log_2n$, since $m_c$ is linear in $n$; the rest is $O(1)$. For a split of $\TInd$ into the roots $F$, $|H'|-|H|=|F|-1$ and $|A_c|=9$. \qed
+
+\paragraph{Corrections and reproduction.} The first version, like u7 itself, charged prior bits only for templates that some datum uses, while the KT index ranged over all seven (referee m1). Under G1 nothing changes; under G2 (no $\vee,\forall,\exists$ at the root) 355 prior bits were missing and under G3 470. Every template is now charged; $H_{\mathrm{used}}$ is AS's split $H_F$ with the index restricted to $F$. With u7's own bookkeeping the script reproduces AS Table 12 exactly at $n=1000$ (G1: $-223$, $+2325$, $+2701$; G2: $-915$, $+1141$, $+1428$); the G2 rows of AS Table 12 carry the same undercount, which changes no conclusion there. A first SDPC run ($+803$ to $+12270$ bits) was an encoding artefact and is refuted.
+
+\begin{table}[ht]\centering\footnotesize
+\begin{tabular}{@{}llrrrrrrr@{}}
+\toprule
+law, split & $n$ & NAIVE & PC & DPC & SDPC & RDPC & CF\\
+\midrule
+G1, $H_{\mathrm{root}}$ & 1000 & $-223.0$ & $+2325.3$ & $+2700.6$ & $+770.0$ & $+1676.6$ & $+709.8$\\
+ & 16000 & $-16466.1$ & $-1198.5$ & $-3035.6$ & $+765.8$ & $+3724.6$ & $-301.8$\\
+ & 256000 & $-274655.9$ & $-94088.5$ & $-163027.5$ & $+761.9$ & $+5985.9$ & $-17241.7$\\
+G2, $H_{\mathrm{used}}$ & 1000 & $-926.0$ & $+1129.8$ & $+1417.1$ & $+403.7$ & $+870.1$ & $+236.5$\\
+ & 16000 & $-21484.6$ & $+1035.8$ & $+2805.3$ & $+393.7$ & $+1566.1$ & $-2341.2$\\
+ & 256000 & $-350773.1$ & $-12391.6$ & $+4289.5$ & $+383.7$ & $+2346.1$ & $-45211.8$\\
+G3, $H_{\mathrm{used}}$ & 1000 & $-1300.8$ & $+772.5$ & $+543.0$ & $+284.6$ & $+931.3$ & $+270.0$\\
+ & 16000 & $-24985.6$ & $-3058.9$ & $-9258.6$ & $+272.8$ & $+1736.6$ & $-246.7$\\
+ & 256000 & $-404445.7$ & $-75061.9$ & $-186306.5$ & $+260.8$ & $+2564.9$ & $-7814.9$\\
+\bottomrule
+\end{tabular}
+\caption{$\CL(\text{split})-\CL(T^*)$ in bits ($T^*=\Q+\TInd$; positive: $\TInd$ stays whole). Prior parts $+780$ (G1), $+425$ (G2), $+310$ (G3). SDPC for $H_{\mathrm{root}}$ under G2 and G3: $+769.9\to+761.8$ and $+769.7\to+761.9$. CF on G1 at $n=256000$: $-0.067$ bits per datum. Computed (pa \S2.2; \texttt{c2\_mdl.out}, \texttt{c2b\_cf.out}).}\label{tab:pa:mdl}
+\end{table}
+
+\paragraph{Proof of \Cref{prop:pa:detour}.} (a) Each wrapper $w_f(P)$ ($\neg\neg P$, $P\wedge P$, $P\vee P$, $(0=0)\to P$, $\forall zP$, $\exists zP$, with $z$ not free in $P$) is logically equivalent to $P$ and has root $f$, so $\Ind(w_f(P))\in\inst(T_f)$, and $\Ind(P)$ follows by \cref{lem:pa:motive} (a special case of \cref{prop:pa:readonce}(a)). The six checked derivations have 17--19 lines; overheads over citing $\Ind(P)$: $\neg$ 409.9, $\wedge$ 441.6, $\vee$ 441.6, $\to$ 488.9, $\forall$ 369.2, $\exists$ 425.6 bits. No wrapper exists for the root $=$. (b) The instances of $T_=$ are induction for equations, so $\Q+T_=\subseteq\IOpen$; $\IOpen$ does not prove that $\sqrt2$ is irrational \citep{shepherdson1964nonstandard}, and $\PA$ does. \qed
+
+% ---------------------------------------------------------------------
+\subsection{Theorem data}\label{app:pa:theorems}
+
+\paragraph{Proofs of \Cref{prop:pa:memo,prop:pa:gibbs}.} \Cref{prop:pa:memo}: adding $s$ adds $\beta|s|$ prior bits; each occurrence of $s$ costs $\ell_{\mathrm{cite}}$ instead of $D_T(s)$; the other data change only through the index. \Cref{prop:pa:gibbs}: let $Z:=\sum_s2^{-\ell(s)}\le1$ and $q:=2^{-\ell}/Z$. Then $\Ex_P[\ell+\log_2P]=\sum_sP(s)\log_2\frac{P(s)}{Zq(s)}=\KL(P\|q)-\log_2Z\ge0$, with equality iff $P=q$ and $Z=1$. Adopting a new datum costs at least $\ell(s)$ prior bits, so memorisation can gain only on repeated data. \qed
+
+\paragraph{Proof of \Cref{prop:pa:wellspec}.} $\Th(\Q\cup S)\subseteq\Th(\PA)$, and equality would make $\PA$ finitely axiomatisable, which it is not \citep{rylln1952axiomatizability}. So some $\sigma\in\Th(\PA)\setminus\Th(\Q\cup S)$ has $P_{\PA}(\sigma)>0$ (\cref{lem:model:lone}, parameters admissible) and $P_{\Q\cup S}(\sigma)=0$; it occurs a.s.\ after finitely many data. There are countably many such $S$. The second claim is \cref{thm:ident:doob}. For $\PA\cup S$: for generic weights its law differs from $P_{\PA}$, so it loses by \cref{thm:ident:doob}; that the decay is polynomial, as for a spare slot (\cref{prop:ident:spare}), is a proof sketch, and whether some special weight gives $P_{\PA\cup S}=P_{\PA}$ was not checked. \qed
+
+\paragraph{Proof of \Cref{prop:pa:must}.} (a) is the definition of the score. (b) and (c) compare prior bits among score-1 theories: $F_0$ has every sentence as an instance, and an inconsistent theory derives every sentence, so either has score 1 unless refuted within $d$. The example in (b): $\beta(7+13)=31.7+58.8=90.5>72$ bits. \qed
+
+\paragraph{The theorems in other axiomatisations.} The six theorems of \cref{tab:pa:theorems} cost 1148.4--4163.7 bits more in $\PA_{\CVI}$ and 2241.2--8117.4 bits more in $\PA_{\LNP}$ than in $\Q+\TInd$, with $\beta^*=143$--$501$ and $240$--$861$ bits per symbol (upper bounds: $\Ind$ is re-derived at each use; a direct $\PA_{\CVI}$ derivation of $\forall x\,0+x=x$ by the referee costs 652 bits more instead of 1161). The four recursion-convention theorems of \cref{prop:pa:recursion} give $\beta^*=30.5$--$45.6$. Decodable-code costs are 3.6--7.5\% higher. All 19 derivations are checked.
+
+\paragraph{Compressible data and streams (\Cref{rem:pa:streams}).} Per datum $f(\varphi)$ ($\varphi$ a random motive, seed 41) the options cost: derive in $\PA_{\Ind}$, memorise ($\beta|f(\varphi)|+\ell_{\mathrm{cite}}$), or adopt $f(P)$ ($\ell_{\mathrm{cite}}+\beta|\varphi|$, plus $\beta|f(P)|$ once). $\Ind$, $|\varphi|=21$: 101.5 (a citation) against 431.7. $\CVI$, $|\varphi|=20$: derive 1565.0, memorise 332.2, adopt 97.0 ($+81$); $|\varphi|=418$: 3365.4, 5733.3, 1897.3. $\LNP$, $|\varphi|=21$: 2335.5, 350.3, 101.5 ($+86$). Streams (seed 42; bits relative to $\Q+\TInd$, $n=1000$): $u=0$: $\Q+\TInd$ plus library $-561857$, $\Q$ plus library $-562036$ (MAP); $u=0.1$: $-513380$ (MAP) against $-489898$; $u=0.5$: $-285950$ (MAP) against $-147800$.
+
+% ---------------------------------------------------------------------
+\subsection{Data from \texorpdfstring{$\Th(\N)$}{Th(N)}, the chain and narrow practice}\label{app:pa:thn}
+
+\paragraph{Proof of \Cref{prop:pa:thn}.} If $T$ proves a false $\varphi$, then $\neg\varphi\in\Th(\N)$ and $T\nvdash\neg\varphi$ by consistency. Otherwise $T$'s theorems are true, and since they are r.e.\ while $\Th(\N)$ is not, some true $\sigma$ has $T\nvdash\sigma$. In both cases some $s$ has $\mu(s)>0=P_T(s)$, and the probability that it is absent from $n$ draws is $(1-\mu(s))^n\to0$. \qed
+
+\paragraph{Proof of \Cref{prop:pa:refute}.} An inconsistent theory derives every sentence, so its 0/1 likelihood is never $0$ without a rule. Under $\paR\infty$ it derives the negation of the first datum. Under $\paR{d_n}$ its shortest refutation has some finite size $d$, and it is refuted once $d_n\ge d$. Consistency of r.e.\ theories is $\Pi_1$-complete (known), so no computable rule refutes exactly the inconsistent theories. (AS Thm 6.15 is a related but different statement about \DTRC-type accept sets.) \qed
+
+\paragraph{Proof of \Cref{prop:pa:refl}} (adapted from the proof of \cref{prop:time:notemplate}). Suppose $\tau$ has a metavariable $M$ with an occurrence at position $q$. Constant bodies of each sort with two different root symbols exist: $\lambda\bar z.0$ and $\lambda\bar z.(0+0)$ for terms, $\lambda\bar z.(0=0)$ and $\lambda\bar z.\neg(0=0)$ for formulas; for a constant body the subtree of $\tau\theta$ at $q$ is that constant (AS Lemma 2.4), and the symbols of $\tau$ above $q$ are kept. Give every other metavariable any body. \emph{Case 1: $q$ is the root or lies in the antecedent.} If $q$ lies inside the numeral argument of $\Prv_T$, take $\lambda\bar z.(0+0)$: the argument is then not a numeral, so $\tau\theta\notin\Refl_T$. Otherwise $q$ is the root or a position of $\Prv_T$'s fixed skeleton, where all members of $\Refl_T$ carry the same symbol; choose the constant body with a different root symbol. \emph{Case 2: no metavariable occurs at the root or in the antecedent.} Then the antecedent is a fixed $\Prv_T(N_0)$, and every member of $\Refl_T$ with this antecedent is $\Prv_T(\gn{\varphi_0})\to\varphi_0$ for the one $\varphi_0$ with $\gn{\varphi_0}=N_0$; so $\inst(\tau)$ has at most one element. But a template with a metavariable has infinitely many instances, since each type has infinitely many bodies and $\theta\mapsto\tau\theta$ is injective (AS Thm 2.5(a)). So $\tau$ has no metavariable. \qed
+
+\begin{remark}[Pointwise limits are trivial]\status{proved}\pabrk\src{pa Rem 4.5}\label{rem:pa:pointwise}
+Under 0/1 support every sentence is eventually decided correctly by memorisation alone (with inconsistent theories present, given $\paR{d_n}$). Whether the mass of not-yet-refuted inconsistent theories deriving a sentence tends to $0$ is open.
+\end{remark}
+
+\paragraph{Proofs of \Cref{prop:pa:regret} and \Cref{rem:pa:pointwise}.} $P_{\mathrm{mix}}(D_n)\ge\pi(T)\prod_s\Leps(T;s)$; for $s\notin E$ that $T$ derives, $\Leps(T;s)\ge(1-\varepsilon)P_T(s)$ (if $T$ refutes $s$ the bound is $+\infty$); for $s\in E$, $\Leps(T;s)\ge\varepsilon\mu_0(s)$. Take $-\log_2$. With $\varepsilon=0$, apply the same to $T\cup E$, whose likelihood is positive on all of $D_n$. For \cref{rem:pa:pointwise}: a true $s$ occurs eventually, after which every surviving theory derives it; for a false $s$, $\neg s$ occurs eventually, after which no surviving consistent theory derives $s$; with inconsistent theories present this needs $\paR{d_n}$ (\cref{prop:pa:refute}). Their remaining mass can be large (\cref{prop:pa:incons}); whether it tends to $0$ is open. \qed
+
+\begin{remark}[Toy drift]\status{computed}\pabrk\src{pa \S4}\label{rem:pa:tower}
+Along $T_0=\PA$, $T_{k+1}=T_k+\Con(T_k)$, with Geometric($\frac12$) data levels and prior $2^{-50(k+1)}$, the MAP is the largest level seen ($16$ at $n=10^5$) and the regret grows like 50 bits per level ($798.9$ bits at $n=10^5$; linear, $0.2637$ bits per datum, if the theories' level law is misspecified). The toy covers only the provable part of the data: under a full-support law a positive fraction of the data is unprovable in every $T_k$. Each step adds a ground sentence, since one reflection sentence suffices (\cref{prop:time:collapse}) and the reflection schema is not a template (\cref{prop:pa:refl}).
+\end{remark}
+
+\noindent Details (seed 1; data levels Geometric($\rho$), each $T_k$ generating its theorems with a truncated geometric level law of rate $s$): for $\rho=s=\frac12$ the MAP level and regret are $2$, $98.1$ bits at $n=10$, $9$, $448.6$ at $10^3$ and $16$, $798.9$ at $10^5$, and the probability that the next datum is unprovable is $7.6\cdot10^{-6}$ at $10^5$; with $\Leps$, $\varepsilon=0.01$, the MAP lags the record ($11$ at $10^5$) and the regret is $674.0$; for $\rho=s=0.8$ the regret is $2598.9$ bits at $10^5$ (MAP 52); for $\rho=\frac12$, $s=0.3$ it is $0.2637$ bits per datum at $10^5$. The referee's independent re-implementation gives identical numbers.
+
+\paragraph{Proof of \Cref{prop:pa:isigma}.} (a) $\ISigma n$ is finitely axiomatisable for $n\ge1$ (known). $\ISigma{n+1}\vdash\Con(\ISigma n)$ (known; \citealp{hajek1993metamathematics}, traced by the referee to Cor.~I.4.34 through a secondary source; not verified), so $\PA\vdash\Con(\ISigma n)$, while $\ISigma n\nvdash\Con(\ISigma n)$ by G\"odel's second theorem, $\ISigma n$ being consistent (true). So $P_{\PA}(\Con(\ISigma n))>0=P_{\ISigma n}(\Con(\ISigma n))$, and $\Con(\ISigma n)$ occurs a.s. Eliminating each $\ISigma n$ is not concentration, since the tail $\{\ISigma m:m>N\}$ could hold mass; \cref{thm:ident:doob} gives $\pi_n(\Cstar_{\PA})\to1$, and no $\ISigma n$ is in $\Cstar_{\PA}$ since its law has a different support. The waiting time is about $1/P_{\PA}(\Con(\ISigma n))$. (b) \emph{Sketch.} Deriving $\Ind(\varphi)$, $\varphi\in\Sigma_n$, from $\sigma_n$ goes through the Tarski biconditional $\varphi\leftrightarrow\Tr_n(\gn\varphi)$ (the predicate of \cref{prop:time:collapse}), whose derivation grows with $|\varphi|$, while citing $\TInd$ costs $L_\Qg(\varphi)$ plus a constant. Not formalised; the growth rate was not checked. (c) Refuted by \cref{ex:pa:narrow,ex:pa:skel}. \qed
+
+\begin{lemma}[Equivalent motives]\status{proved}\pabrk\src{pa Lemma 4.7}\label{lem:pa:motive}
+If $B\vdash\forall\bar p\forall x(\chi\leftrightarrow\psi)$ then $B+\Ind(\chi)\vdash\Ind(\psi)$.
+\end{lemma}
+
+\paragraph{Proof of \Cref{lem:pa:motive}.} From $\forall x(\chi\leftrightarrow\psi)$ at $0$, $x$ and $Sx$: $\psi(0)$ gives $\chi(0)$, and $\psi(x)\to\psi(Sx)$ gives $\chi(x)\to\chi(Sx)$. So the antecedent of $\Ind(\psi)$ gives that of $\Ind(\chi)$, which gives $\forall x\chi$, hence $\forall x\psi$. Generalise over the parameters. \qed
+
+\paragraph{Proof of \Cref{prop:pa:readonce}.} (a) Fix the path from $C$'s root to one occurrence $F(x,\bar z)$. Instantiate every other atom as a constant: $\top:=(0=0)$ ($A,B:=\lambda.0$), $\bot:=(S0=0)$ ($A:=\lambda.S0$, $B:=\lambda.0$), other formula metavariables $\lambda.(0=0)$ or $\lambda.(S0=0)$; Q1 refutes $S0=0$. Since each metavariable occurs once, these choices are independent, so each sibling on the path can be made $\top$ or $\bot$ as needed: $\top$ beside $\wedge$ and $\leftrightarrow$, $\bot$ beside $\vee$, $\top$ as the antecedent of $\to$ when the path goes to the consequent, and $\bot$ as the consequent when it goes to the antecedent (that step then acts as a negation, as $\neg$ does). Set $F:=\lambda x\bar z.\psi'(x)$, which ignores $\bar z$, so the quantifiers on the path become vacuous. By propositional logic, Q1 and the vacuous-quantifier laws, $\mathrm{Q1}\vdash\forall x(C\theta\leftrightarrow\psi')$ or $\mathrm{Q1}\vdash\forall x(C\theta\leftrightarrow\neg\psi')$, depending only on the path. Take $\psi':=\psi$ in the first case and $\psi':=\neg\psi$ in the second. Then $\mathrm{Q1}\vdash\forall x(C\theta\leftrightarrow\psi)$, and \cref{lem:pa:motive} applied to the instance $\tau\theta=\Ind(C\theta)$ gives $\Ind(\psi)$.
+(b) Term metavariables are replaced by terms, which contain no logical symbols, so every instance has $C$'s skeleton. A formula with a fixed skeleton is logically equivalent to a prenex formula of fixed complexity $\Sigma_k$, and \cref{lem:pa:motive} turns the instances into $\Sigma_k$ induction. $\ISigma k\subsetneq\PA$ because $\PA\vdash\Con(\ISigma k)$ (known, as in \cref{prop:pa:isigma}(a)) while $\ISigma k\nvdash\Con(\ISigma k)$. \qed
+
+\begin{remark}[Read-once is not necessary]\status{proved; computed}\pabrk\src{pa Rem 4.9}\label{rem:pa:shift}
+$\TInd[P:=\lambda x.\,x=0\vee F(x)]$ is not read-once, and every instance's motive holds at $0$; yet $\mathrm{Q1},\mathrm{Q2}+\Ind(x=0\vee\exists y(x=Sy\wedge P(y)))\vdash\Ind(P)$ (checked, 47 lines). Which non-read-once templates give full induction is open.
+\end{remark}
+
+\noindent The checked derivation has 227 written symbols, costs 1403.3 bits against a 15.4-bit citation, and cites only $\Ind$, Q1, Q2. The motive $\chi$ is not equivalent to $P$, so \cref{lem:pa:motive} does not apply.
+
+\paragraph{Details of \Cref{ex:pa:narrow,ex:pa:skel}.} Narrow practice (the referee's counterexample r8, re-checked by the track): $|\TInd|=14$, $|T_E|=39$, $|T_N|=31$ (\texttt{dtlib}), prior difference 280 bits; coverage checked on 3000 data in seeds 31 and 33; the code, the identity (three contexts: motive root and the two ``$=$'' positions) and its expansion give $+230.8/+230.8/+232.0$ at $n=100$ and $+174.6/+174.6/+174.6$ at $3000$. G1: motives of depth 2 quantifying only atoms give $1+7+3\cdot49+2=157$ skeletons, all found among 200000 motives (seed 12); 112 occur in the first 3000 data. Each motive is a Boolean combination of atoms and single quantifiers over atoms, so it is equivalent to a $\Sigma_2$ formula. The theory of the 112 seen skeletons (119 templates) is $+42905.6$ and $+42838.5$ bits behind at $n=1000,3000$; $T^*$ uses 19 formula contexts. With all 157 skeletons (164 templates) the slope is $+2.0$ bits per doubling. The entropy terms cancel only asymptotically: G1 draws each connective independently given its context, so their difference is $O_P(1)$ by Wilks's theorem for nested multinomial models (cited from memory; proof sketch).
+
+% ---------------------------------------------------------------------
+\subsection{Root fragments and the \texorpdfstring{$\Q$}{Q} axioms}\label{app:pa:frag}
+
+Track experiments' $T^*=\mathrm{Q1..Q7}+\TInd$ has one-hole motives without parameters; its language has $<$ with no $\Q$ axiom about it. $T_f$ for $f\in\{=,<\}$ has motive $a(x)\,f\,b(x)$ with 1-ary term metavariables; for $\neg$, $\neg P_1(x)$; for $\wedge,\vee,\to,\leftrightarrow$, $P_1(x)\,f\,P_2(x)$; for $\forall,\exists$, $f\,y\,P_1(x,y)$.
+
+\begin{proposition}[Root fragments]\status{proved}\pabrk\src{experiments Prop X9}\label{prop:pa:fragments}
+$\inst(\{T_f:\text{9 roots}\})=\inst(\TInd)$; for each connective root $f$ and any $\Q^-$, $\Q^-\cup\{T_f\}$ and $\Q^-\cup\{\TInd\}$ have the same consequences; the argument fails for $=$ and $<$.
+\end{proposition}
+
+\paragraph{Proof of \Cref{prop:pa:fragments}.} (a) Every motive has one of the 9 roots, and an instance of $\TInd$ with root $f$ is the instance of $T_f$ whose sub-bodies are read off the motive (for $\forall,\exists$ the bound variable becomes $P_1$'s second argument); conversely $\inst(T_f)\subseteq\inst(\TInd)$. (b) One direction is (a). For the other, given $\varphi$ choose: $P_1=P_2=\varphi$ for $\wedge,\vee$; $P_1=\neg\varphi$ for $\neg$; $P_1=(0=0)$, $P_2=\varphi$ for $\to,\leftrightarrow$; $P_1(x,y)=\varphi(x)$ for $\forall,\exists$ (nonempty domains). The chosen motive $\psi$ satisfies $\vdash\forall x(\psi\leftrightarrow\varphi)$, so $\Ind(\psi)\vdash\Ind(\varphi)$. (c) No such body exists for an atomic root; \cref{prop:pa:atomic} shows the atomic fragments are weaker. \qed
+
+\paragraph{Proof of \Cref{prop:pa:atomic}.} \emph{$T^*$ proves every induction instance with parameters.} For $\varphi(x,\bar w)$ take the parameter-free motive $\psi(x):=\forall\bar w[(\varphi(0,\bar w)\wedge\forall y(\varphi(y,\bar w)\to\varphi(Sy,\bar w)))\to\varphi(x,\bar w)]$. $\psi(0)$ is valid; if $\psi(x)$ and the base and step hold for $\bar w$, then $\varphi(x,\bar w)$ and so $\varphi(Sx,\bar w)$: $\psi(Sx)$. $\TInd$ gives $\forall x\psi$, which is induction for $\varphi$. So $T^*\supseteq\PA$ and $T^*\vdash\sigma$, as $\PA\vdash\sigma$ (known). \emph{$\Q+\{T_=,T_<\}\nvdash\sigma$.} By \citet{shepherdson1964nonstandard} (secondary sources only) there is a model $M$ of $\Q$ plus open induction with parameters in which $x\cdot x=2\cdot y\cdot y$ has a solution with $y\ne0$; $M$ is the non-negative part of a discretely ordered ring, with $Sx:=x+1$, so Q1--Q7 hold (Q3 by discreteness). Instances of $T_=$ are open induction, so they hold. Read $<$ as the empty relation: every instance of $T_<$ has the false conjunct $a(0)<b(0)$ in its antecedent, so it holds; $\sigma$ does not mention $<$. So $M\models\Q+\{T_=,T_<\}$ and $M\not\models\sigma$. \qed
+
+The same holds for any theory whose induction-type templates are all term-only: by \cref{prop:pa:readonce}(b) it lies in some $\ISigma k\subsetneq\PA$.
+
+\begin{proposition}[Redundant $\Q$ axioms]\status{proved; computed}\pabrk\src{experiments Prop X11}\label{prop:pa:redundant}
+$\mathrm{Q1},\mathrm{Q2},\mathrm{Q4..Q7}+\TInd\vdash\mathrm{Q3}$; no other $\mathrm{Q}_i$ is redundant given full induction.
+\end{proposition}
+
+\paragraph{Proof of \Cref{prop:pa:redundant}.} $\TInd$ cites $\Ind(\psi)$ for $\psi(x):=x=0\vee\exists y(x=Sy)$; $\psi(0)$ holds and $\psi(Sx)$ holds with $y:=x$, so $\forall x\psi$, which gives Q3. For the other axioms: in a structure in which every element is the value of a numeral, every induction instance holds (induction on $k$ in the metatheory). Each structure below has this property, satisfies the $\mathrm Q_j$, $j\ne i$, and falsifies $\mathrm Q_i$: $i=1$: $\{0\}$, all operations $0$; $i=2$: $\{0,1\}$, $S0=S1=1$, $x+0=x$, $x+1=1$, $x\cdot0=0$, $x\cdot1=x$; $i=4$: $\N$, $x\oplus y:=x+y+1$, $x\otimes y:=y(x+1)$; $i=5$: $\N$, $x\oplus y:=x$, $x\otimes y:=0$; $i=6$: $\N$, standard $+$, $x\otimes y:=xy+1$; $i=7$: $\N$, standard $+$, $x\otimes y:=0$. Each verification is a line of arithmetic (e.g.\ $i=4$: $x\oplus Sy=x+y+2=S(x\oplus y)$, $x\otimes Sy=(y+1)(x+1)=(x\otimes y)\oplus x$); \texttt{check\_models.out} evaluates all seven axioms in each structure on a finite range. \qed
+
+% ---------------------------------------------------------------------
+\subsection{The Bayesian DTRC, the \texorpdfstring{$\forall$}{forall}-merge and Euler's polynomial}\label{app:pa:dtrc}
+
+\paragraph{Proof of \Cref{prop:pa:spare}.} The Dirichlet($\frac12$) marginal of counts $(n_1,\dots,n_K,0)$ over $K+1$ categories divided by that of $(n_1,\dots,n_K)$ over $K$ is $\frac{\Gamma((K+1)/2)\Gamma(n+K/2)}{\Gamma(K/2)\Gamma(n+(K+1)/2)}$, and $\Gamma(n+a+\frac12)/\Gamma(n+a)\sim n^{1/2}$. Add $\beta|\tau|$ prior bits. \qed
+
+\paragraph{Proofs of \Cref{prop:pa:nc,prop:pa:incons}.} \Cref{prop:pa:nc}: the likelihood is the constant $\mu_0(D)$ for every compatible theory and $0$ otherwise. \Cref{prop:pa:incons}: every $T$-derivation is a $T'$-derivation, and each of its citations loses a factor $1-w$ under the rescaled weights; the best $T'$-derivation is at least as probable. With Dirichlet weights and $\sigma$ unused, \cref{prop:pa:spare} applies. \qed
+
+\begin{remark}[Overlapping templates]\status{proof sketch}\pabrk\src{pa Rem 5.4}\label{rem:pa:overlap}
+For the lump and $F_0$ the code assigns each datum to its cheapest covering template, a two-part bound; if the greedy assignment is optimal (not proved), the exact marginal is at most about $n$ bits lower, and the lump stays $\ge219$ bits behind at $n=100$.
+\end{remark}
+
+\paragraph{Sketch for \Cref{rem:pa:overlap}.} The exact marginal sums over all assignments of data to covering templates. Its code length is at least the body code length under the best assignment, because the index probabilities of all assignments sum to at most 1. If the best assignment is the greedy one (induction data on $\TInd$, whose motive is coded once, rather than on $F_0$, which codes the whole sentence), the exact code is lower than the two-part code by at most the greedy index cost, about $n$ bits for two covering templates. At $n=100$ the lump would then still be at least $319.3-100\approx219$ bits behind. Optimality of the greedy assignment is not proved.
+
+\paragraph{Full \DTRC{} run.} \Cref{tab:pa:dtrc} at $n=300$, $1000$: root split $+771.4$, $+769.9$; spare $+18.2$, $+19.0$; memorise $+41418.2$, $+133845.4$; over-general $+8964.3$, $+27876.8$; lump $+1048.9$, $+3205.5$; bare $F_0$ $+14712.6$, $+46251.0$ bits (the first version had eight entries that did not match the output; referee M1). Without negatives the lump has mass $1.000$ at $n=10$ and $7.679\cdot10^{-97}$ at $n=100$; from $n=100$ the remainder beside $\Q+\TInd$ is almost all on the spare ($5.808\cdot10^{-6}$). The second negative is $(0=0)\wedge\forall x(0=S0\to0=S0)\to\forall x(0=S0)$. The theories without $0=S0$ as an instance have mass $2.6\cdot10^{-53}$ and $2.2\cdot10^{-13}$ at $n=10,30$, hence the acceptance by $\Ver\delta0$ for $\delta\ge3\cdot10^{-13}$.
+
+\begin{table}[ht]\centering\footnotesize
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+candidate & $n=10$ & $30$ & $100$ & $300$ & $1000$ & $3000$\\
+\midrule
+split by head of $t$ (sound) & $+115.5$ & $+109.1$ & $+101.0$ & $+93.3$ & $+84.6$ & $+76.7$\\
+memorise instances & $+519.5$ & $+1263.8$ & $+3749.9$ & $+12204.1$ & $+34023.6$ & $+83197.3$\\
+over-general $z_1+0=z_2$ & $+145.5$ & $+351.5$ & $+927.2$ & $+2618.8$ & $+7975.5$ & $+22702.2$\\
+$\forall x(x+0=x)$, fixed rule code & $+38.2$ & $+104.7$ & $+337.2$ & $+1001.6$ & $+3326.9$ & $+9970.8$\\
+\bottomrule
+\end{tabular}
+\caption{$\forall x\varphi$ as a sound merge: $\CL-\CL(z+0=z)$ in bits on data $t+0=t$ ($t$ random closed terms, seed 12). The over-general template is refuted by the negative $0+0=S0$. With Q3 in the theory the head split would give $\forall x(x+0=x)$ by cases; here the theories are the templates alone. A first run in which the head split overtook the schema at $n=1000$ was an artefact of coding split bodies from a root context (refuted). Computed (pa \S5.5).}\label{tab:pa:merge}
+\end{table}
+
+\begin{table}[ht]\centering\footnotesize
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+& \multicolumn{3}{c}{$R=10$ (rules of $\CND$)} & \multicolumn{3}{c}{$R=2$ ($\Cmin$: cite, $\forall$E)}\\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+$n$ & fixed & learned, shared & learned, by depth & fixed & shared & by depth\\
+\midrule
+$10$ & 33.2 & 23.4 & 12.5 & 10.0 & 20.0 & 2.5\\
+$10^3$ & 3321.9 & 2004.0 & 41.1 & 1000.0 & 2000.0 & 5.8\\
+$10^6$ & 3321928.1 & 2000004.0 & 85.9 & 1000000.0 & 2000000.0 & 10.8\\
+\bottomrule
+\end{tabular}
+\caption{$\CL(\Hall)-\CL(\Hsch)$ in bits on pure instance data under three rule codes (term costs cancel). The depth-indexed code gives $\frac{R-1}2\log_2n+O(1)$ ($4.31\log_2n$ at $n=10^6$ for $R=10$, tending to $4.5$). In a mixed practice with a fraction $f$ of $\varphi$-instances the depth-indexed difference is $h(f)$ bits per datum at $n=10^6$ ($0.4691$ at $f=0.9$ and $0.1$; $1.0001$ at $f=\frac12$), the shared one $1.896$, $1.377$, $0.483$ bits per datum at $f=0.9,0.5,0.1$. Computed in closed form; matches the referee's r3 (pa \S5.5).}\label{tab:pa:rulecode}
+\end{table}
+
+\paragraph{Euler's polynomial (\Cref{ex:pa:euler}).} $\mathrm{Prime}(m):=\neg m=0\wedge\neg m=S0\wedge\forall a\forall b(a\cdot b=m\to a=S0\vee b=S0)$ has a 27-symbol frame and three occurrences of $m=k\cdot k+k+41$ (the first version counted two; referee m9), so $|\text{datum}(k)|=27+3(3(k+1)+45)$ with unary numerals; the template has 171 symbols. Under the unconditioned geometric law the false instances have mass $0.0049$ ($\rho=0.9$) and $0.0727$ ($\rho=0.97$). Code length of memorisation minus the false schema (bits), flat / depth-indexed grammar, and the schema's predictive probability of $k=40$: $\rho=0.9$, $n=100$: $51445/51373$, $1.9\cdot10^{-3}/4.1\cdot10^{-4}$; $n=10^4$: $161030/160816$, $1.4\cdot10^{-3}/4.8\cdot10^{-5}$; $n=10^6$: $314225/320382$, $1.4\cdot10^{-3}/5.0\cdot10^{-7}$; $\rho=0.97$, $n=10^6$: $1820112/1920893$, $8.6\cdot10^{-3}/5.0\cdot10^{-7}$ (seeds 5, 6; primality by trial division; the referee's closed-form recomputation is identical). \emph{Covering (sketch).} A template that covers infinitely many data must have a metavariable at or above a position of the numeral $k$ (otherwise $k$ is fixed), so some instance puts there a term that makes the sentence false: the numeral $k=41j$ at the positions of $k$ ($41\mid k^2+k+41$), or a composite such as $41\cdot41$ at a position above them. So every finite unguarded covering union is false unless it memorises. \emph{Eventual behaviour (sketch).} Under the flat grammar the schema pays a linear KL term (about $0.007$ bits per datum at $\rho=0.9$) for the false $k$ it predicts, while memorisation's prior grows like $(\log n)^2$, so memorisation eventually wins, beyond $n=10^6$; under the depth-indexed grammar both costs grow like $(\log n)^2$ and the false schema stays ahead. Constants estimated, not computed. A refutation datum ($40^2+40+41=41^2$) removes the schema.
