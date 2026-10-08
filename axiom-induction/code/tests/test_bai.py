@@ -317,3 +317,117 @@ def test_star_closed_form_large_numeral():
     a = Chain(Q, K=1, c_stop=0.5, qe_open=False).logcoefs(th, d)
     b = Chain(Q, K=1, c_stop=0.5, qe_open=False, guided=False, max_occ=14).logcoefs(th, d)
     assert abs(a[0] - b[0]) < 1e-9
+
+
+# ------------------------------------------------------------------------------------ revision (after the referee)
+def test_trim_causal_pool_and_mem_alias():
+    """Trim(T, D_n) keeps exactly the components cited by some datum; a CausalPool uses only D_b for b <= n;
+    Mem(D_n) equal to a pool theory is an alias with no mass of its own"""
+    from bai.pool import CausalPool
+    from bai.posterior import trimmed
+    P = parse('?t+0=?t')
+    T = Theory([Component(P), parse('0=S0'), parse('?u*0=0')], 'T3')
+    data = cite_data(Theory([Component(P)], 'g'), [1.0], Q, 20, 3)
+    res = evaluate([T], data, [20], 'L0', Q=Q, trim=True)[0]
+    assert 'trim:T3' in res
+    assert [pp(c.T) for c in res['trim:T3']['theory'].comps] == [pp(Component(P).T)]
+    assert abs(sum(v['post'] for k, v in res.items() if not k.startswith('_')) - 1) < 1e-9
+    assert trimmed(T, {0, 1, 2}) is None and trimmed(T, set()) is None
+    seen = []
+
+    def builder(Db, b):
+        seen.append((b, len(Db)))
+        return [Theory([Db[0]], 'first@%d' % b)]
+    cp = CausalPool([T], builder, [2, 5, 9], data)
+    assert len(cp(4)) == 2 and seen == [(2, 2)]
+    assert len(cp(20)) >= 2 and seen == [(2, 2), (5, 5), (9, 9)]
+    # Mem alias: a pool theory equal to Mem(D_1)
+    d0 = data[0]
+    r1 = evaluate([Theory([d0], 'single'), Theory([Component(P)], 'H_sch')], data, [1], 'L0', Q=Q)[0]
+    assert r1['Mem']['post'] == 0.0 and r1['Mem']['alias_of'] == 'single'
+    assert abs(r1['single']['post'] + r1['H_sch']['post'] - 1) < 1e-12
+
+
+def _ref_core():
+    here = os.path.dirname(os.path.abspath(__file__))
+    rc = os.path.abspath(os.path.join(here, '..', '..', 'research', 'tracks', 'experiments', 'referee_code'))
+    if rc not in sys.path:
+        sys.path.insert(0, rc)
+    import ref_core
+    return ref_core
+
+
+def test_against_independent_reference():
+    """bai against the referee's independent reimplementation (research/tracks/experiments/referee_code/
+    ref_core.py, written from the notes, not from this code): Q, the matcher and L0, the prior code, the
+    Dirichlet marginal and the L1 chain coefficients (referee m1)"""
+    R = _ref_core()
+    from dtrc.templates import match as dmatch, canon
+    from dtrc.schemas import Q_AXIOMS, T_IND
+    rng = random.Random(20261009)
+    q = R.Q()
+    # Q log-probabilities
+    for (nh, nb, ap) in [(0, 0, False), (0, 0, True), (1, 0, False), (1, 1, False)]:
+        for _ in range(200):
+            t = q.sample_term(rng, nh, nb, ap)
+            assert abs(q.q_term(t, nh, nb, ap) - Q.logq_term(t, nh, nb, ap)) < 1e-9
+            f = q.sample_form(rng, nh, nb, ap)
+            assert abs(q.q_form(f, nh, nb, ap) - Q.logq_form(f, nh, nb, ap)) < 1e-9
+    # matcher and L0
+    temps = [R.parse(s) for s in ['?t+0=?t', 'forall x. x+?b=?b+x', '?a+?b=?b+?a', 'forall x. ?P(x)', '?P']]
+    temps.append(T_IND)
+    for T in temps:
+        ms = R.metas(T)
+        for _ in range(30):
+            th = {m: (q.sample_form(rng, ar, 0, False) if R.meta_is_formula(m) else q.sample_term(rng, ar, 0, False))
+                  for m, ar in ms.items()}
+            s = R.inst(T, th)
+            for T2 in temps:
+                assert (R.match(T2, s) is None) == (dmatch(T2, s) is None)
+                la, lb = R.l0(T2, {}, s, q), Component(T2).logcoef0(s, Q)
+                assert (la == R.NEG) == (lb == float('-inf'))
+                if la != R.NEG:
+                    assert abs(la - lb) < 1e-9
+    # prior code
+    qsent = [R.parse(x) for x in Q_AXIOMS.values()]
+    for ts in ([R.parse('?t+0=?t')], qsent + [T_IND], [R.parse('?P')]):
+        assert abs(R.theory_bits(ts) - theory_bits([canon(T) for T in ts], TemplateCode())) < 1e-9
+    # Dirichlet marginal
+    for _ in range(100):
+        m = rng.randint(1, 5)
+        coefs = []
+        for j in range(rng.randint(1, 8)):
+            Sset = rng.sample(range(m), rng.randint(1, min(m, 4)))
+            coefs.append({i: rng.uniform(-9, 0) for i in Sset})
+        assert abs(R.dir_marg(coefs, m, 0.5) - dirichlet_marginal(coefs, m, 0.5)) < 1e-9
+    # L1 chain coefficients (K = 1 and 2)
+    T1 = R.Theory1([(R.parse('forall x. forall y. x+y=y+x'), {})])
+    T2 = R.Theory1([(R.parse('?t=0'), {}), (R.parse('?t=0 -> ?t+0=0'), {})])
+    for t1, K, qe_open in [(T1, 2, False), (T1, 1, True), (T2, 1, False)]:
+        th = Theory([Component(T, g) for T, g in t1.comps], 'x')
+        ch = Chain(Q, Q, K=K, c_stop=0.5, qe_open=qe_open)
+        for _ in range(30):
+            d = R.chain_sample(t1, [1.0] * len(t1.comps), q, q, qe_open, K, 0.5, rng)
+            if len(str(d)) > 150:
+                continue
+            theirs = ch.logcoefs(th, d)
+            for i in range(len(t1.comps)):
+                a = R.l1_coef(t1, i, d, q, q, qe_open, K, 0.5)
+                b = theirs.get(i, float('-inf'))
+                assert (a == R.NEG) == (b == float('-inf'))
+                if a != R.NEG:
+                    assert abs(a - b) < 1e-9
+
+
+def test_pa_classify_tags():
+    """the PA equivalence tags of the hand pool (Props X9-X11 of the track notes)"""
+    here = os.path.dirname(os.path.abspath(__file__))
+    sys.path.insert(0, os.path.join(here, '..', 'experiments'))
+    import common  # noqa: F401
+    from pa_common import pa_hand_pool
+    tags = {th.name: th.tags['equiv'] for th in pa_hand_pool()}
+    assert tags['T*'] == 'yes' and tags['frag-complete'] == 'yes' and tags['IndSwap (equivalent, uncited)'] == 'yes'
+    assert tags['T*-Q3'] == 'yes'                       # Q3 follows from T_Ind
+    assert all(tags['T*-Q%d' % i] == 'weaker' for i in (1, 2, 4, 5, 6, 7))
+    assert tags['frag-atoms'] == 'weaker'
+    assert tags['spare-false(0=1)'] == 'no' and tags['Q-lumped'] == 'no' and tags['bare?P'] == 'no'

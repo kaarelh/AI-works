@@ -8,7 +8,8 @@ For each phi (given as a template P = phi(?t)) and each data generator:
   open   the L1 chain (K=1, open elim terms) from H_open = {phi(?t), ?t open} (Gen gives forall-forms);
   allq2  the L1 chain with K=2 from H_all (elim with an open term, then Gen: explicit quantified theorems
          such as forall y phi(Sy));
-the posterior over the pool (hand alternatives + Min of data subsets + skeleton clusters + Mem(D_n)) is
+the posterior over the pool (hand alternatives + Min of subsets of D_b and skeleton clusters of D_b for every
+build point b <= n, so only data already seen are used + Mem(D_n)) is
 computed under L0, under L1 (the generator's chain: well specified), and for 'sch' data also under L1sel
 (the L1 chain observed only through closed quantifier-free outputs).
 
@@ -31,6 +32,7 @@ from bai.grammar import Grammar
 from bai.lik import Chain, SelChain, class_prob_qf, l1_exact_supported
 from bai.gens import cite_data, chain_data
 from bai.posterior import evaluate, Deriver, support_mass
+from bai.pool import CausalPool
 from dtrc.templates import instantiate
 
 PHIS = {'x+0=x': '?t+0=?t', '0+x=x': '0+?t=?t', '~(Sx=0)': '~S?t=0'}
@@ -39,6 +41,7 @@ NS = [1, 2, 4, 8, 16, 32, 64, 128, 256]
 SEEDS = [0, 1, 2, 3, 4]
 C_STOP = 0.5
 HELD = [num(9), ('+', num(2), num(3)), ('*', S(ZERO), num(4))]
+DERIVED = ('over-general', 'over-specific', 'other', 'skeleton')     # classes given to data-derived theories
 CLASSES = ['H_all', 'H_sch', 'H_open', 'H_all+sch', 'mem', 'over-general', 'over-specific', 'fragmented',
            'spare', 'skeleton', 'other']
 
@@ -64,25 +67,33 @@ def make_data(P, g, n, seed, Q, ch):
     raise ValueError(g)
 
 
+BUILD_POINTS = [1, 2, 4, 8, 16, 32, 64]
+
+
 def build_pool(P, data, seed, star=True):
-    pool = e1_hand_pool(P, star=star)
-    rng = random.Random(1000 + seed)
-    for i, T in enumerate(min_theories(data[:64], rng)):
-        cls = classify_vs(T, P)
-        if cls == 'H_sch':
-            continue
-        if not star and has_star(Theory([T], 'x')):
-            continue
-        pool.append(Theory([T], 'min%d:%s' % (i, pp(T)), {'cls': cls}))
-    for k, temps in skeleton_theories(data[:64]):
-        th = Theory(temps, 'skel%d' % k, {'cls': 'skeleton'})
-        if not star and has_star(th):
-            continue
-        pool.append(th)
-    pool = dedupe(pool)
+    """the E1 pool as a causal pool: the hand alternatives, plus, for every build point b <= n, Min of random
+    subsets of D_b and the skeleton clusters of D_b (theories built only from data already seen).  Theories
+    whose L1 coefficients would need the brute-force fallback are left out (pool.excluded)."""
     K = 1 if star else 2
-    kept = [th for th in pool if l1_exact_supported(th, K)]
-    return kept, [th.name for th in pool if not l1_exact_supported(th, K)]
+    hand = [th for th in dedupe(e1_hand_pool(P, star=star)) if l1_exact_supported(th, K)]
+
+    def builder(Db, b):
+        out = []
+        rng = random.Random((1000 + seed) * 1000 + b)
+        for i, T in enumerate(min_theories(Db, rng)):
+            cls = classify_vs(T, P)
+            if cls == 'H_sch':
+                continue
+            if not star and has_star(Theory([T], 'x')):
+                continue
+            out.append(Theory([T], 'min%d@%d:%s' % (i, b, pp(T)), {'cls': cls}))
+        for k, temps in skeleton_theories(Db):
+            th = Theory(temps, 'skel%d@%d' % (k, b), {'cls': 'skeleton'})
+            if not star and has_star(th):
+                continue
+            out.append(th)
+        return out
+    return CausalPool(hand, builder, BUILD_POINTS, data, keep=lambda th: l1_exact_supported(th, K))
 
 
 def run(args):
@@ -93,7 +104,7 @@ def run(args):
     P = parse(PHIS[phi_name])
     data = make_data(P, g, max(NS), seed, Q, ch)
     star = g != 'allq2'
-    pool, excluded = build_pool(P, data, seed, star=star)
+    cpool = build_pool(P, data, seed, star=star)
     liks = {'L0': 'L0'}
     if g in ('sch', 'all'):
         liks['L1'] = ch['closed1']
@@ -106,28 +117,39 @@ def run(args):
     der = Deriver(K=1, Q=Q)
     A = forall_of(P)
     held = [instantiate(P, {'t': t}) for t in HELD]
-    out = {'phi': phi_name, 'gen': g, 'seed': seed, 'n_pool': len(pool) + 1, 'liks': {}, 'excluded': excluded}
+    out = {'phi': phi_name, 'gen': g, 'seed': seed, 'liks': {}}
+
+    def sel_ok(th):
+        try:
+            for c in th.comps:
+                class_prob_qf(c, ch['closed1'])
+            return True
+        except ValueError:
+            return False
     for lname, lik in liks.items():
-        pl = pool
         if lname == 'L1sel':
-            pl = []
-            for th in pool:
-                try:
-                    for c in th.comps:
-                        class_prob_qf(c, ch['closed1'])
-                    pl.append(th)
-                except ValueError:
-                    pass
+            def pl(n):
+                return [th for th in cpool(n) if sel_ok(th)]
+        else:
+            pl = cpool
         res_all = evaluate(pl, data, NS, lik, Q=Q, alpha=0.5)
         rows = []
         for n, res in zip(NS, res_all):
             cls_mass = {c: 0.0 for c in CLASSES}
-            for th in pl:
-                cls_mass[th.tags.get('cls', 'other')] += res[th.name]['post']
-            cls_mass['mem'] += res['Mem']['post']
-            mp = max(res, key=lambda k: res[k]['post'])
-            pf = support_mass(res, pl, der, A)
-            pi = sum(support_mass(res, pl, der, h) for h in held) / len(held)
+            seen_data = set(data[:n])
+            for name, v in res.items():
+                if name.startswith('_'):
+                    continue
+                th = v['theory']
+                # a data-derived theory of ground components that are all data seen so far is a memoriser
+                # (e.g. a Min theory of D_1 that equals Mem(D_n)); hand theories keep their class
+                memo = (th.tags.get('cls') in DERIVED and all(c.ground for c in th.comps)
+                        and all(c.T in seen_data for c in th.comps))
+                c = 'mem' if (name == 'Mem' or memo) else th.tags.get('cls', 'other')
+                cls_mass[c if c in cls_mass else 'other'] += v['post']
+            mp = max((k for k in res if not k.startswith('_')), key=lambda k: res[k]['post'])
+            pf = support_mass(res, [], der, A)
+            pi = sum(support_mass(res, [], der, h) for h in held) / len(held)
 
             def lo(a, b):
                 if a in res and b in res:
@@ -144,9 +166,13 @@ def run(args):
             rows.append({'n': n, 'mass': cls_mass, 'map': mp, 'map_post': res[mp]['post'], 'P_forall': pf,
                          'bounded': (bnd['names'], bnd['max_post']) if bnd else None,
                          'P_inst': pi, 'lo_sch_all': lo('H_sch', 'H_all'), 'lo_open_all': lo('H_open', 'H_all'),
+                         'pool_size': sum(1 for k in res if not k.startswith('_')),
                          'post': {k: v['post'] for k, v in res.items() if v['post'] > 1e-6}})
-        out['liks'][lname] = {'pool_size': len(pl) + 1, 'rows': rows}
+        out['liks'][lname] = {'pool_size': rows[-1]['pool_size'], 'rows': rows}
+    out['excluded'] = sorted(set(cpool.excluded))
+    out['n_pool'] = out['liks']['L0']['pool_size']
     out['inexact'] = {k: getattr(v, 'inexact', 0) for k, v in ch.items()}
+    out['deriver_inexact'] = der.chain.inexact
     out['data_head'] = [pp(d) for d in data[:12]]
     out['frac_forall_data'] = sum(1 for d in data if d[0] == 'all') / len(data)
     out['frac_param_data'] = sum(1 for d in data if 'w0' in str(d)) / len(data)
@@ -182,7 +208,8 @@ def report(results, wall):
                '{phi(?t) open}, H_all+sch, Mem(D_n), over-general, over-specific and fragmented theories '
                '(summed over the pool); P(|-forall) = posterior mass of theories T with T |-_1 forall x phi '
                '(chain derivations of length <= 1); P(|-inst) = the same for held-out closed instances '
-               '(mean over 3); lo = log2 posterior odds H_sch : H_all. Means over seeds.\n')
+               '(mean over 3); "Mem" = Mem(D_n) and any pool theory of ground data seen so far; '
+               'lo = log2 posterior odds H_sch : H_all. Means over seeds.\n')
     summary = {}
     for phi in PHIS:
         for g in GENS:
@@ -192,11 +219,13 @@ def report(results, wall):
             txt.append('\n## phi = %s, generator %s\n' % (phi, g))
             txt.append('Pool size (incl. Mem) %s (data-derived theories left out for lack of exact L1: %s); '
                        'fraction of data with explicit forall: %.2f; with the '
-                       'parameter: %.2f; L1 inexact counters %s.\n' % (
+                       'parameter: %.2f; L1 likelihood fallback counters, summed over seeds: %s.\n' % (
                            rs[0]['liks']['L0']['pool_size'], sum(len(r['excluded']) for r in rs),
                            sum(r['frac_forall_data'] for r in rs) / len(rs),
                            sum(r['frac_param_data'] for r in rs) / len(rs),
-                           [r['inexact'] for r in rs][0]))
+                           {k: sum(r['inexact'][k] for r in rs) for k in rs[0]['inexact']}))
+            txt.append('Derivability oracle (|-_1) fallback count, summed over seeds: %d (0 = every derivability '
+                       'answer exact).\n' % sum(r['deriver_inexact'] for r in rs))
             for lname in rs[0]['liks']:
                 bmax = max([r['liks'][lname]['rows'][i]['bounded'][1] for r in rs
                             for i in range(len(NS)) if r['liks'][lname]['rows'][i]['bounded']] or [0.0])

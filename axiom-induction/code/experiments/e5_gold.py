@@ -27,6 +27,7 @@ from bai.pool import specialise
 from dtrc.templates import instantiate
 
 SEEDS = list(range(10))
+DRAWS_A2 = 1000
 NS_A = [1, 4, 16, 64, 256, 1024, 4096]
 ALPHA = 0.5
 
@@ -92,11 +93,12 @@ def part_a2():
     rows = []
     rng = np.random.default_rng(0)
     ns = [10 ** k for k in range(2, 9)]
-    means = []
+    means, ses = [], []
     for n in ns:
-        vals = [nested_bf_quadrature(n, int(rng.binomial(n, qS)), qS) for _ in range(200)]
-        means.append(float(sum(vals) / len(vals)))
-        rows.append([n, fmt(float(sum(vals) / len(vals)), 2), fmt(float(min(vals)), 2), fmt(float(max(vals)), 2)])
+        vals = np.array([nested_bf_quadrature(n, int(rng.binomial(n, qS)), qS) for _ in range(DRAWS_A2)])
+        means.append(float(vals.mean()))
+        ses.append(float(vals.std(ddof=1) / math.sqrt(len(vals))))
+        rows.append([n, fmt(float(vals.mean()), 3), fmt(ses[-1], 3), fmt(float(vals.min()), 2), fmt(float(vals.max()), 2)])
     # cross-check: quadrature against the exact Dirichlet DP of part (a) on two seeded data sets (n = 500)
     from bai.lik import dirichlet_marginal, logcoefs0
     P = parse('?t+0=?t')
@@ -109,11 +111,20 @@ def part_a2():
         ex = (dirichlet_marginal([logcoefs0(th, d, Q) for d in data], 2, ALPHA)
               - dirichlet_marginal([logcoefs0(base, d, Q) for d in data], 1, ALPHA)) / LN2
         check.append((seed, round(ex, 5), round(nested_bf_quadrature(500, nS, qS), 5)))
-    xs = [math.log2(n) for n in ns]
-    mx, my = sum(xs) / len(xs), sum(means) / len(means)
-    fit = sum((x - mx) * (y - my) for x, y in zip(xs, means)) / sum((x - mx) ** 2 for x in xs)
-    slopes = {'per decade': [round(float((means[i + 1] - means[i]) / math.log2(10)), 3) for i in range(len(ns) - 1)],
-              'least-squares slope against log2 n': round(float(fit), 4), 'check (seed, exact DP, quadrature) at n=500': check}
+    def ls_slope(idx):
+        xs = [math.log2(ns[i]) for i in idx]
+        ys = [means[i] for i in idx]
+        mx = sum(xs) / len(xs)
+        sxx = sum((x - mx) ** 2 for x in xs)
+        cs = [(x - mx) / sxx for x in xs]
+        b = sum(c * y for c, y in zip(cs, ys))
+        se = math.sqrt(sum((c * ses[i]) ** 2 for c, i in zip(cs, idx)))
+        return round(float(b), 4), round(float(se), 4)
+    slopes = {'per decade (per log2 n)': [round(float((means[i + 1] - means[i]) / math.log2(10)), 3)
+                                          for i in range(len(ns) - 1)],
+              'least-squares slope against log2 n, n = 1e2..1e8 (slope, s.e. from the draws)': ls_slope(range(len(ns))),
+              'least-squares slope, n = 1e4..1e8': ls_slope(range(2, len(ns))),
+              'check (seed, exact DP, quadrature) at n=500': check}
     return rows, qS, slopes
 
 
@@ -250,10 +261,11 @@ def main():
                'Under {phi(?t), phi(S?z)} a datum phi(t) has probability Q(t)(w1 + w2/qS) if t is S-rooted and '
                'Q(t) w1 otherwise, with qS = %.3f the root probability of S; so the Bayes factor against {phi(?t)} '
                'depends only on n and the number nS of S-rooted data: BF = E[(1 - w2 + w2/qS)^nS (1 - w2)^(n - nS)], '
-               'w2 ~ Beta(1/2, 1/2). nS ~ Binomial(n, qS), 200 draws per n (numpy seed 0); log2 BF by quadrature '
+               'w2 ~ Beta(1/2, 1/2). nS ~ Binomial(n, qS), %d draws per n (numpy seed 0); log2 BF by quadrature '
                '(substitution w2 = u^2, 2e5-point trapezoid rule). The cross-check against the exact DP is listed '
-               'with the slopes below.\n\n' % qS)
-    txt.append(md_table(['n', 'mean log2 BF', 'min', 'max'], rows_a2))
+               'with the slopes below. The standard errors of the slopes are propagated from the per-n standard '
+               'errors of the means (independent draws per n).\n\n' % (qS, DRAWS_A2))
+    txt.append(md_table(['n', 'mean log2 BF', 's.e. of the mean', 'min', 'max'], rows_a2))
     txt.append('\nSlopes of the mean log2 BF against log2 n: %s\n' % slopes_a2)
     for src, rows in rows_b.items():
         txt.append('\n## (b) Data from %s: posterior over {L_1..L_40, L_inf}\n\n' % src)

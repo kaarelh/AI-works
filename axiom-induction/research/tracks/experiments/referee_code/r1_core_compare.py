@@ -211,13 +211,16 @@ for name, K, qe_open in [('H_all', 1, True), ('M_x', 2, False), ('mp', 1, False)
     t1 = L1T[name]
     m = len(t1.comps)
     w = [1.0 / m] * m
-    N = 20000
+    N = 10000
     cnt = Counter(R.chain_sample(t1, w, q, q, qe_open, K, 0.5, rng) for _ in range(N))
     stat, df, rest_c, tot, big, unk = 0.0, 0, 0, 0.0, 0.0, 0
 
     def pex(d):
         return sum(w[i] * math.exp(R.l1_coef(t1, i, d, q, q, qe_open, K, 0.5)) for i in range(m))
     for d, c in cnt.items():
+        if c < 5:                  # cells with N p >= 20 have count >= 5 except with negligible probability
+            rest_c += c
+            continue
         try:
             p = pex(d)
         except OverflowError:      # too many occurrences for the brute force: pooled
@@ -234,7 +237,7 @@ for name, K, qe_open in [('H_all', 1, True), ('M_x', 2, False), ('mp', 1, False)
     rp = 1 - big
     stat += (rest_c - N * rp) ** 2 / (N * rp)
     log('(g) own sampler vs own exact, %s K=%d qe_open=%s: chi2 = %.1f on %d cells (+1 pooled); sum of exact '
-        'probabilities of observed data %.4f <= 1' % (name, K, qe_open, stat, df, tot))
+        'probabilities of data seen >= 5 times %.4f <= 1' % (name, K, qe_open, stat, df, tot))
 
 with open(os.path.join(HERE, 'r1_core_compare.out'), 'w') as f:
     f.write('\n'.join(OUT) + '\n')

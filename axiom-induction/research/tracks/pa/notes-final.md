@@ -107,8 +107,9 @@ prior unless said otherwise.
   * With Dirichlet(½) weights the marginal is model §1.5's P^Dir_T.
 * **L1 (derivation grammar).** Model §1.5: a random derivation tree that cites axioms (instantiated by Q) or applies
   rules; P_T(d) is the normalised probability that it concludes d. This is the generative model of the brief. Under
-  subcriticality P_T(d) is a computable real, but whether P_T(d) > 0 is undecidable, and evaluation by truncation
-  takes time exponential in the derivation size (model Prop 2.7).
+  subcriticality P_T(d) is a computable real, but whether P_T(d) > 0 is undecidable (model Prop 2.7). The only
+  evaluation method given there, truncation, enumerates a number of trees exponential in its precision parameter; no
+  lower bound on the cost is known.
 * **L1-max (two-part).** −log₂ of the probability of the best single derivation (universal's name).
 * **L1-sch (this track's computable two-part code).** A datum is the conclusion of a derivation in the
   natural-deduction calculus of `checks/nd.py` (rules hyp, ax, tc, →I, ∀E, ∀I, ∃I, ∃E, refl, subst; a standard sound
@@ -682,7 +683,8 @@ derivation grammar on closed theorems t = 0: an over-general escape template bea
 terms cheaper than the derivation steps.
 
 **Relation to the time penalty (brief H6).** The full-sum likelihood that makes the generator beat memorisation
-(Prop 3.2) has an undecidable support and is expensive to approximate (model Prop 2.7). A time-bounded approximation
+(Prop 3.2) has an undecidable support, and the known evaluation method is exponential in its precision (model
+Prop 2.7). A time-bounded approximation
 that sums over the derivations found within the bound lower-bounds μ_T(θ), so it overestimates the code length
 −log₂μ_T(θ); the two-part code is the extreme case of one derivation. So a time bound on computing the likelihood
 pushes the posterior towards adopting theorems with long proofs as axioms. The first version said this for "deep
@@ -1211,7 +1213,7 @@ cite this file's numbering; universal and experiments cite `notes.md` of this tr
 | **M1** §4 table differs from `c4_bdtrc.out` (8 entries) | accepted; table regenerated from the output by a script, and every quoted number in this file is checked mechanically against the outputs | §5 table | `c10_quotes.py` → `c10_quotes.out` (all quotes found) |
 | **M2** overall answer claims untested robustness | accepted; answer restated with the qualifiers "within the hand-picked candidate sets" and "axiom-instance data"; the failures and the unscored competitors are listed | §7, §5 answer | text; supported by §3, §4.3 |
 | **M3** theorem data not treated; memorisation beats derivation | accepted; new section: memorisation threshold β*, lemma reuse, compressible theorems, theorem streams, the well-specified case (Gibbs, Doob), the 0/1 variant, the H6 link | §3, F10 | `thm.py` (5 new derivation schemes), `c6_theorem_data.py` (19 checked derivations); Props 3.1–3.4 proved |
-| **M4** Prop 3.5(c) and F8 refuted | accepted; claim kept as refuted with the referee's counterexample (re-checked independently) and a second one (G1 skeleton theory); new Lemma 4.7, Prop 4.8 (read-once dichotomy), Remark 4.9, Conjecture 4.10; F8 and the summary rewritten | §4.1–4.3, F8 | `c8_narrow.py` (identity = c4 code to 0.1 bit); `c9_shift.py` (checked) |
+| **M4** Prop 3.5(c) and F8 refuted | accepted; claim kept as refuted with the referee's counterexample (re-checked independently) and a second one (G1 skeleton theory); new Lemma 4.7, Prop 4.8 (read-once dichotomy), Remark 4.9, Conjecture 4.10; F8 and the summary rewritten. The referee's remark that G1 forces a covering template with a formula metavariable is not right: G1 has 157 skeletons, all covered by term-only templates inside IΣ₂; there the posterior keeps PA through the Occam balance, not through coverage | §4.1–4.3, F8 | `c8_narrow.py` (identity = c4 code to 0.1 bit); `c9_shift.py` (checked) |
 | **M5** exponential ∀E rate is a property of the rule code | accepted; rate reported with the code; learned depth-indexed rule law gives (R−1)/2·log₂n; mixed practice gives h(f) per datum | §5.5 | `c7_rulecode.py` (reproduces the referee's r3 numbers) |
 | **m1** H_root not charged for unused templates | accepted; every template charged; H_used added (the paper's H_F); u7 bookkeeping printed for reproduction | §2.2 | `c2_mdl.py`, `c2b_cf.py`; reproduction of `AS:tab:many:mdl` at n = 1000 |
 | **m2** SDPC margin not constant | accepted; exact Occam identity and expansion (Prop 2.3) | §2.2 | identity printed next to the code length at every n; slopes −1, −2.5, −3 |
@@ -1256,10 +1258,12 @@ cite this file's numbering; universal and experiments cite `notes.md` of this tr
 
 ### 9.3 Reproducibility run
 
-See `checks/c10_quotes.out` for the final run's record. All scripts were re-run after the last code change; the
-outputs of `test_nd`, `c1_costs`, `c2_detour`, `c3_tower`, `c4_bdtrc`, `c6_theorem_data`, `c7_rulecode`,
-`c8_narrow`, `c9_shift` were byte-identical on a second run; `c2_mdl`, `c2b_cf` and `c5_euler` (several minutes each)
-were run once from the final code. [[REPRO]]
+After the last code change, every script was run once to produce the saved outputs, the outputs were copied aside, and
+every script was run again with `PYTHONDONTWRITEBYTECODE=1` (so no files other than the outputs are written). All
+twelve outputs were byte-identical to the saved ones (`cmp`): `test_nd`, `c1_costs`, `c2_detour`, `c2_mdl`, `c2b_cf`,
+`c3_tower`, `c4_bdtrc`, `c5_euler`, `c6_theorem_data`, `c7_rulecode`, `c8_narrow`, `c9_shift`. `c10_quotes.py` was
+run last, against this file; it reports 87 quotes checked and 0 failed. Run times: `c2_mdl.py` about 25 minutes,
+`c2b_cf.py` and `c5_euler.py` a few minutes, the others under 15 seconds each.
 
 ### 9.4 Refuted claims (kept, with the reason)
 
@@ -1293,3 +1297,6 @@ were run once from the final code. [[REPRO]]
 * Whether the mass of not-yet-refuted inconsistent theories vanishes (Remark 4.5).
 * Whether the greedy assignment is optimal for overlapping templates (Remark 5.4).
 * Collection from Replacement in ZF without Foundation (with Power Set).
+* §3 under plain L1 (a grammar-choice code, model §6.5) or under the full sum over derivations: only the two-part
+  symbol code L1-sch was computed.
+* The asymptotic slope +2.0 for the G1 skeleton theory relies on Wilks's theorem (proof sketch in §4.3).

@@ -1,6 +1,6 @@
 # E5: spare slots, L_inf versus L_k, and Gold's text
 
-Command: `cd code/experiments && python3 e5_gold.py`. Seeds [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]. Dirichlet alpha = 0.5. Wall time 18 s.
+Command: `cd code/experiments && python3 e5_gold.py`. Seeds [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]. Dirichlet alpha = 0.5. Wall time 66 s.
 
 
 ## (a) Spare slots: log2 Bayes factor of T + spare against T = {x+0=x schema}
@@ -38,21 +38,21 @@ Slope of the mean log2 BF against log2 n between n = 256 and 4096: {'false sente
 
 ## (a2) Nested spare slot at large n (quadrature)
 
-Under {phi(?t), phi(S?z)} a datum phi(t) has probability Q(t)(w1 + w2/qS) if t is S-rooted and Q(t) w1 otherwise, with qS = 0.350 the root probability of S; so the Bayes factor against {phi(?t)} depends only on n and the number nS of S-rooted data: BF = E[(1 - w2 + w2/qS)^nS (1 - w2)^(n - nS)], w2 ~ Beta(1/2, 1/2). nS ~ Binomial(n, qS), 200 draws per n (numpy seed 0); log2 BF by quadrature (substitution w2 = u^2, 2e5-point trapezoid rule). The cross-check against the exact DP is listed with the slopes below.
+Under {phi(?t), phi(S?z)} a datum phi(t) has probability Q(t)(w1 + w2/qS) if t is S-rooted and Q(t) w1 otherwise, with qS = 0.350 the root probability of S; so the Bayes factor against {phi(?t)} depends only on n and the number nS of S-rooted data: BF = E[(1 - w2 + w2/qS)^nS (1 - w2)^(n - nS)], w2 ~ Beta(1/2, 1/2). nS ~ Binomial(n, qS), 1000 draws per n (numpy seed 0); log2 BF by quadrature (substitution w2 = u^2, 2e5-point trapezoid rule). The cross-check against the exact DP is listed with the slopes below. The standard errors of the slopes are propagated from the per-n standard errors of the means (independent draws per n).
 
 
-| n | mean log2 BF | min | max |
-|---|---|---|---|
-| 100 | -2.11 | -3.47 | 3.27 |
-| 1000 | -2.91 | -4.27 | 0.99 |
-| 10000 | -3.87 | -5.21 | 1.98 |
-| 100000 | -4.75 | -5.92 | -0.88 |
-| 1000000 | -5.50 | -6.78 | 0.61 |
-| 10000000 | -6.41 | -7.56 | -3.64 |
-| 100000000 | -7.27 | -8.44 | -3.28 |
+| n | mean log2 BF | s.e. of the mean | min | max |
+|---|---|---|---|---|
+| 100 | -2.196 | 0.030 | -3.47 | 4.08 |
+| 1000 | -3.028 | 0.029 | -4.35 | 3.18 |
+| 10000 | -3.867 | 0.029 | -5.23 | 2.41 |
+| 100000 | -4.658 | 0.031 | -6.14 | 1.01 |
+| 1000000 | -5.575 | 0.029 | -7.08 | 1.03 |
+| 10000000 | -6.332 | 0.030 | -7.84 | -0.24 |
+| 100000000 | -7.200 | 0.028 | -8.56 | -2.20 |
 
 
-Slopes of the mean log2 BF against log2 n: {'per decade': [-0.24, -0.29, -0.267, -0.224, -0.274, -0.26], 'least-squares slope against log2 n': -0.2594, 'check (seed, exact DP, quadrature) at n=500': [(3, -3.97229, -3.97236), (4, -3.16922, -3.16926)]}
+Slopes of the mean log2 BF against log2 n: {'per decade (per log2 n)': [-0.25, -0.253, -0.238, -0.276, -0.228, -0.261], 'least-squares slope against log2 n, n = 1e2..1e8 (slope, s.e. from the draws)': (-0.2508, 0.0017), 'least-squares slope, n = 1e4..1e8': (-0.2511, 0.0028), 'check (seed, exact DP, quadrature) at n=500': [(3, -3.97229, -3.97236), (4, -3.16922, -3.16926)]}
 
 
 ## (b) Data from L_5: posterior over {L_1..L_40, L_inf}

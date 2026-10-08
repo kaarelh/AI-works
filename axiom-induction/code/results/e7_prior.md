@@ -1,36 +1,43 @@
 # E7: prior variants (time factor, steeper simplicity penalty) on the E2 data
 
-Command: `cd code/experiments && python3 e7_prior.py`. Seeds [0, 1, 2, 3, 4]. Wall time 34 s. Template sizes (symbols) of some theories, seed 0: {'T*': 77, 'frag-complete': 287, 'Ind-any-antecedent': 68, 'bare?P': 1, 'Q-lumped': 22}.
+Command: `cd code/experiments && python3 e7_prior.py`. Seeds 0-24. Causal pool with Trim(T, D_n) and Mem(D_n), as in E2. Wall time 160 s. Template sizes (symbols) of some theories, seed 0: {'T*': 77, 'frag-complete': 287, 'Ind-any-antecedent': 68, 'bare?P': 1, 'Q-lumped': 22}.
 
-| lambda | tau | n | T* | equiv. to T* | unsound | MAP (count) |
-|---|---|---|---|---|---|---|
-| 1.0 | 0.0 | 8 | 2e-26 | 2e-26 | 0.401 | DTRC(n=16) x3; Q-lumped x2 |
-| 1.0 | 0.0 | 16 | 8e-22 | 8e-22 | 0.399 | DTRC(n=16) x3; Q-lumped x2 |
-| 1.0 | 0.0 | 32 | 0.197 | 0.197 | 0.203 | T*-Q2 x2; skel6 x1; skel4 x1 |
-| 1.0 | 0.0 | 64 | 0.790 | 0.790 | 0.010 | T* x4; T*-Q3 x1 |
-| 1.0 | 0.0 | 128 | 0.991 | 0.991 | 0.009 | T* x5 |
-| 1.0 | 0.0 | 512 | 0.996 | 0.996 | 0.004 | T* x5 |
-| 1.0 | 1.0 | 8 | 7e-27 | 7e-27 | 0.401 | DTRC(n=16) x3; Q-lumped x1; skel4 x1 |
-| 1.0 | 1.0 | 16 | 2e-22 | 2e-22 | 0.400 | DTRC(n=16) x3; Q-lumped x1; skel4 x1 |
-| 1.0 | 1.0 | 32 | 0.197 | 0.197 | 0.203 | T*-Q2 x2; skel6 x1; skel4 x1 |
-| 1.0 | 1.0 | 64 | 0.791 | 0.791 | 0.009 | T* x4; T*-Q3 x1 |
-| 1.0 | 1.0 | 128 | 0.992 | 0.992 | 0.008 | T* x5 |
-| 1.0 | 1.0 | 512 | 0.996 | 0.996 | 0.004 | T* x5 |
-| 1.0 | 4.0 | 8 | 2e-28 | 2e-28 | 0.404 | DTRC(n=16) x3; Q-lumped x2 |
-| 1.0 | 4.0 | 16 | 6e-24 | 6e-24 | 0.400 | DTRC(n=16) x3; Q-lumped x2 |
-| 1.0 | 4.0 | 32 | 0.197 | 0.197 | 0.203 | T*-Q2 x2; skel6 x1; skel4 x1 |
-| 1.0 | 4.0 | 64 | 0.792 | 0.792 | 0.008 | T* x4; T*-Q3 x1 |
-| 1.0 | 4.0 | 128 | 0.993 | 0.993 | 0.007 | T* x5 |
-| 1.0 | 4.0 | 512 | 0.996 | 0.996 | 0.004 | T* x5 |
-| 2.0 | 0.0 | 8 | 7e-68 | 7e-68 | 1.000 | Q-lumped x5 |
-| 2.0 | 0.0 | 16 | 9e-58 | 9e-58 | 0.809 | Q-lumped x4; DTRC(n=16) x1 |
-| 2.0 | 0.0 | 32 | 8e-28 | 8e-28 | 1.000 | Q-lumped x3; skel4 x2 |
-| 2.0 | 0.0 | 64 | 0.799 | 0.799 | 5e-04 | T* x4; T*-Q3 x1 |
-| 2.0 | 0.0 | 128 | 1.000 | 1.000 | 5e-04 | T* x5 |
-| 2.0 | 0.0 | 512 | 1.000 | 1.000 | 2e-04 | T* x5 |
-| 0.5 | 0.0 | 8 | 1e-09 | 1e-09 | 0.200 | DTRC(n=16) x4; Q-lumped x1 |
-| 0.5 | 0.0 | 16 | 6e-10 | 6e-10 | 9e-07 | DTRC(n=16) x5 |
-| 0.5 | 0.0 | 32 | 0.186 | 0.186 | 0.107 | skel6 x2; T*-Q2 x2; T* x1 |
-| 0.5 | 0.0 | 64 | 0.757 | 0.759 | 0.041 | T* x4; T*-Q3 x1 |
-| 0.5 | 0.0 | 128 | 0.961 | 0.963 | 0.037 | T* x5 |
-| 0.5 | 0.0 | 512 | 0.980 | 0.981 | 0.019 | T* x5 |
+
+Columns: mean posterior of T*, of theories deductively equivalent to T*, of unsound theories; seeds in which a delta = 0.05 verifier (citation depth) accepts a false probe; the tag of the MAP (yes = equivalent to T*, weaker = sound and strictly weaker, no = unsound) counted over seeds.
+
+
+| lambda | tau | n | T* | equiv. to T* | unsound | accepting seeds | MAP tag (count) |
+|---|---|---|---|---|---|---|---|
+| 1.0 | 0.0 | 8 | 2e-21 | 4e-13 | 0.256 | 2/25 | weaker x18; no x7 |
+| 1.0 | 0.0 | 16 | 9e-07 | 5e-06 | 0.197 | 3/25 | weaker x20; no x5 |
+| 1.0 | 0.0 | 32 | 0.197 | 0.197 | 0.077 | 0/25 | weaker x19; yes x5; no x1 |
+| 1.0 | 0.0 | 64 | 0.751 | 0.791 | 0.009 | 0/25 | yes x20; weaker x5 |
+| 1.0 | 0.0 | 128 | 0.991 | 0.991 | 0.009 | 0/25 | yes x25 |
+| 1.0 | 0.0 | 512 | 0.996 | 0.996 | 0.004 | 0/25 | yes x25 |
+| 1.0 | 1.0 | 8 | 8e-22 | 1e-13 | 0.293 | 2/25 | weaker x16; no x9 |
+| 1.0 | 1.0 | 16 | 8e-07 | 5e-06 | 0.217 | 3/25 | weaker x19; no x6 |
+| 1.0 | 1.0 | 32 | 0.197 | 0.197 | 0.084 | 0/25 | weaker x17; yes x5; no x3 |
+| 1.0 | 1.0 | 64 | 0.751 | 0.791 | 0.009 | 0/25 | yes x20; weaker x5 |
+| 1.0 | 1.0 | 128 | 0.992 | 0.992 | 0.008 | 0/25 | yes x25 |
+| 1.0 | 1.0 | 512 | 0.996 | 0.996 | 0.004 | 0/25 | yes x25 |
+| 1.0 | 4.0 | 8 | 9e-23 | 6e-15 | 0.372 | 5/25 | weaker x16; no x9 |
+| 1.0 | 4.0 | 16 | 6e-07 | 4e-06 | 0.262 | 4/25 | weaker x18; no x7 |
+| 1.0 | 4.0 | 32 | 0.197 | 0.197 | 0.103 | 1/25 | weaker x17; yes x5; no x3 |
+| 1.0 | 4.0 | 64 | 0.752 | 0.792 | 0.008 | 0/25 | yes x20; weaker x5 |
+| 1.0 | 4.0 | 128 | 0.993 | 0.993 | 0.007 | 0/25 | yes x25 |
+| 1.0 | 4.0 | 512 | 0.996 | 0.996 | 0.004 | 0/25 | yes x25 |
+| 2.0 | 0.0 | 8 | 2e-59 | 3e-46 | 0.860 | 18/25 | no x22; weaker x3 |
+| 2.0 | 0.0 | 16 | 2e-38 | 9e-19 | 0.792 | 19/25 | no x20; weaker x5 |
+| 2.0 | 0.0 | 32 | 0.040 | 0.040 | 0.737 | 18/25 | no x18; weaker x6; yes x1 |
+| 2.0 | 0.0 | 64 | 0.594 | 0.634 | 0.206 | 5/25 | yes x16; no x5; weaker x4 |
+| 2.0 | 0.0 | 128 | 1.000 | 1.000 | 5e-04 | 0/25 | yes x25 |
+| 2.0 | 0.0 | 512 | 1.000 | 1.000 | 2e-04 | 0/25 | yes x25 |
+| 0.5 | 0.0 | 8 | 2e-11 | 1e-06 | 3e-04 | 0/25 | weaker x25 |
+| 0.5 | 0.0 | 16 | 1e-04 | 5e-04 | 7e-05 | 0/25 | weaker x25 |
+| 0.5 | 0.0 | 32 | 0.186 | 0.187 | 0.014 | 0/25 | weaker x20; yes x5 |
+| 0.5 | 0.0 | 64 | 0.719 | 0.761 | 0.039 | 0/25 | yes x20; weaker x5 |
+| 0.5 | 0.0 | 128 | 0.961 | 0.963 | 0.037 | 0/25 | yes x25 |
+| 0.5 | 0.0 | 512 | 0.980 | 0.981 | 0.019 | 0/25 | yes x25 |
+
+
+Largest change, over seeds and n, of the mass of T*, of its equivalents or of the unsound theories caused by the time factor: tau = 1: 0.1814; tau = 4: 0.5627.

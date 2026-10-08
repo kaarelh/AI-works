@@ -188,3 +188,50 @@ def skeleton_theories(data, ks=(2, 3, 4)):
 
 def mem_theory(data, name='Mem'):
     return Theory([Component(d) for d in dict.fromkeys(data)], name, {'cls': 'mem'})
+
+
+# ------------------------------------------------------------------------------------ causal pools
+def dedupe_theories(pool):
+    seen, out = set(), []
+    for th in pool:
+        if th.key in seen:
+            continue
+        seen.add(th.key)
+        out.append(th)
+    return out
+
+
+class CausalPool:
+    """A pool that uses only data already seen: pool(n) = the fixed theories, plus the data-derived theories
+    built from D_b for every build point b <= n (built once, on first use, and kept for all later n).
+    builder(D_b, b) returns a list of theories; keep(theory) filters them (e.g. exact-L1 support);
+    rejected names are collected in self.excluded."""
+
+    def __init__(self, fixed, builder, build_points, data, keep=None):
+        self.fixed = list(fixed)
+        self.builder = builder
+        self.bp = sorted(set(build_points))
+        self.data = data
+        self.keep = keep
+        self.built = {}
+        self.excluded = []
+
+    def _build(self, b):
+        if b not in self.built:
+            ths = self.builder(self.data[:b], b)
+            if self.keep is not None:
+                self.excluded.extend(th.name for th in ths if not self.keep(th))
+                ths = [th for th in ths if self.keep(th)]
+            self.built[b] = ths
+        return self.built[b]
+
+    def __call__(self, n):
+        out = list(self.fixed)
+        for b in self.bp:
+            if b > n:
+                break
+            out.extend(self._build(b))
+        return dedupe_theories(out)
+
+    def all_theories(self, nmax):
+        return self(nmax)

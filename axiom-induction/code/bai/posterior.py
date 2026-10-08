@@ -4,6 +4,7 @@ import math
 from .grammar import NEG_INF, logsumexp, LN2, Grammar
 from .lik import dirichlet_marginal, dirichlet_bounds, DPTooLarge, logcoefs0, Chain
 from .pool import mem_theory
+from .theory import Theory
 
 
 def coef_fn(lik, Q=None):
@@ -28,24 +29,54 @@ def _hasp(t):
     return has_param(t)
 
 
+def trimmed(th, used, tagger=None):
+    """Trim(T, D_n): the sub-theory of the components of `th` with indices in `used` (the components that
+    cover at least one datum of D_n as a first citation).  Returns None if nothing would be removed or
+    nothing would be left."""
+    if not used or len(used) == len(th.comps):
+        return None
+    comps = [c for i, c in enumerate(th.comps) if i in used]
+    t = Theory(comps, 'trim:' + th.name, {'cls': 'trimmed', 'trimmed_from': th.name})
+    if tagger is not None:
+        tagger(t)
+    return t
+
+
 def evaluate(pool, data, ns, lik, Q=None, alpha=0.5, lam=1.0, tau=0.0, with_mem=True, code=None,
-             max_states=20000):
-    """posterior over `pool` (+ Mem(D_n) if with_mem) after each prefix data[:n], n in ns.
+             max_states=20000, trim=False, tagger=None):
+    """posterior over a pool (+ Mem(D_n) if with_mem) after each prefix data[:n], n in ns.
+
+    pool: a list of theories (the same at every n), or a function n -> list of theories (a pool that may
+    depend on the data seen so far, e.g. theories built from D_b for build points b <= n).
+    trim: if True, at each n add Trim(T, D_n) for every pool theory T with at least two components (the
+    components of T that cover some datum of D_n; see `trimmed`), tagged by tagger(theory) if given.
+    Theories are deduplicated at each n by their component keys; the first occurrence wins.
 
     Returns a list (one per n) of dicts name -> {'lp': log prior, 'lm': log marginal likelihood,
-    'post': posterior probability}.  If the exact Dirichlet DP of a theory exceeds max_states states, its
-    marginal is replaced by the lower bound of dirichlet_bounds ('lm_hi' holds the upper bound) and the
-    entry '_bounded' gives the largest posterior mass the bounded theories could have.  log prior = -lam * bits * ln 2 - tau * log2(1 + size) * ln 2."""
+    'post': posterior probability, 'theory': the theory}.  If the exact Dirichlet DP of a theory exceeds
+    max_states states, its marginal is replaced by the lower bound of dirichlet_bounds ('lm_hi' holds the
+    upper bound) and the entry '_bounded' gives the largest posterior mass the bounded theories could have.
+    log prior = -lam * bits * ln 2 - tau * log2(1 + size) * ln 2."""
     cf = coef_fn(lik, Q)
     N = max(ns)
-    coefs = {}
+    coefs = {}          # theory key -> list of coefficient dicts (extended lazily)
     priors = {}
-    for th in pool:
-        priors[th.name] = th.tags['log_prior'] if 'log_prior' in th.tags else th.log_prior(lam, tau, code)
-        cs = []
-        for d in data[:N]:
-            cs.append(cf(th, d))
-        coefs[th.name] = cs
+
+    def get_coefs(th, n):
+        cs = coefs.get(th.key)
+        if cs is None:
+            cs = []
+            coefs[th.key] = cs
+        while len(cs) < n:
+            cs.append(cf(th, data[len(cs)]))
+        return cs[:n]
+
+    def get_prior(th):
+        v = priors.get(th.key)
+        if v is None:
+            v = th.tags['log_prior'] if 'log_prior' in th.tags else th.log_prior(lam, tau, code)
+            priors[th.key] = v
+        return v
     out = []
 
     def marg(cs, m):
@@ -56,17 +87,44 @@ def evaluate(pool, data, ns, lik, Q=None, alpha=0.5, lam=1.0, tau=0.0, with_mem=
             return lo, hi
     for n in ns:
         res = {}
-        for th in pool:
-            lm, hi = marg(coefs[th.name][:n], len(th.comps))
-            res[th.name] = {'lp': priors[th.name], 'lm': lm}
+        seen = set()
+        cur = list(pool(n) if callable(pool) else pool)
+        if trim:
+            extra = []
+            for th in cur:
+                if len(th.comps) < 2:
+                    continue
+                cs = get_coefs(th, n)
+                used = set()
+                for cj in cs:
+                    used.update(cj)
+                t = trimmed(th, used, tagger)
+                if t is not None:
+                    extra.append(t)
+            cur = cur + extra
+        mem = mem_theory(data[:n], 'Mem') if with_mem else None
+        if mem is not None:
+            cur = cur + [mem]
+        names_by_key = {}
+        for th in cur:
+            if th.key in seen:
+                if th is mem:
+                    # Mem(D_n) equals a pool theory: that theory keeps its name and its mass; 'Mem' is an
+                    # alias with no mass of its own (no double counting)
+                    res['Mem'] = {'lp': NEG_INF, 'lm': NEG_INF, 'theory': mem, 'alias_of': names_by_key[th.key]}
+                continue
+            seen.add(th.key)
+            name = th.name
+            if name in res:
+                k = 2
+                while '%s#%d' % (name, k) in res:
+                    k += 1
+                name = '%s#%d' % (name, k)
+            names_by_key[th.key] = name
+            lm, hi = marg(get_coefs(th, n), len(th.comps))
+            res[name] = {'lp': get_prior(th), 'lm': lm, 'theory': th}
             if hi is not None:
-                res[th.name]['lm_hi'] = hi
-        if with_mem:
-            mem = mem_theory(data[:n], 'Mem')
-            lm, hi = marg([cf(mem, d) for d in data[:n]], len(mem.comps))
-            res['Mem'] = {'lp': mem.log_prior(lam, tau, code), 'lm': lm, 'theory': mem}
-            if hi is not None:
-                res['Mem']['lm_hi'] = hi
+                res[name]['lm_hi'] = hi
         z = logsumexp([v['lp'] + v['lm'] for v in res.values()])
         for v in res.values():
             x = v['lp'] + v['lm']
@@ -109,14 +167,17 @@ class Deriver:
 
 
 def support_mass(res, theories, deriver, s):
-    """posterior mass of the theories in the pool (and Mem, if present in res) that derive s"""
+    """posterior mass of the theories in res (the pool at this n, including Mem and trimmed theories) that
+    derive s.  `theories` is kept for backward compatibility and used only for entries of res that carry
+    no theory."""
+    byname = {th.name: th for th in theories}
     tot = 0.0
-    ths = list(theories)
-    if 'Mem' in res and 'theory' in res['Mem']:
-        ths.append(res['Mem']['theory'])
-    for th in ths:
-        if th.name in res and res[th.name]['post'] > 0 and deriver.derives(th, s):
-            tot += res[th.name]['post']
+    for name, v in res.items():
+        if name.startswith('_') or v['post'] <= 0:
+            continue
+        th = v.get('theory') or byname.get(name)
+        if th is not None and deriver.derives(th, s):
+            tot += v['post']
     return tot
 
 

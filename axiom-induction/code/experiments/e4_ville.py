@@ -73,7 +73,7 @@ def tight_pipeline(args):
             data = cite_data(Ts, [1.0], Qu, horizon, seed0 + tr)
         ns = list(range(1, horizon + 1))
         res_all = evaluate([Ts, Tp], data, ns, 'L0', Q=Qu, alpha=ALPHA, with_mem=False)
-        if any(support_mass(r, [Ts, Tp], der, BAD) >= 1 - delta for r in res_all):
+        if any(support_mass(r, [], der, BAD) >= 1 - delta for r in res_all):
             wins += 1
     return wins
 
@@ -117,6 +117,8 @@ def part_a():
 
 
 # ------------------------------------------------------------------------------------ (B), (C)
+# note: '1+0=0' and 'S0+0=0' parse to the same sentence, so the list has 8 distinct queries (results unaffected;
+# research/tracks/experiments/checks/check_e4_where.out)
 QUERIES = [parse('forall x. x+0=x'), parse('1+0=0'), parse('0+0=1'), parse('S0+0=0'), BAD, parse('2+0=3'),
            parse('7+0=8'), parse('(1+1)+0=S(1+1)'), parse('0=0')]
 
@@ -147,7 +149,7 @@ def pool_trial(args):
     elif setting == 'C3':
         data = [instantiate(P, {'t': ZERO})] * nmax
     lik = 'L0' if lik_name == 'L0' else Chain(Q, Q, K=1, c_stop=0.5, qe_open=False)
-    ns = list(range(1, nmax + 1)) if nmax <= 64 else sorted(set(list(range(1, 65)) + list(range(64, nmax + 1, 8))))
+    ns = list(range(1, nmax + 1))          # every n is checked (referee m6; the first version checked 88 values)
     res_all = evaluate(pool, data, ns, lik, Q=Q, alpha=ALPHA)
     der = Deriver(K=1, Q=Q)
     # w* = prior mass of T* when the prior is normalised over the fixed pool plus the whole family of
@@ -160,15 +162,17 @@ def pool_trial(args):
     max_mass = 0.0
     for n, r in zip(ns, res_all):
         for q in invalid:
-            m = support_mass(r, pool, der, q)
+            m = support_mass(r, [], der, q)
             max_mass = max(max_mass, m)
             if m >= 1 - 0.05 * wstar and first_win is None:
                 first_win = (n, pp(q))
     final = res_all[-1]
-    mp = max(final, key=lambda k: final[k]['post'])
+    mp = max((k for k in final if not k.startswith('_')), key=lambda k: final[k]['post'])
     return {'setting': setting, 'lik': lik_name, 'seed': seed, 'wstar': wstar, 'first_win': first_win,
             'max_invalid_mass': max_mass, 'map': mp, 'map_post': final[mp]['post'],
-            'n_invalid_queries': len(invalid)}
+            'n_invalid_queries': len(invalid), 'deriver_inexact': der.chain.inexact,
+            'lik_inexact': getattr(lik, 'inexact', 0),
+            'bounded': max((r['_bounded']['max_post'] for r in res_all if '_bounded' in r), default=0.0)}
 
 
 def part_bc(trials=100, nmax=256):
@@ -189,6 +193,7 @@ def part_bc(trials=100, nmax=256):
                 maps[r['map']] = maps.get(r['map'], 0) + 1
             ex = [r['first_win'] for r in rs if r['first_win']][:2]
             rows.append([setting, lik, fmt(rs[0]['wstar'], 4), '%d/%d' % (wins, len(rs)), 0.05,
+                         '%d / %d' % (sum(r['deriver_inexact'] for r in rs), sum(r['lik_inexact'] for r in rs)),
                          fmt(max(r['max_invalid_mass'] for r in rs), 4),
                          '; '.join('%s x%d' % (k[:26], v) for k, v in sorted(maps.items(), key=lambda kv: -kv[1])[:3]),
                          '; '.join('n=%d %s' % e for e in ex)])
@@ -212,10 +217,11 @@ def main():
                'B: well specified (L0 citations of phi(?t)). C1: 10%% of the data replaced by false near misses '
                't+0=St; the pool also contains {phi(?t), ?t+0=S?t}. C2: heavy-tailed terms (zeta numerals, s = 1.5). '
                'C3: only phi(0) is shown; the decoy T\' = {phi(0), 0=S0} is in the pool. The prover queries every '
-               'round all statements of a fixed list that T* does not derive: %s. n = 1..256. '
+               'round all statements of a fixed list that T* does not derive: %s. Every n = 1..256 is checked. '
                '"max mass" = the largest posterior mass ever given to the theories deriving one invalid query.\n\n'
                % ', '.join(pp(q) for q in QUERIES))
-    txt.append(md_table(['setting', 'likelihood', 'w* = prior of T*', 'prover wins', 'bound', 'max mass on an invalid query',
+    txt.append(md_table(['setting', 'likelihood', 'w* = prior of T*', 'prover wins', 'bound',
+                         'fallback counts (oracle / likelihood)', 'max mass on an invalid query',
                          'MAP at n=256 (count)', 'first wins (examples)'], rows_bc))
     save('e4_ville', '\n'.join(txt), {'A': rows_a, 'BC': rows_bc, 'raw': raw})
 
