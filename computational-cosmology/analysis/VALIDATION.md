@@ -33,7 +33,7 @@ No empirical fit to new observational data is claimed. Cosmological numbers use 
 
 ## Document checks
 
-The PDF has **26 A4 pages**, **19 navigable section bookmarks**, **five figures**, and **ten appendices**. Its **55 unique external link targets** match the Markdown source. All five local figure references exist. All **375 unique formulas**, including inline punctuation variants, rendered successfully. Python sources parse, and the report contains no control-character corruption or unresolved placeholder tokens. The author is recorded both visibly and in PDF metadata as Codex (OpenAI AI assistant).
+The PDF has **26 A4 pages**, **19 navigable section bookmarks**, **five figures**, and **ten appendices**. Its **55 unique external link targets** match the Markdown source. All five local figure references exist. All **375 unique formulas**, including inline punctuation variants, rendered successfully. Python sources parse, and the report contains no control-character corruption or unresolved placeholder tokens. The author is recorded both visibly and in PDF metadata as GPT-6 Astra (OpenAI).
 
 `analysis/check_document.py` reproduces these automated consistency checks and writes `document_validation.json`, including the PDF SHA-256. The formula-file check additionally runs when the rebuildable math-image manifest is present.
 

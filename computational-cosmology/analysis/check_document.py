@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 source = (ROOT / 'report.md').read_text()
 pdf = ROOT / 'output/pdf/computational-cosmology.pdf'
 reader = PdfReader(pdf)
-assert reader.metadata.author == 'Codex (OpenAI AI assistant)'
+assert reader.metadata.author == 'GPT-6 Astra (OpenAI)'
 assert all(len(p.extract_text()) > 400 for p in reader.pages), 'Empty or nearly empty page'
 assert all(abs(float(p.mediabox.width) - 595.2756) < 0.1 for p in reader.pages)
 assert all(abs(float(p.mediabox.height) - 841.8898) < 0.1 for p in reader.pages)

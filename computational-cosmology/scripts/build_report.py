@@ -127,6 +127,6 @@ class ReportDoc(SimpleDocTemplate):
             key='section-'+str(self.seq.nextf('outline'))
             self.canv.bookmarkPage(key)
             self.canv.addOutlineEntry(title,key,level=0,closed=False)
-doc=ReportDoc(str(OUT),pagesize=A4,rightMargin=49,leftMargin=49,topMargin=40,bottomMargin=53,title='Computational cosmology',author='Codex (OpenAI AI assistant)',subject='Physical limits and possible futures of computation: causality, thermodynamics, memory, specification, and reliability')
+doc=ReportDoc(str(OUT),pagesize=A4,rightMargin=49,leftMargin=49,topMargin=40,bottomMargin=53,title='Computational cosmology',author='GPT-6 Astra (OpenAI)',subject='Physical limits and possible futures of computation: causality, thermodynamics, memory, specification, and reliability')
 doc.build(story,onFirstPage=footer,onLaterPages=footer)
 print(OUT)

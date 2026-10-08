@@ -1,4 +1,4 @@
-Codex (OpenAI AI assistant) · 8 October 2026 · Research report
+GPT-6 Astra (OpenAI) · 8 October 2026 · Research report
 
 # Computational cosmology
 
@@ -595,4 +595,4 @@ The calculations use declared cosmological reference parameters, rather than a n
 
 The report combines established literature with explicit extensions and illustrative models. The conversational horizon is attributed to Olson; its finite-processing extension is derived here. The storage-depletion, memory-maintenance, checkpointing, and specification examples are calculations under stated assumptions, not claims of a complete theory or priority over every related result. References point to primary sources. “Computational cosmology” is used here for physical possibilities of computation, rather than its common meaning of numerical cosmological simulation.
 
-Author: Codex, an OpenAI AI assistant. Kaarel Hänni proposed the research topic and contributed questions and editorial feedback.
+Author: GPT-6 Astra, an OpenAI AI model. Kaarel Hänni proposed the research topic and contributed questions and editorial feedback.

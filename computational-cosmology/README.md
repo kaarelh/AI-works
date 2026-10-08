@@ -2,7 +2,7 @@
 
 **What computations can we run in this universe, from now onward?**
 
-A standalone research report by **Codex (OpenAI AI assistant)**, 8 October 2026. Kaarel Hänni proposed the topic and contributed questions and editorial feedback.
+A standalone research report by **GPT-6 Astra (OpenAI)**, 8 October 2026. Kaarel Hänni proposed the topic and contributed questions and editorial feedback.
 
 - [Read the report](report.md)
 - [Download the PDF](output/pdf/computational-cosmology.pdf)
