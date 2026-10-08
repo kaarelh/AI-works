@@ -70,8 +70,10 @@ def fig_scores(df, out):
             ax.set_yticklabels([c[1] for c in COND])
             ax.invert_yaxis()
             if len(gm) == 0:
-                ax.text(0.5, 0.5, "not run", transform=ax.transAxes, ha="center", va="center", color=MUTED)
+                ax.text(0.5, 0.5, "not run (cost)", transform=ax.transAxes, ha="center", va="center", color=MUTED)
                 ax.set_xticks([])
+                ax.xaxis.set_major_locator(matplotlib.ticker.NullLocator())
+                continue
             else:
                 for k, (c, _, col, mk, fl) in enumerate(COND):
                     x = gm[gm.cond == c].score
@@ -81,7 +83,7 @@ def fig_scores(df, out):
                 ax.set_xlim(lo_all, 1.005)
             ax.xaxis.set_major_locator(matplotlib.ticker.MaxNLocator(4))
     fig.suptitle("Task score by principal: mean and 95% bootstrap CI", x=0.01, ha="left", color=INK, fontsize=13)
-    fig.tight_layout(rect=(0, 0, 1, 0.93))
+    fig.tight_layout(rect=(0, 0, 1, 0.93), h_pad=3.2)
     for j, m in enumerate(MODELS):
         bb = axes[0, j].get_position()
         fig.text(bb.x0, 0.945, MODEL_LABEL[m], color=INK, fontsize=12, weight="bold")
@@ -221,19 +223,55 @@ def fig_attitude(df, out):
     plt.close(fig)
 
 
+def fig_loop(df, out):
+    """Loophole review: item I6 recall and the three workflow-surfaced patterns, by principal."""
+    g = df[df.task == "loop"]
+    panels = [("I6", "Finds the 'foreign use / import\nnot covered' loophole"),
+              ("p_calibration", "Says a specific loophole is\nweaker than it looks"),
+              ("p_holdback", "Advises holding loopholes back\nso they aren't fixed"),
+              ("p_grandfather_step", "Spells out how to get under\nthe grandfather clause")]
+    if "found" in g:
+        import ast
+        g = g.copy()
+        g["I6"] = g["found"].apply(lambda f: float((ast.literal_eval(f) if isinstance(f, str) else f).get("I6_use_import_not_covered", 0))
+                                   if isinstance(f, (str, dict)) else np.nan)
+    panels = [p for p in panels if p[0] in g]
+    fig, axes = plt.subplots(1, len(panels), figsize=(3.6 * len(panels) + 1.6, 3.8), sharey=True)
+    for j, (k, lab) in enumerate(panels):
+        ax = axes[j]
+        ax.set_yticks(range(len(COND)))
+        ax.set_yticklabels([c[1] for c in COND])
+        ax.invert_yaxis()
+        for i, (c, _, col, mk, fl) in enumerate(COND):
+            x = g[g.cond == c][k].dropna()
+            if len(x):
+                mu, lo, hi = boot_ci(x)
+                dot(ax, i, mu, lo, hi, col, mk, fl)
+        ax.set_xlim(-0.03, 1.03)
+        ax.set_title(lab, loc="left", color=INK, fontsize=9.5)
+        ax.set_xlabel("share of responses")
+    fig.suptitle("Loophole review (dual-use): what changes with the principal (all models, n = 42 per principal)",
+                 x=0.01, ha="left", color=INK, fontsize=12)
+    fig.tight_layout(rect=(0, 0, 1, 0.9))
+    fig.savefig(out, dpi=150)
+    plt.close(fig)
+
+
 def main():
     adir, fdir = sys.argv[1], sys.argv[2]
     os.makedirs(fdir, exist_ok=True)
     df = pd.read_csv(f"{adir}/scored_with_judge.csv")
     fig_scores(df, f"{fdir}/fig1_scores.png")
-    cm = pd.read_csv(f"{adir}/contrasts_by_model.csv")
-    cp = pd.read_csv(f"{adir}/pooled_contrasts_z.csv")
-    fig_forest(cm, cp, f"{fdir}/fig2_contrasts.png", "Planned contrasts on task score (standardised within model × task)",
-               "difference in SD units (95% bootstrap CI)")
+    cm = pd.read_csv(f"{adir}/pre4_contrasts_by_model.csv")
+    cp = pd.read_csv(f"{adir}/pre4_pooled_contrasts_z.csv")
+    fig_forest(cm, cp, f"{fdir}/fig2_contrasts.png",
+               "Planned contrasts on task score, four pre-registered tasks (standardised within model × task)",
+               "difference in SD units (95% bootstrap CI); positive = first principal scores higher")
     fig_effort(df, f"{fdir}/fig3_effort.png")
     if "ambiguous_lean" in df:
         fig_lean(df, f"{fdir}/fig4_whip_lean.png")
     fig_attitude(df, f"{fdir}/fig5_attitude.png")
+    fig_loop(df, f"{fdir}/fig6_loop_patterns.png")
     print("figures ->", fdir)
 
 

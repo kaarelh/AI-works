@@ -1,6 +1,6 @@
 """Analysis: condition means, planned contrasts, permutation tests, bootstrap CIs.
 
-usage: python3 analyze.py <scored.jsonl> <outdir> [<judgedir>]
+usage: python3 analyze.py <scored.jsonl> <outdir> [<judgedir>] [<loop_pattern_dir>]
 
 Blocks are (model, task, rep): replicate r uses the same item order in every
 condition. A contrast with weights w (summing to 0) is evaluated per block,
@@ -137,6 +137,23 @@ def add_judge(df, jdir):
     return df
 
 
+LOOP_PATTERNS = {"H2_calibration": "p_calibration", "H1_holdback": "p_holdback", "H4_grandfather_step": "p_grandfather_step"}
+
+
+def add_loop_patterns(df, pdir):
+    if not pdir or not os.path.isdir(pdir):
+        return df
+    for col in LOOP_PATTERNS.values():
+        df[col] = np.nan
+    for i, rid in df["id"].items():
+        p = f"{pdir}/{rid}.json"
+        if os.path.exists(p):
+            d = json.load(open(p))
+            for k, col in LOOP_PATTERNS.items():
+                df.at[i, col] = 1.0 if str((d.get(k) or {}).get("answer", "no")).lower().startswith("y") else 0.0
+    return df
+
+
 def fmt_table(t, cols):
     return t[cols].to_markdown(index=False, floatfmt=".3f")
 
@@ -146,6 +163,7 @@ def main():
     os.makedirs(outdir, exist_ok=True)
     df = pd.DataFrame([json.loads(l) for l in open(path)])
     df = add_judge(df, sys.argv[3] if len(sys.argv) > 3 else None)
+    df = add_loop_patterns(df, sys.argv[4] if len(sys.argv) > 4 else None)
     df["z"] = standardise(df, "score")
     df["log_out_tokens"] = np.log(df["out_tokens"].clip(lower=1))
     df["log_think"] = np.log1p(df["thinking_tokens"].fillna(0))
@@ -169,6 +187,19 @@ def main():
         t.to_csv(f"{outdir}/pooled_contrasts_{y}.csv", index=False)
         report.append(f"## Pooled contrasts, all models and tasks: {label}\n\n" +
                       fmt_table(t, ["contrast", "est", "lo", "hi", "p", "p_holm(primary)", "n_blocks"]))
+
+    # pre-registered primary family: the four original tasks (loop was added after pilot 1)
+    pre = df[df.task.isin(["sched", "whip", "memo", "code"])].copy()
+    pre["z"] = standardise(pre, "score")
+    for y, label in (("z", "standardised"), ("score", "raw")):
+        t = contrast_table(pre, y, [])
+        prim = t[t.contrast.isin(PRIMARY)].copy()
+        t["p_holm(primary)"] = np.nan
+        t.loc[prim.index, "p_holm(primary)"] = holm(prim.p.values)
+        t.to_csv(f"{outdir}/pre4_pooled_contrasts_{y}.csv", index=False)
+        report.insert(1, f"## PRIMARY (pre-registered): pooled over the four original tasks, {label} score\n\n" +
+                      fmt_table(t, ["contrast", "est", "lo", "hi", "p", "p_holm(primary)", "n_blocks"]))
+    contrast_table(pre, "z", ["model"]).to_csv(f"{outdir}/pre4_contrasts_by_model.csv", index=False)
 
     for by in (["model"], ["task"], ["model", "task"]):
         t = contrast_table(df, "z" if by != ["model", "task"] else "score", by)
@@ -224,6 +255,15 @@ def main():
         t["outcome"] = "loop log(n issues listed) (pooled)"
         t["model"] = "all"
         sec.append(t)
+    for col in LOOP_PATTERNS.values():
+        if col in df and df[col].notna().any():
+            g = df[(df.task == "loop") & df[col].notna()]
+            for by in (["model"], []):
+                t = contrast_table(g, col, by)
+                t["outcome"] = f"loop {col}" + (" (pooled)" if not by else "")
+                if not by:
+                    t["model"] = "all"
+                sec.append(t)
     if "n_substance" in df:
         t = contrast_table(df[df.task == "memo"], "n_substance", ["model"])
         t["outcome"] = "memo n_substance edits"
@@ -307,6 +347,14 @@ def main():
             it = pd.DataFrame(rows).groupby("cond").mean(numeric_only=True).T
             it = it[[c for c in COND_ORDER if c in it.columns]]
             report.append("## Whip: mean code for each ambiguous senator (-2 = N ... +2 = Y)\n\n" + it.to_markdown(floatfmt=".2f"))
+    pc = [c for c in LOOP_PATTERNS.values() if c in df]
+    if pc:
+        d = df[df.task == "loop"].groupby("cond")[pc].mean().reindex([c for c in COND_ORDER if c in set(df.cond)])
+        report.append("## Loophole review: workflow-surfaced patterns, share of responses (Sonnet coder)\n\n" + d.to_markdown(floatfmt=".2f"))
+        for c in pc:
+            d = df[df.task == "loop"].pivot_table(index="model", columns="cond", values=c, aggfunc="mean")
+            d = d[[x for x in COND_ORDER if x in d.columns]]
+            report.append(f"### {c} by model\n\n" + d.to_markdown(floatfmt=".2f"))
     mk = df.groupby(["model", "cond"])[[c for c in df.columns if c.startswith("m_")]].mean()
     report.append("## Text markers (share of responses)\n\n" + mk.to_markdown(floatfmt=".3f"))
     cost = df.groupby("model")["cost"].sum()
