@@ -1,0 +1,693 @@
+[
+ {
+  "id": "U-01",
+  "sources": [
+   "MB-01",
+   "MB-22"
+  ],
+  "file": "paper/sections/universal.tex",
+  "label_or_line": "l.8 (opening), l.39 (subsection title), l.68 (thm:univ:B title), l.72 ('Not covered'), l.86, l.222, l.224",
+  "severity": "fatal",
+  "reviewer_severity": {
+   "MB-01": "fatal",
+   "MB-22": "minor"
+  },
+  "verdict": "accepted, fix modified",
+  "problem": "[MB-01] The section states without qualification that instance data 'never favour' forall x phi over sigma_phi, that the B2 effect 'is bounded', and (l.222) that 'the axioms prove forall x phi' does not gain from closed instances. Thm B only covers single axioms (B1), a background under mu_T, Lone, Lcl (B2), and CUiii (B3). The case of a background with a FIXED common weight under Lsel - the likelihood the paper recommends as the good version (l.224) - is missing from the 'Not covered' list, although the source lists it. There the selected laws differ (phi-instance share wc/(1-w+wc) against w), so on closed-instance data from B(+)_w forall x phi the log odds for the forall-version grow linearly, and in the class {B(+)_w forall x phi, B(+)_w sigma_phi} P(T |- forall x phi | D_n) -> 1: neither 'never favour', nor 'bounded', nor the prior-share regime holds. This is a claim stronger than the source. [MB-22] 'On closed instances it accepts forall x phi only if the prior share of provers ... is >= 1-delta' holds only in the limit. At finite n the posterior can exceed its limit.",
+  "evidence": "[MB-01] Universal notes Sec. 4, 'Not covered, or false': 'With fixed weights and a background under L1-sel, the two laws have different effective weights, and whichever matches the data wins.' The effective weight is derived in the paper's own proof of Prop B2 (app-universal l.32), valid at fixed w. scratch/mathB_lsel_fixed.py (c=0.3, w=0.5): drift +0.153 nats/datum for the forall-version on data from B(+)forall (log odds +324.6 at n=2000), -0.171 on data from B(+)sigma. [MB-22] thm:univ:omega(b),(e) give limits only. Finite-n control is cor:univ:sound, under well-specification.",
+  "fix": "Binding text DECISIONS.md §10.U1 (section opening; subsection and theorem titles 'do not favour'; the new 'Not covered' paragraph naming the fixed-weight and learned-weight L1^sel background effects, ∧-detours, normalised C_U3, and the scores with a background or quantified data; l.86; l.222). In §3.9 (l.224), write 'accepts ∀xφ only if, eventually, the prior share of provers over theories and filters is ≥ 1−δ (for finite n see cor:univ:sound)' (MB-22), and name the filter likelihood as 'a known filter (L1^sel, or the per-citation L1^sel_cit, under which the background effect vanishes, rem:univ:B2cit)'.",
+  "verdict_note": "Verified in universal notes §4 'Not covered, or false' (both L1-sel background cases) and the proof of Prop B2 (effective weight w_e = wc/(1−w+wc)). MB-01's alternative of switching the recommendation to L1^sel_cit is not adopted (rejected.json); the tie under L1^sel_cit is stated as a fact."
+ },
+ {
+  "id": "U-02",
+  "sources": [
+   "MB-02",
+   "MB-14"
+  ],
+  "file": "paper/sections/universal.tex; paper/sections/app-universal.tex",
+  "label_or_line": "thm:univ:B (B1), (B3) (l.69); app-universal l.20",
+  "severity": "fatal",
+  "reviewer_severity": {
+   "MB-02": "fatal",
+   "MB-14": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "[MB-02] (B3) asserts the odds bound 'under the scores' in CUiii calculi for all data not containing forall x phi. That is false as stated. The 'score argument' (proof of thm:univ:odds) covers only single axioms on closed-instance data. With first-order derivability (def:model:scores, def:sound:tri): (i) single axioms, datum s = not exists x not phi (or forall x (phi and phi)), s != forall x phi: H_all |- s but I_c(phi) does not, so S_prove(H_sch;D)=0 < S_prove(H_all;D)=1 and the odds become infinite in favour of the forall-version; (ii) with a background, as prop:univ:sim allows: B={forall x phi -> S0=0}, quantifier-free datum S0=0. B with forall x phi proves it; B with I_c(phi) does not. S_prove and S_g with g_inf<1 then favour the forall-version. [MB-14] '(equality under Lcl, Lsel, scores)' omits the conditions under which equality holds. Lsel needs forall x phi not in S; otherwise H_all's normaliser mu(S) includes 1-c and the ratio is strictly below 1. The scores need forall x phi to be consistent. tab:univ:odds states both conditions.",
+  "evidence": "[MB-02] Countermodel for (ii): N with an extra element e, 0+e=S0 (!= e), S0 != 0: forall x phi fails, so B holds, every closed instance holds, S0=0 fails (scratch/mathB_models.py). For (i) a model with an extra element where 0+e != e. For quantifier-free data and single axioms the restricted claim is true: by Herbrand's theorem {forall x phi} |- s iff I_c(phi) |- s for quantifier-free closed s. [MB-14] tab:univ:odds rows 2-3; app-universal l.18.",
+  "fix": "Binding text DECISIONS.md §10.U2: (B3) under the scores only for single axioms and quantifier-free data (equality by Herbrand's theorem); (B1) equality conditions stated. Write the Herbrand step in the App. B proof.",
+  "verdict_note": "Verified: S_prove uses first-order ⊢ (universal §1.5); Th(H_sch) ⊆ Th(H_all), and the datum ¬∃x¬φ is proved by H_all only, so the scores favour the ∀-version on such data. Universal notes (B3) has the same gap."
+ },
+ {
+  "id": "U-03",
+  "sources": [
+   "MB-03"
+  ],
+  "file": "paper/sections/universal.tex; paper/sections/app-universal.tex",
+  "label_or_line": "prop:univ:hanni (l.147); app-universal l.123",
+  "severity": "major",
+  "reviewer_severity": {
+   "MB-03": "major"
+  },
+  "verdict": "partly accepted",
+  "problem": "Read literally, the sentence says that under S_nc (and S_g) the posterior converges to the prior restricted to {T consistent: T |- I_c(phi)}. That is false. S_nc(T;D) = 1[T u D consistent] (def:model:scores), so by compactness and continuity of measure the limit is the prior restricted to {T: T u I_c(phi) consistent}. That set also contains theories that do not prove the instances: the empty theory, and the over-specific {phi(Sz)} of the c2 class, which is true in N and does not prove phi(0). Under S_g with g=1 on provable data and g_inf in (0,1), theories that fail finitely many instances keep positive limit mass (if D_+ is a set). The proof only shows that theories proving the data share one factor.",
+  "evidence": "def:model:scores; app-universal l.123 ('all theories proving the data get the same factor'); universal notes Sec. 6.2, which claims only that the provers' 'mutual odds stay at the prior odds'.",
+  "fix": "Binding text DECISIONS.md §10.U4: state that provers of all the data share one factor under S_nc and S_g (so the trichotomy conclusion holds), and that the S_nc limit is the prior restricted to the larger set {T : T ∪ I_c(φ) consistent}, which contains non-provers such as ∅. Make no claim about non-provers under S_g beyond that.",
+  "verdict_note": "S_nc part verified. The S_g part of MB-03 depends on whether D_+ counts repeated data, which the definition leaves open; with repetitions counted, non-provers vanish under S_g. No S_g limit is claimed (rejected.json)."
+ },
+ {
+  "id": "U-04",
+  "sources": [
+   "MB-04"
+  ],
+  "file": "paper/sections/time.tex",
+  "label_or_line": "rem:time:summary (1) (l.191); l.20",
+  "severity": "major",
+  "reviewer_severity": {
+   "MB-04": "major"
+  },
+  "verdict": "accepted, fix modified",
+  "problem": "'Penalties on the time to check or generate axioms (Kt, speed prior) ... change Haenni's equivalence by an additive constant at most' is marked proved, but Sec. 6 never defines a time-penalised prior. thm:time:equiv is for the untimed 2^-|p| prior. prop:time:cheap shows only that membership takes polynomial time for fixed f. For a Levin Kt-style penalty (log of running time), the Craig decider's time includes simulating f, with an f-dependent overhead, and the charge grows with |chi|. rem:model:priors(iii) itself says a Levin factor changes ln pi by O(ln l(T)). So 'additive constant' holds only for a penalty that depends on the time class alone.",
+  "evidence": "time.tex l.104-109; app-time l.75 ('in time polynomial in |chi| for fixed f'); model.tex rem:model:priors(iii). The source (model notes Sec. 6.5, item 1) makes the same claim without a definition.",
+  "fix": "Binding text DECISIONS.md §10.U6 item (1): Craig's sets have polynomial-time membership like finite DT° theories, so such a penalty charges them as it charges template theories; no time-penalised prior is defined, so no bound on the change to thm:time:equiv is claimed.",
+  "verdict_note": "Verified: no time-penalised prior is defined in §6; rem:model:priors(iii) itself says a Levin factor changes ln π by O(ln ℓ(T)). The model notes' 'additive constant' is not proved; the reviewer's alternative quantitative statements are not adopted."
+ },
+ {
+  "id": "U-05",
+  "sources": [
+   "MB-05",
+   "C-11"
+  ],
+  "file": "paper/sections/time.tex",
+  "label_or_line": "l.20; rem:time:summary (2) (l.191)",
+  "severity": "major",
+  "reviewer_severity": {
+   "MB-05": "major",
+   "C-11": "major"
+  },
+  "verdict": "accepted",
+  "problem": "[MB-05] 'Templates block his schema but not the collapse (in arithmetic)' overstates prop:time:collapse. That proposition needs background PA and covers only Sigma_n-sound assigners on Sigma_n sentences, at cost a|f|+b_n: linear overhead, not the constant of thm:time:equiv. For merely consistent assigners PA+rho can be inconsistent (l.99). Whether Craig's set is a finite union of DT templates is open (app-time l.156, problem 15). l.99 states these limits; the introduction and 'The precise statement' drop them. [C-11] The intro drops the hypotheses of prop:time:collapse. That result needs background PA and covers only Sigma_n-sound assigners on Sigma_n sentences; for merely consistent assigners (the class in Haenni's equivalence) the reflection sentence can be inconsistent with PA. The discussion (line 16) and rem:time:summary(2) keep at least 'in arithmetic'; the intro does not.",
+  "evidence": "[MB-05] time.tex l.89-99 (statement and the paragraph after it); app-time l.156. [C-11] prop:time:collapse (time.tex lines 89-97); time.tex line 99 ('for merely consistent assigners rho_{f,n} can be inconsistent with PA'); discussion.tex line 16 ('in arithmetic one ground reflection sentence reproduces any Sigma_n-sound assigner'). See also MB-05 for time.tex.",
+  "fix": "Binding text DECISIONS.md §10.U6 item (2) (over PA; Σ_n-sound assigners on Σ_n sentences; linear in |f|; open for merely consistent assigners). Delete the l.20 paragraph (the summary moves to the start of §6, U-14)."
+ },
+ {
+  "id": "U-06",
+  "sources": [
+   "MB-06",
+   "C-12"
+  ],
+  "file": "paper/sections/time.tex",
+  "label_or_line": "rem:time:summary (3) (l.191)",
+  "severity": "major",
+  "reviewer_severity": {
+   "MB-06": "major",
+   "C-12": "major"
+  },
+  "verdict": "accepted",
+  "problem": "[MB-06] 'Derivation size in written symbols prices the assigner per datum, between its nondeterministic time (a lower bound for every theory) and its deterministic time (an upper bound for the collapse constructions)' is inexact in four ways. (a) thm:time:ntime gives X in NTIME(l^{c_e}), so the lower bound is the c_e-th root of the nondeterministic time, not that time. (b) It holds only infinitely often, for languages outside the class, and only for theories with polynomial-time membership. (c) The upper bound covers A^C_f (sketch) and two-sorted A_f (recalled, not checked), but not rho_{f,n} (app-time l.92). (d) The charges omit the T-dependent constants -ln(Z_T/Z^sigma_T) and log2 Z_T of prop:time:sigma. l.173 states (a) correctly ('a polynomial root'), so the summary contradicts the body. [C-12] The same result is stated in two incompatible ways. Intro A7 and the discussion say that symbol-size penalties charge a hard assigner 'between its nondeterministic time and its deterministic time'. time.tex says that they charge 'a polynomial root of t(m)', t the nondeterministic time, and that is what prop:time:sigma with thm:time:ntime gives: derivation size l forces X in NTIME(l^c), so the charge is at least t^(1/c), not t.",
+  "evidence": "[MB-06] thm:time:ntime; cor:time:hard; prop:time:sigma(b),(c); app-time l.92; time.tex l.173. [C-12] time.tex line 173 ('symbol-size penalties charge a polynomial root of t(m)'); thm:time:ntime line 114 (X in NTIME(l(m)^{c_e})); prop:time:sigma(b) line 177 (kappa s(m)/4 with X outside NTIME(s^{c_1})). MB-06 flags the same wording in rem:time:summary(3).",
+  "fix": "Binding text DECISIONS.md §10.U6 item (3) (a fixed polynomial root of the nondeterministic time, infinitely often, for theories with polynomial-time membership; constants −ln(Z_T/Z^σ_T) and log2 Z_T kept; upper bound proof sketch; none for ρ_{f,n}); status per §11."
+ },
+ {
+  "id": "U-07",
+  "sources": [
+   "MB-07"
+  ],
+  "file": "paper/sections/time.tex; paper/sections/app-time.tex",
+  "label_or_line": "rem:time:upper (l.130); app-time l.92",
+  "severity": "major",
+  "reviewer_severity": {
+   "MB-07": "major"
+  },
+  "verdict": "accepted",
+  "problem": "The remark counts rho_{f,n} among the constructions that pay 'at most a polynomial of the assigner's deterministic running time' ('plus the Tarski biconditional for rho_{f,n}'). The appendix says the size of the PA-proof of the Tarski biconditional 'is not bounded in the notes', and the source does not bound it either. The remark claims more than the sources and contradicts the appendix.",
+  "evidence": "Model notes Sec. 6.4: 'Template version (Prop 6.5). The same, plus the Tarski biconditional for phi', with no size bound. app-time l.92.",
+  "fix": "Binding text DECISIONS.md §10.U7; status per §11."
+ },
+ {
+  "id": "U-08",
+  "sources": [
+   "MB-08"
+  ],
+  "file": "paper/sections/universal.tex; paper/sections/app-universal.tex",
+  "label_or_line": "prop:univ:open (d) (l.168); app-universal l.155",
+  "severity": "major",
+  "reviewer_severity": {
+   "MB-08": "major"
+  },
+  "verdict": "accepted",
+  "problem": "(d) is stated for any class that contains the guarded H_sch. The proof ('(d) follows from (c), thm:univ:size(2) and prop:univ:both') covers only the finite class {H_all, H_open, H_sch, H_both} of Tab. c5. prop:univ:both is proved in C_min, not C_open. In C_open, H_both's per-datum ratio to H_sch is [(1-w)+(1-rho)cw/(1-gc rho)]/[(1-w)+w(1+c)/(1-gc rho)], a different expression. For countable classes with learned-weight provers, the limit 0 is not proved: thm:univ:omega(a) needs fixed laws.",
+  "evidence": "Universal notes U11 proof: '(d) follows from (c) and U4(2) for the finitely many hypotheses compared'. The C_open H_both law follows from the formulas of app-universal l.152-153 with w_open=0.",
+  "fix": "Binding text DECISIONS.md §10.U5 (finite classes; H_both 'only polynomially, like 1/n in C_min'); the App. B proof says 'for the finitely many hypotheses compared'.",
+  "verdict_note": "Verified: universal notes U11(d) proof is 'from (c) and U4(2) for the finitely many hypotheses compared'."
+ },
+ {
+  "id": "U-09",
+  "sources": [
+   "MB-09"
+  ],
+  "file": "paper/sections/time.tex",
+  "label_or_line": "prop:time:lonesize (l.140)",
+  "severity": "major",
+  "reviewer_severity": {
+   "MB-09": "major"
+  },
+  "verdict": "accepted",
+  "problem": "Wrong number. '-ln Pr(tree) <= 12.8 + 12.2k nats' is false for k >= 6. The exact cost is 12.7657 + 12.2061k: per round -ln(0.1*0.1*(0.2*0.5)^2) - ln(0.1*0.5) = 12.2061, plus -ln(0.2/7) - ln(1e-4) = 12.7657. The paper's own Tab. time:c12 gives 378.95 at k=30, against 12.8 + 12.2*30 = 378.8. Harmless for the argument, which needs only linear growth.",
+  "evidence": "scratch/mathB_time.py: violations at k = 6, 8, 10, 12, 14. The referee's r2_l1_size.out says '<= 12.77 + 12.206 k'.",
+  "fix": "Binding text DECISIONS.md §10.U8: '−ln Pr(tree) = 12.77 + 12.21k nats (12.206 per round)'.",
+  "verdict_note": "Verified from app-time l.97 (12.206 per round, 12.77 for citation and final ∀E) and tab:time:c12 (378.95 at k = 30 > 12.8 + 12.2·30)."
+ },
+ {
+  "id": "U-10",
+  "sources": [
+   "C-16"
+  ],
+  "file": "paper/sections/time.tex; paper/sections/app-time.tex",
+  "label_or_line": "§6.2 (l.59); prop:time:twosorted status (l.62); app-time l.34",
+  "severity": "major",
+  "reviewer_severity": {
+   "C-16": "major"
+  },
+  "verdict": "accepted",
+  "problem": "Cross-track inconsistency left unreconciled. The model track's Prop 6.2 (and the proof of Prop 6.3) uses Sigma_1-completeness of Q for Acc_f(code(phi)). The universal track found, and the paper's own correction table records, that in L_A with < and no Q axiom about <, Q is Sigma_1-complete only for <-free sentences (Q does not prove 0 < S0). The paper never says that Acc_f and Rej_f are written without <, or that < is defined by Dlt in B.",
+  "evidence": "app-verification.tex line 55 ('Sigma_1-completeness of Q restricted to <-free sentences (m2)'); universal notes-final lines 388-391 and §15.1 m2; model notes-final line 886 (no restriction); model.tex line 20 (L_A = {0,S,+,.,<,=}) and line 24 (Q1-Q7 do not mention <); time.tex line 59 ('a Sigma_1 formula of arithmetic ... (via Kleene's T predicate)').",
+  "fix": "Binding text DECISIONS.md §10.U9: Acc_f and Rej_f written without <; status and proof mention Σ1-completeness for <-free sentences. (model-ident-sound adds the Q sentence; front records the reconciliation.)"
+ },
+ {
+  "id": "U-11",
+  "sources": [
+   "R-22",
+   "R-04",
+   "R-03"
+  ],
+  "file": "paper/sections/universal.tex; paper/sections/app-universal.tex",
+  "label_or_line": "§3 opening to §3.2 (l.8-96); §3.9 (l.220-224); tab:univ:odds; tab:univ:c2",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-22": "major",
+   "R-04": "major",
+   "R-03": "major"
+  },
+  "verdict": "accepted, fix modified",
+  "problem": "[R-22] §3 states its answer last. The plain-language verdict ('The intuition, precisely', §3.9, p.23) comes after 7 pages. §3.2 opens with the technical Factorisation (Prop 3.2), and the central Theorem 3.3 has no content of its own: 'O_n/O_0 as in Table 4', a float that LaTeX placed before the theorem. [R-04] There is no running example and no figure: 0 figures in 122 pages. The one table that shows the whole ∀xφ story at a glance is buried in Appendix B. It shows mass leaving the over-general templates, the schema rising, ∀xφ dying under L1 and staying at its prior share under L0^cl. [R-03] The fact that makes the main result intuitive is stated only abstractly ('∀xφ spends probability on outputs never observed') and never with a number. The output in question is mostly ∀xφ itself: as a generator, the theory {∀xφ} usually states its own axiom.",
+  "evidence": "[R-22] universal.tex l.48: 'the odds ... satisfy O_n/O_0 as in \\Cref{tab:univ:odds}'. On p.17, Tables 3 and 4 sit at the top of the page, between Prop 3.2 and its proof idea. [R-04] tab:univ:c2 (p.71): under L1, H∀ goes 0.021 → 0.053 → 0.000 → 0.000 and Hsch 0.042 → 0.455 → 0.892 → 0.996 (n = 0, 1, 5, 20). Under L0^cl, H∀:Hsch stays 1:2 (0.332 against 0.665). Over-general templates go 0.926 → 0.000 by n=20. paper/figures/ is empty. [R-03] In C_min, quantifier-free φ, c = 0.3: P_{H∀}(∀xφ) = 1/(1+c) = 0.769 and P_{H∀}(φ(t)) = 0.2308·Q(t), against P_{Hsch}(φ(t)) = Q(t). So each instance multiplies the odds by 0.23: 2.1 bits per datum, a factor 4.3e-7 after 10 instances (scratch/r_example_numbers.out; matches tab:univ:odds, row L1, and the c2 posterior table p.71, where H∀ falls from 0.021 to 0.000 by n=5).",
+  "fix": "Open §3 with the first paragraph of §3.9 (where the intuition is right, where it needs refinement, what licenses ∀xφ; with the U-01 wording). Keep prop:univ:factor and thm:univ:odds as separate results (labels and part references stay); make thm:univ:odds display its formulas (binding text DECISIONS.md §10.U3) with the 0.77/0.23 running-example sentence; move tab:univ:odds to App. B; move tab:univ:c2 (label unchanged) into §3.2 as the running example for φ = 0+x=x (R-04). §3.9 then keeps only the ∀xφ-specific part of the good version and cor:univ:sound.",
+  "verdict_note": "Merging prop:univ:factor into thm:univ:odds (R-22) is not adopted: two labelled statements cited separately elsewhere would have to change."
+ },
+ {
+  "id": "U-12",
+  "sources": [
+   "R-23",
+   "R-37"
+  ],
+  "file": "paper/sections/universal.tex",
+  "label_or_line": "thm:univ:omega (l.131-142); other long status heads (prop:univ:noguard, prop:univ:sentences, prop:univ:quant); time.tex prop:time:single (l.66)",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-23": "major",
+   "R-37": "minor"
+  },
+  "verdict": "partly accepted",
+  "problem": "[R-23] The theorem that answers 'the axioms prove ∀xφ' runs 0.64 pages. It has parts (a)-(e), sub-parts (c1)-(c3) and (d1)-(d2), a definition ('faithful for C') embedded in part (c), and a seven-item status line. The headline (a)+(b), that the limit is the prior share of provers inside C*, is lost among the special regimes. [R-37] Status strings in statement heads are often longer than a line, so the statement begins on the third line. Examples: '(a), (b), (c1)–(c3), (d1), (e) proved; (d2) proved for the pair, proof sketch in general; computed'; 'provability, (a), (b) proved; (c) proof sketch; computed; (d) computed, limit conjecture'; 'proved, assuming Con(PA) and the standard formalisation of computations; Hänni's consistency argument refuted in this reading'.",
+  "evidence": "[R-23] Status: '(a), (b), (c1)-(c3), (d1), (e) proved; (d2) proved for the pair, proof sketch in general; computed'. Part (c) defines 'faithful' inside the statement. [R-37] p.19-22 and p.37 as rendered.",
+  "fix": "Do not split thm:univ:omega. Instead: define 'faithful for C' in one sentence before the theorem; add a one-line gloss of the ω-gap; head status '(a)-(c), (d1), (e) proved; computed' with '(d2) \\status{proved for the pair; proof sketch in general}' inline at (d2); same pattern for the other long heads (DECISIONS.md §7). In prop:time:single move 'assuming Con(PA) and the standard formalisation of computations' into the statement.",
+  "verdict_note": "R-23's split into a theorem plus a new proposition rejected: it needs a new label and would invalidate the part references thm:univ:omega(b), (c3), (d), (e) in model, intro, discussion, ident and app-verification (rejected.json)."
+ },
+ {
+  "id": "U-13",
+  "sources": [
+   "R-24"
+  ],
+  "file": "paper/sections/time.tex; paper/sections/app-time.tex",
+  "label_or_line": "opening (l.18-20); §6.5 (l.136-185); rem:time:summary (l.190-194)",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-24": "major"
+  },
+  "verdict": "partly accepted",
+  "problem": "§6 also states its result last (rem:time:summary, p.41). Its opening restates the intro's account of the collapse (R-15). The middle carries a four-step technical chain (Lemma 6.14 → Prop 6.15 → Thm 6.16 → Cor 6.17) whose only use in the main text is the conclusion that L1 is proved to charge at least logarithmically.",
+  "evidence": "Block estimates: opening 0.43 pp; lem:time:symexp, prop:time:codelength and thm:time:log with proofs 0.43 pp; rem:time:summary 0.31 pp at the end.",
+  "fix": "Open §6 with the collapse argument and its quotations (canonical home, DECISIONS.md §4), then rem:time:summary (new text U-04..U-06) moved to the start; delete l.20. Move lem:time:symexp, prop:time:codelength, thm:time:log and rem:time:convention to App. E with the pointer sentences of DECISIONS.md §3; keep cor:time:log, prop:time:sigma, conj:time:poly. Keep conj:time:polytime in §6, shortened.",
+  "verdict_note": "Moving conj:time:polytime to §9.5 rejected (cited by discussion and app-verification; rejected.json)."
+ },
+ {
+  "id": "U-14",
+  "sources": [
+   "R-13",
+   "C-38"
+  ],
+  "file": "paper/sections/universal.tex; paper/sections/time.tex",
+  "label_or_line": "whole sections",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-13": "major",
+   "C-38": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "[R-13] The main text is 56.0 pages against a plan of about 40 (outline cap 46), and the table of contents adds 3 pages. Section spans (measured from the PDF): intro 4.7, model 6.5, univ 7.9, ident 6.5, sound 5.9, time 5.9, pa 8.4, exp 6.6, disc 3.7. [C-38] The main text runs to about 56 pages and the appendices to about 60, against the outline's targets of about 40 (cap 46) and 36 pages. Part of the excess is duplicated material (C-39 to C-42).",
+  "evidence": "[R-13] Section starts measured with pdftotext -bbox: p.5.10, 9.77, 16.25, 24.10, 30.61, 36.48, 42.40, 50.80, 57.39; references at p.61.10. Block estimates are in scratch/r_blocks.out. C-38 records the same overrun. [C-38] main.aux: sec:intro p. 5, sec:disc p. 57, app:model p. 63, app:ver p. 115; pdfinfo: 122 pages; OUTLINE.md 'Page budget'.",
+  "fix": "Meet DECISIONS.md §2: universal 6.25 pp (cap 6.5), time 4.5 (cap 4.75), with the moves of §3 (universal: tab:univ:odds, prop:univ:overspec, prop:univ:rkrate and the waste paragraph, lem:univ:survivors, rem:univ:kreisel, the proof of cor:univ:sound, script defaults; time: lem:time:symexp, prop:time:codelength, thm:time:log, rem:time:convention) and tightening (detour, hutter, openrefuted, the c8 paragraph, the equational-fragment paragraph, §3.8; text after prop:time:cheap; rem:time:links)."
+ },
+ {
+  "id": "U-15",
+  "sources": [
+   "R-16"
+  ],
+  "file": "paper/sections/time.tex; paper/sections/universal.tex",
+  "label_or_line": "prop:time:lonesize; time l.127; rem:univ:detour; rem:univ:openrefuted; app sentences narrating first versions",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-16": "major"
+  },
+  "verdict": "accepted",
+  "problem": "About 1.2 pages of the main text narrate first-version claims, refuted, that do not change what the reader should believe. All of them are already in tab:ver:corrections (App. H.2). The outline (rule 3) keeps refuted claims in the text only 'where they matter to the reader'.",
+  "evidence": "Examples: 'The first version's argument (\"at least two lines\") was wrong' (pa l.57); '(The pre-referee version let c depend on T; referee m1.)' (time l.127); the unlabelled 'Refuted: a constant margin' remark (pa l.106); rem:exp:refuted (0.27 pp, seven items); the last sentence of sec:pa:answer.",
+  "fix": "Keep rem:univ:detour, rem:univ:openrefuted and prop:time:lonesize, each ≤ 4 lines (DECISIONS.md §5); delete '(The pre-referee version let c depend on T; referee m1.)' (time l.127); shorten 'The first version conjectured ...' to one clause."
+ },
+ {
+  "id": "U-16",
+  "sources": [
+   "R-17",
+   "R-05"
+  ],
+  "file": "paper/sections/universal.tex; paper/sections/time.tex",
+  "label_or_line": "universal l.8 ('All results are from the universal track'), l.113 ('the brief's H4(a)'); time l.18 ('The brief (H6) conjectured'), l.104, l.109 (the brief's sentence refuted)",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-17": "major",
+   "R-05": "major"
+  },
+  "verdict": "accepted",
+  "problem": "[R-17] Process vocabulary runs through the mathematics. Objects are named after the organisational unit that produced them ('track universal's chains', 'track pa's natural deduction', 'track experiments' grammar'), and statements carry 'referee m9', 'editor, from ...' and 'the model track's first version'. The reader has to learn the project's org chart to follow the definitions. [R-05] The intro's only table, and ten sentences across the paper, grade the hypotheses H1-H7 of the orchestrator's internal research brief. The reader has never seen that document, and its hypotheses are not Hänni's. 'Refutes the brief's H6' or 'the brief's H4(a)' tells him nothing about his own proposals and spends 0.6 pages of the intro.",
+  "evidence": "[R-17] Counts in the main sections: 'track(s)' 55, 'referee' 42, 'first version / pre-referee / first summary' 18 (grep). model.tex alone has 17 'track' mentions. Example: Def 2.4 (p.11): 'track universal's chains C_min ... track experiments' forward chain Ch_J ... track pa's natural deduction ND'. [R-05] tab:intro:verdicts caption: 'The hypotheses of the research brief (research/00-brief.md), which were to be checked'. time.tex l.109 quotes and refutes 'the brief's sentence'. The question itself contains no hypotheses H1-H7.",
+  "fix": "Remove process vocabulary from running text (DECISIONS.md §6.2): state the claims directly (e.g. 'so a penalty on the time to check membership does not price the collapse'); 'the track's prior' → 'the prior 2^{-(Σ|A|+#axioms)}'; keep provenance in \\src. Fix C-29 at the same time ('Results are from the universal track unless the source note says otherwise' can go entirely once \\src carries provenance)."
+ },
+ {
+  "id": "U-17",
+  "sources": [
+   "R-15"
+  ],
+  "file": "paper/sections/universal.tex; paper/sections/time.tex",
+  "label_or_line": "universal l.8 (re-quotation of the question); time l.18-20",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-15": "major"
+  },
+  "verdict": "accepted",
+  "problem": "Hänni's note is summarised or quoted five to six times, with the same quotations ('T(quoted-phi) = accept => phi', 'being an axiom of the right form is in fact decidable', 'p(true/false/independent)', 'think of this as there being some model...'). He wrote the note and needs it once at most.",
+  "evidence": "Intro §1.1 (1.1 pp) and time.tex l.18 repeat the collapse argument with the same quotations (C-39). model.tex l.185 and intro l.34 repeat the variants. sound.tex l.191-194 quotes his three questions after their answers have been given as Examples 5.19, 5.20 and Proposition 5.21.",
+  "fix": "Delete the re-quotation of the question at the start of §3 (canonical in the intro). time.tex §6 opening is the canonical home of the collapse quotations (DECISIONS.md §4): keep them, short, and do not repeat them elsewhere in §6."
+ },
+ {
+  "id": "U-18",
+  "sources": [
+   "R-27",
+   "C-26"
+  ],
+  "file": "paper/sections/universal.tex",
+  "label_or_line": "prop:univ:memo (l.110: DirMult), l.113 (Mem), first uses of ω-gap and spare",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-27": "major",
+   "C-26": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "[R-27] Several central terms are used throughout and never defined in this paper. 'Spare template/slot' is used in the intro (A4, A9, H5), Prop 2.20(c), Prop 3.9 and Rem 4.19, and is only implicit in Prop 4.18 ('σ a spare'). 'ω-gap' appears in the abstract, A3, §3 and §4, always as 'of AS'. 'Motive' appears in A5, Table 5 and §7. Also undefined: DTRC (intro l.109; the §7.6 title), 'anchor' (Prop 5.7 title), 'cautious verifier', Acc_k and H_k(DT°) (Prop 5.6), 'Gold's limit point' and 'L∞ against L5' (A9; Prop 4.12), and 'KT' (Lemma 2.12; first expanded in §7). [C-26] Symbols used before their definition or never defined: DirMult (defined in ident.tex line 108, used earlier in prop:univ:memo); Mem(D_n) (first used universal.tex line 113, defined only in experiments.tex line 29); SeenQ and Trim (used in sound.tex and pa.tex, defined in section 8); H_k and Acc_k (only 'AS Def 2.6'); the elimination-term law Qelim (never defined); T_E, T_N (only in app-pa); T_{L_infty} ('AS Prop 5.12'); Q^- (never defined). In ident.tex R_n is the spare-slot ratio while tab:ident:misspec in the same section uses R_m for numeral splits.",
+  "evidence": "[R-27] grep: no sentence of the form 'a spare template is ...' in the main text. 'ω-gap' is always 'of AS' or 'AS §4.5'. 'motive' is first defined at pa.tex l.35 (p.43). C-26 lists further symbols used before their definition (DirMult, Mem, SeenQ, T_{L∞}, T_E, T_N, Q_e). [C-26] grep of the section files in reading order; NOTATION.md §3, §7 (where each symbol should be defined).",
+  "fix": "Define DirMult and Mem(E) at first use in §3 (give the DirMult formula here and cite it from prop:ident:splitlzero, or the reverse, once); gloss ω-gap and spare template at first use (DECISIONS.md §6.3)."
+ },
+ {
+  "id": "U-19",
+  "sources": [
+   "R-14",
+   "C-40",
+   "C-42"
+  ],
+  "file": "paper/sections/universal.tex; paper/sections/time.tex",
+  "label_or_line": "universal l.96 (E1), l.150 (Bel ≈ 0.69), l.189 (E3(a)), rem:univ:mdl (l.236-238); time rem:time:links(iii) (l.199), rem:time:e7 (l.204)",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-14": "major",
+   "C-40": "minor",
+   "C-42": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "[R-14] Each experiment's findings are written out two or three times: in §8.2 with tables, and again with the same numbers in one to three thematic remarks. §8.2 alone is about 4.3 pages (p.52-56). [C-40] Duplicated material: each experiment's findings are written out in its section 8 paragraph and again, with the same numbers, in one to three thematic sections. The copies are consistent today (checked against code/results), but every later correction must be made in up to four places. [C-42] Duplicated material: the same computed numbers or passages appear in two to four places.",
+  "evidence": "[R-14] E2 appears in rem:sound:lumps, rem:pa:e2, rem:pa:lumps and §8 E2(2). E3(a) in rem:ident:e3a, universal l.189 and §8 E3(a). E4 in rem:sound:e4 and §8 E4. E6 in rem:pa:e6, rem:ident:splitsL1 and §8 E6. E7 in rem:time:links(iii), rem:time:e7 and §8 E7. E8 in rem:ident:e8 and §8 E8 (C-40 lists them). [C-40] Numbers cross-checked in this review against code/results/e2_pa.md, e3_misspec.md, e4_ville.md, e5_gold.md, e6_equivalent.md, e7_prior.md, e8_split_l1.md. [C-42] Direct comparison of the passages.",
+  "fix": "Canonical homes per DECISIONS.md §4: the E1 paragraph after prop:univ:both stays (canonical E1); l.189 E3(a) sentence → one clause citing rem:ident:e3a; l.150 → pointer to rem:sound:belc; rem:univ:mdl keeps only the ∀xφ-specific split rates and points to rem:ident:mdl (no re-quote of AS); rem:time:e7 is the canonical E7 home (τ and λ), with C30's wording 'slightly at τ = 1, markedly at τ = 4'; rem:time:links(iii) becomes a one-clause pointer."
+ },
+ {
+  "id": "U-20",
+  "sources": [
+   "MB-10"
+  ],
+  "file": "paper/sections/universal.tex",
+  "label_or_line": "thm:univ:confirm (l.119)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "MB-10": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "The theorem does not state the data-generating assumption: data i.i.d. from P_{T*}, a countable class, a proper prior. Expectations in (1) and (3) and 'a.s.' in (2) are with respect to P_{T*}. Setting W (def:ident:W) is introduced only in the next section. Without it, (2) is false (data from a law outside G).",
+  "evidence": "thm:univ:omega states the assumption explicitly (l.132); thm:univ:confirm does not.",
+  "fix": "Add: 'Assume setting W (def:ident:W), T* in G the generator.'"
+ },
+ {
+  "id": "U-21",
+  "sources": [
+   "MB-11"
+  ],
+  "file": "paper/sections/universal.tex; paper/sections/app-universal.tex",
+  "label_or_line": "prop:univ:noguard(b) (l.184); tab:univ:noguard caption",
+  "severity": "minor",
+  "reviewer_severity": {
+   "MB-11": "minor"
+  },
+  "verdict": "accepted, fix modified",
+  "problem": "(b) is proved with Laplace (alpha=1) memorisers via prop:univ:memo(ii'). The table and c8 use Dirichlet(1/2) weights, the paper's default; alpha=1 appears only as a Part 4 variant. The proved statement and the computed default differ.",
+  "evidence": "app-universal l.183 cites prop:univ:memo(ii'), which is for Laplace weights; tab:univ:noguard caption: 'Dirichlet(1/2) weights'.",
+  "fix": "State in prop:univ:noguard(b) and the tab:univ:noguard caption that (b) is proved for Laplace-weighted memorisers while the computations use Dirichlet(½) weights (α stated in the caption).",
+  "verdict_note": "The reviewer's alternative (state a Krichevsky–Trofimov version of the bound) would be a new result; only the hypothesis mismatch is made explicit."
+ },
+ {
+  "id": "U-22",
+  "sources": [
+   "MB-12"
+  ],
+  "file": "paper/sections/time.tex",
+  "label_or_line": "rem:time:convention (l.53) against l.74",
+  "severity": "minor",
+  "reviewer_severity": {
+   "MB-12": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "l.53 says his route through the schema 'works only with two sorts'. l.74 says his argument 'needs standard arithmetic (two sorts) or a sound f'. For a sound f in one sort, PA u A_f is true in N, so it is consistent. It proves f's labels by Sigma_1-completeness, so the AI hypothesis is compatible whenever f is. The two lines disagree.",
+  "evidence": "time.tex l.53 and l.74; prop:time:single needs an unsound f.",
+  "fix": "l.53: 'works with two sorts, or in one sort for sound assigners; prop:time:single shows that it fails for some consistent unsound ones'."
+ },
+ {
+  "id": "U-23",
+  "sources": [
+   "MB-13"
+  ],
+  "file": "paper/sections/universal.tex; paper/sections/app-universal.tex",
+  "label_or_line": "prop:univ:factor (l.42); app l.14",
+  "severity": "minor",
+  "reviewer_severity": {
+   "MB-13": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "'m leading quantifiers' should be 'm leading universal quantifiers'. Forall-E fails on an existential, so Z_Hsch = (1-c) sum_{k<=m} c^k counts universal quantifiers only.",
+  "evidence": "Universal notes U1: 'm is the number of leading forall of phi'.",
+  "fix": "Write 'm leading universal quantifiers' in both places."
+ },
+ {
+  "id": "U-24",
+  "sources": [
+   "MB-15"
+  ],
+  "file": "paper/sections/universal.tex",
+  "label_or_line": "thm:univ:size, last sentence (l.102)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "MB-15": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "The likelihood under which P_tau(I) <= max(max_f p_f, max_g F(root=g)) holds is not stated. The proof (app-universal l.64) bounds the citation law. Under Lone in C_min, a template with a formula metavariable also reaches instances through forall-E (e.g. ?A := forall x phi, then forall-E). Tab. c2 applies the theorem under Lone.",
+  "evidence": "app-universal l.64 (proof uses only theta drawn i.i.d. and unique matching).",
+  "fix": "Write 'under Lzero/Lcl (the citation law)', or bound the extra forall-E mass under Lone."
+ },
+ {
+  "id": "U-25",
+  "sources": [
+   "MB-16"
+  ],
+  "file": "paper/sections/universal.tex",
+  "label_or_line": "l.122 (dyadic family)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "MB-16": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "The dyadic family's prior over j (proportional to 1/(j(j+1)), total 1-pi_0) is not stated. The value '0.37 at n=1e50' depends on it.",
+  "evidence": "Recomputed: 0.3716 with that prior (scratch/mathB_cmin.out, with the tail j >= 5000 added).",
+  "fix": "Add 'with prior (1-pi_0)/(j(j+1)) on j >= 1'."
+ },
+ {
+  "id": "U-26",
+  "sources": [
+   "MB-17"
+  ],
+  "file": "paper/sections/universal.tex",
+  "label_or_line": "l.181 (waste paragraph; moves to App. B)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "MB-17": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "'wastes a fixed fraction r_w of the tail's mass': r_w is a ratio, not a fraction. The waste equals r_w times the tail mass, and r_w = 1/c = 3.33 for Split_k.",
+  "evidence": "lem:univ:waste; app-universal l.227 (r_w = 1/c).",
+  "fix": "Write 'wastes r_w times the tail's mass'."
+ },
+ {
+  "id": "U-27",
+  "sources": [
+   "MB-18"
+  ],
+  "file": "paper/sections/time.tex; paper/sections/app-time.tex",
+  "label_or_line": "prop:time:notemplate (l.80); app-time l.62",
+  "severity": "minor",
+  "reviewer_severity": {
+   "MB-18": "minor"
+  },
+  "verdict": "accepted, fix modified",
+  "problem": "The proposition is stated and proved for C_f, the Acc part. The conclusion 'templates block his schema' concerns A_f = C_f u {Rej_f(code(phi)) -> not phi}. A template whose instances mix both parts is not covered by 'the Rej part is symmetric'. At a skeleton position where Acc_f and Rej_f carry different symbols, Case 1(ii) needs a constant body whose root differs from both.",
+  "evidence": "app-time l.48-53 offers two constant bodies per type, which is not always enough against two symbols.",
+  "fix": "State prop:time:notemplate for the acceptance part C_f (as proved) and add: 'The rejection part, and templates whose instances mix the two parts, are not treated here (\\cref{app:ver:open})'. Do not extend the statement to A_f without a proof from the sources.",
+  "verdict_note": "app-verification's open item (6) already records that the rejection part is not proved; the reviewer's sketch for mixed templates is not a source."
+ },
+ {
+  "id": "U-28",
+  "sources": [
+   "MB-19"
+  ],
+  "file": "paper/sections/time.tex",
+  "label_or_line": "l.111 ('no theory escapes this')",
+  "severity": "minor",
+  "reviewer_severity": {
+   "MB-19": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "'no theory escapes this' overstates thm:time:ntime, which needs membership decidable in polynomial time O(n^e).",
+  "evidence": "thm:time:ntime hypothesis.",
+  "fix": "Write 'no theory with polynomial-time membership escapes this'."
+ },
+ {
+  "id": "U-29",
+  "sources": [
+   "MB-20"
+  ],
+  "file": "paper/sections/time.tex",
+  "label_or_line": "rem:time:convention (l.53; moves to App. E)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "MB-20": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "'The constant equivalence needs the semimeasure convention' is not shown. Only the given argument needs it; app-time l.27 says 'the argument gives nothing better'.",
+  "evidence": "app-time l.27.",
+  "fix": "Write 'This argument needs ...' or 'is proved only in ...'."
+ },
+ {
+  "id": "U-30",
+  "sources": [
+   "MB-21"
+  ],
+  "file": "paper/sections/app-time.tex",
+  "label_or_line": "proof of prop:time:codelength (l.131)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "MB-21": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "Notation clash. g (parameter-chain continuation probability) and rho (branching rate) reuse the symbols of C_open's Gen probability g and parameter probability rho in Sec. 3 and prop:univ:rk.",
+  "evidence": "app-time l.131 vs universal.tex l.14, l.17.",
+  "fix": "Rename, e.g. g_par and rho_br."
+ },
+ {
+  "id": "U-31",
+  "sources": [
+   "MB-23"
+  ],
+  "file": "paper/sections/universal.tex",
+  "label_or_line": "l.17 (S_nc,β, β > 1)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "MB-23": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "'S_nc,beta is beta^n S_g with g_inf = 1/beta', but def:model:scores requires g_inf in [0,1). beta = 1 (S_nc itself) gives g_inf = 1.",
+  "evidence": "def:model:scores.",
+  "fix": "Write 'for beta > 1'; S_nc is the case beta = 1."
+ },
+ {
+  "id": "U-32",
+  "sources": [
+   "MB-25"
+  ],
+  "file": "paper/sections/universal.tex",
+  "label_or_line": "thm:univ:omega(e) (l.138)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "MB-25": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "The pair law P_T(s)1[s in S]/P_T(S) is undefined when P_T(S)=0, e.g. for S the closed instances with S-rooted argument and a theory emitting no such sentence.",
+  "evidence": "Definition in (e).",
+  "fix": "Restrict F to filters with P_T(S) > 0 for all T, or give such pairs likelihood 0."
+ },
+ {
+  "id": "U-33",
+  "sources": [
+   "MB-26"
+  ],
+  "file": "paper/sections/universal.tex; paper/sections/app-time.tex",
+  "label_or_line": "universal l.234-235; app-time l.154-155 (overfull)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "MB-26": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "Overfull hboxes: 4.4pt in universal.tex l.234-235 and 0.7pt in app-time l.154-155.",
+  "evidence": "paper/main.log.",
+  "fix": "Rephrase or allow hyphenation."
+ },
+ {
+  "id": "U-34",
+  "sources": [
+   "C-29"
+  ],
+  "file": "paper/sections/universal.tex",
+  "label_or_line": "l.8",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C-29": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "The section also states rem:univ:B2cit (an editor's reconciliation from experiments §1.7 and Prop X6(b)) and reports E1 and E3(a) numbers from the experiments track.",
+  "evidence": "rem:univ:B2cit \\src{editor, from experiments ...}; universal.tex lines 96 and 189.",
+  "fix": "'Results are from the universal track unless the source note says otherwise; E1 and E3(a) numbers are from the experiments track.'"
+ },
+ {
+  "id": "U-35",
+  "sources": [
+   "C-31"
+  ],
+  "file": "paper/sections/app-universal.tex",
+  "label_or_line": "tab:univ:inc caption (l.137)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C-31": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "Conflict C26 requires every table to state the Dirichlet alpha. This table uses the class of tab:univ:c2 (alpha = 1 in c2) but was computed by c10(d), and the appendix convention is alpha = 1/2 for c8-c10; the caption does not say which.",
+  "evidence": "CLAIMS.md C26; app-universal.tex line 9 ('Dirichlet alpha = 1 in c2-c7, alpha = 1/2 in c8-c10').",
+  "fix": "State alpha in the caption."
+ },
+ {
+  "id": "U-36",
+  "sources": [
+   "R-31"
+  ],
+  "file": "paper/sections/universal.tex",
+  "label_or_line": "§3.6 (l.183-189); l.198",
+  "severity": "minor",
+  "reviewer_severity": {
+   "R-31": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "Two places where a reader gets lost. §3.6 debates deep splits R_k, guards, the waste rate W_o and races between families over Q. Its conclusion ('it approximates the missing guard by ever deeper splits, whose waste q^k W_o tends to 0') needs one plain sentence first. l.198 packs into one 9-line paragraph the equational-fragment result, a sufficient condition q > e^{-(1-μ)²/2}, a negative remark for q = ½ and a Kt remark.",
+  "evidence": "Block estimates: §3.6 about 1.1 pp; the §3.7 text paragraph 0.3 pp.",
+  "fix": "Lead §3.6 with: 'Without a guard the outcome depends on which competitors the class contains; with a selection-aware likelihood the ω-step is taken.' Then state Props 3.19 and 3.22 and move prop:univ:rkrate to the appendix. Split l.198 into two sentences of result and move the sufficient condition to the appendix with prop:univ:eqfrag."
+ },
+ {
+  "id": "U-37",
+  "sources": [
+   "R-38"
+  ],
+  "file": "paper/sections/universal.tex",
+  "label_or_line": "tab:univ:hyp (l.19-36)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "R-38": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "In Table 3 the X column is justified, so short cells stretch across the full width with large gaps (p.17, row R_k: 'z unguarded;   weights   (v_0, ...)'). \\src sits inside the caption ('Hypotheses of Section 3^{universal §1.3}'). R_k, Split_k and Both0 are defined here but used only in §3.6 and §3.8, five pages later.",
+  "evidence": "p.17 as rendered. universal.tex l.21: \\begin{tabularx}{\\textwidth}{@{}l X c@{}}.",
+  "fix": "Use >{\\raggedright\\arraybackslash}X (tested). Move \\src out of the caption into the text. Define R_k, Split_k and Both0 where they are used."
+ },
+ {
+  "id": "U-38",
+  "sources": [
+   "R-42"
+  ],
+  "file": "paper/sections/universal.tex",
+  "label_or_line": "l.45, l.72, l.142, l.187, l.230-232 (proof idea style)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "R-42": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "Proof sketches in §3 are plain paragraphs starting '\\noindent\\emph{Proof idea.}', with no end mark. Other sections use \\begin{proof}[Proof idea] with a QED box. The proof of Cor 3.27 sets \\qed by hand.",
+  "evidence": "p.16-23 compared with p.10-15 and p.36-41.",
+  "fix": "Use \\begin{proof}[Proof idea] ... \\end{proof} throughout §3."
+ },
+ {
+  "id": "U-39",
+  "sources": [
+   "MB-24"
+  ],
+  "file": "paper/sections/universal.tex",
+  "label_or_line": "thm:univ:B proof idea (l.72)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "MB-24": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "'The mechanism is the size principle' fits Lone but not mu_T. Under the unnormalised mu_T the factor c is the probability of the extra forall-E step, not a normalisation effect.",
+  "evidence": "prop:univ:factor; tab:univ:odds row mu_T.",
+  "fix": "Included in the binding text of DECISIONS.md §10.U1 ('through the extra ∀E step')."
+ },
+ {
+  "id": "U-40",
+  "sources": [
+   "R-29"
+  ],
+  "file": "paper/sections/universal.tex",
+  "label_or_line": "l.17, l.189 (script names in running text)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "R-29": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "Names of check scripts appear in the main text: 'checks c2-c7', 'c8-c10', 'In c8', 'universal's c2 class', and in \\src notes '(c8)', '(c1)'. They mean nothing to the reader. They also collide with the constant c and with the parts (c1)-(c3) of Theorem 3.15, which appear two pages later.",
+  "evidence": "universal.tex l.17: 'Dirichlet α = 1 in checks c2-c7, α = ½ in c8-c10'. l.189: 'In c8 (\\Cref{tab:univ:noguard}), with R_{1..4} ...'.",
+  "fix": "Script names only in \\src, captions and appendices (DECISIONS.md §6.2); move the l.17 defaults to App. B and state α in each table caption; l.189 'In c8' → 'In the computations of \\cref{tab:univ:noguard}'."
+ },
+ {
+  "id": "U-41",
+  "sources": [
+   "C-27"
+  ],
+  "file": "paper/sections/universal.tex; paper/sections/time.tex",
+  "label_or_line": "uses of prop:univ:sim, lem:univ:waste, prop:univ:rk, prop:univ:eqfrag; time l.99",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C-27": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "These results are used in the main text as if stated there, but are stated only in the appendices, against the ledger's section column ('univ / app', 'pa / app': statement in the section, proof in the appendix). prop:univ:eqfrag is described in prose in section 3 with a \\Cref that sends the reader to Appendix B for the statement.",
+  "evidence": "CLAIMS.md rows prop:univ:sim, lem:univ:waste, prop:univ:rk, prop:univ:eqfrag, lem:pa:motive, prop:pa:fragments, prop:pa:redundant, rem:pa:pointwise, rem:pa:tower, rem:pa:shift (section 'univ / app' or 'pa / app'); c3_status2.out (environment locations).",
+  "fix": "At each main-text use of a statement that lives only in App. B or E (including those moved now), write its conclusion and '\\cref{...} in \\cref{app:...}' (prop:univ:eqfrag: state its conclusion in one sentence in §3.7). Report moved items in the changelog for the CLAIMS.md sync."
+ }
+]

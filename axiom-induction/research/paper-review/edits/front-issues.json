@@ -1,0 +1,792 @@
+[
+ {
+  "id": "F-01",
+  "sources": [
+   "C-01"
+  ],
+  "file": "paper/sections/abstract.tex; paper/sections/intro.tex",
+  "label_or_line": "abstract l.3 ('First, closed instances never favour ...'); intro A2 (l.57) heading and first sentence",
+  "severity": "fatal",
+  "reviewer_severity": {
+   "C-01": "fatal"
+  },
+  "verdict": "accepted",
+  "problem": "The abstract and answer A2 state without qualification that closed instances never favour forall x phi over its instance schema, and that the odds 'stay at the prior odds or fall by a constant factor per datum'. The body proves this only for the calculi and likelihoods listed in thm:univ:B and states an exception: under the stream filter Lsel with a background and learned weights the Bayes factor of B+forall x phi against B+sigma_phi tends to h(w*), which exceeds 1 for small w*. For calculi with conjunction rules the direction is open. Under strict L0 the odds drop to 0 at the first datum, which is neither 'stay' nor 'a constant factor per datum'.",
+  "evidence": "universal.tex lines 82-86 (prop:univ:B2: Bayes factor -> h(w*) in [c,1/c], > 1 iff w* < sqrt(c)/(1+sqrt(c)); data i.i.d. from a law of B+sigma_phi, so the setting is well specified); universal.tex line 72 ('Not covered: Lsel with a background and learned weights (prop:univ:B2), and-detours, normalised likelihoods in C_U3'); rem:univ:detour line 79 ('whether detours can reverse the direction is open'); tab:univ:odds row L0 (strict): 0 for n >= 1. CLAIMS.md A2 keeps the exceptions ('non-logical and bounded (prop:univ:B2) or calculus-specific (rem:univ:detour)'); the intro mentions the and-detour exception but not B2, and the abstract mentions neither. See also MB-01 (same overstatement in the body of section 3).",
+  "fix": "Use the canonical wording of DECISIONS.md §9.1 (abstract: the binding text of §8.3; A2: the long form, shortened, keeping 'in the comparisons analysed', the three odds regimes (stay / constant factor per datum / drop to zero), the non-logical L1^sel weight exception with a pointer to prop:univ:B2, and the open ∧-detour case). Verified: universal notes §4 'Not covered, or false' lists the L1-sel background case (fixed and learned weights) and ∧-detours; the paper's thm:univ:B covers neither.",
+  "verdict_note": "Same overstatement as MB-01 in the body (univ-time U-01)."
+ },
+ {
+  "id": "F-02",
+  "sources": [
+   "C-02"
+  ],
+  "file": "paper/sections/intro.tex",
+  "label_or_line": "tab:intro:verdicts, row H2 (l.81)",
+  "severity": "fatal",
+  "reviewer_severity": {
+   "C-02": "fatal"
+  },
+  "verdict": "accepted",
+  "problem": "The verdict cell for H2 ('concentration on {T: P_T = P_T*}') reads 'confirmed for fixed weights; a.e. weight vector with Dirichlet weights'. This says that the concentration hypothesis holds for almost every weight vector under Dirichlet weights. The paper proves the opposite: with Dirichlet weights the exact generator class has posterior mass 0 at every n for all w* off a countable set. What holds for a.e. w* is identification of the instance union under L0.",
+  "evidence": "ident.tex lines 83-85 (rem:ident:exact, status 'refuted; counter-statement proved'); thm:ident:limit(b) line 76 (instance union, L0, a.e. w*); sound.tex line 85 (rem:sound:vacuous). Source verdict, model notes-final §9.1 H2: 'Dirichlet weights: instance union identified for a.e. w*; the exact class has mass 0.'",
+  "fix": "Replace the H2 cells by the binding text of DECISIONS.md §10.F1 (exact class mass 0 with Dirichlet weights; instance union a.e. under L0; KL-minimisers for finite classes only; where = thm:ident:doob, rem:ident:exact, thm:ident:limit, thm:ident:kl). The table itself moves to app:ver:process (F-20).",
+  "verdict_note": "Verified against model notes-final §9.1 H2 and rem:ident:exact (refuted; counter-statement proved)."
+ },
+ {
+  "id": "F-03",
+  "sources": [
+   "C-03"
+  ],
+  "file": "paper/sections/intro.tex",
+  "label_or_line": "A7 (l.67), last clause",
+  "severity": "fatal",
+  "reviewer_severity": {
+   "C-03": "fatal"
+  },
+  "verdict": "accepted",
+  "problem": "'plain Lone is proved to charge only logarithmically (cor:time:log)' asserts a proved upper bound on what plain L1 charges. cor:time:log is a lower bound: plain L1 is proved to charge at least about the logarithm of the assigner's nondeterministic time. Whether it charges more is open, and the paper conjectures a polynomial charge (conj:time:poly).",
+  "evidence": "time.tex line 170 (cor:time:log: '-ln P_T(phi_w) >= zeta s(m) - ln(C/Z_T)'); time.tex line 191 (rem:time:summary (4): 'Plain Lone is proved to charge at least zeta s(m) nats ... a polynomial charge is conj:time:poly'); discussion.tex line 20 states it correctly ('for plain Lone only a logarithmic charge is proved'); conj:time:poly line 182.",
+  "fix": "Replace 'plain L1 is proved to charge only logarithmically (cor:time:log)' by 'for plain L1 only a logarithmic charge is proved (cor:time:log); a polynomial charge is conjectured (conj:time:poly)'. A7 as a whole follows DECISIONS.md §9.6 (see F-12).",
+  "verdict_note": "cor:time:log is a lower bound (time.tex l.170; model notes Cor 6.13)."
+ },
+ {
+  "id": "F-04",
+  "sources": [
+   "R-20"
+  ],
+  "file": "paper/sections/discussion.tex",
+  "label_or_line": "l.16 (sec:disc:proposal, 'Templates')",
+  "severity": "fatal",
+  "reviewer_severity": {
+   "R-20": "fatal"
+  },
+  "verdict": "accepted",
+  "problem": "'Inside the class membership is matching, so likelihoods can be computed exactly over a pool (prop:exp:exact)' claims more than the sources. prop:exp:exact covers the citation likelihood L0, the Dirichlet sum, and the two-step chain L1 for the component shapes the code checks. It does not cover the derivation-grammar likelihood of Def 2.13, whose positivity is undecidable.",
+  "evidence": "prop:model:compute(c): 'No algorithm decides whether a theory has likelihood 0 on a datum.' experiments.tex l.35 (prop:exp:exact(d)): 'complete for the component shapes ... the code admits into L1 pools only theories of the shapes it checks'. discussion.tex l.31 itself says 'exact computation is feasible over finite pools with short derivations'.",
+  "fix": "Replace the sentence by the binding text of DECISIONS.md §10.F3 (citation likelihood, Dirichlet sum and the two-step chain computed exactly over a pool; general derivation likelihood only a computable real with undecidable positivity).",
+  "verdict_note": "prop:exp:exact covers L0, the Dirichlet sum and C_ch(J) for checked shapes only; prop:model:compute(c)."
+ },
+ {
+  "id": "F-05",
+  "sources": [
+   "C-04",
+   "R-10"
+  ],
+  "file": "paper/sections/abstract.tex",
+  "label_or_line": "l.3 ('Second, with well-specified data ...'; key terms)",
+  "severity": "major",
+  "reviewer_severity": {
+   "C-04": "major",
+   "R-10": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "[C-04] The abstract drops the hypotheses of the identification results. Concentration on the theories with the data's law is proved for fixed weights (setting W); with the paper's default Dirichlet weights the exact class has mass 0 and only the instance union is identified, for a.e. weight vector, under L0. Identification of the theorems needs L1 with parameters admissible (or L0). Under the selection-aware likelihood that the paper recommends, theorems are not identified (prior-share regime). [R-10] The abstract's key terms go unexplained: 'proper prefix-code prior', 'which gives the size principle', 'a Bayesian ω-gap'. For the first reader these are the hooks of the answer.",
+  "evidence": "[C-04] ident.tex def:ident:W line 23 ('fixed law P_T ... (fixed weights)'); thm:ident:doob; rem:ident:exact; thm:ident:limit(b); cor:ident:deductive and the paragraph after it (line 40); thm:univ:omega(b). Intro A4 (line 57) does carry the hypotheses. [R-10] 'the likelihood is a derivation grammar whose normaliser does not depend on the data, which gives the size principle'; '... tends to a prior share or to zero, a Bayesian ω-gap'.",
+  "fix": "Replace the abstract by the binding text of DECISIONS.md §8.3 (fixed weights; theorems not axioms; the size principle glossed as 'theories predicting unobserved sentences lose a constant factor per datum'; ω-gap named after the statement it names). Keep ≤ 250 words."
+ },
+ {
+  "id": "F-06",
+  "sources": [
+   "C-05"
+  ],
+  "file": "paper/sections/abstract.tex; paper/sections/intro.tex; paper/sections/discussion.tex",
+  "label_or_line": "abstract l.3; intro A5 (l.63); discussion l.35",
+  "severity": "major",
+  "reviewer_severity": {
+   "C-05": "major"
+  },
+  "verdict": "accepted",
+  "problem": "All three state as a general fact that under misspecification the posterior goes to the best-fitting generator. thm:ident:kl proves this for finite classes only, and rem:ident:fullclass says that in the full template class the KL-projection picture can fail (infimum KL 0 approached by unsound hybrids; conjecture: unsound mass -> 1). The intro's own 'What is not achieved (ii)' says the same, so A5 and the abstract contradict it.",
+  "evidence": "ident.tex line 157 (thm:ident:kl: 'Let H be finite'); line 160 ('it need not describe the full template class'); rem:ident:fullclass line 177; intro.tex line 100 (ii); tab:intro:verdicts H2 ('KL-minimisers for finite classes only').",
+  "fix": "Use DECISIONS.md §9.4 everywhere: 'in finite classes the posterior goes to the best-fitting generator (thm:ident:kl); in the full class even this can fail (rem:ident:fullclass)'."
+ },
+ {
+  "id": "F-07",
+  "sources": [
+   "C-06"
+  ],
+  "file": "paper/sections/abstract.tex; paper/sections/intro.tex",
+  "label_or_line": "abstract l.3 (last sentence); intro l.115",
+  "severity": "major",
+  "reviewer_severity": {
+   "C-06": "major"
+  },
+  "verdict": "accepted",
+  "problem": "'Adversarial referees with independent code checked the results; no human has.' The verification appendix says that results added in the revisions were not checked by a referee, and these include headline results quoted in the abstract and the intro (the averaged and shrinking-threshold soundness theorems, the symbol-size charge prop:time:sigma, the computability result prop:model:compute).",
+  "evidence": "app-verification.tex line 17 ('Results added in the revisions were checked by their track and re-read by the section writers, but not by a referee; among them are ... model Thms 4.7, 4.8, ..., 6.14 ...'); app-ident.tex line 11; app-pa.tex line 12.",
+  "fix": "Abstract: 'AI referees checked first versions; no human has checked the mathematics.' (binding §8.3). Intro §1.5 and the short answer item 10 use DECISIONS.md §9.9 (first versions refereed; revisions checked only by tracks and writers)."
+ },
+ {
+  "id": "F-08",
+  "sources": [
+   "C-07",
+   "MA-21"
+  ],
+  "file": "paper/sections/app-verification.tex",
+  "label_or_line": "l.17 ('What this means for the reader', list of unrefereed results)",
+  "severity": "major",
+  "reviewer_severity": {
+   "C-07": "major",
+   "MA-21": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "[C-07] The list of results added after the referee reports is incomplete, and it disagrees with the appendices that state the same fact. It omits model Props 2.7 and 2.8 (prop:model:compute, prop:model:max; new section §2.4 answering referee Q2), Rem 8.3 (rem:ident:nearmiss) and the new proof of Thm 5.1(b), which app-ident lists; it omits experiments Prop X11 (prop:pa:redundant), which app-pa lists; and it omits universal Lemma S1, the exact rates of U16(b), the new proof of U10(c3), U12(b) for f_q = 0 (Watson's lemma) and the two-part part of U14(c), and experiments' full proof of X8(c), all added in response to the referees. 'Among them are' hides the gap; a reader cannot tell which results are unrefereed. [MA-21] Unlike app-ident line 11, it does not say which results the model referee checked. Lemma sound:regret, Thms sound:avg and sound:shrink, rem:sound:vacuous, the mechanism of ex:sound:constant and prop:sound:fiftyfifty were added after the referee.",
+  "evidence": "[C-07] model notes-final §2.4 heading '(new; referee Q2)'; model §12.1 rows Q2, Q6, M4; universal §15.1 rows M2 ('Lemma S1 ... Exact rates for Split_k and Both0'), M3, m5, m6; experiments §16.1 row M3 ('X8(c) proved in full'); app-ident.tex line 11; app-pa.tex line 12. [MA-21] model notes-final, 'What changed after the referee' (M1) and §7 ('new, referee m4').",
+  "fix": "Replace 'among them are' by one complete list compiled from the four verification logs (model §12, universal §15, pa §9, experiments §16), adding at least: model Props 2.7, 2.8, Rem 4.5, Rem 8.3, the new proof of Thm 5.1(b), Props 5.5(d), 5.6, 6.11, 6.14, 7.6, 8.2, Lemmas 4.6, 6.10, Thms 4.7, 4.8, 6.12, Cor 6.13, Ex 3.6; universal Lemma S1, Lemma N0, Props N1-N3, B2, U2n, U2t, U10(e), the new proof of U10(c3), U12(b) for f_q = 0, U14(c) two-part part, U16(b) exact rates; pa Props 1.4, 2.3, 3.1-3.4, 4.8, Lemma 4.7, Rems 4.9, 5.4, the full proof of Prop 4.3; experiments Props X8(c) (full proof), X10, X11, X12, X13 and E8. Use the paper's labels next to the track numbers. app-ident, app-pa and app-sound replace their own lists by a pointer to this paragraph (MIS M-20, pa-exp P-24); check that the three appendices and this list agree."
+ },
+ {
+  "id": "F-09",
+  "sources": [
+   "C-08"
+  ],
+  "file": "paper/sections/intro.tex",
+  "label_or_line": "A6 (l.65), heading and 'Misspecified, a waiting prover wins with probability 1'",
+  "severity": "major",
+  "reviewer_severity": {
+   "C-08": "major"
+  },
+  "verdict": "accepted",
+  "problem": "The heading 'The thresholded verifier is sound only for well-specified data' and the sentence 'Misspecified, a waiting prover wins with probability 1' turn one example into a general statement. The body shows a single misspecified setting in which a waiting prover wins with probability 1, a misspecified setting in which the verifier is merely incomplete, and computed misspecified settings (E4 C2, C3) in which the prover never won. What is proved is that soundness is guaranteed only under well-specification.",
+  "evidence": "sound.tex line 16 ('Under misspecification there is no guarantee; in an example a waiting prover wins with probability 1'); prop:sound:misspec line 49 ('In the setting of ex:ident:escape'); sound.tex line 56 ('Misspecification can also make the verifier incomplete instead'); rem:sound:e4 line 128 ((C2) 0/100, (C3) 0/100).",
+  "fix": "Heading: 'The thresholded verifier is guaranteed sound only for well-specified data.' Sentence: 'Misspecified, there is no guarantee: in an example a waiting prover wins with probability 1 (prop:sound:misspec); elsewhere the verifier is merely incomplete.' (DECISIONS.md §9.5)."
+ },
+ {
+  "id": "F-10",
+  "sources": [
+   "C-09"
+  ],
+  "file": "paper/sections/intro.tex; paper/sections/discussion.tex",
+  "label_or_line": "intro A6 (l.65); discussion l.29 (good version, 'Output') and l.33",
+  "severity": "major",
+  "reviewer_severity": {
+   "C-09": "major"
+  },
+  "verdict": "accepted",
+  "problem": "The shrinking-threshold theorem is quoted as the soundness guarantee for learned weights in general, and the discussion builds it into the recommended 'good version'. thm:sound:shrink requires a likelihood linear in the weights (L0, or the experiments' chain); its proof uses lem:sound:regret(a), which needs linearity. The good version's likelihood is a derivation grammar (L1, or L^sigma), in which a tree citing several theory axioms carries a product of weights and Z_T depends on w, so it is not linear in w. For that likelihood only the averaged theorem (thm:sound:avg) applies.",
+  "evidence": "sound.tex line 109 (thm:sound:shrink: 'a likelihood linear in w (L0; also the experiments' chain C_ch(J))'); app-sound.tex line 124 ('by lem:sound:regret(a), which needs the likelihood to be linear in w'); def:model:lone line 142 (citation by w_tau at each theory-citation node); discussion.tex line 28 (the good version's likelihood is L1 / L^sigma).",
+  "fix": "Use DECISIONS.md §9.5: the shrinking threshold needs a likelihood linear in the weights (citation; the experiments' chain); for a derivation-grammar likelihood with learned weights only the averaged guarantee is proved. Discussion: binding text §10.F4.",
+  "verdict_note": "Verified: thm:sound:shrink hypothesis 'a likelihood linear in w'; its proof uses lem:sound:regret(a) on T*'s law (app-sound l.124; experiments X8(c) termwise bound)."
+ },
+ {
+  "id": "F-11",
+  "sources": [
+   "C-10"
+  ],
+  "file": "paper/sections/discussion.tex",
+  "label_or_line": "l.33 ('What it can promise') against l.28",
+  "severity": "major",
+  "reviewer_severity": {
+   "C-10": "major"
+  },
+  "verdict": "accepted",
+  "problem": "The good version includes 'a model of which theorems get reported, by a known filter (Lsel) or a prior over filters', and the next paragraph promises for it 'identification of the theorem set under Lone with parameters admissible'. With a selection-aware likelihood the theorem set is exactly what is not identified: under Lsel, Hall and Hsch have the same law and the provability of forall x phi tends to a prior share. The promise list holds for plain L1, not for the version the section recommends.",
+  "evidence": "thm:univ:omega(b) (universal.tex line 135: 'Hall, Hsch under Lcl or Lsel' give a limit in (0,1)); tab:univ:c5 (Lsel row stays at 0.750); discussion.tex line 35 itself ('It cannot certify forall x phi from closed instances').",
+  "fix": "Binding text DECISIONS.md §10.F4: say which component each guarantee needs; with a selection model only Th(T) ∩ S is identified and deductive questions beyond S keep their prior share (thm:univ:omega(b))."
+ },
+ {
+  "id": "F-12",
+  "sources": [
+   "C-11",
+   "C-12"
+  ],
+  "file": "paper/sections/intro.tex; paper/sections/discussion.tex",
+  "label_or_line": "intro A7 (l.67: 'Templates block his schema but not the collapse'; 'between its nondeterministic time and its deterministic time'); discussion l.16 and l.20",
+  "severity": "major",
+  "reviewer_severity": {
+   "C-11": "major",
+   "C-12": "major"
+  },
+  "verdict": "accepted",
+  "problem": "[C-11] The intro drops the hypotheses of prop:time:collapse. That result needs background PA and covers only Sigma_n-sound assigners on Sigma_n sentences; for merely consistent assigners (the class in Haenni's equivalence) the reflection sentence can be inconsistent with PA. The discussion (line 16) and rem:time:summary(2) keep at least 'in arithmetic'; the intro does not. [C-12] The same result is stated in two incompatible ways. Intro A7 and the discussion say that symbol-size penalties charge a hard assigner 'between its nondeterministic time and its deterministic time'. time.tex says that they charge 'a polynomial root of t(m)', t the nondeterministic time, and that is what prop:time:sigma with thm:time:ntime gives: derivation size l forces X in NTIME(l^c), so the charge is at least t^(1/c), not t.",
+  "evidence": "[C-11] prop:time:collapse (time.tex lines 89-97); time.tex line 99 ('for merely consistent assigners rho_{f,n} can be inconsistent with PA'); discussion.tex line 16 ('in arithmetic one ground reflection sentence reproduces any Sigma_n-sound assigner'). See also MB-05 for time.tex. [C-12] time.tex line 173 ('symbol-size penalties charge a polynomial root of t(m)'); thm:time:ntime line 114 (X in NTIME(l(m)^{c_e})); prop:time:sigma(b) line 177 (kappa s(m)/4 with X outside NTIME(s^{c_1})). MB-06 flags the same wording in rem:time:summary(3).",
+  "fix": "Use DECISIONS.md §9.6 in A7, the short answer item 9 and discussion §9.1 ('Templates', 'A time penalty'): 'over PA', 'Σ_n-sound assigners on Σ_n sentences', 'whether templates block the collapse for merely consistent assigners is open'; the charge is 'at least a fixed polynomial root of the nondeterministic time (proved, infinitely often, for theories with polynomial-time membership) and, for the collapse constructions, at most a polynomial of the deterministic time (proof sketch)'. Never 'between its nondeterministic and deterministic time' without 'a polynomial root of'.",
+  "verdict_note": "Same wording fixed in time.tex rem:time:summary by univ-time (U-05, U-06)."
+ },
+ {
+  "id": "F-13",
+  "sources": [
+   "C-13"
+  ],
+  "file": "paper/sections/intro.tex",
+  "label_or_line": "A4 (l.61): 'a derivation likelihood does not change the MDL finding of AS ...'",
+  "severity": "major",
+  "reviewer_severity": {
+   "C-13": "major"
+  },
+  "verdict": "accepted",
+  "problem": "The justification given is incomplete in the way that matters. The MDL finding is that MDL tracks usage statistics; what preserves it under a derivation likelihood is that the split still wins linearly when the instantiation grammar misfits the usage (prop:ident:splitlzero(d), prop:ident:splitlone(c)). The intro cites only the tie and the Occam terms, which read as if the posterior respected the schema's boundary.",
+  "evidence": "rem:ident:mdl (ident.tex line 130: 'with usage that Qg misfits, it wins linearly under both ... when the instantiation model is misspecified, the posterior tracks usage, not the logical boundary of a schema'); discussion.tex line 16 ('told apart by Occam terms or by usage statistics').",
+  "fix": "Use the MDL sentence of DECISIONS.md §9.3: tie at matched weights, Occam terms with learned weights, and a linear split win when the instantiation grammar misfits the usage, so the posterior tracks usage (rem:ident:mdl). In the reordered intro this sentence belongs to the 'templates' answer (DECISIONS.md §8.1)."
+ },
+ {
+  "id": "F-14",
+  "sources": [
+   "C-14"
+  ],
+  "file": "paper/sections/intro.tex",
+  "label_or_line": "tab:intro:verdicts, row H7 (l.90)",
+  "severity": "major",
+  "reviewer_severity": {
+   "C-14": "major"
+  },
+  "verdict": "accepted",
+  "problem": "prop:pa:thn covers consistent r.e. theories. Inconsistent r.e. theories derive every sentence and, without a refutation rule, are never removed under a 0/1-support likelihood; with a computable rule they are removed only at growing depth.",
+  "evidence": "prop:pa:thn (pa.tex line 165: 'every consistent r.e. theory has posterior 0 eventually'); prop:pa:refute (line 169: 'Without a refutation rule inconsistent theories are never refuted').",
+  "fix": "Binding text DECISIONS.md §10.F1 (row H7): 'no consistent r.e. theory survives Th(N), and inconsistent ones are refuted only at growing depth'."
+ },
+ {
+  "id": "F-15",
+  "sources": [
+   "C-15"
+  ],
+  "file": "paper/sections/discussion.tex",
+  "label_or_line": "l.35 ('It removes ... an inconsistent theory only by refutation')",
+  "severity": "major",
+  "reviewer_severity": {
+   "C-15": "major"
+  },
+  "verdict": "accepted",
+  "problem": "This contradicts three body results. A false spare sentence makes T* + sigma inconsistent, and positive data remove that inconsistent theory like n^(-1/2) (rem:ident:sparetotal), with no refutation. Inconsistent templates such as the bare formula metavariable die within a few data under generative likelihoods (prop:univ:hanni, tab:univ:inc, rem:sound:belc). prop:pa:incons says only that the size principle charges inconsistency no more than a spare slot, and it is proved for the two-part likelihood, not for L1.",
+  "evidence": "ident.tex line 148 (rem:ident:sparetotal); universal.tex line 147 and tab:univ:inc; sound.tex line 188; pa.tex line 266 (prop:pa:incons, 'Under Lmax'); app-verification.tex line 204, item (7) (prop:pa:incons under the normalised L1 is open). The same discussion sentence also says the false spare is removed 'only polynomially', so the two clauses describe the same theory differently.",
+  "fix": "Binding text DECISIONS.md §10.F5 (with learned weights a false spare sentence, and the inconsistent T* ∪ {σ}, is removed only polynomially; the likelihood charges mass spent off the data, not inconsistency; certifying consistency needs refutation at growing depth).",
+  "verdict_note": "Wording adjusted from the reviewer's: added 'with learned weights' (with fixed weights the decay is exponential, rem:ident:sparetotal) and replaced 'the size principle does not charge inconsistency' by the precise statement (generative likelihoods do remove inconsistent theories that waste mass, tab:univ:inc)."
+ },
+ {
+  "id": "F-16",
+  "sources": [
+   "C-17",
+   "C-34"
+  ],
+  "file": "paper/sections/app-verification.tex",
+  "label_or_line": "tab:ver:corrections (l.37-75) and l.22",
+  "severity": "major",
+  "reviewer_severity": {
+   "C-17": "major",
+   "C-34": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "[C-17] The table does not list every correction in the four verification logs, although the text says it does. Missing: model m5 (check c9 was tautological for the split; replaced by c9b); pa m10 (the toy tower covers only the provable part of the data, a scope restriction) and the accepted part of m11 (two-part bounds, now Rem 5.4); experiments m1 (the 'brute force' tests shared code with the implementation; independent reference test added), m3 (citations of superseded drafts), m9 (summary wording), m13 (fallback counters not reported) and m14 (the E5(a2) slope, first reported as -0.259 from 200 draws, now -0.251 +- 0.002). Only the last appears elsewhere (tab:exp:e5 caption). [C-34] The pa rows name items by their first-version numbers (Prop 3.5(c), §4.5) while every grey source note in the paper uses the final numbering (pa Prop 4.6, §5.5). A reader cannot match 'Prop 3.5(c)' to the cited notes-final.md, where it appears only as 'old Prop 3.5(c)'.",
+  "evidence": "[C-17] model notes-final §12.1 row m5; pa notes-final §9.1 rows m10, m11; experiments notes-final §16.1 rows m1, m3, m9, m13, m14; app-experiments.tex line 146 (caption of tab:exp:e5: 'the first version reported -0.259 from 200 draws'). [C-34] pa.tex line 184 (\\src{pa Prop 4.6; referee M4, m7}); pa notes-final §9.4.",
+  "fix": "Add the missing items, one clause each, to the 'weakened' rows: model m5 (c9 tautological; c9b); pa m10 (toy tower covers only the provable part) and the accepted part of m11; experiments m1, m3, m9, m13, m14 (E5(a2) slope -0.259 → -0.251 ± 0.002). Or change l.22 to say that minor evidence and wording fixes are omitted and name them. Use the final numbering in pa rows with the old one in parentheses (C-34: 'Prop 4.6(c) (old 3.5(c)), F8; M4'; '§5.5 (old §4.5)'). Also add rows for the corrections made in this revision that change a statement (DECISIONS.md §10: MB-01/02, MA-01/02, C1, C2, C-02, C-03, MA-03..09, MB-03..09, C3..C15), each one line citing the issue id, in tab:ver:writing."
+ },
+ {
+  "id": "F-16b",
+  "sources": [
+   "C-16"
+  ],
+  "file": "paper/sections/app-verification.tex",
+  "label_or_line": "tab:ver:conflicts",
+  "severity": "major",
+  "reviewer_severity": {
+   "C-16": "major"
+  },
+  "verdict": "accepted",
+  "problem": "Cross-track inconsistency left unreconciled. The model track's Prop 6.2 (and the proof of Prop 6.3) uses Sigma_1-completeness of Q for Acc_f(code(phi)). The universal track found, and the paper's own correction table records, that in L_A with < and no Q axiom about <, Q is Sigma_1-complete only for <-free sentences (Q does not prove 0 < S0). The paper never says that Acc_f and Rej_f are written without <, or that < is defined by Dlt in B.",
+  "evidence": "app-verification.tex line 55 ('Sigma_1-completeness of Q restricted to <-free sentences (m2)'); universal notes-final lines 388-391 and §15.1 m2; model notes-final line 886 (no restriction); model.tex line 20 (L_A = {0,S,+,.,<,=}) and line 24 (Q1-Q7 do not mention <); time.tex line 59 ('a Sigma_1 formula of arithmetic ... (via Kleene's T predicate)').",
+  "fix": "Record the reconciliation of Σ1-completeness of Q (restricted to <-free sentences; Acc_f, Rej_f written without <; model and universal tracks) as a row of tab:ver:conflicts. The statements are fixed by univ-time (U-10) and model-ident-sound (M-19)."
+ },
+ {
+  "id": "F-17",
+  "sources": [
+   "R-01"
+  ],
+  "file": "paper/sections/intro.tex",
+  "label_or_line": "l.29-68 (sec:intro:note, sec:intro:reading, sec:intro:answers)",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-01": "major"
+  },
+  "verdict": "accepted",
+  "problem": "The answer arrives late. After the verbatim question (p.5) the reader gets a framing sentence, 1.1 pages that summarise Hänni's own notes back to him (sec:intro:note), and a dense model paragraph. The first answer starts in the second half of p.6. Page 5 says nothing about the results.",
+  "evidence": "TOC: 1.1 at p.5, 1.3 'Answers in brief' at p.6. Block estimate (scratch/r_blocks.out): quote 0.33 pp, sec:intro:note 1.11 pp, before A1. Only the abstract, which is dense, answers early.",
+  "fix": "Insert the binding short answer of DECISIONS.md §8.2 directly after the verbatim question (framed box or quote). Restructure the intro as in §8.1; §1.1 at most a third of a page with no long quotations (they live in §2.6, §2.7, §6 and §9.3, DECISIONS.md §4)."
+ },
+ {
+  "id": "F-18",
+  "sources": [
+   "R-02"
+  ],
+  "file": "paper/sections/intro.tex",
+  "label_or_line": "l.54-72 (A1-A9)",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-02": "major"
+  },
+  "verdict": "accepted, fix modified",
+  "problem": "The answers follow the research tracks, not the question. A6 (the verifier) answers a question the user did not ask, and it sits between the ∀xφ answers and his three refinements (A7 time, A8 derivation length). Templates, his first refinement, get no answer of their own: it is spread over A1 and A7. His last bullet has three tiers (the actual axioms; something equivalent in theorems; at least a lot of posterior mass), and its answer is split across A4, A5 and A9.",
+  "evidence": "Question bullets: ∀xφ; 'good version' with templates, derivation-length prior and time penalty; 'robustly picks up the axioms ... or equivalent ... or a lot of posterior mass'. The intro order is A1 version, A2-A3 ∀xφ, A4-A5 identification, A6 verifier, A7 time, A8 derivation length, A9 Gold/spares.",
+  "fix": "Reorder the answers to follow the question (DECISIONS.md §8.1 item 6): version; ∀xφ; templates (new answer, text in §8.1); derivation-length prior; time; his last bullet as the binding 3×2 table of §8.1; side results (verifier, trichotomy) last.",
+  "verdict_note": "The global reordering of sections proposed in the readability review (§3.1) is not adopted (rejected.json); only the intro's answers are reordered."
+ },
+ {
+  "id": "F-19",
+  "sources": [
+   "R-03"
+  ],
+  "file": "paper/sections/intro.tex",
+  "label_or_line": "A2 (l.57)",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-03": "major"
+  },
+  "verdict": "accepted",
+  "problem": "The fact that makes the main result intuitive is stated only abstractly ('∀xφ spends probability on outputs never observed') and never with a number. The output in question is mostly ∀xφ itself: as a generator, the theory {∀xφ} usually states its own axiom.",
+  "evidence": "In C_min, quantifier-free φ, c = 0.3: P_{H∀}(∀xφ) = 1/(1+c) = 0.769 and P_{H∀}(φ(t)) = 0.2308·Q(t), against P_{Hsch}(φ(t)) = Q(t). So each instance multiplies the odds by 0.23: 2.1 bits per datum, a factor 4.3e-7 after 10 instances (scratch/r_example_numbers.out; matches tab:univ:odds, row L1, and the c2 posterior table p.71, where H∀ falls from 0.021 to 0.000 by n=5).",
+  "fix": "Add the generator-view numbers to A2 (they are also items 4-5 of the short answer): at c = 0.3 in C_min, {∀xφ} outputs ∀xφ itself with probability 1/(1+c) = 0.77 and each instance multiplies its odds against φ(z) by c/(1+c) = 0.23 (prop:univ:factor; tab:univ:odds row L1).",
+  "verdict_note": "Numbers recomputed from the paper's own formulas (prop:univ:factor with Z_sch = 1-c, Z_all = (1-c)(1+c))."
+ },
+ {
+  "id": "F-20",
+  "sources": [
+   "R-05"
+  ],
+  "file": "paper/sections/intro.tex; paper/sections/discussion.tex; paper/sections/app-verification.tex",
+  "label_or_line": "tab:intro:verdicts (l.74-95); intro l.57, l.67; discussion l.20",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-05": "major"
+  },
+  "verdict": "accepted",
+  "problem": "The intro's only table, and ten sentences across the paper, grade the hypotheses H1-H7 of the orchestrator's internal research brief. The reader has never seen that document, and its hypotheses are not Hänni's. 'Refutes the brief's H6' or 'the brief's H4(a)' tells him nothing about his own proposals and spends 0.6 pages of the intro.",
+  "evidence": "tab:intro:verdicts caption: 'The hypotheses of the research brief (research/00-brief.md), which were to be checked'. time.tex l.109 quotes and refutes 'the brief's sentence'. The question itself contains no hypotheses H1-H7.",
+  "fix": "Move tab:intro:verdicts (label unchanged) to app:ver:process, after the paragraph that introduces the brief, with the cell fixes F-02, F-14, C-19, C-20 and \\crefabbrev. Intro: one sentence with a pointer. Replace 'refutes the brief's H6/H4(a)' and similar phrases in intro and discussion by the claim itself (DECISIONS.md §6.2)."
+ },
+ {
+  "id": "F-21",
+  "sources": [
+   "R-06",
+   "R-11"
+  ],
+  "file": "paper/sections/intro.tex",
+  "label_or_line": "l.47 (model paragraph); l.52 (blanket sentence); A1-A9",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-06": "major",
+   "R-11": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "[R-06] The answers are dense with symbols and with jargon not yet defined. Nine answers of about 900 words carry 54 cross-references. In the intro the following are never defined or explained: C_min, L1^sel, L1^sel_cit, 'citation with the closure reading', 'parameters admissible', generator class (defined only in A4), 'spare slot', 'root split', 'the MDL finding of AS', 'Gold's limit point', C*_d, 'motive', 'guard', 'hard assigner'. [R-11] 'Each answer holds within the hypotheses of the results it points to' leaves the reader to collect the hypotheses. The three that change the answer are well-specified data, fixed against Dirichlet weights, and the calculus (C_min). Each answer should carry the ones it needs.",
+  "evidence": "[R-06] Cross-references per answer line: 6, 6, 7, 8, 4, 6, 8, 4, 5 (grep in intro.tex l.51-67). For example, A2: 'the posterior odds stay at the prior odds (citation with the closure reading, L1^sel, Hänni's scores) or fall by a constant factor per datum under a derivation likelihood in the minimal calculus C_min'. [R-11] A2 needs C_min, and fixed or common weights, for 'never favour' (see MB-01, C-01). A4 needs fixed weights for concentration (C-04). A6 needs fixed weights.",
+  "fix": "At most two \\cref per answer; no undefined symbols in the intro (C_min, L1^sel, 'closure reading', 'parameters admissible', C*_d, 'guard', 'hard assigner' either glossed in a clause or replaced by words); glosses of DECISIONS.md §6.3 for spare template, ω-gap, motive, DTRC; delete the blanket sentence l.52 and put the key hypothesis into each answer; remove the variant names L1^σ, L1^sel, L1^sel_cit from the model paragraph."
+ },
+ {
+  "id": "F-22",
+  "sources": [
+   "R-07",
+   "C-42"
+  ],
+  "file": "paper/sections/intro.tex; paper/sections/discussion.tex",
+  "label_or_line": "A1 (l.55); discussion l.25-31",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-07": "major",
+   "C-42": "minor"
+  },
+  "verdict": "partly accepted",
+  "problem": "[R-07] A1 says 'A good version exists, in a precise and limited sense' but never says what it is. The recipe appears twice, in different words: for ∀xφ only in §3.9 (p.23), and in general in §9.2 (p.58). The user asked 'is there a good version of sth like this'; the paper's own answer to that is a definition, and it is not in one place. [C-42] Duplicated material: the same computed numbers or passages appear in two to four places.",
+  "evidence": "[R-07] A1 lists properties (finite DT° sets, prefix-code prior, data-independent normaliser) and cites a lemma, but gives no definition. universal.tex l.224 and discussion.tex l.27-29 give overlapping ingredient lists: selection model, noise, Bel_cons verifier, shrinking threshold. [C-42] Direct comparison of the passages.",
+  "fix": "The recommended inducer is stated once, in full, in sec:disc:good (with the fixes F-10/F-11); A1 gives it in two lines of words with a pointer. universal.tex §3.9 keeps only what is specific to ∀xφ (univ-time). No boxed copy at the end of §2.",
+  "verdict_note": "R-07's third copy (a box at the end of §2) rejected: it would recreate the duplication that C-42 and R-26 ask to remove."
+ },
+ {
+  "id": "F-23",
+  "sources": [
+   "R-08"
+  ],
+  "file": "paper/sections/intro.tex",
+  "label_or_line": "A6 (l.65)",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-08": "major"
+  },
+  "verdict": "accepted",
+  "problem": "The intro uses 'the thresholded verifier' without defining it or saying why it bears on the question. A reader who asked about axiom induction cannot tell what is being verified, or by whom.",
+  "evidence": "The intro mentions it only in A6 and the reader's guide ('the verifier against adaptive provers'). The definition is in §5.1 (p.30).",
+  "fix": "Open the verifier answer with: 'Used as a proof checker, the posterior accepts a sentence when theories deriving it carry at least 1-δ of the mass; we ask whether a prover that adapts to the checker can get a non-theorem accepted.' Place it among the side results (F-18)."
+ },
+ {
+  "id": "F-24",
+  "sources": [
+   "R-09"
+  ],
+  "file": "paper/sections/intro.tex",
+  "label_or_line": "A8 (l.69)",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-09": "major"
+  },
+  "verdict": "accepted",
+  "problem": "A8 says 'on theorem data without direct uses of induction the MAP is strictly weaker than PA'. That is a computed comparison of two candidates on one stream, stated as if it were a general fact about the MAP.",
+  "evidence": "pa notes-final §3.5: the data are a stream of six library theorems (seed 42), and the candidates are T_Ind + library and Q + library; the 'MAP' is the better of these two. pa.tex l.144 (rem:pa:streams (iii)) gives it as computed. The table only supports '6 to 24 times' (ratios 5.8-24.2 in tab:pa:theorems).",
+  "fix": "Write: 'on a computed stream of six library theorems, Q plus the theorems as axioms beats Q + T_Ind, and that theory is strictly weaker than PA (rem:pa:streams)'; keep 'within the candidates scored'. Use DECISIONS.md §9.8 for the rest."
+ },
+ {
+  "id": "F-25",
+  "sources": [
+   "R-13",
+   "C-38",
+   "R-35"
+  ],
+  "file": "paper/main.pdf; paper/main.tex; paper/sections/intro.tex; paper/sections/discussion.tex",
+  "label_or_line": "whole main text; front-group sections",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-13": "major",
+   "C-38": "minor",
+   "R-35": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "[R-13] The main text is 56.0 pages against a plan of about 40 (outline cap 46), and the table of contents adds 3 pages. Section spans (measured from the PDF): intro 4.7, model 6.5, univ 7.9, ident 6.5, sound 5.9, time 5.9, pa 8.4, exp 6.6, disc 3.7. [C-38] The main text runs to about 56 pages and the appendices to about 60, against the outline's targets of about 40 (cap 46) and 36 pages. Part of the excess is duplicated material (C-39 to C-42). [R-35] The table of contents runs 3 pages (pp.1-4) because it lists every subsection of eight appendices, so the main text starts on p.5.",
+  "evidence": "[R-13] Section starts measured with pdftotext -bbox: p.5.10, 9.77, 16.25, 24.10, 30.61, 36.48, 42.40, 50.80, 57.39; references at p.61.10. Block estimates are in scratch/r_blocks.out. C-38 records the same overrun. [C-38] main.aux: sec:intro p. 5, sec:disc p. 57, app:model p. 63, app:ver p. 115; pdfinfo: 122 pages; OUTLINE.md 'Page budget'. [R-35] pdftotext of pp.1-4: the TOC lists A.1-H.7. Section 1 starts at p.5.",
+  "fix": "Meet the targets of DECISIONS.md §2 for the front sections: intro 3.5 pp (cap 3.75), discussion 2.5 pp (cap 2.75). Set \\setcounter{tocdepth}{1} in main.tex (TOC one page; main text from p. 3). After all groups finish, run the final build and the page check of §2; report per-section spans in the changelog."
+ },
+ {
+  "id": "F-26",
+  "sources": [
+   "R-15",
+   "C-39"
+  ],
+  "file": "paper/sections/intro.tex; paper/sections/discussion.tex",
+  "label_or_line": "intro l.36-40 (sec:intro:note); discussion l.40",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-15": "major",
+   "C-39": "minor"
+  },
+  "verdict": "accepted, fix modified",
+  "problem": "[R-15] Hänni's note is summarised or quoted five to six times, with the same quotations ('T(quoted-phi) = accept => phi', 'being an axiom of the right form is in fact decidable', 'p(true/false/independent)', 'think of this as there being some model...'). He wrote the note and needs it once at most. [C-39] Duplicated material: Haenni's collapse argument is quoted twice with the same quotations ('T(quoted-phi) = accept => phi', 'being an axiom of the right form is in fact decidable', 'a model of the phis ...'), and his score proposal is quoted in both the intro and section 2.",
+  "evidence": "[R-15] Intro §1.1 (1.1 pp) and time.tex l.18 repeat the collapse argument with the same quotations (C-39). model.tex l.185 and intro l.34 repeat the variants. sound.tex l.191-194 quotes his three questions after their answers have been given as Examples 5.19, 5.20 and Proposition 5.21. [C-39] Direct comparison of the passages.",
+  "fix": "Quote Hänni's note once per item, in the canonical homes of DECISIONS.md §4 (collapse argument: time.tex §6; variants: model §2.6; trichotomy: §2.7; other ideas: discussion §9.3; polytime: conj:time:polytime). Intro §1.1: one sentence per item with a pointer, at most short phrases quoted. Discussion §9.3: point by point without re-quoting long passages.",
+  "verdict_note": "C-39 proposed keeping the full quotations in the intro; rejected in favour of R-01/R-15 (the intro must reach the answer on page 1). See rejected.json."
+ },
+ {
+  "id": "F-27",
+  "sources": [
+   "R-26"
+  ],
+  "file": "paper/sections/discussion.tex",
+  "label_or_line": "l.14-35 (§9.1, §9.2)",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-26": "major"
+  },
+  "verdict": "accepted",
+  "problem": "The discussion repeats the intro and §3.9 at length. §9.1 'Templates', 'A derivation-length prior' and 'A time penalty' restate A1, A8, A7 and rem:time:summary. §9.2's 'good version' restates §3.9 l.224, and 'what it can promise' restates A4 and A6. The discussion has 82 cross-references in 3.7 pages.",
+  "evidence": "Block estimates: §9 opening with §9.1 1.21 pp; §9.2 0.3 pp plus text. Compare discussion.tex l.20 with time.tex l.191 and intro.tex l.63.",
+  "fix": "Cut §9.1 to three short paragraphs that add interpretation only (no restated results beyond one canonical sentence each); §9.2 is the single statement of the good version (F-22); keep §9.3 (no long quotes), trim §9.4 by about 30%%, keep §9.5 with C-37's additions. Target 2.5 pp."
+ },
+ {
+  "id": "F-28",
+  "sources": [
+   "R-33",
+   "R-34"
+  ],
+  "file": "paper/preamble.tex; paper/sections/intro.tex",
+  "label_or_line": "\\src (l.37), \\status (l.35); intro l.115",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-33": "major",
+   "R-34": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "[R-33] \\src is \\textsuperscript{...}, an unbreakable box. Its 184 uses (169 in the main text) either overflow the margin or, in ident, pa and experiments, are pushed by a local hack (\\hfil\\penalty0\\hfilneg) to the start of the next line, where a grey superscript dangles alone before the statement. Long notes ('model §1.5; universal §1.5; pa Def 0.3; experiments §1.7; model Ex 3.6', 79 characters) make this worse. [R-34] \\status is \\textsf{\\small[...]} without \\textup. In plain-style theorem heads (theorem, lemma, proposition, corollary, conjecture) it comes out italic sans; in definition and remark styles it is upright. The same marker therefore looks different from one statement to the next.",
+  "evidence": "[R-33] build3.log: the overfull boxes at model.tex l.140-146 (Def 2.13 head) and l.214-217 (Rem 2.21 head) come from the unbreakable status-plus-superscript head. Dangling superscripts on p.25 (Prop 4.7, Thm 4.9, Rem 4.10), p.29 (Conj 4.26, Rem 4.27), p.43 (Def 7.2, Props 7.3, 7.5, Rem 7.4) and p.48 (Ex 7.27). 78 uses of the hack (30 in ident, 44 in pa and app-pa, 4 in experiments). [R-34] p.10: Lemma 2.3 '[(a) proved; (b) proof sketch]' italic; Remark 2.10 upright. p.25: Theorem 4.9 status italic, wrapping over two lines; Remark 4.10 upright.",
+  "fix": "Apply the binding preamble code of DECISIONS.md §7 (\\emergencystretch, \\status with \\textup, breakable \\src, no-op \\identbrk/\\pabrk/\\expbrk, \\crefabbrev, citation aliases in \\AtBeginDocument). Land this first (it affects all builds). Intro l.115: 'as a small grey note'."
+ },
+ {
+  "id": "F-29",
+  "sources": [
+   "R-16",
+   "C-28"
+  ],
+  "file": "paper/sections/app-verification.tex",
+  "label_or_line": "tab:ver:corrections; app:ver:sketches",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-16": "major",
+   "C-28": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "[R-16] About 1.2 pages of the main text narrate first-version claims, refuted, that do not change what the reader should believe. All of them are already in tab:ver:corrections (App. H.2). The outline (rule 3) keeps refuted claims in the text only 'where they matter to the reader'. [C-28] The refuted 'constant margin' remark has no label, so app-verification points to prop:pa:occam instead of the refuted claim. tab:pa:merge, the evidence for rem:pa:merge, is never referenced.",
+  "evidence": "[R-16] Examples: 'The first version's argument (\"at least two lines\") was wrong' (pa l.57); '(The pre-referee version let c depend on T; referee m1.)' (time l.127); the unlabelled 'Refuted: a constant margin' remark (pa l.106); rem:exp:refuted (0.27 pp, seven items); the last sentence of sec:pa:answer. [C-28] Label/reference cross-check (labels never referenced include tab:pa:merge); app-verification.tex line 59.",
+  "fix": "App. H is the home of refuted first-version claims (DECISIONS.md §5). Make every row of tab:ver:corrections point to where the item now lives (rem:model:subcrit and the r6 numbers in App. A; rem:sound:hyp's refuted sentences in App. D; rem:exp:refuted in App. G; the constant-margin remark as rem:pa:sdpcrefuted in App. F, replacing the pointer to prop:pa:occam; tab:pa:merge cited by pa-exp)."
+ },
+ {
+  "id": "F-30",
+  "sources": [
+   "R-17"
+  ],
+  "file": "paper/sections/intro.tex; paper/sections/discussion.tex",
+  "label_or_line": "intro §1.2-§1.5; discussion",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-17": "major"
+  },
+  "verdict": "accepted",
+  "problem": "Process vocabulary runs through the mathematics. Objects are named after the organisational unit that produced them ('track universal's chains', 'track pa's natural deduction', 'track experiments' grammar'), and statements carry 'referee m9', 'editor, from ...' and 'the model track's first version'. The reader has to learn the project's org chart to follow the definitions.",
+  "evidence": "Counts in the main sections: 'track(s)' 55, 'referee' 42, 'first version / pre-referee / first summary' 18 (grep). model.tex alone has 17 'track' mentions. Example: Def 2.4 (p.11): 'track universal's chains C_min ... track experiments' forward chain Ch_J ... track pa's natural deduction ND'.",
+  "fix": "No 'track X's ...' naming, no 'the brief's H...', no 'referee m...' in running text (DECISIONS.md §6.2). One sentence in §1.5 says the results come from four independently refereed research notes (app:ver)."
+ },
+ {
+  "id": "F-31",
+  "sources": [
+   "R-27",
+   "C-26"
+  ],
+  "file": "paper/sections/intro.tex; paper/sections/abstract.tex",
+  "label_or_line": "intro A2-A9; abstract",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-27": "major",
+   "C-26": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "[R-27] Several central terms are used throughout and never defined in this paper. 'Spare template/slot' is used in the intro (A4, A9, H5), Prop 2.20(c), Prop 3.9 and Rem 4.19, and is only implicit in Prop 4.18 ('σ a spare'). 'ω-gap' appears in the abstract, A3, §3 and §4, always as 'of AS'. 'Motive' appears in A5, Table 5 and §7. Also undefined: DTRC (intro l.109; the §7.6 title), 'anchor' (Prop 5.7 title), 'cautious verifier', Acc_k and H_k(DT°) (Prop 5.6), 'Gold's limit point' and 'L∞ against L5' (A9; Prop 4.12), and 'KT' (Lemma 2.12; first expanded in §7). [C-26] Symbols used before their definition or never defined: DirMult (defined in ident.tex line 108, used earlier in prop:univ:memo); Mem(D_n) (first used universal.tex line 113, defined only in experiments.tex line 29); SeenQ and Trim (used in sound.tex and pa.tex, defined in section 8); H_k and Acc_k (only 'AS Def 2.6'); the elimination-term law Qelim (never defined); T_E, T_N (only in app-pa); T_{L_infty} ('AS Prop 5.12'); Q^- (never defined). In ident.tex R_n is the spare-slot ratio while tab:ident:misspec in the same section uses R_m for numeral splits.",
+  "evidence": "[R-27] grep: no sentence of the form 'a spare template is ...' in the main text. 'ω-gap' is always 'of AS' or 'AS §4.5'. 'motive' is first defined at pa.tex l.35 (p.43). C-26 lists further symbols used before their definition (DirMult, Mem, SeenQ, T_{L∞}, T_E, T_N, Q_e). [C-26] grep of the section files in reading order; NOTATION.md §3, §7 (where each symbol should be defined).",
+  "fix": "Gloss at first use in the intro (and abstract where used) with the wordings of DECISIONS.md §6.3: spare template, ω-gap, motive, DTRC, anchor, cautious verifier; and rename Gold's languages to \\mathcal L_k in A9 and the verdict table (DECISIONS.md §6.1)."
+ },
+ {
+  "id": "F-32",
+  "sources": [
+   "C-18"
+  ],
+  "file": "paper/sections/abstract.tex",
+  "label_or_line": "l.3",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C-18": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "This is the well-specified statement (thm:univ:omega(a)). Under misspecification (unmodelled selection, no guard) the limit is class-dependent and can be 1 over Q (prop:univ:noguard(b), (d); prop:univ:sentences(d)). Intro A3 says so; the abstract does not, and the abstract's caveat sentence speaks only of 'positive guarantees'.",
+  "evidence": "intro.tex line 55 ('or, when the likelihood ignores how the data were selected, to a class-dependent limit'); prop:univ:noguard(b) ('= 1 at every n without them'); tab:univ:noguard (1.000 over Q to n = 10^12).",
+  "fix": "Covered by the binding abstract (DECISIONS.md §8.3); if words allow, add 'when the data are drawn from the model' after 'zero'. The intro's A3 keeps the class-dependent limit under unmodelled selection."
+ },
+ {
+  "id": "F-33",
+  "sources": [
+   "C-19"
+  ],
+  "file": "paper/sections/intro.tex",
+  "label_or_line": "tab:intro:verdicts, row H4(a)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C-19": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "The 'where' column cites only prop:univ:memo, which carries the memorisation half of the verdict. The over-general half ('confirmed') rests on thm:univ:size.",
+  "evidence": "universal.tex line 113 ('proved for over-general templates' via thm:univ:size).",
+  "fix": "Cite thm:univ:size,prop:univ:memo."
+ },
+ {
+  "id": "F-34",
+  "sources": [
+   "C-20"
+  ],
+  "file": "paper/sections/intro.tex",
+  "label_or_line": "tab:intro:verdicts H5; A9; A2",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C-20": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "Bare log without unit, against NOTATION §1 ('never a bare \\log'; every code length carries its unit). The n^{-1/2} rate and the 1/2 log2 n cost hold for Dirichlet(1/2) weights; with fixed weights spares decay exponentially. The memoriser-class rate needs Laplace weights (prop:univ:memo(ii')). Hypotheses dropped in the summary (compare MA-10, MA-13).",
+  "evidence": "prop:ident:spare(a) line 138 ('at alpha_sigma = 1/2, 1/2 log2 n bits'); rem:ident:sparetotal ('With fixed weights the factor is (1-w_sigma)^n'); prop:univ:memo(ii') line 110 ('Laplace weights').",
+  "fix": "H5: 'spares cost about 1/2 log2 n bits (Dirichlet(1/2) weights)'. A9: 'with Dirichlet(1/2) weights a spare slot ... decays only like n^{-1/2}'. A2: 'the memoriser class with Laplace weights, under a geometric numeral law, ...'."
+ },
+ {
+  "id": "F-35",
+  "sources": [
+   "C-21"
+  ],
+  "file": "paper/sections/intro.tex",
+  "label_or_line": "'What is not achieved' (iii)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C-21": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "The list of conjectured rates omits the universal-track conjectures that OUTLINE §1 item 5 requires (the limits of prop:univ:noguard(d) and prop:univ:sentences(d), and prop:univ:memo(iii)); app-verification lists them.",
+  "evidence": "OUTLINE.md §1 item 5; app-verification.tex lines 176-177.",
+  "fix": "Add 'the over-Q limits of the split races (prop:univ:noguard(d), prop:univ:sentences(d)) and the memoriser rate (prop:univ:memo(iii))'."
+ },
+ {
+  "id": "F-36",
+  "sources": [
+   "C-33"
+  ],
+  "file": "paper/sections/discussion.tex",
+  "label_or_line": "l.40 (\"making some mistakes\")",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C-33": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "E4(C1) does not illustrate a noise mixture: there the mistakes are a schema z+0=Sz inside a pool theory, which changes the theory's theorems, and the verifier accepts falsehoods in 100/100 streams. The supporting source for 'harmless if the noise model is part of the generator' is the model track's remark on noise mixtures (Thm 4.1 transfers) and rem:ident:nearmiss.",
+  "evidence": "rem:sound:e4 (C1) and tab:exp:e4 (MAP 'Hsch with the mistake schema'); model notes-final §9.3 ('allow some mistakes': Theorem 4.1 still holds if the noise model is part of the well-specified generator); rem:ident:nearmiss.",
+  "fix": "Cite rem:ident:nearmiss and prop:univ:robust for the positive statement and E4(C1) as the counter-case: 'if the mistakes are modelled as axioms (E4(C1)) the verifier accepts them'."
+ },
+ {
+  "id": "F-37",
+  "sources": [
+   "C-35"
+  ],
+  "file": "paper/sections/app-verification.tex",
+  "label_or_line": "app:ver:sketches",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C-35": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "The lists are incomplete: the conjecture that a deeper nesting would win on heavy-tailed data (experiments.tex line 138); the heuristic waiting times of the I-Sigma_n chain in prop:ident:gold (ident.tex line 95; only those of prop:pa:isigma are listed); the 'eventual behaviour' sketch of ex:pa:euler (its status names both sketches; only 'covering' is listed); the rate '(prior ratio/delta_r)^{1/alpha} data' of rem:ident:sparetotal, which rests on the sketch of prop:ident:spare(b) (cf. MA-25).",
+  "evidence": "ex:pa:euler status 'computed; proof sketch (covering, eventual behaviour)'; experiments.tex line 138 '(conjecture)'; ident.tex line 95 '(a heuristic)'.",
+  "fix": "Add the four items (heavy-tail nesting conjecture; heuristic waiting times of prop:ident:gold; 'eventual behaviour' sketch of ex:pa:euler; the waiting time of rem:ident:sparetotal from the sketch of prop:ident:spare(b)), and mirror every status change of DECISIONS.md §11 (e.g. prop:ident:spare(c) hypothesis, rem:time:upper for ρ_{f,n}, prop:pa:wellspec Dirichlet part, prop:exp:exact(d), rem:sound:indep, rem:pa:pointwise open part)."
+ },
+ {
+  "id": "F-38",
+  "sources": [
+   "C-36"
+  ],
+  "file": "paper/sections/app-verification.tex",
+  "label_or_line": "app:ver:refs",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C-36": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "The list of references not verified against their sources omits doob1949application (bibliographic data confirmed only through a secondary bibliography; the theorem is cited, not read), krichevsky1981performance (the KT rate is cited as known; pa's log: 'standard, not re-checked') and rylln1952axiomatizability (data copied from AS's bibliography).",
+  "evidence": "bib/ident.bib comment on doob1949application; pa notes-final §9.2 'references' row; NOTATION.md §11 table.",
+  "fix": "Add the three entries with what was checked."
+ },
+ {
+  "id": "F-39",
+  "sources": [
+   "C-37"
+  ],
+  "file": "paper/sections/discussion.tex",
+  "label_or_line": "sec:disc:open",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C-37": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "Two open problems of the model track that the paper itself states as open are missing: whether equal instance sets (or laws) imply equivalence for single DT templates (model §10 problem 8; ident.tex line 61 'this converse is open') and for which assigners a Craig set is a finite union of DT templates (problem 15; app-time.tex line 156).",
+  "evidence": "model notes-final §10 items 8, 15; prop:ident:splits(c); app-time.tex line 156.",
+  "fix": "Add both open problems (equal laws ⇒ equivalence for single DT templates, prop:ident:splits(c); for which assigners a Craig set is a finite union of DT templates), and the two open items made explicit in this revision: prop:univ:open(d) for countable classes with learned-weight provers, and whether templates block the collapse for merely consistent assigners."
+ },
+ {
+  "id": "F-40",
+  "sources": [
+   "R-12"
+  ],
+  "file": "paper/sections/intro.tex",
+  "label_or_line": "l.98-126 (sec:intro:contrib, sec:intro:guide)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "R-12": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "The contributions paragraph and the reader's guide list the same nine sections twice in different words. 'What is not achieved' is the paragraph the user most needs, and it sits between them.",
+  "evidence": "l.96 lists sections 2-8 by content; l.113-122 lists them again.",
+  "fix": "Merge contributions into the guide (one line per section); move 'What is not achieved' directly after the answers (DECISIONS.md §8.1). Keep both labels."
+ },
+ {
+  "id": "F-41",
+  "sources": [
+   "R-39",
+   "R-40"
+  ],
+  "file": "paper/sections/intro.tex; paper/preamble.tex",
+  "label_or_line": "tab:intro:verdicts",
+  "severity": "minor",
+  "reviewer_severity": {
+   "R-39": "minor",
+   "R-40": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "[R-39] With cleveref's noabbrev, the narrow 'where' columns wrap to three lines ('Propositions 4.14 and 4.15 and Remark 4.27'; 'Remark 7.30 and Proposition 7.29'; 'Remarks 5.14 and 7.32'), which makes Table 5 a page tall (p.29). [R-40] Floats interrupt statements. Table 1 is set at the top of p.8 in the middle of answer A8 (its bold heading is split by the table). Tables 3 and 4 sit between Proposition 3.2 (p.16) and its proof idea (p.17).",
+  "evidence": "[R-39] p.29 as rendered; ident.tex l.198 gives the column as p{2.7cm}. [R-40] p.7-8 and p.16-17 as rendered.",
+  "fix": "The table moves to App. H (F-20), which removes the float split of A8; call \\crefabbrev inside it (DECISIONS.md §6.5)."
+ },
+ {
+  "id": "F-42",
+  "sources": [
+   "R-41"
+  ],
+  "file": "paper/main.tex; paper/preamble.tex; paper/sections/intro.tex",
+  "label_or_line": "title footnote l.6; intro l.47, l.113",
+  "severity": "minor",
+  "reviewer_severity": {
+   "R-41": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "The two earlier reports print as 'Claude (Anthropic) (2026a)' and 'Claude (Anthropic) (2026b)', which the reader cannot tell apart. The title footnote reads 'a follow-up to Claude (Anthropic) (2026b) and Claude (Anthropic) (2026a)'. The paper then refers to them as AS and IL.",
+  "evidence": "p.1 footnote; p.10 'the earlier report Claude (Anthropic) (2026a) (\"AS\" below)'.",
+  "fix": "Citation aliases as in DECISIONS.md §6.4 (\\defcitealias in \\AtBeginDocument; \\citetalias in the title footnote; first mention 'AS \\citep{...}, on axiom schemas, and IL \\citep{...}, on inferential learning')."
+ },
+ {
+  "id": "F-43",
+  "sources": [
+   "R-44"
+  ],
+  "file": "paper/sections/intro.tex; paper/sections/discussion.tex",
+  "label_or_line": "intro l.33; discussion l.64",
+  "severity": "minor",
+  "reviewer_severity": {
+   "R-44": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "The framing sentence 'a study of an idea ... not the design of a stronger prover' appears three times in almost the same words. The outline asks for it in the intro and the discussion only.",
+  "evidence": "intro l.29; experiments l.20 ('It is a laboratory for checking the claims ..., not a prover'); discussion l.64.",
+  "fix": "Keep the framing sentence in the intro (one sentence after the short answer) and the discussion's closing paragraph only; pa-exp removes the experiments copy (P-17)."
+ },
+ {
+  "id": "F-44",
+  "sources": [
+   "R-45"
+  ],
+  "file": "paper/sections/app-verification.tex",
+  "label_or_line": "appendix as a whole",
+  "severity": "minor",
+  "reviewer_severity": {
+   "R-45": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "The cut list moves about 8 pages into appendices that already run about 60 pages against a plan of 36 (C-38). Without offsetting deletions the appendix would reach about 70 pages.",
+  "evidence": "Block estimates in scratch/r_blocks.out. Duplicate proofs exist in app-ident and app-sound (rem:ident:exact against rem:sound:vacuous) and in app-time and app-pa (prop:time:notemplate against prop:pa:refl) (C-41). Refuted items appear both in appendix sections and in tab:ver:corrections.",
+  "fix": "App. H keeps each refuted item once (tab:ver:corrections), receives tab:intro:verdicts, and points to the other appendices rather than repeating them. Overall appendix cap 66 pp (DECISIONS.md §2)."
+ },
+ {
+  "id": "F-45",
+  "sources": [
+   "R-28"
+  ],
+  "file": "paper/sections/app-notation.tex (new, optional); paper/main.tex",
+  "label_or_line": "appendix front",
+  "severity": "minor",
+  "reviewer_severity": {
+   "R-28": "major"
+  },
+  "verdict": "partly accepted",
+  "problem": "The notation is overloaded, sometimes within one page. α is both the Dirichlet parameter (Lemma 2.12) and the rule probabilities α_ax, ..., α_∀E (Def 2.13, next paragraph). q is the numeral-law parameter, the extinction root (Lemma 2.14), the query q_t and the probe sentence q (§5). ρ is the subcriticality rate, the Q_open parameter probability, the affinity ρ_T and the reflection sentence ρ_{f,n}. L names the languages L_A, L and L_1 ⊊ L_2 ⊊ ..., the likelihood names L0/L1/L2/L_ε, the code length L_Q(φ) and a count of vacuous quantifiers. c is the ∀E probability, the constant of Thm 6.3, the constraints c_j, the costs c_S(f), the count c(s), c_T, c_e, c_der, c_{K,α} and the check scripts c1-c16. R has six meanings; K four (Mendelson's calculus, the number of templates, the channel K(s'|s), K_T = KL); H(s) is the 50/50 rule beside the hypotheses H∀, H_F and H_k.",
+  "evidence": "On p.25-26 Prop 4.12 uses languages L_1 ⊊ L_2 while Thm 4.9 on the same spread uses the likelihoods L0 and L1. sound.tex l.22 (q_t queries) and l.119 (q a sentence) are three pages apart. model.tex l.133 and l.141 are adjacent.",
+  "fix": "Optional: a one-page notation table (label app:notation) from NOTATION.md, input as the first appendix; if added, §1.5 says where it is. Symbol renamings: only those of DECISIONS.md §6.1.",
+  "verdict_note": "Most of R-28's renamings rejected (rejected.json); the notation table is kept as an option."
+ },
+ {
+  "id": "F-46",
+  "sources": [
+   "C-27"
+  ],
+  "file": "paper/CLAIMS.md",
+  "label_or_line": "ledger (final sync)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C-27": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "CLAIMS.md (the ledger) will be out of date after the revision: several statements, statuses and sections change, and some ledger entries repeat errors found by the reviewers (e.g. prop:pa:must, prop:pa:wellspec, ex:pa:skel, rem:pa:e3b per C1, C2, C4, C5).",
+  "evidence": "The reviewers' fixes C1, C2, C4, C5 each ask to correct CLAIMS.md too; C-27 asks to update its section column.",
+  "fix": "After all groups finish, update CLAIMS.md from the four changelogs: section column of moved items (C-27), the new statements of DECISIONS.md §10 (incl. the H2 verdict and prop:pa:must, prop:pa:wellspec, prop:pa:memo, ex:pa:skel, rem:pa:e3b), the statuses of §11, and the C-16 reconciliation. Only the front group edits CLAIMS.md."
+ }
+]

@@ -1,0 +1,219 @@
+% =====================================================================
+% Appendix: how the results were established (key: ver). Written by the framing editor, last.
+% Sources: the verification logs at the end of research/tracks/{model,universal,pa,experiments}/notes-final.md
+%   (model §12; universal §15; pa §9; experiments §16), the referee reports referee.md, paper/CLAIMS.md
+%   ("Cross-track conflicts" C1-C43), the bib/*.bib comments, and the section writers' reports of problems
+%   found while writing (recorded in tab:ver:writing and app:ver:open).
+% No theorem environments.
+% =====================================================================
+
+\clearpage % flush the floats of the preceding appendices before this one
+\section{How the results were established}\label{app:ver}
+
+\subsection{Process}\label{app:ver:process}
+
+\paragraph{Roles.} A research brief (\texttt{research/00-brief.md}) quoted the question and set out hypotheses H1--H7 to be confirmed, refined or refuted (\cref{tab:intro:verdicts}). Four research tracks then worked in parallel: \emph{model} (the general theory), \emph{universal} (the case $\forall x\varphi$), \emph{pa} ($\PA$ and $\ZF$) and \emph{experiments} (the package \texttt{code/bai} and the experiments E1--E8). Each track wrote notes (\texttt{notes.md}) with seeded check scripts. An adversarial referee for each track read the notes, re-derived the proofs, wrote independent code (\texttt{referee\_code/}) and filed a report (\texttt{referee.md}). The track revised its notes into \texttt{notes-final.md}, which ends with a verification log mapping every referee issue to its resolution. The referees found no fatal error. They raised, by track: model, 5 major and 16 minor issues and 6 questions; universal, 3 major and 11 minor issues and 7 questions; pa, 5 major and 11 minor issues and 5 questions the track had missed; experiments, 5 major and 14 minor issues. A planning editor then wrote an outline, a notation file and a ledger of every claim with its status and source, and reconciled 43 cross-track conflicts (\cref{app:ver:conflicts}). Section writers wrote each section from the final notes only, re-reading the proofs as they went and recording what they found (\cref{tab:ver:writing}). A framing editor wrote the introduction, the discussion and this appendix, and ran the build.
+
+\paragraph{What this means for the reader.} All roles were separate Claude instances (Anthropic). No human has checked the mathematics. Nothing is checked in a proof assistant. Track pa's natural-deduction derivations are checked line by line by a small checker, \texttt{nd.py}, which rejects ten planted unsound steps and the referee's 173 mutants (\cref{app:pa:checker}); its referee re-checked the derivations with an independent checker. Results added in the revisions were checked by their track and re-read by the section writers, but not by a referee; among them are (numbered as in the tracks' notes, which the grey source notes give) model Thms 4.7, 4.8, Lemma 4.6, Props 5.5(d), 5.6, 6.11, 6.14, 7.6, 8.2, Lemma 6.10, Thm 6.12, Cor 6.13 and Ex 3.6; universal Lemma N0, Props N1--N3, B2, U2n, U2t and U10(e); pa Props 1.4, 2.3, 3.1--3.4, 4.8 and Lemma 4.7; experiments Props X10, X12, X13 and E8. The appendices name these where they give the proofs (e.g.\ \cref{app:ident,app:pa}).
+
+% ---------------------------------------------------------------------
+\subsection{Corrections made during verification}\label{app:ver:corrections}
+
+\Cref{tab:ver:corrections} lists every claim of the first versions that was refuted or weakened, with the reason and where the paper states what holds instead. ``Found by'' gives the referee's issue number (M major, m minor) or ``track'' when the track found it in its own revision. Refuted claims that matter to the reader are also kept in the text, labelled refuted.
+
+{\footnotesize
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{1.9cm}>{\raggedright\arraybackslash}p{4.3cm}>{\raggedright\arraybackslash}p{6.1cm}>{\raggedright\arraybackslash}p{2.6cm}@{}}
+\caption{Claims refuted or weakened during verification.}\label{tab:ver:corrections}\\
+\toprule
+item; found by & claim of the first version & reason; what holds now & where\\
+\midrule
+\endfirsthead
+\toprule
+item; found by & claim of the first version & reason; what holds now & where\\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\multicolumn{4}{@{}l}{\emph{model track}}\\
+Def 1.5; M5 & ``every type has mean offspring below 1'' makes $\Qg$ subcritical & no formula type of $L_A$ satisfies it; with infinitely many types a chain is infinite with probability $\prod_k(1-1/(k+2)^2)=\frac12$; the domination step fails. Refuted; replaced by uniform weighted subcriticality & \cref{rem:model:subcrit,def:model:grammar}\\
+Rem 1.10; m3 & a stronger theory has a larger $Z_T$, ``hence a smaller $P_T(s)$ on each datum'' & $T=\{a,a\to b\}$, $T'=T\cup\{b\}$: $P_T(b)=0.032$, $P_{T'}(b)=0.346$. Refuted; true for data whose shortest derivation is unchanged & \cref{rem:model:graded}\\
+Thm 5.1(b); M4 & the exact generator class gets posterior mass $\to1$ for a.e.\ $w^*$ & its mass is $0$ at every $n$ ($|T^*|\ge2$, independent components, $w^*$ off a countable set). Refuted; replaced by identification of the instance union & \cref{rem:ident:exact,thm:ident:limit}\\
+Prop 6.9; M2 & plain $\Lone$ charges derivation symbol size & a conclusion of size $2^{k+3}-1$ from a tree with $7+8k$ grammar nodes. Refuted; replaced by Lemma 6.10--Prop 6.14 and Conj 6.15 & \cref{prop:time:lonesize}\\
+\S7 (c5); m4 & renormalisation is coherent essentially when every theory is complete & coherent in 199 of 300 posteriors, 2 of them with all theories complete. Refuted; the 50/50 rule characterised instead & \cref{rem:sound:completeref,prop:sound:fiftyfifty}\\
+\S4; M1 & Thm 4.1 applies to the Dirichlet-weight model & vacuous there; a constant threshold accepts with probability $0.977$--$1.000$ against nominal $0.02$. Refuted; averaged and shrinking-threshold versions proved & \cref{rem:sound:vacuous,ex:sound:constant,thm:sound:avg,thm:sound:shrink}\\
+\S5.3; M3 & ``a derivation likelihood does not change the MDL finding'' [proved] & proved only for matched fixed weights. Withdrawn; Prop 5.6 with (d) a conjecture & \cref{prop:ident:splitlone,rem:ident:mdl}\\
+\S4.1; m8 & ``$W^*$ only grows under truncation''; ``$\Ltwo$ likelihoods are finite sums'' & the truncated constant can fall to $0.09$ against $\pi(C^*_d)=0.90$; with full-support $\Qg$ the sums are infinite. Refuted & \cref{rem:sound:hyp}\\
+brief H6; track & a collapse schema ``requires running $T$ to check membership'', so a Kt penalty prices it & membership is polynomial without running $T$. Refuted & \cref{prop:time:cheap}\\
+H\"anni's note; track & his schema is consistent for every consistent assigner & single-sorted over $\PA$ it can be inconsistent. Refuted in that reading; his conclusion holds via Craig & \cref{prop:time:single,thm:time:equiv}\\
+weakened; m1, m2, m6, m9--m12, m14--m16 & --- & Cor 6.8's constant uniform only for template theories (m1); Prop 4.2's prover replaced by a waiting prover, as an every-round prover wins only 11/400 against escalation (m2); Prop 2.5's numbers corrected to $0.16$--$0.35$ (m6); consistency hypothesis added to Prop 1.9(b) (m9); Prop 2.6(c) restricted to first-order templates with $0$-ary term metavariables (m10); $\alpha_{\mathrm{ax}}+\alpha_{\mathrm{lg}}>0$ (m11) and parameters admissible (m12) added to Lemma 1.7; split ties only at matched fixed weights (m14); Prop 2.5's limit $0$ or $\infty$ only if $T^*\in\{T_1,T_2\}$ (m15); Ex 3.4, Rem 3.5 are $\Lzero$ only, and $\Lone$ was computed in Ex 3.6 (m16) & the corresponding items of \cref{sec:model,sec:ident,sec:sound,sec:time}\\
+\midrule
+\multicolumn{4}{@{}l}{\emph{universal track}}\\
+U11(e); M1 & without a guard $\Hopen$ wins on closed data and the posterior takes the $\omega$-step & $R_1=\{\varphi(0),\varphi(Sz)\}$ beats $\Hopen$ by $(1-q)\Wo$ per datum; $P(T\vdash\forall x\varphi\mid D_n)=0.000$ from $n=1000$. Refuted under $\Lone$; holds for $\{\Hall,\Hopen\}$ and under $\Lsel$ & \cref{rem:univ:openrefuted,prop:univ:noguard}\\
+remark after U3; m8 & $\wedge$-detours cannot break the factor $c$ & in $\Cand$ the ratio is $0.15553>c=0.15$. Refuted; whether the direction can reverse is open & \cref{rem:univ:detour}\\
+U16(b), (c); M2 & ``$=1$ over $\Q$'' in the sentence-only class & true only in a three-hypothesis class; with depth $\le4$ memorisers win, with depth $\le40$ splits win to $n=10^{12}$; the referee's ``$\to0$ over $\Q$'' holds only for bounded depth. Restated, limit a conjecture & \cref{prop:univ:sentences}, \cref{app:univ:sentences}\\
+U10(c); m3 & $\vdash_{\mathsf C}$ and $\vdash$ conflated in the faithful regime & split into (c1), (c2) with the extra hypothesis & \cref{thm:univ:omega}\\
+weakened; M3, m1, m2, m4--m7, m9--m11 & --- & U10(c3) restricted to $\Cmin$-like calculi (M3); memoriser universe named, as the prior was improper (m1); $\Sigma_1$-completeness of $\Q$ restricted to $<$-free sentences (m2); learned weights are outside U7, Prop B2 added (m4); U12(b) recomputed with equal priors (m5); U14(b) does not apply at $q=\frac12$, U14(c) is a sufficient condition (m6); U10(d) for quantified $\varphi$ a sketch in general (m7); inconsistent theories reported as $\Inc$ and the verifier moved to $\Belc$ (m9); wording (m10); the probability qualifier of U6 restored (m11) & the corresponding items of \cref{sec:univ}\\
+\midrule
+\multicolumn{4}{@{}l}{\emph{pa track}}\\
+Prop 3.5(c), F8; M4 & with $\Sigma_n$ motives every covering $\DT$ theory has $\PA$-strength induction, so the posterior lands on the $L_\infty$ side & a theory inside $\ISigma1$ covers a $\Sigma_1$/open practice and overtakes $\Q+\TInd$ near $n\approx2^{26.7}$; a term-only theory inside $\ISigma2$ covers G1. Refuted & \cref{prop:pa:isigma,ex:pa:narrow,ex:pa:skel}\\
+\S2.2; m2 & the SDPC margin of the root split is constant & it falls by 1 bit per doubling. Refuted & \cref{prop:pa:occam}, \cref{sec:pa:mdl}\\
+\S2.2 first run; track & under a shared grammar the root split loses by a growing margin ($+803\dots+12270$ bits) & an encoding artefact (bound variables coded as holes). Refuted & \cref{sec:pa:mdl}\\
+\S4.5 first run; track & the head-symbol split of $x+0=x$ overtakes the schema at $n=1000$ & an artefact of root-context coding; the split closes in at 5 bits per doubling. Refuted & \cref{rem:pa:merge}\\
+\S4.5; M5 & under $\Lone$ the odds of $\forall x(x+0=x)$ fall like $2^{-3.3n}$, ``as H4 predicts'' & true for a fixed rule code only; $\frac{R-1}2\log_2n$ under a learned depth-indexed code. Refuted as a general rate & \cref{rem:pa:merge}\\
+\S7; M2--M4 & ``it robustly gets a theory deductively equivalent to $\PA$'' & true only within the hand-picked candidate sets and for axiom-instance data. Refuted as stated & \cref{sec:pa:answer}\\
+\S1.2; m5 & a derivation of $\CVI(P)$ costs more ``because it has two lines'' & a citation also writes $P(x)$. Argument wrong; conclusion re-proved & \cref{prop:pa:lower}\\
+numbers; M1, m1, m9 & eight entries of the \DTRC{} table; the G2/G3 margins; the Euler lead & table regenerated from the output and every quote checked by script (M1); every template charged (m1); lead $2.1\cdot10^5\to3.1\cdot10^5$ bits at $n=10^6$ (m9) & \cref{tab:pa:dtrc,tab:pa:mdl,ex:pa:euler}\\
+weakened; m3, m4, m6--m8 & --- & break-even ratios are code-specific (m3); a decodable variant of the code added (m4); one refutation rule $\mathsf R_d$ (m6); eliminating each $\ISigma n$ is not concentration, Doob's theorem added (m7); a depth theorem of AS cited too loosely, replaced by $\Pi_1$-completeness of consistency (m8) & the corresponding items of \cref{sec:pa}\\
+\midrule
+\multicolumn{4}{@{}l}{\emph{experiments track}}\\
+E2; M1 & in 3 of 5 seeds an unsound lump has mass $\ge0.997$ at some $n\le32$ and a $\delta=0.05$ verifier accepts a false sentence & the pool used unseen data and lacked $\SeenQ(D_n)$; with causal pools 5 of 25 seeds. Refuted as a frequency & \cref{rem:exp:refuted,rem:sound:lumps}\\
+E2; M1 & the MAP list at $n=8$ & built from data 9--16, unseen at $n=8$. Refuted & \cref{rem:exp:refuted}\\
+E6; M2 & the five closed-guard forms of commutativity are logically equivalent & $S_{ab}$, $M_x$, $M_y$ are strictly weaker. Refuted & \cref{prop:exp:comm}\\
+\S0; M3 & soundness at a constant threshold for any well-specified data & fails for multi-component $T^*$ at fixed weights. Refuted & \cref{ex:sound:constant}\\
+\S5; M4 & $\PA$: ``robust at the level of theorems, not of axioms'' & atomic motives lead to $\Q+\{T_=,T_<\}$, strictly weaker. Refuted & \cref{prop:pa:atomic,rem:pa:e3b}\\
+E1, E2; track & $P(T\vdash\varphi(t^*)\mid D)=1.000$ from $n=8$ in every E1 configuration; no false probe accepted on E2 data & open data under $\Lzero$ give $0$ at $n=4,8$; the mean over seeds hid seeds 1, 2 and 4. Refuted & \cref{rem:exp:refuted}\\
+weakened; m2, m4--m8, m10--m12; track & --- & Prop X5's almost-everywhere qualification (m2, M3); $\Mem(D_n)$ is the best memoriser only under $\Lzero$ (m4); held-out $\PA$ instances drawn outside the stream (m5); every $n$ checked in E4(B, C) (m6); E7's time-factor result holds by construction (m7); $\Lselc$ is per-citation rejection (m8); Gold's text only if every stage ends (m10); E3(a) gains compared within $\Lzero$ (m11); E3(a) families extended, so the MAP is interior (m12); $\Mem(D_n)$ double-counted in E6 at $n=1,2$, $T^*-\mathrm{Q3}$ mis-tagged, two wrong $\Lzero$ entries in the first E1 table (track) & \cref{sec:exp}, \cref{app:exp}\\
+\end{longtable}
+}
+
+\paragraph{Track against referee.} In five places the final notes disagree with the referee, with reasons, and the paper follows the final notes. (1) Pa, m11: AS Thm~5.16 holds in closure-normal form with parameters; the real gap is that it concerns a single covering template (\cref{prop:pa:isigma}). (2) Pa, M4: the law G1 does not force a formula metavariable; its 157 skeletons are covered by a term-only theory inside $\ISigma2$, and the posterior keeps $\PA$ through the Occam balance (\cref{ex:pa:skel}). (3) Experiments, M2: open guards do reach $\forall x\forall y$ under the single-parameter convention (\cref{prop:exp:comm}(a)). (4) Universal, M2: the referee's ``$\to0$ over $\Q$'' holds only with bounded split depth (\cref{prop:univ:sentences}). (5) Model, m13: the tightness of the soundness constant holds exactly, not only as a supremum (\cref{rem:sound:tight}).
+
+% ---------------------------------------------------------------------
+\subsection{Corrections made while writing the paper}\label{app:ver:writing}
+
+The section writers re-read the final notes against their proofs and outputs. \Cref{tab:ver:writing} lists what they changed or qualified. None of these changes a headline result; several narrow a scope or lower a status.
+
+{\footnotesize
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{1.8cm}>{\raggedright\arraybackslash}p{10.8cm}>{\raggedright\arraybackslash}p{2.4cm}@{}}
+\caption{Corrections and qualifications made while writing.}\label{tab:ver:writing}\\
+\toprule
+section & what was found, and what the paper does & where\\
+\midrule
+\endfirsthead
+\toprule
+section & what was found, and what the paper does & where\\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+model & Kraft's inequality for the prior needs theories taken up to renaming of metavariables; added to the definition. The number of templates is coded as $\gamma(k+1)$, not $\gamma(k)$, so that the empty theory has a code. & \cref{def:model:theory}, \cref{app:model:prior}\\
+model & Lemma 1.7(b), $Z_T\ge\alpha_{\mathrm{ax}}+\alpha_{\mathrm{lg}}$, fails for $T=\emptyset$; $Z_\emptyset\ge\alpha_{\mathrm{lg}}$ suffices where it is used. Prop 1.9(c) uses only $\operatorname{supp}P_T\subseteq\Th(T)$, which needs no hypothesis. & \cref{app:model:lik,app:model:size}\\
+model & The notation file's ``$\le c$'' for the $\CUiii$ factor bounds only derivations that cite the added axiom. The direction (factor at most 1) is not proved for $\Cand$; the table caption says for which calculi it is. Some ``size principle'' marks in \cref{tab:model:likelihoods} are the writer's applications of \cref{lem:model:size} and \cref{thm:univ:size}, flagged in its caption. Prop 2.8 needs $\Qg$ symmetric in the holes. & \cref{tab:model:calculi,tab:model:likelihoods,prop:model:max}\\
+universal & The proof of Lemma S1 omitted a case (a summand that is a variable always instantiated by $0$); added, conclusion unchanged. Thm U2's equality under H\"anni's scores needs $\forall x\varphi$ consistent. In c5 Part A, $\Hboth$ carries a uniform prior on its weight. U5's ``survival 0.503'' is a per-datum estimate of $p_S=\frac12$, so only the gain per datum is reported. The notes' citations of the superseded first E3 result and of ``only derivation length prices computation'' are replaced (conflicts C9, C11). & \cref{lem:univ:survivors,tab:univ:odds,tab:univ:c5}\\
+ident & ``A false spare sentence makes $T^*\cup\{\sigma\}$ inconsistent'' holds only when $T^*$ refutes $\sigma$. ``Well specified: Occam loss'' under $\Lone$ is a conjecture; only a bounded gain is proved. Spares in the span of $T^*$'s components never vanish, contrary to a summary sentence of the model notes. Check c7: the escape template alone loses to memorisation at $\lambda=1$ by $n=10^4$ ($-2649$ to $-4234$ bits); only the hybrid beats memorisation. Check c2 Part B: the misspecified Stirling prediction is off at $n=100$ ($-1.50$ against $-0.06$). & \cref{rem:ident:sparetotal,rem:ident:mdl,prop:ident:spare,tab:ident:c7,tab:ident:c2}\\
+sound & The laws of $\Bel$, $\Dis$, $\Indep$ (model Props 7.1(a), (c), (d), 7.2) need unbounded derivability, since $\Th_d(T)$ is not closed under consequence; stated for $d=\infty$. Check c5 records only 2- and 3-monotonicity; 4-monotonicity was checked by the referee on two atoms. The computed support of Thm 4.1 ($n\le300$, $400$) checks the bound, not time-uniformity. & \cref{sec:sound:tri}, \cref{app:sound:tri,app:sound:fixed}\\
+time & The closing statement's upper bound rests on a proof sketch, so its status is lowered. Prop 6.14(b), (c) depend on the hierarchy theorem. Prop 6.14(c) also needs the explicit derivations to be $\CK$-derivations (or to translate at linear cost) and a code with at least one bit per written symbol. The size of the $\PA$-proof of the Tarski biconditional in the upper bound for the reflection sentence is not bounded in the notes. Prop 6.4 is proved for the acceptance part of H\"anni's schema only. & \cref{rem:time:summary,prop:time:sigma,rem:time:upper,prop:time:notemplate}\\
+pa & Rem 4.9's ``no instance is logically equivalent to $\Ind(P)$'' is not proved; a weaker true statement is used. Prop 5.3 is proved for the two-part likelihood, not for the normalised $\Lone$, and is stated under $\Lmax$. The ``astronomically large'' waiting times of Prop 4.6(a) are a heuristic. Props 3.3 and 4.6(a) need fixed weights (setting W); that $\PA\cup S$ decays polynomially is a proof sketch for generic weights. ``The redundant union wins after 1--12 uses'' counts schema uses in expectation; one use of $\CVI$ alone saves 1468 bits. ``E3(b) keeps the theorems, not the axioms'' holds for two of three connective-rich laws. & \cref{rem:pa:shift,prop:pa:incons,prop:pa:isigma,prop:pa:wellspec,rem:pa:usage,rem:pa:e3b}\\
+experiments & The proof of Prop X4(c) (Gen, then $\forall$E, at $J=2$) treats a derived component as a $\DT$ template without saying so, and the code's support check does not test it; the hypothesis is added, and for data-derived theories at $J=2$ exactness rests on the computed checks. At $\lambda=2$ the verifier also accepts a false probe in 5 of 25 seeds at $n=64$ (unsound mass $0.206$), which the notes do not report. & \cref{prop:exp:exact}, \cref{app:exp:exact,tab:exp:e7}\\
+\end{longtable}
+}
+
+% ---------------------------------------------------------------------
+\subsection{Cross-track conflicts}\label{app:ver:conflicts}
+
+The tracks used different calculi, priors and names, and some cited each other's superseded results. The ledger records 43 conflicts; \cref{tab:ver:conflicts} gives each with its resolution.
+
+{\footnotesize
+\begin{longtable}{@{}l>{\raggedright\arraybackslash}p{6.0cm}>{\raggedright\arraybackslash}p{7.7cm}@{}}
+\caption{Cross-track conflicts and their resolutions.}\label{tab:ver:conflicts}\\
+\toprule
+& conflict & resolution\\
+\midrule
+\endfirsthead
+\toprule
+& conflict & resolution\\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+C1 & the per-datum $\forall$E factor differs between calculi & each factor stated with its calculus and normalisation (\cref{tab:model:calculi}); the direction is shared\\
+C2 & two selection-aware likelihoods & $\Lsel$ (stream) for Prop B2; $\Lselc$ (per citation) for E1, E6 (\cref{rem:univ:B2cit,rem:model:sel})\\
+C3 & prior codes differ, so prior shares differ & every share names its code (\cref{tab:univ:share})\\
+C4 & three verifier constants & one theorem with classes $C^*_d$, $C^{\mathrm{Dir}}_d$, $C^*_\forall$\\
+C5 & Thm 4.1 used for Dirichlet weights & never; \cref{thm:sound:avg,thm:sound:shrink} instead\\
+C6 & Ex 4.9 numbers differ between implementations & ranges with all sources (\cref{tab:sound:constant})\\
+C7 & pa cites E2's superseded ``3 of 5'' & 5 of 25 (causal pools); pa \S5.4 is one run\\
+C8 & E6 cited as identification among deductively equivalent forms & logically and merely instance-equivalent forms stated separately\\
+C9 & universal cites the superseded first E3(a) & final E3(a) only\\
+C10 & nested spare-slot slopes differ & E5(a2) $-0.251\pm0.002$ primary; the rate stays a proof sketch\\
+C11 & ``only derivation length prices computation'' & ``derivation length in written symbols''\\
+C12, C31 & pa's two-part code called $\Lone$ & named $\Lsch$; its numbers are not $\Lone$ results\\
+C13 & sign of the Occam drift (fixed vs learned grammar) & both with scopes; \cref{prop:pa:occam} reconciles\\
+C14 & rate of the $\forall$E penalty & depends on the rule law and normalisation; the direction does not\\
+C15 & guard learning rate (exponential vs logarithmic) & both, in their models ($\rho$ fixed or learned)\\
+C16 & memorisation verdicts & each with its setting; H4(a) refuted for memorisation in general\\
+C17 & misspecification gives weaker or unsound theories & classified by kind of data (\cref{tab:ident:misspec})\\
+C18--C23 & clashing names and symbols & the notation of \cref{sec:model}\\
+C24 & numbering of Robinson's axioms & the same in all tracks\\
+C25, C26 & symbol counts; Dirichlet $\alpha$ & bit counts name their code; tables state $\alpha$\\
+C27 & parameter admissibility & stated wherever $\operatorname{supp}P_T=\Th(T)$ is used\\
+C28 & fixed weight vectors in the experiments & a yardstick, not an instance of a theorem (\cref{rem:ident:x5})\\
+C29 & E8 per-doubling rates & quoted with their windows\\
+C30 & ``$\PA$-equivalents from $n=100$'' vs ``$\SeenQ$ first'' & different data laws and candidate sets; both with scopes\\
+C32 & H\"anni's equivalence: argument vs conclusion & argument fails single-sorted over $\PA$; conclusion holds (\cref{prop:time:single,thm:time:equiv})\\
+C33 & instance-only generators vs E1 & no conflict; $\Cch1$ is $\Cmin$-like\\
+C34 & three spare-slot formulas & one statement, three sources (\cref{prop:ident:spare})\\
+C35 & model Prop 5.6(b) vs E8 & E8 not cited for (b)\\
+C36 & U11(e) vs AS Prop 4.5 & the Bayesian counterpart, with the refuted claim labelled\\
+C37 & over-$\Q$ limit for splits & class-dependent (\cref{prop:univ:noguard,prop:univ:sentences})\\
+C38 & track-vs-referee disagreements & the final notes, with reasons (\cref{app:ver:corrections})\\
+C39 & three verifier definitions & the $\Belc$ verifier inherits soundness (\cref{rem:sound:belc})\\
+C40 & units of $d$ in $\Th_d$ & stated at each use\\
+C41 & ``statements given without proof are easily derivable'' in two tracks & the same message, different pairs; no conflict\\
+C42 & cost of computing $\Lone$ & the wording of \cref{prop:model:compute}\\
+C43 & Thm B under $\Lcl$ vs E1 under $\Lzero$ & different likelihoods\\
+\end{longtable}
+}
+
+% ---------------------------------------------------------------------
+\subsection{Conjectures, proof sketches and open items}\label{app:ver:sketches}
+
+\paragraph{Conjectures.}
+\Cref{thm:ident:limit}(c) (every $w^*$);
+\cref{prop:ident:splitlone}(d) (Occam rate under $\Lone$);
+\cref{rem:ident:fullclass} (unsound mass in the full class);
+\cref{conj:ident:cder};
+\cref{prop:univ:memo}(iii) (memoriser rate);
+the limits in \cref{prop:univ:noguard}(d) and \cref{prop:univ:sentences}(d);
+\cref{conj:time:poly};
+\cref{conj:time:polytime};
+\cref{conj:pa:broad};
+the reverse overheads in \cref{rem:pa:zf}.
+
+\paragraph{Proof sketches.}
+\Cref{lem:model:a4}(b);
+\cref{thm:ident:limit}(b$'$);
+\cref{prop:ident:spare}(b), (c), (d2);
+the mechanism of \cref{ex:sound:constant};
+\cref{thm:univ:omega}(d2) in general;
+\cref{prop:univ:noguard}(c);
+\cref{prop:univ:quant}(b) for $f_q>0$ and (c);
+\cref{prop:univ:sentences}(a);
+the spine formula of \cref{rem:univ:detour};
+\cref{cor:time:hard}(b) for a single $X$;
+\cref{rem:time:upper} and the upper bound in \cref{rem:time:summary};
+\cref{rem:time:links}(ii) and the argument of (iv);
+\cref{prop:pa:isigma}(b);
+the last part of \cref{prop:pa:wellspec};
+the slope in \cref{ex:pa:skel};
+the covering argument in \cref{ex:pa:euler};
+\cref{rem:pa:overlap}.
+The waiting times in \cref{prop:pa:isigma}(a) are a heuristic.
+
+\paragraph{Open items found while writing.}\label{app:ver:open}
+These are not resolved in the paper. (1) Model Lemma 1.2(b) has only a proof sketch; the missing step is named in \cref{app:model:a4}. (2) The direction of \cref{thm:univ:B} is not proved in $\Cand$. (3) In \cref{prop:univ:eqfrag} the full-sum comparison at $q=\frac12$ is open. (4) The ident results added after the referee report (\cref{thm:ident:limit}(b) with its new proof, \cref{prop:ident:splitlone}, \cref{prop:ident:spare}(d), \cref{ex:ident:lonedq}, \cref{prop:ident:proofs}, \cref{rem:ident:nearmiss}) were not refereed. (5) In \cref{ex:sound:constant} a $\chi^2$ limit uniform over the window $1\ll n\ll1/\varepsilon$ is not written out; completeness under the shrinking threshold, and the strictness of \cref{prop:sound:cautious}(d) for $\Hk k(\DT)$, are open. (6) In \cref{rem:time:upper} the $\Q$-proof size bound is recalled from \citet{pudlak1998lengths} and the size of the Tarski biconditional's proof is not bounded; for \cref{cor:time:hard} with a single $X$, the time-constructibility and gap conditions are not checked; the route to \cref{conj:time:poly} lacks de Bruijn indices and Gen under sharing, and a polynomial bound on the size of shared representations; \cref{prop:time:notemplate} is not proved for the rejection part of the schema; the $\ISigma n$ comparison under a derivation-time penalty proposed by pa's referee was not quantified. (7) Pa: the stronger form of Rem 4.9; \cref{prop:pa:incons} under the normalised $\Lone$; \cref{prop:pa:wellspec} and \cref{prop:pa:isigma}(a) with Dirichlet weights. (8) Experiments: exactness of $\Lone$ for data-derived theories at $J=2$ rests on computed checks (brute force at $J=1,2$ and the referee's recursion on 904 triples), not on \cref{prop:exp:exact}(d).
+
+% ---------------------------------------------------------------------
+\subsection{References not verified}\label{app:ver:refs}
+
+The bibliography files record, for each entry, what was checked. The following were not verified against their sources, and the text hedges each claim that rests on them. \emph{Content or theorem not checked:} \citet{hutter2007universal} (bibliographic data and abstract only); \citet{leike2015solomonoff} (abstract); \citet{gaifman1964concerning} (condition cited from memory; secondary sources use constants); \citet{berk1966limiting} and \citet{kleijn2006misspecification} (abstracts; conditions not read); \citet{ghosal2017fundamentals} (theorem number only via citing papers); \citet{horning1969study} and \citet{angluin1988identifying} (existence only); \citet{rousseau2011asymptotic} (issue number not re-confirmed; not applied); \citet{craig1953axiomatizability}, \citet{seiferas1978separating} and \citet{zak1983turing} (full text not read); \citet{cook1972hierarchy} (exact form of the theorem not checked; pages omitted); \citet{pudlak1998lengths} (the $\Q$-proof bound not checked in the chapter); \citet{boolos2007computability} (chapter not checked); \citet{shepherdson1964nonstandard} (secondary sources only); \citet{zarach1996replacement} (editor and publisher of the volume not checked); \citet{gitman2016zfc} and \citet{kaye2007interpretations} (abstracts); \citet{kaye1988parameter} (existence). \emph{Locations or numbering not checked:} \citet{mendelson1997introduction} (system $\CK$, numbering); \citet{athreya1972branching} (chapter); \citet{hajek1993metamathematics} (Cor.~I.4.34 traced by a referee through a secondary source) and \citet{kaye1991models} (chapter numbers); \citet{shoenfield1967mathematical} (location; publisher recalled). \emph{Recalled from memory:} \citet{church1936note}, \citet{turing1936computable}, \citet{birkhoff1935structure}, \citet{schwarz1978estimating}, \citet{clarke1990information}, \citet{hoeffding1963probability}, \citet{shafer1976mathematical} (cited only for the framework), \citet{ville1939etude} (data copied from IL's bibliography) and \citet{schwartz1965bayes} (data checked by the model track's referee only). \emph{Not opened:} \citet{parikh1973some}, \citet{baaz1993kreisel} (editors and pages not recorded) and \citet{hrubes2007theories}. \emph{Cited without an entry, from memory:} Wilks's theorem, the Paris--Kirby results on fragments, the sequential form of the KT estimator, Levin's Kt and the compressed-string algorithms behind the route to \cref{conj:time:poly}.
+
+% ---------------------------------------------------------------------
+\subsection{Reproduction}\label{app:ver:repro}
+
+Every computed number comes from a seeded script whose output is saved next to it.
+\begin{itemize}[leftmargin=*]
+\item \emph{Track checks.} \texttt{research/tracks/<track>/checks/} holds each track's scripts and their \texttt{.out} files (model c1--c16; universal c1--c10; pa \texttt{test\_nd}, c1--c10; experiments' check scripts), and \texttt{referee\_code/} the referees' independent scripts and outputs. Universal re-ran all ten of its scripts and the referee's seven, and pa all twelve of its scripts, in a scratch directory, with byte-identical outputs; pa's \texttt{c10\_quotes.py} checks 87 quoted numbers of its notes against the outputs.
+\item \emph{Code.} From \texttt{code/}: \texttt{python3 -m pytest -q tests} (21 unit tests, including a comparison with the referee's independent implementation); \texttt{sh run\_all.sh} (tests and E1--E8, about 50 minutes on four shared cores); seeds and per-experiment commands in \cref{app:exp:repro}. Results are in \texttt{code/results/*.md} and \texttt{*.json}, the first version's in \texttt{code/results/v1/}.
+\item \emph{Paper.} From \texttt{paper/}: \texttt{./build.sh} merges the bibliographies and runs pdf\LaTeX{} and Bib\TeX; \texttt{./test-section.sh <section> <appendix>} builds one section alone.
+\end{itemize}

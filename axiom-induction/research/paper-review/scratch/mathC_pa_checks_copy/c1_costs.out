@@ -1,0 +1,95 @@
+LAM = log2(23) = 4.524 bits per written symbol; rules = 10
+
+== (a) Q + Dlt + {Ind | CVI | LNP}: cost of obtaining each form f(P) in each theory (all derivations checked)
+theory form  lines  written    K      bits   overhead  bits(dec) overhead(dec)
+T_Ind  Ind       1        2    1      15.5       -0.0       16.5          0.0
+T_Ind  CVI      63      204   14    1483.6     1468.0     1567.8       1551.2
+T_Ind  LNP      82      332   33    2249.6     2234.1     2358.3       2341.8
+T_CVI  Ind      39      127   18     896.0      880.4      961.6        945.1
+T_CVI  CVI       1        2    1      15.5       -0.0       16.5          0.0
+T_CVI  LNP      20      117   20     662.0      646.4      693.5        676.9
+T_LNP  Ind      65      253   38    1707.7     1692.1     1808.8       1792.3
+T_LNP  CVI      27      128   21     773.1      757.5      815.6        799.1
+T_LNP  LNP       1        2    1      15.5       -0.0       16.5          0.0
+T_all  Ind       1        2    1      15.8        0.0       16.8          0.0
+T_all  CVI       1        2    1      15.8        0.0       16.8          0.0
+T_all  LNP       1        2    1      15.8        0.0       16.8          0.0
+overhead = bits minus the bits of a one-line citation of f(P) in a theory with the same number of axioms.
+K = written occurrences of P; under the naive code the overhead grows by LAM*(K-1) = 4.52*(K-1) bits per
+    extra symbol of the motive (a citation writes the motive once, K = 1).
+bits(dec) = the decodable variant (nd.Proof.bits_decodable: + number of lines, number of tc premises, the
+    variable of each subst and exI line); increase over bits: 4.8% to 7.3% on the non-citation rows.
+
+template sizes |f(P)| (symbols): Ind 16, CVI 18, LNP 19  -> prior cost LAM*|f| = Ind 72, CVI 81, LNP 86 bits
+
+pairwise break-even: per use of a form, the extra bits it costs in each theory
+  T_Ind vs T_CVI on Ind/CVI data:  T_Ind wins iff p_CVI/p_Ind < 0.600
+  T_Ind vs T_LNP on Ind/LNP data:  T_Ind wins iff p_LNP/p_Ind < 0.757
+  T_CVI vs T_LNP on CVI/LNP data:  T_CVI wins iff p_LNP/p_CVI < 1.172
+  same three ratios under the decodable code: 0.609, 0.765, 1.180
+  (each ratio is for L1-sch with THIS derivation library: the costs are upper bounds, so the ratios are not
+  the ratios of shortest derivations; see the naive-code ratios at the end of this file for code dependence)
+
+lower-bound sizes: |CVI(P)| = 18, its antecedent 13 symbols; |Ind(P)| = 16, its antecedent 11 symbols;
+  |LNP(P)| = 19, its antecedent 4 symbols
+
+asymptotic winner (least expected bits per schema use; prior terms are O(1) and ignored), grid step 0.1
+rows p_Ind, columns p_CVI (p_LNP = 1 - p_Ind - p_CVI).  I=T_Ind C=T_CVI L=T_LNP; second letter: winner when
+the redundant union T_all is also allowed (A = T_all)
+          0.0   0.1   0.2   0.3   0.4   0.5   0.6   0.7   0.8   0.9   1.0
+p_I=1.0    II                                                            
+p_I=0.9    IA    IA                                                      
+p_I=0.8    IA    IA    IA                                                
+p_I=0.7    IA    IA    IA    IA                                          
+p_I=0.6    CA    CA    CA    CA    CA                                    
+p_I=0.5    CA    CA    CA    CA    CA    CA                              
+p_I=0.4    LA    CA    CA    CA    CA    CA    CA                        
+p_I=0.3    LA    LA    CA    CA    CA    CA    CA    CA                  
+p_I=0.2    LA    LA    LA    CA    CA    CA    CA    CA    CA            
+p_I=0.1    LA    LA    LA    LA    CA    CA    CA    CA    CA    CA      
+p_I=0.0    LL    LA    LA    LA    LA    CA    CA    CA    CA    CA    CC
+
+redundant union versus a minimal theory: T_all - T_Ind (prior: + LAM*(|CVI|+|LNP|) bits; per use: index
+cost log2(11/9) more for every citation, minus the derivation overhead saved on CVI and LNP uses)
+  p_CVI=0.01 p_LNP=0.00: per-use saving 14.39 bits; T_all ahead after n > 12 schema uses
+  p_CVI=0.05 p_LNP=0.00: per-use saving 73.11 bits; T_all ahead after n > 2 schema uses
+  p_CVI=0.10 p_LNP=0.05: per-use saving 258.22 bits; T_all ahead after n > 1 schema uses
+  p_CVI=0.00 p_LNP=0.01: per-use saving 22.05 bits; T_all ahead after n > 8 schema uses
+
+== (c) recursion convention for +: textbook Q4,Q5 (right) versus Q4L,Q5L (left), both with Ind
+  Q4 in T_left    lines  11  written  33  overhead 213.8 bits per use
+  Q5 in T_left    lines  22  written  98  overhead 593.4 bits per use
+  Q4L in T_right  lines  11  written  33  overhead 213.8 bits per use
+  Q5L in T_right  lines  21  written  89  overhead 545.1 bits per use
+  (Q + Ind has 8 axioms; a citation costs log2(10)+log2(8) bits.)
+  T_right beats T_left iff  r4*213.8 + r5*593.4 > l4*213.8 + l5*545.1, with r_i, l_i the usage rates of
+  Q_i and of the left variants: the posterior adopts the convention the data use.
+
+== (b) ZF: checked derivations between schema forms (schematic in P(u) / R(x,y))
+  SepJ from ReplJ        lines  36  written 207  K 19  overhead 1209.3 bits;  template |SepJ| = 16 symbols (72 bits)
+  Found from EInd        lines  21  written 138  K  0  overhead  758.1 bits;  template |Found| = 24 symbols (109 bits)
+  ReplK from Coll        lines  15  written 108  K 12  overhead  574.1 bits;  template |ReplK| = 41 symbols (185 bits)
+  ReplJ from Coll+SepJ   lines  43  written 237  K 21  overhead 1432.0 bits;  template |ReplJ| = 37 symbols (167 bits)
+  not computed (long; see notes): Coll from Repl (needs ranks and Power Set), EInd from Found (needs
+  transitive closures, hence Infinity and Replacement).
+  Overheads are upper bounds on the true minimum (shortest derivations were not searched).
+
+== naive code (every written formula written out at the instance): overhead on concrete motives
+derivation             |phi|=5    |phi|=10   |phi|=20   |phi|=40 
+CVI from T_Ind              1621       1915       2515       3832   (schematic: 1468; K = 14)
+Ind from T_CVI              1088       1487       2264       4030   (schematic: 880; K = 18)
+LNP from T_CVI               870       1300       2176       4102   (schematic: 646; K = 20)
+CVI from T_LNP               993       1445       2368       4394   (schematic: 758; K = 21)
+mean over 5 random motives per size (seed 7); the growth per motive symbol is about LAM*(K-1).
+break-even under the naive code (T_Ind beats T_CVI iff p_CVI/p_Ind < overhead(Ind|T_CVI)/overhead(CVI|T_Ind)):
+  |phi|=5: 0.671  |phi|=10: 0.776  |phi|=20: 0.900  |phi|=40: 1.052
+
+== base axioms cited by each derivation (the base theory over which the equivalences are proved)
+  Ind <- CVI (A)       cites ['CVI', 'Dlt', 'Q3', 'Q4', 'Q5']
+  CVI <- Ind (B)       cites ['Dlt', 'Ind', 'Q1', 'Q2', 'Q3', 'Q4', 'Q5']
+  LNP <- CVI(~) (C1)   cites ['CVI']
+  CVI <- LNP(~) (C2)   cites ['LNP']
+  Q4 <- left+Ind       cites ['Ind', 'Q4L', 'Q5L']
+  Q5 <- left+Ind       cites ['Ind', 'Q4L', 'Q5L']
+  Q4L <- right+Ind     cites ['Ind', 'Q4', 'Q5']
+  Q5L <- right+Ind     cites ['Ind', 'Q4', 'Q5']
