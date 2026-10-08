@@ -9,7 +9,7 @@
 % Steps the notes leave out are named ("Not written out").
 % =====================================================================
 
-Scripts named \texttt{c}$k$ are the model track's (\nolinkurl{research/tracks/model/checks/}), \texttt{r}$k$ its referee's (\nolinkurl{research/tracks/model/referee_code/}); the others are in \nolinkurl{research/tracks/experiments/checks/}. Each is seeded and writes its output next to itself.
+Scripts named \texttt{c}$k$ are the model track's (\nolinkurl{research/tracks/model/checks/}), \texttt{r}$k$ its referee's (\nolinkurl{research/tracks/model/referee_code/}); the others are in \nolinkurl{research/tracks/experiments/checks/}. Each is seeded and writes its output next to itself. Of this section's results the model track's referee checked \cref{thm:sound:fixed}, \cref{prop:sound:cautious,prop:sound:complete} and the trichotomy results \cref{prop:sound:laws,prop:sound:belief,prop:sound:bracket} (now in \cref{sec:sound:tri}). \Cref{lem:sound:regret}, \cref{thm:sound:avg,thm:sound:shrink}, \cref{rem:sound:vacuous}, the mechanism of \cref{ex:sound:constant} and \cref{prop:sound:fiftyfifty} were added after the referee report and checked by the track and while writing, not by a referee; the complete list of such results is in \cref{app:ver:process}. Nothing is checked in a proof assistant.
 
 % ---------------------------------------------------------------------
 \subsection{Fixed weights}\label{app:sound:fixed}
@@ -29,22 +29,40 @@ Z^{\Hclass}_n:=\sum_T\pi(T)\prod_{i\le n}\frac{P_T(X_i)}{P_{T^*}(X_i)}=\frac{M(X
 \emph{Step 4: conclusion.} On $G$, in every round and for every history of queries and truthful constraints, $\pi_t(C^*_d)=W^*_d/Z_t\ge W^*_d/Z^{\Hclass}_{n(t)}>W^*_d\delta'\ge\delta$. If $q\notin\Th_d(T^*)$ then $q\notin\Th_d(T)$ for every $T\in C^*_d$, so $\pi_t(\{T:q\notin\Th_d(T)\})>\delta$ and $q$ is not accepted. The prover's knowledge and randomness enter only through the schedule and the constraints, so the conclusion covers a prover that knows the future data.
 \end{proof}
 
-\paragraph{Computed (\Cref{thm:sound:fixed}).} \texttt{c4}, Part~1: \Lzero{}, fixed weights, $\Qg$ root law $(.5,.3,.1,.1)$ on $(0,S,+,\cdot)$, $T^*=\{z+0=z\}$ against $\{z+0=z,\ S0+0=S0,\ 0+0=S0\}$ (weights $0.49,0.5,0.01$), which proves $q:=(0+0=S0)$; $\pi(T^*)=0.3$; $20\,000$ runs of $300$ data. The frequency of $\{\exists n\le300:\pi_n(T^*)\le\delta\}$ was $0.044$, $0.014$, $0.004$ against $\delta/\pi(T^*)=0.10$, $0.033$, $0.010$. \texttt{r7}: nine hypotheses all proving the same invalid query, $\pi(C^*)=0.385$, $n\le400$: $0.0365$, $0.0125$, $0.0027$ against $\delta/\pi(C^*)=0.130$, $0.052$, $0.013$. The horizons are finite, so these check the bound, not its time-uniformity.
+\paragraph{Escalations.} Let $Z_t:=W^*_d/\pi_t(C^*_d)$, as in Step~1. Escalating a valid query $q$ adds the constraint $1[q\in\Th_d(T)]$, which keeps $C^*_d$ and multiplies $Z_t$ by $\pi_t(\{T:q\in\Th_d(T)\})<1-\delta$, because $q$ was not accepted; data rounds multiply it by factors that form a nonnegative supermartingale from~$1$ (Step~3). Since $Z_t\ge W^*_d$, on the Ville event of probability $\ge1-\delta''$ the number $E^+_t$ of escalated valid queries satisfies $(1-\delta)^{E^+_t}>W^*_d\delta''$, so $E^+_t\le(\ln(1/W^*_d)+\ln(1/\delta''))/\delta$ for all $t$ (IL Thm~4.16). An invalid query escalated adds a constraint that removes the theories deriving it; IL bounds these through a reject threshold $\delta_r$, which this protocol does not have, so their number is not bounded.
+
+\paragraph{Computed (\Cref{thm:sound:fixed}).} \texttt{c4}, Part~1: \Lzero{}, fixed weights, $\Qg$ root law $(.5,.3,.1,.1)$ on $(0,S,+,\cdot)$, $T^*=\{z+0=z\}$ against $\{z+0=z,\ S0+0=S0,\ 0+0=S0\}$ (weights $0.49,0.5,0.01$), which proves $q:=(0+0=S0)$; $\pi(T^*)=0.3$; $20\,000$ runs of $300$ data. The frequency of $\{\exists n\le300:\pi_n(T^*)\le\delta\}$ was $0.044$, $0.014$, $0.004$ against $\delta/\pi(T^*)=0.10$, $0.033$, $0.010$. \texttt{r7}: nine hypotheses all proving the same invalid query, $\pi(C^*)=0.385$, $n\le400$: $0.0365$, $0.0125$, $0.0027$ against $\delta/\pi(C^*)=0.130$, $0.052$, $0.013$. So the frequency of invalid acceptance stayed 2--5 times below the bound. The horizons are finite, so these check the bound, not its time-uniformity.
+
+\begin{remark}[The constant is tight]\status{proved}\src{model \S4.1 (referee m13)}\label{rem:sound:tight}
+IL Prop~C.5 shows that $\delta\le W^*_d\delta'$ cannot be improved, with $R^*=\{a,b\}$ against $R'=\{a,c\}$, which generates only $a$ and proves $c$. That pair is not in the template models (under $\Lzero$, $\operatorname{supp}P_{T'}\subseteq\operatorname{supp}P_{T^*}$ implies $\Th_d(T')\subseteq\Th_d(T^*)$ for every $d$; under $\Lone$ with parameters admissible it does so for $d=\infty$ only: $T^*=\{a,a\to b\}$ and $T'=T^*\cup\{b\}$ have the same support, but $b\in\Th_{|b|}(T')\setminus\Th_{|b|}(T^*)$). But $T'=\{a,c\}$ with a small fixed weight on $c$ attains IL's acceptance probability $(1-u)^{t^*}$ exactly, and it tends to $\delta'$ as $u,W^*_d\to0$.
+\end{remark}
 
 \begin{proof}[Proof of \Cref{rem:sound:tight}]
-\emph{IL's pair is not in the models.} Under \Lzero{} with full-support $\Qg$, $\operatorname{supp}P_T=\bigcup\inst(T)$, and $\Th_d$ depends only on the instance union; under \Lone{} with parameters admissible $\operatorname{supp}P_T=\Th(T)$ (\Cref{lem:model:lone}(c)). Either way $\operatorname{supp}P_{T'}\subseteq\operatorname{supp}P_{T^*}$ gives $\Th_d(T')\subseteq\Th_d(T^*)$, so no $T'$ generates only data of $T^*$ and still proves a sentence $T^*$ does not.
+\emph{IL's pair and the template models.} Under \Lzero{} with full-support $\Qg$, $\operatorname{supp}P_T=\bigcup\inst(T)$, and $\Th_d$ depends only on the instance union, so $\operatorname{supp}P_{T'}\subseteq\operatorname{supp}P_{T^*}$ gives $\Th_d(T')\subseteq\Th_d(T^*)$ for every $d$: no $T'$ generates only data of $T^*$ and still proves a sentence $T^*$ does not. Under \Lone{} with parameters admissible $\operatorname{supp}P_T=\Th(T)$ (\Cref{lem:model:lone}(c)), so the inclusion of supports gives $\Th(T')\subseteq\Th(T^*)$, the case $d=\infty$ only. For finite $d$ it fails: with ground $T^*=\{a,a\to b\}$ and $T'=T^*\cup\{b\}$, $\Th(T')=\Th(T^*)$, so the supports agree, but $b$ is an axiom of $T'$ while every derivation of $b$ from $T^*$ uses $a$, $a\to b$ and MP, so $b\in\Th_{|b|}(T')\setminus\Th_{|b|}(T^*)$.
 
 \emph{The construction.} Let $a,b,c$ be ground sentences with $c\notin\Th_d(T^*)$ and $c\in\Th_d(\{c\})$, let $T^*=\{a,b\}$ with fixed weights $(1-u,u)$, $T'=\{a,c\}$ with fixed weights $(1-\varepsilon,\varepsilon)$, prior $(W^*,1-W^*)$, likelihood \Lzero{} and $\delta=W^*\delta'$. Then $W^*_d=W^*$. After $t$ data equal to $a$, $r_t:=P_{T'}(a^t)/P_{T^*}(a^t)=((1-\varepsilon)/(1-u))^t$, and $c$ is accepted iff $\pi_t(T^*)=W^*/(W^*+(1-W^*)r_t)\le\delta$, i.e.\ iff $r_t\ge\theta:=(1-W^*\delta')/((1-W^*)\delta')$. Let $t^*$ be the least $t$ with $(1-u)^{-t}>\theta$ (IL Prop~C.5). For $t<t^*$, $r_t<(1-u)^{-t}\le\theta$. At $t^*$ the inequality $(1-u)^{-t^*}>\theta$ is strict, so $r_{t^*}>\theta$ for all $\varepsilon$ below some $\varepsilon_0>0$. A datum $b$ kills $T'$. So the prover that waits for $t^*$ data and then asks $c$ (an earlier query could be escalated, and the oracle's ``no'' would kill $T'$) wins iff the first $t^*$ data are $a$: probability $(1-u)^{t^*}$, exactly IL's value. By IL Prop~C.5 it lies in $[(1-u)/\theta,1/\theta)$ with $1/\theta=(1-W^*)\delta'/(1-W^*\delta')$, so it tends to $\delta'$ as $u,W^*\to0$.
 \end{proof}
+
+\paragraph{Truncation (\Cref{rem:sound:hyp}).} On a finite truncation $\Hclass_N\ni T^*$ with the renormalised prior, the proof above runs with $\pi(\cdot)/\pi(\Hclass_N)$ in place of $\pi$, so the theorem holds with $W^*_d$ replaced by $\pi(C^*_d\cap\Hclass_N)/\pi(\Hclass_N)\ge\pi(T^*)$.
 
 \paragraph{The computable verifier (\Cref{rem:sound:hyp}).} For a finite class and $d<\infty$, $\Th_d(T)$ is decidable (finitely many derivations of symbol size $\le d$ up to renaming of parameters, axioms checked by matching), the likelihoods are computable reals (\Lzero{} by matching; \Lone{} by \Cref{prop:model:compute}(a)), and the denominator of $\pi_t$ is positive. So an interval of width $\le\varepsilon$ around the non-deriving mass can be computed; accept iff its upper end is $\le\delta$. Acceptance then implies that the true mass is $\le\delta$ at the same posterior, and Step~4 applies verbatim. With truncated $\Qg$ the computation is exact.
 
 \paragraph{The refuted remarks (\Cref{rem:sound:hyp}).} (1) On a truncation $\Hclass_N\ni T^*$ the constant $\pi(C^*_d\cap\Hclass_N)/\pi(\Hclass_N)$ is at least $\pi(T^*)$ but can be below $\pi(C^*_d)$: with $\Hclass=\{T^*,T_2,T_3\}$, $T_2\in C^*_d$, prior $(0.01,0.89,0.10)$ and $\Hclass_N=\{T^*,T_3\}$ it is $0.01/0.11\approx0.09$, against $0.90$. (2) \Ltwo{} likelihoods are finite sums only when $\Qg$ has finite support: for $T=\{P\to b\}$, $P$ a $0$-ary formula metavariable, $P_T(b)$ at depth~1 sums $\alpha_{\mathrm{MP}}\,\mu(A)\,\mu(A\to b)$ over the infinitely many logical-axiom instances $A$.
 
-\paragraph{\Cref{prop:sound:misspec}: computed.} \texttt{c4}, Part~2: the sound theories are ground equations for the $20$ most likely human data (covering $0.956$ of the human mass), with the human's conditional probabilities as weights and prior $0.99$ against $\Tesc$. With $\delta=0.01$ and no escalation, $S0=0$ was accepted in $2000/2000$ runs, median time $17$ data; $0.341$, $0.902$, $0.986$, $1.000$ of runs by $n=10,50,100,500$. \texttt{r3}, Part~2: against a verifier that escalates every non-accepted query, a prover asking $S0=0$ in every round won $11/400$ (only when the first datum was uncovered), the waiting prover $400/400$. The track's first version used the non-adaptive prover (referee m2).
+\paragraph{\Cref{prop:sound:misspec}: computed.} \texttt{c4}, Part~2, is the run of \cref{ex:ident:escape} (details in \cref{app:ident:misspec}), read with $\delta=0.01$ and no escalation: the fraction of runs in which $S0=0$ had been accepted was $0.341$, $0.902$, $0.986$, $1.000$ by $n=10,50,100,500$. \texttt{r3}, Part~2: against a verifier that escalates every non-accepted query, a prover asking $S0=0$ in every round won $11/400$ (only when the first datum was uncovered), the waiting prover $400/400$.
 
 % ---------------------------------------------------------------------
 \subsection{The cautious limit}\label{app:sound:cautious}
+
+\begin{proposition}[The limit $\delta\to0$]\status{proved}\src{model Prop 4.3}\label{prop:sound:cautious}
+Suppose each $P_T$ has a fixed support $\operatorname{supp}_T$ (fixed weights; or Dirichlet weights under \Lzero, where $\PDir{T}(D)>0$ iff $D\subseteq\bigcup\inst(T)$).
+\begin{enumerate}[label=(\alph*)]
+\item $\pi_n(T)>0$ iff $\pi(T)>0$ and $D_n\subseteq\operatorname{supp}_T$. So $\Ver{0}{d}$ accepts exactly $\bigcap\{\Th_d(T):\pi(T)>0,\ D_n\subseteq\operatorname{supp}_T\}$.
+\item $\Ver{0}{d}$ is sound for every $T^*$ with $\pi(T^*)>0$ and $D_n\subseteq\operatorname{supp}_{T^*}$, deterministically and without well-specification (IL Thm~4.14). $\Ver{\delta}{d}$ accepts at least as much.
+\item Under \Lzero{} with full-support $\Qg$, if $\pi$ charges every finite theory, $\Ver{0}{d}$ accepts exactly $\Th_d(D_n)$ (AS Prop~6.4, read on theorems).
+\item Under \Lzero, if $\operatorname{supp}\pi=\Hk{k}(\DT)$, the theories with at most $k$ templates, the acceptance set of $\Ver{0}{d}$ contains $\Th_d(\Acc_k(D_n))$, where $\Acc_k$ is the cautious $k$-union verifier of AS Def~2.6. In general classes the inclusion can be strict; for $\Hk{k}(\DT)$ itself this is open.
+\end{enumerate}
+\end{proposition}
 
 \begin{proof}[Proof of \Cref{prop:sound:cautious}]
 (a) The likelihood of $T$ (fixed weights, or the Dirichlet marginal under \Lzero) is positive iff every datum lies in $\operatorname{supp}_T$, and $\pi_n(T)$ is proportional to $\pi(T)$ times it. $\Ver{0}{d}$ accepts $q$ iff $\pi_n(\{T:q\notin\Th_d(T)\})=0$, i.e.\ iff $q\in\Th_d(T)$ for every $T$ of positive posterior mass.
@@ -62,7 +80,7 @@ Z^{\Hclass}_n:=\sum_T\pi(T)\prod_{i\le n}\frac{P_T(X_i)}{P_{T^*}(X_i)}=\frac{M(X
 \toprule
  & cautious $k$-union verifier (AS) & Bayesian thresholded verifier\\
 \midrule
-assumptions for soundness & realizability ($R^*\in\Hk{k}$), bound $k\ge k'$ & well-specified data law; $W^*_d\ge\delta/\delta'$; with Dirichlet weights, averaging over $w^*$ or a threshold shrinking with $n$\\
+assumptions for soundness & realizability ($R^*\in\Hk{k}$), bound $k\ge k'$ & well-specified data law; $W^*_d\ge\delta/\delta'$; with Dirichlet weights, averaging over $w^*$, or a threshold shrinking with $n$ for likelihoods linear in $w$\\
 soundness & deterministic; every prover, every time & probability $\ge1-\delta'$; every prover, every time (\Cref{thm:sound:fixed,thm:sound:avg,thm:sound:shrink})\\
 without the assumptions & sound relative to $\mathrm{cl}(R^*)$ (AS Lemma~2.8); without a bound accepts only the data (AS Prop~6.4) & can accept a false sentence with probability~1 (\Cref{prop:sound:misspec}); at a fixed $w^*$ a constant threshold fails (\Cref{ex:sound:constant})\\
 completeness & exact once an anchor is present (AS Lemma~2.8) & each theorem eventually, a.s.\ (\Cref{prop:sound:complete}; Dirichlet: a.e.\ $w^*$); no anchor, no bound; open under a shrinking threshold\\
@@ -73,12 +91,29 @@ depends on the target's length & no & yes: $\delta\le2^{-\lambda\ell(T^*)}\delta
 \caption{The cautious verifier of AS against the Bayesian thresholded verifier (model \S5.5, with the weight convention stated).}\label{tab:sound:compare}
 \end{table}
 
+\noindent The time for the Bayesian verifier to accept $s$ is set by the competitors that miss it: a split that omits a root of probability $p$ gains a factor $(1-p)^{-n}$ until the first datum with that root.
+
 % ---------------------------------------------------------------------
 \subsection{Dirichlet weights}\label{app:sound:dir}
 
+\begin{remark}[Vacuity for Dirichlet weights]\status{proved ($\Lzero$ and likelihoods affine in $w$)}\src{model Rem 4.5; experiments \S0 (M3)}\label{rem:sound:vacuous}
+Under $\Lzero$, or any likelihood affine in $w$ (such as the experiments' chain $\Cch J$), read \cref{thm:sound:fixed} with parameter $(T,w)$ and prior $\pi(T)\Dir_T(dw)$. Its class $\{(T,w):P_{T,w}=P_{T^*,w^*},\ \Th_d(T)=\Th_d(T^*)\}$ has prior mass $0$ if $|T^*|\ge2$, the component laws of $T^*$ are linearly independent, and $w^*$ lies outside a countable set; then $\delta\le W^*_d\delta'$ forces $\delta=0$. Under $\Lone$, where $P_{T,w}$ is a ratio of power series in $w$, the same is plausible but not proved.
+\end{remark}
+
 \begin{proof}[Proof of \Cref{rem:sound:vacuous}]
-This is the argument of model Thm~5.1(b$''$). Fix $T$. The map $w\mapsto P_{T,w}$ is affine, so $W_T:=\{w:P_{T,w}=P_{T^*,w^*}\}$ is the intersection of the simplex with an affine subspace. If $\Dir_T(W_T)>0$, then $W_T$ has positive Lebesgue measure in the simplex, so the affine map is constant on a set that spans the simplex's affine hull, hence on the whole simplex, and every component of $T$ has law $P_{T^*,w^*}$. (For $|T|=1$ the weight is trivial and the condition is $\Qg_\tau=P_{T^*,w^*}$.) So the class has positive prior mass only if some template $\sigma$ has $\Qg_\sigma=\sum_{\tau\in T^*}w^*_\tau\Qg_\tau$. For each $\sigma$, linear independence of the component laws of $T^*$ allows at most one such $w^*$, and there are countably many $\sigma$.
+The class is the exact class $\{(T,w):P_{T,w}=P_{T^*,w^*}\}$ of \cref{rem:ident:exact} intersected with $\{T:\Th_d(T)=\Th_d(T^*)\}$, so its prior mass is at most that of the exact class. The affine-slice argument in the proof of \cref{rem:ident:exact} (\cref{app:ident:gold}) uses only that $w\mapsto P_{T,w}$ is affine, which holds under $\Lzero$ and for the chain $\Cch J$ (whose law is $\sum_iw_ia_i$): it gives $\Dir_T(\{w:P_{T,w}=P_{T^*,w^*}\})=0$ for every $T$ unless some one-component theory has law $P_{T^*,w^*}$, which, by linear independence of $T^*$'s component laws, happens for at most one $w^*$ per one-component theory, so for countably many $w^*$. Under $\Lone$, $P_{T,w}=\mu_{T,w}/Z_{T,w}$ is a ratio of power series in $w$, not affine, and the argument does not apply.
 \end{proof}
+
+\begin{lemma}[Regret]\status{(a), (b), (d) proved; (c) known; computed}\src{model Lemma 4.6; experiments Prop X8(c)}\label{lem:sound:regret}
+Let $T$ have $K$ templates with laws $q_\tau$ (under \Lzero, $q_\tau=\Qg_\tau$), $P_{T,w}:=\sum_\tau w_\tau q_\tau$, weights $\Dir(\alpha)$, $A:=\sum_\tau\alpha_\tau$, and
+\[
+\Rreg(n,K):=\min_{c\in\N^K,\ \sum_\tau c_\tau=n}\ \frac{\Ex_{\Dir(\alpha)}\big[\prod_\tau w_\tau^{c_\tau}\big]}{\prod_\tau(c_\tau/n)^{c_\tau}}\qquad(0^0:=1).
+\]
+(a) $\PDir{T}(x^n)\ge\Rreg(n,K)\,P_{T,w}(x^n)$ for every $w$ in the closed simplex and every $x^n$.
+(b) If $\alpha_\tau\le1$ for every $\tau$, then $\Rreg(n,K)\ge\frac{\Gamma(A)}{e\,(K-1)!\prod_\tau\Gamma(\alpha_\tau)}\,(n+1)^{-(K-1)}$.
+(c) For $\alpha_\tau\equiv\tfrac12$: $-\ln\Rreg(n,K)=\tfrac{K-1}2\ln n+O(1)$ \citep{krichevsky1981performance}.
+(d) For $\alpha_\tau\equiv\alpha$: $\Rreg(n,K)\le\frac{\Gamma(K\alpha)\Gamma(\alpha+n)}{\Gamma(\alpha)\Gamma(K\alpha+n)}\sim\frac{\Gamma(K\alpha)}{\Gamma(\alpha)}n^{-(K-1)\alpha}$; so at $\alpha=1$ the exponent $K-1$ in (b) is tight.
+\end{lemma}
 
 \begin{proof}[Proof of \Cref{lem:sound:regret}]
 (a) Expand over labellings $\ell:[n]\to T$ with counts $c_\tau(\ell)$:
@@ -112,7 +147,7 @@ Ville's inequality gives $G:=\{\sup_nZ_n<1/\delta'\}$ with $\PDir{T^*}(G)\ge1-\d
 \[
 \pi_R(T^*\mid D_n)=\frac{2^{-\mathrm{bits}(T^*)}M_{T^*}(D_n)}{\sum_{T\in R_n}2^{-\mathrm{bits}(T)}M_T(D_n)}\ge\frac{2^{-\mathrm{bits}(T^*)}}{C\,Z_n}\ge\frac{2^{-\mathrm{bits}(T^*)}}{Z_n}.
 \]
-Off the Ville event this exceeds $2^{-\mathrm{bits}(T^*)}\delta'\ge\delta$. Accepting $s$ with $T^*\nvdash_Js$ needs mass $\ge1-\delta$ on theories deriving $s$, hence $\pi_R(T^*\mid D_n)\le\delta$. If $F$ is a fixed pool $H$ plus all memorisers, $C\le\sum_{T\in H}2^{-\mathrm{bits}(T)}+1$, because the memorisers' codes form a prefix-free set; use $2^{-\mathrm{bits}(T^*)}/C$ in place of $2^{-\mathrm{bits}(T^*)}$.
+Off the Ville event this exceeds $2^{-\mathrm{bits}(T^*)}\delta'\ge\delta$. Accepting $s$ with $T^*\nvdash_Js$ needs mass $\ge1-\delta$ on theories deriving $s$, hence $\pi_R(T^*\mid D_n)\le\delta$. If $F$ is a fixed pool $H$ plus all memorisers whose codes lie outside the template code, $C\le1$ may fail; but $C\le\sum_{T\in H}2^{-\mathrm{bits}(T)}+1$, because the memorisers' codes form a prefix-free set, and the argument runs with $2^{-\mathrm{bits}(T^*)}/C$ in place of $2^{-\mathrm{bits}(T^*)}$.
 \end{proof}
 
 \begin{proof}[Proof of \Cref{thm:sound:shrink}]
@@ -122,19 +157,25 @@ $Z'_n:=M(X^n)/P_{T^*,w^*}(X^n)$ is a nonnegative supermartingale under the i.i.d
 =\pi(C^{\mathrm{Dir}}_d)\frac{\PDir{T^*}(X^n)/P_{T^*,w^*}(X^n)}{Z'_n}\ \ge\ \frac{\pi(C^{\mathrm{Dir}}_d)\,\Rreg(n,K)}{Z'_n},
 \]
 with $n=n(t)$, by \Cref{lem:sound:regret}(a), which needs the likelihood to be linear in $w$. On $G$ this exceeds $\pi(C^{\mathrm{Dir}}_d)\Rreg(n,K)\delta'\ge\delta_n$. No member of $C^{\mathrm{Dir}}_d$ derives an invalid $q$, so its non-deriving mass exceeds $\delta_n$.
+
+\emph{Pool version} (experiments Prop~X8(c)). With $F$, $C\le1$ and $M_T$ as in the pool version of \cref{thm:sound:avg}, $Z'_n:=\sum_{T\in F}(2^{-\mathrm{bits}(T)}/C)\,M_T(D_n)/P_{T^*,w^*}(D_n)$ is a nonnegative supermartingale under $P_{T^*,w^*}$ with $Z'_0=1$, so $P[\sup_nZ'_n\ge1/\delta']\le\delta'$. For every pool $R_n\subseteq F$ with $T^*\in R_n$, pathwise and by \Cref{lem:sound:regret}(a),
+\[
+\pi_R(T^*\mid D_n)\ \ge\ \frac{2^{-\mathrm{bits}(T^*)}M_{T^*}(D_n)}{C\,Z'_n\,P_{T^*,w^*}(D_n)}\ \ge\ \frac{2^{-\mathrm{bits}(T^*)}\Rreg(n,K)}{Z'_n},
+\]
+which off the Ville event exceeds $2^{-\mathrm{bits}(T^*)}\Rreg(n,K)\delta'\ge\delta_n$. Conclude as in the pool version of \cref{thm:sound:avg}.
 \end{proof}
 
 \paragraph{\Cref{ex:sound:constant}: details.} \emph{Why $T^*\nvdash q$.} In the term model in which $+$ returns its first argument on $(a,0)$ exactly when $a$ has root $0$ or $S$ (and returns the formal term $a+b$ otherwise), every instance of $0+0=0$ and $(Sz)+0=Sz$ holds, but $(0\cdot0)+0$ denotes the term $(0\cdot0)+0\ne0\cdot0$. \emph{Why $P_{T'}=(1-\varepsilon)P_{T^*,w^*}$ on the data's support.} A datum is $t+0=t$ with $t=0$ or $t=St'$. Under $T'$ it has probability $\Qg(t)$, i.e.\ $0.5$ or $(0.5-\varepsilon)\Qg(t')$; under $P_{T^*,w^*}$ it has $w^*_1=0.5/(1-\varepsilon)$ or $w^*_2\Qg(t')=(0.5-\varepsilon)\Qg(t')/(1-\varepsilon)$. \emph{The decomposition.} $T^*$'s instance sets are disjoint, so $\ln P_{T^*,w^*}(D)-\ln P_{T^*,\hat w}(D)=\sum_fn_f\ln(w^*_f/\hat w_f)=-n\KL(\hat w\|w^*)$, with $\hat w$ the empirical weights. With the previous point,
 \[
 \ln\frac{P_{T'}(D)}{\PDir{T^*}(D)}=n\ln(1-\varepsilon)+\Big[\ln P_{T^*,\hat w}(D)-\ln\PDir{T^*}(D)\Big]-n\,\KL(\hat w\,\|\,w^*).
 \]
-The bracket is the regret of \Cref{lem:sound:regret}(c) at $K=2$, also \Cref{prop:ident:splitlzero}(b), and $2n\KL(\hat w\|w^*)\to\chi^2_1$ in law. \emph{Not written out}: a version of that $\chi^2$ limit uniform over the window $1\ll n\ll1/\varepsilon$, which the crossing argument needs. \emph{The shrinking threshold} of the model track's run is $\delta_n=\pi(T^*)\,\delta'\,\frac{1}{e\pi}\,(n+1)^{-1}$ with $\delta'=0.02$, the bound of \Cref{lem:sound:regret}(b) at $K=2$, $\alpha=\tfrac12$ ($1/(e\pi)=0.1171$).
+The bracket is the regret of \Cref{lem:sound:regret}(c) at $K=2$, also \Cref{prop:ident:splitlzero}(b), and $2n\KL(\hat w\|w^*)\to\chi^2_1$ in law. \emph{Not written out}: a version of that $\chi^2$ limit uniform over the window $1\ll n\ll1/\varepsilon$, which the crossing argument needs. While $\varepsilon n\ll1$ the log-odds of $T'$ grow like $\tfrac12\ln n$ and cross $\ln99$ near $n\approx8000$. \emph{Moderate $\varepsilon$.} The referee's runs (\texttt{r3}, geometric grid, $n\le8000$ and $n\le80000$) found no acceptance at $\varepsilon=10^{-3}$ and $10^{-4}$, at the fixed $w^*$ (median of the largest log-ratio $2.81$ and $3.96$, below $\ln99=4.60$) and with $w^*$ from the prior. \emph{The shrinking threshold} of the model track's run is $\delta_n=\pi(T^*)\,\delta'\,\frac{1}{e\pi}\,(n+1)^{-1}$ with $\delta'=0.02$, the bound of \Cref{lem:sound:regret}(b) at $K=2$, $\alpha=\tfrac12$ ($1/(e\pi)=0.1171$).
 
 \begin{table}[ht]
 \centering\footnotesize
-\begin{tabular}{@{}lcccc@{}}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}Xc>{\centering\arraybackslash}p{2.3cm}>{\centering\arraybackslash}p{2.5cm}>{\centering\arraybackslash}p{2.1cm}@{}}
 \toprule
- & $\varepsilon$ & fixed $w^*$, constant $\delta$ & $w^*\sim\Dir(\tfrac12,\tfrac12)$, constant $\delta$ & fixed $w^*$, shrinking $\delta_n$\\
+implementation & $\varepsilon$ & fixed $w^*$, constant $\delta$ & $w^*\sim\Dir(\tfrac12,\tfrac12)$, constant $\delta$ & fixed $w^*$, shrinking $\delta_n$\\
 \midrule
 model (\texttt{c11}, every $n\le2\cdot10^6$, 300 runs) & $10^{-5}$ & $0.997$ & $0.007$ & $0/300$\\
  & $10^{-6}$ & $1.000$ & $0.003$ & $0/300$\\
@@ -143,49 +184,8 @@ experiments (\texttt{check\_fixed\_weight}, same) & $10^{-5}$ & $0.977$ (median 
 model's referee (\texttt{r3}, geometric grid of $n$) & $10^{-5}$ & $\ge0.980$ & $\ge0.008$ & --\\
  & $10^{-6}$ & $\ge1.000$ & $\ge0.010$ & --\\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \caption{\Cref{ex:sound:constant}: probability that the underivable $q$ is ever accepted; nominal bound $\delta/\pi(T^*)=0.02$. The referee checked a geometric grid of $n$, so its numbers are lower bounds. The differences between implementations are Monte Carlo and grid effects.}\label{tab:sound:constant}
 \end{table}
 
 \noindent \texttt{check\_fixed\_weight} also matched its closed form against the posterior code ($\ln$ Bayes factors to $4.1\cdot10^{-13}$) and checked \Cref{lem:sound:regret}(b) at $K=2$ for $n\le2000$ (margin $\ge2.1$ nats).
-
-% ---------------------------------------------------------------------
-\subsection{The trichotomy}\label{app:sound:tri}
-
-Derivability is unbounded here (\Cref{def:sound:tri}).
-
-\begin{proof}[Proof of \Cref{prop:sound:laws}]
-(a) A consistent theory proves at most one of $s$, $\neg s$, so it is counted once in $\Bel(s)+\Dis(s)+\Indep(s)$; an inconsistent one proves both and is counted twice. The sum is $(1-\Inc)+2\Inc$.
-(b) $\Dis(s)=\Bel(\neg s)$ by definition; classically $T\vdash\neg\neg s$ iff $T\vdash s$. On consistent theories $\Bel(\top)=1$, $\Bel(\bot)=0$, and $1-\Dis=\Bel+\Indep$ by (a).
-(c) $\Th(T)$ is closed under consequence.
-(d) A consistent $T$ proves at most one of two incompatible sentences, and proves $s\vee s'$ if it proves either.
-\end{proof}
-
-\begin{proof}[Proof of \Cref{prop:sound:belief}]
-For one consistent $T$ put $u(s):=1[T\vdash s]$. Closure under $\wedge$-introduction and elimination gives $u(\bigwedge_{i\in I}s_i)=\prod_{i\in I}u(s_i)$. So the right side equals $\sum_{\emptyset\ne I}(-1)^{|I|+1}\prod_{i\in I}u(s_i)=1-\prod_i(1-u(s_i))=1[T\text{ proves some }s_i]\le u(s_1\vee\dots\vee s_k)$. The inequality is linear in $u$, so it survives the mixture $\Bel=\sum_T\pi_D(T)u_T$. By completeness, $u_T(s)=1[\mathrm{Mod}(T)\subseteq\mathrm{Mod}(s)]$, which identifies the focal elements.
-\end{proof}
-
-\begin{proof}[Proof of \Cref{prop:sound:bracket}]
-For each $T$ in the posterior's (countable) support choose a complete consistent extension $\bar T$ (Lindenbaum), and put $P(s):=\sum_T\pi_D(T)\,1[s\in\bar T]$, a mixture of point masses on complete theories. Then $1[T\vdash s]\le1[s\in\bar T]\le1-1[T\vdash\neg s]$, the second because $\bar T$ is consistent and contains $\neg s$ when $T\vdash\neg s$. Average over $T$. The argument uses only $\Th_d(T)\subseteq\Th(T)\subseteq\bar T$, so it holds for bounded derivability as well.
-\end{proof}
-
-\begin{proof}[Proof of \Cref{ex:sound:renorm,ex:sound:fifty}]
-\Cref{ex:sound:renorm}: $\Bel(a)=\tfrac13$ (from $\{a\}$) and $\Dis(a)=0$, since no theory proves $\neg a$; so $R(a)=1$, and likewise $R(b)=1$. No theory proves $a\wedge b$, and $\{\neg(a\wedge b)\}$ refutes it, so $R(a\wedge b)=0$. A probability with $P(a)=P(b)=1$ has $P(a\wedge b)=1$.
-\Cref{ex:sound:fifty}: the empty theory proves none of $b$, $b\wedge c$, $b\wedge\neg c$ or their negations, so each gets $H=\tfrac12$, and $\tfrac12+\tfrac12\ne\tfrac12$.
-\end{proof}
-
-\begin{proof}[Proof of \Cref{prop:sound:fiftyfifty}]
-Identify a consistent theory with its nonempty set of models $\mathrm{Mod}(T)$ among the valuations, and a sentence with its set of models; over finitely many atoms every set of valuations is a sentence. For one theory
-\[
-H_T(s)=1[\mathrm{Mod}(T)\subseteq s]+\tfrac12\,1[\mathrm{Mod}(T)\text{ meets both }s\text{ and its complement}],
-\]
-and $H=\sum_T\pi_D(T)H_T$.
-\emph{If.} With $|\mathrm{Mod}(T)|=1$, $H_T$ is the point mass on the model. With $\mathrm{Mod}(T)=\{v,v'\}$, $H_T(s)$ is $1$, $\tfrac12$ or $0$ as $s$ contains both, one or none of $v,v'$, i.e.\ $H_T=\tfrac12(\delta_v+\delta_{v'})$. A mixture of probabilities is a probability.
-\emph{Only if.} For valuations $v\ne v'$ put $D_T:=H_T(\{v,v'\})-H_T(\{v\})-H_T(\{v'\})$. If $v,v'\in\mathrm{Mod}(T)$ and $|\mathrm{Mod}(T)|\ge3$, all three sets meet $\mathrm{Mod}(T)$ and its complement, so $D_T=\tfrac12-\tfrac12-\tfrac12=-\tfrac12$. In every other case $D_T=0$: if $\mathrm{Mod}(T)=\{v,v'\}$, $D_T=1-\tfrac12-\tfrac12$; if exactly one of them, say $v$, is a model, then $H_T(\{v'\})=0$ and $H_T(\{v,v'\})=H_T(\{v\})$, because $\{v,v'\}$ and $\{v\}$ meet $\mathrm{Mod}(T)$ and its complement in the same way; if neither is a model, all three terms are $0$. So if some $T_0$ with $\pi_D(T_0)>0$ has three or more models and $v,v'$ are two of them, $\sum_T\pi_D(T)D_T\le-\tfrac12\pi_D(T_0)<0$, whereas a probability gives $0$.
-\end{proof}
-
-\paragraph{Linear-programming checks.} \texttt{c5}: \Cref{ex:sound:renorm,ex:sound:fifty} are infeasible as probabilities; $300$ random posteriors on three atoms gave no violation of $2$- or $3$-monotonicity and no bracketing failure; renormalisation was incoherent in $90/300$, the 50/50 rule in $290/300$. \texttt{r5} (independent generator): no violation of $2$-, $3$- or $4$-monotonicity on two atoms, no bracketing failure with other completions; the 50/50 rule was coherent in $12/300$ trials, exactly those in which every theory had at most two models. \texttt{c14}: the criterion of \Cref{prop:sound:fiftyfifty} agrees with LP coherence in $3225/3225$ posteriors on two atoms (all one- and two-theory supports plus $3000$ random) and $600/600$ on three. (Model \S7 also credits c5 with $4$-monotonicity; c5's output records only $2$ and $3$, and $4$ was checked by the referee on two atoms.)
-
-\begin{remark}[Renormalisation and complete theories]\status{refuted; computed}\src{model \S7 (referee m4)}\label{rem:sound:completeref}
-The model track's first version said: ``the coherent cases [of renormalisation] are essentially those where every theory is complete''. \textbf{Refuted}: in the referee's trials renormalisation was coherent in $199$ of $300$ posteriors, only $2$ of them with all theories complete; in \texttt{c14} it was coherent in $1761$ cases on two atoms ($218$ with all theories complete) and $306$ on three atoms ($42$). For the 50/50 rule the exact condition is \Cref{prop:sound:fiftyfifty}; for renormalisation no characterisation is given.
-\end{remark}

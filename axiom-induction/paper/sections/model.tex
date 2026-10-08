@@ -2,26 +2,27 @@
 % =====================================================================
 % Section 2: the model. Sources (final records only):
 %   research/tracks/model/notes-final.md   §1 (Defs 1.1, 1.3, 1.5; Lemmas 1.2, 1.4, 1.6, 1.7, 1.8;
-%       Prop 1.9; Remark 1.10; L2, L1^sigma), §2.4 (Props 2.7, 2.8), §11, §12 (verification log)
-%   research/tracks/model/referee.md        (M5, m3, m9, m11, m12, Q2)
+%       Prop 1.9; Remark 1.10; L2, L1^sigma), §2.4 (Props 2.7, 2.8), §7 (trichotomy), §11, §12
+%   research/tracks/model/referee.md        (M5, m3, m4, m9, m11, m12, Q2)
 %   research/tracks/universal/notes-final.md §1.2-1.6, §2.1-2.3, §7.1 (calculi, likelihoods, priors)
 %   research/tracks/experiments/notes-final.md §1.1-1.7, Props X1-X3
 %   research/tracks/pa/notes-final.md       Defs 0.1-0.4, Prop 5.2
 %   research/prior/hanni-solomonoff-axiom-induction.md (quotes)
-% Proofs, rule lists and computations: sections/app-model.tex.
+% Proofs, rule lists, the calculi table, moved statements and computations: sections/app-model.tex.
+% The trichotomy subsection (label sec:sound:tri) was moved here from Section 5; labels unchanged.
 % Definitions carry \src only; every claim carries \status and \src.
 % =====================================================================
 
-This section fixes theories, calculi, priors, the instantiation grammar, likelihoods and H\"anni's scores. The tracks' calculi and likelihoods are set side by side in \cref{tab:model:calculi,tab:model:likelihoods}, so that each later result can name the ones it assumes. The results here are structural. Proofs are in \cref{app:model}.
+This section fixes theories, calculi, priors, the instantiation grammar, likelihoods, H\"anni's scores and his trichotomy. Proofs are in \cref{app:model}, with \cref{tab:model:calculi,tab:model:likelihoods}, which list the calculi and the likelihoods (normalisers, size principle, names in the research notes).
 
 % ---------------------------------------------------------------------
 \subsection{Syntax and theories}\label{sec:model:syntax}
 
-We use the syntax of the earlier report \citet{claude2026axiomschemas} (``AS'' below), \S2, without change. The languages are $L_A=\{0,S,+,\cdot,<,=\}$ and $L_\in$. Formulas may contain \emph{parameters} $p,p_1,\dots$ (free names) and are read under their universal closure; leading universal quantifiers are not stripped, so $\forall x\,(x+0=x)$ and $p+0=p$ are different data with equivalent closures (closure-normal form, AS \S2.1). Bound variables are de Bruijn indices in the theory and the code; the text writes named variables. $\mathcal S$ is the set of these formulas, called \emph{sentences}.
+We use the syntax of AS \S2 without change. The languages are $L_A=\{0,S,+,\cdot,<,=\}$ and $L_\in$. Formulas may contain \emph{parameters} $p,p_1,\dots$ (free names) and are read under their universal closure; leading universal quantifiers are not stripped, so $\forall x\,(x+0=x)$ and $p+0=p$ are different data with equivalent closures (closure-normal form, AS \S2.1). $\mathcal S$ is the set of these formulas, called \emph{sentences}.
 
-A \emph{template} (AS Def~2.1) may contain metavariable occurrences $M(t_1,\dots,t_n)$ with metavariable-free arguments. Term metavariables are lower case ($z,z'$ if $0$-ary; $f,g$), formula metavariables capital ($P,F$). An occurrence is a \emph{pattern occurrence} if its arguments are distinct bound variables; in the class $\DT$ every metavariable has one. $\FO\subseteq\PAT\subseteq\DT\subseteq\SO$, and $\DTF$ ($0$-ary term metavariables) is the class implemented in code. A \emph{ground} template is a single sentence. A substitution $\theta$ maps metavariables to bodies, $\lambda$-terms whose only free names are parameters, and $\inst(\tau)=\{\tau\theta\}$ (AS Def~2.2); whether parameters are admissible in bodies is said at each use. \emph{Matching} (AS Thm~2.5): for $\tau\in\DT$ and $s\in\mathcal S$ at most one $\theta$ has $\tau\theta=s$, found in time $O(|\tau|+|s|)$. Tracks universal and experiments give each metavariable a \emph{guard}: \emph{closed} (no parameter in the body; the default) or \emph{open}.
+A \emph{template} (AS Def~2.1) may contain metavariables applied to metavariable-free arguments, $M(t_1,\dots,t_n)$. Term metavariables are lower case ($z,z'$ if $0$-ary; $f,g$), formula metavariables capital ($P,F$). An occurrence is a \emph{pattern occurrence} if its arguments are distinct bound variables; in the class $\DT$ every metavariable has one. $\FO\subseteq\PAT\subseteq\DT\subseteq\SO$, and $\DTF$ ($0$-ary term metavariables) is the class implemented in code. A \emph{ground} template is a single sentence. A substitution $\theta$ maps metavariables to bodies, $\lambda$-terms whose only free names are parameters, and $\inst(\tau)=\{\tau\theta\}$ (AS Def~2.2); whether parameters are admissible in bodies is said at each use. \emph{Matching} (AS Thm~2.5): for $\tau\in\DT$ and $s\in\mathcal S$ at most one $\theta$ has $\tau\theta=s$, found in time $O(|\tau|+|s|)$. The chains of \cref{sec:univ,sec:exp} give each metavariable a \emph{guard}: \emph{closed} (no parameter in the body; the default) or \emph{open}.
 
-Robinson arithmetic $\Q$ has the axioms Q1 $\forall x\,\neg Sx=0$; Q2 $\forall x\forall y(Sx=Sy\to x=y)$; Q3 $\forall x(\neg x=0\to\exists y\,x=Sy)$; Q4 $\forall x\,(x+0=x)$; Q5 $\forall x\forall y\,(x+Sy=S(x+y))$; Q6 $\forall x\,(x\cdot 0=0)$; Q7 $\forall x\forall y\,(x\cdot Sy=x\cdot y+x)$, numbered as in all four tracks and AS. Track pa writes Q3 as $x=0\vee\exists y\,x=Sy$ and adds $\Dlt:=\forall u\forall v(u<v\leftrightarrow\exists z\,(u+Sz=v))$. Induction is the template $\TInd=(P(0)\wedge\forall x(P(x)\to P(Sx)))\to\forall xP(x)\in\DT\setminus\PAT$.
+Robinson arithmetic $\Q$ has the axioms Q1 $\forall x\,\neg Sx=0$; Q2 $\forall x\forall y(Sx=Sy\to x=y)$; Q3 $\forall x(\neg x=0\to\exists y\,x=Sy)$; Q4 $\forall x\,(x+0=x)$; Q5 $\forall x\forall y\,(x+Sy=S(x+y))$; Q6 $\forall x\,(x\cdot 0=0)$; Q7 $\forall x\forall y\,(x\cdot Sy=x\cdot y+x)$, numbered as in AS. $\Q$ has no axiom about $<$; it is $\Sigma_1$-complete for $<$-free $\Sigma_1$ sentences. \Cref{sec:pa} writes Q3 as $x=0\vee\exists y\,x=Sy$. Induction is the template $\TInd=(P(0)\wedge\forall x(P(x)\to P(Sx)))\to\forall xP(x)\in\DT\setminus\PAT$.
 
 \begin{definition}[Theories]\src{model Def 1.1}\label{def:model:theory}
 A \emph{theory} is a finite set $T=\{\tau_1,\dots,\tau_k\}$ of $\DT$ templates, taken up to renaming of metavariables; $\bigcup\inst(T):=\bigcup_i\inst(\tau_i)$. $\Hclass$ is the class of all theories. A \emph{weighted theory} is a pair $(T,w)$ with $w$ in the open simplex over $T$.
@@ -36,45 +37,17 @@ The background calculus is Mendelson's first-order calculus with equality $\CK$ 
 
 Since parameters are read under closure, $\varphi(p)$ and $\forall x\varphi$ are interderivable (AS Prop~4.10), while a closed instance $\varphi(t)$ is not (AS Ex~4.9). $\CK$ is complete (known). $\Th(T)$ and $\Th_d(T)$ depend on $T$ only through $\bigcup\inst(T)$. The unit of $d$ is stated at each use: symbol size here and in \cref{sec:sound}, chain steps in \cref{sec:exp}, derivation size in \cref{sec:pa}.
 
-\begin{lemma}[A4 is not a template]\status{(a) proved; (b) proof sketch}\src{model Lemma 1.2}\label{lem:model:a4}
-(a) A4, written as $\forall xP(x)\to P(f)$ with $f$ a $0$-ary term metavariable, is not in $\SO$, so not in $\DT$. (b) No finite set of $\DT$ templates has the instances of A4 as its instance union.
-\end{lemma}
+$\forall$-elimination is not a template (\cref{lem:model:a4}, in \cref{app:model:calculi}), so it belongs to the fixed background (compare AS Rem~A.3); the other logical axioms are templates. Derivation grammars use $\forall$E as a primitive rule; it is derivable in $\CK$, so $\Th$ is unchanged.
 
-\begin{proof}[Proof idea]
-(a) AS Def~2.1 requires metavariable-free arguments. (b) A template inside A4 covers $\forall xB_m\to B_m[t/x]$, $B_m:=(x+\dots+x=x)$, for one $m$ or one $t$ (\cref{app:model:a4}).
-\end{proof}
-
-So $\forall$-elimination belongs to the fixed background (compare AS Rem~A.3). The other logical axioms are templates: A1--A3 in $\FO$, A5 in $\PAT$ as $\forall x(P\to F(x))\to(P\to\forall xF(x))$, substitutivity in $\DT$. Derivation grammars use $\forall$E as a primitive rule; it is derivable in $\CK$, so $\Th$ is unchanged.
-
-\begin{definition}[The calculi of the tracks]\src{universal \S1.4; experiments \S1.6; pa Def 0.3; model Ex 3.6}\label{def:model:calculi}
-Each track's derivation likelihood is a stochastic grammar over derivations in its own calculus (\cref{tab:model:calculi}; rule lists in \cref{app:model:calculi}): track universal's chains $\Cmin$ (cite with probability $1-c$, $\forall$E with probability $c$) and $\Copen(c,g)$ (plus Gen on the parameter with probability $g$; $p_{\mathrm{cite}}=1-c-g$), and its tree calculi $\CUiii$ and $\Cand$; track experiments' forward chain $\Cch{J}$ (stop probability $c_{\mathrm{stop}}$ while a rule applies; $c_{\mathrm{ch}}:=1-c_{\mathrm{stop}}=\tfrac12$); track pa's natural deduction $\CND$, scored by the two-part code $\Lsch$; and the equational grammar of $\Leq$.
+\begin{definition}[The restricted calculi]\src{universal \S1.4; experiments \S1.6; pa Def 0.3; model Ex 3.6}\label{def:model:calculi}
+Later sections use stochastic grammars over derivations in restricted calculi (rules in \cref{app:model:calculi}, comparison in \cref{tab:model:calculi}): the chains $\Cmin$ (cite with probability $1-c$, $\forall$E with probability $c$) and $\Copen(c,g)$ (plus Gen on the parameter, probability $g$; $p_{\mathrm{cite}}=1-c-g$) and the trees $\CUiii$, $\Cand$ of \cref{sec:univ}; the forward chain $\Cch{J}$ of \cref{sec:exp} (stop probability $c_{\mathrm{stop}}$ while a rule applies; $c_{\mathrm{ch}}:=1-c_{\mathrm{stop}}=\tfrac12$); natural deduction $\CND$ with the two-part code $\Lsch$ (\cref{sec:pa}); and the equational grammar of $\Leq$.
 \end{definition}
-
-\begin{table}[t]
-\centering\footnotesize
-\begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}p{3.3cm}>{\raggedright\arraybackslash}p{2.4cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{1.3cm}@{}}
-\toprule
-calculus & rules & normalisation & factor $P_{\Hall}/P_{\Hsch}$ per closed instance & used in\\
-\midrule
-$\CK$ & cite theory or logical axiom, MP, Gen, $\forall$E & $\mu_T/Z_T$; finite a.s.\ iff $m\le1$ & not computed; with parameters admissible no hypothesis emits only instances (\cref{thm:univ:omega}(c3)) & \S\S\ref{sec:ident}--\ref{sec:time}\\
-$\Cmin$ & cite ($1-c$), $\forall$E ($c$) & $\mu_T$ or $\mu_T/Z_T$ & $c$ unnormalised; $c/(1+c)$ normalised ($\varphi$ quantifier-free) & \S\ref{sec:univ}\\
-$\Copen$ & $\Cmin$ + Gen on $p$ ($g$) & same & $c(1-\rho)/(1+c)$ normalised, against guarded $\Hsch$ ($\rho$: parameter probability of $\Qopen$) & \S\ref{sec:univ}\\
-$\CUiii$ & cite, $\forall$E, quantifier-free rules & trees, $\mu_T$ & $\le c$ on the mass that cites the axiom (\cref{prop:univ:sim}) & \S\ref{sec:univ}\\
-$\Cand$ & cite, $\forall$E, $\wedge$I, $\wedge$E & trees, $\mu_T$ & $>c$ (refuted conjecture, \cref{rem:univ:detour}); $\le0.925$ on the computed grid & \S\ref{sec:univ}\\
-$\Cch{J}$ & cite, then $\le J$ steps ($\forall$E, Gen, MP) & proper, no normaliser & $c_{\mathrm{ch}}=1-c_{\mathrm{stop}}$ & \S\ref{sec:exp}\\
-$\CND$ & hyp, ax, tc, $\to$I, $\forall$E, $\forall$I, $\exists$I, $\exists$E, refl, subst & two-part code; sub-probability & $1/10$ per $\forall$E step (fixed rule code; learned codes: \cref{tab:pa:rulecode}) & \S\ref{sec:pa}\\
-$\Leq$ & cite, refl, sym, trans, cong$_S$, cong$_+$ & $\mu_T/Z_T$, least fixpoint & --- (closed equations only) & \S\ref{sec:ident}\\
-\bottomrule
-\end{tabularx}
-\caption{The calculi of the tracks. ``Factor'' is the likelihood ratio of $\Hall=\{\forall x\varphi\}$ to its instance schema $\Hsch$ on one closed instance $\varphi(t)$. Rates are comparable only within one calculus and one code: $\Cch{J}$ is proper, yet its factor equals the \emph{unnormalised} $\Cmin$ factor with $c=c_{\mathrm{ch}}$. The direction (factor at most~1) is proved for $\Cmin$ and $\CUiii$ (\cref{thm:univ:B}), follows from the exact laws for $\Copen$ (\cref{prop:univ:open}), and holds in $\Cch{J}$ (experiments Prop X6) and under pa's codes (pa \S5.5); in $\Cand$ it holds on the computed grid and is open in general.}
-\label{tab:model:calculi}
-\end{table}
 
 % ---------------------------------------------------------------------
 \subsection{Prior}\label{sec:model:prior}
 
 \begin{definition}[Template code and prior]\src{model Def 1.3}\label{def:model:prior}
-Templates are coded in preorder, one token per node from a fixed alphabet (the symbols of the language, connectives, quantifiers, and escapes IDX, PAR, MV) at $\lceil\log_2(\text{alphabet size})\rceil$ bits. The escapes are followed by Elias-$\gamma$ codes: $\gamma(k+1)$ for a de Bruijn index $k$, $\gamma(j+1)$ for $p_j$, and for a metavariable a new/old bit, then its arity ($\gamma(n+1)$) and sort bit if new or its index if old, then its arguments. Renamings get the same code, argument permutations ($M(x,y)$, $M(y,x)$) different ones. A theory $\{\tau_1,\dots,\tau_k\}$ is coded as $\gamma(k+1)$ and the $k$ template codes in lexicographic order; $\ell(T)$ is the length in bits, and
+Templates are coded by a prefix code on their preorder token sequences, one token per node (details in \cref{app:model:prior}). Renamings get the same code, argument permutations ($M(x,y)$, $M(y,x)$) different ones. A theory is coded as its number of templates followed by their codes in lexicographic order; $\ell(T)$ is the length in bits, and
 \[
 \pi_\lambda(T):=2^{-\lambda\ell(T)}/Z_\lambda,\qquad \lambda\ge1,\qquad Z_\lambda:=\textstyle\sum_{T\in\Hclass}2^{-\lambda\ell(T)}.
 \]
@@ -82,51 +55,25 @@ Mixture weights get the prior $\Dir(\alpha,\dots,\alpha)$, by default $\alpha=\t
 \end{definition}
 
 \begin{lemma}[Kraft]\status{proved}\src{model Lemma 1.4}\label{lem:model:kraft}
-$\sum_{T\in\Hclass}2^{-\ell(T)}\le1$, so $\pi_\lambda$ is a probability for $\lambda\ge1$; and $\sum_T\pi_\lambda(T)^{1/2}<\infty$ for $\lambda\ge2$.
+Theory codes are prefix-free, so $\sum_{T\in\Hclass}2^{-\ell(T)}\le1$ and $\pi_\lambda$ is a probability for $\lambda\ge1$; and $\sum_T\pi_\lambda(T)^{1/2}<\infty$ for $\lambda\ge2$.
 \end{lemma}
 
-\begin{proof}[Proof idea]
-Theory codes are prefix-free (\cref{app:model:prior}); for $\lambda\ge2$, $2^{-\lambda\ell/2}\le2^{-\ell}$.
-\end{proof}
-
-\begin{remark}[Other priors; time factors]\status{proved}\src{experiments \S1.3; universal \S1.6; pa Def 0.2; model \S1.3}\label{rem:model:priors}
-(i) Track experiments' prior $\propto2^{-\lambda\,\mathrm{bits}(T)}(1+|T|)^{-\tau}$ uses a stochastic template code that satisfies Kraft, so it is proper for $\lambda\ge1$ ($\lambda=\tfrac12$ only on finite pools); $\Q\cup\{\TInd\}$ costs 226.2 bits. Its factor $(1+|T|)^{-\tau}$ (time exponent $\tau$, default~0) prices membership time.
-(ii) Track universal's $2^{-\lambda(\sum_A|A|+\#\text{axioms})}$ and track pa's $2^{-\beta\sum_\tau|\tau|}$ ($\beta=5$ or $\log_223$ bits per symbol) are improper over all theories and are used only on finite or summable families. Prior shares depend on the code (\cref{tab:univ:share}).
-(iii) A Levin-style time factor for a decider of the axiom set is polynomial in $\ell(T)$ inside $\DT$, since membership is matching; it changes $\ln\pi$ by $O(\ln\ell(T))$ and barely bites. Time matters in \cref{sec:time}.
-\end{remark}
+Other priors (\cref{rem:model:priors}, in \cref{app:model:prior}): the experiments' prior is proper for $\lambda\ge1$; those of \cref{sec:univ,sec:pa} are improper, used only on finite or summable families; a Levin-style time factor changes $\ln\pi$ only by $O(\ln\ell(T))$ inside $\DT$.
 
 % ---------------------------------------------------------------------
 \subsection{Instantiation grammar}\label{sec:model:grammar}
 
 \begin{definition}[Instantiation grammar $\Qg$]\src{model Def 1.5}\label{def:model:grammar}
-$\Qg$ is a probabilistic context-free grammar on metavariable bodies with one production law per \emph{type} $(s,k)$: the sort $s\in\{\iota,o\}$ of the node and the number $k$ of variables available there (holes plus bound indices in scope; the two are treated alike). A body of type $\iota^n\to s$ is generated from the root type $(s,n)$. A node of type $(s,k)$ chooses, with probabilities depending only on $(s,k)$, a function or relation symbol or connective (children of type $(\cdot,k)$), a quantifier (child of type $(o,k+1)$), one of the $k$ variables, a constant, or a parameter (from a geometric law). $\Qg(\theta):=\prod_M\Qg_{\mathrm{type}(M)}(\theta(M))$. We require \emph{full support} (all productions have positive probability) and \emph{uniform subcriticality}: at most $b<\infty$ children per production, and weights $h(\text{type})\in[h_{\min},h_{\max}]$, $h_{\min}>0$, and $\rho<1$ with $\Ex_i\big[\sum_{\text{children }c}h(\mathrm{type}(c))\big]\le\rho\,h(i)$ for every type $i$.
+$\Qg$ is a probabilistic context-free grammar on metavariable bodies with one production law per \emph{type} $(s,k)$: the sort $s\in\{\iota,o\}$ of the node and the number $k$ of variables available there (holes and bound indices alike). A body of type $\iota^n\to s$ starts at type $(s,n)$; a node chooses a function or relation symbol or connective (children of type $(\cdot,k)$), a quantifier (child of type $(o,k+1)$), one of the $k$ variables, a constant, or a parameter (from a geometric law). $\Qg(\theta):=\prod_M\Qg_{\mathrm{type}(M)}(\theta(M))$. We require \emph{full support} (all productions have positive probability) and \emph{uniform subcriticality}: at most $b<\infty$ children per production, and type weights $h\in[h_{\min},h_{\max}]$, $h_{\min}>0$, and $\rho<1$ with $\Ex_i\big[\sum_{\text{children }c}h(\mathrm{type}(c))\big]\le\rho\,h(i)$ for every type $i$.
 \end{definition}
 
-\begin{lemma}[$\Qg_\tau$ is a law on $\inst(\tau)$]\status{proved}\src{model Lemma 1.6}\label{lem:model:grammar}
-Let $\Qg$ be uniformly subcritical, $\tau\in\DT$, and $N$ the size of a body drawn from type $i$.
-(a) $\Ex_iN\le h(i)/(h_{\min}(1-\rho))$; bodies are finite a.s.
-(b) With $\Lambda:=2/((1-\rho)h_{\min})$ and $0<\zeta\le(\Lambda bh_{\max})^{-2}$: $\Ex_i[e^{\zeta N}]\le e^{\zeta\Lambda h(i)}$, so $P_i(N\ge\ell)\le e^{\zeta(\Lambda h_{\max}-\ell)}$.
-(c) $\Qg_\tau(s):=\Qg(\theta_s)$ if $\tau\theta_s=s$, else $0$, is a probability on $\mathcal S$; with full support its support is $\inst(\tau)$.
-(d) (a) and (b) hold for every multi-type branching process with independent children given the type, at most $b$ children and the uniform condition.
-\end{lemma}
-
-\begin{proof}[Proof idea]
-The $h$-weight of generation $j$ has mean at most $\rho^jh(i)$; (b) is an induction on depth; (c) uses unique matching (\cref{app:model:grammar}).
-\end{proof}
-
-\begin{remark}[The earlier condition]\status{refuted (old condition); exclusion proved; computed}\src{model \S1.4}\label{rem:model:subcrit}
-The pre-referee condition ``every type has mean offspring below~1'' is refuted (referee M5) as a usable hypothesis: no formula type of $L_A$ satisfies it, and with infinitely many types it does not give finiteness (a chain infinite with probability $\prod_k(1-1/(k+2)^2)=\tfrac12$). The uniform condition excludes that chain and holds for a grammar for $L_A$ with $\rho=0.75$ (\cref{app:model:grammar}).
-\end{remark}
-
-The term laws $\Qnum$, $\QGW$, $\Qopen$ of track universal (\cref{def:univ:setup}) and track experiments' grammar (\cref{ex:model:qa}) are of this kind. Track pa instead \emph{learns} a positional grammar (a sequential KT model of the body). It is not a fixed PCFG, so results that assume a fixed $\Qg$, such as the exact split ties of \cref{prop:ident:splits}, do not apply to it verbatim (\cref{prop:pa:occam}).
+Under these conditions bodies are finite a.s.\ with exponential tails, and $\Qg_\tau(s):=\Qg(\theta_s)$ if $\tau\theta_s=s$, else $0$, is a probability on $\mathcal S$, with support $\inst(\tau)$ under full support (\cref{lem:model:grammar}, in \cref{app:model:grammar}). The uniform condition replaces a per-type condition that does not give finiteness (\cref{rem:model:subcrit}); it holds for a grammar for $L_A$ with $\rho=0.75$ (\cref{ex:model:qa}), for the term laws of \cref{def:univ:setup} and for the experiments' grammar. The code of \cref{sec:pa} instead \emph{learns} a positional grammar (a sequential KT model of the body), not a fixed PCFG, so results that assume a fixed $\Qg$, such as the exact split ties of \cref{prop:ident:splits}, do not apply to it verbatim (\cref{prop:pa:occam}).
 
 % ---------------------------------------------------------------------
 \subsection{Likelihoods}\label{sec:model:lik}
 
-Data are a sequence $D=(X_1,\dots,X_n)$ of sentences.
-
 \begin{definition}[$\Lzero$: axiom citation]\src{model \S1.5}\label{def:model:lzero}
-With fixed weights, $P_{T,w}(s):=\sum_{\tau\in T}w_\tau\Qg_\tau(s)$ and $P_{T,w}(D):=\prod_iP_{T,w}(X_i)$. With Dirichlet weights, $\PDir{T}(D):=\int\prod_iP_{T,w}(X_i)\,\Dir(dw;\alpha)$.
+For data $D=(X_1,\dots,X_n)$, a sequence of sentences, and fixed weights, $P_{T,w}(s):=\sum_{\tau\in T}w_\tau\Qg_\tau(s)$ and $P_{T,w}(D):=\prod_iP_{T,w}(X_i)$. With Dirichlet weights, $\PDir{T}(D):=\int\prod_iP_{T,w}(X_i)\,\Dir(dw;\alpha)$.
 \end{definition}
 
 \begin{lemma}[Dirichlet labelling sum]\status{proved; computed}\src{model \S1.5 (c8); experiments Prop X2}\label{lem:model:dirsum}
@@ -134,7 +81,7 @@ With $A:=\sum_\tau\alpha_\tau$, summing over labellings $\ell:\{1..n\}\to T$ wit
 \[
 \PDir{T}(D)=\sum_{\ell}\frac{\Gamma(A)}{\Gamma(A+n)}\prod_{\tau\in T}\frac{\Gamma(\alpha_\tau+n_\tau(\ell))}{\Gamma(\alpha_\tau)}\prod_{i=1}^n\Qg_{\ell_i}(X_i).
 \]
-$\PDir{T}$ is exchangeable and consistent in $n$, and its normaliser does not depend on $D$. For disjoint instance sets the sum has one term, and $P(X_{n+1}=s\mid D)=\sum_\tau\frac{\alpha_\tau+n_\tau}{A+n}\Qg_\tau(s)$, the KT rule per template. (Numerical checks: \cref{app:model:lik}.)
+$\PDir{T}$ is exchangeable and consistent in $n$, and its normaliser does not depend on $D$. For disjoint instance sets the sum has one term, and $P(X_{n+1}=s\mid D)=\sum_\tau\frac{\alpha_\tau+n_\tau}{A+n}\Qg_\tau(s)$; at $\alpha_\tau=\tfrac12$ this is, per template, the Krichevsky--Trofimov (KT) estimator, the Dirichlet($\tfrac12$) predictive rule.
 \end{lemma}
 
 \begin{definition}[$\Lone$: derivation grammar]\src{model \S1.5}\label{def:model:lone}
@@ -145,40 +92,26 @@ or applies MP (two children), Gen (one child; a parameter from a geometric law i
 A tree is \emph{valid} if at each MP node the right child concludes (left conclusion $\to B$), the node concluding $B$, and each $\forall$E node's child has root $\forall$. Then $\mu_T(s):=\Pr[\text{valid, conclusion }s]$, $Z_T:=\sum_s\mu_T(s)$ and $P_T(s):=\mu_T(s)/Z_T$.
 \end{definition}
 
-The code length $-\log_2\Pr(\text{tree})$ is a derivation-length prior that counts \emph{grammar choices}, not the symbols of the formulas; the two can differ exponentially (\cref{prop:time:lonesize}).
+Subscripted $\alpha_\bullet$ are rule probabilities; the Dirichlet parameter is $\alpha$ or $\alpha_\tau$. The code length $-\log_2\Pr(\text{tree})$ counts \emph{grammar choices}, not the symbols of the formulas; the two can differ exponentially (\cref{prop:time:lonesize}).
 
-\begin{lemma}[$\Lone$ is proper; support]\status{(a) proved, except the extinction criterion (known); (b), (c) proved; computed}\src{model Lemma 1.7}\label{lem:model:lone}
+\begin{lemma}[$\Lone$ is proper; support]\status{proved; extinction criterion known; computed}\src{model Lemma 1.7}\label{lem:model:lone}
 (a) Let $\Qg$ be uniformly subcritical. The tree is finite a.s.\ iff $m\le1$ \citep[Ch.~I; numbering not checked]{athreya1972branching}; for $m<1$ it has $1/(1-m)$ derivation nodes in expectation; for $m>1$ it is infinite with probability $1-q>0$, $q$ the least root of $q=(\alpha_{\mathrm{ax}}+\alpha_{\mathrm{lg}})+(\alpha_{\mathrm{Gen}}+\alpha_{\forall\mathrm E})q+\alpha_{\mathrm{MP}}q^2$.
-(b) $Z_T\ge1-\alpha_{\mathrm r}>0$, so $P_T$ is a probability whose normaliser does not depend on the data.
-(c) If all rule probabilities and weights are positive, $\Qg$ has full support and \emph{parameters are admissible} (in logical-axiom instances, $\forall$E terms and Gen), then $\operatorname{supp}P_T=\Th(T)$. Without parameters Gen is vacuous, and for example $\forall x(R(x)\to R(x))$ has no tree. Mean sizes and the extinction probability are checked numerically (\cref{app:model:lik}).
+(b) $Z_T\ge1-\alpha_{\mathrm r}>0$ for $T\ne\emptyset$, and $Z_\emptyset\ge\alpha_{\mathrm{lg}}$; so, when $Z_T>0$, $P_T$ is a probability whose normaliser does not depend on the data.
+(c) If all rule probabilities and weights are positive, $\Qg$ has full support and \emph{parameters are admissible} (in logical-axiom instances, $\forall$E terms and Gen), then $\operatorname{supp}P_T=\Th(T)$. Without parameters Gen is vacuous, and for example $\forall x(R(x)\to R(x))$ has no tree.
 \end{lemma}
 
-\begin{definition}[Variants]\src{model \S1.5; universal \S1.5; pa Def 0.3; experiments \S1.7; model Ex 3.6}\label{def:model:variants}
-\begin{itemize}[leftmargin=*,itemsep=1pt]
-\item $\Ltwo$: $\Lone$ with citation forced at depth $d$; support $\Th_{\le d}(T)$, the conclusions of valid trees of depth $\le d$.
-\item $\Lsig$: $\mu^\sigma_T(s):=\sum_{\pi\text{ valid, concluding }s}\Pr(\pi)e^{-\kappa|\pi|}$, $\kappa>0$, $|\pi|$ the total symbol size of the tree's conclusions; $P^\sigma_T:=\mu^\sigma_T/Z^\sigma_T$.
-\item $\Lmax$ (two-part, Viterbi): $V_T(s):=$ the largest probability of a single valid tree concluding $s$ (under $\Lzero$: of a single citation).
-\item $\Lsch$ (pa; \cref{def:pa:lsch}): a computable two-part code over $\CND$ derivations with $\beta$ bits per \emph{written symbol} (\cref{app:model:calculi}); reported values are upper bounds. It is a two-part form of $\Lsig$, not of plain $\Lone$. $\Lnaive$ writes each formula out at the instance.
-\item $\Lcl$ (universal): as $\Lzero$, but a universal sentence $\forall\bar x\chi$ is cited through its instances $\chi(\bar t)$.
-\item $\Lsel$ (stream filter; universal): $P_T(s\mid S)=P_T(s)/P_T(S)$ for $s\in S$, a set known to contain every datum.
-\item $\Lselc$ (per-citation rejection; experiments): $\sum_iw_ia_i(s)/c_i$, with $a_i(s)$ the probability that a chain from component $i$ ends in $s$ and $c_i$ that it ends in $S$.
-\item Noise mixtures (universal): $P^\eta_T:=(1-\eta)P_T+\eta N$, $N$ a fixed full-support law, $\eta\in(0,1)$.
-\item $\Leps$ (pa): $(1-\varepsilon)P_T(s)+\varepsilon\mu_0(s)[T\nvdash_k\neg s]$, $\mu_0$ fixed, $\nvdash_k$ a bounded refutation search; a sub-probability whose mass depends on $T$, not on the data.
-\item $\Leq$ (model Ex~3.6): $\mu_T/Z_T$ for the equational grammar of \cref{tab:model:calculi}, terms of size $\le N$.
-\end{itemize}
+\begin{definition}[Variants]\src{model \S1.5, Ex 3.6; universal \S1.5; pa Def 0.3; experiments \S1.7}\label{def:model:variants}
+$\Ltwo$: $\Lone$ with citation forced at depth $d$; support $\Th_{\le d}(T)$, the conclusions of valid trees of depth $\le d$.
+$\Lsig$: $\mu^\sigma_T(s):=\sum_{\pi\text{ valid, concluding }s}\Pr(\pi)e^{-\kappa|\pi|}$, $\kappa>0$, $|\pi|$ the total symbol size of the tree's conclusions; $P^\sigma_T:=\mu^\sigma_T/Z^\sigma_T$, a probability with a data-independent normaliser and the support of $\Lone$ (\cref{lem:model:lsig}).
+$\Lmax$ (two-part, Viterbi): $V_T(s):=$ the largest probability of a single valid tree concluding $s$ (under $\Lzero$: of a single citation).
+$\Lsch$, $\Lnaive$ (\cref{def:pa:lsch}): two-part codes over $\CND$ derivations with $\beta$ bits per \emph{written symbol}, a two-part form of $\Lsig$, not of plain $\Lone$.
+$\Lcl$: as $\Lzero$, but a universal sentence $\forall\bar x\chi$ is cited through its instances $\chi(\bar t)$.
+$\Lsel$ (stream filter): $P_T(s\mid S)=P_T(s)/P_T(S)$ for $s\in S$, a set known to contain every datum.
+$\Lselc$ (per-citation rejection): $\sum_iw_ia_i(s)/c_i$, with $a_i(s)$ the probability that a chain from component $i$ ends in $s$ and $c_i$ that it ends in $S$; it equals $\Lsel$ for one-component theories only (\cref{rem:model:sel}).
+Noise mixtures: $P^\eta_T:=(1-\eta)P_T+\eta N$, $N$ a fixed full-support law, $\eta\in(0,1)$.
+$\Leps$: $(1-\varepsilon)P_T(s)+\varepsilon\mu_0(s)[T\nvdash_k\neg s]$, $\mu_0$ fixed, $\nvdash_k$ a bounded refutation search; a sub-probability whose mass depends on $T$, not on the data.
+$\Leq$: $\mu_T/Z_T$ for an equational grammar (\cref{app:model:calculi}), terms of size $\le N$.
 \end{definition}
-
-\begin{lemma}[$\Lsig$ is proper]\status{proved}\src{model \S1.5}\label{lem:model:lsig}
-$0<Z^\sigma_T\le Z_T\le1$; so $\Lsig$ is a probability with a data-independent normaliser and the support of $\Lone$.
-\end{lemma}
-
-\begin{remark}[Two selection-aware likelihoods]\status{proved}\src{experiments \S1.7 (referee m8)}\label{rem:model:sel}
-$\Lsel$ and $\Lselc$ coincide for one-component theories and differ for mixtures ($\sum_iw_ia_i/\sum_iw_ic_i$ against $\sum_iw_ia_i/c_i$). \Cref{prop:univ:B2} uses $\Lsel$; experiments E1 and E6 use $\Lselc$, for which multi-component pool members are a modelling choice (\cref{rem:univ:B2cit}).
-\end{remark}
-
-\Cref{tab:model:likelihoods} in the appendix lists all these likelihoods with their normalisers, whether they have the size principle (\cref{sec:model:size}), and each track's name for them.
-
-
 % ---------------------------------------------------------------------
 \subsection{H\"anni's scores}\label{sec:model:scores}
 
@@ -188,8 +121,49 @@ H\"anni's working notes \citep{hanni2026notes}\footnote{File \texttt{research/pr
 For labelled data $D=D_+\cup D_-$ (true, false):
 $\Sprove(T;D):=1[T\text{ consistent}]\prod_{s\in D_+}1[T\vdash s]\prod_{s\in D_-}1[T\vdash\neg s]$;
 $\Snc(T;D):=1[T\cup D_+\cup\neg D_-\text{ consistent}]$;
-$\Sg(T;D):=\Snc(T;D)\prod_{s\in D_+}g(\ell_T(s))$, with $\ell_T(s)$ the size of a shortest derivation ($\infty$ if none), $g$ non-increasing and $g_\infty:=g(\infty)\in[0,1)$. The posterior is $\pi(T)S(T;D)$. These are scores, not likelihoods: $\sum_DS(T;D)\ne1$ and depends on $T$. Track universal's $S_{\mathrm{nc},\beta}$ equals $\beta^n\Sg$ with $g\equiv1$ on provable data and $g_\infty=1/\beta$. Track pa's $\Leps$ is the noisy form: $\varepsilon=1$ gives $\Snc$ up to the factor $\mu_0(D)$, common to all theories, and $\varepsilon\to0$ moves towards $\Sprove$.
+$\Sg(T;D):=\Snc(T;D)\prod_{s\in D_+}g(\ell_T(s))$, with $\ell_T(s)$ the size of a shortest derivation ($\infty$ if none), $g$ non-increasing and $g_\infty:=g(\infty)\in[0,1)$. The posterior is $\pi(T)S(T;D)$. These are scores, not likelihoods: $\sum_DS(T;D)\ne1$ and depends on $T$. For $\beta>1$, the score $S_{\mathrm{nc},\beta}$ of \cref{sec:univ} equals $\beta^n\Sg$ with $g\equiv1$ on provable data and $g_\infty=1/\beta$; $S_{\mathrm{nc},1}=\Snc$. The noisy likelihood $\Leps$ (\cref{def:model:variants}) is related but not equal: at $\varepsilon=1$ it is $\mu_0(D)\prod_{s\in D}[T\nvdash_k\neg s]$, a per-datum, bounded-search relaxation of $\Snc$ on positive data, which equals $\Snc$ up to the common factor $\mu_0(D)$ only when joint consistency of $T\cup D$ reduces to non-refutation of each datum within $k$ steps; as $\varepsilon\to0$ it tends to the generative $P_T$, whose support ($\Lone$, parameters admissible) is $\Th(T)$.
 \end{definition}
+
+% ---------------------------------------------------------------------
+\subsection{H\"anni's trichotomy}\label{sec:sound:tri}
+
+His notes also give each sentence ``a p(true/\allowbreak false/\allowbreak independent)'' and ask three questions about it.
+
+\begin{definition}[Belief, disbelief, independence]\src{model \S7; universal \S1.6}\label{def:sound:tri}
+For a posterior $\pi_D$ on a countable class, a sentence $s$ and $\vdash$ derivability in $\CK$ without a bound: $\Bel(s):=\pi_D(T\vdash s)$, $\Dis(s):=\pi_D(T\vdash\neg s)$, $\Indep(s):=\pi_D(T\nvdash s\text{ and }T\nvdash\neg s)$, $\Inc:=\pi_D(T\text{ inconsistent})$, $\Pl(s):=1-\Dis(s)$ and $\Belc(s):=\pi_D(T\text{ consistent and }T\vdash s)$.
+\end{definition}
+
+\noindent Bounded $\Th_d(T)$ is not closed under consequence, so \cref{prop:sound:laws}(a), (c), (d) and \cref{prop:sound:belief} need $d=\infty$; \cref{prop:sound:bracket} holds for every $d$ (proofs in \cref{app:sound:tri}).
+
+\begin{proposition}[Basic laws]\status{proved}\src{model Prop 7.1}\label{prop:sound:laws}
+(a) $\Bel(s)+\Dis(s)+\Indep(s)=1+\Inc$; from now on the posterior is on consistent theories, so the three sum to~1. (b) $\Dis(s)=\Bel(\neg s)$; $\Bel(\top)=1$, $\Bel(\bot)=0$; $\Pl(s)=\Bel(s)+\Indep(s)$. (c) If $s\vdash s'$ then $\Bel(s)\le\Bel(s')$. (d) If $\vdash\neg(s\wedge s')$ then $\Bel(s\vee s')\ge\Bel(s)+\Bel(s')$.
+\end{proposition}
+
+\begin{example}[Renormalising is incoherent]\status{proved; computed}\src{model Ex 7.4}\label{ex:sound:renorm}
+H\"anni's first question proposes to ``get true/false by either just removing the independent fraction and renormalizing''; this is incoherent in general, as he later suspects. Let $R(s):=\Bel(s)/(\Bel(s)+\Dis(s))$. With atoms $a,b$ and theories $\{a\}$, $\{b\}$, $\{\neg(a\wedge b)\}$ of posterior $\tfrac13$ each, $R(a)=R(b)=1$ but $R(a\wedge b)=0$; no probability does this.
+\end{example}
+
+\begin{example}[The 50/50 rule is incoherent]\status{proved; computed}\src{model Ex 7.5}\label{ex:sound:fifty}
+His second proposes to ``turn the independent fraction into 50/50'' and expects ``the downside of not giving coherent probabilities usually''; confirmed, with an exact criterion in \cref{prop:sound:fiftyfifty}. Let $F_{1/2}(s):=\Bel(s)+\tfrac12\Indep(s)$. Already for the empty theory over atoms $b,c$: $F_{1/2}(b)=F_{1/2}(b\wedge c)=F_{1/2}(b\wedge\neg c)=\tfrac12$, while coherence needs $P(b\wedge c)+P(b\wedge\neg c)=P(b)$.
+\end{example}
+
+\begin{proposition}[When the 50/50 rule is coherent]\status{proved; computed}\src{model Prop 7.6}\label{prop:sound:fiftyfifty}
+Over finitely many propositional atoms, $F_{1/2}$ is coherent (equal to some probability on valuations, on every sentence) iff every theory of positive posterior mass has at most two models.
+\end{proposition}
+
+\begin{proposition}[Bel is a belief function]\status{proved; framework known}\src{model Prop 7.2}\label{prop:sound:belief}
+For all sentences $s_1,\dots,s_k$, $\ \Bel(s_1\vee\dots\vee s_k)\ge\sum_{\emptyset\ne I\subseteq[k]}(-1)^{|I|+1}\Bel(\bigwedge_{i\in I}s_i)$. So $\Bel$ is a totally monotone capacity on the Lindenbaum algebra, with focal elements $\mathrm{Mod}(T)$, and $\Pl$ is its plausibility \citep{shafer1976mathematical}.
+\end{proposition}
+
+\begin{proposition}[Coherent bracketing]\status{proved}\src{model Prop 7.3}\label{prop:sound:bracket}
+There is a probability $P$ on complete consistent theories with $\Bel(s)\le P(s)\le\Pl(s)$ for every $s$.
+\end{proposition}
+
+\noindent So his third, ``hmm maybe this motivates not removing the independent fraction?'', gets a yes: $(\Bel,\Pl)$ is a coherent lower and upper probability. Like the semimeasure he mentions, it keeps the mass on ``undecided'' (the convention under which \cref{thm:time:equiv} holds with a constant); a coherent point value would need a distribution over the completions of each theory.
+
+\begin{remark}[How the likelihood shapes $\Indep$]\status{proved for ground $\psi$; proof sketch when $\psi$ is generated by a schema}\src{model \S7}\label{rem:sound:indep}
+Let $\psi$ be independent of the data. Under H\"anni's 0/1 scores the posterior odds of $T^*\cup\{\psi\}$ against $T^*$ stay at their prior value (\cref{prop:model:whichsize}(b)). Under $\Lzero$ and $\Lone$ a theory that proves \emph{and generates} $\psi$ loses mass while $\psi$ never appears: polynomially with Dirichlet weights (\cref{prop:ident:spare}), exponentially with fixed weights (\cref{lem:model:size}). So that part of $\Bel(\psi)$ falls (all of it under $\Lone$, parameters admissible), and $\Indep(\psi)$ grows if the mass moves to theories that neither prove nor refute $\psi$.
+\end{remark}
 
 % ---------------------------------------------------------------------
 \subsection{The size principle}\label{sec:model:size}
@@ -197,47 +171,32 @@ $\Sg(T;D):=\Snc(T;D)\prod_{s\in D_+}g(\ell_T(s))$, with $\ell_T(s)$ the size of 
 \begin{lemma}[Size principle, exact form]\status{proved; computed}\src{model Lemma 1.8 (c1); universal Thm U4(1)}\label{lem:model:size}
 Let $P^*,P$ be probabilities on a countable $\mathcal S$, $\varepsilon:=P(\mathcal S\setminus\operatorname{supp}P^*)<1$ and $\tilde P:=P(\cdot\mid\operatorname{supp}P^*)$.
 (a) $\KL(P^*\|P)=\KL(P^*\|\tilde P)+\ln\frac1{1-\varepsilon}\ge\ln\frac1{1-\varepsilon}$.
-(b) On data in $\operatorname{supp}P^*$, $P(D)=(1-\varepsilon)^n\tilde P(D)$, and $\Ex_{P^*}[\tilde P(D)/P^*(D)]=1$.
-Computed: for $\{z+0=z\}$ against $\{z_1+0=z_2\}$, (a) holds to $10^{-9}$, and the simulated per-datum log-ratio $3.94$ nats matches $\KL=3.894$ nats.
+(b) On data in $\operatorname{supp}P^*$, $P(D)=(1-\varepsilon)^n\tilde P(D)$, and $\Ex_{P^*}[\tilde P(D)/P^*(D)]=1$. Computed checks: \cref{app:model:size}.
 \end{lemma}
 
-A hypothesis that puts mass $\varepsilon$ outside the data's support loses at least $\ln\frac1{1-\varepsilon}$ nats per datum: the size principle \citep{tenenbaum2001generalization}. \Cref{thm:univ:size} states it for sub-probabilities.
+So a hypothesis that puts mass $\varepsilon$ outside the data's support loses at least $\ln\frac1{1-\varepsilon}$ nats per datum: the size principle \citep{tenenbaum2001generalization} (for sub-probabilities: \cref{thm:univ:size}).
 
 \begin{proposition}[Which likelihoods have the size principle]\status{proved}\src{model Prop 1.9}\label{prop:model:whichsize}
 (a) $\Lzero$, $\Lone$, $\Ltwo$ and $\Lsig$ have it: each $P_T$ is a probability on $\mathcal S$ with a data-independent normaliser, so \cref{lem:model:size} applies to every $T$ that puts mass outside the data law's support (under $\Lzero$ with full-support $\Qg$: every $T$ with $\bigcup\inst(T)\not\subseteq\operatorname{supp}P^*$).
-(b) H\"anni's scores do not. Let $\Th(T)\subseteq\Th(T')$. Then $\Snc(T')\le\Snc(T)$. If $T'$ is consistent with the labelled data, $\Sprove(T')\ge\Sprove(T)$; if moreover $\bigcup\inst(T)\subseteq\bigcup\inst(T')$, $\Sg(T')\ge\Sg(T)$. So if $\psi\notin\Th(T^*)$ and $T^*\cup\{\psi\}\cup D_+\cup\neg D_-$ is consistent, the posterior odds of $T^*\cup\{\psi\}$ against $T^*$ never fall below the prior odds under $\Sprove$ or $\Sg$, and equal them under $\Snc$.
-(c) Generative likelihoods penalise that strengthening ($\psi$ ground): exactly by $(1-w_\psi)^n$ under $\Lzero$ with fixed weights, on data not containing $\psi$; at rate at least $\ln\frac1{1-\alpha_{\mathrm{ax}}w_\psi}$ nats per datum under $\Lone$; like $n^{-\alpha}$ with Dirichlet weights (\cref{prop:ident:spare}).
+(b) H\"anni's scores do not. Let $\Th(T)\subseteq\Th(T')$. Then $\Snc(T')\le\Snc(T)$. If $T'$ is consistent with the labelled data, $\Sprove(T')\ge\Sprove(T)$; if moreover $\bigcup\inst(T)\subseteq\bigcup\inst(T')$, $\Sg(T')\ge\Sg(T)$. So if $\psi\notin\Th(T^*)$ and $T^*\cup\{\psi\}\cup D_+\cup\neg D_-$ is consistent, the posterior odds of $T^*\cup\{\psi\}$ against $T^*$ never fall below the prior odds under $\Sprove$ or $\Sg$, and equal them under $\Snc$. The consistency hypothesis is needed ($\psi=\forall xR(x)$, $T^*=\emptyset$, $D_+=\{\neg R(0)\}$).
+(c) Generative likelihoods penalise that strengthening ($\psi$ ground): exactly by $(1-w_\psi)^n$ under $\Lzero$ with fixed weights ($T^*$'s weights scaled by $1-w_\psi$), on data not containing $\psi$; at rate at least $\ln\frac1{1-\alpha_{\mathrm{ax}}w_\psi}$ nats per datum under $\Lone$; like $n^{-\alpha}$ with Dirichlet weights (\cref{prop:ident:spare}).
 \end{proposition}
 
-The consistency hypothesis in (b) is needed ($\psi=\forall xR(x)$, $T^*=\emptyset$, $D_+=\{\neg R(0)\}$; referee m9).
-
-\begin{remark}[H\"anni's graded score, normalised]\status{proved; refuted (old sentence); computed}\src{model Rem 1.10}\label{rem:model:graded}
-Let $\ell_T(s)$ be the least length in bits of an explicit derivation of $s$ from $T$ in a prefix-free code that writes every formula out, $g(\ell):=2^{-\kappa\ell}$, $\kappa\ge1$, $g_\infty=0$. Then $Z_T:=\sum_s2^{-\kappa\ell_T(s)}\le1$ and $P^g_T:=2^{-\kappa\ell_T}/Z_T$ is a probability; with $g_\infty>0$ the normaliser is infinite. Like $\Lsig$, $P^g_T$ charges the \emph{written} length of the derivation, while $\Lone$ charges only grammar choices (\cref{prop:time:codelength}). If $\bigcup\inst(T)\subseteq\bigcup\inst(T')$, then $Z_{T'}\ge Z_T$, so $P^g_{T'}(s)\le P^g_T(s)$ whenever $\ell_{T'}(s)=\ell_T(s)$. H\"anni's remark that one can ``think of this as there being some model for how the statements get generated'' holds once the score is divided by $Z_T$ and $g_\infty=0$.
-\emph{Refuted} (referee m3): the pre-referee sentence ``a stronger theory has more short theorems, hence a larger $Z_T$, hence a smaller $P_T(s)$ on each datum''. For $T=\{a,a\to b\}$ and $T'=T\cup\{b\}$ (same theorems, nested instances) and $\kappa=1$, $P_T(b)=0.032$ and $P_{T'}(b)=0.346$ (10 sentences gain, 36 lose); under $\Ltwo$, $0.016$ and $0.24$. A datum whose shortest derivation gets shorter can gain.
+\begin{remark}[H\"anni's graded score, normalised]\status{proved; refuted (old sentence); computed}\src{model Rem 1.10; referee m3 (r6)}\label{rem:model:graded}
+Let $\ell_T(s)$ be the least length in bits of an explicit derivation of $s$ from $T$ in a prefix-free code that writes every formula out, $g(\ell):=2^{-\kappa\ell}$, $\kappa\ge1$, $g_\infty=0$. Then $Z_T:=\sum_s2^{-\kappa\ell_T(s)}\le1$ and $P^g_T:=2^{-\kappa\ell_T}/Z_T$ is a probability; with $g_\infty>0$ the normaliser is infinite. Like $\Lsig$, $P^g_T$ charges the \emph{written} length of the derivation (\cref{prop:time:codelength}). If $\bigcup\inst(T)\subseteq\bigcup\inst(T')$, then $Z_{T'}\ge Z_T$, so $P^g_{T'}(s)\le P^g_T(s)$ whenever $\ell_{T'}(s)=\ell_T(s)$. H\"anni's remark that one can ``think of this as there being some model for how the statements get generated'' holds once the score is divided by $Z_T$ and $g_\infty=0$.
+\emph{Refuted} (\cref{app:ver:corrections}): the pre-referee sentence ``a stronger theory has more short theorems, hence a larger $Z_T$, hence a smaller $P_T(s)$ on each datum''. For $T=\{a,a\to b\}$ and $T'=T\cup\{b\}$ (same theorems, nested instances) $b$ has a one-citation derivation from $T'$ and needs MP from $T$, so $P^g_{T'}(b)/P^g_T(b)=2^{\kappa(\ell_T(b)-\ell_{T'}(b))}Z_T/Z_{T'}\ge2^{\kappa(\ell_T(b)-\ell_{T'}(b))}Z_T$, which exceeds $1$ once $\kappa(\ell_T(b)-\ell_{T'}(b))>\log_2(1/Z_T)$: a datum whose shortest derivation gets shorter can gain.
 \end{remark}
 
 % ---------------------------------------------------------------------
 \subsection{Computing the likelihood}\label{sec:model:compute}
 
-\begin{proposition}[What can be computed]\status{(a) proved; (b), (c) proved, given Church's theorem (known)}\src{model Prop 2.7}\label{prop:model:compute}
+\begin{proposition}[What can be computed]\status{proved; (b), (c) given Church's theorem (known)}\src{model Prop 2.7}\label{prop:model:compute}
 Assume $\Lone$ with $m<1$, $\Qg$ uniformly subcritical, computable grammar probabilities and weights, and the hypotheses of \cref{lem:model:lone}(c).
 (a) $\mu_T(s)$, $Z_T$ and $P_T(s)$ are computable reals, uniformly in $(T,s)$.
 (b) $\{(T,s):P_T(s)>0\}=\{(T,s):s\in\Th(T)\}$ is recursively enumerable and, for a language with a binary relation symbol, undecidable already for $T=\emptyset$ \citep{church1936note,turing1936computable}.
 (c) No algorithm decides whether a theory has likelihood $0$ on a datum. For a finite class, the posterior $\pi_n(T)$ is a computable real whenever it is defined, but which theories it has excluded is undecidable.
 \end{proposition}
 
-\begin{proof}[Proof idea]
-(a) The whole tree, bodies included, satisfies \cref{lem:model:grammar}(d); finitely many trees have at most $N$ grammar nodes, the rest have probability $O(1/N)$, and $Z_T\ge1-\alpha_{\mathrm r}$. (b) \Cref{lem:model:lone}(c) and Church's theorem (\cref{app:model:compute}).
-\end{proof}
+\noindent The proof enumerates trees, exponentially many in $1/\epsilon$ for precision $\epsilon$, and nothing better is known (\cref{app:model:compute}); later sections restrict the calculus ($\Cch{J}$, $J\le2$) or score explicit derivations ($\Lsch$).
 
-\emph{Cost.} Precision $\epsilon$ needs all trees with up to $N\approx C_\nu/\epsilon$ grammar nodes ($C_\nu$ bounds their mean number), exponentially many in $N$; a likelihood ratio needs $\epsilon$ below likelihoods that are exponentially small in the datum's least tree size (\cref{prop:time:codelength}). No better general algorithm and no lower bound are known. The tracks restrict the calculus ($\Cch{J}$, $J\le2$) or score explicit derivations ($\Lsch$).
-
-\begin{proposition}[The maximum is not the sum]\status{proved}\src{model Prop 2.8}\label{prop:model:max}
-Let $\tau:=\forall x\forall y\,F(x,y)$ ($F:\iota^2\to o$), $\tau':=\forall x\forall y\,F(y,x)$, $T_1:=\{\tau\}$, $T_2:=\{\tau,\tau'\}$ with weights $\tfrac12,\tfrac12$, and $\Qg$ symmetric in the holes. Under $\Lzero$, $P_{T_2}=P_{T_1}$, so the posterior odds equal the prior odds at every $n$. Under $\Lmax$, $V_{T_2}(s)=\tfrac12V_{T_1}(s)$ on every instance, so the two-part odds are $(\pi(T_2)/\pi(T_1))\,2^{-n}\to0$: the maximum breaks a tie inside the generator class.
-\end{proposition}
-
-\begin{proof}[Proof idea]
-$\Qg_\tau=\Qg_{\tau'}$, and each instance has one citation per template (\cref{app:model:compute}).
-\end{proof}
-
-Here the theorems agree; whether the maximum can change a \emph{deductive} limit is open. Track universal's $\Lmax$ and track pa's codes are of this two-part kind.
+The two-part $\Lmax$ is not the sum: the maximum can break a tie inside the generator class, with two-part odds $(\pi(T_2)/\pi(T_1))\,2^{-n}\to0$ between theories of equal $\Lzero$ law and equal theorems (\cref{prop:model:max}, in \cref{app:model:compute}); whether it can change a \emph{deductive} limit is open. The codes of \cref{sec:pa} are also two-part.
