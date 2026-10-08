@@ -1,0 +1,147 @@
+"""Writes ../issues-math-A.json (the issue list of review-math-A.md) as valid JSON."""
+import json, os
+
+I = []
+def add(id_, file, loc, sev, problem, evidence, fix):
+    I.append(dict(id=id_, file=file, label_or_line=loc, severity=sev, problem=problem, evidence=evidence, fix=fix))
+
+add("MA-01", "paper/sections/sound.tex", "line 131 (text after rem:sound:e4)", "fatal",
+    "Claims the E4 (C1) verifier is 'sound for the data's actual generator (a two-schema theory with fixed weights, covered by thm:sound:shrink)'. thm:sound:shrink covers only a verifier with a shrinking threshold delta_n <= pi(C^Dir_d) delta' R(n,K); the E4 verifier uses a constant threshold delta = 0.05 w*. Claim stronger than the source.",
+    "Source (experiments notes-final §6, finding 2): 'Prop X8(c) applies to it (with its shrinking threshold)' - the qualifier is dropped. Example sound:constant (same section) shows a constant threshold at fixed weights can fail. The queries accepted in C1 (0+0=1, 2+0=3) are theorems of the generator, but that is an observation, not a theorem.",
+    "Replace the parenthesis by: 'a two-schema theory with fixed weights (0.9, 0.1); thm:sound:shrink would cover a verifier with its shrinking threshold, not the constant-threshold verifier of E4, whose accepted queries 0+0=1 and 2+0=3 are theorems of that generator'.")
+
+add("MA-02", "paper/sections/model.tex", "line 191 (def:model:scores)", "fatal",
+    "Asserts 'Track pa's L_eps is the noisy form: eps=1 gives S_nc up to the factor mu_0(D), common to all theories'. False: at eps=1, L_eps(T;D) = mu_0(D) prod_d [T does not refute d within k steps], a per-datum bounded-search test; S_nc = 1[T u D consistent] is a joint, unbounded test.",
+    "Counterexample: atoms d1, d2, T = {not(d1 and d2)}, D = {d1, d2}: T refutes neither datum, so L_eps = mu_0(D) > 0, but S_nc = 0. Also any T refuting a datum only by a derivation longer than k. Inherited from pa notes Def 0.3; no later result uses the identity (footnote § of tab:model:likelihoods and prop:pa:nc use the per-datum form).",
+    "Write: 'eps = 1 gives a per-datum, bounded-search relaxation of S_nc, prod_d [T does not refute d within k], up to mu_0(D)'. Replace 'eps -> 0 moves towards S_prove' by 'eps -> 0 gives the generative P_T, whose support (L1, parameters admissible) is Th(T)'.")
+
+add("MA-03", "paper/sections/model.tex; paper/sections/app-model.tex", "model.tex line 216 (rem:model:graded, 'Refuted'); app-model.tex line 135", "major",
+    "The remark fixes l_T(s) = bits of a prefix-free derivation code, kappa >= 1, hence Z_T <= 1, then quotes the referee's counterexample (kappa=1: P_T(b)=0.032, P_T'(b)=0.346; also kappa=1/2) as if in that setting. r6 computed l as a symbol count (l_T'(b)=1) normalised over a finite universe of 570 formulas, which is not the remark's setting.",
+    "The quoted values imply Z_T' = 2^-1/0.3456 = 1.447 > 1 at kappa=1, contradicting 'Z_T <= 1' in the same remark; at kappa=1/2, Z = 4.10 and 4.74 (scratch/a1_numbers.out). The refutation itself holds in the stated setting: with gamma(#lines), 2-bit rule tags and 2 bits per symbol, l_T'(b)=5, l_T(b)>=23, l_T(a)=5, so P_T(b) <= 2^-18 < 2^-5 <= P_T'(b).",
+    "Label the r6 numbers as 'symbol-size l, normalised over a finite universe (Z may exceed 1)', or replace them by the prefix-code bound P_T(b) <= 2^-18 < 2^-5 <= P_T'(b); drop the kappa=1/2 values.")
+
+add("MA-04", "paper/sections/ident.tex; paper/sections/app-ident.tex", "ident.tex line 140 (prop:ident:spare(c)); app-ident.tex line 160 (sketch)", "major",
+    "Case (c) (inst(sigma) in supp P*, Q_sigma outside the span) claims ln R_n = -(alpha_sigma/2) ln n + O_P(1). The sketch's local quadratic -nIu^2/2 needs I = chi^2(Q_sigma||P*) < infinity; with chi^2 infinite, E ln(1+u(Y-1)) ~ -c u^beta (1<beta<2) and the rate is n^{-alpha/beta}.",
+    "scratch/a4_spare_heavy.py (.out): P*(k) ~ k^-3, Q_sigma(k) ~ k^-gamma, alpha=1/2, exact quadrature, 60 runs, n=1e2..1e6. gamma=2.6 (finite chi^2): slopes -0.269 / -0.228 (claim -0.25). gamma=1.5 (chi^2 infinite, beta=4/3): slopes -0.389 / -0.412 (heuristic -0.375), not -0.25. E5's nested spare has bounded Y=1/q_S, so it is unaffected.",
+    "Add the hypothesis 'sum_s Q_sigma(s)^2/P*(s) < infinity' to (c); remark that without it decay is faster (between n^-alpha and n^-alpha/2); add the condition to open problem 2.")
+
+add("MA-05", "paper/sections/sound.tex; paper/sections/app-sound.tex", "rem:sound:vacuous (sound.tex lines 84-86); app-sound.tex line 80", "major",
+    "Stated for 'Dirichlet weights' generally (Thm sound:avg is stated for L0, L1, L2), but the proof needs w -> P_{T,w} affine (so W_T is an affine slice; 'linear independence allows at most one w*'). Under L1/L2, P_{T,w} = mu_{T,w}/Z_{T,w} is not affine in w.",
+    "app-sound proof: 'The map w -> P_{T,w} is affine'. The source (model Rem 4.5 via Thm 5.1(b'')) is implicitly L0 too.",
+    "Restrict to 'L0, or any likelihood affine in w (the chain C_ch(J))'; say that under L1 the null-or-everything dichotomy holds by real-analyticity but the countability step is not proved.")
+
+add("MA-06", "paper/sections/sound.tex; paper/sections/app-sound.tex", "rem:sound:tight (sound.tex line 41); app-sound.tex line 35", "major",
+    "Claims 'supp P_T' in supp P_T* implies Th_d(T') in Th_d(T*) ... under L1 with parameters admissible'. Under L1, supp = Th(T), so the premise yields only Th(T') in Th(T*); for finite d this does not give Th_d(T') in Th_d(T*).",
+    "T* = {a, a->b}, T' = T* u {b} (ground): supp P_T' = Th(T') = Th(T*) = supp P_T*, but b is in Th_|b|(T') and not in Th_|b|(T*). So under L1 at finite d an IL-type pair (generates only T*'s theorems, proves at level d what T* does not) exists in the template model.",
+    "Restrict the L1 clause to d = infinity in the remark and in the appendix proof.")
+
+add("MA-07", "paper/sections/ident.tex", "line 87 (rem:ident:x5)", "major",
+    "Says 'thm:ident:doob covers the experiments' Dirichlet posteriors only for one-component generators (E1, E4, E6)'. thm:ident:doob assumes setting W: a fixed countable class in which every T carries a fixed i.i.d. law. In E1/E4/E6 the competitors have Dirichlet-integrated (exchangeable, non-i.i.d.) laws, and the pools contain data-dependent members (Mem(D_n), causal-pool theories). The theorem as stated does not apply.",
+    "def:ident:W versus experiments §1.5; E4 setup ('plus Mem(D_n)'), E6 setup ('also ... Mem(D_n)'), experiments §2 (causal pools). For a fixed pool the conclusion follows from the (T,w) argument of the proof of thm:ident:limit(b) with the frequency functional (the one-component P* is an atom of the prior on laws); no consistency theorem covers data-dependent pools.",
+    "Write: 'the argument of thm:ident:doob run on (T,w), as in the proof of thm:ident:limit(b), gives concentration on {(T,w): P_{T,w} = P_T*} for one-component generators and a fixed pool; data-dependent pools are covered by no consistency theorem here, only by the soundness bound of thm:sound:avg (pool version)'.")
+
+add("MA-08", "paper/sections/sound.tex", "line 134 (rem:sound:lumps, 'No contradiction with thm:sound:shrink')", "major",
+    "E2 uses data-dependent causal pools (SeenQ(D_n), trimmed theories) at fixed weights. thm:sound:shrink is stated for a fixed countable class; only thm:sound:avg has a pool version, and thm:sound:avg does not apply at fixed weights. So the cited theorem does not cover E2 as stated.",
+    "thm:sound:shrink statement; pool version only in thm:sound:avg; the source experiments Prop X8(c) states the fixed-weight result 'for any pool R_n, possibly chosen by looking at the data'.",
+    "Add a pool version to thm:sound:shrink (posterior restricted to any R_n containing T*, delta_n <= 2^-bits(T*) R(n,K) delta'; the pathwise argument of the pool version of thm:sound:avg goes through with Z'_n) and cite it in rem:sound:lumps.")
+
+add("MA-09", "paper/sections/app-ident.tex", "line 106 (tab:ident:c2, caption and 'misspecified prediction' row)", "major",
+    "The misspecified predictions (-1.50, 39.5, 480.4, 4920.4, 49351.8) omit +(K-1)/2 = 1.5, which the well-specified row includes; the caption then misattributes the n=100 gap to 'the misspecified expansion is not yet accurate'.",
+    "E[n KL(rhat||p)] = n KL(r||p) + E[n KL(rhat||r)] ~ n KL(r||p) + (K-1)/2. Corrected: -0.003, 40.98, 481.87, 4921.9, 49353.3. Independent Monte Carlo (20000 runs): 0.003+-0.026, 40.970+-0.076, 481.60+-0.24 at n=1e2,1e3,1e4 (scratch/a1_numbers.out). c2_split.py line 100 adds (K-1)/2 only 'if kl == 0'.",
+    "Add (K-1)/2 to the misspecified predictions and replace the caption sentence by 'both predictions include the mean (K-1)/2 of n KL(rhat||r)'.")
+
+add("MA-10", "paper/sections/ident.tex", "line 17 (section intro)", "minor",
+    "'spare templates are never refuted and at best decay polynomially' holds only for Dirichlet weights; with fixed weights spares decay exponentially, (1-w_sigma)^n (rem:ident:sparetotal), and §4.1's setting W is fixed-weight.",
+    "rem:ident:sparetotal: 'With fixed weights the factor is (1-w_sigma)^n'.",
+    "Write 'with Dirichlet weights, spare templates ... decay at best polynomially (exponentially with fixed weights)'.")
+
+add("MA-11", "paper/sections/app-model.tex; paper/sections/ident.tex", "app-model.tex line 86 (tab:model:likelihoods, row P^eta_T 'yes†'); ident.tex line 238 (rem:ident:nearmiss)", "minor",
+    "With full-support noise N (or a full-support channel K), supp P_T* is all of S, so eps = 0 for every competitor and lem:model:size says nothing; 'yes' and 'the size principle holds' are vacuous and mislead.",
+    "lem:model:size defines eps := P(S \\ supp P*); here supp P* = S.",
+    "Mark the row 'vacuous with full-support noise (separation only through KL)' and say so in rem:ident:nearmiss.")
+
+add("MA-12", "paper/sections/sound.tex; paper/sections/app-sound.tex", "line 105 (thm:sound:avg, pool version); app-sound.tex line 115", "minor",
+    "'2^-bits(T*) may be divided by sum_H 2^-bits + 1' is a weakening (the divisor is >= 1). It is needed only when the memorisers are coded outside the experiments' Kraft code, in which case the proof's premise 'C <= 1 (Kraft)' fails for that family. The text leaves both readings open.",
+    "app-sound proof: 'C := sum_F 2^-bits(T) <= 1 (Kraft ...)' and then 'C <= sum_H 2^-bits + 1'.",
+    "State: 'if the memorisers' codes lie outside the template code, C may exceed 1 and the threshold must be delta <= 2^-bits(T*) delta' / (sum_H 2^-bits + 1)'.")
+
+add("MA-13", "paper/sections/ident.tex", "line 98 (rem:ident:memo)", "minor",
+    "'The memoriser class can keep mass exp(-O(ln^2 n))' drops the hypotheses of universal Prop U6 (Laplace-weighted memorisers, geometric numerals).",
+    "universal notes-final line 118: 'Laplace-weighted memorisers under geometric numerals keep >= exp(-O(log^2 n))'.",
+    "Add '(Laplace-weighted memorisers, geometric numerals)'.")
+
+add("MA-14", "paper/sections/model.tex", "line 209 (prop:model:whichsize(c))", "minor",
+    "'exactly by (1-w_psi)^n under L0 with fixed weights' needs T*'s weights scaled by 1-w_psi in T'; the paper's statement omits this.",
+    "model notes Prop 1.9(c): 'psi's weight w_psi, the others scaled by 1-w_psi'; app-model proof uses P_T' = (1-w_psi)P_T* + w_psi[s=psi].",
+    "Add '(T*'s weights scaled by 1-w_psi)'.")
+
+add("MA-15", "paper/sections/sound.tex", "line 184 (rem:sound:indep)", "minor",
+    "'Bel of a sentence psi independent of the data stays at its prior level forever' is not what prop:model:whichsize(b) gives (it gives prior odds of T* u {psi} against T*; Bel is renormalised as theories die). 'So Indep(psi) grows' does not follow, since mass may move to theories refuting psi. The status 'proved' rests partly on the sketch prop:ident:spare(b) for non-ground psi.",
+    "prop:model:whichsize(b) statement; prop:ident:spare (b) is a proof sketch.",
+    "Say 'the posterior odds of T* u {psi} against T* stay at their prior value'; 'Bel(psi) falls; Indep(psi) grows if the mass goes to theories that do not refute psi'; status 'proved for ground psi, sketch otherwise'.")
+
+add("MA-16", "paper/sections/ident.tex", "lines 140-142 (prop:ident:spare (c), (d2))", "minor",
+    "(c) assumes Q_sigma outside the span of T*'s components, (d2) inside their convex hull; 'in the span but outside the hull' is covered by neither.",
+    "Statement of prop:ident:spare.",
+    "Extend (d2) to the span (with w* such that the reparametrised family has a positive density at P*), or list the case as open.")
+
+add("MA-17", "paper/sections/sound.tex", "line 56", "minor",
+    "'in ex:ident:weaker it never accepts forall x(0+x=x)' is too strong; the corollary gives only that the deriving mass tends to 0 (at small n the prior may make it accepted).",
+    "cor:ident:deductive gives a limit statement only.",
+    "Write 'it accepts forall x(0+x=x) at most finitely often'.")
+
+add("MA-18", "paper/sections/model.tex", "line 201 (lem:model:size, 'Computed')", "minor",
+    "Conflates two computations: identity (a) was checked on a truncated universe (30901 terms, KL = 2.618), while 3.894 is the untruncated KL estimated by simulation; 3.94 is quoted only at n=1e4 (3.81, 4.19 at 1e2, 1e3; no standard error).",
+    "research/tracks/model/checks/c1_size_principle.out.",
+    "Write '(a) holds to 1e-9 on the truncated grammar; the simulated per-datum log-ratio of the untruncated grammar is 3.81, 4.19, 3.94 at n = 1e2, 1e3, 1e4, against KL = H(Q) = 3.894'.")
+
+add("MA-19", "paper/sections/sound.tex", "line 38 ('IL's escalation bound ... transfers')", "minor",
+    "Asserted without argument. IL Thm 4.16's bound on invalid escalations needs a REJECT threshold delta_r, which this protocol lacks; only the bound on valid escalations transfers directly.",
+    "IL app-caution.tex proof of thm:caution:bayesesc (factor <= 1-delta_r for invalid escalations); def:sound:protocol has ACCEPT/ESCALATE only.",
+    "State the transferred bound E^+_t <= (ln(1/W*_d) + ln(1/delta''))/delta with the one-line argument (members of C*_d pass every constraint), and note the missing delta_r.")
+
+add("MA-20", "paper/sections/ident.tex", "line 234 (prop:ident:proofs(c))", "minor",
+    "'finer than the Th(T*) that conclusions identify (prop:ident:sep)' cites the result showing that conclusions already separate deductively equivalent theories. True statement: the proof-data generator class is contained in the conclusion-data class; proofs guarantee the instance union, conclusions guarantee only Th(T*).",
+    "prop:ident:sep separates T1={a,b} and T2={a,a->b} from conclusions alone.",
+    "Rephrase as 'proofs guarantee identification of the instance union; conclusions guarantee only Th(T*) (though they often separate more, prop:ident:sep)'.")
+
+add("MA-21", "paper/sections/app-sound.tex", "opening paragraph", "minor",
+    "Unlike app-ident line 11, it does not say which results the model referee checked. Lemma sound:regret, Thms sound:avg and sound:shrink, rem:sound:vacuous, the mechanism of ex:sound:constant and prop:sound:fiftyfifty were added after the referee.",
+    "model notes-final, 'What changed after the referee' (M1) and §7 ('new, referee m4').",
+    "Add the same refereed / added-later sentence as in app-ident.")
+
+add("MA-22", "paper/sections/ident.tex", "line 61 (prop:ident:splits(c))", "minor",
+    "The main text cites AS Prop C.1 without its richness condition (the appendix states it).",
+    "app-ident.tex line 53: '(under its richness condition)'.",
+    "Add '(under AS's richness condition)'.")
+
+add("MA-23", "paper/sections/sound.tex", "line 45 (rem:sound:hyp)", "minor",
+    "The computable-verifier clause needs a finite class and d < infinity (decidable Th_d); this is stated only in the appendix.",
+    "app-sound.tex 'The computable verifier': 'For a finite class and d<infinity ...'.",
+    "Add 'for a finite class and d < infinity'.")
+
+add("MA-24", "paper/sections/sound.tex", "lines 118-122 (ex:sound:constant and the mechanism paragraph)", "minor",
+    "Does not say that the failure needs eps small enough for the window 1 << n << 1/eps to reach ln 99; for moderate eps the constant threshold did not fail.",
+    "Referee r3: 0 acceptances at eps = 1e-3, 1e-4. Drift alone: max_n[0.5 ln n + 0.5 ln(pi/2) - n eps] = 2.83, 3.98 < ln 99 = 4.60 (scratch/a2_example49.out). Independent re-simulation reproduces 0.967 / 1.000 (fixed w*), 0.013 / 0.010 (prior w*), 0 (shrinking threshold).",
+    "Add 'for eps = 1e-3, 1e-4 no acceptance occurred (r3); the constant threshold fails when T' is close enough to T*'s law that 1 << n << 1/eps is a long window'.")
+
+add("MA-25", "paper/sections/ident.tex", "line 148 (rem:ident:sparetotal)", "minor",
+    "The status 'proved (the sum)' also covers 'about (prior ratio/delta_r)^{1/alpha} data ... in case (b)', which rests on the sketch of prop:ident:spare(b).",
+    "prop:ident:spare(b) is a proof sketch.",
+    "Mark that sentence '(from the sketch (b))'.")
+
+add("MA-26", "paper/sections/model.tex", "line 191 (def:model:scores, S_nc,beta)", "minor",
+    "'S_nc,beta equals beta^n S_g with g = 1 on provable data and g_inf = 1/beta' needs beta > 1, since the definition requires g_inf < 1 (universal allows beta >= 1; beta = 1 is S_nc).",
+    "universal notes-final line 215: 'with beta >= 1'.",
+    "Write 'for beta > 1 (beta = 1 is S_nc)'.")
+
+add("MA-27", "paper/sections/model.tex", "line 152 (lem:model:lone(b))", "minor",
+    "'Z_T >= 1 - alpha_r' fails for T = empty set (a theory citation is then invalid), where only Z >= alpha_lg holds; prop:model:compute(b) uses T = empty set.",
+    "app-model.tex 'Implicit in the notes' after the proof of lem:model:lone.",
+    "State (b) for T nonempty and add 'Z_empty >= alpha_lg' to the lemma.")
+
+out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "issues-math-A.json")
+with open(out, "w") as f:
+    json.dump(I, f, indent=2, ensure_ascii=False)
+print(len(I), "issues written;", sum(1 for x in I if x['severity'] == 'fatal'), "fatal,",
+      sum(1 for x in I if x['severity'] == 'major'), "major,", sum(1 for x in I if x['severity'] == 'minor'), "minor")
