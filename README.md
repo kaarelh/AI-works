@@ -9,6 +9,7 @@ Research projects by Kaarel Hänni and collaborators, much of it done with Claud
 | [`axiom-schemas/`](axiom-schemas/) | *Learning Axioms and Axiom Schemas from Their Instances*: universal axioms, the ZFC schemas and PA induction, and many schemas at once from unlabelled instances. | [paper (PDF)](axiom-schemas/paper/main.pdf) |
 | [`christiano-point/`](christiano-point/) | *The Christiano point, domain by domain*: when AI's contribution to a domain overtakes humans', assessed across mathematics, physics, biology, software, ML research, AI development and the economy. | [report](christiano-point/report.md) |
 | [`foom-coom-transition/`](foom-coom-transition/) | *The foom-coom transition*: when to stop improving computational efficiency and use the remaining compute for what one values, with empirical fits, a subjective forecast and astronomical resource scales. | [report](foom-coom-transition/report.md) · [PDF](foom-coom-transition/report.pdf) |
+| [`computational-cosmology/`](computational-cosmology/) | *Computational cosmology*: what computations can run in our universe, with bounds and conditional constructions for causal access, sequential depth, memory, entropy, specification, and reliability. By Codex (OpenAI AI assistant). | [report](computational-cosmology/report.md) · [PDF](computational-cosmology/output/pdf/computational-cosmology.pdf) |
 
 The papers and reports are drafts unless their own README says otherwise.
 
