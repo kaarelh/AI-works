@@ -1,13 +1,15 @@
 """Score raw outputs.
 
-usage: python3 score.py <rawdir> <out.jsonl>
+usage: python3 score.py <rawdir> <out.jsonl> [<loop_judge_dir>]
 """
 import glob
 import json
+import os
 import re
 import sys
 
 import task_code
+import task_loop
 import task_memo
 import task_sched
 import task_whip
@@ -33,8 +35,15 @@ def score_one(rec):
         s = task_whip.score(text, c)
     elif t == "memo":
         s = task_memo.score(text, c)
-    else:
+    elif t == "code":
         s = task_code.score(text, c)
+    else:  # loop: needs the judge's verdict
+        jp = f"{LOOPJUDGE}/{j['id']}.json" if LOOPJUDGE else None
+        if jp and os.path.exists(jp):
+            s = task_loop.score_from_judgement(json.load(open(jp)), c)
+        else:
+            s = dict(score=float("nan"))
+        s["n_items_regex"] = task_loop.count_items(text)
     u = rec.get("usage") or {}
     od = u.get("output_tokens_details") or {}
     row = dict(id=j["id"], task=t, cond=c, model=j["model"], rep=j["rep"],
@@ -47,8 +56,14 @@ def score_one(rec):
     return row
 
 
+LOOPJUDGE = None
+
+
 def main():
+    global LOOPJUDGE
     rawdir, out = sys.argv[1], sys.argv[2]
+    if len(sys.argv) > 3:
+        LOOPJUDGE = sys.argv[3]
     rows = []
     for p in sorted(glob.glob(rawdir + "/*.json")):
         rec = json.load(open(p))

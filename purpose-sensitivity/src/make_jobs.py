@@ -8,6 +8,7 @@ import json
 import random
 
 import task_code
+import task_loop
 import task_memo
 import task_sched
 import task_whip
@@ -20,8 +21,9 @@ BUILD = {
     "whip": task_whip.build_prompt,
     "memo": task_memo.build_prompt,
     "code": task_code.build_prompt,
+    "loop": task_loop.build_prompt,
 }
-TASKS = list(BUILD)
+TASKS = ["sched", "whip", "memo", "code"]  # 'loop' was added after the main run; request it explicitly
 
 
 def rep_range(s):

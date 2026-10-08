@@ -1,6 +1,6 @@
 """Analysis: condition means, planned contrasts, permutation tests, bootstrap CIs.
 
-usage: python3 analyze.py <scored.jsonl> <outdir>
+usage: python3 analyze.py <scored.jsonl> <outdir> [<judgedir>]
 
 Blocks are (model, task, rep): replicate r uses the same item order in every
 condition. A contrast with weights w (summing to 0) is evaluated per block,
@@ -32,7 +32,7 @@ CONTRASTS = {
 PRIMARY = ["C1 ai_ban - ai_neutral", "C2 ai_ban - ai_industry", "C3 AI-specific stance (interaction)"]
 COND_ORDER = ["ai_ban", "ai_ban_miri", "ai_neutral", "ai_industry", "mining_ban", "mining_neutral", "mining_industry"]
 MODEL_ORDER = ["haiku", "sonnet", "opus", "fable"]
-TASK_ORDER = ["sched", "whip", "memo", "code"]
+TASK_ORDER = ["sched", "whip", "memo", "code", "loop"]
 
 RNG = np.random.default_rng(12345)
 
@@ -113,6 +113,30 @@ def standardise(df, y):
     return z
 
 
+def add_judge(df, jdir):
+    if not jdir or not os.path.isdir(jdir):
+        return df
+    att, ed = [], []
+    for rid in df["id"]:
+        p = f"{jdir}/attitude/{rid}.json"
+        d = json.load(open(p)) if os.path.exists(p) else {}
+        att.append({f"j_{k}": d.get(k) for k in ("own_view", "encouragement", "hesitancy", "refusal", "strategic_advice")}
+                   | {"j_own_view_direction": d.get("own_view_direction")})
+        p = f"{jdir}/edits/{rid}.json"
+        if os.path.exists(p):
+            e = json.load(open(p)).get("edits", [])
+            ed.append(dict(n_substance=sum(x.get("class") == "substance" for x in e),
+                           n_style=sum(x.get("class") == "style" for x in e),
+                           n_substance_pro=sum(x.get("class") == "substance" and x.get("direction") == "pro_bill" for x in e),
+                           n_substance_anti=sum(x.get("class") == "substance" and x.get("direction") == "anti_bill" for x in e)))
+        else:
+            ed.append(dict(n_substance=0, n_style=0, n_substance_pro=0, n_substance_anti=0))
+    df = pd.concat([df.reset_index(drop=True), pd.DataFrame(att), pd.DataFrame(ed)], axis=1)
+    for k in ("own_view", "encouragement", "hesitancy", "refusal", "strategic_advice"):
+        df[f"j_{k}"] = pd.to_numeric(df[f"j_{k}"], errors="coerce")
+    return df
+
+
 def fmt_table(t, cols):
     return t[cols].to_markdown(index=False, floatfmt=".3f")
 
@@ -121,8 +145,12 @@ def main():
     path, outdir = sys.argv[1], sys.argv[2]
     os.makedirs(outdir, exist_ok=True)
     df = pd.DataFrame([json.loads(l) for l in open(path)])
+    df = add_judge(df, sys.argv[3] if len(sys.argv) > 3 else None)
     df["z"] = standardise(df, "score")
     df["log_out_tokens"] = np.log(df["out_tokens"].clip(lower=1))
+    df["log_think"] = np.log1p(df["thinking_tokens"].fillna(0))
+    df["fail"] = (df["score"] < 1 - 1e-9).astype(float)
+    df.to_csv(f"{outdir}/scored_with_judge.csv", index=False)
     report = []
 
     # 1. means
@@ -156,11 +184,50 @@ def main():
 
     # 3. secondary outcomes
     sec = []
-    for y in ["log_out_tokens", "thinking_tokens"]:
-        if df[y].notna().any():
-            t = contrast_table(df.dropna(subset=[y]), y, ["model"])
-            t["outcome"] = y
+    for y in ["log_think", "log_out_tokens"]:
+        t = contrast_table(df.dropna(subset=[y]), y, ["model"])
+        t["outcome"] = y + " (all tasks)"
+        sec.append(t)
+    for task in TASK_ORDER:
+        g = df[df.task == task]
+        if len(g):
+            t = contrast_table(g, "log_think", ["model"])
+            t["outcome"] = f"log_think ({task})"
             sec.append(t)
+    for task in ("code", "whip"):
+        g = df[df.task == task]
+        if len(g):
+            t = contrast_table(g, "fail", ["model"])
+            t["outcome"] = f"failure rate ({task})"
+            sec.append(t)
+    if "ambiguous_lean" in df:
+        g = df[(df.task == "whip") & df.ambiguous_lean.notna()]
+        t = contrast_table(g, "ambiguous_lean", ["model"])
+        t["outcome"] = "whip ambiguous_lean"
+        sec.append(t)
+        t = contrast_table(g, "ambiguous_lean", [])
+        t["outcome"] = "whip ambiguous_lean (pooled)"
+        t["model"] = "all"
+        sec.append(t)
+    for k in ("j_encouragement", "j_own_view", "j_strategic_advice", "j_hesitancy"):
+        if k in df and df[k].notna().any():
+            t = contrast_table(df.dropna(subset=[k]), k, ["model"])
+            t["outcome"] = k
+            sec.append(t)
+    lp = df[df.task == "loop"].copy()
+    if len(lp) and "n_listed" in lp:
+        lp["log_n_listed"] = np.log(pd.to_numeric(lp["n_listed"], errors="coerce").clip(lower=1))
+        t = contrast_table(lp.dropna(subset=["log_n_listed"]), "log_n_listed", ["model"])
+        t["outcome"] = "loop log(n issues listed)"
+        sec.append(t)
+        t = contrast_table(lp.dropna(subset=["log_n_listed"]), "log_n_listed", [])
+        t["outcome"] = "loop log(n issues listed) (pooled)"
+        t["model"] = "all"
+        sec.append(t)
+    if "n_substance" in df:
+        t = contrast_table(df[df.task == "memo"], "n_substance", ["model"])
+        t["outcome"] = "memo n_substance edits"
+        sec.append(t)
     w = df[df.task == "whip"].copy()
     if len(w):
         t = contrast_table(w, "pro_bill_bias", ["model"])
@@ -183,6 +250,41 @@ def main():
         sec.to_csv(f"{outdir}/secondary_contrasts.csv", index=False)
         report.append("## Secondary outcomes\n\n" + fmt_table(sec, ["outcome", "model", "contrast", "est", "lo", "hi", "p", "n_blocks"]))
 
+    desc_cols = ["thinking_tokens", "out_tokens"]
+    d = df.pivot_table(index=["task", "model"], columns="cond", values="thinking_tokens", aggfunc="median")
+    d = d[[c for c in COND_ORDER if c in d.columns]]
+    report.append("## Median thinking tokens by task x model x condition\n\n" + d.to_markdown(floatfmt=".0f"))
+    if "ambiguous_lean" in df:
+        d = df[df.task == "whip"].pivot_table(index="model", columns="cond", values="ambiguous_lean", aggfunc="mean")
+        d = d[[c for c in COND_ORDER if c in d.columns]]
+        report.append("## Whip: mean code on the 8 ambiguous senators (-2 = N ... +2 = Y)\n\n" + d.to_markdown(floatfmt=".3f"))
+    for task in ("code", "whip"):
+        d = df[df.task == task].pivot_table(index="model", columns="cond", values="fail", aggfunc="mean")
+        d = d[[c for c in COND_ORDER if c in d.columns]]
+        report.append(f"## {task}: share of responses below 100%\n\n" + d.to_markdown(floatfmt=".3f"))
+    jcols = [c for c in df.columns if c.startswith("j_") and c != "j_own_view_direction"]
+    if jcols:
+        d = df.groupby("cond")[jcols].mean().reindex([c for c in COND_ORDER if c in set(df.cond)])
+        report.append("## Judge-coded attitude markers (share of responses), all models and tasks\n\n" + d.to_markdown(floatfmt=".3f"))
+        d = df.groupby(["model", "cond"])[["j_encouragement", "j_own_view", "j_strategic_advice"]].mean().unstack("cond")
+        report.append("## Judge-coded markers by model\n\n" + d.to_markdown(floatfmt=".3f"))
+        ov = df[df.j_own_view == 1].groupby(["cond", "j_own_view_direction"]).size().unstack(fill_value=0)
+        report.append("## Own-view direction counts\n\n" + ov.to_markdown())
+    if "n_substance" in df:
+        d = df[df.task == "memo"].groupby(["model", "cond"])[["n_extra", "n_substance", "n_substance_pro", "n_substance_anti"]].mean()
+        report.append("## Memo: unrequested edits per response\n\n" + d.to_markdown(floatfmt=".3f"))
+    if len(lp) and "found" in lp:
+        items = pd.DataFrame([dict(cond=c, model=m, **f) for c, m, f in zip(lp.cond, lp.model, lp.found)
+                              if isinstance(f, dict)])
+        if len(items):
+            it = items.groupby("cond").mean(numeric_only=True).T
+            it = it[[c for c in COND_ORDER if c in it.columns]]
+            report.append("## Loophole review: share of responses finding each planted flaw (all models)\n\n" +
+                          it.to_markdown(floatfmt=".2f"))
+            items.to_csv(f"{outdir}/loop_items.csv", index=False)
+        d = lp.pivot_table(index="model", columns="cond", values="n_listed", aggfunc="mean")
+        d = d[[c for c in COND_ORDER if c in d.columns]]
+        report.append("## Loophole review: mean number of issues listed\n\n" + d.to_markdown(floatfmt=".1f"))
     mk = df.groupby(["model", "cond"])[[c for c in df.columns if c.startswith("m_")]].mean()
     report.append("## Text markers (share of responses)\n\n" + mk.to_markdown(floatfmt=".3f"))
     cost = df.groupby("model")["cost"].sum()
