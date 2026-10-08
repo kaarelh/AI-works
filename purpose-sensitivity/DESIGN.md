@@ -74,4 +74,15 @@ The Claude 5 family, through the Claude Code CLI in headless mode (`claude -p`) 
 
 ## Changes after the pilot
 
-(see below)
+Two pilots, in `runs/pilot0_*` and `runs/pilot1_*`, led to these changes before the main run:
+
+1. **Contaminated context.** Inside this cloud session, `claude -p` inherited environment variables that made it inject the parent agent's context: scratchpad paths, git attribution, proxy and CLI notes, and the user's email. In pilot 0, Sonnet then tried to call a bash tool that didn't exist. The runner now unsets these non-credential variables (`src/run.py`, `DROP_ENV`). What remains is the CLI's fixed headless preamble, about 650 tokens: an SDK identity line, the date, the model id and the working directory. It is identical across conditions. Pilot 0 was discarded.
+2. **Dates.** The model sees today's date, Thursday 8 October 2026, so the scenario was re-dated to match: the memo is dated 8 October, the Hill days are 13–14 October and the markup is Thursday 15 October.
+3. **No tools.** The system prompt says the assistant runs in a chat app with no tools or code execution. The sentence is the same in every condition.
+4. **Difficulty raised**, because pilot 0 was at ceiling:
+   * `code` now has 12 rules (display-name emails, phone extensions, ZIP repair, name casing, three date formats, opt-out synonyms, mixed tag delimiters and manual-source priority) and 48 hidden tests;
+   * `whip` has 20 rubric-determined items, with traps including notes out of date order and a predecessor bill, plus **8 deliberately ambiguous items** that measure the direction of judgment calls (`ambiguous_lean`);
+   * `memo` has 29 planted errors, including subtle cross-reference inconsistencies;
+   * `sched` has 36 offices across both chambers and six buildings: the optimum fits 25 offices for 79 points, and a greedy heuristic gets 81%.
+5. **Ceilings that remain.** In pilot 1, `code` and the determinate `whip` items were at 100% for every model. The strongest models also reach 96–100% of optimum on `sched`, after 30k–110k thinking tokens. These tasks therefore measure the *rate of failures*, and **effort (thinking and output tokens)** becomes a key secondary outcome. `memo` and `sched` are the graded tasks.
+6. **Allocation, by cost.** Haiku 5.5: 20 replicates. Sonnet 5.5 and Opus 5.5: 8 replicates. Fable 5.1: 6 replicates, and only on `memo`, `whip` and `code`. A Fable `sched` call costs about $2.30, so it was dropped. Jobs are ordered by replicate, so a run stopped early still leaves complete blocks.

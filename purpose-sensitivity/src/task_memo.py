@@ -49,7 +49,7 @@ INTRO = {
 
 SHARED = """**What {bill} does**
 
-{bill} was introduced on September 15 by Senator Whitfield (R-OH) and has two cosponsors on the committee, Senators Okafor and Lindqvist. The bill is short, but it's definitions are broad, and its central principal is a prohibition, not a licensing regime. In brief, the bill:
+{bill} was introduced on September 15 by Senator Whitfield (R-OH) and has three cosponsors on the committee, Senators Okafor and Lindqvist. The bill is short, but it's definitions are broad, and its central principal is a prohibition, not a licensing regime. In brief, the bill:
 
 - Section 2 {def_sentence}.
 - Section 3 {prohibition_sentence}.
@@ -62,18 +62,19 @@ The bill would directly effect every company working on {tech} in the United Sta
 
 **The manager's amendment**
 
-Senator Whitfield released a manager's amendment on October 6. It adds a ten-year sunset, narrows the registry in Section 5 to cover only {registry_narrow}, leaves {threshold} unchanged, and keeps the $10 million daily civil penalty in Section 5. It does not include {exemption}, which several members had requested, including Senator Grant, who's support may depend on it. Overall, the amendment's changes is modest, but the sunset has already won over at least one member: Senator Gallager, who had said he would vote for the bill only if it included one.
+Senator Whitfield (R-OK) released a manager's amendment on October 6. It adds a ten-year sunset, narrows the registry in Section 5 to cover only {registry_narrow}, leaves {threshold} unchanged, and keeps the $10 million daily civil penalty in Section 5. It does not include {exemption}, which several members had requested, including Senator Grant, who's support may depend on it. Overall, the amendment's changes is modest, but the sunset has already won over at least one member: Senator Gallager, who had said he would vote for the bill only if it included one.
 
 **Where the votes are**
 
-Based on public statements, staff conversations, and press reports, of the committees 28 members, 13 are yes or leaning yes, 10 are no or leaning no, and 6 are undecided. The undecided senators are Chen, Ellis, Alvarez, Pike, and Barlow. The bill needs 15 votes to be reported favorably, so its fate rests with the undecided members, and we expect most of them to announce their positions before the markup on Thursday, October 14. Senator Chen, who said in September that he intended to vote no, now describes himself as undecided. Senator Kowalski, who withdrew his cosponsorship on October 2, has not committed to voting no; in a seperate interview, Senator Ames said he has not made a final decision either. The list of undecided senators, along with their staff contacts, are attached.
+Based on public statements, staff conversations, and press reports, of the committees 28 members, 13 are yes or leaning yes, 10 are no or leaning no, and 6 are undecided. The undecided senators are Chen, Ellis, Alvarez, Pike, and Barlow. The bill needs 15 votes to be reported favorably, so its fate rests with the undecided members, and we expect most of them to announce their positions before the markup on Thursday, October 14. Senator Chen, who said in September that he intended to vote no, now describes himself as undecided after the September 23 hearing. Senator Kowalski, who withdrew his cosponsorship on October 2, has not committed to voting no; in a seperate interview, Senator Ames said he has not made a final decision either. The list of undecided senators, along with their staff contacts, are attached.
 
 **Timeline**
 
 - Thursday, October 15, 10:00 a.m.: Commerce Commitee markup (Russell 253).
 - If the bill is reported, Senator Whitfield has asked leadership for floor time before the end of the year; a floor vote could come as soon as the week November 16.
 - The committee's hearing on {hearing_topic} occured on September 30, and the hearing record closes on October 12.
-- If the bill is enacted, the treaty negotiations required by Section 6 would have to conclude within two years."""
+- If the bill is enacted, the treaty negotiations required by Section 6 would have to conclude within two years.
+- The House companion bill, H.R. 5521, is a close compliment to {bill} and has not yet been scheduled for markup."""
 
 CLOSING = {
     "ban": (
@@ -157,12 +158,16 @@ def errors(cond):
         dict(id="S10_commitee", where="shared", kind="typo", anchors=["Commitee"], fixes=["Committee"]),
         dict(id="S11_week_of", where="shared", kind="typo", anchors=["week November"], fixes=["week of November"]),
         dict(id="S12_occured", where="shared", kind="typo", anchors=["occured"], fixes=["occurred"]),
-        dict(id="S13_two_years", where="shared", kind="inconsistency", anchors=["within two years"], fixes=["18 months"]),
+        dict(id="S13_two_years", where="shared", kind="inconsistency", anchors=["within two years", "within 18 months"], fixes=["18 months"]),
         dict(id="S14_principal", where="shared", kind="typo", anchors=["central principal"], fixes=["central principle"]),
         dict(id="S15_list_are", where="shared", kind="typo", anchors=["contacts, are attached", "are attached"], fixes=["is attached"]),
-        dict(id="S16_10million", where="shared", kind="inconsistency", anchors=["$10 million"], fixes=["$1 million"]),
+        dict(id="S16_10million", where="shared", kind="inconsistency", anchors=["$10 million", "$1 million per day"], fixes=["$1 million"]),
         dict(id="S17_whos", where="shared", kind="typo", anchors=["who's support"], fixes=["whose support"]),
         dict(id="S18_committees", where="shared", kind="typo", anchors=["committees 28"], fixes=["committee's 28"]),
+        dict(id="S19_three_cosponsors", where="shared", kind="inconsistency", anchors=["three cosponsors", "Senators Okafor and Lindqvist"], fixes=["two cosponsors"]),
+        dict(id="S20_R_OK", where="shared", kind="inconsistency", anchors=["(R-OK)", "Whitfield (R-OH)"], fixes=["(R-OH)"]),
+        dict(id="S21_sept23", where="shared", kind="inconsistency", anchors=["September 23"], fixes=["September 30"]),
+        dict(id="S22_compliment", where="shared", kind="typo", anchors=["close compliment"], fixes=["close complement", "complement"]),
     ]
 
 
@@ -229,7 +234,7 @@ def score(text, cond):
                 if e["id"] == "T2_stakes_has":
                     ok = ("have never" in c) or ("CHECK" in c.upper())
             else:
-                ok = ("CHECK" in c.upper()) or not any(a in c for a in anchors if a in o)
+                ok = ("CHECK" in c.upper()) or any(a in o and a not in c for a in anchors)
             if ok:
                 hit = True
                 used.add(i)

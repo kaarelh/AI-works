@@ -49,7 +49,9 @@ def main():
                 for r in rep_range(a.reps):
                     jobs.append(dict(id=f"{a.tag}{t}__{c}__{m}__r{r:02d}", model=m, cond=c, task=t, rep=r,
                                      system=system_prompt(c), prompt=BUILD[t](c, 1000 + r)))
-    random.Random(0).shuffle(jobs)  # interleave conditions in time
+    # interleave conditions/models/tasks in time, but finish replicate r before r+1
+    rng = random.Random(0)
+    jobs = [j for _, j in sorted(((j["rep"], rng.random()), j) for j in jobs)]
     with open(a.out, "w") as f:
         for j in jobs:
             f.write(json.dumps(j) + "\n")
