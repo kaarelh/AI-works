@@ -1,0 +1,50 @@
+"""Check: which theories had their Dirichlet marginal replaced by bounds (DP too large) in E2, E3, E4(B, C), E6 and
+E7-type runs, and the largest posterior mass they could have had.  Re-evaluates seed 0 of each configuration
+(seeds 0-4 for E2).  Command: python3 check_bounded.py"""
+import os
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(HERE, '..', '..', '..', '..', 'code', 'experiments'))
+import common  # noqa: E402,F401  (sets up paths)
+import bai.posterior as BP  # noqa: E402
+
+found = []
+orig = BP.evaluate
+
+
+def wrapped(*a, **k):
+    out = orig(*a, **k)
+    for r in out:
+        if '_bounded' in r:
+            found.append((tuple(r['_bounded']['names']), r['_bounded']['max_post']))
+    return out
+
+
+BP.evaluate = wrapped
+import e2_pa  # noqa: E402
+import e3_misspec  # noqa: E402
+import e4_ville  # noqa: E402
+import e6_equivalent  # noqa: E402
+for m in (e2_pa, e3_misspec, e4_ville, e6_equivalent):
+    m.evaluate = wrapped
+
+for seed in range(5):
+    e2_pa.run(seed)
+print('E2 (5 seeds): bounded cases', len(found), max([x[1] for x in found] or [0]))
+found.clear()
+for g in ['heavy', 'numerals', 'small', 'skewQ']:
+    for l in ['L0', 'L1']:
+        e3_misspec.run_a((g, l, 0, [8, 32, 128, 512]))
+for g in ['dtrc-motive', 'root-skew', 'deep']:
+    e3_misspec.run_b((g, 0, [16, 64, 256, 1024, 2048]))
+print('E3 (seed 0): bounded cases', len(found), sorted(set(x[0] for x in found)), max([x[1] for x in found] or [0]))
+found.clear()
+for st in ['B', 'C1', 'C2', 'C3']:
+    for l in ['L0', 'L1']:
+        e4_ville.pool_trial((st, l, 0, 256))
+print('E4 B/C (seed 0): bounded cases', len(found), sorted(set(x[0] for x in found)), max([x[1] for x in found] or [0]))
+found.clear()
+for g in ['A_xy', 'M_x', 'S_ab']:
+    e6_equivalent.run((g, 0))
+print('E6 (seed 0): bounded cases', len(found), sorted(set(x[0] for x in found)), max([x[1] for x in found] or [0]))

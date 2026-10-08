@@ -1,0 +1,82 @@
+(a) induction theorems as data: derive in a theory, or memorise (adopt as a ground axiom)?
+    D = bits of the checked derivation; c = one-line citation in the theory with theta added;
+    beta* = (D - c)/|theta| bits per symbol: memorising at the first occurrence is cheaper iff the axiom prior
+    per symbol is below beta* (the track uses LAM = 4.52).
+theory thm    statement                          |th|  lines        D   D(dec)  memorise    D/memo   beta* last line
+T_Ind  snx    Ax.~Sx=x                              7     11    224.6    239.6      38.2       5.9    31.2 tc writes 7
+T_Ind  mul0   Ax.(0*x)=0                            7     14    281.3    302.4      38.2       7.4    39.3 tc writes 7
+T_Ind  add0l  Ax.(0+x)=x                            7     11    220.1    236.6      38.2       5.8    30.5 tc writes 7
+T_Ind  addSl  Aa.Av.(Sa+v)=S(a+v)                  13     23    576.0    612.6      65.3       8.8    43.8 allI writes 1
+T_Ind  comm   Aq.Ax.(x+q)=(q+x)                    11     55   1358.6   1434.4      56.3      24.2   122.9 allI writes 1
+T_Ind  assoc  Aa.Ab.Ax.((a+b)+x)=(a+(b+x))         17     27    793.4    839.1      83.4       9.5    46.3 allI writes 1
+T_CVI  snx    Ax.~Sx=x                              7     49   1385.8   1459.5      38.3      36.2   197.0 tc writes 7
+T_CVI  mul0   Ax.(0*x)=0                            7     52   1429.8   1509.5      38.3      37.3   203.3 tc writes 7
+T_CVI  add0l  Ax.(0+x)=x                            7     49   1381.3   1456.5      38.3      36.1   196.4 tc writes 7
+T_CVI  addSl  Aa.Av.(Sa+v)=S(a+v)                  13     61   2063.6   2156.8      65.5      31.5   158.2 allI writes 1
+T_CVI  comm   Aq.Ax.(x+q)=(q+x)                    11    169   5522.3   5766.0      56.4      97.9   501.4 allI writes 1
+T_CVI  assoc  Aa.Ab.Ax.((a+b)+x)=(a+(b+x))         17     65   2439.6   2543.9      83.5      29.2   143.1 allI writes 1
+T_LNP  snx    Ax.~Sx=x                              7     75   2476.8   2586.0      38.3      64.7   352.9 tc writes 7
+T_LNP  mul0   Ax.(0*x)=0                            7     78   2522.5   2637.7      38.3      65.8   359.4 tc writes 7
+T_LNP  add0l  Ax.(0+x)=x                            7     75   2472.3   2583.0      38.3      64.5   352.2 tc writes 7
+T_LNP  addSl  Aa.Av.(Sa+v)=S(a+v)                  13     87   3523.0   3651.8      65.5      53.8   270.5 allI writes 1
+T_LNP  comm   Aq.Ax.(x+q)=(q+x)                    11    247   9476.1   9820.4      56.4     168.0   860.9 allI writes 1
+T_LNP  assoc  Aa.Ab.Ax.((a+b)+x)=(a+(b+x))         17     91   4081.9   4219.8      83.5      48.9   239.7 allI writes 1
+Every derivation above ends with a tc line that writes the whole theorem (LAM*|theta| bits), or with allI
+lines over a tc line that writes its matrix; so D exceeds the memorisation cost by the cost of all the other lines.
+
+    extra cost of each theorem in T_CVI and T_LNP over T_Ind (upper bounds: Ind is derived from CVI each time):
+      snx     T_CVI  +1161.2   T_LNP  +2252.2
+      mul0    T_CVI  +1148.4   T_LNP  +2241.2
+      add0l   T_CVI  +1161.2   T_LNP  +2252.2
+      addSl   T_CVI  +1487.6   T_LNP  +2947.0
+      comm    T_CVI  +4163.7   T_LNP  +8117.4
+      assoc   T_CVI  +1646.2   T_LNP  +3288.5
+
+    the four theorems of the referee's r6 (recursion conventions; 8 axioms; c = citation with 9 axioms):
+      Q4 in T_left    |th|  7  D  220.1   memorise  31.7 +  6.5   beta*  30.5
+      Q5 in T_left    |th| 13  D  599.8   memorise  58.8 +  6.5   beta*  45.6
+      Q4L in T_right  |th|  7  D  220.1   memorise  31.7 +  6.5   beta*  30.5
+      Q5L in T_right  |th| 13  D  551.4   memorise  58.8 +  6.5   beta*  41.9
+
+(b) lemma reuse: commutativity with its two lemmas derived in-line, or cited after adopting them as axioms
+    comm in T_Ind, lemmas in-line:   55 lines,  1358.6 bits
+    comm in T_Ind + {add0l, addSl}:   23 lines,   504.7 bits   (saving 853.9 bits per use; the two lemmas cost 90.5 bits of prior)
+    so the lemmas are adopted as axioms once comm (or anything using them) occurs 1 time(s).
+
+(c) compressible theorems: instances of a schema form with large motives (seed 41)
+    datum f(phi), phi a random motive with x free; per-datum bits under three hypotheses:
+      derive  = bits of the schematic derivation of f(P) in T_Ind (c1_costs.py) + LAM*|phi| (L1-sch)
+      memo    = LAM*|f(phi)| + citation           (adopt the datum itself as a ground axiom)
+      templ   = citation + LAM*|phi|, plus LAM*|f(P)| of prior once (adopt the template f(P))
+      Ind |phi| =  29  |f(phi)| =  127   derive   137.7   memo   581.0   templ   137.7 (+72 once)   cheapest per datum: derive (= cite Ind)
+      Ind |phi| =  21  |f(phi)| =   94   derive   101.5   memo   431.7   templ   101.5 (+72 once)   cheapest per datum: derive (= cite Ind)
+      Ind |phi| = 109  |f(phi)| =  458   derive   499.6   memo  2078.3   templ   499.6 (+72 once)   cheapest per datum: derive (= cite Ind)
+      Ind |phi| = 429  |f(phi)| = 1779   derive  1947.1   memo  8053.9   templ  1947.1 (+72 once)   cheapest per datum: derive (= cite Ind)
+      CVI |phi| =  19  |f(phi)| =   69   derive  1560.5   memo   318.6   templ    92.4 (+81 once)   cheapest per datum: memo
+      CVI |phi| =  20  |f(phi)| =   72   derive  1565.0   memo   332.2   templ    97.0 (+81 once)   cheapest per datum: memo
+      CVI |phi| = 123  |f(phi)| =  381   derive  2030.9   memo  1730.0   templ   562.9 (+81 once)   cheapest per datum: memo
+      CVI |phi| = 418  |f(phi)| = 1266   derive  3365.4   memo  5733.3   templ  1897.3 (+81 once)   cheapest per datum: derive
+      LNP |phi| =   7  |f(phi)| =   34   derive  2272.2   memo   160.3   templ    38.2 (+86 once)   cheapest per datum: memo
+      LNP |phi| =  21  |f(phi)| =   76   derive  2335.5   memo   350.3   templ   101.5 (+86 once)   cheapest per datum: memo
+      LNP |phi| = 104  |f(phi)| =  325   derive  2711.0   memo  1476.6   templ   476.9 (+86 once)   cheapest per datum: memo
+      LNP |phi| = 400  |f(phi)| = 1213   derive  4050.0   memo  5493.6   templ  1815.9 (+86 once)   cheapest per datum: derive
+    Ind(phi) in T_Ind is a citation, so "derive" is the template row: the schema compresses its instances by a
+    factor of about |Ind(phi)|/|phi|.  For a non-primitive form (CVI, LNP in T_Ind) deriving beats memorising
+    only when the motive is long; adopting the template beats both after one or two uses.
+
+(d) posterior on theorem streams (two-part code as above, uniform citation index log2 #axioms):
+    u=0.0 n=   1  T_Ind         0  T_Ind+lib        63  Q+lib+memorised uses       -10   (relative to T_Ind; MAP: Q+lib+memorised uses)
+    u=0.0 n=  10  T_Ind         0  T_Ind+lib     -4905  Q+lib+memorised uses     -4978   (relative to T_Ind; MAP: Q+lib+memorised uses)
+    u=0.0 n= 100  T_Ind         0  T_Ind+lib    -53132  Q+lib+memorised uses    -53215   (relative to T_Ind; MAP: Q+lib+memorised uses)
+    u=0.0 n=1000  T_Ind         0  T_Ind+lib   -561857  Q+lib+memorised uses   -562036   (relative to T_Ind; MAP: Q+lib+memorised uses)
+    u=0.1 n=   1  T_Ind         0  T_Ind+lib        63  Q+lib+memorised uses       -10   (relative to T_Ind; MAP: Q+lib+memorised uses)
+    u=0.1 n=  10  T_Ind         0  T_Ind+lib     -2999  Q+lib+memorised uses     -2574   (relative to T_Ind; MAP: T_Ind+lib)
+    u=0.1 n= 100  T_Ind         0  T_Ind+lib    -44158  Q+lib+memorised uses    -41517   (relative to T_Ind; MAP: T_Ind+lib)
+    u=0.1 n=1000  T_Ind         0  T_Ind+lib   -513380  Q+lib+memorised uses   -489898   (relative to T_Ind; MAP: T_Ind+lib)
+    u=0.5 n=   1  T_Ind         0  T_Ind+lib        63  Q+lib+memorised uses       -10   (relative to T_Ind; MAP: Q+lib+memorised uses)
+    u=0.5 n=  10  T_Ind         0  T_Ind+lib     -2833  Q+lib+memorised uses     -2141   (relative to T_Ind; MAP: T_Ind+lib)
+    u=0.5 n= 100  T_Ind         0  T_Ind+lib    -32228  Q+lib+memorised uses    -18353   (relative to T_Ind; MAP: T_Ind+lib)
+    u=0.5 n=1000  T_Ind         0  T_Ind+lib   -285950  Q+lib+memorised uses   -147800   (relative to T_Ind; MAP: T_Ind+lib)
+    T_Ind = Q1..Q7 + Ind (PA).  T_Ind+lib has the same theorems as T_Ind, since the library consists of
+    T_Ind-theorems.  Q+lib is Q plus six PA-theorems, a finite subtheory of PA, hence strictly weaker (PA is
+    not finitely axiomatisable).  The memorised-uses variant adds each fresh Ind(phi) as a ground axiom.
