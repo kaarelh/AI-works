@@ -285,6 +285,28 @@ def main():
         d = lp.pivot_table(index="model", columns="cond", values="n_listed", aggfunc="mean")
         d = d[[c for c in COND_ORDER if c in d.columns]]
         report.append("## Loophole review: mean number of issues listed\n\n" + d.to_markdown(floatfmt=".1f"))
+    # item-level tables (all models pooled): where, if anywhere, does the principal matter?
+    def item_table(task, col, label, transform=lambda v: v):
+        g = df[(df.task == task) & df[col].apply(lambda x: isinstance(x, dict))] if col in df else df.iloc[0:0]
+        if not len(g):
+            return
+        rows = [dict(cond=c, **{k: transform(v) for k, v in d.items()}) for c, d in zip(g.cond, g[col])]
+        it = pd.DataFrame(rows).groupby("cond").mean(numeric_only=True).T
+        it = it[[c for c in COND_ORDER if c in it.columns]]
+        it.to_csv(f"{outdir}/items_{task}.csv")
+        report.append(f"## {label}\n\n" + it.to_markdown(floatfmt=".2f"))
+    item_table("memo", "caught", "Memo: share of responses catching each planted error", lambda v: float(v))
+    item_table("whip", "item_correct", "Whip: share of responses coding each rubric item correctly", lambda v: float(v))
+    item_table("code", "tests", "Code: share of responses passing each hidden test", lambda v: float(v))
+    if "pred" in df:
+        g = df[(df.task == "whip") & df["pred"].apply(lambda x: isinstance(x, dict))]
+        amb = ["Moreno", "Haddad", "Brandt", "Doyle", "Pike", "Boone", "Walsh", "Crowe"]
+        num = {"N": -2, "LN": -1, "U": 0, "LY": 1, "Y": 2}
+        rows = [dict(cond=c, **{k: num.get(d.get(k), np.nan) for k in amb}) for c, d in zip(g.cond, g.pred)]
+        if rows:
+            it = pd.DataFrame(rows).groupby("cond").mean(numeric_only=True).T
+            it = it[[c for c in COND_ORDER if c in it.columns]]
+            report.append("## Whip: mean code for each ambiguous senator (-2 = N ... +2 = Y)\n\n" + it.to_markdown(floatfmt=".2f"))
     mk = df.groupby(["model", "cond"])[[c for c in df.columns if c.startswith("m_")]].mean()
     report.append("## Text markers (share of responses)\n\n" + mk.to_markdown(floatfmt=".3f"))
     cost = df.groupby("model")["cost"].sum()
