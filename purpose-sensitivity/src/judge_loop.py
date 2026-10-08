@@ -1,6 +1,6 @@
 """Judge loophole-review responses with Sonnet 5.5: which of the 10 planted flaws each one finds.
 
-usage: python3 judge_loop.py <rawdir> <outdir> [--workers N] [--model sonnet]
+usage: python3 judge_loop.py <rawdir> <outdir> [--workers N] [--model sonnet] [--sample N]
 """
 import argparse
 import glob
@@ -37,6 +37,7 @@ def main():
     ap.add_argument("outdir")
     ap.add_argument("--workers", type=int, default=8)
     ap.add_argument("--model", default="sonnet")
+    ap.add_argument("--sample", type=int, default=0, help="judge only a random sample of this size")
     a = ap.parse_args()
     os.makedirs(a.outdir, exist_ok=True)
     todo = []
@@ -48,6 +49,11 @@ def main():
         out = f"{a.outdir}/{j['id']}.json"
         if not os.path.exists(out):
             todo.append((out, task_loop.judge_prompt(j["cond"], rec["result"] or "")))
+    if a.sample:
+        import random
+        files = sorted(t[0] for t in todo)
+        keep = set(random.Random(0).sample(files, min(a.sample, len(files))))
+        todo = [t for t in todo if t[0] in keep]
     print(len(todo), "to judge", flush=True)
     cost = [0.0]
 
