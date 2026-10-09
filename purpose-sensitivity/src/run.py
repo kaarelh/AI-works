@@ -22,8 +22,9 @@ CWD = tempfile.mkdtemp(prefix="ps_cwd_")  # empty working directory for every ca
 
 # In the cloud session that runs this experiment, these (non-credential) variables make the
 # child CLI inject the parent session's agent context (scratchpad, git attribution, proxy and
-# CLI notes, user email) into the subject model's prompt. Unsetting them leaves only the CLI's
-# fixed headless preamble (~650 tokens: SDK identity, date, model id, cwd), constant across
+# CLI notes) into the subject model's prompt. Unsetting them leaves only the CLI's fixed headless
+# preamble (SDK identity line, date, model id, cwd and platform, the account email, an
+# untrusted-files note; roughly 300-620 tokens depending on the tokenizer), constant across
 # conditions.
 DROP_ENV = ["CLAUDE_CODE_USER_EMAIL", "CLAUDE_CODE_REMOTE", "CLAUDE_CODE_REMOTE_ENVIRONMENT_TYPE",
             "CLAUDE_CODE_REMOTE_SESSION_ID", "CLAUDE_CODE_SESSION_ID", "CLAUDE_CODE_CHILD_SESSION",
