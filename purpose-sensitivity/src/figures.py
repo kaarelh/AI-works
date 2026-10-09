@@ -257,21 +257,56 @@ def fig_loop(df, out):
     plt.close(fig)
 
 
+def fig_loop_v2(L, out, title):
+    panels = [("I6a_foreign_use", "Finds 'foreign use / import\nnot covered' (strict)"),
+              ("P_calibration", "Says a specific loophole is\nweaker than it looks"),
+              ("P_holdback", "Advises holding loopholes back\nso they aren't fixed"),
+              ("P_grandfather_step", "Points out the pre-enactment\ngrandfather step"),
+              ("P_reliance_caveat", "Warns that relying on a\nloophole carries legal risk")]
+    conds = [c for c in COND if c[0] in set(L.cond)]
+    fig, axes = plt.subplots(1, len(panels), figsize=(3.3 * len(panels) + 1.6, 3.6), sharey=True)
+    for j, (k, lab) in enumerate(panels):
+        ax = axes[j]
+        ax.set_yticks(range(len(conds)))
+        ax.set_yticklabels([c[1] for c in conds])
+        ax.invert_yaxis()
+        for i, (c, _, col, mk, fl) in enumerate(conds):
+            x = L[L.cond == c][k].dropna()
+            if len(x):
+                mu, lo, hi = boot_ci(x)
+                dot(ax, i, mu, lo, hi, col, mk, fl)
+        ax.set_xlim(-0.03, 1.03)
+        ax.set_title(lab, loc="left", color=INK, fontsize=9.5)
+        ax.set_xlabel("share of responses")
+    fig.suptitle(title, x=0.01, ha="left", color=INK, fontsize=12)
+    fig.tight_layout(rect=(0, 0, 1, 0.88))
+    fig.savefig(out, dpi=150)
+    plt.close(fig)
+
+
 def main():
     adir, fdir = sys.argv[1], sys.argv[2]
     os.makedirs(fdir, exist_ok=True)
     df = pd.read_csv(f"{adir}/scored_with_judge.csv")
     fig_scores(df, f"{fdir}/fig1_scores.png")
-    cm = pd.read_csv(f"{adir}/pre4_contrasts_by_model.csv")
-    cp = pd.read_csv(f"{adir}/pre4_pooled_contrasts_z.csv")
+    allp = pd.read_csv(f"{adir}/pooled_contrasts_all_analyses.csv")
+    cp = allp[(allp.analysis == "PRIMARY: five tasks") & (allp.scale == "SD")]
+    cm = pd.read_csv(f"{adir}/contrasts_by_model_z.csv")
     fig_forest(cm, cp, f"{fdir}/fig2_contrasts.png",
-               "Planned contrasts on task score, four pre-registered tasks (standardised within model × task)",
+               "Planned contrasts on task score, all five tasks (standardised within model × task)",
                "difference in SD units (95% bootstrap CI); positive = first principal scores higher")
     fig_effort(df, f"{fdir}/fig3_effort.png")
     if "ambiguous_lean" in df:
         fig_lean(df, f"{fdir}/fig4_whip_lean.png")
     fig_attitude(df, f"{fdir}/fig5_attitude.png")
-    fig_loop(df, f"{fdir}/fig6_loop_patterns.png")
+    if os.path.exists(f"{adir}/loop_coded.csv"):
+        L = pd.read_csv(f"{adir}/loop_coded.csv")
+        fig_loop_v2(L, f"{fdir}/fig6_loop_patterns.png",
+                    f"Loophole review, original requests (mean of two blinded coders; all models, n = {L.groupby('cond').size().min()} per principal)")
+    if os.path.exists(f"{adir}/loopc_coded.csv"):
+        L = pd.read_csv(f"{adir}/loopc_coded.csv")
+        fig_loop_v2(L, f"{fdir}/fig7_loop_control.png",
+                    f"Loophole review, WORDING-MATCHED control: identical request text, only the principal differs (n = {L.groupby('cond').size().min()} per principal)")
     print("figures ->", fdir)
 
 

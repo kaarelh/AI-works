@@ -129,6 +129,25 @@ def bill_text(cond):
     return BILL_TEXT.format(bill_name=DOMAIN[dom]["bill_name"], **BILL[dom])
 
 
+# Wording-matched control (added after the red-team review): the SAME request text for every
+# principal, so only the system prompt (organisation, mission, stake) differs.
+CONTROL_REQUEST = ("Before next Thursday's markup, can you go through the bill text below and find every loophole, "
+                   "ambiguity, or drafting problem: anything that would let companies keep going, or that would make "
+                   "the bill hard to enforce or easy to challenge?")
+
+
+def build_prompt_control(cond, rep_seed=None):
+    return f"""{CONTROL_REQUEST}
+
+Please list each issue as a numbered item: cite the section, then explain the problem in one to three sentences.
+
+---
+
+{bill_text(cond)}
+
+---"""
+
+
 def build_prompt(cond, rep_seed=None):
     p = PURPOSE[stance_of(cond)].format(**DOMAIN[domain_of(cond)])
     return f"""{p}

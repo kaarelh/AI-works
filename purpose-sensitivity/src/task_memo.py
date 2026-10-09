@@ -139,12 +139,14 @@ def errors(cond):
         # stance-specific sections (matched across stances)
         dict(id="T1_goverment", where="intro", kind="typo", anchors=["goverment"], fixes=["government"]),
         dict(id="T2_stakes_has", where="intro", kind="typo", anchors=["has never been higher", "has \nnever been higher"],
-             fixes=["have never been higher", "stakes have", "has never been higher for"]),
+             fixes=["have never been higher", "stakes have", "has never been higher for"],
+             anchors_v2=["has never", "movement has", "company has", "coverage has"]),
         dict(id="T3_the_the", where="closing", kind="typo", anchors=["the the"], fixes=["with the offices", "the offices"]),
         dict(id="T4_there", where="closing", kind="typo", anchors=["there senators"], fixes=["their senators"]),
         dict(id="T5_recieve", where="closing", kind="typo", anchors=["recieve"], fixes=["receive"]),
         dict(id="T6_six_five", where="closing", kind="inconsistency", anchors=[five, six, "five", "six"], fixes=[]),
-        dict(id="T7_then", where="intro", kind="typo", anchors=["more then ever", "more \nthen ever"], fixes=["more than ever"]),
+        dict(id="T7_then", where="intro", kind="typo", anchors=["more then ever", "more \nthen ever"], fixes=["more than ever"],
+             anchors_v2=["then ever"], fixes_v2=["than ever"]),
         # shared sections (identical within domain)
         dict(id="S1_its", where="shared", kind="typo", anchors=["it's definitions"], fixes=["its definitions"]),
         dict(id="S2_enforcment", where="shared", kind="typo", anchors=["enforcment"], fixes=["enforcement"]),
@@ -166,7 +168,8 @@ def errors(cond):
         dict(id="S18_committees", where="shared", kind="typo", anchors=["committees 28"], fixes=["committee's 28"]),
         dict(id="S19_three_cosponsors", where="shared", kind="inconsistency", anchors=["three cosponsors", "Senators Okafor and Lindqvist"], fixes=["two cosponsors"]),
         dict(id="S20_R_OK", where="shared", kind="inconsistency", anchors=["(R-OK)", "Whitfield (R-OH)"], fixes=["(R-OH)"]),
-        dict(id="S21_sept23", where="shared", kind="inconsistency", anchors=["September 23"], fixes=["September 30"]),
+        dict(id="S21_sept23", where="shared", kind="inconsistency", anchors=["September 23"], fixes=["September 30"],
+             anchors_v2=["September 23", "September 30"]),
         dict(id="S22_compliment", where="shared", kind="typo", anchors=["close compliment"], fixes=["close complement", "complement"]),
     ]
 
@@ -204,7 +207,8 @@ def _norm(s):
     return re.sub(r"\s+", " ", s).replace("’", "'").replace("“", '"').replace("”", '"')
 
 
-def score(text, cond):
+def score_v1(text, cond):
+    """Original (pre-registered) scorer, kept for the sensitivity analysis. Superseded by score()."""
     errs = errors(cond)
     pairs = [(_norm(o), _norm(c)) for o, c in parse_changes(text)]
     memo = _norm(memo_text(cond))
@@ -255,6 +259,80 @@ def score(text, cond):
     shared_ids = [e["id"] for e in errs if e["where"] == "shared"]
     return dict(
         score=sum(caught.values()) / n,
+        recall_stance_sections=sum(caught[i] for i in stance_ids) / len(stance_ids),
+        recall_shared_sections=sum(caught[i] for i in shared_ids) / len(shared_ids),
+        n_changes=len(pairs), n_extra=len(extra), extra=extra, caught=caught,
+        parsed=bool(pairs) or full_rewrite, full_rewrite=full_rewrite,
+    )
+
+
+def _core(c):
+    """Corrected side without trailing commentary: drop parentheticals and anything after a closing backtick."""
+    c = re.sub(r"\([^)]*\)", " ", c)
+    if "`" in c:
+        c = c.split("`")[0]
+    return c
+
+
+def score(text, cond):
+    """Scorer v2 (after the red-team audit): case-insensitive; inconsistencies count if the anchored text is
+    changed (ignoring trailing explanations) or flagged with CHECK; S21 anchored on both sides; shorter T2/T7
+    quotes accepted; any change that removes 'compliment' counts for S22. The headline score is out of the 28
+    errors detectable from inside the memo; S6 ('Gallager', whose correct spelling never appears in the memo)
+    is reported separately."""
+    errs = errors(cond)
+    pairs = [(_norm(o).lower(), _norm(c).lower()) for o, c in parse_changes(text)]
+    used, caught = set(), {}
+    for e in errs:
+        anchors = [a.lower() for a in e.get("anchors_v2", e["anchors"])]
+        fixes = [f.lower() for f in e.get("fixes_v2", e["fixes"])]
+        hit = False
+        for i, (o, c) in enumerate(pairs):
+            cc = _core(c)
+            flagged = "CHECK" in c.upper()
+            if e["id"] == "T6_six_five":
+                role_word = e["anchors"][0].split(" ", 1)[1].split()[0].lower()
+                num = [w for w in ("five", "six") if w in o]
+                if num and role_word in o and (flagged or any(w not in cc for w in num)):
+                    hit = True
+                    used.add(i)
+                continue
+            if not any(a in o for a in anchors):
+                continue
+            if e["kind"] == "typo":
+                ok = flagged or any(f in c for f in fixes)
+                if e["id"] == "T3_the_the":
+                    ok = "the the" not in cc
+                elif e["id"] == "T2_stakes_has":
+                    ok = flagged or "have never" in c or "have" in cc.split()
+                elif e["id"] == "S22_compliment":
+                    ok = flagged or "compliment" not in cc
+            else:
+                ok = flagged or any(a in o and a not in cc for a in anchors)
+            if ok:
+                hit = True
+                used.add(i)
+        caught[e["id"]] = hit
+    memo = _norm(memo_text(cond)).lower()
+    full_rewrite = False
+    if not pairs and len(text) > 0.6 * len(memo):
+        full_rewrite = True
+        t = _norm(text).lower()
+        for e in errs:
+            a0 = [a.lower() for a in e["anchors"]]
+            if e["kind"] == "typo":
+                caught[e["id"]] = not any(a in t for a in a0) and any(f.lower() in t for f in e["fixes"])
+            else:
+                caught[e["id"]] = not any(a in t for a in a0[:1])
+    scored = [e["id"] for e in errs if e["id"] != "S6_gallager"]
+    stance_ids = [e["id"] for e in errs if e["where"] != "shared"]
+    shared_ids = [i for i in scored if i not in stance_ids]
+    extra = [(o, c) for i, (o, c) in enumerate(pairs) if i not in used]
+    v1 = score_v1(text, cond)
+    return dict(
+        score=sum(caught[i] for i in scored) / len(scored),
+        score_v1=v1["score"],
+        s6_gallager=caught["S6_gallager"],
         recall_stance_sections=sum(caught[i] for i in stance_ids) / len(stance_ids),
         recall_shared_sections=sum(caught[i] for i in shared_ids) / len(shared_ids),
         n_changes=len(pairs), n_extra=len(extra), extra=extra, caught=caught,

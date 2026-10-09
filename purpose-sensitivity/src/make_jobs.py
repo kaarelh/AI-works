@@ -22,6 +22,7 @@ BUILD = {
     "memo": task_memo.build_prompt,
     "code": task_code.build_prompt,
     "loop": task_loop.build_prompt,
+    "loopc": task_loop.build_prompt_control,
 }
 TASKS = ["sched", "whip", "memo", "code"]  # 'loop' was added after the main run; request it explicitly
 

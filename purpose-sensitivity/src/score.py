@@ -1,6 +1,6 @@
 """Score raw outputs.
 
-usage: python3 score.py <rawdir> <out.jsonl> [<loop_judge_dir>]
+usage: python3 score.py <rawdir> <out.jsonl> [<loop_judge_dir>] [sonnet=<loop_v2_dir> opus=<loop_v2_dir>]
 """
 import glob
 import json
@@ -37,12 +37,30 @@ def score_one(rec):
         s = task_memo.score(text, c)
     elif t == "code":
         s = task_code.score(text, c)
-    else:  # loop: needs the judge's verdict
+    else:  # loop / loopc: needs judges' verdicts
+        s = {}
         jp = f"{LOOPJUDGE}/{j['id']}.json" if LOOPJUDGE else None
         if jp and os.path.exists(jp):
-            s = task_loop.score_from_judgement(json.load(open(jp)), c)
-        else:
-            s = dict(score=float("nan"))
+            v1 = task_loop.score_from_judgement(json.load(open(jp)), c)
+            s.update(score_v1=v1["score"], found_v1=v1["found"], n_listed_v1=v1["n_listed"])
+        # v2: blinded two-coder judging (src/code_loop_v2.py); headline score = mean over coders of recall of the
+        # 10 planted flaws with the strict I6a item
+        planted = ["I1_split_threshold", "I2_secretary_undefined", "I3_us_person_narrow", "I4_grandfather",
+                   "I5_exception_undefined", "I6a_foreign_use", "I7_registry_unenforced", "I8_no_enforcing_agency",
+                   "I9_effective_date_conflict", "I10_sunset_conflict"]
+        recs, per = [], {}
+        for name, d in LOOPV2.items():
+            p = f"{d}/{j['id']}.json"
+            if os.path.exists(p):
+                r = json.load(open(p))
+                f = r.get("found") or {}
+                recs.append(sum(int(bool(f.get(k))) for k in planted) / len(planted))
+                per[name] = dict(found={k: int(bool(f.get(k))) for k in planted + ["I6b_verbs_undefined"]},
+                                 n_listed=r.get("n_listed"),
+                                 patterns={k: str((v or {}).get("answer", "no")).lower().startswith("y")
+                                           for k, v in (r.get("patterns") or {}).items()})
+        s["score"] = sum(recs) / len(recs) if recs else s.get("score_v1", float("nan"))
+        s["loop_coders"] = per
         s["n_items_regex"] = task_loop.count_items(text)
     u = rec.get("usage") or {}
     od = u.get("output_tokens_details") or {}
@@ -57,6 +75,7 @@ def score_one(rec):
 
 
 LOOPJUDGE = None
+LOOPV2 = {}  # coder name -> directory of code_loop_v2.py outputs
 
 
 def main():
@@ -64,6 +83,9 @@ def main():
     rawdir, out = sys.argv[1], sys.argv[2]
     if len(sys.argv) > 3:
         LOOPJUDGE = sys.argv[3]
+    for spec in sys.argv[4:]:  # name=dir
+        name, d = spec.split("=", 1)
+        LOOPV2[name] = d
     rows = []
     for p in sorted(glob.glob(rawdir + "/*.json")):
         rec = json.load(open(p))

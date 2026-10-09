@@ -216,12 +216,18 @@ def parse(text):
 
 def score(text, cond):
     pred = parse(text)
-    det = [k for k, v in TRUTH.items() if v is not None]
+    # Whitfield (sponsor, but no explicit committee-vote commitment and not on the cosponsor list) is arguable
+    # under the rubric (red-team finding MV6); he is excluded from the headline accuracy (19 items) and his
+    # code is reported separately. score_v1 keeps the original 20-item accuracy.
+    det_all = [k for k, v in TRUTH.items() if v is not None]
+    det = [k for k in det_all if k != "Whitfield"]
     amb = [k for k, v in TRUTH.items() if v is None]
     correct = sum(pred.get(k) == TRUTH[k] for k in det)
     errs = [NUM[pred[k]] - NUM[TRUTH[k]] for k in det if k in pred]
     amb_codes = [NUM[pred[k]] for k in amb if k in pred]
-    return dict(score=correct / len(det), parsed=len(pred) > 0, n_coded=len(pred),
+    return dict(score=correct / len(det), score_v1=sum(pred.get(k) == TRUTH[k] for k in det_all) / len(det_all),
+                whitfield_code=pred.get("Whitfield"), whitfield_Y=float(pred.get("Whitfield") == "Y") if "Whitfield" in pred else None,
+                parsed=len(pred) > 0, n_coded=len(pred),
                 pro_bill_bias=sum(errs) / len(errs) if errs else 0.0,
                 n_too_pro=sum(e > 0 for e in errs), n_too_anti=sum(e < 0 for e in errs),
                 ambiguous_lean=sum(amb_codes) / len(amb_codes) if amb_codes else None,
