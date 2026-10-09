@@ -5,9 +5,11 @@ This repository holds several independent projects, one top-level folder each.
 | folder | working branch |
 |---|---|
 | `paulsen/` | `claude/charming-lovelace-olmdo9` |
-| `inferential-learning/`, `axiom-schemas/` | `claude/sleepy-gauss-u4kem1` |
+| `inferential-learning/`, `axiom-schemas/`, `axiom-induction/` | `claude/sleepy-gauss-u4kem1` |
 | `christiano-point/` | `claude/vibrant-wright-pdohvb` |
 | `foom-coom-transition/` | `codex/foom-coom-transition-2026-10-08` |
+| `computational-cosmology/` | `codex/computational-cosmology-2026-10-08` |
+| `purpose-sensitivity/` | `claude/friendly-sagan-hngxoz` |
 
 ## Working branches
 
