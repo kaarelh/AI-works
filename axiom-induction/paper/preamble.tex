@@ -10,9 +10,11 @@
 \usepackage{enumitem}
 \usepackage{graphicx}
 \usepackage{xcolor}
+\usepackage{framed}% breakable box for the short answer of the introduction
 \usepackage[hidelinks]{hyperref}
 \usepackage[capitalise,noabbrev]{cleveref}
 \setlist{itemsep=2pt,topsep=4pt}
+\setlength{\emergencystretch}{2em}% lets TeX loosen a line instead of overflowing
 
 % ---- theorem environments (one counter, numbered within section)
 \theoremstyle{plain}
@@ -32,9 +34,22 @@
 
 % ---- status and provenance markers
 % \status{proved} | \status{computed} | \status{conjecture} | \status{known} | \status{proof sketch}
-\newcommand{\status}[1]{\textsf{\small[#1]}}
-% \src{...}: where the full record lives in research/tracks/ or research/prior/ (gray, small)
-\newcommand{\src}[1]{\textsuperscript{\textcolor{gray}{\scriptsize\textsf{#1}}}}
+% \status: upright in every theorem style
+\newcommand{\status}[1]{\textup{\textsf{\small[#1]}}}
+% \src{...}: where the full record lives in research/tracks/ or research/prior/.
+% Small grey upright note, breakable at spaces; a ragged line break may precede it.
+\newcommand{\src}[1]{\unskip\hskip0pt plus 1fil\penalty300\hskip0.35em plus -1fil\relax\textup{\textcolor{gray}{\scriptsize\textsf{#1}}}}
+% neutralise the local line-break hacks of ident.tex, pa.tex, experiments.tex
+% (those files use \providecommand, so these definitions win)
+\newcommand{\identbrk}{}\newcommand{\pabrk}{}\newcommand{\expbrk}{}
+% abbreviated cross-reference names, for use inside table floats only
+\newcommand{\crefabbrev}{\crefname{proposition}{Prop.}{Props.}\crefname{theorem}{Thm.}{Thms.}%
+  \crefname{lemma}{Lem.}{Lems.}\crefname{corollary}{Cor.}{Cors.}\crefname{remark}{Rem.}{Rems.}%
+  \crefname{example}{Ex.}{Exs.}\crefname{definition}{Def.}{Defs.}\crefname{conjecture}{Conj.}{Conjs.}%
+  \crefname{table}{Tab.}{Tabs.}\crefname{section}{\S}{\S\S}\crefname{subsection}{\S}{\S\S}%
+  \crefname{appendix}{App.}{Apps.}}
+% citation aliases for the two earlier reports (natbib is loaded after this file)
+\AtBeginDocument{\defcitealias{claude2026axiomschemas}{AS}\defcitealias{claude2026whatfollows}{IL}}
 
 % ---- template classes
 \newcommand{\FO}{\mathrm{FO}}               % first-order patterns

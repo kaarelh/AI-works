@@ -5,188 +5,78 @@
 %   code/results/e1_universal.md ... e8_split_l1.md (several numbers re-read from the .json files; see the
 %       header of app-experiments.tex); research/tracks/experiments/checks/*.out.
 % Results stated as theorems in other sections are cited, not restated:
-%   X5 = rem:ident:x5; X6 = chain case of thm:univ:odds (stated in prose in E1(1)); X7 = prop:ident:spare;
+%   X5 = rem:ident:x5; X6 = chain case of thm:univ:odds; X7 = prop:ident:spare;
 %   X8 = thm:sound:avg, thm:sound:shrink, ex:sound:constant; X9-X11 = prop:pa:fragments, prop:pa:atomic,
-%   prop:pa:redundant; X13 = prop:ident:splits(b), rem:ident:splitsL1.
-% Tables placed in the appendix (labels unchanged): tab:exp:e2seen, tab:exp:e4, tab:exp:e5, tab:exp:e7.
+%   prop:pa:redundant; X12 = prop:exp:comm (now in pa.tex, before rem:pa:e6); X13 = prop:ident:splits(b),
+%   rem:ident:splitsL1.
+% Moved to app-experiments.tex in the revision (labels unchanged): the E1-E8 paragraphs with tab:exp:e1,
+%   tab:exp:e2, tab:exp:e3a, tab:exp:e3b (new subsection app:exp:results); rem:exp:refuted; the pool-construction
+%   details; the proof idea of prop:exp:exact. New label: tab:exp:summary.
 % Local macros (prefix exp): \expth (names of pool theories), \expgen (names of generators), \expbrk.
 % =====================================================================
 \providecommand{\expbrk}{\hfil\penalty0\hfilneg}
 \providecommand{\expth}[1]{\textsf{#1}}
 \providecommand{\expgen}[1]{\textit{#1}}
+\providecommand{\crefabbrev}{}
 
 \section{Experiments: a small exact laboratory}\label{sec:exp}
+\suppressfloats[t]% the summary table goes to the top of the next page, not above the heading
 
-Track experiments wrote a Python package, \texttt{bai} (\texttt{code/bai}), that computes exact posteriors over finite pools of theories made of $\DT$ templates, reusing the code of AS \citep{claude2026axiomschemas} for syntax, matching, $\Min$ and \DTRC, and ran eight experiments, E1--E8. It is a laboratory for checking the claims of \S\S\ref{sec:univ}--\ref{sec:pa} on small cases, not a prover. Three facts frame every number. Each posterior is exact \emph{over its pool}, i.e.\ conditioned on ``the theory is in the pool'' (\cref{rem:exp:limits}). The derivation likelihood is a chain of at most two steps, so induction followed by MP and $\forall$E is outside it, and the PA runs use \Lzero. And E2, E3(b), E5(b), E8 sample multi-component theories at one fixed weight vector, where \cref{thm:ident:doob} does not cover the Dirichlet posterior; there the runs are a yardstick, not an instance of a theorem (\cref{rem:ident:x5}). Code lengths are in bits, $\alpha=\tfrac12$, every run is seeded (\cref{app:exp:repro}), and all findings below are computed unless a proposition is cited.
+The package \texttt{bai} (\texttt{code/bai}) computes exact posteriors over finite pools of theories made of $\DT$ templates, reusing the code of AS \citep{claude2026axiomschemas} for syntax, matching, $\Min$ and \DTRC; eight experiments, E1--E8, use it as a small exact laboratory for the claims of \S\S\ref{sec:univ}--\ref{sec:pa}. Each posterior is exact \emph{over its pool}, i.e.\ conditioned on ``the theory is in the pool'' (\cref{rem:exp:limits}); code lengths are in bits, $\alpha=\tfrac12$, every run is seeded (\cref{app:exp:repro}), and all findings are computed unless a proposition is cited.
 
 % ---------------------------------------------------------------------
 \subsection{What is implemented}\label{sec:exp:impl}
 
 A \emph{component} is a $\DT$ template with a closed or open \emph{guard} on each metavariable (may its body contain the parameter?); a theory is a finite set of components. The language is $L_A$; no axiom of $\Q$ mentions $<$. There is one parameter $p$: a datum $\varphi(Sp)$ means $\forall y\,\varphi(Sy)$, and data with two parameters have probability $0$. The instantiation grammar $\Qg$ is a fixed PCFG over bodies (\cref{app:exp:impl}) that satisfies \cref{def:model:grammar} and counts holes and bound variables alike, so splitting a schema by the root of a body is an exact reparametrisation (\cref{prop:ident:splits}(b), \cref{rem:ident:splitsL1}). The prior is $\pi(T)\propto2^{-\lambda\,\mathrm{bits}(T)}(1+|T|)^{-\tau}$, where $\mathrm{bits}(T)$ is the length of $T$ in a prefix code that satisfies Kraft's inequality, $|T|$ is the template size and $\tau$ is the time exponent of \cref{rem:model:priors}; by default $\lambda=1$ and $\tau=0$. For instance $\{z+0=z\}$ costs $17.1$ bits, $\{\forall x\,(x+0=x)\}$ $17.2$ bits and $T^*:=\mathrm{Q1..Q7}+\TInd$ $226.2$ bits.
 
-The mixture weights get a $\Dir(\tfrac12)$ prior and are integrated out. \Lzero{} is citation: $P(s\mid T,w)=\sum_iw_ia_i(s)$ with $a_i(s)=\prod_M\Qg(\theta_s(M))$ for the unique matcher $\theta_s$. \Lone{} is the forward chain $\Cch{J}$ (\cref{def:model:calculi}; rules in \cref{app:model:calculi}): cite component $i$ with probability $w_i$, then take at most $J\in\{1,2\}$ steps of $\forall$E (term from $\Qelim$), Gen on $p$, or MP with a \emph{cited} major premise, stopping with probability $c_{\mathrm{stop}}=\tfrac12$ while a rule applies; $c_{\mathrm{ch}}:=1-c_{\mathrm{stop}}$. The chain never fails, so it needs no normaliser, and its law is linear in $w$. \Lselc{} observes the chain through ``closed quantifier-free sentences only'' by per-citation rejection, $a_i/c_i$ with $c_i$ the probability that a chain from component $i$ ends there (\cref{rem:model:sel}). The marginal $\PDir{T}(D_n)$ is computed exactly by a dynamic programme over count vectors (\cref{lem:model:dirsum}). Above $20000$ states rigorous bounds replace it; the largest posterior mass a theory so bounded could have had never exceeded $8\cdot10^{-14}$ (\cref{app:exp:pools}).
+The mixture weights get a $\Dir(\tfrac12)$ prior and are integrated out. \Lzero{} is citation: $P(s\mid T,w)=\sum_iw_ia_i(s)$ with $a_i(s)=\prod_M\Qg(\theta_s(M))$ for the unique matcher $\theta_s$. \Lone{} is the forward chain $\Cch{J}$ (\cref{def:model:calculi}; rules in \cref{app:model:calculi}): cite component $i$ with probability $w_i$, then take at most $J\in\{1,2\}$ steps of $\forall$E (term from the elimination-term law $\Qelim$), Gen on $p$, or MP with a \emph{cited} major premise, stopping with probability $c_{\mathrm{stop}}=\tfrac12$ while a rule applies; $c_{\mathrm{ch}}:=1-c_{\mathrm{stop}}$. The chain never fails, so it needs no normaliser, and its law is linear in $w$; induction followed by MP and $\forall$E is outside it, so the PA runs use \Lzero. \Lselc{} observes the chain through ``closed quantifier-free sentences only'' by per-citation rejection, $a_i/c_i$ with $c_i$ the probability that a chain from component $i$ ends there (\cref{rem:model:sel}). The marginal $\PDir{T}(D_n)$ is computed exactly by a dynamic programme over count vectors (\cref{lem:model:dirsum}). Above $20000$ states rigorous bounds replace it; the largest posterior mass a theory so bounded could have had never exceeded $8\cdot10^{-14}$ in E1--E4, where it is recorded for every run, and was $0$ in the one E6 seed checked (\cref{app:exp:pools}).
 
-The pool at sample size $n$ holds: hand-picked theories; theories built \emph{causally} from $D_b$ at build points $b\le n$, namely $\Min$ of random subsets of $D_b$ (AS Thm~3.3), skeleton clusters (\DTRC{} without refutation, stopped at $k$ clusters; AS \S7.1) and, in PA runs, \DTRC{} with the PA refuter and the observed-root split; in PA runs, $\Trim(T,D_n)$ for every pool theory $T$, the components that could have produced a seen datum, so that $\Trim(T^*,D_n)=\SeenQ(D_n)$ is $\TInd$ plus the $\Q$ axioms cited so far; and $\Mem(D_n)$. So every member uses only data already seen, which the track's first version did not ensure (\cref{rem:exp:refuted}). $T\vdash_Js$ iff some chain of at most $J$ steps from $T$, with all rules enabled, ends in $s$: a sound under-approximation of derivability, $\Th_d$ of \cref{def:model:calculus} with $d$ in chain steps. $\Ver{\delta}{J}$, the verifier $\Ver{\delta}{d}$ of \cref{def:sound:protocol} on the pool, accepts $s$ iff the pool posterior of $\{T:T\vdash_Js\}$ is at least $1-\delta$; $J=1$ in E1, E3(a), E4 and $J=0$ in E2, E3(b), E7.
+\begin{table}[!t]\centering\footnotesize\crefabbrev
+\begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}p{0.27\textwidth}>{\raggedright\arraybackslash}p{0.15\textwidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{0.12\textwidth}@{}}
+\toprule
+& setup & result tested & finding & where\\
+\midrule
+E1 & data from $\Hsch$, $\Hall$, $\Hopen$ (\Lzero{} or chain) on three $\varphi$; 5 seeds, $n\le256$ & \cref{thm:univ:odds,thm:univ:omega,thm:univ:size} & in the chain, one bit per datum against $\Hall$, exactly; under \Lselc{} an exact tie, so $P(T\vdash\forall x\varphi)$ tends to a prior share; memorisers and over-general templates die fast & \cref{sec:univ:never}\\
+E2 & \Lzero{} citations of $T^*=\mathrm{Q1..Q7}+\TInd$ at fixed weights; causal pools; 25 seeds, $n\le512$ & \cref{prop:ident:spare}; pool version of \cref{thm:sound:shrink} & $T^*$ wins once every needed axiom is cited, $\SeenQ(D_n)$ before; early unsound lumps; spares decay polynomially & \cref{rem:pa:e2,rem:sound:lumps}\\
+E3(a) & instances of $x+0=x$ under four other term laws; $n\le1024$ & \cref{thm:ident:kl} & linear drift to a best-fitting family member; completeness lost, nothing unsound & \cref{rem:ident:e3a}\\
+E3(b) & E2's $T^*$ under four other motive laws; $n\le2048$ & \cref{prop:pa:fragments,prop:pa:atomic} & connective-rich laws keep the theorems, not the axioms; atomic motives end on a strictly weaker theory & \cref{rem:pa:e3b}\\
+E4 & an adaptive prover against $\Ver{\delta}{1}$: IL's tight construction, and pools on $x+0=x$ & \cref{thm:sound:avg} & well specified, wins stay below $\delta'$; with false near misses in the data, the prover always wins & \cref{rem:sound:e4}\\
+E5 & spare slots; $\mathcal L_k$ against $\mathcal L_\infty$; Gold's text; 10 seeds & \cref{prop:ident:spare,prop:ident:gold} & unused spares follow (a) exactly; both ends of Gold's limit point identified; 14 stages of Gold's text end & after \cref{prop:ident:spare,prop:ident:gold}\\
+E6 & eight forms of commutativity; chain and \Lzero{} data; 5 seeds, $n\le256$ & \cref{prop:exp:comm,prop:ident:sep,thm:univ:omega} & the chain identifies the generating form; under \Lselc{} the provers keep their prior share & \cref{rem:pa:e6}\\
+E7 & E2 with a time factor or a steeper prior & \cref{rem:model:priors} & the time factor slightly favours small unsound lumps; steepness trades early for late soundness & \cref{rem:time:e7}\\
+E8 & a schema against its root split, chain data with latent citations; 10 seeds, $n\le4096$ & \cref{prop:ident:splitlone} & a derivation likelihood does not change the MDL finding & \cref{rem:ident:e8}\\
+\bottomrule
+\end{tabularx}
+\caption{The experiments. Pool names used in the tables of \cref{app:exp:results}: \expth{skel}$k$\expth{@}$b$ is a skeleton clustering of $D_b$ stopped at $k$ clusters, \expth{DTRC@}$b$ is \DTRC{} with a PA refuter on $D_b$, \expth{frag-complete}, \expth{frag-atoms} and \expth{frag-observed@}$b$ are $\Q$ plus the root fragments $T_f$ of all nine roots, of $=$ and $<$, and of the roots seen in $D_b$, and \expth{IndSwap} is $\Q$ plus an equivalent, swapped induction template. Computed.}\label{tab:exp:summary}
+\end{table}
 
-\begin{proposition}[The computed likelihoods are exact]\status{proved; computed}\expbrk\src{experiments Props X1--X4}\label{prop:exp:exact}
+The pool at sample size $n$ holds hand-picked theories; theories built \emph{causally} from the data $D_b$ seen at build points $b\le n$ ($\Min$ of random subsets, skeleton clusters and, in PA runs, \DTRC{} and the observed-root split; \cref{app:exp:impl}); in PA runs, for every pool theory $T$, $\Trim(T,D_n)$, the components of $T$ that could have produced a seen datum, so that $\SeenQ(D_n):=\Trim(T^*,D_n)$ is $\TInd$ plus the $\Q$ axioms cited so far; and $\Mem(D_n)$, the set of data seen. So every pool member uses only data already seen. $T\vdash_Js$ iff some chain of at most $J$ steps from $T$, with all rules enabled, ends in $s$: a sound under-approximation of derivability, $\Th_d$ of \cref{def:model:calculus} with $d$ in chain steps. $\Ver{\delta}{J}$, the verifier $\Ver{\delta}{d}$ of \cref{def:sound:protocol} on the pool, accepts $s$ iff the pool posterior of $\{T:T\vdash_Js\}$ is at least $1-\delta$; $J=1$ in E1, E3(a), E4 and $J=0$ in E2, E3(b), E7.
+
+\begin{proposition}[The computed likelihoods are exact]\status{(a)--(c) proved; (d) proved under the hypothesis of (d3), computed otherwise}\expbrk\src{experiments Props X1--X4}\label{prop:exp:exact}
 \textup{(a)} For a component $\tau$ and a sentence $s$ with at most the parameter $p$, citing $\tau$ with independent bodies from $\Qg$ yields $s$ with probability $\prod_M\Qg(\theta_s(M))$ if $\tau$ matches $s$ by a matcher $\theta_s$ that respects the guards, and $0$ otherwise.
 \textup{(b)} For $a_{ij}\ge0$, $\Ex_{w\sim\Dir(\alpha)}\prod_{j=1}^n\sum_{i=1}^Kw_ia_{ij}=\sum_z\prod_ja_{z_jj}\cdot\frac{\Gamma(K\alpha)}{\Gamma(K\alpha+n)}\prod_i\frac{\Gamma(\alpha+n_i(z))}{\Gamma(\alpha)}$, summed over assignments $z$ of the data to the $K$ components, with counts $n_i(z)$. The dynamic programme computes this sum, and the bounds bracket it.
 \textup{(c)} For every theory, weight vector and $J$, the law of the chain's output is a probability on sentences.
-\textup{(d)} The backward recursion over predecessors computes the \Lone{} coefficients $a_i(s)$ exactly whenever the predecessor sets it enumerates are complete. They are complete for the component shapes of \cref{app:exp:exact}, and the code admits into \Lone{} pools only theories of the shapes it checks (this left out 65 and 43 data-derived theories in two E1 configurations, none elsewhere).
+\textup{(d)} The backward recursion over predecessors computes the \Lone{} coefficients $a_i(s)$ exactly whenever the predecessor sets it enumerates are complete. They are complete for the component shapes of \cref{app:exp:exact}, and the code admits into \Lone{} pools only theories of the shapes it checks (this left out 65 and 43 data-derived theories in two E1 configurations, none elsewhere); the hypothesis of (d3) in \cref{app:exp:exact}, no rigid $p$ inside a metavariable argument, is not checked by the code. It holds for every hand theory of E1 and E6; for data-derived theories at $J=2$ (E1 \expgen{allq2}) exactness is computed (brute force to $10^{-9}$ on 10 theories; the referee's 904 triples), not proved.
 \end{proposition}
 
-\begin{proof}[Proof idea]
-(a) is the matching theorem, AS Thm~2.5. (b) expands the product and takes Dirichlet moments (\cref{lem:model:dirsum}); the upper bound uses concavity of the log-likelihood on the simplex. (c) Every step chooses among finitely many outcomes of total probability $1$, and no run fails. (d) Each predecessor set is in bijection with the matchers of a derived $\DT$ template, which are unique. Details in \cref{app:exp:exact}.
-\end{proof}
-
-\noindent The code agrees with brute force on $500$ random Dirichlet sums ($1.4\cdot10^{-14}$) and with the referee's independent reimplementation, written from the notes, on $400$ marginals ($1.4\cdot10^{-14}$) and $904$ \Lone{} coefficients at $J=1,2$ ($2.1\cdot10^{-14}$); a forward sampler passes $\chi^2$ tests; 21 unit tests pass.
+\noindent The proofs are in \cref{app:exp:exact}. The code agrees with brute force on $500$ random Dirichlet sums ($1.4\cdot10^{-14}$) and with an independent reimplementation, written from the notes, on $400$ marginals ($1.4\cdot10^{-14}$) and $904$ \Lone{} coefficients at $J=1,2$ ($2.1\cdot10^{-14}$); a forward sampler passes $\chi^2$ tests; 21 unit tests pass.
 
 % ---------------------------------------------------------------------
 \subsection{Results}\label{sec:exp:results}
 
-\paragraph{E1: $\forall x\varphi$ from data about $\varphi$.}
-For $\varphi\in\{x+0=x,\ 0+x=x,\ \neg Sx=0\}$, seeds 0--4 and $n=1,2,4,\dots,256$, five generators are used: \expgen{sch} (\Lzero{} citations of $\sigma_\varphi=\varphi(z)$, closed terms); \expgen{all} ($\Cch1$ from $\Hall$, closed $\forall$E terms, so about half of the data are $\forall x\varphi$ itself); \expgen{allq} (the same with open terms, e.g.\ $\varphi(Sp)$); \expgen{open} ($\Cch1$ from $\Hopen$, whose Gen steps emit sentences such as $\forall y\,\varphi(Sy)$); and \expgen{allq2} ($\Cch2$ from $\Hall$: $\forall$E with an open term, then Gen). The pool (15--28 theories) holds $\Hall$, $\Hsch$, $\Hopen$, $\Hboth$, $\Hall\cup\Hopen$, the over-specific $\{\varphi(0),\varphi(Sz)\}$, two root splits, three spare-slot theories, over-general generalisations of $\varphi(z)$ and $F_0$, causal theories and $\Mem(D_n)$. The likelihoods are \Lzero, \Lone{} with the generator's own chain, and \Lselc{} on \expgen{sch} data. Every generator has one component, so \cref{thm:ident:doob} applies (\cref{tab:exp:e1}).
+\Cref{tab:exp:summary} lists the eight experiments, the result each one tests and where its finding is stated; setups, tables and further findings are in \cref{app:exp:results}.
 
-\begin{table}[t]
-\centering\footnotesize
-\begin{tabularx}{\textwidth}{@{}ll>{\raggedright\arraybackslash}Xlll@{}}
-\toprule
-data & lik. & mass of the generating theory at $n=4,8,32,256$ & MAP at $256$ & $P(\vdash_1\forall x\varphi)$ & first $n$\\
-\midrule
-\expgen{sch} & \Lzero & $0.87,\ 0.97,\ 1.000,\ 1.000$ & $\Hsch$ & $2\cdot10^{-7}$ & 16\\
-\expgen{sch} & \Lone & $0.84,\ 0.96,\ 1.000,\ 1.000$ & $\Hsch$ & $3\cdot10^{-7}$ & 16\\
-\expgen{sch} & \Lselc & $0.43,\ 0.42,\ 0.53,\ 0.59$ & $\Hsch$ & $0.484$; $0.269$ & never\\
-\expgen{all} & \Lone & $0.87,\ 0.99,\ 1.000,\ 1.000$ & $\Hall$ & $1.000$ & 16\\
-\expgen{allq} & \Lone & $0.73,\ 0.90,\ 1.000,\ 1.000$ & $\Hall$ & $1.000$ & 16\\
-\expgen{open} & \Lone & $0.89,\ 1.000,\ 1.000,\ 1.000$ & $\Hopen$ & $1.000$ & 8\\
-\expgen{allq2} & \Lone & $0.88,\ 0.997,\ 1.000,\ 1.000$ & $\Hall$ & $1.000$ & 16\\
-\bottomrule
-\end{tabularx}
-\caption{E1. Means over 5 seeds and, where the three formulas agree, over $\varphi$. $P(\vdash_1\forall x\varphi)$ at $n=256$; under \Lselc{} it is $0.484$ for $x+0=x$ and $0+x=x$ and $0.269$ for $\neg Sx=0$. Last column: first $n$ from which the generator keeps mass $\ge0.99$, worst run. Under \Lzero{} (rows omitted) $\Hall$ dies at its first instance; on \expgen{all} data $\Hboth$ has mass $\ge0.995$ from $n=32$, on \expgen{allq} data $\Hall\cup\Hopen$ has $1.000$ from $n=16$, and on \expgen{open} and \expgen{allq2} data $\Mem(D_n)$ has $1.000$ from $n=16$ and $64$; $P(\vdash_1\forall x\varphi)=1.000$ at $n=256$ in all four.}
-\label{tab:exp:e1}
-\end{table}
 
-\noindent\emph{(1) The factor of \cref{thm:univ:odds}, exactly.} In $\Cch J$ with closed $\forall$E terms, $\Hall$ emits $\forall x\varphi$ with probability $c_{\mathrm{stop}}$ and otherwise $\varphi(t)$ with probability $c_{\mathrm{ch}}\Qg(t)$, after which no rule applies; $\Hsch$ emits $\varphi(t)$ with probability $\Qg(t)$. So on closed instances the $\log_2$ odds $\Hsch:\Hall$ gain $\log_2(1/c_{\mathrm{ch}})=1$ bit per datum under \Lone{} and stay at the prior odds under \Lselc{} ($c_\forall=c_{\mathrm{ch}}$, $c_{\mathrm{sch}}=1$); this is experiments Prop X6 (proved), the $\Cch J$ case of the \emph{unnormalised} row of \cref{thm:univ:odds}. Computed: $n+0.090$ bits ($x+0=x$, $0+x=x$) and $n+1.440$ ($\neg Sx=0$) at every $n$ and seed, within $1.1\cdot10^{-11}$ bits of $n$ plus the prior difference from the referee's code; the \Lselc{} tie holds to $10^{-13}$.
-\emph{(2) The $\omega$-gap.} Under \Lselc{} $P(T\vdash\forall x\varphi\mid D_n)$ tends to the prior share, in this code, of the provers among the theories tied with $\Hsch$ (\cref{thm:univ:omega}(b), \cref{tab:univ:share}), while held-out closed instances get mass $\ge0.999$ from $n=8$ in every run except \expgen{open} data under \Lzero{} (\cref{thm:univ:confirm}).
-\emph{(3) The size principle.} At $n=8$ on \expgen{sch} data, $\Mem(D_n)$ has mass $\le2.4\cdot10^{-12}$ and the over-general theories $\le7\cdot10^{-5}$, both falling exponentially (\cref{thm:univ:size}). This is one memoriser; the memoriser class can decay more slowly (\cref{prop:univ:memo}). Under \Lone{} $\Mem(D_n)$ is not provably the best memoriser, since a ground $\forall$-sentence can raise its likelihood (the referee found $\Mem(D_n)\cup\{\forall x\,(x+0=x)\}$ 11--16 bits worse, the margin shrinking).
-\emph{(4) Quantified data.} From a prover of $\forall x\varphi$, \Lone{} finds the generator by $n=16$ and $P(T\vdash\forall x\varphi\mid D_n)\to1$ (\cref{prop:univ:open}(a), \cref{prop:univ:quant}(a)). Under \Lzero{} derived sentences can only be axioms, so theories that list them win, and with Gen outputs of unbounded variety \Lzero{} ends at $\Mem(D_n)$.
-
-\paragraph{E2: PA without labels.}
-Data are \Lzero{} citations from $T^*=\mathrm{Q1..Q7}+\TInd$ (numbering of \S\ref{sec:model}) at fixed weights $0.05$ per $\Q$ axiom and $0.65$ for $\TInd$, with one-hole motives from $\Qg$; seeds 0--24; $n=8,\dots,512$; the likelihood is \Lzero{} with the same $\Qg$. Besides the causal theories, $\Trim(T,D_n)$ and $\Mem(D_n)$, the pool holds $T^*$, $T^*-\mathrm{Q}_i$, \expth{frag-complete} ($\Q$ plus the nine root fragments $T_f$), \expth{frag-atoms} ($\Q+\{T_=,T_<\}$), the spares $T^*+T_\wedge$, $T^*+\{\forall x\,(0+x=x)\}$ and $T^*+\{0=S0\}$, \expth{IndSwap} ($\Q$ plus a swapped, equivalent induction template), two over-general induction templates, \expth{Q-lumped} $=\{\forall x\forall y\,P(x,y),\ \forall x\,P(x),\ \TInd\}$ and $F_0$. Tags come from \cref{prop:pa:fragments,prop:pa:atomic,prop:pa:redundant} and a budgeted refuter (``unsound'' is certain). The weights are fixed, so the applicable soundness statement is \cref{thm:sound:shrink}, not \cref{thm:sound:avg} (\cref{tab:exp:e2}; $\SeenQ$ and code lengths in \cref{tab:exp:e2seen}).
-
-\begin{table}[t]
-\centering\footnotesize
-\begin{tabularx}{\textwidth}{@{}rllllc>{\raggedright\arraybackslash}X@{}}
-\toprule
-$n$ & $T^*$ & equiv. & weaker & unsound & acc. & MAP [tag] (count of 25)\\
-\midrule
-8 & $2\cdot10^{-21}$ & $4\cdot10^{-13}$ & 0.744 & 0.256 & 2 & \expth{skel4@8} [w] 12, \expth{DTRC@8} [w] 6, $\Trim(\text{\expth{Q-lumped}})$ [u] 4, \dots\\
-16 & $9\cdot10^{-7}$ & $5\cdot10^{-6}$ & 0.803 & 0.197 & 3 & \expth{skel6@16} [w] 9, \expth{skel4@16} [w] 5, \expth{Q-lumped} [u] 3, \dots\\
-32 & 0.197 & 0.197 & 0.727 & 0.077 & 0 & $T^*-\mathrm{Q2}$ [w] 7, \expth{skel6@32} [w] 6, $T^*$ 5, \dots\\
-64 & 0.751 & 0.791 & 0.200 & 0.009 & 0 & $T^*$ 19, $T^*-\mathrm{Q3}$ [e] 1, \dots\\
-128 & 0.991 & 0.991 & 0 & 0.009 & 0 & $T^*$ 25\\
-512 & 0.996 & 0.996 & 0 & 0.004 & 0 & $T^*$ 25\\
-\bottomrule
-\end{tabularx}
-\caption{E2: posterior mass by tag (means over 25 seeds). ``Acc.'': seeds in which $\Ver{0.05}{0}$ accepts a false probe. Tags: [e] equivalent to $T^*$, [w] sound and strictly weaker, [u] unsound. At $n=512$ the unsound mass is the false spare $T^*+\{0=S0\}$.}
-\label{tab:exp:e2}
-\end{table}
-
-\noindent\emph{(1)} $T^*$ wins once Q1, Q2, Q4--Q7 have each been cited (the last at datum 20--97, median 55; Q3 is redundant by \cref{prop:pa:redundant}); the mass on its equivalents is $\ge0.95$ from $n=32$, $64$ or $128$ (5, 15, 5 seeds). Before that the sound but weaker $\SeenQ(D_n)$ leads, since an uncited axiom costs its prior bits and the factor of \cref{prop:ident:spare}(a).
-\emph{(2)} At $n\le16$ \expth{Q-lumped} or its trim beats $\SeenQ$ in some seeds (by up to $12.7$ bits), and $\Ver{0.05}{0}$ then accepts $\forall x\,(x+0=0)$, $\forall x\,(Sx=x)$, $\forall x\forall y\,(y=x)$: in 5 of 25 seeds, never from $n=32$ (19 of 25 with the first version's pool, \cref{tab:exp:e2seen}). This is consistent with \cref{thm:sound:shrink}, which needs $\delta_n\le2^{-226}\Rreg(n,8)\,\delta'\asymp2^{-226}n^{-3.5}$ (\cref{rem:sound:lumps}).
-\emph{(3)} \expth{frag-complete} has $T^*$'s instance set and its laws include $T^*$'s (\cref{prop:ident:splits}(b)), so it loses the prior difference ($698.9$ bits) plus $4.2$ bits per doubling of $n$ ($n=64\ldots512$; asymptotically $(16-8)/2=4$, the Occam term of \cref{prop:ident:splitlzero}(c)).
-\emph{(4)} Unused spare sentences lose $0.49$ bits per doubling and the nested $T_\wedge$ $0.25$ (\cref{prop:ident:spare}(a), (c)); the inconsistent $T^*+\{0=S0\}$ keeps $0.004$ at $n=512$.
-\emph{(5)} The equivalent but uncited \expth{IndSwap} has likelihood $0$ from the first induction datum: citation identifies the cited axioms. Over-general induction templates lose linearly.
-
-\paragraph{E3: misspecified usage.}
-All data are theorems of the target, but their law is no pool theory's (\cref{thm:ident:kl}).
-(a) Instances of $\varphi=(x+0=x)$ under other term laws: \expgen{heavy} (a zeta(1.5) numeral with probability $0.7$, else $S^k(t_1\circ t_2)$), \expgen{numerals} ($S^k0$, $k\sim\mathrm{Geom}(0.2)$), \expgen{small} ($\Qg$-terms with at most 4 symbols: 12 distinct sentences) and \expgen{skewQ} (another PCFG); \Lzero{} ($n\le1024$) and \Lone{} ($\Cch1$, $n\le512$); seeds 0--4. The pool adds to E1's hand pool the closed-guard numeral splits $R_m=\{\varphi(0),\dots,\varphi(S^{m-1}0),\varphi(S^mz)\}$, $m\le16$, and the nested $C_1=\{\varphi(z),\varphi(Sz)\}$ and $C_2=C_1\cup\{\varphi(SSz)\}$.
-(b) E2's $T^*$ and weights with other motive laws: \expgen{dtrc-motive} (AS's motive generator), \expgen{root-skew} (roots $\to,\wedge,=,\exists$ with $.5,.2,.2,.1$), \expgen{deep} (more connectives) and \expgen{atomic} ($a(x)=b(x)$ with probability $0.6$, $a(x)<b(x)$ with $0.4$); \Lzero; $n\le2048$; E2's pool plus $T^*+T_f$ for every root $f$ (\cref{tab:exp:e3a,tab:exp:e3b}).
-
-\begin{table}[t]
-\centering\footnotesize
-\begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}Xllll@{}}
-\toprule
-data & MAP at the largest $n$ (5 seeds; \Lzero{} and \Lone{} alike) & inst.\ set & gain & $P(\vdash\text{held-out})$ & superset\\
-\midrule
-\expgen{heavy} & $C_2$ (3 seeds), $\{\varphi(z),\varphi(SSz)\}$ (2) & same & $212\to455$ & $1.000$ & $3\cdot10^{-63}$\\
-\expgen{numerals} & $R_9$ or $R_{10}$ at $n=512$; $R_{11}$ or $R_{12}$ at $1024$ & subset & $1271\to2897$ & $0.333$ & $0$\\
-\expgen{small} & $\Hsch$ up to $n=512$; $\Mem(D_n)$ at $1024$ (\Lzero) & same$\to$finite & $0\to156$ & $1.000\to0.000$ & $7\cdot10^{-5}$\\
-\expgen{skewQ} & \expth{frag1}, a root split (from $n=512$) & same & $70\to212$ & $1.000$ & $2\cdot10^{-20}$\\
-\bottomrule
-\end{tabularx}
-\caption{E3(a). Gain: code length of $\Hsch$ minus that of the MAP under \Lzero, bits, $n=512\to1024$ (means). $P(\vdash\text{held-out})$: mean mass deriving $\varphi(9)$, $\varphi(2+3)$, $\varphi(1\cdot4)$. Superset: largest mass on over-general theories at the largest $n$ over seeds and likelihoods. Families: \cref{tab:exp:e3afam}.}
-\label{tab:exp:e3a}
-\end{table}
-
-\begin{table}[t]
-\centering\footnotesize
-\begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}Xllll@{}}
-\toprule
-motives & MAP at $n=256$ / $1024$ / $2048$ (5 seeds) & equiv. & weaker & $T^*$ & unsound at 16\\
-\midrule
-\expgen{dtrc-motive} & $T^*$ / $T^*+T_\exists$ / $T^*+T_\exists$ & $1.000$ & $0$ & $5\cdot10^{-70}$ & $0.25$; $1.0$\\
-\expgen{root-skew} & $T^*+T_\to$ / \expth{frag-observed@16}, \expth{@32} / same & $1.000$ & $0$ & $0$ & $0.52$; $1.0$\\
-\expgen{deep} & $T^*$ / $T^*$ / $T^*$ & $0.998$ & $0$ & $0.998$ & $2\cdot10^{-11}$; $7\cdot10^{-11}$\\
-\expgen{atomic} & \expth{frag-atoms} (4), $T^*$ (1) / \expth{frag-atoms} / \expth{frag-atoms} & $2\cdot10^{-178}$ & $1.000$ & $4\cdot10^{-298}$ & $0.21$; $0.999$\\
-\bottomrule
-\end{tabularx}
-\caption{E3(b). Masses at $n=2048$; unsound mass at $n=16$ as mean; max over seeds. Code lengths relative to $T^*$ at $n=2048$: \expgen{root-skew} \expth{frag-observed@}$b$ $-1387$ to $-1509$ bits; \expgen{dtrc-motive} $T^*+T_\exists$ $-228$ to $-318$; \expgen{deep} \expth{frag-complete} $+665$ to $+674$; \expgen{atomic} \expth{frag-atoms} $-986$ to $-1028$.}
-\label{tab:exp:e3b}
-\end{table}
-
-\noindent\emph{(a)} The posterior moves at a linear rate to the best-fitting member of a family; the winner keeps changing as $n$ grows. On numerals the best split deepens ($R_4$/$R_5$ at $n=128$, $R_9$/$R_{10}$ at $512$, $R_{11}$/$R_{12}$ at $1024$, interior to the family), like the drift of \cref{prop:univ:noguard}(d) in track universal's calculus; $n=1024$ is too small to test its part (b). On heavy tails the deepest nesting available wins, and a deeper one would probably win if the exact programme could hold it (conjecture). Nothing unsound survives at large $n$, but completeness is lost: with numerals only the held-out $\varphi(2+3)$, $\varphi(1\cdot4)$ are not derived, and with a finite selected support the axioms become the 12 observed sentences. As in \cref{ex:ident:weaker}, all data are theorems of the target and the posterior goes to a strictly weaker theory. \Lone{} gives the same MAPs as \Lzero{} for $n\le512$.
-\emph{(b)} Under connective-rich motive laws the winners contain $\TInd$ or a connective fragment and Q1, Q2, Q4--Q7, so they are equivalent to $T^*$ (\cref{prop:pa:fragments}); yet under \expgen{dtrc-motive} and \expgen{root-skew} the MAP leaves $T^*$: the theorems survive, the axioms do not. Under \expgen{atomic} motives $T^*$ has mass $0.988$ at $n=64$ in 4 of 5 seeds, and then $\Q+\{T_=,T_<\}$ takes mass $1.000$ in every seed from $n=1024$. That theory does not prove the irrationality of $\sqrt2$, which $T^*$ proves (\cref{prop:pa:atomic}): the posterior moves \emph{away} from $T^*$ to a strictly weaker theory (\cref{rem:pa:e3b}). Unsound lumps recur at $n=16$.
-
-\paragraph{E4: an adaptive prover.}
-The prover wins if $\Ver{\delta}{1}$ ever accepts some $s$ with $T^*\nvdash_1s$. $T^*$ always has one component, so \cref{thm:sound:avg} bounds the win probability by $\delta'$ when $\delta=w^*\delta'$ (\cref{tab:exp:e4}).
-(A) The tight construction of IL Prop~C.5 \citep{claude2026whatfollows} with a Dirichlet decoy: $T^*=\{\varphi(z)\}$ on numerals with $P(t=0)=1-u$, decoy $T'=\{\varphi(0),0=S0\}$, prior $w^*$ on $T^*$; the prover asks $0=S0$ every round. It wins iff the first $t^*$ data are $\varphi(0)$, with $t^*$ the first $n$ at which $\pi_n(T^*)\le\delta$ given $\varphi(0)^n$, so $P(\text{win})=(1-u)^{t^*}$ exactly.
-(B, C) $\varphi=(x+0=x)$, $T^*=\Hsch$, E1's hand pool plus $\Mem(D_n)$; $w^*=7\cdot10^{-6}$ (the pool version of \cref{thm:sound:avg}), bound $0.05$; each round the prover asks eight sentences that $T^*$ does not derive; 100 streams, every $n\le256$, \Lzero{} and \Lone.
-Well specified, wins stay below $\delta'$: $9$--$46$ times below in (A), whose Dirichlet decoy is slower than IL's fixed-weight one (\cref{rem:sound:tight}), and $0/100$ in (B), where the largest invalid mass ($0.45$, $0.53$) sits on the true but underivable $\forall x\,(x+0=x)$ at $n\le6$. Misspecified, the prover wins every time when $10\%$ of the data are false near misses $t+0=St$ and the mistake schema is in the pool (C1), and when only a decoy fits selected data better ((A) with only $\varphi(0)$ shown); heavy tails (C2) and selection with a clean memoriser in the pool (C3) did no harm. No theorem covers the misspecified case (\cref{rem:sound:e4}).
-
-\paragraph{E5: spare slots, $L_\infty$ against $L_5$, and Gold's text} (\cref{tab:exp:e5}).
-(a) Exact Bayes factors of $\{\varphi(z)\}$ plus a spare against $\{\varphi(z)\}$ on its own \Lzero{} data: the unused spares ($0=S0$; $z\cdot0=0$) match \cref{prop:ident:spare}(a) to all printed digits (slope $-0.500$ per doubling); the nested $\varphi(Sz)$ has slope $-0.281$ on $n=256\ldots4096$ and, by quadrature, $-0.251\pm0.002$ on $10^2\ldots10^8$, supporting the $n^{-1/4}$ of \cref{prop:ident:spare}(c), itself a proof sketch. A false spare sentence is thus removed by positive data only like $n^{-1/2}$.
-(b) With $L_k$ the $k$ ground sentences $\varphi(S^j0)$, $j<k$, and $L_\infty=\{\varphi(z)\}$ under $\Qnum$: on data from $L_5$ the posterior switches to $L_5$ between $n=64$ and $128$ (mass $1.000$ from $256$, 10/10 seeds), and on data from $L_\infty$ it keeps $L_\infty$ ($1.000$ from $n=16$). \Cref{prop:ident:gold}(a) proves this for fixed generators; here $L_5$ has Dirichlet weights and is sampled at one weight vector, so the run is a yardstick (\cref{rem:ident:x5}). (c) Against the MAP learner over $\{L_1,\dots,L_{60},L_\infty\}$ the first 14 stages of Gold's construction all end (740 data): the start of a text on which, if every stage ends, the MAP changes infinitely often (\cref{prop:ident:gold}(b), (c)).
-
-\paragraph{E6: generating axiomatisations.} Eight forms of commutativity of $+$ are compared.
-
-\begin{proposition}[Forms of commutativity]\status{proved; computed}\expbrk\src{experiments Prop X12}\label{prop:exp:comm}
-Let $A_{xy}:=\{\forall x\forall y\,(x+y=y+x)\}$, $A_{yx}:=\{\forall y\forall x\,(x+y=y+x)\}$, $S_{ab}:=\{z+z'=z'+z\}$, $M_x:=\{\forall x\,(x+z=z+x)\}$ and $M_y:=\{\forall y\,(z+y=y+z)\}$, with closed guards, and let $S_{ab}^{\mathrm{open}}$, $M_x^{\mathrm{open}}$, $M_y^{\mathrm{open}}$ be the same templates with open guards.
-\textup{(a)} $A_{xy}$, $A_{yx}$, $M_x^{\mathrm{open}}$ and $M_y^{\mathrm{open}}$ are logically equivalent.
-\textup{(b)} $S_{ab}\cup M_x\cup M_y\cup S_{ab}^{\mathrm{open}}\nvdash\forall x\forall y\,(x+y=y+x)$. So $S_{ab}$, $M_x$, $M_y$ and $S_{ab}^{\mathrm{open}}$ are strictly weaker than $A_{xy}$, although $S_{ab}$, $M_x$ and $M_y$ yield exactly its closed instances $t+t'=t'+t$.
-\end{proposition}
-
-\noindent The proof (\cref{app:exp:comm}) uses the structure $\N\sqcup\{\alpha,\beta\}$ with $\alpha+\beta=\alpha\ne\beta=\beta+\alpha$. Part (a) corrects a remark of the track's referee that open guards cannot reach $\forall x\forall y$ under the single-parameter convention: one bound variable and the parameter already give two variables. The fixed pool is the eight forms, $A_{xy}\cup A_{yx}$, $A_{xy}\cup S_{ab}$ and $\Mem(D_n)$. Data come from $\Cch2$ (closed $\forall$E terms) on $A_{xy}$ and on $M_x$, and from \Lzero{} citations of $S_{ab}$; seeds 0--4; $n\le256$ (\cref{tab:exp:e6}).
-
-\noindent \Lone{} identifies the generating form by $n=32$ in every run, among logically equivalent and among instance-equivalent weaker forms (compare \cref{prop:ident:sep}); $A_{xy}$ is told from $A_{yx}$ and the open forms by partial instances such as $\forall y\,(2+y=y+2)$. Under \Lselc{} the five closed-guard forms have equal likelihoods on every datum (as in E1(1)), so the mass on provers of commutativity tends to their prior share $0.088$, not to $1$: the $\omega$-gap of \cref{thm:univ:omega} again, not a tie among equivalents. A redundant second form is a spare slot ($<10^{-9}$; \cref{rem:pa:e6}).
-
-\paragraph{E7: time factor and steeper penalty} (E2's data and pools, 25 seeds; \cref{tab:exp:e7}).
-The time factor costs $\tau\log_2(1+|T|)$ bits ($T^*$ has 77 symbols), so at $\tau=1$ it moves the log-odds between $T^*$ and any hand competitor by at most $\log_2(78/2)\approx5.3$ bits. It changes nothing visible from $n=64$ on; at $n\le32$ it slightly favours small unsound lumps (unsound MAP at $n=8$ in 9 instead of 7 seeds at $\tau=1$; largest change of a reported mass $0.181$ at $\tau=1$, $0.563$ at $\tau=4$). This follows from the factor's definition and does not test the brief's H6 (\cref{prop:time:cheap,thm:time:ntime}). The steepness $\lambda=2$ makes early unsound lumping far more frequent (unsound MAP at $n=8$ in 22 seeds) but removes the false spare faster; $\lambda=\tfrac12$ does the reverse (\cref{rem:time:e7}).
-
-\paragraph{E8: splits under a derivation likelihood.}
-Let $\varphi(t):=(t+0=t)$, $\psi(t):=(0+t=t)$, whole $:=\{\varphi(z),\psi(z),\varphi(z)\to\psi(z)\}$, and split $:=$ whole with $\varphi(z)$ replaced by $\varphi(0),\varphi(Sz),\varphi(z+z'),\varphi(z\cdot z')$ ($K=4$ root productions). Under $\Cch1$ a citation of $\varphi(t)$ stops or applies MP with the cited conditional, giving $\psi(t)$, which can also be cited: the component behind a $\psi$-datum is latent. Data come from $\Cch1$ on whole at fixed weights $(0.5,0.25,0.25)$, with bodies from $\Qg$ (\expgen{wellspec}) or from another PCFG (\expgen{skew}: roots $0,S,+,\cdot$ with $.5,.1,.2,.2$); seeds 0--9; $n\le4096$. \Cref{tab:exp:e8} gives Bayes factors without the prior, which adds $76.4$ bits for whole.
-
-\noindent At matched weights ($w_\varphi p_f$) the two theories give every datum the same \Lone{} probability, to $1.1\cdot10^{-13}$ (experiments Prop X13, \cref{rem:ident:splitsL1}). With learned weights and well-specified usage the split loses $1.43$ bits per doubling under \Lone{} and $1.51$ under \Lzero{} ($n=256\ldots4096$; $1.60$, $1.76$ on $1024\ldots4096$), near the $(K-1)/2=1.5$ of conjecture \cref{prop:ident:splitlone}(d). With misspecified usage it wins linearly, more under \Lone{} ($0.202$ against $0.074$ bits per datum), because there the term of a $\psi$-datum also informs the split (\cref{prop:ident:splitlone}(c)). E8 does not test \cref{prop:ident:splitlone}(b), which concerns a one-component schema with fixed weights. In this model a derivation likelihood does not change the MDL finding (\cref{rem:ident:mdl}); what it changes in PA, the consequences of a split (\cref{prop:pa:detour}), the chain cannot test.
+\noindent For a one-component generator in a fixed hand pool (E1, E4, E6) the generator is an atom of the prior, and Doob's argument in the $(T,w)$ form gives concentration on it (\cref{rem:ident:x5}, in \cref{app:ident:gold}); the data-dependent pool members ($\Mem(D_n)$, causal theories) are covered only by the pool versions of \cref{thm:sound:avg,thm:sound:shrink}. E2, E3(b), E5(b) and E8 sample at one fixed weight vector; there the runs are a yardstick, not an instance of a theorem.
 
 % ---------------------------------------------------------------------
 \subsection{What the experiments do not show}\label{sec:exp:limits}
 
-\begin{remark}[Limitations]\status{(i) computed; (ii)--(v) proved (properties of the code)}\expbrk\src{experiments \S\S11, 12, 16.5}\label{rem:exp:limits}
+\begin{remark}[Limitations]\status{(i), (v) computed; (ii)--(iv) properties of the code}\expbrk\src{experiments \S\S11, 12, 16.5}\label{rem:exp:limits}
 (i) \emph{Pool, not class.} The winners, and even the frequency of unsound acceptance, changed with the pool: E2's acceptances fell from 19 to 5 of 25 seeds with causal pools and trimmed theories, and E3(a)'s winners moved when the families $R_m$, $C_k$ were extended. The pool version of \cref{thm:sound:avg} keeps soundness under pool restriction; nothing comparable is shown for identification. Search beyond a pool is open.
 (ii) \emph{Chains, $J\le2$.} MP needs a cited major premise, so no run computes PA under a derivation likelihood.
-(iii) \emph{One parameter; fixed $\Qg$.} A misfit of usage statistics is absorbed by extra components (E3, E8); a learned grammar can change the sign of the Occam drift (\cref{prop:pa:occam}).
+(iii) \emph{One parameter; fixed $\Qg$.} A misfit of usage statistics is absorbed by extra components (E3, E8); a learned grammar can change the sign of the Occam drift (\cref{prop:pa:occam}, in \cref{app:pa:mdl}).
 (iv) \emph{Bounded derivability.} $\vdash_J$ under-approximates provability, so the $P(T\vdash s)$ columns are lower bounds.
-(v) \emph{Small runs.} 25 seeds in E2 and E7, 10 in E5 and E8, 5 otherwise; $n\le4096$ (quadrature to $10^8$). The exact Dirichlet sum is exponential in the number of overlapping components, which also stops E3(a)'s nesting at $C_2$.
+(v) \emph{Small runs.} 25 seeds in E2 and E7, 10 in E5 and E8, 5 in E1, E3 and E6; E4 100--400 streams; $n\le4096$ (quadrature to $10^8$). The exact Dirichlet sum is exponential in the number of overlapping components, which also stops E3(a)'s nesting at $C_2$.
 No run uses human-written theorem lists: every misspecified generator perturbs or selects from the model's own term or motive law. Neither H\"anni's collapse (\cref{sec:time}) nor his ``do not contradict'' variant is implemented.
-\end{remark}
-
-\begin{remark}[Claims of the first version]\status{refuted}\expbrk\src{experiments \S16.4; referee M1--M4}\label{rem:exp:refuted}
-Each claim is kept with its counterexample.
-(1) E2: ``in 3 of 5 seeds an unsound lump has mass $\ge0.997$ at some $n\le32$ and a $\delta=0.05$ verifier accepts a false sentence''. True of a pool that used unseen data and lacked $\SeenQ(D_n)$; with causal pools, 2 of seeds 0--4 and 5 of 25. Counterexample to its representativeness: seed 2 at $n=32$, where the old \expth{skel4} (built from 40 data) had mass $1.0$ and the causal \expth{skel4@32} has $0.85$.
-(2) E2: ``MAP at $n=8$: \DTRC($n=16$) three times'': built from data 9--16, unseen at $n=8$.
-(3) E6: ``the five closed-guard forms are logically equivalent'': \cref{prop:exp:comm}(b).
-(4) ``Soundness at a constant threshold for any well-specified data'': fails for multi-component $T^*$ at fixed weights (\cref{ex:sound:constant}).
-(5) PA: ``robust at the level of theorems, not of axioms'': E3(b) atomic motives (\cref{prop:pa:atomic}).
-(6) E1: ``$P(T\vdash\varphi(t^*)\mid D_n)=1.000$ from $n=8$ in every configuration'': \expgen{open} data under \Lzero{} give $0$ at $n=4,8$.
-(7) E2: ``no false probe is accepted'': the mean over seeds hid seeds 1, 2 and 4.
 \end{remark}
