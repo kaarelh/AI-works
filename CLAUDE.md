@@ -7,6 +7,8 @@ This repository holds several independent projects, one top-level folder each.
 | `paulsen/` | `claude/charming-lovelace-olmdo9` |
 | `inferential-learning/`, `axiom-schemas/`, `axiom-induction/` | `claude/sleepy-gauss-u4kem1` |
 | `christiano-point/` | `claude/vibrant-wright-pdohvb` |
+| `foom-coom-transition/` | `codex/foom-coom-transition-2026-10-08` |
+| `computational-cosmology/` | `codex/computational-cosmology-2026-10-08` |
 
 ## Working branches
 
