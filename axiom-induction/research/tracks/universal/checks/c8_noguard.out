@@ -1,0 +1,79 @@
+c8_noguard: C_open, c=0.3 g=0.2 rho=0.1, numerals q=0.5, phi = 0+x=x
+Self-test of the integrator: log int_0^1 u^(a-1)(1-u)^(b-1)(1+beta u)^(-n) du against mpmath hyp2f1
+  max abs error 9.0e-13 over 6 cases
+Part 1: exact law of R_k (Prop N1) against the procedural sampler (common.sample_derivation)
+  R_1 v=[0.5] u=0.5, N=200000: z-scores (success, heads, tail j=k..k+3, phi(S^k w0), universal): +0.95 +2.07 -1.00 -0.47 +0.42 -0.44 -0.19 +0.13; unexpected outputs: 0
+  R_2 v=[0.3, 0.2] u=0.5, N=200000: z-scores (success, heads, tail j=k..k+3, phi(S^k w0), universal): +0.21 -0.34 +0.66 -0.53 -0.65 +0.31 -0.14 +0.84 +0.44; unexpected outputs: 0
+  R_3 v=[0.2, 0.1, 0.1] u=0.6, N=200000: z-scores (success, heads, tail j=k..k+3, phi(S^k w0), universal): +0.65 +0.49 +0.21 +0.04 -1.09 +0.42 +0.03 -0.11 +1.36 -0.99; unexpected outputs: 0
+  max |z| = 2.07
+
+Part 2: inf_w KL(P* || R_k) against q^k log((1+g rho)/(1-rho)) (Prop N2)
+  c=0.3 g=0.2 rho=0.10 q=0.5  k: numeric/predicted  0: 0.125163/0.125163  1: 0.062582/0.062582  2: 0.031291/0.031291  3: 0.015645/0.015645  4: 0.007823/0.007823  5: 0.003911/0.003911  6: 0.001956/0.001956
+  c=0.5 g=0.3 rho=0.30 q=0.8  k: numeric/predicted  0: 0.442853/0.442853  1: 0.354282/0.354282  2: 0.283426/0.283426  3: 0.226741/0.226741  4: 0.181392/0.181392  5: 0.145114/0.145114  6: 0.116091/0.116091
+  c=0.1 g=0.6 rho=0.05 q=0.3  k: numeric/predicted  0: 0.080852/0.080852  1: 0.024256/0.024256  2: 0.007277/0.007277  3: 0.002183/0.002183  4: 0.000655/0.000655  5: 0.000196/0.000196  6: 0.000059/0.000059
+  c=0.2 g=0.2 rho=0.50 q=0.9  k: numeric/predicted  0: 0.788457/0.788457  1: 0.709612/0.709612  2: 0.638650/0.638650  3: 0.574785/0.574785  4: 0.517307/0.517307  5: 0.465576/0.465576  6: 0.419019/0.419019
+  max |numeric - predicted| = 1.8e-15; minimiser u* = q^k/(B(1-q^k)+q^k) to 1e-6; max gain from perturbing head weights = 0.0e+00 (<= 0 means none)
+
+Part 3: posteriors, closed-instance data, Dirichlet(1/2) weights, prior 2^-(symbols + 1 per axiom), memoriser class mass 2^-6 (lower bracket)
+  L1-norm | class A {H_forall, H_open, R_1} | mean over 20 seeds
+     n:                            0        10       100      1000     10000    100000   1000000
+     P(T |- Ax phi), pure:     0.997     0.996     0.697     0.000     0.000     0.000     0.000
+     P(T |- Ax phi), Q:        1.000     1.000     1.000     1.000     1.000     1.000     1.000
+     mass(memorisers):         0.000     0.000     0.000     0.000     0.000     0.000     0.000
+     MAP (mode over seeds):   H_open    H_open    H_open       R_1       R_1       R_1       R_1
+  L1-norm | class B4 + R_2..R_4 + memorisers | mean over 20 seeds
+     n:                            0        10       100      1000     10000    100000   1000000
+     P(T |- Ax phi), pure:     0.599     0.996     0.697     0.000     0.000     0.000     0.000
+     P(T |- Ax phi), Q:        0.601     1.000     1.000     1.000     1.000     0.000     0.000
+     mass(memorisers):         0.399     0.000     0.000     0.000     0.000     1.000     1.000
+     MAP (mode over seeds):   H_open    H_open    H_open       R_3       R_4       mem       mem
+  L1-norm | class B40 + R_2..R_40 + memorisers | mean over 20 seeds
+     n:                            0        10       100      1000     10000    100000   1000000
+     P(T |- Ax phi), pure:     0.599     0.996     0.697     0.000     0.000     0.000     0.000
+     P(T |- Ax phi), Q:        0.601     1.000     1.000     1.000     1.000     1.000     1.000
+     mass(memorisers):         0.399     0.000     0.000     0.000     0.000     0.000     0.000
+     MAP (mode over seeds):   H_open    H_open    H_open       R_3       R_6       R_9      R_12
+  L1-sel | class A {H_forall, H_open, R_1} | mean over 20 seeds
+     n:                            0        10       100      1000     10000    100000   1000000
+     P(T |- Ax phi), pure:     0.997     0.998     0.987     1.000     1.000     1.000     1.000
+     P(T |- Ax phi), Q:        1.000     1.000     1.000     1.000     1.000     1.000     1.000
+     mass(memorisers):         0.000     0.000     0.000     0.000     0.000     0.000     0.000
+     MAP (mode over seeds):   H_open    H_open    H_open    H_open    H_open    H_open    H_open
+  L1-sel | class B4 + R_2..R_4 + memorisers | mean over 20 seeds
+     n:                            0        10       100      1000     10000    100000   1000000
+     P(T |- Ax phi), pure:     0.599     0.998     0.987     1.000     1.000     1.000     1.000
+     P(T |- Ax phi), Q:        0.601     1.000     1.000     1.000     1.000     1.000     1.000
+     mass(memorisers):         0.399     0.000     0.000     0.000     0.000     0.000     0.000
+     MAP (mode over seeds):   H_open    H_open    H_open    H_open    H_open    H_open    H_open
+  L1-sel | class B40 + R_2..R_40 + memorisers | mean over 20 seeds
+     n:                            0        10       100      1000     10000    100000   1000000
+     P(T |- Ax phi), pure:     0.599     0.998     0.987     1.000     1.000     1.000     1.000
+     P(T |- Ax phi), Q:        0.601     1.000     1.000     1.000     1.000     1.000     1.000
+     mass(memorisers):         0.399     0.000     0.000     0.000     0.000     0.000     0.000
+     MAP (mode over seeds):   H_open    H_open    H_open    H_open    H_open    H_open    H_open
+
+Part 4: class B40 at larger n, L1-norm (multinomial counts, 10 seeds per n); robustness variants
+  default (alpha=1/2, lam=1, mu=2^-6, lower bracket)
+     n=1e7: P_Q 1.000 P_pure 0.0e+00 MAP R_15
+     n=1e8: P_Q 1.000 P_pure 0.0e+00 MAP R_18
+     n=1e9: P_Q 1.000 P_pure 0.0e+00 MAP R_21
+     n=1e10: P_Q 1.000 P_pure 0.0e+00 MAP R_24
+     n=1e12: P_Q 1.000 P_pure 0.0e+00 MAP R_30
+  memoriser upper bracket, mu=2^-1
+     n=1e7: P_Q 1.000 P_pure 0.0e+00 MAP R_15
+     n=1e8: P_Q 1.000 P_pure 0.0e+00 MAP R_18
+     n=1e9: P_Q 1.000 P_pure 0.0e+00 MAP R_21
+     n=1e10: P_Q 1.000 P_pure 0.0e+00 MAP R_24
+     n=1e12: P_Q 1.000 P_pure 0.0e+00 MAP R_30
+  alpha=1
+     n=1e7: P_Q 1.000 P_pure 0.0e+00 MAP R_15
+     n=1e8: P_Q 1.000 P_pure 0.0e+00 MAP R_18
+     n=1e9: P_Q 1.000 P_pure 0.0e+00 MAP R_21
+     n=1e10: P_Q 1.000 P_pure 0.0e+00 MAP R_24
+     n=1e12: P_Q 1.000 P_pure 0.0e+00 MAP R_30
+  lam=2
+     n=1e7: P_Q 1.000 P_pure 0.0e+00 MAP R_14
+     n=1e8: P_Q 1.000 P_pure 0.0e+00 MAP R_17
+     n=1e9: P_Q 1.000 P_pure 0.0e+00 MAP R_20
+     n=1e10: P_Q 1.000 P_pure 0.0e+00 MAP R_23
+     n=1e12: P_Q 1.000 P_pure 0.0e+00 MAP R_30

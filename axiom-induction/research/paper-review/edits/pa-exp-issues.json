@@ -1,0 +1,790 @@
+[
+ {
+  "id": "P-01",
+  "sources": [
+   "C1",
+   "C24"
+  ],
+  "file": "paper/sections/pa.tex; paper/sections/app-pa.tex",
+  "label_or_line": "prop:pa:must (l.156); app-pa l.97",
+  "severity": "fatal",
+  "reviewer_severity": {
+   "C1": "fatal",
+   "C24": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "[C1] Part (c) gives the bare formula metavariable F_0 as an example of an \"unrefuted theory with smaller prior deriving all data within d\". Under the rule R_d of def:pa:refute, F_0 is refuted by the first datum: for any datum s' the sentence -s' is itself an instance of F_0, so F_0 derives -s' by a one-line citation. Whenever d covers the 11-55-line derivations required in part (b), it covers that citation. The example is false (the track notes, Prop 3.4(c), make the same mistake). The appendix proof says \"either has score 1 unless refuted within d\", but does not notice that F_0 always is. [C24] \"two library theorems suffice\" understates the case. One theorem suffices: associativity has 17 symbols, and 17 * log2 23 = 76.9 > 72.",
+  "evidence": "[C1] def:pa:refute (pa.tex l.29): likelihood 0 if T |-_{<=d} -s' for a datum s'; under L0, derives = has as an instance. F_0 has every sentence, including -s', as an instance. Part (b) requires d to cover derivations of 11-55 lines (c6_theorem_data.out), so d is larger than the size of a one-line citation of -s'. [C24] tab:pa:theorems (|s| = 17 for associativity); scratch/mathC_checks/arith_checks.out.",
+  "fix": "Binding text DECISIONS.md §10.P1 (drop F_0 as an example of (c); explain why R_d refutes it); fix the app-pa proof. In (b) write 'one or two library theorems suffice (associativity alone: 17·log2 23 = 76.9 > 72 bits)' (C24), with β_ax per P-03.",
+  "verdict_note": "Verified: under R_d (def:pa:refute) a negated datum ¬s' is an instance of F_0, derivable by a one-line citation, and (b) needs d to cover 11-55-line derivations. pa notes Prop 3.4(c) has the same error."
+ },
+ {
+  "id": "P-02",
+  "sources": [
+   "C2"
+  ],
+  "file": "paper/sections/pa.tex; paper/sections/app-pa.tex",
+  "label_or_line": "prop:pa:wellspec (l.152) last sentence; app-pa l.95",
+  "severity": "fatal",
+  "reviewer_severity": {
+   "C2": "fatal"
+  },
+  "verdict": "accepted",
+  "problem": "\"Theories PA u S (generic weights) decay polynomially, like spare slots\" is false in the stated setting. The proposition is posed in setting W (def:ident:W: every theory carries one FIXED law). For generic fixed weights P_{PA u S} != P_PA, so KL(P_PA || P_{PA u S}) > 0. By the strong law the log posterior odds of PA u S against PA then fall linearly in n: the decay is exponential, at the KL rate. Polynomial (spare-slot) decay belongs to Dirichlet-integrated weights (prop:ident:spare is stated \"with Dir(alpha) priors\"), which setting W excludes. The appendix calls the polynomial rate \"a proof sketch\", but the rate is wrong in this setting, not just unproved.",
+  "evidence": "def:ident:W (ident.tex l.23) \"each T carries a fixed law P_T (fixed weights)\"; prop:ident:spare (ident.tex l.137) is under Dir(alpha) priors; pa notes-final §3.6 say \"Their decay should be polynomial, like a spare slot (model Prop 5.5)\", which mixes the two settings in the same way.",
+  "fix": "Binding text DECISIONS.md §10.P2 (exponential at generic fixed weights in setting W, at the KL rate of prop:ident:rates(a); polynomial only with Dirichlet weights, proof sketch); status per §11; update the app-pa proof.",
+  "verdict_note": "Verified: def:ident:W fixes the laws; rem:ident:sparetotal gives (1−w_σ)^n with fixed weights; pa notes §3.6 mixes the two settings."
+ },
+ {
+  "id": "P-03",
+  "sources": [
+   "C3"
+  ],
+  "file": "paper/sections/pa.tex",
+  "label_or_line": "def:pa:lsch (l.22-23); prop:pa:memo (l.123-125); tab:pa:theorems caption (l.140); Answer (3) (l.159)",
+  "severity": "major",
+  "reviewer_severity": {
+   "C3": "major"
+  },
+  "verdict": "accepted, fix modified",
+  "problem": "Def pa:lsch uses ONE beta both for the prior (pi(T) ~ 2^{-beta sum|tau|}) and per written proof symbol. Prop pa:memo then says memorising at the first occurrence is cheaper \"iff beta < beta*(s) := (D_T(s) - l_cite)/|s|\". D_T(s) and l_cite are themselves computed at that beta. With a single beta, D_T(s) = A + beta*W with W >= |s| (every derivation writes s or its matrix), so beta*(s) > beta for EVERY beta. The \"iff\" is then vacuous: memorising always wins, and Answer (3) (\"when the axiom prior is much steeper than the proof code (beta >= beta*)\") cannot happen. The threshold only makes sense with a separate axiom-prior rate beta_ax, as check c6 (\"the axiom prior per symbol is below beta*\") and the referee's M3 (\"the axiom prior about 7-10 times steeper than the track's beta\") intend.",
+  "evidence": "Independent check scratch/mathC_checks/memo_single_beta.py, using the track's own derivation library: for all 18 (theory, theorem) pairs, W ranges from 33 to 1518 written symbols against |s| = 7-17, and the non-symbol cost A exceeds l_cite. So memorising is cheaper for every single beta. Output in memo_single_beta.out.",
+  "fix": "Binding text DECISIONS.md §10.P3: introduce β_ax (bits per axiom symbol; default β_ax = β); restate prop:pa:memo with β_ax and with D_T, ℓ_cite at the proof-text β; caption 'memorising wins at the first occurrence for every theorem at the default β_ax = β'; Answer (3) with β_ax ≥ β*(s).",
+  "verdict_note": "Verified: with one β the 'iff β < β*(s)' is vacuous as written; pa's c6 output and the referee's M3 already read β* as a threshold for the axiom-prior rate. The reviewer's general claim 'memorising wins for every β' is replaced by the computed statement for the six theorems."
+ },
+ {
+  "id": "P-04",
+  "sources": [
+   "C4"
+  ],
+  "file": "paper/sections/pa.tex; paper/sections/app-pa.tex",
+  "label_or_line": "ex:pa:skel (l.200-202); app-pa l.141",
+  "severity": "major",
+  "reviewer_severity": {
+   "C4": "major"
+  },
+  "verdict": "accepted",
+  "problem": "The example describes two different theories as if they were one (\"it\"). The computed lag (42838.5 bits at n = 3000, prior part 43040) belongs to the theory of the 112 skeletons seen in 3000 data (119 templates). That theory does not cover G1: 45 of the 157 skeletons are unseen, and it gets likelihood 0 under L0 when one of them appears. While it covers the data, its asymptotic slope is (119-8)/2 - 19*4 = -20.5 bits per doubling: it CLOSES IN on T*. The +2.0 bits per doubling belongs to the 164-template theory that covers G1, whose code length was never computed. The main-text sentence thus pairs a computed lag with the slope of a different, uncomputed theory.",
+  "evidence": "c8_narrow.out (B): \"n= 3000 H_skel (119 templates) ... +42838.5 ... asymptotic slope -20.5 bits per doubling\"; \"with all of them, H_skel has 164 templates; the asymptotic slope is ... +2.0\". Recomputed in scratch/mathC_checks/arith_checks.out.",
+  "fix": "Binding text DECISIONS.md §10.P4; same split in the app-pa details paragraph.",
+  "verdict_note": "Verified in pa checks/c8_narrow.out (B): +42838.5 bits is the 119-template theory (slope −20.5); +2.0 is the 164-template covering theory, not computed."
+ },
+ {
+  "id": "P-05",
+  "sources": [
+   "C5"
+  ],
+  "file": "paper/sections/pa.tex; paper/sections/experiments.tex",
+  "label_or_line": "rem:pa:e3b (l.217); tab:exp:e3b (l.131)",
+  "severity": "major",
+  "reviewer_severity": {
+   "C5": "major"
+  },
+  "verdict": "accepted, fix modified",
+  "problem": "The paper reports the mass of T*-equivalents under atomic motives as \"2*10^-178 at n = 2048\". That figure is an artefact of the pool. The only T*-equivalent left is frag-complete, which carries seven never-used fragments and is a constant 590.6 bits behind frag-atoms in every seed. The natural PA-equivalent competitor frag-atoms + T_Ind = Q + {T_=, T_<, T_Ind} is not in the pool. Its extra template is a spare slot, so it trails frag-atoms by only about 45 bits, and that gap grows by about 0.5 bit per doubling. The qualitative conclusion stands: the MAP is the strictly weaker frag-atoms, with mass about 1 - 2e-14. But the PA-equivalent mass is about 1e-14 and falls only polynomially; the paper overstates it by about 164 orders of magnitude.",
+  "evidence": "scratch/mathC_checks/e3b_pool_extension.py re-runs E3(b) \"atomic\" with that one theory added to the pool. Its mass relative to frag-atoms is 6.2e-14, 3.1e-14 and 2.2e-14 at n = 256, 1024 and 2048, and the T*-equivalent mass becomes 3.1e-14 (n = 1024) and 2.2e-14 (n = 2048) instead of 1e-112 and 2e-178. Bits behind frag-atoms: 43.87, 44.86, 45.36 (+0.5 per doubling, the n^{-1/2} rate of prop:ident:spare(b)). The same in all five seeds, with frag-atoms still the MAP (mass 1 - 2e-14) from n = 1024 (e3b_pool_extension.out). In the saved JSON, frag-complete minus frag-atoms is 590.6 bits in all five seeds.",
+  "fix": "Binding text DECISIONS.md §10.P5: say the 2·10^-178 is the T*-equivalent mass in this pool, carried by frag-complete (about 590 bits behind frag-atoms, from code/results/e3_misspec.md), and that a T*-equivalent adding only T_Ind to frag-atoms was not in the pool and would lose only polynomially (prop:ident:spare). Same caveat in the tab:exp:e3b caption. Do not quote the reviewer's re-run numbers.",
+  "verdict_note": "Verified from e3_misspec.md (atomic: frag-complete −397..−437 bits vs frag-atoms −986..−1028 relative to T*). The reviewer's 2.2·10^-14 comes from a scratch re-run, not a source (rejected.json)."
+ },
+ {
+  "id": "P-06",
+  "sources": [
+   "C6"
+  ],
+  "file": "paper/sections/pa.tex",
+  "label_or_line": "tab:pa:failures row F3 (l.279)",
+  "severity": "major",
+  "reviewer_severity": {
+   "C6": "major"
+  },
+  "verdict": "accepted",
+  "problem": "The \"fixable?\" column calls never-used parts split off (the omega-gap) \"harmless for theorems (prop:pa:detour)\". prop:pa:detour(a) shows harmlessness only for splits of T_Ind that contain a NON-ATOMIC connective root, and (b) shows the atomic split is strictly weaker. The table also cites rem:pa:merge as evidence for F3. There the sound split by head symbol \"does not entail forall x(x+0=x)\" and eventually wins (crossover about 1e8): theorems ARE lost. The track notes (F3) carry the qualifier \"harmless under L1 if a non-atomic connective is covered\", which the table drops.",
+  "evidence": "pa.tex l.113 (prop:pa:detour (a), (b)); l.256 (rem:pa:merge: \"covers every closed instance but does not entail forall x(x+0=x) ... crossover near n = 10^8\"); pa notes-final §6 F3.",
+  "fix": "Binding text DECISIONS.md §10.P6."
+ },
+ {
+  "id": "P-07",
+  "sources": [
+   "C7"
+  ],
+  "file": "paper/sections/pa.tex",
+  "label_or_line": "rem:pa:zf (l.81), last sentence",
+  "severity": "major",
+  "reviewer_severity": {
+   "C7": "major"
+  },
+  "verdict": "accepted",
+  "problem": "\"So the textbook ZF axioms win exactly when they are used directly\" is stronger than the evidence. Three parts are unsupported. (1) The \"only if\" direction for Replacement against Collection and for Foundation against in-induction needs the reverse overheads, which the same remark labels \"not formalised (conjecture: much larger)\". (2) Collection from Replacement without Foundation is \"open to us\". (3) The notes' qualifier \"and of nothing else that they derive only at a cost\" (pa §1.5) is dropped. Without it, data that use Collection or in-induction alongside the textbook forms make the textbook set lose.",
+  "evidence": "Same remark: \"The reverse overheads were not formalised (conjecture: much larger)\"; pa notes-final §1.5 states the qualifier. Literature: Collection from Replacement needs Foundation and Power Set in the standard proofs; it fails without Power Set (Zarach 1996; Gitman-Hamkins-Johnstone 2016). in-induction from Foundation needs transitive closures (Kaye-Wong 2007). These citations are correctly reported.",
+  "fix": "Binding text DECISIONS.md §10.P7."
+ },
+ {
+  "id": "P-08",
+  "sources": [
+   "C8"
+  ],
+  "file": "paper/sections/pa.tex",
+  "label_or_line": "paragraph 'Answer.' (l.159)",
+  "severity": "major",
+  "reviewer_severity": {
+   "C8": "major"
+  },
+  "verdict": "accepted",
+  "problem": "The paragraph opens \"A derivation-length likelihood finds Q+T_Ind from theorem data (1) when the data come from its own derivation process (prop:pa:gibbs, prop:pa:wellspec)\". Both cited results concern the generative, full-sum L1 (Gibbs bounds -log2 P_{T*}; wellspec is Doob under L1 in setting W). Neither concerns the two-part code L_sch, which the rest of §7.4 and the sentence \"Otherwise L_sch memorises\" are about. A reader will take items (1)-(4) as statements about L_sch. Under L_sch no result is given for well-specified theorem data.",
+  "evidence": "prop:pa:gibbs (l.148) uses -log2 P under P_{T*}; prop:pa:wellspec (l.152) is \"PA's L1 generator in setting W\". The paragraph itself says \"Not computed: theorem data under plain L1 or the full sum\". CLAIMS C12 resolves that pa's numbers are never \"L1 results\".",
+  "fix": "Binding text DECISIONS.md §10.P8 (item (1) under the full-sum L1; items (2)-(4) under L1^sch; the MAP sentence as a two-candidate computation, cf. R-09)."
+ },
+ {
+  "id": "P-09",
+  "sources": [
+   "C9",
+   "C37"
+  ],
+  "file": "paper/sections/pa.tex",
+  "label_or_line": "paragraph after def:pa:lsch (l.26); prop:pa:gibbs (l.148)",
+  "severity": "major",
+  "reviewer_severity": {
+   "C9": "major",
+   "C37": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "[C9] Kraft for a symbol-by-symbol code needs at least log2|alphabet| bits per written symbol. The track notes (pa §0) concede that \"strictly, beta should be log2 of the alphabet size, about log2 25 with the variable names used\". At beta = log2 23 the per-symbol charge is below that, so \"Kraft holds (proved)\" is not proved for the code as used. Consequently \"L_sch is the two-part form of a sub-probability likelihood\" is not established at the reported beta. The same gap affects prop:pa:gibbs's example l(s) = beta|s| (C37). [C37] The example l(s) = beta|s| satisfies sum 2^{-l} <= 1 only for a prefix (Polish) code with beta >= log2|alphabet|. The pa notes state this condition, but the paper drops it, and beta = log2 23 does not meet it for the roughly 25-symbol alphabet (see C9). The consequence sentence (\"at most the prior cost of memorising\") depends on it.",
+  "evidence": "[C9] pa notes-final §0, L1-sch decodable variant: \"(Strictly, beta should be log2 of the alphabet size, about log2 25 with the variable names used; this changes symbol costs by about 3% and no conclusion.)\" CLAIMS.md def:pa:lsch also says \"Kraft proved\". [C37] pa notes-final Prop 3.2: \"for a Polish-notation code over at most 2^beta symbols\"; §0 caveat.",
+  "fix": "Binding text DECISIONS.md §10.P9 (Kraft for β ≥ log2 alphabet size; β = log2 23 under-charges by about 3%; gibbs example with the alphabet condition); status per §11. (app-model l.58 already states the caveat; model-ident-sound need not act.)"
+ },
+ {
+  "id": "P-10",
+  "sources": [
+   "C10",
+   "C-32"
+  ],
+  "file": "paper/sections/app-pa.tex; paper/sections/pa.tex",
+  "label_or_line": "rem:pa:pointwise (app-pa l.112-113); pa l.182; rem:pa:shift status (app-pa l.135)",
+  "severity": "major",
+  "reviewer_severity": {
+   "C10": "major",
+   "C-32": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "[C10] The remark (status \"proved\") says that under 0/1 support \"every sentence is eventually decided correctly by memorisation alone (with inconsistent theories present, given R_{d_n})\". Its next sentence calls it open whether the mass of not-yet-refuted inconsistent theories deriving a sentence tends to 0. With infinitely many inconsistent theories, R_{d_n} removes each one eventually but never all of them at once. So \"decided correctly\" holds theory by theory (every surviving CONSISTENT theory), not for the posterior. The parenthetical claims more than is proved. [C-32] Status and source notes differ from the ledger: rem:ident:nearmiss, rem:pa:pointwise and rem:pa:shift drop the 'open' part of their ledger status (the text keeps it); ex:sound:constant cites 'experiments Prop X8' where the ledger cites the check check_fixed_weight (X8 does not contain the example).",
+  "evidence": "[C10] Proof (app-pa l.116): \"with inconsistent theories present this needs R_{d_n} ... Their remaining mass can be large (prop:pa:incons); whether it tends to 0 is open\". pa notes Remark 4.5 has the same tension. [C-32] CLAIMS.md rows rem:ident:nearmiss ('proved (transfer); open'), rem:pa:pointwise ('proved; open'), rem:pa:shift ('proved; computed (checked); open'), ex:sound:constant (source 'experiments check_fixed_weight'); scratch/c3_status2.out.",
+  "fix": "Binding text DECISIONS.md §10.P10; status 'proved; open'. rem:pa:shift status 'proved; computed; open' (C-32)."
+ },
+ {
+  "id": "P-11",
+  "sources": [
+   "C11"
+  ],
+  "file": "paper/sections/pa.tex",
+  "label_or_line": "sec:pa:answer (l.298)",
+  "severity": "major",
+  "reviewer_severity": {
+   "C11": "major"
+  },
+  "verdict": "accepted",
+  "problem": "The headline answer says that within the hand-picked candidate sets \"and for data that are direct uses of axioms\" the inducer puts nearly all mass on PA-equivalents. Direct-use data also include narrow and atomic practice. On such data the paper's own runs and examples end on a strictly weaker theory: E3(b) atomic motives give mass 1.000 on Q + {T_=, T_<} from n = 1024 (rem:pa:e3b), and ex:pa:narrow overtakes T* near n = 2^26.7. The next sentence lists \"narrow practice\" as a failure, which contradicts the scope as worded. The positive cases are the broad usage laws scored: G1, connective-rich motives, and the E2 weights at n >= 128.",
+  "evidence": "rem:pa:e3b (l.217); ex:pa:narrow (l.197); tab:exp:e3b atomic row; E2 at n <= 32, where the weaker SeenQ leads (tab:exp:e2).",
+  "fix": "Binding text DECISIONS.md §10.P11 (broad usage laws; once every needed axiom is cited; narrow/atomic direct use ends weaker); delete the last sentence (refuted first version; it is in tab:ver:corrections)."
+ },
+ {
+  "id": "P-12",
+  "sources": [
+   "C12"
+  ],
+  "file": "paper/sections/experiments.tex; paper/sections/app-experiments.tex",
+  "label_or_line": "prop:exp:exact(d) (l.35); app-experiments l.53",
+  "severity": "major",
+  "reviewer_severity": {
+   "C12": "major"
+  },
+  "verdict": "accepted",
+  "problem": "Part (d), status \"proved; computed\", says that the predecessor sets \"are complete for the component shapes of app:exp:exact, and the code admits into L1 pools only theories of the shapes it checks\". The appendix says the support check does NOT test the hypothesis of (d3) (no rigid p inside a metavariable argument). For data-derived theories at J = 2 (E1 allq2), exactness \"rests on the computed checks\". The proposition omits this hypothesis and thereby overstates what is proved.",
+  "evidence": "app-experiments.tex l.53: \"The support check does not test the hypothesis of (d3) ... for data-derived theories at J=2 (E1 allq2) exactness rests on the computed checks: ... (same class, so not independent)\".",
+  "fix": "Binding text DECISIONS.md §10.P12; status per §11."
+ },
+ {
+  "id": "P-13",
+  "sources": [
+   "C13"
+  ],
+  "file": "paper/sections/pa.tex",
+  "label_or_line": "prop:pa:occam status (l.97)",
+  "severity": "major",
+  "reviewer_severity": {
+   "C13": "major"
+  },
+  "verdict": "accepted",
+  "problem": "The status says \"(a), (c) proved; (b) proved under its growth condition\". Part (c) is derived from the expansion (b): the log2 n coefficients come from (b) applied to the index, to H, and to the context counts m_c. So (c) needs the same hypothesis, that every nonzero count grows linearly. For random data it holds almost surely, with the O(1) holding a.s.",
+  "evidence": "app-pa.tex l.65: \"(c) ... The log2 terms give ... since m_c is linear in n\" (uses (b)).",
+  "fix": "Status per DECISIONS.md §10.P13 / §11."
+ },
+ {
+  "id": "P-14",
+  "sources": [
+   "C14"
+  ],
+  "file": "paper/sections/app-pa.tex",
+  "label_or_line": "l.99 ('Decodable-code costs are 3.6-7.5% higher')",
+  "severity": "major",
+  "reviewer_severity": {
+   "C14": "major"
+  },
+  "verdict": "accepted",
+  "problem": "Wrong number (trivial fix). Over the 18 theorem derivations the decodable overhead ranges from 3.4% to 7.5%, not from 3.6%. The minimum is T_LNP assoc: 4219.8/4081.9 = +3.4%.",
+  "evidence": "c6_theorem_data.out (a), columns D and D(dec); recomputed in scratch/mathC_checks/memo_single_beta.out (last column).",
+  "fix": "Write 3.4-7.5% (min T_LNP assoc 4219.8/4081.9; from the D and D(dec) columns of pa checks/c6_theorem_data.out).",
+  "verdict_note": "Verified against c6_theorem_data.out."
+ },
+ {
+  "id": "P-15",
+  "sources": [
+   "C15"
+  ],
+  "file": "paper/sections/app-pa.tex",
+  "label_or_line": "Euler paragraph (l.208)",
+  "severity": "major",
+  "reviewer_severity": {
+   "C15": "major"
+  },
+  "verdict": "accepted, fix modified",
+  "problem": "Wrong number (trivial fix). c5_euler.py sums the unconditioned geometric mass of the false k over k < 200 only. For rho = 0.97 the tail matters, and the true mass is 0.0737. The rho = 0.9 value, 0.0049, is right.",
+  "evidence": "c5_euler.py l.114: mass_false = sum over FALSE_K (k in [0, 200)); independent sum to k < 4000 in scratch/mathC_checks/arith_checks.out: 0.0737 (rho = 0.97), 0.0049 (rho = 0.9).",
+  "fix": "Write 'mass 0.0049 (ρ = 0.9) and 0.0727 (ρ = 0.97), summed over false k < 200' (DECISIONS.md §10.P14). Do not quote the reviewer's tail sum 0.0737.",
+  "verdict_note": "c5_euler.py sums over k < 200 (verified by the reviewer); the source output is 0.0727 with that truncation."
+ },
+ {
+  "id": "P-16",
+  "sources": [
+   "C21",
+   "MA-07"
+  ],
+  "file": "paper/sections/experiments.tex",
+  "label_or_line": "l.20 ('where thm:ident:doob does not cover ...'); E1 setup (l.48: 'Every generator has one component, so thm:ident:doob applies')",
+  "severity": "major",
+  "reviewer_severity": {
+   "C21": "minor",
+   "MA-07": "major"
+  },
+  "verdict": "accepted",
+  "problem": "[C21] thm:ident:doob is stated for setting W, a countable class of FIXED i.i.d. laws. The E1 pools contain multi-component theories with Dirichlet-integrated (exchangeable, non-i.i.d.) marginal laws. Concentration on the generator still holds, by Doob's theorem for a countable class of sequence laws or by the (T, w)-parameter version (rem:ident:x5), but not by the cited statement as written. [MA-07] Says 'thm:ident:doob covers the experiments' Dirichlet posteriors only for one-component generators (E1, E4, E6)'. thm:ident:doob assumes setting W: a fixed countable class in which every T carries a fixed i.i.d. law. In E1/E4/E6 the competitors have Dirichlet-integrated (exchangeable, non-i.i.d.) laws, and the pools contain data-dependent members (Mem(D_n), causal-pool theories). The theorem as stated does not apply.",
+  "evidence": "[C21] def:ident:W (fixed laws); experiments notes X5(c): \"(a) applies to it only for one-component theories\". [MA-07] def:ident:W versus experiments §1.5; E4 setup ('plus Mem(D_n)'), E6 setup ('also ... Mem(D_n)'), experiments §2 (causal pools). For a fixed pool the conclusion follows from the (T,w) argument of the proof of thm:ident:limit(b) with the frequency functional (the one-component P* is an atom of the prior on laws); no consistency theorem covers data-dependent pools.",
+  "fix": "Cite rem:ident:x5 (new text, MIS M-07): 'the generator is a prior atom and Doob's argument in the (T,w) form applies to a fixed pool (rem:ident:x5); the data-dependent members (Mem(D_n), causal theories) are covered only by the pool versions of the soundness theorems'. Same at l.20."
+ },
+ {
+  "id": "P-17",
+  "sources": [
+   "R-14",
+   "C-40",
+   "C-42",
+   "R-44"
+  ],
+  "file": "paper/sections/experiments.tex; paper/sections/app-experiments.tex; paper/sections/pa.tex",
+  "label_or_line": "§8.2 (l.45-169), tab:exp:e1/e2/e3a/e3b; prop:exp:comm; rem:exp:refuted; pa.tex rem:pa:e2, rem:pa:e3b, rem:pa:e6, l.91 (MDL quotation)",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-14": "major",
+   "C-40": "minor",
+   "C-42": "minor",
+   "R-44": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "[R-14] Each experiment's findings are written out two or three times: in §8.2 with tables, and again with the same numbers in one to three thematic remarks. §8.2 alone is about 4.3 pages (p.52-56). [C-40] Duplicated material: each experiment's findings are written out in its section 8 paragraph and again, with the same numbers, in one to three thematic sections. The copies are consistent today (checked against code/results), but every later correction must be made in up to four places. [C-42] Duplicated material: the same computed numbers or passages appear in two to four places. [R-44] The framing sentence 'a study of an idea ... not the design of a stronger prover' appears three times in almost the same words. The outline asks for it in the intro and the discussion only.",
+  "evidence": "[R-14] E2 appears in rem:sound:lumps, rem:pa:e2, rem:pa:lumps and §8 E2(2). E3(a) in rem:ident:e3a, universal l.189 and §8 E3(a). E4 in rem:sound:e4 and §8 E4. E6 in rem:pa:e6, rem:ident:splitsL1 and §8 E6. E7 in rem:time:links(iii), rem:time:e7 and §8 E7. E8 in rem:ident:e8 and §8 E8 (C-40 lists them). [C-40] Numbers cross-checked in this review against code/results/e2_pa.md, e3_misspec.md, e4_ville.md, e5_gold.md, e6_equivalent.md, e7_prior.md, e8_split_l1.md. [C-42] Direct comparison of the passages. [R-44] intro l.29; experiments l.20 ('It is a laboratory for checking the claims ..., not a prover'); discussion l.64.",
+  "fix": "Restructure §8 per DECISIONS.md §3: keep framing (two sentences, 'a small exact laboratory' only, R-44), implementation (~0.6 pp), prop:exp:exact, a new summary table tab:exp:summary (experiment | setup in one line | result tested | finding | where in the main text), rem:exp:limits. Move the E1-E8 paragraphs and tab:exp:e1, e2, e3a, e3b (labels unchanged) to a new subsection app:exp:results; rem:exp:refuted and pool-construction details to App. G; prop:exp:comm to pa.tex before rem:pa:e6. Canonical homes: rem:pa:e2 (E2 identification; acceptances only cited from rem:sound:lumps), rem:pa:e3b (E3(b)), rem:pa:e6 (E6). Delete the AS MDL re-quotation at pa l.91 (canonical in ident §4.4). App. G does not repeat what tab:exp:e2seen and tab:exp:e4-e8 already show (R-45)."
+ },
+ {
+  "id": "P-18",
+  "sources": [
+   "R-25"
+  ],
+  "file": "paper/sections/pa.tex; paper/sections/app-pa.tex",
+  "label_or_line": "def:pa:lsch (l.22-26); l.91, l.110 (§7.3)",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-25": "major"
+  },
+  "verdict": "accepted",
+  "problem": "§7 uses code-level and AS-internal names that this paper never defines: nd.size, dtlib, u7, G1/G2/G3, NAIVE, PC, DPC, SDPC, RDPC, CF. A reader at p.44 cannot follow 'the split leads by 274656, 94089, 163028 and 17242 bits under NAIVE, PC, DPC and CF, and trails by 762 (SDPC) and 5986 (RDPC)'.",
+  "evidence": "pa.tex l.9 lists them as 'local symbols (not exported)'. l.91 introduces SDPC, RDPC and CF in one parenthesis. NAIVE, PC and DPC are not explained at all. AS's code u7 and law G1 are named without description.",
+  "fix": "In the main text distinguish only 'a fixed instantiation grammar' from 'a learned positional grammar shared by all templates (SDPC)'; give the §7.3 result as 'with a fixed or per-template grammar the split wins linearly (\\cref{tab:pa:mdl}); with a shared learned grammar it is held at the prior margin up to Occam terms'. Move the code names NAIVE/PC/DPC/RDPC/CF, u7/G1-G3 descriptions and the decodable-variant details to App. F (DECISIONS.md §3)."
+ },
+ {
+  "id": "P-19",
+  "sources": [
+   "R-13",
+   "C-38"
+  ],
+  "file": "paper/sections/pa.tex; paper/sections/experiments.tex",
+  "label_or_line": "whole sections",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-13": "major",
+   "C-38": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "[R-13] The main text is 56.0 pages against a plan of about 40 (outline cap 46), and the table of contents adds 3 pages. Section spans (measured from the PDF): intro 4.7, model 6.5, univ 7.9, ident 6.5, sound 5.9, time 5.9, pa 8.4, exp 6.6, disc 3.7. [C-38] The main text runs to about 56 pages and the appendices to about 60, against the outline's targets of about 40 (cap 46) and 36 pages. Part of the excess is duplicated material (C-39 to C-42).",
+  "evidence": "[R-13] Section starts measured with pdftotext -bbox: p.5.10, 9.77, 16.25, 24.10, 30.61, 36.48, 42.40, 50.80, 57.39; references at p.61.10. Block estimates are in scratch/r_blocks.out. C-38 records the same overrun. [C-38] main.aux: sec:intro p. 5, sec:disc p. 57, app:model p. 63, app:ver p. 115; pdfinfo: 122 pages; OUTLINE.md 'Page budget'.",
+  "fix": "Meet DECISIONS.md §2: pa 6.5 pp (cap 6.75, including prop:exp:comm), experiments 2.75 (cap 3.0), with the moves of §3 (pa: details of def:pa:lsch, tab:pa:costs, prop:pa:recursion, prop:pa:chain, code names, rem:pa:sdpcrefuted; experiments: E1-E8 and their tables, rem:exp:refuted, pool details, proof idea of prop:exp:exact) and tightening (rem:pa:usage, rem:pa:zf, §7.3 opening and G1 numbers, rem:pa:lumps, rem:pa:merge, text after prop:pa:isigma)."
+ },
+ {
+  "id": "P-20",
+  "sources": [
+   "R-16",
+   "C-28"
+  ],
+  "file": "paper/sections/pa.tex; paper/sections/app-pa.tex; paper/sections/experiments.tex",
+  "label_or_line": "pa l.57; unlabelled remark l.106-108; l.298 last sentence; rem:exp:refuted (l.183-192); tab:pa:merge",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-16": "major",
+   "C-28": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "[R-16] About 1.2 pages of the main text narrate first-version claims, refuted, that do not change what the reader should believe. All of them are already in tab:ver:corrections (App. H.2). The outline (rule 3) keeps refuted claims in the text only 'where they matter to the reader'. [C-28] The refuted 'constant margin' remark has no label, so app-verification points to prop:pa:occam instead of the refuted claim. tab:pa:merge, the evidence for rem:pa:merge, is never referenced.",
+  "evidence": "[R-16] Examples: 'The first version's argument (\"at least two lines\") was wrong' (pa l.57); '(The pre-referee version let c depend on T; referee m1.)' (time l.127); the unlabelled 'Refuted: a constant margin' remark (pa l.106); rem:exp:refuted (0.27 pp, seven items); the last sentence of sec:pa:answer. [C-28] Label/reference cross-check (labels never referenced include tab:pa:merge); app-verification.tex line 59.",
+  "fix": "Per DECISIONS.md §5: delete pa l.57 ('The first version's argument ... was wrong'); move the constant-margin remark to App. F with the new label rem:pa:sdpcrefuted; delete the last sentence of sec:pa:answer; move rem:exp:refuted to App. G; cite tab:pa:merge in rem:pa:merge (C-28)."
+ },
+ {
+  "id": "P-21",
+  "sources": [
+   "R-17",
+   "R-05"
+  ],
+  "file": "paper/sections/pa.tex; paper/sections/experiments.tex",
+  "label_or_line": "pa l.17 ('Track pa computes ...'), throughout; experiments l.20, l.164 ('does not test the brief's H6')",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-17": "major",
+   "R-05": "major"
+  },
+  "verdict": "accepted",
+  "problem": "[R-17] Process vocabulary runs through the mathematics. Objects are named after the organisational unit that produced them ('track universal's chains', 'track pa's natural deduction', 'track experiments' grammar'), and statements carry 'referee m9', 'editor, from ...' and 'the model track's first version'. The reader has to learn the project's org chart to follow the definitions. [R-05] The intro's only table, and ten sentences across the paper, grade the hypotheses H1-H7 of the orchestrator's internal research brief. The reader has never seen that document, and its hypotheses are not Hänni's. 'Refutes the brief's H6' or 'the brief's H4(a)' tells him nothing about his own proposals and spends 0.6 pages of the intro.",
+  "evidence": "[R-17] Counts in the main sections: 'track(s)' 55, 'referee' 42, 'first version / pre-referee / first summary' 18 (grep). model.tex alone has 17 'track' mentions. Example: Def 2.4 (p.11): 'track universal's chains C_min ... track experiments' forward chain Ch_J ... track pa's natural deduction ND'. [R-05] tab:intro:verdicts caption: 'The hypotheses of the research brief (research/00-brief.md), which were to be checked'. time.tex l.109 quotes and refutes 'the brief's sentence'. The question itself contains no hypotheses H1-H7.",
+  "fix": "Remove process vocabulary from running text (DECISIONS.md §6.2): 'Track pa computes with ...' → 'The computations of this section use ...'; 'track experiments' → 'the experiments of §8'; replace 'the brief's H6' by the claim."
+ },
+ {
+  "id": "P-22",
+  "sources": [
+   "R-27",
+   "C-26",
+   "R-30"
+  ],
+  "file": "paper/sections/pa.tex; paper/sections/experiments.tex; paper/sections/app-pa.tex",
+  "label_or_line": "motive (first use), DTRC (§7.6 title), T_{L∞} (tab:pa:dtrc), Q^- (prop:pa:fragments), Q_e (experiments l.27), SeenQ/Trim, pool names (tab:exp:e2, tab:exp:e3b)",
+  "severity": "major",
+  "reviewer_severity": {
+   "R-27": "major",
+   "C-26": "minor",
+   "R-30": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "[R-27] Several central terms are used throughout and never defined in this paper. 'Spare template/slot' is used in the intro (A4, A9, H5), Prop 2.20(c), Prop 3.9 and Rem 4.19, and is only implicit in Prop 4.18 ('σ a spare'). 'ω-gap' appears in the abstract, A3, §3 and §4, always as 'of AS'. 'Motive' appears in A5, Table 5 and §7. Also undefined: DTRC (intro l.109; the §7.6 title), 'anchor' (Prop 5.7 title), 'cautious verifier', Acc_k and H_k(DT°) (Prop 5.6), 'Gold's limit point' and 'L∞ against L5' (A9; Prop 4.12), and 'KT' (Lemma 2.12; first expanded in §7). [C-26] Symbols used before their definition or never defined: DirMult (defined in ident.tex line 108, used earlier in prop:univ:memo); Mem(D_n) (first used universal.tex line 113, defined only in experiments.tex line 29); SeenQ and Trim (used in sound.tex and pa.tex, defined in section 8); H_k and Acc_k (only 'AS Def 2.6'); the elimination-term law Qelim (never defined); T_E, T_N (only in app-pa); T_{L_infty} ('AS Prop 5.12'); Q^- (never defined). In ident.tex R_n is the spare-slot ratio while tab:ident:misspec in the same section uses R_m for numeral splits. [R-30] Pool-member names appear in tables before or without definition: skel4@8, DTRC@8, Trim(Q-lumped), skel6@16, frag-observed@16, @32, frag1, IndSwap.",
+  "evidence": "[R-27] grep: no sentence of the form 'a spare template is ...' in the main text. 'ω-gap' is always 'of AS' or 'AS §4.5'. 'motive' is first defined at pa.tex l.35 (p.43). C-26 lists further symbols used before their definition (DirMult, Mem, SeenQ, T_{L∞}, T_E, T_N, Q_e). [C-26] grep of the section files in reading order; NOTATION.md §3, §7 (where each symbol should be defined). [R-30] Table 11 (p.53) 'MAP [tag]' column; Table 13 (p.54) 'frag-observed@16, @32'. 'skel' and '@b' are explained only implicitly in l.29 ('stopped at k clusters').",
+  "fix": "Glosses at first use per DECISIONS.md §6.3 (motive; DTRC; T_{\\mathcal L_∞} with AS Prop 5.12; Q^- = any subset of Q1-Q7; Q_e = elimination-term law of the chain; SeenQ, Trim); one caption line for pool names in tab:exp:summary and in App. G (R-30). Rename 'the L_∞ side' and T_{L_∞} to calligraphic (§6.1)."
+ },
+ {
+  "id": "P-23",
+  "sources": [
+   "MA-08",
+   "C-25"
+  ],
+  "file": "paper/sections/experiments.tex",
+  "label_or_line": "l.75 (E2: 'the applicable soundness statement is thm:sound:shrink'); l.96; l.142-144 and tab:exp:e4 (w* as prior of T*)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "MA-08": "major",
+   "C-25": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "[MA-08] E2 uses data-dependent causal pools (SeenQ(D_n), trimmed theories) at fixed weights. thm:sound:shrink is stated for a fixed countable class; only thm:sound:avg has a pool version, and thm:sound:avg does not apply at fixed weights. So the cited theorem does not cover E2 as stated. [C-25] Notation drifts from NOTATION.md. rem:sound:lumps writes R_{1/2}(n,8) (the model track's name) where experiments.tex writes \\Rreg(n,8) for the same quantity. rem:sound:tight and rem:sound:vacuous write W* for W*_d. In E4, w* denotes the prior mass of T*, while NOTATION and thm:sound:shrink in the same paper use w* for the true weight vector; 'delta = w* delta'' for a one-component T* then reads as delta = delta'.",
+  "evidence": "[MA-08] thm:sound:shrink statement; pool version only in thm:sound:avg; the source experiments Prop X8(c) states the fixed-weight result 'for any pool R_n, possibly chosen by looking at the data'. [C-25] NOTATION.md §3 rows '(T,w), w_tau, w*' and '\\Rreg(n,K)'; experiments.tex line 142 ('when delta = w* delta''), line 144 ('w* = 7*10^-6 (the pool version ...)'); app-experiments.tex tab:exp:e4 column 'w*'.",
+  "fix": "After MIS adds the pool version of thm:sound:shrink (M-08), cite 'the pool version of thm:sound:shrink' at l.75 and l.96 and write \\Rreg(n,8); in E4 and tab:exp:e4 never write w* for the prior constant: π(T*) in (A), and in (B, C) the pool-version constant 2^{-bits(T*)}/(Σ_H 2^{-bits(T)} + 1) under a name such as W*_pool (DECISIONS.md §6.1)."
+ },
+ {
+  "id": "P-24",
+  "sources": [
+   "C-07"
+  ],
+  "file": "paper/sections/app-pa.tex",
+  "label_or_line": "l.12 (list of results added in the revision)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C-07": "major"
+  },
+  "verdict": "accepted",
+  "problem": "The list of results added after the referee reports is incomplete, and it disagrees with the appendices that state the same fact. It omits model Props 2.7 and 2.8 (prop:model:compute, prop:model:max; new section §2.4 answering referee Q2), Rem 8.3 (rem:ident:nearmiss) and the new proof of Thm 5.1(b), which app-ident lists; it omits experiments Prop X11 (prop:pa:redundant), which app-pa lists; and it omits universal Lemma S1, the exact rates of U16(b), the new proof of U10(c3), U12(b) for f_q = 0 (Watson's lemma) and the two-part part of U14(c), and experiments' full proof of X8(c), all added in response to the referees. 'Among them are' hides the gap; a reader cannot tell which results are unrefereed.",
+  "evidence": "model notes-final §2.4 heading '(new; referee Q2)'; model §12.1 rows Q2, Q6, M4; universal §15.1 rows M2 ('Lemma S1 ... Exact rates for Split_k and Both0'), M3, m5, m6; experiments §16.1 row M3 ('X8(c) proved in full'); app-ident.tex line 11; app-pa.tex line 12.",
+  "fix": "Keep the sentence on what the referee re-checked; replace the list of unrefereed additions by a pointer to the complete list in app:ver:process (front F-08); check that they agree."
+ },
+ {
+  "id": "P-25",
+  "sources": [
+   "C16"
+  ],
+  "file": "paper/sections/experiments.tex",
+  "label_or_line": "E2 item (2) (l.96; moves to App. G)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C16": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "The text attributes the 5 accepting seeds to \"Q-lumped or its trim beats SeenQ ... and V then accepts\". In seed 1 (n = 16) the unsound MAP is the data-derived skeleton cluster skel4@16 (mass 0.999), and Q-lumped has 0.001.",
+  "evidence": "e2_pa.md, \"Seeds and n at which a delta = 0.05 verifier accepts\": seed 1, n = 16, MAP skel4@16, 0.999. Recomputed in scratch/mathC_e2_json.out.",
+  "fix": "Write \"an unsound lump (Q-lumped, its trim, or in one seed a data-derived skeleton cluster) beats SeenQ\"."
+ },
+ {
+  "id": "P-26",
+  "sources": [
+   "C17"
+  ],
+  "file": "paper/sections/experiments.tex",
+  "label_or_line": "E8 paragraph (l.169; moves to App. G; rem:ident:e8 is MIS)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C17": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "These are marginal rates between n = 1024 and 4096: (817.04 - 196.52)/3072 and (299.59 - 72.05)/3072. The results file reports \"mean gain per datum at n = 4096: L1 0.1995, L0 0.0731\". The paper does not say which it quotes.",
+  "evidence": "e8_split_l1.md last line; arithmetic in scratch/mathC_checks/arith_checks.out.",
+  "fix": "Add \"between n = 1024 and 4096\" (as the notes do), or quote 0.200/0.073 as the mean gain at n = 4096."
+ },
+ {
+  "id": "P-27",
+  "sources": [
+   "C18"
+  ],
+  "file": "paper/sections/experiments.tex",
+  "label_or_line": "rem:exp:limits (v) and status (l.174, l.179)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C18": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "\"5 [seeds] otherwise\" also covers E4, which uses 400 streams in (A), 100 per row in (B, C) and 1e5 Monte Carlo streams. The status \"(ii)-(v) proved (properties of the code)\" assigns \"proved\" to (v), which is a list of run sizes.",
+  "evidence": "app-experiments.tex l.208 (seeds: E4 streams 0-399 (A), 0-99 (B, C)); tab:exp:e4.",
+  "fix": "Write \"...5 in E1, E3 and E6; E4 100-400 streams\". Change the status to \"(i), (v) computed; (ii)-(iv) properties of the code\"."
+ },
+ {
+  "id": "P-28",
+  "sources": [
+   "C20"
+  ],
+  "file": "paper/sections/experiments.tex",
+  "label_or_line": "E1 setup (l.48)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C20": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "Per-row pool sizes in e1_universal.json range from 14 to 28. The notes give 15-28 \"at n = 256\".",
+  "evidence": "scratch check over all rows of e1_universal.json: pool sizes {14,...,28}.",
+  "fix": "Write \"15-28 theories at n = 256\"."
+ },
+ {
+  "id": "P-29",
+  "sources": [
+   "C22"
+  ],
+  "file": "paper/sections/app-pa.tex",
+  "label_or_line": "l.31 (bounded collection)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C22": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "The wording suggests that the fragment equivalences IS_n <=> IP_n <=> LS_n <=> LP_n need an extra axiom. Their proofs use bounded collection BS_n, which IS_n proves (Paris-Kirby). They hold over the usual base theory without extra hypotheses.",
+  "evidence": "Standard: IS_{n+1} => BS_{n+1} => IS_n, so IS_n proves BS_n for n >= 1. Kaye 1991 ch. 7; Hajek-Pudlak I.2.",
+  "fix": "Write \"their proofs use bounded collection (BS_n, provable in IS_n) because theta_phi adds a bounded quantifier\"."
+ },
+ {
+  "id": "P-30",
+  "sources": [
+   "C23"
+  ],
+  "file": "paper/sections/pa.tex",
+  "label_or_line": "rem:pa:streams (iii) (l.144)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C23": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "\"for u = 0.1, 0.5 it is Q+T_Ind plus the library\". At n = 1 the MAP is Q + library for every u. T_Ind + library becomes the MAP from n = 10. The candidate \"Q + library\" includes all six library theorems from the first datum, so it is a hand-picked hypothesis, not one built from data seen.",
+  "evidence": "c6_theorem_data.out (d): u = 0.1 and 0.5 at n = 1, MAP \"Q+lib+memorised uses\".",
+  "fix": "Write \"from n = 10 (the first checkpoint after n = 1)\". Note that the library is fixed in advance (caveat (ii))."
+ },
+ {
+  "id": "P-31",
+  "sources": [
+   "C25"
+  ],
+  "file": "paper/sections/experiments.tex",
+  "label_or_line": "E5(b) (l.149)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C25": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "The main text names neither the hypothesis set, {L_1..L_40, L_inf}, nor the weight vector of the L_5 generator (uniform). The caption's per-datum gain 3 - log2 5 assumes uniform weights.",
+  "evidence": "e5_gold.md (b): \"posterior over {L_1..L_40, L_inf}\"; notes §7 \"Data i.i.d. uniform on L_5\".",
+  "fix": "Add \"over {L_1, ..., L_40, L_inf}; L_5 data uniform on its five sentences\"."
+ },
+ {
+  "id": "P-32",
+  "sources": [
+   "C26"
+  ],
+  "file": "paper/sections/experiments.tex",
+  "label_or_line": "E6 paragraph (l.161)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C26": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "The cross-reference is wrong. rem:pa:e6 contains neither the spare-slot statement nor the bound; the numbers are in e6_equivalent.md (A_xy+A_yx <= 1e-11, A_xy+S_ab <= 4e-10).",
+  "evidence": "pa.tex l.84-86 (rem:pa:e6 text); e6_equivalent.md L1 tables.",
+  "fix": "Point to tab:exp:e6, or add the two masses to its caption."
+ },
+ {
+  "id": "P-33",
+  "sources": [
+   "C27"
+  ],
+  "file": "paper/sections/app-experiments.tex",
+  "label_or_line": "app:exp:pools (l.68)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C27": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "The phrase is ambiguous: it can be read as \"not checked\" or as \"no case among those checked\". check_bounded.py re-ran E3 and E4 for seed 0 only. The per-row \"bounded\" fields of e3_misspec.json and e4_ville.json are 0 for every seed, so the claim holds, but for E6 only seed 0 was checked. The main-text sentence (experiments.tex l.27) \"never exceeded 8e-14\" covers E6 seeds 1-4 without evidence.",
+  "evidence": "check_bounded.out (\"E3(a) (seed 0)\", \"E6 (seed 0)\"); scan of all result JSONs: E1 max 8.43e-14, E2-E4 0; E6-E8 have no \"bounded\" field.",
+  "fix": "Write \"in E3 and E4(B, C), recorded per run: none; in E6, seed 0 only (Mem, 0)\"."
+ },
+ {
+  "id": "P-34",
+  "sources": [
+   "C28"
+  ],
+  "file": "paper/sections/app-pa.tex",
+  "label_or_line": "l.156",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C28": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "prop:pa:readonce(b) is stated for read-once templates. The argument (a fixed formula skeleton) applies to every term-only template, read-once or not. The claim also needs the theory's other components to be Q axioms or theorems of a fixed IS_k.",
+  "evidence": "pa.tex l.191.",
+  "fix": "Write \"by the argument of prop:pa:readonce(b), which needs only a fixed formula skeleton, any theory of Q axioms and term-only induction-type templates lies in some IS_k\"."
+ },
+ {
+  "id": "P-35",
+  "sources": [
+   "C29"
+  ],
+  "file": "paper/sections/pa.tex",
+  "label_or_line": "l.263 ('the minimal model')",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C29": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "The superlative \"the minimal model\" is not proved anywhere.",
+  "evidence": "pa notes §5.6 uses the same phrase without proof.",
+  "fix": "Write \"a minimal model\" or \"a simple model\"."
+ },
+ {
+  "id": "P-36",
+  "sources": [
+   "C32"
+  ],
+  "file": "paper/sections/app-pa.tex",
+  "label_or_line": "proof of prop:pa:readonce(a) (l.132)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C32": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "The proof needs every SIBLING SUBTREE on the path (a read-once formula, not an atom) to be forceable to T and to F by constant instantiation. The text gives only \"each metavariable occurs once, so these choices are independent\", and skips the induction over the connectives and quantifiers.",
+  "evidence": "The claim is true: by induction, a read-once formula over atoms that can each be set to T or F can itself be set to T or to F (for <-> use (T,T) and (T,F); quantifiers become vacuous). The track notes say \"a read-once formula is not constant in its atoms\".",
+  "fix": "Add one sentence: \"By induction on its structure, every read-once subformula can be made logically equivalent (over Q1) to T and, by another choice, to F.\""
+ },
+ {
+  "id": "P-37",
+  "sources": [
+   "C33"
+  ],
+  "file": "paper/sections/app-pa.tex",
+  "label_or_line": "proof of prop:pa:lower, step 2 (l.37)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C33": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "With parameters, schema instances in closure-normal form are universally closed, so an Ind instance can have a forall prefix. The argument does not need the claim, because the antecedent-root comparison (conjunction against forall) after removing the prefix already excludes ax.",
+  "evidence": "pa.tex l.35 (parameters allowed); app-pa l.37.",
+  "fix": "Delete the clause, or write \"even after removing a forall-prefix\"."
+ },
+ {
+  "id": "P-38",
+  "sources": [
+   "C34"
+  ],
+  "file": "paper/sections/experiments.tex",
+  "label_or_line": "E1 item (3) (l.71)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C34": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "The largest value over runs is 2.419e-12, so \"<= 2.4e-12\" is violated by rounding.",
+  "evidence": "scratch/mathC_e1_json.out: max Mem@8 (sch, L0/L1) = 2.41891539876831e-12.",
+  "fix": "Write \"<= 2.5*10^-12\" or \"about 2.4*10^-12 at most\"."
+ },
+ {
+  "id": "P-39",
+  "sources": [
+   "C35"
+  ],
+  "file": "paper/sections/experiments.tex",
+  "label_or_line": "E2 item (3) (l.97)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C35": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "At small n the likelihood part favours frag-complete. Its code-length excess is 696.9 at n = 8 and 698.2 at n = 16, below the 698.9-bit prior difference. \"Loses the prior difference plus ...\" is accurate only from about n = 32.",
+  "evidence": "tab:exp:e2seen middle columns; e2_pa.md code-length table.",
+  "fix": "Write \"it trails by about the prior difference (696.9 bits at n = 8), and the gap grows by 4.2 bits per doubling from n = 64 to 512\"."
+ },
+ {
+  "id": "P-40",
+  "sources": [
+   "C36"
+  ],
+  "file": "paper/sections/pa.tex",
+  "label_or_line": "rem:pa:usage (iii) (l.73)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C36": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "The threshold, about 0.29/650, uses the library's upper-bound overheads. With the proved lower bounds of prop:pa:lower (44-53 bits), the provable threshold is only below about 0.29/44 = 7*10^-3. The remark is prefaced \"for this library\", but (iii) reads as a general fact.",
+  "evidence": "arith_checks.out: 0.29/646.4 = 4.5e-4, 0.29/1468 = 2.0e-4, 0.29/44 = 6.6e-3.",
+  "fix": "Add \"(for this library; with only the lower bounds of prop:pa:lower, the threshold is at most about 7*10^-3)\"."
+ },
+ {
+  "id": "P-41",
+  "sources": [
+   "C19",
+   "C-22"
+  ],
+  "file": "paper/sections/experiments.tex",
+  "label_or_line": "tab:exp:e1 caption (l.65)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C19": "minor",
+   "C-22": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "[C19] The caption averages over phi only \"where the three formulas agree\". The L_sel row averages the generator mass over phi even though the formulas disagree: H_sch is 0.516 for x+0=x and 0+x=x but 0.731 for -Sx=0 at n = 256, giving 0.59. [C-22] The table averages over phi also where the formulas disagree. In the L1sel row the generator mass is 0.391/0.391/0.515 at n=4 (mean 0.43) and 0.516/0.516/0.731 at n=256 (mean 0.59); in the allq/L1 row 0.764/0.764/0.649 (mean 0.73). The caption's condition is not what was done.",
+  "evidence": "[C19] e1_universal.md, L1sel blocks; scratch/mathC_e1_table.out. [C-22] code/results/e1_universal.md (generator sch L1sel; allq L1), recomputed by scratch/c1_e1_table.py.",
+  "fix": "Caption: 'Means over 5 seeds and over the three formulas (per-formula values in code/results/e1_universal.md)', or give the L1^sel row per formula (0.39/0.38/0.47/0.52 and 0.52/0.50/0.65/0.73, from e1_universal.md)."
+ },
+ {
+  "id": "P-42",
+  "sources": [
+   "C-24"
+  ],
+  "file": "paper/sections/pa.tex",
+  "label_or_line": "rem:pa:merge (l.256)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C-24": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "Conflict C14 asks for the rate of the forall-elimination penalty 'with scopes' under each rule law. The remark gives the fixed code, the learned depth-indexed code and mixed practice, but omits the learned shared code, which is linear (2 bits per datum at n = 10^6 in tab:pa:rulecode).",
+  "evidence": "CLAIMS.md C14 and rem:pa:merge entry ('learned shared 2000004 bits at 10^6'); tab:pa:rulecode (app-pa.tex line 205).",
+  "fix": "Add 'linear under a learned rule law shared across depths (tab:pa:rulecode)'."
+ },
+ {
+  "id": "P-43",
+  "sources": [
+   "C30"
+  ],
+  "file": "paper/sections/experiments.tex",
+  "label_or_line": "E7 paragraph (l.164)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C30": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "\"Slightly\" fits tau = 1 (unsound MAP in 9 instead of 7 seeds). At tau = 4, the largest change in a reported mass is 0.563, the mean unsound mass at n = 8 rises from 0.256 to 0.372, and accepting seeds at n = 8 go from 2 to 5.",
+  "evidence": "e7_prior.md; tab:exp:e7.",
+  "fix": "In the App. G E7 paragraph write 'favours small unsound lumps (slightly at τ = 1, markedly at τ = 4)'; the canonical rem:time:e7 (univ-time) carries the same wording."
+ },
+ {
+  "id": "P-44",
+  "sources": [
+   "C31"
+  ],
+  "file": "paper/sections/experiments.tex",
+  "label_or_line": "E3(a) discussion (l.138)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C31": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "\"On heavy tails the deepest nesting available wins\" and \"the winner keeps changing as n grows\". In 2 of 5 heavy seeds the MAP is the two-component {phi(z), phi(SSz)}, not C_2, the deepest nesting in the pool. Under heavy data the winners are the same at n = 512 and 1024. The second phrase is true only of the numeral data.",
+  "evidence": "e3_misspec.md heavy L0: MAP \"C_2 x3; skel2@8 x2\" at both n = 512 and 1024.",
+  "fix": "Write \"a depth-2 nesting (C_2, or {phi(z), phi(SSz)}) wins\", and \"on numerals the winner keeps changing\".",
+  "verdict_note": "The same wording is fixed in rem:ident:e3a by model-ident-sound (M-15)."
+ },
+ {
+  "id": "P-45",
+  "sources": [
+   "C-41"
+  ],
+  "file": "paper/sections/app-pa.tex",
+  "label_or_line": "proof of prop:pa:refl (l.110)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C-41": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "Duplicated material: the same proof is written out twice in each pair. app-time's proof already ends with the reflection case.",
+  "evidence": "Direct comparison: the affine-slice argument and the constant-body argument are repeated almost word for word.",
+  "fix": "Replace the proof by 'as for \\cref{prop:time:notemplate} (\\cref{app:time:templates}), with Prv_T for Acc_f' (canonical home of the constant-body argument: app-time)."
+ },
+ {
+  "id": "P-46",
+  "sources": [
+   "C-27"
+  ],
+  "file": "paper/sections/pa.tex",
+  "label_or_line": "uses of lem:pa:motive, prop:pa:fragments, prop:pa:redundant, rem:pa:pointwise, rem:pa:tower, rem:pa:shift (l.172, 182, 188, 194, 210)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "C-27": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "These results are used in the main text as if stated there, but are stated only in the appendices, against the ledger's section column ('univ / app', 'pa / app': statement in the section, proof in the appendix). prop:univ:eqfrag is described in prose in section 3 with a \\Cref that sends the reader to Appendix B for the statement.",
+  "evidence": "CLAIMS.md rows prop:univ:sim, lem:univ:waste, prop:univ:rk, prop:univ:eqfrag, lem:pa:motive, prop:pa:fragments, prop:pa:redundant, rem:pa:pointwise, rem:pa:tower, rem:pa:shift (section 'univ / app' or 'pa / app'); c3_status2.out (environment locations).",
+  "fix": "At each main-text use of a statement that lives only in App. F (including those moved now), write its conclusion and '\\cref{...} in \\cref{app:...}'. Report moved items in the changelog for the CLAIMS.md sync."
+ },
+ {
+  "id": "P-47",
+  "sources": [
+   "R-32"
+  ],
+  "file": "paper/sections/pa.tex",
+  "label_or_line": "l.91, l.110 (MDL finding)",
+  "severity": "minor",
+  "reviewer_severity": {
+   "R-32": "minor"
+  },
+  "verdict": "accepted",
+  "problem": "The MDL finding of AS is quoted three times ('MDL tracks the statistics of usage ...'). The paper's conclusion about it ('when the instantiation model is misspecified, the posterior tracks usage') comes as the last sentence of a 10-line remark.",
+  "evidence": "Quoted at universal l.237, ident l.104 and pa l.91. rem:ident:mdl is 0.32 pp, with its conclusion at the end.",
+  "fix": "No re-quotation of AS's MDL sentence in §7.3 (canonical in ident §4.4); one clause with a pointer to rem:ident:mdl."
+ }
+]

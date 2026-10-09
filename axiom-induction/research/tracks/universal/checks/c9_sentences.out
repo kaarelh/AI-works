@@ -1,0 +1,83 @@
+c9_sentences: C_min, c=0.3, numerals q=0.5, phi = 0+x=x
+Part 1: closed forms against the generic exact engine (common.py), fixed weights, data j = 0..8
+  max |engine - closed form| = 1.1e-16 over Split_1..3 and Both0, 2 likelihoods
+
+Part 2: minimal KL (nats per datum) against the closed forms
+  q=0.5 c=0.3  H_forall 1.46634 | Split_1..6 numeric/pred 0.73317/0.73317 0.36658/0.36658 0.18329/0.18329 0.09165/0.09165 0.04582/0.04582 0.02291/0.02291 | Both0 1.01844/1.01844
+  q=0.8 c=0.5  H_forall 1.09861 | Split_1..6 numeric/pred 0.87889/0.87889 0.70311/0.70311 0.56249/0.56249 0.44999/0.44999 0.35999/0.35999 0.28799/0.28799 | Both0 1.00221/1.00221
+  q=0.3 c=0.1  H_forall 2.39790 | Split_1..6 numeric/pred 0.71937/0.71937 0.21581/0.21581 0.06474/0.06474 0.01942/0.01942 0.00583/0.00583 0.00175/0.00175 | Both0 1.06084/1.06084
+  max |numeric - closed form| = 8.9e-16
+
+Part 3: posteriors on numeral data (Dirichlet(1/2) weights, prior 2^-(symbols+1 per axiom), memoriser class mass 2^-6, lower bracket)
+  L1-norm | class S3 {H_forall, Split_1, Both0} | mean over 20 seeds
+     n:                            0        20       100      1000     10000    100000   1000000
+     P(T |- Ax phi), pure:     0.996     0.038     0.000     0.000     0.000     0.000     0.000
+     P(T |- Ax phi), Q:        1.000     1.000     1.000     1.000     1.000     1.000     1.000
+     mass(memorisers):         0.000     0.000     0.000     0.000     0.000     0.000     0.000
+     MAP (mode over seeds): H_forall   Split_1   Split_1   Split_1   Split_1   Split_1   Split_1
+  L1-norm | class S4m {H_forall, Both0, Split_1..4, memorisers} | mean over 20 seeds
+     n:                            0        20       100      1000     10000    100000   1000000
+     P(T |- Ax phi), pure:     0.336     0.024     0.000     0.000     0.000     0.000     0.000
+     P(T |- Ax phi), Q:        0.338     0.926     0.947     0.475     0.000     0.000     0.000
+     mass(memorisers):         0.662     0.074     0.053     0.525     1.000     1.000     1.000
+     MAP (mode over seeds):      mem   Split_1   Split_3       mem       mem       mem       mem
+  L1-norm | class S40m {H_forall, Both0, Split_1..40, memorisers} | mean over 20 seeds
+     n:                            0        20       100      1000     10000    100000   1000000
+     P(T |- Ax phi), pure:     0.336     0.024     0.000     0.000     0.000     0.000     0.000
+     P(T |- Ax phi), Q:        0.338     0.926     0.947     1.000     1.000     1.000     1.000
+     mass(memorisers):         0.662     0.074     0.053     0.000     0.000     0.000     0.000
+     MAP (mode over seeds):      mem   Split_1   Split_3   Split_6   Split_9  Split_12  Split_15
+  L0-closure | class S3 {H_forall, Split_1, Both0} | mean over 20 seeds
+     n:                            0        20       100      1000     10000    100000   1000000
+     P(T |- Ax phi), pure:     0.996     0.997     0.999     1.000     1.000     1.000     1.000
+     P(T |- Ax phi), Q:        1.000     1.000     1.000     1.000     1.000     1.000     1.000
+     mass(memorisers):         0.000     0.000     0.000     0.000     0.000     0.000     0.000
+     MAP (mode over seeds): H_forall  H_forall  H_forall  H_forall  H_forall  H_forall  H_forall
+  L0-closure | class S4m {H_forall, Both0, Split_1..4, memorisers} | mean over 20 seeds
+     n:                            0        20       100      1000     10000    100000   1000000
+     P(T |- Ax phi), pure:     0.336     0.997     0.999     1.000     1.000     1.000     1.000
+     P(T |- Ax phi), Q:        0.338     1.000     1.000     1.000     1.000     1.000     1.000
+     mass(memorisers):         0.662     0.000     0.000     0.000     0.000     0.000     0.000
+     MAP (mode over seeds):      mem  H_forall  H_forall  H_forall  H_forall  H_forall  H_forall
+  L0-closure | class S40m {H_forall, Both0, Split_1..40, memorisers} | mean over 20 seeds
+     n:                            0        20       100      1000     10000    100000   1000000
+     P(T |- Ax phi), pure:     0.336     0.997     0.999     1.000     1.000     1.000     1.000
+     P(T |- Ax phi), Q:        0.338     1.000     1.000     1.000     1.000     1.000     1.000
+     mass(memorisers):         0.662     0.000     0.000     0.000     0.000     0.000     0.000
+     MAP (mode over seeds):      mem  H_forall  H_forall  H_forall  H_forall  H_forall  H_forall
+
+Part 4: class S40m at larger n, L1-norm (multinomial counts, 10 seeds per n); robustness variants
+  default (alpha=1/2, lam=1, mu=2^-6, lower bracket)
+     n=1e7: P_Q 1.000  P_pure 0.0e+00  MAP Split_18
+     n=1e8: P_Q 1.000  P_pure 0.0e+00  MAP Split_21
+     n=1e9: P_Q 1.000  P_pure 0.0e+00  MAP Split_24
+     n=1e10: P_Q 1.000  P_pure 0.0e+00  MAP Split_27
+     n=1e12: P_Q 1.000  P_pure 0.0e+00  MAP Split_34
+  memoriser upper bracket, mu=2^-1
+     n=1e7: P_Q 1.000  P_pure 0.0e+00  MAP Split_18
+     n=1e8: P_Q 1.000  P_pure 0.0e+00  MAP Split_21
+     n=1e9: P_Q 1.000  P_pure 0.0e+00  MAP Split_24
+     n=1e10: P_Q 1.000  P_pure 0.0e+00  MAP Split_27
+     n=1e12: P_Q 1.000  P_pure 0.0e+00  MAP Split_34
+  alpha=1
+     n=1e7: P_Q 1.000  P_pure 0.0e+00  MAP Split_18
+     n=1e8: P_Q 1.000  P_pure 0.0e+00  MAP Split_21
+     n=1e9: P_Q 1.000  P_pure 0.0e+00  MAP Split_24
+     n=1e10: P_Q 1.000  P_pure 0.0e+00  MAP Split_27
+     n=1e12: P_Q 1.000  P_pure 0.0e+00  MAP Split_34
+  lam=2
+     n=1e7: P_Q 1.000  P_pure 0.0e+00  MAP Split_17
+     n=1e8: P_Q 1.000  P_pure 0.0e+00  MAP Split_20
+     n=1e9: P_Q 1.000  P_pure 0.0e+00  MAP Split_24
+     n=1e10: P_Q 1.000  P_pure 0.0e+00  MAP Split_27
+     n=1e12: P_Q 1.000  P_pure 0.0e+00  MAP Split_33
+
+Part 5: log-odds (nats) of the Split family (sum over k <= 40) against the memoriser class, L1-norm, default prior; mean (min, max) over 10 seeds
+  n=1e2   log-odds      16.5 (     -2.9,      29.9)   L log2 L =    18.2
+  n=1e3   log-odds      34.4 (     14.4,      53.1)   L log2 L =    33.1
+  n=1e4   log-odds      54.7 (     12.0,      94.4)   L log2 L =    49.6
+  n=1e5   log-odds      71.5 (     17.3,     120.1)   L log2 L =    67.3
+  n=1e6   log-odds     105.1 (     50.5,     162.0)   L log2 L =    86.0
+  n=1e8   log-odds     145.2 (     98.6,     204.9)   L log2 L =   125.8
+  n=1e10  log-odds     193.5 (    115.8,     350.9)   L log2 L =   167.9
+  n=1e12  log-odds     286.4 (    237.4,     406.7)   L log2 L =   212.0

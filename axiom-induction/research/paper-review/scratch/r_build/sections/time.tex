@@ -1,0 +1,210 @@
+\section{Time penalties and H\"anni's collapse}\label{sec:time}
+% =====================================================================
+% Section 6: the collapse of axiom induction into function induction, what templates do to it, and which
+% time or length penalty prices it. Sources (final records only):
+%   research/tracks/model/notes-final.md   §6 (Prop 6.0 - Conj 6.15, the closing statement), §1.3, §1.5,
+%       Rem 1.10, §9.1 (H6), §9.3, §10 items 12-15, §12 (verification log: M2, m1); checks/c12_l1_size.out
+%   research/tracks/model/referee.md        (M2, m1, Q2); referee_code/r2_l1_size.out
+%   research/tracks/universal/notes-final.md Prop U2t (§2.2), the remark after Prop U14 (§8)
+%   research/tracks/pa/notes-final.md       Prop 4.3, §3.2, §3.8, F9; pa referee.md missed question 3
+%   research/tracks/experiments/notes-final.md §1.3, §9 (E7); code/results/e7_prior.md
+%   research/00-brief.md (H6); research/prior/hanni-*.md (quotes)
+% Proofs and computations: sections/app-time.tex.
+% Local deviations from NOTATION.md §9: the binary numeral of a word w is \num{w} (not nu(w)), because nu(pi)
+% counts grammar nodes in the same section; the exponential rate of model Prop 6.11 is zeta (the notes'
+% theta), because theta is a substitution (as in app-model.tex).
+% =====================================================================
+
+H\"anni's working notes \citep{hanni2026notes}\footnote{File \texttt{research/prior/hanni-solomonoff-axiom-induction.md} of the accompanying repository; working notes, quoted verbatim.} compare axiom induction, which weighs axiom systems that prove the labelled data, with Solomonoff function induction, which weighs programs that label statements directly. He argues that the two are equivalent for consistent assigners, turning an assigner $T$ into the schema ``\texttt{T(quoted-phi) = accept => phi}'', where ``being an axiom of the right form is in fact decidable''. So unrestricted axiom induction collapses into function induction; this motivates his restriction to substitution schemas. The question adds a time penalty: ``it should not take too long to generate axioms / to check whether a statement is an axiom''. The brief (H6) conjectured that such a penalty prices the collapse schema by the assigner's running time.
+
+Following model \S6, we show that the equivalence holds within a constant (via Craig's trick; via his own schema only in a two-sorted reading), that templates block his schema but not the collapse, that time penalties on checking or generating axioms do not block it, and that derivation length in written symbols prices it, while plain $\Lone$ does so only logarithmically as far as proved. \Cref{rem:time:summary} states the result. Proofs are in \cref{app:time}.
+
+% ---------------------------------------------------------------------
+\subsection{The two inductors}\label{sec:time:inducers}
+
+Fix a countable first-order language $L$ with sentences $\Sent_L$, a universal prefix machine $U$ (program $p$ has weight $2^{-|p|}$), and a decidable background $B\subseteq\Sent_L$, possibly empty, that is part of every axiom hypothesis. Data are labelled sentences $D=((\varphi_1,b_1),\dots,(\varphi_n,b_n))$, $b_i\in\{1,0\}$ (true, false).
+
+\begin{definition}[Axiom and function induction]\src{model \S6.1}\label{def:time:inducers}
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item $\AI$: a hypothesis is a program $p$ that halts on every input and decides a set $A_p\subseteq\Sent_L$. It is \emph{compatible} with $D$ if $B\cup A_p$ is consistent and proves $\varphi_i$ when $b_i=1$ and $\neg\varphi_i$ when $b_i=0$. $W_{\AI}(D):=\sum_{p\text{ compatible}}2^{-|p|}$.
+\item $\FIcons$: a hypothesis is a program $f$ computing a partial map $\Sent_L\to\{\mathrm{acc},\mathrm{rej}\}$ with $B\cup\Gamma_f$ consistent, where $\Gamma_f:=\{\varphi:f(\varphi)=\mathrm{acc}\}\cup\{\neg\varphi:f(\varphi)=\mathrm{rej}\}$; it is compatible if it gives each $\varphi_i$ the label $b_i$; $W_{\mathrm{FI}}(D):=\sum_{f\text{ compatible}}2^{-|f|}$. $\FIall$ is the same over all assigners.
+\item Semimeasure convention: $P_X(b_1\dots b_n\mid\varphi_1\dots\varphi_n):=W_X(D_n)/W_X(\emptyset)$, and log loss is $-\log_2$ of it. Hypotheses that leave $\varphi$ undecided drop out, so $W(D+(\varphi,1))+W(D+(\varphi,0))\le W(D)$ (H\"anni: ``maybe we should speak of a semimeasure here instead of renormalizing''). $W_X(D)$ depends on $D$ only as a set.
+\end{itemize}
+\end{definition}
+
+\begin{proposition}[Why consistent assigners]\status{proved}\src{model Prop 6.0}\label{prop:time:fiall}
+Let $R$ be a unary predicate, $w_1,w_2,\dots$ distinct closed terms, and $\varphi_i$ be $R(w_i)$ or $\neg R(w_i)$ by independent fair coins, all labelled true (a consistent labelling). $\FIall$'s log loss is at most a constant (the program ``always accept''); the expected log loss of $\AI$ and of $\FIcons$ is at least $n$ bits.
+\end{proposition}
+
+\begin{proof}[Proof idea]
+No compatible $\AI$ or $\FIcons$ hypothesis labels both $\psi$ and $\neg\psi$ true, so the two predictive probabilities sum to at most~1; by convexity a step costs at least one bit in expectation (\cref{app:time:inducers}). This confirms H\"anni's informal separation, and is why the fair comparison is with $\FIcons$.
+\end{proof}
+
+\begin{theorem}[H\"anni's equivalence, repaired]\status{proved; Craig's theorem known}\src{model Thm 6.1}\label{thm:time:equiv}
+There is a constant $c$, depending only on $U$, the coding of syntax and the decider for $B$, such that $2^{-c}W_{\AI}(D)\le W_{\mathrm{FI}}(D)\le2^{c}W_{\AI}(D)$ for every finite labelled $D$. Hence, for every reveal order and every labelling, the log losses of $\AI$ and $\FIcons$ in the semimeasure convention differ by at most $2c$ bits.
+\end{theorem}
+
+\begin{proof}[Proof idea]
+$\AI\to\mathrm{FI}$ is H\"anni's argument: map $p$ to ``search for proofs of $\varphi$ and of $\neg\varphi$ from $B\cup A_p$''. For $\mathrm{FI}\to\AI$ his schema is replaced by Craig's trick \citep{craig1953axiomatizability}: $f$ becomes a decider of
+$A^C_f:=\{\varphi^{\wedge(k+1)}:f(\varphi)=\mathrm{acc}\text{ in exactly }k\text{ steps}\}\cup\{(\neg\varphi)^{\wedge(k+1)}:f(\varphi)=\mathrm{rej}\text{ in exactly }k\text{ steps}\}$, $\psi^{\wedge m}$ the right-nested $m$-fold conjunction. $A^C_f$ is decidable and has the consequences of $\Gamma_f$; its decider is $f$ plus a fixed wrapper (\cref{app:time:inducers}).
+\end{proof}
+
+\begin{remark}[The convention, and ``what is a sequence'']\status{proved}\src{model \S6.1}\label{rem:time:convention}
+Renormalising at each step, $P(b\mid\varphi,D):=W(D+(\varphi,b))/\sum_{b'}W(D+(\varphi,b'))$, the argument gives only $2c$ bits \emph{per step}. The constant equivalence needs the semimeasure convention, which answers H\"anni's ``wtf is a sequence here?'' (any reveal order, any labelling). His ``same spec length as the axiom system plus a const'' holds in both directions, and $B$ needs no arithmetic; his route through the schema does, and works only with two sorts (\S\ref{sec:time:schema}).
+\end{remark}
+
+% ---------------------------------------------------------------------
+\subsection{H\"anni's schema}\label{sec:time:schema}
+
+Let $\Accf{f}(x)$ be a $\Sigma_1$ formula of arithmetic for ``$f$ halts on input $x$ with output $\mathrm{acc}$'' (via Kleene's $T$ predicate), and $\Rejf{f}(x)$ likewise. H\"anni's schema is
+$A_f:=\{\Accf{f}(\gn{\varphi})\to\varphi:\varphi\in\Sent_L\}\cup\{\Rejf{f}(\gn{\varphi})\to\neg\varphi:\varphi\in\Sent_L\}$, and his consistency argument is that ``a model of the phis alone would be a model of the added sentences also''.
+
+\begin{proposition}[Two sorts: his argument works]\status{proved; $\Sigma_1$-completeness of $\Q$ known}\src{model Prop 6.2}\label{prop:time:twosorted}
+Let $L$-sentences live in one sort and arithmetic in another, with $B:=\Q$ on the second. If $\Gamma_f$ has a model, then $B\cup A_f$ is consistent and $\Cn(B\cup A_f)\cap\Sent_L=\Cn(\Gamma_f)$.
+\end{proposition}
+
+\begin{proposition}[One sort over $\PA$]\status{proved, assuming $\Con(\PA)$ and the standard formalisation of computations; H\"anni's consistency argument refuted in this reading}\src{model Prop 6.3}\label{prop:time:single}
+Let $L=L_A$, $B=\PA$, and let $f$ accept $\gn{\neg\Con(\PA)}$, search on input $\gn{\Con(\PA)}$ for a $\PA$-proof of $\bot$ and accept if it finds one, and loop on every other input. Then $\Gamma_f=\{\neg\Con(\PA)\}$ is consistent with $\PA$, but $\PA\cup A_f$ is inconsistent.
+\end{proposition}
+
+\begin{proof}[Proof idea]
+$\PA\cup A_f$ proves $\neg\Con(\PA)$ from the true $\Sigma_1$ sentence $\Accf{f}(\gn{\neg\Con(\PA)})$, and $\Con(\PA)$ from $\PA\vdash\neg\Con(\PA)\to\Accf{f}(\gn{\Con(\PA)})$ (\cref{app:time:schema}).
+\end{proof}
+
+His argument assumes that the antecedents are evaluated correctly; in a model of $\PA+\neg\Con(\PA)$, $\Accf{f}(\gn{\Con(\PA)})$ holds via a nonstandard proof of $\bot$. So his \emph{conclusion}, the equivalence, stands (\cref{thm:time:equiv}); his \emph{argument} needs standard arithmetic (two sorts) or a sound $f$.
+
+% ---------------------------------------------------------------------
+\subsection{What templates do}\label{sec:time:templates}
+
+\begin{proposition}[No non-ground template in the collapse schema]\status{proved}\src{model Prop 6.4; pa Prop 4.3}\label{prop:time:notemplate}
+Write Gödel numbers as unary numerals $S^k0$ (or in any numeral system in which some term symbol, here $+$, never occurs), and let $C_f:=\{\Accf{f}(\gn{\varphi})\to\varphi:\varphi\in\Sent_L\}$, single- or two-sorted. Every $\DT$ template $\tau$ with $\inst(\tau)\subseteq C_f$ is ground. So $C_f$ is not $\bigcup\inst(T)$ for any finite set $T$ of $\DT$ templates, and such a set with instances in $C_f$ covers finitely many of its members. The same holds for the reflection schema $\Refl_T=\{\Prv_T(\gn{\varphi})\to\varphi\}$ (\cref{prop:pa:refl}).
+\end{proposition}
+
+\begin{proof}[Proof idea]
+A metavariable at the root or in the antecedent takes a constant body that breaks the shape $\Accf{f}(\text{numeral})$ (AS Lemma~2.4). Otherwise the antecedent is fixed, which fixes $\varphi$, so $\tau$ has one instance, while a template with a metavariable has infinitely many (AS Thm~2.5(a); \cref{app:time:templates}).
+\end{proof}
+
+So H\"anni's restriction (``maybe we just say we have to have second-order substitution schemas of a specific kind'') blocks his construction: inside $\DT$ it costs one ground template per sentence, which is memorisation. But one ground sentence can carry the collapse, at least in arithmetic.
+
+\begin{proposition}[One reflection sentence carries the collapse]\status{proved, given partial truth predicates (known)}\src{model Prop 6.5}\label{prop:time:collapse}
+For $n\ge1$ let $\Tr_n(x)$ be a $\Sigma_n$ partial truth predicate, $\PA\vdash\varphi\leftrightarrow\Tr_n(\gn{\varphi})$ for every $\Sigma_n$ sentence $\varphi$ (known; \citealp[Ch.~I]{hajek1993metamathematics}; \citealp[Ch.~9]{kaye1991models}; chapter numbers not checked), and $\Sent_{\Sigma_n}(x)$ a $\Delta_1$ formula for ``$x$ codes a $\Sigma_n$ sentence''. The single sentence (ground $\DT$ template)
+\[
+\rho_{f,n}:=\forall x\big[(\Sent_{\Sigma_n}(x)\wedge\Accf{f}(x))\to\Tr_n(x)\big]\wedge\forall x\big[(\Sent_{\Sigma_n}(x)\wedge\Rejf{f}(x))\to\neg\Tr_n(x)\big]
+\]
+has $\ell(\rho_{f,n})\le a|f|+b_n$ for constants $a,b_n$ (binary numeral for $f$'s index), and:
+(a) $\PA+\rho_{f,n}$ proves every $\Sigma_n$ sentence that $f$ accepts and the negation of every one it rejects;
+(b) if $f$ is $\Sigma_n$-sound (it accepts only true and rejects only false $\Sigma_n$ sentences), $\PA+\rho_{f,n}$ is true in $\N$.
+\end{proposition}
+
+So $\PA$'s templates plus one ground sentence reproduce any $\Sigma_n$-sound assigner on $\Sigma_n$ sentences, at a cost linear in $|f|$ (not $|f|+c$); for merely consistent assigners $\rho_{f,n}$ can be inconsistent with $\PA$ (as in \cref{prop:time:single}). It is also why the toy tower of \cref{rem:pa:tower} adds one ground sentence per step.
+
+% ---------------------------------------------------------------------
+\subsection{Time penalties}\label{sec:time:penalties}
+
+\begin{proposition}[Membership is cheap in both collapse sets]\status{(a), (b) proved; the brief's H6 sentence refuted}\src{model Prop 6.6}\label{prop:time:cheap}
+(a) With binary numerals, membership of $\chi$ in $A_f$ is decidable in time polynomial in $|\chi|$ without running $f$: parse $\chi$ as $\Accf{f}(t)\to\varphi$ or $\Rejf{f}(t)\to\neg\varphi$, compute $\gn{\varphi}$, compare with $t$. With unary numerals likewise, since then $|\chi|\ge\gn{\varphi}$.
+(b) Membership in $A^C_f$ is decidable in time polynomial in $|\chi|$: at most $|\chi|$ decompositions $\chi=\psi^{\wedge m}$, each running $f$ for $m-1<|\chi|$ steps.
+\end{proposition}
+
+So a penalty in the style of Levin's $\mathrm{Kt}$ or the speed prior on the time to \emph{check} axiomhood puts these sets in the same polynomial class as $\DT$ templates (\cref{rem:model:priors}(iii)). The brief's sentence ``A schema `$T(\gn{\varphi})=\text{accept}\to\varphi$' requires running $T$ to check membership, so a Kt- or speed-prior-style penalty prices it by $T$'s running time'' is \emph{refuted} by (a). Penalising the time to \emph{generate} axioms fails too: $\varphi^{\wedge(k+1)}\in A^C_f$ comes from $k$ steps of $f$ and is longer than $k$.
+
+The computation of $f$ moves into the proofs (with $A_f$ a derivation must prove $\Accf{f}(\gn{\varphi})$) or into the length of the axioms ($A^C_f$). Both are counted by the symbol size of derivations, and no theory escapes this. Let $L\supseteq\{0,S,+,\cdot,R\}$, $R$ unary. For $X\subseteq\{0,1\}^*$ put $\varphi_w:=R(\num{w})$, $\num{w}$ a binary numeral term, and let $f_X$ accept $\varphi_w$ iff $w\in X$ and reject it otherwise; $\Gamma_{f_X}$ is consistent (interpret $R$ as $X$).
+
+\begin{theorem}[Derivation size bounds the assigner's nondeterministic time]\status{proved}\src{model Thm 6.7}\label{thm:time:ntime}
+Let $T$ be any axiom set with membership decidable in time $O(n^e)$ and $T\cup\Gamma_{f_X}$ consistent. If every $\varphi_w$, $w\in X$, has a $\CK$-derivation from $T$ of symbol size at most $\ell(|w|)$, with $\ell(m)\ge m$ time-constructible, then $X\in\NTIME(\ell(m)^{c_e})$, where $c_e$ depends only on $e$ and on $\CK$'s proof-checking overhead.
+\end{theorem}
+
+\begin{proof}[Proof idea]
+Guess a derivation of size at most $\ell(|w|)$ and check it. If $w\notin X$, then $\neg\varphi_w\in\Gamma_{f_X}$, so consistency rules out a derivation (\cref{app:time:penalties}).
+\end{proof}
+
+\begin{corollary}[Hard assigners force long derivations, for every theory]\status{proved, given the nondeterministic time hierarchy theorem (known); single $X$ for all $e$: proof sketch}\src{model Cor 6.8 (referee m1)}\label{cor:time:hard}
+For finite $\DT$ theories membership takes time $O(|T|\cdot|\chi|)$ (AS Thm~2.5), so $e=1$ and $c_1$ is one constant for all of them.
+(a) Let $s(m)\ge m$ be time-constructible with $s(m+1)^{c_1}=o(s(m)^{c_1+1})$ (every polynomial). There is a decidable $X$ such that every finite $\DT$ theory $T$ with $T\cup\Gamma_{f_X}$ consistent has, for infinitely many $m$, some $w\in X$ of length $m$ with no $\CK$-derivation of $\varphi_w$ from $T$ of symbol size $\le s(m)$.
+(b) For each $e$ the same holds, with $X$ depending on $e$, for every axiom set with membership in time $O(n^e)$; a single $X$ for all $e$ exists under a growth condition (proof sketch, \cref{app:time:penalties}).
+\end{corollary}
+
+The hierarchy theorem is cited from \citet{cook1972hierarchy,seiferas1978separating,zak1983turing}; its exact form was not checked. $X$ has a fixed program, so $f_X$ is cheap for function induction and expensive in derivation size for every template theory. (The pre-referee version let $c$ depend on $T$; referee m1.)
+
+\begin{remark}[Upper bounds]\status{proof sketch}\src{model \S6.4}\label{rem:time:upper}
+The collapse constructions pay at most a polynomial of the assigner's \emph{deterministic} running time $k$ in derivation size: cite $\varphi^{\wedge(k+1)}$ and eliminate $\wedge$; or prove the true $\Sigma_1$ sentence $\Accf{f}(\gn{\varphi})$ in $\Q$, in size polynomial in the computation (recalled from \citealp{pudlak1998lengths}, not checked), then apply MP (two sorts), plus the Tarski biconditional for $\rho_{f,n}$.
+\end{remark}
+
+% ---------------------------------------------------------------------
+\subsection{What the derivation likelihoods charge}\label{sec:time:lik}
+
+\Cref{thm:time:ntime} bounds the \emph{symbol} size of derivations. The code length $-\ln\Pr(\pi)$ of an $\Lone$ tree counts its grammar choices instead (\cref{def:model:lone}), and the two can differ exponentially.
+
+\begin{remark}[Refuted: plain $\Lone$ charges symbol size]\status{refuted; counterexample proved and computed}\src{model Prop 6.9 (referee M2)}\label{prop:time:lonesize}
+\emph{Claim} (pre-referee, as a sketch): under $\Lone$ with subcritical parameters, $-\ln P_T(\varphi)\ge\kappa\,\ell_{\min}(\varphi)-\ln(C/Z_T)$ for constants $\kappa,C>0$, with $\ell_{\min}(\varphi)$ the least symbol size of a derivation of $\varphi$ from $T$.
+\emph{Counterexample.} From the logical axiom $\forall x\,(x=x)$, repeat $k$ times ``$\forall$E with $t=p+p$, then Gen on $p$'', and close with one $\forall$E. The conclusion $\varphi_k$ has size exactly $2^{k+3}-1$; the tree has $7+8k$ grammar nodes and, in the referee's grammar, $-\ln\Pr(\text{tree})\le12.8+12.2k$ nats. Every derivation of $\varphi_k$ contains $\varphi_k$, while $-\ln P_T(\varphi_k)\le-\ln\Pr(\text{tree})$ (as $Z_T\le1$) grows linearly in $k$. Checked by two independent scripts (\cref{tab:time:c12}); a one-node A4 example is in \cref{app:time:lik}.
+\end{remark}
+
+$\forall$E and Gen substitute into every occurrence of a variable at the price of one choice. So \cref{thm:time:ntime,cor:time:hard} transfer to $\Lsig$ and to H\"anni's graded score, not to plain $\Lone$. Let $\nu(\pi)$ count the grammar nodes of a tree $\pi$ (derivation nodes, $\Qg$ nodes of bodies and terms, nodes of the geometric chains that choose parameters), and $\nu_{\min}(s)$ be the least $\nu$ of a valid tree concluding $s$.
+
+\begin{lemma}[Symbol size against grammar choices]\status{proved; computed}\src{model Lemma 6.10}\label{lem:time:symexp}
+Let $\pi$ be a valid $\Lone$ tree from a finite $T$ with $\nu$ grammar nodes, $a_T\ge2$ a bound on the sizes of the templates of $T$ and of $\CK$'s logical templates, and $c_T:=2a_T^2$. Every conclusion in $\pi$ has symbol size at most $(c_T+1)\nu^2e^{\nu/e}$.
+\end{lemma}
+
+\begin{proof}[Proof idea]
+$\forall$E multiplies the size by at most $|t|$; the substituted terms are disjoint sets of grammar nodes, so by AM--GM their sizes multiply to at most $e^{\nu/e}$ (\cref{app:time:lik}, with a random-chain check).
+\end{proof}
+
+\begin{proposition}[$\Lone$ charges its own code length exponentially]\status{proved; computed}\src{model Prop 6.11}\label{prop:time:codelength}
+Assume $\Lone$ with $m<1$, $\Qg$ uniformly subcritical (\cref{def:model:grammar}), $T$ finite and a geometric parameter law. There are $\zeta,C>0$, depending on the grammar and on $T$, with $P_T(\varphi)\le C\,e^{-\zeta\,\nu_{\min}(\varphi)}/Z_T$ for every $\varphi$.
+\end{proposition}
+
+\begin{proof}[Proof idea]
+The whole tree satisfies the uniform condition, so $\Ex[e^{\zeta\nu}]\le C$ (\cref{lem:model:grammar}(d)); then Markov's inequality.
+\end{proof}
+
+\begin{theorem}[Code length bounds the assigner's time, logarithmically]\status{proved}\src{model Thm 6.12}\label{thm:time:log}
+In the setting of \cref{thm:time:ntime}, let $T$ be a finite $\DT$ theory with $T\cup\Gamma_{f_X}$ consistent, and let every $\varphi_w$, $w\in X$, have a valid $\Lone$ tree from $T$ with at most $\ell(|w|)$ grammar nodes, $\ell(m)\ge m$ time-constructible. Then $X\in\NTIME(2^{(d+1)\ell(m)})$, where $d$, the polynomial degree of the syntactic operations used in checking, depends neither on $T$ nor on $\ell$.
+\end{theorem}
+
+\begin{proof}[Proof idea]
+Guess the tree and write every conclusion out; by \cref{lem:time:symexp} it has size at most $(c_T+1)\ell^2e^{\ell/e}$, and $e^{d/e}<2^d$ (\cref{app:time:lik}).
+\end{proof}
+
+\begin{corollary}[Hard assigners make plain $\Lone$ pay, logarithmically]\status{proved, given the hierarchy theorem (known)}\src{model Cor 6.13}\label{cor:time:log}
+Let $s(m)\ge m$ be time-constructible with $s(m)^2-(d+1)s(m+1)\to\infty$ (every polynomial; $2^m$). There is a decidable $X$ such that for every finite $\DT$ theory $T$ with $T\cup\Gamma_{f_X}$ consistent, for infinitely many $m$ some $w\in X$ of length $m$ has $\nu_{\min}(\varphi_w)>s(m)$; under the hypotheses of \cref{prop:time:codelength}, $-\ln P_T(\varphi_w)\ge\zeta\,s(m)-\ln(C/Z_T)$ on those data.
+\end{corollary}
+
+So if the assigner's language needs nondeterministic time $t(m)$, plain $\Lone$ is guaranteed to charge only about $\ln t(m)$ nats per hard datum; symbol-size penalties charge a polynomial root of $t(m)$:
+
+\begin{proposition}[Symbol-size penalties charge polynomially]\status{(a) proved; (b), (c) proved, given the hierarchy theorem (via \cref{cor:time:hard})}\src{model Prop 6.14}\label{prop:time:sigma}
+(a) Under $\Lsig$ (\cref{def:model:variants}), $P^\sigma_T(\varphi)\le e^{-\kappa\,\ell^\sigma_{\min}(\varphi)}Z_T/Z^\sigma_T$, with $\ell^\sigma_{\min}(\varphi)$ the least total symbol size of a valid $\Lone$ tree concluding $\varphi$.
+(b) A valid $\Lone$ tree of total symbol size $\ell$ yields a $\CK$-derivation of symbol size at most $4\ell$. So with $X$ from \cref{cor:time:hard}(a), for every finite $\DT$ theory $T$ consistent with $\Gamma_{f_X}$, infinitely often $-\ln P^\sigma_T(\varphi_w)\ge\kappa s(m)/4-\ln(Z_T/Z^\sigma_T)$.
+(c) H\"anni's graded score with $g(\ell)=2^{-\kappa\ell}$ on explicit $\CK$-derivations, in a code with at least one bit per written symbol (\cref{rem:model:graded}), charges at least $\kappa s(m)$ bits on the same data, and at least $\kappa s(m)+\log_2Z_T$ after normalisation.
+\end{proposition}
+
+\begin{conjecture}[Plain $\Lone$ charges polynomially too]\status{conjecture}\src{model Conj 6.15}\label{conj:time:poly}
+\Cref{thm:time:log} holds with $\NTIME(\ell(m)^c)$, for a constant $c$, in place of $\NTIME(2^{(d+1)\ell(m)})$.
+\end{conjecture}
+
+The route is to check trees on shared representations (formula DAGs, compressed terms); the missing step is de Bruijn indices and Gen under sharing (\cref{app:time:lik}).
+
+% ---------------------------------------------------------------------
+\subsection{The precise statement, and links}\label{sec:time:summary}
+
+\begin{remark}[What the time penalty does]\status{proved; upper bound in (3): proof sketch}\src{model \S6.5}\label{rem:time:summary}
+(1) Penalties on the time to check or generate axioms (Kt, speed prior) do not block the collapse: with Craig's sets they change H\"anni's equivalence by an additive constant at most (\cref{thm:time:equiv,prop:time:cheap}). (2) Templates block his schema but not the collapse in arithmetic (\cref{prop:time:notemplate,prop:time:collapse}). (3) Derivation size in written symbols prices the assigner per datum, between its nondeterministic time (a lower bound for every theory, \cref{thm:time:ntime,cor:time:hard}) and its deterministic time (an upper bound for the collapse constructions, \cref{rem:time:upper}): $\Lsig$ charges at least $\kappa s(m)/4$ nats and the graded score at least $\kappa s(m)$ bits on infinitely many hard data (\cref{prop:time:sigma}). (4) Plain $\Lone$ is proved to charge at least $\zeta s(m)$ nats when the assigner's language lies outside $\NTIME(2^{(d+1)s})$, i.e.\ logarithmically in its time (\cref{cor:time:log}); a polynomial charge is \cref{conj:time:poly}. By contrast, function induction has $W_{\mathrm{FI}}(D_n)\ge2^{-|f_X|}$ when $B\cup\Gamma_{f_X}$ is consistent, so its total log loss on $f_X$'s labels is at most $|f_X|$ bits.
+\end{remark}
+
+So the question's derivation-length prior should measure length in written symbols ($\Lsig$, or the graded score normalised as in \cref{rem:model:graded}), unless \cref{conj:time:poly} is proved. Whether axiom induction with a symbol-size penalty is equivalent, up to polynomial factors, to function induction over consistent assigners with short certificates is open (model \S10, problem 13).
+
+\begin{remark}[Links to the other sections]\status{(i) proved; (ii) and the argument of (iv): proof sketch; (iii), the numbers of (iv): computed}\src{universal Prop U2t, \S8; experiments E7; pa \S3.8, F9}\label{rem:time:links}
+(i) No penalty monotone in derivation length or time reverses \cref{thm:univ:B}: in $\Cmin$ a chain weight non-increasing in the number of eliminations keeps $P^f_{\Hall}(s)\le P^f_{\Hsch}(s)$ on every datum $s\ne\forall x\varphi$ (\cref{prop:univ:robust}, U2t). This counts steps, not symbols.
+(ii) In the equational fragment $\{\text{Q4},\text{Q5}\}$, a Kt-style penalty on generating $0+S^k0=S^k0$ charges $O(\ln k)$, less than the derivation charge of \cref{prop:univ:eqfrag} (at least $k+1$ axiom leaves).
+(iii) The experiments' membership-time factor $(1+|T|)^{-\tau}$ is a few bits by construction ($\le\log_2(78/2)\approx5.3$ bits against $T^*$ at time exponent $\tau=1$); on the E2 data it changes nothing visible from $n=64$ and slightly favours small unsound lumps at $n\le32$ (unsound MAP at $n=8$ in 9 instead of 7 of 25 seeds; \cref{tab:exp:e7}).
+(iv) A time-bounded evaluation of the likelihood sums over the derivations found within the bound, so it lower-bounds $\mu_T(s)$ and favours adopting theorems with long proofs as axioms; a two-part code is the extreme case. Under $\Lsch$ memorising already beats deriving at the first occurrence for 11-line proofs (\cref{prop:pa:memo}, \cref{tab:pa:theorems}).
+(ii) and (iv) agree: a derivation likelihood favours the theory that makes the data cheap to state, not the logically minimal one. The $\PA$ comparison proposed by pa's referee ($\ISigma{n}$ as $\Q$ plus one partial-truth sentence, against the schema, under a derivation-time penalty) was not quantified.
+\end{remark}
+
+\begin{remark}[A steeper simplicity penalty]\status{computed}\src{experiments E7}\label{rem:time:e7}
+On the E2 data (25 seeds), prior steepness $\lambda=2$ makes the MAP at $n=8$ unsound in 22 seeds ($\lambda=1$: 7) but removes the false spare slot faster ($2\cdot10^{-4}$ against $0.004$ unsound mass at $n=512$); $\lambda=\tfrac12$ (proper only on finite pools) does the reverse; neither removes both failure modes (\cref{tab:exp:e7}).
+\end{remark}
+
+\begin{conjecture}[A time-bounded analogue]\status{conjecture; not written out}\src{model \S9.3}\label{conj:time:polytime}
+H\"anni's note on time-bounded Solomonoff induction\footnote{File \texttt{research/prior/hanni-polytime-solomonoff.md}; working notes, in which he says he has not ``checked all the technical claims completely carefully''.} gives, for each polynomial $p$, a predictor whose log loss exceeds that of any ``prediction algorithm $P$ with runtime $O(p(n))$'' by ``at most a constant $c_P$''. The analogue here is the derivation-bounded $\Ltwo$ inducer with a growing depth budget; a constant-regret bound against theories whose data have derivations within the budget plausibly follows by his argument.
+\end{conjecture}

@@ -1,0 +1,68 @@
+--- preamble.orig.tex	2026-10-08 19:33:23.295606880 +0000
++++ preamble.tex	2026-10-08 19:35:25.600233292 +0000
+@@ -13,6 +13,7 @@
+ \usepackage[hidelinks]{hyperref}
+ \usepackage[capitalise,noabbrev]{cleveref}
+ \setlist{itemsep=2pt,topsep=4pt}
++\setlength{\emergencystretch}{2em}% lets TeX loosen a line instead of overflowing
+ 
+ % ---- theorem environments (one counter, numbered within section)
+ \theoremstyle{plain}
+@@ -32,9 +33,10 @@
+ 
+ % ---- status and provenance markers
+ % \status{proved} | \status{computed} | \status{conjecture} | \status{known} | \status{proof sketch}
+-\newcommand{\status}[1]{\textsf{\small[#1]}}
++\newcommand{\status}[1]{\textup{\textsf{\small[#1]}}}% upright in every theorem style
+ % \src{...}: where the full record lives in research/tracks/ or research/prior/ (gray, small)
+-\newcommand{\src}[1]{\textsuperscript{\textcolor{gray}{\scriptsize\textsf{#1}}}}
++\newcommand{\src}[1]{\unskip\hskip0pt plus 1fil\penalty300\hskip0.35em plus -1fil\relax\textup{\textcolor{gray}{\scriptsize\textsf{#1}}}}% breakable, not a superscript; may start a new line
++\newcommand{\identbrk}{}\newcommand{\pabrk}{}\newcommand{\expbrk}{}% neutralise the local line-break hacks
+ 
+ % ---- template classes
+ \newcommand{\FO}{\mathrm{FO}}               % first-order patterns
+--- /home/user/AI-works/axiom-induction/paper/main.tex	2026-10-08 14:17:04.626199995 +0000
++++ main.tex	2026-10-08 19:33:23.309742722 +0000
+@@ -9,7 +9,7 @@
+ \begin{document}
+ \maketitle
+ \input{sections/abstract}
+-\tableofcontents
++\setcounter{tocdepth}{1}\tableofcontents
+ \newpage
+ \input{sections/intro}
+ \input{sections/model}
+--- /home/user/AI-works/axiom-induction/paper/sections/app-sound.tex	2026-10-08 15:10:08.243390032 +0000
++++ sections/app-sound.tex	2026-10-08 19:35:07.781634500 +0000
+@@ -132,9 +132,9 @@
+ 
+ \begin{table}[ht]
+ \centering\footnotesize
+-\begin{tabular}{@{}lcccc@{}}
++\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}Xc>{\raggedright\arraybackslash}p{2.9cm}>{\raggedright\arraybackslash}p{2.4cm}>{\raggedright\arraybackslash}p{2.0cm}@{}}
+ \toprule
+- & $\varepsilon$ & fixed $w^*$, constant $\delta$ & $w^*\sim\Dir(\tfrac12,\tfrac12)$, constant $\delta$ & fixed $w^*$, shrinking $\delta_n$\\
++implementation & $\varepsilon$ & fixed $w^*$, constant $\delta$ & $w^*\sim\Dir(\tfrac12,\tfrac12)$, constant $\delta$ & fixed $w^*$, shrinking $\delta_n$\\
+ \midrule
+ model (\texttt{c11}, every $n\le2\cdot10^6$, 300 runs) & $10^{-5}$ & $0.997$ & $0.007$ & $0/300$\\
+  & $10^{-6}$ & $1.000$ & $0.003$ & $0/300$\\
+@@ -143,7 +143,7 @@
+ model's referee (\texttt{r3}, geometric grid of $n$) & $10^{-5}$ & $\ge0.980$ & $\ge0.008$ & --\\
+  & $10^{-6}$ & $\ge1.000$ & $\ge0.010$ & --\\
+ \bottomrule
+-\end{tabular}
++\end{tabularx}
+ \caption{\Cref{ex:sound:constant}: probability that the underivable $q$ is ever accepted; nominal bound $\delta/\pi(T^*)=0.02$. The referee checked a geometric grid of $n$, so its numbers are lower bounds. The differences between implementations are Monte Carlo and grid effects.}\label{tab:sound:constant}
+ \end{table}
+ 
+--- /home/user/AI-works/axiom-induction/paper/sections/universal.tex	2026-10-08 14:49:19.364656470 +0000
++++ sections/universal.tex	2026-10-08 19:35:07.782810590 +0000
+@@ -18,7 +18,7 @@
+ 
+ \begin{table}[t]
+ \centering\footnotesize
+-\begin{tabularx}{\textwidth}{@{}l X c@{}}
++\begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}X c@{}}
+ \toprule
+ name & axioms & $\vdash\forall x\varphi$: pure / over $\Q$\\
+ \midrule

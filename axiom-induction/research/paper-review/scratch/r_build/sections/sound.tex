@@ -1,0 +1,194 @@
+\section{Soundness of the thresholded verifier}\label{sec:sound}
+% =====================================================================
+% Section 5 (key: sound). Sources (final records only):
+%   research/tracks/model/notes-final.md   §4 (protocol, Thm 4.1 and remarks, Props 4.2-4.4,
+%       Rem 4.5, Lemma 4.6, Thms 4.7, 4.8, Ex 4.9), §5.4 "Reading", §5.5 (table), §7, §12
+%   research/tracks/model/referee.md        (M1, m2, m4, m8, m13)
+%   research/tracks/experiments/notes-final.md  §0 item 4, Prop X8, §4 (E2), §6 (E4), §16
+%   research/tracks/universal/notes-final.md §1.6, §6.2, §11
+%   research/tracks/pa/notes-final.md        §5.4
+%   research/prior/hanni-solomonoff-axiom-induction.md (quotes on the trichotomy)
+%   Earlier reports: IL Thms 4.14-4.16, 10.9, Lemma C.4, Prop C.5; AS Def 2.6, Lemma 2.8,
+%       Prop 6.4, Thm 6.5.
+% Proofs, computations and tables: sections/app-sound.tex.
+% =====================================================================
+
+A posterior over theories can serve as a proof checker: a prover proposes a sentence, and the verifier accepts it when almost all posterior mass sits on theories that derive it. Is this sound against provers that adapt to it (the brief's H3)? With fixed weights and well-specified data, yes: with probability at least $1-\delta/\pi(C^*_d)$ no invalid sentence is ever accepted (\Cref{thm:sound:fixed}). With the default Dirichlet weights, on average over the weight prior, or at each weight vector with a threshold that shrinks with $n$, but not with a constant threshold (\Cref{thm:sound:avg,thm:sound:shrink,ex:sound:constant}). Under misspecification there is no guarantee; in an example a waiting prover wins with probability~1 (\Cref{prop:sound:misspec}). The limit $\delta\to0$ is the cautious verifier of AS, read on theorems (\Cref{prop:sound:cautious}). In H\"anni's triple ``true / false / independent'', $\Bel$ is a belief function and $\Pl$ its plausibility (\Cref{sec:sound:tri}). Sources: model \S\S4, 7; experiments Prop~X8, E2, E4; universal \S\S6.2, 11. Proofs are in \Cref{app:sound}.
+
+% ---------------------------------------------------------------------
+\subsection{Protocol}\label{sec:sound:protocol}
+
+\begin{definition}[Protocol; thresholded verifier]\src{model \S4}\label{def:sound:protocol}
+Fix a countable class $\Hclass$ with prior $\pi$, a truth $T^*\in\Hclass$ and a derivability bound $d\le\infty$. Data $X_1,X_2,\dots$ form an infinite sequence. In each round $t=1,2,\dots$ either the next datum arrives or a \emph{prover} submits a query $q_t$; the prover chooses which. Let $n(t)$ be the number of data that have arrived by round $t$. The verifier $\Ver{\delta}{d}$ answers \textsf{ACCEPT} iff $\pi_t(\{T:q_t\notin\Th_d(T)\})\le\delta$. Otherwise it may \textsf{ESCALATE} to a deterministic oracle that says whether $q_t\in\Th_d(T^*)$; the $j$-th answer becomes the constraint $c_j(T):=1[q\in\Th_d(T)\Leftrightarrow q\in\Th_d(T^*)]$. The posterior at round $t$ is $\pi_t(T)\propto\pi(T)\prod_{i\le n(t)}P_T(X_i)\prod_jc_j(T)$ with fixed weights; with Dirichlet weights the marginal $\PDir{T}(X_1,\dots,X_{n(t)})$ replaces the product over data. The verifier is \emph{sound} on a run if it never accepts a sentence outside $\Th_d(T^*)$. Finally $C^*_d:=\{T:P_T=P_{T^*},\ \Th_d(T)=\Th_d(T^*)\}$ and $W^*_d:=\pi(C^*_d)\ge\pi(T^*)$.
+\end{definition}
+
+The prover may be randomised, adaptive and computationally unbounded, may know $T^*$, the verifier and the whole future data sequence, and chooses when data arrive. Soundness is relative to $\Th_d(T^*)$, not to truth. The unit of $d$ is symbol size (\Cref{def:model:calculus}); the experiments use chain steps ($\vdash_J$), and pa's example in \Cref{rem:sound:lumps} uses $d=0$ (being an instance). This is the protocol of AS Def~2.6 with $\Ver{\delta}{d}$ in place of the version-space verifier.
+
+% ---------------------------------------------------------------------
+\subsection{Fixed weights}\label{sec:sound:fixed}
+
+\begin{theorem}[Time-uniform soundness, fixed weights]\status{proved; computed}\src{model Thm 4.1}\label{thm:sound:fixed}
+Assume setting W (\Cref{def:ident:W}): every $T\in\Hclass$ carries a fixed law $P_T$ (fixed mixture weights), the data are i.i.d.\ from $P_{T^*}$ with $\pi(T^*)>0$, the prior does not depend on $n$, and the oracle is truthful. If $\delta\le W^*_d\,\delta'$, there is an event $G$ with $P(G)\ge1-\delta'$, depending only on the data sequence, on which no prover ever gets a sentence outside $\Th_d(T^*)$ accepted, in any round.
+\end{theorem}
+
+\begin{proof}[Proof idea]
+IL Thm~4.15(b) in the class form of IL Thm~10.9, with $C^*_d$ as the target. Members of $C^*_d$ share $T^*$'s likelihood and pass every constraint, so $\pi_t(C^*_d)=W^*_d/Z_t$ with $Z_t\le M(X^{n})/P_{T^*}(X^{n})$, $n=n(t)$, $M$ the Bayes mixture. That ratio is a nonnegative supermartingale started at~1, so by Ville's inequality (IL Lemma~C.4; \citealp{ville1939etude}) it ever reaches $1/\delta'$ with probability at most $\delta'$. Elsewhere $\pi_t(C^*_d)>\delta$ in every round, and no member of $C^*_d$ derives a sentence outside $\Th_d(T^*)$ (\Cref{app:sound:fixed}).
+\end{proof}
+
+One event covers all queries and rounds, so no union bound over the prover's attempts is needed. The brief's H3 is confirmed for fixed weights, with the constant improved from $\pi(T^*)$ to $W^*_d$. The guarantee is per target: under $\pi_\lambda$ it covers the $T^*$ with $\lambda\ell(T^*)\le\log_2(\delta'/\delta)$, so for long axiom systems it is weak. IL's escalation bound (IL Thm~4.16) transfers with $C^*_d$ as the target. Read at the single sentence $\forall x\varphi$, with the class of members of $\Cstar$ that agree with $T^*$ on it, the theorem gives \Cref{cor:univ:sound}. In simulations the frequency of invalid acceptance stayed 2--5 times below the bound (\Cref{app:sound:fixed}).
+
+\begin{remark}[The constant is tight]\status{proved}\src{model \S4.1 (referee m13)}\label{rem:sound:tight}
+IL Prop~C.5 shows that $\delta\le W^*\delta'$ cannot be improved, with $R^*=\{a,b\}$ against $R'=\{a,c\}$, which generates only $a$ and proves $c$. That pair is not in the template models ($\operatorname{supp}P_{T'}\subseteq\operatorname{supp}P_{T^*}$ implies $\Th_d(T')\subseteq\Th_d(T^*)$ under \Lzero, and under \Lone{} with parameters admissible). But $T'=\{a,c\}$ with a small fixed weight on $c$ attains IL's acceptance probability $(1-u)^{t^*}$ exactly, and it tends to $\delta'$ as $u,W^*\to0$ (\Cref{app:sound:fixed}).
+\end{remark}
+
+\begin{remark}[Hypotheses]\status{proved; refuted (two old remarks)}\src{model \S4.1 (referee m8)}\label{rem:sound:hyp}
+What matters: (i) well-specification of the \emph{data law}, not only of the theorem set (\Cref{prop:sound:misspec}; selected data in \Cref{rem:sound:e4}(A)); (ii) fixed weights, or \Cref{sec:sound:dir}; (iii) a proper prior that does not depend on $n$ (a penalty $\lambda_n$ growing with $n$ breaks the supermartingale step; no replacement is known); (iv) truthful constraints. A finite truncation $\Hclass_N\ni T^*$ keeps the theorem with $W^*_d$ replaced by $\pi(C^*_d\cap\Hclass_N)/\pi(\Hclass_N)\ge\pi(T^*)$; so does a computable verifier that computes the non-deriving mass to within $\varepsilon$ (\Cref{prop:model:compute}(a)) and accepts iff the upper end is $\le\delta$. \textbf{Refuted} (model track, first version): ``$W^*$ only grows under truncation'' (the ratio above can fall to $0.09$ against $\pi(C^*_d)=0.90$) and ``\Ltwo{} likelihoods are finite sums'' (not with full-support $\Qg$); see \Cref{app:sound:fixed}.
+\end{remark}
+
+\begin{proposition}[Misspecification: a waiting prover wins]\status{proved; computed}\src{model Prop 4.2}\label{prop:sound:misspec}
+In the setting of \Cref{ex:ident:escape} (human axioms $\Q$; data $t=0$ for closed $\{0,+\}$-terms $t$ from a law with infinite support; a finite class of sound theories, possibly with $\Q$, plus $\Tesc=\{z=0\}$; \Lzero), let the prover wait until $\pi_t(\{T:T\nvdash S0=0\})\le\delta$ and then submit $S0=0$. For every $\delta>0$, with probability~1 the verifier $\Ver{\delta}{\infty}$ accepts $S0=0$ at some finite time, whether or not it escalates; yet $\Q\vdash\neg\,S0=0$.
+\end{proposition}
+
+\begin{proof}
+By \Cref{ex:ident:escape}, almost surely $\pi_n(\Tesc)=1$ for all large $n$, and $\Tesc\vdash S0=0$. The prover's only query is made when it is accepted.
+\end{proof}
+
+Computed: accepted in $2000/2000$ runs (median $17$ data); against an escalating verifier the waiting prover won $400/400$, a prover asking in every round $11/400$ (\Cref{app:sound:fixed}). Misspecification can also make the verifier incomplete instead: in \Cref{ex:ident:weaker} it never accepts $\forall x(0+x=x)$. Which happens depends on whether the best-fitting generator is weaker than $T^*$ or incomparable with it.
+
+% ---------------------------------------------------------------------
+\subsection{The cautious limit and completeness}\label{sec:sound:cautious}
+
+\begin{proposition}[The limit $\delta\to0$]\status{proved}\src{model Prop 4.3}\label{prop:sound:cautious}
+Suppose each $P_T$ has a fixed support $\operatorname{supp}_T$ (fixed weights; or Dirichlet weights under \Lzero, where $\PDir{T}(D)>0$ iff $D\subseteq\bigcup\inst(T)$).
+\begin{enumerate}[label=(\alph*)]
+\item $\pi_n(T)>0$ iff $\pi(T)>0$ and $D_n\subseteq\operatorname{supp}_T$. So $\Ver{0}{d}$ accepts exactly $\bigcap\{\Th_d(T):\pi(T)>0,\ D_n\subseteq\operatorname{supp}_T\}$.
+\item $\Ver{0}{d}$ is sound for every $T^*$ with $\pi(T^*)>0$ and $D_n\subseteq\operatorname{supp}_{T^*}$, deterministically and without well-specification (IL Thm~4.14). $\Ver{\delta}{d}$ accepts at least as much.
+\item Under \Lzero{} with full-support $\Qg$, if $\pi$ charges every finite theory, $\Ver{0}{d}$ accepts exactly $\Th_d(D_n)$ (AS Prop~6.4, read on theorems).
+\item Under \Lzero, if $\operatorname{supp}\pi=\Hk{k}(\DT)$, the acceptance set of $\Ver{0}{d}$ contains $\Th_d(\Acc_k(D_n))$, where $\Acc_k$ is the cautious $k$-union verifier of AS Def~2.6. In general classes the inclusion can be strict; for $\Hk{k}(\DT)$ itself this is open.
+\end{enumerate}
+\end{proposition}
+
+\begin{proposition}[Completeness without anchors]\status{proved}\src{model Prop 4.4}\label{prop:sound:complete}
+Assume setting W with \Lzero{} (full-support $\Qg$, any $d$) or with \Lone{} ($d=\infty$, parameters admissible). For every $s\in\Th_d(T^*)$ and every $\delta>0$, almost surely $\Ver{\delta}{d}$ accepts $s$ at all sufficiently large $n$. With Dirichlet weights under \Lzero{} the same holds for Lebesgue-almost every $w^*$.
+\end{proposition}
+
+\begin{proof}
+By \Cref{cor:ident:deductive} the non-deriving mass of $s$ tends to $\pi(\Cstar\cap\{T:s\notin\Th_d(T)\})/\pi(\Cstar)$, which is $0$ because under these likelihoods every member of $\Cstar$ has the theorems of $T^*$. With Dirichlet weights use \Cref{thm:ident:limit}(b).
+\end{proof}
+
+The cautious verifier becomes exact only once the data contain an anchor (AS Lemma~2.8), and without a bound on the number of templates it accepts only the data (AS Prop~6.4). The Bayesian verifier needs neither, because the likelihood moves mass away from memorisers and splits; it gives up deterministic soundness. \Cref{tab:sound:compare} (\Cref{app:sound:cautious}) sets the two verifiers side by side. The time to accept $s$ is set by the competitors that miss it: a split that omits a root of probability $p$ gains a factor $(1-p)^{-n}$ until the first datum with that root.
+
+% ---------------------------------------------------------------------
+\subsection{Dirichlet weights}\label{sec:sound:dir}
+
+\begin{remark}[Vacuity for Dirichlet weights]\status{proved; refuted (earlier use)}\src{model Rem 4.5; experiments \S0 (M3)}\label{rem:sound:vacuous}
+Read \Cref{thm:sound:fixed} with parameter $(T,w)$ and prior $\pi(T)\Dir_T(dw)$. Its class $\{(T,w):P_{T,w}=P_{T^*,w^*},\ \Th_d(T)=\Th_d(T^*)\}$ has prior mass $0$ if $|T^*|\ge2$, the component laws of $T^*$ are linearly independent, and $w^*$ lies outside a countable set; then $\delta\le W^*\delta'$ forces $\delta=0$. The model track's first version applied the theorem to the Dirichlet model, and the experiments' first summary promised soundness at a constant threshold for any well-specified data; both are \textbf{refuted} (\Cref{ex:sound:constant}).
+\end{remark}
+
+\begin{lemma}[Regret]\status{(a), (b), (d) proved; (c) known; computed}\src{model Lemma 4.6; experiments Prop X8(c)}\label{lem:sound:regret}
+Let $T$ have $K$ templates with laws $q_\tau$ (under \Lzero, $q_\tau=\Qg_\tau$), $P_{T,w}:=\sum_\tau w_\tau q_\tau$, weights $\Dir(\alpha)$, $A:=\sum_\tau\alpha_\tau$, and
+\[
+\Rreg(n,K):=\min_{c\in\N^K,\ \sum_\tau c_\tau=n}\ \frac{\Ex_{\Dir(\alpha)}\big[\prod_\tau w_\tau^{c_\tau}\big]}{\prod_\tau(c_\tau/n)^{c_\tau}}\qquad(0^0:=1).
+\]
+\begin{enumerate}[label=(\alph*)]
+\item $\PDir{T}(x^n)\ge\Rreg(n,K)\,P_{T,w}(x^n)$ for every $w$ in the closed simplex and every $x^n$.
+\item If $\alpha_\tau\le1$ for every $\tau$, then $\Rreg(n,K)\ge\dfrac{\Gamma(A)}{e\,(K-1)!\prod_\tau\Gamma(\alpha_\tau)}\,(n+1)^{-(K-1)}$.
+\item For $\alpha_\tau\equiv\tfrac12$: $-\ln\Rreg(n,K)=\tfrac{K-1}2\ln n+O(1)$ \citep{krichevsky1981performance}.
+\item For $\alpha_\tau\equiv\alpha$: $\Rreg(n,K)\le\frac{\Gamma(K\alpha)\Gamma(\alpha+n)}{\Gamma(\alpha)\Gamma(K\alpha+n)}\sim\frac{\Gamma(K\alpha)}{\Gamma(\alpha)}n^{-(K-1)\alpha}$; so at $\alpha=1$ the exponent $K-1$ in (b) is tight.
+\end{enumerate}
+\end{lemma}
+
+\noindent (a) compares the two sides term by term over labellings of the data; (b) integrates over a copy of the simplex shrunk by $1/(n+1)$ towards $c/n$; (d) takes $c=(n,0,\dots,0)$ (\Cref{app:sound:dir}).
+
+\begin{theorem}[Soundness on average over $w^*$]\status{proved}\src{model Thm 4.7; experiments Prop X8(a), (b)}\label{thm:sound:avg}
+Let $\Hclass$ be countable with prior $\pi$ and Dirichlet weights, each $T$ with its marginal law $\PDir{T}$ on data sequences (under \Lzero, \Lone{} or \Ltwo), and truthful constraints. Let the data come from $\PDir{T^*}$: first $w^*\sim\Dir_{T^*}$, then i.i.d.\ from $P_{T^*,w^*}$. Put $C^{\mathrm{Dir}}_d:=\{T:\PDir{T}=\PDir{T^*}\text{ on }\mathcal S^n\text{ for all }n,\ \Th_d(T)=\Th_d(T^*)\}\ni T^*$. If $\delta\le\pi(C^{\mathrm{Dir}}_d)\,\delta'$, there is a data event $G$ with $\PDir{T^*}(G)\ge1-\delta'$ on which no prover ever gets a sentence outside $\Th_d(T^*)$ accepted. Hence $\Dir_{T^*}\{w^*:P^\infty_{T^*,w^*}(G^c)>\delta'/\gamma\}\le\gamma$ for every $\gamma\in(0,1]$.
+\emph{Pool version} (experiments): with the experiments' prior weights $2^{-\mathrm{bits}(T)}$ and $\vdash_J$ for $\Th_d$, the verifier may use the posterior restricted to any pool $R_n\ni T^*$, even one chosen from the data, and the conclusion holds for $\delta\le2^{-\mathrm{bits}(T^*)}\delta'$; for a fixed pool $H$ plus all memorisers, $2^{-\mathrm{bits}(T^*)}$ may be divided by $\sum_{T\in H}2^{-\mathrm{bits}(T)}+1$.
+\end{theorem}
+
+\begin{theorem}[Soundness at a fixed $w^*$]\status{proved}\src{model Thm 4.8; experiments Prop X8(c)}\label{thm:sound:shrink}
+As in \Cref{thm:sound:avg}, but with data i.i.d.\ from $P_{T^*,w^*}$ for a \emph{fixed} $w^*$ in the closed simplex, a likelihood linear in $w$ (\Lzero; also the experiments' chain $\Cch{J}$), $K:=|T^*|$, and a verifier that accepts at round $t$ iff the non-deriving mass is at most $\delta_{n(t)}$. If $\delta_n\le\pi(C^{\mathrm{Dir}}_d)\,\delta'\,\Rreg(n,K)$ for every $n$, then with probability at least $1-\delta'$ no prover ever gets a sentence outside $\Th_d(T^*)$ accepted. For $\alpha\le1$, \Cref{lem:sound:regret}(b) gives an explicit $\delta_n\propto(n+1)^{-(K-1)}$; with $\alpha=\tfrac12$ and the exact $\Rreg$, $\delta_n\asymp n^{-(K-1)/2}$. To cover every target with at most $k$ templates, use $\min_{K\le k}\Rreg(n,K)$.
+\end{theorem}
+
+\begin{proof}[Proof idea for both]
+For \Cref{thm:sound:avg}, run the proof of \Cref{thm:sound:fixed} under the sequence law $\PDir{T^*}$, then apply Markov's inequality in $w^*$. For \Cref{thm:sound:shrink}, apply Ville's inequality to $M/P_{T^*,w^*}$ and pass to the marginal $\PDir{T^*}$, which all of $C^{\mathrm{Dir}}_d$ shares, by \Cref{lem:sound:regret}(a) (\Cref{app:sound:dir}).
+\end{proof}
+
+\Cref{thm:sound:shrink} is time-uniform, but its threshold falls with $n$ and slows acceptance; whether completeness (\Cref{prop:sound:complete}) survives is open. \Cref{thm:sound:avg} covers a fixed $w^*$ only outside a set of small prior mass. The shrinking threshold is needed:
+
+\begin{example}[Constant threshold]\status{computed; mechanism proof sketch}\src{model Ex 4.9; experiments Prop X8}\label{ex:sound:constant}
+\Lzero; root law of $\Qg$ $(p_0,p_S,p_+,p_\cdot)=(0.5,\,0.5-\varepsilon,\,\varepsilon/2,\,\varepsilon/2)$; truth $T^*=\{0+0=0,\ (Sz)+0=Sz\}$ with $\Dir(\tfrac12,\tfrac12)$ weights, data from $P_{T^*,w^*}$ with the interior $w^*=(p_0,p_S)/(1-\varepsilon)$. The competitor $T'=\{z+0=z\}$ proves $q:=(0\cdot0)+0=0\cdot0$, which $T^*$ does not. Prior $\tfrac12$ each; the verifier accepts $q$ iff $\pi_n(T^*)\le\delta=0.01$, so \Cref{thm:sound:avg}'s bound is $0.02$. Two implementations checked every $n\le2\cdot10^6$ with $300$ runs per cell, a third a geometric grid of $n$ (\Cref{tab:sound:constant}). The acceptance probability was $0.977$--$0.997$ ($\varepsilon=10^{-5}$) and $1.000$ ($\varepsilon=10^{-6}$) at the fixed $w^*$; $0.003$--$0.010$ with $w^*$ drawn from the prior; and $0/300$ at the fixed $w^*$ with the threshold of \Cref{thm:sound:shrink}.
+\end{example}
+
+The mechanism: on the data's support $P_{T'}=(1-\varepsilon)P_{T^*,w^*}$, and $\ln P_{T'}(D)-\ln\PDir{T^*}(D)$ is $n\ln(1-\varepsilon)$ plus the regret $\tfrac12\ln n+O(1)$ of \Cref{lem:sound:regret}(c) plus an $O_P(1)$ term. While $\varepsilon n\ll1$ it grows like $\tfrac12\ln n$ and crosses $\ln99$, near $n\approx8000$ (\Cref{app:sound:dir}). With fixed weights the ratio is $(1-\varepsilon)^n\le1$ and $q$ is never accepted.
+
+% ---------------------------------------------------------------------
+\subsection{What the experiments show}\label{sec:sound:exp}
+
+\begin{remark}[E4: adaptive provers in the code]\status{computed}\src{experiments E4}\label{rem:sound:e4}
+Verifier on $\vdash_1$, $\Dir(\tfrac12)$ weights, one-component $T^*$, so \Cref{thm:sound:avg} applies (\Cref{tab:exp:e4}). (A) The tight construction of IL Prop~C.5 with a Dirichlet decoy $T'=\{\varphi(0),0=S0\}$: win probability exactly $(1-u)^{t^*}$, $9$--$46$ times below $\delta'$ in five settings; the full pipeline agrees with the closed-form event on $400/400$ streams in the two settings checked. With \emph{selected} data (only $\varphi(0)$ shown, each a theorem of $T^*$) the prover wins $20/20$ in every setting. (B) Well specified ($\varphi=x+0=x$, $T^*=\Hsch$, bound $0.05$, every $n\le256$): $0/100$ wins under \Lzero{} and \Lone; the largest mass on theories deriving an invalid query is $0.45$ and $0.53$, always on the true but underivable $\forall x(x+0=x)$, at $n\le6$. (C1) $10\%$ false near misses $t+0=St$, with the mistake schema in the pool: $100/100$ wins, first acceptance at the first mistaken datum in $90/100$ streams. (C2) Heavy-tailed terms: $0/100$. (C3) Selection with the decoy and a clean memoriser in the pool: $0/100$.
+\end{remark}
+
+In (C1) the verifier is sound for the data's actual generator (a two-schema theory with fixed weights, covered by \Cref{thm:sound:shrink}) and unsound for the intended $T^*$, as the brief's H2 anticipated. Comparing (C3) with (A): under misspecification soundness depends on what else is in the pool, and no theorem covers this.
+
+\begin{remark}[Early unsound lumps]\status{computed}\src{experiments E2; pa \S5.4}\label{rem:sound:lumps}
+E2 (\Lzero, $T^*=$ Q1..Q7 $+\,\TInd$ at fixed weights, causal pools with $\SeenQ(D_n)$, $25$ seeds, verifier on citation): a $\delta=0.05$ verifier accepts the false $\forall x(x+0=0)$, $\forall x\,(Sx=x)$, $\forall x\forall y\,(y=x)$ in $5$ of $25$ seeds, at $n=8$ or $16$, never from $n=32$ (\Cref{tab:exp:e2}). In pa \S5.4 (one run, hand-picked candidates, two-part code) $\Ver{\delta}{0}$ accepts $0=S0$ at $n=10$ and $30$ for every $\delta\ge3\cdot10^{-13}$, because the lump $F_0+\TInd$ leads (\Cref{rem:pa:lumps}). No contradiction with \Cref{thm:sound:shrink}: for E2 it needs $\delta_n\le2^{-226}R_{1/2}(n,8)\,\delta'\asymp2^{-226}n^{-3.5}$ ($T^*$ costs $226.2$ bits in the experiments' code); in pa's set $\pi(\Q+\TInd)=2^{-330}$, and pa's data are not drawn from a model generator.
+\end{remark}
+
+
+% ---------------------------------------------------------------------
+\subsection{The trichotomy: true, false, independent}\label{sec:sound:tri}
+
+H\"anni's working notes \citep{hanni2026notes} observe that a posterior over theories gives each sentence ``a p(true/\allowbreak false/\allowbreak independent)'' (\nolinkurl{research/prior/hanni-solomonoff-axiom-induction.md}).
+
+\begin{definition}[Belief, disbelief, independence]\src{model \S7; universal \S1.6}\label{def:sound:tri}
+For a posterior $\pi_D$ on a countable class and a sentence $s$, with $\vdash$ derivability in $\CK$ without a bound:
+\[
+\begin{aligned}
+&\Bel(s):=\pi_D(T\vdash s),\quad \Dis(s):=\pi_D(T\vdash\neg s),\quad \Indep(s):=\pi_D(T\nvdash s\text{ and }T\nvdash\neg s),\\
+&\Inc:=\pi_D(T\text{ inconsistent}),\quad \Pl(s):=1-\Dis(s),\quad \Belc(s):=\pi_D(T\text{ consistent and }T\vdash s).
+\end{aligned}
+\]
+\end{definition}
+
+The model track allows bounded derivability here; but $\Th_d(T)$ is not closed under consequence (a derivation of $s$ has symbol size at least $|s|$), so \Cref{prop:sound:laws}(a), (c), (d) and \Cref{prop:sound:belief} need $d=\infty$. \Cref{prop:sound:bracket} holds for every $d$.
+
+\begin{proposition}[Basic laws]\status{proved}\src{model Prop 7.1}\label{prop:sound:laws}
+(a) $\Bel(s)+\Dis(s)+\Indep(s)=1+\Inc$; from now on the posterior is on consistent theories, so the three sum to~1. (b) $\Dis(s)=\Bel(\neg s)$; $\Bel(\top)=1$, $\Bel(\bot)=0$; $\Pl(s)=\Bel(s)+\Indep(s)$. (c) If $s\vdash s'$ then $\Bel(s)\le\Bel(s')$. (d) If $\vdash\neg(s\wedge s')$ then $\Bel(s\vee s')\ge\Bel(s)+\Bel(s')$.
+\end{proposition}
+
+\begin{proposition}[Bel is a belief function]\status{proved; framework known}\src{model Prop 7.2}\label{prop:sound:belief}
+For all sentences $s_1,\dots,s_k$, $\ \Bel(s_1\vee\dots\vee s_k)\ge\sum_{\emptyset\ne I\subseteq[k]}(-1)^{|I|+1}\Bel(\bigwedge_{i\in I}s_i)$. So $\Bel$ is a totally monotone capacity on the Lindenbaum algebra, with focal elements $\mathrm{Mod}(T)$, and $\Pl$ is its plausibility \citep{shafer1976mathematical}.
+\end{proposition}
+
+\begin{proposition}[Coherent bracketing]\status{proved}\src{model Prop 7.3}\label{prop:sound:bracket}
+There is a probability $P$ on complete consistent theories with $\Bel(s)\le P(s)\le\Pl(s)$ for every $s$.
+\end{proposition}
+
+\noindent For one consistent $T$, $s\mapsto1[T\vdash s]$ is multiplicative on conjunctions, which gives \Cref{prop:sound:laws}(c), (d) and \Cref{prop:sound:belief}; for \Cref{prop:sound:bracket}, mix Lindenbaum completions of the theories with their posterior weights. Proofs of this subsection are in \Cref{app:sound:tri}.
+
+\begin{example}[Renormalising is incoherent]\status{proved; computed}\src{model Ex 7.4}\label{ex:sound:renorm}
+Renormalising means $R(s):=\Bel(s)/(\Bel(s)+\Dis(s))$. With atoms $a,b$ and theories $\{a\}$, $\{b\}$, $\{\neg(a\wedge b)\}$ of posterior $\tfrac13$ each, $R(a)=R(b)=1$ but $R(a\wedge b)=0$; no probability does this.
+\end{example}
+
+\begin{example}[The 50/50 rule is incoherent]\status{proved; computed}\src{model Ex 7.5}\label{ex:sound:fifty}
+Let $H(s):=\Bel(s)+\tfrac12\Indep(s)$. Already for the empty theory over atoms $b,c$: $H(b)=H(b\wedge c)=H(b\wedge\neg c)=\tfrac12$, while coherence needs $P(b\wedge c)+P(b\wedge\neg c)=P(b)$.
+\end{example}
+
+\begin{proposition}[When the 50/50 rule is coherent]\status{proved; computed}\src{model Prop 7.6}\label{prop:sound:fiftyfifty}
+Over finitely many propositional atoms, $H=\Bel+\tfrac12\Indep$ is coherent (equal to some probability on valuations, on every sentence) iff every theory of positive posterior mass has at most two models.
+\end{proposition}
+
+\noindent A theory with one or two models contributes the uniform law on them; one with three or more models, two of which are $v,v'$, makes $H(\{v,v'\})<H(\{v\})+H(\{v'\})$. Linear programming agrees with the criterion in $3225/3225$ posteriors on two atoms and $600/600$ on three.
+
+\begin{remark}[How the likelihood shapes $\Indep$]\status{proved (from \Cref{prop:model:whichsize,prop:ident:spare})}\src{model \S7}\label{rem:sound:indep}
+Under H\"anni's 0/1 scores a consistent strengthening keeps its prior odds (\Cref{prop:model:whichsize}(b)), so $\Bel$ of a sentence $\psi$ independent of the data stays at its prior level forever. Under \Lzero{} and \Lone, a theory that proves \emph{and generates} $\psi$ loses mass while $\psi$ never appears: polynomially with Dirichlet weights (\Cref{prop:ident:spare}), exponentially with fixed weights (\Cref{lem:model:size}). So $\Indep(\psi)$ grows: with a generative likelihood, ``the data never mention $\psi$'' is evidence against theories that would have mentioned it.
+\end{remark}
+
+\begin{remark}[The $\Belc$ verifier]\status{computed; transfer proved}\src{universal \S6.2, \S11; editor, from model \S4}\label{rem:sound:belc}
+Inconsistent theories prove $s$ and $\neg s$ and inflate $\Bel$ and $\Dis$ alike: in universal's c2 class at $n=0$, $\Bel(\forall x\varphi)\approx0.69$ is almost all $\Inc$; generative likelihoods remove such theories within a few data (\Cref{tab:univ:inc}). Universal therefore recommends ``accept $s$ iff $\Belc(s)\ge1-\delta$'' (\Cref{sec:univ:intuition}). When this verifier accepts, $\Ver{\delta}{d}$ would accept at the same posterior, since $\{T:T\nvdash s\}$ is part of what it counts against $s$. The proofs of \Cref{thm:sound:fixed,thm:sound:avg,thm:sound:shrink} bound $\pi_t(C^*_d)$ (or $\pi_t(C^{\mathrm{Dir}}_d)$) from below for every sequence of truthful constraints, so all three transfer to it ($\Belc$ read at level $d$).
+\end{remark}
+
+\paragraph{H\"anni's three questions} (same file of his notes).
+(1) ``i guess you could also naturally just get true/false by either just removing the independent fraction and renormalizing.'' This is incoherent in general (\Cref{ex:sound:renorm}), which confirms his ``i guess we probably usually don't get coherent probabilities either?''.
+(2) ``instead of renormalizing, you could also turn the independent fraction into 50/50. tho i guess this has the downside of not giving coherent probabilities usually''. Confirmed: it fails already for one theory (\Cref{ex:sound:fifty}), and it is coherent exactly when no theory of positive mass has more than two models (\Cref{prop:sound:fiftyfifty}).
+(3) ``hmm maybe this motivates not removing the independent fraction?'' Yes. $(\Bel,\Pl)$ is a coherent lower and upper probability (\Cref{prop:sound:belief,prop:sound:bracket}). Like a semimeasure it keeps the mass on ``undecided'' instead of redistributing it; that is also the convention under which \Cref{thm:time:equiv} holds with a constant. A coherent point value needs a distribution over the completions of each theory, which the trichotomy does not supply.

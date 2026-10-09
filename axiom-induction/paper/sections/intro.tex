@@ -1,0 +1,101 @@
+% =====================================================================
+% Section 1: introduction (key: intro).
+% Structure, the page-1 short answer (binding text) and the canonical wordings of the answers:
+%   research/paper-review/edits/DECISIONS.md §8.1, §8.2, §9. Deviations from the binding text are
+%   recorded in research/paper-review/edits/front-log.md.
+% Sources: research/00-brief.md (the question, verbatim); research/prior/hanni-*.md (short quotes only;
+%   the long quotations live in model.tex §2.6-2.7 and time.tex §6); the section files (labels, statements).
+% No theorem environments and no floats. The verdict table tab:intro:verdicts is in app-verification.tex.
+% =====================================================================
+
+\section{Introduction}\label{sec:intro}
+
+Kaarel H\"anni asked the following question on 8 October 2026 (verbatim):
+
+\begin{quote}\footnotesize
+let's consider the case of going from a bunch of phi(x) statements to forall x phi(x). i wonder if this should happen basically like so:
+\begin{itemize}[itemsep=0pt,topsep=1pt]
+\item forall x phi(x) is a simple law which implies all the other statements. so once we see all these other statements, we should up the probability on forall x phi(x). i guess we should still be entertaining other hypotheses as well
+\item i guess this is some sort of solomonoff induction idea. see my writing on solomonoff axiom induction here: \url{https://github.com/kaarelh/notes}
+\item could you investigate whether there is a good version of sth like this here? some further ideas:
+\begin{itemize}[itemsep=0pt,topsep=0pt]
+\item we might want to not allow just any enumerable axioms, but ones with templates
+\item we might want to have a derivation length prior (like, statements given without proof in our data set should be fairly easily derived from axioms)
+\item we might want to have a time complexity penalty. like, it should not take too long to generate axioms / to check whether a statement is an axiom
+\end{itemize}
+\item i'm interested in whether you can come up with something that robustly picks up the axioms we actually have, or at least something that is equivalent in terms of theorems derived. or if this will at least get a lot of posterior mass
+\end{itemize}
+\end{quote}
+
+\begin{framed}\small
+\noindent\textbf{Short answer.}
+\begin{enumerate}[label=\arabic*.,leftmargin=*,itemsep=0.5pt,topsep=1pt]
+\item \textbf{There is a coherent version.} The prior is $2^{-\text{code length}}$ over finite sets of templates, i.e.\ schemas such as $\varphi(z)$ or induction. The likelihood of a datum is the probability that a random derivation process outputs it. The process cites an axiom, fills in its schematic variables at random, and applies modus ponens, generalisation and $\forall$-elimination. The probability is divided by a normaliser that does not depend on the data (\cref{sec:model}).
+\item \textbf{The normaliser does the work.} A theory pays for the probability it spends on sentences that are never observed (the size principle). Your ``prove the givens'' and ``do not contradict'' scores have no normaliser, so a consistent strengthening never loses its prior odds under them (\cref{prop:model:whichsize}).
+\item \textbf{From $\varphi(t)$ to $\forall x\varphi$.} Instances push mass off memorisers and off over-general schemas. They do not make $\forall x\varphi$ more probable than the instance schema $\varphi(z)$, which is just as simple and implies exactly the data (\cref{thm:univ:B}).
+\item \textbf{A derivation likelihood even favours $\varphi(z)$.} Used as a generator, $\{\forall x\varphi\}$ mostly states its own axiom: at $\forall$-elimination rate $0.3$, $77\%$ of its output is $\forall x\varphi$ itself. So each observed instance multiplies its odds against $\varphi(z)$ by $0.23$. (This is proved in the simplest calculus. With a background theory and a selection-aware likelihood the $\forall$-version can gain through its effective mixture weight, a non-logical effect. With $\wedge$-rules on quantified formulas the direction is open.)
+\item \textbf{So prediction is confirmed, derivability is not.} ``All future data are instances'' gets posterior probability tending to $1$. With data drawn from the model, ``the axioms prove $\forall x\varphi$'' tends to its prior share ($3$--$48\%$ for $0+x=x$, depending on the prior code) or to $0$. One instance at a free parameter, $\varphi(p)$, or one quantified datum that entails $\forall x\varphi$, does license it (\cref{thm:univ:omega}).
+\item \textbf{Data drawn from some theory's law with fixed weights:} the posterior concentrates on the theories with that law. Under citation, or a derivation likelihood with parameters, these prove exactly the right theorems: a deductively equivalent system is found. With learned weights this holds under citation for almost every weight vector. The posterior does not find the particular axioms: among theories with the same law, the prior decides (\cref{sec:ident}).
+\item \textbf{Human-stated theorems are not such data.} In finite classes the posterior then goes to the best-fitting generator, which can be strictly weaker than the axioms behind the data, or unsound. For $\PA$ it finds the axioms that are used. $\PA$-equivalents won on direct uses of the axioms under broad usage, within the candidates scored. Narrow or atomic induction practice ended on a weaker theory (\cref{sec:pa:answer}).
+\item \textbf{``Statements given without proof should be easily derivable''} turns short theorems with long proofs, and frequently used lemmas, into axioms. Under a two-part code, deriving each of six library theorems of $\PA$ costs about 6 to 24 times as much as adopting it as an axiom (\cref{tab:pa:theorems}).
+\item \textbf{A time penalty on checking or generating axioms does not stop your collapse:} the collapse sets have polynomial-time membership. Templates block the acceptance half of your schema, but over $\PA$ one reflection sentence still reproduces every $\Sigma_n$-sound assigner on $\Sigma_n$ sentences. What charges for the collapse is derivation length in written symbols: at least a fixed polynomial root of the assigner's nondeterministic time, infinitely often. For the grammar's own code length only a logarithmic charge is proved (\cref{rem:time:summary}).
+\item \textbf{For the trichotomy, keep (belief, plausibility):} renormalising and 50/50 are incoherent in general. All positive guarantees need data drawn from the model. AI referees with independent code checked first versions of the research notes. No human has checked the mathematics.
+\end{enumerate}
+\end{framed}
+
+This paper checks an idea within a precise model; it does not design a prover.
+
+% ---------------------------------------------------------------------
+\subsection{H\"anni's note}\label{sec:intro:note}
+
+H\"anni's working notes \citep{hanni2026notes} weigh the axiom systems that prove the labelled givens and not their negations, or that ``do not contradict the given statements'', possibly by the givens proved and proof length (\cref{sec:model:scores}); each other statement gets ``a p(true/false/independent)'', and he asks whether to renormalise, split 50/50 or keep the triple (\cref{sec:sound:tri}). He argues that axiom induction equals function induction over consistent \emph{assigners}, programs labelling sentences accept or reject, as an assigner becomes the decidable schema ``if the assigner accepts $\varphi$, then $\varphi$'', and turns to substitution schemas (\cref{sec:time}). His other ideas and his time-bounded note are taken up in \cref{sec:disc:hanni}.
+
+% ---------------------------------------------------------------------
+\subsection{The question as we read it, and the model}\label{sec:intro:reading}
+
+We read the question as asking for (1) \emph{a good version}, a precise Bayesian inducer with a template prior, a likelihood favouring short derivations and a time penalty; (2) what it does with instances $\varphi(t)$ of $\forall x\varphi$; (3) \emph{guarantees}: when the posterior concentrates on the actual axioms or a deductively equivalent system, or gives them much mass, and why it fails.
+
+The model (\cref{sec:model}) is that of short-answer items 1--2 and builds on two earlier reports, AS \citep{claude2026axiomschemas}, on axiom schemas, and IL \citep{claude2026whatfollows}, on inferential learning. A \emph{theory} is a finite set of \emph{templates} (formulas with metavariables, in AS's class $\DT$) with prior $\pi$ and fixed or Dirichlet mixture weights; data are drawn independently from the law $P_{T^*}$ of a generating theory $T^*$. $\Lone$ is the derivation likelihood. Under \emph{citation}, $\Lzero$, a datum is a template filled in by the grammar, so the support of $P_T$ is the \emph{instance union} of $T$; under $\Lone$ with \emph{parameters admissible} (free names in instantiations) it is the theorem set.
+
+% ---------------------------------------------------------------------
+\subsection{Answers}\label{sec:intro:answers}
+
+\begin{enumerate}[label=\textbf{A\arabic*.},leftmargin=*,itemsep=1pt]
+\item \textbf{A good version exists, in a precise and limited sense:} the model above, whose likelihood is a computable real with undecidable positivity. The recommended inducer (\cref{sec:disc:good}) adds a model of which theorems get reported and of mistakes, and reports belief and plausibility.
+
+\item \textbf{For $\forall x\varphi$, prediction is confirmed and derivability is not.} In every comparison analysed (\cref{thm:univ:B}) closed instances keep the odds of $\forall x\varphi$ against $\varphi(z)$ at the prior odds (citation with the closure reading, a likelihood conditioned on closed-instance data, H\"anni's scores), lower them by a constant factor per datum (derivation likelihoods in the minimal calculus of citation and $\forall$-elimination) or set them to zero (strict citation), up to non-logical weight effects under a selection-aware likelihood with a background ($\wedge$-rules: open). With data from a model generator, ``the axioms prove $\forall x\varphi$'' tends to the prior share of provers in the \emph{generator class} $\Cstar$ of theories whose law equals the data's, or to $0$ if $\Cstar$ has none (\cref{thm:univ:omega}): a Bayesian $\omega$-gap, since all closed instances together do not entail $\forall x\varphi$. If the likelihood ignores how the data were selected, the limit depends on the class.
+
+\item \textbf{Templates block H\"anni's collapse schema, not the collapse; nor do they see a schema's boundary.} No non-ground template fits the acceptance part of his schema, but over $\PA$ one ground reflection sentence reproduces every $\Sigma_n$-sound assigner on $\Sigma_n$ sentences; for merely consistent assigners this is open (\cref{rem:time:summary}). A schema and its \emph{root split} (one template per root symbol of the substituted expression) tie at matched weights, differ by Occam terms with learned weights, and the split wins linearly when the instantiation grammar misfits the usage: as far as proved, a derivation likelihood does not change AS's MDL finding, and the posterior tracks usage, not the logical boundary of a schema (\cref{rem:ident:mdl}).
+
+\item \textbf{Read as ``statements given without proof should be easily derivable'', a derivation-length prior makes the data theorems}, and a derivation likelihood then favours the theory that makes them cheap to state: under a two-part code, on a computed stream of six library theorems, $\Q$ plus the theorems, strictly weaker than $\PA$, beats $\Q+\TInd$ (Robinson arithmetic with the induction template) within the candidates scored (\cref{rem:pa:streams}). The generator wins on data from its own derivation process under the full-sum likelihood, or on direct uses of its schemas.
+
+\item \textbf{A time penalty on checking or generating axioms does not stop the collapse; derivation size in written symbols prices it} (\cref{rem:time:summary}): for each polynomial bound on membership time, a decidable hard assigner forces every theory within that bound and consistent with its labels to use, infinitely often, derivations of symbol size at least a fixed polynomial root of its nondeterministic time, and the collapse constructions pay at most a polynomial of its deterministic time (proof sketch); for plain $\Lone$ only a logarithmic charge is proved, a polynomial one conjectured.
+
+\item \textbf{His last bullet depends on the data.} \emph{Data drawn from a law of the model} are sampled from some theory's likelihood, with fixed weights unless stated. On human-stated theorems the posterior goes, in finite classes, to the best-fitting (KL-minimising) generators; in the full class even this can fail (\cref{thm:ident:kl}).
+
+\end{enumerate}
+{\footnotesize\crefabbrev\setlength{\LTpre}{2pt}\setlength{\LTpost}{2pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.13\linewidth}>{\raggedright\arraybackslash}p{0.405\linewidth}>{\raggedright\arraybackslash}p{0.405\linewidth}@{}}
+\toprule
+& data drawn from a law of the model & human-stated theorems\\
+\midrule
+\endhead
+the actual axioms & No: inside the generator class the posterior equals the prior, so the actual axioms keep $\pi(T^*)/\pi(\Cstar)$. Under $\Lone$, equivalent axiomatisations with different laws are told apart, and the generating one wins (\cref{cor:ident:prior,prop:ident:sep}) & No: it picks up the axioms that are used. Usage decides among equivalent forms, and theorem data are memorised (\cref{sec:pa:answer})\\
+a deductively equivalent system & Yes with fixed weights: the theorem set under $\Lone$ with parameters admissible, the instance union under $\Lzero$. With learned weights, under $\Lzero$, for almost every weight vector (\cref{cor:ident:deductive,thm:ident:limit}) & Not robustly: limits can be weaker or unsound (\cref{tab:ident:misspec}). $\PA$-equivalents win only on broad direct-use practice, within the candidates scored (\cref{sec:pa:answer})\\
+a lot of posterior mass & The actual axioms keep their prior share inside the generator class, which the data never move & Only within the hand-picked candidate sets scored (\cref{sec:pa:answer})\\
+\bottomrule
+\end{longtable}}
+\begin{enumerate}[resume*]
+
+\item \textbf{Side results.} The posterior, used as a proof checker, accepts a sentence when theories deriving it carry at least $1-\delta$ of the mass. It is guaranteed sound only for well-specified data: with fixed weights and data from the model no adaptive prover ever gets a non-theorem accepted, with probability at least $1-\delta/\pi(C^*_d)$ ($C^*_d\subseteq\Cstar$: $T^*$'s theorems up to size $d$), uniformly in time (\cref{thm:sound:fixed}); with learned weights, on average over the weight prior and, for likelihoods linear in the weights, with a threshold shrinking in $n$, otherwise only on average. Misspecified, there is no guarantee: in an example a waiting prover wins with probability $1$; elsewhere the verifier is merely incomplete. H\"anni's trichotomy is $(\Bel,\Dis,\Indep)$, the masses of the theories that prove $s$, refute it, or neither: keep $\Bel$ and $\Pl=1-\Dis$, a coherent lower and upper probability, as renormalising and the 50/50 split are incoherent in general (\cref{sec:sound:tri}).
+\end{enumerate}
+
+% ---------------------------------------------------------------------
+\subsection{What is not achieved}\label{sec:intro:contrib}
+
+(i) No posterior over the full template class is computed; candidate sets and pools are hand-picked, and winners changed with the pool (\cref{rem:exp:limits}). (ii) Misspecified limits are known only for finite classes and specific families. (iii) Conjectured, not proved (\cref{app:ver:sketches}): the Occam rate under $\Lone$, identification for every weight vector, a polynomial charge by plain $\Lone$, the over-$\Q$ limits of the split--memoriser races, the memoriser rate. (iv) No human-written theorem corpus is used, and (v) $\PA$ is never computed under the generative $\Lone$. (vi) Nothing is checked in a proof assistant or by a human; results added in revision were checked only by their authors and the section writers; several references are unverified (\cref{app:ver}).
+
+% ---------------------------------------------------------------------
+\subsection{Earlier work, method and reader's guide}\label{sec:intro:guide}
+
+AS and IL, prepared for H\"anni, are cited by their own numbering. AS treats the same questions without priors (templates, matching, the $\omega$-gap, the MDL finding, \DTRC, a learner for unlabelled mixtures that clusters the data by refuting merged templates), and its code is reused; IL supplies the Ville argument of \cref{sec:sound}. The results come from four independently refereed research notes (\cref{app:ver}). Each theorem-like statement carries a status in brackets (proved; computed, by a seeded script; known, with a reference; proof sketch; conjecture; refuted, kept with its counterexample) and, as a small grey note, its item in the notes (e.g.\ ``model Thm 4.1''). The research brief had seven hypotheses, judged in \cref{tab:intro:verdicts}. \emph{Reader's guide:} \S\ref{sec:model}: the model, H\"anni's scores and trichotomy; \S\ref{sec:univ}: $\forall x\varphi$; \S\ref{sec:ident}: what the posterior identifies; \S\ref{sec:sound}: the verifier; \S\ref{sec:time}: the collapse and time penalties; \S\ref{sec:pa}: $\PA$, $\ZF$ and robust failures; \S\ref{sec:exp}: exact posteriors over finite pools, experiments E1--E8; \S\ref{sec:disc}: the good version, H\"anni's note, literature, open problems; appendices: proofs, tables, the record of verification.

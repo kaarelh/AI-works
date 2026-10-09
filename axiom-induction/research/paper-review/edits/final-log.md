@@ -1,0 +1,17 @@
+# final check: resolution log
+
+Changes made by the final checker (one session). Each is minimal and recorded here as issue or finding → change (file, label). The full report is `research/paper-review/final-check.md`.
+
+No label was added, moved, deleted or renamed. `CLAIMS.md` needed no change: none of the edited sentences is stated there. The other group logs are unchanged; where a change affects a figure in one of them, the figure is noted below.
+
+| finding | source of the finding | change (file, label or place) |
+|---|---|---|
+| FC-1: the §4 opening said "Misspecified, the posterior goes to the best-fitting generator" without the qualifier "in finite classes" of the canonical wording (DECISIONS §9.4; C-05). | step 2 (scope) | `ident.tex`, opening of `sec:ident`: "Misspecified, in finite classes the posterior goes to the best-fitting generator, …". |
+| FC-2: intro A5 read "a decidable hard assigner forces every theory with membership time within a polynomial bound …", which suggests one assigner for all polynomial bounds. `cor:time:hard`(b) and `rem:time:summary`(3) give one $X$ per exponent $e$ (one $X$ for all finite DT° theories). | step 2 (quantifier order) | `intro.tex`, A5 (`sec:intro:answers`): "for each polynomial bound on membership time, a decidable hard assigner forces every theory within that bound and consistent with its labels to use, …". |
+| FC-3: intro §1.2 glossed templates as "formulas whose metavariables take metavariable-free arguments: AS's class DT°". That is the general template condition; DT° also requires a pattern occurrence of each metavariable (`sec:model:syntax`). | step 2 (precision) | `intro.tex`, `sec:intro:reading`: "(formulas with metavariables, in AS's class $\DT$)". |
+| FC-4: discussion §9.3 stated "his time-bounded note has an analogue for derivation-bounded inducers", citing `conj:time:polytime`, a conjecture (not written out). | step 2 (status) | `discussion.tex`, `sec:disc:hanni`: "his time-bounded note plausibly has an analogue for derivation-bounded inducers (\cref{conj:time:polytime})". |
+| FC-5: `tab:intro:verdicts` (App H), row H4(e), said "without a guard the ω-step is not taken under L1". `rem:univ:openrefuted` and `prop:univ:noguard` say it *need not* be taken; the outcome depends on the class (over $\Q$ with $R_1..R_{40}$ and memorisers the computed value is 1.000). | step 2 (scope) | `app-verification.tex`, `tab:intro:verdicts` row H4(e): "without a guard the $\omega$-step need not be taken under $\Lone$". |
+| FC-6: `ex:sound:constant` said "in the referee's runs at ε = 10⁻³ and 10⁻⁴, never" in running text (process vocabulary, DECISIONS §6.2; M-13). The provenance is in App D (`app:sound:dir`, "Moderate ε"). | step 1 (M-13) | `sound.tex`, `ex:sound:constant`: "in runs at $\varepsilon=10^{-3}$ and $10^{-4}$, never". |
+| FC-7: discussion 2.76 pp against its cap of 2.75 (F-25, F-27). | step 4 (length) | `discussion.tex`, `sec:disc:open`: "Further items and the sketches to write out:" → "Further items and sketches:" (the last line held only "Appendix H.5."). The discussion now measures 2.74 pp. |
+
+Page spans after these changes (full build, heading positions in `main.pdf`): intro 4.00, model 5.54, universal 6.46, ident 5.16, sound 3.61, time 4.57, pa 6.66, experiments 2.65, discussion 2.74; main text 41.39 pp. The front log's discussion figure (2.76) is superseded; the other groups' figures are unchanged.

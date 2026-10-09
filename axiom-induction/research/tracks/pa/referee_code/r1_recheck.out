@@ -1,0 +1,47 @@
+r1: independent re-check of the track's checked derivations (rules, hypotheses, axioms, schema statements)
+derivation                          lines  written       bits   bits+dec  independent check
+(A)  Ind <- CVI                        39      127      896.0      955.6  ok
+(B)  CVI <- Ind(theta)                 63      204     1483.6     1561.8  ok
+(C1) LNP <- CVI(~P)                    20      117      662.0      689.5  ok
+(C2) CVI <- LNP(~P)                    27      128      773.1      805.6  ok
+T_Ind: LNP                             82      332     2249.6     2348.3  ok
+T_LNP: Ind                             65      253     1707.7     1792.8  ok
+Q4 <- Q4L,Q5L,Ind                      11       33      220.1      234.6  ok
+Q5 <- Q4L,Q5L,Ind                      22       98      599.8      634.4  ok
+Q4L <- Q4,Q5,Ind                       11       33      220.1      234.6  ok
+Q5L <- Q4,Q5,Ind                       21       89      551.4      586.1  ok
+ZF SepJ <- ReplJ                       36      207     1215.8     1275.5  ok
+ZF Found <- EInd                       21      138      764.6      792.1  ok
+ZF ReplK <- Coll                       15      108      580.5      599.1  ok
+ZF ReplJ <- Coll+SepJ                  43      237     1438.5     1486.0  ok
+wrapper not: Ind(P) <- Ind(w(P))       17       70      426.1      447.1  ok
+wrapper and: Ind(P) <- Ind(w(P))       17       77      457.8      478.8  ok
+wrapper or: Ind(P) <- Ind(w(P))        17       77      457.8      478.8  ok
+wrapper imp: Ind(P) <- Ind(w(P))       19       84      505.1      530.1  ok
+wrapper all: Ind(P) <- Ind(w(P))       17       61      385.4      402.4  ok
+wrapper ex: Ind(P) <- Ind(w(P))        19       70      441.7      467.8  ok
+ALL DERIVATIONS RE-CHECKED
+
+overheads (bits minus a one-line citation in a theory with the same number of axioms), two codes:
+  "track" = the track's proof-text code; "decodable" = plus the omitted symbols and length fields
+  CVI|T_Ind  track  1468.0   decodable  1545.2
+  Ind|T_CVI  track   880.4   decodable   939.1
+  LNP|T_CVI  track   646.4   decodable   672.9
+  CVI|T_LNP  track   757.5   decodable   789.1
+  LNP|T_Ind  track  2234.1   decodable  2331.8
+  Ind|T_LNP  track  1692.1   decodable  1776.3
+
+break-even usage ratios (asymptotic, L1-sch):
+  T_Ind beats T_CVI iff p_CVI/p_Ind <    track 0.600   decodable 0.608
+  T_Ind beats T_LNP iff p_LNP/p_Ind <    track 0.757   decodable 0.762
+  T_CVI beats T_LNP iff p_LNP/p_CVI <    track 1.172   decodable 1.173
+  same ratio from the track's own L1-naive numbers (c1_costs.out, mean of 5 motives):
+    |phi|=5    T_Ind beats T_CVI iff p_CVI/p_Ind < 0.671
+    |phi|=10   T_Ind beats T_CVI iff p_CVI/p_Ind < 0.777
+    |phi|=20   T_Ind beats T_CVI iff p_CVI/p_Ind < 0.900
+    |phi|=40   T_Ind beats T_CVI iff p_CVI/p_Ind < 1.052
+
+mutation test (the re-checker must reject corrupted proofs): for every line of (A), (B), (C2) and the ZF
+derivation SepJ <- ReplJ, replace that line's conclusion by its negation, or (for allI/exE lines) its
+eigenvariable by a variable free in a hypothesis, and re-check
+  173 of 173 mutants rejected

@@ -1,0 +1,214 @@
+% =====================================================================
+% Section 7: the axioms we actually have, PA and ZF (key: pa). Sources (final records only):
+%   research/tracks/pa/notes-final.md   Defs 0.2-0.4; Props 1.1-1.5, Rem 1.2, §1.4; Props 2.1-2.3, §2.2;
+%       Props 3.1-3.4, §§3.2-3.8; Props 4.1-4.4, Rem 4.5, Prop 4.6, Lemma 4.7, Prop 4.8, Rem 4.9, §4.3,
+%       Conj 4.10; Props 5.1-5.3, Rem 5.4, §§5.2-5.5; §6 (F1-F10); §7; §9 (verification log); referee.md
+%   research/tracks/experiments/notes-final.md  Props X9-X12 (§2), E2 (§4), E3(b) (§5), E6 (§8)
+%   checks: research/tracks/pa/checks/*.out (c1-c9); code/results/e2_pa.md, e3_misspec.md, e6_equivalent.md
+% Proofs, full tables, the code names (NAIVE, PC, DPC, RDPC, CF, u7, G2, G3) and the checker: sections/app-pa.tex.
+% Moved to app-pa.tex in the revision (labels unchanged), each with a pointer in the text: as decided,
+%   tab:pa:costs, prop:pa:recursion, prop:pa:chain, the details of def:pa:lsch, the code names, and the refuted
+%   constant-margin remark (new label rem:pa:sdpcrefuted); for length, rem:pa:pat, prop:pa:lower, prop:pa:occam,
+%   rem:pa:streams, prop:pa:must, prop:pa:refl, prop:pa:regret, ex:pa:skel, prop:pa:spare, tab:pa:dtrc,
+%   rem:pa:lumps, rem:pa:merge, prop:pa:nc, ex:pa:euler.
+% Received from experiments.tex: prop:exp:comm (proof stays in app:exp:comm).
+% Local symbols (not exported): p_f, c_S(f), theta_phi, PA_S, u, G1, SDPC, R, h(f), beta_ax.
+% Local macros: \pabrk (lets a long \src move to the next line), \paR{d} (refutation rule R_d);
+%   \expth is provided here too, since pa.tex is input before experiments.tex.
+% =====================================================================
+\providecommand{\pabrk}{\hfil\penalty0\hfilneg}
+\providecommand{\paR}[1]{\mathsf{R}_{#1}}
+\providecommand{\expth}[1]{\textsf{#1}}
+\providecommand{\crefabbrev}{}
+
+\section{The axioms we actually have: PA and ZF}\label{sec:pa}
+
+Which axioms does the posterior pick up for arithmetic and set theory? Three caveats hold throughout. (i) The computations use the two-part code $\Lsch$ or $\Lzero$ with a learned grammar, never the generative $\Lone$ of \cref{sec:model}; their numbers are not $\Lone$ results. (ii) Candidate sets are hand-picked and finite. (iii) Derivation costs are upper bounds (\cref{def:pa:lsch}). Units are bits; ``proved; computed'' means a proof plus a derivation checked line by line (\cref{app:pa:checker}); proofs and full tables are in \cref{app:pa} (for \cref{prop:exp:comm} in \cref{app:exp:comm}).
+
+% ---------------------------------------------------------------------
+\subsection{Setting}\label{sec:pa:setting}
+
+\begin{definition}[The two-part derivation code $\Lsch$]\pabrk\src{pa Defs 0.2, 0.3}\label{def:pa:lsch}
+Derivations are in a sound and complete natural-deduction calculus $\CND$ (\cref{tab:model:calculi}). An instance $f(\varphi)$ of a schema $f(P)$ is derived schematically in $P$ and costs $\mathrm{bits}(\pi)+L_\Qg(\varphi)$, the \emph{motive} $\varphi$ (the formula substituted for $P$) being coded once by the grammar $\Qg$. Per line, $\mathrm{bits}(\pi)$ charges $\log_210$ for the rule, $\log_2|T|$ per axiom citation, $\log_2(\text{line index})$ per premise reference and $\beta$ per \emph{written symbol}. On a finite candidate set the prior is $\pi(T)\propto2^{-\beta_{\mathrm{ax}}\sum_{\tau\in T}|\tau|}$, with $\beta_{\mathrm{ax}}$ bits per axiom symbol; by default $\beta_{\mathrm{ax}}=\beta$ ($\log_223\approx4.52$ in the derivation computations, $5$ in those built on AS's code; \cref{app:pa:checker}). $\CL(T;D)$ is the total code length, $\ell_{\mathrm{cite}}$ the cost of a one-line citation. Costs of explicit derivations are upper bounds on the shortest ones.
+\end{definition}
+
+\noindent With at least $\log_2$ of the alphabet size bits per written symbol a decodable variant of $\Lsch$ is a prefix code, so Kraft holds \status{proved for $\beta\ge\log_2$(alphabet size)} and $\Lsch$ is the two-part form of a sub-probability likelihood of the $\Lsig$ kind, not of plain $\Lone$ (\cref{prop:time:codelength}); $\beta=\log_223$ under-charges symbols by about 3\%, which changes no conclusion. $\Qg$ is \emph{learned}: sequential KT, a Dirichlet($\frac12$) marginal \citep{krichevsky1981performance}, per context (sort, depth, parent, child index) over 9 formula and 14 term symbols; with Dirichlet($\frac12$) weights, $\CL$ differences under $\Lzero$ are exact $\log_2$ posterior odds, except where templates overlap (\cref{rem:pa:overlap}, in \cref{app:pa:dtrc}).
+
+\begin{definition}[Refutation rule $\paR d$]\pabrk\src{pa Def 0.4}\label{def:pa:refute}
+With data $D$ and negative data $N$, $\paR d$ sets the likelihood of $T$ to $0$ if $T\vdash_{\le d}\neg s'$ for some $s'\in D$ or $T\vdash_{\le d}s$ for some $s\in N$ ($\Th_d$ in derivation size; under $\Lzero$, $d=0$ and ``derives'' means ``has as an instance''). $\paR\infty$ is not computable.
+\end{definition}
+
+% ---------------------------------------------------------------------
+\subsection{Equivalent axiomatisations: usage decides}\label{sec:pa:equiv}
+
+Let $\Dlt:=\forall u\forall v\,(u<v\leftrightarrow\exists z\,(u+Sz=v))$. For a motive $\varphi$ in $x$ (parameters allowed), $\Ind(\varphi):=\varphi(0)\wedge\forall x(\varphi\to\varphi(Sx))\to\forall x\varphi$; $\CVI(\varphi):=\forall x(\theta_\varphi\to\varphi)\to\forall x\varphi$ with $\theta_\varphi:=\forall y(y<x\to\varphi(y))$; $\LNP(\varphi):=\exists x\varphi\to\exists x(\varphi\wedge\forall y(y<x\to\neg\varphi(y)))$. For nonempty $S\subseteq\{\Ind,\CVI,\LNP\}$ let $\PA_S:=\Q+\Dlt+\{f(P):f\in S\}$, $\PA_f:=\PA_{\{f\}}$, and $\PA_{\mathrm{all}}$ with all three.
+
+\begin{proposition}[Three forms of induction]\status{proved; computed}\pabrk\src{pa Prop 1.1}\label{prop:pa:equiv}
+With $B:=\{\mathrm{Q1},\dots,\mathrm{Q5},\Dlt\}$, for every motive $\varphi$: (A) $B\vdash\CVI(\varphi)\to\Ind(\varphi)$; (B) $B\vdash\Ind(\theta_\varphi)\to\CVI(\varphi)$; (C1) $\vdash\CVI(\neg\varphi)\to\LNP(\varphi)$; (C2) $\vdash\LNP(\neg\varphi)\to\CVI(\varphi)$. So $\PA_{\Ind}$, $\PA_{\CVI}$, $\PA_{\LNP}$ have the same theorems.
+\end{proposition}
+
+\noindent The derivations were checked schematically in $P$, on 200 random motives, and by independent code (\cref{app:pa:equiv}). So $\PA$ is $\Q$, $\Dlt$ and one higher-order pattern, $\CVI(P)$ or $\LNP(P)$; $\TInd$ is not a pattern (\cref{rem:pa:pat}, in \cref{app:pa:equiv}).
+
+\paragraph{Usage.} Let the data be i.i.d.\ uses: a form $f$ with probability $p_f$ and a motive $\varphi\sim\Qg$, the datum being $f(\varphi)$. In $\PA_S$ a use costs $c_S(f)+L_\Qg(\varphi)$, $c_S(f)$ the cost of the cheapest derivation of $f(P)$ in a fixed library of checked derivations (a citation if $f\in S$). In the library a derivation costs 646--2234 bits more than a citation (\cref{tab:pa:costs}); any derivation of $\CVI(P)$ from $\PA_{\Ind}$, or of $\Ind(P)$ from $\PA_{\CVI}$, provably costs at least 53 or 44 bits more (\cref{prop:pa:lower}; both in \cref{app:pa:equiv}).
+
+\begin{proposition}[Usage limit]\status{proved, given the library constants}\pabrk\src{pa Prop 1.3}\label{prop:pa:usage}
+$\frac1n(\CL(\PA_S;D_n)-\CL(\PA_{S'};D_n))\to\sum_fp_f(c_S(f)-c_{S'}(f))$ a.s.; the posterior concentrates on the $S$ minimising $\Ex_p[c_S(f)]$ if it is unique.
+\end{proposition}
+
+\begin{remark}[The usage-closed axiomatisation]\status{computed}\pabrk\src{pa \S1.2}\label{rem:pa:usage}
+For $\Lsch$ with this library: (i) $\PA_{\Ind}$ beats $\PA_{\CVI}$ iff $p_{\CVI}/p_{\Ind}<0.600$, and $\PA_{\LNP}$ iff $p_{\LNP}/p_{\Ind}<0.757$; these ratios are code-specific (\cref{app:pa:equiv}). (ii) $\PA_{\mathrm{all}}$ pays $81+86$ prior bits and $0.29$ bits per citation more than $\PA_{\Ind}$, and is ahead after about one use of a non-primitive form (in expectation after 1--12 schema uses for the mixes tried). (iii) So the posterior concentrates on the \emph{usage-closed} axiomatisation: for this library every form used at a rate above about $5\cdot10^{-4}$ per use is primitive (with only the lower bounds of \cref{prop:pa:lower}, the threshold is at most about $7\cdot10^{-3}$). All candidates are $\PA$-equivalent, so the theorems are right whichever wins (compare \cref{prop:ident:sep}).
+\end{remark}
+
+\noindent The same holds for the two recursion conventions for $+$ (Q4, Q5 against $0+x=x$, $Sx+y=S(x+y)$): each proves the other's laws with one induction, and the posterior adopts the convention the data use (\cref{prop:pa:recursion}, in \cref{app:pa:equiv}).
+
+\noindent In ZF, Separation from Replacement, Replacement from Collection and Foundation from $\in$-induction cost 574--1432 bits per use (template priors 72--185 bits); the reverse overheads, not formalised, are conjectured to be much larger. Given them, the textbook ZF axioms win when the data are direct uses of them and of nothing they derive only at a cost (\cref{rem:pa:zf}, in \cref{app:pa:equiv}).
+
+\begin{proposition}[Forms of commutativity]\status{proved; computed}\pabrk\src{experiments Prop X12}\label{prop:exp:comm}
+Let $A_{xy}:=\{\forall x\forall y\,(x+y=y+x)\}$, $A_{yx}:=\{\forall y\forall x\,(x+y=y+x)\}$, $S_{ab}:=\{z+z'=z'+z\}$, $M_x:=\{\forall x\,(x+z=z+x)\}$, $M_y:=\{\forall y\,(z+y=y+z)\}$, with closed guards, and $S_{ab}^{\mathrm{open}}$, $M_x^{\mathrm{open}}$, $M_y^{\mathrm{open}}$ the same with open guards (\cref{sec:exp:impl}).
+\textup{(a)} $A_{xy}$, $A_{yx}$, $M_x^{\mathrm{open}}$ and $M_y^{\mathrm{open}}$ are logically equivalent.
+\textup{(b)} $S_{ab}\cup M_x\cup M_y\cup S_{ab}^{\mathrm{open}}\nvdash\forall x\forall y\,(x+y=y+x)$. So $S_{ab}$, $M_x$, $M_y$ and $S_{ab}^{\mathrm{open}}$ are strictly weaker than $A_{xy}$, although $S_{ab}$, $M_x$ and $M_y$ yield exactly its closed instances $t+t'=t'+t$.
+\end{proposition}
+
+
+\begin{remark}[E6: commutativity]\status{computed}\pabrk\src{experiments E6}\label{rem:pa:e6}
+Data from the chain $\Cch2$ on $A_{xy}$ and on $M_x$, and \Lzero{} citations of $S_{ab}$ (5 seeds, $n\le256$; \cref{app:exp:results}). The chain $\Lone$ identifies the generating form by $n=32$ in every run, among logically equivalent and among instance-equivalent weaker forms (compare \cref{prop:ident:sep}), through partial instances such as $\forall y\,(2+y=y+2)$. Under $\Lselc$ the five closed-guard forms have equal likelihoods on every datum, so the mass on provers of $\forall x\forall y\,(x+y=y+x)$ tends to their prior share $0.088$, not to $1$: the $\omega$-gap of \cref{thm:univ:omega}, not a tie among equivalents. A redundant second form is a spare slot (mass below $10^{-9}$; \cref{tab:exp:e6}).
+\end{remark}
+
+% ---------------------------------------------------------------------
+\subsection{The MDL finding in PA}\label{sec:pa:mdl}
+
+AS's MDL finding (usage, not the logical boundary of a schema, decides whether it is split; \cref{rem:ident:mdl}) concerns sequential KT codes, whose comparisons are $\log_2$ posterior odds. We re-ran AS's code on $T^*:=\Q+\TInd$ against its splits $H_F$, one $T_f$ per motive root $f\in F$ ($H_{\mathrm{root}}$: all 7 roots; $H_{\mathrm{used}}$: those that occur), under several grammars and usage laws, among them AS's natural law G1 (motives of depth 2, all seven roots used; \cref{app:pa:mdl}). With fixed parameters and a grammar that factors at the root, $H_F$ has exactly the law of $T^*$ (\cref{prop:pa:chain}, in \cref{app:pa:mdl}). With learned parameters Occam terms decide: under SDPC, a learned positional grammar shared by all templates, $\CL(H_F)-\CL(T^*)=\Delta\mathrm{prior}+\frac{|F|-9}2\log_2n+O(1)$ when all nonzero counts grow linearly (\cref{prop:pa:occam}, in \cref{app:pa:mdl}), to $0.1$ bit of the computed code length; so the SDPC margin is not constant (\cref{rem:pa:sdpcrefuted}). With a fixed $\Qg$ only the split pays Occam terms (\cref{prop:ident:splitlzero}); a learned grammar can reverse the drift (\cref{rem:ident:mdl}(ii)).
+
+On G1 at $n=256000$ the split wins by $17242$ to $274656$ bits, a margin linear in $n$, under a fixed symbol code, per-template learned codes and a shared grammar with one context per sort; under SDPC it stays $762$ bits behind (\cref{tab:pa:mdl}, in \cref{app:pa:mdl}). So the finding is about the grammar, not the likelihood family: a split pays off linearly whenever $\Qg$ ignores a feature that the split conditions on and that usage depends on. A derivation likelihood changes the consequences:
+
+\begin{proposition}[Detours]\status{(a) proved; computed; (b) known}\pabrk\src{pa Prop 2.2}\label{prop:pa:detour}
+(a) A split $H_F$ derives every induction instance if $F$ contains a non-atomic connective, through the wrappers $\neg\neg P$, $P\wedge P$, $P\vee P$, $(0=0)\to P$, $\forall zP$, $\exists zP$ (six checked derivations; under $\Lsch$ they cost 369.2--488.9 bits more than a citation). (b) If $F=\{=\}$, $\Q+H_F\subseteq\IOpen$, which does not prove the irrationality of $\sqrt2$ \citep{shepherdson1964nonstandard} (secondary sources only), while $\PA$ does.
+\end{proposition}
+
+\noindent So under $\Lone$ MDL's incompleteness for schemas (AS App.~E.7) disappears once a split has a non-atomic root; the usage effect and the unsoundness error remain (\cref{rem:pa:lumps}; \cref{rem:ident:mdl}(i)).
+
+% ---------------------------------------------------------------------
+\subsection{Theorem data: statements given without proof}\label{sec:pa:theorems}
+
+H\"anni proposed that ``statements given without proof in our data set should be fairly easily derived from axioms''. Then the data are theorems. A theory $T$ can derive a datum $s$, at cost $D_T(s)$ (cheapest library derivation under $\Lsch$), or adopt it as a ground axiom.
+
+\begin{proposition}[Memorisation threshold]\status{proved}\pabrk\src{pa Prop 3.1}\label{prop:pa:memo}
+If $s$ occurs $r$ times and the other data have the same best derivations under $T$ and $T\cup\{s\}$, then $\CL(T\cup\{s\})-\CL(T)=\beta_{\mathrm{ax}}|s|+\Delta I-r(D_T(s)-\ell_{\mathrm{cite}})$, with $D_T(s)$ and $\ell_{\mathrm{cite}}$ computed at the proof-text rate $\beta$ and $\Delta I$ the index cost change ($\log_2\frac{k+1}k$ per citation over $k$ axioms). Up to $\Delta I$, memorising at the first occurrence is cheaper iff $\beta_{\mathrm{ax}}<\beta^*(s):=(D_T(s)-\ell_{\mathrm{cite}})/|s|$.
+\end{proposition}
+
+\begin{table}[t]\centering\footnotesize
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+theorem $s$ & $|s|$ & lines & $D_T(s)$ & $\beta|s|+\ell_{\mathrm{cite}}$ & ratio & $\beta^*(s)$\\
+\midrule
+$\forall x\,\neg Sx=x$ & 7 & 11 & 224.6 & 38.2 & 5.9 & 31.2\\
+$\forall x\,0\cdot x=0$ & 7 & 14 & 281.3 & 38.2 & 7.4 & 39.3\\
+$\forall x\,0+x=x$ & 7 & 11 & 220.1 & 38.2 & 5.8 & 30.5\\
+$\forall a\forall v\,Sa+v=S(a+v)$ & 13 & 23 & 576.0 & 65.3 & 8.8 & 43.8\\
+$\forall q\forall x\,x+q=q+x$ & 11 & 55 & 1358.6 & 56.3 & 24.2 & 122.9\\
+$\forall a\forall b\forall x\,(a+b)+x=a+(b+x)$ & 17 & 27 & 793.4 & 83.4 & 9.5 & 46.3\\
+\bottomrule
+\end{tabular}
+\caption{Deriving versus memorising in $\Q+\TInd$ ($\Lsch$, $\beta=\log_223\approx4.52$; bits; $\beta|s|+\ell_{\mathrm{cite}}$ memorises at $\beta_{\mathrm{ax}}=\beta$): memorising wins at the first occurrence for every theorem at the default $\beta_{\mathrm{ax}}=\beta$. Computed; checked derivations; upper bounds (pa \S3.2; \cref{app:pa:theorems}).}\label{tab:pa:theorems}
+\end{table}
+
+\noindent Frequent lemmas become axioms, and a schema compresses its direct instances about fourfold; on a stream of theorems from a library fixed in advance the MAP is $\Q$ plus the library, or, with steady direct induction uses, $\Q+\TInd$ plus the library from $n=10$ (\cref{rem:pa:streams}, in \cref{app:pa:theorems}).
+
+\noindent On data from $P_{T^*}$ the generator's code length for a new datum is in expectation at most the prior cost of memorising it, when that prior is a prefix code ($\beta_{\mathrm{ax}}\ge\log_2$ of the alphabet size; Gibbs' inequality, \cref{prop:pa:gibbs}, in \cref{app:pa:theorems}).
+
+\begin{proposition}[Well specified, the generator wins]\status{proved, given \cref{thm:ident:doob} and known facts; proof sketch (Dirichlet weights)}\pabrk\src{pa Prop 3.3}\label{prop:pa:wellspec}
+Let the data be i.i.d.\ from $\PA$'s $\Lone$ generator in setting W (\cref{def:ident:W}), weights positive and parameters admissible ($\operatorname{supp}P_{\PA}=\Th(\PA)$, \cref{lem:model:lone}), in a countable class with $\pi(\PA)>0$. Then a.s.\ every $\Q\cup S$ ($S$ a finite set of $\PA$-theorems) has posterior $0$ eventually, and $\pi_n(\Cstar)\to1$. Under W a theory $\PA\cup S$ with generic fixed weights has a law different from $P_{\PA}$ and loses exponentially, at rate $\KL(P_{\PA}\|P_{\PA\cup S})$ (\cref{prop:ident:rates}(a)); with Dirichlet weights (outside W) such theories behave like spare slots and should decay only polynomially (proof sketch, \cref{prop:ident:spare}).
+\end{proposition}
+
+\noindent Under the 0/1 score $\Sprove$ with $\paR d$, $\Q+\TInd$ beats $\Q$ plus memorised theorems once they cost more prior bits than $\TInd$ (72 bits at $\beta_{\mathrm{ax}}=\beta$; associativity alone suffices), if $d$ covers its derivations; but any unrefuted theory with a smaller prior that derives every datum within $d$ beats both, e.g.\ an inconsistent theory that $\paR d$ does not refute (\cref{prop:pa:must}, in \cref{app:pa:theorems}).
+
+\paragraph{Answer.} A derivation-length likelihood finds $\Q+\TInd$ from theorem data (1) under the full-sum generative $\Lone$, when the data come from its own derivation process (\cref{prop:pa:gibbs,prop:pa:wellspec}), which human theorems, selected for short statements and interest, do not (under the two-part $\Lsch$ this case was not studied); and, under $\Lsch$, (2) when the data contain direct uses of the schema; (3) when the axiom prior is much steeper than the proof code ($\beta_{\mathrm{ax}}\ge\beta^*(s)$, here 30--123 bits per symbol against $\beta=4.52$); (4) under the 0/1 constraint with refutation, at the price of the size principle. Otherwise $\Lsch$ memorises short theorems, and on a computed stream of six library theorems the better of two candidates is $\Q$ plus the theorems as axioms, strictly weaker than $\PA$ (\cref{rem:pa:streams}). $\Leq$ (\cref{ex:ident:lonedq}) and the fragment $\{\mathrm{Q4},\mathrm{Q5}\}$ (\cref{prop:univ:eqfrag}) show the same pattern: a derivation likelihood favours the theory that makes the data cheap to state. Not computed: theorem data under plain $\Lone$ or the full sum. A time bound on computing the likelihood sums over fewer derivations and so pushes further towards memorisation (\cref{rem:time:links}).
+
+% ---------------------------------------------------------------------
+\subsection{Data from \texorpdfstring{$\Th(\N)$}{Th(N)}, the I\texorpdfstring{$\Sigma_n$}{Sigma-n} chain and narrow practice}\label{sec:pa:thn}
+
+\begin{proposition}[No consistent r.e.\ theory survives]\status{proved}\pabrk\src{pa Prop 4.1}\label{prop:pa:thn}
+If $P_T(s)>0$ iff $T\vdash s$ (e.g.\ $\Lone$, weights positive, parameters admissible) and the data are i.i.d.\ from a law with full support on $\Th(\N)$, every consistent r.e.\ theory has posterior $0$ eventually, a.s.
+\end{proposition}
+
+\begin{proposition}[Refutation]\status{proved; known}\pabrk\src{pa Prop 4.2}\label{prop:pa:refute}
+Without a refutation rule inconsistent theories are never refuted; $\paR\infty$ refutes them at once but is not computable; $\paR{d_n}$, $d_n\to\infty$, refutes each eventually; no computable rule does better uniformly, as consistency of r.e.\ theories is $\Pi_1$-complete.
+\end{proposition}
+
+\noindent Along $\PA$, $\PA+\Con(\PA)$, \dots\ the posterior drifts: in a toy model the MAP is the largest level seen and the regret grows by about 50 bits, the prior cost of one level, per level (\cref{rem:pa:tower}). In $\DT$ each step must add a ground sentence, since every $\DT$ template whose instances lie in the reflection schema $\Refl_T$ is ground (\cref{prop:pa:refl}; both in \cref{app:pa:thn}).
+
+\noindent Pointwise limits are trivial: under 0/1 support memorisation alone eventually decides every sentence correctly in every surviving consistent theory (\cref{rem:pa:pointwise}). So for $\Th(\N)$ one can promise regret against every theory plus its exceptions (under $\Leps$, within $-\log_2\pi(T)$ bits of $T$ with its exceptions coded as noise; \cref{prop:pa:regret}; both in \cref{app:pa:thn}) and depth-relative soundness, not identification. In Gold's model the chain $\ISigma1\subset\ISigma2\subset\cdots$ with union $\PA$ is a limit point.
+
+\begin{proposition}[The $\ISigma n$ chain]\status{(a) proved, given known facts; (b) proof sketch; (c) refuted}\pabrk\src{pa Prop 4.6; referee M4, m7}\label{prop:pa:isigma}
+(a) For i.i.d.\ theorems from $\PA$'s $\Lone$ generator (setting W, parameters admissible), each $\ISigma n=\Q+\sigma_n$ has posterior $0$ eventually and $\pi_n(\Cstar_{\PA})\to1$ a.s.\ in any countable class with $\pi(\PA)>0$; the waiting times are presumably astronomical (a heuristic). (b) Before that, $\sigma_n$ pays at each induction use for a Tarski biconditional that grows with the motive, so the schema wins linearly on induction-use data. (c) \emph{Refuted:} ``if the community uses only $\Sigma_n$ motives, every $\DT$ theory covering its practice contains $\PA$-strength induction, so the posterior lands on the $\mathcal L_\infty$ side''.
+\end{proposition}
+
+\noindent (c) fails because AS Thm 5.16 concerns a single covering template. What is true: a read-once induction template $\TInd[P:=\lambda x.C]$, each metavariable occurring once in $C$, gives full induction over Q1 if $C$ has a formula metavariable, and otherwise yields only instances with $C$'s formula skeleton, so that $\Q$ plus its instances lies in some $\ISigma k\subsetneq\PA$ (\cref{prop:pa:readonce}; equivalent motives give equivalent induction instances, \cref{lem:pa:motive}). The condition is sufficient, not necessary: the non-read-once $\TInd[P:=\lambda x.\,x=0\vee F(x)]$ still gives full induction over Q1, Q2 (\cref{rem:pa:shift}; all in \cref{app:pa:thn}); which other templates give full induction is open.
+
+\begin{example}[Narrow practice ends on the weaker side]\status{computed}\pabrk\src{pa \S4.3 (1); referee r8}\label{ex:pa:narrow}
+Practice: $\Q$ plus induction on motives $\exists z(s=t)$ and $\neg(s=t)$. $H_{\mathrm{narrow}}:=\Q+T_E+T_N$, with the two induction templates $T_E:=\Ind(\lambda x.\exists z\,A(x,z)=B(x,z))$ and $T_N:=\Ind(\lambda x.\neg C(x)=D(x))$ (term metavariables), covers it and lies in $\ISigma1\subsetneq\PA$. $\CL(H_{\mathrm{narrow}})-\CL(T^*)=+230.8$ bits at $n=100$ and $+174.6$ at $3000$, matching \cref{prop:pa:occam}(a) to 0.1 bit; slope $\frac{9-8}2-3\cdot\frac{9-1}2=-11.5$ bits per doubling (three fixed formula contexts), crossover $n\approx2^{26.7}$.
+\end{example}
+
+\noindent On G1 coverage does not force $\PA$ either: the term-only theory of all 157 motive skeletons lies inside $\ISigma2$ and has slope $+2.0$ bits per doubling against $T^*$ (proof sketch; code length not computed), while the theory of the 112 skeletons seen by $n=3000$ dies at the first unseen one (\cref{ex:pa:skel}, in \cref{app:pa:thn}). So strength beyond usage is set by an Occam balance, a term-only theory gaining $\frac{|A_c|-1}2$ bits per doubling per context it fixes and paying $\frac12$ per extra template, and narrow practice lands on the weaker side: the Bayesian $\mathcal L_\infty$-versus-$\mathcal L_5$ choice (\cref{prop:ident:gold}).
+
+\begin{conjecture}[Broad practice]\status{conjecture}\pabrk\src{pa Conj 4.10}\label{conj:pa:broad}
+If the motives have unbounded depth and use every connective at every depth with positive probability, the mass on theories deriving all of $\PA$ tends to $1$. (Open because covering theories may use non-read-once templates.)
+\end{conjecture}
+
+\noindent The experiments of \cref{sec:exp} (fixed PCFG, $\Lzero$, causal pools; $<$ in the language, nine motive roots) find the narrow effect with atomic motives. Let $T_f$ be $\TInd$ with motive root $f$; for a connective root $f$ and any set $\Q^-$ of axioms among Q1--Q7, $\Q^-+T_f$ has the same consequences as $\Q^-+\TInd$ (\cref{prop:pa:fragments}), and Q3 is redundant given $\TInd$ (\cref{prop:pa:redundant}; both in \cref{app:pa:frag}).
+
+\begin{proposition}[Atomic fragments are weaker]\status{proved, given two known facts}\pabrk\src{experiments Prop X10}\label{prop:pa:atomic}
+$T^*:=\mathrm{Q1..Q7}+\TInd$ contains $\PA$ and proves $\sigma:=\neg\exists x\exists y(\neg y=0\wedge x\cdot x=(SS0\cdot y)\cdot y)$; $\Q+\{T_=,T_<\}\nvdash\sigma$ (known facts: $\PA\vdash\sigma$; Shepherdson's model, \citealp{shepherdson1964nonstandard}, secondary sources only).
+\end{proposition}
+
+\begin{remark}[E3(b)]\status{computed}\pabrk\src{experiments E3(b)}\label{rem:pa:e3b}
+$\Lzero$ data from $T^*$ with misspecified motive laws (5 seeds, $n\le2048$). Three connective-rich laws keep the theorems (mass $0.998$--$1.000$ on $T^*$-equivalents at $n=2048$); under two of them the MAP leaves $T^*$ for $T^*+T_\exists$ or an observed-root split. Atomic motives: $T^*$ has mass $0.988$ at $n=64$ in 4 of 5 seeds, then \expth{frag-atoms} $=\Q+\{T_=,T_<\}$ has mass $1.000$ in 5 of 5 seeds from $n=1024$ (mass on $T^*$-equivalents \emph{in this pool}: $2\cdot10^{-178}$ at $n=2048$, carried by \expth{frag-complete}, $\Q$ plus all nine $T_f$, whose seven never-used fragments put it about 590 bits behind \expth{frag-atoms}; a $T^*$-equivalent that only adds $\TInd$ to \expth{frag-atoms} was not in the pool and would lose only polynomially, as a spare slot, \cref{prop:ident:spare}): the posterior moves to a strictly weaker theory (\cref{tab:exp:e3b}).
+\end{remark}
+
+% ---------------------------------------------------------------------
+\subsection{Unlabelled mixtures: a Bayesian DTRC}\label{sec:pa:dtrc}
+
+AS's \DTRC{} is a learner for unlabelled mixtures that clusters the data by refuting merged templates (AS \S7). Its Bayesian form: finite sets of $\DT$ templates, prior 5 bits per symbol, Dirichlet($\frac12$) weights, one shared positional grammar, negatives under $\paR0$; data from G1 practice (Q1--Q7 as ground sentences, induction with probability $\frac12$), one seed; candidates: the root split, a spare $F\to F$, memorisation, AS's over-general template $T_{\mathcal L_\infty}$, the lump $F_0+\TInd$ and the bare $F_0$ (code lengths in \cref{tab:pa:dtrc}, in \cref{app:pa:dtrc}).
+
+
+\noindent Without negatives $\Q+\TInd$ has mass $\ge1-6\cdot10^{-6}$ from $n=100$; with two negatives ($0=S0$ and a false instance of $T_{\mathcal L_\infty}$), $\ge1-1.6\cdot10^{-5}$ from $n=10$. The root split and the spare are $\PA$-equivalent, so the mass on $\PA$-equivalents is $\ge1-10^{-96}$ from $n=100$, \emph{within this candidate set}. At $n=10,30$, without negatives, the unsound lump $F_0+\TInd$ leads, and $\Ver\delta0$ accepts the false $0=S0$ for every $\delta\ge3\cdot10^{-13}$ until a negative datum refutes the lump: AS's unsoundness for rarely used ground axioms in Bayesian form (\cref{rem:pa:lumps}, in \cref{app:pa:dtrc}; frequencies over seeds: \cref{rem:sound:lumps}). The split gains 1 bit per doubling (\cref{prop:pa:occam}); the spare loses $\frac12$, as a never-used template costs its prior plus $\frac12\log_2n$ bits and a constant (\cref{prop:pa:spare}, in \cref{app:pa:dtrc}); the rest lose linearly.
+
+
+\begin{remark}[E2]\status{computed}\pabrk\src{experiments E2}\label{rem:pa:e2}
+$\Lzero$ citations from $T^*$ at fixed weights, 25 seeds, $n\le512$, causal pools. $T^*$ takes the mass once Q1, Q2, Q4--Q7 have each been cited (median datum 55; Q3 is redundant): mass on its equivalents $\ge0.95$ from $n=32$, $64$ or $128$ (5, 15, 5 seeds); mean mass of $T^*$ $0.751$ at $n=64$, $0.996$ at $512$. Before that the sound but weaker $\SeenQ(D_n)$, $\TInd$ plus the Q axioms cited so far (\cref{sec:exp:impl}), leads; the \DTRC{} candidates above (other data) lack it. The false spare $T^*+\{0=S0\}$ keeps $0.004$ at $n=512$ (\cref{tab:exp:e2}); false acceptances: \cref{rem:sound:lumps}.
+\end{remark}
+
+\noindent On data $t+0=t$ the schema $z+0=z$ wins; the sound split by the head of $t$, which does not entail $\forall x(x+0=x)$, closes in at 5 bits per doubling (a Bayesian $\omega$-gap), and $\forall x(x+0=x)$ loses at a rate set by the rule code, from $\log_210$ bits per datum to $\frac{R-1}2\log_2n$ for $R$ rules (\cref{rem:pa:merge}). ``Does not contradict'' alone learns nothing: the posterior is the prior restricted to compatible theories (\cref{prop:pa:nc}; both in \cref{app:pa:dtrc}).
+
+\begin{proposition}[Inconsistency is invisible to the size principle]\status{proved}\pabrk\src{pa Prop 5.3}\label{prop:pa:incons}
+Under $\Lmax$ with citation weights, adding $\sigma$ with fixed weight fraction $w$ gives $P_{T\cup\{\sigma\}}(s)\ge(1-w)^{c(s)}P_T(s)$, $c(s)$ the citations in $s$'s best $T$-derivation; with Dirichlet weights an unused $\sigma$ costs its prior plus about $\frac12\log_2n$ bits. Consistency must be enforced by $\paR d$.
+\end{proposition}
+
+% ---------------------------------------------------------------------
+\subsection{Robust failures and the overall answer}\label{sec:pa:failures}
+
+\begin{table}[t]\centering\footnotesize\crefabbrev
+\begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{0.23\textwidth}>{\raggedright\arraybackslash}p{0.27\textwidth}@{}}
+\toprule
+& what fails & evidence & fixable?\\
+\midrule
+F1 & usage over logic & \cref{prop:pa:usage,rem:pa:usage} & change the target\\
+F2 & misspecified grammar: linear fragmentation & \cref{tab:pa:mdl} & shared positional grammar\\
+F3 & never-used parts split off ($\omega$-gap) & \cref{prop:pa:occam,rem:pa:merge} & harmless for theorems only for splits with a non-atomic formula root (\cref{prop:pa:detour}(a)); term-root splits lose $\forall x\varphi$ (\cref{rem:pa:merge}); atomic-root splits are weaker (\cref{prop:pa:detour}(b))\\
+F4 & false generalisation, no counterexamples & \cref{ex:pa:euler} & only by refutation\\
+F5 & unsound lumps at small $n$ & \cref{rem:pa:lumps,rem:pa:e2} & a negative datum, more data\\
+F6 & inconsistency unseen by the size principle & \cref{prop:pa:incons} & only $\paR{d_n}$, not certifiable\\
+F7 & no well-specified theory for $\Th(\N)$ & \cref{prop:pa:thn,rem:pa:tower} & as regret (\cref{prop:pa:regret})\\
+F8 & strength beyond usage set by Occam terms & \cref{ex:pa:narrow,rem:pa:e3b} & broad practice (\cref{conj:pa:broad})\\
+F9 & bounded search memorises long proofs & \cref{sec:pa:theorems} & not in general (\cref{prop:model:compute})\\
+F10 & theorem data memorised, MAP $\subsetneq\PA$ & \cref{prop:pa:memo,rem:pa:streams} & schema uses, steep prior\\
+\bottomrule
+\end{tabularx}
+\caption{Robust failures (pa \S6); statuses as in the cited items.}\label{tab:pa:failures}
+\end{table}
+
+\noindent F4: on true data $\mathrm{Prime}(k\cdot k+k+41)$ the false schema $\mathrm{Prime}(z\cdot z+z+41)$ beats memorisation at every computed $n\le10^6$, no finite unguarded covering union is true without memorising, and a refutation removes the schema; memorisation should eventually win under a flat grammar, not under a depth-indexed one (proof sketches; \cref{ex:pa:euler}, in \cref{app:pa:dtrc}).
+
+\subsubsection{The overall answer}\label{sec:pa:answer}
+
+The inducer does \emph{not} robustly pick up the textbook axioms; it picks up the axioms that are \emph{used}. Within the hand-picked candidate sets and pools scored, for data that are direct uses of axioms under the broad usage laws scored (usage mixes of equivalent forms, G1 practice, connective-rich motives) and once every needed axiom has been cited, it puts nearly all mass on theories deductively equivalent to $\PA$; narrow or atomic practice, also direct use, ends on a strictly weaker theory (\cref{ex:pa:narrow,prop:pa:atomic}). In three of the four hand-picked cases this is automatic, since every candidate is $\PA$-equivalent (usage mixes, recursion conventions, root splits), and in the \DTRC{} run $\PA$-equivalents get mass $\ge1-10^{-96}$ from $n=100$. It fails robustly on theorem data, narrow practice, absent counterexamples, small $n$ and inconsistency (\cref{tab:pa:failures}). Not scored: all finite template unions, non-read-once templates, stronger true theories such as $\PA+\Con(\PA)$ (spare slots), further ZF candidates.

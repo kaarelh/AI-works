@@ -1,0 +1,239 @@
+% =====================================================================
+% Section 4: what the posterior identifies (key: ident). Sources (final records only):
+%   research/tracks/model/notes-final.md   §2 (Thm 2.1, Cors 2.2, 2.3, Props 2.4-2.6), §3 (Thm 3.1, Ex 3.2,
+%       Lemma 3.3, Ex 3.4, Rem 3.5, Ex 3.6, Conj 3.7), §5 (Thm 5.1, Props 5.2, 5.4-5.6), §8 (Thm 8.1,
+%       Prop 8.2, Rem 8.3), §12 (verification log); referee.md (M3, M4, m5-m7, m10, m12, m14-m16, Q1, Q5, Q6)
+%   research/tracks/universal/notes-final.md  Lemma U7, §10
+%   research/tracks/experiments/notes-final.md Props X5, X7, X13; E3(a), E5, E8; code/results/e{3,5,8}_*.md
+%   research/tracks/pa/notes-final.md       Props 2.1-2.3, 5.1
+% Proofs, details and computed tables: sections/app-ident.tex. Local symbols (not exported): rho_T,
+% Delta_n, BF_n, R_n, K_T, \mathbb M, P^{(p')}.
+% Local macro: \identbrk lets a long \src note move to the next line (fill-break; no effect if unused).
+% =====================================================================
+\providecommand{\identbrk}{\hfil\penalty0\hfilneg}
+
+\section{What the posterior identifies}\label{sec:ident}
+
+Well specified, the posterior concentrates on the theories with the data's law and is the prior among them: it identifies the theorem set (under $\Lone$, parameters admissible) or the instance union (under $\Lzero$), not the axioms. Splits of a schema are decided by Occam terms or by usage statistics; spare templates are never refuted and at best decay polynomially; stochastic positive data identify both ends of Gold's limit point. Misspecified, the posterior goes to the best-fitting generator, which can be weaker than the axioms behind the data, or unsound. Sources are the model track (\S\S2, 3, 5, 8) unless named; proofs and computations are in \Cref{app:ident}. Logarithms are natural, KL in nats; the experiments report bits.
+
+% ---------------------------------------------------------------------
+\subsection{Well-specified consistency}\label{sec:ident:wellspec}
+
+\begin{definition}[Setting W]\identbrk\src{model \S2}\label{def:ident:W}
+$\Hclass$ is a countable class with a prior $\pi$, $\sum_T\pi(T)=1$; each $T$ carries a \emph{fixed} law $P_T$ on the countable set $\mathcal S$ (fixed weights). The data $D_n=(X_1,\dots,X_n)$ are i.i.d.\ from $P_{T^*}$, $\pi(T^*)>0$. The posterior is $\pi_n(T):=\pi(T)P_T(D_n)/M(D_n)$, $M(D_n):=\sum_T\pi(T)P_T(D_n)$; the predictive law is $M_n:=\sum_T\pi_n(T)P_T$; the \emph{generator class} is $\Cstar:=\{T:P_T=P_{T^*}\}$.
+\end{definition}
+
+\begin{theorem}[Concentration on the generator class]\status{proved; known (Doob 1949)}\identbrk\src{model Thm 2.1; universal Lemma U7}\label{thm:ident:doob}
+Under W, $\pi_n(\Cstar)\to1$ a.s.; moreover $\pi_n(T)\to\pi(T)1[T\in\Cstar]/\pi(\Cstar)$ for every $T$, and in total variation.
+\end{theorem}
+
+\noindent The proof is Doob's argument \citep{doob1949application}, written out for a countable class in \cref{app:ident:doob}.
+
+\begin{corollary}[Inside $\Cstar$ the posterior is the prior]\status{proved; computed}\identbrk\src{model Cor 2.2}\label{cor:ident:prior}
+For $T,T'\in\Cstar$ and every $n$, $\pi_n(T)/\pi_n(T')=\pi(T)/\pi(T')$.
+\end{corollary}
+
+\begin{corollary}[Limits of deductive beliefs]\status{proved}\identbrk\src{model Cor 2.3}\label{cor:ident:deductive}
+Under W, a.s., for all $s$ and $d\le\infty$ at once, $\pi_n(\{T:s\in\Th_d(T)\})\to\pi(\{T\in\Cstar:s\in\Th_d(T)\})/\pi(\Cstar)$.
+\end{corollary}
+
+\noindent The data decide a deductive question only through $\Cstar$; inside it the prior decides. The limit is $1[s\in\Th_d(T^*)]$ under $\Lzero$ (full-support $\Qg$, positive weights) for every $d$ ($\operatorname{supp}P_T=\bigcup\inst(T)$) and under $\Lone$ with parameters admissible for $d=\infty$ ($\operatorname{supp}P_T=\Th(T)$; \cref{lem:model:grammar,lem:model:lone}); under $\Ltwo$ only $\Th_{\le d}$ is fixed, and for H\"anni's scores nothing of this kind holds.
+
+\begin{proposition}[Rates]\status{proved}\identbrk\src{model Prop 2.4}\label{prop:ident:rates}
+Assume W. (a) For $T\notin\Cstar$, $\pi(T)>0$: $\frac1n\ln\frac{\pi_n(T^*)}{\pi_n(T)}\to\KL(P_{T^*}\|P_T)\in(0,\infty]$ a.s. (b) $\sum_{i=1}^n\Ex\,\KL(P_{T^*}\|M_{i-1})\le\ln\frac1{\pi(\Cstar)}$. (c) For $A\subseteq\Hclass\setminus\Cstar$ and $\rho_T:=\sum_s(P_{T^*}(s)P_T(s))^{1/2}$, $\Ex[(\pi_n(A)/\pi_n(T^*))^{1/2}]\le\sum_{T\in A}(\pi(T)/\pi(T^*))^{1/2}\rho_T^n$; so $P[\pi_n(A)\ge\varepsilon]\le C\rho^n\varepsilon^{-1/2}$ if $\sup_A\rho_T\le\rho<1$ and $C:=\sum_{T\in A}(\pi(T)/\pi(T^*))^{1/2}<\infty$ (true for $\pi_\lambda$, $\lambda\ge2$).
+\end{proposition}
+
+\noindent The rate (c) degenerates for spare templates ($\rho_T\ge(1-\varepsilon)^{1/2}$ for a spare of weight $\varepsilon$), whose decay the weight prior sets (\cref{prop:ident:spare}).
+
+% ---------------------------------------------------------------------
+\subsection{Identification is of the generator}\label{sec:ident:gen}
+
+\begin{proposition}[$\Lone$ separates deductively equivalent theories]\status{proved (open parameter region); computed}\identbrk\src{model Prop 2.5}\label{prop:ident:sep}
+Let $a:=\neg(S0=0)$, $b:=\neg(SS0=0)$, $T_1:=\{a,b\}$, $T_2:=\{a,a\to b\}$ (ground, weights $\frac12$); $\Th(T_1)=\Th(T_2)$. Under $\Lone$ or $\Ltwo$, $P_{T_1}(b)\ge\alpha_{\mathrm{ax}}/2$ and $P_{T_2}(b)\le\alpha_{\mathrm r}/(1-\alpha_{\mathrm r})$; so $P_{T_1}\ne P_{T_2}$ if $\alpha_{\mathrm{ax}}/2>\alpha_{\mathrm r}/(1-\alpha_{\mathrm r})$.
+\end{proposition}
+
+\noindent The laws also differ in every computed setting outside the proved region (\cref{app:ident:gen}); for all parameters it is open. With data from $P_{T_1}$ or $P_{T_2}$ the posterior picks the generating axiomatisation, not a logically privileged one; from a third generator the drift is a difference of two KL divergences and can vanish.
+
+\begin{proposition}[Equal laws; splits are exact ties]\status{proved; computed}\identbrk\src{model Prop 2.6 and remark; pa Prop 2.1}\label{prop:ident:splits}
+Let $\Qg$ have full support and all weights be positive.
+(a) Under $\Lzero$, $P_{T,w}=P_{T',w'}$ implies $\bigcup\inst(T)=\bigcup\inst(T')$, hence $\Th_d(T)=\Th_d(T')$ for all $d$.
+(b) Let $\tau\in T$ have a metavariable $M$ whose law factors at the root over finitely many productions, $\Qg_M(\lambda\bar z.\,r(\beta_1,\dots,\beta_a))=p_r\prod_j\Qg(\beta_j)$, and let $\tau_r$ be $\tau$ with $M$'s body fixed to root $r$ and fresh metavariables for its children. The \emph{root split} $T'$, with $\tau$ replaced by the $\tau_r$ at weights $w'_{\tau_r}:=w_\tau p_r$, consists of $\DT$ templates, and $P_{T',w'}=P_{T,w}$ under $\Lzero$; $\mu_{T'}=\mu_T$, $Z_{T'}=Z_T$ under $\Lone$, $\Ltwo$.
+(c) A renamed or argument-permuted copy (AS Lemma~A.2) has the same law if $\Qg$ is symmetric in holes. Equal laws give equal instance sets, hence equivalence for first-order templates with only $0$-ary term metavariables (AS Prop~C.1); in general (e.g.\ A1, or $\DT$) this converse is open.
+\end{proposition}
+
+\noindent So with weights matched to $\Qg$ no data tell a schema (e.g.\ $\TInd$) from its root split; only the prior does. The tie needs $\Qg$ to factor at the root, which track pa's learned grammar does not (\cref{prop:pa:occam}).
+
+\begin{remark}[Chain likelihood, latent citations]\status{proved; computed}\identbrk\src{experiments Prop X13, E8, E6}\label{rem:ident:splitsL1}
+In the chain $\Cch{J}$ the tie holds for a $0$-ary closed-guard term metavariable of a component that is not an MP major premise; in E8, where a datum $\psi(t)$ may be cited or derived from $\varphi(t)$ by MP, the two log-probabilities agree to $1.1\cdot10^{-13}$. In E6 the chain $\Lone$ identifies the generating form of commutativity by $n=32$, among logically equivalent and among instance-equivalent forms; under $\Lselc$ five closed-guard forms tie exactly (\cref{rem:pa:e6}).
+\end{remark}
+
+% ---------------------------------------------------------------------
+\subsection{Positive data and Gold}\label{sec:ident:gold}
+
+\begin{theorem}[Identification in the limit with probability one]\status{(a), (b) proved; (b$'$) known, proof sketch; (c) conjecture}\identbrk\src{model Thm 5.1}\label{thm:ident:limit}
+Let $\Hclass$ be all theories, with a prior positive on $T^*$.
+(a) For fixed generators ($\Lzero$ with fixed positive weights; or $\Lone$ with fixed positive parameters, $m\le1$, parameters admissible; full-support $\Qg$) and data i.i.d.\ from $P_{T^*}$, the learner $g_n:=L$ if $\pi_n(\{T:\operatorname{supp}P_T=L\})>\frac12$ equals $\operatorname{supp}P_{T^*}$ for all large $n$, a.s.: $\bigcup\inst(T^*)$ under $\Lzero$, $\Th(T^*)$ under $\Lone$. No bound on the number of templates is needed.
+(b) With Dirichlet weights (prior $\pi(T)\Dir_T(dw;\alpha)$, $\Lzero$, full-support $\Qg$, data i.i.d.\ from $P_{T^*,w^*}$), for Lebesgue-a.e.\ $w^*$, $\pi_n(\{T:\bigcup\inst(T)=\bigcup\inst(T^*)\})\to1$ a.s.
+(b$'$) Under (b), $\pi_n(\{(T,w):\TV(P_{T,w},P_{T^*,w^*})<\varepsilon\})\to1$ a.s.\ for all $\varepsilon>0$ (\citealp[Thm~6.9]{ghosal2017fundamentals}; numbering checked only via citing papers).
+(c) Conjecture: (b) holds for every $w^*$ in the open simplex.
+\end{theorem}
+
+\noindent (b) runs Doob's argument with the support functional $\bigcup\inst(T)$, which takes countably many values and a.s.\ equals the set of sentences seen (\cref{app:ident:gold}).
+
+\begin{remark}[The exact class has posterior mass zero]\status{refuted; counter-statement proved}\identbrk\src{model Thm 5.1(b$''$)}\label{rem:ident:exact}
+The pre-referee (b) read ``$\pi_n(\{(T,w):P_{T,w}=P_{T^*,w^*}\})\to1$ for a.e.\ $w^*$''. If $|T^*|\ge2$ with linearly independent component laws, this mass is $0$ at every $n$ for all $w^*$ off a countable set: each $\{w:P_{T,w}=P_{T^*,w^*}\}$ is Lebesgue-null, and the posterior on $w$ is absolutely continuous with respect to $\Dir_T$.
+\end{remark}
+
+\begin{remark}[Which computed posteriors are covered]\status{known}\identbrk\src{experiments Prop X5}\label{rem:ident:x5}
+\Cref{thm:ident:doob} covers the experiments' Dirichlet posteriors only for one-component generators (E1, E4, E6). E2, E3(b), E5(b), E8 sample at one fixed weight vector, where only (b) and conjecture (c) speak: a yardstick, not an instance of a theorem.
+\end{remark}
+
+\begin{proposition}[$L_\infty$ against $L_5$]\status{proved}\identbrk\src{model Prop 5.2}\label{prop:ident:gold}
+Let $L_1\subsetneq L_2\subsetneq\cdots$, $L_\infty:=\bigcup_iL_i$, each $L_i$ ($i\le\infty$) with a generator $P_i$, $\operatorname{supp}P_i=L_i$, whose class has prior mass $\pi_i>0$ (setting W). (a) On data i.i.d.\ from $P_i$, $g_n=L_i$ eventually, a.s. (b) Some text for $L_\infty$ has $g_n\ne L_\infty$ infinitely often \citep{gold1967language}. (c) Such texts have $P_\infty^\infty$-probability $0$.
+\end{proposition}
+
+\noindent The learner has no fixed preference between the ends of the limit point; the size principle decides (on $P_5$-data the ratio of $L_\infty$'s generator to $L_5$'s is $P_\infty(L_5)^n$ times a factor of mean at most $1$; \cref{lem:model:size}). E5 shows both ends identified and the MAP changing at each of 14 stages of Gold's text (\cref{tab:exp:e5}). For the $\ISigma n$ chain both directions separate, after presumably astronomical waiting times (a heuristic; \cref{app:ident:gold}, \cref{prop:pa:isigma}).
+
+\begin{remark}[Memorisation and the bound]\status{proved; known (prior work, flagged)}\identbrk\src{model \S5.2}\label{rem:ident:memo}
+A fixed memoriser $\Mem(E)$ dies once a datum outside $E$ appears; before that it pays its prior and, with Dirichlet weights, about $\frac{|E|-1}2\ln n$ nats. The memoriser \emph{class} can keep mass $\exp(-O(\ln^2n))$ (\cref{prop:univ:memo}). So the Bayesian needs no bound on the number of templates, unlike the cautious learner (AS Prop~6.4). Identification from stochastic positive data goes back to \citet{horning1969study} and \citet{angluin1988identifying} (existence checked, content not).
+\end{remark}
+
+% ---------------------------------------------------------------------
+\subsection{Splits and the MDL finding}\label{sec:ident:mdl}
+
+AS \S6.10 found that MDL ``tracks the statistics of usage, not the logical boundaries of schemas'' (a naive code splits $\TInd$ by a linear margin, a well-specified one gains at most $O(\log n)$; AS Props~E.16, E.17). Does a derivation likelihood change this? With learned weights a root split must learn the root law that the schema takes from $\Qg$.
+
+\begin{proposition}[Schema against root split, $\Lzero$]\status{proved; known (the $\chi^2$ limit); computed}\identbrk\src{model Prop 5.4}\label{prop:ident:splitlzero}
+Let $T=\{\tau\}$, $T'$ its root split over $K$ productions with $\Dir(\alpha)$ weights, the data $n$ instances of $\tau$ with root law $r$, root counts $n_f$, $\hat r:=n_f/n$, and $p$ the root law of $\Qg$.
+(a) $\Delta_n:=\ln\PDir{T'}(D_n)-\ln P_T(D_n)=\ln\DirMult(n_f;\alpha)-\sum_fn_f\ln p_f$, $\DirMult(n_f;\alpha):=\frac{\Gamma(K\alpha)}{\Gamma(K\alpha+n)}\prod_f\frac{\Gamma(\alpha+n_f)}{\Gamma(\alpha)}$.
+(b) If all $n_f\to\infty$: $\Delta_n=n\KL(\hat r\|p)-\frac{K-1}2\ln n+c_{K,\alpha}+(\alpha-\frac12)\sum_f\ln\hat r_f+o(1)$, $c_{K,\alpha}:=\ln\frac{\Gamma(K\alpha)}{\Gamma(\alpha)^K}+\frac{K-1}2\ln2\pi$.
+(c) If $r=p$: $\Delta_n=-\frac{K-1}2\ln n+O_P(1)$ ($2n\KL(\hat r\|p)\to\chi^2_{K-1}$); the schema wins at rate $n^{-(K-1)/2}$.
+(d) If $r\ne p$: $\Delta_n/n\to\KL(r\|p)>0$ a.s.; the split wins linearly.
+(e) The prior adds $\lambda(\ell(T')-\ell(T))>0$ bits for the schema.
+\end{proposition}
+
+\begin{proposition}[Schema against root split, derivation likelihoods]\status{(a)--(c) proved; (d) conjecture; computed}\identbrk\src{model Prop 5.6}\label{prop:ident:splitlone}
+Let $T=\{\tau\}$ root-factor as in \cref{prop:ident:splits}(b), $|R|=K$, root law $p$ interior, $T'$ the split with $\Dir(\alpha)$ weights, under $\Lzero$, $\Lone$ ($m<1$) or $\Ltwo$ with other parameters fixed and shared; $P^{(p')}$ is the law of $\{\tau\}$ with root law $p'$, and $\mathrm{BF}_n:=\PDir{T'}(D_n)/P_T(D_n)$.
+(a) $P_{T',w'}=P^{(w')}$, so $\PDir{T'}(D)=\int\prod_iP^{(p')}(X_i)\,\Dir(dp')$: the split with learned weights is the schema with a learned root law.
+(b) If $\Qg$ fits the usage (data i.i.d.\ from $P_T$), $\mathrm{BF}_n$ is a nonnegative supermartingale from $1$: $P(\sup_n\mathrm{BF}_n\ge1/\delta')\le\delta'$.
+(c) If not (data i.i.d.\ from $P^{(r)}\ne P^{(p)}$, $r$ interior), $\frac1n\ln\mathrm{BF}_n\to\KL(P^{(r)}\|P^{(p)})\in(0,\infty]$ a.s.
+(d) Conjecture: under (b), with $p'\mapsto P^{(p')}$ identifiable and nonsingular Fisher information, $\ln\mathrm{BF}_n=-\frac{K-1}2\ln n+O_P(1)$.
+\end{proposition}
+
+\noindent (b) is Ville's inequality (IL Lemma~C.4); (c) uses a continuity lemma (\cref{app:ident:mdl}); (d) would need a Laplace theorem for a model with latent citations. Computed: \cref{tab:ident:c2,tab:ident:c13} (slope $-0.507$ for (d)).
+
+\begin{remark}[E8: latent citations]\status{computed}\identbrk\src{experiments E8}\label{rem:ident:e8}
+For $\{\varphi(z),\psi(z),\varphi(z)\to\psi(z)\}$ against the split of $\varphi(z)$ by its term's root ($K=4$; chain $\Lone$ data, 10 seeds), well-specified usage makes the split lose $1.43$ bits per doubling of $n$ under $\Lone$ and $1.51$ under $\Lzero$ ($n=256\ldots4096$; conjectured $1.5$), and skewed usage makes it win $0.202$ against $0.074$ bits per datum ($n=1024\ldots4096$): a $\psi$-datum may be $\varphi$ followed by MP, so under $\Lone$ its term informs the split too (\cref{tab:exp:e8}).
+\end{remark}
+
+\begin{remark}[What this says about the MDL finding]\status{proved; computed (as cited)}\identbrk\src{model \S5.3; pa \S2; universal \S10; experiments E8}\label{rem:ident:mdl}
+As far as proved, a derivation likelihood does not change the MDL finding: with usage that $\Qg$ fits, the split loses under $\Lzero$ and gains at most $\ln(1/\delta')$ nats with probability $1-\delta'$ under $\Lone$ (that it loses there is conjecture (d)); with usage that $\Qg$ misfits, it wins linearly under both. Three qualifications. (i) Partial splits that only $\Lone$ keeps alive are not covered: a split of $\TInd$ with a non-atomic connective derives every induction instance, an unseen-connective datum costing 369--489 bits in pa's code instead of being impossible (\cref{prop:pa:detour}); a general comparison is open. (ii) A learned grammar can reverse the Occam drift: under pa's shared positional grammar the split into roots $F$ costs $\Delta\mathrm{prior}+\frac{|F|-9}2\log_2n+O(1)$ bits more than the schema, whose grammar pays for root symbols it never uses (\cref{prop:pa:occam}); with seven roots the split gains 1 bit per doubling yet is 762 bits behind at $n=256000$. (iii) Unmodelled selection of the reported data creates linear split wins (\cref{rem:univ:mdl}). In short: when the instantiation model is misspecified, the posterior tracks usage, not the logical boundary of a schema.
+\end{remark}
+
+% ---------------------------------------------------------------------
+\subsection{Spare templates}\label{sec:ident:spare}
+
+\begin{proposition}[Cost of a spare template]\status{(a), (d1) proved; (b), (c), (d2) proof sketch; computed}\identbrk\src{model Prop 5.5; experiments Prop X7; pa Prop 5.1}\label{prop:ident:spare}
+Let the truth be $(T^*,w^*)$ under $\Lzero$ with $\Dir(\alpha_\tau)$ priors, $A:=\sum_{\tau\in T^*}\alpha_\tau$, $\sigma$ a spare with parameter $\alpha_\sigma$, $R_n:=\PDir{T^*\cup\{\sigma\}}(D_n)/\PDir{T^*}(D_n)$.
+(a) If no datum is in $\inst(\sigma)$, exactly $R_n=\frac{\Gamma(A+\alpha_\sigma)\Gamma(A+n)}{\Gamma(A)\Gamma(A+\alpha_\sigma+n)}\sim\frac{\Gamma(A+\alpha_\sigma)}{\Gamma(A)}n^{-\alpha_\sigma}$; at $\alpha_\sigma=\frac12$, $\frac12\log_2n$ bits plus a constant and the prior bits.
+(b) If $\sigma$ covers data but $\Qg_\sigma(\operatorname{supp}P^*)=1-c<1$: $\ln R_n=-\alpha_\sigma\ln n+O_P(1)$.
+(c) If $\inst(\sigma)\subseteq\operatorname{supp}P^*$, $\Qg_\sigma$ outside the span of $T^*$'s components: $\ln R_n=-\frac{\alpha_\sigma}2\ln n+O_P(1)$.
+(d1) If $\Qg_\sigma=\Qg_{\tau_1}$, $\tau_1\in T^*$ (e.g.\ an argument-permuted copy), and $T^*$'s instance sets are disjoint, $R_n\to\frac{\Gamma(A+\alpha_\sigma)\Gamma(\alpha_1)}{\Gamma(A)\Gamma(\alpha_1+\alpha_\sigma)}(w^*_1)^{\alpha_\sigma}>0$ a.s.: the spare never vanishes.
+(d2) If $\Qg_\sigma$ is in the convex hull of $T^*$'s components but equals none, and the induced prior on $P_{T^*\cup\{\sigma\},w}$ has a continuous positive density at $P^*$, $R_n$ tends to a positive constant.
+\end{proposition}
+
+\noindent (b) and (c) need a boundary Laplace approximation (not written out) of the kind studied for overfitted mixtures by \citet{rousseau2011asymptotic}. In E5 unused spares follow (a) exactly and a nested spare, case (c), has fitted exponent $-0.251\pm0.002$ on $n=10^2\ldots10^8$; without the density hypothesis of (d2) a spare can gain slowly (\cref{tab:ident:spare}).
+
+\begin{remark}[All spares; what spares cost]\status{proved (the sum); computed}\identbrk\src{model \S5.4; experiments E2, E5}\label{rem:ident:sparetotal}
+With a common $\alpha_\sigma=\alpha$, $R_n$ in (a) does not depend on $\sigma$; so the posterior mass of all $T^*\cup\{\sigma\}$ with $\sigma$ covering no datum is at most $R_n/\pi(T^*)=O(n^{-\alpha})$. With fixed weights the factor is $(1-w_\sigma)^n$. Spares inside the support do not threaten identification of the instance union. What spares cost is slow rejection: about $(\text{prior ratio}/\delta_r)^{1/\alpha}$ data to fall below $\delta_r$ in case (b). A spare sentence that $T^*$ refutes makes $T^*\cup\{\sigma\}$ inconsistent, and positive data remove it only like $n^{-1/2}$ (E2, $0=S0$ beside Q1: posterior $0.004$ at $n=512$); the size principle does not see inconsistency (\cref{prop:pa:incons}).
+\end{remark}
+
+% ---------------------------------------------------------------------
+\subsection{Misspecification}\label{sec:ident:misspec}
+
+Human data are theorems of the actual axioms, but are not drawn from any $P_T$ of the model.
+
+\begin{theorem}[Finite class: concentration on the KL-minimisers]\status{proved; known (general form)}\identbrk\src{model Thm 3.1}\label{thm:ident:kl}
+Let $\Hclass$ be finite, $\pi>0$, the data i.i.d.\ from any $P_H$, $K_T:=\KL(P_H\|P_T)$, $\min_TK_T<\infty$, $\mathbb M:=\arg\min_TK_T$. Then $\pi_n(\mathbb M)\to1$ a.s., with $\frac1n\ln\frac{\pi_n(T)}{\pi_n(T_0)}\to K_{T_0}-K_T<0$ for $T\notin\mathbb M\ni T_0$; inside $\mathbb M$ the posterior need not converge.
+\end{theorem}
+
+\noindent The general form is known \citep{berk1966limiting,kleijn2006misspecification} (abstracts read, conditions not); it need not describe the full template class (\cref{rem:ident:fullclass}).
+
+\begin{example}[The axiom's own theorems lead to a weaker theory]\status{proved}\identbrk\src{model Ex 3.2}\label{ex:ident:weaker}
+In $L_A$ with parameters not admissible, under $\Lzero$ with fixed full-support $\Qg$ and $\pi(\{0+z=z\})>0$, let the human's axiom be $\forall x(0+x=x)$ and the data its theorems $0+t=t$, $t\sim\Qg$. They are well specified for $\{0+z=z\}$, whose generator class has instance union $\Ic(0+x=x)$ (\cref{prop:ident:splits}), and no such theory proves $\forall x(0+x=x)$ (take $\N\cup\{a\}$ with $0+a:=0$). So $P(T\vdash\forall x(0+x=x)\mid D_n)\to0$ a.s.: the $\omega$-gap (AS \S4.5), forced by the likelihood.
+\end{example}
+
+\noindent Under $\Lone$ without parameters $\operatorname{supp}P_T=\Th(T)$ fails; \cref{thm:univ:omega} treats that case.
+
+\begin{lemma}[Sound templates cover at most one zero-sum equation]\status{proved}\identbrk\src{model Lemma 3.3}\label{lem:ident:zerosum}
+Let $Z:=\{t=0:t\text{ a closed term over }0,+\}$. A $\DT$ template all of whose instances are true in $\N$ (parameters, if admissible, read universally) covers at most one member of $Z$.
+\end{lemma}
+
+\begin{example}[An unsound limit]\status{proved; computed}\identbrk\src{model Ex 3.4}\label{ex:ident:escape}
+Let the human's axioms be $\Q$ and the data true equations $t=0$, $t\in Z$, from a law of infinite support; the class is finite, made of sound theories $T_1,\dots,T_m$ and $\Tesc:=\{z=0\}$, all with positive prior; $\Lzero$ with full-support $\Qg$. By \cref{lem:ident:zerosum} the $T_j$ cover finitely many members of $Z$, so a.s.\ $\pi_n(\Tesc)=1$ eventually. But $\Tesc\vdash S0=0$ and $\Q\vdash\neg S0=0$; $\Q$ itself, if in the class, dies at the first datum, as its axioms are not in $Z$. Computed: against twenty best-possible sound theories at prior $0.99$, $S0=0$ reached posterior $\ge0.99$ in 2000/2000 runs (median 17 data).
+\end{example}
+
+\begin{remark}[The full class]\status{conjecture; computed}\identbrk\src{model Rem 3.5}\label{rem:ident:fullclass}
+In the full class with Dirichlet weights the KL-projection picture can fail: theories with finite KL are unsound (\cref{lem:ident:zerosum}), with infimum KL $0$ approached by hybrids of memorisation and $\Tesc$; memorisers are sound but each has infinite KL, yet as a family they code the data with $o(n)$ extra bits. Conjecture: unsound mass $\to1$. Computed for three hand-picked families: at $n=10^4$ the hybrid leads memorisation by at least 7000--25000 bits (\cref{tab:ident:c7}).
+\end{remark}
+
+\noindent In \cref{ex:ident:escape} $\Q$ fails because the data are not axiom instances; a derivation likelihood removes that failure, but not reliably its outcome.
+
+\begin{example}[A derivation likelihood does not reliably rescue the axioms]\status{computed}\identbrk\src{model Ex 3.6}\label{ex:ident:lonedq}
+$\Leq$ derives closed equations over $0,S,+$ (cite, refl, sym, trans, congruences), terms of size $\le N$, $P_T=\mu_T/Z_T$ exact. Class: $T_\Q:=\{z+0=z,\ z_1+Sz_2=S(z_1+z_2)\}$ (Q4, Q5) and $T_\Q\cup\{0+z=z\}$ (sound); $\Tesc$ and $T_\Q\cup\{z=0\}$ (unsound). On true equations $t=0$ over $\{0,+\}$ the cross-entropy minimiser is unsound in all 16 settings in which $\Qg$ gives $+$ probability $0.25$, and sound in 5 of 8 when $+$ is rare under $\Qg$ (\cref{tab:ident:c16}): in grammar 1, citing $z=0$ pays about 2 nats per $+$ through $\Qg$, deriving from Q4, Q5 about 7. Limits: truncated, equational only, three grammars, a finite class.
+\end{example}
+
+\begin{conjecture}\status{conjecture}\identbrk\src{model Conj 3.7}\label{conj:ident:cder}
+In untruncated $\Leq$, $\ln P_{T_\Q}(t=0)=-c_{\mathrm{der}}\#_+(t)+O(1)$ on balanced $\{0,+\}$-terms; so $\Tesc$ beats $T_\Q$ on laws with many $+$ iff $\ln\frac1{p_+p_0}<c_{\mathrm{der}}$, $p_+,p_0$ the root probabilities under $\Qg$ (grammar 1: $\approx2$ against $\approx7$).
+\end{conjecture}
+
+\begin{remark}[E3(a): misspecified usage of instances]\status{computed}\identbrk\src{experiments E3(a)}\label{rem:ident:e3a}
+On instances of $x+0=x$ with a term law not the model's, the posterior moves at a linear rate to the best-fitting member of a family: nested $\{\varphi(z),\varphi(Sz),\varphi(SSz)\}$ (heavy tails; same instances), closed-guard splits $R_m$ with $m$ growing in $n$ (numerals; $m=9$--$10$ at $n=512$, $11$--$12$ at $1024$; $\varphi(2+3)$ underived), $\Mem(D_n)$ (finite selected support). No unsound mass at large $n$; completeness is lost (\cref{tab:exp:e3a}).
+\end{remark}
+
+\noindent \Cref{tab:ident:misspec} collects the cases: misspecified usage of axiom instances gives the same or weaker theorems; derived theorems, absent counterexamples, mistakes and small samples can give unsound ones.
+
+\begin{table}[t]
+\centering\footnotesize
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{1.5cm}>{\raggedright\arraybackslash}p{4.4cm}>{\raggedright\arraybackslash}p{2.7cm}@{}}
+\toprule
+data (true unless stated) & likelihood & posterior lands on & where\\
+\midrule
+\multicolumn{4}{@{}l}{\emph{same theorems or instances, other axioms}}\\
+instances, usage that $\Qg$ misfits & $\Lzero$, $\Lone$ & root splits; nested $C_2$ & \cref{prop:ident:splitlzero,prop:ident:splitlone,rem:ident:e3a}\\
+$\PA$ instances, connective-rich motives & $\Lzero$ & $T^*+T_\exists$; observed-root fragments & \cref{rem:pa:e3b}\\
+\multicolumn{4}{@{}l}{\emph{deductively weaker}}\\
+closed instances of $\forall x(0+x=x)$ & $\Lzero$ & closed schema $0+z=z$ & \cref{ex:ident:weaker}\\
+instances: numerals only; finite set & $\Lzero$, $\Lone$ & $R_m$, $m$ growing; $\Mem(D_n)$ & \cref{rem:ident:e3a}\\
+$\PA$ instances, atomic motives & $\Lzero$ & $\Q+\{T_=,T_<\}$ & \cref{rem:pa:e3b,prop:pa:atomic}\\
+narrow induction practice & pa's code & $\Q+T_E+T_N\subseteq\ISigma1$ (extrapolated) & \cref{ex:pa:narrow}\\
+theorems, no direct induction uses & $\Lsch$ & $\Q$ + a finite library & \cref{rem:pa:streams}\\
+\multicolumn{4}{@{}l}{\emph{unsound}}\\
+derived equations $t=0$, finite class & $\Lzero$ & $\Tesc=\{z=0\}$ & \cref{ex:ident:escape}\\
+the same & $\Leq$ & $\Tesc$ or $T_\Q\cup\{z=0\}$ (16/16 at $p_+=0.25$) & \cref{ex:ident:lonedq}\\
+the same, full class & $\Lzero$, Dir. & memorisation--$\Tesc$ hybrids (conjecture) & \cref{rem:ident:fullclass}\\
+prime values of $k^2+k+41$ & $\Lsch$ & the false schema (counterexample absent) & \cref{ex:pa:euler}\\
+10\% false near misses (not true) & $\Lzero$, $\Lone$ & verifier accepts falsehoods, 100/100 & \cref{rem:sound:e4}\\
+small $n$, rarely cited axioms & $\Lzero$; $\Lsch$ & unsound lumps (E2: 5/25 seeds) & \cref{rem:sound:lumps,rem:pa:lumps}\\
+\bottomrule
+\end{tabularx}
+\caption{Kinds of misspecification and where the posterior lands; statuses are those of the cited items. Computed results hold within their pools or candidate sets.}
+\label{tab:ident:misspec}
+\end{table}
+
+% ---------------------------------------------------------------------
+\subsection{Predictive versus deductive}\label{sec:ident:pred}
+
+\begin{theorem}[Predictive versus deductive]\status{proved}\identbrk\src{model Thm 8.1}\label{thm:ident:predded}
+Assume W. (a) $\sum_{n\ge0}\Ex\,\KL(P_{T^*}\|M_n)\le\ln\frac1{\pi(\Cstar)}$. (b) $\pi_n(\{T:T\vdash s\})\to\pi(\{T\in\Cstar:T\vdash s\})/\pi(\Cstar)$ a.s., which is $1[T^*\vdash s]$ iff the members of $\Cstar$ agree on $s$ up to prior-null sets; they do when the generator determines the theorem set ($\Lzero$ with full support; $\Lone$ with parameters admissible), and need not under $\Ltwo$ or when $\operatorname{supp}P_T\subsetneq\Th(T)$. (c) If $T_1\vdash s$, $T_2\nvdash s$ and the data come from $P_{T_1}$, the expected log-odds of $T_1$ against $T_2$ grow by exactly $\KL(P_{T_1}\|P_{T_2})$ per datum, while the per-datum predictions differ in total variation by at most $(\KL(P_{T_1}\|P_{T_2})/2)^{1/2}$.
+\end{theorem}
+
+\noindent So when two theories differ in what they prove but hardly in what they generate, prediction is settled early and the deductive question stays near its prior odds for about $1/\KL$ data. Misspecified, predictions go to the KL-projection and beliefs to its theorems, so predictive success certifies nothing deductive. For $\forall x\varphi$ this is the gap between \cref{thm:univ:confirm} and \cref{thm:univ:omega} (compare \citealp{hutter2007universal}).
+
+\begin{proposition}[Data that come with their proofs]\status{proved}\identbrk\src{model Prop 8.2}\label{prop:ident:proofs}
+Let each datum be a whole valid $\Lone$ tree from $P_T(\cdot\mid\text{valid})$, showing each node's rule and conclusion and whether a citation leaf cites a theory or a logical axiom, but not which template; weights fixed. (a) $P_T(\pi)=\prod_vP^{\Lzero}_T(\mathrm{concl}(v))\,G(\pi)/Z_T$ over the theory-citation leaves $v$, with $P^{\Lzero}_T:=\sum_\tau w_\tau\Qg_\tau$, $G$ independent of $T$, and $Z_T$ a function of $P^{\Lzero}_T$. (b) $P_T=P_{T'}$ on trees iff $P^{\Lzero}_T=P^{\Lzero}_{T'}$: the posterior concentrates on the $\Lzero$ generator class of $T^*$, with instance union $\bigcup\inst(T^*)$, and splits still tie. (c) So proofs identify $\bigcup\inst(T^*)$, finer than the $\Th(T^*)$ that conclusions identify (\cref{prop:ident:sep}).
+\end{proposition}
+
+\begin{remark}[Near misses]\status{proved (the transfer)}\identbrk\src{model Rem 8.3}\label{rem:ident:nearmiss}
+H\"anni's ``grade near misses'' can be a corruption channel $K(s'\mid s)$ favouring $s'$ near $s$, $P^K_T(s'):=\sum_sP_T(s)K(s'\mid s)$. Each $P^K_T$ is a fixed law with a data-independent normaliser, so \cref{thm:ident:doob}, \cref{cor:ident:deductive}, \cref{thm:sound:fixed} (with $C^*_d$ defined through $P^K$) and the size principle hold when the channel is part of the well-specified model. The generator class can grow, since $K$ need not be injective; by how much, for natural metrics, is open. The noise mixtures of \cref{prop:univ:robust} are related.
+\end{remark}

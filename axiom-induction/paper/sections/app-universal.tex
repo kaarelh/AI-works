@@ -1,0 +1,337 @@
+% =====================================================================
+% Appendix to Section 3 (key: univ). Full proofs and computations.
+% Source: research/tracks/universal/notes-final.md (proofs, checks c1--c10, verification log)
+% and referee.md (referee_code r1--r7).
+% =====================================================================
+
+\section{Proofs and computations for \texorpdfstring{\Cref{sec:univ}}{Section 3}}\label{app:univ}
+
+Proofs follow the universal track's final notes; steps they leave out are named. Checks are the seeded scripts c1--c10 in \texttt{research/tracks/universal/checks/}; the referee's independent scripts r1--r7 (which do not import the track's code) are in \texttt{referee\_code/}. A second run of all scripts reproduced every output byte for byte. Dirichlet $\alpha=1$ in c2--c7, $\alpha=\tfrac12$ in c8--c10.
+
+% ---------------------------------------------------------------------
+\subsection{Factorisation, odds and robustness}\label{app:univ:odds}
+
+\begin{table}[ht]
+\centering\footnotesize
+\begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}X c@{}}
+\toprule
+name & axioms & $\vdash\forall x\varphi$: pure / over $\Q$\\
+\midrule
+$\Hall$; $\Hsch$ & $\{\forall x\varphi\}$; $\{\sigma_\varphi\}$, closed guard & yes/yes; no/no\\
+$\Hopen$; $\Hboth$ & $\{\sigma_\varphi\}$, open guard ($z\sim\Qopen$); $\{\forall x\varphi,\sigma_\varphi\}$, weight $w_\forall$ on $\forall x\varphi$ & yes/yes; yes/yes\\
+memorisers; over-specific & finite sets of closed instances; e.g.\ $\sigma_\varphi[z:=Sz]$, closed guard & no/no; no/no\\
+over-general & a subterm or subformula of $\sigma_\varphi$ made a fresh metavariable; the bare $F_0$ (inconsistent) & varies\\
+root split & $\{\sigma_\varphi[z:=f(z_1,\dots,z_r)]:f\text{ a root of }\Qg\}$, closed guards & no/no\\
+\bottomrule
+\end{tabularx}
+\caption{Hypotheses of \Cref{sec:univ}; provability for $\varphi=0+x=x$ (closed instances do not prove $\forall x\varphi$ over $\Q$: AS Ex~4.9). $B\oplus_wA$ adds $A$ with weight $w$ to $B$, scaling $B$'s weights by $1-w$. $R_k$, $\Split_k$, Both0: \Cref{sec:univ:open,sec:univ:sentences}.}
+\label{tab:univ:hyp}
+\end{table}
+
+\paragraph{Proof of \Cref{prop:univ:factor}.} A $\Cmin$-derivation from $\{\forall x\varphi\}$ is a chain: cite $\forall x\varphi$, then $k\ge0$ eliminations with terms $t_1,\dots,t_k$, with probability $c^k(1-c)\prod_j\Qg(t_j)$. With $k=0$ it yields $\forall x\varphi$. For $k\ge1$ map it to the $\sigma_\varphi$-chain ``cite $\sigma_\varphi$ with $z:=t_1$, then eliminate with $t_2,\dots,t_k$'', of probability $c^{k-1}(1-c)\prod_j\Qg(t_j)$. The conclusions coincide, since $\forall$E with $t_1$ gives $\varphi(t_1)=\sigma_\varphi[z:=t_1]$ ($t_1$ has no bound variable) and the remaining steps agree; failing chains map to failing chains. The map is a bijection onto all $\sigma_\varphi$-chains, and no $\sigma_\varphi$-chain yields $\forall x\varphi$ (its conclusions have fewer quantifiers). Summing over chains with conclusion $s$ gives the factor $c$. Citation factorises over axioms, $\mu_T=\sum_Aw_A\mu_A$, which gives the background form. The leading universal quantifiers of $\varphi$ are rigid, so exactly $m+1$ chain lengths succeed from $\sigma_\varphi$ and $m+2$ from $\forall x\varphi$, which gives the normalisers. For $k$ variables the first $k$ eliminations are absorbed into one citation. \qed
+
+c1 checks the identity on every output of $2\cdot10^5$ sampled derivations ($0+x=x$, $\neg Sx=0$, $\forall y(x+y=y+x)$; $\Qnum$, $\QGW$) to $5\cdot10^{-14}$; referee r1 to $1.6\cdot10^{-15}$.
+
+\paragraph{Proof of \Cref{thm:univ:odds}.} Each case follows from \Cref{prop:univ:factor}. $\Lzero$: $\Hall$ cites only $\forall x\varphi$. $\Lcl$: identical laws by definition. $\mu_T$: factor $c$ per datum. $\Lone$: divide by the normalisers; for quantifier-free $\varphi$, $Z_{\Hsch}=1-c$ and the factor is $c(1-c)/((1-c)+c(1-c))=c/(1+c)$. $\Lsel$: $\mu_{\Hall}(s)/\mu_{\Hall}(S)=c\mu_{\Hsch}(s)/(c\mu_{\Hsch}(S))$ as $\forall x\varphi\notin S$. $\Lmax$: best chains map to best chains, each scaled by $c$. Scores: both theories prove every instance and, when $\forall x\varphi$ is consistent, are consistent with the data (if it is not, $\Sprove(\Hall)=0$, which still agrees with \Cref{thm:univ:B}). Background: $r(s)=\frac{(1-w)\mu_B(s)+wc\mu_{\Hsch}(s)}{(1-w)\mu_B(s)+w\mu_{\Hsch}(s)}\in[c,1]$. \qed
+
+\begin{table}[ht]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.47\textwidth}X@{}}
+\toprule
+likelihood & $O_n/O_0$\\
+\midrule
+$\Lzero$ (strict citation) & $0$ for $n\ge1$\\
+$\Lcl$; $\Lsel(S)$ with $\forall x\varphi\notin S$; $\Sprove$, $\Snc$, $\Sg$ ($\forall x\varphi$ consistent) & $1$\\
+$\mu_T$ (unnormalised); $\Lmax$ & $c^n$\\
+$\Lone$ & $\big(cZ_{\Hsch}/((1-c)+cZ_{\Hsch})\big)^n$; $(c/(1+c))^n$ for quantifier-free $\varphi$\\
+background $B$, under $\mu_T$ & $\prod_ir(X_i)$, $r(s)\in[c,1]$; $r(s)=c$ if $\mu_B(s)=0$\\
+\bottomrule
+\end{tabularx}
+\caption{Odds of $\Hall$ against $\Hsch$ after $n$ closed instances, relative to the prior odds (\Cref{thm:univ:odds}); asserted on every sampled path (5 formulas, 2 term laws, 50 seeds, $n\le200$), referee's code to $7\cdot10^{-13}$. The consistency condition in the score row is ours; the notes leave it implicit.}
+\label{tab:univ:odds}
+\end{table}
+
+\paragraph{Proof of \Cref{thm:univ:B}.} (B1) is \Cref{thm:univ:odds}. (B3) under $\mu_T$ and $\Lmax$ is \Cref{prop:univ:sim}, whose map acts derivation by derivation. Under the scores, for single axioms and quantifier-free data: by Herbrand's theorem a quantifier-free sentence $s$ follows from $\{\forall x\varphi\}$ iff it follows from finitely many closed instances of $\varphi$, i.e.\ from $\Ic(\varphi)=\bigcup\inst(\Hsch)$; in particular $\{\forall x\varphi\}$ is consistent iff $\Ic(\varphi)$ is. So $\Hall$ and $\Hsch$ prove, and are consistent with, the same quantifier-free data, and $\Sprove$, $\Snc$, $\Sg$ give them equal scores. (B2): fix $w$ and $s\neq\forall x\varphi$. Under $\mu_T$, $\mu_{B\oplus_w\forall}(s)=(1-w)\mu_B(s)+wc\mu_{\Hsch}(s)\le(1-w)\mu_B(s)+w\mu_{\Hsch}(s)=\mu_{B\oplus_w\sigma}(s)$. Under $\Lone$, $Z_{B\oplus_w\forall}=(1-w)Z_B+w((1-c)+cZ_{\Hsch})\ge(1-w)Z_B+wZ_{\Hsch}=Z_{B\oplus_w\sigma}$, since $(1-c)+cZ_{\Hsch}-Z_{\Hsch}=(1-c)(1-Z_{\Hsch})\ge0$; so the normalised likelihoods obey the same inequality datum by datum. A pointwise inequality at every $w$ survives integration against a common weight prior. Under $\Lcl$ the laws coincide at every $w$. \qed
+
+\begin{proposition}[Robustness of the direction]\label{prop:univ:robust}\status{proved; computed}\src{universal Props U2n, U2t, U2c}
+In $\Cmin$, for every $s\neq\forall x\varphi$: \textup{(U2n)} with a full-support noise law $N$ and $\eta\in(0,1)$, the ratio of the noisy laws of $\Hall$ and $\Hsch$ at $s$ is in $[c,1]$ under $\mu_T$, $\le1$ under $\Lone$, and $1$ under $\Lsel$ with noise after selection; a false datum no longer refutes. \textup{(U2t)} If chains are weighted by $f(\ell)w_A\prod_j\Qg(t_j)$, $f$ non-increasing in the number $\ell$ of eliminations (e.g.\ Levin-style $f(\ell)\propto(\ell+1)^{-2}$), then $P^f_{\Hall}(s)\le\sup_\ell\frac{f(\ell+1)}{f(\ell)}P^f_{\Hsch}(s)\le P^f_{\Hsch}(s)$. \textup{(U2c)} Under $\Lone$, quantifier-free $\varphi$ and any prior on $c$, $O_n/O_0\le2^{-n}$.
+\end{proposition}
+
+\paragraph{Proof of \Cref{prop:univ:robust}.} (U2n) The unnormalised claim is the background case of \Cref{thm:univ:odds} with $\mu_B:=N$. For $\Lone$, $c\mu_{\Hsch}(s)/Z_{\Hall}\le\mu_{\Hsch}(s)/Z_{\Hsch}$ because $Z_{\Hall}=(1-c)+cZ_{\Hsch}\ge Z_{\Hsch}$ (as $Z_{\Hsch}\le1$); mixing both with the same $\eta N$ keeps the inequality. Under $\Lsel$ the selected laws coincide. A false datum has likelihood $\ge\eta N(s)>0$. (U2t) The bijection maps a $\forall x\varphi$-chain with $\ell+1$ eliminations to a $\sigma_\varphi$-chain with $\ell$, with the same term product; $f(\ell+1)$ becomes $f(\ell)$. (U2c) $\Hsch$'s normalised law is $\Qg_{\sigma_\varphi}$ for every $c$, and $c/(1+c)$ increases in $c$ to $\tfrac12$ at $c=1$; a bound valid for every $c$ survives integration. \qed c10(h) checked (U2n) at $2\cdot10^5$ random parameter points.
+
+\begin{proposition}[Simulation inequality]\label{prop:univ:sim}\status{proved}\src{universal Prop U3}
+In a $\CUiii$ calculus, for quantifier-free $\varphi$ and $s$, $\mu_{B\oplus\forall x\varphi}(s)-P^0(s)\le c\,(\mu_{B\oplus\sigma_\varphi}(s)-P^0(s))$, with $P^0(s)$ the mass of derivations of $s$ that never cite the added axiom.
+\end{proposition}
+
+\paragraph{Proof of \Cref{prop:univ:sim}.} In a derivation of a quantifier-free $s$ from $B\oplus\forall x\varphi$, a leaf citing $\forall x\varphi$ is not the root, and its parent takes a premise that is not quantifier-free; in a $\CUiii$ calculus only $\forall$E does. So each such leaf sits in a pattern ``$\forall$E(cite $\forall x\varphi$, $t$)'' concluding $\varphi(t)$. Replace each pattern by ``cite $\sigma_\varphi$, $z:=t$'': probability $c\,\Qg(t)p_{\mathrm{cite}}w$ becomes $p_{\mathrm{cite}}w\Qg(t)$, and conclusions are kept. The map is injective, because cited axioms are labelled and every $\sigma_\varphi$-leaf in the image came from a pattern. Derivations with $m\ge1$ patterns contribute $\sum c^m\Pr(f(\pi))\le c\sum_{\pi'\text{ citing }\sigma_\varphi}\Pr(\pi')$; those with $m=0$ never cite the added axiom and have the same probability in both theories. \qed
+
+\paragraph{The $\wedge$-detour counterexample (\Cref{rem:univ:detour}; proof sketch).}\label{app:univ:detour} $\Cand$ with probabilities $p_c$ (cite), $c$ ($\forall$E), $a$ ($\wedge$I), $e$ ($\wedge$E, side chosen with probability $\tfrac12$); $B=\emptyset$; $\varphi=0+x=x$. A formula $G$ made at a base node (cite or $\forall$E) reaches the root through a balanced word of $\wedge$I (into a conjunction with a free partner) and $\wedge$E (take $G$'s side), each pair of weight $eaZ_T$ with $Z_T$ the success probability. So $P_T(G)=\mathrm{base}_T(G)D(eaZ_T)$ with $D(x)=\sum_j\mathrm{Cat}_jx^j=(1-\sqrt{1-4x})/(2x)$; the ansatz solves $P(G)=\mathrm{base}(G)+e\sum_WP(G\wedge W)$ exactly when $D=1+xD^2$. For $\Hall$, $\mathrm{base}(\varphi(t))=cP(\forall x\varphi)\Qg(t)$ and $P(\forall x\varphi)=p_cD_\forall$, so $P_{\Hall}(\varphi(t))=cp_cD_\forall^2\Qg(t)$; for $\Hsch$, $P(\varphi(t))=p_cD_\sigma\Qg(t)$. $Z_T$ is the least fixed point of $Z=D(eaZ)(p_c+cP_U+aZ^2)$, $P_U=p_cD$ for $\Hall$, $0$ for $\Hsch$; the first map dominates, so $D_\forall\ge D_\sigma\ge1$, with $D_\forall>1$ if $a,e>0$, and $R=cD_\forall^2/D_\sigma\ge cD_\forall>c$. Not written out: that the least fixed point is the success probability. At $(0.35,0.15,0.25,0.25)$, $D_\forall=1.03160$, $D_\sigma=1.02636$, $R=0.15553$ (c10(a), referee r2); two samplers give $0.15528\pm0.00067$ and $0.1562\pm0.0005$.
+
+\paragraph{Proof of \Cref{prop:univ:B2}.} Under $\Lsel$, $T_\sigma$ gives $\varphi(t)$ probability $w\Qg(t)$ and $\psi(t)$ probability $(1-w)\Qg(t)$. $T_\forall$ reaches $S$ through $\forall x\varphi$ only after one elimination, so it gives $w_e\Qg(t)$ and $(1-w_e)\Qg(t)$ with $w_e=wc/(1-w+wc)$. The likelihoods are $K_Dw_e^{n_\varphi}(1-w_e)^{n_\psi}$ and $K_Dw^{n_\varphi}(1-w)^{n_\psi}$ with the same $K_D$. $w\mapsto w_e$ is a $C^1$ bijection of $[0,1]$ with inverse $w=v/(c+v(1-c))$ and $dw/dv=h(v)$, so
+\[\mathrm{BF}_n=\int_0^1v^{n_\varphi}(1-v)^{n_\psi}h(v)\,dv\Big/\int_0^1v^{n_\varphi}(1-v)^{n_\psi}dv=\Ex[h(V)],\quad V\sim\mathrm{Beta}(n_\varphi+1,n_\psi+1).\]
+$n_\varphi/n\to w^*$ a.s.\ and the Beta variance is $\le1/(4(n+3))$, so $V\to w^*$ in law; $h$ is bounded and continuous. $h(v)>1$ iff $\sqrt c>c+v(1-c)$ iff $v<\sqrt c/(1+\sqrt c)$. \qed
+
+c10(b) ($c=0.3$, 10 seeds, $n=10^5$): $2.1918$, $1.1537$, $0.7102$, $0.4056$ at $w^*=0.1,0.3,0.5,0.8$, against $h(w^*)=2.1914$, $1.1534$, $0.7101$, $0.4056$.
+
+\paragraph{Proof of \Cref{rem:univ:B2cit}.} Under $\Lselc$ each citation is repeated until its chain lands in $S$. The component $\forall x\varphi$ lands only after one elimination, so its selected law is $\Qg_{\sigma_\varphi}$, as is that of $\sigma_\varphi$; $\sigma_\psi$ has $\Qg_{\sigma_\psi}$. Both theories therefore have law $(1-w)\Qg_{\sigma_\psi}+w\Qg_{\sigma_\varphi}$ at every $w$. \qed
+
+\begin{proposition}[Spare-slot prover]\label{prop:univ:both}\status{proved; computed}\src{universal \S4}
+In $\{\Hsch,\Hall,\Hboth\}$ with a uniform prior on $w_\forall$, under $\Lone$ with quantifier-free $\varphi$, the likelihood ratio $\Hboth:\Hsch$ is $I_n=\int_0^1(\frac{1-w(1-c)}{1+wc})^ndw\in[\frac1{n+1},\frac1{n(1-c)}]$, so $P(T\vdash\forall x\varphi\mid D_n)\to0$ like $\Theta(1/n)$: $\forall x\varphi$ is a spare slot of $\Hboth$, a template beside the generator's own that the data never or rarely use (\Cref{prop:ident:spare}).
+\end{proposition}
+
+\paragraph{Proof of \Cref{prop:univ:both}.} $\Hboth$ with weight $w$ on $\forall x\varphi$ has $\mu(\varphi(t))=(1-w+wc)(1-c)\Qg(t)$ and $Z=(1-c)(1+wc)$, so its ratio to $\Hsch$ is $(1-w(1-c))/(1+wc)$. Since $1-w+wc-(1-w)(1+wc)=w^2c\ge0$, $I_n\ge\int_0^1(1-w)^ndw=\frac1{n+1}$; and the integrand is $\le e^{-nw(1-c)}$, so $I_n\le\frac1{n(1-c)}$. \qed Computed (c5 Part C): $nI_n=0.958$, $0.996$, $1.000$ at $n=10,10^2,10^5$.
+
+
+% ---------------------------------------------------------------------
+\subsection{Size principle, over-specific templates and memorisers}\label{app:univ:memo}
+
+\begin{theorem}[Size principle on instances]\label{thm:univ:size}\status{proved; computed}\src{universal Thm U4}
+Let the data be i.i.d.\ from $P^*$, $P^*(I)=1$ for $I=\Ic(\varphi)$, and $P'$ a sub-probability with $P'(I)=p<1$. Then $\KL(P^*\|P')\ge\ln\frac1p$, $\frac1n\ln\frac{P'(D_n)}{P^*(D_n)}\to-\KL(P^*\|P')$ a.s., and $\Ex\frac{P'(D_n)}{P^*(D_n)}\le p^n$. Under the citation law ($\Lzero$, $\Lcl$), a first-order template strictly more general than $\sigma_\varphi$, with metavariables i.i.d.\ from $\Qg$ and a formula law $F$, has $P_\tau(I)\le\max(\max_fp_f,\max_gF(\mathrm{root}=g))$.
+\end{theorem}
+
+\paragraph{Proof of \Cref{thm:univ:size}.} (1) Log-sum inequality: $\sum_{s\in I}P^*(s)\ln\frac{P^*(s)}{P'(s)}\ge P^*(I)\ln\frac{P^*(I)}{P'(I)}=\ln\frac1p$. (2) With $Y_i=\ln\frac{P'(X_i)}{P^*(X_i)}$, $y^+\le e^y$ gives $\Ex Y^+\le\Ex e^Y=P'(\operatorname{supp}P^*)\le1$, so $\Ex Y=-\KL\in[-\infty,0)$ and the strong law applies (it allows $\Ex Y=-\infty$ when $\Ex Y^+<\infty$). (3) Tonelli: $\Ex\prod_iP'(X_i)/P^*(X_i)=P'(\operatorname{supp}P^*)^n$. (4) Write $\sigma_\varphi=\tau\rho$, $\rho$ not a renaming. Either (a) some metavariable $u$ of $\tau$ has $\rho(u)$ with a rigid root $f$, or (b) $\rho$ identifies two metavariables $u\neq u'$; otherwise $\rho$ would be a renaming. If $\tau\theta\in\inst(\sigma_\varphi)$, then $\tau\theta=\tau\rho\theta'$ and unique matching gives $\theta=\rho\theta'$ on $\tau$'s metavariables. In case (a) $\theta(u)$ has root $f$ (probability $\Qg(\mathrm{root}=f)$, or $F(\mathrm{root}=f)$); in case (b) $\theta(u)=\theta(u')$, of probability $\sum_t\Qg(t)^2\le\max_t\Qg(t)\le\max_f\Qg(\mathrm{root}=f)$. \qed
+
+c2: under $\Qnum$, ${?y}+{?z}={?z}$ has $P_\tau(I)=\tfrac12$ and KL $0.693$, $0+{?y}={?z}$ has $\tfrac13$ and $1.386$; (4) held in 38 of 38 cases and in the referee's 130 random generalisations (r7).
+
+\begin{proposition}[Over-specific templates]\label{prop:univ:overspec}\status{proved; computed}\src{universal Prop U5}
+For $\tau=\sigma_\varphi[z:=f(z_1,\dots,z_r)]$ and root-generated $\Qg$, $P_\tau(\varphi(t))/P_{\Hsch}(\varphi(t))$ is $1/p_f$ if $\mathrm{root}(t)=f$ and $0$ otherwise. So the odds $\tau:\sigma_\varphi$ grow like $p_f^{-n}$ while all data have root $f$ (probability $p_f^n$), then vanish; they form a martingale. Some single-root template survives with probability $\sum_fp_f^n$, the failure probability of AS Thm~4.4(a).
+\end{proposition}
+
+\paragraph{Proof of \Cref{prop:univ:overspec}.} $\Qg(f(\bar t))=p_f\prod_i\Qg(t_i)$ and $\tau$ matches $\varphi(t)$ iff $\mathrm{root}(t)=f$, with $z_i:=t_i$; so $P_\tau(\varphi(t))=\Qg(t)/p_f$ there and $0$ elsewhere. Under $\Hsch$'s law the ratio has mean $\sum_{\mathrm{root}(t)=f}\Qg(t)/p_f=1$. \qed c2: gain per datum $\ln2$ under $\Qnum$ and $\ln(1/0.3)=1.204$ under $\QGW$; over-specific mass $0.110$ at $n=1$, $0$ at $n=10$ (\Cref{tab:univ:c2}).
+
+\begin{proposition}[Memorisers]\label{prop:univ:memo}\status{(i), (ii), (ii$'$) proved; (iii) conjecture; computed}\src{universal Prop U6}
+Give the memorisers a product-Bernoulli prior over a named universe of sentences $s$, with $r_s=2^{-(\lvert s\rvert+1)}$ and $\sum r_s<\infty$. Let $Z_0:=\prod_s(1-r_s)>0$, $S_n$ the distinct data, $m_n=\lvert S_n\rvert$, $\mu$ the prior of the memoriser class. \textup{(i)} The class marginal lies in $[Z_0,1]\cdot\prod_{s\in S_n}r_s\,m_n^{-n}$ for uniform weights, with the Dirichlet($\alpha$)-multinomial probability $\DirMult_\alpha(D_n)$ of the counts (formula in \Cref{prop:ident:splitlzero}) in place of $m_n^{-n}$ for Dirichlet weights. \textup{(ii)} Uniform weights, $\Qg$ of infinite support and finite entropy: the log-odds against $\Hsch$ divided by $n$ tend to $-\infty$ a.s. \textup{(ii$'$)} Laplace weights: deterministically the log-odds are $\ge\ln\frac{\mu Z_0}{\pi(\Hsch)}+\sum_{s\in S_n}\ln r_s-(m_n-1)\ln(n+m_n-1)$, which under $\Qnum$ (numeral universe) is $\ge-C\ln^2n$ a.s.\ for all large $n$: the class is not exponentially small. \textup{(iii)} Conjecture: $-\Theta(\ln^2n)$ under $\Qnum$.
+\end{proposition}
+
+\paragraph{Proof of \Cref{prop:univ:memo}.} (i) $\pi(F)=Z_0\prod_{s\in F}r_s/(1-r_s)$. $F=S_n$ gives the lower bound ($r_s/(1-r_s)\ge r_s$). For the upper, $\sum_{F\supseteq S_n}\pi(F)=\prod_{s\in S_n}r_s$, and each likelihood is at most that of $S_n$: $\lvert F\rvert^{-n}\le m_n^{-n}$, and $j$ unused components multiply $\DirMult_\alpha$ by $\frac{\Gamma((m+j)\alpha)\Gamma(n+m\alpha)}{\Gamma(m\alpha)\Gamma(n+(m+j)\alpha)}\le1$. (ii) The log-odds are at most a constant $-n\ln m_n+\sum_i\ln\frac1{\Qg(t_i)}$, the sum is $n(H(\Qg)+o(1))$ a.s., and $m_n\to\infty$ a.s. (ii$'$) $\DirMult_1(D_n)=1/[\binom n{(n_s)}\binom{n+m-1}{m-1}]$; the multinomial coefficient is $\le1/\mathrm{ML}(D_n)$ (a type class has probability $\le1$ under the maximum-likelihood law), $\binom{n+m-1}{m-1}\le(n+m-1)^{m-1}$, and $\mathrm{ML}(D_n)\ge P_{\Hsch}(D_n)$; with the lower bracket this is the deterministic bound. For numerals $\lvert\varphi(S^k0)\rvert=\lvert\sigma_\varphi\rvert+\mathrm{occ}\cdot k$. With $K_n$ the largest $k$ seen, $P(K_n\ge3\log_{1/q}n)\le n\cdot n^{-3}=n^{-2}$, summable, so by Borel--Cantelli a.s.\ $K_n<3\log_{1/q}n$ eventually; then $m_n\le K_n+1$ and $\sum_{s\in S_n}(\lvert s\rvert+1)=O(\ln^2n)$. \qed
+
+(The first version had probability $1-1/n$ at threshold $2\log_{1/q}n$; c10(g) checks the $n^{-2}$ tail exactly.) The universe must be named: over all closed sentences $\sum r_s=\infty$ at $\lambda=1$ (referee r6). \emph{c3} ($\alpha=1$, 10 seeds, log-odds up to a constant in $[\ln Z_0,0]$): under $\Qnum$, $q=\tfrac12$, $m_n=10.4$, $16.4$ at $n=10^3,10^5$ and the Laplace log-odds are $-133.8$, $-327.7$ ($-2.80\ln^2n$, $-2.47\ln^2n$; uniform weights $-1062$, $-1.4\cdot10^5$); at $q=0.9$, $D_l/\ln^2n$ moves from $-35$ to $-53$ (pre-asymptotic); under $\QGW$, $m_n=2.2\cdot10^4$ at $n=10^5$ and $D_l/n\approx-4.0$: exponential.
+
+% ---------------------------------------------------------------------
+\subsection{Predictive confirmation}\label{app:univ:confirm}
+
+\paragraph{Proof of \Cref{thm:univ:confirm}.} (1) By the chain rule, $\sum_{n<N}\Ex\KL(P^*\|M(\cdot\mid D_n))=\Ex\ln\frac{P^*(D_N)}{M(D_N)}\le\ln\frac1{\pi(T^*)}$, as $M\ge\pi(T^*)P^*$. Pushing forward to the indicator of $I$, $\KL(P^*\|M(\cdot\mid D_n))\ge\ln\frac1{M(I\mid D_n)}\ge1-M(I\mid D_n)$; a nonnegative series with finite mean is finite a.s. (2) $P_T(I)^\infty=1[T\in G]$, and $\Cstar\subseteq G$, so \Cref{thm:ident:doob} applies. (3) $1-\pi_n(G)\le\min(1,\sum_{T\notin G}\pi_n(T)/\pi_n(T^*))$ and \Cref{thm:univ:size}(3). (4) $P_T(D_n)=(1-\varepsilon_T)^n\hat P(D_n)$ on instance sequences. \qed
+
+\begin{remark}[Relation to Hutter]\label{rem:univ:hutter}\status{known; computed}\src{universal \S5}
+In the Bayes--Laplace model the universal hypothesis, even its observable form, has posterior $0$, while the universal prior confirms it \citep{hutter2007universal} (abstract checked; full text not). \Cref{thm:univ:confirm}(2) is the analogue for countable classes, by the same mechanism: prior mass on instance-only hypotheses. But $G$ contains $\Hsch$, which does not prove $\forall x\varphi$. Nor is confirmation stepwise monotone: with prior $\tfrac12$ on each of $\sigma_\varphi$, $\varphi(Sz)$, the datum $\varphi(S0)$ lowers $\sigma_\varphi$ to $\tfrac13$, a Nicod-type effect \citep{leike2015solomonoff}.
+\end{remark}
+
+c4: with a point mass $\pi_0=0.01$ and Uniform$(0,1)$ on $\varepsilon$, $P(\text{all future}\mid n)=\pi_0/(\pi_0+\frac{1-\pi_0}{n+1})$; with $\pi_0=0$ it is $0$ while $P(\text{next }m)=\frac{n+1}{n+m+1}$. Summed misses $4.22$ (Laplace) and $2.70$ (dyadic) $\le\ln100=4.61$.
+
+% ---------------------------------------------------------------------
+\subsection{The Bayesian \texorpdfstring{$\omega$}{omega}-gap}\label{app:univ:omega}
+
+\paragraph{Proof of \Cref{thm:univ:omega}.} (a) Sum the limit of \Cref{thm:ident:doob} over $\ProvAll$, or over the theories counted by $\Bel$, $\Dis$, $\Indep$ or $\Inc$. (b) Both theories lie in $\Cstar$, one in $\ProvAll$. For the learned-weight pair the marginal laws are exchangeable, not equal, so (a) does not apply; \Cref{prop:univ:B2} gives the limit $\pi(T_\forall)h/(\pi(T_\forall)h+\pi(T_\sigma))\in(0,1)$ directly. (Under $\Lsel$, $\{\sigma_\varphi,\exists x\neg(0+x=x)\}$ with $S$ excluding the second sentence is a consistent refuter in $\Cstar$, so all three trichotomy values can keep mass.) (c1) $T\in\Cstar$ implies $\Th_{\mathsf C}(T)\cap X=\Th_{\mathsf C}(T^*)\cap X$. (c2) Each axiom instance of $T\in\Cstar$ lies in $\Th_{\mathsf C}(T^*)\cap X$, hence follows from $T^*$ by soundness; symmetrically. (In $\Cmin$, $T^*=\{\forall x(\varphi\wedge\psi)\}$ has limit $0$ in (c1) and $1$ in (c2): different questions, conflated in the first version.) (c3) In $\Cmin$ every chain has positive probability under full-support $\Qg$, so $\Lone$ is faithful, and a $\sigma_\varphi$-chain with quantifier-free $\varphi$ can only cite. For the second part apply the rule to a derivation of an instance. (d1) $\mu_{\Hall}(\cdot\mid S)=c\mu_{\Hsch}(\cdot\cap S)/(c\mu_{\Hsch}(S))=P_{\Hsch}$ since $\operatorname{supp}\mu_{\Hsch}=\Ic\subseteq S$; then (c3) with $T^*:=\Hsch$, or (b) under $\Lsel$. (d2) For quantified $\varphi$, $\tilde P:=\mu_{\Hsch}(\cdot\mid S)$ is the law of neither hypothesis. On $S$, $\mu_{\Hall}=c\mu_{\Hsch}$, so both log-ratios are constant there and $\KL(\tilde P\|P_{\Hsch})=\ln\frac{Z_{\Hsch}}{\mu_{\Hsch}(S)}<\ln\frac{Z_{\Hall}}{c\mu_{\Hsch}(S)}=\KL(\tilde P\|P_{\Hall})$, because $cZ_{\Hsch}<Z_{\Hall}$; the posterior concentrates on $\Hsch$ (\Cref{thm:ident:kl}). For a general class this is a sketch. (e) Pairs form a countable class of i.i.d.\ laws. $(\Hsch,S)$ has the data law iff $S\supseteq\Ic$; $(\Hall,S)$ has it iff $S\supseteq\Ic$ and $\forall x\varphi\notin S$ (\Cref{thm:univ:odds}); otherwise some instance gets probability $0$ or $\forall x\varphi$ positive probability. Summing prior masses over $\Cstar$ gives the limit. \qed
+
+c10(e): filters \{all sentences, closed quantifier-free, closed instances, closed instances with $S$-rooted argument\}, $\pi=(\tfrac13,\tfrac23)$, $\nu$ uniform: $0.333$, $0.284$, $0.252$, $0.250$ at $n=0,1,5,10$, predicted $0.2500$.
+
+\paragraph{Proof of \Cref{cor:univ:sound}.} Members of $C^*_\forall$ do not prove $\forall x\varphi$ and share $T^*$'s likelihood, so
+\[\pi_n(C^*_\forall)=\pi(C^*_\forall)\,P_{T^*}(D_n)/M(D_n).\]
+Acceptance needs $\pi_n(C^*_\forall)\le\delta$, that is, $M(D_n)/P_{T^*}(D_n)\ge\pi(C^*_\forall)/\delta$. This ratio is a nonnegative supermartingale started at $1$; by Ville's inequality it ever reaches that level with probability at most $\delta/\pi(C^*_\forall)$. \qed
+
+\begin{table}[ht]
+\centering\small
+\begin{tabular}{@{}lllcccc@{}}
+\toprule
+stream & likelihood & class & $n=0$ & $10$ & $50$ & $100$\\
+\midrule
+closed instances & $\Lone$ & full & 0.750 & 0.364 & 0.004 & 0.000\\
+closed instances & $\Lone$ & $\{\Hall,\Hopen\}$ & 1.000 & 1.000 & 1.000 & 1.000\\
+closed instances & $\Lsel$ & full & 0.750 & 0.750 & 0.750 & 0.750\\
+output of $\Hopen$ & $\Lone$ & full & 0.750 & 0.860 & 1.000 & 1.000\\
+output of $\Hall$ & $\Lone$ & full & 0.750 & 1.000 & 1.000 & 1.000\\
+\bottomrule
+\end{tabular}
+\caption{$P(T\vdash\forall x\varphi\mid D_n)$ in $\Copen$ (c5 Part A); closed instances are also $\Hall$'s output filtered to closed instances; $\varphi=0+x=x$, defaults, prior $2^{-(\text{symbols}+1\text{ per axiom})}$; full class $\{\Hall,\Hopen,\Hsch\text{ (guarded)},\Hboth\}$, with a uniform prior on $\Hboth$'s weight, prior share of provers $0.750$. On the full output of $\Hall$ (itself reported), $\Hall$ has $0.993$ at $n=10$.}
+\label{tab:univ:c5}
+\end{table}
+
+\begin{table}[ht]
+\centering\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+prior code & bits$(\Hall)$ & bits$(\Hsch)$ & share of $\Hall$\\
+\midrule
+universal: dtrc symbols $+1$ per axiom, $\lambda=1$ & 7 & 6 & 0.333\\
+model $\pi_1$ (\Cref{def:model:prior}; 4 bits per token) & 27 & 26 & 0.333\\
+model $\pi_2$ & & & 0.200\\
+experiments' template code, closed guard & 17.18 & 17.09 & 0.484\\
+pa, $\beta=5$ bits per symbol & 30 & 25 & 0.030\\
+pa, $\beta=\log_223$ & 27.14 & 22.62 & 0.042\\
+\bottomrule
+\end{tabular}
+\caption{Prior share of $\Hall$ in $\{\Hall,\Hsch\}$ for $\varphi=0+x=x$ under the four tracks' codes (c10(f); the model rows by hand from \Cref{def:model:prior}). The experiments' value equals their E1 limit under $\Lselc$\src{universal \S6.6}.}
+\label{tab:univ:share}
+\end{table}
+
+\begin{proposition}[H\"anni's variants on $\forall x\varphi$]\label{prop:univ:hanni}\status{proved; computed}\src{universal \S6.2}
+Let $\varphi=0+x=x$, $\Qg$ of full support. Under $\Sprove$ the posterior converges a.s.\ in total variation to the prior restricted to $\{T\text{ consistent}:T\vdash\Ic(\varphi)\}$, which contains $\Q$ (independent), $\Q+\forall x\varphi$ (true), $\Q+\exists x\neg\varphi$ (false), $\Hsch$, $\Hall$ and consistent over-general templates such as $\{0+z_1=z_2\}$: all three trichotomy values keep positive mass, and over-generalisation is never penalised. Under $\Snc$ and $\Sg$ ($g\equiv1$ on provable data) the theories that prove all the data share one factor, so their mutual odds keep the prior odds and again all three trichotomy values keep positive mass; under $\Snc$ the limit is the prior restricted to the larger set $\{T:T\cup\Ic(\varphi)\text{ consistent}\}$, which also contains non-provers of the instances such as $\emptyset$. Under generative likelihoods inconsistent theories die within a few data (\Cref{tab:univ:inc}).
+\end{proposition}
+
+\paragraph{Proof of \Cref{prop:univ:hanni}.} Under $\Sprove$ the posterior is the prior restricted to $\mathrm{Adm}_n=\{T\text{ consistent}:T\vdash D_n\}$; every closed instance eventually appears a.s., so $\mathrm{Adm}_n\downarrow\{T\text{ consistent}:T\vdash\Ic(\varphi)\}$, and continuity of measure gives convergence in total variation. The model of AS Ex~4.9 shows that $\Q$, $\Q+\forall x\varphi$ and $\Q+\exists x\neg\varphi$ are consistent with all closed instances, each of which $\Q$ proves; $\{0+z_1=z_2\}$ has a one-element model. Under $\Snc$ and $\Sg$ ($g\equiv1$ on provable data) all theories proving the data get the same factor, so their mutual odds stay at the prior odds. Under $\Snc$ the score is $1[T\cup D_n\text{ consistent}]$; as every closed instance eventually appears a.s., compactness and continuity of measure give the limit: the prior restricted to $\{T:T\cup\Ic(\varphi)\text{ consistent}\}$, which contains $\emptyset$. $\Inc=0$ under the scores by definition. \qed
+
+\begin{table}[ht]
+\centering\small
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+$\varphi$, law, likelihood & $n=0$ & $1$ & $2$ & $5$ & $10$ & $20$\\
+\midrule
+$0+x=x$, $\Qnum$; $\Lcl$, $\Lone$, $\Lsel$ & 0.674 & 0.000 & 0.000 & 0.000 & 0.000 & 0.000\\
+$\neg Sx=0$, $\Qnum$; $\Lcl$ / $\Lone$ & 0.931 & .585/.635 & .319/.390 & .056/.081 & .002/.003 & 0.000\\
+$x<Sx$, $\Qnum$; $\Lcl$ & 0.627 & 0.080 & 0.004 & 0.000 & 0.000 & 0.000\\
+$\neg Sx=0$, $\QGW$; $\Lcl$ & 0.931 & 0.454 & 0.191 & 0.010 & 0.000 & 0.000\\
+\bottomrule
+\end{tabular}
+\caption{Mass $\Inc$ of inconsistent theories in the class of \Cref{tab:univ:c2} without its learned-weight root split, so all members have fixed weights and no Dirichlet $\alpha$ enters (c10(d), 20 seeds): the bare formula metavariable and, for $\neg Sx=0$, three templates with instances such as $\neg(0=0)$. $\Belc(\forall x\varphi)$ tends to the prior share $\approx0.332$ under $\Lcl$, $\Lsel$ and to $0$ under $\Lone$.}
+\label{tab:univ:inc}
+\end{table}
+
+\begin{proposition}[An $\omega$-gap for Q4]\label{prop:univ:q4}\status{proved; computed}\src{universal Prop U13}
+$(\Q-\text{Q4})$ plus all closed instances of $x+0=x$ does not prove $\forall x(x+0=x)$ (a model on $\N\cup\{a,b\}$). So closed instances cannot tell the axiom Q4 from its closed schema $z+0=z$, which differ in their theorems over $\Q-\text{Q4}$.
+\end{proposition}
+
+\paragraph{Proof of \Cref{prop:univ:q4}.} On $\N\cup\{a,b\}$, standard on $\N$, let $Sa=a$, $Sb=b$; $a+m=m$, $b+m=b$ ($m\in\N$); $x+a=a$ for $x\in\N\cup\{a\}$, $b+a=b$, $x+b=b$ for all $x$; $x\cdot0=0$; $a\cdot m=a$, $b\cdot m=b$ ($m\ge1$); $n\cdot a=n\cdot b=b$ ($n\ge1$); $0\cdot a=0\cdot b=0$; $a\cdot a=a\cdot b=a$; $b\cdot a=b\cdot b=b$. Q1--Q3: $S$ is the identity on $\{a,b\}$ and $n\mapsto n+1$ on $\N$. Q5: for $y=m$, $a+(m+1)=m+1=S(a+m)$, both sides are $b$ for $x=b$, and $x\in\N$ is standard; for $y\in\{a,b\}$, $Sy=y$ and $x+y\in\{a,b\}$ is fixed by $S$. Q6 holds by definition. Q7: for $y=m$, $a\cdot(m+1)=a=a\cdot m+a$ (as $0+a=a+a=a$) and $b\cdot(m+1)=b=b\cdot m+b$; for $y\in\{a,b\}$ we need $z+x=z$ with $z=x\cdot y$, which holds for $x=0$ ($0+0=0$), $x=n\ge1$ ($b+n=b$), $x=a$ ($a+a=a$) and $x=b$ ($b+b=b$). Closed terms denote standard numbers, so every closed instance holds, but $a+0=0\neq a$. \qed
+
+Each case was re-checked for this paper; c6 and referee r5 find no violation on $\{0..40\}\cup\{a,b\}$ and $\{0..80\}\cup\{a,b\}$.
+
+\begin{proposition}[The Gaifman condition]\label{prop:univ:gaifman}\status{proved; known}\src{universal Prop U15}
+Let $\mu$ be a probability on $L$-structures, $P(\psi):=\mu\{M:M\models\psi\}$, and $t_1,t_2,\dots$ the closed terms. Then
+\[P\Big(\forall x\varphi\ \Big|\ \textstyle\bigwedge_{i\le n}\varphi(t_i)\Big)\to P(\forall x\varphi)\big/\mu\{M:M\models\varphi(t)\text{ for all closed }t\}.\]
+The Gaifman condition \citep{gaifman1964concerning} $P(\forall x\varphi)=\inf_nP(\bigwedge_{i\le n}\varphi(t_i))$ holds for all $\varphi$ iff $M_0\preccurlyeq M$ for $\mu$-a.e.\ $M$, with $M_0$ the closed-term substructure (AS Prop~4.7); the limit is then $1$ if $P(\forall x\varphi)>0$ and $0$ if $P(\forall x\varphi)=0$.
+\end{proposition}
+
+\noindent So believing $\forall x\varphi$ from true closed instances is safe for $\N$ and unsafe for credences that weigh $\R$, $V$, models of $\PA+\neg\Con(\PA)$ (AS Ex~4.8) or some models of $\Q$ (AS Ex~4.9). The condition is cited from memory by the track; secondary sources state it with constants rather than closed terms.
+
+\paragraph{Proof of \Cref{prop:univ:gaifman}.} $\forall x\varphi$ entails each instance, so $P(\forall x\varphi\wedge\bigwedge_{i\le n}\varphi(t_i))=P(\forall x\varphi)$, and the conjunctions decrease to ``all closed instances hold''; continuity of $\mu$ gives the limit. The gap in the Gaifman condition is $\mu\{M:\text{all closed instances hold},\ M\nvDash\forall x\varphi\}$, which vanishes for every $\varphi$ (countably many) iff $\mu$-a.e.\ $M$ satisfies (i) of AS Prop~4.7, i.e.\ $M_0\preccurlyeq M$. \qed
+
+% ---------------------------------------------------------------------
+\subsection{Open instances, guards and root splits}\label{app:univ:open}
+
+\paragraph{Proof of \Cref{prop:univ:open}.} (a) $P_T(D)>0$ gives $T\vdash\varphi(p)$, and $p$ occurs in no axiom, so Gen gives $T\vdash\forall x\varphi$. (b) follows from (a). (c) With weights $(w_\forall,w_{\mathrm{open}},w_{\mathrm{sch}})$ on $\forall x\varphi$ and the open- and closed-guarded $\sigma_\varphi$, the only outputs are $\forall x\varphi$, $\varphi(p)$ and closed $\varphi(t)$ (Gen fails on closed formulas, $\forall$E on quantifier-free ones). With $a:=\mu(\forall x\varphi)$, $b:=\mu(\varphi(p))$: $a=p_{\mathrm{cite}}w_\forall+gb$ and $b=\rho(p_{\mathrm{cite}}w_{\mathrm{open}}+ca)$, so
+\begin{gather*}
+a=\frac{p_{\mathrm{cite}}(w_\forall+g\rho w_{\mathrm{open}})}{1-gc\rho},\qquad Z=a(1+c)+p_{\mathrm{cite}}(w_{\mathrm{open}}+w_{\mathrm{sch}}),\\
+\mu(\varphi(t))=\Qnum(t)\big[(1-\rho)(p_{\mathrm{cite}}w_{\mathrm{open}}+ca)+p_{\mathrm{cite}}w_{\mathrm{sch}}\big]\quad(t\text{ closed}).
+\end{gather*}
+Hence $Z_{\Hopen}=p_{\mathrm{cite}}\frac{1+g\rho}{1-gc\rho}$, $Z_{\Hall}=p_{\mathrm{cite}}\frac{1+c}{1-gc\rho}$, $Z_{\Hsch}=p_{\mathrm{cite}}$; unnormalised, $\mu_{\Hall}/\mu_{\Hopen}=c$ at instances and $1/(g\rho)$ at $\forall x\varphi$, and $\mu_{\Hopen}/\mu_{\Hsch}=\frac{1-\rho}{1-gc\rho}$ at closed instances; divide by the normalisers. (d) follows, for the finitely many hypotheses compared, from (c), \Cref{thm:univ:size}(2) and \Cref{prop:univ:both}; the rate $1/n$ for $\Hboth$ is computed in $\Cmin$, and in $\Copen$ its per-datum ratio to $\Hsch$ (the formulas above with $w_{\mathrm{open}}=0$) is still below $1$ at every $w_\forall>0$. \qed
+
+c1 (sampler, max $\lvert z\rvert=1.60$), c5 and referee r7 ($2.15$) confirm (c).
+
+\begin{lemma}[Waste]\label{lem:univ:waste}\status{proved}\src{universal Lemma N0}
+Let $P^*$ be a law on a countable set, $H\cup T$ a partition of $\operatorname{supp}P^*$ with $\tau:=P^*(T)\in(0,1]$, $N_W$ a law on a set disjoint from $\operatorname{supp}P^*$, and $r_{\mathrm w}>0$. Over the laws $p_hP^*(\cdot\mid H)+p_tP^*(\cdot\mid T)+r_{\mathrm w}p_tN_W$ with $p_h+(1+r_{\mathrm w})p_t=1$, the minimum of $\KL(P^*\|\cdot)$ is $\tau\ln(1+r_{\mathrm w})$, attained at $p_t=\tau/(1+r_{\mathrm w})$, $p_h=1-\tau$.
+\end{lemma}
+
+\begin{proof}
+The conditionals are exact and $N_W$ lives off the support, so $\KL=(1-\tau)\ln\frac{1-\tau}{p_h}+\tau\ln\frac\tau{p_t}$, convex in $p_t$ once $p_h=1-(1+r_{\mathrm w})p_t$. The derivative $(1-\tau)(1+r_{\mathrm w})/p_h-\tau/p_t$ vanishes at $p_t=\tau/(1+r_{\mathrm w})$, $p_h=1-\tau$, where the value is $\tau\ln(1+r_{\mathrm w})$.
+\end{proof}
+
+\begin{proposition}[Exact law of $R_k$]\label{prop:univ:rk}\status{proved; computed}\src{universal Prop N1}
+In $\Copen$, let $A_\rho:=\frac{1-\rho}{1-gc\rho}$ and $B_\rho:=\frac{1+g\rho}{1-gc\rho}$, and give $R_k$ sentence weights $v_0,\dots,v_{k-1}$ and template weight $u$. Its unnormalised law is $p_{\mathrm{cite}}v_j$ at $\varphi(S^j0)$ ($j<k$); $p_{\mathrm{cite}}uA_\rho\Qnum(S^m0)$ at $\varphi(S^{k+m}0)$; $p_{\mathrm{cite}}u\rho/(1-gc\rho)$ at $\varphi(S^kp)$; $p_{\mathrm{cite}}ug\rho/(1-gc\rho)$ at $\forall y\varphi(S^ky)$; and $0$ elsewhere. $Z=p_{\mathrm{cite}}(1-u+uB_\rho)$. $\Hopen$ is the case $k=0$, $u=1$.
+\end{proposition}
+
+\begin{proof}
+Citing a sentence yields it, and Gen and $\forall$E then fail. Citing the template yields $\varphi(S^kt)$, $t\sim\Qopen$; Gen applies only to $\varphi(S^kp)$, giving $U:=\forall y\varphi(S^ky)$, and $\forall$E only to $U$. With $a:=\mu(U)$, $b:=\mu(\varphi(S^kp))$: $a=gb$, $b=\rho(p_{\mathrm{cite}}u+ca)$, so $a=g\rho p_{\mathrm{cite}}u/(1-gc\rho)$, $b=\rho p_{\mathrm{cite}}u/(1-gc\rho)$, and a closed tail instance has mass $(1-\rho)\Qnum(S^m0)(p_{\mathrm{cite}}u+ca)=p_{\mathrm{cite}}uA_\rho\Qnum(S^m0)$. Summing gives $Z=p_{\mathrm{cite}}(1-u)+p_{\mathrm{cite}}u(1+g\rho)/(1-gc\rho)$.
+\end{proof}
+
+c8 Part 1: sampler for $R_1..R_3$, max $\lvert z\rvert=2.07$ (referee r3: $2.19$).
+
+\begin{proposition}[Rates on closed data]\label{prop:univ:rkrate}\status{proved; computed}\src{universal Prop N2}
+On closed numeral data from $\Qnum$, under $\Lone$: $\KL(P^*\|P_{\Hall})=\ln\frac{1+c}{c(1-\rho)}$, $\KL(P^*\|P_{\Hopen})=\Wo$, $\inf_w\KL(P^*\|P_{R_k})=q^k\Wo$. Each split level halves the loss at $q=\tfrac12$ ($0.0626$, $0.0313$, $0.0156$ for $R_1,R_2,R_3$).
+\end{proposition}
+
+\noindent The proof uses the exact law of $R_k$ (\Cref{prop:univ:rk}) and the waste lemma (\Cref{lem:univ:waste}): a law that reproduces $P^*$ on a tail of mass $\tau$ and wastes $r_{\mathrm w}$ times the tail's mass loses at best $\tau\ln(1+r_{\mathrm w})$; for $R_k$, $\tau=q^k$ and $\ln(1+r_{\mathrm w})=\Wo$.
+
+\paragraph{Proof of \Cref{prop:univ:rkrate}.} Conditioned on closed outputs, $\Hall$ and $\Hopen$ have law $P^*$ (\Cref{prop:univ:open}(c)), so their KL is $-\ln$ of their closed mass, $c(1-\rho)/(1+c)$ and $A_\rho/B_\rho=(1-\rho)/(1+g\rho)$. For $R_k$ (\Cref{prop:univ:rk}) the normalised law has head mass $(1-u)/Z_R$, $Z_R=1-u+uB_\rho$, tail mass $p_t=A_\rho u/Z_R$ with the exact tail shape (because $\Qnum(S^{k+m}0)=q^k\Qnum(S^m0)$), and waste $(B_\rho-A_\rho)u/Z_R=r_{\mathrm w}p_t$ with $r_{\mathrm w}=B_\rho/A_\rho-1$. For fixed $u$ the best head is $v_j\propto\Qnum(S^j0)$ (Gibbs), and \Cref{lem:univ:waste} applies with $\tau=q^k$: $p_t$ ranges over $(0,A_\rho/B_\rho]=(0,1/(1+r_{\mathrm w})]$, which contains the optimum, attained at $u=q^k/(B_\rho(1-q^k)+q^k)$. The value is $q^k\ln(B_\rho/A_\rho)=q^k\Wo$. \qed
+
+c8 Part 2: numerical minimisation agrees to $1.8\cdot10^{-15}$ ($k\le6$, four settings). For \Cref{rem:univ:openrefuted}, the referee's independent run (r3) of $\{\Hall,\Hopen,R_1\}$ gives $0.880$ at $n=100$, then $0.000$ at $n=300$.
+
+\paragraph{Proof of \Cref{prop:univ:noguard}.} \emph{Provability.} On $\N\cup\{e,e'\}$, standard on $\N$, with $Se=Se'=e'$ and $0+e=0+e'=e'$, every $S^kx$ ($k\ge1$) is a standard number $\ge k$ or $e'$, so every instance of $\varphi(S^kz)$, closed or under closure, and $\varphi(0),\dots,\varphi(S^{k-1}0)$ hold, while $0+e\neq e$. Over $\Q$: $\Q$ proves each $0+S^j0=S^j0$ (Q4, Q5, induction on $j$ outside the theory), and $k$ uses of Q3 show that every $x$ is one of $0,\dots,S^{k-1}0$ or $S^ky$, where $\varphi(S^kp)$, read as $\forall y\varphi(S^ky)$, applies. Memorisers consist of closed instances, which $\Q$ proves, and $\Q\nvdash\forall x\varphi$ (AS Ex~4.9).
+(a) $\Hall$, $\Hopen$ have fixed laws with KL $\ge\Wo$ (note $\ln\frac{1+c}{c(1-\rho)}\ge\Wo$), so their normalised log-likelihood ratio to $P^*$ is $-n\KL+o(n)$ a.s. For $R_k$ with learned weights, take the interior optimum $w_0$ and an $\varepsilon$-neighbourhood $N_\varepsilon$ on which the weights are bounded away from $0$; there the per-datum log-likelihood ($\ln v_j-\ln Z_R$, or $\ln(A_\rho u)+\ln\Qnum(S^m0)-\ln Z_R$, whose middle term does not depend on $w$) has $w$-gradient bounded by some $M$. So the marginal is $\ge\Dir(N_\varepsilon)P_{w_0}(D_n)e^{-nM\varepsilon}$, and $\liminf\frac1n\ln\frac{\text{marginal}}{P^*(D_n)}\ge-q^k\Wo-M\varepsilon$ for every $\varepsilon$; the log-odds of $R_k$ against each prover grow like $n(1-q^k)\Wo-o(n)$. Provers that add $\sigma_\varphi$ as a spare component to some $R_k$ decay only polynomially relative to $R_k$ (proof sketch; \Cref{prop:ident:spare}(b)).
+(b) All members but the memorisers prove $\forall x\varphi$ over $\Q$, which gives the second sentence. By \Cref{prop:univ:memo}(ii$'$) the memoriser class has log-marginal $\ge-C\ln^2n$ relative to $P^*$. For each $R_k$ the likelihood ratio to $P^*$ depends only on the empirical frequencies $\hat p$ of the $k+1$ categories (head values; tail), since the tail shape cancels; so $\frac1n\ln\sup_w\frac{P_{R_k,w}(D_n)}{P^*(D_n)}=\sup_wG(\hat p,w)$, convex and hence continuous in $\hat p$ near $p^*$, with limit $-q^k\Wo<0$, and the marginal is below the supremum. With $\mathcal K$ finite all non-memorisers lose linearly against the memorisers.
+(c) (Proof sketch.) Under $\Lsel$, $R_k$'s filtered law (head $v_j/N$, tail $A_\rho u\Qnum(S^m0)/N$, $N=1-u+A_\rho u$) is a smooth reparametrisation of a $(k+1)$-category multinomial equal to $P^*$ at one interior point. The Laplace (BIC) expansion \citep{schwarz1978estimating,clarke1990information} (recalled, details not checked) gives log-marginal $-\frac k2\ln n+O_P(1)$ relative to $P^*$; memorisers lose $O(\ln^2n)$; $\Hall$, $\Hopen$ have log-ratio $0$. Not written out: almost-sure control, uniform in $k$ for infinite $\mathcal K$. \qed
+
+\begin{table}[ht]
+\centering\small
+\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{@{}llccccccc@{}}
+\toprule
+likelihood, class & quantity & $n=0$ & $10$ & $10^2$ & $10^3$ & $10^4$ & $10^5$ & $10^6$\\
+\midrule
+$\Lone$, $\{\Hall,\Hopen,R_1\}$ & $P(\vdash)$, pure & .997 & .996 & .697 & .000 & .000 & .000 & .000\\
+ & MAP & $\Hopen$ & $\Hopen$ & $\Hopen$ & $R_1$ & $R_1$ & $R_1$ & $R_1$\\
+$\Lone$, $+R_{2..4}$, mem. & $P(\Q\cup T\vdash)$ & .601 & 1.000 & 1.000 & 1.000 & 1.000 & .000 & .000\\
+ & MAP & $\Hopen$ & $\Hopen$ & $\Hopen$ & $R_3$ & $R_4$ & mem & mem\\
+$\Lone$, $+R_{2..40}$, mem. & $P(\vdash)$, pure & .599 & .996 & .697 & .000 & .000 & .000 & .000\\
+ & $P(\Q\cup T\vdash)$ & .601 & 1.000 & 1.000 & 1.000 & 1.000 & 1.000 & 1.000\\
+ & MAP & $\Hopen$ & $\Hopen$ & $\Hopen$ & $R_3$ & $R_6$ & $R_9$ & $R_{12}$\\
+$\Lsel$, each class & $P(\vdash)$, pure & .997/.599 & .998 & .987 & 1.000 & 1.000 & 1.000 & 1.000\\
+\bottomrule
+\end{tabular}
+\caption{Without a guard (c8 Part 3): $P(T\vdash\forall x\varphi\mid D_n)$ in pure logic and over $\Q$, $\varphi=0+x=x$, closed numeral data ($q=\tfrac12$), $\Copen$ at $(c,g,\rho)=(0.3,0.2,0.1)$, Dirichlet($\tfrac12$) weights (\Cref{prop:univ:noguard}(b) is proved for Laplace-weighted memorisers), prior $2^{-(\text{symbols}+1\text{ per axiom})}$, memoriser class mass $2^{-6}$ (lower bracket), mean of 20 seeds; MAP = mode over seeds. Part 4 (multinomial counts, 10 seeds): with $R_{1..40}$ the MAP is $R_{15},R_{18},R_{21},R_{24},R_{30}$ at $n=10^7,10^8,10^9,10^{10},10^{12}$ and $P(\Q\cup T\vdash)=1.000$, $P(\vdash)$ pure $=0$, also with the upper bracket and class mass $\tfrac12$, with $\alpha=1$, and with $\lambda=2$ ($R_{14}..R_{30}$)\src{universal Prop N3}.}
+\label{tab:univ:noguard}
+\end{table}
+
+The MAP depth is about $\log_2n$ minus a slowly growing term ($\approx8$ at $n=10^6$, $\approx10$ at $10^{12}$).
+
+% ---------------------------------------------------------------------
+\subsection{Quantified data and the equational fragment}\label{app:univ:quant}
+
+\begin{proposition}[Quantified data]\label{prop:univ:quant}\status{(a), (b) proved; computed}\src{universal Prop U12}
+\textup{(a)} If $s\in D$ and $B\cup\Ic(\varphi)\nvdash s$, then under any likelihood supported on theorems $B\oplus\sigma_\varphi$ has posterior $0$; over $\Q$, one datum $\forall y(0+Sy=Sy)$ leaves only provers of $\forall x(0+x=x)$. \textup{(b)} If all theories prove $\forall x\varphi$ at different costs ($\{\forall^L\forall x\varphi,\sigma_\varphi\}$ against $\{\forall x\varphi,\sigma_\varphi\}$ in $\Cmin$, $L$ vacuous quantifiers, uniform weight priors, equal prior masses, data $\forall x\varphi$ with probability $f_q$ and instances otherwise), the log Bayes factor tends to $\ln(1+c+\dots+c^L)$ when $f_q=0$ ($0.349$ at $L=3$) and grows linearly when $f_q>0$, at a rate a little above $f_qL\ln\frac1c$ (\status{proof sketch} for $f_q>0$). \textup{(c)} \status{proof sketch} In $\Lmax$ form a derived sentence becomes an axiom when the derivation steps it saves, at $\ge\ln\frac1c$ each, exceed its prior cost and an $O(\ln n)$ dilution: frequently used lemmas become axioms.
+\end{proposition}
+
+\paragraph{Proof of \Cref{prop:univ:quant}.} (a) If $B\cup\Ic\nvdash s$, then $B\oplus\sigma_\varphi\nvdash s$. In AS Ex~4.9's model, $0+Sa=0+a=b\neq a=Sa$, so $\Q+\Ic\nvdash\forall y(0+Sy=Sy)$; and $\Q+\forall y(0+Sy=Sy)\vdash\forall x(0+x=x)$ by Q4 at $0$ and Q3 elsewhere. (b) In units of $1-c$, with $S_B:=\sum_{k=0}^{L+1}c^k$: $\{\forall x\varphi,\sigma_\varphi\}$ with weight $w$ on $\forall x\varphi$ gives $P(\forall x\varphi)=\frac w{1+wc}$, $P(\varphi(t))=\frac{1-w+wc}{1+wc}\Qg(t)$; $\{\forall^L\forall x\varphi,\sigma_\varphi\}$ gives $P(\forall x\varphi)=wc^L/Z_B$, $P(\varphi(t))=((1-w)+wc^{L+1})\Qg(t)/Z_B$, $Z_B=wS_B+1-w$ (vacuous eliminations succeed with term mass $1$). A quantified datum adds $L\ln\frac1c+\ln\frac{Z_B}{1+wc}$ to the log-ratio; an instance $0.021$, $0.094$, $0.307$, $1.323$ nats at $w=0.05,0.2,0.5,0.9$ ($L=3$), so the two theories price instances alike only for small $w$ (referee m5). For $f_q=0$ both Bayes factors against $\Hsch$ are $\int_0^1e^{nf_i(w)}dw$ with $f_i(0)=0$, $f_i$ decreasing, $f'_{\mathrm{both}}(0)=-1$, $f'_B(0)=-(1+c+\dots+c^L)$; Watson's lemma gives $(n\lvert f_i'(0)\rvert)^{-1}(1+o(1))$ for each. For $f_q>0$ (sketch) the rate is $\Delta(f_q):=\max_w\Ex\ell_{\mathrm{both}}(w)-\max_w\Ex\ell_B(w)$, the Laplace approximation at the interior maxima not written out. (c) (Sketch.) In $\Lmax$ form a derivation's code length is a sum of rule and term costs; adding $\psi$ costs its prior bits and an $O(\ln n)$ dilution, and saves $\ell_T(s)-\ell_{T+\psi}(s)$ steps of cost $\ge\ln\frac1c$ per datum $s$. \qed
+
+c10(c), equal priors, 20 seeds, $n\le10^5$: for $f_q=0$ the log Bayes factor is $0.349$ ($L=3$) and $0.357$ ($L=10$) at every $n$; for $L=3$, $\Delta=0.0396$, $0.1980$, $0.7921$ at $f_q=0.01,0.05,0.2$ (measured $0.0395$, $0.1977$, $0.7921$; $f_qL\ln\frac1c=0.036$, $0.181$, $0.722$); for $L=10$, $0.1240$, $0.6198$, $2.4793$ (measured $0.1236$, $0.6187$, $2.4793$). The first version's table (c5 Part B) gave $\{\forall^L\forall x\varphi,\sigma_\varphi\}$ a much smaller prior and so tracked only the refutation in (a): $P(T\vdash\forall x\varphi)=1-(1-f_q)^n$ within Monte Carlo error.
+
+\begin{proposition}[The equational fragment]\label{prop:univ:eqfrag}\status{(a)--(c) proved; (a) computed}\src{universal Prop U14}
+\textup{(a)} In equational logic over $E=\{\text{Q4},\text{Q5}\}$ every derivation of $0+S^k0=S^k0$ has at least $k+1$ axiom leaves. \textup{(b)} If grammar nodes pick rules independently, with at most two premises and mean $\mu<1$, then $P(\ge L\text{ nodes})\le e^{-(L-1)(1-\mu)^2/2}$. \textup{(c)} The full sum favours the schema by $\Omega(k)$ on $0+S^k0=S^k0$ when $q>e^{-(1-\mu)^2/2}$; this needs $q>0.61$, so it does not apply at $q=\tfrac12$; the two-part ($\Lmax$) comparison favours it linearly in $k$ at $q=\tfrac12$ when each leaf pays a citation and a term of point mass $\le1-q$.
+\end{proposition}
+
+\paragraph{Proof of \Cref{prop:univ:eqfrag}.} (a) Let $w(t):=\sum_{+\text{-nodes }l+r}(1+\#S(r))$, $\#S(r)$ the number of $S$ symbols in $r$. Rewriting $u+0$ to $u$, or $u+Sv$ to $S(u+v)$, anywhere in a term changes $w$ by exactly $-1$ (the rewritten node contributes $1$, resp.\ $2+\#S(v)$ before and $0$, resp.\ $1+\#S(v)$ after; nodes inside are untouched; nodes above keep the $S$-count of their right argument), and the reverse by $+1$. $w(0+S^k0)=k+1$, $w(S^k0)=0$. A derivation (reflexivity, symmetry, transitivity, congruence, substitution, axiom instances) converts by induction into a rewrite chain with at most as many steps as axiom leaves: congruence and transitivity concatenate chains, symmetry reverses one, substitution keeps lengths. (b) Couple the grammar with the Galton--Watson tree of rule labels and explore it depth-first with premise counts $\xi_i$; $\ge L$ nodes requires $\sum_{i\le L-1}(\xi_i-1)\ge0$; apply Hoeffding's inequality \citep{hoeffding1963probability} to $\xi_i-1\in[-1,1]$ with mean $\mu-1$ (typed grammars need the maximum of $\mu$ over contexts). (c) Full sum: by (a), (b), $P_E(0+S^k0=S^k0)\le e^{-k(1-\mu)^2/2}$, while the schema gives $\ge p_{\mathrm{cite}}w(1-q)q^k$. Two-part: $\ge k+1$ leaves of cost $\ge\ln\frac1{p_{\mathrm{cite}}}+\ln\frac1{1-q}>\ln\frac1q$ (for $q\ge\tfrac12$), against $O(1)+k\ln\frac1q$ for the schema. \qed
+
+c6: shortest chains of exactly $k+1$ for $k\le5$ by breadth-first search; referee r5: the invariant on $339\,250$ random rewrites.
+
+% ---------------------------------------------------------------------
+\subsection{The sentence-only class}\label{app:univ:sentences}
+
+\begin{proposition}[Sentence-only class]\label{prop:univ:sentences}\status{(b), (c) proved; computed}\src{universal Prop U16}
+\textup{(a)} \status{proof sketch} Under $\Lcl$, $\Hall$ has the true law and $\Split_k$, Both0 match it only at a point or at the boundary, so $P(T\vdash\forall x\varphi\mid D_n)\to1$ (Laplace expansion uniform in $k$ not written out). \textup{(b)} Under $\Lone$: $\KL(P^*\|P_{\Hall})=\ln\frac{1+c}c$ ($1.466$), $\inf_w\KL(P^*\|P_{\Split_k})=q^k\ln\frac{1+c}c$, $\inf_w\KL(P^*\|P_{\mathrm{Both0}})=q\ln\frac{1+qc}{qc}$ ($1.018$). \textup{(c)} $\Split_k$ proves $\forall x\varphi$ over $\Q$, not in pure logic; memorisers in neither. \textup{(d)} \status{computed; limit conjecture} In pure logic $P(T\vdash\forall x\varphi\mid D_n)\to0$ in every class computed. Over $\Q$, with depth $\le4$ memorisers win (limit $0$); with depth $\le40$ splits win to $n=10^{12}$ under four prior variants (\Cref{tab:univ:sentences}). Conjecture: with all depths the limit is $1$.
+\end{proposition}
+
+\paragraph{Proof of \Cref{prop:univ:sentences}.} (a) (Sketch.) $\Split_k$ equals the true law at one weight vector ($v_j=\Qnum(S^j0)$, $u=q^k$) and pays $n^{-k/2}$ with learned weights; Both0 only at the boundary; memorisers lose $O(\ln^2n)$; uniformity in $k$ not written out. (b) $\Hall$ gives each instance $c/(1+c)$ times its true probability (\Cref{thm:univ:odds}). $\Split_k$: the universal sentence yields itself with mass $(1-c)u$ or $\varphi(S^{k+m}0)$ with mass $(1-c)uc\Qnum(S^m0)$; normalised by $(1-c)(1+cu)$: head $v_j/(1+cu)$, tail $uc\Qnum(S^m0)/(1+cu)$, waste $u/(1+cu)=p_t/c$; \Cref{lem:univ:waste} with $\tau=q^k$, $r_{\mathrm w}=1/c$ gives $q^k\ln(1+\frac1c)$, attainable as $p_t$ ranges over $(0,\frac c{1+c}]$. Both0 with weight $w$ on $\varphi(0)$: with $M:=(1-w)c/(1+c(1-w))$, the tail $\{j\ge1\}$ has mass $qM$ with the exact shape, waste $M/c$, and $\varphi(0)$ mass $1-qM-M/c$; so $\KL=(1-q)\ln\frac{1-q}{1-M(q+1/c)}+q\ln\frac1M$, convex, minimal at $M=\frac{qc}{1+qc}\le\frac c{1+c}$ with value $q\ln\frac{1+qc}{qc}$. (c) The countermodel and derivation of \Cref{prop:univ:noguard}. \qed
+
+c9 Parts 1--2 confirm the rates to $8.9\cdot10^{-16}$; referee r4 reproduces them.
+
+\begin{lemma}[Survivors prove $\forall x\varphi$ over $\Q$]\label{lem:univ:survivors}\status{proved}\src{universal Lemma S1}
+In $\Cmin$ with numeral elimination terms and $\varphi=0+x=x$, every finite set $T$ of sentences with $P_T(\varphi(S^j0))>0$ for infinitely many $j$ satisfies $\Q\cup T\vdash\forall x\varphi$.
+\end{lemma}
+
+\paragraph{Proof of \Cref{lem:univ:survivors}.} A chain cites some $A\in T$ and eliminates with numerals; $T$ is finite, so one $A$ yields $\varphi(S^j0)$ for infinitely many $j$. The conclusions are quantifier-free, so $A=\forall\bar y\chi$ with $\chi$ quantifier-free and $\chi[\bar t/\bar y]=(0+S^j0=S^j0)$ for numeral tuples with infinitely many $j$. Numerals contain only $0$ and $S$, so $\chi$ is $\tau_0+\tau_1=\tau_2$ with $\tau_0$ either $0$ or a variable instantiated by $0$ in every such output, and $\tau_1,\tau_2$ of the forms $S^a0$ or $S^ay$. As $j$ varies, $\tau_1=S^ay_m$ and $\tau_2=S^by_{m'}$, and neither variable is that of $\tau_0$ (which takes only the value $0$). If $m=m'$, then $a=b$ and $A\vdash\forall y\varphi(S^ay)$ (instantiate $\tau_0$'s variable, if any, by $0$); over $\Q$, $a$ uses of Q3 and the closed instances give $\forall x\varphi$. If $m\neq m'$, $A\vdash0+S^a0=S^b0$ and $A\vdash0+S^a0=S^{b+1}0$, so $S^b0=S^{b+1}0$, which $\Q$ refutes; then $\Q\cup T$ is inconsistent. \qed
+
+The track's proof treats only $\tau_0=0$; the case of a variable always instantiated by $0$ is added here and does not change the conclusion.
+
+\begin{remark}[Kreisel's conjecture]\label{rem:univ:kreisel}\status{known (secondary sources only)}\src{universal \S9}
+``All instances have short derivations, so $\forall x\varphi$ is derivable'' resembles Kreisel's conjecture, reported open for standard formalisations of $\PA$, settled for some \citep{parikh1973some,baaz1993kreisel} and false for some theories close to $\PA$ \citep{hrubes2007theories} (none of these was opened). $\Split_1$ shows that the naive version fails without axioms such as Q3: every numeral instance has a one-step derivation, $\forall x\varphi$ none.
+\end{remark}
+
+\begin{table}[ht]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}llccccccc@{}}
+\toprule
+likelihood, class & quantity & $n=0$ & $20$ & $10^2$ & $10^3$ & $10^4$ & $10^5$ & $10^6$\\
+\midrule
+$\Lone$, $\{\Hall,\Split_1,\mathrm{Both0}\}$ & $P(\vdash)$, pure & 0.996 & 0.038 & 0.000 & 0.000 & 0.000 & 0.000 & 0.000\\
+$\Lone$, $+\Split_{1..4}$, mem. & $P(\Q\cup T\vdash)$ & 0.338 & 0.926 & 0.947 & 0.475 & 0.000 & 0.000 & 0.000\\
+ & MAP & mem & $\Split_1$ & $\Split_3$ & mem & mem & mem & mem\\
+$\Lone$, $+\Split_{1..40}$, mem. & $P(\vdash)$, pure & 0.336 & 0.024 & 0.000 & 0.000 & 0.000 & 0.000 & 0.000\\
+ & $P(\Q\cup T\vdash)$ & 0.338 & 0.926 & 0.947 & 1.000 & 1.000 & 1.000 & 1.000\\
+ & MAP & mem & $\Split_1$ & $\Split_3$ & $\Split_6$ & $\Split_9$ & $\Split_{12}$ & $\Split_{15}$\\
+$\Lcl$, $+\Split_{1..40}$, mem. & $P(\vdash)$, pure & 0.336 & 0.997 & 0.999 & 1.000 & 1.000 & 1.000 & 1.000\\
+\bottomrule
+\end{tabular}
+\caption{Sentence-only class (c9 Part 3): $\varphi=0+x=x$, $\Cmin$, $c=0.3$, numerals with $q=\tfrac12$, Dirichlet($\tfrac12$), prior $2^{-(\text{symbols}+1\text{ per axiom})}$, memoriser class mass $2^{-6}$ (lower bracket), 20 seeds, MAP = mode; the larger classes also contain $\Hall$ and Both0. With $\Split_{1..40}$ under $\Lone$ the MAP is $\Split_{18},\Split_{21},\Split_{24},\Split_{27},\Split_{34}$ at $n=10^7,\dots,10^{10},10^{12}$ with $P(\Q\cup T\vdash)=1.000$, also with the upper bracket and class mass $\tfrac12$, with $\alpha=1$ and with $\lambda=2$ (c9 Part 4).}
+\label{tab:univ:sentences}
+\end{table}
+
+\emph{The race (c9 Part 5).} Log odds of the split family ($k\le40$) against the memoriser family, mean of 10 seeds: $16.5$ nats at $n=10^2$, $54.7$ at $10^4$, $105.1$ at $10^6$, $193.5$ at $10^{10}$ and $286.4$ at $10^{12}$ (minimum over seeds negative only at $10^2$), of the order of $L\log_2L$ with $L=\log_2n$. \emph{Heuristic (conjecture).} The best memoriser pays about $L^2$ bits of prior and $(L/2)\ln n$ nats of Dirichlet cost; the best split wastes about $nq^k\ln\frac{1+c}c$ nats, balancing the $\Theta(L)$ cost of one more level at $k\approx L-\log_2L$, and so saves about $\log_2L$ levels of $\Theta(L)$ nats. \emph{History.} The first version's ``$=1$ over $\Q$'' came from $\{\Hall,\Split_1,\mathrm{Both0}\}$, where all members prove $\forall x\varphi$ over $\Q$; the referee's ``$\to0$ over $\Q$'' holds with depth $\le4$, not with depth $\le40$ to $n=10^{12}$.

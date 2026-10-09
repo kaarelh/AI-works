@@ -1,0 +1,325 @@
+% =====================================================================
+% Appendix to Section 4 (key: ident). Full proofs and computations.
+% Sources: research/tracks/model/notes-final.md §§2, 3, 5, 8 and §12; checks c2, c3, c3b, c4, c6, c7, c9b,
+% c13, c15, c16 (research/tracks/model/checks/*.out); referee.md and referee_code/r4, r6;
+% research/tracks/universal/notes-final.md Lemma U7; research/tracks/experiments/notes-final.md Prop X13,
+% E5, E8 and code/results/e5_gold.md, e8_split_l1.md; research/tracks/pa/notes-final.md Prop 5.1.
+% =====================================================================
+
+\providecommand{\crefabbrev}{}% fallback until the preamble defines it (DECISIONS §6.5)
+\section{Proofs and computations for \texorpdfstring{\Cref{sec:ident}}{Section 4}}\label{app:ident}
+
+Proofs follow the model track's final notes; steps they leave out are named. The checks are the seeded scripts of \texttt{research/tracks/model/checks/} (c2--c16), each with its output file; the referee's independent scripts (r1--r7) are in \texttt{referee\_code/}. The model track's referee re-did the proofs of \cref{thm:ident:doob}, \cref{cor:ident:prior,cor:ident:deductive}, \cref{prop:ident:rates}, \cref{prop:ident:sep}, \cref{prop:ident:splits}(a), (b), \cref{thm:ident:kl}, \cref{ex:ident:weaker,lem:ident:zerosum,ex:ident:escape}, \cref{thm:ident:limit}(a), \cref{prop:ident:gold}, \cref{prop:ident:splitlzero}, \cref{prop:ident:spare}(a) and \cref{thm:ident:predded} line by line and found no error beyond the corrections recorded in \cref{rem:ident:exact} and \cref{app:ver}. Results added after the referee report were checked by the track and again while writing, not by a referee; the complete list is in \cref{app:ver:process}. Nothing is checked in a proof assistant.
+
+% ---------------------------------------------------------------------
+\subsection{Consistency and rates}\label{app:ident:doob}
+
+\paragraph{Proof of \Cref{thm:ident:doob}.}
+\emph{Step 1 (joint law; L\'evy).} Let $\Pi$ be the law of $(T,X_1,X_2,\dots)$ on $\Hclass\times\mathcal S^\infty$ with $\Pi(T=t,X\in E)=\pi(t)P_t^\infty(E)$, and $M:=\sum_t\pi(t)P_t^\infty$ its data marginal. Since $\Hclass$ is countable, Bayes' rule gives $\pi_n(A)=\Pi(T\in A\mid X_1,\dots,X_n)$ on the $M$-full event where $M(D_n)>0$. By L\'evy's upward theorem (known), for each fixed $A\subseteq\Hclass$, $\pi_n(A)\to\Pi(T\in A\mid X_\infty)$ $\Pi$-a.s.; the convergence event is a data event, so it holds $M$-a.s.
+\emph{Step 2 (the data determine the generator).} For $x\in\mathcal S^\infty$ let $F(x)(s):=\lim_nn^{-1}\#\{i\le n:x_i=s\}$, and $F(x):=\bot$ if some limit fails to exist or the limits do not sum to $1$. By the strong law applied to the countably many $s$, $P_t^\infty(F=P_t)=1$ for each $t$ (on that event the limits are the numbers $P_t(s)$, which sum to $1$). Hence $\Pi(P_T=F(X))=1$.
+\emph{Step 3 (the limit lives on $\{T:P_T=F(X)\}$).} Choose a version of $\{\Pi(T=t\mid X_\infty)\}_t$ that sums to $1$ a.s. Each indicator $1\{P_t=F(X)\}$ is $X_\infty$-measurable, so $\Ex[1\{P_T=F(X)\}\mid X_\infty]=\sum_t1\{P_t=F(X)\}\Pi(T=t\mid X_\infty)$ by monotone convergence. The left side is $1$ a.s.\ by Step 2. $F(X)$ ranges $\Pi$-a.s.\ over the countable set $\{P_t:t\in\Hclass\}$; apply Step 1 to the countably many sets $A_\nu:=\{t:P_t=\nu\}$ and intersect the full-measure events. Then, $M$-a.s., $\lim_n\pi_n(A_{F(X)})=\Pi(T\in A_{F(X)}\mid X_\infty)=1$.
+\emph{Step 4 (transfer to the truth).} $M\ge\pi(T^*)P_{T^*}^\infty$, so every $M$-null event is $P_{T^*}^\infty$-null and Step 3 holds $P_{T^*}^\infty$-a.s. Under $P_{T^*}^\infty$, $F(X)=P_{T^*}$ a.s.\ by Step 2, so $A_{F(X)}=\Cstar$, and $\pi_n(\Cstar)\to1$.
+\emph{Pointwise and total variation.} Write $q_T:=\pi(T)1[T\in\Cstar]/\pi(\Cstar)$. By \cref{cor:ident:prior}, $\pi_n(T)=\pi_n(\Cstar)\,q_T$ for $T\in\Cstar$, so
+\[\textstyle\sum_T|\pi_n(T)-q_T|=\sum_{T\in\Cstar}q_T\,(1-\pi_n(\Cstar))+\pi_n(\Hclass\setminus\Cstar)=2\,(1-\pi_n(\Cstar))\to0.\]
+\qed
+
+The universal track proves the same statement independently (its Lemma U7, total variation via Scheff\'e's lemma); the exact identity above is ours and gives the same conclusion directly.
+
+\paragraph{Proof of \Cref{cor:ident:prior}.} Every $T\in\Cstar$ has $P_T=P_{T^*}$ as a law on $\mathcal S$, so $P_T(D_n)=P_{T^*}(D_n)$ for every sequence, and the posterior ratio is the prior ratio. \qed
+
+\emph{Computed} (c9b; every likelihood by matching; three seeds, $n\le2000$): $\{z+0=z\}$ and its root split with weights $p_f=(0.5,0.3,0.1,0.1)$ agree to $5.68\cdot10^{-14}$ in log-likelihood; an over-general template, a split missing a root and $T^*$ plus the spare $0=S0$ (weight $0.05$, decaying as $0.95^n$) go to $0$. An earlier check (c9) was tautological for the split (referee m5).
+
+\paragraph{Proof of \Cref{cor:ident:deductive}.} Put $A:=\{T:s\in\Th_d(T)\}$. Then $\pi_n(A)=\pi_n(A\cap\Cstar)+\pi_n(A\setminus\Cstar)$. The second term is at most $\pi_n(\Hclass\setminus\Cstar)\to0$. By \cref{cor:ident:prior} the first equals $\pi_n(\Cstar)\pi(A\cap\Cstar)/\pi(\Cstar)$. Both hold on the single event of \cref{thm:ident:doob}, so simultaneously for all $(s,d)$. For the two cases named after the corollary: under $\Lzero$ with full-support $\Qg$ and positive weights, $\operatorname{supp}P_T=\bigcup\inst(T)$, so every $T\in\Cstar$ has $T^*$'s instance union and hence its $\Th_d$; under $\Lone$ with parameters admissible, $\operatorname{supp}P_T=\Th(T)$, so every $T\in\Cstar$ has $\Th(T)=\Th(T^*)$. \qed
+
+\begin{proposition}[Rates]\status{proved}\src{model Prop 2.4}\label{prop:ident:rates}
+Assume W. (a) For $T\notin\Cstar$, $\pi(T)>0$: $\frac1n\ln\frac{\pi_n(T^*)}{\pi_n(T)}\to\KL(P_{T^*}\|P_T)\in(0,\infty]$ a.s. (b) $\sum_{i=1}^n\Ex\,\KL(P_{T^*}\|M_{i-1})\le\ln\frac1{\pi(\Cstar)}$. (c) For $A\subseteq\Hclass\setminus\Cstar$ and $\rho_T:=\sum_s(P_{T^*}(s)P_T(s))^{1/2}$, $\Ex[(\pi_n(A)/\pi_n(T^*))^{1/2}]\le\sum_{T\in A}(\pi(T)/\pi(T^*))^{1/2}\rho_T^n$; so $P[\pi_n(A)\ge\varepsilon]\le C\rho^n\varepsilon^{-1/2}$ if $\sup_A\rho_T\le\rho<1$ and $C:=\sum_{T\in A}(\pi(T)/\pi(T^*))^{1/2}<\infty$ (true for $\pi_\lambda$, $\lambda\ge2$).
+\end{proposition}
+
+\noindent The rate (c) degenerates for spare templates ($\rho_T\ge(1-\varepsilon)^{1/2}$ for a spare of weight $\varepsilon$), whose decay the weight prior sets (\cref{prop:ident:spare}).
+
+\paragraph{Proof of \Cref{prop:ident:rates}.}
+(a) $\ln\frac{\pi_n(T^*)}{\pi_n(T)}=\ln\frac{\pi(T^*)}{\pi(T)}+\sum_{i\le n}Y_i$ with $Y_i:=\ln\frac{P_{T^*}(X_i)}{P_T(X_i)}$ i.i.d. Their negative part is integrable, since $(\ln x)^+\le x$ gives $\Ex Y^-=\Ex(\ln\frac{P_T}{P_{T^*}})^+\le\Ex\frac{P_T(X)}{P_{T^*}(X)}\le1$, and $\Ex Y=\KL(P_{T^*}\|P_T)>0$ by Gibbs' inequality, as $P_T\ne P_{T^*}$. The strong law holds with limit in $(0,\infty]$. If $P_T(X_i)=0$ for some $i$, the ratio is $+\infty$ from then on.
+(b) $M(D_n)\ge\pi(\Cstar)P_{T^*}(D_n)$. By the chain rule $\ln\frac{P_{T^*}(D_n)}{M(D_n)}=\sum_{i\le n}\ln\frac{P_{T^*}(X_i)}{M_{i-1}(X_i)}$, and the conditional expectation of the $i$-th term given $D_{i-1}$ is $\KL(P_{T^*}\|M_{i-1})$. Take expectations.
+(c) $\frac{\pi_n(A)}{\pi_n(T^*)}=\sum_{T\in A}\frac{\pi(T)}{\pi(T^*)}L_T$ with $L_T:=\prod_{i\le n}\frac{P_T(X_i)}{P_{T^*}(X_i)}$. Use $(\sum a_T)^{1/2}\le\sum a_T^{1/2}$ and, by independence, $\Ex L_T^{1/2}=\rho_T^n$. For the probability bound, $\pi_n(A)\le\pi_n(A)/\pi_n(T^*)$ and Markov's inequality applied to the square root. \qed
+
+For the degeneration: if $T=T^*\cup\{\tau\}$ with weight $\varepsilon$ on $\tau$ and $T^*$'s weights scaled by $1-\varepsilon$, then $P_T\ge(1-\varepsilon)P_{T^*}$, so $\rho_T\ge(1-\varepsilon)^{1/2}\sum_sP_{T^*}(s)=(1-\varepsilon)^{1/2}$.
+
+% ---------------------------------------------------------------------
+\subsection{Identification of the generator}\label{app:ident:gen}
+
+\paragraph{Proof of \Cref{prop:ident:sep}.} $\Th(T_1)=\Th(T_2)$: $b$ follows from $a$ and $a\to b$ by MP, and $a\to b$ follows from $b$ by an A1 instance and MP. Under $T_2$: $b$ has root $\neg$; every instance of a logical axiom has root $\to$, $\forall$ or $=$, and $b$ is not an axiom of $T_2$; so no one-node tree concludes $b$, and $\mu_{T_2}(b)\le\Pr[\text{the root is a rule node}]=\alpha_{\mathrm r}$. With $Z_{T_2}\ge1-\alpha_{\mathrm r}$ (\cref{lem:model:lone}(b)), $P_{T_2}(b)\le\alpha_{\mathrm r}/(1-\alpha_{\mathrm r})$. Under $T_1$ the one-node tree citing $b$ has probability $\alpha_{\mathrm{ax}}/2$, and $Z_{T_1}\le1$. The same argument holds under $\Ltwo$. \qed
+
+\emph{Computed} (c6; A1--A3 and MP, formulas of size $\le3$, depth $\le2$; rule probabilities for (ax, lg, MP) $(0.6,0.25,0.15)$ in the proved region, $(0.5,0.3,0.2)$ on its boundary, $(0.3,0.3,0.4)$ and $(0.2,0.4,0.4)$ outside): $P_{T_1}(b)=0.16$--$0.35$, $P_{T_2}(b)=0.007$--$0.04$, $\TV=0.16$--$0.35$; the referee's implementation (r6) confirms both bounds. A route to all parameters, not carried out: $P_T(s)$ is a power series in the rule probabilities with nonnegative coefficients, so the difference is real-analytic on the subcritical region and nonzero near $\alpha_{\mathrm r}=0$.
+
+\paragraph{Proof of \Cref{prop:ident:splits}.}
+(a) $\operatorname{supp}P_{T,w}=\bigcup\inst(T)$ by \cref{lem:model:grammar}(c) with positive weights, and $\Th_d$ depends only on the instance union (\cref{def:model:calculus}).
+(b) \emph{Templates.} Substituting the body into a pattern occurrence $M(\bar y)$ gives $r(N_1(\bar y,\dots),\dots)$; each $N_j$ has a pattern occurrence, because $\bar y$ are distinct bound variables and a binder production adds one more. Other occurrences of $M$ receive the same body with metavariable-free arguments, which $\DT$ allows. So $\tau_r\in\DT$.
+\emph{Instances.} $\inst(\tau)=\bigsqcup_r\inst(\tau_r)$: at a pattern occurrence of $M$ an instance shows the root production of $\theta(M)$, and distinct productions give distinct subtrees there (for a hole production $z_i$, the distinct bound variable $y_i$).
+\emph{Probabilities.} For $s\in\inst(\tau_r)$ with $\tau$'s matcher $\theta$, the matcher of $\tau_r$ gives the children's bodies of $\theta(M)$, and the root factorisation gives $\Qg(\theta)=p_r\,\Qg_{\tau_r}(s)$. (Holes and bound indices are drawn alike, so a child body under a binder has the law of a body with one more argument.) Hence $w_\tau\Qg_\tau(s)=\sum_rw_\tau p_r\Qg_{\tau_r}(s)$, and the other components are unchanged.
+\emph{Under $\Lone$, $\Ltwo$.} A theory-citation node's conclusion has the same law under $(T,w)$ and $(T',w')$, by the $\Lzero$ statement; every other node has the same law, and a tree's validity and conclusion depend only on its nodes' conclusions. So $\mu_{T'}=\mu_T$ and $Z_{T'}=Z_T$.
+(c) A renaming permutes the factors of $\Qg(\theta)$; an argument permutation permutes the holes, which a hole-symmetric $\Qg$ ignores. The converse is (a) for single templates; for first-order templates with only $0$-ary term metavariables, AS Prop~C.1 (under its richness condition) turns equal instance sets into $\tau\equiv\tau'$. That proposition assumes one side has only $0$-ary term metavariables (referee m10), so it says nothing about templates such as A1 $=B\to(C\to B)$. \qed
+
+With \emph{learned} weights the likelihoods differ; that case is \cref{prop:ident:splitlzero,prop:ident:splitlone}. Track pa's Prop~2.1 is (b) for $\TInd$ with a shared grammar $\Qg(\varphi)=\Qg(f)\Qg(\cdot\mid f)$: an induction datum with motive root $f$ has probability $w\Qg(f)\Qg(\varphi\mid f)=w\Qg(\varphi)$ under both.
+
+\emph{Computed} (c2, Part A): $z+0=z$ against its split over $0,S,+,\cdot$ with root law $(0.5,0.3,0.1,0.1)$; maximal difference $1.08\cdot10^{-19}$ over all 2849 instances with $|t|\le9$, every instance matched against every template.
+
+\begin{remark}[Chain likelihood, latent citations]\status{proved; computed}\src{experiments Prop X13, E8}\label{rem:ident:splitsL1}
+In the chain $\Cch{J}$ the tie holds for a $0$-ary closed-guard term metavariable of a component that is not an MP major premise; in E8, where a datum $\psi(t)$ may be cited or derived from $\varphi(t)$ by MP, the two log-probabilities agree to $1.1\cdot10^{-13}$. For E6 see \cref{rem:pa:e6}.
+\end{remark}
+
+\paragraph{Proof of \Cref{rem:ident:splitsL1} (experiments Prop X13).} Under $\Qg$ a closed term has root $f$ with probability $q_f$ and, given the root, children drawn independently from the same closed-term law (every node of a closed term has the same context). So ``cite $\tau$ with probability $w_\tau$ and draw the body of $u$ from $\Qg$'' and ``cite $\tau_f$ with probability $w_\tau q_f$ and draw the bodies of $u_1,\dots,u_r$ from $\Qg$'' give the same law on the cited sentence, jointly with the bodies of $\tau$'s other metavariables. Every later chain step depends only on the current sentence and on the set of MP components, which is the same in $T$ and $T'$ because neither $\tau$ nor any $\tau_f$ is an MP component. \qed
+
+% ---------------------------------------------------------------------
+\subsection{Identification in the limit and Gold}\label{app:ident:gold}
+
+\paragraph{Proof of \Cref{thm:ident:limit}(a).} By \cref{thm:ident:doob}, $\pi_n(\Cstar)\to1$, and every $T\in\Cstar$ has $\operatorname{supp}P_T=\operatorname{supp}P_{T^*}$. At most one $L$ can have posterior mass above $\frac12$; once $\pi_n(\Cstar)>\frac12$ it is $\operatorname{supp}P_{T^*}$, which is $\bigcup\inst(T^*)$ under $\Lzero$ (\cref{lem:model:grammar}(c)) and $\Th(T^*)$ under $\Lone$ (\cref{lem:model:lone}(c)). \qed
+
+\paragraph{Proof of \Cref{thm:ident:limit}(b).} The proof of \cref{thm:ident:doob}, with the frequency functional replaced by a support functional.
+\emph{A countable parameter that the data determine.} Put $U(T,w):=\bigcup\inst(T)$; it takes countably many values. For a sequence $x$ let $F'(x):=\{x_i:i\ge1\}$. For $w$ in the open simplex, $\operatorname{supp}P_{T,w}=\bigcup\inst(T)$ is a countable set of points of positive probability, each of which occurs a.s., and nothing else occurs; so $P^\infty_{T,w}(F'=U(T,w))=1$. $\Dir_T$ charges only the open simplex. Hence $\Pi(U=F'(X))=1$ for the joint law $\Pi$ of $(T,w,X)$.
+\emph{Steps 1 and 3.} The posterior given $D_n$ is $\Pi(\cdot\mid D_n)$ (Bayes' formula with the likelihood as a density with respect to the prior). For each of the countably many sets $A_\nu:=\{(T,w):\bigcup\inst(T)=\nu\}$, L\'evy's theorem gives $\pi_n(A_\nu)\to\Pi(A_\nu\mid X_\infty)$ $M$-a.s. Since $F'(X)$ is $X_\infty$-measurable, $1=\Ex[1\{U=F'(X)\}\mid X_\infty]=\sum_\nu1\{F'(X)=\nu\}\,\Pi(A_\nu\mid X_\infty)$ a.s. So, $M$-a.s., $\pi_n(A_{F'(X)})\to1$.
+\emph{Step 4, changed.} Let $E$ be the $M$-null event where this fails. Since $M\ge\pi(T^*)\int P^\infty_{T^*,w}(\cdot)\,\Dir_{T^*}(dw)$, we get $\int P^\infty_{T^*,w}(E)\,\Dir_{T^*}(dw)=0$, so $P^\infty_{T^*,w}(E)=0$ for $\Dir_{T^*}$-a.e.\ $w$, which is Lebesgue-a.e.\ $w$ because the Dirichlet density is positive on the open simplex. For such $w^*$, a.s.\ $F'(X)=\bigcup\inst(T^*)$ and $\pi_n(A_{\bigcup\inst(T^*)})\to1$. \qed
+
+The pre-referee proof said that the steps of \cref{thm:ident:doob} ``go through with the countable sum replaced by an integral''. That sentence is withdrawn: Step 3 needs a countable family of sets, which the support functional provides and the law itself does not (referee M4, who suggested this route).
+
+\paragraph{Sketch of \Cref{thm:ident:limit}(b$'$).} $P_{T,w}$ lies in the Polish space of probability vectors on $\mathcal S$ ($\ell^1$ metric), and the frequency functional $F$ recovers it a.s. For a countable convergence-determining family of bounded continuous functions $g$, L\'evy's theorem gives that the posterior mean of $g(P)$ converges to $g(F(X))$ a.s. So the posterior law of $P_{T,w}$ converges weakly to the point mass at $P^*$, which gives the statement for total-variation balls; transfer to Lebesgue-a.e.\ $w^*$ as in (b). Not written out: the choice of the family and the passage from weak convergence to total-variation balls.
+
+\paragraph{Proof of the counter-statement in \Cref{rem:ident:exact}.} The posterior on $w$ given $T$ is absolutely continuous with respect to $\Dir_T$, so it suffices that each $W_T$ below is Lebesgue-null. Fix $T$. The set $W_T:=\{w:P_{T,w}=P^*\}$ is the intersection of the simplex with an affine subspace, since $w\mapsto P_{T,w}$ is affine. If it had positive Lebesgue measure in the simplex, the affine map would be constant on an open set, hence on the whole simplex, and every component of $T$ would have law $P^*$ (for $|T|=1$ the condition is $\Qg_\tau=P^*$). The posterior on $w$ given $T$ is absolutely continuous with respect to $\Dir_T$. So the posterior mass of the exact class is $0$ at every $n$ unless some template $\sigma$ has $\Qg_\sigma=P^*=\sum_\tau w^*_\tau\Qg_\tau$. For each $\sigma$, linear independence of $\{\Qg_\tau:\tau\in T^*\}$ allows at most one such $w^*$, and there are countably many $\sigma$. \qed
+
+\begin{remark}[Which computed posteriors are covered]\status{known (Doob's theorem in the $(T,w)$ form); not covered: data-dependent pools}\src{experiments Prop X5}\label{rem:ident:x5}
+\Cref{thm:ident:doob} is stated for fixed laws. Run on the parameter $(T,w)$ with prior $\pi(T)\Dir_T(dw)$, as in the proof of \cref{thm:ident:limit}(b), Doob's argument gives concentration on $\{(T,w):P_{T,w}=P_{T^*}\}$ for a one-component generator, which is an atom of the prior, in a fixed pool: this covers E1, E4 and E6 with their hand pools. The experiments' data-dependent pool members ($\Mem(D_n)$, causal theories) are covered by no consistency theorem here, only by the pool versions of \cref{thm:sound:avg,thm:sound:shrink}. E2, E3(b), E5(b) and E8 sample at one fixed weight vector, where only \cref{thm:ident:limit}(b) and conjecture (c) speak: a yardstick, not an instance of a theorem.
+\end{remark}
+
+\begin{remark}[Memorisation and the bound]\status{proved; known (prior work, flagged)}\src{model \S5.2}\label{rem:ident:memo}
+A fixed memoriser $\Mem(E)$ dies once a datum outside $E$ appears; before that it pays its prior and, with Dirichlet weights, about $\frac{|E|-1}2\ln n$ nats. The memoriser \emph{class} can keep mass $\exp(-O(\ln^2n))$ (Laplace-weighted memorisers, geometric numerals; \cref{prop:univ:memo}). So the Bayesian needs no bound on the number of templates, unlike the cautious learner (AS Prop~6.4). Identification from stochastic positive data goes back to \citet{horning1969study} and \citet{angluin1988identifying} (existence checked, content not).
+\end{remark}
+
+\paragraph{Proof of \Cref{prop:ident:gold}.} (a) is \cref{thm:ident:doob}. (b) Enumerate $\mathcal L_\infty=\{e_1,e_2,\dots\}$ and build the text in stages. At stage $i$, with $\sigma$ the prefix built so far, pick $k_i>k_{i-1}$ with $\sigma\cup\{e_i\}\subseteq \mathcal L_{k_i}$ (possible since the chain increases to $\mathcal L_\infty$) and append $e_i$; the new prefix $\sigma'$ has positive $P_{k_i}$-probability. By (a), applied to $P_{k_i}^\infty$ conditioned on the positive-probability prefix $\sigma'$, almost every continuation reaches $g_n=\mathcal L_{k_i}$ at some finite $n$; pick such a continuation, with elements in $\mathcal L_{k_i}\subseteq \mathcal L_\infty$, and cut it at a time where $g_n=\mathcal L_{k_i}$. The resulting sequence lists every $e_i$ and only elements of $\mathcal L_\infty$, and $g_n=\mathcal L_{k_i}\ne \mathcal L_\infty$ at infinitely many times. (c) By (a) with $i=\infty$, $P_\infty^\infty$-a.s.\ $g_n=\mathcal L_\infty$ eventually. \qed
+
+\emph{Computed} (E5; \cref{tab:exp:e5}): on data uniform on $\mathcal L_5$ the mass of $\mathcal L_5$ is $2\cdot10^{-6}$ at $n=64$, $0.661$ at $128$ and $1.000$ from $256$ in all 10 seeds ($\mathcal L_5$ gains $3-\log_25\approx0.68$ bits per datum, repaying 72 prior bits and its Dirichlet cost); on Gold's text against the MAP learner over $\{\mathcal L_1,\dots,\mathcal L_{60},\mathcal L_\infty\}$ the first 14 stages end (740 data), which shows only that these stages end (experiments' referee m10).
+\emph{The $\ISigma n$ chain} (model \S5.2, heuristic). Under $\Lone$ with theorem data, $\PA$'s generator charges $\Th(\PA)\setminus\Th(\ISigma n)$, so $\ISigma n$ is eventually rejected on $\PA$-data; and $\PA$'s generator charges $\Th(\PA)\setminus\Th(\ISigma 5)$, so $\PA$ is eventually rejected on $\ISigma5$-data. Both masses presumably are tiny, as they need long derivations with complex induction; if so, the number of data needed is of order $1/P_{\PA}(\Th(\PA)\setminus\Th(\ISigma n))$. The masses were not estimated.
+
+% ---------------------------------------------------------------------
+\subsection{Splits}\label{app:ident:mdl}
+
+\paragraph{Proof of \Cref{prop:ident:splitlzero}.} (a) The split's instance sets are disjoint (\cref{prop:ident:splits}(b)), so the labelling sum of \cref{lem:model:dirsum} has one term, and $\Qg_{\tau_f}(s)=\Qg_\tau(s)/p_f$ for $s\in\inst(\tau_f)$. So $\PDir{T'}(D)=\DirMult(n_f;\alpha)\prod_i\Qg_\tau(X_i)/p_{f_i}$, while $P_T(D)=\prod_i\Qg_\tau(X_i)$.
+(b) Stirling: $\ln\Gamma(a+m)=(a+m-\frac12)\ln m-m+\frac12\ln2\pi+o(1)$ as $m\to\infty$. Applied to $\ln\Gamma(K\alpha+n)$ and the $K$ terms $\ln\Gamma(\alpha+n_f)$,
+\begin{align*}\ln\DirMult(n_f;\alpha)={}&\textstyle\sum_fn_f\ln n_f-n\ln n+(\alpha-\frac12)\sum_f\ln n_f\\&\textstyle{}-(K\alpha-\frac12)\ln n+\frac{K-1}2\ln2\pi+\ln\frac{\Gamma(K\alpha)}{\Gamma(\alpha)^K}+o(1).\end{align*}
+With $\ln n_f=\ln n+\ln\hat r_f$ the first two terms are $n\sum_f\hat r_f\ln\hat r_f$, and the $\ln n$ terms collect to $(K\alpha-\frac K2-K\alpha+\frac12)\ln n=-\frac{K-1}2\ln n$. Subtracting $\sum_fn_f\ln p_f$ turns $n\sum_f\hat r_f\ln\hat r_f$ into $n\KL(\hat r\|p)$.
+(c) Pearson's and Wilks's $\chi^2$ limit (known), with all $n_f\to\infty$ a.s.\ since $p$ is in the open simplex. (d) The strong law for $\hat r$; $\ln\DirMult(n_f;\alpha)=n\sum_f\hat r_f\ln\hat r_f+O(\ln n)$ also when some $r_f=0$. (e) The prior. \qed
+
+With $\alpha=\frac12$ the term $(\alpha-\frac12)\sum\ln\hat r_f$ vanishes, and in the well-specified case $\Ex\Delta_n\approx\frac{K-1}2-\frac{K-1}2\ln n+c_{K,\alpha}$; for $K=4$, $c_{4,1/2}=\ln\pi^{-2}+\frac32\ln2\pi=0.467$, which gives the predictions of \cref{tab:ident:c2}.
+
+\begin{table}[ht]
+\centering\small
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+$n$ & $10^2$ & $10^3$ & $10^4$ & $10^5$ & $10^6$\\
+\midrule
+well specified, mean $\Delta_n$ & $-4.93$ & $-8.34$ & $-11.77$ & $-15.27$ & $-18.85$\\
+\quad prediction & $-4.94$ & $-8.39$ & $-11.85$ & $-15.30$ & $-18.76$\\
+\quad $P(\Delta_n>0)$ & $0.007$ & $0$ & $0$ & $0$ & $0$\\
+misspecified, mean $\Delta_n$ & $-0.06$ & $39.7$ & $482.2$ & $4917.5$ & $49356.3$\\
+\quad prediction & $-0.00$ & $41.0$ & $481.9$ & $4921.9$ & $49353.3$\\
+\bottomrule
+\end{tabular}
+\caption{\Cref{prop:ident:splitlzero}, computed (model check c2, Part B): $\Delta_n$ in nats, $K=4$, $\alpha=\frac12$, $\Qg$'s root law $p=(0.5,0.3,0.1,0.1)$, 400 runs per $n$. Well specified: $r=p$. Misspecified: $r=(0.4,0.3,0.2,0.1)$, $\KL(r\|p)=0.0494$ nats; predictions from (b) with $\hat r$ replaced by $r$, plus $\frac{K-1}2$ (the mean of $n\KL(\hat r\|r)$) in both cases. The referee (r4) checked (b) for $\alpha=0.3,1,2$ ($K=3$): the residual tends to $0$ like $1/n$.}
+\label{tab:ident:c2}
+\end{table}
+
+\paragraph{Proof of \Cref{prop:ident:splitlone}.}
+(a) Under $(T',w')$ a theory-citation node chooses $\tau_r$ with probability $w'_r$ and draws the children's bodies from $\Qg$. By the root factorisation and $\inst(\tau)=\bigsqcup_r\inst(\tau_r)$, its conclusion has the law of a citation of $\tau$ whose $M$ has root law $w'$. All other nodes have the same laws, and validity and conclusions depend only on the nodes' conclusions; so $\mu$ and $Z$ coincide, under $\Lzero$, $\Lone$ and $\Ltwo$.
+(b) By Tonelli,
+\[\textstyle\Ex[\mathrm{BF}_{n+1}\mid D_n]=\int\prod_{i\le n}\frac{P^{(p')}}{P^{(p)}}(X_i)\sum_{x:P^{(p)}(x)>0}P^{(p')}(x)\,\Dir(dp')\le\mathrm{BF}_n.\] Ville's inequality (known; IL Lemma~C.4) and the supermartingale convergence theorem (known).
+(c) Write
+\[\textstyle\ln\mathrm{BF}_n=\ln\frac{\PDir{T'}(D_n)}{P^{(r)}(D_n)}+\sum_{i\le n}\ln\frac{P^{(r)}(X_i)}{P^{(p)}(X_i)}.\]
+The second sum divided by $n$ tends to $\KL(P^{(r)}\|P^{(p)})$ a.s., as in \cref{prop:ident:rates}(a). For the first term:
+\emph{upper bound:} $\PDir{T'}(D_n)/P^{(r)}(D_n)$ is a nonnegative supermartingale under $P^{(r)}$, as in (b); it converges a.s.\ to a finite limit, so $\limsup_nn^{-1}\ln$ of it is $\le0$.
+\emph{Lower bound:} for $\gamma>0$ let $U_\gamma:=\{p':\KL(P^{(r)}\|P^{(p')})<\gamma\}$. By the continuity lemma below it contains a neighbourhood of the interior point $r$, so $\Dir(U_\gamma)>0$; let $\Dir_U$ be the normalised restriction. By Jensen's inequality,
+\[\textstyle\ln\int_{U_\gamma}\prod_i\frac{P^{(p')}}{P^{(r)}}(X_i)\,\Dir(dp')\ge\ln\Dir(U_\gamma)+\sum_iY_i,\qquad Y_i:=\int\ln\frac{P^{(p')}(X_i)}{P^{(r)}(X_i)}\,\Dir_U(dp').\]
+The $Y_i$ are i.i.d., and by Tonelli on the positive and negative parts
+\[\textstyle\Ex Y^+\le\int\Ex\frac{P^{(p')}(X)}{P^{(r)}(X)}\,\Dir_U(dp')\le1,\qquad\Ex Y=-\int\KL(P^{(r)}\|P^{(p')})\,\Dir_U(dp')\ge-\gamma.\] By the strong law, $\liminf_nn^{-1}\ln[\PDir{T'}(D_n)/P^{(r)}(D_n)]\ge-\gamma$ a.s.; let $\gamma\downarrow0$ along a sequence.
+\emph{Continuity lemma: $\KL(P^{(r)}\|P^{(p')})\to0$ as $p'\to r$.} For a tree $\pi$, $\Pr_{p'}(\pi)/\Pr_r(\pi)=\prod p'_f/r_f$ over $\pi$'s theory-citation leaves, $f$ the root production chosen there. Let $L(\pi)$ be the number of these leaves, $\varrho:=\min_fp'_f/r_f\le1$ and $\varrho':=\max_fp'_f/r_f\ge1$. Then $\mu_{p'}(x)\ge\sum_{\pi\to x}\varrho^{L(\pi)}\Pr_r(\pi)\ge\mu_r(x)\,\varrho^{\Ex_r[L\mid x]}$ (Jensen, $\Ex_r[\cdot\mid x]$ over the valid trees concluding $x$), and $Z_{p'}\le\Ex_r[\varrho'^L;\text{valid}]$. So
+\[\KL(P^{(r)}\|P^{(p')})\le\ln\tfrac1\varrho\cdot\Ex_r[L\mid\text{valid}]+\ln\frac{\Ex_r[\varrho'^L;\text{valid}]}{Z_r}.\]
+Here $\Ex_r[L\mid\text{valid}]\le\Ex_r[N]/Z_r<\infty$, with $N$ the number of derivation nodes ($m<1$). And $\Ex_r[\varrho'^L;\text{valid}]\to Z_r$ as $\varrho'\downarrow1$ by dominated convergence, since $L\le N$ and $\Ex_r[e^{\zeta N}]<\infty$ for small $\zeta>0$ (\cref{lem:model:grammar}(d) for the derivation tree). Both terms tend to $0$ as $p'\to r$. Under $\Ltwo$, $L\le2^d$ and the lemma is immediate. \qed
+
+\begin{table}[ht]
+\centering\small
+\begin{tabular}{@{}lp{11.5cm}@{}}
+\toprule
+part & result\\
+\midrule
+(a) & split with weights $(u,1-u)$ against the schema with root law $u$, $u\in\{0.1,0.37,0.8\}$: maximal difference $1.05\cdot10^{-14}$\\
+latency & 88 of 5885 conclusions depend on $u$ through derived trees\\
+(b) & $\delta'=0.5,0.2,0.05$: $P(\max_{n\le3000}\mathrm{BF}_n\ge1/\delta')=0.427,0.133,0.036$ (1000 runs, every $n$ checked)\\
+(c) & data root law $0.3$, schema $0.6$: $\KL=0.11487$ nats; mean $n^{-1}\ln\mathrm{BF}_n=0.11301$, $0.11460$, $0.11464$ at $n=10^3,10^4,10^5$\\
+(d) & mean $\ln\mathrm{BF}_n=-1.765$, $-6.405$ at $n=10^2$, $10^6$ (400 runs); slope $-0.507$ ($-0.498$ on $n\ge10^4$) against $-0.5$\\
+\bottomrule
+\end{tabular}
+\caption{\Cref{prop:ident:splitlone}, computed (model check c13): a propositional $\Ltwo$ model, depth 2, atom $a$, logical axioms A1--A3 instantiated from a grammar truncated to size $\le5$, MP; $\tau=F\to F$ with $F$ rooted at $a$ or $\neg$, $K=2$, root law $p_a=0.6$; 5885 possible conclusions. Citations are latent only weakly here.}
+\label{tab:ident:c13}
+\end{table}
+
+
+% ---------------------------------------------------------------------
+\subsection{Spare templates}\label{app:ident:spare}
+
+\paragraph{Proof of \Cref{prop:ident:spare}(a).} The labellings of the data by templates of $T^*\cup\{\sigma\}$ are those for $T^*$, with $n_\sigma=0$. For each labelling, the Dirichlet moment of \cref{lem:model:dirsum} for $T^*\cup\{\sigma\}$ divided by that for $T^*$ is $\frac{\Gamma(A+\alpha_\sigma)}{\Gamma(A+\alpha_\sigma+n)}\frac{\Gamma(\alpha_\sigma)}{\Gamma(\alpha_\sigma)}\Big/\frac{\Gamma(A)}{\Gamma(A+n)}$, the same for every labelling; factor it out. Asymptotics: $\Gamma(a+n)/\Gamma(b+n)\sim n^{a-b}$. \qed
+
+For a symmetric prior ($\alpha_\tau=\alpha_\sigma=\alpha$, $A=K\alpha$) this is experiments' Prop~X7(a) and, at $\alpha=\frac12$, pa's Prop~5.1: $\log_2$ of the inverse is $\frac12\log_2n+\log_2\frac{\Gamma(K/2)}{\Gamma((K+1)/2)}+o(1)$ bits. Its prediction for pa's code is compared with pa's computed spare costs in \cref{prop:pa:spare}.
+
+\paragraph{Proof of \Cref{prop:ident:spare}(d1).} $P_{T^*\cup\{\sigma\},w}=\sum_{\tau\ne\tau_1}w_\tau\Qg_\tau+(w_{\tau_1}+w_\sigma)\Qg_{\tau_1}$ for every $w$. By the aggregation property of Dirichlet laws, $(w_{\tau_1}+w_\sigma,(w_\tau)_{\tau\ne\tau_1})\sim\Dir(\alpha_1+\alpha_\sigma,(\alpha_\tau)_{\tau\ne\tau_1})$. So $\PDir{T^*\cup\{\sigma\}}$ is the Dirichlet marginal of $T^*$ with $\alpha_1$ replaced by $\alpha_1+\alpha_\sigma$, and with disjoint instance sets the one-labelling formula of \cref{lem:model:dirsum} gives, for every $D_n$ with $n_1$ data in $\inst(\tau_1)$, exactly
+\[\mathrm{BF}^\sigma_n=\frac{\Gamma(A+\alpha_\sigma)\Gamma(A+n)}{\Gamma(A)\Gamma(A+\alpha_\sigma+n)}\cdot\frac{\Gamma(\alpha_1+\alpha_\sigma+n_1)\Gamma(\alpha_1)}{\Gamma(\alpha_1+\alpha_\sigma)\Gamma(\alpha_1+n_1)}.\]
+The limit follows from $\Gamma(a+n)/\Gamma(b+n)\sim n^{a-b}$ and $n_1/n\to w^*_1$ a.s. \qed
+
+We checked the limits in \cref{tab:ident:spare} against this formula: with $A=1$, $\alpha_1=\frac12$, $w^*_1=\frac12$ it gives $\ln\mathrm{BF}^\sigma_\infty=\ln(\frac\pi2\cdot2^{-1/2})=0.1050$ at $\alpha_\sigma=\frac12$, $0$ at $\alpha_\sigma=1$ and $\ln\frac23=-0.4055$ at $\alpha_\sigma=2$, as c15 reports.
+
+\paragraph{Sketch of \Cref{prop:ident:spare}(b), (c).} Write $w=((1-u)\tilde w,u)$ with $u\sim\mathrm{Beta}(\alpha_\sigma,A)$ independent of $\tilde w\sim\Dir(\alpha_\tau)$ (aggregation). The per-datum factor is $1-u+u\,\Qg_\sigma(X)/P_{T^*,\tilde w}(X)$. In (b), at $\tilde w=w^*$ its mean is $1-uc$, so the likelihood decays like $e^{-ncu}$ in $u$, and $\int u^{\alpha_\sigma-1}e^{-ncu}du\sim\Gamma(\alpha_\sigma)(cn)^{-\alpha_\sigma}$. In (c) the mean is $1$ (zero drift) and the log-likelihood in $u$ is locally $-nIu^2/2+\sqrt n\,Zu$ with $I=\sum_s\Qg_\sigma(s)^2/P^*(s)-1$; this quadratic expansion is where the finite-$\chi^2$ hypothesis of (c) is used. The integral against $u^{\alpha_\sigma-1}$ scales as $n^{-\alpha_\sigma/2}$. Not written out: uniformity in $\tilde w$ near $w^*$, and almost-sure or in-probability control of the fluctuations. This is a boundary Laplace approximation of the kind analysed for overfitted mixtures by \citet{rousseau2011asymptotic}, whose setting has continuous component parameters (checked by the model track's referee); their result is not applied here.
+
+\paragraph{Sketch of \Cref{prop:ident:spare}(d2).} $T^*$ and $T^*\cup\{\sigma\}$ parametrise the same family of laws, so the two marginals integrate the same likelihood against two prior densities on that family, and Laplace's method gives the ratio of the densities at $P^*$. Not written out: the Laplace step.
+
+\begin{table}[ht]
+\centering\small
+\begin{tabular}{@{}llp{10.4cm}@{}}
+\toprule
+case & source & result\\
+\midrule
+(a) & E5(a) & $0=S0$ never cited, $u\cdot0=0$ never matched: $\log_2$ BF $-1.00$, $-6.83$ at $n=1$, $4096$, equal to the formula on every seed; slope $-0.500$\\
+(a), (b) & c3, r4 & formula matched to 4 decimals; slopes $-0.499$, $-0.498$; referee: $-\alpha_\sigma$ to 3 decimals for $\alpha_\sigma=\frac12,1,2$\\
+(c) & E5(a2) & nested $\varphi(Sz)$ in $\{\varphi(z)\}$: mean $\log_2$ BF $-2.196$ at $n=10^2$, $-7.200$ at $10^8$ (1000 draws per $n$); slope $-0.251\pm0.002$\\
+(c) & c3b, r4 & $-0.265$ on $10^3\ldots10^7$ (s.e.\ $\approx0.07$ per point); referee $-0.230$, $-0.523$, $-0.961$ for $\alpha_\sigma=\frac12,1,2$\\
+(d1) & c15 & formula equals the numerical integral to 5 decimals; at $n=10^6$ within $0.003$ of the limit\\
+(d2) & c15 & $w^*_1=0.3$: $\ln\mathrm{BF}^\sigma_n$ changes by $-0.031$, $-0.021$, $-0.004$ per decade; $w^*_1=\frac12$ ($P^*=\Qg_\sigma$, density infinite): $+0.22$, $+0.20$, $+0.13$\\
+\bottomrule
+\end{tabular}
+\caption{Spare templates, computed. Slopes are of the mean log Bayes factor against the log of $n$ in the same base, so they do not depend on the base. The primary estimate for (c) is E5(a2); its rate remains a proof sketch.}
+\label{tab:ident:spare}
+\end{table}
+
+% ---------------------------------------------------------------------
+\subsection{Misspecification}\label{app:ident:misspec}
+
+\begin{table}[ht]
+\crefabbrev
+\centering\footnotesize
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{1.5cm}>{\raggedright\arraybackslash}p{4.4cm}>{\raggedright\arraybackslash}p{2.7cm}@{}}
+\toprule
+data (true unless stated) & likelihood & posterior lands on & where\\
+\midrule
+\multicolumn{4}{@{}l}{\emph{same theorems or instances, other axioms}}\\
+instances, usage that $\Qg$ misfits & $\Lzero$, $\Lone$ & root splits; depth-2 nestings & \cref{prop:ident:splitlzero,prop:ident:splitlone,rem:ident:e3a}\\
+$\PA$ instances, connective-rich motives & $\Lzero$ & $T^*+T_\exists$; observed-root fragments & \cref{rem:pa:e3b}\\
+\multicolumn{4}{@{}l}{\emph{deductively weaker}}\\
+closed instances of $\forall x(0+x=x)$ & $\Lzero$ & closed schema $0+z=z$ & \cref{ex:ident:weaker}\\
+instances: numerals only; finite set & $\Lzero$ ($\Lone$ to $n=512$) & $R_m$, $m$ growing; $\Mem(D_n)$ ($\Lzero$, $n=1024$) & \cref{rem:ident:e3a}\\
+$\PA$ instances, atomic motives & $\Lzero$ & $\Q+\{T_=,T_<\}$ & \cref{rem:pa:e3b,prop:pa:atomic}\\
+narrow induction practice & two-part code & $\Q+T_E+T_N\subseteq\ISigma1$ (extrapolated) & \cref{ex:pa:narrow}\\
+theorems, no direct induction uses & $\Lsch$ & $\Q$ + a finite library & \cref{rem:pa:streams}\\
+\multicolumn{4}{@{}l}{\emph{unsound}}\\
+derived equations $t=0$, finite class & $\Lzero$ & $\Tesc=\{z=0\}$ & \cref{ex:ident:escape}\\
+the same & $\Leq$ & $\Tesc$ or $T_\Q\cup\{z=0\}$ (16/16 at $p_+=0.25$) & \cref{ex:ident:lonedq}\\
+the same, full class & $\Lzero$, Dir. & memorisation--$\Tesc$ hybrids (conjecture) & \cref{rem:ident:fullclass}\\
+prime values of $k^2+k+41$ & $\Lsch$ & the false schema (counterexample absent) & \cref{ex:pa:euler}\\
+10\% false near misses (not true) & $\Lzero$, $\Lone$ & verifier accepts falsehoods, 100/100 & \cref{rem:sound:e4}\\
+small $n$, rarely cited axioms & $\Lzero$; $\Lsch$ & unsound lumps (E2: unsound MAP in 7/25 seeds at $n=8$; false acceptance in 5/25) & \cref{rem:sound:lumps,rem:pa:lumps}\\
+\bottomrule
+\end{tabularx}
+\caption{Kinds of misspecification and where the posterior lands; statuses are those of the cited items. Computed results hold within their pools or candidate sets. $T_f$: $\TInd$ with motive root $f$; $T_E$, $T_N$: the two induction templates of narrow practice, on motives $\exists z(s=t)$ and $\neg(s=t)$ (\cref{ex:pa:narrow}).}
+\label{tab:ident:misspec}
+\end{table}
+
+\paragraph{Proof of \Cref{thm:ident:kl}.} On $\operatorname{supp}P_H$, $\ln(P_T/P_{T_0})=Y_0-Y_T$ with $Y_T:=\ln(P_H/P_T)$. $Y_T$ has an integrable negative part, $\Ex(\ln\frac{P_T}{P_H})^+\le\Ex\frac{P_T}{P_H}\le1$, and mean $K_T$; $Y_0\in L^1$ because also $K_{T_0}<\infty$. By the strong law, $n^{-1}\sum_{i\le n}(Y_{0,i}-Y_{T,i})\to K_{T_0}-K_T$ a.s., the value $-\infty$ allowed when $K_T=\infty$. $\Hclass$ is finite. \qed
+
+Inside $\mathbb M$, members with equal KL but different laws trade places like a zero-drift random walk.
+
+\paragraph{Proof of \Cref{ex:ident:weaker}.} $P_H=P_\sigma$, so \cref{thm:ident:doob} applies with truth $\sigma$. Every $T\in C_\sigma$ has $\bigcup\inst(T)=\inst(\sigma)=\Ic(0+x=x)$ by \cref{prop:ident:splits}(a) (parameters not admissible), hence $\Th(T)=\Th(\Ic(0+x=x))$. Take the structure $\N\cup\{a\}$, standard on $\N$, with $0+a:=0$ and the other operations extended arbitrarily, for instance $Sa:=a$ and $a\circ y:=y\circ a:=a$ for $\circ\in\{+,\cdot\}$ except $0+a=0$. Closed terms denote standard numbers, so every closed instance holds; $\forall x(0+x=x)$ fails at $a$. By \cref{cor:ident:deductive} the posterior probability that $T\vdash\forall x(0+x=x)$ tends to $0$. \qed
+
+\paragraph{Proof of \Cref{lem:ident:zerosum}.} Let $\tau$ cover some $t=0\in Z$.
+\emph{Shape.} The datum has no binders, so $\tau$'s rigid skeleton has none. A pattern occurrence of positive arity needs bound variables in scope, so every metavariable is $0$-ary. The only formula position in $t=0$ is the root.
+\emph{Root metavariable.} Then $\tau$ is a formula metavariable, with the false instance $0=S0$.
+\emph{Otherwise} $\tau=(u=v)$ with term templates $u,v$. $u$ matches $t$, so its rigid nodes are $+$ and $0$ and its metavariable occurrences are leaves; hence $\mathrm{val}(u\theta)=\sum_jc_j\,\mathrm{val}(\theta(z_j))$, $c_j$ the multiplicity of $z_j$ in $u$. $v$ matches $0$, so $v$ is $0$ or a metavariable $z$.
+\emph{$v=0$.} Soundness requires $\sum_jc_j\mathrm{val}(\theta(z_j))=0$ for all $\theta$; $\theta(z_j):=S0$ for all $j$ shows $c_j=0$. So $\tau$ is ground and covers one sentence.
+\emph{$v=z$, $z$ not in $u$.} The value of $u\theta$ does not depend on $\theta(z)$; one of $\theta(z)\in\{0,S0\}$ gives a false instance.
+\emph{$v=z$, $z$ in $u$.} Soundness requires $\sum_jc_j\mathrm{val}(\theta(z_j))=\mathrm{val}(\theta(z))$ for all $\theta$; unit test values give $c_z=1$ and $c_j=0$ for $j\ne z$. So $u$ contains $z$ once and is otherwise ground; covering $t=0$ forces $\theta(z)=0$, and $\tau$ covers exactly one member of $Z$. \qed
+
+\paragraph{Proof of \Cref{ex:ident:escape}.} By \cref{lem:ident:zerosum} each $T_j$ covers at most $|T_j|$ members of $Z$. Since $\operatorname{supp}P_H$ is infinite, $P_H(Z\setminus\bigcup_j\bigcup\inst(T_j))>0$, so a.s.\ some datum falls outside every $T_j$, which then has likelihood $0$ under $\Lzero$. $P_{\Tesc}>0$ on $Z$ (full-support $\Qg$, $z:=t$). So $\pi_n(\Tesc)=1$ from that datum on. $\Tesc\vdash S0=0$ (instance $z:=S0$); $\Q\vdash\neg S0=0$ (Q1). $\Q$'s axioms are sentences outside $Z$, so a theory containing only them has likelihood $0$ at the first datum. \qed
+
+\emph{Computed} (c4, Part 2; the run reported in \cref{ex:ident:escape}): the twenty sound theories are ground equations for the 20 most likely data, which carry mass $0.956$, weighted as the human's conditional law, and share prior $0.99$ against $\Tesc$; $S0=0$ had reached posterior $\ge0.99$ in 90.2\% of runs by $n=50$. \Cref{prop:sound:misspec} uses this example for the verifier.
+
+\begin{remark}[The full class]\status{conjecture; computed}\src{model Rem 3.5}\label{rem:ident:fullclass}
+In the full class with Dirichlet weights the KL-projection picture can fail: theories with finite KL are unsound (\cref{lem:ident:zerosum}), with infimum KL $0$ approached by hybrids of memorisation and $\Tesc$; memorisers are sound but each has infinite KL, yet as a family they code the data with $o(n)$ extra bits. Conjecture: unsound mass $\to1$. Computed for three hand-picked families: at $n=10^4$ the hybrid leads memorisation by at least 7000--25000 bits (\cref{tab:ident:c7}).
+\end{remark}
+
+\begin{table}[ht]
+\centering\small
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+& \multicolumn{3}{c}{$\lambda=1$} & \multicolumn{3}{c}{$\lambda=2$}\\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+seed & 11 & 12 & 13 & 11 & 12 & 13\\
+\midrule
+distinct data at $n=10^4$ & 282 & 325 & 330 & 282 & 325 & 330\\
+hybrid $-$ memorisation, $n=10^3$ & $\ge1143$ & $\ge1207$ & $\ge1065$ & $\ge3344$ & $\ge3505$ & $\ge3063$\\
+hybrid $-$ memorisation, $n=10^4$ & $\ge7370$ & $\ge8613$ & $\ge8625$ & $\ge21703$ & $\ge24719$ & $\ge24596$\\
+escape alone $-$ memorisation, $n=10^4$ & $-4234$ & $-2649$ & $-2719$ & $12871$ & $16289$ & $16120$\\
+\bottomrule
+\end{tabular}
+\caption{\Cref{rem:ident:fullclass}, computed (model check c7): $\log_2$ score (prior plus $\Lzero$ marginal likelihood, $\Dir(\frac12)$) relative to memorising all distinct data. Human data $t=0$, $t$ a $\{0,+\}$-tree ($0$ with probability $0.7$); model $\Qg$ root law $(0.5,0.3,0.1,0.1)$ on $(0,S,+,\cdot)$; prior $2^{-\lambda\ell}$ under a simplified code (3 bits per symbol, 2 per metavariable occurrence, Elias $\gamma$ for the number of templates), not $\pi_\lambda$ of \cref{def:model:prior}. Hybrid: ground templates for data seen at least twice plus $z=0$; its score is a lower bound (one labelling). Escape alone: $\{z=0\}$. Positive favours the unsound theory. At $\lambda=1$ the escape alone loses to memorisation by $n=10^4$, but the hybrid does not.}
+\label{tab:ident:c7}
+\end{table}
+
+\begin{example}[A derivation likelihood does not reliably rescue the axioms]\status{computed}\src{model Ex 3.6}\label{ex:ident:lonedq}
+$\Leq$ derives closed equations over $0,S,+$ (cite, refl, sym, trans, congruences), terms of size $\le N$, $P_T=\mu_T/Z_T$ exact. Class: $T_\Q:=\{z+0=z,\ z_1+Sz_2=S(z_1+z_2)\}$ (Q4, Q5) and $T_\Q\cup\{0+z=z\}$ (sound); $\Tesc$ and $T_\Q\cup\{z=0\}$ (unsound). On true equations $t=0$ over $\{0,+\}$ the cross-entropy minimiser is unsound in all 16 settings in which $\Qg$ gives $+$ probability $0.25$, and sound in 5 of 8 when $+$ is rare under $\Qg$ (\cref{tab:ident:c16}): in grammar 1, citing $z=0$ pays about 2 nats per $+$ through $\Qg$, deriving from Q4, Q5 about 7. Limits: truncated, equational only, three grammars, a finite class.
+\end{example}
+
+\begin{conjecture}\status{conjecture}\src{model Conj 3.7}\label{conj:ident:cder}
+In untruncated $\Leq$, $\ln P_{T_\Q}(t=0)=-c_{\mathrm{der}}\#_+(t)+O(1)$ on balanced $\{0,+\}$-terms; so $\Tesc$ beats $T_\Q$ on laws with many $+$ iff $\ln\frac1{p_+p_0}<c_{\mathrm{der}}$, $p_+,p_0$ the root probabilities under $\Qg$ (grammar 1: $\approx2$ against $\approx7$).
+\end{conjecture}
+
+\paragraph{Details of \Cref{ex:ident:lonedq}.} We write $T_{\Q0}:=T_\Q\cup\{0+z=z\}$ and $T_{\mathrm{mix}}:=T_\Q\cup\{z=0\}$. Each node of the $\Leq$ grammar cites a template of $T$ (probability $\alpha_{\mathrm{ax}}$, metavariables from $\Qg$), or applies refl ($t\sim\Qg$), sym, trans (valid iff the middle terms agree), congruence for $S$, or congruence for $+$ (a side term $u\sim\Qg$, left or right). A tree is valid iff its steps are valid and every term lies in $U_N$, the closed terms of size $\le N$. $P_T=\mu_T/Z_T$, with $\mu_T$ the least fixpoint of the grammar's equation. These rules are complete for closed equational consequence (Birkhoff; recalled, not checked against the source \citep{birkhoff1935structure}). A Monte Carlo simulation agrees with the fixpoint ($Z=0.54909$ against $0.54965\pm0.00091$; $|z|\le1.31$ on eight conclusion frequencies). Human law: $t=0$, $t$ a closed $\{0,+\}$-term from a grammar choosing $0$ with probability $1-h$ and $+$ with $h$, conditioned on size $\le N$, $h\in\{0.3,0.45\}$, with and without the datum $0=0$.
+
+\begin{table}[ht]
+\centering\small
+\begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}p{3.9cm}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{1.6cm}@{}}
+\toprule
+grammar & rule probabilities (ax, refl, sym, trans, cong$_S$, cong$_+$) & $\Qg$ root law $(0,S,+)$ & minimiser & settings\\
+\midrule
+1 & $(.35,.15,.1,.15,.1,.15)$, $m=0.65$ & $(.55,.2,.25)$ & $\Tesc$ with $0=0$; $T_{\mathrm{mix}}$ without & 8/8 unsound\\
+2 & $(.5,.1,.05,.2,.05,.1)$, $m=0.60$ & $(.55,.2,.25)$ & as grammar 1 & 8/8 unsound\\
+3 & as grammar 1 & $(.8995,.1,.0005)$ & $T_{\Q0}$ in 5; $T_{\mathrm{mix}}$ in 3 (all with $0=0$) & 5/8 sound\\
+\bottomrule
+\end{tabularx}
+
+\vspace{4pt}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+mean $\ln P_T(t=0)$ by size of $t$ & 1 & 3 & 5 & 7 & 9\\
+\midrule
+grammar 1: $T_\Q$ & $-1.88$ & $-1.82$ & $-8.45$ & $-15.52$ & $-22.89$\\
+grammar 1: $\Tesc$ & $-0.80$ & $-3.23$ & $-5.22$ & $-7.20$ & $-9.19$\\
+grammar 3: $T_\Q$ & $-1.62$ & $-1.57$ & $-7.91$ & $-15.41$ & $-23.33$\\
+grammar 3: $T_{\Q0}$ & $-1.63$ & $-1.28$ & $-7.34$ & $-14.55$ & $-22.19$\\
+grammar 3: $\Tesc$ & $-0.43$ & $-8.58$ & $-16.30$ & $-24.01$ & $-31.72$\\
+\bottomrule
+\end{tabular}
+\caption{\Cref{ex:ident:lonedq}, computed (model check c16). Top: the cross-entropy minimiser over $\{T_\Q,T_{\Q0},\Tesc,T_{\mathrm{mix}}\}$ in the eight settings of each grammar ($N\in\{7,9\}$, $h\in\{0.3,0.45\}$, with and without $0=0$). Bottom: per-datum log-likelihoods at $N=9$. In grammar 1, $T_\Q$ pays about 7 nats per extra $+$ and $\Tesc$ about 2; e.g.\ at $N=9$, $h=0.45$, data $t\ne0$, the cross-entropies are $7.758$ ($T_\Q$), $7.124$ ($T_{\Q0}$), $4.951$ ($\Tesc$), $4.904$ ($T_{\mathrm{mix}}$) nats, so the odds of $T_\Q$ against $T_{\mathrm{mix}}$ fall by about 2.85 nats per datum. In grammar 3, $\Tesc$ pays $\ln\frac1{p_+p_0}\approx7.7$ nats per $+$ through $\Qg$; $T_\Q$'s increments (6.3, 7.5, 7.9 nats between consecutive sizes) are still rising at size 9, so the large-term limit in grammar 3 is not settled.}
+\label{tab:ident:c16}
+\end{table}
+
+% ---------------------------------------------------------------------
+\subsection{Predictive versus deductive}\label{app:ident:pred}
+
+\paragraph{Proof of \Cref{thm:ident:predded}.} (a) is \cref{prop:ident:rates}(b) with the index shifted; (b) is \cref{cor:ident:deductive} with $d=\infty$, and the two cases are those named after it. (c) $\Ex_{P_{T_1}}\ln\frac{P_{T_1}(X)}{P_{T_2}(X)}=\KL(P_{T_1}\|P_{T_2})$ per datum, summed over the data; Pinsker's inequality $\TV\le(\KL/2)^{1/2}$ (known). For the misspecified remark: $M(D_n)\ge\pi(T)P_T(D_n)$ for every $T$ and every sequence, so the cumulative log loss of $M$ exceeds that of $T$ by at most $\ln(1/\pi(T))$. \qed
+
+\begin{proposition}[Data that come with their proofs]\status{proved}\src{model Prop 8.2}\label{prop:ident:proofs}
+Let each datum be a whole valid $\Lone$ tree from $P_T(\cdot\mid\text{valid})$, showing each node's rule and conclusion and whether a citation leaf cites a theory or a logical axiom, but not which template; weights fixed. (a) $P_T(\pi)=\prod_vP^{\Lzero}_T(\mathrm{concl}(v))\,G(\pi)/Z_T$ over the theory-citation leaves $v$, with $P^{\Lzero}_T:=\sum_\tau w_\tau\Qg_\tau$, $G$ independent of $T$, and $Z_T$ a function of $P^{\Lzero}_T$. (b) $P_T=P_{T'}$ on trees iff $P^{\Lzero}_T=P^{\Lzero}_{T'}$: the posterior concentrates on the $\Lzero$ generator class of $T^*$, with instance union $\bigcup\inst(T^*)$, and splits still tie. (c) So proofs guarantee identification of the instance union $\bigcup\inst(T^*)$; conclusions guarantee only $\Th(T^*)$ (though they often separate more, \cref{prop:ident:sep}).
+\end{proposition}
+
+\paragraph{Proof of \Cref{prop:ident:proofs}.} (a) A tree's probability is the product of its nodes' probabilities. A theory-citation leaf whose template is not recorded contributes $\alpha_{\mathrm{ax}}\sum_\tau w_\tau\Qg_\tau(\mathrm{concl}(v))=\alpha_{\mathrm{ax}}P^{\Lzero}_T(\mathrm{concl}(v))$, the sum over the unrecorded choices factorising over leaves (matching is unique, so $\Qg_\tau(\mathrm{concl}(v))$ is the sum over substitutions). No other node depends on $T$. Validity depends only on conclusions, so $Z_T=\Pr[\text{valid}]$ is a function of the law of theory-leaf conclusions, i.e.\ of $P^{\Lzero}_T$. (b) ``If'' is (a). ``Only if'': the one-node tree citing $s$ as a theory axiom has probability $\alpha_{\mathrm{ax}}P^{\Lzero}_T(s)/Z_T$; equality for all $s$ makes $P^{\Lzero}_T$ and $P^{\Lzero}_{T'}$ proportional, and both sum to $1$. The rest is \cref{thm:ident:doob}, \cref{cor:ident:prior} and \cref{prop:ident:splits}(a), (b). (c) The proof-data generator class of $T^*$ is contained in its conclusion-data class, since equal $\Lzero$ laws give equal $\Lone$ laws; the latter guarantees only $\Th(T^*)$ (\cref{cor:ident:deductive}, $\Lone$ with parameters admissible), though conclusions can separate more (\cref{prop:ident:sep}). \qed
+
+If the template name is recorded at each citation leaf, the argument is easier.
+
+\begin{remark}[Near misses]\status{proved (the transfer); open (size of the generator class)}\src{model Rem 8.3}\label{rem:ident:nearmiss}
+H\"anni's ``grade near misses'' can be a corruption channel $K(s'\mid s)$ favouring $s'$ near $s$, $P^K_T(s'):=\sum_sP_T(s)K(s'\mid s)$. Each $P^K_T$ is a fixed law with a data-independent normaliser, so \cref{thm:ident:doob}, \cref{cor:ident:deductive} and \cref{thm:sound:fixed} (with $C^*_d$ defined through $P^K$) hold when the channel is part of the well-specified model. The size principle also holds, but with a full-support channel it is vacuous ($\operatorname{supp}P^K_{T^*}=\mathcal S$), and theories are separated only through $\KL$. The generator class can grow, since $K$ need not be injective; by how much, for natural metrics, is open. The noise mixtures of \cref{prop:univ:robust} are related.
+\end{remark}
+
+\paragraph{Proof of \Cref{rem:ident:nearmiss}.} $P^K_T$ is a probability on $\mathcal S$ whose normaliser does not depend on the data. The proofs of \cref{thm:ident:doob}, \cref{cor:ident:deductive}, \cref{thm:sound:fixed} and \cref{lem:model:size} use only that each hypothesis carries a fixed law on a countable set and that the data are i.i.d.\ from one of them; they therefore hold with $P^K_T$ in place of $P_T$ when the data are i.i.d.\ from $P^K_{T^*}$. \qed

@@ -1,0 +1,190 @@
+\section{Time penalties: proofs and details}\label{app:time}
+% =====================================================================
+% Appendix to Section 6. Sources: research/tracks/model/notes-final.md §6 (Prop 6.0 - Conj 6.15), §1.2-1.5,
+%   §10 items 12-15, §12; research/tracks/model/referee.md (M2, m1); research/tracks/model/checks/c12_l1_size.{py,out};
+%   research/tracks/model/referee_code/r2_l1_size.{py,out}; research/tracks/pa/notes-final.md Prop 4.3.
+% The proofs follow the notes; steps the notes leave implicit are named ("Implicit in the notes").
+% =====================================================================
+
+Scripts cited here are in the folders \texttt{checks/} (the model track's) and \texttt{referee\_code/} (its referee's) of \texttt{research/tracks/model/}; each is seeded and writes its output next to itself. Sizes are symbol counts in closure-normal form with de Bruijn indices: a quantifier, a connective, a function or relation symbol, a constant, an index and a parameter each count one.
+
+% ---------------------------------------------------------------------
+\subsection{The two inductors}\label{app:time:inducers}
+
+\begin{proposition}[Why consistent assigners]\status{proved}\src{model Prop 6.0}\label{prop:time:fiall}
+Let $R$ be a unary predicate, $w_1,w_2,\dots$ distinct closed terms, and $\varphi_i$ be $R(w_i)$ or $\neg R(w_i)$ by independent fair coins, all labelled true (a consistent labelling). $\FIall$'s log loss is at most a constant (the program ``always accept''); the expected log loss of $\AI$ and of $\FIcons$ is at least $n$ bits.
+\end{proposition}
+
+\noindent This confirms H\"anni's informal separation, and is why the fair comparison is with $\FIcons$.
+
+\begin{proof}[Proof of \cref{prop:time:fiall}]
+$\FIall$: the program ``always accept'' has some length $c$ and labels every $\varphi_i$ true, so $W_{\FIall}(D_n)\ge2^{-c}$; with $W_{\FIall}(\emptyset)\le1$ (Kraft, for a prefix machine) the log loss $-\log_2W(D_n)+\log_2W(\emptyset)$ is at most $c$.
+$\AI$ and $\FIcons$: let $D$ be the data so far and $\psi:=R(w_{i})$ for the next index. A hypothesis compatible with $D+(\psi,1)$ and with $D+(\neg\psi,1)$ would prove, or accept, both $\psi$ and $\neg\psi$, against consistency. So the two sets of compatible hypotheses are disjoint subsets of those compatible with $D$, and the predictive probabilities $a:=W(D+(\psi,1))/W(D)$ and $a':=W(D+(\neg\psi,1))/W(D)$ satisfy $a+a'\le1$. The coin shows $\psi$ or $\neg\psi$ with probability $\tfrac12$ each, independently of $D$, so the expected step loss is $\tfrac12(-\log_2a-\log_2a')\ge-\log_2\frac{a+a'}2\ge1$ bit, by convexity of $-\log_2$. Summing over the $n$ steps gives at least $n$ bits.
+\end{proof}
+
+\begin{proof}[Proof of \cref{thm:time:equiv}]
+\emph{$W_{\mathrm{FI}}\ge2^{-c'}W_{\AI}$.} For a decider $p$ let $f_p$ be the program: on input $\varphi$, dovetail searches for proofs of $\varphi$ and of $\neg\varphi$ from $B\cup A_p$ (both sets are decidable, so the theorems are recursively enumerable), and output $\mathrm{acc}$ or $\mathrm{rej}$ for the first proof found. Its code is a fixed wrapper followed by $p$, so $|f_p|\le|p|+c'$ and $p\mapsto f_p$ is injective. Let $p$ be compatible with $D$. Then $B\cup A_p$ is consistent, so at most one of $\varphi,\neg\varphi$ is provable, and $f_p$ labels each $\varphi_i$ with $b_i$. Also $\Gamma_{f_p}\subseteq\Th(B\cup A_p)$, so $B\cup\Gamma_{f_p}$ is consistent and $f_p$ is a compatible $\FIcons$ hypothesis. Summing $2^{-|f_p|}\ge2^{-c'}2^{-|p|}$ over compatible $p$ gives the claim.
+
+\emph{$W_{\AI}\ge2^{-c''}W_{\mathrm{FI}}$ (Craig's trick).} For an $\FIcons$ hypothesis $f$ define $A^C_f$ as in \cref{thm:time:equiv}. Its decider $p_f$: given $\chi$, try each of the at most $|\chi|$ decompositions $\chi=\psi^{\wedge m}$; for each, run $f$ for $m-1$ steps on $\psi$ and check whether it accepts in exactly $m-1$ steps, and, if $\psi=\neg\varphi$, run $f$ on $\varphi$ and check whether it rejects in exactly $m-1$ steps. Every run is bounded, so $p_f$ halts on every input, even when $f$ is partial. Each member $\varphi^{\wedge(k+1)}$ is logically equivalent to $\varphi\in\Gamma_f$ (likewise for $\neg\varphi$), and each member of $\Gamma_f$ has such a power in $A^C_f$, with $k$ the halting time. So $\Cn(B\cup A^C_f)=\Cn(B\cup\Gamma_f)$, which is consistent, and $B\cup A^C_f$ decides every $\varphi_i$ as $f$ does. Hence $p_f$ is compatible whenever $f$ is. Its code is a fixed wrapper followed by $f$: $|p_f|\le|f|+c''$, and $f\mapsto p_f$ is injective.
+
+\emph{Losses.} Put $c:=\max(c',c'')$. The semimeasure log loss of an inducer on $D_n$ is $-\log_2W(D_n)+\log_2W(\emptyset)$; each of the two terms differs by at most $c$ between $\AI$ and $\FIcons$, and both depend on $D_n$ only as a set. If one weight is $0$, so is the other, and both losses are infinite.
+\end{proof}
+
+\begin{remark}[The convention, and ``what is a sequence'']\status{proved}\src{model \S6.1}\label{rem:time:convention}
+Renormalising at each step, $P(b\mid\varphi,D):=W(D+(\varphi,b))/\sum_{b'}W(D+(\varphi,b'))$, the argument of \cref{thm:time:equiv} gives only $2c$ bits \emph{per step}. The constant equivalence is proved only in the semimeasure convention, which answers H\"anni's ``wtf is a sequence here?'' (any reveal order, any labelling). His ``same spec length as the axiom system plus a const'' holds in both directions, and $B$ needs no arithmetic. His route through the schema does need arithmetic; it works with two sorts, or in one sort for sound assigners, and \cref{prop:time:single} shows that it fails for some consistent unsound ones (\cref{sec:time:schema}).
+\end{remark}
+
+\paragraph{Per-step renormalisation.} With $P_X(b\mid\varphi,D):=W_X(D+(\varphi,b))/(W_X(D+(\varphi,0))+W_X(D+(\varphi,1)))$, the numerator and the denominator each change by a factor in $[2^{-c},2^c]$ between the inducers, so each step's ratio lies in $[2^{-2c},2^{2c}]$; over $n$ steps the bound is $2cn$ bits, and the argument gives nothing better.
+
+% ---------------------------------------------------------------------
+\subsection{H\"anni's schema}\label{app:time:schema}
+
+\begin{proof}[Proof of \cref{prop:time:twosorted}]
+\emph{Consistency.} Take the structure whose arithmetic sort is the standard $\N$ and whose $L$-sort is a model $M$ of $\Gamma_f$. In $\N$, $\Accf{f}(\gn{\varphi})$ is true iff $f$ accepts $\varphi$, and then $\varphi\in\Gamma_f$ holds in $M$; likewise for rejections. So every member of $A_f$ holds, and so does $\Q$.
+\emph{$\supseteq$.} If $f(\varphi)=\mathrm{acc}$, then $\Accf{f}(\gn{\varphi})$ is a true $\Sigma_1$ sentence, hence provable in $\Q$ ($\Sigma_1$-completeness for $<$-free $\Sigma_1$ sentences, which applies as $\Accf{f}$ is written without $<$; known, e.g.\ \citealp{boolos2007computability}, chapter on $\Q$, not checked); MP with its member of $A_f$ gives $\varphi$. Rejections are similar. So $\Gamma_f\subseteq\Cn(B\cup A_f)$.
+\emph{$\subseteq$.} An $L$-sentence provable from $B\cup A_f$ holds in every structure $\N\oplus M$ with $M\models\Gamma_f$; its truth there depends only on $M$. So it holds in every model of $\Gamma_f$, and by completeness it lies in $\Cn(\Gamma_f)$.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:time:single}]
+\emph{$\Gamma_f$.} Since $\Con(\PA)$ holds, the search on $\gn{\Con(\PA)}$ never ends, so $\Gamma_f=\{\neg\Con(\PA)\}$. $\PA+\neg\Con(\PA)$ is consistent by Gödel's second incompleteness theorem.
+\emph{$\neg\Con(\PA)$.} $\Accf{f}(\gn{\neg\Con(\PA)})$ is a true $\Sigma_1$ sentence, so $\PA$ proves it; with its member of $A_f$, $\PA\cup A_f\vdash\neg\Con(\PA)$.
+\emph{$\Con(\PA)$.} $\PA\vdash\neg\Con(\PA)\to\Accf{f}(\gn{\Con(\PA)})$: if a proof of $\bot$ exists there is a least one, and $\PA$ proves that the search halts on it with output $\mathrm{acc}$. This formalisation step is standard and already provable in $\ISigma{1}$. With the member $\Accf{f}(\gn{\Con(\PA)})\to\Con(\PA)$ of $A_f$, $\PA\cup A_f\vdash\neg\Con(\PA)\to\Con(\PA)$, so $\PA\cup A_f\vdash\Con(\PA)$. Both together are a contradiction.
+\end{proof}
+
+% ---------------------------------------------------------------------
+\subsection{Templates}\label{app:time:templates}
+
+\begin{proof}[Proof of \cref{prop:time:notemplate}]
+Let $\tau\in\DT$ with $\inst(\tau)\subseteq C_f$, and suppose $\tau$ has a metavariable $M$ with an occurrence at position $q$. Constant bodies exist for every type with two different root symbols: $\lambda\bar z.0$ and $\lambda\bar z.(0+0)$ for terms, $\lambda\bar z.(0=0)$ and $\lambda\bar z.\neg(0=0)$ for formulas. By the preservation lemma (AS Lemma~2.4), for a constant body the subtree of $\tau\theta$ at $q$ is that constant, whatever the occurrence's arguments, and the rigid symbols of $\tau$ above $q$ are the same in every instance. Every member of $C_f$ has the form $\Accf{f}(N)\to\varphi$, where $N$ is the numeral $\gn{\varphi}$ substituted for the free variable of the fixed formula $\Accf{f}(x)$. Since $\inst(\tau)\ne\emptyset$, the path from the root to $q$ is a path of such a member.
+
+\emph{Case 1: $q$ is the root or lies in the antecedent.}
+(i) If $q$ lies inside an occurrence of the numeral $N$ (its root included), every member of $C_f$ carries $S$ or $0$ at $q$. Put $\theta(M):=\lambda\bar z.(0+0)$ and any bodies elsewhere. Then $\tau\theta$ has $+$ at $q$. If $\tau\theta$ were in $C_f$, $q$ would again lie inside a numeral, since the path to $q$ is the same; so $\tau\theta\notin C_f$.
+(ii) Otherwise $q$ is the root or a position of the fixed skeleton of $\Accf{f}(x)$. All members of $C_f$ carry the same symbol there ($\to$ at the root). Choose the constant body of the right type whose root symbol differs from it; then $\tau\theta\notin C_f$.
+Both contradict $\inst(\tau)\subseteq C_f$.
+
+\emph{Case 2: no metavariable occurs at the root or in the antecedent.} Then the antecedent of every instance is one fixed sentence $\Accf{f}(N_0)$, and the only member of $C_f$ with that antecedent is $\Accf{f}(\gn{\varphi_0})\to\varphi_0$ for the single $\varphi_0$ with $\gn{\varphi_0}=N_0$. So $\tau$ has at most one instance. But a template with a metavariable has infinitely many instances: each type has infinitely many bodies, and $\theta\mapsto\tau\theta$ is injective (AS Thm~2.5(a)). Contradiction.
+
+So $\tau$ is ground. A ground template has one instance; $C_f$ is infinite, so no finite set of $\DT$ templates has instance union $C_f$, and such a set with instances in $C_f$ covers at most as many members as it has templates.
+
+\emph{Reflection schema} (pa Prop~4.3). With $\Prv_T(x)$ in place of $\Accf{f}(x)$ the members are $\Prv_T(\gn{\varphi})\to\varphi$, with unary numerals, and the proof goes through word for word.
+\end{proof}
+
+\paragraph{Implicit in the notes.} Case~1(i) uses that ``inside the numeral'' is determined by the path to $q$, which is rigid in $\tau$; we have made this explicit. The notes, and the statement, treat the acceptance part $C_f$. The rejection part, and templates whose instances mix the two parts, are not treated: at a skeleton position where $\Accf{f}$ and $\Rejf{f}$ carry different symbols, Case~1(ii) would need a constant body whose root differs from both (\cref{app:ver:open}).
+
+\begin{proof}[Proof of \cref{prop:time:collapse}]
+(a) Let $f(\varphi)=\mathrm{acc}$ with $\varphi\in\Sigma_n$. Then $\PA\vdash\Accf{f}(\gn{\varphi})$ (a true $\Sigma_1$ sentence) and $\PA\vdash\Sent_{\Sigma_n}(\gn{\varphi})$ (a true $\Delta_1$ fact). So $\PA+\rho_{f,n}\vdash\Tr_n(\gn{\varphi})$, and $\PA\vdash\Tr_n(\gn{\varphi})\to\varphi$. For rejections, $\PA+\rho_{f,n}\vdash\neg\Tr_n(\gn{\varphi})$ and $\PA\vdash\varphi\to\Tr_n(\gn{\varphi})$, so $\neg\varphi$ follows.
+(b) In $\N$, $\Accf{f}$ and $\Rejf{f}$ hold exactly of $f$'s actual decisions, and $\Tr_n$ is $\Sigma_n$-truth, so both conjuncts of $\rho_{f,n}$ are true when $f$ is $\Sigma_n$-sound.
+\emph{Length.} $f$ enters $\rho_{f,n}$ only through its index, written as a binary numeral of length $O(|f|)$ inside $\Accf{f}$ and $\Rejf{f}$; the rest of the sentence depends on $n$ only.
+\end{proof}
+
+% ---------------------------------------------------------------------
+\subsection{Time penalties}\label{app:time:penalties}
+
+\begin{proof}[Proof of \cref{prop:time:cheap}]
+(a) Parsing $\chi$ as an implication with antecedent $\Accf{f}(t)$ or $\Rejf{f}(t)$ is a comparison with a fixed formula, linear in $|\chi|$. Computing the Gödel number of the consequent (or of the formula under its negation) is polynomial in $|\chi|$, and so is writing it as a binary numeral and comparing it with $t$. With unary numerals, $t$ itself has length $\gn{\varphi}\le|\chi|$, so writing out the numeral is again polynomial in $|\chi|$. No step runs $f$.
+(b) $\chi=\psi^{\wedge m}$ forces $m\le|\chi|$, and there are at most $|\chi|$ candidate decompositions. For each, $f$ is simulated for $m-1<|\chi|$ steps on $\psi$ (and on $\varphi$ if $\psi=\neg\varphi$), in time polynomial in $|\chi|$ for fixed $f$.
+\end{proof}
+
+\begin{proof}[Proof of \cref{thm:time:ntime}]
+\emph{Algorithm.} Given $w$ of length $m$, compute $\varphi_w$ and the time-constructible bound $\ell(m)$, guess a $\CK$-derivation of symbol size at most $\ell(m)$, and check it: each line is an instance of a logical axiom (A1--A3, A5 and the equality axioms by matching; A4 by first-order matching, which is polynomial), a member of $T$ (time $O(\ell^e)$), or follows by MP or Gen. Accept iff the derivation is valid and ends in $\varphi_w$. All checks are polynomial in $\ell(m)$, of a degree that depends only on $e$ and on the degree $d_{\CK}$ of $\CK$'s line checks; so the machine runs in time $O(\ell(m)^{c_e})$.
+\emph{Completeness.} If $w\in X$, such a derivation exists by hypothesis.
+\emph{Soundness.} If $w\notin X$, then $\neg\varphi_w\in\Gamma_{f_X}$, so $T\vdash\varphi_w$ would make $T\cup\Gamma_{f_X}$ inconsistent. No derivation exists, and the machine rejects.
+\end{proof}
+
+\begin{proof}[Proof of \cref{cor:time:hard}]
+\emph{Uniformity.} The constant $c_e$ of \cref{thm:time:ntime} depends on $T$ only through $e$. Membership in a finite $\DT$ theory is matching against each template, in time $O(|T|\cdot|\chi|)$ (AS Thm~2.5), so $e=1$ for all of them, with a $T$-dependent constant factor that does not change the class.
+\emph{The hierarchy theorem} (known; exact form not checked against \citealp{cook1972hierarchy,seiferas1978separating,zak1983turing}): if $t_2$ is time-constructible and $t_1(m+1)=o(t_2(m))$, then $\NTIME(t_2)\setminus\NTIME(t_1)\ne\emptyset$.
+(a) Apply it with $t_1:=s^{c_1}$ and $t_2:=s^{c_1+1}$ to get a decidable $X\in\NTIME(s^{c_1+1})\setminus\NTIME(s^{c_1})$. Suppose some finite $\DT$ theory $T$ with $T\cup\Gamma_{f_X}$ consistent had, for all but finitely many $m$, a derivation of size at most $s(m)$ of every $\varphi_w$ with $w\in X$, $|w|=m$. Put the finitely many words of the exceptional lengths in a table. The machine of \cref{thm:time:ntime} with $\ell=s$, plus the table, decides $X$ in $\NTIME(s^{c_1})$: a contradiction.
+(b) The same with $c_e$ in place of $c_1$, for each $e$.
+\emph{A single $X$ for all $e$} (proof sketch). Take $X\in\NTIME(s^{\log_2 s})\setminus\NTIME(s^{(\log_2 s)/2})$, when these bounds are time-constructible and satisfy the gap condition. Every $s^{c_e}$ is eventually below $s^{(\log_2 s)/2}$, so the argument of (a) applies to every $e$. The time-constructibility and gap conditions for these bounds are not checked.
+\end{proof}
+
+\begin{remark}[Upper bounds]\status{proof sketch ($A^C_f$, two-sorted $A_f$); not established for $\rho_{f,n}$}\src{model \S6.4}\label{rem:time:upper}
+The collapse constructions through $A^C_f$ and the two-sorted $A_f$ pay at most a polynomial of the assigner's \emph{deterministic} running time $k$ in derivation size: cite $\varphi^{\wedge(k+1)}$ and eliminate $\wedge$; or prove the true $\Sigma_1$ sentence $\Accf{f}(\gn{\varphi})$ in $\Q$, in size polynomial in the computation (recalled from \citealp{pudlak1998lengths}, not checked), then apply MP. For $\rho_{f,n}$ the same route also needs a $\PA$-proof of the Tarski biconditional for $\varphi$, whose size is not bounded here.
+\end{remark}
+
+\paragraph{Upper bounds (\cref{rem:time:upper}); proof sketch.} From $A^C_f$, a derivation of $\varphi$ cites $\varphi^{\wedge(k+1)}$, $k=\mathrm{time}_f(\varphi)$, and applies $\wedge$-elimination, in size polynomial in $k|\varphi|$. From $A_f$ in two sorts, a derivation is a $\Q$-proof of the true $\Sigma_1$ sentence $\Accf{f}(\gn{\varphi})$ followed by MP; the size of such a $\Q$-proof is polynomial in the length of the computation (recalled from \citealp{pudlak1998lengths}, not checked). From $\rho_{f,n}$, the same plus a $\PA$-proof of the Tarski biconditional $\Tr_n(\gn{\varphi})\to\varphi$, whose size is not bounded in the notes.
+
+% ---------------------------------------------------------------------
+\subsection{What the derivation likelihoods charge}\label{app:time:lik}
+
+\paragraph{The counterexample to the pre-referee claim (\cref{prop:time:lonesize}; referee M2).} Let $\varphi^{(0)}:=\forall x\,(x=x)$, the logical axiom of reflexivity (size 4). Round $j=1,\dots,k$: apply $\forall$E with the term $p+p$ ($p$ the first parameter), then Gen on $p$; this doubles the number of occurrences of the bound variable and keeps one $\forall$ at the root. A final $\forall$E with $p+p$ gives $\varphi_k$, an equation whose two sides are balanced sums of $2^{k+1}$ copies of $p$; its size is $2(2^{k+2}-1)+1=2^{k+3}-1$. The tree has one citation node; each $\forall$E contributes its own node and the $5$ grammar nodes of $p+p$ (the $+$ node and two parameters, each with a one-node index chain), each Gen its node and a one-node chain: $\nu=1+6+8k=7+8k$. In the referee's grammar ($\alpha_{\mathrm{ax}}=\alpha_{\mathrm{lg}}=\alpha_{\mathrm{MP}}=0.2$, $\alpha_{\mathrm{Gen}}=\alpha_{\forall\mathrm E}=0.1$, so $m=0.6$; seven logical schemas cited uniformly; terms $0$:\,.4, $S$:\,.2, $+$:\,.1, $\cdot$:\,.1, parameter:\,.2; parameter index geometric with ratio $\tfrac12$) a round costs $-\ln(0.1\cdot0.1\cdot(0.2\cdot0.5)^2)-\ln(0.1\cdot0.5)=12.206$ nats and the citation plus final $\forall$E $12.77$ nats. Every derivation of $\varphi_k$ contains $\varphi_k$, so $\ell_{\min}(\varphi_k)\ge2^{k+3}-1$, and $-\ln P_T(\varphi_k)\le-\ln\Pr(\text{tree})$ because $Z_T\le1$. For every $\kappa>0$ and $C$ the claimed inequality fails for large $k$; \cref{tab:time:c12} gives the numbers.
+
+\emph{One-node example.} For $B_m(x):=(x+\dots+x=0)$ with $m$ summands and $t:=S^m0$, the A4 instance $\forall xB_m(x)\to B_m(t)$ has size quadratic in $m$ but probability $e^{-O(m)}$: the referee's script gives sizes $145$, $1765$, $6725$ symbols at costs at most $99.4$, $369.0$, $728.5$ nats for $m=10,40,80$ (\texttt{r2\_l1\_size.out}).
+
+\begin{table}[ht]
+\centering\small
+\begin{tabular}{@{}rrrrr@{}}
+\toprule
+$k$ & $\nu=7+8k$ & $|\varphi_k|=2^{k+3}-1$ & $-\ln\Pr(\text{tree})$ (nats) & $\ln|\varphi_k|/\nu$ \\
+\midrule
+0 & 7 & 7 & 12.77 & 0.278 \\
+1 & 15 & 15 & 24.97 & 0.181 \\
+3 & 31 & 63 & 49.38 & 0.134 \\
+10 & 87 & 8191 & 134.83 & 0.104 \\
+14 & 119 & 131071 & 183.65 & 0.099 \\
+30 & 247 & $8.6\cdot10^9$ & 378.95 & 0.093 \\
+\bottomrule
+\end{tabular}
+\caption{The counterexample to the pre-referee claim of \cref{prop:time:lonesize}. Sizes were built and checked by the referee's script for $k\le14$ (\texttt{r2\_l1\_size.out}; formula beyond) and independently by \texttt{c12\_l1\_size.out}, Part~A, for $k\le12$, which also counts $\nu=7+8k$. Costs are the referee's, for the grammar given in the text. $\ln|\varphi_k|/\nu\to\ln2/8\approx0.087$, below the $1/e\approx0.368$ that \cref{lem:time:symexp} allows.}\label{tab:time:c12}
+\end{table}
+
+\begin{lemma}[Symbol size against grammar choices]\status{proved; computed}\src{model Lemma 6.10}\label{lem:time:symexp}
+Let $\pi$ be a valid $\Lone$ tree from a finite $T$ with $\nu$ grammar nodes, $a_T\ge2$ a bound on the sizes of the templates of $T$ and of $\CK$'s logical templates, and $c_T:=2a_T^2$. Every conclusion in $\pi$ has symbol size at most $(c_T+1)\nu^2e^{\nu/e}$.
+\end{lemma}
+
+\begin{proof}[Proof of \cref{lem:time:symexp}]
+For a node $v$ let $G(v)$ be the number of Gen nodes in its subtree and $\Pi(v):=\prod_u|t_u|$ over the $\forall$E nodes $u$ in its subtree, $t_u$ the substituted term ($\Pi=1$ if there are none). We show $|\mathrm{concl}(v)|\le(c_T\nu^2+G(v))\,\Pi(v)$ by induction on the tree.
+\emph{Citation of a $\DT$ template} (of $T$, or A1--A3, A5, equality; substitution $\theta$). An occurrence $M(\bar t)$ becomes $\theta(M)[\bar t/\bar z]$. The body $\theta(M)$ has at most $\nu$ nodes and each argument $t_i$, a subterm of the template, has size at most $a_T$, so the piece has size at most $\nu a_T$. There are at most $a_T$ occurrences and at most $a_T$ rigid symbols, so $|\tau\theta|\le a_T+a_T^2\nu\le c_T\nu\le c_T\nu^2$.
+\emph{Citation of A4} ($\forall xB\to B[t/x]$, not a template; \cref{lem:model:a4}). $B$ and $t$ have at most $\nu$ nodes each, so the size is at most $1+(|B|+1)+|B|\,|t|\le3\nu^2\le c_T\nu^2$ (such a tree has $\nu\ge3$).
+\emph{$\forall$E with term $t$.} The conclusion $\psi[t/x]$ replaces each occurrence of the bound variable by $t$, which contains no bound indices, so no index shifting is needed: $|\psi[t/x]|\le|\psi|\,|t|\le|\mathrm{premise}|\,|t|$, and $\Pi$ gains the factor $|t|$.
+\emph{Gen.} Replacing a parameter by an index keeps the size and the new $\forall$ adds one; $G$ grows by one and $\Pi\ge1$.
+\emph{MP.} The conclusion is a proper subformula of the major premise, and $G$ and $\Pi$ only grow from a child to its parent.
+Finally $G(v)\le\nu$, and the substituted terms of different $\forall$E nodes are disjoint sets of grammar nodes, so $\sum_u|t_u|\le\nu$. For $k$ terms, AM--GM gives $\prod_u|t_u|\le(\nu/k)^k\le\sup_{y>0}(\nu/y)^y=e^{\nu/e}$. Hence $|\mathrm{concl}(v)|\le(c_T\nu^2+\nu)e^{\nu/e}\le(c_T+1)\nu^2e^{\nu/e}$.
+\end{proof}
+
+\emph{Computed} (\texttt{c12\_l1\_size.out}, Part~B). Chains without A4 citations satisfy the stronger bound $(c_T+1)\nu e^{\nu/e}$ (the citation case gives $c_T\nu$). This is what the script tests: on 9865 conclusions of 3000 random valid $\forall$E/Gen chains, with terms from a PCFG and cited sentences with up to three quantifiers and repeated variables, neither the inductive bound nor the final bound was violated; the largest $\ln(\text{size})/\nu$ was $0.220$. The first version of the lemma had $\nu^{\nu+1}$ in place of $e^{\nu/e}$, and $\nu$ in place of $\nu^2$; the A4 case (the referee's one-node example) forced $\nu^2$ (model \S12.4).
+
+\begin{proposition}[$\Lone$ charges its own code length exponentially]\status{proved; computed}\src{model Prop 6.11}\label{prop:time:codelength}
+Assume $\Lone$ with $m<1$, $\Qg$ uniformly subcritical (\cref{def:model:grammar}), $T$ finite and a geometric parameter law. There are $\zeta,C>0$, depending on the grammar and on $T$, with $P_T(\varphi)\le C\,e^{-\zeta\,\nu_{\min}(\varphi)}/Z_T$ for every $\varphi$.
+\end{proposition}
+
+\begin{proof}[Proof of \cref{prop:time:codelength}]
+The whole tree (derivation nodes, $\Qg$ nodes, parameter-chain nodes) is a multi-type branching process with boundedly many children per node, each node's children drawn independently given its type. Give derivation nodes weight $1$, $\Qg$ nodes weight $\eta h_{\Qg}$ ($h_{\Qg}$ from \cref{def:model:grammar}) and chain nodes weight $\eta$. A derivation node has expected weighted offspring at most $m+\eta(v_Th_{\Qg,\max}+1)$, with $v_T$ bounding the number of metavariables of a template of $T$ or of $\CK$; this is below $1$ for small $\eta$, since $m<1$. $\Qg$ nodes satisfy the condition with $\rho_{\Qg}$, and a chain node continues with probability $g_{\mathrm{par}}<1$. So the uniform condition holds with $\rho_{\mathrm{br}}:=\max(m+\eta(v_Th_{\Qg,\max}+1),\rho_{\Qg},g_{\mathrm{par}})<1$, and \cref{lem:model:grammar}(b),(d) gives $\Ex[e^{\zeta\nu}]\le C$ for some $\zeta>0$. A valid tree concluding $\varphi$ has $\nu\ge\nu_{\min}(\varphi)$, so $P_T(\varphi)=\mu_T(\varphi)/Z_T\le\Pr[\nu\ge\nu_{\min}(\varphi)]/Z_T\le Ce^{-\zeta\nu_{\min}(\varphi)}/Z_T$ by Markov's inequality.
+\end{proof}
+
+\emph{Computed} (\texttt{c12\_l1\_size.out}, Part~C). For the joint process with $m=0.55$ and the grammar $\Qg_A$ of the model appendix, $10^5$ simulated trees: mean $\nu=26.9$; $\Pr(\nu\ge L)=0.362$, $0.137$, $0.0288$, $0.00238$, $3.0\cdot10^{-5}$ for $L=25,50,100,200,400$; the log-tail falls by $0.0249$ nats per node between $L=100$ and $200$.
+
+\begin{theorem}[Code length bounds the assigner's time, logarithmically]\status{proved}\src{model Thm 6.12}\label{thm:time:log}
+In the setting of \cref{thm:time:ntime}, let $T$ be a finite $\DT$ theory with $T\cup\Gamma_{f_X}$ consistent, and let every $\varphi_w$, $w\in X$, have a valid $\Lone$ tree from $T$ with at most $\ell(|w|)$ grammar nodes, $\ell(m)\ge m$ time-constructible. Then $X\in\NTIME(2^{(d+1)\ell(m)})$, where $d$, the polynomial degree of the syntactic operations used in checking, depends neither on $T$ nor on $\ell$.
+\end{theorem}
+
+\begin{proof}[Proof of \cref{thm:time:log}]
+On input $w$, put $\ell:=\ell(|w|)$ and guess a tree with at most $\ell$ grammar nodes. Each node is a choice from a finite list (rule, template of $T$, logical schema, production of $\Qg$) or one of at most $\ell+O(1)$ variables, so the guess has $O(\ell\ln\ell)$ bits. Compute every node's conclusion explicitly, check validity (MP needs equality of formulas, $\forall$E a root $\forall$) and compare the root's conclusion with $\varphi_w$. By \cref{lem:time:symexp} every formula has size at most $S:=(c_T+1)\ell^2e^{\ell/e}$, and all operations are polynomial of a fixed degree $d$ in that size. So the time is at most $\ell\cdot S^d$, which is at most $2^{(d+1)\ell}$ for $\ell\ge\ell_0(T)$, since $e^{d/e}<2^d$ and the remaining factor is polynomial in $\ell$; smaller inputs go in a table. Completeness and soundness are as in \cref{thm:time:ntime}: citations name a template of $T$, so no membership test is needed, and a valid tree is a $\CK$-derivation from $\bigcup\inst(T)$ (each $\forall$E is an A4 instance plus MP).
+\end{proof}
+
+\begin{proof}[Proof of \cref{cor:time:log}]
+Apply the hierarchy theorem with $t_1:=2^{(d+1)s}$ and $t_2:=2^{s^2}$; the condition $t_1(m+1)=o(t_2(m))$ is $s(m)^2-(d+1)s(m+1)\to\infty$. This gives a decidable $X\in\NTIME(2^{s^2})\setminus\NTIME(2^{(d+1)s})$. If, for some $T$ and all but finitely many $m$, every $w\in X$ of length $m$ had $\nu_{\min}(\varphi_w)\le s(m)$, \cref{thm:time:log} with $\ell=s$ and a table (for the exceptional lengths and for $\ell<\ell_0(T)$) would put $X$ in $\NTIME(2^{(d+1)s})$. Since $d$ does not depend on $T$, one $X$ serves every $T$. The likelihood bound is \cref{prop:time:codelength} with $\nu_{\min}(\varphi_w)>s(m)$.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:time:sigma}]
+(a) Summing over valid trees $\pi$ concluding $\varphi$,
+\[
+\mu^\sigma_T(\varphi)=\sum_{\pi}\Pr(\pi)e^{-\kappa|\pi|}\le e^{-\kappa\ell^\sigma_{\min}(\varphi)}\sum_{\pi}\Pr(\pi)=e^{-\kappa\ell^\sigma_{\min}(\varphi)}\mu_T(\varphi)\le e^{-\kappa\ell^\sigma_{\min}(\varphi)}Z_T;
+\]
+divide by $Z^\sigma_T$.
+(b) List the conclusions of all nodes of the tree in post-order (total size $\ell$). For each $\forall$E node $v$ with premise $u$, insert the A4 instance $\mathrm{concl}(u)\to\mathrm{concl}(v)$ before $v$, of size $|\mathrm{concl}(u)|+|\mathrm{concl}(v)|+1$; the substituted term has no bound variables, so it is free for $x$. Then $\mathrm{concl}(v)$ follows by MP; Gen nodes are $\CK$'s Gen, and citations are axioms of $\CK$ or members of $\bigcup\inst(T)$. Each node is the premise of at most one node and there are at most $\ell$ nodes, so the insertions total at most $3\ell$ and the derivation has size at most $4\ell$. If $\ell^\sigma_{\min}(\varphi_w)\le s(m)/4$, there would be a $\CK$-derivation of size $\le s(m)$; by \cref{cor:time:hard}(a) this fails for some $w\in X$ of length $m$, for infinitely many $m$. On those data (a) gives $-\ln P^\sigma_T(\varphi_w)\ge\kappa\,\ell^\sigma_{\min}(\varphi_w)-\ln(Z_T/Z^\sigma_T)>\kappa s(m)/4-\ln(Z_T/Z^\sigma_T)$.
+(c) An explicit $\CK$-derivation written with at least one bit per symbol has bit length at least its symbol size, which exceeds $s(m)$ on the same data. So $g(\ell_T(\varphi_w))=2^{-\kappa\ell_T(\varphi_w)}<2^{-\kappa s(m)}$, and after normalisation $-\log_2P^g_T(\varphi_w)=\kappa\ell_T(\varphi_w)+\log_2Z_T>\kappa s(m)+\log_2Z_T$.
+\end{proof}
+
+\paragraph{Implicit in the notes.} Part (c) needs the explicit derivations of \cref{rem:model:graded} to be derivations in $\CK$ (or derivations of a calculus that translates into $\CK$ with linear overhead, which changes the constant) and the code to spend at least one bit per written symbol; the notes say ``bits, which is at least their symbol count''. We state both assumptions.
+
+\paragraph{The route to \cref{conj:time:poly}, and what is missing.} Represent conclusions with sharing (formula DAGs, grammar-compressed terms), so that $\forall$E need not copy $t$ into every occurrence; for the doubling family above a DAG of size $O(k)$ suffices. That every tree with $\nu$ grammar nodes has such representations of size polynomial in $\nu$ is part of what has to be shown. MP needs equality of two compressed formulas; equality of compressed strings and of grammar-compressed trees is decidable in polynomial time (recalled by the track, not checked: Plandowski 1994; Busatto, Lohrey and Maneth 2008; Schmidt-Schau{\ss} 2005). The missing step is Gen and de Bruijn indices under sharing: abstracting a parameter turns it into an index whose value depends on the binder depth at each occurrence, so a shared subterm can need different indices in different contexts. With that step, the proof of \cref{thm:time:log} would give $\NTIME(\ell^c)$. Model \S10 lists this as problem 12, together with the derivation-penalised equivalence (problem 13), a single-sorted repair of H\"anni's schema for consistent but unsound assigners (problem 14), and for which $f$ the set $A^C_f$, or a set with its consequences and polynomial membership, is a finite union of $\DT$ templates (problem 15).
+
+\begin{remark}[Links to the other sections]\status{(i) proved; (ii), (iv): proof sketch; numbers of (iv): computed}\src{universal Prop U2t, \S8; experiments E7; pa \S3.8, F9}\label{rem:time:links}
+(i) No penalty monotone in derivation length or time reverses \cref{thm:univ:B}: in $\Cmin$ a chain weight non-increasing in the number of eliminations keeps $P^f_{\Hall}(s)\le P^f_{\Hsch}(s)$ on every datum $s\ne\forall x\varphi$ (\cref{prop:univ:robust}, U2t). This counts steps, not symbols.
+(ii) In the equational fragment $\{\text{Q4},\text{Q5}\}$, a Kt-style penalty on generating $0+S^k0=S^k0$ charges $O(\ln k)$, less than the derivation charge of \cref{prop:univ:eqfrag} (at least $k+1$ axiom leaves).
+(iii) The experiments' membership-time factor is a small extra simplicity penalty by construction (\cref{rem:time:e7}).
+(iv) A time-bounded evaluation of the likelihood sums over the derivations found within the bound, so it lower-bounds $\mu_T(s)$ and favours adopting theorems with long proofs as axioms; a two-part code is the extreme case. Under $\Lsch$ with its default axiom prior, memorising already beats deriving at the first occurrence for 11-line proofs (\cref{prop:pa:memo}, \cref{tab:pa:theorems}).
+(ii) and (iv) agree: a derivation likelihood favours the theory that makes the data cheap to state, not the logically minimal one. A $\PA$ comparison under a derivation-time penalty ($\ISigma{n}$ as $\Q$ plus one partial-truth sentence, against the schema) was not quantified.
+\end{remark}

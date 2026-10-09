@@ -1,0 +1,149 @@
+\section{The model: proofs and details}\label{app:model}
+% =====================================================================
+% Appendix to Section 2. Sources: research/tracks/model/notes-final.md §1, §2.4, §10, §12;
+%   research/tracks/model/referee.md (M5, m3, m9, m11, m12); research/tracks/model/checks/{c1,c8,c10}.out;
+%   research/tracks/model/referee_code/{r1,r6}.out; research/tracks/universal/notes-final.md §1.2-1.4, §2.3, §7.1;
+%   research/tracks/experiments/notes-final.md §1.2-1.7, Props X2, X3; research/tracks/pa/notes-final.md Def 0.3.
+% Steps that the notes leave implicit are named ("Implicit in the notes").
+% =====================================================================
+
+Scripts cited here are in \texttt{research/tracks/model/checks/} (the track's) and \texttt{.../referee\_code/} (its referee's); each is seeded and writes its output next to itself.
+
+% ---------------------------------------------------------------------
+\subsection{Prior}\label{app:model:prior}
+
+\begin{proof}[Proof of \cref{lem:model:kraft}]
+The template code is prefix-free: each token fixes the number of children that follow, the escapes are followed by self-delimiting Elias-$\gamma$ codes and fixed bits, and an old metavariable's arity is already known. $\gamma(k+1)$ fixes how many template codes follow, so theory codes are prefix-free. The code determines a template up to renaming of metavariables, which is how \cref{def:model:theory} identifies templates, and sorting makes the code of a set canonical; so distinct theories have distinct codes, and Kraft's inequality gives $\sum_T2^{-\ell(T)}\le1$. Hence $0<Z_\lambda\le1$ for $\lambda\ge1$. For $\lambda\ge2$, $\sum_T\pi_\lambda(T)^{1/2}=Z_\lambda^{-1/2}\sum_T2^{-\lambda\ell(T)/2}\le Z_\lambda^{-1/2}\sum_T2^{-\ell(T)}<\infty$.
+\end{proof}
+
+\paragraph{Implicit in the notes.} (1) Theories must be taken up to renaming of metavariables: renamings share a code, so otherwise infinitely many theories would share one code and the sum would diverge. (2) The notes code the number of templates as $\gamma(k)$; Elias-$\gamma$ codes positive integers, and the empty theory (used in \cref{prop:model:compute}(b)) needs a code, so we write $\gamma(k+1)$. Neither changes a statement.
+
+\begin{proof}[Proof of \cref{rem:model:priors}]
+(i) The experiments' template code is $-\log_2$ of a subcritical stochastic grammar over templates whose arities fix the tree shape, so $\sum_\tau2^{-\mathrm{bits}(\tau)}\le1$. A set of $m$ distinct components costs $|\gamma(m)|+\sum_i\mathrm{bits}(\tau_i)-\log_2m!$, so the sum over such sets is the sum over ordered tuples of distinct components times $2^{-|\gamma(m)|}$, at most $2^{-|\gamma(m)|}(\sum_\tau2^{-\mathrm{bits}(\tau)})^m\le2^{-|\gamma(m)|}$; summing over $m$ gives at most~1, and $(1+|T|)^{-\tau}\le1$. An independent implementation of the code gives the same lengths to four decimals (experiments \S1.3). (iii) Membership in a finite $\DT$ theory is decided by matching against each template, in time $O(\sum_{\tau\in T}(|\tau|+|s|))$ (AS Thm~2.5); so the time constant is polynomial in $\ell(T)$ and its logarithm is $O(\ln\ell(T))$.
+\end{proof}
+
+% ---------------------------------------------------------------------
+\subsection{Instantiation grammar}\label{app:model:grammar}
+
+\begin{proof}[Proof of \cref{lem:model:grammar}]
+(a) Let $G_j$ be the sum of $h$ over generation $j$. Given the first $j$ generations, $\Ex[G_{j+1}]\le\rho G_j$ by the uniform condition and linearity, so $\Ex G_j\le\rho^jh(i)$. Generation $j$ has at most $G_j/h_{\min}$ nodes; sum over $j$.
+
+(b) Let $N_D$ count the nodes of depth at most $D$. We show $\Ex_j[e^{\zeta N_D}]\le e^{\zeta\Lambda h(j)}$ for all types $j$ by induction on $D$. For $D=0$, $N_0=1\le\Lambda h_{\min}=2/(1-\rho)$. For the step, let the root's children have types $c_1,\dots,c_r$ ($r\le b$) and $H:=\sum_lh(c_l)\in[0,bh_{\max}]$. The subtrees are independent given the types, so $\Ex_j[e^{\zeta N_{D+1}}]\le e^\zeta\Ex_j[e^{\zeta\Lambda H}]$. Put $x:=\zeta\Lambda H\in[0,1]$ (as $\zeta\le(\Lambda bh_{\max})^{-2}$ and $\Lambda bh_{\max}\ge2$). For $x\in[0,1]$, $e^x\le1+x+x^2$, since $e^x-1-x\le x^2(e-2)$. So $\Ex_j[e^{\zeta\Lambda H}]\le1+\zeta\Lambda\rho h(j)+\zeta^2\Lambda^2b^2h_{\max}^2\le\exp(\zeta\Lambda\rho h(j)+\zeta^2\Lambda^2b^2h_{\max}^2)$, and $\Ex_j[e^{\zeta N_{D+1}}]\le e^{\zeta\Lambda h(j)}$ iff $1+\zeta\Lambda^2b^2h_{\max}^2\le\Lambda(1-\rho)h(j)$. The right side is at least $2$, the left at most $2$. Monotone convergence gives the bound for $N$; the tail is Markov's inequality.
+
+(c) By AS Thm~2.5(a), $\theta\mapsto\tau\theta$ is injective, so $\sum_s\Qg_\tau(s)=\sum_\theta\Qg(\theta)=\prod_M1=1$, each body law being a probability on finite bodies by (a). With full support $\Qg(\theta)>0$ for every $\theta$.
+
+(d) The proofs of (a) and (b) use only independence given the type, the bound $b$ and the uniform condition.
+\end{proof}
+
+\paragraph{The per-type condition (\cref{rem:model:subcrit}).} The pre-referee definition asked that every type have mean offspring below~1, and dominated the process by one Galton--Watson process with the largest mean (referee M5). (1) No formula type of $L_A$ or $L_\in$ satisfies this: every formula production has a child. (2) With infinitely many types it does not give finiteness: with a nullary predicate $\top$, let a formula node with $k$ variables choose $\forall$ (child with $k+1$ variables) with probability $1-1/(k+2)^2$ and $\top$ otherwise; the chain never stops with probability $\prod_{m\ge2}(1-1/m^2)=\tfrac12$ (referee, \texttt{r1\_subcritical.out}: product $0.500000$, simulated $0.4989$). (3) Means do not give domination: $\{0{:}\,0.55,\,2{:}\,0.45\}$ and $\{0{:}\,0.1,\,1{:}\,0.9\}$ both have mean $0.9$, and a law dominating both has mean $\ge1.35$.
+\emph{The uniform condition excludes the chain of (2)} [proved]: it requires $h(k+1)(1-1/(k+2)^2)\le\rho h(k)$, so
+$h(k)\le h(0)\rho^k\prod_{j<k}\frac{(j+2)^2}{(j+1)(j+3)}=h(0)\rho^k\frac{2(k+1)}{k+2}\to0$, against $h\ge h_{\min}>0$ (\texttt{c10\_subcritical.out}, Part C: e.g.\ $6.1\cdot10^{-92}$ at $k=2000$ for $\rho=0.9$).
+
+\begin{example}[Grammars that satisfy \cref{def:model:grammar}]\status{computed}\src{model \S1.4 (c10); experiments \S1.2}\label{ex:model:qa}
+$\Qg_A$ for $L_A$: term node $0$ $.4$, $S$ $.2$, $+$ $.1$, $\cdot$ $.1$, a variable $.2$ (uniform over the $k$ variables; renormalised away when $k=0$); formula node $=$ $.3$, $<$ $.2$, $\neg,\wedge,\to,\forall,\exists$ $.1$ each. Term nodes have mean $0.75$ ($k=0$) or $0.6$ term children; formula nodes $0.7$ formula and $1.0$ term children. With $h(o)=1$, $h(\iota)=0.05$ the weighted ratio is at most $0.75$ at every type, so $\rho=0.75$. From $2\cdot10^5$ bodies: mean size $14.62$ (s.e.\ $0.04$) from a formula root, against the bound $80$; $4.016$ (s.e.\ $0.015$) from a term root at $k=0$, against the bound $4$, which is the exact mean $1/(1-0.75)$. Both tails decay exponentially. Track experiments' grammar has mean $0.72$ same-sort children at formula nodes and at most $0.75$ at term nodes, and satisfies the condition with $h(o)=1$ and $h(\iota)$ small.
+\end{example}
+
+% ---------------------------------------------------------------------
+\subsection{Calculi}\label{app:model:calculi}
+
+One law $\Qg$ instantiates metavariables and, unless said otherwise, supplies the $\forall$E terms (universal \S1.2).
+
+\emph{$\Cmin$.} Chains. A node cites (probability $1-c$: an axiom by weight, metavariables from $\Qg$) or applies $\forall$E (probability $c$) to a recursively generated premise with $t\sim\Qg$, failing if the premise has no leading $\forall$. For $\{\sigma_\varphi\}$, $Z=(1-c)\sum_{k\le m'}c^k$ with $m'$ the number of leading $\forall$ of $\varphi$ (\cref{prop:univ:factor}).
+\emph{$\Copen(c,g)$.} Adds Gen (probability $g$), which abstracts the parameter of the premise and fails if there is none; $p_{\mathrm{cite}}=1-c-g$; terms from $\Qopen=\rho[p]+(1-\rho)\Qnum$ ($\rho$ here is the parameter probability). Per closed datum, normalised: $\Hall/\Hsch=c(1-\rho)/(1+c)$, $\Hopen/\Hsch=(1-\rho)/(1+g\rho)$ (\cref{prop:univ:open}).
+\emph{$\CUiii$.} Each node picks cite, $\forall$E, or a rule whose premises and conclusion are quantifier-free (equality rules; propositional rules and MP on quantifier-free formulas), with fixed probabilities; trees.
+\emph{$\Cand$.} Cite ($p_{\mathrm{cite}}$), $\forall$E ($c$), $\wedge$I ($a$), $\wedge$E ($e$; side left or right with probability $\tfrac12$), the $\wedge$-rules on all formulas; trees. Used for \cref{rem:univ:detour}.
+
+\emph{$\Cch{J}$ (experiments \S1.6).} A chain $s_0,\dots,s_k$, $k\le J$. $s_0$ cites component $i$ with probability $w_i$ (bodies from $\Qg$, guards respected). At step $j<J$, if some rule applies, the chain stops with probability $c_{\mathrm{stop}}$, otherwise it applies an applicable rule $r$ with probability $\propto c_r$: \emph{elim} ($s_j=\forall x\psi\mapsto\psi[t/x]$, $t$ from $\Qelim$, closed terms, with $p$ iff the run is open); \emph{gen} ($s_j\mapsto\forall x\,s_j[x/p]$ if $s_j$ contains $p$); \emph{mp} (a uniformly chosen component $A\to B$, $A,B\in\DT$ with the metavariables of $A$ in $B$, whose $A$ matches $s_j$; $s_{j+1}=B\theta$, $\theta$ read off $s_j$ and drawn from $\Qg$ on the rest). If no rule applies, or $j=J$, it stops. Defaults $c_{\mathrm{stop}}=\tfrac12$, all $c_r=1$, $J=1$ ($J=2$ in parts of E1 and in E6); one parameter $p$. The chain never fails, so its law is a probability (experiments Prop X3), and $P(s\mid T,w)=\sum_iw_ia_i(s)$. It is the special case of $\Lone$ with cited major premises and depth $\le J$, so induction followed by MP and $\forall$E is outside it (\cref{rem:exp:limits}).
+
+\emph{$\CND$ and $\Lsch$ (pa Def 0.3).} Sequents $\Gamma\vdash A$ with rules hyp, ax (an axiom, or a schema instance at a motive), tc (from $\Gamma_j\vdash A_j$ infer $\bigcup_j\Gamma_j\vdash B$ if $\bigwedge_jA_j\to B$ is a tautology), $\to$I, $\forall$E, $\forall$I, $\exists$I, $\exists$E, refl, subst, with the usual side conditions; a standard sound and complete calculus, checked by \texttt{nd.py}. The derivation is written schematically in a predicate metavariable $P$ and the motive is coded once by the grammar. Per line it costs $\log_210$ bits for the rule, $\log_2|T|$ per axiom citation, $\log_2(\text{line index})$ per premise reference and $\beta=\log_223\approx4.52$ bits per written symbol. The decodable variant also codes the number of lines, the premise count of each tc line and the variables named by subst and $\exists$I (4.8--7.3\% more on pa \S1's derivations); it is a prefix code, so $\Lsch$ is the two-part form of a sub-probability. ($\beta$ should strictly be $\log_2$ of the alphabet size, about $\log_225$: about 3\% on symbol costs, no conclusion changes.)
+
+\emph{The grammar of $\Leq$ (model Ex~3.6).} A node cites a template ($\alpha_{\mathrm{ax}}$; metavariables from $\Qg$) or applies refl ($t\sim\Qg$), sym, trans (valid iff the middle terms agree), congruence for $S$, or congruence for $+$ (side term $u\sim\Qg$, left or right). A tree is valid iff its steps are and all its terms are closed of size $\le N$. $\mu_T$ is the exact least fixpoint; Monte Carlo agrees ($Z=0.54909$ against $0.54965\pm0.00091$). The rules are complete for closed equational consequence (known; \citealp{birkhoff1935structure}, not checked).
+
+\paragraph{Proof sketch of \cref{lem:model:a4}(b)}\label{app:model:a4}
+Let $s_{m,t}:=\forall xB_m\to B_m[t/x]$, $B_m:=(x+\dots+x=x)$ with $m$ summands. Suppose $\tau\in\DT$ with $\inst(\tau)\subseteq\inst(\mathrm{A4})$ covers $s_{m,t}$ and $s_{m',t'}$, $m\ne m'$. The antecedents differ under $\forall x$ at positions whose subterms contain the bound $x$, so $\tau$ has an occurrence there with $x$ among its arguments, say $f(x)$. The matching position of the consequent carries $B_m[t/x]$; in $\tau$ it is either $f(c)$ with a fixed metavariable-free $c$, forcing $t=t'=c$ there, or a metavariable independent of $f$, which gives instances outside A4. So each template covers $s_{m,t}$ for one $m$ or one $t$, and a finite set misses some $s_{m,t}$. \emph{Not written out:} turning ``the matching position in the consequent'' into a statement about every $\DT$ shape (model \S10, open problem 9).
+
+% ---------------------------------------------------------------------
+\subsection{Likelihoods}\label{app:model:lik}
+
+\Cref{tab:model:likelihoods} lists the likelihoods of \cref{def:model:lzero,def:model:lone,def:model:variants} and the scores of \cref{def:model:scores}.
+
+\begin{table}[ht]
+\centering\footnotesize\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{@{}lXllp{4.6cm}@{}}
+\toprule
+name & definition & normaliser & size pr. & model / universal / pa / experiments\\
+\midrule
+$\Lzero$ & $\sum_\tau w_\tau\Qg_\tau(s)$, or $\PDir{T}$ & probability & yes & L0 / L0-strict / L0 / L0\\
+$\Lcl$ & $\Lzero$; $\forall\bar x\chi$ cited via instances & probability & yes$^\dagger$ & --- / L0-closure / --- / ---\\
+$\mu_T$ & $\Pr[\text{valid tree concluding }s]$ & mass $Z_T$ & yes$^\ddagger$ & $\mu_T$ / L1(c) / --- / ---\\
+$\Lone$ & $\mu_T/Z_T$ & $Z_T\ge1-\alpha_{\mathrm r}$ & yes & L1 / L1-norm / L1 (not computed) / L1 ($\Cch{J}$)\\
+$\Ltwo$ & citation forced at depth $d$ & $Z^{(d)}_T$ & yes & L2 / --- / ``bounded'' / ---\\
+$\Lsig$ & $\Lone\cdot e^{-\kappa|\pi|}$, renormalised & $Z^\sigma_T$ & yes & L1$^\sigma$ / --- / --- / ---\\
+$\Lmax$ & best single tree & sub-prob. & yes$^\ddagger$ & two-part / L1-max / L1-max / ---\\
+$\Lsch$ & two-part $\CND$ code & sub-prob. & yes$^\ddagger$ & --- / --- / L1-sch / ---\\
+$\Lsel$ & $P_T(s)/P_T(S)$ on $S$ & $P_T(S)$ & yes$^\dagger$ & --- / L1-sel$(S)$ / --- / ---\\
+$\Lselc$ & $\sum_iw_ia_i(s)/c_i$ & $c_i$ & yes$^\dagger$ & --- / --- / --- / L1sel\\
+$P^\eta_T$ & $(1-\eta)P_T+\eta N$ & as $P_T$ & yes$^\dagger$ & (channel $P^K_T$) / $P^\eta_T$ / --- / ---\\
+$\Leps$ & $(1-\varepsilon)P_T+\varepsilon\mu_0[T\nvdash_k\neg s]$ & mass dep.\ on $T$ & partly$^\S$ & --- / --- / $L_\varepsilon$ / ---\\
+$\Leq$ & equational grammar & $Z_T$ & yes$^\dagger$ & L1-eq / --- / --- / ---\\
+$P^g_T$ & $2^{-\kappa\ell_T(s)}/Z_T$ & $Z_T\le1$ & restricted & $P^g_T$ / --- / --- / ---\\
+scores & \cref{def:model:scores} & none & no & $\Sprove,\Snc,\Sg$ / $S_{\mathrm{nc},\beta}$ / $\Leps$ / ---\\
+\bottomrule
+\end{tabularx}
+\caption{Likelihoods and scores. Normalisers are data-independent. ``yes'': \cref{prop:model:whichsize}(a); ``restricted'': \cref{rem:model:graded}; ``no'': \cref{prop:model:whichsize}(b). $^\dagger$A fixed probability on $\mathcal S$, so \cref{lem:model:size} applies as in the proof of \cref{prop:model:whichsize}(a). $^\ddagger$A fixed sub-probability, so \cref{thm:univ:size} applies. $^\S$Only $(1-\varepsilon)P_T$ separates theories that refute no datum; at $\varepsilon=1$ nothing is learned (\cref{prop:pa:nc}). The marks say that mass outside the data's support is lost, not how strongly two theories are separated.}
+\label{tab:model:likelihoods}
+\end{table}
+
+\begin{proof}[Proof of \cref{lem:model:dirsum}]
+$\prod_iP_{T,w}(X_i)=\sum_\ell\prod_\tau w_\tau^{n_\tau(\ell)}\prod_i\Qg_{\ell_i}(X_i)$, a finite sum over the labellings with $X_i\in\inst(\ell_i)$; integrate term by term with the Dirichlet moments (known)
+\[\Ex\textstyle\prod_\tau w_\tau^{n_\tau}=\frac{\Gamma(A)}{\Gamma(A+n)}\prod_\tau\frac{\Gamma(\alpha_\tau+n_\tau)}{\Gamma(\alpha_\tau)}.\] The result is symmetric in the data. $\PDir{T}$ is a mixture of the i.i.d.\ laws $P_{T,w}^{\otimes n}$, each a probability on $\mathcal S^n$ consistent in $n$ (\cref{lem:model:grammar}(c)), so its normaliser is~1 for every $D$. With disjoint instance sets each datum has one label, and $\PDir{T}(D,s)/\PDir{T}(D)=\frac{\Gamma(A+n)}{\Gamma(A+n+1)}\frac{\Gamma(\alpha_\tau+n_\tau+1)}{\Gamma(\alpha_\tau+n_\tau)}\Qg_\tau(s)=\frac{\alpha_\tau+n_\tau}{A+n}\Qg_\tau(s)$ for $s\in\inst(\tau)$.
+\end{proof}
+
+\emph{Computed.} \texttt{c8\_formulas.out} (1): closed form $9.908294678\cdot10^{-6}$ against quadrature over $w_1\sim\mathrm{Beta}(\tfrac12,\tfrac12)$ $9.908294680\cdot10^{-6}$ (asserted to $10^{-12}$). Experiments Prop X2: the exact dynamic programme agrees with brute force on 500 random instances and with the referee's independent count-vector sum on 400 cases to $1.4\cdot10^{-14}$; above 20000 states it returns rigorous bounds (\cref{app:exp}).
+
+\begin{proof}[Proof of \cref{lem:model:lone}]
+(a) A derivation node has $0$, $1$ or $2$ premises with probabilities $\alpha_{\mathrm{ax}}+\alpha_{\mathrm{lg}}>0$, $\alpha_{\mathrm{Gen}}+\alpha_{\forall\mathrm E}$, $\alpha_{\mathrm{MP}}$, independently: a Galton--Watson tree with mean $m$. The extinction theorem (known) gives finiteness iff $m\le1$, given positive mass at~0 (without it the tree is infinite even at $m=1$; referee m11), and extinction probability $q$ for $m>1$. $\Ex N=1+m\Ex N$, with $\Ex N<\infty$ for $m<1$ since generation $k$ has mean $m^k$. Bodies and terms are finite a.s.\ by \cref{lem:model:grammar}(a).
+(b) A one-node citation tree is valid, so $Z_T\ge\alpha_{\mathrm{ax}}+\alpha_{\mathrm{lg}}$.
+(c) $\subseteq$: a valid tree is a $\CK$-derivation from $\bigcup\inst(T)$, each $\forall$E node replaced by an A4 instance and MP. $\supseteq$: a $\CK$-derivation from $\bigcup\inst(T)$ and logical axioms is a grammar tree of positive probability: citations have $w_\tau\Qg(\theta)>0$, logical-axiom instances (A4's term included) have positive $\Qg$-probability with parameters where used, and each Gen has positive parameter probability. Without parameters all formulas in a tree are closed and Gen adds only vacuous quantifiers (referee m12).
+\end{proof}
+
+\paragraph{Implicit in the notes.} For $T=\emptyset$ no theory axiom can be cited; reading such a node as invalid, (b) becomes $Z_\emptyset\ge\alpha_{\mathrm{lg}}>0$, which is what \cref{prop:model:compute}(b) uses.
+
+\emph{Computed} (\texttt{c8\_formulas.out} (2), derivation nodes): $(\alpha_{\mathrm{MP}},\alpha_{\mathrm{Gen}}+\alpha_{\forall\mathrm E})=(0.15,0.2)$, $m=0.5$: mean $2.010$ against $2$; $(0.3,0.3)$, $m=0.9$: $9.965$ against $10$; $m=1$: heavy tail; $(0.4,0.3)$, $m=1.1$: $P(\text{finite, }<20000\text{ nodes})=0.7489$ against $q=0.75$.
+
+\begin{proof}[Proof of \cref{lem:model:lsig} and \cref{rem:model:sel}]
+A one-node citation tree $\pi$ has $\Pr(\pi)\,e^{-\kappa|\pi|}>0$, and $e^{-\kappa|\pi|}\le1$ gives $\mu^\sigma_T\le\mu_T$; $\mu^\sigma_T(s)>0$ iff some valid tree concludes $s$ with positive probability, iff $\mu_T(s)>0$. For \cref{rem:model:sel}: with one component $P_T=a_1$ and $P_T(S)=c_1$; with several, the stream filter divides by $\sum_iw_ic_i$ and the per-citation form each term by its own $c_i$.
+\end{proof}
+
+% ---------------------------------------------------------------------
+\subsection{The size principle}\label{app:model:size}
+
+\begin{proof}[Proof of \cref{lem:model:size}]
+On $\operatorname{supp}P^*$, $P=(1-\varepsilon)\tilde P$; substitute into
+\[\KL(P^*\|P)=\textstyle\sum_{s\in\operatorname{supp}P^*}P^*(s)\ln(P^*(s)/P(s)).\] For (b), $\Ex_{P^*}[\tilde P(X)/P^*(X)]=\sum_{s\in\operatorname{supp}P^*}\tilde P(s)=1$; extend to $n$ data by independence.
+\end{proof}
+
+\emph{Computed} (\texttt{c1\_size\_principle.out}): root law $(0,S,+,\cdot)=(.5,.3,.1,.1)$; $P^*$ the law of $\{z+0=z\}$, $P$ that of $\{z_1+0=z_2\}$ on the 30901 terms of size $\le11$. (a) holds to $10^{-9}$ (asserted); the simulated per-datum log-ratio is $3.81$, $4.19$, $3.94$ nats at $n=10^2,10^3,10^4$, against $\KL=H(\Qg)=3.894$ nats for the untruncated grammar.
+
+\begin{proof}[Proof of \cref{prop:model:whichsize}]
+(a) Each $P_T$ is a fixed probability on $\mathcal S$ (\cref{lem:model:grammar,lem:model:lone,lem:model:lsig}; under $\Ltwo$ all trees are finite and one-node citations valid); apply \cref{lem:model:size}. Under $\Lzero$ with full support and positive weights, $\operatorname{supp}P_{T,w}=\bigcup\inst(T)$.
+(b) A model of $T'\cup D_+\cup\neg D_-$ is a model of $\Th(T')\supseteq\bigcup\inst(T)$, so $\Snc(T')\le\Snc(T)$. If $\Sprove(T)=1$, $T'$ proves what $T$ proves and is consistent by hypothesis, so $\Sprove(T')=1$. For $\Sg$: $\Snc(T')=1$ by hypothesis, and instance inclusion makes every derivation from $T$ one from $T'$, so $\ell_{T'}\le\ell_T$ and $g(\ell_{T'})\ge g(\ell_T)$. The consequence is the case $T=T^*$, $T'=T^*\cup\{\psi\}$, where the instances are nested; if $T^*$ proves the labelled data, the consistency hypothesis reduces to that of $T^*\cup\{\psi\}$.
+(c) Under $\Lzero$, $P_{T'}(s)=(1-w_\psi)P_{T^*}(s)+w_\psi[s=\psi]$. Under $\Lone$, the one-node tree citing $\psi$ gives $P_{T'}(\psi)\ge\alpha_{\mathrm{ax}}w_\psi$ (as $Z_{T'}\le1$), while $\psi\notin\Th(T^*)\supseteq\operatorname{supp}P_{T^*}$ by the inclusion $\subseteq$ of \cref{lem:model:lone}(c), which needs no hypothesis. So $\varepsilon\ge\alpha_{\mathrm{ax}}w_\psi$ in \cref{lem:model:size}, and by the strong law $n^{-1}\ln\frac{P_{T'}(D)}{P_{T^*}(D)}\to-\KL(P_{T^*}\|P_{T'})\le-\ln\frac1{1-\alpha_{\mathrm{ax}}w_\psi}$ a.s. The Dirichlet case is \cref{prop:ident:spare}(a).
+\end{proof}
+
+\begin{proof}[Proof of \cref{rem:model:graded}]
+A derivation determines its conclusion, so distinct sentences have distinct shortest derivations with codes in one prefix-free set; with $\kappa\ge1$, Kraft gives $Z_T\le1$. With $g_\infty>0$ the infinitely many sentences without derivation make the sum infinite. The code writes axioms as formulas, so instance inclusion makes every derivation from $T$ one from $T'$ with the same code: $\ell_{T'}\le\ell_T$, $Z_{T'}\ge Z_T$. The refuted sentence fails where the numerator grows too. The counterexample is the referee's (\texttt{r6\_stronger\_theory.out}): on a universe of 570 formulas of size $\le7$, $\ell_T(b)=5$ and $\ell_{T'}(b)=1$; $\kappa=1$ gives $P_T(b)=0.0321$, $P_{T'}(b)=0.3456$ ($\kappa=\tfrac12$: $0.0432$, $0.1491$), 10 sentences gaining and 36 losing; under $\Ltwo$ (depth 2) $P_T(b)$ rises from $0.0134$, $0.0156$, $0.0168$ to $0.263$, $0.240$, $0.196$ in three rule settings.
+\end{proof}
+
+% ---------------------------------------------------------------------
+\subsection{Computing the likelihood}\label{app:model:compute}
+
+\begin{proof}[Proof of \cref{prop:model:compute}]
+(a) Let $\nu(\pi)$ count the grammar nodes of a tree: derivation nodes, $\Qg$ nodes of bodies and terms, and the nodes of the geometric chains that pick parameters. Weight them $1$, $\eta h_{\Qg}$ and $\eta$. A derivation node then has expected weighted offspring at most $m+\eta(v_Th_{\Qg,\max}+1)$, with $v_T$ the largest number of metavariable slots of a template of $T$ or of a logical schema; a $\Qg$ node has ratio at most $\rho_{\Qg}$; a chain node continues with a fixed probability below~1. As $m<1$, a small $\eta$ makes all ratios less than~1, so the whole tree satisfies \cref{lem:model:grammar}(d) (as in the proof of \cref{prop:time:codelength}) and $\Ex\nu\le C_\nu$, computable from the parameters and $T$. Finitely many trees have $\nu\le N$ (each node chooses from a finite list: rule, template, logical schema, production, one of at most the arity plus $N$ variables, chain step); validity is decidable and each probability is a computable real. So $\mu^{\le N}_T(s)\le\mu_T(s)\le\mu^{\le N}_T(s)+C_\nu/N$ by Markov's inequality, likewise for $Z_T$, and $Z_T\ge1-\alpha_{\mathrm r}>0$.
+(b) The identity is \cref{lem:model:lone}(c). $\bigcup\inst(T)$ is decidable by matching, so $\Th(T)$ is recursively enumerable. $\Th(\emptyset)$ is the set of valid formulas, undecidable for a language with a binary relation symbol (Church, Turing; known).
+(c) Deciding $P_T(s)=0$ would decide $s\notin\Th(T)$. For a finite class, $\pi_n(T)$ is a quotient of computable reals whose denominator is positive when defined.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:model:max}]
+For a body $\beta$ of type $\iota^2\to o$ let $\beta^{\mathrm{sw}}$ swap its holes. Then $\tau'[F:=\beta]=\tau[F:=\beta^{\mathrm{sw}}]$, so $\inst(\tau)=\inst(\tau')$, and hole symmetry gives $\Qg_\tau=\Qg_{\tau'}$. Under $\Lzero$, $P_{T_2}=\tfrac12\Qg_\tau+\tfrac12\Qg_{\tau'}=P_{T_1}$, and the posterior odds are the prior odds (\cref{cor:ident:prior}). The codes of $\tau$ and $\tau'$ differ, so $T_1\ne T_2$. Under the maximum each instance has exactly one matcher per template (AS Thm~2.5), so two citations of probability $\tfrac12\Qg_\tau(s)$ each, and $V_{T_2}(s)=\tfrac12V_{T_1}(s)$.
+\end{proof}
