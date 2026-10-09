@@ -9,6 +9,7 @@ This repository holds several independent projects, one top-level folder each.
 | `christiano-point/` | `claude/vibrant-wright-pdohvb` |
 | `foom-coom-transition/` | `codex/foom-coom-transition-2026-10-08` |
 | `computational-cosmology/` | `codex/computational-cosmology-2026-10-08` |
+| `purpose-sensitivity/` | `claude/friendly-sagan-hngxoz` |
 
 ## Working branches
 
