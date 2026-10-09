@@ -193,6 +193,15 @@ The pooled ban − industry contrast (C8) moves as follows from original to iden
 | grandfather step | +0.46 [+0.35, +0.57] | +0.19 [+0.10, +0.29], p = 0.001 |
 | issues listed | no difference | no difference |
 
+The control has fewer replicates than the original (Haiku 12, Sonnet and Opus 6, Fable 4) and omits MIRI. Restricting the original data to the same models and replicates gives the same picture. For the AI lab vs the AI ban advocate:
+
+| | original wording, matched sample | identical wording |
+|---|---|---|
+| foreign-use flaw | 0.61 vs 0.79 | 0.64 vs 0.68 |
+| calibration | 0.82 vs 0.36 | 0.73 vs 0.55 |
+| hold-back | 0.52 vs 0.02 | 0.18 vs 0.02 |
+| reliance caveat | 0.77 vs 0 | 0 vs 0 |
+
 How to read this:
 
 * **The industry request produces most of the asymmetry.** Its legal team asks for gaps "that would let us keep operating if it passes as written". That framing triggers the reliance caveats, most of the calibration and hold-back advice, and the relevance filtering that dropped the foreign-use flaw (useless to a company that wants to keep building or mining itself). With identical requests, these largely disappear.
