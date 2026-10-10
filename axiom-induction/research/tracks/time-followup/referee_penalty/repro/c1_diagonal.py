@@ -1,8 +1,8 @@
-"""c1: the diagonal construction of Theorem 3.2 (time-followup notes.md and notes-final.md), run against concrete computable predictors.
+"""c1: the diagonal construction of Theorem 4.2 (time-followup notes.md), run against concrete computable predictors.
 
 A predictor maps (label history, step index j) to a pair (q0, q1) with q0, q1 >= 0 and q0 + q1 <= 1 (a semimeasure step).
-The diagonal labeller of Theorem 3.2 does not see (q0, q1) exactly: it sees approximations a_b with |a_b - q_b| <= 2^-(j+3)
-and picks the label b_j with the smaller a_b (ties: 0).  Claim checked (Theorem 3.2(c), in the form of notes.md; notes-final.md sharpens it to n - 1/(4 ln 2), see c4):
+The diagonal labeller of Theorem 4.2 does not see (q0, q1) exactly: it sees approximations a_b with |a_b - q_b| <= 2^-(j+3)
+and picks the label b_j with the smaller a_b (ties: 0).  Claim checked (Theorem 4.2(c)):
     the predictor's cumulative log loss on the first n diagonal labels is >= n - 1/(2 ln 2) for every n,
 and >= n when the approximations are exact.  Approximation modes: exact; seeded random errors of size <= 2^-(j+3);
 adversarial errors of that size (they push the choice towards the *larger* q_b whenever |q0 - q1| < 2^-(j+2)).
@@ -22,8 +22,6 @@ Predictors:
   index-reader                         q1 = 0.9 if j is even, else 0.1 (reads the sentence s_j, i.e. its index)
 Part B re-runs the self-referential program D(n) = G(e, n) of the proof from scratch for every n <= 150 (KT, exact and
 random modes) and checks that the label of s_j computed inside D(n) equals D(j) (the history-consistency step).
-KT ignores the sentences, so Part B does not exercise the self-reference; the referee's
-../referee_logic/r1_quine_diagonal.py does (e is a quine whose sentences contain its own source).
 Part C checks the analytic tail bound sum_j log2(1 + 2^-(j+1)) <= 1/(2 ln 2).
 """
 import math

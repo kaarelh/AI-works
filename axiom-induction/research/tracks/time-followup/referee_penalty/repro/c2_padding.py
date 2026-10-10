@@ -1,4 +1,4 @@
-"""c2: padded Craig sets (Lemma 2.1 and Remark 2.6 of the time-followup notes.md and notes-final.md) on toy assigners with step-counted runs.
+"""c2: padded Craig sets (Lemma 3.1 of the time-followup notes.md) on toy assigners with step-counted runs.
 
 Sentences are atoms R(w), w a nonempty binary word, enumerated in length-lexicographic order; an assigner f is a
 step-counted program (a Python generator: one yield = one step) that accepts, rejects, or runs forever.
@@ -8,7 +8,7 @@ writing an axiom costs its length.  "work" = all cost except writing axioms.
 E_f (padded enumerator): stage s = 1, 2, ...: generate sentence s and start f on it; advance every unfinished run by one
 step.  When the run on phi halts, write psi^(m) := (psi & (psi & ... psi)) (m copies, right-nested; |psi^(m)| =
 m|psi| + 3(m-1)), psi = phi (acc) or ~phi (rej), with
-   padding 'work': m := (work counter at that moment) + 1      [the version used in Lemma 2.1]
+   padding 'work': m := (work counter at that moment) + 1      [the version used in Lemma 3.1]
    padding 'all' : m := (total cost counter, writing included) + 1.
 A^E_f := the set of axioms E_f writes.  Decider: given chi = psi^(m), rerun E_f (without writing) until its counter passes
 m - 1, and accept iff E_f would start writing psi^(m) exactly when the counter equals m - 1.
@@ -20,11 +20,9 @@ Claims checked:
   (2) the decider accepts members and rejects perturbed strings (m +- 1, flipped literal, undecided phi); a from-scratch
       rerun of the decider agrees with the event log on random small queries;
   (3) P1: decider work <= 2 |chi| for every f, padded ('work' and 'all') and unpadded;
-      [the dec/|chi| column is computed from the cost model, as (|chi| + m)/|chi| (padded) or (|chi| + k)/|chi|
-       (unpadded); the decider itself is run only in the 30-query from-scratch check of (2), column 'rerun']
   (4) P2, cumulative form: completion time of a_i <= 2 * (|a_1| + ... + |a_i|) for 'work' padding, every f;
   (5) P2, strict per-axiom form: completion time of a_i <= 2 |a_i| for 'all' padding (whose lengths grow geometrically),
-      and <= |a_i|^2 for 'work' padding (Lemma 2.1 states a polynomial bound);
+      and <= |a_i|^2 for 'work' padding (Lemma 3.1 states a polynomial bound);
   (6) unpadded: completion time / |a_i| is unbounded (dovetailing delay), and so is completion / cumulative length for
       slow f, which is why P2 needs the padding while P1 does not;
   (7) f's own steps per |phi| range from below 1 to exponential: the bounds in (3)-(5) do not depend on it.

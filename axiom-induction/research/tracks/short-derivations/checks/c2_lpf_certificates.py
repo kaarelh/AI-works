@@ -1,4 +1,5 @@
-"""c2: certificates for the least-prime-factor data of Example 6.5 (short-derivations/notes.md).
+"""c2: certificates for the least-prime-factor data of Example 5.6 of short-derivations/notes.md (an illustration of
+the soft charges of §5; nothing here is a proof).
 
 Data: phi_{N,i} := "bit i of the least prime factor of N is 1", for N >= 2 and 0 <= i < bitlength(lpf(N)).
 Certificate for N: its factorisation N = p_1^e_1 ... p_k^e_k with p_1 < ... < p_k, and a Pratt certificate for each p_j
@@ -15,9 +16,11 @@ Claims checked (they illustrate known facts; nothing here is a proof):
       a non-generator base, a missing prime of p-1, a wrong product, unsorted factors, a non-least first factor;
   (3) certificate size (total bits of all numbers in it) grows like O(log^2 N): the ratio bits / bitlength(N)^2 stays
       bounded; verifier work (modular multiplications) grows polynomially: work / bitlength(N)^3 stays bounded;
-  (4) contrast: trial division needs about lpf(N) / 2 divisions, i.e. 2^(bitlength(N)/2 - 1) on balanced semiprimes.
+  (4) contrast: trial division by odd candidates needs about min(lpf(N), isqrt(N)) / 2 divisions, i.e. about
+      2^(bitlength(N)/2 - 1) on balanced semiprimes (it stops at isqrt(N) when N is prime; notes-final, referee m11).
 """
 import random
+from math import isqrt
 from sympy import isprime, factorint
 
 SEED = 1009
@@ -157,7 +160,8 @@ def main():
                 maxpr = max(maxpr, sum(nprimes(cp) for _, _, cp in cert))
                 maxw = max(maxw, w / b ** 3)
                 worst_b3 = max(worst_b3, w / b ** 3)
-                maxtd = max(maxtd, (min(fac) + 1) // 2)
+                # trial division by odd candidates stops at the least prime factor or at isqrt(N) (referee m11)
+                maxtd = max(maxtd, (min(min(fac), isqrt(N)) + 1) // 2)
             all_ok &= labels_ok
             out.append(f"{bits:>5} {kind:>10} {ncase:>4} {maxbits:>14} {maxbits / bits ** 2:>9.3f} {maxpr:>12} "
                        f"{maxw:>9.4f} {str(labels_ok):>9} {maxtd:>22.3e}")

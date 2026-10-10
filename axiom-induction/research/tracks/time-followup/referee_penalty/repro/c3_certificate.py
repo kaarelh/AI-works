@@ -1,4 +1,4 @@
-"""c3: certificate-carrying axioms (Theorem 4.2(b) of the time-followup notes.md and notes-final.md) on a toy NP-and-coNP language.
+"""c3: certificate-carrying axioms (Theorem 5.2(b) of the time-followup notes.md) on a toy NP-and-coNP language.
 
 Language: X := {n >= 2 : the least prime factor of n is 1 mod 4}.  Sentences phi_n := R(bin(n)).  Both membership and
 non-membership have short certificates: the prime factorisation of n (nondecreasing primes, Elias-gamma coded), whose
