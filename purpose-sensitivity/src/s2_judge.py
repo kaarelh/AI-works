@@ -317,7 +317,7 @@ def subject_identity(rec):
 
 def score_probe(rec, info):
     meta = info.get("meta") or {}
-    if rec.get("refused_by_api"):
+    if rec.get("refused_by_api") or rec.get("api_block"):
         return dict(api_block=True)
     text = rec.get("result") or ""
     if meta.get("probe") == "realism":
@@ -397,8 +397,9 @@ def judge_main(argv):
             continue
         base = dict(id=j["id"], model=j["model"], unit=info.get("unit"), context=info.get("context"),
                     arm=info.get("arm"), rep=info.get("rep"), canary_of=info.get("canary_of"), judge_model=a.model)
-        if rec.get("refused_by_api") or not (rec.get("result") or "").strip():
-            json.dump(dict(base, api_block=bool(rec.get("refused_by_api")), empty=not (rec.get("result") or "").strip(),
+        blocked = bool(rec.get("refused_by_api") or rec.get("api_block"))  # Astra / run.py safeguard stops
+        if blocked or not (rec.get("result") or "").strip():
+            json.dump(dict(base, api_block=blocked, empty=not (rec.get("result") or "").strip(),
                            judge_ok=False),
                       open(out, "w"))
             continue

@@ -34,10 +34,10 @@ def load(rawdir):
         kind = (j.get("meta") or {}).get("kind")
         if j["unit"].startswith("identity__"):
             row["kind"] = "identity"
-            row.update(s2_judge.score_probe(j, row["text"]) if hasattr(s2_judge, "score_probe") else {})
+            row.update(s2_judge.score_probe(r, j))
         elif kind == "probe":
             row["kind"] = "credence"
-            row["credence"] = s2_fidelity.parse_credence(row["text"])
+            row["credence"] = s2_fidelity.parse_credence(row["text"])[0]
             row["claim_id"] = j["meta"]["claim_id"]
             row["side"] = j["meta"]["side"]
         else:
@@ -50,6 +50,11 @@ def load(rawdir):
 def main():
     rawdir = sys.argv[1]
     df = load(rawdir)
+    for c in df.columns:
+        if df[c].dtype == object and c not in ("text", "id", "context", "arm", "model", "served", "kind", "claim_id", "side"):
+            vals = df[c].dropna()
+            if len(vals) and all(isinstance(v, (bool, int, float)) for v in vals):
+                df[c] = df[c].map(lambda v: float(v) if v is not None and not (isinstance(v, float) and v != v) else float("nan"))
     out = []
     pd.set_option("display.width", 250)
     out.append(f"# Study 2 pilot report\n\n{len(df)} records, total cost ${df.cost.sum():.2f}\n")
@@ -96,7 +101,7 @@ def main():
     i = df[df.kind == "identity"]
     if len(i):
         out.append("\n## Identity probes\n")
-        cols = [x for x in i.columns if x in ("names_model", "names_developer", "identity_ok", "model_ok", "developer_ok")]
+        cols = [x for x in i.columns if x in ("identity_ok", "other_developer", "other_claude_model")]
         out.append(i[["model", "context"] + cols + ["text"]].assign(text=i.text.str[:90]).to_markdown(index=False))
     rep = "\n".join(out)
     if len(sys.argv) > 2:

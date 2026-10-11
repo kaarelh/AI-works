@@ -40,6 +40,12 @@ DROP_ENV = ["CLAUDE_CODE_USER_EMAIL", "CLAUDE_CODE_REMOTE", "CLAUDE_CODE_REMOTE_
             "CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT", "CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD",
             "CLAUDE_ADDITIONAL_DIRECTORIES", "CLAUDE_CODE_REMOTE_TOOLS_FORWARD", "CLAUDE_CODE_SESSION_ATTENDED"]
 ENV = {k: v for k, v in os.environ.items() if k not in DROP_ENV}
+# The CLI silently re-runs a request on another Opus model when a model's safeguards stop it ("refusal fallback"),
+# and may retry a refused request. Both would hide the subject's own behaviour, so they are disabled: a safeguard
+# stop is then returned as is_error with stop_reason "refusal" and recorded once as an outcome (api_block), never
+# retried. (Study 1 ran before this was known; none of its 1,596 records shows a fallback.)
+ENV.update(CLAUDE_CODE_DISABLE_REFUSAL_FALLBACK="1", CLAUDE_CODE_DISABLE_REFUSAL_RETRY="1",
+           CLAUDE_CODE_NO_MODEL_FALLBACK="1")
 CLI = "claude"
 
 
@@ -94,8 +100,8 @@ class Ledger:
             elif outcome == "ok":
                 self.d["ok"] += 1
                 m["ok"] += 1
-            elif outcome in ("timeouts", "failures"):
-                self.d[outcome] += 1
+            elif outcome in ("timeouts", "failures", "api_blocks"):
+                self.d[outcome] = self.d.get(outcome, 0) + 1
             self.d["cap_usd"] = self.cap
             self.d["updated_utc"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
             with open(self.path + ".tmp", "w") as f:
@@ -159,6 +165,19 @@ def run_one(job, outdir, timeout=900, ledger=None, retries=4):
             if ledger is not None:
                 ledger.add(job["model"], 0.0, "ok")
             return "ok", res.get("total_cost_usd") or 0.0
+        if res is not None and res.get("is_error") and res.get("stop_reason") == "refusal":
+            # a safeguard stop is an observed outcome: record it once, do not retry
+            served, served_all = served_model(res.get("modelUsage"))
+            rec = dict(job=job, result="", api_block=True, api_error=str(res.get("result"))[:2000],
+                       usage=res.get("usage"), cost=res.get("total_cost_usd"), model_usage=res.get("modelUsage"),
+                       duration_ms=res.get("duration_ms"), wall=wall, stop_reason="refusal", attempts=attempt + 1,
+                       served_model=served, served_models=served_all, timeouts=n_timeouts)
+            with open(path + ".tmp", "w") as f:
+                json.dump(rec, f)
+            os.replace(path + ".tmp", path)
+            if ledger is not None:
+                ledger.add(job["model"], 0.0, "api_blocks")
+            return "api_block", res.get("total_cost_usd") or 0.0
         last_err = (res or {}).get("result") if res else err
         time.sleep(5 * 2 ** attempt + random.random() * 3)
     log_line(outdir, "_failures.log", dict(id=job["id"], err=str(last_err)[:1000]))
@@ -180,7 +199,7 @@ def main():
     os.makedirs(a.outdir, exist_ok=True)
     jobs = [json.loads(l) for l in open(a.jobs)]
     ledger = Ledger(a.ledger or os.path.join(a.outdir, "_ledger.json"), a.budget) if a.budget is not None else None
-    stats = {"ok": 0, "skip": 0, "fail": 0, "timeout": 0, "budget": 0}
+    stats = {"ok": 0, "skip": 0, "fail": 0, "timeout": 0, "budget": 0, "api_block": 0}
     if not a.retry_timeouts:
         old = timed_out_ids(a.outdir)
         stats["timeout"] = sum(j["id"] in old for j in jobs)
