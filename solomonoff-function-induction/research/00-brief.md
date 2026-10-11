@@ -84,7 +84,7 @@ This is the source for the NN Bayes ≈ circuit SFI bridge (H10). Cite it as the
 
 > oh i just remembered that also the paper should include an equivalence between the kolmogorov complexity version and the universal semimeasure version, if these turn out to be equivalent (if they don't, then it should explain that). of course only include it if you can figure it out rigorously first
 
-The paper must therefore give this question a section of its own, built from the foundations track's refereed results (H1). Cover:
+The paper must therefore include this question, wherever it fits best (a section, a subsection or part of the foundations section; Hänni later said the format is up to us), built from the foundations track's refereed results (H1). Cover:
 * the universal function semimeasure M_F and its machine form;
 * the weak-semimeasure variant;
 * the deterministic program mixture W;

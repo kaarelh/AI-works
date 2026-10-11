@@ -136,7 +136,7 @@ def main():
     bad_d = notweak = fr = 0
     trials = 200
     for i in range(trials):
-        scale = Fr(rng.randrange(1, 9), 8)
+        scale = Fr(rng.randrange(1, 9), 64)  # mix of frozen and unfrozen cases
         vals = {D: (Fr(1) if len(D) == 0 else Fr(rng.randrange(0, 101), 100) * scale) for D in ALLD}
         phi = lambda D, v=vals: v[D]
         nu, stages, frozen = trim(approx_of(phi, rng))
