@@ -65,8 +65,18 @@ This is the shared brief for every research track and every writer. Read it in f
 * `../../inferential-learning/paper/` (the report *What Follows from What*), especially the imitation and caution sections.
 * `../../axiom-induction/paper/sections/time.tex`: Hänni's axiom-vs-function-induction equivalence, the semimeasure convention, and the asymmetric time-penalty results. These are for the *later* paper. This paper should not depend on them, but should use compatible definitions.
 
+**Slides with Dmitry, now available.** `prior/vaintrob-hanni-nnbayes-generalization-slides.{pdf,txt}`: Vaintrob and Hänni, *A Generalization Result for Overparametrized Neural Net Bayesian Learning* (ILIAD 2026, 110 pages, slide footers numbered to 38). The link is https://kaarelh.github.io/ai/nnbayes-generalization.pdf.
+* **The SFI warm-up.**
+  * Python programs with prior 3^{-|p|}; i.i.d. inputs.
+  * Proposition: after n = O(C) samples, the average posterior probability on the correct answer exceeds 99.9%, with probability 1 − exp(−Ω(C)).
+  * A relevance-based sample-complexity bound.
+* **The main theorem.** Under a strong ℓ2 prior, the NN Bayes prior of a function roughly tracks its MLP-circuit complexity even when the net is overparametrized. Hence circuit-simple functions are learned from poly(d, C) samples.
+* **The NNGP case is different:** XORs are circuit-simple but slow to learn.
+
+This is the source for the NN Bayes ≈ circuit SFI bridge (H10). Cite it as these slides, and state only what they claim, with their own caveats.
+
 **Not available.**
-* The slides with Dmitry Vaintrob, on "NN Bayes is kinda like a circuit version of SFI". The link has been asked for.
+* (The slides with Dmitry are now available; see above.)
 * A web search found arXiv 2607.05735, "Width-Robust Learnability in Mean-Field Bayesian Neural Networks" (Vaintrob, Hänni), and a LessWrong post "Deep Learning is cheap Solomonoff induction?" (slides from an October 2024 talk; authors not confirmed). Neither could be opened.
 * **Network:** arxiv.org, lesswrong.com and greaterwrong.com do not resolve. WebSearch works (snippets only). Mark any reference you could not check against its source as **unverified**, and never invent bibliographic data.
 
