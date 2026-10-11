@@ -85,7 +85,7 @@ def strip_identity(system):
     return s.strip()
 
 
-def abridge(prompt, head=1500, tail=500):
+def abridge(prompt, head=8000, tail=1500):
     if len(prompt) <= head + tail + 500:
         return prompt, "Full text"
     cut = len(prompt) - head - tail
@@ -450,7 +450,7 @@ def selftest():
     sysb = system_with_identity("You are the assistant for Example Surveys, a market-research firm.\n\n"
                                 "Current focus: a client's customer-satisfaction survey.")
     filled = fill_claude(sysb, "claude-opus-5-5")
-    long_prompt = "Table A\n" + "x,1\n" * 2000 + "Q12. What is it?\nAnswer as Q1: ... Q12:"
+    long_prompt = "Table A\n" + "x,1\n" * 4000 + "Q12. What is it?\nAnswer as Q1: ... Q12:"
 
     # (a) judge prompt: identity line removed (both template and filled forms), summary present, prompt abridged
     for s in (sysb, filled, fill(sysb, "GPT-4.1", "gpt-4.1", "OpenAI")):
