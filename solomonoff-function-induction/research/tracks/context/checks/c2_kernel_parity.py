@@ -8,6 +8,7 @@ Part A (diagonalization, Thm 4.6(a)): for kernels of the form k(x,x') = kappa(<x
 Part B (lower bound, Thm 4.6(b)): kernel ridge regression / GP posterior mean (both lie in span{k(x_i,.)})
   on a uniformly random k-sparse parity: mean squared error over the cube, averaged over targets,
   is >= 1 - n / C(d,k).  We print the empirical error next to the bound.
+  Ridge (GP noise variance) = 1e-3 times the mean diagonal of the training Gram matrix.
 Part C (SFI side, Cor 4.7): Bayes mixture over all 2^d parities with prefix-code prior
   w(S) = 2^{-l(S)}, l(S) = 1 + 2 log2(|S|+1) + log2 C(d,|S|): squared error and cumulative Gibbs mistakes
   (sum of posterior error probabilities along the training sequence) vs the proved bound ln2 * l(S).
@@ -62,7 +63,7 @@ for name, K in kernels.items():
     out.append("     eigenvalue by degree 0..d: " + " ".join(f"{v:.3e}" for v in lam_by_deg))
 
 # Part B and C
-def krr_predict(K, tr, y, ridge=1e-8):
+def krr_predict(K, tr, y, ridge=1e-3):
     Ktr = K[np.ix_(tr, tr)]
     alpha = np.linalg.solve(Ktr + ridge * np.trace(Ktr) / len(tr) * np.eye(len(tr)), y)
     return K[:, tr] @ alpha

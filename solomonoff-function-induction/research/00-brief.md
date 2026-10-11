@@ -80,6 +80,19 @@ This is the source for the NN Bayes ≈ circuit SFI bridge (H10). Cite it as the
 * A web search found arXiv 2607.05735, "Width-Robust Learnability in Mean-Field Bayesian Neural Networks" (Vaintrob, Hänni), and a LessWrong post "Deep Learning is cheap Solomonoff induction?" (slides from an October 2024 talk; authors not confirmed). Neither could be opened.
 * **Network:** arxiv.org, lesswrong.com and greaterwrong.com do not resolve. WebSearch works (snippets only). Mark any reference you could not check against its source as **unverified**, and never invent bibliographic data.
 
+## Later request (Hänni, 2026-10-11, verbatim)
+
+> oh i just remembered that also the paper should include an equivalence between the kolmogorov complexity version and the universal semimeasure version, if these turn out to be equivalent (if they don't, then it should explain that). of course only include it if you can figure it out rigorously first
+
+The paper must therefore give this question a section of its own, built from the foundations track's refereed results (H1). Cover:
+* the universal function semimeasure M_F and its machine form;
+* the weak-semimeasure variant;
+* the deterministic program mixture W;
+* the single-shortest-program (Kolmogorov) version K_F;
+* the mixture of product laws.
+
+For each comparison, state exactly what is proved: equivalence up to a constant, an unbounded gap with an explicit example, upper bounds on the gap, and what remains open. Then explain what the differences mean for prediction. Include only rigorously established claims; mark open questions as open.
+
 ## Orchestrator's preliminary analysis: hypotheses to prove, correct or refute, not assume
 
 * **H1 (definitions).** Make precise and compare:
