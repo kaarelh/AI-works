@@ -5,7 +5,7 @@ The model must not see anything about the study (no repo files, no other jobs, n
 This file is standalone (standard library plus the provider SDK); it imports nothing from the repo.
 
 usage:
-  python3 astra_runner.py <jobs.jsonl> <outdir> --model <model-id> [--backend openai|openai-responses|litellm|dry-run]
+  python3 astra_runner.py <jobs.jsonl> <outdir> --model <model-id> [--backend openai|openai-responses|litellm|cmd|dry-run]
                           [--base-url URL] [--api-key-env OPENAI_API_KEY] [--workers 4]
                           [--display-name "GPT-4.1" --developer "OpenAI" [--identity-model-id ID]]
                           [--ordered] [--max-calls N] [--max-cost USD --price-in P --price-out P] [--summary]
@@ -192,8 +192,42 @@ def call_dry_run(job, a, summary):
                 reasoning_summary="[dry-run summary]" if summary else None, summary_unavailable=False)
 
 
+def call_cmd(job, a, summary):
+    """Run one job through a headless command-line client (e.g. the agent's own non-interactive CLI), in a fresh empty
+    directory outside the repo. The template may use {system_file}, {prompt_file}, {combined_file}, {out_file},
+    {workdir} and {model}; --cmd-stdin chooses what goes to stdin (combined / prompt / none). The answer is read from
+    {out_file} if the template uses it, else from stdout. "combined" = system prompt, a rule line, then the user message,
+    for clients that take no separate system prompt."""
+    import shutil
+    import subprocess
+    import tempfile
+    work = tempfile.mkdtemp(prefix="ps_job_")
+    try:
+        files = dict(system_file=os.path.join(work, "system.txt"), prompt_file=os.path.join(work, "prompt.txt"),
+                     combined_file=os.path.join(work, "combined.txt"), out_file=os.path.join(work, "answer.txt"))
+        combined = job["system"] + "\n\n---\n\n" + job["prompt"]
+        for k, text in (("system_file", job["system"]), ("prompt_file", job["prompt"]), ("combined_file", combined)):
+            with open(files[k], "w") as f:
+                f.write(text)
+        cmd = a.cmd
+        for k, v in dict(files, workdir=work, model=a.model).items():
+            cmd = cmd.replace("{" + k + "}", v)
+        stdin = {"combined": combined, "prompt": job["prompt"], "none": None}[a.cmd_stdin]
+        t0 = time.time()
+        p = subprocess.run(cmd, shell=True, cwd=work, input=stdin, capture_output=True, text=True, timeout=a.cmd_timeout)
+        if p.returncode != 0:
+            raise RuntimeError(f"command exited {p.returncode}: {p.stderr[-1500:]}")
+        out = open(files["out_file"]).read() if "{out_file}" in a.cmd and os.path.exists(files["out_file"]) else p.stdout
+        raw = dict(id=None, created=int(t0), model=a.model, cmd_template=a.cmd, cmd_stdin=a.cmd_stdin,
+                   returncode=p.returncode, stdout_tail=p.stdout[-4000:], stderr_tail=p.stderr[-4000:])
+        return dict(result=out.strip(), model_served=a.model, finish_reason="exit_0", usage=None, raw_response=raw,
+                    envelope=envelope(raw), reasoning_summary=None, summary_unavailable=bool(summary))
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+
 BACKENDS = {"openai": call_openai_chat, "openai-responses": call_openai_responses, "litellm": call_litellm,
-            "dry-run": call_dry_run}
+            "cmd": call_cmd, "dry-run": call_dry_run}
 
 
 def tokens(usage):
@@ -377,6 +411,9 @@ def main():
     ap.add_argument("--retries", type=int, default=5)
     ap.add_argument("--backoff", type=float, default=5.0, help=argparse.SUPPRESS)
     ap.add_argument("--limit", type=int, default=None, help="run only the first N jobs (smoke test)")
+    ap.add_argument("--cmd", default=None, help="command template for --backend cmd (see call_cmd)")
+    ap.add_argument("--cmd-stdin", default="combined", choices=["combined", "prompt", "none"])
+    ap.add_argument("--cmd-timeout", type=int, default=1200)
     a = ap.parse_args()
     raw = open(a.jobs, "rb").read()
     a.jobs_sha256 = hashlib.sha256(raw).hexdigest()
