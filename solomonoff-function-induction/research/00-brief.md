@@ -47,6 +47,7 @@ This is the shared brief for every research track and every writer. Read it in f
     * so that the MAP is "simple model + noise" rather than "model + memorised errors";
     * whereas in sequence induction a universal hypothesis absorbs everything.
   * Also the line "have people not already considered this for solving the model + data split problem?".
+* **`hanni-lesswrong-comment-thread.md`**: the LessWrong thread Hänni pasted after this brief was written. It confirms that the grokking note is the source. It adds **Cole Wyeth's objection**: under a steeper penalty, a hypothesis that is itself a universal distribution absorbs everything, "studied in algorithmic statistics". It also gives **Hänni's reply**, with his numbers: a 100-bit simple model; errors on a 2^{-10} fraction of inputs, whose set costs 10,000 bits; the 'good model', 'error-learning model' and '50/50 model'; and private randomness as the reason no universal hypothesis fits in the function case. The paper must answer Wyeth's objection explicitly.
 * **`hanni-*ood*`, `hanni-some-examples-where-function-solomonoff-generalizes-well-ood.md`, `hanni-does-solomonoff-generalize-well-out-of-distribution.md`, `hanni-solomonoff-induction-is-weird.md`**: OOD generalisation of SFI.
 * **`hanni-polytime-solomonoff.md`**: time-bounded Solomonoff, with constant regret against O(p(n)) predictors.
 * **`hanni-circuit-*.md`**: circuit Solomonoff. Regret and complexity are polynomially related; circuit Occam learning; OOD min-circuit induction.
