@@ -338,10 +338,10 @@ python3 src/figures2.py
 | `study2/DESIGN2.md` | frozen design with the pilot decisions |
 | `study2/analysis/` | `report.md` (every table), `scored_s2.csv` (one row per response), contrast CSVs |
 | `study2/figures/` | figures 1–4 |
-| `src/s2_*.py` | context modules (tasks, scorers, coder prompts), judge, coder runner, pilot report |
+| `src/s2_*.py` | context modules (tasks, scorers, coder prompts), judge, coder runner, pilot report, list of branch-only paths (`s2_branch_only.py`) |
 | `src/make_jobs2.py`, `src/analyze2.py`, `src/figures2.py` | job builder, analysis, figures |
 | `runs2/main/raw/`, `runs2/main/coding/` | all 3,848 subject responses, judge and coder outputs |
 | `runs2/pilot/` | pilot responses, coder validation and the safeguard block tests |
 | `handoff/` | the non-Claude handoff: runner, model-free job files, manifest, prompts for GPT-Astra |
-| `astra_out/` | the GPT records (one folder per model), Astra's run logs, wrapper scripts and coverage report |
+| `astra_out/` | the GPT records (one folder per model), Codex event streams and their audits (`_events/`), Astra's run logs, wrapper scripts and coverage report; on `main` without the records and streams that §8 of the design keeps off it |
 | `runs2/astra/coding/` | judge and coder outputs for the GPT records |
