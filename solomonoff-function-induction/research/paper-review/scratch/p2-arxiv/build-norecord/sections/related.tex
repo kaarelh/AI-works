@@ -1,0 +1,51 @@
+% Section 8 (writer: steep-b). Source: research/tracks/steeper/notes-final.md §1.3 (prior work), §3.6, §4.5 (Props 4.4, 4.5,
+% Rems 4.6, 4.7), §4.6 items 6, 7, 9, §6 (relation to T5), and the remark after Prop 2.14 (SafeBayes).
+\section{Computable versions and related work}\label{sec:related}
+
+\subsection{Computable classes}\label{sec:related:computable}
+
+The lower bounds of \cref{sec:teacher} use only coding properties of the class, so they survive in resource-bounded classes (proofs in \cref{app:related}).
+
+\begin{proposition}[Computable product classes]\status{proved; the examples are remarks}\src{steeper Prop 4.4}\label{prop:related:computable}
+Let $\mathcal H'$ be a hypothesis class of product hypotheses (\cref{def:setup:class}).
+(a) \Cref{lem:teacher:list,lem:teacher:floor,lem:teacher:coding,lem:teacher:twopart} and the lower-bound parts of \cref{thm:teacher:main} ((o), the bound on $\Phi$ in (i), (ii), and the level and $R_B$ statements of (iii)) hold for every $\pi\in\mathcal H'$, with $\kappa$ replaced by a constant that depends on $\mathcal H'$. The parts that use reference programs ($\Delta(c)$, $J_g$, $J_b$, (iv)) hold if $\mathcal H'$ contains a good model $\pi'_g$ and a memoriser $\pi'_b$, with $\kappa_g:=\ell(\pi'_g)-d$ and $\kappa_b:=\ell(\pi'_b)-d-\lceil L_S\rceil$.
+(b) \Cref{thm:split:private} holds in every countable product class with Kraft weights that contains a program for the sampler.
+(c) \Cref{prop:absorb:price}(ii) holds in every product class with a prefix-free code.
+\end{proposition}
+
+Examples are probabilistic programs clocked at $t(|x|)$ steps and weighted by code length, as in time-bounded SFI \citep[the time-bounded theorem]{claudeSFI2026fundamentals}, where generous time bounds change $\kappa_g,\kappa_b$ by logarithmic terms; and circuits with private output noise, where a parity costs about $d\log d$ bits, so $\kappa_g$ is of order $d\log d$ and $c_{\rm hi}$ shrinks by a factor of order $\log d$ (constants not computed). \Cref{thm:absorb:absorption} does not transfer: it needs a member that is the class's own mixture, and a mixture of all time-$t$ programs is not a time-$t$ program. So the contrast between product and shared classes is established only for the unbounded classes.
+
+\begin{proposition}[Computability of the steeper predictor]\status{proved}\src{steeper Prop 4.5}\label{prop:related:computability}
+Let $\lambda\ge1$ be computable, the class $\Hcl{\times}$ or $\Hcl{F}$, $X$ infinite and $\{0,1\}\subseteq Y$. (a) $\xi_\lambda(D)$ is lower semicomputable uniformly in $D$. (b) Neither the raw conditional $\xi_\lambda(D+(x,y))/\xi_\lambda(D)$ nor its normalised version is computable. (c) Both are limit-computable.
+\end{proposition}
+
+Part (b) is the diagonal argument for $\MF$ \citep[the computability proposition]{claudeSFI2026fundamentals}: a computable conditional yields a computable labelling on which the predictor loses a constant per input, against the weight $2^{-\lambda(K(f)+\kappa)}$ of a program for it.
+
+\begin{remark}[Cold posteriors are a different direction]\status{known; remark}\src{steeper Rem 4.6}\label{rem:related:cold}
+\citet{wenzel2020good} report that ``cold'' posteriors $\propto\exp(-U(\theta)/T)$ with $T<1$, where $U(\theta)=-\sum_i\log p(y_i\mid x_i,\theta)-\log p(\theta)$, improve Bayesian neural networks. Prior and likelihood get the same exponent, so their ratio stays at $\lambda=1$. The $\lambda>1$ direction is that of fractional posteriors, with likelihood exponent $\eta=1/\lambda<1$ \citep{bhattacharya2019fractional}.
+\end{remark}
+
+\begin{remark}[Neural-network Bayes]\status{remark}\src{steeper Rem 4.7}\label{rem:related:nn}
+With labels independent given the parameters $\theta$, a network's Bayes posterior is a mixture of product laws, a $\Mprod$-type object \citep[NN Bayes is function-space Bayes]{claudeSFI2026fundamentals}. \Cref{thm:split:private} applies to countable discretisations with weights $p(\theta)$: under the power prior $p(\theta)^\lambda$, $\lambda>1$, parameters that memorise the label noise get posterior mass exponentially small in the sampled randomness, if the noise model is in the family. Whether a parameter prior behaves like a description-length prior, as \cref{thm:teacher:main} needs, is the bridge question raised by the Vaintrob--H\"anni result on neural-network Bayes \citep{vaintrobhanni2026nnbayes}; nothing here settles it.
+\end{remark}
+
+\subsection{Related work}\label{sec:related:work}
+
+\begin{remark}[$\lambda$-weighted two-part MDL in classification]\status{known; unverified}\src{steeper \S1.3}\label{rem:related:mdl}
+Three papers study $\lambda\ell+\sum-\log\nu$ over essentially product hypotheses, a classifier plus a code for the label noise. As their abstracts describe them, \citet{grunwald2007suboptimal} show that at $\lambda=1$ MDL and Bayes classifiers can stay bounded away from the best achievable error under misspecification, \citet{zhu2025quantifying} characterise the limiting error along the regularisation path of two-part-code MDL as a function of $\lambda$ and the noise level, and \citet{zhu2026overfitting} show for a PAC-Bayesian rule that $\lambda=1$ can overfit while a much larger, sample-size-dependent $\lambda$ gives vanishing excess loss. That a bounded $\lambda$ fits the noise and $\lambda$ must grow with the sample size is their finding (and H\"anni's remark), not ours. Their target is the data distribution; H\"anni's is deliberately not (\cref{rem:limits:schedule}). Their abstracts do not mention universal hypotheses, the shared/private contrast, or Kolmogorov-complexity classes with lower bounds over all hypotheses; whether their analysis covers some of this can only be settled from the full texts.
+\end{remark}
+
+\begin{remark}[Tempered and safe posteriors]\status{known; unverified; remark}\src{steeper \S1.3, remark after Prop 2.14}\label{rem:related:posteriors}
+The posteriors of \cref{def:setup:objectives} are generalised, Gibbs, fractional or safe posteriors with learning rate $\eta=1/\lambda$ \citep{bissiri2016general,bhattacharya2019fractional,grunwald2012safe,grunwald2017inconsistency,zhang2006epsilon}, whose consistency theory concerns the data distribution. SafeBayes chooses $\eta$ from data by a sequential randomised log loss \citep{grunwald2012safe}; by \cref{prop:limits:noident}(i) such a criterion has no reason to leave $\eta=1$ in well-specified imitation. This is our reading, not checked against the papers' precise criteria.
+\end{remark}
+
+\begin{remark}[Relation to the earlier formalisation]\status{remark}\src{steeper \S6}\label{rem:related:t5}
+An earlier report \citep[section ``Simplicity and normativity from imitation'']{claude2026whatfollows} formalised H\"anni's proposal for a general imitation channel. We re-derive, rather than copy, the results we use from it: per-input and per-block pricing, the sequence-case threshold, the lemmas behind its kink theorem (here for semimeasures), the hull lemma, rate thresholds, rate blindness, non-identifiability, guard erosion and error envelopes (\cref{app:related:t5}). Two statements change. Its full-table window at $d=20$ has upper end about $(1-H(p))/d\approx0.049$ when logarithmic terms are ignored; with the $2\log d$ terms, as large as $d$ there, the rigorous value is $c_{\rm hi}=0.01139$ at $\kappa=0$ (\cref{cor:teacher:fulltable}). And its lemma that the randomness of the error set removes the slack $2p$, stated for computable hypotheses, holds for semimeasures (\cref{lem:teacher:sharpfloor}).
+\end{remark}
+
+\begin{remark}[What is new]\status{remark}\src{steeper \S3.6}\label{rem:related:new}
+Known: two-part codes and MDL with complexity weights above $1$ (\cref{sec:setup:objectives}); $\lambda$-weighted MDL in noisy classification (\cref{rem:related:mdl}); the structure function, sophistication and restricted model families (\cref{sec:algstat}); tempered posteriors; and our tools (dominance bounds, Kakutani's dichotomy, Ville's inequality, hashing). We have not found the following in the literature, though our search was limited to abstracts: the contrast under a steeper prior between classes with a universal member and the private-randomness class, with its price (\cref{sec:absorb}); the analysis over all hypotheses of Kolmogorov-complexity classes through list decoding (\cref{thm:teacher:main}, \cref{prop:limits:rateblind,prop:limits:envelope}); the observation that consistent schedules learn the teacher's errors; the model--randomness theorems (\cref{sec:split}); and product sophistication with its gap to set sophistication (\cref{prop:algstat:parity}). We do not claim that a fixed $\lambda$ eventually learns the errors and $\lambda$ must grow with $n$.
+\end{remark}
+
+\paragraph{Open question.}\label{q:related:open}
+Does a time-bounded shared class contain a short member that absorbs everything at $\lambda>1$? If not, steeper simplicity could work in time-bounded SI too. Is the $\lambda$-MAP computable from the data? It presumably is not, but we have no proof. And the novelty claims of \cref{rem:related:new} remain to be checked against the full texts of \citet{zhu2025quantifying,zhu2026overfitting,grunwald2007suboptimal} and of the literature on restricted model families.

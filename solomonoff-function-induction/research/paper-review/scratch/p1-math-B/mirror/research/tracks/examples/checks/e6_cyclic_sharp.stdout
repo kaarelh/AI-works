@@ -1,0 +1,116 @@
+e6_cyclic_sharp.py  seed=20261012
+
+(a) component laws by exhaustive enumeration of their randomness (exact rationals)
+   n=2: 6 orderings, 252 exact comparisons with the closed forms, mismatches: 0
+   n=3: 4 orderings, 840 exact comparisons with the closed forms, mismatches: 0
+   closed forms: cyclic 1/(N-1)_k; broom B_j: 1/(N-1)_{k-1} if j=k, 1/(N-1)_k if j>k, 0 if j<k (k>=2);
+   partial chain P_j: 1/(N-1)_k if j>=k; normaliser of P_j at x_t: (j-t+1)/((N-t)(N-1)_{t-1}) for j>=t.
+   example n=3, k=4: broom B_4 gives 1/210, cyclic law 1/840
+
+(b) depth-count lemma |A_k(F)| <= N - k
+   n=2: all 625 partial functions; max |A_k| for k=1..3: [3, 2, 1]; bound N-k: [3, 2, 1]
+   n=3: all 8^8 = 16777216 total functions; max |A_k| for k=1..7: [7, 6, 5, 4, 3, 2, 1]; bound N-k: [7, 6, 5, 4, 3, 2, 1]; violations: 0  (11 s)
+   n=3: 100000 random partial functions (values uniform on undefined/0..N-1); max |A_k|, k=1..7: [6, 5, 4, 4, 3, 2, 1]; violations: 0
+   n=4: 100000 random partial functions (values uniform on undefined/0..N-1); max |A_k|, k=1..15: [7, 9, 8, 8, 6, 6, 6, 5, 5, 3, 3, 2, 2, 1, 0]; violations: 0
+   (the broom with its spine realised attains N-k for every k: its A_k is every input outside v_1..v_{k-1})
+   n=2: broom attains |A_k| = N-k for all k: True
+   n=3: broom attains |A_k| = N-k for all k: True
+   n=4: broom attains |A_k| = N-k for all k: True
+
+(c) k-step bounds at n = 64 (mpmath, 60 digits); Kproxy(k) := log2(k+1) + 2 log2 log2(k+2); constants c omitted
+        k | log2(N-1)_k        | old upper - new upper | old gap (upper-lower) | new gap (upper-lower)
+        1.0 |               64.0 |          -7.97523e-41 |                   1.0 |                   1.0
+        2.0 |              128.0 |           5.27383e-41 |                   2.0 |                   2.0
+       64.0 |             4096.0 |               52.7864 |                  64.0 |               11.2136
+     1000.0 |            64000.0 |                47.398 |                  64.0 |                16.602
+   1.04858e+6 |         67108864.0 |               35.3561 |                  64.0 |               28.6439
+   4.29497e+9 |     274877906943.0 |                  22.0 |                  64.0 |                  42.0
+   9.22337e+18 |  5.86212669298e+20 |                   0.0 |                  64.0 |                  63.0
+   1.84467e+19 |  1.15397859452e+21 |                   0.0 |                  64.0 |                   0.0
+   (at k = 64 the new upper bound lies log2(N-64) - Kproxy(64) = 52.8 bits below the old one, up to c;
+    the old gap between upper and lower bound is about min(n, k) bits, the new one min(Kproxy(k), log2(N-k)))
+
+(d) eps_N := log2((N-1)!) - [(n - log2 e) N - n/2 + log2(2 pi)/2]; Robbins: 1/((12N+1) ln2) < eps_N < 1/(12 N ln2)
+    n |  eps_N             1/(12N ln2)        1/((12N+1)ln2)    window holds
+    1 |         0.059642         0.0601123         0.0577078   True
+    2 |        0.0299946         0.0300561         0.0294428   True
+    3 |        0.0150203         0.0150281         0.0148731   True
+    4 |       0.00751306        0.00751404         0.0074751   True
+   10 |      0.000117407       0.000117407       0.000117397   True
+   16 |       1.83448e-6        1.83448e-6        1.83448e-6   True
+   17 |       9.17241e-7        9.17241e-7         9.1724e-7   True
+   18 |        4.5862e-7         4.5862e-7         4.5862e-7   True
+   20 |       1.14655e-7        1.14655e-7        1.14655e-7   True
+   24 |       7.16594e-9        7.16594e-9        7.16594e-9   True
+   32 |       2.7992e-11        2.7992e-11        2.7992e-11   True
+   40 |      1.09344e-13       1.09344e-13       1.09344e-13   True
+   64 |      6.51739e-21       6.51739e-21       6.51739e-21   True
+   window holds for every n tested: True
+   (notes.md and e3 said 'the Stirling error equals 1/(12N ln2) to the printed precision for n<=24':
+    false at n = 1, 2, and e3's double-precision column is rounding noise for n >= 17; see the rows above)
+
+(e) proxies (closed forms validated in (a)); all chains give the same values, so these are exact for every f
+   order-free proxy: w_cyc = 1/2; brooms: wB_j = (1/4)/(j(j+1)) for every j, plus (1/4)/(i(i+1)) more at j = 2^i
+   (the second family imitates K(k) being small for simple k such as powers of two); no partial chains.
+   For each k the loss is about the cheaper of two routes: cyclic law, log2(N-k) + log2(1/w_cyc) above
+   log2(N-1)_{k-1}; broom B_k, log2(1/wB_k) above it.  Thm 2.3(1): min{K(k), log2(N-k)} + c.
+    n |    k   | -log2 nu(D_k) | log2(N-1)_{k-1} | excess  | cyclic route | broom route
+    4 |      1 |         2.481 |           0.000 |   2.481 |        4.907 |       3.000
+    4 |      5 |        19.071 |          15.000 |   4.072 |        4.459 |       6.907
+    4 |      8 |        28.420 |          24.951 |   3.469 |        4.000 |       5.363
+    4 |     15 |        41.203 |          40.250 |   0.953 |        1.000 |       5.907
+    6 |      1 |         2.855 |           0.000 |   2.855 |        6.977 |       3.000
+    6 |     21 |       120.967 |         114.660 |   6.307 |        6.426 |      10.852
+    6 |     32 |       177.687 |         172.332 |   5.355 |        6.000 |       6.866
+    6 |     63 |       290.984 |         289.995 |   0.989 |        1.000 |       7.977
+    8 |      1 |         2.962 |           0.000 |   2.962 |        8.994 |       3.000
+    8 |     85 |       657.589 |         649.209 |   8.380 |        8.418 |      14.836
+    8 |    128 |       966.730 |         959.835 |   6.895 |        8.000 |       7.802
+    8 |    255 |      1676.993 |        1675.996 |   0.997 |        1.000 |       9.994
+   10 |      1 |         2.990 |           0.000 |   2.990 |       10.999 |       3.000
+   10 |    341 |      3317.783 |        3307.381 |  10.401 |       10.416 |      18.831
+   10 |    512 |      4891.897 |        4883.840 |   8.056 |       10.000 |       8.491
+   10 |   1023 |      8760.005 |        8759.006 |   0.999 |        1.000 |      11.999
+   12 |      1 |         2.998 |           0.000 |   2.998 |       13.000 |       3.000
+   12 |   1365 |     16008.473 |       15996.065 |  12.408 |       12.415 |      22.830
+   12 |   2048 |     23666.730 |       23657.861 |   8.869 |       12.000 |       9.044
+   12 |   4095 |     43239.047 |       43238.047 |   1.000 |        1.000 |      14.000
+   (at k = N/3 the broom is expensive in this prior and the cyclic route wins; at k = N/2 = 2^(n-1) the broom
+    route costs 2 + log2(n(n-1)) bits against n for the cyclic route, so it wins from n = 8 on (by 3.0 bits at
+    n = 12). SFI has K(N/2) <= K(n) + c, so for SFI the old e3 proxy, which has no broom, overstates the
+    k = N/2 cost by n - O(log n) bits)
+
+   normalised proxy: weights (w_cyc, broom total, partial-chain total); brooms wB_j ∝ 1/(j(j+1)),
+   partial chains u_j ∝ 2^{-j}.  Check of the proxy form of Prop 2.9 at every 2 <= t <= N-1:
+   normalised step loss l_t >= log2(N-t+1) + log2 wB_{t-1}.
+    n | weights            | min_t [l_t - log2(N-t+1) - log2 wB_{t-1}] | normalised loss, full cycle | semimeasure loss | log2((N-1)!)
+    3 | (0.500,0.500,0.000) |                                   2.7740 |                      13.299 |           13.299 |       12.299
+    3 | (0.020,0.020,0.960) |                                   5.2168 |                       7.099 |           17.943 |       12.299
+    3 | (0.001,0.001,0.998) |                                   8.9375 |                       4.841 |           22.265 |       12.299
+    4 | (0.500,0.500,0.000) |                                   3.1327 |                      41.250 |           41.250 |       40.250
+    4 | (0.020,0.020,0.960) |                                   5.3440 |                      31.502 |           45.894 |       40.250
+    4 | (0.001,0.001,0.998) |                                   8.1343 |                      19.206 |           50.216 |       40.250
+    6 | (0.500,0.500,0.000) |                                   3.4568 |                     290.995 |          290.995 |      289.995
+    6 | (0.020,0.020,0.960) |                                   6.5341 |                     283.692 |          295.639 |      289.995
+    6 | (0.001,0.001,0.998) |                                   7.5553 |                     260.120 |          299.961 |      289.995
+    8 | (0.500,0.500,0.000) |                                   3.5516 |                    1676.996 |         1676.996 |     1675.996
+    8 | (0.020,0.020,0.960) |                                   7.5676 |                    1673.913 |         1681.640 |     1675.996
+    8 | (0.001,0.001,0.998) |                                   8.9300 |                    1654.603 |         1685.962 |     1675.996
+   10 | (0.500,0.500,0.000) |                                   3.5765 |                    8760.006 |         8760.006 |     8759.006
+   10 | (0.020,0.020,0.960) |                                   8.0319 |                    8759.068 |         8764.650 |     8759.006
+   10 | (0.001,0.001,0.998) |                                  10.5801 |                    8748.686 |         8768.972 |     8759.006
+   (normalised loss below log2((N-1)!) shows that the order-free lower bound does not transfer to the
+    normalised predictor without an argument; Prop 2.9 still holds step by step in every case)
+
+(f) SI illustration: exact block-level label loss over the full cycle of a Bayes mixture of mu_m (m = 1..10,
+    weight (3/4)/(m(m+1)) normalised) and a uniform-bits null model (weight 1/4); 3 seeded permutations per n
+    n | prefix code s -> 1^|s| 0 s : label loss (3 runs) | raw n-bit blocks: label loss (3 runs)
+    2 |                     0.2199,  0.2199,  0.2199 |  3.0664,  3.0664,  1.2912
+    3 |                     0.2595,  0.2595,  0.2595 |  5.1850,  5.2148,  2.8771
+    4 |                     0.2353,  0.2353,  0.2353 |  2.6100,  4.8792,  2.6100
+    5 |                     0.1859,  0.1859,  0.1859 |  2.9266,  4.6956,  3.0411
+    6 |                     0.1347,  0.1347,  0.1347 |  5.3735,  7.7830,  4.5371
+   (prefix code: once the header 1^n 0 of x_1 is read only mu_n and the null model remain, and the labels
+    cost only the null model's residual weight; raw blocks: the first label must resolve where blocks end)
+
+runtime 39 s
