@@ -2,29 +2,41 @@
 
 Updated: 2026-10-12.
 Branch: `codex/purpose-sensitivity-astra-2026-10-11`.
-All ten handoff manifest checks passed. Repository changes remain confined to `purpose-sensitivity/astra_out/`.
+All ten handoff manifest checks pass. Repository changes are confined to `purpose-sensitivity/astra_out/`.
 
-## Latest retry: chatgpt.com allowed
+## Current blocker and sign-in route
 
-Recreated `/tmp/codex-home` with directory mode 0700 and private copies of `auth.json` and available `config.toml` with mode 0600. The original CLI home was unchanged. The private home was deleted after the probe; authentication-secret scanning found no copied secrets in files being published.
+The user authorized fresh sign-in and broader wrapper changes. Created a new private persistent CLI home at `/workspace/purpose-sensitivity-private/codex-home` (directory and parent mode 0700), without copying the old authentication. The original CLI home remains unchanged. No token is currently stored in the new home. It will be retained for the study and removed only after all files are done, as instructed.
 
-Ran exactly one additional `gpt-6-astra` probe through the supplied runner using `s2_smoke.jsonl`, `--cmd-stdin prompt --ordered --workers 2 --max-calls 2600 --limit 1 --retries 1`. Temperature, reasoning effort, and output length stayed at their defaults.
-
-The earlier proxy CONNECT error did not recur. The CLI instead exited with this authentication error before generating an answer:
-
-```
-Your access token could not be refreshed because you have since logged out or signed in to another account. Please sign in again.
-```
-
-The CLI exited 1; the turn failed, with no completed turn, agent answer, or answer file. Stopped as instructed. No full smoke suite, main batch, or rung batch ran. No further model calls or sign-in attempts were made. A fresh CLI sign-in is the outstanding prerequisite.
-
-## Final command template
-
-Backend: `cmd`; stdin: `prompt`. The capture wrapper retains complete CLI events and audits metadata without evaluating answers. All CLI flags are unchanged.
+Attempted:
 
 ```sh
-CODEX_HOME=/tmp/codex-home python3 /workspace/AI-works/purpose-sensitivity/astra_out/_capture_cli.py {workdir} {model} {out_file} /opt/codex/bin/codex --no-daemon -a never exec --ignore-user-config --ignore-rules --ephemeral --skip-git-repo-check --sandbox read-only -C {workdir} -m {model} -c 'model_instructions_file="{system_file}"' -c 'project_doc_max_bytes=0' -c 'skills.include_instructions=false' -c 'skills.bundled.enabled=false' -c 'web_search="disabled"' -c 'features.shell_tool=false' -c 'features.unified_exec=false' -c 'features.apply_patch_freeform=false' -c 'features.view_image=false' -c 'features.apps=false' -c 'features.plugins=false' -c 'features.memories=false' -c 'features.memory_tool=false' -c 'features.multi_agent=false' -c 'features.multi_agent_v2=false' -c 'features.js_repl=false' -c 'features.code_mode=false' -c 'tools.update_plan.enabled=false' --color never --json -o {out_file} -
+CODEX_HOME=/workspace/purpose-sensitivity-private/codex-home /opt/codex/bin/codex login --device-auth
 ```
+
+Device-code sign-in could not reach `https://auth.openai.com/api/accounts/deviceauth/usercode`. An independent HEAD request to `https://auth.openai.com/` confirmed HTTP CONNECT 403 from the egress proxy. No device code or credential was issued. The CLI's supported device flow therefore needs network configuration before it can request human sign-in.
+
+Saved an environment configuration draft adding only `auth.openai.com`, preserving `chatgpt.com` and the package-manager presets. This is a saved draft, not a runtime network update; environment settings must apply/publish it. This is the current required action from Kaarel. After that, resume device sign-in and supply its URL/code to Kaarel. No study/model call was attempted during this sign-in repair.
+
+## Exact model command
+
+Backend: `cmd`; stdin: `prompt`. Planned runner flags remain `--ordered --workers 2 --max-calls 2600 --retries 1`; generation temperature, reasoning effort and output length stay at defaults.
+
+```sh
+CODEX_HOME=/workspace/purpose-sensitivity-private/codex-home python3 /workspace/AI-works/purpose-sensitivity/astra_out/_capture_cli.py {workdir} {model} {out_file} /opt/codex/bin/codex --no-daemon -a never exec --ignore-user-config --ignore-rules --ephemeral --skip-git-repo-check --sandbox read-only -C {workdir} -m {model} -c 'model_instructions_file="{system_file}"' -c 'project_doc_max_bytes=0' -c 'skills.include_instructions=false' -c 'skills.bundled.enabled=false' -c 'web_search="disabled"' -c 'features.shell_tool=false' -c 'features.unified_exec=false' -c 'features.apply_patch_freeform=false' -c 'features.view_image=false' -c 'features.apps=false' -c 'features.plugins=false' -c 'features.memories=false' -c 'features.memory_tool=false' -c 'features.multi_agent=false' -c 'features.multi_agent_v2=false' -c 'features.js_repl=false' -c 'features.code_mode=false' -c 'tools.update_plan.enabled=false' --color never --json -o {out_file} -
+```
+
+The runner creates a fresh temporary directory and CLI session per job, passes the job's system file as model instructions, and sends its user message on stdin. No parent conversation or repository documentation is provided. The protected handoff runner and job files are unchanged.
+
+## Mechanics changes and checks
+
+The capture wrapper now reads partial streams without blocking, detects operational warnings in both stderr and error items, propagates shared stop markers to active workers, and distinguishes account/provider stops, human-authentication requirements, and usage/rate pauses. It never inspects agent-answer text for operational warnings.
+
+It terminates its own CLI process group and kills it after two seconds if necessary. An internal timeout defaults to 1,150 seconds (`ASTRA_CLI_TIMEOUT_SECONDS`), below the supplied runner's 1,200-second timeout. Individual failures/timeouts remain retryable and do not set a global stop. Rate-pause markers include an explicit reset time when supplied; a supervisor must publish progress and resume after the reset, clearing only the resolved rate pause.
+
+Success requires exactly one completed turn, a nonempty answer file, and exact byte equality with the final agent-message event. This prevents JSON logs being mistaken for an answer. Answer bytes and full traces are unchanged; audits include file links and hashes. The supplied runner still performs its original outer-whitespace trimming (`out.strip()`) when writing command-backend records, and reports the requested model ID as served without independent service attestation. These inherited limitations were not changed.
+
+All 16 synthetic helper tests passed, including exact-byte preservation, partial-stream stopping, concurrent stop propagation, rate reset parsing, forced termination, timeout, missing answers, and malformed events. `git diff --check` passed. These tests used a fake CLI, no study prompts, no credentials and no model calls. Live generation remains unverified pending authentication.
 
 ## Models and cumulative observed tool counts
 
@@ -35,12 +47,12 @@ CODEX_HOME=/tmp/codex-home python3 /workspace/AI-works/purpose-sensitivity/astra
 | gpt-6-luna | GPT-6 Luna | OpenAI | 0 | 0 | Not run | 0 |
 | gpt-5.6-sol | GPT-5.6 Sol | OpenAI | 0 | 0 | Not run | 0 |
 
-The latest Astra stream had zero observed tool items, zero unknown item types, and zero malformed JSON lines. Its sole item type was `error`. The other CLI diagnostic was a non-account deprecation warning for `features.memory_tool`. Complete streams and audits are in `_events/gpt-6-astra/`; runner stdout is in `_logs/gpt-6-astra__single_job_chatgpt_allowed.log`.
+The CLI flags disable tools as far as previously verified, with a read-only sandbox. Codex 0.159.2 omits some tool kinds, including clock, from JSON output: observed counts do not prove all tools are absent. The two audited streams contain no observed tool items and no answers.
 
-Tools were disabled as far as the recorded flags permit, with a read-only sandbox. Codex 0.159.2 omits some tool kinds, including clock, from its JSON formatter; these are counts of observed items, not proof that every possible tool was disabled. No successful generation occurred in any probe.
+The subagent fallback was not used. The available orchestration launcher exposes no control to remove tools or filesystem access, so its required isolation cannot currently be confirmed. Subagents assisted only with CLI mechanics and synthetic helper checks; they never received study jobs.
 
-## Totals and prior attempts
+## Ledger and preserved history
 
-Cumulative ledger: **3 counted command attempts, 0 successful answers, 3 errors, 0 API blocks**. Astra accounts for two errors and Sol for one. Token counters and estimated cost remain zero because this command backend supplies no token/cost telemetry; these values are not measurements. No confirmed completed model API call occurred.
+Ledger unchanged: **3 counted command attempts, 0 successful answers, 3 errors, 0 API blocks**. Astra has two errors; Sol has one. Token counters and estimated cost remain zero because the command backend supplies no token/cost telemetry, not because usage/cost was measured. Login and synthetic helper checks do not count as model attempts.
 
-Earlier reports are retained in `_coverage_2026-10-11.md` (read-only CLI home) and `_coverage_2026-10-12_proxy.md` (proxy CONNECT 403). No API-key route or subagent fallback was used. No Claude model was invoked. This agent and its subagents did not answer, rewrite, summarize, or evaluate study prompts or answers; subagent work was limited to runner and CLI mechanics.
+No complete smoke suite, main file or rung file has run. Prior coverage reports and failure logs remain under this directory. No Claude model was invoked. No study prompt or answer was authored, rewritten, summarized or evaluated by this agent or a session with access to the repository/conversation. Credentials are neither printed nor committed. Exceptions to the original mechanics are the explicitly authorized persistent private home and wrapper changes, plus the necessary saved network-draft addition described above.
