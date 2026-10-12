@@ -172,3 +172,9 @@ For each comparison, state exactly what is proved: equivalence up to a constant,
 > btw probably you're already doing this but i wouldn't call it wyeth's objection in the paper. like it's a fairly standard thing. i was certainly aware of it before wyeth's comment
 
 In the papers, call it the (standard) absorption objection, and do not attribute it to Wyeth or quote him (see the binding note in the papers' OUTLINE.md).
+
+## Format (Hänni, 2026-10-12)
+
+> generally please make sure these are like academic papers suitable for arxiv
+
+See the binding note at the top of each paper's OUTLINE.md: standard academic structure, no status or source markup in the PDF, no process vocabulary, verified references only, an AI-preparation disclosure in the acknowledgements. Note that arXiv does not accept AI systems as authors.

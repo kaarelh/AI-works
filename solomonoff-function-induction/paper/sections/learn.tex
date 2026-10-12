@@ -1,39 +1,38 @@
 % Section "learn" (writer: learn). Sources: research/tracks/foundations/notes-final.md §6 (Thms 6.1, 6.5, 6.7,
 % Cor 6.6, Props 6.8--6.10, Rem 6.11, §6.6, §6.7) and research/tracks/context/notes-final.md §2.4, §5.2, §5.4.
-% Proofs: sections/app-learn.tex.
+% Proofs and the secondary remarks (rem:learn:increasing, rem:learn:cesaro, rem:learn:relations,
+% rem:learn:positive, rem:learn:interventions) are in sections/app-learn.tex, to respect the page cap.
 \section{Learning theorems: SFI as supervised learning}\label{sec:learn}
 
-H\"anni describes SFI as ``just ideal supervised learning'' \citep{hanni2026request}. This section states the guarantees behind that description and where they stop. Throughout, $(x_t,y_t)_{t\le n}$ is a sequence of pairs, $D_n=\{(x_t,y_t):t\le n\}$, and $\LSFI(D_n)=-\log\MF(D_n)$ is SFI's cumulative log loss in the semimeasure convention. By \cref{prop:setting:order} it depends neither on the order nor on repetitions, and it is infinite on inconsistent sequences. Upper bounds in this convention also hold for the normalised predictor (\cref{prop:setting:normalise}). We write $\mu$ for the input distribution, $c$ for a machine constant and $L_\nu(D):=-\log\nu(D)$. A \emph{conditional semimeasure} is a map $P(y\mid x)\ge0$ with $\sum_yP(y\mid x)\le1$ for every $x$; for a lower-semicomputable one, $K(P)$ is the least $K(i)$ over its indices in the enumeration of \cref{def:versions:variants}. For a partial computable $\varphi$, $K(\varphi)$ is the least $K(e)$ with $\varphi_e=\varphi$.
+H\"anni describes SFI as ``just ideal supervised learning'' \citep{hanni2026request}. This section states the guarantees behind that description and where they stop. Throughout, $D_n=\{(x_t,y_t):t\le n\}$ and $\LSFI(D_n)=-\log\MF(D_n)$ is SFI's cumulative log loss in the semimeasure convention; it depends neither on the order nor on repetitions, and it is infinite on inconsistent sequences (\cref{prop:setting:order}). Upper bounds in this convention also hold for the normalised predictor (\cref{prop:setting:normalise}). We write $\mu$ for the input distribution, $c$ for a machine constant, and $L_\nu(D):=-\log\nu(D)$. A \emph{conditional semimeasure} is a map $P(y\mid x)\ge0$ with $\sum_yP(y\mid x)\le1$; for a lower-semicomputable one, $K(P)$ is the least $K(i)$ over its indices in the enumeration of \cref{def:versions:variants}. For a partial computable $\varphi$, $K(\varphi)$ is the least $K(e)$ with $\varphi_e=\varphi$.
 
 % ------------------------------------------------------------------
 \subsection{Dominance}\label{sec:learn:dominance}
 
 \begin{theorem}[dominance]\label{thm:learn:dominance}
 \status{proved}\src{foundations Thm 6.1}
-Let $\nu$ be a machine law (\cref{def:setting:machine}). Then $\MF(D)\ge2^{-K(\nu)}\nu(D)$ for every data set $D$. Hence for every consistent sequence, however its inputs are chosen (fixed in advance, adversarially, adaptively, non-computably),
+Let $\nu$ be a machine law (\cref{def:setting:machine}). Then $\MF(D)\ge2^{-K(\nu)}\nu(D)$ for every data set $D$. Hence for every consistent sequence, however its inputs are chosen (in advance, adversarially, adaptively, non-computably),
 \begin{equation}\label{eq:learn:dominance}
 \LSFI(D_n)\ \le\ -\log\nu(D_n)+K(\nu).
 \end{equation}
 In particular:
-\begin{enumerate}[label=(\alph*)]
-\item \emph{x-only samplers.} For every lower-semicomputable conditional semimeasure $P$, $\LSFI(D_n)\le\sum_{t\le n}-\log P(y_t\mid x_t)+K(P)+c$. The right side counts a repeated input each time it appears; the left side counts it once.
-\item \emph{Deterministic programs.} If $y_t=\varphi(x_t)$ for all $t$, with $\varphi$ partial computable, then $\LSFI(D_n)\le K(\varphi)+c$.
-\item \emph{Weak comparators.} For every lower-semicomputable weak semimeasure $\nu$ (\cref{def:setting:weak}), $\LSFI(D_n)\le-\log\nu(D_n)+K(\nu)+K(\dom D_n)+c$. The term $K(\dom D_n)$ cannot be replaced by a constant (semimeasure convention): on the $2k$-point data sets of \cref{thm:setting:weakvsmachine}(iii) the excess of $\LSFI$ over $-\log\Mw$ is at least $k\log\frac32-K(k)-c$, while $K(\dom D)\le k\log3+K(k)+c$ there. So on that family at least a fraction $\log(3/2)/\log3\approx0.37$ of the term is needed, asymptotically.
-\end{enumerate}
+(a) \emph{x-only samplers:} for every lower-semicomputable conditional semimeasure $P$, $\LSFI(D_n)\le\sum_{t\le n}-\log P(y_t\mid x_t)+K(P)+c$, where the right side counts a repeated input each time it appears and the left side once;
+(b) \emph{deterministic programs:} if $y_t=\varphi(x_t)$ for all $t$, with $\varphi$ partial computable, then $\LSFI(D_n)\le K(\varphi)+c$;
+(c) \emph{weak comparators:} for every lower-semicomputable weak semimeasure $\nu$ (\cref{def:setting:weak}), $\LSFI(D_n)\le-\log\nu(D_n)+K(\nu)+K(\dom D_n)+c$. The term $K(\dom D_n)$ cannot be replaced by a constant (semimeasure convention): on the $2k$-point data sets of \cref{thm:setting:weakvsmachine}(iii), $\LSFI$ exceeds $-\log\Mw$ by at least $k\log\frac32-K(k)-c$, while $K(\dom D)\le k\log3+K(k)+c$. So about a fraction $\log(3/2)/\log3\approx0.37$ of the term is needed there.
 \end{theorem}
 
 \begin{proof}
-\Cref{thm:setting:universal} gives $\MF\ge2^{-K(\nu)}\nu$, and \cref{prop:setting:order} gives $\LSFI(D_n)=-\log\MF(D_n)$ in every order. (a) By \cref{prop:setting:includes}(a) the product law $\nu_P(D)=\prod_{(x,y)\in D}P(y\mid x)$ is a machine law with $K(\nu_P)\le K(P)+c$. It counts each input of $D_n$ once, and the extra factors of repeated inputs are at most~$1$. (b) \Cref{prop:setting:includes}(b). (c) \Cref{thm:setting:weakvsmachine}(ii),(iii). The domain of each data set of that family is determined by $k$ and a vector in $\{1,2,3\}^k$, which gives the bound on $K(\dom D)$.
+\Cref{thm:setting:universal} gives $\MF\ge2^{-K(\nu)}\nu$, and \cref{prop:setting:order} gives $\LSFI(D_n)=-\log\MF(D_n)$ in every order. (a) The product law $\nu_P(D)=\prod_{(x,y)\in D}P(y\mid x)$ is a machine law with $K(\nu_P)\le K(P)+c$ (\cref{prop:setting:includes}(a)); it counts each input once, and the extra factors of repeats are at most~$1$. (b) \Cref{prop:setting:includes}(b). (c) \Cref{thm:setting:weakvsmachine}(ii),(iii); each domain of that family is determined by $k$ and a vector in $\{1,2,3\}^k$.
 \end{proof}
 
-Taking expectations gives the same bound under every data distribution. Part (a) is H\"anni's ``Thm 1 (template)'' for computably samplable predictors that see only the current input \citep{hanni2026notes}: such a predictor ``loses to `the solomonoff inductor for C'{}'' by ``at most a constant (depending on $P$ but not the distribution)''. It holds in his setting of ``input-output pairs from a function'', that is, on consistent sequences, with each sampler's randomness used once per input, as his remark on using ``different bits of randomness \dots{} for sampling on different inputs'' suggests.
+Taking expectations gives the same bound under every data distribution. Part (a) is H\"anni's ``Thm 1 (template)'' for computably samplable predictors that see only the current input \citep{hanni2026notes}: each such predictor ``loses to `the solomonoff inductor for C'{}'' by ``at most a constant (depending on $P$ but not the distribution)''. It holds in his setting of ``input-output pairs from a function'', that is, on consistent sequences, with randomness read once per input, as his remark on using ``different bits of randomness \dots{} for sampling on different inputs'' suggests.
 
 \begin{remark}[scope of dominance]\label{rem:learn:h2}
 \status{proved; open part}\src{foundations §6.1, F20--F23}
-(i) The comparison class of \cref{thm:learn:dominance} contains every machine law: deterministic programs, x-only samplers, computable laws of random total functions for every countable $Y$ (\cref{lem:setting:total}), laws with computable cylinder probabilities, and lower-semicomputable mixtures of these (\cref{prop:setting:includes}).
-(ii) The label sequence must be consistent. If an input reappears with another label, $\LSFI(D_n)=\infty$, while a sampler that draws fresh randomness at each \emph{query} has finite loss. Randomness per input is the right reading for data from a function (\cref{rem:setting:perinput}); randomness per query gives the per-query mixture $\Mpq$ (\cref{prop:learn:perquery}).
+(i) The comparators include every machine law (\cref{prop:setting:includes}), among them all computable laws of random total functions for every countable $Y$ (\cref{lem:setting:total}).
+(ii) The label sequence must be consistent: if an input reappears with another label, $\LSFI=\infty$, while a sampler with fresh randomness per \emph{query} has finite loss. Randomness per input is the right reading for data from a function (\cref{rem:setting:perinput}); per query it gives $\Mpq$ (\cref{prop:learn:perquery}).
 (iii) Weak comparators need the extra term of (c).
-(iv) Whether every lower-semicomputable law of a random partial function is dominated by $\MF$ up to a constant factor is open (\cref{q:setting:rpf}).
+(iv) For general lower-semicomputable laws of random partial functions the statement is open (\cref{q:setting:rpf}).
 \end{remark}
 
 % ------------------------------------------------------------------
@@ -41,203 +40,144 @@ Taking expectations gives the same bound under every data distribution. Part (a)
 
 \begin{theorem}[merging]\label{thm:learn:merging}
 \status{proved; finite analogue computed (foundations c4, r6; integrability inequality c11(c))}\src{foundations Thm 6.5 and remarks}
-Let $\nu$ be a machine law of a random total function, equivalently (\cref{lem:setting:total}) a computable law of a random total function, and let $F\sim\nu$. Let the inputs be chosen by any measurable rule $x_t=s_t(h_{t-1},\xi_t)$, where $h_{t-1}$ is the history, $(\xi_t)$ is independent of $F$, and $s_t$ is arbitrary (possibly non-computable). Put $y_t:=F(x_t)$, $\nu(y\mid D,x):=\nu(D+(x,y))/\nu(D)$, and
-\[ d_t:=\KL\big(\nu(\cdot\mid D_{t-1},x_t)\,\big\|\,\MF(\cdot\mid D_{t-1},x_t)\big)\quad\text{(bits; $d_t=0$ at a repeated input)}. \]
-Then $\sum_{t\le n}\Ex d_t=\Ex\log\big(\nu(D_n)/\MF(D_n)\big)\le K(\nu)$ for every $n$. Consequently $\sum_{t\ge1}\Ex d_t\le K(\nu)$, $d_t\to0$ almost surely, and $\sum_{t\ge1}\Ex\big\|\nu(\cdot\mid D_{t-1},x_t)-\MF(\cdot\mid D_{t-1},x_t)\big\|_1^2\le2\ln2\cdot K(\nu)$.
+Let $\nu$ be a machine law of a random total function, equivalently a computable law of a random total function (\cref{lem:setting:total}), and $F\sim\nu$. Let the inputs follow any measurable rule $x_t=s_t(h_{t-1},\xi_t)$, with $h_{t-1}$ the history, $(\xi_t)$ independent of $F$, and $s_t$ arbitrary (possibly non-computable); $y_t:=F(x_t)$. With $\nu(y\mid D,x):=\nu(D+(x,y))/\nu(D)$ let
+\[ d_t:=\KL\big(\nu(\cdot\mid D_{t-1},x_t)\,\big\|\,\MF(\cdot\mid D_{t-1},x_t)\big)\ \text{bits}\qquad(d_t=0\text{ at a repeated input}). \]
+Then $\sum_{t\le n}\Ex d_t=\Ex\log(\nu(D_n)/\MF(D_n))\le K(\nu)$ for every $n$. Hence $\sum_{t\ge1}\Ex d_t\le K(\nu)$, $d_t\to0$ almost surely, and $\sum_{t\ge1}\Ex\|\nu(\cdot\mid D_{t-1},x_t)-\MF(\cdot\mid D_{t-1},x_t)\|_1^2\le2\ln2\cdot K(\nu)$.
 \end{theorem}
 
-\emph{Proof idea.} The rule sees $F$ only through past labels. So, given the past, $F$ has law $\nu$ conditioned on $F\supseteq D_{t-1}$, the label $y_t$ has law $\nu(\cdot\mid D_{t-1},x_t)$, and the expected log ratio at step $t$ is $d_t$. The ratios telescope to $\log(\nu(D_n)/\MF(D_n))$, which is at most $K(\nu)$ on every path (\cref{thm:learn:dominance}). \Cref{app:learn:merging} gives the full proof, with the integrability step.
+\emph{Proof idea.} The rule sees $F$ only through past labels, so given the past $y_t$ has law $\nu(\cdot\mid D_{t-1},x_t)$ and the expected log ratio at step $t$ is $d_t$. The ratios telescope to $\log(\nu(D_n)/\MF(D_n))\le K(\nu)$ (\cref{thm:learn:dominance}). \Cref{app:learn:merging} adds the integrability step.
 
-This is the function analogue of Solomonoff's convergence theorem \citep{solomonoff1978complexity} (we have not checked the source). The rule must not see $F$ beyond the revealed labels. If it does, for example by choosing inputs whose label is~$1$, the conditional law of $y_t$ changes and the expected bound can fail: in a finite analogue (foundations r6) the summed expected KL reaches $12.5$ bits against a bound of $1$ bit. The pathwise bound \eqref{eq:learn:dominance} still holds, and \cref{thm:hist:directed} bounds the expected excess by the directed information from $F$ to the inputs.
+This is the function analogue of Solomonoff's convergence theorem \citep{solomonoff1978complexity} (source not checked). The rule must not see $F$ beyond the revealed labels: when it picks inputs by their label, the expected bound fails (in a finite analogue the summed KL reaches $12.5$ bits against a bound of $1$; foundations r6). The pathwise bound \eqref{eq:learn:dominance} still holds, and \cref{thm:hist:directed} bounds the excess by directed information.
 
 \begin{corollary}[mistake bound]\label{cor:learn:mistakes}
 \status{proved; known (Littlestone 1988; Barzdin--Freivalds 1972, content unverified)}\src{foundations Cor 6.6}
-Let $\varphi$ be partial computable and $x_1,x_2,\ldots\in\dom\varphi$ any inputs, with $y_t=\varphi(x_t)$. At most $K(\varphi)+c$ steps $t$ have $\MF(\varphi(x_t)\mid D_{t-1},x_t)\le\frac12$. So the predictor $\hat y_t:=\arg\max_y\MF(y\mid D_{t-1},x_t)$ makes at most $K(\varphi)+c$ mistakes on every input sequence.
+Let $\varphi$ be partial computable, $x_1,x_2,\ldots\in\dom\varphi$ any inputs, and $y_t=\varphi(x_t)$. At most $K(\varphi)+c$ steps have $\MF(\varphi(x_t)\mid D_{t-1},x_t)\le\frac12$. So $\hat y_t:=\arg\max_y\MF(y\mid D_{t-1},x_t)$ makes at most $K(\varphi)+c$ mistakes on every input sequence.
 \end{corollary}
 
 \begin{proof}
-Each such step adds at least one bit to $\LSFI(D_n)\le K(\varphi)+c$ (\cref{thm:learn:dominance}(b)). If $\MF(\varphi(x_t)\mid D_{t-1},x_t)>\frac12$, then $\varphi(x_t)$ is the unique maximiser. The maximum exists because only finitely many labels have conditional probability above any positive threshold.
+Each such step adds at least one bit to $\LSFI(D_n)\le K(\varphi)+c$ (\cref{thm:learn:dominance}(b)). Above $\frac12$, $\varphi(x_t)$ is the unique maximiser; the maximum exists because only finitely many labels exceed any positive threshold.
 \end{proof}
 
-This is the halving-algorithm bound $\log|H|$ \citep{littlestone1988learning}, for enumerable classes \citep{barzdin1972prediction}, with $K(\varphi)$ in place of $\log|H|$. The predictor $\hat y_t$ is not computable (\cref{prop:setting:computability}). Examples are in \cref{prop:ex:deterministic}.
+This is the halving bound $\log|H|$ \citep{littlestone1988learning}, for enumerable classes \citep{barzdin1972prediction}, with $K(\varphi)$ in place of $\log|H|$. The predictor is not computable (\cref{prop:setting:computability}). Examples are in \cref{prop:ex:deterministic}.
 
 % ------------------------------------------------------------------
 \subsection{Online-to-batch and noise}\label{sec:learn:batch}
 
 \begin{theorem}[online-to-batch]\label{thm:learn:batch}
 \status{proved; finite analogues computed (foundations r9; c7, r7)}\src{foundations Thm 6.7}
-Let $\mu$ be any distribution on $X$ (it need not be computable) and $x_1,x_2,\ldots$ i.i.d.\ from $\mu$.
-\begin{enumerate}[label=(\alph*)]
-\item \emph{Deterministic labels.} Let $\varphi$ be partial computable with $\mu(\dom\varphi)=1$ and $y_t=\varphi(x_t)$. Put $Q_t(\cdot\mid x):=\MF(\cdot\mid D_t,x)$, $\bar Q_n:=\frac1n\sum_{t=0}^{n-1}Q_t$ and $R(Q):=\Ex_{x\sim\mu}[-\log Q(\varphi(x)\mid x)]$. Then
-\[ \textstyle\sum_{t=0}^{n-1}\Ex R(Q_t)\le K(\varphi)+c,\qquad \Ex R(\bar Q_n)\le\frac{K(\varphi)+c}n,\qquad \Ex\,\mu\{x:\arg\max_y\bar Q_n(y\mid x)\ne\varphi(x)\}\le\frac{K(\varphi)+c}n. \]
-\item \emph{Noisy labels, time-stamped inputs.} Let $P(\cdot\mid x)$ be any conditional probability (possibly non-computable) and $y_t\sim P(\cdot\mid x_t)$ independently given the inputs. Run SFI on the stamped inputs $\tilde x_t:=\langle x_t,t\rangle$, for a computable bijection $\langle\cdot,\cdot\rangle:X\times\mathbb N\to X$, with data sets $\tilde D_t$. Put $q_t(\cdot\mid x):=\MF(\cdot\mid\tilde D_{t-1},\langle x,t\rangle)$ and $\bar q_n:=\frac1n\sum_{t=1}^nq_t$. Then for every lower-semicomputable conditional semimeasure $P'$,
-\[ \Ex\,\Ex_{x\sim\mu}\KL\big(P(\cdot\mid x)\,\|\,\bar q_n(\cdot\mid x)\big)\ \le\ \frac{K(P')+c}n+\Ex_{x\sim\mu}\KL\big(P(\cdot\mid x)\,\|\,P'(\cdot\mid x)\big). \]
-If $P$ is lower semicomputable (hence computable), the bound is $(K(P)+c)/n$. The expected excess 0--1 risk of $\arg\max_y\bar q_n(y\mid x)$ over the Bayes classifier is at most the square root of $2\ln2$ times the right side.
-\item \emph{Frozen noise.} Let $F$ have the product law of a computable conditional probability $P$ (one draw per input) and $y_t=F(x_t)$. Then $\sum_{t\le n}\Ex d_t\le K(P)+c$, with $d_t$ as in \cref{thm:learn:merging}, for every input rule that sees only the past, not only for i.i.d.\ inputs.
+Let $x_1,x_2,\ldots$ be i.i.d.\ from any distribution $\mu$ on $X$, computable or not.
+\begin{enumerate}[label=(\alph*),leftmargin=*]
+\item \emph{Deterministic labels.} Let $\varphi$ be partial computable, $\mu(\dom\varphi)=1$, $y_t=\varphi(x_t)$. Put $Q_t(\cdot\mid x):=\MF(\cdot\mid D_t,x)$, $\bar Q_n:=\frac1n\sum_{t<n}Q_t$, $R(Q):=\Ex_{x\sim\mu}[-\log Q(\varphi(x)\mid x)]$. Then $\sum_{t<n}\Ex R(Q_t)\le K(\varphi)+c$, $\Ex R(\bar Q_n)\le(K(\varphi)+c)/n$, and the expected 0--1 risk $\Ex\,\mu\{x:\arg\max_y\bar Q_n(y\mid x)\ne\varphi(x)\}$ is at most $(K(\varphi)+c)/n$.
+\item \emph{Noisy labels, stamped inputs.} Let $y_t\sim P(\cdot\mid x_t)$ independently given the inputs, for any conditional probability $P$ (possibly non-computable). Run SFI on $\tilde x_t:=\langle x_t,t\rangle$, for a computable bijection $\langle\cdot,\cdot\rangle:X\times\mathbb N\to X$, with data sets $\tilde D_t$; put $q_t(\cdot\mid x):=\MF(\cdot\mid\tilde D_{t-1},\langle x,t\rangle)$ and $\bar q_n:=\frac1n\sum_{t\le n}q_t$. Then for every lower-semicomputable conditional semimeasure $P'$,
+\[ \Ex\,\Ex_{x\sim\mu}\KL\big(P(\cdot\mid x)\,\|\,\bar q_n(\cdot\mid x)\big)\le\tfrac1n\big(K(P')+c\big)+\Ex_{x\sim\mu}\KL\big(P(\cdot\mid x)\,\|\,P'(\cdot\mid x)\big). \]
+For lower-semicomputable (hence computable) $P$ this is $(K(P)+c)/n$. The expected excess 0--1 risk of $\arg\max_y\bar q_n(y\mid x)$ over the Bayes classifier is at most $\sqrt{2\ln2}$ times the square root of the right side.
+\item \emph{Frozen noise.} If $F$ has the product law of a computable conditional probability $P$ (one draw per input) and $y_t=F(x_t)$, then $\sum_{t\le n}\Ex d_t\le K(P)+c$, with $d_t$ as in \cref{thm:learn:merging}, for every input rule that sees only the past.
 \end{enumerate}
 \end{theorem}
 
-\emph{The online-to-batch argument.} When $x_{t+1}$ is independent of $D_t$ and has law $\mu$, $\Ex R(Q_t)$ is the expected loss of SFI's online prediction at step $t+1$. So the cumulative bound of \cref{thm:learn:dominance} bounds the sum of the risks, and convexity of $-\log$ moves the average inside: this is online-to-batch conversion \citep{littlestone1989online,cesabianchi2004generalization}. The same averaging over a uniformly random order of a finite input set gives \cref{prop:learn:splits}; there SFI's order independence makes it an identity. \Citet{haussler1994predicting} use a permutation argument of this kind (we have not checked the source). Part (b) adds stamps, which make all inputs distinct, and uses the stamp-ignoring product law of $P'$ as comparator; (c) is \cref{thm:learn:merging} for a product law. \Cref{app:learn:batch} has the proofs. The batch bounds are for the Ces\`aro average $\bar Q_n$, not for the last posterior predictive $Q_n$ (\cref{sec:learn:curves}).
+Part (a) is online-to-batch conversion \citep{littlestone1989online,cesabianchi2004generalization}: since $x_{t+1}$ is independent of $D_t$, $\Ex R(Q_t)$ is the expected online loss at step $t+1$, so \cref{thm:learn:dominance}(b) bounds $\sum_t\Ex R(Q_t)$, and convexity moves the average inside. The same averaging over a random order of a finite input set gives \cref{prop:learn:splits}, where order independence makes it an identity; \citet{haussler1994predicting} use a permutation argument of this kind (source not checked). In (b) the stamps make the inputs distinct, and the stamp-ignoring product law of $P'$ is the comparator; (c) is \cref{thm:learn:merging} for a product law. Proofs are in \cref{app:learn:batch}. The bounds are for the Ces\`aro average $\bar Q_n$, not for the last predictor $Q_n$ (\cref{sec:learn:curves}).
 
 \begin{proposition}[random-function SFI cannot model fresh label noise]\label{prop:learn:freshnoise}
 \status{proved; refuted (the brief's fresh-noise claim, as stated); computed (foundations c5, r9(b))}\src{foundations Prop 6.8; F31}
-Let $\mu(x_0)=\alpha>0$, and let $P(\cdot\mid x_0)$ give positive probability to at least two labels; put $p_{\max}:=\max_yP(y\mid x_0)<1$. Draw the pairs $(x_t,y_t)$ i.i.d.\ from $\mu\times P$, with a fresh label at every draw. Predict with $\nu(\cdot\mid D,x)$ for a weak semimeasure $\nu$ and the repeated-input convention of \cref{def:setting:data}, raw or normalised; this covers $\MF$, $W$, $\Mprod$ and $\Mw$.
-\begin{enumerate}[label=(\alph*)]
-\item For every $n\ge2$, $\Prob[D_n\text{ inconsistent}]>0$, so the expected cumulative log loss is infinite, in both conventions.
-\item $\Prob[D_n\text{ consistent}]\le(1-\alpha)^n+p_{\max}^{-1}(1-\alpha+\alpha p_{\max})^n\to0$.
-\item The statement ``for every input distribution and every computable conditional probability $P$, SFI's expected cumulative log loss exceeds that of $P$ by at most $K(P)+O(1)$'' is false for random-function SFI. For $P$ with finite expected log loss it holds for all $n$ exactly when $P(\cdot\mid x)$ is a point mass for every $x$ with $\mu(x)>0$, and then it is \cref{thm:learn:batch}(a).
-\end{enumerate}
+Let $\mu(x_0)=\alpha>0$, let $P(\cdot\mid x_0)$ give positive probability to two labels, and $p_{\max}:=\max_yP(y\mid x_0)<1$. Draw the pairs $(x_t,y_t)$ i.i.d.\ from $\mu\times P$, with a fresh label at every draw, and predict with $\nu(\cdot\mid D,x)$ for a weak semimeasure $\nu$, raw or normalised, with the repeated-input convention of \cref{def:setting:data}. This covers $\MF$, $W$, $\Mprod$ and $\Mw$.
+(a) For every $n\ge2$, $\Prob[D_n\text{ inconsistent}]>0$, so the expected cumulative log loss is infinite, in both conventions.
+(b) $\Prob[D_n\text{ consistent}]\le(1-\alpha)^n+p_{\max}^{-1}(1-\alpha+\alpha p_{\max})^n\to0$.
+(c) The statement ``for every input distribution and every computable conditional probability $P$, SFI's expected cumulative log loss exceeds that of $P$ by at most $K(P)+O(1)$'' is false for random-function SFI. For $P$ with finite expected log loss it holds for all $n$ exactly when $P(\cdot\mid x)$ is a point mass for every $x$ with $\mu(x)>0$; then it is \cref{thm:learn:batch}(a).
 \end{proposition}
 
-\begin{proof}
-(a) Two draws of $x_0$ with different labels have positive probability; the second gets probability~$0$, because the stored label gets probability~$1$. (b) The labels at $x_0$ agree with probability $\sum_{j\ge0}\binom nj\alpha^j(1-\alpha)^{n-j}\sum_yP(y\mid x_0)^j$, and $\sum_yP(y\mid x_0)^j\le p_{\max}^{j-1}$ for $j\ge1$. (c) If some $x$ with $\mu(x)>0$ has two labels of positive probability, (a) applies. Otherwise $\varphi(x):=$ the label with $P(\varphi(x)\mid x)>\frac12$ is partial computable, $K(\varphi)\le K(P)+c$, and $\mu(\dom\varphi)=1$.
-\end{proof}
-
-$X$ is countable, so $\mu$ is atomic, and in theory one repetition with another label suffices. The failure is structural: random-function SFI models the label as a function of the input, and a source with fresh noise is not one. With $10$ equally likely inputs and fair-coin labels, the data stay consistent with probability $0.95$ at $n=2$, $0.113$ at $n=10$ and $5\cdot10^{-4}$ at $n=20$ (foundations c5). This refutes, for random-function SFI, the fresh-noise form of the supervised-learning hypothesis of the project brief (\cref{tab:intro:verdicts}). The finite-loss proviso in (c) is ours: if $P$'s expected loss is infinite the inequality holds trivially. There are three repairs: time stamps (\cref{thm:learn:batch}(b)), frozen noise (\cref{thm:learn:batch}(c); an example is \cref{prop:ex:frozen}), and mixing per query.
+The proof is in \cref{app:learn:batch}. Random-function SFI models the label as a function of the input, and a source with fresh noise is not one; one repetition with another label suffices. With $10$ equally likely inputs and fair-coin labels, the data stay consistent with probability $0.95$ at $n=2$, $0.113$ at $n=10$ and $5\cdot10^{-4}$ at $n=20$ (foundations c5). This refutes, for random-function SFI, the fresh-noise form of the brief's supervised-learning hypothesis (\cref{tab:intro:verdicts}). The finite-loss proviso in (c) is ours: if $P$'s loss is infinite the inequality holds trivially. The repairs are stamps (\cref{thm:learn:batch}(b)), frozen noise (\cref{thm:learn:batch}(c); example: \cref{prop:ex:frozen}) and mixing per query:
 
 \begin{proposition}[the per-query mixture]\label{prop:learn:perquery}
 \status{proved; computed (foundations c7, r7)}\src{foundations Prop 6.9}
-Let $\Mpq(y_{1:n}\Vert x_{1:n})=\sum_i\mm(i)\prod_{t\le n}P_i(y_t\mid x_t)$ be the per-query mixture (\cref{def:versions:variants}), defined on all finite sequences of pairs, consistent or not.
-\begin{enumerate}[label=(\alph*)]
-\item $\Mpq$ is a lower-semicomputable chronological semimeasure: $\Mpq(\epsilon\Vert\epsilon)\le1$ and $\sum_y\Mpq(y_{1:n}y\Vert x_{1:n}x)\le\Mpq(y_{1:n}\Vert x_{1:n})$ for every $x$. It depends only on the multiset of pairs. It equals $\Mprod(D_n)$ on sequences with distinct inputs, is at most $\Mprod(D_n)$ on consistent sequences with repeated inputs (often strictly), and is positive on inconsistent sequences, where every set-based object gives probability~$0$.
-\item \emph{Pathwise regret.} On every sequence, consistent or not, $-\log\Mpq(y_{1:n}\Vert x_{1:n})\le\sum_{t\le n}-\log P(y_t\mid x_t)+K(P)$ for every lower-semicomputable conditional semimeasure $P$.
-\item \emph{Fresh noise.} Let $(x_t,y_t)$ be i.i.d.\ from $\mu\times P$, with $\mu$ arbitrary and $P$ any conditional probability. Let $q_t(\cdot\mid x):=\Mpq(y_{<t}\,\cdot\Vert x_{<t}x)/\Mpq(y_{<t}\Vert x_{<t})$ and $\bar q_n:=\frac1n\sum_{t\le n}q_t$. Then for every lower-semicomputable conditional semimeasure $P'$,
-\[ \textstyle\sum_{t\le n}\Ex\,\Ex_\mu\KL(P\,\|\,q_t)\le K(P')+n\,\Ex_\mu\KL(P\,\|\,P'),\qquad \Ex\,\Ex_\mu\KL(P\,\|\,\bar q_n)\le\frac{K(P')}n+\Ex_\mu\KL(P\,\|\,P'). \]
-\item \emph{Stamped SFI dominates it.} With the stamps of \cref{thm:learn:batch}(b), $\MF(\tilde D_n)\ge2^{-c}\Mpq(y_{1:n}\Vert x_{1:n})$.
-\end{enumerate}
+Let $\Mpq(y_{1:n}\Vert x_{1:n})=\sum_i\mm(i)\prod_{t\le n}P_i(y_t\mid x_t)$ on all finite sequences of pairs (\cref{def:versions:variants}).
+(a) $\Mpq$ is a lower-semicomputable chronological semimeasure: $\Mpq(\epsilon\Vert\epsilon)\le1$ and $\sum_y\Mpq(y_{1:n}y\Vert x_{1:n}x)\le\Mpq(y_{1:n}\Vert x_{1:n})$. It depends only on the multiset of pairs; it equals $\Mprod(D_n)$ on sequences with distinct inputs, is at most $\Mprod(D_n)$ on consistent sequences with repeats (often strictly), and is positive on inconsistent sequences.
+(b) On every sequence, consistent or not, $-\log\Mpq(y_{1:n}\Vert x_{1:n})\le\sum_{t\le n}-\log P(y_t\mid x_t)+K(P)$ for every lower-semicomputable conditional semimeasure $P$.
+(c) Let $(x_t,y_t)$ be i.i.d.\ from $\mu\times P$, $\mu$ arbitrary and $P$ any conditional probability, $q_t(\cdot\mid x):=\Mpq(y_{<t}\,\cdot\Vert x_{<t}x)/\Mpq(y_{<t}\Vert x_{<t})$ and $\bar q_n:=\frac1n\sum_{t\le n}q_t$. For every lower-semicomputable conditional semimeasure $P'$, $\sum_{t\le n}\Ex\,\Ex_\mu\KL(P\|q_t)\le K(P')+n\,\Ex_\mu\KL(P\|P')$, so $\Ex\,\Ex_\mu\KL(P\|\bar q_n)\le K(P')/n+\Ex_\mu\KL(P\|P')$.
+(d) With the stamps of \cref{thm:learn:batch}(b), $\MF(\tilde D_n)\ge2^{-c}\Mpq(y_{1:n}\Vert x_{1:n})$.
 \end{proposition}
 
-So the regret form of the supervised-learning bound holds under fresh noise for the per-query mixture, with no stamps. Read per query, Solomonoff's operator induction is this mixture (\cref{rem:versions:operator}; secondary sources only). \SFIhist{} dominates it (\cref{prop:hist:operator}), and \cref{prop:comp:round} is a time-bounded mixture of the same kind. Proofs are in \cref{app:learn:perquery}.
+So the regret bound holds under fresh noise for the per-query mixture, with no stamps. Read per query, Solomonoff's operator induction is this mixture (\cref{rem:versions:operator}; secondary sources only). \SFIhist{} dominates it (\cref{prop:hist:operator}), and \cref{prop:comp:round} is a time-bounded mixture of the same kind. Proofs: \cref{app:learn:perquery}.
 
 % ------------------------------------------------------------------
 \subsection{Learning curves and in-distribution error}\label{sec:learn:curves}
 
-The bounds so far are cumulative, or are for averaged predictors. This subsection asks about the predictor after $n$ samples, about held-out points, and about the error at a single step.
+The bounds so far are cumulative or for averaged predictors. We now look at the predictor after $n$ samples, at held-out points, and at single steps.
 
 \begin{proposition}[the expected risk of a Bayes predictor need not decrease]\label{prop:learn:curve}
 \status{proved; computed (foundations c11(a), r12)}\src{foundations Prop 6.10}
-Let $X=\{a,b\}$, $\mu$ uniform, target $\varphi\equiv0$, and consider a Bayes mixture of three total functions: $\varphi$ with prior weight $w$, and $(1,0)$ and $(0,1)$ with weight $(1-w)/2$ each. Let $r_t$ be the expected log risk of the posterior predictive after $t$ i.i.d.\ samples. Then
-\[ r_0=-\log\tfrac{1+w}2,\qquad r_1=\tfrac12\log\tfrac{1+w}{2w},\qquad r_t=2^{1-t}r_1\quad(t\ge1). \]
-So $r_1>r_0$ whenever $(1+w)^3>8w$, in particular for all $w\le\frac15$. For $w=\frac1{16}$, $r_0=0.912$ and $r_1=1.544$ bits. The sum $\sum_tr_t$ increases to $\log(1/w)$.
+Let $X=\{a,b\}$, $\mu$ uniform, target $\varphi\equiv0$, and a Bayes mixture of three total functions: $\varphi$ with prior weight $w$, and $(1,0)$ and $(0,1)$ with weight $\frac{1-w}2$ each. The expected log risk $r_t$ of the posterior predictive after $t$ i.i.d.\ samples is $r_0=-\log\frac{1+w}2$, $r_1=\frac12\log\frac{1+w}{2w}$ and $r_t=2^{1-t}r_1$ for $t\ge1$. So $r_1>r_0$ whenever $(1+w)^3>8w$, in particular for all $w\le\frac15$; for $w=\frac1{16}$, $r_0=0.912$ and $r_1=1.544$ bits. The sum $\sum_tr_t$ increases to $\log(1/w)$.
 \end{proposition}
 
-The mixture is a law of a random total function, so both conventions agree. It is a finite Bayes mixture, not $\MF$: it shows that ``more data never hurts in expectation'' is false for Bayes predictors with a fixed target, so nothing of the kind follows from the general theory. Whether it fails for $\MF$ on some computable target is not established. In $300$ random finite instances, $63$ had non-monotone risk curves (foundations r12).
+The mixture is a law of a random total function, so both conventions agree. It is a finite Bayes mixture, not $\MF$: ``more data never hurts in expectation'' is false for Bayes predictors with a fixed target, so no such statement follows from the general theory. Whether it fails for $\MF$ is not established. In $300$ random finite instances, $63$ had non-monotone risk curves (foundations r12). Learning curves can also increase when sampling without replacement (\cref{rem:learn:increasing}).
 
 \begin{remark}[last iterate and leave-one-out]\label{rem:learn:lastiterate}
 \status{identity proved; computed (foundations c11(b)); bound open}\src{foundations Rem 6.11, §8 item 7}
-In the setting of \cref{thm:learn:batch}(a), exchangeability of $x_1,\dots,x_{n+1}$ gives
-\[ \Ex R(Q_n)=\Ex\Big[\frac1{n+1}\sum_{i=1}^{n+1}-\log Q^{(-i)}\big(\varphi(x_i)\mid x_i\big)\Big], \]
-where $Q^{(-i)}$ is SFI's predictive given the data set of the samples $j\ne i$; a held-out input that also occurs among the others costs~$0$. So whether $\Ex R(Q_n)\le(K(\varphi)+c)/(n+1)$ for SFI's last iterate is a leave-one-out question, the log-loss analogue of \cref{conj:learn:loo}. It is open. In $300$ random finite instances the largest value of $(n+1)r_n/K$ was $0.87$ (foundations r12).
+In the setting of \cref{thm:learn:batch}(a), exchangeability gives $\Ex R(Q_n)=\Ex\big[\frac1{n+1}\sum_{i\le n+1}-\log Q^{(-i)}(\varphi(x_i)\mid x_i)\big]$, where $Q^{(-i)}$ is SFI's predictive given the data set of the samples $j\ne i$ (a held-out input that occurs among the others costs~$0$). So whether $\Ex R(Q_n)\le(K(\varphi)+c)/(n+1)$ for SFI's last predictor is a leave-one-out question, the log-loss analogue of \cref{conj:learn:loo}. It is open. In $300$ random finite instances the largest $(n+1)r_n/K$ was $0.87$ (foundations r12).
 \end{remark}
 
-\emph{Errors.} For $\nu\in\{W,\MF\}$, a target $f$, a training set $A$ with $D=f|_A$, and a test input $x^*$, put $e(x^*):=1-\nu(f(x^*)\mid D,x^*)$, the posterior mass that is wrong or undefined at $x^*$ ($0$ if $x^*\in A$); $e^{\rm wr}(x^*):=\sum_{y\ne f(x^*)}\nu(D+(x^*,y))/\nu(D)$, the mass that is defined and wrong; and $e_{\rm norm}(x^*)$, the error of the normalised predictor. Always $e^{\rm wr}\le e_{\rm norm}\le e$, since the normaliser is at most $\nu(D)$. So lower bounds on $e^{\rm wr}$ and upper bounds on $e$ hold in both conventions.
+\emph{Errors.} For $\nu\in\{W,\MF\}$, a target $f$, training inputs $A$ with $D=f|_A$, and a test input $x^*$: $e(x^*):=1-\nu(f(x^*)\mid D,x^*)$ is the posterior mass wrong or undefined at $x^*$ ($0$ if $x^*\in A$); $e^{\rm wr}(x^*):=\sum_{y\ne f(x^*)}\nu(D+(x^*,y))/\nu(D)$ is the mass defined and wrong; $e_{\rm norm}(x^*)$ is the error of the normalised predictor. Since the normaliser is at most $\nu(D)$, $e^{\rm wr}\le e_{\rm norm}\le e$: lower bounds on $e^{\rm wr}$ and upper bounds on $e$ hold in both conventions.
 
 \begin{proposition}[random splits]\label{prop:learn:splits}
 \status{proved; technique known; computed (context c3)}\src{context Prop 2.9}
-Let $\nu\in\{W,\MF\}$, let $B$ be any finite input set (possibly adversarial) and $f$ any labelling of $B$. Choose a uniformly random order of $B$ and an independent uniform split point $k\in\{1,\dots,|B|\}$; train on the first $k-1$ inputs and test on the $k$-th. The expected test loss is
-\[ \frac{-\log(\nu(f|_B)/\nu(\emptyset))}{|B|}\ \le\ \frac{L_\nu(f|_B)}{|B|}\ \le\ \frac{\KF(f|_B)+c}{|B|}, \]
-with $c=0$ for $W$, and the expected test error is at most $(\ln2)L_\nu(f|_B)/|B|$.
+Let $\nu\in\{W,\MF\}$, $B$ any finite input set (possibly adversarial), $f$ any labelling of $B$. Train on the first $k-1$ inputs of a uniformly random order of $B$ and test on the $k$-th, with $k$ uniform on $\{1,\dots,|B|\}$ and independent. The expected test loss is $-\log(\nu(f|_B)/\nu(\emptyset))/|B|\le L_\nu(f|_B)/|B|\le(\KF(f|_B)+c)/|B|$, with $c=0$ for $W$, and the expected test error is at most $(\ln2)L_\nu(f|_B)/|B|$.
 \end{proposition}
-
-This is the online-to-batch argument above; the identity holds for every input set because the step losses sum to the order-free total in every order (\cref{app:learn:splits}). A Monte Carlo run on a toy mixture gives $1.8230\pm0.0071$ against the exact $1.8200$ (context c3).
 
 \begin{proposition}[leave-one-out]\label{prop:learn:loo}
 \status{proved; computed (context c7)}\src{context Prop 2.10}
-For $\nu\in\{W,\MF\}$, a labelling $f$ of a finite set $B$, and $e_{\rm LOO}(x):=1-\nu(f|_B)/\nu(f|_{B\setminus\{x\}})$,
-\[ \sum_{x\in B}e_{\rm LOO}(x)\ \le\ \frac{\nu(\emptyset)-\nu(f|_B)}{\nu(f|_B)}\ <\ 2^{L_\nu(f|_B)}\ \le\ 2^{\KF(f|_B)+c}. \]
+For $\nu\in\{W,\MF\}$, a labelling $f$ of a finite $B$, and $e_{\rm LOO}(x):=1-\nu(f|_B)/\nu(f|_{B\setminus\{x\}})$: $\sum_{x\in B}e_{\rm LOO}(x)\le(\nu(\emptyset)-\nu(f|_B))/\nu(f|_B)<2^{L_\nu(f|_B)}\le2^{\KF(f|_B)+c}$.
 \end{proposition}
 
-\emph{Proof idea.} $e_{\rm LOO}(x)\,\nu(f|_{B\setminus\{x\}})$ is the mass of hypotheses (programs for $W$, tapes for $\MF$) that are correct on $B\setminus\{x\}$ and not correct at $x$. These sets are disjoint for different $x$ and contain no hypothesis correct on all of $B$ (\cref{app:learn:splits}).
-
-\begin{remark}[learning curves can increase]\label{rem:learn:increasing}
-\status{computed (context c3 Part 2)}\src{context Rem 2.11}
-Take a Bayes mixture of the truth $f$ (weight $w_f$) and $|B|$ hypotheses, each wrong at exactly one point of $B$ (weight $w$ each). Sampling without replacement, the loss at step $k$ is $\log\frac{w_f+w(|B|-k+1)}{w_f+w(|B|-k)}$ in every order, and it increases with $k$. With $w=w_f=1/(|B|+1)$ and $|B|=16$, the last step (leave-one-out) costs $1$ bit, while the random-split average is $0.255$ bits. Each leave-one-out error is $\frac12$ here, within a factor of about $2$ of the bound of \cref{prop:learn:loo}. By Kraft's inequality such weights $w=w_f=2^{-K}$ need $|B|\le2^K-1$.
-\end{remark}
+\emph{Proof ideas} (\cref{app:learn:splits}). Splits: in every order the step losses sum to the order-free total; average over $k$. Leave-one-out: $e_{\rm LOO}(x)\,\nu(f|_{B\setminus\{x\}})$ is the mass of hypotheses (programs for $W$, tapes for $\MF$) correct on $B\setminus\{x\}$ and not at $x$; these sets are disjoint and avoid the hypotheses correct on all of $B$.
 
 \begin{conjecture}[leave-one-out for SFI]\label{conj:learn:loo}
 \status{conjecture}\src{context Conj 2.11; context §7 item 1}
-For SFI, $\frac1{|B|}\sum_{x\in B}e_{\rm LOO}(x)=O\big(\KF(f|_B)/|B|\big)$, up to logarithmic factors.
+For SFI, $\frac1{|B|}\sum_{x\in B}e_{\rm LOO}(x)=O(\KF(f|_B)/|B|)$, up to logarithmic factors.
 \end{conjecture}
 
-Heuristic, not proved: the natural one-exception hypotheses ``$f$ except at $x$'' have weight about $2^{-K(f)-K(x\mid f)}$, and $\sum_x2^{-K(x\mid f)}\le1$. A counterexample needs many more than $K(f)$ points $x$ whose one-point flips $f^x$ have $K(f^x)\lesssim K(f)$. Natural attempts at a counterexample (halting-set indicators, pseudo-random seeds, thresholds) give only $O(1)$ or $O(K(f))$ such points.
+\Cref{app:learn:remarks} gives the heuristic and the toy mixture of \cref{rem:learn:increasing}, which shows that \cref{prop:learn:loo} is tight within a factor of about~$2$ for general prior weights.
 
 \begin{proposition}[separating properties are typical even in distribution]\label{prop:learn:typical}
 \status{proved; computed (context c4)}\src{context Prop 2.12}
-Let $f\equiv0$ on $\{0,1\}^d$, let $x_1,\dots,x_n$ be i.i.d.\ uniform training inputs and $x^*$ an independent uniform test input, with $d\ge\ell:=\lceil\log n\rceil+1$. Let $u$ be the $\ell$-bit prefix of $x^*$ and $G_u$ the set of strings that start with $u$. Then
-\begin{enumerate}[label=(\arabic*)]
-\item $\Prob[G_u\text{ separates }x^*\text{ from the training inputs}]=(1-2^{-\ell})^n\ge\frac12$;
-\item $K(G_u)\le\ell+2\log(\ell+1)+c$;
-\item for $\nu\in\{W,\MF\}$, $\Ex\,e^{\rm wr}(x^*)\ge\frac12\cdot2^{-\ell-2\log(\ell+1)-c}\ge2^{-c}/\big(8n(\log n+3)^2\big)$, hence in both conventions.
-\end{enumerate}
-For a computable binary $f$ on $\{0,1\}^d$ the same argument gives $\Ex\,e^{\rm wr}(x^*)\ge2^{-K(f)-c}/\big(8n(\log n+3)^2\big)$.
+Let $f\equiv0$ on $\{0,1\}^d$, $x_1,\dots,x_n$ i.i.d.\ uniform training inputs and $x^*$ an independent uniform test input, $d\ge\ell:=\lceil\log n\rceil+1$. Let $G_u$ be the set of strings that start with the $\ell$-bit prefix $u$ of $x^*$. Then (1) $G_u$ separates $x^*$ from the training inputs with probability $(1-2^{-\ell})^n\ge\frac12$; (2) $K(G_u)\le\ell+2\log(\ell+1)+c$; (3) for $\nu\in\{W,\MF\}$, $\Ex\,e^{\rm wr}(x^*)\ge\frac12\cdot2^{-\ell-2\log(\ell+1)-c}\ge2^{-c}/(8n(\log n+3)^2)$, in both conventions. For computable binary $f$ the same argument gives $\Ex\,e^{\rm wr}(x^*)\ge2^{-K(f)-c}/(8n(\log n+3)^2)$.
 \end{proposition}
 
-\emph{Proof idea.} On the event of (1), a program that answers~$1$ on $G_u$ and runs any training-consistent program elsewhere is consistent with the training data and costs $K(G_u)+c$ extra bits; this is the special case of \cref{prop:ood:hanni} with a prefix property and a constant output, proved in \cref{app:learn:typical}. So ``no simple property separates test from train'' can hold typically only at scales $\lesssim\log n$ bits.
-
-\begin{remark}[a refuted comparison]\label{rem:learn:cesaro}
-\status{refuted}\src{context Prop 2.12, X13}
-An earlier version of the context notes read \cref{prop:learn:typical} as ``matching the $O(1/n)$ Ces\`aro upper bound up to $\log^2n$''. That comparison is invalid. It sets a per-step lower bound against an average over steps, which says nothing about the per-step rate: since $\sum_k\Ex e_k\le(\ln2)(K(f)+c)$, we have $\liminf_kk\,\Ex e_k=0$. The correct per-step comparison is \cref{cor:learn:perstep}.
-\end{remark}
+\emph{Proof idea.} On the event of (1), a program that answers~$1$ on $G_u$ and runs a training-consistent program elsewhere is consistent with the training data and costs $K(G_u)+c$ extra bits; this is a special case of \cref{prop:ood:hanni}, proved in \cref{app:learn:typical}. So ``no simple property separates test from train'' holds typically only at scales of about $\log n$ bits. An earlier reading of this bound as ``matching the Ces\`aro bound up to $\log^2n$'' is refuted (\cref{rem:learn:cesaro}); the per-step comparison is:
 
 \begin{corollary}[per-step in-distribution error]\label{cor:learn:perstep}
 \status{proved; computed (context c7)}\src{context Cor 2.17}
-Let $\mu$ be any distribution on $X$, $f$ partial computable with $\mu(\dom f)=1$, $x_1,\dots,x_n,x^*$ i.i.d.\ from $\mu$, $\nu\in\{W,\MF\}$, and $e$ the semimeasure-convention error (so the bounds also hold normalised).
-\begin{enumerate}[label=(\alph*)]
-\item \emph{Markov form.} For every $\varepsilon\in(0,1)$, $\Ex e(x^*)\le\varepsilon+2^{K(f)+c}e^{-\varepsilon n}$; hence $\Ex e(x^*)\le\big((K(f)+c)\ln2+\ln n+1\big)/n$. With probability at least $1-\delta$ over the training sample, $\Ex_{x^*}[e(x^*)\mid D_n]\le\varepsilon+2^{K(f)+c}e^{-\varepsilon n}/\delta$. The posterior-majority predictor has expected 0--1 risk at most $2\Ex e(x^*)$.
-\item \emph{Exchangeability form.} $\Ex e(x^*)\le\Ex\big[\frac{\nu(\emptyset)-\nu(f|_S)}{(n+1)\nu(f|_S)}\big]\le2^{K(f)+c}/(n+1)$, where $S$ is the set of the $n+1$ sampled values.
-\end{enumerate}
-For $f\equiv0$ and uniform inputs on $\{0,1\}^d$ with $d\ge\lceil\log n\rceil+1$, $2^{-c}/\big(8n(\log n+3)^2\big)\le\Ex e(x_{n+1})\le2^{c}/(n+1)$, in both conventions: the per-step error is $\Theta(1/n)$ up to the $\log^2n$ factor in the lower bound.
+Let $\mu$ be any distribution on $X$, $f$ partial computable with $\mu(\dom f)=1$, $x_1,\dots,x_n,x^*$ i.i.d.\ from $\mu$, $\nu\in\{W,\MF\}$, and $e$ the semimeasure-convention error (so the bounds hold normalised too).
+(a) For every $\varepsilon\in(0,1)$, $\Ex e(x^*)\le\varepsilon+2^{K(f)+c}e^{-\varepsilon n}$; hence $\Ex e(x^*)\le((K(f)+c)\ln2+\ln n+1)/n$. With probability at least $1-\delta$ over the training sample, $\Ex_{x^*}[e(x^*)\mid D_n]\le\varepsilon+2^{K(f)+c}e^{-\varepsilon n}/\delta$. The posterior-majority predictor has expected 0--1 risk at most $2\Ex e(x^*)$.
+(b) $\Ex e(x^*)\le\Ex\big[\frac{\nu(\emptyset)-\nu(f|_S)}{(n+1)\nu(f|_S)}\big]\le2^{K(f)+c}/(n+1)$, where $S$ is the set of the $n+1$ sampled values.
+For $f\equiv0$ and uniform inputs on $\{0,1\}^d$, $d\ge\lceil\log n\rceil+1$: $2^{-c}/(8n(\log n+3)^2)\le\Ex e(x_{n+1})\le2^{c}/(n+1)$ in both conventions, so the per-step error is $\Theta(1/n)$ up to the $\log^2n$ factor.
 \end{corollary}
 
-\emph{Proof idea.} (a) Every hypothesis with error above $\varepsilon$ under $\mu$ survives $n$ samples with probability at most $e^{-\varepsilon n}$, while the posterior normaliser is at least $2^{-K(f)-c}$. (b) Given the multiset of the $n+1$ samples, the test point is a uniformly random one of them, so the error is an average of leave-one-out errors, and \cref{prop:learn:loo} applies. The sandwich combines (b) with \cref{prop:learn:typical} (\cref{app:learn:perstep}).
-
-\begin{remark}[relations among the in-distribution bounds]\label{rem:learn:relations}
-\status{remark}\src{context Rem 2.18}
-(i) \emph{Ces\`aro and per step.} For computable $f$ and every sequence of distinct inputs, $\sum_{k\le n}e_k\le(\ln2)(K(f)+c)$ (from \cref{thm:learn:dominance}(b), since $e\le-\ln(1-e)$; this is \cref{thm:ood:cumulative}). \Cref{cor:learn:perstep}(a) gives a per-step rate in distribution at the price of an additive $\ln n$. \Cref{thm:learn:batch}(a) is the Ces\`aro statement for the log loss of the averaged predictor.
-(ii) \Cref{cor:learn:perstep}(a) is the Markov half of the relevance-based bound in the Vaintrob--H\"anni slides \citep[Appendix~A]{vaintrobhanni2026nnbayes}, specialised to $W$ and $\MF$. The union-bound half and the slides' geometric length prior are not needed, because long programs enter only multiplied by $e^{-\varepsilon n}$.
-(iii) \emph{Leave-one-out is different.} For a fixed finite $B$ and a random held-out point, the training set eliminates every hypothesis with two or more errors on $B$, so the Markov argument has nothing to act on; what remains is the mass of one-exception hypotheses (\cref{conj:learn:loo}). If \cref{conj:learn:loo} holds, the proof of \cref{cor:learn:perstep}(b) gives $\Ex e(x^*)=O(K(f)/(n+1))$ up to logarithmic factors, without the additive $\ln n$.
-\end{remark}
+\emph{Proof idea} (\cref{app:learn:perstep}). (a) A hypothesis with error above $\varepsilon$ survives $n$ samples with probability at most $e^{-\varepsilon n}$, and the posterior normaliser is at least $2^{-K(f)-c}$. (b) Given the multiset of samples, the test point is a uniformly random one of them, so the error is an average of leave-one-out errors (\cref{prop:learn:loo}). Part (a) is the Markov half of the slides' relevance-based bound \citep{vaintrobhanni2026nnbayes}, specialised to $W$ and $\MF$; \cref{rem:learn:relations} relates the in-distribution bounds.
 
 % ------------------------------------------------------------------
 \subsection{Comparison, and the sense of ``ideal''}\label{sec:learn:ideal}
 
 \begin{proposition}[Occam bound in description-length form]\label{prop:learn:occam}
 \status{proved (standard); references known, unverified}\src{foundations §6.6; F32}
-Let $x_t$ be i.i.d.\ from $\mu$ and $\varphi$ partial computable with $\mu(\dom\varphi)=1$, $y_t=\varphi(x_t)$. With probability at least $1-\delta$, every program $p\in\dom V$ consistent with $D_n$ has $\mu\{x:\varphi_{V(p)}(x)\ne\varphi(x)\}\le(|p|\ln2+\ln(1/\delta))/n$, where ``$\ne$'' includes ``undefined''. In particular the shortest consistent program, of length $\KF(D_n)\le K(\varphi)$, has 0--1 risk at most $(K(\varphi)\ln2+\ln(1/\delta))/n$.
+Let $x_t$ be i.i.d.\ from $\mu$, $\varphi$ partial computable with $\mu(\dom\varphi)=1$, $y_t=\varphi(x_t)$. With probability at least $1-\delta$, every program $p\in\dom V$ consistent with $D_n$ has $\mu\{x:\varphi_{V(p)}(x)\ne\varphi(x)\}\le(|p|\ln2+\ln(1/\delta))/n$, where ``$\ne$'' includes ``undefined''. So the shortest consistent program, of length $\KF(D_n)\le K(\varphi)$, has 0--1 risk at most $(K(\varphi)\ln2+\ln(1/\delta))/n$.
 \end{proposition}
 
-So for deterministic targets SFI (\cref{thm:learn:batch}(a), in expectation, for log loss and 0--1 loss) and the Kolmogorov version (with high probability, 0--1 loss) learn at the same rate, although their code lengths on a given data set can differ (\cref{thm:versions:nocoding}). They differ under noise: the Occam argument needs a consistent hypothesis, SFI has a resolvability bound with stamps (\cref{thm:learn:batch}(b)), and $\Mpq$ has one without (\cref{prop:learn:perquery}(c)). The following comparisons are with results we have not checked against their sources.
-\emph{Occam} \citep{blumer1987occam}: the above is a description-length form of the Occam bound.
-\emph{PAC-Bayes} \citep{mcallester1999some}: risk bounds with a $\KL(Q\,\|\,\text{prior})/n$ term; with prior $2^{-K}$ and a posterior concentrated on the target this term is about $K(\varphi)\ln2/n$, the same rate. The difference is in kind: PAC-Bayes bounds hold with high probability for a randomised classifier, \cref{thm:learn:batch} in expectation for the averaged Bayes predictive.
-\emph{MDL and the index of resolvability} \citep{barron1991minimum}: \cref{thm:learn:batch}(b) and \cref{prop:learn:perquery}(c) are Ces\`aro-average resolvability bounds $\min_{P'}[K(P')/n+\KL(P\|P')]$ in the conditional setting, for every input distribution.
-\emph{Prediction with expert advice} \citep{vovk1990aggregating,cesabianchi2006prediction}: under log loss a Bayes mixture has regret $\log(1/w_i)$ against expert $i$ on every sequence; \cref{thm:learn:dominance} is this fact with machine laws as experts, each predicting with its own posterior given the past labels, so shared randomness is allowed.
+For deterministic targets SFI (in expectation, log and 0--1 loss; \cref{thm:learn:batch}(a)) and the Kolmogorov version (with high probability, 0--1 loss) thus learn at the same rate, although their code lengths can differ (\cref{thm:versions:nocoding}). Under noise they differ: the Occam argument needs a consistent hypothesis, SFI has a resolvability bound with stamps, and $\Mpq$ has one without. \Cref{app:learn:remarks} compares with Occam bounds \citep{blumer1987occam}, PAC-Bayes \citep{mcallester1999some}, the index of resolvability \citep{barron1991minimum} and expert advice \citep{vovk1990aggregating,cesabianchi2006prediction}.
 
 \begin{remark}[in what sense SFI is ideal supervised learning]\label{rem:learn:ideal}
 \status{remark (each item cited)}\src{foundations §6.7}
-Three points are established. (1) SFI is the Bayes predictor for the prior ``a random lower-semicomputable labeller'': machine laws weighted by $\mm(i)\ge2^{-K(i)}$ (\cref{thm:setting:universal}). It is universal for that class pathwise (\cref{thm:learn:dominance}). (2) In the standard supervised model, with i.i.d.\ inputs from any distribution, even a non-computable one, and computable labels, the averaged predictor has expected log and 0--1 risk at most $(K(\varphi)+c)/n$ (\cref{thm:learn:batch}(a)). With frozen noise the cumulative bound $K(P)+c$ holds; with fresh noise it holds on stamped inputs and for $\Mpq$. This is the Occam rate with $K$ in place of $\log|H|$, without a union bound or a confidence parameter. (3) Inputs are never predicted, so the input distribution may be arbitrary and complex at no cost.
-
-Seven limits. \emph{Loss:} the guarantees are for log loss on labels; 0--1 bounds follow ($K/n$ for deterministic labels, $\sqrt{K/n}$ excess risk with noise). \emph{Averaged, not last, predictor:} \cref{prop:learn:curve,rem:learn:lastiterate}. \emph{Function semantics:} fresh label noise makes the loss infinite (\cref{prop:learn:freshnoise}). \emph{Computability:} $\MF$ and its predictions are not computable (\cref{prop:setting:computability}); time-bounded and circuit versions are in \cref{sec:comp}. \emph{Constants:} all bounds hold up to a machine constant, and encodings cost $K(\alpha,\beta)$ (\cref{thm:setting:invariance}). \emph{Distribution shift:} the batch bounds are for test inputs from the training distribution (\cref{sec:ood}). \emph{Comparator class:} predictors that use the list of past inputs are not dominated; simple history-aware predictors have loss $0$ where SFI's loss is unbounded (\cref{thm:hist:chain,thm:hist:skipped,thm:ex:cycle}). The swap data of \cref{ex:setting:swap} do not show this. \SFIhist{} removes this limit (\cref{cor:hist:H4}).
+Established: (1) SFI is the Bayes predictor for the prior ``a random lower-semicomputable labeller'', machine laws weighted by $\mm(i)\ge2^{-K(i)}$ (\cref{thm:setting:universal}), and it is universal for that class pathwise (\cref{thm:learn:dominance}). (2) With i.i.d.\ inputs from any distribution and computable labels, the averaged predictor has expected log and 0--1 risk at most $(K(\varphi)+c)/n$; with frozen noise, or fresh noise on stamped inputs or for $\Mpq$, the cumulative bound $K(P)+c$ holds (\cref{thm:learn:batch,prop:learn:perquery}). This is the Occam rate with $K$ for $\log|H|$, without a union bound or confidence parameter. (3) Inputs are never predicted, so the input distribution may be arbitrary at no cost.
+Limits: \emph{loss}: the guarantees are for log loss on labels, and 0--1 bounds follow ($K/n$ without noise, $\sqrt{K/n}$ excess with noise); \emph{averaged predictor}: \cref{prop:learn:curve,rem:learn:lastiterate}; \emph{function semantics}: \cref{prop:learn:freshnoise}; \emph{computability}: \cref{prop:setting:computability}, and \cref{sec:comp} for computable versions; \emph{constants}: machine constants, and $K(\alpha,\beta)$ for encodings (\cref{thm:setting:invariance}); \emph{distribution shift}: \cref{sec:ood}; \emph{comparator class}: simple history-aware predictors have loss $0$ where SFI's loss is unbounded (\cref{thm:hist:chain,thm:hist:skipped,thm:ex:cycle}; the swap data of \cref{ex:setting:swap} do not show this), and \SFIhist{} removes this limit (\cref{cor:hist:H4}).
 \end{remark}
 
 \begin{remark}[prior work on the framing]\label{rem:learn:hutterEX}
 \status{known; unverified}\src{foundations §6.6 last item; history §4.6 item 2}
-Hutter lists ``supervised learning from examples'' among the problem classes of the AIXI model: a table-of-contents snippet shows a section ``Supervised Learning from Examples (EX)'' in \citet{hutter2007aixi}, and the abstracts of \citet{hutter2000theory} and \citet{hutter2005universal} name supervised learning among the problem classes treated. We have not read these sections. So the use of a universal mixture as the ideal learner from presented examples is prior work in substance; what those sections prove was not checked.
+Hutter lists ``supervised learning from examples'' among the problem classes of the AIXI model: a table-of-contents snippet shows a section ``Supervised Learning from Examples (EX)'' in \citet{hutter2007aixi}, and the abstracts of \citet{hutter2000theory,hutter2005universal} name supervised learning. We have not read these sections. The universal mixture as the ideal learner from presented examples is therefore prior work in substance.
 \end{remark}
 
 \begin{proposition}[chosen inputs]\label{prop:learn:active}
 \status{proved}\src{context Prop 5.3}
-(1) For every weak semimeasure $\nu$ and every query set $A$, chosen adaptively or not, the total semimeasure-convention log loss on the labels of $A$ is $-\log(\nu(f|_A)/\nu(\emptyset))$, whatever the order. For log loss on the queried labels, choosing the order is worthless; only the set matters.
-(2) Small total loss does not give efficient identification. Let $f_a(x):=\ind[x=a]$ on $\{0,1\}^d$. SFI's total loss on any query sequence, even on all of $\{0,1\}^d$, is at most $K(f_a)+c\le d+2\log d+c$. Yet every query strategy, adaptive or randomised, needs at least $(2^d-1)/2$ queries in expectation over a uniform $a$ to identify~$a$.
+(1) For every weak semimeasure $\nu$ and every query set $A$, chosen adaptively or not, the total semimeasure-convention log loss on the labels of $A$ is $-\log(\nu(f|_A)/\nu(\emptyset))$ in every order: for log loss, choosing the order is worthless.
+(2) Small total loss does not give efficient identification. For $f_a(x):=\ind[x=a]$ on $\{0,1\}^d$, SFI's total loss on any query sequence, even all of $\{0,1\}^d$, is at most $K(f_a)+c\le d+2\log d+c$, yet every query strategy, adaptive or randomised, needs at least $(2^d-1)/2$ queries in expectation over a uniform $a$ to identify~$a$.
 \end{proposition}
 
-Part (1) is \cref{prop:setting:order}; part (2) is proved in \cref{app:learn:active}. For active learning the log-loss guarantee must be paired with another objective, such as expected information gain \citep{orseau2013universal} (content not checked).
-
-\begin{remark}[positive-example induction]\label{rem:learn:positive}
-\status{proof sketch; known (snippet)}\src{context Rem 5.5}
-H\"anni lists ``positive example induction'' among the ideal inductions he wants to define \citep{hanni2026notes}: learning a set or a distribution from samples. In SFI terms, positive labels $(x,1)$ alone are useless, because the constant-$1$ program explains them. The right formalisation is a sampling likelihood: the samples are the labels of the index inputs $i\mapsto x_i$, under hypotheses with private randomness per sample that ignore the index. The resulting mixture is $\sum_{P}w_P\prod_iP(x_i)$ over computable distributions $P$ on $X$, the private-randomness analogue of the universal semimeasure on the sample sequence. It appears to be the object of the ideal learner from positive evidence of \citet{chater2007ideal}; their exact model was not checked.
-\end{remark}
-
-\begin{remark}[interventions]\label{rem:learn:interventions}
-\status{remark}\src{context Rem 5.6}
-If the inputs are interventions set by the experimenter independently of the system's randomness, x-only dominance (\cref{thm:learn:dominance}(a)) applies to the interventional law $P(y\mid\mathrm{do}(x))$. With observational inputs, SFI targets $P(y\mid x)$ like any conditional learner. Nothing specific to SFI is proved here.
-\end{remark}
+Part (1) is \cref{prop:setting:order}; (2) is proved in \cref{app:learn:active}. For active learning the log-loss guarantee must be paired with another objective, such as expected information gain \citep{orseau2013universal} (not checked). Positive-example induction and interventional inputs are discussed in \cref{rem:learn:positive,rem:learn:interventions}.

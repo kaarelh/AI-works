@@ -1,5 +1,19 @@
 # Outline: Paper 1, "Solomonoff Function Induction: Definitions, Versions and Basic Theorems" (working title)
 
+> **BINDING NOTE (Hänni, 2026-10-12): the papers must be standard academic papers, suitable for arXiv.**
+> * **Status tags and source notes.** The final PDF has no `\status{...}` tags and no `\src{...}` source notes. They stay in the sources only until the arXiv conversion pass, which removes them. Until then, keep them accurate: the conversion reads them.
+> * **Proved results** are theorems, propositions, lemmas or corollaries, with proofs.
+> * **Proof sketches** are labelled "Proof sketch", and the statement must not be presented as fully proved.
+> * **Conjectures** go in the conjecture environment. Open questions go under "Open problems".
+> * **Computed results** are stated as examples or remarks: "a direct computation (code in the accompanying repository) gives …".
+> * **Refuted earlier claims** appear only where they inform the reader. Example: "the natural strengthening X fails: …". No list of internal corrections.
+> * **No process vocabulary in the paper.** No "track", "referee", "ledger", "notes-final", "brief" or "orchestrator". No verification appendix. Instead, a short paragraph in the acknowledgements on how the paper was prepared and checked, and a "Code and data" statement pointing to the repository.
+> * **Standard structure:** abstract, introduction with a contributions list, related work, preliminaries, results, discussion and open problems, references, appendices with proofs.
+> * **References:** only references whose bibliographic data have been checked. Drop or replace a citation that cannot be checked; never print "unverified".
+> * **Hänni's ideas** are credited through citations to his notes, or by stating the authorship arrangement. Sam Eisenstat's example is credited in the text and in the acknowledgements.
+> * **Tone:** formal academic register. No conversational references to "his request".
+
+
 > **BINDING NOTE (Hänni, 2026-10-12): do not call it "Wyeth's objection".** Absorption by a universal hypothesis under a steeper penalty is a standard point. It is known in algorithmic statistics, and Hänni's own note already makes it ("pathology of not specifying even the hypothesis in the seq prediction case"); he was aware of it before the LessWrong exchange. In visible text, call it **the absorption objection** or **the standard absorption point**. Do not name sections, theorems or remarks after Wyeth, and do not quote his comment. At most, one neutral footnote may record that the point was raised in the LessWrong thread. Internal LaTeX labels such as rem:absorb:wyeth may stay as they are (they are invisible), but their printed headings must not mention Wyeth.
 
 
