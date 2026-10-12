@@ -1,5 +1,5 @@
 """c7: the per-query product mixture S versus the per-input (set) mixture M_prod
-(notes-final.md Def 4.1, Prop 6.9; referee item M1).
+(notes-final.md Def 4.1 and Prop 6.9, where S is written M_pq; referee.md item M3).
 
 Finite analogue.  Inputs X = {0,1,2}, labels Y = {0,1}.  The class consists of conditional
 laws P(1|x) with values in {0, 1/4, 1/2, 3/4, 1} for each x (125 laws), plus 8 conditional

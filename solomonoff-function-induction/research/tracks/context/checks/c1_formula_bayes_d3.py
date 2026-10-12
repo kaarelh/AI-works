@@ -17,7 +17,9 @@ Checks (all claims are about every one of the 256 functions f and every ordering
       (checked via min and max over orderings, computed exactly by dynamic programming over subsets)
   (d) order independence: L(f) = sum_i -log2(1 - P_i) for every ordering (checked on random orderings)
 Also reports, per complexity class, the worst-case (adversarial-order) number of mistakes of
-  Occam learning (simplest consistent function; ties by truth-table index) and of the MAP (Bayes) predictor.
+  Occam learning (simplest consistent function; ties by truth-table index) and of the Bayes posterior-majority
+  (weighted-majority) predictor.  (Earlier versions called it "MAP"; MAP usually means the maximum-a-posteriori
+  hypothesis, which under this prior is the Occam learner.)
 Deterministic (no randomness except the seeded random orderings in (d)).
 """
 import math
@@ -148,14 +150,14 @@ out.append(f"(d) max |sum_i -log2(1-P_i) - L(f)| over 5 random orderings x 256 f
 
 out.append("")
 out.append("per formula-size class c: #functions, L range, Gibbs mistakes m (min / mean over uniform random order / max over orders),")
-out.append("  worst-case Occam mistakes, worst-case MAP mistakes (ties count 1/2), max ratio L / m_min")
+out.append("  worst-case Occam mistakes, worst-case posterior-majority mistakes (ties count 1/2), max ratio L / m_min")
 for cc in sorted(set(c)):
     R = [r for r in rows if r[1] == cc]
     Ls = [r[2] for r in R]
     out.append(f"c={cc:2d}: n={len(R):3d}  L in [{min(Ls):6.2f},{max(Ls):6.2f}]  "
                f"m_min max={max(r[3] for r in R):5.2f}  m_mean max={max(r[4] for r in R):5.2f}  "
                f"m_max max={max(r[5] for r in R):5.2f}  Occam worst={max(r[6] for r in R)}  "
-               f"MAP worst={max(r[7] for r in R):.1f}  max L/m_min={max(r[2] / r[3] for r in R if r[3] > 0):6.2f}")
+               f"majority worst={max(r[7] for r in R):.1f}  max L/m_min={max(r[2] / r[3] for r in R if r[3] > 0):6.2f}")
 nsmaller = {int(cc): int((c <= cc).sum()) for cc in sorted(set(c))}
 out.append("")
 out.append("#functions with formula size <= c (trivial upper bound on adversarial Occam mistakes + 1): " + str(nsmaller))

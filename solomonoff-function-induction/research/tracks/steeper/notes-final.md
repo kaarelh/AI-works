@@ -1,12 +1,12 @@
 # Track "steeper": steeper simplicity in Solomonoff function induction (final notes)
 
-*Brief item H9: the teacher's-mistakes trick and the model-vs-randomness split. This file revises `notes.md` after the referee report `referee.md`. It is self-contained and supersedes `notes.md`, which is kept unchanged as the record of the first version. §7 lists every referee item and what was done about it.*
+*Brief item H9: the teacher's-mistakes trick and the model-vs-randomness split. This file revises `notes.md` after two referee reports on it: `referee-run1.md` (first run, 2026-10-11) and `referee.md` (second run, 2026-10-12). It is self-contained. It supersedes `notes.md`, which is kept unchanged as the record of the first version, and `notes-final-run1.md`, the revision after the first report, which is kept for the record. §7 lists every item of both reports and what was done about it.*
 
 * **Sources.**
   * Hänni's note `prior/hanni-grokking-a-notion.md`, especially its "messy notes", and the LessWrong thread `prior/hanni-lesswrong-comment-thread.md`, which contains Cole Wyeth's objection and Hänni's reply with his numbers. The two texts agree; the thread is quoted where it is more precise.
-  * The earlier formalisation `../../inferential-learning/research/theory/T5-steeper-simplicity-and-normativity-from-imitation.md` ("T5") and its scripts. Every T5 result used here is re-derived below. §6 lists what is reused, corrected and new.
-  * The other tracks' notes (`../foundations/notes.md` "F", `../history/notes.md`, `../context/notes.md`, `../examples/notes.md`). No track had a `notes-final.md` when this file was written. §8 aligns the definitions.
-* **Scripts.** `checks/c1`–`c6`, seeded or deterministic, outputs saved next to them as `.out` files. `c3` and `c5` were corrected in this revision and re-run; `c6` is new. `checks/t5_rerun/` holds the saved re-run of T5's scripts c1–c3. The referee's independent scripts are in `referee_code/` and are cited where they are the only check.
+  * The earlier formalisation `../../inferential-learning/research/theory/T5-steeper-simplicity-and-normativity-from-imitation.md` ("T5") and its scripts. Every T5 result used here is re-derived below. §6 lists what is reused, corrected, dropped and new.
+  * The other tracks' current notes: `../foundations/notes.md` ("F"; no final version yet), `../context/notes-final.md`, `../history/notes-final.md` (incomplete: it ends after its §3, so its §4–§5 are read from `../history/notes.md`), and `../examples/notes.md` (no final version yet). The foundations referee's report `../foundations/referee.md` is used where it bears on this track. §8 aligns the definitions.
+* **Scripts.** `checks/c1`–`c7`, seeded or deterministic, outputs saved next to them as `.out` files. `c7_run2` is new in this revision; `c1`–`c6` were re-run and reproduce their saved outputs byte for byte. `checks/t5_rerun/` holds the saved re-run of T5's scripts c1–c3. The referees' independent scripts are in `referee_code/` (`r1`–`r6` from the first run, `q1`–`q4` from the second) and are cited where they are the only check.
 
 **Status tags.**
 * **[proved]**: full proof here.
@@ -14,6 +14,7 @@
 * **[known: ref]**: standard or published result. "(verified)" means the bibliographic data were confirmed by web search. "(content unverified)" means the statement could not be checked against the source, because only search snippets were available (arxiv.org, cwi.nl, ar5iv and similar hosts do not resolve here). "(snippet)" means a search snippet confirmed the specific content quoted.
 * **[proof sketch]**, **[conjecture]**, **[open]**, **[refuted]**: as named.
 * **Illustration (κ = 0)**: a number obtained by setting the unknown machine constant κ to 0. Such numbers are not proved; robust versions are given where they exist.
+* **Deficiency convention.** Every number about the teacher's-mistakes instance states the randomness deficiency $\delta_S$ (or $\delta_E$) of the error rule that it assumes (§2.2). Numbers with $\delta_S=0$ hold for incompressible error rules; they say nothing about compressible ones (§2.7).
 
 All logarithms are base 2 unless written ln. κ denotes a constant that depends only on the reference machine and on the fixed programs built in the proofs. It never depends on $d,m,p,N$, the data or the hypotheses, and different occurrences may differ.
 
@@ -31,47 +32,55 @@ Hänni's proposal, in his words: penalise "the length of the program plus the ne
      
      So for fixed λ and a deterministic teacher, errors included, the selected hypothesis and the steeper posterior reproduce all but finitely many of the teacher's labels.
    * *No universal product hypothesis* (Prop 1.3, Cor 1.4) [proved]. For every product hypothesis $\nu_U$ there are parities on which it loses $2^d-1$ bits while the parity costs $d+2\log d+\kappa$. A per-input Bayes mixture pays its $\log(1/w)$ again at every input (Prop 1.3(iii)).
-   * *The price of private randomness* (Prop 1.7) [proved; new]. Product hypotheses cannot express a latent random cause shared by several inputs.
+   * *The price of private randomness* (Prop 1.7) [proved]. Product hypotheses cannot express a latent random cause shared by several inputs.
      * At λ = 1 this costs at most $K(\mathrm{dom}D)+O(1)$ bits against $M_F$ (F Thm 4.2), and the loss is unbounded in the worst case (F Prop 4.5).
      * At λ > 1 it costs a constant factor. On $k$ pairs of inputs that share one fair coin per pair, every steeper product predictor pays at least $\min(\lambda,2)(K(\beta\mid k)-\kappa)$ bits, where β lists the coins. $M_F$ pays at most $k+\kappa$.
    * *Answer to Wyeth* (§1.8). His construction works for SI and for SFI as the foundations track defines it ($M_F$). It is unavailable in the product class (Cor 1.4). The cost of that restriction is Prop 1.7. Labelled history restores the construction (Prop 4.1). The algorithmic-statistics reading he points to is Prop 3.8.
-   * So steeper SFI is *defined* over product hypotheses: x-only samplers, the foundations track's $M_{\rm prod}$-type hypotheses. This is a modelling choice, not a technicality: "the model" is what is reused across inputs, and "the noise" is private to each input.
+   * So steeper SFI is *defined* over product hypotheses: x-only samplers with frozen per-input noise, the foundations track's $M_{\rm prod}$-type hypotheses. This is a modelling choice, not a technicality: "the model" is what is reused across inputs, and "the noise" is private to each input.
 2. **The teacher's-mistakes trick (§2).**
    * *Hänni's numbers* [computed: c1]. His second version gives $c=\lambda/N\in(1.12\cdot10^{-6},\,8.99\cdot10^{-3})$. His "≈ p log(1/p) ≈ 1/100" is 13% below the exact $H(2^{-10})=0.0112$; this is immaterial.
-   * *A rigorous instance with his numbers* (Thm 2) [proved].
-     * The simple model is a random parity on $\{0,1\}^{100}$ ($d=100$ bits). The systematic error is a random rule on the first $m=20$ input bits with density $p=2^{-10}$; it takes $L_S=11{,}710$ bits ("10000 bits").
+   * *A rigorous instance with his numbers, for incompressible error rules* (Thm 2) [proved].
+     * The simple model is a random parity on $\{0,1\}^{100}$ ($d=100$ bits). The systematic error is a random rule on the first $m=20$ input bits with density $p=2^{-10}$; it takes $L_S=11{,}710$ bits ("10000 bits"). The rule's randomness deficiency given the model, $\delta_S$, enters every slack term.
      * The theorem quantifies over **all** product hypotheses; its lower bounds hold in every c.e. prefix-free product class (§4.5). For $c$ in an explicit window $(2^{-m},c_{\rm hi}]$:
-       * the good model is optimal up to an explicit slack;
+       * the good model is optimal up to an explicit slack, which contains $\delta_S/2^m$;
        * every near-optimal hypothesis agrees with the parity on more than 3/4 of the inputs on average (at least 0.98 at $c=10^{-4}$, κ = 0);
-       * every near-optimal hypothesis holds little information about the error rule beyond the parity: $I\le37.7$ bits at κ = 0 and $I\le98.3$ bits at κ = 30 ($c=10^{-4}$), out of $L_S=11{,}710$. Against $L_S$ itself add the randomness deficiency $\delta_S$ of the rule, which exceeds $j$ with probability below $2^{-j}$;
-       * on error inputs, every near-optimal hypothesis gives the teacher's erroneous label average probability at most 0.199 (κ = 0, $\delta_S=0$), 0.218 ($\delta_S=20$) or 0.274 (κ = 30). For $m=24$ the bound is 0.065. The memoriser gives 1 and the good model $2^{-10}$.
+       * every near-optimal hypothesis holds little information $I$ about the error rule beyond the parity: $I\le37.7$ bits at κ = 0 and $I\le98.3$ bits at κ = 30 ($c=10^{-4}$), out of $L_S=11{,}710$. Against $L_S$ itself add $\delta_S$;
+       * on error inputs, every near-optimal hypothesis gives the teacher's erroneous label average probability at most 0.199 (κ = 0, $\delta_S=0$), 0.218 (κ = 0, $\delta_S=20$) or 0.274 (κ = 30, $\delta_S=0$). For $m=24$ the bound is 0.065. The memoriser gives 1 and the good model $2^{-10}$.
      * The window is $(9.54\cdot10^{-7},8.06\cdot10^{-3}]$ for κ = 0 and $(9.54\cdot10^{-7},3.66\cdot10^{-3}]$ for κ = 30 [computed: c3].
-     * The lower end $2^{-m}$ is sharp to a factor $1+O((m+\log d+\kappa)/L_S)$. Below it, near-optimal hypotheses reproduce the errors, under the explicit condition of Thm 2(iii).
+     * The lower end $2^{-m}$ is sharp to a factor $1+O((m+\log d+\kappa)/L_S)$. Below it, near-optimal hypotheses reproduce the errors, but the proved bound is useful only at a relative distance below $2^{-m}$: at $c=0.9\cdot2^{-m}$ the error label gets probability at least 0.66, at $0.94\cdot2^{-m}$ at least 0.48, and in the top 0.6% below $2^{-m}$ nothing is proved (κ = 0, $\delta_S=0$; c7(D)).
+     * The theorem uses five hypotheses: a list-decodable model class (parities), the product form $E=S\times\{0,1\}^{d-m}$ of the error set, uniform inputs, $p<0.056$, and small $\delta_S$ (§2.4).
      * With $m=d$ (idiosyncratic errors, full truth table) the window is $\lambda\in(1,1.19\cdot10^4]$ at $d=20$, κ = 0. At λ = 1 the good model and the memoriser tie to $O(\log n)$.
+   * *The trick needs the error rule to be incompressible given the model* (Prop 2.17, error envelopes) [proved; computed: c7(B)]. Density and description length do not suffice. Take Hänni's density $2^{-10}$ and an error set made of a cheap subcube plus random points.
+     * With 128 subcube points and 896 random points (the set then takes about 10,400 bits, matching Hänni's "10000 bits"), no hypothesis that fits no better than the good model is near-optimal for any $c<1.6\cdot10^{-5}$: 31% of the window's logarithmic width (κ = 0; 25% at κ = 30).
+     * With 512 + 512 points (about 6,400 bits) the same holds below $7.0\cdot10^{-5}$: 47% of the log-width.
+     * Near the lower end of the window, near-optimal hypotheses reproduce the cheap errors: the error label gets probability at least 0.86 (512-point subcube) or 0.55 (128-point subcube) on the subcube at $c=1.01\cdot2^{-m}$ (κ = 0, with the random part $S_2$ incompressible, $\delta_2=0$).
+     * This re-derives T5's error envelopes (T5 Prop 4.5) as an all-hypothesis statement.
    * *Hänni's first version, realised* (Example 2.7a) [proved; computed: c6]. At $d=100$, $m=10$, $p=2^{-6}$ ($L_S=116$ bits) the population window is $c\in(9.8\cdot10^{-4},5.8\cdot10^{-3}]$ at κ = 0. At $N=10^4$ this is $\lambda\in(9.8,58]$, against his $(10,100)$. The window is nonempty up to κ = 30. Only coarse identification is proved at this size.
-   * *Plain Bayes and SI learn the errors* (Prop 2.9) [proved].
+   * *Plain Bayes and SI learn the errors* (Prop 2.9) [proved]. So does the λ-MAP under every schedule with $\lambda_N/N\to0$, such as $\lambda_N=\sqrt N$ (Prop 2.9(b)). The trick needs $\lambda=\Theta(N)$, and with it the learner is deliberately not consistent for the teacher's label distribution.
+   * *Prior work* (§1.3). λ-weighted two-part MDL for noisy binary classification, over a classifier-plus-noise-code class, is studied by Zhu & Srebro (COLT 2025) and Zhu, Ohannessian & Srebro (2026), extending Grünwald & Langford's λ = 1 inconsistency [known (verified bibliographically); content per abstracts]. Per their abstracts and search snippets, every bounded λ overfits and consistency needs λ to grow with the sample size. That qualitative finding is theirs, not this track's. They do not study universal hypotheses, the shared/private contrast, or a target that deliberately differs from the data distribution.
    * *Limits* (§2.6).
-     * (a) A fixed λ does not work: systematic errors are eventually learned. λ must grow like $N$.
-     * (b) *Rate blindness* (Prop 2.11). For a fixed error rule and any machine constant κ, the all-hypothesis criterion holds for every $d\ge d_0(\kappa)$, with $d_0$ linear in κ (Lemma 2.11a). Examples: a 3-bit rule on 1/8 of the inputs has $d_0=49$ at κ = 0 and $d_0=169$ at κ = 30; a single 6-bit prefix has $d_0=450$ and $1005$ [computed: c6].
+     * (a) A fixed λ does not work, and neither does any $\lambda_N=o(N)$: systematic errors are eventually learned.
+     * (b) *Rate blindness* (Prop 2.11). For a fixed cheap error rule and any machine constant κ, the all-hypothesis criterion holds for every $d\ge d_0(\kappa)$, with $d_0$ linear in κ (Lemma 2.11a). Examples: a 3-bit rule on 1/8 of the inputs has $d_0=49$ at κ = 0 and $d_0=169$ at κ = 30; a single 6-bit prefix has $d_0=450$ and $1005$ [computed: c6].
      * (c) Guard erosion; (d) λ cannot be chosen from imitation data; (e) labelled history restores universality.
      * (f) The window depends on the input law (Prop 2.15).
      * (g) *OOD* (Prop 2.16). Steeper simplicity removes Hänni's constant-probability OOD lower bound: it becomes $2^{-\lambda(K(Q,b)+\kappa)}$. It does so only by sharpening the preference for the shortest train-fitting hypotheses, whatever they do on the unseen inputs.
-     * (h) The proof method needs $p<0.056$.
-3. **The model-vs-randomness split (§3).** Take a sampler ν of length $k$. "Fill-ins" are deterministic programs that reproduce the sampled labels.
-   * *λ = 1* (Thm 3, Prop 3.3) [proved]. In SFI the posterior odds of the fill-ins against the sampler program lie in $[2^{-2\log(N+1)-2\log(n+1)-2\log(r+1)-\kappa},\,2^{k+m^*}]$, whatever the amount of sampled randomness. This is for dyadic samplers that read $r$ bits, on inputs of length at most $n$. $m^*$ is a Ville deficiency with $\Pr[m^*\ge m]\le2^{-m}$. In SI the same holds with $K(n)$ in place of the logarithms. This is Hänni's "both get similar posterior", made precise.
+     * (h) Error envelopes (Prop 2.17), above.
+     * (i) The window method needs $p<0.056$. A sharper risk floor (Lemma 2.2c, T5's Lemma 2.5c for semimeasures) extends the kink to every $p<1/4$ (Prop 3.8(iv)). It is not used to extend the window; with the present level structure it could give at most $p<0.123$, and only for $c$ well above $2^{-m}$ (§2.6, end).
+3. **The model-vs-randomness split (§3).** Take a computable sampler ν of length $k$. "Fill-ins" are deterministic programs that reproduce the sampled labels.
+   * *λ = 1* (Thm 3, Prop 3.3) [proved]. In SFI the posterior odds of the fill-ins against the sampler program lie in $[2^{-2\log(t_N+1)-\kappa},\,2^{k+m^*}]$, whatever the amount of sampled randomness. Here $t_N=\lceil\log(2n+2+2\log(i_N+1))\rceil$, $n$ bounds the input lengths and $i_N=\lceil\log(6N/\beta_N)\rceil$, with $\beta_N$ the least probability ν gave an observed label; so $2\log(t_N+1)$ is doubly logarithmic in $n$ and triply in $N$ (about 6 bits at $n=100$, $N=10^6$). This holds for every computable sampler, including the non-dyadic Bern(1/3) labels of H6 (Lemma 3.2′, which adapts the foundations referee's tape-prefix argument). $m^*$ is a Ville deficiency with $\Pr[m^*\ge m]\le2^{-m}$. In SI the same holds with $K(n)$ in place of the logarithms. This is Hänni's "both get similar posterior", made precise.
    * *λ > 1, private randomness* (Thm 4) [proved]. This holds in every countable product class with Kraft weights.
-     * For all $N$, every λ-MAP has length at most $(\lambda k+m^*)/(\lambda-1)$.
+     * For all $N$, every λ-MAP has length at most $k+(k+m^*)/(\lambda-1)$. So it may contain up to $(k+m^*)/(\lambda-1)$ bits beyond the sampler, for example memorised noise.
      * The fill-ins' posterior is at most $2^{\lambda k+\lambda m^*-(\lambda-1)(-\log\nu(D_N))}$. This decays exponentially in the sampled randomness; it is not zero.
-     * If infinitely many distinct inputs are seen, then almost surely every λ-MAP is eventually ν-equivalent on the run, and the power posterior concentrates on ν-equivalent hypotheses. Inputs may be adaptive.
+     * If infinitely many distinct inputs are seen, then almost surely every λ-MAP is eventually ν-equivalent on the run (summable squared Hellinger distances along the inputs, not equality), and the power posterior concentrates on such hypotheses. Inputs may be adaptive.
    * *λ > 1, shared randomness or SI* (Thm 5) [proved]. The universal mixture beats every sampler with $(\lambda-1)k>\lambda\ell_U+c_0$. No split is made.
    * *Algorithmic statistics* (§3.5).
      * Steeper two-part codes over finite sets trade off sophistication against sufficiency (Prop 3.5). The product analogue holds (Prop 3.6).
-     * For a noisy random parity the two splits differ by about $d$ bits (Prop 3.8). Set sophistication is $O(\log d)$: the parity's parameter is treated as noise. Product sophistication is $d\pm O(\log n)$.
+     * For a noisy random parity the two splits differ by about $d$ bits (Prop 3.8). Set sophistication is $O(\log d)$: the parity's parameter is treated as noise. Product sophistication is $d\pm O(\log d)$, for every flip rate $p<1/4$ (Prop 3.8(iv)). (`notes-final-run1.md` wrote $d\pm O(\log n)$; since $n=2^d$ that was too weak a statement; the proof gives $O(\log d)$.)
      * That restricting the model family changes the structure function is known. Hamming-ball models (Vereshchagin–Vitányi 2010) are the closest case. New here, as far as a snippet-level search can tell, is only the product (private-randomness) family on partial data and its link to SFI.
 4. **Other results (§4).**
    * Labelled history restores universality (Prop 4.1). A history of *inputs* with private randomness does not (Prop 4.2).
    * Tempering the likelihood leaves deterministic hypotheses unchanged (Remark 4.3).
-   * *Fixed λ versus λ ∝ N* (§4.4). With λ = cN the steeper predictor is not a single Bayesian predictor. Its guarantees are batch statements at each $N$.
+   * *Fixed λ versus λ ∝ N* (§4.4). With λ = cN the steeper predictor is not a single Bayesian predictor. Its guarantees are batch statements at each $N$. It pays $c\,\ell$ bits per sample over the selected model's loss, by design.
    * *Computable versions* (§4.5).
      * Theorems 2 and 4 hold in any c.e. prefix-free product class, for example time-bounded samplers or circuits with private output noise. Each class has its own constants (Prop 4.4).
      * The steeper predictive is lower semicomputable and not computable (Prop 4.5).
@@ -95,6 +104,7 @@ This section follows the foundations track's definitions (F §1–§5). §8 give
 * Its likelihood is the product law $\nu(D):=\prod_{x\in\mathrm{dom}D}\nu(D(x)\mid x)$.
 * Its prediction at a new input $x$ is $\nu(\cdot\mid x)$, which does not depend on $D$.
 * It is *deterministic* if every $\nu(\cdot\mid x)$ is a point mass or zero, i.e. a partial computable function $f$. Then $\nu(D)=1$ if $f\supseteq D$, and $0$ otherwise.
+* *Per input, not per query.* The randomness here is private to each distinct **input**: a product law is the law of a random function, so a repeated input repeats its label ("frozen" noise). The foundations referee (`../foundations/referee.md`, M3 and §6 of its current version) distinguishes this from the *per-query* product mixture, which draws fresh noise at every query, and notes that the two coincide on data with distinct inputs. Everything in this track uses data sets, i.e. distinct inputs, so the distinction does not change any result. The per-input reading is the right one for the teacher's-mistakes setting: the teacher is a fixed function whose errors are fixed, and a repeated query gets the same erroneous label.
 
 **Definition 1.2 (shared hypothesis).** A *shared hypothesis* is a lower-semicomputable **weak function semimeasure** (F Def 2.1): a map $P$ from data sets to $[0,1]$ with $P(\emptyset)\le1$ and $\sum_yP(D\cup\{(x,y)\})\le P(D)$ for $x\notin\mathrm{dom}D$.
 * Its prediction is $P(y\mid x,D):=P(D\cup\{(x,y)\})/P(D)$.
@@ -115,7 +125,7 @@ Hypotheses are programs. Two programs for the same law are different hypotheses 
 * $\Pi_F$: function machines, $P_\pi=\nu_{T_{V(\pi)}}$ (machine laws). Its mixture is $M_F$ on nonempty data sets (F Thm 3.2).
 * $\Pi_w$: lower-semicomputable weak function semimeasures. Its mixture is $M^w$ (F Thm 3.4).
 * $\Pi_{\rm SI}$: lower-semicomputable semimeasures on strings. Its mixture is the Solomonoff–Levin $M$.
-* $\Pi_{\rm chr}$: history-oracle function machines (history §4.1), with $P_\pi$ the chronological semimeasure $\rho(y_{1:n}\Vert x_{1:n})$ of machine $V(\pi)$. Its mixture is SFI$^{\rm hist}$'s $M_H$. By history Lemma 4.1 and Thm 4.2, $M_H$ is a lower-semicomputable chronological semimeasure that dominates every one, so it is itself a member and equals Hutter's ξ up to constants (history Cor 4.3). Taking $M_H$ as the universal element avoids relying on an enumeration of all chronological semimeasures, as the history track's referee suggests.
+* $\Pi_{\rm chr}$: history-oracle function machines (history §4.1), with $P_\pi$ the chronological semimeasure $\rho(y_{1:n}\Vert x_{1:n})$ of machine $V(\pi)$. Its mixture is SFI$^{\rm hist}$'s $M_H$. By history Lemma 4.1 and Thm 4.2, $M_H$ is a lower-semicomputable chronological semimeasure that dominates every one, so it is itself a member (history Cor 4.3(a)). The history track identifies $M_H$ with Hutter's ξ up to constants, a step its final notes mark as known but unverified; nothing here uses that identification, and "$M_H\asymp\xi$" below is shorthand for the universality of $M_H$. Taking $M_H$ as the universal element avoids relying on an enumeration of all chronological semimeasures, as the history track's referee suggests.
 
 The canonical classes are closed under prefix-free simulation: for every prefix machine $V'$ whose outputs are indices of the family, there is a string ρ with $V(\rho w)=V'(w)$ for all $w\in\mathrm{dom}V'$. This is what makes the per-program sums in Lemma 3.2 and Prop 2.16 exact.
 
@@ -141,6 +151,16 @@ These are Hänni's two descriptions ("a higher coefficient on the length of the 
 * Barron & Cover 1991, *IEEE Trans. IT* 37(4):1034–1054.
 
 [known (verified); content unverified]. A secondary source (arXiv 2311.03852, seen as a snippet) restates the Barron–Cover risk bound for two-part MDL with a complexity weight $\alpha>1$, citing Barron & Cover 1991, Zhang and Grünwald 2007. So **λ > 1 two-part codes are standard in MDL convergence theory** and are not claimed as new here. What this track studies is how λ > 1 interacts with universal hypotheses and with private versus shared randomness.
+
+**λ-weighted two-part MDL in noisy classification: the closest prior work** (referee M1). Three papers study the same objective over essentially the same kind of hypothesis: a classifier plus a code for the label noise, i.e. a product hypothesis with private noise.
+* Grünwald & Langford, "Suboptimal behavior of Bayes and MDL in classification under misspecification", *Machine Learning* 66:119–149, 2007 (COLT 2004) [known (verified bibliographically); content per abstract]. With λ = 1, MDL and Bayes classifiers can stay bounded away from the best achievable 0–1 error for all sample sizes.
+* Zhu & Srebro, "Quantifying overfitting along the regularization path for two-part-code MDL in supervised classification", COLT 2025, PMLR 291:6124–6155 (arXiv 2503.02110) [known (verified bibliographically); content per abstract and search snippets]. For a modified two-part-code rule with weight λ on the prior code length, they characterise the worst-case limiting 0–1 error as a function of λ and the noise level. Per the snippets: for every fixed λ ≥ 1 the limiting error stays above the noise level, though below 1/2 ("tempered"); for λ < 1 it can be as bad as chance above a critical noise level. A secondary summary (snippet, unverified) says consistency holds when $1\ll\lambda_m\ll m/\log m$. The first referee's reading that $\lambda_m\asymp\sqrt m$ is the recommended rate is not confirmed by what I could see.
+* Zhu, Ohannessian & Srebro, "Overfitting and generalizing with (PAC) Bayesian prediction in noisy binary classification", arXiv 2603.22644, March 2026 [known (verified bibliographically); content per abstract]. A PAC-Bayes-style rule trades training error against λ times the KL divergence to a prior. At λ = 1 it is a Bayesian posterior, which overfits and can have non-vanishing excess loss in the agnostic case; a much larger, sample-size-dependent λ gives uniformly vanishing excess loss.
+
+What these papers establish, and what this track adds.
+* *Theirs*: a bounded λ fits the noise eventually, and λ must grow with the sample size. This track's Prop 2.9(b) and §4.4 reach the same qualitative conclusion in a different setting; the conclusion is credited to them and to Hänni's own remark, not claimed as a finding here.
+* *A difference of target.* They measure success against the data distribution: consistency means converging to the best classifier for the data, which in the teacher's-mistakes setting is the teacher *with* its systematic errors whenever the class contains it. Hänni's goal is the opposite: not to learn a systematic, learnable part of the data. So the two goals conflict. Every schedule with $\lambda_N/N\to0$, including their consistent ones, eventually learns a systematic error rule that is in the class (Prop 2.9(b)); the trick needs $\lambda=cN$ with $c$ above the error rule's rate (Thm 2), and then the learner is deliberately inconsistent for the teacher's label distribution, paying $c\,\ell$ bits per sample (§4.4).
+* *Not in these papers* (as far as their abstracts show): universal hypotheses and Wyeth's absorption (Thm 1 versus Cor 1.4), the contrast between shared and private randomness and its price (Prop 1.7), hypothesis classes defined by Kolmogorov complexity with all-hypothesis lower bounds via list decoding (Thm 2), the dependence on the error rule's incompressibility (Prop 2.17), the model-versus-randomness theorems (Thms 3–5), and the product algorithmic-statistics notions (§3.5). Whether their analysis already covers some of these in the classification setting can only be settled by reading the papers, which do not resolve here.
 
 **Lemma 1.1 [proved].**
 * (i) If some $J_\lambda(\pi;o)<\infty$, the set of λ-MAPs is finite and nonempty.
@@ -291,7 +311,7 @@ $$D_\beta:=\{(a_j,\beta_j),(b_j,\beta_j):j\le k\},$$
 * (i) For every $\lambda\ge1$ and every β: $-\log\xi^\times_\lambda(D_\beta)\ \ge\ \min(\lambda,2)\,\big(K(\beta\mid k)-\kappa\big)$.
 * (ii) Hence every program $\pi\in\Pi_\times$ has $J_\lambda(\pi;D_\beta)\ge\min(\lambda,2)(K(\beta\mid k)-\kappa)$. The same bound holds for every product subclass with a prefix-free code, with κ depending on the subclass.
 * (iii) On the other side, the law σ that answers input $x$ with the $|x|$-th bit of the shared tape is a machine law of complexity $O(1)$ with $\sigma(D_\beta)=2^{-k}$. So $-\log M_F(D_\beta)\le k+\kappa$, and the steeper predictor over the machine-law class $\Pi_F$ has $-\log\xi^F_\lambda(D_\beta)\le k+\lambda\kappa$.
-* (iv) For β uniform, $\Pr[K(\beta\mid k)<k-j]<2^{-j}$. So with probability at least $1-2^{-j}$ the steeper product predictor pays at least $(\min(\lambda,2)-1)k-\kappa'(\lambda+j)$ bits more than $M_F$ and than $\xi^F_\lambda$.
+* (iv) For β uniform, $\Pr[K(\beta\mid k)<k-j]<2^{-j}$. So with probability at least $1-2^{-j}$ the steeper product predictor pays at least $(\min(\lambda,2)-1)k-2j-(\lambda+2)\kappa$ bits more than $M_F$ and than $\xi^F_\lambda$.
 
 *Proof.*
 * (i) Fix $\pi\in\Pi_\times$ with conditional semimeasure $\nu=\nu_{V(\pi)}$. Then $\nu(D_\beta)=\prod_js_j(\beta_j)$ with $s_j(y):=\nu(y\mid a_j)\nu(y\mid b_j)$.
@@ -301,7 +321,7 @@ $$D_\beta:=\{(a_j,\beta_j),(b_j,\beta_j):j\le k\},$$
   * For nonnegative $t_\pi$ and $\gamma\ge1$, $\sum_\pi t_\pi^\gamma\le(\sum_\pi t_\pi)^\gamma$. With $\gamma=\min(\lambda,2)$ this gives $\xi^\times_\lambda(D_\beta)\le\sum_\pi2^{-\lambda|\pi|}Q_\pi(\beta)^2\le R(\beta)^{\min(\lambda,2)}\le2^{-\min(\lambda,2)(K(\beta\mid k)-\kappa)}$.
 * (ii) $2^{-J_\lambda(\pi;D_\beta)}$ is one term of $\xi^\times_\lambda(D_\beta)$. For a subclass, replace $\Pi_\times$ by the subclass in the definition of $R$; (F2) then holds with a constant for that subclass.
 * (iii) σ is the function machine $T=\{(x,w,w_{|x|}):x\ne\varepsilon,\ w\in\{0,1\}^{|x|}\}$, where $w_{|x|}$ is the last bit of the tape prefix $w$; at input $x$ it reads tape bit $|x|$. Inputs $a_j,b_j$ have the same length $j$, so they get the same bit, and distinct $j$ get independent bits. Apply F Thm 3.2. For $\xi^F_\lambda$ keep the single term of a program for σ.
-* (iv) Fewer than $2^{k-j}$ strings have $K(\cdot\mid k)<k-j$. ∎
+* (iv) Fewer than $2^{k-j}$ strings have $K(\cdot\mid k)<k-j$. On the complement, (i) gives $-\log\xi^\times_\lambda(D_\beta)\ge\min(\lambda,2)(k-j-\kappa)$, while (iii) gives $-\log M_F(D_\beta)\le k+\kappa$ and $-\log\xi^F_\lambda(D_\beta)\le k+\lambda\kappa$. Subtract and use $\min(\lambda,2)\le2$. ∎
 
 [computed: c6(D): the inequality $\xi_\lambda(D_\beta)\le R(\beta)^{\min(\lambda,2)}$ held in all 24,732 checks on random finite product classes with Kraft weights, $\lambda\in\{1,1.3,1.7,2,2.5,4\}$; equality occurs.]
 
@@ -317,7 +337,7 @@ Wyeth: "If you penalize the complexity of my hypotheses more steeply, I can just
   * The steeper product class cannot represent latent randomness shared across inputs. At λ = 1 this costs at most $K(\mathrm{dom}D)+O(1)$ bits against $M_F$, unboundedly in the worst case (F Thm 4.2, Prop 4.5). At λ > 1 it costs a factor $\min(\lambda,2)$ on shared coins (Prop 1.7).
   * The protection ends where hypotheses see labelled history: then the in-context Bayes mixture is one member again, and absorption returns per block (Prop 4.1).
   * So relative to SFI as F defines it ($M_F$), restricting to private randomness is not free. "Nothing is lost at λ = 1" holds only relative to the product class.
-* **(iv) The algorithmic-statistics reading.** Wyeth is right that the question lives in algorithmic statistics. For set models (shared randomness) the minimal sufficient statistic of a noisy random parity treats the parity's $d$-bit parameter as noise: its sophistication is $O(\log d)$. For product models the parameter is model: product sophistication is $d\pm O(\log n)$ (Prop 3.8). Restricting the model family to "parameter + private noise per input" is what moves the split. §3.5 relates this to known work on restricted model families.
+* **(iv) The algorithmic-statistics reading.** Wyeth is right that the question lives in algorithmic statistics. For set models (shared randomness) the minimal sufficient statistic of a noisy random parity treats the parity's $d$-bit parameter as noise: its sophistication is $O(\log d)$. For product models the parameter is model: product sophistication is $d\pm O(\log d)$ (Prop 3.8). Restricting the model family to "parameter + private noise per input" is what moves the split. §3.5 relates this to known work on restricted model families.
 * **Is the restriction ad hoc?** It is a choice, and the paper should present it as one. Two reasons support it. Hänni's dominance template for SFI is stated against x-only samplers, which are the product hypotheses (F Prop 3.3(a)). And in supervised learning "the model" is naturally the part of the description that is reused across inputs; noise that is private to each input is, by construction, not part of it. The price in (iii) is what the choice gives up.
 
 ---
@@ -386,15 +406,37 @@ Wyeth: "If you penalize the complexity of my hypotheses more steeply, I can just
 * Off $E$, $y^*=f_a$; on $E$, $\nu\le1$. So $\mathbb E_x\nu_\pi(y^*\mid x)\le u(\pi)+p$.
 * If $T=t\ge2$, then $u\le\theta_{t-1}=\frac12+2^{-t}$, and $\frac12+2^{-t}+p+2^{-B}\le\frac12(1+2^{-(t-1)}+2p+\tau_B)$. ∎
 
+Lemma 2.2 is tight as a function of $u$ alone: a hypothesis that gives the teacher's label probability 1 on $E$ and is uniform elsewhere has $u=\frac{1-p}2$ and $\mathbb E_x\nu(y^*\mid x)=\frac12+\frac p2=u+p$. Removing the additive $p$ needs the randomness of $S$ relative to the hypothesis; that hypothesis knows $S$, and for it the deviation term γ below is large. This is T5's Lemma 2.5c; the next lemma re-derives it for semimeasures, where the correlation $\hat s$ that T5 uses is not computable.
+
+**Lemma 2.2c (randomness of the error rule sharpens the floor; T5 Lemma 2.5c for semimeasures) [proved; computed: c7(C)].** In Setting 2.0, for every program π, every integer $g\ge1$ and every $B\in[\log(1/p),\infty]$:
+$$R_B(\pi)\ \ge\ -\log\Big(p+(1-2p)\,u(\pi)+p\big(2\gamma(\pi)+2^{1-g}\big)+2^{-B}\Big),$$
+where $\gamma(\pi):=\sqrt{j\ln2/(2s_0)}$ and $j$ is the least integer with $j-2\log(j+1)>\delta_S+I(\pi)+1+2\log m+2\log s_0+g+2\log g+\kappa$. Always $I(\pi)\le\ell(\pi)+\kappa$, so the same holds with $\ell(\pi)$ in place of $I(\pi)$. The proof does not use $p=2^{-r}$: it holds for any error-rule size $s_0$ (with $p:=s_0/2^m$).
+
+*Proof.*
+* *Notation.* For $z\in\{0,1\}^m$ let $A(z):=\mathbb E_w\nu_\pi(f_a(z,w)\mid(z,w))$ and $V(z):=\mathbb E_w\nu_\pi(f_a(z,w)\oplus1\mid(z,w))$, with $w$ uniform on $\{0,1\}^{d-m}$. Then $A+V\le1$, $u=2^{-m}\sum_zA(z)$ and $\bar v:=2^{-m}\sum_zV(z)\le1-u$.
+* *Exact identity.* Off $E$ the teacher's label is $f_a$; on $E$ it is $f_a\oplus1$. So
+$$\mathbb E_x\nu_\pi(y^*(x)\mid x)=2^{-m}\Big[\sum_{z\notin S}A(z)+\sum_{z\in S}V(z)\Big]=u-p\,\mathrm{avg}_SA+p\,\mathrm{avg}_SV.$$
+* *Information budget.* By the definition of $I$, $K(S\mid a,\pi)=B_S-I(\pi)=L_S-\delta_S-I(\pi)$. And $I(\pi)\le K(\pi\mid a,K(a))+\kappa\le\ell(\pi)+\kappa$ by (F3) and (F1).
+* *Coding step.* Let $\mathcal B$ be a set of $s_0$-subsets of $\{0,1\}^m$ with $|\mathcal B|\le2^{L_S-j}$ that contains $S$ and is c.e. given $(\pi,a,m,s_0)$ and a parameter $\theta$ with $K(\theta)\le g+2\log g+\kappa$. Then $S$ is described by $j$ and its index among the first $2^{\lceil L_S\rceil-j}$ enumerated elements, so $K(S\mid a,\pi)\le\lceil L_S\rceil-j+2\log(j+1)+2\log m+2\log s_0+g+2\log g+\kappa$. With the budget, $j-2\log(j+1)\le\delta_S+I(\pi)+1+2\log m+2\log s_0+g+2\log g+\kappa$, which the choice of $j$ excludes. So no such $\mathcal B$ exists.
+* *The $V$ side.* Let θ be the least multiple of $2^{-g}$ with $\theta\ge1-u+\gamma$. If $\mathrm{avg}_SV>\theta$, take $\mathcal B:=\{S':|S'|=s_0,\ \mathrm{avg}_{S'}V>\theta\}$. It is c.e. because $V$ is lower semicomputable. Since $\theta\ge\bar v+\gamma$, Hoeffding's bound for sampling without replacement gives $|\mathcal B|\le\binom{2^m}{s_0}e^{-2s_0\gamma^2}=2^{L_S-j}$. This contradicts the coding step. So $\mathrm{avg}_SV\le1-u+\gamma+2^{-g}$.
+* *The $A$ side.* $A$ is only lower semicomputable, so a set "$\mathrm{avg}_{S'}A$ is small" is not c.e. Use a finite stage instead. Let $\nu_s\uparrow\nu_\pi$ be the stage-$s$ lower approximations, $A_s(z):=\mathbb E_w\nu_s(f_a(z,w)\mid(z,w))$ and $u_s:=2^{-m}\sum_zA_s(z)\uparrow u$. If $u\le2^{-g}$ the claim below is trivial. Otherwise let θ′ be the largest multiple of $2^{-g}$ below $u$, so $\theta'\ge u-2^{-g}$, and let $s^*$ be the first stage with $u_{s^*}>\theta'$. $A_{s^*}$ is computable from $(\pi,a,m,\theta')$. If $\mathrm{avg}_SA_{s^*}<u_{s^*}-\gamma$, take $\mathcal B:=\{S':\mathrm{avg}_{S'}A_{s^*}<u_{s^*}-\gamma\}$, which is decidable from those data; Hoeffding's lower-tail bound gives $|\mathcal B|\le2^{L_S-j}$, a contradiction. So $\mathrm{avg}_SA\ge\mathrm{avg}_SA_{s^*}\ge u_{s^*}-\gamma>u-2^{-g}-\gamma$.
+* *Combine.* $\mathbb E_x\nu_\pi(y^*\mid x)\le u-p(u-2^{-g}-\gamma)+p(1-u+\gamma+2^{-g})=p+(1-2p)u+p(2\gamma+2^{1-g})$. Then $R_B\ge-\log\mathbb E_x\max\{\nu_\pi(y^*\mid x),2^{-B}\}\ge-\log(\mathbb E_x\nu_\pi(y^*\mid x)+2^{-B})$ by Jensen, as in Lemma 2.2. ∎
+
+[computed: c7(C): the identity holds to $2.2\cdot10^{-16}$ on 400 random semimeasure hypotheses, a third of them correlated with $S$, at $d=8$, $m\in\{6,8\}$; the deterministic form $\mathbb E\nu(y^*)\le p+(1-2p)u+p(\text{dev}_A+\text{dev}_V)$, with the actual deviations, is never violated.]
+
+*Comparison.* At $u=\frac12$ Lemma 2.2 gives $\mathbb E\nu(y^*)\le\frac12+p$ and Lemma 2.2c gives $\frac12+p(2\gamma+2^{1-g})$. The gain matters only when $p$ is not small: it lets the kink of Prop 3.8 hold for every $p<1/4$ (Prop 3.8(iv)). It is not used to extend Theorem 2's window, which stays at $p<0.056$; the end of §2.6 explains why the present argument could gain at most $p<0.123$.
+
 **Lemma 2.3 (coding the error rule with a hypothesis) [proved; referee r3].** $K(S\mid a,\pi)\le2^mR_B(\pi)+\beta_B+2\log m+2\log B\cdot[B<\infty]+\kappa$. (For finite $B$, take $B$ an integer.)
 
 *Proof.*
 * For $z\in\{0,1\}^m$ and $b\in\{0,1\}$, let $q_z(b):=2^{-\mathbb E_w\min\{B,-\log\nu_\pi(f_a(z,w)\oplus b\mid(z,w))\}}$, with $w$ uniform on $\{0,1\}^{d-m}$.
 * By AM–GM, $q_z(b)\le\mathbb E_w\max\{\nu_\pi(f_a\oplus b\mid\cdot),2^{-B}\}$. Hence $\sum_bq_z(b)\le1+\tau_B$.
 * $q_z$ is lower semicomputable from $(\pi,a,m,B)$.
-* So $Q(S'):=\prod_zq_z(1_{S'}(z))/(1+\tau_B)$ is a lower-semicomputable semimeasure on subsets of $\{0,1\}^m$.
-* Since $y^*(z,w)=f_a(z,w)\oplus1_S(z)$, $-\log Q(S)=2^mR_B(\pi)+\beta_B$.
-* Apply (F2) conditionally on $(\pi,a,m,B)$, and (F5). ∎
+* So $Q(S'):=\prod_z\big[q_z(1_{S'}(z))/(1+\tau_B)\big]$, normalised **factor by factor**, is a lower-semicomputable semimeasure on subsets of $\{0,1\}^m$: its total mass is $\prod_z\sum_bq_z(b)/(1+\tau_B)\le1$.
+* Since $y^*(z,w)=f_a(z,w)\oplus1_S(z)$, $-\log Q(S)=2^mR_B(\pi)+2^m\log(1+\tau_B)=2^mR_B(\pi)+\beta_B$.
+* Apply (F2) conditionally on $(\pi,a,m,B)$, and (F5) for $m$ and for the integer $B$. ∎
+
+*Correction.* `notes.md` and `notes-final-run1.md` printed $Q(S'):=\prod_zq_z(1_{S'}(z))/(1+\tau_B)$, with a single division. That is not a semimeasure in general: for a deterministic hypothesis at a small $B$ its total mass is 1.119 (referee `q2_lemmas.out` (c)). The proof's $\beta_B=2^m\log(1+\tau_B)$ was already the per-factor value; with per-factor normalisation the identity holds to $2\cdot10^{-15}$ and the mass is at most 1 (same check). No other statement changes.
 
 **Lemma 2.4 (two-part lower bounds) [proved].** If $T(\pi)=t<\infty$, then
 * (D1) $\ell(\pi)\ge d-s(t)-\Lambda_1$;
@@ -481,7 +523,7 @@ Then:
   * Let $v(z):=\mathbb E_w\nu_\pi(f_a(z,w)\oplus1\mid(z,w))\in[0,1]$. Then $e(\pi)=s_0^{-1}\sum_{z\in S}v(z)$, and $\bar v:=2^{-m}\sum_zv(z)=\mathbb E_x\nu_\pi(f_a\oplus1\mid x)\le1-u(\pi)$ because ν is a semimeasure.
   * Let θ be the least multiple of $2^{-g}$ that is $\ge1-u(\pi)+\gamma_g$. Then $K(\theta)\le g+2\log g+\kappa$ and $\theta\ge\bar v+\gamma_g$.
   * Suppose $e(\pi)>\theta$. The set $B_\theta:=\{S':|S'|=s_0,\ s_0^{-1}\sum_{z\in S'}v(z)>\theta\}$ is c.e. given $(\pi,a,m,s_0,\theta)$, because $v$ is lower semicomputable. It contains $S$.
-  * For $S'$ uniform among $s_0$-subsets, Hoeffding's bound for sampling without replacement gives $\Pr[\mathrm{avg}_{S'}v-\bar v\ge\gamma_g]\le e^{-2s_0\gamma_g^2}$ [known: Hoeffding 1963, *JASA* 58:13–30, Thm 4 (verified via secondary sources); sanity check in c3; exhaustive check in referee r3]. So $|B_\theta|\le2^{L_S-j_g}$.
+  * For $S'$ uniform among $s_0$-subsets, Hoeffding's bound for sampling without replacement gives $\Pr[\mathrm{avg}_{S'}v-\bar v\ge\gamma_g]\le e^{-2s_0\gamma_g^2}$ [known: Hoeffding 1963, *JASA* 58:13–30, the bound for sampling without replacement (bibliographic data verified; the theorem number is unverified); sanity check in c3; exhaustive checks in referee r3 and q2(d)]. So $|B_\theta|\le2^{L_S-j_g}$.
   * Describe $S$ by $j_g$ (self-delimiting) and its index among the first $2^{\lceil L_S\rceil-j_g}$ elements enumerated. This gives $K(S\mid\pi,a)\le\lceil L_S\rceil-j_g+2\log(j_g+1)+2\log m+2\log s_0+g+2\log g+\kappa$.
   * Together with (d), this gives $j_g-2\log(j_g+1)\le\Gamma_g$, contradicting the choice of $j_g$. So $e(\pi)\le\theta\le1-u+\gamma_g+2^{-g}$.
 
@@ -503,8 +545,23 @@ Then:
 | 30 | 0 | 0.981 | $d+51.0$ | 98.3 | 98.3 | 0.274 |
 | 30 | 20 | 0.981 | $d+51.2$ | 98.5 | 118.5 | 0.287 |
 
-* At $c=10^{-3}$, κ = 0: $u\ge0.912$, $e\le0.270$. At $m=24$ ($L_S=187{,}457$), κ = 0, $c=10^{-4}$: $e\le0.065$; κ = 30: $e\le0.084$.
-* The κ = 0 rows are illustrations. The κ = 30 rows show how the bounds degrade; any fixed κ gives numbers of the same kind, since every bound is explicit in κ.
+* At $c=10^{-3}$, κ = 0, $\delta_S=0$: $u\ge0.912$, $e\le0.270$. At $m=24$ ($L_S=187{,}457$), κ = 0, $\delta_S=0$, $c=10^{-4}$: $e\le0.065$; κ = 30: $e\le0.084$.
+* The κ = 0 rows are illustrations. The κ = 30 rows show how the bounds degrade; any fixed κ gives numbers of the same kind, since every bound is explicit in κ. The same holds for $\delta_S$: every bound is explicit in it, and the rows with $\delta_S=20$ show the effect of a modest deficiency. For an error rule with a large deficiency the bounds become vacuous, and Prop 2.17 shows that this is not an artefact of the proof.
+* *The memoriser regime near $2^{-m}$* [computed: c7(D); referee q4(B)]. Theorem 2(iii) applies only when $\rho<(1-c2^m)B_S/2^m$. At Hänni's sizes (κ = 0, $\delta_S=0$) this holds iff $c<0.99418\cdot2^{-m}$, and the threshold of (iv) is $0.99471\cdot2^{-m}$. Writing $c=(1-\varepsilon)2^{-m}$, the error-label bound of (iii) is:
+
+  | ε | 0.5 | 0.2 | 0.1 | 0.06 | 0.03 | 0.01 |
+  |---|---|---|---|---|---|---|
+  | $e\ge$ (κ = 0, $\delta_S=0$) | 0.955 | 0.831 | 0.658 | 0.483 | 0.223 | 0.010 |
+  | $e\ge$ (κ = 30, $\delta_S=0$) | 0.917 | 0.706 | 0.457 | 0.256 | 0.060 | 0.000 |
+  
+  So the precise statement is: for $c\le(1-\varepsilon)2^{-m}$, every near-optimal hypothesis gives the teacher's erroneous label average probability at least the tabulated value. It is at least 1/2 for $c\le0.937\cdot2^{-m}$ (κ = 0) or $0.888\cdot2^{-m}$ (κ = 30). In the band of relative width about 6% below $2^{-m}$ nothing useful is proved.
+
+**The hypotheses Theorem 2 relies on** (referee M3). The instance is chosen so that every step of the proof goes through. Each of the following is used. Without one of the first four, a step of the proof fails as written; the fifth enters every bound quantitatively:
+* *A list-decodable model class.* Parities admit Lemma 2.1: a hypothesis that agrees with $f_a$ on more than $\frac12+2^{-t-1}$ of the inputs determines $a$ up to $2t+O(\log t)$ bits. For simple models without this property (majority-like functions have short approximations) the kink can fail (open problem 1).
+* *The product form $E=S\times\{0,1\}^{d-m}$.* Lemma 2.3 codes $S$ with $2^mR_B(\pi)$ bits because each $z\in\{0,1\}^m$ is averaged over $2^{d-m}$ inputs. For an unstructured $E\subseteq\{0,1\}^d$ of the same density the same argument gives $2^dR_B(\pi)$ bits, which is useless at $d=100$.
+* *Uniform inputs.* Rates, and hence the window, scale with the input law (Prop 2.15).
+* $p<0.056$, so that $G_1>H(p)$ (end of §2.6).
+* *A small deficiency $\delta_S$*: the error rule is incompressible given the model. Every slack term ($\Lambda_2$, $\Delta(c)$, $\Delta_\ell$, $\Gamma_g$) contains $\delta_S$. Prop 2.17 shows that a rule with Hänni's density and description length but a cheap high-density part defeats the trick over a large part of the window.
 
 **Corollary 2.5 (idiosyncratic errors, full truth table) [proved; computed: c3].** Take $m=d$, $n=2^d$, $B=\infty$, and let the data be the whole truth table, so $N=n$.
 * A λ-MAP minimises $\lambda\ell+nR=n\,J_{\lambda/n}$, so it satisfies Theorem 2(ii) with $\eta=0$ and $c=\lambda/n$.
@@ -521,11 +578,17 @@ Then:
   * every other program has $J_1\ge nG_1$, which exceeds $J_1(\pi_g)$ once $n(G_1-H(p))>d+\kappa_g+\log(n+1)$.
   
   So **λ = 1 does not determine whether the errors are memorised**; that depends on lower-order terms and the reference machine. **Every λ > 1 in the window does**, up to the slack $\Lambda_2/(\lambda-1)$.
-* *Numbers* [computed: c3, $g=7$]. With κ = 0 (illustration), $d=m=20$, $p=2^{-10}$, $L_E=11{,}710$:
-  * the window is $\lambda\in(1,\,1.19\cdot10^4]$; with κ = 30 it is $(1,6456]$;
-  * at λ = 2: $u\ge0.991$, $\ell\le d+58.2$, $I\le70.8$ bits, $e\le0.225$;
-  * at $\lambda=105$: $\ell\le d+15.7$, $I\le28.3$ bits, $e\le0.188$;
-  * with κ = 30 the bounds weaken by tens of bits (λ = 105: $\ell\le d+46.3$, $I\le88.9$, $e\le0.266$).
+* *Numbers* [computed: c3 (window), c7(H) (identification, $g$ optimised); referee q1(D) agrees]. $d=m=20$, $p=2^{-10}$, $L_E=11{,}710$, $B=\infty$:
+  * the window is $\lambda\in(1,\,1.19\cdot10^4]$ at κ = 0 and $(1,6456]$ at κ = 30;
+  
+  | κ | $\delta_E$ | λ = 2: $u\ge$ | $\ell\le$ | $I\le$ | $e\le$ | λ = 105: $\ell\le$ | $I\le$ | $e\le$ |
+  |---|---|---|---|---|---|---|---|---|
+  | 0 | 0 | 0.991 | $d+58.2$ | 70.8 | 0.220 | $d+15.7$ | 28.3 | 0.185 |
+  | 0 | 20 | 0.991 | $d+78.2$ | 90.8 | 0.251 | $d+15.9$ | 28.5 | 0.204 |
+  | 30 | 0 | 0.991 | $d+148.2$ | 190.8 | 0.320 | $d+46.3$ | 88.9 | 0.261 |
+  | 30 | 20 | 0.991 | $d+168.2$ | 210.8 | 0.341 | $d+46.5$ | 89.1 | 0.275 |
+  
+  * The κ = 0 rows are illustrations. Near λ = 1 the deficiency enters the length and information bounds at full weight, through $\Lambda_2/(\lambda-1)$.
   * In an exact small instance ($d=m=8$, $|E|=8$) the good model and the memoriser switch at λ = 0.936 [computed: c3].
 
 **Lemma 2.6 (finite sample) [proved].**
@@ -536,14 +599,14 @@ $$J^B_c(\hat\pi)\le J_c(\pi_{\rm ref})+\varepsilon_1+B\sqrt{\frac{\hat L\ln2+\ln
 where $\varepsilon_1:=A\sqrt{\ln(2/\delta)/(2N)}$ and $\hat L:=(J_c(\pi_{\rm ref})+\varepsilon_1)/c$.
 
 *Proof.*
-* Each sampled input is marginally uniform. By Hoeffding's bound for sampling without replacement (Thm 4 of Hoeffding 1963), with probability at least $1-\delta/2$, $\hat J_c(\pi_{\rm ref})\le J_c(\pi_{\rm ref})+\varepsilon_1$.
+* Each sampled input is marginally uniform. By Hoeffding's bound for sampling without replacement (Hoeffding 1963), with probability at least $1-\delta/2$, $\hat J_c(\pi_{\rm ref})\le J_c(\pi_{\rm ref})+\varepsilon_1$.
 * For each π, the truncated losses lie in $[0,B]$. Apply Hoeffding with confidence $(\delta/2)2^{-\ell(\pi)}$ and take a union bound (Kraft). With probability at least $1-\delta/2$, simultaneously for all π, $\hat J_c(\pi)\ge J^B_c(\pi)-B\sqrt{(\ell(\pi)\ln2+\ln(2/\delta))/(2N)}$.
 * A minimiser satisfies $c\ell(\hat\pi)\le\hat J_c(\hat\pi)\le\hat J_c(\pi_{\rm ref})$, so $\ell(\hat\pi)\le\hat L$ on the first event.
 * Combine. (This adapts T5 Lemma 1.2: it is one-sided and uses truncation, so no noise floor on hypotheses is needed.) ∎
 
 **Corollary 2.7 (Hänni's numbers with sampled data) [proved; computed: c3].** Take $\pi_{\rm ref}=\pi_g$ and $A=\log(1/p)$. With probability at least $1-\delta$, every λ-MAP with $\lambda=cN$ satisfies Theorem 2(ii) with $\eta=\varepsilon_N$ (the excess in Lemma 2.6), whenever $J_g+\varepsilon_N<M_2$.
 
-At $d=100$, $m=20$, $p=2^{-10}$, $B=30$, $\delta=0.01$, κ = 0 (illustration), $g=7$ [computed: c3]:
+At $d=100$, $m=20$, $p=2^{-10}$, $B=30$, $\delta=0.01$, κ = 0 (illustration), $\delta_S=0$, $g=7$ [computed: c3]:
 
 | $c$ | $N$ | $\varepsilon_N/c$ | $u\ge$ | $\ell\le$ | $e\le$ |
 |---|---|---|---|---|---|
@@ -556,7 +619,7 @@ The required $N$ is large because uniform convergence over all programs is pessi
 **Example 2.7a (Hänni's Version 1, realised in population form) [proved, as an instance of Theorem 2; computed: c6(C)].**
 * *Instance.* $d=100$, $m=10$, $p=2^{-6}$, so $s_0=16$, $L_S=115.6$ bits and $H(p)=0.116$. At $N=10^4$ the model saves $N(1-H(p))=8839$ bits for its 100 bits (88 bits per bit) and the error rule saves $NH(p)=1161$ bits for its 116 bits (10.0 bits per bit). These are Version 1's sizes and rates: a 100-bit model at about 100 bits per bit and a 100-bit error model at 10 bits per bit.
 * *Window.* $c\in(2^{-10},c_{\rm hi}]$ with $c_{\rm hi}=5.80\cdot10^{-3}$ at κ = 0, $4.06\cdot10^{-3}$ at κ = 10, $2.53\cdot10^{-3}$ at κ = 30. At $N=10^4$ this reads $\lambda\in(9.77,58.0]$ at κ = 0; Hänni's three-hypothesis calculation gives $(10,100)$. The window is nonempty for every κ ≤ 30 checked.
-* *What is proved in the window.* Every near-optimal hypothesis has $u>3/4$ and $\ell\le d+\Delta_\ell$. At κ = 0: $\ell\le d+47.8$ and $I\le65.0$ bits at $c=2.5\cdot10^{-3}$; $\ell\le d+28.3$ and $I\le45.6$ bits at $c=5.5\cdot10^{-3}$, out of $L_S=115.6$. Near the lower end of the window the information bound exceeds $L_S$ and says nothing. The error-label bound (e) is vacuous at these sizes, because $s_0=16$ is too small for the Hoeffding step. Below $c=6.9\cdot10^{-4}$ the memoriser beats every level-1 hypothesis with $R\ge H(p)$ (Thm 2(iv)).
+* *What is proved in the window.* Every near-optimal hypothesis has $u>3/4$ and $\ell\le d+\Delta_\ell$. At κ = 0 and $\delta_S=0$: $\ell\le d+47.8$ and $I\le65.0$ bits at $c=2.5\cdot10^{-3}$; $\ell\le d+28.3$ and $I\le45.6$ bits at $c=5.5\cdot10^{-3}$, out of $L_S=115.6$. Near the lower end of the window the information bound exceeds $L_S$ and says nothing. The error-label bound (e) is vacuous at these sizes, because $s_0=16$ is too small for the Hoeffding step. Below $c=6.9\cdot10^{-4}$ the memoriser beats every level-1 hypothesis with $R\ge H(p)$ (Thm 2(iv)).
 * *Caveats.* This is the population objective. At $N=10^4$ samples Lemma 2.6 gives no guarantee: for every admissible $B\ge\log(1/p)=6$ its excess term is at least $6\sqrt{(d-4-\Lambda_1)\ln2/(2N)}=0.31$, while the margin $M_2-J_g$ is at most 0.22 anywhere in the window [computed: c6(H)]. The referee's full-table instance ($d=13$, $m=10$, $p=2^{-6}$; window $\lambda\in(8,86]$ at κ = 0) matches the error rule's size but not the model's.
 
 **Proposition 2.8 (the power posterior concentrates on near-minimisers) [proved; computed: c5(e)].** Let $\lambda=cN$, let $D$ be any data set and let $\hat J_g:=\hat J_c(\pi_g)$. Then for every $\eta>0$,
@@ -568,7 +631,9 @@ $$\frac{\Pi_\lambda(\{\pi:\hat J_c(\pi)\ge\hat J_g+\eta\}\mid D)}{\Pi_\lambda(\p
 * Summing $2^{-\ell(\pi)}2^{-(1-1/\lambda)N(\hat J_g+\eta)}$ over the set gives at most $2^{-(1-1/\lambda)N(\hat J_g+\eta)}$, by Kraft.
 * Divide by $2^{-N\hat J_g}$ and use $N/\lambda=1/c$. ∎
 
-*Consequence* [proved]. Combine Prop 2.8 with Lemma 2.6's uniform deviation bound, which applies to every empirical near-minimiser because $\ell\le\hat J_c/c$. With probability at least $1-\delta$, the steeper posterior with $\lambda=cN$ puts all but a $2^{-N\eta+(\hat J_g+\eta)/c}$ fraction of its mass on programs that satisfy Theorem 2(ii) with $\eta'=\eta+\varepsilon_N$, provided $J_g+\eta'<M_2$.
+*Consequence* [proved; computed: c7(F)]. Work on the probability-$(1-\delta)$ event of Lemma 2.6 (with $\pi_{\rm ref}=\pi_g$, $A=\log(1/p)$), on which $\hat J_g\le J_g+\varepsilon_1$ and the uniform deviation bound holds for every program. Every program with $\hat J_c(\pi)<\hat J_g+\eta$ has $\ell(\pi)\le\hat J_c(\pi)/c<\hat L':=(J_g+\varepsilon_1+\eta)/c$, so
+$$J^B_c(\pi)\ \le\ \hat J_c(\pi)+B\sqrt{\frac{\hat L'\ln2+\ln(2/\delta)}{2N}}\ \le\ J_g+\eta',\qquad \eta':=\eta+\varepsilon_1+B\sqrt{\frac{\hat L'\ln2+\ln(2/\delta)}{2N}}.$$
+Hence the steeper posterior with $\lambda=cN$ puts all but a $2^{-N\eta+(\hat J_g+\eta)/c}$ fraction of its mass on programs that satisfy Theorem 2(ii) with $\eta'$ in place of η, provided $J_g+\eta'<M_2$. (`notes-final-run1.md` wrote $\eta'=\eta+\varepsilon_N$, with Lemma 2.6's $\hat L=(J_g+\varepsilon_1)/c$; near-minimisers can be longer by $\eta/c$ bits, so $\hat L'$ is needed. At $c=10^{-4}$, $\eta=10^{-3}$, $N=10^{13}$, $B=30$, $\delta=0.01$, κ = 0: $\hat L'=241.7$ bits against $\hat L=231.7$, and $\eta'=1.0933\cdot10^{-3}$ against $1.0916\cdot10^{-3}$; the condition $J_g+\eta'<M_2$ holds.)
 * Its predictive, averaged over $E$, gives the error label probability at most $\sup e(\pi)+2^{-N\eta+(\hat J_g+\eta)/c}$, the supremum over those programs.
 * Averaged over the fresh error inputs $E\setminus\mathrm{dom}D$ instead, the bound is multiplied by $|E|/(|E|-N)$. This factor is negligible at $d=100$.
 * Example (κ = 0, with $\hat J_g$ replaced by its population value $J_g=c(d+\kappa_g)+H(p)=0.0232$): $c=10^{-4}$, $\eta=10^{-3}$, $N=10^6$ gives a ratio of at most $2^{-758}$ [computed: c5(e), corrected in this revision; referee r1(F)].
@@ -580,18 +645,20 @@ $$\frac{\Pi_\lambda(\{\pi:\hat J_c(\pi)\ge\hat J_g+\eta\}\mid D)}{\Pi_\lambda(\p
 $$\sum_{i\le N}-\log P(y^*(x_i)\mid x_i,D_{i-1})\le\ell(\pi_b)+\kappa\le d+\lceil L_S\rceil+\kappa_b+\kappa.$$
   * So at most $d+L_S+O(\log dm)$ inputs, in total, receive probability below 1/2 for the teacher's label. Every other error input among those revealed gets the erroneous label with probability at least 1/2. For $M_F$ this is F's mistake bound (F Cor 6.6).
   * Explicitly: if all $2^d$ inputs are revealed, the error inputs number $p2^d$, and the fraction of them on which $P$ gives the erroneous label probability at least 1/2 is at least $1-(d+\lceil L_S\rceil+\kappa_b+\kappa)/(p2^d)$. At Hänni's sizes with κ = 0 this is $1-9.6\cdot10^{-24}$ [computed: c6(G)].
-* **(b) MDL / λ-MAP for any *fixed* λ ≥ 1.** Apply Lemma 2.6 with $\pi_{\rm ref}=\pi_b$ ($A=0$), $c=\lambda/N$, $\hat L=d+\lceil L_S\rceil+\kappa_b$. With probability at least $1-\delta$, the MAP has
+* **(b) MDL / λ-MAP for any λ ≥ 1, fixed or depending on $N$.** Apply Lemma 2.6 with $\pi_{\rm ref}=\pi_b$ ($A=0$), $c=\lambda/N$, $\hat L=\ell(\pi_b)\le d+\lceil L_S\rceil+\kappa_b$. With probability at least $1-\delta$, the MAP has
   $$R_B\le\frac{\lambda\hat L}N+B\sqrt{\frac{\hat L\ln2+\ln(2/\delta)}{2N}},$$
-  hence $e(\hat\pi)\ge2^{-R_B/p}-2^{-B}$. This tends to $1-2^{-B}$ as $N$ grows (for $N\le2^d$). Numbers at λ = 1, κ = 0, $B=30$, $\delta=0.01$: $e\ge0.65$ at $N=10^{13}$ and $e\ge0.96$ at $N=10^{15}$.
+  hence $e(\hat\pi)\ge2^{-R_B/p}-2^{-B}$. Lemma 2.6 allows λ to depend on $N$, so this holds for every schedule $\lambda=\lambda_N$. Whenever $\lambda_N/N\to0$ the bound approaches $1-2^{-B}$ as $N$ grows; on the finite domain $\{0,1\}^d$ this concerns $N\le2^d$ and is made explicit by the formula. Numbers at κ = 0, $B=30$, $\delta=0.01$ (they do not depend on $\delta_S$) [computed: c3, c7(G)]:
+  * λ = 1: $e\ge0.65$ at $N=10^{13}$, $e\ge0.96$ at $N=10^{15}$;
+  * $\lambda_N=\sqrt N$: $e\ge0.73$ at $N=10^{15}$ and $e\ge0.97$ at $N=10^{17}$ (at $N=10^{12}$, $\lambda_N/N=10^{-6}$ is still inside Theorem 2's window, and the bound says nothing).
 * **(c) SI.** On the interleaved sequence with uniform i.i.d. inputs, Theorem 1(d) with λ = 1 gives $\mathbb E\sum_i-\log M(y_i\mid\cdot)\le K(\mu)+\kappa\le d+L_S+O(\log dm)$. For every λ > 1 the steeper SI predictor pays at most $\lambda\ell_U$ more.
 
 *Proof.* (a) $P(D_N)\ge2^{-\ell(\pi_b)-\kappa}$, then telescope; each label with probability below 1/2 costs more than one bit. (b) Lemma 2.6, and $R_B(\hat\pi)\le J^B_c(\hat\pi)$; the error-label bound is as in Theorem 2(iii). (c) is Theorem 1(d). ∎
 
-So the trick needs λ to grow like $N$. A **fixed** λ > 1 removes only noise (§3), not finite-complexity errors. This confirms Hänni's remark that the coefficient must increase with the data set. At $\lambda=cN$ the population selection is stable as $N$ grows. This keeps T5's correction of an earlier gloss ("only on a finite-sample window").
+So the trick needs $\lambda=\Theta(N)$: $\lambda/N$ must stay above $2^{-m}$ (Thm 2(iii), (iv)) and every schedule with $\lambda_N/N\to0$ eventually reproduces the errors (Prop 2.9(b)). A **fixed** λ > 1 removes only noise (§3), not finite-complexity errors. This confirms Hänni's remark that the coefficient must increase with the data set. The qualitative finding "a bounded λ overfits; λ must grow with the sample size" is known for λ-weighted two-part MDL in noisy classification (Zhu & Srebro 2025; Zhu, Ohannessian & Srebro 2026; §1.3), and is not claimed as new here. What differs is the rate and the target. Their consistent schedules grow sublinearly (per a secondary summary, $1\ll\lambda_N\ll N/\log N$) and aim at the data distribution, which here includes the teacher's errors; such schedules learn the errors (Prop 2.9(b)). Hänni's $\lambda=cN$ is deliberately not consistent for the teacher's label distribution: it discards every component whose rate is below $c$, valid or not (Prop 2.12), and pays $c\,\ell$ bits per sample (§4.4). At $\lambda=cN$ the population selection is stable as $N$ grows. This keeps T5's correction of an earlier gloss ("only on a finite-sample window").
 
 ### 2.6 Limits
 
-**Proposition 2.10 (fixed λ) [proved].** This is Prop 2.9(b): for fixed λ, the λ-MAP reproduces the systematic errors once $N$ is large.
+**Proposition 2.10 (fixed or sublinear λ) [proved].** This is Prop 2.9(b): for fixed λ, and for every schedule with $\lambda_N/N\to0$, the λ-MAP reproduces the systematic errors once $N$ is large (with $N\le2^d$; explicit bounds in Prop 2.9(b)).
 
 **Proposition 2.11 (rate blindness in the junta family) [proved; computed: c3, c6(A)].** Here $B=\infty$ and the coin has length at most κ.
 * **(i) Three-hypothesis form.** If
@@ -644,15 +711,21 @@ $$a:=2+4q,\qquad b:=4+2\log m+2\kappa+q\big(\lceil L_S\rceil+4\log m+2\log s_0+2
 
 The steeper penalty sorts by **rate**, not by validity. Two worlds with the same teacher channel $P^*$ and the same input law, one where a component is an error and one where it is a rare valid rule, receive the same selection at every $c$. *Proof:* $J_c$ depends on the data only through $P^*$ and the input law. This is T5 Thm 4.1, kept.
 
-**Proposition 2.13 (guard erosion; T5 Prop 4.4, re-derived) [proved; computed: c5(b), c6(G)].**
-* *Setting.* In some region (contexts where a schema σ applies), the teacher applies σ only when a guard $G$ holds (frequency $\pi_G$, per-use gain $g$). Otherwise (frequency $\pi_{\neg G}$) the teacher plays one of the other $M-1$ steps.
-* *Options and rates.*
-  * The options are "none" (uniform), "unguarded σ" (cost $k_\sigma$) and "guarded σ" (cost $k_\sigma+k_G$).
-  * With teacher noise η, the unguarded option's rate is $\rho_\sigma=(\pi_Gg-\pi_{\neg G}\log(1/\eta))/k_\sigma$.
-  * The guard's marginal rate is $\rho_G=\pi_{\neg G}\Delta_G/k_G$, with $\Delta_G=\log(M/\eta)-\log(M-1)$.
-* *Claim.* If $\rho_G<\rho_\sigma$, then for $c\in(\rho_G,\rho_\sigma)$ the selected rule is the **unguarded** one, which is unsound although the teacher never erred. Otherwise the path goes guarded → none.
-* *Proof.* The three options are the points $(0,0)$, $(k_\sigma,-k_\sigma\rho_\sigma)$ and $(k_\sigma+k_G,-k_\sigma\rho_\sigma-k_G\rho_G)$. The middle one is a vertex iff $\rho_\sigma>\rho_G$. Apply Lemma 1.2. ∎
-* *Numbers.* For $\pi_G=0.05$, $\pi_{\neg G}=5\cdot10^{-4}$, $k_\sigma=22$, $k_G=12$, $M=64$, η = 0.05: unguarded on $(1.810\cdot10^{-4},1.223\cdot10^{-2})$. For $\pi_G=\pi_{\neg G}=0.002$: guarded → none at $c=3.203\cdot10^{-4}$ (exact crossing, c6(G); c5's grid gives $3.21\cdot10^{-4}$).
+**Proposition 2.13 (guard erosion; T5 Prop 4.4, re-derived) [proved; computed: c5(b), c6(G), c7(E); referee q1(I)].**
+* *Teacher model.* Inputs are contexts; in a region of them a schema σ is one of $M$ possible steps. A guard $G$ splits the region into G-contexts (input mass $\pi_G$) and ¬G-contexts (mass $\pi_{\neg G}$).
+  * In a G-context the teacher plays σ with probability $1-\eta+\eta/M$ and each other step with probability $\eta/M$ (noise rate η).
+  * In a ¬G-context the teacher plays one fixed step other than σ. It never applies σ there.
+* *Options* (lengths $0$, $k_\sigma$, $k_\sigma+k_G$ above a common base), and their expected log-losses per context:
+  * "none" is uniform over the $M$ steps: $\log M$ everywhere;
+  * "unguarded σ" predicts like the teacher's G-context law in every context of the region: $H_G$ in G-contexts, where $H_G$ is the entropy of that law, and $\log(M/\eta)$ in ¬G-contexts;
+  * "guarded σ" does the same in G-contexts and is uniform over the $M-1$ non-σ steps in ¬G-contexts: $\log(M-1)$ there.
+* *Rates.* With $g:=\log M-H_G$, the unguarded option's rate is $\rho_\sigma=(\pi_Gg-\pi_{\neg G}\log(1/\eta))/k_\sigma$, and the guard's marginal rate is $\rho_G=\pi_{\neg G}\Delta_G/k_G$ with $\Delta_G=\log(M/\eta)-\log(M-1)$.
+* *Claim.* If $\rho_G<\rho_\sigma$, then for $c\in(\rho_G,\rho_\sigma)$ the selected rule is the **unguarded** one. It applies σ in ¬G-contexts, where the teacher never did. Otherwise the selection path goes guarded → none, at the average rate of the guarded option.
+* *Proof.* The three options are the points $(0,0)$, $(k_\sigma,-k_\sigma\rho_\sigma)$ and $(k_\sigma+k_G,-k_\sigma\rho_\sigma-k_G\rho_G)$, after subtracting the risk of "none". The middle one is a vertex iff $\rho_\sigma>\rho_G$. Apply Lemma 1.2. ∎
+* *Numbers* (c7(E), matching referee q1(I)). $M=64$, η = 0.05: $H_G=0.5773$, $g=5.4227$, $\Delta_G=4.3446$.
+  * $\pi_G=0.05$, $\pi_{\neg G}=5\cdot10^{-4}$, $k_\sigma=22$, $k_G=12$: $\rho_\sigma=1.2226\cdot10^{-2}$, $\rho_G=1.8103\cdot10^{-4}$; the path is guarded → unguarded → none, with the unguarded rule selected on $(1.810\cdot10^{-4},1.223\cdot10^{-2})$.
+  * $\pi_G=\pi_{\neg G}=0.002$: $\rho_\sigma=1.0007\cdot10^{-4}<\rho_G=7.2411\cdot10^{-4}$; the path is guarded → none at $c=3.2032\cdot10^{-4}$. (`notes.md` quoted $3.21\cdot10^{-4}$ from c5's grid.)
+* `notes.md` said the unguarded rule is unsound "although the teacher never erred". That was wrong as worded: the teacher has noise η in G-contexts. The correct statement is that the teacher never applied σ outside $G$.
 
 **Proposition 2.14 (λ cannot be chosen from imitation data; T5 Thm 4.3, re-derived) [proved; computed: c5(c)].**
 * (i) For every strictly proper scoring rule, the expected score under the teacher's data is uniquely maximised by the teacher's channel $P^*(\cdot\mid x)$, errors included, at each $x$ of positive mass [known: definition and Gneiting & Raftery 2007, *JASA* 102:359–378 (verified)]. So any validation that estimates a strictly proper score on fresh imitation data prefers, among candidates, the one closest to $P^*$, not the norm. Computed for the log, Brier and spherical scores in Hänni's example.
@@ -681,7 +754,46 @@ Theorem 2 is for uniform inputs. Its window depends on the input law through the
 * At λ = 1, (i) is the context track's Prop 2.1 for $M_{\rm prod}$: Hänni's "simple property absent from training gives a constant probability of bad behaviour". With $\lambda=cN$ the lower bound $2^{-cN(K(Q,b)+\kappa)}$ vanishes, so steeper simplicity removes his constant lower bound.
 * It does so by (ii): among hypotheses that fit the training data equally, posterior odds become $2^{-\lambda\Delta\ell}$. The steeper posterior concentrates on the shortest train-fitting hypotheses, whatever they do on $Q$. If the shortest one extrapolates well, steeper SFI is more reliable out of distribution than SFI. If a shorter hypothesis agrees on training data and is wrong on $Q$, steeper SFI is more confidently wrong. No guarantee about unseen properties follows.
 
-**Limitation of the proof method.** Theorem 2's window needs $G_1>H(p)$, i.e. $p<0.056$. The identification constants at Hänni's sizes are modest, and Example 2.7a shows they become coarse when the error rule is small. A sharper analysis would replace the Jensen floor of Lemma 2.2 by a finer one (T5's Lemma 2.5c does this for the full-table case); it is not reused here.
+**Proposition 2.17 (error envelopes: the trick needs an incompressible error rule; T5 Prop 4.5, re-derived as an all-hypothesis statement) [proved; computed: c7(B); referee q4(C)].**
+* *Setting.* Setting 2.0 with $B=\infty$, except that the error rule is split: $S=S_1\sqcup S_2\subseteq\{0,1\}^m$, $|S|=s_0=p2^m$, with $s_1:=|S_1|$, $s_2:=|S_2|$, $p_1:=s_1/2^m$, and $p_2:=s_2/(2^m-s_1)$ the error density off $S_1$. $S_1$ is *cheap*: $K(S_1\mid m)\le k_1$. Put $E_1:=S_1\times\{0,1\}^{d-m}$ (the cheap error region; every input in it is an error input).
+* *The envelope program* $\pi_e$: on $E_1$ it predicts the label $f_a\oplus1$ with probability 1; elsewhere it predicts $f_a$ with flip probability $p_2$. Its population risk is $R_e=(1-p_1)H(p_2)$, which is below $H(p)$ by concavity of $H$ (since $p=p_1\cdot1+(1-p_1)p_2$). Its length is at most $d+k_1+\kappa_e$ with $\kappa_e:=2\log d+2\log m+2\log(s_2+1)+\kappa$. Put $J_e(c):=c(d+k_1+\kappa_e)+R_e\ge J_c(\pi_e)$, and
+$$\zeta:=c\,(k_1+\kappa_e+4+\Lambda_1)+\eta,\qquad c_{\rm env}:=\frac{H(p)-R_e}{k_1+\kappa_e+4+\Lambda_1}.$$
+* **(i) The good model is beaten.** Let π satisfy $J_c(\pi)\le J_e(c)+\eta$, with $J_e(c)+\eta<M_2(c)$. Then $T(\pi)=1$ and $R(\pi)\le R_e+\zeta$. In particular, for $c<c_{\rm env}$ and η small enough that $\zeta<H(p)-R_e$, no program with $R(\pi)\ge H(p)$ is η-near-optimal: the good model, and anything that fits no better, is excluded.
+* **(ii) The cheap errors are reproduced.** Under the hypotheses of (i), with $B_2:=K(S_2\mid a,K(a))$ and $\delta_2:=\log\binom{2^m-s_1}{s_2}-B_2$,
+$$e_1(\pi):=\mathbb E[\nu_\pi(y^*(x)\mid x)\mid x\in E_1]\ \ge\ 2^{-\bar R_1},\qquad \bar R_1:=\frac1{p_1}\Big(\zeta+(1-p_1)H(p_2)-\min(c,2^{-m})\big(B_2-K(S_1)\big)^+\Big).$$
+  For $c\ge2^{-m}$ this gives $\bar R_1\le\big(\zeta+(\delta_2+\log(2^m+1)+K(S_1))/2^m\big)/p_1$. On $E_1$ the teacher's label is the erroneous one, so $e_1$ is the average probability of reproducing the cheap errors.
+
+*Proof.*
+* (i) Programs with $T(\pi)\ge2$ have $J_c(\pi)\ge J^B_c(\pi)\ge M_2(c)$ (Theorem 2(o)), so $T(\pi)=1$. Then (D1) gives $\ell(\pi)\ge d-4-\Lambda_1$, and $c(d-4-\Lambda_1)+R(\pi)\le J_c(\pi)\le c(d+k_1+\kappa_e)+R_e+\eta$.
+* (ii) Write $R=p_1R^{(1)}+(1-p_1)R^{(2)}$, the risks on $E_1$ and off it.
+  * *Coding $S_2$ off $S_1$.* For $z\notin S_1$ define $q_z(b)$ as in Lemma 2.3 (with $B=\infty$). Then $Q(S'):=\prod_{z\notin S_1}q_z(1_{S'}(z))$ is a lower-semicomputable semimeasure on subsets of $\{0,1\}^m\setminus S_1$, given $(\pi,a,m,S_1)$, and $-\log Q(S_2)=(2^m-s_1)R^{(2)}$. So $K(S_2\mid a,\pi,S_1)\le(2^m-s_1)R^{(2)}+2\log m+\kappa$.
+  * *Chain.* By (F3), (F1) and Lemma 2.1 with $t=1$: $K(a,S_2\mid S_1)\le\ell(\pi)+s(1)+2\log d+(2^m-s_1)R^{(2)}+2\log m+\kappa$. By (F3) and (F4): $K(a,S_2\mid S_1)\ge K(a,S_2)-K(S_1)-\kappa\ge d+B_2-K(S_1)-\kappa$. With $\Lambda_1=2\log d+2\log m+\kappa$:
+  $$\ell(\pi)\ \ge\ d-4-\Lambda_1+\max\big\{0,\ B_2-K(S_1)-2^mx\big\},\qquad x:=(1-p_1)R^{(2)},$$
+  using also (D1) for the 0 branch.
+  * *Combine.* From $J_c(\pi)\le J_e(c)+\eta$: $p_1R^{(1)}\le\zeta+(1-p_1)H(p_2)-\big[x+c\max\{0,B_2'-2^mx\}\big]$ with $B_2':=(B_2-K(S_1))^+$. Over $x\ge0$ the bracket is at least $\min(c,2^{-m})B_2'$: for $c2^m\ge1$ its minimum is at $x=B_2'/2^m$, otherwise at $x=0$ [computed: c7(B), 2000 random cases]. This gives $R^{(1)}\le\bar R_1$, and Jensen gives $e_1\ge2^{-R^{(1)}}$.
+  * For $c\ge2^{-m}$, use $(2^m-s_1)H(p_2)\le\log\binom{2^m-s_1}{s_2}+\log(2^m+1)$. ∎
+
+[computed: c7(B) also checks, on 40 exact small instances ($d=6$, $m=4$), that $-\log Q(S_2)=(2^m-s_1)R^{(2)}$ and that $Q$ has total mass at most 1.]
+
+*Numbers* [computed: c7(B)]. $d=100$, $m=20$, $p=2^{-10}$ (Hänni's density); $S_1=\{z:z_1=\dots=z_j=0\}$, so $K(S_1\mid m)\le2\log(j+1)+\kappa$; $S_2$ a random set of the remaining size, so $\delta_2$ is small with high probability. The window of Theorem 2 for an incompressible rule is $(9.54\cdot10^{-7},8.06\cdot10^{-3}]$ at κ = 0.
+
+| instance | $\log\binom{2^m-s_1}{s_2}$ (≈ $K(S)$) | $H(p)-R_e$ | $c_{\rm env}$, κ = 0 / 10 / 30 | share of the window's log-width below $c_{\rm env}$ (κ = 0 / 30) | $e_1\ge$ at $c=1.01\cdot2^{-m}$, $2\cdot10^{-6}$, $10^{-5}$ (κ = 0, $\delta_2=0$) |
+|---|---|---|---|---|---|
+| $j=11$: $s_1=512$, $s_2=512$ | 6,364 bits | 0.00510 | $7.0\cdot10^{-5}$ / $4.9\cdot10^{-5}$ / $3.1\cdot10^{-5}$ | 0.47 / 0.42 | 0.86, 0.77, 0.34 |
+| $j=13$: $s_1=128$, $s_2=896$ | 10,418 bits | 0.00123 | $1.6\cdot10^{-5}$ / $1.2\cdot10^{-5}$ / $7.5\cdot10^{-6}$ | 0.31 / 0.25 | 0.55, 0.35, 0.01 |
+
+* The second instance has Hänni's density and, up to 4%, his "10000 bits". It is not covered by Theorem 2's conclusions: its deficiency against $L_S=11{,}710$ is about 1,300 bits. On almost a third of the window's logarithmic width, provably no hypothesis that fits no better than the good model is near-optimal.
+* With $\delta_2=20$ the $e_1$ bounds drop slightly (0.84 and 0.49 at $c=1.01\cdot2^{-m}$).
+* *Three-hypothesis illustration* (κ = 0, upper-bound lengths treated as exact; not proved). For the first instance, the envelope beats the good model for $c<1.9\cdot10^{-4}$ with my generic code lengths; the referee's explicit lengths give $5.7\cdot10^{-4}$ (q4(C)). The memoriser of the whole rule wins only below $9.5\cdot10^{-7}$.
+* *What is not proved.* Above $c_{\rm env}$ the good model may or may not be selected; Theorem 2's bounds there contain $\delta_S\approx5{,}300$ (first instance) and are vacuous for the error label. Whether near-optimal hypotheses avoid memorising the random part $S_2$ is not proved either; it would need Theorem 2's argument on the complement of $S_1$.
+
+*Reading.* This is T5's "error envelope" (T5 Prop 4.5), now with all hypotheses quantified over. Real systematic human errors are usually low-complexity patterns, which is the envelope case, not the incompressible case of Theorem 2. When an error region is cheap to describe and dense in errors, its rate $\big(H(p)-R_e\big)/k_1$ is high, and the steeper penalty learns it like any other valid component (rate blindness, Prop 2.11). With an error density θ < 1 inside the region (T5's general form), the envelope predicts the error with probability θ there; for θ < 1/2 the intended label is still the more likely one, and for θ > 1/2 the envelope is a learned systematic error. Part (i) holds for that general envelope with $R_e=p_1H(\theta)+(1-p_1)H(p_2)$ and the corresponding length; part (ii) is proved here only for θ = 1.
+
+**Limitation of the proof method.** Theorem 2's window needs $G_1>H(p)$, i.e. $p<0.056$.
+* Lemma 2.2c removes most of the $2p$ slack from the risk floor. It extends the kink to every $p<1/4$ (Prop 3.8(iv)). Using it in the window argument is not carried out here, and the present argument could gain only part of the range:
+  * The window argument separates hypotheses that "know the model" ($u>3/4$, level 1) from the rest. With Lemma 2.2c and no deviation term, the level-2 floor $1-\log(3/2-p)$ exceeds $H(p)$ only for $p<0.123$ [computed: c7(C)]. Going beyond needs finer levels in the identification argument.
+  * The level argument must bound the risk of *every* level-≥2 program, before anything is known about it. For such a program the information $I(\pi)$ is bounded only through its length, $I(\pi)\le\ell(\pi)-d+s(t)+O(\log d)$, and a program that is to compete with the good model has $\ell(\pi)\le d+\kappa_g+(H(p)+\eta)/c$. Near $c=2^{-m}$ this allows $I(\pi)\approx L_S$, and then the deviation term γ of Lemma 2.2c is of order $\sqrt{H(p)/p}$, not small. For $c$ well above $2^{-m}$ the bound $H(p)/c$ is much smaller than $L_S$, and a window for $p<0.123$ on that part of the $c$-range looks within reach.
+* T5's Lemma 2.5c was introduced for the full-table kink, and that is where it is used here (Prop 3.8(iv)). Extending the window method beyond $p<0.056$ is open problem 2.
 
 ---
 
@@ -720,21 +832,49 @@ $$W_{\rm det}(D)\ \ge\ 2^{-k-2\log(N+1)-2\log(n+1)-2\log(r+1)-\kappa}\,\nu(D).$$
 
 [computed: c4(B) checks the independence exactly over GF(16) for $N\le3$ (3232 cases, maximum error 0). c6(E) checks the full statement with the embedding $1x$, $q=\max(n+1,r)$, $r\in\{2,3,4\}$, $|Y|=3$ and $N\le3$: 2106 cases, maximum error 0. The referee's r5 confirms the independence over GF(32) and shows that distinct seeds often give the same function on $X$; the sum above is over programs, so this does not matter.]
 
-F Prop 4.4 proves the fair-coin case, at cost $K(n,k)$, with the same hash family; F's remark after it sketches the dyadic case, which Lemma 3.2 proves. In the function-machine version of SFI (one random tape), a sampler is itself a union of cylinders, each fixing the bits it reads; these are "fill-ins" with no $K(N)$ cost. Lemma 3.2 is what the program mixture (brief H1(b)) and the product class need.
+F Prop 4.4 proves the fair-coin case, at cost $K(n,k)$, with the same hash family; F's remark after it sketches the dyadic case, which Lemma 3.2 proves. In the function-machine version of SFI (one random tape), a sampler is itself a union of cylinders, each fixing the bits it reads; these are "fill-ins" with no $K(N)$ cost.
+
+Lemma 3.2 has two weaknesses: it needs dyadic probabilities (the Bern(1/3) labels of H6 are not covered), and it pays $2\log(N+1)$. The foundations referee (`../foundations/referee.md`, M2: the first pass's Proposition R1, re-derived there) gives a simpler argument for the deterministic program mixture: a deterministic program can *store a finite piece of the random tape*, and the only cost is a self-delimiting description of the stored length, which can be padded to a number of small complexity. The next lemma adapts that argument to product classes and to every computable sampler.
+
+**Lemma 3.2′ (fill-ins from stored stream prefixes; any computable sampler) [proved; computed: c7(A)].**
+* *Setting.* The class is the canonical $\Pi_\times$. ν is a computable conditional *measure* (a sampler: the values $\nu(y\mid x)$ are computable reals, uniformly in $(x,y)$, and $\sum_y\nu(y\mid x)=1$), with a program $\pi_\nu\in\Pi_\times$ of length $k$. $Y$ is finite. $D$ is a data set with $N$ inputs, all of length at most $n$, and $\beta_D:=\min_{(x,y)\in D}\nu(y\mid x)>0$.
+* *Claim.* With $i_D:=\lceil\log(6N/\beta_D)\rceil$ and $t_D:=\lceil\log(2n+2+2\log(i_D+1))\rceil$,
+$$W_{\rm det}(D)\ \ge\ 2^{-k-2\log(t_D+1)-\kappa}\,\nu(D).$$
+* Since $\beta_D\ge\nu(D)$, $i_D\le\log(6N)+\log(1/\nu(D))+1$. So the cost $2\log(t_D+1)$ is doubly logarithmic in $n$ and triply logarithmic in $N$ and in the sampled randomness $-\log\nu(D)$.
+
+*Proof.*
+* *Private streams.* Let $j(x)$ be the length-lexicographic index of $x$, so $j(x)\le2^{n+1}-2$ for $|x|\le n$, and let $\langle a,b\rangle:=(a+b)(a+b+1)/2+b$ (Cantor pairing; injective, and increasing in $b$). For a finite string $w$ (bits indexed from 0), the *stream prefix* of $x$ in $w$ is $w_{\langle j(x),0\rangle}w_{\langle j(x),1\rangle}\cdots$, continued while the positions are below $|w|$. Distinct inputs read disjoint positions.
+* *Certification.* Order $Y=\{y^{(1)},\dots,y^{(K)}\}$ and put $F_h:=\sum_{h'\le h}\nu(y^{(h')}\mid x)$, $F_0=0$, $F_K=1$. At depth $i\ge1$ compute rationals $q_{i,h}$ with $|q_{i,h}-F_h|\le2^{-i-2}$ ($q_{i,0}=0$, $q_{i,K}=1$). A stream prefix $b_1\dots b_i$ names the dyadic interval $I=[0.b_1\dots b_i,\ 0.b_1\dots b_i+2^{-i})$. It *certifies* $y^{(h)}$ at depth $i$ if $q_{i,h-1}+2^{-i-2}\le\min I$ and $\sup I\le q_{i,h}-2^{-i-2}$; then $I\subseteq[F_{h-1},F_h]$.
+* *Consistency.* Two certificates along the same stream, for labels $h<h'$ at depths $i\le i'$, have nested intervals $I'\subseteq I$. The point $P:=\min I'$ lies in both, so $P<\sup I\le F_h\le F_{h'-1}\le\min I'=P$, a contradiction. So $\varphi_w(x):=$ "the label certified at some depth within the stream prefix of $x$ in $w$" (undefined if none) is a well-defined partial computable function, with an index computable from $(V(\pi_\nu),w)$.
+* *Probability.* The depth-$i$ intervals inside $[F_{h-1}+2^{-i-1},F_h-2^{-i-1}]$ are all certified for $y^{(h)}$, because $q_{i,h-1}+2^{-i-2}\le F_{h-1}+2^{-i-1}$ and $q_{i,h}-2^{-i-2}\ge F_h-2^{-i-1}$. They cover all of that segment except at most $2\cdot2^{-i}$. So a uniform stream prefix of length at least $i$ certifies $y^{(h)}$ with probability at least $\nu(y^{(h)}\mid x)-3\cdot2^{-i}$.
+* *Independence.* For $w$ uniform on $\{0,1\}^L$, the stream prefixes of distinct inputs are independent and uniform. If $L\ge(2^{n+1}+i)^2$, every input of length at most $n$ has a stream prefix of length at least $i$, since $\langle j(x),i-1\rangle<(j(x)+i+1)^2\le(2^{n+1}+i)^2$. Then, at $i=i_D$, where $3\cdot2^{-i_D}\le\beta_D/(2N)$,
+$$\Pr_w[\varphi_w\supseteq D]\ \ge\ \prod_{(x,y)\in D}\big(\nu(y\mid x)-3\cdot2^{-i_D}\big)\ \ge\ \nu(D)\Big(1-\frac1{2N}\Big)^N\ \ge\ \frac{\nu(D)}2 .$$
+* *Programs.* Let $V'$ be the prefix machine that reads $\pi_\nu$ (by simulating $V$), then a self-delimiting code of $t$ of length at most $2\log(t+1)+1$, then $L_t:=2^{2^t}$ bits $w$, and outputs an index of the deterministic conditional semimeasure $\varphi_w$. By simulation closure (§1.2) there is ρ with $V(\rho u)=V'(u)$. The programs $p_w:=\rho\,\pi_\nu\,\mathrm{code}(t)\,w$ are distinct for distinct $w$. With $t=t_D$, $2^{2^{t_D}}\ge(2^{n+1}(i_D+1))^2\ge(2^{n+1}+i_D)^2$.
+* *Sum.* $W_{\rm det}(D)\ge\sum_w2^{-|p_w|}[\varphi_w\supseteq D]=2^{-|\rho|-k-|\mathrm{code}(t_D)|}\Pr_w[\varphi_w\supseteq D]\ge2^{-k-2\log(t_D+1)-|\rho|-2}\nu(D)$. ∎
+
+[computed: c7(A): over 600 random samplers ($|Y|\le4$, rational values with various denominators, Bern(1/3) included) and adversarial approximations $q_{i,h}=F_h\pm2^{-i-2}$, the certified mass is at least $\nu-3\cdot2^{-i}$ in all 1646 (label, depth) cases and no two certificates conflict; the end-to-end ratio $\Pr_w[\varphi_w\supseteq D]/\nu(D)$ at depth $i_D$ is at least 1/2 in all cases (smallest 0.645); the pairing and length facts hold for $n\le12$, $i\le64$.]
+
+*Size of the cost* [computed: c7(A)]. $2\log(t_D+1)$ is 5.6 bits at $n=20$, $N=10^3$; 6.3 bits at $n=100$, $N=10^6$ (for β = 1/3 and for $\beta=2^{-10}$); 8.9 bits at $n=10^6$, $N=10^{15}$. Lemma 3.2's hashing cost at the same sizes is 32 to 143 bits.
+
+Lemmas 3.2 and 3.2′ are what the program mixture (brief H1(b)) and the product class need. Lemma 3.2′ covers computable samplers (measures), not every lower-semicomputable product law: for a semimeasure the boundaries $F_h$ are not computable, and the certification step fails. The foundations referee's Prop R1 handles general machine laws for the mixture $W$, at the cost $\kappa(L_{1/2})$ of naming the needed tape length, which is not computably bounded in general.
 
 ### 3.2 λ = 1: the sampler and its fill-ins get similar posterior
 
-**Theorem 3 (SFI, λ = 1) [proved].** In the setting of §3.1 with the canonical class $\Pi_\times$, for a dyadic sampler as in Lemma 3.2, and simultaneously for all $N$, with $n_N:=\max_{i\le N}|x_i|$:
+**Theorem 3 (SFI, λ = 1) [proved].** In the setting of §3.1 with the canonical class $\Pi_\times$, for every computable sampler ν with a program of length $k$, and simultaneously for all $N$, put $n_N:=\max_{i\le N}|x_i|$, $\beta_N:=\min_{i\le N}\nu(y_i\mid x_i)$, $i_N:=\lceil\log(6N/\beta_N)\rceil$ and $t_N:=\lceil\log(2n_N+2+2\log(i_N+1))\rceil$. Then:
 * (i) $\Pi_1(\pi_\nu\mid D_N)\ge2^{-k-m^*}$;
-* (ii) $\Pi_1(\mathrm{det}\mid D_N)=W_{\rm det}(D_N)/\xi_\times(D_N)\ge2^{-k-2\log(N+1)-2\log(n_N+1)-2\log(r+1)-\kappa-m^*}$;
+* (ii) $\Pi_1(\mathrm{det}\mid D_N)=W_{\rm det}(D_N)/\xi_\times(D_N)\ge2^{-k-2\log(t_N+1)-\kappa-m^*}$;
 * (iii) the posterior odds of all fill-ins against the sampler program lie in
-$$\big[\,2^{-2\log(N+1)-2\log(n_N+1)-2\log(r+1)-\kappa},\ \ 2^{k+m^*}\big],$$
+$$\big[\,2^{-2\log(t_N+1)-\kappa},\ \ 2^{k+m^*}\big],$$
 whatever the sampled randomness $-\log\nu(D_N)$.
+* (iv) For a dyadic sampler that reads $r$ bits, Lemma 3.2 gives the alternative lower ends $2^{-k-2\log(N+1)-2\log(n_N+1)-2\log(r+1)-\kappa-m^*}$ in (ii) and $2^{-2\log(N+1)-2\log(n_N+1)-2\log(r+1)-\kappa}$ in (iii). At realistic sizes they are weaker (§3.1, size of the cost).
 
 *Proof.*
 * (i) $\Pi_1(\pi_\nu\mid D)=2^{-k}\nu(D)/\xi_\times(D)$; apply Lemma 3.1.
-* (ii) Lemma 3.2 and Lemma 3.1.
-* (iii) The lower end is Lemma 3.2 divided by $2^{-k}\nu(D_N)$. For the upper end, $W_{\rm det}\le\xi_\times\le2^{m^*}\nu$. ∎
+* (ii) Lemma 3.2′ applied to $D_N$ (whose $\beta_{D_N}=\beta_N$ and $i_{D_N}=i_N$), and Lemma 3.1.
+* (iii) The lower end is Lemma 3.2′ divided by $2^{-k}\nu(D_N)$. For the upper end, $W_{\rm det}\le\xi_\times\le2^{m^*}\nu$.
+* (iv) The same, with Lemma 3.2. ∎
+
+`notes.md` and `notes-final-run1.md` stated Theorem 3 only for dyadic samplers, with the costs of (iv) (referee minor 6). The restriction is removed: (i)–(iii) hold for every computable sampler, including the Bern(1/3) labels of the examples track's H6, where $\beta_N\ge1/3$ and $i_N=\lceil\log(18N)\rceil$.
 
 **Proposition 3.3 (SI, λ = 1) [proved].**
 * *Setting.* A string $z=z_{1:n}$ is drawn from a computable measure μ with $K(\mu)=k$. Let ξ be Solomonoff's mixture over lower-semicomputable semimeasures with weights $2^{-K}$, and let $m^*:=\sup_n\log(\xi(z_{1:n})/\mu(z_{1:n}))$.
@@ -742,7 +882,7 @@ whatever the sampled randomness $-\log\nu(D_N)$.
 * (ii) The deterministic hypotheses consistent with $z$ (point masses on computable infinite extensions) have total weight at least $2^{-k-K(n)-\kappa}\mu(z)$. A single one suffices: $w=z0^\infty$ has $K(\delta_w)\le K(z)+\kappa\le K(n)+K(z\mid n)+\kappa\le K(n)+k-\log\mu(z)+\kappa$, by (F2) applied to μ restricted to length $n$.
 * (iii) In Solomonoff's deterministic-program representation $M=\sum_p2^{-|p|}$, *every* hypothesis is a fill-in. The sampler appears only as the set of programs "decoder for μ, then a code of $z$", whose total weight is at least $2^{-k-\kappa}\mu(z)$ [known: this is the usual proof of $M\ge2^{-K(\mu)-\kappa}\mu$].
 
-So Hänni's claim "both get similar posterior" holds in SI and in SFI, up to factors $2^{O(k+\log N+\log n+\log r)}$ (SFI) or $2^{O(k+K(n))}$ (SI) and the Ville deficiency. The odds do not depend on how much randomness was sampled. In SI no hashing is needed, because a fill-in may output the whole sequence.
+So Hänni's claim "both get similar posterior" holds in SI and in SFI: up to factors $2^{k}$ and $2^{2\log(t_N+1)+\kappa}$, with $t_N$ of order $\log(n+\log\log(N/\beta_N))$ (SFI), or $2^{O(k+K(n))}$ (SI), and the Ville deficiency. The odds do not depend on how much randomness was sampled. In SI no hashing is needed, because a fill-in may output the whole sequence.
 
 ### 3.3 λ > 1 with private randomness: the sampler wins
 
@@ -780,11 +920,15 @@ Call π **ν-equivalent on the run** if $\sum_N\mathrm{H}^2\big(\nu(\cdot\mid x_
   * *MAPs.* MAPs lie in the finite set $\{\ell\le L\}$ with $L=(\lambda k+m^*)/(\lambda-1)$, by (i). A MAP has $\Lambda_N(\hat\pi)\ge2^{\lambda\ell(\hat\pi)-\lambda k}\ge2^{-\lambda k}$. Each non-equivalent π in that finite set eventually has $\Lambda_N<2^{-\lambda k}$.
   * *Posterior.* $\Pi_\lambda(\text{non-equivalent}\mid D_N)\le2^{\lambda k}\big[\sum_{\ell(\pi)\le L,\ \text{non-eq}}2^{-\lambda\ell(\pi)}\Lambda_N(\pi)\big]+2^{\lambda k+m^*-(\lambda-1)L}$ for every $L$. The first term tends to 0; then let $L\to\infty$. ∎
 
-So, uniformly in $N$, the steeper SFI posterior puts exponentially little (but positive) mass on fill-ins, in the amount of sampled randomness. Its MAP has bounded length. With infinitely many distinct inputs, both eventually sit on samplers equivalent to ν on the run. **This is the split Hänni hoped for, with any fixed λ > 1.** The model is the shortest ν-equivalent sampler, up to the slack $(k+m^*)/(\lambda-1)$; the randomness is everything else. On a finite domain such as $\{0,1\}^n$, (iv) is vacuous and (i)–(iii) are the content.
+So, uniformly in $N$, the steeper SFI posterior puts exponentially little, but positive, mass on fill-ins, in the amount of sampled randomness. Its MAP has bounded length. With infinitely many distinct inputs, both eventually sit on samplers equivalent to ν on the run. **This is the split Hänni hoped for, with any fixed λ > 1, in the following precise and limited sense.**
+* The selected model is a sampler, not a fill-in, but not necessarily ν itself: its length is at most $k+(k+m^*)/(\lambda-1)$, so it may carry up to $(k+m^*)/(\lambda-1)$ bits beyond the sampler, for example memorised noise. The bound is loose as λ → 1.
+* "ν-equivalent on the run" means summable squared Hellinger distances along the inputs seen. It is not equality of predictive laws, and it says nothing about inputs never seen.
+* On a finite domain such as $\{0,1\}^n$, (iv) is vacuous and (i)–(iii) are the content.
 
 ### 3.4 λ > 1 with shared randomness: no split
 
-**Theorem 5 (SI, or SFI with shared randomness, λ > 1) [proved; computed: c4(C); referee r4].** Assume (Dom) and $\xi_1\le2^{c_1}U$, and let $\lambda>1$. Let $\pi_\nu$ be a program for a sampler, of length $k$, in the class. For every observation:
+**Theorem 5 (SI, or SFI with shared randomness, λ > 1) [proved; computed: c4(C); referee r4, q4(A)].** Assume (Dom) and $\xi_1\le2^{c_1}U$, and let $\lambda>1$. Let $\pi_\nu$ be a program for a sampler, of length $k$, in the class. For every observation:
+* *Which class for SI.* An SI hypothesis is a semimeasure on the interleaved string, inputs included. If the inputs are adaptive or non-computable, as §3.1 allows, Solomonoff's $M$ need not model them, and (Dom) in the needed form is supplied by the chronological class $\Pi_{\rm chr}$ with $U=M_H\asymp$ Hutter's ξ (history Cor 4.3; F Prop 7.2), not by $\Pi_{\rm SI}$. With i.i.d. computable inputs $\Pi_{\rm SI}$ with $U=M$ works.
 * (i) If $(\lambda-1)k>\lambda\ell_U+c_0$, then $J_\lambda(\pi_U)<J_\lambda(\pi_\nu)$: the sampler program is never a λ-MAP, and every λ-MAP has length at most $L_\lambda<k$.
 * (ii) For every set $A$ of programs: $\Pi_\lambda(A\mid o)\le2^{-(\lambda-1)\min_{\pi\in A}\ell(\pi)+\lambda\ell_U+c_1}$. In particular the power posterior puts at most $2^{-(\lambda-1)L+\lambda\ell_U+c_1}$ on all programs of length ≥ L, on every observation.
 
@@ -799,13 +943,14 @@ Compare Theorem 4.
   * a sampler of ν (a model plus private noise);
   * or a short universal learner that contains no model of ν at all.
 
-**Example 3.4 (noisy parity, full table) [computed: c4(C)].**
+**Example 3.4 (noisy parity, full table: an illustration of Theorem 5's mechanism) [computed: c4(C)].**
 * *Instance.* $d=12$, $n=4096$; the labels are a random parity with i.i.d. flips at rate 1/8 (509 flips).
-* *Classes.* The product class contains the coin, parity-plus-noise samplers ($\ell=24.2$) and the memoriser (the good model plus the flip set). The shared class adds $U$, the Bayes mixture over all parities and noise rates, with $\ell_U=12$.
+* *Classes.* A small explicit product class contains the coin, parity-plus-noise samplers ($\ell=24.2$) and the memoriser (the good model plus the flip set). The "shared class" adds $U$, the finite Bayes mixture over all parities and a grid of noise rates, to which I assign the length $\ell_U=12$.
+* *Status.* $\ell_U=12$ is an arbitrary length for a finite mixture, not the length of a universal element, and this finite class does not satisfy (Dom) for all of $\Pi_{\rm SI}$. So the example illustrates the mechanism of Theorem 5 (a short mixture member beats every longer sampler once $(\lambda-1)(k-\ell_U)$ exceeds the mixture's extra loss); it is not an instance of the theorem.
 * *Results.*
   * The product-class MAP is the sampler at λ = 1, 1.1, 1.5, 2, 3 and 6.
   * At λ = 1 the memoriser is only 8.2 bits worse: a tie up to $O(\log n)$.
-  * The shared-class MAP is the sampler for λ < 1.315 and $U$ for λ > 1.315.
+  * The shared-class MAP is the sampler for λ < 1.315 and $U$ for λ > 1.315. The threshold is $(-\log U(D)+\log\nu(D))/(k-\ell_U)$, computed by c4 from unrounded values; from the rounded values c4 prints (2234.0, 2218.0, 24.2, 12) one gets 1.311 (referee q1(J)).
 
 ### 3.5 Relation to algorithmic statistics
 
@@ -850,7 +995,7 @@ Lemma 1.6 is the product sufficiency line. Product notions are conditional on th
 * *Status.* Vereshchagin–Shen 2017 state, per a search snippet, that set and distribution models are equivalent with logarithmic precision. The thresholding above is presumably that translation; this was not checked against the paper.
 
 **Proposition 3.8 (the two splits differ by ≈ d bits: noisy random parity) [proved; computed: c2(c), c4(C)].**
-* *Setting.* Setting 2.0 with $m=d$, $n=2^d$, $p<1/4$ and $G_1>H(p)$ (true for $p<0.056$). Let $z=y^*\in\{0,1\}^n$ be the full table and $D$ the full data set, so $\mathrm{dom}D=\{0,1\}^d$ and $K(y_D\mid\mathrm{dom}D)=K(z\mid d)\pm\kappa$. Let $\delta_E:=L_E-K(E\mid a,K(a))$.
+* *Setting.* Setting 2.0 with $m=d$, $n=2^d$, $p<1/4$ and, for (ii), $G_1>H(p)$ (true for $p<0.056$); (iv) removes that condition. Let $z=y^*\in\{0,1\}^n$ be the full table and $D$ the full data set, so $\mathrm{dom}D=\{0,1\}^d$ and $K(y_D\mid\mathrm{dom}D)=K(z\mid d)\pm\kappa$. Let $\delta_E:=L_E-K(E\mid a,K(a))$.
 * **(i) Sets: the parity is noise.** $S_0:=\{f_{a'}\oplus1_{E'}:a'\in\{0,1\}^d,|E'|=pn\}$ has the following properties.
   * $|S_0|=2^{d+L_E}$. The map $(a',E')\mapsto$ table is injective, since two distinct parities differ on $n/2>2pn$ inputs.
   * $K(S_0\mid d)\le2\log r+\kappa$ and $K(S_0)\le2\log d+2\log r+\kappa$.
@@ -868,6 +1013,24 @@ Lemma 1.6 is the product sufficiency line. Product notions are conditional on th
   * Lower bound: a product-c-sufficient π with $T(\pi)\ge2$ would have $\ell+nR\ge nG_1>K(z\mid d)+c$ by Lemma 2.2 (with $B=\infty$). Here $K(z\mid d)\le d+nH(p)+2\log n+\kappa$, using the memoriser program. So $T(\pi)=1$, and (D1) applies.
   * The kink: $\ell<d-4-\Lambda_1$ forces $T\ge2$ by (D1), hence $R\ge G_1$.
 * **(iii)** The gap $\mathrm{soph}^\times-\mathrm{soph}^{\rm set}\ge d-O(\log d)$ is unbounded in $d$.
+* **(iv) Every flip rate below 1/4 (T5 Lemma 2.5c and Thm 2.5(b), re-derived for semimeasures)** [proved; computed: c7(C)]. Drop the condition $G_1>H(p)$, and let $p=s_0/n<1/4$ with $K(p)$ small (e.g. $p=a/2^b$, $K(p)\le2\log(a+1)+2\log(b+1)+\kappa$; then $\kappa_g:=2\log d+K(p)+\kappa$). Use $B=\infty$. For integers $t,g\ge1$ let $\gamma_d$ be the γ of Lemma 2.2c with $\ell(\pi)$ replaced by $d$, and
+  $$F_t:=1-\log\Big(1+(1-2p)2^{-t}+2p\big(2\gamma_d+2^{1-g}\big)\Big).$$
+  * *Kink.* Every product program π with $\ell(\pi)<d-s(t)-\Lambda_1$ has $R(\pi)\ge F_t$. So $\rho^\times_D(\alpha)\ge nF_t$ for $\alpha<d-s(t)-\Lambda_1$.
+  * *Sophistication.* If $n F_t>d+\lceil L_E\rceil+\kappa_b+2\kappa+c$, then $\mathrm{soph}^\times_c(D)\ge d-s(t)-\Lambda_1$. With the upper bound of (ii), which needs only $p<1/4$:
+  $$d-s(t)-\Lambda_1\ \le\ \mathrm{soph}^\times_c(D)\ \le\ d+\kappa_g\qquad\text{for }\ \delta_E+2\log d+\kappa_g+\log(n+1)+\kappa\le c<nF_t-d-\lceil L_E\rceil-\kappa_b-2\kappa .$$
+  * For fixed $p<1/4$ and $\delta_E=O(\log n)$, $\gamma_d\to0$ as $d\to\infty$, and $F_t\to1-\log(1+(1-2p)2^{-t})$, which exceeds $H(p)$ for a fixed $t=t_p$. So the range of $c$ has length of order $n(F_{t_p}-H(p))$, and product sophistication is $d\pm O(\log d)$ for every $p<1/4$. The gap of (iii) holds for every $p<1/4$.
+  
+  *Proof.* If $\ell(\pi)<d-s(t)-\Lambda_1$, then $T(\pi)>t$ by (D1) (if $T(\pi)=t'\le t$, then $\ell(\pi)\ge d-s(t')-\Lambda_1\ge d-s(t)-\Lambda_1$). So $u(\pi)\le\theta_t=\frac12+2^{-t-1}$. Lemma 2.2c with $I(\pi)\le\ell(\pi)+\kappa<d+\kappa$ (γ is increasing in the budget) gives $\mathbb E\nu(y^*)\le p+(1-2p)(\frac12+2^{-t-1})+p(2\gamma_d+2^{1-g})=\frac12\big(1+(1-2p)2^{-t}+2p(2\gamma_d+2^{1-g})\big)$, so $R(\pi)\ge F_t$. For sophistication: a product-$c$-sufficient π has $\ell(\pi)+nR(\pi)\le K(y_D\mid\mathrm{dom}D)+c\le K(z\mid d)+\kappa+c\le\ell(\pi_b)+2\kappa+c\le d+\lceil L_E\rceil+\kappa_b+2\kappa+c$, using the memoriser program; so $nR(\pi)\le d+\lceil L_E\rceil+\kappa_b+2\kappa+c<nF_t$, and the kink forces $\ell(\pi)\ge d-s(t)-\Lambda_1$. The upper bound and its range of $c$ are those of (ii), whose proof uses only minimum-distance decoding, valid for $p<1/4$. ∎
+  
+  *Numbers* [computed: c7(C); κ = 0 illustration, $\delta_E=0$, best $(t,g)$]. For $p\in\{1/8,3/16,7/32,15/64\}$ the best level is $t=2$ (so $s(2)=7.2$), with $F_2-H(p)$ between 0.016 and 0.064 at $d\ge30$.
+  
+  | $d$ | soph$^\times_c$ lies in | range of $c$ (lower end; upper end for $p=1/8$ and $p=15/64$) |
+  |---|---|---|
+  | 30 | $[d-26.8,\ d+15.8\ldots d+23.4]$ | $[56\ldots63,\ 6.9\cdot10^7\ldots1.7\cdot10^7)$ |
+  | 60 | $[d-30.8,\ d+17.8\ldots d+25.4]$ | $[90\ldots97,\ 7.4\cdot10^{16}\ldots1.8\cdot10^{16})$ |
+  | 100 | $[d-33.7,\ d+19.3\ldots d+26.9]$ | $[133\ldots140,\ 8.1\cdot10^{28}\ldots2.0\cdot10^{28})$ |
+  
+  At $d=20$ the lower bound $d-24.5$ is negative: the $O(\log d)$ terms dominate. At κ = 30 the lower bound is $d-63.7$ at $d=100$. With Lemma 2.2's floor instead of Lemma 2.2c's, no admissible $t$ exists for $p\ge3/16$ at these sizes; its large-level floor $1-\log(1+2p)$ exceeds $H(p)$ only for $p<0.1525$.
 
 **Relation to restricted model families** (referee M3).
 * Algorithmic statistics has studied model families other than all finite sets.
@@ -892,21 +1055,24 @@ Lemma 1.6 is the product sufficiency line. Product notions are conditional on th
 
 * **Known:**
   * two-part codes and MDL, including complexity weights above 1 (Barron–Cover's α > 1, per a secondary source);
+  * **λ-weighted two-part MDL and PAC-Bayes in noisy binary classification, over classifier-plus-noise hypotheses, including the findings that λ = 1 can be inconsistent, that every bounded λ overfits, and that λ must grow with the sample size** (Grünwald & Langford 2007; Zhu & Srebro 2025; Zhu, Ohannessian & Srebro 2026; content per abstracts; §1.3);
   * the structure function, sufficient statistics, the MSS and sophistication (with the citations above);
   * restricted model families in algorithmic statistics (Hamming and other distortion balls, strong models) and the equivalence of set and distribution models up to $O(\log)$;
   * tempered, fractional and generalised posteriors and their consistency theory;
-  * Solomonoff's and Bayes' dominance bounds; Kakutani's dichotomy; Ville's inequality; $k$-wise independent hashing.
-* **Not found in a snippet-level search** (so possibly new; a full literature check is needed before publication):
-  * steeper simplicity analysed in function induction with *private* randomness, against classes with a universal element (Thm 1 versus Prop 1.3, Cor 1.4), and its price on shared latent causes (Prop 1.7);
-  * the model/randomness theorems: Thm 3 (λ = 1), Thm 4 (fixed λ > 1, via Ville and a Kakutani-type argument, for adaptive inputs, in any countable product class) and Thm 5 (shared classes);
-  * the product structure function, product sufficiency and product sophistication as defined here, and the ≈ d gap to the set notions for a noisy parity (Prop 3.8), as an instance of the restricted-family phenomenon above;
-  * Theorem 2's systematic-error (junta) instance with Hänni's numbers, including the identification bounds (d), (e), the memoriser regime, the sharp lower end, and the all-hypothesis rate-blindness criterion with its κ-robust form (Prop 2.11, Lemma 2.11a).
+  * Solomonoff's and Bayes' dominance bounds; Kakutani's dichotomy; Ville's inequality; $k$-wise independent hashing; the tape-prefix padding argument for deterministic program mixtures (foundations referee, Prop R1).
+* **Not found in a snippet-level search** (so possibly new; a full literature check, including the full texts of the three classification papers, is needed before publication):
+  * the contrast, under a steeper prior, between classes that contain a universal element and the private-randomness class (Thm 1 versus Prop 1.3, Cor 1.4), with its price on shared latent causes (Prop 1.7);
+  * the all-hypothesis analysis over hypothesis classes defined by Kolmogorov complexity, via list decoding: Theorem 2's systematic-error (junta) instance with Hänni's numbers, its identification bounds (d), (e), the memoriser regime, the sharp lower end, the all-hypothesis rate-blindness criterion with its κ-robust form (Prop 2.11, Lemma 2.11a), and the error-envelope limit (Prop 2.17);
+  * the observation that the trick's target is deliberately not the data distribution, so that consistent schedules ($\lambda_N/N\to0$) learn the teacher's errors (Prop 2.9(b), §1.3);
+  * the model/randomness theorems: Thm 3 (λ = 1, every computable sampler, via Lemma 3.2′), Thm 4 (fixed λ > 1, via Ville and a Kakutani-type argument, for adaptive inputs, in any countable product class) and Thm 5 (shared classes);
+  * the product structure function, product sufficiency and product sophistication as defined here, and the ≈ d gap to the set notions for a noisy parity at every flip rate below 1/4 (Prop 3.8), as an instance of the restricted-family phenomenon above.
 * **Already in T5** (this project's earlier note, re-derived here):
   * per-input pricing;
   * the sequence pathology threshold;
-  * the kink for full-table parity with random errors and its window;
+  * the kink for full-table parity with random errors and its window, and the sharper floor of T5 Lemma 2.5c (Lemma 2.2c here);
   * the flatness of shared mixtures;
-  * the hull lemma, rate thresholds, guard erosion, non-identifiability and block universality.
+  * the hull lemma, rate thresholds, guard erosion, non-identifiability, block universality and error envelopes (in T5 as a three-hypothesis rate comparison).
+* **Not claimed:** the qualitative statement "a fixed λ eventually learns the errors; λ must grow with $N$". It is Hänni's own remark, and it is known in the classification setting (first bullet).
 
 ---
 
@@ -935,13 +1101,14 @@ $$\sum_i-\log h_w(y_i\mid\cdot)=-\log\frac{\sum_\theta w_\theta\prod_i\nu_\theta
 ### 4.4 Fixed λ versus λ ∝ N [proved, from Thms 2 and 4 and Props 2.9, 2.12]
 
 * With **fixed** λ > 1, SFI over a product class, facing a computable sampler ν of length $k$ (Thm 4):
-  * its MAP length is at most $(\lambda k+m^*)/(\lambda-1)$ for every $N$;
+  * its MAP length is at most $(\lambda k+m^*)/(\lambda-1)=k+(k+m^*)/(\lambda-1)$ for every $N$, so the MAP may carry up to $(k+m^*)/(\lambda-1)$ bits beyond the sampler;
   * the posterior mass on fill-ins that memorise the noise is at most $2^{\lambda k+\lambda m^*-(\lambda-1)(-\log\nu(D_N))}$: exponentially small in the sampled randomness, not zero;
   * with infinitely many distinct inputs, almost surely every MAP is eventually ν-equivalent on the run.
   
-  It also eventually learns every finite-complexity *deterministic* regularity, systematic errors included (Prop 2.9(b)).
+  It also eventually learns every finite-complexity *deterministic* regularity, systematic errors included (Prop 2.9(b)). So does every schedule with $\lambda_N/N\to0$, including the consistent schedules of the classification literature (§1.3).
 * With **λ = cN** it additionally discards components whose population rate is below $c$, such as Hänni's error rule (Thm 2). Valid components below the rate are discarded too (Prop 2.12), and the rates depend on the input law (Prop 2.15).
 * SI and shared-randomness SFI do neither. At any λ > 1 their selected hypotheses have length at most $(\lambda\ell_U+c_0)/(\lambda-1)$ on all data and fit almost as well as $U$ (Thm 1). In particular, samplers with $(\lambda-1)k>\lambda\ell_U+c_0$ are never selected (Thm 5).
+* *Deliberate inconsistency.* With $\lambda=cN$ the learner is not consistent for the teacher's label distribution: it never adopts a component whose rate is below $c$, valid or erroneous. This is the point of the trick, and its cost.
 * *The price.* At a given $N$, with $\lambda=cN$, the steeper code length satisfies $-\log\xi_\lambda(D_N)\le\lambda\ell(\pi)-\log\nu_\pi(D_N)=N(c\,\ell(\pi)+\hat L(\pi))$ for every program π. This is a **batch** excess of $c\,\ell(\pi)$ bits per sample over π's own loss, against $\ell(\pi)/N$ per sample at λ = 1. It is not a sequential regret, because λ = cN is not one Bayesian predictor (§1.3). By Prop 2.14 this price cannot be seen by proper-score validation, and in the twin worlds it cannot be justified from imitation data. On shared latent causes the product class pays an additional factor (Prop 1.7).
 
 ### 4.5 Computable versions, NN Bayes and cold posteriors
@@ -979,14 +1146,16 @@ Whether the λ-MAP is computable from the data is not settled here; it is presum
 ### 4.6 Open problems
 
 1. *Kinks beyond parities.* Which simple-model classes give a window? Parities do, via list decoding. Majority-like functions should not, since short approximations exist; this is T5's open problem 1.
-2. *Sharper identification constants.* A version of T5's Lemma 2.5c (randomness of $E$ relative to the hypothesis) for the junta case would push the error-label bound toward $1-u\approx0.02$ at Hänni's sizes, give a nonvacuous bound for small error rules (Example 2.7a), and extend the window method beyond $p<0.056$.
+2. *Sharper identification constants and $p$ up to 1/4.* Lemma 2.2c (T5's Lemma 2.5c for semimeasures) gives the kink for every $p<1/4$ (Prop 3.8(iv)). Extending the *window* method beyond $p<0.056$ needs finer levels than $u>3/4$ and a deviation term that does not grow with the program length (end of §2.6). A sharper treatment of the error-label bound (e) would also help small error rules (Example 2.7a).
 3. *Lower-semicomputable hypotheses in Prop 3.7.*
 4. *Which hypotheses count as shared.* Whether every lower-semicomputable random-function law is dominated by $M_F$ up to a constant is F Problem 3.6. Theorem 1 holds for the weak class and the machine-law class either way.
 5. *A principled, data-free choice of $c$* (T5's open problem 3). Prop 2.14 shows imitation data cannot supply it.
 6. *Time-bounded shared classes.* Does a time-bounded shared class contain a short member that absorbs at λ > 1, as in Theorem 1? If not, steeper simplicity could work in time-bounded SI too.
 7. *Computability of the λ-MAP.*
 8. *Finite samples.* Lemma 2.6 needs $N\approx10^{11}$ at Hänni's sizes; a sharper concentration argument (e.g. localisation around the window) is needed for realistic $N$.
-9. *Literature.* Check the novelty claims of §3.6 against Vereshchagin–Vitányi 2010 and the restricted-model literature, and Barron–Cover's α > 1 condition against the paper.
+9. *Literature.* Check the novelty claims of §3.6 against the full texts of Zhu & Srebro 2025, Zhu, Ohannessian & Srebro 2026 and Grünwald & Langford 2007, against Vereshchagin–Vitányi 2010 and the restricted-model literature, and Barron–Cover's α > 1 condition against the paper.
+10. *Structured error rules.* Prop 2.17 handles error regions that are entirely errors. For general envelopes (error density θ < 1 in a cheap region) only part (i) is proved. Whether near-optimal hypotheses avoid memorising the random remainder $S_2$, and what happens above $c_{\rm env}$, are open. A theory that covers realistic, low-complexity human errors is the main gap between the trick and Hänni's motivation.
+11. *Choice of schedule.* Between consistent schedules ($\lambda_N/N\to0$), which learn the teacher's errors, and $\lambda=cN$, which discards every component below rate $c$, there is no schedule that tells errors from rare valid rules from imitation data alone (Props 2.12, 2.14). What extra information (meaning postulates, coherence constraints, T5 §5) would suffice is open.
 
 ---
 
@@ -996,16 +1165,17 @@ Whether the λ-MAP is computable from the data is not settled here; it is presum
 |---|---|
 | Sequence case: "it'll be better to drop bits and take the likelihood loss"; "a universal hypothesis ... starts to predict the human errors" | **Confirmed** (Thm 1(a), (c), (d); Prop 2.9(c)). |
 | Wyeth: "I can just choose a hypothesis that is a universal distribution" | **Correct** for SI and for shared-randomness SFI, including $M_F$ (Thm 1); **not available** in the product class (Cor 1.4); the restriction has a price (Prop 1.7). See §1.8. |
-| "this pathology is maybe not present in function solomonoff ... if each input has to sample its own random bits" | **Confirmed**: no product hypothesis is universal (Prop 1.3, Cor 1.4); in his example the selected hypothesis is the good model (Thm 2). **Qualified**: it fails when inputs carry labelled history (Prop 4.1), and private randomness cannot express shared latent causes (Prop 1.7). |
-| "maybe I'm just failing to construct the right universal hypothesis" | **Settled** for the instance: Theorem 2 quantifies over all product hypotheses. |
-| His three hypotheses and numbers | Version 2: **confirmed** [computed: c1]; "≈ p log(1/p) ≈ 1/100" is 0.0098 against the exact 0.0112, immaterial. Version 1: **realised in population form** (Example 2.7a): window $\lambda\in(9.77,58.0]$ at $N=10^4$, κ = 0, against his (10, 100); only coarse identification is proved at that size. |
-| "the good model could be a vertex of the convex hull ... picked out by some loss of the form described (even in the limit of many data points, though we will need to increase the hypothesis term coefficient ... as the data set size increases)" | **Confirmed**: Lemma 1.2; λ = cN is necessary for systematic errors (Prop 2.9(b)); the window is $(2^{-m},c_{\rm hi}]$. A vertex is needed, not just a boundary point, and no other hypothesis may sit at the same point. |
+| "this pathology is maybe not present in function solomonoff ... if each input has to sample its own random bits" | **Confirmed** for the absorption pathology: no product hypothesis is universal (Prop 1.3, Cor 1.4). **Qualified**: it returns when inputs carry labelled history (Prop 4.1), and private randomness cannot express shared latent causes (Prop 1.7). |
+| His example: a 100-bit simple model, errors on a $2^{-10}$ fraction of inputs whose set takes 10,000 bits; "the good model could be a vertex ... picked out by some loss of the form described" | **Confirmed for error rules that are incompressible relative to the model**: Theorem 2 (junta instance, parity model, uniform inputs, $p<0.056$, small $\delta_S$), where every near-optimal hypothesis is, up to explicit slack, the good model. **Refuted as a statement about every error rule with that density and description length**: with a cheap high-density part (an error envelope) the good model is provably not near-optimal over 31% (κ = 0) to 25% (κ = 30) of the window's logarithmic width, and near-optimal hypotheses reproduce the cheap errors near its lower end (Prop 2.17; counterexample with 128 + 896 points, about 10,400 bits). **Open** in general: which structured error rules leave a window. Hänni himself called the example "somewhat cherry-picked for the idea to work". |
+| "maybe I'm just failing to construct the right universal hypothesis" | **Settled** for incompressible error rules: Theorem 2 quantifies over all product hypotheses. For structured rules the dangerous hypotheses are not universal ones but envelopes (Prop 2.17). |
+| His three hypotheses and numbers | Version 2 (per-sample, 10,000-bit error set): **arithmetic confirmed** [computed: c1]; "≈ p log(1/p) ≈ 1/100" is 0.0098 against the exact 0.0112, immaterial; **realised rigorously** by Theorem 2 with $L_S=11{,}710$ bits. Version 1 (100-bit error model, rate ratio 10): **arithmetic confirmed**; **realised in population form** by Example 2.7a: window $\lambda\in(9.77,58.0]$ at $N=10^4$, κ = 0, against his (10, 100); only coarse identification is proved at that size, and no finite-sample guarantee at $N=10^4$. |
+| "the good model could be a vertex of the convex hull ... (even in the limit of many data points, though we will need to increase the hypothesis term coefficient ... as the data set size increases)" | **Confirmed**: Lemma 1.2; the window is $(2^{-m},c_{\rm hi}]$ in $c=\lambda/N$, so λ must grow linearly in $N$; every schedule with $\lambda_N/N\to0$ learns the errors (Prop 2.9(b)). A vertex is needed, not just a boundary point, and no other hypothesis may sit at the same point. That λ must grow with the data is also known in noisy classification (§1.3). |
 | "alternatively: just set abs bound on model complexity ... in a sense equivalent to the previous proposal" | **Confirmed** at vertices (Lemma 1.2(iv)). Not equivalent elsewhere: the absolute bound can also select points above the boundary, which no penalty selects. |
-| "look at how many bits of entropy are left given the hypothesis ... some point at which the derivative changes ... (this doesn't show up in the seq case because there it's ... 1 bit paying for 1 bit)" | **Confirmed**: the product structure function has a kink at the simple model, while the set/shared one lies on the sufficiency line (Prop 3.8, T5 Thm 2.5). |
-| "It seems plausible that some other pathology is present" | **Yes**: rate blindness (cheap frequent errors are learned and rare valid rules lost, robustly in κ: Lemma 2.11a), guard erosion, non-identifiability of λ, block universality, input-law dependence, and confident wrong extrapolation off the training support (§2.6, §4). |
-| "solomonoff doesn't have a preference here, both get similar posterior" (sampler vs filled-in bits) | **Confirmed** with explicit factors (Thm 3, Prop 3.3). |
-| a stronger simplicity prior gives "a preference for a simple sampler" in SFI | **Confirmed** for every fixed λ > 1 in every countable product class (Thm 4). In SI the universal mixture wins instead (Thm 5). |
-| "have people not already considered this for solving the model + data split problem?" | Partly. Algorithmic statistics and MDL study the split with set or shared models, where incompressible parameters are treated as noise (Prop 3.8), and restricted model families (Hamming balls) move the split; λ > 1 two-part codes appear in MDL convergence theory. The private-randomness (product) family and its use in steeper SFI were not found (snippet-level check only). |
+| "look at how many bits of entropy are left given the hypothesis ... some point at which the derivative changes ... (this doesn't show up in the seq case because there it's ... 1 bit paying for 1 bit)" | **Confirmed**: the product structure function has a kink at the simple model, for every flip rate below 1/4, while the set/shared one lies on the sufficiency line (Prop 3.8, T5 Thm 2.5). |
+| "It seems plausible that some other pathology is present" | **Yes**: rate blindness (cheap frequent errors are learned and rare valid rules lost, robustly in κ: Lemma 2.11a), error envelopes (Prop 2.17), guard erosion, non-identifiability of λ, block universality, input-law dependence, and confident wrong extrapolation off the training support (§2.6, §4). |
+| "solomonoff doesn't have a preference here, both get similar posterior" (sampler vs filled-in bits) | **Confirmed** with explicit factors, for every computable sampler (Thm 3, Prop 3.3). |
+| a stronger simplicity prior gives "a preference for a simple sampler" in SFI | **Confirmed** for every fixed λ > 1 in every countable product class (Thm 4), in the limited sense stated after it. In SI the universal mixture wins instead (Thm 5). |
+| "have people not already considered this for solving the model + data split problem?" | **Partly, yes.** λ-weighted two-part MDL over classifier-plus-noise hypotheses is studied in noisy classification (Zhu & Srebro 2025; Zhu, Ohannessian & Srebro 2026; Grünwald & Langford 2007), with the finding that bounded λ overfits; there the target is the data distribution, not a norm that differs from it (§1.3). Algorithmic statistics and MDL study the split with set or shared models, where incompressible parameters are treated as noise (Prop 3.8), and restricted model families (Hamming balls) move the split; λ > 1 two-part codes appear in MDL convergence theory. The universal-hypothesis question, the private/shared contrast and the teacher's-mistakes reading were not found (snippet-level check only). |
 
 ---
 
@@ -1024,30 +1194,75 @@ Whether the λ-MAP is computable from the data is not settled here; it is presum
 * T5 Lemma 3.1 → Lemma 1.2 here.
 * Thm 3.2 → Prop 2.12; Thm 4.1 → the twin-world remark after Prop 2.12; Thm 4.3 → Prop 2.14; Prop 4.4 → Prop 2.13, with $\Delta_G$ as corrected; Prop 2.6 → Prop 4.1.
 * T5's (d7) (input-law dependence) → Prop 2.15, in the separable case only.
+* Lemma 2.5c → Lemma 2.2c, for semimeasures. T5 computes the correlation $\hat s_h$ exactly for computable hypotheses; here only lower-semicomputable quantities are available, so the two sides of the deviation are handled separately (a c.e. set for $V$, a finite approximation stage for $A$). Used for Prop 3.8(iv), the kink for every $p<1/4$ (T5 Thm 2.5(b), second term).
+* Prop 4.5 (error envelopes) → Prop 2.17, as an all-hypothesis statement. T5 compares three hypotheses; Prop 2.17(i) excludes every hypothesis that fits no better than the good model, and (ii) proves that near-optimal hypotheses reproduce the cheap errors.
 
-**Not reused (and not re-verified here):** Thm 3.3 (idealised multi-region thresholds), Cor 3.4 (all shapes for product hulls), Lemma 2.5c, §5 (coherence and postulates), Prop 4.5, (d3) and (d6).
+**Not reused (and not re-verified here), with reasons** (referee minor 17):
+* *Thm 3.3 (idealised multi-region rate thresholds with arbitrary hypotheses) and Cor 3.4 (all hull shapes are realisable).* Theorem 2 covers the case the brief asks about (one simple model plus one error rule) with all hypotheses quantified over, and Props 2.12 and 2.15 cover the separable multi-component case. A multi-region version of Theorem 2 would follow the same pattern but was not needed for H9.
+* *§5 (situation-typed step imitation, coherence and meaning postulates).* That is T5's answer to the "simplicity prior defined in terms of existing understanding" idea of the grokking note. It is about inference rules, not about SFI, and belongs with the later axiom-induction paper. Open problem 11 points to it.
+* *(d3) Parasitic errors (non-additivity when an error is cheap given a valid rule) and (d6) language relativity.* Both are pathologies of the rate-threshold picture that hold for steeper SFI as well, by the same arguments, but they add no SFI-specific content. They are mentioned in open problems 10 and 11 rather than re-derived.
 
 **T5's scripts.** T5's c1–c3 were re-run from scratch copies; the outputs are saved in `checks/t5_rerun/` and reproduce T5's numbers (window $(1.119\cdot10^{-6},8.989\cdot10^{-3})$, ratio 8037; λ = 1 switch at $N=894{,}054$; the c2 kink table; 0 violations in c3).
 
-**Corrections relative to T5:** none of substance. T5's window for $d=20$ was stated as "≈ 0.049 up to O(log) slack". The rigorous value from Theorem 2 with κ = 0 is $c_{\rm hi}=0.0114$; the heuristic value ignores the $2\log d$ terms, which are of the same size as $d$ at $d=20$.
+**Corrections relative to T5:** none of substance in the results reused. T5's window for $d=20$ was stated as "≈ 0.049 up to O(log) slack". The rigorous value from Theorem 2 with κ = 0 is $c_{\rm hi}=0.0114$; the heuristic value ignores the $2\log d$ terms, which are of the same size as $d$ at $d=20$. T5's Lemma 2.5c is stated for computable hypotheses and uses $K(h)$; Lemma 2.2c uses the information $I(\pi)\le\ell(\pi)+\kappa$ and holds for semimeasures.
 
-**New here:** the systematic (junta) error instance with Hänni's numbers; the error-label and information bounds; the memoriser regime and the sharp lower end; the all-hypothesis rate-blindness criterion and its κ-robust form; Theorem 1(c3), (d); the power-posterior concentration (Prop 2.8); Example 2.7a; Props 1.7, 2.15, 2.16, 4.2, 4.4, 4.5; all of §3 except the parity flatness.
+**New here:** the systematic (junta) error instance with Hänni's numbers; the error-label and information bounds; the memoriser regime and the sharp lower end; the all-hypothesis rate-blindness criterion and its κ-robust form; the all-hypothesis error-envelope theorem (Prop 2.17); Theorem 1(c3), (d); the power-posterior concentration (Prop 2.8); the schedule statement Prop 2.9(b); Example 2.7a; Props 1.7, 2.15, 2.16, 4.2, 4.4, 4.5; Lemma 3.2′; all of §3 except the parity flatness.
 
 ---
 
-## 7. Response to the referee
+## 7. Response to the referees
 
-The referee found no fatal errors, three major issues and twenty minor ones, and listed six questions the track had missed. All were accepted; none is disputed. The table says where each is handled.
+### 7.1 Second report (`referee.md`, 2026-10-12)
+
+The second referee reviewed `notes.md`, not `notes-final-run1.md`, and found no fatal errors, four major issues and nineteen minor ones, and listed eight questions. Several items repeat the first report and were already fixed in `notes-final-run1.md`; the table says so. All items were accepted. One factual point in M1 could not be confirmed and is reported as such.
+
+| Item | What was done |
+|---|---|
+| **M1** prior work on λ-weighted two-part MDL in classification | Verified bibliographically (WebSearch): Zhu & Srebro 2025 (COLT, PMLR 291:6124–6155), Zhu, Ohannessian & Srebro 2026 (arXiv 2603.22644), Grünwald & Langford 2007 (*Mach. Learn.* 66:119–149). New paragraph in §1.3 with their findings per abstracts, what they do not cover, and the difference of target (data distribution versus a norm). "Fixed λ fails; λ must grow" is credited and removed from the findings (§3.6, Prop 2.9 discussion). λ = cN versus consistent schedules is discussed (§1.3, Prop 2.9(b) generalised to schedules, §4.4): every schedule with $\lambda_N/N\to0$ learns the errors [c7(G)]; λ = cN is deliberately inconsistent for the teacher's channel. *Not confirmed:* the referee's "$\lambda_m\asymp\sqrt m$ gives SRM-type consistency"; a secondary summary instead gives $1\ll\lambda_m\ll m/\log m$. Both are reported as unverified. §5's last row and §3.6 are rewritten. |
+| **M2** Wyeth not answered; cost understated | Already fixed in `notes-final-run1.md`: §1.8 answers Wyeth in four parts plus the "ad hoc?" question; "nothing is lost" is replaced by the exact statement (§1.6); Prop 1.7 prices the restriction at λ > 1. Re-checked in this revision (Prop 1.7's proof by hand; c6(D)). |
+| **M3** the trick needs an incompressible error rule; hidden $\delta_S=0$ | (a) Every numerical claim now states $\delta_S$ (convention at the top; Thm 2 table; Cor 2.5 table with $\delta_E\in\{0,20\}$ [c7(H)]; Cor 2.7; Example 2.7a; Prop 2.9). $I(\pi)$ is defined in Setting 2.0. (b) New **Prop 2.17** (error envelopes, T5 Prop 4.5 re-derived as an all-hypothesis statement) with proof and two instances at Hänni's density, one with a ≈10,400-bit error set [c7(B)]; it is the general form of q4(C). (c) §0 and §5 reworded as the referee proposed: confirmed for incompressible rules, refuted for rules with a cheap high-density part, open in general. (d) The five hypotheses Theorem 2 relies on are listed after its numbers (§2.4). |
+| **M4** κ = 0 verdicts called proved | Already fixed in `notes-final-run1.md`: all κ = 0 numbers are labelled illustrations; Lemma 2.11a gives the κ-robust form with $d_0(\kappa)$ linear in κ [c6(A)]; Prop 2.11(i)'s examples are stated with their margins and not as proved. |
+| m1 Prop 2.8 exponent | Already −758 in `notes-final-run1.md` (c5(e) corrected). |
+| m2 Lemma 3.2 seed double-counting; (F1) sentence | Already fixed in `notes-final-run1.md` (canonical classes closed under prefix-free simulation, one program per seed; (F1) proof rewritten). |
+| m3 Lemma 2.3 normaliser | Fixed: per-factor normalisation, with a correction note (§2.3). |
+| m4 Thm 2(iii) near $2^{-m}$ | Table of the error-label bound at $c=(1-\varepsilon)2^{-m}$ for κ ∈ {0, 30} [c7(D), matching q4(B)]; §0 states "nothing in the top 0.6%; ≥ 1/2 for $c\le0.937\cdot2^{-m}$". |
+| m5 Theorem 4 overstatements | §0 item 3, the reading after Thm 4 and §4.4 now say: eventual ν-equivalence on the run (summable Hellinger), MAP up to $(k+m^*)/(\lambda-1)$ bits beyond the sampler, fill-ins' posterior positive. Infinite $X$ is required for (iv). |
+| m6 Theorem 3 only for dyadic samplers | Removed: new **Lemma 3.2′** (stored stream prefixes, adapting the foundations referee's Prop R1) proves the fill-in bound for every computable sampler at cost $2\log(t+1)$, doubly logarithmic in $n$ [c7(A)]; Theorem 3 restated; the dyadic hashing bound is kept as Thm 3(iv). Covers H6's Bern(1/3) labels. |
+| m7 Prop 2.8 η′ | Restated with $\hat L'=(J_g+\varepsilon_1+\eta)/c$ and an explicit η′ [c7(F)]. |
+| m8 Prop 2.13 under-specified | The teacher model is stated; rates derived from it; "never applied σ outside $G$" replaces "never erred"; exact crossing $3.2032\cdot10^{-4}$ [c7(E), matching q1(I)]. |
+| m9 Cor 2.7 "—" cells | Already filled in `notes-final-run1.md`. |
+| m10 Example 3.4 | Reworded as an illustration of Theorem 5's mechanism, with $\ell_U$ an assigned length; 1.315 versus 1.311 explained. |
+| m11 Theorem 5 and SI with adaptive inputs | Scope note added to Theorem 5: use $\Pi_{\rm chr}$ ($U=M_H\asymp\xi$). |
+| m12 Prop 3.7 conditional | Already fixed in `notes-final-run1.md`. |
+| m13 Prop 3.5 reading | Already fixed in `notes-final-run1.md` (trade-off; the old reading marked refuted). |
+| m14 Lemma 1.2(iii) wording | Already fixed in `notes-final-run1.md`. |
+| m15 λ = cN not one predictor | Already stated in `notes-final-run1.md` (§1.3, §4.4). |
+| m16 T5 Lemma 2.5c dropped | Reused: **Lemma 2.2c** (semimeasure version) and **Prop 3.8(iv)** (kink and product sophistication ≈ d for every $p<1/4$) [c7(C)]. The window is not extended, with the reasons given at the end of §2.6. |
+| m17 what was dropped from T5 | §6 lists Thm 3.3, Cor 3.4, §5, (d3), (d6) with reasons; Lemma 2.5c and Prop 4.5 are now reused. |
+| m18 Hänni's Version 1 | Realised in population form by Example 2.7a (an instance of Theorem 2), done in `notes-final-run1.md`; §5 states what is and is not proved for it. |
+| m19 $\delta_S$ convention and "information" | See M3(a). |
+| Q1 Wyeth | §1.8. |
+| Q2 prior work; λ's growth rate | §1.3, Prop 2.9(b), §4.4. |
+| Q3 which error rules | Prop 2.17; hypotheses of Theorem 2 (§2.4); open problem 10. |
+| Q4 input-distribution dependence | Prop 2.15 (separable case, proved); Theorem 2 for non-uniform inputs is not done and is listed among its hypotheses. |
+| Q5 steeper SFI and H8 | Prop 2.16 (done in `notes-final-run1.md`); the context track's Remark 3.13 is cited in §8. |
+| Q6 computable, circuit, NN; cold posteriors | §4.5: Prop 4.4, Prop 4.5, Remarks 4.6, 4.7 (done in `notes-final-run1.md`). |
+| Q7 general samplers in the λ = 1 split | Lemma 3.2′, Theorem 3. |
+| Q8 Version 1 | Example 2.7a. |
+
+### 7.2 First report (`referee-run1.md`, 2026-10-11)
+
+The first referee found no fatal errors, three major issues and twenty minor ones, and listed six questions the track had missed. All were accepted in `notes-final-run1.md`; none is disputed. The table says where each is handled; later changes are noted.
 
 | Item | What was done |
 |---|---|
 | **M1** κ = 0 numbers called "proved" | All κ = 0 numbers are now labelled illustrations. New Lemma 2.11a gives the robust form: the all-hypothesis criterion holds for all $d\ge d_0(\kappa)$, $d_0$ linear in κ, with a table for κ ≤ 100 [c6(A)]. Prop 2.11(i)'s examples are stated with their margins (9.6 and 1.4 bits). Every Theorem 2 number is given at κ = 0 and κ = 30. |
 | **M2** Wyeth not answered; cost understated | New §1.8 "Answer to Wyeth's objection" with points (i)–(iv) and the ad-hoc question. "Nothing is lost" was removed (§1.6). New Prop 1.7 quantifies the price at λ > 1: a factor $\min(\lambda,2)$ on shared latent coins [proved; c6(D)]. |
 | **M3** novelty vs restricted model classes | §3.5 now has "Relation to restricted model families" (VV 2010 Hamming/distortion balls; strong models; set–distribution equivalence). §3.6 is toned down. Prop 3.7 is marked as presumably the standard translation. λ > 1 two-part codes are noted as known (§1.3). |
-| m1 Lemma 3.2 per-seed counting | Canonical classes are now $\Pi=\mathrm{dom}V$, closed under prefix-free simulation (§1.2); Lemma 3.2 builds one program per seed. Checked with the $1x$ embedding [c6(E)]. |
+| m1 Lemma 3.2 per-seed counting | Canonical classes are now $\Pi=\mathrm{dom}V$, closed under prefix-free simulation (§1.2); Lemma 3.2 builds one program per seed. Checked with the $1x$ embedding [c6(E)]. (Second revision: Lemma 3.2′ now gives a stronger, general bound.) |
 | m2 c3 ceiling bug | Fixed with exact integer binomials; only the rate-blindness lines changed (verification log). |
 | m3 Prop 2.8 example | c5(e) now uses the formula; exponent −758. |
-| m4 $\delta_S$ and "information" | $B_S$, $\delta_S$, $I(\pi)$ defined in Setting 2.0; Thm 2(ii)(d) restated; table with $\delta_S\in\{0,20\}$ [c6(B)]. |
+| m4 $\delta_S$ and "information" | $B_S$, $\delta_S$, $I(\pi)$ defined in Setting 2.0; Thm 2(ii)(d) restated; table with $\delta_S\in\{0,20\}$ [c6(B)]. (Second revision: stated in every numerical claim; Prop 2.17.) |
 | m5 overstatements | §0 and §4.4 rewritten (Thm 4 wording; per-input mixtures only; the condition in Thm 2(iii)). |
 | m6 finite domains | Thm 4(iv) requires an infinite input sequence; Prop 2.9 states explicit finite-$N$ bounds. |
 | m7 SI not a weak function semimeasure | Classes are observation-indexed (Def 1.3); Thm 1(c) is for data-set classes; the chronological class covers adaptive inputs (Thm 1 remarks, Thm 5). |
@@ -1057,7 +1272,7 @@ The referee found no fatal errors, three major issues and twenty minor ones, and
 | m11 Lemma 1.2(iii) wording | Reworded via the vertices of $C$, end vertices included; checked [c6(F)]. While doing this, (iv)'s "iff" was found to fail on the horizontal ray; corrected (log item 13). |
 | m12 "flat totals" tag | Now a one-line proof in Prop 3.8(i). |
 | m13 Version 1 | Example 2.7a at $d=100$, $m=10$, $p=2^{-6}$, matching both sizes; the referee's $d=13$ instance is also reported [c6(C), c6(H)]. |
-| m14 hidden terms in Thm 3 | Stated in Thm 3 and §0, with the dyadic restriction. |
+| m14 hidden terms in Thm 3 | Stated in Thm 3 and §0, with the dyadic restriction. (Second revision: the restriction is removed by Lemma 3.2′, and the cost is now $2\log(t_N+1)$.) |
 | m15 λ = cN not Bayesian | Stated in §1.3; §4.4 speaks of batch excess, not regret. |
 | m16 (F1) proof | Fixed (§1.2). |
 | m17 Cor 1.4 input space | $X\supseteq\{0,1\}^d$ for all $d$ stated. |
@@ -1075,48 +1290,65 @@ The referee found no fatal errors, three major issues and twenty minor ones, and
 
 ## 8. Cross-track consistency
 
-No track had a `notes-final.md` when this was written; the comparison is with the current `notes.md` of foundations (F), history, context and examples.
+**What was compared** (2026-10-12; the other tracks were being revised in parallel, so their numbering may still change):
+* foundations: `../foundations/notes.md` ("F"; no `notes-final.md` yet) and its referee report `../foundations/referee.md`;
+* context: `../context/notes-final.md` (rewritten during this revision; numbering re-checked at 09:23);
+* history: `../history/notes-final.md` for §1–§3 (it stops after §3.7 at a `<!-- PART2 -->` marker) and `../history/notes.md` for §4–§5, with its second referee report `../history/referee.md`;
+* examples: `../examples/notes.md` (no `notes-final.md` yet).
 
-**Terminology and objects.**
+### 8.1 Definitions and objects
 
 | This track | Foundations (F) | History | Context | Examples |
 |---|---|---|---|---|
-| data set: finite partial function $D$ | same (§1) | function-consistent sequence, $D_n$ (§1.1) | same (§1) | same (§1.1) |
-| shared hypothesis = lsc weak function semimeasure | Def 2.1 | — | — | — |
-| machine law (shared tape) | Def 2.5 | function machine $M_T$ (§1.2) | $\mu_T$ (§1) | $\nu_T$ (§1.1) |
-| product hypothesis = lsc product law, $\nu(D)=\prod\nu(y\mid x)$ | Prop 3.3(a) | computable sampler without history | "product (private-randomness) hypothesis" | "product law" |
-| $\xi_\times$ (mixture of $\Pi_\times$) | $=M_{\rm prod}$ exactly (Def 4.1), "operator induction" | — | — | — |
-| mixture of $\Pi_F$ | $=M_F$ on $D\ne\emptyset$ (Thm 3.2); F's recommended SFI | $M_F$ (§1.2) | $M_F$ | $M_F$, $L_{\rm SFI}=-\log M_F$ |
-| mixture of $\Pi_{\rm chr}$ | Hutter's ξ (Prop 7.2) | $\xi\asymp M_H$ = SFI$^{\rm hist}$ (Cor 4.3) | — | (F7) |
-| loss: semimeasure convention, $-\log P(D)$, order-independent for a fixed hypothesis | Prop 5.2 | §1.2 | (F1) | §1.1 |
+| data set: finite partial function $D$ | same (§1) | same; "consistent" sequence, $D_n$ (final §1.1) | same (final §1.1) | same (§1.1) |
+| shared hypothesis = lsc weak function semimeasure | Def 2.1 | — | $M^w$ (final §1.1, §5.1) | — |
+| machine law (shared tape), $\nu_T$ | Def 2.5 | $\nu_T$ (final §1.2) | $\nu_T$ (final §1.1) | $\nu_T$ (§1.1) |
+| product hypothesis = lsc product law, $\nu(D)=\prod\nu(y\mid x)$, per-input (frozen) noise | Prop 3.3(a) | $\nu_P$, "x-only samplers" (final §1.2, F3′) | "product laws", $M_{\rm prod}$ (final §1.1) | "product law" |
+| $\xi_\times$ (mixture of $\Pi_\times$) | $=M_{\rm prod}$ exactly (Def 4.1) | — | $M_{\rm prod}$ | — |
+| mixture of $\Pi_F$ | $=M_F$ on $D\ne\emptyset$ (Thm 3.2); F's SFI (Def 5.1) | $M_F$ | $M_F$ | $M_F$ |
+| mixture of $\Pi_{\rm chr}$ | Hutter's ξ (Prop 7.2) | $M_H$, called ξ (final §1.3; notes §4) | SFI$^{\rm hist}$ (cited) | (F7) |
+| loss of a fixed shared hypothesis: $-\log P(D)$, order-independent | Prop 5.2 | $L_{\rm SFI}$ (final §1.2) | Fact A | $L_{\rm SFI}$ (§1.1) |
+| deterministic program mixture | $W$ (Def 4.1) | — | $W$ | — |
 
-**Notation clashes the paper should resolve.**
-* λ: here the steepness exponent (brief H9). The foundations, history, context and examples tracks use λ for the uniform measure on tapes. Suggest a different symbol for one of them (for example $\mathrm{Unif}$ for the measure).
-* $m$: here the junta size. F uses $m(i)$ for the universal discrete semimeasure, written $\mathbf m$ here; the history track uses $m$ for $GF(2^m)$.
-* $c$: here $c=\lambda/N$. The other tracks use $c$ for machine constants, written κ here.
-* $Y$: F, history and context take $Y=\{0,1\}^*$; this track needs $Y$ finite (Lemmas 2.1–2.3 binary, Prop 3.7, Lemma 3.2).
+* All tracks use the same objects with the same definitions. The steeper track adds only the program-indexed classes of §1.2 and the power-prior objective of §1.3.
+* *Per-input versus per-query private randomness.* The foundations referee (M3 and §6 of its current report) asks this track to say which it uses. It uses per-input private randomness on data sets (§1.1); on distinct inputs the per-query mixture coincides with $M_{\rm prod}$ (F referee, M3, the first pass's R4, re-derived). The teacher's-mistakes setting has a fixed teacher, so per-input is the right reading.
+* *Hutter's ξ.* The history track's final notes define ξ as $M_H$, the law of the universal history-oracle function machine, and mark its agreement with Hutter's ξ as known but unverified (history final §1.3; referee m13). This track uses only the universality of $M_H$ (history Lemma 4.1, Thm 4.2, Cor 4.3(a)), never the identification with Hutter's ξ. "$M_H\asymp\xi$" in this file should be read with that status.
 
-**Results used from other tracks, and how they are used.**
+### 8.2 Notation clashes the paper should resolve
+
+* **λ**: here the steepness exponent (brief H9). Foundations, history, context and examples use λ for the uniform measure on tapes. The context track agrees that one of them needs another symbol (for example $\mathrm{Unif}$ for the tape measure).
+* **κ**: here an unspecified machine constant. The history track's final notes and the foundations referee use $\kappa(N):=\min_{L\ge N}K(L)$; this file writes that quantity only through Lemma 3.2′, where it does not appear by name. The paper should reserve κ for one of the two.
+* **$c$**: here $c=\lambda/N$. The other tracks use $c$ for machine constants.
+* **$m$**: here the junta size. F writes $m(i)$ for the universal discrete semimeasure ($\mathbf m$ here); context uses $m$ for a training-set size and an expected number of mistakes.
+* **$Y$**: F, history and context take $Y=\{0,1\}^*$; this track needs $Y$ finite (Lemmas 2.1–2.3 are binary; Prop 3.7; Lemmas 3.2, 3.2′).
+* **$K_F$**: F and context use $K_F(D)$ for the shortest consistent program; this track does not use it.
+
+### 8.3 Results used from other tracks, and how
+
 * F Thm 3.2 and Thm 3.4: (Dom) for $\Pi_F$ and $\Pi_w$ (§1.4).
 * F Prop 3.3(a): product laws are machine laws; x-only samplers are product laws (§1.1, §1.6).
 * F Thm 4.2 and Prop 4.5: the price of private randomness at λ = 1 (§1.6, §1.8).
-* F Prop 4.4: hashing for fair coins; Lemma 3.2 proves the dyadic case that F's remark sketches.
-* F Thm 6.1, Thm 6.5, Cor 6.6: $M_F$'s pathwise dominance, merging and mistake bound (Prop 2.9(a), Thm 5 remark).
-* F Prop 6.8: fresh noise on repeated inputs gives infinite loss; all noise here is frozen.
+* F Prop 4.4 (hashing for fair coins): Lemma 3.2 proves the dyadic case that F's remark sketches. The foundations referee's Prop R1 (stored tape prefixes) is adapted in Lemma 3.2′ to every computable sampler in the product class. It supersedes hashing here, as the referee says it does for F.
+* F Thm 6.1, Thm 6.5, Cor 6.6: $M_F$'s pathwise dominance, merging and mistake bound (Prop 2.9(a), remark after Thm 5).
+* F Prop 6.8: fresh noise on repeated inputs gives infinite loss for random-function SFI; all noise here is frozen.
 * F Prop 7.3(c): its diagonal argument gives Prop 4.5(b).
-* History Lemma 4.1, Thm 4.2, Cor 4.3: $M_H$ (SFI$^{\rm hist}$) is a universal lower-semicomputable chronological semimeasure, $M_H\asymp\xi$; used for $\Pi_{\rm chr}$ (§1.2), Thm 1 (example 4), Prop 4.2 and Thm 5.
-* Context Prop 2.1: Hänni's OOD proposition; Prop 2.16 is its λ > 1 counterpart for the product class.
-* Context Thm 3.1, Prop 3.3: time-bounded x-only SFI, a mixture of clocked product hypotheses; Prop 4.4 says Theorems 2 and 4 transfer to such classes when weighted by code length.
-* Context §4.1: NN posterior as function-space Bayes; Remark 4.7.
-* Examples Prop 4.6: frozen label noise around a computable $g$ costs SFI $\log\binom n{e_n}+\log(n+1)+K(g)+c$ at λ = 1. This is the λ = 1 side of §3: sampler and memoriser are close (Thm 3); λ > 1 separates them (Thm 4). Its machine $T_g$ shares the flip rate ε′ across inputs, so it is a machine law (a mixture of product laws), not a product law. In $\Pi_\times$ the same bound holds up to $O(\log n)$ [proved]: the product law "$g$ flipped independently with probability $e_n/n$" has a program of length $K(g)+O(\log n)$, and its loss is $nH(e_n/n)\le\log\binom n{e_n}+\log(n+1)$.
+* History Lemma 4.1, Thm 4.2, Cor 4.3 (`notes.md` numbering, also announced in the final notes' §1.3): $M_H$ is a lower-semicomputable chronological semimeasure that dominates every one; used for $\Pi_{\rm chr}$ (§1.2), Thm 1 (example 4), Prop 4.2 and Thm 5. The history referee's caveat on Thm 4.2 (exactness fails at the root when $\rho(\varepsilon\Vert\varepsilon)<1$) does not affect dominance.
+* Context Prop 2.1: Hänni's OOD proposition; Prop 2.16 is its λ > 1 counterpart in the product class.
+* Context Thm 3.1, Prop 3.3: time-bounded x-only SFI, a mixture of clocked product hypotheses; Prop 4.4 says Theorems 2 and 4 transfer to such classes when weighted by code length (context Remark 3.1a recommends the same weights).
+* Context §4.1 (Prop 4.1): the NN posterior as function-space Bayes; Remark 4.7.
+* Context Thm 3.11 and Remark 3.13: on the conjunction ladder, deterministic least-size (Occam) selection fails exponentially out of distribution, while the λ → ∞ limit of the power posterior (uniform over least-size consistent formulas) makes $O(d^2)$ Gibbs and $O(d)$ majority mistakes. This is a concrete instance of Prop 2.16(ii)'s warning that the steeper posterior concentrates on the shortest train-fitting hypotheses; it does not settle the universal-machine case, and neither does Prop 2.16.
+* Examples Prop 4.6: frozen label noise around a computable $g$ costs SFI $\log\binom n{e_n}+\log(n+1)+K(g)+c$ at λ = 1. This is the λ = 1 side of §3: sampler and memoriser are close (Thm 3); λ > 1 separates them (Thm 4). The examples track's machine $T_g$ shares the flip rate across inputs, so it is a machine law (a mixture of product laws), not a product law. In $\Pi_\times$ the same bound holds up to $O(\log n)$ [proved]: the product law "$g$ flipped independently with probability $e_n/n$" has a program of length $K(g)+O(\log n)$, and its loss is $nH(e_n/n)\le\log\binom n{e_n}+\log(n+1)$.
+* Examples §3 (H6): the threshold hypothesis "Bern(1/3) below $t$, 1 above" is a computable sampler with non-dyadic probabilities. Theorem 3 now covers it (Lemma 3.2′ with $\beta\ge1/3$), and Theorem 4 says that a steeper SFI over a product class would select such a sampler, not a fill-in of the revealed coin flips.
 
-**Consistency checks.**
-* F's request ("the steeper-simplicity track should say explicitly that it works with $M_{\rm prod}$-type hypotheses") is met: §1.2 defines $\Pi_\times$ so that $\xi_\times=M_{\rm prod}$ exactly, and §1.6–§1.8 state the consequences, including the price relative to F's recommended $M_F$.
+### 8.4 Consistency checks
+
+* F's request that this track say explicitly that it works with $M_{\rm prod}$-type hypotheses is met: §1.2 defines $\Pi_\times$ so that $\xi_\times=M_{\rm prod}$ exactly, and §1.6–§1.8 state the consequences, including the price relative to F's recommended $M_F$ (Prop 1.7).
 * F's verdict on H1(a) (weak and machine universality differ by up to $K(\mathrm{dom}D)$) does not affect this track: Theorem 1 holds in both classes, with $U=M^w$ or $U=M_F$.
 * The history track's H4 result (SFI$^{\rm hist}$ is universal because the tape is shared) and Prop 4.2 here are two sides of one fact: shared randomness gives universality and removes the steeper-simplicity protection; private randomness keeps per-input pricing and forgoes universality.
+* The history referee's M5 (prefix-free deterministic programs pay far less than $K(n)$ extra on random labels, for the mixture) agrees with Lemma 3.2′ here, which pays $2\log(t+1)$, doubly logarithmic in $n$.
 * The examples track's H5/H6 results and the context track's OOD results use $M_F$ at λ = 1; nothing here contradicts them. Prop 2.16 adds that steeper simplicity removes the context track's constant lower bound only by sharpening the preference for the shortest train-fitting hypotheses.
+* The context track's cross-track section cites this track's Props 2.16, 4.1, 4.4 and Remark 4.7. Their numbers and content are unchanged in this revision. New items have new numbers (Lemmas 2.2c, 3.2′; Prop 2.17; Prop 3.8(iv); Theorem 3(iv)).
 * No disagreement with another track was found.
-* The context and history tracks have referee reports but no final notes yet. Those reports found no fatal error in the results used here: context Prop 2.1 and Thm 3.1(a) (with a wording fix) and history Lemma 4.1, Thm 4.2 and Cor 4.3 were confirmed. The history referee's caveat on Thm 4.2 (exactness fails at the root when $\rho(\varepsilon\Vert\varepsilon)<1$) does not affect dominance, which is all this track uses.
 
 ---
 
@@ -1133,8 +1365,9 @@ No track had a `notes-final.md` when this was written; the comparison is with th
 * Gneiting, T., Raftery, A. E. (2007). Strictly proper scoring rules, prediction, and estimation. *JASA* 102(477):359–378. (v)
 * Goldreich, O., Levin, L. A. (1989). A hard-core predicate for all one-way functions. STOC. (standard)
 * Grünwald, P. (2012). The safe Bayesian: learning the learning rate via the mixability gap. ALT, LNCS 7568:169–183. (v, cu)
+* Grünwald, P., Langford, J. (2007). Suboptimal behavior of Bayes and MDL in classification under misspecification. *Machine Learning* 66:119–149; COLT 2004 version, pp. 331–347; arXiv math/0406221. (v; content per abstract)
 * Grünwald, P., van Ommen, T. (2017). Inconsistency of Bayesian inference for misspecified linear models, and a proposal for repairing it. *Bayesian Analysis* 12(4):1069–1103. (v, cu)
-* Hoeffding, W. (1963). Probability inequalities for sums of bounded random variables. *JASA* 58:13–30, Thm 4. (v via secondary sources)
+* Hoeffding, W. (1963). Probability inequalities for sums of bounded random variables. *JASA* 58(301):13–30; the bound for sampling without replacement. (v; that it is numbered Thm 4 is unverified)
 * Hutter, M. (2005). *Universal Artificial Intelligence*. Springer, ch. 5 (chronological semimeasures). (cited via the history track; cu)
 * Kakutani, S. (1948). On equivalence of infinite product measures. *Ann. Math.* 49:214–224. (v)
 * Koppel, M. (1987). Complexity, depth, and sophistication. *Complex Systems* 1(6):1087–1091. (v, cu)
@@ -1151,6 +1384,8 @@ No track had a `notes-final.md` when this was written; the comparison is with th
 * Ville, J. (1939). *Étude critique de la notion de collectif*. (standard)
 * Vitányi, P. (2006). Meaningful information. *IEEE Trans. IT* 52(10):4617–4626. (v, cu)
 * Wenzel, F., et al. (2020). How good is the Bayes posterior in deep neural networks really? ICML 2020, PMLR 119. (v; definition of the cold posterior and the reported improvement per snippet)
+* Zhu, Ohannessian & Srebro (2026); first names and initials not checked except Xiaohan Zhu and Nathan Srebro. Overfitting and generalizing with (PAC) Bayesian prediction in noisy binary classification. arXiv 2603.22644. (v; content per abstract)
+* Zhu, Xiaohan; Srebro, Nathan (2025). Quantifying overfitting along the regularization path for two-part-code MDL in supervised classification. COLT 2025, PMLR 291:6124–6155; arXiv 2503.02110. (v; content per abstract and snippets; the consistent growth rate of λ per a secondary summary, unverified)
 * Zhang, T. (2006). From ε-entropy to KL-entropy: analysis of minimum information complexity density estimation. *Ann. Statist.* 34(5):2180–2210. (v, cu)
 
 ---
@@ -1158,10 +1393,14 @@ No track had a `notes-final.md` when this was written; the comparison is with th
 ## Verification log
 
 **Method.**
-* Every proof was written out in full and re-checked step by step. The new proofs of this revision (Prop 1.7, Lemma 2.11a, Props 2.15, 2.16, 4.4, 4.5, the per-program Lemma 3.2, the reworded Lemma 1.2(iii), the conditional Prop 3.7, the flatness in Prop 3.8(i)) were checked by hand and, where a finite analogue exists, by script.
+* Every proof was written out in full and re-checked step by step.
+  * First revision (`notes-final-run1.md`): Prop 1.7, Lemma 2.11a, Props 2.15, 2.16, 4.4, 4.5, the per-program Lemma 3.2, the reworded Lemma 1.2(iii), the conditional Prop 3.7, the flatness in Prop 3.8(i).
+  * Second revision (this file): Lemma 2.2c, Prop 2.17, Lemma 3.2′, the restated Theorem 3, Prop 3.8(iv), Prop 2.9(b) for schedules, the η′ of Prop 2.8, the teacher model of Prop 2.13, the normaliser of Lemma 2.3.
+  * The first-revision proofs had not been seen by any referee (the second referee read `notes.md`). They were re-checked by hand in this revision: Prop 1.7 (AM–GM, the semimeasure $R$, the $\min(\lambda,2)$ exponent, and part (iv), whose constant is $-2j-(\lambda+2)\kappa$), Lemma 2.11a (the algebra of $(\star)\Leftrightarrow F(d)\ge0$ and the up-set property), Prop 2.16 (the wrapper sum), Prop 4.5(b) (both diagonal arguments). No error was found.
+* Where a finite analogue exists, every new statement was checked by script (c6, c7).
 * Every T5 result that is reused was re-derived, not copied. T5's scripts c1–c3 were re-run from scratch copies; outputs are saved in `checks/t5_rerun/`.
-* Every number quoted comes from this track's scripts, run with fixed seeds or deterministically. Outputs are saved as `checks/*.out`.
-* An independent referee read `notes.md` and wrote `referee_code/r1`–`r6`. Where a claim's only independent check is the referee's, this is stated.
+* Every number quoted comes from this track's scripts, run with fixed seeds or deterministically. Outputs are saved as `checks/*.out`. Numbers are rounded in the safe direction.
+* Two independent referees read `notes.md` and wrote `referee_code/r1`–`r6` (first run) and `q1`–`q4` (second run). Where a claim's only independent check is a referee's, this is stated. Several numbers of this revision reproduce the second referee's independently: the Theorem 2(iii) band (q4(B)), the Cor 2.5 table with $\delta_E=20$ (q1(D)), the Prop 2.13 rates and crossing (q1(I)), the Prop 2.8 exponent (q1(F)).
 * Environment: Python 3.11.15, numpy 2.4.6, scipy 1.17.1.
 
 **Scripts and what they check.**
@@ -1170,16 +1409,17 @@ No track had a `notes-final.md` when this was written; the comparison is with th
 |---|---|---|---|
 | `c1_hanni_numbers.py` | deterministic | Both versions of Hänni's calculation; windows; λ = 1 switch; $H(2^{-10})$ vs $p\log(1/p)$; $L_S$ for the instances | Version 2 window $(1.1185\cdot10^{-6},8.9893\cdot10^{-3})$, ratio 8037; switch at $N=8.941\cdot10^5$; $L_S=11{,}710.3$ |
 | `c2_pricing_kink.py` | 2 | (a) per-input pricing over parities; minimax example 2.5431 by two methods. (b) 400 random semimeasure hypotheses: the identity for $u$, the list-size bound and the risk floor (Lemmas 2.1, 2.2). (c) kink instance: product list mixtures vs flat shared and set totals | 0 violations; 2.5431 < 2.5850 |
-| `c3_junta_window.py` (**corrected**) | 3 | Sanity inequalities; concavity reduction (2830 instances); $G_1=H(p)$ crossover; windows for κ ∈ {0, 30}; identification (a)–(e) on a grid ($g=7$); memoriser regime; rate blindness (three-hypothesis and all-hypothesis); Lemma 2.6 numbers; λ = 1 MAP error bounds; exact small instance | 0 violations; crossover $p=0.0560$; numbers as quoted |
+| `c3_junta_window.py` | 3 | Sanity inequalities; concavity reduction (2830 instances); $G_1=H(p)$ crossover; windows for κ ∈ {0, 30}; identification (a)–(e) on a grid ($g=7$); memoriser regime; rate blindness (three-hypothesis and all-hypothesis); Lemma 2.6 numbers; λ = 1 MAP error bounds; exact small instance | 0 violations; crossover $p=0.0560$; numbers as quoted |
 | `c4_model_vs_randomness.py` | 4 | (A) Ville, 4000 runs; (B) hashing exact over GF(16); (C) noisy parity, product vs shared MAPs, threshold λ = 1.315 | all below $2^{-m}$; max error 0; as quoted |
-| `c5_limits.py` (**corrected**) | 5 | (a) separable thresholds (8000 tests), hull (300 sets); (b) guard erosion; (c) proper scores, held-out selection; (d) block telescoping; (e) power-posterior bound, now with $J_g$ from the formula | 0 violations; $3.6\cdot10^{-15}$; exponent −758 |
-| `c6_revision.py` (**new**) | 6 | (A) Lemma 2.11a: $d_0(\kappa)$ for five rules and κ ≤ 100, direct check at $d_0-1$, $d_0$ and on ~400 values up to $10^6$; Prop 2.11(i) margins. (B) Theorem 2(ii) with $\delta_S\in\{0,10,20\}$, κ ∈ {0, 30}, best $g$. (C) Example 2.7a and the referee's $d=13$ instance. (D) Prop 1.7's inequality on random finite product classes (24,732 checks) and an illustrative class. (E) Lemma 3.2 with the $1x$ embedding, exact (2106 cases). (F) Lemma 1.2(iii) on 401 random point sets (5061 points). (G) exact guard-erosion crossing; Prop 2.9(a) fraction. (H) Example 2.7a: Lemma 2.6 excess vs margin at $N=10^4$ | all checks pass: $d_0$ table as quoted, 0 violations in (D), maximum error 0 in (E), 0 mismatches in (F); excess 0.308 > margin 0.224 in (H) |
+| `c5_limits.py` | 5 | (a) separable thresholds (8000 tests), hull (300 sets); (b) guard erosion; (c) proper scores, held-out selection; (d) block telescoping; (e) power-posterior bound with $J_g$ from the formula | 0 violations; $3.6\cdot10^{-15}$; exponent −758 |
+| `c6_revision.py` (first revision) | 6 | (A) Lemma 2.11a: $d_0(\kappa)$ for five rules and κ ≤ 100, direct check at $d_0-1$, $d_0$ and on ~400 values up to $10^6$; Prop 2.11(i) margins. (B) Theorem 2(ii) with $\delta_S\in\{0,10,20\}$, κ ∈ {0, 30}, best $g$. (C) Example 2.7a and the referee's $d=13$ instance. (D) Prop 1.7's inequality on random finite product classes (24,732 checks). (E) Lemma 3.2 with the $1x$ embedding, exact (2106 cases). (F) Lemma 1.2(iii) on 401 random point sets. (G) exact guard-erosion crossing; Prop 2.9(a) fraction. (H) Example 2.7a: Lemma 2.6 excess vs margin at $N=10^4$ | all checks pass |
+| `c7_run2.py` (**new**, second revision) | 7 | (A) Lemma 3.2′: certification under adversarial approximations (600 samplers, 1646 cases), consistency, end-to-end ratio ≥ 1/2, pairing and length facts, cost table. (B) Prop 2.17: two envelope instances, $c_{\rm env}$ for κ ∈ {0, 10, 30}, the $e_1$ bounds for $\delta_2\in\{0,20\}$, the three-hypothesis illustration, the minimisation identity (2000 cases), the complement coding identity on 40 exact instances. (C) Lemma 2.2c: exact identity and inequality on 400 random semimeasure hypotheses; crossovers 0.1233 and 0.1525; Prop 3.8(iv) instances for $d\in\{20,30,60,100\}$, four rates, κ ∈ {0, 30}. (D) Theorem 2(iii) band. (E) Prop 2.13 from the teacher model. (F) Prop 2.8's η′. (G) Prop 2.9(b) for schedules. (H) Cor 2.5 with $\delta_E\in\{0,20\}$ | 0 violations, 0 conflicts; smallest end-to-end ratio 0.645; numbers as quoted |
 | `t5_rerun/` | (T5's) | T5's c1–c3 from scratch copies | reproduces T5's window, switch $N$, kink table and 0 violations |
 
-**Changes to existing scripts in this revision.**
-* `c3`: `log2binom` now uses exact integer binomials when affordable (the lgamma version gave $m+10^{-14}$ for $|S|=1$, so $\lceil L_S\rceil=m+1$). Diff of the output: only the rate-blindness lines changed. Three-hypothesis thresholds for $m=6,7,8$ moved from $1.6588,0.82393,0.40972\cdot10^{-2}$ to $1.9353,0.94163,0.46093\cdot10^{-2}$; all-hypothesis left sides for $m=6$ moved slightly; single-prefix memoriser bounds moved slightly (e.g. $e\ge0.829\to0.833$). No verdict changed. This matches the referee's r1(E), r6(c).
-* `c5`: part (e) computes $J_g=c(d+\kappa_g)+H(p)$ instead of hard-coded values; exponents −776 → −758, −9776 → −9758, −888 → −868, 230 → 247 (matches referee r1(F), r6(d)).
-* All six scripts were re-run after the last edit; c1, c2, c3, c4, c5 and c6 reproduce their saved outputs byte for byte.
+**Changes to scripts.**
+* First revision: `c3`'s `log2binom` uses exact integer binomials (only the rate-blindness lines changed; no verdict changed). `c5`(e) computes $J_g$ from the formula (exponent −776 → −758). `c6` added.
+* Second revision: `c7_run2` added. No existing script was edited.
+* All seven scripts were re-run in this revision on scratch copies (c1–c6) and in place (c7). c1–c6 reproduce their saved outputs byte for byte.
 
 **Self-check items, each resolved.**
 1. Lemma 2.1 originally used $\hat s$, which is not computable for semimeasures. It was replaced by the lower-semicomputable $u$ with an enumeration argument.
@@ -1187,28 +1427,40 @@ No track had a `notes-final.md` when this was written; the comparison is with th
 3. Theorem 2(ii)(b) needed the case $R_B\ge B_S/2^m$ handled separately; it is.
 4. The tempered-likelihood posterior with λ = cN is a fixed Gibbs measure that need not concentrate; Prop 2.8 is for the power prior only.
 5. Theorem 5(ii) first summed over "all programs computing ν", which is not a c.e. set; it now bounds any set of programs via $\xi_1$.
-6. The window method fails for $p\ge0.056$; stated as a limitation. The rate-blindness results do not need $G_1>H(p)$.
+6. The window method fails for $p\ge0.056$; stated as a limitation, with the reason it is not lifted by Lemma 2.2c (end of §2.6). The rate-blindness results do not need $G_1>H(p)$.
 7. The finite-sample statement uses sampling without replacement, so the data are partial functions as SFI requires.
-8. (Revision) Lemma 3.2's sum is over programs, one per seed, in a class closed under prefix-free simulation; the earlier per-seed sum was not justified by "universality" alone.
-9. (Revision) Prop 2.16(i)'s exact mass $2^{-\lambda(K(Q,b)+\kappa)}$ uses the same closure: the wrapper map $p\mapsto\rho zp$ is injective.
-10. (Revision) Lemma 2.11a needs $b\ge a/\ln2$ for the up-set property; c6(A) checks it for every row of the table.
-11. (Revision) In Example 2.7a the bound $u\ge2^{-(J_g+\eta)}-p$ can fall below 3/4; Theorem 2(ii) now states $u\ge\max\{3/4,\cdot\}$, since $T(\pi)=1$ gives $u>3/4$.
-12. (Revision) Numbers are rounded in the safe direction: lower bounds down, upper bounds up, window ends not widened.
-13. (Revision) `notes.md`'s Lemma 1.2(iv) said that a constrained solution minimises some penalised objective iff its point lies on the lower hull. That fails for points on the horizontal ray to the right of the least-$R$ vertex (they tie in $R$ but lose for every $c>0$). The statement and proof are corrected.
+8. (First revision) Lemma 3.2's sum is over programs, one per seed, in a class closed under prefix-free simulation.
+9. (First revision) Prop 2.16(i)'s exact mass uses the same closure: the wrapper map $p\mapsto\rho zp$ is injective.
+10. (First revision) Lemma 2.11a needs $b\ge a/\ln2$ for the up-set property; c6(A) checks it for every row of the table.
+11. (First revision) In Example 2.7a the bound $u\ge2^{-(J_g+\eta)}-p$ can fall below 3/4; Theorem 2(ii) states $u\ge\max\{3/4,\cdot\}$.
+12. (First revision) Numbers are rounded in the safe direction.
+13. (First revision) `notes.md`'s Lemma 1.2(iv) "iff" fails on the horizontal ray to the right of the least-$R$ vertex; corrected.
+14. (Second revision) Lemma 2.3's normaliser was misprinted (one division instead of one per factor); with the printed formula $Q$ is not a semimeasure. Fixed; the proof's $\beta_B$ was already the per-factor value.
+15. (Second revision) Lemma 2.2c cannot use T5's correlation $\hat s$, which is not computable for semimeasures, and the set "$\mathrm{avg}_{S'}A$ is small" is not c.e. The $A$ side is handled with a finite approximation stage $s^*$, chosen from a $g$-bit threshold θ′.
+16. (Second revision) Prop 2.17(ii) needs a lower bound on the hypothesis's risk off the cheap region; it comes from coding $S_2$ given $S_1$ (Lemma 2.3 on the complement), and the minimisation over the split of the risk gives $\min(c,2^{-m})$, checked numerically.
+17. (Second revision) Lemma 3.2′'s certification must be consistent across depths along one stream, although each depth uses different approximations; the nesting argument proves it, and c7(A) checks it with adversarial approximations.
+18. (Second revision) Lemma 3.2′ needs the sampler to be a computable *measure*: for a semimeasure the label boundaries $F_h$ are not computable. Stated.
+19. (Second revision) In Prop 3.8(iv) the deviation term is evaluated at $\ell=d$, which bounds it for every program shorter than $d-s(t)-\Lambda_1$, because γ is increasing in the budget. For non-dyadic rates the good model's description of $p$ costs about $2d$ bits; the instances therefore use simple dyadic rates.
+20. (Second revision) Prop 2.8's consequence used Lemma 2.6's $\hat L$; near-minimisers can be $\eta/c$ bits longer. Fixed with $\hat L'$.
+21. (Second revision) Prop 2.9(b) was stated for fixed λ; Lemma 2.6 is a statement at each $N$, so it applies to every schedule. Restated.
 
-**Literature checks in this revision** (WebSearch snippets only; arxiv.org, ar5iv, cwi.nl did not resolve):
-* Vereshchagin–Vitányi 2010: bibliographic data and abstract-level content (distortion balls, Hamming, denoising) confirmed.
-* Vereshchagin–Shen 2017: set and distribution models equivalent with logarithmic precision, per snippet.
-* Milovanov (CSR 2016): strong models and normal objects, per snippet; title not confirmed.
-* Barron–Cover 1991: the α > 1 complexity weight is confirmed only through a secondary source (arXiv 2311.03852).
-* Poland 2006 erratum: confirmed (52(3):1279; corrects the abstract's i.i.d. description).
-* Wenzel et al. 2020: definition of the cold posterior and the reported improvement confirmed.
+**Literature checks** (WebSearch snippets only; arxiv.org, ar5iv, cwi.nl, proceedings.mlr.press, alphaxiv.org did not resolve).
+* First revision: Vereshchagin–Vitányi 2010 (abstract-level content confirmed); Vereshchagin–Shen 2017 (set–distribution equivalence per snippet); Milovanov 2016 (per snippet, title not confirmed); Barron–Cover 1991 (α > 1 only via a secondary source); Poland 2006 erratum (confirmed); Wenzel et al. 2020 (cold-posterior definition confirmed).
+* Second revision:
+  * Zhu & Srebro 2025: title, authors, venue (COLT 2025, PMLR 291:6124–6155) and arXiv number confirmed; content (regularisation path, limiting error as a function of λ and noise; bounded λ ≥ 1 tempered, λ < 1 catastrophic above a critical noise) per snippets; the consistent growth rate $1\ll\lambda_m\ll m/\log m$ only via a secondary summary; the first referee's $\sqrt m$ not confirmed.
+  * Zhu, Ohannessian & Srebro 2026: arXiv 2603.22644, March 2026, confirmed; content per abstract.
+  * Grünwald & Langford 2007: *Machine Learning* 66:119–149, COLT 2004 pp. 331–347, arXiv math/0406221 confirmed; content per abstract.
+  * Hoeffding 1963: the without-replacement bound is cited without a theorem number, which could not be confirmed.
 
 **Claims by status.**
-* *Proved:* Lemmas 1.1, 1.2, 1.6, 2.1–2.4, 2.6, 2.11a, 3.1, 3.2; Theorems 1–5; Props 1.3, 1.7, 2.8, 2.9, 2.11–2.16, 3.3, 3.5–3.8, 4.1, 4.2, 4.4, 4.5; Cors 1.4, 2.5, 2.7; Example 2.7a; Remarks 1.5, 4.3.
-* *Computed:* all numerical statements in §§2–3 and Prop 1.7's inequality (c1–c6).
-* *Illustrations (κ = 0), not proved:* every number labelled κ = 0, in particular Prop 2.11's examples at fixed $d$.
-* *Known with references:* the facts F1–F5, Sion's minimax theorem, Hoeffding's bound without replacement, Ville's inequality, Kakutani's dichotomy, Solomonoff's bound, Parseval list decoding, the definitions and results of algorithmic statistics, restricted model families, α > 1 two-part MDL, cold posteriors. Bibliographic data were verified by search; most content was not checked against the sources (marked cu).
-* *Remarks without proof:* the circuit and time-bounded examples after Prop 4.4; Remark 4.6; Remark 4.7.
+* *Proved:* Lemmas 1.1, 1.2, 1.6, 2.1–2.4, 2.2c, 2.6, 2.11a, 3.1, 3.2, 3.2′; Theorems 1–5; Props 1.3, 1.7, 2.8, 2.9, 2.10–2.17, 3.3, 3.5–3.8 (including 3.8(iv)), 4.1, 4.2, 4.4, 4.5; Cors 1.4, 2.5, 2.7; Example 2.7a; Remarks 1.5, 4.3.
+* *Computed:* all numerical statements in §§2–3 and the inequalities and identities listed under c2–c7.
+* *Illustrations (κ = 0), not proved:* every number labelled κ = 0, in particular Prop 2.11's examples at fixed $d$, the three-hypothesis comparisons of Prop 2.17, and Example 3.4 (an illustration of Theorem 5's mechanism with an assigned $\ell_U$).
+* *Known with references:* the facts F1–F5, Sion's minimax theorem, Hoeffding's bound without replacement, Ville's inequality, Kakutani's dichotomy, Solomonoff's bound, Parseval list decoding, the definitions and results of algorithmic statistics, restricted model families, α > 1 two-part MDL, λ-weighted MDL in noisy classification, cold posteriors. Bibliographic data were verified by search; most content was not checked against the sources (marked cu).
+* *Remarks without proof:* the circuit and time-bounded examples after Prop 4.4; Remark 4.6; Remark 4.7; the reading after Prop 2.17 for envelopes with θ < 1 beyond part (i).
 * *Conjectures:* none stated as results. Open problems are in §4.6.
-* *Refuted:* none of Hänni's claims. Two statements in `notes.md` were wrong and are corrected: the reading of Prop 3.5 ("λ slightly above 1 selects an approximately minimal sufficient statistic"), and the "iff" in Lemma 1.2(iv) (counterexample: a point on the horizontal ray to the right of the least-$R$ vertex). One of T5's informal numbers was sharpened: the $d=20$ upper end of the window.
+* *Refuted:*
+  * The extension of Hänni's example to every error rule with his density and description length: refuted by Prop 2.17 (counterexample: Hänni's density, a 128-point cheap subcube plus 896 random points, about 10,400 bits; the good model is not near-optimal for $c<1.6\cdot10^{-5}$, κ = 0). His example with an incompressible rule is confirmed (Theorem 2). None of Hänni's claims as he stated them is refuted.
+  * Two statements in `notes.md` were wrong and are corrected: the reading of Prop 3.5 ("λ slightly above 1 selects an approximately minimal sufficient statistic") and the "iff" in Lemma 1.2(iv) (counterexample: a point on the horizontal ray to the right of the least-$R$ vertex).
+  * Misprints and slips corrected without changing any conclusion: Lemma 2.3's normaliser; Prop 2.8's η′; Prop 2.13's "although the teacher never erred".
+  * One of T5's informal numbers was sharpened: the $d=20$ upper end of the window.
