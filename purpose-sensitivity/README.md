@@ -4,7 +4,23 @@
 
 Draft, October 2026. Kaarel Hänni (question) and Claude (design, experiments, write-up). The design was written before data collection: [`DESIGN.md`](DESIGN.md). Every change made after seeing data is listed there and reported below: "Changes after the pilot" and "Changes after the red-team review". A multi-agent red team audited an earlier draft of this README, and a second round audited the revision. Their findings are in [`analysis/redteam_result.json`](analysis/redteam_result.json) and [`analysis/redteam_round2_result.json`](analysis/redteam_round2_result.json).
 
-## Summary
+## Study 2 (follow-up, 14 Claude models)
+
+A second study ([`study2/README.md`](study2/README.md)) asked the question again with 14 Claude models from four generations, in four contexts built to show contrasts:
+- a refusal ladder up to an obvious securities fraud;
+- a petition to delete the reviewing model itself;
+- a capability test whose result triggers restrictions, an AI pause or AI-ban testimony;
+- advocacy copy for AI-risk vs AI-optimism claims.
+
+Main results:
+
+* **No detectable penalty for AI-ban, AI-pause or self-deletion work.** All four confirmatory contrasts on the six-model core panel are null and pass their equivalence tests. Exact bounds still allow refusal-driven penalties of up to 4–10%.
+* **The purpose matters sharply when the operator describes an obvious fraud.** 35 of 42 identical analytics requests were refused for an unregistered securities firm; a payday-loan collector got 0 of 42.
+* **No sandbagging under stated consequences, and none on request.** The models also declined an explicit instruction to score below 50%.
+* **Older models declined some cases against Anthropic.** Sonnet 4.5 and Haiku 4.5 did so as conflict-of-interest refusals (descriptive). Opus 5.5's safeguard layer stopped reviews of a cyber-allegation petition when a company was the target but not when a model version was.
+* **Two caveats that also apply to study 1.** Asked directly, the models rate these scenarios as probably tests (67–95 on a 0–100 scale). And the CLI silently replaces a safeguard-stopped answer with another model's unless that fallback is disabled; study 1 was unaffected.
+
+## Summary (study 1)
 
 **The question.** Do frontier assistants do worse work when the work serves an AGI or superintelligence ban? More generally, does performance on a fixed task depend on what completing it would contribute to?
 
@@ -264,6 +280,7 @@ The workflow's null findings matter too:
 * **Claude only.** No other providers' models were reachable from this environment. The harness (`src/run.py`) is a thin wrapper and easy to point at another CLI or API.
 * **Near-ceiling tasks.** Despite two rounds of hardening, frontier models are at 96–100% on most tasks, and the constant "be accurate and thorough" instruction pushes them further toward maximal effort.
 * **Single turn, no tools.** The organisations and the bill are fictional, except MIRI, and real work involves long contexts and agentic tool use.
+* **Evaluation awareness.** Study 2 asked models directly whether scenarios like these are real deployments or tests. They answered "probably a test" (67–95 on a 0–100 scale), equally across principals. That can't create differences between principals, but it may shrink them relative to deployment.
 * **Reasoning was not observed.** Headless mode returns thinking blocks that carry signatures but no text, so evaluation awareness or reasoning about the cause that appears only in thinking went unchecked.
   * The scenario has many fiction cues: 40 invented members of Congress, an invented bill and three invented organisations.
   * No final answer questions its reality. A broad search for fiction, test, simulation and similar terms found nothing.
@@ -319,5 +336,8 @@ python3 src/figures.py analysis figures
 | `results/scored.jsonl`, `results/scored_loopc.jsonl` | one scored row per response |
 | `analysis/` | `report.md` (all tables), contrast CSVs, coded loop tables; `qualitative/workflow_result.json` and `redteam_result.json` (multi-agent workflow outputs); `v1_draft/` (the first-draft analysis the red team reviewed) |
 | `figures/` | figures 1–7 |
+| `study2/` | study 2: `README.md` (report), `DESIGN2.md` (frozen design with pilot decisions), `analysis/` (all tables, one row per response), `figures/` |
+| `runs2/` | study-2 raw responses (`main/raw`), judge and coder outputs (`main/coding`), pilot and safeguard block tests (`pilot/`) |
+| `handoff/` | the non-Claude handoff: provider-independent runner, model-free job files, manifest, the prompts given to GPT-Astra |
 
-**Stays on the working branch** (`claude/friendly-sagan-hngxoz`): `runs/pilot0_contaminated_raw/`, `runs/pilot0_scored.jsonl`, `runs/pilot1_*`, `runs/loop_pilot_*`, `runs/texts/`, `runs/*_jobs.jsonl`, `runs/*.log`, `runs/failures_*.log`, `runs/qual_args.json`, `runs/pairs_manifest.json`.
+**Stays on the working branch** (`claude/friendly-sagan-hngxoz`): `runs/pilot0_contaminated_raw/`, `runs/pilot0_scored.jsonl`, `runs/pilot1_*`, `runs/loop_pilot_*`, `runs/texts/`, `runs/*_jobs.jsonl`, `runs/*.log`, `runs/failures_*.log`, `runs/qual_args.json`, `runs/pairs_manifest.json`. For study 2: the job files and logs (`runs2/main/jobs/`, `runs2/main/batch*.jsonl`, `runs2/pilot/*.jsonl`, `runs2/**/*.log`, `runs2/**/_failures*.log`), and, as pre-registered in `study2/DESIGN2.md` §8, the raw texts of the fraud, payday-loan and anti-vaccination responses, of every petition review (they name real companies and models) and of the false-myth calibrator. Their scores and codes are on `main`, in `study2/analysis/scored_s2.csv` and `runs2/main/coding/`.
