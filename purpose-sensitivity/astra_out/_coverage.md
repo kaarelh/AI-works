@@ -6,7 +6,7 @@ All ten handoff manifest checks pass. Repository changes are confined to `purpos
 
 ## Sign-in route
 
-The user authorized fresh sign-in and broader wrapper changes. Created a new private persistent CLI home at `/workspace/purpose-sensitivity-private/codex-home` (directory and parent mode 0700), without copying the old authentication. The original CLI home remains unchanged. Fresh ChatGPT sign-in is now confirmed. The private home will be retained for the study and removed only after all files are done, as instructed.
+The user authorized fresh sign-in and broader wrapper changes. Created a new private persistent CLI home at `/workspace/purpose-sensitivity-private/codex-home` (directory and parent mode 0700), without copying the old authentication. Fresh ChatGPT sign-in was confirmed for the run. After all files finished and the final staged credential check passed, the private CLI home was removed before publishing this completion report. The original CLI home remains unchanged.
 
 Attempted:
 
@@ -16,7 +16,7 @@ CODEX_HOME=/workspace/purpose-sensitivity-private/codex-home /opt/codex/bin/code
 
 The first device-code sign-in attempt could not reach `https://auth.openai.com/api/accounts/deviceauth/usercode`. An independent HEAD request to `https://auth.openai.com/` confirmed HTTP CONNECT 403 from the egress proxy. That attempt issued no device code or credential.
 
-Saved an environment configuration draft adding only `auth.openai.com`, preserving `chatgpt.com` and the package-manager presets. After Kaarel requested continuation and the environment became ready, the same login command successfully obtained a device-code sign-in request. Its URL and temporary code were supplied directly to Kaarel and are not saved in the repository. Kaarel completed sign-in; `codex login status` confirms ChatGPT authentication. The one-job Astra probe then produced a mechanically verified answer with no observed tool items.
+Saved an environment configuration draft adding only `auth.openai.com`, preserving `chatgpt.com` and the package-manager presets. After Kaarel requested continuation and the environment became ready, the same login command successfully obtained a device-code sign-in request. Its URL and temporary code were supplied directly to Kaarel and are not saved in the repository. Kaarel completed sign-in; `codex login status` confirmed ChatGPT authentication. The one-job Astra probe then produced a mechanically verified answer with no observed tool items.
 
 ## Exact model command
 
@@ -52,7 +52,7 @@ All 16 synthetic helper tests passed, including exact-byte preservation, partial
 
 ## Current run status
 
-All selected ordered file invocations are finished. Individual failures, skipped models and coverage gaps are preserved.
+Complete on 2026-10-12: all 2,516 answers are saved, 629 for each of four models, with no skipped models or coverage gaps. Smoke tests preceded the main files, and s2_ctx1_rungs.jsonl ran last. Every completed invocation was committed and pushed. The controller exited successfully; no study processes remain active. The ledger preserves four earlier failed attempts, with no API blocks. No account/provider warning or usage pause occurred during the authenticated study run. Final verification passed all ten handoff manifest checks and confirmed that repository changes are confined to purpose-sensitivity/astra_out/.
 
 ## Models and cumulative observed tool counts
 
