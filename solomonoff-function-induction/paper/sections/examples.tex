@@ -1,0 +1,243 @@
+% Section "ex" (writer: ex). Source: research/tracks/examples/notes-final.md (final numbering), using
+% foundations Thm 3.2, Prop 3.3, Thm 6.1, Thm 6.3, Cor 6.6, Prop 6.8 and history Prop 2.3, Lemma 2.4a,
+% Thm 2.1, Cor 4.3, Prop 4.4, Lemma B, §4.4 as cited there. Proofs, the raw-block statements for SI,
+% the tables, the full e-mail quote and the description of the computations are in sections/app-examples.tex.
+\section{Worked examples}\label{sec:ex}
+
+\citet{hanni2026request} proposed two examples in which SFI ``does much worse than SI'': a random cyclic permutation revealed backwards along its cycle, and a coin-flip example due to Sam Eisenstat, which H\"anni reported with an argument from his e-mail to Eisenstat. We work both out and add examples in which SFI does well (his out-of-distribution examples are in \cref{sec:ood}). Losses are in the semimeasure convention, $\LSFI(D_n)=-\log\MF(D_n)$ in every order (\cref{prop:setting:order}), unless stated otherwise; upper bounds also hold for the normalised predictor $\MFbar$, lower bounds only where we say so (\cref{rem:setting:conventions}). $c$ is a machine constant, $j\ge0$ a confidence parameter, and a finite function is identified with its graph. Proofs are in \cref{app:ex}.
+
+% ------------------------------------------------------------------
+\subsection{Tools}\label{sec:ex:tools}
+
+Lower bounds come from the coding theorem given the domain, $\LSFI(D)\ge K(D|_T\mid T)-c$ for $T\subseteq\dom D$ (\cref{thm:setting:coding}(a)), and from a counting fact:
+
+\begin{lemma}[complexity is at least surprisal]\label{lem:ex:surprisal}
+\status{proved}\src{examples Lemma 1.2}
+Let $Z$ take values in a countable set, with law $P$ (computable or not), and let $w$ be fixed. For every $j\ge0$, $\Prob[K(Z\mid w)<-\log P(Z)-j]<2^{-j}$, and $\Ex K(Z\mid w)\ge H(Z)$.
+\end{lemma}
+
+\begin{proof}
+The probability is $\sum_zP(z)$ over the $z$ with $P(z)<2^{-K(z\mid w)-j}$, hence less than $\sum_z2^{-K(z\mid w)-j}\le2^{-j}$. The expectation bound is Gibbs' inequality for the sub-probability $2^{-K(\cdot\mid w)}$.
+\end{proof}
+
+\paragraph{SI.} SI sees the history coded as $\code(h_t)=\bar x_1\bar y_1\cdots\bar x_t\bar y_t$ with $\bar s:=1^{|s|}0s$ (\cref{thm:hist:si}). For $\rho\in\{M,\Mnorm\}$, with $\Mnorm\ge M$ the normalised Solomonoff measure, SI's label loss is
+\[\textstyle L^y_\rho(k):=\sum_{t\le k}-\log\big[\rho(\code(h_{t-1})\bar x_t\bar y_t)/\rho(\code(h_{t-1})\bar x_t)\big],\]
+so $L^y_M=\LMy$. If $\rho(\code(h))\ge2^{-k}\Prob(h)$ for the true law $\Prob$ of the pairs, $L^y_\rho$ exceeds the Bayes-optimal history-aware label loss by at most $k$ in expectation, and by at most $k+j$ at all times with probability at least $1-2^{-j}$, even if the inputs are incompressible (\cref{lem:ex:silabel}).
+
+% ------------------------------------------------------------------
+\subsection{The cyclic permutation}\label{sec:ex:cyclic}
+
+\begin{definition}[the cyclic permutation]\label{def:ex:cyclic}
+\src{examples \S2.1; H\"anni's request}
+Fix $d\ge1$, $N:=2^d$ and a cyclic permutation $f$ of $\{0,1\}^d$ (a single $N$-cycle). Put $x_0:=0^d$ and $x_k:=f^{-1}(x_{k-1})$ for $1\le k\le N$. The $k$-th revealed pair is $(x_k,x_{k-1})$, and $D_k:=\{(x_i,x_{i-1}):i\le k\}$. We write $(a)_k:=a(a-1)\cdots(a-k+1)$, $(a)_0:=1$.
+\end{definition}
+
+H\"anni expected that this ``will have very low loss under SI but high loss under SFI'' \citep{hanni2026request}. The map $f\mapsto(x_1,\dots,x_{N-1})$ is a bijection onto the orderings of the nonzero strings (its inverse closes the cycle $0^d\mapsto x_{N-1}\mapsto\dots\mapsto x_1\mapsto0^d$), so for uniform $f$ the ordering is uniform. For $k<N$, $D_k$ is a chain $x_k\to\dots\to x_1\to0^d$ of distinct nonzero strings. The labels add nothing to the inputs ($y_k=x_{k-1}$): all of $f$ is in the order.
+
+\begin{theorem}[the full cycle]\label{thm:ex:cycle}
+\status{proved; computed (examples e3, e6(d))}\src{examples Thm 2.1}
+Semimeasure convention.
+(a) For every total $f:\{0,1\}^d\to\{0,1\}^d$, $|\LSFI(f)-K(f\mid d)|\le c$.
+(b) For every cyclic permutation $f$ of $\{0,1\}^d$, $\LSFI(f)\le\log((N-1)!)+c$.
+(c) For uniform cyclic $f$, $\Prob[\LSFI(f)<\log((N-1)!)-j-c]<2^{-j}$, and $\Ex\LSFI(f)\ge\log((N-1)!)-c$.
+(d) $\log((N-1)!)=(d-\log e)N-\frac d2+\frac12\log(2\pi)+\epsilon_N$ with $\frac1{(12N+1)\ln2}<\epsilon_N<\frac1{12N\ln2}$.
+The same bounds hold for $\LSFI(D_{N-1})$.
+\end{theorem}
+
+So SFI pays $d-\log e\approx d-1.443$ bits per pair over the cycle (\cref{tab:ex:cycle}). In (a) one function machine reads a single program for the whole table from the shared tape; in (b) one machine draws a uniform cyclic permutation of each length; (d) is Stirling's formula with Robbins' remainder bounds \citep{robbins1955remark}.
+
+\begin{theorem}[$k$ steps]\label{thm:ex:ksteps}
+\status{proved; computed (examples e6(a),(b),(c))}\src{examples Thm 2.3}
+Semimeasure convention; $1\le k\le N-1$.
+(a) On every chain, $\LSFI(D_k)\le\log(N-1)_{k-1}+\min\{K(k),\log(N-k)\}+c$.
+(b) For uniform cyclic $f$, $\Prob[\LSFI(D_k)<\log(N-1)_{k-1}-j-c]<2^{-j}$.
+(c) For uniform cyclic $f$, with probability at least $1-2^{-j}$, $\LSFI(D_k)\ge\log(N-1)_{k-1}-d-j-c$ for all $k<N$ at once.
+\end{theorem}
+
+So $\LSFI(D_k)=\log(N-1)_{k-1}\pm O(K(k))$ with high probability: SFI pays about $\log(N-t+1)$ bits for the label at step $t\ge2$, and the newest input is free up to $K(k)$. The upper bound uses a \emph{broom} $B_k$, a function machine that draws, for each length $\ell$, a uniform injective sequence $(v_1,\dots,v_{k-1})$ of nonzero $\ell$-bit strings and maps $v_1\mapsto0^\ell$, $v_i\mapsto v_{i-1}$, and every other input to $v_{k-1}$; it extends $D_k$ with probability $1/(N-1)_{k-1}$. It randomises the upper-bound program of H\"anni's chain example (\cref{thm:hist:chain}). The lower bounds rest on a depth count (\cref{lem:ex:depth}). The cost is intrinsic to order-free prediction:
+
+\begin{proposition}[order-free predictors]\label{prop:ex:orderfree}
+\status{proved; sharper weak case open}\src{examples Prop 2.4 (general lemma: history Prop 2.3)}
+Let $f$ be uniform cyclic and $k<N$.
+(a) For every law $\nu$ of a random partial function, computable or not (so every machine law, with shared or private randomness), $\Ex[-\log\nu(D_k)]\ge\log(N-1)_{k-1}$.
+(b) For every weak function semimeasure $\nu$ (every order-independent predictor, \cref{prop:setting:predictor}), $\Ex[-\log\nu(D_k)]\ge\log(N-1)_k-\log(N-1)$ and $\Ex[-\log\nu(f)]\ge\log((N-1)!)$.
+\end{proposition}
+
+For $k\le N/2$ the two bounds differ by at most one bit. So no random-function law, and for $k\le N/2$ no order-independent predictor, does better than SFI by more than $O(K(k))$ bits in expectation.
+
+\paragraph{Open question.}\label{q:ex:depthweak} Does the depth count, $\sum_{x,z}\nu(D(x,z))\le N-k$ in the notation of \cref{lem:ex:chainsemi}, and hence (a), hold for every weak $\nu$? A linear program confirms it for $N=4$ only.
+
+The normalised predictor is not order-free, and a set-based history-aware predictor has loss $0$ here (\cref{rem:ex:where}), so information-theoretic arguments alone cannot bound it below. The structure of $\MF$ can:
+
+\begin{proposition}[normalised SFI]\label{prop:ex:normalised}
+\status{proved; proxy computed (examples e6(e))}\src{examples Prop 2.9}
+Let $f$ be uniform cyclic and $\bar\ell_t:=-\log\MFbar(y_t\mid D_{t-1},x_t)$. For $2\le t\le N-1$, $\Ex\bar\ell_t\ge\log(N-t+1)-K(t-1)-c$, and $\bar\ell_t\ge\log(N-t+1)-K(t-1)-j-c$ with probability at least $1-2^{-j}$. Hence $\Ex\sum_{t\le k}\bar\ell_t\ge(k-1)(d-1-\log k-2\log\log(k+1)-c)$ for $k\le N/2$, which is at least $(k-1)(\delta d-O(\log d))$ for $k\le2^{(1-\delta)d}$.
+\end{proposition}
+
+\emph{Proof idea.} $\bar\ell_t=\LSFI(D_t)+\log\Znorm(D_{t-1},x_t)$, and $\Ex\LSFI(D_t)\ge\log(N-1)_{t-1}$ by \cref{prop:ex:orderfree}(a). The broom $B_{t-1}$ is total, consistent with the past, and sends $x_t$ to the wrong label $x_{t-2}$, so it keeps the normaliser at least $2^{-K(t-1)-c}/(N-1)_{t-2}$ (\cref{lem:hist:broom}), as in \cref{prop:hist:normchain}. Over the whole cycle these bounds sum to at most about $2N$ bits (\cref{q:ex:normalised}).
+
+\begin{proposition}[\SFIhist]\label{prop:ex:cychist}
+\status{proved, given \cref{cor:hist:H4}}\src{examples Prop 2.5 (= history Prop 4.8)}
+For every $d$, every cyclic $f$ and every $k\le N$, $\LH\le c$ on $(x_1,x_0),\dots,(x_k,x_{k-1})$, with $c$ independent of $d$.
+\end{proposition}
+
+\begin{proof}
+``Answer $0^{|x|}$ first, then the previous input'' is computable and has loss $0$; apply \cref{cor:hist:H4}.
+\end{proof}
+
+For H\"anni's conjecture that seeing the previous inputs makes SFI ``as good as SI'' (\cref{sec:hist:sfihist}), the hypotheses must see the \emph{list} of previous inputs; their set is not enough:
+
+\begin{proposition}[\SFIset]\label{prop:ex:cycset}
+\status{proved}\src{examples Prop 2.11}
+Let $L_{\rm set}$ be the loss of \SFIset{}, whose hypotheses see the set of previous inputs (\cref{prop:hist:variants}). For uniform cyclic $f$ on the full cycle, $\Prob[L_{\rm set}<\log((N-1)!)-j-c]<2^{-j}$, $\Ex L_{\rm set}\ge\log((N-1)!)$, and always $L_{\rm set}\le\log((N-1)!)+c$.
+\end{proposition}
+
+\begin{proposition}[SI]\label{prop:ex:cycsi}
+\status{proved; computed (examples e6(f), an illustration)}\src{examples Prop 2.10}
+Let $\rho\in\{M,\Mnorm\}$ and $f$ uniform cyclic. There is $c$, independent of $d$, with $\Ex L^y_\rho(k)\le c$ for every $k\le N$ and $\Prob[\exists k\le N:\ L^y_\rho(k)>j+c]\le2^{-j}$.
+\end{proposition}
+
+SI pays about $K(d)$ bits on the header $1^d0$ of the first input, which tells it $d$; then the labels are free. With raw $d$-bit blocks the bound becomes $K(d)+c$ (\cref{prop:ex:cycraw}), probably the right order (\cref{conj:ex:raw}). So H\"anni's description holds: SFI pays about $(d-\log e)2^d$ bits over the cycle (semimeasure convention) and at least $\delta d-O(\log d)$ bits per step for $t\le2^{(1-\delta)d}$ (normalised), while SI and \SFIhist{} pay $O(1)$, uniformly in $d$.
+
+\Cref{rem:ex:where} locates the information and gives a separation in the other direction.
+
+% ------------------------------------------------------------------
+\subsection{Eisenstat's example}\label{sec:ex:eisenstat}
+
+\begin{definition}[Eisenstat's example]\label{def:ex:eisenstat}
+\src{examples \S3.1; H\"anni's request}
+Let $b_0,b_1,\dots$ be i.i.d.\ $\Bern(\frac13)$ (index $i$ is a \emph{head} if $b_i=1$, else a \emph{tail}) and $\zeta_1,\zeta_2,\dots$ i.i.d.\ $\Bern(\frac23)$, independent of $b$. At step $t$, reveal the smallest unrevealed head $i$ as $(i,1)$ if $\zeta_t=1$, else the smallest unrevealed tail as $(i,0)$. After $n$ steps: $N^1_n,N^0_n$ count the revealed heads and tails; $\tau_n$ ($\eta_n$) is one more than the last revealed tail (head), or $0$; $g_n$ is the smallest unrevealed index; and $UB_n:=-\log P_{1/3}(b_{<\tau_n})=\tau_n\log3-N^0_n$, with $P_{1/3}$ the $\Bern(\frac13)$ product measure.
+\end{definition}
+
+H\"anni's e-mail claims that SFI's ``log loss \dots{} is the loss given by our threshold function, up to $o(n)$ terms'' \citep{hanni2026request}. We take as threshold function the \emph{threshold law} $\nu^{\rm thr}_s$: the product law with $\Prob[y=1\mid i]=\frac13$ for $i<s$ and $=1$ for $i\ge s$, a machine law with index computable from $s$ (\cref{prop:setting:includes}(a)).
+
+\begin{lemma}[shape of the revealed set]\label{lem:ex:shape}
+\status{proved}\src{examples Lemma 3.1}
+The revealed tails (heads) are exactly the tails (heads) below $\tau_n$ ($\eta_n$). No unrevealed index lies below $\min(\tau_n,\eta_n)$; an unrevealed index below $\eta_n$ is a tail, one below $\tau_n$ a head. If $\tau_n\le\eta_n$, then $g_n\ge\tau_n$ and $[\tau_n,g_n)$ consists of revealed heads.
+\end{lemma}
+
+\begin{proof}
+The process reveals the first unrevealed head (tail), so the revealed heads (tails) are the first $N^1_n$ heads ($N^0_n$ tails) of $b$.
+\end{proof}
+
+So the revealed set is about $[0,n/2)$ together with the heads in $[n/2,2n)$.
+
+\begin{proposition}[upper bound]\label{prop:ex:UB}
+\status{proved}\src{examples Prop 3.2}
+For every $b$, every reveal sequence of this kind (each choice of head or tail may be arbitrary) and every $n$: $\LSFI(D_n)\le UB_n+K(\tau_n)+c\le UB_n+\log(\tau_n+1)+2\log\log(\tau_n+2)+c$, also for $\LSFIbar$.
+\end{proposition}
+
+Indeed $\MF\ge2^{-K(\tau_n)-c}\nu^{\rm thr}_{\tau_n}$ (\cref{thm:setting:universal}); under $\nu^{\rm thr}_{\tau_n}$ the revealed indices at or above $\tau_n$ are heads (\cref{lem:ex:shape}) and cost nothing, and those below $\tau_n$ cost at most $UB_n$; finally $K(i)\le\log(i+1)+2\log\log(i+2)+c$.
+
+\begin{theorem}[pathwise sandwich]\label{thm:ex:sandwich}
+\status{proved}\src{examples Thm 3.3}
+Semimeasure convention. For every $b$, every reveal sequence and every $n$, $\LSFI(D_n)\ge K(b_{<g_n}\mid g_n)-c$. If $b$ is Martin-L\"of random for $P_{1/3}$, then at every $n$ with $\tau_n\le\eta_n$,
+\[UB_n-K(g_n)-c_b\ \le\ \LSFI(D_n)\ \le\ UB_n+K(\tau_n)+c.\]
+In Eisenstat's process, almost surely $|\LSFI(D_n)-UB_n|\le\log n+O(\log\log n)+c_b$ for all large $n$.
+\end{theorem}
+
+\emph{Proof idea.} $[0,g_n)$ is revealed with its true labels; monotonicity and the coding theorem given the domain give the first bound, and the Levin--Schnorr theorem turns it into the surprisal $-\log P_{1/3}(b_{<g_n})\ge UB_n$. Almost surely the heads are eventually ahead (\cref{lem:ex:behind}).
+
+\begin{proposition}[the threshold loss]\label{prop:ex:asymp}
+\status{proved; computed (examples e1, e2, e7(d))}\src{examples Prop 3.4}
+Let $a:=\frac32\log3-1$ and $\sigma^2:=\frac29a^2+\frac14(\log3)^2=1.0496602$. For every $n$, $\Ex UB_n=\frac{H(1/3)}2n=0.4591479\,n$ and $\Var(UB_n)=\sigma^2n$ exactly; $UB_n/n\to\frac{H(1/3)}2$ almost surely, and $(UB_n-\frac{H(1/3)}2n)/\sqrt n\to\mathcal N(0,\sigma^2)$ in law.
+\end{proposition}
+
+\begin{theorem}[expected loss]\label{thm:ex:expected}
+\status{proved; computed (examples e2)}\src{examples Thm 3.6}
+Semimeasure convention. For all $n\ge2$,
+$\frac{H(1/3)}2n-\log n-c\le\Ex\LSFI(D_n)\le\frac{H(1/3)}2n+\log n+2\log\log n+c$, and the upper bound holds for $\Ex\LSFIbar$. The product law with $\Prob[y=1]=\frac13$ at every input pays $(\log3-\frac13)n=1.2516\,n$.
+\end{theorem}
+
+\begin{proposition}[exact law; order-free predictors]\label{prop:ex:law}
+\status{proved; computed (examples e1, s2(d))}\src{examples Prop 3.7}
+Let $D$ be a possible value of $D_n$, $S:=\dom D$, $s^+:=1+\max S$, $N^1$ the number of $1$-labels of $D$, and $r:=\frac23$ if the label at $\max S$ is $1$, $r:=\frac13$ otherwise.
+(a) $\Prob[D_n=D]=\binom n{N^1}(\frac29)^nr^{s^+-n}$; so the labelling given $\dom D_n=S$ depends on the label at $\max S$, not only on $N^1$.
+(b) Every weak function semimeasure $\nu$, computable or not, has $\Ex[-\log\nu(D_n)]\ge\frac{H(1/3)}2n-\log n-O(1)$.
+\end{proposition}
+
+So SFI is optimal among order-independent predictors up to $O(\log n)$ in expectation; as in the cyclic example, the gap to SI is a property of order-free prediction.
+
+\begin{remark}[H\"anni's e-mail argument]\label{rem:ex:email}
+\status{proved; normalised open}\src{examples \S3.6}
+The claim (quoted in \cref{app:ex:eisenstat}) is correct in the semimeasure convention, almost surely with $O(\log n)$ in place of $o(n)$ and the threshold at the tail frontier (\cref{thm:ex:sandwich}). Its ``easy direction'' is \cref{prop:ex:UB}. The ``other direction'' is correct in substance, with two repairs: the ``pointing trick'' is the coding theorem given the domain of the fully revealed segment $[0,g_n)$, which costs $K(g_n)=O(\log n)$ bits; and incompressibility must be measured by the empirical surprisal $UB_n$, not by $\tau_nH(1/3)$, which differs from it by $\Theta(\sqrt n)$ (enough for $o(n)$, not for $O(\log n)$). For the normalised predictor the lower bound is open.
+\end{remark}
+
+\paragraph{History-aware prediction and SI.} Call a history \emph{touching} if its revealed set is the initial segment $[0,\max(\tau,\eta))$. The Bayes-optimal history-aware predictor $P^*$ is explicit (\cref{lem:ex:pstar}): at a touching history it gives the input $\max(\tau,\eta)+k$ the label $1$ with probability $2^k/(2^k+1)$; at every other history it is certain and correct.
+
+\begin{proposition}[the burn-in]\label{prop:ex:burnin}
+\status{proved; computed (examples e1(e), e7(a),(b))}\src{examples Prop 3.9}
+The number $N_{\rm touch}$ of touching steps in the infinite run has $\Prob[N_{\rm touch}=k]=(\frac23)^{k-1}\frac13$. Each costs $P^*$ an expected $\vartheta=\sum_{k\ge0}\frac29[(\frac23)^k\log(1+2^{-k})+(\frac13)^k\log(1+2^k)]=0.7995167$ bits, so $\Ex L_{P^*}(n)\le\Ex L_{P^*}(\infty)=3\vartheta=2.39855$ bits.
+\end{proposition}
+
+\begin{theorem}[\SFIhist{} and SI]\label{thm:ex:eisensi}
+\status{proved}\src{examples Thm 3.10}
+(a) For every $b$, every coin sequence and every $n$, $\LH(n)\le L_{P^*}(n)+c$; so $\Ex\LH(n)\le3\vartheta+c$.
+(b) Code indices as strings and labels as one-bit strings. For $\rho\in\{M,\Mnorm\}$, $\Ex L^y_\rho(n)\le3\vartheta+c$ for all $n$, and $\Prob[\exists n:\ L^y_\rho(n)>L_{P^*}(n)+j+c]\le2^{-j}$.
+\end{theorem}
+
+\begin{proof}
+(a) \Cref{cor:hist:H4} for the computable $P^*$. (b) The pair process has a computable law $\Prob$ whose label conditionals are those of $P^*$, so $M(\code(h))\ge2^{-c}\Prob(h)$ (\cref{lem:hist:block}); apply \cref{lem:ex:silabel,prop:ex:burnin}.
+\end{proof}
+
+A natural rule reads the labels off the history: \emph{the new input is a tail if and only if it is the smallest unrevealed index}.
+
+\begin{corollary}[the rule]\label{cor:ex:rule}
+\status{proved}\src{examples Cor 3.11}
+Almost surely there is a last touching step, and the rule is exact at every later step.
+\end{corollary}
+
+\begin{proposition}[errors of the rule]\label{prop:ex:rulestats}
+\status{proved; computed (examples e2, e7)}\src{examples Prop 3.12}
+Over the infinite run the rule errs twice in expectation, and it makes no error with probability exactly $\frac12$.
+\end{proposition}
+
+In finite proxies (\cref{tab:ex:eisenstat}) order-free mixtures pay about $0.46$ bits per step, history-aware and joint ones a bounded total.
+
+\paragraph{Open question.}\label{q:ex:normalised} Is the normalised loss of the same order as $\LSFI$ over the whole cycle of \cref{def:ex:cyclic}, and in Eisenstat's example? The method of \cref{prop:ex:normalised} pays $O(\log t)$ bits per step, more than the information per step near the end of the cycle and in Eisenstat's example ($0.46$ bits), and set-based history-aware predictors have loss $O(1)$ in both. In finite mixtures with most prior on partial chains the full-cycle normalised loss is far below $\log((N-1)!)$ ($19.2$ against $40.25$ bits at $d=4$).
+
+% ------------------------------------------------------------------
+\subsection{Positive examples}\label{sec:ex:positive}
+
+The bounds below hold in both conventions.
+
+\begin{proposition}[deterministic targets]\label{prop:ex:deterministic}
+\status{proved}\src{examples Prop 4.1 (cf.\ \cref{cor:learn:mistakes})}
+Let $f$ be partial computable, $x_1,x_2,\dots\in\dom f$ any inputs (adversarial, adaptive or non-computable; repeats allowed), $y_t=f(x_t)$. Then $\LSFI(D_n)\le K(f)+c$, and at most $K(f)+c$ steps give $f(x_t)$ predictive probability at most $\frac12$, raw or normalised.
+\end{proposition}
+
+\begin{proof}
+\Cref{thm:learn:dominance}(b), \cref{cor:learn:mistakes}, and $\Znorm(D,x)\le\MF(D)$.
+\end{proof}
+
+\begin{example}[sparse parity]\label{ex:ex:parity}
+\status{proved; computed (examples e4(a))}\src{examples Ex 4.2}
+For $S\subseteq\{0,\dots,d-1\}$ with $|S|=k$ and $\chi_S(x):=\bigoplus_{i\in S}x_i$ (bits beyond $|x|$ read as $0$): $\LSFI\le\log\binom dk+K(d)+K(k)+c$ on every input sequence. If $S$ is uniform and the inputs form a fixed sequence whose labels determine $S$ (e.g.\ containing the unit vectors), every learner, history-aware or not, has expected loss at least $\log\binom dk$.
+\end{example}
+
+\begin{example}[thresholds]\label{ex:ex:threshold}
+\status{proved; computed (examples e4(b))}\src{examples Ex 4.3}
+For $f_\theta(x):=\ind[x\ge\theta]$ on $\mathbb N$, $\LSFI(D)\le-\log\sum_{\theta':f_{\theta'}\supseteq D}2^{-K(\theta')}+c\le K(\theta)+c$. For $\theta$ uniform on $[0,2^\ell)$, $\ell$ bisection queries cost every learner at least $\ell$ bits in expectation, and SFI at most $\ell+K(\ell)+c$.
+\end{example}
+
+\begin{example}[sorting]\label{ex:ex:sorting}
+\status{proved}\src{examples Ex 4.4}
+Sorting has complexity $O(1)$, so over any number of pairs (list, sorted list), in any order, SFI's total loss and its number of steps that give the sorted list probability at most $\frac12$ are bounded by a constant.
+\end{example}
+
+\begin{example}[integer polynomials]\label{ex:ex:poly}
+\status{proved}\src{examples Ex 4.5}
+For $g(x)=\sum_{i\le k}a_ix^i$ with all $a_i\in\{0,\dots,A-1\}$, $K(g)\le(k+1)\log A+K(k)+K(A)+c$; for uniform coefficients and $k+1$ distinct inputs every learner pays at least $(k+1)\log A$ in expectation. For arbitrary integer coefficients, $K(g)\le\sum_iK(a_i)+K(k)+c$.
+\end{example}
+
+So SFI is optimal in these examples up to $O(\log d)$, $O(\log\ell)$ and $O(\log k+\log A)$.
+
+\begin{proposition}[frozen label noise]\label{prop:ex:frozen}
+\status{proved; computed (examples e4(c))}\src{examples Prop 4.6}
+Let $g:X\to\{0,1\}$ be partial computable and $y_x:=g(x)\oplus z_x$ with $z_x$ i.i.d.\ $\Bern(\varepsilon)$, drawn once per input.
+(a) For every data set $D$ with $\dom D\subseteq\dom g$, $|\dom D|=n$, and $e$ labels that disagree with $g$: $\LSFI(D)\le\log\binom ne+\log(n+1)+K(g)+c$.
+(b) If the $n$ distinct inputs are chosen without access to the noise at unrevealed inputs, $nH(\varepsilon)\le\Ex\LSFI(D_n)\le nH(\varepsilon)+\log(n+1)+K(g)+c$; the lower bound holds for every learner.
+\end{proposition}
+
+The machine behind (a) shares a flip rate across inputs, so it is a mixture of product laws (\cref{app:ex:positive}). Fresh label noise is different: random-function SFI fails as soon as an input can repeat with another label (\cref{rem:ex:fresh}).
+

@@ -1,0 +1,136 @@
+% Section "comp" (writer: oodcomp). Source: research/tracks/context/notes-final.md §3 (Thm 3.1, Rem 3.1a, Props 3.2a,
+% 3.2c, 3.3, Cor 3.2b, Rem 3.2, Q 3.4, §3.2, Thm 3.5, Rem 3.6, 3.7, Props 3.8, 3.9, Rem 3.10, Lemma 3.11a, Thm 3.11,
+% Rem 3.11b, 3.12, 3.13, §7 items 3, 4, 5, 8), Hänni's polytime and circuit notes, and the Vaintrob--Hänni slides
+% (Appendix K). Renamings (NOTATION.md): time bound p -> t, clock t_k -> \tau_k, mixtures S, S^rd -> \Mlen, \Mrd,
+% circuit mixture W -> \Wcirc, size c(f) -> \csize(f), expected Gibbs mistakes m -> \mathcal E, B(s) -> \Gamma(s),
+% context's N_A -> n_A, history length N_k -> \tilde n_k, Occam's N -> n_0, gadget size g -> \gamma.
+% To respect the page target, rem:comp:constant and rem:comp:adversary are stated in app-comp.tex.
+\section{Computable versions}\label{sec:comp}
+
+SFI is not computable (\cref{prop:setting:computability}). H\"anni's notes sketch two computable relatives: a time-bounded Solomonoff predictor with constant regret against all predictors of a given running time, and induction over Boolean circuits, where ``regret and complexity are polynomially related'' \citep{hanni2026notes}. This section states what holds and shows that Occam (simplest-consistent) learning, unlike Bayes, fails exponentially out of distribution.
+
+% ------------------------------------------------------------------
+\subsection{Time-bounded SFI}\label{sec:comp:time}
+
+\begin{definition}[time-bounded predictors; length-activated mixture]\label{def:comp:timebounded}
+\src{context \S3.1}
+Let $Y$ be finite, $|Y|\ge2$. A \emph{probability predictor} is a RAM program $A$ that on input $x$ halts with rationals $(A(y\mid x))_{y\in Y}$, nonnegative and summing to $1$, in time $T_A(x)$. For a nondecreasing $t:\mathbb N\to\mathbb N_{\ge1}$, $\mathcal C_t:=\{A:\exists c_A\,\forall x\ T_A(x)\le c_At(|x|)\}$. Fix RAM programs $A_1,A_2,\dots$ with computable weights $w_i>0$, $\sum_iw_i\le1$, activation lengths $n_1<n_2<\cdots$, and a nondecreasing unbounded clock factor $g\ge1$, with $t$ and $g\cdot t$ time-constructible. Let $q_i(\cdot\mid x):=A_i(\cdot\mid x)$ if $|x|\ge n_i$ and $A_i$ halts on $x$ within $g(|x|)t(|x|)$ steps with a valid vector, and the uniform vector $u$ otherwise. The \emph{length-activated mixture} is the mixture of product laws $\Mlen(D):=\sum_iw_i\prod_{(x,y)\in D}q_i(y\mid x)$.
+\end{definition}
+
+\begin{theorem}[time-bounded SFI]\label{thm:comp:timebounded}
+\status{(a) proved (corrected); (b) proof sketch; computed (context c5, c9)}\src{context Thm 3.1}
+(a) Let $A=A_i\in\mathcal C_t$ and $n_A:=\max(n_i,\min\{n:g(n)\ge c_A\})$. On every sequence of \emph{distinct} inputs, with any labels, the regret of $\Mlen$ against $A$ after $k$ rounds is
+\[ \sum_{j\le k}\log\frac{A(y_j\mid x_j)}{\Mlen(y_j\mid D_{j-1},x_j)}\ \le\ \log\tfrac1{w_i}+\#\{j\le k:|x_j|<n_A\}\log|Y|\ \le\ \log\tfrac1{w_i}+(2^{n_A}-1)\log|Y|. \]
+(b) With $n_i=2^{2^i}$ and $g(n)=\lceil\log\log(n+4)\rceil$, round $k$ costs at most $\log\log|x_k|+1$ simulations of $g(|x_k|)t(|x_k|)$ steps plus as many arithmetic operations on stored weights; weights stored with relative precision $k^{-2}$ change the cumulative loss by $O(1)$.
+\end{theorem}
+
+\emph{Proof idea} (\cref{app:comp}). (a) The loss of $\Mlen$ is at most $\log(1/w_i)$ plus that of $\prod q_i$; $q_i=A$ on inputs of length at least $n_A$, and on shorter ones $q_i\in\{A,u\}$ costs at most $\log|Y|$ more than $A$. (b) Only active machines change their weights, and rounding errors telescope. A direct computation on a toy instance (code in the accompanying repository) matches the brute-force mixture to $2.5\cdot10^{-16}$, with regret $132.4$ bits against the proved $184$. The constant in (a) is large, triple exponential in the index $i$ (\cref{rem:comp:constant}).
+
+\begin{remark}[distinct inputs are a real restriction]\label{rem:comp:distinct}
+\status{refuted; computed (context c9)}\src{context \S3.1}
+One might hope that restricting (a) to distinct inputs loses nothing, since a repeated input costs nothing in the semimeasure convention. For noisy labels it does not: a repeated input with a new label has probability $0$ under $\Mlen$, as under SFI (\cref{prop:learn:freshnoise}); and even if the product hypotheses are mixed round by round, length clocking leaves a comparator over budget on short inputs forever. On $4000$ rounds that repeat $12$ short inputs with labels drawn from a comparator in $\mathcal C_t$, a direct computation gives regret $469$ bits, growing linearly.
+\end{remark}
+
+\begin{proposition}[round-activated mixture]\label{prop:comp:round}
+\status{proved; running time proof sketch; computed (context c9)}\src{context Prop 3.2a}
+Let $q_i^{(k)}:=A_i(\cdot\mid x_k)$ if $k\ge k_i$ and $A_i$ halts on $x_k$ within $g(k)t(|x_k|)$ steps with a valid vector, and $u$ otherwise; let $\Mrd$ be the Bayes mixture, with weights $w_i$, of the per-round products $\prod_{j\le k}q_i^{(j)}(y_j)$. For every $A=A_i\in\mathcal C_t$, every stream (repeated inputs and conflicting labels allowed) and every $k$, the regret of $\Mrd$ against $A$ is at most $\log(1/w_i)+(J_A-1)\log|Y|$, $J_A:=\max(k_i,\min\{k:g(k)\ge c_A\})$. Round $k$ costs $\#\{i:k_i\le k\}$ simulations of $g(k)t(|x_k|)$ steps plus as many arithmetic operations.
+\end{proposition}
+
+\begin{proof}
+For $j\ge J_A$, machine $i$ is active and $T_A(x_j)\le c_At(|x_j|)\le g(j)t(|x_j|)$, so $q_i^{(j)}=A(\cdot\mid x_j)$; for $j<J_A$, $q_i^{(j)}\in\{A(\cdot\mid x_j),u\}$ and $-\log q_i^{(j)}(y_j)\le\log|Y|-\log A(y_j\mid x_j)$. The mixture loses at most $\log(1/w_i)$ to $\prod_jq_i^{(j)}$.
+\end{proof}
+
+This is the time-bounded analogue of SFI on time-stamped inputs (\cref{thm:learn:batch}(b)), and a mixture of the per-query kind (\cref{rem:versions:operator}). On the stream of \cref{rem:comp:distinct} its regret is $10.0$ bits, against the bound $20$.
+
+\begin{corollary}[all polynomial-time predictors]\label{cor:comp:poly}
+\status{proved}\src{context Cor 3.2b}
+Let $g$ be computable, nondecreasing and unbounded, and the clock $\tau_k(x):=(|x|+2)^{g(k)}$ time-constructible. With $\tau_k(x_k)$ in place of $g(k)t(|x_k|)$ in \cref{prop:comp:round}, the regret against every x-only predictor with $T_A(x)\le c_A(|x|+2)^{e_A}$ is bounded by a constant depending on $A$, on every stream; round $k$ costs $\#\{i:k_i\le k\}$ simulations of $(|x_k|+2)^{g(k)}$ steps.
+\end{corollary}
+
+\begin{proof}
+$c_A(|x|+2)^{e_A}\le(|x|+2)^{e_A+\log c_A}$, so $A$ is within budget once $g(k)\ge e_A+\log c_A$; argue as for \cref{prop:comp:round}.
+\end{proof}
+
+This is H\"anni's ``Remark 4'': constant regret against all polynomial-time predictors in time $|x|^{\omega(1)}$ per round.
+
+\begin{remark}[H\"anni's ``apples to oranges'' caveat]\label{rem:comp:apples}
+\status{remark}\src{context Rem 3.2}
+In H\"anni's sequence theorem the learner reuses state across rounds while the comparator recomputes, which he calls comparing ``apples to oranges''. For x-only comparators, which see one input and have nothing to reuse, \cref{thm:comp:timebounded,prop:comp:round} compare like with like. History-aware comparators need a chronological learner: no x-only learner competes with them, since the chain and skipped-string predictors run in linear time while SFI's loss on those data is unbounded (\cref{thm:hist:chain,thm:hist:skipped}).
+\end{remark}
+
+\begin{proposition}[time-bounded history-aware predictors]\label{prop:comp:history}
+\status{regret proved; running time proof sketch}\src{context Prop 3.2c}
+Let $\mathcal C^{\rm hist}_t$ be the RAM programs $A$ that keep a state, receive $x_k$, output $A(\cdot\mid h_{k-1},x_k)$, then receive $y_k$, with round $k$ taking at most $c_At(\tilde n_k)$ steps, where $\tilde n_k$ is the length of the encoded $h_{k-1}$ and $x_k$. Let the learner start machine $i$ at round $k_i$ and give it $2g(k)t(\tilde n_k)$ steps in round $k$, spent replaying the stored history and then on round $k$; it uses $A_i$'s output if this finishes in time and $u$ otherwise, and mixes the per-round products. Then the regret against every $A=A_i\in\mathcal C^{\rm hist}_t$ is at most $\log(1/w_i)+2k_0\log|Y|$ on every stream, $k_0:=\max(k_i,\min\{k:g(k)\ge c_A\})$; round $k$ costs $O(\#\{i:k_i\le k\}\,g(k)t(\tilde n_k))$ steps plus the replay memory.
+\end{proposition}
+
+\emph{Proof idea} (\cref{app:comp}). As $\tilde n_k$ grows, every past round of $A$ fits into the current budget once $k\ge k_0$, so the replay catches up by round $2k_0-2$ and stays caught up. This is the function-setting form of H\"anni's amortised warm-up; a budget depending only on $|x_k|$ could stall. The class contains the chain and skipped-string predictors; it is the time-bounded counterpart of \SFIhist{} (\cref{cor:hist:H4}).
+
+\begin{proposition}[samplers]\label{prop:comp:samplers}
+\status{proved (corrected)}\src{context Prop 3.3}
+Let $A(x;r)$ be a probabilistic RAM program that halts within $c_At(|x|)$ steps on all coin sequences $r$, with output law $P_A(\cdot\mid x)$. For $|x|\ge n_i$ let $q_i^{\rm samp}(y\mid x)$ be the probability that $A_i(x;r)$ halts within $g(|x|)t(|x|)$ steps with output $y$, plus $1/|Y|$ times the probability that it does not; for $|x|<n_i$ let $q_i^{\rm samp}:=u$. The mixture $\sum_i\frac{w_i}2(\prod_Dq_i+\prod_Dq_i^{\rm samp})$ satisfies \cref{thm:comp:timebounded}(a) against every such sampler (regret against $P_A$) and every predictor in $\mathcal C_t$, with $\log(2/w_i)$ for $\log(1/w_i)$; \cref{prop:comp:round} extends likewise. Computing $q_i^{\rm samp}$ exactly takes time $O(2^{g(|x|)t(|x|)}g(|x|)t(|x|))$.
+\end{proposition}
+
+A sampler's program is not a predictor's program, so the mixture must contain both readings; the proof of \cref{thm:comp:timebounded}(a) applies because $q_i^{\rm samp}(y\mid x)\ge P_A(y\mid x)/|Y|$ on short inputs.
+
+\paragraph{Open question.}\label{q:comp:samplers} Is there a learner with per-round time polynomial in $t(|x|)$ and constant regret against all time-$O(t)$ samplers? (Heuristic, not proved: Monte Carlo with $s$ samples per round adds an expected excess of order $(|Y|-1)/(2s\ln2)$ bits per round, so constant regret would need $s_k\to\infty$ with $\sum_k1/s_k<\infty$.) As secondary sources describe it, \citet{impagliazzo1990no} tie efficient universal extrapolation to the non-existence of one-way functions. Speed priors \citep{schmidhuber2002speed,filan2016loss} treat the sequence case.
+
+% ------------------------------------------------------------------
+\subsection{Circuit SFI}\label{sec:comp:circuits}
+
+\begin{definition}[circuits and the circuit mixture]\label{def:comp:circuits}
+\src{context \S3.2}
+Fix $d\ge1$ and the basis of all $16$ two-input Boolean gates. A circuit of size $s$ is a list of $s$ gates, gate $j$ with a type and two inputs from $\{x_1,\dots,x_d,0,1,\mathrm{gate}_1,\dots,\mathrm{gate}_{j-1}\}$; gate $s$ is the output. There are $N_s=\prod_{j=1}^s16(d+1+j)^2$ of them. The prior $w(C):=2^{-s}/N_s$ is the code length of ``size in unary, then the gate list''; $\sum_Cw(C)=1$. Let $\Wcirc(D):=\sum\{w(C):C\text{ consistent with }D\}$, $\csize(f)$ the least size of a circuit for $f$, and for $B\subseteq\{0,1\}^d$, $\csize_B(f)$ the least size of one agreeing with $f$ on $B$, and $L_B:=-\log\Wcirc(f|_B)$. The \emph{exception gadget} appends $\gamma\le d+1$ gates computing $[x=a]$ and a new output gate, so that $C'$ equals $C$ off $a$ and outputs a chosen bit at $a$; $C\mapsto C'$ is injective and $w(C')/w(C)\ge2^{-\Gamma(s)}$, $\Gamma(s):=\gamma(5+2\log(d+1+s+\gamma))$.
+\end{definition}
+
+For any ordering of $B$, let $P_i$ be the posterior probability of the wrong label at step $i$ (circuits are total, so both conventions agree) and $\mathcal E:=\sum_iP_i$ the expected number of mistakes of posterior sampling (Gibbs mistakes).
+
+\begin{theorem}[circuit Bayes: mistakes and circuit size]\label{thm:comp:circuitbayes}
+\status{proved; computed (context c1, c8)}\src{context Thm 3.5}
+For every $B\subseteq\{0,1\}^d$, every $f$ and every ordering of $B$:
+(a) some circuit of size at most $\lceil L_B\rceil$ agrees with $f$ on $B$, and $L_B\le\csize_B(f)+\log N_{\csize_B(f)}=O(\csize_B(f)\log(\csize_B(f)+d))$;
+(b) $\mathcal E\le(\ln2)L_B$ and $L_B\le2\mathcal E(\Gamma(\lceil L_B\rceil)+3)$; explicitly, for all $\mathcal E>0$ and $d\ge1$,
+$\csize_B(f)\le\lceil L_B\rceil$ with $L_B\le16\,\mathcal E\,(d+1)\log\big(2(\mathcal E+1)(d+2)\big)$.
+\end{theorem}
+
+\emph{Proof idea} (\cref{app:comp}). (a) Circuits larger than $S$ have total weight $2^{-S}$. (b) The first inequality is $P_i\le-\ln(1-P_i)$ with \cref{prop:setting:order}. For the second, the gadget maps the small wrong circuits at step $i$ injectively into the right ones at weight cost $2^{-\Gamma}$, so $-\log(1-P_i)\le\Gamma+2$; steps with $P_i\le\frac12$ cost at most $2P_i$, and at most $2\mathcal E$ steps have $P_i>\frac12$. A grid computation gives the largest ratio $10.85$ in place of $16$.
+
+\begin{remark}[relation to H\"anni's sketch]\label{rem:comp:gap}
+\status{remark; computed (context c1)}\src{context Rem 3.6, 3.7}
+H\"anni's direction, ``expected regret $m$ when learning the function $f$ implies there is a circuit of size $O(m\log m\cdot\text{inputdim})$'', is (b) with (a), with $\log((\mathcal E+1)(d+2))$ for $\log m$; it holds for every single ordering, needs no Markov step (total log loss is order independent), and his flagged ``$+O(\log m)$ term'' is the $\log(d+s)$ in $\Gamma$. His step from ``log loss $\le\mathrm{poly}(m)$'' to ``a circuit of size $\mathrm{poly}(m)$'' is a \emph{circuit coding theorem}; (a) gives it for a size prior with exponential tail, while a polynomial tail gives only $\csize(f)\le2^{O(L)}$. The converse holds on every ordering: $\mathcal E\le(\ln2)L\le(\ln2)\csize(f)(5+2\log(d+1+\csize(f)))$. For formulas on $d=3$ an exhaustive computation over all $256$ functions and all orderings confirms inequalities of the same form.
+\end{remark}
+
+\begin{proposition}[Occam learning in distribution]\label{prop:comp:occam}
+\status{(a) known; (b) proved}\src{context Props 3.8, 3.9}
+Order functions by shortest description length in a prefix-free language, then by a fixed tie rule; $\ell(f)$ is the shortest description length of $f$. The \emph{Occam learner} predicts with the first function consistent with the data, so it uses only $H_f:=\{h\text{ preceding or equal to }f\}$, $|H_f|<2^{\ell(f)+1}$. For i.i.d.\ inputs from $\mu$: (a) after $n\ge(\ln|H_f|+\ln(1/\delta))/\varepsilon$ samples its hypothesis has $\mu$-error at most $\varepsilon$ with probability at least $1-\delta$ \citep{blumer1987occam}; (b) its expected number of mistakes is at most $6.7+(\ln|H_f|)(1+\ln n_0)+\ln^2n_0$, $n_0:=\lceil\ln|H_f|/p_{\min}\rceil$ with $p_{\min}$ the least positive point mass of $\mu$; for uniform $\mu$ on $\{0,1\}^d$ this is $O(\ell(f)(d+\log\ell(f))+d^2)$.
+\end{proposition}
+
+(a) is a union bound over $H_f$; with $\varepsilon=\delta=0.01$ it needs $70\ell(f)+531$ samples, so H\"anni's ``$1000000\cdot C(f)$ input-output pairs'' suffice when $C(f)$ is description length. (b) is proved in \cref{app:comp}.
+
+\begin{remark}[the ``physicist's proof'' is a proof for weighted majority]\label{rem:comp:majority}
+\status{proved; known}\src{context Rem 3.10}
+H\"anni's ``physicist's proof'' that Occam makes $O(C(f))$ online mistakes on every ordering assumes that when the current guess is wrong, a constant fraction of the competing weight is wrong too. That is the guarantee of the \emph{posterior-majority} (weighted-majority) predictor: when it errs, at least half of the posterior mass errs, so $\Wcirc(D_i)\le\Wcirc(D_{i-1})/2$, and it makes at most $L_B\le\ell(f)$ mistakes on every ordering \citep{littlestone1988learning,littlestone1994weighted}. Under the circuit prior the maximum-a-posteriori \emph{circuit} is a smallest consistent one, so the MAP-hypothesis learner is an Occam learner. For Occam the assumption can fail at every step:
+\end{remark}
+
+% ------------------------------------------------------------------
+\subsection{Occam learning fails out of distribution}\label{sec:comp:ladder}
+
+The construction below is from the Vaintrob--H\"anni slides (Appendix K) \citep{vaintrobhanni2026nnbayes}; we prove it for two languages and every tie rule. \emph{Formulas} have leaves $x_j,\neg x_j,0,1$ and binary nodes AND, OR, XOR; size is the number of leaves; the prior is ``size in unary, then uniform within the size''. \emph{Circuits} are as in \cref{def:comp:circuits}.
+
+\begin{theorem}[the conjunction ladder]\label{thm:comp:ladder}
+\status{proved; computed (context c6, c11); construction from the slides}\src{context Thm 3.11}
+Let $f=x_1\wedge\dots\wedge x_d$, and let Occam use any fixed tie rule among functions of equal least size, for formulas ($d\ge2$) or circuits ($d\ge3$). Present $1^d$, then $0^d$, then the inputs of Hamming weight $1,2,\dots,d-1$ level by level, inside a level an input on which the current hypothesis errs if there is one. Then Occam makes at least $2^d-2$ mistakes (formulas) or $2^d-d-2$ (circuits). Since $\ell(f)=\Theta(d\log d)$ in both languages, its worst-case number of mistakes is $2^{\Omega(\ell/\log\ell)}$; the trivial upper bound is $2^{\ell+1}$.
+\end{theorem}
+
+\emph{Proof idea} (\cref{app:comp}). At the start of stage $k$ the data say $h(1^d)=1$ and $h(x)=0$ for $|x|<k$. A M\"obius-inversion lemma (\cref{lem:comp:mobius}) shows that the least-size consistent functions are then exactly the $\binom dk$ conjunctions of $k$ variables (for circuits from $k=2$). Each is wrong only at its own point $1_S$, so every input of weight $k$ is a mistake. The ordering is computable from $d$ and the tie rule, so ``structured orderings are safe'' is false, as the slides note. A second adversary gives the circuit count without the lemma (\cref{rem:comp:adversary}). A direct computation ($d=3,4,5$, seven tie rules) finds every input of every covered level to be a mistake.
+
+\begin{remark}[it is the selection rule, not the prior]\label{rem:comp:selection}
+\status{computed (context c6(e)); known; unverified (claimed in the slides)}\src{context Rem 3.12}
+With the same formula prior the posterior-majority predictor makes at most $L(f)\le\ell(f)$ mistakes on every ordering (\cref{rem:comp:majority}). An exact computation (code in the accompanying repository; ties count $\frac12$) gives, for $d=3$ and $d=4$: Occam on the ladder $7$ and $15$ mistakes; posterior majority on the ladder $2.5$ and $3.5$, and on its worst ordering $5.5$ and $8.5$; Gibbs on its worst ordering $4.47$ and $7.08$; halving bound $L(f)=10.83$ and $15.30$. The slides tabulate four selection rules on one prior: deterministic argmax, $2^{\Theta(C/\log C)}$ worst-case mistakes; argmax with randomised tie-breaking, $\tilde\Theta(C^2)$; a uniformly random consistent hypothesis with a doubling budget, $O(C)$; weighted majority, at most $C$. They also state that a random ordering gives $O((C+d)d)$ expected mistakes in any language, and the descending-weight ordering exactly $d+1$. The first and last rows are proved here (\cref{thm:comp:ladder,rem:comp:majority}); the other claims are the slides' and we have not checked them.
+\end{remark}
+
+\begin{remark}[uniform tie-breaking on the ladder]\label{rem:comp:uniformties}
+\status{proved}\src{context Rem 3.13}
+All formulas of one size have the same prior weight, so the limit $\lambda\to\infty$ of the power posterior $\propto w(\text{formula})^\lambda\ind[\text{consistent}]$ (the direction of the companion paper on steeper priors, \citealt{claudeSFI2026steeper}) is uniform over the least-size consistent formulas, and by symmetry uniform over the surviving $k$-conjunctions at stage $k$. On the ladder it makes at most $1+\sum_{k=1}^{d-1}H_{\binom dk}\le d+d^2\ln2$ Gibbs mistakes ($H_m$ the harmonic number) and at most $\frac32(d-1)+1$ majority mistakes. So \cref{thm:comp:ladder} is a failure of deterministic tie-breaking; it does not show that steeper SFI fails on this ordering.
+\end{remark}
+
+\paragraph{Open questions.}\label{q:comp:open} A circuit coding theorem for size priors with polynomial tails: do large random circuits rarely compute functions without small circuits? Do few posterior-majority mistakes imply a small circuit (steps with $P_i$ just below $\frac12$ cost log loss but no majority mistakes)? Is there a natural language and target with $2^{\Omega(\ell)}$ worst-case Occam mistakes, and can a steeper posterior over a universal machine fail exponentially on some ordering? The machine-model details of the running times above (RAM versus multitape, the cost of the clocks) are not written out.

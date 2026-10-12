@@ -1,0 +1,182 @@
+% Section "ood" (writer: oodcomp). Sources: research/tracks/context/notes-final.md §1.2, §2 (Props 2.1--2.8,
+% 2.13--2.16, Thm 2.5, 2.7, Ex 2.15, 2.15a, Rem 2.2, 2.8a, §2.5, §7 item 9) and research/tracks/examples/notes-final.md §5
+% (Prop 5.1, §5.1--5.4, §7 item 4); Hänni's notes in research/prior/. Notation: NOTATION.md (sample size n, input
+% length d, novelty \sep, D^*_y for context's \lambda_y, \mathcal T for a theory, to keep T for function machines).
+\section{Out-of-distribution behaviour}\label{sec:ood}
+
+H\"anni's notes state that if ``there is some simple property such that no input with that property showed up in training'', SFI keeps ``at least corresponding const probability of just outputting 0 on all inputs with that property'', and ask whether ``some log term'' is lost \citep{hanni2026notes}. His draft adds a two-sided version, asks for a converse, and lists examples where SFI ``plausibly'' generalises well. This section makes these statements precise. His notes use plain complexity $C(\cdot)$; we use prefix complexity $K$ throughout.
+
+\paragraph{Conventions.} $\nu$ ranges over $\{W,\MF\}$ (\cref{def:versions:variants,def:setting:sfi}); for $W$ the normalised conditional $\bar\nu$ is defined as $\MFbar$ is for $\MF$. For a target $f$ and inputs $x_1,x_2,\dots$, $D_k:=\{(x_j,f(x_j)):j\le k\}$ and the \emph{posterior error} $e_k:=1-\nu(f(x_k)\mid D_{k-1},x_k)$ is the posterior mass that is wrong \emph{or undefined} at $x_k$. At a test point $x^*$ with training labels $f|_A$: $e(x^*):=1-\nu(f(x^*)\mid f|_A,x^*)$; $e^{\rm wr}(x^*):=\sum_{y\ne f(x^*)}\nu(f|_A+(x^*,y))/\nu(f|_A)$ (defined and wrong); $e_{\rm norm}(x^*):=1-\bar\nu(f(x^*)\mid f|_A,x^*)$. Since $\sum_y\nu(f|_A+(x^*,y))\le\nu(f|_A)$,
+\begin{equation}\label{eq:ood:errors}
+e^{\rm wr}(x^*)\ \le\ e_{\rm norm}(x^*)\ \le\ e(x^*),
+\end{equation}
+so every lower bound below on $e^{\rm wr}$, and every upper bound on $e$, holds in both conventions. A \emph{property} $Q\subseteq X$ \emph{separates} $x^*$ from $A$ if $x^*\in Q$ and $Q\cap A=\emptyset$. For decidable $Q$ and partial computable $b$, $K(Q,b)$ is the complexity of a pair $\langle e,e'\rangle$ with $\varphi_e$ a total decider of $Q$ and $\varphi_{e'}$ computing $b$ on $Q\cap\dom b$; $K(Q,b)\le K(Q)+K(b)+c$.
+
+% ------------------------------------------------------------------
+\subsection{Unseen simple properties}\label{sec:ood:prop}
+
+\begin{proposition}[H\"anni's proposition, with no log term]\label{prop:ood:hanni}
+\status{proved}\src{context Prop 2.1}
+Let $Q$ be decidable, $b$ partial computable, $\dom D\cap Q=\emptyset$, $S\subseteq Q\cap\dom b$ finite and $E:=b|_S$. Then (a) $\nu(D\cup E)\ge2^{-K(Q,b)-c}\,\nu(D)$, and the hypotheses (programs for $W$, tapes for $\MF$) consistent with $D$ that agree with $b$ on all of $Q\cap\dom b$ have mass at least $2^{-K(Q,b)-c}\nu(D)$; (b) $\KF(D\cup E)\le\KF(D)+K(Q,b)+c$.
+\end{proposition}
+
+\begin{proof}
+For $W$: let $V'$ read a $V$-program $z$ for $\langle e,e'\rangle$, then a $V$-program $p$, and output an index of the function equal to $\varphi_{e'}$ on $Q$ and to $\varphi_{V(p)}$ off $Q$; let $V(wu)=V'(u)$. The map $p\mapsto wzp$ is injective, preserves consistency with $D$ (no input of $D$ lies in $Q$), and its image agrees with $b$ on $Q\cap\dom b$. Summing over consistent $p$ with $|z|=K(Q,b)$ gives (a); a shortest $p$ gives (b). For $\MF$: the function machine $T_{Q,b}$ that answers $b(x)$ on $Q$ without reading the tape and runs $T_U$ off $Q$ has an index computable from $\langle e,e'\rangle$, and maps every tape with $f_\omega\supseteq D$ to a function extending $D\cup b|_{Q\cap\dom b}$; apply \cref{thm:setting:universal}.
+\end{proof}
+
+So, whatever $D$ is and however large, SFI behaves like $b$ on all unseen $Q$-inputs with posterior probability at least $2^{-K(Q,b)-c}$; with $b\equiv0$ this is H\"anni's statement. For $|S|=1$ and $b$ wrong there, (a) bounds $e^{\rm wr}$, so it holds in both conventions.
+
+\begin{remark}[where a log term would come from]\label{rem:ood:logterm}
+\status{proved}\src{context Rem 2.2}
+No log term arises, for $W$ or for $\MF$: the modified program is a concatenation of self-delimiting codes, and the proof sums over all consistent programs. Plain complexity costs $K(Q)\le C(Q)+2\log C(Q)+O(1)$. If $Q$ is only semi-decidable the argument gives no bound at all, since the wrapper cannot decide $Q$; a time-truncated decidable subset of $Q$ restores it there.
+\end{remark}
+
+H\"anni also worries about properties that are simple only relative to a good training program (``if this internal variable is set 0, then the if statement triggers''). Conditional complexity captures this.
+
+\begin{proposition}[properties simple given a training-consistent program]\label{prop:ood:relative}
+\status{proved (corrected)}\src{context Prop 2.3}
+Let $p\in\dom V$ be consistent with $D$, and $q,r$ indices with $\varphi_q(\langle p,\cdot\rangle)$ total; let $Q_p:=\{x:\varphi_q(\langle p,x\rangle)=1\}$ and $b_p(x):=\varphi_r(\langle p,x\rangle)$. If $Q_p\cap\dom D=\emptyset$ and $S\subseteq Q_p\cap\dom b_p$ is finite, then $\nu(D\cup b_p|_S)\ge2^{-K(q,r\mid p)-c}\,2^{-|p|}$; so the posterior probability of $b_p$ on $S$ is at least $2^{-K(q,r\mid p)-c}$ times $2^{-|p|}/\nu(D)$, the posterior weight of $p$.
+\end{proposition}
+
+\emph{Proof idea.} The program $wpz$ reads $p$ first, then a conditional program $z$ for $\langle q,r\rangle$ given $p$; it outputs $b_p$ on $Q_p$ and $p$'s values elsewhere. Reading $z$ first would give the complexity of the pair instead. For $\MF$ use $\MF\ge2^{-c}W$ (\cref{thm:versions:chain}).
+
+\begin{proposition}[dependence on the universal machine]\label{prop:ood:machine}
+\status{proved; analogue known}\src{context Prop 2.4}
+Fix $V$, a decidable $Q$ and a partial computable $b$. (a) Some universal prefix machine $V'$ has $2^{-K(Q,b)-c}W'\le W\le2W'$ and, for every $D$ with $\dom D\cap Q=\emptyset$ and finite $S\subseteq Q\cap\dom b$, $W'(D)=W(D)$ and $W'(D\cup b|_S)\ge\frac12W'(D)$. (b) Some universal prefix machine $V''$ yields an SFI $M_F'$ with $2^{-K(Q,b)-c}M_F'\le\MF\le2M_F'$ on nonempty data sets such that, for every nonempty $D$ with $\dom D\cap Q=\emptyset$, $M_F'(D)=\MF(D)$ and the $M_F'$-posterior probability that $f_\omega=b$ on all of $Q\cap\dom b$ is at least $\frac12$.
+\end{proposition}
+
+\emph{Proof idea} (\cref{app:ood}). $V'$ runs $V$ on programs $0u$ and the wrapper of \cref{prop:ood:hanni} on programs $1u$; the halves agree off $Q$. So H\"anni's remark that ``there's a programming language in which [good behaviour] doesn't have a better const'' is right. The machine is tailored to one property and behaviour, $K(Q,b)+O(1)$ bits from the reference machine. This is a supervised analogue of the dependence of AIXI on the reference machine \citep{leike2015bad}.
+
+% ------------------------------------------------------------------
+\subsection{The draft's two-sided result}\label{sec:ood:twosided}
+
+For a property $P\subseteq X\times Y$ of input--output pairs (``$y$ is a correct proof of $x$''), H\"anni's draft states that ``the probability of $P$-abiding generalization is at least $2^{-C(P)}$'' and, if no training input has property $Q$, ``at most $2^{-C(Q)}$ times 2 to the negative complexity of the smallest string not satisfying $P$ on the given input times a const''; in sum, good OOD generalisation ``has at least a const probability of happening but also at least some const probability of not happening'' \citep{hanni2026notes}. The summary is correct:
+
+\begin{theorem}[two-sided bound on $P$-abiding generalisation]\label{thm:ood:twosided}
+\status{proved}\src{context Thm 2.5}
+Let $Q$ be decidable, $\dom D\cap Q=\emptyset$, $S\subseteq Q$ finite and nonempty, and $K(P,Q)$ the complexity of a decider of $Q$ paired with an enumerator of $P$ (in (a)) or of its complement (in (b)).
+(a) If $P$ is c.e.\ and every $x\in Q$ has some $y$ with $(x,y)\in P$, then $\nu(\text{every }x\in S\text{ gets a }P\text{-abiding output}\mid D)\ge2^{-K(P,Q)-c}$.
+(b) If the complement of $P$ is c.e.\ and every $x\in Q$ has some $y$ with $(x,y)\notin P$, then $\nu(\text{some }x\in S\text{ gets a }P\text{-violating output}\mid D)\ge2^{-K(P,Q)-c}$, so $\nu(\text{all of }S\text{ is }P\text{-abiding}\mid D)\le1-2^{-K(P,Q)-c}$.
+(c) For $x\in Q$ and $(x,z)\notin P$: $\MF(D+(x,z))\ge2^{-K(Q)-K(z\mid x)-c}\MF(D)$ and $W(D+(x,z))\ge2^{-K(Q)-\KP(z\mid x)-c}W(D)$ (\cref{rem:versions:Wdelim}).
+\end{theorem}
+
+\emph{Proof idea} (\cref{app:ood}). (a), (b) apply \cref{prop:ood:hanni} to the first abiding (violating) output found by enumeration; (c) runs a conditional program on half of the tape on $Q$ and $T_U$ on the other half elsewhere. The bounds hold for every amount of data. The draft's upper bound must be read as a lower bound on the probability of \emph{violation}, as in (c). Literally, both bounds are false:
+
+\begin{proposition}[the draft's bounds as stated are false]\label{prop:ood:draftfalse}
+\status{refuted; proved}\src{context Prop 2.6}
+Let $P=\{(x,0):x\in X\}$. (a) If $D$ labels inputs outside a decidable $Q_d$ with $0$ and $x^*\in Q_d$, then $\nu((x^*,0)\mid D)\ge2^{-c}$, while the literal upper bound tends to $0$ as $K(Q_d)\to\infty$. (b) If $x^*\in\{0,1\}^d$ has $K(x^*\mid d)\ge d$ and $D=\{(x,1):x\in\{0,1\}^d\setminus\{x^*\}\}$, then $K(P)=O(1)$ but $\nu((x^*,0)\mid D)\le2^{-d+c}$, also normalised. With $Q=\{x^*\}$ \cref{thm:ood:twosided}(a) gives $2^{-d-2\log d-c}$, so its $K(Q)$ term is needed and nearly tight.
+\end{proposition}
+
+% ------------------------------------------------------------------
+\subsection{OOD failure is a bounded resource}\label{sec:ood:budget}
+
+\begin{theorem}[cumulative bound]\label{thm:ood:cumulative}
+\status{proved}\src{context Thm 2.7}
+Let $f$ be computable and $x_1,x_2,\dots$ any distinct inputs (adversarial, adaptive or non-computable). For every $n$, with $c=0$ for $W$,
+\[ \sum_{k\le n}-\log(1-e_k)\le K(f)+c,\quad \sum_{k\le n}e_k\le(\ln2)(K(f)+c),\quad \#\{k\le n:e_k\ge\delta\}\le\frac{(\ln2)(K(f)+c)}{\delta}. \]
+The same holds normalised, and with $K(f)+c$ replaced by $L_\nu(f|_B)\le\KF(f|_B)+c$, $B=\{x_1,\dots,x_n\}$.
+\end{theorem}
+
+\begin{proof}
+By \cref{prop:setting:order} the first sum is $-\log(\nu(D_n)/\nu(\emptyset))\le L_\nu(D_n)\le\KF(f|_B)+c\le K(f)+c$; use $-\ln(1-e)\ge e$, and count. Normalised errors are smaller by \eqref{eq:ood:errors}.
+\end{proof}
+
+This is the error form of the mistake bound (\cref{cor:learn:mistakes}). Separating properties force errors, but only a bounded total:
+
+\begin{proposition}[novelty budget]\label{prop:ood:budget}
+\status{proved}\src{context Prop 2.8}
+Let $Y=\{0,1\}$ and $\sep_k:=\min\{K(Q):Q$ decidable, $x_k\in Q$, $Q\cap\{x_1,\dots,x_{k-1}\}=\emptyset\}$. Then $e_k\ge e^{\rm wr}_k\ge2^{-\sep_k-c}$ for every $k$, and $\sum_k2^{-\sep_k}\le1$.
+\end{proposition}
+
+\begin{proof}
+The first claim is \cref{prop:ood:hanni} with $b\equiv1-f(x_k)$. A property separating $x_k$ from its predecessors contains $x_k$, so it separates no other $x_j$; distinct $k$ thus have distinct minimisers, with distinct shortest descriptions in $\dom V$; apply Kraft's inequality.
+\end{proof}
+
+\begin{remark}[the novelty bound is lopsided]\label{rem:ood:lopsided}
+\status{refuted as stated; remark}\src{context Rem 2.8a}
+Reading \cref{thm:ood:cumulative,prop:ood:budget} as ``the total OOD error lies between the novelty of the inputs and the complexity of $f$'' is wrong: the novelty bound $2^{-c}\sum_k2^{-\sep_k}$ never exceeds $2^{-c}$. Separation forces constant error at single steps but at most $O(1)$ in total; each simple property surprises only once. The positive statement is relative (\cref{thm:learn:dominance}(a)): if a computable x-only predictor generalises correctly across all the shifts, SFI's total excess log loss over it is at most its complexity plus $c$. A human who generalises after seeing the data is history-aware, which needs \cref{cor:hist:H4}; reading \cref{prop:ood:budget} as a formalisation of H\"anni's ``fake ood generalization'' is an interpretation, not a theorem.
+\end{remark}
+
+% ------------------------------------------------------------------
+\subsection{Converses}\label{sec:ood:converse}
+
+\begin{proposition}[the naive converse fails for complex targets]\label{prop:ood:converse}
+\status{proved}\src{context Prop 2.13}
+Let $f:\{0,1\}^d\to\{0,1\}$ be uniformly random and $A=\{x_1,\dots,x_n\}$, $x^*$ i.i.d.\ uniform, all independent.
+(a) Every learner has $\Ex[e_{\rm norm}(x^*)\mid x^*\notin A]\ge\frac12$.
+(b) For every string $z$ determined by $f$ (e.g.\ a shortest program for $f$) and $s\ge0$, the probability that some decidable $Q$ with $K(Q\mid z)\le s$ separates $x^*$ from $A$ is at most $2^{s+1}/(n+1)$.
+(c) (\emph{A program fitted to the training data.}) Let $K(x^*\mid d)\ge d$, $A:=\{0,1\}^d\setminus\{x^*\}$, $D:=\{(x,1):x\in A\}$, $f:=D+(x^*,0)$, and $p_1$ a shortest program for the constant $1$ (consistent with $D$). Every decidable $Q$ separating $x^*$ from $A$ has $K(Q\mid p_1)\ge d-c$, yet $e_{\rm norm}(x^*)\ge1-2^{-d+c}$; here $K(f)\ge d-c$.
+\end{proposition}
+
+So H\"anni's converse (``works well if there isn't a simple distinguishing property given such a program'') fails both for a program determined by the target (a, b) and for one fitted to the training data (c). The obstruction is $K(f)$. Allowing a factor depending on it, a converse holds once the property may depend on the labelled sample. For $A$ finite, $x^*\notin A$, $B:=A\cup\{x^*\}$ and $y\ne f(x^*)$, put $D^*_y:=f|_A+(x^*,y)$.
+
+\begin{proposition}[sandwich for one test point]\label{prop:ood:sandwich}
+\status{proved}\src{context Prop 2.14}
+For every decidable $Q$ separating $x^*$ from $A$ and partial computable $b$ with $b(x^*)=y$,
+$2^{-K(Q,b)-c}\le\nu(D^*_y)/\nu(f|_A)\le2^{L_\nu(f|_A)-K(D^*_y\mid B)+c}\le2^{\KF(f|_A)-K(D^*_y\mid B)+c'}$.
+\end{proposition}
+
+\begin{proof}
+Left: \cref{prop:ood:hanni}. Right: for $B$ given as a list, $\nu$ restricted to labellings of $B$ is a semimeasure (disjoint programs or tapes), lsc uniformly in $B$, so the conditional coding theorem gives $\nu(D^*_y)\le2^{-K(D^*_y\mid B)+c}$; and $\nu(f|_A)=2^{-L_\nu(f|_A)}\ge2^{-\KF(f|_A)-c}$.
+\end{proof}
+
+SFI errs at $x^*$ only if a wrong completion is, \emph{given all inputs}, not much more complex than the training labels are for a program that does not know the inputs. This gap is the one between x-only and history-aware prediction (\cref{thm:hist:sandwich}).
+
+\begin{proposition}[converse given the labelled sample]\label{prop:ood:labelled}
+\status{proved; disjointness computed (context c7)}\src{context Prop 2.16}
+Let $f$ be a labelling of a finite $B$, $x^*\in B$, $A:=B\setminus\{x^*\}$, and $\sep(x^*;A\mid f)$, $\sep(x^*;A)$ the least $K(Q\mid f)$, $K(Q)$ of a decidable $Q$ separating $x^*$ from $A$. Then
+\[ e^{\rm wr}(x^*)\le e_{\rm norm}(x^*)\le2^{\,L_\nu(f)-K(x^*\mid f)+c}\le2^{\,\KF(f)-K(x^*\mid f)+c'},\qquad |K(x^*\mid f)-\sep(x^*;A\mid f)|\le c, \]
+and $e^{\rm wr}(x^*)\ge2^{-\sep(x^*;A)-K(y)-c}$ for every $y\ne f(x^*)$. Also $e_{\rm norm}(x^*)\le2^{L_\nu(f)+\KF(f)-K(x^*\mid B)+c}$, and $e_{\rm norm}(x^*)\le2^{|p|-K(x^*\mid B,p)+c}$ for every $p\in\dom V$ that computes $f$ on $B$.
+\end{proposition}
+
+\emph{Proof idea} (\cref{app:ood}). The hypotheses that agree with $f$ on $B\setminus\{x\}$ and are defined and wrong at $x$ form disjoint sets for distinct $x$, with masses lsc uniformly in $(f,x)$; the coding theorem bounds the mass for $x^*$ by $2^{-K(x^*\mid f)+c}$, and the normaliser at $x^*$ is at least $\nu(f)$.
+
+So if $f$ is simple and no property simple \emph{given the labelled sample} separates the test point, the error there is small. The two sides use the separating complexity without and with the sample; the difference is the value of knowing the other inputs. The mass undefined at $x^*$ is not lsc, so there is no pointwise bound on $e(x^*)$; \cref{cor:learn:perstep} bounds it in distribution.
+
+\begin{example}[easy-to-hard generalisation; shortest proofs]\label{ex:ood:easyhard}
+\status{proved}\src{context Ex 2.15, 2.15a}
+Let the inputs be sentences of a consistent theory $\mathcal T$ with decidable proof checking, labelled $1$ if $\mathcal T$ proves them and $0$ if it refutes them. Let every training sentence have a proof or refutation of length at most $L$, and the test sentence $x^*$ none of length at most $L':=2^{\lceil\log L\rceil}\le2L$. The property ``no proof or refutation of length $\le L'$'' is decidable, separates $x^*$ from the training set, and has complexity at most $K(\mathcal T)+K(\lceil\log L\rceil)+c\le K(\mathcal T)+2\log\log L+c$ for large $L$. With $b\equiv0$ and $b\equiv1$, \cref{prop:ood:hanni} gives the wrong label probability at least $2^{-K(\mathcal T)-2\log\log L-c}$, however many easy sentences were seen. Proof search, of length $K(\mathcal T)+c$, fits every correctly labelled training set, so the correct label has probability at least $2^{-K(\mathcal T)-c}$. If instead each provable sentence is labelled by its shortest proof, \cref{thm:ood:twosided}(c) with the violating output $\varepsilon$ ($K(\varepsilon\mid x^*)=O(1)$) gives probability at least $2^{-K(\mathcal T)-2\log\log L-c}$ that $x^*$ does not get its shortest proof.
+\end{example}
+
+Both ends are independent of the amount of data. The failure floor is not independent of the difficulty threshold: it decays, slowly, as $L$ grows.
+
+\begin{remark}[the strongest true positive statements]\label{rem:ood:answer}
+\status{remark}\src{context \S2.5}
+(i) Over any shifts, SFI's total loss exceeds that of every computable x-only predictor $P$ by at most $K(P)+c$, and its total error is at most $(\ln2)(K(f)+c)$ (\cref{thm:learn:dominance,thm:ood:cumulative}). (ii) A random train/test split of any input set $B$ costs at most $L_\nu(f|_B)/|B|$ in expectation (\cref{prop:learn:splits}). (iii) For simple $f$ the error at a test point lies between $2^{-\sep(x^*;A)-O(1)}$ and $2^{L_\nu(f)-\sep(x^*;A\mid f)+O(1)}$; for random $f$ no learner has a converse. So ``no simple separating property implies small error'' fails only for bounds independent of $K(f)$, or for properties simple unconditionally. (iv) In distribution the per-step error is at most $\min\{((K(f)+c)\ln2+\ln n+1)/n,\,2^{K(f)+c}/(n+1)\}$, and for uniform inputs at least of order $2^{-K(f)}/(n\log^2n)$ (\cref{prop:learn:typical,cor:learn:perstep}).
+\end{remark}
+
+\paragraph{Open question.}\label{q:ood:converse} Is there a positive statement for properties simple given a program fitted to the training data only (as in \cref{prop:ood:converse}(c)), with a factor depending on $K(f)$?
+
+% ------------------------------------------------------------------
+\subsection{H\"anni's examples}\label{sec:ood:examples}
+
+H\"anni's examples are sentences of a formal theory labelled by provability (``assuming the riemann hypothesis is decidable, it seems plausible that solomonoff function induction gives it the intended label''), sentences labelled by their shortest proofs, and ``correctly counted the lengths of odd strings'', tested on even lengths \citep{hanni2026notes}.
+
+\begin{proposition}[the intended answer]\label{prop:ood:intended}
+\status{proved}\src{examples Prop 5.1}
+If the labels follow a partial computable $g$ and $x\in\dom g$ is new, SFI gives $g(x)$ predictive probability at least $2^{\LSFI(D)-K(g)-c}$, in both conventions.
+\end{proposition}
+
+\begin{proof}
+$\MF(D+(x,g(x)))\ge2^{-K(g)-c}$ (\cref{thm:learn:dominance}(b)); divide by $\MF(D)$; the normalised conditional is larger.
+\end{proof}
+
+This is near $1$ only if $\LSFI(D)\approx K(g)$, i.e.\ if $g$-like programs carry most of the posterior.
+
+\begin{example}[H\"anni's three examples]\label{ex:ood:hanniexamples}
+\status{proved; computed (examples e5)}\src{examples \S5.1--5.3; context Ex 2.15, 2.15a}
+Let $\mathcal T$ be a consistent theory with decidable proof checking, and $p_{\mathcal T}$ its proof search, of length $K(\mathcal T)+c$.
+(a) \emph{Provability labels.} $p_{\mathcal T}$ fits every correctly labelled training set, so $\LSFI(D)\le K(\mathcal T)+c$, \cref{prop:ood:intended} applies, and over any sequence of sentences the correct label gets probability at most $\frac12$ at most $K(\mathcal T)+c$ times. A hard test sentence keeps a wrong-label probability of at least $2^{-K(\mathcal T)-2\log\log L-c}$ however many easy sentences were seen (\cref{ex:ood:easyhard}). This makes precise H\"anni's weakly held hypothesis that for Solomonoff induction ``ood generalization is a thing, but easy-to-hard generalization is not''. Relative to proof search in the form ``fixed searcher, then a description of $\mathcal T$'' (\cref{prop:ood:relative}), the floor is $2^{-K(L'\mid p_{\mathcal T})-c}\ge2^{-c'}/(\log L(\log\log L)^2)$ times the posterior weight of $p_{\mathcal T}$.
+(b) \emph{Shortest proofs as labels.} The same bounds hold, with the floor of \cref{ex:ood:easyhard}.
+(c) \emph{Lengths of odd strings.} The correct answer has probability at least $2^{-c}$ on every even-length input and SFI makes at most $c$ online errors; ``$|x|$ even'' and ``output $0$'' cost $O(1)$ bits, so a wrong answer keeps probability at least $2^{-c'}$. Both constants depend on the machine. An exact computation over a small enumerated grammar of programs (\cref{app:ood}; code in the accompanying repository) gives the intended answer probability at least $0.979$, $0.997$ or $0.9997$ on every even-length test string, depending on one prior weight, and about $0.11$ when one extra program tilts the grammar.
+\end{example}
+
+\Cref{tab:ood:hanni} (\cref{app:ood}) summarises what is proved, what is only plausible, and natural strengthenings of H\"anni's statements that are false.
+
+
+\begin{conjecture}[natural machines generalise as intended]\label{conj:ood:natural}
+\status{conjecture}\src{examples \S5.1--5.3, \S7 item 4}
+For natural universal machines and natural training sets, the intended answers of \cref{ex:ood:hanniexamples} get posterior probability close to $1$; for example, a decidable Riemann hypothesis gets its correct label with high probability.
+\end{conjecture}
+
+This is not a precise statement, and by \cref{prop:ood:machine} it fails for some universal machines; what is machine-invariant is the bounded number of errors (\cref{thm:ood:cumulative}). We know no route to a version for a fixed reference machine.

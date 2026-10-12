@@ -1,0 +1,143 @@
+% Appendix D (writer: steep-b). Proofs for sec:limits. Source: research/tracks/steeper/notes-final.md §2.5-§2.6
+% (Props 2.9-2.17, Lemma 2.11a) and checks c3, c5, c6(A,G), c7(B,C,E,G).
+\section{Proofs for the limits of the trick}\label{app:limits}
+
+The setting is \cref{def:teacher:instance} unless stated otherwise; (F1)--(F5) are the facts of \cref{app:setup:facts}.
+
+\subsection{Plain Bayes, MDL and SI}\label{app:limits:plain}
+
+\begin{proof}[Proof of \cref{prop:limits:plain}]
+(a) The memoriser $\pi_b$ is deterministic and consistent with every $D_n$, so $P(D_n)\ge2^{-\ell(\pi_b)-\kappa}$. Since $P$ is a shared hypothesis, its sequential log loss telescopes: $\sum_{i\le n}-\log P(y^*(x_i)\mid x_i,D_{i-1})=-\log P(D_n)+\log P(\emptyset)\le\ell(\pi_b)+\kappa$. Each conditional is at most $1$, so each term is nonnegative, and a label with probability below $\frac12$ adds more than one bit; normalised conditionals are at least the raw ones. On an error input the teacher's label is the erroneous one. The memoriser can be given $s_0=2^{m-r}$ through $r$, so $\ell(\pi_b)\le d+\lceil L_S\rceil+O(\log d+\log m)$. If all $2^d$ inputs are revealed there are $p2^d$ error inputs, and at most $d+\lceil L_S\rceil+\kappa_b+\kappa$ of them get the erroneous label with probability below $\frac12$. At $d=100$, $m=20$, $p=2^{-10}$ and $\kappa=0$ there are $1.238\cdot10^{27}$ error inputs and at most $11{,}853$ exceptions, a fraction $9.57\cdot10^{-24}$ (script \texttt{c6\_\allowbreak{}revision.py}, part (G), seed 6). For $\MF$, $P\ge2^{-K(\nu_\pi)-O(1)}\nu_\pi$ because product laws are machine laws, and $K(\nu_\pi)\le\ell(\pi)+\kappa$ by (F1).
+
+(b) Apply \cref{lem:teacher:finite} with $\pi_{\rm ref}=\pi_b$, whose per-input losses are $0$, so $A=0$ and $\epsilon_1=0$, and with $c=\lambda_n/n$; then its $\hat L$ is $\ell(\pi_b)\le d+\lceil L_S\rceil+\kappa_b$. A $\lambda$-MAP minimises $\hat J_c$, so with probability at least $1-\delta$, $R_B(\hat\pi)\le J^B_c(\hat\pi)\le c\,\ell(\pi_b)+B\sqrt{(\hat L\ln2+\ln(2/\delta))/(2n)}$. The lemma holds for each $n$ separately, so $\lambda$ may depend on $n$. The error-label bound is the last step of the proof of \cref{thm:teacher:main}(iii): $p\,\Ex[\min\{B,-\log\nu\}\mid E]\le R_B$ and Jensen's inequality. If $\lambda_n/n\to0$, both terms of the bound on $R_B$ tend to $0$. Numbers (script \texttt{c7\_\allowbreak{}run2.py}, part (G), seed 7; $\kappa=0$, $B=30$, $\delta=0.01$): for $\lambda=1$, $e\ge0.255$, $0.649$, $0.958$, $0.996$ at $n=10^{12},10^{13},10^{15},10^{17}$; for $\lambda_n=\sqrt n$, $e\ge0.045$, $0.734$, $0.970$ at $n=10^{13},10^{15},10^{17}$. At $n=10^{12}$, $\lambda_n/n=10^{-6}$ still lies in the window of \cref{thm:teacher:main}, and the bound says nothing. For $\lambda_n=n^{0.9}$, whose ratio $\lambda_n/n$ tends to $0$ slowly, the bound is still $0$ at $n=10^{17}$.
+
+(c) Encode the interleaved sequence with fixed-length blocks; with uniform i.i.d.\ inputs and $y_i=y^*(x_i)$ its law $\Prob$ is computable from $a$, $S$, $d$, $m$ and $r$, so it has a program $\pi_{\Prob}\in\Hcl{\mathrm{SI}}$ with $\ell(\pi_{\Prob})\le d+\lceil L_S\rceil+O(\log d+\log m)$. Since $M\ge2^{-\ell(\pi_{\Prob})}\Prob$, the chain-rule argument in the proof of \cref{thm:absorb:absorption}(d) gives $\Ex_{\Prob}\sum_{i\le n}-\log M(y_i\mid x_1y_1\cdots x_i)\le\ell(\pi_{\Prob})$. For $\lambda>1$ apply \cref{thm:absorb:absorption}(d) itself, with $\kappa_0=0$ in $\Hcl{\mathrm{SI}}$.
+\end{proof}
+
+\subsection{Rate blindness: the criterion in the machine constant}\label{app:limits:robust}
+
+\begin{proof}[Proof of \cref{prop:limits:rateblind}]
+(i) $J_c(\pi_b)<J_c(\pi_g)$ if and only if $c<H(p)/(\ell(\pi_b)-\ell(\pi_g))$, and $J_c(\pi_{\rm coin})\le J_c(\pi_g)$ if and only if $c\ge(1-H(p))/(\ell(\pi_g)-\ell(\pi_{\rm coin}))$; under the hypothesis these two ranges cover all $c>0$. (ii) Let $u(\pi)>\frac34$, so $\lev(\pi)=1$, and $R(\pi)\ge H(p)$. Below the left side of $(\star)$, \cref{thm:teacher:main}(iv) gives $J_c(\pi_b)<J_c(\pi)$. At or above it, $c\,(d-4-\Lambda_1-\kappa)\ge1-H(p)$ by $(\star)$, so (D1) gives $J_c(\pi)\ge c(d-4-\Lambda_1)+H(p)\ge1+c\kappa\ge J_c(\pi_{\rm coin})$. (iii) is \cref{thm:teacher:main}(iii).
+\end{proof}
+
+\begin{proof}[Proof of \cref{lem:limits:robust}]
+(i) With $B=\infty$, $\Lambda_1=2\log d+2\log m+\kappa$ and $\kappa_b=2\log d+2\log m+2\log s_0+\kappa$. The first denominator of $(\star)$ is positive. When the second is positive, $(\star)$ is equivalent to $H\,(d-4-\Lambda_1-\kappa)\ge(1-H)(\lceil L_S\rceil+\kappa_b+4+\Lambda_1)$. Dividing by $H$, the difference of the two sides is
+\[
+d-4-2\log d-2\log m-2\kappa-q\big(\lceil L_S\rceil+4\log d+4\log m+2\log s_0+2\kappa+4\big)=d-a\log d-b=F(d).
+\]
+Conversely, $F(d)\ge0$ implies $d-4-\Lambda_1-\kappa=d-4-2\log d-2\log m-2\kappa\ge F(d)+4q\log d+q(\lceil L_S\rceil+4)>0$, so the side condition holds as well.
+
+(ii) $F'(d)=1-a/(d\ln2)$, so $F$ is strictly increasing on $[a/\ln2,\infty)$ and tends to $\infty$. On $[1,a/\ln2]$, $F(1)=1-b<0$ because $b\ge4$, and for $d>1$, $F(d)<d-b\le a/\ln2-b\le0$. So $F<0$ on $[1,a/\ln2]$, and $\{d\ge1:F(d)\ge0\}=[d_0,\infty)$ for the unique root $d_0>a/\ln2$.
+
+(iii) $b$ is affine in $\kappa$ with slope $2+2q$, $a$ does not depend on $\kappa$, and $d_0=b+a\log d_0$.
+
+Taking all three constants equal to a common upper bound is legitimate because $(\star)$ only becomes harder to satisfy when any of them grows.
+\end{proof}
+
+A direct computation (script \texttt{c6\_\allowbreak{}revision.py}, part (A), seed 6) gives $d_0(\kappa)$, the least integer $d$ with $F(d)\ge0$, for five cheap error rules. In every row $b\ge a/\ln2$; $(\star)$ fails at $d_0-1$, holds at $d_0$, and holds at each of about $400$ values of $d$ in $[d_0,10^6]$.
+
+\begin{center}\small
+\begin{tabular}{@{}l|cccccc@{}}
+\toprule
+error rule & $\kappa=0$ & $10$ & $20$ & $30$ & $50$ & $100$\\
+\midrule
+$m=3$, $p=1/8$ (one $3$-bit prefix) & 49 & 90 & 130 & 169 & 245 & 434\\
+$m=4$, $p=1/16$ (one $4$-bit prefix) & 106 & 172 & 236 & 299 & 422 & 727\\
+$m=6$, $p=1/64$ (one $6$-bit prefix) & 450 & 639 & 823 & 1005 & 1364 & 2248\\
+$m=7$, $p=1/128$ (one $7$-bit prefix) & 901 & 1231 & 1554 & 1873 & 2505 & 4063\\
+$m=6$, $p=1/8$ (eight $6$-bit prefixes) & 89 & 129 & 168 & 206 & 282 & 470\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Illustrations at $\kappa=0$.} These are not proved for any reference machine. In the three-hypothesis form \cref{prop:limits:rateblind}(i), with the lengths set equal to their upper bounds $d+\kappa_g$ and $d+\lceil L_S\rceil+\kappa_b$, at $d=100$ a single $6$- or $7$-bit prefix is never selected, with margins of $9.6$ and $1.4$ bits (the verdict flips if $\ell(\pi_b)-\ell(\pi_g)$ is larger by that much), while an $8$-bit prefix leaves a window. In the all-hypothesis form, the $3$-bit rule satisfies $(\star)$ at $d=100$ for $\kappa\le10$ and fails for $\kappa\ge20$. In the memoriser regime of a single $6$-bit prefix at $c=10^{-4}$, near-optimal programs give the error label probability at least $0.833$ (script \texttt{c3\_\allowbreak{}junta\_\allowbreak{}window.py}, seed 3).
+
+\subsection{Separable components, guard erosion, non-identifiability, input law}\label{app:limits:guard}
+
+\begin{proof}[Proof of \cref{prop:limits:separable}]
+The objective $c\,\ell+R$ is a sum over regions of (extra length times $c$) plus (risk on the region), and the choices in different regions are independent, so it is minimised region by region; in each region \cref{lem:setup:hull} applies. With two options, component $j$ lowers the objective if and only if $c\,k_j<r_j$. If a valid component with rate $\rho_v$ is kept, then $c<\rho_v\le\rho_e$ (up to ties), so an error component with rate $\rho_e$ is kept as well. Finally, $J_c$ depends on the data only through the teacher's channel and the input law, which coincide in the two worlds.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:limits:guard}]
+Per context of the region, the expected log losses are: for ``none'', $\log n_{\rm st}$ everywhere; for ``unguarded $\sigma$'', $H_G$ in $G$-contexts and $\log(n_{\rm st}/\epsilon_G)$ in $\neg G$-contexts, where the teacher's fixed step has probability $\epsilon_G/n_{\rm st}$ under the $G$-context law; for ``guarded $\sigma$'', $H_G$ in $G$-contexts and $\log(n_{\rm st}-1)$ in $\neg G$-contexts. Relative to ``none'', the unguarded option lowers the risk by $\mu(G)g-\mu(\neg G)\log(1/\epsilon_G)=k_\sigma\rho_\sigma$ for $k_\sigma$ bits, and the guard lowers it by a further $\mu(\neg G)\Delta_G=k_G\rho_G$ for $k_G$ more bits. So the three options are the points $(0,0)$, $(k_\sigma,-k_\sigma\rho_\sigma)$ and $(k_\sigma+k_G,-k_\sigma\rho_\sigma-k_G\rho_G)$ in the (length, risk) plane, after subtracting the common base. The middle point is a vertex of the hull if and only if the slope $-\rho_\sigma$ of the first segment is steeper than the slope $-\rho_G$ of the second, that is, $\rho_\sigma>\rho_G$. By \cref{lem:setup:hull}(iii) it is then the unique minimiser for $c\in(\rho_G,\rho_\sigma)$. Otherwise the hull has only the two outer points, and the selection switches at the slope between them, $(k_\sigma\rho_\sigma+k_G\rho_G)/(k_\sigma+k_G)$.
+\end{proof}
+
+\emph{Numbers} (script \texttt{c7\_\allowbreak{}run2.py}, part (E), seed 7; an independent computation from the same teacher model agrees). With $n_{\rm st}=64$ and $\epsilon_G=0.05$, the $G$-context law puts $0.95078$ on $\sigma$, $H_G=0.5773$, $g=5.4227$ and $\Delta_G=4.3446$. For $\mu(G)=0.05$, $\mu(\neg G)=5\cdot10^{-4}$, $k_\sigma=22$, $k_G=12$: $\rho_\sigma=1.2226\cdot10^{-2}$, $\rho_G=1.8103\cdot10^{-4}$, and as $c$ increases the selection goes guarded, unguarded (on $(1.8103\cdot10^{-4},1.2226\cdot10^{-2})$), none. For $\mu(G)=\mu(\neg G)=0.002$: $\rho_\sigma=1.0007\cdot10^{-4}<\rho_G=7.2411\cdot10^{-4}$, and the selection goes from guarded to none at $c=3.2032\cdot10^{-4}$. The teacher has noise $\epsilon_G$ in $G$-contexts; what it never does is apply $\sigma$ outside $G$.
+
+\begin{proof}[Proof of \cref{prop:limits:noident}]
+(i) A scoring rule is strictly proper if, for each $x$, the expected score of a forecast $Q$ under the label law $P^*(\cdot\mid x)$ is uniquely maximised at $Q=P^*(\cdot\mid x)$ \citep{gneiting2007strictly}; average over $x$. (ii) The held-out log loss of the population selection $h_c$ is $R(h_c)$, and by \cref{lem:setup:hull}(ii), $c<c'$ implies $R(h_c)\le R(h_{c'})$. (iii) An imitation-only rule sees the same data distribution in both worlds, since the teacher's channel and the input law are the same, and \cref{prop:limits:separable} gives the same selection at every $c$; the selection that is right in one world keeps an error or drops a valid rule in the other.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:limits:inputlaw}]
+The population risk is $\sum_j\mu(X_j)\Ex[\text{loss}\mid x\in X_j]$, so choosing component $j$ changes $J_c$ by $c\,k_j-\mu(X_j)\Delta_j$; the other claims are rearrangements of this criterion.
+\end{proof}
+
+The numbers in \cref{prop:limits:noident} are from script \texttt{c5\_\allowbreak{}limits.py}, part (c), seed 5, for the three hypotheses of \cref{rem:teacher:hanni}; the same script checks the separable thresholds of \cref{prop:limits:separable} by brute force in $8000$ (instance, $c$) pairs, with no violation.
+
+\subsection{Error envelopes}\label{app:limits:envelope}
+
+\begin{proof}[Proof of \cref{prop:limits:envelope}]
+\emph{The envelope.} Off $E_1$ the inputs with prefix in $S_2$ are the error inputs, a fraction $p_2$ of the inputs off $E_1$, so $R(\pi_e)=(1-p_1)H(p_2)$. Since $p=p_1\cdot1+(1-p_1)p_2$, concavity of $H$ gives $H(p)\ge p_1H(1)+(1-p_1)H(p_2)=R_e$. The program $\pi_e$ needs $a$, $d$, $m$, a description of $S_1$ given $m$, and $s_2$ (from which $p_2$ follows), which gives the length bound.
+
+(i) The error set still has density $p$, so \cref{thm:teacher:main}(o) applies: programs of level at least $2$ have $J_c\ge J^B_c\ge\Phi_2(c)>J_e(c)+\epsilon$, so $\lev(\pi)=1$. Then (D1) gives $\ell(\pi)\ge d-4-\Lambda_1$, and $c(d-4-\Lambda_1)+R(\pi)\le J_c(\pi)\le c(d+k_1+\kappa_e)+R_e+\epsilon$, that is, $R(\pi)\le R_e+\zeta$.
+
+(ii) Write $R(\pi)=p_1R^{(1)}+(1-p_1)R^{(2)}$, where $R^{(1)}$ and $R^{(2)}$ are the risks conditional on $E_1$ and off $E_1$, and put $x:=(1-p_1)R^{(2)}$.
+
+\emph{Coding $S_2$ given $S_1$.} For $z\notin S_1$ define $q_z(b)$ as in the proof of \cref{lem:teacher:coding} with $B=\infty$. Then $Q(S'):=\prod_{z\notin S_1}q_z(\ind_{S'}(z))$ is a lower-semicomputable semimeasure on subsets of $\{0,1\}^m\setminus S_1$, given $(\pi,a,m,S_1)$. For $z\notin S_1$ the teacher's label is $f_a\oplus\ind_{S_2}(z)$, so $-\log Q(S_2)=(2^m-s_1)R^{(2)}=2^mx$. By (F2), $K(S_2\mid a,\pi,S_1)\le2^mx+2\log m+\kappa$.
+
+\emph{Chain.} By (F3), (F1) and \cref{lem:teacher:list} with $t=1$, $K(a,S_2\mid S_1)\le\ell(\pi)+4+2\log d+2^mx+2\log m+\kappa$. By (F3) and (F4), $K(a,S_2\mid S_1)\ge K(a,S_2)-K(S_1)-\kappa\ge d+B_2-K(S_1)-\kappa$. With $\Lambda_1=2\log d+2\log m+\kappa$ and (D1),
+\[
+\ell(\pi)\ \ge\ d-4-\Lambda_1+\max\big\{0,\ B_2'-2^mx\big\},\qquad B_2':=\big(B_2-K(S_1)\big)^+ .
+\]
+
+\emph{Combination.} $J_c(\pi)=c\,\ell(\pi)+p_1R^{(1)}+x\le J_e(c)+\epsilon$ gives
+\[
+p_1R^{(1)}\le\zeta+(1-p_1)H(p_2)-\big[x+c\max\{0,B_2'-2^mx\}\big].
+\]
+Over $x\ge0$ the bracket is piecewise linear: for $x\le B_2'/2^m$ it equals $cB_2'+(1-c2^m)x$, and for larger $x$ it equals $x$. So its minimum is $B_2'/2^m$ (at $x=B_2'/2^m$) if $c2^m\ge1$, and $cB_2'$ (at $x=0$) if $c2^m<1$; that is, $\min(c,2^{-m})B_2'$. Hence $R^{(1)}\le\bar R_1$, and Jensen's inequality gives $e_1(\pi)\ge2^{-R^{(1)}}\ge2^{-\bar R_1}$.
+
+For $c\ge2^{-m}$, use $(2^m-s_1)H(p_2)\le\log\binom{2^m-s_1}{s_2}+\log(2^m+1)$, which gives $\bar R_1\le\big(\zeta+(\delta_2+\log(2^m+1)+K(S_1))/2^m\big)/p_1$ with $\delta_2:=\log\binom{2^m-s_1}{s_2}-B_2$.
+\end{proof}
+
+\emph{Numbers} (script \texttt{c7\_\allowbreak{}run2.py}, part (B), seed 7). The script also checks the minimisation identity on $2000$ random cases and, on $40$ exact small instances ($d=6$, $m=4$), that $-\log Q(S_2)=(2^m-s_1)R^{(2)}$ and that $Q$ has total mass at most $1$. At $d=100$, $m=20$, $p=2^{-10}$, with $S_1=\{z:z_1=\dots=z_j=0\}$, so that $K(S_1\mid m)\le2\log(j+1)+\kappa$, and $S_2$ uniformly random (so $\delta_2$ is small with high probability), at $\kappa=0$ unless stated:
+
+\begin{center}\small
+\begin{tabular}{@{}l|cccc@{}}
+\toprule
+instance & $\log\binom{2^m-s_1}{s_2}$ & $H(p)-R_e$ & $10^5c_{\rm env}$ ($\kappa=0/10/30$) & share ($\kappa=0/30$)\\
+\midrule
+$j=11$ ($512+512$) & 6,364 & 0.00510 & $6.98/4.94/3.12$ & 0.47 / 0.42\\
+$j=13$ ($128+896$) & 10,418 & 0.00123 & $1.64/1.17/0.746$ & 0.31 / 0.25\\
+\bottomrule
+\end{tabular}
+
+\medskip
+\begin{tabular}{@{}l|ccccc@{}}
+\toprule
+lower bound on $e_1$ ($\delta_2=0$) & $c=1.01\cdot2^{-m}$ & $2\cdot10^{-6}$ & $5\cdot10^{-6}$ & $10^{-5}$ & $3\cdot10^{-5}$\\
+\midrule
+$j=11$ & 0.862 & 0.774 & 0.567 & 0.338 & 0.042\\
+$j=13$ & 0.545 & 0.350 & 0.097 & 0.012 & 0.000\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+In both instances $J_e<\Phi_2$ on $(0,c_{\rm env}]$, as part (i) requires. With $\delta_2=20$ the first column becomes $0.839$ and $0.489$. Here $j=11$ means $s_1=512$ cheap and $s_2=512$ random points, and the share is the share of the window's logarithmic width below $c_{\rm env}$, $\log(c_{\rm env}2^m)/\log(c_{\rm hi}2^m)$, with the window $(2^{-m},c_{\rm hi}]$ of \cref{thm:teacher:main} for an incompressible rule. Against $L_S=11{,}710$ the deficiencies of the two rules are about $5{,}300$ and $1{,}300$ bits.
+
+\emph{A three-hypothesis illustration} ($\kappa=0$, upper-bound lengths treated as exact; not proved). For $j=11$, the envelope beats the good model for $c<1.87\cdot10^{-4}$ with the generic code lengths above; an independent computation with explicit code lengths ($\ell(\pi_g)=d+19.9$, $\ell(\pi_e)=d+28.9$) gives $c<5.7\cdot10^{-4}$, where the envelope gives the erroneous label average probability $0.50$ on $E$, against $0.001$ for the good model. A memoriser of the whole rule wins only below $9.5\cdot10^{-7}$.
+
+\emph{Envelopes with density $\theta<1$.} If the cheap region contains errors with density $\theta$, the envelope predicts the error there with probability $\theta$, and the proof of part (i) goes through with $R_e=p_1H(\theta)+(1-p_1)H(p_2)$ and the corresponding length. For $\theta<\frac12$ the intended label is still the more likely one inside the region; for $\theta>\frac12$ the envelope is a learned systematic error. Part (ii) is proved only for $\theta=1$.
+
+\subsection{Unseen properties}\label{app:limits:ood}
+
+\begin{proof}[Proof of \cref{prop:limits:ood}]
+(i) Let $V'$ be the prefix machine that reads a self-delimiting code $z$ of a pair (decider $q$ for $Q$, program $r$ for $b$), then a program $\pi'\in\dom V$, and outputs an index of the conditional semimeasure that is the point mass at $b(x)$ (or $0$ while $b(x)$ is undefined) if $q$ accepts $x$, and $\nu_{\pi'}(\cdot\mid x)$ otherwise; this is lower semicomputable. By closure under prefix-free simulation (\cref{def:setup:class}) there is $\rho$ with $V(\rho z\pi')=V'(z\pi')$; let $\kappa:=|\rho|$ and take $|z|=K(Q,b)$. Distinct $\pi'$ give distinct programs $\rho z\pi'$. Since $\dom D\cap Q=\emptyset$, $\nu_{\rho z\pi'}(D)=\nu_{\pi'}(D)$, and since $Z\subseteq Q\cap\dom b$, $\nu_{\rho z\pi'}(D\cup b|_Z)=\nu_{\pi'}(D)$. So
+\[
+\sum_{\pi'\in\dom V}2^{-\lambda|\rho z\pi'|}\,\nu_{\rho z\pi'}(D)=2^{-\lambda(K(Q,b)+\kappa)}\sum_{\pi'}2^{-\lambda|\pi'|}\nu_{\pi'}(D)=2^{-\lambda(K(Q,b)+\kappa)}\,\xi_\lambda(D),
+\]
+which is the posterior mass claim, and the same sum with $D\cup b|_Z$ in place of $D$ is a lower bound for $\xi_\lambda(D\cup b|_Z)$.
+
+(ii) Equal likelihoods cancel in the ratio of posteriors, which leaves the ratio of prior weights $2^{-\lambda\ell(\pi_1)}/2^{-\lambda\ell(\pi_2)}$.
+\end{proof}
+
+On a conjunction ladder, \citet[the conjunction-ladder theorem and the remark on uniform tie-breaking]{claudeSFI2026fundamentals} gives a concrete instance of the warning in (ii): deterministic selection of a least-size consistent formula makes exponentially many mistakes on some ordering of the inputs, for every tie rule, while uniform tie-breaking among the least-size consistent formulas, the $\lambda\to\infty$ limit of the power posterior there, makes $O(d^2)$ Gibbs mistakes. This does not settle the universal case, and neither does \cref{prop:limits:ood}.

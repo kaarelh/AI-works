@@ -1,0 +1,197 @@
+% Section "hist" (writer: hist). Source: research/tracks/history/notes-final.md (final numbering), with its
+% referee.md and checks; foundations Prop 7.2 for lem:hist:chrono and cor:hist:H4. Hänni's notes and request
+% (research/prior/hanni-sfi-notes.md, research/00-brief.md) are quoted verbatim. Proofs: sections/app-hist.tex.
+% Renamings (NOTATION.md §4): tape measure \Unif; L_k -> \bar\ell_k; KH -> \Kpred; xi -> \MH; xi' -> \MHin;
+% kappa -> \Kpad; tau -> \Ktail; (H1),(H2) -> (A1),(A2); private memory R -> \Gamma; computable random function
+% pi -> nu; joint law mu -> \Prob; GF(2^m) -> GF(2^q); orders sigma, tau -> sigma, sigma'.
+% Page cap (OUTLINE.md: "move secondary remarks ... to its appendix first"): the secondary items
+% lem:hist:memory, prop:hist:nopathwise, rem:hist:thm1open, prop:hist:shannon, cor:hist:joint,
+% lem:hist:chronolaw, prop:hist:variants, prop:hist:operator and rem:hist:exploit are stated in app-hist.tex.
+\section{History-aware prediction}\label{sec:hist}
+
+SFI sees the past only as a set: its hypotheses answer each query without seeing the other inputs, and its loss $\LSFI(D_n)$ in the semimeasure convention ignores the order of the data (\cref{prop:setting:order}). H\"anni's notes \citep{hanni2026notes} give two examples where seeing the history helps without bound, and a dominance theorem (``Thm 1'') for simple reveal orders; his request conjectures that SFI whose hypotheses see the list of previous inputs ``just becomes as good as SI'' \citep{hanni2026request}. We prove the examples, decide Thm~1 in three readings (some cases stay open), and prove the conjecture in a precise form. Lower bounds on $\LSFI$ are in the semimeasure convention unless stated; $c_\omega$ depends on the machines and on a Martin-L\"of random $\omega$. Proofs and some secondary statements are in \cref{app:hist}.
+
+\subsection{History-aware predictors}\label{sec:hist:setting}
+
+\begin{definition}[History-aware predictors]\src{history \S1.3, Lemma 1.0; foundations Prop 7.2}\label{def:hist:predictor}
+A \emph{history-aware predictor} $P$ gives sub-probabilities $P(y\mid h,x)$; its loss is $L_P:=-\log P(y_{1:n}\Vert x_{1:n})$, $P(y_{1:n}\Vert x_{1:n}):=\prod_{i\le n}P(y_i\mid h_{i-1},x_i)$. A \emph{computable sampler} is a probabilistic machine that, given $(h,x)$, reads random bits and halts with a label or diverges (\emph{defective} if with positive probability); $P(y\mid h,x)$ is its probability of output $y$, lsc in the arguments. An \emph{input sampler} (reveal law) $\Delta$ outputs an input given $h$. A \emph{chronological semimeasure} is a map $\rho(y_{1:n}\Vert x_{1:n})\ge0$ with $\rho(\epsilon\Vert\epsilon)\le1$ and $\sum_y\rho(y_{1:n}y\Vert x_{1:n}x)\le\rho(y_{1:n}\Vert x_{1:n})$ for all $x$; $L_\rho:=-\log\rho(y_{1:n}\Vert x_{1:n})$.
+\end{definition}
+
+These are Hutter's chronological semimeasures, with inputs as his actions and labels as his percepts \citep{hutter2000theory,hutter2005universal}. H\"anni's class $C$ is the computable samplers; one that halts with probability $1$ has computable probabilities ($1-\sum_{y'\ne y}P(y'\mid h,x)$ is upper semicomputable).
+
+\begin{lemma}[SFI is a chronological semimeasure]\status{proved}\src{history Lemma 1.2; foundations Prop 7.2(b),(c)}\label{lem:hist:chrono}
+$\rho_F(y_{1:n}\Vert x_{1:n}):=\Unif\{\omega:f_\omega(x_i)=y_i\ \forall i\le n\}$ is an lsc chronological semimeasure, equal to $\MF(D_n)$ on consistent sequences and $0$ otherwise. Hence the loss $\LH$ of \SFIhist{} (\cref{def:hist:sfihist}) satisfies $\LH\le\LSFI(D_n)+c$ in every order. The lsc chronological semimeasures that depend only on $D_n$ and vanish on inconsistent sequences are exactly the lsc weak function semimeasures.
+\end{lemma}
+
+\subsection{H\"anni's counterexamples}\label{sec:hist:counter}
+
+H\"anni's notes reveal ``a deterministic sequence of increasingly long random strings'' as $(x_1,0),(x_2,x_1),\dots$ and write: ``I'm pretty sure Solomonoff induction gets unbounded loss on this sequence. I don't actually have a proof''; a ``cleaner construction'' gives ``0 to everything except one string you've skipped among all strings of a certain length'' \citep{hanni2026notes}. Both claims hold. (We take $\epsilon$ as the chain's first label.)
+
+\begin{theorem}[H\"anni's chain]\status{proved}\src{history Thm 2.1}\label{thm:hist:chain}
+Let $x_1,\dots,x_n$ ($n\ge2$) be distinct nonempty strings, $D_n:=\{(x_1,\epsilon)\}\cup\{(x_{i+1},x_i):i<n\}$, revealed as $(x_1,\epsilon),(x_2,x_1),\dots$.
+(a) $K(x_1,\dots,x_{n-1}\mid x_n)-c\le\LSFI(D_n)\le K(x_1,\dots,x_{n-1})+c$ (semimeasure convention).
+(b) If $1\le\ell_1<\ell_2<\cdots$ are computable, $x_i$ is the $i$-th block, of length $\ell_i$, of a Martin-L\"of random $\omega$, and $\bar\ell_k:=\sum_{i\le k}\ell_i$, then $\bar\ell_{n-1}-K(\ell_n)-c_\omega\le\LSFI(D_n)\le\bar\ell_{n-1}+K(n)+c$ (semimeasure convention); for $\ell_i=i$, $\LSFI(D_n)=n(n-1)/2\pm(2\log n+c_\omega)$.
+(c) The predictor ``$\epsilon$ on the empty history; otherwise the unique input of the history that is not one of its labels'' has loss $0$; it is deterministic, set-based and of complexity $O(1)$.
+\end{theorem}
+
+\emph{Proof idea.} Iterating $f_\omega$ from $x_n$ recovers $x_{n-1},\dots,x_1$, so the chain events are disjoint (\cref{lem:hist:chain0}); apply the conditional coding theorem.
+
+For the second example fix $s_\ell\in\{0,1\}^\ell$ for each $\ell$ and let $f_s(x):=\ind[x=s_{|x|}]$. Block $\ell$ reveals the other strings of length $\ell$ in lexicographic order, then $s_\ell$; $D^{(\ell)}$ is the data after blocks $1,\dots,\ell$.
+
+\begin{theorem}[H\"anni's skipped strings]\status{proved}\src{history Thm 2.2}\label{thm:hist:skipped}
+(a) ``Predict $1$ at $x$ iff every other string of length $|x|$ is already an input'' has loss $0$; it is deterministic, set-based and of complexity $O(1)$. (b) $K(s_1,\dots,s_\ell\mid\ell)-c\le\LSFI(D^{(\ell)})\le\ell(\ell+1)/2+c$ (semimeasure convention). (c) If $s_1s_2\cdots$ are the consecutive blocks of a Martin-L\"of random $\omega$, then $\LSFI(D^{(\ell)})\ge\ell(\ell+1)/2-K(\ell)-c_\omega$; for each $\ell$, all but a $2^{-k}$ fraction of tuples $(s_1,\dots,s_\ell)$ give $\LSFI(D^{(\ell)})\ge\ell(\ell+1)/2-k-c$ (semimeasure convention).
+\end{theorem}
+
+The lower bound is the domain bound of \cref{thm:setting:coding}(a). In the length-lexicographic order \SFIhist{} pays as much as SFI (\cref{cor:hist:initial}), in H\"anni's order $O(1)$: the order carries the information.
+
+\begin{proposition}[Every order-free predictor pays]\status{proved}\src{history Prop 2.3}\label{prop:hist:orderfree}
+Let $\nu$ be a weak function semimeasure (\cref{def:setting:weak}), e.g.\ $\Mw$, $\Mprod$ or $W$. (a) For every $x$, $\sum_z\nu(D(x,z))\le1$ over all chains $D(x,z):=\{(x,z_1),(z_1,z_2),\dots,(z_k,\epsilon)\}$ ($k\ge0$) of distinct nonempty strings $z_i\ne x$. (b) If $\nu$ is lsc, the lower bounds of \cref{thm:hist:chain,thm:hist:skipped} hold for $-\log\nu$ with $K(\nu)$ subtracted. (c) For every $\nu$, with independent uniform blocks, $\Ex[-\log\nu(D_n)]\ge\bar\ell_{n-1}$ and $\Ex[-\log\nu(D^{(\ell)})]\ge\ell(\ell+1)/2$.
+\end{proposition}
+
+So every predictor that sees the past as a set \emph{and} is order-independent pays the cost (H\"anni's predictors are not order-independent). The normalised $\MFbar$ is not order-free, but its normaliser is at least $2^{-K(B)-c}$ times the probability that a total machine $B$ extends the data (\cref{lem:hist:broom}). For the chain, the \emph{broom} $B_j$ reads blocks $v_1,\dots,v_j$ of lengths $\ell_1,\dots,\ell_j$, sets $f(v_1):=\epsilon$, $f(v_i):=v_{i-1}$, and sends every other input to $v_j$; it extends $D_{j+1}$ with probability $2^{-\bar\ell_j}$ at a cost of $K(j)+c$ bits (as in \cref{prop:ex:normalised}).
+
+\begin{proposition}[Normalised SFI on both examples]\status{proved; finite proxy computed}\src{history Prop 2.4, Lemma 2.4a; check c9}\label{prop:hist:normchain}
+(a) In the setting of \cref{thm:hist:chain}(b), $-\log\MFbar(y_t\mid D_{t-1},x_t)\ge\ell_{t-1}-K(\ell_t)-K(t-2)-c_\omega$ for $t\ge2$; for $\ell_i=i$, $\LSFIbar\ge n(n-1)/2-n(4\log n+c_\omega)$. With independent uniform blocks the expected normalised loss at step $t$ is at least $\ell_{t-1}-K(t-2)-c$, so $\Ex\LSFIbar\ge n(n-1)/2-n(2\log n+c)$ for $\ell_i=i$.
+(b) In the setting of \cref{thm:hist:skipped}(c), the normalised loss at $s_\ell$ is at least $\ell-2K(\ell)-c_\omega$, so $\LSFIbar\ge\ell(\ell+1)/2-\ell(4\log\ell+c_\omega)$ after block $\ell\ge2$; with independent uniform $s_j$, at least $\ell-K(\ell)-c$ in expectation.
+\end{proposition}
+
+The method needs more information per step than the $O(\log t)$ bits of the broom, so it gives nothing for \cref{prop:hist:strict,thm:hist:gf}.
+
+\subsection{H\"anni's Theorem 1}\label{sec:hist:thm1}
+
+H\"anni's Thm~1: if $f$ is drawn and the inputs are drawn from $\Delta$, ``each predictor P in C can only beat solomonoff function induction in expected log loss by at most the complexity $C_\Delta$ of sampling from the reveal sequence distribution $\Delta$ plus a constant $C_P$'', in the case where ``the reveal sequence distribution is simple to sample from conditional on any particular choice of function $f$''; a preceding remark says it fails if one puts ``the randomization inside the reveal sequence distribution'' of the chain \citep{hanni2026notes}.
+
+\begin{definition}[Three readings]\src{history \S3}\label{def:hist:readings}
+Let $y_i=f(x_i)$. \emph{Reading A}: one reveal law $\Delta(x_i\mid h_{i-1})$ that does not see $f$ (private randomness and memory allowed), $f$ arbitrary. \emph{Reading C}: for each $f$ a reveal law $\Delta_f(x\mid h)$ that sees only the history, with $C_\Delta:=K(\Delta_f)$ as a standalone sampler; A is the case $\Delta_f=\Delta$. \emph{Reading B}: $x_i\sim\Delta(\cdot\mid f,h_{i-1})$, with $C_\Delta$ the complexity of $\Delta$ relative to an oracle for $f$.
+\end{definition}
+
+H\"anni's text fixes Reading C: his example of failure has $C_\Delta=O(1)$ in Reading B but is excluded in Reading C (\cref{thm:hist:randchain}), and his sketch simulates $\Delta$ in a function machine, which cannot see $f$. Let $I(f\to x_{1:n}):=\sum_{i\le n}I(f;x_i\mid h_{i-1})$ (\emph{directed information}). A reveal law that does not see $f$ may keep private memory; it enters only through its \emph{reveal-sequence law} $\Delta(x_{1:n}\Vert y_{1:n-1})$, and $I(f\to x)=0$ (\cref{lem:hist:memory}).
+
+\begin{proposition}[The proof sketch fails]\status{computed; proved}\src{history Prop 3.1; check c1}\label{prop:hist:sketchfails}
+Let $X=\{a,b\}$, $f(a)=f(b)=\beta$ for a uniform bit $\beta$, and let $\Delta$ show $a$, then $b$. The predictor with $y_1$ uniform and $y_2=y_1$ has loss $1$ bit; the simulator of the proof sketch, run with separate randomness for each input, has loss $2$ bits.
+\end{proposition}
+
+The sketch ``internally simulates'' $\Delta$ and $P$ and then uses ``jensen's inequality'' \citep{hanni2026notes}. A simulator with private randomness per input loses the cross-input correlations that $P$ uses, and the Jensen step averages over \emph{simulated} histories, whose labels come from $P$, not $f$. (SFI itself pays at most $1+c$ bits here.) One simulation shared by all inputs works, at the price of the reveal sequence's log loss:
+
+\begin{theorem}[Shared-randomness simulator]\status{proved}\src{history Thm 3.2}\label{thm:hist:shared}
+For computable samplers $\Delta$ (inputs) and $P$ (labels), possibly defective and with private memory, and every consistent sequence, $\MF(D_n)\ge2^{-K(\Delta,P)-c}\Delta(x_{1:n}\Vert y_{1:n-1})P(y_{1:n}\Vert x_{1:n})$; so $\LSFI(D_n)\le L_P+L_\Delta+K(\Delta)+K(P)+c$ with $L_\Delta:=-\log\Delta(x_{1:n}\Vert y_{1:n-1})$. For distinct inputs the product may be summed over all orders of $D_n$.
+\end{theorem}
+
+\begin{theorem}[Bayes form]\status{proved}\src{history Thm 3.5; checks c2, r1}\label{thm:hist:bayes}
+Let $f\sim\nu$, a computable random function (a machine law of a random total function, \cref{lem:setting:total}), and let the inputs see $f$ only through revealed labels: $x_i=\mathrm{sel}_i(\Gamma,h_{i-1})$, arbitrary maps, $\Gamma$ independent of $f$. Then the Bayes predictor $\nu(y\mid D_h,x)$ ($D_h$ the data of $h$; \cref{def:setting:data}) is the true conditional law, with loss $-\log\nu(D_n)$, and $\LSFI(D_n)\le-\log\nu(D_n)+K(\nu)+c$ on every path. So $\Ex\LSFI(D_n)\le\Ex L_P+K(\nu)+c$ for every predictor $P$, computable or not.
+\end{theorem}
+
+\begin{theorem}[Directed information]\status{proved; identity computed}\src{history Thm 3.6; checks c2, r1}\label{thm:hist:directed}
+Let $f\sim\nu$, let the inputs have any joint law with $f$, $y_i=f(x_i)$, finite alphabets up to time $n$, and $L_\Prob:=-\sum_{i\le n}\log\Prob(y_i\mid h_{i-1},x_i)$. (a) For any law $\nu$, $\Ex[-\log\nu(D_n)]-\Ex L_\Prob=I(f\to x_{1:n})-\Ex\KL(\Prob(f\in\cdot\mid h_n)\Vert\nu(f\in\cdot\mid f\supseteq D_n))\le I(f\to x_{1:n})$. (b) For computable $\nu$ and every $P$, $\Ex\LSFI(D_n)\le\Ex L_P+I(f\to x_{1:n})+K(\nu)+c$.
+\end{theorem}
+
+\begin{theorem}[H\"anni's randomized chain; Reading B is false]\status{proved; refutes Reading B}\src{history Thm 3.7; check r1}\label{thm:hist:randchain}
+Let $x_i$ be independent and uniform on $\{0,1\}^i$, $f(x_{i+1}):=x_i$ and $f:=\epsilon$ elsewhere; reveal $x_1,x_2,\dots$. Then $f$ is a computable random function with $K(\nu)=O(1)$; an $O(1)$ program computes the reveal sequence from an oracle for $f$ ($x_i$ is the unique string of length $i\ge2$ with $f(x_i)\ne\epsilon$, and $x_1=f(x_2)$); the chain predictor has loss $0$; $I(f\to x_{1:n})=n(n+1)/2$; and $\Ex\LSFI(D_n)\ge n(n-1)/2$, $\Ex\LSFIbar\ge n(n-1)/2-n(2\log n+c)$.
+\end{theorem}
+
+This is H\"anni's own example, and his remark is correct. It refutes only Reading B: in Reading C, $K(\Delta_f)\ge n(n+1)/2-k-c$ for all but a $2^{-k}$ fraction of chains. His question whether Thm~1 ``can be improved to a version that talks about the algorithmic mutual information of $\Delta$ and $f$'' thus has a negative answer in Reading B.
+
+For arbitrary $f$ assume (A1) $Y$ is finite and (A2) a computable map $j\mapsto A_j$ to finite, listed subsets of $X$, of complexity $K(A)$, has all inputs up to step $n$ in $A_n$. Let $C_{\rm dir}(\Delta,n):=\sup_\nu I_\nu(f\to x_{1:n})$ over laws $\nu$ on $Y^{A_n}$ ($0$ if $\Delta$ does not see $f$).
+
+\begin{theorem}[Minimax theorem]\status{(a) proved; (b) proved for reveal laws that do not see $f$, proof sketch for those that do; computed}\src{history Thm 3.8; checks c3, c8, r2}\label{thm:hist:minimax}
+Fix $n$, assume (A1), (A2), and let the reveal law see the history (with private memory) and possibly $f|_{A_n}$. Assume that $P(y\mid h,x)$ and the reveal-sequence law have (a) rational values computable from their arguments, or (b) computable real values (this includes all computable samplers that halt with probability $1$; \cref{lem:hist:memory}). Then for every $f:A_n\to Y$, and on average over any law of $f$ independent of the reveal law's private randomness,
+$\Ex_{x\mid f}\LSFI(D_n)\le\Ex_{x\mid f}L_P+C_{\rm dir}(\Delta,n)+K(P)+K(\Delta)+K(n)+K(A)+c$.
+\end{theorem}
+
+\emph{Proof idea.} Sion's theorem \citep{sion1958general} and \cref{thm:hist:directed}(a) give a law on $Y^{A_n}$ within $C_{\rm dir}+2$ bits of $P$ for every $f$, found by a search computable from $(P,\Delta,n,A)$. For reveal laws that see $f$, case (b) needs $C_{\rm dir}$ to within $1$, not written out.
+
+\begin{corollary}[H\"anni's Theorem 1 in Reading C]\status{proved under the stated hypotheses}\src{history Cor 3.9}\label{cor:hist:thm1}
+(a) Under (A1), (A2), with $P$ and every $\Delta_f$ of computable real values (e.g.\ samplers halting with probability $1$, private memory allowed): $\Ex_{x\mid f}\LSFI(D_n)\le\Ex_{x\mid f}L_P+K(P)+K(\Delta_f)+K(n)+K(A)+c$ for every $f$; for random $f$, with $\Ex_fK(\Delta_f)$.
+(b) If $x_i=\delta_f(h_{i-1})$ with $\delta_f$ computable: for every $f$, sampler $P$ (defective allowed) and $n$, $\LSFI(D_n)\le L_P+K(\delta_f)+K(P)+c$ on every path (\cref{cor:hist:deterministic}).
+(c) For all samplers $P,\Delta_f$, with no finiteness assumption, $\Ex_{x\mid f}\LSFI\le\Ex_{x\mid f}L_P+H_f(x_{1:n})+K(\Delta_f)+K(P)+c$, $H_f$ the entropy of the reveal sequence given $f$.
+\end{corollary}
+
+So Thm~1 is true in H\"anni's reading, with an extra $K(n)+K(A)$ for random reveal laws; only the proof sketch fails. Open cases are listed in \cref{rem:hist:thm1open}; no pathwise version with $K(\Delta)$ alone holds (\cref{prop:hist:nopathwise}). The Shannon form of his mutual-information question holds: if the reveal law is indexed by a random $\Theta$ and does not see $f$, then $I(f\to x)\le I(f;\Theta)$, with equality in the randomized chain (\cref{prop:hist:shannon}). The algorithmic form is untested:
+
+\begin{conjecture}[Algorithmic form in Reading C]\status{conjecture (untested)}\src{history Conj 3.11; Q8}\label{conj:hist:algmi}
+With $I(a:b):=K(b)-K(b\mid a)$ and the hypotheses of \cref{cor:hist:thm1}(a): $\Ex_{x\mid f}\LSFI\le\Ex_{x\mid f}L_P+I(\Delta_f:f|_{A_n})+K(P)+O(\log K(\Delta_f))+K(n)+K(A)+c$.
+\end{conjecture}
+
+\subsection{SFI with access to the previous inputs}\label{sec:hist:sfihist}
+
+H\"anni's request: ``if you further give the function oracle access to a list of previous x (but not previous y), then it just becomes as good as SI'' \citep{hanni2026request}.
+
+\begin{definition}[\SFIhist]\src{history \S4.1}\label{def:hist:sfihist}
+Let $X_H$ be the set of nonempty finite input lists. A \emph{history-oracle function machine} is a function machine $T$ on $X_H$ (\cref{def:setting:machine}), queried at time $i$ at $x_{1:i}$; it never sees labels but can recompute its own. Its law $M^{\rm hist}_T(y_{1:n}\Vert x_{1:n}):=\Unif\{\omega:T^\omega(x_{1:i})=y_i\ \forall i\le n\}$ ($n\ge1$; $1$ at the root) is an lsc chronological semimeasure (\cref{lem:hist:chronolaw}). \emph{\SFIhist{}} is SFI over $X_H$: its law is $\MH:=M^{\rm hist}_{T^H_U}$, $T^H_U$ the universal function machine for $X_H$ (\cref{thm:setting:universal}), and its loss is $\LH:=-\log\MH(y_{1:n}\Vert x_{1:n})$. We \emph{define} the universal chronological semimeasure as $\MH$.
+\end{definition}
+
+\begin{theorem}[Representation]\status{proved; construction computed}\src{history Thm 4.2; checks c4, r5}\label{thm:hist:representation}
+For every lsc chronological semimeasure $\rho$ there is a history-oracle function machine $T_\rho$ with $M^{\rm hist}_{T_\rho}=\rho$ at every non-root node and $K(T_\rho)\le K(\rho)+c$.
+\end{theorem}
+
+The proof allocates dyadic intervals as \citet{zvonkin1970complexity} do for sequences. For sequences, \citet{wood2013non} state that machine-based and semimeasure-based universal priors form the same class (abstract seen only); we have not checked whether \cref{thm:hist:representation} appears in this form in Hutter's work, and claim no novelty for it.
+
+\begin{corollary}[Universality of \SFIhist]\status{proved; identification known (unverified)}\src{history Cor 4.3; foundations Prop 7.2(a),(d)}\label{cor:hist:H4}
+(a) $\MH\ge2^{-K(\rho)-c}\rho$ for every lsc chronological semimeasure $\rho$; so $\MH$ is a universal element of this class and agrees with every other one up to constant factors.
+(b) For every lsc history-aware predictor $P$ (e.g.\ every computable sampler, defective or not) and \emph{every} sequence, consistent or not: $\LH\le L_P+K(P)+c$.
+(c) $\LH\le\LSFI(D_n)+c$ on every consistent sequence, in every order.
+\end{corollary}
+
+So H\"anni's conjecture holds in this sense. A trimming construction as in \cref{thm:setting:weakuniversal} gives the same law up to constants. Agreement with Hutter's universal chronological semimeasure \citep{hutter2000theory,hutter2005universal} is known, but not checked against the sources (he uses finite alphabets), and is not used; his ``supervised learning from examples'' is prior work in substance (\cref{rem:learn:hutterEX}). Oracles that see the previous pairs, the time $i$, or the set of previous inputs define \SFIpairs, \SFIcount{} (SFI on time-stamped inputs) and \SFIset, with laws $\Mpairs,\Mcount,\Mset$ and losses $L_{\rm pairs},L_{\rm count},L_{\rm set}$; on distinct inputs SFI $\preceq$ \SFIcount{} $\preceq$ \SFIset{} $\preceq$ \SFIhist{} up to constant factors, and $\Mpairs$ agrees with $\MH$ up to constant factors (\cref{prop:hist:variants}).
+
+\begin{proposition}[The hierarchy is strict]\status{proved; lemma computed}\src{history Prop 4.5; checks c6, r4}\label{prop:hist:strict}
+Semimeasure convention. (i) Every set $S$ of $n\ge2$ strings has an order such that, with labels $y_i=\ind[i\text{ even}]$, $\LSFI\ge n-\log(n+1)-c$ while $L_{\rm count}\le c$. (ii) On the chain of \cref{thm:hist:chain}(b), $L_{\rm count}\ge\bar\ell_{n-1}-K(\ell_n)-c_\omega$ while $L_{\rm set}\le c$. (iii) Every such $S$ has an order such that, with labels $y_1=\epsilon$, $y_i=x_{i-1}$, $L_{\rm set}\ge\log n!-\log n-c$ while $\LH\le c$. Single infinite sequences with linearly growing gaps also exist (\cref{prop:hist:strictinf}).
+\end{proposition}
+
+In (iii) a tape determines the order backwards from its last input. So the oracle must give the list, not the set (also \cref{prop:ex:cycset}). Operator induction, read as $\Mpq$, ignores the history: \SFIhist{} dominates it, and on distinct inputs it pays the lower bounds of \cref{thm:hist:chain,thm:hist:skipped} (\cref{prop:hist:operator}).
+
+For deterministic programs on $X_H$, the program mixture $\Whist$ pays at most $\Ktail(n):=-\log\sum_{N\ge n}2^{-K(N)}$ extra bits against fair-coin labels, and $\Ktail(n)\le g(n)+K(g)+c$ for every computable nondecreasing unbounded $g$, while the single shortest program pays more than $\log n+\log\log n$ extra bits infinitely often (\cref{prop:hist:programs}): as for SFI (\cref{thm:versions:nocoding}), the Kolmogorov and mixture versions differ unboundedly.
+
+\subsection{As good as Solomonoff induction?}\label{sec:hist:si}
+
+Let $M$ be the universal monotone semimeasure (\cref{prop:setting:si}), $\code(h_n):=\bar x_1\bar y_1\cdots\bar x_n\bar y_n$ with $\bar s:=1^{|s|}0s$, and $\LMjoint:=-\log M(\code(h_n))$; SFI's loss is at most $\LMjoint+c$ (\cref{cor:hist:joint}). Let $\LMx$ be the sum over $i$ of $-\log$ of $M$'s conditional probability of $\bar x_i$ given $\code(h_{i-1})$ (the loss on the inputs), and $\LMy:=\LMjoint-\LMx$, Solomonoff induction's unnormalised conditional label loss. Let $\MHin$ be the universal chronological semimeasure for inputs given previous labels (roles exchanged) and $L^x_{\rm in}:=-\log\MHin(x_{1:n}\Vert y_{1:n-1})$.
+
+\begin{theorem}[Solomonoff induction on the joint sequence]\status{proved}\src{history Thm 4.6, Lemma B}\label{thm:hist:si}
+On every sequence: (a) $\LH\le\LMjoint+c$ and $L^x_{\rm in}\le\LMjoint+c$; (b) $\LMjoint\le\LH+L^x_{\rm in}+c$; (c) $\LH-\LMy\le\LMx+c$ and $\LMy-\LH\le L^x_{\rm in}-\LMx+c$; (d) if $x_i=\delta(h_{i-1})$ for a partial computable $\delta$, then $\LMjoint\le\LH+K(\delta)+c$. This holds for every prefix-free block code with nonempty codewords.
+\end{theorem}
+
+\begin{proposition}[Input-loss identity]\status{proved; toy computed}\src{history Prop 4.7; check s3}\label{prop:hist:inputloss}
+For a partial computable $\delta$ and every sequence with $x_i=\delta(h_{i-1})$ for all $i$: $\LMx-K(\delta)-c\le\LH-\LMy\le\LMx+c$.
+\end{proposition}
+
+So for deterministic input policies, ``$\LH\le\LMy+O(1)$'' holds iff $M$ predicts the inputs with bounded loss. \citet{lattimore2011universal} state that ``the unnormalised version can fail to predict very simple recursive sub-patterns'', such as each odd bit repeated at the next even position (abstract seen only). With $X=Y=\{0,1\}$ and the identity code, let (LHG-even) say that for some $\omega$ the loss of unnormalised $M$ on positions $2,4,\dots$ of $\omega_1\omega_1\omega_2\omega_2\cdots$ is unbounded, and (LHG-odd) the same on positions $3,5,\dots$ of $0\omega_1\omega_1\omega_2\omega_2\cdots$.
+
+\begin{proposition}[The conditional label loss]\status{conditional (on LHG transfer); LHG known, unverified beyond the abstract}\src{history \S4.4, Q3}\label{prop:hist:lhg}
+With $X=Y=\{0,1\}$ and the identity code: under (LHG-even), $\LMy\le\LH+O(1)$ fails on some sequence (labels copy inputs); under (LHG-odd), $\LH\le\LMy+O(1)$ fails on some sequence (inputs copy the previous label, \cref{prop:hist:inputloss}). For the code $\bar s=1^{|s|}0s$ the hypotheses must also transfer to framed blocks.
+\end{proposition}
+
+This does not contradict \cref{cor:hist:H4}: $M$'s conditionals need not be lsc. For normalised $M$ both directions are open.
+
+\begin{remark}[Verdict on H\"anni's conjecture]\status{remark (cited items)}\src{history \S7 ``H4''}\label{rem:hist:H4verdict}
+With the list of previous inputs SFI becomes the universal chronological semimeasure (\cref{cor:hist:H4}); the set is not enough (\cref{prop:hist:strict}(iii)). ``As good as SI'' holds against Solomonoff induction's joint loss (\cref{thm:hist:si}(a)); against its conditional label loss the difference is $M$'s loss on the inputs (\cref{prop:hist:inputloss}), and for unnormalised $M$ it fails both ways, conditionally on \cref{prop:hist:lhg}; the normalised case is open.
+\end{remark}
+
+\subsection{What SFI can and cannot exploit}\label{sec:hist:exploit}
+
+For $D$ with distinct inputs let $D_\sigma$ be $D$ in order $\sigma$, $x_\sigma$ its input list, and $\Kpred(x_{1:n}):=\min\{|p|:V(p,x_i)=\langle x_1,\dots,x_{i-1}\rangle\ \forall i\le n\}$, the complexity of recovering each input's predecessors from the input.
+
+\begin{theorem}[Sandwich]\status{proved}\src{history Thm 5.2 (with Prop 5.1)}\label{thm:hist:sandwich}
+For every data set $D$: $\max_\sigma\LH(D_\sigma)-c\le\LSFI(D)\le\min_{\sigma'}[\LH(D_{\sigma'})+\Kpred(x_{\sigma'})]+c$.
+\end{theorem}
+
+\begin{corollary}[Initial segments]\status{proved}\src{history Cor 5.3}\label{cor:hist:initial}
+If $\dom D=\{e_1,\dots,e_k\}$ for a computable injective sequence $e$, then $|\LSFI(D)-\LH(D\text{ in $e$-order})|\le K(e)+c$, and the $e$-order is the worst for \SFIhist{} up to $K(e)+c$.
+\end{corollary}
+
+This covers the skipped strings and the full cyclic permutation ($K(e)\le K(d)+c$). The $\Kpred$ term can be needed beyond order information: identify $\{0,1\}^q$ with $\mathrm{GF}(2^q)$ (polynomial basis modulo the lexicographically least irreducible polynomial) and let $D_{abr}:=\{(a,r),(b,r+ab)\}$, $a\ne b$.
+
+\begin{theorem}[A $\mathrm{GF}(2^q)$ example]\status{proved; computed}\src{history Thm 5.4, Lemma 5.5; checks c5, r3, s4}\label{thm:hist:gf}
+(a) In both orders $\LH(D_{abr})\le q+c$, with $c$ independent of $q$. (b) $\LSFI(D_{abr})\ge K(a,b,r\mid q)-3q/2-1-c$; so for all but a $2^{1-k}$ fraction of triples, $\LSFI(D_{abr})\ge3q/2-k-c\ge\max_\sigma\LH(D_\sigma)+q/2-k-c'$. (c) For uniform $(a,b,r)$, $a\ne b$, $\Ex\LSFI(D_{abr})\ge3q/2-2$ for every $q\ge1$. These lower bounds are in the semimeasure convention; for $\LSFIbar$ they are open.
+\end{theorem}
+
+\SFIhist{} predicts $y_2=y_1+x_1x_2$; SFI's hypotheses never see the first input. The key step is a character-sum bound (\cref{lem:hist:charsum}). A direct computation (code in the accompanying repository) gives the optimum over \emph{all} laws of random functions, $\min_w\Ex[-\log w(D_{abr})]=2.708$ bits for $q=2$ and $4.348$ for $q=3$, against $q$ for \SFIhist{}.
+
+\begin{theorem}[Expected gap]\status{proved}\src{history Thm 5.6}\label{thm:hist:expected}
+Let $f\sim\nu$ computable and the inputs drawn by any kernel $\Delta(\cdot\mid f,h_{i-1})$, with finite alphabets up to time $n$. Then $-c\le\Ex\LSFI(D_n)-\Ex\LH\le I(f\to x_{1:n})+K(\nu)+c$, and the gap is at most $K(\nu)+c$ if the input choice does not see $f$.
+\end{theorem}
+
+The upper bound is attained up to $n$ in the randomized chain, but not in general: the $\mathrm{GF}$ triple revealed in random order has $I(f\to x)\approx2q$ but a gap of at most $q+c$ (and fails Reading B: $q$ bits for \SFIhist{}, $\Ex\LSFI\ge3q/2-2$).
+
+On individual sequences, $\LSFI(D)\le\LH(D_\sigma)+I(x_\sigma:D)+c$, with $I(a:b):=K(b)-K(b\mid a)$; the natural strengthening with $I(x_\sigma:y_\sigma)$ in place of $I(x_\sigma:D)$ is false, by a margin linear in $n$ (\cref{prop:hist:info}). Informally, shared randomness lets a label of SFI correlate with a \emph{guess} about the other inputs, not with the inputs present (\cref{rem:hist:exploit}).
+
+\paragraph{Open questions.}\label{q:hist:open} (i) The open cases of Reading C (\cref{rem:hist:thm1open}). (ii) Do (LHG-even), (LHG-odd) hold? How does $\LH$ compare with normalised $M$'s label loss? (iii) Normalised SFI on \cref{prop:hist:strict,prop:hist:strictinf,thm:hist:gf}. (iv) Is $\LMjoint=\LH+L^x_{\rm in}\pm O(1)$ (``$\le$'' is proved)? (v) The growth of $\max_GN(G)$ in \cref{lem:hist:charsum} (local search suggests about $2^{1.35q}$; an observation only). (vi) \Cref{conj:hist:algmi}. (vii) Which individual-sequence quantity measures $\LSFI(D)-\LH(D_\sigma)$ tightly? (viii) The exact rate in \cref{prop:hist:programs}(d).
