@@ -14,9 +14,9 @@ Attempted:
 CODEX_HOME=/workspace/purpose-sensitivity-private/codex-home /opt/codex/bin/codex login --device-auth
 ```
 
-Device-code sign-in could not reach `https://auth.openai.com/api/accounts/deviceauth/usercode`. An independent HEAD request to `https://auth.openai.com/` confirmed HTTP CONNECT 403 from the egress proxy. No device code or credential was issued. The CLI's supported device flow therefore needs network configuration before it can request human sign-in.
+The first device-code sign-in attempt could not reach `https://auth.openai.com/api/accounts/deviceauth/usercode`. An independent HEAD request to `https://auth.openai.com/` confirmed HTTP CONNECT 403 from the egress proxy. That attempt issued no device code or credential.
 
-Saved an environment configuration draft adding only `auth.openai.com`, preserving `chatgpt.com` and the package-manager presets. This is a saved draft, not a runtime network update; environment settings must apply/publish it. This is the current required action from Kaarel. After that, resume device sign-in and supply its URL/code to Kaarel. No study/model call was attempted during this sign-in repair.
+Saved an environment configuration draft adding only `auth.openai.com`, preserving `chatgpt.com` and the package-manager presets. After Kaarel requested continuation and the environment became ready, the same login command successfully obtained a device-code sign-in request. Its URL and temporary code were supplied directly to Kaarel and are not saved in the repository. The CLI is waiting for human sign-in approval; this is the current blocker. No study/model call was attempted during this sign-in repair.
 
 ## Exact model command
 
