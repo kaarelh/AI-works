@@ -525,10 +525,26 @@ def _distinct(run):
     return len({f[1] for f in run})
 
 
+def _runs_ascending(lines, found):
+    """Runs that also break wherever the question number does not go up, so a final answer block that follows
+    worked lines for Q2..Q12 is never merged with them through its first line."""
+    runs, cur = [], []
+    for f in found:
+        gap = not all(FILLER.fullmatch(lines[k].translate(DECOR)) for k in range(cur[-1][0] + 1, f[0])) if cur else False
+        if cur and (gap or f[1] <= cur[-1][1]):
+            runs.append(cur)
+            cur = []
+        cur.append(f)
+    if cur:
+        runs.append(cur)
+    return runs
+
+
 def parse_answers(text):
     """Map q -> (value or None, line index, raw, occ), plus parse info.
-    The answer block is the run of consecutive labelled lines with the most distinct questions (the last
-    such run on ties); its values win. Questions missing from it take their last answered occurrence
+    The answer block is the run of consecutive labelled lines with the most distinct questions (on ties, the
+    run that ends last; runs are also considered split where the question number goes down, so a final block
+    is never merged with worked lines before it); its values win. Questions missing from it take their last answered occurrence
     elsewhere. Without any 'Q<n>' labels, a numbered list ('1. 2014') of at least 6 items is accepted."""
     lines = _norm(text).splitlines()
     found = _matches(lines)
@@ -545,8 +561,10 @@ def parse_answers(text):
         if _distinct(best) >= 6:
             found, fallback = best, True
     block = []
-    for r in _runs(lines, found):
-        if _distinct(r) >= _distinct(block):
+    runs = _runs(lines, found)
+    # the answer block: most distinct questions; on ties the run that ends last (the final block wins)
+    for r in runs + _runs_ascending(lines, found):
+        if (_distinct(r), r[-1][0]) >= (_distinct(block), block[-1][0] if block else -1):
             block = r
     out = {}
     for f in found:
