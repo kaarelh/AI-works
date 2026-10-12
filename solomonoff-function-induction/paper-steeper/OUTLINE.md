@@ -1,5 +1,12 @@
 # Outline: Paper 2, "Steeper Simplicity Priors in Solomonoff Function Induction" (working title)
 
+> **BINDING NOTE (authorship, 2026-10-12).** arXiv does not allow AI tools as authors, so the author line is **Kaarel Hänni** alone, with no "Claude (Anthropic)" byline. Disclosure goes in two places:
+> * **A title-page footnote:** the paper was developed and written with extensive assistance from Claude (Anthropic), an AI system, which produced the proofs, the computations and the text under the author's direction. It was checked by independent AI referees, and no human has yet independently checked all of the mathematics.
+> * **A fuller paragraph in the acknowledgements.**
+>
+> Name the system "Claude (Anthropic)", never a specific model version. Ideas from the author's notes are cited as his notes (\citep{hanni2026notes}) or described as the author's. Sam Eisenstat is credited for his example. The Vaintrob–Hänni slides are cited as such.
+
+
 > **BINDING NOTE (Hänni, 2026-10-12): the papers must be standard academic papers, suitable for arXiv.**
 > * **Status tags and source notes.** The final PDF has no `\status{...}` tags and no `\src{...}` source notes. They stay in the sources only until the arXiv conversion pass, which removes them. Until then, keep them accurate: the conversion reads them.
 > * **Proved results** are theorems, propositions, lemmas or corollaries, with proofs.

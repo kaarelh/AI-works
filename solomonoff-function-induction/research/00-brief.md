@@ -178,3 +178,7 @@ In the papers, call it the (standard) absorption objection, and do not attribute
 > generally please make sure these are like academic papers suitable for arxiv
 
 See the binding note at the top of each paper's OUTLINE.md: standard academic structure, no status or source markup in the PDF, no process vocabulary, verified references only, an AI-preparation disclosure in the acknowledgements. Note that arXiv does not accept AI systems as authors.
+
+## Authorship (Hänni, 2026-10-12)
+
+He asked whether he and Claude could both be authors. arXiv's policy forbids AI tools as authors. Decision, which he can revise: Kaarel Hänni is the sole author, and Claude's role is disclosed in a title-page footnote and in the acknowledgements. Only the two SFI papers are converted to arXiv format; the earlier papers stay as they are.
