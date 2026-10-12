@@ -106,17 +106,27 @@ class StudyController:
             raise ControllerError(f'{label} failed (exit {result.returncode}); no further model calls started.')
         return result.stdout
 
+    def whitespace_check_command(self, staged=False):
+        # Captured streams and model records are evidence; their bytes must not
+        # be rewritten to satisfy source-formatting rules. Glob pathspecs match
+        # only authored files directly in astra_out, never nested trace/data.
+        prefix = str(self.root.relative_to(self.repo))
+        patterns = [f':(glob){prefix}/*.{extension}'
+                    for extension in ('py', 'md', 'txt', 'sh', 'toml', 'yaml', 'yml')]
+        patterns.append(f':(literal){prefix}/.gitignore')
+        return ['git', 'diff', *(['--cached'] if staged else []), '--check', '--', *patterns]
+
     def checkpoint(self, status):
         self.save_state(status)
         self.checked([sys.executable, '-B', str(self.root / '_refresh_coverage.py'), '--status', status], 'Coverage verification')
         prefix = str(self.root.relative_to(self.repo))
-        self.checked(['git', 'diff', '--check', '--', prefix], 'Diff verification')
+        self.checked(self.whitespace_check_command(), 'Authored-file diff verification')
         self.checked(['git', 'add', '-A', '--', prefix,
                       f':(exclude){prefix}/**/*.lock', f':(exclude){prefix}/*.lock',
                       f':(exclude){prefix}/**/__pycache__/**',
                       f':(exclude){prefix}/__pycache__/**', f':(exclude){prefix}/**/*.pyc'], 'Scoped staging')
         self.checked([sys.executable, '-B', str(self.root / '_check_publish.py')], 'Credential publication check')
-        self.checked(['git', 'diff', '--cached', '--check'], 'Staged diff verification')
+        self.checked(self.whitespace_check_command(staged=True), 'Staged authored-file diff verification')
         changed = subprocess.run(['git', 'diff', '--cached', '--quiet'], cwd=self.repo, capture_output=True)
         if changed.returncode not in (0, 1):
             raise ControllerError('Cannot inspect staged changes.')

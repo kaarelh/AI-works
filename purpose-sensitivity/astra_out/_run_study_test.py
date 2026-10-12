@@ -2,6 +2,7 @@
 import importlib.util
 import json
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -250,6 +251,59 @@ class ControllerTests(unittest.TestCase):
         with self.assertRaises(STUDY.ControllerError):
             self.controller.run()
         self.assertEqual(self.controller.invoked, [])
+
+    def test_git_whitespace_checks_preserve_raw_evidence_but_reject_authored_errors(self):
+        ctl = self.controller
+
+        def git(*args):
+            return subprocess.run(['git', *args], cwd=ctl.repo, capture_output=True)
+
+        self.assertEqual(git('init', '--quiet').returncode, 0)
+        self.assertEqual(git('config', 'core.whitespace', 'blank-at-eof,blank-at-eol').returncode, 0)
+        raw = self.root / '_events/synthetic/fixture.stderr.log'
+        raw.parent.mkdir(parents=True)
+        original = b'Synthetic diagnostic\n\n'
+        raw.write_bytes(original)
+        # Even a text suffix under raw event/model directories stays untouched.
+        nested = self.root / '_events/synthetic/raw.txt'
+        nested.write_bytes(b'Synthetic raw text   \n')
+        model_data = self.root / 'synthetic-model/fixture.json'
+        model_data.parent.mkdir()
+        model_data.write_bytes(b'{"synthetic": true}   \n')
+        authored = self.root / '_authored.py'
+        authored.write_bytes(b'synthetic = True\n')
+        self.assertEqual(git('add', '-A', '--', 'purpose-sensitivity/astra_out').returncode, 0)
+        # First prove this fixture reproduces the original all-staged failure.
+        self.assertNotEqual(git('diff', '--cached', '--check').returncode, 0)
+        self.assertEqual(subprocess.run(ctl.whitespace_check_command(staged=True),
+                                       cwd=ctl.repo, capture_output=True).returncode, 0)
+        self.assertEqual(raw.read_bytes(), original)
+        authored.write_bytes(b'synthetic = True   \n')
+        self.assertNotEqual(subprocess.run(ctl.whitespace_check_command(),
+                                          cwd=ctl.repo, capture_output=True).returncode, 0)
+        self.assertEqual(git('add', '--', str(authored.relative_to(ctl.repo))).returncode, 0)
+        self.assertNotEqual(subprocess.run(ctl.whitespace_check_command(staged=True),
+                                          cwd=ctl.repo, capture_output=True).returncode, 0)
+        self.assertEqual(raw.read_bytes(), original)
+
+    def test_whitespace_scope_does_not_narrow_credential_guard_or_staging(self):
+        ctl = self.controller
+        checked = []
+
+        def record_command(command, label):
+            checked.append((command, label))
+            return b'synthetic-branch\n' if label == 'Branch lookup' else b''
+
+        ctl.checked = record_command
+        # Mock publication completely: no credential read, commit or push.
+        with patch.object(STUDY.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0)):
+            STUDY.StudyController.checkpoint(ctl, 'Synthetic publication fixture')
+        guard = [command for command, label in checked if label == 'Credential publication check']
+        self.assertEqual(guard, [[STUDY.sys.executable, '-B', str(self.root / '_check_publish.py')]])
+        staging = [command for command, label in checked if label == 'Scoped staging'][0]
+        self.assertIn('purpose-sensitivity/astra_out', staging)
+        self.assertFalse(any('_events' in item or 'synthetic-model' in item for item in staging))
+        self.assertIn((ctl.whitespace_check_command(staged=True), 'Staged authored-file diff verification'), checked)
 
 
 if __name__ == '__main__':
