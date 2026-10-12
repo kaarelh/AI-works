@@ -1,0 +1,46 @@
+% Appendix G (writer: steep-b). Proofs for sec:related and the correspondence with the earlier formalisation.
+% Source: research/tracks/steeper/notes-final.md §4.5 (Props 4.4, 4.5), §6.
+\section{Proofs for the computable versions, and the earlier formalisation}\label{app:related}
+
+\begin{proof}[Proof of \cref{prop:related:computable}]
+By inspection. \Cref{lem:teacher:list} uses only that $u(\pi;a')$ is lower semicomputable uniformly in $(\pi,a',d)$, which holds in every class with uniformly lower-semicomputable likelihoods; the constant of the enumeration depends on the class. \Cref{lem:teacher:coding} uses only that $q_z$ is lower semicomputable uniformly in $(\pi,a,m,B)$. \Cref{lem:teacher:floor} uses nothing about the class. \Cref{lem:teacher:twopart} uses (F1) for the class, $K(\pi)\le\ell(\pi)+\kappa'$. The proof of \cref{thm:teacher:main} uses only these lemmas and the reference programs, through $J_g$ and $J_b$. \Cref{thm:split:private} uses Ville's inequality for the class's mixture $\xi_{\mathcal C}$, Kraft's inequality and countability. \Cref{prop:absorb:price}(ii) uses the coding theorem for the semimeasure $\tilde R$ built from the class, which holds with a constant that depends on the class.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:related:computability}]
+(a) Each term $2^{-\lambda\ell(\pi)}P_\pi(D)$ is lower semicomputable uniformly in $(\pi,D)$, because $\lambda$ is computable, and the sum of uniformly lower-semicomputable nonnegative terms is lower semicomputable.
+
+(b) Identify $\mathbb N$ with infinitely many inputs. Suppose the raw conditional were computable. Define $f(t)$, for $t\in\mathbb N$, as the first $y\in\{0,1\}$ that a dovetailed search certifies to satisfy $\xi_\lambda(y\mid D_t,t)<0.6$, where $D_t:=\{(s,f(s)):s<t\}$. The two conditionals sum to at most $1$, so one of them is at most $\frac12$ and the search halts. Then $f$ is total computable, and by telescoping $\xi_\lambda(D_n)\le\xi_\lambda(\emptyset)\cdot0.6^n\le0.6^n$. But the class contains a deterministic program for $f$ of length at most $K(f)+\kappa$, so $\xi_\lambda(D_n)\ge2^{-\lambda(K(f)+\kappa)}$ for every $n$, a contradiction for large $n$. For the normalised conditional, run the same construction with it in place of the raw one; then its cumulative loss on $D_n$ is at least $n\log(1/0.6)$. Each normaliser $\sum_{y'}\xi_\lambda(D_t+(t,y'))$ is at most $\xi_\lambda(D_t)$, so the normalised conditional is at least the raw one, and the normalised cumulative loss is at most the raw one, $-\log\xi_\lambda(D_n)+\log\xi_\lambda(\emptyset)\le\lambda(K(f)+\kappa)$. This is again a contradiction for large $n$.
+
+(c) Lower-semicomputable reals are computable in the limit, and the denominators are positive, because every finite data set has a consistent deterministic program.
+\end{proof}
+
+\subsection{Correspondence with the earlier formalisation}\label{app:related:t5}
+
+The earlier report \citep[section ``Simplicity and normativity from imitation'']{claude2026whatfollows} works with a general imitation channel; its results are named here as they are named there.
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}X@{}}
+\toprule
+earlier result & here & change\\
+\midrule
+per-input versus once-only pricing & \cref{prop:absorb:pricing} & exact minimax value kept\\
+the sequence pathology & \cref{thm:absorb:absorption}(a) & same threshold; adds (b)--(d)\\
+universal conditional semimeasure & \cref{rem:absorb:condsemi} & --\\
+per-block pricing & \cref{prop:absorb:history} & countable families with computable weights\\
+kink: list-size and floor lemmas & \cref{lem:teacher:list,lem:teacher:floor} & semimeasures, via the lower-semicomputable agreement; truncation\\
+kink: error segment & \cref{lem:teacher:twopart}(D2) & --\\
+kink: shared randomness & \cref{prop:algstat:parity}(i) & every $\lambda$-optimal set model\\
+randomness of $E$ removes the $2p$ slack & \cref{lem:teacher:sharpfloor} & semimeasures; used for the kink at every $p<1/4$\\
+identification in the parity example & \cref{cor:teacher:fulltable} & adds information and error-label bounds; $c_{\rm hi}$ for $t^*<2$; rigorous $d=20$ window\\
+empirical selection tracks population selection & \cref{lem:teacher:finite} & one-sided, truncated, without replacement\\
+selection traces the lower hull & \cref{lem:setup:hull} & --\\
+rate threshold, separable classes; rate blindness & \cref{prop:limits:separable} & --\\
+steepness not identifiable & \cref{prop:limits:noident} & --\\
+guard erosion & \cref{prop:limits:guard} & teacher model stated; exact crossing\\
+error envelopes & \cref{prop:limits:envelope} & all hypotheses; cheap errors reproduced\\
+input-law dependence & \cref{prop:limits:inputlaw} & separable case only\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Not reused: the idealised rate threshold for arbitrary hypotheses and the realisability of every frontier shape, because \cref{thm:teacher:main} covers one model with one error rule over all hypotheses and \cref{prop:limits:separable,prop:limits:inputlaw} cover separable components; the treatment of inference rules, which is not about function induction; and the pathologies of parasitic errors and language relativity, which hold for steeper SFI by the same arguments but add nothing specific to it. The scripts of the earlier report were re-run from scratch copies and reproduce its numbers (\cref{app:teacher:computations}).

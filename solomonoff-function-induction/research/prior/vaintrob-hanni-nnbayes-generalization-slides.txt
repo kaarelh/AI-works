@@ -1,0 +1,2897 @@
+A Generalization Result for Overparametrized
+       Neural Net Bayesian Learning
+
+              Dmitry Vaintrob       Kaarel Hänni
+
+
+
+
+                          ILIAD 2026
+
+
+
+
+      Kaarel used Claude’s help when creating these slides.
+Plan for the talk
+
+    1. Introduction and motivation.
+
+    2. The main toy learning theorem, proved in four parts:
+          • a learning lemma,
+          • the small-width case,
+          • cloning,
+          • subsampling.
+
+    3. Discussion.
+
+
+  The intention is to do ∼1 hour of main talk, and then have open discussion. Please feel free to
+
+  leave for lunch after the main talk (and also, of course, feel free to leave earlier).
+
+
+
+
+                                                                                                    2/38
+Part 1: Introduction and motivation
+Some interesting questions about neural net learning
+
+    • When and why does neural net learning have good generalization behavior?
+
+    • In many cases, we see good generalization while the network could implement
+      many more functions that label training data just as well but would do poorly on
+      test data. Why does a well-generalizing function get picked out (in cases where it
+      does)?
+
+    • Good generalization should relate to having a preference toward simpler functions.
+      Why does neural net learning have this preference? Wait, what should we even
+      mean by “simple” here?
+
+    • When, and why, does it generalize to genuinely novel inputs? Can we get a better
+      sense of what NN out-of-distribution generalization is like?
+
+
+
+
+                                                                                           4/38
+What this talk does
+
+  We study a   Bayesian   version of neural net learning: put a prior on the weights,
+  condition on the training data, and let the posterior predict on test inputs.
+
+  Our main results are (much more caveated and detailed versions of ):
+
+    • The NNbayes prior of a function roughly tracks its circuit complexity, even when
+      the neural net is overparametrized.
+
+    • Consequently, when the function being learned is circuit-simple, it is learned
+      quickly (again, even when the neural net is overparametrized).
+
+
+  In this talk, we only prove the above in a simple case: when the prior is   very strong, i.e.
+  strongly prefers weight vectors of small ℓ
+                                            2 norm. But we believe the proof ideas
+
+  generalize to other cases of NNbayes — we will discuss this at the end of the talk.
+
+
+
+
+                                                                                                  5/38
+Speculation on the relevance to AI alignment
+    • Relevance to understanding generalization of NN-based learning:
+        • Maybe it’d be helpful if we had a clearer way to think about what is happening
+          during (supervised) NN learning. This could be helpful even if that description is
+          mostly behavioral — for instance, if the description were that NN SGD learning is
+          close in its input–output behavior to some sort of local minimal discrete circuit
+          search.
+        • One major problem here is that even if one establishes a correspondence with some
+          crisper learning process, that’s probably the easy part, with understanding
+          generalization of that crisper process (or really designing some learning process with
+          good high-level properties — perhaps one that generalizes in a benign fashion) being
+          much more difficult.
+        • In a different direction, maybe a clearer understanding of neural net gradient descent
+          learning could lead to the construction of some more crisp learning algorithm that is
+          still somewhat practical, and that could be useful for designing better-understood
+          learners.
+
+
+
+                                                                                                   6/38
+Speculation on the relevance to AI alignment
+
+
+    • Relevance to interpretability:
+        • I think we are very confused about how to think about the structure in/of neural
+           nets (or minds). Maybe trying to get a better understanding of NN learning is a
+           problem that pushes you toward better ways to think about this structure. Maybe
+           ideas so obtained could contribute to the project of rewriting neural nets into some
+           more understandable form (“full reverse-engineering”).
+        • Concretely, the present line of research suggests the ideas of thinking about the
+           distribution of neuron weight vectors, and about kernels computed at each layer.
+
+
+
+
+                                                                                                  7/38
+Speculation on the relevance to AI alignment
+
+    • But isn’t this work about the overparametrized case, whereas real neural nets are
+      usually not that overparametrized? Two thoughts in response:
+         • A lot of learning probably happens quite quickly as you start seeing data, in a regime
+           where you are effectively overparametrized.
+         • If we believe in a view of NN structure that says there are many different
+           mechanisms, with each only being active on a sparse set of data points, then learning
+           is probably overparametrized “from the point of view of such a sparse mechanism”.
+
+    • But isn’t this about the Bayesian case, not SGD?
+         • Yes, I think these are importantly different. But also, probably some ideas carry over.
+    • Ultimately, tbh, my own view is that NN learning theory and principled interpretability are
+      not among the better bets for alignment (but also I’m very pessimistic about all bets).
+      Dmitry disagrees, and I encourage you to go to his talk tomorrow to hear his thoughts.
+
+
+
+
+                                                                                                     8/38
+Part 2: The main learning theorem
+Warm-up: Solomonoff function induction
+  We want to learn a function f : X → Y from examples: draw x1 , . . . , xn ∼ D i.i.d., see
+  the labels yi = f (xi ), and then predict f on fresh inputs x ∼ D .
+
+  Be Bayesian, with    Python programs as the hypotheses:
+    • a program p computes a function X → Y (technically, elements of X and Y are
+       presented as strings);
+
+    • the prior favors short source code: π(p) ∝ 3−|p| , where |p| is the length of p in
+                                                                     −|p|
+                                                               P
+       bits. (Base 3 rather than 2 makes sure the total mass    p3          is finite.)
+
+
+  Learning is conditioning      : the posterior is the prior restricted to the programs that get
+  all n examples right.
+
+  Write C for the length in bits of the shortest program computing f , and
+  err(g) = Prx∼D [ g(x) ̸= f (x) ] — test error is in-distribution. Our figure of merit is the
+  posterior’s   average probability on the correct answer,
+                                                                         
+                Ex∼D posterior{ g : g(x) = f (x) } = 1 − Eg∼posterior err(g) .
+
+                                                                                               10/38
+Warm-up: Solomonoff function induction
+
+  If the target has a short program, few examples suffice:
+
+
+  Proposition
+  After n = O(C) samples, with probability 1 − exp(−Ω(C)) over the draw of the
+  samples, the average probability on the correct answer is > 99.9%.
+
+
+  Corollary
+  Predicting the label with the most posterior mass then gets < 0.2% of the test labels
+  wrong.
+
+                                                                         1
+  (To be wrong at x, that prediction needs the right answer to carry ≤
+                                                                         2 of the posterior at x;
+  Markov.)
+
+
+
+
+                                                                                                    11/38
+Proof
+  (We give a proof that is more complicated than necessary, because this proof will generalize to
+
+  our neural net case.)
+
+  Order all programs by length — i.e., by decreasing prior mass. Three kinds of programs:
+
+  The long tail never matters.P
+                ∗
+                                       The programs of length > 3C + 25 together have prior
+                                               ℓ −ℓ
+  mass < π(p )/2000 (check:           ℓ≥3C+26 2 3   = 3 (2/3)3C+26 < 3−C /2000). And on
+  every                                        ∗
+          training set f ’s shortest program p is consistent, so the posterior denominator is
+  ≥ π(p∗ ): the tail always carries < 2000
+                                       1
+                                           of the posterior.
+
+  Bad short programs die.       Call g   bad if err(g) ≥ 2000
+                                                           1
+                                                              ; it stays consistent with all n
+                                 −n/2000 . Union bound over the < 23C+26 short programs:
+  samples with probability ≤ e
+                          −C — at n = 2000 (3C + 26) log 2 + C              = O(C) — every bad
+                                                                        
+  with probability ≥ 1 − e
+  short program is eliminated outright.
+
+  Good programs are good.
+     1
+                                 Everything else is wrong on a fresh input with probability
+  < 2000 .
+
+  On that event, the average probability on the correct answer is
+         1      1
+  > 1 − 2000 − 2000 = 99.9%.                                                                     □
+                                                                                                     12/38
+The learning proposition really proved by the warm-up
+  Proposition (relevance-based sample complexity bound — informal version)
+  Suppose all but M other hypotheses are “irrelevant” when learning f (because their
+  priors are too small compared to the prior of f ). Then the sample complexity of
+  learning f is O(log M ).
+
+
+  Proposition (relevance-based sample complexity bound)
+  We Bayesian-learn f : X → Y using a countable hypothesis class H ∋ f and a prior π
+  on H. Order the hypotheses in decreasing order of prior, and let M be an index such
+  that the   tail after it has at most π(f )/2000 mass. Then after 4000 (log M + 4)
+                                        1
+  samples, with probability ≥ 1 −
+                                     1000M over the draw of the samples, the average
+  probability on the correct answer is > 99.9%.
+
+  The proof is the warm-up’s argument run in general; it is written out, with the error levels as
+
+  free parameters, in Appendix A.
+
+
+                                                                                                    13/38
+The proposition, instantiated
+
+
+    •   The warm-up    was exactly this: the top-mass hypotheses are the shortest
+                                                                                  ∗
+        programs, and the tail of programs of length > 3C + 25 has mass < π(p )/2000
+        — so M < 2
+                   3C+26 .
+
+
+    •   This talk H =
+                  :      the functions implementable by a width-N neural net, with the
+        prior induced by Gaussian weights. We will be showing that the number of
+        functions relevant when learning f is at most
+        exp(poly(d, circuit complexity of f )). By our relevance-based bound, this means
+        the sample complexity of learning f is O(poly(d, circuit complexity of f )).
+
+
+
+
+                                                                                           14/38
+Our neural net Bayesian learning setting
+    •   Target.                                     d → {1, −1}.
+
+        Architecture.
+                   A boolean function f : {1, −1}
+    •                    A standard MLP of depth L and width N , sigmoid activation ϕ
+        bounded by ±1, one output node zw (x). We ask three things of ϕ: that it be
+        bounded, Lipschitz, and non-polynomial.
+    •   Biases.
+        Interpreting a weight vector as a boolean function. w
+                   No separate bias parameters: we append a constant input x0 = 1.
+    •                                                                outputs +1 on x if
+      zw (x) > 21 and −1 if zw (x) < − 21 ; we restrict the prior ahead of time to w
+      implementing full boolean functions: |zw (x)| >
+                                                         1
+
+    •   Prior.                                           2 for every x. p
+              Independent Gaussian weights: standard deviation σ1 =
+                                     √                                      N/d σ (first
+
+      is the     small (strong) prior limit
+      layer), σℓ = σ (inner), σL = σ/ N (output) — choice explained later. This talk
+                                        , σ → 0 at fixed N .
+          • We don’t actually consider any sort of limiting learner. For each N , we just take σ
+            tiny enough that when learning any function f , the tail of functions with larger
+
+
+        Learning is conditioning. (x, 1)
+                      2
+            weighted ℓ norm is irrelevant.
+    •                                                                   1
+                                              conditions on {zw (x) >
+                                                                        2 }; (x, −1) on
+        {zw (x) < − 21 }.
+                                                                                                   15/38
+Two complexity measures
+  Definition: the MLP-circuit complexity of f at depth L
+  CL (f ) is the smallest C such that some MLP of depth L and width C , with all weights of
+  absolute value at most C , implements f .
+
+                                                d
+  This is never infinite: one hidden layer with 2   neurons can already interpolate all inputs exactly;
+
+  larger L pads with near-identity layers (cf. Appendix B).
+
+  For any reasonable circuit convention — at least given constant fan-in — a function
+  implemented by a depth-L circuit of complexity C has CL (f ) = O(C). Conversely, a
+  function with a small MLP-circuit has a small circuit in any reasonable convention, though
+  there we may have to fudge the complexity polynomially, and the depth. So CL (f ) is related
+  to other fixed-depth circuit complexities of f . (First direction: Appendix B.)
+
+  And what the learner ≈minimizes is the weighted squared ℓ
+                                                                     2 norm matching that prior,
+
+  − log(prior density) = κN (w)/2σ 2 + const with c1 = d/N , inner cℓ = 1, cL = N :
+
+  κN (w) = ℓ cℓ ∥W ℓ ∥2 for a weight vector, and κN (f ) = inf κN (w) : w implements f
+             P                                                    
+
+
+  for a function (∥ · ∥ = Frobenius, and the Euclidean norm of the readout row).
+                                                                                                          16/38
+Statement of the main learning theorem of this talk
+  Theorem
+  In the NNbayes setting of the setting slide: let C = CL (f ), and let the width N be
+  anything at least C — arbitrarily large. Then after n = poly(d, C) data points, with
+  probability 1 − exp(−Ω(C)) over the draw of the samples, the average probability on
+  the correct answer is > 99.9%.
+
+  Throughout, the depth L is held fixed and suppressed inside poly(d, C). How the bound
+
+  depends on L is a story of its own, and we come back to it.
+
+  It turns out that it suffices to show the following:
+
+  Proposition (counting)                                                 
+  For every width N ≥ C :      #{ g : κN (g) ≤ κN (f ) } ≤ exp poly(d, C) .
+  Why it suffices: at tiny σ , only these functions are relevant when learning f — everything
+
+  costlier is in an irrelevant tail — so the relevance-based bound gives
+
+  n = O(log M ) = poly(d, C) samples.
+  We get there by first proving the counting proposition with the width pinned small —
+
+
+                                                                                                17/38
+  and then bootstrapping.
+The counting proposition — first version, at small width
+
+  Proposition (counting, small width)
+  Let C = CL (f ), and take the width N to be at least C and at most poly(C). Then
+                                            
+  #{ g : κN (g) ≤ κN (f ) } ≤ exp poly(d, C) .
+
+  By definition of C , we have that f is realizable at width N with norm poly(d, C) — so
+  every function to be counted has an implementation of norm at most poly(d, C).
+  There is already something to prove here: the count is of   functions, but they are
+  implemented by a continuum of weight vectors.
+
+  The idea is that varying weights cannot change the function too quickly because of
+  Lipschitzness, so we can put disjoint balls around points implementing different
+  functions, and bound the total number of balls by a volume argument.
+
+
+
+
+                                                                                        18/38
+The small-width counting argument
+                    weight space R radius  P                 1
+                                                            2Λ
+
+                                                      ∥w∥ ≤ R
+                                       1
+                                     > Λ
+
+
+
+
+                                                           1
+                                                      R + 2Λ
+
+  One dot per boolean function of norm ≤ R = poly(d, C), in R
+                                                                 P with P the number of
+                                                                 √
+  parameters — a ball the learner never leaves (in Appendix C’s cℓ -rescaled coordinates,
+                    2          ′
+  where κN (w) = ∥w∥ ). If w, w implement different functions then |zw (x) − zw ′ (x)| > 1
+
+  at some input x, and zw (x) is Λ-Lipschitz in w , so the dots sit > 1/Λ apart:
+                                            !P
+                                        1
+                                   R + 2Λ
+       #{ g : κN (g) ≤ R2 } ≤                    = (1 + 2ΛR)P = exp poly(d, C) ,
+                                                                              
+                                      1
+                                     2Λ
+
+  and that is the small-width counting proposition.                  (Details: Appendix C.)
+                                                                                          19/38
+High width: κN and CL are polynomially related
+  Fix f , and now let N be   any width at least CL (f ) — arbitrarily large.
+
+  Theorem (equivalence)
+  CL (f ) and κN (f ) are polynomially related:
+
+            κN (f ) ≤ poly(d, CL (f ))        and     CL (f ) ≤ poly(d, κN (f )),
+
+  with polynomials that do not depend on N .
+
+
+  Corollary (the counting proposition, at every width)                             
+  For every width N ≥ CL (f ):     #{ g : κN (g) ≤ κN (f ) } ≤ exp poly(d, CL (f )) .
+
+  We first derive the corollary, and then prove the two halves of the equivalence theorem
+  by two constructions: one we call   cloning, and one we call subsampling.
+
+                                                                                            20/38
+Proof of the corollary
+
+
+  Take any g with κN (g) ≤ κN (f ). The equivalence theorem — used in both directions
+  — gives
+
+
+            CL (g) ≤ poly(d, κN (g)) ≤ poly(d, κN (f )) ≤ poly(d, CL (f )).
+
+  So every such g is implemented at width poly(d, CL (f )) with weights of absolute value
+  at most poly(d, CL (f )) — and by the Lipschitz-plus-volume count of the small-width
+                                                
+  case, there are at most exp   poly(d, CL (f )) of them.                                □
+
+
+
+
+                                                                                         21/38
+Cloning: f stays cheap at every width
+  Claim (first half of the equivalence theorem).                      At every width N ≥ C = CL (f ),
+  κN (f ) ≤ poly(d, C).
+  Replace every neuron by k = ⌊N/C⌋ copies, dividing each weight                        out of a cloned
+  neuron among its k clones; first-layer weights are copied whole. The function is
+                 Pk        W
+  untouched —          b=1 k ϕ(z) = W ϕ(z) — and the norm does this:
+
+                           first layer                                             last layer
+                                                     internal layer
+                        input not cloned                                     output not cloned
+                               W                            W                        v
+              before
+
+
+
+               after
+
+
+                  k    edges, still of size W   k2   edgesof size W/k       k   edges of size v/k
+                       ∥ · ∥2 × k                    k2 W
+                                                            2
+                                                                = W2             ∥ · ∥2 / k
+                                                        k
+                   c1 = d/N cancels it                unchanged              cL = N cancels it
+  This is the promised explanation of the boundary scalings: c1 = d/N and cL = N are exactly
+
+
+                                                                                                                 22/38
+  what cancels the k and 1/k (the d rides along at every width).                        (Details: Appendix D.)
+Subsampling: small norm lets us discard almost all neurons
+
+  Cloning gives half of the equivalence theorem. To get the other half, i.e.
+  CL (f ) ≤ poly(d, κN (f )), we use subsampling to shrink any net of small ℓ2 norm while
+  preserving the function. (What follows is a sketch; see Appendix E for the full argument.)
+
+
+  Proposition (subsampling)
+  If a width-N net implements g with κN (w) ≤ K , then g is      also implemented — at
+         1
+  margin
+         3 — by a net of width N1 = poly(d, K) whose weighted norm is ≤ 4K .
+
+  This is the second half of the equivalence theorem: the small net’s weights are all at
+                                                                                p
+  most poly(d, K) (weighted norm ≤ 4K at width N1 , read entrywise: first layer ≤ 2KN1 /d,
+           √
+                            K/N1 ), so — after scaling the output layer by 32 to turn
+                           p
+  inner ≤ 2 K , output ≤ 2
+           1                  1
+  margin
+           3 back into margin 2 — it witnesses CL (g) ≤ poly(d, K) = poly(d, κN (g)).
+
+
+
+
+                                                                                               23/38
+Subsampling, in one picture
+                   zero the |v | > 12K/N   i
+
+
+                                 sample N neurons
+                    ×             with replacement
+                                                1
+
+
+          x                  z (x)               x                             z^(x)
+                            rescale out-weights by N/N
+                                           w
+                    ×                                         1
+
+
+
+
+                  width N , astronomical                N = O(dK ) neurons
+                                                                    2
+
+                                                    (one hidden layer) — no N in it
+                                                          1
+
+
+
+
+   Why it works. c = N
+                    L         forces
+                                       P 2
+                                      i vi ≤ K/N , so the out-weights are tiny on average.
+                                                                   1
+   Zero the few heavy out-edges — they can shift zw by at most
+                                                                  12 in total, on any input.
+   What is left is a sum of N small terms, and a random N1 of them, rescaled, is unbiased
+                         1                       d                         1
+   with Hoeffding error
+                         12 at every one of the 2 inputs at once. Margin 2 becomes
+          1
+   margin .
+                                                                                           24/38
+          3
+More hidden layers: the procedure
+                                                          −L
+  Error budget η :=
+                           1
+                        12(L−1) per layer. Define ρ := η 2   min{K −(L−1)/2 , 1}.
+   1.   Kill all big edges.
+        with |Wij | > τi :=
+                                2
+                                √  ∥Wi· ∥.
+                                                                              s
+                                One deterministic pass over every W , s ≥ 2: in row i, zero every entry
+
+                               ρ N
+                                                                                  √
+          –   This√moves the
+                          √
+                             next preactivation vector in ℓ2 by at most ρ2 N K , so it moves the output by
+              ≤ ρ2    N K · ( K)L−s−1 · K/N = ρ2 K (L−s+1)/2 ≤ η2 — the gains being operator norms,
+                                       p
+                √                  p
+
+        Subsample the hidden layers, every layert to the same size
+              ≤      K inside and ≤ K/N at the output, forced by κN (w) ≤ K .
+   2.
+                         −4
+             
+        N := 256 ρ d + log(L/ρ)
+          1                                  : in stage   we subsample hidden layer m := L − t (last
+        hidden layer first), sampling N1 neurons      independently, with replacement, out-weights
+                                  ′
+        rescaled by N/N1 . Write W for the subsampled matrices, Sm+1 for the kept neurons of
+        the layer after.
+          –   Deviations are small: by Hoeffding, with probability ≥ 100
+                                                                      99
+                                                                       q
+                                                                         for every stage and input at once,
+                                                               2          ρ           P  m+1 2
+              stage t moves the next preactivation vector in ℓ     by ≤       i∈Sm+1 ∥Wi·
+                                                                                  N          ∥ .
+                                                                          2
+          – Kept-row masses stay small: by Markov, N
+                                                           P P            m+1 2
+                                                          m   i∈Sm+1  ∥W  i·    ∥   ≤ 8N 1 K with probability
+                                                                               √
+            ≥ 87 — so every stage’s term is, and the bound above reads ≤ ρ2 8N1 K .
+          – Norms stay small: likewise the subsampled net’s weighted norm is ≤ 4K with probability ≥ ;
+                                                                                                           3
+
+                       ′s
+                               √                         ′L
+                                                                   p                                       4
+            hence ∥W ∥op ≤ 2 K (1 < s < L) and ∥W ∥op ≤ 2            K/N1 .
+          – All three at once — one union bound, probability ≥ 1 −
+                                                                     1       1    1
+                                                                         − − > 0; fix such a draw.
+                                                      √           √ 100 8 p4
+            Then each stage moves the output by ≤ ρ2 8N1 K · (2 K)t−2 · 2 K/N1 = 2t+ 2 ρ2 K t/2 ≤ η2 ,
+                                                                                               1
+
+
+            and the 2(L − 1) contributions of
+                                               η               1
+                                               2 move it by ≤ 12 in all.            The subsampled net computes
+              the same signs, at margin , at width
+                                         1
+                                                      N1 = poly(d, K)             , with weighted norm
+                                                                                                  ≤ 4K     .
+                                                                                                                  25/38
+                                         3
+More hidden layers, in one picture
+                      × = big edges, already killed up front (step 1’s per-row threshold)
+      sampling layer m now: N of its neurons with replacement,√out-weights rescaled by N/N
+                       the error crosses each later layer, gain ≤ 2 K (on the norm event) — total: ≤
+                                   1                                                            1
+                                                                                                       η
+                                                                                                       2
+
+                  kept neurons compute exactly —
+               only×the sums into m+1 are estimated
+         x            ···                               ···                              z(x)
+
+                                         layers m+1..L−1: already at width N —
+                                         each union bound runs over the layer after:
+                                                                               1
+
+                                        log N = poly, not log N , hence last to first
+                        ×
+                                             1
+
+                  layers 1..m:
+                 still width N
+
+                                       N1 = O (d + L log(K + 1)) L4 16L (K + 1)2(L−1) .
+                                                                                     
+             Each layer has width
+
+     N -free, and the K 2(L−1) is forced by the first layers: their errors cross all L − 1 later gains of
+     √
+       K . So the proposition goes through — at constant depth, just poly(d, K).
+                                                                                                            26/38
+Taking stock
+  Theorem (again)
+  Let C = CL (f ), N anything at least C : after poly(d, C) data points, with probability
+  1 − exp(−Ω(C)) over the draw of the samples, the average probability on the correct
+  answer is > 99.9%.
+
+  Cloning and subsampling made CL and κN polynomially equivalent at every width; the
+  small-width count and the relevance-based bound did the rest.
+
+  An alternative route. It turns out that one can also conclude this result by replacing the
+  subsampling step (which is perhaps the mathematically trickiest part of the argument) with a
+
+  norm-based capacity bound from the literature (Bartlett 1998; Neyshabur–Tomioka–Srebro;
+
+  Golowich–Rakhlin–Shamir) — but as far as we know, the above theorem is novel. One reason
+
+  to still care about subsampling is that the same idea also works for other cases of NNbayes,
+
+  where we don’t know how to get such a result using other means. We will say more about this
+
+  later. (See Appendix F for more on the literature.)
+
+  Depth.   Probably the main thing that sucks about this theorem is that the poly hides
+  an exp(depth) term. Can one get rid of that?
+                                                                                                 27/38
+Is the exp(depth) actually necessary?
+
+
+  One can show that the subsampled neuron count really must have an exp(depth) term:
+                     2
+  for K = Ω̃(dL ) and N large enough, the ball { g : κN (g) ≤ K } genuinely contains
+
+  2   min{2d , (K/L)Θ(L) }   boolean functions.                           (Appendix G.)
+
+  But this is not a conclusive argument that the sample complexity bound must have
+  such a term.
+
+  Our guess is that it must — without some further assumption.
+
+
+
+
+                                                                                       28/38
+A way to remove exp(depth): restrict the prior to robust weights
+  Store the activations at finite precision.        Now restrict the prior to the   robust   weight
+  vectors: those whose rounded activations do not change when the activations are
+
+
+  And that no weight is too big: |W | ≤ poly(d, C, L) · ∥W ∥ /N
+  perturbed by a quarter of a unit in the last place, on any input.
+                                             s                          s       — each inner
+                                            ij                              F
+  weight within a poly factor of its layer’s root mean square weight. The cloned witness
+  satisfies this.
+  Then a subsample that moves activations by less than that leaves every rounded
+  activation   literally unchanged: no error to propagate at all.
+  Theorem
+                On this prior, the exponential in the depth becomes polynomial:
+               the same guarantee from poly(d, C, L) data points, at every depth.
+
+  (C read as the width of the smallest   robust implementation of f .) See Appendix H for an
+  explanation of why the first condition above alone is insufficient.
+
+  These are sorta contrived restrictions, put in to make the proof work. A more principled
+
+  variant: require a small Lipschitz constant under perturbing activations (obtainable for boolean
+
+                                   denoising layers). But we’d like better ideas here.
+                                                                                                      29/38
+  implementations by building in
+Additional results
+
+
+    •   An online mistake bound.        Instead of the PAC statement, we can also prove:
+        when doing     in-distribution online learning — predict each fresh sample from D
+        before seeing its label — the learner makes only poly(d, CL (f )) mistakes in
+        expectation.
+
+    •   A bound in the other direction.       The   circuit complexity CL of the learned
+        function is at most poly(d, #mistakes made while learning it). That is: if learning
+        works well, the function you end up with is simple.
+
+
+
+
+                                                                                              30/38
+Part 3: Discussion
+The big picture
+
+
+
+  A broader research aim
+      Establish that/when the neural net Bayesian prior   is a circuit complexity prior.
+  So far, everything was for one choice of prior. In general there is one standard deviation
+  per layer — σ1 at the input, σℓ in the intermediate layers, σL at the readout — so
+  there is a whole space of scalings to survey, and which learner you get depends on
+  where you sit in it. We conjecture that only three kinds of point live there — next slide.
+
+
+
+
+                                                                                           32/38
+The big picture: three scalings
+
+
+  We single out three scalings, listing each as (first layer σ1 , inner layers σℓ , output layer
+  σL ):
+    • strong prior σ = pN/d σ σ = σ σ = σ/√N
+                       :  1
+                 −γ/2 for some
+                                             ,   ℓ   ,       L       , with the free parameter
+      σ=N               γ>1                          γ→∞
+                                         . This presentation considered the              case.
+
+    • mean field σ = 1/ d σ = 1/ N σ = 1/N
+                       √        √
+                     :   1           ,   ℓ       γ→1     ,   L       — the        point just outside
+          the strong prior regime.
+
+    • NNGP
+                                             √        √        √
+                                       σ = 1/ d σ = 1/ N σ = 1/ N
+                  (neural network Gaussian process):             1      ,    ℓ       ,   L         .
+
+
+
+
+                                                                                                   33/38
+The big picture: what we expect
+  Our partly speculative picture is that:
+
+    • Every “reasonable” overparametrized NNbayes scaling resembles one of the three.
+       By “reasonable”, we mean that after conditioning on data, each layer has a
+       constant fraction of neurons at Θ(1) preactivations — activations are not very
+       small and also not saturated. (We currently have no rigorous argument for this,
+       though we do have a handwavy one — Appendix I.)
+
+    • The strong prior and mean-field cases have a circuit prior and learn any target
+      from poly(d, its circuit complexity) samples.
+         • Dmitry has figured out how to establish this in the strong prior case (write-up
+            upcoming) and in the infinite-width mean-field case (Vaintrob & Hänni,
+            arXiv:2607.05735).
+    • The NNGP case does not have a good circuit prior — XORs in particular are
+       circuit-simple but slow for it to learn. Our heuristic picture is that it fits boolean
+       functions in the Fourier basis, preferring low degree, so a size-k XOR takes ∼d
+                                                                                             k
+
+       samples where poly(d, k) ought to do. (Appendix J has more discussion.)
+
+                                                                                                 34/38
+The three orderings, scrambled only polynomially
+  Order all boolean functions three times over; a function’s           log-index is
+  log #{g at least this simple}.
+
+                   by circuit complexity C
+                                         L
+
+                                      f , log-index poly(d, C)
+                                                             cloning: κ ≤ poly(d, C )
+                   by min ℓ norm κ
+                           2
+                                    N                        subsampling: C ≤ poly(d, κ )
+                                                                   N             L
+
+
+                                                  f can only be in here
+                                                                        L             N
+
+
+
+
+                   by prior
+                                                     and in here
+                   simplest −→ most complex
+  Every bound runs both ways, so a log-index s in one ordering forces a log-index in
+  [ (sd)1/a , (sd)a ] in the others.
+
+                                                                                            35/38
+Open problems
+   •   Improve the polynomial.       We have not tried to optimize it. Perhaps
+                                                                        2
+                                                                                    quadratic in CL
+       is reachable — linear seems too good, there being ∼ exp(CL ) functions at width CL —
+       or linear in some   other circuit complexity, though that probably needs different ideas.
+       (Matching the O(C log(C + d)) of Solomonoff induction over boolean circuits looks out of
+
+       reach: specifying the input directions the C first-layer neurons read is already ∼ dC bits — for
+
+
+
+       Kill the exp(depth).
+                       2
+       a full XOR, ∼ d . Not a lower bound, but why we expect a genuine d.)
+   •                            We suspect this is impossible by default (open direction:
+       understand the prior better; maybe it’s roughly just the one-hidden-layer prior?), but we
+       also suspect that there is some reasonable robustness assumption on the support of the
+       prior that makes this true. We are not content with our current candidates for this
+
+
+   •   Give a lower bound on the log prior of a function.
+       assumption.
+
+
+         • This bound probably must decay with width or be bad in the circuit complexity. This is
+            because the NNGP does poorly on XORs (Appendix J) and we suspect that any scaling
+           which does not give the NNGP has π(f ) decaying in width.
+         • But even if that’s right, one can ask for a bound that decays in width only slowly.
+       Best such result we know of: Buzaglo et al. (ICML 2024) — see Appendix F.
+
+                                                                                                          36/38
+More open problems
+   •   Classify and analyze the NNbayes regimes.         Either find scalings that behave in
+       a genuinely new way, or prove that every reasonable scaling reduces to one of the
+       regimes we can already deal with, or prove circuit prior theorems for other scalings
+       directly (Appendix I is our current heuristic reduction.) Also, do other reasonable
+
+
+       Out of distribution.
+       ways to set up NNbayes give similar behavior? (We think mostly yes.)
+   •                          The in-distribution guarantee is simply false out of
+       distribution — there are easy counterexamples. An     online mistake bound might
+       still hold, and we have a heuristic argument for one that we suspect is “morally
+
+
+       Other architectures.
+       right” — but the analogous claim for circuits is strictly false.        (Appendix K.)
+   •                           State and prove analogous results for RNNs, transformers,
+       CNNs. Oh, and also just MLPs with other activation functions (what we need of
+
+
+       Gradient descent.
+       ϕ: Appendix L).
+   •                        Do any of the results or ideas here extend to the local learning
+       algorithms people actually use?
+
+
+
+       We think many of these are within reach — and we encourage people looking
+             for concrete neural net learning theory problems to work on them.
+
+                                                                                               37/38
+                    Thank you for listening
+
+ Kaarel and Dmitry would like to thank the following for discussions and ideas:
+
+Lucius Bushnaq, Sam Eisenstat, Lawrence Chan, Jake Mendel, Lauren Greenspan,
+
+                               Claude, ChatGPT
+Appendices
+  Warning! Many of these appendices have largely been generated by Claude from bullet-point
+  outlines and rough notes provided by me. I haven’t meticulously reviewed many appendix slides
+
+  yet, so there could be some errors, sorry.
+
+
+    • A: the relevance-based sample complexity bound, with free parameters
+    • B: implementing circuits inside MLPs
+    • C: the small-width counting argument, in detail
+    • D: cloning, in detail
+    • E: subsampling, in detail
+    • F: to what extent is this already in the literature?
+    • G: constructing exp exp(L) functions of low norm
+    • H: why quantization alone does not kill the exp(depth)
+    • I: a handwavy typology of large-width NNbayes scalings
+    • J: what does NNbayes do in the NNGP regime?
+    • K: out of distribution
+    • L: wherefore our conditions on ϕ
+                                                                                                  39/38
+Appendix A: the relevance-based bound, in general form
+  The setting: a countable class H of functions g : X → Y with prior π , a target f ∈ H, data
+  x1 , . . . , xn ∼ D i.i.d. with labels yi = f (xi ), and the Bayesian posterior. Here S is the set of
+  non-tail hypotheses of the body’s statement, and the error levels are free.
+
+
+  Proposition (relevance-based sample complexity bound)
+  Suppose there is a set S ⊆ H with
+
+   (i)    f ∈ S , π(f ) > 0, and |S| ≤ M ;
+   (ii)   π(H \ S) ≤ T π(f ).
+                                     n ≥ 1ε log M + log(2 + T ) + log 1δ + log η1
+                                                                                    
+  Then for any ε, δ, η > 0: after                                                       samples, w.p.
+  ≥ 1 −2δ the posterior’s average probability
+                                              on the correct answer,
+  Ex∼D posterior{g : g(x) = f (x)} , is ≥ 1 − (ε + η); the posterior-majority predictor then errs
+  on at most a 2(ε + η)-fraction of inputs.
+
+
+  The 2 in log(2 + T ) only keeps that term nonnegative. The body’s statement follows from this
+
+  proposition’s   proof run at ε = η = T = 2000
+                                            1
+                                                , δ =
+                                                         1
+                                                      2000M : the union-bound and Markov requirements
+                                                   −8      1
+  need only hold separately, and each reduces to e      < 2000 — whence the body’s 4000(log M + 4).
+
+
+
+                                                                                                          40/38
+Appendix A: proof
+  Call g   bad if err(g) > ε. A bad hypothesis is consistent with one fresh sample with
+  probability ≤ 1 − ε, hence with all n with probability ≤ e
+                                                               −εn .
+
+  Inside S: union bound. Pr[      some bad g ∈ S survives ] ≤ M e
+                                                                       −εn ≤ δ at the stated n.
+
+  On the complement, every bad hypothesis in S has posterior mass          zero.
+  Below S: Markov.      The expected surviving prior mass of the bad part of H \ S is
+  ≤ T π(f ) e−εn , while the posterior denominator is always ≥ π(f ) (f never dies). So
+  w.p. ≥ 1 − δ , the posterior mass of the bad part of H \ S is ≤ T e
+                                                                     −εn /δ ≤ η .
+
+  Average, and majority.      On the intersection, every surviving bad hypothesis lies in
+  H \ S , with total posterior ≤ η , and each good one is wrong at a fresh x with
+  probability ≤ ε — so the average probability on the correct answer is ≥ 1 − (ε + η).
+                                                                             1
+  The majority prediction is wrong at x only if the correct answer carries ≤
+                                                                             2 of the
+  posterior there; Markov over x gives the 2(ε + η)-fraction.                          □
+
+
+                                                                                                  41/38
+Appendix A: the classical special case, and why a posterior
+statement
+  The classical special case.    For a   deterministic learner that returns a simplest
+                                                                 1
+                                                                     log M (C(f )) + log 1δ
+                                                                                              
+  consistent hypothesis, the corresponding guarantee — n ≥                                        for
+                                                                 ε
+  M (s) := #{g : C(g) ≤ s} — is the classical Occam bound of
+  Blumer–Ehrenfeucht–Haussler–Warmuth 1987; it is our proposition’s union-bound half,
+  with S = {g : C(g) ≤ C(f )}.
+
+  Why we do not use that form.       Our σ → 0 posterior need not have a unique
+  minimizer to return: it concentrates on consistent weight vectors with κN (w)
+                ∗
+  approaching κN := inf{κN (w) : w consistent} — an infimum that need not be
+  attained — and (at least a priori) several   functions may sit at κ∗N , by a symmetry of
+  the input, say. The posterior is then spread over them. The posterior-mass conclusion
+  needs no minimizer named: S is only ever      counted.
+
+
+                                                                                                    42/38
+Appendix A: how this talk instantiates it
+
+  In our setting H is the boolean functions implementable at the given width, and
+  S = { g : κN (g) ≤ κN (f ) } — of size exp(poly(d, C)) by the equivalence theorem and
+  the small-width count, which is what cloning and subsampling are for.
+
+  For the tail condition: every g with κN (g) > κN (f ) has prior mass vanishing       relative to
+  f ’s as σ → 0, and there are finitely many boolean functions at fixed d — so for σ small
+  enough they form a tail of mass < π(f )/2000. At fixed small σ > 0, bounding the tail
+  is genuinely open — the “bound the prior itself ” problem from the open problems list.
+
+  When log M + log(2 + T ) ≤ poly(d, CL (f )) at a given scaling — as we conjecture for the
+
+  whole strong prior family and for mean field — every target is learned from poly(d, CL (f ))
+
+  samples, with no single simplest hypothesis, just a quickly decaying prior.
+
+
+
+
+                                                                                                 43/38
+Appendix B: implementing a circuit inside an MLP
+
+  Claim.         L
+          A depth-    circuit of size C with constant fan-in has CL (f ) = O(C), up to ±1
+  in the depth convention — with the boolean values carried     exactly, not approximately.
+  The construction.    Each gate’s value is carried by a   linear combination of O(1)
+  neurons — the form universal approximation naturally produces. Such combinations
+  compose at no cost: a neuron’s preactivation is an arbitrary linear functional of the
+  previous layer’s activations, so any affine function of several gate values is again a
+  legitimate preactivation.
+
+  Where the thresholds come from.         The construction needs a constant available at
+  every layer. Layer 1 reads it off the bias input; each later layer devotes one neuron to
+  carrying ϕ(β) ̸= 0 forward. One extra neuron and O(1) norm per layer, so still width
+  O(C).
+
+
+
+                                                                                              44/38
+Appendix B: building a gate inside an MLP
+  A gate of fan-in q has Q = 2
+                                      q = O(1) input patterns v (1) , . . . , v (Q) , all distinct. We
+
+  want Q neurons and coefficients with
+
+                 Q
+                 X
+                       λs ϕ as · v (p) − θs       = gate v (p)
+                                                                
+                                                                       for all Q patterns p,
+                 s=1
+
+  where as , θs and λs are all ours to choose.
+
+
+  Theorem (Pinkus 1999, Thm. 5.1)
+  Let ϕ ∈ C(R) be non-polynomial. For any r distinct points ξ
+                                                                             1 , . . . , ξ r and any values
+                                                  Pr                  p − θ ) = α for every p.
+  α1 , . . . , αr , there are as , θs , λs with     s=1 λs ϕ(as · ξ        s     p
+
+  Pinkus gives no bound on the weights, but none is needed: the interpolation problems range
+
+  over a fixed finite family — exact boolean patterns, constant fan-in — so their solutions are
+
+  constants depending only on ϕ.
+
+
+                                                                                                              45/38
+Appendix C: the small-width count, restated
+  Proposition (counting, small width)
+  Let C = CL (f ) and take the width N to be at least C and at most poly(C). Then
+                                            
+  #{ g : κN (g) ≤ κN (f ) } ≤ exp poly(d, C) .
+
+                                weight space R
+                                             P
+                                                          radius    1
+                                                                   2Λ
+
+                                                          ∥w∥ ≤ R
+                                         1
+                                       > Λ
+
+
+
+
+                                                               1
+                                                          R + 2Λ
+
+
+  To apply the relevance-based bound we want a bound on M (κN (f )), the number of functions
+
+  implementable at norm at most f ’s own. Three steps: the learner never leaves a ball of radius
+
+  R; inside it, different functions sit > 1/Λ apart; disjoint balls are counted by volume.
+                                                                                                   46/38
+Appendix C: the learner stays in a ball
+
+  Coordinates.     Rescale coordinate ℓ of weight space by
+                                         P
+                                                             √
+                                                                 cℓ . Then κN (w) = ∥w∥2 is an
+  ordinary squared Euclidean norm on R , P the number of parameters, and sublevel sets
+  of κN really are balls.
+
+  f   is cheap.   At width N ≥ C , embed the width-C net implementing f and set the
+  remaining weights to 0. Its weights are at most C and there are poly(d, C) of them;
+  the coefficients c1 = d/N and cL = N are themselves poly(d, C) at this width, so
+
+
+                                κN (f ) ≤ poly(d, C) =: R2 .
+
+  So the learner stays inside ∥w∥ ≤ R:       the functions with κN (g) > R
+                                                                              2 are together
+                                                                                     2
+  irrelevant — that is the strong prior tail condition — and only {g : κN (g) ≤ R }
+  remains to count.
+
+
+
+
+                                                                                               47/38
+Appendix C: different functions are far apart
+  The separation.                    ′
+                    Suppose w, w in the ball implement      different boolean functions.
+  Then they disagree at some input x, and both have margin, so — after swapping names
+                          1                1
+  if need be — zw (x) >
+                          2 and zw (x) < − 2 , giving |zw (x) − zw (x)| > 1. Since
+                                  ′                               ′
+
+  w 7→ zw (x) is Λ-Lipschitz on ∥w∥ ≤ R,
+
+                                         ∥w − w′ ∥ > 1/Λ.
+                               1
+  This is exactly what the ±
+                               2 margin in the prior restriction bought us: without it, two
+  weight vectors could implement different functions and be arbitrarily close.
+
+  And Λ is not too big.    Perturbing one layer changes the output by at most the
+  perturbation times the operator norms of the layers after it and the Lipschitz constant
+                                                               L
+  of ϕ — all bounded on the ball — so Λ ≤ poly(N ) · O(R) . Only log Λ will enter the
+  count, so this costs us nothing.
+
+
+
+                                                                                              48/38
+Appendix C: comparing volumes
+  One representative per function.    Each g with κN (g) ≤ R
+                                                                 2 has an implementation in
+
+  the ball — a subtlety: κN being an infimum, we should allow     non-strict implementation
+                  1               1
+  here, margins ≥
+                  2 rather than > 2 (take a limit point of implementations). Pick one
+  arbitrarily for each g .
+
+  Disjoint, and contained.   Put a radius-
+                                              1
+                                             2Λ ball around each chosen point. These balls
+  have disjoint interiors — the separation argument, run with the non-strict margins,
+                                                                                         1
+  gives ∥wg − wg ′ ∥ ≥ 1/Λ — and they are all contained in the bigger ball B(0, R +
+                                                                                        2Λ ).
+  Comparing volumes, there are not too many points:
+
+                                                        !P
+                                                    1
+                                               R + 2Λ                      P
+                   #{ g : κN (g) ≤ R2 } ≤          1         =   1 + 2ΛR        .
+                                                  2Λ
+
+
+
+
+                                                                                             49/38
+Appendix C: what the count gives
+
+
+  At width N ≤ poly(C) we have P = poly(d, C, L) and R
+                                                               2 = poly(d, C, L), and Λ
+                                                   L
+  enters only through its logarithm — so even Λ ∼ R is harmless:
+
+
+                               ≤ #{ g : κN (g) ≤ R2 } ≤ exp poly(d, C, L) .
+                                                                        
+               M κN (f )
+
+  The relevance-based bound then gives n = poly(d, C, L).                                   □
+  Note where this breaks. P       is the number of   parameters, so the bound degrades as
+  the net gets wider — and says nothing at all in the overparametrized limit. That is the
+  real problem, and cloning plus subsampling is how we get around it.
+
+
+
+
+                                                                                            50/38
+Appendix D: cloning, restated
+  Proposition
+  If f is implemented by a depth-L, width-C net with all weights at most C , then for
+  every width N ≥ C we have κN (f ) ≤ poly(d, C) — with no dependence on N .
+
+                            first layer                                         last layer
+                                                      internal layer
+                         input not cloned                                 output not cloned
+                                W                            W                    v
+              before
+
+
+
+                after
+
+
+                  k     edges, still of size W   k2   edgesof size W/k   k   edges of size v/k
+                       ∥ · ∥2 × k                     k2 W
+                                                             2
+                                                                 = W2         ∥ · ∥2 / k
+                                                         k
+                   c1 = d/N cancels it                 unchanged          cL = N cancels it
+
+
+  The next three slides give the construction, the norm accounting for the internal layers, and the
+
+  two boundary layers — which is where the coefficients c1 and cL come from.
+                                                                                                  51/38
+Appendix D: the construction
+
+  The construction.     Put k = ⌊N/C⌋. Replace each neuron i by k copies i1 , . . . , ik , and
+  wire   every copy of j to every copy of i, with weight Wij /k. If C does not divide N ,
+  zero the leftover N mod C neurons; the accounting below then holds up to a factor
+  < 2, which poly(d, C) absorbs.
+  It computes the same function.         Suppose all k copies of each neuron j in one layer
+  carry the original activation ϕ(zj ). Then in the next layer, every copy of a neuron i has
+  preactivation
+                           k
+                          XX Wij                    X
+                                         ϕ(zj ) =       Wij ϕ(zj ) = zi ,
+                                     k
+                           j   b=1                  j
+
+  so the next layer again computes the same function at each clone of a neuron. By
+  induction on layers, the net still implements the same function.
+
+
+
+
+                                                                                              52/38
+Appendix D: the norm is preserved
+  Each original weight Wij has become k
+                                                2 weights, each of size W
+                                                                             ij /k . So its
+                               2
+  contribution to the squared ℓ norm is
+
+                                                W 2
+                                                  ij
+                                        k2 ·            = Wij2 :
+                                                 k
+  exactly what it was before. Summing over the layer, the squared norm is              unchanged,
+  however large N is.
+
+  The original net has poly(C) weights, each at most C — plus dC in the input layer —
+  so this accounting gives
+
+                        X
+                                 ∥W ℓ ∥2 ≤ poly(d, C)         at every width N.
+                    ℓ internal
+
+
+  That is the accounting for   internal layers only — the calculation is different for the first and
+  last layer.
+
+                                                                                                       53/38
+Appendix D: the boundary layers
+  The two ends of the net are not symmetric under cloning, because the input and the
+  output are not themselves cloned:
+
+    • First layer.   The inputs xj are not duplicated, so each copy of neuron i needs the
+      full       W
+            weight    ij — k copies at full size. The raw squared norm grows by k = N/C .
+    • Last layer.    The single output reads all k copies of i, so each weight must be vi /k
+        — k copies at 1/k the size. The raw squared norm shrinks by k .
+
+  This is what fixed the boundary scalings of our prior. In the weighted ℓ
+                                                                                2 norm
+
+                     X                           d
+         κN (w) =          cℓ ∥W ℓ ∥2 ,   c1 =     ,   cℓ = 1 for 1 < ℓ < L,      cL = N,
+                                                 N
+                      ℓ
+
+  the coefficients exactly cancel the k and 1/k above, so cloning preserves the weighted
+  norm at   every layer — and the proposition holds as stated.                                         □
+                                                                                         p
+  In prior terms these are exactly the standard deviations we fixed at the start: σ1 =       N/d σ ,
+                          √
+  inner σℓ = σ , σL = σ/      N.
+                                                                                                       54/38
+Appendix E: subsampling, restated
+  Proposition
+  If a width-N net implements g with κN (w) ≤ K , then g is                  also implemented — at
+         1
+  margin
+         3 — by a net of width N1 = poly(d, K) (L fixed, as throughout) whose
+                                                   3                   1
+  weighted norm is ≤ 4K (so κN1 (g) ≤ 9K after the
+                                                   2 rescale to margin 2 ).
+
+                                    zero the |v | > 12K/N
+                                               i
+
+
+                                                  sample N neurons
+                                     ×             with replacement
+                                                          1
+
+
+                  x                           z (x)               x                      z^(x)
+                                             rescale out-weights by N/N
+                                               w
+                                     ×                                   1
+
+
+
+
+                      width N , astronomical                      N = O(dK ) neurons
+                                                                              2
+
+                                                              (one hidden layer) — no N in it
+                                                                     1
+
+
+
+  One hidden layer first, then the general case, where the error injected at one layer has to cross
+
+
+                                                                                                      55/38
+  all the later layers.
+Appendix E: the concentration bound we use
+  Proposition (Hoeffding)                                         P
+  Let X1 , . . . , Xn be independent with |Xk | ≤ B , and S =        k Xk . Then for every t > 0,
+
+                                                               t2 
+                           Pr |S − ES| ≥ t ≤ 2 exp −                   .
+                                                                 2nB 2
+
+  Hoeffding 1963, Theorem 2, in the ak ≤ Xk ≤ bk form: take bk − ak ≤ 2B and union the two
+
+  tails. (Textbook proof: Boucheron–Lugosi–Massart,     Concentration Inequalities, Theorem 2.8.)
+  In words: a sum of independent, individually small terms is very likely to be close to its
+                                                                            √
+  expectation. The sum could be as large as nB , but deviations past ∼B n are
+  exponentially unlikely, and the exponent sees the terms only through B .
+
+  Every estimator below has this shape: sampling n = N1 neurons with replacement makes the
+                                                N
+  terms independent, and each is bounded by
+                                               N1 τ , since the zeroing capped the weights at τ
+  and |ϕ| ≤ 1.   That is what step 1 is for   — it buys a small B , and the widths cancel inside it.
+
+
+                                                                                                    56/38
+Appendix E: one hidden layer, the estimator
+  Write ui for neuron i’s incoming weights and vi for its outgoing one:
+
+                                            N
+                                            X
+                                 zw (x) =         vi ϕ(ui · x).
+                                            i=1
+                                                 2              2
+                                            P             P
+  With cL = N the complexity charges N        i vi , so      i vi ≤ K/N .
+  Concentration will come from Hoeffding, which needs each term of the sum to be small
+
+
+  Zero the heavy out-edges.
+  — most are, but a few need not be, so neutralize those first.
+                                  Take τ = 12K/N and set vi := 0 wherever |vi | > τ .
+                           2
+                                                                       P 2           1
+  Those edges had |vi | ≤ vi /τ , so together they contributed at most  i vi /τ ≤ 12 to
+  zw (x) in absolute value, on any input x (using |ϕ| ≤ 1, per the setup). Write zlight for
+
+  Subsample.
+  what is left — the neurons stay, only their out-edges go.
+               Pick N1 of the N neurons at random, with replacement, and rescale:
+
+                      N X
+            z^(x) =       vi ϕ(ui · x),         |S| = N1 ,          z (x)] = zlight (x).
+                                                                  E[^
+                      N1
+                         i∈S
+
+                                                                                              57/38
+Appendix E: one hidden layer, concentration
+  z^(x) is a sum of N1 independent terms, each bounded by NN1 τ = 12K/N1 — the width
+  has canceled — so Hoeffding gives, for each fixed x,
+             h                        i           t2 N1               t2 N1 
+          Pr |^z (x) − zlight (x)| > t ≤ 2 exp −           =  2 exp   −          .
+                                                  2N 2 τ 2              288 K 2
+  Union bound over all 2 inputs.
+                        2
+                          d       At t =
+                                         1                              2
+                                         12 the exponent is N1 /(41472 K ), so
+  N1  = 165888 (d + 2) K makes some input fail with probability at most
+  2d · 2e−4(d+2) < 10−3 — and this is where d enters the theorem.
+  The norm.    Both coefficients move with the width, and both come out clean: the
+                            P     N      2
+                                                             P 2
+  output layer charges N1   i∈S ( N1 vi ) , of expectation N  i vi ≤ K , and the input
+        d P         2                     d P         2
+  layer
+        N1 i∈S ∥ui ∥ , of expectation N        i ∥ui ∥ ≤ K — so the subsampled net’s
+                                                                                         1
+  weighted norm has expectation ≤ κN (w) ≤ K , and Markov puts it above 4K w.p. ≤
+                                                                                         4.
+  So the probability that either fails is at most 10
+                                                    −3   1
+                                                       + 4 < 1: a good subsample exists,
+         1
+  within
+         6 of zw on every input.                                                         □
+  And 16 is enough. A net with |zw (x)| > 12 subsamples to one with |^z (x)| > 31 , correct sign —
+                                                            1
+  and Lipschitz-plus-volume applies verbatim at threshold
+                                                            3 , distinct functions separated by 2/3.
+                                                                                                   58/38
+Appendix E: more hidden layers, the plan
+  The body’s two steps, with its facts refined so the order in which things get determined is explicit:
+  (In this appendix A, B , C name events, not the main thread’s C = CL (f ).)
+
+   1.   Kill all big edges    , in one deterministic pass — this will make it possible to bound the
+
+
+        The zeroing was safe
+        deviations caused by subsampling. (Next slide.)
+   2.                              (the body’s two step-1 facts): since operator norms of later layers are
+                                                                                η
+        bounded, zeroing a layer’s big edges moves the output by at most
+                                                                                2 , on every input
+                   1
+
+        Draw the subsamples in order: S
+        (η :=
+                12(L−1) ).
+   3.                                            L−1 for the last hidden layer first, down to S1 — each N1
+
+
+        The deviation event A
+        neurons independently, with replacement.
+   4.                                (the body’s “deviations are small”), about the moments in between:
+        just after layer m is subsampled — layers before it still original — the sums into layer m+1’s
+                                         ρ
+                                             √                                        99
+
+        The row-mass event B:
+        kept neurons are accurate to N ∥Wi· ∥, on every
+                                         2              Pinput.
+                                                            P Hoeffding:m+1 Pr[A] ≥ 100  .
+   5.                                 the kept rows carry N           ∥W       ∥ 2 ≤ 8N K . Markov,
+                                                          m   i∈Sm+1     i·            1
+               7                               ρ√
+
+        The norm event C ,
+        Pr[B] ≥8 — what turns ’s bound into 2 8N1 K .
+                              A
+   6.                      about the net after all the subsampling: its weighted norm is ≤ 4K (a
+                                                                             3
+      claim about the weights — κ enters only in fact 6). Markov, Pr[C] ≥
+                                                                             4 — and C alone
+                                     operator norm.
+        One union bound, then one implication. Pr[A ∩ B ∩ C] ≥ 1 −
+        bounds every subsampled
+                                                                                 1    1   1
+   7.
+                                                                                100 − 8 − 4 > 0: fix such a
+        draw. The three      together imply the output moves by ≤ 12
+                                                                  1
+                                                                     on every input — errors added
+        once, at the end; no conditioning anywhere.
+
+                                                                                                              59/38
+Appendix E: step 1 — one threshold rule
+                                                  s
+  For every layer s ≥ 2 and every row i of W , zero every entry with
+
+                            2
+        |Wijs | > τi :=     √ ∥Wi·s ∥,         the    same ρ := η 2−L min{K −(L−1)/2 , 1} everywhere.
+                           ρ N
+                                    2
+  A zeroed entry has |Wij | ≤ Wij /τi , so row i’s zeroed entries together move its preactivation by at
+  most (using |ϕ| ≤ 1)
+
+
+                      ∥Wi·s ∥2   ρ√
+                               =    N ∥Wi·s ∥           — the row’s budget, on any input.
+                        τi       2
+
+  Entries are zeroed, not neurons:        a neuron heavy for one row is light for others, so none is ever
+  discarded. And τi reads only the original row — the pass is deterministic. (With one hidden layer, the
+  output was a single row, which is why a flat τ = 12K/N sufficed there.)
+
+  The two factors in ρ. The min binds only
+                                        √
+                                           for K < 1, where K
+                                                              −(L−1)/2
+                                                                       > 1 would break the chains below
+  (a formality: κ ≥
+                     1            1
+                     4 always, as 2 < |z| ≤  N ∥W L ∥2 ). The 2−L pays for the factor 2 each subsampled
+  layer’s operator norm carries on the norm event — fact 5.
+
+  Why per row? Rows of one layer differ in scale, and each may only be disturbed in proportion to its own
+                                                                                   2
+  norm — that is what makes the Hoeffding exponent row-free (fact 3) and the ℓ         aggregate collapse to
+                                                                 √                       p
+  ∥W s ∥F (fact 1). A single flat τ cannot serve a row of norm       K and one of norm    K/N at once: loose
+
+                                                                                                               60/38
+  enough to spare the first, it leaves the second’s terms far above its budget.
+Appendix E: facts 1–2 — the zeroing is safe
+  The gains, deterministically.           2
+                                       In ℓ , ϕ contracts — normalize Lip(ϕ) ≤ 1, as for tanh —
+  and each layer multiplies by an operator norm, which κN (w) ≤ K bounds:
+                         √                                                            p
+  ∥W s ∥op ≤ ∥W s ∥F ≤       K (1 < s < L) and ∥W L ∥op = ∥W L ∥2 ≤                    K/N — the output
+  layer is a single row, so its operator norm     is its Euclidean norm. Zeroing only shrinks the
+  Frobenius norms (and the output row’s Euclidean norm), so these bounds survive it.
+                                                                                  1
+
+  Fact 1, aggregated.
+  (Frobenius already dominates the operator norm — no row-wise ℓ               control needed.)
+                                                           ρ
+                                                                          √
+                         Row i moves by at most its budget
+                                                           2               N ∥Wi·s ∥, so in ℓ2 the whole
+  vector moves by
+
+                             √ P          1/2     √              √
+                ∥Δz s ∥2 ≤ ρ2 N        s 2
+                                  i ∥Wi· ∥      = ρ2 N ∥W s ∥F ≤ ρ2 N K.
+
+  Fact 2.   For 2 ≤ s ≤ L − 1, crossing layers s+1, . . . , L−1 and then the output row
+                 √               p
+  multiplies by (    K)L−s−1      K/N :
+
+                             ρ
+                                 √            L−s−1
+                                                      q
+                                                                       L−s+1
+                             2       NK · K     2         K
+                                                          N   = ρ2 K     2     ≤ η2 .
+
+  The width N cancels exactly. (At s = L the zeroed row is the output row, so its shift is already
+                   ρ
+                     √   L      ρ
+                                  √     η
+  at the output: ≤
+                   2 N ∥W ∥2 ≤ 2 K ≤ 2 — the same bound, no crossing.)
+                                                                                                           61/38
+Appendix E: fact 3 — Hoeffding, and the width N1
+  Draw the subsamples in order, SL−1 first down to S1 , each N1 neurons       independently, with
+  replacement. Subsampling layer m estimates each sum into layer m+1 by an average of N1
+
+
+  The exponent is the same √everywhere.
+  terms; the kept rows of layer m are verbatim, so those sums are all that is estimated.
+                                                                                            N
+                                                  After zeroing, the terms are bounded by
+                                                                                            N1 τi ;
+                             ρ
+  aiming at the row’s budget
+                             2        N ∥Wi· ∥, the exponent is
+
+              ρ
+                  √             2       ρ2        2
+              2       N ∥Wi· ∥ N1        4 N ∥Wi· ∥ N1        ρ4 N1
+                                   =                      =            — ∥Wi· ∥ cancels.
+                      2 (N τi )2            8
+                                           ρ2
+                                              N ∥Wi· ∥2        32
+
+  The deviation event A: every   kept neuron of every layer is accurate to its row’s budget on
+  every input. Union bounding over the 2d inputs, the N1 kept neurons of the layer after, and
+                          4
+  the L − 1 layers needs ρ N1 /32 ≥ d + log(N1 L) + 5 — which the body’s
+  N1 = ⌈256ρ−4 (d + log(L/ρ))⌉ satisfies, giving Pr[A] ≥ 100
+                                                         99
+                                                             and
+
+
+                  N1 = O (d + L log(K + 1)) L4 16L (K + 1)2(L−1)
+                                                                       
+                                                                           — N -free.
+
+
+  The union runs over the    random Sm+1 , drawn at the previous stage — legal because the
+  draws are independent and the exponent does not depend on the row, so the same bound
+  holds for every realization and Pr[A] is unconditional. On A, stage t moves the next
+                                   q P
+                               ρ
+                                    N i∈Sm+1 ∥Wi· ∥2 , as in fact 1.
+                                                                                                      62/38
+  preactivation vector by ≤
+                               2
+Appendix E: fact 4 — the norm event
+  The row-mass event B.         Summed over all stages — one Markov, not one per layer. Each
+  kept set averages its layer, and at the top stage layer L is the single output row, taken
+  whole:
+          X        X                      X
+      E        N       ∥Wi·m+1 ∥2 = N1         ∥W s ∥2F + N ∥W L ∥22 ≤ N1 κN (w) ≤ N1 K,
+           m   i∈Sm+1                    1<s<L
+
+  using N1 ≥ 1 on the output term. So all stages’ row masses are ≤ 8N1 K at once,
+                                                     √
+  Pr[B] ≥ 87 — which turns fact 3’s aggregate into ρ2 8N1 K .
+  The norm event C .      Subsampling is unbiased for every term of the weighted norm: each
+  term is an average over the kept rows and columns of the original one, and the N/N1
+  rescalings are eaten by exactly as many N1 /N sampling factors — boundary coefficients
+  included. So the subsampled net’s weighted norm has expectation ≤ κN (w) ≤ K ; Markov
+                       3
+  puts it ≤ 4K , Pr[C] ≥
+                       4 . And C √
+                                                                                          The
+                                 bounds the crossing gains too: every subsampled inner
+              ′s         ′s                              ′L
+                                                                  p
+
+  proposition’s norm conclusion and the gains come from one event.
+  layer has ∥W ∥op ≤ ∥W ∥F ≤ 2 K , the output row ∥W ∥op ≤ 2         K/N1 .
+
+
+  And Markov is all that is true here: the norm is unbiased but   not concentrated — a κ-legal heavy
+  row drawn into a subsample really does inflate it. All the exponential concentration lives in fact 3,
+
+
+                                                                                                          63/38
+  where the zeroing bounds the terms.
+Appendix E: fact 5 — the stage crossing
+  Now combine, at stage t, i.e. subsampling layer m = L − t. (The layers after m+1 are the
+  same matrices in the intermediate net as in the final one, so C ’s operator-norm
+                                                                                √ bounds
+                                                                           ρ
+  apply at every stage.) On A each kept neuron of layer m+1 is accurate to
+                                                                           2 N   ∥W ∥; on
+          P                                                           √         p i·
+                         2 ≤ 8N K ; and on C the crossing gains are (2 K)t−2 · 2 K/N .
+  B, N     i∈Sm+1 ∥W i· ∥      1                                                     1
+  So the output moves by at most
+
+                                         t−1
+                   ρ
+                       p          2t−1 K 2           1     t
+                   2       8N1 K · √           = 2t+ 2 ρ2 K 2 ≤ η2          (t ≤ L − 1),
+                                       N1
+
+  the last step by ρ’s factor 2
+                                  −L , since 2t+ 21 −L ≤ 2− 12 . Again N cancels under the square
+                                                                        1
+  root.
+
+                                                                            ρ
+                                                                                √
+  (At the top stage t = 1 the error hits the output row directly, shift ≤           K — the same bound.)
+  All three at once.
+                                                                            2
+                                                                  1    1   1
+                            One union bound: Pr[A ∩ B ∩ C] ≥ 1 −
+                                                                 100 − 8 − 4 > 0, so a draw
+  with all three properties exists. Fix one.
+
+
+
+
+                                                                                                           64/38
+Appendix E: fact 6 — totals, and why last to first
+  The implication, spelled out.       Telescope: net Hm has layers ≥ m subsampled, layers < m
+  original — so HL is the zeroed original, H1 the final net. Consecutive nets differ only in one
+  layer’s estimation, applied to   original, exactly computed neuron functions; fact 5 bounds each
+  H -difference at the output by η2 , and fact 2 separately bounds each of the L − 1 zeroing
+
+  Why the telescope runs last to first.
+  steps (original net → HL ). Errors are summed once, at the end — no conditioning anywhere.
+                                             Comparing Hm+1 to Hm injects error at the N1
+  kept neurons of layer m + 1 — so A’s union runs over N1 = poly rows per layer, costing
+  log N1 in its exponent. A first-to-last telescope would inject error at a still-original layer: N
+
+  Fact 6, the totals.
+  rows, and the log N would poison the width.
+                        L − 1 zeroing shifts and L − 1 stage shifts, each ≤ η/2, move the
+                            1      1                1                  1
+  output by ≤ (L − 1)η =
+                            12 < 6 in all: margin 2 becomes margin 3 , atp   which C bounds this
+
+  net’s weighted norm by 4K — hence, entrywise, first-layer weights ≤ 2
+                                                                           √ KN1 /d (the
+  binding ones, since the coefficient there is the small d/N1 ), inner ≤ 2 K , output
+  ≤ 2 K/N1 : all poly(d, K), because N1 is. Only now is the function known to be preserved
+      p
+
+  — and to make that a statement about the  function we must first restore margin 12 , which is
+                                    3                                              9
+  what κ’s infimum ranges over: the
+                                    2 output rescale multiplies the output term by 4 , so
+                  5
+  κN1 (g) ≤ 4K + 4 · 4K = 9K , and that rescaled net is the CL witness.
+                                                                                              at
+  So the multilayer proposition holds, and the equivalence theorem’s second half goes through —
+
+  constant depth, where
+                     √
+                        that is just poly(d, K). But the depth dependence is exponential: each layer
+
+
+                                                                                                       65/38
+  crossed contributes a   K , and L multiply.
+Appendix F: to what extent is this already in the literature?
+
+  Most of the machinery used here is not novel. But as far as we know, the bayesian
+  learning result proved in this talk has not been stated before. And the ideas work in
+  more cases than just the strong prior limit studied here — these other cases are also
+  novel as far as we know.
+
+  The small-width count is classical.    The Lipschitz-plus-volume step is the standard
+  volumetric covering bound, and its consequence — sample complexity polynomial in the
+  parameter count — is known for the standard sigmoid: Karpinski and Macintyre bound
+  the VC dimension of sigmoid nets by a polynomial in the number of parameters (JCSS
+  1997), building on Goldberg and Jerrum’s bound for classes parametrized by real
+  numbers (1995).
+
+
+
+
+                                                                                          66/38
+Appendix F: width-independence is not new either
+
+
+
+  The subsampling step can be replaced by known norm-based capacity bounds (see
+  Bartlett 1998, Neyshabur–Tomioka–Srebro and Golowich–Rakhlin–Shamir).
+
+  But we believe the subsampling idea generalizes to other cases of NNbayes as well —
+  and we conjecture that, in some sense, it generalizes to   all interesting cases of
+  NNbayes. What you have seen is the simplest instance of a more general argument.
+
+
+
+
+                                                                                        67/38
+Appendix F: cloning, and the closest prior work
+  Cloning’s mechanism is Net2WiderNet         — Chen, Goodfellow and Shlens, ICLR
+  2016. Duplicate a unit and divide the outgoing weights by the replication factor, and
+  the function is preserved exactly. What is not there is the   norm accounting: that the
+  layer-weighted κ comes out unchanged, and that requiring this at the two ends is what
+  forces c1 ∝ 1/N and cL = N .
+  The closest prior work    is Buzaglo et al. (ICML 2024): the same Bayesian-interpolator
+  framing and a “sample complexity ≈ teacher complexity” conclusion — but their bound
+  degrades   linearly in the student width, which is precisely the dependence we remove.
+  Same object, other angles.      Our κN is a layer-weighted analogue of the
+  representation cost RL (f ) of Parkinson, Ongie, Willett, Shamir and Srebro, who prove
+  depth separations in it. For two-layer ReLU nets the min-norm infinite-width interpolant
+  is characterized by Savarese et al. (COLT 2019) and, multivariately, by Ongie et al.
+  (ICLR 2020).
+
+  So: width-independence is a consequence; the headline is norm ↔ circuits.
+
+                                                                                            68/38
+Appendix F: is the NNbayes prior a Kolmogorov prior?
+  A related line of work     argues the neural net parameter–function map is biased toward
+  Kolmogorov-simple functions: Dingle, Camargo and Louis (2018) bound
+  P (f ) ≤ 2−aK̃(f )+b for generic input–output maps via the coding theorem; Valle-Pérez,
+  Camargo and Louis (ICLR 2019) bring this to deep nets; Mingard et al. argue SGD
+  approximately samples this prior (JMLR 2021), and that nets have “an inbuilt Occam’s
+  razor” (Nature Communications 2025).
+
+  But only one direction of that can hold.          Bounds of this shape say: large prior mass
+  ⇒ compressible. A genuine Kolmogorov prior would also need the converse — every
+  K̃ -simple function gets mass ∼2−K̃ — and that is impossible. There are functions with
+  O(log d)-bit descriptions (diagonalize against all small circuits, by brute force) whose
+  circuit complexity is 2
+                          Ω(d) : they have no small circuits, so NNbayes will very likely not
+
+  learn them quickly — and in our strong prior regime the prior tracks κN , which
+  subsampling ties to circuit complexity, so their mass sits far below 2
+                                                                         −K̃ .
+
+  The warm-up’s programs-versus-circuits distinction again: the NNbayes prior charges for
+
+  computation, not just description. On small instances the two are hard to tell apart empirically;
+
+                                                                                                      69/38
+  they separate exactly on the computation-heavy functions.
+Appendix G: constructing exp exp(L) functions of low norm
+  The claim.   The exp(depth) in our counting bound is not an artifact of the proof. It is
+                                  2
+  really there — for K = Ω̃(dL ):
+                                                  n              o
+                    log2 #{ g : κN (g) ≤ K } ≥ min 2d , (K/L)Θ(L) .
+
+  The method.     We exhibit weight vectors. For   every boolean function on a subcube of
+  d′ = Θ(L log(K/L)) of the d coordinates — taking K = Ω̃(dL2 ); smaller K caps d′ at
+   p                                                                d′
+  ∼ K/d — we build a w with κN (w) ≤ K implementing it. There are 22 such
+  functions, so the ball is at least that rich.
+
+  Why it is possible.    Computing an arbitrary function is expensive, but only if you insist
+  on an answer of size Θ(1). So compute at a tiny amplitude δ , where it is nearly free,
+  and then spend the depth amplifying δ back up — and depth makes amplification
+  exponentially cheap.
+
+  Three steps, then: a cheap first layer, an arbitrary function at amplitude δ , and
+  amplification back to Θ(1).
+                                                                                            70/38
+Appendix G: why depth makes this cheap
+
+                             bumps, at Θ(1)                                           Θ(1)
+         amplitude)
+
+                                                                                           layer
+                          arbitrary function,
+                          computed at amplitude δ
+             log(
+
+
+
+
+                          — costs 2 δ
+                                   d′ 2
+
+                      δ                             amplify by 1/δ and fan out, over L layers
+                                                    — costs only L (2 /δ )
+                                                                     d′   2 1/L
+
+
+
+  Computing is expensive only if you insist on a Θ(1) answer. Compute tiny, then climb back —
+
+  and the climb is cheap because we can be gaining exponentially in amplitude over L layers.
+                                                                                                   d′
+  The steeper the drop you can afford, the more functions fit in the ball: δ down means 2               up.
+
+
+
+                                                                                                              71/38
+Appendix G: the blow-up construction
+  Budget K , depth L, width N = 2
+                                     d′ +1 (one bump per point, plus a constant bank of
+                                                                    ′
+  the same size — see the fine print), working on a subcube of d of the d coordinates.
+  We implement an    arbitrary boolean function on it.
+  Layer 1: one bump per point — cheap.          Take ϕ γ(⟨x
+                                                              (i) , x⟩ − (d′ − 1)) , which is
+                                                                                 
+                                                                                       ′
+  ϕ(γ) at x(i) and ϕ(≤ −γ) elsewhere; γ = Θ(log d′ ) keeps even the sum of all 2d soft
+                              2   2 ′    ′
+  tails negligible. With ∥ui ∥ = γ d + (d − 1)
+                                              2 — the offset rides on the bias input —
+
+
+                      N
+                   d X
+                       ∥ui ∥2 = Õ(d d′2 )
+                                                                        p
+        cost   =                                 — the source of the     K/d cap on d′ .
+                   N
+                     i=1
+
+
+
+  Layer 2:Pread them all, at tiny amplitude.
+                                      P          2
+                                                  One unit forms
+                                                         ′
+                                                        d 2
+  s(x) =   i vi ϕ(ui · x) = δf (x), at cost   i vi = Θ(2 δ ). Small output, small weights,
+  cheap — and an arbitrary boolean function has now been computed.
+
+
+                                                                                                72/38
+Appendix G: the blow-up construction
+  Layers 3, . . . , L − 1: fan out to N clones while amplifying by G = 1/δ.
+                                             2
+                                                                                      A layer of
+  gain aℓ going from nℓ to nℓ+1 units costs aℓ rℓ , with rℓ := nℓ+1 /nℓ ; minimizing
+  P 2                  Q          Q                            2   1/m over the m = L − 3
+    ℓ aℓ rℓ subject to  ℓ aℓ = G,  ℓ rℓ = N gives cost m (G N )
+  amplifying layers; we write L for m below, hiding a constant. This is legitimate for a
+                                                                   ′
+  saturating ϕ: every step runs in the linear regime ϕ(az) ≈ ϕ (0)az , and only the last
+  saturates.
+
+  Output layer. N        units carrying ±1, weights 1/N : cost N · N · N
+                                                                           −2 = 1, margin Θ(1)
+
+  — so the prior’s restriction to full boolean functions is met.
+
+  Any wider net works too.
+          d′
+                                    We wrote this at N = 2
+                                                            d′ +1 , the smallest width that fits
+
+  the 2        distinct bumps together with the constant bank. At a larger width, clone the
+  whole net — each bump included — which leaves the weighted norm unchanged. So
+                  ′
+  the same d is reached at every N ≥ 2
+                                             d′ +1 , and the bound is not a statement about
+
+  one special width.
+
+
+
+                                                                                                   73/38
+Appendix G: balancing the two costs
+
+  Balancing.
+      ′
+               Take 2
+                        d′ δ 2 ≈ K , so G ≈ 2d′ /2 /
+                                                       √
+                                         K and the fan-out cost is
+  m(4d /K)1/m ≤ K over the m = L − 3 amplifying layers:
+
+               ′
+                         K m                             m     K
+             4d ≤ K                     ⇐⇒        d′ ≈       log2 ,      m = L − 3.
+                          m                                2     m
+
+  The depth enters through the   boosting, which evades the cL = N penalty: emitting the answer
+                                                              d′
+  straight out of layer 2 would need |vi | ∼ 1, hence cost ∼ 4  . A bump reads ϕ(−γ) off its own
+                                           ′                            ′
+                                       d
+  point rather than 0, leaving a Θ(δ2  ) offset at layer 2; a bank of 2d constant units absorbs it
+                                                             d′
+  at the same Θ(K) cost — one unit alone would cost K2 . For scale: at L = 10, d = 40,
+
+  K = 3 × 106 , sharing the budget across the three stages honestly gives d′ = 40 — the full cube
+                                                                                10
+  — and almost all boolean functions on 40 bits need a circuit of size ∼3 × 10 .
+
+
+
+
+                                                                                                 74/38
+Appendix G: what it does and does not settle
+  Proposition                    d′ +1
+  For L ≥ 4, K > L and N ≥ 2          , every boolean function on
+  d′ = Θ̃ min{L log(K/L),
+                               p       
+                                  K/d} coordinates has κN ≤ K — the cap comes from the first
+                ′2                             2                               d
+  layer’s Θ̃(d d ) bill. Hence, for K = Ω̃(dL ), log2 #{g : κN (g) ≤ K} ≥ min{2 , (K/L)
+                                                                                       Θ(L) }.
+
+  This matches the ceiling from the other side: subsampling to N1 = poly(d, K)K
+                                                                                     O(L) and
+                             2
+  counting gives log # ≤ Õ(N1 L), i.e. K
+                                          O(L) .
+
+  What it settles.2
+                      The exp(depth) in the width we subsample to is not an artifact. A width-N1
+                                                          d′ of them — so subsampling, with no
+  net carries Õ(N1 L) bits, while the ball already holds 2
+  further assumption on what the posterior is supported on, cannot reach any width below
+  (K/L)Θ(L) .
+  What it does not settle.     It does not show that ℓ
+                                                       2 min-norm learning is bad here. For that,
+
+  these functions would have to sit at or below the minimum norm over hypotheses consistent
+  with the data — and a circuit-simple target may well have a cheaper implementation than any
+  of them. Our guess is that things are not nice here, but we have no proof.
+
+
+
+                                                                                                    75/38
+Appendix H: why quantization alone is not enough
+  The gap.     Drop the no-big-weights condition of the body’s robust-prior slide and keep
+  only quantization. Thenthis proof route dies: there is an explicit family of robust nets
+  with κN ≤ K realizingevery boolean function on d bits, so the count is back to
+  exp(depth) and no poly(d, K, L)-width compression can exist. (Whether the learning
+  statement is false we do not know — that needs prior mass, not cardinality.)
+
+  What quantization was supposed to stop.                 Appendix G’s blow-up hides an arbitrary
+  function in a tiny    amplitude δ , then spends the depth amplifying it back. Quantization
+  forbids exactly that: an activation of size δ ≪ δq rounds to 0.
+
+  But amplitude is not the only hiding place.               Hide the function in a tiny relative
+  cancellation instead. A reader neuron sums ∼N terms that cancel down to a residual of
+  size δq — a relative cancellation of 2
+                                               −d — while every activation in the net is 0, ±δ ,
+                                                                                              q
+  or within δq /4 of ±1: margin > δq /4 at every neuron, and δq /2 at the signal.
+  The margin constrains each neuron’s distance from a bucket boundary. It says nothing about
+
+  its sensitivity to perturbations of its   inputs. And quantization does not merely fail to bite — it
+  helps: rounding collapses the “off ” cluster into one bucket, which is what makes that
+
+                                                                                                         76/38
+  cancellation exact.
+Appendix H: the construction, layers 1 and 2
+  Write δq for the quantization step and β = δq /4 for the required margin.
+  Representatives are the integer multiples of δq , boundaries the half-integer multiples,
+  rounding is to nearest. Fix a target g : {±1}
+                                                  d → {±1} and set α := δ ,
+                                                                         q    zt := ϕ−1 (α),
+  c′ := zt /α = 1 + O(δq2 ).
+  Layer 1: a replicated bump bank, and a saturated constant bank. n             copies of
+             d point bumps ϕ γ(⟨x , x⟩ − (d − 1)) , together with n2d units of bias γ ;
+                                               
+  each of the 2                   p
+               d                                              1
+  width N = 2n2 . The steepness obeys γ > atanh(1 − δq /4) =
+                                                              2 ln(8/δq ) + O(δq ),
+  independent of d — this is what makes all d “off ” shells round into the   same bucket
+  −1. Cost Nd ∥W 1 ∥2F = d2 γ 2 (d2 − d + 2) = Θ(γ 2 d3 ), independent of n and of N . (That
+                                     d
+  is c1 = d/N doing its work: a 2 -entry dictionary for poly(d).)
+
+  Layer 2: readers. n   2 neurons, each carrying weight W g(p) on every copy of bump p,
+  with W = zt /(2n). Because the off-shells all round to −1, the background is one
+  number independent of x, and the constant bank cancels it     exactly, on every input —
+  not on average. Preactivation zt g(x), hence activation αg(x).
+
+                                                                                             77/38
+Appendix H: the construction, fan-out and output
+  Layers 3, . . . , L − 1: fan out at constant amplitude.         Layer j+1’s neurons each read
+  all nj neurons of layer j — which all compute g , so they all fire together — with weight
+  c′ /nj . The preactivation is zt g(x) again, i.e. α is an exact fixed point of
+  round ◦ ϕ ◦ (c′ ·): no drift, at any depth. Layer cost c′2 nj+1 /nj ; writing κfan for the
+  total spent on these L − 3 layers, AM–GM lets the fan-out F := nL−1 /n2 reach
+                       L−3
+   κfan /(c′2 (L − 3))      — exponential in the depth, for a fixed bill.
+
+  Output, and padding.
+                    2
+                              The output reads the nL−1 final neurons with equal weights,
+                                              1
+  at cost Θ N/(α nL−1 ) , and |zout | >
+                                              2 . Layers 2, . . . , L − 1 are padded out to width
+  N with zero rows: activation 0, which is a representative, at cost 0.
+  The bucket alignment is load-bearing, and it is forced. Three values have to clear the
+  margin at once: 0 (the padding, unavoidable since the live layers are narrower than N ), ±α
+
+  (the signal) and ±1 (the saturated bank). Only the integer-representative grid hosts all three
+
+  — put the signal mid-bucket instead and both 0 and ±1 land on boundaries. This also forces
+
+  δq = 1/m for an integer m ≥ 2, so the claim is “for suitable δq ”, not “for all”.
+
+                                                                                                    78/38
+Appendix H:Pthe budget, and the count
+                              2
+                                  /4d ∈ [1, 2] be the reader overhead and B what is left of K for
+                
+  Let µ = 1 +        p g(p)
+  the reader and output layers. The reader and output bills multiply, and in their product
+  n, N , α and δq all cancel identically:
+
+                γ 2 d3                              d       2B 2 F
+          (i)
+                  2 + κfan + B ≤ K,            (ii) 4   ≤
+                                                             µc′2
+                                                                   ,     (iii) N ≥ nL−1 ≥ F.
+
+
+                                                                                 d
+  Since g 7→ f is the identity here, log2 #{robust f : κN (f ) ≤ K} ≥ 2 , which is
+                                                   2 1/3
+  K (L−1)/2−o(1) at fixed depth and 2Θ((K/γ ) ) with the depth free. A net of width N1
+              2                                                        The fan-out is the whole
+  source of this:
+  carries Õ(N1 L) bits, so no poly(d, K, L) width suffices.
+                                                             d
+                   at F = 1, i.e. L = 3, (ii) gives merely 2 ≲ K .
+
+  Verified end to end by a script that builds the weights explicitly, rounds between layers, and
+  checks the computed function, the margin at      every neuron (bumps, constants, readers, each
+                                                                        1 1 1
+  fan-out layer, padding) and κN from the definition: d = 3, 4, 5, δq ∈ {
+                                                                        4 , 5 , 10 }, fan-out depth
+                                                         1
+  3 and 5, random and worst-case g . E.g. at d = 4, δq = 5 , K = 4000: κN = 1832, worst
+                                                                     d
+  margin 0.100 against the required β = 0.05, function exact on all 2 inputs.
+                                                                                                      79/38
+Appendix H: and what the weight condition does to it
+  Every layer of the construction is a small   live block inside an N × N frame: nj+1 × nj
+  nearly equal entries, zeros elsewhere. For such a layer
+
+                                                                           j
+           q
+               ′                         j                     maxik |Wik    |        N
+      j
+  ∥W ∥F = c nj+1 /nj ,            max |Wik | = c′ /nj , so
+                                                                    j
+                                                                               = √           .
+                                   ik                           ∥W ∥F /N             nj nj+1
+                                                                                   √
+  At the bottom of the fan-out, where the live block is smallest, this is at least
+                                                                      √              F (and
+  F 1−1/(2(L−3)) at the AM–GM optimum), so by (ii) at least 2d /(K 2): the violation is
+  exactly as large as the count it buys. Requiring that no weight sit more than a poly
+  factor above its layer’s root mean square therefore caps F at poly, and then (ii) caps
+  2d at poly: the construction collapses to the L = 3 case it started from.
+  Why relative to the layer’s own norm. Asking for small weights outright buys nothing:
+  every inner weight here is already P/N with an N -independent P , so all of them vanish as the
+
+  net widens. What is exponential in the depth is P . Equivalently: the condition forbids a layer
+
+  from routing the function through a vanishing fraction of its width, which is precisely what the
+
+  fan-out chain does.
+                                                                                                    80/38
+Appendix I: a handwavy large-width NNbayes typology
+                                2
+  The prior has one variance σℓ per layer, so   a priori the space of scalings is
+  L-dimensional. What actually lives in it?
+  The standing assumption. After conditioning the prior on a small number of data
+  points (x, y) from a boolean function, preactivations are Θ(1) at every hidden layer:
+  activations neither collapsed — ϕ never leaves its linear-ish regime and the layer is
+  nearly affine — nor saturated — every neuron ±1 and the derivative gone. This is a
+  condition on where the posterior sits, not on a typical prior draw — the two coincide
+  only at NNGP. Everything below classifies the scalings compatible with it.
+
+  The protocol.    Condition on data and sample the layers     in order, each given the ones
+  before. By the chain rule the total log prior cost is a sum of per-layer conditional costs,
+  and by the time we reach layer ℓ the incoming activation vector ϕ
+                                                                        ℓ−1 is a fixed vector
+
+  rather than something to solve for self-consistently.
+
+                                                                                d
+  One thing we grant ourselves: the first layer is a fixed random embedding R       → RN with
+            √
+  σ1 = Θ(1/ d), which gives Θ(1) activations. Everything else is up for grabs.
+                                                                                                81/38
+Appendix I: what a layer costs
+  A row enters only through zi = ⟨Wi· , ϕ
+                                            ℓ−1 ⟩, so for an isotropic Gaussian row the whole
+
+  N -dimensional prior collapses to one scalar:
+                                                                     √ 
+                     zi ∼ N (0, τℓ2 ),     τℓ = σℓ ϕℓ−1        = Θ σℓ N .
+  τℓ is the preactivation scale the prior supplies for free.
+  Asking a constant fraction of a layer’s neurons to clear |zi | ≥ A then costs
+                                                      
+                                                      N
+                        0 if τℓ = Θ(1),             Θ 2           if τℓ ≪ 1.
+                                                      τℓ
+  The readout is a   single neuron, with no averaging available to it. So
+                                                              
+                                   1                        1
+                          Fhid = Θ 2 ,             FL = Θ          ,
+                                   σℓ                      N σL2
+  each when that layer is paying at all.
+                                                                  O(N )
+  The bounds are tight only up to a constant per neuron, i.e. e           per layer. So comparisons
+
+  decide whenever per-neuron costs differ by ω(1) — which is everything below.
+                                                                                                      82/38
+Appendix I: three reductions
+  1. The hidden σ are ≤ N .
+                     ℓ
+                                −1/2   Above that τ ≫ 1 and a typical draw saturates;
+  nothing pushes back — a saturated net computes fine and the prior prefers it.
+
+  2. Only the per-layer prices matter.      With m data points, a layer that computes
+                                                             2
+  must clear the bar in m different directions, cost ∝ m/σℓ ; a layer that copies makes
+  them parallel, cost ∝ 1/σℓ . So the scaling enters only through the price 1/σℓ it puts on
+                           2                                                    2
+
+  each layer’s work. (Which layer carries which price still matters once a layer can run
+  collapsed and be rescaled downstream — that is the next three slides.)
+
+  3. The spread decides, by one case check.         Prices within a poly of one another act
+  as one price, up to poly. A superpolynomial step    up in σ is ruled out by the standing
+  assumption: there the posterior prefers to compute at collapsed amplitude and rescale.
+  So σ is non-increasing — and at the first superpolynomial step     down, the pricier tail
+  can only copy, so the net truncates to its flat-price prefix. (Next three slides.)
+
+
+
+
+             So we are down to two knobs: the internal σ , and the readout σL .
+
+                                                                                              83/38
+Appendix I: the price argument
+                                                    weighted norm κσ =             ℓ 2   2
+                                                                           P
+  In the paying region the learner ≈minimizes the                            ℓ ∥W ∥ /σℓ —
+  the overall scale is shared by every candidate function, so only the relative prices 1/σℓ
+                                                                                           2
+
+
+  Moderate spread ⇒ strong prior, up to poly.
+  are visible.
+                                                      Everything in this talk is per-layer for
+  the   internal layers — cloning preserves each internal ∥W ℓ ∥2 (the boundary terms only
+  at their canonical prices, Appendix D) — so for internal prices within a poly of one
+  another, every bound runs for κσ with poly-degraded constants. (    Moderate = the same
+                                           extreme = different powers.)
+  Extreme spread is a case check on the direction of the step
+  power of N up to poly(d, CL ) factors;
+                                                                       — and neither
+  direction makes a new regime. A step up in σ (a tight layer feeding a looser one) is
+  excluded by the standing assumption: the posterior prefers to collapse the tight layer’s
+  activations and rescale in the looser one (next slide). So σ is non-increasing along the
+  net. A step down leaves the tail with no cheaper layer after it to rescale: it can only
+  copy, and the flat prefix finishes the computation (slide after next).
+
+
+                                                                                             84/38
+Appendix I: a step up in σ is excluded by the assumption
+  The worrying case: an earlier inner layer    tighter than a later one, σℓ ≪ σℓ+1
+              2
+
+  What the posterior prefers there.
+  (pℓ := 1/σℓ ≫ pℓ+1 ); one adjacent pair suffices.
+                                            Run layer ℓ at amplitude t, let layer ℓ + 1 scale
+  back up. If the computation uses the degree-k part of ϕ, the nonlinear content of layer
+  ℓ’s output is suppressed by tk−1 , and layer ℓ + 1 must dig it back out:
+                                                                1                      k    1 
+                                                       k pℓ+1
+     cost(t) = t2 pℓ + t−2k pℓ+1 ,
+                                                                 2k+2
+                                            t∗ =         pℓ             ,   cost∗ = Θ pℓk+1 pℓ+1
+                                                                                             k+1
+                                                                                                  .
+
+  Going linear is not a cliff, just the t
+                                         −2k recovery price; the saving (p /p     1/(k+1) is
+                                                                          ℓ ℓ+1 )
+
+
+  But the preferred configuration has layer ℓ at amplitude t → 0:
+  unbounded, so nothing internal stops the collapse.
+
+                                                                              ∗      collapsed
+  activations, precisely what the standing assumption excludes. A step up is not a new
+  regime; it is a scaling whose posterior walks out of the classified region. So within the
+  assumption, the internal σ is non-increasing.
+  (The assumption-compatible alternative — the tight layer only copies — is the next slide’s
+
+  truncation. scaling_pricecheck.py: interior optimum at every ratio; slopes 0.7498,
+
+  −0.1251 vs the predicted 43 , − 18 at k = 3; t∗ falls 0.38 → 0.02 over ratios 102 → 1012 .)
+                                                                                                      85/38
+Appendix I: a step down in σ truncates the net
+  So the internal σ is non-increasing. Take the      first superpolynomial step down: the
+  prefix before it is one flat price — that is what those layers are in fact like, up to poly
+
+
+  The tail cannot compute within poly budgets.
+  — and every layer after it is superpolynomially pricier.
+                                                            Paying its price outright is out, and
+  the collapse trick of the previous slide needs a    cheaper later layer to do the rescaling —
+  with σ non-increasing there is none. So the tail can only copy: function-independent
+
+
+  The prefix can finish.
+  overhead, invisible to every comparison.
+                             By universal approximation, whatever the full net was going to
+  compute, the flat-price prefix can compute by itself and hand forward. So the learner is
+  that of a flat-σ net at the prefix depth: one of the three regimes, at a possibly smaller
+  effective depth.
+  Fine print. Functions cheap only at the full depth are not lost, just repriced: through the tail
+  they cost superpoly, through the shallow prefix exponential — either way invisible at the poly
+
+  budgets everything here runs at, so the reduction is exact at the classification’s up-to-poly
+
+  grain.
+
+
+                                                                                                     86/38
+Appendix I: the strong prior case is a line, not a region
+  Take σ ≪ N
+                 −1/2 , so the hidden layers pay, and suppose the readout pays as well (if
+
+  not, mass moves into it — the first off-line case below). Neither live cost may
+  dominate, so equate them:
+
+                                                                
+                     1        1                                  σ
+                        = Θ                 ⇐⇒          σL = Θ  √    .
+                     σ2      N σL2                               N
+
+  So this is a   one-parameter family, not a two-parameter region — matching this talk’s
+  internal and readout coefficients (1, N ), σ the free parameter (the input layer sat
+  outside the protocol).
+
+  Both sides of the line reduce rather than being new.          Above it, mass moves into
+  the cheaper readout and the hidden preactivations fall below Θ(1): the hidden layers go
+  linear, the net effectively shallower. Below it the readout can only afford to copy: the
+  last hidden layer already carries the answer — one fewer layer (off the line, the
+  reduction fires again and cascades).
+
+
+
+       The line is exactly the set of scalings at which a depth-L net uses all L layers.
+
+                                                                                             87/38
+Appendix I: the readout axis at σ = N −1/2
+  Now the hidden layers sit exactly at their free threshold and pay nothing; only σL
+                  2
+  varies. Write σL = N
+                            −β , so F = Θ(N β−1 ).
+
+        : nothing happens. τ = Ω(1)
+                                     L
+                                                         1
+  β≤1                               L       , so the ±
+                                                         2 margin is an Θ(1)-probability event
+  and costs nothing; rescaling the output changes the classifier only up to constants
+  (exactly not at all in the τL → ∞ limit).
+
+  1<β<2      : still NNGP, and for a specific reason.         The margin is now a large
+  deviation, so it is   not that things still look Gaussian. But the hidden layers are
+  untouched, so the feature map — hence the kernel, its eigenbasis and its eigenvalues —
+  is exactly the NNGP one. Only the       estimator moves: conditioning a Gaussian on a
+  far-away convex set concentrates it on the least-RKHS-norm point, so the posterior
+  slides from GP classification toward the    hard-margin SVM in the NNGP kernel. Same
+  spectrum, same d
+                        k for parities.
+
+  β=2   : mean field.  Forcing the readout costs Θ(N
+                                                     β−1 ); moving the features costs
+
+  Θ(N ), since each hidden neuron sits at τ = Θ(1) and a functionally real change needs
+  Θ(N ) of them. Equal exactly at β = 2.
+                                                                                                 88/38
+Appendix I: the classification
+                          name                           what it is
+                          NNGP                           GP classification; the margin is vacuous
+       σ       σ         L
+              −1/2             −1/2
+
+                        ) NNGP                           same kernel, estimator slides to max-margin
+       N       Ω(N    )
+              −1/2           −1   −1/2
+
+                          mean field                     the junction of the two families
+       N       (N , N
+              −1/2        −1
+
+                          strong prior                   ℓ min-norm; σ → 0 is this talk
+       N       N√
+       ≪N        −1/2
+               σ/ N                                      2
+
+
+
+
+                        Two one-parameter families, joined at mean field.
+    On the first the kernel is fixed and the estimator varies; on the second the estimator is
+                                      fixed and the prior strength varies.
+
+
+   Handwaving used. That a real feature change needs Θ(N ) neurons is a scaling guess. The
+   price argument identifies off-line profiles with strong prior only up to polynomial factors and
+
+   effective-depth changes — it does not exclude them. The step-up case is where the assumption
+
+   does real work: those scalings are excluded, not classified — their posterior prefers collapsed
+   activations, outside the three regimes. And all of this prices one configuration; whether the
+
+   cost varies across functions, which is what separates kernel from min-norm, is separate.
+
+                                                                                                       89/38
+Appendix I: the space of scalings
+                                                                         strong prior
+
+
+                (hidden)
+                                2
+                                       NNGP
+                   − logN σ 2   1
+                                                         mean field
+                                    σ 2 > 1/N: hidden layers saturate
+                                          1           2            3
+                                            − log σ (readout)
+                                                 N
+                                                     2
+                                                     L
+
+
+
+  What is left of the L-dimensional space after the reductions: one horizontal segment (NNGP
+
+  — hidden layers at fan-in, kernel fixed while the readout price varies) and one diagonal ray,
+
+  σL2
+      = σ 2 /N (strong prior — readout variance N times smaller than hidden), meeting at mean
+  field. Everything else either truncates to a shallower flat-σ net (steps down in σ ) or leaves the
+
+  standing assumption — saturating in the shaded region, collapsing at any step up in σ .
+
+                                                                                                       90/38
+Appendix J: what does NNbayes do in the NNGP regime?
+  The talk is about the σ → 0 end of the strong prior family; this appendix is about the
+  NNGP.
+
+
+
+                       Fourier kernel
+  In the NNGP scaling, the posterior is a kernel method and we can identify the kernel
+  exactly. It is the                    : diagonal in the parities, eigenvalues depending only
+  on the degree. So the whole inductive bias of the regime is a preference for low Fourier
+  degree.
+
+
+  The claim
+            In the NNGP regime there is an inductive bias, but it is the wrong one:
+                a bias toward low   degree is not a bias toward low complexity.
+  Degree and circuit size are not comparable in the direction that matters: XOR on k
+  bits has a circuit of size O(k) and degree k — the largest possible for a function of k
+  bits. A prior that charges for degree charges maximally for some of the very simplest
+  functions — and no compositional path talks it out of that.
+  (Our own exp(depth) costs nothing here: a k -bit XOR is symmetric, so k thresholds do it in
+
+  one hidden layer, and our bound is poly(d, k) ≪ d k .)
+                                                                                                 91/38
+Appendix J: what a kernel method does
+  (In this appendix K denotes a kernel, not the main thread’s norm budget.) A kernel is a
+                        ′                  ′
+  covariance, K(x, x ) = Cov(z(x), z(x )) under the prior — hence two arguments.
+  Pinning the second one at a training point gives n single-input     kernel functions
+                            ki (x) := K(x, xi ),         i = 1, . . . , n,
+                                           P
+  and the method regresses on those: h =       i αi ki .
+                                    ′                           ′ ) gives the feature map
+                                        P
+  Equivalently, diagonalize: K(x, x ) =
+        √                              √ S λS ψS (x)ψS (x
+  x 7→ ( λS ψS (x))S , and h = S cS λS ψS with ∥h∥H = S c2S .2
+                                  P                                   P
+
+  We are heavily overparametrized        : there are 2
+                                                      d features and only n constraints, so
+
+  interpolation does not pin h down. The method returns the   minimum-∥c∥2 solution,
+  h(x) = K(x, X)K(X, X)  −1
+                        P ^y , with  X the training inputs. In our case ψS = χS and
+  λS = λ|S| , so ∥h∥2H = S h(S) 2 /λ : high degree is penalized by 1/λ .
+                                    |S|                                 k
+
+  This is exactly the NNGP posterior mean — Lee, Bahri, Novak, Schoenholz, Pennington and
+
+  Sohl-Dickstein,   Deep Neural Networks as Gaussian Processes, ICLR 2018.
+                                                                                              92/38
+Appendix J: our 21 rule versus the posterior mean
+  We condition on the  events {zw (xi ) > 21 } and predict by posterior majority — the
+  median; the NNGP setting conditions on equalities z(xi ) = yi and predicts by the
+  mean. GP classification versus GP regression: no closed form, and median and mean
+  can disagree.
+
+  But the conclusion crosses.     The eigenstructure belongs to the          prior, so changing the
+  likelihood does not touch it. Redo the estimate on the prior side: for zw to implement
+  χS with margin its χS -coefficient must be Θ(1), and under the prior that coefficient is
+  Gaussian with variance λ|S| , so
+
+
+                                                                Θ(1)
+                                                                     ≈ d |S| ,
+                                                        
+                        − log π w implements χS             ≈
+                                                                λ|S|
+
+  so our relevance-based accounting cannot kick in before ∼ d
+                                                                       k samples for a degree-k
+
+  parity — a prior-mass statement, exactly what we condition on.
+
+  Caveat: this bounds the prior mass from     above, so it limits what the relevance-based bound
+                                      k
+  can promise rather than proving d       are needed; the genuine lower bound we cite is for kernel
+
+
+                                                                                                      93/38
+  ridge regression.
+Appendix J: the NNGP kernel is the Fourier kernel
+  Take G = ({1, −1} , ⊙) under the Hadamard product, so G ∼
+                      d                                                  d and every
+                                                          = (Z/2)
+  element is its own inverse. Its characters are exactly the parities
+
+                                           Y
+                                χS (x) =         xi ,   S ⊆ [d],
+                                           i∈S
+
+  i.e. the Fourier basis of boolean functions.
+
+
+  Claim
+     For any MLP with i.i.d. Gaussian weights, the NNGP kernel on the hypercube is
+                          G-invariant, hence diagonal in the parities.
+
+  Two steps: an invariant kernel is always diagonalized by the characters, and the NNGP
+  kernel is invariant. The NTK turns out to be in the same boat.
+
+
+
+                                                                                          94/38
+Appendix J: an invariant kernel is diagonal in the characters
+
+  Call K G   -invariant if K(g ⊙ x, g ⊙ x′ ) = K(x, x′ ) for all g . Equivalently
+  K(x, x′ ) = ϱ̃(x ⊙ x′ ) for some ϱ̃ : G → R, using x−1 = x. Let
+  (CK h)(x) = Ex′ K(x, x′ ) h(x′ ) , the average over the cube.
+                                 
+
+
+  Theorem                                                                            
+  Every character χ is an eigenvector of CK , with eigenvalue λχ = Ez        ϱ̃(z)χ(z) .
+  Proof.                          ′                                 ′
+            Substitute z = x ⊙ x , a bijection for fixed x, so χ(x ) = χ(x)χ(z):
+
+
+  (CK χ)(x) = Ex′ ϱ̃(x⊙x′ ) χ(x′ ) = Ez ϱ̃(z) χ(x)χ(z) = Ez ϱ̃(z)χ(z) χ(x).
+                                                                
+                                                                                              □
+
+  The 2
+          d characters are orthogonal in a 2d -dimensional space, so they are a full eigenbasis.
+
+
+
+
+                                                                                               95/38
+Appendix J: the NNGP kernel is invariant
+  The NNGP recursion for an MLP with i.i.d. Gaussian weights is
+
+
+                     Σℓ (x, x′ ) = σw
+                                    2
+                                      E(u,v)∼N (0,Qℓ−1 ) ϕ(u)ϕ(v) + σb2 ,
+                                                                
+
+         ℓ−1 the 2 × 2 Gram matrix    Σℓ−1 (xi , xj ) x ,x ∈{x,x′ } — so Σℓ (x, x′ ) depends on
+                                                     
+  with Q
+                                                       i   j
+  the previous layer only through those three Gram entries.
+
+  On the hypercube the diagonal is constant. ⟨x, x⟩ = d
+                                           ℓ              ℓ     ′
+                                                                                         1
+                                                                   for every x, so Σ (x, x) is a
+                                                                          ℓ−1 (x, x′ )) for
+  constant, and by induction so is every Σ (x, x). Hence Σ (x, x ) = Fℓ (Σ
+                                        ′           ′
+  a univariate Fℓ , and therefore K(x, x ) = ϱ(⟨x, x ⟩).
+
+  And the Hadamard action preserves the inner product              , since gi
+                                                                                2 = 1:
+
+                                              X
+                         ⟨g ⊙ x, g ⊙ x′ ⟩ =        gi2 xi x′i = ⟨x, x′ ⟩.
+                                               i
+
+  (G acts on the d genuine coordinates only; the bias input just adds a constant 1 to
+  every inner product, and d + 1 on the diagonal.) So K is G-invariant, with
+               P                                        P                  
+  ϱ̃(z) = ϱ(   i zi ). Its eigenvalue on χS is λS = Ez ϱ(      i zi )χS (z) , which by
+  permutation symmetry depends only on |S|.
+                                                                                                   96/38
+Appendix J: the same holds for the NTK
+  The argument used exactly one property:        the kernel sees the inputs only through their
+  Gram matrix. Nothing cared which recursion produced it.
+  The NTK recursion is of that form too:
+
+
+     Θℓ (x, x′ ) = Σℓ (x, x′ ) + Θℓ−1 (x, x′ ) · Σ̇ℓ (x, x′ ),   Σ̇ℓ (x, x′ ) = E ϕ′ (u)ϕ′ (v) ,
+                                                                                             
+
+
+  the expectation over the same N (0, Q
+                                             ℓ−1 ). Every ingredient depends on the inputs
+                                                                                     ′
+  only through the Gram entries, and sums and products of functions of ⟨x, x ⟩ are again
+                    ′            ′             ′
+  functions of ⟨x, x ⟩. So Θ(x, x ) = ϱΘ (⟨x, x ⟩), and the parities are its eigenfunctions
+  too, with eigenvalues graded by degree.
+
+  So the low-degree-fit picture is equally our picture of what    gradient descent does in the
+  linearized regime. Not needed for the Bayesian story, but it is the same phenomenon —
+  and indeed the lower bound we cite is stated for the NTK, which is legitimate to use
+  here precisely because the two kernels share an eigenbasis and a degree-graded
+  spectrum.
+
+                                                                                                   97/38
+Appendix J: so what does the NNGP learn?
+  The kernel is diagonal in the parities with eigenvalues λk depending only on the degree,
+  so the RKHS norm is
+                                                   ^
+                                                 X h(S) 2
+                                    ∥h∥2H =                  ,
+                                                      λ|S|
+                                                 S
+
+  and minimum-norm interpolation penalizes degree-k coefficients by 1/λk .
+
+  A heuristic picture.   Kernel regression resolves the eigendirections with λ ≫ 1/n. The
+                                             k
+  degree-≤ k eigenspace has dimension ∼ d , so with n samples the learned function is
+  roughly the Fourier truncation of the target to degree
+
+                                                 log n
+                                         k ≈           .
+                                                 log d
+
+  So it really is “fit the lowest-degree thing consistent with the data so far” — in a soft
+  form, with low degrees strongly preferred rather than a hard cutoff.
+
+  Hence the XOR problem       , for which there are theorems — next slide.
+                                                                                              98/38
+Appendix J: no kernel at all likes parities
+   The obstruction is not invariance — it is a trace budget.             Normalize K(x, x) = 1
+   and write λS := ⟨χS , CK χS ⟩ — the eigenvalue in the invariant case, the diagonal entry
+                                                                                         d
+                                                                                                 ≈ dk
+                                             P                                               
+   in general. The trace is basis-free, so     S λS = Ex K(x, x) = 1, and there are      k
+   parities at degree k . So for   any kernel whatsoever
+                                      #{ S : λS ≥ 1/n } ≤ n.
+
+   Since resolving the χS direction needs n = Ω(1/λS ): with n samples at most n of the
+   d k degree-k parities are learnable at all. A single fixed parity is of course easy for a
+   kernel built for it — which is why any kernel-independent statement has to quantify
+   over a class.
+
+   What the invariance adds         is only that the λS are   equal within a degree. It upgrades
+                                         −k ” to “ every one has λ ≲ d−k ” — it removes
+   “the average degree-k parity has λ ≈ d
+   the escape hatch of a kernel that favors a few chosen parities, rather than being the
+   source of the failure.
+
+                                                                                                    99/38
+Appendix J: the citations
+  Kernel-independent, class level.      Kamath, Montasser and Srebro (COLT 2020): for
+  any class of pairwise uncorrelated functions the dimension complexity is exponential
+  (Example 1, square loss) — parities being the canonical instance. Ben-David, Eiron and
+  Simon (JMLR 2002) supply the other half of the picture: most classes of bounded VC
+  dimension admit no large-margin embedding at all.
+
+  For our kernel specifically.    Donhauser, Wu and Yang (ICML 2021): for inner product
+  kernels ϱ(⟨x, x′ ⟩) and the fully-connected NTK at any depth, rotational invariance
+  “induces a bias towards low-degree polynomials in high dimensions”, with a lower bound
+  on generalization error; their distributional assumptions cover i.i.d. ±1 coordinates, so
+  the cube qualifies. Our structural theorem shows the NNGP kernel is of that form: their
+  theorem plus our step, not an analogy.
+
+  Quantitatively.   Ghorbani, Mei, Misiakiewicz and Montanari: Ω̃(d
+                                                                          k ) samples for a
+
+  degree-k target — stated on the sphere, but Yang and Salman’s spectra agree across
+  cube, sphere and isotropic Gaussian in high dimensions.
+  And the spectra are computed in exactly our basis by Yang and Salman: both the NNGP kernel
+
+
+                                                                                                    100/38
+  and the NTK, as operators on the boolean cube, “are diagonalized by the natural Fourier basis”.
+Appendix J: maybe that is just what real nets do?
+
+  The objection.     Real networks are also terrible at XORs. Abbe, Boix-Adserà and
+                 conjecture SGD’s time to be Θ̃ dmax(Leap(f ), 2)
+                                                                    
+  Misiakiewicz                                                          — proved for two-layer
+  nets on isotropic Gaussian data under technical assumptions on how SGD is run, open
+  in general.
+
+  Here Leap(f ) is the most   new coordinates any single Fourier term must add, building
+  the support up in the best order. A plain size-k XOR has Leap = k — the same d
+                                                                                           k the
+
+  kernel pays.
+
+  So perhaps the NNGP is simply right about neural nets, and the failure we are
+  complaining about is a failure real networks share.
+
+
+
+
+                                                                                                 101/38
+Appendix J: no — it fails for the wrong reason
+  The response.        Take the balanced tree of pairwise XORs computing XORk , with gates
+  g1 , . . . , gr , and learn                             X
+                                 fε (x) = XORk (x) + ε         gj (x)
+                                                           j
+
+  (from upcoming work of Alexeev and Vaintrob). The degree is still k , but the Fourier
+  support now contains the circuit’s intermediate gates χ{1,2} , χ{3,4} , . . . , so no term has
+  to add more than two new coordinates and Leap(fε ) = 2:
+
+                                    2                                        k
+                          SGD: Θ̃(d ) conjecturally,    kernel: still Ω̃(d       ).
+
+  Both fail on the bare XOR, for different reasons. A real net fails because nothing clicks
+  — build it a path and it walks up. The NNGP fails because it dislikes high degree,
+  however good the path.
+
+
+
+
+                                                                                              102/38
+Appendix J: in fairness to the NNGP
+  We rescued our own regime by restricting the support of the prior, so the same question
+
+
+  An asymmetry makes it look harder.
+  deserves asking here.
+                                            Ours was a   competitor problem — too many
+  functions in the ball — and cutting the support is the natural tool for that. The
+  NNGP’s is a target-mass problem: a degree-k parity has prior mass
+  exp(−Θ(1/λk )) ≈ exp(−d k ) by itself. Conditioning on A rescales every mass by
+  1/ Pr[A], so a restriction keeping both the parity and its low-degree competitors leaves
+
+  But it is not ruled out.
+  the ratio untouched.
+                              Any restriction making the prior roughly uniform over a small
+  class of low-complexity functions would give good learning (via the relevance-based
+  bound) whatever the prior’s shape. Whether a    natural one does — as opposed to
+  importing a circuit prior, which begs the question — we do not know.
+
+
+
+  Open problem:    is there a natural support restriction under which the NNGP learns
+  simple functions quickly?
+
+                                                                                         103/38
+Appendix K: out of distribution, and what replaces the theorem
+  Our theorem is in-distribution, and out of distribution the statement is simply false:
+  nothing stops the learner from being wrong on inputs the training distribution never
+
+
+  But our results still give a handle here:
+  reaches.
+                                                 the equivalence theorem and the count
+  make NNbayes an Occam learner over a discrete, complexity-ordered class, no matter
+  where the inputs come from — so one can now think of neural net out-of-distribution
+                                    Occam learning. That is the move this appendix makes.
+  The natural substitute is an online mistake bound.
+  learning as out-of-distribution
+                                                                 Fix any ordering of all 2
+                                                                                            d
+
+  inputs, predict each one with the current hypothesis before seeing its label, and count
+  mistakes. Is the count poly(d, C)? (In this appendix C is description length in a
+
+
+  A physicist’s argument that it is.
+  formula code — a cousin of, not the same as, the talk’s CL .)
+                                          When the current hypothesis is wrong, presumably
+  a constant fraction of the hypotheses between it and f are wrong too, so each mistake
+  retires a constant fraction of the survivors. There are 2
+                                                               O(C) of those, so O(C) mistakes.
+
+  In the description-length version of the setting — Occam over boolean circuits, which is the
+
+  discrete model of our learner — this argument is   false, and not for an exotic reason.
+                                                                                                 104/38
+Appendix K: the conjunction ladder
+  Theorem
+  Let f = x1 ∧ · · · ∧ xd , so C(f ) = Θ(d log d). Present the all-ones point, then the
+  all-zeros point, then every remaining input in   ascending Hamming weight, within each
+  level in the learner’s own tie-breaking order. The Occam learner is wrong on all but at
+  most one of the 2d inputs: writing M ∗ (f ) for the worst-case mistake count over input
+  orderings, M
+                 ∗ (f ) = 2Θ(C/ log C) .
+
+
+  Why.   At stage k the cheapest surviving hypotheses are exactly the
+                                                                           d
+                                                                           k
+                                                                               
+                                                                                   conjunctions of
+  k variables. They all cost the same — variable naming is symmetric — and
+  ANDS ′ (1S ) = 1 only if S ′ ⊆ S , impossible between distinct sets of equal size. So each
+  mistake kills exactly one hypothesis while every other survivor is   correct at that point —
+  the next slide makes this rigorous. The attrition assumption fails maximally, at every
+  single step.
+
+  Neither ingredient is contrived: the target is a very neat function, and the ordering is an
+  easy-to-hard curriculum. At d = 40 that is ∼10
+                                                    12 mistakes, where the physicist’s
+
+  argument had promised O(C) ≈ a few hundred.
+                                                                                                     105/38
+Appendix K: why the conjunctions are the cheapest survivors
+  At the start of stage k the data says: h(1 · · · 1) = 1, and h(x) = 0 for every |x| < k .
+  (Cost model: leaf v = 2 + ⌈log2 d⌉, AND/OR/XOR gate 4, NOT 2, constant 3.)
+
+  1 (Möbius).
+      L          In h’s GF(2) polynomial the coefficient of monomial S is
+  cS =     T ⊆S h(1T ). Vanishing below weight k kills every coefficient of degree < k , and
+  leaves cS = h(1S ) at degree k .
+
+  2 (leaves).   So every monomial of h has degree ≥ k , and h ̸= 0 — so h depends on
+  ≥ k distinct variables: any formula for it has ≥ k leaves and ≥ k − 1 binary gates, cost
+  ≥ kv + 4(k − 1).
+  3 (equality).   At exactly kv + 4(k − 1) there is no room for constants, NOTs, or a
+  repeated variable: h is a bare gate-tree on k distinct variables. And any assignment to
+  them other than all-ones zero-fills to an input of weight < k , where h must vanish —
+  so h = AND of its variables. (This is what killed ORS and XORS : both are nonzero at
+  weight-1 points inside S .)
+                                                              16
+  Checked by exact dynamic programming at d = 4, over all 2        data-subsets: the optimal
+
+  adversarial ordering is precisely this ladder.
+                                                                                               106/38
+Appendix K: the ladder at d = 4
+
+         step    input                      label   learner’s hypothesis (cost)    prediction
+          1      1111                        1      constant 0   (3)               0 ✗
+          2      0000                        0      constant 1   (3)               1 ✗
+         3–6     1000, 0100, 0010, 0001      0      x1 , x2 , x3 , x4 (4)          1 ✗ each
+         7–12    the six weight-2 points     0      the six xi ∧ xj (12)           1 ✗ each
+         13–16   the four weight-3 points    0      the four xi ∧ xj ∧ xk   (20)   1 ✗ each
+
+  2 + 4 + 6 + 4 = 16 = 24 mistakes, and only then does the learner reach AND4 (cost
+  28). Showing 1111 first is the key move: the one positive example never rules out any
+  monotone conjunction, and each negative example kills exactly one survivor.
+
+  Here simplest = fewest literals = most general, and ascending-weight data punishes
+  over-generality one point at a time. The most-specific consistent learner handles the same
+
+  stream with ≤ d + 1 mistakes.
+
+
+
+                                                                                                107/38
+Appendix K: it is the argmax that fails, not the prior
+  Same prior ∝ 2
+                    −C(g) , same data. Only the selection rule changes.
+
+
+   selection rule                                                   worst case over orderings
+   argmax — Occam / MAP / MDL, deterministic ties                   2Θ(C/ log C)
+   argmax with randomized tie-breaking within a cost level          Θ̃(C 2 )
+   uniformly random consistent hypothesis, doubling budget          O(C)
+   weighted majority vote — Bayesian model averaging                ≤C
+
+  The last line is one paragraph: total weight is ≤ 1 by Kraft, each mistake halves the
+  surviving weight, and f ’s weight 2
+                                        −C(f ) is never removed. It holds on every ordering.
+
+  Where this touches us.        Our σ → 0 learner is   not the deterministic argmax: ties
+  spread symmetrically (the Gaussian prior has no convention to conspire with) and we
+  predict by majority — the good side of this table. On the ladder the surviving
+  conjunctions get equal mass, so the majority errs O(d) times. The caution is for the
+  abstraction: modeling NNbayes as a single-simplest-hypothesis Occam learner can be
+  off by 2
+             Θ(C/ log C) out of distribution; the Bayesian version (Appendix A) survives.
+
+                                                                                               108/38
+Appendix K: does it transfer to κN ? which orderings are bad
+  Transfer.   The mechanism needs two things: an antichain of equal-complexity
+  hypotheses, and each one wrong at a point all the others get right. The second is a
+  fact about conjunctions, not about the language. The first holds for κN too — the
+                                                                           d
+                                                                               
+  Gaussian prior is invariant under permuting input coordinates, so all            conjunctions of
+                                                                           k
+  k variables have the same κN . But note the symmetry cuts both ways: it also makes
+  the posterior   tie across the antichain, which is exactly what rescues the majority vote
+  (previous slide).
+
+  Which orderings.      Random order is fine in any language, E[M ] = O
+                                                                                     
+                                                                            (C + d) d . But
+  “structured ⇒ safe” is false: the catastrophic ordering has description complexity
+  O(log d), and smoothing it by w helps only by a factor w. Descending weight —
+  anti-curriculum — gives exactly d + 1. The real axis is correlation between the data
+  order and the arbitrary tie-breaking conventions of the language; catastrophe needs a
+  conspiracy between the two.
+  A discrete, realizable, noise-free model — no SGD, no overparametrization, not a theorem
+                                                                 KPH
+  about a net. Nearest relative: Poland & Hutter (MDL loss Θ(2      ) vs Bayes mixture
+  O(KPH )); NN-side, Wilson & Izmailov’s “marginalization instead of optimization”.
+                                                                                                 109/38
+Appendix L: wherefore our conditions on ϕ
+  Bounded |ϕ| ≤ const
+            ,             . Used in subsampling: for concentration bounds to be good, we
+  need to bound the contributions of individual neurons.
+
+  Lipschitz |ϕ | ≤ const
+            ,
+                ′          . Used twice. In the small-width count, it is what makes
+  w 7→ zw (x) Lipschitz on the norm ball, so that distinct functions are separated in
+  weight space and the volume argument runs. In the multilayer case, it is what carries a
+  perturbation through the nonlinearity, so that it is amplified only by the operator norms.
+
+  Non-polynomial.     Used in Appendix B, to relate other circuit complexities to
+  MLP-circuit complexity: it is exactly the hypothesis of the interpolation theorem.
+
+  A saturating sigmoid has all three. ReLU is Lipschitz and non-polynomial, but bounded only on
+
+  a bounded range. Appendices G and H additionally use a   saturating ϕ with ϕ′ (0) ̸= 0 and
+  ϕ(0) = 0 — nondegeneracies rather than genuinely new conditions — and H’s fixed point also
+  needs ϕ odd, so that the g = −1 branch lands on −α; that one is a genuine symmetry
+
+  assumption. tanh has all of them.
+
+
+                                                                                               110/38
+

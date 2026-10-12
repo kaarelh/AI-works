@@ -1,0 +1,407 @@
+[
+ {
+  "id": "P2X-01",
+  "file": "paper-steeper/sections/discussion.tex",
+  "label_or_line": "line 9, paragraph \"The gap to realistic errors\": \"for such errors the trick provably fails\"",
+  "severity": "fatal",
+  "problem": "The discussion states as proved that the trick fails for human labelling errors that are cheap, frequent patterns. The body proves failure only inside its instance: a random parity on uniform inputs, junta-shaped error sets, and either (a) one constructed rule (a cheap subcube plus random points) on part of the window, or (b) a fixed cheap rule once the parity length d exceeds d_0(kappa). Nothing is proved for other model classes, other input laws or other cheap patterns. This is a claim stronger than the body and the source.",
+  "evidence": "prop:limits:envelope (limits.tex 28-44): one rule (j=13: 128 cheap + 896 random points), failure only for c < c_env, '31% of the logarithmic width ... (25% at kappa=30)'; 'above c_env nothing is proved for it'. prop:limits:rateblind and lem:limits:robust: under condition (star), which holds only for d >= d_0(kappa) (e.g. d_0=49 at kappa=0, 169 at kappa=30 for a 3-bit prefix). steeper notes-final §0 item 2: 'Density and description length do not suffice' (an existence statement), and §2.6(b) (for a fixed cheap rule and d >= d_0(kappa)). q:limits:open: 'Which structured error rules leave a window? ... A theory for realistic, low-complexity human errors is the main gap'.",
+  "fix": "Replace the sentence by: \"Human labelling errors are often cheap, frequent patterns rather than incompressible sets. In the parity instance the trick provably fails for such errors in two ways: a fixed cheap rule defeats every c once the simple model is long enough (Proposition 5.4, Lemma 5.5), and a rule made of a cheap region plus random points, with the original density and description length, makes the good model non-optimal on about a third of the window (Proposition 5.3). Whether any window survives for structured errors in general is open.\""
+ },
+ {
+  "id": "P2X-02",
+  "file": "paper-steeper/sections/abstract.tex",
+  "label_or_line": "line 3, sentences \"For a random parity with a systematic error rule ... gives the erroneous labels little probability. In the original example the window spans three orders of magnitude\"; also intro.tex line 17 (Contributions, second bullet: \"gives the erroneous labels small average probability\")",
+  "severity": "major",
+  "problem": "The abstract states the teacher's-mistakes theorem without four of its hypotheses and overstates its conclusion. (1) The theorem is about the population objective J_c, not the empirical lambda-MAP at sample size n; the finite-sample version needs about 10^11 samples at the example's sizes. (2) Inputs must be uniform; (3) the error set must have product (junta) form; (4) the flip rate must be below 0.056 (otherwise c_hi <= 0). (5) 'Little probability' for the erroneous labels: the proved bound on their average probability is never below 0.194 anywhere in the window (kappa=0) and 0.268 (kappa=30), against 2^-10 for the good model; for the total-bits version of the example the bound is vacuous. (6) 'Spans three orders of magnitude' holds for machine constants up to about 300 bits only; the abstract does not mention the machine constant.",
+  "evidence": "thm:teacher:main (teacher.tex 78-101): population quantities R, J_c (def:teacher:instance(c): 'Inputs are uniform'), E = S x {0,1}^{d-m}, 'c_hi > 0 requires G_1 > H(p); with B = inf this holds iff p < 0.0560'. tab:teacher:numbers: e <= 0.199 (kappa=0), 0.274 (kappa=30) at c=1e-4. ex:teacher:version1: '(e) is vacuous because s_0=16 is too small'. cor:teacher:sampled and text after it: n = 10^11 to 10^13. rem:teacher:hypotheses lists the five hypotheses. Independent check scratch/p2-arxiv-B/window_scope.py (.out): reproduces Table 2(a) exactly; minimum of the e-bound over the whole window 0.194 (kappa=0), 0.268 (kappa=30); window ratio c_hi*2^m = 8453 (kappa=0), 3837 (30), 1004 (300), 811 (400).",
+  "fix": "Abstract: \"For a random parity on uniformly distributed inputs whose labels are flipped on a junta-shaped error set that is incompressible relative to the parity, with flip rate below 0.056, we prove that for lambda = cn with c in an explicit window every near-optimal hypothesis of the population objective knows the parity, holds little information about the error set and gives the erroneous labels average probability at most about 0.2 at the sizes of the original example (a memoriser gives 1). For machine constants up to 30 bits the window spans more than three orders of magnitude.\" Intro bullet 2: replace \"small average probability\" by \"average probability at most 0.199 (kappa=0) or 0.274 (kappa=30) at the example's sizes\" and add \"(population objective; uniform inputs)\"."
+ },
+ {
+  "id": "P2X-03",
+  "file": "paper-steeper/sections/abstract.tex",
+  "label_or_line": "line 3, last sentence \"for lambda > 1 the sampler wins with private but not with shared randomness\"; also split.tex section title 6.3 \"the sampler wins\"",
+  "severity": "major",
+  "problem": "Two missing qualifications. (a) Private randomness: the theorem does not say that the sampler nu is selected. It says a lambda-MAP is at most (k+delta*)/(lambda-1) bits longer than nu's program, is not a fill-in once the sampled randomness is large, and (for infinite input sequences only) is eventually nu-equivalent on the run; rem:split:reading says explicitly 'not necessarily nu'. (b) Shared randomness: the universal mixture beats only samplers with (lambda-1)k > lambda*l_U + kappa_0, i.e. longer than l*_lambda; short samplers are not excluded.",
+  "evidence": "thm:split:private (i)-(iv); rem:split:reading: 'The selected model is a sampler, not a fill-in, but not necessarily nu: it may carry up to (k+delta*)/(lambda-1) bits beyond the sampler ... On a finite domain such as {0,1}^d, (iv) is vacuous.' thm:split:shared (i): 'if (lambda-1)k > lambda l_U + kappa_0, then ... the sampler program is never a lambda-MAP'.",
+  "fix": "Abstract: \"for fixed lambda > 1, private randomness selects a sampler rather than a fill-in, while with shared randomness a short universal mixture beats every sampler longer than about l_U.\" Retitle Section 6.3 \"lambda > 1 with private randomness: samplers beat fill-ins\"."
+ },
+ {
+  "id": "P2X-04",
+  "file": "paper-steeper/sections/split.tex",
+  "label_or_line": "line 5 (\"up to explicit factors that do not depend on how much randomness was sampled\"); discussion.tex line 11 (\"indifferent, up to bounded factors\")",
+  "severity": "major",
+  "problem": "Inconsistent with the paper's own lemma. The lower end of the posterior odds in Theorem 6.4 is 2^{-2log(t_n+1)-kappa}, and t_n depends on beta_n = min nu(y_i|x_i), hence (triply logarithmically) on the sampled randomness and on n; the upper end 2^{k+delta*} contains the random Ville deficiency. So the factors are neither independent of the sampled randomness nor bounded.",
+  "evidence": "lem:split:stream (split.tex 32): 'the cost 2log(t_D+1) is doubly logarithmic in d and triply logarithmic in n and in the sampled randomness -log nu(D)'. thm:split:lambda1 (iii) bounds involve t_n and delta*. Source steeper notes-final §0 item 3 states the doubly/triply logarithmic dependence.",
+  "fix": "split.tex line 5: \"up to explicit factors: 2^{k+delta*} in one direction and 2^{2log(t_n+1)+kappa} in the other, where 2log(t_n+1) grows only triply logarithmically in n and in the sampled randomness\". discussion.tex line 11: replace \"up to bounded factors\" by \"up to factors that grow at most triply logarithmically in the amount of data\"."
+ },
+ {
+  "id": "P2X-05",
+  "file": "paper-steeper/bib/core.bib (entry hanni2026lesswrong) and every \\citep of it",
+  "label_or_line": "core.bib line 28 (author = {Hänni, Kaarel and Wyeth, Cole}); printed in the PDF 17 times: pp. 3 (x3), 5 (x2), 7, 8 (x2), 9 (footnote), 12, 13, 14, 19, 20, 32, 34 (bibliography), 62; .tex citations: intro.tex 10, 12 (x2), 43, 48; setup.tex 48, 61, 64; absorb.tex 5, 104; teacher.tex 11, 16; limits.tex 21, 44; discussion.tex 9; app-verification.tex 115, 129",
+  "severity": "major",
+  "problem": "Wyeth is named in the printed paper 17 times: every citation of the author's own LessWrong comments renders as \"(Hänni and Wyeth, undated)\", and the bibliography lists \"Kaarel Hänni and Cole Wyeth\" as authors. The binding note requires that Wyeth not be named (at most one neutral footnote may record that the point was raised in the thread); this review's brief requires every mention to go. The footnote at absorb.tex 5 therefore also names him through its citation. Blocking for arXiv.",
+  "evidence": "pdftotext of main.pdf: 17 lines contain 'Wyeth' (pages 3,5,7,8,9,12,13,14,19,20,32,34,62). main.bbl lines 112-113: '\\bibitem[H{\\\"a}nni and Wyeth(undated)]{hanni2026lesswrong} Kaarel H{\\\"a}nni and Cole Wyeth.' app-verification.tex 129 already notes the problem. No Wyeth quotation is printed (checked against research/prior/hanni-lesswrong-comment-thread.md), and no heading names him.",
+  "fix": "Drop the entry hanni2026lesswrong (P2X-06). Every quotation it supports except three is also in the public grokking note: cite that note instead (see the replacement map in the review, section 4.3). Restate the three LessWrong-only remarks (\"somewhat cherry-picked\", \"anywhere close to a full solution\", \"some specific toy cases\") in the author's voice without quotation. If the neutral footnote is kept, cite a new entry with Hänni as sole author (\"Comment on Jonas Hallgren's Shortform\", LessWrong, <date>, <URL>), whose date the author checks."
+ },
+ {
+  "id": "P2X-06",
+  "file": "paper-steeper/bib/core.bib",
+  "label_or_line": "entry hanni2026lesswrong (year = {undated}, note = {Text as pasted by K. Hänni on 11 October 2026})",
+  "severity": "major",
+  "problem": "Unverifiable reference: no date, text known only as pasted into the preparation conversation, page unreachable and not found by search. The binding note allows only references whose bibliographic data have been checked.",
+  "evidence": "WebSearch (2026-10-12) for the thread and for \"Jonas Hallgren's Shortform\" found neither; lesswrong.com and greaterwrong.com do not resolve (WebFetch: ENOTFOUND). core.bib comment: 'unverified: the LessWrong page did not resolve ...; The date of the comments is not known.' Printed year: 'undated'.",
+  "fix": "Drop it (see P2X-05). If the author wants the thread cited, he supplies the comment's date and permalink and the entry names him alone."
+ },
+ {
+  "id": "P2X-07",
+  "file": "paper-steeper/bib/core.bib; intro.tex; split.tex",
+  "label_or_line": "entry hanni2026request; citations at intro.tex 12, 43, 48 (x2); split.tex 5, 55",
+  "severity": "major",
+  "problem": "A private message from the sole author to the AI system is cited 6 times as \"Personal communication to the author, ... quoted verbatim in solomonoff-function-induction/research/00-brief.md\". A sole author cannot cite a personal communication to himself, the entry exposes the preparation process (\"Request for a paper\", the brief file), and it is not a checkable source.",
+  "evidence": "main.bbl: 'Kaarel Hänni. Request for a paper on Solomonoff function induction. Personal communication to the author, 11 October 2026; quoted verbatim in solomonoff-function-induction/research/00-brief.md in the accompanying repository'. The quoted sentence ('a preference for a simple sampler over a model where the sampled bits are filled in (solomonoff doesn't have a preference here, both get similar posterior)') occurs only in research/00-brief.md, not in the public notes (grep of the local clone of github.com/kaarelh/notes).",
+  "fix": "Drop the entry. intro.tex 12 and split.tex 5: pose the question in the author's voice without quotation (\"A second question is whether a steeper prior prefers a simple sampler to programs in which the sampled bits are filled in; at lambda = 1, Solomonoff induction has no such preference.\"). split.tex 55 and intro.tex 48: \"Sam Eisenstat's coin example (S. Eisenstat, personal communication; see also [companion paper])\". Remove the key from Table 1's caption."
+ },
+ {
+  "id": "P2X-08",
+  "file": "paper-steeper/bib/core.bib",
+  "label_or_line": "entry hanni2026notes (title = {notes}); 15 citations",
+  "severity": "major",
+  "problem": "The entry cites a whole public repository under the title \"notes\", with no file, date or version. The quotations it supports come from two specific notes; a reader cannot find them from the entry.",
+  "evidence": "WebFetch github.com/kaarelh/notes: public repository, description 'some of my notes from 2023-2026'. File 'philosophy/philosophy of thinking/beating solomonoff induction at grokking a notion.md' exists and contains 'an even stronger simplicity prior than solomonoff', the 'messy notes' section and 'predicts $100$ bits per specification bit'. The 'computably samplable' quotations (setup.tex 8, absorb.tex 108) are in 'ai/learning/solomonoff induction/solomonoff function induction.md' (local clone, commit 541b175, 17 June 2026).",
+  "fix": "Replace by two entries: Hänni, K. (2026). Beating Solomonoff induction at grokking a notion. Note, https://github.com/kaarelh/notes, file philosophy/philosophy of thinking/beating solomonoff induction at grokking a notion.md (commit 541b175, accessed <date>); and Hänni, K. (2026). Solomonoff function induction. Note, same repository, file ai/learning/solomonoff induction/solomonoff function induction.md. Cite each where its text is quoted."
+ },
+ {
+  "id": "P2X-09",
+  "file": "paper-steeper/sections/absorb.tex",
+  "label_or_line": "line 5 (\"This is a standard point.\" with the only citation being the LessWrong footnote); intro.tex line 12 (\"A standard objection\")",
+  "severity": "major",
+  "problem": "The paper calls the absorption point standard but cites no standard source; the only citation attached is the LessWrong thread (in the footnote) and the author's note. The binding note says the point is known in algorithmic statistics, and the paper may cite algorithmic statistics for it. A reader cannot check 'standard' as written.",
+  "evidence": "absorb.tex 5: '...can absorb all the structure of the data. This is a standard point.\\footnote{It was also raised in the comment thread ... \\citep{hanni2026lesswrong}.}' OUTLINE.md binding note: 'Absorption by a universal hypothesis under a steeper penalty is a standard point. It is known in algorithmic statistics'. The relevant fact: if lower-semicomputable semimeasures are admitted as models, the universal semimeasure is a model of complexity O(1) that is optimal for every string, which is why algorithmic statistics restricts models to finite sets or computable distributions (surveyed in Vereshchagin and Shen 2017, already in the bibliography and open access at arXiv 1607.08077).",
+  "fix": "After checking the passage, write: \"This is a standard point: in algorithmic statistics, admitting the universal semimeasure as a model makes every string have an O(1)-complexity optimal two-part description, which is why models are restricted to finite sets or computable distributions (Gacs, Tromp and Vitanyi 2001; Vereshchagin and Shen 2017, Section <n>).\" Keep the footnote only in the form of P2X-05's fix, or drop it."
+ },
+ {
+  "id": "P2X-10",
+  "file": "paper-steeper/sections/*.tex; preamble.tex",
+  "label_or_line": "64 \\status{...} and 73 \\src{...} markers (all theorem-like environments)",
+  "severity": "major",
+  "problem": "The PDF prints, in every theorem-like environment, a status tag and a grey source note in the vocabulary of the preparation process, e.g. 'Proposition 3.4 (Per-input pricing). [proved; computed] steeper Prop 1.3 (T5 Thm 2.1, Prop 2.2); check c2(a); referee r2'. 47 status tags are not plain 'proved', some outside any standard vocabulary ('proved for computable hypotheses; that it is the standard set--distribution translation is believed (known; unverified)', 'known; unverified (content per abstracts); remark').",
+  "evidence": "scratch/p2-arxiv-B/envs.txt (73 environments; 47 non-plain statuses); main.txt lines 454, 573, 606, 648, 732, 807, 815, 819, 1059, 1195, 1269, 1279, 1294, 1668, 2449, 2730 (examples of printed markers).",
+  "fix": "Apply the conversion table (review section 4.1; scratch/p2-arxiv-B/conversion_table.md): delete every \\status and \\src, then reword the nine environments whose status carries content, as listed there: refuted readings (lem:setup:hull, prop:algstat:set), unverified literature (prop:algstat:coarse, rem:algstat:restricted, rem:related:mdl, rem:related:posteriors), examples inside a proposition (prop:related:computable), 'instance of' (ex:teacher:version1) and speculation (rem:limits:method). Delete the \\status and \\src definitions from preamble.tex."
+ },
+ {
+  "id": "P2X-11",
+  "file": "paper-steeper/main.tex; paper-steeper/sections/app-verification.tex",
+  "label_or_line": "main.tex lines 9-13 (\\newif\\ifsfirecord, \\sfirecordtrue) and line 46 (\\ifsfirecord\\input{sections/app-verification}\\fi); Appendix H (pp. 58-63)",
+  "severity": "major",
+  "problem": "The PDF contains Appendix H 'How the results were checked (internal record)', 5.5 pages of process material (tracks, referees with dates, a planning editor, section writers, a framing editor, a 31-row correction table, 'References not checked against the source', 'Open issues of this draft'). The binding note excludes a verification appendix. Setting \\sfirecordfalse is not enough for arXiv, because arXiv distributes the uploaded source: the file and the switch would still be public.",
+  "evidence": "main.toc: 'H How the results were checked (internal record) ... 58'; app-verification.tex lines 7 ('It is not part of the arXiv version ... switch \\sfirecordfalse'), 11 ('Every role was played by a separate instance of Claude ...'), 111-121, 123-131.",
+  "fix": "For the arXiv version: delete the \\newif, \\sfirecordtrue and the \\ifsfirecord line from main.tex, and do not upload sections/app-verification.tex. What the appendix records that a reader needs moves as follows: the refuted statements (rows 1-3) are already in the body; the two refereeing rounds become one sentence in the acknowledgements (already there); the script table becomes part of the Code and data statement (P2X-21); the literature caveats are resolved by P2X-14 to P2X-20, not printed. Keep app-verification.tex on the working branch as the internal record."
+ },
+ {
+  "id": "P2X-12",
+  "file": "paper-steeper/sections/*.tex (65 occurrences of H\\\"anni in visible text, 19 of his/he)",
+  "label_or_line": "intro.tex 6-48 incl. Table 1 (tab:intro:claims, columns 'Claim | Verdict | Where'); headings: teacher.tex 8 (Section 4.1 'Hänni's calculation'), 10 (Remark 'Hänni's calculation'), 107 (Remark 'Numbers at Hänni's sizes'), 160 (Corollary 'Hänni's numbers with sampled data'), 166 (Example 'Hänni's Version 1'); limits.tex 89 (citation '[Hänni's proposition, with no log term]')",
+  "severity": "major",
+  "problem": "The sole author is referred to in the third person throughout and his claims are graded ('Confirmed', 'refuted', 'This confirms Hänni's remark', 'This is the split Hänni hoped for', 'as Hänni expected'); four theorem-like headings and a subsection carry his name. The introduction even explains the device ('which are cited in the third person, as Hänni's'). In a paper whose author is Hänni this reads as an external review of the author, not as his paper; the binding note asks for formal register and for his ideas to be credited by citation.",
+  "evidence": "process_vocab.out category Hanni-3rd-person (65 lines) and his/he (19); intro.tex 48 'which are cited in the third person, as Hänni's'; Table 1 'Verdict' column; main.toc: '4.1 Hänni's calculation'.",
+  "fix": "Use the author's voice with citations: 'the proposal of [grokking note]', 'the example of [grokking note]', 'the original sizes (d=100, m=20, p=2^-10)'. Retitle: 4.1 'The three-hypothesis calculation'; Remark 'Numbers for the running example'; Corollary 'Finite samples'; Example 'The total-bits version of the example'. Table 1: 'Questions raised in [notes] and where they are answered', columns 'Question | Answer | Where'. Delete 'which are cited in the third person, as Hänni's'. Cite Paper 1's results by number, not as 'Hänni's proposition'."
+ },
+ {
+  "id": "P2X-13",
+  "file": "paper-steeper/sections/intro.tex, setup.tex, absorb.tex, teacher.tex, algstat.tex, split.tex, discussion.tex",
+  "label_or_line": "intro.tex 6 and 12; algstat.tex 5; absorb.tex 5, 43, 104, 108; discussion.tex 9",
+  "severity": "major",
+  "problem": "Long verbatim quotations of informal working notes, with their lowercase and abbreviations ('roughly speaking solomonoff would be making the same mistakes', 'see some point at which the derivative changes or sth.', 'seq prediction case', 'abs bound'), carry the argument of the introduction and of Sections 3 and 7. In a sole-author paper this is self-quotation of drafts; the binding note asks for formal academic register.",
+  "evidence": "algstat.tex 5 quotes 47 words including 'like imagine this graphed ... or sth. (this doesn't show up in the seq case because there it's pretty much just 1 bit paying for 1 bit (until you specify it in full if it's finite complexity))'; intro.tex 6 quotes four fragments in one paragraph.",
+  "fix": "Paraphrase in formal English in the author's voice and cite the note; keep at most one short quotation where the exact wording matters (e.g. the example's sizes)."
+ },
+ {
+  "id": "P2X-14",
+  "file": "paper-steeper/sections/intro.tex, algstat.tex, related.tex, discussion.tex",
+  "label_or_line": "intro.tex 46 ('as their abstracts describe them'; 'Our literature search went only as far as abstracts, so the novelty claims ... need a check against full texts'); algstat.tex 48 ('presumably that translation'), 82 ('As far as we can tell from the abstracts', 'A comparison with the full texts is left open'); related.tex 35 ('As their abstracts describe them', '... can only be settled from the full texts'), 39 ('This is our reading, not checked against the papers' precise criteria'), 47 ('though our search was limited to abstracts'), 51 ('the novelty claims ... remain to be checked against the full texts'); discussion.tex 26 (open problem (8) 'Literature'), 30 (acknowledgements: 'the comparison with the literature rests on abstracts and search snippets')",
+  "severity": "major",
+  "problem": "Ten passages tell the reader that the cited literature was not read. These are statements about the preparation process, not about mathematics; they are not acceptable in an arXiv paper, and a to-do ('need a comparison with the full texts') is listed as an open research problem. The underlying works are open access, so the check can be done (P2X-15 to P2X-20).",
+  "evidence": "Quoted passages; scratch/p2-arxiv-B/process_vocab.out categories abstract(s), full text, hedge, snippet. Open-access copies found by this review's WebSearch: Zhu-Srebro (PMLR 291), Zhu-Ohannessian-Srebro (arXiv 2603.22644), Vereshchagin-Vitanyi 2010 (arXiv cs/0411014), Vereshchagin-Shen 2017 (arXiv 1607.08077), Grunwald 2012 (homepages.cwi.nl/~pdg/ftp/alt12longer.pdf), Wenzel et al. 2020 (PMLR 119).",
+  "fix": "Read the works and rewrite each passage as a plain statement of what the work proves (see P2X-15 to P2X-20). Delete open problem (8) and the acknowledgements clause. If a work cannot be read, remove the sentence that relies on it rather than hedging it."
+ },
+ {
+  "id": "P2X-15",
+  "file": "paper-steeper/sections/related.tex",
+  "label_or_line": "rem:related:mdl (line 35); intro.tex 46 (Prior work); rem:limits:schedule (limits.tex 21)",
+  "severity": "major",
+  "problem": "The closest prior work is described only 'as their abstracts describe them'. The paper's central disclaimer ('That a bounded lambda fits the noise and lambda must grow with the sample size is their finding ..., not ours') and its claim of difference ('Their abstracts do not mention universal hypotheses, the shared/private contrast, or Kolmogorov-complexity classes') rest on abstracts. Also, Grunwald and Langford (2007) is about lambda = 1 (Bayes and MDL under misspecification), so the intro's 'these works find that a bounded lambda fits the noise and that lambda must grow' misdescribes it.",
+  "evidence": "related.tex 35; intro.tex 46; CLAIMS.md rem:related:mdl status 'known (verified bibliographically; content per abstracts and snippets)'; CLAIMS.md conflict P12 (a growth rate attributed to Zhu-Srebro 'could not be confirmed'). Bibliographic data verified (WS-P1): COLT 2025, PMLR 291:6124-6155; arXiv 2603.22644; Machine Learning 66(2-3):119-149.",
+  "fix": "Read the three papers and state, with theorem numbers: the hypothesis class and objective they analyse, what they prove about bounded lambda, what growth of lambda they need, and whether any of their hypotheses is universal. Describe Grunwald-Langford separately ('at lambda = 1, Bayes and MDL classifiers can be inconsistent under misspecification'). Then state the difference in one sentence without hedging."
+ },
+ {
+  "id": "P2X-16",
+  "file": "paper-steeper/sections/algstat.tex",
+  "label_or_line": "rem:algstat:restricted (line 82)",
+  "severity": "major",
+  "problem": "The novelty of product sophistication relative to restricted model families is asserted 'as far as we can tell from the abstracts', and 'A comparison with the full texts is left open'. Milovanov (2016) is described from a snippet (the source notes say 'exact title and pages unverified').",
+  "evidence": "steeper notes-final line 1038 ('Milovanov (CSR 2016) ... [known (snippet); unverified]') and line 1377; CLAIMS.md rem:algstat:restricted status 'known (VV 2010 verified bibliographically, content per abstract)'. Vereshchagin-Vitanyi 2010 abstract (this review's WebSearch): distortion balls, Hamming distortion, denoising.",
+  "fix": "Read Vereshchagin-Vitanyi 2010 (arXiv cs/0411014) and Milovanov 2016 (arXiv 1512.04510); state precisely what the Hamming-ball structure function gives for the noisy parity and what the product family adds; delete the hedges. If not read, keep only the Hamming-ball sentence and drop (a)-(c)."
+ },
+ {
+  "id": "P2X-17",
+  "file": "paper-steeper/sections/setup.tex",
+  "label_or_line": "line 48 ('two-part codes with a complexity weight above 1 are reported to appear in MDL convergence theory \\citep{barron1991minimum,grunwald2007minimum}'); intro.tex 46 ('Two-part codes with a complexity weight above one appear in MDL theory'); rem:related:new ('Known: two-part codes and MDL with complexity weights above 1')",
+  "severity": "major",
+  "problem": "A literature claim is supported only by a secondary source: the paper itself says 'reported to appear', and the intro and rem:related:new then state it as known fact. Neither cited work was checked for it.",
+  "evidence": "steeper notes-final line 1448: 'Barron-Cover 1991 (alpha > 1 only via a secondary source)'; app-verification.tex 117: 'A complexity weight above one in Barron and Cover (1991) is known only through a secondary source'. This review's WebSearch confirmed the bibliographic data of both works but found nothing on the weight.",
+  "fix": "Check Grunwald (2007), Part III (the chapter on consistency of two-part MDL, where an alpha-two-part code with alpha > 1 is analysed, if the reviewer's recollection is right) and Barron and Cover (1991); cite the exact chapter/theorem and state it without 'reported'. If it cannot be checked, delete the clause in all three places."
+ },
+ {
+  "id": "P2X-18",
+  "file": "paper-steeper/sections/related.tex",
+  "label_or_line": "rem:related:posteriors (line 39): 'SafeBayes chooses eta ... by \\cref{prop:limits:noident}(i) such a criterion has no reason to leave eta=1 in well-specified imitation. This is our reading, not checked against the papers' precise criteria.'",
+  "severity": "major",
+  "problem": "A claim about the behaviour of SafeBayes is made and immediately disowned as unchecked. Either it is an argument (then it needs the criterion's definition) or it should go.",
+  "evidence": "Text as quoted. Grunwald (2012) author copy (homepages.cwi.nl/~pdg/ftp/alt12longer.pdf; abstract via this review's WebSearch): the learning rate is chosen by randomised sequential prediction loss.",
+  "fix": "Read Grunwald (2012) and Grunwald-van Ommen (2017) for the SafeBayes criterion; if the conclusion follows, state it as a remark with the one-line reason; otherwise delete the two sentences."
+ },
+ {
+  "id": "P2X-19",
+  "file": "paper-steeper/sections/algstat.tex",
+  "label_or_line": "prop:algstat:coarse status and line 48 ('Vereshchagin and Shen state that set and distribution models are equivalent up to logarithmic terms; the thresholding above is presumably that translation')",
+  "severity": "major",
+  "problem": "The status tag says the equivalence is 'believed (known; unverified)' and the text says 'presumably'. A cited survey is used for a statement that was not checked in it.",
+  "evidence": "envs.txt: status 'proved for computable hypotheses; that it is the standard set--distribution translation is believed (known; unverified)'; CLAIMS.md: 'Vereshchagin-Shen, per snippet, unverified'. The survey is open access (arXiv 1607.08077; LNCS 10010:669-737 verified).",
+  "fix": "Check the survey's section on distributions versus finite sets; cite it with the section number and drop 'presumably', or delete the sentence (the proposition stands without it)."
+ },
+ {
+  "id": "P2X-20",
+  "file": "paper-steeper/sections/related.tex",
+  "label_or_line": "rem:related:new (line 47); q:related:open (line 51)",
+  "severity": "major",
+  "problem": "The paper lists five contributions it 'has not found in the literature, though our search was limited to abstracts'. Novelty claims resting on an abstract-level search are not acceptable; the honest form after a proper check is 'to our knowledge'.",
+  "evidence": "related.tex 47, 51; CLAIMS.md rem:related:new: '(possibly new; needs a full literature check before publication)'.",
+  "fix": "After P2X-15 and P2X-16, rewrite: 'To our knowledge the following are new: ...' and delete the last sentence of q:related:open. If the check is not done, list the results as contributions without novelty claims."
+ },
+ {
+  "id": "P2X-21",
+  "file": "paper-steeper/sections/discussion.tex",
+  "label_or_line": "Code and data statement (line 33); title-page footnote (main.tex 16)",
+  "severity": "major",
+  "problem": "The statement points to 'solomonoff-function-induction/research/tracks/steeper/' (the banned word 'tracks' in visible text) and to 'the research notes with full proofs from which the paper was written'; the folder is not on the repository's main branch, so the link does not resolve; no commit or release is pinned.",
+  "evidence": "PDF p. 33: '... are in the folder solomonoff-function-induction/research/tracks/steeper/ of the repository https://github.com/kaarelh/AI-works'. gh api: solomonoff-function-induction is absent from main (404).",
+  "fix": "Publish the scripts to main in a neutral folder (e.g. solomonoff-function-induction/code/steeper/, with the referee scripts as code/steeper/independent/) and write: 'Code and data. All numerical statements are produced by deterministic or seeded Python 3.11 scripts (NumPy, SciPy), with their outputs, in the folder solomonoff-function-induction/code/steeper of https://github.com/kaarelh/AI-works (release <tag>). Appendix C.8 lists the script for each computation.' Do not mention research notes or tracks."
+ },
+ {
+  "id": "P2X-22",
+  "file": "paper-steeper/bib/core.bib",
+  "label_or_line": "entry claudeSFI2026fundamentals (\"Draft ... Folder solomonoff-function-induction/paper/ of https://github.com/kaarelh/AI-works\"); 22 citations and the title-page footnote",
+  "severity": "major",
+  "problem": "The companion paper, cited 22 times for definitions and results, cannot be reached: the cited folder is not on the repository's main branch.",
+  "evidence": "gh api repos/kaarelh/AI-works/contents/solomonoff-function-induction?ref=main returns 404 (the repository itself is public; inferential-learning/ is on main).",
+  "fix": "Submit the two papers together and cite the companion by its arXiv identifier; until then publish the folder to main (per CLAUDE.md) and cite a tagged URL. Keep the key; change howpublished/note."
+ },
+ {
+  "id": "P2X-23",
+  "file": "paper-steeper/bib/core.bib; absorb.tex, intro.tex, teacher.tex, app-teacher.tex, related.tex, app-related.tex, discussion.tex",
+  "label_or_line": "entry claude2026whatfollows (author = {Claude (Anthropic)}, howpublished = {Unpublished report prepared for K. Hänni}); 10 citations, 8 of them with the pinpoint [section ``Simplicity and normativity from imitation'']",
+  "severity": "major",
+  "problem": "The earlier report on which several results are 're-derived' is cited as an unpublished report by an AI system 'prepared for K. Hänni' (the author of this paper), with no URL, date or section number. An AI system listed as author of a cited work, and a work 'prepared for' the citing author, will draw a reader's and a moderator's attention; the long pinpoint is repeated 8 times.",
+  "evidence": "The report is public: gh api shows inferential-learning/ (README, paper, code, research) on main of github.com/kaarelh/AI-works; its title page (inferential-learning/paper/main.tex line 6) reads author 'Claude (Anthropic)', 'Draft; authorship and publication to be decided by him'. The cited section is \\section{Simplicity and normativity from imitation} in sections/simplicity.tex (Section 8 of that report).",
+  "fix": "Decide the report's author line first (the report itself says it is for Hänni to decide) and use the same line here; give the URL https://github.com/kaarelh/AI-works/tree/main/inferential-learning and the year; drop 'prepared for K. Hänni'. Cite as \\citet[Section 8]{claude2026whatfollows} once in the introduction, then 'the earlier report' without the pinpoint."
+ },
+ {
+  "id": "P2X-24",
+  "file": "paper-steeper/sections/setup.tex, absorb.tex, limits.tex, split.tex, related.tex, app-absorb.tex, app-split.tex, app-limits.tex",
+  "label_or_line": "e.g. setup.tex 8 '[the fresh-noise proposition]', 17 '[the per-query proposition]', 36 '[the corollary on SFI^hist]'; absorb.tex 71 '[the chain theorem, the shared-coin proposition and the remark after it]'; app-split.tex 65 '[the hashing remark]'; related.tex 103 '[the time-bounded theorem]'; limits.tex 89 '[Hänni's proposition, with no log term]'",
+  "severity": "major",
+  "problem": "About 15 references to the companion paper use informal names instead of numbers (10 of them as bracketed pinpoints such as [the shared-coin proposition], others as 'the mistake bound of', 'the tape-length bound of', 'the merging theorem of'), and five of the names do not match the companion's printed titles, so a reader cannot find the result. 'The hashing remark' points to a remark that the companion itself titles 'The hashing bound, superseded'.",
+  "evidence": "Paper 1 titles (paper/sections): learn.tex 79 'random-function SFI cannot model fresh label noise' (cited as 'the fresh-noise proposition'); learn.tex 89 'the per-query mixture' ('the per-query proposition'); hist.tex 129 'Universality of SFI^hist' ('the corollary on SFI^hist'); versions.tex 60 'Shared randomness is not a mixture of private randomness' ('the shared-coin proposition'); app-versions.tex 55 'The hashing bound, superseded' ('the hashing remark'). app-verification.tex 130: 'theorem numbers can be added once both papers are final'.",
+  "fix": "Once Paper 1 is frozen, cite by number and exact title, e.g. \\citet[Proposition 6.3]{...}; build both papers from one shared .aux (xr-hyper) or fill numbers by hand and check them."
+ },
+ {
+  "id": "P2X-25",
+  "file": "paper-steeper/sections/discussion.tex",
+  "label_or_line": "Open problems list, lines 15-26 (cross-references to q:teacher:open, q:limits:open, q:absorb:shared, q:related:open, q:algstat:lsc)",
+  "severity": "major",
+  "problem": "The \\label of each 'Open question' paragraph picks up the number of the enclosing subsection, so the list sends the reader to the wrong place: '(Section 5.4)' is the subsection 'Unseen properties', '(Section 4.5)' is 'Idiosyncratic errors, finite samples and Version 1', '(Section 3.4)' is 'Answer to the absorption objection'. The open questions themselves are unnumbered paragraphs at the ends of those subsections.",
+  "evidence": "PDF p. 32-33: '(Section 5.4)', '(Section 4.5, Remark 5.11)', '(Section 3.4)', '(Section 8.2)', '(Section 7.2)'; labels q:limits:open (limits.tex 101), q:teacher:open (teacher.tex 182), q:absorb:shared (absorb.tex 111).",
+  "fix": "Either drop the per-section 'Open question' paragraphs and keep only the numbered list in Section 9.1 (shorter), or give each open question its own counter (a 'question' environment) and refer to 'Question 4.12'."
+ },
+ {
+  "id": "P2X-26",
+  "file": "paper-steeper (structure)",
+  "label_or_line": "main text pp. 3-33 (30 pages, 70 theorem-like environments: 5 theorems, 20 propositions, 10 lemmas, 3 corollaries, 21 remarks, 9 definitions, 2 examples); Section 8 'Computable versions and related work'",
+  "severity": "major",
+  "problem": "Against a typical arXiv paper in learning theory (main text about 20-25 pages, results stated in a handful of theorems, secondary results in appendices) the main text is long and flat: 70 environments, of which only 3 lemmas are in the appendices; every section ends with remarks and an open question. The outline's own budget (18-22 pages) is exceeded by about 9 pages. Related work is split between the introduction and a final section that also proves two propositions; the binding note asks for related work before the preliminaries.",
+  "evidence": "main.toc; scratch/p2-arxiv-B/envs.json (main 70, appendix 3); OUTLINE.md page budget (total 21); app-verification.tex 126 ('about 30 pages against a target of 18-22').",
+  "fix": "Move to the appendices: prop:absorb:inputs, rem:absorb:condsemi, prop:limits:guard, prop:limits:inputlaw, prop:limits:ood, rem:limits:method, ex:split:noisyparity, rem:split:siprograms, prop:algstat:product, prop:algstat:coarse, prop:related:computable, prop:related:computability, rem:related:cold, rem:related:nn, and Theorem 4.7 (iii)-(iv) with Table 2(b). Make Section 2 'Related work' (rem:related:mdl, rem:related:posteriors, rem:related:t5, restricted families) or keep it last but without results. Collect open questions once (P2X-25). Target 20-22 main pages."
+ },
+ {
+  "id": "P2X-27",
+  "file": "paper-steeper/sections/teacher.tex",
+  "label_or_line": "def:teacher:instance (lines 21-32), the display before thm:teacher:main (65-76), thm:teacher:main (78-101)",
+  "severity": "major",
+  "problem": "The central theorem cannot be read on its own. Before it the reader meets about 40 symbols (s_0, L_S, B_S, delta_S, I, R, R_B, J_c, J_c^B, Phi, Phi^B, tau_B, beta_B, u, theta_t, lev, s(t), G_j, pi_coin, pi_g, pi_b, kappa_g, kappa_b, Lambda_1, psi_c, Phi_1, Phi_2, t*, J_g, J_b, Delta(c), c_hi, Lambda_2, Lambda_3, Delta_l, e, gamma_g, j_g, Gamma_g, varrho), and the theorem has five parts with sub-parts (a)-(e). The introduction gives no informal statement of it.",
+  "evidence": "teacher.tex 21-101; intro.tex 17 (bullet) states the conclusion but not a theorem.",
+  "fix": "Add 'Theorem 1 (informal)' to the introduction. In Section 4 state a simplified Theorem 4.7 with B = infinity and epsilon = 0 (window, identification (a)-(e) with numeric constants suppressed into O(log d + kappa)) and move the general form with truncation, epsilon-slack and parts (iii)-(iv) to Appendix C. Put the symbol definitions that only the proofs need (tau_B, beta_B, Gamma_g, j_g, varrho) in the appendix."
+ },
+ {
+  "id": "P2X-28",
+  "file": "paper-steeper (all .tex, .bib, .bbl files that would be uploaded)",
+  "label_or_line": "comment lines in main.tex (7), preamble.tex (23) and every section file; label rem:absorb:wyeth (absorb.tex 5, 101; intro.tex 16); bib comments",
+  "severity": "major",
+  "problem": "arXiv makes the LaTeX source public. As it stands the source contains process vocabulary in comments ('writer: steep-a', 'Source: research/tracks/steeper/notes-final.md', 'CLAIMS.md', 'OUTLINE.md', 'framing editor', 'The binding note ... excludes it from the arXiv version'), a label naming Wyeth, and bib files whose entries name Wyeth and carry '% unverified' comments.",
+  "evidence": "grep: 36 full-line comments in sections/*.tex (plus inline comments), 7 in main.tex, 23 in preamble.tex; e.g. setup.tex 1 '% Section 2 (writer: steep-a). Source: research/tracks/steeper/notes-final.md ...'; intro.tex 7 '% Binding notes: the absorption objection is not attributed to a person ...'; absorb.tex 101 '\\label{rem:absorb:wyeth}'.",
+  "fix": "Build the arXiv upload in a separate folder: flatten the inputs (latexpand), strip comments (arxiv_latex_cleaner or a script), rename rem:absorb:wyeth to rem:absorb:answer (3 places), upload main.bbl but not bib/*.bib, and grep the tarball for 'Wyeth', 'track', 'referee', 'notes-final', 'ledger', 'CLAIMS', 'OUTLINE', 'steep-', 'Claude' (the last should occur only in the footnote and acknowledgements)."
+ },
+ {
+  "id": "P2X-29",
+  "file": "paper-steeper/sections/intro.tex",
+  "label_or_line": "line 18 (Contributions, Limits bullet: 'on almost a third of the window's logarithmic width'); line 19 (split bullet: 'product sophistication exceeds set sophistication by d - O(log d) bits')",
+  "severity": "minor",
+  "problem": "Two summaries drop qualifiers that the body states. 'Almost a third' holds with the machine constant set to 0 (a quarter at kappa=30). The sophistication gap holds for sufficiency slacks b in a stated range and deficiency delta_E = O(d), with p < 1/4.",
+  "evidence": "limits.tex 42 ('31% of the logarithmic width ... at kappa=0 (25% at kappa=30)'); prop:algstat:parity (ii)-(iv) ranges of b and 'delta_E = O(d)'.",
+  "fix": "'on almost a third (kappa=0; a quarter at kappa=30) of the window's logarithmic width'; 'by d - O(log d) bits for a range of sufficiency slacks'."
+ },
+ {
+  "id": "P2X-30",
+  "file": "paper-steeper/sections/discussion.tex",
+  "label_or_line": "line 5 ('When a universal mixture is a member of the class ... it cannot')",
+  "severity": "minor",
+  "problem": "Overstated: the absorption theorem excludes only hypotheses longer than l*_lambda (which tends to l_U); a model shorter than about l_U can still be selected.",
+  "evidence": "thm:absorb:absorption (a); rem:absorb:reading ('Whether a given model is longer than l_U depends on the reference machine').",
+  "fix": "'it cannot for any model longer than l*_lambda, a bound that does not depend on the data'."
+ },
+ {
+  "id": "P2X-31",
+  "file": "paper-steeper/sections/teacher.tex",
+  "label_or_line": "cor:teacher:fulltable, line 155 ('the window lambda in (1, 1.19 10^4]') and app-teacher.tex 137 ('(1,11945]')",
+  "severity": "minor",
+  "problem": "Part (i) of the corollary needs J_g < Phi_2 (strict), i.e. the open interval (1, N c_hi); the computed window is printed closed at the right end.",
+  "evidence": "cor:teacher:fulltable (i): 'every lambda > 1 with J_g(lambda/N) < Phi_2(lambda/N), in particular every lambda in (1, N c_hi)'; app-verification row 22 records the fix of the statement but not of the number.",
+  "fix": "Print '(1, 1.19 10^4)' and '(1, 6456)', or say 'the window (1, N c_hi] (part (i) holds on its interior)'."
+ },
+ {
+  "id": "P2X-32",
+  "file": "paper-steeper/sections/app-teacher.tex",
+  "label_or_line": "line 216 ('-n epsilon + (J_g + epsilon)/c = -1000 + 242.3')",
+  "severity": "minor",
+  "problem": "Wrong intermediate number: with J_g(c) = c(d + kappa_g) + H(p) = 0.023167 at c = 1e-4, kappa=0, (J_g + epsilon)/c = 241.67, so the exponent is -758.33. The main-text bound 2^-758 is right; 242.3 is not.",
+  "evidence": "scratch/p2-arxiv-B/concentration_exponent.py (.out): J_g = 0.023167, (J_g+eps)/c = 241.67, exponent -758.33; research/tracks/steeper/checks/c5_limits.out line 24: 'J_c(good)=0.0232 ... log2 bound = -758'.",
+  "fix": "'-1000 + 241.7'."
+ },
+ {
+  "id": "P2X-33",
+  "file": "paper-steeper/sections/absorb.tex",
+  "label_or_line": "rem:absorb:wyeth (iii), line 105 ('So ``nothing is lost at lambda=1'' holds only relative to the product class'); rem:absorb:reading line 38 ('a dog classifier with millions of bits certainly is')",
+  "severity": "minor",
+  "problem": "(iii) puts in quotation marks a claim that appears nowhere in the paper (it is an earlier draft's claim, removed in revision); (38) 'certainly' asserts something about every reference machine.",
+  "evidence": "steeper notes-final 339, 1260 ('\"Nothing is lost\" was removed (§1.6)').",
+  "fix": "(iii): 'So restricting to private randomness is not free at lambda = 1 when compared with M_F.' (38): 'a model of millions of bits is longer than l_U for any reasonable reference machine.'"
+ },
+ {
+  "id": "P2X-34",
+  "file": "paper-steeper/sections/split.tex, app-split.tex, limits.tex, app-algstat.tex, absorb.tex",
+  "label_or_line": "split.tex 104 ('2^{-lambda|p|}'); app-split.tex 32 (p_w), 60 (p_s), 69 (delta_w); limits.tex 58 (a:=2+4q, b:=...); app-algstat.tex 20 and 77 (integer u), 52 (p = h/2^e); algstat.tex 45 (rho:=ceil(-log nu_pi(D))) next to rho^x_D; absorb.tex 65 (kappa')",
+  "severity": "minor",
+  "problem": "Notation clashes with ../paper/NOTATION.md and within sections: programs are pi in Paper 2 because p is the error density (NOTATION §1); subscripted delta is reserved for deficiencies (§4 item 18); in Section 5 a is the parity vector and b the behaviour of prop:limits:ood, yet Lemma 5.5 defines constants a, b; in Section 7 u is the agreement u(pi) and also an integer index, e and h are e(pi) and h_z and also p = h/2^e, rho is both the product structure function and an integer; kappa' is reserved for a subclass constant.",
+  "evidence": "NOTATION.md §1 'Programs', §4 items 18 and 2; the quoted lines.",
+  "fix": "Write pi for programs (pi_w, pi_s, 2^{-lambda l(pi)}); point mass 1_w or [w]; Lemma 5.5 constants alpha_0, beta_0; integer index v (A_v); p = h'/2^{e'} or 'p a dyadic rational of small complexity'; rho -> r_D; kappa' -> kappa_2."
+ },
+ {
+  "id": "P2X-35",
+  "file": "paper-steeper/sections/absorb.tex",
+  "label_or_line": "prop:absorb:price (iv), line 78",
+  "severity": "minor",
+  "problem": "A lower bound on a predictor's loss without its convention. NOTATION.md §6 requires every lower bound to say 'semimeasure convention' or 'both conventions'; the excess of the steeper product predictor over M_F is proved for -log xi(D) (semimeasure convention), and normalising xi^x_lambda can only lower its loss.",
+  "evidence": "prop:absorb:price (iv) and its proof (app-absorb.tex 69); NOTATION.md §6 last bullet.",
+  "fix": "Add '(semimeasure convention)' after 'pays at least'."
+ },
+ {
+  "id": "P2X-36",
+  "file": "paper-steeper/bib/core.bib, steep-a.bib, steep-b.bib",
+  "label_or_line": "entries hoeffding1963probability, grunwald2007suboptimal, ville1939etude, grunwald2012safe, grunwald2017inconsistency, zhang2006epsilon, bissiri2016general, bhattacharya2019fractional",
+  "severity": "minor",
+  "problem": "Verified entries with incomplete data.",
+  "evidence": "This review's WebSearch: Hoeffding JASA 58(301), doi 10.1080/01621459.1963.10500830; Ville: Monographies des Probabilités, fasc. III (ed. Borel), Gauthier-Villars 1939; DOIs 10.1007/978-3-642-34106-9_16, 10.1214/17-BA1085, 10.1214/009053606000000704, 10.1111/rssb.12158, 10.1214/18-AOS1712. Paper 1 review: Grunwald-Langford Machine Learning 66(2-3).",
+  "fix": "Add number = {301} (Hoeffding), number = {2--3} (Grunwald-Langford), series and number (Ville), and DOIs throughout (plainnat prints them)."
+ },
+ {
+  "id": "P2X-37",
+  "file": "paper-steeper/bib/steep-a.bib, steep-b.bib",
+  "label_or_line": "koppel1987complexity, koppel1991almost, vitanyi2006meaningful, antunes2009sophistication, milovanov2016algorithmic, cover2006elements, goldreich1989hard, kushilevitz1993learning, wenzel2020good",
+  "severity": "minor",
+  "problem": "Nine printed entries could not be re-verified in this review (the session's shared WebSearch budget ran out); only the writers' own search records support them. Milovanov's title and pages conflict between the source notes ('exact title and pages unverified') and the bib comment ('Confirmed'); Kushilevitz-Mansour's pages were copied from a sibling project ('the SIAM snippet did not show the pages').",
+  "evidence": "scratch/p2-arxiv-B/bibcheck-log.md section 'Writer's search record only'; steeper notes-final line 1377; steep-b.bib comment on kushilevitz1993learning. All nine agree with the reviewer's own knowledge of these works.",
+  "fix": "Re-check the nine by search before submission (DBLP or publisher pages), with priority on milovanov2016algorithmic and the pages of kushilevitz1993learning."
+ },
+ {
+  "id": "P2X-38",
+  "file": "paper-steeper/bib/core.bib",
+  "label_or_line": "entry vaintrobhanni2026nnbayes (URL https://kaarelh.github.io/ai/nnbayes-generalization.pdf)",
+  "severity": "minor",
+  "problem": "The title and authors are confirmed only against the local copy of the slides; the URL was not found by search and does not resolve from this environment.",
+  "evidence": "WebFetch: ENOTFOUND kaarelh.github.io; Paper 1 review: 'verified against local copy only'. The title slide in research/prior/ matches the entry.",
+  "fix": "The author checks the URL in a browser; if it is not public, cite the slides as 'Slides, ILIAD 2026' without URL or deposit them in the repository."
+ },
+ {
+  "id": "P2X-39",
+  "file": "paper-steeper/sections/app-teacher.tex, app-limits.tex, app-related.tex",
+  "label_or_line": "script names c6_revision.py, c7_run2.py (app-teacher 56, 125, 137, 196, 216, 220; app-limits 10, 12, 37, 65, 102); 'were re-run from scratch copies' (app-teacher 220, app-related 46)",
+  "severity": "minor",
+  "problem": "Script names and one phrase expose the preparation process ('revision', 'run2', 're-run from scratch copies'); elsewhere the same kind of computation is cited only as 'code in the accompanying repository, seed N'. The two conventions are mixed.",
+  "evidence": "process_vocab.out category process-run (24 lines).",
+  "fix": "Rename the scripts in the published code folder by content (e.g. c6_constants_examples.py, c7_streams_envelopes.py) and cite every computation the same way ('script <name>, seed N'); replace 're-run from scratch copies and reproduce' by 'reproduce'."
+ },
+ {
+  "id": "P2X-40",
+  "file": "paper-steeper/main.tex; preamble.tex",
+  "label_or_line": "main.tex 15-24 (no \\hypersetup, \\tableofcontents + \\newpage); preamble.tex 13 (\\usepackage{framed}); author line without affiliation",
+  "severity": "minor",
+  "problem": "PDF metadata are empty (pdfinfo: Title, Author blank); a full-page table of contents is unusual for an arXiv paper of this length; the 'framed' package is loaded but unused; no affiliation or contact address.",
+  "evidence": "pdfinfo main.pdf; grep finds no 'framed' environment in sections/.",
+  "fix": "Add \\hypersetup{pdftitle={...}, pdfauthor={Kaarel Hänni}}; drop the TOC or keep it without \\newpage; remove 'framed'; add an affiliation (or 'Independent researcher') and an e-mail address."
+ },
+ {
+  "id": "P2X-41",
+  "file": "paper-steeper/CLAIMS.md",
+  "label_or_line": "rows rem:absorb:examples, cor:teacher:fulltable; missing row rem:teacher:numbers",
+  "severity": "minor",
+  "problem": "The ledger is stale in three places (the paper is right): it says xi_1 = U where the paper (correctly) proves xi_1 <= U; it states the full-table corollary for lambda in (1, N c_hi] where the paper has the open interval; and it has no row for rem:teacher:numbers (only tab:teacher:numbers).",
+  "evidence": "scratch/p2-arxiv-B/compare_status.out ('NOT IN LEDGER: rem:teacher:numbers'); app-verification rows 22 and 30.",
+  "fix": "Update CLAIMS.md (not part of the arXiv upload)."
+ },
+ {
+  "id": "P2X-42",
+  "file": "paper-steeper/sections/related.tex; discussion.tex",
+  "label_or_line": "rem:related:nn line 29 and discussion.tex 13 ('the bridge question raised by the Vaintrob--Hänni result')",
+  "severity": "minor",
+  "problem": "The 'bridge question' is posed in the companion paper (rem:nn:bridge, q:nn:bridges), not in the slides; attributing it to the slides misstates the source.",
+  "evidence": "paper/sections/nn.tex 49, 94; CLAIMS.md rem:related:nn: 'Paper 1's bridge question'.",
+  "fix": "'is the bridge question of the companion paper (Remark <n>), which the slides of Vaintrob and Hänni (2026) motivate'."
+ },
+ {
+  "id": "P2X-43",
+  "file": "paper-steeper/sections/limits.tex, teacher.tex, related.tex",
+  "label_or_line": "limits.tex 98 ('looks within reach but is not proved'); teacher.tex 183 and discussion.tex 20 ('presumably do not'); related.tex 51 ('It presumably is not, but we have no proof')",
+  "severity": "minor",
+  "problem": "Speculative phrasing in remarks and open questions; academic style states conjectures as conjectures or questions.",
+  "evidence": "Quoted lines.",
+  "fix": "'We do not know whether the window extends to p < 0.123'; 'we expect that majority-like functions do not give a window'; 'Is the lambda-MAP computable from the data? We conjecture not.' (or a conjecture environment if the author wants to commit)."
+ },
+ {
+  "id": "P2X-44",
+  "file": "paper-steeper/sections/setup.tex",
+  "label_or_line": "paragraph 'Objects from the companion paper' (line 8)",
+  "severity": "minor",
+  "problem": "One paragraph introduces nine objects of the companion paper (function machine, f^T_omega, nu_T, M_F, product laws, M_prod, M^w, M_H, frozen vs fresh noise) with a dominance relation and an unboundedness result; most are needed only in Section 3. Hard to absorb on first reading.",
+  "evidence": "setup.tex 8.",
+  "fix": "Turn it into a short table (object, meaning, where used) or move M^w, M_H and the M_F/M_prod comparison to the start of Section 3."
+ },
+ {
+  "id": "P2X-45",
+  "file": "paper-steeper/sections/abstract.tex",
+  "label_or_line": "line 3 (first sentences)",
+  "severity": "minor",
+  "problem": "The abstract uses n and c (in 'lambda = cn') without saying what they are, and the informal 'absorbs everything' is not defined anywhere in the paper.",
+  "evidence": "abstract.tex 3.",
+  "fix": "Use the rewritten abstract of the review's section 7.1, which defines n (sample size) and replaces 'absorbs everything' by what Theorem 3.2 proves."
+ }
+]

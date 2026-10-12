@@ -1,0 +1,182 @@
+[
+ {
+  "id": "P1C-01",
+  "file": "paper/sections/app-ood.tex",
+  "label_or_line": "line 39 (grammar paragraph), table tab:ood:grammar rows 'tilted'; also ood.tex line 171 (ex:ood:hanniexamples(c)) and app-ood.tex line 69 (tab:ood:hanni)",
+  "severity": "major",
+  "problem": "Correction to C-31 of the concurrent run, and to app-ood.tex. The 'tilted' extra program does NOT get 'prior mass equal to (or ten times) that of all plain programs' (app-ood.tex line 39; repeated in C-31's diagnosis and fix). It gets tilt times the mass of the plain programs consistent with the training data, i.e. of the single intended class |x|, which is 7.4 times smaller. The printed numbers 0.557/0.114 belong to that weighting; with the described weighting they would be 0.148/0.017. At x10 the one extra program carries 44% of the total prior mass (and the masses sum to 1.06, harmless because the predictive is a ratio). The main text's 'about 0.11 when one extra program tilts the grammar' hides all of this. This is a wrong description of a computation that a reader would act on, so major, not minor.",
+  "evidence": "examples/checks/e5_dsl_odd_lengths.py line 88: extra_programs=[(bad, tilt * 0.5 * m_plain_ok)], where m_plain_ok is the mass of the plain classes consistent with training (0.093932, class 'len' only; total plain-expression mass 0.695313). Independent rerun (scratch/p1-math-C/c1_e5_tilt.py, .out.txt): as coded, P(correct) = 0.557 (x1) and 0.114 (x10), reproducing the table. With the paper's wording (mass = x1 or x10 that of ALL plain programs) it is 0.148 and 0.017. In c1b_prior_share.out.txt the x10 program holds 0.443 of the total prior. The same e5 output shows that the program's natural grammar mass is 1.784e-4 (ratio 3.8e-3 to the consistent plain mass), so x10 inflates it about 2633-fold. The wrong description is inherited from the e5 docstring and examples notes §5.3, which contradict the code.",
+  "fix": "app-ood.tex: 'The tilted rows add one program \"if |x| even then 0 else |x|\" with prior mass equal to (or ten times) that of the intended program |x|, the only plain program consistent with the training data; with the factor ten it carries 44% of the prior mass (the predictive is computed after normalising).' ood.tex line 171: '... and about 0.11 when a single extra program with ten times the prior mass of the intended one is added'. tab:ood:hanni: '0.11 with a tilted prior'. Do NOT apply C-31's suggested wording ('ten times (resp. once) the prior mass of all plain programs'), which is wrong."
+ },
+ {
+  "id": "P1C-03",
+  "file": "paper/sections/nn.tex",
+  "label_or_line": "rem:nn:rigorous (line 86)",
+  "severity": "major",
+  "problem": "Under 'Proved' the remark lists 'the Gaussian-process limits fail on sparse and odd parities where SFI succeeds'. For sparse parities, what is proved concerns the squared error of the real-valued kernel or GP-mean predictor, averaged over random k-sparse targets (thm:nn:walsh(b), cor:nn:separation). The paper says two paragraphs earlier: 'we do not claim a 0-1 version in general'. As printed, the summary claims a classification failure that is not proved. The intro repeats it loosely as 'a separation between Gaussian-process limits and SFI on parities'.",
+  "evidence": "nn.tex line 69: 'The separation is in squared error of the real-valued predictor; we do not claim a 0--1 version in general.' Context notes §4.6 (v): 'the regression predictor is diagonal in the Walsh basis and needs binom(d,k) samples for k-sparse parities'. Classification failure is proved only for bias-free two-layer ReLU kernels and odd |S|>=3 (rem:nn:oddparity(b): zero prior mass; (c): anti-correlation of the regression predictor).",
+  "fix": "Rewrite the item as: 'kernel regression and GP posterior means in the Gaussian-process limits need binom(d,k) samples, in squared error, on random k-sparse parities, where SFI needs O(k log d); for bias-free two-layer ReLU kernels odd parities of degree at least 3 are never learned, have GP-classification prior mass 0, and are anti-correlated with the predictor on unseen points.'"
+ },
+ {
+  "id": "P1C-06",
+  "file": "paper/sections/comp.tex",
+  "label_or_line": "thm:comp:timebounded(b) (line 24); prop:comp:round, last sentence (line 36); cor:comp:poly, last clause (line 47); prop:comp:history, last clause (line 63)",
+  "severity": "major",
+  "problem": "Running-time claims that are only sketched, or not argued at all, appear inside theorem, proposition and corollary statements. Once \\status is removed, nothing in these statements marks them as unproved. The binding note requires sketches to be labelled and forbids presenting the statement as fully proved. The appendix gives a 'Proof sketch' for thm:comp:timebounded(b) only. The running-time parts of prop:comp:round, prop:comp:history and cor:comp:poly have no proof or sketch anywhere. The 'Proof of prop:comp:history' covers the regret only. The machine model is admitted to be unwritten only in q:comp:open.",
+  "evidence": "Statuses at comp.tex lines 21, 35, 62: '(b) proof sketch', 'running time proof sketch', 'regret proved; running time proof sketch'. app-comp.tex line 11: 'The machine model (RAM versus multitape) and the cost of running the clocks are not written out; this part is a proof sketch.' app-comp.tex line 18: 'Proof of prop:comp:history (regret)'. Context notes Prop 3.2c: cost '[proof sketch]'.",
+  "fix": "Split each statement. Keep the regret bounds in the theorem, proposition and corollary. Move every per-round cost claim to one 'Remark (running time; proof sketch)' after prop:comp:history. That remark should give the sketch for all four, including the stored-weight update for M_rd and the replay bookkeeping, and should state that the RAM model is assumed and the cost of the clocks is not analysed. Alternatively, write '(running time: proof sketch in \\cref{app:comp})' inside each statement and add the missing sketches."
+ },
+ {
+  "id": "P1C-09",
+  "file": "paper/sections/related.tex",
+  "label_or_line": "lines 6, 8, 10, 12, 18; also nn.tex line 91",
+  "severity": "major",
+  "problem": "Beyond C-11(i) and C-28 (which cover 'Each of these should be checked ...', '(we have seen only the abstract)' and the Vovk sentence), the following printed reading-status hedges remain non-standard: related.tex line 8 'according to their abstract', 'in their abstract', 'that it agrees with Hutter's construction up to constant factors is expected but was not checked against his texts'; line 10 'whether their random-selection result coincides with \\cref{prop:learn:splits} we have not checked'; line 18 'At the level of a search that saw abstracts and secondary sources only'; nn.tex line 91 'These descriptions follow the abstracts.' In addition related.tex ('is expected but was not checked') and hist.tex line 135 ('is known, but not checked against the sources') contradict each other on the Hutter identification.",
+  "evidence": "OUTLINE binding note: 'never print \"unverified\"'; 'No process vocabulary'. related.tex header comment: 'Every content claim below is hedged: only abstracts or secondary descriptions were seen.' bib/related.bib: vovk1992universal '% unverified: content not seen'.",
+  "fix": "Use one consistent formulation in related.tex and hist.tex, e.g. 'We expect, but do not prove, that \\SFIhist{} agrees with Hutter's universal chronological semimeasure up to constant factors (he works with finite alphabets).' Replace 'according to their abstract'/'in their abstract' by plain attribution ('X show that ...') or by 'X report that ...'; delete 'we have not checked' (or say 'we do not compare the two statements here'); delete the first clause of rem:related:new and 'These descriptions follow the abstracts.'"
+ },
+ {
+  "id": "P1C-11",
+  "file": "paper/bib/core.bib",
+  "label_or_line": "hanni2026request (lines 19-25); cited in nn.tex line 8 and steeper.tex line 14 (also learn.tex, intro.tex)",
+  "severity": "major",
+  "problem": "Kaarel Hänni is the sole author, yet the bibliography lists 'Kaarel Hänni. Request for a paper on Solomonoff function induction. Personal communication to the author, 11 October 2026; quoted verbatim in ... research/00-brief.md'. A personal communication from the author to himself cannot be cited, and a reader cannot make sense of it. In my sections it supports the quotations 'kinda like a circuit version of solomonoff function induction' (nn.tex) and 'a preference for a simple sampler over a model where the sampled bits are filled in' / 'both get similar posterior' (steeper.tex).",
+  "evidence": "main.bbl lines 169-176. Main.tex author line: Kaarel Hänni alone. The quotations are verbatim from research/00-brief.md lines 7 and 23.",
+  "fix": "Do not cite the request. Describe these ideas as the author's in the first person or impersonally, e.g. 'NN Bayes can be viewed as a circuit version of SFI (\\citealt{vaintrobhanni2026nnbayes})' and 'Solomonoff induction has no preference between a simple sampler and a model in which the sampled bits are filled in; both get similar posterior weight'. If a source is wanted, cite the note in hanni2026notes that contains the idea. This needs a global change, coordinated with intro.tex and learn.tex (cf. reviewer B MB-06)."
+ },
+ {
+  "id": "P1C-12",
+  "file": "paper/sections/ood.tex, comp.tex, nn.tex, steeper.tex",
+  "label_or_line": "e.g. ood.tex lines 7, 27, 34, 48, 53, 111, 153; comp.tex lines 10, 54, 58, 99, 111; nn.tex lines 8, 24, 33, 47, 51, 54, 81, 86, 91; steeper.tex lines 6, 8, 12, 14",
+  "severity": "major",
+  "problem": "The sections refer to the sole author in the third person and argue with him: 'Hänni's version has an extra loglog(1/p) term, which is not needed'; 'His step ... is a circuit coding theorem'; 'Hänni's objection ... is made rigorous'; 'which Hänni doubts'; 'H\\\"anni anticipated'. The slides co-authored by the author are treated as an outside source ('the other claims are the slides' and we have not checked them'; 'We re-checked the proof ... the rest is unchecked'). With 'Kaarel Hänni' as the only name on the title page, a reader cannot tell who 'we' is or why the author does not check his own slides. The binding note allows citing his notes as his notes, but the paper never states this convention.",
+  "evidence": "OUTLINE binding note (authorship): 'Ideas from the author's notes are cited as his notes (\\citep{hanni2026notes}) or described as the author's.' intro.tex line 5: '\\citet{hanni2026notes} proposes ...'. There is no sentence anywhere explaining the third-person convention.",
+  "fix": "Add one sentence to the introduction: 'We cite the author's earlier working notes as \\citet{hanni2026notes} and discuss the claims made there as claims of those notes.' Then change 'Hänni's X' to 'the notes' X' or 'X of \\citet{hanni2026notes}' in these sections. Rephrase statements about the slides as 'the slides state ...; we do not prove these claims here'."
+ },
+ {
+  "id": "P1C-04",
+  "file": "paper/sections/ood.tex",
+  "label_or_line": "rem:ood:answer (line 145), items (iii) and (iv)",
+  "severity": "major",
+  "problem": "Depends on C-01 (which this reviewer confirms independently, scratch/p1-math-C/c4_pointwise_e_check.py). rem:ood:answer(iii) bounds 'the error at a test point' from above by 2^{L_nu(f)-sep(x*;A|f)+O(1)}. In this section 'the error' is the semimeasure-convention e(x*), for which the paper proves no upper bound (prop:ood:labelled bounds e_norm and e^wr only) and at line 134 even asserts that none exists. If C-01 is fixed by the minimal option (deleting the sentence without adding the e(x*) bound), (iii) remains unproved as stated. The lower end also needs the -K(y) term (cf. C-39).",
+  "evidence": "prop:ood:labelled bounds only e^wr <= e_norm <= 2^{L_nu(f)-K(x*|f)+c}, and its lower bound is 2^{-sep(x*;A)-K(y)-c}. ood.tex line 134: 'The mass undefined at x* is not lsc, so there is no pointwise bound on e(x*)'. prop:learn:typical (learn.tex line 138) assumes uniform inputs on {0,1}^d with d >= ceil(log n)+1 and, for general f, computable binary f.",
+  "fix": "Either add the pointwise bound e(x*) <= 2^{L_nu(f)-K(x*|f)+c} to prop:ood:labelled with the waiting-sampler proof (C-01's full option), which makes (iii) true as written; or restrict (iii) to e_norm (upper end) and e^wr (lower end, with K(y))."
+ },
+ {
+  "id": "P1C-17",
+  "file": "paper/sections/ood.tex",
+  "label_or_line": "ex:ood:hanniexamples(c) (line 171)",
+  "severity": "minor",
+  "problem": "'\"|x| even\" and \"output 0\" cost O(1) bits, so a wrong answer keeps probability at least 2^{-c'}' fails at the empty string. It has even length 0, and 'output 0' is the correct answer there. Hänni's example asks for generalisation 'to all strings'. The claim itself is true, but the witness behaviour is wrong at one input. The source has the same slip.",
+  "evidence": "Examples notes §5.3: '\"|x| is even\" and \"output 0\" are O(1) bits, so a wrong answer has probability >= 2^{-c'} on every even-length input'. At x = epsilon, |x| = 0.",
+  "fix": "Use 'output 1', which is wrong on every even length, or take the property '|x| even and x nonempty'."
+ },
+ {
+  "id": "P1C-21",
+  "file": "paper/sections/ood.tex",
+  "label_or_line": "conventions paragraph (line 13); prop:ood:budget (line 88)",
+  "severity": "minor",
+  "problem": "K(Q) is used in thm:ood:twosided(c), prop:ood:budget, prop:ood:draftfalse and ex:ood:easyhard but is never defined; only K(Q,b) is. prop:ood:budget's minimum is over an empty set if x_k repeats an earlier input. The conventions do not assume the inputs are distinct.",
+  "evidence": "ood.tex line 13 defines only K(Q,b). prop:ood:budget does not state that the inputs are distinct.",
+  "fix": "Add 'K(Q) is the least K(e) over indices e of total deciders of Q.' In prop:ood:budget add 'distinct inputs x_1, x_2, ...'."
+ },
+ {
+  "id": "P1C-23",
+  "file": "paper/sections/ood.tex",
+  "label_or_line": "thm:ood:twosided (lines 57-60); ex:ood:easyhard (line 138)",
+  "severity": "minor",
+  "problem": "The OUTLINE requires every lower bound to say that it bounds the defined (wrong or abiding) mass and holds in both conventions; thm:ood:twosided (a)-(c) and ex:ood:easyhard never say so (the decidedness of x* in ex:ood:easyhard is C-33).",
+  "evidence": "OUTLINE §7 notes: 'Say for each lower bound that it bounds the defined-and-wrong mass and holds in both conventions.'",
+  "fix": "Add after thm:ood:twosided: 'All lower bounds in this subsection are on defined outputs, so they hold in both conventions.' Repeat in ex:ood:easyhard."
+ },
+ {
+  "id": "P1C-24",
+  "file": "paper/sections/app-ood.tex",
+  "label_or_line": "proof of prop:ood:labelled (line 31); status at ood.tex line 126",
+  "severity": "minor",
+  "problem": "The parenthetical 'A direct computation on a finite mixture ... confirms the disjointness on all subsets of a five-point domain' presents a computer check of a two-line logical fact. This is out of place in a proof. The status 'disjointness computed' has the same problem.",
+  "evidence": "The disjointness argument is complete in the preceding sentence.",
+  "fix": "Delete the parenthetical and set the status to 'proved'."
+ },
+ {
+  "id": "P1C-27",
+  "file": "paper/sections/comp.tex",
+  "label_or_line": "prop:comp:round (line 36); def:comp:timebounded (line 17)",
+  "severity": "minor",
+  "problem": "The activation rounds k_i are used but never defined; the definition introduces only activation lengths n_i. The section also uses n_i, n_A and n'_A for input lengths, which clashes with the paper-wide convention that n is the sample size and d the input length.",
+  "evidence": "NOTATION.md: d = input length, n = sample size. comp.tex line 22: n_A := max(n_i, ...).",
+  "fix": "Define 'activation rounds k_1 < k_2 < ...' in prop:comp:round. Rename the length thresholds, e.g. to ell_i, ell_A and ell'_A."
+ },
+ {
+  "id": "P1C-29",
+  "file": "paper/sections/comp.tex",
+  "label_or_line": "thm:comp:circuitbayes(a) (line 90)",
+  "severity": "minor",
+  "problem": "'For every B ⊆ {0,1}^d ... some circuit of size at most ceil(L_B) agrees with f on B' fails for B = empty set: L_B = 0 and there are no circuits of size 0. The proof uses B nonempty ('strictly because ... B != empty').",
+  "evidence": "app-comp.tex line 27; def:comp:circuits: sizes s >= 1.",
+  "fix": "'For every nonempty B ⊆ {0,1}^d'."
+ },
+ {
+  "id": "P1C-32",
+  "file": "paper/sections/app-comp.tex",
+  "label_or_line": "rem:comp:adversary (line 59)",
+  "severity": "minor",
+  "problem": "'(For formulas the slot count gives |V_h| <= csize(h) ...)' uses csize, defined as circuit size, for formula size.",
+  "evidence": "def:comp:circuits defines csize for circuits.",
+  "fix": "Write 'formula size' or introduce a symbol for it."
+ },
+ {
+  "id": "P1C-33",
+  "file": "paper/sections/comp.tex",
+  "label_or_line": "rem:comp:apples (line 58)",
+  "severity": "minor",
+  "problem": "'no x-only learner competes with them, since ... SFI's loss on those data is unbounded (\\cref{thm:hist:chain,thm:hist:skipped})': those theorems are about SFI. The statement for every order-free (x-only) learner is prop:hist:orderfree.",
+  "evidence": "CLAIMS.md: prop:hist:orderfree: every order-free predictor pays the chain and skipped-string lower bounds.",
+  "fix": "Cite \\cref{prop:hist:orderfree} as well."
+ },
+ {
+  "id": "P1C-34",
+  "file": "paper/sections/comp.tex",
+  "label_or_line": "q:comp:samplers (line 75)",
+  "severity": "minor",
+  "problem": "The Monte Carlo heuristic omits the source's condition that the sampler's probabilities be bounded away from 0 and 1.",
+  "evidence": "Context notes Q 3.4: 'when the sampler's probabilities are bounded away from 0 and 1, an expected excess log loss of order 1/t per round'.",
+  "fix": "Add the condition."
+ },
+ {
+  "id": "P1C-35",
+  "file": "paper/sections/comp.tex",
+  "label_or_line": "line 10 and rem:comp:gap (line 99)",
+  "severity": "minor",
+  "problem": "Quotation marks are put around text that is not verbatim. 'regret and complexity are polynomially related' is the file name or title of a note, not a sentence in it. '\"log loss <= poly(m)\"' and '\"a circuit of size poly(m)\"' paraphrase 'the log loss is at most poly(m)' and 'a circuit of size at most poly(m)'.",
+  "evidence": "research/prior/hanni-circuit-for-circuit-induction-regret-and-complexity-are-polynomially-related.md (title only), lines 10-11.",
+  "fix": "Quote exactly, or paraphrase without quotation marks."
+ },
+ {
+  "id": "P1C-37",
+  "file": "paper/sections/nn.tex, app-nn.tex",
+  "label_or_line": "thm:nn:walsh (line 58), rem:nn:oddparity(c) (line 75); app-nn.tex lines 10, 21-23",
+  "severity": "minor",
+  "problem": "The notation is inconsistent. Lambda_{|S|} (statement) vs Lambda_S (proof). <x,x'> is the inner product in R^d and <z,chi_S> the L^2 pairing. K denotes the Gram matrix, which clashes with Kolmogorov complexity K. rem:nn:oddparity(c) does not restate its hypotheses (these two kernels, odd |S| >= 3). 'From (a)' in the proof of (c) means thm:nn:walsh(a).",
+  "evidence": "nn.tex lines 58, 75; app-nn.tex lines 10, 22, 23.",
+  "fix": "Use Lambda_{|S|} throughout. Write E_x[z(x)chi_S(x)] for the L^2 pairing and G for the Gram matrix. Begin (c) with 'For these kernels and odd |S| >= 3'. Write 'From \\cref{thm:nn:walsh}(a)'."
+ },
+ {
+  "id": "P1C-39",
+  "file": "paper/sections/steeper.tex",
+  "label_or_line": "lines 8, 10, 14",
+  "severity": "minor",
+  "problem": "Some summaries drop hypotheses. 'the product class pays min(lambda,2) bits per coin' holds for incompressible coin sequences: the bound is min(lambda,2)(K(beta|k)-kappa). The 0.199 figure holds at randomness deficiency 0. 'the lambda-MAPs are eventually equivalent to nu' holds almost surely. 'every countable product class' should say 'with Kraft weights'.",
+  "evidence": "Steeper notes Prop 1.7(i), §0 item 2 ('0.199 (kappa=0, delta_S=0)'), Thm 4 ('almost surely ...'; 'every countable product class with Kraft weights').",
+  "fix": "Add 'for incompressible coin sequences', '(error rule of deficiency 0)', 'almost surely' and 'with Kraft weights'."
+ },
+ {
+  "id": "P1C-41",
+  "file": "paper/sections/steeper.tex",
+  "label_or_line": "line 10",
+  "severity": "minor",
+  "problem": "'A few per cent below 2^{-20} and further down, near-optimal hypotheses reproduce the errors' overstates what is proved. At 6% below, the bound gives the error label probability at least 0.48; at 10% below, at least 0.66. In the top 0.6% below the threshold nothing is proved.",
+  "evidence": "Steeper notes §0 item 2: 'at c=0.9*2^{-m} the error label gets probability at least 0.66, at 0.94*2^{-m} at least 0.48, and in the top 0.6% below 2^{-m} nothing is proved'.",
+  "fix": "'Below 2^{-20} near-optimal hypotheses give the erroneous labels probability at least 0.48 at 6% below the threshold and at least 0.66 at 10% below.'"
+ }
+]

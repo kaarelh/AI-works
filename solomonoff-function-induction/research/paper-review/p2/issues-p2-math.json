@@ -1,0 +1,380 @@
+[
+ {
+  "id": "P2M-01",
+  "file": "paper-steeper/sections/setup.tex",
+  "label_or_line": "line 89 (paragraph after lem:setup:coding, 'Proof idea')",
+  "severity": "fatal",
+  "problem": "The text says that what separates the two kinds of class is whether one member attains the coding bound K(y_D | dom D) - kappa 'up to a constant on every data set', and that 'in a class that contains its own mixture, the mixture does'. This is false for the data-set classes H_F and H_w: no weak function semimeasure, in particular neither M_F nor M^w, satisfies -log P(D) <= K(y_D | dom D) + O(1) on every data set.",
+  "evidence": "Companion-paper source: foundations notes-final Example 6.4 (the 'swap' data set D={(x1,x2),(x2,x1)}) has K(D|dom D)=O(1) but -log M_F(D)=n +- O(1). A finite-Y version: for n-bit x1 != x2 take inputs u_j=(x1,j), v_j=(x2,j) (j<=n) with labels bit_j(x2) on u_j and bit_j(x1) on v_j. Then K(y_D|dom D)=O(1). If P(D)>=2^-C for all such D, the one-point inequality gives P(D restricted to the u_j) >= 2^-C for every x2, while the 2^n-1 labellings of the fixed domain {u_j} have total P-mass <= P(emptyset) <= 1; contradiction once 2^n-1 > 2^C. What (Dom) actually gives is ell_U - log U(D) <= ell(pi) - log P_pi(D) + ell_U + kappa_0 for every pi, i.e. U attains the class optimum min_pi [ell(pi) - log P_pi(D)] up to a constant, which is a different quantity. The steeper notes (sec. 1.5, after Lemma 1.6) contain the same loose sentence ('U does in a class with (Dom)').",
+  "fix": "Replace the last two sentences by: 'What separates the two kinds of class is whether one member attains the class's best two-part code length, min_pi [ell(pi) - log P_pi(D)], up to a constant on every data set. Under (Dom) the member U does: ell_U - log U(D) <= ell(pi) - log P_pi(D) + ell_U + kappa_0 for every pi (sec:absorb). In the product class no member does (cor:absorb:nouniversal).' Do not claim that any member attains K(y_D | dom D) + O(1)."
+ },
+ {
+  "id": "P2M-02",
+  "file": "paper-steeper/sections/absorb.tex",
+  "label_or_line": "cor:absorb:nouniversal (line 57)",
+  "severity": "fatal",
+  "problem": "The corollary ends '...and (Dom) fails in every product class.' As stated this is false: def:setup:class allows any c.e. prefix-free class, and the paper itself speaks of 'every product class with a prefix-free code' (prop:absorb:price(ii), prop:related:computable). A product class with one program, or any finite product class, satisfies (Dom) trivially with that program as pi_U and kappa_0=0. The argument needs the class to contain short programs for the parities. The source (steeper notes Cor 1.4) says only 'for every candidate U in the product class', meaning the canonical class Pi_x; the paper's statement is stronger than the source.",
+  "evidence": "Counterexample: the class {pi_0} with P_{pi_0} = nu_0 satisfies P_pi <= 2^{ell(pi)} U for its only member. The proof of the corollary uses a parity program of length d + 2log d + kappa, which exists in H_x but not in an arbitrary product class.",
+  "fix": "End the corollary with: '...and (Dom) fails in H_x, and in every product class that contains, for every d and a, a program for the parity f_a of length o(2^d) (for example d + O(log d) for time-bounded samplers, O(d log d) for circuits).' Adjust the summary sentence in sec:absorb's first paragraph and rem:absorb:wyeth(ii) to match."
+ },
+ {
+  "id": "P2M-03",
+  "file": "paper-steeper/sections/limits.tex",
+  "label_or_line": "prop:limits:plain(b) last sentence (line 13); rem:limits:schedule (line 21); also intro.tex line 18 and the 'by (b)' clause of rem:limits:schedule",
+  "severity": "major",
+  "problem": "The proposition says 'If lambda_n/n -> 0, this tends to 1 - 2^{-B} as n grows (within n <= 2^d)', and the remark draws the conclusion 'every schedule with lambda_n/n -> 0 eventually reproduces the errors'. For a fixed instance the domain is finite, so n <= 2^d and no limit n -> infinity exists. The claim is false for the paper's own instance. What is true is the explicit bound of (b) at each n, together with an asymptotic statement for a sequence of instances in which d grows. The intro repeats the claim ('every schedule with lambda_n/n -> 0 learn[s] the errors').",
+  "evidence": "At d=100, m=20, p=2^-10 (kappa=0, delta_S=0, B=30, delta=0.01) take lambda_n = n^0.9, so lambda_n/n = n^-0.1 -> 0. For every n <= 2^100 we have lambda_n/n >= 2^-10, so the bound of (b) is 0 (independent code: research/paper-review/scratch/p2-math/limits_split_numbers.out, part (1): e >= 0.000 at n = 1e13, 1e17, 1e20 and 2^100). Moreover, for n in [1e23, 2^100], c_n = n^-0.1 lies in the window (2^-20, 8.06e-3], and cor:teacher:sampled with thm:teacher:main(ii) gives, with probability >= 0.99, e <= 0.43, 0.42, 0.34 and 0.27 at n = 1e23, 1e25, 1e27 and 2^100 (research/paper-review/scratch/p2-math/schedule_counterexample.out). So this schedule never reproduces the errors on this instance. The steeper notes (Prop 2.9(b)) have the same gloss, with the caveat 'on the finite domain this concerns N <= 2^d and is made explicit by the formula'; the paper drops the caveat in the remark and in the intro.",
+  "fix": "In (b) replace the last sentence by: 'In particular e(hat pi) >= 1 - 2^{-B} - o(1) whenever (lambda_n/n) L_hat -> 0 and L_hat/n -> 0, along any sequence of instances (d_n) with fixed m, r and rule and n <= 2^{d_n}; on a fixed instance the bound is informative only once (lambda_n/n)(d + L_S) is small compared with p, which for slowly decaying schedules (e.g. lambda_n = n^0.9 at Hanni's sizes) never happens for n <= 2^d.' In rem:limits:schedule and intro.tex line 18 replace 'every schedule with lambda_n/n -> 0 eventually reproduces the errors' by 'every schedule with (lambda_n/n)(d + L_S) -> 0 eventually reproduces them (prop:limits:plain(b)); lambda must be of order n'."
+ },
+ {
+  "id": "P2M-04",
+  "file": "paper-steeper/sections/absorb.tex",
+  "label_or_line": "thm:absorb:absorption(c) (lines 25-30); app-absorb.tex (c3); also intro.tex line 16 and discussion.tex line 5 ('...are eventually predicted')",
+  "severity": "major",
+  "problem": "Part (c) does not say that lambda is fixed, although part (a) explicitly distinguishes 'fixed lambda' from 'lambda = cn'. (c1) is a statement about the sequential predictor xi_lambda. With lambda = lambda_n there is no single sequential predictor (rem:setup:persample), and the telescoping step fails. (c3) is false in general for lambda = cn: a program shorter than ell_U and ell_t whose loss on D_n grows sublinearly (for example o(n) but unbounded) beats pi_U for all large n, because cn(ell_U - ell) grows linearly, and it can give the teacher's label probability below 1/2 at infinitely many n. The intro and discussion summarise the theorem as 'a computable deterministic teacher's labels, errors included, are eventually predicted' without the restriction.",
+  "evidence": "Proof of (c3) in app-absorb: the finite set H_{<= l*_lambda} and the bound J_lambda(pi_U; D_n) <= lambda ell_U + ell_t + kappa_0 'for every n' both depend on lambda being constant. Sketch of a counterexample for lambda = cn in H_F: take a teacher t that equals a simple function h except on a sparse computable set of inputs S, where t is complex, and a function machine pi' that outputs h off S and a label with probability 1/3 on S. Then ell(pi') is about K(h) + O(1), which is smaller than ell_t and, for suitable reference machines, smaller than ell_U. Its loss on D_n is (log 3) times #(S among the first n inputs) = o(n), so J_cn(pi') < J_cn(pi_U) for all large n, and at every input of S the MAP pi' gives t(x) probability 1/3. The steeper notes' summary says 'So for fixed lambda and a deterministic teacher...'.",
+  "fix": "Begin (c) with 'Let lambda > 1 be fixed.' Add after (c3): 'With lambda = cn, (c1) and (c3) are not available; only (a) and (c2) hold at each n.' In intro.tex line 16 and discussion.tex line 5, write 'for every fixed lambda > 1, ... are eventually predicted'."
+ },
+ {
+  "id": "P2M-05",
+  "file": "paper-steeper/sections/teacher.tex",
+  "label_or_line": "paragraph after thm:teacher:main (line 105); also abstract.tex ('gives the erroneous labels little probability')",
+  "severity": "major",
+  "problem": "The summary of the theorem says that every near-optimal hypothesis 'gives the erroneous labels little probability'. Part (e) gives e(pi) <= 1 - u(pi) + gamma_g + 2^{-g}. At Hanni's sizes this is 0.199-0.287 at c=1e-4 (0.270 at c=1e-3), about 200-300 times the good model's 2^-10. It is vacuous whenever s_0 is small compared with the information budget, for example in ex:teacher:version1 (s_0=16), where the paper itself says the bound exceeds 1. The unqualified word 'little' therefore overstates what (e) proves, in the body and in the abstract.",
+  "evidence": "Independent recomputation (research/paper-review/scratch/p2-math/teacher_numbers.out, part (3)): e <= 0.1991 (kappa=0, delta_S=0), 0.2177 (delta_S=20), 0.2735 (kappa=30), 0.2869 (kappa=30, delta_S=20) at c=1e-4; 0.2700 at c=1e-3. Version 1: e <= 2.10, 1.78, 1.67 and 1.63 at c = 1.5e-3, 2.5e-3, 4e-3 and 5.5e-3 (part (7)). The good model has e = 2^-10 and the memoriser e = 1.",
+  "fix": "Quantify, e.g. '... and, when the error rule is large (s_0 much larger than Delta_ell + log terms), gives the erroneous labels average probability at most 1 - u + gamma_g + 2^{-g} (at most 0.2-0.29 at Hanni's sizes, against 1 for the memoriser and 2^{-10} for the good model)'. In the abstract write 'gives the erroneous labels much less probability than a memoriser' or state the number."
+ },
+ {
+  "id": "P2M-06",
+  "file": "paper-steeper/sections/app-algstat.tex",
+  "label_or_line": "app:algstat:numbers (line 52) and tab:algstat:numbers; algstat.tex proof idea of prop:algstat:parity (line 79)",
+  "severity": "minor",
+  "problem": "The text says the table uses 'the best (t,g)' and that 'F_2 - H(p) lies between 0.016 (for p=15/64) and 0.064 (for p=1/8)' at d >= 30. In fact the computation takes, for t=2, the least g for which the b-range is nonempty, not the g that maximises it. The b-range upper ends and the quoted F_2 - H values belong to that g. Optimising g gives F_2 - H between 0.034 and 0.209 and upper ends about 2-3 times larger (d=100: 2.6e29 instead of 8.1e28 for p=1/8; 4.4e28 instead of 2.0e28 for p=15/64). The printed intervals remain valid, since they are weaker, but the description is wrong.",
+  "evidence": "Track script c7_run2.py part (C): the inner loop 'break's at the first t with cup > clo and keeps best only if lb > best[0] strictly, so the first admissible g is retained. Independent recomputation: research/paper-review/scratch/p2-math/limits_split_numbers.out, part (7), which lists both 'first admissible g' (it reproduces the paper's table) and 'best g'.",
+  "fix": "Either report the g-optimised ranges and F_2 - H values (0.034-0.209 at d >= 30), or say 'with t=2 and the least g for which the range is nonempty' and drop 'best'. Keep the statement that the intervals hold for every b in the stated range."
+ },
+ {
+  "id": "P2M-07",
+  "file": "paper-steeper/sections/app-algstat.tex",
+  "label_or_line": "tab:algstat:numbers, kappa=30 rows (lines 67-70)",
+  "severity": "minor",
+  "problem": "The kappa=30 rows were computed with 2 kappa in the threshold for j_d, while prop:algstat:parity(iv) prints a single kappa. With the printed formula and the same g-selection rule, the d=20, p=15/64 upper end is 5.6e2, not 8.1e3. This is why the kappa=30 range is non-monotone in kappa against the kappa=0 row (8.1e3 > 2.8e3), which a reader will find puzzling.",
+  "evidence": "c7_run2.py: 'Gam = ... + 2*kappa'. Independent recomputation with the printed formula: research/paper-review/scratch/p2-math/limits_split_numbers.out part (7), kappa=30, d=20, p=15/64: first admissible g=6, b in [111, 5.6e2); g-optimised: [111, 1.9e4).",
+  "fix": "Recompute the kappa=30 rows with the printed j_d, or print '2 kappa' in j_d and say that each occurrence of kappa is set to 30. Note in the caption that the upper ends depend on the choice of g."
+ },
+ {
+  "id": "P2M-08",
+  "file": "paper-steeper/sections/teacher.tex",
+  "label_or_line": "tab:teacher:numbers(b), kappa=30 row, column c 2^m = 0.99 (line 134)",
+  "severity": "minor",
+  "problem": "At kappa=30, delta_S=0, thm:teacher:main(iii) applies only for c < 0.98914 * 2^-m, so at c 2^m = 0.99 its hypothesis rho < (1 - c2^m) B_S/2^m fails. The entry 0.000 is therefore not a value of the theorem's bound (it is only the trivial bound e >= 0). The text gives the kappa=0 thresholds (0.99418, 0.937) but not the kappa=30 ones.",
+  "evidence": "Independent recomputation (research/paper-review/scratch/p2-math/teacher_numbers.out, part (4)): kappa=30: (iii) applies iff c < 0.98914*2^-m; e >= 1/2 iff c <= 0.8884*2^-m; threshold of (iv) 0.98967*2^-m. All other 11 cells of Table (b) are reproduced exactly.",
+  "fix": "Print '--' in that cell with the footnote '(iii) does not apply: at kappa=30 it needs c < 0.989*2^-m', and add the kappa=30 thresholds (0.989, 0.888) to rem:teacher:numbers."
+ },
+ {
+  "id": "P2M-09",
+  "file": "paper-steeper/sections/app-teacher.tex",
+  "label_or_line": "app:teacher:concentration, line 216 ('-n eps + (J_g+eps)/c = -1000 + 242.3')",
+  "severity": "minor",
+  "problem": "Arithmetic slip. J_g(1e-4) = c(d + kappa_g) + H(p) = 0.023167 at kappa=0, so (J_g + eps)/c = 241.67 and the exponent is -758.33. With the printed 242.3 the exponent would be -757.7, and the main-text claim 'at most 2^{-758}' (prop:teacher:concentration) would not follow.",
+  "evidence": "Independent: research/paper-review/scratch/p2-math/teacher_numbers.out part (8): J_g(1e-4) = 0.023167, exponent -758.33. Track c5_limits.out prints 'log2 bound = -758' (rounded).",
+  "fix": "Write '-1000 + 241.7 = -758.3'."
+ },
+ {
+  "id": "P2M-10",
+  "file": "paper-steeper/sections/split.tex",
+  "label_or_line": "section intro (line 5) and thm:split:lambda1(iii) (line 46)",
+  "severity": "minor",
+  "problem": "The text says the lambda=1 factors 'do not depend on how much randomness was sampled', and (iii) says 'whatever the sampled randomness'. The lower end 2^{-2log(t_n+1)-kappa} depends on beta_n through i_n = ceil(log(6n/beta_n)). It is independent of the sampled randomness only for samplers whose label probabilities are bounded below (such as Bern(1/3)). In general it is triply logarithmic in -log nu(D_n), as lem:split:stream itself says.",
+  "evidence": "lem:split:stream: 'the cost 2 log(t_D+1) is ... triply logarithmic in n and in the sampled randomness -log nu(D)'. Example: beta_D = 2^-10 instead of 1/3 changes i_D from 25 to 33 at d=100, n=1e6 (research/paper-review/scratch/p2-math/limits_split_numbers.out part (6)).",
+  "fix": "Write 'up to explicit factors that depend on the sampled randomness at most triply logarithmically (not at all if every label probability is bounded below)', and in (iii) replace 'whatever the sampled randomness' by 'with a lower end that depends on the sampled randomness only through t_n'."
+ },
+ {
+  "id": "P2M-11",
+  "file": "paper-steeper/sections/split.tex",
+  "label_or_line": "paragraph after thm:split:shared (line 97)",
+  "severity": "minor",
+  "problem": "'Predictively both converge to nu's predictions (in H_F by the merging theorem of the companion paper).' The cited merging theorem concerns M_F at lambda = 1. For the steeper predictors xi^F_lambda and xi^x_lambda the claim follows only for fixed lambda, from the dominance xi_lambda >= 2^{-lambda ell(pi_nu)} nu (or >= 2^{-lambda ell_U - kappa_0 - k} nu) and the same telescoping argument. With lambda = cn there is no single predictor to converge (rem:setup:persample). The mode of convergence (summed expected KL) is not stated.",
+  "evidence": "Companion paper thm:learn:merging: d_t := KL(nu(.|D_{t-1},x_t) || M_F(.|D_{t-1},x_t)), sum E d_t <= K(nu). It is stated for M_F only.",
+  "fix": "Write 'For fixed lambda, both steeper predictors dominate nu (xi^x_lambda >= 2^{-lambda k} nu; xi^F_lambda >= 2^{-lambda ell_U-kappa_0-k} nu), so by the argument of the merging theorem their summed expected KL to nu's predictions is at most lambda k, respectively lambda ell_U + kappa_0 + k.'"
+ },
+ {
+  "id": "P2M-12",
+  "file": "paper-steeper/sections/limits.tex",
+  "label_or_line": "prop:limits:ood(i) (line 92)",
+  "severity": "minor",
+  "problem": "'the programs that answer b(x) on Q and run another program elsewhere carry posterior mass exactly 2^{-lambda(K(Q,b)+kappa)}'. The exact equality holds for the particular family {rho z pi'} built with one shortest code z (app:limits:ood). The set of all programs with that behaviour has mass at least this value, not exactly it.",
+  "evidence": "Proof in app-limits: the sum runs over pi' in dom V for a fixed rho and z with |z| = K(Q,b).",
+  "fix": "Write 'a family of programs that answer b(x) on Q and run an arbitrary program elsewhere (one for each pi') carries posterior mass exactly ...; hence all such programs together carry at least this mass'."
+ },
+ {
+  "id": "P2M-13",
+  "file": "paper-steeper/sections/app-absorb.tex",
+  "label_or_line": "proof of prop:absorb:pricing(i), 'the value' (line 42); statement absorb.tex line 48",
+  "severity": "minor",
+  "problem": "The minimax argument ranges over all conditional sub-probabilities in Delta_eps, but the statement takes inf over product hypotheses, which are lower-semicomputable. The near-optimal nu = (1 - |Y|eps) Q*_x + eps need not be lsc, since Q* can be irrational. The equality of the two infima is not stated.",
+  "evidence": "Proof text: 'attained up to that error by nu = (1-|Y|eps)Q_x + eps, which lies in Delta_eps'.",
+  "fix": "Add one sentence: 'Rational conditional probabilities, which are computable, are dense in Delta_eps and L(., Q) is continuous there, so the infimum over product hypotheses equals the infimum over Delta_eps.'"
+ },
+ {
+  "id": "P2M-14",
+  "file": "paper-steeper/sections/absorb.tex",
+  "label_or_line": "thm:absorb:absorption(a) (line 23); split.tex thm:split:shared(i) (line 89)",
+  "severity": "minor",
+  "problem": "The statements say 'for every observation o', but the length bound needs U(o) > 0. If U(o) = 0, then by (Dom) every P_pi(o) = 0 and every program is a minimiser of the constant-infinity objective. The appendix excludes this case inside the proof, not in the statement. thm:split:shared(i) has the same gap.",
+  "evidence": "app-absorb.tex line 16: '(If P_hat(o)=0 ... we exclude this case, which does not occur when U(o)>0.)'",
+  "fix": "State 'for every observation o with U(o) > 0' in thm:absorb:absorption(a) and thm:split:shared(i)."
+ },
+ {
+  "id": "P2M-15",
+  "file": "paper-steeper/sections/teacher.tex",
+  "label_or_line": "prop:teacher:concentration (line 173)",
+  "severity": "minor",
+  "problem": "The proof uses 2^{-(1-1/lambda) n hatJ_c(pi)} <= 2^{-(1-1/lambda) n (hatJ_g + eps)}, which needs 1 - 1/lambda >= 0, i.e. lambda = cn >= 1. The statement says 'any data set of size n' without this condition.",
+  "evidence": "app-teacher.tex line 203, the display after 'So, on the set ...'.",
+  "fix": "Add 'with cn >= 1' to the hypotheses."
+ },
+ {
+  "id": "P2M-16",
+  "file": "paper-steeper/sections/algstat.tex",
+  "label_or_line": "prop:algstat:parity(i) (line 60)",
+  "severity": "minor",
+  "problem": "The main text says that the set structure function 'lies on the sufficiency line from alpha = O(log d) on', i.e. for all larger alpha. The proof in app:algstat:parity (flatness, sets A_u with u <= d) covers alpha only up to d + O(log d), and the appendix says so. Above that, a further family is needed (subsets of A_0 that also fix part of the index of E'). It is easy but not written.",
+  "evidence": "app-algstat.tex line 20: '... for every alpha from O(log d) up to d + O(log d)'.",
+  "fix": "Either state 'for alpha between O(log d) and d + O(log d)' in the main text, or add the one-line extension (fix a and the first L_E - v bits of the index of E', giving complexity d + L_E - v + O(log d) and log-size v)."
+ },
+ {
+  "id": "P2M-17",
+  "file": "paper-steeper/sections/app-limits.tex",
+  "label_or_line": "app:limits:envelope, table 'lower bound on e_1' (lines 115-121) and limits.tex line 42",
+  "severity": "minor",
+  "problem": "The e_1 values (0.862/0.545 at c = 1.01*2^-m, etc.) come from the relaxed bound for c >= 2^-m, R_1 <= (zeta + (delta_2 + log(2^m+1) + K(S_1))/2^m)/p_1 with K(S_1) <= k_1 + 2log m, not from the displayed R_1. The displayed R_1 gives larger values (0.879, 0.789, 0.578, 0.344, 0.043 for j=11 and 0.587, 0.377, 0.105, 0.012, 0.000 for j=13). The printed values are therefore valid but weaker, and the text does not say which bound produced them.",
+  "evidence": "Independent recomputation: research/paper-review/scratch/p2-math/limits_split_numbers.out part (3). The relaxed form with K(S_1) = k_1 + 2log m reproduces 0.545 exactly (R_1 = 0.8757).",
+  "fix": "Add 'computed from the relaxed bound for c >= 2^{-m}, with K(S_1) <= k_1 + 2log m + kappa' to the table caption, or print the values of the displayed bound."
+ },
+ {
+  "id": "P2M-18",
+  "file": "paper-steeper/sections/app-teacher.tex",
+  "label_or_line": "app:teacher:version1 (line 196), finite-sample sentence",
+  "severity": "minor",
+  "problem": "'every admissible B >= 6 makes the excess at least 6 sqrt((d-4-Lambda_1) ln2/(2n)) = 0.308, because hatL >= ell(pi_g) >= d - 4 - Lambda_1'. The value 0.308 uses Lambda_1 at B = infinity (19.93), but Lemma lem:teacher:finite needs finite B, for which Lambda_1(B) is larger (70.6 at B=6). The inequality is still true, because (D1) holds with 2log d + kappa in place of Lambda_1, but as written the reader cannot verify it.",
+  "evidence": "Independent: with d-4-Lambda_1(inf) = 76.07 the value is 0.3081; with the sharper (D1) constant d - 4 - 2log d, min over B >= 6 of B sqrt(...) = 0.321 >= 0.308 (research/paper-review/scratch/p2-math/teacher_numbers.out part (7)). Margin max(Phi_2 - J_g) = 0.2239 (reproduced).",
+  "fix": "Write 'because hatL >= ell(pi_g) >= d - 4 - 2log d - kappa by (D1), whose proof uses only 2log d + kappa of Lambda_1'."
+ },
+ {
+  "id": "P2M-19",
+  "file": "paper-steeper/sections/limits.tex",
+  "label_or_line": "prop:limits:plain(a) (line 12)",
+  "severity": "minor",
+  "problem": "The display bounds the loss by d + ceil(L_S) + kappa_b + kappa with kappa_b = 2log d + 2log m + 2log s_0 + kappa, where 2log s_0 = 2(m - r) is linear in m. The next sentence then says 'd + L_S + O(log dm)'. The appendix repairs this by giving s_0 through r, but the main text is internally inconsistent.",
+  "evidence": "app-limits.tex line 10: 'The memoriser can be given s_0 = 2^{m-r} through r, so ell(pi_b) <= d + ceil(L_S) + O(log d + log m)'.",
+  "fix": "In the main text write 'at most d + L_S + O(log d + log m) inputs (the memoriser can name s_0 through r)'."
+ },
+ {
+  "id": "P2M-20",
+  "file": "paper-steeper/sections/related.tex",
+  "label_or_line": "rem:related:new, last sentence (line 47)",
+  "severity": "minor",
+  "problem": "'We do not claim that a fixed lambda eventually learns the errors and lambda must grow with n.' Read literally, this contradicts prop:limits:plain(b) and rem:limits:schedule, which do claim, and prove for the instance, that MDL with fixed lambda learns the errors. What is meant is that the qualitative finding is not claimed as new.",
+  "evidence": "limits.tex lines 13 and 21.",
+  "fix": "Write 'We do not claim as new the qualitative finding that a bounded lambda learns the errors and lambda must grow with n.'"
+ },
+ {
+  "id": "P2M-21",
+  "file": "paper-steeper/sections/app-limits.tex",
+  "label_or_line": "proof of prop:limits:guard (line 62)",
+  "severity": "minor",
+  "problem": "The proof applies lem:setup:hull(iii) to the points (0,0), (k_sigma, -k_sigma rho_sigma), (k_sigma+k_G, ...) after subtracting the risk of 'none'. These have negative R, while the lemma assumes R in [0, infinity] (its proof of the boundary structure uses R >= 0).",
+  "evidence": "lem:setup:hull hypothesis 'R in [0, infinity]'; app-setup.tex 'because R(b) >= 0'.",
+  "fix": "Note that the objective is invariant under adding the common risk log n_st of 'none' (which restores R >= 0), or apply the lemma to the unshifted risks."
+ },
+ {
+  "id": "P2M-22",
+  "file": "paper-steeper/sections/app-teacher.tex",
+  "label_or_line": "app:teacher:version1, last paragraph (line 198)",
+  "severity": "minor",
+  "problem": "Inconsistent rounding: the d=13 full-table windows are printed as (8, 61.9] and (8, 39.6], while the computed ends are 61.99 and 39.68. Every other number in the paper is rounded to nearest.",
+  "evidence": "Independent: N c_hi = 86.23, 61.99, 39.68 at kappa = 0, 10, 30 (research/paper-review/scratch/p2-math/teacher_numbers.out part (7)). Track c6_revision.out prints 61.99.",
+  "fix": "Print (8, 62.0] and (8, 39.7], or say that the upper ends are rounded down."
+ },
+ {
+  "id": "P2M-23",
+  "file": "paper-steeper/sections (setup, teacher, limits, split, algstat and their appendices)",
+  "label_or_line": "notation",
+  "severity": "minor",
+  "problem": "Several symbols are overloaded across sections, sometimes within one argument. rho is the product structure function rho^x_D and also the threshold in prop:algstat:coarse (varrho is the memoriser slack). r is log(1/p), the dyadic exponent in lem:split:hash, the simulation prefix in app-split and the program for b in app-limits. a is the parity parameter and also the coefficient in lem:limits:robust. b is the sufficiency slack, a label bit (lem:teacher:coding), a behaviour (prop:limits:ood) and a coefficient (lem:limits:robust). g is the integer in thm:teacher:main(e) and the information gain in prop:limits:guard. k is the sampler length, the number of coin pairs and a product index. q is the coefficient (1-H)/H, the field degree and q_z. These collisions make the proofs harder to follow.",
+  "evidence": "algstat.tex lines 31 and 45; teacher.tex line 98; lem:limits:robust; app-split.tex lines 32 and 58; absorb.tex line 74 and line 86 (prod_{k<i}).",
+  "fix": "Rename locally, e.g. the threshold in prop:algstat:coarse to rho_0 or s; the coefficients in lem:limits:robust to A_q, B_q (or alpha, beta'); the simulation prefixes to sigma or w_0; the guard gain to g_G; the product index in prop:absorb:history to j."
+ },
+ {
+  "id": "P2M-24",
+  "file": "paper-steeper/sections/absorb.tex",
+  "label_or_line": "rem:absorb:wyeth(i) (line 103)",
+  "severity": "minor",
+  "problem": "'samplers longer than about ell_U are never selected (thm:split:shared)'. thm:split:shared(i) excludes samplers with (lambda-1)k > lambda ell_U + kappa_0, i.e. k > l*_lambda = ell_U + (ell_U+kappa_0)/(lambda-1). For lambda near 1 this threshold is far above ell_U. 'About ell_U' is correct only for lambda bounded away from 1, or for lambda = cn as n grows.",
+  "evidence": "thm:split:shared(i); rem:absorb:reading gives the threshold l*_lambda = ell_U + (ell_U+kappa_0)/(lambda-1).",
+  "fix": "Write 'samplers longer than l*_lambda = ell_U + (ell_U+kappa_0)/(lambda-1) are never selected (thm:split:shared); with lambda = cn this tends to ell_U'."
+ },
+ {
+  "id": "P2M-25",
+  "file": "paper-steeper/sections/teacher.tex",
+  "label_or_line": "cor:teacher:fulltable(ii) (line 153); proof in app-teacher.tex app:teacher:fulltable (ii) (line 134)",
+  "severity": "major",
+  "problem": "Part (ii) states without qualification that at lambda=1 'the optimum, J_1(pi_g) and J_1(pi_b) lie within O(log N)+delta_E of each other'. The proof covers programs of level >= 2 only through 'J_1 >= N G_1, and this exceeds J_1(pi_g) once N(G_1-H(p)) > d+kappa_g+log(N+1)'. That needs G_1 > H(p), i.e. p < 0.056, and N large. Neither condition is in the statement, and def:teacher:instance allows every p = 2^-r with 2 <= r <= m. A second problem: in this section J_c := c*ell + R is the per-sample objective, so 'J_1' reads as c = 1 (ell + R). The proof means the two-part length ell + N R at lambda = 1, i.e. J_lambda(pi;D) of def:setup:objectives.",
+  "evidence": "At p = 1/16 (r = 4, allowed), G_1 = 1 - log(3/2 + 1/8) = 0.2996 < H(1/16) = 0.3373. Then N(G_1 - H(p)) < 0, and the proof gives no lower bound on the two-part length of level >= 2 programs, so 'the optimum' is not controlled. The statement is still true for every p < 1/4 by a different argument. Lemma setup:coding gives ell(pi) - log nu_pi(D) >= K(y_D|dom D) - kappa >= K(z|d) - kappa for every program, whatever its level. Minimum-distance decoding (p < 1/4) gives K(z) >= d + L_E - delta_E - kappa, as in app-algstat (ii). Hence optimum >= d + L_E - delta_E - O(log N). The steeper notes (Cor 2.5) have the same gap.",
+  "fix": "Either add to (ii) 'if p < 0.056 and N(G_1-H(p)) > d+kappa_g+log(N+1)', or replace the level-split in the proof by the coding bound: 'every program has ell(pi)+N R(pi) = ell(pi) - log nu_pi(D) >= K(y_D|dom D) - kappa >= d + L_E - delta_E - 2log d - kappa (minimum-distance decoding, p < 1/4)'. With the second fix, (ii) holds for every p < 1/4. In both cases write the two-part length as J_1(pi;D) or 'ell + N R', not J_1(pi)."
+ },
+ {
+  "id": "P2M-26",
+  "file": "paper-steeper/sections/limits.tex",
+  "label_or_line": "paragraph after prop:limits:envelope (line 44), parenthesis '(Its deficiency is about 1,300 bits, so thm:teacher:main does not cover it; above c_env nothing is proved for it.)'",
+  "severity": "major",
+  "problem": "Both halves of the parenthesis are false. thm:teacher:main is stated for every error rule S with |S| = s_0, and delta_S enters only as a parameter of its bounds, so it does cover the j = 13 envelope rule. For that rule, with delta_S of about 1,260 to 1,310 bits, the bounds are weaker but not vacuous above c_env. The source sentence (steeper notes, after Prop 2.17: 'Theorem 2's bounds there contain delta_S of about 5,300 (first instance) and are vacuous for the error label') concerns the j = 11 instance. The paper transfers it to the j = 13 instance, where it does not hold.",
+  "evidence": "Independent computation (research/paper-review/scratch/p2-math/v4_extra.out), kappa = 0, B = infinity, eps = 0, delta_S in {1256, 1306}. These bound delta_S = L_S - K(S|a,K(a)) with K(S) at most log binom(2^20-128, 896) + 2log 14 + 2log 20 + 2log 897 = 10,418 + O(log). At c = 1e-4, Theorem 2(i)-(ii) give Delta(c) <= 5.8e-3, u >= 0.983, ell <= d+33.0, I <= 50.3 and e <= 0.71 (g = 11). At c = 1e-3 they give ell <= d+21.2 and e <= 0.78. At c = c_env = 1.64e-5 they give u >= 0.990 and ell <= d+104. For j = 11 (delta_S about 5,300) the error-label bound is vacuous (e <= 1.38 at c = 1e-4), as the notes say, but u >= 0.983 and ell <= d+72 still hold. These bounds are consistent with prop:limits:envelope: at c = 1e-5, (b) gives R >= H(p) - 1.4e-3 = 0.00975 and (i) gives R <= R_e + zeta = 0.0107.",
+  "fix": "Replace the parenthesis by: '(Its deficiency is about 1,300 bits. thm:teacher:main still applies, but its bounds are weaker: at c = 10^-4 (kappa = 0) every near-optimal hypothesis has u >= 0.98, ell <= d+33 and e <= 0.71, and near 2^-m the bounds are vacuous. Whether the good model itself is near-optimal above c_env is open.)' Make the matching change in app-limits.tex line 125 if it is read the same way."
+ },
+ {
+  "id": "P2M-27",
+  "file": "paper-steeper/sections/setup.tex",
+  "label_or_line": "line 48 ('In statistics these objects are generalised, Gibbs, fractional or safe posteriors with learning rate eta=1/lambda'); related.tex rem:related:posteriors (line 39); intro.tex line 50; discussion.tex line 67",
+  "severity": "major",
+  "problem": "The power-prior posterior Pi_lambda(pi|o), proportional to 2^{-lambda ell(pi)} P_pi(o), is not a generalised, Gibbs, fractional or safe posterior with learning rate 1/lambda. That description fits the tempered posterior Pi^{1/lambda}, proportional to 2^{-ell(pi)} P_pi(o)^{1/lambda}. The two share their maximiser (lem:setup:basic(ii)) but differ as distributions: Pi_lambda is proportional to (Pi^{1/lambda})^lambda, which is Bayes with the sharper prior 2^{-lambda ell}. rem:related:posteriors says 'The posteriors of def:setup:objectives are generalised, Gibbs, fractional or safe posteriors with learning rate eta=1/lambda', which is false for Pi_lambda. The paper's posterior results are about Pi_lambda: thm:split:private(ii)-(iii), thm:split:shared(ii), prop:teacher:concentration and prop:limits:ood. A reader could wrongly carry over fractional-posterior theory to them, or the paper's results to fractional posteriors.",
+  "evidence": "Two programs with ell = 0, P = 1/2 and ell = 1, P = 1, at lambda = 2. Pi_2 gives odds (1/2):(1/4) = 2:1. Pi^{1/2} gives odds 2^{-1/2}:2^{-1} = sqrt(2):1. In general, odds under Pi_lambda are the lambda-th power of odds under Pi^{1/lambda}. Only thm:split:private(iii) treats the tempered posterior, separately. The steeper notes (sec. 1.3) use the looser wording 'Hanni's two descriptions ... appear as generalised ... posteriors ..., and as two-part MDL with a complexity weight above 1', which maps the two descriptions to the two literatures.",
+  "fix": "setup.tex line 48: 'The tempered posterior Pi^{1/lambda} is the generalised (Gibbs, fractional, safe) posterior with learning rate 1/lambda [cites]. The lambda-MAP, its maximiser, is two-part MDL with complexity weight lambda [cites]. The power-prior posterior Pi_lambda has the same maximiser but is Bayes with the prior 2^{-lambda ell}; it is proportional to (Pi^{1/lambda})^lambda.' Make the same correction in rem:related:posteriors, intro.tex line 50 and discussion.tex line 67."
+ },
+ {
+  "id": "P2M-28",
+  "file": "paper-steeper/sections/teacher.tex",
+  "label_or_line": "sentence after cor:teacher:sampled (line 164) and q:teacher:open (line 183, 'far below the n~1e11 that uniform convergence needs here'); intro.tex line 52 ('The finite-sample guarantee needs about 10^11 samples'); discussion.tex line 75",
+  "severity": "minor",
+  "problem": "The paper says repeatedly that the finite-sample guarantee needs about 10^11 samples at Hanni's sizes. Its own appendix gives a meaningful guarantee at n = 10^9 (app-teacher.tex line 192: ell <= d+113.9, e <= 0.284), and the corollary applies with nontrivial identification well below that. What needs about 10^11 is an excess below about 10 bits at c = 1e-4. The framing understates the result and contradicts the appendix.",
+  "evidence": "Independent computation of cor:teacher:sampled (research/paper-review/scratch/p2-math/v4_extra.out), B = 30, delta = 0.01, kappa = 0, delta_S = 0, g optimised. At c = 1e-3: n = 1e8 gives eps_n/c = 22.6 bits, u >= 0.898, ell <= d+42.6, e <= 0.305; n = 1e7 gives u >= 0.868, ell <= d+92.2, e <= 0.374. At c = 1e-4: n = 1e9 gives eps_n/c = 92.5, u >= 0.977, ell <= d+113.9, e <= 0.280; n = 1e10 gives eps_n/c = 29.0, ell <= d+49.8, e <= 0.228. The condition J_g + eps_n < Phi_2 holds in all these cases.",
+  "fix": "Write: 'Uniform convergence gives identification with near-population constants (excess below 10 bits at c = 10^-4) only at n of about 10^11. Coarser guarantees hold much earlier: at c = 10^-3 and n = 10^8, u >= 0.90, ell <= d+43 and e <= 0.31.' Change intro.tex line 52, discussion.tex line 75 and q:teacher:open to match."
+ },
+ {
+  "id": "P2M-29",
+  "file": "paper-steeper/sections/app-absorb.tex",
+  "label_or_line": "proof of prop:absorb:price(iii) (line 67); absorb.tex rem:absorb:why (line 71) and prop:absorb:price(iii) (line 78)",
+  "severity": "minor",
+  "problem": "The macro \\nulen denotes two different laws in the two companion papers. The papers share NOTATION.md, and rem:absorb:why cites the companion paper's result about nu_len. Paper 1 defines nu_len as the law of F(x) := omega_{|x|+1}, one coin per input length including the empty input (paper/sections/versions.tex line 61; app-versions.tex line 66). Paper 2 defines it as the machine that answers omega_{|x|} for x != epsilon and is undefined at epsilon. Both give nu_len(D_beta) = 2^-k, so no result changes.",
+  "evidence": "paper/sections/versions.tex line 61: 'let nu_len be the law of F(x) := omega_{|x|+1}'. paper-steeper/sections/app-absorb.tex line 67: 'nu_len is the law of the function machine T = {(x,w,w_{|x|}) : x != epsilon, w in {0,1}^{|x|}}'. The steeper notes call Paper 2's law sigma (Prop 1.7(iii)).",
+  "fix": "Use Paper 1's definition: inputs 0^i and 1^i still share bit i+1, distinct i still get independent bits, and nu_len(D_beta) = 2^-k. Alternatively, call Paper 2's law sigma, as the notes do."
+ },
+ {
+  "id": "P2M-30",
+  "file": "paper-steeper/sections/teacher.tex",
+  "label_or_line": "def:teacher:instance (lines 21-32)",
+  "severity": "minor",
+  "problem": "The instance never says that the label set is Y = {0,1}. def:setup:data allows any finite Y with |Y| >= 2. Several parts of the section use binary labels: the teacher y* = f_a XOR 1_E, the coin with R = 1, list decoding through h_0 - h_1, the floor (on E, nu(y*|x) <= 1 with the 'other' label being f_a), and the identity (eq:teacher:identity) with A + V <= 1. Over a larger Y the coin's risk is log|Y|, and several constants change.",
+  "evidence": "teacher.tex line 28: 'the coin ... with ell <= kappa and R = 1'. app-teacher.tex line 10: nu_pi(f_{a'}(x)|x) = (h_0+h_1)/2 + chi s_h/2 holds only when the labels are 0 and 1.",
+  "fix": "Add to def:teacher:instance: 'Throughout this section and the next, Y = {0,1}.'"
+ },
+ {
+  "id": "P2M-31",
+  "file": "paper-steeper/sections/teacher.tex",
+  "label_or_line": "sentence before c_hi (line 72): 'The pieces of Phi_2 are nondecreasing in c and J_g is linear, so {c>0 : J_g(c) <= Phi_2(c)} = (0,c_hi]'",
+  "severity": "minor",
+  "problem": "The stated reason does not imply the conclusion. That the pieces of Phi_2 are nondecreasing does not make {J_g <= Phi_2} an initial interval. What does is that J_g minus each piece is affine and strictly increasing in c: the slope d + kappa_g exceeds both d - 8 - Lambda_1 and 0. The conclusion also needs J_g(0+) = H(p) < min{G_1, G_{t*-1}}; otherwise the set is empty, which the next sentence covers only implicitly.",
+  "evidence": "J_g(c) - (c(d-8-Lambda_1) + G_1) = c(8 + Lambda_1 + kappa_g) + H(p) - G_1, and J_g(c) - G_{t*-1} = c(d + kappa_g) + H(p) - G_{t*-1}. Both are increasing in c, so the set where both are <= 0 is (0, min of the two zeros], and it is nonempty iff G_1 > H(p).",
+  "fix": "Write: 'J_g minus each piece of Phi_2 is affine and increasing in c, so {c > 0 : J_g(c) <= Phi_2(c)} = (0, c_hi] (empty if c_hi <= 0), with ...'."
+ },
+ {
+  "id": "P2M-32",
+  "file": "paper-steeper/sections/teacher.tex",
+  "label_or_line": "cor:teacher:fulltable (line 152 'every lambda in (1,N c_hi)' against line 155 'window lambda in (1,1.19e4]'); app-teacher.tex line 137 '(1,11945]'",
+  "severity": "minor",
+  "problem": "The corollary correctly gives the open interval (1, N c_hi): at c = c_hi, J_g = Phi_2, and Theorem 2(ii) needs J_g + eps < Phi_2 strictly. The numbers below it report closed windows (1, 1.19e4] and (1, 11945], so they disagree with the corollary at the endpoint. The same applies to 'window' figures elsewhere whenever they are used for identification rather than for (i).",
+  "evidence": "Theorem 2(ii) hypothesis: J_g(c) + eps < Phi_2(c). At c = c_hi, J_g(c_hi) = Phi_2(c_hi), by the definition of c_hi as the zero of J_g - Phi_2.",
+  "fix": "Write the identification window as (1, 1.19e4) and (1, 6456), or add 'the right end point belongs to the window of (i), not of (ii)'."
+ },
+ {
+  "id": "P2M-33",
+  "file": "paper-steeper/sections/algstat.tex",
+  "label_or_line": "prop:algstat:parity(ii) (line 65, 'rho^x_D(alpha) >= N G_1 for every alpha < d-4-Lambda_1: the product structure function has a kink at alpha ~ d')",
+  "severity": "minor",
+  "problem": "A kink needs bounds on both sides of alpha ~ d, but the statement gives only the lower bound rho^x_D(alpha) >= N G_1 below d - 4 - Lambda_1. The upper side, rho^x_D(alpha) <= N H(p) for alpha >= d + kappa_g (the good model), is used only implicitly. The same holds for (iv).",
+  "evidence": "By def:algstat:product, rho^x_D(d + kappa_g) <= -log nu_{pi_g}(D) = N H(p), because ell(pi_g) <= d + kappa_g and |E| = pN exactly. This is not stated in prop:algstat:parity.",
+  "fix": "Add: 'and rho^x_D(alpha) <= N H(p) for alpha >= d + kappa_g, so rho^x_D drops by at least N(G_1 - H(p)) within an alpha-interval of length 4 + Lambda_1 + kappa_g = O(log d)' (with N(F_t - H(p)) and s(t) + Lambda_1 + kappa_g in (iv))."
+ },
+ {
+  "id": "P2M-34",
+  "file": "paper-steeper/sections/limits.tex",
+  "label_or_line": "paragraph after prop:limits:ood (line 95): 'With lambda=cn the bound vanishes, so steeper simplicity removes his constant lower bound, but only through (ii)'",
+  "severity": "minor",
+  "problem": "Part (i) gives only a lower bound, 2^{-lambda(K(Q,b)+kappa)}, on the probability of behaviour b on Q. That this bound vanishes for lambda = cn does not show that the probability vanishes. 'Removes his constant lower bound' can be read as a proof that the probability tends to 0, which nothing in the paper shows; part (ii) concerns posterior odds between equal-likelihood programs.",
+  "evidence": "prop:limits:ood(i) is an inequality xi_lambda(D u b|_Z) >= 2^{-lambda(K(Q,b)+kappa)} xi_lambda(D). No upper bound on xi_lambda(D u b|_Z)/xi_lambda(D) is proved anywhere in the paper.",
+  "fix": "Write: 'With lambda = cn the lower bound of (i) degrades to 2^{-cn(K(Q,b)+kappa)}, so his constant lower bound no longer follows. Whether the probability of b on Q actually vanishes depends, by (ii), on what the shortest train-fitting hypotheses do on Q.'"
+ },
+ {
+  "id": "P2M-35",
+  "file": "paper-steeper/sections/limits.tex",
+  "label_or_line": "rem:limits:schedule (line 21): 'so the code length exceeds pi's own loss by c ell(pi) bits per sample'",
+  "severity": "minor",
+  "problem": "The display before this sentence, -log xi_lambda(D_n) <= n(c ell(pi) + R_hat(pi)), is an upper bound. It shows that the code length exceeds pi's loss by at most c ell(pi) bits per sample, not exactly that much. discussion.tex line 61 states it correctly ('its guaranteed code length exceeds ...').",
+  "evidence": "For a mixture, -log xi_lambda(D_n) can be smaller than lambda ell(pi) - log nu_pi(D_n), for example when many programs share pi's likelihood.",
+  "fix": "Write 'exceeds pi's own loss by at most c ell(pi) bits per sample (the guaranteed excess)'."
+ },
+ {
+  "id": "P2M-36",
+  "file": "paper-steeper/sections/related.tex",
+  "label_or_line": "rem:related:nn (line 29): 'parameters that memorise the label noise get posterior mass exponentially small in the sampled randomness'",
+  "severity": "minor",
+  "problem": "thm:split:private(iii) bounds the posterior mass of deterministic programs consistent with the data, the fill-ins, and nothing else. Parameters that memorise the label noise only partly, or stochastically, are not covered. The source says 'deterministic parameter settings that memorise the label noise' (steeper notes, Rem 4.7).",
+  "evidence": "thm:split:private(iii): 'Every deterministic program consistent with D_n has ...; Pi_lambda(det|D_n) <= ...'. Part (ii) bounds long programs whatever they are, but not memorisers as such.",
+  "fix": "Write 'deterministic parameter settings that reproduce the noisy labels'."
+ },
+ {
+  "id": "P2M-37",
+  "file": "paper-steeper/sections/limits.tex",
+  "label_or_line": "paragraph after lem:limits:robust (line 61)",
+  "severity": "minor",
+  "problem": "Two small mismatches with the results. (1) 'no program that knows the parity and fits no better than noise is optimal at any c' is stronger than prop:limits:rateblind(ii), which gives 'beaten by the memoriser or beaten or tied by the coin'. A program tied with the coin can be a minimiser. (2) 'leaves a window of a factor of about 8000 (kappa=0)': rem:teacher:numbers gives the ratio 8453 for Theorem 2's window. 8037 is Hanni's three-hypothesis ratio.",
+  "evidence": "prop:limits:rateblind(ii) proof: J_c(pi) >= 1 + c kappa >= J_c(pi_coin), a weak inequality. Ratio c_hi 2^20 = 8.0618e-3/9.5367e-7 = 8453.4 (research/paper-review/scratch/p2-math/v1_teacher.out).",
+  "fix": "Write '... is ever the unique optimum (at every c it is beaten by the memoriser or matched by the coin)' and 'a window of a factor of about 8500 (kappa=0) or 3800 (kappa=30)'."
+ },
+ {
+  "id": "P2M-38",
+  "file": "paper-steeper/sections/app-limits.tex",
+  "label_or_line": "paragraph after the proof of prop:limits:ood (line 143), conjunction ladder",
+  "severity": "minor",
+  "problem": "Calling the companion paper's conjunction ladder 'a concrete instance of the warning in (ii)' conflicts with the companion paper's own reading. There, the failure is a failure of deterministic tie-breaking (lambda-MAP selection). Uniform tie-breaking among least-size consistent formulas, the lambda -> infinity limit of the power posterior, makes only O(d^2) Gibbs mistakes. Paper 1, rem:comp:uniformties, concludes: 'So thm:comp:ladder is a failure of deterministic tie-breaking; it does not show that steeper SFI fails on this ordering.' The warning in (ii) is about the steeper posterior.",
+  "evidence": "paper/sections/comp.tex lines 131-133 (rem:comp:uniformties). The paper's own sentence reports both facts, but frames them as illustrating the posterior's danger.",
+  "fix": "Write: 'On a conjunction ladder [companion paper] deterministic selection of a least-size consistent formula, a lambda-MAP rule, makes exponentially many mistakes on some ordering for every tie rule, while the lambda -> infinity power posterior, uniform over those formulas, makes O(d^2) Gibbs mistakes. The danger in (ii) is therefore sharpest for single-hypothesis selection.'"
+ },
+ {
+  "id": "P2M-39",
+  "file": "paper-steeper/sections/teacher.tex",
+  "label_or_line": "rem:teacher:numbers (line 108): 'for m=24 (L_S=187,457) the bound at c=10^-4 is e<=0.065 (kappa=0)'",
+  "severity": "minor",
+  "problem": "This number does not state the deficiency it assumes, contrary to the paper's convention (line 34: 'every number we give states the delta_S it assumes').",
+  "evidence": "Recomputed: e <= 0.0650 at kappa = 0 and 0.0842 at kappa = 30, both with delta_S = 0 (research/paper-review/scratch/p2-math/v1_teacher.out).",
+  "fix": "Write '(kappa = 0, delta_S = 0; 0.084 at kappa = 30)'."
+ },
+ {
+  "id": "P2M-40",
+  "file": "paper-steeper/sections/split.tex",
+  "label_or_line": "thm:split:shared, last sentence (line 92); app-split.tex line 99",
+  "severity": "minor",
+  "problem": "'For SI with adaptive or non-computable inputs, (Dom) in the needed form is supplied by H_chr ..., not by H_SI' misplaces the difficulty. (Dom) is a property of the class and holds in H_SI with U = M on every observation. What fails with adaptive or non-computable inputs is the theorem's other hypothesis, that the sampler has a program pi_nu in the class: an SI hypothesis must also model the inputs.",
+  "evidence": "rem:absorb:examples: (Dom) holds in H_SI with kappa_0 = 0. thm:split:shared requires 'pi_nu a program of length k for a sampler in the class'.",
+  "fix": "Write: 'For SI with adaptive or non-computable inputs the sampler is not an SI hypothesis, since it does not model the inputs. Use H_chr, where it is a chronological semimeasure and (Dom) holds with U = M_H. With i.i.d. computable inputs, H_SI with U = M works.'"
+ },
+ {
+  "id": "P2M-41",
+  "file": "paper-steeper/sections/intro.tex",
+  "label_or_line": "Contributions, fourth bullet (line 23): 'so it is not a fill-in once the sampled randomness is larger'",
+  "severity": "minor",
+  "problem": "The comparison has no stated object ('larger' than what?), and the claim is a derived statement not given in the body. From thm:split:private, a lambda-MAP has length at most (lambda k + delta*)/(lambda-1), and every fill-in has length at least -log nu(D_n) - delta*. So no lambda-MAP is a fill-in once -log nu(D_n) > lambda(k + delta*)/(lambda-1).",
+  "evidence": "thm:split:private(i) and (iii): (lambda k + delta*)/(lambda-1) < -log nu(D_n) - delta* iff -log nu(D_n) > (lambda k + lambda delta*)/(lambda-1).",
+  "fix": "Write 'so it is not a fill-in once the sampled randomness -log nu(D_n) exceeds lambda(k + delta*)/(lambda-1)', and add this one-line consequence to rem:split:reading."
+ },
+ {
+  "id": "P2M-42",
+  "file": "paper-steeper/sections/setup.tex",
+  "label_or_line": "lem:setup:hull(iv) (line 72): 'not on the horizontal ray to the right of the least-R vertex'",
+  "severity": "minor",
+  "problem": "The least-R vertex is the endpoint of that ray and is a penalised minimiser, so the statement must exclude only the open ray. The proof (app-setup.tex line 29) says 'open horizontal ray'.",
+  "evidence": "In {(0,1),(10,0),(20,0)} the vertex (10,0) minimises c ell + R for c < 0.1 and lies at the start of the horizontal ray. Exact rational check of (iii): 0 mismatches in 17,588 point tests (research/paper-review/scratch/p2-math/v5b_hull_exact.out).",
+  "fix": "Write 'not on the open horizontal ray to the right of the least-R vertex'."
+ }
+]

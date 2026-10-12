@@ -1,0 +1,60 @@
+% Section 8 (writer: steep-a; edited by p2-body). Source: research/tracks/steeper/notes-final.md §3.5 (Props 3.5-3.8, definitions, restricted families, reading).
+% Renamed from the source: set models S -> A, sufficiency slack c -> b, table size n = 2^d -> N, S_0,S_u -> A_0,A_v, T(pi) -> lev(pi).
+% prop:algstat:product, prop:algstat:coarse and q:algstat:lsc are in app-algstat.tex.
+\section{Relation to algorithmic statistics}\label{sec:algstat}
+
+The author's note proposes a second way to find the split between model and noise: plot the entropy left given the hypothesis against the hypothesis length and look for a change of slope, which in the sequence case does not appear, because there it is ``pretty much just 1 bit paying for 1 bit'' \citep{hanni2026grokking}. For set models this graph is Kolmogorov's structure function. We define a product version and show, for a noisy random parity, that the two place the split about $d$ bits apart. Proofs are in \cref{app:algstat}.
+
+\subsection{Set models and steeper two-part codes}\label{sec:algstat:set}
+
+\begin{definition}[Set models]\src{steeper \S3.5, Definitions}\label{def:algstat:set}
+For a string $z$, a \emph{set model} is a finite set $A\ni z$, with two-part length $K(A)+\log|A|$. The \emph{structure function} is $h_z(\alpha):=\min\{\log|A|:A\ni z,\ K(A)\le\alpha\}$. The \emph{sufficiency line} is the bound $K(A)+\log|A|\ge K(z)-\kappa$, valid for every $A\ni z$ since $K(z\mid A)\le\log|A|+\kappa$. $A$ is \emph{$b$-sufficient} if $K(A)+\log|A|\le K(z)+b$; a \emph{minimal sufficient statistic} minimises $K(A)$ among $b$-sufficient models; and the \emph{set sophistication} is $\sophset_b(z):=\min\{K(A):A\ni z,\ K(A)+\log|A|\le K(z)+b\}$. Conditional versions given a string $w$ (for example a domain) replace $K$ by $K(\cdot\mid w)$.
+\end{definition}
+
+These notions are standard \citep{gacs2001algorithmic,vereshchagin2004kolmogorov,vereshchagin2017algorithmic}; we use them as stated. Sophistication goes back to \citet{koppel1987complexity,koppel1991almost}, with total programs as models; see also \citet{vitanyi2006meaningful} and \citet{antunes2009sophistication}. We do not use the equivalences between the versions.
+
+Steeper two-part codes over sets select an approximately minimal sufficient statistic only in a limited sense: a minimiser $A_\lambda$ of $\lambda K(A)+\log|A|$ has $K(A_\lambda)\le\sophset_b(z)+(b+\kappa)/(\lambda-1)$ and is $(b+(\lambda-1)\sophset_b(z))$-sufficient, and as $\lambda\to1$ the length bound becomes vacuous (\cref{prop:algstat:set,rem:algstat:near1} in \cref{app:algstat:coarse}).
+
+\subsection{Product models}\label{sec:algstat:product}
+
+\begin{definition}[Product structure function and sophistication]\src{steeper \S3.5, product versions}\label{def:algstat:product}
+For a data set $D$ and the class $\Hcl{\times}$, the \emph{product structure function} is $\rho^\times_D(\alpha):=\min\{-\log\nu_\pi(D):\ell(\pi)\le\alpha\}$; $\pi$ is \emph{product-$b$-sufficient} if $\ell(\pi)-\log\nu_\pi(D)\le K(y_D\mid\dom D)+b$; and the \emph{product sophistication} is $\sophx_b(D):=\min\{\ell(\pi):\pi\text{ product-$b$-sufficient}\}$. \Cref{lem:setup:coding} is the product sufficiency line. Product notions are conditional on the domain by construction, since product hypotheses do not model the inputs.
+\end{definition}
+
+The argument of \cref{prop:algstat:set}, with \cref{lem:setup:coding} as the sufficiency line, bounds the length of every $\lambda$-MAP over $\Hcl{\times}$ by the product sophistication plus $(b+\kappa)/(\lambda-1)$ (\cref{prop:algstat:product}). Thresholding a computable product hypothesis with rational values gives a set model that is at most logarithmically longer, so set models are at least as coarse as product models, at least for computable hypotheses (\cref{prop:algstat:coarse}; whether this holds for lower-semicomputable hypotheses is \cref{q:algstat:lsc}). Both are in \cref{app:algstat:coarse}.
+
+\subsection{A noisy random parity}\label{sec:algstat:parity}
+
+We use the instance of \cref{def:teacher:instance} with $m=d$ (idiosyncratic errors) and $B=\infty$, so $E=S$, $N:=2^d$ and $|E|=pN$, and write $L_E,\delta_E$ for $L_S,\delta_S$. Let $z=y^*\in\{0,1\}^N$ be the teacher's table and $D$ the full data set, so $\dom D=\{0,1\}^d$ and $K(y_D\mid\dom D)=K(z\mid d)\pm\kappa$; for a product program $R(\pi)=-\frac1N\log\nu_\pi(D)$ is the risk under uniform inputs. Here $G_1=1-\log(\frac32+2p)$, which exceeds $H(p)$ exactly for $p<0.0560$ (\cref{sec:teacher:theorem}), $\Lambda_1=4\log d+\kappa$ and $\kappa_b=4\log d+2\log(pN)+\kappa$. We use list decoding (\cref{lem:teacher:list}), the risk floor (\cref{lem:teacher:floor}) and the length bound (D1) of \cref{lem:teacher:twopart}; part (iv) also uses the sharper floor \cref{lem:teacher:sharpfloor}.
+
+\begin{proposition}[The two splits differ by about $d$ bits]\status{proved; computed}\src{steeper Prop 3.8 (T5 Thm 2.5); checks c2(c), c4(C), c7(C)}\label{prop:algstat:parity}
+Let $p<1/4$.
+\begin{enumerate}[label=(\roman*)]
+\item \emph{Sets: the parity is noise.} $A_0:=\{f_{a'}\oplus\ind_{E'}:a'\in\{0,1\}^d,\ |E'|=pN\}$ has $|A_0|=2^{d+L_E}$ and $K(A_0)\le2\log d+2\log r+\kappa$, and $K(z)\ge d+L_E-\delta_E-\kappa$. So $A_0$ is $(\delta_E+2\log d+2\log r+\kappa)$-sufficient, and $\sophset_b(z)\le2\log d+2\log r+\kappa$ for every such $b$. The structure function lies on the sufficiency line, within $\delta_E+O(\log d)$, for $\alpha$ between $O(\log d)$ and $d+O(\log d)$. Every $\lambda$-optimal set model $A_\lambda$ with $\lambda>1$ holds at most $O(\log d)+(\delta_E+O(\log d))/(\lambda-1)$ bits of information about $a$.
+\item \emph{Products: the parity is model.} Assume also $G_1>H(p)$. For $\delta_E+2\log d+\kappa_g+\log(N+1)+\kappa\le b<N(G_1-H(p))-d-2\log N-\kappa$,
+\[
+d-4-\Lambda_1\ \le\ \sophx_b(D)\ \le\ d+\kappa_g,
+\]
+and $\rho^\times_D(\alpha)\ge NG_1$ for every $\alpha<d-4-\Lambda_1$, while $\rho^\times_D(\alpha)\le NH(p)$ for $\alpha\ge d+\kappa_g$ (the good model): the product structure function has a kink at $\alpha\approx d$.
+\item The gap $\sophx-\sophset\ge d-O(\log d)$ is unbounded in $d$.
+\item \emph{Every flip rate below $1/4$.} Drop the condition $G_1>H(p)$; let $p=|E|/N<1/4$ have small complexity $K(p)$, with $\kappa_g:=2\log d+K(p)+\kappa$. For integers $t,g\ge1$ let $\gamma_d:=\sqrt{j_d\ln2/(2pN)}$, where $j_d$ is the least integer with $j_d-2\log(j_d+1)>\delta_E+d+1+2\log d+2\log(pN)+g+2\log g+2\kappa$, and
+\[
+F_t:=1-\log\Big(1+(1-2p)2^{-t}+2p\big(2\gamma_d+2^{1-g}\big)\Big).
+\]
+Every product program with $\ell(\pi)<d-s(t)-\Lambda_1$ has $R(\pi)\ge F_t$, so $\rho^\times_D(\alpha)\ge NF_t$ for $\alpha<d-s(t)-\Lambda_1$, while $\rho^\times_D(\alpha)\le NH(p)$ for $\alpha\ge d+\kappa_g$. Moreover $d-s(t)-\Lambda_1\le\sophx_b(D)\le d+\kappa_g$ for every $b$ with
+\[
+\delta_E+2\log d+\kappa_g+\log(N+1)+\kappa\ \le\ b\ <\ NF_t-d-\lceil L_E\rceil-\kappa_b-2\kappa.
+\]
+For fixed $p<1/4$ and $\delta_E=O(d)$, $\gamma_d\to0$ as $d\to\infty$, and with $g$ growing slowly $F_t\to1-\log(1+(1-2p)2^{-t})$, which exceeds $H(p)$ for some fixed $t=t_p$. So the admissible range of $b$ has length of order $N(F_{t_p}-H(p))$, product sophistication is $d\pm O(\log d)$, and the gap of (iii) holds for every $p<1/4$.
+\end{enumerate}
+\end{proposition}
+
+\emph{Proof idea.} (i) Minimum-distance decoding recovers $(a,E)$ from $z$, since two parities differ on $N/2>2pN$ inputs, so $K(z)\ge d+L_E-\delta_E-\kappa$, while $A_0$ is described by $d$ and $r$. (ii) The good model is product-sufficient; a program with $\lev(\pi)\ge2$ pays $NG_1$, more than the memoriser's two-part length; so a product-sufficient program has $\lev(\pi)=1$, and (D1) bounds its length. (iv) uses the sharper floor (\cref{app:algstat:parity}; numerical values in \cref{tab:algstat:numbers}).
+
+\begin{remark}[Restricted model families]\status{known; unverified (content per abstracts); remark}\src{steeper \S3.5, relation to restricted model families}\label{rem:algstat:restricted}
+Restricting the model family changes the structure function; Hamming-ball models \citep{vereshchagin2010rate} are the closest case. For the full-table noisy parity the Hamming ball of radius $pN$ around $f_a$ is a set model of complexity about $d$ and log-size about $NH(p)$, that is, the parity plus independent flips as a set. See also \citet{milovanov2016algorithmic}.
+\end{remark}
+
+\begin{remark}[Reading: one bit paying for one bit]\status{remark}\src{steeper \S3.5, Reading}\label{rem:algstat:reading}
+With shared randomness (a set model, or any shared model) a uniformly random $d$-bit parameter costs the same in the model as in the data-to-model code, one bit for one bit. So the minimal sufficient statistic treats the parity's parameter as noise. With private randomness, not knowing the parameter costs about one bit \emph{per input}, so the product split keeps it in the model, and the slope of $\rho^\times_D$ changes at $\alpha\approx d$, as the note \citep{hanni2026grokking} anticipated for the function case. For supervised learning the product split is the relevant one, because the model is the part of the description reused across inputs. This is also why steeper simplicity is useless over set models in the parity example (\cref{prop:algstat:parity}(i)) and decisive over product models (\cref{thm:teacher:main,cor:teacher:fulltable}).
+\end{remark}
