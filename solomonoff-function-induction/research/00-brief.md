@@ -166,3 +166,9 @@ For each comparison, state exactly what is proved: equivalence up to a constant,
 * **Final record:** end each track's notes with a *Verification log*.
 * **Style:** plain, precise prose, short sentences, no marketing, and nothing claimed beyond what the notes establish.
 * **Audience:** a mathematically literate reader (learning theory, algorithmic information theory). The paper is meant to establish public fundamentals, so definitions must be careful and self-contained.
+
+## Naming (Hänni, 2026-10-12)
+
+> btw probably you're already doing this but i wouldn't call it wyeth's objection in the paper. like it's a fairly standard thing. i was certainly aware of it before wyeth's comment
+
+In the papers, call it the (standard) absorption objection, and do not attribute it to Wyeth or quote him (see the binding note in the papers' OUTLINE.md).
