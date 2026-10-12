@@ -293,7 +293,7 @@ The workflow's null findings matter too:
 * **Post-hoc changes.** The scorer fixes, the move to a five-task primary family, the I6 split and the wording control all followed the red-team audit of a first draft. The original versions are reported as sensitivity analyses and give the same conclusions. A second audit round changed only the reporting: C4 and C9, the informative-cell bounds, the reattribution of calibration, and the limits of the control.
 * **The control is a separate run.** It ran a day after the original, with fewer replicates, no MIRI arm and no original-wording arm alongside it. It gives everyone the ban advocates' and newsroom's scope clause; no arm gives everyone the industry's wording.
 * **Usage-limit interruption.** About 550 calls failed mid-run on the account's usage limit and were rerun from the same job files. Every cell is complete.
-* **Cost.** About $296 at list prices: subject calls $181 (main), $21 (control) and $21 (pilots); judges and coders $74. The multi-agent workflows used a further ~8.4M subagent tokens.
+* **Cost.** About $296 at API list prices (the runs used a Claude subscription, not per-token billing): subject calls $181 (main), $21 (control) and $21 (pilots); judges and coders $74. The multi-agent workflows used a further ~8.4M subagent tokens.
 
 ## Reproduce
 
