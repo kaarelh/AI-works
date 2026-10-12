@@ -1,4 +1,4 @@
-"""c6: the counting lemma behind Prop 4.6(iii) (SFI^set cannot track the order).
+"""c6: the counting lemma behind Prop 4.5(iii) (SFI^set cannot track the order).
 
 A deterministic set-hypothesis g maps (T, x), with T a finite set of previous inputs and x the
 current input, to a label.  Fix a set S of n inputs.  An order sigma = (x_1, ..., x_n) of S is

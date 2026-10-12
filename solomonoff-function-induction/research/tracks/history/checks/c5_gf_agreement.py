@@ -1,4 +1,4 @@
-"""c5: the counting bound behind Thm 5.3 (the 'ab' example).
+"""c5: the counting bound behind Thm 5.4 and Lemma 5.5 (the 'ab' example).
 
 F = GF(2^m).  For a function G: F -> F let
     N(G) = #{ (a,b) in F x F : a != b, G(a) + G(b) = a*b }.

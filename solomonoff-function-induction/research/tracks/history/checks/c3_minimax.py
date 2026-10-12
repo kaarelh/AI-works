@@ -1,4 +1,4 @@
-"""c3: the minimax step of Thm 3.4 in notes.md, on small finite instances.
+"""c3: the minimax step of Thm 3.8 in notes.md and notes-final.md, on small finite instances.
 
 Setting: X = {0,1,2}, Y = {0,1}, horizon n = 3, the 8 functions f: X -> Y.
 For a history-aware predictor P and an input policy Delta we compute

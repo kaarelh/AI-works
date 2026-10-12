@@ -12,12 +12,12 @@ brute-force values.
          test of the sentence "depends on the labelling only through the number of
          heads";
     (A3) Lemma 3.8 (P*) vs the brute-force conditional, all t <= n;
-    (A4) E[L_P*(n)] and E[N_touch(n)] (Prop 3.9: E L = kappa * E N_touch(n));
     (A5) E[g_n] <= n/2 + 1/2 and H(g_n) <= log2(n/2+3/2) + log2 e (proof of Thm 3.6).
 (B) Exact Markov-chain DP over the states touching / (A,U) / (B,U) (U capped), for
     n up to 2000: P(eta_n < tau_n) vs 20 exp(-n/18) (Lemma 3.5); E N_touch(n);
     E L_P*(n); the brief's rule "tail iff x_t = smallest unrevealed index": exact
     expected number of errors and exact P(no error in n steps).
+(B2) Monte Carlo of L_P*(60) and N_touch(60) with own process and P* code (Prop 3.9).
 (C) kappa (Prop 3.9) to 30 digits with mpmath; sigma^2 (Prop 3.4(3)).
 (D) Direct simulation (own simple implementation) of the process: E[UB_n]/n,
     Var(UB_n)/n, frequency of eta_n < tau_n, E g_n.
@@ -27,7 +27,7 @@ brute-force values.
 (G) The track's code: bayes_xonly_surprisal and threshold_mixture_loss vs this
     file's brute force / naive sums.
 
-Seed 20261011 (parts D, G). Output: r1_eisenstat_independent_output.txt
+Seed 20261011 (parts B2, D, G). Output: r1_eisenstat_independent_output.txt
 """
 import math
 import os
@@ -209,23 +209,7 @@ def part_A():
                 worst = max(worst, abs(q - my_pstar(h, x)))
                 npairs += 1
         say(f"   (A3) {npairs} (history, input) pairs: max |P* - brute force| = {worst}")
-        # (A4) E L_P*(n), E N_touch(n)
-        EL = 0.0
-        EN = Fr(0)
-        for hist, p, _ in branches:
-            L = 0.0
-            for t in range(n):
-                h, (x, y) = hist[:t], hist[t]
-                eta, tau, g, S = frontiers(h)
-                if g == max(eta, tau):
-                    EN += p
-                q = my_pstar(h, x)
-                q = q if y == 1 else 1 - q
-                L += -math.log2(q)
-            EL += float(p) * L
         tm = float(1 - lost)
-        say(f"   (A4) E[L_P*(n)] = {EL/tm:.6f}; E[N_touch(n)] = {float(EN)/tm:.6f}; "
-            f"kappa*E[N_touch(n)] = {KAPPA*float(EN)/tm:.6f}  (mass-renormalised)")
         # (A5) E g_n, H(g_n)
         gl = defaultdict(Fr)
         for hist, p, _ in branches:
@@ -251,90 +235,133 @@ KAPPA = kappa_float()
 
 def part_B():
     say("")
-    say("(B) exact DP over states: touching-with-heads-ahead (TH), touching-with-tails-ahead (TT),")
-    say("    (A,U) heads ahead, (B,U) heads behind; U capped at 400 (truncated mass reported)")
-    U = 400
+    say("(B) exact DP over states: touching with heads ahead (TH) / tails ahead (TT), (A,U) heads ahead,")
+    say("    (B,U) heads behind. U is capped at 600; A-mass above the cap goes to an absorbing state A_inf")
+    say("    (from level 600 the A-walk returns with probability 2^-600); B-mass above the cap is dropped and reported.")
+    U = 600
     dmax = U + 1
-    # probabilities from touching
-    ph = np.array([(2 / 9) * (2 / 3) ** d for d in range(dmax)])  # head reveal skipping d tails
-    pt = np.array([(2 / 9) * (1 / 3) ** d for d in range(dmax)])  # tail reveal skipping d heads
-    jA = np.array([(1 / 3) * (2 / 3) ** j for j in range(dmax)])  # from A: head reveal skipping j tails
-    jB = np.array([(2 / 3) * (1 / 3) ** j for j in range(dmax)])  # from B: tail reveal skipping j heads
+    ph = np.array([(2 / 9) * (2 / 3) ** d for d in range(dmax)])  # touching: head reveal skipping d tails
+    pt = np.array([(2 / 9) * (1 / 3) ** d for d in range(dmax)])  # touching: tail reveal skipping d heads
+    jA = np.array([(1 / 3) * (2 / 3) ** j for j in range(dmax)])  # A: head reveal skipping j tails
+    jB = np.array([(2 / 3) * (1 / 3) ** j for j in range(dmax)])  # B: tail reveal skipping j heads
 
-    def step(TH, TT, A, B):
-        nTH = nTT = 0.0
+    def step(TH, TT, A, Ainf, B, lostB):
+        T = TH + TT
+        nTH = T * ph[0]
+        nTT = T * pt[0]
         nA = np.zeros(U + 1)
         nB = np.zeros(U + 1)
-        T = TH + TT
-        # from touching
-        nTH += T * ph[0]
-        nTT += T * pt[0]
         nA[1:] += T * ph[1:U + 1]
+        nAinf = Ainf + T * (2 / 9) * 3 * (2 / 3) ** (U + 1)         # sum_{d>U} (2/9)(2/3)^d
         nB[1:] += T * pt[1:U + 1]
-        # from A_u
+        nlost = lostB + T * (2 / 9) * 1.5 * (1 / 3) ** (U + 1)
         for u in range(1, U + 1):
-            if A[u] == 0:
-                continue
             m = A[u]
-            # tail reveal (1/3): u-1 ; reaching 0 -> touching with heads ahead
-            if u - 1 == 0:
-                nTH += m / 3
-            else:
-                nA[u - 1] += m / 3
-            # head reveal (2/3): u + j
-            top = min(U - u, dmax - 1)
-            nA[u:u + top + 1] += (2 / 3) * m * jA[:top + 1]
-        for u in range(1, U + 1):
-            if B[u] == 0:
-                continue
+            if m:
+                if u == 1:
+                    nTH += m / 3          # A-walk returns: revealed set [0, eta), heads ahead
+                else:
+                    nA[u - 1] += m / 3
+                top = U - u
+                nA[u:U + 1] += (2 / 3) * m * jA[:top + 1]
+                nAinf += (2 / 3) * m * (2 / 3) ** (top + 1)
             m = B[u]
-            if u - 1 == 0:
-                nTT += 2 * m / 3   # head reveal brings heads frontier to... revealed set initial segment, tails ahead
-            else:
-                nB[u - 1] += 2 * m / 3
-            top = min(U - u, dmax - 1)
-            nB[u:u + top + 1] += (1 / 3) * m * jB[:top + 1]
-        return nTH, nTT, nA, nB
+            if m:
+                if u == 1:
+                    nTT += 2 * m / 3      # B-walk returns: revealed set [0, tau), tails ahead
+                else:
+                    nB[u - 1] += 2 * m / 3
+                top = U - u
+                nB[u:U + 1] += (1 / 3) * m * jB[:top + 1]
+                nlost += (1 / 3) * m * (1 / 3) ** (top + 1)
+        return nTH, nTT, nA, nAinf, nB, nlost
 
-    # NOTE on flags: after the B-walk returns (a head reveal fills the last unrevealed head
-    # below tau), the revealed set is [0, tau) and tau = F > eta: tails ahead (TT).
-    # After the A-walk returns, eta = F > tau: heads ahead (TH).
-    TH, TT, A, B = 1.0, 0.0, np.zeros(U + 1), np.zeros(U + 1)   # empty history: touching, eta=tau=0 (not behind)
+    TH, TT, A, Ainf, B, lostB = 1.0, 0.0, np.zeros(U + 1), 0.0, np.zeros(U + 1), 0.0
+    T0, A0, A0inf = 1.0, np.zeros(U + 1), 0.0   # no-error chain (touching, A_u, A_inf)
     EN = 0.0
     Eerr = 0.0
-    # no-error DP (separate): states touching (flag irrelevant), A_u
-    T0, A0 = 1.0, np.zeros(U + 1)
-    checkpoints = {10, 20, 40, 80, 160, 200, 1000, 2000}
-    say("     n | P(eta_n<tau_n) exact | 20 exp(-n/18) | E N_touch(n) | E L_P*(n)=kappa*E N_touch | rule: E errors(n)  P(no error in n steps)")
+    checkpoints = {1, 2, 3, 5, 10, 20, 40, 80, 160, 200, 1000, 2000}
+    say("     n | P(eta_n<tau_n) exact | 20 exp(-n/18) | E N_touch(n) | kappa*E N_touch(n) | rule: E errors(n) | P(no rule error in n steps)")
     for t in range(1, 2001):
-        # quantities "before step t"
         T = TH + TT
-        EN += T
-        Eerr += T * (1 / 3) + B.sum()
-        # no-error chain update for step t
-        nT0 = T0 * (2 / 9)                      # tail with d = 0 (correct)
+        EN += T                                   # history before step t is touching
+        Eerr += T * (1 / 3) + B.sum()             # touching step errs w.p. 1/3; every B-step errs
+        # no-error chain: from touching only "tail, d=0" (2/9) and "head, d>=1" keep the rule correct
+        nT0 = T0 * (2 / 9)
         nA0 = np.zeros(U + 1)
-        nA0[1:] += T0 * ph[1:U + 1]             # head with d >= 1 (correct)
+        nA0[1:] += T0 * ph[1:U + 1]
+        nA0inf = A0inf + T0 * (2 / 9) * 3 * (2 / 3) ** (U + 1)
         for u in range(1, U + 1):
-            if A0[u] == 0:
-                continue
             m = A0[u]
-            if u == 1:
-                nT0 += m / 3
-            else:
-                nA0[u - 1] += m / 3
-            top = min(U - u, dmax - 1)
-            nA0[u:u + top + 1] += (2 / 3) * m * jA[:top + 1]
-        T0, A0 = nT0, nA0
-        TH, TT, A, B = step(TH, TT, A, B)
+            if m:
+                if u == 1:
+                    nT0 += m / 3
+                else:
+                    nA0[u - 1] += m / 3
+                top = U - u
+                nA0[u:U + 1] += (2 / 3) * m * jA[:top + 1]
+                nA0inf += (2 / 3) * m * (2 / 3) ** (top + 1)
+        T0, A0, A0inf = nT0, nA0, nA0inf
+        TH, TT, A, Ainf, B, lostB = step(TH, TT, A, Ainf, B, lostB)
         if t in checkpoints:
-            behind = TT + B.sum()   # eta < tau after t steps
-            say(f"  {t:5d} | {behind:.6e}         | {min(1.0, 20*math.exp(-t/18)):.6e}   | {EN:.6f}     | {KAPPA*EN:.6f}                   "
-                f"| {Eerr:.6f}          {T0 + A0.sum():.6f}")
-    say(f"   mass kept after 2000 steps (cap effect): {TH + TT + A.sum() + B.sum():.12f}")
-    say(f"   limits: E N_touch -> 3, E L_P* -> 3 kappa = {3*KAPPA:.6f}; rule: E errors -> 2, P(no error) -> 1/2 "
-        "(referee's derivation: per touching step error prob 1/3, plus every step in a B-state errs, "
-        "expected B-steps per touching step 1/3; no-error prob p = (2/9)p + (1/9)p + 1/3)")
+            behind = TT + B.sum()
+            say(f"  {t:5d} | {behind:.6e}         | {min(1.0, 20*math.exp(-t/18)):.6e}   | {EN:.9f}  | {KAPPA*EN:.9f}        "
+                f"| {Eerr:.9f}       | {T0 + A0.sum() + A0inf:.9f}")
+    say(f"   total mass after 2000 steps = {TH + TT + A.sum() + Ainf + B.sum():.12f}; B-mass dropped at the cap = {lostB:.3e}")
+    say(f"   limits: E N_touch -> 3, kappa*3 = {3*KAPPA:.9f}; rule: E errors -> 2, P(no error ever) -> 1/2.")
+    say("   (Referee's derivation of the rule's limits: a touching step errs w.p. 2/9 (head, d=0) + 1/9 (tail, d>=1) = 1/3;")
+    say("    every step taken in a B-state errs; expected B-steps per touching step = sum_d (2/9)(1/3)^d * 2d = 1/3;")
+    say("    so E errors = 3*(1/3+1/3) = 2; P(no error ever) = p with p = (2/9)p + (1/9)p + 1/3, i.e. p = 1/2.)")
+
+
+def part_B2():
+    """Monte Carlo of the P* loss with the referee's own process and P* implementations."""
+    say("")
+    say("(B2) Monte Carlo of L_P*(60) and N_touch(60), own implementation (seed 20261011)")
+    rng = np.random.default_rng(20261011)
+    R = 60000
+    Ls = np.empty(R)
+    Ns = np.empty(R)
+    for r in range(R):
+        b = []
+        def bit(i):
+            while len(b) <= i:
+                b.append(1 if rng.random() < 1 / 3 else 0)
+            return b[i]
+        eta = tau = 0
+        S = set()
+        g = 0
+        L = 0.0
+        N = 0
+        for t in range(60):
+            F = max(eta, tau)
+            touching = (g == F)
+            want = 1 if rng.random() < 2 / 3 else 0
+            i = eta if want == 1 else tau
+            while bit(i) != want:
+                i += 1
+            x = i
+            if x < F:
+                q1 = 0.0 if x < eta else 1.0
+            elif touching:
+                q1 = 1.0 / (1.0 + 2.0 ** (-(x - F)))
+            else:
+                q1 = 1.0 if tau <= eta else 0.0
+            q = q1 if want == 1 else 1 - q1
+            L += -math.log2(q)
+            N += touching
+            S.add(x)
+            if want == 1:
+                eta = x + 1
+            else:
+                tau = x + 1
+            while g in S:
+                g += 1
+        Ls[r] = L
+        Ns[r] = N
+    say(f"  E L_P*(60) = {Ls.mean():.4f} +- {Ls.std()/math.sqrt(R):.4f} (claim <= 3 kappa = 2.3986; DP value at 60 ~ {KAPPA*3:.4f});"
+        f" E N_touch(60) = {Ns.mean():.4f} +- {Ns.std()/math.sqrt(R):.4f};"
+        f" P(N_touch=j), j=1..4: {[round(float(np.mean(Ns==j)),4) for j in range(1,5)]} vs geometric {[round((2/3)**(j-1)/3,4) for j in range(1,5)]}")
 
 
 # ---------------------------------------------------------------------------
@@ -479,6 +506,7 @@ def main():
     say("r1_eisenstat_independent.py (seed 20261011 for simulations)")
     part_A()
     part_B()
+    part_B2()
     part_C()
     part_D()
     part_E()

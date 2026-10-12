@@ -16,6 +16,8 @@
 [F] Lemma 1.2(iii) as reworded (referee minor 11): a point is the unique minimiser of c*l + R on a
     nonempty open interval of c iff it is a vertex of the lower boundary (end vertices included) and
     no other hypothesis sits at the same point.
+[G] Small items: the exact guard-erosion crossing (Prop 2.13) and the explicit fraction in Prop 2.9(a).
+[H] Example 2.7a at N = 1e4: Lemma 2.6's excess term against the largest margin M2 - J_g in the window.
 
 Formulas are those of notes-final.md, re-implemented here (not imported from c3).
 Seeded: numpy default_rng(6), random.seed(6).

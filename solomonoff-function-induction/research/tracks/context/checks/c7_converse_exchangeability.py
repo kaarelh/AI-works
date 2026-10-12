@@ -14,6 +14,10 @@ Checks
         E[e(x*)] = E[ (1/(m+1)) * sum_{x in S, multiplicity 1} e_LOO(x; S) ]   (S = set of sampled values)
                 <= E[ (nu(empty) - nu(f|S)) / ((m+1) nu(f|S)) ],
       computed exactly by enumerating all (m+1)-tuples, for several m and pi.
+  (4) Markov form (Cor 2.17(a)): with hypotheses = (law, realisation) pairs, each a deterministic partial
+      function h with weight w_h, and eps_h = pi{x : h(x) != f(x) or undefined},
+        E[e(x*)] = E[ sum_{h extends D} w_h eps_h / nu(D) ] <= min_eps [ eps + nu(empty) e^{-eps m} / nu(f) ],
+      checked exactly for the same m and pi (nu(f) <= nu(D) because f is a total labelling extending D).
 Seed 7.
 """
 import itertools
@@ -137,9 +141,29 @@ for trial in range(3):
             Eb += p * (nu({}) - nSf) / ((m + 1) * nSf)
         ok = abs(Ee - Eid) < 1e-12 and Ee <= Eb + 1e-15
         ok3 &= ok
+        # (4) Markov form
+        hyps_flat = [(wh * p_, a) for wh, law in zip(w, hyps) for p_, a in law]
+        eps_h = [sum(pi[x] for x in range(NX) if a[x] != f[x]) for _, a in hyps_flat]
+        nf = nu(dict(enumerate(f)))
+        mk = min(e_ + nu({}) * np.exp(-e_ * m) / nf for e_ in np.linspace(0, 1, 2001))
+        ok4 = Ee <= mk + 1e-12
+        ok3 &= ok4
         P(f"(3) pi #{trial} m={m}: E e(x*) = {Ee:.6f}; exchangeability identity error {abs(Ee - Eid):.1e}; "
-          f"bound E[(nu(empty)-nu(f|S))/((m+1)nu(f|S))] = {Eb:.6f}; holds: {ok}")
-P(f"(3) all identities and bounds hold: {ok3}")
+          f"bound E[(nu(empty)-nu(f|S))/((m+1)nu(f|S))] = {Eb:.6f}; holds: {ok}; "
+          f"(4) Markov bound min_eps[eps + nu(empty)e^(-eps m)/nu(f)] = {mk:.6f}; holds: {ok4}")
+P(f"(3)+(4) all identities and bounds hold: {ok3}")
+# (4') the Markov bound at larger m, against the exact expectation computed by the hypothesis-level formula
+pi = rng.dirichlet(np.ones(NX))
+hyps_flat = [(wh * p_, a) for wh, law in zip(w, hyps) for p_, a in law]
+nf = nu(dict(enumerate(f)))
+for m in (20, 50, 100, 200):
+    # exact E e(x*) = sum over samples ... computed via hypotheses: E[sum_{h extends D_m} w_h eps_h / nu(D_m)] needs
+    # the joint law of D_m; we use the upper bound E <= sum_h w_h eps_h (1-eps_h)^m / nu(f) (exact Markov step)
+    mstep = sum(wh * sum(pi[x] for x in range(NX) if a[x] != f[x]) *
+                (1 - sum(pi[x] for x in range(NX) if a[x] != f[x])) ** m for wh, a in hyps_flat) / nf
+    mk = min(e_ + nu({}) * np.exp(-e_ * m) / nf for e_ in np.linspace(0, 1, 20001))
+    P(f"(4') m={m}: sum_h w_h eps_h (1-eps_h)^m / nu(f) = {mstep:.3e} <= min_eps[...] = {mk:.3e}: {mstep <= mk + 1e-15}; "
+      f"(ln(nu(empty)/nu(f)) + ln m + 1)/m = {(np.log(nu({}) / nf) + np.log(m) + 1) / m:.3e}")
 
 with open(__file__.replace(".py", "_output.txt"), "w") as fh:
     fh.write("\n".join(out) + "\n")

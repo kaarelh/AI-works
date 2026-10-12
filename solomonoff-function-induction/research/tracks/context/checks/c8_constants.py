@@ -5,7 +5,9 @@
     We compute L* by bisection on a log-spaced grid of m in [1e-3, 1e5] and d in [1, 1e4], and report
       max L* / (m (d+1) log2(2 (m+1) (d+2)))      over the whole grid (all m > 0 on the grid), and
       max L* / (m d log2(m d + 2))                 over the part of the grid with m >= 1 (referee m12's form),
-    together with the location of the maxima.
+    together with the location of the maxima, and four points with m << 1/d, where the referee's form
+    m d log2(md+2) is not uniformly bounded (its ratio grows like 4 log2 d) while the analytic bound
+    L* <= 16 m (d+1) log2(2(m+1)(d+2)) of the notes still holds.
 (2) Vaintrob-Hanni slides, warm-up (slide 12): the tail inequality 3 (2/3)^(3C+26) < 3^(-C)/2000,
     in log form ln(6000) + 26 ln(2/3) + C ln(8/9) < 0, which is decreasing in C; and the union-bound
     sample size n = 2000((3C+26) ln 2 + C), at which 2^(3C+26) e^(-n/2000) = e^(-C).
@@ -56,10 +58,12 @@ for m in ms:
 P(f"(1) grid: {len(ms)} values of m in [1e-3,1e5], {len(ds)} values of d in [1,1e4]")
 P(f"    max L*/(m (d+1) log2(2(m+1)(d+2))) = {best1[0]:.3f} at m={best1[1][0]:.3g}, d={best1[1][1]}, L*={best1[1][2]:.4g}")
 P(f"    max over m >= 1 of L*/(m d log2(m d + 2)) = {best2[0]:.3f} at m={best2[1][0]:.3g}, d={best2[1][1]}, L*={best2[1][2]:.4g}")
-# behaviour of the referee's form for small m (it is not uniformly bounded there)
-for m, d in ((1e-3, 10), (1e-3, 1000), (1e-3, 10000)):
+# the referee's form m d log2(md+2) is not uniformly bounded when m << 1/d: the ratio grows like 4 log2 d
+# (and the form 16 m (d+1) log2(2(m+1)(d+2)) proved in the notes still holds there)
+for m, d in ((1e-6, 10), (1e-6, 1000), (1e-6, 10000), (1e-9, 10 ** 6)):
     L = Lstar(m, d)
-    P(f"    small m: m={m}, d={d}: L*/(m d log2(md+2)) = {L / (m * d * math.log2(m * d + 2)):.1f}")
+    P(f"    small m: m={m}, d={d}: L*/(m d log2(md+2)) = {L / (m * d * math.log2(m * d + 2)):.1f}; "
+      f"L*/(16 m (d+1) log2(2(m+1)(d+2))) = {L / (16 * m * (d + 1) * math.log2(2 * (m + 1) * (d + 2))):.3f}")
 
 # (2) warm-up
 lhs0 = math.log(6000) + 26 * math.log(2 / 3)

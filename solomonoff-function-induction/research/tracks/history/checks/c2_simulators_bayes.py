@@ -1,10 +1,10 @@
-"""c2: random finite instances for Section 3 of notes.md.
+"""c2: random finite instances for Section 3 of notes.md and notes-final.md.
 
 Setting: X = {0,1,2}, Y = {0,1}, horizon n = 3, repeated inputs allowed (a repeated input
 must get the same label, as data come from a function).
 
 Checks, each over many seeded random instances:
- (A) Shared-randomness simulator G (Thm 3.1): one simulated trajectory from (Delta, P),
+ (A) Shared-randomness simulator G (Thm 3.2): one simulated trajectory from (Delta, P),
      G(x) = label at the first visit of x.  For every input/label sequence consistent with a
      function:  G(D_n) >= Delta(x||y) * P(y||x), and for sequences with distinct inputs
      G(D_n) >= sum over all orderings sigma of Delta(x_sigma||y_sigma) P(y_sigma||x_sigma).
@@ -12,9 +12,14 @@ Checks, each over many seeded random instances:
  (B) Private-randomness simulator of the draft's sketch (each input gets its own simulated
      history, conditioned on visiting it): how often its expected loss exceeds E[L_P]
      (the sketch claims never), for f ~ pi and non-peeking Delta.
- (C) Bayes theorem, non-peeking Delta (Thm 3.2): the chronological Bayes predictor's loss
+     Note: this simulator is the NORMALISED one (conditioned on visiting x) with the horizon
+     truncated at n = 3.  The draft's simulator is unnormalised with unbounded horizon.
+     Normalising only lowers the loss, so violations found here would also hold for an
+     unnormalised version at the same horizon; the horizon truncation makes it a different
+     object.  c1 alone establishes Prop. 3.1.
+ (C) Bayes theorem, non-peeking Delta (Thm 3.5): the chronological Bayes predictor's loss
      equals -log pi(D_n) on every path, and E[L_P] >= E[-log pi(D_n)] for random P.
- (D) Directed-information identity, peeking Delta (Thm 3.3):
+ (D) Directed-information identity, peeking Delta (Thm 3.6):
      E[-log pi(D)] - E[-log mu(y||x)] = I(f -> x) - E[KL(post || label-only post)] <= I(f -> x),
      and E[L_P] >= E[-log mu(y||x)].
 Seed 20261011.  Output saved to c2_simulators_bayes.out.

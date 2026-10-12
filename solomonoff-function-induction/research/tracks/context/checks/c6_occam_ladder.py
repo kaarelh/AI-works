@@ -15,7 +15,8 @@ Parts
   (c) Circuit language of Section 3.2: all 16 two-input gates, sources x_1..x_d, 0, 1 and earlier gates,
       size = number of gates (dead gates allowed).  For d = 3, 4, 5: for k >= 2 the least-size consistent
       functions at the start of stage k are exactly the k-variable conjunctions (size k-1); for k = 1
-      the lemma fails (x_i AND x_j has size 1); Occam mistakes on the ladder.
+      the lemma fails (x_i AND x_j has size 1); Occam mistakes on the ladder.  Also the number of functions
+      with at most d-1 gates for d = 3, 4 (a cross-check against the referee's r2 counts).
   (d) Description lengths l(AND_d) (unary size code + uniform choice within the size, as in Section 3.2/3.3)
       against the mistake lower bounds 2^d - 2 (formulas) and 2^d - d - 2 (circuits), d = 3..40.
   (e) Same prior, other selection rule: Bayes posterior-majority (weighted majority) predictor for the
@@ -237,6 +238,11 @@ for d in (3, 4, 5):
     P(f"  d={d}: #functions of least size <= {smax}: {len(sizes)}; ladder lemma for k=2..{d-1}: {lem}; "
       f"k=1: size-1 consistent functions include x1 AND x2: {has_pair_and} (so the lemma fails at k=1); "
       f"Occam mistakes on the ladder: {mis} of {NP} (lower bound 2^d-d-2 = {NP-d-2})")
+
+
+P("  cross-check at one size more (d-1 gates): #functions of least circuit size <= d-1: "
+  + ", ".join(f"d={d}: {len(circuit_sizes(d, d - 1))}" for d in (3, 4))
+  + " (equal to the formula counts of size <= d in (b); an observation, not used)")
 
 
 # ---------------------------------------------------------------- (d) description lengths

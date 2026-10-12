@@ -3,8 +3,8 @@ Proposition 3.2a; referee m1, m2).
 
 Toy model: Y = {0,1}; an input is a pair (length n, id); p(n) = n; the clock factor is g(t) = ceil(log2(t+1)) (the regret
 statements hold for every nondecreasing unbounded g; the log log choice only matters for running time).
-Comparators A_i are probability predictors with a simulated running time c_i * p(|x|) on every input
-(a constant-factor time class C_p with constant c_i) and weights w_i = 2^-(i+1).
+Comparators A_i are probability predictors with simulated running time at most c_i * p(|x|) (class C_p with
+constant c_i); on half of the inputs they run faster, in time p(|x|) and weights w_i = 2^-(i+1).
 
 S_len (Theorem 3.1): machine i is active on inputs of length >= n_i and is used when its time c_i p(|x|)
   is within g(|x|) p(|x|); otherwise it predicts uniformly.  Bound (Thm 3.1(a), with the m1 wording):
@@ -41,22 +41,29 @@ def A(i, x):
     return 0.05 + 0.9 * h
 
 
+def T(i, x):
+    """actual running time: c_i p(|x|) is only the worst case; on inputs with even id A_i runs in time p(|x|).
+    This exercises referee m1: on a short input an active comparator may finish within the clock."""
+    n, ident = x
+    return (1 if ident % 2 == 0 else c[i]) * n
+
+
 def q_len(i, x):
     n = x[0]
-    if n >= n_act[i] and c[i] * n <= g(n) * n:
+    if n >= n_act[i] and T(i, x) <= g(n) * n:
         return A(i, x)
     return 0.5
 
 
 def q_round(i, x, k):
     n = x[0]
-    if k >= k_act[i] and c[i] * n <= g(k) * n:
+    if k >= k_act[i] and T(i, x) <= g(k) * n:
         return A(i, x)
     return 0.5
 
 
-N_i = [max(n_act[i], min(n for n in range(1, 10 ** 6) if g(n) >= c[i])) for i in range(NM)]
-J_i = [max(k_act[i], min(k for k in range(1, 10 ** 9) if g(k) >= c[i])) for i in range(NM)]
+N_i = [max(n_act[i], next(n for n in range(1, 10 ** 6) if g(n) >= c[i])) for i in range(NM)]
+J_i = [max(k_act[i], next(k for k in range(1, 10 ** 9) if g(k) >= c[i])) for i in range(NM)]
 out = []
 
 
@@ -84,7 +91,8 @@ def run(stream_inputs, label_rule):
         for key, qq in (("len", ql), ("round", qr)):
             lik = np.where(y == 1, qq, 1 - qq)
             new = logS[key] + np.log2(lik)
-            lossS[key] = -float(np.log2(np.sum(2.0 ** new)))
+            mx = new.max()
+            lossS[key] = -float(mx + np.log2(np.sum(2.0 ** (new - mx))))
             logS[key] = new
         a = np.array([A(i, x) for i in range(NM)])
         lossA += -np.log2(np.where(y == 1, a, 1 - a))
@@ -111,8 +119,8 @@ lossS, lossA, ok, ms, short = run(inputs_A, lambda x, pl: 0 if pl > 0.5 else 1)
 P("Stream A (4000 distinct inputs, adversarial labels against S_len):")
 P(f"  Thm 3.1(a) bound holds at every prefix for every comparator: {ok['len']} (min slack {ms['len']:.2f} bits)")
 P(f"  round-based bound holds at every prefix: {ok['round']} (min slack {ms['round']:.2f} bits)")
-P(f"  final regrets S_len - A_i: {[round(lossS['len'] - a, 1) for a in lossA]}")
-P(f"  final regrets S_round - A_i: {[round(lossS['round'] - a, 1) for a in lossA]}")
+P(f"  final regrets S_len - A_i: {[round(float(lossS['len'] - a), 1) for a in lossA]}")
+P(f"  final regrets S_round - A_i: {[round(float(lossS['round'] - a), 1) for a in lossA]}")
 
 # Stream B: repeated short inputs, noisy labels drawn from comparator 3
 pool = [(n, j) for n in range(2, 6) for j in range(3)]
@@ -120,7 +128,7 @@ inputs_B = [pool[int(rng.integers(len(pool)))] for _ in range(4000)]
 lossS, lossA, ok, ms, short = run(inputs_B, lambda x, pl: int(rng.random() < A(4, x)))
 P("Stream B (4000 rounds from 12 short inputs, labels ~ A_4, so repeated inputs get different labels):")
 P(f"  Thm 3.1(a)-type bound (short-input count) holds: {ok['len']}; but the count of short rounds grows: {short.tolist()}")
-P(f"  final regret S_len - A_4 = {lossS['len'] - lossA[4]:.1f} bits (grows linearly: A_4 is never within its length-based budget)")
+P(f"  final regret S_len - A_4 = {lossS['len'] - lossA[4]:.1f} bits (grows linearly: on odd-id inputs A_4 is never within its length-based budget)")
 P(f"  round-based bound holds at every prefix: {ok['round']} (min slack {ms['round']:.2f} bits); "
   f"final regret S_round - A_4 = {lossS['round'] - lossA[4]:.1f} bits <= {math.log2(1 / w[4]) + (J_i[4] - 1):.0f}")
 
