@@ -60,7 +60,7 @@ Each row gives the symbol (and macro), its meaning, where it is defined in the p
 | $\Mprod$ (`\Mprod`) | mixture of product laws (private randomness per input), on data sets | `def:versions:variants` | $M_{\rm prod}$ | $M_{\rm prod}$ | "product law" | $M_{\rm prod}$ | $\xi_\times$ |
 | $\Mpq$ (`\Mpq`) | per-query mixture (fresh randomness per query), on sequences; operator induction as secondary sources describe it | `def:versions:variants` | $M_{\rm pq}$ | per-query mixture (Prop 4.9) | — | $S$ (§6 item 1) | — |
 | $\nu_P$ (product) | product law $\prod_{(x,y)\in D}P(y\mid x)$ of a conditional semimeasure $P$ (Hänni's x-only sampler) | `prop:setting:includes` | $\nu_P$ | $\nu_P$ | — | product law | $\nu^{\otimes}$ |
-| $\nulen$ (`\nulen`) | law of $F(x)=\omega_{|x|}$: one shared coin per input length | `prop:versions:shared` | $\sigma$ | — | — | — | $\sigma$ (Prop 1.7(iii)) |
+| $\nulen$ (`\nulen`) | law of $F(x)=\omega_{|x|+1}$: one shared coin per input length | `prop:versions:shared` | $\sigma$ | — | — | — | $\sigma$ (Prop 1.7(iii)) |
 | $\Omtail{\ell}$ (`\Omtail`) | $\sum\{2^{-|p|}:p\in\dom V,|p|\ge\ell\}$ | `prop:versions:Wgap` | $\tau_V(\ell)$ | — | — | — | — |
 | $\Kpad(N)$ (`\Kpad`) | padded complexity $\min_{L\ge N}K(L)$ | `prop:versions:tape` | $\kappa(N)$ | $\kappa(N)$ | — | — | — |
 | $\Ktail(N)$ (`\Ktail`) | $-\log\sum_{L\ge N}2^{-K(L)}$ | `prop:hist:programs` | — | $\tau(N)$ | — | — | — |

@@ -1,13 +1,47 @@
 % Appendix F (writer: steep-a). Proofs for sec:algstat. Source: steeper notes-final §3.5 (Props 3.7, 3.8), check c7(C).
-\section{Proofs for the relation to algorithmic statistics}\label{app:algstat}
+\section{Proofs for \texorpdfstring{\cref{sec:algstat}}{Section \ref*{sec:algstat}} (algorithmic statistics)}\label{app:algstat}
 
-\subsection{Proof of the proposition on sets from products}\label{app:algstat:coarse}
+\subsection{Steeper codes over sets and products, and sets from products}\label{app:algstat:coarse}
 
-We prove \cref{prop:algstat:coarse}. Since $Y$ is finite and $\nu_\pi$ is computable with rational values, the test $\nu_\pi(\dom D\mapsto y')\ge2^{-\rho}$ is decidable, so $A$ is computable from $(\pi,\dom D,\rho)$. By (F1), (F3) and (F5), $K(A\mid\dom D)\le\ell(\pi)+2\log(\rho+1)+\kappa$. It contains $y_D$ because $\nu_\pi(D)\ge2^{-\rho}$. Since $\sum_{y'}\nu_\pi(\dom D\mapsto y')\le1$, $|A|\le2^\rho$. Hence
+\begin{proposition}[Steeper two-part codes over sets]\status{proved; a natural reading refuted}\src{steeper Prop 3.5}\label{prop:algstat:set}
+Let $\lambda>1$ and let $A_\lambda$ minimise $\lambda K(A)+\log|A|$ over $A\ni z$. Then, for every $b\ge0$,
 \[
-K(A\mid\dom D)+\log|A|\le\ell(\pi)+2\log(\rho+1)+\kappa+\rho\le\ell(\pi)-\log\nu_\pi(D)+1+2\log(\rho+1)+\kappa,
+K(A_\lambda)\le\sophset_b(z)+\frac{b+\kappa}{\lambda-1},
 \]
-and product-$b$-sufficiency of $\pi$ gives the claim. The consequence follows by taking $\pi$ to attain $\sophx_b(D)$. Against the unconditional set sophistication of the string $y_D$, describe $\dom D$ first, at cost $K(\dom D)$. \qed
+and $A_\lambda$ is $\big(b+(\lambda-1)\sophset_b(z)\big)$-sufficient.
+\end{proposition}
+
+\begin{proof}
+Let $A_b$ attain $\sophset_b(z)$. Then $\lambda K(A_\lambda)+\log|A_\lambda|\le\lambda K(A_b)+\log|A_b|\le(\lambda-1)\sophset_b(z)+K(z)+b$. Subtract the sufficiency line for the first claim; use $K(A_\lambda)\le\lambda K(A_\lambda)$ for the second. A minimiser exists because only finitely many $A$ have $K(A)\le L$.
+\end{proof}
+
+\begin{remark}[$\lambda$ near $1$]\label{rem:algstat:near1}
+The bounds do not show that $\lambda$ slightly above $1$ selects an approximately minimal sufficient statistic: as $\lambda\to1$ the length bound becomes vacuous, and as $\lambda$ grows the sufficiency deficiency grows. The proposition is useful at $\lambda-1=\Theta(1)$ when the sophistication is small.
+\end{remark}
+
+\begin{proposition}[Steeper two-part codes over products]\status{proved}\src{steeper Prop 3.6}\label{prop:algstat:product}
+Every $\lambda$-MAP over $\Hcl{\times}$ for $D$ has length at most $\sophx_b(D)+(b+\kappa)/(\lambda-1)$ and is $\big(b+(\lambda-1)\sophx_b(D)\big)$-product-sufficient.
+\end{proposition}
+
+\begin{proof}
+As for \cref{prop:algstat:set}, with \cref{lem:setup:coding} as the sufficiency line. The same trade-off applies (\cref{rem:algstat:near1}).
+\end{proof}
+
+\begin{proposition}[Sets from products]\status{proved for computable hypotheses; that it is the standard set--distribution translation is believed (known; unverified)}\src{steeper Prop 3.7}\label{prop:algstat:coarse}
+Let $\pi$ be product-$b$-sufficient for $D$, and let $\nu_\pi$ be a computable conditional measure with rational values. Put $r_D:=\lceil-\log\nu_\pi(D)\rceil$ (of order $n$) and $A:=\{y'\in Y^{\dom D}:\nu_\pi(\dom D\mapsto y')\ge2^{-r_D}\}$. Then $y_D\in A$, $K(A\mid\dom D)\le\ell(\pi)+2\log(r_D+1)+\kappa$, and $A$ is $(b+2\log(r_D+1)+\kappa)$-sufficient conditionally on $\dom D$: $K(A\mid\dom D)+\log|A|\le K(y_D\mid\dom D)+b+2\log(r_D+1)+\kappa$. Consequently $\sophset_{b'}(y_D\mid\dom D)\le\sophx_b(D)+2\log(r_D+1)+\kappa$ with $b'=b+2\log(r_D+1)+\kappa$, provided a computable rational product hypothesis attains $\sophx_b(D)$. Against the unconditional set sophistication of the string $y_D$, add $K(\dom D)$.
+\end{proposition}
+
+\begin{proof}
+Since $Y$ is finite and $\nu_\pi$ is computable with rational values, the test $\nu_\pi(\dom D\mapsto y')\ge2^{-r_D}$ is decidable, so $A$ is computable from $(\pi,\dom D,r_D)$. By (F1), (F3) and (F5), $K(A\mid\dom D)\le\ell(\pi)+2\log(r_D+1)+\kappa$. It contains $y_D$ because $\nu_\pi(D)\ge2^{-r_D}$. Since $\sum_{y'}\nu_\pi(\dom D\mapsto y')\le1$, $|A|\le2^{r_D}$. Hence
+\[
+K(A\mid\dom D)+\log|A|\le\ell(\pi)+2\log(r_D+1)+\kappa+r_D\le\ell(\pi)-\log\nu_\pi(D)+1+2\log(r_D+1)+\kappa,
+\]
+and product-$b$-sufficiency of $\pi$ gives the claim. The consequence follows by taking $\pi$ to attain $\sophx_b(D)$. Against the unconditional set sophistication of the string $y_D$, describe $\dom D$ first, at cost $K(\dom D)$.
+\end{proof}
+
+\begin{question}[lower-semicomputable product models]\label{q:algstat:lsc}
+Does \cref{prop:algstat:coarse} hold for lower-semicomputable product hypotheses, for which the set $A$ is only computably enumerable?
+\end{question}
 
 \subsection{Proof of the noisy-parity proposition}\label{app:algstat:parity}
 
@@ -17,7 +51,7 @@ We prove \cref{prop:algstat:parity}, in the notation of \cref{sec:algstat:parity
 
 \emph{(i), complexity of $A_0$ and of $z$.} $A_0$ is computable from $d$ and $r$, so $K(A_0)\le2\log d+2\log r+\kappa$ by (F5). The table $z$ determines $a$ as the unique parity within distance $pN<N/4$ of $z$, and then $E=\{x:z(x)\ne f_a(x)\}$; $d$ is determined by $|z|=N$. So $K(z)\ge K(a,E)-\kappa$, and by symmetry of information (F4), $K(a,E)=K(a)+K(E\mid a,K(a))+O(1)\ge d+L_E-\delta_E-\kappa$. Therefore $K(A_0)+\log|A_0|\le K(z)+\delta_E+2\log d+2\log r+\kappa$.
 
-\emph{(i), flatness.} For an integer $0\le u\le d$ let $A_u$ be the subset of $A_0$ whose parities $a'$ agree with $a$ on the first $d-u$ coordinates. Then $\log|A_u|=u+L_E$ and $K(A_u)\le d-u+2\log d+2\log(u+1)+2\log r+\kappa$, since $A_u$ is computable from $d$, $r$, $u$ and those $d-u$ bits. So every $A_u$ has two-part length $d+L_E+O(\log d)$, within $\delta_E+O(\log d)$ of the sufficiency line. With the sufficiency line itself as the lower bound, the structure function $h_z$ lies within $\delta_E+O(\log d)$ of the sufficiency line for every $\alpha$ from $O(\log d)$ up to $d+O(\log d)$.
+\emph{(i), flatness.} For an integer $0\le v\le d$ let $A_v$ be the subset of $A_0$ whose parities $a'$ agree with $a$ on the first $d-v$ coordinates. Then $\log|A_v|=v+L_E$ and $K(A_v)\le d-v+2\log d+2\log(v+1)+2\log r+\kappa$, since $A_v$ is computable from $d$, $r$, $v$ and those $d-v$ bits. So every $A_v$ has two-part length $d+L_E+O(\log d)$, within $\delta_E+O(\log d)$ of the sufficiency line. With the sufficiency line itself as the lower bound, the structure function $h_z$ lies within $\delta_E+O(\log d)$ of the sufficiency line for every $\alpha$ from $O(\log d)$ up to $d+O(\log d)$.
 
 \emph{(i), $\lambda$-optimal set models.} By \cref{prop:algstat:set} with $b=\delta_E+2\log d+2\log r+\kappa$, $K(A_\lambda)\le2\log d+2\log r+\kappa+(b+\kappa)/(\lambda-1)$. By (F3), $K(a)-K(a\mid A_\lambda)\le K(A_\lambda)+\kappa$, which is the claim.
 
@@ -49,11 +83,11 @@ so $NR(\pi)<NF_t$ in the stated range of $b$, and the kink forces $\ell(\pi)\ge 
 
 \subsection{Numbers for the noisy parity at every flip rate below 1/4}\label{app:algstat:numbers}
 
-\Cref{tab:algstat:numbers} evaluates \cref{prop:algstat:parity}(iv) for four dyadic flip rates of small complexity ($K(p)\le2\log(h+1)+2\log(e+1)+\kappa$ for $p=h/2^e$), with $\delta_E=0$ and the best $(t,g)$; the best level is $t=2$ throughout, so $s(t)=7.2$. A direct computation (code in the accompanying repository, seed 7) produced the values. The rows with $\kappa=0$ are illustrations, not results about a particular reference machine; the rows with $\kappa=30$ show how the bounds degrade. At $d\ge30$, $F_2-H(p)$ lies between $0.016$ (for $p=15/64$) and $0.064$ (for $p=1/8$). For comparison, the floor of \cref{lem:teacher:floor} at large level, $1-\log(1+2p)$, exceeds $H(p)$ only for $p<0.1525$, and with it no admissible $t$ exists for $p\ge3/16$ at these sizes.
+\Cref{tab:algstat:numbers} evaluates \cref{prop:algstat:parity}(iv) for four dyadic flip rates of small complexity ($K(p)\le2\log(h'+1)+2\log(e'+1)+\kappa$ for $p=h'/2^{e'}$), with $\delta_E=0$, $t=2$ (so $s(t)=7.2$) and the least $g$ for which the range of $b$ is nonempty. A direct computation (code in the accompanying repository) produced the values, with every occurrence of $\kappa$ set to $0$ or to $30$ (so the constant in $j_d$ is $2\kappa$). The rows with $\kappa=0$ are illustrations, not results about a particular reference machine; the rows with $\kappa=30$ show how the bounds degrade. For this choice of $g$, at $d\ge30$, $F_2-H(p)$ lies between $0.016$ (for $p=15/64$) and $0.064$ (for $p=1/8$). For comparison, the floor of \cref{lem:teacher:floor} at large level, $1-\log(1+2p)$, exceeds $H(p)$ only for $p<0.1525$, and with it no admissible $t$ exists for $p\ge3/16$ at these sizes.
 
 \begin{table}[ht]
 \centering\footnotesize\setlength{\tabcolsep}{3.5pt}
-\caption{Bounds on product sophistication for the full-table noisy parity (\cref{prop:algstat:parity}(iv)), $\delta_E=0$. The interval for $\sophx_b(D)$ holds for every $b$ in the stated range.}\label{tab:algstat:numbers}
+\caption{Bounds on product sophistication for the full-table noisy parity (\cref{prop:algstat:parity}(iv)), $\delta_E=0$, $t=2$. The interval for $\sophx_b(D)$ holds for every $b$ in the stated range. Rows with $\kappa=0$ set the machine constant to $0$ (an illustration). The upper ends of the ranges depend on the choice of $g$.}\label{tab:algstat:numbers}
 \begin{tabular}{rrcccccc}
 \toprule
 $\kappa$ & $d$ & lower bound & \multicolumn{4}{c}{upper bound $d+\cdots$ for $p=$} & range of $b$ \\
@@ -74,4 +108,4 @@ $\kappa$ & $d$ & lower bound & \multicolumn{4}{c}{upper bound $d+\cdots$ for $p=
 
 At $d=20$ the lower bound is negative, so the interval says nothing there; the $O(\log d)$ terms dominate. Upper ends of the $b$-ranges are rounded down, lower ends to the nearest integer.
 
-A second, smaller computation (code in the accompanying repository, seed 2) illustrates (i)--(ii) at $d=10$, $|E|=16$ ($p=1/64$): product list mixtures that leave $u$ bits of $a$ unknown have risk rising from $H(p)=0.116$ at $u=0$ to about $1$ by $u=7$, while the per-sample code lengths of the corresponding shared mixtures stay between $0.116$ and $0.126$, and the two-part lengths of the set models $A_u$ are constant ($125.6$ bits). These totals are the one-line computation of the flatness step, not an independent check.
+A smaller computation (code in the accompanying repository) illustrates (i)--(ii) at $d=10$, $|E|=16$ ($p=1/64$): product list mixtures that leave $v$ bits of $a$ unknown have risk rising from $H(p)=0.116$ at $v=0$ to about $1$ by $v=7$, while the per-sample code lengths of the corresponding shared mixtures stay between $0.116$ and $0.126$.

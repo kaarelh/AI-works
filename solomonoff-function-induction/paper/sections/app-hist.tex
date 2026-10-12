@@ -1,8 +1,10 @@
 % Appendix for Section "hist" (writer: hist). Proofs adapted from research/tracks/history/notes-final.md
 % (final numbering) and checked line by line. Steps the notes leave implicit are written out and marked by a
 % "% step added" comment (not in the printed text). For the page cap, the secondary items lem:hist:memory,
-% prop:hist:nopathwise, rem:hist:thm1open, lem:hist:chronolaw and rem:hist:exploit are stated here.
-\section{Proofs for history-aware prediction}\label{app:hist}
+% prop:hist:nopathwise, rem:hist:thm1open and lem:hist:chronolaw are stated here; prop:hist:normchain,
+% prop:hist:strict, conj:hist:algmi, prop:hist:lhg, thm:hist:gf and thm:hist:expected were moved here from hist.tex
+% in the arXiv edit pass (log-p1-hist-ex.md).
+\section{Proofs for Section~\ref{sec:hist} (history-aware prediction)}\label{app:hist}
 
 Notation is that of \cref{sec:hist}. We use: (F1) \cref{thm:setting:universal} for any countable decidable input set, $\MF(D)\ge2^{-K(T)}\nu_T(D)$ for $D\ne\emptyset$, and $\MF(D)\ge2^{-K(g)-c}$ if a partial computable $g$ extends $D$ (\cref{prop:setting:includes}(b)); (F2) the conditional coding theorem of \cref{sec:setting:data}: if $\nu(z\mid w)$ is lsc uniformly in $w$ and $\sum_z\nu(z\mid w)\le1$, then $K(z\mid w)\le-\log\nu(z\mid w)+K(\nu)+c$; (F3) Levin--Schnorr: $\omega$ is Martin-L\"of random iff $K(\omega_{1:\ell})\ge\ell-c_\omega$ for all $\ell$ \citep{li2008introduction}; (F4) $K(a,b)\le K(b)+K(a\mid b)+c$ and $K(s)\le|s|+K(|s|)+c$ \citep{li2008introduction}; (F5) $M\ge2^{-K(\nu)-c}\nu$ for every lsc semimeasure $\nu$ on $\{0,1\}^*$ \citep{zvonkin1970complexity,li2008introduction}; (F6) Sion's minimax theorem \citep{sion1958general}, for compact convex sets in $\mathbb R^m$ and a continuous payoff convex in one variable and affine in the other.
 
@@ -27,7 +29,7 @@ Fix $\omega$, $x$, and $z\ne z'$ that both satisfy the condition; put $z_0=z'_0:
 \end{proof}
 
 \begin{proof}[Proof of \cref{thm:hist:skipped}]
-(a) In block $\ell$ the strings other than $s_\ell$ come first, so $s_\ell$ is unseen when they are queried, and all its length-$\ell$ siblings are seen when it is. (b) $\dom D^{(\ell)}$ and $\ell$ are computable from each other, and given the domain the labelling determines $s_{1:\ell}$; apply \cref{thm:setting:coding}(a). A function machine that reads, for each length $j$, its own block of $j$ tape bits as a guess $s'_j$ and answers $1$ at $x$ iff $x=s'_{|x|}$ extends $D^{(\ell)}$ with probability $2^{-\ell(\ell+1)/2}$; apply (F1). (c) $K(s_{1:\ell}\mid\ell)\ge K(s_{1:\ell})-K(\ell)-c\ge\ell(\ell+1)/2-K(\ell)-c_\omega$ by (F3); and fewer than $2^{m-k}$ tuples have $K(\cdot\mid\ell)<m-k$, $m=\ell(\ell+1)/2$.
+(a) In block $\ell$ the strings other than $s_\ell$ come first, so $s_\ell$ is unseen when they are queried, and all its length-$\ell$ siblings are seen when it is. (b) $\dom D^{(\ell)}$ and $\ell$ are computable from each other, and given the domain the labelling determines $s_{1:\ell}$; apply \cref{thm:setting:coding}(a). A function machine that reads, for each length $j$, its own block of $j$ tape bits as a guess $s'_j$ and answers $1$ at $x$ iff $x=s'_{|x|}$ extends $D^{(\ell)}$ with probability $2^{-\ell(\ell+1)/2}$; apply (F1). (c) $K(s_{1:\ell}\mid\ell)\ge K(s_{1:\ell})-K(\ell)-c\ge\ell(\ell+1)/2-K(\ell)-c_\omega$ by (F3); and fewer than $2^{m-j}$ tuples have $K(\cdot\mid\ell)<m-j$, $m=\ell(\ell+1)/2$.
 \end{proof}
 
 \begin{proof}[Proof of \cref{prop:hist:orderfree}]
@@ -46,14 +48,22 @@ For every $D$, $x\notin\dom D$ and function machine $B$: $\Znorm(D,x)\ge2^{-K(B)
 Apply (F1) to each $D+(x,y)$ and sum over $y$; the events $\{f^B_\omega\supseteq D,\ f^B_\omega(x)=y\}$ are disjoint.
 \end{proof}
 
+For the chain, the \emph{broom} $B_j$ reads blocks $v_1,\dots,v_j$ of lengths $\ell_1,\dots,\ell_j$, sets $f(v_1):=\epsilon$, $f(v_i):=v_{i-1}$, and sends every other input to $v_j$; it extends $D_{j+1}$ with probability $2^{-\bar\ell_j}$ at a cost of $K(j)+c$ bits (as in \cref{prop:ex:normalised}).
+
+\begin{proposition}[Normalised SFI on both examples]\status{proved; finite proxy computed}\src{history Prop 2.4, Lemma 2.4a; check c9}\label{prop:hist:normchain}
+(a) In the setting of \cref{thm:hist:chain}(b), $-\log\MFbar(y_t\mid D_{t-1},x_t)\ge\ell_{t-1}-K(\ell_t)-K(t-2)-c_\omega$ for $t\ge2$; for $\ell_i=i$, $\LSFIbar\ge n(n-1)/2-n(4\log n+c_\omega)$. With independent uniform blocks the expected normalised loss at step $t$ is at least $\ell_{t-1}-K(t-2)-c$, so $\Ex\LSFIbar\ge n(n-1)/2-n(2\log n+c)$ for $\ell_i=i$.
+(b) In the setting of \cref{thm:hist:skipped}(c), the normalised loss at $s_\ell$ is at least $\ell-2K(\ell)-c_\omega$, so $\LSFIbar\ge\ell(\ell+1)/2-\ell(4\log\ell+c_\omega)$ after block $\ell\ge2$; with independent uniform $s_j$, at least $\ell-K(\ell)-c$ in expectation.
+\end{proposition}
+
 \begin{proof}[Proof of \cref{prop:hist:normchain}]
 Let $\beta_t:=-\log\MFbar(y_t\mid D_{t-1},x_t)=-\log\MF(D_t)+\log\Znorm(D_{t-1},x_t)\ge0$.
-(a) The broom $B_j$ of \cref{sec:hist:counter} is well defined (the $v_i$ have distinct lengths), total, and $K(B_j)\le K(j)+c$. On $\{v_i=x_i\ \forall i\le j\}$, of probability $2^{-\bar\ell_j}$, it extends $D_{j+1}$: $f(x_{j+1})=v_j=x_j$ since $\ell_{j+1}\notin\{\ell_1,\dots,\ell_j\}$. At step $t\ge2$, \cref{lem:hist:broom} with $B_{t-2}$ gives $\Znorm(D_{t-1},x_t)\ge2^{-K(t-2)-c-\bar\ell_{t-2}}$, so $\beta_t\ge-\log\MF(D_t)-\bar\ell_{t-2}-K(t-2)-c$. Insert \cref{thm:hist:chain}(b) at horizon $t$, or, for uniform blocks, \cref{prop:hist:orderfree}(c) in expectation. Sum the positive parts; for $\ell_i=i$ use $K(t),K(t-2)\le2\log n+c$ for $t\le n$.
+(a) The broom $B_j$ above is well defined (the $v_i$ have distinct lengths), total, and $K(B_j)\le K(j)+c$. On $\{v_i=x_i\ \forall i\le j\}$, of probability $2^{-\bar\ell_j}$, it extends $D_{j+1}$: $f(x_{j+1})=v_j=x_j$ since $\ell_{j+1}\notin\{\ell_1,\dots,\ell_j\}$. At step $t\ge2$, \cref{lem:hist:broom} with $B_{t-2}$ gives $\Znorm(D_{t-1},x_t)\ge2^{-K(t-2)-c-\bar\ell_{t-2}}$, so $\beta_t\ge-\log\MF(D_t)-\bar\ell_{t-2}-K(t-2)-c$. Insert \cref{thm:hist:chain}(b) at horizon $t$, or, for uniform blocks, \cref{prop:hist:orderfree}(c) in expectation. Sum the positive parts; for $\ell_i=i$ use $K(t),K(t-2)\le2\log n+c$ for $t\le n$.
 (b) $T_\ell$ reads blocks $g_j$ of length $j$ for $j<\ell$ and outputs $1$ at $x$ iff $|x|<\ell$ and $x=g_{|x|}$, and $0$ elsewhere; it is total and $K(T_\ell)\le K(\ell)+c$. Before the query $s_\ell$ the data are $D':=D^{(\ell-1)}\cup\{(x,0):|x|=\ell,\,x\ne s_\ell\}$, which $T_\ell$ extends iff $g_j=s_j$ for all $j<\ell$, with probability $2^{-\ell(\ell-1)/2}$. So $\Znorm(D',s_\ell)\ge2^{-K(\ell)-c-\ell(\ell-1)/2}$; insert \cref{thm:hist:skipped}(c), or \cref{prop:hist:orderfree}(c) in expectation, and use $2K(j)\le4\log\ell+c$ for $j\le\ell$.
 \end{proof}
 
+The method needs more information per step than the $O(\log t)$ bits of the broom, so it gives nothing for \cref{prop:hist:strict,thm:hist:gf}.
 
-\subsection{H\"anni's Theorem 1}\label{app:hist:thm1}
+\subsection{A dominance theorem for computable reveal laws}\label{app:hist:thm1}
 
 \begin{lemma}[Private memory]\status{proved}\src{history Lemma 3.0}\label{lem:hist:memory}
 Let a reveal mechanism that does not see $f$ consist of a random element $\Gamma$ (private memory and coins) independent of $f$ and maps $x_i=\mathrm{sel}_i(\Gamma,h_{i-1})$, with reveal-sequence law $\Delta(x_{1:n}\Vert y_{1:n-1}):=\Prob[\mathrm{sel}_i(\Gamma,h_{i-1})=x_i\ \forall i\le n]$. (a) Given $h_{i-1}$, $f$ and $x_i$ are conditionally independent; so $I(f\to x_{1:n})=0$ for finite-valued inputs and labels. (b) Given $f$, the input sequence has probability $\Delta(x_{1:n}\Vert f(x_1),\dots,f(x_{n-1}))$, and the effective kernel $\Delta(x_{1:i}\Vert y_{1:i-1})/\Delta(x_{1:i-1}\Vert y_{1:i-2})$ depends neither on $f$ nor on its law. (c) If the mechanism is a computable sampler with private memory that halts with probability $1$ at each step whatever labels it is fed, and its inputs up to time $n$ lie in a finite listed set $A_n$, then $\Delta(x_{1:n}\Vert y_{1:n-1})$ is a computable real, uniformly in its arguments.
@@ -101,16 +111,16 @@ Write $Y^A:=Y^{A_n}$, $\mathcal U$ for the uniform law on it, and $\mathcal G:=\
 \emph{Step 1.} $\Phi$ is continuous, convex in $G$, affine in $\nu$; by (F6), $\min_G\max_\nu\Phi=\max_\nu\min_G\Phi$. For $G=\frac12\nu+\frac12\mathcal U$, $-\log G(D)\le1-\log\nu(D)$, so \cref{thm:hist:directed}(a) and Gibbs' inequality give $\Phi(G,\nu)\le1+I_\nu(f\to x)$. Hence $v^*:=\min_G\max_{f\in\mathcal F_{\rm fin}}\Phi_f(G)\le1+C_{\rm dir}$.
 \emph{Step 2.} For $G,G'\in\mathcal G$ and $|D|\le n$, $|\log G(D)-\log G'(D)|\le|G(D)-G'(D)|/(\ln2\min(G(D),G'(D)))\le|Y|^n\|G_0-G'_0\|_1/\ln2$. So a rational $G'_0$ within $\ell^1$-distance $|Y|^{-n}\ln2$ of a minimiser has $\max_{f\in\mathcal F_{\rm fin}}\Phi_f(G')\le v^*+1\le2+C_{\rm dir}$.
 \emph{Step 3, case (a).} Path probabilities given $f$ are computable rationals, $\mathcal F_{\rm fin}$ is decidable ($f\notin\mathcal F_{\rm fin}$ iff some path of positive probability has $P(y_i\mid h,x)=0$), and each $\Phi_f$ is computable on rational points. With the Lipschitz constant of Step 2, evaluating $\max_f\Phi_f$ to within $\frac14$ on a fine rational grid yields a grid point $G'$ with $\max_f\Phi_f(G')\le v^*+1$.
-\emph{Step 3, case (b).} Let $\gamma$ be rational with $C_{\rm dir}\le\gamma\le C_{\rm dir}+1$ ($\gamma=0$ if $\Delta$ does not see $f$). Enumerate rational $G'_0$ and stop at the first $G'$ certified to satisfy $(\star)$: $\Ex_{x\mid f}[-\log G'(D_n)]<\Ex_{x\mid f}L_P+3+\gamma$ for every $f\in Y^A$. The left side is a computable real. The right side is a finite sum of products of a computable nonnegative real $\Prob[\text{path}\mid f]$ and an lsc value $L_P(\text{path})\in[0,\infty]$, hence lsc in $[0,\infty]$ (with $0\cdot\infty=0$). A true strict inequality ``computable $<$ lsc'' is certified in finite time, also when the right side is $+\infty$; dovetail over candidates. By Step 2 some rational $G'$ satisfies $(\star)$, so the search halts. If $\Delta$ sees $f$, $\gamma$ must be computed: $C_{\rm dir}$ is the maximum over a simplex of finitely many terms $u\log(u/v)$, with $u,v$ polynomial in $\nu$ and in computable values of $\Delta$, and should be computable to within $1$ via a modulus of continuity of entropy on a finite alphabet; this is not written out, so this case is a proof sketch.
+\emph{Step 3, case (b).} Let $\gamma$ be rational with $C_{\rm dir}\le\gamma\le C_{\rm dir}+1$ ($\gamma=0$ if $\Delta$ does not see $f$). Enumerate rational $G'_0$ and stop at the first $G'$ certified to satisfy $(\star)$: $\Ex_{x\mid f}[-\log G'(D_n)]<\Ex_{x\mid f}L_P+3+\gamma$ for every $f\in Y^A$. The left side is a computable real. The right side is a finite sum of products of a computable nonnegative real $\Prob[\text{path}\mid f]$ and an lsc value $L_P(\text{path})\in[0,\infty]$, hence lsc in $[0,\infty]$ (with $0\cdot\infty=0$). A true strict inequality ``computable $<$ lsc'' is certified in finite time, also when the right side is $+\infty$; dovetail over candidates. By Step 2 some rational $G'$ satisfies $(\star)$, so the search halts. If $\Delta$ sees $f$, $\gamma$ must be computed; this case is only sketched (\cref{rem:hist:minimaxsketch}).
 \emph{Step 4.} The procedure is uniform in $(P,\Delta,n,A)$, so $G'$ has rational probabilities computable from these, and rejection sampling (undefined outside $A_n$) makes it a function machine with $K(G')\le K(P)+K(\Delta)+K(n)+K(A)+c$. (F1) gives $\Ex_{x\mid f}\LSFI\le\Ex_{x\mid f}[-\log G'(D_n)]+K(G')+c\le\Ex_{x\mid f}L_P+4+C_{\rm dir}+K(G')+c$; average over $f$ for the last claim. An almost surely halting reveal sampler with private memory has $K(\Delta)$ at most its complexity plus $K(A)+c$ (\cref{lem:hist:memory}(c) uses the list $A_n$).
 \end{proof}
 
 \begin{proof}[Proof of \cref{cor:hist:thm1}]
-(a) \Cref{thm:hist:minimax}(b) with $\Delta:=\Delta_f$, which does not see $f$; then average. (b) \Cref{cor:hist:deterministic}. (c) Take expectations in \cref{thm:hist:shared}; given $f$ the law of $x_{1:n}$ is $\Delta_f(x\Vert y)$, and $\Ex_{x\mid f}[-\log\Delta_f(x\Vert y)]=H_f(x_{1:n})$.
+(a) \Cref{thm:hist:minimax}(b) with $\Delta:=\Delta_f$, which does not see $f$; then average. (b) \Cref{cor:hist:deterministic}. (c) Take expectations in \cref{thm:hist:shared}; given $f$ the law of $x_{1:n}$ is $\Delta_f(x\Vert y)$, and $\Ex_{x\mid f}[-\log\Delta_f(x\Vert y)]=H(x_{1:n}\mid f)$, as $\Delta_f$ halts with probability $1$.
 \end{proof}
 
-\begin{remark}[What is open in Reading C]\status{open}\src{history remarks after Cor 3.9; Q1, Q7; checks r6, r7, c3, r2}\label{rem:hist:thm1open}
-(i) Whether $K(n)+K(A)$ can be dropped: the minimax law depends on the horizon, and in one small instance a direct computation certifies that one law for horizons $1$--$4$ needs at least $0.026$ bits (each single horizon: at most $0.005$); no growth was found up to horizon $6$, weak evidence that $K(n)$ is an artefact. (ii) Defective samplers with $K(P)$ alone ($\Ex L_P$ is then only upper semicomputable, so $(\star)$ cannot be certified). (iii) Infinite alphabets at a fixed horizon. (iv) Reveal laws that see $f$, in case (b). The computed minimax value without the uniform component is at most $1.8\cdot10^{-15}$ bits in all tested instances where $\Delta$ does not see $f$.
+\begin{remark}[Open cases in Reading C]\status{open}\src{history remarks after Cor 3.9; Q1, Q7; checks r6, r7, c3, r2}\label{rem:hist:thm1open}
+(i) Whether $K(n)+K(A)$ can be dropped: the minimax law depends on the horizon; in one small instance a direct computation (code in the accompanying repository) certifies that one law for horizons $1$--$4$ needs at least $0.026$ bits, while each single horizon needs at most $0.005$, and it finds no growth up to horizon $6$. (ii) Defective samplers with $K(P)$ alone ($\Ex L_P$ is then only upper semicomputable, so $(\star)$ cannot be certified). (iii) Infinite alphabets at a fixed horizon. (iv) Reveal laws that see $f$, in case (b) (\cref{rem:hist:minimaxsketch}).
 \end{remark}
 
 \begin{proposition}[No pathwise version of Reading A]\status{proved}\src{history Prop 3.12}\label{prop:hist:nopathwise}
@@ -122,12 +132,18 @@ Let $\omega$ be Martin-L\"of random with blocks $b_i$ of length $i$, $f(b_{i+1})
 \end{proof}
 
 \begin{proposition}[Shannon form of the mutual-information question]\status{proved; computed}\src{history Prop 3.10; check c7}\label{prop:hist:shannon}
-Let $(f,\Theta)$ be jointly random and, given $(f,\Theta)$, let $x_i\sim\Delta_{\Theta,\Gamma}(\cdot\mid h_{i-1})$, a kernel that does not see $f$, with private memory $\Gamma$ independent of $f$ given $\Theta$; finite alphabets up to time $n$. (a) If $I(f;\Theta)<\infty$, then $I(f\to x_{1:n})=I(f;\Theta)-I(f;\Theta\mid h_n)-\sum_iI(y_i;\Theta\mid h_{i-1},x_i)\le I(f;\Theta)$. (b) For $f\sim\nu$ computable, $\Ex\LSFI(D_n)\le\Ex L_P+I(f;\Theta)+K(\nu)+c$ for every $P$. (c) In Reading C, $\Theta:=\Delta_f$ restricted to $n$ steps is a function of $f$, $I(f;\Theta)=H(\Delta_f)$, and in \cref{thm:hist:randchain} $I(f\to x)=H(\Delta_f)=n(n+1)/2$.
+Let $(f,\Theta)$ be jointly random and, given $(f,\Theta)$, let $x_i\sim\Delta_{\Theta,\Gamma}(\cdot\mid h_{i-1})$, a kernel that does not see $f$, with private memory $\Gamma$ independent of $f$ given $\Theta$; finite alphabets up to time $n$. (a) If $I(f;\Theta)<\infty$, then $I(f\to x_{1:n})=I(f;\Theta)-I(f;\Theta\mid h_n)-\sum_iI(y_i;\Theta\mid h_{i-1},x_i)\le I(f;\Theta)$. (b) For $f\sim\nu$ computable, $\Ex\LSFI(D_n)\le\Ex L_P+I(f;\Theta)+K(\nu)+c$ for every $P$. (c) In Reading C, $\Theta:=\Delta^{(n)}_f$, the restriction of $\Delta_f$ to $n$ steps, is a function of $f$, $I(f;\Theta)=H(\Theta)$, and in \cref{thm:hist:randchain} $I(f\to x)=H(\Theta)=n(n+1)/2$.
 \end{proposition}
 
 \begin{proof}
-(a) Given $\Theta=k$, the law of $(f,\Gamma,h_{i-1})$ is $p(df\mid k)p(d\Gamma\mid k)\prod_{j<i}\Delta_{k,\Gamma}(x_j\mid h_{j-1})\ind[f(x_j)=y_j]$, so $f\perp\Gamma\mid(\Theta,h_{i-1})$, and the law of $x_i$ given $(f,\Theta,h_{i-1})$ does not involve $f$: $I(f;x_i\mid\Theta,h_{i-1})=0$. The chain rule gives $I(f;\Theta,h_n)=I(f;\Theta)+\sum_iH(y_i\mid\Theta,h_{i-1},x_i)$, and also $I(f;\Theta,h_n)=I(f;h_n)+I(f;\Theta\mid h_n)$ with $I(f;h_n)=I(f\to x)+\sum_iH(y_i\mid h_{i-1},x_i)$ (proof of \cref{thm:hist:directed}). Equate, using $H(y_i\mid h_{i-1},x_i)-H(y_i\mid\Theta,h_{i-1},x_i)=I(y_i;\Theta\mid h_{i-1},x_i)$. (b) \Cref{thm:hist:directed}(b) and (a). (c) $I(f;\Theta)=H(\Theta)$ when $\Theta$ is a function of $f$; in the randomized chain, $\Delta_f$ restricted to $n$ steps determines the chain, uniform on $n(n+1)/2$ bits. % restriction to n steps added (the notes write H(Delta_f))
+(a) Given $\Theta=k$, the law of $(f,\Gamma,h_{i-1})$ is $p(df\mid k)p(d\Gamma\mid k)\prod_{j<i}\Delta_{k,\Gamma}(x_j\mid h_{j-1})\ind[f(x_j)=y_j]$, so $f\perp\Gamma\mid(\Theta,h_{i-1})$, and the law of $x_i$ given $(f,\Theta,h_{i-1})$ does not involve $f$: $I(f;x_i\mid\Theta,h_{i-1})=0$. The chain rule gives $I(f;\Theta,h_n)=I(f;\Theta)+\sum_iH(y_i\mid\Theta,h_{i-1},x_i)$, and also $I(f;\Theta,h_n)=I(f;h_n)+I(f;\Theta\mid h_n)$ with $I(f;h_n)=I(f\to x)+\sum_iH(y_i\mid h_{i-1},x_i)$ (proof of \cref{thm:hist:directed}). Equate, using $H(y_i\mid h_{i-1},x_i)-H(y_i\mid\Theta,h_{i-1},x_i)=I(y_i;\Theta\mid h_{i-1},x_i)$. (b) \Cref{thm:hist:directed}(b) and (a). (c) $I(f;\Theta)=H(\Theta)$ when $\Theta$ is a function of $f$; in the randomised chain, $\Delta^{(n)}_f$ determines the chain, uniform on $n(n+1)/2$ bits. % restriction to n steps added (the notes write H(Delta_f))
 \end{proof}
+
+\begin{conjecture}[Algorithmic form in Reading C]\status{conjecture (untested)}\src{history Conj 3.11; Q8}\label{conj:hist:algmi}
+With $I(a:b):=K(b)-K(b\mid a)$ and the hypotheses of \cref{cor:hist:thm1}(a): $\Ex_{x\mid f}\LSFI\le\Ex_{x\mid f}L_P+I(\Delta_f:f|_{A_n})+K(P)+O(\log K(\Delta_f))+K(n)+K(A)+c$.
+\end{conjecture}
+
+We have neither a proof nor a counterexample.
 
 \subsection{\SFIhist}\label{app:hist:sfihist}
 
@@ -159,9 +175,13 @@ Let the inputs be distinct. (a) $\Mpairs$ and $\MH$ agree up to constant factors
 on the event that $T'$ outputs $y_{1:n}$ the recursion reproduces the true history, and conversely by induction on $i$. (b) The hypothesis that outputs the $i$-th $\bar y$-block of the universal monotone machine's output. (c) Each oracle is computable from the next (the count is the size of the set plus one).
 \end{proof}
 
+\begin{proposition}[The hierarchy is strict]\status{proved; lemma computed}\src{history Prop 4.5; checks c6, r4}\label{prop:hist:strict}
+Semimeasure convention. (i) Every set $S$ of $n\ge2$ strings has an order such that, with labels $y_i=\ind[i\text{ even}]$, $\LSFI\ge n-\log(n+1)-c$ while $L_{\rm count}\le c$. (ii) On the chain of \cref{thm:hist:chain}(b), $L_{\rm count}\ge\bar\ell_{n-1}-K(\ell_n)-c_\omega$ while $L_{\rm set}\le c$. (iii) Every such $S$ has an order such that, with labels $y_1=\epsilon$, $y_i=x_{i-1}$, $L_{\rm set}\ge\log n!-\log n-c$ while $\LH\le c$. Single infinite sequences with linearly growing gaps also exist (\cref{prop:hist:strictinf}).
+\end{proposition}
+
 \begin{proof}[Proof of \cref{prop:hist:strict}]
 (i) $A:=\{x_i:i\text{ even}\}$ and $D$ are computable from each other given $S$, so $\LSFI\ge K(A\mid S)-c$ (\cref{thm:setting:coding}(a)); choose $A$ of size $\lfloor n/2\rfloor$ with $K(A\mid S)\ge\log\binom n{\lfloor n/2\rfloor}-1\ge n-\log(n+1)-1$. The count hypothesis $\ind[i\text{ even}]$ gives $L_{\rm count}\le c$.
-(ii) With $U$ the universal count-machine, $\nu(z\mid x,n):=\Unif\{\omega:U^\omega(n,x)=z_1,\,U^\omega(n-1,z_1)=z_2,\dots,U^\omega(1,z_{n-1})=\epsilon\}$ sums to at most $1$ over $z$ (iteration determines $z$), so $L_{\rm count}\ge K(x_{1:n-1}\mid x_n,n)-c$; $n$ is computable from $|x_n|$, and the proof of \cref{thm:hist:chain}(b) finishes. ``Output the longest element of the set'' gives $L_{\rm set}\le c$.
+(ii) With $U$ the universal count-machine, $\nu(z\mid x,n):=\Unif\{\omega:U^\omega(n,x)=z_1,\,U^\omega(n-1,z_1)=z_2,\dots,U^\omega(1,z_{n-1})=\epsilon\}$ sums to at most $1$ over $z$ (iteration determines $z$), so $L_{\rm count}\ge K(x_{1:n-1}\mid x_n,n)-c$; $n$ is computable from $|x_n|$, and the proof of \cref{thm:hist:chain}(b) finishes. ``Output the longest element of the set, or $\epsilon$ if it is empty'' gives $L_{\rm set}\le c$.
 (iii) For a tape $\omega$ of the universal set-machine $U$, an order is consistent iff $U^\omega(\emptyset,x_1)=\epsilon$ and $U^\omega(\{x_{<i}\},x_i)=x_{i-1}$. Then $x_n$ determines $x_{n-1}=U^\omega(S\setminus\{x_n\},x_n)$, and so on backwards, so at most $n$ orders are consistent with $\omega$ and $\sum_\sigma\Mset(\sigma)\le n$. (F2) for this semimeasure divided by $n$, lsc uniformly in $S$, gives $L_{\rm set}\ge K(\sigma\mid S)-\log n-c$; choose $K(\sigma\mid S)\ge\log n!-1$. ``$y_1=\epsilon$, $y_i=x_{i-1}$'' gives $\LH\le c$.
 \end{proof}
 
@@ -173,8 +193,10 @@ Let $\omega$ be Martin-L\"of random and $u_j,v_j$ the strings with indices $2j-1
 (i) $\dom D_{2k}$ is computable from $k$, and the labelling determines $\omega_{1:k}$; use \cref{thm:setting:coding}(a), (F4) and (F3). (iii) By the backward reconstruction, a tape fixes the order given its last input ($u_k$ or $v_k$), so at most two of the $2^k$ block orders $\sigma_b$ fit one tape; apply (F2) to $b\mapsto\Mset(\sigma_b)/2$ and take $b=\omega_{1:k}$.
 \end{proof}
 
-\begin{proposition}[Operator induction]\status{proved, given the unverified description}\src{history Prop 4.9}\label{prop:hist:operator}
-Read as $\Mpq$ (\cref{rem:versions:operator}), operator induction \citep{solomonoff2008three} is an lsc chronological semimeasure that ignores the history, so $\LH\le-\log\Mpq+c$ on every sequence. On distinct inputs $\Mpq=\Mprod(D_n)$, a weak semimeasure, so it pays the lower bounds of \cref{thm:hist:chain,thm:hist:skipped} (semimeasure convention).
+$\Mpq$ is a per-query mixture in the spirit of Solomonoff's operator induction (\cref{rem:versions:operator}).
+
+\begin{proposition}[The per-query mixture ignores the history]\status{proved, given the unverified description}\src{history Prop 4.9}\label{prop:hist:operator}
+$\Mpq$ is an lsc chronological semimeasure that ignores the history, so $\LH\le-\log\Mpq+c$ on every sequence. On distinct inputs $\Mpq=\Mprod(D_n)$, a weak semimeasure, so it pays the lower bounds of \cref{thm:hist:chain,thm:hist:skipped} (semimeasure convention).
 \end{proposition}
 
 \begin{proof}
@@ -182,7 +204,7 @@ Read as $\Mpq$ (\cref{rem:versions:operator}), operator induction \citep{solomon
 \end{proof}
 
 \begin{proposition}[Deterministic programs for \SFIhist]\status{proved; toy computed}\src{history Prop 4.10; checks s2, c10}\label{prop:hist:programs}
-Let $\Whist(y\Vert x):=\sum_{p\in\dom V}2^{-|p|}\ind[\varphi_{V(p)}(x_{1:i})=y_i\ \forall i\le n]$ and $\Khist(y\Vert x)$ the least such $|p|$, with $(\varphi_e)$ the partial computable functions on $X_H$; let $\Ktail(n):=-\log\sum_{N\ge n}2^{-K(N)}$ and $\{0,1\}\subseteq Y$. For every input list and $y\in\{0,1\}^n$, $\Whist(y\Vert x)\ge2^{-n-\Ktail(n)-c}$, where (a) $\Ktail(n)\le\Kpad(n)\le K(n)$, (b) $\Ktail(n)\le g(n)+K(g)+c$ for every computable nondecreasing unbounded $g$, and (c) $\Ktail(n)\to\infty$. (d) But $n-c\le\max_y\Khist(y\Vert x_{1:n})\le n+K(n)+c$, and along every input sequence $\max_y\Khist(y\Vert x_{1:n})-n>\log n+\log\log n$ for infinitely many $n$.
+With $(\varphi_e)$ the partial computable functions on $X_H$, let $\Whist(y\Vert x):=\sum_{p\in\dom V}2^{-|p|}\ind[\varphi_{V(p)}(x_{1:i})=y_i\ \forall i\le n]$ and $\Khist(y\Vert x)$ the least such $|p|$; let $\Ktail(n):=-\log\sum_{N\ge n}2^{-K(N)}$ and $\{0,1\}\subseteq Y$. For every input list and $y\in\{0,1\}^n$, $\Whist(y\Vert x)\ge2^{-n-\Ktail(n)-c}$, where (a) $\Ktail(n)\le\Kpad(n)\le K(n)$, (b) $\Ktail(n)\le g(n)+K(g)+c$ for every computable nondecreasing unbounded $g$, and (c) $\Ktail(n)\to\infty$. (d) But $n-c\le\max_y\Khist(y\Vert x_{1:n})\le n+K(n)+c$, and along every input sequence $\max_y\Khist(y\Vert x_{1:n})-n>\log n+\log\log n$ for infinitely many $n$.
 \end{proposition}
 
 \begin{proof}
@@ -213,6 +235,20 @@ $\nu(h_n):=\ind[x_i=\delta(h_{i-1})\ \forall i\le n]\MH(y_{1:n}\Vert x_{1:n})$ a
 
 On $\delta$-consistent sequences also $L^x_{\rm in}\le K(\delta)+c$, so $\LH+L^x_{\rm in}-K(\delta)-c\le\LMjoint\le\LH+L^x_{\rm in}+c$.
 
+Lattimore, Hutter and Gavane (LHG below) \citep{lattimore2011universal} show that unnormalised Solomonoff induction can fail to predict simple recursive sub-patterns of a sequence. We do not show that their construction gives the following assumptions, which are not proved here.
+
+\begin{assumption}[LHG-even]\label{ass:hist:lhgeven}
+With $X=Y=\{0,1\}$ and the identity code, for some $\omega$ the loss of unnormalised $M$ on positions $2,4,\dots$ of $\omega_1\omega_1\omega_2\omega_2\cdots$ is unbounded.
+\end{assumption}
+
+\begin{assumption}[LHG-odd]\label{ass:hist:lhgodd}
+The same for positions $3,5,\dots$ of $0\omega_1\omega_1\omega_2\omega_2\cdots$.
+\end{assumption}
+
+\begin{proposition}[The conditional label loss]\status{conditional (on LHG transfer); LHG known, unverified beyond the abstract}\src{history \S4.4, Q3}\label{prop:hist:lhg}
+With $X=Y=\{0,1\}$ and the identity code: under Assumption LHG-even, $\LMy\le\LH+O(1)$ fails on some sequence (labels copy inputs); under Assumption LHG-odd, $\LH\le\LMy+O(1)$ fails on some sequence (inputs copy the previous label, \cref{prop:hist:inputloss}). For the code $\bar s=1^{|s|}0s$ the assumptions must also hold for framed blocks.
+\end{proposition}
+
 \begin{proof}[Proof of \cref{prop:hist:lhg}]
 (Even.) $x_i:=\omega_i$, $y_i:=x_i$: $\LH\le c$ by the copy predictor (\cref{cor:hist:H4}(b)), while $\LMy$ is $M$'s loss on the copied bits. (Odd.) $\delta(\emptyset):=0$, $\delta(h):=$ the last label of $h$, $y_i:=\omega_i$: the joint sequence is $0\omega_1\omega_1\omega_2\omega_2\cdots$, the inputs $x_2,x_3,\dots$ are the copied bits, so $\LMx$ is unbounded, and \cref{prop:hist:inputloss} with $K(\delta)=O(1)$ gives $\LH-\LMy\to\infty$. Non-convergence of the copied bits' conditional probabilities to $1$ already makes the cumulative loss unbounded.
 \end{proof}
@@ -223,6 +259,14 @@ On $\delta$-consistent sequences also $L^x_{\rm in}\le K(\delta)+c$, so $\LH+L^x
 The left inequality is \cref{lem:hist:chrono}. For the right one fix $\sigma'$ and $p$ attaining $\Kpred(x_{\sigma'})$. The function machine $T$, which does not depend on $p$, on query $x$ enumerates the prefix-free set $\dom V(\cdot,x)$ and takes the first element $q$ found that is a prefix of the tape; checking a candidate reads the tape only up to the first mismatch, which comes within $|q|$ bits, so $T$ reads exactly $q$. % step added: T reads exactly q
 It computes $V(q,x)=\langle x'_1,\dots,x'_k\rangle$ and runs $T^H_U$ on the rest of the tape at $(x'_1,\dots,x'_k,x)$. On tapes $p\omega'$, every $x\in\dom D$ finds $p$ (as $p\in\dom V(\cdot,x)$, a prefix-free set), so all queries share $\omega'$, and $\nu_T(D)\ge2^{-|p|}\MH(y_{\sigma'}\Vert x_{\sigma'})$; apply (F1). For \cref{cor:hist:initial}, $\Kpred(e\text{-order})\le K(e)+c$: given $x$, enumerate $e$ until $x$ appears.
 \end{proof}
+
+To make the example of \cref{sec:hist:exploit} precise, identify $\{0,1\}^q$ with $\mathrm{GF}(2^q)$ (polynomial basis modulo the lexicographically least irreducible polynomial) and let $D_{abr}:=\{(a,r),(b,r+ab)\}$, $a\ne b$.
+
+\begin{theorem}[A $\mathrm{GF}(2^q)$ example]\status{proved; computed}\src{history Thm 5.4, Lemma 5.5; checks c5, r3, s4}\label{thm:hist:gf}
+(a) In both orders $\LH(D_{abr})\le q+c$, with $c$ independent of $q$. (b) $\LSFI(D_{abr})\ge K(a,b,r\mid q)-3q/2-1-c$; so for all but a $2^{1-j}$ fraction of triples, $\LSFI(D_{abr})\ge3q/2-j-c\ge\max_\sigma\LH(D_\sigma)+q/2-j-c'$. (c) For uniform $(a,b,r)$, $a\ne b$, $\Ex\LSFI(D_{abr})\ge3q/2-2$ for every $q\ge1$. These lower bounds are in the semimeasure convention; for $\LSFIbar$ they are open.
+\end{theorem}
+
+The key step of the proof is a character-sum bound.
 
 \begin{lemma}[Character-sum bound]\status{proved; computed}\src{history Lemma 5.5; checks c5, s4}\label{lem:hist:charsum}
 Let $F=\mathrm{GF}(2^q)$. Every partial $G:F\to F$ has $N(G):=\#\{(a,b):a\ne b,\ G(a)+G(b)=ab\}<2^q+2^{3q/2}$ (pairs where $G$ is defined).
@@ -236,13 +280,19 @@ The term $u=0$ is $2^{2q}$. For $u\ne0$, $(\mathbf C_u)_{ab}:=\chi_u(ab)$ has $\
 
 
 \begin{proof}[Proof of \cref{thm:hist:gf}]
-(a) $P$ predicts $y_1$ uniformly on $\{0,1\}^{|x_1|}$ and then $y_2=y_1+x_1x_2$; in the order $(b,a)$ it predicts $(r+ab)+ba=r$. Apply \cref{cor:hist:H4}(b). (b) For fixed $\omega$, $f_\omega\supseteq D_{abr}$ iff $r=f_\omega(a)$ and $f_\omega(a)+f_\omega(b)=ab$, so $\sum_{a\ne b,r}\MF(D_{abr})=\Ex_\omega N(f_\omega|_F)<2^{3q/2+1}$ by \cref{lem:hist:charsum} (both sides count ordered pairs). So $\MF(D_{abr})2^{-3q/2-1}$ is a semimeasure on triples, lsc uniformly in $q$; apply (F2). Fewer than $2^{3q-k}$ of the at least $2^{3q-1}$ triples have $K(a,b,r\mid q)<3q-k$. (c) Jensen: $\Ex\LSFI\ge-\log\Ex\MF(D_{abr})\ge\log(2^{2q}(2^q-1))-3q/2-1\ge3q/2-2$.
+(a) $P$ predicts $y_1$ uniformly on $\{0,1\}^{|x_1|}$ and then $y_2=y_1+x_1x_2$; in the order $(b,a)$ it predicts $(r+ab)+ba=r$. Apply \cref{cor:hist:H4}(b). (b) For fixed $\omega$, $f_\omega\supseteq D_{abr}$ iff $r=f_\omega(a)$ and $f_\omega(a)+f_\omega(b)=ab$, so $\sum_{a\ne b,r}\MF(D_{abr})=\Ex_\omega N(f_\omega|_F)<2^{3q/2+1}$ by \cref{lem:hist:charsum} (both sides count ordered pairs). So $\MF(D_{abr})2^{-3q/2-1}$ is a semimeasure on triples, lsc uniformly in $q$; apply (F2). Fewer than $2^{3q-j}$ of the at least $2^{3q-1}$ triples have $K(a,b,r\mid q)<3q-j$. (c) Jensen: $\Ex\LSFI\ge-\log\Ex\MF(D_{abr})\ge\log(2^{2q}(2^q-1))-3q/2-1\ge3q/2-2$.
 \end{proof}
 
-The optima $2.708$ and $4.348$ bits mix the maximal sets of triples one function extends ($4$ at $q=2$, $42$ at $q=3$); $\Ex\LSFI$ is at least the optimum, as SFI restricted to the field is a random partial function. Exhaustive search gives $\max_GN(G)=8$ ($q=2$) and $22$ ($q=3$); for $q=4$ it lies in $[56,80]$.
+A direct computation (code in the accompanying repository) gives the optimum over \emph{all} laws of random functions, $\min_w\Ex[-\log w(D_{abr})]=2.708$ bits for $q=2$ and $4.348$ for $q=3$, which is a lower bound on $\Ex\LSFI$ (SFI restricted to the field is a random partial function), against the Bayes history-aware loss $q$ ($\LH\le q+c$); and $\max_GN(G)=8$ for $q=2$ and $22$ for $q=3$, against the bounds $12$ and $30.6$ of \cref{lem:hist:charsum}, while for $q=4$ it lies in $[56,80]$.
+
+\begin{theorem}[Expected gap]\status{proved}\src{history Thm 5.6}\label{thm:hist:expected}
+Let $f\sim\nu$ computable and the inputs drawn by any kernel $\Delta(\cdot\mid f,h_{i-1})$, with finite alphabets up to time $n$. Then $-c\le\Ex\LSFI(D_n)-\Ex\LH\le I(f\to x_{1:n})+K(\nu)+c$, and the gap is at most $K(\nu)+c$ if the input choice does not see $f$.
+\end{theorem}
+
+The upper bound is attained up to the last input's entropy in the randomised chain, but not in general. Let $(a,b,r)$ be uniform, let $f(a)=r$, $f(b)=r+ab$ and $f=\epsilon$ elsewhere, and reveal $a$ and $b$ in a uniformly random order. Then $I(f\to x)=(q-1)+\log(2^q-1)$, while the gap $\Ex\LSFI-\Ex\LH$ is at most $q+c$. The predictor of \cref{thm:hist:gf}(a) has $\Ex L_P=q$ and its reveal law has an $O(1)$ program relative to an oracle for $f$, and $\Ex\LSFI\ge3q/2-2$: a second process on which the oracle reading fails.
 
 \begin{proof}[Proof of \cref{thm:hist:expected}]
-The lower bound is \cref{lem:hist:chrono}, pathwise; the upper bound is \cref{thm:hist:directed}(b) with $P$ the predictor of $\MH$ (sub-probability conditionals), and \cref{lem:hist:memory}(a). In the $\mathrm{GF}$ process, uniform labels give $\Ex\LSFI\le2q+c$ and $\Ex\LH$ is at least the Bayes loss $q$; $x_1$ has entropy $q$ and about $1$ bit given $f$, and $x_2$ is uniform on $2^q-1$ points given $h_1$ but determined by $f$, so $I(f\to x)\approx2q$.
+The lower bound is \cref{lem:hist:chrono}, pathwise; the upper bound is \cref{thm:hist:directed}(b) with $P$ the predictor of $\MH$ (sub-probability conditionals), and \cref{lem:hist:memory}(a). In the $\mathrm{GF}$ process after the theorem, uniform labels give $\Ex\LSFI\le2q+c$ and $\Ex\LH$ is at least the Bayes loss $q$, so the gap is at most $q+c$. As $f$ determines $\{a,b\}$, $x_1$ has entropy $q$ and entropy $1$ given $f$, and $x_2$ is uniform on $2^q-1$ points given $h_1$ but determined by $f$ and $x_1$; so $I(f\to x)=(q-1)+\log(2^q-1)$.
 \end{proof}
 
 \begin{proposition}[An individual-sequence information bound]\status{(a) proved; (b) refuted; computed}\src{history Prop 5.7; check s1}\label{prop:hist:info}
@@ -253,6 +303,3 @@ With $I(a:b):=K(b)-K(b\mid a)$: (a) $\LSFI(D)\le\LH(D_\sigma)+I(x_\sigma:D)+c$ f
 (a) The lookup table gives $\LSFI(D)\le K(D)+c$ (F1). For fixed $x_{1:n}$, $y_{1:n}\mapsto\MH(y_{1:n}\Vert x_{1:n})$ is a semimeasure on $Y^n$, lsc uniformly in $x_{1:n}$, so (F2) gives $K(D\mid x_\sigma)\le\LH(D_\sigma)+c$; and $K(D)=I(x_\sigma:D)+K(D\mid x_\sigma)$. (b) $\LSFI(D)\ge n-\log(n+1)-1-c$ (proof of \cref{prop:hist:strict}(i)); $\LH(D_\sigma)\le c$, as $\ind[i\text{ even}]$ knows $i$; and $I(x_\sigma:y_\sigma)\le K(y_\sigma)+c\le K(n)+c$, as $y_\sigma=0101\cdots$. With $A$ uniform, the events $\{f_\omega\supseteq D_A\}$ are disjoint, so Gibbs' inequality gives $\Ex_A\LSFI(D_A)\ge\log\binom n{\lfloor n/2\rfloor}\ge n-\log(n+1)$ exactly.
 \end{proof}
 
-\begin{remark}[What SFI can and cannot exploit]\status{remark (informal part not a theorem)}\src{history \S5.1 remark, \S5.2 ``Gap bounds'', \S5.5; check r3}\label{rem:hist:exploit}
-\emph{Informally} (not a theorem): SFI's hypotheses answer each query without seeing the other inputs, coupled only through the shared tape, so a label can correlate with a \emph{guess} about the other inputs (as the brooms and the optimal law for \cref{thm:hist:gf} do) but not depend on which inputs are present. \emph{Proved}: $\mathrm{gap}(\sigma):=\LSFI(D)-\LH(D_\sigma)$ is at least $\max_{\sigma'}\LH(D_{\sigma'})-\LH(D_\sigma)-c$ and at most $\min\{\Kpred(x_\sigma),L^x_{\rm in}(x_\sigma\Vert y_\sigma),I(x_\sigma:D)\}+c$, with $\Kpred(x_\sigma)\le K(x_{1:n-1})+c$ (\cref{thm:hist:sandwich,cor:hist:joint,thm:hist:si,prop:hist:info}); in expectation it is at most $I(f\to x)+K(\nu)+c$ (\cref{thm:hist:expected}). The bound $I(x_\sigma:D)$ is weak: for constant labels it is about $K(\dom D)$, while $\LSFI=O(1)$.
-\end{remark}

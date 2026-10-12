@@ -1,11 +1,24 @@
-% Section 2 (writer: steep-a). Source: research/tracks/steeper/notes-final.md §1.1-§1.3, §1.5 (Lemma 1.6).
+% Section 3 (writer: steep-a; edited by p2-body). Source: research/tracks/steeper/notes-final.md §1.1-§1.3, §1.5 (Lemma 1.6).
 % Notation: ../paper/NOTATION.md (n = number of samples, N = 2^d, c = lambda/n, kappa = machine constant).
 \section{Setting: hypothesis classes and steeper objectives}\label{sec:setup}
 
 This section fixes the data, the two kinds of hypotheses, hypothesis classes indexed by programs, and the steeper objectives. Proofs and standard facts are in \cref{app:setup}.
 
 \paragraph{Objects from the companion paper.}
-We use the objects of \citet{claudeSFI2026fundamentals}. A \emph{function machine} $T$ reads, on input $x$, a prefix of one random tape $\omega\sim\Unif$ that all inputs share, and outputs a label; its random partial function is $f^T_\omega$ and its \emph{machine law} is $\nu_T(D)=\Unif\{\omega:f^T_\omega\supseteq D\}$. Solomonoff function induction (SFI) is the random partial function of the universal function machine, with law $\MF$; $\MF(D)=\sum_i\mm(i)\,\nu_{T_i}(D)$ for $D\ne\emptyset$. Product laws of lower-semicomputable (lsc) conditional semimeasures, H\"anni's ``computably samplable'' x-only predictors \citep{hanni2026notes}, are machine laws; their mixture is $\Mprod$. $\Mw$ is a universal lsc weak function semimeasure, and $\MH$, the law of SFI whose hypotheses see the earlier inputs (\SFIhist{}), is a universal lsc chronological semimeasure. $\Mprod$, $\MF$ and $\Mw$ agree up to $K(\dom D)+O(1)$ bits, but $\MF/\Mprod$ is unbounded. If labels are redrawn at every query (fresh noise) and inputs repeat, random-function SFI has infinite expected loss \citep[the fresh-noise proposition]{claudeSFI2026fundamentals}; all noisy data in this paper draw each label once per distinct input (\emph{frozen} noise).
+We use the following objects of \citet{claudeSFI2026fundamentals}.
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{1.7cm}X@{}}
+\toprule
+$T$, $\nu_T$ & a \emph{function machine} reads, on input $x$, a prefix of one random tape $\omega\sim\Unif$ that all inputs share, and outputs a label; its random partial function is $f^T_\omega$, and its \emph{machine law} is $\nu_T(D)=\Unif\{\omega:f^T_\omega\supseteq D\}$\\
+$\MF$ & Solomonoff function induction (SFI): the law of the universal function machine; $\MF(D)=\sum_i\mm(i)\,\nu_{T_i}(D)$ for $D\ne\emptyset$\\
+$\Mprod$ & the mixture of the product laws of lower-semicomputable (lsc) conditional semimeasures; product laws are machine laws, and they include the computably samplable predictors of \citet[note on Solomonoff function induction]{hanni2026notes}\\
+$\Mw$ & a universal lsc weak function semimeasure\\
+$\MH$ & the law of \SFIhist{}, SFI whose hypotheses see the earlier inputs; a universal lsc chronological semimeasure\\
+\bottomrule
+\end{tabularx}
+\end{center}
+$\Mprod$, $\MF$ and $\Mw$ agree up to $K(\dom D)+O(1)$ bits, but $\MF/\Mprod$ is unbounded. If labels are redrawn at every query (fresh noise) and inputs repeat, random-function SFI has infinite expected loss \citep[the proposition on fresh label noise]{claudeSFI2026fundamentals}% P1: prop:learn:freshnoise
+; all noisy data in this paper draw each label once per distinct input (\emph{frozen} noise).
 
 \subsection{Data and the two kinds of hypotheses}\label{sec:setup:hyp}
 
@@ -14,7 +27,7 @@ The input set is $X=\{0,1\}^*$; statements about a fixed input length use $\{0,1
 \end{definition}
 
 \begin{definition}[Product hypothesis; private randomness]\src{steeper Def 1.1}\label{def:setup:product}
-A \emph{product hypothesis} is an lsc conditional semimeasure $\nu(y\mid x)$ ($\sum_y\nu(y\mid x)\le1$). It is the law of a random partial function whose values $F(x)\sim\nu(\cdot\mid x)$ are independent across distinct $x$: a probabilistic machine that uses fresh coins of its own at each input. Its likelihood is the \emph{product law} $\nu(D):=\prod_{x\in\dom D}\nu(D(x)\mid x)$, and its prediction at a new input $x$ is $\nu(\cdot\mid x)$, whatever $D$ is. It is \emph{deterministic} if it is a partial computable function $f$; then $\nu(D)=\ind[f\supseteq D]$. The randomness is private to each distinct input, not to each query; on data sets the two readings coincide \citep[the per-query proposition]{claudeSFI2026fundamentals}.
+A \emph{product hypothesis} is an lsc conditional semimeasure $\nu(y\mid x)$ ($\sum_y\nu(y\mid x)\le1$). It is the law of a random partial function whose values $F(x)\sim\nu(\cdot\mid x)$ are independent across distinct $x$: a probabilistic machine that uses fresh coins of its own at each input. Its likelihood is the \emph{product law} $\nu(D):=\prod_{x\in\dom D}\nu(D(x)\mid x)$, and its prediction at a new input $x$ is $\nu(\cdot\mid x)$, whatever $D$ is. It is \emph{deterministic} if it is a partial computable function $f$; then $\nu(D)=\ind[f\supseteq D]$. The randomness is private to each distinct input, not to each query; on data sets the two readings coincide \citep[the per-query mixture]{claudeSFI2026fundamentals}.% P1: prop:learn:perquery
 \end{definition}
 
 \begin{definition}[Shared hypothesis]\src{steeper Def 1.2}\label{def:setup:shared}
@@ -33,8 +46,9 @@ $\Hcl{\times}$, lsc conditional semimeasures with their product laws $\nu_\pi$, 
 $\Hcl{F}$, function machines with their machine laws, whose mixture is $\MF$ on nonempty data sets;
 $\Hcl{w}$, lsc weak function semimeasures, with mixture $\Mw$;
 $\Hcl{\mathrm{SI}}$, lsc semimeasures on binary strings, with the Solomonoff--Levin mixture $M$;
-$\Hcl{\mathrm{chr}}$, history-oracle function machines with their chronological semimeasures $\rho(y_{1:n}\Vert x_{1:n})$, with mixture $\MH$, itself an lsc chronological semimeasure that dominates every one \citep[the corollary on \SFIhist{}]{claudeSFI2026fundamentals}. We use only this universality of $\MH$, not its identification with Hutter's universal chronological semimeasure.
-Canonical classes are \emph{closed under prefix-free simulation}: for every prefix machine $V'$ whose outputs are indices of the family there is a string $r$ with $V(rw)=V'(w)$ for all $w\in\dom V'$, so distinct $w$ give distinct programs $rw$.
+$\Hcl{\mathrm{chr}}$, history-oracle function machines with their chronological semimeasures $\rho(y_{1:n}\Vert x_{1:n})$, with mixture $\MH$, itself an lsc chronological semimeasure that dominates every one \citep[the universality of \SFIhist{}]{claudeSFI2026fundamentals}.% P1: cor:hist:H4
+\ We use only this universality of $\MH$, not its identification with Hutter's universal chronological semimeasure.
+Canonical classes are \emph{closed under prefix-free simulation}: for every prefix machine $V'$ whose outputs are indices of the family there is a string $\sigma$ with $V(\sigma w)=V'(w)$ for all $w\in\dom V'$, so distinct $w$ give distinct programs $\sigma w$.
 \end{definition}
 
 Throughout, $\kappa$ is a constant that depends only on the reference machine, the class and the fixed programs built in the proofs, never on the data or the hypotheses; different occurrences may differ. We use five standard facts (F1)--(F5) of algorithmic information theory, stated in \cref{app:setup:facts}: $K(\pi)\le\ell(\pi)+\kappa$ in every class (F1), the conditional coding theorem (F2), the chain rule (F3), symmetry of information (F4), and $K(j)\le2\log(j+1)+\kappa$ (F5).
@@ -45,7 +59,7 @@ Throughout, $\kappa$ is a constant that depends only on the reference machine, t
 Fix a class, an observation $o$ and a \emph{steepness} $\lambda\ge1$. The \emph{two-part objective} is $J_\lambda(\pi;o):=\lambda\,\ell(\pi)-\log P_\pi(o)\in[0,\infty]$; a minimiser is a \emph{$\lambda$-MAP}. The \emph{power-prior posterior} is $\Pi_\lambda(\pi\mid o):=2^{-\lambda\ell(\pi)}P_\pi(o)/\xi_\lambda(o)$, with the \emph{steeper mixture} $\xi_\lambda(o):=\sum_\pi2^{-\lambda\ell(\pi)}P_\pi(o)$: Bayes' rule with the prior $2^{-\lambda\ell}$, whose Kraft sum is at most $1$. We write $\xi^\times_\lambda$, $\xi^F_\lambda$ for $\Hcl{\times}$, $\Hcl{F}$, and $\xi_{\mathcal C}:=\sum_{\pi\in\mathcal C}2^{-\ell(\pi)}P_\pi$ for a class $\mathcal C$. The \emph{tempered posterior} with exponent $\eta\in(0,1]$ is $\Pi^\eta(\pi\mid o)\propto2^{-\ell(\pi)}P_\pi(o)^\eta$.
 \end{definition}
 
-These are the two forms of H\"anni's proposal: ``a higher coefficient on the length of the program than on the likelihood terms'', and ``penalize the likelihood term less'' \citep{hanni2026notes,hanni2026lesswrong}. For data-set classes, $\xi_\lambda$ is a shared hypothesis. In statistics these objects are generalised, Gibbs, fractional or safe posteriors with learning rate $\eta=1/\lambda$ \citep{zhang2006epsilon,bissiri2016general,bhattacharya2019fractional,grunwald2012safe,grunwald2017inconsistency}, and two-part codes with a complexity weight above $1$ are reported to appear in MDL convergence theory \citep{barron1991minimum,grunwald2007minimum}; $\lambda$-weighted MDL for noisy classification is discussed in \cref{rem:related:mdl}. What we study is how $\lambda>1$ interacts with universal hypotheses and with private versus shared randomness.
+The two-part objective is the proposal of \citet{hanni2026grokking}, which puts ``a higher coefficient on the length of the program than on the likelihood terms''; the power-prior posterior is its Bayesian form. For data-set classes, $\xi_\lambda$ is a shared hypothesis. The tempered posterior $\Pi^{1/\lambda}$ is a generalised (Gibbs, fractional or safe) posterior with learning rate $1/\lambda$ \citep{zhang2006epsilon,bissiri2016general,bhattacharya2019fractional,grunwald2012safe,grunwald2017inconsistency}, and the $\lambda$-MAP, its maximiser (\cref{lem:setup:basic}), is a two-part code with complexity weight $\lambda$. The power-prior posterior $\Pi_\lambda$ has the same maximiser but is Bayes' rule with the prior $2^{-\lambda\ell}$; it is proportional to $(\Pi^{1/\lambda})^\lambda$. Our posterior results concern $\Pi_\lambda$ unless stated. What we study is how $\lambda>1$ interacts with universal hypotheses and with private versus shared randomness.
 
 \begin{lemma}[Basic properties]\status{proved}\src{steeper Lemma 1.1}\label{lem:setup:basic}
 (i) If $J_\lambda(\pi;o)<\infty$ for some $\pi$, the set of $\lambda$-MAPs is finite and nonempty.
@@ -58,23 +72,10 @@ These are the two forms of H\"anni's proposal: ``a higher coefficient on the len
 \end{proof}
 
 \begin{remark}[Per-sample form; $\lambda=cn$ gives batch objectives]\status{remark}\src{steeper \S1.3}\label{rem:setup:persample}
-For a product class and $n$ data points put $c:=\lambda/n$; then $J_\lambda/n=\hat J_c(\pi):=c\,\ell(\pi)+\frac1n\sum_{i\le n}-\log\nu_\pi(y_i\mid x_i)$. For an input law $\mu$ and a fixed teacher $y^*:X\to Y$ the population versions are the risk $R(\pi):=\Ex_{x\sim\mu}[-\log\nu_\pi(y^*(x)\mid x)]$, $J_c(\pi):=c\,\ell(\pi)+R(\pi)$ and $\Phi(c):=\inf_\pi J_c(\pi)$. H\"anni's remark that ``we will need to increase the hypothesis term coefficient compared to the sum of log likelihoods term as the data set size increases'' \citep{hanni2026lesswrong} is the choice $\lambda=cn$ with $c$ fixed. For fixed $\lambda$, $\xi_\lambda$ is one shared hypothesis and its sequential loss telescopes; with $\lambda=cn$ the prior exponent changes with $n$ and this is not available. All statements with $\lambda=cn$ are therefore \emph{batch} statements at a given $n$, not statements about one Bayesian predictor.
+For a product class and $n$ data points put $c:=\lambda/n$; then $J_\lambda/n=\hat J_c(\pi):=c\,\ell(\pi)+\frac1n\sum_{i\le n}-\log\nu_\pi(y_i\mid x_i)$. For an input law $\mu$ and a fixed teacher $y^*:X\to Y$ the population versions are the risk $R(\pi):=\Ex_{x\sim\mu}[-\log\nu_\pi(y^*(x)\mid x)]$, $J_c(\pi):=c\,\ell(\pi)+R(\pi)$ and $\Phi(c):=\inf_\pi J_c(\pi)$. As noted in \citet{hanni2026grokking}, the coefficient of the length term must grow with the size of the data set; $\lambda=cn$ with $c$ fixed is this choice. For fixed $\lambda$, $\xi_\lambda$ is one shared hypothesis and its sequential loss telescopes; with $\lambda=cn$ the prior exponent changes with $n$ and this is not available. All statements with $\lambda=cn$ are therefore \emph{batch} statements at a given $n$, not statements about one Bayesian predictor.
 \end{remark}
 
-The next lemma is the geometry behind H\"anni's observation that ``the `good model' could be a vertex of the convex hull of the set of attainable (hypothesis complexity, expected neg log likelihood) tuples'' \citep{hanni2026lesswrong}, and behind his alternative, an ``abs bound on model complexity'' \citep{hanni2026notes}.
-
-\begin{lemma}[Hull lemma]\status{proved; computed; strengthening of (iv) refuted}\src{steeper Lemma 1.2 (T5 Lemma 3.1); checks c5(a), c6(F)}\label{lem:setup:hull}
-Let $\mathcal A:=\{(\ell(\pi),R(\pi))\}$ with $R\in[0,\infty]$ and finitely many points below each $\ell$-level, let $C:=\mathrm{conv}(\mathcal A\cap\{R<\infty\})+\mathbb R^2_{\ge0}$, and call the extreme points of $C$ its \emph{vertices}.
-\begin{enumerate}[label=(\roman*)]
-\item For $c>0$, every minimiser of $c\,\ell+R$ lies on the boundary of $C$, on a supporting line with normal $(c,1)$.
-\item If $c<c'$ and $h,h'$ minimise $J_c,J_{c'}$, then $\ell(h)\ge\ell(h')$ and $R(h)\le R(h')$.
-\item A point of $\mathcal A$ is the unique minimising point of $c\,\ell+R$ for every $c$ in some nonempty open interval if and only if it is a vertex of $C$; the least-$\ell$ vertex and the least-$R$ vertex, if it exists, count. A hypothesis is then the unique minimiser if and only if no other hypothesis has the same point.
-\item (Absolute length bound.) Every minimiser $h_c$ of $c\,\ell+R$ ($c>0$) solves $\min\{R(h):\ell(h)\le\ell(h_c)\}$. Conversely, a solution of $\min\{R(h):\ell(h)\le L\}$ minimises $c\,\ell+R$ for some $c>0$ if and only if its point lies on the boundary of $C$ and not on the horizontal ray to the right of the least-$R$ vertex.
-\end{enumerate}
-The strengthening of the converse in (iv) with ``on the boundary of $C$'' alone is false: in $\mathcal A=\{(0,1),(10,0),(20,0)\}$ the point $(20,0)$ lies on the boundary and solves the constrained problem for $L\ge20$, but $(10,0)$ is strictly better for every $c>0$.
-\end{lemma}
-
-So H\"anni's two proposals, the penalty and the absolute bound, select the same hypotheses at the vertices; the absolute bound can also select points above the boundary, which the penalty never selects. Examples are in \cref{app:setup:hull}.
+Selection by $c\,\ell+R$ has a simple geometry, which underlies the observation of \citet{hanni2026grokking} that the good model of the example of \cref{sec:teacher} could be a vertex of the convex hull of the attainable pairs (complexity, expected log loss), and the alternative proposed there, an absolute bound on model complexity. The minimisers lie on the lower-left boundary of the convex hull of the pairs $(\ell(\pi),R(\pi))$, and exactly its vertices are unique minimisers on an open interval of $c$; a larger $c$ selects shorter hypotheses with larger risk; and an absolute length bound selects the same hypotheses at the vertices, but can also select points above the boundary, which the penalty never selects (\cref{lem:setup:hull,rem:setup:hullconverse} in \cref{app:setup:hull}).
 
 The last lemma is the sufficiency line for data-set classes: one bit of description pays for at most one bit of likelihood.
 
@@ -86,4 +87,4 @@ In every data-set class (product or shared hypotheses), for every program $\pi$ 
 where $y_D$ lists the labels of $D$ in the canonical order of $\dom D$.
 \end{lemma}
 
-\emph{Proof idea.} Given $\pi$ and $\dom D$, the labelling $y\mapsto P_\pi(\dom D\mapsto y)$ is an lsc semimeasure on $Y^{\dom D}$; apply (F2), (F3) and (F1) (\cref{app:setup:coding}). What separates the two kinds of class is whether one member attains this bound up to a constant on \emph{every} data set. In a class that contains its own mixture, the mixture does (\cref{sec:absorb}); in the product class nothing does (\cref{cor:absorb:nouniversal}).
+\emph{Proof idea.} Given $\pi$ and $\dom D$, the labelling $y\mapsto P_\pi(\dom D\mapsto y)$ is an lsc semimeasure on $Y^{\dom D}$; apply (F2), (F3) and (F1) (\cref{app:setup:coding}). What separates the two kinds of class is whether one member attains the class's best two-part code length $\min_\pi[\ell(\pi)-\log P_\pi(D)]$ up to a constant on every data set. Under (Dom) the member $U$ does: $\ell_U-\log U(D)\le\ell(\pi)-\log P_\pi(D)+\ell_U+\kappa_0$ for every $\pi$ (\cref{sec:absorb}). In the product class no member does (\cref{cor:absorb:nouniversal}).

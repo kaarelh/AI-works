@@ -1,23 +1,56 @@
-% Appendix "ood" (writer: oodcomp). Proofs from research/tracks/context/notes-final.md §2 (Props 2.4, 2.6, 2.13, 2.16,
-% Thm 2.5) and the e5 computation of research/tracks/examples/notes-final.md §5.3 (checks/e5_dsl_odd_lengths.py).
-\section{Proofs for Section~\ref{sec:ood}}\label{app:ood}
+% Appendix "ood" (writer: oodcomp; edited by the group p1-ood in the arXiv conversion). Proofs from
+% research/tracks/context/notes-final.md §2 (Props 2.1, 2.4, 2.6, 2.13, 2.16, Rem 2.2, Thm 2.5, Ex 2.15, 2.15a) and the
+% e5 computation of research/tracks/examples/notes-final.md §5.3 (checks/e5_dsl_odd_lengths.py; the tilt is
+% extra_programs=[(bad, tilt*0.5*m_plain_ok)], line 88). Received from ood.tex: the proof of prop:ood:hanni,
+% rem:ood:logterm, ex:ood:easyhard.
+\section{Proofs for Section~\ref{sec:ood} (out-of-distribution behaviour)}\label{app:ood}
 
 Notation and conventions are those of \cref{sec:ood}; $c,c'$ are machine constants. We use the conditional coding theorem as stated in \cref{sec:setting}: a discrete semimeasure $\mu(\cdot\mid z)$ that is lsc uniformly in $z$ satisfies $\mu(a\mid z)\le2^{-K(a\mid z)+c_\mu}$.
+
+\begin{proof}[Proof of \cref{prop:ood:hanni}]
+For $W$: let $V'$ read a $V$-program $z$ for $\langle e,e'\rangle$, then a $V$-program $p$, and output an index of the function equal to $\varphi_{e'}$ on $Q$ and to $\varphi_{V(p)}$ off $Q$; let $V(wu)=V'(u)$. The map $p\mapsto wzp$ is injective, preserves consistency with $D$ (no input of $D$ lies in $Q$), and its image agrees with $b$ on $Q\cap\dom b$. Summing over consistent $p$ with $|z|=K(Q,b)$ gives (a); a shortest $p$ gives (b). For $\MF$: the function machine $T_{Q,b}$ that answers $b(x)$ on $Q$ without reading the tape and runs $T_U$ off $Q$ has an index computable from $\langle e,e'\rangle$, and maps every tape with $f_\omega\supseteq D$ to a function extending $D\cup b|_{Q\cap\dom b}$; \cref{thm:setting:universal} gives the bound on $\MF(D\cup E)$. For the event on all of $Q\cap\dom b$: the tapes $pw$ of $T_U$ with $p$ a shortest program for an index of $T_{Q,b}$ and $f^{T_U}_w\supseteq D$ have measure $2^{-|p|}\MF(D)\ge2^{-K(Q,b)-c}\MF(D)$, and each gives a function that extends $D$ and equals $b$ on $Q\cap\dom b$.
+\end{proof}
+
+\begin{remark}[Where a logarithmic term would come from]\label{rem:ood:logterm}
+\status{proved}\src{context Rem 2.2}
+No logarithmic term arises, for $W$ or for $\MF$: the modified program is a concatenation of self-delimiting codes, and the proof sums over all consistent programs. Plain complexity would cost $K(Q)\le C(Q)+2\log C(Q)+O(1)$. For semi-decidable $Q$ the argument gives no bound, since the wrapper cannot decide $Q$; a time-truncated decidable subset of $Q$ restores it there.
+\end{remark}
+
+\begin{proposition}[Properties simple given a training-consistent program]\label{prop:ood:relative}
+\status{proved (corrected)}\src{context Prop 2.3}
+Let $p\in\dom V$ be consistent with $D$, and $q,r$ indices with $\varphi_q(\langle p,\cdot\rangle)$ total; let $Q_p:=\{x:\varphi_q(\langle p,x\rangle)=1\}$ and $b_p(x):=\varphi_r(\langle p,x\rangle)$. If $Q_p\cap\dom D=\emptyset$ and $S\subseteq Q_p\cap\dom b_p$ is finite, then $\nu(D\cup b_p|_S)\ge2^{-K(q,r\mid p)-c}\,2^{-|p|}$; so the posterior probability of $b_p$ on $S$ is at least $2^{-K(q,r\mid p)-c}$ times $2^{-|p|}/\nu(D)$, the posterior weight of $p$ under $W$ (up to a constant factor under $\MF$).
+\end{proposition}
+
+\begin{proof}
+The program $wpz$ reads $p$ first, then a conditional program $z$ for $\langle q,r\rangle$ given $p$; it outputs $b_p$ on $Q_p$ and $p$'s values elsewhere. Reading $z$ first would give the complexity of the pair instead. For $\MF$ use $\MF\ge2^{-c}W$ (\cref{thm:versions:chain}).
+\end{proof}
 
 \begin{proof}[Proof of \cref{prop:ood:machine}]
 (a) Let $V'(0u):=V(u)$, and let $V'(1u)$ be an index of the function that is $b$ on $Q$ and $\varphi_{V(u)}$ off $Q$ (defined when $u\in\dom V$). $\dom V'$ is prefix-free, and $V'$ is universal because it simulates $V$ with one extra bit. If $\dom D\cap Q=\emptyset$, the programs $0u$ and $1u$ agree on $\dom D$, so each half of $\dom V'$ contributes $W(D)/2$: $W'(D)=W(D)$. Every program $1u$ outputs $b$ on $S$, so $W'(D\cup b|_S)\ge W(D)/2=W'(D)/2$. For all $D$: $W(D)\le2W'(D)$ by the programs $0u$, and $W(D)\ge2^{-K(Q,b)-c}W'(D)$ because $V$ simulates $1u$ by the wrapper $wzu$ of \cref{prop:ood:hanni} and $0u$ by $u$.
 
-(b) For a function machine $T_i$ let $T_i^{Q,b}:=\{(x,\varepsilon,b(x)):x\in Q\cap\dom b\}\cup\{(x,w,y)\in T_i:x\notin Q\}$: it answers $b$ on $Q$ without reading the tape and runs $T_i$ elsewhere. It is c.e.\ because $Q$ is decidable, and consistent because on $Q$ all triples carry the label $b(x)$ and off $Q$ they are those of $T_i$. Its index is computable from $i$ and $\langle e,e'\rangle$. Let $V''(0u):=V(u)$ and let $V''(1u)$ be an index of $T^{Q,b}_{V(u)}$, and build $M_F'$ from $V''$ as in \cref{thm:setting:universal}. For $D\ne\emptyset$,
-\[ M_F'(D)=\tfrac12\sum_{u\in\dom V}2^{-|u|}\nu_{T_{V(u)}}(D)+\tfrac12\sum_{u\in\dom V}2^{-|u|}\nu_{T^{Q,b}_{V(u)}}(D). \]
-If $\dom D\cap Q=\emptyset$, the functions $f^{T_i^{Q,b}}_\omega$ and $f^{T_i}_\omega$ agree on $\dom D$ for every $\omega$, so both halves equal $\frac12\MF(D)$ and $M_F'(D)=\MF(D)$. Every tape in the second half gives a function equal to $b$ on $Q\cap\dom b$, which gives the posterior bound $\frac12$. The first half gives $M_F'\ge\frac12\MF$ on nonempty sets, so $M_F'$ dominates every machine law. Conversely $M_F'$ is a machine law with an index computable from $\langle e,e'\rangle$, so $\MF\ge2^{-K(Q,b)-c}M_F'$. The decomposition holds only for nonempty data sets; for $D=\emptyset$ the same computation gives $M_F'(b|_S)\ge\frac12\Omega_V$ with $\Omega_V:=\sum_{p\in\dom V}2^{-|p|}$.
+(b) For a function machine $T_i$ let $T_i^{Q,b}:=\{(x,\epsilon,b(x)):x\in Q\cap\dom b\}\cup\{(x,w,y)\in T_i:x\notin Q\}$: it answers $b$ on $Q$ without reading the tape and runs $T_i$ elsewhere; it is c.e.\ because $Q$ is decidable, consistent because $T_i$ is, and has an index computable from $i$ and $\langle e,e'\rangle$. Let $V''(0u):=V(u)$, let $V''(1u)$ be an index of $T^{Q,b}_{V(u)}$, and build $M_F'$ from $V''$ as in \cref{thm:setting:universal}: for $D\ne\emptyset$, $M_F'(D)=\frac12\sum_{u\in\dom V}2^{-|u|}\big(\nu_{T_{V(u)}}(D)+\nu_{T^{Q,b}_{V(u)}}(D)\big)$. If $\dom D\cap Q=\emptyset$, the functions $f^{T_i^{Q,b}}_\omega$ and $f^{T_i}_\omega$ agree on $\dom D$ for every $\omega$, so both halves equal $\frac12\MF(D)$ and $M_F'(D)=\MF(D)$. Every tape in the second half gives a function equal to $b$ on $Q\cap\dom b$, which gives the posterior bound $\frac12$. The first half gives $M_F'\ge\frac12\MF$ on nonempty sets, so $M_F'$ dominates every machine law. Conversely $M_F'$ is a machine law with an index computable from $\langle e,e'\rangle$, so $\MF\ge2^{-K(Q,b)-c}M_F'$. The decomposition holds only for nonempty data sets; for $D=\emptyset$ the same computation gives $M_F'(b|_S)\ge\frac12\Omega_V$ with $\Omega_V:=\sum_{p\in\dom V}2^{-|p|}$.
 \end{proof}
 
 \begin{proof}[Proof of \cref{thm:ood:twosided}]
 (a) Let $b_P(x)$ be the first $y$ found in a fixed enumeration of $P$ with first coordinate $x$. It is partial computable, total on $Q$, $P$-abiding, and $K(Q,b_P)\le K(P,Q)+c$. Apply \cref{prop:ood:hanni} with $S$. (b) The same with $b_{\neg P}$ from an enumeration of the complement. For the consequence: the events ``every $x\in S$ is $P$-abiding'' and ``some $x\in S$ is $P$-violating'' concern disjoint sets of labellings of $S$; for $W$ they are disjoint sets of programs and for $\MF$ disjoint sets of tapes, so their conditional probabilities sum to at most~$1$. (c) For $W$: let $h\in\dom V$ be shortest with $\varphi_{V(h)}(x)=z$, so $|h|=\KP(z\mid x)$; apply \cref{prop:ood:hanni} with $b:=\varphi_{V(h)}$ and $K(Q,b)\le K(Q)+|h|+c$. For $\MF$: let $T(x',\omega)$ split $\omega$ into its even and odd bits; if $x'\in Q$, run the conditional universal prefix machine on input $x'$, reading program bits lazily from the odd bits; otherwise run $T_U$ on the even bits. $T$ is a function machine. The two streams are independent and uniform and no input of $D$ lies in $Q$, so $\nu_T(D+(x,z))=\MF(D)\cdot\sum\{2^{-|u|}:u\text{ outputs }z\text{ on }x\}\ge2^{-K(z\mid x)}\MF(D)$. $T$ has an index computable from a decider of $Q$, so universality costs $K(Q)+c$.
 \end{proof}
 
+For a property $P\subseteq X\times Y$ of input--output pairs (for example, ``$y$ is a correct proof of $x$''), an earlier draft in \citet{hanni2026notes} supports the two-sided statement of \cref{sec:ood:twosided} by two bounds: for an input $x$ and data $D$,
+\begin{equation}\label{eq:ood:literal}
+\begin{gathered}
+\nu(P\text{-abiding output at }x\mid D)\ \ge\ 2^{-K(P)},\\
+\nu(P\text{-abiding output at }x\mid D)\ \le\ c\,2^{-K(Q)-K(z_x)}\quad\text{if }x\in Q\text{ and }\dom D\cap Q=\emptyset,
+\end{gathered}
+\end{equation}
+where $z_x$ is the simplest output with $(x,z_x)\notin P$. These bounds fail as stated:
+
+\begin{proposition}[The literal two-sided bounds fail]\label{prop:ood:draftfalse}
+\status{refuted; proved}\src{context Prop 2.6}
+Let $P=\{(x,0):x\in X\}$. (a) If $D$ labels the inputs outside a decidable $Q_m$ with $0$ and $x^*\in Q_m$, then $\nu((x^*,0)\mid D)\ge2^{-c}$, while the second bound of \eqref{eq:ood:literal} tends to $0$ as $K(Q_m)\to\infty$ ($m\to\infty$). (b) If $x^*\in\{0,1\}^d$ has $K(x^*\mid d)\ge d$ and $D=\{(x,1):x\in\{0,1\}^d\setminus\{x^*\}\}$, then $K(P)=O(1)$ but $\nu((x^*,0)\mid D)\le2^{-d+c}$, also normalised. With $Q=\{x^*\}$, \cref{thm:ood:twosided}(a) gives $2^{-d-2\log d-c}$, so its $K(Q)$ term is needed and nearly tight.
+\end{proposition}
+
 \begin{proof}[Proof of \cref{prop:ood:draftfalse}]
-(a) The constant-$0$ program $p_0$ is consistent with $D+(x^*,0)$, so $\nu((x^*,0)\mid D)\ge2^{-|p_0|-c}/\nu(D)\ge2^{-|p_0|-c}$, a fixed positive constant. The violating output $1$ has $K(1)=O(1)$, so the literal bound $c\,2^{-K(Q_d)}2^{-K(z)}$ tends to $0$.
+(a) The constant-$0$ program $p_0$ is consistent with $D+(x^*,0)$, so $\nu((x^*,0)\mid D)\ge2^{-|p_0|-c}/\nu(D)\ge2^{-|p_0|-c}$; the violating output $1$ has $K(1)=O(1)$, so the bound $c\,2^{-K(Q_m)-K(1)}$ tends to $0$.
 (b) For $x\in\{0,1\}^d$ let $\mu_d(x):=\nu(\{(x',1):x'\ne x\}\cup\{(x,0)\})$. These are labellings of $\{0,1\}^d$, so the events are disjoint and $\sum_x\mu_d(x)\le1$; $\mu_d$ is lsc uniformly in $d$. The conditional coding theorem gives $\mu_d(x^*)\le2^{-K(x^*\mid d)+c}\le2^{-d+c}$. The constant-$1$ program is consistent with $D$ and with $D+(x^*,1)$, so $\nu(D)\ge2^{-c_1}$ and $\sum_y\nu(D+(x^*,y))\ge2^{-c_1}$. Dividing $\mu_d(x^*)=\nu(D+(x^*,0))$ by either gives the bound in both conventions. Finally $K(\{x^*\})\le d+2\log d+c$.
 \end{proof}
 
@@ -27,36 +60,32 @@ If $\dom D\cap Q=\emptyset$, the functions $f^{T_i^{Q,b}}_\omega$ and $f^{T_i}_\
 (c) $p_1$ is a fixed string, so $K(Q\mid p_1)\ge K(Q)-c$. A separating $Q$ meets $\{0,1\}^d$ exactly in $\{x^*\}$, so $x^*$ is computable from $d$ and a decider of $Q$: $d\le K(x^*\mid d)\le K(Q)+c$. The error bound is \cref{prop:ood:draftfalse}(b), which holds normalised. Finally $x^*$ is the unique $0$ of $f$ among strings of length $d$, so $d\le K(x^*\mid d)\le K(f)+c$.
 \end{proof}
 
+For $A$ finite, $x^*\notin A$, $B:=A\cup\{x^*\}$ and $y\ne f(x^*)$, put $D^*_y:=f|_A+(x^*,y)$.
+
+\begin{proposition}[Sandwich for one test point]\label{prop:ood:sandwich}
+\status{proved}\src{context Prop 2.14}
+For every decidable $Q$ separating $x^*$ from $A$ and partial computable $b$ with $b(x^*)=y$,
+$2^{-K(Q,b)-c}\le\nu(D^*_y)/\nu(f|_A)\le2^{L_\nu(f|_A)-K(D^*_y\mid B)+c}\le2^{\KF(f|_A)-K(D^*_y\mid B)+c'}$.
+\end{proposition}
+
+\begin{proof}
+Left: \cref{prop:ood:hanni}. Right: for $B$ given as a list, $\nu$ restricted to labellings of $B$ is a semimeasure (disjoint programs or tapes), lsc uniformly in $B$, so the conditional coding theorem gives $\nu(D^*_y)\le2^{-K(D^*_y\mid B)+c}$; and $\nu(f|_A)=2^{-L_\nu(f|_A)}\ge2^{-\KF(f|_A)-c}$.
+\end{proof}
+
 \begin{proof}[Proof of \cref{prop:ood:labelled}]
-For $x\in B$ let $\mu_f(x):=\sum_{y\ne f(x)}\nu(f|_{B\setminus\{x\}}+(x,y))$: the mass of hypotheses (programs or tapes) that agree with $f$ on $B\setminus\{x\}$ and give a defined wrong label at $x$. A hypothesis counted for $x$ and for $x'\ne x$ would be wrong at $x$ (first set) and right at $x$ (second set); so the sets are disjoint and $\sum_{x\in B}\mu_f(x)\le\nu(\emptyset)\le1$. (A direct computation on a finite mixture with deterministic, partial, product and shared-randomness hypotheses confirms the disjointness on all subsets of a five-point domain; code in the accompanying repository.) $\mu_f(x)$ is lsc uniformly in the finite object $f$ and $x$ (enumerate programs, or tape cylinders), so $\mu_f(x^*)\le2^{-K(x^*\mid f)+c}$. The normaliser at $x^*$ satisfies $\sum_y\nu(f|_A+(x^*,y))\ge\nu(f)=2^{-L_\nu(f)}$, and $L_\nu(f)\le\KF(f)+c$. Hence
+For $x\in B$ let $\mu_f(x):=\sum_{y\ne f(x)}\nu(f|_{B\setminus\{x\}}+(x,y))$: the mass of hypotheses (programs or tapes) that agree with $f$ on $B\setminus\{x\}$ and give a defined wrong label at $x$. A hypothesis counted for $x$ and for $x'\ne x$ would be wrong at $x$ (first set) and right at $x$ (second set); so the sets are disjoint and $\sum_{x\in B}\mu_f(x)\le\nu(\emptyset)\le1$. $\mu_f(x)$ is lsc uniformly in the finite object $f$ and $x$ (enumerate programs, or tape cylinders), so $\mu_f(x^*)\le2^{-K(x^*\mid f)+c}$. The normaliser at $x^*$ satisfies $\sum_y\nu(f|_A+(x^*,y))\ge\nu(f)=2^{-L_\nu(f)}$, and $L_\nu(f)\le\KF(f)+c$. Hence
 \[ e_{\rm norm}(x^*)=\frac{\mu_f(x^*)}{\sum_y\nu(f|_A+(x^*,y))}\le2^{L_\nu(f)-K(x^*\mid f)+c}. \]
 \emph{Separating properties.} $Q=\{x^*\}$ is decidable from $x^*$, so $\sep(x^*;A\mid f)\le K(x^*\mid f)+c$. Conversely, given $f$ (hence the list $B$) and a decider of a separating $Q$, $x^*$ is the unique element of $B\cap Q$, so $K(x^*\mid f)\le\sep(x^*;A\mid f)+c$.
 \emph{Lower bound.} \Cref{prop:ood:hanni} with $b\equiv y$ and $K(Q,b)\le K(Q)+K(y)+c$.
-\emph{Conditioning on the input set.} $K(x^*\mid B)\le K(x^*\mid f)+K(f\mid B)+c$, and $K(f\mid B)\le\KF(f)+c$ (run a shortest consistent program on the list $B$).
-\emph{Conditioning on the input set and a program.} From $\langle B,p\rangle$ one computes $f$, so $K(x^*\mid B,p)\le K(x^*\mid f)+c$; and $L_\nu(f)\le\KF(f)+c\le|p|+c$. As for $f$, $K(x^*\mid B,p)$ equals up to $c$ the least $K(Q\mid B,p)$ of a decidable separating $Q$. This form is never sharper than the main bound by more than a constant.
+\emph{The other two bounds.} $K(x^*\mid B)\le K(x^*\mid f)+K(f\mid B)+c$ with $K(f\mid B)\le\KF(f)+c$ (run a shortest consistent program on the list $B$); and from $\langle B,p\rangle$ one computes $f$, so $K(x^*\mid B,p)\le K(x^*\mid f)+c$, while $L_\nu(f)\le\KF(f)+c\le|p|+c$. The last form is never sharper than the main bound by more than a constant.
 \end{proof}
 
-\paragraph{The grammar computation of \cref{ex:ood:hanniexamples}(c).} The script \texttt{e5\_dsl\_odd\_lengths.py} (deterministic; code in the accompanying repository) computes an exact Bayes mixture over an enumerated grammar. A plain program is an arithmetic expression of depth at most $2$ over the leaves $|x|$, $\#_1(x)$, $\#_0(x)$, $0$, $1$, $2$ with $+,-,\times$; an \texttt{if} program is ``if $C$ then $E$ else $E'$'' with one of $80$ simple conditions $C$ (parity of a leaf, comparisons and equalities of leaves, first and last bit). Programs with the same values on all strings of length $1$ to $8$ are merged into $1345$ classes. The prior gives weight $p_{\rm plain}$ to plain programs and $1-p_{\rm plain}$ to \texttt{if} programs, with fixed grammar weights inside each. Training: all $170$ strings of length $1,3,5,7$, labelled by their length; test: all $340$ strings of length $2,4,6,8$. Only one plain class (``$|x|$'') fits the training data. \Cref{tab:ood:grammar} gives the posterior predictive. The ``tilted'' rows add one program ``if $|x|$ even then $0$ else $|x|$'' with prior mass equal to (or ten times) that of all plain programs.
+\begin{example}[Easy-to-hard generalisation; shortest proofs]\label{ex:ood:easyhard}
+\status{proved}\src{context Ex 2.15, 2.15a}
+Let the inputs be sentences of a consistent theory $\mathcal T$ with decidable proof checking, labelled $1$ if $\mathcal T$ proves them and $0$ if it refutes them. Let every training sentence have a proof or refutation of length at most $L$, and let the test sentence $x^*$ be decided by $\mathcal T$, with no proof or refutation of length at most $L':=2^{\lceil\log L\rceil}\le2L$. The property ``no proof or refutation of length $\le L'$'' is decidable, separates $x^*$ from the training set, and has complexity at most $K(\mathcal T)+K(\lceil\log L\rceil)+c\le K(\mathcal T)+2\log\log L+c$ for large $L$. With $b\equiv0$ and $b\equiv1$, \cref{prop:ood:hanni} gives the wrong label probability at least $2^{-K(\mathcal T)-2\log\log L-c}$, however many easy sentences were seen. Proof search, of length $K(\mathcal T)+c$, fits every correctly labelled training set, so the correct label has probability at least $2^{-K(\mathcal T)-c}$. If instead each provable sentence is labelled by its shortest proof, \cref{thm:ood:twosided}(c) with the violating output $\epsilon$ (the empty string; $K(\epsilon\mid x^*)$ and $\KP(\epsilon\mid x^*)$ are $O(1)$) gives probability at least $2^{-K(\mathcal T)-2\log\log L-c}$ that $x^*$ does not get its shortest proof.
+\end{example}
 
-\begin{table}[ht]
-\centering\small
-\begin{tabular}{@{}lccccc@{}}
-\toprule
-prior & \multicolumn{4}{c}{$P(\text{correct})$ at length $2$ / $4$ / $6$ / $8$} & min over test strings \\
-\midrule
-$p_{\rm plain}=0.5$ & 0.9824 & 0.9835 & 0.9834 & 0.9834 & 0.9790 \\
-$p_{\rm plain}=0.9$ & 0.9975 & 0.9977 & 0.9977 & 0.9977 & 0.9971 \\
-$p_{\rm plain}=0.99$ & 0.99977 & 0.99978 & 0.99978 & 0.99978 & 0.99972 \\
-tilted $\times1$ & 0.557 & 0.557 & 0.557 & 0.557 & 0.555 \\
-tilted $\times10$ & 0.114 & 0.114 & 0.114 & 0.114 & 0.113 \\
-\bottomrule
-\end{tabular}
-\caption{Posterior predictive of the intended answer $|x|$ on even-length strings, for the grammar of \cref{ex:ood:hanniexamples}(c).}\label{tab:ood:grammar}
-\end{table}
-
-Online, with $p_{\rm plain}=0.5$: after all strings of length $2$ are revealed with their labels, the probability of a wrong answer at lengths $4$ to $8$ drops to about $2.7\cdot10^{-3}$; after length $4$, to about $1.5\cdot10^{-8}$; after length $6$, to $0$ within the class. A single revealed string (``$00$'', label $2$) leaves about $6.7\cdot10^{-3}$, because programs such as ``if $|x|$ even then $2$ else $|x|$'' survive it. A finite grammar is not a universal machine, so this only illustrates \cref{prop:ood:machine}, which is the proof that the answer depends on the machine.
-
-\paragraph{Summary of H\"anni's examples.} \Cref{tab:ood:hanni} collects what \cref{ex:ood:hanniexamples} proves.
+\paragraph{The grammar computation of \cref{ex:ood:hanniexamples}(c).} A deterministic script (code in the accompanying repository) computes an exact Bayes mixture over an enumerated grammar. A plain program is an arithmetic expression of depth at most $2$ over the leaves $|x|$, $\#_1(x)$, $\#_0(x)$, $0$, $1$, $2$ with $+,-,\times$; an \texttt{if} program is ``if $C$ then $E$ else $E'$'' with one of $80$ simple conditions $C$ (parity of a leaf, comparisons and equalities of leaves, first and last bit). Plain expressions with the same values on all strings of length $1$ to $8$ are merged into $1345$ classes; an \texttt{if} program is a condition and two such classes. The prior gives weight $p_{\rm plain}$ to plain programs and $1-p_{\rm plain}$ to \texttt{if} programs, with fixed grammar weights inside each. Training: all $170$ strings of length $1,3,5,7$, labelled by their length; test: all $340$ strings of length $2,4,6,8$. Only one plain class (``$|x|$'') fits the training data. For $p_{\rm plain}=0.5$, $0.9$ and $0.99$ the posterior predictive of the intended answer $|x|$ at lengths $2,4,6,8$ is $0.9824$ to $0.9835$, $0.9975$ to $0.9977$ and $0.99977$ to $0.99978$, with minima over the test strings $0.9790$, $0.9971$ and $0.99972$. A tilted prior adds one program ``if $|x|$ even then $0$ else $|x|$'' with prior mass equal to (or ten times) that of the intended program $|x|$, the only plain program consistent with the training data; with the factor ten it carries $44\%$ of the prior mass (the predictive is computed after normalising). The intended answer then gets $0.557$ (or $0.114$) at every even length, with minima $0.555$ (or $0.113$). A finite grammar is not a universal machine, so this only illustrates \cref{prop:ood:machine}, which proves that the answer depends on the machine.
 
 \begin{table}[ht]
 \centering\small\crefabbrev
@@ -66,9 +95,8 @@ example & proved & plausible only & false strengthening \\
 \midrule
 provability labels & correct label $\ge2^{\LSFI(D)-K(\mathcal T)-c}$; $\le K(\mathcal T)+c$ online errors; wrong label $\ge2^{-K(\mathcal T)-2\log\log L-c}$, and $\ge2^{-K(L'\mid p_{\mathcal T})-c}$ times the weight of proof search & a hard sentence (e.g.\ the Riemann hypothesis) labelled correctly with probability near $1$ & at fixed difficulty $L$ of the training sentences, the wrong-label probability tends to $0$ as more are added \\
 shortest proofs & the same form & a hard sentence gets its shortest proof w.h.p. & the same, for shortest proofs \\
-odd lengths & correct $\ge2^{-c}$, wrong $\ge2^{-c'}$, $\le c$ online errors & correct w.h.p.\ on natural machines (at least $0.979$ on the grammar) & correct w.h.p.\ on every universal machine (\cref{prop:ood:machine}; $0.11$ tilted) \\
+odd lengths & correct $\ge2^{-c}$, wrong $\ge2^{-c'}$, $\le c$ online errors & correct w.h.p.\ on natural machines (at least $0.979$ on the grammar) & correct w.h.p.\ on every universal machine (\cref{prop:ood:machine}; $0.11$ with a tilted prior) \\
 \bottomrule
 \end{tabularx}
-\caption{H\"anni's OOD examples (\cref{ex:ood:hanniexamples}). He wrote ``plausibly'' and did not claim the last column. The floor $2^{-K(\mathcal T)-2\log\log L-c}$ is tiny for a natural theory; the relative bound is the one that can bite.}\label{tab:ood:hanni}
+\caption{The out-of-distribution examples of \cref{ex:ood:hanniexamples}: what is proved, what is plausible, and strengthenings that fail. The floor $2^{-K(\mathcal T)-2\log\log L-c}$ is tiny for a natural theory; the relative bound is the stronger one.}\label{tab:ood:hanni}
 \end{table}
-% source: examples §5.4

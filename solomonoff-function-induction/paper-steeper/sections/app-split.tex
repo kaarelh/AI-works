@@ -1,5 +1,5 @@
 % Appendix E (writer: steep-a). Proofs for sec:split. Source: steeper notes-final §3.1-§3.3 (Lemmas 3.2, 3.2', Prop 3.3, Thm 4).
-\section{Proofs for the model--randomness split}\label{app:split}
+\section{Proofs for \texorpdfstring{\cref{sec:split}}{Section \ref*{sec:split}} (the model--randomness split)}\label{app:split}
 
 The proof of \cref{thm:split:lambda1} is given in the main text.
 
@@ -11,9 +11,17 @@ We prove \cref{lem:split:ville}. Let $Z_n:=\xi(D_n)/\nu(D_n)$. Given the past an
 \]
 the sum running over labels of positive $\nu$-probability, by the one-point inequality. So $(Z_n)$ is a nonnegative supermartingale with $Z_0=\xi(\emptyset)\le1$, also when the input rule is adaptive or randomised. Ville's maximal inequality \citep{ville1939etude} gives $\Prob[\sup_nZ_n\ge2^j]\le Z_0\,2^{-j}\le2^{-j}$. For the consequence, $\xi_{\mathcal C}\ge2^{-\ell(\pi)}\nu_\pi$, so $\nu_\pi(D_n)\le2^{\ell(\pi)}\xi_{\mathcal C}(D_n)\le2^{\ell(\pi)+\delta^*}\nu(D_n)$. \qed
 
-\subsection{Proof of the stream-prefix lemma}\label{app:split:stream}
+\subsection{Fill-ins from stored stream prefixes}\label{app:split:stream}
 
-We prove \cref{lem:split:stream}. Order $Y=\{y^{(1)},\dots,y^{(|Y|)}\}$.
+\begin{lemma}[Fill-ins from stored stream prefixes]\status{proved; computed}\src{steeper Lemma 3.2$'$ (adapts foundations Prop 4.4); check c7(A)}\label{lem:split:stream}
+Let the class be $\Hcl{\times}$, let $\nu$ be a sampler with a program $\pi_\nu$ of length $k$, and let $D$ be a data set with $n$ inputs, all of length at most $d$, with $\beta_D:=\min_{(x,y)\in D}\nu(y\mid x)>0$. Put $i_D:=\lceil\log(6n/\beta_D)\rceil$ and $t_D:=\lceil\log(2d+2+2\log(i_D+1))\rceil$. Then
+\[
+\Wdet(D)\ \ge\ 2^{-k-2\log(t_D+1)-\kappa}\,\nu(D).
+\]
+Since $\beta_D\ge\nu(D)$, $i_D\le\log(6n)+\log(1/\nu(D))+1$; so the cost $2\log(t_D+1)$ is doubly logarithmic in $d$ and triply logarithmic in $n$ and in the sampled randomness $-\log\nu(D)$.
+\end{lemma}
+
+\begin{proof} Order $Y=\{y^{(1)},\dots,y^{(|Y|)}\}$.
 
 \emph{Private streams.} Let $j(x)$ be the length-lexicographic index of $x$, so $j(x)\le2^{d+1}-2$ for $|x|\le d$, and let $\langle a,b\rangle:=(a+b)(a+b+1)/2+b$ be the Cantor pairing, which is injective and increasing in $b$. For a finite string $w$ (bits indexed from $0$), the \emph{stream prefix} of $x$ in $w$ is $w_{\langle j(x),0\rangle}w_{\langle j(x),1\rangle}\cdots$, continued while the positions are below $|w|$. Distinct inputs read disjoint positions.
 
@@ -29,17 +37,17 @@ We prove \cref{lem:split:stream}. Order $Y=\{y^{(1)},\dots,y^{(|Y|)}\}$.
 \]
 using $\nu(y\mid x)\ge\beta_D$ and Bernoulli's inequality.
 
-\emph{Programs.} Let $V'$ be the prefix machine that reads $\pi_\nu$ (by simulating $V$, which consumes exactly $\pi_\nu$), then a self-delimiting code of an integer $t$ of length at most $2\log(t+1)+1$, then $L_t:=2^{2^t}$ bits $w$, and outputs an index of the deterministic conditional semimeasure $\varphi_w$. By closure under prefix-free simulation (\cref{def:setup:class}) there is $r$ with $V(ru)=V'(u)$. The programs $p_w:=r\,\pi_\nu\,\code(t)\,w$ are distinct for distinct $w$. With $t=t_D$ we have $2^{t_D}\ge2d+2+2\log(i_D+1)$, so $L_{t_D}\ge\big(2^{d+1}(i_D+1)\big)^2\ge(2^{d+1}+i_D)^2$.
+\emph{Programs.} Let $V'$ be the prefix machine that reads $\pi_\nu$ (by simulating $V$, which consumes exactly $\pi_\nu$), then a self-delimiting code of an integer $t$ of length at most $2\log(t+1)+1$, then $L_t:=2^{2^t}$ bits $w$, and outputs an index of the deterministic conditional semimeasure $\varphi_w$. By closure under prefix-free simulation (\cref{def:setup:class}) there is $\sigma$ with $V(\sigma u)=V'(u)$. The programs $\pi_w:=\sigma\,\pi_\nu\,\code(t)\,w$ are distinct for distinct $w$. With $t=t_D$ we have $2^{t_D}\ge2d+2+2\log(i_D+1)$, so $L_{t_D}\ge\big(2^{d+1}(i_D+1)\big)^2\ge(2^{d+1}+i_D)^2$.
 
 \emph{Sum.}
 \[
-\Wdet(D)\ge\sum_w2^{-|p_w|}\ind[\varphi_w\supseteq D]=2^{-|r|-k-|\code(t_D)|}\Pr_w[\varphi_w\supseteq D]\ge2^{-k-2\log(t_D+1)-|r|-2}\,\nu(D).
+\Wdet(D)\ge\sum_w2^{-|\pi_w|}\ind[\varphi_w\supseteq D]=2^{-|\sigma|-k-|\code(t_D)|}\Pr_w[\varphi_w\supseteq D]\ge2^{-k-2\log(t_D+1)-|\sigma|-2}\,\nu(D).\qedhere
 \]
-\qed
+\end{proof}
 
-\emph{Computation.} A direct computation (code in the accompanying repository, seed 7) checked the certification step on 600 random samplers ($|Y|\le4$, rational values with various denominators, Bern$(1/3)$ included) with adversarial approximations $q_{i,h}=F_h\pm2^{-i-2}$: in all 1646 label--depth cases the certified mass was at least $\nu-3\cdot2^{-i}$, no two certificates conflicted, and the end-to-end ratio at depth $i_D$ was at least $1/2$ (smallest $0.645$). It also checked the pairing and length facts for $d\le12$, $i\le64$. The cost $2\log(t_D+1)$ is $5.6$ bits at $d=20$, $n=10^3$ ($\beta_D=1/3$); $6.3$ bits at $d=100$, $n=10^6$ (for $\beta_D=1/3$ and for $\beta_D=2^{-10}$); $7.2$ bits at $d=1000$, $n=10^{12}$ ($\beta_D=10^{-3}$); and $8.9$ bits at $d=10^6$, $n=10^{15}$ ($\beta_D=1/3$). The hashing cost of \cref{lem:split:hash} at the same sizes is $31.9$, $56.3$ (with $r=2$) or $60.1$ (with $r=10$), $106.6$ and $142.7$ bits.
+A direct computation (code in the accompanying repository) confirms the certification step on $600$ random samplers with adversarial approximations $q_{i,h}=F_h\pm2^{-i-2}$, and the pairing and length facts for $d\le12$, $i\le64$. The cost $2\log(t_D+1)$ is $5.6$ bits at $d=20$, $n=10^3$ ($\beta_D=1/3$); $6.3$ bits at $d=100$, $n=10^6$ (for $\beta_D=1/3$ and for $\beta_D=2^{-10}$); $7.2$ bits at $d=1000$, $n=10^{12}$ ($\beta_D=10^{-3}$); and $8.9$ bits at $d=10^6$, $n=10^{15}$ ($\beta_D=1/3$). The hashing cost of \cref{lem:split:hash} at the same sizes is $31.9$, $56.3$ (with $r=2$) or $60.1$ (with $r=10$), $106.6$ and $142.7$ bits.
 
-\emph{Ville's inequality in simulation.} For \cref{lem:split:ville}, a simulation with the true sampler (code in the accompanying repository, seed 4; 4000 runs) gave empirical frequencies $\Prob[\delta^*\ge j]=0.119,0.055,0.032,0.014,0.003$ for $j=1,2,3,4,6$, and an independent simulation with an adversarial adaptive input rule, which puts the next input where $\xi$ deviates most from $\nu$, gave $0.355,0.163,0.069,0.035,0.0065$; all are below $2^{-j}$.
+For \cref{lem:split:ville}, a simulation (code in the accompanying repository; $4000$ runs) with an adaptive input rule that puts the next input where $\xi$ deviates most from $\nu$ gives the empirical frequencies $\Prob[\delta^*\ge j]=0.355,0.163,0.069,0.035,0.0065$ for $j=1,2,3,4,6$, all below $2^{-j}$.
 
 \subsection{An alternative for dyadic samplers: hashing}\label{app:split:hash}
 
@@ -53,20 +61,27 @@ Let the class be $\Hcl{\times}$, let $\nu$ be a sampler whose values are multipl
 \begin{proof}
 \emph{Exact values.} From the index $V(\pi_\nu)$ and $r$ one computes $\nu$ exactly: enumerate lower approximations $\nu_s(y\mid x)\uparrow\nu(y\mid x)$ until $\sum_y\nu_s(y\mid x)>1-2^{-r}$, which happens because $\nu$ is a measure and $Y$ is finite. Then every deficit $\nu-\nu_s$ is below $2^{-r}$, and $\nu(y\mid x)$ is the least multiple of $2^{-r}$ that is at least $\nu_s(y\mid x)$.
 
-\emph{Canonical sampler.} For $b\in\{0,\dots,2^r-1\}$ let $\sigma(x,b)$ be the label $y$ whose cumulative interval $[\sum_{y'<y}\nu(y'\mid x),\sum_{y'\le y}\nu(y'\mid x))$ contains $b2^{-r}$. Then $\Pr_b[\sigma(x,b)=y]=\nu(y\mid x)$ for uniform $b$.
+\emph{Canonical sampler.} For $b\in\{0,\dots,2^r-1\}$ let $\mathrm{lab}(x,b)$ be the label $y$ whose cumulative interval $[\sum_{y'<y}\nu(y'\mid x),\sum_{y'\le y}\nu(y'\mid x))$ contains $b2^{-r}$. Then $\Pr_b[\mathrm{lab}(x,b)=y]=\nu(y\mid x)$ for uniform $b$.
 
 \emph{Hash.} Let $q:=\max(d+1,r)$, fix (computably from $q$) an irreducible polynomial of degree $q$ over GF$(2)$, and embed $\{0,1\}^{\le d}$ injectively into GF$(2^q)$ by mapping $x$ to the element with coefficient vector $1x$. For a seed $s\in\mathrm{GF}(2^q)^n$ let $h_s(x)$ be the first $r$ coefficient bits of $\sum_{j<n}s_j\,x^j$, computed in GF$(2^q)$ with $x$ embedded. For distinct $x_1,\dots,x_n$ the map $s\mapsto(\sum_js_jx_i^j)_{i\le n}$ is a bijection (a Vandermonde matrix with distinct nodes), so for uniform $s$ the values $h_s(x_i)$ are independent and uniform on $\{0,1\}^r$.
 
-\emph{Programs, one per seed.} Let $V'$ be the prefix machine that reads $\pi_\nu$ (by simulating $V$), then self-delimiting codes of $n$, $d$ and $r$, then $qn$ bits $s$, and outputs an index of the deterministic conditional semimeasure $x\mapsto\sigma(x,h_s(x))$ on $\{0,1\}^{\le d}$, undefined elsewhere. By closure under prefix-free simulation there is $r'$ with $V(r'u)=V'(u)$. The programs $p_s:=r'\pi_\nu\code(n)\code(d)\code(r)\,s$ are distinct for distinct $s$, deterministic, and of length $L_0+qn$ with $L_0\le k+2\log(n+1)+2\log(d+1)+2\log(r+1)+\kappa$.
+\emph{Programs, one per seed.} Let $V'$ be the prefix machine that reads $\pi_\nu$ (by simulating $V$), then self-delimiting codes of $n$, $d$ and $r$, then $qn$ bits $s$, and outputs an index of the deterministic conditional semimeasure $x\mapsto\mathrm{lab}(x,h_s(x))$ on $\{0,1\}^{\le d}$, undefined elsewhere. By closure under prefix-free simulation there is $\sigma'$ with $V(\sigma'u)=V'(u)$. The programs $\pi_s:=\sigma'\pi_\nu\code(n)\code(d)\code(r)\,s$ are distinct for distinct $s$, deterministic, and of length $L_0+qn$ with $L_0\le k+2\log(n+1)+2\log(d+1)+2\log(r+1)+\kappa$.
 
-\emph{Sum.} $\sum_s2^{-|p_s|}\ind[\nu_{p_s}\supseteq D]=2^{-L_0}\Pr_s[\forall i:\sigma(x_i,h_s(x_i))=y_i]=2^{-L_0}\prod_i\nu(y_i\mid x_i)=2^{-L_0}\nu(D)$.
+\emph{Sum.} $\sum_s2^{-|\pi_s|}\ind[\nu_{\pi_s}\supseteq D]=2^{-L_0}\Pr_s[\forall i:\mathrm{lab}(x_i,h_s(x_i))=y_i]=2^{-L_0}\prod_i\nu(y_i\mid x_i)=2^{-L_0}\nu(D)$.
 \end{proof}
 
-Distinct seeds often give the same function on $X$; the sum is over programs, one per seed, so this does not matter. A direct computation (code in the accompanying repository) checked the independence exactly over GF$(16)$ for $n\le3$ (3232 cases) and the full statement with the embedding $1x$, $q=\max(d+1,r)$, $r\in\{2,3,4\}$, $|Y|=3$ and $n\le3$ (2106 cases), with maximum error $0$. The hashing idea for fair coins and the program mixture is in \citet[the hashing remark]{claudeSFI2026fundamentals}.
+Distinct seeds often give the same function on $X$; the sum is over programs, one per seed, so this does not matter. A direct computation (code in the accompanying repository) confirms the independence and the full statement exactly over small fields. The hashing idea for fair coins and the program mixture is in \citet[a hashing bound]{claudeSFI2026fundamentals}.% P1: rem:versions:hashing
 
-\subsection{Proof of the SI proposition}\label{app:split:si}
 
-We prove \cref{prop:split:si}. (i) Under $\nu$, $Z_n:=M(z_{1:n})/\nu(z_{1:n})$ is a nonnegative supermartingale with $Z_0\le1$, because $M(z0)+M(z1)\le M(z)$; Ville's inequality gives the tail bound, and $\Pi_1(\pi_\nu\mid z_{1:n})=2^{-k}\nu(z_{1:n})/M(z_{1:n})\ge2^{-k-\delta^*}$. (ii) Let $w:=z_{1:n}0^\infty$ and let $\delta_w$ be the point mass on its prefixes. Given $n$ and $\pi_\nu$, the restriction of $\nu$ to $\{0,1\}^n$ is a computable measure, so (F2) gives $K(z_{1:n}\mid n,\pi_\nu)\le-\log\nu(z_{1:n})+\kappa$, and (F1), (F3) give $K(z_{1:n})\le K(n)+k-\log\nu(z_{1:n})+\kappa$. An index of $\delta_w$ is computable from $z_{1:n}$, so the class contains a program for $\delta_w$ of length at most $K(z_{1:n})+\kappa$, and $\delta_w$ is consistent with $z_{1:n}$. (iii) The programs ``a fixed decoder, a shortest program for $\nu$, then a Shannon--Fano code of $z$ under $\nu$'' have total weight at least $2^{-k-\kappa}\nu(z)$; this is the usual proof of $M\ge2^{-K(\nu)-O(1)}\nu$ \citep{li2008introduction}. \qed
+\subsection{Solomonoff induction at \texorpdfstring{$\lambda=1$}{lambda=1}}\label{app:split:si}
+
+\begin{proposition}[SI at $\lambda=1$]\status{proved; (iii) known}\src{steeper Prop 3.3}\label{prop:split:si}
+Let a string $z_{1:n}$ be drawn from a computable measure $\nu$ with a program $\pi_\nu\in\Hcl{\mathrm{SI}}$ of length $k$, and let $\delta^*:=\sup_n\log\big(M(z_{1:n})/\nu(z_{1:n})\big)$, where $M=\xi_1$ is the mixture of $\Hcl{\mathrm{SI}}$.
+(i) $\Pi_1(\pi_\nu\mid z_{1:n})\ge2^{-k-\delta^*}$ for all $n$, and $\Prob[\delta^*\ge j]\le2^{-j}$. (ii) The deterministic hypotheses consistent with $z_{1:n}$ (point masses on computable infinite extensions) have total weight at least $2^{-k-K(n)-\kappa}\nu(z_{1:n})$. (iii) In the deterministic-program representation of $M$ every hypothesis is a fill-in; the sampler appears only as the programs ``decoder for $\nu$, then a code of $z$'', of total weight at least $2^{-k-\kappa}\nu(z)$.
+\end{proposition}
+
+\begin{proof} (i) Under $\nu$, $Z_n:=M(z_{1:n})/\nu(z_{1:n})$ is a nonnegative supermartingale with $Z_0\le1$, because $M(z0)+M(z1)\le M(z)$; Ville's inequality gives the tail bound, and $\Pi_1(\pi_\nu\mid z_{1:n})=2^{-k}\nu(z_{1:n})/M(z_{1:n})\ge2^{-k-\delta^*}$. (ii) Let $w:=z_{1:n}0^\infty$ and let $\mathbf 1_w$ be the point mass on its prefixes. Given $n$ and $\pi_\nu$, the restriction of $\nu$ to $\{0,1\}^n$ is a computable measure, so (F2) gives $K(z_{1:n}\mid n,\pi_\nu)\le-\log\nu(z_{1:n})+\kappa$, and (F1), (F3) give $K(z_{1:n})\le K(n)+k-\log\nu(z_{1:n})+\kappa$. An index of $\mathbf 1_w$ is computable from $z_{1:n}$, so the class contains a program for $\mathbf 1_w$ of length at most $K(z_{1:n})+\kappa$, and $\mathbf 1_w$ is consistent with $z_{1:n}$. (iii) The programs ``a fixed decoder, a shortest program for $\nu$, then a Shannon--Fano code of $z$ under $\nu$'' have total weight at least $2^{-k-\kappa}\nu(z)$; this is the usual proof of $M\ge2^{-K(\nu)-O(1)}\nu$ \citep{li2008introduction}.
+\end{proof}
 
 \subsection{Proof of the private-randomness theorem}\label{app:split:private}
 
@@ -92,10 +107,19 @@ If $g_{n+1}=1$, then almost surely $\nu_\pi(y_{n+1}\mid x_{n+1})=0$ and $\Lambda
 \]
 The first term is a finite sum of terms that tend to $0$. Let $n\to\infty$, then $L\to\infty$. \qed
 
-\emph{Computation.} In an explicit Kraft-valid product class (Kraft sum $0.909$) of samplers, fill-ins and partial memorisers, an independent computation (code in the accompanying repository, seed 777) ran 30 runs at 12 sample sizes and 4 values of $\lambda$ and found no violation of (i)--(iii) or of the upper end of \cref{thm:split:lambda1}(iii) in 1440 MAP checks.
+A direct computation (code in the accompanying repository) in an explicit product class of samplers, fill-ins and partial memorisers with Kraft weights confirms (i)--(iii) and the upper end of \cref{thm:split:lambda1}(iii) in $1440$ cases.
 
 \subsection{Proof of the shared-randomness theorem}\label{app:split:shared}
 
-We prove \cref{thm:split:shared}. (i) By (Dom), $-\log U(o)\le k+\kappa_0-\log P_{\pi_\nu}(o)$, so $J_\lambda(\pi_U;o)=\lambda\ell_U-\log U(o)\le\lambda\ell_U+\kappa_0+k-\log P_{\pi_\nu}(o)$, which is below $\lambda k-\log P_{\pi_\nu}(o)=J_\lambda(\pi_\nu;o)$ exactly when $(\lambda-1)k>\lambda\ell_U+\kappa_0$; the same condition says $\ell^*_\lambda<k$, and every $\lambda$-MAP has length at most $\ell^*_\lambda$ by \cref{thm:absorb:absorption}(a). (ii) $\sum_{\pi\in A}2^{-\lambda\ell(\pi)}P_\pi(o)\le2^{-(\lambda-1)\min_A\ell}\sum_\pi2^{-\ell(\pi)}P_\pi(o)=2^{-(\lambda-1)\min_A\ell}\,\xi_1(o)\le2^{-(\lambda-1)\min_A\ell+\kappa_1}U(o)$, and the normaliser $\xi_\lambda(o)$ is at least $2^{-\lambda\ell_U}U(o)$. For SI with adaptive or non-computable inputs, Solomonoff's $M$ is a semimeasure on the whole interleaved string and need not dominate laws whose inputs are not modelled; $\MH$ dominates every lsc chronological semimeasure on every input sequence \citep{claudeSFI2026fundamentals}, so (Dom) holds in $\Hcl{\mathrm{chr}}$. \qed
+We prove \cref{thm:split:shared}. (i) Since $U(o)>0$, $J_\lambda(\pi_U;o)<\infty$. By (Dom), $-\log U(o)\le k+\kappa_0-\log P_{\pi_\nu}(o)$, so $J_\lambda(\pi_U;o)=\lambda\ell_U-\log U(o)\le\lambda\ell_U+\kappa_0+k-\log P_{\pi_\nu}(o)$, which is below $\lambda k-\log P_{\pi_\nu}(o)=J_\lambda(\pi_\nu;o)$ exactly when $(\lambda-1)k>\lambda\ell_U+\kappa_0$; the same condition says $\ell^*_\lambda<k$, and every $\lambda$-MAP has length at most $\ell^*_\lambda$ by \cref{thm:absorb:absorption}(a). (ii) $\sum_{\pi\in A}2^{-\lambda\ell(\pi)}P_\pi(o)\le2^{-(\lambda-1)\min_A\ell}\sum_\pi2^{-\ell(\pi)}P_\pi(o)=2^{-(\lambda-1)\min_A\ell}\,\xi_1(o)\le2^{-(\lambda-1)\min_A\ell+\kappa_1}U(o)$, and the normaliser $\xi_\lambda(o)$ is at least $2^{-\lambda\ell_U}U(o)$. For SI with adaptive or non-computable inputs the sampler is not an SI hypothesis, since it does not model the inputs; in $\Hcl{\mathrm{chr}}$ it is a chronological semimeasure, and $\MH$ dominates every lsc chronological semimeasure on every input sequence \citep{claudeSFI2026fundamentals}, so (Dom) holds there with $U=\MH$. \qed% P1: cor:hist:H4
 
-In an explicit shared class that contains its own mixture, an independent computation (code in the accompanying repository, seed 4242) found no violation of (ii) or of \cref{thm:absorb:absorption}(a) and (c1) in 300 MAP checks.
+A direct computation (code in the accompanying repository) in an explicit shared class that contains its own mixture confirms (ii) and \cref{thm:absorb:absorption}(a) and (c1) in $300$ cases.
+
+\begin{example}[Noisy parity, full table: an illustration]\status{computed; illustration}\src{steeper Ex 3.4; check c4(C); referee q1(J)}\label{ex:split:noisyparity}
+Let $d=12$ and let the data be the full table ($N=4096$ inputs) of a random parity with i.i.d.\ flips at rate $1/8$ ($509$ flips). A small product class contains the coin, parity-plus-noise samplers ($\ell=24.2$ bits) and the memoriser (parity plus flip set); a ``shared class'' adds the finite Bayes mixture $U$ over all parities and a grid of noise rates, with an \emph{assigned} length $\ell_U=12$. A direct computation (code in the accompanying repository) gives: the product-class MAP is the sampler at $\lambda=1,1.1,1.5,2,3,6$, and at $\lambda=1$ the memoriser is only $8.2$ bits worse, a tie up to $O(\log N)$; the shared-class MAP is the sampler for $\lambda<1.315$ and $U$ above, the threshold being $(-\log U(D)+\log\nu(D))/(k-\ell_U)$ (the rounded values $2234.0$, $2218.0$, $24.2$, $12$ give $1.311$). Since $\ell_U=12$ is assigned and this finite class does not satisfy (Dom), the example illustrates the mechanism of \cref{thm:split:shared}; it is not an instance of it.
+\end{example}
+
+\begin{remark}[No split in SI's program representation]\status{proved}\src{steeper Rem 4.3}\label{rem:split:siprograms}
+Solomonoff's $M$ is a mixture over deterministic programs. Tempering does not change deterministic hypotheses (\cref{lem:setup:basic}(iii)), and a power prior $2^{-\lambda\ell(\pi)}$ charges sampled bits and model bits alike, so it is indifferent between ``decoder for $\nu$ plus a code of the randomness'' and a literal fill-in of the same length. The split needs a representation in which the randomness is not part of the program: a product hypothesis with private coins.
+\end{remark}
+
