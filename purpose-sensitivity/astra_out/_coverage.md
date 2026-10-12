@@ -48,7 +48,7 @@ All 16 synthetic helper tests passed, including exact-byte preservation, partial
 
 ## Current run status
 
-Initial invocation completed for s2_ctx2.jsonl / gpt-6.1-sol; individual failures remain recorded.
+Initial invocation completed for s2_ctx2.jsonl / gpt-6-luna; individual failures remain recorded.
 
 ## Models and cumulative observed tool counts
 
@@ -56,7 +56,7 @@ Initial invocation completed for s2_ctx2.jsonl / gpt-6.1-sol; individual failure
 |---|---:|---:|---:|---:|---:|---:|
 | GPT-6 Astra (`gpt-6-astra`; OpenAI) | 280 | 280 | 0 | 0 | 278 | 0 |
 | GPT-6.1 Sol (`gpt-6.1-sol`; OpenAI) | 280 | 279 | 0 | 0 | 278 | 0 |
-| GPT-6 Luna (`gpt-6-luna`; OpenAI) | 229 | 229 | 0 | 0 | 229 | 0 |
+| GPT-6 Luna (`gpt-6-luna`; OpenAI) | 278 | 278 | 0 | 0 | 278 | 0 |
 | GPT-5.6 Sol (`gpt-5.6-sol`; OpenAI) | 229 | 229 | 0 | 0 | 229 | 0 |
 
 Counts describe the event streams actually captured. The original Sol startup failure has no full stream. Codex 0.159.2 omits some tool kinds, including clock, from JSON output; zero observed items does not verify that all tools are absent.
@@ -68,7 +68,7 @@ Counts describe the event streams actually captured. The original Sol startup fa
 | `s2_smoke.jsonl` | 5 | 5 | 5 | 5 | 5 |
 | `s2_ctx4.jsonl` | 104 | 104 | 104 | 104 | 104 |
 | `s2_ctx4_probes.jsonl` | 120 | 120 | 120 | 120 | 120 |
-| `s2_ctx2.jsonl` | 49 | 49 | 49 | 0 | 0 |
+| `s2_ctx2.jsonl` | 49 | 49 | 49 | 49 | 0 |
 | `s2_ctx2c.jsonl` | 12 | 0 | 0 | 0 | 0 |
 | `s2_ctx3.jsonl` | 62 | 0 | 0 | 0 | 0 |
 | `jobs_study1.jsonl` | 210 | 0 | 0 | 0 | 0 |
@@ -79,7 +79,7 @@ File counts include saved API-block records, if any; the model table separates t
 
 ## Ledger and limitations
 
-Ledger: **1018 counted command attempts, 1014 successful answers, 4 errors, 0 API blocks**. The shared cap remains 2,600. Token/cost counters are unmeasured for this command backend, even when the ledger reports zero.
+Ledger: **1067 counted command attempts, 1063 successful answers, 4 errors, 0 API blocks**. The shared cap remains 2,600. Token/cost counters are unmeasured for this command backend, even when the ledger reports zero.
 
 Saved answer records were mechanically checked against the final model event, the handoff hash, model identity, default settings and command template. No prompt or answer content was interpreted, summarized or evaluated.
 
