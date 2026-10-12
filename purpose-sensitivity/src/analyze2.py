@@ -1577,15 +1577,18 @@ def analyse(df, exp, outdir, keymap, diff_info, a):
                 Xpm.append(pm)
         r2, _ = ew(pet[pet.model.isin(ms)], SPEC["H5"]["w"], "recall_kw_pp", tag="H5kw" + pname)
         X.append(dict(code="H5kw", family="desc", panel=pname, context="petition",
-                      contrast=SPEC["H5"]["label"] + ", keyword rubric", y="recall_kw_pp", **r2))
+                      contrast=SPEC["H5"]["label"] + ", keyword rubric", y="recall_kw_pp",
+                      positive_means=pos_text(SPEC["H5"], "recall_kw_pp"), **r2))
         for y in ("share_pp", "share_lex_pp"):
             r2, _, _ = claim_level(df, y, ms, tag="F4" + pname + y)
             X.append(dict(code="F4", family="desc", panel=pname, context="fidelity",
-                          contrast="AI-risk - AI-optimism (agency), claim as unit", y=y, **r2))
+                          contrast="AI-risk - AI-optimism (agency), claim as unit", y=y,
+                          positive_means="+ = more pieces ASSERTED for AI-risk claims", **r2))
         r2, _ = m1_test(df, ms)
         X.append(dict(code="M1", family="desc", panel=pname, context="analysis",
                       contrast=f"fraud_illegal - survey refusal: {r2.get('events', 0)} fraud refusals vs "
                       f"{fmtv(r2.get('expected'))} expected (exact conditional test, one-sided)", y="refusal_any_pp",
+                      positive_means="+ = more refusal under fraud_illegal",
                       p_fixed=r2.get("p_exact_greater", nan)))
     Xdf = pd.DataFrame(X)
     csv("extended_panel", Xdf)
@@ -2194,7 +2197,9 @@ def secondary_text(Sdf, Spm, h5i, h5im, h5_ok, nb, h5x=None):
           f"{fmtv(h5i.get('hi95'))}], {h5i.get('n_families', 0)} families (targets compared: {h5i.get('targets')}). The "
           "comparison set is the included families' own developers, so developer-target main effects cancel as in the "
           "version crossover. With API blocks excluded instead of scored 0 (§6 treatment of provider blocks): "
-          f"{fmtv((h5x or {}).get('est'))} pp [{fmtv((h5x or {}).get('lo95'))}, {fmtv((h5x or {}).get('hi95'))}]."
+          + (f"{fmtv(h5x['est'])} pp [{fmtv(h5x.get('lo95'))}, {fmtv(h5x.get('hi95'))}]."
+             if (h5x or {}).get("est", nan) == (h5x or {}).get("est", nan)
+             else "not estimable (no family has a complete block without an API block).")
           + ("" if h5_ok else " Shown for information only: below the reporting threshold it is not interpreted.")
           if h5i.get("est", nan) == h5i.get("est", nan) else "Interaction not estimable: no non-Claude family with "
           "complete blocks on all three developer arms."),
