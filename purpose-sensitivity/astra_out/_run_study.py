@@ -24,6 +24,7 @@ MODELS = [('gpt-6-astra', 'GPT-6 Astra'), ('gpt-6.1-sol', 'GPT-6.1 Sol'),
 MAIN_FILES = ['s2_ctx4', 's2_ctx4_probes', 's2_ctx2', 's2_ctx2c',
               's2_ctx3', 'jobs_study1', 's2_ctx1', 's2_ctx1_rungs']
 CAP = 2600
+WORKERS = 4
 
 
 def timestamp():
@@ -143,7 +144,7 @@ class StudyController:
         return [sys.executable, '-B', str(self.root / '_run_guarded.py'),
                 str(self.handoff / (name + '.jsonl')), str(self.root),
                 '--model', model, '--display-name', display, '--developer', 'OpenAI',
-                '--backend', 'cmd', '--workers', '2',
+                '--backend', 'cmd', '--workers', str(WORKERS),
                 '--max-calls', str(CAP), '--retries', '1', '--ordered',
                 '--reasoning-effort', 'default', '--cmd-stdin', 'prompt', '--cmd', template]
 

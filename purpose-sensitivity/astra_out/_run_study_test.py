@@ -237,7 +237,7 @@ class ControllerTests(unittest.TestCase):
         cmd = self.controller.runner_command('s2_ctx4', model, display)
         self.assertEqual(cmd[1], '-B')
         self.assertTrue(cmd[2].endswith('_run_guarded.py'))
-        for flag, value in [('--workers', '2'), ('--retries', '1'), ('--max-calls', '2600'),
+        for flag, value in [('--workers', '4'), ('--retries', '1'), ('--max-calls', '2600'),
                             ('--reasoning-effort', 'default'), ('--cmd-stdin', 'prompt')]:
             self.assertEqual(cmd[cmd.index(flag) + 1], value)
         self.assertIn('--ordered', cmd)

@@ -133,7 +133,7 @@ def main():
               'Saved answer records were mechanically checked against the final model event, the handoff hash, model identity, default settings and command template. No prompt or answer content was interpreted, summarized or evaluated.', '',
               'The subagent fallback was not used: the available launcher cannot confirm removal of tools and filesystem access. Subagents assisted only with mechanics and synthetic checks. No Claude model was used.', '',
               'Credentials remain outside Git. Publication checks inspect staged paths and compare staged bytes against local authentication values without printing those values. This conversation transcript and the device login code are not committed.', '',
-              'Deviations from the initial mechanics: the authorized persistent private CLI home, capture wrapper, guarded runner launcher, necessary network allowlist draft, and metadata/credential publication checks. The handoff runner and job files remain unchanged. Prior failure reports/logs are preserved.', '']
+              'Deviations from the initial mechanics: the authorized persistent private CLI home, capture wrapper, guarded runner launcher, necessary network allowlist draft, metadata/credential publication checks, and four workers from s2_ctx2c onward under the later authorization to adjust concurrency. The handoff runner and job files remain unchanged. Prior failure reports/logs are preserved.', '']
     path = ROOT / '_coverage.md'
     prior = path.read_text()
     prefix = prior.split('## Models and cumulative observed tool counts')[0].split('## Current run status')[0]

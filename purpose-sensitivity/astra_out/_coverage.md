@@ -20,7 +20,7 @@ Saved an environment configuration draft adding only `auth.openai.com`, preservi
 
 ## Exact model command
 
-Backend: `cmd`; stdin: `prompt`. Runner flags remain `--ordered --workers 2 --max-calls 2600 --retries 1`; generation temperature, reasoning effort and output length stay at defaults.
+Backend: `cmd`; stdin: `prompt`. Runner flags are `--ordered --workers 4 --max-calls 2600 --retries 1` from `s2_ctx2c` onward. Earlier invocations used `--workers 2`. Generation temperature, reasoning effort and output length stay at defaults.
 
 ```sh
 CODEX_HOME=/workspace/purpose-sensitivity-private/codex-home python3 /workspace/AI-works/purpose-sensitivity/astra_out/_capture_cli.py {workdir} {model} {out_file} /opt/codex/bin/codex --no-daemon -a never exec --ignore-user-config --ignore-rules --ephemeral --skip-git-repo-check --sandbox read-only -C {workdir} -m {model} -c 'model_instructions_file="{system_file}"' -c 'project_doc_max_bytes=0' -c 'skills.include_instructions=false' -c 'skills.bundled.enabled=false' -c 'web_search="disabled"' -c 'features.shell_tool=false' -c 'features.unified_exec=false' -c 'features.apply_patch_freeform=false' -c 'features.view_image=false' -c 'features.apps=false' -c 'features.plugins=false' -c 'features.memories=false' -c 'features.memory_tool=false' -c 'features.multi_agent=false' -c 'features.multi_agent_v2=false' -c 'features.js_repl=false' -c 'features.code_mode=false' -c 'tools.update_plan.enabled=false' --color never --json -o {out_file} -
@@ -36,11 +36,15 @@ It terminates its own CLI process group and kills it after two seconds if necess
 
 Batch invocations use `_run_guarded.py` with the supplied runner's same arguments. It imports the unchanged runner, checks the shared stop marker before queued jobs and under the ledger reservation lock, and permits active jobs to save their results. This prevents a stopped batch from consuming its remaining call budget. All 10 synthetic launcher tests passed, including a six-job queue where only the active job reserved a call and saved its result after a pause. No study prompts or credentials were used in these tests.
 
-The invocation template is `python3 -B purpose-sensitivity/astra_out/_run_guarded.py purpose-sensitivity/handoff/{file}.jsonl purpose-sensitivity/astra_out --model {model} --display-name "{display_name}" --developer OpenAI --backend cmd --cmd "$(cat purpose-sensitivity/astra_out/_command.txt)" --cmd-stdin prompt --ordered --workers 2 --max-calls 2600 --retries 1`. Logs append to `_logs/{model}__{file}.log`.
+The invocation template is `python3 -B purpose-sensitivity/astra_out/_run_guarded.py purpose-sensitivity/handoff/{file}.jsonl purpose-sensitivity/astra_out --model {model} --display-name "{display_name}" --developer OpenAI --backend cmd --cmd "$(cat purpose-sensitivity/astra_out/_command.txt)" --cmd-stdin prompt --ordered --workers 4 --max-calls 2600 --retries 1 --reasoning-effort default`. Logs append to `_logs/{model}__{file}.log`.
 
 After smoke tests, `python3 -B purpose-sensitivity/astra_out/_run_study.py` supervises the run with a private creation umask (`077`). It processes files in the requested order and models in the table order, validates and pushes after each invocation, and retries unfinished jobs within the unchanged cumulative cap. Additional repair passes run in the original file order before the final rung file, reserving budget for all unattempted jobs. A usage pause is published before waiting for an explicitly supplied reset time; an unknown reset or an account/provider/authentication stop requires resolution. All 16 mocked controller tests passed without model calls or credentials. Controller state contains only execution metadata.
 
 Publication after Luna's `s2_ctx4_probes` briefly paused because a captured stderr log contains a blank line at EOF. That log remains byte-for-byte unchanged. Whitespace checks now apply to authored source, documentation and command/configuration files; generated records and captured streams retain their original formatting. Credential and scope checks still inspect every staged file. The expanded controller suite has 18 passing synthetic tests, including a Git regression confirming that raw-log formatting is preserved while authored-source whitespace errors still block publication. This was a publication-check failure, not a model failure or provider/account warning.
+
+Under the user's authorization to adjust workers, the controller increases concurrency to four starting with `s2_ctx2c`. The existing two-worker GPT-5.6 Sol `s2_ctx2` invocation was allowed to drain before replacing the orchestration process. Fresh per-job sessions, sequential block/file ordering, the shared call cap and warning gates remain unchanged. Up to four already-reserved calls can be active when a warning arrives; subsequent reservations are blocked. The updated controller still passes all 18 synthetic tests. The model command template is unchanged.
+
+The publication checker now checks both source and destination paths for renames and handles confirmed staged deletions without trying to read nonexistent blobs. All remaining staged blobs receive the same credential checks. Ten synthetic Git tests cover deletion and rename scope, credential matching, and staged-versus-worktree bytes; no study content or real credentials were used in those tests.
 
 Success requires exactly one completed turn, a nonempty answer file, and exact byte equality with the final agent-message event. This prevents JSON logs being mistaken for an answer. Answer bytes and full traces are unchanged; audits include file links and hashes. The supplied runner still performs its original outer-whitespace trimming (`out.strip()`) when writing command-backend records, and reports the requested model ID as served without independent service attestation. These inherited limitations were not changed.
 
@@ -48,7 +52,7 @@ All 16 synthetic helper tests passed, including exact-byte preservation, partial
 
 ## Current run status
 
-Initial invocation completed for s2_ctx2.jsonl / gpt-6-luna; individual failures remain recorded.
+Resuming the authorized ordered study run; existing records were verified.
 
 ## Models and cumulative observed tool counts
 
@@ -57,7 +61,7 @@ Initial invocation completed for s2_ctx2.jsonl / gpt-6-luna; individual failures
 | GPT-6 Astra (`gpt-6-astra`; OpenAI) | 280 | 280 | 0 | 0 | 278 | 0 |
 | GPT-6.1 Sol (`gpt-6.1-sol`; OpenAI) | 280 | 279 | 0 | 0 | 278 | 0 |
 | GPT-6 Luna (`gpt-6-luna`; OpenAI) | 278 | 278 | 0 | 0 | 278 | 0 |
-| GPT-5.6 Sol (`gpt-5.6-sol`; OpenAI) | 229 | 229 | 0 | 0 | 229 | 0 |
+| GPT-5.6 Sol (`gpt-5.6-sol`; OpenAI) | 278 | 278 | 0 | 0 | 278 | 0 |
 
 Counts describe the event streams actually captured. The original Sol startup failure has no full stream. Codex 0.159.2 omits some tool kinds, including clock, from JSON output; zero observed items does not verify that all tools are absent.
 
@@ -68,7 +72,7 @@ Counts describe the event streams actually captured. The original Sol startup fa
 | `s2_smoke.jsonl` | 5 | 5 | 5 | 5 | 5 |
 | `s2_ctx4.jsonl` | 104 | 104 | 104 | 104 | 104 |
 | `s2_ctx4_probes.jsonl` | 120 | 120 | 120 | 120 | 120 |
-| `s2_ctx2.jsonl` | 49 | 49 | 49 | 49 | 0 |
+| `s2_ctx2.jsonl` | 49 | 49 | 49 | 49 | 49 |
 | `s2_ctx2c.jsonl` | 12 | 0 | 0 | 0 | 0 |
 | `s2_ctx3.jsonl` | 62 | 0 | 0 | 0 | 0 |
 | `jobs_study1.jsonl` | 210 | 0 | 0 | 0 | 0 |
@@ -79,7 +83,7 @@ File counts include saved API-block records, if any; the model table separates t
 
 ## Ledger and limitations
 
-Ledger: **1067 counted command attempts, 1063 successful answers, 4 errors, 0 API blocks**. The shared cap remains 2,600. Token/cost counters are unmeasured for this command backend, even when the ledger reports zero.
+Ledger: **1116 counted command attempts, 1112 successful answers, 4 errors, 0 API blocks**. The shared cap remains 2,600. Token/cost counters are unmeasured for this command backend, even when the ledger reports zero.
 
 Saved answer records were mechanically checked against the final model event, the handoff hash, model identity, default settings and command template. No prompt or answer content was interpreted, summarized or evaluated.
 
@@ -87,4 +91,4 @@ The subagent fallback was not used: the available launcher cannot confirm remova
 
 Credentials remain outside Git. Publication checks inspect staged paths and compare staged bytes against local authentication values without printing those values. This conversation transcript and the device login code are not committed.
 
-Deviations from the initial mechanics: the authorized persistent private CLI home, capture wrapper, guarded runner launcher, necessary network allowlist draft, and metadata/credential publication checks. The handoff runner and job files remain unchanged. Prior failure reports/logs are preserved.
+Deviations from the initial mechanics: the authorized persistent private CLI home, capture wrapper, guarded runner launcher, necessary network allowlist draft, metadata/credential publication checks, and four workers from s2_ctx2c onward under the later authorization to adjust concurrency. The handoff runner and job files remain unchanged. Prior failure reports/logs are preserved.

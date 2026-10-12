@@ -22,6 +22,43 @@ def strings(value):
             yield from strings(child)
 
 
+def check_staged(repo, needles):
+    """Check every changed path and scan all blobs remaining in the index.
+
+    Disabling rename detection exposes both the deleted source and added
+    destination, so neither path can escape the authorized-directory check.
+    A Git-confirmed deletion has no staged blob to inspect.
+    """
+    raw = subprocess.check_output(
+        ['git', 'diff', '--cached', '--name-status', '-z', '--no-renames'], cwd=repo)
+    fields = raw.split(b'\0')
+    if fields[-1] != b'':
+        raise SystemExit('Publication blocked: malformed staged change metadata.')
+    fields.pop()
+    if len(fields) % 2:
+        raise SystemExit('Publication blocked: malformed staged change metadata.')
+    changes = []
+    for index in range(0, len(fields), 2):
+        status, path = fields[index:index + 2]
+        if status not in {b'A', b'M', b'T', b'D'}:
+            raise SystemExit('Publication blocked: unsupported staged change status.')
+        name = os.fsdecode(path)
+        if not name.startswith(PREFIX):
+            raise SystemExit('Publication blocked: staged path outside authorized directory.')
+        changes.append((status, name))
+    for status, name in changes:
+        if status == b'D':
+            continue
+        if Path(name).name in {'auth.json', 'config.toml'} or Path(name).suffix in {'.pem', '.key'}:
+            raise SystemExit('Publication blocked: credential-like filename.')
+        blob = subprocess.run(['git', 'show', ':' + name], cwd=repo, capture_output=True)
+        if blob.returncode:
+            raise SystemExit('Publication blocked: cannot inspect staged file.')
+        if any(needle in blob.stdout for needle in needles):
+            raise SystemExit('Publication blocked: local credential or account identifier matched staged data.')
+    return len(changes)
+
+
 def main():
     private_home = Path('/workspace/purpose-sensitivity-private/codex-home')
     if not (private_home / 'auth.json').is_file():
@@ -56,20 +93,8 @@ def main():
             sensitive.add(value)
     needles = {v.encode() for v in sensitive}
     needles.update(json.dumps(v)[1:-1].encode() for v in sensitive)
-    names = subprocess.check_output(
-        ['git', 'diff', '--cached', '--name-only', '-z'], cwd=REPO).decode().split('\0')
-    names = [name for name in names if name]
-    if any(not name.startswith(PREFIX) for name in names):
-        raise SystemExit('Publication blocked: staged path outside authorized directory.')
-    for name in names:
-        if Path(name).name in {'auth.json', 'config.toml'} or Path(name).suffix in {'.pem', '.key'}:
-            raise SystemExit('Publication blocked: credential-like filename.')
-        blob = subprocess.run(['git', 'show', ':' + name], cwd=REPO, capture_output=True)
-        if blob.returncode:
-            raise SystemExit('Publication blocked: cannot inspect staged file.')
-        if any(needle in blob.stdout for needle in needles):
-            raise SystemExit('Publication blocked: local credential or account identifier matched staged data.')
-    print(f'Publication check passed: {len(names)} staged files within scope; no local credential matches.')
+    count = check_staged(REPO, needles)
+    print(f'Publication check passed: {count} staged paths within scope; no local credential matches.')
 
 
 if __name__ == '__main__':
