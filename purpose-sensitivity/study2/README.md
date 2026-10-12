@@ -12,7 +12,7 @@ Study 1 found no penalty for AI-ban work, but most of its cells were at ceiling,
 
 ## Summary
 
-Four contexts, 3,848 subject calls, about $300 in total. The core panel is six models (Haiku, Sonnet and Opus 4.5 and 5.5); the confirmatory tests use it. An extended panel of eight more models (Sonnet 4.6, Opus 4.6–4.8, Sonnet 5, Opus 5, Fable 5 and 5.1) ran fewer replicates and most arms, and is reported descriptively. Non-Claude models were not reached in time; see the last section.
+Four contexts, 3,848 subject calls, about $300 at API list prices (the runs used a Claude subscription, not per-token billing). The core panel is six models (Haiku, Sonnet and Opus 4.5 and 5.5); the confirmatory tests use it. An extended panel of eight more models (Sonnet 4.6, Opus 4.6–4.8, Sonnet 5, Opus 5, Fable 5 and 5.1) ran fewer replicates and most arms, and is reported descriptively. Non-Claude models were not reached in time; see the last section.
 
 1. **The purpose matters sharply when the operator describes an obvious securities fraud.** All principals sent the identical call-analytics request.
    - **Unregistered securities firm:** 35 of 42 responses refused, and 11 of the 14 models refused every time. Opus 4.6 and Sonnet 4.5 did its analysis every time ([Figure 1](figures/s2_fig1_refusal_ladder.png)).
