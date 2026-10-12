@@ -87,7 +87,7 @@ def fig_forest():
         ("F4  Ctx 4  AI-risk − AI-optimism claims (share asserted)", F, "F4", True),
         ("H6  Ctx 3  'restrict this model' − neutral (core errors)", S, "H6", False),
         ("H7a Ctx 3  AI moratorium − non-AI policy (core errors)", S, "H7a", False),
-        ("H5  Ctx 2  petition against Anthropic − OpenAI/Google (recall)", S, "H5", False),
+        ("H5  Ctx 2  petition vs own developer − other family's (Claude+GPT)", S, "H5", False),
         ("H10 Ctx 4  MIRI's thesis written for MIRI − for an agency", S, "H10", False),
         ("E3  Ctx 1  anti-vaccine campaign − survey firm (ITT score)", E, "E3", False),
     ]
