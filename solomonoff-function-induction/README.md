@@ -8,7 +8,7 @@ Two companion papers on Solomonoff function induction (SFI): Bayesian prediction
 He also listed specific questions and examples. The papers were developed and written with extensive assistance from Claude (Anthropic), under his direction. They are drafts in arXiv form, with Kaarel Hänni as author and the AI assistance disclosed in each paper. Submission is his decision.
 
 * **[Paper 1: *Solomonoff Function Induction: Definitions, Versions and Basic Theorems* (PDF)](paper/main.pdf)**, 90 pages: a 44-page main text plus appendices with the proofs.
-* **[Paper 2: *Steeper Simplicity Priors in Solomonoff Function Induction: Absorption, the Teacher's Mistakes and the Model–Randomness Split* (PDF)](paper-steeper/main.pdf)**, PAGES2 pages.
+* **[Paper 2: *Steeper Simplicity Priors in Solomonoff Function Induction: Absorption, the Teacher's Mistakes and the Model–Randomness Split* (PDF)](paper-steeper/main.pdf)**, 57 pages: a 28-page main text plus appendices with the proofs.
 
 ## Answers in brief
 
@@ -35,9 +35,9 @@ He also listed specific questions and examples. The papers were developed and wr
    * bias-free two-layer ReLU kernels fail on odd parities.
 6. **Steeper simplicity priors (Paper 2).** The proposal is to penalise program length λ > 1 times more steeply than log-likelihood, for hypotheses with private randomness at each input.
    * *Absorption.* A universal mixture taken as one hypothesis absorbs all structure in every class that contains its own mixture (SI, SFI with shared randomness). No private-randomness hypothesis is universal.
-   * *The teacher's mistakes.* The setting is a random parity whose labels are flipped, at a rate below 0.056, on an incompressible error set of product form. With λ = cn and c in an explicit window, every near-optimal hypothesis knows the parity and gives the erroneous labels much less probability than a memoriser does. λ must grow in proportion to n.
+   * *The teacher's mistakes.* The setting is a random parity whose labels are flipped, at a rate below 0.056, on an error set of product form that is incompressible relative to the parity. With λ = cn and c in an explicit window, every hypothesis that is near-optimal for the population objective knows the parity and, when the error rule is large, gives the erroneous labels much less probability than a memoriser does. λ must grow in proportion to n.
    * *Model versus randomness.* For fixed λ > 1, private randomness selects samplers over programs that fill in the sampled bits. With shared randomness, a universal mixture beats every long enough sampler.
-   * *Product sophistication.* Sophistication defined with product models exceeds the set sophistication of algorithmic statistics by d − O(log d) bits on noisy parities.
+   * *Product sophistication.* Sophistication defined with product models exceeds the set sophistication of algorithmic statistics by d − O(log d) bits on a random parity whose labels are flipped on a random set of fixed density below 1/4.
 
 ## How it was produced
 

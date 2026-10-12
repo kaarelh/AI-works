@@ -132,3 +132,70 @@ Before this phase: 63 pages, main text 33.
 
 * Phase 4 (P2F-17): replace the informal companion-result names marked `% P1: <label>` by p2-body (setup, absorb, limits, split, computable, app-absorb, app-split, app-limits) with `\citet[Theorem~X.Y]{claudeSFI2026fundamentals}` from Paper 1's final `main.aux`; check Paper 1's `sec:steep` against Paper 2's final statements.
 * p1-front: copy `paper-steeper/bib/core.bib` to `paper/bib/core.bib` (§2); same `\renewcommand` lines in the same place of the preamble (§3); `framed` can be removed from Paper 1's preamble (P2F-24).
+
+---
+
+# Phase 4
+
+Inputs: Paper 1's final `paper/main.aux` (build of 20:54; 628 labels; 90 pages, 0 errors, 0 undefined references and citations), Paper 2's sources after phase 3, Paper 1's statements behind every `% P1: <label>` marker of p2-body, the steeper `notes-final.md` (Prop 2.16 and its reading) and the context `notes-final.md` (Prop 2.1). No git command was run. No label was moved, deleted, renamed or added; no `\status` or `\src` call was touched, so no new "rendered as" entry is needed.
+
+Files edited: Paper 2 `sections/{setup,absorb,app-absorb,limits,app-limits,split,app-split,computable,intro,discussion}.tex` (citation pinpoints only, plus the correction in `limits.tex` below); Paper 1 `sections/steeper.tex` (P2X-24, two phrases and one comment line). The body files of Paper 2 are p2-body's; phase 4 (§H) assigns these replacements to p2-front.
+
+## P2F-17 (P2X-24): companion results cited by number
+
+Every informal name, and every bare `\citep{claudeSFI2026fundamentals}` that stands for a specific result, now carries the number from Paper 1's `main.aux`. In running text the citation is `\citet[…]`, in parentheses `\citep[…]` (natbib prints "Hänni (2026a, Theorem 5.3)" and "(Hänni, 2026a, Theorem 5.3)"). Each statement of Paper 1 was read against the claim it supports in Paper 2.
+
+| Paper 2 place | was | now | Paper 1 label |
+|---|---|---|---|
+| `setup.tex`, ¶"Objects from the companion paper" | no citation for "agree up to $K(\dom D)+O(1)$ bits, but $\MF/\Mprod$ is unbounded" | `\citep[Theorem~4.4 and Proposition~4.7]` | `thm:versions:chain`, `prop:versions:shared` |
+| same ¶, fresh noise | `[the proposition on fresh label noise]` | `\citep[Proposition~5.6]` | `prop:learn:freshnoise` (part (a): infinite expected loss) |
+| `def:setup:product` | `[the per-query mixture]` | `\citep[Proposition~5.7(a)]` | `prop:learn:perquery` ($\Mpq=\Mprod$ on distinct inputs) |
+| `def:setup:class`, $\Hcl{\mathrm{chr}}$ | `[the universality of \SFIhist{}]` | `\citep[Corollary~6.17(a)]` | `cor:hist:H4` |
+| `rem:absorb:why` | `[the chain theorem, the proposition on shared randomness and the remark on the size of this gap]` | `\citep[Theorem~4.4, Proposition~4.7 and Remark~4.8]` | `thm:versions:chain`, `prop:versions:shared`, `rem:versions:sharedsize` |
+| `q:absorb:shared` | "open question of the companion paper \citep{…}" | `\citep[Question~3.14]` | `q:setting:rpf` |
+| `app:absorb:examples` | one bare `\citep` after the $\Hcl{w}$, $\Hcl{\mathrm{SI}}$, $\Hcl{\mathrm{chr}}$ list; "by the representation theorem for chronological semimeasures" | `\citep[Theorem~3.11]` after the $\Mw$ clause; `\citep[Corollary~6.17]` after "lsc chronological semimeasure"; "by `\citet[Theorem~6.16]`"; `\citep[Theorem~3.8]` after "$\MF$ is a machine law" | `thm:setting:weakuniversal`, `cor:hist:H4`, `thm:hist:representation`, `thm:setting:universal` |
+| `app:absorb:price` (iii) | "Universality gives … \citep{…}" | `\citep[Theorem~3.8]` | `thm:setting:universal` (eq. `eq:setting:mixture`) |
+| proof idea of `prop:limits:plain` | "the mistake bound of \citet{…}" | "for $\MF$ this is `\citet[Corollary~5.4]`" | `cor:learn:mistakes` |
+| `sec:limits:ood`, first sentence | `[the proposition on unseen simple properties, with no logarithmic term]` | `\citep[Proposition~8.1]` | `prop:ood:hanni` |
+| after `prop:limits:ood` | "(i) is the companion's proposition for $\Mprod$" | "(i) is the statement of `\citet[Proposition~8.1(a)]` with $\Mprod$ in place of $W$ and $\MF$" (correction, see below) | `prop:ood:hanni` |
+| before `lem:split:stream` | "the tape-length bound of \citet{…}" | "the tape-length bound of `\citet[Proposition~4.6(a)]`" (Paper 1's title is "Tape-length bound") | `prop:versions:tape` |
+| after `thm:split:lambda1` (Eisenstat) | "see also \citet{…}" | "see also `\citet[Section~7.3]`" | `sec:ex:eisenstat` |
+| after `thm:split:shared` | "the argument of the merging theorem of \citet{…}" | "the argument of `\citet[Theorem~5.3]`" | `thm:learn:merging` |
+| `app-limits.tex`, after the proof of `prop:limits:ood` | `[the conjunction ladder and the remark on uniform tie-breaking]` | `\citep[Theorem~9.10 and Remark~G.11]` | `thm:comp:ladder`, `rem:comp:uniformties` |
+| `app-split.tex`, after `lem:split:hash` | `\citet[a hashing bound]` | `\citet[Remark~B.3]` | `rem:versions:hashing` |
+| proof of `thm:split:shared` | bare `\citep` for "$\MH$ dominates every lsc chronological semimeasure" | `\citep[Corollary~6.17(a)]` | `cor:hist:H4` |
+| `rem:computable:examples` | `[time-bounded SFI]` | `\citep[Section~9.1]` (the clocked class $\mathcal C_t$ is `def:comp:timebounded` there) | `sec:comp:time` (marker: `thm:comp:timebounded`) |
+| after `prop:related:computability` | `[the computability proposition]` | `\citep[Proposition~A.10(c)]` | `prop:setting:computability` (the diagonal argument is part (c), non-computability of the conditionals, which is Paper 2's part (b)) |
+| `rem:related:nn` | `[NN Bayes is function-space Bayes]`; "the bridge question of the companion paper" | `\citep[Proposition~10.1]`; "the bridge question of the companion paper `\citep[Question~10.9 and Remark~H.2]`" | `prop:nn:functionspace`; `q:nn:bridges`, `rem:nn:bridge` |
+| `intro.tex`, ¶"Relation to the author's notes …" (Eisenstat) | "see also \citet{…}" | "see also `\citet[Section~7.3]`" | `sec:ex:eisenstat` |
+| `discussion.tex`, ¶"Relation to other work" | "the bridge question of the companion paper" | "… of the companion paper `\citep[Question~10.9]`" | `q:nn:bridges` |
+
+**Correction in `limits.tex` (after `prop:limits:ood`).** "At $\lambda=1$, (i) is the companion's proposition for $\Mprod$" read as if Paper 1 stated the proposition for $\Mprod$. Paper 1's `prop:ood:hanni` is stated for $\nu\in\{W,\MF\}$ (its conventions paragraph). The sentence now says what the steeper notes' reading of Prop 2.16 says: at $\lambda=1$, (i) is that statement with $\Mprod$ in place of $W$ and $\MF$. No claim changed.
+
+**Unchanged on purpose:** citations of the companion paper as a whole (`intro.tex` l.7 and "The basic theory of SFI is in the companion paper"; `setup.tex` "We use the following objects of \citet{…}"; the title-page footnote of `main.tex`); the acknowledgements' "in the companion paper" (exact §A4 text). The `% P1: <label>` comments stay: they record the Paper 1 label behind each number in case Paper 1 is renumbered. Two markers were added with the new citations (`setup.tex`, `limits.tex`).
+
+**Check (script `scratchpad/p2f4/checknums.py`):** each of the 23 distinct pinpoints printed in Paper 2 (Theorem 3.8, 3.11, 4.4, 5.3, 6.16, 9.10; Proposition 4.6, 4.7, 5.6, 5.7, 8.1, 10.1, A.10; Corollary 5.4, 6.17; Remark 4.8, B.3, G.11, H.2; Question 3.14, 10.9; Section 7.3, 9.1) equals the type and number of its label in Paper 1's `main.aux`, before and after Paper 1's rebuild; no printed pinpoint lacks a label and no label is unused. No informal name of a Paper 1 result remains in Paper 2 (grep of every `claudeSFI2026fundamentals` citation and of "companion").
+
+## P2X-24: Paper 1's `sec:steep` against Paper 2's final statements
+
+Checked sentence by sentence against `thm:absorb:absorption`, `rem:absorb:examples`, `cor:absorb:nouniversal`, `rem:absorb:why`, `prop:absorb:price`, `def:teacher:instance`, `thm:teacher:main` with the definition of $c_{\rm hi}$ (teacher.tex:90–92), `rem:limits:schedule`, `prop:limits:envelope`, `thm:split:lambda1`, `prop:split:si`, `thm:split:private`, `rem:split:reading`, `thm:split:shared` and Paper 2's abstract:
+
+* Absorption in every class that contains its own mixture (SI, SFI with shared randomness, the history-aware class with $\MH$); no universal private-randomness hypothesis; the price of private randomness and its $\lambda=1$ form: agree.
+* "$\lambda$ must grow linearly in $n$"; "density and description length alone do not suffice"; the $\lambda=1$ sampler/fill-in statement; "for fixed $\lambda>1$ … samplers rather than fill-ins" (the limited sense of `rem:split:reading`, as in Paper 2's own abstract); "a universal mixture beats every sufficiently long sampler" with shared randomness or in SI: agree.
+* **The teacher's-mistakes sentence misstated the theorem** in two ways. (1) It named neither the flip-rate bound nor the population objective: with "$\lambda$ proportional to the sample size $n$" and no "population", it reads as a statement about the near-optimal hypotheses of the sampled objective at every $n$, which `thm:teacher:main` does not give (`cor:teacher:sampled` needs about $10^9$ samples for coarse guarantees) and which is false for $n<d$, where no learner can identify a parity on $\{0,1\}^d$. (2) The window is nonempty only for $p<0.056$ ($c_{\rm hi}>0$ iff $G_1>H(p)$); without the bound the sentence suggests a window for every flip rate, while Paper 2 leaves $0.056\le p<1/4$ open (`q:teacher:open`(b)). Minimal fix in `paper/sections/steeper.tex`: "whose labels a teacher flips**, at a rate below $0.056$,** on an error set …" and "every **hypothesis with private randomness that is near-optimal for the population objective** knows the parity …" (Paper 2's abstract, §F28, states both). This departs from the exact §F20 text; recorded here as a deviation with the reason above. One comment line in the file's header records the change.
+
+Paper 1 rebuilt (`cd paper && flock /tmp/claude-0/paper-build-sfi.lock ./build.sh`, 22:02): **0 LaTeX errors, 0 undefined references, 0 undefined citations, 0 multiply defined labels, 0 overfull boxes above 10pt**; 90 pages, as before. All 628 labels keep their numbers and pages (diff of `main.aux` before and after). §11 still runs from p. 41 (y = 477 pt) to p. 42 (y = 151 pt), about 0.50 page against the 0.5 budget.
+
+**For p1-front / the lead editor (not edited; outside this phase's authorisation):** Paper 1's introduction (`intro.tex:34`, Steeper bullet) and Discussion (`discussion.tex:13`, ¶"The companion paper") summarise the same theorem without the flip-rate bound and the population objective ("makes near-optimal hypotheses learn a random parity …"; "keeps near-optimal hypotheses from modelling a teacher's errors …"). Both point to §11, which now states the hypotheses; adding "at a flip rate below $0.056$" and "for the population objective" there would make the three places agree.
+
+## Paper 2 build and checks
+
+Full build (`cd paper-steeper && flock /tmp/claude-0/paper-build-sfi.lock ./build.sh`, 22:01): **0 LaTeX errors, 0 undefined references, 0 undefined citations, 0 multiply defined labels, 0 overfull boxes above 10pt** (the 1.84pt box in the exact Code and data text remains). **57 pages**; layout unchanged from phase 3: §1 starts on p. 2, §2 on p. 5, §10 on p. 27, Code and data ends on p. 28, references pp. 29–31, Appendix A from p. 31. Page counts against §C are therefore those of §6 above (main text 28 pages against the cap of 27; appendices and total within their caps).
+
+Greps on both PDFs after the rebuilds: §A5 vocabulary grep, Paper 2: only formula symbols ($s_0$, $S_1$, $S_2$, $E_1$, $s_1$, $s_2$, $e_1$, $h_1$, $\mathbb R^2$, parts (c1)–(c3)), the DOI "s10994-…" and the footnote's "independent AI referees", as in phase 3; Paper 1: 22 hits, all formula symbols ($s_1$, $r_0$, $r_1$, $r_2$, $c_1$, $E_1$–$E_3$, $s_2$, $h_1$, $e_1$), a DOI ("s41467-…") and the footnote's "referees"; none in §11. `grep -c -i wyeth` = 0 for both; the `\[(proved|computed|…)` grep returns nothing for both. `core.bib` unchanged and identical in both papers.
+
+---
+
+# Final check (fresh checker, 22:05–22:20; report `research/paper-review/final-check-p2.md`)
+
+Edits to this group's files: `abstract.tex`, two qualifiers so that the abstract matches the body. (1) "…knows the parity and, when the error rule is large, gives the erroneous labels far less probability than a memoriser does": `thm:teacher:main`(e) and §F35 need this condition, and in `ex:teacher:version1` the bound is vacuous. (2) "…on a random set of inputs of fixed density below $1/4$": `prop:algstat:parity`(iv) is asymptotic, for $p$ of small complexity. The abstract is now 1744 characters. No label was touched. The full build is clean, 57 pages, with the layout unchanged. The main-text cap (28 pages against 27) is still open; see the report, §5.

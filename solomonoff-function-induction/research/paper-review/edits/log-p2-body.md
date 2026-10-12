@@ -214,3 +214,9 @@ Before the edits (same method): main 25.0, appendices 23.2. Every section is wit
 5. Six moves beyond the §C list (marked "length" in §3) to bring the main text from 25.0 to 21.75 pages; each leaves a summary sentence with the statement's content and a pointer.
 6. §E "threshold $\rho_0$" was not introduced: after renaming the integer to $r_D$ the threshold is $2^{-r_D}$ and needs no symbol.
 7. P2B-44: "matched by the coin" is written "beaten or tied by the coin", the wording of `prop:limits:rateblind`(ii).
+
+---
+
+## Final check (fresh checker, 22:05–22:20; report `research/paper-review/final-check-p2.md`)
+
+Edits to this group's files: `teacher.tex`, first paragraph, "three orders of magnitude at the example's sizes **for $\kappa\le30$**" (the ratio is 8453 at $\kappa=0$ and 3837 at $\kappa=30$, and decreases in $\kappa$); `app-setup.tex`, remark title "[The converse in (iv)]" (capitalisation); `app-limits.tex` l.75, "(code in the accompanying repository)" added (§A9 wording). No label was touched. The full build is clean, 57 pages, with the layout unchanged.
