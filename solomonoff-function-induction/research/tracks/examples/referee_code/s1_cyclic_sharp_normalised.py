@@ -303,7 +303,8 @@ def part_d():
     say("    All bounds are log2(N-1)_k minus an offset; offsets are computed exactly (no large-float differences).")
     say("        k  | log2(N-1)_k | track: upper off  lower off  gap | referee: upper off  lower off  gap")
     for k in [1, 2, 8, 64, 1000, 2 ** 20, 2 ** 40, 2 ** 63]:
-        lfk = lfall(N - 1, k)
+        mpmath.mp.dps = 80
+        lfk = float((mpmath.loggamma(N) - mpmath.loggamma(N - k)) / mpmath.log(2))   # log2 (N-1)_k, exact enough
         t_up = max(0.0, lg(N - k) - k)                    # track upper = lfk - t_up
         t_lo = lg(N - 1)                                  # track lower = lfk - t_lo
         r_up = lg(N - k) - min(Kint(k), lg(N - k), k)     # referee upper = lfk - r_up

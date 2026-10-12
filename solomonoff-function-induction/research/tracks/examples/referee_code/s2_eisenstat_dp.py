@@ -42,7 +42,7 @@ def say(*a):
 
 
 # ---------------------------------------------------------------- (a)
-def dp(nmax, UMAX=400, DMAX=400):
+def dp(nmax, UMAX=400, DMAX=401):
     """Forward DP.  State vector: Th, Tt (touching, top head / top tail), A[1..UMAX], B[1..UMAX].
     Tracks probability mass, and accumulates E[P* loss], E[touching steps], E[rule errors],
     Pr[no rule error so far] (as a separate 'clean' copy of the chain)."""
@@ -50,7 +50,7 @@ def dp(nmax, UMAX=400, DMAX=400):
     d = np.arange(DMAX)
     ph = (2 / 9) * (2 / 3) ** d
     pt = (2 / 9) * (1 / 3) ** d
-    loss_touch = float(np.sum(ph * np.log2(1 + 2.0 ** (-d)) + pt * np.log2(1 + 2.0 ** d)))
+    loss_touch = float(np.sum(ph * np.log2(1 + 2.0 ** (-d)) + pt * (d + np.log2(1 + 2.0 ** (-d)))))
     err_touch = ph[0] + pt[1:].sum()          # rule errs: head at d=0, tail at d>=1
     # A-walk: tail (1/3) U-1 ; head (2/3) skipping j tails, prob (1/3)(2/3)^j: U+j
     # B-walk: head (2/3) U-1 ; tail (1/3) skipping j heads, prob (2/3)(1/3)^j: U+j
@@ -117,8 +117,8 @@ def dp(nmax, UMAX=400, DMAX=400):
 
 
 def part_a():
-    say("(a) exact forward DP over the frontier chain (truncation U <= 400; 'mass' = retained probability)")
-    rows, kap = dp(400)
+    say("(a) exact forward DP over the frontier chain (truncation U <= 1500; 'mass' = retained probability)")
+    rows, kap = dp(400, UMAX=1500, DMAX=1501)
     say(f"    kappa (from DP setup) = {kap:.12f}")
     say("      n | E[N_touch(n)]  E[L_P*(n)]  E[L_P*]/kappa | E[#rule errors]  P(no rule error) | "
         "P(eta_n<tau_n)    20exp(-n/18) | mass")
@@ -215,26 +215,29 @@ def surprisal_given_domain(lab, n):
 def part_c(rng):
     say("")
     say("(c) independent simulation")
-    say("      n  runs | E[UB]/n (se)          Var(UB)/n | E[g]-(n/2+1/2) (se) | H_plugin(g) bound | "
-        "E[-log P(D|S)]/n (se)   minus h/2")
+    say("      n  runs | E[UB]/n (se)          Var(UB)/n | E[tau]/n-1/2 (se)  E[g-tau] (se) [claim <= 1/2] | "
+        "H_plugin(g) bound | E[-log P(D|S)]/n (se)   minus h/2")
     for n, R in [(100, 4000), (1000, 2000), (10000, 300)]:
-        UB, G, BX = [], [], []
+        UB, G, BX, TA = [], [], [], []
         for _ in range(R):
             tau, T, g, eta, lab = simulate(n, rng)
             UB.append(tau * LOG3 - T)
             G.append(g)
+            TA.append(tau)
             BX.append(surprisal_given_domain(lab, n))
         UB = np.array(UB)
         G = np.array(G)
+        TA = np.array(TA)
         BX = np.array(BX)
+        GT = G - TA
         vals, cnts = np.unique(G, return_counts=True)
         p = cnts / cnts.sum()
         Hplug = float(-(p * np.log2(p)).sum())
         bound = math.log2(n / 2 + 1.5) + math.log2(math.e)
         say(f"    {n:5d} {R:5d} | {UB.mean()/n:.5f} ({UB.std()/n/math.sqrt(R):.5f}) {UB.var()/n:9.4f} | "
-            f"{G.mean()-(n/2+0.5):8.3f} ({G.std()/math.sqrt(R):.3f}) | {Hplug:6.3f} <= {bound:6.3f} | "
+            f"{TA.mean()/n-0.5:+.5f} ({TA.std()/n/math.sqrt(R):.5f}) {GT.mean():7.4f} ({GT.std()/math.sqrt(R):.4f}) | {Hplug:6.3f} <= {bound:6.3f} | "
             f"{BX.mean()/n:.5f} ({BX.std()/n/math.sqrt(R):.5f}) {BX.mean()/n - H13/2:+.5f}")
-    say(f"    theory: E[UB]/n = h(1/3)/2 = {H13/2:.6f}; Var/n = 1.04966; E[g] <= n/2 + 1/2 (upper bound only)")
+    say(f"    theory: E[UB]/n = h(1/3)/2 = {H13/2:.6f}; Var/n = 1.04966; E[tau] = n/2; E[g - tau] <= 1/2 (g <= first tail at/after tau)")
 
 
 # ---------------------------------------------------------------- (d)

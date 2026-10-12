@@ -1,0 +1,16 @@
+s3_si_encoding.py  (referee, run 2; seed 20261012)
+SI proxy: bitwise Bayes mixture of mu_m (m = 1..12, w(m) ~ 1/(m(m+1)), total 0.9) and fair bits (0.1).
+Label loss in bits over the full cycle (all 2^n steps), 3 random cyclic permutations per n.
+   n | raw n-bit blocks (no delimiters)     | prefix code 1^|s| 0 s          | -log2 w(n) | log2(sum_{m>=n} w(m)/w(n))
+   2 |    3.0504    0.9397    0.9881 |  7.85e-02  7.85e-02  7.85e-02 |     2.621 |     1.344
+   3 |    2.5784    1.4897    1.4552 |  9.33e-02  9.33e-02  9.33e-02 |     3.621 |     1.621
+   4 |    1.8400    6.7482    2.1240 |  8.40e-02  8.40e-02  8.40e-02 |     4.358 |     1.791
+   5 |    2.1069    3.2776    2.1069 |  6.56e-02  6.56e-02  6.56e-02 |     4.943 |     1.885
+   6 |    2.3391    6.5089    3.5878 |  4.70e-02  4.70e-02  4.70e-02 |     5.429 |     1.914
+   7 |    2.4294    2.4294    2.5361 |  3.18e-02  3.18e-02  3.18e-02 |     5.844 |     1.885
+   8 |    8.7085    2.9754    2.7197 |  2.06e-02  2.06e-02  2.06e-02 |     6.206 |     1.791
+Reading: with delimiter-free blocks the proxy pays about 1-9 bits of label loss, varying with the
+permutation: it must infer where the blocks end, and hypotheses with other block lengths survive for
+a while.  With the prefix code it reads n from the first header, before any label, and pays < 0.1 bits
+(the residual weight of the null model) for every n.  The proxy prior is not universal, so the raw
+column illustrates the mechanism only; it is not evidence about the growth rate K(n).
