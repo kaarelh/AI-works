@@ -19,6 +19,7 @@ import argparse
 import json
 import os
 import random
+import re
 import subprocess
 import sys
 import tempfile
@@ -126,6 +127,27 @@ def job_tags(job):
     return {k: job[k] for k in ("model", "context", "arm", "rep", "unit", "cond", "task") if k in job}
 
 
+LIMIT_RX = re.compile(r"hit your (session|usage|weekly) limit.*?resets? (?:at )?(\d{1,2})(?::(\d\d))?\s*(am|pm)", re.I | re.S)
+
+
+def wait_for_limit_reset(err, max_wait=8 * 3600):
+    """On an account usage-limit error, sleep until the stated reset time (UTC) plus a margin and return True, so the
+    job is retried without spending an attempt; return False for any other error."""
+    m = LIMIT_RX.search(str(err or ""))
+    if not m:
+        return False
+    h, mi, ap = int(m.group(2)) % 12, int(m.group(3) or 0), m.group(4).lower()
+    h += 12 if ap == "pm" else 0
+    now = time.gmtime()
+    secs = ((h * 60 + mi) - (now.tm_hour * 60 + now.tm_min)) * 60 - now.tm_sec
+    if secs <= 0:
+        secs += 24 * 3600
+    secs = min(secs + 120 + random.random() * 60, max_wait)
+    print(f"[{time.strftime('%H:%M:%S')}] usage limit; sleeping {secs / 60:.0f} min until reset", flush=True)
+    time.sleep(secs)
+    return True
+
+
 def run_one(job, outdir, timeout=900, ledger=None, retries=4):
     path = os.path.join(outdir, job["id"] + ".json")
     if os.path.exists(path):
@@ -179,6 +201,8 @@ def run_one(job, outdir, timeout=900, ledger=None, retries=4):
                 ledger.add(job["model"], 0.0, "api_blocks")
             return "api_block", res.get("total_cost_usd") or 0.0
         last_err = (res or {}).get("result") if res else err
+        if wait_for_limit_reset(last_err):
+            continue
         time.sleep(5 * 2 ** attempt + random.random() * 3)
     log_line(outdir, "_failures.log", dict(id=job["id"], err=str(last_err)[:1000]))
     if ledger is not None:
