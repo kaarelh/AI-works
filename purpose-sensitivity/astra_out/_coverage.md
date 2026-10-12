@@ -52,7 +52,7 @@ All 16 synthetic helper tests passed, including exact-byte preservation, partial
 
 ## Current run status
 
-Initial invocation completed for s2_ctx1_rungs.jsonl / gpt-5.6-sol; individual failures remain recorded.
+All selected ordered file invocations are finished. Individual failures, skipped models and coverage gaps are preserved.
 
 ## Models and cumulative observed tool counts
 
