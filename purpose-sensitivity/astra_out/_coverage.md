@@ -38,13 +38,15 @@ Batch invocations use `_run_guarded.py` with the supplied runner's same argument
 
 The invocation template is `python3 -B purpose-sensitivity/astra_out/_run_guarded.py purpose-sensitivity/handoff/{file}.jsonl purpose-sensitivity/astra_out --model {model} --display-name "{display_name}" --developer OpenAI --backend cmd --cmd "$(cat purpose-sensitivity/astra_out/_command.txt)" --cmd-stdin prompt --ordered --workers 2 --max-calls 2600 --retries 1`. Logs append to `_logs/{model}__{file}.log`.
 
+After smoke tests, `python3 -B purpose-sensitivity/astra_out/_run_study.py` supervises the run with a private creation umask (`077`). It processes files in the requested order and models in the table order, validates and pushes after each invocation, and retries unfinished jobs within the unchanged cumulative cap. Additional repair passes run in the original file order before the final rung file, reserving budget for all unattempted jobs. A usage pause is published before waiting for an explicitly supplied reset time; an unknown reset or an account/provider/authentication stop requires resolution. All 16 mocked controller tests passed without model calls or credentials. Controller state contains only execution metadata.
+
 Success requires exactly one completed turn, a nonempty answer file, and exact byte equality with the final agent-message event. This prevents JSON logs being mistaken for an answer. Answer bytes and full traces are unchanged; audits include file links and hashes. The supplied runner still performs its original outer-whitespace trimming (`out.strip()`) when writing command-backend records, and reports the requested model ID as served without independent service attestation. These inherited limitations were not changed.
 
 All 16 synthetic helper tests passed, including exact-byte preservation, partial-stream stopping, concurrent stop propagation, rate reset parsing, forced termination, timeout, missing answers, and malformed events. These tests used a fake CLI, no study prompts, no credentials and no model calls. The fresh-sign-in Astra probe verified live answer delivery and equality between the saved record and the runner's trimmed final model message. Its CLI configuration deprecation notice is preserved; it is not an account/provider warning.
 
 ## Current run status
 
-Astra, 6.1 Sol and Luna have each completed all five smoke jobs. Continuing with 5.6 Sol.
+Resuming the authorized ordered study run; existing records were verified.
 
 ## Models and cumulative observed tool counts
 
@@ -53,7 +55,7 @@ Astra, 6.1 Sol and Luna have each completed all five smoke jobs. Continuing with
 | GPT-6 Astra (`gpt-6-astra`; OpenAI) | 7 | 7 | 0 | 0 | 5 | 0 |
 | GPT-6.1 Sol (`gpt-6.1-sol`; OpenAI) | 7 | 6 | 0 | 0 | 5 | 0 |
 | GPT-6 Luna (`gpt-6-luna`; OpenAI) | 5 | 5 | 0 | 0 | 5 | 0 |
-| GPT-5.6 Sol (`gpt-5.6-sol`; OpenAI) | 0 | 0 | 0 | 0 | 0 | 0 |
+| GPT-5.6 Sol (`gpt-5.6-sol`; OpenAI) | 5 | 5 | 0 | 0 | 5 | 0 |
 
 Counts describe the event streams actually captured. The original Sol startup failure has no full stream. Codex 0.159.2 omits some tool kinds, including clock, from JSON output; zero observed items does not verify that all tools are absent.
 
@@ -61,7 +63,7 @@ Counts describe the event streams actually captured. The original Sol startup fa
 
 | File | Jobs per model | Astra | 6.1 Sol | Luna | 5.6 Sol |
 |---|---:|---:|---:|---:|---:|
-| `s2_smoke.jsonl` | 5 | 5 | 5 | 5 | 0 |
+| `s2_smoke.jsonl` | 5 | 5 | 5 | 5 | 5 |
 | `s2_ctx4.jsonl` | 104 | 0 | 0 | 0 | 0 |
 | `s2_ctx4_probes.jsonl` | 120 | 0 | 0 | 0 | 0 |
 | `s2_ctx2.jsonl` | 49 | 0 | 0 | 0 | 0 |
@@ -75,7 +77,7 @@ File counts include saved API-block records, if any; the model table separates t
 
 ## Ledger and limitations
 
-Ledger: **19 counted command attempts, 15 successful answers, 4 errors, 0 API blocks**. The shared cap remains 2,600. Token/cost counters are unmeasured for this command backend, even when the ledger reports zero.
+Ledger: **24 counted command attempts, 20 successful answers, 4 errors, 0 API blocks**. The shared cap remains 2,600. Token/cost counters are unmeasured for this command backend, even when the ledger reports zero.
 
 Saved answer records were mechanically checked against the final model event, the handoff hash, model identity, default settings and command template. No prompt or answer content was interpreted, summarized or evaluated.
 
