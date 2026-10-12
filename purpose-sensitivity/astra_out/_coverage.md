@@ -44,14 +44,14 @@ All 16 synthetic helper tests passed, including exact-byte preservation, partial
 
 ## Current run status
 
-Astra completed all five smoke jobs. Continuing smoke tests for the remaining three models.
+Astra smoke is complete. Sol saved four of five smoke answers; one attempt failed because the selected model was at capacity. Retrying the unfinished job.
 
 ## Models and cumulative observed tool counts
 
 | Model | Attempts | Audited streams | Streams with tool items | Observed tool items | Answers | API blocks |
 |---|---:|---:|---:|---:|---:|---:|
 | GPT-6 Astra (`gpt-6-astra`; OpenAI) | 7 | 7 | 0 | 0 | 5 | 0 |
-| GPT-6.1 Sol (`gpt-6.1-sol`; OpenAI) | 1 | 0 | 0 | 0 | 0 | 0 |
+| GPT-6.1 Sol (`gpt-6.1-sol`; OpenAI) | 6 | 5 | 0 | 0 | 4 | 0 |
 | GPT-6 Luna (`gpt-6-luna`; OpenAI) | 0 | 0 | 0 | 0 | 0 | 0 |
 | GPT-5.6 Sol (`gpt-5.6-sol`; OpenAI) | 0 | 0 | 0 | 0 | 0 | 0 |
 
@@ -61,7 +61,7 @@ Counts describe the event streams actually captured. The original Sol startup fa
 
 | File | Jobs per model | Astra | 6.1 Sol | Luna | 5.6 Sol |
 |---|---:|---:|---:|---:|---:|
-| `s2_smoke.jsonl` | 5 | 5 | 0 | 0 | 0 |
+| `s2_smoke.jsonl` | 5 | 5 | 4 | 0 | 0 |
 | `s2_ctx4.jsonl` | 104 | 0 | 0 | 0 | 0 |
 | `s2_ctx4_probes.jsonl` | 120 | 0 | 0 | 0 | 0 |
 | `s2_ctx2.jsonl` | 49 | 0 | 0 | 0 | 0 |
@@ -75,7 +75,7 @@ File counts include saved API-block records, if any; the model table separates t
 
 ## Ledger and limitations
 
-Ledger: **8 counted command attempts, 5 successful answers, 3 errors, 0 API blocks**. The shared cap remains 2,600. Token/cost counters are unmeasured for this command backend, even when the ledger reports zero.
+Ledger: **13 counted command attempts, 9 successful answers, 4 errors, 0 API blocks**. The shared cap remains 2,600. Token/cost counters are unmeasured for this command backend, even when the ledger reports zero.
 
 Saved answer records were mechanically checked against the final model event, the handoff hash, model identity, default settings and command template. No prompt or answer content was interpreted, summarized or evaluated.
 
