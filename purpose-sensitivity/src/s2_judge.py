@@ -361,16 +361,20 @@ def out_name(job):
 
 
 def call(model, prompt, timeout=600):
-    from run import CWD, ENV, served_model
+    from run import CWD, ENV, served_model, wait_for_limit_reset
     cmd = ["claude", "-p", "--model", model, "--tools", "", "--system-prompt", JUDGE_SYS, "--output-format", "json",
            "--no-session-persistence", "--strict-mcp-config", "--disable-slash-commands", "--setting-sources", ""]
-    for _ in range(3):
+    tries = 0
+    while tries < 3:
+        tries += 1
         try:
             p = subprocess.run(cmd, input=prompt, capture_output=True, text=True, timeout=timeout, cwd=CWD, env=ENV)
             res = json.loads(p.stdout.strip().splitlines()[-1])
             obj = extract_json(res.get("result") or "")
             if obj is not None:
                 return obj, res.get("total_cost_usd") or 0, served_model(res.get("modelUsage"))[0]
+            if wait_for_limit_reset(res.get("result")):  # account usage limit: wait for the reset, do not spend a try
+                tries -= 1
         except Exception:  # noqa: BLE001
             pass
     return None, 0, None
