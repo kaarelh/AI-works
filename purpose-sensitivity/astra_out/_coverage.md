@@ -6,7 +6,7 @@ All ten handoff manifest checks pass. Repository changes are confined to `purpos
 
 ## Sign-in route
 
-The user authorized fresh sign-in and broader wrapper changes. Created a new private persistent CLI home at `/workspace/purpose-sensitivity-private/codex-home` (directory and parent mode 0700), without copying the old authentication. The original CLI home remains unchanged. Fresh ChatGPT sign-in is now confirmed. The private home will be retained for the study and removed only after all files are done, as instructed.
+The user authorized fresh sign-in and broader wrapper changes. Created a new private persistent CLI home at `/workspace/purpose-sensitivity-private/codex-home` (directory and parent mode 0700), without copying the old authentication. Fresh ChatGPT sign-in was confirmed for the run. After all files finished and the final staged credential check passed, the private CLI home was removed before publishing this completion report. The original CLI home remains unchanged.
 
 Attempted:
 
@@ -16,7 +16,7 @@ CODEX_HOME=/workspace/purpose-sensitivity-private/codex-home /opt/codex/bin/code
 
 The first device-code sign-in attempt could not reach `https://auth.openai.com/api/accounts/deviceauth/usercode`. An independent HEAD request to `https://auth.openai.com/` confirmed HTTP CONNECT 403 from the egress proxy. That attempt issued no device code or credential.
 
-Saved an environment configuration draft adding only `auth.openai.com`, preserving `chatgpt.com` and the package-manager presets. After Kaarel requested continuation and the environment became ready, the same login command successfully obtained a device-code sign-in request. Its URL and temporary code were supplied directly to Kaarel and are not saved in the repository. Kaarel completed sign-in; `codex login status` confirms ChatGPT authentication. The one-job Astra probe then produced a mechanically verified answer with no observed tool items.
+Saved an environment configuration draft adding only `auth.openai.com`, preserving `chatgpt.com` and the package-manager presets. After Kaarel requested continuation and the environment became ready, the same login command successfully obtained a device-code sign-in request. Its URL and temporary code were supplied directly to Kaarel and are not saved in the repository. Kaarel completed sign-in; `codex login status` confirmed ChatGPT authentication. The one-job Astra probe then produced a mechanically verified answer with no observed tool items.
 
 ## Exact model command
 
@@ -52,16 +52,16 @@ All 16 synthetic helper tests passed, including exact-byte preservation, partial
 
 ## Current run status
 
-Initial invocation completed for s2_ctx3.jsonl / gpt-5.6-sol; individual failures remain recorded.
+Complete on 2026-10-12: all 2,516 answers are saved, 629 for each of four models, with no skipped models or coverage gaps. Smoke tests preceded the main files, and s2_ctx1_rungs.jsonl ran last. Every completed invocation was committed and pushed. The controller exited successfully; no study processes remain active. The ledger preserves four earlier failed attempts, with no API blocks. No account/provider warning or usage pause occurred during the authenticated study run. Final verification passed all ten handoff manifest checks and confirmed that repository changes are confined to purpose-sensitivity/astra_out/.
 
 ## Models and cumulative observed tool counts
 
 | Model | Attempts | Audited streams | Streams with tool items | Observed tool items | Answers | API blocks |
 |---|---:|---:|---:|---:|---:|---:|
-| GPT-6 Astra (`gpt-6-astra`; OpenAI) | 354 | 354 | 0 | 0 | 352 | 0 |
-| GPT-6.1 Sol (`gpt-6.1-sol`; OpenAI) | 354 | 353 | 0 | 0 | 352 | 0 |
-| GPT-6 Luna (`gpt-6-luna`; OpenAI) | 352 | 352 | 0 | 0 | 352 | 0 |
-| GPT-5.6 Sol (`gpt-5.6-sol`; OpenAI) | 352 | 352 | 0 | 0 | 352 | 0 |
+| GPT-6 Astra (`gpt-6-astra`; OpenAI) | 631 | 631 | 0 | 0 | 629 | 0 |
+| GPT-6.1 Sol (`gpt-6.1-sol`; OpenAI) | 631 | 630 | 0 | 0 | 629 | 0 |
+| GPT-6 Luna (`gpt-6-luna`; OpenAI) | 629 | 629 | 0 | 0 | 629 | 0 |
+| GPT-5.6 Sol (`gpt-5.6-sol`; OpenAI) | 629 | 629 | 0 | 0 | 629 | 0 |
 
 Counts describe the event streams actually captured. The original Sol startup failure has no full stream. Codex 0.159.2 omits some tool kinds, including clock, from JSON output; zero observed items does not verify that all tools are absent.
 
@@ -75,15 +75,15 @@ Counts describe the event streams actually captured. The original Sol startup fa
 | `s2_ctx2.jsonl` | 49 | 49 | 49 | 49 | 49 |
 | `s2_ctx2c.jsonl` | 12 | 12 | 12 | 12 | 12 |
 | `s2_ctx3.jsonl` | 62 | 62 | 62 | 62 | 62 |
-| `jobs_study1.jsonl` | 210 | 0 | 0 | 0 | 0 |
-| `s2_ctx1.jsonl` | 61 | 0 | 0 | 0 | 0 |
-| `s2_ctx1_rungs.jsonl` | 6 | 0 | 0 | 0 | 0 |
+| `jobs_study1.jsonl` | 210 | 210 | 210 | 210 | 210 |
+| `s2_ctx1.jsonl` | 61 | 61 | 61 | 61 | 61 |
+| `s2_ctx1_rungs.jsonl` | 6 | 6 | 6 | 6 | 6 |
 
 File counts include saved API-block records, if any; the model table separates those from answers.
 
 ## Ledger and limitations
 
-Ledger: **1412 counted command attempts, 1408 successful answers, 4 errors, 0 API blocks**. The shared cap remains 2,600. Token/cost counters are unmeasured for this command backend, even when the ledger reports zero.
+Ledger: **2520 counted command attempts, 2516 successful answers, 4 errors, 0 API blocks**. The shared cap remains 2,600. Token/cost counters are unmeasured for this command backend, even when the ledger reports zero.
 
 Saved answer records were mechanically checked against the final model event, the handoff hash, model identity, default settings and command template. No prompt or answer content was interpreted, summarized or evaluated.
 

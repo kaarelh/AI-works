@@ -5,7 +5,8 @@ Run from the project folder. Prints one path per line, relative to it, chosen fr
     python3 src/s2_branch_only.py | xargs git rm -q -f
 
 Excluded:
-  * study 1 scratch: pilots, job files, logs, texts;
+  * study 1 scratch: pilots, job files, logs, texts, and runs/gpt_raw/ (the GPT replication records in study-1
+    format, regenerated from astra_out/ by src/s1_astra_adapt.py);
   * study 2 job files, logs and failure logs;
   * as pre-registered in study2/DESIGN2.md §8, the raw texts of the fraud, payday-loan and anti-vaccination
     responses, of every petition review and of the false-myth calibrator. That covers the Claude records in
@@ -32,7 +33,7 @@ def files(prefix):
 
 def study1():
     rx = re.compile(r'^runs/(pilot0_contaminated_raw/|pilot0_scored\.jsonl|pilot1_|loop_pilot_|texts/|'
-                    r'qual_args\.json|pairs_manifest\.json)|^runs/[^/]+(_jobs\.jsonl|\.log)$')
+                    r'qual_args\.json|pairs_manifest\.json|gpt_raw/)|^runs/[^/]+(_jobs\.jsonl|\.log)$')
     return [f for f in files('runs') if rx.search(f)]
 
 
@@ -56,11 +57,13 @@ def astra():
     tracked = files('astra_out')
     out, keep_captures, drop_captures = [], set(), set()
     for f in tracked:
-        m = re.match(r'^astra_out/([^_/][^/]*)/([a-z0-9]+_\d{6})\.json$', f)
+        m = re.match(r'^astra_out/([^_/][^/]*)/([^_/][^/]*)\.json$', f)
         if not m:
             continue
         model, rid = m.groups()
-        if rid not in units:
+        if rid.startswith('s1_'):  # study-1 replication: readable ids, published like study 1's raw responses
+            units[rid] = rid
+        elif rid not in units:
             sys.exit(f'{f}: id not in any keymap')
         tail = (json.load(open(f)).get('raw_response') or {}).get('stdout_tail') or ''
         caps = {(model, c) for c in CAPTURE.findall(tail)}

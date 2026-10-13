@@ -641,6 +641,33 @@ def usage_tokens(u):
     return out, det.get("thinking_tokens", det.get("reasoning_tokens"))
 
 
+CAPTURE_RX = re.compile(r'"capture_id": "(ps_job_[A-Za-z0-9_\-]+)"')
+
+
+def codex_usage(path, rec):
+    """Usage of an Astra (Codex CLI) record, which the runner leaves empty: the last turn.completed event of the saved
+    call's stream, astra_out/_events/<model>/<capture>.jsonl (capture id from raw_response.stdout_tail).
+    Returns a usage dict (input, output and reasoning tokens) or None."""
+    caps = CAPTURE_RX.findall((rec.get("raw_response") or {}).get("stdout_tail") or "")
+    if not caps:
+        return None
+    d = os.path.dirname(os.path.abspath(path))
+    ev = os.path.join(os.path.dirname(d), "_events", os.path.basename(d), caps[-1] + ".jsonl")
+    u = None
+    if os.path.exists(ev):
+        for line in open(ev):
+            try:
+                e = json.loads(line)
+            except ValueError:
+                continue
+            if e.get("type") == "turn.completed":
+                u = e.get("usage")
+    if not u:
+        return None
+    return dict(input_tokens=u.get("input_tokens"), output_tokens=u.get("output_tokens"),
+                output_tokens_details=dict(reasoning_tokens=u.get("reasoning_output_tokens") or 0))
+
+
 def dev_target(dev):
     """Developer string from an Astra identity, mapped onto the Ctx 2b target names where it is one of them."""
     d = str(dev or "")
@@ -712,7 +739,8 @@ def load_records(raw, extra, keymaps):
             dev = ident.get("developer") or ("Anthropic" if model in CLAUDE else "unknown")
             text = rec.get("result") or ""
             blocked = bool(rec.get("api_block") or rec.get("refused_by_api"))
-            out_tok, think = usage_tokens(rec.get("usage"))
+            usage = rec.get("usage") or (codex_usage(p, rec) if src == "extra" else None)
+            out_tok, think = usage_tokens(usage)
             served = rec.get("served_model") or rec.get("model_served")
             row = dict(id=j["id"], out_name=s2_judge.out_name(j), path=p, source=src, unit=info.get("unit"),
                        context=info["context"], arm=info["arm"], cell=cell_of(info["context"], info["arm"], meta),
@@ -729,7 +757,8 @@ def load_records(raw, extra, keymaps):
                        tool_call_attempt=bool(TOOL_RX.search(text[:400])),
                        stop_reason=rec.get("stop_reason") or rec.get("finish_reason"), served_model=served,
                        served_mismatch=src == "claude" and served is not None and served != model,
-                       cost=rec.get("cost"), out_tokens=out_tok, thinking_tokens=think, wall=rec.get("wall"))
+                       cost=rec.get("cost"), out_tokens=out_tok, thinking_tokens=think,
+                       in_tokens=(usage or {}).get("input_tokens"), wall=rec.get("wall"))
             row.update({"s_" + k: v for k, v in score_record(info, rec, text).items()})
             rows.append(row)
     df = pd.DataFrame(rows)
