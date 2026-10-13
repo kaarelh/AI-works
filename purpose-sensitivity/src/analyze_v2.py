@@ -97,7 +97,7 @@ def kappa(a, b):
 def ctab(g, y, by=None, keep=("C1 ai_ban - ai_neutral", "C2 ai_ban - ai_industry", "C3 AI-specific stance (interaction)",
                                "C6 mining_ban - mining_industry", "C5 ai_ban_miri - ai_ban", "C8 ban - industry (both domains)")):
     t = A.contrast_table(g.dropna(subset=[y]), y, by or [])
-    return t[t.contrast.isin(keep)]
+    return t[t.contrast.isin(keep)] if len(t) else t
 
 
 def md(t, cols=None, floatfmt=".3f"):
@@ -116,8 +116,8 @@ def main():
     df = load(scored)
     df = A.add_judge(df, jdir)
     dfc = load(scored_c) if os.path.exists(scored_c) else pd.DataFrame()
-    df["log_think"] = np.log1p(df["thinking_tokens"].fillna(0))
-    df["log_out"] = np.log(df["out_tokens"].clip(lower=1))
+    df["log_think"] = np.log1p(pd.to_numeric(df["thinking_tokens"], errors="coerce").fillna(0))
+    df["log_out"] = np.log(pd.to_numeric(df["out_tokens"], errors="coerce").clip(lower=1))
     R = []
 
     # A. data

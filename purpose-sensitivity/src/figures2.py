@@ -28,11 +28,15 @@ CORE = ["claude-haiku-4-5", "claude-sonnet-4-5", "claude-opus-4-5", "claude-haik
         "claude-opus-5-5"]
 EXT = ["claude-sonnet-4-6", "claude-opus-4-6", "claude-opus-4-7", "claude-opus-4-8", "claude-sonnet-5", "claude-opus-5",
        "claude-fable-5", "claude-fable-5-1"]
+GPT = ["gpt-6-astra", "gpt-6.1-sol", "gpt-6-luna", "gpt-5.6-sol"]
+GPT_LABEL = {"gpt-6-astra": "GPT-6 Astra", "gpt-6.1-sol": "GPT-6.1 Sol", "gpt-6-luna": "GPT-6 Luna", "gpt-5.6-sol": "GPT-5.6 Sol"}
 LABEL = {m: m.replace("claude-", "").replace("-", " ", 1).replace("-", ".").title().replace("Sonnet", "Sonnet")
          for m in CORE + EXT}
 
 
 def short(m):
+    if m in GPT_LABEL:
+        return GPT_LABEL[m]
     name, ver = m.replace("claude-", "").split("-", 1)
     return f"{name.capitalize()} {ver.replace('-', '.')}"
 
@@ -43,7 +47,7 @@ def fig_refusal():
     rungs = ["survey", "ai_ban", "ai_accel", "mining_ban", "disfavoured_adv", "disreputable_legal", "fraud_illegal"]
     names = ["Survey firm", "AI-ban\ncoalition", "Anti-AI-\nregulation", "Mining-ban\ncoalition",
              "Anti-vaccine\ncampaign", "Payday-loan\ncollector", "Unregistered\nsecurities"]
-    models = CORE + EXT
+    models = CORE + EXT + [m for m in GPT if (d.model == m).any()]
     M = np.full((len(models), len(rungs)), np.nan)
     txt = [["" for _ in rungs] for _ in models]
     for i, m in enumerate(models):
@@ -55,7 +59,7 @@ def fig_refusal():
             k = int(row.full + row.partial)
             M[i, j] = k / row.judged if row.judged else np.nan
             txt[i][j] = f"{k}/{int(row.judged)}" + (f"\n+{int(row.api_block)} blocked" if row.api_block else "")
-    fig, ax = plt.subplots(figsize=(9.2, 6.6))
+    fig, ax = plt.subplots(figsize=(9.2, 6.6 + 0.4 * (len(models) - len(CORE + EXT))))
     ax.imshow(M, cmap=SEQ, vmin=0, vmax=1, aspect="auto")
     for i in range(len(models)):
         for j in range(len(rungs)):
@@ -65,11 +69,15 @@ def fig_refusal():
     ax.set_xticks(range(len(rungs)), names, fontsize=8.5)
     ax.set_yticks(range(len(models)), [short(m) for m in models])
     ax.axhline(len(CORE) - 0.5, color=INK2, lw=1)
+    gpt_rows = len(models) > len(CORE + EXT)
+    if gpt_rows:
+        ax.axhline(len(CORE + EXT) - 0.5, color=INK2, lw=1)
     ax.tick_params(length=0)
     for s in ax.spines.values():
         s.set_visible(False)
     ax.set_title("Context 1: share of identical call-analytics requests refused, by principal\n"
-                 "(judge-coded full or partial refusals / responses; core panel above the line)", fontsize=10.5,
+                 "(judge-coded full or partial refusals / responses; Claude core panel above the first line"
+                 + (",\nGPT models via the Codex CLI below the second)" if gpt_rows else ")"), fontsize=10.5,
                  loc="left", color=INK)
     fig.tight_layout()
     fig.savefig(f"{OUT}/s2_fig1_refusal_ladder.png", dpi=160)
