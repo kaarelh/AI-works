@@ -430,7 +430,7 @@ python3 src/s1_gpt_sensitivity.py analysis_gpt/scored_with_judge.csv runs/gpt_ra
 | `analysis/` | `report.md` (all tables), contrast CSVs, coded loop tables; `qualitative/workflow_result.json` and `redteam_result.json` (multi-agent workflow outputs); `v1_draft/` (the first-draft analysis the red team reviewed) |
 | `figures/` | figures 1–8 (8: the GPT replication) |
 | `src/s1_astra_adapt.py`, `src/s1_cross_family.py`, `src/s1_gpt_sensitivity.py` | GPT replication: record conversion (with token counts from the Codex event streams), cross-family comparison and figure 8, sensitivity analyses |
-| `results/scored_gpt.jsonl`, `analysis_gpt/` | GPT replication: one scored row per response; study 1's analysis (`report.md`), the cross-family comparison (`cross_family.md`) and sensitivity analyses (`sensitivity.md`) |
+| `results/scored_gpt.jsonl`, `analysis_gpt/` | GPT replication: one scored row per response; study 1's analysis (`report.md`), the cross-family comparison (`cross_family.md`) and sensitivity analyses (`sensitivity.md`); `redteam_result.json`, the red-team findings on this replication and on the GPT Context 1 write-up, with adversarial verdicts |
 | `runs/gpt_loop_v2_sonnet/`, `runs/gpt_loop_v2_opus/`, `runs/gpt_loop_judge/`, `runs/gpt_judge/` | GPT replication: coder and judge outputs (the raw GPT responses are in `astra_out/<model>/s1_*.json`) |
 | `study2/` | study 2: `README.md` (report), `DESIGN2.md` (frozen design with pilot decisions), `analysis/` (all tables, one row per response), `figures/` |
 | `runs2/` | study-2 raw responses (`main/raw`), judge and coder outputs (`main/coding`), pilot and safeguard block tests (`pilot/`) |
