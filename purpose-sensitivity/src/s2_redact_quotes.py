@@ -6,7 +6,8 @@ Run from the project folder, on the `main` checkout, after the branch-only paths
 every tracked JSON file under runs2/**/coding/, runs2/pilot/judge/ and runs2/pilot/code_*/ whose unit matches
 s2_branch_only.RAW_UNITS (fraud, payday-loan and anti-vaccination analyses, petition reviews, the false-myth
 calibrator), every string field whose key ends in "quote" is set to "", at the top level and inside the coder's raw
-JSON reply. Codes, counts and refusal labels stay. --check reports how many files would change without writing.
+JSON reply. Codes, counts and refusal labels stay. Each rewritten file is staged (git add), so the publish commit
+picks it up. --check reports how many files would change without writing.
 """
 import json
 import os
@@ -57,6 +58,7 @@ def main():
             changed += 1
             if not check:
                 json.dump(new, open(f, "w"))
+                subprocess.run(["git", "add", f], check=True)
     print(f"{n} judge/coder files for branch-only units; {changed} {'would change' if check else 'redacted'}")
 
 
