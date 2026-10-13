@@ -12,7 +12,7 @@
 % q:comp:open: \src{context \S7 items 3, 4, 5}
 \section{Computable versions}\label{sec:comp}
 
-SFI is not computable (\cref{prop:setting:computability}). The author's notes sketch two computable relatives \citep{hanni2026notes}: a time-bounded Solomonoff predictor with constant regret against all predictors of a given running time, and induction over Boolean circuits, for which regret and circuit complexity should be polynomially related. This section states what holds and shows that Occam (simplest-consistent) learning, unlike Bayes, fails exponentially out of distribution.
+SFI is not computable (\cref{prop:setting:computability}). Two computable relatives are natural: a time-bounded Solomonoff predictor with constant regret against all predictors of a given running time, and induction over Boolean circuits, for which regret and circuit complexity should be polynomially related.\footnote{Both were first sketched in the author's working notes \citep{hanni2026notes}, the first for sequences, with activation, clocking, amortised replay and an extension to all polynomial-time predictors; so were in-distribution bounds for Occam learning and the question whether it makes few online mistakes on every ordering.} This section states what holds and shows that Occam (simplest-consistent) learning, unlike Bayes, fails exponentially out of distribution.
 
 % ------------------------------------------------------------------
 \subsection{Time-bounded SFI}\label{sec:comp:time}
@@ -57,14 +57,14 @@ Let $g$ be computable, nondecreasing and unbounded, and the clock $\tau_k(x):=(|
 $c_A(|x|+2)^{e_A}\le(|x|+2)^{e_A+\log c_A}$, so $A$ is within budget once $g(k)\ge e_A+\log c_A$; argue as for \cref{prop:comp:round}.
 \end{proof}
 
-This answers a remark in the author's polytime note \citep[note ``polytime solomonoff'']{hanni2026notes}: constant regret against all polynomial-time predictors, in time $(|x_k|+2)^{g(k)}$ per round for an arbitrarily slowly growing $g$ (\cref{rem:comp:runtime}); with the clock $(|x|+2)^{g(|x|)}$ the same holds on distinct inputs, in time $|x|^{\omega(1)}$ per round. For x-only comparators these results compare like with like; history-aware comparators need a chronological learner (\cref{rem:comp:apples}):
+So one learner has constant regret against all polynomial-time predictors, in time $(|x_k|+2)^{g(k)}$ per round for an arbitrarily slowly growing $g$ (\cref{rem:comp:runtime}); with the clock $(|x|+2)^{g(|x|)}$ the same holds on distinct inputs, in time $|x|^{\omega(1)}$ per round. For x-only comparators these results compare like with like; history-aware comparators need a chronological learner (\cref{rem:comp:apples}):
 
 \begin{proposition}[Time-bounded history-aware predictors]\label{prop:comp:history}
 \status{regret proved; running time proof sketch}\src{context Prop 3.2c}
 Let $\mathcal C^{\rm hist}_t$ be the RAM programs $A$ that keep a state, receive $x_k$, output $A(\cdot\mid h_{k-1},x_k)$, then receive $y_k$, with round $k$ taking at most $c_At(\tilde n_k)$ steps, where $\tilde n_k$ is the length of the encoded $h_{k-1}$ and $x_k$. Let the learner start machine $i$ at round $k_i$ and give it $2g(k)t(\tilde n_k)$ steps in round $k$, spent replaying the stored history and then on round $k$; it uses $A_i$'s output if this finishes in time and $u$ otherwise, and mixes the per-round products. Then the regret against every $A=A_i\in\mathcal C^{\rm hist}_t$ is at most $\log(1/w_i)+2k_0\log|Y|$ on every stream, $k_0:=\max(k_i,\min\{k:g(k)\ge c_A\})$.
 \end{proposition}
 
-\emph{Proof idea} (\cref{app:comp}). As $\tilde n_k$ grows, every past round of $A$ fits into the current budget once $k\ge k_0$, so the replay catches up by round $2k_0-2$ and stays caught up; a budget depending only on $|x_k|$ could stall. This is the function-setting form of the amortised warm-up of that note. For $t(n)=n$ the class contains the chain and skipped-string predictors; it is the time-bounded counterpart of \SFIhist{} (\cref{cor:hist:H4}).
+\emph{Proof idea} (\cref{app:comp}). As $\tilde n_k$ grows, every past round of $A$ fits into the current budget once $k\ge k_0$, so the replay catches up by round $2k_0-2$ and stays caught up; a budget depending only on $|x_k|$ could stall. For $t(n)=n$ the class contains the chain and skipped-string predictors; it is the time-bounded counterpart of \SFIhist{} (\cref{cor:hist:H4}).
 
 A mixture that reads each program both as a predictor and as a sampler has the same regret against time-bounded samplers, at a cost per round exponential in the clock (\cref{prop:comp:samplers}); whether polynomial time per round suffices is open (\cref{q:comp:samplers}).
 
@@ -86,13 +86,13 @@ For every nonempty $B\subseteq\{0,1\}^d$, every $f$ and every ordering of $B$:
 $\csize_B(f)\le\lceil L_B\rceil$ with $L_B\le16\,\mathcal E\,(d+1)\log\big(2(\mathcal E+1)(d+2)\big)$.
 \end{theorem}
 
-\emph{Proof idea} (\cref{app:comp}). (a) Circuits larger than $S$ have total weight $2^{-S}$. (b) The first inequality is $P_i\le-\ln(1-P_i)$ with \cref{prop:setting:order}. For the second, the gadget maps the small wrong circuits at step $i$ injectively into the right ones at weight cost $2^{-\Gamma}$, so $-\log(1-P_i)\le\Gamma+2$; steps with $P_i\le\frac12$ cost at most $2P_i$, and at most $2\mathcal E$ steps have $P_i>\frac12$. Both directions hold on every ordering and formalise a sketch in the author's notes; the step from small log loss to a small circuit is a circuit coding theorem, which (a) provides for size priors with an exponential tail (\cref{rem:comp:gap}).
+\emph{Proof idea} (\cref{app:comp}). (a) Circuits larger than $S$ have total weight $2^{-S}$. (b) The first inequality is $P_i\le-\ln(1-P_i)$ with \cref{prop:setting:order}. For the second, the gadget maps the small wrong circuits at step $i$ injectively into the right ones at weight cost $2^{-\Gamma}$, so $-\log(1-P_i)\le\Gamma+2$; steps with $P_i\le\frac12$ cost at most $2P_i$, and at most $2\mathcal E$ steps have $P_i>\frac12$. Both directions hold on every ordering; the step from small log loss to a small circuit is a circuit coding theorem, which (a) provides for size priors with an exponential tail (\cref{rem:comp:gap}).
 
 Occam (simplest-consistent) learning, which predicts with the first consistent function in order of description length $\ell$, has the classical in-distribution guarantees (\cref{prop:comp:occam}). Out of distribution the picture differs:
 
-\begin{remark}[An informal argument that holds for weighted majority]\label{rem:comp:majority}
+\begin{remark}[A natural argument, which holds for weighted majority]\label{rem:comp:majority}
 \status{proved; known}\src{context Rem 3.10}
-An informal argument in \citet{hanni2026notes} that Occam makes $O(C(f))$ online mistakes on every ordering assumes that when the current guess is wrong, a constant fraction of the competing weight is wrong too. That is the guarantee of the \emph{posterior-majority} (weighted-majority) predictor: when it errs, at least half of the posterior mass errs, so $\Wcirc(D_i)\le\Wcirc(D_{i-1})/2$, and it makes at most $L_B\le\ell(f)$ mistakes on every ordering \citep{littlestone1988learning,littlestone1994weighted}. Under the circuit prior the maximum-a-posteriori \emph{circuit} is a smallest consistent one, so the MAP-hypothesis learner is an Occam learner. For simplest-consistent learning the assumption can fail at every step (\cref{thm:comp:ladder}).
+A natural argument that Occam makes $O(\ell(f))$ online mistakes on every ordering assumes that when the current guess is wrong, a constant fraction of the competing weight is wrong too. That is the guarantee of the \emph{posterior-majority} (weighted-majority) predictor: when it errs, at least half of the posterior mass errs, so $\Wcirc(D_i)\le\Wcirc(D_{i-1})/2$, and it makes at most $L_B\le\ell(f)$ mistakes on every ordering \citep{littlestone1988learning,littlestone1994weighted}. Under the circuit prior the maximum-a-posteriori \emph{circuit} is a smallest consistent one, so the MAP-hypothesis learner is an Occam learner. For simplest-consistent learning the assumption can fail at every step (\cref{thm:comp:ladder}).
 \end{remark}
 
 % ------------------------------------------------------------------
