@@ -1,5 +1,8 @@
 # Outline: Paper 1, "Solomonoff Function Induction: Definitions, Versions and Basic Theorems" (working title)
 
+> **BINDING NOTE 4 (2026-10-13): framing relative to the author's notes.** The papers read as the first presentation of this material; the author's notes are an internal stage of the research. No running-text citations or quotations of the notes, no framing of results as replies to or corrections of them; credit goes in short neutral footnotes and the acknowledgements. Full rules: `research/paper-review/REFRAME.md` (supersedes DECISIONS.md §A6 and the 'Relation to the author's notes' paragraphs).
+
+
 > **BINDING NOTE (authorship, 2026-10-12).** arXiv does not allow AI tools as authors, so the author line is **Kaarel Hänni** alone, with no "Claude (Anthropic)" byline. Disclosure goes in two places:
 > * **A title-page footnote:** the paper was developed and written with extensive assistance from Claude (Anthropic), an AI system, which produced the proofs, the computations and the text under the author's direction. It was checked by independent AI referees, and no human has yet independently checked all of the mathematics.
 > * **A fuller paragraph in the acknowledgements.**
