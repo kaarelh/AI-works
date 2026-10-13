@@ -1,31 +1,43 @@
-% Appendix G (writer: steep-b; edited by p2-body). Proofs for sec:computable and the correspondence with the earlier report.
-% Source: research/tracks/steeper/notes-final.md §4.5 (Props 4.4, 4.5), §6.
+% Appendix H (writer W6, Paper 2 restructure of 2026-10-13, research/paper-review/restructure/PLAN.md). Base: app-related.tex
+% at dcb3a3a3 (writer steep-b; edited by p2-body). Proofs for sec:computable and the correspondence with the earlier report.
+% Sources: research/tracks/steeper/notes-final.md §4.5 (Props 4.4, 4.5), §6; research/tracks/split/iid/notes-final.md Cor 6.2;
+% research/tracks/split/kink/notes-final.md §5.0.
+% Received from FRONT (related.tex): rem:related:t5, now the opening paragraph of app:related:t5. As a paragraph it carries
+% no environment; its tags were  \status{remark}\src{steeper \S6}.
+% Fix round (DECISIONS-restructure §3, RW6-01, RW6-04): prop:related:computability (statement, label, status, src) received
+% from computable.tex; its proof idea is folded into the proof ((a), (c) already state it; the Paper 1 citation opens (b)); the last sentence of app:related:t5 deleted (D11(y)).
 \section{Proofs for \texorpdfstring{\cref{sec:computable}}{Section \ref*{sec:computable}} and the correspondence with the earlier report}\label{app:related}
 
 \begin{proof}[Proof of \cref{prop:related:computable}]
 We go through the proofs and list, for each, the property of the class it uses and the constant that changes. Since $\mathcal H'$ is c.e.\ and prefix-free, (F1) holds for it with a constant $\kappa_2$ that depends on $\mathcal H'$: $K(\pi)\le\ell(\pi)+\kappa_2$.
-\begin{itemize}
+\begin{itemize}[itemsep=0pt]
 \item \Cref{lem:teacher:list}: the agreement $u(\pi;a')$ is lower semicomputable uniformly in $(\pi,a',d)$, as in every class with uniformly lower-semicomputable likelihoods; the constant of the enumeration of the list depends on the class.
 \item \Cref{lem:teacher:coding}: $q_z$ is lower semicomputable uniformly in $(\pi,a,m,B)$, so (F2) applies with a constant that depends on the class.
 \item \Cref{lem:teacher:floor}: Jensen's inequality only; no constant changes.
 \item \Cref{lem:teacher:twopart}: the two lemmas above and (F1) with $\kappa_2$.
 \item \Cref{thm:teacher:main}: the lemmas above, and the reference programs only through $J_g$ and $J_b$, whose constants are $\kappa_g$ and $\kappa_b$ of $\pi'_g$ and $\pi'_b$.
 \item \Cref{thm:split:private}: Ville's inequality for the class's mixture $\xi_{\mathcal C}$ (\cref{lem:split:ville}), Kraft's inequality and countability; no constant enters.
-\item \Cref{prop:absorb:price}(ii): the coding theorem for the semimeasure $\tilde R$ built from the class, which holds with a constant that depends on the class.\qedhere
+\item \Cref{prop:absorb:price}(ii): the coding theorem for the semimeasure $\tilde R$ built from the class, which holds with a constant that depends on the class.
+\item \Cref{thm:recovery:main,thm:recovery:kink}: \cref{def:split:setting} and the proofs in \cref{app:recovery} take an arbitrary countable class $\mathcal C$ with Kraft weights and sub-probability kernels that contains a program for $\nu$, and use nothing else: bounds for single programs are combined by Ville's inequality for $\xi_{\mathcal C}$ and by union bounds weighted by $2^{-\ell(\pi)}$, which Kraft's inequality makes summable. No machine constant enters, and $\ell_0$, $\mathcal E_0$ and the margins are computed from the class's own lengths and kernels; so a time-bounded class may select a longer but faster program than $\Hcl{\times}$ would.\qedhere
 \end{itemize}
 \end{proof}
+
+\begin{proposition}[Computability of the steeper predictor]\status{proved}\src{steeper Prop 4.5}\label{prop:related:computability}
+Let $\lambda\ge1$ be computable, the class $\Hcl{\times}$ or $\Hcl{F}$, $X$ infinite and $\{0,1\}\subseteq Y$. (a) $\xi_\lambda(D)$ is lower semicomputable uniformly in $D$. (b) Neither the raw conditional $\xi_\lambda(D+(x,y))/\xi_\lambda(D)$ nor its normalised version is computable. (c) Both are limit-computable.
+\end{proposition}
 
 \begin{proof}[Proof of \cref{prop:related:computability}]
 (a) Each term $2^{-\lambda\ell(\pi)}P_\pi(D)$ is lower semicomputable uniformly in $(\pi,D)$, because $\lambda$ is computable, and the sum of uniformly lower-semicomputable nonnegative terms is lower semicomputable.
 
-(b) Identify $\mathbb N$ with infinitely many inputs. Suppose the raw conditional were computable. Define $f(t)$, for $t\in\mathbb N$, as the first $y\in\{0,1\}$ that a dovetailed search certifies to satisfy $\xi_\lambda(y\mid D_t,t)<0.6$, where $D_t:=\{(s,f(s)):s<t\}$. The two conditionals sum to at most $1$, so one of them is at most $\frac12$ and the search halts. Then $f$ is total computable, and by telescoping $\xi_\lambda(D_n)\le\xi_\lambda(\emptyset)\cdot0.6^n\le0.6^n$. But the class contains a deterministic program for $f$ of length at most $K(f)+\kappa$, so $\xi_\lambda(D_n)\ge2^{-\lambda(K(f)+\kappa)}$ for every $n$, a contradiction for large $n$. For the normalised conditional, run the same construction with it in place of the raw one; then its cumulative loss on $D_n$ is at least $n\log(1/0.6)$. Each normaliser $\sum_{y'}\xi_\lambda(D_t+(t,y'))$ is at most $\xi_\lambda(D_t)$, so the normalised conditional is at least the raw one, and the normalised cumulative loss is at most the raw one, $-\log\xi_\lambda(D_n)+\log\xi_\lambda(\emptyset)\le\lambda(K(f)+\kappa)$. This is again a contradiction for large $n$.
+(b) This is the diagonal argument for $\MF$ \citep[Proposition~A.10(c)]{claudeSFI2026fundamentals}.% P1: prop:setting:computability
+\ Identify $\mathbb N$ with infinitely many inputs. Suppose the raw conditional were computable. Define $f(t)$, for $t\in\mathbb N$, as the first $y\in\{0,1\}$ that a dovetailed search certifies to satisfy $\xi_\lambda(y\mid D_t,t)<0.6$, where $D_t:=\{(s,f(s)):s<t\}$. The two conditionals sum to at most $1$, so one of them is at most $\frac12$ and the search halts. Then $f$ is total computable, and by telescoping $\xi_\lambda(D_n)\le\xi_\lambda(\emptyset)\cdot0.6^n\le0.6^n$. But the class contains a deterministic program for $f$ of length at most $K(f)+\kappa$, so $\xi_\lambda(D_n)\ge2^{-\lambda(K(f)+\kappa)}$ for every $n$, a contradiction for large $n$. For the normalised conditional, run the same construction with it in place of the raw one; then its cumulative loss on $D_n$ is at least $n\log(1/0.6)$. Each normaliser $\sum_{y'}\xi_\lambda(D_t+(t,y'))$ is at most $\xi_\lambda(D_t)$, so the normalised conditional is at least the raw one, and the normalised cumulative loss is at most the raw one, $-\log\xi_\lambda(D_n)+\log\xi_\lambda(\emptyset)\le\lambda(K(f)+\kappa)$. This is again a contradiction for large $n$.
 
 (c) Lower-semicomputable reals are computable in the limit, and the denominators are positive, because every finite data set has a consistent deterministic program.
 \end{proof}
 
 \subsection{Correspondence with the earlier report}\label{app:related:t5}
 
-The earlier report \citep{claude2026whatfollows} works with a general imitation channel; its results are named here as they are named there.
+\label{rem:related:t5}\Citet[Section~8]{claude2026whatfollows} formalised the proposal for a general imitation channel, mostly by comparing a few hypotheses by rate. We re-derive the results we use from this earlier report: per-input and per-block pricing, the sequence-case threshold, the lemmas behind its kink theorem (here for semimeasures), the hull lemma, rate thresholds, rate blindness, non-identifiability, guard erosion and error envelopes. The table names them as they are named there. Two of its statements change here. Its full-table window at $d=20$ has upper end about $(1-H(p))/d\approx0.049$ when logarithmic terms are ignored; with the $2\log d$ terms, as large as $d$ there, a direct computation gives $c_{\rm hi}=0.01139$ with the machine constant set to $0$, an illustration (\cref{cor:teacher:fulltable}). And its lemma that the randomness of the error set removes the slack $2p$, stated for computable hypotheses, holds for semimeasures (\cref{lem:teacher:sharpfloor}).
 
 \begin{center}\small
 \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}X@{}}
@@ -39,10 +51,10 @@ per-block pricing & \cref{prop:absorb:history} & countable families with computa
 kink: list-size and floor lemmas & \cref{lem:teacher:list,lem:teacher:floor} & semimeasures, via the lower-semicomputable agreement; truncation\\
 kink: error segment & \cref{lem:teacher:twopart}(D2) & --\\
 kink: shared randomness & \cref{prop:algstat:parity}(i) & every $\lambda$-optimal set model\\
-randomness of $E$ removes the $2p$ slack & \cref{lem:teacher:sharpfloor} & semimeasures; used for the kink at every $p<1/4$\\
-identification in the parity example & \cref{cor:teacher:fulltable} & adds information and error-label bounds; $c_{\rm hi}$ for $t^*<2$; rigorous $d=20$ window\\
+randomness of $E$ removes the $2p$ slack & \cref{lem:teacher:sharpfloor} & semimeasures; used for the full-table kink at every $p<1/4$ (\cref{prop:parity:kink,prop:parity:range})\\
+identification in the parity example & \cref{cor:teacher:fulltable} & every rule length $m$; adds information and error-label bounds; rigorous $d=20$ window\\
 empirical selection follows population selection & \cref{lem:teacher:finite} & one-sided, truncated, without replacement\\
-selection traces the lower hull & \cref{lem:setup:hull} & --\\
+selection traces the lower hull & \cref{lem:setup:hull} & adds the data reading (v) and duality (vi)\\
 rate threshold, separable classes; rate blindness & \cref{prop:limits:separable} & --\\
 steepness not identifiable & \cref{prop:limits:noident} & --\\
 guard erosion & \cref{prop:limits:guard} & teacher model stated; exact crossing\\
@@ -52,4 +64,4 @@ input-law dependence & \cref{prop:limits:inputlaw} & separable case only\\
 \end{tabularx}
 \end{center}
 
-Not reused: the idealised rate threshold for arbitrary hypotheses and the realisability of every frontier shape, because \cref{thm:teacher:main} covers one model with one error rule over all hypotheses and \cref{prop:limits:separable,prop:limits:inputlaw} cover separable components; the treatment of inference rules, which is not about function induction; and the pathologies of parasitic errors and language relativity, which hold for steeper SFI by the same arguments but add nothing specific to it. The scripts of the earlier report reproduce its numbers (\cref{app:teacher:computations}).
+Not reused: the idealised rate threshold for arbitrary hypotheses and the realisability of every frontier shape, because \cref{thm:teacher:main} covers one model with one error rule over all hypotheses and \cref{prop:limits:separable,prop:limits:inputlaw} cover separable components; the treatment of inference rules, which is not about function induction; and the pathologies of parasitic errors and language relativity, which hold for steeper SFI by the same arguments but add nothing specific to it.

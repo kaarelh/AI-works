@@ -1,182 +1,242 @@
-# Claims ledger: Paper 2 (steeper simplicity priors in SFI)
+# Claims ledger: Paper 2 (steeper simplicity priors in SFI), after the restructure of 2026-10-13
 
-> **BINDING NOTE (Hänni, 2026-10-12): do not call it "Wyeth's objection".** Absorption by a universal hypothesis under a steeper penalty is a standard point. It is known in algorithmic statistics, and Hänni's own note already makes it ("pathology of not specifying even the hypothesis in the seq prediction case"); he was aware of it before the LessWrong exchange. In visible text, call it **the absorption objection** or **the standard absorption point**. Do not name sections, theorems or remarks after Wyeth, and do not quote his comment. At most, one neutral footnote may record that the point was raised in the LessWrong thread. Internal LaTeX labels such as rem:absorb:wyeth may stay as they are (they are invisible), but their printed headings must not mention Wyeth.
+> **Binding notes (unchanged).** The absorption objection is a standard point: never "Wyeth's objection"; the label `rem:absorb:wyeth` stays, its printed title is "Answer to the absorption objection". The paper presents the material for the first time, in the "we" voice; the author's notes are credited only in at most five neutral footnotes (now two: the proposal in `intro.tex`, the change of slope in `kinks.tex`) and in the acknowledgements (`research/paper-review/REFRAME.md`). Statuses are rendered in prose and the `\status{}`/`\src{}` calls print nothing (`research/paper-review/DECISIONS.md` §A1–§A2). Computed numbers stand outside statements, introduced by "a direct computation (code in the accompanying repository) gives …"; κ = 0 numbers are illustrations.
 
+Binding plan of the restructure: `research/paper-review/restructure/PLAN.md` (labels, notation §4, statuses §5). Sources of claims: the refereed record `research/tracks/steeper/notes-final.md` ("steeper") for the base material, and for the new material the sub-track records `research/tracks/split/{iid,kink,teacher}/notes-final.md` with the verification reports `research/tracks/split/verify-{iid,kink,teacher}.md`, which override the synthesis `research/tracks/split/notes-final.md` where they correct it. Writer logs: `research/paper-review/restructure/log-W1.md` … `log-W6.md`, `log-front.md`.
 
-Binding for the writers of `paper-steeper/`. Conventions as in `../paper/CLAIMS.md`: **id** = LaTeX label; **status** = the item's `\status{}`; **source** = FINAL numbering of `research/tracks/steeper/notes-final.md` ("St"), with T5 (`claude2026whatfollows`, section "Simplicity and normativity from imitation") and the other tracks where relevant; **section** = file key (`sections/<key>.tex`, "app" = `sections/app-<key>.tex`).
+## 1. What the paper claims, in one paragraph per reason
 
-Notation is that of `../paper/NOTATION.md`. In particular, relative to St: **$n$ = number of samples (St's $N$), $N=2^d$ (St's $n$), $d_n$ = largest input length (St's $n_N$)**; $c=\lambda/n$; machine constant $\kappa$; (Dom) constants $\kappa_0,\kappa_1$ (St's $c_0,c_1$); classes $\mathcal H_\times,\mathcal H_F,\mathcal H_w,\mathcal H_{\rm SI},\mathcal H_{\rm chr}$ (St's $\Pi_\times,\dots$); level $\lev(\pi)$ (St's $T(\pi)$); $\Phi_1,\Phi_2$ (St's $M_1,M_2$); near-optimality slack $\epsilon$ (St's $\eta$); Ville deficiency $\delta^*$ (St's $m^*$); absorption length bound $\ell^*_\lambda$ (St's $L_\lambda$); sufficiency slack $b$ (St's $c$ in $\mathrm{soph}_c$); set models $A$ (St's $S$ in §3.5); the true law of an interleaved string $\Prob$ (St Thm 1(d)'s $\mu$); St Prop 3.3's measure $\mu\to\nu$.
+* **Precondition: absorption** (§4). In every class that contains its own mixture (SI, SFI with shared randomness, the weak and the history-aware classes) every λ-MAP is shorter than $\ell^*_\lambda$, a fixed-λ learner reproduces a deterministic teacher's errors, and no sampler longer than $\ell^*_\lambda$ is selected (`thm:absorb:absorption`, `thm:split:shared`); no product hypothesis is universal (`cor:absorb:nouniversal`), at a price on shared coins and up to labelled history (`prop:absorb:price`, `prop:absorb:history`).
+* **Common geometry: kinks** (§5). λ-MAPs on one data set are read off the hull (`lem:setup:hull`); one kink lemma, data and population readings (`lem:kink:main`); the split on one data set and its converse (`cor:kink:split`, `thm:kink:converse`); a universal member flattens every kink (`prop:kink:universal`).
+* **First and main reason: the model–randomness split** (§6, §7). Per query (PQ), every $\lambda_n$-MAP with $1\le\lambda_n=o(n)$ is eventually a shortest program equivalent to the sampler, with a rate for fixed λ > 1 that depends on the class only through a margin, and no such rate at λ = 1 (`thm:recovery:main`, `prop:recovery:lambda1`, `prop:recovery:necessity`); the sample kink (`thm:recovery:kink`); frozen labels allow only identification on the run (`prop:recovery:frozen`, `thm:split:private`(iv)); λ = 1 on one data set (`thm:split:lambda1`). The full table of the noisy parity has a product kink at the parity, set models have none (`prop:parity:kink`, `prop:parity:range`, `prop:parity:sets`).
+* **Second reason: the teacher's mistakes** (§8, §9). The kink lemma with right slope $2^{-m}$ gives the teacher theorem over all product hypotheses (`prop:teacher:kinks`, `thm:teacher:main`); the reuse factor explains why λ ∝ n is needed (`lem:teacher:reuse`, `prop:teacher:schedules`, `prop:limits:plain`); full tables for every m (`cor:teacher:fulltable`); windows below 0.1233 asymptotically (`prop:teacher:sharp`, `prop:teacher:rates`). Structured rules add a second kink and defeat the window (`prop:limits:envelope`, `prop:limits:rateblind`, `prop:limits:separable`).
 
-After the edit pass of 2026-10-12 several items moved to the appendices; their locations are listed in `research/paper-review/edits/log-p2-body.md` §3. Every number below is quoted from St and its checks; κ = 0 numbers are illustrations, not results about any particular reference machine, and the paper must say so.
+**Flip-rate decimals** (verify-teacher §9). $G_1>H(p)$ holds exactly for $p<p_0=0.0559643\ldots$; the sufficient decimal printed everywhere (abstract, introduction, Paper 1 `sec:steep`) is $p<0.05596$, not the base's 0.056, which is false for a few dyadic rule sizes now that $s_0$ is arbitrary. The asymptotic junta window needs $1-\log(\frac32-p)>H(p)$, i.e. $p<p_1=0.1233072\ldots$; printed as $p\le0.1233$.
 
----
+## 2. Ledger (generated from the sources in input order; numbers from the build of 2026-10-13)
 
-## 1. Ledger
+Status and source are the environment's `\status{}` and `\src{}`; definitions carry `\src{}` only. Tables are listed after the environments of their file.
 
-### 1.1 `setup` — data, hypotheses, classes, objectives (writer: steep-a)
+### `intro.tex`
 
-| id | statement | status | source | section |
+| no. | id | kind: title | status | source |
 |---|---|---|---|---|
-| def:setup:data | $X=\{0,1\}^*$, $Y$ finite; data sets are partial functions; noise is frozen per input (fresh noise with repeats makes random-function SFI's loss infinite: Paper 1, `prop:learn:freshnoise`) | definition | St §1.1 | setup |
-| def:setup:product | Product hypothesis: lsc conditional semimeasure $\nu(y\mid x)$; product law $\nu(D)=\prod\nu(D(x)\mid x)$; prediction does not depend on $D$; deterministic case; randomness private per input (not per query) | definition | St Def 1.1 | setup |
-| def:setup:shared | Shared hypothesis: lsc weak function semimeasure $P$; prediction $P(D+(x,y))/P(D)$; loss telescopes in every order; SI hypotheses are not weak function semimeasures | definition | St Def 1.2 | setup |
-| def:setup:class | Hypothesis class: c.e. prefix-free program set with uniformly lsc likelihoods; canonical classes $\mathcal H_\times$ (mixture $\xi_\times=\Mprod$ exactly), $\mathcal H_F$ ($\MF$ on $D\ne\emptyset$), $\mathcal H_w$ ($\Mw$), $\mathcal H_{\rm SI}$ ($M$), $\mathcal H_{\rm chr}$ ($\MH$); closure under prefix-free simulation; standing facts (F1)–(F5) | definition; facts known (Li–Vitányi 2008, section numbers unverified) | St Def 1.3, §1.2 | setup |
-| def:setup:objectives | Two-part objective $J_\lambda(\pi;o)=\lambda\ell(\pi)-\log P_\pi(o)$ and λ-MAPs; power-prior posterior $\Pi_\lambda$ and mixture $\xi_\lambda$; tempered posterior $\Pi^\eta$; these are generalised / Gibbs / fractional / safe posteriors with $\eta=1/\lambda$, and λ > 1 two-part codes are standard in MDL theory (not claimed as new) | definition; literature known (verified bibliographically, content unverified) | St §1.3 | setup |
-| lem:setup:basic | (i) If some $J_\lambda$ is finite, the set of λ-MAPs is finite and nonempty; (ii) $\arg\min J_\lambda=\arg\max\Pi_\lambda=\arg\max\Pi^{1/\lambda}$; (iii) on deterministic hypotheses the tempered posterior equals the plain one | proved | St Lemma 1.1 | setup |
-| rem:setup:persample | Per-sample form: $c:=\lambda/n$, $\hat J_c=c\ell+\frac1n\sum-\log\nu$; population $J_c(\pi)=c\ell(\pi)+R(\pi)$, $\Phi(c)=\inf J_c$; Hänni's "increase the coefficient with the data" is $\lambda=cn$; **$\lambda=cn$ is not one Bayesian predictor**, so all its statements are batch statements at a given $n$ | remark | St §1.3 | setup |
-| lem:setup:hull | Hull lemma: (i) minimisers of $c\ell+R$ lie on the boundary of the convex hull; (ii) $\ell$ nonincreasing and $R$ nondecreasing in $c$; (iii) a point is the unique minimiser on an open $c$-interval iff it is a vertex; (iv) Hänni's absolute length bound selects the same points at vertices but can select points above the boundary. St `notes.md`'s "iff" version of (iv) is **refuted** (counterexample $\{(0,1),(10,0),(20,0)\}$) | proved; computed (St c5(a), c6(F)); notes.md version refuted | St Lemma 1.2 (T5 Lemma 3.1) | setup; proof app |
-| lem:setup:coding | Coding bound in every data-set class: $\ell(\pi)-\log P_\pi(D)\ge K(y_D\mid\dom D)-\kappa$ | proved | St Lemma 1.6 | setup |
+| 1 | `tab:intro:claims` | table:  |  |  |
 
-### 1.2 `absorb` — The absorption objection: absorption and private randomness (writer: steep-a)
+### `related.tex`
 
-| id | statement | status | source | section |
+(no theorem-like environments)
+
+### `setup.tex`
+
+| no. | id | kind: title | status | source |
 |---|---|---|---|---|
-| thm:absorb:absorption | Absorption. Assume (Dom) and $\lambda>1$. (a) Every λ-MAP has $\ell\le\ell^*_\lambda:=(\lambda\ell_U+\kappa_0)/(\lambda-1)$ and log-loss at most $\lambda\ell_U$ bits worse than $U$'s; (b) $2^{-\lambda\ell_U}U\le\xi_\lambda\le\xi_1$, so the steeper code length is within $\lambda\ell_U$ of $U$'s; (c) deterministic teacher $t$ (errors included), distinct inputs: cumulative loss $\le\min\{\lambda\ell_t,\lambda\ell_U+\kappa_0+\ell_t\}$, λ-MAPs eventually lie in a finite set and mispredict only finitely often; (d) SI with i.i.d. computable inputs (fixed-length block encoding): expected label loss $\le\lambda\ell_U+\kappa_0+\ell(\pi_{\Prob})$ | proved | St Thm 1 | absorb; proof app |
-| rem:absorb:examples | (Dom) holds with $\kappa_0=0$ (and $\xi_1\le U$) in $\mathcal H_F$ ($U=\MF$), $\mathcal H_w$ ($\Mw$), $\mathcal H_{\rm SI}$ ($M$), $\mathcal H_{\rm chr}$ ($\MH$, universality only), and every class containing its own mixture | proved | St §1.4 examples | absorb |
-| rem:absorb:reading | Theorem 1(a) is the standard absorption objection made exact and Hänni's "drop bits and take the likelihood loss"; it reproduces T5 Prop 2.3's threshold; as $\lambda\to\infty$ the bound tends to $\ell_U$, not 0; whether a given model is longer than $\ell_U$ depends on the machine; (c) has no explicit rate (explicit discrete-MDL bounds are exponentially worse than Bayes: Poland–Hutter 2005, known) | remark; known | St remarks after Thm 1 | absorb |
-| prop:absorb:pricing | Per-input pricing: (i) every product hypothesis has $\max_{f\in F}\sum_i-\log\nu(f(x_i)\mid x_i)\ge\sum_iH(Q_{x_i})$, with minimax value $\max_Q\sum_iH(Q_{x_i})$ (Sion; example 2.5431 < 2.5850); (ii) parities: some parity costs every product hypothesis $\ge n$ bits, the shared mixture $\le d$; (iii) per-input mixtures pay $\log(1/w)$ at every input | proved; computed (St c2(a); referee r2) | St Prop 1.3 (T5 Thm 2.1, Prop 2.2) | absorb; proof app |
-| cor:absorb:nouniversal | No universal product hypothesis: for every product $\nu_U$ and $C$ there are $D$ and a deterministic $f\supseteq D$ of length $\le d+2\log d+\kappa$ with $\nu_U(D)\le2^{-(2^d-1)}$; (Dom) fails in every product class | proved | St Cor 1.4 | absorb |
-| rem:absorb:condsemi | The universal conditional semimeasure $\mm(y\mid x)$ dominates every product hypothesis input by input but pays $2^{K(\nu)}$ at every input; it never learns | proved | St Rem 1.5 (T5 Thm 2.4) | absorb |
-| rem:absorb:why | Why private randomness matters: at λ = 1 the decomposition into hypotheses does not change the predictor ($\xi_\times=\Mprod$ is shared); at λ > 1 it does. Steeper SFI is therefore defined over $\mathcal H_\times$, whose λ → 1 limit is $\Mprod$, not $\MF$. Cost at λ = 1: $\Mprod$ vs $\MF$ up to $K(\dom D)+O(1)$, unbounded in the worst case, and at most $\Kpad(k+1)+O(1)$ on shared-coin data (Paper 1) | remark (cites proved results) | St §1.6; F Thm 4.2, Prop 4.5, Rem 4.5a | absorb |
-| prop:absorb:price | Price of private randomness (shared latent coins $D_\beta$, one coin per pair of inputs): (i)–(ii) every steeper product predictor and every product program pays $\ge\min(\lambda,2)(K(\beta\mid k)-\kappa)$; (iii) $-\log\MF(D_\beta)\le k+\kappa$ and the steeper machine-law predictor $\le k+\lambda\kappa$; (iv) w.p. $\ge1-2^{-j}$ the product predictor pays $\ge(\min(\lambda,2)-1)k-2j-(\lambda+2)\kappa$ more | proved; computed (St c6(D)) | St Prop 1.7 | absorb; proof app |
-| rem:absorb:wyeth | Answer to the absorption objection: (i) correct wherever a universal hypothesis is a member (SI, $\MF$, $\Mw$, $\MH$); (ii) unavailable in the product class (`cor:absorb:nouniversal`, `rem:absorb:condsemi`, `prop:absorb:inputs`), which is Hänni's reply made exact; (iii) the restriction has a price (`prop:absorb:price`) and a boundary (`prop:absorb:history`); (iv) the algorithmic-statistics reading (`prop:algstat:parity`); the restriction is a modelling choice, with two reasons for it | remark (cites proved results) | St §1.8 | absorb |
-| prop:absorb:history | Labelled history restores universality: with earlier labelled pairs in the input, the in-context Bayes mixture of computable positive personas is one product hypothesis of length $\le K(w,(\nu_\theta))+\kappa$, paying $\log(1/w)$ per block | proved; computed (St c5(d)) | St Prop 4.1 (T5 Prop 2.6) | absorb |
-| prop:absorb:inputs | A history of inputs only, with private randomness, is a product hypothesis on extended inputs, so per-input pricing persists; with shared randomness (\SFIhist) a universal element exists and Theorem 1 applies | proved | St Prop 4.2 | absorb |
-| q:absorb:shared | Open: which hypotheses count as shared (is every lsc random-function law dominated by $\MF$? Paper 1 `q:setting:rpf`); Theorem 1 holds for $\mathcal H_w$ and $\mathcal H_F$ either way | open | St §4.6 item 4; F Problem 3.6 | absorb |
+| 3.1 | `def:setup:data` | definition: Data |  | steeper \S1.1; split/iid Defs 1.1, 1.3; split/teacher \S1.0 |
+| 3.2 | `rem:setup:objects` | remark: Which object; repeated inputs | remark | split/iid Remark 1.4(a),(b),(d); split/teacher \S1.0 |
+| 3.3 | `def:setup:product` | definition: Product hypothesis; private randomness |  | steeper Def 1.1 |
+| 3.4 | `def:setup:shared` | definition: Shared hypothesis |  | steeper Def 1.2 |
+| 3.5 | `def:setup:class` | definition: Hypothesis class |  | steeper Def 1.3, \S1.2; split/iid Def 1.1 |
+| 3.6 | `def:setup:objectives` | definition: Steeper objectives |  | steeper \S1.3 |
+| 3.7 | `lem:setup:basic` | lemma: Basic properties | proved | steeper Lemma 1.1 |
+| 3.8 | `rem:setup:persample` | remark: Per-sample form; $\lambda=cn$ gives batch objectives | remark | steeper \S1.3 |
+| 3.9 | `lem:setup:hull` | lemma: Hull lemma | proved; computed; strengthening of (iv) refuted | steeper Lemma 1.2 (T5 Lemma 3.1); split/kink Thms 2.1, 2.2, Prop 2.3; checks c5(a), c6(F), k1, rB1 |
+| 3.10 | `lem:setup:coding` | lemma: Coding bound | proved | steeper Lemma 1.6; split/kink Remark 2.5, Cor 3.3(a) |
 
-### 1.3 `teacher` — the teacher's-mistakes theorem (writer: steep-b)
+### `absorb.tex`
 
-| id | statement | status | source | section |
+| no. | id | kind: title | status | source |
 |---|---|---|---|---|
-| rem:teacher:hanni | Hänni's calculation. Version 1 (100-bit model at 100 bits/bit, 100-bit error model at 10 bits/bit): "simple" selected exactly for λ ∈ (10, 100). Version 2 (100-bit model; errors on a $2^{-10}$ fraction costing 10,000 bits): $c\in(1.12\cdot10^{-6},8.99\cdot10^{-3})$, ratio ≈ 8000; λ = 1 switches to the memoriser at $n\approx8.94\cdot10^5$; his "≈ p log(1/p) ≈ 1/100" is 0.0098 against $H(2^{-10})=0.0112$, immaterial. The calculation does not exclude other hypotheses | computed (St c1; T5 re-run) | St §2.1 | teacher |
-| def:teacher:instance | Setting: parity $f_a$ on $\{0,1\}^d$ with $K(a)\ge d$; error rule $S\subseteq\{0,1\}^m$, $|S|=s_0=p2^m$, $p=2^{-r}$; error set $E=S\times\{0,1\}^{d-m}$; teacher $y^*=f_a\oplus\ind_E$; $L_S$, $B_S=K(S\mid a,K(a))$, $\delta_S=L_S-B_S$, $I(\pi)$; uniform inputs; $R,R_B,J_c,J^B_c,\Phi,\Phi^B$; $u(\pi)$, $\lev(\pi)$, $s(t)$, $G_j$; coin, good model $\pi_g$, memoriser $\pi_b$; Hänni's numbers $d=100$, $m=20$, $p=2^{-10}$, $L_S=11{,}710.27$ | definition | St Setting 2.0 | teacher |
-| lem:teacher:list | List decoding for semimeasures: $\lev(\pi)=t<\infty\Rightarrow K(a\mid\pi)\le s(t)+2\log d+\kappa$ | proved; computed (St c2(b); referee r3) | St Lemma 2.1 (T5 Lemma 2.5a, generalised) | teacher; proof app |
-| lem:teacher:floor | Risk floor: $R_B(\pi)\ge-\log(u(\pi)+p+2^{-B})$ | proved; computed (St c2(b)) | St Lemma 2.2 (T5 Lemma 2.5b) | teacher; proof app |
-| lem:teacher:sharpfloor | Randomness of the error rule sharpens the floor (semimeasure version of T5 Lemma 2.5c, via $I(\pi)\le\ell(\pi)+\kappa$) | proved; computed (St c7(C)) | St Lemma 2.2c | app |
-| lem:teacher:coding | Coding the error rule with a hypothesis: $K(S\mid a,\pi)\le2^mR_B(\pi)+\beta_B+2\log m+2\log B\cdot[B<\infty]+\kappa$ | proved; referee r3 | St Lemma 2.3 | teacher; proof app |
-| lem:teacher:twopart | Two-part lower bounds: (D1) $\ell(\pi)\ge d-s(t)-\Lambda_1$; (D2) $\ell(\pi)+2^mR_B(\pi)\ge d+B_S-s(t)-\Lambda_1$, for $\lev(\pi)=t$ | proved | St Lemma 2.4 (T5 Thm 2.5(c)) | teacher; proof app |
-| thm:teacher:main | Theorem 2, for every program of $\mathcal H_\times$ (or of any class of `prop:related:computable`): (o) level bounds; (i) window: if $c2^m>1$ and $c\le c_{\rm hi}$, then $\Phi\ge\Phi^B\ge\min\{\Phi_1,\Phi_2\}$ and $J_c(\pi_g)\le\Phi(c)+\Delta(c)$ with $\Delta(c)\le c(4+\Lambda_1+\kappa_g)+(\log(2^m+1)+\delta_S)/2^m$; (ii) every $\epsilon$-near-optimal program (a) knows the model ($u>3/4$), (b) fits no better than noise, (c) has $\ell\le d+\Delta_\ell$, (d) holds $I(\pi)\le\Delta_\ell+\Lambda_3$ bits about the rule, (e) gives the erroneous label average probability $\le1-u+\gamma_g+2^{-g}$ on $E$; (iii) memoriser regime for $c2^m<1$; (iv) the lower end $2^{-m}$ is sharp up to a factor $1+O((m+\log d+\kappa)/L_S)$. $c_{\rm hi}>0$ requires $p<0.056$ | proved | St Thm 2 | teacher; proof app |
-| tab:teacher:numbers | At Hänni's sizes ($B=\infty$, $\epsilon=0$): window $(9.54\cdot10^{-7},8.06\cdot10^{-3}]$ (κ = 0, ratio 8453) and $(9.54\cdot10^{-7},3.66\cdot10^{-3}]$ (κ = 30). At $c=10^{-4}$: $u\ge0.983$, $\ell\le d+20.4$, $I\le37.7$, $e\le0.199$ (κ = 0, $\delta_S=0$); $e\le0.218$ ($\delta_S=20$); $I\le98.3$, $e\le0.274$ (κ = 30). $m=24$: $e\le0.065$. Memoriser regime (κ = 0, $\delta_S=0$): $e\ge0.955,0.831,0.658,0.483,0.223,0.010$ for $c=(1-\varepsilon)2^{-m}$, $\varepsilon=0.5,0.2,0.1,0.06,0.03,0.01$; $e\ge1/2$ needs $c\le0.937\cdot2^{-m}$; Theorem 2(iii) applies only for $c<0.99418\cdot2^{-m}$, so nothing is proved in the top 0.6% below $2^{-m}$. κ = 0 rows are illustrations | computed (St c3, c6(B), c7(D); referee r1) | St §2.4 "Numbers" | teacher |
-| rem:teacher:numbers | Remark "Numbers for the running example" that introduces `tab:teacher:numbers` (κ = 0 rows illustrations; $\delta_S$ stated; rounding convention; κ = 30 memoriser-regime thresholds $0.98914\cdot2^{-m}$ and $0.888\cdot2^{-m}$) | computed (St c3, c6(B), c7(D); referee r1) | St §2.4 "Numbers" | teacher |
-| rem:teacher:hypotheses | The five hypotheses Theorem 2 relies on: list-decodable model class (parities), product form of $E$, uniform inputs, $p<0.056$, small $\delta_S$ | remark | St §2.4 | teacher |
-| cor:teacher:fulltable | Idiosyncratic errors, full truth table ($m=d$, $n=N=2^d$): for every $\lambda\in(1,Nc_{\rm hi}]$ every λ-MAP satisfies Theorem 2(ii) with slack $\Lambda_2/(\lambda-1)$ (in particular for $\lambda\in(1,Nc_{\rm hi})$); (ii) if $G_1>H(p)$ and $N(G_1-H(p))>d+\kappa_g+\log(N+1)$, at λ = 1 the optimum of $\ell+NR$ and the values at $\pi_g$, $\pi_b$ are within $O(\log N)+\delta_E$, so λ = 1 does not decide whether errors are memorised; window $\lambda\in(1,1.19\cdot10^4)$ at $d=20$ (κ = 0), $(1,6456)$ (κ = 30), stated after the corollary (DECISIONS §F42, §F44) | proved; computed (St c3, c7(H)) | St Cor 2.5 (T5 Thm 3.5, Cor 3.5a) | teacher |
-| lem:teacher:finite | Finite sample ($n$ inputs without replacement): w.p. $\ge1-\delta$ every minimiser of $\hat J_c$ has $J^B_c\le J_c(\pi_{\rm ref})+\epsilon_1+B\sqrt{(\hat L\ln2+\ln(2/\delta))/(2n)}$ | proved | St Lemma 2.6 (adapts T5 Lemma 1.2) | app |
-| cor:teacher:sampled | Hänni's numbers with sampled data: w.p. $1-\delta$ every λ-MAP with $\lambda=cn$ satisfies Theorem 2(ii) with $\epsilon=\epsilon_n$; this needs $n\approx10^{11}$–$10^{13}$ at his sizes (uniform convergence is pessimistic; Theorem 2 is a population statement) | proved; computed (St c3) | St Cor 2.7 | teacher |
-| ex:teacher:version1 | Hänni's Version 1 realised in population form ($d=100$, $m=10$, $p=2^{-6}$, $L_S=115.6$): window $c\in(2^{-10},5.80\cdot10^{-3}]$ at κ = 0, i.e. $\lambda\in(9.77,58.0]$ at $n=10^4$ against his (10, 100); only coarse identification; the error-label bound is vacuous at this size; no finite-sample guarantee at $n=10^4$ | proved (instance of Thm 2); computed (St c6(C), c6(H)) | St Ex 2.7a | teacher |
-| prop:teacher:concentration | The power posterior with $\lambda=cn$ concentrates on near-minimisers: mass ratio $\le2^{-n\epsilon+(\hat J_g+\epsilon)/c}$; with Lemma 2.6, all but that fraction satisfies Theorem 2(ii) with $\epsilon'$ ($\le2^{-758}$ at $c=10^{-4}$, $\epsilon=10^{-3}$, $n=10^6$, κ = 0) | proved; computed (St c5(e), c7(F); referee r1(F)) | St Prop 2.8 | teacher |
-| q:teacher:open | Open: kinks beyond parities (majority-like models); the window for $p$ up to 1/4 and sharper constants; finite samples at realistic $n$ | open | St §4.6 items 1, 2, 8 | teacher |
+| 4.1 | `rem:absorb:examples` | remark: Classes with an absorbing member | proved | steeper \S1.4, examples (1)--(5) |
+| 4.2 | `thm:absorb:absorption` | theorem: Absorption | proved | steeper Thm 1 |
+| 4.3 | `rem:absorb:reading` | remark: Reading | remark; known | steeper remarks after Thm 1 |
+| 4.4 | `thm:split:shared` | theorem: SI, or SFI with shared randomness, $\lambda>1$ | proved; computed | steeper Thm 5; split/kink Prop 3.5; check c4(C); referee r4, q4(A) |
+| 4.5 | `prop:absorb:pricing` | proposition: Per-input pricing | proved; computed | steeper Prop 1.3 (T5 Thm 2.1, Prop 2.2); check c2(a); referee r2 |
+| 4.6 | `cor:absorb:nouniversal` | corollary: No universal product hypothesis | proved | steeper Cor 1.4 |
+| 4.7 | `rem:absorb:wyeth` | remark: Answer to the absorption objection | remark; cites proved results | steeper \S1.8 |
+| 4.8 | `q:absorb:shared` | question: shared hypotheses | open | steeper \S1.4; companion paper q:setting:rpf |
 
-### 1.4 `limits` — limits of the trick (writer: steep-b)
+### `kinks.tex`
 
-| id | statement | status | source | section |
+| no. | id | kind: title | status | source |
 |---|---|---|---|---|
-| prop:limits:plain | Plain Bayes, MDL and SI learn the errors: (a) any predictor dominating $\mathcal H_\times$ (e.g. $\Mprod$, $\MF$) has total loss $\le\ell(\pi_b)+\kappa$, so all but $d+L_S+O(\log dm)$ revealed error inputs get the erroneous label w.p. $\ge1/2$ (fraction $1-9.6\cdot10^{-24}$ at Hänni's sizes, κ = 0); (b) for every λ ≥ 1 and every schedule $\lambda_n$, the λ-MAP has $R_B\le\lambda\hat L/n+B\sqrt{\cdots}$, so every schedule with $\lambda_n/n\to0$ (fixed λ, $\sqrt n$) reproduces the errors ($e\ge0.65$ at $n=10^{13}$, λ = 1); (c) SI pays $\le d+L_S+O(\log dm)$ | proved; computed (St c3, c6(G), c7(G)) | St Props 2.9, 2.10 | limits |
-| rem:limits:schedule | Hence $\lambda=\Theta(n)$ is needed (Hänni's own remark). Fixed λ vs $\lambda\propto n$: fixed λ > 1 removes noise, not finite-complexity errors; $\lambda=cn$ discards every component of rate below $c$, valid or not; the learner is deliberately inconsistent for the teacher's channel and pays $c\ell$ bits per sample (batch). "Bounded λ overfits; λ must grow" is known in noisy classification (Zhu–Srebro 2025; Zhu–Ohannessian–Srebro 2026) and is not claimed | remark (from proved results); known | St end of §2.5, §4.4 | limits |
-| prop:limits:rateblind | Rate blindness: (i) three-hypothesis form; (ii) all-hypothesis criterion $(\star)$: if it holds, at every $c$ every program that knows the model and fits no better than noise is beaten by the memoriser or by the coin; (iii) below $2^{-m}$ the memoriser regime applies | proved; computed (St c3, c6(A)) | St Prop 2.11 | limits |
-| lem:limits:robust | The criterion is robust in κ: $(\star)\iff F(d)\ge0$; it holds for all $d\ge d_0(\kappa)$ with $d_0$ linear in κ; e.g. a 3-bit rule on 1/8 of the inputs: $d_0=49$ (κ = 0), 169 (κ = 30); a single 6-bit prefix: 450, 1005 | proved; computed (St c6(A)) | St Lemma 2.11a | limits; proof app |
-| prop:limits:separable | Separable components: each region selects its own hull vertex; a component is kept iff its rate exceeds $c$; a valid component whose rate is at most an error's rate cannot be kept without the error; twin worlds with the same channel and input law get the same selection | proved; computed (St c5(a)) | St Prop 2.12 (T5 Thm 3.2, Thm 4.1) | limits |
-| prop:limits:guard | Guard erosion: if $\rho_G<\rho_\sigma$, then for $c\in(\rho_G,\rho_\sigma)$ the unguarded rule is selected and applies σ where the teacher never did; numbers for $n_{\rm st}=64$ steps, $\epsilon_G=0.05$ | proved; computed (St c5(b), c6(G), c7(E); referee q1(I)) | St Prop 2.13 (T5 Prop 4.4) | limits |
-| prop:limits:noident | λ cannot be chosen from imitation data: strictly proper scores are maximised by the teacher's channel, errors included; held-out log loss prefers the smallest $c$; in the twin worlds any imitation-only rule is wrong in one | proved; computed (St c5(c)); scoring rules known (Gneiting–Raftery 2007) | St Prop 2.14 (T5 Thm 4.3) | limits |
-| prop:limits:inputlaw | The selection depends on the input law: a component is kept iff $\mu(X_j)\Delta_j>ck_j$; the window moves with $\mu$ and can be empty | proved | St Prop 2.15 | limits |
-| prop:limits:ood | Steeper simplicity and unseen properties: wrapped programs give behaviour $b$ on unseen $Q$ probability $\ge2^{-\lambda(K(Q,b)+\kappa)}$; equal-likelihood posterior odds are $2^{-\lambda\Delta\ell}$. With $\lambda=cn$ Hänni's constant lower bound vanishes, but only by sharpening the preference for the shortest train-fitting hypotheses; no OOD guarantee follows | proved | St Prop 2.16 | limits |
-| prop:limits:envelope | Error envelopes: with Hänni's density and a cheap error region $S_1$ (subcube) plus random points, (i) for $c<c_{\rm env}$ no program that fits no better than the good model is near-optimal; (ii) near-optimal programs reproduce the cheap errors, $e_1\ge2^{-\bar R_1}$. Numbers (κ = 0): 128 + 896 points (≈ 10,400 bits): $c_{\rm env}=1.6\cdot10^{-5}$, 31% of the window's log-width (25% at κ = 30), $e_1\ge0.55$ at $c=1.01\cdot2^{-m}$; 512 + 512: $7.0\cdot10^{-5}$, 47%, $e_1\ge0.86$. **Refutes** the extension of Hänni's example to every error rule with his density and description length | proved; computed (St c7(B); referee q4(C)); refutes the overbroad reading | St Prop 2.17 (T5 Prop 4.5, all-hypothesis form) | limits; proof app |
-| rem:limits:method | Limitation of the method: the window needs $p<0.056$; Lemma 2.2c extends the kink to $p<1/4$ but, with the present level structure, the window could reach at most $p<0.123$ | remark; computed (St c7(C)) | St end of §2.6 | limits |
-| q:limits:open | Open: structured error rules (envelopes with density θ < 1; memorising the random part; behaviour above $c_{\rm env}$); a principled data-free choice of $c$; a schedule that tells errors from rare valid rules | open | St §4.6 items 5, 10, 11 | limits |
+| 5.1 | `def:algstat:product` | definition: Structure functions and sufficiency |  | steeper \S3.5, product versions; split/kink \S1; split/teacher \S4 |
+| 5.2 | `def:kink:kinks` | definition: Kinks, right lines and secants |  | split/kink Def 3.1; split/teacher Def 1.4, Remark 1.3; split/verify-teacher \S3 |
+| 5.3 | `lem:kink:main` | lemma: The kink lemma | proved | split/teacher Lemma 1.1 (final form), Remark 1.2; split/verify-teacher \S2 |
+| 5.4 | `cor:kink:locate` | corollary: Kinks locate the $\lambda$-MAPs | proved | split/kink Thm 3.2, Remark 3.2$'$; split/verify-kink \S6 |
+| 5.5 | `cor:kink:split` | corollary: The split on one data set | proved | split/kink Cor 3.3 |
+| 5.6 | `thm:kink:converse` | theorem: Stable MAP lengths occur only at kinks | proved | split/kink Thm 3.4 |
+| 5.7 | `prop:kink:universal` | proposition: A universal member flattens every kink | proved | split/kink Prop 3.5; split/verify-kink \S5 |
+| 5.8 | `rem:kink:reading` | remark: Reading | remark | split/kink \S6, Remark 3.6 |
 
-### 1.5 `split` — the model–randomness split (writer: steep-a)
+### `recovery.tex`
 
-| id | statement | status | source | section |
+| no. | id | kind: title | status | source |
 |---|---|---|---|---|
-| def:split:setting | Sampler ν (computable conditional measure) with a program $\pi_\nu$ of length $k$; distinct inputs chosen by any rule before the label is drawn; sampled randomness $-\log\nu(D_n)$; fill-ins and their weight $\Wdet(D)$ | definition | St §3.1 | split |
-| lem:split:ville | Ville deficiency: $\delta^*:=\sup_n\log(\xi(D_n)/\nu(D_n))$ has $\Prob[\delta^*\ge j]\le2^{-j}$; in a Kraft product class, $\nu_\pi(D_n)\le2^{\ell(\pi)+\delta^*}\nu(D_n)$ for all $\pi,n$ (adaptive inputs allowed) | proved; computed (St c4(A)); Ville's inequality known | St Lemma 3.1 | split |
-| lem:split:hash | Derandomising a dyadic sampler by hashing: $\Wdet(D)\ge2^{-k-2\log(n+1)-2\log(d+1)-2\log(r+1)-\kappa}\nu(D)$ | proved; computed (St c4(B), c6(E); referee r5) | St Lemma 3.2 | app |
-| lem:split:stream | Fill-ins from stored stream prefixes, every computable sampler: $\Wdet(D)\ge2^{-k-2\log(t_D+1)-\kappa}\nu(D)$, with $t_D$ doubly logarithmic in $d$ and triply in $n$ and in $-\log\nu(D)$ (5.6 bits at $d=20$, $n=10^3$; 6.3 bits at $d=100$, $n=10^6$) | proved; computed (St c7(A)) | St Lemma 3.2′ (adapts the foundations referee's Prop R1 = F Prop 4.4) | split; proof app |
-| thm:split:lambda1 | Theorem 3 (SFI, λ = 1, every computable sampler, all $n$ simultaneously): $\Pi_1(\pi_\nu\mid D_n)\ge2^{-k-\delta^*}$; $\Pi_1(\det\mid D_n)\ge2^{-k-2\log(t_n+1)-\kappa-\delta^*}$; the posterior odds of fill-ins against the sampler program lie in $[2^{-2\log(t_n+1)-\kappa},2^{k+\delta^*}]$ whatever the sampled randomness; covers Bern(1/3) labels (H6); (iv) the hashing alternative for dyadic samplers | proved | St Thm 3 | split |
-| prop:split:si | SI, λ = 1: posterior of ν $\ge2^{-k-\delta^*}$; deterministic extensions consistent with $z$ weigh $\ge2^{-k-K(n)-\kappa}\nu(z)$; in $M$'s program representation every hypothesis is a fill-in | proved; (iii) known | St Prop 3.3 | split |
-| thm:split:private | Theorem 4 (private randomness, fixed λ > 1, any countable Kraft product class containing $\pi_\nu$): (i) every λ-MAP has $\ell\le(\lambda k+\delta^*)/(\lambda-1)$ and loss within $\lambda k$ of ν; (ii) length tail $\le2^{\lambda k+\delta^*-(\lambda-1)L}$; (iii) consistent deterministic programs have $\ell\ge-\log\nu(D_n)-\delta^*$, and $\Pi_\lambda(\det\mid D_n)\le2^{\lambda k+\lambda\delta^*-(\lambda-1)(-\log\nu(D_n))}$ (tempered analogue too); (iv) with infinitely many distinct inputs, a.s. every λ-MAP is eventually ν-equivalent on the run and the posterior concentrates on such programs | proved; computed (St c4(C); referee r4); Kakutani-type argument known | St Thm 4 | split; proof app |
-| rem:split:reading | The split Hänni hoped for, in a precise and limited sense: the selected model is a sampler, not a fill-in, but may carry up to $(k+\delta^*)/(\lambda-1)$ extra bits; "ν-equivalent on the run" (summable $\Hel$) is not equality and says nothing about unseen inputs; on a finite domain (iv) is vacuous | remark | St §3.3 | split |
-| thm:split:shared | Theorem 5 (SI, or SFI with shared randomness, λ > 1, (Dom), $\xi_1\le2^{\kappa_1}U$): (i) if $(\lambda-1)k>\lambda\ell_U+\kappa_0$ the sampler program is never a λ-MAP; (ii) $\Pi_\lambda(A\mid o)\le2^{-(\lambda-1)\min_A\ell+\lambda\ell_U+\kappa_1}$. For adaptive inputs use $\mathcal H_{\rm chr}$ | proved; computed (St c4(C); referee r4, q4(A)) | St Thm 5 | split |
-| ex:split:noisyparity | Illustration of Theorem 5's mechanism (not an instance: $\ell_U=12$ is assigned): $d=12$, $N=4096$, flip rate 1/8; the product-class MAP is the sampler at every λ tested; at λ = 1 the memoriser is 8.2 bits worse; the shared-class MAP switches to $U$ at λ ≈ 1.315 | computed (St c4(C)); illustration | St Ex 3.4 | split |
-| rem:split:siprograms | In SI's deterministic-program representation neither tempering nor a power prior splits model from randomness; the split needs a representation in which randomness is not part of the program | proved | St Rem 4.3 | split |
+| 6.1 | `def:split:setting` | definition: Samplers, equivalent programs, margins and fill-ins |  | steeper \S3.1; split/iid Defs 1.1--1.3; split/kink \S5.0 |
+| 6.2 | `lem:split:ville` | lemma: Ville deficiency | proved; computed; Ville's inequality known | steeper Lemma 3.1; split/iid Lemma 2.2; split/verify-kink \S2.3; check c4(A); referee q3(B) |
+| 6.3 | `thm:recovery:main` | theorem: Exact model recovery | proved | split/iid Thms 3.1, 3.2, 4.1(i)--(iv), (iv$'$); split/verify-iid \S1.2 |
+| 6.4 | `rem:recovery:posterior` | remark: Concentration on $\mathcal E$, not on $\mathcal E_0$ | remark; a natural strengthening refuted | split/iid Thm 3.2 and the refutation after it |
+| 6.5 | `rem:recovery:method` | remark: Method and literature | remark; known | split/iid \S3, remarks after Thm 3.1 |
+| 6.6 | `prop:recovery:lambda1` | proposition: $\lambda=1$ against $\lambda>1$ | proved; computed | split/iid Prop 5.1(a),(b),(b$'$), Prop 4.4(b), Thm 4.1(iv$'$); split/verify-iid \S1.4 |
+| 6.7 | `thm:recovery:kink` | theorem: A sample has a kink at the shortest equivalent length | proved | split/kink Lemmas 5.1--5.3, Thm 5.4, Cor 5.7(a),(d) (scheme (pq)); split/iid Lemma 8.1(i)--(iii); split/verify-kink \S2--\S3 |
+| 6.8 | `rem:recovery:window` | remark: The $\ell_0$ in the right window | proved; a natural strengthening refuted | split/iid Lemma 8.1(iv); split/verify-iid \S1.7 |
+| 6.9 | `cor:recovery:noisy` | corollary: Noisy computable functions | proved | split/iid Cor 6.1(i)--(v) |
+| 6.10 | `thm:split:private` | theorem: Private randomness; any input rule | proved; computed; Kakutani-type argument known | steeper Thm 4; split/iid Prop 3.3, Prop 7.2(a); split/verify-iid \S1.1, \S2 item 4; check c4(C); referee r4, q3(C) |
+| 6.11 | `prop:recovery:frozen` | proposition: Frozen labels | proved | split/iid Props 7.5, 7.6(b),(d) |
+| 6.12 | `thm:split:lambda1` | theorem: SFI at $\lambda=1$ | proved | steeper Thm 3 |
+| 6.13 | `rem:split:reading` | remark: What frozen labels give | remark | steeper \S3.3; split/iid Prop 3.3, Prop 7.5 |
+| 6.14 | `q:recovery:open` | question: Rates, frozen labels, misspecification | open | split/notes-final \S6 items 1--6; split/iid Props 4.3, 4.4, Conj 7.4; split/kink \S8 |
+| 2 | `tab:recovery:times` | table:  |  |  |
 
-### 1.6 `algstat` — relation to algorithmic statistics (writer: steep-a)
+### `parity.tex`
 
-| id | statement | status | source | section |
+| no. | id | kind: title | status | source |
 |---|---|---|---|---|
-| def:algstat:set | Set models $A\ni z$, structure function $h_z(\alpha)$, sufficiency line, $b$-sufficiency, minimal sufficient statistic, set sophistication $\sophset_b(z)$ (conditional versions given $\dom D$) | definition; known (Gács–Tromp–Vitányi 2001, Vereshchagin–Vitányi 2004, Vereshchagin–Shen 2017, Koppel 1987, Vitányi 2006, Antunes–Fortnow 2009; bibliographic data verified, statements unverified) | St §3.5 "Definitions" | algstat |
-| prop:algstat:set | Steeper two-part codes over sets: $K(A_\lambda)\le\sophset_b(z)+(b+\kappa)/(\lambda-1)$ and $A_\lambda$ is $(b+(\lambda-1)\sophset_b(z))$-sufficient. St `notes.md`'s reading "λ slightly above 1 selects an approximately minimal sufficient statistic" is **refuted** | proved; reading refuted | St Prop 3.5 | algstat |
-| def:algstat:product | Product structure function $\rho^\times_D(\alpha)$, product $b$-sufficiency, product sophistication $\sophx_b(D)$; Lemma 1.6 is the product sufficiency line | definition | St §3.5 | algstat |
-| prop:algstat:product | Every λ-MAP over $\mathcal H_\times$ has $\ell\le\sophx_b(D)+(b+\kappa)/(\lambda-1)$ and is $(b+(\lambda-1)\sophx_b(D))$-product-sufficient | proved | St Prop 3.6 | algstat |
-| prop:algstat:coarse | Sets are at least as coarse as products, for computable rational hypotheses: thresholding gives a set model with $K(A\mid\dom D)\le\ell(\pi)+2\log(\rho+1)+\kappa$, conditionally sufficient; the lsc case is open | proved for computable hypotheses; equivalence of set and distribution models believed standard (Vereshchagin–Shen, per snippet, unverified) | St Prop 3.7 | algstat |
-| prop:algstat:parity | Noisy random parity, full table: (i) set models treat the parity as noise: $\sophset\le2\log d+2\log r+\kappa$, flat structure function, every λ-optimal set model knows $\le O(\log d)+(\delta_E+O(\log d))/(\lambda-1)$ bits of $a$; (ii) product models keep it: $d-4-\Lambda_1\le\sophx_b(D)\le d+\kappa_g$, kink at $\alpha\approx d$; (iii) the gap $\ge d-O(\log d)$ is unbounded; (iv) $\sophx=d\pm O(\log d)$ for every flip rate $p<1/4$ (St `notes-final-run1.md`'s $O(\log n)$ corrected to $O(\log d)$) | proved; computed (St c2(c), c4(C), c7(C)) | St Prop 3.8 (T5 Thm 2.5) | algstat; proof app |
-| rem:algstat:restricted | Restricting the model family moves the split; this is known (Hamming-ball models, Vereshchagin–Vitányi 2010; strong models, Milovanov 2016, unverified). What the product view adds, as far as a snippet-level search can tell: an operational family (private randomness per input), its role in steeper SFI, structured noise with identification bounds | known (VV 2010 verified bibliographically, content per abstract); remark | St §3.5 "Relation to restricted model families" | algstat |
-| rem:algstat:reading | With shared randomness a uniformly random parameter costs the same in the model as in the noise code ("1 bit pays for 1 bit"), so the minimal sufficient statistic treats it as noise; with private randomness not knowing it costs one bit per input, so the product split keeps it in the model; for supervised learning the product split is the relevant one | remark | St §3.5 "Reading" | algstat |
-| q:algstat:lsc | Open: `prop:algstat:coarse` for lower-semicomputable hypotheses | open | St §4.6 item 3 | algstat |
+| 7.1 | `def:teacher:instance` | definition: The instance |  | steeper Setting 2.0; split/teacher Prop 5.3 (any $s_0$); split/kink \S4 |
+| 7.2 | `lem:teacher:list` | lemma: List decoding for semimeasures | proved; computed | steeper Lemma 2.1 (T5 Lemma 2.5a, generalised); checks c2(b), referee r3 |
+| 7.3 | `lem:teacher:floor` | lemma: Risk floor | proved; computed | steeper Lemma 2.2 (T5 Lemma 2.5b); check c2(b) |
+| 7.4 | `lem:teacher:coding` | lemma: Coding the error rule with a hypothesis | proved | steeper Lemma 2.3; referee r3, q2(c) |
+| 7.5 | `lem:teacher:twopart` | lemma: Two-part lower bounds | proved | steeper Lemma 2.4 (T5 Thm 2.5(c)) |
+| 7.6 | `lem:teacher:sharpfloor` | lemma: Randomness of the error rule sharpens the floor | proved; computed | steeper Lemma 2.2c (T5 Lemma 2.5c for semimeasures); check c7(C) |
+| 7.7 | `prop:parity:kink` | proposition: A kink at the parity | proved | split/kink Prop 4.1 |
+| 7.8 | `prop:parity:range` | proposition: The $\lambda$-range of ``parity plus noise'' | proved; computed | split/kink Prop 4.2, Cor 4.3; split/verify-kink \S4.1 |
+| 7.9 | `def:algstat:set` | definition: Set models |  | steeper \S3.5, Definitions |
+| 7.10 | `prop:parity:sets` | proposition: Set models have no steep kink at the parity | proved; computed | split/kink Prop 4.4; checks k8(D), rB2 |
+| 7.11 | `rem:algstat:reading` | remark: Reading: one bit for one bit | remark | steeper \S3.5, Reading |
+| 7.12 | `rem:algstat:restricted` | remark: Restricted model families | known; unverified (content per abstracts); remark | steeper \S3.5, relation to restricted model families |
+| 7.13 | `q:parity:open` | question: set kinks | open | split/kink \S8 item 4; split synthesis \S6 item 7 |
 
-### 1.7 `related` — computable versions, cold posteriors, prior work (writer: steep-b)
+### `teacher.tex`
 
-| id | statement | status | source | section |
+| no. | id | kind: title | status | source |
 |---|---|---|---|---|
-| rem:related:mdl | λ-weighted two-part MDL in noisy binary classification over classifier-plus-noise hypotheses: Grünwald–Langford 2007 (λ = 1 can be inconsistent), Zhu–Srebro COLT 2025, Zhu–Ohannessian–Srebro 2026 (every bounded λ overfits; consistency needs λ to grow). Their target is the data distribution; Hänni's is not. Not in their abstracts: universal hypotheses, the shared/private contrast, Kolmogorov-complexity classes with all-hypothesis bounds | known (verified bibliographically; content per abstracts and snippets) | St §1.3 | related |
-| rem:related:posteriors | Generalised, fractional and safe posteriors (Bissiri et al. 2016; Bhattacharya et al. 2019; Grünwald 2012; Grünwald–van Ommen 2017; Zhang 2006; Barron–Cover 1991); SafeBayes has no reason to move from η = 1 in well-specified imitation (a reading, not checked against the papers' criteria) | known (verified bibliographically, content unverified); remark | St §1.3, after Prop 2.14 | related |
-| prop:related:computable | Theorems 2 and 4 hold in every c.e. prefix-free product class (time-bounded samplers, circuits with private output noise) with the class's own constants; Theorem 1's contrast is established only for the unbounded classes | proved; the examples are remarks (constants not computed) | St Prop 4.4 | related |
-| prop:related:computability | The steeper predictive $\xi_\lambda$ is lsc; its raw and normalised conditionals are not computable and are limit-computable | proved | St Prop 4.5 | related |
-| rem:related:cold | Cold posteriors (Wenzel et al. 2020) sharpen prior and likelihood together and are not the λ > 1 direction; fractional posteriors are | known (snippet); remark | St Rem 4.6 | related |
-| rem:related:nn | NN Bayes is a private-randomness mixture; Theorem 4 applies to countable discretisations; whether a parameter prior behaves like a description-length prior (needed for Theorem 2) is Paper 1's bridge question | remark | St Rem 4.7 | related |
-| rem:related:t5 | Relation to T5: re-derived and reused items (with T5's corrections), items not reused and why, corrections (the rigorous $d=20$ window $c_{\rm hi}=0.0114$ against T5's heuristic 0.049; Lemma 2.2c for semimeasures), new items | remark | St §6 | related |
-| rem:related:new | What is known, what was not found in a snippet-level search (possibly new; needs a full literature check before publication), and what is not claimed | remark | St §3.6 | related |
-| q:related:open | Open: time-bounded shared classes with an absorbing member; computability of the λ-MAP; literature checks of the novelty claims | open | St §4.6 items 6, 7, 9 | related |
+| 8.1 | `rem:teacher:hanni` | remark: The three-hypothesis calculation | computed | steeper \S2.1; checks c1, T5 re-run |
+| 8.2 | `lem:teacher:reuse` | lemma: Duplication | proved; computed | split/teacher Lemma 3.0; split/verify-teacher \S4; check t7(C) |
+| 8.3 | `prop:teacher:schedules` | proposition: Which schedules keep the identification | proved; computed | split/teacher Prop 3.6, Prop 3.2(a); split/verify-teacher \S6; check v3 |
+| 8.4 | `rem:limits:schedule` | remark: Fixed $\lambda$ against $\lambda\propto n$ | remark (from proved results); known | steeper end of \S2.5, \S4.4; split/teacher \S3.0, Remark 3.5 |
+| 8.5 | `prop:teacher:kinks` | proposition: The two kink bounds | proved; computed | split/teacher Prop 2.1(a),(b); checks t1(B), rB2(E) |
+| 8.6 | `thm:teacher:main` | theorem: The teacher's-mistakes theorem | proved | steeper Thm 2; split/teacher Prop 2.1(c), Remark 2.6 (a1); split/verify-teacher \S8 |
+| 8.7 | `rem:teacher:numbers` | remark: Numbers for the running example | computed | steeper \S2.4 ``Numbers''; checks c3, c6(B), c7(D); referee r1, q4(B); split/teacher t6(D), v5(D) |
+| 8.8 | `rem:teacher:hypotheses` | remark: What the theorem relies on | remark | steeper \S2.4 ``The hypotheses Theorem 2 relies on''; split/teacher Table 2.2 |
+| 8.9 | `rem:teacher:selected` | remark: What is selected | remark; computed; a natural strengthening refuted | split/teacher \S2.1 ``What is selected''; checks t5(A),(B), rA1(A), rB3(A) |
+| 8.10 | `cor:teacher:fulltable` | corollary: Full truth tables: the window starts at the reuse factor | proved; computed | steeper Cor 2.5 (T5 Thm 3.5, Cor 3.5a); split/teacher Props 3.1(a),(b), 2.4(iii); checks c3, c7(H), t1(D), rB2(B) |
+| 8.11 | `cor:teacher:sampled` | corollary: Finite samples | proved; computed | steeper Cor 2.7, Lemma 2.6; check c3 |
+| 8.12 | `prop:teacher:sharp` | proposition: Charging the information about the rule | proved; computed | split/teacher Lemma 5.1, Prop 5.2, Remark 2.6 (a2); split/verify-teacher \S6, \S8; checks t4(B), t6(B), rB7(B) |
+| 8.13 | `prop:teacher:rates` | proposition: A window for every flip rate below $0.1233$, asymptotically | proved; computed | split/teacher Prop 5.3; split/verify-teacher \S9; checks t4(A), t6(A), rB7(A), v5(A),(B) |
+| 8.14 | `q:teacher:open` | question: other models, flip rates, samples and schedules | open | steeper \S2.6; split/teacher \S5 ``What remains open'', Prop 3.3(c), Prop 3.6; split synthesis \S6 items 8--10, 12, 14 |
+| 3 | `tab:teacher:numbers` | table:  |  |  |
 
-### 1.8 Framing files (framing editor)
+### `limits.tex`
 
-| id | statement | status | source | section |
+| no. | id | kind: title | status | source |
 |---|---|---|---|---|
-| tab:intro:claims | Hänni's specific claims (grokking note, messy notes, LessWrong thread) with verdicts and where | table (summarises ledger rows) | St §5 | intro |
+| 9.1 | `prop:limits:envelope` | proposition: Error envelopes | proved; computed | steeper Prop 2.17 (T5 Prop 4.5, all-hypothesis form); split/teacher Prop 2.1(d), Prop 4.1; split/verify-teacher \S2; check c7(B); referee q4(C) |
+| 9.2 | `prop:limits:rateblind` | proposition: Rate blindness | proved; computed | steeper Prop 2.11; split/teacher Prop 4.2; final-check row 18; checks c3, c6(A) |
+| 9.3 | `prop:limits:separable` | proposition: Separable components | proved; computed | steeper Prop 2.12 (T5 Thm 3.2, Thm 4.1); check c5(a) |
+| 9.4 | `rem:limits:hull` | remark: What a hull cannot see | remark | split/teacher Remark 4.3; steeper Props 2.12--2.15 |
+| 9.5 | `q:limits:open` | question: structured errors and the choice of $c$ | open | steeper \S2.6; split/notes-final \S6 items 11, 15 |
 
----
+### `computable.tex`
 
-## 2. Cross-track conflicts (as they affect Paper 2)
+| no. | id | kind: title | status | source |
+|---|---|---|---|---|
+| 10.1 | `prop:related:computable` | proposition: Computable product classes | proved; the examples are remarks | steeper Prop 4.4; split/iid Cor 6.2, Def 1.1; split/kink \S5.0 |
+| 10.2 | `rem:computable:examples` | remark: Examples | remark | steeper Prop 4.4 |
+| 10.3 | `prop:related:computability` | proposition: Computability of the steeper predictor | proved | steeper Prop 4.5 |
+| 10.4 | `rem:related:nn` | remark: Neural-network Bayes | remark | steeper Rem 4.7; split/iid Def 1.1, Cor 6.2 |
+| 10.5 | `q:related:open` | question: resource bounds and computability | open | steeper \S4.6 items 6, 7 |
 
-The full list is `../paper/CLAIMS.md` §2. Items specific to Paper 2:
+### `discussion.tex`
 
-| # | conflict | resolution |
-|---|---|---|
-| P1 | **Notation swaps** relative to St: $N\leftrightarrow n$, $n_N\to d_n$, $c_0,c_1\to\kappa_0,\kappa_1$, $m^*\to\delta^*$, $\Pi_\times\to\mathcal H_\times$, $T(\pi)\to\lev(\pi)$, $M_1,M_2\to\Phi_1,\Phi_2$, slack $\eta\to\epsilon$, guard noise $\eta\to\epsilon_G$, guard step count $M\to n_{\rm st}$, $L_\lambda\to\ell^*_\lambda$, sufficiency slack $c\to b$, set models $S\to A$, $\pi$ (input law, Props 2.13, 2.15) $\to\mu$, St Prop 3.3's $\mu\to\nu$, St Thm 1(d)'s $\mu\to\Prob$, Hellinger $\mathrm H^2\to\Hel$. | `../paper/NOTATION.md` §4 items 2, 4, 5, 7, 10, 13–18. Every displayed formula of St §2–§3 changes; writers re-derive each displayed formula after renaming. |
-| P2 | **Hashing citation**: St cites "F Prop 4.4 (hashing for fair coins)". | Hashing is Paper 1 `rem:versions:hashing` (F Rem 4.4a); the tape-length bound is Paper 1 `prop:versions:tape` (F Prop 4.4, the foundations referee's Prop R1), which `lem:split:stream` adapts. (Paper 1 C11.) |
-| P3 | **St cites F and Hi in their `notes.md` numbering.** | All cited numbers survive in the final notes (F Defs 2.1, 2.5, 4.1; Thms 3.2, 3.4, 4.2, 6.1, 6.5; Props 3.3(a), 4.5, 6.8, 7.2, 7.3(c); Cor 6.6; Problem 3.6; Hi Lemma 4.1, Thm 4.2, Cor 4.3). Cite them through Paper 1's results by name. |
-| P4 | **"λ = 1 costs at most $K(\dom D)$, unboundedly"** (St §1.6–§1.8). | Sharpened by F Rem 4.5a, Prop 4.4: on shared-coin data the gap is at most $\Kpad(k+1)+O(1)$ (Paper 1 C12). Quote both in `rem:absorb:why`. |
-| P5 | **$M_H\asymp\xi$** in St. | Read as the universality of $\MH$ only; the identification with Hutter's ξ is known but unverified and unused (Paper 1 C13). |
-| P6 | **Per-input vs per-query randomness.** | Paper 2 uses per-input (product laws on data sets); with distinct inputs it coincides with the per-query mixture (Paper 1 `prop:learn:perquery`(a)). |
-| P7 | **Ex Prop 4.6's machine** shares the flip rate across inputs (a mixture of product laws, not a product law). | In $\mathcal H_\times$ the same bound holds up to $O(\log n)$ (St §8.3, proved). Mention only if Paper 2 cites Ex Prop 4.6. |
-| P8 | **Lemma 3.2 (hashing) vs Lemma 3.2′ (stream prefixes).** | Main text uses `lem:split:stream`; `lem:split:hash` is the appendix alternative for Theorem 3(iv). (Paper 1 C23.) |
-| P9 | **SI encoding in Theorem 1(d)** (fixed-length blocks) vs Paper 1's prefix code. | Stated locally in `thm:absorb:absorption`(d); no conflict with Paper 1's results, which hold for any prefix-free block code. (Paper 1 C9.) |
-| P10 | **Corrections within St** of its earlier files: Lemma 1.2(iv) "iff" (refuted, counterexample); the reading of Prop 3.5 (refuted); Lemma 2.3's normaliser; Prop 2.8's $\epsilon'$ (needs $\hat L'$); Prop 2.13's "although the teacher never erred"; Prop 3.8's $O(\log n)\to O(\log d)$; Theorem 3 extended from dyadic to all computable samplers. | State the corrected forms; keep the refuted readings as refuted where the ledger says so (`lem:setup:hull`, `prop:algstat:set`). |
-| P11 | **Corrections relative to T5**: the $d=20$ window ($c_{\rm hi}=0.0114$ rigorous, against T5's heuristic 0.049); Lemma 2.2c holds for semimeasures (T5's Lemma 2.5c for computable hypotheses). | `rem:related:t5`. |
-| P12 | **Zhu–Srebro rate.** The first referee read $\lambda_m\asymp\sqrt m$ as their recommended rate; a secondary summary gives $1\ll\lambda_m\ll m/\log m$; neither is confirmed against the paper. | Do not state a rate from their paper; say "λ must grow with the sample size", per their abstracts. |
-| P13 | **Example 3.4** uses an assigned $\ell_U=12$ and does not satisfy (Dom). | Present it as an illustration of Theorem 5's mechanism, not an instance. |
-| P14 | **Context's citations of St** (Props 2.16, 4.1, 4.4, Rem 4.7). | Unchanged in content; Paper 1 cites them by name via `\citet{claudeSFI2026steeper}`. |
+| no. | id | kind: title | status | source |
+|---|---|---|---|---|
+| 4 | `tab:discussion:reasons` | table:  |  |  |
 
----
+### `app-setup.tex`
 
-## 3. Answers to Hänni's requests (Paper 2's share)
+| no. | id | kind: title | status | source |
+|---|---|---|---|---|
+| A.1 | `rem:setup:hullconverse` | remark: The converse in (iv) | proved; computed | steeper Lemma 1.2, refuted strengthening of (iv); check c6(F) |
 
-**R6. "The trick idea for, in a specific case, not learning your teacher's mistakes via a stronger simplicity prior" (and the LessWrong thread).**
-* His claim that a universal hypothesis absorbs everything in the sequence case: **confirmed** (`thm:absorb:absorption`(a),(c),(d); `prop:limits:plain`(c)).
-* "This pathology is maybe not present in function solomonoff … if each input has to sample its own random bits": **confirmed** for absorption (`prop:absorb:pricing`, `cor:absorb:nouniversal`); **qualified**: it returns with labelled history (`prop:absorb:history`), and private randomness cannot express shared latent causes (`prop:absorb:price`).
-* His example (100-bit model, errors on a $2^{-10}$ fraction costing 10,000 bits; "the good model could be a vertex … picked out by some loss"): **confirmed for error rules incompressible relative to the model** (`thm:teacher:main`, `tab:teacher:numbers`); **corrected**: refuted as a statement about every error rule with that density and description length (`prop:limits:envelope`); open in general (`q:limits:open`). He called the example "somewhat cherry-picked".
-* "Maybe I'm just failing to construct the right universal hypothesis": **settled** for incompressible error rules (Theorem 2 quantifies over all product hypotheses); for structured rules the dangerous hypotheses are envelopes, not universal ones.
-* His three hypotheses and numbers: arithmetic **confirmed** (`rem:teacher:hanni`); Version 2 realised rigorously ($L_S=11{,}710$ bits); Version 1 realised in population form (`ex:teacher:version1`: λ ∈ (9.77, 58.0] at $n=10^4$, κ = 0, against his (10, 100)).
-* "We will need to increase the hypothesis term coefficient as the data set size increases": **confirmed**: the window is in $c=\lambda/n$, and every schedule with $\lambda_n/n\to0$ learns the errors (`prop:limits:plain`(b), `rem:limits:schedule`); a vertex is needed, not just a boundary point (`lem:setup:hull`).
-* "Alternatively: just set an absolute bound on model complexity … in a sense equivalent": **confirmed at vertices**, not elsewhere (`lem:setup:hull`(iv)).
-* "Some other pathology is present": **yes**: rate blindness (`prop:limits:rateblind`, `lem:limits:robust`), error envelopes, guard erosion, non-identifiability of λ, input-law dependence, block universality, confident wrong extrapolation (`prop:limits:*`, `prop:absorb:history`).
+### `app-absorb.tex`
 
-**R7. "A preference for a simple sampler over a model where the sampled bits are filled in (Solomonoff doesn't have a preference here, both get similar posterior)."**
-* "Both get similar posterior" at λ = 1: **confirmed** with explicit factors, for every computable sampler, in SFI and in SI (`thm:split:lambda1`, `prop:split:si`).
-* A stronger simplicity prior gives a preference for the sampler in SFI: **confirmed** for every fixed λ > 1 in every countable product class, in the limited sense of `rem:split:reading` (`thm:split:private`); in SI and in shared-randomness SFI the universal mixture wins instead (`thm:split:shared`).
-* "Look at how many bits of entropy are left given the hypothesis … a point at which the derivative changes … not in the seq case (1 bit paying for 1 bit)": **confirmed**: the product structure function has a kink at the simple model for every flip rate below 1/4, while the set version lies on the sufficiency line (`prop:algstat:parity`).
+| no. | id | kind: title | status | source |
+|---|---|---|---|---|
+| B.1 | `ex:split:noisyparity` | example: Noisy parity, full table: an illustration | computed; illustration | steeper Ex 3.4; check c4(C); referee q1(J) |
+| B.2 | `rem:absorb:condsemi` | remark: The universal conditional semimeasure never learns | proved | steeper Rem 1.5 (T5 Thm 2.4) |
+| B.3 | `rem:absorb:why` | remark: Why private randomness is what matters | remark; cites proved results | steeper \S1.6; foundations Thm 4.2, Prop 4.5, Rem 4.5a |
+| B.4 | `prop:absorb:price` | proposition: The price of private randomness | proved; computed | steeper Prop 1.7; check c6(D) |
+| B.5 | `prop:absorb:history` | proposition: Labelled history restores universality | proved; computed | steeper Prop 4.1 (T5 Prop 2.6); check c5(d) |
+| B.6 | `prop:absorb:inputs` | proposition: A history of inputs only | proved | steeper Prop 4.2 |
 
-**The absorption objection** (a standard point: a universal distribution, taken as a hypothesis, absorbs everything under a steeper penalty): answered in `rem:absorb:wyeth`: correct for SI and for SFI with shared randomness, including $\MF$ (`thm:absorb:absorption`); unavailable in the product class (`cor:absorb:nouniversal`); the restriction has a price (`prop:absorb:price`) and a boundary (`prop:absorb:history`); the algorithmic-statistics reading is `prop:algstat:parity`.
+### `app-kinks.tex`
 
-**"Have people not already considered this for solving the model + data split problem?"** Partly yes (`rem:related:mdl`, `rem:algstat:restricted`, `rem:related:new`): λ-weighted two-part MDL over classifier-plus-noise hypotheses (with the finding that bounded λ overfits), λ > 1 two-part codes in MDL theory, and restricted model families in algorithmic statistics. Not found at snippet level: the universal-hypothesis question, the private/shared contrast, the teacher's-mistakes reading.
+| no. | id | kind: title | status | source |
+|---|---|---|---|---|
+| C.1 | `lem:kink:secant` | lemma: Lines against secants | proved | split/teacher Def 1.4, Lemma 1.5; split/verify-teacher \S3 |
+| C.2 | `prop:algstat:product` | proposition: Steeper two-part codes over products | proved | steeper Prop 3.6; split/kink Cor 3.3 |
 
-**R8 (split into papers).** This is the second of two papers; the first is `claudeSFI2026fundamentals`, which summarises this one in its section "Steeper simplicity priors".
+### `app-recovery.tex`
+
+| no. | id | kind: title | status | source |
+|---|---|---|---|---|
+| D.1 | `lem:recovery:ratios` | lemma: Likelihood ratios | proved; strong law and Ville's inequality known | split/iid Lemmas 2.1, 2.2(b),(c); split/kink Lemma 5.1 (pq); split/verify-kink \S2.1 |
+| D.2 | `prop:recovery:necessity` | proposition: What is necessary | proved | split/iid Props 4.2, 4.3, 4.4(a),(b), Remark 4.5; split/verify-iid \S1.5 |
+| D.3 | `rem:recovery:frozentable` | remark: Frozen labels on a finite domain | proved | split/iid Cor 6.1(vi); split/verify-iid \S1.10 |
+| D.4 | `prop:recovery:beyond` | proposition: Adaptive inputs, misspecification, $\lambda=cn$ | proved | split/iid Props 7.2(b), 7.3(iii$'$), 3.4(a)--(c); split/verify-iid \S1.3, \S1.8 |
+
+### `app-split.tex`
+
+| no. | id | kind: title | status | source |
+|---|---|---|---|---|
+| D.5 | `lem:split:stream` | lemma: Fill-ins from stored stream prefixes | proved; computed | steeper Lemma 3.2$'$ (adapts foundations Prop 4.4); check c7(A) |
+| D.6 | `prop:split:si` | proposition: SI at $\lambda=1$ | proved; (iii) known | steeper Prop 3.3 |
+| D.7 | `rem:split:siprograms` | remark: No split in SI's program representation | proved | steeper Rem 4.3 |
+
+### `app-parity.tex`
+
+| no. | id | kind: title | status | source |
+|---|---|---|---|---|
+| E.1 | `prop:algstat:set` | proposition: Steeper two-part codes over sets | proved; a natural reading refuted | steeper Prop 3.5 |
+| E.2 | `rem:algstat:near1` | remark: $\lambda$ near $1$ | remark | steeper Prop 3.5, refuted reading |
+| E.3 | `prop:algstat:coarse` | proposition: Sets from products | proved for computable hypotheses; that it is the standard set--distribution translation is believed (known; unverified) | steeper Prop 3.7 |
+| E.4 | `q:algstat:lsc` | question: lower-semicomputable product models | open | steeper Prop 3.7, open part |
+| E.5 | `prop:algstat:parity` | proposition: Sets against products | proved; computed | steeper Prop 3.8 (T5 Thm 2.5); split/kink Props 4.1, 4.4, Cor 4.3; checks c2(c), c4(C), c7(C) |
+| 5 | `tab:parity:ranges` | table:  |  |  |
+
+### `app-teacher.tex`
+
+| no. | id | kind: title | status | source |
+|---|---|---|---|---|
+| F.1 | `prop:teacher:frozen` | proposition: Frozen noise, counted once or per query | proved | split/teacher Prop 3.7; split/verify-teacher \S7 |
+| F.2 | `prop:limits:plain` | proposition: Plain Bayes, MDL and SI learn the errors | proved; computed | steeper Props 2.9, 2.10; checks c3, c6(G), c7(G) |
+| F.3 | `lem:teacher:finite` | lemma: Finite sample | proved | steeper Lemma 2.6 (adapts T5 Lemma 1.2) |
+| F.4 | `ex:teacher:version1` | example: The total-bits version of the example | proved (instance of \cref{thm:teacher:main}); computed | steeper Ex 2.7a; checks c6(C), c6(H) |
+| F.5 | `prop:teacher:concentration` | proposition: The power posterior concentrates on near-minimisers | proved; computed | steeper Prop 2.8; checks c5(e), c7(F); referee q1(F) |
+| 6 | `tab:teacher:rates` | table:  |  |  |
+
+### `app-limits.tex`
+
+| no. | id | kind: title | status | source |
+|---|---|---|---|---|
+| G.1 | `lem:limits:robust` | lemma: The criterion is robust in the machine constant | proved; computed | steeper Lemma 2.11a; check c6(A) |
+| G.2 | `prop:limits:guard` | proposition: Guard erosion | proved; computed | steeper Prop 2.13 (T5 Prop 4.4); checks c5(b), c6(G), c7(E); referee q1(I) |
+| G.3 | `prop:limits:noident` | proposition: $\lambda$ cannot be chosen from imitation data | proved; computed; (i) known | steeper Prop 2.14 (T5 Thm 4.3); check c5(c) |
+| G.4 | `prop:limits:inputlaw` | proposition: The selection depends on the input law | proved | steeper Prop 2.15 |
+| G.5 | `prop:limits:ood` | proposition: Steeper simplicity and unseen properties | proved | steeper Prop 2.16 |
+
+### `app-related.tex`
+
+(no theorem-like environments)
+
+
+## 3. Answers to the author's questions (Paper 2's share), updated
+
+* **"A nice theorem saying model + data splits work, at least in some contexts."** `thm:recovery:main` (Theorem A of the introduction): per query, exact for every $1\le\lambda_n=o(n)$, with a margin rate for fixed λ > 1; on one data set, `cor:kink:split` (Theorem B) at every kink; the noisy parity's full table has such a kink (`prop:parity:kink`, `prop:parity:range`).
+* **Sampler versus fill-ins.** At λ = 1 similar posterior weight on a data set (`thm:split:lambda1`, `prop:split:si`); per query λ = 1 has the same limit, but no class-free rate (`prop:recovery:lambda1`); for fixed λ > 1 fill-ins have exponentially small posterior mass at every n (`thm:recovery:main`(c), `thm:split:private`(iii)); with shared randomness or in SI, no long sampler is selected (`thm:split:shared`).
+* **The teacher's mistakes.** For incompressible product-form error rules at $p<0.05596$, every near-optimal hypothesis knows the parity and not the errors, for $c\in(2^{-m},c_{\rm hi})$ (`thm:teacher:main`); "the good model is a hull vertex on the whole window" fails in explicit rate codes (`rem:teacher:selected`); λ must grow with n because of the reuse factor (`lem:teacher:reuse`), while noise needs only a fixed λ > 1; not for every rule with the same density and description length (`prop:limits:envelope`).
+* **Change of slope of the entropy left against hypothesis length.** Made precise as a kink (`def:kink:kinks`, `cor:kink:split`, `thm:kink:converse`); present for product models of the noisy parity at every flip rate below 1/4 for large d, absent for set models (`prop:parity:kink`, `prop:parity:range`(iii), `prop:parity:sets`).
+* **Absolute complexity bound.** Every penalised minimiser solves a length-bounded problem, not conversely (`lem:setup:hull`(iv), `rem:setup:hullconverse`).
+* **Prior work.** λ-weighted two-part MDL in noisy classification, two-part MDL for density estimation (Barron and Cover, "studied by" only), restricted model families (`rem:related:mdl`, `sec:related`, `rem:related:new`).
+
+The notation swaps and corrections relative to the steeper record of the base version (former §2, P1–P14) are in the base file (`git show dcb3a3a3:solomonoff-function-induction/paper-steeper/CLAIMS.md`); the restructure's notation is `PLAN.md` §4.
