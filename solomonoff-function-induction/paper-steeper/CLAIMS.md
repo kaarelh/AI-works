@@ -1,21 +1,21 @@
-# Claims ledger: Paper 2 (steeper simplicity priors in SFI), after the restructure of 2026-10-13
+# Claims ledger: Paper 2 (steeper simplicity priors in SFI), after the restructure and its fix round of 2026-10-13
 
 > **Binding notes (unchanged).** The absorption objection is a standard point: never "Wyeth's objection"; the label `rem:absorb:wyeth` stays, its printed title is "Answer to the absorption objection". The paper presents the material for the first time, in the "we" voice; the author's notes are credited only in at most five neutral footnotes (now two: the proposal in `intro.tex`, the change of slope in `kinks.tex`) and in the acknowledgements (`research/paper-review/REFRAME.md`). Statuses are rendered in prose and the `\status{}`/`\src{}` calls print nothing (`research/paper-review/DECISIONS.md` §A1–§A2). Computed numbers stand outside statements, introduced by "a direct computation (code in the accompanying repository) gives …"; κ = 0 numbers are illustrations.
 
-Binding plan of the restructure: `research/paper-review/restructure/PLAN.md` (labels, notation §4, statuses §5). Sources of claims: the refereed record `research/tracks/steeper/notes-final.md` ("steeper") for the base material, and for the new material the sub-track records `research/tracks/split/{iid,kink,teacher}/notes-final.md` with the verification reports `research/tracks/split/verify-{iid,kink,teacher}.md`, which override the synthesis `research/tracks/split/notes-final.md` where they correct it. Writer logs: `research/paper-review/restructure/log-W1.md` … `log-W6.md`, `log-front.md`.
+Binding plan of the restructure: `research/paper-review/restructure/PLAN.md` (labels, notation §4, statuses §5). Sources of claims: the refereed record `research/tracks/steeper/notes-final.md` ("steeper") for the base material, and for the new material the sub-track records `research/tracks/split/{iid,kink,teacher}/notes-final.md` with the verification reports `research/tracks/split/verify-{iid,kink,teacher}.md`, which override the synthesis `research/tracks/split/notes-final.md` where they correct it. Writer logs: `research/paper-review/restructure/log-W1.md` … `log-W6.md`, `log-front.md`. Fix round: `research/paper-review/restructure/DECISIONS-restructure.md` and the fix lists `fix-W1.json` … `fix-W6.json`, `fix-FRONT.json`; each log ends with a section on the fixes.
 
 ## 1. What the paper claims, in one paragraph per reason
 
-* **Precondition: absorption** (§4). In every class that contains its own mixture (SI, SFI with shared randomness, the weak and the history-aware classes) every λ-MAP is shorter than $\ell^*_\lambda$, a fixed-λ learner reproduces a deterministic teacher's errors, and no sampler longer than $\ell^*_\lambda$ is selected (`thm:absorb:absorption`, `thm:split:shared`); no product hypothesis is universal (`cor:absorb:nouniversal`), at a price on shared coins and up to labelled history (`prop:absorb:price`, `prop:absorb:history`).
-* **Common geometry: kinks** (§5). λ-MAPs on one data set are read off the hull (`lem:setup:hull`); one kink lemma, data and population readings (`lem:kink:main`); the split on one data set and its converse (`cor:kink:split`, `thm:kink:converse`); a universal member flattens every kink (`prop:kink:universal`).
-* **First and main reason: the model–randomness split** (§6, §7). Per query (PQ), every $\lambda_n$-MAP with $1\le\lambda_n=o(n)$ is eventually a shortest program equivalent to the sampler, with a rate for fixed λ > 1 that depends on the class only through a margin, and no such rate at λ = 1 (`thm:recovery:main`, `prop:recovery:lambda1`, `prop:recovery:necessity`); the sample kink (`thm:recovery:kink`); frozen labels allow only identification on the run (`prop:recovery:frozen`, `thm:split:private`(iv)); λ = 1 on one data set (`thm:split:lambda1`). The full table of the noisy parity has a product kink at the parity, set models have none (`prop:parity:kink`, `prop:parity:range`, `prop:parity:sets`).
-* **Second reason: the teacher's mistakes** (§8, §9). The kink lemma with right slope $2^{-m}$ gives the teacher theorem over all product hypotheses (`prop:teacher:kinks`, `thm:teacher:main`); the reuse factor explains why λ ∝ n is needed (`lem:teacher:reuse`, `prop:teacher:schedules`, `prop:limits:plain`); full tables for every m (`cor:teacher:fulltable`); windows below 0.1233 asymptotically (`prop:teacher:sharp`, `prop:teacher:rates`). Structured rules add a second kink and defeat the window (`prop:limits:envelope`, `prop:limits:rateblind`, `prop:limits:separable`).
+* **Precondition: absorption** (§4). In every class that contains its own mixture (SI, SFI with shared randomness, the weak and the history-aware classes) every λ-MAP is shorter than $\ell^*_\lambda$, a fixed-λ learner reproduces a deterministic teacher's errors, and no sampler longer than $\ell^*_\lambda$ is selected (`thm:absorb:absorption`, `thm:split:shared`); no product hypothesis is universal (`cor:absorb:nouniversal`, from `prop:absorb:pricing` in App B), at a price on randomness shared by several inputs (about a factor min(λ, 2)) and up to labelled history (`prop:absorb:price`, `prop:absorb:history`).
+* **Common geometry: kinks** (§5). λ-MAPs on one data set are read off the hull (`lem:setup:hull`); one kink lemma, data and population readings (`lem:kink:main`); the split on one data set and its converse (`cor:kink:split`, `thm:kink:converse`); a universal member flattens every kink far beyond its own length (`prop:kink:universal`).
+* **First and main reason: the model–randomness split** (§6, §7). Per query (PQ), every $\lambda_n$-MAP with $1\le\lambda_n=o(n)$ is eventually a shortest program equivalent to the sampler, with a rate for fixed λ > 1 that depends on the class only through a margin, and no such rate at λ = 1 (`thm:recovery:main`, `prop:recovery:lambda1`, `prop:recovery:necessity`); the sample kink, with the Ville deficiency in place of the sufficiency slack (`thm:recovery:kink`); with frozen labels no procedure recovers every sampler, and every λ ≥ 1 eventually selects programs equivalent to the sampler on the run, with summable Hellinger gaps along the queried inputs (`prop:recovery:frozen`, `thm:split:private`(iv)); for fixed λ > 1 no λ-MAP is a fill-in once $L_n(\nu)>\lambda(k+\delta^*)/(\lambda-1)$ (`rem:split:reading`); λ = 1 on one data set (`thm:split:lambda1`). The full table of the noisy parity has a product kink at the parity (for large d, typical error sets and dyadic flip rates below 1/4 every fixed λ > 1 selects "parity plus noise"), and set models have no steep one (`prop:parity:kink`, `prop:parity:range`(iii), `prop:parity:sets`).
+* **Second reason: the teacher's mistakes** (§8, §9). The kink lemma with right slope $2^{-m}$ gives the teacher theorem over all product hypotheses (`prop:teacher:kinks`, `thm:teacher:main`); the reuse factor explains why λ ∝ n is needed (`lem:teacher:reuse`, `prop:teacher:schedules`, `prop:limits:plain`); full tables for every m (`cor:teacher:fulltable`); windows below $p_1=0.1233\ldots$ asymptotically (`prop:teacher:rates`, with `prop:teacher:sharp` in App F); the bounds of the running example are rounded safely ($e\le0.200$ at κ = 0, 0.274 at κ = 30; window $(9.54\cdot10^{-7},8.06\cdot10^{-3}]$ at κ = 0 and $(9.54\cdot10^{-7},3.65\cdot10^{-3}]$ at κ = 30). Structured rules add a second kink and defeat the window (`prop:limits:envelope`, `prop:limits:rateblind`, `prop:limits:separable`).
 
-**Flip-rate decimals** (verify-teacher §9). $G_1>H(p)$ holds exactly for $p<p_0=0.0559643\ldots$; the sufficient decimal printed everywhere (abstract, introduction, Paper 1 `sec:steep`) is $p<0.05596$, not the base's 0.056, which is false for a few dyadic rule sizes now that $s_0$ is arbitrary. The asymptotic junta window needs $1-\log(\frac32-p)>H(p)$, i.e. $p<p_1=0.1233072\ldots$; printed as $p\le0.1233$.
+**Flip-rate decimals** (verify-teacher §9). $G_1>H(p)$ holds exactly for $p<p_0=0.0559643\ldots$; the sufficient decimal printed everywhere (abstract, introduction, Paper 1 `sec:steep`) is $p<0.05596$, not the base's 0.056, which is false for a few dyadic rule sizes now that $s_0$ is arbitrary. The asymptotic junta window needs $1-\log(\frac32-p)>H(p)$, i.e. $p<p_1=0.1233072\ldots$; printed as $p\le0.1233$ where a sufficient condition is meant, and as $p_1\le p$ for the lower end of the open range (`q:teacher:open`(b), open problem (3)).
 
-## 2. Ledger (generated from the sources in input order; numbers from the build of 2026-10-13)
+## 2. Ledger (generated from the sources in input order; numbers from the build after the fix round of 2026-10-13)
 
-Status and source are the environment's `\status{}` and `\src{}`; definitions carry `\src{}` only. Tables are listed after the environments of their file.
+Status and source are the environment's `\status{}` and `\src{}`; definitions carry `\src{}` only. Tables are listed after the environments of their file. Moved in the fix round (DECISIONS-restructure §3): `lem:setup:basic` (§3 → App A), `prop:absorb:pricing` (§4 → App B), `rem:recovery:window` (§6 → App D), `prop:teacher:sharp` (§8 → App F), the text of §9.3 with `prop:limits:ood` already in App G (`sec:limits:ood` now an alias on `app:limits:ood`), `prop:related:computability` (§10 → App H).
 
 ### `intro.tex`
 
@@ -32,15 +32,14 @@ Status and source are the environment's `\status{}` and `\src{}`; definitions ca
 | no. | id | kind: title | status | source |
 |---|---|---|---|---|
 | 3.1 | `def:setup:data` | definition: Data |  | steeper \S1.1; split/iid Defs 1.1, 1.3; split/teacher \S1.0 |
-| 3.2 | `rem:setup:objects` | remark: Which object; repeated inputs | remark | split/iid Remark 1.4(a),(b),(d); split/teacher \S1.0 |
+| 3.2 | `rem:setup:objects` | remark: Repeated inputs | remark | split/iid Remark 1.4(a),(b),(d); split/teacher \S1.0 |
 | 3.3 | `def:setup:product` | definition: Product hypothesis; private randomness |  | steeper Def 1.1 |
 | 3.4 | `def:setup:shared` | definition: Shared hypothesis |  | steeper Def 1.2 |
 | 3.5 | `def:setup:class` | definition: Hypothesis class |  | steeper Def 1.3, \S1.2; split/iid Def 1.1 |
 | 3.6 | `def:setup:objectives` | definition: Steeper objectives |  | steeper \S1.3 |
-| 3.7 | `lem:setup:basic` | lemma: Basic properties | proved | steeper Lemma 1.1 |
-| 3.8 | `rem:setup:persample` | remark: Per-sample form; $\lambda=cn$ gives batch objectives | remark | steeper \S1.3 |
-| 3.9 | `lem:setup:hull` | lemma: Hull lemma | proved; computed; strengthening of (iv) refuted | steeper Lemma 1.2 (T5 Lemma 3.1); split/kink Thms 2.1, 2.2, Prop 2.3; checks c5(a), c6(F), k1, rB1 |
-| 3.10 | `lem:setup:coding` | lemma: Coding bound | proved | steeper Lemma 1.6; split/kink Remark 2.5, Cor 3.3(a) |
+| 3.7 | `rem:setup:persample` | remark: Per-sample form; $\lambda=cn$ gives batch objectives | remark | steeper \S1.3 |
+| 3.8 | `lem:setup:hull` | lemma: Hull lemma | proved; computed; strengthening of (iv) refuted | steeper Lemma 1.2 (T5 Lemma 3.1); split/kink Thms 2.1, 2.2, Prop 2.3; checks c5(a), c6(F), k1, rB1 |
+| 3.9 | `lem:setup:coding` | lemma: Coding bound | proved | steeper Lemma 1.6; split/kink Remark 2.5, Cor 3.3(a) |
 
 ### `absorb.tex`
 
@@ -50,10 +49,9 @@ Status and source are the environment's `\status{}` and `\src{}`; definitions ca
 | 4.2 | `thm:absorb:absorption` | theorem: Absorption | proved | steeper Thm 1 |
 | 4.3 | `rem:absorb:reading` | remark: Reading | remark; known | steeper remarks after Thm 1 |
 | 4.4 | `thm:split:shared` | theorem: SI, or SFI with shared randomness, $\lambda>1$ | proved; computed | steeper Thm 5; split/kink Prop 3.5; check c4(C); referee r4, q4(A) |
-| 4.5 | `prop:absorb:pricing` | proposition: Per-input pricing | proved; computed | steeper Prop 1.3 (T5 Thm 2.1, Prop 2.2); check c2(a); referee r2 |
-| 4.6 | `cor:absorb:nouniversal` | corollary: No universal product hypothesis | proved | steeper Cor 1.4 |
-| 4.7 | `rem:absorb:wyeth` | remark: Answer to the absorption objection | remark; cites proved results | steeper \S1.8 |
-| 4.8 | `q:absorb:shared` | question: shared hypotheses | open | steeper \S1.4; companion paper q:setting:rpf |
+| 4.5 | `cor:absorb:nouniversal` | corollary: No universal product hypothesis | proved | steeper Cor 1.4 |
+| 4.6 | `rem:absorb:wyeth` | remark: Answer to the absorption objection | remark; cites proved results | steeper \S1.8 |
+| 4.7 | `q:absorb:shared` | question: shared hypotheses | open | steeper \S1.4; companion paper q:setting:rpf |
 
 ### `kinks.tex`
 
@@ -65,7 +63,7 @@ Status and source are the environment's `\status{}` and `\src{}`; definitions ca
 | 5.4 | `cor:kink:locate` | corollary: Kinks locate the $\lambda$-MAPs | proved | split/kink Thm 3.2, Remark 3.2$'$; split/verify-kink \S6 |
 | 5.5 | `cor:kink:split` | corollary: The split on one data set | proved | split/kink Cor 3.3 |
 | 5.6 | `thm:kink:converse` | theorem: Stable MAP lengths occur only at kinks | proved | split/kink Thm 3.4 |
-| 5.7 | `prop:kink:universal` | proposition: A universal member flattens every kink | proved | split/kink Prop 3.5; split/verify-kink \S5 |
+| 5.7 | `prop:kink:universal` | proposition: A universal member flattens every kink far beyond its length | proved | split/kink Prop 3.5; split/verify-kink \S5 |
 | 5.8 | `rem:kink:reading` | remark: Reading | remark | split/kink \S6, Remark 3.6 |
 
 ### `recovery.tex`
@@ -79,13 +77,12 @@ Status and source are the environment's `\status{}` and `\src{}`; definitions ca
 | 6.5 | `rem:recovery:method` | remark: Method and literature | remark; known | split/iid \S3, remarks after Thm 3.1 |
 | 6.6 | `prop:recovery:lambda1` | proposition: $\lambda=1$ against $\lambda>1$ | proved; computed | split/iid Prop 5.1(a),(b),(b$'$), Prop 4.4(b), Thm 4.1(iv$'$); split/verify-iid \S1.4 |
 | 6.7 | `thm:recovery:kink` | theorem: A sample has a kink at the shortest equivalent length | proved | split/kink Lemmas 5.1--5.3, Thm 5.4, Cor 5.7(a),(d) (scheme (pq)); split/iid Lemma 8.1(i)--(iii); split/verify-kink \S2--\S3 |
-| 6.8 | `rem:recovery:window` | remark: The $\ell_0$ in the right window | proved; a natural strengthening refuted | split/iid Lemma 8.1(iv); split/verify-iid \S1.7 |
-| 6.9 | `cor:recovery:noisy` | corollary: Noisy computable functions | proved | split/iid Cor 6.1(i)--(v) |
-| 6.10 | `thm:split:private` | theorem: Private randomness; any input rule | proved; computed; Kakutani-type argument known | steeper Thm 4; split/iid Prop 3.3, Prop 7.2(a); split/verify-iid \S1.1, \S2 item 4; check c4(C); referee r4, q3(C) |
-| 6.11 | `prop:recovery:frozen` | proposition: Frozen labels | proved | split/iid Props 7.5, 7.6(b),(d) |
-| 6.12 | `thm:split:lambda1` | theorem: SFI at $\lambda=1$ | proved | steeper Thm 3 |
-| 6.13 | `rem:split:reading` | remark: What frozen labels give | remark | steeper \S3.3; split/iid Prop 3.3, Prop 7.5 |
-| 6.14 | `q:recovery:open` | question: Rates, frozen labels, misspecification | open | split/notes-final \S6 items 1--6; split/iid Props 4.3, 4.4, Conj 7.4; split/kink \S8 |
+| 6.8 | `cor:recovery:noisy` | corollary: Noisy computable functions | proved | split/iid Cor 6.1(i)--(v) |
+| 6.9 | `thm:split:private` | theorem: Private randomness; any input rule | proved; computed; Kakutani-type argument known | steeper Thm 4; split/iid Prop 3.3, Prop 7.2(a); split/verify-iid \S1.1, \S2 item 4; check c4(C); referee r4, q3(C) |
+| 6.10 | `prop:recovery:frozen` | proposition: Frozen labels | proved | split/iid Props 7.5, 7.6(b),(d) |
+| 6.11 | `thm:split:lambda1` | theorem: SFI at $\lambda=1$ | proved | steeper Thm 3 |
+| 6.12 | `rem:split:reading` | remark: What frozen labels give | remark | steeper \S3.3; split/iid Prop 3.3, Prop 7.5 |
+| 6.13 | `q:recovery:open` | question: rates, frozen labels, misspecification | open | split/notes-final \S6 items 1--6 (item 6: its first question only); split/iid Props 4.3, 4.4, \S7.4 (open for countable classes); split/kink \S8 |
 | 2 | `tab:recovery:times` | table:  |  |  |
 
 ### `parity.tex`
@@ -121,9 +118,8 @@ Status and source are the environment's `\status{}` and `\src{}`; definitions ca
 | 8.9 | `rem:teacher:selected` | remark: What is selected | remark; computed; a natural strengthening refuted | split/teacher \S2.1 ``What is selected''; checks t5(A),(B), rA1(A), rB3(A) |
 | 8.10 | `cor:teacher:fulltable` | corollary: Full truth tables: the window starts at the reuse factor | proved; computed | steeper Cor 2.5 (T5 Thm 3.5, Cor 3.5a); split/teacher Props 3.1(a),(b), 2.4(iii); checks c3, c7(H), t1(D), rB2(B) |
 | 8.11 | `cor:teacher:sampled` | corollary: Finite samples | proved; computed | steeper Cor 2.7, Lemma 2.6; check c3 |
-| 8.12 | `prop:teacher:sharp` | proposition: Charging the information about the rule | proved; computed | split/teacher Lemma 5.1, Prop 5.2, Remark 2.6 (a2); split/verify-teacher \S6, \S8; checks t4(B), t6(B), rB7(B) |
-| 8.13 | `prop:teacher:rates` | proposition: A window for every flip rate below $0.1233$, asymptotically | proved; computed | split/teacher Prop 5.3; split/verify-teacher \S9; checks t4(A), t6(A), rB7(A), v5(A),(B) |
-| 8.14 | `q:teacher:open` | question: other models, flip rates, samples and schedules | open | steeper \S2.6; split/teacher \S5 ``What remains open'', Prop 3.3(c), Prop 3.6; split synthesis \S6 items 8--10, 12, 14 |
+| 8.12 | `prop:teacher:rates` | proposition: A window for every flip rate below $p_1$, asymptotically | proved; computed | split/teacher Prop 5.3; split/verify-teacher \S9; checks t4(A), t6(A), rB7(A), v5(A),(B) |
+| 8.13 | `q:teacher:open` | question: other models, flip rates, samples and schedules | open | steeper \S2.6; split/teacher \S5 ``What remains open'', Prop 3.3(c), Prop 3.6; split synthesis \S6 items 8--10, 12, 14 |
 | 3 | `tab:teacher:numbers` | table:  |  |  |
 
 ### `limits.tex`
@@ -142,9 +138,8 @@ Status and source are the environment's `\status{}` and `\src{}`; definitions ca
 |---|---|---|---|---|
 | 10.1 | `prop:related:computable` | proposition: Computable product classes | proved; the examples are remarks | steeper Prop 4.4; split/iid Cor 6.2, Def 1.1; split/kink \S5.0 |
 | 10.2 | `rem:computable:examples` | remark: Examples | remark | steeper Prop 4.4 |
-| 10.3 | `prop:related:computability` | proposition: Computability of the steeper predictor | proved | steeper Prop 4.5 |
-| 10.4 | `rem:related:nn` | remark: Neural-network Bayes | remark | steeper Rem 4.7; split/iid Def 1.1, Cor 6.2 |
-| 10.5 | `q:related:open` | question: resource bounds and computability | open | steeper \S4.6 items 6, 7 |
+| 10.3 | `rem:related:nn` | remark: Neural-network Bayes | remark | steeper Rem 4.7; split/iid Def 1.1, Cor 6.2 |
+| 10.4 | `q:related:open` | question: resource bounds and computability | open | steeper \S4.6 items 6, 7 |
 
 ### `discussion.tex`
 
@@ -156,18 +151,20 @@ Status and source are the environment's `\status{}` and `\src{}`; definitions ca
 
 | no. | id | kind: title | status | source |
 |---|---|---|---|---|
-| A.1 | `rem:setup:hullconverse` | remark: The converse in (iv) | proved; computed | steeper Lemma 1.2, refuted strengthening of (iv); check c6(F) |
+| A.1 | `lem:setup:basic` | lemma: Basic properties | proved | steeper Lemma 1.1 |
+| A.2 | `rem:setup:hullconverse` | remark: The converse in (iv) | proved; computed | steeper Lemma 1.2, refuted strengthening of (iv); check c6(F) |
 
 ### `app-absorb.tex`
 
 | no. | id | kind: title | status | source |
 |---|---|---|---|---|
 | B.1 | `ex:split:noisyparity` | example: Noisy parity, full table: an illustration | computed; illustration | steeper Ex 3.4; check c4(C); referee q1(J) |
-| B.2 | `rem:absorb:condsemi` | remark: The universal conditional semimeasure never learns | proved | steeper Rem 1.5 (T5 Thm 2.4) |
-| B.3 | `rem:absorb:why` | remark: Why private randomness is what matters | remark; cites proved results | steeper \S1.6; foundations Thm 4.2, Prop 4.5, Rem 4.5a |
-| B.4 | `prop:absorb:price` | proposition: The price of private randomness | proved; computed | steeper Prop 1.7; check c6(D) |
-| B.5 | `prop:absorb:history` | proposition: Labelled history restores universality | proved; computed | steeper Prop 4.1 (T5 Prop 2.6); check c5(d) |
-| B.6 | `prop:absorb:inputs` | proposition: A history of inputs only | proved | steeper Prop 4.2 |
+| B.2 | `prop:absorb:pricing` | proposition: Per-input pricing | proved; computed | steeper Prop 1.3 (T5 Thm 2.1, Prop 2.2); check c2(a); referee r2 |
+| B.3 | `rem:absorb:condsemi` | remark: The universal conditional semimeasure never learns | proved | steeper Rem 1.5 (T5 Thm 2.4) |
+| B.4 | `rem:absorb:why` | remark: Why private randomness is what matters | remark; cites proved results | steeper \S1.6; foundations Thm 4.2, Prop 4.5, Rem 4.5a |
+| B.5 | `prop:absorb:price` | proposition: The price of private randomness | proved; computed | steeper Prop 1.7; check c6(D) |
+| B.6 | `prop:absorb:history` | proposition: Labelled history restores universality | proved; computed | steeper Prop 4.1 (T5 Prop 2.6); check c5(d) |
+| B.7 | `prop:absorb:inputs` | proposition: A history of inputs only | proved | steeper Prop 4.2 |
 
 ### `app-kinks.tex`
 
@@ -182,16 +179,17 @@ Status and source are the environment's `\status{}` and `\src{}`; definitions ca
 |---|---|---|---|---|
 | D.1 | `lem:recovery:ratios` | lemma: Likelihood ratios | proved; strong law and Ville's inequality known | split/iid Lemmas 2.1, 2.2(b),(c); split/kink Lemma 5.1 (pq); split/verify-kink \S2.1 |
 | D.2 | `prop:recovery:necessity` | proposition: What is necessary | proved | split/iid Props 4.2, 4.3, 4.4(a),(b), Remark 4.5; split/verify-iid \S1.5 |
-| D.3 | `rem:recovery:frozentable` | remark: Frozen labels on a finite domain | proved | split/iid Cor 6.1(vi); split/verify-iid \S1.10 |
-| D.4 | `prop:recovery:beyond` | proposition: Adaptive inputs, misspecification, $\lambda=cn$ | proved | split/iid Props 7.2(b), 7.3(iii$'$), 3.4(a)--(c); split/verify-iid \S1.3, \S1.8 |
+| D.3 | `rem:recovery:window` | remark: The $\ell_0$ in the right window | proved; a natural strengthening refuted | split/iid Lemma 8.1(iv); split/verify-iid \S1.7 |
+| D.4 | `rem:recovery:frozentable` | remark: Frozen labels on a finite domain | proved | split/iid Cor 6.1(vi); split/verify-iid \S1.10 |
+| D.5 | `prop:recovery:beyond` | proposition: Adaptive inputs, misspecification, $\lambda=cn$ | proved | split/iid Props 7.2(b), 7.3(iii$'$), 3.4(a)--(c); split/verify-iid \S1.3, \S1.8 |
 
 ### `app-split.tex`
 
 | no. | id | kind: title | status | source |
 |---|---|---|---|---|
-| D.5 | `lem:split:stream` | lemma: Fill-ins from stored stream prefixes | proved; computed | steeper Lemma 3.2$'$ (adapts foundations Prop 4.4); check c7(A) |
-| D.6 | `prop:split:si` | proposition: SI at $\lambda=1$ | proved; (iii) known | steeper Prop 3.3 |
-| D.7 | `rem:split:siprograms` | remark: No split in SI's program representation | proved | steeper Rem 4.3 |
+| D.6 | `lem:split:stream` | lemma: Fill-ins from stored stream prefixes | proved; computed | steeper Lemma 3.2$'$ (adapts foundations Prop 4.4); check c7(A) |
+| D.7 | `prop:split:si` | proposition: SI at $\lambda=1$ | proved; (iii) known | steeper Prop 3.3 |
+| D.8 | `rem:split:siprograms` | remark: No split in SI's program representation | proved | steeper Rem 4.3 |
 
 ### `app-parity.tex`
 
@@ -213,6 +211,7 @@ Status and source are the environment's `\status{}` and `\src{}`; definitions ca
 | F.3 | `lem:teacher:finite` | lemma: Finite sample | proved | steeper Lemma 2.6 (adapts T5 Lemma 1.2) |
 | F.4 | `ex:teacher:version1` | example: The total-bits version of the example | proved (instance of \cref{thm:teacher:main}); computed | steeper Ex 2.7a; checks c6(C), c6(H) |
 | F.5 | `prop:teacher:concentration` | proposition: The power posterior concentrates on near-minimisers | proved; computed | steeper Prop 2.8; checks c5(e), c7(F); referee q1(F) |
+| F.6 | `prop:teacher:sharp` | proposition: Charging the information about the rule | proved; computed | split/teacher Lemma 5.1, Prop 5.2, Remark 2.6 (a2); split/verify-teacher \S6, \S8; checks t4(B), t6(B), rB7(B) |
 | 6 | `tab:teacher:rates` | table:  |  |  |
 
 ### `app-limits.tex`
@@ -227,15 +226,16 @@ Status and source are the environment's `\status{}` and `\src{}`; definitions ca
 
 ### `app-related.tex`
 
-(no theorem-like environments)
-
+| no. | id | kind: title | status | source |
+|---|---|---|---|---|
+| H.1 | `prop:related:computability` | proposition: Computability of the steeper predictor | proved | steeper Prop 4.5 |
 
 ## 3. Answers to the author's questions (Paper 2's share), updated
 
 * **"A nice theorem saying model + data splits work, at least in some contexts."** `thm:recovery:main` (Theorem A of the introduction): per query, exact for every $1\le\lambda_n=o(n)$, with a margin rate for fixed λ > 1; on one data set, `cor:kink:split` (Theorem B) at every kink; the noisy parity's full table has such a kink (`prop:parity:kink`, `prop:parity:range`).
 * **Sampler versus fill-ins.** At λ = 1 similar posterior weight on a data set (`thm:split:lambda1`, `prop:split:si`); per query λ = 1 has the same limit, but no class-free rate (`prop:recovery:lambda1`); for fixed λ > 1 fill-ins have exponentially small posterior mass at every n (`thm:recovery:main`(c), `thm:split:private`(iii)); with shared randomness or in SI, no long sampler is selected (`thm:split:shared`).
 * **The teacher's mistakes.** For incompressible product-form error rules at $p<0.05596$, every near-optimal hypothesis knows the parity and not the errors, for $c\in(2^{-m},c_{\rm hi})$ (`thm:teacher:main`); "the good model is a hull vertex on the whole window" fails in explicit rate codes (`rem:teacher:selected`); λ must grow with n because of the reuse factor (`lem:teacher:reuse`), while noise needs only a fixed λ > 1; not for every rule with the same density and description length (`prop:limits:envelope`).
-* **Change of slope of the entropy left against hypothesis length.** Made precise as a kink (`def:kink:kinks`, `cor:kink:split`, `thm:kink:converse`); present for product models of the noisy parity at every flip rate below 1/4 for large d, absent for set models (`prop:parity:kink`, `prop:parity:range`(iii), `prop:parity:sets`).
+* **Change of slope of the entropy left against hypothesis length.** Made precise as a kink (`def:kink:kinks`, `cor:kink:split`, `thm:kink:converse`); present for per-query samples with high probability (`thm:recovery:kink`) and for the full table of the noisy parity at every dyadic flip rate below 1/4, for large d and typical error sets (`prop:parity:kink`, `prop:parity:range`(iii)); no steep one for set models (`prop:parity:sets`).
 * **Absolute complexity bound.** Every penalised minimiser solves a length-bounded problem, not conversely (`lem:setup:hull`(iv), `rem:setup:hullconverse`).
 * **Prior work.** λ-weighted two-part MDL in noisy classification, two-part MDL for density estimation (Barron and Cover, "studied by" only), restricted model families (`rem:related:mdl`, `sec:related`, `rem:related:new`).
 
