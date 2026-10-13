@@ -13,9 +13,9 @@ He also listed specific questions and examples. The papers were developed and wr
 ## Answers in brief
 
 1. **Definition.**
-   * A *function machine* is a probabilistic program that reads one random tape, shared by all inputs, and labels each input it is asked about, or diverges.
-   * A universal function machine exists.
-   * Its law M_F is the prior of SFI. It dominates the law of every function machine up to the factor 2^{−K(ν)}, and it changes by at most a constant factor when the universal machine changes.
+   * Feed one infinite sequence of fair coin flips to a universal Turing machine. On each query x it runs afresh, reads the same sequence from its first bit, as many bits as it needs, and outputs a label or diverges. This gives a random partial function; its law M_F is the prior of SFI, and SFI conditions it on the data. There is one source of randomness: reading the tape's first self-delimiting block as a program and the rest as its coin flips is only a representation of M_F as a mixture.
+   * M_F dominates the law of every *function machine* (any Turing machine reading one random tape, the same for all queries) up to the factor 2^{−K(ν)}, and it changes by at most a constant factor when the universal machine changes.
+   * The coin-free version, the prior 2^{−|p|} on deterministic programs (W), never exceeds M_F by more than a constant factor and falls short of it by at most K(dom D) + O(1) bits. The gap is unbounded, but on two-point data sets over d-bit inputs it is at most K^pad(2^{d+1}) + O(1), which grows more slowly than 2 log h(d) for every computable unbounded nondecreasing h (Paper 1, Section 4).
    * On every consistent data sequence, however the inputs are chosen, SFI's cumulative log loss exceeds that of every computable random labeller ν by at most K(ν) + O(1).
    * With i.i.d. inputs and a computable deterministic target f, the averaged predictor has risk O(K(f)/n).
 2. **Kolmogorov version versus semimeasure version: not equivalent.** There is no coding theorem for function programs.
