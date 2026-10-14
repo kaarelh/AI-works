@@ -1,21 +1,22 @@
-# Claims ledger: Paper 2 (steeper simplicity priors in SFI), after the restructure and its fix round of 2026-10-13
+# Claims ledger: Paper 2 (steeper simplicity priors in SFI), after the restructure, its fix round of 2026-10-13 and the imitation integration of 2026-10-14
 
 > **Binding notes (unchanged).** The absorption objection is a standard point: never "Wyeth's objection"; the label `rem:absorb:wyeth` stays, its printed title is "Answer to the absorption objection". The paper presents the material for the first time, in the "we" voice; the author's notes are credited only in at most five neutral footnotes (now two: the proposal in `intro.tex`, the change of slope in `kinks.tex`) and in the acknowledgements (`research/paper-review/REFRAME.md`). Statuses are rendered in prose and the `\status{}`/`\src{}` calls print nothing (`research/paper-review/DECISIONS.md` §A1–§A2). Computed numbers stand outside statements, introduced by "a direct computation (code in the accompanying repository) gives …"; κ = 0 numbers are illustrations.
 
-Binding plan of the restructure: `research/paper-review/restructure/PLAN.md` (labels, notation §4, statuses §5). Sources of claims: the refereed record `research/tracks/steeper/notes-final.md` ("steeper") for the base material, and for the new material the sub-track records `research/tracks/split/{iid,kink,teacher}/notes-final.md` with the verification reports `research/tracks/split/verify-{iid,kink,teacher}.md`, which override the synthesis `research/tracks/split/notes-final.md` where they correct it. Writer logs: `research/paper-review/restructure/log-W1.md` … `log-W6.md`, `log-front.md`. Fix round: `research/paper-review/restructure/DECISIONS-restructure.md` and the fix lists `fix-W1.json` … `fix-W6.json`, `fix-FRONT.json`; each log ends with a section on the fixes.
+Binding plan of the restructure: `research/paper-review/restructure/PLAN.md` (labels, notation §4, statuses §5). Sources of claims: the refereed record `research/tracks/steeper/notes-final.md` ("steeper") for the base material, and for the new material the sub-track records `research/tracks/split/{iid,kink,teacher}/notes-final.md` with the verification reports `research/tracks/split/verify-{iid,kink,teacher}.md`, which override the synthesis `research/tracks/split/notes-final.md` where they correct it. Writer logs: `research/paper-review/restructure/log-W1.md` … `log-W6.md`, `log-front.md`. Fix round: `research/paper-review/restructure/DECISIONS-restructure.md` and the fix lists `fix-W1.json` … `fix-W6.json`, `fix-FRONT.json`; each log ends with a section on the fixes. Imitation integration of 2026-10-14: sources `research/tracks/imitation/notes-final.md` (synthesis), its sub-track records `research/tracks/imitation/{robust,decay}/notes-final.md` with their referee reports, `research/tracks/imitation/final-check.md`, the final referee report `research/tracks/imitation/referee-final.md` (items 1–5 verified; running-text corrections C1–C6 applied) and the literature record `research/paper-review/imitation-edit/literature.md`; log `research/paper-review/imitation-edit/log-integrate.md`.
 
 ## 1. What the paper claims, in one paragraph per reason
 
 * **Precondition: absorption** (§4). In every class that contains its own mixture (SI, SFI with shared randomness, the weak and the history-aware classes) every λ-MAP is shorter than $\ell^*_\lambda$, a fixed-λ learner reproduces a deterministic teacher's errors, and no sampler longer than $\ell^*_\lambda$ is selected (`thm:absorb:absorption`, `thm:split:shared`); no product hypothesis is universal (`cor:absorb:nouniversal`, from `prop:absorb:pricing` in App B), at a price on randomness shared by several inputs (about a factor min(λ, 2)) and up to labelled history (`prop:absorb:price`, `prop:absorb:history`).
 * **Common geometry: kinks** (§5). λ-MAPs on one data set are read off the hull (`lem:setup:hull`); one kink lemma, data and population readings (`lem:kink:main`); the split on one data set and its converse (`cor:kink:split`, `thm:kink:converse`); a universal member flattens every kink far beyond its own length (`prop:kink:universal`).
 * **First and main reason: the model–randomness split** (§6, §7). Per query (PQ), every $\lambda_n$-MAP with $1\le\lambda_n=o(n)$ is eventually a shortest program equivalent to the sampler, with a rate for fixed λ > 1 that depends on the class only through a margin, and no such rate at λ = 1 (`thm:recovery:main`, `prop:recovery:lambda1`, `prop:recovery:necessity`); the sample kink, with the Ville deficiency in place of the sufficiency slack (`thm:recovery:kink`); with frozen labels no procedure recovers every sampler, and every λ ≥ 1 eventually selects programs equivalent to the sampler on the run, with summable Hellinger gaps along the queried inputs (`prop:recovery:frozen`, `thm:split:private`(iv)); for fixed λ > 1 no λ-MAP is a fill-in once $L_n(\nu)>\lambda(k+\delta^*)/(\lambda-1)$ (`rem:split:reading`); λ = 1 on one data set (`thm:split:lambda1`). The full table of the noisy parity has a product kink at the parity (for large d, typical error sets and dyadic flip rates below 1/4 every fixed λ > 1 selects "parity plus noise"), and set models have no steep one (`prop:parity:kink`, `prop:parity:range`(iii), `prop:parity:sets`).
-* **Second reason: the teacher's mistakes** (§8, §9). The kink lemma with right slope $2^{-m}$ gives the teacher theorem over all product hypotheses (`prop:teacher:kinks`, `thm:teacher:main`); the reuse factor explains why λ ∝ n is needed (`lem:teacher:reuse`, `prop:teacher:schedules`, `prop:limits:plain`); full tables for every m (`cor:teacher:fulltable`); windows below $p_1=0.1233\ldots$ asymptotically (`prop:teacher:rates`, with `prop:teacher:sharp` in App F); the bounds of the running example are rounded safely ($e\le0.200$ at κ = 0, 0.274 at κ = 30; window $(9.54\cdot10^{-7},8.06\cdot10^{-3}]$ at κ = 0 and $(9.54\cdot10^{-7},3.65\cdot10^{-3}]$ at κ = 30). Structured rules add a second kink and defeat the window (`prop:limits:envelope`, `prop:limits:rateblind`, `prop:limits:separable`).
+* **Second reason: the teacher's mistakes** (§8, §9). The kink lemma with right slope $2^{-m}$ gives the teacher theorem over all product hypotheses (`prop:teacher:kinks`, `thm:teacher:main`); the reuse factor explains why λ ∝ n is needed (`lem:teacher:reuse`, `prop:teacher:schedules`, `prop:limits:plain`); full tables for every m (`cor:teacher:fulltable`); windows below $p_1=0.1233\ldots$ asymptotically (`prop:teacher:rates`, with `prop:teacher:sharp` in App F); the bounds of the running example are rounded safely ($e\le0.200$ at κ = 0, 0.274 at κ = 30; window $(9.54\cdot10^{-7},8.06\cdot10^{-3}]$ at κ = 0 and $(9.54\cdot10^{-7},3.65\cdot10^{-3}]$ at κ = 30). Structured rules add a second kink and defeat the window (`prop:limits:envelope`, `prop:limits:rateblind`, `prop:limits:separable`). With λ = cn the length is charged once per sample; no fixed prior with full support gives the cn-MAPs on every sample, and per query for c > c* they end at shorter, worse programs while every summable prior that charges the sampler's programs ends at them; a fixed weight-decay coefficient on an averaged loss has the same form (a Gaussian prior of precision nω) and can keep a worse classifier in the limit (`rem:teacher:weightdecay`; `prop:teacher:nofixedprior`, `ex:teacher:weightdecay` in App F).
+* **Imitation** (§10, App H). A person is a sampler; a copy is a program with the person's kernel on the support of the inputs. With private coins this is the first reason: every fixed λ > 1 eventually returns a shortest copy. With coins that the environment drives and the input partly reveals, a fixed λ (any $\lambda_n=o(n)$) eventually returns a shortest program for the data kernel $P^*$, which in the feature case encodes the coupling (`thm:recovery:main`(a)); the guarantee needs λ/n above the reuse factor $2^{-m}$. If the person's coins are an incompressible function of a cell variable with many more values than the person has bits, then for $c=a2^{-m}$, $a>1$, every near-optimal private-randomness hypothesis has bounded length, predicts neither much better nor much worse than the person, holds little information about the coupling, and is close to the person in behaviour: an explicit bound on the input-averaged Rényi-½ divergence, informative for $c$ well below $H(\rho)/\ell_0$ (`thm:imit:main`, via `lem:imit:coding` and `lem:imit:closeness`). Near-copies, not copies; behaviour, not mechanism. No procedure reliably copies each of several persons that share one data law, nor a person entangled with an incompressible coupling (`prop:imit:limits`); cheap couplings defeat every $c$, and a window for copies needs more than about $\ell_0/(\log|Y|-H(\rho))$ cells (`prop:imit:cheap`); with private coins no predictor gains more than its length plus a Ville deficiency (`rem:imit:private`). The scope paragraph of the introduction and "What the toy cases leave open" in the discussion say that the motivating problems are not solved, name the four toy cases solved, and list six concrete open problems.
 
 **Flip-rate decimals** (verify-teacher §9). $G_1>H(p)$ holds exactly for $p<p_0=0.0559643\ldots$; the sufficient decimal printed everywhere (abstract, introduction, Paper 1 `sec:steep`) is $p<0.05596$, not the base's 0.056, which is false for a few dyadic rule sizes now that $s_0$ is arbitrary. The asymptotic junta window needs $1-\log(\frac32-p)>H(p)$, i.e. $p<p_1=0.1233072\ldots$; printed as $p\le0.1233$ where a sufficient condition is meant, and as $p_1\le p$ for the lower end of the open range (`q:teacher:open`(b), open problem (3)).
 
-## 2. Ledger (generated from the sources in input order; numbers from the build after the fix round of 2026-10-13)
+## 2. Ledger (generated from the sources in input order; numbers from the build after the imitation integration of 2026-10-14)
 
-Status and source are the environment's `\status{}` and `\src{}`; definitions carry `\src{}` only. Tables are listed after the environments of their file. Moved in the fix round (DECISIONS-restructure §3): `lem:setup:basic` (§3 → App A), `prop:absorb:pricing` (§4 → App B), `rem:recovery:window` (§6 → App D), `prop:teacher:sharp` (§8 → App F), the text of §9.3 with `prop:limits:ood` already in App G (`sec:limits:ood` now an alias on `app:limits:ood`), `prop:related:computability` (§10 → App H).
+Status and source are the environment's `\status{}` and `\src{}`; definitions carry `\src{}` only. Tables are listed after the environments of their file. Moved in the fix round (DECISIONS-restructure §3): `lem:setup:basic` (§3 → App A), `prop:absorb:pricing` (§4 → App B), `rem:recovery:window` (§6 → App D), `prop:teacher:sharp` (§8 → App F), the text of §9.3 with `prop:limits:ood` already in App G (`sec:limits:ood` now an alias on `app:limits:ood`), `prop:related:computability` (§10 → App H). Imitation integration of 2026-10-14: new section `sec:imit` (§10; the computable classes are now §11, the discussion §12) with its appendix `app:imit` (App H; the former App H is now App I). By the compact cut of the synthesis (§5.3), `rem:imit:private`, the numbers after `thm:imit:main`, `prop:imit:limits`(c) and the cell count (together the new `prop:imit:cheap`) are in App H, and the draft's `q:imit:open` is not in the paper (its questions are open problem (7) of the discussion). New in `teacher.tex`: `rem:teacher:weightdecay`; in `app-teacher.tex`: `app:teacher:weightdecay` with `prop:teacher:nofixedprior` and `ex:teacher:weightdecay`.
 
 ### `intro.tex`
 
@@ -111,15 +112,16 @@ Status and source are the environment's `\status{}` and `\src{}`; definitions ca
 | 8.2 | `lem:teacher:reuse` | lemma: Duplication | proved; computed | split/teacher Lemma 3.0; split/verify-teacher \S4; check t7(C) |
 | 8.3 | `prop:teacher:schedules` | proposition: Which schedules keep the identification | proved; computed | split/teacher Prop 3.6, Prop 3.2(a); split/verify-teacher \S6; check v3 |
 | 8.4 | `rem:limits:schedule` | remark: Fixed $\lambda$ against $\lambda\propto n$ | remark (from proved results); known | steeper end of \S2.5, \S4.4; split/teacher \S3.0, Remark 3.5 |
-| 8.5 | `prop:teacher:kinks` | proposition: The two kink bounds | proved; computed | split/teacher Prop 2.1(a),(b); checks t1(B), rB2(E) |
-| 8.6 | `thm:teacher:main` | theorem: The teacher's-mistakes theorem | proved | steeper Thm 2; split/teacher Prop 2.1(c), Remark 2.6 (a1); split/verify-teacher \S8 |
-| 8.7 | `rem:teacher:numbers` | remark: Numbers for the running example | computed | steeper \S2.4 ``Numbers''; checks c3, c6(B), c7(D); referee r1, q4(B); split/teacher t6(D), v5(D) |
-| 8.8 | `rem:teacher:hypotheses` | remark: What the theorem relies on | remark | steeper \S2.4 ``The hypotheses Theorem 2 relies on''; split/teacher Table 2.2 |
-| 8.9 | `rem:teacher:selected` | remark: What is selected | remark; computed; a natural strengthening refuted | split/teacher \S2.1 ``What is selected''; checks t5(A),(B), rA1(A), rB3(A) |
-| 8.10 | `cor:teacher:fulltable` | corollary: Full truth tables: the window starts at the reuse factor | proved; computed | steeper Cor 2.5 (T5 Thm 3.5, Cor 3.5a); split/teacher Props 3.1(a),(b), 2.4(iii); checks c3, c7(H), t1(D), rB2(B) |
-| 8.11 | `cor:teacher:sampled` | corollary: Finite samples | proved; computed | steeper Cor 2.7, Lemma 2.6; check c3 |
-| 8.12 | `prop:teacher:rates` | proposition: A window for every flip rate below $p_1$, asymptotically | proved; computed | split/teacher Prop 5.3; split/verify-teacher \S9; checks t4(A), t6(A), rB7(A), v5(A),(B) |
-| 8.13 | `q:teacher:open` | question: other models, flip rates, samples and schedules | open | steeper \S2.6; split/teacher \S5 ``What remains open'', Prop 3.3(c), Prop 3.6; split synthesis \S6 items 8--10, 12, 14 |
+| 8.5 | `rem:teacher:weightdecay` | remark: $\lambda=cn$ and weight decay | proved; computed; known | imitation/decay notes-final \S\S1--4 (Props 2.1--2.3, 3.2, 4.1, 4.2, Example 4.3); checks d1, d2, d3; imitation/notes-final \S3 |
+| 8.6 | `prop:teacher:kinks` | proposition: The two kink bounds | proved; computed | split/teacher Prop 2.1(a),(b); checks t1(B), rB2(E) |
+| 8.7 | `thm:teacher:main` | theorem: The teacher's-mistakes theorem | proved | steeper Thm 2; split/teacher Prop 2.1(c), Remark 2.6 (a1); split/verify-teacher \S8 |
+| 8.8 | `rem:teacher:numbers` | remark: Numbers for the running example | computed | steeper \S2.4 ``Numbers''; checks c3, c6(B), c7(D); referee r1, q4(B); split/teacher t6(D), v5(D) |
+| 8.9 | `rem:teacher:hypotheses` | remark: What the theorem relies on | remark | steeper \S2.4 ``The hypotheses Theorem 2 relies on''; split/teacher Table 2.2 |
+| 8.10 | `rem:teacher:selected` | remark: What is selected | remark; computed; a natural strengthening refuted | split/teacher \S2.1 ``What is selected''; checks t5(A),(B), rA1(A), rB3(A) |
+| 8.11 | `cor:teacher:fulltable` | corollary: Full truth tables: the window starts at the reuse factor | proved; computed | steeper Cor 2.5 (T5 Thm 3.5, Cor 3.5a); split/teacher Props 3.1(a),(b), 2.4(iii); checks c3, c7(H), t1(D), rB2(B) |
+| 8.12 | `cor:teacher:sampled` | corollary: Finite samples | proved; computed | steeper Cor 2.7, Lemma 2.6; check c3 |
+| 8.13 | `prop:teacher:rates` | proposition: A window for every flip rate below $p_1$, asymptotically | proved; computed | split/teacher Prop 5.3; split/verify-teacher \S9; checks t4(A), t6(A), rB7(A), v5(A),(B) |
+| 8.14 | `q:teacher:open` | question: other models, flip rates, samples and schedules | open | steeper \S2.6; split/teacher \S5 ``What remains open'', Prop 3.3(c), Prop 3.6; split synthesis \S6 items 8--10, 12, 14 |
 | 3 | `tab:teacher:numbers` | table:  |  |  |
 
 ### `limits.tex`
@@ -132,14 +134,22 @@ Status and source are the environment's `\status{}` and `\src{}`; definitions ca
 | 9.4 | `rem:limits:hull` | remark: What a hull cannot see | remark | split/teacher Remark 4.3; steeper Props 2.12--2.15 |
 | 9.5 | `q:limits:open` | question: structured errors and the choice of $c$ | open | steeper \S2.6; split/notes-final \S6 items 11, 15 |
 
+### `imit.tex`
+
+| no. | id | kind: title | status | source |
+|---|---|---|---|---|
+| 10.1 | `def:imit:setting` | definition: Environment-driven coins |  | imitation/robust notes-final Setting 4.1 (B$_\beta$ conditioned on $(h_0,\mu)$ only, imitation/notes-final \S2.2; imitation/referee-final item 3); referee-B B1 |
+| 10.2 | `thm:imit:main` | theorem: Robust near-imitation | proved | imitation/robust notes-final Thm 4.7(U),(vii), Lemmas 4.4--4.6; referee-A A1; imitation/notes-final \S2.2 (re-derived); imitation/referee-final items 1--3 (verified; code q1--q4); checks f7, s1(B),(C) |
+| 10.3 | `prop:imit:limits` | proposition: What no procedure can do | proved; computed | imitation/robust notes-final Props 4.10(a2), 4.11; referee-A R1; imitation/referee-final item 4 (verified; code q5); checks f8, s1(D) |
+
 ### `computable.tex`
 
 | no. | id | kind: title | status | source |
 |---|---|---|---|---|
-| 10.1 | `prop:related:computable` | proposition: Computable product classes | proved; the examples are remarks | steeper Prop 4.4; split/iid Cor 6.2, Def 1.1; split/kink \S5.0 |
-| 10.2 | `rem:computable:examples` | remark: Examples | remark | steeper Prop 4.4 |
-| 10.3 | `rem:related:nn` | remark: Neural-network Bayes | remark | steeper Rem 4.7; split/iid Def 1.1, Cor 6.2 |
-| 10.4 | `q:related:open` | question: resource bounds and computability | open | steeper \S4.6 items 6, 7 |
+| 11.1 | `prop:related:computable` | proposition: Computable product classes | proved; the examples are remarks | steeper Prop 4.4; split/iid Cor 6.2, Def 1.1; split/kink \S5.0 |
+| 11.2 | `rem:computable:examples` | remark: Examples | remark | steeper Prop 4.4 |
+| 11.3 | `rem:related:nn` | remark: Neural-network Bayes | remark | steeper Rem 4.7; split/iid Def 1.1, Cor 6.2 |
+| 11.4 | `q:related:open` | question: resource bounds and computability | open | steeper \S4.6 items 6, 7 |
 
 ### `discussion.tex`
 
@@ -211,7 +221,9 @@ Status and source are the environment's `\status{}` and `\src{}`; definitions ca
 | F.3 | `lem:teacher:finite` | lemma: Finite sample | proved | steeper Lemma 2.6 (adapts T5 Lemma 1.2) |
 | F.4 | `ex:teacher:version1` | example: The total-bits version of the example | proved (instance of \cref{thm:teacher:main}); computed | steeper Ex 2.7a; checks c6(C), c6(H) |
 | F.5 | `prop:teacher:concentration` | proposition: The power posterior concentrates on near-minimisers | proved; computed | steeper Prop 2.8; checks c5(e), c7(F); referee q1(F) |
-| F.6 | `prop:teacher:sharp` | proposition: Charging the information about the rule | proved; computed | split/teacher Lemma 5.1, Prop 5.2, Remark 2.6 (a2); split/verify-teacher \S6, \S8; checks t4(B), t6(B), rB7(B) |
+| F.6 | `prop:teacher:nofixedprior` | proposition: No fixed prior gives the $cn$-MAPs | proved; computed | imitation/decay notes-final Props 2.1--2.3, 3.2; checks d1, d3 |
+| F.7 | `ex:teacher:weightdecay` | example: A worse classifier in the limit | proved; computed | imitation/decay notes-final Example 4.3; checks d2(A)--(D), d3(D) |
+| F.8 | `prop:teacher:sharp` | proposition: Charging the information about the rule | proved; computed | split/teacher Lemma 5.1, Prop 5.2, Remark 2.6 (a2); split/verify-teacher \S6, \S8; checks t4(B), t6(B), rB7(B) |
 | 6 | `tab:teacher:rates` | table:  |  |  |
 
 ### `app-limits.tex`
@@ -224,11 +236,20 @@ Status and source are the environment's `\status{}` and `\src{}`; definitions ca
 | G.4 | `prop:limits:inputlaw` | proposition: The selection depends on the input law | proved | steeper Prop 2.15 |
 | G.5 | `prop:limits:ood` | proposition: Steeper simplicity and unseen properties | proved | steeper Prop 2.16 |
 
+### `app-imit.tex`
+
+| no. | id | kind: title | status | source |
+|---|---|---|---|---|
+| H.1 | `rem:imit:private` | remark: Private coins | proved | imitation/robust notes-final Lemma 2.1, Thm 2.2(2),(3); check r1; referee rb1 |
+| H.2 | `lem:imit:coding` | lemma: Coding the coupling with a hypothesis | proved | imitation/robust notes-final Lemma 4.4; checks r6(A), s1(B); referee rb2(A) |
+| H.3 | `lem:imit:closeness` | lemma: Closeness | proved | imitation/robust notes-final Lemma 4.6; imitation/notes-final \S2.2 (proof checked line by line); imitation/referee-final item 1 (verified; the factor 2 is tight; code q1, q2); checks f7(A),(B), s1(B),(C) |
+| H.4 | `prop:imit:cheap` | proposition: Cheap couplings | proved; computed | imitation/robust notes-final Prop 4.10(c),(d); referee rb2(B),(C); imitation/referee-final item 5 (C5); checks f2(B), r6(D), s1(A) |
+
 ### `app-related.tex`
 
 | no. | id | kind: title | status | source |
 |---|---|---|---|---|
-| H.1 | `prop:related:computability` | proposition: Computability of the steeper predictor | proved | steeper Prop 4.5 |
+| I.1 | `prop:related:computability` | proposition: Computability of the steeper predictor | proved | steeper Prop 4.5 |
 
 ## 3. Answers to the author's questions (Paper 2's share), updated
 
@@ -237,6 +258,9 @@ Status and source are the environment's `\status{}` and `\src{}`; definitions ca
 * **The teacher's mistakes.** For incompressible product-form error rules at $p<0.05596$, every near-optimal hypothesis knows the parity and not the errors, for $c\in(2^{-m},c_{\rm hi})$ (`thm:teacher:main`); "the good model is a hull vertex on the whole window" fails in explicit rate codes (`rem:teacher:selected`); λ must grow with n because of the reuse factor (`lem:teacher:reuse`), while noise needs only a fixed λ > 1; not for every rule with the same density and description length (`prop:limits:envelope`).
 * **Change of slope of the entropy left against hypothesis length.** Made precise as a kink (`def:kink:kinks`, `cor:kink:split`, `thm:kink:converse`); present for per-query samples with high probability (`thm:recovery:kink`) and for the full table of the noisy parity at every dyadic flip rate below 1/4, for large d and typical error sets (`prop:parity:kink`, `prop:parity:range`(iii)); no steep one for set models (`prop:parity:sets`).
 * **Absolute complexity bound.** Every penalised minimiser solves a length-bounded problem, not conversely (`lem:setup:hull`(iv), `rem:setup:hullconverse`).
-* **Prior work.** λ-weighted two-part MDL in noisy classification, two-part MDL for density estimation (Barron and Cover, "studied by" only), restricted model families (`rem:related:mdl`, `sec:related`, `rem:related:new`).
+* **Imitation: a copy of a person rather than fill-ins or other predictors.** In a toy setting, yes up to near-copies and for λ/n in a window (a fixed λ returns a program for the data kernel, `thm:recovery:main`(a)): every near-optimal hypothesis is close to the person in behaviour although hypotheses that model the environment predict better (`thm:imit:main`); not for cheap couplings (`prop:imit:cheap`), and not reliably by any procedure when persons share a data law or a person is entangled with its coupling (`prop:imit:limits`); in-context learners are excluded by the class, not by the data (App H.1).
+* **λ = cn and weight decay.** No fixed prior with full support gives the cn-MAPs on every sample (in $\Hcl{\times}$); both λ = cn and a fixed weight-decay coefficient keep a per-sample penalty that does not vanish with the data and can keep a cheaper, worse hypothesis in the limit; the analogy is one of objectives (a norm is not a code length, iterates are not minimisers, decoupled decay differs) (`rem:teacher:weightdecay`, `prop:teacher:nofixedprior`, `ex:teacher:weightdecay`).
+* **Caveats.** The paper does not claim to solve the motivating problems; it offers tools and solves four toy cases (paragraph "Scope" in the introduction); six concrete gaps are listed in the discussion ("What the toy cases leave open").
+* **Prior work.** λ-weighted two-part MDL in noisy classification, two-part MDL for density estimation (Barron and Cover, "studied by" only), restricted model families (`rem:related:mdl`, `sec:related`, `rem:related:new`); behavioural cloning, inverse reinforcement learning and identifiability from behaviour, at abstract level (`sec:related`, paragraph "Imitation and identifiability from behaviour"); weight decay and grokking, at abstract level (`rem:teacher:weightdecay`).
 
 The notation swaps and corrections relative to the steeper record of the base version (former §2, P1–P14) are in the base file (`git show dcb3a3a3:solomonoff-function-induction/paper-steeper/CLAIMS.md`); the restructure's notation is `PLAN.md` §4.
