@@ -1,0 +1,97 @@
+====================================================================================================
+(A) Repeated sample: summable priors end at maximum likelihood; a non-summable prior need not
+====================================================================================================
+(A1) random finite classes, samples with (a),(b): 1074; at r = floor(r_ML)+1 every w-MAP attains P*: 1074 of 1074; largest r_ML = 102227.4
+(A2) realisation: theta_j with 4 KL(1/4||theta_j) = 1/j^3 bits: j=1: 0.539296, j=2: 0.346426, j=5: 0.273249, j=10: 0.258118, j=100: 0.250255
+     non-summable prior log2 w(pi*) = -1, log2 w(pi_j) = 1/j; on h^r the score of pi_j is 1/j - r/j^3 (relative to r log P*)
+   r =         1: unique MAP pi_j at j =     2 (sqrt(3r) =       1.7), score 3.750e-01 > 0 > -1 = score of pi*; tail j >= 4 scores below 1/4; maximisers: 1
+   r =        10: unique MAP pi_j at j =     6 (sqrt(3r) =       5.5), score 1.204e-01 > 0 > -1 = score of pi*; tail j >= 10 scores below 1/10; maximisers: 1
+   r =       100: unique MAP pi_j at j =    17 (sqrt(3r) =      17.3), score 3.847e-02 > 0 > -1 = score of pi*; tail j >= 27 scores below 1/27; maximisers: 1
+   r =     10000: unique MAP pi_j at j =   173 (sqrt(3r) =     173.2), score 3.849e-03 > 0 > -1 = score of pi*; tail j >= 261 scores below 1/261; maximisers: 1
+   r =   1000000: unique MAP pi_j at j =  1732 (sqrt(3r) =    1732.1), score 3.849e-04 > 0 > -1 = score of pi*; tail j >= 2600 scores below 1/2600; maximisers: 1
+   r = 100000000: unique MAP pi_j at j = 17321 (sqrt(3r) =   17320.5), score 3.849e-05 > 0 > -1 = score of pi*; tail j >= 25982 scores below 1/25982; maximisers: 1
+   So at every r the MAP exists and has likelihood P* 2^(-1/j^3) < P*: summability cannot be dropped in Prop 2.2(iv).
+
+====================================================================================================
+(B) Which fixed priors reproduce the cn-MAP sets on all samples of size <= N?
+====================================================================================================
+(B1) coin (length 1) / deterministic f (length 1+10), all samples of size n <= 30 (only n and f-consistency matter)
+   c = 1/20 (ck = 1/2): priors (1,t) consistent with all samples n <= 30: log2 t in (-1, inf); degenerate priors matching: []
+   c = 1/5 (ck = 2): priors (1,t) consistent with all samples n <= 30: log2 t in (-inf, -30); degenerate priors matching: ['(1,0)']
+   ck = 1/2: every full-support prior with t > 1/2 works (no sample has (a),(b)); ck = 2: only t < 2^-30 survives n <= 30,
+   so in the limit only delta_coin (no full support) reproduces the cn-MAPs: the hypothesis of Prop 2.2(ii) is needed.
+
+(B2) two Bernoulli rates: pi_h = rate 1/2 (length 1), pi_q = rate 1/4 (length 1+k), k = 10; log2(3/2) = 0.584963
+   c = 0.01    (ck = 0.100, ck < log(3/2)): (1,t) feasible for n <= 40: none (empty from N = 12 on); degenerate priors matching: none
+   c = 0.03    (ck = 0.300, ck < log(3/2)): (1,t) feasible for n <= 40: none (empty from N = 4 on); degenerate priors matching: none
+   c = 0.05    (ck = 0.500, ck < log(3/2)): (1,t) feasible for n <= 40: none (empty from N = 4 on); degenerate priors matching: none
+   c = 0.0584  (ck = 0.584, ck < log(3/2)): (1,t) feasible for n <= 40: none (empty from N = 4 on); degenerate priors matching: none
+   c = 0.0586  (ck = 0.586, ck > log(3/2)): (1,t) feasible for n <= 40: log2 t in (-inf, -23.399); degenerate priors matching: ['(1,0)']
+   c = 0.1     (ck = 1.000, ck > log(3/2)): (1,t) feasible for n <= 40: log2 t in (-inf, -23.399); degenerate priors matching: ['(1,0)']
+   smallest |g(phat) - ck| over all samples examined: 4.821e-04 (no float tie)
+   For ck < log(3/2): no fixed prior of any kind reproduces the cn-MAP sets (Prop 2.2(v)); for ck > log(3/2) delta_{pi_h} does.
+
+====================================================================================================
+(C) Teacher window: c > c* for c in (max(2^-m, c_+), c_hi), c_+ = H(p)/(B_S - 4 - Lambda_1 - kappa_g)
+====================================================================================================
+d = 100, m = 20, p = 2^-10, s0 = 1024, H(p) = 0.0111738, L_S = log2 C(2^m, s0) = 11710.273, 2^m H(p) = 11716.598
+  kappa =  0, delta_S =  0: Lambda_2 =   52.19, c_+ = 9.579412e-07 = 1.00447 * 2^-m; (ii)(b) bound at c_+: +1.7e-17, at c = 1e-4: 0.011124 (H(p) = 0.011174)
+  kappa =  0, delta_S = 20: Lambda_2 =   72.19, c_+ = 9.595865e-07 = 1.00620 * 2^-m; (ii)(b) bound at c_+: -1.0e-16, at c = 1e-4: 0.011104 (H(p) = 0.011174)
+  kappa = 30, delta_S =  0: Lambda_2 =  112.19, c_+ = 9.628942e-07 = 1.00967 * 2^-m; (ii)(b) bound at c_+: -8.7e-18, at c = 1e-4: 0.011066 (H(p) = 0.011174)
+  kappa = 30, delta_S = 20: Lambda_2 =  132.19, c_+ = 9.645566e-07 = 1.01141 * 2^-m; (ii)(b) bound at c_+: -1.4e-16, at c = 1e-4: 0.011047 (H(p) = 0.011174)
+  Paper 2 (rem:teacher:numbers): window (9.54e-7, 8.06e-3] at kappa = 0, (9.54e-7, 3.65e-3] at kappa = 30, so c_+ < c_hi.
+
+====================================================================================================
+(D) Example 4.3: the box threshold, the switch condition, AdamW where L2 never switches
+====================================================================================================
+(D1) box (AdamW-limit) threshold: closed form 2 eps / ln((2-3q)/q) against direct box minimisation
+   eps = 0.1, q = 0.2: closed form 0.102780, numerical 0.102780; at 1.5x: L-BFGS-B box theta = (6.486367, 1.075808) vs (6.486367, 1.075808)
+   eps = 0.05, q = 0.1: closed form 0.035296, numerical 0.035296; at 1.5x: L-BFGS-B box theta = (18.888089, 1.596352) vs (18.888089, 1.596352)
+   eps = 0.3, q = 0.25: closed form 0.372801, numerical 0.372801; at 1.5x: L-BFGS-B box theta = (1.788264, 0.880836) vs (1.788264, 0.880836)
+   eps = 0.5, q = 0.3: closed form 0.769655, numerical 0.769655; at 1.5x: L-BFGS-B box theta = (0.866189, 0.703029) vs (0.866189, 0.703029)
+   eps = 0.8, q = 0.2: closed form 0.822237, numerical 0.822237; at 1.5x: L-BFGS-B box theta = (0.810796, 0.810796) vs (0.810796, 0.810796)
+   eps = 0.7, q = 0.3: closed form 1.077517, numerical 1.077517; at 1.5x: L-BFGS-B box theta = (0.618706, 0.618706) vs (0.618706, 0.618706)
+   eps = 0.9, q = 0.1: closed form 0.635321, numerical 0.635321; at 1.5x: L-BFGS-B box theta = (1.049338, 1.049338) vs (1.049338, 1.049338)
+   eps = 0.5, q = 0.4: closed form 1.442695, numerical 1.442695; at 1.5x: L-BFGS-B box theta = (0.462098, 0.364045) vs (0.462098, 0.364045)
+(D2) L2 switch iff eps^2 < 1 - 2q: sign of b = eps th1 - th2 at the minimiser of F over omega in [1e-6, 1e4] (241 values)
+   eps = 0.8000, q = 0.2: eps^2 = 0.6400 >= 1-2q = 0.60: b > 0 at 241 of 241 omegas (min b = 2.000e-06; omega b at 1e4 = 0.0200, limit (eps^2-(1-2q))/2 = 0.0200)
+   eps = 0.7000, q = 0.3: eps^2 = 0.4900 >= 1-2q = 0.40: b > 0 at 241 of 241 omegas (min b = 4.500e-06; omega b at 1e4 = 0.0450, limit (eps^2-(1-2q))/2 = 0.0450)
+   eps = 0.7746, q = 0.2: eps^2 = 0.6000 >= 1-2q = 0.60: b > 0 at 241 of 241 omegas (min b = 4.800e-10; omega b at 1e4 = 0.0000, limit (eps^2-(1-2q))/2 = 0.0000)
+   eps = 0.9000, q = 0.1: eps^2 = 0.8100 >= 1-2q = 0.80: b > 0 at 241 of 241 omegas (min b = 5.003e-07; omega b at 1e4 = 0.0050, limit (eps^2-(1-2q))/2 = 0.0050)
+   eps = 0.5000, q = 0.4: eps^2 = 0.2500 >= 1-2q = 0.20: b > 0 at 241 of 241 omegas (min b = 2.500e-06; omega b at 1e4 = 0.0250, limit (eps^2-(1-2q))/2 = 0.0250)
+   eps = 0.7700, q = 0.2: eps^2 = 0.5929 < 1-2q = 0.60: omega* = 1.3359e+01; sign of b as predicted at 241 of 241 omegas
+   eps = 0.6000, q = 0.3: eps^2 = 0.3600 < 1-2q = 0.40: omega* = 1.8850e+00; sign of b as predicted at 241 of 241 omegas
+   eps = 0.1000, q = 0.2: eps^2 = 0.0100 < 1-2q = 0.60: omega* = 2.1011e-03; sign of b as predicted at 241 of 241 omegas
+(D3) full-batch Adam on F (coupled L2) and AdamW (decoupled), 2e5 steps, lr 0.05/sqrt(1+t/1000), betas (0.9, 0.999)
+   eps = 0.8, q = 0.2 (eps^2 >= 1-2q; box threshold 0.8222):
+     coef 0.3 : Adam on F (0.7938, 0.4027) err 0.00 [argmin F (0.7938, 0.4027)] | AdamW (3.3333, 0.7453) err 0.00 [box (3.3333, 0.7452) err 0.00]
+     coef 0.6 : Adam on F (0.4857, 0.2902) err 0.00 [argmin F (0.4857, 0.2902)] | AdamW (1.6667, 0.8895) err 0.00 [box (1.6667, 0.8896) err 0.00]
+     coef 1.2 : Adam on F (0.2784, 0.1846) err 0.00 [argmin F (0.2785, 0.1846)] | AdamW (0.8333, 0.8333) err 0.20 [box (0.8333, 0.8333) err 0.20]
+     coef 2.0 : Adam on F (0.1782, 0.1238) err 0.00 [argmin F (0.1784, 0.1240)] | AdamW (0.5000, 0.5000) err 0.20 [box (0.5000, 0.5000) err 0.20]
+   eps = 0.7, q = 0.3 (eps^2 >= 1-2q; box threshold 1.0775):
+     coef 0.5 : Adam on F (0.5409, 0.2202) err 0.00 [argmin F (0.5409, 0.2202)] | AdamW (2.0000, 0.5310) err 0.00 [box (2.0000, 0.5311) err 0.00]
+     coef 2.0 : Adam on F (0.1622, 0.0839) err 0.00 [argmin F (0.1622, 0.0839)] | AdamW (0.5000, 0.5000) err 0.30 [box (0.5000, 0.5000) err 0.30]
+
+====================================================================================================
+(E) Kinks for weight decay
+====================================================================================================
+(E1) L(theta) = |theta - 1|: minimiser of L + (omega/2) theta^2 on a grid of step 1e-5: omega 0.1: 1.00000 (predicted 1.00000); omega 0.5: 1.00000 (predicted 1.00000); omega 0.9: 1.00000 (predicted 1.00000); omega 1.0: 1.00000 (predicted 1.00000); omega 1.1: 0.90909 (predicted 0.90909); omega 2.0: 0.50000 (predicted 0.50000); omega 5.0: 0.20000 (predicted 0.20000)
+     value function v(rho) = min{L : theta^2 <= rho}: v(0.25) = 0.50001 (pred. 0.50000); v(0.81) = 0.10001 (pred. 0.10000); v(1.0) = 0.00000 (pred. 0.00000); v(1.21) = 0.00000 (pred. 0.00000); v(4.0) = 0.00000 (pred. 0.00000); convex, kink at rho = 1
+(E2) toy (eps, q) = (0.1, 0.2): minimisers at 61 log-spaced omegas in [1e-5, 10] are pairwise distinct along the path; smallest distance between neighbours 7.452e-03
+
+====================================================================================================
+(F) Error rates of the programs of d1(C) against the sampler (f, p = 0.1), inputs uniform on 8 points
+====================================================================================================
+   pi0 = (f, 0.1)  : argmax error 0.1000, randomised error 0.1800
+   (f, 1/8)        : argmax error 0.1000, randomised error 0.2000
+   (f', 0.1)       : argmax error 0.2000, randomised error 0.2600
+   coin            : argmax error 0.5000, randomised error 0.5000
+   The sampler's randomised error is 2p(1-p) = 0.18; its argmax error is p = 0.1 (the coin's is 0.5 either way).
+
+====================================================================================================
+(G) Schedules lambda_n = c n + sqrt(n) with c n0 a breakpoint of h's hull (exact integer fits)
+====================================================================================================
+cases (class, sample, breakpoint sigma = c n0 whose closed edge misses maximum likelihood): 239
+  lambda_{r n0}-MAPs of h^r inside the breakpoint's MAP set M at every listed r from some r on, up to r = 1e+07: 239 of 239
+  (that r is 1 in 234 cases; the largest is 100)
+  for every listed r > r_th the lambda-MAPs and the MAPs of a full-support prior are disjoint: 239 of 239
