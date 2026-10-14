@@ -1,0 +1,169 @@
+% Section 6 (restructure writer W3; plan: research/paper-review/restructure/PLAN.md). Proofs: app-recovery.tex (App D) and app-split.tex (its continuation).
+% Sources: research/tracks/split/iid/notes-final.md (Defs 1.1-1.3, Lemmas 2.1-2.2, Thms 3.1, 3.2, Props 3.3, 3.4, Thm 4.1, Props 4.2-4.4, Remarks 4.5, 4.7,
+% Prop 5.1, Cor 6.1, Props 7.2, 7.3, 7.5, 7.6, Lemma 8.1); split/kink/notes-final.md §5 (Lemmas 5.1-5.3, Thm 5.4, Cor 5.7, scheme (pq));
+% split/verify-iid.md (all corrections of §2), split/verify-kink.md §2-§3; base split.tex (def:split:setting, lem:split:ville, thm:split:lambda1, thm:split:private, rem:split:reading).
+% thm:split:shared and sec:split:shared moved to absorb.tex (W1); lem:split:hash and thm:split:lambda1(iv) are cut (PLAN §3.1);
+% prop:recovery:beyond is stated in app-recovery.tex (page budget; log-W3 deviation); rem:recovery:window is stated in app-recovery.tex (fix round, RW3-05).
+% Notation (PLAN §4): \mathcal E, \mathcal E_0, ell_0, k; {\Hel}_\mu; margins gamma_{\bar\ell}, gamma_-, gamma_=(ell); \mathsf C_s (Chernoff coefficient);
+% fits L_n(pi), sampled randomness L_n(nu); Ville deficiency delta^* with nu(o_n) inside, current deficiency delta_n. Local: o_n (data after n queries),
+% KL_mu(pi) (mean KL divergence; D(pi) in the records), R_nu (risk under the sampler; R in the records), n_rec (recovery time);
+% parity classes (D11(h)): d input dimension, r parity length, r_0 class bound (C_{k,r_0}), theta parity vector.
+\section{Exact model recovery from samples}\label{sec:recovery}\label{sec:split}
+
+This section gives the first and main reason for a complexity penalty steeper than the likelihood penalty: it separates a model from its noise. Labels drawn from a sampler are explained by the sampler, with private coins, and by \emph{fill-ins}, deterministic programs that store the sampled bits; on one data set, at $\lambda=1$, the two get similar posterior weight (\cref{thm:split:lambda1}). Yet model-plus-noise splits work exactly per query: with i.i.d.\ inputs and a fresh label at every query, every $\lambda$-MAP is eventually a shortest program for the sampler, for every schedule $1\le\lambda_n=o(n)$ (\cref{thm:recovery:main}). A steeper prior adds a rate that depends only on $\lambda$, the program's length, a margin and the confidence, which $\lambda=1$ lacks (\cref{prop:recovery:lambda1}); the sample has a kink at the model (\cref{thm:recovery:kink}). With frozen labels no procedure recovers every sampler, and every $\lambda\ge1$ eventually selects programs that are $\nu$-equivalent on the run: their Hellinger gaps to $\nu$ along the queried inputs are summable (\cref{thm:split:private,prop:recovery:frozen}). Proofs are in \cref{app:recovery}.
+
+\subsection{Samplers, equivalent programs and the Ville deficiency}\label{sec:split:setting}
+
+\begin{definition}[Samplers, equivalent programs, margins and fill-ins]\src{steeper \S3.1; split/iid Defs 1.1--1.3; split/kink \S5.0}\label{def:split:setting}
+Let $\mathcal C$ be a countable class of programs $\pi$ with lengths $\ell(\pi)$, $\sum_{\pi\in\mathcal C}2^{-\ell(\pi)}\le1$, and kernels $\nu_\pi(y\mid x)\ge0$, $\sum_y\nu_\pi(y\mid x)\le1$: for example $\Hcl{\times}$, a time-bounded or circuit subclass of it, or a finite class. A \emph{sampler} is a probability kernel $\nu$. We write $o_n$ for the data after $n$ queries ($h_n$ per query, $D_n$ with frozen labels; \cref{def:setup:data}), $L_n(\pi):=L(\pi;o_n)$, and $L_n(\nu):=-\log\nu(o_n)$, the \emph{sampled randomness}.
+\emph{Per query} (PQ data, inputs i.i.d.\ from any law $\mu$): $\mathcal E$ is the set of programs whose kernel equals $\nu$ at $\mu$-almost every input, assumed nonempty; $\ell_0:=\min_{\mathcal E}\ell$, and $\mathcal E_0$ is the finite set of programs of $\mathcal E$ of length $\ell_0$. The \emph{Hellinger gap} is ${\Hel}_\mu(\pi):=\Ex_{x\sim\mu}\Hel(\nu(\cdot\mid x),\nu_\pi(\cdot\mid x))$, with $\Hel(P,Q):=1-\sum_y\sqrt{P(y)Q(y)}$, also for a sub-probability $Q$; it is positive iff $\pi\notin\mathcal E$. The \emph{margins} $\gamma_{\bar\ell}$, $\gamma_-$, $\gamma_=(\ell)$ are the least gaps of programs outside $\mathcal E$ of length at most $\bar\ell$, below $\ell_0$, and exactly $\ell$ ($\min\emptyset:=\infty$).
+\emph{Any input rule:} the inputs are chosen by any rule that fixes $x_{n+1}$ before $y_{n+1}$ is drawn (adaptive, randomised or non-computable), the labels are frozen on distinct inputs or drawn per query, and $\pi_\nu\in\mathcal C$ is a program of length $k$ whose kernel equals $\nu$ at every input the rule can query; in $\Hcl{\times}$ such a $\nu$ is a computable conditional measure. With frozen labels a repeated query changes no data; where a process is needed, it is indexed by distinct inputs in order of first appearance, and frozen labels with i.i.d.\ inputs are an input rule of this kind.
+A \emph{fill-in} is a deterministic program consistent with the data; in a data-set class their total weight is $\Wdet(D):=\sum\{2^{-\ell(\pi)}:\pi\text{ deterministic},\ \nu_\pi\supseteq D\}$.
+\end{definition}
+
+\begin{lemma}[Ville deficiency]\status{proved; computed; Ville's inequality known}\src{steeper Lemma 3.1; split/iid Lemma 2.2; split/verify-kink \S2.3; check c4(A); referee q3(B)}\label{lem:split:ville}
+Let the inputs follow any rule as in \cref{def:split:setting}, and let $\xi$ be a shared hypothesis with $\xi(\emptyset)\le1$ (frozen labels) or the mixture $\xi_{\mathcal C}(o_n):=\sum_{\pi\in\mathcal C}2^{-\ell(\pi)}\nu_\pi(o_n)$ (either kind of labels; $\Mprod$ for $\Hcl{\times}$ on data sets). The \emph{current deficiency} $\delta_n:=\log(\xi(o_n)/\nu(o_n))$ and the \emph{Ville deficiency} $\delta^*:=\sup_n\delta_n$ satisfy $\Prob[\delta^*\ge j]\le2^{-j}$ for every $j\ge0$, whether or not $\nu$ has a program in $\mathcal C$. For $\xi=\xi_{\mathcal C}$, every $\pi\in\mathcal C$ and every $n$: $L_n(\pi)\ge L_n(\nu)-\ell(\pi)-\delta_n\ge L_n(\nu)-\ell(\pi)-\delta^*$.
+\end{lemma}
+
+\emph{Proof idea.} As $x_{n+1}$ is fixed before $y_{n+1}$, $\xi(o_n)/\nu(o_n)$ is a nonnegative supermartingale started at most at $1$; apply Ville's inequality \citep{ville1939etude} and $\xi_{\mathcal C}\ge2^{-\ell(\pi)}\nu_\pi$ (\cref{app:split:ville}).
+
+\subsection{Exact recovery}\label{sec:recovery:main}
+
+Let $H_\mu(\nu):=\Ex_{x\sim\mu}H(\nu(\cdot\mid x))$, $W_\lambda:=\sum_{\pi\in\mathcal E}2^{-\lambda\ell(\pi)}$, and $\mathsf C_s(\pi):=\Ex_{x\sim\mu}\sum_{y:\nu(y\mid x)>0}\nu(y\mid x)^{1-s}\nu_\pi(y\mid x)^s$, the \emph{Chernoff coefficient} of $\pi$ at $s\in(0,1]$.
+
+\begin{theorem}[Exact model recovery]\status{proved}\src{split/iid Thms 3.1, 3.2, 4.1(i)--(iv), (iv$'$); split/verify-iid \S1.2}\label{thm:recovery:main}
+In the per-query setting of \cref{def:split:setting} (PQ data, inputs i.i.d.\ from $\mu$, $\mathcal E\ne\emptyset$), with $\delta_n,\delta^*$ the deficiencies of $\xi_{\mathcal C}$ (\cref{lem:split:ville}):
+\begin{enumerate}[label=(\alph*),itemsep=0pt,topsep=2pt]
+\item \emph{The limit.} For every schedule $\lambda_n\ge1$ with $\lambda_n/n\to0$, fixed $\lambda\ge1$ included, almost surely the set of $\lambda_n$-MAPs equals $\mathcal E_0$ for all large $n$.
+\item \emph{The posteriors.} For fixed $\lambda\ge1$ and $\eta\in(0,1]$, almost surely $\Pi_\lambda(\mathcal E\mid h_n)\to1$, with $\Pi_\lambda(\pi\mid h_n)\to2^{-\lambda\ell(\pi)}/W_\lambda$ for $\pi\in\mathcal E$; and $\Pi^\eta(\mathcal E\mid h_n)\to1$, with limit shares $2^{-\ell(\pi)}/W_1$.
+\item \emph{Every $n$, fixed $\lambda>1$.} Every $\lambda$-MAP has length at most $(\lambda\ell_0+\delta_n)/(\lambda-1)\le\ell_0+(\ell_0+\delta^*)/(\lambda-1)$. Every fill-in has length at least $L_n(\nu)-\delta^*$; the fill-ins' total mass is at most $2^{\lambda\ell_0+\lambda\delta^*-(\lambda-1)L_n(\nu)}$ under $\Pi_\lambda$ and at most $2^{\ell_0+\delta^*-(1-1/\lambda)L_n(\nu)}$ under $\Pi^{1/\lambda}$; and $L_n(\nu)/n\to H_\mu(\nu)$ almost surely.
+\item \emph{Each $n$.} For every $n$ and every $\lambda>0$,
+\[
+\Prob[\text{the set of $\lambda$-MAPs}\ne\mathcal E_0]\le\sum\nolimits_{\pi\notin\mathcal E}\inf\nolimits_{0<s\le1}2^{-s\lambda(\ell(\pi)-\ell_0)}\mathsf C_s(\pi)^n .
+\]
+If $\lambda>1$, $\varepsilon\in(0,1)$, $\bar\ell_\varepsilon:=\lceil(\lambda\ell_0+\log(2/\varepsilon))/(\lambda-1)\rceil$ and $0<\gamma\le\gamma_{\bar\ell_\varepsilon}$, this probability is at most $\varepsilon$ for every $n\ge\big\lceil\lambda(\ell_0+\log(2/\varepsilon))\ln2/(2\min(1,\lambda-1)\gamma)\big\rceil$.
+\end{enumerate}
+\end{theorem}
+
+\emph{Proof idea.} A $\lambda_n$-MAP is no worse than $\mathcal E_0$, so, as $\lambda_n\ge1$, selecting a program longer than $\bar\ell$ makes the prior-weighted likelihood ratios against $\nu$ of such programs sum to at least $2^{-\ell_0}$; this sum is a nonnegative supermartingale started at the prior's tail mass, so by Ville's inequality long programs are almost surely never selected. Among the rest, the strong law makes the likelihood ratio of every $\pi\notin\mathcal E$ decay exponentially, which beats a length advantage of $o(n)$. (b) is similar, (c) uses \cref{lem:split:ville}, and (d) is Markov's inequality for powers of the likelihood ratio (\cref{app:recovery:main}).
+
+\begin{remark}[Concentration on $\mathcal E$, not on $\mathcal E_0$]\status{remark; a natural strengthening refuted}\src{split/iid Thm 3.2 and the refutation after it}\label{rem:recovery:posterior}
+The natural strengthening to concentration on $\mathcal E_0$ fails: with programs for $\nu$ of lengths $5$ and $7$, the limit share of $\mathcal E_0$ in (b) is $8/9$ at $\lambda=1.5$ and $4/5$ for every tempered posterior, and below $1$ in every canonical class. Only the MAP singles out $\mathcal E_0$.
+\end{remark}
+
+\begin{remark}[Method and literature]\status{remark; known}\src{split/iid \S3, remarks after Thm 3.1}\label{rem:recovery:method}
+Parts (a) and (b) use the standard argument from Ville's inequality and the strong law, and we claim no novelty for them (\cref{rem:related:posteriors}); what needs $\lambda>1$ is (c) and the margin form of (d).
+\end{remark}
+
+\subsection{What a steeper prior buys, and what is necessary}\label{sec:recovery:lambda1}
+
+\paragraph{Two parity classes.} Let the inputs be uniform on $\{0,1\}^d$, $d$ large, and $\nu$ the fair coin. In $\mathcal C_k$ the coin has length $k$, and for $1\le r\le d$ and $\theta\in\{0,1\}^r$ the parity $x\mapsto\langle\theta,x_{1:r}\rangle\bmod2$ has length $r+2\lceil\log(r+1)\rceil+1$; in $\mathcal C_{k,r_0}$ ($r_0\le d$) the coin has length $k$ and the $2^{r_0}$ parities on the first $r_0$ bits have length $r_0+2$. In both, $\mathcal E_0=\{\text{coin}\}$, $\ell_0=k$, and every parity has gap $1-2^{-1/2}>0.29$. The \emph{recovery time} $n_{\rm rec}(\varepsilon)$ is the least $n$ with $\Prob[\text{the set of $\lambda$-MAPs}\ne\{\text{coin}\}]\le\varepsilon$ at all larger $n$.
+
+\begin{proposition}[$\lambda=1$ against $\lambda>1$]\status{proved; computed}\src{split/iid Prop 5.1(a),(b),(b$'$), Prop 4.4(b), Thm 4.1(iv$'$); split/verify-iid \S1.4}\label{prop:recovery:lambda1}
+(a) Let $k\ge8$, $r_0\ge6$ and $n:=r_0-5$. In $\mathcal C_{k,r_0}$, with probability at least $31/32$ every $1$-MAP at $n$ is a parity. So for $\varepsilon<31/32$ no function of $(\ell_0,\gamma,\varepsilon)$ bounds the recovery time at $\lambda=1$, even with a uniform margin.
+(b) In $\mathcal C_k$ with $k$ even, $d\ge2^{(k-8)/2}$ and $\varepsilon<31/32$, at $\lambda=1$: $2^{(k-8)/2}-6<n_{\rm rec}(\varepsilon)\le\max(32,\lceil2^{(k+1)/2}/\sqrt\varepsilon\,\rceil)$.
+(c) For fixed $\lambda>1$, in both classes, whatever $r_0$ and $d$, $\Prob[\text{the set of $\lambda$-MAPs}\ne\{\text{coin}\}]\le2^{k-2-(1-1/\lambda)n}$ for every $n$; so $n_{\rm rec}(\varepsilon)\le\lceil\lambda(k+\log(1/(4\varepsilon)))/(\lambda-1)\rceil$.
+\end{proposition}
+
+\emph{Proof idea.} A parity is consistent iff the labels lie in the column span of the input matrix over GF$(2)$. In (a) and the lower end of (b) a parity on $n+5$ bits is consistent with probability at least $31/32$ and beats the coin; the upper end bounds the dimension of the parities that can tie the coin. (c) is \cref{thm:recovery:main}(d) with $s=1/\lambda$ (\cref{app:recovery:lambda1}).
+
+So in $\mathcal C_k$ the recovery time is $\Theta(2^{\ell_0/2})$ at $\lambda=1$ and $O(\lambda\ell_0/(\lambda-1))$ for fixed $\lambda>1$, tight up to logarithms (\cref{prop:recovery:necessity}(c)). A direct computation (code in the accompanying repository), exact on every integer $n$, gives \cref{tab:recovery:times}; at $\lambda=1$ the times equal $2^{(k+4)/2}+6$. In \cref{thm:recovery:main}(d), for $\lambda>1$, the steeper prior charges every program longer than $\bar\ell_\varepsilon$ by $2^{-\lambda(\ell(\pi)-\ell_0)}$, at most $\varepsilon/2$ in total in every class, and $s=1/\lambda$ turns the prior factor of the shorter programs into $2^{\ell_0-\ell(\pi)}$, which is Kraft-summable; so the margin matters only up to length $\bar\ell_\varepsilon$. At $\lambda=1$ one exponent $s<1$ for all programs leaves the factor $Z(s):=\sum_\pi2^{-s\ell(\pi)}$, which depends on the class (it is finite in finite classes), and by (a) no bound in $(\ell_0,\gamma,\varepsilon)$ alone exists.
+
+\begin{table}[ht]\centering\small
+\caption{Recovery times $n_{\rm rec}(0.01)$ in $\mathcal C_k$ for large $d$ (\cref{prop:recovery:lambda1}), computed exactly.}\label{tab:recovery:times}
+\begin{tabular}{@{}rrrrrr@{}}\toprule
+$\ell_0=k$ & $\lambda=1$ & $\lambda=1.1$ & $\lambda=1.5$ & $\lambda=2$ & $\lambda=3$\\\midrule
+16 & 1030 & 78 & 34 & 23 & 20\\
+24 & 16390 & 144 & 52 & 38 & 29\\
+32 & 262150 & 232 & 70 & 51 & 38\\
+40 & 4194310 & 298 & 94 & 67 & 50\\\bottomrule
+\end{tabular}
+\end{table}
+
+Each ingredient of \cref{thm:recovery:main}(d) is needed (\cref{prop:recovery:necessity}): a margin; for $\lambda\ge2$ the factor $1/\gamma$, up to a constant and the ratio of $\ell_0$ to the length a wrong program saves; and $1/(\lambda-1)$, up to logarithms in the recovery time of $\mathcal C_k$ and up to $\log(1+2^{2-k})/(\lambda-1)$ bits in the length bound of (c), in separate classes. In $\Hcl{\times}$, with $Y=\{0,1\}$ and $\nu$ bounded away from $0$ and $1$, $\gamma_{\bar\ell}$ is eventually below every computable function of $\bar\ell$, so (d) gives no computable sample size.
+
+\subsection{The sample kink}\label{sec:recovery:kink}
+
+Consider the point family $\{(\ell(\pi),L_n(\pi)):\pi\in\mathcal C\}$ of a per-query sample (\cref{sec:kinks}), with left steepness $s_-(n)$ and right secant $s_+(n)$ at $(\ell_0,L_n(\nu))$ (\cref{def:kink:kinks}, with $\mathcal M=\mathcal C$).
+
+\begin{theorem}[A sample has a kink at the shortest equivalent length]\status{proved}\src{split/kink Lemmas 5.1--5.3, Thm 5.4, Cor 5.7(a),(d) (scheme (pq)); split/iid Lemma 8.1(i)--(iii); split/verify-kink \S2--\S3}\label{thm:recovery:kink}
+In the per-query setting, fix $n$ and $\varepsilon\in(0,1)$, and let $\delta^*$ be the Ville deficiency of $\xi_{\mathcal C}$.
+\begin{enumerate}[label=(\roman*),itemsep=0pt,topsep=2pt]
+\item With probability at least $1-\varepsilon$, simultaneously for all $\pi\in\mathcal C$: $L_n(\pi)-L_n(\nu)>2\log e\cdot n\,{\Hel}_\mu(\pi)-2\ell(\pi)-2\log(1/\varepsilon)$.
+\item With probability at least $1-\varepsilon$, $(\ell_0,L_n(\nu))$ is a zero-window left kink of steepness $\sigma_n:=\min_{\ell<\ell_0}(2\log e\cdot n\gamma_=(\ell)-2\ell-2\log(1/\varepsilon))/(\ell_0-\ell)$ if $\sigma_n>0$ ($\sigma_n:=\infty$ if $\ell_0=0$); if $A:=2\log e\cdot n\gamma_--2\log(1/\varepsilon)\ge2\ell_0$, then $\sigma_n\ge A/\ell_0$.
+\item With probability at least $1-\varepsilon$, for every $\tau>1$, $(\ell_0,L_n(\nu))$ is a right kink of flatness $\tau$ and window $(\ell_0+\log(1/\varepsilon))/(\tau-1)$. For all $n$ at once, $L_n(\pi)\ge L_n(\nu)-(\ell_0+\delta^*)-(\ell(\pi)-\ell_0)$ for every $\pi$: a right line of slope $1$ and offset $\ell_0+\delta^*$, giving the window $(\ell_0+\delta^*)/(\tau-1)$.
+\item Let $\bar\ell>\ell_0$ and $n>(\bar\ell+\log(1/\varepsilon))/(\log e\cdot\gamma_{\bar\ell})$. With probability at least $1-2\varepsilon$: programs of length at most $\bar\ell$ that fit no worse than $\nu$ are in $\mathcal E$; every right secant from $(\ell_0,L_n(\nu))$ is below $\tau_{\bar\ell}:=1+(\ell_0+\log(1/\varepsilon))/(\bar\ell-\ell_0)$; and if $\sigma_n>\tau_{\bar\ell}$, the point is a vertex of the hull and for every $\lambda\in(\tau_{\bar\ell},\sigma_n)$ the set of $\lambda$-MAPs is $\mathcal E_0$.
+\item For an infinite sequence of queries, almost surely $s_-(n)\ge n\,\underline s+o(n)$ with $\underline s:=2\log e\cdot\min_{\ell<\ell_0}\gamma_=(\ell)/(\ell_0-\ell)>0$, and $s_+(n)<1<s_-(n)$ for all large $n$: $\lambda=1$ lies strictly inside the kink.
+\end{enumerate}
+\end{theorem}
+
+\emph{Proof idea.} (i) is Markov's inequality for $\sqrt{\nu_\pi(h_n)/\nu(h_n)}$, whose mean is $(1-{\Hel}_\mu(\pi))^n\le e^{-n{\Hel}_\mu(\pi)}$, with a union bound weighted by $2^{-\ell(\pi)}$; (ii) reads it below $\ell_0$; (iii) is Markov's inequality for $\xi_{\mathcal C}(h_n)/\nu(h_n)$, or \cref{lem:split:ville}; (iv) adds a flat part and applies \cref{cor:kink:locate}(c); (v) takes $\varepsilon_n=n^{-2}$ in (i) and uses \cref{thm:recovery:main}(a) at $\lambda=1$ with \cref{lem:setup:hull}(v) (\cref{app:recovery:kink}).
+
+So the model is the hull vertex at length $\ell_0$: to its left a bit of model explains a number of bits of data linear in $n$, to its right a bit of program buys at most about one bit of noise beyond a window. The $\ell_0$ in the right window of (iii) cannot be dropped at finite $n$ (\cref{rem:recovery:window}).
+
+\subsection{Noisy computable functions}\label{sec:recovery:noisy}
+
+\begin{corollary}[Noisy computable functions]\status{proved}\src{split/iid Cor 6.1(i)--(v)}\label{cor:recovery:noisy}
+Let $Y=\{0,1\}$, $f:X\to Y$ total computable, $p\in[0,\frac12]$ computable, and $\nu_{f,p}(y\mid x):=1-p$ if $y=f(x)$, $p$ otherwise. Let $\mathcal C$ contain a program for $\nu_{f,p}$ ($\mu$-a.e.), with PQ data from i.i.d.\ inputs: a noisy oracle that redraws its flip at every query.
+(i) For $p<\frac12$ a kernel in $\mathcal E$ determines $f$ $\mu$-a.e.\ (its more likely label) and $p$; so for every schedule $1\le\lambda_n=o(n)$, almost surely every $\lambda_n$-MAP is eventually a shortest program in $\mathcal C$ whose kernel is $f$, up to $\mu$-null sets, with flips at rate exactly $p$.
+(ii) For fixed $\lambda>1$ the fill-ins, ``$f$ plus the list of flipped queries'' among them, have total posterior mass at most $2^{\lambda\ell_0+\lambda\delta^*-(\lambda-1)L_n(\nu_{f,p})}$, with $L_n(\nu_{f,p})/n\to H(p)$ almost surely.
+(iii) If $p=\frac12$, $f$ is not identifiable; if $p=0$, $\mathcal E$ contains fill-ins and (ii) gives no decay. In $\Hcl{\times}$, for $p>0$, the margin form gives no computable sample size (\cref{prop:recovery:necessity}(e) with a rational $\beta\in(0,p]$).
+\end{corollary}
+
+\emph{Proof idea.} \Cref{thm:recovery:main}(a),(c), with $H(\nu_{f,p}(\cdot\mid x))=H(p)$ for every $x$ (\cref{app:recovery:noisy}).
+
+The rate, a real number, is identified exactly, and the flips stay out of the model. With frozen labels on a finite support the data set is eventually the full table, so the selection depends on one table: no procedure identifies every such sampler (\cref{prop:recovery:frozen}(a)), and in an explicit class of parities with eight noise rates the $\lambda$-MAP is then wrong with probability at least $(7/8)^{64}$ for every $\lambda$, while per query (i) applies (\cref{rem:recovery:frozentable} in \cref{app:recovery:noisy}).
+
+\subsection{Frozen labels, adaptive inputs and misspecification}\label{sec:split:private}
+
+Call $\pi$ \emph{$\nu$-equivalent on the run} if $\sum_i\Hel(\nu(\cdot\mid x_i),\nu_\pi(\cdot\mid x_i))<\infty$, the sum running over the queries (per query) or over the distinct inputs (frozen labels).
+
+\begin{theorem}[Private randomness; any input rule]\status{proved; computed; Kakutani-type argument known}\src{steeper Thm 4; split/iid Prop 3.3, Prop 7.2(a); split/verify-iid \S1.1, \S2 item 4; check c4(C); referee r4, q3(C)}\label{thm:split:private}
+Let $\mathcal C$ be as in \cref{def:split:setting}, the inputs follow any rule, with frozen or per-query labels, and let $\pi_\nu\in\mathcal C$ have length $k$ and $\nu_{\pi_\nu}(o_n)=\nu(o_n)$ for all $n$ almost surely. Define $\delta^*$ from $\xi_{\mathcal C}$. For fixed $\lambda>1$, simultaneously for all $n$:
+(i) every $\lambda$-MAP $\hat\pi$ has $\ell(\hat\pi)\le(\lambda k+\delta^*)/(\lambda-1)$ and $L_n(\nu)-\ell(\hat\pi)-\delta^*\le L_n(\hat\pi)\le L_n(\nu)+\lambda k$;
+(ii) $\Pi_\lambda(\{\pi:\ell(\pi)>\bar\ell\}\mid o_n)\le2^{\lambda k+\delta^*-(\lambda-1)\bar\ell}$ for every $\bar\ell$;
+(iii) every fill-in has length at least $L_n(\nu)-\delta^*$, $\Pi_\lambda(\text{fill-ins}\mid o_n)\le2^{\lambda k+\lambda\delta^*-(\lambda-1)L_n(\nu)}$, and $\Pi^{1/\lambda}(\text{fill-ins}\mid o_n)\le2^{k+\delta^*-(1-1/\lambda)L_n(\nu)}$.
+(iv) \emph{Every $\lambda\ge1$.} If infinitely many queries are made, then for fixed $\lambda\ge1$, almost surely the $\lambda$-MAPs have bounded length, uniformly in $n$, from some $n$ on every $\lambda$-MAP is $\nu$-equivalent on the run, and $\Pi_\lambda(\nu\text{-equivalent on the run}\mid o_n)\to1$.
+\end{theorem}
+
+\emph{Proof idea.} (i)--(iii) compare with $J_\lambda(\pi_\nu;o_n)=\lambda k+L_n(\nu)$ and use \cref{lem:split:ville}. In (iv) the tail supermartingale of \cref{thm:recovery:main}(a), with $k$ for $\ell_0$, confines the $\lambda$-MAPs to a finite set, and the likelihood ratio of a program not $\nu$-equivalent on the run tends to $0$ by the martingale argument behind Kakutani's dichotomy \citep{kakutani1948equivalence}, valid for adaptive inputs (\cref{app:split:private}).
+
+Per query with i.i.d.\ inputs, $\nu$-equivalence on the run is almost surely membership in $\mathcal E$. With frozen labels and i.i.d.\ inputs from a $\mu$ of infinite support, any program of $\mathcal E_0$ can serve as $\pi_\nu$, and $\nu$-equivalence on the run means $\sum_{x\in\supp\mu}\Hel(\nu(\cdot\mid x),\nu_\pi(\cdot\mid x))<\infty$ (\cref{app:recovery:beyond}).
+
+\begin{proposition}[Frozen labels]\status{proved}\src{split/iid Props 7.5, 7.6(b),(d)}\label{prop:recovery:frozen}
+Take frozen labels with inputs i.i.d.\ from $\mu$.
+(a) Let $\nu,\nu'$ differ only at one input $x_0$ with $\mu(x_0)>0$, where $\nu(\cdot\mid x_0)$ and $\nu'(\cdot\mid x_0)$ are distinct and mutually absolutely continuous. Every estimator with values in $\mathcal C$ that is almost surely eventually in $\mathcal E_\nu$ under $\nu$ is almost surely not eventually in $\mathcal E_{\nu'}$ under $\nu'$. Here $\mathcal E_\nu$ is the set of programs whose kernel equals $\nu$ at $\mu$-almost every input. In $\Hcl{\times}$ every computable $\nu$ with $\nu(y_0\mid x_0)\in(0,1)$ at some $x_0$ of positive mass has such a computable $\nu'$: no procedure, the $\lambda$-MAP for any $\lambda$ included, recovers every computable sampler with noise on the support of $\mu$.
+(b) Let $\mathcal E\ne\emptyset$ and $\beta_x:=1-\max_y\nu(y\mid x)$. If $\sum_{x\in\supp\mu}\beta_x=\infty$, then for every $\lambda\ge1$ the posterior mass of the deterministic programs tends to $0$ almost surely.
+(c) Let $\mu$ be uniform on $\{0,\dots,9\}$, and let the class consist of a program of length $5$ for $\nu=\Bern(1/64)$ and programs $e_j$ of length $9$ equal to $\nu$ except $e_j(1\mid j)=1$. For every $\lambda<1.5$ the $\lambda$-MAP is eventually some $e_j$ with probability exactly $1-(63/64)^{10}$.
+\end{proposition}
+
+\emph{Proof idea.} (a) The two laws of the data process differ in one factor of a product. (b) A deterministic program has gap at least $\beta_x/2$ at $x$; apply \cref{thm:split:private}(iv). (c) An $e_j$ with frozen label $1$ at $j$ gains $6$ bits of fit for $4\lambda$ bits of length; per query it fails at the first label $0$ at $j$; and $1-(63/64)^{10}=0.1457$ to four digits (\cref{app:recovery:beyond}).
+
+\Cref{prop:recovery:beyond} gives further limits: with adaptive inputs a shorter program that differs from $\nu$ at every query but is $\nu$-equivalent on the run can win forever with positive probability; under misspecification fill-ins do not compete per query; and with $\lambda=cn$, $\mathcal E_0$ is recovered for $c$ below the truth's left steepness in population and not above, as for the teacher's errors (\cref{sec:teacher}).
+
+\subsection{\texorpdfstring{$\lambda=1$}{lambda=1} on one data set}\label{sec:split:lambda1}
+
+On a data set fill-ins are cheap: a deterministic program can store a finite piece of each input's private random stream. Adapting the tape-length bound of \citet[Proposition~4.6(a)]{claudeSFI2026fundamentals} % P1: prop:versions:tape
+gives, in $\Hcl{\times}$, $\Wdet(D)\ge2^{-k-2\log(t_D+1)-\kappa}\nu(D)$ whenever $\beta_D:=\min_{(x,y)\in D}\nu(y\mid x)>0$, with $2\log(t_D+1)$ doubly logarithmic in the input length and triply logarithmic in $|\dom D|$ and $-\log\nu(D)$ (\cref{lem:split:stream}). For frozen labels on distinct inputs let $d_n$ be the largest input length in $D_n$, $\beta_n:=\beta_{D_n}$, $i_n:=\lceil\log(6|\dom D_n|/\beta_n)\rceil$, $t_n:=\lceil\log(2d_n+2+2\log(i_n+1))\rceil$, and $\Pi_1(\det\mid D_n)$ the posterior mass of all deterministic programs.
+
+\begin{theorem}[SFI at $\lambda=1$]\status{proved}\src{steeper Thm 3}\label{thm:split:lambda1}
+Let the class be $\Hcl{\times}$, the labels frozen on distinct inputs chosen by any rule, $\nu$ a sampler with a program $\pi_\nu$ of length $k$, and $\delta^*$ the Ville deficiency of $\xi_\times=\Mprod$. Simultaneously for all $n$:
+(i) $\Pi_1(\pi_\nu\mid D_n)\ge2^{-k-\delta^*}$;
+(ii) $\Pi_1(\det\mid D_n)=\Wdet(D_n)/\xi_\times(D_n)\ge2^{-k-2\log(t_n+1)-\kappa-\delta^*}$;
+(iii) the posterior odds of all fill-ins against the sampler program lie in $[2^{-2\log(t_n+1)-\kappa},2^{k+\delta^*}]$, with a lower end that depends on the sampled randomness only through $t_n$.
+\end{theorem}
+
+\begin{proof}
+$\Pi_1(\pi_\nu\mid D_n)=2^{-k}\nu(D_n)/\xi_\times(D_n)$; bound $\xi_\times(D_n)\le2^{\delta^*}\nu(D_n)$ by \cref{lem:split:ville}, and $\Wdet(D_n)$ below by \cref{lem:split:stream} and above by $\xi_\times(D_n)$.
+\end{proof}
+
+The lower ends cover non-dyadic samplers, such as the $\Bern(1/3)$ threshold hypotheses of Sam Eisenstat's coin example (personal communication; \citealp[Section~7.3]{claudeSFI2026fundamentals}), % P1: sec:ex:eisenstat
+and in SI's representation by deterministic programs no complexity weight separates a sampler from its fill-ins (\cref{prop:split:si,rem:split:siprograms}).
+
+\begin{remark}[What frozen labels give]\status{remark}\src{steeper \S3.3; split/iid Prop 3.3, Prop 7.5}\label{rem:split:reading}
+With frozen labels and fixed $\lambda>1$, no $\lambda$-MAP is a fill-in once $L_n(\nu)>\lambda(k+\delta^*)/(\lambda-1)$, and the fill-ins' posterior is exponentially small in the sampled randomness, but positive (\cref{thm:split:private}). The selected program need not be $\nu$: it may carry up to $(k+\delta^*)/(\lambda-1)$ bits beyond it, such as noise memorised at a few inputs. In the limit every $\lambda\ge1$ selects programs that are $\nu$-equivalent on the run, although at $\lambda=1$ the posterior odds stay within the factors of \cref{thm:split:lambda1}. Equivalence on the run says nothing about unseen inputs and is vacuous on a finite domain; exact recovery needs per-query labels (\cref{thm:recovery:main,prop:recovery:frozen}).
+\end{remark}
+
+\begin{question}[rates, frozen labels, misspecification]\status{open}\src{split/notes-final \S6 items 1--6 (item 6: its first question only); split/iid Props 4.3, 4.4, \S7.4 (open for countable classes); split/kink \S8}\label{q:recovery:open}
+(a) Is there a recovery-time bound in $\Hcl{\times}$ computable from $(\lambda,\ell_0,\varepsilon)$ and a margin for the programs far from $\nu$? (b) Can $1/\gamma_{\bar\ell}$ in \cref{thm:recovery:main}(d) be replaced by a term of order $\log n$ for each family of near-equivalent refinements? (c) Is the joint factor $1/(\min(1,\lambda-1)\gamma)$ necessary in one class? (d) With frozen labels and repeated inputs, for which classes and input laws does the evidence $\sum_{x\in\dom D_n}\Hel(\nu(\cdot\mid x),\nu_\pi(\cdot\mid x))$ of every program shorter than $\ell_0$ grow without bound? On one frozen data set far from the full table, can single fill-ins in $\Hcl{\times}$ give a right secant of at least $1$ at the shortest equivalent program? (e) If $\mathcal E=\emptyset$ in a countable class, is the $\lambda_n$-MAP eventually a shortest minimiser of the mean KL divergence for every schedule $\lambda_n=o(n)$ that grows fast enough?
+\end{question}

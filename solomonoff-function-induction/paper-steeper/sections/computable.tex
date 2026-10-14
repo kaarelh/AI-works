@@ -1,36 +1,36 @@
-% Section 10 (p2-body, DECISIONS §D2): computable hypothesis classes. Receives prop:related:computable,
-% prop:related:computability, rem:related:nn and q:related:open from the former related.tex (labels unchanged); the
-% examples paragraph of prop:related:computable is now rem:computable:examples.
-% Source: research/tracks/steeper/notes-final.md §4.5 (Props 4.4, 4.5, Rem 4.7), §4.6 items 6, 7.
+% Section 10 (writer W6, Paper 2 restructure of 2026-10-13, research/paper-review/restructure/PLAN.md). Base: computable.tex at
+% dcb3a3a3 (p2-body, DECISIONS §D2), which received prop:related:computable, prop:related:computability, rem:related:nn and
+% q:related:open from the former related.tex (labels unchanged). Sources: research/tracks/steeper/notes-final.md §4.5
+% (Props 4.4, 4.5, Rem 4.7), §4.6 items 6, 7; research/tracks/split/iid/notes-final.md Def 1.1, Cor 6.2;
+% research/tracks/split/kink/notes-final.md §5.0 (the class of the sample kink).
+% Fix round (DECISIONS-restructure §3, RW6-01): prop:related:computability (statement, label, status, src) moved to
+% app-related.tex next to its proof; one sentence here. rem:computable:examples cut to three lines.
 \section{Computable hypothesis classes}\label{sec:computable}\label{sec:related:computable}
 
-The lower bounds of \cref{sec:teacher} use only coding properties of the class, so they survive in resource-bounded classes (proofs in \cref{app:related}).
+Both reasons for a steeper penalty survive resource bounds: the recovery theorems of \cref{sec:recovery} use only countability and the Kraft inequality, and the lower bounds of \cref{sec:parity,sec:teacher} only coding properties of the class (proofs in \cref{app:related}).
 
-\begin{proposition}[Computable product classes]\status{proved; the examples are remarks}\src{steeper Prop 4.4}\label{prop:related:computable}
+\begin{proposition}[Computable product classes]\status{proved; the examples are remarks}\src{steeper Prop 4.4; split/iid Cor 6.2, Def 1.1; split/kink \S5.0}\label{prop:related:computable}
 Let $\mathcal H'$ be a hypothesis class of product hypotheses (\cref{def:setup:class}).
 (a) \Cref{lem:teacher:list,lem:teacher:floor,lem:teacher:coding,lem:teacher:twopart} and the lower-bound parts of \cref{thm:teacher:main} ((o), the bound on $\Phi$ in (i), (ii), and the level and $R_B$ statements of (iii)) hold for every $\pi\in\mathcal H'$, with $\kappa$ replaced by a constant that depends on $\mathcal H'$. The parts that use reference programs ($\Delta(c)$, $J_g$, $J_b$, (iv)) hold if $\mathcal H'$ contains a good model $\pi'_g$ and a memoriser $\pi'_b$, with $\kappa_g:=\ell(\pi'_g)-d$ and $\kappa_b:=\ell(\pi'_b)-d-\lceil L_S\rceil$.
 (b) \Cref{thm:split:private} holds in every countable product class with Kraft weights that contains a program for the sampler.
 (c) \Cref{prop:absorb:price}(ii) holds in every product class with a prefix-free code.
+(d) \Cref{thm:recovery:main,thm:recovery:kink} hold in every countable product class with Kraft weights that contains a program whose kernel equals $\nu$ at $\mu$-almost every input, for example a time-bounded, circuit or finite class; $\ell_0$, $\mathcal E_0$ and the margins are then those of the class, in its own code.
 \end{proposition}
 
-\begin{remark}[Examples]\label{rem:computable:examples}
-Examples are probabilistic programs clocked at $t(|x|)$ steps, as in time-bounded SFI \citep[Section~9.1]{claudeSFI2026fundamentals},% P1: thm:comp:timebounded
-\ where generous time bounds change $\kappa_g,\kappa_b$ by logarithmic terms, and circuits with private output noise, where a parity costs about $d\log d$ bits, so $\kappa_g$ is of order $d\log d$ and $c_{\rm hi}$ shrinks by a factor of order $\log d$. \Cref{thm:absorb:absorption} does not transfer, since a mixture of all time-$t$ programs is not a time-$t$ program; so the contrast between product and shared classes is established only for unbounded classes.
+\emph{Proof idea.} Parts (a) and (c) use (F1) and the coding theorem, with constants of the class; (b) and (d) use only countability, the Kraft inequality and Ville's inequality for the class's own mixture. With a finite input set, as for circuits on $\{0,1\}^d$, inputs repeat, so (d) concerns per-query labels; with frozen labels the data eventually form one table (\cref{rem:recovery:frozentable}). The classes of \cref{prop:recovery:lambda1} are finite classes of this kind.
+
+\begin{remark}[Examples]\status{remark}\src{steeper Prop 4.4}\label{rem:computable:examples}
+Examples are probabilistic programs clocked at $t(|x|)$ steps \citep[Section~9.1]{claudeSFI2026fundamentals},% P1: sec:comp:time
+\ and circuits with private output noise, where a parity costs about $d\log d$ bits. \Cref{thm:absorb:absorption} does not transfer: a mixture of all time-$t$ programs is not a time-$t$ program.
 \end{remark}
 
-\begin{proposition}[Computability of the steeper predictor]\status{proved}\src{steeper Prop 4.5}\label{prop:related:computability}
-Let $\lambda\ge1$ be computable, the class $\Hcl{\times}$ or $\Hcl{F}$, $X$ infinite and $\{0,1\}\subseteq Y$. (a) $\xi_\lambda(D)$ is lower semicomputable uniformly in $D$. (b) Neither the raw conditional $\xi_\lambda(D+(x,y))/\xi_\lambda(D)$ nor its normalised version is computable. (c) Both are limit-computable.
-\end{proposition}
+For computable $\lambda\ge1$, in $\Hcl{\times}$ and $\Hcl{F}$, the steeper mixture $\xi_\lambda$ is lower semicomputable, and its predictive conditionals, raw or normalised, are limit-computable but not computable, as for $\MF$ (\cref{prop:related:computability}).
 
-Part (b) is the diagonal argument for $\MF$ \citep[Proposition~A.10(c)]{claudeSFI2026fundamentals}:% P1: prop:setting:computability
-\ a computable conditional yields a computable labelling on which the predictor loses a constant per input, against the weight $2^{-\lambda(K(f)+\kappa)}$ of a program for it.
-
-\begin{remark}[Neural-network Bayes]\status{remark}\src{steeper Rem 4.7}\label{rem:related:nn}
-With labels independent given the parameters $\theta$, a network's Bayes posterior is a mixture of product laws, an object of the type of $\Mprod$ \citep[Proposition~10.1]{claudeSFI2026fundamentals}.% P1: prop:nn:functionspace
-\ \Cref{thm:split:private} applies to countable discretisations with weights $p(\theta)$: under the power prior $p(\theta)^\lambda$, $\lambda>1$, deterministic parameter settings that reproduce the noisy labels get posterior mass exponentially small in the sampled randomness, if the noise model is in the family. Whether a parameter prior behaves like a description-length prior, as \cref{thm:teacher:main} needs, is the bridge question of the companion paper \citep[Question~10.9 and Remark~H.2]{claudeSFI2026fundamentals}, which the slides of \citet{vaintrobhanni2026nnbayes} motivate;% P1: rem:nn:bridge, q:nn:bridges
-\ nothing here settles it.
+\begin{remark}[Neural-network Bayes]\status{remark}\src{steeper Rem 4.7; split/iid Def 1.1, Cor 6.2}\label{rem:related:nn}
+With labels independent given the parameters $\theta$, a network's Bayes posterior is a mixture of product laws, of the type of $\Mprod$ \citep[Proposition~10.1]{claudeSFI2026fundamentals};% P1: prop:nn:functionspace
+\ for a countable discretisation with integer code lengths $\ell(\theta)$ and Kraft weights, whose noise model contains the sampler, \cref{thm:split:private,thm:recovery:main} apply: under the power prior $2^{-\lambda\ell(\theta)}$, $\lambda>1$, settings that reproduce the noisy labels get posterior mass exponentially small in the sampled randomness, and per query the $\lambda$-MAP is eventually a shortest setting whose kernel equals the sampler $\mu$-almost everywhere. Whether a parameter prior behaves like a description-length prior, as \cref{thm:teacher:main} needs, is the bridge question of the companion paper \citep[Question~10.9 and Remark~H.2]{claudeSFI2026fundamentals}, which the slides of \citet{vaintrobhanni2026nnbayes} motivate; nothing here settles it.% P1: rem:nn:bridge, q:nn:bridges
 \end{remark}
 
-\begin{question}[resource bounds and computability]\label{q:related:open}
-(a) Does some time-bounded shared class contain a short member that absorbs everything at $\lambda>1$, as in \cref{thm:absorb:absorption}? If not, steeper simplicity could also work in time-bounded Solomonoff induction. (b) For computable $\lambda\ge1$ and the class $\Hcl{\times}$, is there a computable map from data sets to $\lambda$-MAPs?
+\begin{question}[resource bounds and computability]\status{open}\src{steeper \S4.6 items 6, 7}\label{q:related:open}
+(a) Does some time-bounded shared class contain a short member that absorbs everything at $\lambda>1$, as in \cref{thm:absorb:absorption}? If not, steeper simplicity could work in time-bounded Solomonoff induction. (b) For computable $\lambda\ge1$ and the class $\Hcl{\times}$, is there a computable map from data sets to $\lambda$-MAPs?
 \end{question}

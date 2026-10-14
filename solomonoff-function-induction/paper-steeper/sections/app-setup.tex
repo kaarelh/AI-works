@@ -1,10 +1,12 @@
-% Appendix A (writer: steep-a). Proofs for sec:setup. Source: steeper notes-final §1.3 (Lemma 1.2), §1.5 (Lemma 1.6).
+% Appendix A (restructure writer W1). Proofs for sec:setup. Sources: steeper notes-final §1.3 (Lemma 1.2), §1.5 (Lemma 1.6);
+% split/kink/notes-final.md §2 (Thms 2.1, 2.2, Prop 2.3; renamed: F -> fit L (DECISIONS-restructure D11(z)), alpha_min -> alpha_0, rho_D-breve -> lower boundary \underline C).
+% Fix round (RW1-01): lem:setup:basic with its proof received from setup.tex (app:setup:basic).
 \section{Proofs for \texorpdfstring{\cref{sec:setup}}{Section \ref*{sec:setup}} (setting)}\label{app:setup}
 
 \subsection{Standard facts}\label{app:setup:facts}
 
 The following facts are standard \citep{li2008introduction}; $\kappa$ is as in \cref{sec:setup:classes}.
-\begin{itemize}
+\begin{itemize}[itemsep=0pt]
 \item[(F1)] $K(\pi)\le\ell(\pi)+\kappa$ for every program $\pi$ of a class $\mathcal H$. The identity map on the c.e.\ prefix-free set $\mathcal H$ is a prefix machine, which the universal machine simulates with a fixed prefix; for canonical classes, $\mathcal H=\dom V$ and the fact is immediate.
 \item[(F2)] \emph{Conditional coding theorem.} If a fixed program lower-semicomputes from $z$ a semimeasure $Q_z$ on a countable set, then $K(w\mid z)\le-\log Q_z(w)+\kappa$.
 \item[(F3)] $K(x)\le K(y)+K(x\mid y)+\kappa$, and $K(x,y\mid z)\le K(x\mid z)+K(y\mid x,z)+\kappa$.
@@ -12,44 +14,54 @@ The following facts are standard \citep{li2008introduction}; $\kappa$ is as in \
 \item[(F5)] $K(j)\le2\log(j+1)+\kappa$ for every integer $j\ge0$, by a doubling code.
 \end{itemize}
 
-\subsection{The hull lemma}\label{app:setup:hull}
+\subsection{Basic properties of the objectives}\label{app:setup:basic}
 
-\begin{lemma}[Hull lemma]\status{proved; computed; strengthening of (iv) refuted}\src{steeper Lemma 1.2 (T5 Lemma 3.1); checks c5(a), c6(F)}\label{lem:setup:hull}
-Let $\mathcal A:=\{(\ell(\pi),R(\pi))\}$ with $R\in[0,\infty]$ and finitely many points below each $\ell$-level, let $C:=\mathrm{conv}(\mathcal A\cap\{R<\infty\})+\mathbb R^2_{\ge0}$, and call the extreme points of $C$ its \emph{vertices}.
-\begin{enumerate}[label=(\roman*)]
-\item For $c>0$, every minimiser of $c\,\ell+R$ lies on the boundary of $C$, on a supporting line with normal $(c,1)$.
-\item If $c<c'$ and $h,h'$ minimise $J_c,J_{c'}$, then $\ell(h)\ge\ell(h')$ and $R(h)\le R(h')$.
-\item A point of $\mathcal A$ is the unique minimising point of $c\,\ell+R$ for every $c$ in some nonempty open interval if and only if it is a vertex of $C$; the least-$\ell$ vertex and the least-$R$ vertex, if it exists, count. A hypothesis is then the unique minimiser if and only if no other hypothesis has the same point.
-\item (Absolute length bound.) Every minimiser $h_c$ of $c\,\ell+R$ ($c>0$) solves $\min\{R(h):\ell(h)\le\ell(h_c)\}$. Conversely, a solution of $\min\{R(h):\ell(h)\le L\}$ minimises $c\,\ell+R$ for some $c>0$ if and only if its point lies on the boundary of $C$ and not on the open horizontal ray to the right of the least-$R$ vertex.
-\end{enumerate}
+\begin{lemma}[Basic properties]\status{proved}\src{steeper Lemma 1.1}\label{lem:setup:basic}
+(i) If $J_\lambda(\pi;o)<\infty$ for some $\pi$, the set of $\lambda$-MAPs is finite and nonempty.
+(ii) $\arg\min_\pi J_\lambda(\pi;o)=\arg\max_\pi\Pi_\lambda(\pi\mid o)=\arg\max_\pi\Pi^{1/\lambda}(\pi\mid o)$.
+(iii) On deterministic hypotheses $P_\pi(D)^\eta=P_\pi(D)\in\{0,1\}$, so on any set of deterministic hypotheses the tempered posterior has the relative weights of the plain ($\lambda=1$) posterior.
 \end{lemma}
 
-\begin{remark}[The converse in (iv)]\label{rem:setup:hullconverse}
-The converse in (iv) cannot be weakened to ``on the boundary of $C$'': in $\mathcal A=\{(0,1),(10,0),(20,0)\}$ the point $(20,0)$ lies on the boundary and solves the constrained problem for $L\ge20$, but $(10,0)$ is strictly better for every $c>0$.
+\emph{Proof.} (i) $J_\lambda\ge\lambda\ell$, and only finitely many programs have $\ell(\pi)\le J_\lambda(\pi_0;o)/\lambda$. (ii) $2^{-J_\lambda}=(2^{-\ell}P_\pi^{1/\lambda})^\lambda$. \qed
+
+\subsection{Proof of the hull lemma}\label{app:setup:hull}
+
+We prove \cref{lem:setup:hull}. Write $\alpha_0:=\min\{\ell(\pi):L(\pi)<\infty\}$, and call a program \emph{finite} if $L(\pi)<\infty$. All fits are nonnegative.
+
+\emph{Step 1: the vertices, by gift wrapping.} Put $\rho_0:=\min\{L(\pi):\ell(\pi)=\alpha_0\}$ and $v_0:=(\alpha_0,\rho_0)$. Given $v_i=(\alpha_i,\rho_i)$, let $\sigma_{i+1}$ be the supremum of the slopes $(\rho_i-L(\pi))/(\ell(\pi)-\alpha_i)$ over finite $\pi$ with $\ell(\pi)>\alpha_i$. If there is no such $\pi$ or $\sigma_{i+1}\le0$, stop, and put $q:=i$. Otherwise let $\alpha_{i+1}$ be the largest length of a program attaining the supremum, and $\rho_{i+1}:=\rho_i-\sigma_{i+1}(\alpha_{i+1}-\alpha_i)$.
+\begin{itemize}[itemsep=0pt]
+\item \emph{The suprema are attained.} If some $\pi$ has slope $s>0$ from $v_i$, every $\pi'$ with slope at least $s$ has $0\le L(\pi')\le\rho_i-s(\ell(\pi')-\alpha_i)$, so $\ell(\pi')\le\alpha_i+\rho_i/s$; only finitely many programs qualify.
+\item \emph{$\rho_i=\min\{L(\pi):\ell(\pi)\le\alpha_i\}$, attained at length exactly $\alpha_i$.} By induction: a program with $\alpha_i<\ell(\pi)\le\alpha_{i+1}$ has slope at most $\sigma_{i+1}$ from $v_i$, so $L(\pi)\ge\rho_i-\sigma_{i+1}(\ell(\pi)-\alpha_i)\ge\rho_{i+1}$, and the maximising program at length $\alpha_{i+1}$ has fit exactly $\rho_{i+1}$.
+\item \emph{$\sigma_1>\sigma_2>\dots>0$.} If $\sigma_{i+1}\ge\sigma_i$ for some $i\ge1$, the slope of $v_{i+1}$ seen from $v_{i-1}$ is a weighted mean of $\sigma_i$ and $\sigma_{i+1}$, hence at least $\sigma_i$: strict inequality contradicts the definition of $\sigma_i$, and equality the maximality of $\alpha_i$.
+\item \emph{Infinitely many vertices.} The $\alpha_i$ are strictly increasing integers, and $\sum_i\sigma_i(\alpha_i-\alpha_{i-1})=\rho_0-\lim_i\rho_i\le\rho_0$ with every $\alpha_i-\alpha_{i-1}\ge1$; so $\alpha_i\to\infty$ and $\sigma_i\to0$.
+\end{itemize}
+
+\emph{Step 2: the boundary.} Let $P$ be linear between consecutive vertices, equal to $\rho_q$ on $[\alpha_q,\infty)$ if $q<\infty$, and defined on $[\alpha_0,\infty)$ (if there are infinitely many vertices, $\alpha_i\to\infty$). Its slopes $-\sigma_1<-\sigma_2<\dots\le0$ increase, so $P$ is convex and nonincreasing. Every finite point lies on or above $P$: if $\ell(\pi)\in(\alpha_i,\alpha_{i+1}]$ its slope from $v_i$ is at most $\sigma_{i+1}$; if $\ell(\pi)>\alpha_q$ its slope from $v_q$ is at most $0$; if $\ell(\pi)=\alpha_0$, $L(\pi)\ge\rho_0$. So $C$ lies in the epigraph $\{(\alpha,y):\alpha\ge\alpha_0,\ y\ge P(\alpha)\}$, which is convex and closed under adding $\mathbb R^2_{\ge0}$. Conversely, $(\alpha,P(\alpha))$ is a convex combination of two vertices for $\alpha\in[\alpha_{i-1},\alpha_i]$, and equals $v_q+(\alpha-\alpha_q,0)$ for $\alpha\ge\alpha_q$. Hence $C$ is that epigraph and $\underline C=P$. Its boundary consists of the vertical ray above $v_0$, the edges $[v_{i-1},v_i]$ of slope $-\sigma_i$, and, if $q<\infty$, the horizontal ray to the right of $v_q$, the least-$L$ vertex. Its extreme points are exactly the $v_i$, and each is the point of a program of length $\alpha_i$. This proves the first part of (v).
+
+Below, $\langle(c,1),(\ell,L)\rangle=c\,\ell+L$.
+
+\emph{(i).} Since $(c,1)\ge0$, the infimum of $c\,\ell+L$ over $C$ equals its infimum over $\mathcal A$. A minimiser therefore minimises a nonzero linear functional over $C$, so the line $\{c\,\ell+L=J_c(\pi)\}$ supports $C$ at its point, which lies on the boundary.
+
+\emph{(ii).} Add $J_c(\pi)\le J_c(\pi')$ and $J_{c'}(\pi')\le J_{c'}(\pi)$ to get $(c'-c)(\ell(\pi')-\ell(\pi))\le0$, so $\ell(\pi')\le\ell(\pi)$. Then the first inequality gives $L(\pi)\le L(\pi')+c(\ell(\pi')-\ell(\pi))\le L(\pi')$.
+
+\emph{(iii).} The two boundary pieces at $v_i$ have slopes $-\sigma_i<-\sigma_{i+1}$. For $c\in(\sigma_{i+1},\sigma_i)$ the line with normal $(c,1)$ through $v_i$ meets $C$ only at $v_i$, so $v_i$ is the unique minimising point. Conversely, a point that is the unique minimising point for every $c$ in an open interval is an exposed point of $C$, hence a vertex. A boundary point that is not a vertex lies in the relative interior of an edge, and then both endpoints of the edge minimise whenever it does; or on the vertical ray, where the vertex below it is better; or on the horizontal ray, where the least-$L$ vertex is better. The statement about programs is immediate.
+
+\emph{(iv).} If $\ell(\pi)\le\ell(\pi_c)$, then $L(\pi)\ge L(\pi_c)+c(\ell(\pi_c)-\ell(\pi))\ge L(\pi_c)$. For the converse: a vertex minimises $J_c$ for $c\in(\sigma_{i+1},\sigma_i)$, and a point inside an edge of slope $-\sigma_i$ minimises $J_{\sigma_i}$. A point on the open horizontal ray is beaten, for every $c>0$, by the least-$L$ vertex. A point on the vertical ray above $v_0$ is never a constrained solution, since $v_0$ is feasible whenever it is and fits better. A point off the boundary minimises no $J_c$, by (i).
+
+\emph{(v), the minimisers.} For every finite $\pi$, $J_c(\pi)\ge c\,\ell(\pi)+P(\ell(\pi))\ge m_c:=\inf_{\alpha\ge\alpha_0}(c\,\alpha+P(\alpha))$. The function $\varphi(\alpha):=c\,\alpha+P(\alpha)$ is piecewise linear with slope $c-\sigma_i$ on $(\alpha_{i-1},\alpha_i)$ and $c$ beyond $\alpha_q$, increasing in $i$. Let $i^*:=\min\{i:\sigma_{i+1}\le c\}$, which exists because $\sigma_i\to0<c$ or $\sigma_{q+1}=0$. Then $\varphi$ is nonincreasing up to $\alpha_{i^*}$ and nondecreasing after it, so $m_c=c\,\alpha_{i^*}+\rho_{i^*}$ is attained by the program at $v_{i^*}$. Hence $\pi$ is a minimiser if and only if $L(\pi)=P(\ell(\pi))$ and $\ell(\pi)$ minimises $\varphi$; the minimising set of $\varphi$ is $\{\alpha_{i^*}\}$ if $\sigma_{i^*+1}<c$, and $[\alpha_{i^*},\alpha_{i^*+1}]$ if $c=\sigma_{i^*+1}$. This is the description in (v). The set is finite because its lengths are bounded and there are finitely many programs of each length.
+
+\emph{(vi).} By (v), $\Phi(c)=\min_i(c\,\alpha_i+\rho_i)$, a minimum of affine functions, hence concave; on $(\sigma_{i+1},\sigma_i)$ it equals $c\,\alpha_i+\rho_i$, with derivative $\alpha_i$. For $\alpha\ge\alpha_0$, $\Phi(c)\le c\,\alpha+P(\alpha)$ for every $c$, so $\sup_c(\Phi(c)-c\,\alpha)\le P(\alpha)$. Conversely, for $\alpha\in[\alpha_{i-1},\alpha_i]$ take $c=\sigma_i$, at which every point of the edge minimises, so $\Phi(\sigma_i)=\sigma_i\alpha+P(\alpha)$; for $\alpha\ge\alpha_q$, $\Phi(c)-c\,\alpha=\rho_q-c(\alpha-\alpha_q)\to\rho_q=P(\alpha)$ as $c\downarrow0$. This is the Legendre--Fenchel duality of convex analysis. \qed
+
+\begin{remark}[The converse in (iv)]\status{proved; computed}\src{steeper Lemma 1.2, refuted strengthening of (iv); check c6(F)}\label{rem:setup:hullconverse}
+The converse in (iv) cannot be weakened to ``on the boundary of $C$'': in $\mathcal A=\{(0,1),(10,0),(20,0)\}$ the point $(20,0)$ lies on the open horizontal ray to the right of the least-$L$ vertex $(10,0)$ and solves $\min\{L:\ell\le\bar\ell\}$ for $\bar\ell\ge20$, since it ties with $(10,0)$ there, but $(10,0)$ is strictly better for every $c>0$.
 \end{remark}
 
-\emph{Examples.} In $\{(0,1),(10,0.5),(20,0)\}$ the middle point lies on the segment between the other two, so it is never the unique minimiser; the end points are the unique minimisers on $(0.05,\infty)$ and on $(0,0.05)$. In $\{(0,1),(5,0.9),(10,0)\}$ the point $(5,0.9)$ lies above the boundary of $C$; it solves the constrained problem for $L\in[5,10)$ and minimises no penalised objective.
-
-We prove \cref{lem:setup:hull}. Write $\mathcal A':=\mathcal A\cap\{R<\infty\}$ and $\langle(c,1),(\ell,R)\rangle=c\,\ell+R$.
-
-\emph{(i).} Since $(c,1)\ge0$, the infimum of $c\,\ell+R$ over $C=\mathrm{conv}(\mathcal A')+\mathbb R^2_{\ge0}$ equals its infimum over $\mathcal A'$. A minimiser $a$ over $\mathcal A$ therefore minimises a nonzero linear functional over $C$. So the line $\{c\,\ell+R=c\,\ell(a)+R(a)\}$ supports $C$ at $a$, and $a$ lies on the boundary of $C$.
-
-\emph{Structure of the boundary.} Fix $a\in\mathcal A'$ and $s>0$. A point $b\in\mathcal A'$ with $\ell(b)>\ell(a)$ and $R(b)\le R(a)-s(\ell(b)-\ell(a))$ has $\ell(b)\le\ell(a)+R(a)/s$, because $R(b)\ge0$; only finitely many points satisfy this. So from each point the steepest descending direction to the right is attained, and the lower-left boundary of $C$ is a polygonal line. It consists of a vertical ray above the least-$\ell$ vertex, segments between consecutive vertices with slopes $-s$, $s\in(0,\infty)$, strictly increasing from left to right, and, if a point of least $R$ exists, a horizontal ray to the right of the least-$R$ vertex. Its corners are extreme points of $C$, and every extreme point of $C$ lies in $\mathcal A'$, because the extreme points of a convex hull belong to the generating set and adding the orthant creates none.
-
-\emph{(iii).} Let $a$ be a vertex. Its two incident boundary pieces have slopes $-s_-<-s_+\le0$, with $s_-=\infty$ at the least-$\ell$ vertex and $s_+=0$ at the least-$R$ vertex. For $c\in(s_+,s_-)$ the line with normal $(c,1)$ through $a$ meets $C$ only at $a$, so $a$ is the unique minimising point. Conversely, if $a$ is the unique minimising point for every $c$ in an open interval, then $a$ is an exposed point of $C$, hence an extreme point, hence a vertex. A boundary point that is not a vertex lies in the relative interior of a segment between two vertices, or on one of the two rays. In the first case, whenever it minimises $c\,\ell+R$, so do both endpoints of its segment. A point on the vertical ray is beaten by the vertex below it (smaller $R$), and a point on the horizontal ray by the least-$R$ vertex (smaller $\ell$, same $R$). So no such point is ever the unique minimising point. The statement about hypotheses is immediate: a hypothesis is the unique minimiser exactly when its point is the unique minimising point and no other hypothesis has that point.
-
-\emph{(ii).} Add $c\,\ell(h)+R(h)\le c\,\ell(h')+R(h')$ and $c'\ell(h')+R(h')\le c'\ell(h)+R(h)$ to get $(c'-c)(\ell(h')-\ell(h))\le0$, so $\ell(h')\le\ell(h)$. Then the first inequality gives $R(h)\le R(h')+c(\ell(h')-\ell(h))\le R(h')$.
-
-\emph{(iv).} If $\ell(h)\le\ell(h_c)$, then $R(h)\ge R(h_c)+c(\ell(h_c)-\ell(h))\ge R(h_c)$, so $h_c$ solves the constrained problem with $L=\ell(h_c)$. For the converse, by the description of the boundary: a vertex minimises $c\,\ell+R$ for every $c$ in its interval $(s_+,s_-)$, which contains positive values; a point on a segment between two vertices, of slope $-s$ with $s>0$, lies on the supporting line with normal $(s,1)$ and so minimises $s\,\ell+R$. A point on the open horizontal ray is beaten, for every $c>0$, by the least-$R$ vertex. A point on the vertical ray above the least-$\ell$ vertex is never a constrained solution, since that vertex is feasible whenever the point is and has smaller $R$. A point not on the boundary minimises no linear functional with normal $(c,1)$ over $\mathcal A$, by (i).
-
-\emph{\Cref{rem:setup:hullconverse}.} In $\mathcal A=\{(0,1),(10,0),(20,0)\}$ the point $(20,0)$ lies on the open horizontal ray to the right of the least-$R$ vertex $(10,0)$. It solves $\min\{R:\ell\le L\}$ for $L\ge20$, since it ties with $(10,0)$ there, but $20c>10c$ for every $c>0$.
-
-A direct computation (code in the accompanying repository) confirms the equivalence in (iii) on $401$ random point sets with duplicate and collinear points, and the minimisers on $300$ further point sets.
+\emph{Examples.} In $\{(0,1),(10,0.5),(20,0)\}$ the middle point lies on the segment between the other two, so it is never the unique minimiser; the end points are the unique minimisers on $(0.05,\infty)$ and on $(0,0.05)$. In $\{(0,1),(5,0.9),(10,0)\}$ the point $(5,0.9)$ lies above the boundary of $C$; it solves the constrained problem for $\bar\ell\in[5,10)$ and minimises no penalised objective. A direct computation (code in the accompanying repository) confirms (iii), (v) and (vi) on random point sets with duplicate and collinear points.
 
 \subsection{Proof of the coding bound}\label{app:setup:coding}
 
-We prove \cref{lem:setup:coding}. Given $\pi$ and the finite set $\dom D$, the map $y\mapsto P_\pi(\dom D\mapsto y)$ on $Y^{\dom D}$ is lower semicomputable, uniformly in $(\pi,\dom D)$. It is a semimeasure. For a product hypothesis its total mass is $\prod_{x\in\dom D}\sum_y\nu_\pi(y\mid x)\le1$. For a shared hypothesis, repeated use of the one-point inequality gives $\sum_{y}P_\pi(\dom D\mapsto y)\le P_\pi(\emptyset)\le1$. By (F2), $K(y_D\mid\pi,\dom D)\le-\log P_\pi(D)+\kappa$. By (F3) and (F1),
+We prove \cref{lem:setup:coding}. Given $\pi$ and the finite set $\dom D$, the map $y\mapsto P_\pi(\dom D\mapsto y)$ on $Y^{\dom D}$ is lower semicomputable, uniformly in $(\pi,\dom D)$, because the class is (\cref{def:setup:class}). It is a semimeasure. For a product hypothesis its total mass is $\prod_{x\in\dom D}\sum_y\nu_\pi(y\mid x)\le1$. For a shared hypothesis, repeated use of the one-point inequality gives $\sum_{y}P_\pi(\dom D\mapsto y)\le P_\pi(\emptyset)\le1$. By (F2), applied to one fixed program for all $(\pi,\dom D)$, $K(y_D\mid\pi,\dom D)\le L(\pi;D)+\kappa$. By (F3) and (F1),
 \[
-K(y_D\mid\dom D)\le K(\pi)+K(y_D\mid\pi,\dom D)+\kappa\le\ell(\pi)-\log P_\pi(D)+\kappa.
+K(y_D\mid\dom D)\le K(\pi)+K(y_D\mid\pi,\dom D)+\kappa\le\ell(\pi)+L(\pi;D)+\kappa.
 \]
 \qed

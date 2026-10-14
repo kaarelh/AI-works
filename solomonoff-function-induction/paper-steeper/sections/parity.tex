@@ -1,0 +1,156 @@
+% Section 7 (writer: W4 of the restructure; plan: research/paper-review/restructure/PLAN.md). Proofs are in app-parity.tex.
+% Sources: base teacher.tex (def:teacher:instance, the four lemmas, notation box) and app-teacher.tex (lem:teacher:sharpfloor);
+% base algstat.tex (def:algstat:set, prop:algstat:parity, rem:algstat:restricted, rem:algstat:reading);
+% research/tracks/split/kink/notes-final.md §4 (Props 4.1, 4.2, Cor 4.3, Prop 4.4) with split/verify-kink.md §4;
+% split/teacher/notes-final.md §5 (the generalised instance) with split/verify-teacher.md §9 (rounding of the crossings).
+% Renamed from the kink record: fit F -> L(.;D); Gamma_t, Gamma°_t, F^sharp_t, b_0, c^* kept (c^* now with K(p)).
+\section{The noisy random parity: one instance, two readings}\label{sec:parity}\label{sec:algstat}
+
+Both reasons meet in one instance: a random parity on $\{0,1\}^d$ with labels flipped on an error set. If the error set is a random set of inputs, the full table's flips are noise and the coding bound is a right line of slope $1$ at the good model (\cref{sec:kinks}); if it is a random rule on $m<d$ input bits, they are a teacher's systematic errors, with slope $2^{-m}$ per sample (\cref{sec:teacher}). We fix the instance and its lemmas, find a steep kink of the full table at the parity, selecting ``parity plus noise'' on a range of $\lambda$, and contrast set models, for which the parity is noise (proofs in \cref{app:parity}).
+
+\subsection{The instance}\label{sec:teacher:instance}
+
+\paragraph{Notation} for this section and \cref{sec:teacher}:
+\begin{center}\footnotesize\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\linewidth}{@{}>{$}l<{$}X>{$}l<{$}X@{}}
+\toprule
+d,\ m,\ p,\ s_0 & lengths, flip rate, rule size & a,\ f_a,\ S,\ E,\ y^* & parity, rule, error set, teacher\\
+L_S,\ B_S,\ \delta_S,\ I,\ e & codes, deficiency, information & B,\ R,\ R_B,\ J_c,\ J^B_c,\ \Phi,\ \Phi^B & risks, objectives, infima\\
+u,\ \lev,\ s(t),\ G_j,\ F^\sharp_t & agreement, level, floors & \pi_{\rm coin},\ \pi_g,\ \pi_b,\ \kappa_g,\ \kappa_b,\ \Lambda_1 & reference programs, overheads\\
+b_0,\ \Gamma_t,\ \Gamma^\circ_t & full table (\cref{sec:parity:full}) & \Phi_2,\ J_g,\ J_b,\ \Delta,\ c_{\rm hi} & bounds of \cref{sec:teacher}\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{definition}[The instance]\src{steeper Setting 2.0; split/teacher Prop 5.3 (any $s_0$); split/kink \S4}\label{def:teacher:instance}
+In this section and \cref{sec:teacher,sec:limits}, $Y=\{0,1\}$. Fix integers $2\le m\le d$ and $1\le s_0\le2^{m-2}$, and put $p:=s_0/2^m\le\frac14$.
+\begin{enumerate}[label=(\alph*),itemsep=0pt,topsep=2pt]
+\item \emph{Model, errors, teacher.} The \emph{simple model} is the parity $f_a(x)=\langle a,x\rangle\bmod2$ on $\{0,1\}^d$, for some $a\in\{0,1\}^d$ with $K(a)\ge d$. The \emph{error rule} is a set $S\subseteq\{0,1\}^m$ with $|S|=s_0$, the \emph{error set} is $E:=S\times\{0,1\}^{d-m}$, and the \emph{teacher} is $y^*:=f_a\oplus\ind_E$: a systematic rule (a random junta) for $m<d$, an idiosyncratic random set for $m=d$.
+\item \emph{Description lengths.} $L_S:=\log\binom{2^m}{s_0}$, $B_S:=K(S\mid a,K(a))$ and the \emph{deficiency} $\delta_S:=L_S-B_S$. The \emph{information} of a program about the rule is $I(\pi):=B_S-K(S\mid a,\pi)$, so $L_S-K(S\mid a,\pi)=\delta_S+I(\pi)$. One has $2^mH(p)-\log(2^m+1)\le L_S\le2^mH(p)$ \citep{cover2006elements}, $\delta_S\ge-2\log m-2\log s_0-\kappa$, and $\Pr_S[\delta_S>j]<2^{-j}$ for a uniformly random rule.
+\item \emph{Population quantities.} Inputs are uniform on $\{0,1\}^d$, so $\Pr[x\in E]=p$. For a product program $\pi$ and a truncation level $B\in[\log(1/p),\infty]$: $R(\pi):=\Ex_x[-\log\nu_\pi(y^*(x)\mid x)]$, $R_B(\pi):=\Ex_x\min\{B,-\log\nu_\pi(y^*(x)\mid x)\}\le R(\pi)$, $J_c:=c\,\ell+R$, $J^B_c:=c\,\ell+R_B$, $\Phi(c):=\inf_\pi J_c(\pi)$ and $\Phi^B(c):=\inf_\pi J^B_c(\pi)\le\Phi(c)$, the infima over the class; $2^{-\infty}:=0$. Results that use (D2) of \cref{lem:teacher:twopart} take $B$ to be $\infty$ or an integer.
+\item \emph{Agreement, level, errors.} $u(\pi):=\Ex_x\nu_\pi(f_a(x)\mid x)$ and $e(\pi):=\Ex[\nu_\pi(y^*(x)\mid x)\mid x\in E]$. With $\theta_t:=\frac12+2^{-t-1}$, the \emph{level} is $\lev(\pi):=\min\{t\ge1:u(\pi)>\theta_t\}$ ($\infty$ if $u(\pi)\le\frac12$); so $\lev(\pi)=1$ if and only if $u(\pi)>\frac34$, and $\lev(\pi)>t$ if and only if $u(\pi)\le\theta_t$. Put $s(t):=2t+2\log(t+1)\le4t$ and $G_j:=1-\log(1+2^{-j}+2p+2^{1-B})$ for $j\in[0,\infty]$, increasing and concave in $j$.
+\item \emph{Reference programs} in $\Hcl{\times}$: the \emph{coin} $\pi_{\rm coin}$, with $\ell\le\kappa$ and $R=1$; the \emph{good model} $\pi_g$, which gives $f_a(x)$ probability $1-p$, with $\ell(\pi_g)\le d+\kappa_g$, $\kappa_g:=2\log d+K(p)+\kappa$, and $R(\pi_g)=R_B(\pi_g)=H(p)$; the \emph{memoriser} $\pi_b$, the deterministic $y^*$, with $\ell(\pi_b)\le d+\lceil L_S\rceil+\kappa_b$, $\kappa_b:=2\log d+2\log m+2\log s_0+\kappa$, and $R(\pi_b)=0$.
+\item \emph{Slack constant.} $\Lambda_1:=2\log d+2\log m+2\log B\cdot\ind[B<\infty]+2^m\log(1+2^{1-B})+\kappa$.
+\end{enumerate}
+The \emph{example's sizes} are $d=100$, $m=20$, $p=2^{-10}$; then $s_0=1024$ and $L_S=11{,}710.27$ bits.
+\end{definition}
+
+For $p=2^{-r}$, (F5) of \cref{app:setup:facts} gives $K(p)\le2\log r+\kappa$, and numbers for such $p$ use $\kappa_g=2\log d+2\log r+\kappa$. Every slack term below contains $\delta_S$ and every number states the $\delta_S$ it assumes; numbers with $\delta_S=0$ say nothing about rules compressible given the model (\cref{prop:limits:envelope}).
+
+\subsection{Four lemmas and a sharper floor}\label{sec:teacher:lemmas}
+
+We use parities for list decoding: beating a coin noticeably on $f_a$ determines $a$ up to a few bits.
+
+\begin{lemma}[List decoding for semimeasures]\status{proved; computed}\src{steeper Lemma 2.1 (T5 Lemma 2.5a, generalised); checks c2(b), referee r3}\label{lem:teacher:list}
+If $\lev(\pi)=t<\infty$, then $K(a\mid\pi)\le s(t)+2\log d+\kappa$.
+\end{lemma}
+
+\begin{lemma}[Risk floor]\status{proved; computed}\src{steeper Lemma 2.2 (T5 Lemma 2.5b); check c2(b)}\label{lem:teacher:floor}
+$R_B(\pi)\ge-\log\big(u(\pi)+p+2^{-B}\big)$. Hence $\lev(\pi)=t\ge2$ implies $R_B(\pi)\ge G_{t-1}$, and $\lev(\pi)=\infty$ implies $R_B(\pi)\ge G_\infty$.
+\end{lemma}
+
+\begin{lemma}[Coding the error rule with a hypothesis]\status{proved}\src{steeper Lemma 2.3; referee r3, q2(c)}\label{lem:teacher:coding}
+For integer or infinite $B$, $K(S\mid a,\pi)\le2^mR_B(\pi)+2^m\log(1+2^{1-B})+2\log m+2\log B\cdot\ind[B<\infty]+\kappa$.
+\end{lemma}
+
+\begin{lemma}[Two-part lower bounds]\status{proved}\src{steeper Lemma 2.4 (T5 Thm 2.5(c))}\label{lem:teacher:twopart}
+Let $\lev(\pi)=t<\infty$. Then
+\(
+\text{(D1)}\ \ \ell(\pi)\ge d-s(t)-\Lambda_1
+\)
+and, if $B$ is an integer or $\infty$,
+\(
+\text{(D2)}\ \ \ell(\pi)+2^mR_B(\pi)\ge d+B_S-s(t)-\Lambda_1.
+\)
+\end{lemma}
+
+\Cref{lem:teacher:floor} is tight in $u$ alone, but the additive $p$ goes if $S$ is random given the hypothesis.
+
+\begin{lemma}[Randomness of the error rule sharpens the floor]\status{proved; computed}\src{steeper Lemma 2.2c (T5 Lemma 2.5c for semimeasures); check c7(C)}\label{lem:teacher:sharpfloor}
+For every program $\pi$, integer $g\ge1$ and $B\in[\log(1/p),\infty]$,
+\(
+R_B(\pi)\ge-\log\big(p+(1-2p)\,u(\pi)+p(2\gamma(\pi)+2^{1-g})+2^{-B}\big),
+\)
+where $\gamma(\pi):=\sqrt{j\ln2/(2s_0)}$ and $j$ is the least integer with $j-2\log(j+1)>\delta_S+I(\pi)+1+2\log m+2\log s_0+g+2\log g+\kappa$. Always $I(\pi)\le\ell(\pi)+\kappa$, and the bound remains valid with any $I\ge I(\pi)$ in place of $I(\pi)$.
+\end{lemma}
+
+\emph{Proof ideas.} By Parseval, fewer than $2^{2t}$ parities agree with $\nu_\pi$ above $\theta_t$, a list enumerable from $\pi$ \citep{goldreich1989hard,kushilevitz1993learning}. The floor is Jensen's inequality. The coding lemma makes the likelihoods per prefix a semimeasure on rules, of cost $2^mR_B$ as $E$ is a product. (D1) is $d\le K(a)\le\ell(\pi)+K(a\mid\pi)+\kappa$; (D2) adds the coding lemma. In the sharp floor, unusual mass on $E$ would put $S$ in a small enumerable set \citep{hoeffding1963probability} (\cref{app:teacher:list,app:teacher:lemmas}).
+
+For $t\in[1,\infty]$ and an information budget $I\ge0$ the sharp floor at $B=\infty$ is
+\[
+F^\sharp_t(I):=\sup_{g\ge1}\Big[1-\log\Big(1+(1-2p)2^{-t}+2p\big(2\gamma_g(I)+2^{1-g}\big)\Big)\Big],
+\]
+with $\gamma_g(I)$ the $\gamma(\pi)$ of \cref{lem:teacher:sharpfloor} with $I$ for $I(\pi)$. By that lemma, every $\pi$ with $\lev(\pi)>t$ and $I(\pi)\le I$ has $R(\pi)\ge F^\sharp_t(I)$; $F^\sharp_t(I)$ is nondecreasing in $t$ and nonincreasing in $I$ (\cref{app:teacher:lemmas}).
+
+\subsection{The full table: a kink at the parity}\label{sec:parity:full}\label{sec:algstat:parity}
+
+Take $m=d$, $B=\infty$ and $p<1/4$, so $E=S$, $N:=2^d$ and $|E|=pN$; write $L_E,B_E,\delta_E$ for $L_S,B_S,\delta_S$. Let $z:=y^*\in\{0,1\}^N$ be the teacher's table and $D$ the full data set: frozen noise at rate $p$, conditioned on its number of flips. A product program has fit $L(\pi;D)=NR(\pi)$; here $G_t=1-\log(1+2^{-t}+2p)$, $\Lambda_1=4\log d+\kappa$ and $\kappa_b=4\log d+2\log(pN)+\kappa$. The class is $\Hcl{\times}$, or any product hypothesis class that contains a good model $\pi_g$, with $\kappa_g:=\ell(\pi_g)-d$ and $\kappa$ the class's constant (as in \cref{prop:related:computable}(a)). Put $\Gamma^\circ_t:=\max\{G_t,F^\sharp_t(d+\kappa)\}$, $\mathrm{den}_t:=\kappa_g+\min\{d,s(t+1)+\Lambda_1\}$ for $t\in[1,\infty]$, and, as $0\le NH(p)-L_E\le\log(N+1)$,
+\[
+b_0:=\kappa_g+(NH(p)-L_E)+\delta_E+2\log(d+1)+\kappa\ =\ \delta_E+O(d).
+\]
+
+\begin{proposition}[A kink at the parity]\status{proved}\src{split/kink Prop 4.1}\label{prop:parity:kink}
+Let $t_0\ge1$ be an integer and $\sigma^{(t_0)}:=\inf_{t\ge t_0}N(\Gamma^\circ_t-H(p))/\mathrm{den}_t$.
+(i) $\pi_g$ is $b_0$-sufficient for $D$.
+(ii) If $\sigma^{(t_0)}>0$, then $D$ has a left kink of steepness $\sigma^{(t_0)}$ and window $w:=\ell(\pi_g)-(d-s(t_0)-\Lambda_1)\in[0,\kappa_g+s(t_0)+\Lambda_1]$ at $(\ell(\pi_g),NH(p))$.
+(iii) Hence, if $\sigma^{(t_0)}>0$, \cref{cor:kink:split}(b) applies to $\pi_s=\pi_g$ and $b=b_0$ for every $\lambda\in(1,\sigma^{(t_0)})$.
+\end{proposition}
+
+\emph{Proof idea.} (i): minimum-distance decoding recovers $(a,E)$ from $z$, as two parities differ on $N/2>2pN$ inputs. (ii): by (D1), a program shorter than $d-s(t_0)-\Lambda_1$ has level $t+1>t_0$, so it saves at most $\mathrm{den}_t$ bits against $\pi_g$ and pays at least $N\Gamma^\circ_t$ in fit (\cref{app:parity:kink}).
+
+As $\Gamma^\circ_t$ is nondecreasing in $t$, $\sigma^{(t_0)}\ge N(\Gamma^\circ_{t_0}-H(p))/(\kappa_g+d)$, exponential in $d$ once $\Gamma^\circ_{t_0}>H(p)$; beyond $\pi_g$ the coding bound allows at most about one bit of fit per bit. For $\lambda>1$ let
+\[
+\bar\ell_\lambda:=d+\kappa_g+\frac{b_0+\kappa}{\lambda-1},\qquad\Gamma_t(\lambda):=\max\{G_t,F^\sharp_t(\bar\ell_\lambda+\kappa)\},
+\]
+with $\kappa$ the constant of \cref{lem:setup:coding}, let $T$ be the least integer $t\ge1$ with $s(t+1)+\Lambda_1\ge d$, and for an integer $t_0\ge1$ let $C_{t_0}(\lambda)$ be the condition $\lambda\,\mathrm{den}_t<N(\Gamma_t(\lambda)-H(p))$ for $t=t_0,\dots,\max(t_0,T)$.
+
+\begin{proposition}[The $\lambda$-range of ``parity plus noise'']\status{proved; computed}\src{split/kink Prop 4.2, Cor 4.3; split/verify-kink \S4.1}\label{prop:parity:range}
+\begin{enumerate}[label=(\roman*),itemsep=0pt,topsep=2pt,leftmargin=*]
+\item Let $\lambda>1$ satisfy $C_{t_0}(\lambda)$. Every $\lambda$-MAP $\hat\pi$ on $D$ satisfies:
+(a) $\lev(\hat\pi)\le t_0$, so $u(\hat\pi)>\theta_{t_0}$ and $K(a\mid\hat\pi)\le s(t_0)+2\log d+\kappa$: it knows the parity;
+(b) $d-s(t_0)-\Lambda_1\le\ell(\hat\pi)\le\bar\ell_\lambda$;
+(c) $NH(p)-\lambda(b_0+\kappa)/(\lambda-1)\le L(\hat\pi;D)\le NH(p)+\lambda(\kappa_g+s(t_0)+\Lambda_1)$: it fits like the noise;
+(d) $\hat\pi$ is $\big(b_0+(\lambda-1)(\kappa_g+s(t_0)+\Lambda_1)\big)$-sufficient;
+(e) $I(\hat\pi)\le I_e:=\bar\ell_\lambda-d+s(t_0)+2\log d+\kappa$;
+(f) $e(\hat\pi)\le1-u(\hat\pi)+\gamma_g(I_e)+2^{-g}$ for every integer $g\ge1$;
+(g) with $R_{\max}:=H(p)+\lambda(\kappa_g+s(t_0)+\Lambda_1)/N$, $u(\hat\pi)\ge\max\big\{\theta_{t_0},\,2^{-R_{\max}}-p,\,\max_{g\ge1}\big(2^{-R_{\max}}-p-p(2\gamma_g(I_e)+2^{1-g})\big)/(1-2p)\big\}$.
+\item \emph{Interval form.} If $1<\lambda_{\rm lo}\le\lambda_{\rm hi}$ and $\lambda_{\rm hi}\,\mathrm{den}_t<N(\Gamma_t(\lambda_{\rm lo})-H(p))$ for $t=t_0,\dots,\max(t_0,T)$, then $C_{t_0}(\lambda)$, and with it (a)--(g), holds for every $\lambda\in[\lambda_{\rm lo},\lambda_{\rm hi}]$.
+\item \emph{Every flip rate below $1/4$.} In $\Hcl{\times}$, fix a dyadic rational $p\in(0,\frac14)$ and $\lambda>1$, and let $m=d\to\infty$ with $\delta_E=O(d)$. For all large $d$, $C_2(\lambda)$ holds; if moreover $1-\log(\frac32-p)>H(p)$, then $C_1(\lambda)$ holds.
+\end{enumerate}
+\end{proposition}
+
+\emph{Proof idea.} The upper length bound is \cref{cor:kink:split}(a) at $\pi_g$. A $\lambda$-MAP of level $t+1>t_0$ is at least $(d-s(t+1)-\Lambda_1)^+$ long and has budget at most $\bar\ell_\lambda+\kappa$, so the floors charge it $N\Gamma_t(\lambda)$, and $C_{t_0}(\lambda)$ puts it above $\pi_g$; the rest is (D1), the comparison with $\pi_g$ and the sharp floor's proof. (ii): $\Gamma_t(\lambda)$ is nondecreasing in $\lambda$. (iii): the budget is $O(d)$ while $s_0=pN$ (\cref{app:parity:kink}).
+
+With $f_t(p):=1-\log(1+(1-2p)2^{-t})$, the crossing condition of (iii) is $f_1(p)>H(p)$, which holds exactly for $p<p_1$, the unique root in $(0,\frac14)$; likewise $G_1>H(p)$ exactly for $p<p_0$. A direct computation (code in the accompanying repository) gives $p_1=0.1233072\ldots$ and $p_0=0.0559643\ldots$, so the conditions hold for $p\le0.1233$ and $p<0.05596$ respectively; it also certifies by interval arithmetic that $f_2-H\ge0.0187$ on $(0,\frac14]$, which the proof of (iii) uses.
+
+By (ii), finitely many cells certify $C_{t_0}(\lambda)$ on an interval of $\lambda$. A direct computation of such covers (code in the accompanying repository; \cref{app:parity:kink}) shows that for $p=2^{-10}$ the range reaches $\lambda\to1$; for $p\ge1/16$, at the levels $t_0$ of \cref{tab:parity:ranges}, it starts above $1$, for example $[1.00059,6529.7]$ at $p=1/8$, $d=20$, with the machine constant set to $0$ (an illustration).
+
+\subsection{Set models: the parity is noise}\label{sec:algstat:set}
+
+\begin{definition}[Set models]\src{steeper \S3.5, Definitions}\label{def:algstat:set}
+A \emph{set model} of a string $z$ is a finite set $A\ni z$, with two-part length $K(A)+\log|A|$. The \emph{structure function} is $h_z(\alpha):=\min\{\log|A|:A\ni z,\ K(A)\le\alpha\}$, and the \emph{sufficiency line} is $K(A)+\log|A|\ge K(z)-\kappa$, valid since $K(z\mid A)\le\log|A|+\kappa$. $A$ is \emph{$b$-sufficient} if $K(A)+\log|A|\le K(z)+b$; a \emph{minimal sufficient statistic} minimises $K(A)$ among these; the \emph{set sophistication} is $\sophset_b(z):=\min\{K(A):A\ni z\ \text{$b$-sufficient}\}$. Conditional versions replace $K$ by $K(\cdot\mid w)$.
+\end{definition}
+
+These notions are standard \citep{gacs2001algorithmic,vereshchagin2004kolmogorov,vereshchagin2017algorithmic}; sophistication goes back to \citet{koppel1987complexity,koppel1991almost} (see also \citealp{vitanyi2006meaningful,antunes2009sophistication}). The set models of $z$ form a point family (\cref{def:algstat:product}) with lengths $K(A)$, fits $\log|A|$ and structure function $h_z$. Steeper two-part codes over sets select an approximately minimal sufficient statistic only in a limited sense, and thresholding a computable product hypothesis gives a set model at most logarithmically longer (\cref{app:algstat:coarse}).
+
+Let $c^*:=2\log d+K(p)+\kappa$ and $A_0:=\{f_{a'}\oplus\ind_{E'}:a'\in\{0,1\}^d,\ |E'|=pN\}$, a $(\delta_E+c^*)$-sufficient set model with $K(A_0)\le c^*$. For sets the parity is noise: every $\lambda$-optimal set model holds at most $O(\log d)+(\delta_E+O(\log d))/(\lambda-1)$ bits about $a$. For products it is model: for large $d$ and $\delta_E=O(d)$, product sophistication is $d\pm O(\log d)$ on a slack range of order $N$ (\cref{prop:algstat:parity}).
+
+\begin{proposition}[Set models have no steep kink at the parity]\status{proved; computed}\src{split/kink Prop 4.4; checks k8(D), rB2}\label{prop:parity:sets}
+In the setting of \cref{sec:parity:full}, with $c^*$ as above, every left kink $(\sigma,w)$ of the set models of $z$ at $(\alpha_{\rm r},L_{\rm r})$ with $\alpha_{\rm r}-w>c^*$ has $\sigma\le1+(c^*+\delta_E+2\kappa)/(\alpha_{\rm r}-c^*)$.
+\end{proposition}
+
+\emph{Proof idea.} The kink point lies above the sufficiency line and $A_0$, shorter than $\alpha_{\rm r}-w$, at most $\delta_E+c^*$ above it, so between them the fit falls about one bit per bit (\cref{app:algstat:parity}).
+
+So at $\alpha_{\rm r}\approx d$ the set steepness is at most $1+O((\log d+\delta_E)/d)$, and the product steepness at least $N(\Gamma^\circ_1-H(p))/(\kappa_g+d)$, exponential in $d$ when $\Gamma^\circ_1>H(p)$: for $p<0.05596$ always, for $p\le0.1233$ once $d$ is large if $\delta_E=O(d)$. $A_0$ acts as the universal member of \cref{prop:kink:universal}. For $\lambda-1$ of order $(\log d+\delta_E)/d$ nothing is claimed, and the code's $O(\log d)$ terms decide (\cref{app:algstat:parity}).
+
+\begin{remark}[Reading: one bit for one bit]\status{remark}\src{steeper \S3.5, Reading}\label{rem:algstat:reading}
+Knowing a random $d$-bit parameter saves sets one bit per bit, products about a bit \emph{per input}. This is why steeper simplicity is useless over set models in this example once $\lambda-1\gg(\log d+\delta_E)/d$ (\cref{prop:parity:sets,prop:algstat:parity}; closer to $1$ the code's $O(\log d)$ terms decide), and decisive over product models (\cref{cor:kink:split,prop:parity:range}).
+\end{remark}
+
+\begin{remark}[Restricted model families]\status{known; unverified (content per abstracts); remark}\src{steeper \S3.5, relation to restricted model families}\label{rem:algstat:restricted}
+Restricting the model family changes the structure function; Hamming-ball models \citep{vereshchagin2010rate} are the closest case, and the Hamming ball of radius $pN$ around $f_a$ is a set model of complexity about $d$ and log-size about $NH(p)$, the parity plus independent flips as a set (see also \citealp{milovanov2016algorithmic}).
+\end{remark}
+
+\begin{question}[set kinks]\status{open}\src{split/kink \S8 item 4; split synthesis \S6 item 7}\label{q:parity:open}
+Let $\pi_s=q\theta\in\Hcl{\times}$ be product-$b$-sufficient for a data set $D$, with a $k$-bit parameter $\theta$ such that $K(\theta\mid q)\ge k$, and let $\rho^\times_D$ have a left kink of steepness $\sigma>1$ at the point of $\pi_s$. Is there a function $\epsilon(k)=o(k)$, not depending on $D$, such that there is always a set model $A\ni y_D$ with $K(A\mid\dom D)\le|q|+\epsilon(k)$ and $K(A\mid\dom D)+\log|A|\le K(y_D\mid\dom D)+b+\epsilon(k)$? By the argument of \cref{prop:parity:sets}, such a set caps the steepness of the set models' left kinks beyond $K(A\mid\dom D)$ at $1+(b+\epsilon(k)+2\kappa)/(\alpha_{\rm r}-K(A\mid\dom D))$. For the noisy parity, $A_0$ has complexity $O(\log d)$ and is $(\delta_E+O(\log d))$-sufficient (\cref{sec:algstat:set}).
+\end{question}

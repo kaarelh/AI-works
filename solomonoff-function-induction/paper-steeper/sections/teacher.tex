@@ -1,127 +1,103 @@
-% Section 5 (writer: steep-b; edited by p2-body). Source: research/tracks/steeper/notes-final.md §2.1-§2.4 (Setting 2.0, Lemmas 2.1-2.4,
-% Thm 2, Cors 2.5, 2.7, Ex 2.7a, Prop 2.8). Notation: ../paper/NOTATION.md (n = samples, N = 2^d, c = lambda/n,
-% kappa = machine constant, Phi_1, Phi_2 for St's M_1, M_2, \lev for St's T, epsilon for St's eta).
-% Ex 2.7a (ex:teacher:version1) and Prop 2.8 (prop:teacher:concentration) are in app-teacher.tex.
-\section{The teacher's-mistakes theorem}\label{sec:teacher}
+% Section 8 (writer: W5 of the restructure; plan: research/paper-review/restructure/PLAN.md). Proofs, prop:limits:plain, prop:teacher:frozen
+% and tab:teacher:rates are in app-teacher.tex (page budget; log-W5); prop:teacher:sharp with the Floor_t/Psi_t/LB_t/Phi_2^sharp
+% display moved there in the fix round (DECISIONS-restructure §3, fix-W5 RW5-04).
+% Sources: base teacher.tex (rem:teacher:hanni, thm:teacher:main, rem:teacher:numbers, tab:teacher:numbers, rem:teacher:hypotheses,
+% cor:teacher:fulltable, cor:teacher:sampled, q:teacher:open) and base limits.tex (rem:limits:schedule);
+% research/tracks/split/teacher/notes-final.md §1.0, §2.1 (Prop 2.1, "What is selected", Table 2.2), Remark 2.6, §3 (Lemma 3.0,
+% Props 3.1, 3.3(a), 3.6), §5 (Lemma 5.1, Props 5.2, 5.3); split/verify-teacher.md §4-§9 (corrections applied).
+% The instance, the four lemmas and the sharp floor are in parity.tex (W4); the kink lemma is in kinks.tex (W2).
+% Notation: PLAN.md §4. Local: Floor_t, Psi_t, LB_t, Phi_2^sharp, psi_2, a^*(p) (teacher §5); R_max (teacher Remark 2.6, corrected
+% per verify-teacher §8); FQ (teacher §1.0). The record's theta_m is not named (theta_t is the level threshold).
+\section{The teacher's mistakes: the split at a positive rate}\label{sec:teacher}
 
-A learner that grasps what a teacher means, rather than predicting what the teacher would say, should not reproduce the teacher's mistakes. When these are explainable deviations from a simple model, the steeper objective of \cref{def:setup:objectives} over product hypotheses is meant to select the simple model with noise. This section makes this rigorous for the example of \cref{rem:teacher:hanni}. \Cref{thm:teacher:main} quantifies over \emph{all} product hypotheses and shows that, for error rules incompressible relative to the model, every near-optimal hypothesis is, up to explicit slack, the simple model with noise, on a window of $c=\lambda/n$ of more than three orders of magnitude at the example's sizes for $\kappa\le30$; \cref{sec:limits} shows where this stops. Proofs are in \cref{app:teacher}.
+This section gives the second reason for a complexity penalty steeper than the likelihood penalty: a learner that grasps what a teacher means, rather than predicting what the teacher would say, should not reproduce the teacher's systematic mistakes. It is the split of \cref{sec:kinks} at a positive rate: a bit of noise enters one likelihood term, and a fixed $\lambda>1$ discards it (\cref{sec:recovery}); a bit of an error rule enters the term of every input it governs, so $\lambda$ must grow linearly in $n$. We prove this for the instance of \cref{def:teacher:instance}, over all product hypotheses; \cref{sec:limits} shows where it stops. Proofs are in \cref{app:teacher}.
 
-\subsection{The three-hypothesis calculation}\label{sec:teacher:hanni}
+\subsection{From noise to errors}\label{sec:teacher:hanni}\label{sec:limits:schedule}
 
 \begin{remark}[The three-hypothesis calculation]\status{computed}\src{steeper \S2.1; checks c1, T5 re-run}\label{rem:teacher:hanni}
-We give the calculation in two versions: in total bits, and per sample as in \cref{sec:intro}.
-\begin{enumerate}[label=(\arabic*)]
-\item \emph{Total-bits version}: a simple model of $100$ bits that predicts $100$ bits of labels per bit of description, and on top of it a systematic error model of $100$ bits that predicts $10$ bits per bit. Coin, simple model, and simple model plus errors lie on a hull with slopes $100$ and $10$, so the simple model alone is selected exactly for $\lambda\in(10,100)$.
-\item \emph{Per-sample version}: a $100$-bit simple model with systematic human error on a $2^{-10}$ fraction of the inputs, whose set takes $10{,}000$ bits to specify. Of the good model (the simple model with flip probability $p=2^{-10}$, $10$ more bits), the model that learns the errors ($10{,}100$ bits, loss $0$) and the fair coin, the good model is selected if and only if $c$ lies between the rate $H(p)/9990=1.1185\cdot10^{-6}$ of the errors and the rate $(1-H(p))/110=8.989\cdot10^{-3}$ of the model, a ratio of about $8000$; plain MDL ($\lambda=1$) switches to the memoriser at $n\approx8.94\cdot10^5$.
-\end{enumerate}
-A direct computation (code in the accompanying repository) gives these numbers, with the exact binary entropy $H(2^{-10})=0.0112$. The calculation compares three hypotheses only; it does not exclude partial models, partial memorisers, mixtures or some universal hypothesis, so it leaves open whether another hypothesis does better.
+(1) A simple model of $100$ bits predicts $100$ bits of labels per bit of description, and a systematic error model of $100$ further bits predicts $10$ bits per bit. The coin, the simple model and the simple model with its errors lie on a hull with slopes $100$ and $10$, so the simple model alone is selected exactly for $\lambda\in(10,100)$. (2) Per sample, let the errors cover a $2^{-10}$ fraction of the inputs and take $10{,}000$ bits. Of the good model (flip rate $p=2^{-10}$, $110$ bits), the memoriser ($10{,}100$ bits, risk $0$) and the coin, the good model minimises $c\,\ell+R$ exactly for $H(p)/9990<c<(1-H(p))/110$; a direct computation (code in the accompanying repository) gives the window $(1.1185\cdot10^{-6},8.989\cdot10^{-3})$, and plain MDL ($\lambda=1$) switches to the memoriser at $n\approx8.94\cdot10^5$. Other hypotheses might do better.
 \end{remark}
 
-\subsection{The instance}\label{sec:teacher:instance}
+The \emph{reuse factor} of a unit of randomness (one sampled label, or one cell $z\in\{0,1\}^m$ of an error rule) is the number of likelihood terms it determines. A label of noise, drawn per query or frozen per distinct input (PQ, FR of \cref{def:setup:data}), enters one term; a cell of the rule enters the term of every input in it, $2^{d-m}$ on the full table and about $n2^{-m}$ among $n$ samples. Repetition scales every threshold:
 
-\paragraph{Notation for this section.} The symbols in the statement of \cref{thm:teacher:main} are defined in \cref{def:teacher:instance}, in the display before the theorem and in the theorem itself:
-\begin{center}\footnotesize
-\begin{tabularx}{\linewidth}{@{}>{$}l<{$}X>{$}l<{$}X@{}}
-\toprule
-d,\ m & input length, rule length & p=2^{-r},\ s_0 & flip rate, rule size\\
-a,\ f_a & parity parameter, parity & S,\ E,\ y^* & error rule, error set, teacher\\
-L_S,\ B_S,\ \delta_S & log-count, complexity, deficiency & I(\pi) & information of $\pi$ about $S$\\
-B,\ R,\ R_B & truncation, risk, truncated risk & J_c,\ J^B_c,\ \Phi,\ \Phi^B & $c\ell+R$, $c\ell+R_B$, infima\\
-u,\ \lev & agreement with $f_a$, level & s(t),\ G_j & list-decoding cost, risk floor\\
-\pi_{\rm coin},\ \pi_g,\ \pi_b & coin, good model, memoriser & \kappa_g,\ \kappa_b,\ \Lambda_1 & length overheads, slack\\
-\Phi_1,\ \Phi_2,\ J_g,\ J_b & bounds of \cref{sec:teacher:theorem} & \Delta,\ c_{\rm hi} & excess, end of the window\\
-\bottomrule
-\end{tabularx}
-\end{center}
+\begin{lemma}[Duplication]\status{proved; computed}\src{split/teacher Lemma 3.0; split/verify-teacher \S4; check t7(C)}\label{lem:teacher:reuse}
+If every term of a data set $D$ is counted $r\ge1$ times, so that each program has fit $rL(\pi;D)$, then $J_\lambda=r\,J_{\lambda/r}(\cdot\,;D)$ and the $\lambda$-MAPs are the $(\lambda/r)$-MAPs of $D$. With every reference point $(\alpha_{\rm r},L_{\rm r})$ moved to $(\alpha_{\rm r},rL_{\rm r})$, every $\lambda$-threshold of $D$ (the hull's edge slopes and vertex $\lambda$-intervals, left steepness, the slopes of right lines and right secants) is multiplied by $r$, and so are the wedge margins and the offsets of right lines.
+\end{lemma}
 
-\begin{definition}[The teacher's-mistakes instance]\src{steeper Setting 2.0}\label{def:teacher:instance}
-Throughout this section and the next, $Y=\{0,1\}$. Fix integers $1\le m\le d$ and $2\le r\le m$, and put $p:=2^{-r}$ and $s_0:=p2^m$.
-\begin{enumerate}[label=(\alph*)]
-\item \emph{Model, errors, teacher.} The \emph{simple model} is the parity $f_a(x)=\langle a,x\rangle\bmod2$ on $\{0,1\}^d$, for some $a\in\{0,1\}^d$ with $K(a)\ge d$. The \emph{error rule} is a set $S\subseteq\{0,1\}^m$ with $|S|=s_0$, and the \emph{error set} is $E:=S\times\{0,1\}^{d-m}$, the inputs whose first $m$ bits lie in $S$. The \emph{teacher} is $y^*:=f_a\oplus\ind_E$. For $m<d$ the errors are a systematic rule (a random junta) that generalises to new inputs; for $m=d$ they are an idiosyncratic random set.
-\item \emph{Description lengths.} $L_S:=\log\binom{2^m}{s_0}$, $B_S:=K(S\mid a,K(a))$, and the \emph{deficiency} $\delta_S:=L_S-B_S$. The \emph{information} a program $\pi$ holds about the rule beyond the parity is $I(\pi):=B_S-K(S\mid a,\pi)$, so $L_S-K(S\mid a,\pi)=\delta_S+I(\pi)$. One has $2^mH(p)-\log(2^m+1)\le L_S\le2^mH(p)$ \citep{cover2006elements}; $\delta_S\ge-2\log m-2\log s_0-\kappa$, since $S$ can be given by its index among the $s_0$-subsets; and $\Pr_S[\delta_S>j]<2^{-j}$ for a uniformly random rule, since fewer than $2^{L_S-j}$ programs are shorter than $L_S-j$.
-\item \emph{Population quantities.} Inputs are uniform on $\{0,1\}^d$, so $\Pr[x\in E]=p$. For a product program $\pi$ and a truncation level $B\in[\log(1/p),\infty]$: $R(\pi):=\Ex_x[-\log\nu_\pi(y^*(x)\mid x)]$, $R_B(\pi):=\Ex_x\min\{B,-\log\nu_\pi(y^*(x)\mid x)\}\le R(\pi)$, $J_c:=c\,\ell+R$, $J^B_c:=c\,\ell+R_B$, $\Phi(c):=\inf_\pi J_c(\pi)$ and $\Phi^B(c):=\inf_\pi J^B_c(\pi)\le\Phi(c)$, the infima over the class. We write $2^{-\infty}:=0$.
-\item \emph{Agreement and level.} $u(\pi):=\Ex_x\nu_\pi(f_a(x)\mid x)$. With $\theta_t:=\frac12+2^{-t-1}$, the \emph{level} is $\lev(\pi):=\min\{t\ge1:u(\pi)>\theta_t\}$, and $\lev(\pi):=\infty$ if $u(\pi)\le\frac12$; so $\lev(\pi)=1$ if and only if $u(\pi)>\frac34$. Put $s(t):=2t+2\log(t+1)\le4t$ and $G_j:=1-\log(1+2^{-j}+2p+2^{1-B})$ for $j\in[0,\infty]$; $G_j$ is increasing and concave in $j$.
-\item \emph{Reference programs} in $\Hcl{\times}$: the \emph{coin} $\pi_{\rm coin}$, with $\ell\le\kappa$ and $R=1$; the \emph{good model} $\pi_g$, which gives $f_a(x)$ probability $1-p$, with $\ell(\pi_g)\le d+\kappa_g$, $\kappa_g:=2\log d+2\log r+\kappa$, and $R(\pi_g)=R_B(\pi_g)=H(p)$; the \emph{memoriser} $\pi_b$, the deterministic $y^*$, with $\ell(\pi_b)\le d+\lceil L_S\rceil+\kappa_b$, $\kappa_b:=2\log d+2\log m+2\log s_0+\kappa$, and $R(\pi_b)=0$.
-\item \emph{Slack constant.} $\Lambda_1:=2\log d+2\log m+2\log B\cdot\ind[B<\infty]+2^m\log(1+2^{1-B})+\kappa$.
+\emph{Proof.} $\lambda\ell+rL=r\big((\lambda/r)\ell+L\big)$, and the conditions of \cref{def:kink:kinks,lem:kink:main} are homogeneous in fits, offsets and slopes. \qed
+
+Frozen noise counted once (FR) is like fresh noise: for fixed $\lambda>1$ every $\lambda$-MAP is at most $(k+\delta^*)/(\lambda-1)$ bits longer than the sampler's program, at every $n$. Counted per query (\emph{FQ}: a fixed table $F$ queried at i.i.d.\ inputs) it is reused at every repeat, like an error rule with $m=d$: if the class can memorise finitely many inputs, every $\lambda_n=o(n)$ eventually rejects every program for the sampler (\cref{prop:teacher:frozen}). Plain Bayes, MDL and SI learn the errors, as does every schedule with $(\lambda_n/n)(d+L_S)\to0$ along a sequence of instances (\cref{prop:limits:plain}).
+
+\begin{proposition}[Which schedules keep the identification]\status{proved; computed}\src{split/teacher Prop 3.6, Prop 3.2(a); split/verify-teacher \S6; check v3}\label{prop:teacher:schedules}
+In the instance of \cref{def:teacher:instance}, let the data be PQ with $\nu=\delta_{y^*}$ (FQ with $F=y^*$), the inputs uniform on $\{0,1\}^d$, and $\lambda_n>0$.
+\begin{enumerate}[label=(\alph*),itemsep=0pt,topsep=2pt]
+\item If $\lambda_n/n\to0$, almost surely for all large $n$ every $\lambda_n$-MAP has $R=0$: it gives $y^*(x)$ probability $1$ at every $x\in\{0,1\}^d$, so $e=1$.
+\item If $\lambda_n/n\to\infty$, almost surely for all large $n$ every $\lambda_n$-MAP has length at most $\ell_{\min}:=\min\{\ell(\pi):R(\pi)<\infty\}$. In $\Hcl{\times}$, $\ell_{\min}\le\kappa$, so once $d-4-\Lambda_1>\kappa$ these $\lambda_n$-MAPs have level at least $2$.
+\item Let $B<\infty$ be an integer in $[\log(1/p),\infty)$, $c_{\rm hi}$ computed at this $B$, $2^{-m}<c_1\le c_2<c_{\rm hi}$, $\delta\in(0,1)$, $\epsilon_1:=\log(1/p)\sqrt{\ln(2/\delta)/(2n)}$, $\bar L:=(J_g(c_2)+\epsilon_1)/c_1$ and $\bar\epsilon_n:=\epsilon_1+B\sqrt{(\bar L\ln2+\ln(2/\delta))/(2n)}$. For each $n$, with these data or with $n\le2^d$ inputs drawn without replacement, and each $\lambda_n$ with $\lambda_n/n\in[c_1,c_2]$: with probability at least $1-\delta$, every $\lambda_n$-MAP satisfies \cref{thm:teacher:main}(ii) with $c=\lambda_n/n$ and $\epsilon=\bar\epsilon_n$, whenever $J_g(c)+\bar\epsilon_n<\Phi_2(c)$ on $[c_1,c_2]$, which holds for all large $n$. For PQ data with $\delta=n^{-2}$, almost surely this holds for all large $n$.
 \end{enumerate}
-The \emph{example's sizes} are $d=100$, $m=20$, $p=2^{-10}$; then $s_0=1024$ and $L_S=11{,}710.27$ bits, about the $10{,}000$ bits of the example.
-\end{definition}
+\end{proposition}
 
-The objective is the population objective $J_c$; finite samples are treated in \cref{cor:teacher:sampled}. The deficiency $\delta_S$ enters every slack term below, and every number we give states the $\delta_S$ it assumes; numbers with $\delta_S=0$ concern error rules that are incompressible given the model, and say nothing about compressible ones (\cref{prop:limits:envelope}).
+\emph{Proof idea.} (a) The memoriser has fit $0$, which leaves finitely many candidates, and the strong law eliminates those of positive risk. (b) One bit of length eventually outweighs the fit of a shortest finite-risk program. (c) is \cref{lem:teacher:finite} with a length budget uniform over $[c_1,c_2]$ (\cref{app:teacher:schedules}).
 
-\subsection{Four lemmas}\label{sec:teacher:lemmas}
+So a ratio $\lambda_n/n$ that stays in a compact subset of the window $(2^{-m},c_{\rm hi})$ of \cref{thm:teacher:main} keeps the identification; $\lambda=cn$ is the simplest such schedule.
 
-The first lemma is the reason for choosing parities: a hypothesis that agrees with $f_a$ noticeably more often than a coin determines $a$ up to a few bits.
+\begin{remark}[Fixed $\lambda$ against $\lambda\propto n$]\status{remark (from proved results); known}\src{steeper end of \S2.5, \S4.4; split/teacher \S3.0, Remark 3.5}\label{rem:limits:schedule}
+For noise a fixed $\lambda>1$ suffices (\cref{thm:recovery:main,thm:split:private}); for errors $\lambda/n$ must stay above about $2^{-m}$, the reuse factor per sample (\cref{thm:teacher:main}(iii),(iv)). With $\lambda=cn$ the learner discards every component whose rate is below $c$, valid or not (\cref{prop:limits:separable}): it is deliberately inconsistent for the teacher's label distribution, at the price of a batch excess: $-\log\xi_\lambda(D_n)\le n\,(c\,\ell(\pi)+\hat R(\pi))$ for every $\pi$, with $\hat R$ the empirical risk, so $c\,\ell(\pi)$ bits per sample over $\pi$'s own loss (not a sequential regret, \cref{rem:setup:persample}; literature: \cref{rem:related:mdl}).
+\end{remark}
 
-\begin{lemma}[List decoding for semimeasures]\status{proved; computed}\src{steeper Lemma 2.1 (T5 Lemma 2.5a, generalised); checks c2(b), referee r3}\label{lem:teacher:list}
-If $\lev(\pi)=t<\infty$, then $K(a\mid\pi)\le s(t)+2\log d+\kappa$.
-\end{lemma}
+\subsection{The two kink bounds and the theorem}\label{sec:teacher:theorem}
 
-\emph{Proof idea.} The agreement of $\nu_\pi$ with a parity $f_{a'}$ is $\frac12$ plus half a Fourier coefficient of $\nu_\pi(0\mid x)-\nu_\pi(1\mid x)$, and by Parseval fewer than $2^{2t}$ parities have agreement above $\theta_t$ \citep{goldreich1989hard,kushilevitz1993learning}. The agreement is lower semicomputable, so this list can be enumerated from $\pi$ (\cref{app:teacher:list}).
-
-\begin{lemma}[Risk floor]\status{proved; computed}\src{steeper Lemma 2.2 (T5 Lemma 2.5b); check c2(b)}\label{lem:teacher:floor}
-$R_B(\pi)\ge-\log\big(u(\pi)+p+2^{-B}\big)$. Hence $\lev(\pi)=t\ge2$ implies $R_B(\pi)\ge G_{t-1}$, and $\lev(\pi)=\infty$ implies $R_B(\pi)\ge G_\infty$.
-\end{lemma}
-
-\begin{lemma}[Coding the error rule with a hypothesis]\status{proved}\src{steeper Lemma 2.3; referee r3, q2(c)}\label{lem:teacher:coding}
-For integer or infinite $B$, $K(S\mid a,\pi)\le2^mR_B(\pi)+2^m\log(1+2^{1-B})+2\log m+2\log B\cdot\ind[B<\infty]+\kappa$.
-\end{lemma}
-
-\begin{lemma}[Two-part lower bounds]\status{proved}\src{steeper Lemma 2.4 (T5 Thm 2.5(c))}\label{lem:teacher:twopart}
-If $\lev(\pi)=t<\infty$, then
-\[
-\text{(D1)}\quad\ell(\pi)\ge d-s(t)-\Lambda_1,\qquad\qquad\text{(D2)}\quad\ell(\pi)+2^mR_B(\pi)\ge d+B_S-s(t)-\Lambda_1.
-\]
-\end{lemma}
-
-\emph{Proof ideas.} \Cref{lem:teacher:floor} is Jensen's inequality; a hypothesis can be right on $E$ for free only on a $p$-fraction of the inputs. \Cref{lem:teacher:coding} turns the per-$z$ average likelihoods into a semimeasure on subsets of $\{0,1\}^m$; the product form of $E$ makes the cost $2^mR_B$, not $2^dR_B$. (D1) is $d\le K(a)\le\ell(\pi)+K(a\mid\pi)+\kappa$; (D2) adds \cref{lem:teacher:coding} and symmetry of information. See \cref{app:teacher:lemmas}, which also proves a sharper floor (\cref{lem:teacher:sharpfloor}).
-
-\subsection{The theorem}\label{sec:teacher:theorem}
-
-Define
+The objective is the population objective $J_c$ of \cref{def:teacher:instance}, in the population reading of \cref{lem:kink:main}; samples are treated in \cref{sec:teacher:more}. Define
 \begin{gather*}
-\psi_c(R):=c\max\{0,B_S-2^mR\}+R,\qquad \Phi_1(c):=c(d-4-\Lambda_1)+B_S/2^m,\qquad t^*:=(d-\Lambda_1)/4,\\
-\Phi_2(c):=\begin{cases}\min\{c(d-8-\Lambda_1)+G_1,\ G_{t^*-1}\}&t^*\ge2,\\ G_1&t^*<2,\end{cases}\\
+t^*:=\tfrac{d-\Lambda_1}4,\qquad
+\Phi_2(c):=\begin{cases}\min\{c(d-8-\Lambda_1)+G_1,\ G_{t^*-1}\}&t^*\ge2,\\ G_1&t^*<2,\end{cases}\qquad\Lambda_3:=4+2\log d+\kappa,\\
 J_g(c):=c(d+\kappa_g)+H(p)\ge J_c(\pi_g),\qquad J_b(c):=c(d+\lceil L_S\rceil+\kappa_b)\ge J_c(\pi_b),\\
+\Lambda_2:=2^mH(p)-B_S+4+\Lambda_1+\kappa_g\le\log(2^m+1)+\delta_S+4+\Lambda_1+\kappa_g,\\
 \Delta(c):=\max\{0,\ c(4+\Lambda_1+\kappa_g)+H(p)-B_S/2^m\}.
 \end{gather*}
-$J_g$ minus each piece of $\Phi_2$ is affine and increasing in $c$, so $\{c>0:J_g(c)\le\Phi_2(c)\}=(0,c_{\rm hi}]$ (empty if $c_{\rm hi}\le0$) with
+For $c\ge2^{-m}$ and $\Lambda_2\ge0$, $\Delta(c)=\Lambda_2/2^m+(c-2^{-m})(4+\Lambda_1+\kappa_g)$. $J_g$ minus each piece of $\Phi_2$ is affine and increasing in $c$, so $\{c>0:J_g(c)\le\Phi_2(c)\}=(0,c_{\rm hi}]$ (empty if $c_{\rm hi}\le0$) with
 \[
 c_{\rm hi}:=\min\Big\{\frac{G_1-H(p)}{8+\Lambda_1+\kappa_g},\ \frac{G_{t^*-1}-H(p)}{d+\kappa_g}\Big\}\ \ (t^*\ge2),\qquad c_{\rm hi}:=\frac{G_1-H(p)}{d+\kappa_g}\ \ (t^*<2).
 \]
-$c_{\rm hi}>0$ requires $G_1>H(p)$; with $B=\infty$ this holds if and only if $p<0.0560$.
+$c_{\rm hi}>0$ requires $G_1>H(p)$; at $B=\infty$ this holds exactly for $p<p_0=0.05596\ldots$ (\cref{sec:parity:full}).
 
-\begin{theorem}[The teacher's-mistakes theorem]\status{proved}\src{steeper Thm 2}\label{thm:teacher:main}
-In the setting of \cref{def:teacher:instance}, with $B\in[\log(1/p),\infty]$, the following hold for every program $\pi$ of $\Hcl{\times}$, and of every product class covered by \cref{prop:related:computable}.
-\begin{enumerate}[label=(\roman*),start=0]
-\item \emph{Level bounds.} If $\lev(\pi)=1$, then $J^B_c(\pi)\ge c(d-4-\Lambda_1)+\psi_c(R_B(\pi))$. If $\lev(\pi)\ge2$, including $\infty$, then $J^B_c(\pi)\ge\Phi_2(c)$.
-\item \emph{Window.} If $c\,2^m>1$ and $c\le c_{\rm hi}$, then $\Phi(c)\ge\Phi^B(c)\ge\min\{\Phi_1(c),\Phi_2(c)\}$ and $J_c(\pi_g)\le\Phi(c)+\Delta(c)$, where $\Delta(c)\le c(4+\Lambda_1+\kappa_g)+(\log(2^m+1)+\delta_S)/2^m$.
-\item \emph{Identification.} Let $c\,2^m>1$, $\epsilon\ge0$ and $J_g(c)+\epsilon<\Phi_2(c)$, and let $J^B_c(\pi)\le J_g(c)+\epsilon$; this includes every $\pi$ with $J_c(\pi)\le\Phi(c)+\epsilon$. Then $\lev(\pi)=1$. Put $\Lambda_2:=2^mH(p)-B_S+4+\Lambda_1+\kappa_g\le\log(2^m+1)+\delta_S+4+\Lambda_1+\kappa_g$, $\Lambda_3:=4+2\log d+\kappa$ and
+\begin{proposition}[The two kink bounds]\status{proved; computed}\src{split/teacher Prop 2.1(a),(b); checks t1(B), rB2(E)}\label{prop:teacher:kinks}
+Let $B=\infty$ or let $B\ge\log(1/p)$ be an integer. Take the reference point $(d+\kappa_g,H(p))$, bounded by $\pi_g$, the fits $R\ge R_B$, the set $\mathcal N$ of programs of level at least $2$ ($\infty$ included) and the set $\mathcal M$ of programs of level $1$.
+(a) \emph{Left.} Every $\pi\in\mathcal N$ has $J^B_c(\pi)\ge\Phi_2(c)$ for every $c>0$, so $\eta_{\mathcal N}(c)\ge\Phi_2(c)-J_g(c)$, which is nonnegative on $(0,c_{\rm hi}]$ and positive on $(0,c_{\rm hi})$. If $c_{\rm hi}>0$, every $\pi\in\mathcal N$ lies above the wedge with apex $(d+\kappa_g,H(p))$, steepness $c_{\rm hi}$ and margin $G_1-H(p)$: $R_B(\pi)\ge H(p)+\max\{c_{\rm hi}(d+\kappa_g-\ell(\pi)),\,G_1-H(p)\}$.
+(b) \emph{Right.} Every $\pi\in\mathcal M$ has $\ell(\pi)\ge d-4-\Lambda_1$ and $R_B(\pi)\ge H(p)-\Lambda_2/2^m-2^{-m}(\ell(\pi)-d-\kappa_g)$: $\mathcal M$ has the right line of slope $2^{-m}$ and offset $\Lambda_2/2^m$, with length floor $d-4-\Lambda_1$. If $p<\frac14$, then $\Lambda_2\ge0$.
+\end{proposition}
+
+\emph{Proof idea.} (a): by (D1) a program of level $t\ge2$ is at least $d-s(t)-\Lambda_1$ long or pays the risk floor $G_{t-1}$, and the concavity of $G$ leaves two cases. (b) is (D1) and (D2) at level $1$ (\cref{app:teacher:main}).
+
+Not knowing the parity costs a positive amount per sample; knowing the rule buys only $2^{-m}$ of risk per bit. Between the two slopes lies the window:
+
+\begin{theorem}[The teacher's-mistakes theorem]\status{proved}\src{steeper Thm 2; split/teacher Prop 2.1(c), Remark 2.6 (a1); split/verify-teacher \S8}\label{thm:teacher:main}
+In the setting of \cref{def:teacher:instance}, with $B=\infty$ or an integer $B\ge\log(1/p)$, the following hold for every program $\pi$ of $\Hcl{\times}$, and of every product class covered by \cref{prop:related:computable}.
+\begin{enumerate}[label=(\roman*),start=1,itemsep=1pt,topsep=2pt]
+\item[(o)] \emph{Level bounds.} If $\lev(\pi)=1$, then $J^B_c(\pi)\ge c(d-4-\Lambda_1)+\max\{R_B(\pi),\,cB_S-(c2^m-1)R_B(\pi)\}$. If $\lev(\pi)\ge2$, including $\infty$, then $J^B_c(\pi)\ge\Phi_2(c)$.
+\item \emph{Window.} If $c\,2^m>1$ and $c\le c_{\rm hi}$, then $\Phi(c)\ge\Phi^B(c)\ge\min\{c(d-4-\Lambda_1)+B_S/2^m,\ \Phi_2(c)\}$ and $J_c(\pi_g)\le\Phi(c)+\Delta(c)$, where $\Delta(c)\le c(4+\Lambda_1+\kappa_g)+(\log(2^m+1)+\delta_S)/2^m$.
+\item \emph{Identification.} Let $c\,2^m>1$, $\epsilon\ge0$ and $J_g(c)+\epsilon<\Phi_2(c)$, and let $J^B_c(\pi)\le J_g(c)+\epsilon$; this includes every $\pi$ with $J_c(\pi)\le\Phi(c)+\epsilon$. Then $\lev(\pi)=1$. Put
 \[
-\Delta_\ell:=\kappa_g+\frac\epsilon c+\frac{\Lambda_2+\epsilon/c}{c2^m-1}.
+\Delta_\ell:=\kappa_g+\frac\epsilon c+\frac{\Lambda_2+\epsilon/c}{c2^m-1},\qquad R_{\max}:=J_g(c)+\epsilon-c\,(d-4-\Lambda_1)^+.
 \]
-\begin{enumerate}[label=(\alph*)]
-\item \emph{It knows the simple model:} $u(\pi)\ge\max\{\frac34,\ 2^{-(J_g(c)+\epsilon)}-p-2^{-B}\}$.
+\begin{enumerate}[label=(\alph*),itemsep=0pt,topsep=1pt]
+\item \emph{It knows the simple model:} $u(\pi)\ge\max\{\frac34,\ 2^{-R_{\max}}-p-2^{-B}\}$.
 \item \emph{It fits no better than noise:} $R_B(\pi)\ge H(p)-\dfrac{c\Lambda_2+\epsilon}{c2^m-1}$.
 \item \emph{It is short:} $\ell(\pi)\le d+\Delta_\ell$.
 \item \emph{It holds little information about the error rule:} $I(\pi)\le\Delta_\ell+\Lambda_3$, so $L_S-K(S\mid a,\pi)\le\delta_S+\Delta_\ell+\Lambda_3$.
-\item \emph{It does not predict the errors:} for every integer $g\ge1$,
-\[
-e(\pi):=\Ex\big[\nu_\pi(y^*(x)\mid x)\,\big|\,x\in E\big]\ \le\ 1-u(\pi)+\gamma_g+2^{-g},
-\]
-where $\gamma_g:=\sqrt{j_g\ln2/(2s_0)}$ and $j_g$ is the least integer $j\ge0$ with $j-2\log(j+1)>\delta_S+\Delta_\ell+\Lambda_3+1+2\log m+2\log s_0+g+2\log g+\kappa$.
+\item \emph{It does not predict the errors:} for every integer $g\ge1$, $e(\pi)\le1-u(\pi)+\gamma_g+2^{-g}$, where $\gamma_g:=\sqrt{j_g\ln2/(2s_0)}$ and $j_g$ is the least integer $j\ge0$ with $j-2\log(j+1)>\delta_S+\Delta_\ell+\Lambda_3+1+2\log m+2\log s_0+g+2\log g+\kappa$.
 \end{enumerate}
 \item \emph{Memoriser regime.} Let $c\,2^m<1$, and let $J^B_c(\pi)\le J_b(c)+\epsilon$ with $J_b(c)+\epsilon<\Phi_2(c)$. Then $\lev(\pi)=1$ and $(1-c2^m)\min\{R_B(\pi),B_S/2^m\}\le\varrho:=c(\lceil L_S\rceil-L_S+\delta_S+4+\Lambda_1+\kappa_b)+\epsilon$. If $\varrho<(1-c2^m)B_S/2^m$, then $R_B(\pi)\le\varrho/(1-c2^m)$ and $e(\pi)\ge2^{-R_B(\pi)/p}-2^{-B}$.
 \item \emph{The lower end is sharp.} If $c<H(p)/(\lceil L_S\rceil+\kappa_b+4+\Lambda_1)$, then $J_c(\pi_b)<J_c(\pi)$ for every $\pi$ with $\lev(\pi)=1$ and $R(\pi)\ge H(p)$. Since $L_S=2^mH(p)-O(m)$, this threshold is $2^{-m}\big(1+O((m+\log d+\kappa)/L_S)\big)$.
 \end{enumerate}
 \end{theorem}
 
-\emph{Proof idea.} For a program of level $1$, (D1) and (D2) give $J^B_c\ge c(d-4-\Lambda_1)+\psi_c(R_B)$, and when $c2^m>1$ the function $\psi_c$ is minimised at $R=B_S/2^m$: each bit of rule information costs $c$ per sample in length and saves only $2^{-m}$ in risk. A program of level $t\ge2$ pays in length through (D1) or in risk through \cref{lem:teacher:floor}; concavity of $G$ reduces the $t$-dependence to two endpoints. Part (ii) reads these inequalities backwards. For (e), if a near-optimal program gave the erroneous labels much probability, $S$ would lie in a small set enumerable from the program (Hoeffding's inequality for sampling without replacement \citep{hoeffding1963probability}), contradicting (d). Parts (iii) and (iv) follow from (D2) and (D1). See \cref{app:teacher:main}.
+\emph{Proof idea.} (i), (ii)(b) and (ii)(c) are \cref{lem:kink:main}(i),(ii) with the bounds of \cref{prop:teacher:kinks} ($\tau=2^{-m}$, offset $\Lambda_2/2^m$, length floor $d-4-\Lambda_1$, $\eta_{\mathcal N}\ge\Phi_2-J_g$); the lemma's $\Delta(c)$ is $\Delta(c)$. The rest gives the position its meaning: (a) is the risk floor at $R_B\le R_{\max}$; (d) is list decoding and symmetry of information; in (e), much probability on the erroneous labels would put $S$ in a small set enumerable from the program \citep{hoeffding1963probability}, contradicting (d). (iii) is the side $c<2^{-m}$ of the same line, (iv) the memoriser's secant (\cref{app:teacher:main}).
 
-So in the window $2^{-m}<c<c_{\rm hi}$, for error rules that are incompressible relative to the model, no product hypothesis of any kind beats the good model by more than $\Delta(c)$, and every near-optimal hypothesis knows the parity, is at most $\Delta_\ell$ bits longer than $d$, holds little information about the rule and gives the erroneous labels average probability at most $1-u+\gamma_g+2^{-g}$ (at most $0.2$ to $0.29$ at the example's sizes, against $1$ for the memoriser and $2^{-10}$ for the good model), when the error rule is large compared with the information budget. Below $2^{-m}$, by a relative margin, near-optimal hypotheses reproduce the errors. For such rules this settles the question left open by the three-hypothesis calculation of \cref{rem:teacher:hanni}.
+So in the window $2^{-m}<c<c_{\rm hi}$, for error rules incompressible relative to the model, no product hypothesis beats the good model by more than $\Delta(c)$, and every near-optimal hypothesis knows the parity, is at most $\Delta_\ell$ bits longer than $d$, holds little information about the rule and gives the erroneous labels average probability at most $1-u+\gamma_g+2^{-g}$ (at most $0.2$ to $0.29$ at the example's sizes, against $1$ for the memoriser), when the rule is large compared with the information budget. Below $2^{-m}$, by a relative margin, near-optimal hypotheses reproduce the errors. The lower end $2^{-m}$ is the reuse factor: a bit of the rule serves about $n2^{-m}$ of $n$ samples, a bit of noise one.
 
-\begin{remark}[Numbers for the running example]\status{computed}\src{steeper \S2.4 ``Numbers''; checks c3, c6(B), c7(D); referee r1, q4(B)}\label{rem:teacher:numbers}
-At $d=100$, $m=20$, $p=2^{-10}$, $B=\infty$ and $\epsilon=0$, a direct computation (code in the accompanying repository) gives \cref{tab:teacher:numbers}, rounded to the nearest unit in the last digit. Rows with the machine constant set to $0$ ($\kappa=0$) are illustrations, not results about any reference machine; rows with $\kappa=30$ show how the bounds degrade, and every bound is explicit in $\kappa$ and $\delta_S$. The window is $(9.54\cdot10^{-7},\,8.06\cdot10^{-3}]$ at $\kappa=0$ (a ratio of $8453$) and $(9.54\cdot10^{-7},\,3.66\cdot10^{-3}]$ at $\kappa=30$ (ratio $3837$), against the three-hypothesis window $(1.12\cdot10^{-6},8.99\cdot10^{-3})$ of \cref{rem:teacher:hanni}. The memoriser has $e=1$ and the good model $e=2^{-10}$; for $m=24$ ($L_S=187{,}457$) the bound at $c=10^{-4}$ is $e\le0.065$ ($\kappa=0$, $\delta_S=0$). Near $2^{-m}$ the memoriser regime is only partly covered (lower bounds on $e$ in \cref{app:teacher:computations}): with $\delta_S=0$, (iii) applies only for $c<0.99418\cdot2^{-m}$ at $\kappa=0$ ($c<0.98914\cdot2^{-m}$ at $\kappa=30$), and $e\ge\frac12$ needs $c\le0.937\cdot2^{-m}$ ($0.888\cdot2^{-m}$ at $\kappa=30$); in a band of relative width about $6\%$ below $2^{-m}$ nothing useful is proved.
+\begin{remark}[Numbers for the running example]\status{computed}\src{steeper \S2.4 ``Numbers''; checks c3, c6(B), c7(D); referee r1, q4(B); split/teacher t6(D), v5(D)}\label{rem:teacher:numbers}
+At $d=100$, $m=20$, $p=2^{-10}$, $B=\infty$, $\epsilon=0$, a direct computation (code in the accompanying repository) gives \cref{tab:teacher:numbers}, with $J_g(c)+\epsilon$ for $R_{\max}$ in (ii)(a); with $R_{\max}$ the first row has $u\ge0.988$ and $e\le0.195$. The window is $(9.54\cdot10^{-7},\,8.06\cdot10^{-3}]$ at $\kappa=0$ (a ratio of $8453$; an illustration) and $(9.54\cdot10^{-7},\,3.65\cdot10^{-3}]$ at $\kappa=30$. For $m=24$ the bound at $c=10^{-4}$ is $e\le0.065$ ($\kappa=0$, $\delta_S=0$). In a band of relative width about $6\%$ ($\kappa=0$; about $11\%$ at $\kappa=30$) below $2^{-m}$ nothing useful is proved (\cref{app:teacher:computations}).
 \end{remark}
 
 \begin{table}[t]
@@ -130,42 +106,61 @@ At $d=100$, $m=20$, $p=2^{-10}$, $B=\infty$ and $\epsilon=0$, a direct computati
 \toprule
 $\kappa$ & $\delta_S$ & $u\ge$ & $\ell\le$ & $I\le$ & $L_S-K(S\mid a,\pi)\le$ & $e\le$\\
 \midrule
-0 & 0 & 0.983 & $d+20.4$ & 37.7 & 37.7 & 0.199\\
-0 & 20 & 0.983 & $d+20.6$ & 37.9 & 57.9 & 0.218\\
-30 & 0 & 0.981 & $d+51.0$ & 98.3 & 98.3 & 0.274\\
-30 & 20 & 0.981 & $d+51.2$ & 98.5 & 118.5 & 0.287\\
+0 & 0 & 0.983 & $d+20.5$ & 37.8 & 37.8 & 0.200\\
+0 & 20 & 0.983 & $d+20.7$ & 38.0 & 58.0 & 0.218\\
+30 & 0 & 0.981 & $d+51.1$ & 98.3 & 98.3 & 0.274\\
+30 & 20 & 0.981 & $d+51.3$ & 98.5 & 118.5 & 0.287\\
 \bottomrule
 \end{tabular}
-\caption{Identification at $c=10^{-4}$ (\cref{thm:teacher:main}(ii), $g$ optimised) for the running example: $d=100$, $m=20$, $p=2^{-10}$ ($L_S=11{,}710$ bits), $B=\infty$, $\epsilon=0$. Rows with $\kappa=0$ set the machine constant to $0$ and are illustrations. Information bounds are in bits, out of $L_S$. Numbers are rounded to the nearest unit in the last digit.}
+\caption{Identification at $c=10^{-4}$ (\cref{thm:teacher:main}(ii), $g$ optimised) for the running example: $d=100$, $m=20$, $p=2^{-10}$ ($L_S=11{,}710$ bits), $B=\infty$, $\epsilon=0$. Rows with $\kappa=0$ set the machine constant to $0$ and are illustrations. Information bounds are in bits, out of $L_S$. Lower bounds are rounded down and upper bounds up.}
 \label{tab:teacher:numbers}
 \end{table}
 
-\begin{remark}[What the theorem relies on]\status{remark}\src{steeper \S2.4 ``The hypotheses Theorem 2 relies on''}\label{rem:teacher:hypotheses}
-Without one of the first four of the following hypotheses a step of the proof fails as written; the fifth enters every bound. (1) \emph{A list-decodable model class}: parities admit \cref{lem:teacher:list}, while simple models with short approximations, such as majority-like functions, do not. (2) \emph{The product form $E=S\times\{0,1\}^{d-m}$}: \cref{lem:teacher:coding} averages each $z\in\{0,1\}^m$ over $2^{d-m}$ inputs; for an unstructured $E\subseteq\{0,1\}^d$ it would give $2^dR_B$ bits, useless at $d=100$. (3) \emph{Uniform inputs}: rates, and with them the window, scale with the input law (\cref{prop:limits:inputlaw}). (4) \emph{$p<0.056$}, so that $G_1>H(p)$ (\cref{rem:limits:method}). (5) \emph{A small deficiency $\delta_S$}: every slack term contains it, and \cref{prop:limits:envelope} shows that this is not an artefact of the proof.
+\begin{remark}[What the theorem relies on]\status{remark}\src{steeper \S2.4 ``The hypotheses Theorem 2 relies on''; split/teacher Table 2.2}\label{rem:teacher:hypotheses}
+Without one of the first four hypotheses a step of the proof fails as written; the fifth enters every bound. (1) \emph{A list-decodable model class} (\cref{lem:teacher:list}) gives the left side and the length floor of the right line; majority-like functions do not admit it. (2) \emph{The product form of $E$} gives the right slope $2^{-m}$ instead of $2^{-d}$ (\cref{lem:teacher:coding}). (3) \emph{Uniform inputs} make every slope a rate; the window scales with the input law (\cref{prop:limits:inputlaw}). (4) \emph{$G_1>H(p)$} is the margin of the left wedge; \cref{prop:teacher:rates} relaxes it to $p\le0.1233$, asymptotically. (5) \emph{A small deficiency $\delta_S$} enters the offset of the right line, as the Ville deficiency $\delta^*$ does for noise (\cref{thm:split:private}(i)), with the same tail $2^{-j}$; it is not an artefact of the proof (\cref{prop:limits:envelope}).
 \end{remark}
 
-\subsection{Idiosyncratic errors and finite samples}\label{sec:teacher:more}
+\begin{remark}[What is selected]\status{remark; computed; a natural strengthening refuted}\src{split/teacher \S2.1 ``What is selected''; checks t5(A),(B), rA1(A), rB3(A)}\label{rem:teacher:selected}
+\Cref{thm:teacher:main} concerns the near-optimal programs, not the minimiser. The natural strengthening that $\pi_g$ is a vertex of the population hull on the whole window fails in explicit rate codes: among the programs ``true parity with flip rate $q$'', a direct computation (code in the accompanying repository) at the example's sizes, with the machine constant set to $0$ or $30$ (an illustration), finds that the rate-$p$ program minimises $J_c$ only on the lower $67.7\%$ to $88.6\%$ of the window's logarithmic width; a coarser rate such as $2^{-9}$ takes over above, and satisfies every conclusion of \cref{thm:teacher:main}(ii). In $\Hcl{\times}$ nothing is claimed either way.
+\end{remark}
 
-With idiosyncratic errors and the whole truth table, the window becomes a window in $\lambda$ itself. Write $L_E,B_E,\delta_E$ for $L_S,B_S,\delta_S$ when $m=d$.
+\subsection{Full tables and samples}\label{sec:teacher:more}
 
-\begin{corollary}[Idiosyncratic errors, full truth table]\status{proved; computed}\src{steeper Cor 2.5 (T5 Thm 3.5, Cor 3.5a); checks c3, c7(H)}\label{cor:teacher:fulltable}
-Take $m=d$, $N=2^d$, $B=\infty$, and let the data be the whole truth table of $y^*$, so $n=N$. A $\lambda$-MAP minimises $\lambda\ell+NR=N\,J_{\lambda/N}$.
-\begin{enumerate}[label=(\roman*)]
-\item For every $\lambda>1$ with $J_g(\lambda/N)<\Phi_2(\lambda/N)$, in particular every $\lambda\in(1,Nc_{\rm hi})$, every $\lambda$-MAP $\pi$ satisfies \cref{thm:teacher:main}(ii) with $c=\lambda/N$, $\epsilon=0$: $u(\pi)\ge\max\{\frac34,2^{-J_g(\lambda/N)}-p\}$, $NR(\pi)\ge NH(p)-\lambda\Lambda_2/(\lambda-1)$, $\ell(\pi)\le d+\kappa_g+\Lambda_2/(\lambda-1)$, $I(\pi)\le\kappa_g+\Lambda_2/(\lambda-1)+\Lambda_3$, and (e).
-\item If $G_1>H(p)$ and $N(G_1-H(p))>d+\kappa_g+\log(N+1)$, then at $\lambda=1$ the optimum of $\ell+NR$, and the values $\ell(\pi_g)+NR(\pi_g)$ and $\ell(\pi_b)+NR(\pi_b)$, lie within $O(\log N)+\delta_E$ of each other, so $\lambda=1$ does not decide whether the errors are memorised; lower-order terms and the reference machine do.
-\end{enumerate}
+On the full truth table the reuse factor is exact, and the window becomes one in $\lambda$. Let $N:=2^d$, and write $L_E,B_E,\delta_E$ for $L_S,B_S,\delta_S$ when $m=d$.
+
+\begin{corollary}[Full truth tables: the window starts at the reuse factor]\status{proved; computed}\src{steeper Cor 2.5 (T5 Thm 3.5, Cor 3.5a); split/teacher Props 3.1(a),(b), 2.4(iii); checks c3, c7(H), t1(D), rB2(B)}\label{cor:teacher:fulltable}
+Let $B=\infty$ and let the data be the whole truth table of $y^*$, so $n=N$; a $\lambda$-MAP minimises $\lambda\ell+NR=N\,J_{\lambda/N}$.
+(i) For every $\lambda>2^{d-m}$ with $J_g(\lambda/N)<\Phi_2(\lambda/N)$, in particular every $\lambda\in(2^{d-m},Nc_{\rm hi})$, every $\lambda$-MAP $\pi$ satisfies \cref{thm:teacher:main}(ii) with $c=\lambda/N$ and $\epsilon=0$; so $\ell(\pi)\le d+\kappa_g+2^{d-m}\Lambda_2/(\lambda-2^{d-m})$, $NR(\pi)\ge NH(p)-\lambda2^{d-m}\Lambda_2/(\lambda-2^{d-m})$ and $I(\pi)\le\kappa_g+2^{d-m}\Lambda_2/(\lambda-2^{d-m})+\Lambda_3$.
+(ii) Let $m=d$. If $G_1>H(p)$ and $N(G_1-H(p))>d+\kappa_g+\log(N+1)$, then at $\lambda=1$ the optimum of $\ell+NR$, and the values $\ell(\pi_g)+NR(\pi_g)$ and $\ell(\pi_b)+NR(\pi_b)$, lie within $O(\log N)+\delta_E$ of each other, so $\lambda=1$ does not decide whether the errors are memorised; lower-order terms and the reference machine do.
+(iii) For $\lambda<NH(p)/(\lceil L_S\rceil+\kappa_b+4+\Lambda_1)$ the memoriser beats every program of level $1$ with $R\ge H(p)$.
 \end{corollary}
 
-For instance, at $d=20$ and $p=2^{-10}$ ($L_E=11{,}710$ bits) a direct computation (code in the accompanying repository) gives the window $\lambda\in(1,1.19\cdot10^4)$ with the machine constant set to $0$ (an illustration) and $\lambda\in(1,6456)$ at $\kappa=30$; the bounds at $\lambda=2$ and $\lambda=105$ are in \cref{app:teacher:fulltable}.
+\emph{Proof idea.} \Cref{thm:teacher:main}(ii) and (iv) at $c=\lambda/N$, with $c2^m-1=(\lambda-2^{d-m})/2^{d-m}$; (ii) compares the two programs with (D2) and the risk floor (\cref{app:teacher:fulltable}).
 
-The theorem is a population statement. For sampled data, let $n\le2^d$ inputs be drawn uniformly without replacement, so that the data form a partial function, and labelled by $y^*$; let $B<\infty$, $\delta\in(0,1)$, $\epsilon_1:=\log(1/p)\sqrt{\ln(2/\delta)/(2n)}$, $\hat L:=(J_c(\pi_g)+\epsilon_1)/c$ and $\epsilon_n:=\epsilon_1+B\sqrt{(\hat L\ln2+\ln(2/\delta))/(2n)}$.
+The threshold in (iii) is $2^{d-m}(1+O((m+\log d+\kappa)/L_S))$: the window in $\lambda$ starts, up to lower-order terms, at the reuse factor $2^{d-m}$, the slope of the right line of \cref{prop:teacher:kinks}(b) multiplied by $N$. For $m=d$ it is $1$, as for noise: the good model is $b_0$-sufficient, $b_0=\delta_E+O(\log N)$ (\cref{prop:parity:kink}), so at $\lambda=1$ its point lies on the sufficiency line up to $b_0$, like the sampler's in \cref{thm:split:lambda1}, and (ii) is the resulting tie. At $d=m=20$ and $p=2^{-10}$ a direct computation (code in the accompanying repository) gives the window $\lambda\in(1,1.194\cdot10^4)$ with the machine constant set to $0$ (an illustration) and $(1,6456)$ at $\kappa=30$.
+
+Let $D$ be $n\le2^d$ inputs drawn uniformly without replacement, labelled by $y^*$. For $p<\frac14$, by (D1) the memoriser beats $\pi_g$ at every $\lambda$ below $F_g/(\lceil L_S\rceil+\kappa_b+4+\Lambda_1)\approx n2^{-m}$, with $F_g:=-\log\nu_{\pi_g}(D)\approx nH(p)$. Let $B\ge\log(1/p)$ be an integer, $\delta\in(0,1)$, $\epsilon_1$ as in \cref{prop:teacher:schedules}(c), $\hat L:=(J_c(\pi_g)+\epsilon_1)/c$ and $\epsilon_n:=\epsilon_1+B\sqrt{(\hat L\ln2+\ln(2/\delta))/(2n)}$.
 
 \begin{corollary}[Finite samples]\status{proved; computed}\src{steeper Cor 2.7, Lemma 2.6; check c3}\label{cor:teacher:sampled}
 With probability at least $1-\delta$, every $\lambda$-MAP with $\lambda=cn$ satisfies $J^B_c\le J_g(c)+\epsilon_n$, and hence the conclusions of \cref{thm:teacher:main}(ii) with $\epsilon=\epsilon_n$, whenever $c2^m>1$ and $J_g(c)+\epsilon_n<\Phi_2(c)$.
 \end{corollary}
 
-The proof is uniform convergence over all programs with Kraft weights (\cref{lem:teacher:finite}), which is pessimistic. At the example's sizes, with $B=30$, $\delta=0.01$, $\delta_S=0$, $c=10^{-4}$ and the machine constant set to $0$ (an illustration), it gives near-population constants only at about $10^{11}$ samples ($\epsilon_n/c=9.2$ bits at $n=10^{11}$, $0.9$ bits at $n=10^{13}$); coarser guarantees hold earlier (at $n=10^9$: $\ell\le d+113.9$, $e\le0.284$; \cref{app:teacher:sampled}). In \cref{app:teacher}, the power posterior with $\lambda=cn$, not only its maximiser, is shown to concentrate on near-optimal programs (\cref{prop:teacher:concentration}), and the total-bits version of the example is realised in population form (\cref{ex:teacher:version1}).
+The proof is uniform convergence over all programs with Kraft weights (\cref{lem:teacher:finite}), which is pessimistic: at the example's sizes and $c=10^{-4}$, a direct computation (code in the accompanying repository) shows that near-population constants need about $10^{11}$ samples (machine constant $0$, an illustration; \cref{app:teacher:sampled}). The power posterior with $\lambda=cn$ also concentrates on near-optimal programs (\cref{prop:teacher:concentration}), and \cref{rem:teacher:hanni}(1) is realised in population form (\cref{ex:teacher:version1}).
 
-\begin{question}[other models, flip rates and sample sizes]\label{q:teacher:open}
-(a) For which classes of simple models other than parities is there a window as in \cref{thm:teacher:main}? We expect that majority-like functions, which have short approximations, give none. (b) Is there a window for flip rates $0.056\le p<1/4$, where the kink of \cref{prop:algstat:parity} exists (for $p<0.123$ see \cref{q:limits:open})? (c) Do the conclusions of \cref{thm:teacher:main}(ii), with constants close to the population ones, hold for the $\lambda$-MAPs of sampled data at sample sizes far below $10^{11}$?
+\subsection{Flip rates below 0.1233}\label{sec:teacher:rates}
+
+The bound $\Phi_2$ charges a program that does not know the parity only through the risk floor. Charging in its length the information it holds about the rule gives a continuous lower bound $\Phi_2^\sharp\ge\Phi_2$ on all programs of level at least $2$, and \cref{thm:teacher:main}(i),(ii) and \cref{prop:teacher:schedules}(c) hold with $\Phi_2^\sharp$ in place of $\Phi_2$ for every $c>2^{-m}$ with $J_g(c)+\epsilon<\Phi_2^\sharp(c)$ (\cref{prop:teacher:sharp} in \cref{app:teacher:rates}).
+
+At $c\ge2^{-m}$ the charge $cI\ge p\,(I/s_0)$ is linear in the information per error cell, while the sharp floor of \cref{sec:teacher:lemmas} lets that information gain only about $2p\gamma_g(I)$, of order $\sqrt{I/s_0}$. Let $\psi_2(p,a):=\inf_{x\ge0}\big[apx-\log\big(\tfrac34-\tfrac p2+2p\sqrt{x\ln2/2}\big)\big]$ and $a^*(p):=\inf\{a\ge1:\psi_2(p,a)>H(p)\}$.
+
+\begin{proposition}[A window for every flip rate below $p_1$, asymptotically]\status{proved; computed}\src{split/teacher Prop 5.3; split/verify-teacher \S9; checks t4(A), t6(A), rB7(A), v5(A),(B)}\label{prop:teacher:rates}
+Fix a dyadic $p\in(0,\frac14)$, $\kappa$, $B=\infty$ and $a>a^*(p)$. Let $m\to\infty$ with $s_0=p2^m$, $d\ge m$, $d2^{-m}\to0$ and $\delta_S=o(2^m)$, and let $c_m\ge a2^{-m}$ satisfy $c_md\to0$. Then there is $\epsilon>0$ such that for all large $m$, $J_g(c)+\epsilon<\Phi_2^\sharp(c)$ for every $c\in[a2^{-m},c_m]$; so the identification of \cref{thm:teacher:main}(ii) holds there (\cref{prop:teacher:sharp}(iii)). Moreover $a^*(p)<\infty$ if and only if $1-\log(\frac32-p)>H(p)$, and $a^*(p)=1$ if and only if $\psi_2(p,1)\ge H(p)$.
+\end{proposition}
+
+\emph{Proof idea.} At $c=a2^{-m}$ a budget $I=xs_0$ costs $apx$ per sample, and as $m\to\infty$ the level-$2$ floor tends to $-\log(\frac34-\frac p2+2p\sqrt{x\ln2/2})$; so the level-$2$ term $\Psi_2$ of $\Phi_2^\sharp$ (\cref{app:teacher:rates}) has $\liminf_m\Psi_2(a2^{-m})\ge\psi_2(p,a)>H(p)$, while the length terms vanish. As $a\to\infty$, $\psi_2(p,a)$ increases to $1-\log(\frac32-p)$ (\cref{app:teacher:rates}).
+
+The first condition is that of \cref{prop:parity:range}(iii), which holds exactly for $p<p_1=0.1233072\ldots$ (\cref{sec:parity:full}). $\psi_2(p,1)-H(p)$ is strictly decreasing on $(0,\frac14]$, and a direct computation (code in the accompanying repository) puts its root at $p^*=0.0778658\ldots$ (\cref{app:teacher:rates}). So asymptotically a window reaching far above $2^{-m}$ exists for every dyadic $p\le0.1233$, reaching down to $a2^{-m}$ for every $a>1$ when $p\le0.0778$. At $d=100$ and $m=20$, with the machine constant set to $0$ (an illustration), windows exist at the flip rates $1/16$, $5/64$, $3/32$, $7/64$ and $15/128$, where \cref{thm:teacher:main} gives none, with $e\le0.197$ to $0.269$ at a value of $c$ inside each (\cref{tab:teacher:rates}).
+
+\begin{question}[other models, flip rates, samples and schedules]\status{open}\src{steeper \S2.6; split/teacher \S5 ``What remains open'', Prop 3.3(c), Prop 3.6; split synthesis \S6 items 8--10, 12, 14}\label{q:teacher:open}
+(a) For which classes of simple models other than parities is there a window as in \cref{thm:teacher:main}? We expect that majority-like functions give none. (b) For $p_1\le p<\frac14$ and $m<d$, with $p_1=0.1233072\ldots$ as in \cref{sec:parity:full}, is there a window on which every near-optimal hypothesis has level at most $2$? The present floors cannot give level $1$ there; the level-$3$ analogue of $\psi_2$ tends to $-\log(\frac58-\frac p4)>H(p)$, and what is missing is (D2) at level $2$. (c) Do near-population constants hold for sampled data far below $10^{11}$ samples? (d) On $n\gg2^m$ inputs drawn without replacement, with unequal multiplicities of the sampled cells, is the least $\lambda$ at which a parity with flip noise is a $\lambda$-MAP about the mean multiplicity of the sampled error cells, up to $O(\log)$ terms, and does the largest grow like $n$? (e) What do schedules do whose ratio $\lambda_n/n$ leaves the window infinitely often?
 \end{question}

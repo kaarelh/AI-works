@@ -1,0 +1,211 @@
+% Appendix E (writer: W4 of the restructure; plan: research/paper-review/restructure/PLAN.md). Proofs for sec:parity.
+% Sources: base app-teacher.tex §C.1-C.2 (list decoding, floors, coding lemma, two-part bounds, sharp floor);
+% base app-algstat.tex (prop:algstat:set, rem:algstat:near1, prop:algstat:coarse, q:algstat:lsc, proof of prop:algstat:parity);
+% research/tracks/split/kink/notes-final.md §4 (proofs of Props 4.1, 4.2, Cor 4.3, Prop 4.4) with split/verify-kink.md §4.1 (facts alpha, beta, gamma);
+% split/verify-teacher.md §9 (uniqueness of the crossings).
+\section{Proofs for \texorpdfstring{\cref{sec:parity}}{Section \ref*{sec:parity}} (the noisy random parity)}\label{app:parity}\label{app:algstat}
+
+Throughout, the setting is \cref{def:teacher:instance}, and (F1)--(F5) are the standard facts of \cref{app:setup:facts}. In \cref{app:teacher:list,app:teacher:lemmas}, for $z\in\{0,1\}^m$ and $w\in\{0,1\}^{d-m}$ we write $(z,w)$ for the input with prefix $z$, and $w$ is uniform on $\{0,1\}^{d-m}$ in every expectation $\Ex_w$; from \cref{app:parity:kink} on, $z$ is the table, as in \cref{sec:parity:full}. Since $a\in\{0,1\}^d$, the length $d$ can be computed from $a$. We write $\tau_B:=2^{1-B}$ and $\beta_B:=2^m\log(1+\tau_B)$, both $0$ if $B=\infty$, so that $G_j=1-\log(1+2^{-j}+2p+\tau_B)$ and $\Lambda_1=2\log d+2\log m+2\log B\cdot\ind[B<\infty]+\beta_B+\kappa$.
+
+\subsection{List decoding}\label{app:teacher:list}
+
+\begin{proof}[Proof of \cref{lem:teacher:list}]
+Write $h_y(x):=\nu_\pi(y\mid x)$, $s_h:=h_0-h_1\in[-1,1]$, $\chi_{a'}(x):=(-1)^{\langle a',x\rangle}$ and $\hat s(a'):=\Ex_x[s_h\chi_{a'}]$. Since $\nu_\pi(f_{a'}(x)\mid x)=\frac12(h_0+h_1)+\frac12\chi_{a'}(x)s_h(x)$, the agreement with $f_{a'}$ is
+\[
+u(\pi;a'):=\Ex_x\nu_\pi(f_{a'}(x)\mid x)=\tfrac12\big(\Ex_x[h_0+h_1]+\hat s(a')\big)\le\tfrac12\big(1+\hat s(a')\big).
+\]
+The characters are orthonormal under the uniform law on $\{0,1\}^d$, so Parseval's identity gives $\sum_{a'}\hat s(a')^2=\Ex_xs_h^2\le1$. Hence $A_t:=\{a':u(\pi;a')>\theta_t\}\subseteq\{a':\hat s(a')>2^{-t}\}$ has fewer than $2^{2t}$ elements, the list-size bound for the Hadamard code \citep{goldreich1989hard,kushilevitz1993learning}. The value $u(\pi;a')$ is a finite average of lower semicomputable values, so it is lower semicomputable uniformly in $(\pi,a',d)$, and $A_t$ is computably enumerable given $(\pi,d,t)$. If $\lev(\pi)=t$, then $a\in A_t$. So $a$ is described, given $\pi$, by $d$, by $t$, and by its index in the enumeration of $A_t$, which takes $2t$ bits given $t$. By (F5), $K(a\mid\pi)\le2t+2\log(t+1)+2\log d+\kappa=s(t)+2\log d+\kappa$.
+\end{proof}
+
+The argument uses the lower-semicomputable agreement $u$ rather than the correlation $\hat s$, which is not computable for semimeasures; this extends the lemma of the earlier report \citep{claude2026whatfollows}, for computable hypotheses, to all product hypotheses.
+
+\subsection{The risk floors, the coding lemma and the two-part bounds}\label{app:teacher:lemmas}
+
+\begin{proof}[Proof of \cref{lem:teacher:floor}]
+Since $\min\{B,-\log v\}=-\log\max\{v,2^{-B}\}$ and $-\log$ is convex, Jensen's inequality gives
+\[
+R_B(\pi)\ge-\log\Ex_x\max\{\nu_\pi(y^*(x)\mid x),2^{-B}\}\ge-\log\big(\Ex_x\nu_\pi(y^*(x)\mid x)+2^{-B}\big).
+\]
+Off $E$, $y^*=f_a$; on $E$, $\nu_\pi(y^*\mid x)\le1$, and $\Pr[E]=p$. So $\Ex_x\nu_\pi(y^*(x)\mid x)\le u(\pi)+p$. If $\lev(\pi)=t\ge2$, then $u(\pi)\le\theta_{t-1}=\frac12+2^{-t}$, and $\frac12+2^{-t}+p+2^{-B}=\frac12\big(1+2^{-(t-1)}+2p+\tau_B\big)$, which gives $R_B\ge G_{t-1}$. If $\lev(\pi)=\infty$, then $u\le\frac12$ and $R_B\ge G_\infty$.
+\end{proof}
+
+The floor is tight as a function of $u$ alone: a hypothesis that gives the teacher's label probability $1$ on $E$ and is uniform elsewhere has $u=\frac{1-p}2$ and $\Ex_x\nu(y^*\mid x)=u+p$; it knows $S$. \Cref{lem:teacher:sharpfloor} is the semimeasure version of a lemma of the earlier report \citep{claude2026whatfollows} for computable hypotheses.
+
+\begin{proof}[Proof of \cref{lem:teacher:sharpfloor}]
+For $z\in\{0,1\}^m$ let $A(z):=\Ex_w\nu_\pi(f_a(z,w)\mid(z,w))$ and $V(z):=\Ex_w\nu_\pi(f_a(z,w)\oplus1\mid(z,w))$. Then $A+V\le1$, $u=2^{-m}\sum_zA(z)$, and $\bar v:=2^{-m}\sum_zV(z)\le1-u$. Off $E$ the teacher's label is $f_a$ and on $E$ it is $f_a\oplus1$, so
+\begin{equation}\label{eq:teacher:identity}
+\Ex_x\nu_\pi(y^*(x)\mid x)=2^{-m}\Big[\sum_{z\notin S}A(z)+\sum_{z\in S}V(z)\Big]=u-p\,\mathrm{avg}_SA+p\,\mathrm{avg}_SV.
+\end{equation}
+
+\emph{Information budget.} By definition $K(S\mid a,\pi)=B_S-I(\pi)=L_S-\delta_S-I(\pi)$. By (F3), $B_S=K(S\mid a,K(a))\le K(\pi\mid a,K(a))+K(S\mid a,\pi)+\kappa$, so $I(\pi)\le K(\pi\mid a,K(a))+\kappa\le\ell(\pi)+\kappa$ by (F1).
+
+\emph{Coding step.} Let $j$ satisfy $j-2\log(j+1)>\delta_S+I+1+2\log m+2\log s_0+g+2\log g+\kappa$ for some $I\ge I(\pi)$; the least such $j$ for $I=I(\pi)$ is the one of the statement. Put $\gamma:=\sqrt{j\ln2/(2s_0)}$. Suppose $\mathcal B$ is a set of $s_0$-subsets of $\{0,1\}^m$ with $|\mathcal B|\le2^{L_S-j}$ that contains $S$ and is computably enumerable given $(\pi,a,m,s_0)$ and a parameter $\theta$ with $K(\theta)\le g+2\log g+\kappa$. Then $S$ is described by $j$, $m$, $s_0$, $\theta$ and its index among the first $2^{\lceil L_S\rceil-j}$ enumerated elements, so $K(S\mid a,\pi)\le\lceil L_S\rceil-j+2\log(j+1)+2\log m+2\log s_0+g+2\log g+\kappa$. With the budget this gives $j-2\log(j+1)\le\delta_S+I(\pi)+1+2\log m+2\log s_0+g+2\log g+\kappa$, which the choice of $j$ excludes. So no such $\mathcal B$ exists.
+
+\emph{The $V$ side.} If $1-u+\gamma\ge1$, then $\mathrm{avg}_SV\le1\le1-u+\gamma$. Otherwise let $\theta\le1$ be the least multiple of $2^{-g}$ with $\theta\ge1-u+\gamma$; then $K(\theta)\le g+2\log g+\kappa$ and $\theta\ge\bar v+\gamma$. If $\mathrm{avg}_SV>\theta$, the set $\mathcal B:=\{S':|S'|=s_0,\ \mathrm{avg}_{S'}V>\theta\}$ contains $S$ and is computably enumerable, because $V$ is lower semicomputable. For $S'$ uniform among the $s_0$-subsets, Hoeffding's inequality for sampling without replacement \citep{hoeffding1963probability} gives $\Pr[\mathrm{avg}_{S'}V-\bar v\ge\gamma]\le e^{-2s_0\gamma^2}=2^{-j}$, so $|\mathcal B|\le2^{L_S-j}$, which the coding step excludes. Hence $\mathrm{avg}_SV\le1-u+\gamma+2^{-g}$.
+
+\emph{The $A$ side.} $A$ is only lower semicomputable, so a set of the form ``$\mathrm{avg}_{S'}A$ is small'' need not be enumerable; we use a finite stage. Let $\nu_s\uparrow\nu_\pi$ be the stage-$s$ lower approximations, $A_s(z):=\Ex_w\nu_s(f_a(z,w)\mid(z,w))$ and $u_s:=2^{-m}\sum_zA_s(z)\uparrow u$. If $u\le2^{-g}$, then $\mathrm{avg}_SA\ge0>u-2^{-g}-\gamma$. Otherwise let $\theta'$ be the largest multiple of $2^{-g}$ strictly below $u$, so $\theta'\ge u-2^{-g}$ and $K(\theta')\le g+2\log g+\kappa$, and let $s^*$ be the first stage with $u_{s^*}>\theta'$. Then $A_{s^*}$ is computable from $(\pi,a,m,\theta')$. If $\mathrm{avg}_SA_{s^*}<u_{s^*}-\gamma$, the set $\mathcal B:=\{S':|S'|=s_0,\ \mathrm{avg}_{S'}A_{s^*}<u_{s^*}-\gamma\}$ is decidable from these data and contains $S$; the lower-tail form of the same inequality gives $|\mathcal B|\le2^{L_S-j}$, which the coding step excludes. Hence $\mathrm{avg}_SA\ge\mathrm{avg}_SA_{s^*}\ge u_{s^*}-\gamma>u-2^{-g}-\gamma$.
+
+\emph{Combination.} By \eqref{eq:teacher:identity}, $\Ex_x\nu_\pi(y^*\mid x)\le u-p(u-2^{-g}-\gamma)+p(1-u+\gamma+2^{-g})=p+(1-2p)u+p(2\gamma+2^{1-g})$. Conclude with Jensen's inequality as in \cref{lem:teacher:floor}.
+\end{proof}
+
+\emph{Monotonicity of the sharp floor.} The function $f(j):=j-2\log(j+1)$ is at most $0$ for $j\le5$ and increasing for $j\ge2$. So the least integer $j$ with $f(j)>T$ is $0$ for $T<0$ and the least $j\ge6$ with $f(j)>T$ for $T\ge0$; it is nondecreasing in $T$. The threshold in $\gamma_g(I)$ increases with $I$, so $\gamma_g(I)$ is nondecreasing in $I$, each bracket in the definition of $F^\sharp_t(I)$ is nonincreasing in $I$, and so is their supremum. Each bracket is nondecreasing in $t$, because $p<\frac12$. Since the coding step allows every $I\ge I(\pi)$, a program with $\lev(\pi)>t$ and $I(\pi)\le I$ has $R(\pi)\ge F^\sharp_t(I)$ at $B=\infty$, by the lemma with $u(\pi)\le\theta_t$ and $p+(1-2p)\theta_t=\frac12(1+(1-2p)2^{-t})$.
+
+\begin{proof}[Proof of \cref{lem:teacher:coding}]
+For $z\in\{0,1\}^m$ and $b\in\{0,1\}$ let
+\[
+q_z(b):=2^{-\Ex_w\min\{B,\,-\log\nu_\pi(f_a(z,w)\oplus b\mid(z,w))\}}.
+\]
+By Jensen's inequality for the convex function $t\mapsto2^{-t}$, $q_z(b)\le\Ex_w\max\{\nu_\pi(f_a(z,w)\oplus b\mid(z,w)),2^{-B}\}$, so $\sum_bq_z(b)\le1+\tau_B$. Each $q_z(b)$ is lower semicomputable from $(\pi,a,m,B)$, because the exponent is an average of upper semicomputable values. Define, on subsets $S'\subseteq\{0,1\}^m$, $Q(S'):=\prod_{z\in\{0,1\}^m}q_z(\ind_{S'}(z))/(1+\tau_B)$, normalised factor by factor. Its total mass is $\prod_z\sum_bq_z(b)/(1+\tau_B)\le1$, so $Q$ is a lower-semicomputable semimeasure given $(\pi,a,m,B)$. Since $y^*(z,w)=f_a(z,w)\oplus\ind_S(z)$,
+\[
+-\log Q(S)=\sum_z\Ex_w\min\{B,-\log\nu_\pi(y^*(z,w)\mid(z,w))\}+2^m\log(1+\tau_B)=2^mR_B(\pi)+\beta_B.
+\]
+By (F2), $K(S\mid\pi,a,m,B)\le2^mR_B(\pi)+\beta_B+\kappa$, and by (F3) and (F5) the descriptions of $m$ and of the integer $B$ cost at most $2\log m+2\log B+\kappa$ more. For $B=\infty$ the terms in $B$ vanish.
+\end{proof}
+
+Normalising once by $1+\tau_B$, not per factor, does not in general give a semimeasure.
+
+\begin{proof}[Proof of \cref{lem:teacher:twopart}]
+(D1). By (F3), (F1) and \cref{lem:teacher:list}, $d\le K(a)\le K(\pi)+K(a\mid\pi)+\kappa\le\ell(\pi)+s(t)+2\log d+\kappa$. All terms of $\Lambda_1$ other than $2\log d+\kappa$ are nonnegative.
+(D2). By symmetry of information (F4), $K(a,S)=K(a)+K(S\mid a,K(a))+O(1)\ge d+B_S-\kappa$. By (F3), $K(a,S)\le K(\pi)+K(a\mid\pi)+K(S\mid a,\pi)+\kappa$. Insert (F1), \cref{lem:teacher:list} and \cref{lem:teacher:coding}: $d+B_S\le\ell(\pi)+s(t)+2\log d+2^mR_B(\pi)+\beta_B+2\log m+2\log B\cdot\ind[B<\infty]+\kappa$.
+\end{proof}
+
+\subsection{The full table}\label{app:parity:kink}
+
+Here $m=d$, $B=\infty$ and $p<1/4$. \emph{Minimum-distance decoding.} Two distinct parities differ on exactly $N/2$ inputs and $|E|=pN<N/4$, so $f_a$ is the unique parity within Hamming distance $N/4$ of $z$, and $E=\{x:z(x)\ne f_a(x)\}$; $d$ is determined by $|z|=N$. So $K(a,E)\le K(z)+\kappa$, and by (F4) $K(a,E)=K(a)+K(E\mid a,K(a))+O(1)\ge d+B_E-\kappa$. Hence
+\begin{equation}\label{eq:parity:decoding}
+K(z)\ \ge\ d+L_E-\delta_E-\kappa .
+\end{equation}
+Also $0\le NH(p)-L_E\le\log(N+1)$, by \cref{def:teacher:instance}(b), and $\dom D=\{0,1\}^d$ and $d$ are computable from each other, so by (F3) and (F5)
+\begin{equation}\label{eq:parity:conditional}
+K(y_D\mid\dom D)\ \ge\ K(z\mid d)-\kappa\ \ge\ K(z)-2\log(d+1)-\kappa\ \ge\ d+L_E-\delta_E-2\log(d+1)-\kappa .
+\end{equation}
+
+\begin{proof}[Proof of \cref{prop:parity:kink}]
+(i) Since $|E|=pN$ exactly, $L(\pi_g;D)=NH(p)$. By \eqref{eq:parity:conditional}, $\ell(\pi_g)+L(\pi_g;D)\le d+\kappa_g+NH(p)\le K(y_D\mid\dom D)+b_0$.
+
+(ii) The point $(\ell(\pi_g),NH(p))$ is bounded by $\pi_g$. Since $u(\pi_g)=1-p>\frac34$, $\pi_g$ has level $1$, and (D1) with $s(1)=4\le s(t_0)$ gives $w\ge0$; $w\le\kappa_g+s(t_0)+\Lambda_1$ because $\ell(\pi_g)\le d+\kappa_g$. Let $\ell(\pi)<d-s(t_0)-\Lambda_1$. A program of level $t'\le t_0$ has $\ell(\pi)\ge d-s(t')-\Lambda_1\ge d-s(t_0)-\Lambda_1$ by (D1), since $s$ is increasing; so $\lev(\pi)=t+1$ for an integer $t\ge t_0$, or $\lev(\pi)=\infty$. In the first case (D1) gives $\ell(\pi)\ge(d-s(t+1)-\Lambda_1)^+$, so $0<\ell(\pi_g)-\ell(\pi)\le d+\kappa_g-(d-s(t+1)-\Lambda_1)^+=\mathrm{den}_t$; \cref{lem:teacher:floor} gives $R(\pi)\ge G_t$; and since $\lev(\pi)>t$ and $I(\pi)\le\ell(\pi)+\kappa<d+\kappa$, the sharp floor (\cref{app:teacher:lemmas}) gives $R(\pi)\ge F^\sharp_t(d+\kappa)$. Hence
+\[
+L(\pi;D)-NH(p)\ \ge\ N(\Gamma^\circ_t-H(p))\ \ge\ \sigma^{(t_0)}\,\mathrm{den}_t\ \ge\ \sigma^{(t_0)}\big(\ell(\pi_g)-\ell(\pi)\big).
+\]
+In the second case $R(\pi)\ge\max\{G_\infty,F^\sharp_\infty(d+\kappa)\}=\Gamma^\circ_\infty\ge\Gamma^\circ_t$ for every $t$, because both floors are nondecreasing in $t$; with any integer $t\ge\max(t_0,T)$, where $\mathrm{den}_t=\kappa_g+d\ge\ell(\pi_g)-\ell(\pi)$, the same chain holds. This is the left kink.
+
+(iii) is \cref{cor:kink:split}(b) with $\pi_s=\pi_g$, $b=b_0$, $(\alpha_{\rm r},L_{\rm r})=(\ell(\pi_g),NH(p))$, $\sigma=\sigma^{(t_0)}$ and window $w$.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:parity:range}]
+Let $\hat\pi$ be a $\lambda$-MAP; it exists by \cref{lem:setup:basic}(i), and $J_\lambda(\hat\pi;D)\le J_\lambda(\pi_g;D)\le\lambda(d+\kappa_g)+NH(p)$.
+
+\emph{(b), upper.} \Cref{cor:kink:split}(a) with $\pi_s=\pi_g$ and $b=b_0$ (\cref{prop:parity:kink}(i)) gives $\ell(\hat\pi)\le\ell(\pi_g)+(b_0+\kappa)/(\lambda-1)\le\bar\ell_\lambda$.
+
+\emph{(a).} Suppose $\lev(\hat\pi)=t+1$ with an integer $t\ge t_0$, or $\lev(\hat\pi)=\infty$, and then put $t:=\infty$. By (D1), $\ell(\hat\pi)\ge(d-s(t+1)-\Lambda_1)^+$ (read as $0$ for $t=\infty$). By (b), $I(\hat\pi)\le\ell(\hat\pi)+\kappa\le\bar\ell_\lambda+\kappa$, so \cref{lem:teacher:floor} and the sharp floor give $R(\hat\pi)\ge\Gamma_t(\lambda)$. Since $(d-x)^++\min\{d,x\}=d$ for $x\ge0$,
+\[
+J_\lambda(\hat\pi;D)\ \ge\ \lambda(d-s(t+1)-\Lambda_1)^++N\Gamma_t(\lambda)\ =\ \lambda(d+\kappa_g)-\lambda\,\mathrm{den}_t+N\Gamma_t(\lambda).
+\]
+If $t\le\max(t_0,T)$, then $C_{t_0}(\lambda)$ makes the right side exceed $\lambda(d+\kappa_g)+NH(p)\ge J_\lambda(\hat\pi;D)$, a contradiction. If $t>t':=\max(t_0,T)$, then $s(t'+1)+\Lambda_1\ge d$, so $\mathrm{den}_t=\mathrm{den}_{t'}=\kappa_g+d$, and $\Gamma_t(\lambda)\ge\Gamma_{t'}(\lambda)$ because both floors are nondecreasing in $t$; the condition at $t'$ gives the same contradiction. So $\lev(\hat\pi)\le t_0$ and $u(\hat\pi)>\theta_{t_0}$, and \cref{lem:teacher:list}, with $s$ increasing, bounds $K(a\mid\hat\pi)$.
+
+\emph{(b), lower.} (D1) at the level $\lev(\hat\pi)\le t_0$.
+
+\emph{(c).} By (b), $L(\hat\pi;D)\le J_\lambda(\pi_g;D)-\lambda\ell(\hat\pi)\le NH(p)+\lambda(d+\kappa_g-d+s(t_0)+\Lambda_1)$. The lower bound is \cref{cor:kink:split}(a).
+
+\emph{(d).} By (b), $\ell(\hat\pi)+L(\hat\pi;D)=J_\lambda(\hat\pi;D)-(\lambda-1)\ell(\hat\pi)\le\ell(\pi_g)+L(\pi_g;D)+(\lambda-1)(\ell(\pi_g)-d+s(t_0)+\Lambda_1)$; apply \cref{prop:parity:kink}(i) and $\ell(\pi_g)\le d+\kappa_g$.
+
+\emph{(e).} By (F3), $B_E\le K(\hat\pi\mid a,K(a))+K(E\mid a,\hat\pi)+\kappa$, so $I(\hat\pi)\le K(\hat\pi\mid a,K(a))+\kappa$. By (F4) and (F3), $K(\hat\pi\mid a,K(a))=K(\hat\pi,a)-K(a)+O(1)\le K(\hat\pi)+K(a\mid\hat\pi)-K(a)+\kappa$. Insert (F1), the bound of (a), $K(a)\ge d$ and (b).
+
+\emph{(f).} Given $x\in E$, $x$ is uniform on $E$ and $y^*(x)=f_a(x)\oplus1$, so $e(\hat\pi)=\mathrm{avg}_EV$ with $V$ as in the proof of \cref{lem:teacher:sharpfloor} ($m=d$). The $V$ side of that proof, with the budget $I_e\ge I(\hat\pi)$ of (e), gives $\mathrm{avg}_EV\le1-u(\hat\pi)+\gamma_g(I_e)+2^{-g}$.
+
+\emph{(g).} By (c), $R(\hat\pi)=L(\hat\pi;D)/N\le R_{\max}$. \Cref{lem:teacher:floor} at $B=\infty$ gives $R(\hat\pi)\ge-\log(u(\hat\pi)+p)$, so $u(\hat\pi)\ge2^{-R_{\max}}-p$. \Cref{lem:teacher:sharpfloor} at $B=\infty$, with the budget $I_e$, gives $R(\hat\pi)\ge-\log\big(p+(1-2p)u(\hat\pi)+p(2\gamma_g(I_e)+2^{1-g})\big)$ for every $g\ge1$; solve for $u(\hat\pi)$, using $1-2p>0$. The term $\theta_{t_0}$ is (a).
+
+\emph{(ii).} Three facts. ($\alpha$) $\bar\ell_\lambda$ is nonincreasing in $\lambda$, because $b_0+\kappa\ge0$: \cref{lem:setup:coding} at $\pi_g$ gives $\ell(\pi_g)+L(\pi_g;D)\ge K(y_D\mid\dom D)-\kappa$, and (i) of \cref{prop:parity:kink} gives $\le K(y_D\mid\dom D)+b_0$. ($\beta$) $F^\sharp_t(I)$ is nonincreasing in $I$ (\cref{app:teacher:lemmas}). ($\gamma$) $\mathrm{den}_t\ge0$: in $\Hcl{\times}$, $\kappa_g\ge0$; in another class $\mathrm{den}_t=\ell(\pi_g)\ge0$ if the minimum is $d$, and otherwise (D1) for $\pi_g$ gives $\mathrm{den}_t\ge s(t+1)-4>0$. By ($\alpha$) and ($\beta$), $\Gamma_t(\lambda)$ is nondecreasing in $\lambda$; so for $\lambda\in[\lambda_{\rm lo},\lambda_{\rm hi}]$ and $t=t_0,\dots,\max(t_0,T)$, by ($\gamma$), $\lambda\,\mathrm{den}_t\le\lambda_{\rm hi}\mathrm{den}_t<N(\Gamma_t(\lambda_{\rm lo})-H(p))\le N(\Gamma_t(\lambda)-H(p))$.
+
+\emph{(iii).} The flip rate $p$ is fixed, so $K(p)$ is a constant, and $pN$ is an integer once $2^d$ is a multiple of the denominator of $p$. \emph{The budget is $O(d)$:} $\kappa_g=O(\log d)$, and $b_0=O(d)$ by $NH(p)-L_E\le\log(N+1)$ and $\delta_E=O(d)$, so $\bar\ell_\lambda=O(d)$. In $F^\sharp_t(\bar\ell_\lambda+\kappa)$ the threshold is then $O(d+g)$, since $\log s_0\le d$, so $j=O(d+g)$ and $\gamma_g=O(\sqrt{(d+g)/(p2^d)})$. \emph{The floors converge:} with $g:=d$, $\epsilon_d:=2\gamma_g(\bar\ell_\lambda+\kappa)+2^{1-g}\to0$, and since $\log(y+x)\le\log y+x\log e$ for $y\ge1$, $x\ge0$, every $t$ has $F^\sharp_t(\bar\ell_\lambda+\kappa)\ge f_t(p)-2p\,\epsilon_d\log e$, where $f_t(p):=1-\log(1+(1-2p)2^{-t})$ is increasing in $t$. \emph{Conclusion:} for $t_0\in\{1,2\}$ and $t\ge t_0$, $N(\Gamma_t(\lambda)-H(p))\ge N\big(f_{t_0}(p)-H(p)-2p\,\epsilon_d\log e\big)$, while $\lambda\,\mathrm{den}_t\le\lambda(\kappa_g+d)=O(d)$. So $C_{t_0}(\lambda)$ holds for all large $d$ whenever $f_{t_0}(p)>H(p)$. For $t_0=2$ this holds on all of $(0,\frac14]$ (the computation reported after the proposition). For $t_0=1$, $f_1(p)=1-\log(\frac32-p)$, and $f_1(p)>H(p)$ is the hypothesis.
+\end{proof}
+
+By \cref{prop:parity:range}(ii), finitely many cells certify $C_{t_0}(\lambda)$ on an interval of $\lambda$; a direct computation (code in the accompanying repository) of such covers, in high-precision arithmetic, gives the intervals of \cref{tab:parity:ranges}, with $\delta_E=0$. For $p=2^{-10}$, where the floors $G_t$ alone exceed $H(p)$, the range reaches $\lambda\to1$, and at $d=20$ it agrees to the printed digits with the window of \cref{cor:teacher:fulltable}. For $p\ge1/16$, at the levels $t_0$ of the table, the condition fails near $\lambda=1$, where the budget $\bar\ell_\lambda$ grows like $(b_0+\kappa)/(\lambda-1)$; there the proposition says nothing. With the machine constant set to $0$ (an illustration), at $d=20$, $p=2^{-10}$ and $\delta_E=0$, the same computation gives the identification bounds $u\ge0.9928$, $\ell\le d+45.7$, $I\le58.4$, $e\le0.209$ at $\lambda=2$, and $u\ge0.9903$, $\ell\le d+15.6$, $I\le28.3$, $e\le0.184$ at $\lambda=105$.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{@{}cccc|cc@{}}
+\toprule
+$p$ & $d$ & $\kappa$ & $t_0$ & floors $G_t$ alone & with the sharp floor\\
+\midrule
+$2^{-10}$ & 20 & 0 & 1 & $(1,\,11944.9]$ & $(1,\,12008.5]$\\
+$2^{-10}$ & 20 & 30 & 1 & $(1,\,6456.2]$ & $(1,\,6486.2]$\\
+$2^{-10}$ & 30 & 0 & 1 & $(1,\,9.978\cdot10^6]$ & $(1,\,1.0047\cdot10^7]$\\
+$1/16$ & 20 & 0 & 1 & -- & $[1.00049,\,4276]$\\
+$1/8$ & 20 & 0 & 2 & -- & $[1.00059,\,6529.7]$\\
+$15/64$ & 20 & 0 & 2 & -- & $[1.08656,\,465.39]$\\
+$15/64$ & 20 & 30 & 2 & -- & $[1.3422,\,199.8]$\\
+\bottomrule
+\end{tabular}
+\caption{Certified ranges of $\lambda$ on which every $\lambda$-MAP of the full table satisfies \cref{prop:parity:range}(i); $\delta_E=0$, and $\kappa_g=2\log d+2\log r+\kappa$ for $p=2^{-r}$, $2\log d+2\log(h+1)+2\log(e+1)+\kappa$ for $p=h/2^e$ with $h>1$ odd. Rows with $\kappa=0$ set the machine constant to $0$ (an illustration). Lower ends are rounded up, upper ends down. A dash: the floors $G_t$ alone certify nothing.}
+\label{tab:parity:ranges}
+\end{table}
+
+The same computation covers all $40$ cases $p\in\{\frac1{16},\frac18,\frac3{16},\frac7{32},\frac{15}{64}\}$, $d\in\{20,30,60,100\}$, $\kappa\in\{0,30\}$: in each a certified range exists with $t_0\le2$, and for $d\ge30$ its lower end is below $1+10^{-3}$.
+
+\emph{The crossings.} On $(0,\frac14]$, $(f_1-H)'(p)=\log e/(\frac32-p)-\log\frac{1-p}p\le\log e/\frac54-\log3<0$, and $(G_1-H)'(p)=-2\log e/(\frac32+2p)-\log\frac{1-p}p<0$ at $B=\infty$. Both differences are positive near $0$ and negative at $\frac14$, so each has exactly one root in $(0,\frac14)$, the values $p_1$, $p_0$ of \cref{sec:parity:full}.
+
+\subsection{Set models}\label{app:algstat:coarse}
+
+\begin{proposition}[Steeper two-part codes over sets]\status{proved; a natural reading refuted}\src{steeper Prop 3.5}\label{prop:algstat:set}
+Let $\lambda>1$ and let $A_\lambda$ minimise $\lambda K(A)+\log|A|$ over $A\ni z$. Then, for every $b\ge0$,
+\[
+K(A_\lambda)\le\sophset_b(z)+\frac{b+\kappa}{\lambda-1},
+\]
+and $A_\lambda$ is $\big(b+(\lambda-1)\sophset_b(z)\big)$-sufficient.
+\end{proposition}
+
+\begin{proof}
+Let $A_b$ attain $\sophset_b(z)$. Then $\lambda K(A_\lambda)+\log|A_\lambda|\le\lambda K(A_b)+\log|A_b|\le(\lambda-1)\sophset_b(z)+K(z)+b$. Subtract the sufficiency line for the first claim; use $K(A_\lambda)\le\lambda K(A_\lambda)$ for the second. A minimiser exists because only finitely many $A$ have $K(A)\le L$.
+\end{proof}
+
+\begin{remark}[$\lambda$ near $1$]\status{remark}\src{steeper Prop 3.5, refuted reading}\label{rem:algstat:near1}
+The bounds do not show that $\lambda$ slightly above $1$ selects an approximately minimal sufficient statistic: as $\lambda\to1$ the length bound becomes vacuous, and as $\lambda$ grows the sufficiency deficiency grows. The proposition is useful at $\lambda-1=\Theta(1)$ when the sophistication is small. The product version (\cref{prop:algstat:product}) has the same trade-off.
+\end{remark}
+
+\begin{proposition}[Sets from products]\status{proved for computable hypotheses; that it is the standard set--distribution translation is believed (known; unverified)}\src{steeper Prop 3.7}\label{prop:algstat:coarse}
+Let $\pi$ be product-$b$-sufficient for $D$, and let $\nu_\pi$ be a computable conditional measure with rational values. Put $r_D:=\lceil-\log\nu_\pi(D)\rceil$ and $A:=\{y'\in Y^{\dom D}:\nu_\pi(\dom D\mapsto y')\ge2^{-r_D}\}$. Then $y_D\in A$, $K(A\mid\dom D)\le\ell(\pi)+2\log(r_D+1)+\kappa$, and $K(A\mid\dom D)+\log|A|\le K(y_D\mid\dom D)+b+2\log(r_D+1)+\kappa$. Consequently $\sophset_{b'}(y_D\mid\dom D)\le\sophx_b(D)+2\log(r_D+1)+\kappa$ with $b'=b+2\log(r_D+1)+\kappa$, provided a computable rational product hypothesis attains $\sophx_b(D)$. Against the unconditional set sophistication of the string $y_D$, add $K(\dom D)$.
+\end{proposition}
+
+\begin{proof}
+Since $Y$ is finite and $\nu_\pi$ is computable with rational values, the test $\nu_\pi(\dom D\mapsto y')\ge2^{-r_D}$ is decidable, so $A$ is computable from $(\pi,\dom D,r_D)$. By (F1), (F3) and (F5), $K(A\mid\dom D)\le\ell(\pi)+2\log(r_D+1)+\kappa$. It contains $y_D$ because $\nu_\pi(D)\ge2^{-r_D}$, and $|A|\le2^{r_D}$ because $\sum_{y'}\nu_\pi(\dom D\mapsto y')\le1$. Hence
+\[
+K(A\mid\dom D)+\log|A|\le\ell(\pi)+2\log(r_D+1)+\kappa+r_D\le\ell(\pi)-\log\nu_\pi(D)+1+2\log(r_D+1)+\kappa,
+\]
+and product-$b$-sufficiency of $\pi$ gives the claim. The consequence follows by taking $\pi$ to attain $\sophx_b(D)$; against the unconditional set sophistication of $y_D$, describe $\dom D$ first, at cost $K(\dom D)$.
+\end{proof}
+
+\begin{question}[lower-semicomputable product models]\status{open}\src{steeper Prop 3.7, open part}\label{q:algstat:lsc}
+Does \cref{prop:algstat:coarse} hold for lower-semicomputable product hypotheses, for which the set $A$ is only computably enumerable?
+\end{question}
+
+\subsection{Sets against products}\label{app:algstat:parity}
+
+\begin{proposition}[Sets against products]\status{proved; computed}\src{steeper Prop 3.8 (T5 Thm 2.5); split/kink Props 4.1, 4.4, Cor 4.3; checks c2(c), c4(C), c7(C)}\label{prop:algstat:parity}
+In the setting of \cref{sec:parity:full}, in $\Hcl{\times}$, let $c^*:=2\log d+K(p)+\kappa$.
+(i) \emph{Sets: the parity is noise.} $A_0:=\{f_{a'}\oplus\ind_{E'}:a'\in\{0,1\}^d,\ |E'|=pN\}$ has $|A_0|=2^{d+L_E}$ and $K(A_0)\le c^*$, and $K(z)\ge d+L_E-\delta_E-\kappa$; so $A_0$ is $(\delta_E+c^*)$-sufficient and $\sophset_b(z)\le c^*$ for every $b\ge\delta_E+c^*$. The structure function $h_z$ lies within $\delta_E+O(\log d)$ of the sufficiency line for $\alpha$ between $O(\log d)$ and $d+O(\log d)$, and every $\lambda$-optimal set model with $\lambda>1$ holds at most $O(\log d)+(\delta_E+O(\log d))/(\lambda-1)$ bits of information about $a$.
+(ii) \emph{Products: the parity is model.} For every integer $t\ge1$ and every $b$ with $\delta_E+2\log d+\kappa_g+\log(N+1)+\kappa\le b<N\Gamma^\circ_t-d-\lceil L_E\rceil-\kappa_b-2\kappa$, one has $d-s(t)-\Lambda_1\le\sophx_b(D)\le d+\kappa_g$.
+(iii) \emph{The gap.} For such $b$, $\sophx_b(D)-\sophset_b(z)\ge d-s(t)-\Lambda_1-c^*$. For a fixed dyadic $p\in(0,\frac14)$ and $\delta_E=O(d)$, the range of $b$ in (ii) with $t=2$ is nonempty, of length of order $N$, for all large $d$.
+\end{proposition}
+
+\begin{proof}[Proof of \cref{prop:algstat:parity}]
+\emph{(i), injectivity and size.} If $f_{a'}\oplus\ind_{E'}=f_{a''}\oplus\ind_{E''}$ with $a'\ne a''$, then the nonzero parity $f_{a'}\oplus f_{a''}$, which has $N/2$ ones, equals $\ind_{E'}\oplus\ind_{E''}$, which has at most $2pN<N/2$ ones. So $a'=a''$, and then $E'=E''$. Hence $|A_0|=2^d\binom N{pN}=2^{d+L_E}$.
+
+\emph{(i), complexity.} $A_0$ is computable from $d$ and $p$, so $K(A_0)\le c^*$ by (F3) and (F5). With \eqref{eq:parity:decoding}, $K(A_0)+\log|A_0|\le K(z)+\delta_E+c^*$ (the constants merged into $\kappa$).
+
+\emph{(i), flatness.} For an integer $0\le v\le d$ let $A_v$ be the subset of $A_0$ whose parities $a'$ agree with $a$ on the first $d-v$ coordinates. Then $\log|A_v|=v+L_E$ and $K(A_v)\le d-v+2\log(v+1)+c^*$, since $A_v$ is computable from $d$, $p$, $v$ and those $d-v$ bits. So every $A_v$ has two-part length $d+L_E+O(\log d)$, within $\delta_E+O(\log d)$ of the sufficiency line, which is itself a lower bound; so $h_z$ lies within $\delta_E+O(\log d)$ of the sufficiency line for every $\alpha$ from $O(\log d)$ up to $d+O(\log d)$.
+
+\emph{(i), $\lambda$-optimal set models.} By \cref{prop:algstat:set} with $b=\delta_E+c^*$, $K(A_\lambda)\le c^*+(b+\kappa)/(\lambda-1)$. By (F3), $K(a)-K(a\mid A_\lambda)\le K(A_\lambda)+\kappa$, which is the claim.
+
+\emph{(ii), upper bound.} By \cref{prop:parity:kink}(i), $\pi_g$ is $b_0$-sufficient, and $b_0\le\delta_E+2\log d+\kappa_g+\log(N+1)+\kappa$ since $NH(p)-L_E\le\log(N+1)$. So $\pi_g$ is product-$b$-sufficient for every $b$ in the range, and $\sophx_b(D)\le\ell(\pi_g)\le d+\kappa_g$.
+
+\emph{(ii), lower bound.} The memoriser computes $z$ from $d$, so by (F1) $K(y_D\mid\dom D)\le K(z\mid d)+\kappa\le\ell(\pi_b)+2\kappa\le d+\lceil L_E\rceil+\kappa_b+2\kappa$. Let $\pi$ be product-$b$-sufficient; then $\ell(\pi)+NR(\pi)\le K(y_D\mid\dom D)+b<N\Gamma^\circ_t$ by the upper end of the range of $b$. If $\ell(\pi)<d-s(t)-\Lambda_1$, then $\lev(\pi)=t'+1$ with $t'\ge t$, or $\infty$, by (D1), and as in the proof of \cref{prop:parity:kink}, $R(\pi)\ge\Gamma^\circ_{t'}\ge\Gamma^\circ_t$, a contradiction. So $\ell(\pi)\ge d-s(t)-\Lambda_1$.
+
+\emph{(iii).} The lower end of the range of $b$ is at least $\delta_E+c^*$, so $\sophset_b(z)\le c^*$ by (i), and (ii) gives the gap. With $\lceil L_E\rceil\le NH(p)+1$, $\kappa_b=O(d)$ and $\delta_E=O(d)$, the range of $b$ at $t=2$ has length at least $N(\Gamma^\circ_2-H(p))-O(d)$. The argument for \cref{prop:parity:range}(iii), with the budget $d+\kappa$ in place of $\bar\ell_\lambda+\kappa$, gives $\Gamma^\circ_2\ge F^\sharp_2(d+\kappa)\ge f_2(p)-o(1)$, and $f_2(p)-H(p)\ge0.0187$; so the length is of order $N$ for all large $d$.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:parity:sets}]
+The kink point is bounded: some $A\ni z$ has $K(A)\le\alpha_{\rm r}$ and $\log|A|\le L_{\rm r}$. By the sufficiency line and \eqref{eq:parity:decoding}, $L_{\rm r}\ge K(z)-\kappa-\alpha_{\rm r}\ge d+L_E-\delta_E-2\kappa-\alpha_{\rm r}$. The set $A_0$ has $K(A_0)\le c^*<\alpha_{\rm r}-w$, so the kink gives $d+L_E=\log|A_0|\ge L_{\rm r}+\sigma(\alpha_{\rm r}-K(A_0))\ge L_{\rm r}+\sigma(\alpha_{\rm r}-c^*)$. Combining, $\sigma(\alpha_{\rm r}-c^*)\le\alpha_{\rm r}+\delta_E+2\kappa$, which is the claim.
+\end{proof}
+
+Within $O((\log d+\delta_E)/d)$ of $\lambda=1$ the bound says nothing, and the $O(\log d)$ terms of the code decide. In explicit classes of the sets $A_v$ of the proof of \cref{prop:algstat:parity}, with code lengths assigned to $v$, a direct computation (code in the accompanying repository) gives: with a fixed-length field for $v$, the set $\lambda$-MAP knows nothing about $a$ for all $\lambda\in(1,27.5)$ at $d=8$; with an Elias code for $v$, the set that knows $a$ is a vertex of the set hull whose $\lambda$-interval reaches $3.0$ at $d=8$ and $1.36$ at $d=30$.

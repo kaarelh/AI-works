@@ -1,168 +1,98 @@
-% Appendix C (writer: steep-b). Proofs for sec:teacher. Source: research/tracks/steeper/notes-final.md §2.2-§2.4
-% (Lemmas 2.1-2.4, 2.2c, 2.6; Thm 2; Cors 2.5, 2.7; Ex 2.7a; Prop 2.8) and checks c1-c3, c5-c7.
+% Appendix F (writer: W5 of the restructure; plan: research/paper-review/restructure/PLAN.md). Proofs for sec:teacher.
+% Sources: base app-teacher.tex §C.3-C.7 (proof of thm:teacher:main, numbers, full table, finite samples, ex:teacher:version1,
+% prop:teacher:concentration); base app-limits.tex §D.1 (proof of prop:limits:plain); research/tracks/split/teacher/notes-final.md
+% Prop 2.1, Remark 2.6, Lemma 3.0, Props 3.1, 3.2(a), 3.6, 3.7, Lemma 5.1, Props 5.2, 5.3; split/verify-teacher.md §2-§9
+% (g >= 0; the corrected R_max; continuity of Phi_2^sharp; strict monotonicity of psi_2 and of psi_2(p,1)-H(p)).
+% The proofs of the four lemmas and of the sharp floor (base §C.1-C.2) are in app-parity.tex (W4).
+% prop:teacher:frozen, prop:limits:plain and tab:teacher:rates are stated here, with summaries in teacher.tex (page budget; log-W5);
+% prop:teacher:sharp and its display moved here in the fix round (fix-W5 RW5-04), with a one-paragraph pointer in sec:teacher:rates.
 \section{Proofs for \texorpdfstring{\cref{sec:teacher}}{Section \ref*{sec:teacher}} (the teacher's mistakes)}\label{app:teacher}
 
-Throughout, the setting is \cref{def:teacher:instance}, and (F1)--(F5) are the standard facts of \cref{app:setup:facts}. For $z\in\{0,1\}^m$ and $w\in\{0,1\}^{d-m}$ we write $(z,w)$ for the input with prefix $z$; $w$ is uniform on $\{0,1\}^{d-m}$ in every expectation $\Ex_w$. Since $a\in\{0,1\}^d$, the length $d$ can be computed from $a$. In the proofs we write $\tau_B:=2^{1-B}$ and $\beta_B:=2^m\log(1+\tau_B)$, both $0$ if $B=\infty$, so that $G_j=1-\log(1+2^{-j}+2p+\tau_B)$ and $\Lambda_1=2\log d+2\log m+2\log B\cdot\ind[B<\infty]+\beta_B+\kappa$; and $\Gamma_g:=\delta_S+\Delta_\ell+\Lambda_3+1+2\log m+2\log s_0+g+2\log g+\kappa$, so that $j_g$ in \cref{thm:teacher:main}(e) is the least integer $j\ge0$ with $j-2\log(j+1)>\Gamma_g$.
+Throughout, the setting is \cref{def:teacher:instance}, and (F1)--(F5) are the facts of \cref{app:setup:facts}. For $z\in\{0,1\}^m$ and $w\in\{0,1\}^{d-m}$, $(z,w)$ is the input with prefix $z$, and $w$ is uniform in every $\Ex_w$. We write $\tau_B:=2^{1-B}$ ($0$ if $B=\infty$), so that $G_j=1-\log(1+2^{-j}+2p+\tau_B)$; $T_g:=\delta_S+\Delta_\ell+\Lambda_3+1+2\log m+2\log s_0+g+2\log g+\kappa$, the threshold that defines $j_g$ in \cref{thm:teacher:main}(ii)(e); $\mathrm{loss}_\pi(x):=-\log\nu_\pi(y^*(x)\mid x)\in[0,\infty]$; and $N_n(x)$ for the number of queries at $x$ among the first $n$.
 
-\subsection{List decoding}\label{app:teacher:list}
+\subsection{Noise and errors: frozen noise, plain Bayes and schedules}\label{app:teacher:schedules}
 
-\begin{proof}[Proof of \cref{lem:teacher:list}]
-Write $h_y(x):=\nu_\pi(y\mid x)$, $s_h:=h_0-h_1\in[-1,1]$, $\chi_{a'}(x):=(-1)^{\langle a',x\rangle}$ and $\hat s(a'):=\Ex_x[s_h\chi_{a'}]$. Since $\nu_\pi(f_{a'}(x)\mid x)=\frac12(h_0+h_1)+\frac12\chi_{a'}(x)s_h(x)$, the agreement with $f_{a'}$ is
-\[
-u(\pi;a'):=\Ex_x\nu_\pi(f_{a'}(x)\mid x)=\tfrac12\big(\Ex_x[h_0+h_1]+\hat s(a')\big)\le\tfrac12\big(1+\hat s(a')\big).
-\]
-The characters are orthonormal under the uniform law on $\{0,1\}^d$, so Parseval's identity gives $\sum_{a'}\hat s(a')^2=\Ex_xs_h^2\le1$. Hence $A_t:=\{a':u(\pi;a')>\theta_t\}\subseteq\{a':\hat s(a')>2^{-t}\}$ has fewer than $2^{2t}$ elements. This is the list-size bound for the Hadamard code \citep{goldreich1989hard,kushilevitz1993learning}. The value $u(\pi;a')$ is a finite average of lower semicomputable values, so it is lower semicomputable uniformly in $(\pi,a',d)$, and $A_t$ is computably enumerable given $(\pi,d,t)$. If $\lev(\pi)=t$, then $a\in A_t$. So $a$ is described, given $\pi$, by $d$, by $t$, and by its index in the enumeration of $A_t$, which takes $2t$ bits given $t$. By (F5), $K(a\mid\pi)\le2t+2\log(t+1)+2\log d+\kappa=s(t)+2\log d+\kappa$.
-\end{proof}
+\begin{proposition}[Frozen noise, counted once or per query]\status{proved}\src{split/teacher Prop 3.7; split/verify-teacher \S7}\label{prop:teacher:frozen}
+Let the inputs be i.i.d.\ from a law $\mu$ on $X$, let $\nu$ be a sampler with a program $\pi_0$ of length $k$, in a class $\mathcal C$ as in \cref{def:split:setting}, whose kernel equals $\nu$ on $\supp\mu$, and let the table $F$ have independent values $F(x)\sim\nu(\cdot\mid x)$, drawn once.
+(a) \emph{FR.} For fixed $\lambda>1$, at every $n$, repeats or not, every $\lambda$-MAP has length at most $k+(k+\delta^*)/(\lambda-1)$, where $\delta^*$ is the Ville deficiency of $\xi_{\mathcal C}$ along the distinct inputs (\cref{lem:split:ville}), so $\Prob[\delta^*\ge j]\le2^{-j}$. A program that agrees with $\nu$ off a finite set $A\subseteq\supp\mu$ fits $D_n$ better than $\pi_0$ by at most $\sum_{x\in A}\log(1/\nu(F(x)\mid x))$ bits, however often the inputs of $A$ are queried.
+(b) \emph{FQ.} Let $A\subseteq\supp\mu$ be finite with $\nu(F(x)\mid x)<1$ for some $x\in A$, and let $\pi_A\in\mathcal C$ agree with $\nu$ off $A$ and give $F(x)$ probability $1$ on $A$. The FQ fits of $\pi_0$ and $\pi_A$ differ by $\sum_{x\in A}N_n(x)\log(1/\nu(F(x)\mid x))$. So for every schedule $\lambda_n=o(n)$, almost surely each program whose kernel equals $\nu$ on $\supp\mu$ is a $\lambda_n$-MAP for only finitely many $n$.
+(c) If $\mu$ is uniform on a finite set $X_0$ and every input of $X_0$ has been queried $\bar n$ times, the FQ $\lambda$-MAPs are the $(\lambda/\bar n)$-MAPs of the table $F|_{X_0}$, so every $\lambda$-threshold of that table is multiplied by $\bar n$.
+\end{proposition}
 
-The argument uses the lower-semicomputable agreement $u$ rather than the correlation $\hat s$, which is not computable for semimeasures; this is what extends the computable-hypothesis version of the lemma in the earlier report \citep{claude2026whatfollows} to all product hypotheses. A direct computation (code in the accompanying repository) on $400$ random semimeasure hypotheses at $d=7,8$ confirms the identity for $u$, the list bound and the risk floor.
-
-\subsection{The risk floors, the coding lemma and the two-part bounds}\label{app:teacher:lemmas}
-
-\begin{proof}[Proof of \cref{lem:teacher:floor}]
-Since $\min\{B,-\log v\}=-\log\max\{v,2^{-B}\}$ and $-\log$ is convex, Jensen's inequality gives
-\[
-R_B(\pi)\ge-\log\Ex_x\max\{\nu_\pi(y^*(x)\mid x),2^{-B}\}\ge-\log\big(\Ex_x\nu_\pi(y^*(x)\mid x)+2^{-B}\big).
-\]
-Off $E$, $y^*=f_a$; on $E$, $\nu_\pi(y^*\mid x)\le1$, and $\Pr[E]=p$. So $\Ex_x\nu_\pi(y^*(x)\mid x)\le u(\pi)+p$. If $\lev(\pi)=t\ge2$, then $u(\pi)\le\theta_{t-1}=\frac12+2^{-t}$, and $\frac12+2^{-t}+p+2^{-B}=\frac12\big(1+2^{-(t-1)}+2p+\tau_B\big)$, which gives $R_B\ge G_{t-1}$. If $\lev(\pi)=\infty$, then $u\le\frac12$ and $R_B\ge G_\infty$.
-\end{proof}
-
-\Cref{lem:teacher:floor} is tight as a function of $u$ alone: a hypothesis that gives the teacher's label probability $1$ on $E$ and is uniform elsewhere has $u=\frac{1-p}2$ and $\Ex_x\nu(y^*\mid x)=\frac12+\frac p2=u+p$. Such a hypothesis knows $S$. Removing the additive $p$ therefore needs the randomness of $S$ relative to the hypothesis, which the next lemma uses. It is the semimeasure version of a lemma of the earlier report, which handled computable hypotheses through their exact correlation; for semimeasures only lower-semicomputable quantities are available. The lemma is used for the kink of \cref{prop:algstat:parity} at every flip rate below $1/4$, not for \cref{thm:teacher:main} (see \cref{rem:limits:method}).
-
-\begin{lemma}[Randomness of the error rule sharpens the floor]\status{proved; computed}\src{steeper Lemma 2.2c (T5 Lemma 2.5c for semimeasures); check c7(C)}\label{lem:teacher:sharpfloor}
-For every program $\pi$, every integer $g\ge1$ and every $B\in[\log(1/p),\infty]$,
-\[
-R_B(\pi)\ \ge\ -\log\Big(p+(1-2p)\,u(\pi)+p\big(2\gamma(\pi)+2^{1-g}\big)+2^{-B}\Big),
-\]
-where $\gamma(\pi):=\sqrt{j\ln2/(2s_0)}$ and $j$ is the least integer with $j-2\log(j+1)>\delta_S+I(\pi)+1+2\log m+2\log s_0+g+2\log g+\kappa$. Always $I(\pi)\le\ell(\pi)+\kappa$, so the bound also holds with $\ell(\pi)$ in place of $I(\pi)$. The proof does not use $p=2^{-r}$; it holds for every rule size $s_0$, with $p:=s_0/2^m$.
-\end{lemma}
+By (c) and \cref{cor:teacher:fulltable}, in FQ frozen noise needs $\lambda$ of order $n/|X_0|$, like errors with $m=d$.
 
 \begin{proof}
-For $z\in\{0,1\}^m$ let $A(z):=\Ex_w\nu_\pi(f_a(z,w)\mid(z,w))$ and $V(z):=\Ex_w\nu_\pi(f_a(z,w)\oplus1\mid(z,w))$. Then $A+V\le1$, $u=2^{-m}\sum_zA(z)$, and $\bar v:=2^{-m}\sum_zV(z)\le1-u$. Off $E$ the teacher's label is $f_a$ and on $E$ it is $f_a\oplus1$, so
-\begin{equation}\label{eq:teacher:identity}
-\Ex_x\nu_\pi(y^*(x)\mid x)=2^{-m}\Big[\sum_{z\notin S}A(z)+\sum_{z\in S}V(z)\Big]=u-p\,\mathrm{avg}_SA+p\,\mathrm{avg}_SV.
-\end{equation}
-
-\emph{Information budget.} By definition $K(S\mid a,\pi)=B_S-I(\pi)=L_S-\delta_S-I(\pi)$. By (F3), $B_S=K(S\mid a,K(a))\le K(\pi\mid a,K(a))+K(S\mid a,\pi)+\kappa$, so $I(\pi)\le K(\pi\mid a,K(a))+\kappa\le\ell(\pi)+\kappa$ by (F1).
-
-\emph{Coding step.} Suppose $\mathcal B$ is a set of $s_0$-subsets of $\{0,1\}^m$ with $|\mathcal B|\le2^{L_S-j}$ that contains $S$ and is computably enumerable given $(\pi,a,m,s_0)$ and a parameter $\theta$ with $K(\theta)\le g+2\log g+\kappa$. Then $S$ is described by $j$, $m$, $s_0$, $\theta$ and its index among the first $2^{\lceil L_S\rceil-j}$ enumerated elements, so $K(S\mid a,\pi)\le\lceil L_S\rceil-j+2\log(j+1)+2\log m+2\log s_0+g+2\log g+\kappa$. With the budget this gives $j-2\log(j+1)\le\delta_S+I(\pi)+1+2\log m+2\log s_0+g+2\log g+\kappa$, which the choice of $j$ excludes. So no such $\mathcal B$ exists.
-
-\emph{The $V$ side.} If $1-u+\gamma\ge1$, then $\mathrm{avg}_SV\le1\le1-u+\gamma$. Otherwise let $\theta\le1$ be the least multiple of $2^{-g}$ with $\theta\ge1-u+\gamma$; then $K(\theta)\le g+2\log g+\kappa$ and $\theta\ge\bar v+\gamma$. If $\mathrm{avg}_SV>\theta$, the set $\mathcal B:=\{S':|S'|=s_0,\ \mathrm{avg}_{S'}V>\theta\}$ contains $S$ and is computably enumerable, because $V$ is lower semicomputable. For $S'$ uniform among the $s_0$-subsets, Hoeffding's inequality for sampling without replacement \citep{hoeffding1963probability} gives $\Pr[\mathrm{avg}_{S'}V-\bar v\ge\gamma]\le e^{-2s_0\gamma^2}=2^{-j}$, so $|\mathcal B|\le2^{L_S-j}$, which the coding step excludes. Hence $\mathrm{avg}_SV\le1-u+\gamma+2^{-g}$.
-
-\emph{The $A$ side.} $A$ is only lower semicomputable, so a set of the form ``$\mathrm{avg}_{S'}A$ is small'' need not be enumerable; we use a finite stage. Let $\nu_s\uparrow\nu_\pi$ be the stage-$s$ lower approximations, $A_s(z):=\Ex_w\nu_s(f_a(z,w)\mid(z,w))$ and $u_s:=2^{-m}\sum_zA_s(z)\uparrow u$. If $u\le2^{-g}$, then $\mathrm{avg}_SA\ge0>u-2^{-g}-\gamma$. Otherwise let $\theta'$ be the largest multiple of $2^{-g}$ strictly below $u$, so $\theta'\ge u-2^{-g}$ and $K(\theta')\le g+2\log g+\kappa$, and let $s^*$ be the first stage with $u_{s^*}>\theta'$. Then $A_{s^*}$ is computable from $(\pi,a,m,\theta')$. If $\mathrm{avg}_SA_{s^*}<u_{s^*}-\gamma$, the set $\mathcal B:=\{S':|S'|=s_0,\ \mathrm{avg}_{S'}A_{s^*}<u_{s^*}-\gamma\}$ is decidable from these data and contains $S$; the lower-tail form of the same inequality gives $|\mathcal B|\le2^{L_S-j}$, which the coding step excludes. Hence $\mathrm{avg}_SA\ge\mathrm{avg}_SA_{s^*}\ge u_{s^*}-\gamma>u-2^{-g}-\gamma$.
-
-\emph{Combination.} By \eqref{eq:teacher:identity}, $\Ex_x\nu_\pi(y^*\mid x)\le u-p(u-2^{-g}-\gamma)+p(1-u+\gamma+2^{-g})=p+(1-2p)u+p(2\gamma+2^{1-g})$. Conclude with Jensen's inequality as in \cref{lem:teacher:floor}.
+(a) The next new input is fixed by the i.i.d.\ input stream, independent of $F$, and $F(x)$ at a new $x$ is independent of the earlier labels and inputs; almost surely all queried inputs lie in $\supp\mu$, so $\nu_{\pi_0}(D_n)=\nu(D_n)$ for all $n$. So \cref{thm:split:private}(i) applies with $\pi_\nu=\pi_0$, and \cref{lem:split:ville} gives the tail of $\delta^*$. If $\pi$ agrees with $\nu$ off $A$, then $\nu_\pi(D_n)/\nu_{\pi_0}(D_n)=\prod_{x\in A\cap\dom D_n}\nu_\pi(F(x)\mid x)/\nu(F(x)\mid x)\le\prod_{x\in A}1/\nu(F(x)\mid x)$.
+(b) Off $A$ the per-query losses agree; on $A$, $\pi_A$ has loss $0$ and $\pi_0$ loss $\log(1/\nu(F(x)\mid x))$ at each query. As $X$ is countable, $\supp\mu$ is the set of atoms, and $N_n(x)/n\to\mu(x)>0$ almost surely; so the difference divided by $n$ tends to a positive limit. Every program $\pi'$ whose kernel equals $\nu$ on $\supp\mu$ has the FQ fit of $\pi_0$, so $J_{\lambda_n}(\pi')-J_{\lambda_n}(\pi_A)\ge-\lambda_n\ell(\pi_A)+\sum_{x\in A}N_n(x)\log(1/\nu(F(x)\mid x))\to+\infty$ when $\lambda_n=o(n)$.
+(c) The FQ fit is $\bar n\,L(\pi;F|_{X_0})$; apply \cref{lem:teacher:reuse}.
 \end{proof}
 
-A direct computation (code in the accompanying repository) on $400$ random semimeasure hypotheses at $d=8$, $m\in\{6,8\}$, a third of them correlated with $S$, confirms \eqref{eq:teacher:identity} and the form $\Ex\nu(y^*)\le p+(1-2p)u+p(\mathrm{dev}_A+\mathrm{dev}_V)$ with the actual deviations.
+\begin{proposition}[Plain Bayes, MDL and SI learn the errors]\status{proved; computed}\src{steeper Props 2.9, 2.10; checks c3, c6(G), c7(G)}\label{prop:limits:plain}\label{app:limits:plain}
+(a) Let $P$ be a shared hypothesis with $P\ge2^{-\ell(\pi)-\kappa}\nu_\pi$ for every $\pi\in\Hcl{\times}$, such as $\Mprod$ or $\MF$. For every sequence of distinct inputs and every $n$, $\sum_{i\le n}-\log P(y^*(x_i)\mid x_i,D_{i-1})\le\ell(\pi_b)+\kappa\le d+\lceil L_S\rceil+\kappa_b+\kappa$. So at most $d+\lceil L_S\rceil+\kappa_b+\kappa$ inputs in total ($d+L_S+O(\log d+\log m)$ if $p=2^{-r}$) get probability below $\frac12$ for the teacher's label (semimeasure convention, hence also normalised), and every other revealed error input gets the erroneous label with probability at least $\frac12$.
+(b) Let $B<\infty$, $\delta\in(0,1)$, let $\lambda=\lambda_n\ge1$ be fixed or depend on $n$, and draw $n\le2^d$ inputs uniformly without replacement. With probability at least $1-\delta$, every $\lambda$-MAP $\hat\pi$ has $R_B(\hat\pi)\le\lambda\hat L/n+B\sqrt{(\hat L\ln2+\ln(2/\delta))/(2n)}$ with $\hat L:=d+\lceil L_S\rceil+\kappa_b$, hence $e(\hat\pi)\ge2^{-R_B(\hat\pi)/p}-2^{-B}$. In particular $e(\hat\pi)\ge1-2^{-B}-o(1)$ whenever $(\lambda_n/n)\hat L\to0$ and $\hat L/n\to0$, along any sequence of instances $(d_n)$ with fixed $m$, $p$ and error rule and $n\le2^{d_n}$. On a fixed instance the bound is informative only once $(\lambda_n/n)(d+L_S)$ is small compared with $p$; for slowly decaying schedules such as $\lambda_n=n^{0.9}$ at the example's sizes this never happens for $n\le2^d$.
+(c) On the interleaved string with i.i.d.\ uniform inputs, Solomonoff's $M$ has expected total label loss at most $d+\lceil L_S\rceil+\kappa_b+\kappa$, and for fixed $\lambda$ the steeper SI predictor pays at most $\lambda\ell_U$ more (\cref{thm:absorb:absorption}(d)).
+\end{proposition}
 
-\begin{proof}[Proof of \cref{lem:teacher:coding}]
-For $z\in\{0,1\}^m$ and $b\in\{0,1\}$ let
-\[
-q_z(b):=2^{-\Ex_w\min\{B,\,-\log\nu_\pi(f_a(z,w)\oplus b\mid(z,w))\}}.
-\]
-By Jensen's inequality for the convex function $t\mapsto2^{-t}$, $q_z(b)\le\Ex_w\max\{\nu_\pi(f_a(z,w)\oplus b\mid(z,w)),2^{-B}\}$, so $\sum_bq_z(b)\le1+2\cdot2^{-B}=1+\tau_B$. Each $q_z(b)$ is lower semicomputable from $(\pi,a,m,B)$, because the exponent is an average of upper semicomputable values. Define, on subsets $S'\subseteq\{0,1\}^m$,
-\[
-Q(S'):=\prod_{z\in\{0,1\}^m}\frac{q_z(\ind_{S'}(z))}{1+\tau_B},
-\]
-normalised factor by factor. Its total mass is $\prod_z\sum_bq_z(b)/(1+\tau_B)\le1$, so $Q$ is a lower-semicomputable semimeasure given $(\pi,a,m,B)$. Since $y^*(z,w)=f_a(z,w)\oplus\ind_S(z)$,
-\[
--\log Q(S)=\sum_z\Ex_w\min\{B,-\log\nu_\pi(y^*(z,w)\mid(z,w))\}+2^m\log(1+\tau_B)=2^mR_B(\pi)+\beta_B.
-\]
-By (F2), $K(S\mid\pi,a,m,B)\le2^mR_B(\pi)+\beta_B+\kappa$, and by (F3) and (F5) the descriptions of $m$ and of the integer $B$ cost at most $2\log m+2\log B+\kappa$ more. For $B=\infty$ the terms in $B$ vanish.
+For instance, at the example's sizes with all inputs revealed and the machine constant set to $0$ (an illustration), a direct computation (code in the accompanying repository) shows that the exceptions in (a) are at most $11{,}853$ of the $1.238\cdot10^{27}$ error inputs, a fraction at most $9.6\cdot10^{-24}$. With $B=30$ and $\delta=0.01$ (machine constant $0$, an illustration), the same computation gives $e\ge0.649$ at $n=10^{13}$ for $\lambda=1$, and $e\ge0.734$ at $n=10^{15}$ for $\lambda_n=\sqrt n$.
+
+\begin{proof}
+(a) The memoriser is consistent with every $D_n$, so $P(D_n)\ge2^{-\ell(\pi_b)-\kappa}$, and the sequential loss of a shared hypothesis telescopes to $-\log P(D_n)+\log P(\emptyset)\le\ell(\pi_b)+\kappa$. Each term is nonnegative, a probability below $\frac12$ costs more than a bit, and normalised conditionals are at least the raw ones. For $p=2^{-r}$ the memoriser can name $s_0=2^{m-r}$ through $r$. For $\MF$, $P\ge2^{-K(\nu_\pi)-O(1)}\nu_\pi$ as product laws are machine laws, and $K(\nu_\pi)\le\ell(\pi)+\kappa$; this is \citet[Corollary~5.4]{claudeSFI2026fundamentals}.% P1: cor:learn:mistakes
+\
+(b) Apply \cref{lem:teacher:finite} with $\pi_{\rm ref}=\pi_b$, so $A=0$, $\epsilon_1=0$, $c=\lambda_n/n$ and $\hat L=\ell(\pi_b)$; it holds for each $n$, so $\lambda$ may depend on $n$. The error-label bound is the last step of the proof of \cref{thm:teacher:main}(iii). The bound on $R_B$ is at least $(\lambda_n/n)(d+L_S)$; for $\lambda_n=n^{0.9}$ at the example's sizes, $\lambda_n/n\ge2^{-10}=p$ for every $n\le2^{100}$.
+(c) The law $\Prob$ of the interleaved sequence (fixed-length blocks) is computable from $a$, $S$, $d$, $m$ and $s_0$, so it has a program in $\Hcl{\mathrm{SI}}$ of length at most $d+\lceil L_S\rceil+\kappa_b+\kappa$, and $M$ dominates it; the chain-rule argument in the proof of \cref{thm:absorb:absorption}(d) bounds the expected label loss by that length. For $\lambda>1$ apply \cref{thm:absorb:absorption}(d), with $\kappa_0=0$ in $\Hcl{\mathrm{SI}}$.
 \end{proof}
 
-The normalisation must be per factor: with a single division by $1+\tau_B$, $Q$ is in general not a semimeasure (for a deterministic hypothesis at the smallest admissible $B$ its total mass is $1.119$).
-
-\begin{proof}[Proof of \cref{lem:teacher:twopart}]
-(D1). By (F3), (F1) and \cref{lem:teacher:list}, $d\le K(a)\le K(\pi)+K(a\mid\pi)+\kappa\le\ell(\pi)+s(t)+2\log d+\kappa$. All terms of $\Lambda_1$ other than $2\log d+\kappa$ are nonnegative.
-
-(D2). By symmetry of information (F4), $K(a,S)=K(a)+K(S\mid a,K(a))+O(1)\ge d+B_S-\kappa$. By (F3), $K(a,S)\le K(\pi)+K(a\mid\pi)+K(S\mid a,\pi)+\kappa$. Insert (F1), \cref{lem:teacher:list} and \cref{lem:teacher:coding}: $d+B_S\le\ell(\pi)+s(t)+2\log d+2^mR_B(\pi)+\beta_B+2\log m+2\log B\cdot\ind[B<\infty]+\kappa$.
+\begin{proof}[Proof of \cref{prop:teacher:schedules}]
+Let $\hat R_n(\pi):=\sum_{x\in\{0,1\}^d}(N_n(x)/n)\,\mathrm{loss}_\pi(x)$. As $N_n(x)/n\to2^{-d}$ for each of the finitely many $x$, almost surely $\hat R_n(\pi)\to R(\pi)$ for every $\pi$ (if $R(\pi)=\infty$, $\hat R_n(\pi)=\infty$ once an input of infinite loss is queried).
+(a) The memoriser has fit $0$, so a $\lambda_n$-MAP $\hat\pi$ has $\lambda_n\ell(\hat\pi)\le\lambda_n\ell(\pi_b)$; as $\lambda_n>0$ and by Kraft's inequality, finitely many candidates remain. For each with $R(\pi)>0$, $\frac1n[J_{\lambda_n}(\pi)-J_{\lambda_n}(\pi_b)]=\frac{\lambda_n}n(\ell(\pi)-\ell(\pi_b))+\hat R_n(\pi)\to R(\pi)>0$, so it is a $\lambda_n$-MAP for only finitely many $n$. Under uniform inputs $R(\pi)=0$ means $\nu_\pi(y^*(x)\mid x)=1$ at every $x$, so $e(\pi)=1$.
+(b) The coin has $R=1$, so $\ell_{\min}$ exists; fix $\pi_0$ with $\ell(\pi_0)=\ell_{\min}$ and $R(\pi_0)<\infty$. Lengths are integers, so every $\pi$ with $\ell(\pi)>\ell_{\min}$ has $J_{\lambda_n}(\pi)\ge\lambda_n(\ell_{\min}+1)>J_{\lambda_n}(\pi_0)$ once $\lambda_n>n\hat R_n(\pi_0)$, which holds eventually. In $\Hcl{\times}$, $\ell_{\min}\le\ell(\pi_{\rm coin})\le\kappa$, while level-$1$ programs have length at least $d-4-\Lambda_1$ by (D1).
+(c) Fix $n$ and $c:=\lambda_n/n\in[c_1,c_2]$; a $\lambda_n$-MAP minimises $\hat J_c:=J_{\lambda_n}/n$. \Cref{lem:teacher:finite} with $\pi_{\rm ref}=\pi_g$ (losses in $[0,\log(1/p)]$) holds for every $c$, because its two events do not involve $c$; for PQ data, Hoeffding's inequality for independent bounded variables gives the same events. Its excess has $\hat L(c)=(J_c(\pi_g)+\epsilon_1)/c\le\bar L$, as $J_g$ is increasing and $c\ge c_1$. So with probability at least $1-\delta$, $J^B_c(\hat\pi)\le J_g(c)+\bar\epsilon_n$, and \cref{thm:teacher:main}(ii) applies. $\Phi_2-J_g$ is a minimum of finitely many strictly decreasing affine functions, positive on $[c_1,c_2]\subset(0,c_{\rm hi})$, so it has a positive minimum there, while $\bar\epsilon_n\to0$, also with $\delta=n^{-2}$; then the failure probabilities are summable, and the Borel--Cantelli lemma gives the almost-sure form.
 \end{proof}
 
-\subsection{Proof of the theorem}\label{app:teacher:main}
+\subsection{The kink bounds and the theorem}\label{app:teacher:main}
 
-\begin{proof}[Proof of \cref{thm:teacher:main}]
-\emph{(o).} If $\lev(\pi)=1$, then (D1) and (D2) with $s(1)=4$ give $\ell(\pi)\ge d-4-\Lambda_1+\max\{0,B_S-2^mR_B(\pi)\}$; multiply by $c$ and add $R_B(\pi)$. If $\lev(\pi)=t\in[2,\infty)$, then (D1), $\ell\ge0$ and \cref{lem:teacher:floor} give
-\[
-J^B_c(\pi)\ge c\,(d-s(t)-\Lambda_1)^++G_{t-1}\ge\varphi(t):=c\,(d-4t-\Lambda_1)^++G_{t-1},
-\]
-using $s(t)\le4t$. Extend $\varphi$ to real $t\ge2$. If $t^*\ge2$: on $[2,t^*]$ the first term is linear and $G_{t-1}$ is concave, so $\varphi\ge\min\{\varphi(2),\varphi(t^*)\}=\min\{c(d-8-\Lambda_1)+G_1,\,G_{t^*-1}\}$; for $t>t^*$, $\varphi(t)\ge G_{t-1}\ge G_{t^*-1}$ because $G$ is increasing. If $t^*<2$: $\varphi(t)\ge G_{t-1}\ge G_1$. If $\lev(\pi)=\infty$: $J^B_c\ge R_B\ge G_\infty\ge G_j$ for every $j$, so $J^B_c\ge\Phi_2(c)$ in both cases. ($G_j$ is increasing and concave: with $v=2^{-j}$, $\mathrm dG/\mathrm dj=v/(1+v+2p+\tau_B)>0$ and $\mathrm d^2G/\mathrm dj^2=-\ln2\cdot v(1+2p+\tau_B)/(1+v+2p+\tau_B)^2<0$.)
+Write $\psi_c(R):=c\max\{0,B_S-2^mR\}+R=\max\{R,\ cB_S-(c2^m-1)R\}$. We prove (o), then \cref{prop:teacher:kinks}, then the rest.
 
-\emph{(i).} When $c2^m>1$, $\psi_c$ has slope $1-c2^m<0$ on $[0,B_S/2^m]$ and slope $1$ after it, so $\min_{R\ge0}\psi_c(R)=\psi_c(B_S/2^m)=B_S/2^m$, and every program of level $1$ has $J^B_c\ge\Phi_1(c)$. With (o), $\Phi^B(c)\ge\min\{\Phi_1(c),\Phi_2(c)\}$, and $\Phi\ge\Phi^B$ because $R\ge R_B$. Since $c\le c_{\rm hi}$, $J_g(c)\le\Phi_2(c)$, so
-\[
-J_c(\pi_g)-\Phi(c)\le J_g(c)-\min\{\Phi_1,\Phi_2\}=\max\{J_g-\Phi_1,J_g-\Phi_2\}\le\max\{J_g-\Phi_1,0\}=\Delta(c).
-\]
-Finally $H(p)-B_S/2^m=(2^mH(p)-L_S+\delta_S)/2^m\le(\log(2^m+1)+\delta_S)/2^m$, by the lower bound on $L_S$.
-
-\emph{(ii).} $J^B_c(\pi)\le J_g(c)+\epsilon<\Phi_2(c)$, so $\lev(\pi)=1$ by (o). Every $\pi$ with $J_c(\pi)\le\Phi(c)+\epsilon$ qualifies, since $J^B_c\le J_c$ and $\Phi(c)\le J_c(\pi_g)\le J_g(c)$.
-
-(a) By \cref{lem:teacher:floor}, $-\log(u+p+2^{-B})\le R_B\le J^B_c\le J_g+\epsilon$; and $\lev(\pi)=1$ gives $u>\frac34$.
-
-(b) By (o), $c(d-4-\Lambda_1)+\psi_c(R_B)\le J_g+\epsilon$, that is, $\psi_c(R_B)\le c(4+\Lambda_1+\kappa_g)+H(p)+\epsilon$. If $R_B<B_S/2^m$, then $\psi_c(R_B)=cB_S-(c2^m-1)R_B$. Using the identity $cB_S-H(p)=(c2^m-1)H(p)-c(2^mH(p)-B_S)$,
-\[
-(c2^m-1)R_B\ge(c2^m-1)H(p)-c\big(2^mH(p)-B_S+4+\Lambda_1+\kappa_g\big)-\epsilon=(c2^m-1)H(p)-c\Lambda_2-\epsilon.
-\]
-If $R_B\ge B_S/2^m$ and $2^mH(p)-B_S>0$, then $R_B\ge H(p)-(2^mH(p)-B_S)/2^m\ge H(p)-c\Lambda_2/(c2^m-1)$, because $\Lambda_2\ge2^mH(p)-B_S$ and $c/(c2^m-1)>2^{-m}$; if $2^mH(p)-B_S\le0$ the claim is immediate.
-
-(c) $c\,\ell=J^B_c-R_B\le c(d+\kappa_g)+H(p)+\epsilon-R_B$; apply (b) and divide by $c$.
-
-(d) By (F3), $B_S\le K(\pi\mid a,K(a))+K(S\mid a,\pi)+\kappa$. By (F4) and (F3), $K(\pi\mid a,K(a))=K(\pi,a)-K(a)+O(1)\le K(\pi)+K(a\mid\pi)-K(a)+O(1)$. By (F1), \cref{lem:teacher:list} with $t=1$, $K(a)\ge d$ and (c), this is at most $\ell(\pi)-d+4+2\log d+\kappa\le\Delta_\ell+\Lambda_3$.
-
-(e) Let $v(z):=\Ex_w\nu_\pi(f_a(z,w)\oplus1\mid(z,w))\in[0,1]$. Given $x\in E$, $z$ is uniform on $S$ and $y^*=f_a\oplus1$, so $e(\pi)=\mathrm{avg}_Sv$. Since $\nu_\pi$ is a semimeasure, $\bar v:=2^{-m}\sum_zv(z)\le1-u(\pi)$. If $1-u+\gamma_g\ge1$ there is nothing to prove. Otherwise let $\theta\le1$ be the least multiple of $2^{-g}$ with $\theta\ge1-u(\pi)+\gamma_g$; then $K(\theta)\le g+2\log g+\kappa$ and $\theta\ge\bar v+\gamma_g$. Suppose $e(\pi)>\theta$. The set $\mathcal B_\theta:=\{S':|S'|=s_0,\ \mathrm{avg}_{S'}v>\theta\}$ is computably enumerable given $(\pi,a,m,s_0,\theta)$, because $v$ is lower semicomputable, and it contains $S$. By Hoeffding's inequality for sampling without replacement, $|\mathcal B_\theta|\le\binom{2^m}{s_0}e^{-2s_0\gamma_g^2}=2^{L_S-j_g}$. Describing $S$ by $j_g$ and its index among the first $2^{\lceil L_S\rceil-j_g}$ enumerated elements gives $K(S\mid a,\pi)\le\lceil L_S\rceil-j_g+2\log(j_g+1)+2\log m+2\log s_0+g+2\log g+\kappa$. By (d), $K(S\mid a,\pi)\ge L_S-\delta_S-\Delta_\ell-\Lambda_3$. Together, $j_g-2\log(j_g+1)\le\Gamma_g$, contradicting the choice of $j_g$. So $e(\pi)\le\theta\le1-u(\pi)+\gamma_g+2^{-g}$.
-
-\emph{(iii).} $\lev(\pi)=1$ follows from (o) as in (ii). For $c2^m<1$ and $R\ge0$, $\psi_c(R)\ge cB_S+(1-c2^m)\min\{R,B_S/2^m\}$: for $R\le B_S/2^m$ this is an equality, and for $R\ge B_S/2^m$, $\psi_c(R)=R\ge B_S/2^m=cB_S+(1-c2^m)B_S/2^m$. Compare with $J^B_c\le J_b(c)+\epsilon$ and (o), and use $L_S=B_S+\delta_S$:
-\[
-(1-c2^m)\min\{R_B,B_S/2^m\}\le c\big(\lceil L_S\rceil+\kappa_b-B_S+4+\Lambda_1\big)+\epsilon=\varrho.
-\]
-If $\varrho<(1-c2^m)B_S/2^m$, the minimum cannot be $B_S/2^m$, so $R_B\le\varrho/(1-c2^m)$. For the error label, $p\,\Ex[\min\{B,-\log\nu_\pi(y^*\mid x)\}\mid x\in E]\le R_B$, and by Jensen's inequality
-\[
-\Ex[\nu_\pi(y^*\mid x)\mid E]\ge\Ex[\max\{\nu_\pi(y^*\mid x),2^{-B}\}\mid E]-2^{-B}\ge2^{-R_B/p}-2^{-B}.
-\]
-
-\emph{(iv).} By (D1) with $t=1$ and $R(\pi)\ge H(p)$, $J_c(\pi)\ge c(d-4-\Lambda_1)+H(p)>c(d-4-\Lambda_1)+c(\lceil L_S\rceil+\kappa_b+4+\Lambda_1)=c(d+\lceil L_S\rceil+\kappa_b)\ge J_c(\pi_b)$.
+\begin{proof}[Proof of \cref{thm:teacher:main}(o)]
+If $\lev(\pi)=1$, (D1) and (D2) with $s(1)=4$ give $\ell(\pi)\ge d-4-\Lambda_1+\max\{0,B_S-2^mR_B(\pi)\}$; multiply by $c$ and add $R_B(\pi)$. If $\lev(\pi)=t\in[2,\infty)$, (D1), $\ell\ge0$ and \cref{lem:teacher:floor} give $J^B_c(\pi)\ge c(d-s(t)-\Lambda_1)^++G_{t-1}\ge\varphi(t):=c(d-4t-\Lambda_1)^++G_{t-1}$, as $s(t)\le4t$. Extend $\varphi$ to real $t\ge2$. If $t^*\ge2$: on $[2,t^*]$ the first term is linear and $G_{t-1}$ concave, so $\varphi\ge\min\{\varphi(2),\varphi(t^*)\}$; for $t>t^*$, $\varphi(t)\ge G_{t-1}\ge G_{t^*-1}$. If $t^*<2$: $\varphi(t)\ge G_1$. At level $\infty$, $J^B_c\ge R_B\ge G_\infty\ge G_j$ for every $j$. ($G_j$ is increasing and concave in $j$: with $v=2^{-j}$, $\mathrm dG/\mathrm dj=v/(1+v+2p+\tau_B)>0$ and $\mathrm d^2G/\mathrm dj^2=-\ln2\cdot v(1+2p+\tau_B)/(1+v+2p+\tau_B)^2<0$.)
 \end{proof}
 
-\paragraph{Numbers.}\label{app:teacher:computations} All numbers of \cref{sec:teacher} and this appendix come from deterministic or seeded scripts in the accompanying repository, with saved outputs. The script for \cref{tab:teacher:numbers} computes the windows in closed form and by bisection on $J_g\le\Phi_2$ (the two agree to $10^{-15}$), the identification bounds with $\delta_S\in\{0,10,20\}$ and $g$ optimised over $1,\dots,40$, and the memoriser band; $L_S=11{,}710.273$ bits comes from the exact binomial coefficient, and the crossover $G_1=H(p)$ at $B=\infty$ is $p=0.05596$. A direct computation over $2830$ random instances confirms the reduction to two endpoints in (o): $\min_{t\ge2}$ of the exact $c(d-s(t)-\Lambda_1)^++G_{t-1}$ never falls below $\Phi_2(c)$. For the three hypotheses of \cref{rem:teacher:hanni}, the scripts of the earlier report give the same window $(1.119\cdot10^{-6},8.989\cdot10^{-3})$, with ratio $8037$, and the same $\lambda=1$ switch at $n=894{,}054$.
+\begin{proof}[Proof of \cref{prop:teacher:kinks}]
+(a) By (o), every $\pi\in\mathcal N$ has $J^B_c(\pi)\ge\Phi_2(c)$, and the reference value is $J_g(c)$; $J_g-\Phi_2$ is a maximum of strictly increasing affine functions, hence $\le0$ exactly on $(0,c_{\rm hi}]$ and $<0$ on $(0,c_{\rm hi})$. At $c=c_{\rm hi}>0$, $c_{\rm hi}\ell(\pi)+R_B(\pi)\ge\Phi_2(c_{\rm hi})\ge J_g(c_{\rm hi})$, the slanted side of the wedge; the flat side is $R_B(\pi)\ge G_{\lev(\pi)-1}\ge G_1$ (\cref{lem:teacher:floor}).
+(b) (D1) with $s(1)=4$ gives $\ell(\pi)\ge d-4-\Lambda_1$, and (D2) gives $R_B(\pi)\ge B_S/2^m-2^{-m}(\ell(\pi)-d+4+\Lambda_1)=H(p)-\Lambda_2/2^m-2^{-m}(\ell(\pi)-d-\kappa_g)$. If $p<\frac14$, then $u(\pi_g)=1-p>\frac34$, so $\pi_g\in\mathcal M$, and the line at $\pi_g$ ($\ell(\pi_g)\le d+\kappa_g$, $R_B(\pi_g)=H(p)$) gives $\Lambda_2\ge0$.
+\end{proof}
 
-In the memoriser regime of the running example ($B=\infty$, $\epsilon=0$, $\delta_S=0$), part (iii) gives the following lower bounds on $e$ for every near-optimal hypothesis (``--'': (iii) does not apply, since at $\kappa=30$ it needs $c<0.989\cdot2^{-m}$); rows with $\kappa=0$ are illustrations.
-\begin{center}\small
-\begin{tabular}{@{}l|cccccc@{}}
-\toprule
-$c\,2^m$ & 0.5 & 0.8 & 0.9 & 0.94 & 0.97 & 0.99\\
-\midrule
-$\kappa=0$ & 0.955 & 0.831 & 0.658 & 0.483 & 0.223 & 0.010\\
-$\kappa=30$ & 0.917 & 0.706 & 0.457 & 0.256 & 0.060 & --\\
-\bottomrule
-\end{tabular}
-\end{center}
+\begin{proof}[Proof of \cref{thm:teacher:main}(i)--(iv)]
+Apply \cref{lem:kink:main} in the population reading, $L=R\ge L'=R_B$, at the reference point $(d+\kappa_g,H(p))$, bounded by $\pi_g$, so that $J_{\rm r}=J_g$, with $\mathcal N,\mathcal M$ and the right line of \cref{prop:teacher:kinks}. For $c>2^{-m}$ the lemma's $\Delta(c)$ is $\Lambda_2/2^m+(c-2^{-m})(4+\Lambda_1+\kappa_g)=c(4+\Lambda_1+\kappa_g)+H(p)-B_S/2^m$.
 
-\subsection{The full truth table}\label{app:teacher:fulltable}
+\emph{(i).} $c_{\rm hi}\ge c>0$ forces $G_1>H(p)$, hence $p<p_0<\frac14$ ($G_1$ is largest at $B=\infty$), $\Lambda_2\ge0$, and the lemma's $\Delta(c)$ is $\Delta(c)\ge0$; also $\eta_{\mathcal N}(c)\ge0$. \Cref{lem:kink:main}(i) gives $\Phi^B(c)\ge\min\{\Phi_2(c),J_g(c)-\Delta(c)\}$, with $J_g(c)-\Delta(c)=c(d-4-\Lambda_1)+B_S/2^m$, and $J_c(\pi_g)\le J_g(c)\le\Phi(c)+\Delta(c)$; $\Phi\ge\Phi^B$ as $R\ge R_B$. Finally $H(p)-B_S/2^m=(2^mH(p)-L_S+\delta_S)/2^m\le(\log(2^m+1)+\delta_S)/2^m$.
+
+\emph{(ii).} Every $\pi\in\mathcal N$ has $J^B_c(\pi)\ge\Phi_2(c)>J_g(c)+\epsilon$, the pointwise margin of \cref{lem:kink:main}(ii); and $J_c(\pi)\le\Phi(c)+\epsilon$ implies $J^B_c(\pi)\le J_g(c)+\epsilon$, as $\Phi(c)\le J_c(\pi_g)\le J_g(c)$. So the lemma gives $\lev(\pi)=1$,
+\[
+\ell(\pi)\le d+\kappa_g+\frac{\Lambda_2/2^m+\epsilon}{c-2^{-m}}=d+\Delta_\ell,\qquad R_B(\pi)\ge H(p)-\frac{c\Lambda_2/2^m+2^{-m}\epsilon}{c-2^{-m}}=H(p)-\frac{c\Lambda_2+\epsilon}{c2^m-1},
+\]
+using $\frac\epsilon c+\frac{\epsilon/c}{c2^m-1}=\frac{\epsilon2^m}{c2^m-1}$: these are (c) and (b).
+(a) By (D1), $\ell(\pi)\ge(d-4-\Lambda_1)^+$, so $R_B(\pi)=J^B_c(\pi)-c\ell(\pi)\le R_{\max}$; then $-\log(u+p+2^{-B})\le R_B$ (\cref{lem:teacher:floor}), and $\lev(\pi)=1$ gives $u>\frac34$.
+(d) By (F3), $B_S\le K(\pi\mid a,K(a))+K(S\mid a,\pi)+\kappa$, and by (F4), (F3), $K(\pi\mid a,K(a))\le K(\pi)+K(a\mid\pi)-K(a)+O(1)$. By (F1), \cref{lem:teacher:list} with $t=1$, $K(a)\ge d$ and (c), this is at most $\ell(\pi)-d+4+2\log d+\kappa\le\Delta_\ell+\Lambda_3$.
+(e) Given $x\in E$, $z$ is uniform on $S$ and $y^*=f_a\oplus1$, so $e(\pi)=\mathrm{avg}_SV$ with $V$ as in the proof of \cref{lem:teacher:sharpfloor}. By (d), $I(\pi)\le\Delta_\ell+\Lambda_3$, and for this budget the least admissible $j$ in that proof is $j_g$ (its threshold is $T_g$); so the $V$ side of that proof gives $\mathrm{avg}_SV\le1-u(\pi)+\gamma_g+2^{-g}$. (The argument: if $\mathrm{avg}_SV$ exceeded the least multiple $\theta$ of $2^{-g}$ above $1-u+\gamma_g$, then $S$ would lie in the set of $s_0$-subsets with average above $\theta$, which is enumerable from $(\pi,a,m,s_0,\theta)$ and, by Hoeffding's inequality for sampling without replacement \citep{hoeffding1963probability}, has at most $2^{L_S-j_g}$ elements; this would make $K(S\mid a,\pi)$ smaller than (d) allows.)
+
+\emph{(iii).} $\lev(\pi)=1$ as in (ii). For $c2^m<1$ and $R\ge0$, $\psi_c(R)\ge cB_S+(1-c2^m)\min\{R,B_S/2^m\}$ (equality for $R\le B_S/2^m$; for $R\ge B_S/2^m$, $\psi_c(R)=R$). Compare with $J^B_c\le J_b(c)+\epsilon$ and (o), and use $L_S=B_S+\delta_S$: $(1-c2^m)\min\{R_B,B_S/2^m\}\le c(\lceil L_S\rceil+\kappa_b-B_S+4+\Lambda_1)+\epsilon=\varrho$. If $\varrho<(1-c2^m)B_S/2^m$, the minimum is $R_B\le\varrho/(1-c2^m)$. For the error label, $p\,\Ex[\min\{B,-\log\nu_\pi(y^*\mid x)\}\mid x\in E]\le R_B$, and by Jensen's inequality $\Ex[\nu_\pi(y^*\mid x)\mid E]\ge\Ex[\max\{\nu_\pi(y^*\mid x),2^{-B}\}\mid E]-2^{-B}\ge2^{-R_B/p}-2^{-B}$.
+
+\emph{(iv).} By (D1) and $R(\pi)\ge H(p)$, $J_c(\pi)\ge c(d-4-\Lambda_1)+H(p)>c(d+\lceil L_S\rceil+\kappa_b)\ge J_c(\pi_b)$.
+\end{proof}
+
+\paragraph{Numbers.}\label{app:teacher:computations} All numbers of \cref{sec:teacher} and this appendix come from deterministic or seeded scripts in the accompanying repository. The script for \cref{tab:teacher:numbers} computes the windows in closed form and by bisection on $J_g\le\Phi_2$ (the two agree to $10^{-15}$), the identification bounds with $g\le40$, and the memoriser regime. With $\delta_S=0$, (iii) applies only for $c<0.99418\cdot2^{-m}$ at $\kappa=0$ (an illustration) and $c<0.98914\cdot2^{-m}$ at $\kappa=30$; it gives $e\ge0.954$, $0.830$, $0.658$, $0.483$, $0.222$ at $c2^m=0.5$, $0.8$, $0.9$, $0.94$, $0.97$ ($\kappa=0$) and $e\ge0.916$, $0.705$, $0.456$, $0.255$, $0.059$ ($\kappa=30$), and $e\ge\frac12$ needs $c\le0.937\cdot2^{-m}$ ($0.888\cdot2^{-m}$ at $\kappa=30$).
+
+\subsection{Full truth tables}\label{app:teacher:fulltable}
 
 \begin{proof}[Proof of \cref{cor:teacher:fulltable}]
-With $m=d$ the error set is $E=S$ and $2^m=N$. On the whole truth table the empirical loss equals $N$ times the population risk under uniform inputs, so $J_\lambda(\pi;D)=\lambda\ell(\pi)+NR(\pi)=N\,J_{\lambda/N}(\pi)$, and a $\lambda$-MAP minimises $J_{\lambda/N}$ exactly.
-
-(i) Put $c=\lambda/N$. Then $c2^m=\lambda>1$, and the hypothesis $J_g(c)<\Phi_2(c)$ holds for every $c<c_{\rm hi}$, by the form of $\Phi_2$. A $\lambda$-MAP has $J_c(\pi)=\Phi(c)$, so \cref{thm:teacher:main}(ii) applies with $\epsilon=0$, $B=\infty$. Substituting $c2^m-1=\lambda-1$ and $c/(c2^m-1)=\lambda/(N(\lambda-1))$ gives the stated forms of (a)--(d).
-
-(ii) At $\lambda=1$ the objective is $\ell+NR$. First, $\ell(\pi_g)+NR(\pi_g)=\ell(\pi_g)+NH(p)\le d+\kappa_g+L_E+\log(N+1)$, because $NH(p)\le L_E+\log(N+1)$. Next, $\ell(\pi_b)+NR(\pi_b)\le d+\lceil L_E\rceil+\kappa_b$. Every program of level $1$ has $\ell+NR\ge\ell+NR_B\ge d+B_E-4-\Lambda_1=d+L_E-\delta_E-4-\Lambda_1$, by (D2). Every program of level at least $2$ has $\ell+NR\ge NR\ge NG_1$ by \cref{lem:teacher:floor}, and by the hypotheses $G_1>H(p)$ and $N(G_1-H(p))>d+\kappa_g+\log(N+1)$ this exceeds $\ell(\pi_g)+NR(\pi_g)$, since $L_E\le NH(p)$; so the optimum is attained at level $1$. Here $d=\log N$, and $\kappa_g$, $\kappa_b$ and $\Lambda_1$ are $O(\log N)$, so the optimum and the two values lie within $O(\log N)+\delta_E$ of each other.
+On the whole truth table the empirical loss is $N$ times the population risk, so $J_\lambda(\pi;D)=N\,J_{\lambda/N}(\pi)$.
+(i) Put $c=\lambda/N$, so $c2^m-1=(\lambda-2^{d-m})/2^{d-m}>0$; $J_g(c)<\Phi_2(c)$ for $c<c_{\rm hi}$, as $J_g-\Phi_2$ is strictly increasing. A $\lambda$-MAP has $J_c=\Phi(c)$, so \cref{thm:teacher:main}(ii) applies with $\epsilon=0$, and $1/(c2^m-1)=2^{d-m}/(\lambda-2^{d-m})$ gives the stated forms.
+(ii) $\ell(\pi_g)+NR(\pi_g)\le d+\kappa_g+L_E+\log(N+1)$, as $NH(p)\le L_E+\log(N+1)$, and $\ell(\pi_b)+NR(\pi_b)\le d+\lceil L_E\rceil+\kappa_b$. Level-$1$ programs have $\ell+NR\ge d+L_E-\delta_E-4-\Lambda_1$ by (D2). Programs of level at least $2$ have $\ell+NR\ge NG_1$ (\cref{lem:teacher:floor}), which by the hypotheses exceeds $\ell(\pi_g)+NR(\pi_g)$, since $L_E\le NH(p)$. As $d=\log N$ and $\kappa_g$, $\kappa_b$, $\Lambda_1$ are $O(\log N)$, the claim follows.
+(iii) is \cref{thm:teacher:main}(iv) at $c=\lambda/N$.
 \end{proof}
 
-At $d=m=20$, $p=2^{-10}$, $B=\infty$, a direct computation (code in the accompanying repository, with $g$ optimised) gives the window $\lambda\in(1,11945)$ with the machine constant set to $0$ (an illustration) and $(1,6456)$ at $\kappa=30$, and the following bounds for every $\lambda$-MAP. Near $\lambda=1$ the deficiency enters the length and information bounds at full weight, through $\Lambda_2/(\lambda-1)$.
-
-\begin{center}\small
-\begin{tabular}{@{}cc|cccc|ccc@{}}
-\toprule
-& & \multicolumn{4}{c|}{$\lambda=2$} & \multicolumn{3}{c}{$\lambda=105$}\\
-$\kappa$ & $\delta_E$ & $u\ge$ & $\ell\le$ & $I\le$ & $e\le$ & $\ell\le$ & $I\le$ & $e\le$\\
-\midrule
-0 & 0 & 0.991 & $d+58.2$ & 70.8 & 0.220 & $d+15.7$ & 28.3 & 0.185\\
-0 & 20 & 0.991 & $d+78.2$ & 90.8 & 0.251 & $d+15.9$ & 28.5 & 0.204\\
-30 & 0 & 0.991 & $d+148.2$ & 190.8 & 0.320 & $d+46.3$ & 88.9 & 0.261\\
-30 & 20 & 0.991 & $d+168.2$ & 210.8 & 0.341 & $d+46.5$ & 89.1 & 0.275\\
-\bottomrule
-\end{tabular}
-\end{center}
-
-\noindent In an exact small instance with structured product families ($d=m=8$, $|E|=8$), the good model and the memoriser exchange places at $\lambda=0.936$, an illustration of how lower-order terms decide at $\lambda\approx1$.
+At $d=m=20$, $p=2^{-10}$ and $\lambda=2$, with $g$ optimised, every $\lambda$-MAP has $u\ge0.991$, $\ell\le d+58.2$, $I\le70.8$ and $e\le0.220$ with the machine constant set to $0$ (an illustration) and $\delta_E=0$, and $\ell\le d+148.2$, $I\le190.8$, $e\le0.320$ at $\kappa=30$ (a direct computation, code in the accompanying repository); $\delta_E=20$ adds $20$ bits to $\ell$ and $I$. Near $\lambda=1$ the deficiency enters at full weight, through $\Lambda_2/(\lambda-1)$.
 
 \subsection{Finite samples}\label{app:teacher:sampled}
 
@@ -174,69 +104,102 @@ J^B_c(\hat\pi)\le J_c(\pi_{\rm ref})+\epsilon_1+B\sqrt{\frac{\hat L\ln2+\ln(2/\d
 \end{lemma}
 
 \begin{proof}
-Each sampled input is marginally uniform. By Hoeffding's inequality for sampling without replacement \citep{hoeffding1963probability}, with probability at least $1-\delta/2$, $\hat J_c(\pi_{\rm ref})\le J_c(\pi_{\rm ref})+\epsilon_1$. For each program $\pi$ the truncated losses lie in $[0,B]$; apply the same inequality with confidence $(\delta/2)2^{-\ell(\pi)}$ and take a union bound, which costs at most $\delta/2$ by Kraft's inequality. With probability at least $1-\delta/2$, simultaneously for all $\pi$,
+Each sampled input is marginally uniform. By Hoeffding's inequality for sampling without replacement \citep{hoeffding1963probability}, with probability at least $1-\delta/2$, $\hat J_c(\pi_{\rm ref})\le J_c(\pi_{\rm ref})+\epsilon_1$. The truncated losses of each $\pi$ lie in $[0,B]$; the same inequality with confidence $(\delta/2)2^{-\ell(\pi)}$ and a union bound, which costs at most $\delta/2$ by Kraft's inequality, give, with probability at least $1-\delta/2$, simultaneously for all $\pi$,
 \[
 \hat J_c(\pi)\ge c\,\ell(\pi)+\frac1n\sum_{i\le n}\min\{B,-\log\nu_\pi(y^*(x_i)\mid x_i)\}\ge J^B_c(\pi)-B\sqrt{\frac{\ell(\pi)\ln2+\ln(2/\delta)}{2n}}.
 \]
-On both events, a minimiser satisfies $c\,\ell(\hat\pi)\le\hat J_c(\hat\pi)\le\hat J_c(\pi_{\rm ref})\le J_c(\pi_{\rm ref})+\epsilon_1$, so $\ell(\hat\pi)\le\hat L$, and the two displays combine to the claim.
+On both events a minimiser has $c\,\ell(\hat\pi)\le\hat J_c(\hat\pi)\le\hat J_c(\pi_{\rm ref})\le J_c(\pi_{\rm ref})+\epsilon_1$, so $\ell(\hat\pi)\le\hat L$, and the displays combine.
 \end{proof}
 
-The bound is one-sided and uses truncation, so no noise floor on the hypotheses is needed; this adapts the empirical-selection lemma of the earlier report. The value of $c$ is fixed for the given $n$, so the lemma also applies when $\lambda=\lambda_n$ follows any schedule; \cref{prop:limits:plain}(b) uses this.
+The bound is one-sided and truncated, so no noise floor is needed; as $c$ is fixed for the given $n$, it applies to any schedule. It adapts the empirical-selection lemma of the earlier report.
 
 \begin{proof}[Proof of \cref{cor:teacher:sampled}]
-A $\lambda$-MAP with $\lambda=cn$ minimises $J_\lambda/n=\hat J_c$. Apply \cref{lem:teacher:finite} with $\pi_{\rm ref}=\pi_g$, whose per-input losses $-\log(1-p)$ and $-\log p$ lie in $[0,\log(1/p)]$, so $A=\log(1/p)$. Then $J^B_c(\hat\pi)\le J_c(\pi_g)+\epsilon_n\le J_g(c)+\epsilon_n$, which is the hypothesis of \cref{thm:teacher:main}(ii) with $\epsilon=\epsilon_n$.
+A $\lambda$-MAP with $\lambda=cn$ minimises $\hat J_c$. Apply \cref{lem:teacher:finite} with $\pi_{\rm ref}=\pi_g$, whose losses $-\log(1-p)$ and $-\log p$ lie in $[0,\log(1/p)]$: $J^B_c(\hat\pi)\le J_c(\pi_g)+\epsilon_n\le J_g(c)+\epsilon_n$.
 \end{proof}
 
-At $d=100$, $m=20$, $p=2^{-10}$, $B=30$, $\delta=0.01$, $\delta_S=0$, $g=7$ and the machine constant set to $0$ (an illustration), a direct computation (code in the accompanying repository) gives:
-
-\begin{center}\small
-\begin{tabular}{@{}cc|cccc@{}}
-\toprule
-$c$ & $n$ & $\epsilon_n/c$ (bits) & $u\ge$ & $\ell\le$ & $e\le$\\
-\midrule
-$10^{-4}$ & $10^{11}$ & 9.2 & 0.9825 & $d+29.8$ & 0.212\\
-$10^{-4}$ & $10^{13}$ & 0.9 & 0.9830 & $d+21.5$ & 0.204\\
-$10^{-3}$ & $10^{11}$ & 0.7 & 0.9117 & $d+20.7$ & 0.274\\
-\bottomrule
-\end{tabular}
-\end{center}
-
-\noindent At $n=10^9$ and $c=10^{-4}$ the excess is still $92.5$ bits ($\ell\le d+113.9$, $e\le0.284$).
+At the example's sizes, with $B=30$, $\delta=0.01$, $\delta_S=0$, $g=7$ and the machine constant set to $0$ (an illustration), a direct computation (code in the accompanying repository) gives, at $c=10^{-4}$, an excess $\epsilon_n/c$ of $92.5$ bits at $n=10^9$ ($\ell\le d+113.9$, $e\le0.284$), $9.2$ bits at $n=10^{11}$ ($u\ge0.9825$, $\ell\le d+29.8$, $e\le0.212$) and $0.9$ bits at $n=10^{13}$ ($u\ge0.9830$, $\ell\le d+21.5$, $e\le0.204$).
 
 \subsection{The total-bits version of the example}\label{app:teacher:version1}
 
 \begin{example}[The total-bits version of the example]\status{proved (instance of \cref{thm:teacher:main}); computed}\src{steeper Ex 2.7a; checks c6(C), c6(H)}\label{ex:teacher:version1}
-By \cref{thm:teacher:main} with $d=100$, $m=10$ and $p=2^{-6}$, so that $s_0=16$ and $L_S=115.6$ bits, a direct computation (code in the accompanying repository) gives the following. At $n=10^4$ the model saves $n(1-H(p))=8839$ bits for its $100$ bits ($88$ bits per bit) and the error rule saves $nH(p)=1161$ bits for its $116$ bits ($10.0$ bits per bit): the sizes and rates of the total-bits version in \cref{rem:teacher:hanni}. The window is $c\in(2^{-10},c_{\rm hi}]$ with $c_{\rm hi}=5.80\cdot10^{-3}$ with the machine constant set to $0$ (an illustration) and $2.53\cdot10^{-3}$ at $\kappa=30$; at $n=10^4$ and $\kappa=0$ this is $\lambda\in(9.77,58.0]$, against $(10,100)$ for the three hypotheses. Only coarse identification is proved at this size: near-optimal hypotheses have $u>\frac34$, and at $\kappa=0$, $\delta_S=0$, $c=5.5\cdot10^{-3}$ they have $\ell\le d+28.3$ and $I\le45.6$ bits out of $115.6$; near the lower end the information bound exceeds $L_S$, and (e) is vacuous because $s_0=16$ is too small. At $n=10^4$ samples \cref{cor:teacher:sampled} gives nothing.
+Take $d=100$, $m=10$ and $p=2^{-6}$, so that $s_0=16$ and $L_S=115.6$ bits. At $n=10^4$ the model saves $n(1-H(p))=8839$ bits for its $100$ bits ($88$ bits per bit) and the error rule saves $nH(p)=1161$ bits for its $116$ bits ($10.0$ bits per bit): the sizes and rates of \cref{rem:teacher:hanni}(1). A direct computation (code in the accompanying repository) gives the window $c\in(2^{-10},c_{\rm hi}]$ with $c_{\rm hi}=5.80\cdot10^{-3}$ with the machine constant set to $0$ (an illustration) and $2.53\cdot10^{-3}$ at $\kappa=30$; at $n=10^4$ and $\kappa=0$ this is $\lambda\in(9.77,58.0]$, against $(10,100)$ for the three hypotheses. Only coarse identification is proved at this size: near-optimal hypotheses have $u>\frac34$, and at $\kappa=0$, $\delta_S=0$, $c=5.5\cdot10^{-3}$ they have $\ell\le d+28.3$ and $I\le45.6$ bits out of $115.6$; (e) is vacuous because $s_0=16$ is too small. At $n=10^4$ samples \cref{cor:teacher:sampled} gives nothing: every admissible $B$ makes its excess at least $0.321$, more than the largest margin $\Phi_2-J_g$ in the window, $0.224$.
 \end{example}
-
-In more detail, the computation gives $L_S=115.58$ bits, $H(2^{-6})=0.1161$, and the window ends $c_{\rm hi}=5.803\cdot10^{-3}$, $4.774\cdot10^{-3}$, $4.055\cdot10^{-3}$, $3.116\cdot10^{-3}$ and $2.530\cdot10^{-3}$ at $\kappa=0,5,10,20,30$, so the window is nonempty for every $\kappa\le30$ checked. At $\kappa=0$, $\delta_S=0$, $\epsilon=0$ and $B=\infty$, (c) and (d) give $\ell\le d+103.7$ and $I\le121.0$ at $c=1.5\cdot10^{-3}$ (vacuous, since $L_S=115.6$), $\ell\le d+47.8$ and $I\le65.0$ at $c=2.5\cdot10^{-3}$, $\ell\le d+33.2$ and $I\le50.5$ at $c=4\cdot10^{-3}$, and $\ell\le d+28.3$ and $I\le45.6$ at $c=5.5\cdot10^{-3}$. Part (a) gives $u\ge0.800$ at $c=1.5\cdot10^{-3}$ and only $u>\frac34$ for $c\ge2.5\cdot10^{-3}$, where $2^{-(J_g+\epsilon)}-p$ falls below $\frac34$; the bound of (e) exceeds $1$ throughout. The threshold of (iv) is $c=6.917\cdot10^{-4}$. For the finite sample at $n=10^4$: every admissible $B\ge\log(1/p)=6$ makes the excess of \cref{lem:teacher:finite} at least $6\sqrt{(d-4-2\log d)\ln2/(2n)}=0.321$ at $\kappa=0$, because $\hat L\ge\ell(\pi_g)\ge d-4-2\log d-\kappa$ by (D1), whose proof uses only the terms $2\log d+\kappa$ of $\Lambda_1$; the margin $\Phi_2-J_g$ is at most $0.224$ anywhere in the window (its largest value is at $B=\infty$).
-
-For comparison, a full-table instance that matches the error rule's size but not the model's ($d=13$, $m=10$, $p=2^{-6}$, $N=2^{13}$) has the window $\lambda\in(8,86.2]$ at $\kappa=0$, $(8,62.0]$ at $\kappa=10$ and $(8,39.7]$ at $\kappa=30$.
 
 \subsection{Concentration of the power posterior}\label{app:teacher:concentration}
 
-The power posterior with $\lambda=cn$, not only its maximiser, concentrates on near-optimal programs. Let $\hat J_c(\pi):=c\,\ell(\pi)+\frac1n\sum_{i\le n}-\log\nu_\pi(y_i\mid x_i)$ (\cref{rem:setup:persample}) and $\hat J_g:=\hat J_c(\pi_g)$.
+Let $\hat J_c(\pi):=c\,\ell(\pi)+\frac1n\sum_{i\le n}-\log\nu_\pi(y_i\mid x_i)$ (\cref{rem:setup:persample}) and $\hat J_g:=\hat J_c(\pi_g)$.
 
 \begin{proposition}[The power posterior concentrates on near-minimisers]\status{proved; computed}\src{steeper Prop 2.8; checks c5(e), c7(F); referee q1(F)}\label{prop:teacher:concentration}
 Let $\lambda=cn$ with $cn\ge1$, and let $D$ be any data set of size $n$. For every $\epsilon>0$,
 \[
-\frac{\Pi_\lambda\big(\{\pi:\hat J_c(\pi)\ge\hat J_g+\epsilon\}\,\big|\,D\big)}{\Pi_\lambda(\pi_g\mid D)}\ \le\ 2^{-n\epsilon+(\hat J_g+\epsilon)/c}.
+\Pi_\lambda\big(\{\pi:\hat J_c(\pi)\ge\hat J_g+\epsilon\}\,\big|\,D\big)\big/\Pi_\lambda(\pi_g\mid D)\ \le\ 2^{-n\epsilon+(\hat J_g+\epsilon)/c}.
 \]
-Consequently, for data sampled as in \cref{cor:teacher:sampled}, with probability at least $1-\delta$ all but this fraction of the posterior mass lies on programs that satisfy \cref{thm:teacher:main}(ii) with $\epsilon':=\epsilon+\epsilon_1+B\sqrt{(\hat L'\ln2+\ln(2/\delta))/(2n)}$ in place of $\epsilon$, where $\hat L':=(J_g(c)+\epsilon_1+\epsilon)/c$, provided $J_g(c)+\epsilon'<\Phi_2(c)$.
+Consequently, for data sampled as in \cref{cor:teacher:sampled}, with probability at least $1-\delta$ all but this fraction of the posterior mass lies on programs that satisfy \cref{thm:teacher:main}(ii) with $\epsilon':=\epsilon+\epsilon_1+B\sqrt{(\hat L'\ln2+\ln(2/\delta))/(2n)}$ (with $B$ as in \cref{thm:teacher:main}) in place of $\epsilon$, where $\hat L':=(J_g(c)+\epsilon_1+\epsilon)/c$, provided $J_g(c)+\epsilon'<\Phi_2(c)$.
 \end{proposition}
 
 \begin{proof}
-For every $\pi$, $2^{-\lambda\ell(\pi)}\nu_\pi(D)=2^{-n\hat J_c(\pi)}$. Write $\hat R(\pi):=\frac1n\sum_i-\log\nu_\pi(y_i\mid x_i)\ge0$ for the empirical risk. Then $n\hat J_c(\pi)-\ell(\pi)=(\lambda-1)\ell(\pi)+n\hat R(\pi)\ge(1-1/\lambda)\big(\lambda\ell(\pi)+n\hat R(\pi)\big)=(1-1/\lambda)\,n\hat J_c(\pi)$. So, on the set $\{\pi:\hat J_c(\pi)\ge\hat J_g+\epsilon\}$,
-\[
-2^{-n\hat J_c(\pi)}=2^{-\ell(\pi)}\,2^{-(n\hat J_c(\pi)-\ell(\pi))}\le2^{-\ell(\pi)}\,2^{-(1-1/\lambda)\,n(\hat J_g+\epsilon)},
-\]
-and by Kraft's inequality the sum over the set is at most $2^{-(1-1/\lambda)n(\hat J_g+\epsilon)}$. Divide by $2^{-n\hat J_g}$, the unnormalised weight of $\pi_g$, and use $n/\lambda=1/c$: the ratio is at most $2^{-n\epsilon+(\hat J_g+\epsilon)/c}$.
-
-For the consequence, work on the event of \cref{lem:teacher:finite} with $\pi_{\rm ref}=\pi_g$ and $A=\log(1/p)$, on which $\hat J_g\le J_g(c)+\epsilon_1$ and the uniform deviation bound holds for every program. A program with $\hat J_c(\pi)<\hat J_g+\epsilon$ has $\ell(\pi)\le\hat J_c(\pi)/c<\hat L'$, hence
-\[
-J^B_c(\pi)\le\hat J_c(\pi)+B\sqrt{\frac{\hat L'\ln2+\ln(2/\delta)}{2n}}\le J_g(c)+\epsilon',
-\]
-and \cref{thm:teacher:main}(ii) applies with $\epsilon'$ when $J_g(c)+\epsilon'<\Phi_2(c)$. The bad set has posterior mass at most the ratio times $\Pi_\lambda(\pi_g\mid D)\le1$.
+$2^{-\lambda\ell(\pi)}\nu_\pi(D)=2^{-n\hat J_c(\pi)}$, and with the empirical risk $\hat R\ge0$, $n\hat J_c-\ell=(\lambda-1)\ell+n\hat R\ge(1-1/\lambda)\,n\hat J_c$. So on the set $\{\hat J_c\ge\hat J_g+\epsilon\}$, $2^{-n\hat J_c(\pi)}\le2^{-\ell(\pi)}2^{-(1-1/\lambda)n(\hat J_g+\epsilon)}$, and by Kraft's inequality the set has unnormalised weight at most $2^{-(1-1/\lambda)n(\hat J_g+\epsilon)}$; divide by $2^{-n\hat J_g}$ and use $n/\lambda=1/c$. For the consequence, on the event of \cref{lem:teacher:finite} with $\pi_{\rm ref}=\pi_g$, $\hat J_g\le J_g(c)+\epsilon_1$, so a program with $\hat J_c(\pi)<\hat J_g+\epsilon$ has $\ell(\pi)<\hat L'$ and $J^B_c(\pi)\le\hat J_c(\pi)+B\sqrt{(\hat L'\ln2+\ln(2/\delta))/(2n)}\le J_g(c)+\epsilon'$.
 \end{proof}
 
-Near-minimisers can be $\epsilon/c$ bits longer than the minimiser, which is why the length budget is $\hat L'$ and not the $\hat L$ of \cref{lem:teacher:finite}. For instance, with $\hat J_g$ replaced by its population value $J_g=0.0232$, $c=10^{-4}$, $\epsilon=10^{-3}$, $n=10^6$ and the machine constant set to $0$ (an illustration), $-n\epsilon+(J_g+\epsilon)/c=-1000+241.7=-758.3$, so the ratio is at most $2^{-758}$. At $c=10^{-4}$, $\epsilon=10^{-3}$, $n=10^{13}$, $B=30$, $\delta=0.01$ and $\kappa=0$, a direct computation (code in the accompanying repository) gives $\hat L'=241.7$ bits and $\epsilon'=1.0933\cdot10^{-3}$, and the condition $J_g+\epsilon'<\Phi_2$ holds. Two further consequences: the steeper predictive, averaged over $E$, gives the erroneous label probability at most $\sup e(\pi)+2^{-n\epsilon+(\hat J_g+\epsilon)/c}$, the supremum over the programs just described; averaged over the unseen error inputs $E\setminus\dom D$ instead, the bound is multiplied by $|E|/(|E|-n)$, which is negligible at $d=100$.
+Near-minimisers can be $\epsilon/c$ bits longer than the minimiser, hence the budget $\hat L'$. With $J_g=0.0232$ in place of $\hat J_g$, $c=10^{-4}$, $\epsilon=10^{-3}$, $n=10^6$ and the machine constant set to $0$ (an illustration), the ratio is at most $2^{-1000+241.7}=2^{-758.3}$. So the steeper predictive, averaged over the unseen error inputs, gives the erroneous label probability at most $\big(\sup e(\pi)+2^{-n\epsilon+(\hat J_g+\epsilon)/c}\big)\,|E|/(|E|-n)$, the supremum over the programs just described.
+
+\subsection{Charging the information about the rule}\label{app:teacher:rates}
+
+For $t\in\{2,3,\dots\}\cup\{\infty\}$ ($s(\infty):=\infty$, $\theta_{\infty-1}:=\frac12$, $G_{\infty-1}:=G_\infty$), integers $I\ge0$ and $c>0$ let
+\begin{gather*}
+\mathrm{Floor}_t(I):=\max\Big\{0,\ \sup_{g\ge1}\,-\log\big(p+(1-2p)\theta_{t-1}+p(2\gamma_g(I)+2^{1-g})+2^{-B}\big)\Big\},\\
+\Psi_t(c):=\min_{I\in\{0,1,\dots\}}\big[cI+\mathrm{Floor}_t(I)\big],\qquad\Phi_2^\sharp(c):=\inf_tLB_t(c),\\
+LB_t(c):=\max\big\{c(d-s(t)-\Lambda_1)^++G_{t-1},\ c\big(d-\min\{s(t)+2\log d,d\}-2\log(2d)-\kappa\big)+\Psi_t(c)\big\},
+\end{gather*}
+with $\gamma_g(I)$ as in \cref{sec:teacher:lemmas}; at $B=\infty$, $\mathrm{Floor}_t=\max\{0,F^\sharp_{t-1}\}$.
+
+\begin{proposition}[Charging the information about the rule]\status{proved; computed}\src{split/teacher Lemma 5.1, Prop 5.2, Remark 2.6 (a2); split/verify-teacher \S6, \S8; checks t4(B), t6(B), rB7(B)}\label{prop:teacher:sharp}
+In the instance of \cref{def:teacher:instance}, let $d\ge2\log(d+1)+\kappa+1$.
+(i) Every program $\pi$ of level $t\in\{2,3,\dots\}\cup\{\infty\}$ has $\ell(\pi)\ge d-\min\{s(t)+2\log d,\ d\}+I(\pi)-\kappa$, and $I(\pi)\ge-2\log(2d)-\kappa$ is an integer.
+(ii) Every such $\pi$ has $J^B_c(\pi)\ge LB_t(c)$ for every $c>0$. So $\Phi_2^\sharp\ge\Phi_2$ bounds $J^B_c$ on all programs of level at least $2$, and $\Phi_2^\sharp$ is continuous on $(0,\infty)$.
+(iii) \Cref{thm:teacher:main}(i) and (ii), with all their conclusions, hold with $\Phi_2^\sharp$ in place of $\Phi_2$ (with $B$ as in \cref{thm:teacher:main}) for every $c$ in the window $\{c>2^{-m}:J_g(c)+\epsilon<\Phi_2^\sharp(c)\}$; there, and under the hypotheses of \cref{thm:teacher:main}(ii), (ii)(a) holds in the sharper form $u(\pi)\ge\big(2^{-R_{\max}}-p(1+2\gamma_g+2^{1-g})-2^{-B}\big)/(1-2p)$ for every integer $g\ge1$, with $\gamma_g$ as in (ii)(e).
+(iv) \Cref{prop:teacher:schedules}(c) holds with $\Phi_2^\sharp$, computed at the same $B$, in place of $\Phi_2$, for every compact $[c_1,c_2]\subset\{c>2^{-m}:J_g(c)<\Phi_2^\sharp(c)\}$.
+\end{proposition}
+
+\begin{proof}[Proof of \cref{prop:teacher:sharp}]
+(i) By (F3), $I(\pi)\le K(\pi\mid a,K(a))+\kappa$, and by (F4), (F3), $K(\pi\mid a,K(a))\le K(\pi)+K(a\mid\pi)-K(a)+\kappa$. Insert $K(\pi)\le\ell(\pi)+\kappa$ and $K(a\mid\pi)\le\min\{s(t)+2\log d,\ K(a)\}+\kappa$ (\cref{lem:teacher:list}, or trivially), and use $\min\{s,K(a)\}-K(a)\le\min\{s,d\}-d$, as $K(a)\ge d$. Also $K(S\mid a,\pi)\le K(S\mid a)+\kappa\le B_S+K(K(a))+\kappa$ by (F3), $K(K(a))\le2\log(K(a)+1)+\kappa$ by (F5), and $K(a)\le d+2\log(d+1)+\kappa\le2d-1$; so $I(\pi)\ge-2\log(2d)-\kappa$. $B_S$ and $K(S\mid a,\pi)$ are integers.
+(ii) The first term of $LB_t$ is the bound in the proof of (o) before $s(t)\le4t$ is used, so $\Phi_2^\sharp\ge\Phi_2$ by that proof ($LB_\infty\ge G_\infty\ge\Phi_2$). For the second, with $I:=I(\pi)$, (i) gives $c\,\ell(\pi)\ge c(d-\min\{s(t)+2\log d,d\}-2\log(2d)-\kappa)+cI^+$ (if $I<0$, use $cI\ge-c(2\log(2d)+\kappa)$). \Cref{lem:teacher:sharpfloor} with the budget $I^+\ge I$, $u(\pi)\le\theta_{t-1}$ and $1-2p>0$ gives $R_B(\pi)\ge\mathrm{Floor}_t(I^+)$; add and minimise over $I^+$.
+\emph{Continuity.} Let $t_c$ be the least integer with $s(t_c)\ge d-\Lambda_1$ and $s(t_c)+2\log d\ge d$. For $t\ge t_c$ the first term of $LB_t$ is $G_{t-1}$, the coefficient of $c$ in the second is $-2\log(2d)-\kappa$, and $\Psi_t$ is nondecreasing in $t$ as $\theta_{t-1}$ decreases; also $LB_\infty\ge LB_{t_c}$. So $\Phi_2^\sharp=\min_{2\le t\le t_c}LB_t$. As $p+(1-2p)\theta_{t-1}\ge\frac12$, $0\le\mathrm{Floor}_t\le1$, so on a compact subset of $(0,\infty)$ only finitely many $I$ compete in $\Psi_t$, and each $LB_t$ is continuous.
+(iii) The proofs of \cref{thm:teacher:main}(i),(ii) use (o) only through ``level at least $2$ implies $J^B_c\ge\Phi_2(c)$'', that is, through $\eta_{\mathcal N}\ge\Phi_2-J_g$, and (i) uses $c\le c_{\rm hi}$ only for $J_g\le\Phi_2$; by (ii) both hold with $\Phi_2^\sharp$ on the window. Parts (a)--(e) use only level $1$, (D1), (D2) and the bounds on $\ell$ and $I$. For the sharper (a): by (ii)(d), $I(\pi)\le\Delta_\ell+\Lambda_3$, so \cref{lem:teacher:sharpfloor} with this budget, whose $j$ is $j_g$, gives $2^{-R_B}\le p+(1-2p)u+p(2\gamma_g+2^{1-g})+2^{-B}$; with $R_B\le R_{\max}$, solve for $u$. On this window $\Lambda_2\ge0$: if $\pi_g$ had level at least $2$, then by (ii) $J_g(c)\ge J_c(\pi_g)\ge J^B_c(\pi_g)\ge\Phi_2^\sharp(c)$, against $J_g(c)+\epsilon<\Phi_2^\sharp(c)$; so $u(\pi_g)=1-p>\frac34$, hence $p<\frac14$, and $\Lambda_2\ge0$ by \cref{prop:teacher:kinks}(b).
+(iv) The proof of \cref{prop:teacher:schedules}(c) uses $\Phi_2$ only through \cref{thm:teacher:main}(ii) and the continuity and positivity of $\Phi_2-J_g$ on $[c_1,c_2]$.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:teacher:rates}]
+Let $f(x):=-\log(\frac34-\frac p2+2p\sqrt{x\ln2/2})$, so $\psi_2(p,a)=\inf_{x\ge0}[apx+f(x)]$; at $c=a2^{-m}$ a budget $I=xs_0$ costs $cI=apx$.
+\emph{The floor converges.} Let $r_g:=\delta_S+1+2\log m+2\log s_0+g+2\log g+\kappa$; in $\gamma_g(I)$, $j$ is the least integer with $j-2\log(j+1)>I+r_g$, so $I+r_g<j\le I+r_g+O(\log(I+|r_g|+2))$. Take $g=g_m\to\infty$ with $g_m=o(s_0)$; as $\delta_S=o(2^m)$, $|r_{g_m}|=o(s_0)$, so $\gamma_{g_m}(xs_0)^2=x\ln2/2+o(1)$ uniformly on compacts, and $p2^{1-g_m}\to0$. $\mathrm{Floor}_2$ is a supremum over $g$ and $\theta_1=\frac34$, so by uniform continuity $\mathrm{Floor}_2(xs_0)\ge f(x)-o(1)$ uniformly on $[0,X]$; take $X$ with $apX>\psi_2(p,a)+1$, and note $cI+\mathrm{Floor}_2\ge apX$ for $x>X$. So $\liminf_m\Psi_2(a2^{-m})\ge\psi_2(p,a)$.
+\emph{All levels.} $\Psi_t\ge\Psi_2$ as $\theta_{t-1}\le\theta_1$, and the coefficient of $c$ in the second term of $LB_t$ is at least $-2\log(2d)-\kappa$, so uniformly in $t$, $J_g(c)-LB_t(c)\le c(d+\kappa_g+2\log(2d)+\kappa)+H(p)-\Psi_2(c)$. For $c\in[a2^{-m},c_m]$ the first term is at most $c_m(d+O(\log d))\to0$, and $\Psi_2(c)\ge\Psi_2(a2^{-m})$. As $a>a^*(p)$ and $\psi_2(p,\cdot)$ is nondecreasing, $\psi_2(p,a)>H(p)$, and $\epsilon:=\frac12(\psi_2(p,a)-H(p))$ works for all large $m$ (where also $d\ge2\log(d+1)+\kappa+1$).
+\emph{The readings.} $\psi_2(p,\cdot)$ is an infimum of affine functions, hence concave, continuous on $(0,\infty)$ and nondecreasing. The infimum is attained at some $x^*>0$, as $f'(x)\to-\infty$ when $x\downarrow0$; so for $a'>a$, with $x^*$ the minimiser at $a'$, $\psi_2(p,a')=a'px^*+f(x^*)>apx^*+f(x^*)\ge\psi_2(p,a)$: $\psi_2(p,\cdot)$ is strictly increasing. Also $\psi_2(p,a)\le f(0)=1-\log(\frac32-p)$, and $\psi_2(p,a)\to f(0)$ as $a\to\infty$, since $f$ is continuous at $0$ and $apx\to\infty$ for $x$ bounded away from $0$. So $\psi_2(p,a)<f(0)$ for every $a$, and some $a$ has $\psi_2(p,a)>H(p)$ if and only if $f(0)>H(p)$. If $\psi_2(p,1)\ge H(p)$, strict increase gives $a^*(p)=1$; if $\psi_2(p,1)<H(p)$, continuity gives $a^*(p)>1$.
+\end{proof}
+
+\emph{Monotonicity of $h(p):=\psi_2(p,1)-H(p)$ on $(0,\frac14]$.} With $y:=\sqrt x$, $A:=\frac34-\frac p2$ and $k:=2p\sqrt{\ln2/2}$, $\psi_2(p,1)=\min_{y\ge0}[py^2-\log(A+ky)]$; the function is strictly convex with negative slope at $0$, so its minimiser $y^*$ is unique, positive, and solves $y^*(A+ky^*)=q:=1/\sqrt{2\ln2}=0.8493\ldots$. For $p\le\frac14$, $A\ge\frac58$ and $k\le0.2944$, so $y^*\le q/A\le1.359$, and $y^*\ge0.7385$ as $0.7385(\frac34+0.2944\cdot0.7385)<q$. By Danskin's theorem
+\[
+h'(p)=y^{*2}-\frac{2\sqrt{\ln2/2}\,y^*-\frac12}{(A+ky^*)\ln2}-\log\frac{1-p}p ,
+\]
+where, with $A+ky^*=q/y^*$, the middle term is $(2\sqrt{\ln2/2}\,y^*-\frac12)y^*/(q\ln2)\ge0.463$, increasing in $y^*\ge0.7385$; and $\log\frac{1-p}p\ge\log3$. So $h'(p)\le1.359^2-0.463-\log3<-0.2$. As $h(p)\ge-\log(A+ky^*)-H(p)\to\log\frac43$ for $p\to0$ and $h(\frac14)\le1-\log\frac54-H(\frac14)<0$, $h$ has exactly one root $p^*$ in $(0,\frac14)$.
+
+\begin{table}[!ht]
+\centering\small
+\begin{tabular}{@{}l|cc|cc@{}}
+\toprule
+$p$ & window, $\kappa=0$ & window, $\kappa=30$ & $u\ge$ & $e\le$\\
+\midrule
+$2^{-10}$ & $(1,\ 8.198\cdot10^{-3})$ & $(1,\ 3.686\cdot10^{-3})$ & 0.989 & 0.193\\
+$1/16$ & $(1,\ 2.529\cdot10^{-3})$ & $(1,\ 6.559\cdot10^{-4})$ & 0.827 & 0.197\\
+$5/64$ & $(1.014,\ 1.521\cdot10^{-3})$ & $(1.016,\ 4.285\cdot10^{-4})$ & 0.802 & 0.221\\
+$3/32$ & $(2.141,\ 9.097\cdot10^{-4})$ & $(2.155,\ 2.487\cdot10^{-4})$ & 0.780 & 0.241\\
+$7/64$ & $(6.223,\ 3.184\cdot10^{-4})$ & $(6.532,\ 8.558\cdot10^{-5})$ & 0.759 & 0.260\\
+$15/128$ & $(21.433,\ 6.225\cdot10^{-5})$ & none & 0.750 & 0.269\\
+$1/8$ & none & none & -- & --\\
+\bottomrule
+\end{tabular}
+\caption{The windows $\{c>2^{-m}:J_g(c)<\Phi_2^\sharp(c)\}$ of \cref{prop:teacher:sharp} at $d=100$, $m=20$, $B=\infty$, $\delta_S=0$; lower ends in units of $2^{-20}$, rounded up, and upper ends rounded down. Rows with $\kappa=0$ set the machine constant to $0$ and are illustrations; $\kappa_g=2\log d+K(p)+\kappa$, with $K(p)$ taken as $2\log r$ for $p=2^{-r}$ and $2\log(h+1)+2\log(e+1)$ for $p=h/2^e$, $h>1$ odd. The last columns give the sharper (ii)(a) of \cref{prop:teacher:sharp}(iii) and the resulting (ii)(e) at $\kappa=0$, $\epsilon=0$, $g$ optimised, at $c=10^{-4}$ ($p=2^{-10}$) and $c=6.745,5.282,4.278,4.337,3.586\cdot10^{-5}$ (the other rates in order); $u$ is rounded down and $e$ up. At $p=2^{-10}$ and $c=10^{-4}$ this is the sharpest of three forms of (ii)(a): \cref{tab:teacher:numbers} uses $J_g(c)+\epsilon$ for $R_{\max}$ ($u\ge0.983$, $e\le0.200$), and \cref{rem:teacher:numbers} uses $R_{\max}$ ($u\ge0.988$, $e\le0.195$).}
+\label{tab:teacher:rates}
+\end{table}
+
+At $d=100$, $m=20$, $B=\infty$ and $\delta_S=0$, a direct computation (code in the accompanying repository), with the minimum over integer budgets taken exactly, gives the windows of \cref{tab:teacher:rates}; each computed window is an interval. Of these rates only $2^{-10}$ has $G_1>H(p)$, so \cref{thm:teacher:main} gives no window for the others.
+
