@@ -8,7 +8,7 @@ Two companion papers on Solomonoff function induction (SFI): Bayesian prediction
 He also listed specific questions and examples. The papers were developed and written with extensive assistance from Claude (Anthropic), under his direction. They are drafts in arXiv form, with Kaarel Hänni as author and the AI assistance disclosed in each paper. Submission is his decision.
 
 * **[Paper 1: *Solomonoff Function Induction: Definitions, Versions and Basic Theorems* (PDF)](paper/main.pdf)**, 90 pages: a 44-page main text plus appendices with the proofs.
-* **[Paper 2: *Steeper Simplicity Priors in Solomonoff Function Induction: Absorption, the Teacher's Mistakes and the Model–Randomness Split* (PDF)](paper-steeper/main.pdf)**, 57 pages: a 28-page main text plus appendices with the proofs.
+* **[Paper 2: *Steeper Simplicity Priors in Solomonoff Function Induction: The Model–Randomness Split and the Teacher's Mistakes* (PDF)](paper-steeper/main.pdf)**, 74 pages: a 34-page main text plus appendices with the proofs.
 
 ## Answers in brief
 
@@ -33,21 +33,25 @@ He also listed specific questions and examples. The papers were developed and wr
    * circuit Bayes makes a number of mistakes polynomial in the circuit size on every ordering of the inputs;
    * Gaussian-process limits are separated from SFI on sparse parities;
    * bias-free two-layer ReLU kernels fail on odd parities.
-6. **Steeper simplicity priors (Paper 2).** The proposal is to penalise program length λ > 1 times more steeply than log-likelihood, for hypotheses with private randomness at each input.
-   * *Absorption.* A universal mixture taken as one hypothesis absorbs all structure in every class that contains its own mixture (SI, SFI with shared randomness). No private-randomness hypothesis is universal.
-   * *The teacher's mistakes.* The setting is a random parity whose labels are flipped, at a rate below 0.056, on an error set of product form that is incompressible relative to the parity. With λ = cn and c in an explicit window, every hypothesis that is near-optimal for the population objective knows the parity and, when the error rule is large, gives the erroneous labels much less probability than a memoriser does. λ must grow in proportion to n.
-   * *Model versus randomness.* For fixed λ > 1, private randomness selects samplers over programs that fill in the sampled bits. With shared randomness, a universal mixture beats every long enough sampler.
-   * *Product sophistication.* Sophistication defined with product models exceeds the set sophistication of algorithmic statistics by d − O(log d) bits on a random parity whose labels are flipped on a random set of fixed density below 1/4.
+6. **Steeper simplicity priors (Paper 2): two reasons to penalise program length λ > 1 times more steeply than log-likelihood,** for hypotheses with private randomness at each input.
+   * *Why private randomness.* A universal mixture taken as one hypothesis absorbs all structure in every class that contains its own mixture (SI, SFI with shared randomness). No private-randomness hypothesis is universal.
+   * **First and main reason: the model–randomness split.**
+     * With i.i.d. inputs and a computable sampler that draws fresh coins at every query, for every schedule 1 ≤ λ_n = o(n) every λ_n-MAP is eventually exactly a shortest program for the sampler: the model is the program, the noise is the coins.
+     * For fixed λ > 1 this happens with probability 1 − ε beyond a sample size depending only on λ, the program's length, a margin and ε. At λ = 1 no such bound exists, and in a parity class recovery is exponentially slower in the program's length.
+     * On one data set, a kink of the product structure function at a sufficient program makes every λ between 1 and the kink's steepness select that program, up to explicit windows. Samples have such a kink; so, for large d, does the full table of a noisy random parity at every dyadic flip rate below 1/4. Set models have no steep kink there.
+     * With labels frozen per distinct input, no procedure recovers every sampler; what survives is identification on the inputs actually seen.
+   * **Second reason: not learning a teacher's mistakes,** the same geometry at a positive rate. An error rule is reused at many inputs, so λ must grow linearly in the sample size. For a random parity with labels flipped at a rate below 0.05596 on an error set of product form that is incompressible relative to the parity, every near-optimal hypothesis of the population objective with λ/n in an explicit window knows the parity and, for large error rules, gives the erroneous labels far less probability than a memoriser. Asymptotically, such windows exist for flip rates below 0.1233.
 
 ## How it was produced
 
-* **Research.** Five research tracks are in `research/tracks/`: `foundations`, `history`, `examples`, `context` and `steeper`. Each was developed and then attacked by an adversarial referee who wrote independent code (`referee.md`, `referee_code/`). Each was then revised into a final record, `notes-final.md`, ending in a verification log. The `steeper` track was refereed twice.
+* **Research.** Six research tracks are in `research/tracks/`: `foundations`, `history`, `examples`, `context`, `steeper` and `split` (the model–randomness split; three sub-tracks `iid`, `kink` and `teacher`, each refereed twice, then a synthesis, a final check and independent verification of the post-referee results). Each was developed and then attacked by an adversarial referee who wrote independent code (`referee.md`, `referee_code/`). Each was then revised into a final record, `notes-final.md`, ending in a verification log. The `steeper` track was refereed twice.
 * **Writing.** The papers were planned from claims ledgers (`paper*/CLAIMS.md`) and a shared notation (`paper/NOTATION.md`), and written section by section.
 * **Review.**
   * Six reviewers went over both drafts: three on Paper 1's mathematics, one on Paper 2's mathematics, and one per paper on consistency and arXiv-readiness, including a search check of every bibliography entry.
   * A lead editor verified every fatal and major issue against the sources and wrote binding decisions.
   * Six editor groups applied them, and a fresh checker per paper verified the result.
   * A last pass, at the author's request, rewrote the framing so that the papers present the material directly rather than as a reply to his working notes, which are now credited in footnotes and the acknowledgements (`research/paper-review/REFRAME.md`). Editors rewrote the text; per paper, a fresh reader and a diff checker confirmed that nothing reads as a reply to the notes and that no mathematics changed.
+  * Paper 2 was then restructured around its two threads after new research on the split (the `split` track): a plan with a label manifest, six section writers, three reviewers, a lead editor's decisions, fixes and a fresh final check (`research/paper-review/restructure/`).
   * Everything is in `research/paper-review/`.
 * **Limits of the checking.** All roles were played by separate Claude instances. No human has checked all of the mathematics, and nothing was verified in a proof assistant.
 
@@ -59,7 +63,7 @@ He also listed specific questions and examples. The papers were developed and wr
 | `research/script-map.md` | Every result that rests on a computation, by its printed number in either paper, with the scripts behind it. Generated by `research/make_script_map.py`. |
 | `research/tracks/` | The five research records with referee reports, check scripts (`checks/`), independent re-implementations (`referee_code/`) and their saved outputs. |
 | `code/` | A small enumerated program class (`sfi_dsl.py`) and shared helpers for the examples (`sfi_examples.py`). |
-| `research/paper-review/` | The reviews of both papers (`p1/`, `p2/`), the lead editor's decisions (`DECISIONS.md`), the editor groups' issue lists and logs (`edits/`), the final checks (`final-check-p1.md`, `final-check-p2.md`), the reframing brief and its logs and checks (`REFRAME.md`, `reframe/`), and the reviewers' scripts (`scratch/`). |
+| `research/paper-review/` | The reviews of both papers (`p1/`, `p2/`), the lead editor's decisions (`DECISIONS.md`), the editor groups' issue lists and logs (`edits/`), the final checks (`final-check-p1.md`, `final-check-p2.md`), the reframing brief and its logs and checks (`REFRAME.md`, `reframe/`), the Paper 2 restructure (`restructure/`), and the reviewers' scripts (`scratch/`). |
 | `research/00-brief.md` | The request, the sources, the starting hypotheses and the conventions. |
 | `research/prior/` | Copies of the author's notes on SFI and related topics, from [kaarelh/notes](https://github.com/kaarelh/notes), and the slides with Dmitry Vaintrob. |
 | `research/workflows/` | *(on the working branch `claude/sleepy-gauss-u4kem1` only, not on `main`)* The orchestration scripts that ran the research, writing, review and editing agents. |
