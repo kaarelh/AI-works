@@ -1,0 +1,117 @@
+% Appendix for sec:imit (integration of 2026-10-14, research/paper-review/imitation-edit/log-integrate.md; base: the draft
+% research/tracks/imitation/drafts/app-imit.tex = notes-final.md §2.5). Placement: after app-limits.tex. Sources:
+% research/tracks/imitation/robust/notes-final.md Lemma 2.1, Lemmas 4.4-4.6, Thm 4.7(U),(vii), Props 4.10(a2),(c),(d), 4.11,
+% Prop 5.2; referee-A.md A1, R1; imitation/notes-final.md §2.2 (B_beta := K(beta | h_0, mu)); imitation/referee-final.md
+% (items 1-5 verified; the optional kappa sentence of §6 and C5 applied here). Received from sec:imit (compact form, §5.3 of
+% the synthesis): rem:imit:private (now opens app:imit:private), the numbers after thm:imit:main (end of app:imit:main), and
+% prop:imit:limits(c) with the cell count, now prop:imit:cheap (new label) in app:imit:cheap; the in-context learner (robust Prop 5.2),
+% now the paragraph after the proof in app:imit:private.
+% Fix round of 2026-10-14 (research/paper-review/imitation-edit/log-fix.md): imitation-edit review-math M2, L1, L5, N1, N2 (worlds renamed).
+\section{Proofs for \texorpdfstring{\cref{sec:imit}}{Section \ref*{sec:imit}} (imitation)}\label{app:imit}
+
+The setting is \cref{def:imit:setting}, and (F1)--(F5) are the facts of \cref{app:setup:facts}; we use them relative to a condition such as $(h_0,\mu)$, whose proofs are the unconditional ones, uniformly in the condition \citep{li2008introduction}. The channel $\mu$ is a finite object from which $m$, $W$ and $\supp\mu$ are computable.
+
+\subsection{Private coins}\label{app:imit:private}
+
+\begin{remark}[Private coins]\status{proved}\src{imitation/robust notes-final Lemma 2.1, Thm 2.2(2),(3); check r1; referee rb1}\label{rem:imit:private}
+If, given its input, the person's answer is independent of everything a hypothesis may use (the earlier data and any variables of the environment, earlier or later), the argument of \cref{lem:split:ville} with this larger filtration shows that no predictor, however it models the environment, gains over the person more than its length plus a Ville deficiency $\delta^*$ with $\Prob[\delta^*\ge j]\le2^{-j}$ (proved below). For product hypotheses that also see an environment variable in a countable set, with i.i.d.\ pairs, none then predicts better in population, and \cref{thm:recovery:main} returns the person. This is the degenerate case: a hypothesis can only be lucky on a sample, at one bit of length per bit of luck.
+\end{remark}
+
+Let $\mathcal A_1\subseteq\mathcal A_2\subseteq\cdots$ be $\sigma$-algebras, $x_i$ being $\mathcal A_i$-measurable and $y_i$ being $\mathcal A_{i+1}$-measurable, that contain whatever a hypothesis may use to predict $y_i$, and let the coins be private: $\Prob[y_i=y\mid\mathcal A_i]=\nu_H(y\mid x_i)$ almost surely. A \emph{predictor} $\pi$ assigns to each $i$ an $\mathcal A_i$-measurable sub-probability $q_{\pi,i}$ on $Y$, with fit $L_n(\pi):=-\sum_{i\le n}\log q_{\pi,i}(y_i)$. The claim of \cref{rem:imit:private} is: for every countable family of predictors with $\sum_\pi2^{-\ell(\pi)}\le1$, $\delta^*:=\sup_n\log\sum_\pi2^{-\ell(\pi)+L_n(\nu_H)-L_n(\pi)}$ has $\Prob[\delta^*\ge j]\le2^{-j}$, and $L_n(\pi)\ge L_n(\nu_H)-\ell(\pi)-\delta^*$ for all $\pi$ and $n$.
+
+\begin{proof}[Proof of the claim]
+Almost surely $\nu_H(y_i\mid x_i)>0$ for all $i$, so $M_n:=\sum_\pi2^{-\ell(\pi)}\prod_{i\le n}q_{\pi,i}(y_i)/\nu_H(y_i\mid x_i)$ is well defined and $\mathcal A_{n+1}$-measurable, with $M_0\le1$. By privacy and monotone convergence, $\Ex[M_{n+1}\mid\mathcal A_{n+1}]=\sum_\pi2^{-\ell(\pi)}\prod_{i\le n}\frac{q_{\pi,i}(y_i)}{\nu_H(y_i\mid x_i)}\sum_{y:\nu_H(y\mid x_{n+1})>0}q_{\pi,n+1}(y)\le M_n$. So $(M_n)$ is a nonnegative supermartingale, and Ville's inequality \citep{ville1939etude} gives $\Prob[\sup_nM_n\ge2^j]\le2^{-j}$; put $\delta^*:=\sup_n\log M_n$. Keeping one term, $2^{-\ell(\pi)}2^{L_n(\nu_H)-L_n(\pi)}\le M_n\le2^{\delta^*}$. For product hypotheses on i.i.d.\ pairs $(x_i,z_i)$, privacy gives $R(\pi)-R(\pi_H)=\Ex_{x,z}\KL(\nu_H(\cdot\mid x)\Vert\nu_\pi(\cdot\mid x,z))\ge0$, and the triples are per-query data on the input set of pairs with the sampler $\nu_H(y\mid x)$, to which \cref{thm:recovery:main} applies.
+\end{proof}
+
+\emph{Hypotheses that learn in context.} A system that predicts the answers by inferring, from the data seen so far, which person it faces is a single hypothesis only in a class whose hypotheses carry information across queries. There a Bayes mixture $P_U$ over persons that gives the person weight $w$ has $P_U\ge wP_H$ on every data set, private coins or not, so it loses at most $\log(1/w)$ bits of fit to the person's own program and beats it at every $n$ once $\lambda$ times the length it saves exceeds $\log(1/w)$ (as in \cref{thm:split:shared}). The private-randomness class excludes such hypotheses by construction (\cref{cor:absorb:nouniversal}), not because of anything in the data, and a person with memory is not a product sampler.
+
+\subsection{The coding and closeness lemmas}\label{app:imit:lemmas}
+
+\begin{lemma}[Coding the coupling with a hypothesis]\status{proved}\src{imitation/robust notes-final Lemma 4.4; checks r6(A), s1(B); referee rb2(A)}\label{lem:imit:coding}
+For every $\pi\in\Hcl{\times}$, $K(\beta\mid h_0,\pi,\mu)\le2^mR(\pi)+\kappa$.
+\end{lemma}
+
+\begin{proof}
+For $w\in W$ and $b\in\Sigma$ put $q_w(b):=\sum_x\mu(x\mid w)\,\nu_\pi(h(x,b)\mid x)$, a finite sum, lower semicomputable from $(\pi,h_0,\mu)$. Since $h(x,\cdot)$ is injective, $\sum_bq_w(b)\le\sum_x\mu(x\mid w)\sum_y\nu_\pi(y\mid x)\le1$, so $Q(\beta'):=\prod_wq_w(\beta'(w))$ is a semimeasure on $\Sigma^W$ for every well-formed $(h_0,\mu)$, which is decidable from this finite object (put $Q:=0$ otherwise), and (F2) gives $K(\beta\mid h_0,\pi,\mu)\le-\log Q(\beta)+\kappa$. By Jensen's inequality for the convex function $-\log$,
+\begin{align*}
+-\log Q(\beta)&=\sum_w-\log\Ex_{x\sim\mu(\cdot\mid w)}\nu_\pi(h(x,\beta(w))\mid x)\\
+&\le\sum_w\Ex_{x\sim\mu(\cdot\mid w)}\big[-\log\nu_\pi(h(x,\beta(w))\mid x)\big]=2^mR(\pi).\qedhere
+\end{align*}
+\end{proof}
+
+For a program $\pi$ put
+\[
+\tilde q_w(b):=\prod_x\nu_\pi(h(x,b)\mid x)^{\mu(x\mid w)},\qquad\bar D(\pi):=2^{-m}\sum_wD_{1/2}(\rho\Vert\tilde q_w)
+\]
+and $E(\pi):=2\log\big(2^{m-1}(H(\rho)+R(\pi))+1\big)$. Here $\tilde q_w(b)$ is the geometric mean, over the inputs of cell $w$, of the probability that $\pi$ gives to the answer of coin $b$.
+
+\begin{lemma}[Closeness]\status{proved}\src{imitation/robust notes-final Lemma 4.6; imitation/notes-final \S2.2 (proof checked line by line); imitation/referee-final item 1 (verified; the factor 2 is tight; code q1, q2); checks f7(A),(B), s1(B),(C)}\label{lem:imit:closeness}
+For every $\pi\in\Hcl{\times}$ with $R(\pi)<\infty$,
+\begin{align*}
+\Ex_{x\sim\bar\mu}D_{1/2}\big(\nu_H(\cdot\mid x)\Vert\nu_\pi(\cdot\mid x)\big)&\le\bar D(\pi)\\
+&\le R(\pi)-H(\rho)+\frac{2\big(I_\beta(\pi)+\delta_\beta+|\Sigma|\log(2^m+1)+E(\pi)+\kappa\big)}{2^m}.
+\end{align*}
+\end{lemma}
+
+\begin{proof}
+\emph{Hölder.} Fix $w$. The generalised Hölder inequality $\sum_b\prod_xf_x(b)^{\theta_x}\le\prod_x\big(\sum_bf_x(b)\big)^{\theta_x}$, for $f_x\ge0$, $\theta_x\ge0$ and $\sum_x\theta_x=1$, with $\theta_x:=\mu(x\mid w)$ and $f_x(b):=\sqrt{\rho(b)\nu_\pi(h(x,b)\mid x)}$, gives $\sum_b\sqrt{\rho(b)\tilde q_w(b)}\le\prod_x\big(\sum_b\sqrt{\rho(b)\nu_\pi(h(x,b)\mid x)}\big)^{\mu(x\mid w)}$. By injectivity, $\sum_b\sqrt{\rho(b)\nu_\pi(h(x,b)\mid x)}=\sum_y\sqrt{\nu_H(y\mid x)\nu_\pi(y\mid x)}$. Taking $-2\log$ gives $D_{1/2}(\rho\Vert\tilde q_w)\ge\Ex_{x\sim\mu(\cdot\mid w)}D_{1/2}(\nu_H(\cdot\mid x)\Vert\nu_\pi(\cdot\mid x))$; average over $w$.
+
+\emph{A semimeasure.} $\tilde q_w(b)\le q_w(b)$ (geometric against arithmetic mean), so $\sum_b\tilde q_w(b)\le1$ and, by the Cauchy--Schwarz inequality, $Z_w:=\sum_b\sqrt{\rho(b)\tilde q_w(b)}\le1$. So $Q(\beta'):=\prod_w\sqrt{\rho(\beta'(w))\,\tilde q_w(\beta'(w))}$ has total mass $Z:=\prod_wZ_w\le1$ on $\Sigma^W$, and it is lower semicomputable from $(\pi,h_0,\mu)$. As $R(\pi)<\infty$, $Z\ge Q(\beta)>0$.
+
+\emph{Normalising.} Let $k:=\lfloor-\log Z\rfloor\ge0$. Then $2^kQ$ is a semimeasure, lower semicomputable from $(\pi,h_0,\mu,k)$ (trimmed as usual, so that every value of the condition gives a semimeasure; for the true $k$ nothing is trimmed), and (F2), (F3), (F5) give
+\[
+K(\beta\mid h_0,\pi,\mu)\le-\log Q(\beta)-k+K(k)+\kappa\le-\log Q(\beta)+\log Z+1+2\log(k+1)+\kappa .
+\]
+
+\emph{Evaluating.} Exact type gives $\sum_w\log(1/\rho(\beta(w)))=2^mH(\rho)$, and the definition of $R$ gives $\sum_w-\log\tilde q_w(\beta(w))=2^mR(\pi)$. So $-\log Q(\beta)=2^{m-1}(H(\rho)+R(\pi))$ and $\log Z=-2^{m-1}\bar D(\pi)$; and $k\le-\log Z\le-\log Q(\beta)$, so $2\log(k+1)\le E(\pi)$.
+
+\emph{Lower bound.} $K(\beta\mid h_0,\pi,\mu)=B_\beta-I_\beta(\pi)=L_\beta-\delta_\beta-I_\beta(\pi)\ge2^mH(\rho)-|\Sigma|\log(2^m+1)-\delta_\beta-I_\beta(\pi)$. Combine with the two previous steps and divide by $2^{m-1}$; the remaining $2/2^m$ is absorbed in $\kappa$.
+\end{proof}
+
+\subsection{Proof of \texorpdfstring{\cref{thm:imit:main}}{the near-imitation theorem}}\label{app:imit:main}
+
+\emph{The right line.} For every $\pi\in\Hcl{\times}$, (F3), (F1) and \cref{lem:imit:coding} give $B_\beta\le\ell(\pi)+K(\beta\mid h_0,\pi,\mu)+\kappa\le\ell(\pi)+2^mR(\pi)+\kappa$. With $B_\beta=L_\beta-\delta_\beta\ge2^mH(\rho)-|\Sigma|\log(2^m+1)-\delta_\beta$ and $G=\ell_0+\delta_\beta+|\Sigma|\log(2^m+1)+\kappa$,
+\[
+R(\pi)\ \ge\ H(\rho)-\frac G{2^m}-2^{-m}\big(\ell(\pi)-\ell_0\big)\qquad\text{for every }\pi\in\Hcl{\times}:
+\]
+in the population reading of \cref{def:kink:kinks}, with the reference point $(\ell_0,H(\rho))$, bounded by $\pi_H$, the whole class has the right line $(2^{-m},G/2^m)$ with length floor $0$. Similarly $I_\beta(\pi)=B_\beta-K(\beta\mid h_0,\pi,\mu)\le\ell(\pi)+\kappa$.
+
+\emph{(i)--(iv) and the bound on $\Phi$.} Apply \cref{lem:kink:main} with $L=L'=R$, $\mathcal M$ the whole class, $\mathcal N=\emptyset$ (so $\eta_{\mathcal N}=+\infty$), $\tau=2^{-m}<c$, $g=G/2^m\ge0$ and $\ell_{\mathcal M}=0$; then $c-\tau=(a-1)2^{-m}$ and $\Delta(c)=G/2^m+(c-2^{-m})\ell_0$. A program with $J_c(\pi)\le\Phi(c)+\epsilon$ has $J_c(\pi)\le J_c(\pi_H)+\epsilon$. \Cref{lem:kink:main}(ii) gives $\ell(\pi)\le\ell_0+(g+\epsilon)/(c-\tau)$, which is (i), and $R(\pi)\ge H(\rho)-(cg+\tau\epsilon)/(c-\tau)$, the left side of (ii); \cref{lem:kink:main}(iv) gives $R(\pi)\le H(\rho)+\epsilon+c\,\ell_0$, the right side; and \cref{lem:kink:main}(i) gives $\Phi(c)\ge J_c(\pi_H)-\Delta(c)\ge J_c(\pi_H)-G/2^m-c\,\ell_0$. (iii) is $I_\beta(\pi)\le\ell(\pi)+\kappa$ with (i). For (iv), \cref{lem:imit:closeness} applies, as $R(\pi)<\infty$; insert the right side of (ii), which also gives $E(\pi)\le E$, and (iii):
+\[
+\bar D(\pi)\le c\,\ell_0+\epsilon+\frac2{2^m}\Big[\ell_0+\frac{G+2^m\epsilon}{a-1}+\delta_\beta+|\Sigma|\log(2^m+1)+E+2\kappa\Big].
+\]
+Since $\ell_0+\delta_\beta+|\Sigma|\log(2^m+1)+\kappa=G$, $2+\frac2{a-1}=\frac{2a}{a-1}$ and $1+\frac2{a-1}=\frac{a+1}{a-1}$, this is at most the bound in (iv). Finally $D_{1/2}=-2\log(1-\Hel)\ge2\Hel/\ln2$.
+
+\emph{The program with kernel $P^*$.} It reads a self-delimiting description of $m$, $|\Sigma|$ and the numerators $\rho(b)2^m\le2^m$ ($a_\rho$ bits), then the index of $\beta$ among the couplings of type $\rho$, in $\lceil L_\beta\rceil$ bits, a length computable from what it has read, then $\pi_H$. On an input $x$ with first $m$ bits $w$ it computes $\nu_{\pi_H}(\cdot\mid x)$ exactly: the values are multiples of $2^{-m}$ that sum to $1$ for $x\in\supp\mu$, so the program waits until the lower approximations sum to more than $1-2^{-m}$ and rounds each up to a multiple of $2^{-m}$. The label of mass $\rho(\beta(w))$ is $h(x,\beta(w))$, since the values of $\rho$ are distinct and $h(x,\cdot)$ is injective, and the program gives it probability $1$; where the search does not end it gives nothing, which keeps a semimeasure. So its kernel is $P^*$ on $\supp\mu$, and its risk is $0$. It has smaller $J_c$ than $\pi_H$, hence than every copy, if $c(\lceil L_\beta\rceil+a_\rho+\kappa)<H(\rho)$; and $\lceil L_\beta\rceil\le2^mH(\rho)+1$. \qed
+
+\emph{Outside the range of $c$ discussed after the theorem.} If the values of $\rho$ are distinct, the program that models the coupling wins below about $2^{-m}$ (the last part of the theorem); with ties it must also describe which label each tied coin gives, and it can lose to the copies far below $2^{-m}$. Above about $H(\rho)/\ell_0$ the bound (iv) exceeds $H(\rho)$, and above about $(\log|Y|-H(\rho))/\ell_0$ a simpler, worse program can win (the comparison with $\pi_{\rm u}$ in the proof of \cref{prop:imit:cheap}), as above $c_{\rm hi}$ in \cref{sec:teacher}.
+
+\emph{Numbers.} With $m=20$, $\epsilon=\delta_\beta=0$ and the machine constant set to $0$ (an illustration, not a value for a fixed reference machine), a direct computation (code in the accompanying repository) gives at $c=2^{-19}$ the bound (iv) of $6.2\cdot10^{-4}$ bits for a person who answers with a fair coin ($h(x,b)=b$, $\ell_0\le a_\rho<54$), against $H(\rho)=1$, the divergence of the best predictor, and $9.5\cdot10^{-4}$ for the parity person of \cref{sec:teacher} ($\ell_0<120$), against $H(\rho)=0.0112$; at $c=10^{-4}$ the latter bound exceeds $H(\rho)$, and only \cref{thm:teacher:main} says more.
+
+\subsection{Proof of \texorpdfstring{\cref{prop:imit:limits}}{the limits of imitation}}\label{app:imit:limits}
+
+\emph{(a).} In every $\mathcal W_i$ the sample $h_n$ has the same law, so $\Psi(h_n)$ has the same law. A program in $\mathcal E(\nu_i)\cap\mathcal E(\nu_j)$ would have $\nu_i=\nu_j$ $\bar\mu$-almost everywhere, so the events are disjoint. In the feature case, the world with $\Sigma=\{\ast\}$, $\rho(\ast)=1$ and the response $h'(x,\ast):=h(x,\beta(w))$, $w$ the first $m$ bits of $x$, has the same channel and the data law $\bar\mu\otimes P^*$, and its person's kernel $P^*$ is deterministic, while $\nu_H$ is not at any input when $|\Sigma|\ge2$.
+
+\emph{(b).} Conditional on $f$, hence on $h_0$ and $\mu$, $\beta$ is uniform on its type class, and fewer than $2^{L_\beta-j}$ programs are shorter than $L_\beta-j$; so $\Prob[\delta_\beta>j]<2^{-j}$. The map $(f,\beta)\mapsto(T,\beta)$, $T:=f\oplus\ind_\beta$, is a bijection, so $T$ is uniform and independent of $\beta$, and the data, $(w_i,T(w_i))$ with $w_i$ uniform, depend on the world only through $T$. Fix $T$, the $w_i$ and the randomness of $\Psi$; then $\Psi$ outputs one program $\psi$. The kernels of the persons $H_{T\oplus\ind_{\beta'}}$ for distinct $\beta'$ differ at every cell of the symmetric difference, each of mass $2^{-m}$, because $s_0\ne2^{m-1}$; so $\psi$ copies the person for at most one $\beta'$, and given $T$ each $\beta'$ has probability $\binom{2^m}{s_0}^{-1}$. Average over the conditioning.
+
+\emph{No window in (b).} Moreover, with probability at least $1-2^{-j}$ over $f$, if $H(p)\,(2^m-j-2\log(m+1)-2\kappa)>(1-H(p))\,(j+4\log(m+1)+2\kappa)$ with $p:=s_0/2^m$, then at every $c>0$ the deterministic table $f\oplus\ind_\beta$ or the fair coin has smaller $J_c$ than every copy. Indeed, from a copy $\pi$ the table $f$ is computable given $m$ ($f(w)$ is the label whose lower approximations of $\nu_\pi(\cdot\mid w)$ eventually exceed $\frac12$, as $p<\frac12$), so $K(f)\le\ell(\pi)+2\log(m+1)+\kappa$; and $\Prob_f[K(f)<2^m-j]<2^{-j}$. The deterministic program for $T$ reads $m$ self-delimitingly and then $2^m$ bits, and has risk $0$; the fair coin has length at most $\kappa$ and risk $1$. So, with probability at least $1-2^{-j}$, every copy has $J_c$ larger than the table's for $c<H(p)/(j+4\log(m+1)+2\kappa)$ and larger than the coin's for $c>(1-H(p))/(2^m-j-2\log(m+1)-2\kappa)$, and the stated condition makes these two ranges cover every $c>0$. \qed
+
+\subsection{Cheap couplings}\label{app:imit:cheap}
+
+A coupling with a short description given a shortest copy of the person defeats every $c$, and in the feature case a window for copies needs many cells.
+
+\begin{proposition}[Cheap couplings]\status{proved; computed}\src{imitation/robust notes-final Prop 4.10(c),(d); referee rb2(B),(C); imitation/referee-final item 5 (C5); checks f2(B), r6(D), s1(A)}\label{prop:imit:cheap}
+In the feature case of \cref{def:imit:setting}, with $|\Sigma|\ge2$ and the values of $\rho$ distinct, let $\pi_{\rm u}$, shorter than $\ell_0$, compute the uniform kernel on $Y$.
+\begin{enumerate}[label=(\roman*),itemsep=0pt,topsep=2pt]
+\item If $H(\rho)/(K(\beta\mid\pi_H)+\kappa)\ge(\log|Y|-H(\rho))/(\ell_0-\ell(\pi_{\rm u}))$, then at every $c>0$ some program that is not a copy has $J_c$ at most that of every copy.
+\item If some $c>0$ makes the copies the only minimisers of $J_c$, then $2^m>(\ell_0-\ell(\pi_{\rm u}))/(\log|Y|-H(\rho))-(a_\rho+1+\kappa)/H(\rho)$, with $a_\rho$ as in \cref{thm:imit:main}, whatever the coupling.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(i) As in the last part of the proof of \cref{thm:imit:main}, a program that reads $\pi_H$ and then a shortest description of $\beta$ given $\pi_H$ computes $m$ and $\rho$ from $\beta$ and has kernel $P^*$ on $\supp\mu$, risk $0$ and length $\ell_A\le\ell_0+K(\beta\mid\pi_H)+\kappa$. If $c\le H(\rho)/(K(\beta\mid\pi_H)+\kappa)$, it has $J_c\le c\,\ell_0+H(\rho)=J_c(\pi_H)$. Otherwise $c>(\log|Y|-H(\rho))/(\ell_0-\ell(\pi_{\rm u}))$ by the hypothesis, and $J_c(\pi_{\rm u})=c\,\ell(\pi_{\rm u})+\log|Y|<J_c(\pi_H)$. Neither program is a copy: the first is deterministic, and the second is shorter than $\ell_0$. Every copy has $J_c\ge J_c(\pi_H)$. The bound $K(\beta\mid\pi_H)\le K(\beta)+\kappa$ holds because a description of $\beta$ need not read $\pi_H$.
+
+(ii) By the last part of \cref{thm:imit:main} the copies are not minimisers for $c<H(\rho)/(\lceil L_\beta\rceil+a_\rho+\kappa)$, and by the comparison with $\pi_{\rm u}$ in (i) they are not the only minimisers for $c\ge(\log|Y|-H(\rho))/(\ell_0-\ell(\pi_{\rm u}))$. So $H(\rho)(\ell_0-\ell(\pi_{\rm u}))<(\log|Y|-H(\rho))(\lceil L_\beta\rceil+a_\rho+\kappa)$. Insert $\lceil L_\beta\rceil\le2^mH(\rho)+1$ and divide by $H(\rho)(\log|Y|-H(\rho))$, which is positive because distinct values of $\rho$ give $H(\rho)<\log|\Sigma|\le\log|Y|$.
+\end{proof}
+
+Part (i) is a form of rate blindness (\cref{prop:limits:rateblind}): if the person's apparent randomness has a short description, such as a pseudo-random generator with a short seed, no $c$ returns the person with fresh coins. Part (ii) counts cells and holds for every coupling; a compressible coupling only makes the program with kernel $P^*$ cheaper. With $\ell(\pi_{\rm u})=0$ and the machine constant set to $0$ (an illustration), a direct computation (code in the accompanying repository) shows that by (ii) a person of $10^6$ bits with $H(\rho)\approx\frac12$ and $|Y|=2$ needs more than $1.99\cdot10^6$ cells, whatever the coupling.
