@@ -65,6 +65,21 @@ What this means for every scout, thread, referee and editor:
 * **A separation to look for.** Under a costed-deduction reasoner, find a family of query types where every hypothesis shaped like a program needs length growing with the number of query directions, while one axiomatised law plus cheap deduction answers them all.
 * **What the separation would and would not show.** Such a result would make "theory shape" relative to a reasoner, which matches the condensation essay's point that concepts are inert alone. It would not show that logic, rather than, say, probabilistic programs with conditioning or classes of models (the semantic view), is the right formal home.
 
+## "Existing language": where the discussion stands (2026-10-15)
+
+* **We raised an objection.** "Theories answer questions stated in existing language" is too strong:
+  * major theories introduce vocabulary (entropy, field, gene);
+  * they revise existing concepts (simultaneity, mass);
+  * they sometimes show that existing questions were ill-posed.
+* **The author agrees, and clarifies that the claim was comparative:**
+  > yeah totally agree with this. i only meant to say that it's more like answering questions in terms of existing abstractions than predicting pixels / some concrete/verificationism-style stuff. like that's a step in the right direction. but i agree really we need to go even more in that direction
+* **The paper's stance: a ladder.** Each step moves further from verificationism.
+  1. **Raw-data prediction.** Pixels, observation sequences.
+  2. **Answering questions posed with existing abstractions.** This is axiom induction over a fixed language. The base language is whatever abstractions are already available, which may be highly theoretical. It is not an observational language in the logical empiricists' sense, so the classical objections to a theory-neutral observation language do not apply to it in the same way.
+  3. **Theories that extend the language.** These are theoretical terms that pay for themselves by compression. The data stay in the base language. This step is formally reachable: succinctness of extensions, Ramsey sentences. It is a candidate thread.
+  4. **Theories that revise the base abstractions.** This covers meaning change, and questions shown to be ill-posed. There is no formal handle yet. It is open.
+* **Axiom induction sits on step 2, with partial results possible on step 3.** The paper presents step 2 as a step in the right direction, and says plainly that steps 3 and 4 are needed.
+
 ## Target
 
 An arXiv-quality paper with Kaarel Hänni as sole author. The AI assistance is disclosed as in the two SFI papers (`../solomonoff-function-induction/paper*/main.tex`: title-page footnote and acknowledgements). From the start it follows the rules the SFI papers reached after review:
