@@ -57,6 +57,12 @@ What this means for every scout, thread, referee and editor:
   * the idealised formalism cannot see the difference in shape;
   * the intuition that theories are shaped like logical theories is nonetheless plausible;
   * what is missing is a formal setting in which the shape matters.
+* **The author's follow-up:**
+  > i think this is just true about human theories. we can say this is true by observation before we have some precise account of how this comes about
+
+  So the paper separates two claims.
+  * **The descriptive claim** is stated up front as an observation. Human theories, as written, are declarative: laws, definitions and principles, not procedures that print predictions. We agree. The caveat is the procedural parts of theory in use: methods attached to concepts, numerical schemes, simulation codes.
+  * **The explanatory question** is open: why that shape is good, and whether an ideal inducer should produce it. Craig rules out an account based only on what can be represented, so an answer must be relative to a reasoner, or to a community of reasoners who communicate, check and extend theories piece by piece.
 * **An open research question.** This is a candidate thread for the selection step, if a scout's material supports it: in what precise sense is a theory better shaped like a logical theory than like a program? Craig shows that the set of representable answer-functions is the same, so any difference must lie in what is cheap to obtain from each, relative to a reasoner. Candidate properties of logical theories:
   * **Multi-directional use.** A theory answers questions from any partial information. For example, Kepler's third law gives the period from the semi-major axis and the semi-major axis from the period. A program computes one direction cheaply.
   * **Partiality.** A theory is silent where it has nothing to say.
