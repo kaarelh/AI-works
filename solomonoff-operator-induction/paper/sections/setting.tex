@@ -1,0 +1,159 @@
+% Section 2 (writer: setting). Sources: research/tracks/foundations/notes-final.md (F), context Prop 5.1, Cor 5.2, history Prop 2.4, examples Prop 2.9.
+\section{Function semimeasures, function machines and SOI}\label{sec:setting}
+
+Solomonoff's operator-induction problem asks, given an unordered set of question--answer pairs, for the probability distribution of the answer to a new question \citep{solomonoff2008three}; here the questions are inputs and the answers labels. \emph{Solomonoff operator induction} (SOI) is the family of Bayesian solutions to this problem under universal priors. Informally, its \emph{one-tape version} feeds one infinite sequence $\omega$ of fair coin flips to a universal Turing machine $U$. Each query $x$ is a separate run of $U$ on $x$ that reads $\omega$ one-way from its first bit, as many bits as it needs, and outputs a label or diverges. The same $\omega$ serves every query: the coin flips are shared by all inputs, not drawn afresh at each input. This defines a random partial function, and the one-tape version conditions its law on the observed input--output pairs.\footnote{H\"anni's working notes call this setting function induction \citep{hanni2026notes}. The private random stream per input, with the resulting dominance (\cref{thm:learn:dominance}(a)), and an informal claim that the input encoding matters little (\cref{thm:setting:invariance}(b)) first appeared there.} Formally, it uses the universal function machine $T_U$ of \cref{thm:setting:universal} (\cref{def:setting:sfi}); every universal $U$ gives the same law up to a constant factor. Function machines, the machines of this kind that need not be universal (\cref{def:setting:machine}), include deterministic programs and samplers with a private random stream per input (\cref{prop:setting:includes}), and \cref{sec:versions} compares the versions, among them Solomonoff's own per-query solution. Proofs are in \cref{app:setting}.
+
+\subsection{Data and conventions}\label{sec:setting:data}
+
+\begin{definition}[Data]\src{foundations \S1}\label{def:setting:data}
+Inputs $X$, labels $Y$; by default $X=Y=\{0,1\}^*$, but any infinite decidable $X\subseteq\{0,1\}^*$ and any countable $Y$ with a fixed computable enumeration, $|Y|\ge2$, will do unless stated. $\bot$ means ``undefined'', $\Ybot:=Y\cup\{\bot\}$. A \emph{data set} is a finite partial function $D:X\rightharpoonup Y$; $D+(x,y):=D\cup\{(x,y)\}$ for $x\notin\dom D$; $D|_T$ is a restriction. A partial function $f$ \emph{extends} $D$, $f\supseteq D$, if $f(x)=y$ for all $(x,y)\in D$. A sequence $(x_t,y_t)_{t\le n}$ is \emph{consistent} if $D_n:=\{(x_t,y_t):t\le n\}$ is a partial function; $h_t:=(x_1,y_1,\dots,x_t,y_t)$ is the history. For $\nu$ from data sets to $[0,1]$ the \emph{conditional} is $\nu(y\mid D,x):=\nu(D+(x,y))/\nu(D)$ for $x\notin\dom D$ ($0$ if $\nu(D)=0$), and $\nu(y\mid D,x):=\ind[y=D(x)]$ for $x\in\dom D$ (the \emph{repeated-input convention}).
+\end{definition}
+
+\paragraph{Complexity and constants.} $V$ is a fixed universal prefix machine, $K$ prefix complexity, $\varphi_e$ the $e$-th partial computable function $X\rightharpoonup Y$, and $\mm(i):=\sum_{V(p)=i}2^{-|p|}\ge2^{-K(i)}$; ``lsc'' means lower semicomputable. A \emph{conditional semimeasure} is a map $P(y\mid x)\ge0$ with $\sum_yP(y\mid x)\le1$ for every $x$; the lsc ones have an effective enumeration $(P_i)$ (trim each $P(\cdot\mid x)$ as in the proof of \cref{thm:setting:weakuniversal}). For an object $o$ of a class with a fixed effective enumeration $(o_i)$, such as partial computable functions $(\varphi_e)$, lsc conditional semimeasures $(P_i)$, function machines $(T_i)$ and their laws (\cref{prop:setting:machinelaw}), $K(o):=\min\{K(i):o_i=o\}$. We use the following standard facts \citep{levin1974laws,gacs1974symmetry,chaitin1975theory}, \citep[\S4.3]{li2008introduction}: $\mm$ dominates every lsc discrete semimeasure up to a constant factor; and the conditional coding theorem: if $P(a\mid z)$ is lsc uniformly in $(a,z)$ with $\sum_aP(a\mid z)\le1$, then $K(a\mid z)\le-\log P(a\mid z)+K(P)+c$. Both relativise. $j(x)$ is the position of $x$ in the length-lexicographic order of $\{0,1\}^*$, starting from $j(\epsilon)=0$, so $j(x)\le2^{d+1}-2$ for $|x|\le d$; $\langle\cdot,\cdot\rangle$ denotes fixed computable bijections $\mathbb N\times\mathbb N\to\mathbb N$ and $X\times\mathbb N\to X$. $\log=\log_2$; losses are in bits; $c$ and $O(1)$ depend only on the fixed machines and codings. $\Unif$ is the fair-coin measure on tapes $\omega\in\{0,1\}^\infty$, and $\omega_{1:L}$ the first $L$ tape bits.
+
+\paragraph{Two loss conventions.} The predictors below issue sub-probabilities; the missing mass is the probability of ``undefined''. The \emph{semimeasure convention} scores the raw conditionals, the \emph{normalised convention} divides each by its sum. Statements about losses name their convention; upper bounds in the semimeasure convention hold in both, lower bounds need not (\cref{prop:setting:normalise,rem:setting:conventions}).
+
+\subsection{Three notions of function semimeasure}\label{sec:setting:weak}
+
+\begin{definition}[Weak function semimeasure]\src{foundations Def 2.1}\label{def:setting:weak}
+A map $\nu$ from data sets to $[0,1]$ with $\nu(\emptyset)\le1$ and $\nu(D)\ge\sum_{y\in Y}\nu(D+(x,y))$ for every $D$ and $x\notin\dom D$.
+\end{definition}
+
+Then (W1) $\nu$ is monotone, $\nu(E)\le\nu(D)$ for $E\supseteq D$, and (W2) $\sum_{D:\dom D=S}\nu(D)\le\nu(\emptyset)$ for finite $S$ (sum out one input at a time). Call a predictor $q$ (sub-probabilities $q(\cdot\mid D,x)$, with the repeated-input convention) \emph{order-independent} if, for every $D$, the product $\nu_q(D)$ of its conditionals along a reveal order of $D$ is the same for all orders.
+
+\begin{proposition}[Predictor reading]\status{proved}\src{foundations Prop 2.1a (= context Prop 5.1(a))}\label{prop:setting:predictor}
+(a) If $\nu$ is weak with $\nu(\emptyset)=1$, its conditionals form an order-independent predictor $q_\nu$ with $\nu_{q_\nu}=\nu$. (b) If $q$ is order-independent, $\nu_q$ is weak with $\nu_q(\emptyset)=1$, and $q(y\mid D,x)=\nu_q(D+(x,y))/\nu_q(D)$ when $\nu_q(D)>0$. So weak semimeasures with $\nu(\emptyset)=1$ correspond one-to-one to order-independent predictors, identified where $\nu(D)>0$.
+\end{proposition}
+
+\begin{definition}[Random partial function]\src{foundations Def 2.2}\label{def:setting:rpf}
+A \emph{random partial function} is a random element $F$ of $\Ybot^X$ (product $\sigma$-algebra) with law $P$; its \emph{containment functional} is $\nu_P(D):=P(F\supseteq D)$.
+\end{definition}
+
+Every containment functional is weak, since the events $\{F\supseteq D+(x,y)\}$, $y\in Y$, are disjoint subsets of $\{F\supseteq D\}$. The converse fails (\cref{ex:setting:weaknotrpf}). Containment functionals are exactly the weak $\nu$ with $\nu(\emptyset)=1$ whose Möbius sums are nonnegative (\cref{prop:setting:mobius} in \cref{app:setting:mobius}), the function-space analogue of the correspondence between completely monotone set functions and random sets (cf.\ \citealp{choquet1954theory,matheron1975random,shafer1976mathematical}).
+
+\begin{example}[Weak but not a random function]\status{proved; computed}\src{foundations Ex 2.4; checks c1, c6, c9(b), r1, r4}\label{ex:setting:weaknotrpf}
+(a) Inputs $a,b$: $\nu(\emptyset)=\nu(\{(a,0)\})=\nu(\{(b,0)\})=1$, all other values $0$. It is weak but not a containment functional: ``$F(a)=0$ surely and $F(b)=0$ surely, but never both''.
+(b) Inputs $a,b,c$, labels $\{0,1\}$: $\nutri(\emptyset)=1$, and $\nutri=\frac12$ on the six one-point data sets and on $E_1=\{(a,0),(b,1)\}$, $E_2=\{(b,0),(c,1)\}$, $E_3=\{(c,0),(a,1)\}$, and $0$ elsewhere. $\nutri$ is weak, and $E_1,E_2,E_3$ are pairwise inconsistent with total mass $\frac32$; so no law $P$ of a random partial function has $P(F\supseteq\cdot)\ge c\,\nutri$ with $c>\frac23$, and the uniform law on $(F(a),F(b),F(c))\in\{(0,1,0),(1,0,1),(1,0,0)\}$ attains $c=\frac23$.
+\end{example}
+
+\subsection{Function machines and universality}\label{sec:setting:machines}
+
+\begin{definition}[Function machine]\src{foundations Def 2.5}\label{def:setting:machine}
+A \emph{function machine} is a c.e.\ set $T\subseteq X\times\{0,1\}^*\times Y$ of triples that is \emph{consistent}: if $(x,w,y),(x,w',y')\in T$ and $w,w'$ are comparable, then $y=y'$. For a tape $\omega$ put $f^T_\omega(x):=y$ if some prefix $w$ of $\omega$ has $(x,w,y)\in T$, and $f^T_\omega(x):=\bot$ otherwise. The \emph{machine law} of $T$ is $\nu_T(D):=\Unif\{\omega:\ f^T_\omega\supseteq D\}$.
+\end{definition}
+
+Equivalently, $T$ is a Turing machine as in the informal definition, but not necessarily universal: on query $x$ it reads a one-way random tape and either halts with a label after finitely many bits or diverges; all queries read the same tape.
+
+\begin{proposition}[Machine laws]\status{proved}\src{foundations Prop 2.6 and the enumeration remark}\label{prop:setting:machinelaw}
+Every machine law is the containment functional of a random partial function, with $\nu_T(\emptyset)=1$, and is lsc uniformly in $D$ and an index of $T$. Function machines have an effective enumeration $(T_i)$, to which $K(T)$ and $K(\nu)$ for machine laws refer; $K(\nu_T)\le K(T)$.
+\end{proposition}
+
+\begin{theorem}[Universal function machine]\status{proved}\src{foundations Thm 3.2}\label{thm:setting:universal}
+$T_U:=\{(x,\,pw,\,y):\ p\in\dom V,\ (x,w,y)\in T_{V(p)}\}$ is a function machine. Its law $\MF:=\nu_{T_U}$ has $\MF(\emptyset)=1$ and, for every $D\ne\emptyset$,
+\begin{equation}\label{eq:setting:mixture}
+\MF(D)=\textstyle\sum_i\mm(i)\,\nu_{T_i}(D),\qquad\text{hence}\qquad \MF\ \ge\ 2^{-K(\nu)}\,\nu\quad\text{for every machine law }\nu .
+\end{equation}
+\end{theorem}
+
+$T_U$ reads the first self-delimiting block $p$ of its tape as a program for $T_{V(p)}$ and the rest as that machine's coin flips: one tape read in two parts, not a second source of randomness. This represents $\MF$ as the Bayes mixture \eqref{eq:setting:mixture} over function machines, with posterior weight $\mm(i)\nu_{T_i}(D)/\MF(D)$ on index $i$ after $D$.
+
+If every conditional of an order-independent predictor $q$ sums to $1$, $\nu_q$ is the law of a random total function, and $\MF$ dominates every such lsc law (\cref{prop:setting:normtotal,cor:setting:normuniversal}).
+
+\paragraph{The choice of universal machine.} Let $U$ be a Turing machine as in the informal definition. As noted after \cref{def:setting:machine}, $U$ is a function machine (a halting run that has read $w$ runs identically on every tape extending $w$, so the triples $(x,w,y)$ with $U$ outputting $y$ on query $x$ after reading exactly $w$ are consistent), and its law $\nu_U$ is a machine law. Call $U$ universal if for every function machine $T$ some finite string $p_T$ gives $f^U_{p_T\omega}=f^T_\omega$ for all $\omega$; $T_U$ is universal, with $p_T$ a $V$-program for an index of $T$. Every universal $U$ gives $\MF$ up to a constant factor: by \eqref{eq:setting:mixture}, $\MF\ge2^{-K(\nu_U)}\nu_U$; and $\nu_U(D)\ge2^{-|p_{T_U}|}\MF(D)$, because the tapes $p_{T_U}\omega'$ with $f^{T_U}_{\omega'}\supseteq D$ have measure $2^{-|p_{T_U}|}\MF(D)$ and give $U$ the function $f^{T_U}_{\omega'}$. So $\nu_U$ and $\MF$ agree up to a constant factor depending only on $U$, and so do their posteriors after any $D$; by \cref{prop:setting:order}, the cumulative loss in the semimeasure convention changes with the choice of $U$ by at most an additive constant (compare \cref{thm:setting:invariance}(a)).
+
+\begin{proposition}[What machine laws include]\status{proved}\src{foundations Prop 3.3}\label{prop:setting:includes}
+(a) \emph{Product laws (samplers that see only the input).} If $P$ is an lsc conditional semimeasure, then $\nu_P(D):=\prod_{(x,y)\in D}P(y\mid x)$ is a machine law with $K(\nu_P)\le K(P)+O(1)$; probabilistic machines that read $x$ and output $y$ (halting or not) define exactly these $P$.
+(b) \emph{Deterministic programs.} For partial computable $\varphi$, $D\mapsto\ind[\varphi\supseteq D]$ is a machine law of complexity at most $K(\varphi)+O(1)$.
+(c) \emph{Computable laws.} A law of a random partial function whose cylinder probabilities $P(F|_S=v)$, $v\in\Ybot^S$, are computable uniformly in $(S,v)$ is a machine law; if $Y$ is finite or the function is total, computable $\nu_P$ suffices.
+(d) \emph{Mixtures.} If $(\nu_i)$ are machine laws with computable indices and $w$ is an lsc discrete semimeasure, $D\mapsto\sum_iw_i\nu_i(D)$ ($D\ne\emptyset$) is a machine law.
+\end{proposition}
+
+In (a) each input samples from a private stream of tape bits: the random bits for different inputs are taken, by dovetailing, from different parts of the universal machine's tape. With \cref{thm:setting:universal} this gives dominance over all such samplers (\cref{thm:learn:dominance}(a)).
+
+\begin{remark}[Per input, not per query]\src{foundations remark after Prop 3.3}\label{rem:setting:perinput}
+In (a) a repeated query returns the same label; a sampler run afresh at each query would not. This choice fits data that are input--output pairs of a function, and makes $\nu_P$ a random function; the per-query reading gives a different object, Solomonoff's per-query solution $\Mpq$ (\cref{def:versions:variants,rem:versions:operator,prop:learn:perquery}).
+\end{remark}
+
+\begin{theorem}[Universal weak semimeasure]\status{proved; trimming computed}\src{foundations Thm 3.4; check r3}\label{thm:setting:weakuniversal}
+There is an lsc weak semimeasure $\Mw$ with $\Mw\ge2^{-K(\nu)}\nu$ for every lsc weak semimeasure $\nu$.
+\end{theorem}
+
+\begin{theorem}[Weak versus machine universality]\status{proved; computed}\src{foundations Thm 3.5 and the remark after it; checks c1, c6, c9, r1}\label{thm:setting:weakvsmachine}
+(i) $\MF\le2^{O(1)}\Mw$. (ii) For every lsc weak $\nu$ and every $D$, $\MF(D)\ge2^{-K(\nu)-K(\dom D)-O(1)}\nu(D)$; so $\Mw(D)\le2^{K(\dom D)+O(1)}\MF(D)$. (iii) Let $\nutri^{\otimes k}$ be the product of $k$ copies of $\nutri$ (\cref{ex:setting:weaknotrpf}(b)) on $k$ disjoint blocks of three inputs, and for $\vec\imath\in\{1,2,3\}^k$ let $E_{\vec\imath}$ be the union of the copies of $E_{i_1},\dots,E_{i_k}$ in the blocks: $3^k$ pairwise inconsistent data sets with $2k$ points each. Some $D_k$ among them has $\log(\Mw(D_k)/\MF(D_k))\ge k\log\frac32-K(k)-O(1)$. (iv) The same lower bound holds for the average of $\log(\Mw(E_{\vec\imath})/\MF(E_{\vec\imath}))$ over all $\vec\imath$. (v) The factor behind (iii) is exact: the supremum over laws $P$ of random partial functions of $\min_DP(F\supseteq D)/\nutri^{\otimes k}(D)$, over the $D$ with $\nutri^{\otimes k}(D)>0$, is $(2/3)^k$.
+\end{theorem}
+
+In (ii) the labels of $\dom D$, read in a fixed order, form a semimeasure on strings that a monotone machine realises exactly (\cref{lem:setting:realise}). In (iii) $K(\dom D_k)\le k\log3+K(k)+O(1)$, so asymptotically at least a fraction $\log\frac32/\log3\approx0.37$ of the term $K(\dom D)$ in (ii) is needed.
+
+\begin{remark}[Weak and machine universality differ]\status{refuted (weak definition); open (random-function laws)}\src{foundations \S3, claim F10}\label{rem:setting:h1a}
+By analogy with sequences \citep{zvonkin1970complexity} one might expect lsc function semimeasures and laws of function machines to agree up to a constant factor. For the weak definition this fails: $\Mw$ and $\MF$ agree only up to $2^{K(\dom D)+O(1)}$. For laws of random partial functions it is open (\cref{q:setting:rpf}).
+\end{remark}
+
+\begin{question}\label{q:setting:rpf}
+Is every lsc law of a random partial function dominated by $\MF$ up to a constant factor? It is for the classes of \cref{prop:setting:includes} and for computable filling-in processes (\cref{rem:setting:fillin}), and up to $2^{K(\dom D)+O(1)}$ always. By a proof sketch in \cref{app:setting:rpf} it suffices that every such law, up to a constant factor, is the increasing limit of computable finite rational laws $P_t$ with $P_t(U)\le P_{t+1}(U)$ for every up-set $U$ of the extension order; Strassen's theorem \citep{strassen1965existence} then gives couplings that fill in values.
+\end{question}
+
+\subsection{The one-tape version of SOI and its conventions}\label{sec:setting:sfi}
+
+\begin{definition}[Solomonoff operator induction, one-tape version]\src{foundations Def 5.1}\label{def:setting:sfi}
+The \emph{one-tape version} of SOI is the random partial function $f_\omega:=f^{T_U}_\omega$ of one tape $\omega\sim\Unif$, read by every query, with law $\MF$. After data $D$ the \emph{posterior} is the law of $f_\omega$ given $f_\omega\supseteq D$, with containment functional $E\mapsto\MF(D\cup E)/\MF(D)$ for $E$ consistent with $D$ (and $0$ otherwise). The \emph{predictive conditional} at $x\notin\dom D$ is $\MF(y\mid D,x)=\MF(D+(x,y))/\MF(D)$; its defect $1-\sum_y\MF(y\mid D,x)$ is the posterior probability that $f_\omega(x)=\bot$; at $x\in\dom D$ it is the stored label with probability $1$. The \emph{normaliser} is $\Znorm(D,x):=\sum_y\MF(D+(x,y))$, and the \emph{normalised conditional} is $\MFbar(y\mid D,x):=\MF(D+(x,y))/\Znorm(D,x)$. For a weak $\nu$, $L_\nu(D):=-\log\nu(D)$, and the loss of the one-tape version is $\LSFI(D):=L_{\MF}(D)$.
+\end{definition}
+
+When we say SOI without qualification, we mean the one-tape version $\MF$: it treats the labelling as one random function, so labels of repeated inputs agree; it is the law of a single universal machine and dominates every function machine (\cref{thm:setting:universal}); and on distinct inputs it agrees with the other versions of \cref{sec:versions} up to $K(\dom D)+O(1)$ bits (\cref{thm:versions:chain,prop:learn:perquery}). $\MF(D)>0$ for every $D$ (the lookup table of $D$ is a program).
+
+\begin{proposition}[Order independence]\status{proved; computed}\src{foundations Prop 5.2 (= context Fact A, history Prop 5.1); check c4}\label{prop:setting:order}
+Semimeasure convention. For every weak $\nu$ and consistent $(x_t,y_t)_{t\le n}$, $\sum_{t\le n}-\log\nu(y_t\mid D_{t-1},x_t)=L_\nu(D_n)+\log\nu(\emptyset)\le L_\nu(D_n)$, which depends only on the set $D_n$, not on the order or on repetitions. For SOI it is $\LSFI(D_n)$. On an inconsistent sequence it is infinite.
+\end{proposition}
+
+(A repeated input contributes the factor $1$ or $0$; the other factors telescope.)
+
+\begin{proposition}[Normalisation]\status{proved; computed}\src{foundations Prop 5.3; checks c3, r8, r13; context c3}\label{prop:setting:normalise}
+For a weak $\nu$ and a consistent sequence let $\bar L_\nu:=\sum_{t\le n}-\log\bar\nu(y_t\mid D_{t-1},x_t)$, where $\bar\nu(y\mid D,x):=\nu(D+(x,y))/\sum_{y'}\nu(D+(x,y'))$ at $x\notin\dom D$, and $\LSFIbar:=\bar L_{\MF}$. (a) $\bar L_\nu\le L_\nu(D_n)$; so upper bounds on $\LSFI$ hold in both conventions. (b) For laws of random partial functions the normalised loss can depend on the order; for $\nu=\MF$ this is open (\cref{q:setting:normorder}). (c) For laws of random total functions it equals the semimeasure loss.
+\end{proposition}
+
+For (b), let $(F(a),F(b))$ be uniform on $\{(0,0),(0,\bot),(1,1),(\bot,\bot)\}$: $D=\{(a,0),(b,0)\}$ has normalised probability $\frac23$ if $a$ comes first and $\frac12$ if $b$ does, semimeasure probability $\frac14$ in both orders.
+
+What does transfer is collected in \cref{prop:setting:transfer}: single-point lower bounds, and two general lower bounds, $K^{\emptyset'}(y_{1:n}\mid x_{1:n})-O(1)$ and the chronological Bayes loss, which are $O(1)$ in the chain, the skipped strings and the cyclic permutation (\cref{sec:hist,sec:ex}).
+
+\begin{remark}[Which lower bounds are semimeasure-only]\status{proved (as a list); transfer open where stated}\src{foundations Rem 5.6, updated by history Prop 2.4, examples Prop 2.9, context \S1.2}\label{rem:setting:conventions}
+Lower bounds on $\LSFI(D_n)$, or for every order-free predictor, do not transfer automatically to $\LSFIbar$. In this paper they are proved only in the semimeasure convention for: \cref{thm:setting:coding}(a) beyond single points; \cref{ex:setting:swap}; the $\mathrm{GF}(2^q)$ example (\cref{thm:hist:gf}); the separations of \cref{prop:hist:strict,prop:hist:strictinf}; the cyclic permutation over the full cycle (\cref{thm:ex:cycle}); Eisenstat's example (\cref{thm:ex:sandwich,thm:ex:expected}). Whether they hold normalised is part of \cref{q:setting:normorder}.
+\emph{Also normalised:} the chain and the skipped strings, up to $O(n\log n)$ and $O(\ell\log\ell)$ bits (\cref{prop:hist:normchain}); the cyclic permutation over its first $k\le2^{(1-\delta)d}$ steps, at $\delta d-O(\log d)$ bits per step on average, in expectation (\cref{prop:ex:normalised}).
+\emph{In both conventions:} the out-of-distribution lower bounds of \cref{sec:ood}, which bound the posterior mass that is defined and wrong.
+\end{remark}
+
+\begin{remark}[Choice of the default version]\src{foundations \S5 ``Recommendation''}\label{rem:setting:recommend}
+Besides the reasons given after \cref{def:setting:sfi}, $\MF$ has a posterior over functions ($\Mw$ has none), dominates every machine law with constant $2^{-K(\nu)}$, is invariant (\cref{thm:setting:invariance}), and has an order-independent semimeasure-convention loss. The other objects of \cref{sec:versions}, the coin-free version (the program mixture $W$), the Kolmogorov version $\KF$, the product mixture $\Mprod$, and $\Mw$, agree with it up to $K(\dom D)+O(1)$ bits on data sets, and so does Solomonoff's per-query solution $\Mpq$ on sequences with distinct inputs, where it equals $\Mprod$; they differ by unbounded amounts and should be kept distinct.
+\end{remark}
+
+\subsection{Basic properties}\label{sec:setting:basic}
+
+\begin{theorem}[Invariance]\status{proved}\src{foundations Thm 6.2}\label{thm:setting:invariance}
+(a) If $\MF,M'_F$ are built from two universal prefix machines and two enumerations of function machines, $|\log\MF(D)-\log M'_F(D)|\le c$ for all $D$.
+(b) For computable injections $\alpha:X\to X'$, $\beta:Y\to Y'$, with $D^{\alpha\beta}:=\{(\alpha(x),\beta(y)):(x,y)\in D\}$ and $M'_F$ the one-tape law over $X',Y'$: $|\log\MF(D)-\log M'_F(D^{\alpha\beta})|\le K(\alpha,\beta)+O(1)$ for all $D$. So cumulative losses in the semimeasure convention on original and re-encoded data differ by at most $K(\alpha,\beta)+O(1)$ bits, uniformly over data sets and reveal orders.
+(c) The same holds for the program mixture $W$, the product mixture $\Mprod$ (\cref{def:versions:variants}) and $\Mw$.
+\end{theorem}
+
+So the encoding of inputs and labels matters little as long as it is simple: a computable re-encoding costs at most $K(\alpha,\beta)+O(1)$ bits. The constant is not small for complex encodings; only the upper bound is proved, and whether such encodings can change losses by that much is not known. Non-computable encodings are not covered.
+
+\begin{theorem}[Coding-theorem bounds]\status{proved}\src{foundations Thm 6.3 (= history Lemma 1.1, examples Lemma 1.1, context Prop 5.4(1))}\label{thm:setting:coding}
+For every data set $D$:
+(a) $\LSFI(D)\ge K(D|_T\mid T)-O(1)$ for every $T\subseteq\dom D$; in particular $\MF(D)\le2^{-K(D\mid\dom D)+O(1)}$, and $\MF(D)\le2^{-K(y\mid x)+O(1)}$ for every $(x,y)\in D$;
+(b) $\LSFI(D)\le\min\{\KF(D),\ \sum_{(x,y)\in D}K(y\mid x)\}+O(1)\le K(\dom D)+K(D\mid\dom D)+O(1)$, with $\KF(D)$ the length of the shortest consistent program (\cref{def:versions:variants});
+(c) $\LSFI(\{(x,y)\})=K(y\mid x)\pm O(1)$.
+\end{theorem}
+
+\begin{example}[Swap data]\status{proved; computed}\src{foundations Ex 6.4; checks c9(c), r8}\label{ex:setting:swap}
+For distinct $x_1,x_2\in\{0,1\}^d$ let $D:=\{(x_1,x_2),(x_2,x_1)\}$. Then $K(D\mid\dom D)=O(1)$, but $\LSFI(D)\ge\max\{K(x_2\mid x_1),K(x_1\mid x_2)\}-O(1)$. Conversely $\LSFI(D)\le d+O(1)$ for every pair: the machine $F(x):=x\oplus\omega_{1:|x|}$ has complexity $O(1)$ and extends $D$ exactly when $\omega_{1:d}=x_1\oplus x_2$, with probability $2^{-d}$. For every $x_1$ some $x_2$ has $K(x_2\mid x_1)\ge d$, and then $\LSFI(D)=d\pm O(1)$; also $\KF(D)\le d+2\log d+O(1)$.
+\end{example}
+
+The swap data do \emph{not} separate SOI from history-aware prediction: every lower-semicomputable history-aware predictor $\rho$ shown $x_1$ first pays at least $K(x_2\mid x_1)-K(\rho)-O(1)$ bits on the label of $x_1$ (conditional coding theorem), and $\MH$ pays at least $K(x_2\mid x_1)-O(1)$. Such separations are \cref{thm:hist:chain,thm:hist:skipped,thm:ex:cycle}.
+
+\begin{question}\label{q:setting:twosided}
+Is there a two-sided characterisation of $\LSFI(D)$ up to $O(1)$ by standard complexities, other than the tautology $\LSFI(D)=\min_\nu[K(\nu)-\log\nu(D)]\pm O(1)$ over machine laws $\nu$?
+\end{question}
+
+\begin{proposition}[Sequence induction is SOI on initial segments]\status{proved}\src{foundations Prop 7.1}\label{prop:setting:si}
+Let $X=\mathbb N$, $\{0,1\}\subseteq Y$, and $M$ Solomonoff's universal monotone semimeasure \citep{zvonkin1970complexity}. For $x\in\{0,1\}^n$ put $D_x:=\{(i,x_{i+1}):i<n\}$. Then $2^{-O(1)}M(x)\le\MF(D_x)\le2^{O(1)}M(x)$.
+\end{proposition}
+
+So SOI generalises Solomonoff induction, and is in turn dominated by universal prediction that sees the history (\cref{lem:hist:chrono,cor:hist:H4}). $\MF$ is lsc but not computable, and its conditionals, raw or normalised, are computable relative to the halting problem but not computable (\cref{prop:setting:computability}); so SOI is an ideal reference, not an algorithm (computable versions: \cref{sec:comp}).
+

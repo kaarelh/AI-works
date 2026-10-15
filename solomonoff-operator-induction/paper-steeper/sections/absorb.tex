@@ -1,0 +1,98 @@
+% Section 4 (restructure writer W1; plan: research/paper-review/restructure/PLAN.md).
+% Sources: research/tracks/steeper/notes-final.md §1.4-§1.8, §3.4 (Thm 5), §4 (Props 4.1, 4.2); split/kink/notes-final.md Prop 3.5 (verify-kink §5).
+% Binding: the absorption objection is a standard point; do not attribute it to a person in visible text.
+% Renamed against the base (PLAN §4.2): length thresholds L -> \bar\ell in thm:absorb:absorption(a) and thm:split:shared(ii);
+% the number of shared coins in prop:absorb:price k -> s (k is the sampler's program length in thm:split:shared).
+% Fix round (DECISIONS-restructure §3, RW1-02): prop:absorb:pricing and the prediction sentence after thm:split:shared moved to app-absorb.tex.
+% Rename of 2026-10-15 (research/paper-review/rename/RENAME.md §4, Paper 2 item 2; log-p2.md): absorption names SI and the one-tape
+% version (shared randomness) and SOI^hist; the per-query class (Solomonoff's per-query solution) has no universal member.
+\section{What counts as one hypothesis: absorption and private randomness}\label{sec:absorb}
+
+Under a steeper penalty, a hypothesis that is itself a universal mixture, and so penalises complexity only in the usual way inside itself, can absorb all the structure of the data. This is a standard point, familiar from algorithmic statistics, where the model classes are restricted, for example to finite sets \citep{gacs2001algorithmic,vereshchagin2017algorithmic}. In operator induction there is a way out: if each input samples its own random bits, as in Solomonoff's per-query solution, a hypothesis pays its likelihood term separately at every input. Both reasons for a steeper penalty need the selected hypothesis to be a model, not a universal learner, so this section is their precondition. Proofs are in \cref{app:absorb}.
+
+\subsection{Shared randomness: a universal hypothesis absorbs everything}\label{sec:absorb:shared}
+
+A class satisfies (Dom) if it contains a program $\pi_U$, with $U:=P_{\pi_U}$ and $\ell_U:=\ell(\pi_U)$, such that
+\begin{equation}\label{eq:absorb:dom}
+P_\pi(o)\ \le\ 2^{\ell(\pi)+\kappa_0}\,U(o)\qquad\text{for all programs $\pi$ and observations $o$.}\tag{Dom}
+\end{equation}
+
+\begin{remark}[Classes with an absorbing member]\status{proved}\src{steeper \S1.4, examples (1)--(5)}\label{rem:absorb:examples}
+(Dom) holds with $\kappa_0=0$, and $\xi_1\le U$, in every class that contains its own mixture as a member: in $\Hcl{F}$ with $U=\MF$ (the one-tape version of SOI), in $\Hcl{w}$ with $U=\Mw$, in $\Hcl{\mathrm{SI}}$ with $U=M$, and in $\Hcl{\mathrm{chr}}$ with $U=\MH$ (proof in \cref{app:absorb:examples}).
+\end{remark}
+
+Let $\ell^*_\lambda:=(\lambda\ell_U+\kappa_0)/(\lambda-1)$.
+
+\begin{theorem}[Absorption]\status{proved}\src{steeper Thm 1}\label{thm:absorb:absorption}
+Assume (Dom) and let $\lambda>1$.
+\begin{enumerate}[label=(\alph*),itemsep=0pt,topsep=2pt]
+\item \emph{MAP.} For every observation $o$ with $U(o)>0$, every $\lambda$-MAP $\hat\pi$ has $\ell(\hat\pi)\le\ell^*_\lambda$ and $L(\hat\pi;o)\le-\log U(o)+\lambda\ell_U-\lambda\ell(\hat\pi)$. So if $\bar\ell>\ell_U$ and $\lambda>(\bar\ell+\kappa_0)/(\bar\ell-\ell_U)$, no hypothesis of length at least $\bar\ell$ is a $\lambda$-MAP for any such observation; this holds for fixed $\lambda$, and for $\lambda=cn$ once $cn$ exceeds the bound.
+\item \emph{Power posterior.} $2^{-\lambda\ell_U}U(o)\le\xi_\lambda(o)\le\xi_1(o)$. If $\xi_1\le2^{\kappa_1}U$, then $-\kappa_1\le-\log\xi_\lambda(o)+\log U(o)\le\lambda\ell_U$ for every $o$.
+\item \emph{Deterministic teacher, errors included (data-set classes).} Let $\lambda>1$ be fixed. Let $t:X\to Y$ be total computable with a program $\pi_t$ of length $\ell_t$ in the class, let $x_1,x_2,\dots$ be distinct and $D_n:=\{(x_i,t(x_i)):i\le n\}$.
+\begin{enumerate}[label=(c\arabic*),itemsep=0pt,topsep=0pt]
+\item $\sum_{i\le n}-\log\xi_\lambda(t(x_i)\mid x_i,D_{i-1})\le\min\{\lambda\ell_t,\ \lambda\ell_U+\kappa_0+\ell_t\}$ for every $n$; so at most that many inputs get probability below $1/2$ for the teacher's label.
+\item Every $\lambda$-MAP for $D_n$ has $L(\hat\pi;D_n)\le\lambda\ell_U+\kappa_0+\ell_t$.
+\item There are $n_0$ and a finite set $\mathcal H_{\rm fin}$ such that every $\lambda$-MAP for $D_n$, $n\ge n_0$, lies in $\mathcal H_{\rm fin}$, and at only finitely many $n$ does a $\lambda$-MAP give $t(x_{n+1})$ probability below $1/2$.
+\end{enumerate}
+With $\lambda=cn$, (c1) and (c3) are not available; (a) and (c2) hold at each $n$.
+\item \emph{SI with random inputs.} Let the inputs lie in $\{0,1\}^d$, encode $(x_1,y_1,x_2,\dots)$ as a binary string with fixed-length blocks, let the $x_i$ be i.i.d.\ from a computable law and $y_i=t(x_i)$, and let $\Prob$ be the resulting computable measure, with a program $\pi_{\Prob}\in\Hcl{\mathrm{SI}}$. Then $\Ex_{\Prob}\sum_{i\le n}-\log\xi_\lambda(y_i\mid x_1y_1\cdots x_i)\le\lambda\ell_U+\kappa_0+\ell(\pi_{\Prob})$.
+\end{enumerate}
+\end{theorem}
+
+\emph{Proof idea.} (a) A $\lambda$-MAP is at least as good as $\pi_U$, and (Dom) bounds its gain in fit by $\ell(\hat\pi)+\kappa_0$, so $(\lambda-1)\ell(\hat\pi)\le\lambda\ell_U+\kappa_0$. (b) Keep one term of the mixture. (c) Telescope $\xi_\lambda(D_n)\ge2^{-\lambda\ell_U}U(D_n)$; for (c3), each of the finitely many short programs either has bounded loss along the sequence or is eventually beaten by $\pi_U$. (d) is Solomonoff's bound \citep{solomonoff1978complexity} restricted to the label positions (\cref{app:absorb:absorption}).
+
+On one data set (Dom) also flattens the hull of \cref{lem:setup:hull}: every left kink $(\sigma,w)$ (\cref{def:kink:kinks}) at a reference point $(\alpha_{\rm r},L_{\rm r})$ with $\alpha_{\rm r}-w>\ell_U$ has $\sigma\le1+(\ell_U+\kappa_0)/(\alpha_{\rm r}-\ell_U)$ (\cref{prop:kink:universal}), so no steep change of slope far beyond $\ell_U$ can single out a model.
+
+\begin{remark}[Reading]\status{remark; known}\src{steeper remarks after Thm 1}\label{rem:absorb:reading}
+Part (a) is the absorption objection made exact. The threshold $\ell^*_\lambda=\ell_U+(\ell_U+\kappa_0)/(\lambda-1)$, that of the earlier report \citep{claude2026whatfollows}, tends to $\ell_U$, not $0$, as $\lambda\to\infty$; a model of millions of bits is longer than $\ell_U$ for any reasonable reference machine. For adaptive or non-computable inputs, $\Hcl{\mathrm{chr}}$ replaces (d). Part (c3) has no explicit rate; explicit online bounds for two-part MDL are in general exponentially worse than for Bayes mixtures \citep{poland2005asymptotics}.
+\end{remark}
+
+\subsection{No split with shared randomness}\label{sec:split:shared}
+
+A \emph{sampler} is a probability kernel $\nu$ (\cref{def:split:setting}); here it has a program $\pi_\nu$ of length $k$ in the class considered, so in the canonical classes it is a computable conditional measure. The first reason for a steeper penalty is to select $\pi_\nu$, model plus noise, not a \emph{fill-in}, a deterministic program storing the sampled labels (\cref{sec:recovery}). With shared randomness no long sampler is selected.
+
+\begin{theorem}[SI, or the one-tape version of SOI, $\lambda>1$]\status{proved; computed}\src{steeper Thm 5; split/kink Prop 3.5; check c4(C); referee r4, q4(A)}\label{thm:split:shared}
+Assume (Dom) and $\xi_1\le2^{\kappa_1}U$, let $\lambda>1$, and let $\pi_\nu$ be a program of length $k$ for a sampler in the class. For every observation $o$ with $U(o)>0$:
+\begin{enumerate}[label=(\roman*),itemsep=0pt,topsep=2pt]
+\item if $(\lambda-1)k>\lambda\ell_U+\kappa_0$, then $J_\lambda(\pi_U;o)<J_\lambda(\pi_\nu;o)$: the sampler program is never a $\lambda$-MAP, and every $\lambda$-MAP has length at most $\ell^*_\lambda<k$;
+\item for every nonempty set $A$ of programs, $\Pi_\lambda(A\mid o)\le2^{-(\lambda-1)\min_{\pi\in A}\ell(\pi)+\lambda\ell_U+\kappa_1}$; in particular the power posterior puts at most $2^{-(\lambda-1)\bar\ell+\lambda\ell_U+\kappa_1}$ on all programs of length at least $\bar\ell$.
+\end{enumerate}
+(For SI with adaptive or non-computable inputs the sampler, which does not model the inputs, is not an SI hypothesis; use $\Hcl{\mathrm{chr}}$ with $U=\MH$. With i.i.d.\ computable inputs, $\Hcl{\mathrm{SI}}$ with $U=M$ works.)
+\end{theorem}
+
+\emph{Proof idea.} (i) is \cref{thm:absorb:absorption}(a) plus one comparison: by (Dom), $\pi_U$ fits at most $k+\kappa_0$ bits worse than $\pi_\nu$ and is $k-\ell_U$ bits shorter. (ii) bounds the numerator by $2^{-(\lambda-1)\min_A\ell}\xi_1(o)$ and the normaliser by $2^{-\lambda\ell_U}U(o)$ (\cref{app:split:shared}).
+
+So in a shared class the steeper posterior lives on short programs whatever the data, while in the product class it concentrates on programs equivalent to the sampler (\cref{thm:recovery:main}(b), \cref{thm:split:private}(iv)), whose length is unbounded over samplers. The difference is \emph{what the selected hypothesis is}: a model plus private noise, or a short universal learner that contains no model of $\nu$ (\cref{ex:split:noisyparity}). In SI's representation by deterministic programs no complexity weight separates a sampler from its fill-ins (\cref{rem:split:siprograms}).
+
+\subsection{Private randomness: no hypothesis absorbs anything}\label{sec:absorb:private}
+
+On distinct inputs a product hypothesis pays its likelihood term at every input: for a finite set $F$ of functions and any law $Q$ on $F$, some $f\in F$ costs it at least $\sum_iH(Q_{x_i})$ bits, with $Q_x$ the law of $f(x)$. On the parities of $\{0,1\}^d$, at nonzero inputs, it pays at least $n$ bits on some parity, where the shared Bayes mixture over parities pays at most $d$ (\cref{prop:absorb:pricing} in \cref{app:absorb:pricing}).
+
+\begin{corollary}[No universal product hypothesis]\status{proved}\src{steeper Cor 1.4}\label{cor:absorb:nouniversal}
+For every product hypothesis $\nu_U$ and every $d\ge1$ there are a data set $D$ with $\dom D=\{0,1\}^d\setminus\{0^d\}$ and a deterministic $f\supseteq D$ with a program of length at most $d+2\log d+\kappa$ such that $\nu_U(D)\le2^{-(2^d-1)}$. Hence for every $C$ there are such $D$ and $f$ with $\nu_U(D)<2^{-C}2^{-\ell(\pi_f)}f(D)$, and (Dom) fails in $\Hcl{\times}$, and in every product class that contains, for every $d$, programs of length at most $d+2\log d+\kappa$ for the parities on $\{0,1\}^d$.
+\end{corollary}
+
+\begin{proof}
+Take the parity given by \cref{prop:absorb:pricing}(ii) on which $\nu_U$ loses at least $2^d-1$ bits; it is described by $d$ and $a\in\{0,1\}^d$, and (F5) gives the length bound. Choose $d$ with $2^d-1-d-2\log d-\kappa>C$.
+\end{proof}
+
+The natural candidate for a universal product hypothesis, the universal lsc conditional semimeasure, pays a constant at every input and never learns (\cref{rem:absorb:condsemi}).
+
+\subsection{Why private randomness, and what it costs}\label{sec:absorb:price}
+
+We therefore apply the steeper prior to Solomonoff's per-query solution, over $\Hcl{\times}$, whose $\lambda\to1$ limit is $\Mprod$, not $\MF$ (\cref{rem:absorb:why} gives the reasons and the cost at $\lambda=1$). At $\lambda>1$ the price is a constant factor on randomness shared by several inputs. On data $D_\beta$ that show each of $s$ fair coins $\beta_i$ on two inputs, every product program has $J_\lambda(\pi;D_\beta)\ge\min(\lambda,2)\,(K(\beta\mid s)-\kappa)$, while $-\log\MF(D_\beta)\le s+\kappa$ (\cref{prop:absorb:price}). A product class pays for such a coin either as model, at $\lambda$ bits, or as noise at every input that shows it; a shared class pays one bit. Persistent latent causes, such as a per-batch coin, are of this kind.
+
+The protection also depends on what an input is. If inputs contain the earlier labelled pairs of their block, an in-context Bayes mixture is one product hypothesis that pays its best member's log-weight once per block (\cref{prop:absorb:history}); if they contain only the earlier inputs, pricing stays per input (\cref{prop:absorb:inputs}); with shared randomness (the history-aware version \SFIhist{}) \cref{thm:absorb:absorption} applies with $U=\MH$.
+
+\subsection{Answer to the absorption objection}\label{sec:absorb:answer}
+
+\begin{remark}[Answer to the absorption objection]\status{remark; cites proved results}\src{steeper \S1.8}\label{rem:absorb:wyeth}
+(i) \emph{The objection is correct wherever a universal hypothesis is one member of the class}: in SI, in the one-tape version of SOI, in the weak class and in the history-aware version \SFIhist{}. There every $\lambda$-MAP has length at most $\ell^*_\lambda$ and fits almost as well as $U$; for fixed $\lambda$ it reproduces a deterministic teacher's errors (\cref{thm:absorb:absorption}(c)); no sampler longer than $\ell^*_\lambda$ is selected (\cref{thm:split:shared}); with $\lambda=cn$, $\ell^*_\lambda\to\ell_U$. (ii) \emph{The construction is unavailable in $\Hcl{\times}$}, the class of Solomonoff's per-query solution. No product hypothesis is universal (\cref{cor:absorb:nouniversal}), the universal conditional semimeasure never learns (\cref{rem:absorb:condsemi}), and seeing earlier inputs does not help while the randomness stays private (\cref{prop:absorb:inputs}). (iii) \emph{The restriction has a price and a boundary}: randomness shared across inputs costs more, and the protection ends where hypotheses see labelled history (\cref{rem:absorb:why,prop:absorb:price,prop:absorb:history}). (iv) \emph{Algorithmic statistics}: the $d$-bit parameter of a noisy random parity is noise for set models, which share their randomness, and model for product models (\cref{prop:algstat:parity,prop:parity:kink,prop:parity:sets}).
+The restriction is a modelling choice, supported by two reasons: the product hypotheses are exactly the computably samplable predictors that use different random bits on different inputs, which the one-tape version dominates \citep[Theorem~5.1(a)]{claudeSFI2026fundamentals};% P1: thm:learn:dominance
+\ and in supervised learning the model is naturally the part of the description that is reused across inputs.
+\end{remark}
+
+\begin{question}[shared hypotheses]\status{open}\src{steeper \S1.4; companion paper q:setting:rpf}\label{q:absorb:shared}
+Is every lower-semicomputable law of a random partial function dominated by $\MF$ up to a constant factor? This question of the companion paper \citep[Question~3.14]{claudeSFI2026fundamentals} % P1: q:setting:rpf
+decides which laws with shared randomness the class $\Hcl{F}$ covers; \cref{thm:absorb:absorption} holds for $\Hcl{w}$ and for $\Hcl{F}$ either way.
+\end{question}

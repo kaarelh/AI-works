@@ -1,0 +1,126 @@
+% Appendix B (writer: setting). Proofs for sec:versions. Source: research/tracks/foundations/notes-final.md §4 (and notes.md Prop 4.4 for the hashing proof); context Prop 5.4.
+\section{Proofs for Section~\ref{sec:versions} (Kolmogorov and semimeasure versions)}\label{app:versions}
+
+Notation is that of \cref{sec:setting:data,sec:versions}.
+
+\subsection{The variants and the chain}\label{app:versions:chain}
+
+\begin{remark}[Why $W$'s programs delimit themselves before reading the input]\status{proved}\src{foundations remark after Def 4.1; context \S1.1}\label{rem:versions:Wdelim}
+With this choice $W$ is the containment functional of the random partial function ``draw $p$ with probability $2^{-|p|}$, output $\varphi_{V(p)}$'': a mixture of fixed functions with input-independent weights. Summing $2^{-|p|}$ over the programs of a conditional prefix machine $V(p,x)$ is a different object: for each $x$ the halting programs form a prefix-free set, but their union over $x$ need not, so the weights define no prior over functions. Reading a conditional program lazily from one shared tape does give a random function, the function machine $x\mapsto V(\omega,x)$; it is a machine law of complexity $O(1)$, but not a countable mixture of partial computable functions with input-independent weights, and on single points it gives $2^{-K(y\mid x)\pm O(1)}$ (\cref{thm:setting:coding}(c)). The two notions of conditional complexity are close: with $\KP(z\mid x):=\min\{|h|:h\in\dom V,\ \varphi_{V(h)}(x)=z\}$,
+\[
+K(z\mid x)-c\ \le\ \KP(z\mid x)\ \le\ K(z\mid x)+K(K(z\mid x))+c,
+\]
+since every $h\in\dom V$ is a conditional program, and a conditional program prefixed with a self-delimiting code of its length delimits itself without reading $x$.
+\end{remark}
+
+\begin{proof}[Proof of \cref{thm:versions:chain}]
+(1) The shortest consistent program is one term of $W$. (2) $\delta_e(y\mid x):=\ind[\varphi_e(x)=y]$ is a conditional semimeasure, lsc uniformly in $e$; let $g$ be computable with $P_{g(e)}=\delta_e$. Then $i\mapsto\sum_{e:g(e)=i}\mm(e)$ is an lsc discrete semimeasure, so $\mm(i)\ge2^{-O(1)}\sum_{e:g(e)=i}\mm(e)$, and $\Mprod(D)\ge2^{-O(1)}\sum_e\mm(e)\ind[\varphi_e\supseteq D]=2^{-O(1)}W(D)$. (3) $\Mprod$ is an lsc mixture of product laws, a machine law (\cref{prop:setting:includes}(a,d)); apply \cref{thm:setting:universal}. (4) \Cref{thm:setting:weakvsmachine}(i). (5) $\KF(D)\le K(D)+O(1)$ (lookup table), $K(D)\le K(\dom D)+K(D\mid\dom D)+O(1)$, and $K(D\mid\dom D)\le-\log\Mw(D)+O(1)$ by the conditional coding theorem applied to $E\mapsto\Mw(E)$ on data sets with domain $\dom D$, whose total is at most $1$ ((W2) after \cref{def:setting:weak}).
+\end{proof}
+
+\subsection{Programs that cannot separate inputs}\label{app:versions:Wgap}
+
+\begin{proof}[Proof of \cref{prop:versions:Wgap}]
+$\Omtail{\ell}\to0$ because $\sum_{p\in\dom V}2^{-|p|}\le1$.
+
+(a) Let $E_\ell$ be the set of indices $V(p)$ with $|p|<\ell$; it has fewer than $2^\ell$ elements. Colour $x\in\{0,1\}^d$ by $(\chi_e(x))_{e\in E_\ell}$, where $\chi_e(x)=\varphi_e(x)$ if this is $0$ or $1$ and $\chi_e(x)=*$ otherwise. There are at most $3^{2^\ell}$ colours, so if $2^d>3^{2^\ell}$ two distinct strings $x_1,x_2$ share a colour. No $e\in E_\ell$ has $\varphi_e(x_1)=0$ and $\varphi_e(x_2)=1$, so $W(\{(x_1,0),(x_2,1)\})\le\Omtail{\ell}$. Choose $\ell$ with $\Omtail{\ell}\le\varepsilon$, then $d$ with $2^d>3^{2^\ell}$. For the lower bounds, the uniform product law $P(0\mid x)=P(1\mid x)=\frac12$ has complexity $O(1)$ and gives every two-point binary data set probability $\frac14$; so $\Mprod(D)\ge2^{-O(1)}/4$, and $\MF\ge2^{-O(1)}\Mprod$ by \cref{thm:versions:chain}.
+
+(b) Fewer than $2^{d-1}$ programs have length at most $d-2$, and each gives at most one value at $0^d$. So at least $2^{d-1}$ strings $y\in\{0,1\}^d$ receive $W$-mass only from programs of length at least $d-1$. Each program contributes to at most one $y$, so these $W(\{(0^d,y)\})$ sum to at most $\Omtail{d-1}$, and one of them is at most $\Omtail{d-1}/2^{d-1}$. For the lower bound, $P(y\mid x):=2^{-|x|}\ind[|y|=|x|]$ is a computable conditional probability of complexity $O(1)$, so $\Mprod(\{(0^d,y)\})\ge2^{-O(1)}2^{-d}$.
+\end{proof}
+
+\begin{remark}[How fast the gap of $W$ grows]\status{proved; rate open}\src{foundations Rem 4.3a}\label{rem:versions:Wrate}
+Let $\ell_d:=\lceil\log(d/\log3)\rceil-1$, the largest $\ell$ with $3^{2^\ell}<2^d$. By \cref{prop:versions:Wgap}(a), some two-point binary $D$ on $d$-bit inputs has $-\log W(D)\ge\log(1/\Omtail{\ell_d})$. By \cref{prop:versions:tape}(b), every such $D$ has $-\log W(D)\le2+\Kpad(2^{d+1})+O(1)$. Both bounds are unbounded and both are of padded type, since $\log(1/\Omtail{\ell})\le\Kpad(\ell)+O(1)$. By \cref{prop:versions:tape}(c) the gap is at most $2\log(h(d)+2)+O_h(1)$ for every computable, nondecreasing, unbounded $h$. Its exact rate is open (\cref{q:versions:open}).
+\end{remark}
+
+\begin{proof}[Proof of the claims in \cref{rem:versions:Wrate}]
+$\ell_d$ is the largest $\ell$ with $2^\ell\log3<d$, i.e.\ with $3^{2^\ell}<2^d$. \emph{$\log(1/\Omtail{\ell})\le\Kpad(\ell)+O(1)$}: choose $L\ge\ell$ with $K(L)=\Kpad(\ell)$. The prefix machine that reads a $V$-program for $L$, then $L$ more bits, and halts, is simulated by $V$ with a fixed prefix $r$. The resulting elements of $\dom V$ have length at least $L\ge\ell$ and total weight $2^{L}\cdot2^{-|r|-K(L)-L}$, so $\Omtail{\ell}\ge2^{-\Kpad(\ell)-|r|}$. \emph{Rate}: apply \cref{prop:versions:tape}(c) with $g(N):=h(\max(0,\lfloor\log N\rfloor-1))$, which is computable, nondecreasing and unbounded; then $\Kpad(2^{d+1})\le2\log(h(d)+2)+O_h(1)$.
+\end{proof}
+
+\subsection{The tape-length bound and the hashing bound}\label{app:versions:tape}
+
+\begin{proof}[Proof of \cref{prop:versions:tape}]
+(a) \emph{Monotonicity and limit.} A prefix of $\omega_{1:L}$ is a prefix of $\omega_{1:L'}$ for $L'\ge L$. The event $f_\omega\supseteq D$ holds exactly when each of the finitely many pairs of $D$ has a certifying triple along $\omega$, and then all of them lie within the longest one; so $\{f_\omega\supseteq D\}=\bigcup_L\{\text{certified within }L\text{ bits}\}$, an increasing union.
+
+\emph{The bound.} Fix $L'\ge L$ with $K(L')=\Kpad(L)$. For $w\in\{0,1\}^{L'}$ let $\varphi_{T,w}(x):=y$ if some $(x,w',y)\in T$ has $w'$ a prefix of $w$, and undefined otherwise. This is well defined because $T$ is consistent and any two prefixes of $w$ are comparable, and it is partial computable (enumerate $T$). Let $V'$ be the prefix machine that reads a $V$-program for an index $i$ of $T$, then a $V$-program for $L'$, then $L'$ further bits $w$, and outputs an index of $\varphi_{T_i,w}$; its domain is prefix-free. By universality $V(rs)=V'(s)$ for a fixed string $r$. With shortest programs $q_i,q_{L'}$, the strings $r\,q_i\,q_{L'}\,w$, $w\in\{0,1\}^{L'}$, are distinct elements of $\dom V$, so
+\[
+W(D)\ \ge\ \sum_{w\in\{0,1\}^{L'}}2^{-|r|-K(T)-K(L')-L'}\,\ind[\varphi_{T,w}\supseteq D]\ =\ 2^{-|r|-K(T)-\Kpad(L)}\,\nu^{(L')}(D),
+\]
+and $\nu^{(L')}(D)\ge\nu^{(L)}(D)$.
+The consequence for $L_{1/2}$ is immediate, and $K(T_U)=O(1)$.
+
+(b) Apply (a) to the machine $F(x):=\omega_{j(x)+1}$, of complexity $O(1)$, whose law gives every binary-labelled $D$ probability $2^{-|D|}$. For $|x|\le d$ its certificates lie within the first $2^{d+1}-1$ tape bits, and $\Kpad(2^{d+1}-1)\le\Kpad(2^{d+1})$ since $\Kpad$ is nondecreasing. For the second inequality put $s:=\lceil\log(d+1)\rceil$ and $L'':=2^{2^s}\ge2^{d+1}$; then $\Kpad(2^{d+1})\le K(L'')\le K(s)+O(1)$.
+
+(c) $\Kpad$ is nondecreasing because the minimum runs over a shrinking set, and unbounded because only finitely many $L$ have $K(L)\le c$ for each $c$. $\Kpad(2^{2^s})\le K(2^{2^s})\le K(s)+O(1)$. For $g$: let $N^*:=\min\{N':g(N')\ge g(N)+1\}$. It exists because $g$ is unbounded, it exceeds $N$ because $g$ is nondecreasing, and it is computable from $g(N)+1$. So $\Kpad(N)\le K(N^*)\le K(g(N)+1)+c_g\le2\log(g(N)+2)+c'_g$, using $K(m)\le2\log(m+1)+O(1)$.
+\end{proof}
+
+\begin{remark}[A hashing bound]\status{proved; computed}\src{foundations Rem 4.4a; checks c2, r10}\label{rem:versions:hashing}
+\Cref{prop:versions:tape}(b) is stronger; this bound uses a different construction. For every $D$ with labels in $\{0,1\}$, $|D|\le k$ and $\dom D\subseteq\{0,1\}^{\le d}$: $W(D)\ge2^{-|D|-K(d,k)-c}$. Here $K(d,k)\ge K(d)-O(1)\ge\Kpad(2^{d+1})-O(1)$, and \cref{prop:versions:tape}(b) does not depend on $|D|$. One might expect a logarithmic factor from $k$-wise independent hashing; that is the behaviour of $\KF$, not of $W$: for $\KF$ a logarithmic cost in $d$ occurs already on two points (\cref{thm:versions:nocoding}), and \cref{prop:versions:covering} bounds it by a covering argument rather than by hashing.
+\end{remark}
+
+\begin{proof}
+We may assume $k<2^{d+1}$, since $|\{0,1\}^{\le d}|<2^{d+1}$ (replacing $k$ by $\min(k,2^{d+1}-1)$ changes $K(d,k)$ by $O(1)$). Put $q:=d+1$ and fix, computably from $q$, an irreducible polynomial of degree $q$ over $\mathrm{GF}(2)$. Map $x\in\{0,1\}^{\le d}$ injectively to the element $z_x$ of $\mathrm{GF}(2^q)$ whose coefficient vector is the binary string $1x$. For a seed $s\in\mathrm{GF}(2^q)^k$ let $h_s(z)$ be the lowest bit of $\sum_{i<k}s_iz^i$. For distinct $z_1,\dots,z_k$ the Vandermonde map $s\mapsto(\sum_is_iz_l^i)_{l\le k}$ is a bijection of $\mathrm{GF}(2^q)^k$, so for uniform $s$ the values at any $j\le k$ distinct points are uniform and independent, and so are their lowest bits. Hence $\Pr_s[h_s(z_x)=y\ \forall(x,y)\in D]=2^{-|D|}$. Let $V'$ read a $V$-program for $(d,k)$, then $kq$ further bits $s$, and output an index of $x\mapsto h_s(z_x)$ on $\{0,1\}^{\le d}$; its domain is prefix-free. With $V(rs')=V'(s')$, summing over the $2^{kq}$ seeds gives $W(D)\ge2^{-|r|-K(d,k)}\,\Pr_s[\cdots]=2^{-|r|-K(d,k)-|D|}$.
+\end{proof}
+
+\subsection{Shared randomness}\label{app:versions:shared}
+
+\begin{proof}[Proof of \cref{prop:versions:shared}]
+$\nulen$ is the law of the function machine $\{(x,w,b):|w|=|x|+1,\ w_{|x|+1}=b\}$, of complexity $O(1)$. Suppose $\Mprod\ge\gamma\,\nulen$ for some $\gamma\in(0,1]$. Put $\varepsilon:=\gamma/8$, write $\Mprod=\sum_iw_i\nu_{P_i}$ with $w_i=\mm(i)$, and choose $J$ with $\sum_{i>J}w_i\le\varepsilon$. For $n\ge1$ let $a_n:=0^n$, $b_n:=1^n$, and $s_i(n,y):=P_i(y\mid a_n)P_i(y\mid b_n)$ for $y\in\{0,1\}$.
+
+\emph{Compactness.} Choose an infinite set of lengths along which $P_i(y\mid a_n)\to\alpha_i(y)$ and $P_i(y\mid b_n)\to\beta_i(y)$ for all $i\le J$ and $y\in\{0,1\}$. Let $S_i:=\alpha_i(0)\beta_i(0)+\alpha_i(1)\beta_i(1)\le\max_y\alpha_i(y)\cdot(\beta_i(0)+\beta_i(1))\le1$. If $S_i=1$, then $\max_y\alpha_i(y)=1$, so $\alpha_i=\delta_{y_i}$ for some $y_i$, and then $\beta_i(y_i)=1$, so $\beta_i=\delta_{y_i}$. Let $I_1:=\{i\le J:S_i=1\}$, $I_0:=\{i\le J:S_i<1\}$ and $\varrho:=\max_{i\in I_0}(1+S_i)/2<1$ ($\varrho:=0$ if $I_0$ is empty).
+
+\emph{Subsequence.} Choose lengths $n_1<n_2<\cdots$ from that set such that, for every $j$, $s_i(n_j,0)+s_i(n_j,1)\le\varrho$ for $i\in I_0$, and $s_i(n_j,1-y_i)\le\varepsilon'2^{-j}$ for $i\in I_1$, where $\varepsilon':=\varepsilon/2$.
+
+\emph{Data.} For $b\in\{0,1\}^k$ let $D_b:=\{(a_{n_j},b_j),(b_{n_j},b_j):j\le k\}$. Then $\nulen(D_b)=2^{-k}$. All $D_b$ have the same domain, so $\sum_b\nu_{P_i}(D_b)=\prod_j\big(s_i(n_j,0)+s_i(n_j,1)\big)\le1$ for every $i$.
+
+\emph{Count.} Let $B_k$ be $\{0,1\}^k$ without the two constant vectors. For $i\in I_1$ and $b\in B_k$ the set $T_b:=\{j:b_j\ne y_i\}$ is nonempty, so $\prod_js_i(n_j,b_j)\le\prod_{j\in T_b}\varepsilon'2^{-j}$, and $b\mapsto T_b$ is injective; hence $\sum_{b\in B_k}\prod_js_i(n_j,b_j)\le\prod_j(1+\varepsilon'2^{-j})-1\le e^{\varepsilon'}-1\le2\varepsilon'$. Therefore
+\[
+\textstyle\sum_{b\in B_k}\Mprod(D_b)\ \le\ \sum_{i>J}w_i+\sum_{i\in I_0}w_i\varrho^k+\sum_{i\in I_1}w_i\,2\varepsilon'\ \le\ \varepsilon+\varrho^k+\varepsilon\ \le\ 3\varepsilon
+\]
+once $\varrho^k\le\varepsilon$. But $\sum_{b\in B_k}\gamma\,\nulen(D_b)=\gamma(1-2^{1-k})\ge\gamma/2=4\varepsilon$ for $k\ge2$, a contradiction. ($\MF\ge2^{-O(1)}\nulen$ by \cref{thm:setting:universal}, so $\MF/\Mprod$ is unbounded.)
+\end{proof}
+
+For \cref{rem:versions:sharedsize}: the machine above certifies the labels of all inputs of length at most $d$ within $\omega_{1:d+1}$, so $\nulen^{(d+1)}=\nulen$ on such data, and \cref{prop:versions:tape}(a) with \cref{thm:versions:chain} gives $\Mprod(D)\ge2^{-O(1)}W(D)\ge2^{-\Kpad(d+1)-O(1)}\nulen(D)$.
+
+\subsection{No coding theorem; the covering bound}\label{app:versions:nocoding}
+
+\begin{proof}[Proof of \cref{thm:versions:nocoding}]
+(i) Let $g:=\ell_d=\lceil\log(d/\log3)\rceil-1$, so that $3^{2^g}<2^d$. Fewer than $2^g$ programs have length less than $g$; let $E$ be the set of their indices $V(p)$. Colour $x\in\{0,1\}^d$ by $(\chi_e(x))_{e\in E}\in\{0,1,*\}^E$ as in \cref{prop:versions:Wgap}. There are at most $3^{|E|}<2^d$ colours, so two distinct $x_1,x_2$ share a colour, and no $e\in E$ has $\varphi_e(x_1)=0$, $\varphi_e(x_2)=1$. So $\KF(D)\ge g\ge\log d-\log\log3-1>\log d-2$.
+(ii) \Cref{prop:versions:tape}(b) with $|D|=2$.
+(iii) The uniform product law, as in \cref{prop:versions:Wgap}.
+For the last claim: by (i), $\log d\le\KF(D)+2$, so $\lceil\log(d+1)\rceil\le\KF(D)+4$; and $K(m)\le\log m+2\log\log m+O(1)$ for $m\ge2$.
+\end{proof}
+
+In terms of sets of programs: with $S_D:=\{e:\varphi_e\supseteq D\}$, $W(D)=\mm(S_D)$ and $\KF(D)=\min_{e\in S_D}K(e)$; on the lowest complexity of the elements of a set cf.\ \citet{levin2016occam,epstein2011sets}. For binary sequences the analogous comparison is between monotone complexity and $-\log M$ (cf.\ \citealp{gacs1983relation,day2011increasing}).
+
+\begin{proof}[Proof of \cref{cor:versions:twopoint}]
+Lower bound: \cref{thm:versions:nocoding}(i),(iii). Upper bound: $\LSFI(D)\ge0$, and \cref{prop:versions:covering} with $k=2$ gives $\KF(D)\le2+\log(2(d+2))+K(\lceil\log(d+2)\rceil,2)+O(1)$.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:versions:covering}]
+Put $s:=\lceil\log(d+2)\rceil$ and $d':=2^s-2\ge d$; then $d'+2<2(d+2)$. There are at most $\binom{2^{d'+1}-1}{k}2^k\le2^{k(d'+2)}$ binary-labelled data sets of size $k$ on $\{0,1\}^{\le d'}$. Put $N_{\rm cov}:=\lfloor2^kk(d'+2)\ln2\rfloor+1$. $N_{\rm cov}$ independent uniform truth tables on $\{0,1\}^{\le d'}$ all miss a fixed such $D$ with probability $(1-2^{-k})^{N_{\rm cov}}<e^{-N_{\rm cov}2^{-k}}\le2^{-k(d'+2)}$. By the union bound the expected number of uncovered data sets is below $1$, so some family of $N_{\rm cov}$ truth tables covers all of them. The lexicographically first such family is computable from $(d',k)$, hence from $(s,k)$, by exhaustive search. A program consists of a $V$-program for $(s,k)$ followed by a $\lceil\log N_{\rm cov}\rceil$-bit index (its length is computable from $(s,k)$, so the program is self-delimiting); it outputs an index of the chosen truth table, undefined off $\{0,1\}^{\le d'}$. Its length is at most $K(s,k)+\log N_{\rm cov}+1+O(1)$, and $\log N_{\rm cov}\le k+\log(k(d'+2))\le k+\log(k(d+2))+1$. For the consequence, $\LSFI(D)\ge K(D\mid\dom D)-O(1)=k-\delta_D-O(1)$ by \cref{thm:setting:coding}(a).
+\end{proof}
+
+Explicit two-point coverings also exist (cf.\ \citealp{kleitman1973families}): the $\lfloor N/2\rfloor$-subsets of $\{0,\dots,N-1\}$ that contain $0$, read as $N$ functions on $\binom{N-1}{\lfloor N/2\rfloor-1}$ inputs, show all four label patterns on every pair of inputs.
+
+\begin{remark}[Witnesses of large gaps cannot be computable]\status{proved}\src{foundations Rem 4.10}\label{rem:versions:noncomputable}
+If $k\mapsto D_k$ is computable, then $\KF(D_k)\le K(k)+O(1)$, so the five quantities of \cref{thm:versions:chain}, all between $2^{-\KF(D_k)-O(1)}$ and $1$, agree on $D_k$ up to $K(k)+O(1)$ bits; if $D_d$ has $d$-bit inputs and $d\mapsto D_d$ is computable, they agree up to $O(1)$. So the witnesses of \cref{prop:versions:Wgap,thm:versions:nocoding} and \cref{thm:setting:weakvsmachine}(iii) are non-constructive by necessity; \cref{thm:setting:weakvsmachine}(iv) is an explicit family with a linear gap on average.
+\end{remark}
+
+\begin{question}\label{q:versions:explicit}
+Is there a computable family $k\mapsto D_k$ along which some gap of \cref{tab:versions:compare} between the five quantities of \cref{thm:versions:chain} tends to infinity (necessarily no faster than $K(k)$)?
+\end{question}
+
+\subsection{Structured outputs and the history-aware version}\label{app:versions:structured}
+
+\begin{proposition}[Single queries and structured outputs]\status{proved}\src{context Prop 5.4(3),(4)}\label{prop:versions:structured}
+Let $M(\cdot\mid x)$ be the universal monotone semimeasure given $x$, over the alphabet $\{0,1,\$\}$: Solomonoff induction predicting an output $y$ symbol by symbol after $x$. Then $2^{-K(y\mid x)}\le2^cM(y\mid x)$; but $M(0^d\mid\epsilon)\ge2^{-c}$, while $2^{-K(0^d)}=2^{-K(d)\pm O(1)}$. With an end marker, $M(y\$\mid x)=2^{-K(y\mid x)\pm O(1)}$.
+\end{proposition}
+
+Since $\LSFI(\{(x,y)\})=K(y\mid x)\pm O(1)$ (\cref{thm:setting:coding}(c)), on a single query the one-tape version treats an output as a complete object: it commits to where the output ends and pays for its length, while sequence induction on an undelimited output does not. With delimiters the two agree up to constants; across many examples they differ in how information is shared (\cref{sec:hist}).
+
+\begin{proof}[Proof of \cref{prop:versions:structured}]
+A conditional prefix program for $y$ given $x$ is a monotone program, given $x$, that prints $y$; so $M(y\mid x)\ge2^{-c}\sum_{q:V(q,x)=y}2^{-|q|}\ge2^{-K(y\mid x)-c}$. A constant program prints $0^\infty$, so $M(0^d\mid\epsilon)\ge2^{-c}$, while $K(0^d)=K(d)\pm O(1)$. For the end marker, ``$\ge$'' is the first claim applied to $y\$$, with $K(y\$\mid x)=K(y\mid x)\pm O(1)$. For ``$\le$'': the strings $y\$$, $y\in\{0,1\}^*$, are pairwise incomparable, so their cylinders are disjoint and $\sum_yM(y\$\mid x)\le1$; $y\mapsto M(y\$\mid x)$ is lsc uniformly in $x$, and the conditional coding theorem gives $M(y\$\mid x)\le2^{-K(y\mid x)+c}$.
+\end{proof}
+
+\begin{remark}[The same gap for the history-aware version]\status{proved}\src{history Prop 4.10(d)}\label{rem:versions:hist}
+For \SFIhist{} the two versions also differ unboundedly: on fair-coin labels $\Whist$ pays at most $\Ktail(n)+c\le g(n)+K(g)+c$ extra bits for every computable, nondecreasing, unbounded $g$, while for the worst labels the single shortest program pays more: along every input sequence, $\max_{y\in\{0,1\}^n}\Khist(y\Vert x_{1:n})-n>\log n+\log\log n$ for infinitely many $n$ (\cref{prop:hist:programs}(d)).
+\end{remark}

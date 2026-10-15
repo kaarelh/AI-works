@@ -1,0 +1,109 @@
+% Appendix G (writer W6, Paper 2 restructure of 2026-10-13, research/paper-review/restructure/PLAN.md). Base: app-limits.tex
+% at dcb3a3a3 (writer steep-b). Proofs for sec:limits. Sources: research/tracks/steeper/notes-final.md §2.5-§2.6
+% (Props 2.11-2.17, Lemma 2.11a) and checks c3, c5, c6(A,G), c7(B,E); research/tracks/split/teacher/notes-final.md
+% Prop 2.1(d), Props 4.1, 4.2 and t3(A); research/tracks/split/verify-teacher.md §2.
+% Moved to app-teacher.tex (W5): app:limits:plain with the proof of prop:limits:plain. Cut: app:limits:method, rem:limits:method.
+% Local notation: the rates of the guard-erosion components are sigma_phi, sigma_G (hull-edge slopes, as in lem:setup:hull(v));
+% the population selection at slope c is pi_c (h_n is the per-query sample); sigma (no subscript) is a simulation prefix (DECISIONS §E).
+% Fix round (DECISIONS-restructure §3, RW6-01): app:limits:ood opens with the text of the former §9.3 and carries the alias
+% sec:limits:ood; the d_0 table (three rows) is replaced by one sentence with the 3-bit and 6-bit single-prefix rows.
+\section{Proofs for \texorpdfstring{\cref{sec:limits}}{Section \ref*{sec:limits}} (structured errors)}\label{app:limits}
+
+The setting is \cref{def:teacher:instance} with $B=\infty$ unless stated otherwise, so $\Lambda_1=2\log d+2\log m+\kappa$; (F1)--(F5) are the facts of \cref{app:setup:facts}, and (D1), (D2) the bounds of \cref{lem:teacher:twopart}.
+
+\subsection{Error envelopes}\label{app:limits:envelope}
+
+\begin{proof}[Proof of \cref{prop:limits:envelope}]
+\emph{The envelope.} Off $E_1$ the error inputs are those with prefix in $S_2$, a fraction $p_2$, so $R(\pi_e)=(1-p_1)H(p_2)$, and $p=p_1+(1-p_1)p_2$ with concavity of $H$ gives $H(p)\ge R_e$. The program $\pi_e$ needs $a$, $d$, $m$, a description of $S_1$ given $m$, and $s_2$, which gives the length bound.
+
+(i) Apply \cref{lem:kink:main} in the population reading ($L=L'=R$) with the reference point $(d+k_1+\kappa_e,R_e)$, bounded by $\pi_e$, so that $J_{\rm r}=J_e$; let $\mathcal N$ be the programs of level at least $2$ (level $\infty$ included) and $\mathcal M$ those of level $1$. By \cref{thm:teacher:main}(o) every program of $\mathcal N$ has $J_c\ge\Phi_2(c)>J_e(c)+\epsilon$, so $\lev(\pi)=1$; by (D1) with $s(1)=4$ every program of $\mathcal M$ has length at least $d-4-\Lambda_1$. \Cref{lem:kink:main}(iv) gives $R(\pi)\le R_e+\epsilon+c(k_1+\kappa_e+4+\Lambda_1)=R_e+\zeta$. Every $\epsilon$-near-optimal program has $J_c\le\Phi(c)+\epsilon\le J_e(c)+\epsilon$; so if $\zeta<H(p)-R_e$, which forces $c<c_{\rm env}$, it has $R<H(p)$.
+
+(ii) Write $R(\pi)=p_1R^{(1)}+(1-p_1)R^{(2)}$, with $R^{(1)}$ and $R^{(2)}$ the risks conditional on $E_1$ and off $E_1$, and put $x:=(1-p_1)R^{(2)}$. \emph{Coding $S_2$ given $S_1$.} For $z\notin S_1$ define $q_z(b)$ as in the proof of \cref{lem:teacher:coding} with $B=\infty$. Then $Q(S'):=\prod_{z\notin S_1}q_z(\ind_{S'}(z))$ is a lower-semicomputable semimeasure on subsets of $\{0,1\}^m\setminus S_1$, given $(\pi,a,m,S_1)$. For $z\notin S_1$ the teacher's label is $f_a\oplus\ind_{S_2}(z)$, so $-\log Q(S_2)=(2^m-s_1)R^{(2)}=2^mx$, and (F2) gives $K(S_2\mid a,\pi,S_1)\le2^mx+2\log m+\kappa$. \emph{Chain.} By (F3), (F1) and \cref{lem:teacher:list} with $t=1$, $K(a,S_2\mid S_1)\le\ell(\pi)+4+2\log d+2^mx+2\log m+\kappa$; by (F3) and (F4), $K(a,S_2\mid S_1)\ge K(a,S_2)-K(S_1)-\kappa\ge d+B_2-K(S_1)-\kappa$. With (D1),
+\[
+\ell(\pi)\ \ge\ d-4-\Lambda_1+\max\big\{0,\ B_2'-2^mx\big\},\qquad B_2':=\big(B_2-K(S_1)\big)^+ .
+\]
+\emph{Combination.} $J_c(\pi)=c\,\ell(\pi)+p_1R^{(1)}+x\le J_e(c)+\epsilon$ gives
+\[
+p_1R^{(1)}\le\zeta+(1-p_1)H(p_2)-\big[x+c\max\{0,B_2'-2^mx\}\big].
+\]
+Over $x\ge0$ the bracket is piecewise linear: $cB_2'+(1-c2^m)x$ for $x\le B_2'/2^m$, and $x$ beyond. Its minimum is $B_2'/2^m$ if $c2^m\ge1$ and $cB_2'$ if $c2^m<1$, that is, $\min(c,2^{-m})B_2'$. Hence $R^{(1)}\le\bar R_1$, and Jensen's inequality gives $e_1(\pi)\ge2^{-R^{(1)}}\ge2^{-\bar R_1}$.
+
+For $c\ge2^{-m}$, $(2^m-s_1)H(p_2)\le\log\binom{2^m-s_1}{s_2}+\log(2^m+1)$ gives $\bar R_1\le\big(\zeta+(\delta_2+\log(2^m+1)+K(S_1))/2^m\big)/p_1$ with $\delta_2:=\log\binom{2^m-s_1}{s_2}-B_2$.
+\end{proof}
+
+\emph{Numbers.} Take $d=100$, $m=20$, $p=2^{-10}$, $S_1=\{z:z_1=\dots=z_j=0\}$, so that $K(S_1\mid m)\le2\log(j+1)+\kappa$, and $S_2$ uniformly random, so that $\delta_2$ is small with high probability. With the machine constant set to $0$ (an illustration) unless stated, a direct computation (code in the accompanying repository) gives the following. For $j=11$ ($512$ cheap and $512$ random points), $\log\binom{2^m-s_1}{s_2}=6{,}364$, $H(p)-R_e=0.00510$ and $c_{\rm env}=6.98\cdot10^{-5}$ ($3.12\cdot10^{-5}$ at $\kappa=30$); for $j=13$ ($128+896$ points), $10{,}418$, $0.00123$ and $1.64\cdot10^{-5}$ ($0.746\cdot10^{-5}$). The share of the logarithmic width of the window $(2^{-m},c_{\rm hi}]$ of \cref{thm:teacher:main} below $c_{\rm env}$, $\log(c_{\rm env}2^m)/\log(c_{\rm hi}2^m)$, is $0.47$ and $0.31$ ($0.42$ and $0.24$ at $\kappa=30$). In both instances $J_e<\Phi_2$ on $(0,c_{\rm env}]$, as part (i) requires. From the relaxed bound, with $K(S_1)\le k_1+2\log m+\kappa$, the lower bound on $e_1$ at $c=1.01\cdot2^{-m}$ is $0.862$ and $0.544$ for $\delta_2=0$ ($0.839$ and $0.489$ for $\delta_2=20$); it falls to $0.042$ and $0.000$ at $c=3\cdot10^{-5}$. Against $L_S=11{,}710$ the deficiencies of the two rules are about $5{,}300$ and $1{,}300$ bits.
+
+\emph{Envelopes with density $\theta<1$.} If the cheap region contains errors with density $\theta$, the envelope predicts the error there with probability $\theta$, and the proof of (i) goes through with $R_e=p_1H(\theta)+(1-p_1)H(p_2)$ and the corresponding length. For $\theta>\frac12$ the envelope is a learned systematic error. Part (ii) is proved only for $\theta=1$.
+
+\subsection{Rate blindness: the criterion in the machine constant}\label{app:limits:robust}
+
+\begin{proof}[Proof of \cref{prop:limits:rateblind}]
+(i) $J_c(\pi_b)<J_c(\pi_g)$ if and only if $c<H(p)/(\ell(\pi_b)-\ell(\pi_g))$, and $J_c(\pi_{\rm coin})\le J_c(\pi_g)$ if and only if $c\ge(1-H(p))/(\ell(\pi_g)-\ell(\pi_{\rm coin}))$; under the hypothesis these ranges cover all $c>0$.
+
+(ii) Here $\lev(\pi)=1$, so $\ell(\pi)\ge d-4-\Lambda_1>\kappa\ge\ell(\pi_{\rm coin})$ by (D1) and $(\star)$. If $\ell(\pi_b)\le\ell(\pi)$, the memoriser beats $\pi$ at every $c$, since $R(\pi_b)=0<R(\pi)$; if $R(\pi)\ge1$, the coin beats or ties it at every $c$. Otherwise $0<\ell(\pi_b)-\ell(\pi)\le\lceil L_S\rceil+\kappa_b+4+\Lambda_1$, so the memoriser's secant $R(\pi)/(\ell(\pi_b)-\ell(\pi))$ is at least the left side of $(\star)$, and $\ell(\pi)-\ell(\pi_{\rm coin})\ge d-4-\Lambda_1-\kappa$, so the coin's secant $(1-R(\pi))/(\ell(\pi)-\ell(\pi_{\rm coin}))$ is at most the right side. Since $J_c(\pi_b)<J_c(\pi)$ for $c$ below the first secant and $J_c(\pi_{\rm coin})\le J_c(\pi)$ for $c$ at or above the second, these ranges cover all $c>0$. (iii) is \cref{thm:teacher:main}(iii).
+\end{proof}
+
+\begin{lemma}[The criterion is robust in the machine constant]\status{proved; computed}\src{steeper Lemma 2.11a; check c6(A)}\label{lem:limits:robust}
+Fix $m$ and $s_0$, let $\kappa$ bound the machine constants in $\Lambda_1$, $\kappa_b$ and $\ell(\pi_{\rm coin})$, and put $H:=H(p)$, $q:=(1-H)/H$, $\alpha_0:=2+4q$, $\beta_0:=4+2\log m+2\kappa+q(\lceil L_S\rceil+4\log m+2\log s_0+2\kappa+4)$ and $F(d):=d-\alpha_0\log d-\beta_0$. (i) For $d\ge1$, $(\star)$ holds if and only if $F(d)\ge0$. (ii) If $\beta_0\ge\alpha_0/\ln2$, then $\{d\ge1:F(d)\ge0\}=[d_0,\infty)$ for a unique real $d_0=d_0(\kappa)$. (iii) $d_0(\kappa)$ grows linearly in $\kappa$, with slope $(2+2q)(1+o(1))$.
+\end{lemma}
+
+\begin{proof}
+(i) With $B=\infty$, $\kappa_b=2\log d+2\log m+2\log s_0+\kappa$. The first denominator of $(\star)$ is positive. When the second is positive, $(\star)$ is equivalent to $H\,(d-4-\Lambda_1-\kappa)\ge(1-H)(\lceil L_S\rceil+\kappa_b+4+\Lambda_1)$; dividing by $H$, the difference of the two sides is
+\[
+d-4-2\log d-2\log m-2\kappa-q\big(\lceil L_S\rceil+4\log d+4\log m+2\log s_0+2\kappa+4\big)=F(d).
+\]
+Conversely, $F(d)\ge0$ implies $d-4-\Lambda_1-\kappa\ge F(d)+4q\log d+q(\lceil L_S\rceil+4)>0$, so the side condition holds as well. (ii) $F'(d)=1-\alpha_0/(d\ln2)$, so $F$ is strictly increasing on $[\alpha_0/\ln2,\infty)$ and tends to $\infty$. On $[1,\alpha_0/\ln2]$, $F(1)=1-\beta_0<0$ because $\beta_0\ge4$, and for $d>1$, $F(d)<d-\beta_0\le\alpha_0/\ln2-\beta_0\le0$. So $\{d\ge1:F(d)\ge0\}=[d_0,\infty)$ for the unique root $d_0>\alpha_0/\ln2$. (iii) $\beta_0$ is affine in $\kappa$ with slope $2+2q$, $\alpha_0$ does not depend on $\kappa$, and $d_0=\beta_0+\alpha_0\log d_0$. Taking the three constants equal to a common upper bound is legitimate because $(\star)$ only becomes harder to satisfy when any of them grows.
+\end{proof}
+
+A direct computation (code in the accompanying repository) gives $d_0(\kappa)$, the least integer $d$ with $F(d)\ge0$, at $\kappa=0$ (an illustration), $10$, $20$, $30$, $50$ and $100$: $49$, $90$, $130$, $169$, $245$ and $434$ for one $3$-bit prefix ($m=3$, $p=1/8$), and $450$, $639$, $823$, $1005$, $1364$ and $2248$ for one $6$-bit prefix ($m=6$, $p=1/64$); in each case $\beta_0\ge\alpha_0/\ln2$, and $(\star)$ fails at $d_0-1$ and holds at $d_0$.
+
+\subsection{Separable components, guard erosion, non-identifiability, input law}\label{app:limits:guard}
+
+\begin{proof}[Proof of \cref{prop:limits:separable}]
+The objective $c\,\ell+R$ is a sum over regions of $c$ times the extra length plus the risk on the region, with independent choices, so it is minimised region by region, by \cref{lem:setup:hull} in each; with two options, component $j$ lowers it if and only if $c\,k_j<r_j$. If a valid component with rate $\sigma_v$ is kept, then $c<\sigma_v\le\sigma_e$ (up to ties), so an error component with rate $\sigma_e$ is kept too. $J_c$ depends on the data only through the teacher's channel and the input law, which coincide in the two worlds.
+\end{proof}
+
+\begin{proposition}[Guard erosion]\status{proved; computed}\src{steeper Prop 2.13 (T5 Prop 4.4); checks c5(b), c6(G), c7(E); referee q1(I)}\label{prop:limits:guard}
+In a region of contexts a schema $\varphi$ is one of $n_{\rm st}$ possible steps. A guard $G$ splits the region into $G$-contexts (input mass $\mu(G)$), where the teacher plays $\varphi$ with probability $1-\epsilon_G+\epsilon_G/n_{\rm st}$ and every other step with probability $\epsilon_G/n_{\rm st}$, and $\neg G$-contexts (mass $\mu(\neg G)$), where it plays one fixed step other than $\varphi$. Over a common base, three options have extra lengths $0$, $k_\varphi$ and $k_\varphi+k_G$: ``none'' (uniform), ``unguarded $\varphi$'' (the $G$-context law everywhere) and ``guarded $\varphi$'' (the $G$-context law in $G$-contexts, uniform over the other $n_{\rm st}-1$ steps elsewhere). With $H_G$ the entropy of the $G$-context law, put $\sigma_\varphi:=(\mu(G)(\log n_{\rm st}-H_G)-\mu(\neg G)\log(1/\epsilon_G))/k_\varphi$ and $\sigma_G:=\mu(\neg G)(\log(n_{\rm st}/\epsilon_G)-\log(n_{\rm st}-1))/k_G$. If $\sigma_G<\sigma_\varphi$, then for every $c\in(\sigma_G,\sigma_\varphi)$ the unguarded rule is the unique selection, and it applies $\varphi$ where the teacher never did. Otherwise the selection goes from guarded to none.
+\end{proposition}
+
+\begin{proof}
+Per context, the expected log losses are $\log n_{\rm st}$ for ``none''; $H_G$ in $G$-contexts and $\log(n_{\rm st}/\epsilon_G)$ in $\neg G$-contexts for ``unguarded $\varphi$'', since the teacher's fixed step has probability $\epsilon_G/n_{\rm st}$ under the $G$-context law; and $H_G$ and $\log(n_{\rm st}-1)$ for ``guarded $\varphi$''. Relative to ``none'', the options are the points $(0,0)$, $(k_\varphi,-k_\varphi\sigma_\varphi)$ and $(k_\varphi+k_G,-k_\varphi\sigma_\varphi-k_G\sigma_G)$ in the (length, risk) plane, and adding back $\log n_{\rm st}$ makes \cref{lem:setup:hull} applicable. The middle point is a vertex if and only if $\sigma_\varphi>\sigma_G$, and it is then the unique minimiser for $c\in(\sigma_G,\sigma_\varphi)$ by \cref{lem:setup:hull}(iii); otherwise the selection switches between the outer points at $c=(k_\varphi\sigma_\varphi+k_G\sigma_G)/(k_\varphi+k_G)$.
+\end{proof}
+
+For $n_{\rm st}=64$, $\epsilon_G=0.05$, $\mu(G)=0.05$, $\mu(\neg G)=5\cdot10^{-4}$, $k_\varphi=22$ and $k_G=12$, a direct computation (code in the accompanying repository) gives $\sigma_\varphi=1.2226\cdot10^{-2}$ and $\sigma_G=1.8103\cdot10^{-4}$, so the unguarded rule is the unique selection on an interval spanning a factor of $67$ in $c$; for $\mu(G)=\mu(\neg G)=0.002$, $\sigma_\varphi<\sigma_G$ and the guard is never dropped. The teacher has noise $\epsilon_G$ in $G$-contexts; what it never does is apply $\varphi$ outside $G$.
+
+\begin{proposition}[$\lambda$ cannot be chosen from imitation data]\status{proved; computed; (i) known}\src{steeper Prop 2.14 (T5 Thm 4.3); check c5(c)}\label{prop:limits:noident}
+(i) Every strictly proper scoring rule has expected score on the teacher's data uniquely maximised by the teacher's channel $P^*(\cdot\mid x)$, errors included \citep{gneiting2007strictly}, so validation by such a score prefers the teacher's channel to the intended model. (ii) Along the population selection path the held-out log loss $R(\pi_c)$ of a minimiser $\pi_c$ of $J_c$ is nonincreasing as $c$ decreases, so log-loss validation over a grid of values of $c$ is minimised at the smallest, error-memorising, value. (iii) In the twin worlds of \cref{prop:limits:separable}, every rule that chooses $c$ from imitation data alone is wrong in one of them.
+\end{proposition}
+
+For the three hypotheses of \cref{rem:teacher:hanni}, with the machine constant set to $0$ (an illustration), a direct computation (code in the accompanying repository) gives the held-out losses $1.0$, $0.0112$, $0.0112$ and $0$ at $c=10^{-1},10^{-3},10^{-5},10^{-7}$.
+
+\begin{proof}
+(i) A scoring rule is strictly proper if, for each $x$, the expected score of a forecast $Q$ under $P^*(\cdot\mid x)$ is uniquely maximised at $Q=P^*(\cdot\mid x)$ \citep{gneiting2007strictly}; average over $x$. (ii) By \cref{lem:setup:hull}(ii), $c<c'$ implies $R(\pi_c)\le R(\pi_{c'})$. (iii) An imitation-only rule sees the same data distribution in both worlds, and \cref{prop:limits:separable} gives the same selection at every $c$; the selection that is right in one world keeps an error or drops a valid rule in the other.
+\end{proof}
+
+\begin{proposition}[The selection depends on the input law]\status{proved}\src{steeper Prop 2.15}\label{prop:limits:inputlaw}
+In the setting of \cref{prop:limits:separable}, let the inputs have law $\mu$ and let $\Delta_j$ be component $j$'s expected log-loss reduction per input of $X_j$. Then component $j$ is selected if and only if $\mu(X_j)\Delta_j>c\,k_j$. So the window that keeps a valid component $j$ and drops an error component $j'$ is $c\in(\mu(X_{j'})\Delta_{j'}/k_{j'},\,\mu(X_j)\Delta_j/k_j)$; it moves with $\mu$ and is empty once $\mu(X_{j'})/\mu(X_j)\ge\Delta_jk_{j'}/(\Delta_{j'}k_j)$, and after a shift to $\mu'$ a $c$ chosen in $\mu$'s window keeps the error if and only if $\mu'(X_{j'})\Delta_{j'}>c\,k_{j'}$.
+\end{proposition}
+
+\begin{proof}
+The population risk is $\sum_j\mu(X_j)\Ex[\text{loss}\mid x\in X_j]$, so choosing component $j$ changes $J_c$ by $c\,k_j-\mu(X_j)\Delta_j$; the other claims are rearrangements.
+\end{proof}
+
+\subsection{Unseen properties}\label{app:limits:ood}\label{sec:limits:ood}
+
+For $\MF$, a behaviour $b$ on a decidable set $Q$ absent from the training data gets probability at least $2^{-K(Q,b)-O(1)}$, where $K(Q,b)$ is the length of a shortest code for a decider of $Q$ and a program for $b$ \citep[Proposition~8.1]{claudeSFI2026fundamentals}.% P1: prop:ood:hanni
+\ In $\Hcl{\times}$ the bound becomes $2^{-\lambda(K(Q,b)+\kappa)}$, and programs that fit the training data equally well have posterior odds $2^{-\lambda(\ell(\pi_1)-\ell(\pi_2))}$ (\cref{prop:limits:ood}). With $\lambda=cn$ the bound degrades to $2^{-cn(K(Q,b)+\kappa)}$, and the shortest hypotheses that fit the training data decide the behaviour on $Q$: with a steeper prior the per-query solution extrapolates more reliably than the one-tape version if these hypotheses extrapolate well, and is more confidently wrong if they do not.
+
+\begin{proposition}[Steeper simplicity and unseen properties]\status{proved}\src{steeper Prop 2.16}\label{prop:limits:ood}
+In $\Hcl{\times}$, let $Q\subseteq X$ be decidable, $b$ partial computable, $D$ a data set with $\dom D\cap Q=\emptyset$, $Z\subseteq Q\cap\dom b$ finite, and $\lambda\ge1$. (i) A family of programs that answer $b(x)$ on $Q$ and run an arbitrary program of the class elsewhere (one for each such program) carries posterior mass exactly $2^{-\lambda(K(Q,b)+\kappa)}$, so all programs with this behaviour together carry at least this mass, and $\xi_\lambda(D\cup b|_Z)\ge2^{-\lambda(K(Q,b)+\kappa)}\xi_\lambda(D)$. (ii) If $\nu_{\pi_1}(D)=\nu_{\pi_2}(D)>0$, then $\Pi_\lambda(\pi_1\mid D)/\Pi_\lambda(\pi_2\mid D)=2^{-\lambda(\ell(\pi_1)-\ell(\pi_2))}$.
+\end{proposition}
+
+\begin{proof}
+(i) Let $V'$ be the prefix machine that reads a self-delimiting code $z$ of a pair (decider $q$ for $Q$, program $q'$ for $b$), then a program $\pi'\in\dom V$, and outputs an index of the conditional semimeasure that is the point mass at $b(x)$ (or $0$ while $b(x)$ is undefined) if $q$ accepts $x$, and $\nu_{\pi'}(\cdot\mid x)$ otherwise; it is lower semicomputable. By closure under prefix-free simulation (\cref{def:setup:class}) there is $\sigma$ with $V(\sigma z\pi')=V'(z\pi')$; let $\kappa:=|\sigma|$ and $|z|=K(Q,b)$. Distinct $\pi'$ give distinct programs $\sigma z\pi'$; since $\dom D\cap Q=\emptyset$ and $Z\subseteq Q\cap\dom b$, $\nu_{\sigma z\pi'}(D)=\nu_{\sigma z\pi'}(D\cup b|_Z)=\nu_{\pi'}(D)$. So $\sum_{\pi'}2^{-\lambda|\sigma z\pi'|}\nu_{\sigma z\pi'}(D)=2^{-\lambda(K(Q,b)+\kappa)}\xi_\lambda(D)$, which is the posterior mass claim, and the same sum with $D\cup b|_Z$ in place of $D$ is a lower bound for $\xi_\lambda(D\cup b|_Z)$. (ii) Equal likelihoods cancel in the ratio of posteriors, which leaves the ratio of the prior weights.
+\end{proof}
+
+At $\lambda=1$, (i) is \citet[Proposition~8.1(a)]{claudeSFI2026fundamentals} with $\Mprod$ in place of $W$ and $\MF$.% P1: prop:ood:hanni
+\ On a conjunction ladder \citep[Theorem~9.10 and Remark~G.11]{claudeSFI2026fundamentals},% P1: thm:comp:ladder, rem:comp:uniformties
+\ selecting a least-size consistent formula, a $\lambda$-MAP rule, makes exponentially many mistakes on some ordering for every tie rule, while the $\lambda\to\infty$ power posterior, uniform over those formulas, makes $O(d^2)$ Gibbs mistakes; the danger in \cref{prop:limits:ood}(ii) is sharpest for single-hypothesis selection.

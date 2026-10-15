@@ -1,0 +1,167 @@
+% Appendix for Section "learn" (writer: learn). Proofs adapted from research/tracks/foundations/notes-final.md §6
+% and research/tracks/context/notes-final.md §2.4, §5. The secondary remarks of the section are in app:learn:remarks.
+\section{Proofs for Section~\ref{sec:learn} (learning theorems)}\label{app:learn}
+
+Notation is that of \cref{sec:learn}; $\KL$ is in bits. For a probability $p$ and a sub-probability $q$ on $Y$: $\KL(p\|q)\ge-\log\sum_yq(y)\ge0$ (Jensen); and adding to $q$ one atom that carries its defect $1-\sum_yq(y)$ leaves $\KL(p\|q)$ unchanged and does not decrease $\|p-q\|_1$, so Pinsker's inequality gives
+\begin{equation}\label{eq:learn:pinsker}
+\|p-q\|_1^2\le2\ln2\cdot\KL(p\,\|\,q).
+\end{equation}
+In proofs about $\nu\in\{W,\MF\}$ we treat each hypothesis as a deterministic partial function: for $W$ a program $p$ with weight $2^{-|p|}$ and function $\varphi_{V(p)}$; for $\MF$ a tape $\omega$ with measure $\Unif$ and function $f_\omega$. Then $\nu(D)$ is the mass of the hypotheses that extend $D$.
+
+\subsection{Dominance}\label{app:learn:dominance}
+
+\begin{proof}[Proof of \cref{thm:learn:dominance}]
+\Cref{thm:setting:universal} gives $\MF\ge2^{-K(\nu)}\nu$, and \cref{prop:setting:order} gives $\LSFI(D_n)=-\log\MF(D_n)$ in every order. (a) The product law $\nu_P(D)=\prod_{(x,y)\in D}P(y\mid x)$ is a machine law with $K(\nu_P)\le K(P)+c$ (\cref{prop:setting:includes}(a)); it counts each input once, and the extra factors of repeats are at most~$1$. (b) \Cref{prop:setting:includes}(b). (c) \Cref{thm:setting:weakvsmachine}(ii),(iii); each domain of that family is determined by $k$ and a vector in $\{1,2,3\}^k$.
+\end{proof}
+
+\subsection{Merging}\label{app:learn:merging}
+
+\begin{proof}[Proof of \cref{thm:learn:merging}]
+\emph{Posterior given the past.} Fix $t$ and a history $h$ of length $t-1$ with positive probability (histories take countably many values). The event $\{h_{t-1}=h\}$ is $\{F\supseteq D_h\}$ intersected with an event that depends only on $(\xi_s)_{s<t}$: that the rule, fed the labels of $h$, produces the inputs of $h$. As $(\xi_s)$ is independent of $F$, given $h_{t-1}=h$ and $(\xi_s)_{s\le t}$ the law of $F$ is $\nu(\cdot\mid F\supseteq D_h)$. Since $x_t=s_t(h,\xi_t)$, $\Prob[y_t=y\mid h_{t-1},(\xi_s)_{s\le t}]=\nu(y\mid D_{t-1},x_t)$.
+
+\emph{One step.} Let $p:=\nu(\cdot\mid D_{t-1},x_t)$, a probability since $\nu$ is the law of a random total function, $q:=\MF(\cdot\mid D_{t-1},x_t)$, and $Z_t:=\log(p(y_t)/q(y_t))$. At a repeated input both are point masses at the stored label and $Z_t=d_t=0$. Otherwise the conditional expectation of $Z_t$ given the past is $d_t\ge0$.
+
+\emph{Integrability.} With $\log u\le(u-1)\log e$, the conditional expectation of $Z_t^-$ is
+\[\textstyle\sum_yp(y)\max\big(0,\log\frac{q(y)}{p(y)}\big)\le\log e\sum_y(q(y)-p(y))^+\le\log e.\] On every path the conditionals telescope, since $\nu(\emptyset)=\MF(\emptyset)=1$, and \cref{thm:learn:dominance} gives
+\[\textstyle\sum_{t\le n}Z_t=\log\big(\nu(D_n)/\MF(D_n)\big)\le K(\nu).\]
+Hence $\sum_tZ_t^+\le K(\nu)+\sum_tZ_t^-$, each $\Ex Z_t^+$ is finite, and linearity with the tower property gives $\sum_{t\le n}\Ex d_t=\Ex\log(\nu(D_n)/\MF(D_n))\le K(\nu)$.
+
+\emph{Consequences.} $\sum_td_t$ has finite expectation, so it is finite almost surely and $d_t\to0$ almost surely. Summing \eqref{eq:learn:pinsker} and taking expectations gives the $\ell_1$ bound.
+\end{proof}
+
+\subsection{Online-to-batch and noise}\label{app:learn:batch}
+
+\begin{proof}[Proof of \cref{thm:learn:batch}]
+(a) Labels are defined almost surely since $\mu(\dom\varphi)=1$. As $x_{t+1}\sim\mu$ is independent of $D_t$, $\Ex R(Q_t)=\Ex[-\log\MF(y_{t+1}\mid D_t,x_{t+1})]$ (a repeated input contributes~$0$). Summing over $t<n$ gives $\Ex\LSFI(D_n)\le K(\varphi)+c$ (\cref{thm:learn:dominance}(b)). By convexity of $-\log$, $R(\bar Q_n)\le\frac1n\sum_{t<n}R(Q_t)$. If $\bar Q_n(\varphi(x)\mid x)>\frac12$, then $\varphi(x)$ is the unique maximiser; elsewhere the loss is at least one bit, so Markov's inequality bounds that set's $\mu$-mass by $R(\bar Q_n)$.
+
+(b) Stamped inputs are distinct, so $\MF(\tilde D_n)=\prod_{t\le n}q_t(y_t\mid x_t)$. Given $\tilde D_{t-1}$ and $x_t$, $y_t\sim P(\cdot\mid x_t)$; so $Z_t:=\log(P(y_t\mid x_t)/q_t(y_t\mid x_t))$ has conditional expectation $\KL(P(\cdot\mid x_t)\|q_t(\cdot\mid x_t))$, and, $x_t\sim\mu$ being independent of the past, $\Ex Z_t=\Ex\,\Ex_\mu\KL(P\|q_t)$. The stamp-ignoring product law $\tilde P'(y\mid\langle x,t\rangle):=P'(y\mid x)$ is a machine law of complexity at most $K(P')+c$ (\cref{prop:setting:includes}(a)), so on every path $\sum_{t\le n}Z_t\le K(P')+c+\sum_{t\le n}W_t$ with $W_t:=\log(P(y_t\mid x_t)/P'(y_t\mid x_t))$.
+\emph{Integrability.} If $\Ex_\mu\KL(P\|P')=\infty$ there is nothing to prove. Otherwise, as for $Z_t^-$ above, $\Ex Z_t^-\le\log e$ and $\Ex W_t^-\le\log e$; with $\Ex W_t=\Ex_\mu\KL(P\|P')<\infty$ this gives $\Ex W_t^+<\infty$ and then $\Ex Z_t^+<\infty$. Linearity gives $\sum_{t\le n}\Ex\,\Ex_\mu\KL(P\|q_t)\le K(P')+c+n\,\Ex_\mu\KL(P\|P')$, and convexity of $\KL$ in its second argument (also for sub-probabilities) gives the bound for $\bar q_n$. An lsc conditional probability is computable, since $P(y\mid x)=1-\sum_{y'\ne y}P(y'\mid x)$ is also upper semicomputable (as in \cref{lem:setting:total}); take $P'=P$.
+For 0--1 loss, let $y^*$ be a Bayes label and $\hat y$ the maximiser of $\bar q_n(\cdot\mid x)$. As $\bar q_n(y^*\mid x)\le\bar q_n(\hat y\mid x)$, $P(y^*\mid x)-P(\hat y\mid x)\le[P(y^*\mid x)-\bar q_n(y^*\mid x)]+[\bar q_n(\hat y\mid x)-P(\hat y\mid x)]\le\|P(\cdot\mid x)-\bar q_n(\cdot\mid x)\|_1$. Apply \eqref{eq:learn:pinsker} and Jensen's inequality for the square root.
+
+(c) The product law of a computable conditional probability is a machine law of complexity at most $K(P)+c$ and the law of a random total function; apply \cref{thm:learn:merging}.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:learn:freshnoise}]
+(a) Two draws of $x_0$ with different labels have positive probability, and the second gets probability~$0$, because the stored label gets probability~$1$ in both conventions. (b) The labels at $x_0$ agree with probability $(1-\alpha)^n+\sum_{j\ge1}\binom nj\alpha^j(1-\alpha)^{n-j}\sum_yP(y\mid x_0)^j$. For $j\ge1$, $\sum_yP(y\mid x_0)^j\le p_{\max}^{j-1}$, so this is at most $(1-\alpha)^n+p_{\max}^{-1}(1-\alpha+\alpha p_{\max})^n$. (c) If some $x$ with $\mu(x)>0$ has two labels of positive probability, (a) gives infinite expected loss for $n\ge2$, while $P$'s is finite. Otherwise the label $\varphi(x)$ with $P(\varphi(x)\mid x)>\frac12$ can be found by search, so $\varphi$ is partial computable with $K(\varphi)\le K(P)+c$ and $\mu(\dom\varphi)=1$, and \cref{thm:learn:batch}(a) applies.
+\end{proof}
+
+\subsection{Solomonoff's per-query solution}\label{app:learn:perquery}
+
+\begin{proof}[Proof of \cref{prop:learn:perquery}]
+(a) Each term $\prod_tP_i(y_t\mid x_t)$ satisfies the two inequalities because $\sum_yP_i(y\mid x)\le1$; mixing with $\sum_i\mm(i)\le1$ preserves them; lower semicomputability is clear. The product is symmetric in the pairs, and on distinct inputs it is the definition of $\Mprod(D_n)$. On consistent sequences the factors at repeats are at most~$1$, which gives $\Mpq\le\Mprod(D_n)$, strictly when some term that is positive on $D_n$ has a factor below~$1$ at a repeat. A positive computable conditional probability (for $Y=\{0,1\}^*$, for instance $P(y\mid x)=2^{-2|y|-1}$) is a term with positive weight, so every sequence gets positive mass.
+(b) $\mm(i)\ge2^{-K(i)}$ for an index $i$ of $P$.
+(c) The product of the predictions telescopes to $\Mpq(y_{1:n}\Vert x_{1:n})/\Mpq(\epsilon\Vert\epsilon)\ge\Mpq(y_{1:n}\Vert x_{1:n})$. Given the past, $y_t\sim P(\cdot\mid x_t)$ and $x_t\sim\mu$ is independent of it, so the expected log ratio $\log(P(y_t\mid x_t)/q_t(y_t\mid x_t))$ is $\Ex_\mu\KL(P\|q_t)\ge0$. Summing and applying (b) to $P'$ bounds $\sum_t\Ex\,\Ex_\mu\KL(P\|q_t)$ by $K(P')+\sum_t\Ex\log\frac{P(y_t\mid x_t)}{P'(y_t\mid x_t)}=K(P')+n\,\Ex_\mu\KL(P\|P')$, with integrability as in \cref{thm:learn:batch}(b). Convexity of $\KL$ gives the averaged bound.
+(d) Stamping makes all inputs distinct, so on every sequence the set mixture of the stamp-ignoring laws $\tilde P_i(y\mid\langle x,t\rangle):=P_i(y\mid x)$ equals $\sum_i\mm(i)\prod_tP_i(y_t\mid x_t)=\Mpq(y_{1:n}\Vert x_{1:n})$. The $\tilde P_i$ have indices computable from $i$, so this mixture is a machine law of complexity $O(1)$ (\cref{prop:setting:includes}(a),(d)); apply \cref{thm:setting:universal}.
+\end{proof}
+
+\subsection{Learning curves, splits and leave-one-out}\label{app:learn:splits}
+
+\begin{proposition}[the expected risk of a Bayes predictor need not decrease]\label{prop:learn:curve}
+\status{proved; computed (foundations c11(a), r12)}\src{foundations Prop 6.10}
+Let $X=\{a,b\}$, $\mu$ uniform, target $\varphi\equiv0$, and a Bayes mixture of three total functions: $\varphi$ with prior weight $w$, and $(1,0)$ and $(0,1)$ with weight $\frac{1-w}2$ each. The expected log risk $r_t$ of the posterior predictive after $t$ i.i.d.\ samples is $r_0=-\log\frac{1+w}2$, $r_1=\frac12\log\frac{1+w}{2w}$ and $r_t=2^{1-t}r_1$ for $t\ge1$. So $r_1>r_0$ whenever $(1+w)^3>8w$, in particular for all $w\le\frac15$. The sum $\sum_tr_t$ increases to $\log(1/w)$.
+\end{proposition}
+
+\begin{proof}[Proof of \cref{prop:learn:curve}]
+Before data, the predictive probability of~$0$ at either input is $w+\frac{1-w}2=\frac{1+w}2$. After $(a,0)$ the consistent hypotheses are $\varphi$ and $(0,1)$, and the predictive probability of~$0$ at $b$ is $\frac{w}{w+(1-w)/2}=\frac{2w}{1+w}$; symmetrically after $(b,0)$. After $t\ge1$ samples both inputs have been seen with probability $1-2^{1-t}$ (risk~$0$) and one with probability $2^{1-t}$ (risk $\frac12\log\frac{1+w}{2w}$, as the unseen input has probability $\frac12$). $r_1>r_0$ is equivalent to $(1+w)^3>8w$; the left side minus the right is decreasing on $[0,\frac15]$ and equals $0.128$ at $\frac15$. Finally $\sum_tr_t=r_0+2r_1=\log\frac1w$.
+\end{proof}
+
+For $w=\frac1{16}$, $r_0=0.913$ and $r_1=1.544$ bits. The mixture is a random total function, so both conventions agree, but it is not $\MF$: ``more data never hurts in expectation'' fails for Bayes predictors with a fixed target; for $\MF$ this is not established. In a direct computation (code in the accompanying repository), $63$ of $300$ random finite instances had non-monotone curves; see also \cref{rem:learn:increasing}.
+
+\begin{remark}[last iterate and leave-one-out]\label{rem:learn:lastiterate}
+\status{identity proved; computed (foundations c11(b)); bound open}\src{foundations Rem 6.11, §8 item 7}
+In the setting of \cref{thm:learn:batch}(a), exchangeability gives $\Ex R(Q_n)=\Ex\big[\frac1{n+1}\sum_{i\le n+1}-\log Q^{(-i)}(\varphi(x_i)\mid x_i)\big]$, where $Q^{(-i)}$ is the predictive of $\MF$ given the data set of the samples $j\ne i$ (a held-out input that occurs among the others costs~$0$). Whether $\Ex R(Q_n)\le(K(\varphi)+c)/(n+1)$ is thus a leave-one-out question (cf.\ \cref{conj:learn:loo}); it is open. A direct computation on $300$ random finite instances (code in the accompanying repository) gives $\max(n+1)r_n/K=0.873$.
+\end{remark}
+
+\begin{proof}[Proof of the identity in \cref{rem:learn:lastiterate}]
+Let $x_{n+1}$ be an independent sample; then $\Ex R(Q_n)$ is the expected loss $\Ex[-\log Q_n(\varphi(x_{n+1})\mid x_{n+1})]$. $\MF$ sees its data only as a set and $(x_1,\dots,x_{n+1})$ is exchangeable, so the same expectation results with any sample $i$ held out; average over $i$.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:learn:splits}]
+In every order the step losses sum to $-\log(\nu(f|_B)/\nu(\emptyset))\le L_\nu(f|_B)$ (\cref{prop:setting:order}, $\nu(\emptyset)\le1$). The split point is uniform and independent of the order; divide by $|B|$. A shortest program consistent with $f|_B$ is a term of $W(f|_B)$, so $L_W\le\KF$, and $L_{\MF}\le L_W+c$ (\cref{thm:versions:chain}). For the error use $e\le-\ln(1-e)$.
+\end{proof}
+
+\begin{proposition}[leave-one-out]\label{prop:learn:loo}
+\status{proved; computed (context c7)}\src{context Prop 2.10}
+For $\nu\in\{W,\MF\}$, a labelling $f$ of a finite $B$, and $e_{\rm LOO}(x):=1-\nu(f|_B)/\nu(f|_{B\setminus\{x\}})$: $\sum_{x\in B}e_{\rm LOO}(x)\le(\nu(\emptyset)-\nu(f|_B))/\nu(f|_B)<2^{L_\nu(f|_B)}\le2^{\KF(f|_B)+c}$.
+\end{proposition}
+
+\begin{proof}[Proof of \cref{prop:learn:loo}]
+$e_{\rm LOO}(x)\,\nu(f|_{B\setminus\{x\}})=\nu(f|_{B\setminus\{x\}})-\nu(f|_B)$ is the mass of hypotheses correct on $B\setminus\{x\}$ and wrong or undefined at $x$. A hypothesis in the sets of two points $x\ne x'$ would be correct and not correct at $x'$, so the sets are disjoint, and none contains a hypothesis correct on all of $B$. So the masses sum to at most $\nu(\emptyset)-\nu(f|_B)$. Divide by $\nu(f|_{B\setminus\{x\}})\ge\nu(f|_B)$; the last inequality is as in \cref{prop:learn:splits}.
+\end{proof}
+
+\begin{conjecture}[leave-one-out for the one-tape version]\label{conj:learn:loo}
+\status{conjecture}\src{context Conj 2.11; context §7 item 1}
+For $\nu=\MF$, $\frac1{|B|}\sum_{x\in B}e_{\rm LOO}(x)=O(\KF(f|_B)/|B|)$, up to logarithmic factors.
+\end{conjecture}
+
+We have neither a proof nor a counterexample.
+\emph{Heuristic for \cref{conj:learn:loo} (not a proof).} The natural one-exception hypotheses ``$f$ except at $x$'' have weight about $2^{-K(f)-K(x\mid f)}$, and $\sum_x2^{-K(x\mid f)}\le1$. A counterexample needs many more than $K(f)$ points $x$ whose one-point flips $f^x$ have $K(f^x)\lesssim K(f)$; natural attempts (halting-set indicators, pseudo-random seeds, thresholds) give only $O(1)$ or $O(K(f))$ such points. For general prior weights \cref{prop:learn:loo} is tight within a factor of about~$2$ (\cref{rem:learn:increasing}).
+
+\subsection{Typical separating properties and per-step error}\label{app:learn:typical}
+
+\emph{Separation step} (the special case of \cref{prop:ood:hanni} needed here, proved so as not to rely on a later section). Let $G$ be decidable, $b$ total computable, $\dom D\cap G=\emptyset$ and $x^*\in G$. Then for $\nu\in\{W,\MF\}$, with $K(G)$ the least complexity of an index of a total decider of $G$,
+\begin{equation}\label{eq:learn:separation}
+\nu\big(D+(x^*,b(x^*))\big)\ \ge\ 2^{-K(G)-K(b)-c}\,\nu(D).
+\end{equation}
+For $\MF$: $\{(x,\epsilon,b(x)):x\in G\}\cup\{(x,w,y)\in T_U:x\notin G\}$ is c.e.\ and consistent, hence a function machine with an index computable from those of the decider and of $b$; every tape whose $f_\omega$ extends $D$ makes it extend $D+(x^*,b(x^*))$. Apply \cref{thm:setting:universal}. For $W$: let $V'$ read a $V$-program $z$ for the two indices, then a $V$-program $p$, and output an index of ``$b(x)$ if $x\in G$, else $\varphi_{V(p)}(x)$''. Then $V(wu)=V'(u)$ for a fixed $w$; the map $p\mapsto wzp$ is injective and sends programs consistent with $D$ to programs consistent with $D+(x^*,b(x^*))$.
+
+\begin{proof}[Proof of \cref{prop:learn:typical}]
+(1) The prefix $u$ depends only on $x^*$, which is independent of the training inputs, and $x^*\in G_u$. Each training input lies in $G_u$ with probability $2^{-\ell}\le1/(2n)$, independently, so the probability is $(1-2^{-\ell})^n\ge1-n2^{-\ell}\ge\frac12$. (2) A decider needs $u$: a self-delimiting code of $\ell$, then $\ell$ bits. (3) On the event of (1), \eqref{eq:learn:separation} with $G=G_u$ and $b\equiv1$ gives $e^{\rm wr}(x^*)\ge2^{-K(G_u)-c}$. As $\ell\le\log n+2$, $2^{-\ell}\ge1/(4n)$ and $(\ell+1)^2\le(\log n+3)^2$. For computable binary $f$ take $b=1-f$, with $K(b)\le K(f)+c$.
+\end{proof}
+
+\begin{proof}[Proof of \cref{cor:learn:perstep}]
+(a) Let $\varepsilon_h:=\mu\{x:h(x)\ne f(x)\text{ or undefined}\}$. For a fresh $x^*$, $e(x^*)$ is the posterior mass of hypotheses not correct at $x^*$ (zero at a training input, where all survivors are correct). By Fubini,
+\[ \Ex[e(x^*)\mid D_n]=\frac{\int_{h\supseteq D_n}\varepsilon_h\,d\nu(h)}{\nu(D_n)}\le\varepsilon+\frac{\nu\{h\supseteq D_n:\varepsilon_h>\varepsilon\}}{\nu(D_n)}. \]
+The denominator is at least $2^{-K(f)-c}$ on every sample, as a shortest program for $f$ is consistent with $D_n$. A fixed hypothesis survives the $n$ independent inputs with probability $(1-\varepsilon_h)^n$, so $\Ex\,\nu\{h\supseteq D_n:\varepsilon_h>\varepsilon\}\le\exp(-\varepsilon n)\nu(\emptyset)\le\exp(-\varepsilon n)$. With $\varepsilon:=((K(f)+c)\ln2+\ln n)/n$ the second term is $1/n$ (for $\varepsilon\ge1$ the bound is trivial). Markov's inequality on the surviving bad mass gives the high-probability form. The posterior-majority predictor errs at $x$ only if $e(x)\ge\frac12$.
+(b) Condition on the multiset of the $n+1$ sampled values; by exchangeability $x^*$ is a uniformly random one of the $n+1$ positions. If its value occurs more than once it is a training input and $e(x^*)=0$. Otherwise the training set is $S\setminus\{x^*\}$ and $e(x^*)=e_{\rm LOO}(x^*;S)$, since $\nu$ sees its data as a set. So the conditional expectation is at most $\frac1{n+1}\sum_{x\in S}e_{\rm LOO}(x;S)$; apply \cref{prop:learn:loo}.
+For $f\equiv0$ the lower bound is \cref{prop:learn:typical}, as $e\ge e^{\rm wr}$, and the upper bound is (b) with $K(f)=O(1)$.
+\end{proof}
+
+\subsection{Occam bound and chosen inputs}\label{app:learn:active}
+
+\begin{proof}[Proof of \cref{prop:learn:occam}]
+Put $\varepsilon_p:=(|p|\ln2+\ln(1/\delta))/n$. A fixed $p$ whose disagreement with $\varphi$ exceeds $\varepsilon_p$ is consistent with $D_n$ with probability at most $(1-\varepsilon_p)^n\le e^{-n\varepsilon_p}=2^{-|p|}\delta$. Sum over $p\in\dom V$ and use $\sum_p2^{-|p|}\le1$. A shortest program for $\varphi$ is consistent, so $\KF(D_n)\le K(\varphi)$.
+\end{proof}
+
+We state one further result on chosen inputs.
+
+\begin{proposition}[chosen inputs]\label{prop:learn:active}
+\status{proved}\src{context Prop 5.3}
+(1) For every weak semimeasure $\nu$ and every query set $A$, chosen adaptively or not, the total semimeasure-convention log loss on the labels of $A$ is $-\log(\nu(f|_A)/\nu(\emptyset))$ in every order: for log loss, choosing the order is worthless.
+(2) Small total loss does not give efficient identification. For $f_a(x):=\ind[x=a]$ on $\{0,1\}^d$, the total loss of $\MF$ on any query sequence, even all of $\{0,1\}^d$, is at most $K(f_a)+c\le d+2\log d+c$, yet every query strategy, adaptive or randomised, needs at least $(2^d-1)/2$ queries in expectation over a uniform $a$ to identify~$a$.
+\end{proposition}
+
+\begin{proof}
+(1) is \cref{prop:setting:order}. (2) $f_a$ is computable from $a$ and $K(a)\le d+2\log d+c$; apply \cref{thm:learn:dominance}(b). Fix the strategy's coins. Until $a$ is queried every answer is~$0$, so the queries are those made on $f\equiv0$. Identifying $a$ requires querying $a$ or all other $2^d-1$ points, so at least $\min(\mathrm{pos}(a),2^d-1)$ queries, where $\mathrm{pos}(a)$ is the time of the first query of $a$ on $f\equiv0$. These times are distinct, so their mean over uniform $a$ is at least $2^{-d}\big(\sum_{k=1}^{2^d-1}k+(2^d-1)\big)\ge\frac{2^d-1}2$. Average over the coins.
+\end{proof}
+
+So for active learning the log-loss guarantee must be paired with another objective, such as expected information gain (cf.\ \citealp{orseau2013universal}).
+
+\subsection{Further remarks}\label{app:learn:remarks}
+
+\begin{example}[learning curves can increase]\label{rem:learn:increasing}
+\status{computed (context c3 Part 2)}\src{context Rem 2.11}
+Take a Bayes mixture of the truth $f$ (weight $w_f$) and $|B|$ hypotheses each wrong at exactly one point of $B$ (weight $w$ each). Sampling without replacement, the loss at step $k$ is $\log\frac{w_f+w(|B|-k+1)}{w_f+w(|B|-k)}$ in every order, and it increases with $k$. With $w=w_f=1/(|B|+1)$ and $|B|=16$, the last step (leave-one-out) costs $1$ bit, while for the random-split average a direct calculation gives $0.255$ bits. Each leave-one-out error is $\frac12$, within a factor of about~$2$ of \cref{prop:learn:loo}. By Kraft's inequality such weights $w=w_f=2^{-K}$ need $|B|\le2^K-1$.
+\end{example}
+
+\begin{remark}[per-step versus averaged bounds]\label{rem:learn:cesaro}
+\status{refuted}\src{context Prop 2.12, X13}
+\Cref{prop:learn:typical} is a per-step lower bound and cannot be compared with the Ces\`aro bound of \cref{thm:learn:batch}(a): since $\sum_k\Ex e_k\le(\ln2)(K(f)+c)$, $\liminf_kk\,\Ex e_k=0$. The per-step rate is given by \cref{cor:learn:perstep}.
+\end{remark}
+
+\begin{remark}[relations among the in-distribution bounds]\label{rem:learn:relations}
+\status{remark}\src{context Rem 2.18}
+(i) For computable $f$ and distinct inputs, $\sum_{k\le n}e_k\le(\ln2)(K(f)+c)$ on every sequence (\cref{thm:learn:dominance}(b) with $e\le-\ln(1-e)$; this is \cref{thm:ood:cumulative}). \Cref{cor:learn:perstep}(a) gives a per-step rate in distribution at the price of an additive $\ln n$; \cref{thm:learn:batch}(a) is the Ces\`aro statement for the log loss of the averaged predictor.
+(ii) \Cref{cor:learn:perstep}(a) is the Markov half of the relevance-based bound in the slides of \citet[Appendix~A]{vaintrobhanni2026nnbayes}, specialised to $W$ and $\MF$. The union-bound half and the slides' geometric length prior are not needed: long programs enter only multiplied by $\exp(-\varepsilon n)$.
+(iii) Leave-one-out is different. For a fixed finite $B$ and a random held-out point, the training set eliminates every hypothesis with two or more errors on $B$; what remains is the mass of one-exception hypotheses (\cref{conj:learn:loo}). If \cref{conj:learn:loo} holds, the proof of \cref{cor:learn:perstep}(b) gives $\Ex e(x^*)=O(K(f)/(n+1))$ up to logarithmic factors, without the additive $\ln n$.
+\end{remark}
+
+\emph{Comparison with other bounds.} \emph{PAC-Bayes} \citep{mcallester1999some}: risk bounds with a $\sqrt{\KL(Q\|\text{prior})/n}$ term, or a $\KL/n$ term in the realisable case; with prior $2^{-K}$ and a posterior concentrated on the target the term is about $K(\varphi)\ln2/n$, the same rate. The difference is in kind: PAC-Bayes bounds hold with high probability for a randomised classifier, \cref{thm:learn:batch} in expectation for the averaged Bayes predictive. \emph{MDL and the index of resolvability} \citep{barron1991minimum}: \cref{thm:learn:batch}(b) and \cref{prop:learn:perquery}(c) are Ces\`aro-average resolvability bounds $\min_{P'}[K(P')/n+\KL(P\|P')]$ in the conditional setting, for every input distribution.
+
+\begin{remark}[positive-example induction (informal)]\label{rem:learn:positive}
+\status{proof sketch; known (snippet)}\src{context Rem 5.5}
+Positive-example induction, learning a set or a distribution from samples, is a natural relative of SOI. In SOI terms positive labels $(x,1)$ alone are useless, because the constant-$1$ program explains them. A natural formalisation is a sampling likelihood, whose mixture is $\sum_Pw_P\prod_iP(x_i)$ over computable distributions $P$ on $X$: the private-randomness analogue of the universal semimeasure on the sample sequence (cf.\ the ideal learner from positive evidence of \citealp{chater2007ideal}).
+\emph{Proof sketch.} We do not fix the encoding in detail. The samples are the labels of the index inputs $i\mapsto x_i$, under index-ignoring hypotheses with private randomness per sample; each such hypothesis draws every sample from one distribution $P$ on $X$, and mixing over them gives the displayed mixture.
+\end{remark}
+
+\emph{Computations.} The numbers quoted in \cref{sec:learn} and here come from seeded or deterministic scripts in the accompanying repository: exact finite analogues of the dominance, merging, online-to-batch and last-iterate statements, the fresh-noise consistency probabilities, the per-query version on a finite class of laws, the learning curves, random splits, separating prefixes and the leave-one-out bounds.

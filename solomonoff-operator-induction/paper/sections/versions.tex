@@ -1,0 +1,138 @@
+% Section 3 (writer: setting). Sources: research/tracks/foundations/notes-final.md §4 and Table 4.12; context §1.1, Prop 5.4; history Prop 4.10.
+\section{Kolmogorov and semimeasure versions}\label{sec:versions}
+
+SOI has at least two natural formalisations: a \emph{Kolmogorov version} scores a data set by the length of its shortest consistent program, a \emph{semimeasure version} by a universal mixture such as $\MF$ or the program mixture $W$. For strings the two agree up to an additive constant (the coding theorem), so it is natural to ask whether they agree here.\footnote{This question first appeared in H\"anni's working notes \citep{hanni2026notes}.} They do not, and the versions also differ in where their randomness lives, from Solomonoff's per-query solution $\Mpq$ (\cref{rem:versions:operator}) to the one-tape version $\MF$. \Cref{tab:versions:compare} summarises what is equal, what differs and by how much, and \cref{rem:versions:answer} states what the gaps mean. Proofs are in \cref{app:versions}.
+
+\subsection{The variants}\label{sec:versions:defs}
+
+\begin{definition}[Variants]\src{foundations Def 4.1}\label{def:versions:variants}
+Let $(P_i)$ be the effective enumeration of all lsc conditional semimeasures of \cref{sec:setting:data}.
+\begin{itemize}
+\item \emph{Program mixture} (deterministic programs):\\ $W(D):=\sum_{p\in\dom V}2^{-|p|}\,\ind[\varphi_{V(p)}\supseteq D]=\sum_e\mm(e)\,\ind[\varphi_e\supseteq D]$.
+\item \emph{Kolmogorov version} (single shortest program): $\KF(D):=\min\{|p|:p\in\dom V,\ \varphi_{V(p)}\supseteq D\}=\min\{K(e):\varphi_e\supseteq D\}$.
+\item \emph{Product mixture} (private randomness per input, on data sets):\\ $\Mprod(D):=\sum_i\mm(i)\prod_{(x,y)\in D}P_i(y\mid x)$.
+\item \emph{Per-query mixture}, the per-query version (private randomness per query, on sequences): $\Mpq(y_{1:n}\Vert x_{1:n}):=\sum_i\mm(i)\prod_{t\le n}P_i(y_t\mid x_t)$, for every finite sequence of pairs, consistent or not.
+\end{itemize}
+\end{definition}
+
+$W$ is the coin-free version of SOI: the tape only selects a deterministic program, its first self-delimiting block, and no further bits are read. Equivalently, $W$ puts the prior $2^{-|p|}$ on all self-delimiting deterministic programs $p$ and is conditioned on the data like $\MF$; as $p$ delimits itself without reading the input, $W$ is a countable mixture of partial computable functions with input-independent weights (\cref{rem:versions:Wdelim}). Always $W\le2^{O(1)}\MF$, and $\log(\MF(D)/W(D))\le\min\{\Kpad(L_{1/2}(\MF,D)),K(\dom D)\}+O(1)$, where $L_{1/2}(\MF,D)$ is the least $L$ such that $D$ is produced within the first $L$ tape bits with probability at least $\MF(D)/2$, and $\Kpad(N):=\min_{L\ge N}K(L)$ is the \emph{padded complexity}, nondecreasing, unbounded and at most $K(N)$ (\cref{thm:versions:chain}, \cref{prop:versions:tape}(a)). The gap is unbounded (\cref{prop:versions:Wgap}), but on two-point binary data sets over $d$-bit inputs it is at most $\Kpad(2^{d+1})+O(1)$ (\cref{prop:versions:tape}(b)), hence at most $2\log(h(d)+2)+O_h(1)$ for every computable, nondecreasing, unbounded $h$ (\cref{prop:versions:tape}(c), \cref{rem:versions:Wrate}).
+
+$W(\emptyset)$, $\Mprod(\emptyset)$, $\Mpq(\epsilon\Vert\epsilon)$ are below $1$, which changes losses by a constant only. In the language of algorithmic information theory, with $S_D:=\{e:\varphi_e\supseteq D\}$, $\KF(D)=\min_{e\in S_D}K(e)$ is the prefix complexity of the constraint ``extends $D$'', the length of the shortest deterministic program whose function extends $D$ (not the complexity $K(D)$ of $D$ as a finite object, which is at least $\KF(D)-O(1)$ and can be much larger), and $W(D)=\mm(S_D)$ is the algorithmic probability of the constraint with respect to deterministic programs, the total weight $2^{-|p|}$ of the self-delimiting programs $p\in\dom V$ whose function extends $D$. For a finite string $x$ and the constraint ``outputs $x$'' the analogous quantities are $K(x)$ and $\mm(x)$, and the coding theorem gives $K(x)=-\log\mm(x)+O(1)$ \citep[\S4.3]{li2008introduction}; for the constraint ``output begins with $x$'', monotone complexity and $-\log M$ differ by unbounded amounts \citep{gacs1983relation}.
+
+\begin{remark}[Solomonoff's solutions]\status{known (primary source read); equality on distinct inputs proved}\src{Solomonoff 2008, \S4, eqs.\ (9)--(12), read in full; foundations Def 4.1, claim F36; context \S6 item 1; history Prop 4.9}\label{rem:versions:operator}
+\citet[\S4]{solomonoff2008three} gives two solutions to the operator-induction problem. His eq.~(9), the joint solution, treats each question--answer pair as one string, predicts with his universal mixture over unordered sets of strings, and conditions on the new question; it also models the questions. His eq.~(10) takes the probability of the new answer $A_{n+1}$ to be $\sum_ja^j_0\prod_{i\le n+1}O^j(A_i\mid Q_i)$, a mixture over the conditional distributions $O^j$ computed by partial recursive functions, with weights $a^j_0\approx2^{-l(O^j)}$; with the lsc conditional semimeasures $P_i$ for the $O^j$ and $\mm(i)$ for the weights, this is $\Mpq(A_{1:n+1}\Vert Q_{1:n+1})$, and a repeated question gets an independent factor. His eq.~(12) is a convergence theorem for it (see after \cref{prop:learn:perquery}). $\Mpq$ equals $\Mprod(D_n)$ on sequences with distinct inputs; with repeats $\Mprod$ gives a conflicting label probability $0$ and $\Mpq$ allows fresh noise (\cref{prop:learn:perquery}).
+\end{remark}
+
+\begin{remark}[Where the randomness lives]\src{foundations Rem 4.11}\label{rem:versions:randomness}
+There is no randomness in $\KF$, and none in $W$ beyond the choice of a program; $\Mprod$ draws fresh coins at each input and Solomonoff's per-query solution $\Mpq$ at each query; the one-tape version $\MF$ reads the rest of its one tape, shared by all inputs, so one hypothesis may correlate labels across inputs, as $F(x)=\omega_{|x|+1}$ does. Every mixture also correlates labels through its posterior; the classes still differ by more than constants.
+\end{remark}
+
+\subsection{The chain and the gaps}\label{sec:versions:chain}
+
+\begin{theorem}[The chain]\status{proved}\src{foundations Thm 4.2}\label{thm:versions:chain}
+For every data set $D\ne\emptyset$,
+\[
+2^{-\KF(D)}\le W(D)\le2^{O(1)}\Mprod(D)\le2^{O(1)}\MF(D)\le2^{O(1)}\Mw(D)\le2^{K(\dom D)+O(1)}\,2^{-\KF(D)}.
+\]
+So the five quantities agree up to $K(\dom D)+O(1)$ bits.
+\end{theorem}
+
+The last step is the conditional coding theorem, $K(D\mid\dom D)\le-\log\Mw(D)+O(1)$ (\cref{app:versions:chain}). Let $\Omtail{\ell}:=\sum\{2^{-|p|}:p\in\dom V,\ |p|\ge\ell\}$, which tends to $0$.
+
+\begin{proposition}[Deterministic programs cannot separate inputs cheaply]\status{proved}\src{foundations Prop 4.3 ((b) = context Prop 5.4(2))}\label{prop:versions:Wgap}
+(a) \emph{Two points, binary labels} ($\{0,1\}\subseteq Y$). For every $\varepsilon>0$ and all large $d$ there are distinct $x_1,x_2\in\{0,1\}^d$ with $W(\{(x_1,0),(x_2,1)\})\le\varepsilon$, while $\Mprod(D)\ge2^{-O(1)}/4$ and $\MF(D)\ge2^{-O(1)}/4$ for every two-point $D$ with labels in $\{0,1\}$.
+(b) \emph{One point, long labels} ($Y=\{0,1\}^*$). For every $d$ some $y\in\{0,1\}^d$ has $W(\{(0^d,y)\})\le2^{1-d}\,\Omtail{d-1}$, while $\Mprod(\{(0^d,y)\})\ge2^{-d-O(1)}$.
+So $\Mprod/W$ and $\MF/W$ are unbounded.
+\end{proposition}
+
+(Pigeonhole: the fewer than $2^\ell$ programs shorter than $\ell$ give the $2^d$ inputs at most $3^{2^\ell}$ output patterns, so when $3^{2^\ell}<2^d$ some two inputs are separated by none of them.) The largest two-point gap $\log(\MF(D)/W(D))$ (and $\log(\Mprod(D)/W(D))$) over $d$-bit inputs lies between $\log(1/\Omtail{\ell_d})-O(1)$, $\ell_d:=\lceil\log(d/\log3)\rceil-1$, and $\Kpad(2^{d+1})+O(1)$ (\cref{rem:versions:Wrate}).
+
+\begin{proposition}[Tape-length bound]\status{proved; finite analogue computed}\src{foundations Prop 4.4 (= its referee's Prop R1); checks c9(a), r5}\label{prop:versions:tape}
+(a) Let $T$ be a function machine with law $\nu$, and for $L\ge0$ let $\nu^{(L)}(D):=\Unif\{\omega:$ every $(x,y)\in D$ has a triple $(x,w,y)\in T$ with $w$ a prefix of $\omega_{1:L}\}$. Then $\nu^{(L)}(D)\uparrow\nu(D)$ as $L\to\infty$, and for every $D\ne\emptyset$ and every $L$,
+\[
+W(D)\ \ge\ 2^{-K(T)-\Kpad(L)-c}\,\nu^{(L)}(D),
+\]
+with $c$ independent of $T$, $D$ and $L$. With $L_{1/2}(\nu,D):=\min\{L:\nu^{(L)}(D)\ge\nu(D)/2\}$ this gives $\log\big(\MF(D)/W(D)\big)\le\Kpad\big(L_{1/2}(\MF,D)\big)+O(1)$.
+(b) \emph{Fair-coin labels.} For every $D$ with labels in $\{0,1\}$ and $\dom D\subseteq\{0,1\}^{\le d}$: $W(D)\ge2^{-|D|-\Kpad(2^{d+1})-c'}\ge2^{-|D|-K(\lceil\log(d+1)\rceil)-c''}$.
+(c) $\Kpad(2^{2^s})\le K(s)+O(1)$, and $\Kpad(N)\le2\log(g(N)+2)+c_g$ for every computable, nondecreasing, unbounded $g:\mathbb N\to\mathbb N$.
+\end{proposition}
+
+The $2^{L'}$ programs ``simulate $T$ with stored tape prefix $w$'', $|w|=L'\ge L$, $K(L')=\Kpad(L)$, carry weight $2^{-K(T)-\Kpad(L)-O(1)}\nu^{(L')}(D)$. So $W$ imitates any shared-tape law, paying only for a self-delimiting bound on the number of tape bits used: a deterministic program can carry the random bits it needs. (b) applies (a) to $F(x):=\omega_{j(x)+1}$.
+
+\begin{proposition}[Shared randomness is not a mixture of private randomness]\status{proved; counting step computed}\src{foundations Prop 4.5; check r9(c)}\label{prop:versions:shared}
+Let $\{0,1\}\subseteq Y$ and let $\nulen$ be the law of $F(x):=\omega_{|x|+1}$: one fair coin per input length, shared by all inputs of that length. $\nulen$ is a machine law of complexity $O(1)$, but $\sup_D\nulen(D)/\Mprod(D)=\infty$. Hence $\MF/\Mprod$ is unbounded.
+\end{proposition}
+
+(A product hypothesis labels $0^n$ and $1^n$ independently; a compactness argument shows that $\Mprod$ covers only a small part of the non-constant patterns of $k$ shared coins.)
+
+\begin{remark}[Size of this gap]\status{proved}\src{foundations Rem 4.5a}\label{rem:versions:sharedsize}
+The witnesses of \cref{prop:versions:shared} are not explicit, and their gap is small: on data with inputs of length at most $d$, $\Mprod(D)\ge2^{-O(1)}W(D)\ge2^{-\Kpad(d+1)-O(1)}\nulen(D)$ by \cref{prop:versions:tape}. A lower bound on the rate is open (\cref{q:versions:open}).
+\end{remark}
+
+\subsection{No coding theorem for function programs}\label{sec:versions:coding}
+
+Unlike for strings, shortest description and algorithmic probability of data sets do not agree up to a constant.
+
+\begin{theorem}[No coding theorem for function programs]\status{proved; arithmetic and covering numbers computed}\src{foundations Thm 4.7 (= its referee's Prop A); checks c8(a), c8(b), r11}\label{thm:versions:nocoding}
+Let $\{0,1\}\subseteq Y$ and $d\ge2$. There are distinct $x_1,x_2\in\{0,1\}^d$ such that $D:=\{(x_1,0),(x_2,1)\}$ satisfies
+\[
+\text{(i) }\KF(D)\ge\log d-2;\qquad\text{(ii) }-\log W(D)\le2+K(\lceil\log(d+1)\rceil)+c;\qquad\text{(iii) }\LSFI(D)\le2+c,
+\]
+with $c$ independent of $d$. Hence $\KF(D)+\log W(D)\ge\log d-K(\lceil\log(d+1)\rceil)-c-4\to\infty$, and on these data sets $-\log W(D)\le\log(\KF(D)+4)+2\log\log(\KF(D)+4)+O(1)$.
+\end{theorem}
+
+(i) is the colouring argument with $\ell=\ell_d$, (ii) is \cref{prop:versions:tape}(b), (iii) the fair-coin product law. So a c.e.\ set of programs, $\{e:\varphi_e\supseteq D\}$, can have algorithmic probability $2^{-O(\log\log d)}$ while its simplest member has complexity $\log d-O(1)$ (related literature: \cref{app:versions:nocoding}).
+
+\begin{corollary}[Two-point rate]\status{proved}\src{foundations Cor 4.8}\label{cor:versions:twopoint}
+Let $\rho_K(d)$ be the largest value of $\KF(D)-\LSFI(D)$ over two-point data sets $D$ with binary labels and $d$-bit inputs. Then $\log d-O(1)\le\rho_K(d)\le\log d+K(\lceil\log(d+2)\rceil)+O(1)=\log d+O(\log\log d)$.
+\end{corollary}
+
+\begin{proposition}[Covering bound for the single shortest program]\status{proved; computed}\src{foundations Prop 4.9 (its referee's Prop A3, sharpened); checks c8(c,d), r11(d)}\label{prop:versions:covering}
+For every $D$ with labels in $\{0,1\}$, $|D|=k$ and $\dom D\subseteq\{0,1\}^{\le d}$,
+\[
+\KF(D)\ \le\ k+\log\big(k(d+2)\big)+K\big(\lceil\log(d+2)\rceil,k\big)+O(1).
+\]
+Consequently, with $\delta_D:=k-K(D\mid\dom D)$ (the deficiency of randomness of the labels given the inputs), $\KF(D)\le\LSFI(D)+\delta_D+\log(k(d+2))+K(\lceil\log(d+2)\rceil,k)+O(1)$.
+\end{proposition}
+
+(About $2^kk(d+2)\ln2$ random truth tables cover all such data sets; a program indexes the first covering family.) A logarithmic cost in $d$ is real for the single shortest program already on two points (\cref{thm:versions:nocoding}); the covering argument shows that it is at most logarithmic in $k(d+2)$. $W$, compared with the fair-coin law, pays no factor depending on $|D|$ (\cref{prop:versions:tape}(b)).
+
+Large gaps have no computable witnesses: along a computable family $k\mapsto D_k$ the five quantities of \cref{thm:versions:chain} agree up to $K(k)+O(1)$ bits (\cref{rem:versions:noncomputable}; whether some gap tends to infinity along such a family is \cref{q:versions:explicit}).
+
+\subsection{Summary and meaning for prediction}\label{sec:versions:table}
+
+\begin{table}[!htb]
+\crefabbrev
+\centering\footnotesize
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.1cm}>{\raggedright\arraybackslash}p{1.65cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{1.6cm}@{}}
+\toprule
+comparison & equal up to $O(1)$? & gap: lower bound (witness) & gap: upper bound & open\\
+\midrule
+$2^{-\KF}$ vs $W$ & no (\cref{thm:versions:nocoding}) & $\log d-K(\lceil\log(d+1)\rceil)-O(1)$ on some two-point binary $D$ (non-computable witness) & $K(\dom D)+O(1)$ (\cref{thm:versions:chain}); binary labels, $k$ points: $\delta_D+\log(k(d+2))+K(\lceil\log(d+2)\rceil,k)+O(1)$ (\cref{prop:versions:covering}; a bound on the gap to $\MF$, hence to $W$) & rate in general\\
+$2^{-\KF}$ vs $\MF$ & no & $\log d-O(1)$ on two points (\cref{thm:versions:nocoding}) & two points: $\log d+O(\log\log d)$ (\cref{cor:versions:twopoint}); general: $K(\dom D)+O(1)$ & general rate\\
+$W$ vs $\Mprod$ (and vs $\MF$) & no (\cref{prop:versions:Wgap}) & two points: $\log(1/\Omtail{\ell_d})-O(1)$; one point, $Y=\{0,1\}^*$: $\log(1/\Omtail{d-1})-O(1)$ (non-computable witnesses) & two points, binary: $\Kpad(2^{d+1})+O(1)$; against a machine law $\nu$: $K(\nu)+\Kpad(L_{1/2}(\nu,D))+O(1)$ (\cref{prop:versions:tape}); general: $K(\dom D)+O(1)$ & \cref{q:versions:open}; rates\\
+$\Mprod$ vs $\MF$ & no (\cref{prop:versions:shared}) & unbounded, no rate (compactness witnesses) & against $\nulen$, inputs of length $\le d$: $\Kpad(d+1)+O(1)$ (\cref{rem:versions:sharedsize}); general: $\min\{\Kpad(L_{1/2}(\MF,D)),$ $K(\dom D)\}+O(1)$ & lower rate\\
+$\MF$ vs $\Mw$ & no (\cref{thm:setting:weakvsmachine}) & $k\log\frac32-K(k)-O(1)$ on some $2k$-point $D$; on average over an explicit family & $K(\dom D)+O(1)$ & how close to $K(\dom D)$\\
+$\MF$ vs every lsc random-function law & unknown & --- & $K(\dom D)+O(1)$ & \cref{q:setting:rpf}\\
+$\Mprod$ vs $\Mpq$ & equal on sequences with distinct inputs & with repeats $\Mpq\le\Mprod$; $\Mpq>0=\Mprod$ on inconsistent sequences (\cref{prop:learn:perquery}) & --- & ---\\
+\bottomrule
+\end{tabularx}
+\caption{The Kolmogorov and semimeasure versions compared. Data sets $D$ with inputs of length at most $d$; gaps in bits ($\log$ of the ratio of the two quantities, or $\KF$ plus $\log$ of the other). Every entry is proved where cited. By \cref{rem:versions:noncomputable}, along a computable family $k\mapsto D_k$ of data sets no gap between the five quantities of \cref{thm:versions:chain} exceeds $K(k)+O(1)$; the last row compares objects on sequences, where $\Mpq$ and $\Mprod$ can differ completely.}
+\label{tab:versions:compare}
+\end{table}
+
+\begin{remark}[Summary: the versions are not equivalent, and what the gaps mean]\status{proved}\src{foundations \S4 ``What the differences mean for prediction'' and ``Answer to the question in H\"anni's draft''; claims F16, F17}\label{rem:versions:answer}\label{rem:versions:prediction}
+No two of $\KF$, $W$ and $\MF$ agree up to a constant; the five quantities of \cref{thm:versions:chain} agree up to $K(\dom D)+O(1)$ bits, and there is no coding theorem for function programs (\cref{thm:versions:nocoding}; for \SFIhist{}, \cref{rem:versions:hist}). For prediction:
+(1) \emph{Gaps are cumulative losses:} by \cref{prop:setting:order}, a gap of $g$ bits between two of $W,\Mprod,\MF,\Mw$ on $D$ is a difference of $g$ bits in total log loss on $D$ in every order (semimeasure convention, up to constants).
+(2) \emph{Coin flips or not:} the coin-free version $W$ predicts as well as the one-tape version up to $\Kpad(L_{1/2}(\MF,D))+O(1)$ bits in total (\cref{prop:versions:tape}). On binary labels its loss exceeds the fair-coin loss $|D|$ by at most $K(\lceil\log(d+1)\rceil)+O(1)$ bits however many labels are predicted, hence exceeds the loss of $\MF$ by at most $\delta_D+K(\lceil\log(d+1)\rceil)+O(1)$ with $\delta_D=|D|-K(D\mid\dom D)$ (\cref{thm:setting:coding}(a)). So coin flips beyond the program matter little unless the explanation of the data by $\MF$ needs tape bits with no simple bound, and likewise for private versus shared randomness ($W\le2^{O(1)}\Mprod\le2^{O(1)}\MF$).
+(3) \emph{The shortest program:} $\KF(D)$ is a description length (MDL with one hypothesis), not a predictor's loss. It can exceed the loss of $\MF$ by $\log d-O(1)$ bits on two points (\cref{thm:versions:nocoding}), and on $k$ binary labels with randomness deficiency $\delta_D$ by at most $\delta_D+\log(k(d+2))+K(\lceil\log(d+2)\rceil,k)+O(1)$ (\cref{prop:versions:covering}); whether gaps of order $\log k$ occur is open (\cref{q:versions:open}). For deterministic targets it has the learning rate of $\MF$ (\cref{prop:learn:occam}).
+(4) $\Mw$ can exceed $\MF$ by linearly many bits on some data sets (\cref{thm:setting:weakvsmachine}(iii)), because it dominates the weak semimeasure $\nutri^{\otimes k}$, which no law of a random function dominates by a factor better than $(2/3)^k$; it pays for this by having no posterior over functions.
+(5) For a deterministic computable $f$ all five quantities are at least $2^{-K(f)-O(1)}$ on its data, so the basic learning bounds (\cref{thm:learn:dominance}(b), \cref{cor:learn:mistakes}, \cref{thm:learn:batch}(a)) hold for $W$, $\Mprod$, $\MF$ and $\Mw$; for $\KF$ the corresponding statement is the Occam bound \cref{prop:learn:occam}.
+(6) Fresh label noise on repeated inputs separates Solomonoff's per-query solution $\Mpq$ from all set-based objects (\cref{prop:learn:freshnoise,prop:learn:perquery}).
+(7) On a single query the one-tape version is the conditional universal distribution, $2^{-K(y\mid x)\pm O(1)}$, which commits to where the output ends (\cref{prop:versions:structured}).
+\end{remark}
+
+\begin{question}\label{q:versions:open}
+Is $\log(\MF(D)/W(D))=O(K(d,|D|))$ for inputs of length at most $d$, or even $\Kpad$ of a computable function of $(d,|D|)$? Proved: $\min\{\Kpad(L_{1/2}(\MF,D)),K(\dom D)\}+O(1)$, and $\Kpad(2^{d+1})+O(1)$ against fair coins. Also open: the exact rate of the two-point gap of $W$ (between $\log(1/\Omtail{\ell_d})$ and $\Kpad(2^{d+1})$); whether the single shortest program has gaps of order $\log k$ on $k$ points; a lower rate for $\MF/\Mprod$; and how close $\log(\Mw/\MF)$ comes to $K(\dom D)$.
+\end{question}

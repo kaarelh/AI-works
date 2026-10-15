@@ -1,0 +1,70 @@
+% Section 9 (writer W6, Paper 2 restructure of 2026-10-13, research/paper-review/restructure/PLAN.md). Base: limits.tex at
+% dcb3a3a3 (writer steep-b; edited by p2-body). Sources: research/tracks/steeper/notes-final.md §2.5-§2.6 (Props 2.11-2.17,
+% Lemma 2.11a); research/tracks/split/teacher/notes-final.md Prop 2.1(d), Props 4.1, 4.2, Remark 4.3;
+% research/tracks/split/verify-teacher.md §2 (the kink lemma in its final form, item (iv)); final-check.md rows 17, 18.
+% Moved to teacher.tex (W5): prop:limits:plain, rem:limits:schedule, sec:limits:schedule. Cut: rem:limits:method.
+% Notation (PLAN §4): St's guard noise eta -> epsilon_G, step count M -> n_st, input law pi -> mu, slack eta -> epsilon; the
+% guard-erosion schema is phi (was sigma). The test set of prop:limits:ood is written Z (S and E are the error rule and set).
+% lem:limits:robust, prop:limits:guard, prop:limits:noident, prop:limits:inputlaw and prop:limits:ood are stated in app-limits.tex.
+% Fix round (DECISIONS-restructure §3, RW6-01): the text of the former §9.3 (sec:limits:ood) is now the opening of
+% app:limits:ood, where sec:limits:ood is an alias; §9.2 ends with one sentence that cites prop:limits:ood.
+\section{When errors have structure: a second kink}\label{sec:limits}
+
+In \cref{thm:teacher:main} an incompressible error rule lies to the right of the model's kink, on a line of slope $2^{-m}$ set by its reuse factor (\cref{prop:teacher:kinks}). Here the second reason for a steeper penalty fails: a rule with structure has a kink of its own, and steeper selection sorts hull segments by \emph{rate}, risk reduction per bit, not by validity. The setting is \cref{def:teacher:instance} unless stated otherwise; proofs are in \cref{app:limits}.
+
+\subsection{Which error rules defeat steeper selection}\label{sec:limits:rules}
+
+Realistic systematic errors are often low-complexity patterns, while the example of \cref{sec:teacher} fixes only a density and a description length. Split the rule as $S=S_1\sqcup S_2$, $|S|=s_0=p2^m$, with $s_i:=|S_i|$, $p_1:=s_1/2^m$ and $p_2:=s_2/(2^m-s_1)$, where $S_1$ is \emph{cheap}, $K(S_1\mid m)\le k_1$; every input of $E_1:=S_1\times\{0,1\}^{d-m}$ is an error input. The \emph{envelope} $\pi_e$ predicts $f_a\oplus1$ with probability $1$ on $E_1$ and $f_a$ with flip probability $p_2$ elsewhere; it has risk $R_e=(1-p_1)H(p_2)<H(p)$ and length at most $d+k_1+\kappa_e$, $\kappa_e:=2\log d+2\log m+2\log(s_2+1)+\kappa$. Put $J_e(c):=c(d+k_1+\kappa_e)+R_e$, $\zeta:=c(k_1+\kappa_e+4+\Lambda_1)+\epsilon$ and $c_{\rm env}:=(H(p)-R_e)/(k_1+\kappa_e+4+\Lambda_1)$. A program is \emph{$\epsilon$-near-optimal} at $c$ if $J_c(\pi)\le\Phi(c)+\epsilon$.
+
+\begin{proposition}[Error envelopes]\status{proved; computed}\src{steeper Prop 2.17 (T5 Prop 4.5, all-hypothesis form); split/teacher Prop 2.1(d), Prop 4.1; split/verify-teacher \S2; check c7(B); referee q4(C)}\label{prop:limits:envelope}
+Let $B=\infty$, and let $J_c(\pi)\le J_e(c)+\epsilon$ with $J_e(c)+\epsilon<\Phi_2(c)$.
+\begin{enumerate}[label=(\roman*),itemsep=0pt,topsep=2pt]
+\item $\lev(\pi)=1$ and $R(\pi)\le R_e+\zeta$. So for $c<c_{\rm env}$ and $\epsilon$ small enough that $\zeta<H(p)-R_e$, no program with $R(\pi)\ge H(p)$, the good model included, is $\epsilon$-near-optimal.
+\item With $B_2:=K(S_2\mid a,K(a))$, the average probability of reproducing the cheap errors is
+\begin{gather*}
+e_1(\pi):=\Ex\big[\nu_\pi(y^*(x)\mid x)\,\big|\,x\in E_1\big]\ \ge\ 2^{-\bar R_1},\\
+\bar R_1:=\tfrac1{p_1}\big(\zeta+(1-p_1)H(p_2)-\min(c,2^{-m})\,(B_2-K(S_1))^+\big).
+\end{gather*}
+\end{enumerate}
+\end{proposition}
+
+\emph{Proof idea.} (i) is \cref{lem:kink:main}(iv) with the envelope's point $(d+k_1+\kappa_e,R_e)$ as the reference: \cref{thm:teacher:main}(o) excludes the programs of level at least $2$, and (D1) of \cref{lem:teacher:twopart} gives those of level $1$ length at least $d-4-\Lambda_1$; no right line is needed. (ii) codes $S_2$ given $S_1$ with the hypothesis, as in \cref{lem:teacher:coding}, which bounds its risk off $E_1$ from below.
+
+\emph{A second kink.} The cheap part adds a second drop to the population hull, at length about $d+k_1$. Take a program of level $1$ with $R\ge H(p)$; its length is at least $d-4-\Lambda_1$, so the envelope either dominates its point or has secant at least $c_{\rm env}$ from it, which then bounds the right secant there (\cref{def:kink:kinks}) from below. So, under its side conditions, (i) excludes near-optimal fits no better than noise below $c_{\rm env}$, whereas for an incompressible rule the identification window of \cref{thm:teacher:main} starts just above $2^{-m}$.
+
+At the example's sizes let $S_1=\{z:z_1=\dots=z_j=0\}$ and $S_2$ be uniformly random. For $j=13$ ($128$ cheap and $896$ random points) the rule has density $2^{-10}$ and $\log\binom{2^m-s_1}{s_2}=10{,}418$ bits, of the order of the example's $11{,}710$. With the machine constant set to $0$ (an illustration), a direct computation (code in the accompanying repository) gives $c_{\rm env}=1.64\cdot10^{-5}$: on $31\%$ of the logarithmic width of the window $(9.54\cdot10^{-7},8.06\cdot10^{-3}]$ of \cref{thm:teacher:main} ($24\%$ at $\kappa=30$) no hypothesis that fits no better than the good model is near-optimal, and at $c=1.01\cdot2^{-m}$ near-optimal hypotheses reproduce the cheap errors with average probability at least $0.544$ for typical $S_2$ ($j=11$: $47\%$, $0.862$; \cref{app:limits:envelope}). So density and description length alone do not suffice. (Its deficiency is about $1{,}300$ bits; \cref{thm:teacher:main} applies to it with this value of $\delta_S$ in its bounds, which are correspondingly weaker, and \cref{prop:limits:envelope} says nothing about it above $c_{\rm env}$.) A cheap, dense error region has a high rate and is learned like any valid component.
+
+\begin{proposition}[Rate blindness]\status{proved; computed}\src{steeper Prop 2.11; split/teacher Prop 4.2; final-check row 18; checks c3, c6(A)}\label{prop:limits:rateblind}
+Let $B=\infty$ and $\ell(\pi_{\rm coin})\le\kappa$.
+\begin{enumerate}[label=(\roman*),itemsep=0pt,topsep=2pt]
+\item If $H(p)/(\ell(\pi_b)-\ell(\pi_g))\ge(1-H(p))/(\ell(\pi_g)-\ell(\pi_{\rm coin}))$, then at every $c$ the good model is beaten by the memoriser or beaten or tied by the coin.
+\item Suppose that
+\[
+\frac{H(p)}{\lceil L_S\rceil+\kappa_b+4+\Lambda_1}\ \ge\ \frac{1-H(p)}{d-4-\Lambda_1-\kappa}\quad\text{and}\quad d-4-\Lambda_1-\kappa>0.\tag{$\star$}
+\]
+Let $u(\pi)>\frac34$ and $R(\pi)\ge H(p)$. Unless $\ell(\pi_b)\le\ell(\pi)$ or $R(\pi)\ge1$, the memoriser's secant from the point of $\pi$ is at least the coin's secant to it, $R(\pi)/(\ell(\pi_b)-\ell(\pi))\ge(1-R(\pi))/(\ell(\pi)-\ell(\pi_{\rm coin}))$. So at every $c$ every such program is beaten by the memoriser or beaten or tied by the coin.
+\item For $c<2^{-m}$, near-optimal programs reproduce the errors, under the condition of \cref{thm:teacher:main}(iii).
+\end{enumerate}
+\end{proposition}
+
+\emph{Proof idea.} (i) compares three points. In (ii), (D1) gives $\pi$ length at least $d-4-\Lambda_1$, so the two secants are bounded by the two sides of $(\star)$. So the error kink is at least as steep as the model's, and no slope makes such a point the unique optimum. (iii) is \cref{thm:teacher:main}(iii).
+
+For fixed $m$ and $s_0$, and under a condition on the constants that holds in every computed case, $(\star)$ holds for all $d$ beyond a threshold $d_0(\kappa)$ linear in the machine constant (\cref{lem:limits:robust}): once the simple model is long enough, no program that knows the parity and fits no better than noise is ever the unique optimum. For one $3$-bit prefix ($m=3$, $p=1/8$) a direct computation (code in the accompanying repository) gives $d_0=49$ with the machine constant set to $0$ (an illustration) and $169$ at $\kappa=30$, while the incompressible rule of the example leaves a window whose ends differ by a factor of about $8500$ ($\kappa=0$) or $3800$ ($\kappa=30$).
+
+\subsection{Rate, not validity}\label{sec:limits:other}
+
+\begin{proposition}[Separable components]\status{proved; computed}\src{steeper Prop 2.12 (T5 Thm 3.2, Thm 4.1); check c5(a)}\label{prop:limits:separable}
+Let the inputs split into finitely many regions $X_j$ and the hypotheses be products of per-region choices with additive code lengths. Each region selects a vertex of its own hull for slope $c$ (\cref{lem:setup:hull}). If region $j$ offers a default or a component $j$ of extra length $k_j$ and population risk reduction $r_j$, component $j$ is selected if and only if $r_j/k_j>c$ (ties arbitrary). So a valid component whose rate is at most an error component's rate cannot be kept without the error, except at a common tie value. Two worlds with the same teacher channel and input law, one where a component is an error and one where it is a rare valid rule, get the same selection at every $c$.
+\end{proposition}
+
+\emph{Proof idea.} The objective is a sum over regions, a component lowers it if and only if $c\,k_j<r_j$, and the twin worlds have the same objective.
+
+\begin{remark}[What a hull cannot see]\status{remark}\src{split/teacher Remark 4.3; steeper Props 2.12--2.15}\label{rem:limits:hull}
+Steeper selection keeps exactly the hull segments whose rate exceeds $c$ (\cref{lem:setup:hull}(v), \cref{rem:kink:reading}). An incompressible error rule has rate at most about $2^{-m}$ per sample, its reuse factor; a structured rule has the rate of its cheapest dense part, which can lie anywhere. Nothing in the geometry tells the model's kink from an error's (\cref{app:limits:guard}): a guard with a lower rate than its rule is dropped on an interval of $c$, and the rule is applied where the teacher never applied it (\cref{prop:limits:guard}); the selection, and by the same mechanism the window of \cref{thm:teacher:main}, moves with the input law, proved here in the separable case (\cref{prop:limits:inputlaw}); and $c$ cannot be chosen from imitation data, since strictly proper scores prefer the teacher's channel, errors included \citep{gneiting2007strictly}, log-loss validation picks the smallest $c$, and the twin worlds have the same hull (\cref{prop:limits:noident}).
+\end{remark}
+
+Off the training support the shortest hypotheses that fit the data decide, so with a steeper prior the per-query solution extrapolates more reliably than the one-tape version if these hypotheses extrapolate well, and is more confidently wrong if they do not (\cref{prop:limits:ood}).
+
+\begin{question}[structured errors and the choice of $c$]\status{open}\src{steeper \S2.6; split/notes-final \S6 items 11, 15}\label{q:limits:open}
+(Larger flip rates are the subject of \cref{prop:teacher:rates,q:teacher:open}.) (a) For envelopes whose cheap region has error density $\theta<1$, only part (i) of \cref{prop:limits:envelope} carries over (\cref{app:limits:envelope}). Do near-optimal hypotheses then memorise the random part $S_2$, and what is selected above $c_{\rm env}$? (b) Is there a rule for choosing $c$, using information other than the imitation data, that keeps rare valid rules and drops errors? By \cref{prop:limits:separable,prop:limits:noident}, imitation data alone cannot tell them apart.
+\end{question}

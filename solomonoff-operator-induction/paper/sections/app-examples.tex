@@ -1,0 +1,218 @@
+% Appendix "ex" (writer: ex). Source: research/tracks/examples/notes-final.md (final numbering): Lemmas 1.3, 2.2,
+% 2.2a, 3.5, 3.8, Thms 2.1, 2.3, 3.3, 3.6, Props 2.4, 2.6, 2.9, 2.10, 2.11, 3.4, 3.7, 3.9, 3.12, Cor 3.11,
+% Conj 2.6a, Rem 2.6b, 2.7, 2.12, 4.7, Prop 4.6, §2.6, §3.8, §6 and the Verification log.
+\section{Proofs for Section~\ref{sec:ex} (worked examples)}\label{app:ex}
+
+Notation is that of \cref{sec:ex}. The coding theorem is used in the form of \cref{sec:setting:data}: if $q(a\mid w)$ is lsc uniformly in $(a,w)$ and $\sum_aq(a\mid w)\le1$, then $K(a\mid w)\le-\log q(a\mid w)+K(q)+c$. ``Gibbs'' is $\Ex[-\log q(Z)]\ge H(Z)$ for every $q$ with $\sum_zq(z)\le1$. Numbers obtained by direct computation come from seeded or deterministic scripts in the accompanying repository; the finite mixtures used there are illustrations, not SOI or SI.
+
+% ------------------------------------------------------------------
+\subsection{SI's label loss}\label{app:ex:tools}
+
+\begin{lemma}[SI's label loss]\label{lem:ex:silabel}
+\status{proved}\src{examples Lemma 1.3}
+Let $\Prob$ be a probability law on infinite sequences of pairs in countable sets, coded by a prefix-free code with nonempty codewords, and $\rho$ a semimeasure on $\{0,1\}^*$ with $\rho(\code(h_t))\ge2^{-a}\Prob(h_t)$ for all $t$ and histories. Let $L^y_\Prob(n):=\sum_{t\le n}-\log\Prob(y_t\mid h_{t-1},x_t)$. Then (i) $\Ex L^y_\rho(n)\le\Ex L^y_\Prob(n)+a$ for every $n$, and (ii) $\Prob[\exists n:\ L^y_\rho(n)>L^y_\Prob(n)+a+j]\le2^{-j}$.
+\end{lemma}
+
+\begin{proof}
+Put $Q_t:=\rho(\code(h_{t-1})\bar x_t)/\rho(\code(h_{t-1}))$. Telescoping, $\rho(\code(h_n))=\rho(\epsilon)\prod_{t\le n}Q_t\cdot2^{-L^y_\rho(n)}$ with $\rho(\epsilon)\le1$, and $-\log\Prob(h_n)=L^y_\Prob(n)+\sum_t-\log\Prob(x_t\mid h_{t-1})$. Hence, $\Prob$-almost surely,
+\[L^y_\rho(n)\le-\log\rho(\code(h_n))+\textstyle\sum_t\log Q_t\le a+L^y_\Prob(n)+\log\Lambda_n,\qquad \Lambda_n:=\prod_{t\le n}Q_t/\Prob(x_t\mid h_{t-1}).\]
+Given $h_{t-1}$, $\Ex[Q_t/\Prob(x_t\mid h_{t-1})]\le\sum_x\rho(\code(h_{t-1})\bar x)/\rho(\code(h_{t-1}))\le1$, since $\sum_{w\in A}\rho(sw)\le\rho(s)$ for prefix-free $A$. So $\Lambda$ is a nonnegative supermartingale with $\Lambda_0=1$. Jensen gives (i), and Ville's inequality $\Prob[\sup_n\Lambda_n\ge2^j]\le2^{-j}$ \citep{ville1939etude} gives (ii).
+\end{proof}
+
+The normalisation, $\Mnorm(\epsilon)=1$ and $\Mnorm(zb)=\Mnorm(z)M(zb)/(M(z0)+M(z1))$, is a probability measure with $\Mnorm\ge M$, since
+\[\textstyle\Mnorm(z)=\frac{M(z)}{M(\epsilon)}\prod_{i<|z|}\frac{M(z_{1:i})}{M(z_{1:i}0)+M(z_{1:i}1)}\]
+and each factor is at least $1$. For computable $\Prob$, $M(\code(h))\ge2^{-K(\Prob)-c}\Prob(h)$ (\cref{lem:hist:block}), so the lemma applies to $M$ and $\Mnorm$ with $a=K(\Prob)+c$.
+
+% ------------------------------------------------------------------
+\subsection{The cyclic permutation}\label{app:ex:cyclic}
+
+For a string $x$ and strings $z=(z_1,\dots,z_i)$ put
+\[D(x,z):=\{(x,z_1),(z_1,z_2),\dots,(z_{i-1},z_i),(z_i,0^{|x|})\},\qquad D(x,()):=\{(x,0^{|x|})\},\]
+so that $D_k=D(x_k,(x_{k-1},\dots,x_1))$.
+
+\begin{lemma}[chain semimeasure]\label{lem:ex:chainsemi}
+\status{proved}\src{examples Lemma 2.2 (history Lemma 2.0 with terminal label $0^{|x|}$)}
+For every law $\nu$ of a random partial function $F$ and every $x$, $\sum_z\nu(D(x,z))\le1$, the sum over the finite sequences $z$ of strings different from $0^{|x|}$ for which $D(x,z)$ is a data set. Hence $K(z\mid x)\le\LSFI(D(x,z))+c$ for these $z$.
+\end{lemma}
+
+\begin{proof}
+If $F\supseteq D(x,z)$, then $z$ is the orbit of $x$ up to its first visit to $0^{|x|}$; so for each $F$ at most one $z$ qualifies. $\MF(D(x,z))$ is lsc; apply the coding theorem.
+\end{proof}
+
+\begin{lemma}[depth count]\label{lem:ex:depth}
+\status{proved; computed (examples e6(b))}\src{examples Lemma 2.2a}
+For a partial function $F$ and $1\le k\le N-1$, let $A_k(F)$ be the set of nonzero $x\in\{0,1\}^d$ such that $F(x),\dots,F^{k-1}(x)$ are nonzero $d$-bit strings and $F^k(x)=0^d$. Then $|A_k(F)|\le N-k$, with equality for the broom $B_k$.
+\end{lemma}
+
+\begin{proof}
+If $x\in A_k(F)$, the strings $F(x),\dots,F^{k-1}(x)$ first reach $0^d$ at times $k-1,\dots,1$, so they are distinct, nonzero and not in $A_k(F)$: $|A_k(F)|\le(N-1)-(k-1)$. For the broom, every nonzero input off the spine is in $A_k$.
+\end{proof}
+
+\begin{proof}[Proof of \cref{thm:ex:cycle}]
+(a) The lower bound is \cref{thm:setting:coding}(a) with $T=\{0,1\}^d$, computable from $d$. For the upper bound, the function machine $T$, on input $x$, runs $V(\cdot,\{0,1\}^{|x|})$ on program bits read from the start of the tape and, if $V$ halts with a table $E$ of $\{0,1\}^{|x|}$, outputs $E(x)$. For fixed $x$ the halting prefixes are prefix-free, so $T$ is consistent; all inputs of length $d$ read the same program, so $\nu_T(f)\ge2^{-K(f\mid d)}$; apply \cref{thm:setting:universal}. (The same argument gives $\LSFI(D)\le K(D\mid\dom D)+K(e)+c$ whenever a partial computable $e$ maps each $x\in\dom D$ to $\dom D$.)
+(b) $T_{\rm cyc}$ reads, for each length $\ell$, its own sub-stream $(\omega_{\langle\ell,i\rangle})_i$ of the tape, draws a uniform ordering of the nonzero $\ell$-bit strings by rejection sampling, closes it into a cyclic permutation $\hat f_\ell$ (the bijection after \cref{def:ex:cyclic}), and outputs $\hat f_{|x|}(x)$. It halts with probability $1$, each value is fixed by finitely many tape bits, $K(\nu_{T_{\rm cyc}})=O(1)$, and $\nu_{T_{\rm cyc}}(f)=1/(N-1)!$; apply \cref{thm:setting:universal}.
+(c) By (a), $\LSFI(f)\ge K(f\mid d)-c$; apply \cref{lem:ex:surprisal} with $Z=f$, $w=d$.
+(d) Robbins' bounds $\ln m!=m\ln m-m+\frac12\ln(2\pi m)+r_m$, $\frac1{12m+1}<r_m<\frac1{12m}$ \citep{robbins1955remark}, for $(N-1)!=N!/N$ give $\epsilon_N=r_N/\ln2$.
+$D_{N-1}$ has the computable domain $\{0,1\}^d\setminus\{0^d\}$ and determines $f$, so the bounds transfer.
+\end{proof}
+
+\begin{proof}[Proof of \cref{thm:ex:ksteps}]
+(a) If $k-1>2^\ell-1$, $B_k$ answers $0^\ell$ on length $\ell$; for $k=1$ it maps everything to $0^\ell$. Each value is fixed by finitely many tape bits almost surely, $B_k$ is total almost surely, and its index is computable from $k$. On the event $(v_1,\dots,v_{k-1})=(x_1,\dots,x_{k-1})$, of probability $1/(N-1)_{k-1}$, it maps $x_1\mapsto0^d$, $x_i\mapsto x_{i-1}$, and $x_k$, which is off the spine, to $v_{k-1}=x_{k-1}$. \Cref{thm:setting:universal} gives the term $K(k)$. A uniform cyclic permutation contains the $k$ arcs $x_k\to\dots\to x_1\to0^d$, which do not close the cycle, with probability $(N-k-1)!/(N-1)!=1/(N-1)_k$ (contract the path), so $T_{\rm cyc}$ gives $\log(N-1)_{k-1}+\log(N-k)+c$.
+(b) Let $F$ have law $\nu$. Each $x\in A_k(F)$ has exactly one $z$ of length $k-1$ with $F\supseteq D(x,z)$, its orbit, and other nonzero $x$ have none. So, summing over $x\in\{0,1\}^d\setminus\{0^d\}$ and $z\in(\{0,1\}^d\setminus\{0^d\})^{k-1}$,
+\begin{equation}\label{eq:ex:depth}
+\textstyle\sum_{x,z}\nu(D(x,z))=\Ex|A_k(F)|\le N-k .
+\end{equation}
+Thus $\MF(D(x,z))/(N-k)$ is a semimeasure in $(x,z)$, lsc uniformly in $(d,k)$, and $K(x,z\mid d,k)\le\LSFI(D(x,z))+\log(N-k)+c$. As $(x_k,\dots,x_1)$ is uniform over $(N-1)_k$ values, \cref{lem:ex:surprisal} with $w=(d,k)$ gives (b).
+(c) Use $j+d$ in (b) and a union bound over the $N-1<2^d$ values of $k$.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:ex:orderfree}]
+(a) Gibbs with $q(x,z):=\nu(D(x,z))/(N-k)$ on the same range of $(x,z)$ and \eqref{eq:ex:depth}; $(x_k,(x_{k-1},\dots,x_1))$ lies in this range and is uniform over $(N-1)_k$ values.
+(b) First, for weak $\nu$ and nonzero $x$, $\sum_z\nu(D(x,z))\le1$ over sequences $z$ of distinct nonzero strings other than $x$: this is the proof of \cref{prop:hist:orderfree}(a), with the terminal label $0^d$ in place of $\epsilon$ and nonzero labels in place of nonempty ones. Given $x_k$, $(x_{k-1},\dots,x_1)$ is uniform over $(N-2)_{k-1}$ values; Gibbs gives $\log(N-2)_{k-1}=\log(N-1)_k-\log(N-1)$. For the full cycle, $\sum_g\nu(g)\le1$ over total $g$ on $\{0,1\}^d$ (\cref{def:setting:weak}); Gibbs.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:ex:normalised}]
+$\beta_t=-\log\MF(D_t)+\log\Znorm(D_{t-1},x_t)$. (i) $\MF$ is the law of a random partial function (\cref{prop:setting:machinelaw}), so $\Ex[-\log\MF(D_t)]\ge\log(N-1)_{t-1}$ by \cref{prop:ex:orderfree}(a). (ii) $B_{t-1}$ is total almost surely and $x_t\notin\dom D_{t-1}$, so \cref{lem:hist:broom} and the proof of \cref{thm:ex:ksteps}(a) give $\Znorm(D_{t-1},x_t)\ge2^{-K(t-1)-c}\nu_{B_{t-1}}(D_{t-1})\ge2^{-K(t-1)-c}/(N-1)_{t-2}$ on every path. (iii) $\log(N-1)_{t-1}-\log(N-1)_{t-2}=\log(N-t+1)$. The high-probability form uses \cref{thm:ex:ksteps}(b) for (i). For the sum use $\beta_t\ge0$, $K(t-1)\le\log t+2\log\log(t+1)+c$ and $N-t+1\ge N/2$.
+\emph{Why the method stops.} Over the cycle these bounds sum to at most $\sum_{t<N}(d-K(t))^+\le2N$ bits, since fewer than $2^{d-i+1}$ integers have $K(t)\le d-i$.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:ex:cycset}]
+The labels are determined by the order $\sigma=(x_1,\dots,x_{N-1})$. Fix a tape $\omega$ of the universal set-machine, with answer $U^\omega(A,x)$ at $x$ given the set $A$. If $\sigma$ is consistent with $\omega$, then $x_{N-1}=U^\omega(\{0,1\}^d\setminus\{0^d\},0^d)$, $x_{N-2}=U^\omega(\{0,1\}^d\setminus\{0^d,x_{N-1}\},x_{N-1})$, and so on. So $\sum_\sigma\Mset(y(\sigma)\Vert(\sigma,0^d))\le1$, lsc uniformly in $d$. Gibbs gives the expectation bound; the coding theorem and \cref{lem:ex:surprisal} give the probability bound. The upper bound is $L_{\rm set}\le\LSFI+c$ on distinct inputs (\cref{prop:hist:variants}) and \cref{thm:ex:cycle}(b).
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:ex:cycsi}]
+Let $\Prob_d$ be the law of the pairs for bit length $d$ ($x_t$ uniform over unused nonzero strings, $x_N=0^d$, $y_t=x_{t-1}$, continued after step $N$ by a fixed computable rule). It is computable uniformly in $d$, so by \cref{lem:hist:block} applied to $\sum_d\mm(d)\Prob_d$, $\rho(\code(h))\ge M(\code(h))\ge2^{-c}\mm(d)\Prob_d(h)$. Telescoping as in \cref{lem:ex:silabel}, with label conditionals $1$, $L^y_\rho(k)\le c-\log\mm(d)+\log\rho(\epsilon)+\log\Lambda_k$. At the first step $\Ex\Lambda_1=\sum_x\rho(1^d0x)/\rho(\epsilon)\le\rho(1^d0)/\rho(\epsilon)$, so $V_k:=\Lambda_k\rho(\epsilon)/\rho(1^d0)$ is a nonnegative supermartingale with $V_0:=1$, and $L^y_\rho(k)\le c+K(d)+\log\rho(1^d0)+\log V_k$. Finally $\log\rho(1^d0)\le-K(d)+c$: for $M$ by the coding theorem, as $\sum_dM(1^d0)\le1$ and $d\mapsto M(1^d0)$ is lsc; for $\Mnorm$ because $\Mnorm(1^d0)\le\Mnorm(0\mid1^d)\le M(1^d0)/M(1^{d+1})$ and $M(1^{d+1})\ge2^{-c}$. Jensen and Ville finish.
+\end{proof}
+
+\begin{proposition}[SI on raw blocks]\label{prop:ex:cycraw}
+\status{proved}\src{examples Prop 2.6}
+Code the history as $x_1y_1x_2y_2\cdots$ in raw $d$-bit blocks without delimiters. For $\rho\in\{M,\Mnorm\}$ and uniform cyclic $f$: $\Prob[\exists k\le N:\ L^y_\rho(k)>K(d)+j+c]\le2^{-j}$, and $\Ex L^y_\rho(k)\le K(d)+c$.
+\end{proposition}
+
+\begin{proof}
+For fixed $d$ the raw blocks are a prefix-free code and \cref{lem:hist:block} applies uniformly in $d$, so $M\ge2^{-K(d)-c}\Prob_d$ on coded histories; the label loss of $\Prob_d$ is $0$. Apply \cref{lem:ex:silabel}.
+\end{proof}
+
+For illustration, for an exact Bayes mixture of the true processes for $d'\le10$ and a uniform-bits model, a direct computation (code in the accompanying repository) gives full-cycle label losses of $0.13$--$0.26$ bits with the prefix code and $1.3$--$7.8$ bits with raw blocks ($d=2,\dots,6$).
+
+\begin{question}[raw blocks]\label{conj:ex:raw}
+\status{conjecture}\src{examples Conj 2.6a}
+With raw $d$-bit blocks, is SI's expected label loss at least $K(d)-\Kpad(d)-O(1)$? (The upper bound $K(d)+c$ is \cref{prop:ex:cycraw}; a heuristic: SI does not know where the first block ends, and the first label costs about $K(d)-\min_{L\ge d}K(L)$ bits.)
+\end{question}
+
+\begin{remark}[a prior over $d$]\label{rem:ex:prior}
+\status{proved}\src{examples Rem 2.6b}
+If $d$ is drawn from a computable prior $w$, then with raw blocks $\Ex L^y_M\le H(w)+K(w)+c$.
+\end{remark}
+
+\begin{proof}
+$M\ge2^{-K(w)-c}w(d)\Prob^{\rm bin}_d$, with $\Prob^{\rm bin}_d$ the law of the raw coding. Telescoping gives $L^y_M(k)\le K(w)+c-\log w(d)+\log M(\epsilon)+\log\Lambda_k$, and $\Ex[\Lambda_1\mid d]\le\sum_{|x|=d}M(x)/M(\epsilon)\le1$, since strings of one length are prefix-free. (Raw blocks of different lengths are not, so \cref{lem:ex:silabel} does not apply to the mixture directly.)
+\end{proof}
+
+\begin{remark}[where the information is]\label{rem:ex:where}
+\status{proved; the other-direction part conditional}\src{examples Rem 2.7, 2.8, 2.12}
+A history-aware predictor that sees the previous \emph{pairs} as a set predicts perfectly: the most recent input is the unique input of $D_{t-1}$ that is not a label. So the separation is between scoring a data set as a whole and predicting with the past in view, not between sets and sequences; the previous \emph{inputs} as a set are not enough (\cref{prop:ex:cycset}). In the other direction, take $X=Y=\{0,1\}$ and $y_i=x_i$: $\LSFI\le c$ on every input sequence, while, under Assumption LHG-even (\cref{ass:hist:lhgeven}), SI's unnormalised label loss with the identity code is unbounded on the inputs $\omega_1\omega_2\cdots$ given there (\cref{prop:hist:lhg}).
+\end{remark}
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{rrrrrrr}
+\toprule
+$d$ & $\log((N-1)!)$ & per pair & $d-\log e$ & order-free & history-aware & joint\\
+\midrule
+4 & 40.250 & 2.516 & 2.557 & 42.748 & 1.585 & 1.544\\
+8 & 1675.996 & 6.547 & 6.557 & 1678.576 & 1.585 & 1.583\\
+12 & 43238.047 & 10.556 & 10.557 & 43240.632 & 1.585 & 1.585\\
+\bottomrule
+\end{tabular}
+
+\caption[The cyclic permutation: constants and finite mixtures]{The cyclic permutation: constants and full-cycle losses (bits) of exact finite mixtures, computed exactly on permutations drawn with a fixed seed (code in the accompanying repository). Order-free: weight $\frac16$ each on the uniform cyclic-permutation, permutation and function laws and the maps $x\mapsto0^d$, $x\mapsto x$, $x\mapsto x+1\bmod N$. History-aware: $\frac13$ each on ``copy the previous input'', uniform labels, uniform unused labels. Joint: label loss of a mixture of the true process, true inputs with uniform labels, and uniform blocks.}\label{tab:ex:cycle}
+\end{table}
+
+% ------------------------------------------------------------------
+\subsection{Eisenstat's example}\label{app:ex:eisenstat}
+
+In \cref{rem:ex:email}, $UB_n-\tau_nH(\frac13)=\frac23(G_{N^0_n}-\frac12N^0_n)$, with $G$ as in the proof of \cref{prop:ex:asymp}.
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{rrcccccccc}
+\toprule
+$n$ & runs & $L_{\rm of}/n$ & $UB_n/n$ & iid$/n$ & $\mathrm{sd}(UB_n)/\sqrt n$ & $L_{\rm of}-UB_n$ & $L_{P^*}$ & $L_{\rm joint}$ & touching\\
+\midrule
+100 & 400 & 0.5785 & 0.4498 & 1.2532 & 0.989 & 12.9 & 2.18 & 3.32 & 2.83\\
+1000 & 200 & 0.4840 & 0.4630 & 1.2502 & 1.113 & 21.0 & 2.30 & 3.43 & 2.88\\
+10000 & 40 & 0.4627 & 0.4597 & 1.2510 & 1.113 & 29.4 & 2.17 & 3.29 & 2.85\\
+limit & & & 0.4591 & 1.2516 & 1.0245 & & 2.3986 & & 3\\
+\bottomrule
+\end{tabular}
+
+\caption[Eisenstat's example: simulated losses]{Eisenstat's example: means over the runs of a simulation with a fixed seed (code in the accompanying repository), in bits. $L_{\rm of}$: loss of the exact order-free Bayes mixture of an i.i.d.\ law and two families of threshold laws, with Laplace biases; iid: loss of the product law with $\Prob[y=1]=\frac13$; $L_{P^*}$: loss of the Bayes predictor of \cref{lem:ex:pstar}; $L_{\rm joint}$: label loss of the exact joint mixture of the true process, the true inputs with Laplace labels, and a null model; touching: number of touching steps (\cref{prop:ex:burnin}). $L_{\rm of}-UB_n$ grows like $2.5\log n$ (cf.\ \cref{prop:ex:UB}). Last row: the limits of \cref{prop:ex:asymp,prop:ex:burnin}.}\label{tab:ex:eisenstat}
+\end{table}
+
+\begin{lemma}[the heads frontier is rarely behind]\label{lem:ex:behind}
+\status{proved; computed (examples e7(a))}\src{examples Lemma 3.5}
+$\Prob[\eta_n<\tau_n]\le20e^{-n/18}$.
+\end{lemma}
+
+\begin{proof}
+If $\eta_n<\tau_n$, all revealed indices lie below $\tau_n$, so $\tau_n\ge n$ and $b_{<\tau_n}$ has exactly $N^0_n$ tails (\cref{lem:ex:shape}). So $N^0_n\ge n/2$, or some $k\ge n$ has fewer than $k/2$ tails in $b_{<k}$. By Hoeffding's inequality \citep{hoeffding1963probability} these have probabilities at most $e^{-n/18}$ and $e^{-k/18}$; the sum is at most $e^{-n/18}(1+1/(1-e^{-1/18}))\le19.6\,e^{-n/18}$.
+\end{proof}
+A direct computation (code in the accompanying repository; a dynamic program over the frontier process of \cref{prop:ex:burnin}) gives $\Prob[\eta_n<\tau_n]=6.48\cdot10^{-2}$, $1.55\cdot10^{-2}$, $1.11\cdot10^{-3}$, $7.31\cdot10^{-6}$, $4.27\cdot10^{-10}$ at $n=10,20,40,80,160$ (three digits).
+
+\begin{proof}[Proof of \cref{thm:ex:sandwich}]
+$[0,g_n)\subseteq\dom D_n$ with labels $b_{<g_n}$, and $[0,g_n)$ and $g_n$ are computable from each other; monotonicity and \cref{thm:setting:coding}(a) give $\LSFI(D_n)\ge K(b_{<g_n}\mid g_n)-c$. For $b$ Martin-L\"of random for the computable $P_{1/3}$, the Levin--Schnorr theorem (see \citealp{li2008introduction}) gives $K(b_{<g})\ge-\log P_{1/3}(b_{<g})-c_b$, so $K(b_{<g_n}\mid g_n)\ge-\log P_{1/3}(b_{<g_n})-K(g_n)-c_b$; if $\tau_n\le\eta_n$, then $g_n\ge\tau_n$ and $-\log P_{1/3}(b_{<g_n})\ge UB_n$. The upper bound is \cref{prop:ex:UB}. By \cref{lem:ex:behind} and Borel--Cantelli the heads are eventually ahead; by the strong law $\eta_n/n\to2$ and $\tau_n/n\to\frac12$, so $g_n\le\max(\tau_n,\eta_n)\le3n$ for large $n$. Martin-L\"of random $b$ have probability $1$.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:ex:asymp}]
+Let $G_i$ be the number of heads before the $i$-th tail. Then $\tau_n=N^0_n+G_{N^0_n}$ and, using $H(\frac13)=\log3-\frac23$,
+\[UB_n-\tfrac{H(1/3)}2n=a(N^0_n-\tfrac n3)+\log3\,(G_{N^0_n}-\tfrac12N^0_n),\]
+where $G_i=\sum_{l\le i}\gamma_l$ with $\gamma_l$ i.i.d.\ geometric ($\Prob[\gamma=m]=\frac23(\frac13)^m$, mean $\frac12$, variance $\frac34$), independent of $N^0_n\sim\mathrm{Bin}(n,\frac13)$. The second term has conditional mean $0$ given $N^0_n$, so the terms are uncorrelated, with variances $a^2\frac{2n}9$ and $(\log3)^2\frac34\frac n3$. The strong law follows from $N^0_n/n\to\frac13$, $G_i/i\to\frac12$. For the limit law, let $\psi(s):=\Ex e^{is(\gamma-1/2)}=1-\frac38s^2+o(s^2)$; by independence the characteristic function at $\theta$ is $\Ex[e^{i\theta a(N^0_n-n/3)/\sqrt n}\psi(\theta\log3/\sqrt n)^{N^0_n}]$, the second factor tends to $e^{-\theta^2(\log3)^2/8}$ in probability with modulus at most $1$, and bounded convergence with the de Moivre--Laplace and L\'evy continuity theorems gives $\mathcal N(0,\sigma^2)$.
+\end{proof}
+
+\begin{proof}[Proof of \cref{thm:ex:expected}]
+\emph{Upper.} Take expectations in \cref{prop:ex:UB}; $t\mapsto\log(t+1)+2\log\log(t+2)$ is concave and $\Ex\tau_n=\frac n3+\frac n6=\frac n2$. \emph{Lower.} By \cref{thm:ex:sandwich} and Kraft, conditionally on each value of $g_n$, $\Ex\LSFI(D_n)\ge H(b_{<g_n}\mid g_n)-c=H(b_{<g_n})-H(g_n)-c$. Since $\Prob[b_{<g_n}=s]\le P_{1/3}(s)$, $H(b_{<g_n})\ge\Ex[-\log P_{1/3}(b_{<g_n})]\ge\Ex[UB_n;\tau_n\le\eta_n]$, and $\Ex[UB_n;\eta_n<\tau_n]\le\log3\,(\Ex\tau_n^2)^{1/2}\Prob[\eta_n<\tau_n]^{1/2}=O(n)e^{-n/36}$. Next, $g_n$ is at most the first tail at or after $\tau_n$; $\{\tau_n=k\}$ depends only on the coins and $b_{<k}$, so $\Ex g_n\le\frac n2+\frac12$, and a variable on $\mathbb N$ with mean $m$ has entropy at most $\log(m+1)+\log e$. The i.i.d.\ law pays $\Ex[N^1_n\log3+N^0_n\log\frac32]=(\log3-\frac13)n$.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:ex:law}]
+(a) $D_n=D$ exactly when the coins contain $N^1$ ones (probability $\binom n{N^1}(\frac23)^{N^1}(\frac13)^{n-N^1}$) and the first $N^1$ heads and $n-N^1$ tails of $b$ are the inputs of $D$ labelled $1$ and $0$. By \cref{lem:ex:shape} this fixes $b$ on $[0,s^+)$: each of the $s^+-n$ unrevealed indices below $s^+$ is a tail if the top label is $1$, a head otherwise; probability $(\frac13)^{N^1}(\frac23)^{n-N^1}r^{s^+-n}$. Given $\dom D_n=S$, with $g:=\min(\mathbb N\setminus S)$, the labelling has probability $\binom n{N^1}r^{s^+-n}/Z(S)$, where $Z(S)=((\frac23)^{s^+-n}+(\frac13)^{s^+-n})\binom{n+g}g$ if $g<s^+$ and $Z(S)=\binom{2n}n$ if $S=[0,n)$. Indeed, a possible labelling with top label $1$ is fixed by its tail frontier $\tau'\in[0,g]$ (arbitrary labels on $[0,\tau'-1)$, $0$ at $\tau'-1$, $1$ on $S\setminus[0,\tau')$); summing $\binom n{N^1}$ gives $\sum_i\binom{\tau'-1}i\binom n{\tau'-i}=\binom{n+\tau'-1}{\tau'}$, and $\sum_{\tau'\le g}\binom{n-1+\tau'}{\tau'}=\binom{n+g}g$; top label $0$ is symmetric, and $\sum_m\binom nm^2=\binom{2n}n$. On $S=\{0,1,3\}$ the labellings $(0,1,1)$ and $(1,1,0)$ both have $N^1=2$ but probabilities $\frac15$ and $\frac1{10}$.
+(b) Weak semimeasures are monotone and $\sum_l\nu(l)\le1$ over the labellings of $[0,g)$, so Gibbs given $g_n$ yields $\Ex[-\log\nu(D_n)]\ge H(b_{<g_n}\mid g_n)$; continue as for \cref{thm:ex:expected}.
+\end{proof}
+
+\begin{lemma}[the Bayes predictor]\label{lem:ex:pstar}
+\status{proved; computed (examples e1(c))}\src{examples Lemma 3.8}
+Let $h$ be a history with frontiers $\tau,\eta$, $F:=\max(\tau,\eta)$ and smallest unrevealed index $g$, and $x$ the next input. The conditional probability of label $1$ at $x$ is $0$ if $x<\eta$ and $1$ if $x<\tau$ (for $x<F$ exactly one holds); for $x\ge F$ it is $1$ if $g<F$ and $\tau\le\eta$, $0$ if $g<F$ and $\eta<\tau$, and $2^k/(2^k+1)$, $k:=x-F$, if $g=F$ (touching).
+\end{lemma}
+
+\begin{proof}
+The first case is \cref{lem:ex:shape}. Let $x\ge F$. If $\tau\le\eta$ and $g<F$, the first unrevealed index in $[\tau,\eta)$ is the next tail, so a tail reveal would give an input below $\eta$; the case $\eta<\tau$ is symmetric. If $h$ is touching, it depends only on $\zeta_{<t}$ and $b_{<F}$, so a head at $F+k$ has probability $\frac23(\frac23)^k\frac13$ and a tail there $\frac13(\frac13)^k\frac23$; the ratio is $2^k$.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:ex:burnin}]
+After each step the process is touching, or in a state $(A,u)$ (heads ahead, $u\ge1$ unrevealed tails in $[\tau,\eta)$), or $(B,u)$ (heads behind, $u\ge1$ unrevealed heads in $[\eta,\tau)$); indices $\ge F$ are fresh. From touching, a head reveal skipping $k$ tails (probability $\frac29(\frac23)^k$) leads to $(A,k)$, a tail reveal skipping $k$ heads (probability $\frac29(\frac13)^k$) to $(B,k)$; $k=0$ means touching. From $(A,u)$: $u-1$ with probability $\frac13$, $u+m$ with probability $\frac29(\frac23)^m$. From $(B,u)$: $u-1$ with probability $\frac23$, $u+m$ with probability $\frac29(\frac13)^m$. The $A$-walk moves down by exactly one and has drift $+1$; its probability $\beta$ of ever going one level down satisfies $\beta=\frac13+\frac23\sum_m\frac13(\frac23)^m\beta^{m+1}$, i.e.\ $2\beta^2-3\beta+1=0$, and $\beta=1$ would contradict its convergence to $+\infty$; so $\beta=\frac12$, and $(A,k)$ returns with probability $2^{-k}$. The $B$-walk has drift $-\frac12$ and returns almost surely. The return probability from touching is $\frac29+\frac29+\sum_{k\ge1}\frac29(\frac13)^k+\sum_{k\ge1}\frac29(\frac13)^k=\frac23$, and after a touching step the process starts afresh, so $N_{\rm touch}$ is geometric. By \cref{lem:ex:pstar}, a touching step costs $P^*$ an expected $\vartheta$ and other steps cost $0$, so $\Ex L_{P^*}(n)=\vartheta\Ex N_{\rm touch}(n)$.
+\end{proof}
+
+\begin{proof}[Proof of \cref{cor:ex:rule}]
+In $(A,u)$ the unrevealed indices in $[\tau,\eta)$ are tails, so $g$ is the next tail to be revealed and a head lands at an index $\ge\eta>g$. Almost surely $N_{\rm touch}<\infty$; after the last touching step the process stays in $A$-states, since $B$-states return to touching almost surely and $A$-states are left only through touching.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:ex:rulestats}]
+At a touching step ($g=F$, input $F+k$) the rule errs on a head with $k=0$ (probability $\frac29$) and on a tail with $k\ge1$ (probability $\frac19$). It never errs in $A$-states and always in $B$-states, where $g$ is the next head. A $B$-excursion from $(B,k)$ moves down by exactly one with i.i.d.\ increments of mean $-\frac12$; optional stopping for the martingale $u_t+t/2$ shows that its length $S$ is integrable, and Wald's identity gives $\Ex S=2k$. So a touching step is followed by $\sum_{k\ge1}\frac29(\frac13)^k2k=\frac13$ $B$-steps on average, and a cycle (a touching step and its excursion) has $\frac29+\frac19+\frac13=\frac23$ expected errors. Cycles are i.i.d., $N_{\rm touch}$ is a stopping time for them, and Wald's identity gives $3\cdot\frac23=2$. For the second claim, the probability $p$ of no error from a touching history satisfies $p=\frac29p+\sum_{k\ge1}\frac29(\frac23)^k(2^{-k}p+1-2^{-k})=\frac13p+\frac13$ (an error-free step is a tail at $k=0$ or a head at $k\ge1$), so $p=\frac12$.
+\end{proof}
+
+% ------------------------------------------------------------------
+\subsection{Positive examples}\label{app:ex:positive}
+
+\begin{proof}[Proof of \cref{prop:ex:frozen}]
+(a) $T_g$ reads a uniform real $\varepsilon'$ bit by bit from a shared part of the tape and, for each input $x$, a private uniform real $u_x$, and outputs $g(x)\oplus\ind[u_x<\varepsilon']$ once the comparison is decided (after finitely many bits, with probability $1$). Given $\varepsilon'$ the flips are independent, so $\nu_{T_g}(D)=\int_0^1\varepsilon'^e(1-\varepsilon')^{n-e}d\varepsilon'=1/((n+1)\binom ne)$, with $K(\nu_{T_g})\le K(g)+c$. So $T_g$ is a mixture of product laws, not a product law. Among product laws, ``$g$ flipped independently with probability $e/n$'' has complexity $K(g)+O(\log n)$ and loss $nH(e/n)\le\log\binom ne+\log(n+1)$, which gives (a) up to $O(\log n)$.
+(b) Each new input's flip is $\Bern(\varepsilon)$ and independent of the past, so $e\sim\mathrm{Bin}(n,\varepsilon)$; use $\log\binom ne\le nH(e/n)$ and concavity. Given the past and a new input, the label has conditional entropy $H(\varepsilon)$, so Gibbs at each step bounds every predictor below by $H(\varepsilon)$ per step.
+\end{proof}
+
+\emph{Finite versions.} A direct computation (code in the accompanying repository) gives the following. For sparse parity ($d=16$, $k=3$, prior $w(S)=2^{-|S|-1}/\binom d{|S|}$ on $|S|\le4$) the loss of the Bayes mixture saturates at $\log\binom{16}3+4=13.13$ bits after $16$ to $24$ random examples, in any order. For frozen noise (parities of at most $3$ of $12$ bits, $\varepsilon=0.1$, Laplace flip rate) the regret against the noise-aware predictor is $14.9$--$17.3$ bits for $n=100$--$3200$, close to $-\log w(S^*)+\frac12\log n$ for the target parity $S^*$.
+
+\begin{remark}[fresh noise]\label{rem:ex:fresh}
+\status{proved (citing)}\src{examples Rem 4.7}
+Let the pairs be i.i.d.\ from $\mu\times P(y\mid x)$ with fresh noise at each draw. If inputs never repeat, fresh and frozen noise coincide and \cref{thm:learn:dominance}(a) bounds the regret against $P$ by $K(P)+c$ on every path. If some input has positive probability and $P(\cdot\mid x)$ is not a point mass there, the one-tape version has $\Ex\LSFI=\infty$ in both conventions (\cref{prop:learn:freshnoise}); time stamps or Solomonoff's per-query solution repair this (\cref{thm:learn:batch}(b), \cref{prop:learn:perquery}).
+\end{remark}
+
