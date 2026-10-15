@@ -86,6 +86,15 @@ What this means for every scout, thread, referee and editor:
   4. **Theories that revise the base abstractions.** This covers meaning change, and questions shown to be ill-posed. There is no formal handle yet. It is open.
 * **Axiom induction sits on step 2, with partial results possible on step 3.** The paper presents step 2 as a step in the right direction, and says plainly that steps 3 and 4 are needed.
 
+## Naming of the companion papers (2026-10-15)
+
+The two companion papers are being renamed from "Solomonoff function induction (SFI)" to **Solomonoff operator induction (SOI)**. The binding rules are in `../solomonoff-function-induction/research/paper-review/rename/RENAME.md`.
+* **Where the name comes from.** Solomonoff (2008) posed the operator-induction problem: predict the answer to a new question from an unordered set of question–answer pairs. He gave two universal-prior solutions. His per-query solution is the per-query mixture M_pq.
+* **What "SOI" means without qualification:** the one-tape version M_F, one random tape shared by all questions.
+* **Other versions:** the coin-free version W, the Kolmogorov version K_F, and the history-aware version SOI^hist.
+* **In new records,** write SOI rather than SFI. Older records keep SFI.
+* **This paper's working name stays "Solomonoff axiom induction"** (macro), in parallel with SOI.
+
 ## Target
 
 An arXiv-quality paper with Kaarel Hänni as sole author. The AI assistance is disclosed as in the two SFI papers (`../solomonoff-function-induction/paper*/main.tex`: title-page footnote and acknowledgements). From the start it follows the rules the SFI papers reached after review:
