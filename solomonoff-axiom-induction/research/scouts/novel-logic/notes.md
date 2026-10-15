@@ -227,7 +227,7 @@ Each item gives a statement, a first pass, and an assessment. The four pushed di
   * In the limit, every compatible hypothesis entails all of Th(ℕ), so its L_A-content is Th(ℕ).
 * **ω-rule version** [proved; standard].
   * Q plus the ω-rule proves every true L_A-sentence, by induction on the sentence: Δ₀ truths by (Σ₁C), ∀ by the ω-rule, ∃ by a witness.
-  * So with ⊢_ω and B ⊇ Q, every ω-consistent theory has L_A-content Th(ℕ). The inducer is omniscient about arithmetic a priori.
+  * So with ⊢_ω and B ⊇ Q, every extension of Q that is consistent under ⊢_ω has L_A-content exactly Th(ℕ). The inducer is omniscient about arithmetic a priori.
 * **Assessment.** A remark, but a useful one. F26's unbounded loss on Th(ℕ) is a fact about *effective* consequence, not about the complexity of arithmetic truth: a single short categorical axiom "explains" all of it once consequence is not r.e. Novelty is low; it is the formal side of the classical point that PA² settles every arithmetic question semantically but not deductively.
 
 ### N7. Th(ℕ): is the loss o(n)? (scout F's Q3)
@@ -265,7 +265,7 @@ Each item gives a statement, a first pass, and an assessment. The four pushed di
 * **Facts** [proved, assembled].
   * (a) *Answering implies predicting.* If a consistent r.e. T answers every question of the stream correctly, the loss is ≤ K_≡(T) + c (F13).
   * (b) *Predicting does not imply answering by any theory.* The lottery stream (E1) has bounded loss, but no r.e. theory answers its questions as labelled.
-  * (c) *Predicting a text does not converge to answers on unasked questions.* On a two-valued presentation of an incomplete T* the loss is bounded, but on every T*-independent question the δ-answer is "don't know" forever for small δ, since all three trichotomy values keep prior shares (F24). Three-valued data fix this.
+  * (c) *Predicting a text does not converge to answers on unasked questions.* On a two-valued presentation of an incomplete T* the loss is bounded, but on every T*-independent question the δ-answer is "don't know" forever once δ is below a threshold depending on the question, since all three trichotomy values keep prior shares (F24). Three-valued data fix this.
   * (d) *Closure.* Bel_D(φ ∧ ψ) ≥ Bel_D(φ) + Bel_D(ψ) − 1, since "proves φ" and "proves ψ" imply "proves φ ∧ ψ". So δ-answers are closed under k-fold conjunction with error kδ. Unconstrained SFI has no such closure; consistent SFI has it only after closure (scout S, Prop 2.11).
 * **Assessment.** Mostly assembly. The new part is (b), via §3. Medium: it gives the philosophy scout a formal vocabulary for "answering questions ≫ predicting pixels".
 
@@ -428,7 +428,7 @@ The question matters for three reasons.
 
 **Instances.**
 * **Literal data** (F9's condition (Lit), a fresh unary predicate R). Every finite set of literals with no complementary pair is B-consistent, so r = 2, and Q1 holds for literal streams.
-* **Plain SFI.** Q1 holds, by (b). There the one-tape and coin-free versions can differ by unbounded amounts on finite data (P1 Prop 4.5 / Thm 4.9), but not "bounded against unbounded" on a single infinite stream.
+* **Plain SFI.** Q1 holds, by (b). There the one-tape and coin-free versions can differ by unbounded amounts on finite data (P1 Prop 4.5, as used in F11), but not "bounded against unbounded" on a single infinite stream.
 * **Π₁ data over a true arithmetic background.** Q1 holds by a different argument (§4, Corollary A3).
 * **The lottery.** S contains λ_k and the W-literals. The set {λ_k} ∪ {¬W(k̄, j̄) : j ≤ N_k} is minimally inconsistent with N_k + 2 elements, so no finite r bounds the arity.
   * c1 Part B checks (a) on random finite tape spaces with random inconsistency hypergraphs of arity r = 2, 3, 5. There were 0 violations at ε = 1/(r+1) in 400, 400 and 387 instances.
@@ -488,12 +488,12 @@ The proof uses only F3's decomposition Bel₀ = Unif(V) − Inc₀ and the fact 
 
 **Corollary A2 (a coding theorem for Π₁ data)** [proved]. Let D be a finite data set whose literals D^± are Π₁\* sentences or true Σ₁ sentences. Then
 
-  L_A(D) − c ≤ −log W_A(D) + c ≤ K_A(D) + c ≤ L_A(D) + K(⌈L_A(D)⌉) + 2c.
+  L_A(D) ≤ −log W_A(D) + c ≤ K_A(D) + c ≤ L_A(D) + K(⌈L_A(D)⌉) + 2c.
 
 So on such data the three versions (one-tape, coin-free, Kolmogorov) agree within O(log L_A(D)).
 
 *Proof.*
-* The first two inequalities are F10(c).
+* The first two inequalities are F10(c): W_A ≤ 2^c M_A, and 2^(−K_A) ≤ W_A.
 * For the last, let k := ⌈L_A(D)⌉, so that M_A(D) ≥ 2^(−k).
 * Write ψ_D ≡ π ∧ σ, where π is the conjunction of the Π₁\* literals and σ the conjunction of the true Σ₁ literals. Then B ⊢ σ by (Σ₁C), so Bel₀(π) = Bel₀(ψ_D) = M_A(D) ≥ 2^(−k).
 * By A1, π ∈ T_k. Then B ∪ T_k is consistent and proves π and σ.
@@ -522,10 +522,10 @@ The upper bound is witnessed by *one* true theory, of complexity m + K(m) + c, t
   * The program "given e and m, enumerate the theorems of B ∪ W_e and output the first z such that κ(z, m) appears" halts. Its output z satisfies K(z) ≤ K(e) + K(m) + c.
   * κ(z, m) is a Π₁ sentence proved by a consistent extension of Q, so it is true by (Π₁T), and K(z) > m.
   * Hence K(e) > m − K(m) − c, and K_A({(κ(x,m),1)}) > m − K(m) − c.
-* *(b).* Let s_m be the largest halting time of V on programs of length ≤ m, and let β_m be the true Π₁ sentence ∀p ∀t ∀y (|p| ≤ m ∧ T(p, t, y) → t ≤ s̄_m).
+* *(b).* Let s_m be the largest code t of a halting computation of V on a program of length ≤ m (a finite set), and let β_m be the true Π₁ sentence ∀p ∀t ∀y (|p| ≤ m ∧ T(p, t, y) → t ≤ s̄_m).
   * For x with K(x) > m, the sentence ∀p ≤ P ∀t ≤ s̄_m ¬T(p, t, x̄), where P bounds the codes of programs of length ≤ m, is a true Δ₀ sentence. So Q proves it.
   * With β_m it gives κ(x, m). So B ∪ {β_m} is true and proves every true κ(·, m).
-  * s_m is computable from m and h_m := #{p : |p| ≤ m, V(p)↓} < 2^(m+1): run all such programs until h_m have halted. So K(β_m) ≤ K(m) + m + 1 + c.
+  * s_m is computable from m and h_m := #{p : |p| ≤ m, V(p)↓} < 2^(m+1): run all such programs until h_m have halted, then take the largest computation code. So K(β_m) ≤ K(m) + m + 1 + c.
 * *(a).* For K(x) ≤ m the datum is false Π₁ and M_A = 0 by (Π₁T). Otherwise:
   * combine A2 with the deterministic bound: L_A + K(⌈L_A⌉) + c ≥ K_A > m − K(m) − c;
   * by (b), L_A ≤ m + K(m) + c, so K(⌈L_A⌉) ≤ 2 log m + c′. ∎
@@ -587,3 +587,500 @@ The literal ¬σ_{x₁} is a true Π₁\* sentence. The literal σ_{x₂} is a *
 *What is missing.* A verified statement of (FLEX) with the needed uniformity. The rest is as in F11.
 
 **Open (A-Q1).** Do *true* Σ₂ or Π₂ data admit a coding theorem? A1 fails there: consistent extensions of Q can prove false Π₂ sentences. I do not know whether a gap can be produced with true data.
+
+---
+
+## 5. Push 3: theoretical terms pay for finite theories
+
+### 5.1 The question, and where the answer changes
+
+The seed asks whether a simplicity prior over theories in an extended language, with data only in the observational language, can *provably prefer* theories with theoretical terms because they compress. The answer depends on the hypothesis class.
+
+| hypothesis class | do theoretical terms pay on observational data? | where |
+|---|---|---|
+| r.e. axiom sets, deduction free (the Solomonoff inducers M_A, W_A, K_A) | **no**: O(1) bits (Craig's observation inside the prior). Moreover, r.e. axiom sets in L *are* finite theories in a two-sorted L⁺ with theoretical vocabulary and entities, up to O(1) | F7′; scout S Thm 3.1; B3 below |
+| finite theories (single sentences), deduction free | **yes, unboundedly**: K_fin → ∞ in the base language, O(1) with one unary function symbol (infinity) or with a second sort (PA) | B1, B2 |
+| finite theories in monadic extensions | **no help**: unary theoretical predicates do not help with infinity | B1(a) |
+| literal symbol count instead of K | linear (pure equality) → logarithmic (monadic) → constant (unary function) | B1′ |
+| bounded deduction | scout S: for r.e. axiom sets vocabulary is eliminable at polynomial cost. For finite theories about the named objects, a polyadic relation or unnamed objects are needed | scout S Props 3.5, 3.10, Thm 3.12 |
+| one-tape random finite theories | the equivalence B3 fails: random r.e. theories beat every random finite theory on the lottery | B4 |
+
+### 5.2 Infinity: the simplest regularity that needs a theoretical term
+
+**Setting.**
+* L_mon := {=} ∪ {P_i : i ∈ ℕ}: unary predicates, no constants or function symbols.
+* L_f := L_mon ∪ {f}, with f a unary function symbol.
+* B := ∅.
+* λ_n := ∃x_1 … ∃x_n ⋀_{i<j} x_i ≠ x_j ("there are at least n things").
+* D_n := {(λ_m, 1) : 1 ≤ m ≤ n}, so ψ_{D_n} is equivalent to λ_n.
+* ι := ∀x∀y (f x = f y → x = y) ∧ ∃y ∀x f x ≠ y ("f is injective and not surjective").
+
+**Lemma B1.1 (quantitative finite model property of monadic logic)** [proved, given the Ehrenfeucht–Fraïssé theorem (known; standard); computed: `checks/c2_finite_models.out`, Parts A and B].
+
+Let ψ ∈ Sent_{L_mon} use k predicate symbols and have quantifier rank q, and put q′ := max(q, 1). If ψ has a model, it has one with at most 2^k q′ elements.
+
+For k = 0 (pure equality), a rank-q sentence has the same truth value in all sets of size ≥ q′.
+
+*Proof.*
+* Let M ⊨ ψ. Partition M into the 2^k cells C_τ, τ ∈ {0,1}^k, by which of the k predicates hold. Let M′ ⊆ M keep min(|C_τ|, q′) elements of each cell. M′ is nonempty because M is.
+* We show the duplicator wins the q-round Ehrenfeucht–Fraïssé game on (M, M′). The strategy keeps this invariant: chosen pairs (a_i, b_i) satisfy a_i = a_j ⟺ b_i = b_j, and a_i, b_i lie in the same cell.
+  * When the spoiler picks an element equal to a previously chosen one, answer with its partner.
+  * Otherwise answer with an unchosen element of the same cell on the other side.
+* Such an element exists.
+  * If |C_τ| ≥ q′, both sides have ≥ q′ ≥ q elements in τ, and fewer than q have been chosen.
+  * If |C_τ| < q′, both sides have exactly |C_τ| elements in τ. Chosen elements of τ are matched bijectively, so a fresh element on one side implies one on the other.
+* The invariant makes the chosen pairs a partial isomorphism for = and every P_i. By the Ehrenfeucht–Fraïssé theorem, M and M′ agree on all sentences of rank ≤ q. So M′ ⊨ ψ and |M′| ≤ 2^k q′.
+* For k = 0, all sets of size ≥ q′ are rank-q equivalent by the same game. ∎
+
+*Computed (c2).*
+* Part A: 1000 random pure-equality sentences of rank 1–4 had constant truth value on sizes q, …, q + 3.
+* Part B: 1800 pairs (random sentence over {=, P₁, P₂} of rank 1–3, random structure). Truncating every cell at q never changed the truth value.
+
+**Theorem B1 (infinity)** [proved; (b) uses Lemma B1.1].
+* **(a) Monadic theories cannot explain infinity.** If ψ ∈ Sent_{L_mon} is consistent and ψ ⊢ λ_n, then n ≤ N(ψ) := 2^{k(ψ)}·max(q(ψ), 1). So no consistent finite L_mon-theory proves all of D_∞.
+* **(b) The exact cost in the base language.** K_fin^{L_mon}(D_n) = min_{m ≥ n} K(m) ± c. In particular:
+  * K_fin^{L_mon}(D_n) → ∞;
+  * for every computable nondecreasing unbounded g, K_fin^{L_mon}(D_n) ≤ 2 log g(n) + c for all large n. Applying this to g := ⌊2^(G/3)⌋ shows that it grows more slowly than every computable unbounded nondecreasing G.
+* **(c) One unary function symbol makes the cost constant.** ι is consistent and proves every λ_n. So K_fin^{L_f}(D_n) ≤ K(ι) + c for all n.
+* **(d) The posterior moves to the theoretical term.** Under the prior m on Sent_{L_f}, the posterior probability, given D_n, that the finite hypothesis does not use f tends to 0. Indeed it is at most 2^c·Σ_{j≥n} m(j) / m(ι), with m(j) the universal semimeasure on ℕ.
+* **(e) No gain for the r.e. inducer.** K_A^{{=}}(D_n) ≤ c, by the r.e. theory {λ_m : m ≥ 1} (as F7′ predicts).
+
+*Proof.*
+* (a) Lemma B1.1 gives a model of size ≤ N(ψ), in which λ_n holds only if n ≤ N(ψ).
+* (b) *Lower bound.* N(ψ) is computable from ψ, so K(N(ψ)) ≤ K(ψ) + c. With (a), K(ψ) ≥ K(N(ψ)) − c ≥ min_{m≥n} K(m) − c.
+  * *Upper bound.* For m ≥ n, λ_m is consistent, proves λ_n, and has K(λ_m) ≤ K(m) + c.
+  * *Divergence.* Each m has finite K(m), and only finitely many m have K(m) ≤ j.
+  * *Slow growth.* Let h(j) := the least n′ with g(n′) ≥ j. Then h is computable and h(g(n) + 1) > n. So min_{m≥n} K(m) ≤ K(h(g(n)+1)) ≤ K(g(n) + 1) + c ≤ 2 log g(n) + c′.
+* (c) ι has the model (ℕ, successor). In any model, let y₀ be outside the range of f. Then y₀, f y₀, …, f^{n−1} y₀ are pairwise distinct: f^i y₀ = f^j y₀ with i < j would give y₀ = f^{j−i} y₀ by injectivity, which is in the range. So ι ⊨ λ_n, and by completeness ι ⊢ λ_n.
+* (d) Every compatible L_mon-sentence has N(ψ) ≥ n by (a). The pushforward of m under the computable map ψ ↦ N(ψ) is dominated by 2^c m on ℕ. So Σ_{ψ ∈ L_mon compatible} m(ψ) ≤ 2^c Σ_{j≥n} m(j), which tends to 0. The compatible L_f-mass is ≥ m(ι) > 0.
+* (e) Immediate. ∎
+
+*Computed (c2, Part C).* ι has no model of size 1–6: all 6^6 = 46656 functions on six points were checked.
+
+**B1′ (the same in literal symbol count)** [lower bounds proved; constructions proved and computed]. Let |ψ| be the number of symbols.
+* *Pure equality* (k = 0): ψ ⊢ λ_n forces q(ψ) ≥ n, so |ψ| ≥ n. λ_n itself has 1 + 5·C(n,2) + 2n symbols (c2 D).
+* *Monadic:* n ≤ 2^k q ≤ 2^{|ψ|}|ψ|, so |ψ| ≥ log n − log log n − O(1).
+  * Conversely, the "binary counter" Cnt_k forces ≥ 2^k elements with O(k²) symbols. Cnt_k says: some element has no P_i; and every element not having all P_i has a successor, an element whose P-vector is the binary increment.
+  * Cnt_k holds iff all 2^k cells are nonempty: an induction along the counter. c2 D checks this for k ≤ 3 on all structures with cell counts ≤ 2, and prints the sizes 46, 91, 148, 217, … (second differences 12, so quadratic).
+  * So the monadic cost lies between log n − log log n and O(log² n).
+* *With f:* O(1).
+
+So under a literal-size prior 2^(−α|ψ|), the odds for the theoretical-term theory against the best monadic or pure-equality one grow as 2^{Ω(log n)}, respectively 2^{Ω(n)}.
+
+**Ramsey and Craig, side by side** [proved].
+* The Ramsey sentence ∃f ι(f) is a single existential second-order sentence. Its first-order {=}-consequences are exactly Cn{λ_m : m ≥ 1}:
+  * every infinite set carries an injective non-surjective map;
+  * the theory of infinite sets is complete.
+* Craig's construction, or the r.e. set {λ_m}, gives a first-order observational axiomatisation, necessarily infinite by (a).
+
+So on this example:
+* Ramsey elimination keeps the theory finite but leaves first-order logic;
+* Craig elimination stays first-order but gives up finiteness;
+* a finite first-order observational theory does not exist.
+
+*Relation to scout S.* Scout S's Thm 3.12 shows that unary theoretical predicates do not help finite theories about the named objects under bounded deduction. B1(a) is the same moral with deduction free, on the simplest possible data: unary predicates never help, and a unary *function* does.
+
+### 5.3 Peano arithmetic: theoretical sorts compress PA
+
+**Lemma B2.1 (reflexivity of PA)** [known; recalled, unverified: Mostowski 1952 for reflexivity, Kreisel and Lévy 1968 for essential reflexivity; proof sketch]. For every L_A-sentence ψ, PA + ψ ⊢ Con({ψ}), where Con({ψ}) is the canonical consistency statement of the one-sentence theory {ψ}.
+
+*Sketch.*
+* Let ψ have complexity ≤ j.
+* PA has a Σ_j-satisfaction formula with the Tarski clauses provable [known: partial truth definitions].
+* PA proves the cut-elimination theorem for first-order logic, since it proves the totality of superexponentiation [known].
+* Reason in PA + ψ. If ψ ⊢ ⊥, take a cut-free derivation of ⊥ from ψ. Every formula in it is a subformula instance of ψ, so of complexity ≤ j. Induction along the derivation, with the partial satisfaction formula, shows every sequent valid, hence ¬ψ. This contradicts ψ.
+
+**Corollary B2.2** [proved, given B2.1 and Gödel's second theorem (known)]. No consistent L_A-sentence proves every axiom of PA. Scout S records the classical form: PA is not finitely axiomatisable (Ryll-Nardzewski 1952) [known, as recorded by scout S].
+
+*Proof.*
+* Suppose ψ is consistent and proves every PA axiom.
+* The PA + ψ-proof of Con({ψ}) uses finitely many PA axioms, so ψ ⊢ Con({ψ}).
+* But {ψ} is a consistent r.e. theory containing PA. By G2, {ψ} ⊬ Con({ψ}). Contradiction. ∎
+
+**Theorem B2 (PA's theorems as data)** [(a), (b) proved, given B2.2 and the consistency of PA; (c) proved, given recalled facts about ACA₀; (d) proof sketch].
+
+Setting: L = L_A and B = ∅. Let D_∞ list the theorems of PA, labelled true, in the order of an effective enumeration of PA-derivations. In particular every PA axiom occurs.
+* **(a) Finite L_A-theories.** K_fin^{L_A}(D_n) → ∞ and W_fin^{L_A}(D_n) → 0. On the other hand K_fin^{L_A}(D_n) ≤ K(n) + c, by the conjunction of the first n data.
+* **(b) The r.e. inducer.** K_A^{L_A}(D_n) ≤ K(PA) + c = O(1).
+* **(c) A theoretical sort.** In the two-sorted language L_A² of second-order arithmetic (numbers and sets, with ∈), ACA₀ is finitely axiomatisable, and its L_A-consequences are exactly PA's [known; recalled, unverified: Simpson, *Subsystems of Second Order Arithmetic*]. Hence:
+  * K_fin^{L_A²}(D_n) ≤ c for all n;
+  * the posterior over finite L_A²-theories puts mass → 1 on theories that use the set sort;
+  * the winning theory adds no first-order content. It compresses without predicting anything new.
+* **(d) A theoretical predicate on the same domain.** In L_A ∪ {Tr}, the finite theory IΣ₁ + (compositional truth clauses for Tr) + ∀φ (PA-Ax(φ) → Tr(φ)) is true in ℕ (with Tr the true sentences) and proves every PA axiom. So it also gives O(1). It is not conservative: it proves Con(PA). IΣ₁ is needed to prove that numerals evaluate correctly, for the induction on formulas; IΣ₁ is finitely axiomatisable [recalled, unverified].
+
+*Proof of (a).*
+* By B2.2, every consistent ψ ∈ Sent_{L_A} fails to prove some PA axiom α_ψ.
+* α_ψ occurs in D_∞, so ψ is incompatible with D_n for all large n.
+* Only finitely many ψ have K(ψ) ≤ j, which gives K_fin → ∞. Dominated convergence gives W_fin → 0.
+* The upper bound uses the consistency of PA. ∎
+
+*Contrast with B1.* In arithmetic a unary theoretical *predicate* (truth) suffices, while for infinity in pure equality unary predicates are useless. The difference is that L_A's domain already carries + and ·, which can code syntax.
+
+### 5.4 r.e. axiom sets are finite theories with theoretical apparatus
+
+**Proposition B3 (a Kleene-type theorem with complexity bounds)** [proof sketch; Kleene 1952 and Craig–Vaught 1958 are the classical sources (scout P's `refs.bib`: kleene1952finite, craigvaught1958finite); their statements were not re-read here].
+
+Let L be a finite relational language; function symbols and constants reduce to this case by a faithful translation, costing O(1) by F7. Let L⁺ be the three-sorted extension with:
+* sort o, carrying L;
+* sort n, with 0, S, +, ·, <;
+* sort a ("assignments"), with function symbols val : a × n → o and upd : a × n × o → a, and a relation Sat ⊆ n × a.
+
+There is a computable injective map e ↦ F_e from indices to single L⁺-sentences such that, for every e:
+
+  Cn(F_e) ∩ Sent_L = Cn(W_e) (both sides may be inconsistent together).
+
+Consequently, for every finite data set D in L:
+* K_fin^{L⁺}(D) = K_A^L(D) ± c;
+* 2^(−c) W_A^L(D) ≤ W_fin^{L⁺}(D) ≤ 2^c W_A^L(D).
+
+*Construction.* F_e is the conjunction of:
+* Q on sort n;
+* the update axioms val(upd(a,v,x), v) = x and v ≠ w → val(upd(a,v,x), w) = val(a,w);
+* the Tarski clauses for Sat, one per logical symbol and per relation symbol. Each is guarded by a Δ₀ formula that recognises codes, for example ∀c∀d (Neg(c,d) → ∀a (Sat(c,a) ↔ ¬Sat(d,a))) and ∀c∀v∀d (Ex(c,v,d) → ∀a (Sat(c,a) ↔ ∃x Sat(d, upd(a,v,x))));
+* the single axiom ∀c (Enum_e(c) → ∀a Sat(c,a)), with Enum_e the Σ₁ formula "c is enumerated into W_e and codes an L-sentence".
+
+*Proof sketch.*
+* *(⊇)* Let φ ∈ W_e.
+  * Q proves Enum_e(⌜φ⌝) by (Σ₁C), so F_e ⊢ ∀a Sat(⌜φ⌝, a).
+  * By external induction on L-formulas χ with variables among x_{v_1}, …, x_{v_j}, F_e ⊢ ∀a (Sat(⌜χ⌝, a) ↔ χ[val(a, v_1), …, val(a, v_j)]). The induction uses the clauses, the update axioms, and the Δ₀ facts about standard codes, which Q proves (including v̄ ≠ w̄ for distinct indices).
+  * So F_e ⊢ φ, since sorts are nonempty.
+* *(⊆)* Let M be an L-structure satisfying W_e. Expand it:
+  * sort n := ℕ;
+  * sort a := M^ℕ, with val and upd the evident maps;
+  * Sat(c, a) iff c codes an L-formula χ and M ⊨ χ[a].
+
+  Every clause holds, and Enum_e is interpreted by the true Σ₁ formula, so F_e holds. So every L-consequence of F_e holds in every model of W_e.
+* *Complexities.* F_e is computable from e, and injectively so, since e is written in it. Conversely, F ↦ (an index of Cn(F) ∩ Sent_L) is computable, and pushforwards of m under computable maps are dominated by m. ∎
+
+*Reading.* The Solomonoff-style prior over r.e. axiom sets in L is, up to a constant factor, the prior over *finite* theories in L⁺. The idealised framework therefore already contains theoretical vocabulary (Sat, val, upd) and theoretical entities (numbers and assignments). That is why adding vocabulary costs nothing there (F7′). The finite-theory prior in L alone (B1, B2) is the one under which theoretical terms visibly pay.
+
+### 5.5 The one-tape caveat
+
+**B4** [proved, from E1]. B3's equivalence is coin-free. For one-tape random *finite* theories M_fin^{L⁺}(D) := Unif{ω : the machine emits a finite F_ω, consistent with B and proving ψ_D}, it fails.
+* On the lottery stream of E1, every F_ω has an r.e. L-content, so it cannot prove D_∞ (E1(b)). By continuity from above, M_fin^{L⁺}(D_n) → 0.
+* M_A^L(D_n) stays bounded below.
+
+So random r.e. theories are strictly more powerful than random finite theories with any amount of theoretical apparatus.
+
+### 5.6 Remarks
+
+* **Schemas.** With finitely many schemata (templates) allowed, PA costs O(1) in L_A, so B2's separation is "finite axioms against schemas". ACA₀'s single induction axiom over sets replaces PA's induction schema: a theoretical sort replaces a schema.
+  * I recall Vaught (1967), "Axiomatizability by a schema", for the strength of schemas in general [recalled, unverified]. It is relevant to whether template priors (the earlier axiom-schemas report) behave like the r.e. prior or the finite one.
+  * For B1, the r.e. theory {λ_m} is not obviously a single template schema.
+* **Speed-up (N8).** For finite theories, conservative theoretical extensions also shorten proofs [recalled]. For r.e. axiom sets, scout S's proof padding neutralises this.
+* **For the philosophy section.** The ladder's step 3 ("theoretical terms that pay for themselves by compression") holds exactly as follows.
+  * Unbounded gains for finite theories with free deduction (B1, B2).
+  * No gain for the idealised r.e. inducer (F7′), because it has the theoretical apparatus built in (B3).
+  * Which apparatus is needed is informative. For infinity it is a function, not a unary predicate. For PA it is a second sort or a truth predicate.
+
+  This sharpens, and agrees with, scout S's remark that the bounded results make theoretical *relations or entities* indispensable, not theoretical vocabulary as such.
+
+---
+
+## 6. Push 4: Gödel phenomena
+
+### 6.1 The arithmetical shape of the trichotomy
+
+**Proposition D1** [proved]. Let B be r.e. and consistent with Q ⊆ Cn(B). For every finite consistent D:
+* **(a) True Σ₁.** If σ is a true Σ₁ sentence, then Bel_D(σ) = 1 (and Dis = Indep = 0).
+* **(b) False Π₁.** If π ∈ Π₁\* is false, then (Bel_D, Dis_D, Indep_D)(π) = (0, 1, 0). Equivalently, Bel_D(π) > 0 or Indep_D(π) > 0 implies that π is true.
+* **(c) Unproved true Π₁.** If B and D^± are true, and π ∈ Π₁\* is true with B ∪ D^± ⊬ π, then Bel_D(π), Dis_D(π) and Indep_D(π) are all positive.
+* **(d) Unrefuted false Σ₁.** Dually, if B and D^± are true and σ is a false Σ₁ sentence with B ∪ D^± ⊬ ¬σ, all three values of σ are positive.
+
+*Proof.*
+* (a) The posterior lives on consistent extensions of Q, and every one of them proves σ by (Σ₁C).
+* (b) ¬π is equivalent to a true Σ₁ sentence, which every such theory proves.
+* (c) Consider three r.e. theories:
+  * B ∪ D^± ∪ {π}, which is true, hence consistent, and proves π;
+  * B ∪ D^± ∪ {¬π}, which is consistent since B ∪ D^± ⊬ π, and proves ¬π;
+  * B ∪ D^±, which proves neither: not π by hypothesis, and not ¬π because it is true and ¬π is false.
+
+  Each proves ψ_D and has positive weight (F4).
+* (d) Apply (c) to π := ¬σ. ∎
+
+**Reading.** The inducer's errors are one-sided, in opposite directions on the two classes:
+
+| question class | can the posterior give positive "true" to a false sentence? | positive "false" to a true sentence? | what "independent" means |
+|---|---|---|---|
+| Σ₁ | yes (Σ₁-unsound theories) | **never** | evidence that σ is false: true Σ₁ sentences are never independent |
+| Π₁ (Con(T), Gödel sentences, "K(x) > m", Goldbach) | **never** | yes | evidence that π is true: false Π₁ sentences are never independent |
+
+So "independent" on a Π₁ question is a truth certificate. This is the formal content, inside the inducer, of "the Gödel sentence is true because it is unprovable". It also explains the normalised convention: Bel/(Bel + Dis) is 0 on false Π₁ sentences, but it throws away the Indep share, which only true Π₁ sentences have.
+
+*Example.* Let T := PA + ¬Con(PA), which is consistent and Σ₁-unsound, and let the data present T. Every consistent extension of T proves ¬Con(T). So Dis(Con(T)) = 1, although Con(T) is true. This is the one-sided Π₁ error of D1 in its most extreme form: data from an unsound theory make the posterior certain of a false consistency denial.
+
+### 6.2 Soundness is never learned
+
+Call a theory **Σ₁-sound** if it proves no false Σ₁ sentence.
+
+**Theorem D2 (coin-free)** [proved, given Gödel's second incompleteness theorem for consistent r.e. extensions of PA (known)]. Let B be r.e. and consistent with PA ⊆ Cn(B). There is c such that for every finite consistent D:
+
+  W_A(D; Σ₁-unsound) ≥ 2^(−c)·W_A(D; Σ₁-sound),
+
+where W_A(D; X) := Σ_{e ∈ X} m(e)·1[B ∪ W_e consistent, ⊢ ψ_D]. Hence:
+* the coin-free posterior satisfies P_W(Σ₁-sound | D) ≤ 1/(1 + 2^(−c)) for every D, in particular for every finite part of true arithmetic;
+* so P_W(true | D) ≤ 1/(1 + 2^(−c)) as well;
+* in the Kolmogorov version, the shortest compatible Σ₁-unsound theory is at most c bits longer than the shortest compatible Σ₁-sound one.
+
+*Proof.*
+* By the s-m-n theorem there is a computable injective g with W_{g(e)} = W_e ∪ {¬Con(B ∪ W_e)}, where Con(B ∪ W_e) is the canonical consistency statement for the r.e. presentation given by e.
+* If B ∪ W_e is consistent:
+  * G2 gives B ∪ W_e ⊬ Con(B ∪ W_e), so B ∪ W_{g(e)} is consistent;
+  * its new axiom ¬Con(B ∪ W_e) is a false Σ₁ sentence, so g(e) is Σ₁-unsound;
+  * it proves everything W_e proves.
+* Since m(g(e)) ≥ 2^(−c) m(e) (pushforward domination), summing over the Σ₁-sound compatible e, whose images are distinct, gives the inequality. ∎
+
+**Theorem D2′ (one-tape, on Π₁ data)** [proved, via A1 and G2]. Let B be true with PA ⊆ Cn(B). Let D have literals in Π₁\* ∪ {true Σ₁}, and put k := ⌈L_A(D)⌉. Then
+
+  P_{M_A}(Σ₁-unsound | D) ≥ 2^(−K(k) − c).
+
+Along a Π₁ stream with bounded loss, the posterior probability of Σ₁-unsoundness is therefore bounded below uniformly.
+
+*Proof.*
+* By A1, B ∪ T_k is true and proves ψ_D.
+* Its companion B ∪ T_k ∪ {¬Con(B ∪ T_k)} is consistent (G2), Σ₁-unsound, proves ψ_D, and has an index of complexity ≤ k + K(k) + c.
+* So M_A(D; Σ₁-unsound) ≥ 2^(−k−K(k)−c), while M_A(D) ≤ 2^(−(k−1)). ∎
+
+**Open (D-Q1).** Is P_{M_A}(Σ₁-sound | D) bounded away from 1 for all data, in the one-tape version?
+* The companion argument needs a sentence ¬Con(U) for a consistent r.e. U ⊇ A_ω. A random A_ω is r.e. only relative to its tape.
+* For machines whose emissions over all continuations of some finite tape prefix form a consistent set U_w, the companion "also emit ¬Con(B ∪ U_w) for every prefix w of the tape" works at +c bits [proved]. It fails for coin-fact machines, where every U_w is inconsistent.
+* The lottery (§3) shows the posterior can concentrate on genuinely random theories. So deterministic companions alone do not settle the question.
+* By D2′, a stream on which the one-tape posterior becomes confident of soundness, if one exists, needs data outside Π₁\* ∪ {true Σ₁}.
+
+### 6.3 Con(T) and Gödel sentences given data from T
+
+**Proposition D3** [proved]. Let T be a true r.e. theory with PA ⊆ Cn(B ∪ T), and let the data present T: Cn(D_∞^±) = Cn(B ∪ T). Let γ be Con(B ∪ T) or the Gödel sentence of B ∪ T; over PA these are provably equivalent.
+* (a) lim Bel(γ), lim Dis(γ) and lim Indep(γ) exist and all lie in (0, 1).
+* (b) The Bel and Indep shares are truth certificates for γ in the sense of D1.
+* (c) The *direction* is a choice of universal machine. For every universal V and every j there are universal V′ and V″ with lim Bel(γ)/lim Dis(γ) ≥ 2^j − 1 under V′ and ≤ 1/(2^j − 1) under V″.
+
+*Proof.*
+* (a) By F22 and F24(a), the limit posterior is the prior restricted to ΠExt(T). It contains three deterministic r.e. theories of positive weight:
+  * T + Con(T), which is true;
+  * T + ¬Con(T), which is consistent by G2;
+  * T, which decides neither, by G2 and truth.
+* (c) Let V′(0^i 1) := an index of the deterministic theory machine for T + Con(T), for 0 ≤ i < j, and V′(0^j p) := V(p).
+  * V′ is a universal prefix machine.
+  * The tapes beginning with some 0^i 1 (i < j) have measure 1 − 2^(−j). They give a compatible theory that proves γ, so the Dis share is at most 2^(−j).
+  * V″ is symmetric, with T + ¬Con(T). ∎
+
+**Answer to the brief's question.** Given data from a true T, the posterior on Con(T) or G_T keeps positive prior shares on all three answers forever. No data from T move them in the limit. Which of "true" and "false" gets more mass is fixed by the choice of universal machine, not by anything the data or the logic say. What is machine-independent:
+* all three are positive;
+* any "true" or "independent" mass certifies truth (D1);
+* "the theory is sound" never gets more than 1/(1 + 2^(−c)) in the coin-free version (D2).
+
+### 6.4 Old evidence, and induction in mathematics
+
+**Proposition D4** [proved; immediate from F1(c)]. If B ⊢ φ^b for every (φ, b) ∈ D, then M_A(D) = M_A(∅), and Bel_D = Bel₀, Dis_D = Dis₀, Indep_D = Indep₀. The same holds for W_A and K_A.
+
+In particular, with Q ⊆ Cn(B) and a Δ₀ property P(x), the data {(P(n̄), 1) : n ≤ N}, for any N, leave Bel(∀x P(x)) at its prior value.
+
+*Reading.*
+* Hänni's note `induction-in-mathematics.md` asks whether checking P(n) for all small n licenses ∀n P(n), or at least P(n + 1).
+* Axiom induction with free deduction says no, for a reason unrelated to the note's adversarial worries. The checks are logically entailed (by Q), so they are already "known" and carry no information. This is the problem of old evidence and logical omniscience; scout L lists garber1983old [B] and hacking1967slightly [B, A].
+* With B = ∅ and P a fresh predicate (empirical induction), instances confirm the universal only up to the ω-gap (§7).
+* So the inference the note asks about needs a reasoner for whom computing P(n) is costly. Logical induction (garrabrant2016logical [B, A]) is one. A derivation-charged axiom inducer is another.
+  * *First pass* [proof sketch]: under soft charges 2^(−κ·d_T(χ)) per datum (the earlier report's soft charges), the posterior odds of Q + ∀xP against Q grow by 2^{κ(d_Q(P(n̄)) − d_∀(P(n̄)))} per datum. Here d_Q is the length of Q's computation-style derivation and d_∀ that of instantiation.
+  * Whether the posterior then concentrates on provers of ∀xP depends on competitors that prove the instances cheaply without proving the universal (§7.4).
+* The note's other idea, committing in advance to a random stopping point, is a frequentist error-control argument. Nothing here bears on it.
+
+---
+
+## 7. The ω-gap: anatomy, uniformity, and where it closes
+
+### 7.1 Anatomy
+
+**Proposition C1** [proved].
+
+*Setting.*
+* L has a nonempty set CT of closed terms, and B is r.e. and consistent.
+* φ(x) has one free variable, and I := B ∪ {φ(t) : t ∈ CT} is consistent.
+* The stream lists (φ(t), 1) for all t ∈ CT, in any order.
+
+Then Unif(E_∞) > 0, the posterior converges in total variation to P_∞ = Unif(· | ΠExt(I)) (F22), and the limit trichotomy of ∀xφ falls into one of three cases:
+* (i) (1, 0, 0) if I ⊢ ∀xφ;
+* (ii) (0, 1, 0) if I ⊢ ¬∀xφ, i.e. I is ω-inconsistent at φ;
+* (iii) otherwise all three limits lie in (0, 1), with
+  * lim Dis = P_∞(the theory proves ∃x¬φ, i.e. is ω-inconsistent at φ);
+  * lim Indep = P_∞(the theory proves all instances and decides neither, i.e. is ω-incomplete at φ).
+
+*Proof.*
+* In (i) and (ii), every theory in ΠExt(I) proves what I proves.
+* In (iii), the r.e. theories I, I + ∀xφ and I + ¬∀xφ are consistent and have positive prior weight (F4). Apply F22. ∎
+
+So **the Bayesian ω-gap is exactly the ω-incompleteness of the background plus instances**, made quantitative by prior shares. Two standard cases:
+* B = ∅ with an atomic diagram: F25, AI Prop B.8.
+* B = Q and Δ₀ φ: by D4 the instances are free and the posterior does not move at all. Case (iii) holds iff Q ⊬ ∀xφ.
+
+### 7.2 Can a prior close it?
+
+* *The Dis part.* Restricting the prior to ω-consistent theories removes it: an ω-consistent theory that proves every φ(t) does not prove ∃x¬φ [proved; immediate]. This restriction is not a theory-machine law, since ω-consistency is not a semidecidable property, but it is a well-defined conditioning.
+* *The Indep part.* It cannot be removed uniformly.
+
+**Theorem C2 (no universal prior over random theories closes the gap uniformly)** [proved, via A1 and G2]. Let B be true with PA ⊆ Cn(B). For every k there is a Δ₀ formula φ_k(x) with these properties:
+* ∀xφ_k is true;
+* every closed instance φ_k(n̄) is a true Δ₀ sentence, hence Q-provable, so the instance data are free (D4);
+* nevertheless Bel₀(∀xφ_k) < 2^(−k).
+
+Hence, for every n, Bel_{D_n}(∀xφ_k) = Bel₀(∀xφ_k) < 2^(−k), and Dis + Indep > 1 − 2^(−k). Explicitly, ∀xφ_k := ∀x ¬Prf_{B∪T_k}(x, ⌜⊥⌝), that is Con(B ∪ T_k). Also K(φ_k) ≤ k + K(k) + c, so Bel₀(∀xφ_k) ≥ 2^(−k−K(k)−c).
+
+*Proof.*
+* B ∪ T_k is true (A1), so Con(B ∪ T_k) is a true Π₁ sentence, and its Δ₀ instances are true.
+* If Bel₀(Con(B ∪ T_k)) ≥ 2^(−k), then A1(ii) puts it into T_k. Then B ∪ T_k ⊢ Con(B ∪ T_k), contradicting G2 for the consistent r.e. theory B ∪ T_k ⊇ PA. ∎
+
+*Reading.* For every confidence level there is a true universal statement, all of whose instances are trivially checkable, that the universal inducer believes below that level. The scope is uniform over all random theory machines, not only over the theories of a fixed list. This is Gödel's second theorem transported into the prior by A1, and it is the strongest form of the ω-gap I found.
+
+### 7.3 Versions where the gap closes
+
+Each of the following is [proved] or cites the earlier report.
+* **(a) The ω-rule.** If ⊢ is replaced by ⊢_ω, which is closed under the ω-rule over closed terms, then I ⊢_ω ∀xφ, so case (i) always holds. With B ⊇ Q in L_A, everything collapses to Th(ℕ) (N6): the gap closes because the inducer is omniscient.
+* **(b) Full second-order consequence** with a categorical background (PA²): the instances entail ∀xφ semantically, so case (i) holds (N6).
+* **(c) The generative variant.** With the universal itself in the data space, or a selection-aware likelihood, the earlier report's Thm 3.9(c)–(d) gives convergence to the truth value. These are the only *effective* closures I know, and they change the data model, not the logic.
+* **(d) Finite theories with line budgets** (§7.4): closure is equivalent to a Kreisel-type generalisation property.
+
+### 7.4 Line budgets and Kreisel's conjecture
+
+*Setting.*
+* Hypotheses are single sentences ψ (finite theories).
+* B is fixed.
+* A datum χ is ℓ-compatible with ψ if B ∪ {ψ} is consistent and proves χ in a fixed Hilbert calculus by a derivation with at most ℓ lines. Lines are counted, not symbols.
+* The data are all closed instances φ(S^n 0).
+
+**Proposition C3** [proved; trivial]. The limit posterior (any prior with full support on sentences) gives Bel(∀xφ) = 1 iff every consistent ψ with sup_n ℓ_{B+ψ}(φ(S^n 0)) ≤ ℓ proves ∀xφ. This is a *Kreisel property* at (B, φ, ℓ).
+
+*Examples* [proved].
+* *Pure logic fails.* Take B = ∅ and φ(x) := x = 0 ∨ ∃y x = Sy. Every instance has a derivation with at most four lines, independently of n: an equality axiom S^n 0 = S^n 0, ∃-introduction with witness S^{n−1}0, ∨-introduction. But pure logic does not prove ∀xφ: add an element that is neither 0 nor a successor. So with B = ∅ even the empty theory keeps the gap open under a constant line budget.
+* *Q closes this instance.* With B = Q, ∀xφ is Q's axiom Q3.
+
+*Relation to Kreisel's conjecture* [recalled, unverified]. Kreisel's conjecture: if PA proves φ(S^n 0) in k steps for every n, then PA ⊢ ∀xφ. I recall:
+* Parikh (1973; scout L: parikh1973some [B]) proved a version for a formulation of PA with addition but without multiplication as a function symbol;
+* Baaz and Pudlák (1993) proved further cases;
+* the general Hilbert-style form is open.
+
+If Kreisel-type properties hold for finite extensions of Q, then finite-theory inducers with constant line budgets close the ω-gap. The ω-gap would then be a phenomenon of free deduction and r.e. axiomatisations: a schema of instances proves each instance in one line. This is a conjecture whose status rests on literature I could not check.
+
+**Assessment.**
+* C1 and C2 are worth a short subsection: anatomy plus a uniform Gödelian strengthening.
+* (a) and (b) are remarks.
+* C3 is a cute link, to be included only after the Kreisel literature is verified.
+
+---
+
+## 8. Consistency with the other scouts
+
+* **Scout F (fundamentals).**
+  * The notation is F's throughout. F's Q1 is answered: no in general (E1); yes for bounded inconsistency arity (E2) and for Π₁ streams (A3). F's Q2 is answered for true Π₁-axiomatised theories (A6). F's Q3 is reduced to a density question (N7).
+  * A2 (a coding theorem for Π₁ data) does not conflict with F11 (no coding theorem), which uses literals of a fresh predicate. The two together locate the gap (§4.4).
+  * D1 refines F's trichotomy table by quantifier class. C1 is F25 with the case analysis made explicit, and C2 strengthens F25 uniformly.
+  * F27 (random theories above Q are almost surely incomplete) is consistent with C2, and complementary to it.
+* **Scout S (relation to SFI, time bounds, the dilemma).**
+  * B3 is the finite-theory counterpart of S's Thm 3.1 (vocabulary costs O(1) for r.e. axiom sets). It says *why*: the r.e. class already contains the apparatus.
+  * B1(a) agrees with S's Thm 3.12 (unary theoretical predicates do not help finite theories about named objects), with deduction free.
+  * N8 agrees with S's Prop 3.5: proof padding neutralises speed-up for r.e. axiom sets.
+  * The lottery separates one-tape from coin-free *consistent* SFI as well, by F8 / S's Thm 2.5. S's Prop 2.6 bounds the finite-data gap between W_AI and M_AI by min{…, K(dom D)} + O(1). That is consistent with E1, since K(dom D_n) → ∞ on the lottery stream (the j*_k are not computable).
+* **Scout P (philosophy).** The material relevant to the philosophy section:
+  * the lottery's reading: laws plus randomly drawn contingent facts, forced by proof-requiring compatibility;
+  * B's exact statement of when theoretical terms pay, and the Ramsey/Craig contrast;
+  * D1's "independent certifies truth" for Gödel sentences;
+  * D4: free-deduction axiom induction cannot do induction in mathematics.
+
+  None contradicts P's argument map. B refines P's formal question 3 ("a hierarchy of hypothesis classes in which theoretical terms pay").
+* **Scout L (literature).**
+  * Novelty claims follow L's table: random axioms (Bienvenu et al.), Chaitin, Kleene/Craig–Vaught, speed-up, Gaifman.
+  * L's Observation L1 (M_A violates the Gaifman condition) is the qualitative form of C1(iii). C2 is a uniform, Gödelian strengthening.
+* **No "possible error in the author's view" note.** Nothing in my material bears on a philosophical claim of the author's in a way that makes a disagreement probable. The closest is the ladder's step 3. B confirms it for finite theories and qualifies it for the idealised inducer (no gain there, because the apparatus is built in). That is a refinement, not a disagreement.
+
+---
+
+## 9. References and their verification status
+
+Keys refer to scout L's `../literature/refs.bib` (L), scout P's `../philosophy/refs.bib` (P), or scouts F and S. "[B]" means bibliographic data verified by web search *by that scout*. "[A]" means the abstract was seen by that scout. "[S]" means secondary sources. **No reference was re-verified in this session**, because web search was unavailable.
+
+**Verified by sibling scouts.**
+* Bienvenu, Romashchenko, Shen, Taveneaux, Vermeeren, "The Axiomatic Power of Kolmogorov Complexity", *Ann. Pure Appl. Logic* 165(9):1380–1402, 2014. L: bienvenu2014axiomatic [B, A, S]. Used in §4 for novelty. *Not read*: whether A1 is implicit there is unchecked.
+* G. J. Chaitin, "Information-Theoretic Limitations of Formal Systems", *J. ACM* 21(3):403–424, 1974. L: chaitin1974information [B; S]. A4 reproves the deterministic case it needs.
+* C. S. Calude, H. Jürgensen, "Is Complexity a Source of Incompleteness?", arXiv:math/0408144. L: calude2005complexity [A]. N7.
+* K. de Leeuw, E. F. Moore, C. E. Shannon, N. Shapiro, "Computability by Probabilistic Machines", *Automata Studies*, 1956, pp. 183–212. L: deleeuw1956computability [B; S]. Context for §3.
+* E. M. Gold, "Language Identification in the Limit", *Inform. Control* 10(5):447–474, 1967. L: gold1967language. N12.
+* H. Gaifman, "Concerning Measures in First Order Calculi", *Israel J. Math.* 2(1):1–18, 1964. L: gaifman1964concerning [B]. §7.
+* D. Garber, "Old Evidence and Logical Omniscience in Bayesian Confirmation Theory", *Minnesota Studies* 10:99–131, 1983. L: garber1983old [B; S]. D4.
+* I. Hacking, "Slightly More Realistic Personal Probability", *Phil. Sci.* 34(4):311–325, 1967. L: hacking1967slightly [B, A]. D4.
+* S. Garrabrant et al., "Logical Induction", arXiv:1609.03543, 2016. L: garrabrant2016logical [B, A]. D4.
+* K. Gödel, "Über die Länge von Beweisen", *Ergebnisse eines math. Kolloquiums* 7:23–24, 1936. L: godel1936lange [B, A]. N8.
+* R. J. Parikh, "Some Results on the Length of Proofs", *Trans. AMS* 177:29–36, 1973. L: parikh1973some, listed with bibliographic data. Its *content* as used in §7.4 is recalled, unverified.
+* P. Pudlák, "The Lengths of Proofs", *Handbook of Proof Theory*, 1998, pp. 547–637. L: pudlak1998lengths, listed. The content used in N8 is recalled, unverified.
+* S. C. Kleene, "Finite Axiomatizability of Theories in the Predicate Calculus Using Additional Predicate Symbols", *Memoirs AMS* 10:27–66, 1952. P: kleene1952finite. W. Craig, R. L. Vaught, "Finite Axiomatizability Using Additional Predicates", *JSL* 23(3):289–308, 1958. P: craigvaught1958finite. Both for B3; their exact statements were not re-read.
+* Ryll-Nardzewski 1952 (PA is not finitely axiomatisable), as recorded by scout S §3.1 [known there].
+* Kučera–Slaman and Solovay completeness of Inc₀, as in scout F's F3(c). Only the irrationality of Inc₀ is used here, and even that only for convenience: the proof of A1 works with any (k + 2)-bit lower truncation.
+
+**Recalled, unverified (to be checked when web access returns).**
+* A. Mostowski (1952), reflexivity of PA; G. Kreisel and A. Lévy (1968), "Reflection principles and their use for establishing the complexity of axiomatic systems", *Z. Math. Logik Grundlagen Math.* 14. Used for Lemma B2.1; a proof sketch is given.
+* S. G. Simpson, *Subsystems of Second Order Arithmetic*: ACA₀ is finitely axiomatisable and conservative over PA. Used for B2(c). B3 gives an alternative without it.
+* Finite axiomatisability of IΣ₁. Used for B2(d) only.
+* S. Kripke (1962), "Flexible" predicates of formal number theory; W. H. Woodin (2011), the universal algorithm. Used for (FLEX) in §4.5 only.
+* J. D. Hamkins, A. Miasnikov (2006), "The halting problem is decidable on a set of asymptotic probability one", *Notre Dame J. Formal Logic* 47(4). N7, context only.
+* R. L. Vaught (1967), "Axiomatizability by a schema", *JSL* 32. §5.6, remark only.
+* M. Baaz, P. Pudlák (1993), Kreisel's conjecture for L∃1. §7.4.
+* The Ehrenfeucht–Fraïssé theorem (Ehrenfeucht 1961; Fraïssé 1954); Löwenheim (1915) for the monadic finite model property. Lemma B1.1 is proved directly, given the EF theorem.
+* Dedekind's categoricity of second-order Peano arithmetic (N6); Gödel's second incompleteness theorem for consistent r.e. extensions of PA with the canonical provability predicate (D2, D2′, C2, B2.2); Σ₁-completeness of Q; cut elimination provable in PA; partial truth definitions. All standard textbook facts.
+
+---
+
+## 10. Verification log
+
+**Sources read** (see the header). Theorem numbers of scout F (F1–F27), scout S (Thms 2.4, 2.5, 3.1, 3.12, Props 2.6, 3.5, 3.10) and the earlier report (Thm 3.9 = `thm:univ:omega`) were taken from those records in this session, not from memory.
+
+**Computations** (seed 20261015; all three scripts were run twice, and the outputs are byte-identical: `diff` empty).
+
+* **`checks/c1_lottery.py` → `c1_lottery.out`.**
+  * Part A:
+    * twelve lotteries; every consistent deterministic theory of a twelve-theory list fails the diagonal datum at its own lottery (A1);
+    * the survival probability of the random lottery theory equals Π(1 − 2^(−(k+1))) by exhaustive enumeration for 1–4 lotteries: 1/2, 3/8, 21/64, 315/1024 (A2);
+    * the infinite product is 0.288788;
+    * the deterministic posterior share falls to 0 while the random theory's loss converges to 1.79 bits (A3);
+    * the majority-vote theory is inconsistent at every lottery k ≥ 1 (A4).
+  * Part B: majority vote at threshold 1 − 1/(r + 1) gave a consistent theory containing the data in all 400, 400 and 387 random instances for arity r = 2, 3, 5. At threshold 1/3 (ε = 2/3) it failed 67, 120 and 157 times. Lottery thresholds are printed.
+  * These checks implement the finite combinatorics of E1 and E2. They do not, and cannot, check the infinite statements or the diagonal against all r.e. theories.
+* **`checks/c2_finite_models.py` → `c2_finite_models.out`.**
+  * Lemma B1.1:
+    * pure equality: 1000 random sentences of rank 1–4, constant truth on sizes ≥ q;
+    * monadic with two predicates: 1800 (sentence, structure) pairs, truth preserved by truncating cells at q.
+  * No model of ι on 1–6 points (all functions).
+  * Cnt_k is true iff all 2^k cells are nonempty, for k ≤ 3 (6560 structures for k = 3). Its sizes grow quadratically (46, 91, 148, …, 883 at k = 10).
+  * The closed form of |λ_n| agrees with recursive counting for n ≤ 16.
+* **`checks/c3_threshold.py` → `c3_threshold.out`.** 300 random finite tape spaces, k = 0, …, 12:
+  * the threshold set contains every Π₁ sentence of belief ≥ 2^(−k): 0 violations;
+  * it contains only true sentences of positive belief: 0 violations;
+  * enumeration by increasing lower approximations gives the same set: 0 violations;
+  * the Σ₁ analogue contains both members of an exclusive pair in all 300 instances.
+
+  This checks the dyadic arithmetic of A1 (off-by-one errors in the threshold), not its computability content.
+
+**Proof checks done by hand.** For each proved claim I rechecked the quantifier order and the hypotheses on B:
+* true, ⊇ Q, for A1–A6, D2′, C2;
+* consistent, ⊇ PA, for D2;
+* not mentioning W, numerals distinct, for E1.
+
+Specific points:
+* In A1 the threshold uses I′_k ≤ Inc₀ < I′_k + 2^(−(k+2)), so passing it implies Bel₀ > 0, and Bel₀ ≥ 2^(−k) implies passing it.
+* In E1(b) the ticket j*_e exists because of λ_e's second conjunct and equality.
+* In E2(a) the bound 1 − jε ≥ ε needs ε ≤ 1/(r + 1).
+* In B1(b) the slow-growth bound uses h(g(n) + 1) > n.
+* In D2 the companion map must be injective, and it is applied only to Σ₁-sound compatible theories.
+* In D2′ the factor 2^(−K(k)−c) uses M_A(D) ≤ 2^(−(k−1)).
+* In C2 the instance data are free by D4.
+
+**Claims changed or withdrawn during drafting.**
+1. *"Scout F's Q1 probably holds, by a majority vote."* **[refuted]** by E1. The majority vote can be inconsistent (the lottery paradox), and the lottery stream defeats every r.e. theory. Kept as Corollary E3 with the positive cases.
+2. *A direct coding argument for A4*, bounding the probability that x is "the i-th string the random theory proves complex", summed over i. It **failed**: the sum over i diverges. It was replaced by the Inc₀-threshold argument of A1, which also gave the more general A2.
+3. *"D2 transfers to the one-tape inducer by the same companion."* **Withdrawn.** A_ω is not r.e., so ¬Con(A_ω) is not a sentence. Downgraded to the Π₁-data version D2′, plus an open question with a partial result for machines with a consistent U_w.
+4. *"The monadic cost of λ_n in literal size is linear."* **[refuted]** by the counter Cnt_k: O(log² n) symbols force ≥ 2^k elements. The correct three-level picture is in B1′.
+5. *"Unary theoretical predicates never help finite theories."* True for infinity (B1(a)), **false in general**. Over arithmetic, a unary truth predicate gives O(1) on PA (B2(d)). The moral depends on whether the base structure can code syntax.
+6. *"Kreisel-type closure of the ω-gap holds for every finite theory under line budgets."* **[refuted]** for B = ∅ by φ(x) := x = 0 ∨ ∃y x = Sy (§7.4). It holds for that φ with B = Q.
+
+**Not done.**
+* No referee.
+* No reference was re-verified: web search was unavailable, and all statuses are those recorded by sibling scouts or marked recalled.
+* B3, B2.1, (FLEX) and the Kreisel link are proof sketches or recalled.
+* The rate questions (E-Q2), the true Σ₂/Π₂ coding question (A-Q1), and the one-tape soundness question (D-Q1) are open.
+* Nothing was checked in a proof assistant.
