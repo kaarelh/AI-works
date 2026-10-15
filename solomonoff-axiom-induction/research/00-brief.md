@@ -48,6 +48,23 @@ What this means for every scout, thread, referee and editor:
 * **Raise a disagreement only when it has a decent probability of being right,** the kind of point one would actually bring up in a research discussion. Do not keep a running list or add a standing section for it, and do not invent disagreements.
 * **When you do disagree,** add a short note to your record, labelled "Possible error in the author's view". It gives the claim and its source, why it is probably wrong or overstated, and what to write instead. The synthesis passes on the notes that survive review.
 
+## "What a theory is": where the discussion stands (2026-10-15)
+
+* **We raised an objection.** In the idealised, untimed setting, the Craig-trick collapse undercuts the claim that axiom induction gets "what a theory is" more right than program induction. Any consistent assigner becomes an axiom set at O(1) bits.
+* **The author agrees,** and says Solomonoff axiom induction does not succeed for exactly this reason:
+  > yea i don't think solomonoff axiom induction succeeds, for exactly this reason. so i kinda agree. but then i think that a theory still should be shaped more like a logical theory than a program, it's just that we don't have a good way of making this work out precisely yet
+* **The paper's stance.** The paper should say this plainly:
+  * the idealised formalism cannot see the difference in shape;
+  * the intuition that theories are shaped like logical theories is nonetheless plausible;
+  * what is missing is a formal setting in which the shape matters.
+* **An open research question.** This is a candidate thread for the selection step, if a scout's material supports it: in what precise sense is a theory better shaped like a logical theory than like a program? Craig shows that the set of representable answer-functions is the same, so any difference must lie in what is cheap to obtain from each, relative to a reasoner. Candidate properties of logical theories:
+  * **Multi-directional use.** A theory answers questions from any partial information. For example, Kepler's third law gives the period from the semi-major axis and the semi-major axis from the period. A program computes one direction cheaply.
+  * **Partiality.** A theory is silent where it has nothing to say.
+  * **Modularity.** Axioms have individual content and can be added, removed, tested and combined across domains.
+  * **Closure under inference.**
+* **A separation to look for.** Under a costed-deduction reasoner, find a family of query types where every hypothesis shaped like a program needs length growing with the number of query directions, while one axiomatised law plus cheap deduction answers them all.
+* **What the separation would and would not show.** Such a result would make "theory shape" relative to a reasoner, which matches the condensation essay's point that concepts are inert alone. It would not show that logic, rather than, say, probabilistic programs with conditioning or classes of models (the semantic view), is the right formal home.
+
 ## Target
 
 An arXiv-quality paper with Kaarel Hänni as sole author. The AI assistance is disclosed as in the two SFI papers (`../solomonoff-function-induction/paper*/main.tex`: title-page footnote and acknowledgements). From the start it follows the rules the SFI papers reached after review:
