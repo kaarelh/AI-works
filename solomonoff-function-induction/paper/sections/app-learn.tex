@@ -45,7 +45,7 @@ For 0--1 loss, let $y^*$ be a Bayes label and $\hat y$ the maximiser of $\bar q_
 (a) Two draws of $x_0$ with different labels have positive probability, and the second gets probability~$0$, because the stored label gets probability~$1$ in both conventions. (b) The labels at $x_0$ agree with probability $(1-\alpha)^n+\sum_{j\ge1}\binom nj\alpha^j(1-\alpha)^{n-j}\sum_yP(y\mid x_0)^j$. For $j\ge1$, $\sum_yP(y\mid x_0)^j\le p_{\max}^{j-1}$, so this is at most $(1-\alpha)^n+p_{\max}^{-1}(1-\alpha+\alpha p_{\max})^n$. (c) If some $x$ with $\mu(x)>0$ has two labels of positive probability, (a) gives infinite expected loss for $n\ge2$, while $P$'s is finite. Otherwise the label $\varphi(x)$ with $P(\varphi(x)\mid x)>\frac12$ can be found by search, so $\varphi$ is partial computable with $K(\varphi)\le K(P)+c$ and $\mu(\dom\varphi)=1$, and \cref{thm:learn:batch}(a) applies.
 \end{proof}
 
-\subsection{The per-query mixture}\label{app:learn:perquery}
+\subsection{Solomonoff's per-query solution}\label{app:learn:perquery}
 
 \begin{proof}[Proof of \cref{prop:learn:perquery}]
 (a) Each term $\prod_tP_i(y_t\mid x_t)$ satisfies the two inequalities because $\sum_yP_i(y\mid x)\le1$; mixing with $\sum_i\mm(i)\le1$ preserves them; lower semicomputability is clear. The product is symmetric in the pairs, and on distinct inputs it is the definition of $\Mprod(D_n)$. On consistent sequences the factors at repeats are at most~$1$, which gives $\Mpq\le\Mprod(D_n)$, strictly when some term that is positive on $D_n$ has a factor below~$1$ at a repeat. A positive computable conditional probability (for $Y=\{0,1\}^*$, for instance $P(y\mid x)=2^{-2|y|-1}$) is a term with positive weight, so every sequence gets positive mass.
@@ -69,11 +69,11 @@ For $w=\frac1{16}$, $r_0=0.913$ and $r_1=1.544$ bits. The mixture is a random to
 
 \begin{remark}[last iterate and leave-one-out]\label{rem:learn:lastiterate}
 \status{identity proved; computed (foundations c11(b)); bound open}\src{foundations Rem 6.11, §8 item 7}
-In the setting of \cref{thm:learn:batch}(a), exchangeability gives $\Ex R(Q_n)=\Ex\big[\frac1{n+1}\sum_{i\le n+1}-\log Q^{(-i)}(\varphi(x_i)\mid x_i)\big]$, where $Q^{(-i)}$ is SFI's predictive given the data set of the samples $j\ne i$ (a held-out input that occurs among the others costs~$0$). Whether $\Ex R(Q_n)\le(K(\varphi)+c)/(n+1)$ is thus a leave-one-out question (cf.\ \cref{conj:learn:loo}); it is open. A direct computation on $300$ random finite instances (code in the accompanying repository) gives $\max(n+1)r_n/K=0.873$.
+In the setting of \cref{thm:learn:batch}(a), exchangeability gives $\Ex R(Q_n)=\Ex\big[\frac1{n+1}\sum_{i\le n+1}-\log Q^{(-i)}(\varphi(x_i)\mid x_i)\big]$, where $Q^{(-i)}$ is the predictive of $\MF$ given the data set of the samples $j\ne i$ (a held-out input that occurs among the others costs~$0$). Whether $\Ex R(Q_n)\le(K(\varphi)+c)/(n+1)$ is thus a leave-one-out question (cf.\ \cref{conj:learn:loo}); it is open. A direct computation on $300$ random finite instances (code in the accompanying repository) gives $\max(n+1)r_n/K=0.873$.
 \end{remark}
 
 \begin{proof}[Proof of the identity in \cref{rem:learn:lastiterate}]
-Let $x_{n+1}$ be an independent sample; then $\Ex R(Q_n)$ is the expected loss $\Ex[-\log Q_n(\varphi(x_{n+1})\mid x_{n+1})]$. SFI sees its data only as a set and $(x_1,\dots,x_{n+1})$ is exchangeable, so the same expectation results with any sample $i$ held out; average over $i$.
+Let $x_{n+1}$ be an independent sample; then $\Ex R(Q_n)$ is the expected loss $\Ex[-\log Q_n(\varphi(x_{n+1})\mid x_{n+1})]$. $\MF$ sees its data only as a set and $(x_1,\dots,x_{n+1})$ is exchangeable, so the same expectation results with any sample $i$ held out; average over $i$.
 \end{proof}
 
 \begin{proof}[Proof of \cref{prop:learn:splits}]
@@ -89,9 +89,9 @@ For $\nu\in\{W,\MF\}$, a labelling $f$ of a finite $B$, and $e_{\rm LOO}(x):=1-\
 $e_{\rm LOO}(x)\,\nu(f|_{B\setminus\{x\}})=\nu(f|_{B\setminus\{x\}})-\nu(f|_B)$ is the mass of hypotheses correct on $B\setminus\{x\}$ and wrong or undefined at $x$. A hypothesis in the sets of two points $x\ne x'$ would be correct and not correct at $x'$, so the sets are disjoint, and none contains a hypothesis correct on all of $B$. So the masses sum to at most $\nu(\emptyset)-\nu(f|_B)$. Divide by $\nu(f|_{B\setminus\{x\}})\ge\nu(f|_B)$; the last inequality is as in \cref{prop:learn:splits}.
 \end{proof}
 
-\begin{conjecture}[leave-one-out for SFI]\label{conj:learn:loo}
+\begin{conjecture}[leave-one-out for the one-tape version]\label{conj:learn:loo}
 \status{conjecture}\src{context Conj 2.11; context §7 item 1}
-For SFI, $\frac1{|B|}\sum_{x\in B}e_{\rm LOO}(x)=O(\KF(f|_B)/|B|)$, up to logarithmic factors.
+For $\nu=\MF$, $\frac1{|B|}\sum_{x\in B}e_{\rm LOO}(x)=O(\KF(f|_B)/|B|)$, up to logarithmic factors.
 \end{conjecture}
 
 We have neither a proof nor a counterexample.
@@ -113,7 +113,7 @@ For $\MF$: $\{(x,\epsilon,b(x)):x\in G\}\cup\{(x,w,y)\in T_U:x\notin G\}$ is c.e
 (a) Let $\varepsilon_h:=\mu\{x:h(x)\ne f(x)\text{ or undefined}\}$. For a fresh $x^*$, $e(x^*)$ is the posterior mass of hypotheses not correct at $x^*$ (zero at a training input, where all survivors are correct). By Fubini,
 \[ \Ex[e(x^*)\mid D_n]=\frac{\int_{h\supseteq D_n}\varepsilon_h\,d\nu(h)}{\nu(D_n)}\le\varepsilon+\frac{\nu\{h\supseteq D_n:\varepsilon_h>\varepsilon\}}{\nu(D_n)}. \]
 The denominator is at least $2^{-K(f)-c}$ on every sample, as a shortest program for $f$ is consistent with $D_n$. A fixed hypothesis survives the $n$ independent inputs with probability $(1-\varepsilon_h)^n$, so $\Ex\,\nu\{h\supseteq D_n:\varepsilon_h>\varepsilon\}\le\exp(-\varepsilon n)\nu(\emptyset)\le\exp(-\varepsilon n)$. With $\varepsilon:=((K(f)+c)\ln2+\ln n)/n$ the second term is $1/n$ (for $\varepsilon\ge1$ the bound is trivial). Markov's inequality on the surviving bad mass gives the high-probability form. The posterior-majority predictor errs at $x$ only if $e(x)\ge\frac12$.
-(b) Condition on the multiset of the $n+1$ sampled values; by exchangeability $x^*$ is a uniformly random one of the $n+1$ positions. If its value occurs more than once it is a training input and $e(x^*)=0$. Otherwise the training set is $S\setminus\{x^*\}$ and $e(x^*)=e_{\rm LOO}(x^*;S)$, since SFI sees its data as a set. So the conditional expectation is at most $\frac1{n+1}\sum_{x\in S}e_{\rm LOO}(x;S)$; apply \cref{prop:learn:loo}.
+(b) Condition on the multiset of the $n+1$ sampled values; by exchangeability $x^*$ is a uniformly random one of the $n+1$ positions. If its value occurs more than once it is a training input and $e(x^*)=0$. Otherwise the training set is $S\setminus\{x^*\}$ and $e(x^*)=e_{\rm LOO}(x^*;S)$, since $\nu$ sees its data as a set. So the conditional expectation is at most $\frac1{n+1}\sum_{x\in S}e_{\rm LOO}(x;S)$; apply \cref{prop:learn:loo}.
 For $f\equiv0$ the lower bound is \cref{prop:learn:typical}, as $e\ge e^{\rm wr}$, and the upper bound is (b) with $K(f)=O(1)$.
 \end{proof}
 
@@ -128,7 +128,7 @@ We state one further result on chosen inputs.
 \begin{proposition}[chosen inputs]\label{prop:learn:active}
 \status{proved}\src{context Prop 5.3}
 (1) For every weak semimeasure $\nu$ and every query set $A$, chosen adaptively or not, the total semimeasure-convention log loss on the labels of $A$ is $-\log(\nu(f|_A)/\nu(\emptyset))$ in every order: for log loss, choosing the order is worthless.
-(2) Small total loss does not give efficient identification. For $f_a(x):=\ind[x=a]$ on $\{0,1\}^d$, SFI's total loss on any query sequence, even all of $\{0,1\}^d$, is at most $K(f_a)+c\le d+2\log d+c$, yet every query strategy, adaptive or randomised, needs at least $(2^d-1)/2$ queries in expectation over a uniform $a$ to identify~$a$.
+(2) Small total loss does not give efficient identification. For $f_a(x):=\ind[x=a]$ on $\{0,1\}^d$, the total loss of $\MF$ on any query sequence, even all of $\{0,1\}^d$, is at most $K(f_a)+c\le d+2\log d+c$, yet every query strategy, adaptive or randomised, needs at least $(2^d-1)/2$ queries in expectation over a uniform $a$ to identify~$a$.
 \end{proposition}
 
 \begin{proof}
@@ -160,8 +160,8 @@ Take a Bayes mixture of the truth $f$ (weight $w_f$) and $|B|$ hypotheses each w
 
 \begin{remark}[positive-example induction (informal)]\label{rem:learn:positive}
 \status{proof sketch; known (snippet)}\src{context Rem 5.5}
-Positive-example induction, learning a set or a distribution from samples, is a natural relative of SFI. In SFI terms positive labels $(x,1)$ alone are useless, because the constant-$1$ program explains them. A natural formalisation is a sampling likelihood, whose mixture is $\sum_Pw_P\prod_iP(x_i)$ over computable distributions $P$ on $X$: the private-randomness analogue of the universal semimeasure on the sample sequence (cf.\ the ideal learner from positive evidence of \citealp{chater2007ideal}).
+Positive-example induction, learning a set or a distribution from samples, is a natural relative of SOI. In SOI terms positive labels $(x,1)$ alone are useless, because the constant-$1$ program explains them. A natural formalisation is a sampling likelihood, whose mixture is $\sum_Pw_P\prod_iP(x_i)$ over computable distributions $P$ on $X$: the private-randomness analogue of the universal semimeasure on the sample sequence (cf.\ the ideal learner from positive evidence of \citealp{chater2007ideal}).
 \emph{Proof sketch.} We do not fix the encoding in detail. The samples are the labels of the index inputs $i\mapsto x_i$, under index-ignoring hypotheses with private randomness per sample; each such hypothesis draws every sample from one distribution $P$ on $X$, and mixing over them gives the displayed mixture.
 \end{remark}
 
-\emph{Computations.} The numbers quoted in \cref{sec:learn} and here come from seeded or deterministic scripts in the accompanying repository: exact finite analogues of the dominance, merging, online-to-batch and last-iterate statements, the fresh-noise consistency probabilities, the per-query mixture on a finite class of laws, the learning curves, random splits, separating prefixes and the leave-one-out bounds.
+\emph{Computations.} The numbers quoted in \cref{sec:learn} and here come from seeded or deterministic scripts in the accompanying repository: exact finite analogues of the dominance, merging, online-to-batch and last-iterate statements, the fresh-noise consistency probabilities, the per-query version on a finite class of laws, the learning curves, random splits, separating prefixes and the leave-one-out bounds.

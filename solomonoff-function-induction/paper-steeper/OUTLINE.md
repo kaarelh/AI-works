@@ -1,4 +1,6 @@
-# Outline: Paper 2, "Steeper Simplicity Priors in Solomonoff Function Induction: The Model–Randomness Split and the Teacher's Mistakes"
+# Outline: Paper 2, "Steeper Simplicity Priors in Solomonoff Operator Induction: The Model–Randomness Split and the Teacher's Mistakes"
+
+Renamed on 2026-10-15 under `research/paper-review/rename/RENAME.md` (binding): Solomonoff operator induction (SOI) is the family; SOI without qualification is the one-tape version $M_F$; the subject is Solomonoff's per-query solution (his eq. (10), $M_{\rm pq}$, the class $\mathcal H_\times$) with a steeper prior. Log: `research/paper-review/rename/log-p2.md`.
 
 Restructured on 2026-10-13; fix round of the same day under `research/paper-review/restructure/DECISIONS-restructure.md`. Imitation integration of 2026-10-14 (a new §10 with App H, the weight-decay remark and appendix, the caveats in the introduction and the discussion; log `research/paper-review/imitation-edit/log-integrate.md`). The binding plan is `research/paper-review/restructure/PLAN.md` (structure, labels, notation, statuses, page budgets); framing and voice follow `research/paper-review/REFRAME.md`, the arXiv form `research/paper-review/DECISIONS.md`. The base version of every file is `git show dcb3a3a3:solomonoff-function-induction/paper-steeper/<path>`. The ledger of every numbered item is `CLAIMS.md`; notation is shared with Paper 1 (`../paper/NOTATION.md`) plus PLAN.md §4.
 

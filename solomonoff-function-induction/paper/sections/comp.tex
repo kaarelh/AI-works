@@ -12,17 +12,17 @@
 % q:comp:open: \src{context \S7 items 3, 4, 5}
 \section{Computable versions}\label{sec:comp}
 
-SFI is not computable (\cref{prop:setting:computability}). Two computable relatives are natural: a time-bounded Solomonoff predictor with constant regret against all predictors of a given running time, and induction over Boolean circuits, for which, by analogy with \cref{thm:setting:coding}, regret and circuit complexity should be polynomially related.\footnote{Both were first sketched in the author's working notes \citep{hanni2026notes}, the first for sequences, with activation, clocking, amortised replay, a like-for-like caveat (\cref{rem:comp:apples}) and an extension to all polynomial-time predictors; so were in-distribution bounds for Occam learning and the question whether it makes few online mistakes on every ordering.} This section states what holds and shows that Occam (simplest-consistent) learning, unlike Bayes, fails exponentially out of distribution.
+SOI is not computable (\cref{prop:setting:computability}). Two computable relatives are natural: a time-bounded Solomonoff predictor with constant regret against all predictors of a given running time, and induction over Boolean circuits, for which, by analogy with \cref{thm:setting:coding}, regret and circuit complexity should be polynomially related.\footnote{Both were first sketched in the author's working notes \citep{hanni2026notes}, the first for sequences, with activation, clocking, amortised replay, a like-for-like caveat (\cref{rem:comp:apples}) and an extension to all polynomial-time predictors; so were in-distribution bounds for Occam learning and the question whether it makes few online mistakes on every ordering.} This section states what holds and shows that Occam (simplest-consistent) learning, unlike Bayes, fails exponentially out of distribution.
 
 % ------------------------------------------------------------------
-\subsection{Time-bounded SFI}\label{sec:comp:time}
+\subsection{Time-bounded SOI}\label{sec:comp:time}
 
 \begin{definition}[Time-bounded predictors; length-activated mixture]\label{def:comp:timebounded}
 \src{context \S3.1}
 Let $Y$ be finite, $|Y|\ge2$. A \emph{probability predictor} is a RAM program $A$ that on input $x$ halts with rationals $(A(y\mid x))_{y\in Y}$, nonnegative and summing to $1$, in time $T_A(x)$. For a nondecreasing $t:\mathbb N\to\mathbb N_{\ge1}$, $\mathcal C_t:=\{A:\exists c_A\,\forall x\ T_A(x)\le c_At(|x|)\}$. Fix RAM programs $A_1,A_2,\dots$ with computable weights $w_i>0$, $\sum_iw_i\le1$, activation lengths $\ell_1<\ell_2<\cdots$, and a nondecreasing unbounded clock factor $g\ge1$, with $t$ and $g\cdot t$ time-constructible. Let $q_i(\cdot\mid x):=A_i(\cdot\mid x)$ if $|x|\ge\ell_i$ and $A_i$ halts on $x$ within $g(|x|)t(|x|)$ steps with a valid vector, and the uniform vector $u$ otherwise. The \emph{length-activated mixture} is the mixture of product laws $\Mlen(D):=\sum_iw_i\prod_{(x,y)\in D}q_i(y\mid x)$.
 \end{definition}
 
-\begin{theorem}[Time-bounded SFI]\label{thm:comp:timebounded}
+\begin{theorem}[Time-bounded SOI]\label{thm:comp:timebounded}
 \status{(a) proved (corrected); (b) proof sketch; computed (context c5, c9)}\src{context Thm 3.1}
 Let $A=A_i\in\mathcal C_t$ and $\ell_A:=\max(\ell_i,\min\{n:g(n)\ge c_A\})$. On every sequence of \emph{distinct} inputs, with any labels, the regret of $\Mlen$ against $A$ after $k$ rounds is
 \[ \sum_{j\le k}\log\frac{A(y_j\mid x_j)}{\Mlen(y_j\mid D_{j-1},x_j)}\ \le\ \log\tfrac1{w_i}+\#\{j\le k:|x_j|<\ell_A\}\log|Y|\ \le\ \log\tfrac1{w_i}+(2^{\ell_A}-1)\log|Y|. \]
@@ -46,7 +46,7 @@ Fix activation rounds $k_1<k_2<\cdots$. Let $q_i^{(k)}:=A_i(\cdot\mid x_k)$ if $
 For $j\ge J_A$, machine $i$ is active and $T_A(x_j)\le c_At(|x_j|)\le g(j)t(|x_j|)$, so $q_i^{(j)}=A(\cdot\mid x_j)$; for $j<J_A$, $q_i^{(j)}\in\{A(\cdot\mid x_j),u\}$ and $-\log q_i^{(j)}(y_j)\le\log|Y|-\log A(y_j\mid x_j)$. The mixture loses at most $\log(1/w_i)$ to $\prod_jq_i^{(j)}$.
 \end{proof}
 
-This is the time-bounded analogue of SFI on time-stamped inputs (\cref{thm:learn:batch}(b)), and a mixture of the per-query kind (\cref{rem:versions:operator}). On the stream of \cref{rem:comp:distinct}, where the length-activated mixture has regret $469$ bits, a direct computation (code in the accompanying repository) gives regret $10.0$ bits, against the bound $20$.
+This is the time-bounded analogue of the one-tape version on time-stamped inputs (\cref{thm:learn:batch}(b)) and, like Solomonoff's per-query solution, a mixture of products over queries (\cref{rem:versions:operator}). On the stream of \cref{rem:comp:distinct}, where the length-activated mixture has regret $469$ bits, a direct computation (code in the accompanying repository) gives regret $10.0$ bits, against the bound $20$.
 
 \begin{corollary}[All polynomial-time predictors]\label{cor:comp:poly}
 \status{proved}\src{context Cor 3.2b}
@@ -69,7 +69,7 @@ Let $\mathcal C^{\rm hist}_t$ be the RAM programs $A$ that keep a state, receive
 A mixture that reads each program both as a predictor and as a sampler has the same regret against time-bounded samplers, at a cost per round exponential in the clock (\cref{prop:comp:samplers}); whether polynomial time per round suffices is open (\cref{q:comp:samplers}).
 
 % ------------------------------------------------------------------
-\subsection{Circuit SFI}\label{sec:comp:circuits}
+\subsection{Circuit SOI}\label{sec:comp:circuits}
 
 \begin{definition}[Circuits and the circuit mixture]\label{def:comp:circuits}
 \src{context \S3.2}

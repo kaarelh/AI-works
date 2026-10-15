@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""s3_vocab_ontology.py -- vocabulary versus ontology (scout S, notes.md section 3.8, Props 3.10-3.12).
+"""s3_vocab_ontology.py -- vocabulary versus ontology (scout S, notes.md section 3.6: Lemma 3.9, Prop 3.10, Rem 3.11, Thm 3.12).
 
 Observational language L_O = {e, s0, s1, R} with equality.  Word terms t_w := s_{w1}(...s_{wk}(e)...),
 so s_a(t_v) = t_{av}.  Data are the literals R(t_w)^{[w in X]}.
@@ -29,7 +29,7 @@ Part B (Prop 3.10(b), a finite observational theory; readings (a2), (b2), and (a
   Variant (B4): the same theory with a 5-ary theoretical relation symbol C in place of theta_5 and no
   relativisation, in the free term model W (domain = observed objects only).
 
-Part C (Prop 3.12, regular languages and finite theories over an observable domain).
+Part C (Thm 3.12, regular languages and finite theories over an observable domain).
   For regular X (X3 := #1 divisible by 3; X11 := contains 11), the finite theory
       S_{sig(e)}(e),   forall x (S_sigma(x) -> S_{sigma_a}(s_a x))   (sigma a realised signature, a in {0,1}),
   S_sigma(x) := AND_{|u| < n} R(s_u x)^{sigma(u)}.  Checks: (C1) every sentence true in the free term model
@@ -1031,7 +1031,7 @@ def eval_W(f, X):
 
 
 def part_C():
-    log("=== Part C: finite theories over an observable domain; regular languages (Prop 3.12) ===")
+    log("=== Part C: finite theories over an observable domain; regular languages (Thm 3.12) ===")
     langs = [("X3  (#1 = 0 mod 3)", lambda w: w.count('1') % 3 == 0, 3),
              ("X11 (contains 11)", lambda w: '11' in w, 3)]
     N_C = 9
@@ -1105,7 +1105,7 @@ def main():
     log("unnamed pair elements; they reproduce the alternating-machine and the finite-theory constructions")
     log("that short-derivations Props 4.3 and 4.12 build with theoretical symbols C, C', pr.  (C) shows the")
     log("other side: finite theories true in the free term model (only named objects) fit regular languages,")
-    log("by the signature construction; that they fit nothing else is Prop 3.12 (Rabin), not computed here.")
+    log("by the signature construction; that they fit nothing else is Thm 3.12 (Rabin), not computed here.")
     with open(OUT, "w") as fh:
         fh.write("\n".join(LOG) + "\n")
 

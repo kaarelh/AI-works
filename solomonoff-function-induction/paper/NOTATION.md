@@ -1,9 +1,11 @@
-# Notation for both SFI papers (binding)
+# Notation for both SOI papers (binding)
 
 This file fixes one notation for
 
-* **Paper 1** (`paper/`): *Solomonoff function induction: definitions, versions and basic theorems* (working title), and
-* **Paper 2** (`paper-steeper/`): *Steeper simplicity priors in Solomonoff function induction* (working title).
+* **Paper 1** (`paper/`): *Solomonoff Operator Induction: Definitions, Versions and Basic Theorems*, and
+* **Paper 2** (`paper-steeper/`): *Steeper Simplicity Priors in Solomonoff Operator Induction: The Model–Randomness Split and the Teacher's Mistakes*.
+
+**Naming** (binding: `research/paper-review/rename/RENAME.md`, 2026-10-15). *Solomonoff operator induction* (SOI) is the family of universal-prior solutions to Solomonoff's operator-induction problem; "SOI" without qualification means the one-tape version $\MF$ (stated once, after `def:setting:sfi`). Versions: one-tape $\MF$; per-query $\Mpq$ (Solomonoff's solution, eq. (10) of `solomonoff2008three`); product mixture $\Mprod$; coin-free $W$; Kolmogorov $\KF$; history-aware \SFIhist{}. "SFI" is not printed anywhere; the macro names `\LSFI`, `\LSFIbar`, `\SFIhist`, `\SFIset`, `\SFIcount`, `\SFIpairs`, the labels (`def:setting:sfi`, `sec:setting:sfi`, ...) and the bib keys (`claudeSFI2026...`) keep their names.
 
 It is binding for every writer of both papers. The macros listed in §10 are defined in the block marked "SFI macros" at the end of `paper/preamble.tex` and `paper-steeper/preamble.tex`; the two blocks are identical. Use the macros where they exist. Do not redefine them, and do not add global macros in section files. A section may use a letter locally (§5) if it defines it in that section and the letter is not in the global table (§3).
 
@@ -46,8 +48,8 @@ Each row gives the symbol (and macro), its meaning, where it is defined in the p
 |---|---|---|---|---|---|---|---|
 | $\Unif$ (`\Unif`) | fair-coin measure on tapes | `def:setting:machine` | $\lambda$ | $\lambda$ | $\lambda$ | $\lambda$ | — |
 | $T$, $f^T_\omega$, $\nu_T$ | function machine (c.e. consistent triples), its random partial function, its machine law | `def:setting:machine` | = (Def 2.5) | = | = | = | = |
-| $T_U$, $\MF$ (`\MF`) | universal function machine; SFI $=\nu_{T_U}$ | `thm:setting:universal`, `def:setting:sfi` | = (Thm 3.2, Def 5.1) | = | = | = | mixture of $\Pi_F$ |
-| $\MFbar$ (`\MFbar`) | normalised conditional of SFI | `def:setting:sfi` | $\bar M_F$ | $\bar M_F$ | $\bar M_F$ | $\bar\nu$ | — |
+| $T_U$, $\MF$ (`\MF`) | universal function machine; the one-tape version of SOI (the default), law $\nu_{T_U}$ | `thm:setting:universal`, `def:setting:sfi` | = (Thm 3.2, Def 5.1) | = | = | = | mixture of $\Pi_F$ |
+| $\MFbar$ (`\MFbar`) | normalised conditional of $\MF$ | `def:setting:sfi` | $\bar M_F$ | $\bar M_F$ | $\bar M_F$ | $\bar\nu$ | — |
 | $\Znorm(D,x)$ (`\Znorm`) | normaliser $\sum_y\MF(D+(x,y))$ | `prop:setting:transfer` | $Z_t\cdot M_F(D_{t-1})$ | $S_t$ | $S_t$ | — | — |
 | $Z_t$ | $\Znorm(D_{t-1},x_t)/\MF(D_{t-1})$, posterior probability that $f_\omega(x_t)$ is defined | `prop:setting:transfer` | $Z_t$ | — | — | — | — |
 | $\nu$ (weak) | weak function semimeasure | `def:setting:weak` | = (Def 2.1) | = | = | = | shared hypothesis $P$ |
@@ -55,10 +57,10 @@ Each row gives the symbol (and macro), its meaning, where it is defined in the p
 | $\Mob_T\nu(D)$ (`\Mob`) | Möbius sum $\sum_{\dom E\subseteq T}(-1)^{|E|}\nu(D\cup E)$ | `prop:setting:mobius` | $\Delta(D,T)$ | — | — | — | — |
 | $\nutri$ (`\nutri`) | three-input weak semimeasure of F Ex 2.4 | `ex:setting:weaknotrpf` | $\tau$ | — | — | — | — |
 | $\Mw$ (`\Mw`) | universal weak function semimeasure | `thm:setting:weakuniversal` | $M^w$ | $M^w$ | — | $M^w$ | mixture of $\Pi_w$ |
-| $W$ | deterministic program mixture (programs self-delimit before reading the input) | `def:versions:variants` | $W$ | — | — | $W$ | — (St's $W_{\rm det}$ is a different object) |
+| $W$ | coin-free version: deterministic program mixture (programs self-delimit before reading the input) | `def:versions:variants` | $W$ | — | — | $W$ | — (St's $W_{\rm det}$ is a different object) |
 | $\KF$ (`\KF`) | single shortest consistent program, the Kolmogorov version | `def:versions:variants` | $K_F$ | — | — | $K_F$ | — |
 | $\Mprod$ (`\Mprod`) | mixture of product laws (private randomness per input), on data sets | `def:versions:variants` | $M_{\rm prod}$ | $M_{\rm prod}$ | "product law" | $M_{\rm prod}$ | $\xi_\times$ |
-| $\Mpq$ (`\Mpq`) | per-query mixture (fresh randomness per query), on sequences; operator induction as secondary sources describe it | `def:versions:variants` | $M_{\rm pq}$ | per-query mixture (Prop 4.9) | — | $S$ (§6 item 1) | — |
+| $\Mpq$ (`\Mpq`) | per-query version (fresh randomness per query), on sequences; Solomonoff's solution, eq. (10) of `solomonoff2008three` | `def:versions:variants` | $M_{\rm pq}$ | per-query mixture (Prop 4.9) | — | $S$ (§6 item 1) | — |
 | $\nu_P$ (product) | product law $\prod_{(x,y)\in D}P(y\mid x)$ of a conditional semimeasure $P$ (Hänni's x-only sampler) | `prop:setting:includes` | $\nu_P$ | $\nu_P$ | — | product law | $\nu^{\otimes}$ |
 | $\nulen$ (`\nulen`) | law of $F(x)=\omega_{|x|+1}$: one shared coin per input length | `prop:versions:shared` | $\sigma$ | — | — | — | $\sigma$ (Prop 1.7(iii)) |
 | $\Omtail{\ell}$ (`\Omtail`) | $\sum\{2^{-|p|}:p\in\dom V,|p|\ge\ell\}$ | `prop:versions:Wgap` | $\tau_V(\ell)$ | — | — | — | — |
@@ -67,7 +69,7 @@ Each row gives the symbol (and macro), its meaning, where it is defined in the p
 | $\KP(z\mid x)$ (`\KP`) | input-independent conditional complexity $\min\{|h|:h\in\dom V,h(x)=z\}$ | `rem:versions:Wdelim` | — | — | — | $K^{\mathcal P}$ | — |
 | $\MH$ (`\MH`) | law of \SFIhist{}, the universal chronological semimeasure | `def:hist:sfihist` | $\xi\asymp M_H$ (Prop 7.2) | $\xi:=M_H$ | $\xi$, (F7) | SFI$^{\rm hist}$ | $M_H\asymp\xi$ |
 | $\MHin$ (`\MHin`) | universal chronological semimeasure for inputs given previous labels | `thm:hist:si` | — | $\xi'$ | — | — | — |
-| \SFIhist, \SFIset, \SFIcount, \SFIpairs | SFI whose hypotheses see the list / set / count of previous inputs / previous pairs | `def:hist:sfihist`, `prop:hist:variants` | — | = | SFI$^{\rm hist}$, SFI$^{\rm set}$ | = | — |
+| \SFIhist, \SFIset, \SFIcount, \SFIpairs | SOI whose hypotheses see the list / set / count of previous inputs / previous pairs (print SOI$^{\rm hist}$ etc.) | `def:hist:sfihist`, `prop:hist:variants` | — | = | SFI$^{\rm hist}$, SFI$^{\rm set}$ | = | — |
 | $\Mcount,\Mset,\Mpairs$ | their universal laws | `prop:hist:variants` | — | $M_{\rm count}$ etc. | — | — | — |
 | $\Whist$, $\Khist$ (`\Whist`, `\Khist`) | program mixture and single shortest program for \SFIhist | `prop:hist:programs` | — | $W_{\rm hist}$, $K_{\rm hist}$ | — | — | — |
 | $\rho$ | chronological semimeasure $\rho(y_{1:n}\Vert x_{1:n})$ | `def:hist:predictor` | $\rho$ | $\rho$ | — | — | $P_\pi$ in $\Pi_{\rm chr}$ |
@@ -90,8 +92,8 @@ Each row gives the symbol (and macro), its meaning, where it is defined in the p
 | symbol (macro) | meaning | defined in | F | Hi | Ex | Co | St |
 |---|---|---|---|---|---|---|---|
 | $L_\nu(D)$ | $-\log\nu(D)$ for any weak semimeasure $\nu$ | `def:setting:sfi` | $-\log\nu$ | — | — | $L_\nu$ | $-\log P(D)$ |
-| $\LSFI(D)$ (`\LSFI`) | $L_{\MF}(D)=-\log\MF(D)$, SFI's cumulative loss in the semimeasure convention | `def:setting:sfi` | $L_n$ | $L_{\rm SFI}$ | $L_{\rm SFI}$ | $L_{M_F}$ | — |
-| $\LSFIbar$ (`\LSFIbar`) | SFI's normalised cumulative loss along a given order | `prop:setting:normalise` | $\bar L_n$ | $\bar L$ | $\bar\ell_t$ summed | — | — |
+| $\LSFI(D)$ (`\LSFI`, prints $L_{\rm SOI}$) | $L_{\MF}(D)=-\log\MF(D)$, the cumulative loss of $\MF$ in the semimeasure convention | `def:setting:sfi` | $L_n$ | $L_{\rm SFI}$ | $L_{\rm SFI}$ | $L_{M_F}$ | — |
+| $\LSFIbar$ (`\LSFIbar`) | normalised cumulative loss of $\MF$ along a given order | `prop:setting:normalise` | $\bar L_n$ | $\bar L$ | $\bar\ell_t$ summed | — | — |
 | $L_\rho(y\Vert x)$, $L_P$, $\LH$ (`\LH`) | $-\log\rho(y_{1:n}\Vert x_{1:n})$; for a predictor $P$; for $\MH$ | `def:hist:predictor`, `def:hist:sfihist` | — | $L_P$, $L_H=L_\xi$ | $L$ | — | — |
 | $\LMjoint,\LMx,\LMy$ | SI's loss on $\code(h_n)$; on the inputs; on the labels given the inputs | `thm:hist:si` | — | $L_M^{\rm joint},L_M^x,L_M^y$ | $L^y_M$ | — | — |
 | $L^x_{\rm in}$ | $-\log\MHin(x_{1:n}\Vert y_{1:n-1})$ | `thm:hist:si` | — | $L^x_{\xi'}$ | — | — | — |
@@ -192,7 +194,7 @@ Letters below may be used inside the named section (and its appendix) only, defi
 
 ## 6. Losses and the two conventions (both papers)
 
-* For a weak semimeasure $\nu$ and a data set $D$: $L_\nu(D):=-\log\nu(D)$. SFI's loss is $\LSFI(D):=L_{\MF}(D)$. In any reveal order the cumulative log loss of $\nu$'s predictor is $L_\nu(D_n)+\log\nu(\emptyset)\le L_\nu(D_n)$ (semimeasure convention; `prop:setting:order`).
+* For a weak semimeasure $\nu$ and a data set $D$: $L_\nu(D):=-\log\nu(D)$. The loss of $\MF$ is $\LSFI(D):=L_{\MF}(D)$. In any reveal order the cumulative log loss of $\nu$'s predictor is $L_\nu(D_n)+\log\nu(\emptyset)\le L_\nu(D_n)$ (semimeasure convention; `prop:setting:order`).
 * Normalised convention: $\MFbar(y\mid D,x):=\MF(D+(x,y))/\Znorm(D,x)$ and $\LSFIbar$ along a given order. $\LSFIbar\le\LSFI$ (`prop:setting:normalise`).
 * History-aware losses: $L_\rho(y_{1:n}\Vert x_{1:n}):=-\log\rho(y_{1:n}\Vert x_{1:n})$; $L_P$ for a predictor; $\LH$ for $\MH$.
 * SI losses on $\code(h_n)$: $\LMjoint=\LMx+\LMy$.
@@ -232,7 +234,7 @@ Use these keys so that two sections never create two entries for one work. Every
 * Solomonoff: `solomonoff1964formalI`, `solomonoff1964formalII` (Inform. Control 7), `solomonoff1978complexity` (IEEE IT 24(4):422–432), `solomonoff2008three` (Comput. J. 51(5):566–570, doi 10.1093/comjnl/bxm120), `solomonoff1999two`, `solomonoff2003progress`.
 * Coding theorem and AIT: `zvonkin1970complexity`, `levin1974laws`, `gacs1974symmetry`, `chaitin1975theory`, `gacs1983relation`, `day2011increasing`, `levin2016occam`, `epstein2011sets`, `koppel1987complexity`, `koppel1991almost`, `vitanyi2006meaningful`, `antunes2009sophistication`, `milovanov2016algorithmic`.
 * Hutter and coauthors: `hutter2000theory` (arXiv cs/0004001), `hutter2005universal` (book), `hutter2007aixi` (AGI chapter, arXiv cs/0701125; do not confuse with the existing `hutter2007universal`, TCS 384), `lattimore2011universal` (LHG, ALT 2011, LNAI 6925:262–276), `lattimore2013nofree`, `wood2013non` (Wood–Sunehag–Hutter), `poland2005asymptotics`, `poland2005strong`, `leike2015bad` (COLT 2015, PMLR 40:1244–1259), `leike2015computability` (ALT 2015; do not use `leike2015solomonoff`, which is the Nicod paper), `filan2016loss`, `orseau2013universal`.
-* Operator induction, secondary: `ozkural2015ultimate`, `ozkural2017ultimate`.
+* Operator induction: `solomonoff1999two` (the term), `solomonoff2008three` (the problem, solutions (9) and (10), convergence theorem (12)); both read in full. Secondary (dropped from the bibliographies): `ozkural2015ultimate`, `ozkural2017ultimate`.
 * Learning theory: `blumer1987occam`, `mcallester1999some`, `haussler1994bounds`, `haussler1994predicting`, `littlestone1989online`, `cesabianchi2004generalization`, `cesabianchi2006prediction`, `vovk1990aggregating`, `vovk1992universal`, `ryabko2006pattern`, `case1983comparison`, `chater2007ideal`, `kakutani1948equivalence`, `cover2006elements`, `kleitman1973families`, `strassen1965existence`.
 * λ-MDL and posteriors: `grunwald2007suboptimal` (Grünwald–Langford, Machine Learning 66:119–149), `zhu2025quantifying` (COLT 2025, PMLR 291:6124–6155), `zhu2026overfitting` (arXiv 2603.22644), `wenzel2020good`.
 * Complexity and speed: `impagliazzo1990no`, `schmidhuber2002speed`.
@@ -261,8 +263,8 @@ Use these keys so that two sections never create two entries for one work. Every
 | `\nulen`, `\nutri` | $\nu_{\rm len},\nu_\triangle$ | |
 | `\Znorm`, `\Mob` | $\mathcal Z$, $\nabla$ | `\Znorm(D,x)`, `\Mob_T\nu(D)` |
 | `\Hcl{\times}` etc. | $\mathcal H_\times$ | Paper 2 classes |
-| `\LSFI`, `\LSFIbar`, `\LH`, `\LMjoint`, `\LMx`, `\LMy` | $L_{\rm SFI},\bar L_{\rm SFI},L_H,L_M^{\rm joint},L_M^x,L_M^y$ | |
-| `\SFIhist`, `\SFIset`, `\SFIcount`, `\SFIpairs` | SFI$^{\rm hist}$ etc. | write `\SFIhist{}` in running text |
+| `\LSFI`, `\LSFIbar`, `\LH`, `\LMjoint`, `\LMx`, `\LMy` | $L_{\rm SOI},\bar L_{\rm SOI},L_H,L_M^{\rm joint},L_M^x,L_M^y$ | |
+| `\SFIhist`, `\SFIset`, `\SFIcount`, `\SFIpairs` | SOI$^{\rm hist}$ etc. | write `\SFIhist{}` in running text |
 | `\csize`, `\lev`, `\soph`, `\sophset`, `\sophx` | size, lev, soph, soph$^{\rm set}$, soph$^\times$ | |
 
 Plain letters ($W$, $M$, $K$, $\nu$, $\rho$, $\Delta$, $\lambda$, $\kappa$, $\pi$, $\mu$) have no macro; their meanings are fixed in §3.
