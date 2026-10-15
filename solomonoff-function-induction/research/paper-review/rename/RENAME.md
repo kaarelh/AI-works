@@ -17,7 +17,7 @@ The proposal that followed:
 
 The author replied:
 
-> re your suggestion on what to do with "operator induction": i think maybe we can avoid the cousin loss [the confusion] by speaking of "solomonoff operator induction"? also attaching the two papers. generally your plan looks good, please proceed
+> re your suggestion on what to do with "operator induction": i think maybe we can avoid the cousin loss [i.e. keep the parallel between the names of Solomonoff axiom induction and this family] by speaking of "solomonoff operator induction"? also attaching the two papers. generally your plan looks good, please proceed
 
 ## 2. What the primary sources say
 
