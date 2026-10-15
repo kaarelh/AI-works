@@ -18,8 +18,8 @@ Two companion papers on Solomonoff operator induction (SOI). The problem is Baye
 * **Status:** the papers are drafts in arXiv form. Submission is his decision.
 * **Earlier name:** they were first written under the name "Solomonoff function induction (SFI)", the name used in Hänni's notes.
 
-* **[Paper 1: *Solomonoff Operator Induction: Definitions, Versions and Basic Theorems* (PDF)](paper/main.pdf)**, 90 pages: a 44-page main text plus appendices with the proofs.
-* **[Paper 2: *Steeper Simplicity Priors in Solomonoff Operator Induction: The Model–Randomness Split and the Teacher's Mistakes* (PDF)](paper-steeper/main.pdf)**, 87 pages: a 40-page main text plus appendices with the proofs.
+* **[Paper 1: *Solomonoff Operator Induction: Definitions, Versions and Basic Theorems* (PDF)](paper/main.pdf)**, 93 pages: a 46-page main text plus appendices with the proofs.
+* **[Paper 2: *Steeper Simplicity Priors in Solomonoff Operator Induction: The Model–Randomness Split and the Teacher's Mistakes* (PDF)](paper-steeper/main.pdf)**, 87 pages: a 39-page main text plus appendices with the proofs.
 
 ## Answers in brief
 

@@ -27,6 +27,11 @@ Parts.
   E6  dense random systems, k = n/2: d, A_d (number of minimum-weight dual codewords), the no-aux lower
       bounds, the number of prime implicates, and the sizes of the cores (equations as numbers; chain
       encoding with auxiliary variables).
+  E7  with auxiliary variables: the theory "chain encoding of every dual circuit, each with its own
+      auxiliary variables" is UP-usable (sampled questions), size O(n * #circuits).
+  E8  simplex-dual systems (A = all 2^m - 1 nonzero columns of GF(2)^m): every nonzero dual codeword has
+      weight 2^(m-1), so no-aux lower bound = number of prime implicates = n 2^((n-1)/2) exactly; the core
+      is m equations; the chain-encoded circuits give a UP-usable theory with aux of size O(n^2).
 """
 import itertools
 import random
@@ -546,6 +551,71 @@ def e6(rng):
             out(f"   n={n:2d} k={k:2d} | d={d} A_d={Ad:3d} | {lb_cnf:9.1f} | {lb_pc:9} | {npi:12d} | {k * (n + 1):4d} | {chain} ({aux})")
 
 
+# ---------------------------------------------------------------- E7
+def e7(rng):
+    out("== E7: auxiliary variables: chain encoding of every dual circuit (own aux vars per circuit)")
+    for (n, k) in [(12, 6), (16, 8), (20, 10)]:
+        rows, consts, xstar = random_system(n, k, rng, row_weight=(3, 4))
+        words = codewords(rows)
+        circ = circuits(words)
+        th = []
+        nxt = n + 1
+        for u in circ:
+            cls, nxt = chain_clauses([to_cnf_var(i) for i in bitvars(u)], parity(u & xstar), nxt)
+            th += cls
+        F = CNF(th)
+        qs = sample_queries(rows, consts, xstar, n, rng, 3000)
+        p, dv, full, nq, ex = usable_report(F, rows, consts, xstar, n, qs)
+        cl, lits = F.size()
+        core_cl = sum(2 ** (popcount(r) - 1) for r in rows)
+        npi = sum(2 ** (popcount(u) - 1) for u in circ)
+        out(f"  n={n} k={k}: circuits={len(circ)}; chain-encoded circuits: clauses={cl} aux vars={nxt - n - 1} | "
+            f"derived {dv}/{p} = {dv / max(p, 1):.3f}; fully answered {full}/{nq}; "
+            f"(core {core_cl} clauses; all prime implicates without aux {npi} clauses)")
+
+
+# ---------------------------------------------------------------- E8
+def e8(rng):
+    out("== E8: simplex-dual systems: A = m x (2^m - 1), columns all nonzero vectors of GF(2)^m")
+    for m in (3, 4, 5, 6, 7):
+        n = 2 ** m - 1
+        rows = []
+        for i in range(m):
+            r = 0
+            for col in range(n):
+                if ((col + 1) >> i) & 1:
+                    r |= 1 << col
+            rows.append(r)
+        xstar = rng.getrandbits(n)
+        consts = [parity(r & xstar) for r in rows]
+        words = codewords(rows)
+        wts = sorted({popcount(w) for w in words})
+        d = wts[0]
+        Ad = sum(1 for w in words if popcount(w) == d)
+        lb_cnf = (1 - 2 ** -m) * 2 ** d
+        lb_pc = Ad * 2 ** (d - 1)
+        chain_core = sum(4 * (popcount(r) - 2) + 2 for r in rows)
+        chain_all = sum(4 * (popcount(u) - 2) + 2 for u in words)
+        out(f"  m={m} n={n}: dual weights {wts}; d={d} A_d={Ad}; no-aux CNF lb={lb_cnf:.0f}; "
+            f"no-aux UP-usable lb = #prime implicates = {lb_pc}; GE core {m} equations = {m * (n + 1)} bits; "
+            f"chain core {chain_core} clauses; chain-encoded circuits (UP-usable, aux) {chain_all} clauses")
+        if m == 3:
+            pi = []
+            for u in words:
+                pi += xor_clauses([to_cnf_var(i) for i in bitvars(u)], parity(u & xstar))
+            sols = solutions(rows, consts, n)
+            qs = all_queries(sols, n)
+            F = CNF(pi)
+            p, dv, full, nq, _ = usable_report(F, rows, consts, xstar, n, qs)
+            fails = 0
+            for cdel in pi:
+                F2 = CNF([c for c in pi if c != cdel])
+                p2, d2, f2, nq2, _ = usable_report(F2, rows, consts, xstar, n, qs)
+                fails += d2 < p2
+            out(f"     m=3 exhaustive: all-PI theory ({len(pi)} clauses) derives {dv}/{p}; deleting any one clause breaks "
+                f"usability in {fails}/{len(pi)} cases")
+
+
 def main():
     t0 = time.time()
     rng = random.Random(SEED)
@@ -556,6 +626,8 @@ def main():
     e4()
     e5(rng)
     e6(rng)
+    e7(rng)
+    e8(rng)
     out(f"# done in {time.time() - t0:.1f}s")
     with open(__file__.replace(".py", ".out"), "w") as f:
         f.write("\n".join(OUT_LINES) + "\n")

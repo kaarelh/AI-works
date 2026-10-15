@@ -88,7 +88,7 @@ What this means for every scout, thread, referee and editor:
 
 ## Naming of the companion papers (2026-10-15)
 
-The two companion papers are being renamed from "Solomonoff function induction (SFI)" to **Solomonoff operator induction (SOI)**. The binding rules are in `../solomonoff-function-induction/research/paper-review/rename/RENAME.md`.
+The two companion papers are being renamed from "Solomonoff function induction (SFI)" to **Solomonoff operator induction (SOI)**. The binding rules are in `../solomonoff-operator-induction/research/paper-review/rename/RENAME.md`.
 * **Where the name comes from.** Solomonoff (2008) posed the operator-induction problem: predict the answer to a new question from an unordered set of question–answer pairs. He gave two universal-prior solutions. His per-query solution is the per-query mixture M_pq.
 * **What "SOI" means without qualification:** the one-tape version M_F, one random tape shared by all questions.
 * **Other versions:** the coin-free version W, the Kolmogorov version K_F, and the history-aware version SOI^hist.
@@ -104,12 +104,12 @@ An arXiv-quality paper. **Authors: Kaarel Hänni and Claude (Anthropic).** The a
 * It also says how the results were checked.
 * It names no model version.
 * Hänni's notes are cited as "Hänni's working notes", not "the author's". From the start it follows the rules the SFI papers reached after review:
-* `../solomonoff-function-induction/research/paper-review/REFRAME.md`:
+* `../solomonoff-operator-induction/research/paper-review/REFRAME.md`:
   * it is a first presentation of the material;
   * no running-text citations, quotations or "replies" to the author's notes;
   * credit goes in short neutral footnotes and the acknowledgements;
   * the voice is "we".
-* `../solomonoff-function-induction/research/paper-review/DECISIONS.md`: arXiv form, statuses in prose, computed numbers outside statements, verified references only.
+* `../solomonoff-operator-induction/research/paper-review/DECISIONS.md`: arXiv form, statuses in prose, computed numbers outside statements, verified references only.
 
 The working name is "Solomonoff axiom induction". The final name is still to be decided by the author, so the LaTeX will use a macro.
 
@@ -139,9 +139,9 @@ The working name is "Solomonoff axiom induction". The final name is still to be 
   * Reuse is allowed, but results must be re-verified and restated in this paper's own notation and voice.
 * **The axiom-schemas report:** `../axiom-schemas/`. It covers templates, the anchor theorem, the cautious verifier, and ZF/PA schemas.
 * **The SFI papers:**
-  * Paper 1, `../solomonoff-function-induction/paper/`: the one-tape universal machine M_F; the coin-free version W; K_F; no coding theorem; time-bounded and circuit SFI (§9).
-  * Paper 2, `../solomonoff-function-induction/paper-steeper/`: steeper priors; the kink geometry; the model–randomness split; imitation.
-  * Notation: `../solomonoff-function-induction/paper/NOTATION.md`.
+  * Paper 1, `../solomonoff-operator-induction/paper/`: the one-tape universal machine M_F; the coin-free version W; K_F; no coding theorem; time-bounded and circuit SFI (§9).
+  * Paper 2, `../solomonoff-operator-induction/paper-steeper/`: steeper priors; the kink geometry; the model–randomness split; imitation.
+  * Notation: `../solomonoff-operator-induction/paper/NOTATION.md`.
 
 ## What the paper should contain
 

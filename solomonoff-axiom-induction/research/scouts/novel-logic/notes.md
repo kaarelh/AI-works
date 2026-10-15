@@ -387,6 +387,7 @@ The question matters for three reasons.
 * For the second: if ω ∈ E_∞ and Cn(B ∪ A_ω) were r.e., it would be a consistent r.e. theory proving D_∞, contrary to (b). ∎
 
 **Remarks.**
+* **The stream must be non-computable** [proved]. Any counterexample to Q1 has a non-r.e. set of literals D_∞^±: if D_∞^± were r.e., it would itself be a consistent r.e. theory proving D_∞. E1's stream is computable from ∅′, so its complexity is the least possible.
 * **Rate.** A batch version kills more theories per lottery. Lottery k gets 2^(2k+1) tickets and diagonalises every e < 2^k, with one labelled-false ticket per killed theory. The random theory then survives lottery k with probability ≥ 1 − 2^(−k−1), and after lottery k every e < 2^k is eliminated. So −log W_A(D_n) ≥ −log Σ_{e ≥ 2^k} m(e) after the k-th lottery [proved by the same argument]. This lower bound is a tail of the universal semimeasure. It is unbounded but grows very slowly; I did not determine the exact rate.
 * **Where the randomness sits.** Each random lottery theory has the same law (λ_k) and differs only in a randomly drawn contingent fact (the winner). Under proof-requiring compatibility, a reported loser can only be *explained* by committing to a winner:
   * a deterministic theory commits once, and the adversary reports exactly the ticket it fails to refute;
@@ -922,7 +923,7 @@ So **the Bayesian ω-gap is exactly the ω-incompleteness of the background plus
 * every closed instance φ_k(n̄) is a true Δ₀ sentence, hence Q-provable, so the instance data are free (D4);
 * nevertheless Bel₀(∀xφ_k) < 2^(−k).
 
-Hence, for every n, Bel_{D_n}(∀xφ_k) = Bel₀(∀xφ_k) < 2^(−k), and Dis + Indep > 1 − 2^(−k). Explicitly, ∀xφ_k := ∀x ¬Prf_{B∪T_k}(x, ⌜⊥⌝), that is Con(B ∪ T_k). Also K(φ_k) ≤ k + K(k) + c, so Bel₀(∀xφ_k) ≥ 2^(−k−K(k)−c).
+Hence, for every n, Bel_{D_n}(∀xφ_k) = Bel₀(∀xφ_k) < 2^(−k), and Dis + Indep > 1 − 2^(−k). Explicitly, ∀xφ_k is the canonical consistency statement Con(B ∪ T_k) of the r.e. presentation e_k, written as ∀x δ(x) with δ in Δ₀. Here x codes a pair (a derivation of ⊥, an enumeration stage witnessing its axioms), and the two universal quantifiers are contracted by Δ₀ pairing. Also K(φ_k) ≤ k + K(k) + c, so Bel₀(∀xφ_k) ≥ 2^(−k−K(k)−c).
 
 *Proof.*
 * B ∪ T_k is true (A1), so Con(B ∪ T_k) is a true Π₁ sentence, and its Δ₀ instances are true.
