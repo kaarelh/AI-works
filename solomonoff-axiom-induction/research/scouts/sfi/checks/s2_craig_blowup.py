@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """s2_craig_blowup.py -- Craig's construction against a theory with a theoretical predicate
-(scout S, notes.md section 3, Lemma 3.4 and Example 3.6).
+(scout S, notes.md section 3, Lemma 3.2 and Example 3.6).
 
 Toy theory T (finite, Horn) over the observational vocabulary {e, s0, s1, R} and the theoretical
 predicates {E, O} ("even / odd number of 1s"):
@@ -16,7 +16,7 @@ For each word w the script computes
   * the canonical proof search = test every sequence of candidate lines, by number of lines and then
     lexicographically, until the first valid derivation of R(t_w) or ~R(t_w): the exact number k of
     sequences tested (exact by a counting depth-first search; also by brute force for |w| <= 2);
-  * the size of Craig's padded axiom (phi^b)^{&(k+1)} >= (k+1)|phi^b| (Lemma 3.4: every derivation of
+  * the size of Craig's padded axiom (phi^b)^{&(k+1)} >= (k+1)|phi^b| (Lemma 3.2: every derivation of
     the datum from the Craig set of a literal labeller contains this line);
   * the size of the certificate axiom theta_c -> phi^b, with c a bit code of the shortest derivation
     (|theta_c| = |c| + 14 as in short-derivations Thm 3.1(iii)(b));

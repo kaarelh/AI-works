@@ -97,7 +97,13 @@ The two companion papers are being renamed from "Solomonoff function induction (
 
 ## Target
 
-An arXiv-quality paper with Kaarel Hänni as sole author. The AI assistance is disclosed as in the two SFI papers (`../solomonoff-function-induction/paper*/main.tex`: title-page footnote and acknowledgements). From the start it follows the rules the SFI papers reached after review:
+An arXiv-quality paper. **Authors: Kaarel Hänni and Claude (Anthropic).** The author asked on 2026-10-15 that Claude be listed as a co-author on all the papers in their GitHub versions:
+> btw i think you should be listed as an author with me on all the papers, for the versions on github. still write these as if they were arxiv papers except for this. if we submit to arxiv at some point then we can change this. but i think having you as an author is just more correct and that seems important to get right at least where there's no constraint against it
+
+* The title-page footnote says that Claude is an AI system made by Anthropic and what each author did.
+* It also says how the results were checked.
+* It names no model version.
+* Hänni's notes are cited as "Hänni's working notes", not "the author's". From the start it follows the rules the SFI papers reached after review:
 * `../solomonoff-function-induction/research/paper-review/REFRAME.md`:
   * it is a first presentation of the material;
   * no running-text citations, quotations or "replies" to the author's notes;

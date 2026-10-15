@@ -2,15 +2,15 @@
 """s1_onetape_toy.py -- finite propositional sanity check (scout S, notes.md section 2).
 
 Checks, on a finite propositional analogue with finite random tapes, the set inclusions behind
-  * Theorem B (one-tape equivalence): for an axiom machine G and the proof-search labeller T_G,
+  * Theorem 2.5 (one-tape equivalence): for an axiom machine G and the proof-search labeller T_G,
         {tapes: B u A_G(w) consistent and proves D}  ==  {tapes: f^{T_G}_w extends D, B u Gamma consistent};
     for a function machine T and the axiom machine G_T (enumerate Gamma_{f_w}),
         {tapes: f^T_w extends D, consistent}  is a subset of  {tapes: B u A_{G_T}(w) consistent, proves D};
-  * Proposition E (logical closure and the trichotomy): axiom induction gives every consequence of the
+  * Proposition 2.11 (logical closure and the trichotomy): axiom induction gives every consequence of the
     data probability 1; consistent function induction gives it probability 0 of 'false' but positive
     probability of 'undefined'; after deductive closure of the labellers the three predictive
     probabilities agree exactly (here the maps have no length overhead);
-  * Remark E' (three outcomes are a measure): for axiom induction, W(D+(phi,1)) + W(D+(phi,0))
+  * Remark 2.11' (three outcomes are a measure): for axiom induction, W(D+(phi,1)) + W(D+(phi,0))
     + W(D+(phi,ind)) = W(D) exactly.
 
 Everything is exact (fractions).  Propositional logic over 3 atoms; provability is semantic
@@ -215,7 +215,7 @@ def run(B, Bname, rng, log):
         f"max = {float(max(finite)):.4f} (>= 1 expected: here the maps have no length overhead); "
         f"cases with M_F^cons = 0 < M_AI: {sum(r is None for r in ratios)}")
 
-    # (4) Proposition E: consequences of the data, trichotomy
+    # (4) Proposition 2.11: consequences of the data, trichotomy
     def tri_ai(D, q):
         base = MAI(D)
         if base == 0:
@@ -258,7 +258,7 @@ def run(B, Bname, rng, log):
                     if trf[2] > 0:
                         fi_undef_pos += 1
                         min_undef = trf[2] if min_undef is None else min(min_undef, trf[2])
-    log(f"(4) Prop E on {n_cons} (data, consequence) pairs: AI gives (1,0,0) [or has no compatible "
+    log(f"(4) Prop 2.11 on {n_cons} (data, consequence) pairs: AI gives (1,0,0) [or has no compatible "
         f"hypothesis] in {ai_ok}; consistent FI (random machines + lookup table of D): P(false)=0 in "
         f"{fi_false_zero}/{n_fi}, P(undefined)>0 in {fi_undef_pos}/{n_fi}, smallest positive P(undefined) "
         f"= {float(min_undef) if min_undef is not None else 'n/a'}")
