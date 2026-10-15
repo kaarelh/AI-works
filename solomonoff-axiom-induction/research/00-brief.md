@@ -31,6 +31,27 @@
 
 The slides it links ("models and concepts") were not available.
 
+## Epistemic policy (binding; the author's instruction of 2026-10-15)
+
+> btw, and i think this matters most for more philosophical stuff: when you're doing philosophy work in general, and even when working on this paper currently, despite my earlier prompt saying xyz philosophical things, i want you to only write things in the paper you actually believe, ie don't write stuff xyz which you do not believe even if i believe it. if you think i've made a philosophical error somewhere, don't make that error in your paper, and also please tell me you think i've probably made an error (and then maybe i'll just agree you're right or push back and we can discuss). like, try less to write a paper with my views, and more to write a paper on this topic that covers the relevant questions and gets at the truth even if it isn't what i think. […] (anyway i'm asking to make this our tentative policy; i'm not necessarily committing to this policy for all of time.)
+
+What this means for every scout, thread, referee and editor:
+* **The author's philosophical claims are hypotheses to assess, not positions to defend.** This covers the claims in the request above, in the notes and in the condensation essay. Examples:
+  * theories answer questions stated in an existing language;
+  * theories explain propositions;
+  * the axiom view is progress over raw-data prediction, both in what a theory does and in what a theory is;
+  * the limitations listed.
+
+  For each claim, assess it on the merits, against the strongest objections and the literature, and against our own formal results.
+* **Only claims we actually believe go into the paper.** Where we think a claim is false, overstated or confused, the paper says what we think is true instead, or leaves the claim out.
+* **Our formal results bear on the philosophy.** For example, the Craig-trick collapse bears on the claim that axiom induction gets "what a theory is" more right than an arbitrary program does. Where a result undercuts a claim, say so plainly.
+* **Every record that discusses philosophy ends with a section "Possible errors in the author's views".** For each item:
+  * the claim, quoted or closely paraphrased, with its source;
+  * why we think it is probably wrong or overstated, with our confidence;
+  * what we would write instead.
+
+  The synthesis collects these items in one section of `research/notes-final.md`, so they can be put to the author for discussion. Disagreement is expected and useful. Do not soften it, and do not invent it.
+
 ## Target
 
 An arXiv-quality paper with Kaarel Hänni as sole author. The AI assistance is disclosed as in the two SFI papers (`../solomonoff-function-induction/paper*/main.tex`: title-page footnote and acknowledgements). From the start it follows the rules the SFI papers reached after review:
