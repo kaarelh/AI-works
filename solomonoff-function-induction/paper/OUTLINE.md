@@ -1,4 +1,6 @@
-# Outline: Paper 1, "Solomonoff Function Induction: Definitions, Versions and Basic Theorems" (working title)
+# Outline: Paper 1, "Solomonoff Operator Induction: Definitions, Versions and Basic Theorems"
+
+Renamed on 2026-10-15 under `research/paper-review/rename/RENAME.md` (binding): Solomonoff operator induction (SOI) is the family of universal-prior solutions to Solomonoff's operator-induction problem; SOI without qualification is the one-tape version $\MF$ (stated once, after `def:setting:sfi`); the versions are Solomonoff's per-query solution $\Mpq$ (his eq. (10)), the one-tape version $\MF$, the coin-free version $W$, the Kolmogorov version $\KF$ and the history-aware version \SFIhist{}. Planning text below that predates the rename keeps "SFI" only in quotations. Logs: `research/paper-review/rename/log-p1-{a,b,front}.md`.
 
 > **BINDING NOTE 4 (2026-10-13): framing relative to the author's notes.** The papers read as the first presentation of this material; the author's notes are an internal stage of the research. No running-text citations or quotations of the notes, no framing of results as replies to or corrections of them; credit goes in short neutral footnotes and the acknowledgements. Full rules: `research/paper-review/REFRAME.md` (supersedes DECISIONS.md §A6 and the 'Relation to the author's notes' paragraphs).
 
@@ -33,7 +35,7 @@ Binding plan for all writers of `paper/`. Read it with `NOTATION.md` (one notati
 
 * Readers: mathematically literate researchers in learning theory and algorithmic information theory. First reader: Kaarel Hänni, who asked for the paper (request quoted in `research/00-brief.md`).
 * Purpose (his words): "some paper that explains what Solomonoff function induction is, proves some basic properties, says some stuff about why one might be interested in it". Definitions must be careful and self-contained; this paper establishes public fundamentals.
-* Credit, stated in the introduction and where each item appears: the notion of SFI, many of the theorem claims and most examples are Hänni's \citep{hanni2026notes}; say where his claims were corrected (`CLAIMS.md` §3). The coin example is Sam Eisenstat's, as reported by Hänni \citep{hanni2026request}. The NN Bayes material is from the Vaintrob–Hänni slides \citep{vaintrobhanni2026nnbayes}; state only what they claim, as their claims.
+* Credit, stated in the introduction and where each item appears: the one-tape version of SOI ("function induction" in the notes), many of the theorem claims and most examples are Hänni's \citep{hanni2026notes}; say where his claims were corrected (`CLAIMS.md` §3). The coin example is Sam Eisenstat's, as reported by Hänni \citep{hanni2026request}. The NN Bayes material is from the Vaintrob–Hänni slides \citep{vaintrobhanni2026nnbayes}; state only what they claim, as their claims.
 * Two papers, not one: the steeper-simplicity material (teacher's mistakes, model–randomness split, the absorption objection) is Paper 2 \citep{claudeSFI2026steeper}; this paper summarises it in one short section (`sec:steep`).
 
 ## Sources (the ONLY sources of claims)
@@ -51,7 +53,7 @@ Binding plan for all writers of `paper/`. Read it with `NOTATION.md` (one notati
 3. **Refuted claims stay**, labelled `\status{refuted}`, with the counterexample, next to the corrected statement (e.g. `prop:ood:draftfalse`, `rem:learn:cesaro`, `prop:hist:info`(b), `prop:learn:freshnoise` for H7). The full list goes to `app-verification`.
 4. **Labels** exactly as in `CLAIMS.md`: `sec:<key>`, `sec:<key>:<sub>`, `app:<key>`, `thm:`/`prop:`/`lem:`/`cor:`/`def:`/`ex:`/`rem:`/`conj:` + `<key>:<name>`, `tab:<key>:<name>`, `fig:<key>:<name>`, `eq:<key>:<name>`; open questions are `\paragraph{Open question.}\label{q:<key>:<name>}` in prose, never a theorem environment. Keys: `intro, setting, versions, learn, hist, ex, ood, comp, nn, steep, related, discussion, verification`. Cross-reference with `\Cref`.
 5. **Proofs.** The main text states each result and gives a proof idea in two to six sentences; full proofs go to the section's appendix (`\Cref{app:<key>}`), as in the notes, naming any step the notes leave out. Short proofs (≤ 6 lines) may stay in the main text.
-6. **Notation and macros** only from `NOTATION.md` and the "SFI macros" block. No `\newcommand` in section files except local ones prefixed by the section key (`\histfoo`), defined at the top of the file, and only if unavoidable. Rename sources' symbols as `NOTATION.md` §4 requires (tape measure $\Unif$, $d$ = input length, $N=2^d$, $\Kpad$, $\Ktail$, $\MH$, $j$ for confidence exponents, …).
+6. **Notation and macros** only from `NOTATION.md` and the "SOI macros" block. No `\newcommand` in section files except local ones prefixed by the section key (`\histfoo`), defined at the top of the file, and only if unavoidable. Rename sources' symbols as `NOTATION.md` §4 requires (tape measure $\Unif$, $d$ = input length, $N=2^d$, $\Kpad$, $\Ktail$, $\MH$, $j$ for confidence exponents, …).
 7. **Bibliography.** Keys of `bib/core.bib` first, then the canonical keys of `NOTATION.md` §9.2, with entries in `bib/<key>.bib` (`setting.bib`, `learn.bib`, `hist.bib`, `examples.bib`, `ood.bib`, `comp.bib`, `nn.bib`, `related.bib`, `steeper.bib`, `framing.bib`). Never invent bibliographic data: an entry you could not check gets a comment `% unverified: <what was checked>` and the sentence citing it is hedged. arxiv.org and lesswrong.com do not resolve from here; WebSearch gives snippets only.
 8. **Style.** Plain, precise prose; short sentences; no marketing words. Say "we" for the authors' arguments, "Hänni" for his claims. Every lower bound names its convention.
 9. **Build check.** From `paper/`: `./test-section.sh <section> <appendix>` (e.g. `./test-section.sh setting app-setting`). Undefined references to other sections are expected. The full build only as `flock /tmp/claude-0/paper-build-sfi.lock ./build.sh`, and only when told to.
@@ -75,15 +77,15 @@ Bib files: setting → `bib/setting.bib`; learn → `bib/learn.bib`; hist → `b
 
 ## 0. `abstract.tex` (framing editor; written last; ≤ 250 words)
 
-What SFI is (a universal prior over random functions with shared randomness; Hänni's notion); the main results in one sentence each: universality and the versions question (no coding theorem for function programs), dominance/merging/online-to-batch and the fresh-noise caveat, history-aware prediction (\SFIhist{} is the universal chronological semimeasure; Hänni's Thm 1 true in his reading, its proof sketch not), the two worked examples, OOD; one sentence on Paper 2.
+What SOI is (a universal prior over random functions with shared randomness; Hänni's notion); the main results in one sentence each: universality and the versions question (no coding theorem for function programs), dominance/merging/online-to-batch and the fresh-noise caveat, history-aware prediction (\SFIhist{} is the universal chronological semimeasure; Hänni's Thm 1 true in his reading, its proof sketch not), the two worked examples, OOD; one sentence on Paper 2.
 
 ## 1. `intro.tex` — key `intro` — ≈ 2.5 pp (framing editor)
 
-Hänni's request and why SFI is of interest (ideal supervised learning; the slides' NN Bayes link); the contributions in brief, one paragraph per answer of `CLAIMS.md` §3 (R1–R8 and the later request), each with `\Cref`s; credit (Hänni, Eisenstat as reported by Hänni, Vaintrob–Hänni); a table `tab:intro:verdicts` of the brief's hypotheses H1–H10 with verdicts and where (H9 → Paper 2); what is not achieved (open problems collected from the `q:` rows); reader's guide. No theorem environments.
+Hänni's request and why SOI is of interest (ideal supervised learning; the slides' NN Bayes link); the contributions in brief, one paragraph per answer of `CLAIMS.md` §3 (R1–R8 and the later request), each with `\Cref`s; credit (Hänni, Eisenstat as reported by Hänni, Vaintrob–Hänni); a table `tab:intro:verdicts` of the brief's hypotheses H1–H10 with verdicts and where (H9 → Paper 2); what is not achieved (open problems collected from the `q:` rows); reader's guide. No theorem environments.
 
 ---
 
-## 2. `setting.tex` — key `setting` — ≈ 4.5 pp (writer: setting) — "Function semimeasures, function machines and SFI"
+## 2. `setting.tex` — key `setting` — ≈ 4.5 pp (writer: setting) — "Function semimeasures, function machines and SOI"
 
 **Purpose.** Define the objects carefully, prove universality, fix the conventions, and state the basic properties (invariance, coding bounds, relation to SI, computability). Everything later builds on this section.
 
@@ -91,10 +93,10 @@ Hänni's request and why SFI is of interest (ideal supervised learning; the slid
 * `sec:setting:data` Data and conventions: `def:setting:data`. State the repeated-input convention and the two loss conventions here.
 * `sec:setting:weak` Three notions of function semimeasure: `def:setting:weak`, `prop:setting:predictor`, `prop:setting:normtotal`, `def:setting:rpf`, `prop:setting:mobius`, `ex:setting:weaknotrpf`.
 * `sec:setting:machines` Function machines and universality: `def:setting:machine`, `prop:setting:machinelaw`, `thm:setting:universal`, `prop:setting:includes`, `rem:setting:perinput`, `lem:setting:total`, `thm:setting:weakuniversal`, `thm:setting:weakvsmachine`, `cor:setting:normuniversal`, `rem:setting:h1a`, `q:setting:rpf`.
-* `sec:setting:sfi` The definition of SFI and its conventions: `def:setting:sfi`, `prop:setting:order`, `prop:setting:normalise`, `prop:setting:transfer`, `rem:setting:conventions` (the **updated** list, `CLAIMS.md` C7), `q:setting:normorder`, `rem:setting:recommend`.
+* `sec:setting:sfi` The one-tape version of SOI and its conventions (the default convention is stated here, once): `def:setting:sfi`, `prop:setting:order`, `prop:setting:normalise`, `prop:setting:transfer`, `rem:setting:conventions` (the **updated** list, `CLAIMS.md` C7), `q:setting:normorder`, `rem:setting:recommend`.
 * `sec:setting:basic` Basic properties: `thm:setting:invariance`, `thm:setting:coding`, `ex:setting:swap`, `q:setting:twosided`, `prop:setting:si`, `prop:setting:computability`, `q:setting:level`.
 
-**Notes.** Write $\Unif$ for the tape measure, $d$ for input length. State `rem:setting:h1a` as a refutation of the brief's "or equivalently monotone function machines" for the weak definition. The Möbius remark on random sets is "known; unverified". `ex:setting:swap` must say it does not separate SFI from history-aware prediction (C21).
+**Notes.** Write $\Unif$ for the tape measure, $d$ for input length. State `rem:setting:h1a` as a refutation of the brief's "or equivalently monotone function machines" for the weak definition. The Möbius remark on random sets is "known; unverified". `ex:setting:swap` must say it does not separate SOI from history-aware prediction (C21).
 
 **Appendix `app-setting.tex` (`app:setting`) — ≈ 5 pp.** Proofs of `prop:setting:mobius`, `prop:setting:machinelaw` (with the effective enumeration), `rem:setting:fillin`, `lem:setting:realise`, `prop:setting:includes` (private streams; computable laws; mixtures), `thm:setting:weakuniversal` (trimming), `thm:setting:weakvsmachine` (with the exactness of $(2/3)^k$), `prop:setting:twopoint`, `prop:setting:transfer`, `thm:setting:invariance`, `thm:setting:coding`, `prop:setting:computability`; the reformulation of `q:setting:rpf` (proof sketch, with the quoted Strassen step marked).
 
@@ -110,20 +112,20 @@ Hänni's request and why SFI is of interest (ideal supervised learning; the slid
 * `sec:versions:coding` No coding theorem for function programs: `thm:versions:nocoding`, `cor:versions:twopoint`, `prop:versions:covering`, `rem:versions:noncomputable`, `q:versions:explicit`.
 * `sec:versions:table` Summary and meaning for prediction: `tab:versions:compare` (one table, all rows of F Table 4.12), `rem:versions:prediction`, `prop:versions:structured`, `rem:versions:hist`, `rem:versions:answer`, `q:versions:open`.
 
-**Notes.** Operator induction: per-query reading, unverified against Solomonoff 2008 (C1). The hashing bound appears only in the appendix (`rem:versions:hashing`) with the remark that the brief's "log factor via hashing" describes $\KF$. Keep the witnesses' non-computability (`rem:versions:noncomputable`) next to every gap.
+**Notes.** Solomonoff's solutions (`rem:versions:operator`): his eq. (10) is $\Mpq$, his eq. (9) the joint solution, eq. (12) his convergence theorem; Solomonoff 2008 read in full (C1; RENAME.md §2). The hashing bound appears only in the appendix (`rem:versions:hashing`) with the remark that the brief's "log factor via hashing" describes $\KF$. Keep the witnesses' non-computability (`rem:versions:noncomputable`) next to every gap.
 
 **Appendix `app-versions.tex` (`app:versions`) — ≈ 5 pp.** Proofs of `prop:versions:Wgap`, `prop:versions:tape`, `rem:versions:hashing`, `prop:versions:shared`, `thm:versions:nocoding`, `cor:versions:twopoint`, `prop:versions:covering` (with the Kleitman–Spencer remark, known; unverified), `prop:versions:structured`.
 
 **Cross-references out.** `hist` (`prop:hist:programs`), `learn` (Occam comparison), Paper 2 (`rem:absorb:why` uses `prop:versions:shared`, `rem:versions:sharedsize`; `lem:split:stream` adapts `prop:versions:tape`).
 
-## 4. `learn.tex` — key `learn` — ≈ 5 pp (writer: learn) — "Learning theorems: SFI as supervised learning"
+## 4. `learn.tex` — key `learn` — ≈ 5 pp (writer: learn) — "Learning theorems: SOI as supervised learning"
 
-**Purpose.** The guarantees that make SFI "ideal supervised learning", with their limits: pathwise dominance, merging, mistake bounds, online-to-batch, noise (fresh vs frozen vs stamped vs per-query), learning curves, in-distribution error, comparison with Occam/PAC-Bayes/MDL, and the analogy's limits.
+**Purpose.** The guarantees that make SOI "ideal supervised learning", with their limits: pathwise dominance, merging, mistake bounds, online-to-batch, noise (fresh vs frozen vs stamped vs per-query), learning curves, in-distribution error, comparison with Occam/PAC-Bayes/MDL, and the analogy's limits.
 
 **Subsections and results.**
 * `sec:learn:dominance` Dominance: `thm:learn:dominance`, `rem:learn:h2`.
 * `sec:learn:merging` Merging and mistakes: `thm:learn:merging`, `cor:learn:mistakes`.
-* `sec:learn:batch` Online-to-batch and noise: `thm:learn:batch`, `prop:learn:freshnoise` (H7 as stated refuted for random-function SFI), `prop:learn:perquery`.
+* `sec:learn:batch` Online-to-batch and noise: `thm:learn:batch`, `prop:learn:freshnoise` (H7 as stated refuted for the one-tape version), `prop:learn:perquery`.
 * `sec:learn:curves` Learning curves and in-distribution error: `prop:learn:curve`, `rem:learn:lastiterate`, `prop:learn:splits`, `prop:learn:loo`, `rem:learn:increasing`, `conj:learn:loo`, `prop:learn:typical`, `rem:learn:cesaro`, `cor:learn:perstep`, `rem:learn:relations`.
 * `sec:learn:ideal` Comparison and the sense of "ideal": `prop:learn:occam`, `rem:learn:ideal`, `rem:learn:hutterEX`, `prop:learn:active`, `rem:learn:positive`, `rem:learn:interventions`.
 
@@ -131,11 +133,11 @@ Hänni's request and why SFI is of interest (ideal supervised learning; the slid
 
 **Appendix `app-learn.tex` (`app:learn`) — ≈ 5 pp.** Proofs of `thm:learn:merging` (posterior lemma, integrability), `thm:learn:batch`, `prop:learn:perquery`, `prop:learn:curve`, `rem:learn:lastiterate` (identity), `prop:learn:splits`, `prop:learn:loo`, `prop:learn:typical`, `cor:learn:perstep`, `prop:learn:occam`, `prop:learn:active`.
 
-**Cross-references out.** `setting`, `versions` (`prop:learn:occam` vs `thm:versions:nocoding`), `hist` (comparator class limit), `ood` (distribution shift), `ex` (positive examples), `comp` (time-bounded analogue of stamped SFI).
+**Cross-references out.** `setting`, `versions` (`prop:learn:occam` vs `thm:versions:nocoding`), `hist` (comparator class limit), `ood` (distribution shift), `ex` (positive examples), `comp` (time-bounded analogue of the stamped one-tape version).
 
 ## 5. `hist.tex` — key `hist` — ≈ 5.5 pp (writer: hist) — "History-aware prediction"
 
-**Purpose.** What SFI cannot do with the order of the data and what fixes it: Hänni's counterexamples, his Thm 1 (three readings; true in his reading, proof sketch invalid), \SFIhist{} as the universal chronological semimeasure (H4), its relation to SI, and what SFI can exploit.
+**Purpose.** What SOI cannot do with the order of the data and what fixes it: Hänni's counterexamples, his Thm 1 (three readings; true in his reading, proof sketch invalid), \SFIhist{} as the universal chronological semimeasure (H4), its relation to SI, and what SOI can exploit.
 
 **Subsections and results.**
 * `sec:hist:setting` History-aware predictors: `def:hist:predictor`, `lem:hist:chrono`.
@@ -143,7 +145,7 @@ Hänni's request and why SFI is of interest (ideal supervised learning; the slid
 * `sec:hist:thm1` Hänni's Thm 1: `def:hist:readings`, `lem:hist:memory`, `prop:hist:sketchfails`, `thm:hist:shared`, `cor:hist:deterministic`, `cor:hist:joint`, `thm:hist:bayes`, `thm:hist:directed`, `thm:hist:randchain`, `thm:hist:minimax`, `cor:hist:thm1`, `rem:hist:thm1open`, `prop:hist:shannon`, `conj:hist:algmi`, `prop:hist:nopathwise`.
 * `sec:hist:sfihist` \SFIhist{} and H4: `def:hist:sfihist`, `lem:hist:chronolaw`, `thm:hist:representation`, `cor:hist:H4`, `prop:hist:variants`, `prop:hist:strict`, `prop:hist:operator`, `prop:hist:programs`.
 * `sec:hist:si` As good as SI?: `thm:hist:si`, `prop:hist:inputloss`, `prop:hist:lhg`, `rem:hist:H4verdict`.
-* `sec:hist:exploit` What SFI can and cannot exploit: `thm:hist:sandwich`, `cor:hist:initial`, `thm:hist:gf`, `thm:hist:expected`, `prop:hist:info`, `rem:hist:exploit`, `q:hist:open`.
+* `sec:hist:exploit` What SOI can and cannot exploit: `thm:hist:sandwich`, `cor:hist:initial`, `thm:hist:gf`, `thm:hist:expected`, `prop:hist:info`, `rem:hist:exploit`, `q:hist:open`.
 
 **Notes.** Define the universal chronological semimeasure as $\MH$; mention F's trimming construction as an alternative equal up to constants; Hutter identification "known; unverified" (C13). Hypotheses of the minimax theorem are (A1), (A2). Private memory is $\Gamma$. GF$(2^q)$. Hi's cyclic-permutation result (Hi Prop 4.8) is **not** stated here: it is `prop:ex:cychist` (C16(a)). Lower bounds carry "semimeasure convention"; `prop:hist:normchain` gives the normalised versions.
 
@@ -153,7 +155,7 @@ Hänni's request and why SFI is of interest (ideal supervised learning; the slid
 
 ## 6. `examples.tex` — key `ex` — ≈ 4.5 pp (writer: ex) — "Worked examples"
 
-**Purpose.** Hänni's two examples where SFI does much worse than SI, worked out exactly (statements with probabilities, conventions and constants), and positive examples where SFI works well.
+**Purpose.** Hänni's two examples where SOI does much worse than SI, worked out exactly (statements with probabilities, conventions and constants), and positive examples where SOI works well.
 
 **Subsections and results.**
 * `sec:ex:tools` Tools: `lem:ex:surprisal` (and `lem:ex:silabel` stated, proved in the appendix).
@@ -186,20 +188,20 @@ Hänni's request and why SFI is of interest (ideal supervised learning; the slid
 
 ## 8. `comp.tex` — key `comp` — ≈ 3 pp (writer: oodcomp) — "Computable versions"
 
-**Purpose.** Time-bounded SFI (Hänni's polytime note) and circuit SFI (his circuit notes): what holds, with which constants and running times, and where Occam learning fails.
+**Purpose.** Time-bounded SOI (Hänni's polytime note) and circuit SOI (his circuit notes): what holds, with which constants and running times, and where Occam learning fails.
 
 **Subsections and results.**
-* `sec:comp:time` Time-bounded SFI: `def:comp:timebounded`, `thm:comp:timebounded`, `rem:comp:distinct`, `rem:comp:constant`, `prop:comp:round`, `cor:comp:poly`, `rem:comp:apples`, `prop:comp:history`, `prop:comp:samplers`, `q:comp:samplers`.
-* `sec:comp:circuits` Circuit SFI: `def:comp:circuits`, `thm:comp:circuitbayes`, `rem:comp:gap`, `prop:comp:occam`, `rem:comp:majority`.
+* `sec:comp:time` Time-bounded SOI: `def:comp:timebounded`, `thm:comp:timebounded`, `rem:comp:distinct`, `rem:comp:constant`, `prop:comp:round`, `cor:comp:poly`, `rem:comp:apples`, `prop:comp:history`, `prop:comp:samplers`, `q:comp:samplers`.
+* `sec:comp:circuits` Circuit SOI: `def:comp:circuits`, `thm:comp:circuitbayes`, `rem:comp:gap`, `prop:comp:occam`, `rem:comp:majority`.
 * `sec:comp:ladder` Occam fails out of distribution: `thm:comp:ladder`, `rem:comp:adversary`, `rem:comp:selection`, `rem:comp:uniformties`, `q:comp:open`.
 
 **Notes.** Time bound $t(\cdot)$; clock $\tau_k(x)$; mixtures $\Mlen$, $\Mrd$; circuit mixture $\Wcirc$, size $\csize$; expected Gibbs mistakes $\mathcal E$. The ladder construction is from the slides; credit it.
 
 **Appendix `app-comp.tex` (`app:comp`) — ≈ 2.5 pp.** Proofs of `thm:comp:timebounded` (with the proof-sketch part marked), `prop:comp:history`, `thm:comp:circuitbayes`, `lem:comp:mobius`, `thm:comp:ladder`.
 
-**Cross-references out.** `learn` (stamped SFI), `hist` (chronological learner), `nn`, Paper 2 (`prop:related:computable`: Theorems 2 and 4 transfer to computable product classes).
+**Cross-references out.** `learn` (stamped one-tape version), `hist` (chronological learner), `nn`, Paper 2 (`prop:related:computable`: Theorems 2 and 4 transfer to computable product classes).
 
-## 9. `nn.tex` — key `nn` — ≈ 2 pp (writer: oodcomp) — "Neural-network Bayes and circuit SFI"
+## 9. `nn.tex` — key `nn` — ≈ 2 pp (writer: oodcomp) — "Neural-network Bayes and circuit SOI"
 
 **Purpose.** Hänni asked to link the slides that "explain how NNbayes is kinda like a circuit version of SFI". State what is proved, what the slides claim, and what is open; hedge the bridge.
 
@@ -215,17 +217,17 @@ Hänni's request and why SFI is of interest (ideal supervised learning; the slid
 
 **Purpose.** Tell the reader of this paper what Paper 2 shows, in prose, with `\citet{claudeSFI2026steeper}` and result names. No theorem environments, no proofs, no new claims.
 
-**Contents (in order).** Hänni's proposal (λ > 1 on program length; private randomness per input) and the standard absorption objection. Absorption in any class containing its own mixture (SI, $\MF$, $\Mw$, $\MH$), and no universal product hypothesis; the price of private randomness on shared latent causes. The teacher's-mistakes theorem: window $(2^{-m},c_{\rm hi}]$ in $\lambda/n$ at Hänni's sizes, all product hypotheses quantified over, for incompressible error rules; λ must grow linearly in $n$; error envelopes refute the extension to every rule of that density and length; rate blindness. The model–randomness split: λ = 1 similar posterior (SFI and SI); fixed λ > 1 with private randomness the sampler wins; shared randomness or SI: no split; product versus set sophistication ($d\pm O(\log d)$ vs $O(\log d)$). Prior work: λ-weighted MDL in noisy classification. Write $\lambda/n$, never $c$.
+**Contents (in order).** Hänni's proposal (λ > 1 on program length; private randomness per input) and the standard absorption objection. Absorption in any class containing its own mixture (SI, $\MF$, $\Mw$, $\MH$), and no universal product hypothesis; the price of private randomness on shared latent causes. The teacher's-mistakes theorem: window $(2^{-m},c_{\rm hi}]$ in $\lambda/n$ at Hänni's sizes, all product hypotheses quantified over, for incompressible error rules; λ must grow linearly in $n$; error envelopes refute the extension to every rule of that density and length; rate blindness. The model–randomness split: λ = 1 similar posterior (per-query solution and SI); fixed λ > 1 with private randomness the sampler wins; shared randomness or SI: no split; product versus set sophistication ($d\pm O(\log d)$ vs $O(\log d)$). Prior work: λ-weighted MDL in noisy classification. Write $\lambda/n$, never $c$.
 
 **Cross-references out.** `versions` (`prop:versions:shared`: the λ = 1 cost of private randomness), `learn` (`prop:learn:perquery`), `hist` (`cor:hist:H4`), `ood` (`prop:ood:hanni`).
 
 ## 11. `related.tex` — key `related` — ≈ 1 p (writer: oodcomp) — "Related work"
 
-**Contents.** Solomonoff's three kinds of induction and operator induction (unverified beyond the abstract and secondary sources); Hutter's chronological semimeasures and "supervised learning from examples"; Lattimore–Hutter–Gavane; Wood–Sunehag–Hutter; Lattimore–Hutter on NFL; Poland–Hutter MDL; Leike–Hutter bad priors; Occam, PAC-Bayes, online-to-batch, expert advice; Ryabko; Vovk and conformal prediction; inductive inference of recursive functions (Gold; Barzdin–Freivalds; Case–Smith); speed priors; simplicity bias in networks (pointer to `sec:nn`). One item: `rem:related:new` (what exists and what appears new at a snippet-level search). Sources: Co §6, Hi §4.6, F §6.6. Hedge every content claim not checked against the source.
+**Contents.** Solomonoff's operator-induction problem: the term (Solomonoff 1999), the problem, solutions (9) and (10) and theorem (12) (Solomonoff 2008), both read in full; Hutter's chronological semimeasures and "supervised learning from examples"; Lattimore–Hutter–Gavane; Wood–Sunehag–Hutter; Lattimore–Hutter on NFL; Poland–Hutter MDL; Leike–Hutter bad priors; Occam, PAC-Bayes, online-to-batch, expert advice; Ryabko; Vovk and conformal prediction; inductive inference of recursive functions (Gold; Barzdin–Freivalds; Case–Smith); speed priors; simplicity bias in networks (pointer to `sec:nn`). One item: `rem:related:new` (what exists and what appears new at a snippet-level search). Sources: Co §6, Hi §4.6, F §6.6. Hedge every content claim not checked against the source.
 
 ## 12. `discussion.tex` — key `discussion` — ≈ 1.5 pp (framing editor)
 
-What SFI is good for and where the analogy with supervised learning breaks (from `rem:learn:ideal`); the main open problems, collected from the `q:` rows (`q:setting:rpf`, `q:versions:open`, `q:setting:normorder`, `q:ex:normalised`, `rem:hist:thm1open`, `conj:hist:algmi`, `conj:learn:loo`, `q:comp:samplers`, `q:nn:bridges`); a pointer to Paper 2.
+What SOI is good for and where the analogy with supervised learning breaks (from `rem:learn:ideal`); the main open problems, collected from the `q:` rows (`q:setting:rpf`, `q:versions:open`, `q:setting:normorder`, `q:ex:normalised`, `rem:hist:thm1open`, `conj:hist:algmi`, `conj:learn:loo`, `q:comp:samplers`, `q:nn:bridges`); a pointer to Paper 2.
 
 ## Appendices
 
@@ -238,7 +240,7 @@ Order: `app-setting` (A), `app-versions` (B), `app-learn` (C), `app-hist` (D), `
 ## Cross-paper references
 
 * Paper 1 cites Paper 2 as `\citet{claudeSFI2026steeper}` with the result's name ("the absorption theorem", "the teacher's-mistakes theorem", "Theorem 3 of …" only after the framing editor has fixed numbers). No `\ref` across papers.
-* Paper 2 cites this paper as `\citet{claudeSFI2026fundamentals}` for: function machines and $\MF$ (`thm:setting:universal`), product laws as machine laws (`prop:setting:includes`), $\Mw$ (`thm:setting:weakuniversal`), the variants and the chain (`def:versions:variants`, `thm:versions:chain`), the shared-coin gap and its size (`prop:versions:shared`, `rem:versions:sharedsize`), the tape-length bound and hashing (`prop:versions:tape`, `rem:versions:hashing`), dominance, merging and mistakes (`thm:learn:dominance`, `thm:learn:merging`, `cor:learn:mistakes`), frozen noise and fresh noise (`thm:learn:batch`(c), `prop:learn:freshnoise`), per-query mixture (`prop:learn:perquery`), computability (`prop:setting:computability`), \SFIhist{} (`cor:hist:H4`), OOD (`prop:ood:hanni`), time-bounded SFI (`thm:comp:timebounded`, `prop:comp:samplers`), the NN bridge (`prop:nn:functionspace`), the ladder (`thm:comp:ladder`, `rem:comp:uniformties`).
+* Paper 2 cites this paper as `\citet{claudeSFI2026fundamentals}` for: function machines and $\MF$ (`thm:setting:universal`), product laws as machine laws (`prop:setting:includes`), $\Mw$ (`thm:setting:weakuniversal`), the variants and the chain (`def:versions:variants`, `thm:versions:chain`), the shared-coin gap and its size (`prop:versions:shared`, `rem:versions:sharedsize`), the tape-length bound and hashing (`prop:versions:tape`, `rem:versions:hashing`), dominance, merging and mistakes (`thm:learn:dominance`, `thm:learn:merging`, `cor:learn:mistakes`), frozen noise and fresh noise (`thm:learn:batch`(c), `prop:learn:freshnoise`), per-query mixture (`prop:learn:perquery`), computability (`prop:setting:computability`), \SFIhist{} (`cor:hist:H4`), OOD (`prop:ood:hanni`), time-bounded SOI (`thm:comp:timebounded`, `prop:comp:samplers`), the NN bridge (`prop:nn:functionspace`), the ladder (`thm:comp:ladder`, `rem:comp:uniformties`).
 * T5 (the earlier report) is cited only by Paper 2: `\citet{claude2026whatfollows}`, section "Simplicity and normativity from imitation".
 
 ## Global cross-reference map (within Paper 1)

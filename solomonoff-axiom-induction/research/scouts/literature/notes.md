@@ -129,7 +129,7 @@ Each entry gives what the work does and the precise difference from the axiom in
   * AI is operator induction in which the questions are sentences, and in which deduction ties the answers together: φ and ¬φ, φ ∧ ψ, consequences.
 * **zvonkin1970complexity** [B, A] and **levin1973universal** [B, A: Math-Net abstract].
   * Zvonkin–Levin is the survey of Kolmogorov complexity and the universal semimeasure.
-  * Levin's 1973 paper introduces universal search; the Math-Net record lists the problem of "searching for proofs of limited length" among the universal problems [A].
+  * Levin's 1973 paper introduces universal sequential search problems. The paper's text, hosted on Fortnow's site and quoted in the search results, names "searching for proofs of limited length" among them [A].
   * Relevance: the Levin-style time penalties (Kt) of the earlier report's §6.
 * **hutter2005universal** [B] and **rathmanner2011philosophical** [B, A].
   * The treatise argues for Solomonoff induction as a solution to the problem of induction and discusses the black ravens paradox and confirmation [A].
@@ -153,6 +153,7 @@ Each entry gives what the work does and the precise difference from the axiom in
   * Solomonoff's simplicity measure is "better perceived" as an assumption of effectiveness, and it does not justify Occam's razor (2016).
   * Putnam's diagonal argument defeats the Solomonoff–Levin attempt at a universal learning machine, with a generalised diagonalisation (2019, 2026).
   * *Relevance.* The earlier report's diagonal separation (`thm:time:diagonal`) is a member of this family. The philosophy section should cite Sterkenburg wherever it leans on Occam justifications.
+* **li2008introduction** [X: SFI bib]. The standard textbook for the universal semimeasure, prefix complexity and the coding theorem. **chaitin1975theory** [X: SFI bib] is the prefix-complexity paper.
 * **vitanyi2000minimum** [B, A]. Ideal MDL derived from Bayes with Kolmogorov complexity, and the "fundamental inequality" for when it applies. Relevant to the Kolmogorov version K_A, the shortest consistent axiomatisation proving the data.
 * **schmidhuber2002speed**, **filan2016loss** [X: SFI bib]. Time-penalised universal priors. Relevant to the time-bounded variants.
 * **An informal antecedent, not for the bibliography.** A LessWrong post by "cousin_it", "Using the universal prior for logical uncertainty", is marked *retracted* [S]. It proposed feeding the universal prior one bit per PA sentence, set when the sentence is proved or refuted. That is SFI on sentences. It was retracted because the claim that the prior picks up all computable regularities was unproved [S]. The same post reports that Demski's 2012 paper describes a "naive way to use the universal prior for logical uncertainty" and its problems [S].
@@ -521,7 +522,7 @@ Each verdict is an assessment (search-based). "Known" means known in substance, 
 | universal axiom induction | no | Hutter's "universal induction"; **∈-induction** (the axiom schema of set induction); an axiomatic theory of induction in economics | **medium**: "axiom induction" parses as "induction axiom", and "universal induction" is Hutter's brand |
 | universal theory induction | no | Hutter's "Open problems in universal induction"; "Universal learning theory" (Hutter, arXiv 1102.2467); the problem of induction | medium: read as "universal induction" plus "theory" |
 | Solomonoff theory induction | no | "Solomonoff's theory of inductive inference" (Wikipedia's title for Solomonoff induction) | **high**: near-homonym of the standard name |
-| (Solomonoff) operator induction | **yes**: Solomonoff's term (solomonoff1999two; solomonoff2008three [X: SFI, read in full]); also used by later authors (Özkural 2011, "Diverse consequences of algorithmic probability", arXiv 1107.2788 [S]) | — | fine; SOI is well grounded |
+| (Solomonoff) operator induction | **yes**: Solomonoff's term (solomonoff1999two; solomonoff2008three [X: SFI, read in full]); also used by later authors ("Diverse consequences of algorithmic probability", arXiv 1107.2788 [S]; author recalled as Özkural [R]) | — | fine; SOI is well grounded |
 | "Solomonoff abduction" | informal only: a GreaterWrong comment suggests calling Solomonoff induction "Solomonoff abduction" [S]; the author's note says "solomonoff axiom induction/abduction" | — | avoid: informal and contested |
 | "theory induction" | not an established term; the cognitive-science terms are "theory acquisition", "theory learning", "theory-based Bayesian models" (kemp2008theory; ullman2012theory; tenenbaum2006theory); the learning-theory phrase is "inductive inference of theories from facts" (shapiro1991inductive) | — | usable, but say what it means |
 
