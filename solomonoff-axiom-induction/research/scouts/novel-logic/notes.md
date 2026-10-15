@@ -302,3 +302,288 @@ Each item gives a statement, a first pass, and an assessment. The four pushed di
 * **Self-referential sentences about the posterior** ("Bel₀(β) < ½"). Bel₀ is Δ₂-definable, so fixed points exist. But Bel is a probability of provability, not of truth, so there is no paradox and nothing to learn: β's truth is not constrained by Bel₀(β). Dropped.
 * **Rosser-style balance points.** No machine-independent content found (D3 shows ratios are machine-dependent). Dropped.
 
+---
+
+## 3. Push 1: random theories that no r.e. theory can replace
+
+### 3.1 The question and why it matters
+
+Scout F proved (F22) the following. If some consistent r.e. theory proves every datum of an infinite stream D_∞, then:
+* Unif(E_∞) > 0;
+* the posterior converges in total variation;
+* the cumulative loss is bounded.
+
+Scout F asked for the converse (Q1): does Unif(E_∞) > 0 imply that some consistent r.e. theory proves D_∞?
+
+The question matters for three reasons.
+* **What the hypotheses are.** The one-tape inducer's hypotheses are random theories. If every bounded-loss success were explained by one r.e. theory, the randomness would be a technical convenience. If not, the inducer can succeed where no theory, in the usual sense, succeeds.
+* **The three versions.** It decides whether the one-tape version M_A and the coin-free version W_A can differ *qualitatively* on a single stream. F11 compares them only on finite data.
+* **SFI.** In P1's SFI the analogous converse holds (Prop. E2(b) below). A failure for axioms would be a phenomenon of logic itself.
+
+### 3.2 A density lemma
+
+**Lemma E0 (Lebesgue density on Cantor space)** [proved]. Let X ⊆ {0,1}^∞ be Borel with Unif(X) > 0, and ε ∈ (0,1). Then there is a finite string w with Unif(X ∩ [w]) > (1 − ε)·2^(−|w|).
+
+*Proof.*
+* By outer regularity there is an open O ⊇ X with Unif(O) < Unif(X)/(1 − ε).
+* Write O as a disjoint union of cylinders [w_i], with the w_i prefix-free.
+* If Unif(X ∩ [w_i]) ≤ (1 − ε)·2^(−|w_i|) for every i, then summing gives Unif(X) ≤ (1 − ε)·Unif(O) < Unif(X), a contradiction. ∎
+
+### 3.3 The lottery
+
+**Setting.**
+* L contains 0, S and a binary relation symbol W. Numerals are n̄ := S^n 0.
+* B is a consistent r.e. background that does not mention W and has a model in which the numerals denote pairwise distinct elements; for example B = ∅, Q or PA, with L = L_A ∪ {W}.
+* For k ≥ 0 put N_k := 2^(k+1) − 1 (so lottery k has 2^(k+1) tickets 0, …, N_k), and let
+
+  λ_k := ∃x W(k̄, x) ∧ ∀x (W(k̄, x) → x = 0̄ ∨ x = 1̄ ∨ … ∨ x = N̄_k).
+
+  So λ_k says "lottery k has a winner, and the winner is one of its tickets".
+
+**The random lottery theory G_lot.**
+* G_lot reads the tape in consecutive blocks of k + 1 bits, k = 0, 1, 2, …. Block k is read as a number J_k ∈ {0, …, N_k}.
+* After reading block k it emits λ_k, W(k̄, J̄_k), and ¬W(k̄, j̄) for every j ≤ N_k with j ≠ J_k.
+* It is a theory machine: a c.e. set of pairs (tape prefix, sentence).
+* Under Unif the J_k are independent and uniform.
+* Every A^{G_lot}_ω is consistent with B. In the model of B with distinct numerals, interpret W as {(k, J_k(ω)) : k ∈ ℕ}, extended to non-numeral elements as false.
+
+**Theorem E1 (the lottery)** [proved; computed: `checks/c1_lottery.out`, Part A]. There is an infinite stream D_∞ of labelled L-sentences, computable from ∅′, such that:
+* (a) **Bounded one-tape loss.** For every n, M_A(D_n) ≥ 2^(−K(G_lot) − c)·Π_{k≥0}(1 − 2^(−(k+1))), and the product is 0.28879. So the cumulative loss L_A(D_n) − L_A(∅) is bounded, Unif(E_∞) > 0, and the posterior converges in total variation to P_∞ (F22).
+* (b) **No theory.** No consistent r.e. theory proves every sentence of D_∞^± (with B).
+* (c) **The other versions diverge.** W_A(D_n) → 0 and K_A(D_n) → ∞, while L_A(D_n) stays bounded. Hence the coin-free cumulative loss is unbounded on a stream where the one-tape loss is bounded, and also K_fin^{L′}(D_n) → ∞ for every finite axiomatisation in every language L′ ⊇ L.
+* (d) **The posterior abandons theories.**
+  * The posterior probability that the tape's program is a deterministic machine (one that ignores the coins) tends to 0.
+  * P_∞{ω : Cn(B ∪ A_ω) is r.e.} = 0. In the limit the posterior is concentrated on random theories whose deductive closure is not r.e.
+
+*Proof.*
+
+*The stream.*
+* Let W_0, W_1, … enumerate all r.e. sets of L-sentences. For each e define j*_e ∈ {0, …, N_e} as follows.
+  * If B ∪ W_e is consistent and proves λ_e, let j*_e be the least j ≤ N_e such that B ∪ W_e ⊬ ¬W(ē, j̄).
+    * Such a j exists. Otherwise B ∪ W_e proves ¬W(ē, j̄) for all j ≤ N_e. Together with the second conjunct of λ_e and the equality axioms this gives ∀x ¬W(ē, x), contradicting the first conjunct of λ_e.
+  * Otherwise let j*_e := 0.
+* D_∞ := (λ_0, 1), (W(0̄, j̄*_0), 0), (λ_1, 1), (W(1̄, j̄*_1), 0), …. The label 0 means "false": the datum asserts ¬W(k̄, j̄*_k).
+* *Computability from ∅′.* "B ∪ W_e is consistent" is Π₁; "B ∪ W_e ⊢ λ_e" and "B ∪ W_e ⊢ ¬W(ē, j̄)" are Σ₁. So j*_e is computable from ∅′ uniformly in e.
+
+*(a)*
+* Let E := {ω : J_k(ω) ≠ j*_k for all k}. By independence and continuity from above, Unif(E) = Π_k (1 − 2^(−(k+1))) > 0. The product converges because Σ_k 2^(−(k+1)) < ∞.
+* For ω ∈ E, the theory B ∪ A^{G_lot}_ω is consistent and proves every λ_k. It also proves ¬W(k̄, j̄*_k), because J_k ≠ j*_k. So ν_{G_lot}(D_n) ≥ Unif(E) for all n.
+* F4 (dominance) gives M_A(D_n) ≥ 2^(−K(G_lot) − c)·Unif(E).
+* The numerical value is computed in c1 (A2): exact enumeration agrees with the product formula for 1–4 lotteries, and the infinite product is 0.288788.
+
+*(b)*
+* Suppose B ∪ W_e is consistent and proves all of D_∞^±. In particular it proves λ_e.
+* So j*_e was chosen as a ticket with B ∪ W_e ⊬ ¬W(ē, j̄*_e).
+* But ¬W(ē, j̄*_e) ∈ D_∞^±. Contradiction.
+
+*(c)*
+* W_A(D_n) = Σ_e m(e)·1[B ∪ W_e consistent, ⊢ ψ_{D_n}]. Each indicator is non-increasing in n and, by (b), eventually 0. By dominated convergence (Σ_e m(e) ≤ 1), W_A(D_n) → 0.
+* Then K_A(D_n) ≥ −log W_A(D_n) → ∞.
+* A finite theory in any L′ ⊇ L has an r.e. L-content, so (b) applies to it as well.
+
+*(d)*
+* Let Det be the set of tapes pω′ with p ∈ dom V and G_{V(p)} ignoring its coins, so that it emits a fixed r.e. set X_p. Then Unif(Det ∩ E_{D_n}) = Σ_{p : V(p) ∈ Det} 2^(−|p|)·1[B ∪ X_p consistent, ⊢ ψ_{D_n}].
+* This tends to 0 by (b) and dominated convergence. Dividing by M_A(D_n), which is bounded below by (a), gives the first claim.
+* For the second: if ω ∈ E_∞ and Cn(B ∪ A_ω) were r.e., it would be a consistent r.e. theory proving D_∞, contrary to (b). ∎
+
+**Remarks.**
+* **Rate.** A batch version kills more theories per lottery. Lottery k gets 2^(2k+1) tickets and diagonalises every e < 2^k, with one labelled-false ticket per killed theory. The random theory then survives lottery k with probability ≥ 1 − 2^(−k−1), and after lottery k every e < 2^k is eliminated. So −log W_A(D_n) ≥ −log Σ_{e ≥ 2^k} m(e) after the k-th lottery [proved by the same argument]. This lower bound is a tail of the universal semimeasure. It is unbounded but grows very slowly; I did not determine the exact rate.
+* **Where the randomness sits.** Each random lottery theory has the same law (λ_k) and differs only in a randomly drawn contingent fact (the winner). Under proof-requiring compatibility, a reported loser can only be *explained* by committing to a winner:
+  * a deterministic theory commits once, and the adversary reports exactly the ticket it fails to refute;
+  * a random theory commits at random, and loses only if it happens to pick the reported ticket.
+
+  This is the same split between laws and randomly drawn initial conditions that the laws-versus-initial-conditions seed is about (P2's model–randomness split). Here it is forced, not merely preferred.
+* **Only for proof-requiring.** The r.e. theory {λ_k : k} is consistent with every datum, so under the consistency-requiring variant it is compatible. The lottery phenomenon belongs to proof-requiring compatibility, which demands that reported losers be *derived*.
+* **Computed illustration (c1, Part A3).** In a twelve-lottery truncation with a mixture of twelve deterministic theories and the random theory:
+  * the deterministic posterior share falls from 0.79 to 0 by the ninth lottery;
+  * the random theory's cumulative loss converges to 1.79 bits, which is −log₂ of the truncated product.
+
+  The majority-vote theory (A4) refutes every ticket of every lottery k ≥ 1, so it is inconsistent with λ_k.
+
+### 3.4 Where the lottery cannot happen: bounded inconsistency arity
+
+**Proposition E2 (majority vote)** [proved; computed: `checks/c1_lottery.out`, Part B].
+
+*(a) Axiom induction.* Let S ⊆ Sent_L be decidable and r ≥ 1, and suppose every B-inconsistent finite subset of S contains a B-inconsistent subset with at most r elements. Let D_∞ be an infinite data stream with D_∞^± ⊆ S and Unif(E_∞) > 0. Then there is a consistent r.e. theory T ⊆ S with D_∞^± ⊆ T. In particular B ∪ T proves D_∞, and W_A(D_n) ≥ m(index of T) for all n, so the coin-free loss is also bounded.
+
+*(b) SFI.* For P1's one-tape M_F with input space X and labels Y, if D_∞ : X ⇀ Y is an infinite partial function with lim_n M_F(D_n) > 0, then there is a partial computable f ⊇ D_∞. So P1's coin-free W also has bounded loss on D_∞.
+
+*Proof.*
+
+*(a)*
+* Put ε := 1/(r + 1). By Lemma E0 choose w with Unif(E_∞ ∩ [w]) > (1 − ε)·2^(−|w|). Write Pr_w(·) := 2^{|w|}·Unif(· ∩ [w]).
+* Let T := {φ ∈ S : Pr_w(V_φ) > 1 − ε}. T is r.e., because Pr_w(V_φ) is left-c.e. uniformly in φ.
+* *Data.* For φ ∈ D_∞^±, V_φ ⊇ E_∞, so Pr_w(V_φ) ≥ Pr_w(E_∞) > 1 − ε, and φ ∈ T.
+* *Consistency.* Suppose B ∪ T is inconsistent.
+  * By compactness and the hypothesis on S, some φ_1, …, φ_j ∈ T with j ≤ r form a B-inconsistent set.
+  * Then Pr_w(V_{φ_1} ∩ … ∩ V_{φ_j}) > 1 − jε ≥ 1 − rε = ε.
+  * Every tape in that intersection has B ∪ A_ω proving a B-inconsistent set, so it lies in Inc. Hence Pr_w(Inc) > ε.
+  * But Inc ∩ E_∞ = ∅, so Pr_w(Inc) ≤ 1 − Pr_w(E_∞) < ε. Contradiction.
+
+*(b)*
+* As in (a) with ε = 1/2, choose w with Pr_w{ω : f_ω ⊇ D_∞} > 1/2.
+* Define f(x) := y if Pr_w{ω : f_ω(x) = y} > 1/2. At most one y qualifies, the condition is Σ₁, and f is partial computable.
+* For x ∈ dom D_∞, the event {f_ω(x) = D_∞(x)} contains {f_ω ⊇ D_∞}, so f(x) = D_∞(x).
+* Then W(D_n) ≥ m(f) > 0 for all n. ∎
+
+**Instances.**
+* **Literal data** (F9's condition (Lit), a fresh unary predicate R). Every finite set of literals with no complementary pair is B-consistent, so r = 2, and Q1 holds for literal streams.
+* **Plain SFI.** Q1 holds, by (b). There the one-tape and coin-free versions can differ by unbounded amounts on finite data (P1 Prop 4.5 / Thm 4.9), but not "bounded against unbounded" on a single infinite stream.
+* **Π₁ data over a true arithmetic background.** Q1 holds by a different argument (§4, Corollary A3).
+* **The lottery.** S contains λ_k and the W-literals. The set {λ_k} ∪ {¬W(k̄, j̄) : j ≤ N_k} is minimally inconsistent with N_k + 2 elements, so no finite r bounds the arity.
+  * c1 Part B checks (a) on random finite tape spaces with random inconsistency hypergraphs of arity r = 2, 3, 5. There were 0 violations at ε = 1/(r+1) in 400, 400 and 387 instances.
+  * At ε = 2/3 there were 67, 120 and 157 violations: the threshold matters.
+  * For each threshold 1 − ε, the lottery with 2^(k+1) > 1/ε tickets makes the majority set inconsistent.
+* **Consistent SFI.** M_F^cons agrees with M_A within constant factors (F8), so the lottery stream also separates one-tape consistent SFI from coin-free consistent SFI. The phenomenon comes from *logical consistency constraints of unbounded arity*. Consistent SFI has them, and plain SFI does not.
+
+**Corollary E3 (scout F's Q1, answered)** [proved]. Unif(E_∞) > 0 does not in general imply that some consistent r.e. theory proves D_∞ (E1). It does when the data's inconsistency arity is bounded (E2), and for Π₁ data over a true background extending Q (A3).
+
+### 3.5 What this means for the paper
+
+* **The Kolmogorov-versus-semimeasure question.** F11 shows that P1's finite-data gaps recur for axioms. E1 shows something P1 cannot have: a single stream on which the semimeasure version learns and the Kolmogorov and coin-free versions do not.
+* **"A theory is a logical theory."** In the limit, the one-tape inducer's belief on the lottery stream is about no r.e. theory at all. Its successful hypotheses are *random theories*: a law plus a chance-drawn completion of the contingent facts. This is not an objection to the axiom view. It makes precise that the idealised inducer's objects are "theories with random initial conditions", and that proof-requiring compatibility can force the randomness into the hypotheses.
+* **Open questions.**
+  * *(E-Q1) Arithmetic.* Is there a lottery stream inside L_A, with B true? It needs data that are not Π₁\* (A3), for example false Σ₁ assertions as in §4.5.
+  * *(E-Q2) Rate.* Find the best possible divergence rate of −log W_A along a stream with bounded one-tape loss.
+
+---
+
+## 4. Push 2: Π₁ data — derandomisation, a coding theorem, and Chaitin's theorem for random theories
+
+### 4.1 Setting
+
+* L ⊇ L_A.
+* B is r.e. with Q ⊆ Cn(B), and B is **true**: it has a model whose L_A-reduct is ℕ. B = Q, IΣ₁ and PA all qualify.
+* Π₁\*, (Σ₁C) and (Π₁T) are as in §1.
+* Inc₀ = Unif{ω : B ∪ A_ω inconsistent} is a left-c.e. real; F3 shows it is Solovay complete, hence irrational. Let I′_k be its truncation to k + 2 binary digits, I′_k := ⌊2^(k+2)·Inc₀⌋·2^(−(k+2)). So I′_k ≤ Inc₀ < I′_k + 2^(−(k+2)).
+
+### 4.2 The derandomisation theorem
+
+**Theorem A1 (Π₁ derandomisation)** [proved; computed: `checks/c3_threshold.out` for the threshold arithmetic]. There is a constant c such that for every k ≥ 0 the set
+
+  T_k := {π ∈ Π₁\* : Unif(V_π) > I′_k + 2^(−(k+2))}
+
+satisfies:
+* (i) T_k is r.e. and has an index e_k with K(e_k) ≤ k + K(k) + c;
+* (ii) every π ∈ Π₁\* with Bel₀(π) ≥ 2^(−k) lies in T_k;
+* (iii) every π ∈ T_k has Bel₀(π) > 0 and is true. Hence B ∪ T_k is true, so consistent, and Σ₁-sound.
+
+*Proof.*
+* (i) Unif(V_π) is left-c.e. uniformly in π: enumerate pairs (tape prefix w, finite derivation of π from B and the sentences that G_U emits under prefixes of w), and add up the measure of the cylinders found. Membership in Π₁\* is decidable. So T_k is r.e. uniformly in (k, I′_k). A program for its index consists of:
+  * a self-delimiting description of k (K(k) bits);
+  * the k + 2 bits of I′_k (their number is known once k is known);
+  * a fixed code.
+* (ii) By F3(a), Unif(V_π) = Inc₀ + Bel₀(π) ≥ I′_k + 2^(−k) > I′_k + 2^(−(k+2)).
+* (iii) If π ∈ T_k, then Unif(V_π) > I′_k + 2^(−(k+2)) > Inc₀, so Bel₀(π) = Unif(V_π) − Inc₀ > 0. So some tape has B ∪ A_ω consistent and proving π, and π is true by (Π₁T). ∎
+
+**What the theorem says.** The universal random theory's Π₁ knowledge at confidence level 2^(−k) is contained in one *true* deterministic theory of complexity k + O(log k). The extra information that singles that theory out is k + 2 bits of the consistency probability Inc₀, the "Ω of consistency" of F3.
+
+The proof uses only F3's decomposition Bel₀ = Unif(V) − Inc₀ and the fact that a positive-probability Π₁ proof is a truth certificate. Both are special to axiom induction:
+* P1's M_F has no Inc₀;
+* fresh-predicate literals carry no truth certificate.
+
+**Sharpness inside the proof** (c3, T4). The same threshold set formed from Σ₁ sentences contained both members of an exclusive pair in every one of 300 random finite instances. The derandomisation fails at Σ₁ because consistent theories can affirm false Σ₁ sentences, and do so incompatibly.
+
+### 4.3 Corollaries
+
+**Corollary A2 (a coding theorem for Π₁ data)** [proved]. Let D be a finite data set whose literals D^± are Π₁\* sentences or true Σ₁ sentences. Then
+
+  L_A(D) − c ≤ −log W_A(D) + c ≤ K_A(D) + c ≤ L_A(D) + K(⌈L_A(D)⌉) + 2c.
+
+So on such data the three versions (one-tape, coin-free, Kolmogorov) agree within O(log L_A(D)).
+
+*Proof.*
+* The first two inequalities are F10(c).
+* For the last, let k := ⌈L_A(D)⌉, so that M_A(D) ≥ 2^(−k).
+* Write ψ_D ≡ π ∧ σ, where π is the conjunction of the Π₁\* literals and σ the conjunction of the true Σ₁ literals. Then B ⊢ σ by (Σ₁C), so Bel₀(π) = Bel₀(ψ_D) = M_A(D) ≥ 2^(−k).
+* By A1, π ∈ T_k. Then B ∪ T_k is consistent and proves π and σ.
+* So K_A(D) ≤ K(e_k) + c ≤ k + K(k) + c. ∎
+
+*Contrast.* F11 gives two-atom data of a fresh predicate with K_A − L_A ≥ log d − O(1): no coding theorem in general. A2 says arithmetic truth admits no such gap at quantifier level 1. In particular, **true data of complexity at most Σ₁ ∪ Π₁ never separate the three versions by more than a logarithm.** Only false Σ₁ assertions (§4.5) or more complex sentences can.
+
+**Corollary A3 (bounded loss on Π₁ streams is explained by one true theory)** [proved]. Let D_∞ be a stream with literals in Π₁\* ∪ {true Σ₁}, and suppose sup_n L_A(D_n) ≤ k. Then B ∪ T_k proves every datum. Moreover B ∪ T_k is true, its index has complexity ≤ k + K(k) + c, and the coin-free loss satisfies sup_n (−log W_A(D_n)) ≤ k + K(k) + c. So scout F's Q1 holds on such streams, with an explicit bound.
+
+*Proof.* Apply A1 to each ψ_{D_n}, as in A2. The theory T_k does not depend on n. ∎
+
+**Corollary A4 (Chaitin's incompleteness theorem for random theories)** [proved; formalisation of the Kleene T-predicate standard].
+
+Let T(p, t, y) be a Δ₀ formula saying "t codes a halting computation of V on p with output y", where V is the fixed universal prefix machine. Let
+
+  κ(x, m) := ∀p ∀t ¬(|p| ≤ m ∧ T(p, t, x̄)).
+
+So κ(x, m) is a Π₁ sentence, true iff K(x) > m. Then:
+* (a) for every x, L_A({(κ(x,m), 1)}) ≥ m − K(m) − 2 log m − c (and = ∞ if K(x) ≤ m);
+* (b) for every x with K(x) > m, L_A({(κ(x,m), 1)}) ≤ K_A({(κ(x,m), 1)}) ≤ m + K(m) + c.
+
+The upper bound is witnessed by *one* true theory, of complexity m + K(m) + c, that proves κ(x, m) for every x with K(x) > m simultaneously.
+
+*Proof.*
+* *Chaitin's argument for deterministic theories.* Let B ∪ W_e be consistent and prove κ(x, m).
+  * The program "given e and m, enumerate the theorems of B ∪ W_e and output the first z such that κ(z, m) appears" halts. Its output z satisfies K(z) ≤ K(e) + K(m) + c.
+  * κ(z, m) is a Π₁ sentence proved by a consistent extension of Q, so it is true by (Π₁T), and K(z) > m.
+  * Hence K(e) > m − K(m) − c, and K_A({(κ(x,m),1)}) > m − K(m) − c.
+* *(b).* Let s_m be the largest halting time of V on programs of length ≤ m, and let β_m be the true Π₁ sentence ∀p ∀t ∀y (|p| ≤ m ∧ T(p, t, y) → t ≤ s̄_m).
+  * For x with K(x) > m, the sentence ∀p ≤ P ∀t ≤ s̄_m ¬T(p, t, x̄), where P bounds the codes of programs of length ≤ m, is a true Δ₀ sentence. So Q proves it.
+  * With β_m it gives κ(x, m). So B ∪ {β_m} is true and proves every true κ(·, m).
+  * s_m is computable from m and h_m := #{p : |p| ≤ m, V(p)↓} < 2^(m+1): run all such programs until h_m have halted. So K(β_m) ≤ K(m) + m + 1 + c.
+* *(a).* For K(x) ≤ m the datum is false Π₁ and M_A = 0 by (Π₁T). Otherwise:
+  * combine A2 with the deterministic bound: L_A + K(⌈L_A⌉) + c ≥ K_A > m − K(m) − c;
+  * by (b), L_A ≤ m + K(m) + c, so K(⌈L_A⌉) ≤ 2 log m + c′. ∎
+
+*Reading.* The datum (κ(x, m), 1) carries at most one bit of label information:
+* unconstrained SFI predicts it at O(1) by "always accept";
+* scout F's general lower bound F17 is O(1) here.
+
+Yet the axiom inducer, and consistent SFI by F8, pay m ± O(log m) bits for it, whether the hypotheses are random or deterministic. Two consequences:
+* The cost is the price of the consistency constraint at Π₁. Every Π₁ affirmation must be backed by a true theory, and a true theory that proves high complexity lower bounds must contain the corresponding halting information.
+* Paying it once pays for all such data at level m. This is a clean, machine-independent instance of the brief's "laws versus data": one m-bit Π₁ law (β_m) explains all true complexity lower bounds at level m.
+
+*Relation to the literature.* Bienvenu, Romashchenko, Shen, Taveneaux and Vermeeren (2014; scout L: bienvenu2014axiomatic [B, A, S]) add *randomly chosen* true axioms "C(x) > n" to PA, and show that this does not help prove new interesting theorems. Scout L also reports [S] that adding all true statements "C(x) > n" proves every true Π₁ sentence, and that one carefully chosen statement per n suffices.
+
+A1 and A4 are the universal-mixture counterpart:
+* the *universal* random theory, mixing over all random theory machines including inconsistent ones, proves a fixed Π₁ sentence with probability ≥ 2^(−k) only if a true theory of complexity k + O(log k) proves it;
+* a fixed complexity lower bound costs m ± O(log m).
+
+I could not read the paper. Whether A1 is implicit in it should be checked when web access returns (§9).
+
+**Proposition A6 (scout F's Q2 for Π₁-axiomatised theories)** [proved]. Let T be an r.e. set of Π₁\* sentences, all true, and put k := ⌈−log ΠExt(T)⌉, where ΠExt(T) := Unif{ω : B ∪ A_ω consistent and ⊢ T}. Then
+
+  −log ΠExt(T) − c ≤ −log m(Ext(T)) ≤ −log ΠExt(T) + K(k) + c.
+
+*Proof.*
+* *Right inequality.* Every π ∈ T has Bel₀(π) ≥ ΠExt(T) ≥ 2^(−k), so π ∈ T_k by A1. So B ∪ T_k is consistent and proves T, i.e. e_k ∈ Ext(T), and m(Ext(T)) ≥ m(e_k) ≥ 2^(−k − K(k) − c).
+* *Left inequality.* Tapes beginning with a program for the deterministic theory machine of W_e, for e ∈ Ext(T), give consistent extensions. Their measure is ≥ 2^(−c)·Σ_{e ∈ Ext(T)} m(e) (as in F10(c)). ∎
+
+So for true Π₁ theories the random tape buys at most a logarithm in the probability of their extensions. Q2 for the exact class [T], and for general T, stays open.
+
+### 4.4 Where the random tape helps
+
+Putting §3, §4 and F11 together:
+
+| data | can one-tape M_A beat coin-free W_A or K_A by more than O(log)? | reason |
+|---|---|---|
+| Π₁\* sentences and true Σ₁ sentences (true background ⊇ Q) | **no** (A2, A3) | positive probability certifies truth; truths are jointly consistent |
+| literals of a fresh predicate | yes on finite data (F11); not "bounded against unbounded" on a stream (E2) | binary consistency; majority vote works on streams |
+| sentences with inconsistency constraints of unbounded arity | yes, even bounded against unbounded on one stream (E1) | lottery: majority vote is inconsistent |
+| false Σ₁ assertions | yes on finite data (A5, proof sketch) | consistent theories can affirm false Σ₁ sentences, incompatibly |
+
+### 4.5 Sharpness: a single false Σ₁ datum breaks the coding theorem
+
+**Proposition A5** [proof sketch, given (FLEX)].
+
+*(FLEX)* [recalled, unverified: Kripke's "flexible formulas" (1962); Woodin's universal algorithm (2011)]. For B true and ⊇ PA, there is a Σ₁ formula Φ(x), false of every number in ℕ, such that B + ∀x(Φ(x) ↔ x ∈ F) is consistent for every finite F ⊆ ℕ.
+
+*Claim.* Given (FLEX), for every d ≥ 2 there are distinct x₁, x₂ ∈ {0,1}^d such that the data D := {(σ_{x₁}, 0), (σ_{x₂}, 1)}, with σ_x := Φ(x̄), satisfy:
+* K_A(D) ≥ log d − 2;
+* L_A(D) ≤ 2 + c.
+
+The literal ¬σ_{x₁} is a true Π₁\* sentence. The literal σ_{x₂} is a *false* Σ₁ sentence.
+
+*Sketch.*
+* Every finite pattern {σ_x^{b_x} : x ∈ F′} is B-consistent: apply (FLEX) to F := {x ∈ F′ : b_x = 1}.
+* So the theory machine that emits σ_x^{b_x} for independent fair coins b_x over all x has a consistent theory on every tape, by compactness. It proves D with probability 1/4, which gives L_A(D) ≤ K(that machine) + 2 + c.
+* The colouring argument of F11(i) applies verbatim with σ_x in place of R(t_x).
+
+*What is missing.* A verified statement of (FLEX) with the needed uniformity. The rest is as in F11.
+
+**Open (A-Q1).** Do *true* Σ₂ or Π₂ data admit a coding theorem? A1 fails there: consistent extensions of Q can prove false Π₂ sentences. I do not know whether a gap can be produced with true data.
