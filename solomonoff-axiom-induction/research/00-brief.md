@@ -45,12 +45,8 @@ What this means for every scout, thread, referee and editor:
   For each claim, assess it on the merits, against the strongest objections and the literature, and against our own formal results.
 * **Only claims we actually believe go into the paper.** Where we think a claim is false, overstated or confused, the paper says what we think is true instead, or leaves the claim out.
 * **Our formal results bear on the philosophy.** For example, the Craig-trick collapse bears on the claim that axiom induction gets "what a theory is" more right than an arbitrary program does. Where a result undercuts a claim, say so plainly.
-* **Every record that discusses philosophy ends with a section "Possible errors in the author's views".** For each item:
-  * the claim, quoted or closely paraphrased, with its source;
-  * why we think it is probably wrong or overstated, with our confidence;
-  * what we would write instead.
-
-  The synthesis collects these items in one section of `research/notes-final.md`, so they can be put to the author for discussion. Disagreement is expected and useful. Do not soften it, and do not invent it.
+* **Raise a disagreement only when it has a decent probability of being right,** the kind of point one would actually bring up in a research discussion. Do not keep a running list or add a standing section for it, and do not invent disagreements.
+* **When you do disagree,** add a short note to your record, labelled "Possible error in the author's view". It gives the claim and its source, why it is probably wrong or overstated, and what to write instead. The synthesis passes on the notes that survive review.
 
 ## Target
 
