@@ -1,13 +1,13 @@
 # Bayesian axiom induction from instances
 
-This folder is a follow-up to `../axiom-schemas/` and `../inferential-learning/`. Claude (Anthropic) prepared it in response to a question from Kaarel Hänni (8 October 2026). The question asks whether there is a good Solomonoff-style axiom inducer, with three ingredients:
+This folder is a follow-up to `../axiom-schemas/` and `../inferential-learning/`. Authors: Kaarel Hänni and Claude (Anthropic). Claude did the research and writing, in response to questions from Kaarel Hänni and under his direction. Submission is his decision.
+
+The first question (8 October 2026) asks whether there is a good Solomonoff-style axiom inducer, with three ingredients:
 * a prior over axiom systems built from templates;
 * a likelihood that makes statements with short derivations probable;
 * a time penalty.
 
 It also asks what such an inducer does when it sees instances φ(t) of ∀xφ, and whether it robustly finds the actual axioms, a deductively equivalent system, or at least gives them a lot of posterior mass.
-
-It is a draft. Authorship and publication are his to decide.
 
 **Start with [the paper (PDF)](paper/main.pdf)**, 147 pages. Page 1 holds a short answer. The main text, §§1–9, is about 43 pages; Appendices A–H hold the proofs, the computations and the record of how the results were checked.
 
@@ -26,7 +26,7 @@ It is a draft. Authorship and publication are his to decide.
    * Theorem streams are memorised as axioms.
 5. **Time penalty.** Which computation is free decides.
    * A penalty on checking or generating axioms leaves Hänni's collapse intact in the direction from function induction to axiom induction: padded Craig sets turn every consistent assigner, however slow, into axioms at constant cost (under a Kt-style penalty, log₂(|f| + 1) + O(1) bits). Templates do not block it either: over PA, one reflection sentence suffices for Σn-sound assigners.
-   * Penalising function induction but not proof search makes axiom induction strictly stronger than time-penalised consistent function induction: for every computable predictor there is a computable sequence of arithmetic sentences on which it loses at least n − 0.37 bits while axiom induction loses a constant. The gain comes from free deduction, not from the axioms, and penalties on checking or generating axioms do not make the posterior prefer genuine axiom systems. (An earlier summary of ours, "the time penalty doesn't block your collapse", conflated the two directions; Hänni pointed this out.)
+   * Penalising function induction but not proof search makes axiom induction strictly stronger than time-penalised consistent function induction: for every computable predictor there is a computable sequence of arithmetic sentences on which it loses at least n − 0.37 bits while axiom induction loses a constant. The gain comes from free deduction, not from the axioms, and penalties on checking or generating axioms do not make the posterior prefer genuine axiom systems. (An earlier summary from Claude, "the time penalty doesn't block your collapse", conflated the two directions; Hänni pointed this out.)
    * Charging deduction prices the collapse. If the axiom instances of each derivation, logical ones included, must be short in total, axiom induction becomes function induction with short certificates (on literal data at polynomial budgets: NP ∩ coNP); if each instance must be short, exponential-time function induction (EXPTIME); if only the theory's own axioms must be short, there is no time limit. For the grammar's own code length, only a logarithmic charge is proved.
 6. **Hänni's trichotomy.** Keep (belief, plausibility). Renormalising and the 50/50 split are incoherent in general.
 

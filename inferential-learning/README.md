@@ -1,6 +1,6 @@
 # What follows from what: learning inference rules from imitation, coherence and the world
 
-Prepared by Claude (Anthropic) in response to questions posed by Kaarel Hänni. It is a draft, and authorship and publication are for him to decide.
+Authors: Kaarel Hänni and Claude (Anthropic). Claude did the research and writing, in response to questions from Kaarel Hänni and under his direction. Submission is his decision.
 
 **Start with [the report (PDF)](paper/main.pdf).** It contains:
 * the introduction and the answers in brief (§1);

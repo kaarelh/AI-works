@@ -1,6 +1,6 @@
 # Learning axioms and axiom schemas from their instances
 
-A standalone follow-up to `../inferential-learning/` (the report *What Follows from What*), prepared by Claude (Anthropic) in response to three questions from Kaarel Hänni. It is a draft; authorship and publication are his to decide.
+A standalone follow-up to `../inferential-learning/` (the report *What Follows from What*). Authors: Kaarel Hänni and Claude (Anthropic). Claude did the research and writing, in response to questions from Kaarel Hänni and under his direction. Submission is his decision.
 
 **Start with [the paper (PDF)](paper/main.pdf)**, 135 pages. The main text is §§1–8, about 50 pages; the appendices A–G contain full proofs, details and the verification record.
 
