@@ -1,0 +1,98 @@
+# n2_best_system.py seed=20261015 python=3.11.15
+== A. closed-form lambda-MAP (Prop P2.3) against brute force, small populations
+  optimal values agree in 210/210 (population, lambda) cases
+== population: 8 planets (500-5000 obs), 60 asteroids (lognormal, median ~5 obs), 30 comets (1-2 obs); total observations 18227
+
+== parameters: law L=300 bits, K3 L3=150 bits, elements k=60 bits (K3 saves cP=15), datum c=12.4 bits
+  element thresholds lambda_b = c n_b / k (body joins iff lambda < lambda_b): planets 135.4..793.2; asteroids 0.21..7.03; comets 0.21..0.41
+  lambda-MAP by lambda:
+    lambda=   1.00: |T|=   2565 X=    992.0  {LAW, K3, asteroid x39, planet x8}
+    lambda=   1.05: |T|=   2565 X=    992.0  {LAW, K3, asteroid x39, planet x8}
+    lambda=   1.20: |T|=   2295 X=   1289.6  {LAW, K3, asteroid x33, planet x8}
+    lambda=   1.50: |T|=   2115 X=   1537.6  {LAW, K3, asteroid x29, planet x8}
+    lambda=   2.00: |T|=   1755 X=   2170.0  {LAW, K3, asteroid x21, planet x8}
+    lambda=   3.00: |T|=   1350 X=   3149.6  {LAW, K3, asteroid x12, planet x8}
+    lambda=   5.00: |T|=    990 X=   4563.2  {LAW, K3, asteroid x4, planet x8}
+    lambda=   8.00: |T|=    780 X=   6001.6  {LAW, planet x8}
+    lambda=  12.00: |T|=    780 X=   6001.6  {LAW, planet x8}
+    lambda=  20.00: |T|=    780 X=   6001.6  {LAW, planet x8}
+    lambda=  50.00: |T|=    780 X=   6001.6  {LAW, planet x8}
+    lambda= 100.00: |T|=    780 X=   6001.6  {LAW, planet x8}
+    lambda= 200.00: |T|=    600 X=  34434.8  {LAW, planet x5}
+    lambda= 400.00: |T|=      0 X= 226014.8  {} (all data as exceptions)
+    lambda= 800.00: |T|=      0 X= 226014.8  {} (all data as exceptions)
+    lambda=1600.00: |T|=      0 X= 226014.8  {} (all data as exceptions)
+  lower hull of (|T|, X) (canonical family: law?, K3?, top-j bodies): vertices with slopes sigma_i
+    v0   |T|=      0 X= 226014.8  left steepness sigma=      inf  right flatness= 319.30  {} (all data as exceptions)
+    v1   |T|=    600 X=  34434.8  left steepness sigma=   319.30  right flatness= 177.94  {LAW, planet x5}
+    v2   |T|=    660 X=  23758.4  left steepness sigma=   177.94  right flatness= 160.58  {LAW, planet x6}
+    v3   |T|=    720 X=  14123.6  left steepness sigma=   160.58  right flatness= 135.37  {LAW, planet x7}
+    v4   |T|=    780 X=   6001.6  left steepness sigma=   135.37  right flatness=   7.03  {LAW, planet x8}
+    v5   |T|=    840 X=   5580.0  left steepness sigma=     7.03  right flatness=   6.78  {LAW, asteroid x1, planet x8}
+    v23  |T|=   2565 X=    992.0  left steepness sigma=     1.10  right flatness=   0.83  {LAW, K3, asteroid x39, planet x8}
+    v34  |T|=   4860 X=      0.0  left steepness sigma=     0.28  right flatness=   0.00  {LAW, K3, asteroid x60, comet x30, planet x8}
+    (35 vertices in all; vertices with left steepness > 1: 23)
+  deletion slopes (bits of data explained per bit of axiom) in the lambda=2 MAP {LAW, K3, asteroid x21, planet x8}:
+    law: (X(T - law) - X(T)) / L = 746.1
+    K3: saves 15 bits on each of 29 bodies' elements: 435 bits per 150 bits = 2.90
+    elements of planets in T: slopes 180.5..1057.6
+    elements of asteroids in T: slopes 2.2..9.4
+  scaling (law slope vs elements slope) with m identical bodies of n observations each:
+    m=    1 n=  50: law        2.1   elements    10.33
+    m=   10 n=  50: law       20.7   elements    10.33
+    m=  100 n=  50: law      206.7   elements    10.33
+    m= 1000 n=  50: law     2066.7   elements    10.33
+    m=  100 n=   5: law       20.7   elements     1.03
+    m=  100 n= 500: law     2066.7   elements   103.33
+
+== parameters: law L=3000 bits, K3 L3=600 bits, elements k=60 bits (K3 saves cP=15), datum c=12.4 bits
+  element thresholds lambda_b = c n_b / k (body joins iff lambda < lambda_b): planets 135.4..793.2; asteroids 0.21..7.03; comets 0.21..0.41
+  lambda-MAP by lambda:
+    lambda=   1.00: |T|=   5715 X=    992.0  {LAW, K3, asteroid x39, planet x8}
+    lambda=   1.05: |T|=   5715 X=    992.0  {LAW, K3, asteroid x39, planet x8}
+    lambda=   1.20: |T|=   5220 X=   1537.6  {LAW, asteroid x29, planet x8}
+    lambda=   1.50: |T|=   4740 X=   2170.0  {LAW, asteroid x21, planet x8}
+    lambda=   2.00: |T|=   4260 X=   3025.6  {LAW, asteroid x13, planet x8}
+    lambda=   3.00: |T|=   3840 X=   4116.8  {LAW, asteroid x6, planet x8}
+    lambda=   5.00: |T|=   3720 X=   4563.2  {LAW, asteroid x4, planet x8}
+    lambda=   8.00: |T|=   3480 X=   6001.6  {LAW, planet x8}
+    lambda=  12.00: |T|=   3480 X=   6001.6  {LAW, planet x8}
+    lambda=  20.00: |T|=   3480 X=   6001.6  {LAW, planet x8}
+    lambda=  50.00: |T|=   3480 X=   6001.6  {LAW, planet x8}
+    lambda= 100.00: |T|=      0 X= 226014.8  {} (all data as exceptions)
+    lambda= 200.00: |T|=      0 X= 226014.8  {} (all data as exceptions)
+    lambda= 400.00: |T|=      0 X= 226014.8  {} (all data as exceptions)
+    lambda= 800.00: |T|=      0 X= 226014.8  {} (all data as exceptions)
+    lambda=1600.00: |T|=      0 X= 226014.8  {} (all data as exceptions)
+  lower hull of (|T|, X) (canonical family: law?, K3?, top-j bodies): vertices with slopes sigma_i
+    v0   |T|=      0 X= 226014.8  left steepness sigma=      inf  right flatness=  63.22  {} (all data as exceptions)
+    v1   |T|=   3480 X=   6001.6  left steepness sigma=    63.22  right flatness=   7.03  {LAW, planet x8}
+    v2   |T|=   3540 X=   5580.0  left steepness sigma=     7.03  right flatness=   5.99  {LAW, asteroid x1, planet x8}
+    v3   |T|=   3600 X=   5220.4  left steepness sigma=     5.99  right flatness=   5.79  {LAW, asteroid x2, planet x8}
+    v4   |T|=   3660 X=   4873.2  left steepness sigma=     5.79  right flatness=   5.17  {LAW, asteroid x3, planet x8}
+    v5   |T|=   3720 X=   4563.2  left steepness sigma=     5.17  right flatness=   3.72  {LAW, asteroid x4, planet x8}
+    v21  |T|=   5715 X=    992.0  left steepness sigma=     1.10  right flatness=   0.83  {LAW, K3, asteroid x39, planet x8}
+    v32  |T|=   8010 X=      0.0  left steepness sigma=     0.28  right flatness=   0.00  {LAW, K3, asteroid x60, comet x30, planet x8}
+    (33 vertices in all; vertices with left steepness > 1: 21)
+  deletion slopes (bits of data explained per bit of axiom) in the lambda=2 MAP {LAW, asteroid x13, planet x8}:
+    law: (X(T - law) - X(T)) / L = 74.3
+    elements of planets in T: slopes 135.4..793.2
+    elements of asteroids in T: slopes 2.1..7.0
+  scaling (law slope vs elements slope) with m identical bodies of n observations each:
+    m=    1 n=  50: law        0.2   elements    10.33
+    m=   10 n=  50: law        2.1   elements    10.33
+    m=  100 n=  50: law       20.7   elements    10.33
+    m= 1000 n=  50: law      206.7   elements    10.33
+    m=  100 n=   5: law        2.1   elements     1.03
+    m=  100 n= 500: law      206.7   elements   103.33
+
+== D. single-use fact: datum d of c bits; as an axiom it costs c + a bits (a = delimiter overhead)
+  a=0 lambda=1.0: axiom 12.4 vs exception 12.4 -> tie
+  a=0 lambda=1.1: axiom 13.6 vs exception 12.4 -> exception
+  a=0 lambda=2.0: axiom 24.8 vs exception 12.4 -> exception
+  a=1 lambda=1.0: axiom 13.4 vs exception 12.4 -> exception
+  a=1 lambda=1.1: axiom 14.7 vs exception 12.4 -> exception
+  a=1 lambda=2.0: axiom 26.8 vs exception 12.4 -> exception
+  a=2 lambda=1.0: axiom 14.4 vs exception 12.4 -> exception
+  a=2 lambda=1.1: axiom 15.8 vs exception 12.4 -> exception
+  a=2 lambda=2.0: axiom 28.8 vs exception 12.4 -> exception
