@@ -7,24 +7,24 @@ Item numbers refer to notes-final.md.
 A  Lemma 1.5 for the chain law: false for m = 2 (counterexample), hypothesis holds for 3 <= m <= 8.
 B  Theorem 7.1 (revised): the four counterexamples to the old "iff"; the 2-CNF "iff" on random 2-CNFs of prime
    implicates; the "only if" on random usable theories with wide clauses.
-C  Proposition 3.1 (one round cannot use intermediate concepts): PI(S) plus a chain-encoded library with
+C  Proposition 3.1a (one round cannot use intermediate concepts): PI(S) plus a chain-encoded library with
    auxiliary variables loses UP_1-usability when any clause of PI(S) is deleted; simplex r=3,4 libraries are
    UP-usable but not UP_1-usable.
-D  Proposition 3.3 (depth): rounds needed by the chain encoding (exactly m-1) and by the balanced-tree
+D  Proposition 3.8(a), (b) (depth): rounds needed by the chain encoding (exactly m-1) and by the balanced-tree
    encoding (<= 2 ceil(log2 m) - 1) of one parity law, exhaustive over all questions; the unbounded fan-in
-   circuit of Lemma 3.8(b) built from these theories computes parity, with the stated gate and depth counts.
-E  Simplex family with intermediate concepts: library sizes m(2m-4) (r >= 4), listing lengths (corrected
+   circuit of Lemma 3.5(b) built from these theories computes parity, with the stated gate and depth counts.
+E  Remark 3.2a: simplex family with intermediate concepts: library sizes m(2m-4) (r >= 4), listing lengths (corrected
    integer code l_N(n) = |delta(n+1)|), rounds needed with chain and with balanced-tree encodings.
 F  Proposition 4.2(b) (revised): non-trivial sound rules number m 2^(m-1); the unique minimal usable rule set.
-G  Remark 2.10 (d_* = 2): a single equivalence class of c variables needs exactly c clauses (directed cycle);
+G  Proposition 2.9a (d_* = 2): a single equivalence class of c variables needs exactly c clauses (directed cycle);
    separate classes add up; an anti-equivalence class.
-H  Proposition 2.5 and its converse: for every d_*, the clauses contained in every UP-usable theory over X are
+H  Propositions 2.5 and 2.5a: for every d_*, the clauses contained in every UP-usable theory over X are
    exactly F_ind(S).
-I  Proposition 3.4 (library size formula s(w)): construction vs formula, with weight-1 and weight-4 circuits.
+I  Proposition 3.2 (library size formula s(w)): construction vs formula, with weight-1 and weight-4 circuits.
 J  Lemma 1.7 with l_N(n) = |delta(n+1)|: Kraft sum over all theories over 2 variables.
 K  Section 3.2 computed fractions: the core answers a fraction of sampled questions, 5 systems per m.
 L  Theorem 6.2(c): exact coupon-collector expectations n H_n and the corrected approximation.
-M  Theorem 3.9 (revised hidden-state law, weight-1 and weight-3 functionals): dim = q+1; determined <=> XOR
+M  Theorem 3.6 (revised hidden-state law, weight-1 and weight-3 functionals): dim = q+1; determined <=> XOR
    system unsatisfiable <=> g_* in span (all subsets, q = 3, 4); UP on PI(H_3) derives not-x_* iff unsat;
    every GKRS input (ordered triple, constant) maps to a coordinate of the law, and every coordinate is hit.
 """
@@ -342,7 +342,7 @@ while n_usable < 60 and tries < 20000:
 P(f"  'only if': {n_usable} random usable theories with wide clauses (m=4,5; k=1,2), 10 random replacements each: non-spanner replacements {viol}")
 
 # ------------------------------------------------------------------ C
-P("== C: Proposition 3.1: one round of propagation cannot use intermediate concepts")
+P("== C: Proposition 3.1a: one round of propagation cannot use intermediate concepts")
 cnt = 0
 for trial in range(12):
     m = rng.choice([6, 7, 8])
@@ -375,7 +375,7 @@ for r in (3, 4):
     P(f"  simplex r={r} m={m}: chain library {len(L)} clauses, {N - m} aux; UP-usable on {len(qs_s)} minimal questions: {answers_all(L, N, qs_s)}; UP_1-usable: {answers_all(L, N, qs_s, 1)}")
 
 # ------------------------------------------------------------------ D
-P("== D: Proposition 3.3: rounds needed by intermediate concepts for one parity law (all m 2^(m-1) questions)")
+P("== D: Proposition 3.8(a),(b): rounds needed by intermediate concepts for one parity law (all m 2^(m-1) questions)")
 P("   m | chain: clauses, aux, rounds (claimed m-1 for m >= 4; m = 3 is written directly) | balanced tree: clauses, aux, rounds (bound 2 ceil(log2 m) - 1)")
 for m in range(3, 11):
     law = AffineLaw(m, [((1 << m) - 1, 0)])
@@ -388,7 +388,7 @@ for m in range(3, 11):
 
 
 def ac0_from_theory(F, N, k, inputs):
-    """Unbounded fan-in AND/OR circuit of Lemma 3.8(b): rounds t = 1..k, per round one AND gate per (clause,
+    """Unbounded fan-in AND/OR circuit of Lemma 3.5(b): rounds t = 1..k, per round one AND gate per (clause,
     literal) and one OR gate per literal.  inputs: set of literals that are circuit inputs.  Returns an
     evaluator (assignment of input literals -> set of literals derived) and the gate count and depth."""
     lits = [(v, s) for v in range(N) for s in (0, 1)]
@@ -423,7 +423,7 @@ for m in range(4, 9):
     P(f"  circuit from the tree encoding, m={m}, k={k}: gates {gates} (= k(||F|| + 2N)), depth {depth}; computes x_1 = parity of x_2..x_m on all {2 ** (m - 1)} inputs: {bad == 0}")
 
 # ------------------------------------------------------------------ E
-P("== E: simplex family with intermediate concepts (Remark 3.5)")
+P("== E: Remark 3.2a: simplex family with intermediate concepts")
 P("   r  m | PI over X: clauses | chain library: clauses (m(2m-4)), aux, listing bits | GE core listing bits | ratio")
 for r in range(3, 8):
     m = 2 ** r - 1
@@ -504,7 +504,7 @@ for m in range(2, 7):
         P(f"   m=3: usable subsets of the 12 non-trivial sound rules: {nus} (the full set only)")
 
 # ------------------------------------------------------------------ G
-P("== G: Remark 2.10 (d_* = 2): exact minima for equivalence classes (exhaustive over subsets of PI)")
+P("== G: Proposition 2.9a (d_* = 2): exact minima for equivalence classes (exhaustive over subsets of PI)")
 
 
 def exact_min(law, maxsize=8):
@@ -528,7 +528,7 @@ for name, law, claim in cases:
     P(f"  {name}: |PI| = {npi}; exact minimum {mn} (claimed {claim}); minimum sets {nmin}; e.g. {[cl_str(C) for C in ex]}")
 
 # ------------------------------------------------------------------ H
-P("== H: Proposition 2.5 and its converse: clauses common to all UP-usable theories over X = F_ind(S), every d_*")
+P("== H: Propositions 2.5, 2.5a: clauses common to all UP-usable theories over X = F_ind(S), every d_*")
 stats = {}
 nlaws = 0
 tries = 0
@@ -570,7 +570,7 @@ for key in sorted(stats):
     P(f"  {lab}: {stats[key][0]} laws; necessary clauses (deleting it from the set of all derived-equation clauses breaks usability; tested: every prime implicate and 10 random non-prime ones) == F_ind in {stats[key][1]}{extra}")
 
 # ------------------------------------------------------------------ I
-P("== I: Proposition 3.4: library size sum_u s(|u|), s(w) = 2^(w-1) for w <= 4, 4w-6 for w >= 5")
+P("== I: Proposition 3.2: library size sum_u s(|u|), s(w) = 2^(w-1) for w <= 4, 4w-6 for w >= 5")
 
 
 def s_w(w):
@@ -647,7 +647,7 @@ for m in (4, 5, 6, 8, 10):
     P(f"  m={m}: exact n H_n = {n * H:.3f}; n((m-1)ln2 + gamma) = {approx_old:.3f}; with +1/2: {approx_new:.3f}")
 
 # ------------------------------------------------------------------ M
-P("== M: Theorem 3.9: the hidden-state law with weight-1 and weight-3 functionals")
+P("== M: Theorem 3.6: the hidden-state law with weight-1 and weight-3 functionals")
 
 
 def hidden_law(q):

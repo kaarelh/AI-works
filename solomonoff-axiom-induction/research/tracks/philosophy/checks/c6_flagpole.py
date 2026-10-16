@@ -2,9 +2,11 @@
 
 Deterministic (seed 20261015 for the random data sets).  Writes c6_flagpole.out next to itself.
 
-Setting (notes.md Prop 3.1).  Poles p_1..p_N with heights a_i; t = cot(elevation) is written as a
+Setting (notes.md Prop 3.1).  Poles p_1..p_N with heights a_i; t = tan(elevation) is written as a
 numeral, so the law is linear:  Lambda_h := forall p forall t>0 ( s(p,t) * t = h(p) ), with
-s(p,t) the shadow length when cot(elevation) = 1/t ... written here simply as s(p,t)*t = h(p).
+s(p,t) the shadow length when tan(elevation) = t.  (Revision 2026-10-16: the development docstring said
+"cot(elevation)"; the law s*t = h makes t the tangent, as in the record (referee B, issue 13).  Docstring only;
+the output is unchanged.)
 Equivalent formulation  Lambda_s := forall p forall t>0 ( s(p,t)*t = s(p,1) )  and  forall p h(p) = s(p,1).
 Theories (each a law plus N initial conditions):
   T_H  = Lambda_h + { h(p_i) = a_i }          T_S  = Lambda_h + { s(p_i,1) = a_i }

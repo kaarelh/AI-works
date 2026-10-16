@@ -10,6 +10,11 @@ t ~ U[0,1); data: the dithered cell of width Delta containing q(t).  Relative to
 [-u Delta, (1-u) Delta), u ~ U[0,1), and the band of the tolerance law T^eps is [e - eps, e + eps].
     T^eps proves the datum  iff band inside the cell;  refutes it iff band and cell are disjoint;  silent otherwise.
     code R cost of a datum (random completion inside the band) = -log2(|cell & band| / 2 eps).
+
+Revision note (notes-final.md, Setting S3; referee A M1): the draw t ~ U[0,1) stands for a FRESH time at each
+datum (distinct numerals t_j) with the error e(t_j) and the dither u_j i.i.d.; a law on numerals cannot be atomless.
+The deterministic-patch pricings (Q/det, R/det) with a constant pi_c are a finite-horizon cost model
+(notes-final Prop 3.3a); the randomised pricings are exact theory-machine costs for all n.
 Error shapes: spread e = A sin(2 pi t) (pk = pi/2); peaked e = +-A on 5% of times (pk = 20); A = eps* = 1'.
 Forms: 0 (no law), E (exact law, refuted -> infinite), P (exact law patched at refuted times, deterministic:
 lam pi_c + gamma per refuted datum), H (honest law T^{eps*}, code Q: gamma per silent datum), N (exact true law).

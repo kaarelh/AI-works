@@ -58,6 +58,12 @@ shear of unit Jacobian, V8 / V9 = p_Y(0), the density at 0 of y under the unifor
 9-dimensional compatible region; that distribution is sampled by hit-and-run with the exact membership test
 (function k3_saving in partB; diagnostics are printed after the table).
 
+Revision of 2026-10-16 (final record).  (1) The S1/S3 texts of the bisected equant and of the vicarious
+hypothesis described other models (centre 2e, equant 3e; centre e1+e2, equant e1+2e2); fixed (referee B,
+issue 2).  (2) A faithfulness self-check evaluates every text numerically and compares it with the model
+that is fitted (printed under A3).  (3) Table A5 has the pair vicarious-equant (referee B, issue 3).
+Parts A1, A2 and B are unchanged; their seeded output is identical to the development run's.
+
 Usage: python c4_mars_pool.py [A|B|AB]   (default AB; the saved .out is the AB run).
 
 Requirements: numpy, scipy, pyerfa (tested: numpy 2.4.6, scipy 1.17.1, pyerfa 2.0.1.5).
@@ -373,9 +379,13 @@ def eqv_S1(e1, e2):
     return ["forall", "b", ["forall", "t", ["exists", "s", body]]]
 
 
-TEXTS["S1"]["equant"] = eqv_S1(["*", "2", el("e")], el("e"))
+# eqv_S1(X, Y): centre of the circle at distance X from the Sun, equant at distance X + Y (opposite the
+# aphelion direction w).  Bisected equant: centre e, equant 2e; vicarious hypothesis: centre e1, equant e1 + e2.
+# (Revision of 2026-10-16: the development version called eqv_S1(2e, e) and eqv_S1(e1 + e2, e2), which put the
+# centre at 2e / e1 + e2 and the equant at 3e / e1 + 2 e2, i.e. described other models; referee B, issue 2.)
+TEXTS["S1"]["equant"] = eqv_S1(el("e"), el("e"))
 TEXTS["S3"]["equant"] = TEXTS["S1"]["equant"]
-TEXTS["S1"]["vicarious"] = eqv_S1(["+", el("e1"), el("e2")], el("e2"))
+TEXTS["S1"]["vicarious"] = eqv_S1(el("e1"), el("e2"))
 TEXTS["S3"]["vicarious"] = TEXTS["S1"]["vicarious"]
 # S2: theta = dir(rc(Q, C, Lt)) with Q = -(e1+e2) uc(w), C = -e1 uc(w)
 TEXTS["S2"]["equant"] = pre(["dir", ["rc", ["*", ["-", ["*", "2", el("e")]], ["uc", el("w")]],
@@ -419,6 +429,114 @@ def atoms(x, acc=None):
 def text_bits(S, x):
     A = len(ALPHABET[S])
     return tokens(x) * math.ceil(math.log2(A))
+
+
+# ------------------------------------------------------------------------------------------ faithfulness
+# Revision of 2026-10-16: an independent numerical evaluation of every law text, compared with the numerical
+# model lon() that Part A fits.  The atom check above (every atom in the alphabet) does not catch a text that
+# describes a different model; this check does.
+NUMERALS = {"0": 0.0, "1": 1.0, "2": 2.0}
+ELEMENT_NAMES = {"e", "e1", "e2", "w", "L", "n", "a"}
+
+
+def _ev(x, env, elts):
+    if isinstance(x, str):
+        if x in NUMERALS:
+            return NUMERALS[x]
+        return env[x]
+    h = x[0]
+    if h in ELEMENT_NAMES and len(x) == 2 and x[1] == "b":
+        return elts[h]
+    a = [_ev(y, env, elts) for y in x[1:]]
+    if h == "+":
+        return a[0] + a[1]
+    if h == "-":
+        return -a[0] if len(a) == 1 else a[0] - a[1]
+    if h == "*":
+        return a[0] * a[1]
+    if h == "/":
+        return a[0] / a[1]
+    if h == "sin":
+        return np.sin(a[0])
+    if h == "cos":
+        return np.cos(a[0])
+    if h == "sqrt":
+        return np.sqrt(a[0])
+    if h == "atan2":
+        return np.arctan2(a[0], a[1])
+    if h == "uc":
+        return np.array([np.cos(a[0]), np.sin(a[0])])
+    if h == "dir":
+        return np.arctan2(a[0][1], a[0][0])
+    if h == "rc":                         # ray from Q at angle th meets the unit circle about C
+        Q, C, th = a
+        u = np.array([np.cos(th), np.sin(th)])
+        d = Q - C
+        du = d @ u
+        s = -du + np.sqrt(du * du - d @ d + 1.0)
+        return Q + s * u
+    if h == "kep":
+        return true_anom(kepler_E(np.atleast_1d(a[1]), a[0]), a[0])[0]
+    if h == ">":
+        return a[0] > a[1]
+    raise ValueError(h)
+
+
+def _conj(x):
+    return _conj(x[1]) + _conj(x[2]) if (not isinstance(x, str) and x[0] == "and") else [x]
+
+
+def text_theta(text, elts, t):
+    """theta(b, t) according to a text 'forall b forall t BODY'; existential witnesses are found by a grid
+    scan plus bisection over [-200, 200], and the witness is required to be unique."""
+    body = text[2][2]
+    env = {"t": t}
+    if body[0] == "=":
+        return _ev(body[2], env, elts)
+    assert body[0] == "exists"
+    v, conj = body[1], _conj(body[2])
+    th_eq = [c for c in conj if c[0] == "=" and c[1] == ["theta", "b", "t"]]
+    defs = [c for c in conj if c[0] == "=" and c[1] != ["theta", "b", "t"]]
+    ineq = [c for c in conj if c[0] == ">"]
+    assert len(th_eq) == 1 and len(defs) == 1
+    grid = np.linspace(-200.0, 200.0, 160001)
+    f = lambda z: _ev(defs[0][1], dict(env, **{v: z}), elts) - _ev(defs[0][2], dict(env, **{v: z}), elts)  # noqa: E731
+    fg = f(grid)
+    idx = np.nonzero(np.sign(fg[:-1]) * np.sign(fg[1:]) <= 0)[0]
+    roots = []
+    for i in idx:
+        lo, hi = grid[i], grid[i + 1]
+        for _ in range(80):
+            mid = 0.5 * (lo + hi)
+            if np.sign(f(np.array([mid]))[0]) == np.sign(f(np.array([lo]))[0]):
+                lo = mid
+            else:
+                hi = mid
+        z = 0.5 * (lo + hi)
+        if all(bool(_ev(c, dict(env, **{v: z}), elts)) for c in ineq):
+            if not roots or abs(z - roots[-1]) > 1e-9:
+                roots.append(z)
+    assert len(roots) == 1, roots
+    return _ev(th_eq[0][2], dict(env, **{v: roots[0]}), elts)
+
+
+def faithfulness(n_points=40, seed=SEED + 5):
+    """max |theta_text - theta_model| (rad, wrapped) over random elements and times, per syntax and form."""
+    rng = np.random.default_rng(seed)
+    out = {}
+    for S in ("S1", "S2", "S3"):
+        for f in FORMS:
+            worst = 0.0
+            for _ in range(n_points):
+                elts = {"e": rng.uniform(0, 0.3), "e1": rng.uniform(0, 0.2), "e2": rng.uniform(0, 0.2),
+                        "w": rng.uniform(0, TWO_PI), "L": rng.uniform(0, TWO_PI), "n": rng.uniform(0, 0.02)}
+                t = rng.uniform(-4000, 4000)
+                P = np.array([[elts[k] for k in NAMES[f]]])
+                model = lon(f, P, np.array([t]))[0, 0]
+                txt = text_theta(TEXTS[S][f], elts, t)
+                worst = max(worst, abs(float(wrap(np.array(txt - model)))))
+            out[(S, f)] = worst
+    return out
 
 
 # ------------------------------------------------------------------------------------------ geocentric
@@ -558,6 +676,12 @@ def partA(tt, theta, starts, fits):
             lawbits[(S, f)] = text_bits(S, x)
         print("%-10s %8d %8d %8d %8d %8d %8d" % tuple([f] + row))
     print("# alphabet sizes: S1 %d, S2 %d, S3 %d symbols" % tuple(len(ALPHABET[S]) for S in ("S1", "S2", "S3")))
+    fa = faithfulness()
+    print("# faithfulness (revision): max |theta(text) - theta(model)| over 40 random (elements, time) points, rad:")
+    for S in ("S1", "S2", "S3"):
+        print("#   %s: " % S + ", ".join("%s %.1e" % (f, fa[(S, f)]) for f in FORMS))
+    assert max(fa.values()) < 1e-8, fa
+    print("#   every text computes its form's longitude (all differences < 1e-8 rad)")
     print()
 
     # ---------------------------------------------------------------- A4 posterior
@@ -590,8 +714,8 @@ def partA(tt, theta, starts, fits):
     print("## A5. what the data decide and what the syntax decides: for each delta, the Occam-factor")
     print("#     differences C_G - C_F (bits) between compatible forms; form F beats form G iff")
     print("#     |LAW_F| - |LAW_G| < C_G - C_F.  Text differences |LAW_F| - |LAW_G| in S1/S2/S3 for comparison.")
-    pairs = [("ellipse", "vicarious"), ("ellipse", "equant"), ("equant", "eccentric"), ("eccentric", "circle"),
-             ("ellipse", "eccentric"), ("ellipse", "circle")]
+    pairs = [("ellipse", "vicarious"), ("ellipse", "equant"), ("vicarious", "equant"), ("equant", "eccentric"),
+             ("eccentric", "circle"), ("ellipse", "eccentric"), ("ellipse", "circle")]
     print("%-8s " % "delta'" + " ".join("%20s" % ("%s-%s" % (a[:4], b[:4])) for a, b in pairs))
     for d in deltas:
         cells = []

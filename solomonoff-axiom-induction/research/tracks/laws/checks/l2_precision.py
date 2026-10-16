@@ -10,6 +10,11 @@ Units: arcmin, A = 1.
 (G) guaranteed tolerance: datum "q(t) in [v - delta, v + delta]", v = q(t) + eta, eta ~ U[-delta0, delta0].
     The exact law proves the datum iff |e(t) - eta| <= delta, else refutes it (Prop 2.3).
 (R) dithered rounding: datum "q(t) in the cell of width Delta (offset u ~ U[0,1)) containing q(t)".
+
+Revision note (notes-final.md, Setting S3; referee A M1): the draw t ~ U[0,1) stands for a FRESH time at each
+datum (distinct numerals t_j) with the error e(t_j) and the dither u_j i.i.d.; a law on numerals cannot be atomless.
+The deterministic-patch pricings (Q/det, R/det) with a constant pi_c are a finite-horizon cost model
+(notes-final Prop 3.3a); the randomised pricings are exact theory-machine costs for all n.
     The exact law proves it iff f(t) is in the same cell, else refutes it (Prop 2.4).
 Parts:
     A. (G): per-datum refutation probability r(delta) by Monte Carlo (10^6 draws) and the exact zero

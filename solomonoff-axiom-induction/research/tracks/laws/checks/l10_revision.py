@@ -9,7 +9,7 @@ Parts
      pk = eps*/E|e| of the minimax fit and of the mean fit separately, and the cross ratio
      eps*(minimax)/E|e|(mean) that notes.md reported as "pk".  A local-parabola estimate of how far the
      sample maximum of |e| may lie below the window's true supremum.
-  B. Band-confined completions (referee B 1; notes-final Prop 3.7, Lemma 3.8): per-straddle code-R costs
+  B. Band-confined completions (referee B 1; notes-final Def 3.6a, Prop 3.6a): per-straddle code-R costs
      c_G (bits) of the uniform band H, of HY(s) ("exact with probability s, else uniform in the band") at its
      best s, of SH (a smoothed 40-bin histogram of the band position fitted on a random half of the times,
      evaluated on the other half), and the empirical Gibbs bound int H2(F(V)) dV; the derivative criterion
@@ -20,7 +20,7 @@ Parts
      sensitivity to inflating the band by kappa in {0, 0.01, 0.05}.
   D. Lemma 3.6 (exact fine-regime formula, bound log e, monotonicity in Delta), against quadrature.
   E. notes.md l8 A (the Moon inside a Kepler law) recomputed exactly; ties resolved by the three cases of
-     Thm 3.9 (notes-final numbering).
+     Thm 3.8 (notes-final).
   F. notes.md l8 B (retention) recomputed with the exact fine-regime code-R cost; Delta* by bisection.
   G. Deterministic patch codes against random exceptions (referee A M1): per-exception cost of literal
      numerals, of an enumerative code of the patch set, and H2(p)/p.
@@ -399,7 +399,7 @@ def main():
         " (log2 e = %.6f); increases of the cost with Delta: %d" % (maxerr, ws.size * rs.size, maxexc, LOG2E, viol))
     out("   continuity at Delta = L: closed fine form at r = 1-1e-9 vs coarse form at r = 1: max diff %.2e" % float(
         np.max(np.abs(honest_fine_closed(ws, 1 - 1e-9) - honest_fine_closed(ws, 1.0)))))
-    out("   constant of Props 3.11, 6.1(c): R/(2e) = %.0f' = %.1f deg (notes.md: R/(2e^2) = %.0f' = %.1f deg)" % (
+    out("   constant of Props 3.7, 6.1(c): R/(2e) = %.0f' = %.1f deg (notes.md: R/(2e^2) = %.0f' = %.1f deg)" % (
         RANGE / (2 * math.e), RANGE / (2 * math.e) / 60, RANGE / (2 * math.e ** 2), RANGE / (2 * math.e ** 2) / 60))
 
     # ------------------------------------------------------------------ E
@@ -411,7 +411,7 @@ def main():
     xM = (epsM - ex) / (2 * epsM)
     out("   eps*_Moon = %.2f', E|e|(mean fit) = %.2f', pi_c = %.2f, k = %g, h = %g, |Dom| = %g" % (
         epsM, float(np.mean(np.abs(em))), pic, kM, hM, dom))
-    out("   winner: least rate; on an exact tie with a.s. constant difference the constants decide (Thm 3.9(ii))")
+    out("   winner: least rate; on an exact tie with a.s. constant difference the constants decide (Thm 3.8(ii))")
     out("   %6s %4s | %7s | %9s %9s %9s | %9s %9s | Q / R" % ("Delta", "lam", "gamma", "P(Q)", "H(Q)", "X", "P(R)", "H(R)"))
     for D in (10.0, 60.0, 300.0, 600.0, 1800.0):
         g = math.log2(RANGE / D)

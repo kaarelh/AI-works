@@ -7,6 +7,14 @@ Kepler ellipse against ERFA's plan94 / moon98, for the fit with the smallest mea
 fit with the smallest max |e| ("minimax" fit), 8000 uniform times per body and window).  Writes
 l5_kepler_select.out next to itself.
 
+Revision note (notes-final.md, Setting S3; referee A M1): the draw t ~ U[0,1) stands for a FRESH time at each
+datum (distinct numerals t_j) with the error e(t_j) and the dither u_j i.i.d.; a law on numerals cannot be atomless.
+The deterministic-patch pricings (Q/det, R/det) with a constant pi_c are a finite-horizon cost model
+(notes-final Prop 3.3a); the randomised pricings are exact theory-machine costs for all n.
+Revision note (referee A M6, referee B 8): the 'pk' printed in part A is the CROSS ratio eps*(minimax fit) /
+E|e|(mean fit), not pk(e) of one law; per-fit values are in l10_revision.out part A.  The R/rand pool here
+(0, P, H, tolerance family with whole-circle exceptions) is incomplete (referee B 1; l10 parts B, C).
+
 Data model (notes section 3.1): dithered cells of width Delta on the longitude circle (21600'); a datum's
 literal cost gamma = log2(21600/Delta); naming a time costs pi_c = log2(days in window) + 2 bits.
 For each tolerance eps (grid 0, 0.05 eps*, ..., eps*) and each of the two fits, the per-datum rates are

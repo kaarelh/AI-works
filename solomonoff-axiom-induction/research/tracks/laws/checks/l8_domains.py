@@ -3,6 +3,14 @@ notes section 6).  Small computed instances of Props 6.1 and 6.2 on the real res
 
 Seed 20261016.  Reads l4_residuals.npz; writes l8_domains.out next to itself.
 
+Revision note (notes-final.md, Setting S3; referee A M1): the draw t ~ U[0,1) stands for a FRESH time at each
+datum (distinct numerals t_j) with the error e(t_j) and the dither u_j i.i.d.; a law on numerals cannot be atomless.
+The deterministic-patch pricings (Q/det, R/det) with a constant pi_c are a finite-horizon cost model
+(notes-final Prop 3.3a); the randomised pricings are exact theory-machine costs for all n.
+Revision note (referee B 4, 5): part A's code-Q cell Delta = 600', lam = 2 is decided by Monte Carlo noise
+(exactly, P has the lower rate), and part B's code-R column c_N = 1 uses the fine-regime UPPER bound; both are
+recomputed exactly in l10_revision.out parts E, F.
+
 A. Domain restriction (Prop 6.1).  A Kepler law for the bodies of a population, which also contains the
    Moon (geocentric, residuals of one fixed ellipse over one year).  Per-datum rates for the Moon's data under:
      P  : the unrestricted law with exceptions (Moon elements in the theory; refuted data patched),
