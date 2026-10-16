@@ -49,12 +49,14 @@ PART B (geocentric data: what K3 is worth).  Data: the geocentric ecliptic longi
 (plan94 Mars minus plan94 Earth-Moon barycentre, J2000 ecliptic), 1580.0-1600.0, daily.  Hypothesis:
 Kepler ellipses for Earth (in the ecliptic, a = 1) and Mars (plane fixed at the best heliocentric
 plane of Part A; elements e, w, L, n and the size ratio rho = a_Ma/a_Ea), with rho a free element
-(no K3) or rho := (n_Ea/n_Ma)^(2/3) (K3).  Reported: minimax errors with and without K3 (exact model);
-at several delta, the volumes V9 (rho free) and V8 (K3) of the exact compatible regions, by hit-or-miss
-with the exact model in a box aligned with the principal axes of the region (found from 300 hits of the
-linearised region; the box is enlarged by 25% and grown where hits reach its faces); and the bits of
-rho that K3 saves, log2(range_rho * V8 / V9) with range_rho = 4 (rho in [0,4)); against the text cost
-of K3.
+(no K3) or rho := (n_Ea/n_Ma)^(2/3) (K3).  Reported: minimax errors with and without K3 (exact model),
+and at several delta the bits of rho that K3 saves, log2(range_rho * V8 / V9) with range_rho = 4
+(rho in [0,4)), V9 and V8 the volumes of the EXACT compatible regions without and with K3; against the
+text cost of K3.  Method (revision of 2026-10-16, replacing box sampling, which cannot work here: the
+linearised compatible polytope fills a fraction of 1e-5 or less of its bounding box): with y := rho - (n_E/n_M)^(2/3), a
+shear of unit Jacobian, V8 / V9 = p_Y(0), the density at 0 of y under the uniform distribution on the
+9-dimensional compatible region; that distribution is sampled by hit-and-run with the exact membership test
+(function k3_saving in partB; diagnostics are printed after the table).
 
 Usage: python c4_mars_pool.py [A|B|AB]   (default AB; the saved .out is the AB run).
 
@@ -691,83 +693,139 @@ def partB(t, tt, N, incl, node, fits):
     RANGE["rho"] = (0.0, 4.0)
     rngB = np.random.default_rng(SEED + 2)
 
-    def pca_volume(J, r0, D, x0, names, fn):
-        """volume of the EXACT compatible region {x in the prior box : max_i |fn(x)_i - thg_i| <= D}.
-        Stage 1: hit-or-miss in the LINEARISED polytope {|r0 + J (x - x0)|_inf <= D}, sampled in the
-        whitened LP box, until 300 hits: their principal axes and extents define a box.  Stage 2: hit-or-miss
-        with the exact model (all data; early rejection on every 7th day) in that box enlarged by 25%,
-        enlarging any side with hits in its outer 3%.  Returns (V, se, hits, n, rounds, frac of stage-1
-        linearised hits that are exactly compatible)."""
-        k = J.shape[1]
-        R, detR = whitening(J)
-        Uz = J @ R
-        lo, hi = lp_extents(Uz, r0, D)
-        zlo, zhi = 1.05 * np.minimum(lo, 0) - 1e-9, 1.05 * np.maximum(hi, 0) + 1e-9
-        inside = in_prior(names, x0)
-        sub = np.arange(0, N, 7)
-        cloud, n1 = [], 0
-        while len(cloud) < 300 and n1 < 20_000_000:
-            Z = zlo + rngB.random((50000, k)) * (zhi - zlo)
-            ok = np.max(np.abs(r0[sub][None, :] + Z @ Uz[sub].T), axis=1) <= D
+    def k3_saving(D, n_chains=600, burn=60, keep=200, lin_steps=300):
+        """Bits of the element rho that K3 makes unnecessary, log2(range_rho * V8 / V9), for the EXACT
+        compatible regions at tolerance D (revision of 2026-10-16; box sampling was hopeless in 9 dimensions:
+        hit rates of 1e-5 and below in the box of the LP extents).
+        Shear: y := rho - (n_E/n_M)^(2/3).  The map (x8, rho) -> (x8, y) has unit Jacobian, so
+        V9 = int s(y) dy and V8 = s(0), where s(y) is the 8-volume of {x8 : (x8, y + K3(x8)) compatible};
+        hence V8 / V9 = p_Y(0), the density at 0 of y under the uniform distribution on the 9-dimensional
+        compatible region.  That distribution is sampled by hit-and-run (independent chains) with the EXACT
+        membership test (all data; prior box).  On each line the chord is bracketed by the linearised chord
+        widened by 25% on each side, then stepped out (by its full width) until both ends are non-members;
+        a point is drawn uniformly on the bracket and redrawn until it is a member (uniform on the chord when
+        the chord is an interval).  Chains start at points of the linearised polytope (linear hit-and-run,
+        lin_steps steps from the minimax point) that are exactly compatible."""
+        R, _ = whitening(J9)
+        U = J9 @ R                                    # (N, 9), orthonormal columns: residual = r9 + U z
+        inside = in_prior(names9, x9)
+        hit = make_hit_fn(geo9, tt, thg, D)
+
+        def member(Zs):
+            P = x9 + Zs @ R.T
+            ok = inside(P)
             idx = np.nonzero(ok)[0]
             if len(idx):
-                ok[idx] = np.max(np.abs(r0[None, :] + Z[idx] @ Uz.T), axis=1) <= D
-            n1 += 50000
-            cloud.extend(list((Z[ok] @ R.T)))
-        X = np.array(cloud)
-        ex1 = np.max(np.abs(wrap(fn(x0 + X, tt) - thg)), axis=1)
-        lin_ok = float(np.mean(ex1 <= D))
-        mu = X.mean(axis=0)
-        _, _, Q = np.linalg.svd(X - mu, full_matrices=False)      # rows: principal axes
-        Y = (X - mu) @ Q.T
-        blo, bhi = 1.25 * Y.min(axis=0), 1.25 * Y.max(axis=0)
-        hit = make_hit_fn(fn, tt, thg, D)
-        for rnd in range(10):
-            width = bhi - blo
-            hits, n = 0, 0
-            near = np.zeros((k, 2), bool)
-            while hits < 1200 and n < 2_000_000:
-                Uu = rngB.random((20000, k))
-                P = x0 + mu + (blo + Uu * width) @ Q
-                h = inside(P)
-                idx = np.nonzero(h)[0]
-                if len(idx):
-                    h[idx] = hit(P[idx])
-                hits += int(h.sum())
-                n += 20000
-                if h.any():
-                    near[:, 0] |= (Uu[h] < 0.03).any(axis=0)
-                    near[:, 1] |= (Uu[h] > 0.97).any(axis=0)
-            if not near.any():
-                vol = float(np.prod(width))
-                f = hits / n
-                return f * vol, vol * math.sqrt(max(f * (1 - f), 1e-300) / n), hits, n, rnd, lin_ok
-            blo[near[:, 0]] -= 0.6 * width[near[:, 0]]
-            bhi[near[:, 1]] += 0.6 * width[near[:, 1]]
-        return None
+                ok[idx] = hit(P[idx])
+            return ok
 
-    print("%-7s %9s %9s %9s %7s %9s %7s %9s %8s %8s   %s" % ("delta'", "rho lo", "rho hi", "log2 V9", "+-se", "log2 V8",
-                                                         "+-se", "K3 saves", "hits9", "hits8",
-                                                         "share of linearised hits exactly compatible (9 / 8)"))
+        def lin_chord(Zs, Dir):
+            a = r9[None, :] + Zs @ U.T
+            b = Dir @ U.T
+            with np.errstate(divide="ignore", invalid="ignore"):
+                t1 = (D - a) / b
+                t2 = (-D - a) / b
+            lo = np.where(b > 0, t2, t1)
+            hi = np.where(b > 0, t1, t2)
+            lo = np.where(b == 0, -np.inf, lo)
+            hi = np.where(b == 0, np.inf, hi)
+            return lo.max(axis=1), hi.min(axis=1)
+
+        def rand_dir(C):
+            d = rngB.normal(size=(C, 9))
+            return d / np.linalg.norm(d, axis=1, keepdims=True)
+
+        def yval(Zs):
+            P = x9 + Zs @ R.T
+            return P[:, 8] - (P[:, 3] / P[:, 7]) ** (2.0 / 3.0)
+
+        C = n_chains
+        Z = np.zeros((C, 9))
+        for _ in range(lin_steps):                    # linear hit-and-run (exact chords of the polytope)
+            Dir = rand_dir(C)
+            lo, hi = lin_chord(Z, Dir)
+            Z = Z + (lo + rngB.random(C) * (hi - lo))[:, None] * Dir
+        ok = member(Z)
+        lin_ok = float(np.mean(ok))
+        Z = Z[ok]
+        C = len(Z)
+        Y = np.empty((keep, C))
+        n_prop = n_expand = n_fail = 0
+        for step in range(burn + keep):
+            Dir = rand_dir(C)
+            lo, hi = lin_chord(Z, Dir)
+            lo, hi = np.minimum(lo, 0.0), np.maximum(hi, 0.0)    # the current point lies on its chord
+            w = np.maximum(hi - lo, D)
+            A, B = lo - 0.25 * w, hi + 0.25 * w
+            for side in (0, 1):                        # step out until the bracket end is not a member
+                todo = np.arange(C)
+                for _ in range(30):
+                    if not len(todo):
+                        break
+                    E = A[todo] if side == 0 else B[todo]
+                    m = member(Z[todo] + E[:, None] * Dir[todo])
+                    todo = todo[m]
+                    n_expand += len(todo)
+                    if side == 0:
+                        A[todo] -= w[todo]
+                    else:
+                        B[todo] += w[todo]
+                n_fail += len(todo)
+            newZ = Z.copy()
+            todo = np.arange(C)
+            for _ in range(500):
+                if not len(todo):
+                    break
+                t = A[todo] + rngB.random(len(todo)) * (B[todo] - A[todo])
+                cand = Z[todo] + t[:, None] * Dir[todo]
+                n_prop += len(todo)
+                m = member(cand)
+                newZ[todo[m]] = cand[m]
+                todo = todo[~m]
+            n_fail += len(todo)
+            Z = newZ
+            if step >= burn:
+                Y[step - burn] = yval(Z)
+        sd = float(np.std(Y))
+        est = []
+        for fr in (0.05, 0.1, 0.2):
+            hb = fr * sd
+            f_c = np.mean(np.abs(Y) < hb, axis=0)              # per chain (chains are independent)
+            p = float(np.mean(f_c)) / (2 * hb)
+            se = float(np.std(f_c, ddof=1) / math.sqrt(C)) / (2 * hb)
+            half = [float(np.mean(np.abs(Y[k0:k1]) < hb)) / (2 * hb) for k0, k1 in ((0, keep // 2), (keep // 2, keep))]
+            est.append((fr, math.log2(4.0 * p), se / p / math.log(2), math.log2(4.0 * half[0]), math.log2(4.0 * half[1])))
+        q = np.quantile(Y, [0.01, 0.5, 0.99])
+        return dict(lin_ok=lin_ok, C=C, sd=sd, q=q, est=est, prop=n_prop / (C * (burn + keep)),
+                    expand=n_expand / (C * (burn + keep)), fail=n_fail, y0=float(yval(np.zeros((1, 9)))[0]))
+
+    print("# K3 saving by the shear identity V8/V9 = p_Y(0), y = rho - (n_E/n_M)^(2/3), with hit-and-run on the")
+    print("# exact compatible region (see k3_saving).  'K3 saves' = log2(range_rho * p_Y(0)), range_rho = 4, with")
+    print("# p_Y(0) estimated as the fraction of samples with |y| < h over 2h, h = 0.05 / 0.1 / 0.2 sd(y); +-se over")
+    print("# independent chains; in brackets the estimate from the first and the second half of the kept steps.")
+    print("%-6s %9s %9s %9s %10s %11s   %s" % ("delta'", "rho lo", "rho hi", "sd(y)", "y(minimax)", "y q01..q99",
+                                              "K3 saves (bits), h = 0.05 / 0.1 / 0.2 sd"))
+    diag = []
     for d in [8.0, 4.0, 2.0, 1.0]:
         D = d * ARCMIN
         if D < max(m9, m8):
             continue
+        t_row = time.time()
         lo9, hi9 = lp_extents(J9, r9, D)
-        o9 = pca_volume(J9, r9, D, x9, names9, geo9)
-        o8 = pca_volume(J8, r8, D, x8, names9[:8], geo8)
-        if o9 is None or o8 is None:
-            print("%-7g  (volume estimate did not converge)" % d)
-            continue
-        V9, V8 = o9[0], o8[0]
-        saves = math.log2(4.0 * V8 / V9)
-        print("%-7g %9.5f %9.5f %9.2f %7.2f %9.2f %7.2f %9.2f %8d %8d   %.3f / %.3f"
-              % (d, x9[8] + lo9[8], x9[8] + hi9[8], math.log2(V9), o9[1] / V9 / math.log(2), math.log2(V8),
-                 o8[1] / V8 / math.log(2), saves, o9[2], o8[2], o9[5], o8[5]))
+        o = k3_saving(D)
+        cells = "  ".join("%.2f+-%.2f [%.2f,%.2f]" % (e[1], e[2], e[3], e[4]) for e in o["est"])
+        print("%-6g %9.5f %9.5f %9.2e %10.2e %5.0e..%5.0e   %s"
+              % (d, x9[8] + lo9[8], x9[8] + hi9[8], o["sd"], o["y0"], o["q"][0], o["q"][2], cells))
+        diag.append((d, o, time.time() - t_row))
         sys.stdout.flush()
-    print("# 'K3 saves' = log2(range_rho * V8 / V9), range_rho = 4: the bits of the element rho that K3 makes")
-    print("# unnecessary.  Posterior odds (with K3 : without K3) = 2^(saves - |K3|), |K3| in bits from table A3.")
     print("# rho lo/hi: the linearised LP extent of rho over the compatible region at that delta.")
+    print("# Posterior odds (with K3 : without K3) = 2^(saves - |K3|), |K3| in bits from table A3 (375 in S1, 450 in S2).")
+    print("# diagnostics: chains; share of linear-polytope starting points that are exactly compatible; proposals per")
+    print("# chain-step (acceptance = 1/that); step-out expansions per chain-step; chains that failed to bracket or")
+    print("# to accept (must be 0); seconds.")
+    for d, o, sec in diag:
+        print("#  %-4g chains %d  lin->exact %.3f  proposals %.2f  expansions %.3f  failures %d  %.0f s"
+              % (d, o["C"], o["lin_ok"], o["prop"], o["expand"], o["fail"], sec))
     print()
     print("# done in %.0f s" % (time.time() - T_START))
 
