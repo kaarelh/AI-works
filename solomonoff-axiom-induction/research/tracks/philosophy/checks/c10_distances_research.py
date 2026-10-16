@@ -8,8 +8,10 @@ vicarious hypothesis is compatible with the longitude data at 5.119' (c8: 6.31')
   (1) re-checks the referee's witnessing elements (printed in referee_code/rb3b_distances.out, 6 decimals)
       with c8's own data() and residuals();
   (2) runs a wider search with c8's sequential-LP optimiser slp(): for each distance tolerance tau, starts at
-      c8's starts, at the referee's witness for that tau and two perturbations of it, at the previous tau's
-      optimum (a decreasing and then an increasing sweep), and at 6 seeded random starts;
+      c8's starts, at the referee's witness for that tau and two perturbations of it (each with the scale
+      re-optimised, since the printed elements are rounded to 6 decimals, which alone costs about 1' in
+      longitude through n), at the previous tau's optimum (a decreasing and then an increasing sweep), and at
+      6 seeded random starts;
   (3) prints, for each cell, the least longitude tolerance found by any of c8, rb3b (re-checked) and this
       search, with the witnessing elements and scale, re-checked with c8's residuals().
 Every entry is an UPPER BOUND on the least longitude tolerance (witnessed by explicit elements); no entry is
@@ -137,10 +139,12 @@ def main():
             cand = [c.copy() for c in fixed] + [c.copy() for c in rand[tau]]
             if tau in RB3B[form]:
                 w = np.array(RB3B[form][tau], float)
+                w[-1] = best_scale(form, w, tt, r)          # printed 6-decimal elements: re-optimise the scale
                 cand.append(w)
                 for _ in range(2):
                     p = w.copy()
                     p[:2] += rng.normal(0, 0.003, 2)
+                    p[-1] = best_scale(form, p, tt, r)
                     cand.append(p)
             if prev is not None:
                 cand.append(prev.copy())
