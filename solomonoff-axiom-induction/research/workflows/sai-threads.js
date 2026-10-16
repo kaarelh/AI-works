@@ -13,6 +13,7 @@ const R = `${ROOT}/research`
 const SC = `${R}/scouts`
 const TR = `${R}/tracks`
 const COMMON = `Research project in ${ROOT}: a paper on Solomonoff axiom induction (working name; the final name is undecided, so never build an argument on the name). Read the brief ${R}/00-brief.md in full first: it quotes the author's request verbatim and lists the sources: the author's notes (copies in ${R}/prior/, including hanni-condensation-concepts.md; the full notes repository is at /home/user/kaarelh/notes), the earlier report ../axiom-induction (paper/main.pdf and paper/sections, refereed records research/tracks/*/notes-final.md), ../axiom-schemas, and the two Solomonoff operator induction (SOI) papers ../solomonoff-operator-induction/paper and ../solomonoff-operator-induction/paper-steeper (notation: ../solomonoff-operator-induction/paper/NOTATION.md). Paths starting with ../ are relative to ${ROOT}. Conventions (from the brief): a status on every claim (proved, with a full proof; computed, with script and saved output; known, with an exact verified reference; proof sketch; conjecture; refuted, kept with its counterexample), seeded code with outputs saved next to each script, plain precise prose, a Verification log at the end of each record, no git commands that change repository state. Write only in your folder (given below). WebSearch works; arxiv.org, Google Docs and lesswrong.com cannot be fetched directly (search results and other mirrors are fine).`
+const RESTART = `RESTART SAFETY: the container running this work is sometimes restarted, which kills you mid-task. (1) Before starting, look in your folder for partial versions of your own output files from an earlier interrupted run (notes.md, referee-A.md, referee-B.md, notes-final.md, scripts, outputs, refs.bib, referee_code/): if present, read them, check them, keep what is sound and continue from there instead of starting over; re-run any script whose saved output is missing or incomplete. (2) Write your output file early and save it after each major section, so that little is lost if you are killed.`
 const THREADS = {
   fundamentals: { title: 'Definitions and basic theorems of Solomonoff axiom induction', kind: 'math' },
   sfi: { title: 'Relation to Solomonoff operator induction (SOI), with the time-bounded equivalences and separations', kind: 'math' },
@@ -55,11 +56,11 @@ Check that statements are no stronger than their proofs, and that each novelty c
 Write ${TR}/${t.key}/referee-B.md with a verdict and numbered issues (fatal / major / minor) with concrete fixes and the evidence.`,
 ]
 const developPrompt = (t, resumed) => `${COMMON}\n\nYou develop research thread "${t.key}" (${t.title}; kind ${t.kind}); folder ${TR}/${t.key}, with scripts in checks/. First read its brief ${TR}/${t.key}/00-brief.md, the shared notation ${R}/NOTATION-draft.md, ${R}/select.md, and the scout records the brief points to.
-${resumed ? `An earlier run of this task was interrupted by a container restart. Partial records may already be in ${TR}/${t.key}/ (notes.md, scripts, outputs, refs.bib): read them first, check them, keep what is sound, and complete the task; re-run any script whose saved output is missing or incomplete.\n` : ''}* Prove the strongest true statements you can for the targets, with full proofs.
+${RESTART}\n* Prove the strongest true statements you can for the targets, with full proofs.
 * Check small cases numerically where possible (seeded code, saved outputs).
 * Keep refuted claims, with their counterexamples.
 ${t.kind === 'phil' ? '* Make every philosophical claim precise, attach the formal results that support it, and say which claims are arguments rather than theorems. Verify every reference by WebSearch.\n' : ''}Deliverable ${TR}/${t.key}/notes.md, ending with a Verification log. Return a structured summary of your claims with statuses.`
-const revisePrompt = t => `${COMMON}\n\nRevise research thread "${t.key}" (folder ${TR}/${t.key}) after its referee reports referee-A.md and referee-B.md.
+const revisePrompt = t => `${COMMON}\n\n${RESTART}\nRevise research thread "${t.key}" (folder ${TR}/${t.key}) after its referee reports referee-A.md and referee-B.md.
 * Fix every fatal and major issue, or show with evidence why the referee is wrong. Handle the minor issues.
 * Keep refuted claims, marked refuted, with their counterexamples.
 * Read the other threads' current records (${TR}/*/notes-final.md if present, else notes.md) and ${R}/NOTATION-draft.md. Align definitions and notation, and add a "Cross-thread consistency" section.
@@ -73,14 +74,14 @@ if (mode === 'threads') {
   log(`Threads: ${list.map(t => t.key + (done.has(t.key) ? ' (developed)' : resumed.has(t.key) ? ' (resume)' : '')).join(', ')}`)
   const res = await pipeline(list,
     t => done.has(t.key) ? Promise.resolve({ summary: 'developed earlier' }) : agent(developPrompt(t, resumed.has(t.key)), { label: `develop:${t.key}`, phase: 'Develop', schema: DEV }),
-    (d, t) => parallel(refPrompts(t).map((p, i) => () => agent(`${COMMON}\n\nYou are ${p}`, { label: `referee${'AB'[i]}:${t.key}`, phase: 'Referee', schema: REF }))),
+    (d, t) => parallel(refPrompts(t).map((p, i) => () => agent(`${COMMON}\n\nYou are ${p}\n${RESTART}`, { label: `referee${'AB'[i]}:${t.key}`, phase: 'Referee', schema: REF }))),
     (r, t) => agent(revisePrompt(t), { label: `revise:${t.key}`, phase: 'Revise', schema: REV }),
   )
   return res.map((x, i) => ({ thread: list[i].key, result: x }))
 }
 phase('Synthesis')
 const keys = Object.keys(THREADS)
-const syn = await agent(`${COMMON}\n\nYou are the SYNTHESIS editor. Read ${R}/select.md, ${R}/NOTATION-draft.md, the scout records in ${SC}/, and every thread's ${TR}/<key>/notes-final.md with its referee reports (threads: ${keys.join(', ')}). Write ${R}/notes-final.md with:
+const syn = await agent(`${COMMON}\n\n${RESTART}\nYou are the SYNTHESIS editor. Read ${R}/select.md, ${R}/NOTATION-draft.md, the scout records in ${SC}/, and every thread's ${TR}/<key>/notes-final.md with its referee reports (threads: ${keys.join(', ')}). Write ${R}/notes-final.md with:
 1. The headline results, ranked by importance and coolness, each stated exactly as proved (with pointers) and with its status.
 2. The philosophy: the argument map with the Kepler example and the limitations, with the formal results attached where they support a claim, and an honest account of which claims remain arguments.
 3. The relation to SOI, as a clean table of equivalences and separations.
@@ -96,7 +97,7 @@ const syn = await agent(`${COMMON}\n\nYou are the SYNTHESIS editor. Read ${R}/se
 7. Any "Possible error in the author's view" notes that survived review (see the brief's epistemic policy), each with the claim, the reason and what the paper should say instead.
 8. A consolidated Verification log.
 Do not overstate anything relative to the thread records.`, { label: 'synthesis', phase: 'Synthesis', schema: REV })
-const fin = await agent(`${COMMON}\n\nYou are a FRESH final checker.
+const fin = await agent(`${COMMON}\n\n${RESTART}\nYou are a FRESH final checker.
 * Compare ${R}/notes-final.md against the thread records ${TR}/{${keys.join(',')}}/notes-final.md and their referee reports. For every headline statement, check that it matches the thread statement exactly (hypotheses, constants, quantifiers, status) and that the cited proof exists and survived the referees.
 * Check that every entry of ${R}/refs.bib was verified by a scout or referee.
 * Re-run three of the most important scripts and compare them with the saved outputs.
