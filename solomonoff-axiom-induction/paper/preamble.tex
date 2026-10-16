@@ -1,0 +1,197 @@
+% Preamble for the paper on \SAI (generic part adapted from ../../solomonoff-operator-induction/paper/preamble.tex).
+% Section files must not redefine these macros; new global macros are added only by the planning editor (NOTATION.md).
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1.05in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{stmaryrd}
+\usepackage{booktabs,tabularx,array,longtable,multirow}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{xspace}
+\usepackage{tikz}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\usepackage[capitalise,noabbrev]{cleveref}
+\setlist{itemsep=2pt,topsep=4pt}
+\setlength{\emergencystretch}{2em}% lets TeX loosen a line instead of overflowing
+
+% ---- theorem environments (one counter, numbered within section)
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{assumption}[theorem]{Assumption}
+\newtheorem{question}[theorem]{Question}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\crefname{theorem}{Theorem}{Theorems}
+\crefname{proposition}{Proposition}{Propositions}
+\crefname{lemma}{Lemma}{Lemmas}
+\crefname{corollary}{Corollary}{Corollaries}
+\crefname{conjecture}{Conjecture}{Conjectures}
+\crefname{definition}{Definition}{Definitions}
+\crefname{example}{Example}{Examples}
+\crefname{assumption}{Assumption}{Assumptions}
+\crefname{question}{Question}{Questions}
+\crefname{remark}{Remark}{Remarks}
+\crefname{appendix}{Appendix}{Appendices}
+\crefname{table}{Table}{Tables}
+\crefname{figure}{Figure}{Figures}
+
+% ---- status and provenance markers (binding: on every result; they PRINT NOTHING)
+% \status{proved} | \status{proved, given X} | \status{computed} | \status{known} | \status{proof sketch}
+% | \status{conjecture} | \status{open} | \status{refuted} | \status{assessment}; parts: \status{(a) proved; (b) proof sketch}
+% \src{<thread> <item>}: the item in research/tracks/<thread>/notes-final.md (e.g. \src{fundamentals Thm 5.1}).
+% Their content is rendered in prose ("we prove", "a computation shows (code in the accompanying repository)").
+% Both macros swallow the space that follows them, so an inline call leaves no double space.
+\newif\ifsaishowstatus
+\saishowstatusfalse % internal checking only: \saishowstatustrue prints them as small grey notes
+\newcommand{\status}[1]{\ifsaishowstatus\textup{\textsf{\small[#1]}}\fi\ignorespaces}
+\newcommand{\src}[1]{\ifsaishowstatus\unskip\hskip0pt plus 1fil\penalty300\hskip0.35em plus -1fil\relax\textup{\textcolor{gray}{\scriptsize\textsf{#1}}}\fi\ignorespaces}
+% abbreviated cross-reference names, for use inside table floats only
+\newcommand{\crefabbrev}{\crefname{proposition}{Prop.}{Props.}\crefname{theorem}{Thm.}{Thms.}%
+  \crefname{lemma}{Lem.}{Lems.}\crefname{corollary}{Cor.}{Cors.}\crefname{remark}{Rem.}{Rems.}%
+  \crefname{example}{Ex.}{Exs.}\crefname{definition}{Def.}{Defs.}\crefname{conjecture}{Conj.}{Conjs.}\crefname{question}{Q.}{Qs.}%
+  \crefname{assumption}{Ass.}{Ass.}\crefname{table}{Tab.}{Tabs.}\crefname{section}{\S}{\S\S}\crefname{subsection}{\S}{\S\S}%
+  \crefname{appendix}{App.}{Apps.}}
+
+
+% =====================================================================
+% ===== SAI macros (planning editor; see NOTATION.md) =================
+% =====================================================================
+% Binding. Section files must not redefine or \renewcommand these. A writer who needs a new global
+% symbol asks the planning editor; local symbols are plain math and must not reuse a global symbol.
+% ---- names: the working name of the family is produced ONLY by these macros
+\newcommand{\SAIname}{Solomonoff axiom induction}% the working value; change here only
+\newcommand{\SAItitlename}{Solomonoff Axiom Induction}
+\newcommand{\SAI}{\SAIname\xspace}
+\newcommand{\SAItitle}{\SAItitlename\xspace}
+\newcommand{\SAIabbr}{SAI\xspace}
+\newcommand{\SOI}{Solomonoff operator induction\xspace}
+\newcommand{\SOIabbr}{SOI\xspace}
+\pdfstringdefDisableCommands{\def\xspace{}}
+% ---- general
+\newcommand{\dom}{\operatorname{dom}}                 % domain of a partial function or data set
+\newcommand{\supp}{\operatorname{supp}}
+\newcommand{\ind}{\mathbf{1}}                         % indicator: \ind[x\in E]
+\newcommand{\Unif}{\mathbb{U}}                        % fair-coin measure on tapes (never \lambda)
+\newcommand{\Prob}{\mathbb{P}}                        % true law of the data process
+\newcommand{\Ex}{\mathbb{E}}
+\newcommand{\Var}{\operatorname{Var}}
+\newcommand{\KL}{\operatorname{KL}}                   % in bits unless marked
+\newcommand{\TV}{\operatorname{TV}}
+% ---- algorithmic information
+\newcommand{\mm}{\mathbf{m}}                          % universal discrete semimeasure
+\newcommand{\Kpad}{K^{\mathrm{pad}}}                  % \Kpad(N) = min_{L>=N} K(L)
+\newcommand{\Ktail}{K^{\mathrm{tail}}}
+\newcommand{\Omtail}[1]{\Omega_{V}^{\ge #1}}         % halting mass of V-programs of length >= #1
+\newcommand{\Kt}{\mathit{Kt}}                         % Levin's time-bounded complexity
+% ---- logic
+\newcommand{\Sent}{\mathrm{Sent}}
+\newcommand{\Cn}{\mathrm{Cn}}
+\newcommand{\Con}{\mathrm{Con}}
+\newcommand{\Th}{\mathrm{Th}}
+\newcommand{\PA}{\mathsf{PA}}
+\newcommand{\Q}{\mathsf{Q}}
+\newcommand{\num}[1]{\underline{#1}}                  % numeral
+\newcommand{\gn}[1]{\ulcorner #1\urcorner}            % Goedel number
+\newcommand{\cplx}[1]{\mathsf{#1}}                    % complexity classes: \cplx{NP}, \cplx{EXPTIME}
+\newcommand{\Lar}{\mathcal{L}_{\mathrm{ar}}}
+\newcommand{\LO}{\mathcal{L}_{O}}                     % observational vocabulary
+\newcommand{\LT}{\mathcal{L}_{T}}                     % theoretical vocabulary
+\newcommand{\re}[1]{\mathsf{W}_{#1}}                  % the #1-th r.e. set
+\newcommand{\ThT}{\Th_{\mathfrak{T}}}                 % theory of the named structure
+\newcommand{\IndB}[1][B]{\mathrm{Ind}_{#1}}           % sentences #1 decides neither way
+\newcommand{\Infn}[1]{\mathrm{Inf}_{#1}}              % "there are at least #1 things"
+% ---- the one-tape law and its trichotomy
+\newcommand{\MA}{M_{A}}                               % SAI: one-tape proof-requiring law
+\newcommand{\MAthree}{M_{A}^{3}}
+\newcommand{\MAnc}{M_{A}^{\mathrm{nc}}}               % consistency-requiring 0/1 weight
+\newcommand{\MAhalf}{M_{A}^{1/2}}                     % graded consistency-requiring weight
+\newcommand{\MAdec}{M_{A}^{\mathrm{dec}}}             % random deciders
+\newcommand{\MAchk}[1]{M_{A}^{\mathrm{chk},#1}}       % one-tape membership-time penalty
+\newcommand{\MAgen}[1]{M_{A}^{\mathrm{gen},#1}}       % one-tape generation-time penalty
+\newcommand{\LA}{L_{A}}                               % -log M_A
+\newcommand{\Bel}{\mathrm{Bel}}
+\newcommand{\Belhat}{\widehat{\mathrm{Bel}}}          % \Belhat_0 = \Bel_\emptyset (normalised)
+\newcommand{\Dis}{\mathrm{Dis}}
+\newcommand{\Indep}{\mathrm{Indep}}
+\newcommand{\Inc}{\mathrm{Inc}}                       % \Inc_0 = probability of an inconsistent theory
+\newcommand{\Pl}{\mathrm{Pl}}
+\newcommand{\Belnc}{\mathrm{Bel}^{\mathrm{nc}}}
+\newcommand{\Disnc}{\mathrm{Dis}^{\mathrm{nc}}}
+\newcommand{\tri}{\mathrm{tri}}                       % trichotomy function of the random theory
+\newcommand{\UA}{\Unif_{A}}                           % class-restricted laws: \UA(\mathcal C;D), \UA[T], \UA(\Exts T)
+\newcommand{\epsempty}{\varepsilon_{\emptyset}}       % mass of the empty theory
+% ---- coin-free and Kolmogorov versions, complexities of theories
+\newcommand{\WA}{W_{A}}
+\newcommand{\WAdec}{W_{A}^{\mathrm{dec}}}
+\newcommand{\WAthree}{W_{A}^{3}}
+\newcommand{\WAchk}[1]{W_{A}^{\mathrm{chk},#1}}
+\newcommand{\WAgen}[1]{W_{A}^{\mathrm{gen},#1}}
+\newcommand{\WAKt}[1]{W_{A}^{\mathrm{Kt},#1}}
+\newcommand{\KA}{K_{A}}
+\newcommand{\KAdec}{K_{A}^{\mathrm{dec}}}
+\newcommand{\Kfin}{K_{\mathrm{fin}}}
+\newcommand{\Wfin}{W_{\mathrm{fin}}}
+\newcommand{\Keq}{K_{\equiv}}                         % complexity up to deductive equivalence
+\newcommand{\mmeq}{\mm_{\equiv}}
+\newcommand{\Exts}{\mathrm{Ext}}                      % consistent extensions (not extensionality)
+\newcommand{\Kenum}{K_{\mathrm{enum}}}
+\newcommand{\mmenum}{\mm_{\mathrm{enum}}}
+\newcommand{\Uenum}{\Unif_{\mathrm{enum}}}
+% ---- the operator-induction side (companion paper's objects; function machines are F here)
+\newcommand{\MF}{M_{F}}
+\newcommand{\MFcons}{M_{F}^{\mathrm{cons}}}
+\newcommand{\MFcl}{M_{F}^{\mathrm{cl}}}
+\newcommand{\MFmw}{M_{F}^{\mathrm{mw}}}               % machines consistent on every tape
+\newcommand{\MFthreecons}{M_{F}^{3,\mathrm{cons}}}
+\newcommand{\Wcons}{W^{\mathrm{cons}}}
+\newcommand{\Wcl}{W^{\mathrm{cl}}}
+\newcommand{\Wall}{W^{\mathrm{all}}}                  % plain coin-free SOI on sentences
+\newcommand{\Wthreecons}{W^{3,\mathrm{cons}}}
+\newcommand{\Wcert}{W^{\mathrm{cert}}}
+\newcommand{\KF}{K_{F}}
+\newcommand{\KFcons}{K_{F}^{\mathrm{cons}}}
+\newcommand{\KFcl}{K_{F}^{\mathrm{cl}}}
+\newcommand{\Mprod}{M_{\mathrm{prod}}}
+\newcommand{\Mpq}{M_{\mathrm{pq}}}
+% ---- named assumptions and encodings
+\newcommand{\AssS}{\textup{(S)}}
+\newcommand{\AssStape}{\textup{(S$_{\mathrm{tape}}$)}}
+\newcommand{\AssF}{\textup{(F1)}}
+\newcommand{\Ethree}{\textup{(E3)}}
+% ---- logic section
+\newcommand{\Win}{\mathrm{Win}}
+\newcommand{\Lot}{\mathrm{Lot}}
+\newcommand{\Glot}{G_{\mathrm{lot}}}
+\newcommand{\Tick}{\mathrm{Tick}}
+\newcommand{\Gthr}{G_{\mathrm{thr}}}
+\newcommand{\Kgt}{\mathrm{Kgt}}
+\newcommand{\Bit}{\mathrm{Bit}}
+% ---- theory shape
+\newcommand{\UP}{\mathrm{UP}}
+\newcommand{\FC}{\mathrm{FC}}
+\newcommand{\GE}{\mathrm{GE}}
+\newcommand{\PS}{\mathrm{PS}}
+\newcommand{\Klst}{K_{\mathrm{lst}}}
+\newcommand{\Wlst}{W_{\mathrm{lst}}}
+\newcommand{\KtA}{\mathit{Kt}_{A}}
+\newcommand{\proj}{\operatorname{proj}}
+\newcommand{\PI}{\mathrm{PI}}
+\newcommand{\Par}{\mathrm{Par}}
+\newcommand{\ia}{\mathrm{ia}}
+% ---- approximate laws, explanation, Kepler
+\newcommand{\Exc}{\mathrm{Exc}}
+\newcommand{\EP}{\mathrm{EP}}
+\newcommand{\pk}{\mathrm{pk}}
+\newcommand{\Occ}{\mathrm{Occ}}
+% ===== end of SAI macros =============================================
