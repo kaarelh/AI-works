@@ -2,7 +2,7 @@
 
 Deterministic (seed 20261015 for the random data sets).  Writes c6_flagpole.out next to itself.
 
-Setting (notes.md Prop 3.2).  Poles p_1..p_N with heights a_i; t = cot(elevation) is written as a
+Setting (notes.md Prop 3.1).  Poles p_1..p_N with heights a_i; t = cot(elevation) is written as a
 numeral, so the law is linear:  Lambda_h := forall p forall t>0 ( s(p,t) * t = h(p) ), with
 s(p,t) the shadow length when cot(elevation) = 1/t ... written here simply as s(p,t)*t = h(p).
 Equivalent formulation  Lambda_s := forall p forall t>0 ( s(p,t)*t = s(p,1) )  and  forall p h(p) = s(p,1).
@@ -17,12 +17,12 @@ h_S(p,v): height after the shadow s(p,1) is set to v by an intervention on the s
 What is checked, by exact rational linear algebra on ground instances:
   (1) on 500 random data sets of shadow and height equations (true and false ones), the four
       theories T_H, T_S, T_H', T_S' prove, refute and leave open exactly the same data
-      (they are deductively equivalent: Prop 3.2(a));
+      (they are deductively equivalent: Prop 3.1(a));
   (2) the least number of law instances in a derivation of each kind of datum, under the two
-      formulations (Prop 3.2(b)): the theory whose initial conditions sit at the hub of the law's
+      formulations (Prop 3.1(b)): the theory whose initial conditions sit at the hub of the law's
       formulation needs one instance per shadow datum, the other needs two;
   (3) token lengths of the four theories (the code-length tie up to a constant independent of N);
-  (4) one interventional datum separates C_H from C_S (Prop 3.2(c)), while their observational
+  (4) one interventional datum separates C_H from C_S (Prop 3.1(c)), while their observational
       consequences coincide.
 """
 from fractions import Fraction as Fr
@@ -166,7 +166,7 @@ def main():
     p("(1) T_H, T_S, T_H', T_S' on 2000 random data (500 data sets x 4): identical status in %d/%d;"
       " proves/refutes/open = %d/%d/%d" % (agree, total, counts["proves"], counts["refutes"], counts["open"]))
     p("    ('open' = a datum at an elevation whose law instance is not in the finite pool; with the instance")
-    p("     added, all four prove it: the theories are deductively equivalent, notes.md Prop 3.2(a).)")
+    p("     added, all four prove it: the theories are deductively equivalent, notes.md Prop 3.1(a).)")
 
     # (2) least number of law instances per datum
     poles = [0]

@@ -1,0 +1,47 @@
+# l6_horizons.py seed=20261016 python 3.11.15 numpy 2.4.6
+
+== A. 1-D: derived tolerance and horizon r*(delta) = max{r : e_r <= delta}, eps = 1, e0 = 0
+   L      | max |e_r(formula) - e_r(interval propagation)| over r <= 200 (rel.) | r*(delta) formula / iterated, for delta/eps = 10, 100, 10^4
+   0.5    | 0.00e+00 | inf/inf   inf/inf   inf/inf
+   0.9    | 3.55e-16 | inf/inf   inf/inf   inf/inf
+   0.99   | 1.64e-15 | 10/10   inf/inf   inf/inf
+   1      | 0.00e+00 | 10/10   100/100   10000/10000
+   1.01   | 3.52e-15 | 9/9   69/69   463/463
+   1.1    | 2.90e-16 | 7/7   25/25   72/72
+   2      | 0.00e+00 | 3/3   6/6   13/13
+
+== B. d-dim random linear maps: per-coordinate tolerance after r steps (eps = 1, e0 = 0); medians over
+   coordinates and 50 matrices per row; exact = zonotope half-width (attained by the sign sequence), box = interval arithmetic, Lip = Lipschitz bound with L = ||A||_inf
+   d= 1 rho=0.95 r=10: median box/exact = 1  median Lip/exact = 1  exact attained 50/50  exact <= box <= Lip in all: True
+   d= 1 rho=0.95 r=30: median box/exact = 1  median Lip/exact = 1  exact attained 50/50  exact <= box <= Lip in all: True
+   d= 1 rho=1.00 r=10: median box/exact = 1  median Lip/exact = 1  exact attained 50/50  exact <= box <= Lip in all: True
+   d= 1 rho=1.00 r=30: median box/exact = 1  median Lip/exact = 1  exact attained 50/50  exact <= box <= Lip in all: True
+   d= 1 rho=1.05 r=10: median box/exact = 1  median Lip/exact = 1  exact attained 50/50  exact <= box <= Lip in all: True
+   d= 1 rho=1.05 r=30: median box/exact = 1  median Lip/exact = 1  exact attained 50/50  exact <= box <= Lip in all: True
+   d= 3 rho=0.95 r=10: median box/exact = 5.54  median Lip/exact = 85.8  exact attained 50/50  exact <= box <= Lip in all: True
+   d= 3 rho=0.95 r=30: median box/exact = 837  median Lip/exact = 1.1e+07  exact attained 50/50  exact <= box <= Lip in all: True
+   d= 3 rho=1.00 r=10: median box/exact = 5.48  median Lip/exact = 45.4  exact attained 50/50  exact <= box <= Lip in all: True
+   d= 3 rho=1.00 r=30: median box/exact = 2.06e+03  median Lip/exact = 3.66e+07  exact attained 50/50  exact <= box <= Lip in all: True
+   d= 3 rho=1.05 r=10: median box/exact = 7.38  median Lip/exact = 186  exact attained 50/50  exact <= box <= Lip in all: True
+   d= 3 rho=1.05 r=30: median box/exact = 808  median Lip/exact = 7.92e+06  exact attained 50/50  exact <= box <= Lip in all: True
+   d=10 rho=0.95 r=10: median box/exact = 203  median Lip/exact = 2.3e+03  exact attained 50/50  exact <= box <= Lip in all: True
+   d=10 rho=0.95 r=30: median box/exact = 2.76e+09  median Lip/exact = 3.87e+13  exact attained 50/50  exact <= box <= Lip in all: True
+   d=10 rho=1.00 r=10: median box/exact = 288  median Lip/exact = 5.49e+03  exact attained 50/50  exact <= box <= Lip in all: True
+   d=10 rho=1.00 r=30: median box/exact = 8.5e+09  median Lip/exact = 6.78e+13  exact attained 50/50  exact <= box <= Lip in all: True
+   d=10 rho=1.05 r=10: median box/exact = 308  median Lip/exact = 4.81e+03  exact attained 50/50  exact <= box <= Lip in all: True
+   d=10 rho=1.05 r=30: median box/exact = 3.71e+09  median Lip/exact = 3.2e+13  exact attained 50/50  exact <= box <= Lip in all: True
+
+== C. typical against worst case after r steps, L = 1, eps = 1
+   r=   10: worst case 10; random signs E|S| = 2.461 exact (simulated 2.455; sqrt(2r/pi) = 2.523); uniform errors E|S| simulated 1.453 (sqrt(2r/(3pi)) = 1.457)
+   r=  100: worst case 100; random signs E|S| = 7.959 exact (simulated 7.997; sqrt(2r/pi) = 7.979); uniform errors E|S| simulated 4.649 (sqrt(2r/(3pi)) = 4.607)
+   r= 1000: worst case 1000; random signs E|S| = 25.225 exact (simulated 25.089; sqrt(2r/pi) = 25.231); uniform errors E|S| simulated 14.578 (sqrt(2r/(3pi)) = 14.567)
+   L=1.01 r=100: worst case 170.5; random signs E|x_r| simulated 14.16; sqrt(sum L^(2s)) * sqrt(2/pi) = 14.14
+   L=1.10 r=100: worst case 137796.1; random signs E|x_r| simulated 24344.28; sqrt(sum L^(2s)) * sqrt(2/pi) = 23993.79
+
+== D. joint consistency of honest models: pairwise overlap against a common point
+   1-D intervals (10^5 random families of 2-6 models): pairwise <=> joint fails in 0 families
+   axis-parallel boxes in R^2 (2*10^4 families): pairwise <=> joint fails in 0 families
+   Euclidean discs in R^2: centres at an equilateral triangle of side 2, radius 1.1: pairwise intersect: True; common point exists iff radius >= circumradius 1.1547: False
+
+# runtime 5 s
+# done

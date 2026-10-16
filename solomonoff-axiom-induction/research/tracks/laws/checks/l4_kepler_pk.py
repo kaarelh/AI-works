@@ -1,40 +1,29 @@
-"""l4_kepler_pk.py -- peakedness of the real Kepler residuals, and which form of an
-approximate law (honest law H, exact law with patches P, or no law 0) the two-part
-objective selects per body, window, data precision, steepness and exception code.
+"""l4_kepler_pk.py -- residuals of one fixed Kepler ellipse against ERFA's planetary and lunar
+theories, and their peakedness pk(e) = eps*/E|e|, per body and window.
 
-Thread `laws` (T3, last item).  Seed 20261016.  Writes l4_kepler_pk.out next to
-itself and saves the residual series it uses to l4_residuals.npz.
+Thread `laws` (T3, last item).  Seed 20261016.  Writes l4_kepler_pk.out next to itself and saves
+the residual series it uses to l4_residuals.npz (read by l5_kepler_select.py, which does the
+selection between honest law, patched exact law and no law).
 
-Data.  ERFA's eraPlan94 (heliocentric planets; Simon et al. analytical theory) and
-eraMoon98 (geocentric Moon; Meeus), through pyerfa, exactly as in scout P's
-c1_kepler_fit.py, whose machinery (ecliptic rotation, osculating elements, Kepler
-solver, 3-D least-squares fit) is copied below.  pyerfa is imported from a scratch
-library folder outside the repository (PYTHONPATH).
+Data.  ERFA's eraPlan94 (heliocentric planets; Simon et al. analytical theory) and eraMoon98
+(geocentric Moon; Meeus), through pyerfa 2.0.1.5, exactly as in scout P's c1_kepler_fit.py, whose
+machinery (ecliptic rotation, osculating elements, Kepler solver, 3-D least-squares fit) is copied
+below.  pyerfa is imported from a scratch library folder outside the repository (PYTHONPATH).
 
-For each body and window W centred on J2000.0, N_T i.i.d. uniform sample times.  The
-1-D quantity is the ecliptic longitude (heliocentric; geocentric for the Moon).  The
-error of the fixed Kepler ellipse with elements theta is
-    e_theta(t) = wrap(lon_Kepler(t; theta) - lon_true(t))   (arcmin).
+For each body and window W centred on J2000.0: N_T = 8000 i.i.d. uniform sample times.  The 1-D
+quantity is the ecliptic longitude (heliocentric; geocentric for the Moon).  The error of the fixed
+Kepler ellipse with elements theta is
+    e_theta(t) = wrap(lon_Kepler(t; theta) - lon_true(t))   (arcmin; model minus truth).
 Fits (all with 7 free elements a, e, i, Om, om, M0, n):
     F3   scout P's 3-D least squares on normalised positions;
     L2   least squares on (longitude, latitude) residuals;
-    L1   soft-L1 (robust) on longitude residuals (+ latitude in L2): small mean |e|;
-    Linf L_p continuation p = 4, 8, 16 on longitude residuals: small max |e|.
-eps* := min over fits of max|e| (the tightest honest tolerance we found: an upper bound on
-the minimax error); E|e| := min over fits of mean|e|; pk := eps*/E|e| (this mixes two
-fits on purpose: the honest law uses its best elements, the patched exact law its own).
-
-Selection (asymptotic per-datum costs, notes section 3; Newton not in the pool):
-    data: dithered cells of width Delta arcmin on the longitude, range 360 deg;
-    gamma_f = log2(21600/Delta) bits (literal answer); pi = log2(days in window) + 2 bits
-    (naming a day inside a law sentence or an index);
-    p = E min(|e_L1|/Delta, 1) (P refutes a datum), q = min(2 eps*/Delta, 1) (H silent);
-    per-datum costs:
-        code Q     (question-relative literal, decidable provability):  0: g,  P: p(lam pi + g),       H: q g
-        code Qidx  (exceptions carry their position, = code S):          0: g,  P: p(lam pi + pi + g),  H: q (pi + g)
-        code cond  (exception answer coded among answers the theory allows):
-                                                                         0: g,  P: p(lam pi + g),       H: E log2(#cells the band meets)
-    the selected form is the minimiser (ties: none occurred).
+    L1   soft-L1 (robust) on longitude residuals (+ latitude): aims at a small mean |e|;
+    Linf L_p continuation p = 4, 8, 16 on longitude residuals: aims at a small max |e|.
+eps* := min over fits of max|e| over the sample (an upper bound on the minimax error of a fixed
+ellipse on the window, up to sampling: the sample max is below the true sup on the window);
+E|e| := min over fits of mean|e|; pk := eps*/E|e|.  The two minima may come from different fits
+on purpose: the honest law states its tolerance for its own (minimax) elements, and the patched
+exact law uses its own (mean-optimal) elements.
 """
 import sys
 import time
@@ -178,36 +167,6 @@ def fits(t, rdata, x0):
     return res, lon_d
 
 
-def ncells_cost(eps, delta):
-    """E log2(#cells of a uniformly shifted grid of width delta met by an interval of length 2 eps)."""
-    K = 2 * eps / delta
-    fl = np.floor(K)
-    fr = K - fl
-    return (1 - fr) * np.log2(fl + 1) + fr * np.log2(fl + 2)
-
-
-DELTAS = [0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 30.0, 60.0, 120.0, 300.0, 600.0]
-LAMS = [1.0, 2.0, 4.0]
-CODES = ["Q", "Qidx", "cond"]
-
-
-def select(e_mean_series, eps_star, days, lam, code, delta):
-    g = np.log2(21600.0 / delta)
-    pi = np.log2(days) + 2.0
-    p = float(np.mean(np.minimum(np.abs(e_mean_series) / delta, 1.0)))
-    q = min(2 * eps_star / delta, 1.0)
-    c0 = g
-    if code == "Q":
-        cP, cH = p * (lam * pi + g), q * g
-    elif code == "Qidx":
-        cP, cH = p * (lam * pi + pi + g), q * (pi + g)
-    else:
-        cP, cH = p * (lam * pi + g), ncells_cost(eps_star, delta)
-    costs = {"0": c0, "P": cP, "H": cH}
-    win = min(costs, key=costs.get)
-    return win, costs, p, q
-
-
 def main():
     t0 = time.time()
     out("# l4_kepler_pk.py  seed=%d  python %s  numpy %s  scipy %s  pyerfa %s" %
@@ -277,38 +236,6 @@ def main():
     out("   (saved: l4_residuals.npz, keys <body>_<W>_{t,e_mean,e_max}: sample times in days from J2000,")
     out("    signed longitude errors in arcmin of the fit with the smallest mean |e| and of the fit with the smallest max |e|)")
 
-    out("")
-    out("== B. selected form per precision Delta (arcmin), steepness lambda and exception code")
-    out("   letters: H honest law, P exact law with patches, 0 no law; '.' = Delta < 2 eps* (H proves nothing),"
-        " shown after the letter")
-    hdr = "%-8s %6s %6s |" % ("body", "W", "pk") + "".join("%7g" % d for d in DELTAS)
-    for code in CODES:
-        for lam in LAMS:
-            out("")
-            out("  code %s, lambda = %g" % (code, lam))
-            out("  " + hdr)
-            for (name, W, Wd, eps_star, Eabs, pk, em) in rows:
-                cells = []
-                for d in DELTAS:
-                    win, costs, p, q = select(em, eps_star, Wd, lam, code, d)
-                    mark = "." if d < 2 * eps_star else " "
-                    cells.append("%6s%s" % (win, mark))
-                out("  %-8s %6s %6.2f |" % (name, W, pk) + "".join(cells))
-    out("")
-    out("== C. the criterion in closed form (Delta >= 2 eps*): H beats P per datum iff pk < threshold;")
-    out("   threshold Q: (lam pi + g)/(2 g);  Qidx: (lam pi + pi + g)/(2 (pi + g));  cond: (lam pi + g)/2   (g = gamma_f(Delta))")
-    for (name, W, Wd, eps_star, Eabs, pk, em) in rows:
-        if name not in ("Mars", "Jupiter", "Moon"):
-            continue
-        pi = np.log2(Wd) + 2
-        for d in (10.0, 60.0):
-            if d < 2 * eps_star:
-                continue
-            g = np.log2(21600.0 / d)
-            th = [(1 * pi + g) / (2 * g), (2 * pi + g) / (2 * g), (pi + pi + g) / (2 * (pi + g)),
-                  (2 * pi + pi + g) / (2 * (pi + g)), (pi + g) / 2]
-            out("   %-8s W=%-6s Delta=%5g' pk=%5.2f pi=%5.2f g=%5.2f | Q lam1 %.2f lam2 %.2f | Qidx lam1 %.2f lam2 %.2f | cond lam1 %.2f"
-                % (name, W, d, pk, pi, g, *th))
     out("")
     out("# runtime %.0f s" % (time.time() - t0))
     out("# done")

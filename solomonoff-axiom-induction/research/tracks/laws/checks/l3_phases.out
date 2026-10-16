@@ -1,0 +1,98 @@
+# l3_phases.py seed=20261016 python 3.11.15 numpy 2.4.6
+
+== A. Lemma 3.2: Pr[prove], Pr[refute] given e, for T^eps and cell width Delta (2*10^6 dithers each)
+   formulas: refute = min((|e|-eps)^+/Delta, 1); prove = (1 - (eps + max(|e|, eps))/Delta)^+; silent = rest
+   e= 0.30 eps=1.00 Delta=10.00: prove 0.8002 (formula 0.8000)  refute 0.0000 (formula 0.0000)  silent 0.1998
+   e= 1.00 eps=1.00 Delta=10.00: prove 0.8001 (formula 0.8000)  refute 0.0000 (formula 0.0000)  silent 0.1999
+   e= 2.50 eps=1.00 Delta=10.00: prove 0.6505 (formula 0.6500)  refute 0.1497 (formula 0.1500)  silent 0.1998
+   e= 0.70 eps=0.00 Delta=10.00: prove 0.9299 (formula 0.9300)  refute 0.0701 (formula 0.0700)  silent -0.0000
+   e= 0.70 eps=1.00 Delta= 1.50: prove 0.0000 (formula 0.0000)  refute 0.0000 (formula 0.0000)  silent 1.0000
+   e= 3.00 eps=1.00 Delta= 1.50: prove 0.0000 (formula 0.0000)  refute 1.0000 (formula 1.0000)  silent 0.0000
+   e= 0.20 eps=0.50 Delta= 0.50: prove 0.0000 (formula 0.0000)  refute 0.0000 (formula 0.0000)  silent 1.0000
+   e=12.00 eps=1.00 Delta=10.00: prove 0.0000 (formula 0.0000)  refute 1.0000 (formula 1.0000)  silent 0.0000
+   largest deviation from the formulas: 0.0005 (Monte Carlo standard error ~ 3.5e-4)
+
+   Lemma 3.6: code-R cost given a straddle, E[-log2(|cell & band|/2eps)], against log2(e) - H2(w), w = (eps - e)/(2 eps); Delta = 10, eps = 1
+   e= 0.000: simulated 0.4422  formula 0.4427   (straddle share 0.1998 vs 2eps/Delta = 0.2)
+   e= 0.500: simulated 0.6310  formula 0.6314   (straddle share 0.2004 vs 2eps/Delta = 0.2)
+   e= 0.900: simulated 1.1548  formula 1.1563   (straddle share 0.1996 vs 2eps/Delta = 0.2)
+   e= 0.999: simulated 1.4370  formula 1.4365   (straddle share 0.1996 vs 2eps/Delta = 0.2)
+   e=-0.600: simulated 0.7208  formula 0.7208   (straddle share 0.1999 vs 2eps/Delta = 0.2)
+   beta_e for the spread error: 0.8849  (bounds log2 e - 1 = 0.4427, log2 e = 1.4427)
+   beta_e for the peaked error: 0.4927  (bounds log2 e - 1 = 0.4427, log2 e = 1.4427)
+
+== B. rates per datum, code Q, deterministic patches (Prop 3.3): m_P = p(lam pi_c + gamma), m_H = q gamma
+   pi_c = 22 bits; gamma = log2(21600/Delta); simulated over 4*10^6 data; criterion: H wins iff pk < (lam pi_c + gamma)/(2 gamma)
+   spread Delta=  2.0 lam=1: p=0.31821 (E|e|/D=0.31831) q=1.00000 (2/D=1.00000)  m_P=11.2641 m_H=13.3987 -> P; pk=1.57 vs threshold 1.32 -> P
+   spread Delta=  2.0 lam=2: p=0.31821 (E|e|/D=0.31831) q=1.00000 (2/D=1.00000)  m_P=18.2646 m_H=13.3987 -> H; pk=1.57 vs threshold 2.14 -> H
+   spread Delta=  3.0 lam=1: p=0.21201 (E|e|/D=0.21221) q=0.66675 (2/D=0.66667)  m_P= 7.3808 m_H= 8.5435 -> P; pk=1.57 vs threshold 1.36 -> P
+   spread Delta=  3.0 lam=2: p=0.21201 (E|e|/D=0.21221) q=0.66675 (2/D=0.66667)  m_P=12.0450 m_H= 8.5435 -> H; pk=1.57 vs threshold 2.22 -> H
+   spread Delta= 10.0 lam=1: p=0.06349 (E|e|/D=0.06366) q=0.19985 (2/D=0.20000)  m_P= 2.1002 m_H= 2.2137 -> P; pk=1.57 vs threshold 1.49 -> P
+   spread Delta= 10.0 lam=2: p=0.06349 (E|e|/D=0.06366) q=0.19985 (2/D=0.20000)  m_P= 3.4970 m_H= 2.2137 -> H; pk=1.57 vs threshold 2.49 -> H
+   spread Delta= 60.0 lam=1: p=0.01069 (E|e|/D=0.01061) q=0.03349 (2/D=0.03333)  m_P= 0.3260 m_H= 0.2844 -> H; pk=1.57 vs threshold 1.80 -> H
+   spread Delta= 60.0 lam=2: p=0.01069 (E|e|/D=0.01061) q=0.03349 (2/D=0.03333)  m_P= 0.5612 m_H= 0.2844 -> H; pk=1.57 vs threshold 3.09 -> H
+   peaked Delta=  2.0 lam=1: p=0.02502 (E|e|/D=0.02500) q=1.00000 (2/D=1.00000)  m_P= 0.8857 m_H=13.3987 -> P; pk=20.00 vs threshold 1.32 -> P
+   peaked Delta=  2.0 lam=2: p=0.02502 (E|e|/D=0.02500) q=1.00000 (2/D=1.00000)  m_P= 1.4361 m_H=13.3987 -> P; pk=20.00 vs threshold 2.14 -> P
+   peaked Delta=  3.0 lam=1: p=0.01672 (E|e|/D=0.01667) q=0.66654 (2/D=0.66667)  m_P= 0.5821 m_H= 8.5409 -> P; pk=20.00 vs threshold 1.36 -> P
+   peaked Delta=  3.0 lam=2: p=0.01672 (E|e|/D=0.01667) q=0.66654 (2/D=0.66667)  m_P= 0.9499 m_H= 8.5409 -> P; pk=20.00 vs threshold 2.22 -> P
+   peaked Delta= 10.0 lam=1: p=0.00499 (E|e|/D=0.00500) q=0.19976 (2/D=0.20000)  m_P= 0.1650 m_H= 2.2127 -> P; pk=20.00 vs threshold 1.49 -> P
+   peaked Delta= 10.0 lam=2: p=0.00499 (E|e|/D=0.00500) q=0.19976 (2/D=0.20000)  m_P= 0.2747 m_H= 2.2127 -> P; pk=20.00 vs threshold 2.49 -> P
+   peaked Delta= 60.0 lam=1: p=0.00084 (E|e|/D=0.00083) q=0.03336 (2/D=0.03333)  m_P= 0.0256 m_H= 0.2833 -> P; pk=20.00 vs threshold 1.80 -> P
+   peaked Delta= 60.0 lam=2: p=0.00084 (E|e|/D=0.00083) q=0.03336 (2/D=0.03333)  m_P= 0.0441 m_H= 0.2833 -> P; pk=20.00 vs threshold 3.09 -> P
+
+== C. optimal tolerance of a patched tolerance law (Prop 3.5), code Q, deterministic patches, Delta = 10'
+   rate(eps) = gamma Pr[not proved] + lam pi_c Pr[refuted]; predicted: Pr[|e| > eps_opt] = theta_ex = 2 gamma/(gamma + lam pi_c)
+   spread      lam=1: theta_ex=0.670  eps_opt(grid)=0.52  eps_opt(predicted)=0.496  rate(opt)=1.8308  rate(eps=0)=2.1059  rate(eps*=1)=2.2126
+   spread      lam=2: theta_ex=0.402  eps_opt(grid)=0.80  eps_opt(predicted)=0.807  rate(opt)=2.0692  rate(eps=0)=3.5066  rate(eps*=1)=2.2126
+   spread      lam=4: theta_ex=0.224  eps_opt(grid)=0.94  eps_opt(predicted)=0.939  rate(opt)=2.1667  rate(eps=0)=6.3079  rate(eps*=1)=2.2126
+   uniform-abs lam=1: theta_ex=0.670  eps_opt(grid)=0.33  eps_opt(predicted)=0.330  rate(opt)=1.4693  rate(eps=0)=1.6486  rate(eps*=1)=2.2101
+   uniform-abs lam=2: theta_ex=0.402  eps_opt(grid)=0.60  eps_opt(predicted)=0.598  rate(opt)=1.7643  rate(eps=0)=2.7452  rate(eps*=1)=2.2101
+   uniform-abs lam=4: theta_ex=0.224  eps_opt(grid)=0.79  eps_opt(predicted)=0.776  rate(opt)=1.9627  rate(eps=0)=4.9383  rate(eps*=1)=2.2101
+
+== D. phases of the lambda-MAP as n grows (code Q, deterministic patches); 400 runs per row
+   lengths: l_0 = 200 (exact law), h = 20 (tolerance clause), h_N = 2000 (better theory); pi_c = 22
+   phase string = successive lambda-MAP forms (0 no law, E exact law unpatched, P patched, H honest, N better)
+   spread Delta= 1.5 lam=1: rates m_P=15.193 m_H=13.814; sequences 0N (358), 0P0N (11), 0P0P0N (6), 0P0P0P0N (5)
+      first n with J(H) < J(P): mean 21.9 (400 runs), Wald bounds for the race from n = 0: [14.5, 40.5]
+      first n with J(N) < J(H): mean 144.0 (400 runs), Wald bounds [143.3, 144.3]; first refutation: mean 2.3 vs 1/p = 2.4
+   spread Delta= 3.0 lam=2: rates m_P=12.054 m_H=8.543; sequences 0HN (350), 0PHN (8), 0HPHN (6), 0HPHPHN (5)
+      first n with J(H) < J(P): mean 15.0 (400 runs), Wald bounds for the race from n = 0: [11.4, 27.6]
+      first n with J(N) < J(H): mean 465.5 (400 runs), Wald bounds [463.6, 465.1]; first refutation: mean 4.6 vs 1/p = 4.7
+   spread Delta=10.0 lam=2: rates m_P=3.506 m_H=2.215; sequences 0HN (176), 0PHN (56), 0PHPHN (35), 0HPHN (31)
+      first n with J(H) < J(P): mean 38.5 (400 runs), Wald bounds for the race from n = 0: [31.0, 73.7]
+      first n with J(N) < J(H): mean 1792.7 (400 runs), Wald bounds [1787.5, 1792.5]; first refutation: mean 15.4 vs 1/p = 15.7
+   spread Delta= 3.0 lam=1: rates m_P=7.389 m_H=8.543; sequences 0PN (156), 0P0PN (50), 0P0P0PN (20), 0HPN (13)
+      first n with J(N) < J(H): mean 232.6 (400 runs), Wald bounds [231.8, 233.3]; first refutation: mean 5.1 vs 1/p = 4.7
+   spread Delta=60.0 lam=1: rates m_P=0.323 m_H=0.283; sequences 0EPHN (40), 0EPHPHN (36), 0EPHPHPHN (30), 0EPHPHPHPHPHN (24)
+      first n with J(H) < J(P): mean 529.8 (397 runs), Wald bounds for the race from n = 0: [495.6, 1251.3]
+      first n with J(N) < J(H): mean 7010.1 (400 runs), Wald bounds [6994.9, 7024.9]; first refutation: mean 91.8 vs 1/p = 94.3
+   spread Delta=60.0 lam=2: rates m_P=0.557 m_H=0.283; sequences 0EPHN (105), 0EPHPHN (68), 0PHN (49), 0HN (46)
+      first n with J(H) < J(P): mean 214.1 (400 runs), Wald bounds for the race from n = 0: [146.2, 338.1]
+      first n with J(N) < J(H): mean 14033.3 (400 runs), Wald bounds [13989.9, 14019.9]; first refutation: mean 97.1 vs 1/p = 94.3
+   peaked Delta=10.0 lam=1: rates m_P=0.166 m_H=2.215; sequences 0EP (358), 0P (33), 0E0P (4), 0P0P (2)
+      first n with J(N) < J(H): mean 896.1 (400 runs), Wald bounds [893.8, 898.8]; first refutation: mean 198.9 vs 1/p = 199.3
+
+== E. ties (Thm 3.8(iii)): spread error, Delta = 10', lam = 1, pi_c chosen so that m_P = m_H
+   pi_c(tie) = 23.7220; increments c_P - c_H have mean 0 and positive variance
+   tie              : mean sign changes of J(P)-J(H) up to n=2000: 14.9, up to n=200000: 148.2; median last change 91559; share of runs with a change after n=100000: 0.43
+   m_P > m_H by 10% : mean sign changes of J(P)-J(H) up to n=2000: 11.3, up to n=200000: 15.7; median last change 664; share of runs with a change after n=100000: 0.00
+
+== F. (Thm 3.8(iii)) first passage over level L of S_n = sum (c_P - c_H), divided by L, against 1/(m_P - m_H)
+   L=      10: tau=      6  tau/L=0.6000  (1/mu = 0.2846)
+   L=     100: tau=     21  tau/L=0.2100  (1/mu = 0.2846)
+   L=    1000: tau=    195  tau/L=0.1950  (1/mu = 0.2846)
+   L=   10000: tau=   2333  tau/L=0.2333  (1/mu = 0.2846)
+   L=   30000: tau=   8809  tau/L=0.2936  (1/mu = 0.2846)
+   L=  100000: tau=  29317  tau/L=0.2932  (1/mu = 0.2846)
+
+== G. the four pricings (Prop 3.4), coarse regime, exact formulas: m_P = p gamma_ex, m_H = q gamma_si; pi_c = 22, lambda = 1
+   gamma_ex: det lam pi_c + gamma, rand gamma + H2(p)/p; gamma_si: Q gamma, R beta_e (Lemma 3.6)
+   spread pk= 1.57 Delta=   3: Q/det: P 7.384 H 8.543 -> P (thr 1.36);  Q/rand: P 3.463 H 8.543 -> P (thr 0.64);  R/det: P 7.384 H 0.590 -> H (thr 19.67);  R/rand: P 3.463 H 0.590 -> H (thr 9.22)
+   spread pk= 1.57 Delta=  10: Q/det: P 2.105 H 2.215 -> P (thr 1.49);  Q/rand: P 1.047 H 2.215 -> P (thr 0.74);  R/det: P 2.105 H 0.177 -> H (thr 18.69);  R/rand: P 1.047 H 0.177 -> H (thr 9.29)
+   spread pk= 1.57 Delta=  60: Q/det: P 0.323 H 0.283 -> H (thr 1.80);  Q/rand: P 0.175 H 0.283 -> P (thr 0.97);  R/det: P 0.323 H 0.030 -> H (thr 17.23);  R/rand: P 0.175 H 0.030 -> H (thr 9.31)
+   peaked pk=19.97 Delta=   3: Q/det: P 0.581 H 8.543 -> P (thr 1.36);  Q/rand: P 0.336 H 8.543 -> P (thr 0.79);  R/det: P 0.581 H 0.329 -> H (thr 35.32);  R/rand: P 0.336 H 0.329 -> H (thr 20.44)
+   peaked pk=19.97 Delta=  10: Q/det: P 0.166 H 2.215 -> P (thr 1.49);  Q/rand: P 0.101 H 2.215 -> P (thr 0.91);  R/det: P 0.166 H 0.099 -> H (thr 33.56);  R/rand: P 0.101 H 0.099 -> H (thr 20.45)
+   peaked pk=19.97 Delta=  60: Q/det: P 0.025 H 0.283 -> P (thr 1.80);  Q/rand: P 0.017 H 0.283 -> P (thr 1.19);  R/det: P 0.025 H 0.016 -> H (thr 30.94);  R/rand: P 0.017 H 0.016 -> H (thr 20.46)
+
+# runtime 14 s
+# done
