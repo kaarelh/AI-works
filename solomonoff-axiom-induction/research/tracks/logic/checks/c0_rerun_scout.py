@@ -3,7 +3,10 @@ copies and compare their output byte for byte with the outputs saved in the scou
 
 Deterministic: the scout scripts are seeded (20261015). No randomness here.
 Output: c0_rerun_scout.out (stdout of this script).
-Usage: python3 -I c0_rerun_scout.py <scratch_dir>
+Usage: python3 -I c0_rerun_scout.py <scratch_dir> [<scout_checks_dir>]
+The scout folder defaults to ../../../scouts/novel-logic/checks relative to this file, so run the
+script in place or pass the folder explicitly (revision; referee B, issue 11: a copy of the script
+run elsewhere could not find the folder).
 """
 import hashlib
 import os
@@ -16,7 +19,10 @@ SCOUT = os.path.normpath(os.path.join(HERE, "..", "..", "..", "scouts", "novel-l
 
 
 def main():
+    global SCOUT
     scratch = sys.argv[1]
+    if len(sys.argv) > 2:
+        SCOUT = os.path.abspath(sys.argv[2])
     os.makedirs(scratch, exist_ok=True)
     for name in ("c1_lottery", "c3_threshold"):
         src = os.path.join(SCOUT, name + ".py")

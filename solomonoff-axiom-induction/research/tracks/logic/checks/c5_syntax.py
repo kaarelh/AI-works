@@ -17,6 +17,11 @@ Checks and outputs:
       lexicographic enumeration is at most sum_{L <= |beta| + |num(k)|} (#sentences of length L);
       with the trivial count 14^L this gives delta_str = 1/(5 log2 14); with the formula count it
       gives delta_wff = 1/(5 log2 gamma) (gamma estimated numerically; not a proof).
+
+Revision note (notes-final.md; referee B, issue 5).  The numerical gamma here is an extrapolation.
+A proof that #formulas of length <= L is at most 0.7482 * 5.385^L for every L, hence
+delta >= 0.0823, is the exact super-solution certificate of c6_revision.py R4 (and of referee B's
+rb6 S3).  The code is unchanged; its output is byte-identical to the development round's.
 """
 from math import log2
 

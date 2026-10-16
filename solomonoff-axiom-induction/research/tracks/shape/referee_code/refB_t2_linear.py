@@ -180,6 +180,37 @@ for key, rec in sorted(summary.items()):
     P(f"  {lab}: {rec[0]} laws; F_ind subset of necessary clauses in {rec[1]}; F_ind == necessary clauses in {rec[2]}{extra}")
 P(f"  exhaustive cross-checks of the question-based usability test: mismatches = {xcheck_bad}")
 
+# C2: targeted laws with d* >= 3 and at least one decomposable circuit (so F_ind is a proper subset of PI)
+P("== C2: Thm 2.6 on laws with d*>=3 and decomposable circuits: F_ind usable, and Imp(S) - {C} not usable for each C in F_ind")
+P("   (together: every usable theory over X contains F_ind, and F_ind is usable, so F_ind is the unique minimum)")
+cnt = ok_all = 0
+tries = 0
+sizes = []
+while cnt < 30 and tries < 20000:
+    tries += 1
+    m = rng.choice([6, 6, 7])
+    k = rng.choice([2, 3])
+    rows, consts = random_law(m, k, rng)
+    law = Law(law_from_system(rows, consts, m), m)
+    if law.dstar < 3:
+        continue
+    dec = [u for u in law.circ if law.decomposable(u)]
+    if not dec:
+        continue
+    imps = [C for C in all_clauses(range(1, m + 1)) if is_implicate(C, law.pts)]
+    if m == 7 and len(imps) > 1200:
+        continue
+    qs = law.circuit_questions()
+    Find = law.F_ind()
+    okF, _, _ = usable(Find, m, law.pts, m)
+    nec = all(not answers([D for D in imps if D != C], qs) for C in Find)
+    pis = prime_implicates(law.pts, m)
+    cnt += 1
+    ok_all += (okF and nec)
+    sizes.append((m, k, len(Find), len(pis), len(dec)))
+P(f"  {cnt} laws (m=6,7; k=2,3): F_ind usable and every clause of F_ind necessary in {ok_all}")
+P(f"  (m, k, |F_ind|, |PI|, #decomposable circuits): {sizes}")
+
 # ------------------------------------------------------------------ D
 P("== D: exact minimum UP-usable theory over X: exhaustive over subsets of PI by increasing size (no F_ind assumed)")
 P("   columns: m k d* a* |PI| |F_ind| a*2^(d*-1) | min | #minimum sets | F_ind is the unique min | min contains F_ind (all min sets)")

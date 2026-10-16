@@ -8,7 +8,7 @@
 * *AI-paper*: `../../../../axiom-induction/paper/` (`sections/time.tex`, `app-time.tex`), printed numbers from `main.aux` (e.g. AI-paper Thm 6.3 = `thm:time:equiv`). Its refereed records: **TF** = `research/tracks/time-followup/notes-final.md`, **SD** = `research/tracks/short-derivations/notes-final.md`, model §6.
 * *P1* = SOI Paper 1, `../../../../solomonoff-operator-induction/paper/` (identical copy under `solomonoff-function-induction/paper/`), cited by printed number and label; *P2* = Paper 2.
 * Scouts: **S** (`../../scouts/sfi/notes.md`), **F** (`../../scouts/fundamentals/notes.md`), **N1** (`../../scouts/novel-logic/notes.md`), **L** (`../../scouts/literature/notes.md`).
-* Other threads of this round, by item number: `fundamentals` from its final record `../fundamentals/notes-final.md`; `logic`, `terms`, `shape`, `laws`, `philosophy` from their development records `../<key>/notes.md` (no final record of theirs existed when this one was written). §17 lists every use in both directions.
+* Other threads of this round, by item number: `fundamentals` from its final record `../fundamentals/notes-final.md`; `logic`, `terms`, `shape`, `laws`, `philosophy` from their development records `../<key>/notes.md`. (`terms`' final record was being written while this one was finished; its §0, §0.1 and §1 were read, and the item numbers cited here are unchanged there. No other final record existed.) §17 lists every use in both directions.
 
 **Statuses.** *proved* (full proof here, or a full proof in a cited refereed record that was re-read line by line for this record; then the record is named); *proved, given X* (X a cited known result or a result of another thread); *known* (exact reference, with the level at which it was verified: full text, abstract, secondary source); *known, unverified* (recalled; not checked); *computed* (script and saved output named); *construction check* (a script that confirms an implementation of a proof's construction; it adds no evidence beyond the proof); *proof sketch* (missing steps named); *conjecture*; *open*; *refuted* (kept with its counterexample).
 
@@ -35,7 +35,7 @@
 4. On the lottery stream of `logic` Thm 2.2, *plain* coin-free SOI on sentences has bounded loss while coin-free *consistent* SOI and $W_A$ do not (Cor 4.2). [proved, given `logic` Thm 2.2 and Prop 2.3(b)]
 5. Consistent SOI never becomes certain of a logical consequence: for every $D$ and every sentence $\chi\notin\dom D$, the posterior probability that the sampled labeller is undefined at $\chi$ is at least $2^{-K(\chi)-c}$, uniformly in $D$ (Prop 6.1(c)). [proved]
 6. The independent-label separation (an observed "independent" label separates theories from labellers by an unbounded amount on one datum) holds for every decidable **consistent** $B$ with $\Q\subseteq\Cn(B)$ (Prop 6.3), **also for the one-tape versions** (Prop 6.5, via the Lebesgue density theorem and a majority vote at a density point in the manner of de Leeuw, Moore, Shannon and Shapiro 1956), and its witnesses cannot form a computable, or even r.e., family (Prop 6.4). The productivity of the independent sentences that it uses is classical (Lemma 6.3′). [proved; finite mechanism computed]
-7. None of $W_A$, $W_A^{\rm dec}$, $W^{\rm cons}$, $W^{\rm cl}$, $M_A$, $M_A^{\rm dec}$, $M_F^{\rm cons}$, $M_F^{\rm cl}$ is lower semicomputable when consistency of finite sets is not r.e. (Prop 6.7(a)): the support of an lsc function is r.e. The values of $W_A$, $W^{\rm cons}$, $M_A$, $M_F^{\rm cons}$ are $\emptyset'$-computable, those of the closed and decider versions $\emptyset''$-computable (Prop 6.7(c)). [proved]
+7. None of $W_A$, $W_A^{\rm dec}$, $W^{\rm cons}$, $W^{\rm cl}$, $M_A$, $M_A^{\rm dec}$, $M_F^{\rm cons}$, $M_F^{\rm cl}$ is lower semicomputable when consistency of finite sets is not r.e. (Prop 6.7(a)): the support of an lsc function is r.e. The values of $W_A$, $W^{\rm cons}$, $M_A$, $M_F^{\rm cons}$ are $\emptyset'$-computable, those of the closed and decider versions $\emptyset''$-computable (Prop 6.7(c), (c′)). [proved]
 8. Pathwise and machine-wise consistency (scout S's Rem 2.14): $M_F^{\rm cons}\asymp M_F^{C}$ whenever consistency of finite sets of sentences with $B$ is decidable, by a global-schedule filter (Prop 6.8(c)); general bounds proved; the general case **open**. [proved; computed]
 9. Presburger arithmetic (scout L: "new application"). (i) The coin-free and the exponential-clock one-tape separations are re-verified, with the length conventions made explicit (Rem 9.0, Props 9.1, 9.2). (ii) SAI with **derivation size or material** charged needs doubly exponential budgets on Presburger data, by Fischer–Rabin's nondeterministic bound and the proof of AI-paper Thm 6.9 (Prop 9.4); under the **per-instance reading (a1)** it needs at least singly exponential instance sizes (Prop 9.4′), and whether it needs more is open; for the nonlogical-only readings (a2), (b2) nothing is settled on Presburger data. (iii) The doubly exponential one-tape case is proved **conditionally** on two results verified only at secondary-source level or recalled, a $\Sigma_2$-time lower bound for Presburger arithmetic of Berman's type and the time-bounded Sipser–Gács–Lautemann inclusion (Prop 9.3).
 10. The circuit form of the sandwich (T10): finite axiom sets in a **fixed** finite language with short derivations and nondeterministic verifier circuits are polynomially related in both directions (Thm 10.1), with a gate-indexing scheme by terms; P1's circuit-Bayes theorem holds for verifier circuits (Cor 10.2). This is the routine circuit form of the AI-paper's sandwich (scout L: "near-definitional once the sandwich is proved"), not a separate novelty. [proved, given the standard circuit simulation of Turing machines; computed for tiny $d$] For a prior over all finite axiom sets the mistake-to-size direction is a proof sketch (Rem 10.3).
@@ -47,7 +47,7 @@
 * The diagonal separations under time bounds come from free deduction, not from axioms (Prop 7.6). On a natural theory (Presburger) the separation from clocked consistent SOI is real and non-diagonal; when derivation size or material is charged, SAI needs doubly exponential budgets there, so the separation again comes from free deduction (Prop 9.4). Under reading (a1) only a singly exponential lower bound is proved (Prop 9.4′); it matches what deterministic clocked SOI needs through SD's identification of (a1) with an exponential clock (Rem 9.5).
 
 **What changed in the revision** (details in §16). Both referees found no fatal issue, and every core result survived their line-by-line attacks and independent code. All their points are accepted.
-* **Major (both referees).** Prop 9.4 had claimed the doubly exponential bound also for reading (a1), and the summary and the closing paragraph of §9 had generalised it to every charged reading. The proof covers only the size and material readings. Now: Prop 9.4 for size and material, with a constant independent of the membership degree; Prop 9.4′ for (a1), singly exponential [proved]; (a1) doubly exponential [open]; (a2), (b2) [open].
+* **Major (both referees).** Prop 9.4 had claimed the doubly exponential bound also for reading (a1), and the summary and the closing paragraph of §9 had generalised it to every charged reading. The proof covers only the size and material readings. Now: Prop 9.4 for size and material, with every constant $c''<c$ (independent of the membership degree), infinitely often, and for all large $m$ when the budget is time-constructible; Prop 9.4′ for (a1), singly exponential [proved]; (a1) doubly exponential [open]; (a2), (b2) [open]. The length conventions behind all of §9 are made explicit (Rem 9.0, with an exact-length form of Fischer and Rabin's bound obtained by padding).
 * **Major (referee A).** Prop 6.7(c) had claimed $\emptyset'$-computability for the closed and decider versions, whose defining conditions are $\Pi_2$. Now restricted to the four versions with $\Delta_2$ conditions; the others are $\emptyset''$-computable [proved], and their $\emptyset'$-computability is not claimed.
 * **Hypotheses weakened or made explicit.** Lemma 6.3′ and Props 6.3–6.5 now need only a *consistent* decidable $B$ with $\Q\subseteq\Cn(B)$ (Rosser's argument replaces $\Sigma_1$-soundness; the lemma is classical). Lengths in §9 are symbol counts, which makes the conversion to Fischer and Rabin's lengths linear (Rem 9.0). The lottery's hypotheses (Cor 4.2), Thm 7.4's hypotheses in Thm 7.8, $\varphi$ independent of $B$ in Rem 6.6, function-free monadic languages in Prop 6.8(c), finite $S$ in the remark after Prop 4.1.
 * **Small corrections.** Thm 3.4 holds for $D=\emptyset$ too; the bracket in Lemma 1.2 is always $0$; the Craig decoder tests both readings of a candidate $\neg\varphi'$; Thm 7.8(d) concerns the diagonal sequences only; Prop 7.6(b) has $|u|+c$; two transfer-table rows are re-classified.
@@ -424,11 +424,11 @@ $\mathcal L_{\rm Pr}:=\{0,1,+,=\}$ (finite), $B=\emptyset$, $D^{\rm Pres}$ lists
 **Remark 9.0 (lengths) [proved, given the proviso on Fischer and Rabin's syntax stated in (iii)].** This remark is new in the revision (referee A m1).
 (i) *Our length.* $|\varphi|$ is the **symbol count** of $\varphi$: every occurrence of a connective, quantifier, nonlogical symbol, parenthesis or variable counts $1$, whatever the variable's index. This is the size measure of the AI-paper's calculus $\mathsf K$, in which a variable or parameter counts one symbol (AI-paper Lemma E.28). Machines read $\varphi$ as a bit string of length $b(\varphi)\le\kappa_0|\varphi|\log_2(|\varphi|+2)$ (a sentence with $m$ symbols has at most $m$ distinct variables, which can be renamed $x_1,\dots,x_m$ and written in binary). In this section clocks $\tau$, derivation budgets $d,g,h$ and the length $m$ in the lower bounds are functions of $|\varphi|$.
 (ii) *Why the symbol count.* If a clock were a function of the bit length $b$, which can exceed the symbol count by a factor $\log m$, a clock $2^{2^{c'b}}$ could be $2^{2^{c'\kappa_0m\log m}}$, above every $2^{2^{cm}}$, and the contradictions below would fail. For clocks in bit length the results hold with $\tau(b)\le2^{2^{c'b/\log_2(b+2)}}$ in place of $\tau(m)\le2^{2^{c'm}}$ (and likewise for the singly exponential clocks), since $b/\log_2(b+2)\le\kappa_0|\varphi|$.
-(iii) *Fischer and Rabin's length.* Their syntax was not seen. *Proviso:* their length counts every symbol occurrence, variables included, at least once, and their nonlogical symbols are among $0,1,+,=,<$. Under the proviso every sentence of their length $n$ has an equivalent $\mathcal L_{\rm Pr}$-sentence with at most $\kappa n$ symbols, computable in polynomial time (rewrite $x<y$ as $\exists z\,(x+z+1=y)$ with $z$ fresh; every other symbol is copied). Hence if a decision procedure for $\mathrm{PrA}$ in our syntax has time bound $T(m)$ ($T$ nondecreasing), translating gives one in their syntax with time $\mathrm{poly}(n)+T(\kappa n)$; so their bound $2^{2^{c_{\rm FR}n}}$ for all large $n$ gives $T(m)>2^{2^{cm}}$ for all large $m$, for every $c<c_{\rm FR}/\kappa$. Below, $c$ denotes such a constant. (The development round wrote "lengths differ by a constant factor $\kappa$" without checking the direction that matters; with symbol counts on our side only the direction above is needed, and it holds under the proviso.)
+(iii) *Fischer and Rabin's length.* Their syntax was not seen. *Proviso:* their length counts every symbol occurrence, variables included, at least once, and their nonlogical symbols are among $0,1,+,=,<$. Under the proviso every sentence of their length $n$ has an equivalent $\mathcal L_{\rm Pr}$-sentence with at most $\kappa n$ symbols, computable in polynomial time (rewrite $x<y$ as $\exists z\,(x+z+1=y)$ with $z$ fresh; every other symbol is copied). *Padding:* every $\mathcal L_{\rm Pr}$-sentence $\psi$ has an equivalent sentence with **exactly** $m$ symbols for every $m\ge|\psi|+c_0$, computable in polynomial time, because two equivalence-preserving paddings with coprime increments exist (in the node count of $\mathsf K$: $\psi\wedge0=0$ adds $4$ nodes and $\psi\wedge\neg\,0=1$ adds $5$; every standard syntax has such a pair). *Consequence.* Let $Q$ be a decision procedure for $\mathrm{PrA}$ in our syntax, deterministic or nondeterministic. For $j=0,\dots,\kappa-1$ let $P_j$ decide their sentences of length $n$ by translating, padding to exactly $\kappa n+c_0+j$ symbols and running $Q$. Each $P_j$ is a decision procedure in their syntax, with the same reading of nondeterministic time as $Q$, so by their theorem, for all large $n$, $Q$ takes more than $2^{2^{c_{\rm FR}n}}-\mathrm{poly}(n)$ steps on some sentence with exactly $\kappa n+c_0+j$ symbols. As $j$ runs through all residues, **for all large $m$, $Q$ takes more than $2^{2^{cm}}$ steps on some sentence with exactly $m$ symbols**, for every $c<c_{\rm FR}/\kappa$. Below, $c$ denotes such a constant. (The exact-length form is what the "for all large $m$" arguments of Prop 9.4 use; a form with "at most $m$ symbols" would not do, because a procedure that is slow at some lengths would then be slow at all larger ones.) (The development round wrote "lengths differ by a constant factor $\kappa$" without checking the direction that matters; with symbol counts on our side only the direction above is needed, and it holds under the proviso.)
 
 **Facts used.**
 * (F$_{\rm P}$) *Presburger 1929* [known; standard, not re-checked]: the axioms for successor and addition with the induction schema for $\mathcal L_{\rm Pr}$-formulas form a decidable, consistent and complete axiomatisation of $\mathrm{PrA}$, with membership decidable in polynomial time.
-* (F$_{\rm FR}$) *Fischer and Rabin 1974*, "Super-exponential complexity of Presburger arithmetic", *Complexity of Computation*, SIAM-AMS Proceedings 7, 27–41; MIT LCS TM-43 [known; **statement verified against the abstract** as reported by search results (HUJI CRIS listing, MIT DSpace TM-43, Semantic Scholar and Google Books records) by referee A and again in this revision; full text not seen]: there is a constant $c_{\rm FR}>0$ such that for every decision procedure for $\mathrm{PrA}$, deterministic or nondeterministic, and every sufficiently large $n$, some sentence of length $n$ requires more than $2^{2^{c_{\rm FR}n}}$ steps; the same bounds hold for the minimum lengths of proofs in complete axiomatisations whose axioms are easily recognised. In our lengths (Rem 9.0): for every such procedure, its time bound $T(m)$ on sentences with at most $m$ symbols exceeds $2^{2^{cm}}$ for all large $m$.
+* (F$_{\rm FR}$) *Fischer and Rabin 1974*, "Super-exponential complexity of Presburger arithmetic", *Complexity of Computation*, SIAM-AMS Proceedings 7, 27–41; MIT LCS TM-43 [known; **statement verified against the abstract** as reported by search results (HUJI CRIS listing, MIT DSpace TM-43, Semantic Scholar and Google Books records) by referee A and again in this revision; full text not seen]: there is a constant $c_{\rm FR}>0$ such that for every decision procedure for $\mathrm{PrA}$, deterministic or nondeterministic, and every sufficiently large $n$, some sentence of length $n$ requires more than $2^{2^{c_{\rm FR}n}}$ steps; the same bounds hold for the minimum lengths of proofs in complete axiomatisations whose axioms are easily recognised. In our lengths (Rem 9.0(iii)): for every such procedure and all large $m$, some sentence with exactly $m$ symbols takes it more than $2^{2^{cm}}$ steps.
   *Two readings of nondeterministic time.* (max) the time of a nondeterministic procedure is the maximum over its computation paths, all of which halt, every output being correct and some path giving an output; (short) the time on a sentence is the length of the shortest computation that outputs the correct answer. The abstract does not say which is meant. (short) implies (max). The proof-length clause is a statement of the (short) kind. Where only (max) is needed, nothing is assumed; Prop 9.4's "for all large $m$" for arbitrary (not time-constructible) budgets uses (short) and says so.
 
 **Proposition 9.1 (coin-free; scout S Prop 2.10) [proved, given F$_{\rm P}$, F$_{\rm FR}$ and Rem 9.0].** (a) $W_A$, $W_A^{\rm dec}$, $M_A$, and the penalised $W_A^{{\rm chk},t}$, $W_A^{{\rm gen},t}$, $M_A^{{\rm chk},t}$ ($t$ a large enough polynomial) have bounded loss on $D^{\rm Pres}$. (b) For time-constructible $\tau$ with $\tau(m)\le2^{2^{c'm}}$ for large $m$ and $c'<c$: $\ell_{W^{{\rm cons},\tau}}(D^{\rm Pres}_n)\to\infty$ and $\ell_{W^{{\rm all},\tau}}(D^{\rm Pres}_n)\to\infty$.
@@ -459,7 +459,7 @@ If $\tau(m)\le2^{2^{c'm}}$ for large $m$ with $c'<c_B$, then $\ell_{M_F^{{\rm co
 
 **Remark 9.5 (each charged reading of SAI matches one version of SOI on Presburger data) [summary of Props 9.1–9.4′ and Thm 8.1; the (a1) correspondence is a theorem of SD for literal data only, so for sentence data it is a reading].** With free deduction SAI has bounded loss on $D^{\rm Pres}$ (Prop 9.1(a)), while coin-free clocked consistent SOI with $\tau\le2^{2^{c'm}}$ and one-tape clocked SOI with $\tau\le2^{c'm}$ have unbounded loss (Props 9.1(b), 9.2; doubly exponential one-tape clocks conditionally, Prop 9.3). Once deduction is charged, the budget SAI needs is the budget of the matching SOI version: under the size and material readings SAI is certificate SOI (Thm 8.1), a nondeterministic notion, and Fischer and Rabin's nondeterministic bound forces doubly exponential budgets on both (Prop 9.4); under (a1) SAI behaves like deterministic SOI with an exponential clock (SD Cor 4.4(v)), and their deterministic bound forces exponential instance sizes, the exponential clock turning them into doubly exponential time (Prop 9.4′). So on a natural theory, as on the diagonal sequences of §7, the separation from clocked SOI is the free deduction, for every reading in which the derivation is charged and the conclusion is proved; for (a2), (b2) the question is open.
 
-**Computed thresholds** (`checks/c3_presburger_constants.out`, revised: exact 60-digit arithmetic; $q(x)=x^k$, constant $C$; illustrative, since $c$ and $c_B$ are not known explicitly here). The least $m_0$ from which each contradiction bites, for example with $c=1$, $c'=0.9c$: (A) coin-free, $m_0=11$–$26$; (B) one tape, exponential clock, $6$–$9$; (C) one tape, doubly exponential, $\Sigma_2$ route, $c_B=1$, $26$–$42$. With $c=0.05$ and $c'=0.9c$ the thresholds grow to $202$–$517$ (A), $116$–$171$ (B), $517$–$834$ (C). (The development-round values, from a non-conservative estimate, were $203$–$517$ and $117$–$172$ for the last two; 52 of the 144 tabulated thresholds changed, 8 of them upward by up to $6$: referee B, issue 3.) Table (D): under the size and material readings $\log_2\log_2$ of the forced budget grows linearly in $m$, under (a1) $\log_2h$ does (for $c=0.2$, $c_e=10$, $C_a=4$, $e=2$, $m=320$: $\log_2\log_2d>60.7$, $\log_2\log_2g>59.7$, $\log_2h\ge56.2$). The separations are asymptotic: below $m_0$ a clocked hypothesis may label every short sentence correctly.
+**Computed thresholds** (`checks/c3_presburger_constants.out`, revised: exact 60-digit arithmetic; $q(x)=x^k$, constant $C$; illustrative, since $c$ and $c_B$ are not known explicitly here). The least $m_0$ from which each contradiction bites, for example with $c=1$, $c'=0.9c$: (A) coin-free, $m_0=11$–$26$; (B) one tape, exponential clock, $6$–$9$; (C) one tape, doubly exponential, $\Sigma_2$ route, $c_B=1$, $26$–$42$. With $c=0.05$ and $c'=0.9c$ the thresholds grow to $202$–$517$ (A), $116$–$171$ (B), $517$–$834$ (C). (The development-round values at $c=0.05$, from a non-conservative estimate, were $203$–$517$ for (A) and $117$–$172$ for (B); 52 of the 144 tabulated thresholds changed, 8 of them upward by up to $6$: referee B, issue 3.) Table (D): under the size and material readings $\log_2\log_2$ of the forced budget grows linearly in $m$, under (a1) $\log_2h$ does (for $c=0.2$, $c_e=10$, $C_a=4$, $e=2$, $m=320$: $\log_2\log_2d>60.7$, $\log_2\log_2g>59.7$, $\log_2h\ge56.2$). The separations are asymptotic: below $m_0$ a clocked hypothesis may label every short sentence correctly.
 
 ---
 
@@ -500,7 +500,7 @@ So Bayes over nondeterministic verifier circuits makes few posterior mistakes on
 
 ## 11. The table of equivalences and separations (T11)
 
-Semimeasure convention throughout unless stated; "$\asymp$" within $2^{\pm c}$ on every data set, $c$ a machine constant; "status" is after the verification and the referee round of this thread; "source" names the first proof and this record's item. Rows 33–39 belong to `terms` and are cited from its development record `../terms/notes.md` (item numbers and statuses as there; its final record may revise them). The background $B$ is decidable and consistent throughout.
+Semimeasure convention throughout unless stated; "$\asymp$" within $2^{\pm c}$ on every data set, $c$ a machine constant; "status" is after the verification and the referee round of this thread; "source" names the first proof and this record's item. Rows 33–39 belong to `terms` and are cited from its development record `../terms/notes.md`, with the item numbers that its final record (in progress when this was written; §0 read) keeps. The background $B$ is decidable and consistent throughout.
 
 | # | pair | relation | overhead | hypotheses | status | source |
 |---|---|---|---|---|---|---|
@@ -543,27 +543,33 @@ Semimeasure convention throughout unless stated; "$\asymp$" within $2^{\pm c}$ o
 | 35 | $W_A^{\mathcal L}[t,d]$ — $W_A^{\mathcal L_O}$ with certificate axioms, reading (b) | $\ge2^{-c}$ at polynomially larger budgets | $O(1)$ bits | (F1) | proved, given SD Thm 3.1(iii) (`terms`) | S Prop 3.5; `terms` Prop 4.1 |
 | 36 | observational vs all hypotheses under (a1); finite observational vs all finite under (a2), (b2) | same fit classes ($\mathsf{EXPTIME}$ under (a1); every decidable $X$ under (a2), (b2); $\mathsf{NP}\cap\mathsf{coNP}$ under (b)) | pairing gadget; two-stack normal form | (F1), literal data | proved, given CKS and the one-tape simulation (`terms`) | S Prop 3.10; `terms` Prop 4.3, Thm 4.6, Prop 4.7 |
 | 37 | finite theories in the observational vocabulary with unary theoretical predicates and constants, compatible with the named structure | fit exactly the regular regularities, under every reading | — | literal data | proved, given the Ehrenfeucht–Fraïssé theorem (`terms`; no longer needs Rabin 1969) | S Thm 3.12; `terms` Thm 5.1, Thm 5.3 |
-| 38 | finite theories about the named objects plus **one binary** theoretical relation | every decidable $X$ under (a2), (b2); $\mathsf{NP}\cap\mathsf{coNP}$ under (b); $\mathsf{EXPTIME}$ under (a1) | linear size | literal data, (F1) | proved, given the two-stack normal form (`terms`; scout S had arity 8, arity 2 as a sketch) | S Rem 3.11; `terms` Thm 4.6 |
-| 39 | finite theories with theoretical functions or sorts — r.e. axiom sets, free deduction | "at least $n$ things": monadic finite theories $K_{\rm fin}=\Kpad(n)\pm c$, one unary function $O(1)$; r.e. axiom induction is finite-theory induction in a three-sorted extension up to $O(1)$, coin-free (not one-tape) | — | — | proved (`terms`) | `terms` Thm 6.2, Thm 6.5, Rem 6.6 |
+| 38 | finite theories about the named objects plus **one binary** theoretical relation | every decidable $X$ under (a2), (b2); $\mathsf{NP}\cap\mathsf{coNP}$ under (b); $\mathsf{EXPTIME}$ under (a1) | linear size | literal data, (F1) | proved, given the two-stack normal form (`terms`; scout S had arity 8, arity 2 as a sketch). With free deduction, a finite conservative extension with one binary relation is the Kleene (1952) / Craig–Vaught (1958) theorem, as `terms`' final record credits; the derivation-bounded form is `terms`' | S Rem 3.11; `terms` Thm 4.6 |
+| 39 | finite theories with theoretical functions or sorts — r.e. axiom sets, free deduction | "at least $n$ things": monadic finite theories $K_{\rm fin}=\Kpad(n)\pm c$, one unary function $O(1)$; r.e. axiom induction is finite-theory induction in a three-sorted extension up to $O(1)$, coin-free (not one-tape) | — | — | proved (`terms`; Thm 6.5 is an effective many-sorted form of the Kleene–Craig–Vaught theorem, only its Bayesian corollary claimed as new) | `terms` Thm 6.2, Thm 6.5, Rem 6.6 |
 
 ---
 
 ## 12. Notation requests
 
-* **New global symbols used here** (for NOTATION §4): $M_F^{\rm cl}$ and $\nu^{\rm cl}_F$ (closed one-tape labellers; macro `\MFcl`); $K_F^{\rm cl}$, $K_A^{\rm dec}$; $M_A^{{\rm chk},t}$, $M_A^{{\rm gen},t}$ (one-tape penalised SAI, matching §5's $W_A^{{\rm chk},t}$); $M_F^C$, $M_A^C$ (mixtures over machines consistent on every tape); $M_F^{3,\rm cons}$ (one-tape three-valued consistent SOI, beside $W^{3,\rm cons}$); $\mathrm{Ind}_B$ (sentences $B$ decides neither way); the assumption name (S$_{\rm tape}$).
-* **Local to this record:** $\mathcal L_{\rm Pr}$, $\mathrm{PrA}$, $D^{\rm Pres}$, $c_{\rm FR}$, $c_B$ (§9); $\mathcal L_{\rm circ}$, $n_i$, $g_j$, $s_N(f)$, $a_\ell(f)$, $W_N$, $\Gamma_N$ (§10); the maps (PS), (EM), (CR), (CL).
-* **Clashes found.** (1) N1's lottery uses $W$ as a binary relation symbol, which clashes with the coin-free $W$, $W_A$; NOTATION §6.2 renamed the lottery sentences but not the relation symbol. Suggest $\mathrm{Win}$. (2) P1's $\Omtail{\ell}$ sums over $|p|\ge\ell$; scout S wrote $\Omega_V^{>n}$ for $|p|>n$. This record uses P1's convention ($\Omtail{n+1}$). (3) "SAI" for the family and $M_A$ for the one-tape law: where this record says "SAI loses $O(1)$" it means every listed version.
+* **New global symbols used here** (for NOTATION §4): $M_F^{\rm cl}$ and $\nu^{\rm cl}_F$ (closed one-tape labellers; macro `\MFcl`); $K_F^{\rm cl}$, $K_A^{\rm dec}$; $M_A^{{\rm chk},t}$, $M_A^{{\rm gen},t}$ (one-tape penalised SAI, matching §5's $W_A^{{\rm chk},t}$; `terms` uses them in its Def 1.1); $M_F^C$, $M_A^C$ (mixtures over machines consistent on every tape); $M_F^{3,\rm cons}$ (one-tape three-valued consistent SOI, beside $W^{3,\rm cons}$); $\mathrm{Ind}_B$ (sentences $B$ decides neither way) and $\mathrm{Ref}_B$, $\mathrm{Thm}_B$ (the $B$-refutable and $B$-provable sentences); the assumption name (S$_{\rm tape}$).
+* **Aligned in the revision.** The fair-coin measure is $\Unif$ (the development record wrote $\mathsf U$); $\Cn$ has $B$ built in as in NOTATION §3.1 (the development record wrote $\Cn(B\cup\cdot)$; Prop 2.2(a) now writes the one closure that must exclude part of $B$ with $\vdash$: referee A m13); coin-free plain SOI on sentences is $W^{\rm all}$ (NOTATION §4.4), and $W$ is P1's object on strings; $\Kpad$ is the SOI-N macro; the lottery's relation symbol is $\mathrm{Win}$, as in `logic` §1.3 (both threads requested it).
+* **Local to this record:** $\mathcal L_{\rm Pr}$, $\mathrm{PrA}$, $D^{\rm Pres}$, $c_{\rm FR}$, $c$ (Fischer–Rabin's constant in symbol-count lengths, Rem 9.0), $c_B$, $\kappa_0$, readings (max) and (short) of nondeterministic time (§9); $\mathcal L_{\rm circ}$, $n_i$, $g_j$, $s_N(f)$, $a_\ell(f)$, $W_N$, $\Gamma_N$ (§10); the maps (PS), (EM), (CR), (CL); $X(\mathcal C,D)$ for class-restricted penalised laws (Prop 3.5; `fundamentals` writes the unpenalised one-tape class probabilities $\Unif_A(\cdot)$, and `terms` writes $M_A(\Theta;D)$ for its class-restricted laws; these are the same construction and the paper should pick one).
+* **Clashes found.** (1) Scout N1's lottery used $W$ as a binary relation symbol; now $\mathrm{Win}$ (NOTATION §6.2 should add it, as `logic` also requests). (2) P1's $\Omtail{\ell}$ sums over $|p|\ge\ell$; scout S wrote $\Omega_V^{>n}$ for $|p|>n$. This record uses P1's convention ($\Omtail{n+1}$). (3) "SAI" for the family and $M_A$ for the one-tape law: where this record says "SAI loses $O(1)$" it means every listed version. (4) "Length" of a sentence: §9 needs the symbol count (Rem 9.0); NOTATION should say which length clocks and budgets take, because the AI-paper's derivation sizes count symbols while machine inputs are bit strings.
 
 ---
 
 ## 13. Checks
 
+All scripts are in `checks/`; each is seeded or deterministic and writes `<name>.out` next to itself. Times are from the final reruns in this revision.
+
 | script | what it checks | result |
 |---|---|---|
-| `checks/c1_onetape_finite.py` → `.out` (seed 20261015; 43 s) | Independent finite analogue (scout S's `s1` not read): 4 atoms, 24 sentences (12 formulas + syntactic negations), 64 tapes, 25 random theory machines, 25 random function machines, all 1153 data sets with $|\dom D|\le2$, two backgrounds. (1), (2) tape-wise inclusions of (PS), (EM); (3a), (3b) the two mixture inequalities of Thm 3.1's proof; (4) Prop 6.1 incl. the new abstention bound; (5a), (5b) closed labellers decide as theories (Cor 3.2); (6) trichotomy identity; (7) Prop 6.8(c) filter | (1), (2): 0 violations in $1{,}844{,}800$ triples each (per background); (3a), (3b): 0 violations; (4): SAI $(1,0,0)$ in 412/412 and 476/476 cases, consistent SOI $P(0)=0$, $P(1)>0$, abstention bound in every case, min $P(\bot)=0.0115$; (5a), (5b): 0 mismatches (732/768 and 867/935 tapes); (6): 0 violations; (7): filter consistent on every tape, equals $F$ on consistent tapes, $\nu_{F'}\ge\nu^{\rm cons}_F$ on all 28825 pairs |
-| `checks/c2_independent_label.py` → `.out` (seed 20261015; 1 s) | Finite toy of Props 6.3–6.5: 16 valuations, 64 sentences (32 independent of $B$), 160 random three-valued labellers, lookup and list labellers, theories with images; diagonal $\sigma_n$; one-tape density lemma on 40 random machines | (a) 0 violations; diagonal rows all satisfy $W^{3,\rm cons}\le\Omega^{>n}$, $W_A^3\ge2^{-3}$, $W^{3,\rm cons}\ge2^{-\ell(\text{lookup})}$ until $\mathrm{Ind}$ is exhausted (the finite end of productivity); (d) list labeller keeps its sentences at weight $\ge2^{-5}$; density lemma: 0 violations of (e1), (e2) in 4174 dense prefixes |
-| `checks/c3_presburger_constants.py` → `.out` (deterministic) | Thresholds $m_0$ for the contradictions of Props 9.1–9.3 with $q(x)=x^k$, illustrative $c$, $c'$, $C$, $k$; conservative estimates $\log_2(C2^a+m)\le a+\log_2C+1$ | every row has a finite $m_0$; e.g. $c=1$, $c'=0.9$: (A) 11–26, (B) 6–9, (C) 26–42; $c=0.05$, $c'=0.045$: (A) 203–517, (B) 117–172, (C) 517–834 |
-| `checks/c4_circuit_axioms.py` → `.out` (seed 20261015; 15 s) | Thm 10.1(i): the translation $T_V$ in the fixed language; truth of every axiom in the intended structure on a finite fragment; $R$ agrees with $f_V$; derivability by forward propagation through ground instances; negative control by gate corruption; sizes up to $s=1099$ | 24/24 circuits pass every check; 95/95 corruptions that change $f_V$ detected; $|T_V|/((s+d)\log_2(s+d))\in[7.86,9.03]$ |
+| `c1_onetape_finite.py` → `.out` (seed 20261015; 40 s; unchanged) | Independent finite analogue (scout S's `s1` not read): 4 atoms, 24 sentences (12 formulas + syntactic negations), 64 tapes, 25 random theory machines, 25 random function machines, all 1153 data sets with $|\dom D|\le2$, two backgrounds. (1), (2) tape-wise inclusions of (PS), (EM); (3a), (3b) the two mixture inequalities of Thm 3.1's proof; (4) Prop 6.1 incl. the abstention bound; (5a), (5b) closed labellers decide as theories (Cor 3.2); (6) trichotomy identity; (7) Prop 6.8(c) filter | (1), (2): 0 violations in $1{,}844{,}800$ triples each (per background); (3a), (3b): 0 violations; (4): SAI $(1,0,0)$ in 412/412 and 476/476 cases, consistent SOI $P(0)=0$, $P(1)>0$, abstention bound in every case, min $P(\bot)=0.0115$; (5a), (5b): 0 mismatches (732/768 and 867/935 tapes); (6): 0 violations; (7): filter consistent on every tape, equals $F$ on consistent tapes, $\nu_{F'}\ge\nu^{\rm cons}_F$ on all 28825 pairs. *Reading after the referee round:* item (4)'s abstention bound is a construction check (variants are added with weight exactly $2^{-k}$), and items (3a), (3b) are the inclusions (1), (2) summed with the same weights, so they are consequences rather than independent checks (referee B, issue 5); the mixture-level test between families closed under the maps, with the program-less mass and $D=\emptyset$, is referee B's `rb1` |
+| `c2_independent_label.py` → `.out` (seed 20261015; 0.6 s; unchanged) | Finite toy of Props 6.3–6.5: 16 valuations, 64 sentences (32 independent of $B$), 160 random three-valued labellers, lookup and list labellers, theories with images; diagonal $\sigma_n$; one-tape density lemma on 40 random machines | (a) 0 violations; diagonal rows all satisfy $W^{3,\rm cons}\le\Omtail{n+1}$, $W_A^3\ge2^{-3}$, $W^{3,\rm cons}\ge2^{-\ell(\text{lookup})}$ until $\mathrm{Ind}$ is exhausted (the finite end of productivity); (d) list labeller keeps its sentences at weight $\ge2^{-5}$; density lemma: 0 violations of (e1), (e2) in 4174 dense prefixes. *The density part is weakly informative* (machines consistent on ~5% of tapes; 42 of 261,542 pairs could fail; summed bound untested: referee B, issue 6, `rb6`); superseded by c5 (A) and `rb2` |
+| `c3_presburger_constants.py` → `.out` (deterministic; 28 s; **rewritten**; v1 kept in `v1-outputs/`) | Thresholds $m_0$ for the contradictions of Props 9.1–9.3 with $q(x)=x^k$, illustrative $c$, $c'$, $C$, $k$, now evaluated exactly with mpmath (60 digits); comparison with v1; (D) budgets forced in Props 9.4, 9.4′ | every row has a finite $m_0$; e.g. $c=1$, $c'=0.9$: (A) 11–26, (B) 6–9, (C) 26–42; $c=0.05$, $c'=0.045$: (A) 202–517, (B) 116–171, (C) 517–834. 52 of 144 rows differ from v1: 44 lower by 1–4, 8 higher by 1–6 (the 8 rows referee B found; his exact values reproduced). Cross-check against referee B's formulas (copied into a scratch script): all 144 thresholds agree. (D): $c''=c/2$ thresholds $m\ge\log_2(c_e)/(c-c'')$ verified on 300 lengths each; size and material budgets doubly exponential, (a1) singly exponential |
+| `c4_circuit_axioms.py` → `.out` (seed 20261015; 14 s; unchanged) | Thm 10.1(i): the translation $T_V$ in the fixed language; truth of every axiom in the intended structure on a finite fragment; $R$ agrees with $f_V$; derivability by forward propagation through ground instances; negative control by gate corruption; sizes up to $s=1099$ | 24/24 circuits pass every check; 95/95 corruptions that change $f_V$ detected; $|T_V|/((s+d)\log_2(s+d))\in[7.86,9.03]$ |
+| `c5_revision.py` → `.out` (seed 20261016; 2 s; **new**) | (A) Prop 6.5(b): density step and summed bound on 30 *mostly consistent* three-valued random labellers (consistent on 73%–96% of tapes), 48 sentences (12 $B$-decided), noise labelling $B$-decided sentences $\iota$ on 1/8 or 1/16 of tapes, $\varepsilon\in\{1/4,1/8,1/16\}$; finite diagonal over machine lengths 2–7. Written without reading referee B's `rb2`. (B) Lemma 1.3 (CR): parsing decoder of the padded Craig set with both readings of a candidate $\neg\varphi'$, against a one-reading decoder | (A) $J_w\subseteq\mathrm{Ind}_B$: 0 violations in 5875 dense prefixes; summed bound and $\le2\varepsilon$: 0 violations; non-vacuous: 106 pairs $(w\in\mathcal W',\sigma\notin\mathrm{Ind}_B)$ with positive $\iota$-mass, 226 $\sigma$ outside $I$ with positive consistent $\iota$-mass, largest $\nu/\varepsilon=1.000$; diagonal: 0 violations until $\mathrm{Ind}_B$ is exhausted. (B) at most two decompositions always; two-reading decoder: accepted set = padded Craig set and $\Cn$ preserved in 82/82 labellers; one-reading decoder: $\Cn$ changes in 26/82 |
+
+**Referees' scripts** (`referee_code/`; all rerun from scratch in this revision, byte-identical outputs): `rA1_gadget_ratio` (Cor 10.2's prior ratio, 333,720 cases, smallest slack 2.32 bits); `rb0_xref` (every P1 and AI-paper citation of `notes.md` resolved against the two `main.aux` files); `rb1_onetape_exact` (exact Fraction analogue of Lemma 1.3, Thm 3.1 with constant $2^{c_{\rm ps}}+2^{c_B}$, $D=\emptyset$, Cor 3.2, Prop 6.1(a), (b), Prop 6.8(c): 0 violations); `rb2_independence_density` (Prop 6.5(b) with the summed bound on three machine families: 0 violations, 119 non-vacuous instances); `rb3_literals_transfer` (Rem 5.4 / AI-paper Prop E.1 and Thm 5.1: expected loss $-n\ge+0.33$, transfer 0 violations); `rb4_arith` (Thm 7.4's constant $0.34663<0.361$; Cor 10.2's gadget; c3 v1 thresholds recomputed exactly; Prop 9.4's constants); `rb5_circuit_sat` (Thm 10.1(i) by propositional UNSAT); `rb6_c2_vacuity` (instrumented c2). `rb4` reads `checks/c3_presburger_constants.out`; it was written against the v1 output, now in `checks/v1-outputs/`, and its saved output refers to that version (its parser does not read the new six-column format).
 
 The scripts check constructions on finite analogues; the theorems are asymptotic or logical and are proved in the text.
 
@@ -573,17 +579,21 @@ The scripts check constructions on finite analogues; the theorems are asymptotic
 
 * W. Craig, "On axiomatizability within a system", *J. Symbolic Logic* 18 (1953) 30–32. [known; as cited in the AI-paper; bibliographic data checked there]
 * S. A. Cook, R. A. Reckhow, "The relative efficiency of propositional proof systems", *J. Symbolic Logic* 44(1) (1979) 36–50. [known; bibliographic data confirmed by the earlier report's referee; used only as the classical form of Thm 8.1]
-* M. J. Fischer, M. O. Rabin, "Super-exponential complexity of Presburger arithmetic", *Complexity of Computation*, SIAM-AMS Proceedings 7, AMS 1974, 27–41; MIT LCS TM-43. [known: bibliographic data and abstract checked by scout S and re-confirmed by scout L (`refs.bib`, `fischer1974super`); the exact quantifier form of the theorem (universal $c$, "for all large $m$") **not re-checked in this run**; only the weaker form stated in §9 is used]
-* M. Presburger (1929), completeness and decidability of the theory of $(\mathbb N,0,1,+)$. [known, standard; not re-checked in this run]
-* L. Berman, "The complexity of logical theories", *Theoretical Computer Science* 11 (1980). [**known, unverified** in this run: recalled statement used only in the conditional Prop 9.3]
-* M. Sipser, "A complexity theoretic approach to randomness", STOC 1983; C. Lautemann, "BPP and the polynomial hierarchy", *Inform. Process. Lett.* 17 (1983); P. Gács (attributed in Sipser 1983). [**known, unverified** in this run; used only in the conditional Prop 9.3]
+* M. J. Fischer, M. O. Rabin, "Super-exponential complexity of Presburger arithmetic", *Complexity of Computation*, SIAM-AMS Proceedings 7, AMS 1974, 27–41; MIT LCS TM-43. [known; **statement verified against the abstract** (search results: HUJI CRIS listing, MIT DSpace TM-43, Semantic Scholar, Google Books), by referee A and again in this revision: a fixed $c>0$, every (also nondeterministic) decision procedure, all sufficiently large $n$, $2^{2^{cn}}$ steps on some sentence of length $n$; the same bounds for minimum proof lengths in complete axiomatisations whose axioms are easily recognised. Full text not seen: the length measure (Rem 9.0(iii)) and the meaning of nondeterministic time (§9, readings (max), (short)) were not checked against it]
+* M. Presburger (1929), completeness and decidability of the theory of $(\mathbb N,0,1,+)$. [known, standard; not re-checked]
+* L. Berman, "The complexity of logical theories", *Theoretical Computer Science* 11(1) (1980) 71–77. [known: bibliographic data confirmed (Utah TCS bibliography; referee A and this revision); the result as completeness of $\mathrm{PrA}$ for alternating doubly exponential time with linearly many alternations ($\mathrm{STA}(*,2^{2^{n^{O(1)}}},O(n))$) confirmed at secondary-source level (Haase, "A survival guide to Presburger arithmetic", arXiv 1401.5266; Klaedtke, arXiv cs/0506008); the form (B*) and the size of the reductions not confirmed; used only in the conditional Prop 9.3]
+* M. Sipser, "A complexity theoretic approach to randomness", STOC 1983; C. Lautemann, "BPP and the polynomial hierarchy", *Inform. Process. Lett.* 17 (1983); P. Gács (in Sipser 1983). [known at secondary-source level: $\mathsf{BPP}\subseteq\Sigma_2^p\cap\Pi_2^p$, Sipser first with the fourth level, Gács and Lautemann the second (search results); page numbers not confirmed; the time-bounded form (SGL) is derived in §9 from the standard proof; used only in the conditional Prop 9.3]
+* K. de Leeuw, E. F. Moore, C. E. Shannon, N. Shapiro, "Computability by probabilistic machines", in *Automata Studies*, Annals of Mathematics Studies 34, Princeton University Press 1956, 183–212. [known; bibliographic data from scout L's `refs.bib` (`deleeuw1956computability`); credited for the majority vote / threshold at a density point (Cor 4.2(c), Props 6.5, 9.2, 9.3), on referee A m14]
+* Effective inseparability of the provable and the refutable sentences of consistent r.e. extensions of $\Q$: R. M. Smullyan, *Theory of Formal Systems*, Annals of Mathematics Studies 47, 1961; J. B. Rosser (1936) for the argument. [known at secondary-source level (Sorbi, CiE 2021 slides; Cheng, arXiv 2210.17333, "Effective inseparability and some applications in meta-mathematics", which reworks Smullyan's results), as found by referee A and in this revision; the exact location in Smullyan not seen. Lemma 6.3′ is proved here from the textbook facts (R), (O), (Diag)]
+* Textbook facts on $\Q$: strong representability of decidable relations, the order facts (O), the diagonal lemma; e.g. G. Boolos, J. Burgess, R. Jeffrey, *Computability and Logic*, chs. 16–17. [known, standard; not re-checked against a particular edition]
 * A. K. Chandra, D. C. Kozen, L. J. Stockmeyer, "Alternation", *J. ACM* 28 (1981). [known, unverified; enters only through SD Cor 4.4 (APSPACE = EXPTIME), as recorded there]
-* S. C. Kleene's recursion theorem; the MRDP theorem (Matiyasevich 1970; Davis 1973). [known; as cited in TF Lemma 1.4 and AI-paper Lemma E.14 ("not checked" there)]
-* Lebesgue density theorem on Cantor space. [known; N1 Lemma E0 gives a proof for the form used]
-* Church's theorem (undecidability of first-order validity). [known, standard; used only to instantiate Prop 6.7(a)]
-* Circuit simulation of Turing machines: a time-$T$ machine on inputs of a fixed length has circuits of size $O(T^2)$ (textbook; $O(T\log T)$ by Pippenger–Fischer 1979). [known, unverified in this run; used only for the existence of a polynomial in Thm 10.1(ii)]
+* S. C. Kleene's recursion theorem; the MRDP theorem (Matiyasevich 1970; Davis 1973). [known; as cited in TF Lemma 1.4 and AI-paper Lemma E.14 ("not checked" there); used only in Lemma 6.3′(ii) and Thm 7.4]
+* Lebesgue density theorem on Cantor space. [known; `logic` Lemma 2.1 gives a proof for the form used]
+* Church's theorem (undecidability of first-order validity); decidability of monadic first-order logic without function symbols (Löwenheim 1915, Behmann 1922). [known, standard; used only to instantiate Props 6.7(a), 6.8(c)]
+* Circuit simulation of Turing machines: a time-$T$ machine on inputs of a fixed length has circuits of size $O(T^2)$ (textbook; $O(T\log T)$ by Pippenger–Fischer 1979). [known, unverified; used only for the existence of a polynomial in Thm 10.1(ii)]
 * R. J. Solomonoff, "Three kinds of probabilistic induction", *Computer J.* 51(5) (2008) 566–570; "Two kinds of probabilistic induction", *Computer J.* 42(4) (1999) 256–259. [known; read in full for `RENAME.md`; used here only for the name SOI]
 * L. A. Levin (1973) universal search; J. Schmidhuber (2002) speed prior. [listed in the brief; not used in a proof here; the AI-paper's Kt penalty (Prop 7.2) is Levin-style and TF notes that its time-weighted variant is not the speed prior]
+* The modified Demski prior (Fallenstein, Demski, Garrabrant, c. 2015; Garrabrant et al., *Inductive Coherence*, 2016), as recorded in `fundamentals` §10, §14. [known at snippet level there; cited here only to delimit novelty, §0]
 * P1, P2, the AI-paper and its records TF, SD, model, as in the header.
 
 ---
@@ -592,59 +602,192 @@ The scripts check constructions on finite analogues; the theorems are asymptotic
 
 | claim | status |
 |---|---|
-| Lemma 1.2 (decompositions (1.1), (1.2)) | proved |
-| Lemma 1.3 (maps PS, EM, CR, CL) | proved |
-| Rem 1.4 (only inclusions) | computed (c1) |
+| Lemma 1.2 (decompositions (1.1), (1.2)) | proved (the closed-labeller bracket for $D=\emptyset$ is $0$) |
+| Lemma 1.3 (maps PS, EM, CR, CL) | proved; (CR) with both readings stated explicitly; computed (c1, rb1, c5 (B)) |
+| Rem 1.4 (only inclusions) | computed (c1, rb1) |
 | Thm 2.1 (a)–(c) | proved; Craig known |
 | Rem 2.1′ (i)–(iii) | proved |
-| Prop 2.2 (a)–(d) (Hänni's schema) | as in the AI-paper: (a) proved; (b) proved, schema argument refuted in one sort; (c) proved, given MRDP; (d) proved, given partial truth predicates; proofs re-read |
-| Thm 3.1 (a)–(c), including $D=\emptyset$ | proved; computed (c1) |
-| Cor 3.2 | proved; computed (c1) |
+| Prop 2.2 (a)–(d) (Hänni's schema) | as in the AI-paper: (a) proved; (b) proved, schema argument refuted in one sort (the conclusion of Thm 2.1 is not); (c) proved, given MRDP; (d) proved, given partial truth predicates; proofs re-read |
+| Thm 3.1 (a)–(c), including $D=\emptyset$ | proved; computed (c1, rb1) |
+| Cor 3.2 | proved; computed (c1, rb1) |
 | (S$_{\rm tape}$) | assumption; justification sketch |
-| Thm 3.4, Prop 3.5 | proved, under (S$_{\rm tape}$) |
+| Thm 3.4 (now for every $D$), Prop 3.5 | proved, under (S$_{\rm tape}$) |
 | Rem 3.6 (one-tape Kt, P3) | not attempted |
 | Prop 4.1 | proved, given P1 Thm 3.21(a), Prop 4.6(a) construction |
-| Remark after 4.1 ($K(S)$ slack) | proved, given F10 (`fundamentals` T6) |
-| Cor 4.2 (a)–(c) | proved, given N1 Thm E1, Prop E2(b) |
-| Thm 5.1 | proved |
+| Remark after 4.1 ($K(S)$ slack): finite $S$; r.e. $S$ with index complexities | proved, given `fundamentals` Prop 6.1(a); r.e. case proved |
+| Cor 4.2 (a)–(c) | proved, given `logic` Thm 2.2 and Prop 2.3(b), under `logic` §2.2's hypotheses |
+| Thm 5.1 | proved; computed (rb3) |
 | Cor 5.2 (a)–(d) | proved, by Thm 5.1 and P1 |
 | Prop 5.3 | proved |
-| Rem 5.4 | proved |
-| §5.5 transfer table | proved for "yes" rows by Thm 5.1; "no" rows are reasons, not theorems |
-| Prop 6.1 (a), (b), (d) | proved; computed (c1) |
-| Prop 6.1 (c) (abstention bound) | proved; computed (c1) |
+| Rem 5.4 | proved; computed (rb3) |
+| §5.5 transfer table | proved for "yes" rows by Thm 5.1; "no" rows are reasons, not theorems; rows Prop 4.7 and Thm 5.1(a) re-classified |
+| Prop 6.1 (a), (b), (d) | proved; computed (c1 item (4), rb1) |
+| Prop 6.1 (c) (abstention bound) | proved (c1 item (4) is a construction check) |
 | Rem 6.2 | proved; computed (c1) |
-| Lemma 6.3′ | proved, given MRDP and the recursion theorem |
-| Prop 6.3 (a)–(c) | proved, given Lemma 6.3′; finite mechanism computed (c2) |
+| Lemma 6.3′ (consistent $B$, $\Q\subseteq\Cn(B)$) | known (classical; secondary-source level); proved here given textbook facts (R), (O), (Diag); the $\Sigma_1$-sound version also proved, given MRDP and the recursion theorem |
+| Prop 6.3 (a)–(c) (consistent $B$) | proved, given Lemma 6.3′; finite mechanism computed (c2) |
 | Prop 6.4 (a), (b) | proved |
-| Prop 6.5 (a)–(c) | proved, given Lemma 6.3′ and Lebesgue density; density lemma computed (c2) |
-| Rem 6.6 | proved |
-| Prop 6.7 (a)–(c) | proved |
+| Prop 6.5 (a)–(c) (consistent $B$) | proved, given Lemma 6.3′ and Lebesgue density; density step computed (c5 (A), rb2; c2 weakly) |
+| Rem 6.6 ($\varphi$ $B$-independent) | proved |
+| Prop 6.7 (a), (b), (c) for $W_A,W^{\rm cons},M_A,M_F^{\rm cons}$, (c′) $\emptyset''$ for the closed and decider versions | proved |
+| development round's Prop 6.7(c) for the closed and decider versions ($\emptyset'$) | withdrawn (unproved; not claimed) |
 | lsc-ness of $W_A$ with decidable consistency | open |
-| Prop 6.8 (a)–(c) | proved; (c) computed (c1) |
+| Prop 6.8 (a)–(c) | proved; (c) computed (c1, rb1) |
 | Prop 6.8 (d) ($M_F^{\rm cons}/M_F^C$ bounded in general?) | open |
 | Thm 7.1, Prop 7.2, Thm 7.3, Cor 7.3′, Prop 7.7 | proved, under (S) where stated (TF; re-read) |
-| Thm 7.4 | proved, given recursion theorem and MRDP (TF; re-read) |
+| Thm 7.4 | proved, given recursion theorem and MRDP (TF; re-read); constant computed (rb4 (A)) |
 | Prop 7.5 | proved; "strictly stronger than every time-bounded function inductor" refuted (TF) |
-| Prop 7.6 | (a), (b) proved; (c) proof sketch |
-| Thm 7.8 (a)–(d) | proved, given Thms 3.1, 7.3, 7.4, AI-paper Prop E.1, P1 Prop 9.4 |
+| Prop 7.6 | (a), (b) proved ($|u|+c$); (c) proof sketch |
+| Thm 7.8 (a)–(d) | proved, given Thms 3.1, 7.3, 7.4, AI-paper Prop E.1, P1 Prop 9.4; (b)–(d) under Thm 7.4's hypotheses; (d) for the diagonal sequences only |
 | Thm 8.1, Cor 8.2, Prop 8.3, Rem 8.4 | proved, under (F1), with the conditions stated (AI-paper, TF, SD; re-read) |
 | Rem 8.5 | interpretation |
 | Rem 8.6 (one-tape sandwich) | proof sketch |
-| F$_{\rm P}$, F$_{\rm FR}$ | known (verification levels in §14) |
-| Prop 9.1, Prop 9.2 | proved, given F$_{\rm P}$, F$_{\rm FR}$ (and Lebesgue density for 9.2) |
-| Prop 9.3 | conditional: proved, given (B*) and (SGL), both known, unverified |
-| Prop 9.4 | proved, given F$_{\rm FR}$ and AI-paper Thm 6.9's proof |
-| c3 thresholds | computed |
-| Thm 10.1 (i) | proved; computed (c4) |
+| Rem 9.0 (lengths) | proved, given the proviso on Fischer and Rabin's syntax |
+| F$_{\rm P}$, F$_{\rm FR}$ | known (F$_{\rm FR}$ at abstract level; §14) |
+| Prop 9.1, Prop 9.2 | proved, given F$_{\rm P}$, F$_{\rm FR}$, Rem 9.0 (and Lebesgue density for 9.2) |
+| Prop 9.3 | conditional: proved, given (B*) (secondary sources; reduction size unseen) and (SGL) (standard; time bound derived) |
+| Prop 9.4 (a) size, (b) material: doubly exponential, infinitely often | proved, given F$_{\rm FR}$, AI-paper Lemma E.28 and Thm 6.9's proof |
+| Prop 9.4, "for all large $m$" | proved, given F$_{\rm FR}$ and F$_{\rm P}$, for time-constructible budgets; for arbitrary budgets given F$_{\rm FR}$ in reading (short) |
+| development round's Prop 9.4 clause "the same under (a1)" (doubly exponential) | withdrawn (unproved); the question is open |
+| Prop 9.4′ ((a1): $h(m)>2^{c''m}$ for all large $m$) | proved, given F$_{\rm FR}$ (deterministic case) and AI-paper Prop E.23(a) |
+| (a1) doubly exponential on $D^{\rm Pres}$ | open; proved conditional on an unknown deterministic lower bound |
+| (a1) upper bound on $D^{\rm Pres}$; readings (a2), (b2) on $D^{\rm Pres}$ | open |
+| Rem 9.5 | summary of proved items; the (a1) correspondence is a reading for sentence data |
+| c3 thresholds (revised), table (D) | computed |
+| Thm 10.1 (i) | proved; computed (c4, rb5) |
 | Thm 10.1 (ii) | proved, given the circuit simulation of Turing machines |
-| Cor 10.2 | proved, by P1 Thm 9.8's proof with the stated changes |
+| Cor 10.2 | proved, by P1 Thm 9.8's proof with the stated changes; computed (rA1, rb4 (B)) |
 | Rem 10.3 | proof sketch |
 | §11 table | each row as stated there |
 
 ---
 
-## 16. Verification log
+## 16. Response to the referee reports
+
+Both referees found no fatal issue and no failed proof among the core results; both reran all four developer scripts to byte-identical outputs. Every point is accepted; none is disputed. Where a fix goes beyond the referee's suggestion, the table says so.
+
+**Referee A (proofs).**
+
+| issue | what was wrong | fix (where) |
+|---|---|---|
+| M1 | Prop 9.4 claimed the doubly exponential bound for reading (a1); §0, §9's closing paragraph, the Qualifications and row 30 generalised to every charged reading | Prop 9.4 restricted to size and material, with every $c''<c$ (independent of $e$); how Thm 6.9's time-constructibility is met (the clock $2^{2^{c''m}}$); new Prop 9.4′ for (a1): $h(m)>2^{c''m}$ for all large $m$, via AI-paper Prop E.23(a) and the deterministic Fischer–Rabin bound; (a1) doubly exponential, (a1) upper bounds, (a2), (b2): open; summary, Qualifications, rows 30, 30′ and Rem 9.5 rewritten (§0, §9, §11) |
+| M2 | Prop 6.7(c) claimed $\emptyset'$-computability for the closed and decider versions, whose conditions are $\Pi_2$ | (c) restricted to $W_A,W^{\rm cons},M_A,M_F^{\rm cons}$ with a fuller proof; new (c′): the other four are $\emptyset''$-computable [proved]; their $\emptyset'$-computability not claimed (§6.4) |
+| m1 | length convention in F$_{\rm FR}$ unchecked; a $\log$ factor in one direction would break the doubly exponential thresholds | new Rem 9.0: lengths are symbol counts, which makes the conversion from Fischer and Rabin's lengths linear under a stated proviso on their syntax; a bit-length variant with $c'b/\log_2(b+2)$ |
+| m2 | F$_{\rm FR}$ status; Berman (B*) caveat; $\kappa'$ unnecessary | F$_{\rm FR}$ upgraded to "verified against the abstract"; (B*) with the reduction-size caveat ($2^{2^{c_Bm^\varepsilon}}$); Prop 9.3 now needs only $c'<c_B$; (SGL) with $\kappa=3$ derived |
+| m3 | Lemma 6.3′ is classical; $\Sigma_1$-soundness unnecessary | Lemma 6.3′ restated for consistent $B$ and proved by Rosser's argument relative to $\mathsf W$; status "known (classical)"; Props 6.3–6.5 and row 15 weakened accordingly; the development round's proof kept as (ii); Prop 6.7(a)'s instance now also needs only consistency |
+| m4 | remark after Prop 4.1: $S$ must be finite, or r.e. with index complexity | stated for finite $S$ and proved for r.e. $S$ |
+| m5 | Cor 4.2's lottery hypotheses; E2(b) with $X=\Sent$ | hypotheses of `logic` §2.2 stated; citations moved to `logic` Thm 2.2, Prop 2.3(b) |
+| m6 | Thm 3.4 upper bound: two readings of programs as theory machines | the two wrappers described |
+| m7 | Thm 7.8(d) too broad | restricted to the diagonal sequences |
+| m8 | Thm 7.8 omits Thm 7.4's hypotheses | added |
+| m9 | Prop 6.1(c)'s "computed" is tautological | status "proved"; c1 item (4) relabelled a construction check |
+| m10 | Prop 6.7(a): lookup table is not closed | closure (CL) of the lookup table used for $W^{\rm cl}$, $M_F^{\rm cl}$ |
+| m11 | Lemma 1.2 bracket always $0$ | stated so |
+| m12 | (CR) wording ambiguous about the readings of $\neg\varphi'$ | both readings stated; c5 (B) shows that one reading loses $\Cn$ |
+| m13 | $\Cn(B\cup\cdot)$ against NOTATION's $\Cn$ | aligned throughout; Prop 2.2(a) written with $\vdash$ |
+| m14 | credit: de Leeuw et al.; Thm 10.1 is routine | credited in Cor 4.2(c), Props 6.5, 9.2, 9.3; Thm 10.1 and §0 item 10 relabelled |
+| m15 | transfer-table rows Prop 4.7 and Thm 5.1(a) refer to an undefined SAI analogue of $M_{\rm prod}$ | Prop 4.7 read as a comparison with P1's $M_{\rm prod}$, no SAI-internal claim; Thm 5.1(a) transfers directly |
+| m16 | Rem 6.6 needs $\varphi$ independent of $B$ | added |
+| m17 | "monadic" must exclude function symbols | added (Prop 6.8(c) and the open question after Prop 6.7) |
+| m18 | Verification log should record the referees' reruns and §14 the m2 checks | done (§14, §18) |
+| m19 | Prop 7.6(b) drops a constant | $|u|+c$ |
+
+**Referee B (computation and counterexamples).**
+
+| issue | what was wrong | fix (where) |
+|---|---|---|
+| 1 (major) | = A's M1 | as A M1 |
+| 2 | Prop 9.4: $c''$ does not depend on $e$; the bound holds for all large $m$ | every $c''<c$, independent of $e$ (threshold $\log_2(c_e)/(c-c'')$, c3 (D)); "for all large $m$" proved for time-constructible budgets (the AI-paper's polynomial budgets are), and for arbitrary budgets under reading (short) of nondeterministic time. The qualification is needed: a guess-and-check procedure is a decision procedure only at the lengths where the budget is small, and patching the other lengths needs either a test of the budget (time-constructibility) or a time measure that ignores slow paths (reading (short)); the abstract does not say which reading Fischer and Rabin use |
+| 3 | c3's "conservative" estimate is not conservative; 8 thresholds too small | c3 rewritten with exact arithmetic; all 144 rows cross-checked against the referee's formulas; §9's quoted values corrected ($202$–$517$, $116$–$171$) |
+| 4 | = A's M2 and m10 | as A M2, m10; the referee's $\Pi_2$-completeness reduction for closedness is recorded in Prop 6.7 |
+| 5 | c1 items (4), (3a), (3b) tautological or consequences | relabelled; `rb1` cited for the mixture-level test |
+| 6 | c2's density check weakly informative; summed bound untested | new c5 (A), written independently of `rb2`, non-vacuous (106 and 226 instances), tests the summed bound; agrees with `rb2` |
+| 7 | = A's m11 | as A m11 |
+| 8 | Thm 3.4 needs no $D\ne\emptyset$ | extended to $D=\emptyset$ with proof; row 7 updated |
+
+---
+
+## 17. Cross-thread consistency
+
+The current records of the other threads were read for every statement that uses or overlaps this one: `fundamentals` (final record), `logic`, `terms`, `shape`, `laws`, `philosophy` (development records; for `terms` also the parts of its final record that existed at the time: §0, §0.1, §1 and its citations of `sfi`), and `../../NOTATION-draft.md`.
+
+### 17.1 Definitions and notation
+
+* **Objects.** Theory machines, $\nu_G$, $\nu^3_G$, $G_U$, $A_\omega$, $M_A$, $M_A^3$, $W_A$, $K_A$, $W_A^{\rm dec}$ are exactly `fundamentals` Defs 1.2, 1.4, 1.7 (its §16.1 confirms the match). The mixture identity (1.2), with its $(1-\Omega_V)[B\vdash\psi_D]$ term, is `fundamentals` Thm 4.1's. The coin-free equivalence of deciders and enumerators inside SAI is proved twice: here as part of Thm 2.1 and in `fundamentals` Prop 1.8(a), by the same Craig map; the paper needs it once.
+* **Conventions now shared.** "Proves" means $B\cup\cdot\vdash$; "consistent" means consistent with $B$; $\Cn$ includes $B$; the fair-coin measure is $\Unif$; plain coin-free SOI on sentences is $W^{\rm all}$; the lottery's relation symbol is $\mathrm{Win}$; $\Kpad$ and $\Omtail{\ell}$ as in SOI-N. The development record differed on $\Cn$, $\Unif$ and $W^{\rm all}$; all three are aligned (§12).
+* **Literal data.** Thm 5.1's hypothesis ($R$ not in $B$; the terms $t_x$ pairwise distinct in some model of $B$; data on $R(t_x)$ with $x\mapsto t_x$ injective) is `fundamentals` Def 1.1′ ("fresh atoms"); the distinctness of words is automatic here because a data set is a partial function on sentences.
+* **Three-valued data.** The consistent three-valued labeller of §6.2 (consistent with $B$, deciding none of its $\iota$-sentences) matches `fundamentals`' $\nu^3_G$ (the theory decides no $\iota$-labelled sentence) under the maps (EM) and (PS).
+* **Class probabilities.** `fundamentals` writes $\Unif_A(\cdot)$, `terms` writes $M_A(\Theta;D)$, and Prop 3.5 here writes $X(\mathcal C,D)$ for the same construction (the measure of the tapes whose hypothesis is compatible and whose theory lies in a class). A single symbol is requested (§12).
+* **Lengths.** §9 measures sentences by symbol count (Rem 9.0). The AI-paper's derivation sizes already count symbols; NOTATION does not yet say which length clocks take (§12, clash (4)).
+
+### 17.2 Uses of this record by other threads, checked after the revision
+
+| thread and item | uses | check |
+|---|---|---|
+| `fundamentals` Rem 6.3, Prop 11.4(c) | Thm 5.1 | unchanged; its hypotheses are `fundamentals` Def 1.1′; `fundamentals`' referee A read Thm 5.1 for this use |
+| `fundamentals` §16.2 | Cor 5.2(a) against its Thm 6.2 | consistent: $K_A(D)\ge\log d-2-c$ follows from `fundamentals` Thm 6.2(i) |
+| `logic` §2.3 ("consequence for consistent SOI"), Prop 2.3(b) | Thms 2.1, 3.1, Cor 4.2 | unchanged; `logic`'s referee A found that Thms 2.1, 3.1 hold for any decidable consistent $B$, as `logic` needs; Cor 4.2 now cites `logic`'s own items and hypotheses |
+| `terms` Def 1.1 (final record: §1.1), Thm 2.1(c), Prop 4.1, Table 7.4 | Def 3.3, Thm 3.4, Prop 3.5 (under (S$_{\rm tape}$)), Thm 7.1, Prop 7.7 | Thm 3.4 now holds for every $D$ and spells out the two wrappers of its upper bound; nothing `terms` uses is weakened. `terms`' referee A notes that `terms` applies Thm 3.4's padded decider once to $G_U$ and Prop 3.5 to the classes $\{T:T\cap\Sent_{\mathcal L_O}\in\Theta\}$; Prop 3.5 holds for every class of deductively closed theories, so both uses are within its hypotheses |
+| `terms` §16 | Thm 8.1's constants | the same constants ($\theta_c$ of size $|c|+14$, material $2|c|+29+|\varphi^b|$) re-checked in both records |
+| `shape` Thm 5.2 and its reading | Thm 8.1, Cor 8.2, Rem 8.5 | unchanged; the two records reach the same conclusion from opposite sides (charged deduction is nondeterministic, so it cannot express the textbook point) |
+| `philosophy` §1.3, §1.4, table rows 2 and 4, and its remark on the schema | Thms 2.1, 3.1, 3.4, Prop 2.2, Prop 6.1, Props 6.3–6.5, Prop 7.6 | unchanged in substance. Props 6.3–6.5 now need less (consistent $B$); Prop 7.6(b) carries $|u|+c$; `philosophy` does not cite §9, so the restriction of Prop 9.4 does not affect it. Its statement "consistent SOI never becomes certain of any unasked sentence in the semimeasure convention" is Prop 6.1(c), now with status "proved" (not "computed") |
+| `laws` | none | — |
+
+### 17.3 Uses of other threads by this record
+
+* `fundamentals`: Prop 6.1(a), (c) (remark after Prop 4.1), Thm 3.2(a) (Prop 6.7(b)), Props 3.1, 3.4 (Prop 6.7(c)), Thm 6.2 (Cor 5.2(a)), §10 (novelty of the sampling stage, §0). All used within their hypotheses; all found correct by `fundamentals`' referees.
+* `fundamentals` Prop 8.7 and this record's Lemma 6.3′ both rest on the inseparability of the provable and refutable sentences of extensions of $\Q$: `fundamentals` needs only that no computable set separates them (it proves this by the diagonal lemma), Lemma 6.3′ needs the effective form (Rosser). The paper should state the effective form once and derive both.
+* `logic`: Lemma 2.1 (density), Thm 2.2 (the lottery), Prop 2.3(b) (majority vote for plain SOI), under the hypotheses of `logic` §2.2. `logic`'s referee A found them correct; its final record had not appeared, so item numbers are those of its development record.
+* `terms`: rows 33–39 of §11, with `terms`' development-record statuses.
+* `shape`: Rem 8.5 defers the textbook point to `shape` (its §1.4, §2 and Thm 5.2).
+
+### 17.4 Points to pass on
+
+* **To the synthesis.** On Presburger data the charged-deduction claim is now per reading: doubly exponential budgets for size and material, at least exponential instance sizes for (a1), open for (a2), (b2) (Props 9.4, 9.4′, Rem 9.5). Any sentence of the form "once deduction is charged, the Presburger separation disappears" must name the reading. Lemma 6.3′ and the majority vote at a density point are classical (Smullyan 1961; de Leeuw et al. 1956) and should be cited, not claimed.
+* **To `logic`.** If its final record renumbers Thm 2.2 or Prop 2.3, Cor 4.2 here must follow. Lemma 6.3′ (productivity of $\mathrm{Ind}_B$ for every consistent decidable $B$ with $\Q\subseteq\Cn(B)$) may be useful in its §4.
+* **To `fundamentals`.** Prop 6.7(c), (c′) here extend its Prop 3.4 (which covers $M_A$) to the other versions; the $\emptyset'$ bound fails to be proved for the closed and decider versions.
+* **To `terms`.** Thm 3.4 now holds for every finite $D$, the empty one included.
+* **To NOTATION.** Requests in §12.
+
+### 17.5 Possible error in the author's view
+
+None arises. The author's conjectured equivalence of SAI with consistent SOI is true in the coin-free, one-tape and Kolmogorov versions (Thms 2.1, 3.1). The schema route to it fails in one sort; this was already recorded and agreed (AI-paper Prop 6.5). The corrections of this revision (§16) concern Claude-authored records only.
+
+---
+
+## 18. Verification log
+
+### 18.1 Revision round (2026-10-16)
+
+**Read in full.** `referee-A.md` and `referee-B.md`; this thread's `notes.md` (all 629 lines) and `00-brief.md`; the project brief `../../00-brief.md`; `../../NOTATION-draft.md`.
+**Read in part, for the cross-thread check and the referee issues.** `fundamentals/notes-final.md` §0–§1, Thm 3.2 and Prop 3.4 (statements), Prop 6.1 with proof, Props 8.7, Cor 8.8, §13, §16; `logic/notes.md` §0–§2.4 and §8; `terms/notes.md` §0–§1, §12, §15, and the lines that cite `sfi`; `terms/notes-final.md` (in progress) §0, §0.1, §1 and its lines citing `sfi`; `shape/notes.md` Thm 5.2 and every line citing `sfi`; `philosophy/notes.md` every line citing `sfi`; `laws/notes.md` (no citation of `sfi`); the referee reports of `fundamentals`, `logic`, `terms` and `shape`, for every mention of `sfi`. The AI-paper: Thm 6.9 with its proof, Def E.18, Lemmas E.19 (subformula), E.20 (renaming), E.28 (truncation), Prop E.23 with its proof, the proof of Cor 6.17(b), (c), and the printed numbers in `main.aux`. SD `notes-final.md`: Thm 4.2 (statement), Cor 4.4(v). P1: Prop 4.7 (`versions.tex`) and Thm 5.1 (`learn.tex`). Scout L's `refs.bib` entry for de Leeuw et al.
+
+**Referee claims re-verified.**
+* *A M1 / B 1.* Confirmed against AI-paper Def E.18 ((a1) bounds each axiom line, not their number) and Prop E.23(a) (deterministic time $2^{O(H\log H)}$), and SD Thm 4.2, Cor 4.4(v). The development round's (a1) clause did not follow. Prop E.23(a)'s proof was re-read and uses nothing about the form of the data, so it gives Prop 9.4′ on sentence data.
+* *A M2 / B 4.* Confirmed: closedness and (random) decidability are $\Pi_2$; referee B's reduction shows $\Pi_2$-completeness of closedness for coin-free labellers (re-derived: $\Gamma_{f_e}\subseteq\Cn(\emptyset)\cup\{\neg\chi:B\vdash\neg\chi\}$, so $B\cup\Gamma_{f_e}$ has the same consequences as $B$, and $f_e$ is closed iff it labels every $B$-decided sentence, iff $e$ is total). The $\emptyset''$ bounds were proved instead.
+* *A m1.* Confirmed that the development round's length conversion was unchecked; resolved by Rem 9.0 (symbol counts make the needed direction linear under a stated proviso).
+* *A m2, B 3.* Fischer–Rabin's abstract re-confirmed by two searches (HUJI, MIT DSpace, Semantic Scholar, Google Books records); page fetches failed (DNS). Berman's bibliographic data and secondary statements re-confirmed by one search (Utah TCS bibliography; Haase; Klaedtke; also a description of the class as $\mathrm{LATIME}(2^{2^{O(n)}})$). c3's non-conservative rows reproduced exactly (the 8 rows and values of `rb4` (C)).
+* *A m3.* Effective inseparability confirmed at secondary-source level by one search; Rosser's argument written out (Lemma 6.3′(i)) and checked line by line, in particular the two cases $\underline p\le y$ and $y\le\underline p$ via (O).
+* *A m5–m19, B 2, 5–8.* Each checked against the text of `notes.md` and the cited source; each confirmed. For B 2, the "for all large $m$" form was re-derived and found to need either time-constructible budgets or reading (short) of nondeterministic time (Prop 9.4).
+* No referee claim was found to be wrong.
+
+**Scripts run (revision).**
+* All four developer scripts `c1`–`c4` (development-round versions) and all eight referee scripts `rA1`, `rb0`–`rb6` were copied to the scratchpad and rerun from scratch with `python3 -I`; every one exited 0 and every output was byte-identical to the saved one (c1 40.2 s, c2 0.6 s, c3 0.2 s, c4 13.8 s, rA1 0.6 s, rb0 0.03 s, rb1 14.5 s, rb2 3.7 s, rb3 6.4 s, rb4 26.5 s, rb5 1.6 s, rb6 0.8 s).
+* `c3` rewritten (exact arithmetic, comparison with v1, table (D)); `c5_revision.py` new. Both were run, then rerun from scratch on scratchpad copies: outputs byte-identical (c3 28.4 s, c5 2.0 s).
+* Cross-check of the revised c3 against referee B's condition functions (copied into a scratchpad script, `xcheck_c3.py`, not kept in this folder): all 144 thresholds agree (each $m_0$ satisfies its inequality, $m_0-1$ does not, and the next 200 lengths do).
+
+**Self-checks that changed this record during the revision.**
+1. c5 (A), first version: only 4 of 48 sentences were decided by $B$, and the noise fired on a quarter of the tapes, so no dense cylinder contained a $B$-decided sentence labelled $\iota$; the counter of such pairs was $0$ (the check of $J_w\subseteq\mathrm{Ind}_B$ was vacuous in exactly the way referee B criticised in c2). Redesigned with 12 decided sentences and noise on 1/8 or 1/16 of the tapes: 106 such pairs, and the threshold excludes every one.
+2. c3, first revised run: the summary line counted 52 changed rows without direction; the changes were inspected (44 lower by 1–4, 8 higher by 1–6) and the text states both.
+3. Prop 9.4, "for all large $m$": first written as needing reading (short) of nondeterministic time; then the route through a time-constructible budget, which works under reading (max), was found and added.
+4. The subformula lemma was first cited as AI-paper Lemma E.20; `main.aux` gives E.19 (E.20 is the renaming lemma). Corrected.
+5. Lemma 6.3′(i), first draft: the case $B\vdash\rho$ used "$\rho\notin\mathsf W$" without saying why; added ($\rho\notin\mathrm{Ind}_B\supseteq\mathsf W$).
+
+**Web.** Searches: Fischer–Rabin abstract (two queries), Fischer–Rabin length measure (one; not settled, hence the proviso of Rem 9.0), effective inseparability for $\Q$ (one), Lautemann 1983 (one; page numbers not confirmed), Berman 1980 (one). Fetches of cris.huji.ac.il and link.springer.com failed (DNS).
+
+**Not done.** No proof assistant. (S$_{\rm tape}$) is not written out for a concrete machine. The full texts of Fischer–Rabin and Berman were not seen, so the proviso of Rem 9.0(iii), the reading of nondeterministic time and (B*) remain as stated. Prop 6.8(d) (Rem 2.14 in general) and the lsc question for $W_A$ with decidable consistency stay open; so do (a1) doubly exponential, (a1) upper bounds, and (a2), (b2) on Presburger data. `c1` and `c2` were not modified; their weak items are relabelled here and superseded by `rb1`, `rb2` and `c5`.
+
+### 18.2 Development round (2026-10-15; kept verbatim from `notes.md` §16)
 
 **Reading (in full unless stated).** The brief `00-brief.md` of the project and of this thread; `NOTATION-draft.md`; `select.md`; scout S §0–§2, §4–§9 (§3 skimmed: it belongs to `terms`); scout F §1, §2, §3.1–§3.4 (F1–F12); scout N1 §3 (E0–E3) and §8; the AI-paper's `time.tex` and `app-time.tex` (all 471 lines) with printed numbers from `main.aux`; TF §1–§5 (lines 42–648); SD §0, §1, §3 (Thm 3.1, Cor 3.2, Prop 3.4), and the statements of §2, §4–§7 via the AI-paper's appendix, which transcribes them; P1 `setting.tex`, `versions.tex`, `app-versions.tex`, `learn.tex`, `comp.tex`, the proof of Thm 9.8 in `app-comp.tex`, the statements of `examples.tex`, `ood.tex`, `nn.tex`, and the label list of `main.aux`; `RENAME.md` (§1–§3).
 

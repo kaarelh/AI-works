@@ -24,6 +24,15 @@ Checks:
       final segment of the prefixes; and A_r is contained in U_w for every prefix w.
   T4  coin-free sum (Remark 3.4): an interval of length l >= 2^-k contains at least
       2^(L-k-1) dyadic rationals of level L, for every L >= k+1 (random intervals, k <= 12).
+
+Revision note (notes-final.md; referee A m6, referee B issues 4 and 11).  (i) The weights here are
+dyadic, so the finite model's Inc is dyadic and 0.w = Inc can occur; T3 therefore tests ">=" and
+counts these boundary cases.  Inc_0 is irrational, so in SAI they never occur; c6_revision.py R2
+(and referee B's rb4 R3) test the strict statement with non-dyadic weights.  (ii) T4 counts all
+multiples of 2^-L at each level.  That is the per-level count used by the revised Remark 3.4,
+whose threshold sets are indexed by the PAIR (j, L); with one index per rational the development
+round's summation step double counted (c6_revision.py R1).  The code is unchanged; its output is
+byte-identical to the development round's.
 """
 import random
 from fractions import Fraction

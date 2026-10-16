@@ -21,6 +21,15 @@ Part A3  true lottery bookkeeping (Theorem 2.9(b)): t_k = least refuted ticket (
 Part C   co-r.e. adversary (Proposition 2.7): random co-r.e. removal processes on lottery blocks;
          the adversary that commits, in each block, to the first consistent stage proves the
          final data and is consistent.
+
+Revision note (notes-final.md; referee B, issue 11).  What these parts test, precisely:
+  * A1's survival enumeration draws the reported tickets j*_k at random, so it tests only the
+    product identity prod_k (1 - 2^-(k+1)); the diagonal is tested separately, against random
+    lists of theories.  Referee B's rb1 B tests it against an adversarial list.
+  * A3's check "a theory that refutes no true ticket refutes no ticket" is a consequence of the
+    definition t := min(refuted) and so a tautology; it is bookkeeping, not evidence.  Referee B's
+    rb3 is the exhaustive truth-table version of Thm 2.9(b) and Cor 2.10(iii).
+  The code is unchanged; its output is byte-identical to the development round's.
 """
 import itertools
 import random
