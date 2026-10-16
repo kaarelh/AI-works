@@ -7,9 +7,9 @@ remaining variable asked; m 2^(m-1) questions, 2^(m-1) value patterns (violating
 
 * MAP inducer without auxiliary variables, reasoner UP: at each checkpoint, a theory of least listing length
   among those UP-compatible with the data seen (exact, by integer programming: compatibility with
-  |S| = m-1 questions is a set-cover condition, see notes Lemma 6.2).  We count the questions of Q_{m-1}
+  |S| = m-1 questions is a set-cover condition, see notes Lemma 6.1).  We count the questions of Q_{m-1}
   on which it fails (errs, abstains, or is inconsistent with the antecedent), the unseen patterns, and check
-  failures >= unseen patterns (Thm 6.3(b)).
+  failures >= unseen patterns (Thm 6.2(b)).
 * MAP inducer over linear theories, reasoner GE: the cheapest affine subspace compatible with the data
   (exhaustive over all affine subspaces for m <= 5).
 * Coupon collector: E[#unseen patterns after T questions] = 2^(m-1) (1 - 2^(1-m))^T, against simulation.

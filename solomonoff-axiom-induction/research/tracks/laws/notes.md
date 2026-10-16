@@ -649,5 +649,5 @@ Standard results used without a specific page: Tarski's decidability of real clo
    * Prop 7.1(b) uses that $\mathbb Q$ embeds uniquely into every ordered field, so the recurrence determines rational values in every model.
    * The fine-regime code-R bound of Lemma 3.6 is an upper bound and is used as such in `l8` B.
 6. **Not done.** T8's posterior over an explicit pool of domain predicates; measured derivation sizes for §6.2; a formal derivation-size bound for §7 beyond the numeral sizes.
-7. **Determinism of l4.** *(filled in at the end of the run)*
+7. **Determinism of l4 and l5.** `l5` was re-run on a scratch copy (with a copy of `l4_residuals.npz`): output identical apart from the runtime line. `l4` was re-run on a scratch copy (2645 s under heavy machine load from other threads' jobs): the full output is identical to the saved `l4_kepler_pk.out` apart from the runtime line, and all 117 arrays in the re-run `l4_residuals.npz` are bitwise equal to the saved ones.
 

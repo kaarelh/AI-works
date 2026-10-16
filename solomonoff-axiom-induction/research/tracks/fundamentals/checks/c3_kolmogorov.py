@@ -12,6 +12,8 @@ Finite stand-in for Theorem 11.3 (answer to Q7) and Proposition 5.3(b) (F15(b)).
   at each step present (not desc(v), true) for some v != w* left open by the current theory.
 * Bayes comparison: the posterior-argmax trichotomy predictor with weights 2^-len (len nondecreasing
   along the list); its mistakes are at most -log(M(D)/M(empty)) (Proposition 5.3(a)).
+Revision (referee B, m5(c)): the column formerly headed "index of final theory (F15(b) bound)" is
+relabelled; the numbers are unchanged.
 Seed 20261016.  Output: c3_kolmogorov.out.
 """
 import math
@@ -97,7 +99,9 @@ def run(L, n_random, order_mode):
 if __name__ == "__main__":
     out(f"seed {SEED}")
     out("Kolmogorov predictor against the adversary of Theorem 11.3 (data: 'not desc(v)' labelled true)")
-    out(" L  order          list  K-fails  2^L-1  index of final theory (F15(b) bound)  Bayes mistakes  Bayes bound (bits)  data true at w*")
+    out("Column 'progs before final' = number of list entries before the first theory that proves desc(w*);")
+    out("each failure eliminates one of them for good, so it bounds K-fails (the finite form of Prop 5.3(b)).")
+    out(" L  order          list  K-fails  2^L-1            progs before final (bounds K-fails)  Bayes mistakes  Bayes bound (bits)  data true at w*")
     for L in (2, 3, 4, 5):
         for order_mode in ("random", "decoys first"):
             for rep in range(3):

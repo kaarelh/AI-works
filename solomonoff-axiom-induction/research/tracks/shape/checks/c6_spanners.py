@@ -7,10 +7,11 @@ Law Ch_m: x_1 -> x_2 -> ... -> x_m (solutions: monotone 0^a 1^(m-a)).  Reasoner 
 A  reduction (Thm 7.1): a 2-CNF of sound implications is UP_k-usable iff its implication graph is a k-hop
    TC-spanner of the directed path; checked on random edge sets (m <= 7) by running UP_k on every consistent
    partial assignment.  Wide sound clauses add nothing (their prime-implicate replacements derive as much).
-B  exact minimum k-hop TC-spanners of the directed path P_m by integer programming (k = 2, 3, 4), cross-checked
+B  exact minimum k-hop TC-spanners of the directed path P_m by integer programming (k = 2: m <= 16; k = 3: m <= 13;
+   k = 4: m <= 12; the ILP time grows fast), cross-checked
    by exhaustive search for m <= 7; the optimal spanners are re-checked as UP_k-usable theories.
 C  comparison with the recursive constructions and with the lower bound for UP_2 with auxiliary variables
-   and clauses of any width (Thm 7.3): |F| >= ((m-2) log2((m-2)/2) - m)/2.
+   and clauses of any width (Thm 7.2): |F| >= ((m-2) log2((m-2)/2) - m)/2.
 """
 import random, sys, time, math
 from itertools import combinations, product
@@ -199,7 +200,7 @@ def construct(m, k):
 P("== B: exact minimum k-hop TC-spanners of the directed path (ILP), brute-force cross-check for m <= 7")
 res_table = {}
 for k in (2, 3, 4):
-    mmax = {2: 22, 3: 16, 4: 12}[k]
+    mmax = {2: 16, 3: 13, 4: 12}[k]
     row = []
     for m in range(2, mmax + 1):
         val, E, st = ilp_spanner(m, k)
@@ -213,8 +214,8 @@ for k in (2, 3, 4):
     P(f"  k={k}: " + ", ".join(f"m={m}:{v}" + ("" if st == 0 else "?") for m, v, st in row))
 P("  (brute force agreed for m <= 7; the ILP optima for m <= 8 were re-checked as UP_k-usable 2-CNFs)")
 
-P("== C: k=2 against the midpoint construction and the lower bound with auxiliary variables (Thm 7.3)")
-for m in (4, 6, 8, 10, 12, 14, 16, 18, 20, 22):
+P("== C: k=2 against the midpoint construction and the lower bound with auxiliary variables (Thm 7.2)")
+for m in (4, 6, 8, 10, 12, 14, 16):
     lbv = ((m - 2) * math.log2((m - 2) / 2) - m) / 2 if m > 3 else 0
     P(f"  m={m}: ILP optimum (no aux) = {res_table[(2, m)]}; midpoint construction = {construct(m, 2)}; "
       f"m log2 m = {m * math.log2(m):.1f}; lower bound with aux and any width = {lbv:.1f}")

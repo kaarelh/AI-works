@@ -16,7 +16,19 @@
 
 ## 0. Summary
 
-*(Filled in at the end; see §12 for the status of every claim.)*
+The thread answers the brief's open question ("in what precise sense is a theory better shaped like a logical theory than like a program?") for linear laws over GF(2) and for the implication chain, relative to a reasoner. Statuses are in §12.
+
+1. **The setting and its bridge to SAI (§1).** Explicit theories (clauses over base and auxiliary variables), conditional questions, reasoners ($\mathrm{UP}_k$, $\mathrm{GE}$, $\mathrm{PS}_\infty$) and three inducers: program length ($K_A^{\mathcal R}$, NOTATION §6.1), listing (the theory charged as written, $K_{\rm lst}^{\mathcal R}$), time-charged ($Kt_A^{\mathcal R}$). With unbounded proof search, $K_A^{\mathcal R}$ is $K_A$ on question data **provided** a conditional datum requires the theory to be consistent with its antecedent; the two-valued encoding "$\alpha\to\ell$ is true" is degenerate (a single world fits all question data) [proved].
+2. **The reasoner is invisible to program length (Theorem 1.11) [proved].** Under program-length priors every sound reasoner is equivalent to one round of unit propagation up to $O(1)$ bits, because a fixed program writes out the prime-implicate library. The textbook point is visible only when the written theory is charged: exponential gaps in $K_{\rm lst}$, linear in bits under $Kt$ (Theorem 1.12). **This corrects an expectation implicit in NOTATION §6.1** (Notation request 2).
+3. **Exact minimum without intermediate concepts (§2) [proved; computed].** For an affine law whose derived equations all have weight $\ge3$, the unique minimum unit-propagation-usable theory over the base variables is the set of clauses of the *indecomposable* circuits: those derived equations that cannot be split as two derived equations chained through a single intermediate base quantity (Theorem 2.6). Scout N2's lower bound $a_*2^{d_*-1}$ is a corollary; for the simplex family the minimum is $m2^{(m-1)/2}$ clauses against $\log_2(m+1)$ equations; the written core suffices iff every indecomposable circuit is a core equation. Both bounds fail for weight 2 (counterexamples kept).
+4. **Intermediate concepts (§3).** One parity law: the chain encoding ($4m-6$ clauses) is propagation complete [proved; computed]. Systems: auxiliary variables private to each law add nothing [proved]; and for an explicit family (the hidden-state law of 3-XOR-SAT) every unit-propagation-usable theory, with any intermediate concepts, has written length $2^{\Omega(m^{\varepsilon/3})}$, while Gaussian elimination uses a theory of linear size [proved, given Göös–Kamath–Robere–Sokolov 2019; Gwynne–Kullmann 2014's superpolynomial version verified at abstract level and shown to apply to our notion of usability].
+5. **Directionality (§4) [proved].** The separation the brief asked for exists: for one parity law without intermediate concepts, every direction-complete set of directed rules is exactly $m$ times the clausal law (the number of query directions). With intermediate concepts the factor is at most 9 in written length for every law (3 for the chain encoding). So the large separations are between reasoners and between vocabularies, not between declarative and procedural shapes.
+6. **Three homes of know-how (§5) [proved].** Reasoner, written lemmas, or uncharged computation (free proof search, or a generator under program length). The AI-paper's charged-deduction readings give the written core and the full lemma library the same cost, so they cannot express the textbook point; a deterministic bounded reasoner with a cost on the written theory can.
+7. **Learning (§6) [proved; computed].** With the listing prior, a unit-propagation inducer without intermediate concepts learns pattern by pattern: every minimal compatible theory fails on at least one question of every unseen value pattern, it is fully correct only after all $2^{m-1}$ patterns are seen (coupon collector: about $2^{m-1}(m-1)\ln2$ random questions), and its Bayes loss is about $m\log_2m$ bits per pattern; the GE inducer and the inducer with intermediate concepts pay $O(m\log m)$ bits in total. Under program length the gap disappears.
+8. **Depth against size (§7).** For $x_1\to\dots\to x_m$ and $k$ rounds of propagation, the least usable theory over the base variables is exactly a minimum $k$-hop TC-spanner of the path [proved], $\Theta(m\lambda_k(m))$ [known]; exact values for small $m$ [computed], with $s_2(m)=\sum_{i\le m}\lfloor\log_2i\rfloor$ for $m\le16$ and conjecturally always (the midpoint construction attains it [proved]); at depth 2, intermediate concepts and wide clauses save at most a factor about 2 (a Hansel-type bound) [proved]; superlinear at every fixed depth [proved, given Chandra–Fortune–Lipton].
+9. **First-order lemmas (§8).** Lemma-free theories can be non-elementarily worse for a cut-free reasoner [known: Statman, Orevkov]; writing the cut formulas as axioms restores short cut-free proofs [proof sketch]; a lemma enters a derivation-charged objective iff it saves more than its length [proved].
+
+**Reading for the paper [assessment].** Whether a written theory suffices depends on the reader and on the vocabulary; the idealised inducer cannot see this, because it charges a theory by the length of a program that may compute the missing lemmas. Logical shape buys many-directional use only up to a constant once intermediate concepts are available. No "Possible error in the author's view" arises (§10).
 
 ---
 
@@ -184,7 +196,7 @@ For $r=3$ the check confirms: 7 circuits of weight 4, $|\mathrm{PI}|=56$, $\math
 
 **Proposition 3.1 (the chain encoding; scout N2 Prop 2.5) [proved; computed: c2 A].** Encode $x_1\oplus\dots\oplus x_m=c$ ($m\ge4$) by the constraints $y_1=x_1\oplus x_2$, $y_i=y_{i-1}\oplus x_{i+1}$ ($2\le i\le m-2$), $y_{m-2}\oplus x_m=c$, each three-variable constraint written as its 4 clauses and the last as 2: $4m-6$ clauses, $m-2$ auxiliary variables. The encoding is *propagation complete on all variables*: for every partial assignment $\alpha$ to base and auxiliary variables, unit propagation derives every literal entailed by the encoding and $\alpha$, and reaches a conflict iff $\alpha$ is inconsistent. Without auxiliary variables $2^{m-1}$ clauses are necessary (Corollary 2.7(c)) and sufficient.
 
-*Proof.* Each constraint's clause set is all prime implicates of that one constraint, so (Lemma 1.10) it derives its third variable when two are assigned and gives a conflict when all are assigned inconsistently. Consider the fixpoint of unit propagation without conflict. Every constraint is then either fully assigned, and satisfied, or has at least two unassigned variables. Call the latter *active*. Each variable occurs in at most two constraints, and consecutive constraints share exactly one auxiliary variable, so the graph on active constraints, joined when they share an unassigned variable, is a disjoint union of paths. Fix an unassigned variable $z$ and a value for it. Process each path from one end (in the component of $z$, starting from a constraint containing $z$, setting $z$ first). When a constraint is processed, at most one of its variables is already set: the one it shares with the previously processed constraint, or $z$. It has at least two unassigned variables, so at least one is still free: give the other free ones arbitrary values and solve for that one. This yields a solution extending the fixpoint with either value of $z$, so no unassigned variable is entailed; and if $\alpha$ were inconsistent, the same construction (without $z$) would give a solution, so unit propagation must have reached a conflict. ∎
+*Proof.* Each constraint's clause set is all prime implicates of that one constraint, so (Lemma 1.10) it derives its third variable when two are assigned and gives a conflict when all are assigned inconsistently. Consider the fixpoint of unit propagation without conflict. Every constraint is then either fully assigned, and satisfied, or has at least two unassigned variables. Call the latter *active*. Each variable occurs in at most two constraints, and consecutive constraints share exactly one auxiliary variable, so the graph on active constraints, joined when they share an unassigned variable, is a disjoint union of paths. Fix an unassigned variable $z$ and a value for it. Process each component breadth-first from a root (in the component of $z$, a constraint containing $z$, with $z$ set first). When a constraint is processed, at most one of its variables is already set: the one it shares with its parent, or $z$ at the root. It has at least two unassigned variables, so at least one is still free: give the other free ones arbitrary values and solve for that one. This yields a solution extending the fixpoint with either value of $z$, so no unassigned variable is entailed; and if $\alpha$ were inconsistent, the same construction (without $z$) would give a solution, so unit propagation must have reached a conflict. ∎
 
 The check: exhaustive over all $3^{m+(m-2)}$ partial assignments to base and auxiliary variables, $m=3,\dots,7$, both values of $c$ (for $m=7$: 150,147 consistent and 381,294 inconsistent assignments): 0 failures.
 
@@ -218,9 +230,9 @@ So intermediate concepts that belong to one law each cannot help a weak reasoner
 
 The check: on the law of Theorem 3.6 with four hidden variables (9 base variables), the circuit built from a usable theory (2,442 gates) agrees with unit propagation and with XOR-unsatisfiability on all 256 inputs; on random laws with circuit libraries and random input sets it agrees with unit propagation on every literal (c2 D; a first version mishandled unit clauses and was fixed, Verification log).
 
-**Theorem 3.6 (systems of laws need exponential written length, with any intermediate concepts) [proved, given GKRS 2019].** For $n\ge3$ let $g_e=(u_e,c_e)\in\mathrm{GF}(2)^{n+1}$ range over the $M:=2\binom n3$ vectors with $u_e$ of weight 3 and $c_e\in\{0,1\}$, and $t:=(0^n,1)$. The *hidden-state law* $\mathcal H_n$ on $m=M+1$ base variables $(x_e)_e,x_t$ is
+**Theorem 3.6 (systems of laws need exponential written length, with any intermediate concepts) [proved, given GKRS 2019].** For $n\ge4$ let $g_e=(u_e,c_e)\in\mathrm{GF}(2)^{n+1}$ range over the $M:=2\binom n3$ vectors with $u_e$ of weight 3 and $c_e\in\{0,1\}$, and $t:=(0^n,1)$. The *hidden-state law* $\mathcal H_n$ on $m=M+1$ base variables $(x_e)_e,x_t$ is
 $$\mathcal H_n:=\{((z\cdot g_e)_e,\ z\cdot t):\ z\in\mathrm{GF}(2)^{n+1}\},$$
-a linear law (the observed quantities are fixed linear functionals of an unobserved state $z$), with $k=M-n$ equations; with $z$ as $n+1$ auxiliary variables it is written as the $M+1$ sparse equations $x_e=u_e\cdot z+c_ez_0$, $x_t=z_0$, which $\mathrm{GE}$ uses directly. Then there is $\varepsilon>0$ such that every $\mathrm{UP}$-usable explicit theory $F$ for $\mathcal H_n$, with any number of auxiliary variables and clauses of any width, has
+a linear law (the observed quantities are fixed linear functionals of an unobserved state $z$), with $k=M-n$ equations (for $n\ge4$ the vectors $g_e$ span $\mathrm{GF}(2)^{n+1}$, so $\dim\mathcal H_n=n+1$); with $z$ as $n+1$ auxiliary variables it is written as the $M+1$ sparse equations $x_e=u_e\cdot z+c_ez_0$, $x_t=z_0$, which $\mathrm{GE}$ uses directly. Then there is $\varepsilon>0$ such that every $\mathrm{UP}$-usable explicit theory $F$ for $\mathcal H_n$, with any number of auxiliary variables and clauses of any width, has
 $$\|F\|\ \ge\ 2^{n^{\varepsilon}/2-O(1)}-m\ =\ 2^{\Omega(m^{\varepsilon/3})}.$$
 
 *Proof.* Antecedents $\alpha_S:=\{x_e=0:e\in S\}$, $S\subseteq[M]$, are consistent ($0\in\mathcal H_n$). On $\mathcal H_n$, $x_t$ is determined by $x_S$ iff $t\in\mathrm{span}\{g_e:e\in S\}$ (if not, some $z$ has $z\cdot g_e=0$ on $S$ and $z\cdot t=1$, and $z$, $0$ give two points that agree on $S$), iff the XOR system $\{u_e\cdot y=c_e:e\in S\}$ over $y\in\mathrm{GF}(2)^n$ is unsatisfiable (a subset of the equations sums to $0=1$). If determined, the value is that of the point 0, so usability gives "unit propagation derives $\neg x_t$"; if not, soundness ($\mathrm{proj}\,F=\mathcal H_n$) excludes any literal on $x_t$. So the output for $\neg x_t$ of the circuit of Lemma 3.5 (inputs $I=\{\neg x_e\}$) computes the monotone function 3-XOR-SAT$_n$ (accept iff the selected system is unsatisfiable), with $O((\|F\|+m)^2)$ gates (every variable of $F$ occurs in it, so $N\le\|F\|+m$). Göös, Kamath, Robere and Sokolov prove that this function needs monotone circuits of size $2^{n^{\varepsilon}}$ for some $\varepsilon>0$ (their input encoding lists equations by up to $2n^3$ bits; identifying duplicate inputs changes the size by $O(n^3)$). Hence $(\|F\|+m)^2\ge2^{n^\varepsilon-O(1)}$. ∎
@@ -238,7 +250,7 @@ $$\|F\|\ \ge\ 2^{n^{\varepsilon}/2-O(1)}-m\ =\ 2^{\Omega(m^{\varepsilon/3})}.$$
 
 ## 4. Directionality: the separation the brief asked for, and its limit (target T4)
 
-**Definition 4.1.** A *directed rule* is $P\Rightarrow\ell$, $P$ a set of literals (the premise) and $\ell$ a literal. *Forward chaining* $\mathrm{FC}_k$ applies, in each of $k$ parallel rounds, every rule whose premise is satisfied by the current assignment. A rule is sound for $\mathcal S$ if $\mathcal S\wedge P\models\ell$ (with $P$ consistent with $\mathcal S$); a set of rules is *direction-complete* (usable) if forward chaining derives every entailed base literal from every consistent antecedent. A rule has written length $|P|+1$.
+**Definition 4.1.** A *directed rule* is $P\Rightarrow\ell$, $P$ a set of literals (the premise) and $\ell$ a literal. *Forward chaining* $\mathrm{FC}_k$ applies, in each of $k$ parallel rounds, every rule whose premise is satisfied by the current assignment. A rule is sound for $\mathcal S$ if $\mathcal S\wedge P\models\ell$ (with $P$ consistent with $\mathcal S$; with auxiliary variables, the projection of a rule set is that of its clauses $\neg P\vee\ell$, required to be $\mathcal S$); a set of rules is *direction-complete* (usable) if forward chaining derives every entailed base literal from every consistent antecedent. A rule has written length $|P|+1$.
 
 **Proposition 4.2 (directed rules against clauses) [proved; computed: c3].**
 (a) For a clause $C$ let $\mathrm{rules}(C):=\{\neg(C\setminus\{L\})\Rightarrow L:L\in C\}$. For every theory $F$, $k$ and $\alpha$, $\mathrm{FC}_k$ with $\mathrm{rules}(F)$ and $\mathrm{UP}_k$ with $F$ derive the same literals (and conflict together). Conversely a rule $P\Rightarrow\ell$ is the clause $\neg P\vee\ell$, and unit propagation with the clause derives at least what forward chaining with the rule derives. Hence, for every law and every round budget $k$, with or without auxiliary variables: the smallest usable rule set has at least as many rules as the smallest usable clause set has clauses, and at most $w$ times as many, $w$ the largest clause width of a smallest usable clause set; in written length the factor is likewise at most $w$.
@@ -259,7 +271,7 @@ The checks (c3 A–C): for $m=2,\dots,7$ the sound rules number exactly $m2^{m-1
 
 **Remark 4.4 (scout P's caveat; time bounds) [assessment, with the proved parts cited].**
 * *Programs can contain solvers.* A program may consist of a generic solver applied to a declarative law at $O(1)$ extra length, so "programs lose" cannot be the statement; Theorem 1.11 is the precise form for reasoners: under program length, the weakest reasoner plus a compiler is as good as any. The separations above are about what a *fixed* weak reasoner needs *written*.
-* *Time bounds.* The translation of Prop 4.2(a) is round-for-round, so the directionality factor is the same under every propagation-round budget $\mathrm{UP}_k$. A per-question time bound below that of elimination ($O(k^2m)$ bit operations for $\mathrm{GE}$ on $k$ equations) does not separate directed rules from clauses either: both answer a question of the simplex family in one propagation round. What a time bound does change is the reasoner–reasoner comparison: a reasoner that may not run elimination must be handed the lemma library, which is exponentially larger (§2); if its time is charged at least linearly in the size of the theory it reads, it cannot even read the library. We state this as an assessment: the cell-probe-type question (is there a polynomial-size theory answering every question of the simplex family in time below elimination, for some reasoner model?) is not addressed here.
+* *Time bounds.* The translation of Prop 4.2(a) is round-for-round, so the directionality factor is the same under every propagation-round budget $\mathrm{UP}_k$. A per-question time bound below that of elimination ($O(k^2m)$ bit operations for $\mathrm{GE}$ on $k$ equations) does not separate directed rules from clauses either: the clausal library $\mathrm{PI}(\mathcal S)$ and its rule translation both answer every question of the simplex family in one round. What a time bound does change is the reasoner–reasoner comparison: a reasoner that may not run elimination must be handed the lemma library, which is exponentially larger (§2); if its time is charged at least linearly in the size of the theory it reads, it cannot even read the library. We state this as an assessment: the cell-probe-type question (is there a polynomial-size theory answering every question of the simplex family in time below elimination, for some reasoner model?) is not addressed here.
 
 ---
 
@@ -329,11 +341,25 @@ In every one of the 330 checkpoints (12, 12 and 6 runs) the failures were at lea
 
 **Known bounds [known: Alon–Schieber 1987 (TR 71/87, Tel Aviv; arXiv 2406.06321, 2024); stated for TC-spanners of the directed line by Berman, Bhattacharyya, Grigorescu, Raskhodnikova, Woodruff, Yaroslavtsev (Combinatorica 34(3), 2014) and in Bhattacharyya, Grigorescu, Jung, Raskhodnikova, Woodruff, SIAM J. Comput. 41(6) (2012) 1380–1425; content at abstract/secondary level].** $s_k(m)=\Theta(m\,\lambda_k(m))$, with $\lambda_k$ the $k$-th row inverse Ackermann function: $\lambda_2(m)=\log m$, $\lambda_3(m)=\log\log m$, $\lambda_4(m)=\log^*m$. Upper bounds by hub constructions (midpoint recursion for $k=2$, $\sqrt m$ hubs for $k=3$); Yao (STOC 1982, pp. 128–136) gave the first inverse-Ackermann space–time trade-off for one-dimensional range queries in the semigroup model. Chandra, Fortune and Lipton (JCSS 30(2) (1985) 222–234) give constant-depth unbounded fan-in circuits of size $O(nf^{-1}(n))$ for all prefixes of semigroup products.
 
-**Computed: exact minima [computed: c6 B].** Exact $s_k(m)$ by integer programming over all edge sets (path variables for every path of at most $k$ hops), confirmed by exhaustive search for $m\le7$, and each optimum for $m\le8$ re-checked as a $\mathrm{UP}_k$-usable 2-CNF: *(table filled from `c6_spanners.out` below)*.
+**Computed: exact minima [computed: c6 B].** Exact $s_k(m)$ by integer programming over all edge sets (path variables for every path of at most $k$ hops), confirmed by exhaustive search for $m\le7$, and each optimum for $m\le8$ re-checked as a $\mathrm{UP}_k$-usable 2-CNF:
+
+| $m$ | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| $s_1(m)=\binom m2$ | 1 | 3 | 6 | 10 | 15 | 21 | 28 | 36 | 45 | 55 | 66 | 78 | 91 | 105 | 120 |
+| $s_2(m)$ | 1 | 2 | 4 | 6 | 8 | 10 | 13 | 16 | 19 | 22 | 25 | 28 | 31 | 34 | 38 |
+| $s_3(m)$ | 1 | 2 | 3 | 5 | 6 | 8 | 10 | 12 | 14 | 16 | 18 | 20 | – | – | – |
+| $s_4(m)$ | 1 | 2 | 3 | 4 | 6 | 7 | 9 | 10 | 12 | 14 | 16 | – | – | – | – |
+
+The midpoint construction attains $s_2(m)$ for every $m\le16$ (c6 C); $s_3(m)=2m-6$ for $6\le m\le13$ (the $\log\log$ growth is not yet visible at these sizes). The integer program's time grows fast (about 3 minutes for $m=16$, $k=2$), which limited the ranges.
+
+**Proposition 7.1a (the midpoint construction, exactly) [proved; computed].** The midpoint recursion ($S(1)=0$, $S(n)=n-1+S(\lceil\frac{n-1}2\rceil)+S(\lfloor\frac{n-1}2\rfloor)$) gives $s_2(m)\le S(m)=\sum_{i=1}^m\lfloor\log_2i\rfloor=(m+1)L-2^{L+1}+2$, $L:=\lfloor\log_2m\rfloor$.
+*Proof.* $F(m):=\sum_{i\le m}\lfloor\log_2i\rfloor$ satisfies the same recursion: splitting $i=2j$ and $i=2j+1$ ($i\ge2$), $\lfloor\log_2 i\rfloor=1+\lfloor\log_2j\rfloor$, so $F(m)=(m-1)+F(\lfloor m/2\rfloor)+F(\lfloor(m-1)/2\rfloor)$, and $\lfloor m/2\rfloor=\lceil(m-1)/2\rceil$; the closed form is standard. ∎
+
+**Conjecture 7.1b.** $s_2(m)=\sum_{i=1}^m\lfloor\log_2i\rfloor$ for every $m$ (true for $m\le16$ by the integer program). The best lower bound proved here is Theorem 7.2's $\approx\frac12m\log_2m$, which holds even with auxiliary variables.
 
 **Theorem 7.2 (intermediate concepts and wide clauses gain at most a factor about 2 at depth 2) [proved].** Let $m\ge4$. Every $\mathrm{UP}_2$-usable explicit theory $F$ for $\mathrm{Ch}_m$, with any auxiliary variables and clauses of any width, has
 $$|F|\ \ge\ \tfrac12\big((m-2)\log_2\tfrac{m-2}{2}-m\big),$$
-while $s_2(m)\le m\log_2m$ (midpoint recursion). So at depth 2 the least usable theory has $\Theta(m\log m)$ clauses with or without intermediate concepts, and they save at most a factor about 2.
+(an asymptotic bound: it is positive only from $m=8$ on, 11.7 at $m=16$ against $s_2(16)=38$), while $s_2(m)\le m\log_2m$ (midpoint recursion: a hub vertex joined to all others, then recursion on both sides, $S(n)=n-1+S(a)+S(b)$ with $a+b=n-1$, $a,b\le n/2$, so by induction $S(n)\le n-1+(n-1)\log_2(n/2)\le n\log_2n$). So at depth 2 the least usable theory has $\Theta(m\log m)$ clauses with or without intermediate concepts, and they save at most a factor about 2.
 
 *Proof.* *Simplification.* Let $U$ be the literals derived by unit propagation from $F$ alone; they are auxiliary ($\mathrm{Ch}_m$ fixes no base variable). Simplifying $F$ by $U$ (delete satisfied clauses and falsified literals) gives $F'$ with $|F'|\le|F|$, the same projection, no unit clauses, and every $\mathrm{UP}_2$ derivation of $F$ outside $U$ made by $F'$ no later (induction on rounds: a clause of $F$ that fires contains no literal of $U$, as that literal would be falsified, i.e. its negation derived, contradicting soundness; its simplification fires in $F'$). So assume no unit clauses.
 
@@ -393,7 +419,125 @@ All entries were checked by WebSearch (bibliographic data and abstracts; no full
 
 ---
 
-## Progress log (for restarts)
+## 10. What the thread shows about "what a theory is", and what it does not
 
-* Done: literature searches (see §9); re-run of scout N2's `n1_xor_usability.py` on a scratch copy (identical output apart from the timing line); `checks/shapelib.py`; `checks/c1_linear_noaux.py` (+ `.out`).
-* Next: c2 (chain PC, library, systems, monotone-circuit reduction), c3 (directed rules), c4 (decider for T5), c5 (learning T6), c6 (TC-spanners T7); sections 3–12.
+**The brief's question:** in what precise sense is a theory better shaped like a logical theory than like a program? Our answer, for the classes studied (linear laws over GF(2), the implication chain), with every step a theorem above:
+
+1. **Under the idealised measure, in no sense.** Craig's collapse makes representation shape invisible (`sfi`, `terms`); Theorem 1.11 adds that *reasoners* are invisible too: under program length every sound reasoner is equivalent, up to a machine constant, to one round of unit propagation, because a program can write out the lemma library. The textbook point cannot be stated for the idealised inducer.
+2. **With a cost on the written theory and a fixed weak reasoner, shape matters, and exactly so** (Theorem 1.12). The theory must then contain its own know-how, and the written size it needs depends
+   * *exponentially on the reasoner* (Gaussian elimination: $\log_2(m+1)$ equations; unit propagation: $m2^{(m-1)/2}$ clauses for the simplex family, Corollary 2.8; any intermediate concepts: $2^{\Omega(m^{\varepsilon/3})}$ for the hidden-state law, Theorem 3.6),
+   * *exponentially on the vocabulary* for one law (no intermediate concepts: $2^{m-1}$ clauses; with partial sums: $4m-6$),
+   * and *only by a constant factor on declarative against procedural shape* once intermediate concepts are allowed (directed rules against clauses: exactly the number of directions $m$ without them, $\le9$ in written length with them; Theorem 4.3).
+3. **Which candidate properties of logical theories this bears on.** Multi-directional use is real but cheap: a clause is $w$ directed rules. Closure under inference is what the reasoner supplies, and its price is the subject of §2–§3 and §7. Partiality and modularity are not addressed here.
+4. **Where the know-how lives** (Prop 5.1): in the reasoner, in written lemmas, or in a computation the cost model does not charge (free proof search, as in the AI-paper's charged deduction; or a generator, as under program length). The AI-paper's charged-deduction results leave the search free and therefore cannot express the textbook point (Theorem 5.2).
+5. **Learning** (Theorem 6.2): a weak reasoner without intermediate concepts acquires its know-how pattern by pattern; with an algebraic reasoner, or with intermediate concepts, the law is learned at once.
+6. **Depth against size** (§7): for the implication chain, the written theory a reasoner with $k$ rounds needs has $\Theta(m\lambda_k(m))$ clauses, and intermediate concepts change this by at most a factor about 2 at depth 2.
+
+**What it does not show.** It is not a theorem about textbooks: the laws are linear or implicational, the reasoners are unit propagation, forward chaining and elimination, and the cost of a theory is its written length. It does not show that logic, rather than, say, probabilistic programs with conditioning or classes of models, is the right formal home for theories (the brief's caveat): the large separations are between reasoners and between vocabularies, and a rule base with intermediate concepts is within a constant of a clausal theory. It does not model a community of reasoners that communicate, check and extend theories (`select.md` §4 rejected that as a thread).
+
+**For `philosophy` [assessment].** Recommended sentence for the paper: *"Whether a written theory suffices depends on the reader. Paired with a reasoner that can do algebra, a linear law's few equations suffice; paired with one that only applies rules, the theory must spell out exponentially many derived laws, unless it is allowed new intermediate quantities, which help for a single law but not, in general, for a system of laws. The idealised inducer cannot see any of this, because it charges a theory by the length of a program that may compute the missing lemmas."*
+
+**Possible error in the author's view.** None arises in this thread. The author's textbook claim is supported, in the refined form "the written theory is insufficient for a simple reasoner, as a property of the pair (theory, reasoner) under a cost on the written theory"; the brief's own argument S4 was already corrected at selection (scout P's caveat), and Theorem 1.11 is the precise form of that correction.
+
+---
+
+## 11. Notation requests
+
+1. **Local symbols** (defined in the header of this record and where first used): $m$ (number of base variables; the global $n$ is the number of data), $\mathcal S$ (a law; the global $V$ is the universal machine), $\mathrm{Row}(A)$, $c_u$, $d_*$, $a_*$ (scout N2's $C^\perp$, $d$, $A_d$; $d$ is global), $C_{T,\beta}$, $|F|$, $\|F\|$, $\mathrm{PI}(\cdot)$, $F_{\rm ind}(\mathcal S)$, $\mathrm{Par}_m$, $\mathrm{Ch}_m$, $\mathcal H_n$ (here $n$ is local: the hidden dimension), $s_k(m)$, $\lambda_k$.
+2. **NOTATION §6.1 needs a split.** As written, $K_A^{\mathcal R}$, $W_A^{\mathcal R}$ ("shortest / weighted explicit theories") is ambiguous between program length and written length. We propose: $K_A^{\mathcal R}$, $W_A^{\mathcal R}$ for program length (they extend $K_A$, $W_A$: Prop 1.9), and new symbols $K_{\rm lst}^{\mathcal R}$, $W_{\rm lst}^{\mathcal R}$ (listing prior) and $Kt_A^{\mathcal R}$ (time-charged). **The reasoner-relative separations live in $K_{\rm lst}$ and $Kt$, not in $K_A^{\mathcal R}$** (Theorem 1.11); the paper must not attribute them to the program-length inducer.
+3. **NOTATION §3.2 (conditional questions)** should fix how a conditional datum is scored: $(\alpha,\ell)$ is compatible with $T$ iff $B\cup T\cup\{\alpha\}$ is consistent and proves $\ell$ (encoding (E3)), equivalently the three-valued event "label$(\alpha\to\ell)=1$, label$(\neg\alpha)\ne1$". The two-valued encoding $(\alpha\to\ell,1)$ is degenerate (Prop 1.8).
+4. Reasoner names: $\mathrm{UP}_k$ with *parallel* rounds (Definition 1.3), $\mathrm{FC}_k$ for forward chaining with directed rules.
+
+---
+
+## 12. Status of every claim
+
+| item | statement (short) | status |
+|---|---|---|
+| Lemma 1.5 | compatibility with $\mathcal Q(\mathcal S)$ forces $\mathrm{proj}=\mathcal S$ (affine $k\ge1$, chain) | proved; computed c4 D |
+| Lemma 1.7 | listing code is a prefix code; shortest ⇒ inclusion-minimal | proved |
+| Prop 1.8 | two-valued encoding degenerate: a point theory fits all question data | proved; computed c4 C |
+| Prop 1.9 | bridge: $K_A^{\mathrm{PS}_\infty}=K_A^{\rm cond}\pm c$ (r.e.), within $m+O(\log m)$ (finite) | proved |
+| Lemma 1.10 | $\mathrm{PI}(P)$ complete for one round of UP | proved (folklore; del Val); computed c4 A, c1 B |
+| Thm 1.11 | reasoner invariance under program length | proved; computed c4 B |
+| Thm 1.12 | listing / time-charged / program-length gaps | proved |
+| Lemma 2.1 | determination ⇔ derived equation ⇔ circuit (N2 2.2) | proved; computed c1 A |
+| Prop 2.2 | prime implicates = circuit clauses (N2 2.3) | proved; computed c1 B |
+| Prop 2.3 | any CNF $\ge(1-2^{-k})2^{d_*}$ (N2 2.4(a)) | proved; computed c1 C |
+| Lemma 2.4 | subsumption keeps $\mathrm{UP}_k$ derivations (any law) | proved; computed c1 G, c6 A |
+| Prop 2.5 | indecomposable circuits must be written | proved |
+| Thm 2.6 | $d_*\ge3$: $F_{\rm ind}$ is the unique minimum UP-usable theory over $X$ | proved; computed c1 D, H |
+| Cor 2.7 | $a_*2^{d_*-1}$ bound (N2 2.4(b)); when the core suffices; parity $2^{m-1}$ | proved |
+| Cor 2.8 | simplex: $m2^{(m-1)/2}$ clauses against $\log_2(m+1)$ equations | proved; computed c1 E |
+| Rem 2.9 | the $d_*\ge3$ hypothesis: Cor 2.7(a) and Thm 2.6 fail for $d_*=2$ | refuted for $d_*=2$ (counterexamples kept); computed c1 E, F, H |
+| Prop 3.1 | chain encoding propagation complete (N2 2.5) | proved; computed c2 A |
+| Prop 3.2 | circuit library / all-equations library usable (N2 2.6) | proved; computed c2 B |
+| Prop 3.3 | private intermediate concepts add nothing to a system | proved; computed c2 C |
+| — | the core answers 0.77–0.83 of sampled questions on sparse systems | computed c2 C |
+| Lemma 3.4 | usability ⇒ conflict detection (usability = arc consistency) | proved |
+| Lemma 3.5 | UP is a monotone circuit of size $O(N(\|F\|+N))$ | proved (Bessiere et al. in substance); computed c2 D |
+| Thm 3.6 | hidden-state law: every UP-usable theory has $\|F\|\ge2^{\Omega(m^{\varepsilon/3})}$, any auxiliaries | proved, given GKRS 2019 (known: abstract level) |
+| Rem 3.7 | Gwynne–Kullmann: no poly AC representation of XOR systems | known: abstract level; applies to usability by Lemma 3.4 |
+| Prop 4.2 | rules vs clauses: factor $\le w$; parity exactly $m$; with auxiliaries $\le9$ | proved; computed c3 A–C |
+| Thm 4.3 | the brief's separation exists and is a constant with intermediate concepts | proved |
+| Rem 4.4 | time bounds do not change the directionality factor; cell-probe question open | assessment / open |
+| Prop 5.1 | three homes of know-how; poly-time decider of PI of length $K(A,b)+c$ | proved; computed c3 D |
+| Thm 5.2 | charged deduction assigns the core and the full library the same cost | proved, given `sfi` Thm 8.1, Cor 8.2 |
+| Lemma 6.1 | answers of a no-aux theory on $\mathcal Q_{m-1}$ | proved |
+| Thm 6.2 | pattern-by-pattern learning (a)–(f) | proved; computed c5 |
+| Thm 7.1 | $\mathrm{UP}_k$-usable over $X$ ⇔ $k$-hop TC-spanner; minimum $=s_k(m)$ | proved; computed c6 A |
+| — | $s_k(m)=\Theta(m\lambda_k(m))$ | known: Alon–Schieber (secondary statement) |
+| — | exact $s_k(m)$ for small $m$ | computed c6 B |
+| Prop 7.1a | midpoint construction gives exactly $\sum_{i\le m}\lfloor\log_2i\rfloor$ | proved; computed |
+| Conj 7.1b | $s_2(m)=\sum_{i\le m}\lfloor\log_2i\rfloor$ for all $m$ | conjecture (true for $m\le16$, computed c6 B) |
+| Thm 7.2 | depth 2, any auxiliaries and widths: $|F|\ge\frac12((m-2)\log_2\frac{m-2}2-m)$ | proved; ingredients computed c4 E |
+| Prop 7.3 | fixed depth $k$, bounded width, auxiliaries: superlinear | proved, given CFL 1983 (known: abstract level) |
+| §8 | non-elementary cut elimination (Statman, Orevkov) | known: abstract level |
+| Prop 8.1 | lemmas as axioms restore short cut-free proofs | proof sketch |
+| Prop 8.2 | a lemma enters iff saved derivation cost exceeds its length | proved (elementary) |
+| §10 | the answer to the brief's question | assessment, resting on the theorems listed |
+
+---
+
+## 13. Open problems
+
+1. The exact minimum UP-usable theory over the base variables when $d_*=2$ (equivalence classes interact with heavier circuits; Remark 2.9).
+2. The constant at depth 2 with intermediate concepts: between $\frac12m\log_2m$ (Theorem 7.2) and $\sum_{i\le m}\lfloor\log_2i\rfloor\approx m\log_2m$; Conjecture 7.1b (the latter is exact without auxiliary variables); and the exact effect of auxiliary variables at depth $k\ge3$ (only "superlinear" is shown, given CFL).
+3. A learning theorem for systems of laws (the pattern-by-pattern bound of Theorem 6.2 is for one parity law), and a Bayes lower bound for arbitrary (not block-complete) question sequences.
+4. Time bounds below elimination in a cell-probe-type model (Remark 4.4).
+5. Partiality and modularity, the other candidate properties of logical theories in the brief, have no theorem here.
+
+---
+
+## 14. Verification log
+
+1. **Reading.** The project brief and the thread brief in full; NOTATION-draft; select.md; scout N2 §0–§2, §6–§9 and the source and output of `n1_xor_usability.py`; scout P §1.3 and §5; scout L §3.9 and §7 and its `refs.bib` entries used here; scout S I17–I19; the AI-paper's `time.tex` §6.4–6.6; the `sfi` record §8; the `fundamentals` record's definitions of $K_A$, $W_A$; the prior notes `phil-sci-our-science-is-very-human-software.md` and `good-concepts-are-concepts-that-support-inferences.md`. The `terms` and `philosophy` records were consulted only for how they cite this thread (they cite its targets and scout N2's items; their statements agree with ours, except that they could not yet use Theorem 1.11, Theorem 2.6 or Theorem 3.6).
+2. **Literature.** WebSearch only (about 25 queries). WebFetch failed with DNS errors on every host tried (cronfa.swansea.ac.uk, deepai.org, eccc.weizmann.ac.il, en.wikipedia.org), so no full text was read. Verified at bibliographic and abstract level: GK 2014; Bessiere et al. 2009; BGW 1999; GKRS 2019 and the Cavalar–Oliveira statement of its bound; Alon–Schieber (TR and arXiv); BGJRW 2012; Berman et al. 2014; CFL 1983 and 1985; Yao 1982; Darwiche–Marquis 2002; Selman–Kautz 1996; del Val 1994; Bordeaux–Marques-Silva 2012 (page range inconsistent between listings); Babka et al. 2013; Emdin et al. 2022; Urquhart 1987; Orevkov 1982. Taken from scout L's verified `refs.bib`: Khardon–Roth, Juba, Kowalski, Winograd, McCarthy, Statman. **Not verified:** Ben-Sasson–Wigderson's bibliographic data; the exact theorem statements of GK 2014, BGW 1999 and GKRS 2019; the depth correspondence in CFL 1983 (Prop 7.3 is hedged accordingly); Hansel 1964 (secondary sources only; Theorem 7.2 has its own proof).
+3. **Scripts** (all in `checks/`, seed 20261016, outputs saved next to them; `shapelib.py` is the shared, independent implementation of unit propagation, GF(2) algebra and brute-force prime implicates).
+   * `c1_linear_noaux.py` (30 s): parts A–H as cited in §2.
+   * `c2_intermediate.py` (150 s): parts A–D as cited in §3.
+   * `c3_directions_decider.py` (1.4 s): parts A–D as cited in §4–§5.
+   * `c4_setting_depth2.py` (6 s): parts A–E as cited in §1 and §7.
+   * `c5_learning.py` (0.7 s): the learning simulation of §6.
+   * `c6_spanners.py` (about 7 min, mostly integer programming): parts A–C of §7.
+   * Scout N2's `n1_xor_usability.py` was re-run on a scratch copy: output identical to the saved one apart from the timing line.
+4. **Defects found and fixed during the work.**
+   * c1 E first claimed the simplex minimum $=|\mathrm{PI}|$ also for $r=2$. That is false ($d_*=2$; two equivalences suffice); corrected, and kept as Remark 2.9.
+   * c1 D's first instance selection was dominated by laws with $d_*=1$ (fixed variables); restricted to $d_*\ge2$.
+   * c2 D's first version built gate-level circuits for 5 hidden variables, whose library is huge, and exhausted memory; restricted to 4 hidden variables plus random small laws.
+   * c2 D's circuit builder ignored unit clauses (they must give a constant-1 gate): 287 mismatches with unit propagation on random laws with $d_*=1$; after the fix, 0.
+   * c6: integer-programming time grows fast ($m=16$, $k=2$: about 3 minutes), so the ranges were cut to $m\le16$, $13$, $12$ for $k=2,3,4$. One run was killed by a process-name match of `pkill` against its own shell and was restarted.
+   * Theorem numbers in the docstrings of c5 and c6 (and one label line of c6's output) were updated after renumbering; c6 was re-run afterwards.
+5. **Determinism.** c1–c5 were copied to a scratch directory, re-run, and their outputs compared with the saved ones ignoring the timing line: identical for all five. c6: see item 8.
+6. **Proof self-checks.**
+   * Theorem 2.6 uses $d_*\ge3$ twice (to exclude $u''=e_i+e_j$, and to get $|\mathrm{supp}(u')\cap\mathrm{supp}(u)|\ge2$); both uses are visible in the proof, and c1 H confirms that the statement fails for $d_*=2$.
+   * Lemma 2.4 is proved for any law (only implicates and a consistent antecedent are used), which Theorem 7.1 needs.
+   * Theorem 7.2: the simplification step (unit clauses), the absence of a second positive base literal in serving clauses, the pairing that keeps the diagonal out, and the use of Harris's inequality (blocking events are increasing in the set of left coins and independent of the coins of $N(2a)$) were each checked; c4 E verifies the counting inequality and both pairing sums on 167 generated theories with auxiliary variables and conjunctive clauses.
+   * Theorem 3.6 needs $n\ge4$ for $\dim\mathcal H_n=n+1$ (for $n=3$ the weight-3 vectors span a line); the statement says so. Lemma 3.5's size uses $N\le\|F\|+m$.
+   * Prop 4.2(c)'s splitting adds propagation rounds, so the factor 9 is for unbounded propagation; for a round budget the factor is the clause width (Prop 4.2(a)).
+   * Prop 1.9(b) leaves a gap of up to $m+O(\log m)$ bits between finite and r.e. theories; we did not try to show that it is attained.
+   * Scout N2's "material $O(n)$" for the one-instance derivation (its Prop 2.8(c)) is restated here as "size polynomial in $m$"; the exact material in the calculus $\mathsf K$ was not counted.
+   * Theorem 6.2(d) is stated only for block-complete data; for general sequences only the MAP statement (b) and the simulations are given.
+7. **Not done.** No referee and no proof assistant. Prop 8.1 is a proof sketch. Open problems are listed in §13.
+8. **c6 result and re-run.** The final c6 run took 396 s; its output (§7 table, parts A and C) was reproduced exactly by a second run on a scratch copy (ignoring the timing line). Part C shows that Theorem 7.2's bound is asymptotic (11.7 at $m=16$ against $s_2(16)=38$); Prop 7.1a's closed form was additionally checked against the midpoint recursion for all $m<3000$ (a one-off computation, not saved as a script; the identity is proved).
+9. **Restart safety.** No partial output of an earlier run existed in this folder when the work began (only `00-brief.md`); the record was written section by section and saved after each.

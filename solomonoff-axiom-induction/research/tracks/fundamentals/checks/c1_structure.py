@@ -9,15 +9,18 @@ Finite propositional stand-in.
   have the same mask (logically equivalent sentences), which tests that weights depend on Cn only.
 * A theory is represented by its set of models, a bitmask M; M == 0 is the inconsistent theory.
   "T proves chi" iff M is a subset of chi (for M == 0 every chi is proved).
-* A prior is a finite list of (M, w) with w > 0 and total weight <= 1 (the rest is "missing" mass,
-  like the tapes with no program).  This is the law of a theory machine whose tape selects one of
-  finitely many finite theories (dyadic weights are realisable exactly; we use rationals).
+* A prior is a finite list of (M, w) with w > 0 and total weight exactly 1.  Revision (referee B,
+  m5(a)): version 1 left a "missing" mass 1 - total assigned to no theory; under Def 1.4 every tape
+  yields a theory (the empty one when the tape has no program prefix), so the missing mass is now put
+  on the empty theory.  A prior is then the law of a theory machine whose tape selects one of finitely
+  many finite theories (dyadic weights are realisable exactly; we use rationals).
 * The posterior after data D is the prior restricted to consistent theories proving psi_D.
 
 Exact rational arithmetic (fractions.Fraction) is used for the identities; logs use floats.
 Seed 20261016.  Output: c1_structure.out (written next to this script).
 
 Items checked (labels as in notes.md):
+  A0  (revision) prior total 1, M(empty) = 1 - Inc_0                                (Prop 2.1(e))
   A1  semimeasure inequality, defect = three-valued mass = M(D)*Indep_D            (Prop 2.1(b),(f))
   A2  entailed data free, contradicting data fatal; equivalent sentences            (Prop 2.1(c))
   A3  order independence of the semimeasure-convention loss                         (Prop 2.1(d))
@@ -158,8 +161,15 @@ def m_half(U, prior, D):
     return sum((w * nu_half(U, M, D) for (M, w) in prior if M != 0), Fr(0))
 
 
-def rand_prior(U, n=6, p_inc=0.3, total=None, with_empty=True):
-    """random finite prior; optionally includes the inconsistent theory and the empty theory."""
+def rand_prior(U, n=6, p_inc=0.3, total=None, with_empty=True, fill_empty=True):
+    """random finite prior; optionally includes the inconsistent theory and the empty theory.
+
+    Revision (referee B, m5(a)): with fill_empty=True (the default) the mass 1 - total that was
+    previously "missing" is put on the empty theory (model set FULL), so that every prior is the law
+    of a theory machine on which every tape yields a theory (Def 1.4: tapes with no program give the
+    empty theory).  The random draws are unchanged, so the instances are the same as in version 1;
+    only the weight of the empty theory changes.  fill_empty=False keeps a sub-probability (used in
+    Part C, where the remainder is added after mixing)."""
     thetas = [U.rand_prop(nonempty=True, notfull=False) for _ in range(n)]
     if with_empty:
         thetas.append(U.FULL)
@@ -169,7 +179,10 @@ def rand_prior(U, n=6, p_inc=0.3, total=None, with_empty=True):
     if total is None:
         total = Fr(rng.randint(5, 10), 10)
     s = sum(raw)
-    return [(M, total * r / s) for (M, r) in zip(thetas, raw)]
+    prior = [(M, total * r / s) for (M, r) in zip(thetas, raw)]
+    if fill_empty and total < 1:
+        prior.append((U.FULL, 1 - total))
+    return prior
 
 
 def rand_data(U, n, sid0=0):
@@ -196,8 +209,17 @@ def part_A():
     worst = {key: Fr(0) for key in ["A1sum", "A1defect", "A1indep", "A4", "A5", "A8", "A9", "A11", "A12weak"]}
     worst_f = {"A3": 0.0, "A6": Fr(0), "A7": Fr(0)}
     cnt = {"A2": 0, "A9strict": 0, "A10": 0, "A12ge": 0, "A12charge": 0, "consistentD": 0}
+    a0 = {"total1": 0, "eq": 0, "strict": 0, "n": 0}
     for _ in range(T):
         prior = rand_prior(U)
+        # A0 (revision): every tape yields a theory, so the prior is a probability, and
+        # M(empty) = 1 - Inc_0 (Prop 2.1(e)); strictly between 0 and 1 when Inc_0 > 0.
+        a0["n"] += 1
+        tot = sum((w for (M, w) in prior), Fr(0))
+        inc = sum((w for (M, w) in prior if M == 0), Fr(0))
+        a0["total1"] += int(tot == 1)
+        a0["eq"] += int(weight(U, prior, []) == 1 - inc)
+        a0["strict"] += int(inc == 0 or 0 < weight(U, prior, []) < 1)
         D = rand_data(U, rng.randint(0, 3))
         phi = (100, U.rand_prop(), None)
         MD = weight(U, prior, D)
@@ -304,6 +326,8 @@ def part_A():
     out(f"(A7) max of Bel - P and P - Pl for the selected completion [<= 0]: {float(worst_f['A7']):.3e}")
     out(f"(A8) max |CR posterior Bel^nc - Dempster formula|          [= 0]: {float(worst['A8']):.3e}  (exact)")
     out(f"(A9) max |M^nc(D+1)+M^nc(D+0)-M^nc(D) - undecided mass|   [= 0]: {float(worst['A9']):.3e}; strict excess in {cnt['A9strict']} trials")
+    out(f"(A0) prior total = 1 in {a0['total1']} of {a0['n']}; M(empty) = 1 - Inc_0 exactly in {a0['eq']} of {a0['n']}; "
+        f"0 < M(empty) < 1 whenever Inc_0 > 0 in {a0['strict']} of {a0['n']}")
     out(f"(A10) M^nc(D) >= weight of the empty theory: {cnt['A10']} trials (of those with M^nc>0)")
     out(f"(A11) max |M^nc Bel^nc - (M Bel + weak-theory part)|        [= 0]: {float(worst['A11']):.3e}  (exact)")
     out(f"(A12) max of M_half(D+1)+M_half(D+0)-M_half(D)              [<= 0]: {float(worst['A12weak']):.3e}")
@@ -396,8 +420,9 @@ def part_C():
         raw = [rng.randint(1, 9) for _ in nu_th]
         nu = [(M, Fr(r, sum(raw))) for M, r in zip(nu_th, raw)]
         w = Fr(rng.randint(1, 6), 16)
-        others = rand_prior(U, n=4, total=Fr(rng.randint(2, 8), 16))
+        others = rand_prior(U, n=4, total=Fr(rng.randint(2, 8), 16), fill_empty=False)
         mix = [(M, w * x) for (M, x) in nu] + others
+        mix.append((U.FULL, 1 - w - sum((x for (_, x) in others), Fr(0))))   # revision: remainder on the empty theory
         n = 3
         cands = [U.rand_prop() for _ in range(6)]
 

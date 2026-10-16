@@ -18,6 +18,7 @@ Seed 20261016.  Output: c2_separations.out.
   B5  (Prop 11.2) graded consistency-requiring weight vs proof-requiring weight on k blocks of three
       pairwise incompatible sentences: some data set has gap >= k log(3/2) + log w_empty; and a single
       datum among m = 2^r incompatible sentences has gap >= log m - 1 + log w_empty.
+      Revision: w_empty raised from 1/4 to 3/4 so that every bound is positive (referee B, m5(b)).
 """
 import itertools
 import math
@@ -359,12 +360,15 @@ def part_B5():
         for j in range(k):
             a, b = U.atom(2 * j), U.atom(2 * j + 1)
             blocks.append([a, U.neg(a) & b, U.neg(a) & U.neg(b)])
-        w_empty = 0.25
-        prior = [(U.FULL, w_empty), (0, 0.05)]
+        # Revision (referee B, m5(b)): version 1 used w_empty = 0.25, which made the bound
+        # k log(3/2) + log w_empty nonpositive (vacuous) for k = 1, 2, 3.  With w_empty = 0.75 every
+        # bound below is positive.  The random draws are unchanged.
+        w_empty = 0.75
+        prior = [(U.FULL, w_empty), (0, 0.02)]
         for _ in range(12):
-            prior.append((rng.getrandbits(U.nv) or 1, 0.05 * rng.random()))
+            prior.append((rng.getrandbits(U.nv) or 1, 0.01 * rng.random()))
         for v in range(U.nv):                      # coin theory: a random complete valuation
-            prior.append((1 << v, 0.3 / U.nv))
+            prior.append((1 << v, 0.1 / U.nv))
         prior = [(M, Fr(w).limit_denominator(10 ** 9)) for (M, w) in prior]
         tot = Fr(0)
         best = -1e9
@@ -386,14 +390,14 @@ def part_B5():
     for r in (2, 3, 4):
         U = Universe(r)
         m = 1 << r
-        prior = [(U.FULL, Fr(1, 4)), (0, Fr(1, 32))]
+        prior = [(U.FULL, Fr(3, 4)), (0, Fr(1, 64))]          # revision: w_empty 1/4 -> 3/4
         for v in range(U.nv):
-            prior.append((1 << v, Fr(1, 2) / U.nv))
+            prior.append((1 << v, Fr(1, 8) / U.nv))
         for _ in range(5):
-            prior.append((rng.getrandbits(U.nv) or 1, Fr(rng.randint(1, 5), 200)))
+            prior.append((rng.getrandbits(U.nv) or 1, Fr(rng.randint(1, 5), 400)))
         best = max(lg(m_half(U, prior, [(1 << v, 1)])) - lg(W(U, prior, [(1 << v, 1)])) for v in range(U.nv))
         out(f"single datum among m = {m} incompatible sentences (complete descriptions of {r} atoms): "
-            f"max log(M_half/M) = {best:.3f} >= log m - 1 + log w_empty = {r - 1 + lg(0.25):.3f}")
+            f"max log(M_half/M) = {best:.3f} >= log m - 1 + log w_empty = {r - 1 + lg(0.75):.3f}")
     out()
 
 
