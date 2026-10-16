@@ -52,7 +52,7 @@ for m in range(3, 11):
     S = [x for x in range(1 << m) if popcount(x) % 2 == 0]
     vs = list(range(1, m + 1))
     pi = xor_clauses(vs, 0)
-    kpi = least_rounds(pi, S, m) if m <= 8 else 1
+    kpi = least_rounds(pi, S, m)
     Fc, nc = chain_encoding(vs, 0, m + 1)
     kc = least_rounds(Fc, S, m)
     Ft, nt = tree_encoding(vs, 0, m + 1)

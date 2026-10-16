@@ -1,6 +1,6 @@
 # Referee B (computation and counterexamples) for thread `shape`
 
-*Adversarial referee report, 2026-10-16. Object: `notes.md` (this folder, 543 lines, as of 02:22) and its scripts in `checks/`. I wrote independent, seeded code in `referee_code/refB_*.py`. Each script writes `refB_*.out` next to itself. The code uses its own library `refB_lib.py`, which does not import or copy `checks/shapelib.py`: it has DIMACS-style literals, its own parallel unit propagation, forward chaining, brute-force entailment and prime implicates. I did not use referee A's files in the same folder (`refA_*`). I read referee A's draft issue list (`referee-A.md`, 02:37) only to mark where our findings overlap; every finding below was reproduced by my own code. No git command was run.*
+*Adversarial referee report, 2026-10-16. Object: `notes.md` (this folder, 543 lines, as of 02:22) and its scripts in `checks/`. I wrote independent, seeded code in `referee_code/refB_*.py`. Each script writes `refB_*.out` next to itself. The code uses its own library `refB_lib.py`, which does not import or copy `checks/shapelib.py`: it has DIMACS-style literals, its own parallel unit propagation, forward chaining, brute-force entailment and prime implicates. I did not use referee A's files in the same folder (`refA_*`). I read referee A's draft issue list (`referee-A.md`, 02:37), and the final report once mine was written, only to mark where our findings overlap; every finding below was reproduced by my own code. No git command was run.*
 
 ## Verdict
 
@@ -15,7 +15,7 @@
 * T7: the whole s_k(m) table, Prop 7.1a, and the "only if" half of Theorem 7.1;
 * T1: Prop 1.8 and Theorem 1.11.
 
-All six developer scripts reproduce their saved outputs exactly. The headline new result, Theorem 2.6 (the unique minimum UP-usable theory over the base variables when d* ≥ 3), held on every law tested, by three independent methods (necessity of each clause together with usability, exact minima, and the core criterion of Cor 2.7(b)). Conjecture 7.1b now holds for m ≤ 16; the extended run is reported in §C.
+All six developer scripts reproduce their saved outputs exactly. The headline new result, Theorem 2.6 (the unique minimum UP-usable theory over the base variables when d* ≥ 3), held on every law tested, by three independent methods (necessity of each clause together with usability, exact minima, and the core criterion of Cor 2.7(b)). Conjecture 7.1b ($s_2(m)=\sum_{i\le m}\lfloor\log_2 i\rfloor$) now holds up to m = 18, two values beyond the record's range: $s_2(17)=42$, $s_2(18)=46$.
 
 **What did not survive.**
 * **Issue 1.** The record's reading of the simplex family as a gap *between reasoners* is false for the hypothesis class it defines, which allows auxiliary variables. With auxiliary variables, unit propagation has a usable theory of O(m²) clauses: computed, and the clause counts are exact for r ≤ 7.
@@ -55,7 +55,7 @@ All six scripts of `checks/` were copied to a scratch directory and run there. E
 * §10 item 2, first bullet.
 * Theorem 6.2(f): "under $Kt$ the gap is $m+O(\log m)$".
 
-*Why it fails.* Definition 1.6 takes $H_{\mathrm{UP}}$ to be explicit theories over $X\cup Y$, so auxiliary variables are allowed. Corollary 2.8 is a statement about theories over $X$ only. Prop 3.2 gives every affine law a UP-usable library of size $\sum_u \min(2^{|u|-1},4|u|-6)$. For the simplex family that is $m(2m-4)$ clauses: polynomial.
+*Why it fails.* Definition 1.6 takes $H_{\mathrm{UP}}$ to be explicit theories over $X\cup Y$, so auxiliary variables are allowed. Corollary 2.8 is a statement about theories over $X$ only. Prop 3.2 gives every affine law a UP-usable library of size $\sum_u \min(2^{|u|-1},4|u|-6)$. For the simplex family it is at most $m(2m-4)$ clauses, with each circuit chain-encoded: polynomial.
 
 *Evidence* (`refB_t3_aux.out`, part S).
 * The circuit library with chain encodings is UP-usable for r = 3 (m = 7): exhaustive over all $3^7$ base partial assignments, with 2,352 entailed literals.
@@ -75,7 +75,7 @@ So for UP to the fixpoint the written-length gap to GE grows polynomially (ratio
 *What does survive.*
 * For $\mathrm{UP}_1$ the claims are true even with auxiliary variables. In round 1 a clause that contains an auxiliary literal cannot derive a base literal: that literal is unassigned, and α assigns only base variables. So a $\mathrm{UP}_1$-usable theory must contain $\mathrm{PI}(\mathcal S)$. Theorem 1.12(b)'s upper bound is in fact stated for $\mathrm{UP}_1$.
 * For UP over $X$ the claims are Cor 2.8.
-* With auxiliary variables and UP to the fixpoint, the only reasoner separation in the record is Theorem 3.6, which rests on GKRS 2019.
+* With auxiliary variables and UP to the fixpoint, the only superpolynomial reasoner separation in the record is Theorem 3.6, which rests on GKRS 2019.
 
 *Fix.*
 * State the simplex gap for $\mathrm{UP}_1$ (or $\mathrm{UP}_k$ with k fixed: see Issue 2), or for UP over $X$.
@@ -84,7 +84,7 @@ So for UP to the fixpoint the written-length gap to GE grows polynomially (ratio
 * In Theorem 1.12(a), say that §2's bounds apply to $K_{\rm lst}$ for the class without auxiliary variables (or for $\mathrm{UP}_1$).
 * In Theorem 6.2(f), say "for the inducer without auxiliary variables".
 
-*Overlap.* This is referee A's draft M1; I confirm it independently and with exact numbers.
+*Overlap.* This is referee A's M1 (and m11). I confirm it independently: my library implementation, usability tests and listing code are separate from A's, and the clause and bit counts agree with A's table. To A's fix I add the positive statement for $\mathrm{UP}_1$, and the depth qualification of Issue 2.
 
 **Issue 2 (major). Intermediate concepts help only a reasoner whose propagation depth grows with the law's width, so "vocabulary" and "reasoner" do not separate as §4 and §10 say.**
 
@@ -99,16 +99,17 @@ So for UP to the fixpoint the written-length gap to GE grows polynomially (ratio
 |---|---|---|---|---|---|---|---|---|
 | PI over X (2^(m-1) clauses) | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
 | chain encoding of Prop 3.1 (4m-6 clauses) | 1 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
-| balanced XOR tree (same size) | 2 | 3 | 3 | 4 | 5 | 5 | 5 | 5 |
+| balanced XOR tree (4m-6 clauses for m ≥ 4) | 2 | 3 | 3 | 4 | 5 | 5 | 5 | 5 |
 
-* The chain needs m − 1 rounds; a balanced tree needs about $2\log_2 m$.
-* The "weakest reasoner" in the record's own sense is $\mathrm{UP}_1$ (Theorem 1.11 calls it that). It cannot use intermediate concepts at all (Issue 1).
-* For every fixed k, auxiliary variables cannot make one parity law polynomial. *Proof sketch, given Håstad.* The circuit of Lemma 3.5 without the prefix trick has, per round, an AND gate for each pair (clause, literal) and then an OR gate for each literal. That gives a depth-2k unbounded fan-in circuit with at most $k(\|F\|+N)$ gates whose inputs are the literals of α. On antecedents that assign all of $\mathrm{supp}(u)\setminus\{j\}$, its output for $x_j$ is the parity of $w-1$ input bits given with their negations. Håstad's bound (STOC 1986, pp. 6–20; the form $2^{\Omega(n^{1/(d-1)})}$ for depth d is taken from secondary sources) gives $\|F\|\ge2^{\Omega(w^{1/(2k-1)})}/k-N$, with $N\le\|F\|+m$.
+* The chain needs m − 1 rounds. For m ≤ 10, a balanced tree needs at most $2\lceil\log_2 m\rceil$ (5 for m = 8, 9, 10).
+* The "weakest reasoner" in the record's own sense is $\mathrm{UP}_1$: §1.4 calls it "the weakest one". It cannot use intermediate concepts at all (Issue 1).
+* For every fixed k, auxiliary variables cannot make one parity law polynomial. *Proof sketch, given Håstad.* Build the circuit as in the proof of Prop 7.3 (Lemma 3.5 without the prefix trick): per round, an AND gate for each pair (clause, literal) and then an OR gate for each literal. That gives a depth-2k unbounded fan-in circuit with at most $k(\|F\|+N)$ gates whose inputs are the literals of α. On antecedents that assign all of $\mathrm{supp}(u)\setminus\{j\}$, its output for $x_j$ is the parity of $w-1$ input bits given with their negations. Håstad's bound (STOC 1986, pp. 6–20; the form $2^{\Omega(n^{1/(d-1)})}$ for depth d is taken from secondary sources) gives $\|F\|\ge2^{\Omega(w^{1/(2k-1)})}/k-N$, with $N\le\|F\|+m$.
 * So for a reasoner of bounded depth the simplex family stays superpolynomial even with intermediate concepts, while for UP to the fixpoint it does not (Issue 1).
+* The record already has this phenomenon for the chain law: at depth 2 intermediate concepts gain at most a factor of about 2 (Theorem 7.2), and at no fixed depth do they reach linear size (Prop 7.3). For parity the effect is stronger, superpolynomial against linear, but §3 and §4 do not mention it.
 
-*Fix.* Add a remark: the depth that intermediate concepts require. The chain needs m − 1 rounds and a tree about $2\log_2 m$. For fixed k there is a superpolynomial lower bound, given Håstad. Then rephrase Theorem 4.3(4) and §10: the gap between $2^{m-1}$ and $4m-6$ is a separation between vocabularies *for reasoners that can propagate to depth Ω(log m)*. For bounded-depth reasoners, vocabulary and depth trade off, as §7 shows for the chain law. This also sharpens the textbook reading: a written theory with new intermediate quantities helps a reader only if the reader can chain many steps.
+*Fix.* Add a remark: the depth that intermediate concepts require. The chain needs m − 1 rounds and a balanced tree at most $2\lceil\log_2 m\rceil$. For fixed k there is a superpolynomial lower bound, given Håstad. Then rephrase Theorem 4.3(4) and §10: the gap between $2^{m-1}$ and $4m-6$ is a separation between vocabularies *for reasoners whose propagation depth grows with m*. About $2\log_2 m$ rounds suffice (balanced tree). Given Håstad, polynomial size needs $k=\Omega(\log m/\log\log m)$ rounds. For bounded-depth reasoners, vocabulary and depth trade off, as §7 shows for the chain law. This also sharpens the textbook reading: a written theory with new intermediate quantities helps a reader only if the reader can chain many steps.
 
-*Overlap.* Not in referee A's draft list.
+*Overlap.* Not in referee A's report.
 
 **Issue 3 (major as a statement; its main consequence is unaffected). The "iff" of Theorem 7.1 is false for wide clauses, even when the prime-implicate replacement is forced.**
 
@@ -124,7 +125,7 @@ So for UP to the fixpoint the written-length gap to GE grows polynomially (ratio
 
 *Fix.* State it as two parts: (i) every $\mathrm{UP}_k$-usable theory over $X$ becomes a k-hop TC-spanner under every replacement; (ii) a 2-CNF over $X$ is $\mathrm{UP}_k$-usable iff its edges form a k-hop TC-spanner. "Hence the minimum is $s_k(m)$" follows as before.
 
-*Overlap.* This is referee A's M5; my counterexample additionally removes the ambiguity about which prime implicate is chosen.
+*Overlap.* This is referee A's M5. My counterexamples additionally remove the ambiguity about which prime implicate is chosen.
 
 ### Minor
 
@@ -132,17 +133,17 @@ So for UP to the fixpoint the written-length gap to GE grows polynomially (ratio
 * $F=\{\neg x_1\vee x_2,\ \neg x_2\vee x_1\}$ is compatible with all of $\mathcal Q(\mathrm{Ch}_2)$, both for UP and for $\mathrm{PS}_\infty$. Its projection is {00, 11}, not $\mathrm{Ch}_2$ = {00, 01, 11}.
 * The hypothesis fails at the point 01, which is the only point of $\mathrm{Ch}_m$, m = 2..8, with no coordinate determined by the others (`refB_t1_setting.out`, part A).
 * For $\mathrm{Ch}_3$, and for the affine laws tested, every compatible theory of at most 5 clauses has the right projection.
-* Fix: say m ≥ 3. Section 7 and Theorem 7.2 use m ≥ 4, so nothing downstream changes. (Referee A draft, minor.)
+* Fix: say m ≥ 3. Section 7 and Theorem 7.2 use m ≥ 4, so nothing downstream changes. (Referee A's m1.)
 
 **Issue 5 (minor). Prop 4.2(b) miscounts sound rules and overstates uniqueness.**
 * Under Definition 4.1 a rule $P\Rightarrow\ell$ with $\ell\in P$ is sound, since its premise is consistent and $\mathcal S\wedge P\models\ell$. The parity law with m = 2..6 has 12, 54, 216, 810 and 2,916 sound rules (`refB_t4_rules.out`, part A), not $m2^{m-1}$ = 4, 12, 32, 80, 192.
 * Excluding rules whose premise mentions the conclusion's variable gives exactly $m2^{m-1}$.
 * Adding a trivial rule to a usable set keeps it usable, so "the unique usable rule set" is false. "The unique minimal usable rule set" is true: exhaustive for m = 3 (4,096 subsets), single-deletion tests for m = 4, 5.
-* Fix: exclude rules with $\mathrm{var}(\ell)\in\mathrm{var}(P)$ in Definition 4.1, and say "unique minimal". (Referee A draft, minor.)
+* Fix: exclude rules with $\mathrm{var}(\ell)\in\mathrm{var}(P)$ in Definition 4.1, and say "unique minimal". (Referee A's m8 covers the count. The uniqueness point and the exact counts are added here.)
 
 **Issue 6 (minor). Remark 2.9 understates the d* = 2 minima.**
 * For $x_1=x_2=x_3=x_4$ the exact minimum UP-usable theory over $X$ has 4 clauses: a directed cycle $x_1\to x_2\to x_3\to x_4\to x_1$. The record mentions only the 6-clause chain of equivalences. For $x_1=x_2=x_3$ (simplex r = 2) the minimum is 3, not 4 (`refB_t2_linear.out`, part F).
-* In general, one equivalence class of size c needs exactly c clauses: each variable needs a positive and a negative occurrence, and a cycle achieves this.
+* In general, a law that is one equivalence class of size c ≥ 2 needs exactly c clauses, and a directed cycle achieves this. The lower bound: from a single-literal antecedent, the first propagation round can fire only 2-clauses. So each of the 2c literals must occur in some 2-clause, and that needs at least c clauses.
 * Fix: replace "a spanning tree of each class suffices" with "a directed cycle on each class suffices, and is optimal for a single class". This partly answers open problem 1.
 
 **Issue 7 (minor). The size formula of Prop 3.2 is wrong at weight 1 and does not match the construction at weight 4.**
@@ -154,7 +155,7 @@ So for UP to the fixpoint the written-length gap to GE grows polynomially (ratio
 * Definition 1.6 uses $\ell_{\mathbb N}(N-m)$, which is $\ell_{\mathbb N}(0)$ whenever there are no auxiliary variables. It also uses $\ell_{\mathbb N}(|F|)$ with $F=\emptyset$, and Lemma 1.7 uses $\ell_{\mathbb N}(s-1)$.
 * Elias delta codes only n ≥ 1.
 * Fix: $\ell_{\mathbb N}(n):=$ the length of the delta code of n + 1.
-* With that convention the Kraft sum over all theories over $X$ is 0.2525 for m = 2 (all 256 theories), and 0.2519 for m = 3 restricted to at most 6 clauses (`refB_t1_setting.out`, part B). Lemma 1.7 holds. (Referee A draft mentions Lemma 1.7 renaming, which is a different point.)
+* With that convention the Kraft sum over all theories over $X$ is 0.2525 for m = 2 (all 256 theories), and 0.2519 for m = 3 restricted to at most 6 clauses (`refB_t1_setting.out`, part B). Lemma 1.7 holds. (Referee A's m4, on renaming auxiliary variables, is a different point.)
 
 **Issue 9 (minor). The computed fractions in §3.2 come from one system per m, and vary a lot from system to system.**
 * The record reports the fraction of questions the core answers as 0.803, 0.772 and 0.826 for m = 12, 16, 20.
@@ -238,9 +239,9 @@ Each line gives the claim, the test, and the result. "Exhaustive" means all part
 * Exact $s_k(m)$ by two methods different from the developer's:
   * an exact search: iterative deepening over added edges, branching on the shortest uncovered pair over all ways to complete a path of at most k hops; used for m ≤ 12, 13 and 12 at k = 2, 3, 4;
   * an ILP with layered reachability variables, in which only the edge variables are integral (the developer used one variable per path), for m ≥ 6.
-* Every entry of the record's table for k = 2 (m ≤ 16), k = 3 (m ≤ 13) and k = 4 (m ≤ 12) is confirmed. The optima for m ≤ 9 were re-checked as $\mathrm{UP}_k$-usable 2-CNFs.
+* Every entry of the record's table for k = 2 (m ≤ 16), k = 3 (m ≤ 13) and k = 4 (m ≤ 12) is confirmed. The ILP optima for 6 ≤ m ≤ 9 were re-checked as $\mathrm{UP}_k$-usable 2-CNFs.
 * Prop 7.1a: the recursion, $\sum\lfloor\log_2 i\rfloor$, and the closed form agree for all n ≤ 3,000.
-* Conjecture 7.1b: the ILP gives $s_2(16)=38=\sum_{i\le16}\lfloor\log_2i\rfloor$ in 34 s. The run for m = 17..22 is recorded in `refB_t7_conj.out` (status at the end of this report).
+* Conjecture 7.1b: the ILP gives $s_2(16)=38$ (34 s), $s_2(17)=42$ (211 s) and $s_2(18)=46$ (1,706 s), each equal to $\sum_{i\le m}\lfloor\log_2i\rfloor$. Each optimum was checked to be a 2-hop TC-spanner. The conjecture now holds for all m ≤ 18; the record should update its range. m = 19 did not finish and was stopped; there is no result for it.
 * Theorem 7.2: recursive Steiner (auxiliary-hub) constructions at depth 2 are $\mathrm{UP}_2$-usable for m = 4..14. They are never smaller than $s_2(m)$ (for example 48 against 31 at m = 14), and all lie above the bound.
 
 ---
@@ -249,9 +250,9 @@ Each line gives the claim, the test, and the result. "Exhaustive" means all part
 
 * Theorem 3.6's lower bound. It rests on GKRS 2019, and the full text was not available to the developer. Only the reduction was tested (part C, T3).
 * Prop 7.3, which rests on CFL 1983.
-* §8: Statman and Orevkov; Prop 8.1 is a proof sketch. Referee A's draft M4 concerns it.
+* §8: Statman and Orevkov; Prop 8.1 is a proof sketch. Referee A's M4 concerns it.
 * Theorem 5.2's dependence on the `sfi` record.
-* The $K$-versus-$Kt$ issues in Theorem 1.12(b) and Prop 5.1(c) (referee A's draft M2). These are not computational.
+* The $K$-versus-$Kt$ issues in Theorem 1.12(b) and Prop 5.1(c) (referee A's M2). These are not computational.
 * Theorem 7.2 itself. I checked its proof by hand (simplification, single sources, pairing, Harris) and found no gap. The constructions in part C only confirm that the bound is not violated by natural examples.
 
 ---
@@ -263,7 +264,7 @@ Each line gives the claim, the test, and the result. "Exhaustive" means all part
    * `notes.md` in full (543 lines).
    * `checks/shapelib.py`, enough of it to make sure my library is independent of it.
    * c1 part D and c6, to identify their methods.
-   * Referee A's draft list (`referee-A.md`, 02:37), only to mark overlaps.
+   * Referee A's draft list (`referee-A.md`, 02:37), and its final report after mine was written, only to mark overlaps. A's M7 (the GKRS input set), M8 (Steiner TC-spanner novelty) and m18 (Lemma 3.5: N rounds suffice) concern parts I did not test computationally; I have nothing to add to them.
 2. **Re-runs.** c1–c6 re-run on scratch copies in `/tmp/claude-0/-home-user-AI-works/c4435474-536f-5a96-a73c-7d0c5ea93659/scratchpad/shape_rerun/`. All six outputs are identical to the saved ones apart from the timing line.
 3. **Independent scripts** (in `referee_code/`, seed 20261016 or deterministic; outputs `.out` next to each):
    * `refB_lib.py`: the library.
@@ -273,16 +274,17 @@ Each line gives the claim, the test, and the result. "Exhaustive" means all part
    * `refB_t4_rules.py` (1 s): T4.
    * `refB_t6_learning.py` (22 s): T6.
    * `refB_t7_spanners.py` (352 s): T7.
-   * `refB_t7_conj.py`: Conjecture 7.1b for m = 16..22 (ILP, appends per m).
+   * `refB_t7_conj.py`: Conjecture 7.1b, ILP for m = 16, 17, 18 (34 s, 211 s, 1,706 s). It appends one line per m; m = 19 was stopped unfinished, and this is noted in the output.
    * `refB_misc_core.py` (5 s): the §3.2 fractions.
    * `refB_misc2.py` (<1 s): Lemma 2.4, Prop 2.3 against exact minimum CNF size, Prop 5.1(c).
-   * `refB_misc3_depth.py` (84 s): propagation depth of the encodings.
+   * `refB_misc3_depth.py` (107 s): propagation depth of the encodings, all rows tested exhaustively.
 4. **Defects in my own code, found and fixed.**
    * `refB_t4_rules.py` first failed with a loop-variable error in part C; fixed and re-run.
    * `refB_t6_learning.py`'s first hitting-set enumerator was replaced by a random minimal hitting-set sampler, with minimality checked directly by UP, because exhaustive enumeration blew up for m ≥ 4. Exhaustive enumeration is kept for small |D|, where it ran.
    * Part E of t6 first included r = 0, which needs $2^{26}$ theories; dropped.
    * `refB_t7_spanners.py` part A was extended with forced-replacement counterexamples after I noticed that the first two counterexamples admit an alternative replacement.
    * One run of t7 was interrupted by a `pkill` that matched its own shell, and was restarted. The saved output is from a complete run.
+   * Stopping the unfinished m = 19 run of `refB_t7_conj.py` with `pgrep -f` also matched the calling shell. The ILP process stopped as intended, and no result was lost, because results are appended per m.
    * `refB_t2_linear.py`:
      * part E first produced no system with a non-circuit row, so part E2 was added;
      * part D's laws with d* ≥ 3 were mostly single equations, so part C2 was added (targeted laws with decomposable circuits);
