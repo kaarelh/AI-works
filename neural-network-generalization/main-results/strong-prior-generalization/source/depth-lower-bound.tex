@@ -1,0 +1,106 @@
+% Standalone appendix fragment; uses only standard amsmath/amssymb.
+\section{A depth-dependent lower bound for the norm ball}
+\label{app:depth-lower-bound}
+The fixed-depth restriction in the counting argument has mathematical content.
+For the activation $\phi=\tanh$, bounded weighted norm can encode many functions
+when depth grows.  This is a statement about the norm ball, and does not by
+itself give a lower bound for learning a circuit-simple target.
+
+\begin{proposition}\label{prop:depth-lower-bound}
+There is a universal constant $A$ with the following property.  Let $L\geq4$,
+$1\leq q\leq d$, and $N\geq2^{q+1}$.  Every Boolean function depending on a
+specified set of $q$ input coordinates has a width-$N$, depth-$L$ network with
+$\tanh$ hidden activations, linear readout, output exactly in $\{-1,1\}$,
+and
+\[
+ \kappa_N(w)\leq A\left[dq^2\log^2(2q)
+             +(L-2)2^{2q/(L-2)}\right].
+\]
+Consequently, whenever the right-hand side is at most $K$, the norm ball
+contains at least $2^{2^q}$ distinct Boolean functions.
+\end{proposition}
+
+\begin{proof}
+We first work at width $N_0=2M$, where $M=2^q$, and write $m=L-3$.
+For each $p\in\{-1,1\}^q$, introduce a first-layer unit
+\[
+ h_p(x)=\tanh\!\left(\gamma(\langle p,x\rangle-(q-1))\right),
+ \qquad \gamma=\tfrac12\log(16q),
+\]
+where only the selected coordinates are used.  The other $M$ first-layer
+units are constants $b=\tanh(1)$, obtained from the constant input coordinate.
+The first-layer contribution to the weighted norm is exactly
+\[
+ \frac d2\left[\gamma^2\bigl(q+(q-1)^2\bigr)+1\right]
+ =O\!\left(dq^2\log^2(2q)\right).
+\]
+
+Index the $q$-cube by its vertices and define the $M\times M$ matrix
+$T_{xp}=(1+h_p(x))/2$.  Its diagonal differs from $1$ by at most
+$e^{-2\gamma}$.  If the Hamming distance from $x$ to $p$ is $r\geq1$, then
+$0<T_{xp}\leq e^{2\gamma-4\gamma r}$.  Hence
+\[
+ \|T-I\|_\infty
+ \leq e^{-2\gamma}+e^{2\gamma}
+            \left[(1+e^{-4\gamma})^q-1\right]<\tfrac14.
+\]
+Here $\|\cdot\|_\infty$ is the maximum absolute row sum; the last inequality
+follows from $e^{-2\gamma}=(16q)^{-1}$ and
+$(1+u)^q-1\leq qu e^{qu}$.  Thus $T$ is invertible and
+$\|T^{-1}\|_\infty\leq4/3$.
+
+Let $f$ denote the vector of desired labels, put $v=T^{-1}f$, and fix an
+amplitude $0<t_0\leq s=3/4$.  One neuron in the second layer uses weights
+$a_p=\frac12\operatorname{atanh}(t_0)v_p$ on the bump units and the common
+weight $(\sum_p a_p)/(Mb)$ on the constant units.  Its preactivation is
+\[
+ \sum_p a_p h_p(x)+\sum_p a_p
+   =\operatorname{atanh}(t_0)f(x),
+\]
+so its activation is exactly $t_0f(x)$.  Its squared weight norm is
+$O(Mt_0^2)$, uniformly for $t_0\leq s$.  All other neurons in this layer
+have zero weights and activation zero.
+
+Choose
+\[
+ t_0=sM^{-(m-1)/(2(m+1))},\qquad
+ R=(s/t_0)^{1/m},\qquad
+ n_j=\left\lceil N_0^{j/m}\right\rceil,\quad 0\leq j\leq m.
+\]
+The $j$th of the next $m$ layers has $n_j$ active neurons, all computing
+$t_jf$ with $t_j=t_0R^j$.  Given the preceding $n_{j-1}$ copies of
+$t_{j-1}f$, assign each incoming weight
+\[
+ \frac{\operatorname{atanh}(t_j)}{n_{j-1}t_{j-1}}.
+\]
+This realizes the claimed activation exactly.  Since $0<t_j\leq s$,
+$\operatorname{atanh}(t_j)\leq c t_j$ for a universal constant $c$.
+Also $n_j/n_{j-1}\leq2N_0^{1/m}$.  The norm contribution of this layer is
+therefore at most
+\[
+ \frac{n_j}{n_{j-1}}
+ \left(\frac{\operatorname{atanh}(t_j)}{t_{j-1}}\right)^2
+ \leq 2c^2N_0^{1/m}R^2
+ =O\!\left(M^{2/(m+1)}\right).
+\]
+The second-layer cost is of this same order because
+$Mt_0^2=s^2M^{2/(m+1)}$.  The last hidden layer has $N_0$ copies of $sf$;
+readout weights $1/(N_0s)$ give output $f$ and weighted readout cost
+$s^{-2}$.  Summing gives the asserted bound at width $N_0$.
+
+Finally, for any $N\geq N_0$, replace every hidden neuron by either
+$k=\lfloor N/N_0\rfloor$ or $k+1$ identical copies, choosing the
+multiplicities in each layer to sum to $N$.  Divide each outgoing weight
+by the multiplicity of its source neuron.  This preserves the function
+exactly.  For an inner-layer edge, its contribution to squared norm is
+multiplied by the ratio of its target and source multiplicities, at most
+$(k+1)/k\leq2$.  The first- and last-layer weighted costs are likewise
+multiplied by at most $2$, using their coefficients $d/N$ and $N$.
+Absorbing this factor into $A$ proves the result.
+\end{proof}
+
+For example, taking $q=d\geq2$ and $L=d+2$ gives $2^{2^d}$ functions at weighted
+norm $O(d^3\log^2(2d))$.  Thus a bound on the logarithm of the norm-ball
+cardinality that is polynomial jointly in $d$, $K$, and $L$ is impossible.
+This conclusion concerns uniform counting; it does not establish that the
+posterior needs exponentially many samples for a particular simple target.

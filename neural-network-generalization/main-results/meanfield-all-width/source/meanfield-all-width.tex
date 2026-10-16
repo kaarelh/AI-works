@@ -1,0 +1,409 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools,microtype,xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black,citecolor=blue!50!black]{hyperref}
+\newtheorem{theorem}{Theorem}[section]\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}\newcommand{\Prb}{\mathbb P}\renewcommand{\Pr}{\mathbb P}\newcommand{\R}{\mathbb R}
+\setlength{\emergencystretch}{3em}
+\hypersetup{pdftitle={Mean-field Bayesian circuit learning at every width above target complexity},pdfauthor={Dmitry Vaintrob; Kaarel Hanni; OpenAI Codex}}
+\title{Mean-field Bayesian circuit learning\\at every width above target complexity}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex\thanks{AI assistant; contributed to mathematical analysis and drafting.}}
+\date{October 15, 2026}
+\begin{document}\maketitle
+\begin{abstract}
+We prove polynomial sample complexity for Bayesian learning of Boolean
+functions by fixed-depth tanh networks at mean-field Gaussian scaling,
+uniformly at every hidden width at least the target's bounded-weight network
+complexity. The prior is restricted to networks having absolute margin
+greater than $1/2$ on the entire input cube; learning then conditions on
+noiseless training labels. With polynomially many examples, the posterior
+assigns the correct label probability strictly greater than $2/3$ on almost
+all test inputs, for any input distribution.
+The proof is finite-dimensional and nonasymptotic. Sparse exponential tests
+control empirical hidden-layer covariances using only the logarithm of the
+number of input pairs. Convex duality converts these tests into bounded
+quadratic tilts; a dimension-independent covariance estimate and a backward
+choice of layer budgets then compress every likely margin-separated draw
+into a polynomial-size network. This bounds the aggregate prior mass of
+functions outside one polynomially described class. A Gaussian cylinder
+construction supplies target mass at every admissible width and handles the
+remaining polynomial range of widths. No infinite-width limit is required.
+\end{abstract}
+
+\section{Model and main result}
+Let $d\geq1$, $L\geq2$, and $\mathcal X=\{-1,1\}^d$.
+The augmented input is $\bar x=(1,x_1,\ldots,x_d)$. A depth-$L$ network
+has $L-1$ hidden layers of common width $N$ and computes
+\[
+ h^0(x)=\bar x,\qquad h^s(x)=\tanh(W^sh^{s-1}(x))\quad(1\leq s<L),
+ \qquad z_w(x)=W^Lh^{L-1}(x).
+\]
+There are no additional biases. The product Gaussian prior $\mu_N$ has
+independent centered entries with standard deviations
+\[
+ \sigma_1=d^{-1/2},\qquad
+ \sigma_s=N^{-1/2}\quad(2\leq s<L),\qquad
+ \sigma_L=N^{-1}.
+\]
+These are the mean-field, or $\gamma=1$, conventions.
+For a Boolean function $g$ write
+\[
+ A_{N,g}=\{w:g(x)z_w(x)>1/2\text{ for every }x\in\mathcal X\},
+ \qquad A_N=\bigcup_g A_{N,g},
+ \qquad \pi_N(g)=\frac{\mu_N(A_{N,g})}{\mu_N(A_N)}.
+\]
+Thus the global margin restriction is imposed before the function prior is
+conditioned on training labels. Let $C_L(f)$ be the least integer $C\geq1$
+for which a depth-$L$, width-$C$ network implements $f$ with this strict
+margin and every weight bounded in absolute value by $C$.
+We assume $C_L(f)<\infty$.
+
+For independent inputs $x_1,\ldots,x_n\sim D$, the training sample is
+$S_n=((x_i,f(x_i)))_{i=1}^n$, and the posterior is
+\[
+ \Pi_N(g\mid S_n)=
+ \frac{\pi_N(g)\,\mathbf1\{g(x_i)=f(x_i)\ \forall i\}}
+ {\sum_h\pi_N(h)\,\mathbf1\{h(x_i)=f(x_i)\ \forall i\}}.
+\]
+Its average error is
+$R_D(\Pi_N)=\E_{g\sim\Pi_N}\Prb_{x\sim D}\{g(x)\ne f(x)\}$.
+
+\begin{theorem}[Learning at every width above target complexity]
+\label{thm:main}
+For every fixed depth $L\geq2$ there is a polynomial $p_L$ such that the
+following holds. Let $C=C_L(f)<\infty$, let $N\geq C$, and let
+$\varepsilon,\delta\in(0,1)$. For every distribution $D$ on $\mathcal X$,
+if
+\begin{equation}\label{eq:main-sample}
+ n\geq\frac6\varepsilon\left[
+ p_L\!\left(d,C,\log\frac1\varepsilon\right)
+       +\log\frac6{\varepsilon\delta}\right],
+\end{equation}
+then, with probability at least $1-\delta$ over $S_n$,
+\[
+ R_D(\Pi_N)\leq\varepsilon/3,
+ \qquad
+ \Prb_{x\sim D}\!\left\{
+   \Pi_N(g(x)=f(x)\mid S_n)>2/3\right\}\geq1-\varepsilon.
+\]
+The polynomial is independent of width. Its degree and constants may depend
+on depth. The proof gives explicit quantities that can replace $p_L$.
+\end{theorem}
+
+The statement is information-theoretic: efficient posterior computation or
+efficient construction of the compressed network is not asserted.
+A fixed confidence threshold greater than $1/2$ can replace $2/3$, with the
+corresponding change in constants.
+
+The proof has three finite-width ingredients. First, a cloned target network
+has a Gaussian neighborhood of probability at least $e^{-N\operatorname{poly}_L(d,C)}$.
+Second, each empirical hidden covariance is close to a bounded quadratic
+tilt except on an event exponentially small in $N$; sparse exponential tests
+make the exponent's prefactor polynomial in $d$, despite the $2^d$ inputs.
+Third, a backward choice of tilt bounds permits a polynomial finite network
+to reproduce every likely full-margin sign function. A finite-class
+posterior argument applies at all sufficiently large polynomial widths;
+the target-mass bound handles every smaller width $N\geq C$.
+
+\input{cloning.tex}
+\input{sparse-dual.tex}
+\input{compression.tex}
+
+\section{Likely full-margin draws have small descriptions}
+Let $m=2^d$ and $r=L-1$. Index fields and covariance matrices by the
+$m$ cube inputs. Define
+\[
+ Q_0(x,y)=\bar x\cdot\bar y/d,
+ \qquad
+ Q_{s,N}=\frac1N\sum_{i=1}^N h_i^s(h_i^s)^{\mathsf T}
+ \quad(1\leq s\leq r),
+\]
+where $h_i^s$ denotes the activation of neuron $i$ evaluated on all inputs.
+Write $\mathsf M_Q$ for the law of $\tanh(Z)$ when
+$Z\sim\mathcal N(0,Q)$. Conditional on the preceding layers, the rows
+$h_1^s,\ldots,h_N^s$ are independent with law
+$\mathsf M_{Q_{s-1,N}}$, with $Q_{0,N}=Q_0$.
+This is exact: an internal Gaussian row has preactivation covariance
+$N^{-1}\sum_i h_i^{s-1}(h_i^{s-1})^{\mathsf T}$.
+No covariance matrix is assumed nonsingular.
+
+For a covariance $\widehat Q$ and a probability law $\mu$ on
+$[-1,1]^m$, define
+\[
+ \mathcal J_G(\widehat Q;\mu)=
+ \max_{\|\Gamma\|_{1,\mathrm{ent}}\leq G}
+ \left\{\langle\Gamma,\widehat Q\rangle
+       -\log\int e^{h^{\mathsf T}\Gamma h}\,d\mu(h)\right\},
+ \quad \langle A,B\rangle=\sum_{i,j}A_{ij}B_{ij}.
+\]
+This is the bounded-observable dual from Section~\ref{sec:sparse-dual}
+with $D=m^2$. Symmetrizing a maximizing $\Gamma$ leaves its quadratic
+form unchanged and cannot increase its entrywise norm.
+
+Fix $K\geq4$. Choose the layer budgets backward:
+\begin{equation}\label{eq:backwards-budgets}
+ G_r=32rK^2,\qquad
+ G_s=8G_{s+1}(1+G_{s+1})^2\quad(s=r-1,\ldots,1),
+ \qquad b_s=8(1+G_s)^2.
+\end{equation}
+Then $G_s=32rK^2\prod_{j=s+1}^r b_j$ and
+$G_1\geq\cdots\geq G_r\geq1$.
+Set
+\begin{equation}\label{eq:polynomial-threshold}
+ q_s=\lceil G_s^2/2\rceil,
+ \qquad \ell=\log(2m^2+1),
+ \qquad T_K=\left\lceil\max\left\{1,\frac{2q_1\ell}{K-1}\right\}\right\rceil.
+\end{equation}
+At fixed depth, $G_1$, $q_1$, and $T_K$ are polynomially bounded in $d,K$;
+indeed $\ell\leq(2d+2)\log2$ and the cubic recursion gives
+\[
+ G_1=O_L(K^{2\cdot3^{L-2}}),\qquad
+ T_K=O_L(dK^{4\cdot3^{L-2}-1}).
+\]
+
+\begin{lemma}[A likely set of parameter draws]\label{lem:good-event}
+Let $\mathcal E_K$ be the event that
+\[
+ \mathcal J_{G_s}(Q_{s,N};\mathsf M_{Q_{s-1,N}})\leq K
+ \quad\text{for all }s,
+ \qquad N\|W^L\|_2^2\leq K.
+\]
+For every $N\geq T_K$,
+\begin{equation}\label{eq:good-event-tail}
+ \mu_N(\mathcal E_K^c)\leq L e^{-NK/8}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Apply Proposition~\ref{prop:finite-entropy-certificate} conditionally on
+the preceding layers, taking $s=q_s$ in that proposition. Since
+$G_s^2/(2q_s)\leq1$ and $q_s\leq q_1$, each hidden-layer failure
+probability is at most
+\[
+ \exp\{q_1\ell-N(K-1)\}
+ \leq e^{-N(K-1)/2}\leq e^{-NK/4}.
+\]
+The bound is uniform in the preceding covariance, so averaging preserves it.
+For the readout, $N^2\|W^L\|_2^2$ has a chi-square distribution with
+$N$ degrees of freedom. Its exponential moment at $1/4$ gives
+\[
+ \Prb\{N\|W^L\|_2^2>K\}
+ \leq e^{-NK/4}2^{N/2}\leq e^{-NK/8},
+\]
+where $K\geq4$ is sufficient. A union bound over the $r$ hidden layers
+and the readout proves the claim.
+\end{proof}
+
+\begin{lemma}[Minimum readout and a bounded dual vector]
+\label{lem:readout-dual}
+Suppose $H$ is any $m\times N$ feature matrix, $g\in\{-1,1\}^m$, and
+$v\in\R^N$ satisfies $g_i(Hv)_i>1/2$ for every $i$ and
+$N\|v\|_2^2\leq K$. Put $Q=HH^{\mathsf T}/N$.
+There exists $\beta\in\R^m$ with
+\[
+ \|\beta\|_1\leq2K,
+ \qquad g_i(Q\beta)_i\geq1/2\quad\text{for every }i.
+\]
+This holds even when $Q$ is singular.
+\end{lemma}
+\begin{proof}
+Minimize $N\|u\|_2^2/2$ subject to $g_i(Hu)_i\geq1/2$.
+A minimizer exists by coercivity and closedness, and the given $v$ is a
+strictly feasible point. The elementary convex quadratic-program
+optimality conditions therefore give multipliers $\lambda_i\geq0$ with
+\[
+ Nu=H^{\mathsf T}\beta,
+ \qquad\beta_i=g_i\lambda_i,
+ \qquad\lambda_i[g_i(Hu)_i-1/2]=0.
+\]
+Consequently $Hu=Q\beta$ and
+\[
+ \frac12\|\beta\|_1
+ =\beta^{\mathsf T}Hu
+ =N\|u\|_2^2\leq N\|v\|_2^2\leq K.
+\]
+This proves the result without inverting $Q$.
+\end{proof}
+
+\begin{proposition}[Finite descriptions on the likely set]
+\label{prop:good-compression}
+For each $K\geq4$ there is a finite class $\mathcal H_K$ of Boolean
+functions, independent of $N$, such that every full-margin draw in
+$\mathcal E_K$ has its sign function in $\mathcal H_K$, and
+\[
+ \log|\mathcal H_K|\leq H_L(d,K),
+\]
+where $H_L$ is polynomially bounded at fixed depth.
+\end{proposition}
+\begin{proof}
+Fix a draw in $\mathcal E_K$. Lemma~\ref{lem:bounded-dual-lift} gives
+symmetric matrices $\Gamma_s$ with
+$\|\Gamma_s\|_{1,\mathrm{ent}}\leq G_s$ and
+\[
+ \|Q_{s,N}-\mathsf F_{\Gamma_s}(Q_{s-1,N})\|_{\max}\leq K/G_s.
+\]
+Construct a genuine tilted tower from these same matrices by
+$Q_0^*=Q_0$ and $Q_s^*=\mathsf F_{\Gamma_s}(Q_{s-1}^*)$.
+The matrices may depend on the entire draw; only their uniform norm bounds
+will be used to count the resulting functions.
+For $e_s=\|Q_{s,N}-Q_s^*\|_{\max}$,
+Lemma~\ref{lem:tilted-covariance} gives
+\[
+ e_0=0,\qquad e_s\leq K/G_s+b_s e_{s-1}.
+\]
+The backward choice in \eqref{eq:backwards-budgets} yields
+\begin{equation}\label{eq:tower-approximation}
+ e_r\leq\sum_{s=1}^r\frac K{G_s}\prod_{j=s+1}^r b_j
+      =\frac1{32K}.
+\end{equation}
+Using a common budget at every layer would not give this estimate: the
+larger tilt also enlarges the next layer's covariance Lipschitz constant.
+
+If the draw has full-margin sign $g$, apply Lemma~\ref{lem:readout-dual}
+to its final hidden feature matrix and original readout. This gives
+$\|\beta\|_1\leq2K$ and $g_i(Q_{r,N}\beta)_i\geq1/2$.
+By \eqref{eq:tower-approximation},
+\[
+ \|Q_r^*\beta-Q_{r,N}\beta\|_\infty\leq1/16.
+\]
+Thus $2Q_r^*\beta$ has signed margin at least $7/8$.
+Its dual vector $2\beta$ has $\ell^1$ norm at most $4K$, while all its
+tilt matrices have entrywise norm at most $G_1$.
+Proposition~\ref{prop:tilt-compress} supplies a finite network within
+$1/8$ of this output, and hence with signed margin at least $3/4$.
+Its width and weights have uniform bounds polynomial in $d,K,G_1$.
+Since $G_1$ is polynomial in $K$ at fixed depth, Lemma~\ref{lem:tilt-count}
+provides the required finite class and count.
+\end{proof}
+
+Here is one explicit choice of the count. Write $G=G_1$,
+$b=8(1+G)^2$, and
+\begin{align}
+ \eta&=[32Kr b^{r-1}]^{-1},&
+ n_*&=\left\lceil2\eta^{-2}\log(8r\,2^{2d})\right\rceil,\notag\\
+ D_*&=n_*(d+1)+(L-2)n_*^2,&
+ B_*&=\max\{1,\sqrt{4G+2\log(8\max\{D_*,1\})},4K/n_*\},\notag\\
+ P_*&=D_*+n_*,&
+ \Lambda_*&=(d+Ln_*)[1+n_*(B_*+1)]^{L-1}.
+ \label{eq:explicit-compression}
+\end{align}
+Then
+\begin{equation}\label{eq:explicit-count}
+ H_L(d,K)=P_*\log(3+16B_*\Lambda_*)
+\end{equation}
+is valid. It counts all sign functions realized by the common bounded
+network family, rather than choices of the input-indexed tilt matrices.
+
+\begin{corollary}[Aggregate function-mass bound]\label{cor:aggregate}
+For every $N\geq T_K$,
+\[
+ \mu_N\!\left(\bigcup_{g\notin\mathcal H_K}A_{N,g}\right)
+ \leq L e^{-NK/8}.
+\]
+\end{corollary}
+\begin{proof}
+The union in question is contained in $\mathcal E_K^c$ by
+Proposition~\ref{prop:good-compression}. Apply Lemma~\ref{lem:good-event}.
+\end{proof}
+
+\section{The posterior guarantee at every width}
+We finish with elementary posterior estimates, including the widths below
+the polynomial threshold $T_K$.
+
+\begin{lemma}[A finite relevant class]\label{lem:finite-posterior}
+Let a prior on a finite function class assign positive mass to a target $f$.
+Suppose $f\in\mathcal H$, $\log|\mathcal H|\leq H$, and
+$\pi(\mathcal H^c)/\pi(f)\leq\tau$.
+If $n\geq a^{-1}[H+\log(1/\delta)]$, then, with sample probability
+at least $1-\delta$, its consistency posterior has average error at most
+$a+\tau$.
+\end{lemma}
+\begin{proof}
+A fixed function of true error greater than $a$ survives $n$ independent
+labels with probability at most $(1-a)^n\leq e^{-na}$.
+A union bound excludes all such survivors in $\mathcal H$ except on an
+event of probability at most $e^{H-na}$.
+For every sample the posterior denominator is at least $\pi(f)$, so its
+mass outside $\mathcal H$ is at most $\tau$.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:main}]
+Let $A=Q_L(d,C)$ from Proposition~\ref{prop:cloning}, so $A\geq1$ and
+\[
+ \mu_N(A_{N,f})\geq e^{-AN/2}\quad\text{for every }N\geq C.
+\]
+Set
+\begin{equation}\label{eq:learning-budget}
+ K=4A+8\log(6L/\varepsilon),
+ \qquad
+ P_L(d,C,\varepsilon)=
+ \max\{H_L(d,K),\,A T_K/2\}.
+\end{equation}
+These are explicit, and $P_L$ is polynomially bounded in
+$d,C,\log(1/\varepsilon)$ at fixed depth.
+We show it suffices to replace $p_L$ in \eqref{eq:main-sample} by $P_L$.
+
+First let $N\geq T_K$. Corollary~\ref{cor:aggregate}, the target-mass
+bound, and cancellation of the global-margin normalization give
+\[
+ \frac{\pi_N(\mathcal H_K^c)}{\pi_N(f)}
+ \leq L\exp\{-N(K/8-A/2)\}
+ =L\exp\{-N\log(6L/\varepsilon)\}\leq\varepsilon/6.
+\]
+Necessarily $f\in\mathcal H_K$, since otherwise this ratio would be at
+least one. Lemma~\ref{lem:finite-posterior}, with
+$a=\tau=\varepsilon/6$, gives $R_D(\Pi_N)\leq\varepsilon/3$ with
+probability at least $1-\delta$ as soon as
+\[
+ n\geq\frac6\varepsilon[H_L(d,K)+\log(1/\delta)].
+\]
+
+Now let $C\leq N<T_K$. The target-mass bound and $\mu_N(A_N)\leq1$
+give $-\log\pi_N(f)\leq AN/2\leq A T_K/2$.
+Let $B_n$ be the posterior mass on functions of true error greater than
+$\varepsilon/6$. Using the target as a lower bound on the posterior
+normalizer yields
+\[
+ \E_{S_n}B_n
+ \leq\frac{1}{\pi_N(f)}
+       \sum_{g:\operatorname{err}_D(g)>\varepsilon/6}
+       \pi_N(g)(1-\operatorname{err}_D(g))^n
+ \leq\exp\{A T_K/2-n\varepsilon/6\}.
+\]
+Markov's inequality gives $B_n\leq\varepsilon/6$ with probability at
+least $1-\delta$ if
+\[
+ n\geq\frac6\varepsilon
+       [A T_K/2+\log(6/(\varepsilon\delta))].
+\]
+The remaining posterior mass has error at most $\varepsilon/6$, proving
+$R_D(\Pi_N)\leq\varepsilon/3$ in this width range as well.
+Both sufficient sample bounds follow from \eqref{eq:main-sample} with
+$P_L$ in place of $p_L$. A polynomial majorant gives the stated theorem.
+
+Finally, at every input whose correct-label posterior probability is at
+most $2/3$, the posterior error probability is at least $1/3$.
+Consequently the probability of this failure event is at most
+$3R_D(\Pi_N)\leq\varepsilon$. This proves the strict $>2/3$ success
+criterion without excluding equality from the failure event.
+\end{proof}
+
+\begin{remark}[Activation assumptions]
+Tanh is the activation used in the theorem and throughout the model.
+The proof also applies to any bounded twice continuously differentiable
+activation satisfying $|\phi|\leq1$, $|\phi'|\leq1$, and
+$|\phi''|\leq2$, provided the target has the stated finite bounded-weight
+implementation. The entropy tests use only bounded features; the covariance
+comparison uses precisely these derivative bounds. Analyticity,
+invertibility, and oddness are not used. Other finite derivative bounds
+change the constants.
+\end{remark}
+
+The proof establishes a width-uniform statistical guarantee with explicit,
+though large, polynomial bounds at fixed depth. In particular, it does not
+assert useful numerical sample sizes or uniform polynomial degrees as depth
+grows. The finite-width entropy certificates and the backward layer budgets
+are what permit the same theorem to cover every $N\geq C_L(f)$.
+\end{document}

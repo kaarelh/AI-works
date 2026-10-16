@@ -1,0 +1,343 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools,microtype,xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black,citecolor=blue!50!black]{hyperref}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}\newcommand{\Prb}{\mathbb P}\newcommand{\R}{\mathbb R}
+\hypersetup{pdftitle={Bayesian circuit learning at mean-field scaling},pdfauthor={Dmitry Vaintrob; Kaarel Hanni; OpenAI Codex}}
+\setlength{\emergencystretch}{3em}
+\title{Bayesian circuit learning at mean-field scaling:\\a variational principle and width-independent generalization}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex\thanks{AI assistant; contributed to mathematical analysis and drafting.}}
+\date{October 15, 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We prove polynomial sample complexity for Bayesian learning of Boolean functions
+by fixed-depth tanh networks at mean-field scaling. The Gaussian prior has
+first-layer standard deviation $d^{-1/2}$, internal-layer standard deviation
+$N^{-1/2}$, and readout standard deviation $N^{-1}$. It is first restricted to
+networks with absolute margin greater than $1/2$ on the entire Boolean cube;
+learning then conditions on noiseless labels. For every sufficiently large
+width, a sample bound polynomial in the input dimension and the target's
+bounded-weight network complexity ensures correct-label posterior probability
+strictly greater than $2/3$ on almost all test inputs. The sample bound is
+independent of width; the required width threshold is not quantified.
+The proof identifies the exact finite-domain large-deviation rate, shows that
+full-margin minimizers have quadratic feature tilts with polynomially bounded
+entrywise coefficients, and realizes their feature covariances by polynomial
+finite networks. We also prove a target-mass bound for every fixed depth and
+all $\gamma\geq1$ in the strong-prior family, and a shallow-network learning
+theorem valid at every width throughout that family.
+\end{abstract}
+
+\section{Model and conclusions}
+Let $d\geq1$, $L\geq2$, $\mathcal X=\{-1,1\}^d$, and
+$\bar x=(1,x_1,\ldots,x_d)$. For a bounded $1$-Lipschitz activation
+$\phi:\R\to[-1,1]$, a depth-$L$, hidden-width-$N$ network is
+\[
+ h^0(x)=\bar x,\qquad h^s(x)=\phi(W^s h^{s-1}(x))\ (1\leq s<L),
+ \qquad z_w(x)=W^Lh^{L-1}(x).
+\]
+There are no independent hidden biases beyond the constant input coordinate.
+For a Boolean function $f$ define
+\[
+ A_{N,f}=\{w:f(x)z_w(x)>1/2\text{ for all }x\in\mathcal X\},
+ \qquad A_N=\bigcup_f A_{N,f}.
+\]
+Let $C_L(f)$ be the least integer $C\geq1$ for which a width-$C$ network
+implements $f$ with all its weights bounded in absolute value by $C$.
+We assume this complexity is finite for the target.
+
+Let $\mu_{N,\gamma}$ be the product Gaussian law with standard deviations
+\[
+ \sigma_1=N^{(1-\gamma)/2}/\sqrt d,\quad
+ \sigma_s=N^{-\gamma/2}\ (2\leq s<L),\quad
+ \sigma_L=N^{-(\gamma+1)/2}.
+\]
+Define the weighted norm and the induced Boolean prior by
+\[
+ \kappa_N(w)=\frac dN\|W^1\|_F^2+
+ \sum_{s=2}^{L-1}\|W^s\|_F^2+N\|W^L\|_2^2,
+ \qquad
+ \pi_{N,\gamma}(f)=\frac{\mu_{N,\gamma}(A_{N,f})}{\mu_{N,\gamma}(A_N)}.
+\]
+For $x_1,\ldots,x_n$ drawn independently from any distribution $D$ on
+$\mathcal X$, the posterior is this prior conditioned on
+$g(x_i)=f(x_i)$ for all $i$. Write
+\[
+ R_D(\Pi)=\E_{g\sim\Pi}\Prb_{x\sim D}\{g(x)\ne f(x)\}.
+\]
+The normalization by $\mu_{N,\gamma}(A_N)$ cancels from every prior ratio used
+below. The global margin restriction is essential to this model description;
+we do not replace it by training-set margins.
+
+\begin{theorem}[Mean-field learning at sufficiently large width]\label{thm:critical-learning}
+Fix depth $L\geq2$ and activation $\phi=\tanh$. There is a polynomial $p_L$
+with the following property. For every target $f$ with $C=C_L(f)<\infty$
+and every $\varepsilon\in(0,1)$, there is a width threshold
+$N_0=N_0(d,L,f,\varepsilon)\geq C$ such that for every $N\geq N_0$,
+every $\delta\in(0,1)$, every input distribution $D$, and every
+\[
+ n\geq\frac6\varepsilon\left[p_L(d,C)+\log(1/\delta)\right],
+\]
+with probability at least $1-\delta$ over the training sample $S_n$,
+\[
+ R_D(\Pi_{N,1})\leq\varepsilon/3,
+ \qquad
+ \Prb_{x\sim D}\!\left\{
+ \Pi_{N,1}(g(x)=f(x)\mid S_n)>2/3\right\}\geq1-\varepsilon.
+\]
+The polynomial is independent of width. No polynomial bound on $N_0$, or
+all-width version of this deep-network statement, is asserted.
+\end{theorem}
+
+\begin{theorem}[Uniform shallow-network learning]\label{thm:shallow}
+For $L=2$ there is a polynomial $p$ such that the following holds for every
+$\gamma\geq1$, every target $f$ with $C=C_2(f)$, every $N\geq C$, every
+$\varepsilon,\delta\in(0,1)$, and every input distribution $D$.
+If
+\[
+ n\geq\frac{2}{\varepsilon}
+ \left[p\bigl(d,C,\log(2/\varepsilon)\bigr)+\log(1/\delta)\right],
+\]
+then, with probability at least $1-\delta$ over the training sample,
+$R_D(\Pi_{N,\gamma})\leq\varepsilon$.
+The same posterior-majority classifier has error at most $2\varepsilon$.
+The polynomial is independent of both $N$ and $\gamma$.
+\end{theorem}
+\begin{corollary}[Confident correct prediction]
+Under the hypotheses of Theorem~\ref{thm:shallow}, if
+\[
+ n\geq\frac{6}{\varepsilon}
+ \left[p\bigl(d,C,\log(6/\varepsilon)\bigr)+\log(1/\delta)\right],
+\]
+then with training-sample probability at least $1-\delta$,
+\[
+ \Prb_{x\sim D}\!\left\{
+   \Pi_{N,\gamma}(g(x)=f(x)\mid S_n)>\frac23\right\}
+ \geq1-\varepsilon.
+\]
+Thus an input counts as successful only when the posterior assigns its correct
+label probability strictly greater than $2/3$.
+\end{corollary}
+\begin{proof}
+On every input failing the displayed confidence condition, the posterior
+error probability is at least $1/3$. Consequently the probability of
+confidence failure is at most $3R_D(\Pi)$. Apply
+Theorem~\ref{thm:shallow} with risk tolerance $\varepsilon/3$.
+\end{proof}
+The first theorem treats the infinite-width mean-field regime through a
+statement valid for all sufficiently large finite widths. The second theorem
+is stronger in its width quantifier for shallow networks and requires only a
+bounded Lipschitz activation. The proof first establishes a common target-mass
+bound. An exact large-deviation representation then identifies the critical
+rate, and a new forward construction compresses its full-margin minimizers.
+A finite relevant-function argument converts the resulting count into the
+learning guarantee. The separate shallow argument gives its all-width result
+without a limiting variational analysis.
+
+\input{reviews/unified-cloning.tex}
+
+\input{source/critical-variational.tex}
+\input{source/critical-stationarity.tex}
+\input{source/critical-compression.tex}
+\input{source/critical-learning.tex}
+
+\section{Shallow norm compression and counting}
+\begin{lemma}[Explicit shallow counting]\label{lem:count}
+For $T\geq1$, let $\mathcal A_{N,T}$ be the set of Boolean functions
+implemented with $\kappa_N(w)\leq T$ by a width-$N$ network with $L=2$.
+Let
+\[
+ m=\left\lceil512(T+1)((d+1)\log2+1)\right\rceil,
+ \quad
+ H(d,T)=m(d+2)\log\bigl(2^{14}m(d+1)(T+1)^2\bigr).
+\]
+Then $\log|\mathcal A_{N,T}|\leq H(d,T)$, independently of $N$.
+\end{lemma}
+\begin{proof}
+Write the incoming rows as $u_i\in\R^{d+1}$ and the readout entries as $v_i$.
+The norm bound implies
+\[
+ \sum_i\|u_i\|_2^2\leq NT/d,\quad
+ \sum_i v_i^2\leq T/N,\quad
+ \sum_i|v_i|\leq\sqrt T.
+\]
+Delete terms with $\|u_i\|_2>B$, where $B=16T/\sqrt d$.
+There are at most $NT/(dB^2)$ such terms. Cauchy--Schwarz bounds their
+uniform contribution to the output by $T/(\sqrt d B)=1/16$.
+For the retained terms put $S=\sum_i|v_i|\leq\sqrt T$.
+An implementing network cannot have $S=0$ after this deletion, since its
+original absolute output was everywhere greater than $1/2$.
+Draw $m$ retained indices independently with probabilities $|v_i|/S$.
+The empirical network
+\[
+ \widetilde z(x)=\frac S m\sum_{j=1}^m
+      \operatorname{sgn}(v_{i_j})\phi(u_{i_j}\cdot\bar x)
+\]
+has expectation equal to the retained network. For each input, Hoeffding's
+inequality gives
+\[
+ \Prb\{|\widetilde z(x)-\E\widetilde z(x)|>1/16\}
+ \leq2\exp[-m/(512T)].
+\]
+A union bound over the $2^d$ inputs makes the failure probability less than one
+for the stated $m$. Fix a realization with uniform error at most $1/16$.
+The total error from the original network is at most $1/8$.
+Doubling the readout now gives a width-$m$ implementation with margin
+strictly greater than $3/4$, incoming coordinates bounded by $16T$, and
+readout absolute sum at most $2\sqrt T$.
+
+Round each incoming coordinate to the nearest multiple of
+$\eta_1=[64\sqrt{T+1}(d+1)]^{-1}$ and each readout coordinate to the nearest
+multiple of $\eta_2=(32m)^{-1}$. Rounding incoming weights changes the output
+by at most $2\sqrt T(d+1)\eta_1\leq1/32$; rounding the readout changes it by
+at most $m\eta_2=1/32$. These conservative bounds allow rounding errors of a
+whole mesh step. The resulting grid network preserves the sign of the
+implementation at every input.
+Each incoming coordinate has at most $3+2048(d+1)(T+1)^{3/2}$ grid choices.
+Each readout coordinate, bounded before rounding by $2\sqrt T$, has at most
+$3+128m\sqrt{T+1}$ grid choices. Their product, over $m(d+1)$ incoming and
+$m$ readout coordinates, is at most $\exp H(d,T)$.
+Every function in the class has a sign-preserving representative on this one
+fixed grid. A grid network computes at most one Boolean sign function, so the
+same bound counts the functions themselves.
+\end{proof}
+
+\section{The posterior bound}
+\begin{lemma}[Gaussian tail]
+If $X\sim\chi^2_D$ and $u\geq8D$, then $\Prb(X\geq u)\leq e^{-u/4}$.
+\end{lemma}
+\begin{proof}
+Chernoff's inequality at parameter $3/8$ gives
+$\Prb(X\geq u)\leq4^{D/2}e^{-3u/8}$.
+Since $D\leq u/8$, its logarithm is at most
+$u\log2/8-3u/8\leq-u/4$.
+\end{proof}
+\begin{lemma}[Finite relevant class]\label{lem:relevant}
+Let a prior on a finite class assign positive mass to a target $f$. Suppose
+$f\in\mathcal A$, $|\mathcal A|\leq e^H$, and
+$\pi(\mathcal A^c)\leq\tau\pi(f)$.
+For any $a,\delta\in(0,1)$, if
+$n\geq a^{-1}(H+\log(1/\delta))$, then with probability at least
+$1-\delta$ its consistency posterior satisfies $R_D(\Pi)\leq a+\tau$.
+\end{lemma}
+\begin{proof}
+Any fixed function with error greater than $a$ survives $n$ labels with
+probability at most $(1-a)^n\leq e^{-an}$. A union bound excludes all such
+survivors in $\mathcal A$ except on an event of probability $e^{H-an}$.
+For every sample, the posterior normalizing probability is at least
+$\pi(f)$, so its mass outside $\mathcal A$ is at most $\tau$.
+\end{proof}
+\begin{proof}[Proof of Theorem~\ref{thm:shallow}]
+Let $Q=Q_2(d,C)$ be the explicit cloning bound above, so
+$\mu_{N,\gamma}(A_{N,f})\geq e^{-N^\gamma Q/2}$.
+Choose
+\[
+ T=\max\{1,\ 8(d+2),\ 2Q+4\log(2/\varepsilon)\}.
+\]
+At $L=2$ the number of Gaussian parameters is $D_0=N(d+2)$ and
+$N^\gamma\kappa_N(w)\sim\chi^2_{D_0}$.
+Since $\gamma\geq1$, $D_0\leq(d+2)N^\gamma$, so the preceding Gaussian
+bound yields
+\[
+ \frac{\mu_{N,\gamma}\{\kappa_N>T\}}
+      {\mu_{N,\gamma}(A_{N,f})}
+ \leq\exp[-N^\gamma(T/4-Q/2)]\leq\varepsilon/2.
+\]
+In particular $A_{N,f}$ contains a point with norm at most $T$, and thus
+$f\in\mathcal A_{N,T}$. If a function is outside $\mathcal A_{N,T}$, every
+one of its implementing weights has norm greater than $T$. Disjointness of
+the implementing events and cancellation of the global-margin normalization
+therefore give
+\[
+ \frac{\pi_{N,\gamma}(\mathcal A_{N,T}^{\,c})}{\pi_{N,\gamma}(f)}
+ \leq\varepsilon/2.
+\]
+Apply Lemmas~\ref{lem:count} and~\ref{lem:relevant} with
+$a=\tau=\varepsilon/2$ and $H=H(d,T)$.
+The explicit quantity $H(d,T)$ is bounded by a polynomial in
+$d,C,\log(2/\varepsilon)$, proving the theorem.
+For posterior majority, every misclassified input has posterior probability
+of error at least $1/2$; integration gives its error at most $2R_D(\Pi)$.
+\end{proof}
+
+\section{Scope and relation to earlier mean-field arguments}
+At $\gamma=1$ and depth $L\geq3$, the typical weighted squared norm is of
+order $N$ because there are $(L-2)N^2$ internal weights. The shallow
+norm-tail argument therefore cannot be used directly. Our all-depth proof
+instead bounds the coefficients of the optimal feature-law tilts and samples
+finite networks from their tilted Gaussian rows. The strong-prior parameter
+$\gamma$ in the common cloning construction does not enter that endpoint
+variational argument.
+
+The all-depth theorem is asymptotic in width, at fixed input dimension and
+depth. Its sample polynomial has width-independent coefficients, while its
+width threshold follows from a finite union of large-deviation comparisons
+and is not quantified. The shallow theorem holds at every width $N\geq C$.
+For larger depth we have not established an all-width endpoint theorem, a
+polynomial bound on the width threshold, or the same all-depth conclusion for
+every bounded Lipschitz activation. Tanh supplies analyticity, invertibility,
+and bounded first and second derivatives at specific steps of our proof.
+
+Vaintrob and H\"anni~\cite{mft} propose an all-depth mean-field compression
+argument using a finite-dimensional active subspace and fresh Gaussian
+fluctuations in its complement. There are two independent reasons to supply a separate argument
+for the all-depth conclusion here. First,
+its learning rule uses a smooth mean-squared-error Gibbs tilt, and its
+architecture has independent biases at every hidden layer. Our prior instead
+has a global Boolean margin restriction followed by exact label conditioning.
+Second, the displayed regularity invariant used in its proof is false as
+stated. We give a direct check, rather than assume that a change of conventions
+would repair it.
+
+\begin{proposition}[Failure of the stated pointwise sensitivity invariant]
+Let $\mu$ be uniform on $\mathcal X$, $M\geq1$, and
+$S(\xi)(x)=M^{-1}\sum_{j=1}^M\tanh(\xi_j(x))$.
+If the bound
+\[
+ |D_{j,u}S(\xi)(x)|\leq\frac A{\sqrt M}\|u\|_{L^2(\mu)}
+ \tag{$*$}
+\]
+holds for every field $\xi$, input $x$, channel $j$, and direction
+$u\in L^2(\mu)$, then $A\geq2^{d/2}/\sqrt M$.
+\end{proposition}
+\begin{proof}
+Set $\xi=0$ and $u=2^{d/2}{\bf1}_{\{x\}}$. Then
+$\|u\|_{L^2(\mu)}=1$, whereas
+$D_{j,u}S(0)(x)=2^{d/2}/M$. Substitution into $(*)$ gives the result.
+\end{proof}
+The invariant in Appendix A, Definition A.6(I4), of~\cite{mft} has precisely
+the form $(*)$. Appendix B, Theorem B.14, asserts its initialization for the
+readout suffix with polynomial width and polynomial regularity constant.
+The proposition contradicts that assertion for polynomial $M$ as $d$ grows.
+A pointwise derivative estimate involving $|u(x)|$, or an averaged estimate
+for population loss, can be true. Replacing $(*)$ by either one changes what
+has to be proved in the subsequent induction, particularly for the empirical
+loss and conditional lazy-coordinate scores.
+
+This identifies a gap in that earlier argument, not a counterexample to
+mean-field learnability. The present proof does not use the false sensitivity
+invariant, a conditional lazy-score bound, or a propagation-of-chaos premise.
+Its exact finite-width distributional representation and Gaussian covariance
+comparison yield the required count directly.
+
+\begin{thebibliography}{9}
+\bibitem{dembozeitouni} Amir Dembo and Ofer Zeitouni.
+\emph{Large Deviations Techniques and Applications}. Second edition.
+Springer, 1998. Sanov's theorem and the contraction principle.
+\bibitem{mft} Dmitry Vaintrob and Kaarel H\"anni.
+\emph{Width-Robust Learnability in Mean-Field Bayesian Neural Networks}.
+2026. \href{https://arxiv.org/abs/2607.05735}{arXiv:2607.05735v1}.
+\bibitem{slides} Dmitry Vaintrob and Kaarel H\"anni.
+\emph{A Generalization Result for Overparametrized Neural Net Bayesian Learning}.
+Lecture notes, 2026.
+\url{https://kaarelh.github.io/ai/nnbayes-generalization.pdf}.
+\end{thebibliography}
+\end{document}

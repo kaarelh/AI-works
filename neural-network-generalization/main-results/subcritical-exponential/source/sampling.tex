@@ -1,0 +1,188 @@
+\section{One-sided squared sampling with one logarithm}
+\label{sec:sampling}
+
+The sampling estimate needed below concerns a squared one-sided loss.
+It follows from a metric estimate in the proof of Lee's chaining theorem
+\cite[Lemma~2.12, equation~(2.20)]{Lee2023}. We spell out the comparison:
+a first-power ReLU sampling theorem alone would not give this result.
+Throughout this section, $C$ denotes a universal constant that may change
+from line to line, and $t_-:=\max\{-t,0\}$.
+
+\begin{lemma}[A squared Lipschitz process]\label{lem:squared-process}
+Let $a_1,\ldots,a_m\in\mathbb R^D$, and set
+\[
+ R=\max_{i\le m}\|a_i\|_2,
+ \qquad V=\sup_{\|u\|_2\le1}
+       \left(\sum_{i=1}^m\langle a_i,u\rangle^2\right)^{1/2}.
+\]
+For each $i$, let $\psi_i:\mathbb R\to\mathbb R$ satisfy
+$\psi_i(0)=0$ and $\operatorname{Lip}(\psi_i)\le1$.
+For independent uniform signs $\epsilon_i$,
+\begin{equation}\label{eq:squared-process}
+ \mathbb E_\epsilon\sup_{\|u\|_2\le1}
+ \left|\sum_{i=1}^m\epsilon_i\psi_i(\langle a_i,u\rangle)^2\right|
+ \le C R\sqrt{\log(2(m+D))}\,V.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Use the genuine seminorms $N_i(u)=|\langle a_i,u\rangle|$ and the
+symmetric quasimetric
+\[
+ d_A(u,v)^2
+ =\sum_{i=1}^m N_i(u-v)^2\bigl(N_i(u)^2+N_i(v)^2\bigr).
+\]
+The stronger intermediate estimate established in the proof of
+\cite[Lemma~2.12]{Lee2023} is
+\begin{equation}\label{eq:lee-metric}
+ \gamma_2(T,d_A)
+ \le C\bigl(\lambda\sqrt{\log(2D)}+\kappa\bigr)
+       \sup_{u\in T}\left(\sum_i N_i(u)^2\right)^{1/2},
+ \qquad T\subseteq B_2^D,
+\end{equation}
+where
+\[
+ \lambda=\max_i\bigl(\mathbb E N_i(g)^2\bigr)^{1/2},
+ \qquad \kappa=\mathbb E\max_i N_i(g),
+ \qquad g\sim\mathcal N(0,I_D).
+\]
+Here $\gamma_2$ is the generic-chaining functional. This is equation
+(2.20) of that proof, with the energy normalization (2.17) undone.
+Seminorms follow from the norm statement by replacing
+$N_i(u)$ with $(N_i(u)^2+\varepsilon^2\|u\|_2^2)^{1/2}$ and then
+letting $\varepsilon\downarrow0$; the resulting metrics dominate
+$d_A$, and the parameters on the right converge.
+For our rank-one seminorms,
+$\lambda=R$ and $\kappa\le R\sqrt{2\log(2m)}$.
+
+Let $X_u=\sum_i\epsilon_i\psi_i(\langle a_i,u\rangle)^2$.
+Its subgaussian increment metric is bounded by $\sqrt2\,d_A$, because
+\begin{align*}
+ &\sum_i\left(\psi_i(\langle a_i,u\rangle)^2
+             -\psi_i(\langle a_i,v\rangle)^2\right)^2\\
+ &\quad\le\sum_i |\langle a_i,u-v\rangle|^2
+       \bigl(|\langle a_i,u\rangle|+|\langle a_i,v\rangle|\bigr)^2
+ \le 2d_A(u,v)^2.
+\end{align*}
+We used both Lipschitz continuity and
+$|\psi_i(t)|\le|t|$. The subgaussian chaining inequality, together
+with $X_0=0$, bounds $\mathbb E\sup X_u$ by
+$C\gamma_2(B_2^D,d_A)$. Apply the same argument to $-X_u$ and add.
+Equation~\eqref{eq:lee-metric} now proves
+\eqref{eq:squared-process}.
+\end{proof}
+
+\begin{remark}[The normalization in the metric estimate]
+The proof of \cite[Lemma~2.12]{Lee2023} passes through a coarse additive
+constant in its equation (2.26), after normalizing
+$\sup_T\sum_iN_i^2=1$. The homogeneous version
+\eqref{eq:lee-metric} follows by retaining the scale in the two geometric
+terms of that argument. Indeed, in the rank-one case $T\subseteq B_2^D$
+implies $N_i(u)\le\lambda$ on $T$; writing
+$\|u\|_{\mathcal N}=\max_iN_i(u)$ gives
+$d_A(u,v)\le\sqrt2\|u-v\|_{\mathcal N}$ on $T$.
+Thus $\operatorname{diam}_{d_A}(T)\le C\lambda$ and the volumetric
+packing constant in its Corollary~2.11 can be taken to be
+$C\lambda$, since $T\subseteq\lambda B_{\mathcal N}$.
+The additive term is therefore $C\lambda$, absorbed by
+$C(\lambda\sqrt{\log(2D)}+\kappa)$.
+The growth-functional portion of the proof is unchanged.
+If the packing constant is less than one, first rescale the quasimetric
+to apply that corollary in its stated normalization, and then scale back.
+Most importantly, throughout that argument the $N_i$ are symmetric
+seminorms. No assertion that a positive part is a seminorm is used.
+\end{remark}
+
+\begin{lemma}[Uniform one-sided squared sampling]
+\label{lem:squared-sampling}
+Let $(Z,Y)$ be a random pair with $Z\in\mathbb R^D$, $Y\in\{-1,1\}$,
+$\mathbb E ZZ^{\mathsf T}=I_D$, and $\|Z\|_2^2=D$ almost surely.
+For independent copies $(Z_i,Y_i)$, let
+\[
+ \Delta_n=\sup_{\|u\|_2\le1}
+ \left|\frac1n\sum_{i=1}^n(Y_i\langle Z_i,u\rangle)_-^2
+          -\mathbb E(Y\langle Z,u\rangle)_-^2\right|,
+ \qquad h_n=\sqrt{\frac{D\log(2(n+D))}{n}}.
+\]
+Then $\mathbb E\Delta_n\le C h_n(1+C h_n)$.
+In particular, for any fixed $\varepsilon,\delta>0$ there is a finite
+$A_{\varepsilon,\delta}$ such that
+\[
+ n\ge A_{\varepsilon,\delta}D\log(2D)
+ \quad\Longrightarrow\quad
+ \mathbb P\{\Delta_n>\varepsilon\}\le\delta.
+\]
+The labels may depend arbitrarily on the features.
+\end{lemma}
+
+\begin{proof}
+Put $Q_n=n^{-1}\sum_iZ_iZ_i^{\mathsf T}$.
+Conditional on the observations, apply
+Lemma~\ref{lem:squared-process} to
+$a_i=Y_iZ_i/\sqrt n$ and $\psi_i(t)=t_-$.
+Here $R=\sqrt{D/n}$ and $V=\sqrt{\|Q_n\|_{\mathrm{op}}}$.
+Symmetrization gives
+\begin{equation}\label{eq:sampling-symmetrization}
+ \mathbb E\Delta_n
+ \le C h_n\,\mathbb E\sqrt{\|Q_n\|_{\mathrm{op}}}.
+\end{equation}
+We also apply the same process lemma with $\psi_i(t)=t$.
+Since $\mathbb E Q_n=I_D$, symmetrization and Jensen's inequality imply,
+with $A=\mathbb E\|Q_n\|_{\mathrm{op}}$,
+\[
+ A\le1+\mathbb E\|Q_n-I_D\|_{\mathrm{op}}
+ \le1+C h_n\mathbb E\sqrt{\|Q_n\|_{\mathrm{op}}}
+ \le1+C h_n\sqrt A.
+\]
+Solving this quadratic inequality yields $\sqrt A\le1+C h_n$,
+after increasing $C$. Substitute into
+\eqref{eq:sampling-symmetrization}.
+Finally, at $n\ge A_{\varepsilon,\delta}D\log(2D)$ the quantity
+$h_n$ can be made uniformly small by increasing
+$A_{\varepsilon,\delta}$. Markov's inequality proves the probability
+statement. It is a statement for each specified sample size $n$.
+\end{proof}
+
+\begin{lemma}[Parity balances squared amplitudes]
+\label{lem:parity-squared-balance}
+Let $f(x)=\prod_{j=1}^d x_j$ on the uniform discrete cube, and let $P$
+have Walsh degree at most $r$. Then
+\begin{equation}\label{eq:parity-squared-balance}
+ \mathbb E(fP)_-^2
+ \ge\left(\frac12-\sqrt{\frac rd}\right)\|P\|_2^2.
+\end{equation}
+Consequently, for each fixed $\delta>0$ there is a universal
+$A_\delta$ such that, if $r\le d/64$ and
+$n\ge A_\delta D_r\log(2D_r)$, where
+$D_r=\sum_{j=0}^r\binom dj$, then, with probability at least $1-\delta$,
+\begin{equation}\label{eq:wrong-square-coercivity}
+ \frac1n\sum_{i=1}^n(f(X_i)P(X_i))_-^2
+ \ge\frac14\|P\|_2^2
+ \quad\text{for every polynomial $P$ of degree at most $r$}.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Write $x^{(j)}$ for $x$ with coordinate $j$ flipped, and
+$D_jP=(P(x)-P(x^{(j)}))/2$. Parity changes sign under each flip.
+For $F(t)=t|t|$, the inequality
+$|F(a)-F(b)|\le(|a|+|b|)|a-b|$ and Cauchy--Schwarz give
+\[
+ \bigl|\mathbb E[fP|P|]\bigr|
+ =\frac12\left|\mathbb E f(x)
+      \bigl(F(P(x))-F(P(x^{(j)}))\bigr)\right|
+ \le2\|P\|_2\|D_jP\|_2.
+\]
+Average over $j$ and use
+$\sum_j\|D_jP\|_2^2\le r\|P\|_2^2$ to obtain
+$\bigl|\mathbb E[fP|P|]\bigr|\le2\sqrt{r/d}\,\|P\|_2^2$.
+Since $(fP)_-^2=(P^2-fP|P|)/2$, this proves
+\eqref{eq:parity-squared-balance}.
+
+The feature vector consisting of all Walsh characters of degree at
+most $r$ is isotropic and has squared norm exactly $D_r$.
+When $r\le d/64$, the population lower bound is at least
+$3\|P\|_2^2/8$. Apply Lemma~\ref{lem:squared-sampling} with
+$Y=f(X)$ and $\varepsilon=1/8$, and use homogeneity, to obtain
+\eqref{eq:wrong-square-coercivity}.
+\end{proof}

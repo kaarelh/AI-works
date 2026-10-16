@@ -1,0 +1,227 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools,needspace}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Sparse parity under globally conditioned neural priors},pdfauthor={Dmitry Vaintrob; Kaarel Hanni; OpenAI Codex}}
+\setlength{\emergencystretch}{2em}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\sign}{sign}
+\DeclareMathOperator{\dist}{dist}
+\DeclareMathOperator{\KL}{KL}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\title{Sparse parity under globally conditioned neural priors}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex}
+\date{October 15, 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We study posterior confidence for a parity of $k$ coordinates in a
+$d$-dimensional Boolean input under a specified Bayesian neural-network
+prior. The network has fixed depth, Gaussian weights, hyperbolic-tangent
+hidden activations, and a linear readout. Its prior is conditioned to have
+a fixed absolute output margin on every input, followed by exact training
+labels. For every fixed negative width-scaling exponent $\gamma<0$, we
+prove that each sample size
+$n\le\exp\{c k\log(ed/k)\}$ leaves a universal positive fraction of
+inputs without correct-label posterior probability greater than $2/3$,
+with probability at least $3/4$, in the width-first limit. This is a
+$d^{\Omega(k)}$ lower bound when $k\le d^{1-\eta}$ for fixed $\eta>0$.
+The proof uses Gaussian sign conditioning, sharp Fourier spectra,
+near-orthogonal covariance bounds, and a uniform truncated negative-part
+estimate. The distinction between scaling regimes is substantive:
+for every $0<\gamma<1$, the same prior learns a one-coordinate parity
+with $O(\log d)$ samples. We prove this by identifying its exact minimum
+energy sign functions. These results do not settle the corresponding
+growing-$k$ lower bound at $\gamma=0$ or $0<\gamma<1$.
+\end{abstract}
+
+\section{Model and results}
+Let $\mathcal X=\{-1,1\}^d$ with uniform probability measure.
+Fix $U\subseteq[d]$, $|U|=k$, and set
+$f(x)=\chi_U(x)=\prod_{j\in U}x_j$.
+All hidden layers have width $N$, the number of weight matrices
+$L\ge2$ is fixed, and
+\[
+ h^0(x)=(1,x),\qquad
+ h^s(x)=\tanh(W^sh^{s-1}(x))\quad(1\le s<L),
+ \qquad z_N(x)=W^Lh^{L-1}(x).
+\]
+There are no additional biases. All weights are independent centered
+Gaussians, with variances
+\begin{equation}\label{eq:weights}
+ \Var W^1_{ij}=N^{1-\gamma}/d,\qquad
+ \Var W^s_{ij}=N^{-\gamma}\quad(1<s<L),\qquad
+ \Var W^L_i=N^{-\gamma-1}.
+\end{equation}
+Fix $a>0$; in particular, one may take $a=1/2$.
+Condition the prior on $|z_N(x)|>a$ for every $x\in\mathcal X$.
+For independent uniform training inputs $S=(X_1,\ldots,X_n)$,
+condition subsequently on $f(X_i)z_N(X_i)>0$ for every $i$.
+Equivalently, condition on the intersection of these events.
+Define
+\begin{align*}
+ q_{N,S}(x)&=\mathbb P\{f(x)z_N(x)>0\mid
+ |z_N(y)|>a\ \forall y;\ f(X_i)z_N(X_i)>0\ \forall i\},\\
+ F_N(S)&=\mathbb P_x\{q_{N,S}(x)\le2/3\}.
+\end{align*}
+Thus a successful prediction requires strictly more than $2/3$
+posterior probability of the correct label. A fresh input is always
+independent and uniform. The learner is not told the parity support.
+
+\Needspace{12\baselineskip}
+\begin{theorem}[Sparse-parity sample lower bound]\label{thm:main}
+For each fixed $L\ge2$ and $a>0$, there are $c>0$ and $d_0$
+such that, for every $d\ge d_0$, every $1\le k\le d$, every
+support $U$ of size $k$, every integer
+\[
+ 0\le n\le\exp\!\left(c k\log\frac{ed}{k}\right),
+\]
+and every fixed $\gamma<0$,
+\[
+ \mathbb P_S\left\{\liminf_{N\to\infty}F_N(S)
+          \ge\varepsilon\right\}\ge\frac34,
+ \qquad
+ \varepsilon=\frac{2\pi(1/e-7/20)^2}{256}>0.
+\]
+The conditioning events have positive probability for all sufficiently
+large widths at each fixed dimension and sample.
+\end{theorem}
+
+The numerical value of the displayed failure fraction is approximately
+$7.85\times10^{-6}$. It is uniform in $d,k,L,a$, although the sample
+exponent and dimension threshold are not quantitatively optimized.
+In particular, the theorem rules out vanishing confidence failure below
+the stated sample scale; it does not assert a failure fraction as large
+as $1/10$.
+For any fixed $\eta\in(0,1)$ and $k\le d^{1-\eta}$, the bound
+includes every $n\le d^{c\eta k}$. When $k=d$ it becomes
+$n\le e^{cd}$. The latter dependence is necessary for a uniform
+statement: the input space has only $2^d$ points, and observing almost
+all of them suffices for this confidence criterion under noiseless
+conditioning.
+
+The width limit is taken first, at fixed $d,k,L,a,\gamma,S$.
+No simultaneous dimension--width limit or quantified minimum width is
+asserted. The probability bound holds for each specified sample size
+with uniform constants, rather than on a common event for all prefixes
+of an infinite sample sequence. It uses no monotonicity assumption on
+fixed-target posterior risk.
+
+\begin{theorem}[A separation between scaling regimes]
+\label{thm:separation}
+Fix $d\ge1$, $L\ge2$, $a>0$, and $0<\delta<1$.
+For $0<\gamma<1$, a target $f(x)=x_1$ and
+\[
+ n\ge\left\lceil\log_2\frac{2d}{\delta}\right\rceil
+\]
+satisfy $q_{N,S}(x)\to1$ for every input, with probability at least
+$1-\delta$ over training samples. In contrast, for $\gamma<0$,
+every target and every sample of size $n$ satisfy
+\[
+ \liminf_{N\to\infty}F_N(S)
+ \ge1-\left(2+\frac{400}{9\pi}\right)\frac{n}{d+1}.
+\]
+\end{theorem}
+
+Thus a $d^{c k}$ lower bound cannot hold uniformly over all
+$\gamma<1$ and all $k\ge1$.
+Theorem~\ref{thm:separation} does not resolve the lower-bound question
+restricted to growing $k$ for $0\le\gamma<1$.
+
+\subsection{Proof overview}
+Put $\Psi(t)=2\arcsin(t)/\pi$ and $\beta=2^{-(L-1)}$.
+The normalized network outputs converge to a Gaussian vector with
+covariance
+\[
+ K(x,y)=\Psi^{\circ(L-1)}\!\left(\frac{1+x\cdot y}{d+1}\right).
+\]
+For $\gamma<0$, the fixed global margin vanishes after normalization,
+leaving Gaussian conditioning on the training signs. A homogeneous-cone
+argument bounds the energy of its actual posterior mean by $n$.
+Log-concavity and Gaussian regression convert posterior confidence
+into a quantitative mean margin wherever residual variance remains.
+These are implications about the actual posterior, not a replacement
+of its predictions by the sign of its mean.
+
+We split that mean into a low-degree part, one further pair of Fourier
+levels, and a remaining tail. Uniform sampling controls a truncated
+negative part of the first two pieces. Orthogonality to the target
+parity forces their positive and negative integrals to agree whenever
+their degree is below $k$. Sharp covariance estimates control the tail
+and prevent the negative integral from being hidden on a tiny set.
+A near-orthogonal entry bound is what permits cutoffs much smaller than
+$\log d$. This yields the ambient-dimension exponent uniformly in $k$.
+
+For $0<\gamma<1$, global-margin conditioning instead selects compatible
+sign functions of minimum Gaussian energy. The top eigenspace of the
+kernel consists exactly of affine functions, and the only globally
+constant-magnitude functions in it are constants and signed coordinates.
+This identifies the ground states and proves the logarithmic upper bound.
+All required width-limit, spectral, sampling, and symmetry arguments are
+included below.
+
+\input{width-limits}
+\input{spectral}
+\input{dictators}
+\input{gaussian-posterior}
+\input{multiband-process}
+\input{ptf}
+\input{tail-gram}
+\input{sparse-gram}
+\input{sparse-gaussian}
+
+\section{Scope of the conclusions}
+Theorem~\ref{thm:sparse-gaussian}, together with
+Proposition~\ref{prop:gp-limits}, proves Theorem~\ref{thm:main}.
+Theorems~\ref{thm:dictator-fast} and~\ref{thm:negative-linear} prove
+Theorem~\ref{thm:separation}.
+Parity has a Boolean circuit with $O(k)$ gates, whereas the negative
+exponent posterior requires the stated number of examples to make its
+confidence failure vanish. This is a property of the specified posterior;
+parity can be identified from $O(d)$ samples by linear algebra over
+the two-element field. Searching the supports of size $k$ instead
+requires only $O(k\log(ed/k))$ samples at fixed success probability,
+since each incorrect parity agrees with the target independently with
+probability $1/2$ on each example.
+
+Two questions remain outside the result. At $\gamma=0$, conditioning
+retains a fixed margin at all $2^d$ inputs, so the homogeneous-cone
+argument used here is unavailable. For $0<\gamma<1$, the posterior
+selects energy minimizers, and the dictator example shows that its
+learning behavior need not match the sign-conditioned Gaussian regime.
+Neither the proof nor the counterexample decides whether the same
+$\exp\{c k\log(ed/k)\}$ lower bound holds for growing sparse $k$ in
+either of these two regimes.
+
+\begin{thebibliography}{9}
+\bibitem{ABFR}
+J. Aspnes, R. Beigel, M. Furst, and S. Rudich.
+The expressive power of voting polynomials.
+\emph{Combinatorica} 14(2):135--148, 1994.
+\href{https://www.cs.yale.edu/homes/aspnes/papers/stoc91voting.pdf}{Author manuscript}.
+\bibitem{flajolet2009}
+P. Flajolet and R. Sedgewick. \emph{Analytic Combinatorics}.
+Cambridge University Press, 2009. Chapter VI.
+\bibitem{mai2021coresets}
+T. Mai, C. Musco, and A. Rao.
+Coresets for classification---simplified and strengthened.
+\emph{Advances in Neural Information Processing Systems} 34, 2021.
+\href{https://papers.neurips.cc/paper_files/paper/2021/file/6098ed616e715171f0dabad60a8e5197-Paper.pdf}{Primary paper}; Theorems 3 and 5.
+\bibitem{tropp2008}
+J. A. Tropp. Norms of random submatrices and sparse approximation.
+\emph{Comptes Rendus Math\'ematique} 346:1271--1274, 2008.
+\href{https://tropp.caltech.edu/papers/Tro08-Norms-Random-v3.pdf}{Author manuscript},
+Theorem 1.1.
+\bibitem{prekopa1973}
+A. Pr\'ekopa. On logarithmic concave measures and functions.
+\emph{Acta Scientiarum Mathematicarum} 34:335--343, 1973.
+\end{thebibliography}
+\end{document}

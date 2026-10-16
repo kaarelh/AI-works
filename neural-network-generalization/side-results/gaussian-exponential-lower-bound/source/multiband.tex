@@ -1,0 +1,243 @@
+\section{A uniform bound through the gaps between Fourier levels}
+We prove a lower bound for every sample size using a thin middle band
+of Fourier modes whose covariance trace is small. Ordinary Lipschitz
+contraction controls this band, while Lewis-weight sampling controls
+the lower degrees.
+
+\begin{lemma}[A fixed-threshold sampling bound]\label{lem:multiband-process}
+Let $r<u<d$, and put $\Delta=\tau_r-\tau_u$. Let
+$\mathcal B_{r,u}$ be the span of Walsh characters of degrees $r+1$
+through $u$. Suppose
+\[
+ \eta^2\ge C\frac{D_r\log(2n)}n
+\]
+for a sufficiently large universal constant $C$. For deterministic
+$R,T\ge0$, the class
+\[
+ \mathcal H=\{-f(p+b):p\in V_r,\ \mathbb E|p|\le R,
+                 \ b\in\mathcal B_{r,u},\ \|b\|_K\le\sqrt n\}
+\]
+satisfies
+\begin{equation}\label{eq:multiband-process}
+ \mathbb E_S\sup_{h\in\mathcal H}
+   |\mathbb P_n(h-T)_+-\mathbb E_x(h-T)_+|
+ \le4(R\eta+\sqrt\Delta).
+\end{equation}
+Here $\mathbb P_n g=n^{-1}\sum_i g(X_i)$.
+\end{lemma}
+\begin{proof}
+For the full-cube matrix with rows $f(x)(\chi_U(x))_{|U|\le r}$,
+the Lewis weights are $D_r/M$. The linear-process moment bound of
+Mai, Musco, and Rao \cite[Theorem 3]{mai2021coresets}, with its failure
+parameter set to $1/2$, therefore implies
+\[
+ \mathbb E_{S,\epsilon}\sup_{p\in V_r,\,\mathbb E|p|\le R}
+ \left|\frac1n\sum_i\epsilon_i f(X_i)p(X_i)\right|\le R\eta.
+\]
+The normalization follows directly: their sampled matrix rescales each
+sampled row by $M/n$, whereas $\|p\|_1=M^{-1}\|A\beta\|_1$.
+Their moment bound implies the displayed expectation bound by Jensen.
+
+The covariance-weighted feature vector of the band has squared norm
+$\Delta$ at every input. Consequently
+\[
+ \mathbb E_{S,\epsilon}\sup_{\|b\|_K\le\sqrt n}
+ \left|\frac1n\sum_i\epsilon_i f(X_i)b(X_i)\right|
+ \le\frac{\sqrt n}{n}\sqrt{n\Delta}=\sqrt\Delta.
+\]
+The map $z\mapsto(z-T)_+$ is $1$-Lipschitz and vanishes at zero.
+Symmetrization, followed by the scalar contraction principle, bounds
+the left-hand side of \eqref{eq:multiband-process} by four times the
+linear Rademacher width of $\mathcal H$. The triangle inequality and
+the preceding two estimates prove the claim. Both parameter balls and
+the threshold are fixed before sampling; no positive homogeneity in
+$T$ or relative bound on an unbounded parameter class is asserted.
+\end{proof}
+
+\begin{theorem}[Every sample size up to an exponential threshold]
+\label{thm:all-n-gaussian}
+Fix $L\ge2$. There exist $c_L'>0$, $\varepsilon>0$, and $d_0$ such
+that for every $d\ge d_0$ and every integer $0\le n\le e^{c_L'd}$,
+independent uniform parity training inputs satisfy
+\[
+ \mathbb P_S\{F_{13/20}(S)\ge\varepsilon\}\ge\frac34.
+\]
+The constants may be chosen with
+$\varepsilon=c_\theta^2/256$, where
+$c_\theta=\sqrt{2\pi}(1/e-7/20)$. The same conclusion holds for
+$\liminf_{N\to\infty}F_N(S)$ at every fixed $\gamma<0$ in the
+network convention of Proposition~\ref{prop:paper-width}.
+\end{theorem}
+
+We first prove the range $e^{(\log(d+1))^3}\le n\le e^{c_L'd}$.
+A short argument for smaller samples follows the proof.
+
+\begin{proof}[Proof in the larger-sample range]
+Fix a small sampling-failure probability $\delta=1/20$. All constants
+below may depend on $L$ and $\delta$. Choose a sufficiently large
+constant $A$, to be fixed below, and let $r$ be the largest odd integer
+such that
+\begin{equation}\label{eq:coarse-cutoff}
+ A D_r\log(D_r+1)\le n.
+\end{equation}
+By choosing $c_L'$ sufficiently small, for all large $d$ this cutoff
+satisfies
+\[
+ \tfrac14(\log d)^2\le r\le\alpha d,
+ \qquad n<A D_{r+2}\log(D_{r+2}+1),
+\]
+where $\alpha>0$ is a small constant chosen after $A$. Indeed
+$D_r\le(ed/r)^r$ gives the lower bound, while binomial entropy
+estimates give the upper bound. Uniformly in this range,
+$\log(2n)\le C\log(D_r+1)\le C r\log(eD/r)$.
+
+Put $\tau=\tau_r$, $\ell=\lambda_{r+1}$, $s_2=s_{2,r}$, and
+\[
+ B=C_\delta\left(1+\frac{\sqrt{nd s_2}}\tau+
+                            \frac{n\ell}\tau\right),\qquad
+ \eta^2=C_0\frac{D_r\log(2n)}n.
+\]
+The constant $C_0$ is large enough for
+Lemma~\ref{lem:multiband-process}. The random Gram estimate implies
+$\|Q_{r,SS}\|\le B\tau$ with probability at least $1-\delta$ for
+all large $d$. Its omitted far-pair terms tend to zero uniformly here:
+$r\ge(\log d)^2/4$, and $c_L'$ is small enough that
+$2c_L'<\log2-h(1/4)$.
+
+The crucial estimate is
+\begin{equation}\label{eq:variable-accuracy}
+ \eta^2B\le C_\delta\left[
+ \frac1A+\sqrt{\frac{\rho\log(e/\rho)}A}
+                +\rho^2\log(e/\rho)\right],\qquad \rho=r/D.
+\end{equation}
+To verify it, first $\eta^2\le C/A$ by \eqref{eq:coarse-cutoff}.
+Next, the sharp spectral estimates give
+\[
+ \eta^2\frac{n\ell}\tau
+ \le\frac{C D_r\log(2n)}{r\binom D{r+2}}
+ \le C\rho^2\log(e/\rho).
+\]
+Finally, the square of the remaining term is at most
+\[
+ \left(\eta^2\frac{\sqrt{nd s_2}}\tau\right)^2
+ \le\frac CA\frac{C D_r\log(2n)\,d}{r^2\binom D{r+2}}
+ \le\frac CA\rho\log(e/\rho).
+\]
+This proves \eqref{eq:variable-accuracy}. Its right-hand side can be
+made arbitrarily small, uniformly over all these sample sizes, by
+choosing $A$ large and then $\alpha$ small.
+
+Let $m$ be the actual sign-posterior mean. Its degree-$r$ truncation
+$p$ lies, on the Gram and ordinary ReLU sampling events, in the
+deterministic $L^1$ ball
+\begin{equation}\label{eq:head-radius}
+ \mathbb E|p|\le4\sqrt{B\tau}=:R.
+\end{equation}
+Indeed $\|m-p\|_K^2\le n$ and the Gram event bound its empirical
+squared norm by $B\tau$. Training consistency and the ordinary ReLU
+estimate at accuracy $1/4$ then give \eqref{eq:head-radius}, without
+a VC or squared-loss estimate. For sufficiently large $A$, that ReLU
+event has probability at least $1-\delta$.
+
+Now choose the odd cutoff
+\[
+ u=r+2\lceil10\log(d+1)\rceil,
+\]
+and split $m=p+b+t$ into degrees at most $r$, degrees $r+1$ through
+$u$, and degrees greater than $u$. The sharp level masses give
+\begin{equation}\label{eq:thin-band}
+ \Delta:=\tau_r-\tau_u\le C\tau_r\frac{\log d}{r}=o(\tau_r)
+\end{equation}
+uniformly in the sample range. The upper shell threshold bounds
+$n\ell/\tau\le CA\log(eD/r)$ and
+$nd s_2/\tau^2\le CA(d/r)\log(eD/r)$.
+Below degree $D/8$, each successive odd binomial coefficient grows by
+at least a factor four. The additional $\lceil10\log(d+1)\rceil$
+steps therefore ensure
+\[
+ n\lambda_{u+1}/\tau=o(1),\qquad
+ nd s_{2,u}/\tau^2=o(1),\qquad \tau_u/\tau=1-o(1).
+\]
+Apply the random Gram estimate at $u$. With probability $1-o(1)$,
+\begin{equation}\label{eq:final-tail}
+ \mathbb P_n t^2\le2\tau,\qquad
+ \|t\|_2^2\le n\lambda_{u+1}=o(\tau).
+\end{equation}
+The normalized trace of the tail covariance captured by training is
+at most $n\lambda_{u+1}$. The residual-variance argument thus also
+gives $\sigma_x^2\ge\tau/2$ outside an $o(1)$ fraction of inputs.
+All these error terms are uniform in $n$.
+
+Set $a_0=c_\theta/(2\sqrt2)$ and choose the deterministic threshold
+$T=4\sqrt\tau/a_0$. Lemma~\ref{lem:multiband-process}, Markov's
+inequality, and \eqref{eq:head-radius} imply, with probability at
+least $1-\delta$, a uniform error at most
+\[
+ \frac4\delta(R\eta+\sqrt\Delta)
+\]
+for the empirical stoploss of every member of the indicated sum class.
+By \eqref{eq:variable-accuracy} and \eqref{eq:thin-band}, choose $A$
+large, $\alpha$ small, and then $d$ large so that this is at most
+$a_0\sqrt\tau/8$. The actual $p+b$ belongs to this class on the
+events already specified, since $\|b\|_K\le\sqrt n$.
+
+Write $h=p+b$ and $F=F_{13/20}(S)$. The confidence margin and
+\eqref{eq:final-tail} imply
+$fh>a_0\sqrt\tau$ on a set of measure at least $1-F-o(1)$.
+Its negative set consequently has measure at most $F+o(1)$.
+Moreover $\mathbb E fh=0$ exactly, because $u<d$.
+Training consistency gives $(-f(X_i)h(X_i))_+\le|t(X_i)|$, and
+$(z-T)_+\le z^2/(4T)$ for $z\ge0$. Hence
+\[
+ \mathbb P_n(-fh-T)_+\le\frac{\mathbb P_nt^2}{4T}
+             \le\frac{a_0\sqrt\tau}{8}.
+\]
+The uniform stoploss estimate raises this bound to at most
+$a_0\sqrt\tau/4$ in the population. Equality of the positive and
+negative integrals of $fh$ now yields
+\[
+ a_0\sqrt\tau(1-F-o(1))
+ \le\mathbb E(-fh)_+
+ \le T(F+o(1))+\frac{a_0\sqrt\tau}{4}.
+\]
+After division by $\sqrt\tau$, this implies
+$F\ge a_0^2/32=c_\theta^2/256$ for all large $d$.
+The three events with failure probability $\delta$, together with
+the event of failure probability $o(1)$, have joint probability
+at least $1-3\delta-o(1)>3/4$. This completes the larger-sample proof.
+\end{proof}
+
+\begin{lemma}[Parity obstruction for polynomial thresholds]
+\label{lem:small-ptf}
+Every polynomial threshold of degree at most $s<d$ has full-parity
+error at least
+\[
+ B(d,s)=2^{-d}\sum_{j=0}^{\lfloor(d-s-1)/2\rfloor}\binom dj.
+\]
+\end{lemma}
+\begin{proof}
+A sufficiently small constant perturbation removes zero ties without
+changing the threshold's assigned signs. Let $P$ be the resulting
+polynomial and $t=\lfloor(d-s-1)/2\rfloor$. If the error set has fewer
+than $\dim V_t$ points, linear algebra supplies a nonzero $Q\in V_t$
+vanishing at every error. Then $fPQ^2$ is everywhere nonnegative and
+strictly positive somewhere. But $\deg(PQ^2)\le s+2t<d$, so its
+correlation with full parity is zero, a contradiction.
+\end{proof}
+
+\begin{proof}[Completion for smaller samples]
+For $n\le e^{(\log(d+1))^3}$ choose an odd $s\sim d^{1/3}$. The
+sharp spectral bound gives $n\lambda_{s+1}/\tau_s=o(1)$, uniformly
+in $n$. The posterior mean norm bound, residual-variance lemma, and
+confidence margin imply that its degree-$s$ truncation agrees with
+parity on every confident input except an $o(1)$ fraction of inputs.
+Thus Lemma~\ref{lem:small-ptf} gives
+\[
+ F_{13/20}(S)\ge B(d,s)-o(1)\ge\frac13
+\]
+for all large $d$, for every training sample. Here $B(d,s)\to1/2$:
+by symmetry the removed central binomial window has $O(s)$ atoms,
+each of mass $O(d^{-1/2})$, and $s=o(\sqrt d)$.
+This proves the remaining range. Proposition~\ref{prop:paper-width}
+transfers the confidence conclusion to every fixed negative exponent.
+\end{proof}

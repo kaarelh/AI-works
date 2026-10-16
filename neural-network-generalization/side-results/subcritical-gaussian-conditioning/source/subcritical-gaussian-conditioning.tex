@@ -1,0 +1,150 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools,booktabs}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Gaussian conditioning below the mean-field scaling: a sharp fluctuation threshold},pdfauthor={Dmitry Vaintrob; Kaarel Hanni; OpenAI Codex}}
+\setlength{\emergencystretch}{3em}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\title{Gaussian conditioning below the mean-field scaling:\\a sharp fluctuation threshold}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex}
+\date{October 15, 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+For a Bayesian $\tanh$ network with a Gaussian readout, the hidden
+feature kernel concentrates exponentially in width. When the scaling
+exponent satisfies $\gamma<1$, this remains true after conditioning
+on a fixed output margin at every Boolean input and on noiseless
+training signs. For $0<\gamma<1$, a Gaussian moderate-deviation
+principle determines the leading margin energy. We ask whether it
+also determines the full conditioned posterior. For
+$0<\gamma<1/2$, we prove relative approximation of every full-margin
+orthant probability by a Gaussian with the deterministic finite-gain
+kernel, and hence total-variation approximation of every Boolean
+posterior. The threshold $1/2$ is sharp for a universal statement:
+with only three input bits and one hidden layer, an explicit pair of
+compatible labelings has identical Gaussian energy, but fourth-order
+feature fluctuations change their posterior odds by
+$\exp[(8586a^4/625)N^{2\gamma-1}+o(1+N^{2\gamma-1})]$.
+At the original margin $a=1/2$, these corrections change a prediction
+from less than $2/3$ confidence under the Gaussian comparison to more
+than $2/3$ confidence under the actual network, already at
+$\gamma=1/2$. Thus Gaussian leading rates hold throughout the
+subcritical regime, while exact conditioned Gaussian behavior does not.
+\end{abstract}
+
+\section{Model, conditioning, and the question}
+
+Let $\mathcal X=\{-1,1\}^d$. Append a constant coordinate,
+$h^0(x)=(1,x)$, and use $L-1$ hidden layers of common width $N$:
+\[
+ h^s(x)=\tanh(W^s h^{s-1}(x)),\quad 1\le s<L,
+ \qquad z_N(x)=W^Lh^{L-1}(x).
+\]
+There are no later biases and the readout is linear. All weights
+are independent centered Gaussians, with variances
+\[
+ \operatorname{Var}(W^1_{ij})=N^{1-\gamma}/d,\qquad
+ \operatorname{Var}(W^s_{ij})=N^{-\gamma}\ (1<s<L),\qquad
+ \operatorname{Var}(W^L_i)=N^{-\gamma-1}.
+\]
+These are the conventions in the original notes\footnote{\url{https://kaarelh.github.io/ai/nnbayes-generalization.pdf}.},
+continued to $\gamma<1$.
+Let $Z_N=(z_N(x))_{x\in\mathcal X}$ and fix a margin $a>0$,
+with $a=1/2$ the original choice.
+
+The prior is first conditioned on $|Z_N(x)|>a$ at every input.
+A training sample $S$ then conditions on exact signs. If
+$\mathcal G_S$ denotes the compatible Boolean functions and
+$O_g=\{z:g(x)z(x)>a\text{ for all }x\}$, the posterior is exactly
+\[
+ \pi_N(g\mid S)=
+ \frac{\Pr\{Z_N\in O_g\}}
+      {\sum_{h\in\mathcal G_S}\Pr\{Z_N\in O_h\}},
+ \qquad g\in\mathcal G_S.
+\]
+We also write $A_g$ for the event $Z_N\in O_g$.
+Thus the all-input margin normalization cancels, but its restriction
+at unseen inputs remains in every orthant. For a target $f$, success
+at an input $x$ means
+\[
+ \pi_N\{g:g(x)=f(x)\mid S\}>2/3.
+\]
+This is a sign posterior, not Gaussian regression with numeric
+observations of the latent outputs.
+
+Every result below fixes $d,L,a,\gamma$ before taking $N\to\infty$.
+Training labels may be any fixed consistent collection. Constants
+are not uniform as dimension grows. In particular, a comparison
+proved here cannot silently be used in a joint dimension--width
+limit or converted into a sample-complexity bound.
+
+The exact Gaussian readout leaves just one source of non-Gaussian
+output behavior: the randomness of its feature covariance. A rare
+margin event can tilt that covariance by an amount tending to zero
+while still changing posterior odds by an unbounded factor. This
+is why convergence of the covariance and a Gaussian rate function
+are insufficient by themselves to identify a conditioned posterior.
+
+\input{gaussian-comparison.tex}
+\input{gaussian-conditioning.tex}
+
+\section{Consequences for the circuit-prior research question}
+
+The strongest general statements proved here are as follows.
+For $\gamma\le0$, the limiting posterior is the Gaussian sign
+posterior, with a global margin at $\gamma=0$ and no margin at
+$\gamma<0$. For $0<\gamma<1/2$, the deterministic finite-gain
+Gaussian approximates every full Boolean posterior, including tied
+energy minima. The sufficient range for replacing that kernel by
+its saturated limit is $0<\gamma<1/3$; optimality of the latter
+threshold is not asserted. For every $0<\gamma<1$, the saturated
+Gaussian rate and concentration on compatible energy minimizers
+remain valid. A unique compatible minimum gives the same limiting
+Boolean posterior throughout this entire interval. With ties,
+Theorem~\ref{thm:gaussian-posterior-counterexample} disproves a
+universal Gaussian-posterior replacement for every
+$1/2\le\gamma<1$.
+
+These comparisons concern probabilities themselves. A strict
+$2/3$ confidence indicator is discontinuous at probability exactly
+$2/3$; total-variation convergence alone does not settle that
+boundary case. The counterexample stays strictly away from the
+boundary on both sides and therefore gives an unambiguous
+separation under the requested convention.
+
+A companion paper, \emph{Small circuits can have exponentially
+large prior complexity below the mean-field scaling}, proves a
+separate conclusion throughout $\gamma<1$: full parity has a
+polynomial-size, polynomial-weight $\tanh$ circuit but exponential
+prior complexity on the natural scale of the regime. That prior
+separation does not imply exponential labeled-sample complexity.
+Conversely, the present non-Gaussian correction does not restore a
+polynomial circuit prior. It resolves a different issue: leading
+kernel energies need not determine how the Bayesian learner
+weights equally costly explanations.
+
+The remaining statistical question is whether the actual
+all-input-margin-conditioned posterior needs exponentially many
+examples to predict a $k$-bit XOR correctly with probability
+strictly greater than $2/3$ on most inputs. Neither the prior-mass
+separation nor the usual posterior-mean regression argument proves
+that statement. The counterexample also means that a proof covering
+the whole subcritical interval cannot simply replace every posterior
+by a Gaussian posterior and ignore its tied minima.
+
+\paragraph{Verification.}
+The accompanying script, \path{verify-counterexample.py}, checks the finite orbit table,
+projection identities, strict corner gradients, energy equality,
+Gaussian prefactor ratio, and fourth-moment coefficient using exact
+rational arithmetic. The asymptotic estimates and the completeness
+of the orbit classification are proved in the text.
+
+\end{document}

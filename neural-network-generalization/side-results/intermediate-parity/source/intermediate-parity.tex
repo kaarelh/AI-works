@@ -1,0 +1,243 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools,needspace}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Growing sparse parity under a globally separated neural prior},pdfauthor={Dmitry Vaintrob; Kaarel Hanni; OpenAI Codex}}
+\setlength{\emergencystretch}{2em}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\sign}{sign}
+\DeclareMathOperator{\dist}{dist}
+\DeclareMathOperator{\KL}{KL}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\title{Growing sparse parity under a globally separated neural prior}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex}
+\date{October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We study Bayesian neural networks with Gaussian weights and
+hyperbolic-tangent hidden activations, conditioned on a fixed absolute
+output margin at every Boolean input and on noiseless training labels.
+For each fixed subcritical width exponent $0<\gamma<1$, we obtain
+sample lower bounds for learning parity on a growing sparse set of
+coordinates. Let $\beta=2^{-(L-1)}$, $p=2-\beta$, and
+$\theta=(1-\beta/4)/s_p>1/2$, where
+$s_p=2-2\arcsin(2\sqrt{p-1}/p)/\pi$.
+For $k\le d^{1-\eta}$, with fixed $\eta>0$, the eventual sample
+complexity is at least
+\[
+ \exp\!\left\{c\max\left[k^\theta\log(ed/k),
+                  k\{\log(ed/k)\}^{2-1/\theta}\right]\right\}.
+\]
+The proof establishes failure at specified sample sizes on this scale.
+It applies to the actual posterior and to every possible mixture among
+tied variational minimizers. A prediction counts as successful only
+when the correct label has posterior probability greater than $2/3$.
+The argument combines the paired spectrum of the limiting kernel,
+uniform transport of the global margin through nuisance-coordinate
+averages, and a quantitative parity obstruction on random active
+faces. The natural $\exp\{c k\log(ed/k)\}$ lower bound remains open.
+\end{abstract}
+
+\section{Model and statement}
+Let $\mathcal X=\{-1,1\}^d$ carry uniform probability measure.
+Fix $U\subseteq[d]$ with $|U|=k$ and
+$f(x)=\chi_U(x)=\prod_{j\in U}x_j$.
+The learner is not given $U$. For fixed depth $L\ge2$ and hidden width
+$N$, define
+\[
+ h^0(x)=(1,x),\qquad
+ h^s(x)=\tanh(W^s h^{s-1}(x))\quad(1\le s<L),\qquad
+ z_N(x)=W^L h^{L-1}(x).
+\]
+There are no additional biases. All weights are independent centered
+Gaussians, with
+\begin{equation}\label{eq:weights}
+ \Var W^1_{ij}=N^{1-\gamma}/d,\qquad
+ \Var W^s_{ij}=N^{-\gamma}\quad(1<s<L),\qquad
+ \Var W^L_i=N^{-\gamma-1}.
+\end{equation}
+Fix $a>0$ and $0<\gamma<1$. Condition the prior on
+$|z_N(x)|>a$ for every $x\in\mathcal X$ and then on
+$f(X_i)z_N(X_i)>0$ for independent uniform training inputs
+$S=(X_1,\ldots,X_n)$. Write
+\begin{align*}
+ q_{N,S}(x)&=\Pp\{f(x)z_N(x)>0\mid
+        |z_N(y)|>a\ \forall y,\ f(X_i)z_N(X_i)>0\ \forall i\},\\
+ F_N(S)&=\Pp_x\{q_{N,S}(x)\le2/3\}.
+\end{align*}
+The width limit is always taken first: $d,k,L,a,\gamma,S$ are fixed
+while $N\to\infty$.
+
+Put $D=d+1$ and
+\begin{equation}\label{eq:exponents}
+ \beta=2^{-(L-1)},\quad p=2-\beta,\quad
+ s_p=2-\frac2\pi\arcsin\frac{2\sqrt{p-1}}p,\quad
+ \theta=\frac{1-\beta/4}{s_p},\quad \nu=2-\frac1\theta.
+\end{equation}
+Then $1/2<\theta<1$ and $0<\nu<1$.
+For $L=2$, $\theta=0.719367150047\ldots$ and
+$\nu=0.609889261784\ldots$.
+Let
+\[
+ t=\log(ed/k),\qquad
+ G_{d,k}=\max\{k^\theta t,k t^\nu\},\qquad
+ D_r=\sum_{j=0}^r\binom dj.
+\]
+
+\begin{theorem}[Failure at specified sample sizes]\label{thm:main}
+Fix $L\ge2$, $a>0$, and $\eta\in(0,1)$. There exist positive
+constants $c,C,A$, and sufficiently large $k_0,d_0$ such that the
+following holds for $d\ge d_0$ and $k_0\le k\le d^{1-\eta}$.
+Choose an odd integer $r$ within fixed constant factors of
+\begin{equation}\label{eq:cutoff-choice}
+ c\max\{k^\theta,k t^{\nu-1}\},
+\end{equation}
+with the constants chosen as in the proof, put
+$\rho=r/D$, $H=\log(e/\rho)$, and set
+\begin{equation}\label{eq:exact-size}
+ n_r=\left\lceil A D_r rH\rho^{-1/400}\right\rceil.
+\end{equation}
+Then
+\[
+ cG_{d,k}\le\log n_r\le CG_{d,k},
+\]
+and, for every support $U$ of size $k$ and fixed $0<\gamma<1$,
+\[
+ \Pp_S\left\{\liminf_{N\to\infty}F_N(S)\ge\frac1{16}\right\}
+ \ge\frac34.
+\]
+The conditioning events have positive probability for all sufficiently
+large widths at every fixed dimension and training sample.
+\end{theorem}
+
+
+\begin{corollary}[Depth two]
+For $L=2$, the eventual sample-complexity lower bound is
+\[
+ \exp\!\left\{c\max\left[
+ k^{0.719367150047\ldots}\log(ed/k),\
+ k\{\log(ed/k)\}^{0.609889261784\ldots}\right]\right\}.
+\]
+The two exponents are the exact constants defined in~\eqref{eq:exponents}.
+\end{corollary}
+
+The statement concerns the particular sizes~\eqref{eq:exact-size}.
+It does not assert failure at every smaller sample size. This distinction
+matters because no monotonicity of fixed-target posterior risk is used.
+It nevertheless gives a lower bound for the usual eventual sample
+complexity: a guarantee that holds for every $n\ge m$ cannot have
+$m\le n_r$. For example, no eventual guarantee with training-sample
+success probability greater than $1/4$ can ensure width-limit confidence
+failure strictly below $1/16$ at every $n\ge m$ when $m\le n_r$.
+The theorem does not quantify a minimum width or interchange the width
+and dimension limits.
+
+\subsection{Variational formulation and proof organization}
+Let $\Psi(t)=2\arcsin(t)/\pi$ and
+\[
+ K(x,y)=\Psi^{\circ(L-1)}\!\left(\frac{1+x\cdot y}{d+1}\right).
+\]
+All $L^p$ norms and Walsh coefficients below use the uniform cube
+probability measure. Let $\lambda_j$ be the degree-$j$ eigenvalue of
+the normalized covariance operator $2^{-d}K$. The corresponding energy
+is
+\[
+ \|z\|_K^2=z^{\mathsf T}K^{-1}z
+      =\sum_{V\subseteq[d]}\frac{\widehat z(V)^2}{\lambda_{|V|}}.
+\]
+Write $Q_r=K_{>r}$ and
+$\tau_r=Q_r(x,x)=\sum_{j>r}\binom dj\lambda_j$.
+The width-first posterior selects compatible sign functions minimizing
+$\|z\|_K^2/2$ under
+\begin{equation}\label{eq:obstacle}
+ |z(x)|\ge a\quad(x\in\mathcal X),\qquad
+ f(X_i)z(X_i)\ge a\quad(i\le n).
+\end{equation}
+We prove that every minimizer has test error at least $3/8$. The final
+confidence conclusion is therefore independent of the posterior weights
+among tied minimizers.
+
+The main additional ingredient beyond a norm bound is transport of the
+all-input margin. A minimizing field is split into a low-degree head,
+a middle band, and a sufficiently high-degree tail. Near a sampled
+nuisance input, the first two parts reduce to a frozen head and a common
+scalar offset. A recurrence argument and angular concentration force
+the radial tail profile to return to the head's sign. A center with an
+incorrect head sign consequently produces a quantitative kernel-energy
+witness. These witnesses control bounded, normalized wrong-side moments
+on random active faces. A scalar $L^p$ Bernstein inequality and parity
+influence then force the restricted head degree to be too large.
+
+\input{width-limits}
+\input{spectral}
+\input{comparator}
+\input{sampling}
+\input{tail-gram}
+\input{sparse-gram}
+\input{head-control}
+\input{middle-band-pac}
+\input{angular-concentration}
+\input{radial-geometry}
+\input{head-recurrence}
+\input{transport}
+\input{balanced-contacts}
+\input{analytic-calibration}
+\input{face-restriction}
+\input{assembly}
+
+\section{Scope}
+The result concerns the specified globally conditioned posterior, rather
+than a posterior mean or a kernel ridge predictor. The confidence
+criterion is applied to the actual label probability. The lower bound
+holds for every fixed $0<\gamma<1$ because the same finite-dimensional
+kernel rate governs this entire interval when width is taken first.
+No assertion about $\gamma=0$ is made here.
+
+For fixed polynomial sparsity, the natural remaining target is
+$\exp\{c k\log(ed/k)\}$. The exponent in this paper is smaller. The
+improvement comes from using the global margin during the proof, rather
+than using only the low-degree head's norm. A matching natural-scale
+lower bound would require a stronger local parity calibration or a
+different variational argument.
+
+\begin{thebibliography}{99}
+\bibitem{flajolet2009}
+P. Flajolet and R. Sedgewick. \emph{Analytic Combinatorics}.
+Cambridge University Press, 2009. Chapter VI.
+\bibitem{Lee2023}
+J. R. Lee. Spectral hypergraph sparsification via chaining.
+\href{https://arxiv.org/abs/2209.04539}{arXiv:2209.04539}, Section 2.4.
+\bibitem{tropp2008}
+J. A. Tropp. Norms of random submatrices and sparse approximation.
+\emph{Comptes Rendus Math\'ematique} 346:1271--1274, 2008.
+\bibitem{tropp2012}
+J. A. Tropp. User-friendly tail bounds for sums of random matrices.
+\emph{Foundations of Computational Mathematics} 12:389--434, 2012.
+\bibitem{EI}
+A. Eskenazis and P. Ivanisvili.
+Polynomial inequalities on the Hamming cube.
+\href{https://arxiv.org/abs/1902.02406}{arXiv:1902.02406}.
+\bibitem{HKS}
+A. W. Harrow, A. Kolla, and L. J. Schulman.
+Dimension-free $L^2$ maximal inequality for spherical means in the
+hypercube. \emph{Theory of Computing} 10:55--75, 2014.
+\bibitem{CD} A. Carbonaro and O. Dragi\v cevi\'c.
+\emph{Functional calculus for generators of symmetric contraction semigroups}.
+Duke Math. J. 166 (2017), 937--974.
+\href{https://arxiv.org/abs/1308.1338}{arXiv:1308.1338}; imaginary-power estimate in Proposition 11 of version 2.
+\bibitem{Domelevo} K. Domelevo, P. Durcik, V. Fragkiadaki, O. Klein, D. Oliveira e Silva, L. Slav\'ikov\'a, and B. Wr\'obel.
+\emph{Dimension-free estimates for low degree functions on the Hamming cube}.
+Studia Math. 280 (2025), 161--173.
+\href{https://arxiv.org/abs/2401.07699}{arXiv:2401.07699}.
+
+\end{thebibliography}
+\end{document}

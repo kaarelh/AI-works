@@ -1,0 +1,174 @@
+APPENDIX E AUDIT: COMPRESSION AND THE NORM/COMPLEXITY EQUIVALENCE
+
+Conclusion
+
+The multilayer compression argument works. Its main dependency issue is correctly resolved by sampling the last hidden layer first and comparing intermediate networks in that order. The proof must explicitly specify a LINEAR output layer, a bounded activation with a stated Lipschitz constant, independent samples across layers, and that sampled sets are lists retaining multiplicities. The exposition can and should separate the sampling construction, its three events, and its deterministic telescoping consequence. There is no fatal gap in Appendix E under these assumptions.
+
+The numerical statement can actually be slightly strengthened: the chosen constants give uniform output error at most 1/12, rather than merely the 1/6 needed to reduce a strict margin 1/2 to a strict margin 1/3. The original claimed norm bound 4K before output rescaling and 9K afterward is valid.
+
+Important surrounding corrections
+
+1. Infima need not be attained because implementation uses strict inequalities. The statement "take an implementation of norm kappa_N(g)" is unjustified. Always choose an implementation with norm at most kappa_N(g)+1 (or kappa_N(g)+epsilon) and apply the lemma with this enlarged K. This costs nothing in the polynomial equivalence.
+
+2. The reverse implication C_L(g) <= poly(d,kappa_N(g)) holds for every g representable at width N. It does NOT require N >= C_L(g). State this directly when using the implication to count functions.
+
+3. Output rescaling presupposes a linear readout. For a generic activated output, multiplying the output weights by 3/2 need not multiply the output by 3/2 or improve the margin. The main model should explicitly define hidden activations and a linear output. The formulas already consistently use this model.
+
+4. The factor 4K requires the same sampling/weight normalization, but does not itself need the activation to be 1-Lipschitz. Propagation formulas do. For a fixed Lipschitz constant A, insert A factors in propagation and choose rho smaller; the conclusion remains polynomial at fixed depth and activation. Choosing tanh, or assuming |phi| <= 1 and Lip(phi) <= 1, is cleanest.
+
+5. Appendix D says cloning preserves each weighted layer norm at every width. Exact preservation holds when N is a multiple of C. With k=floor(N/C), the output contribution may increase by a factor N/(kC)<2; the input contribution decreases, and inner contributions are unchanged. This is an easy constant-factor repair, not an obstruction to the main theorem.
+
+6. The compression argument needs no universality or non-polynomial assumption at all. State its conclusion for represented functions, and define the learning theorem for targets with an existing finite C witness. Appendix B's separate universality claims are not needed here.
+
+A FULL CORRECT COMPRESSION LEMMA
+
+Fix d>=1, L>=2, and phi:R->[-1,1] with Lipschitz constant at most 1. Let X={-1,1}^d and append one constant initial coordinate, so h^0(x)=(1,x). A width-N network has
+
+ h^s(x)=phi(W^s h^{s-1}(x)), 1<=s<=L-1,
+ z(x)=v h^{L-1}(x),
+
+with componentwise phi and a linear readout v. Define
+
+ kappa_N(W)= (d/N)||W^1||_F^2
+             + sum_{s=2}^{L-1}||W^s||_F^2 + N||v||_2^2.
+
+Suppose kappa_N(W)<=K and K>0. Write H=L-1, B=max{1,K},
+
+ eta=1/(12H),
+ rho=eta 2^{-L} B^{-H/2},
+ n=ceil[256 rho^{-4} (d+log(L/rho))].
+
+Then there is a width-n network W' with
+
+ sup_{x in X}|z_{W'}(x)-z_W(x)| <= 1/12,
+ kappa_n(W') <= 4K.
+
+Consequently, if W implements g with strict margin 1/2, W' implements g with strict margin 5/12 (hence 1/3). Multiplying its linear readout by 3/2 gives strict margin greater than 1/2 and weighted norm at most 9K.
+
+At fixed L the width is polynomial in d and K+1. More explicitly,
+
+ n=O((d+L log(K+1)) L^4 16^L (K+1)^{2(L-1)}),
+
+where this display also follows when K>=1/4, as automatically holds for a network with strict margin 1/2. For arbitrary K>0 one can write d+L+L log(K+1) in the prefactor instead.
+
+PROOF
+
+Step 1: deterministic truncation.
+
+For every row i of every matrix W^s, 2<=s<=L (with W^L=v), write r_i^s=||W^s_{i,*}||_2. If r_i^s>0, zero each entry whose magnitude exceeds
+
+ tau_i^s = 2 r_i^s/(rho sqrt(N)).
+
+If the row is zero, leave it zero. Denote the truncated matrices by bar W^s; W^1 is unchanged. At any bounded activation vector, deleting a row's entries changes its preactivation by at most
+
+ sum_deleted |W^s_{ij}| <= (r_i^s)^2/tau_i^s
+                         = (rho/2) sqrt(N) r_i^s.
+
+The Euclidean change in a hidden layer s is therefore at most
+(rho/2)sqrt(N)||W^s||_F. Every original or truncated internal matrix has operator norm at most sqrt(K), and the output row has norm at most sqrt(K/N). As phi is 1-Lipschitz, the resulting output change is at most
+
+ (rho/2) K^{(L-s+1)/2} <= eta/2,       2<=s<=L-1.
+
+For the output row itself the bound is (rho/2)sqrt(K)<=eta/2. Telescope through the H layer truncations: the truncated network differs uniformly from the original by at most H eta/2=1/24. Truncation does not increase any Frobenius norm. In what follows keep r_i^s defined using the original matrices; this only loosens all bounds.
+
+Step 2: simultaneous independent sampling construction.
+
+Independently for each hidden layer s, choose a list
+I_s(1),...,I_s(n) of independent uniform indices in {1,...,N}. Lists at distinct layers are also independent. Define the fully sampled network by
+
+ W'^1_{a,*}=W^1_{I_1(a),*},
+ W'^s_{a,b}=(N/n) bar W^s_{I_s(a),I_{s-1}(b)},   2<=s<=L-1,
+ v'_b=(N/n) bar v_{I_{L-1}(b)}.
+
+Duplicates in lists represent distinct copied neurons. This point matters to the formulas and the expectation calculations.
+
+For the proof expose lists in order I_{L-1},I_{L-2},...,I_1. When sampling layer m, layers below m are still the original truncated layers, so the activation h^m_j(x) used in each sample is deterministic, bounded by 1, and independent of every sampling list. The kept rows in layer m+1 are determined by the previously exposed list I_{m+1}. Conditional on the later lists, sampling layer m estimates each such row sum by independent bounded terms.
+
+Step 3: three events with positive simultaneous probability.
+
+Event A (all row estimates accurate). For each stage m, every input x, and each retained row i at layer m+1 (or the single output row when m=L-1), require
+
+ |(N/n) sum_{b=1}^n bar W^{m+1}_{i,I_m(b)} h^m_{I_m(b)}(x)
+     - sum_{j=1}^N bar W^{m+1}_{ij} h^m_j(x)|
+ <= (rho/2)sqrt(N) r_i^{m+1}.
+
+If r_i=0 the estimate is exact. Otherwise each summand in the estimator is bounded in absolute value by (N/n)tau_i, and Hoeffding bounds the failure probability for one row and input by
+
+ 2 exp(-rho^4 n/32).
+
+This bound is uniform in the row. Therefore it remains valid conditional on all later lists, and can be integrated before taking a union bound. There are at most L n 2^d row/input/stage triples, so
+
+ P(A^c) <= 2^{d+1} L n exp(-rho^4 n/32) <= 1/100.
+
+The displayed n suffices. For an explicit elementary verification put r=log(1/rho), a=d+log L+r. Since d>=1,L>=2,r>=0, a>=1. We have n<=257 rho^{-4}a and rho^4 n/32>=8a. Use log a<=a-1 to bound the logarithm of the last probability by
+
+ d log 2+log L+log514+4r+log a-8a
+ <= -(7-log2)d-6log L-3r+log514-1
+ <= -log100.
+
+Event B (sampled rows have controlled mass). Define
+
+ R=N sum_{s=2}^{L-1} sum_{a=1}^n (r_{I_s(a)}^s)^2
+    +N||v||_2^2.
+
+Its expectation is
+
+ E R=n sum_{s=2}^{L-1}||W^s||_F^2+N||v||_2^2 <= nK.
+
+Markov gives P(R<=8nK)>=7/8. Call this event B. In particular, on B the aggregate squared row mass at every single stage is at most 8nK/N. One Markov inequality controls all stages together.
+
+Event C (the final sampled norm is small). Direct calculation gives
+
+ E[(d/n)||W'^1||_F^2]=(d/N)||W^1||_F^2,
+ E||W'^s||_F^2=||bar W^s||_F^2,             2<=s<=L-1,
+ E[n||v'||_2^2]=N||bar v||_2^2.
+
+For the middle identity, each pair (I_s(a),I_{s-1}(b)) is independent and uniform; summing over a,b gives n^2/N^2, canceling the squared factor (N/n)^2. Independence of different summands is NOT needed for these expectation identities. Thus E kappa_n(W')<=K and P(kappa_n(W')<=4K)>=3/4. Call the latter event C. On C, every sampled inner matrix has operator norm at most 2sqrt(K), and the sampled output row has norm at most 2sqrt(K/n).
+
+No independence among A,B,C is needed: P(A intersect B intersect C)>=1-1/100-1/8-1/4>0. Fix a draw in the intersection.
+
+Step 4: telescope in reverse layer order.
+
+Let F_m be the network in which hidden layers m,...,L-1 have been sampled, while layers 1,...,m-1 retain all N neurons; F_L is the completely unsampled truncated network and F_1 is the final sampled network. Incoming weights to a sampled layer simply select its rows; outgoing weights from a sampled layer multiply by N/n. This defines the mixed-width networks unambiguously.
+
+Compare F_{m+1} to F_m. The activations in layer m are exactly the original truncated functions in both networks, before selecting neurons. The only discrepancy is in the sums into retained layer m+1. If m=L-1 this is the output discrepancy and A gives at most (rho/2)sqrt(K)<=eta/2.
+
+Otherwise put t=L-m, so 2<=t<=L-1. Events A and B bound the Euclidean discrepancy in the next preactivation by
+
+ (rho/2)sqrt(8nK).
+
+All matrices after layer m+1 already equal their final sampled matrices. Consequently C controls their gains, even though the intermediate network as a whole need not have norm at most 4K. After activation at layer m+1 and propagation through t-2 remaining hidden matrices and the final readout, the output discrepancy is at most
+
+ (rho/2)sqrt(8nK) (2sqrt(K))^{t-2} 2sqrt(K/n)
+ =rho 2^{t-1/2} K^{t/2}
+ <=eta 2^{-3/2} <= eta/2.
+
+There are H sampling stages, contributing at most 1/24. Together with the truncation error, the uniform total is at most 1/12. Event C proves the norm conclusion, completing the lemma.
+
+DERIVING THE POLYNOMIAL EQUIVALENCE
+
+Let C_L(g) be the least positive integer C for which a depth-L width-C implementation of strict margin 1/2 exists with every individual weight of absolute value at most C. Padding by disconnected neurons is allowed. Fix a represented g at width N, and choose W with
+
+ kappa_N(W)<=kappa_N(g)+1=:K.
+
+The compression lemma, followed by scaling the readout by 3/2, produces width n and entrywise bounds
+
+ |W'^1_{aj}|<=2sqrt(Kn/d),
+ |W'^s_{ab}|<=2sqrt(K),
+ |v'_b|<=3sqrt(K/n).
+
+Hence padding to the integer
+
+ D=ceil(n+2sqrt(Kn/d)+3sqrt(K)+1)
+
+gives a C_L witness. This is polynomial in d and kappa_N(g)+1 for fixed L. Since any strict-margin implementation has kappa_N(W)>1/4, the infimum kappa_N(g)>=1/4, so the additive 1 can if desired be absorbed into polynomial notation in kappa_N(g).
+
+In the other direction, take a width-C witness with weights bounded by C and any N>=C. Set k=floor(N/C), clone every hidden neuron k times, divide all outgoing weights by k, and pad remaining neurons with zero incident edges. Then the function is exactly unchanged. The three contributions to kappa_N are bounded respectively by
+
+ d(d+1)C^2,  (L-2)C^4,  2C^4,
+
+so kappa_N(g)<=d(d+1)C^2+LC^4. This establishes both directions with constants independent of N, subject only to the stated fixed depth/activation convention.
+
+WHAT TO INCLUDE IN THE PAPER
+
+Include the compression lemma and proof above, perhaps move the four steps to a technical appendix. It is central, nontrivial, and sound. Describe two crucial ideas in the main text: truncate rows in proportion to their Euclidean norms, and sample from last layer toward first so the union bound involves n retained rows rather than N original rows. Separate the norm event from the row-mass event; neither may silently be conditioned on when applying Hoeffding.

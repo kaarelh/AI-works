@@ -1,0 +1,135 @@
+% Gaussian-posterior part of the exponential sample lower-bound theorem.
+% Requires theorem, lemma, proposition, corollary environments and amsmath,
+% amssymb, amsthm. The spectral/random-Gram lemma is supplied separately.
+
+\section{The actual Gaussian sign posterior}
+Let $\mathcal X=\{-1,1\}^d$, $M=2^d$, and
+$f(x)=\prod_{j=1}^d x_j$. All function norms and expectations on
+$\mathcal X$ use its uniform probability measure. Let $G$ be a
+nondegenerate centered Gaussian vector indexed by $\mathcal X$, with
+covariance matrix $K$. The training inputs $X_1,\ldots,X_n$ are independent
+and uniform. We condition on
+\[
+ \mathcal A_S=\{f(X_i)G(X_i)>0:1\le i\le n\}.
+\]
+The prediction at $x$ is its actual conditional correct-label probability
+$q_S(x)=\mathbb P(f(x)G(x)>0\mid\mathcal A_S)$, and we write
+\[
+ F_\theta(S)=\mathbb P_x\{q_S(x)\le\theta\},\qquad
+ \theta=\frac{13}{20},\qquad
+ c_\theta=\sqrt{2\pi}\left(\frac1e-\frac7{20}\right)>0.
+\]
+The threshold $\theta<2/3$ supplies a strict buffer for passage from
+limiting Gaussian posteriors to finite-width posterior probabilities.
+
+Suppose the Walsh characters are eigenfunctions of the normalized
+covariance operator, with degree-$j$ eigenvalue $\lambda_j$. Write
+$V_r=\operatorname{span}\{\chi_U:|U|\le r\}$ and $D_r=\dim V_r$.
+For $r<d$, let $Q$ be the covariance contributed by the complementary
+Fourier modes, and put
+\[
+ \tau=Q(x,x)=\sum_{j>r}\binom dj\lambda_j,
+ \qquad \ell=\max_{j>r}\lambda_j.
+\]
+The matrix eigenvalues of $Q$ are $M\lambda_j$; this normalization is
+used throughout. Define $\|h\|_K^2=h^TK^{-1}h$, and write $u_+=\max(u,0)$ and $u_-=\max(-u,0)$.
+
+\begin{lemma}[Mean norm and a confidence margin]\label{lem:schedule-mean}
+Let $m(x)=\mathbb E[G(x)\mid\mathcal A_S]$, and let $s\le n$ be the
+number of distinct sampled inputs. Then
+\[
+ \|m\|_K^2\le s,\qquad f(X_i)m(X_i)>0.
+\]
+Let $\sigma_x^2=\operatorname{Var}(G(x)\mid G_S)$, where $S$ here lists
+the distinct inputs. Whenever $\sigma_x>0$ and $q_S(x)>\theta$,
+\[
+ f(x)m(x)>c_\theta\sigma_x.
+\]
+\end{lemma}
+\begin{proof}
+Whiten the Gaussian training vector as $G_S=K_{SS}^{1/2}\xi$.
+The sign constraints form a homogeneous cone in $\xi$. Conditioning
+leaves the squared Gaussian radius with mean $s$, so Jensen's inequality
+and Gaussian regression give
+\[
+ m_S^TK_{SS}^{-1}m_S\le s,\qquad
+ m=K_{\mathcal X,S}K_{SS}^{-1}m_S.
+\]
+The RKHS norm of this regression vector is the preceding quadratic
+form. Its observed signed coordinates are strictly positive.
+
+For the confidence claim, the scalar conditional variable
+$Y=f(x)G(x)$ has a log-concave density: it is a marginal of a Gaussian
+restricted to a convex set, by the marginal log-concavity theorem \cite{prekopa1973}. If $\mu=\mathbb E Y$ and $F_Y$ is its
+cdf, log-concavity and Jensen's inequality imply
+\[
+ \log F_Y(\mu)\ge\mathbb E\log F_Y(Y)=-1.
+\]
+Consequently $\mathbb P(Y>\mu)\le1-e^{-1}<\theta$.
+Conditioning first on the full training vector shows that the density
+of $Y$ is a mixture of Gaussian densities with common variance
+$\sigma_x^2$, and is therefore at most
+$(\sqrt{2\pi}\sigma_x)^{-1}$. If $q_S(x)>\theta$, then $\mu>0$ and
+\[
+ \theta<\mathbb P(Y>0)
+ \le 1-e^{-1}+\frac{\mu}{\sqrt{2\pi}\sigma_x}.
+\]
+This gives the stated margin.
+\end{proof}
+
+\begin{lemma}[Most residual variances remain large]\label{lem:schedule-var}
+For every training sample,
+\[
+ \mathbb P_x\{\sigma_x^2<\tau/2\}\le \frac{2n\ell}{\tau}.
+\]
+Also, if $p$ is the degree-$r$ Fourier truncation of $m$ and $t=m-p$,
+then $\|t\|_2^2\le n\ell$.
+\end{lemma}
+\begin{proof}
+Write $G=G_{\le r}+G_{>r}$ as a sum of independent fields. Conditioning
+additionally on the full low-degree field can only decrease conditional
+Gaussian variance. The remaining covariance is
+\[
+ Q-Q_{\mathcal X,S}Q_{SS}^{\dagger}Q_{S,\mathcal X}.
+\]
+Its subtracted term is positive semidefinite, bounded above by $Q$,
+and has rank at most $s\le n$. Its normalized trace is at most $n\ell$.
+Markov's inequality proves the first assertion; it includes observed
+points automatically. Fourier orthogonality and the mean norm bound
+prove $\|t\|_2^2\le\ell\|m\|_K^2\le n\ell$.
+\end{proof}
+
+\section{Uniform sampling detects the negative part}
+\begin{lemma}[Uniform ReLU sampling on the cube]\label{lem:schedule-relu}
+For every fixed $\delta,\eta\in(0,1)$, there is a universal constant
+$C$ such that, if
+\[
+ n\ge C\eta^{-2}D_r\log\!\left(\frac{D_r}{\delta\eta}\right),
+\]
+then with probability at least $1-\delta$, simultaneously for all
+$p\in V_r$,
+\[
+ \left|\frac1n\sum_{i=1}^n(-f(X_i)p(X_i))_+
+             -\mathbb E_x(-f(x)p(x))_+\right|
+ \le\eta\mathbb E_x|p(x)|.
+\]
+In particular, when $r<d$ and $\eta=1/4$, the empirical negative
+part is at least $\mathbb E|p|/4$.
+\end{lemma}
+\begin{proof}
+Let $A$ have rows $f(x)(\chi_U(x))_{|U|\le r}$, one for each cube
+point. Then $A^TA=MI$ and every row has squared norm $D_r$.
+The $\ell_1$ Lewis weights of $A$ are exactly $D_r/M$: substitution
+in their defining equation
+\[
+ w_x^2=A_x(A^T\operatorname{diag}(w^{-1})A)^{-1}A_x^T
+\]
+verifies this constant solution, and Lewis weights are unique.
+The additive ReLU coreset theorem of Mai, Musco, and Rao
+\cite[Theorem~5]{mai2021coresets} therefore samples precisely the uniform
+distribution on the cube and gives the stated estimate. Its sample bound
+is $O(\eta^{-2}D_r\log(D_r/(\delta\eta)))$; no additional logarithmic
+factor is required. Finally $\mathbb E fp=0$, because $r<d$, so
+$\mathbb E(-fp)_+=\mathbb E|p|/2$.
+\end{proof}
+

@@ -1,0 +1,87 @@
+\section{Counting functions at bounded width}
+\label{sec:packing}
+
+We first count functions with inexpensive implementations at a fixed width.
+The argument uses the margin to separate representatives in parameter space.
+It does not require the posterior distribution on parameters to be supported
+in a bounded set.
+
+Write $u_\ell=\sqrt{c_\ell}\,W^\ell$, where
+$c_1=d/N$, $c_\ell=1$ for $2\leq\ell\leq L-1$, and $c_L=N$.
+Concatenating these coordinates gives $\kappa_N(w)=\|u\|_2^2$.
+The dimension of the parameter space is
+\[
+ P_N=N(d+1)+(L-2)N^2+N.
+\]
+
+\begin{lemma}[Parameter sensitivity]
+\label{lem:parameter-sensitivity}
+Suppose $|\phi|\leq1$ and $\operatorname{Lip}(\phi)\leq1$.
+For $d\geq1$, $L\geq2$, and $R>0$, define
+\[
+ \Lambda_L(R,d)^2
+ =\frac{d+1}{d}R^{2(L-1)}+\sum_{j=0}^{L-2}R^{2j}.
+\]
+For all rescaled parameters $u,v$ with $\|u\|_2,\|v\|_2\leq R$,
+and every $x\in\{-1,1\}^d$,
+\[
+ |z_u(x)-z_v(x)|\leq\Lambda_L(R,d)\|u-v\|_2.
+\]
+\end{lemma}
+
+\begin{proof}
+Telescope through networks in which one layer at a time is replaced.
+Every layer in each intermediate network comes from either $u$ or $v$,
+and therefore its rescaled Frobenius norm is at most $R$.
+The original first-layer Frobenius norm is at most $R\sqrt{N/d}$,
+each intermediate-layer norm is at most $R$, and the readout norm is
+at most $R/\sqrt N$.
+
+Changing the first rescaled layer by $\Delta u_1$ changes its
+preactivation vector by at most
+$\sqrt{N/d}\sqrt{d+1}\,\|\Delta u_1\|_F$.
+The subsequent activations are $1$-Lipschitz, so its contribution at the
+output is at most
+\[
+ \sqrt{\frac{d+1}{d}}R^{L-1}\|\Delta u_1\|_F.
+\]
+For $2\leq\ell\leq L-1$, the input activation vector has norm at most
+$\sqrt N$. Changing the $\ell$th layer therefore contributes at most
+\[
+ \sqrt N\,\|\Delta u_\ell\|_F
+ R^{L-1-\ell}\frac{R}{\sqrt N}
+ =R^{L-\ell}\|\Delta u_\ell\|_F
+\]
+at the output. Changing the rescaled readout contributes at most
+$\|\Delta u_L\|_2$. Summing these contributions and applying
+Cauchy--Schwarz gives the claim. Notice that the factors of $\sqrt N$
+cancel, so this sensitivity bound is independent of the width.
+\end{proof}
+
+\begin{proposition}[Packing bound]
+\label{prop:packing}
+Under the hypotheses of Lemma~\ref{lem:parameter-sensitivity},
+\[
+ \#\{g:\kappa_N(g)\leq R^2\}
+ \leq \bigl(1+2R\Lambda_L(R,d)\bigr)^{P_N}.
+\]
+\end{proposition}
+
+\begin{proof}
+For every counted function $g$, take a sequence of strict-margin
+implementations whose costs tend to $\kappa_N(g)$.
+Compactness gives a convergent subsequence in rescaled parameter space,
+with limit $u_g$ satisfying $\|u_g\|_2\leq R$.
+Continuity of the network on the finite input domain gives
+$g(x)z_{u_g}(x)\geq1/2$ for every $x$.
+
+If $g\ne g'$, their labels differ somewhere, so
+$|z_{u_g}(x)-z_{u_{g'}}(x)|\geq1$ for some input $x$.
+Lemma~\ref{lem:parameter-sensitivity} therefore gives
+$\|u_g-u_{g'}\|_2\geq1/\Lambda_L(R,d)$.
+The open balls of radius $1/(2\Lambda_L(R,d))$ centered at the $u_g$
+are disjoint and lie inside the ball of radius
+$R+1/(2\Lambda_L(R,d))$.
+Comparing their $P_N$-dimensional volumes proves the bound.
+\end{proof}
+

@@ -1,0 +1,206 @@
+Audit of Appendices A, B, C, D and F
+Source: nnbayes-generalization.pdf / text extraction supplied by parent.
+Reviewer: ChatGPT subagent; 15 October 2026.
+
+SUMMARY
+
+Appendices A--D support the strong-prior argument after minor precision repairs.
+Appendix B's finite interpolation citation is correct. Appendix C's handling of
+infima through closed-margin representatives is also correct. Appendix D is exactly
+norm invariant only at integer width multiples; at other widths the factor is <2.
+Appendix F should be rewritten as a short related-work discussion. Its assertion
+that a circuit-hard, low-prior target must learn slowly is not proved and is not a
+valid consequence of small prior mass. The cited norm-capacity results cannot be
+substituted verbatim without checking their additional activation assumptions.
+
+A. RELEVANCE-BASED LEARNING BOUND
+
+The stated argument is sound for the usual useful range epsilon, delta, eta in
+(0,1). If epsilon+eta>=1 its risk claim is vacuous. For the strong-prior application
+the Markov argument is unnecessary. A cleaner lemma is:
+
+Let pi be a prior on a countable class, pi(f)>0, f in S, |S|<=M, and
+pi(H\S)<=T*pi(f). Given n iid realizable examples, with probability at least
+1-M*exp(-epsilon*n), all consistent hypotheses in S have error <=epsilon.
+For every sample, posterior(H\S)<=pi(H\S)/pi(f)<=T. Consequently posterior
+mean test error is <=epsilon+T on this event. Majority-vote error is at most
+2(epsilon+T). Thus n>=(log M+log(1/delta))/epsilon suffices.
+
+The slide's concrete 4000(log M+4) bound is valid with epsilon=T=1/2000 and
+failure probability <=1/(1000M): M exp[-n/2000]=exp(-8)/M<1/(1000M).
+
+The small-Gaussian claim requires an actual lemma rather than a density heuristic.
+At fixed finite d,N,L, write A_g={w:g(x)z_w(x)>1/2 for every x}; this is open.
+For the unconditioned Gaussian Q_sigma, in rescaled Euclidean coordinates,
+
+  lim_{sigma->0} 2 sigma^2 log Q_sigma(A_g) = -kappa_N(g).
+
+Upper bound: A_g is outside the radius sqrt(kappa_N(g)) ball; use the Gaussian
+radial tail (or the elementary exponential-moment bound with an arbitrary
+slack). Lower bound: choose w in A_g within eta of the infimum and then an open
+ball contained in A_g on which kappa<=kappa_N(g)+2eta; integrate its density.
+The Gaussian normalization contributes only O(sigma^2 log sigma).
+Conditioning the Gaussian on the union of all A_g cancels in prior ratios.
+Thus pi_sigma(g)/pi_sigma(f)->0 whenever kappa_N(g)>kappa_N(f). The domain is
+finite, so summing over the finitely many more costly functions gives the needed
+tail ratio. This says sufficiently small positive sigma at each fixed width;
+it gives no width-uniform sigma cutoff or finite-sigma bound. It does not require
+the posterior itself to have a unique limit, particularly among tied costs.
+
+B. CIRCUIT SIMULATION
+
+Pinkus, Approximation theory of the MLP model in neural networks, Acta Numerica 8
+(1999), Theorem 5.1, printed p.166, states exactly the finite interpolation theorem
+used in the slides: continuous nonpolynomial phi, r distinct inputs, r units and
+an affine preactivation / linear readout can interpolate arbitrary r real values.
+Verified in the author's PDF:
+https://pinkus.net.technion.ac.il/files/2021/02/acta.pdf
+
+For a fixed fan-in bound q, the set of Boolean gate types and inputs is finite.
+Choose one interpolating representation for each gate type on {-1,1}^q. All
+coefficients are then bounded by a finite constant depending only on phi,q.
+The gate value is an exact linear combination of O(2^q)=O(1) activations.
+Substitute these linear combinations into the next gate's affine preactivations.
+Because each gate has at most q incoming Boolean values, each new matrix entry
+remains bounded by a constant depending only on this finite dictionary.
+
+No separate biases are needed: choose beta with c=phi(beta)!=0. At hidden layer 1,
+a dedicated unit has preactivation beta*x_0 and activation c. Each later hidden
+layer has a dedicated unit receiving weight beta/c from that constant unit.
+Its activation is again c, so a threshold theta is supplied by weight -theta/c.
+This adds one unit and a bounded squared-norm cost per layer. The constant unit
+must be explicitly included; an appended input constant alone does not directly
+provide hidden-layer biases.
+
+Depth: a circuit of D gate layers maps naturally to D nonlinear hidden layers
+and one linear readout, hence L=D+1 under the slide's matrix-depth convention.
+For a layered circuit, width is O(C) with fixed phi,q. If edges skip layers, use
+the exact identity Boolean gate to relay them. This adds O(LC) total gate copies
+(and O(C) width for fixed depth), so state either a layered circuit convention or
+keep depth-dependent constants explicit. Since the bound on weights is a fixed
+constant, enlarge C by a fixed constant factor to meet the definition |w|<=C.
+
+Padding deeper networks does not require a vague near-identity argument:
+compute f exactly at one hidden layer by finite interpolation, and use the same
+finite Boolean identity dictionary to carry its exact +/-1 value through all
+remaining layers. This proves every Boolean function has finite C_L for L>=2.
+
+Reverse comparison with Boolean circuit complexity needs a precise convention:
+bounded-Lipschitz phi and fixed L suffice for nonuniform polynomial-size Boolean
+circuits. Quantize weights and intermediate values finely enough for uniform
+output error <1/4, using the margin. On the polynomially bounded range of each
+preactivation, approximate phi by a finite lookup table. The Lipschitz modulus
+gives polynomial table size at the required inverse-polynomial precision. Store
+the table entries as advice and implement arithmetic / lookup by Boolean gates.
+For an arbitrary possibly noncomputable phi this is an existence statement, not
+a uniform efficient algorithm to construct the circuit. Avoid 'any reasonable
+circuit convention' without explaining this distinction.
+
+C. NORM-BALL PACKING
+
+The proof is valid. kappa(g) is an infimum over strict-margin implementations,
+but a bounded minimizing sequence has a convergent subsequence. Its limit has
+the closed margins g(x)z_w(x)>=1/2 by continuity. Distinct labels still force an
+output difference >=1. Conversely, multiplying the linear readout of any
+closed-margin implementation by 1+eta gives strict margins at arbitrarily close
+cost. Thus the infimum equals the minimum over closed margins.
+
+One can sharpen the slide's parameter Lipschitz estimate. Assume |phi|<=1,
+Lip(phi)=A, d>=1, L>=2, and set u_l=sqrt(c_l)W_l, where c_1=d/N,
+c_l=1 internally, c_L=N. On ||u||_2<=R, a layer-by-layer hybrid argument gives
+
+  |z_u(x)-z_v(x)| <= Lambda ||u-v||_2,
+  Lambda^2 <= ((d+1)/d)(A R)^{2(L-1)}
+                + sum_{j=0}^{L-2}(A R)^{2j}.
+
+The first-layer term uses ||(1,x)||=sqrt(d+1); hidden activations have norm
+<=sqrt(N), which cancels the final readout's 1/sqrt(N) rescaling. Each hybrid
+only needs every individual block norm<=R, so mixing blocks from u and v is
+legitimate even when the hybrid's full norm exceeds R. In particular Lambda
+itself can be independent of N; only the ambient parameter dimension
+P=N(d+1)+(L-2)N^2+N causes the packing count to degrade with width.
+
+Representatives in the closed radius-R ball are separated by >=1/Lambda.
+The disjoint open radius-(2Lambda)^(-1) balls give
+
+  #{g:kappa_N(g)<=R^2} <= (1+2 Lambda R)^P.
+
+Avoid the literal statement that the learner 'stays in the ball': at any positive
+sigma the posterior has tails, including implementations of a cheap function
+with large parameter norm. The ball is a device for choosing one representative
+per relevant function; the separate Gaussian tail-ratio lemma controls functions.
+
+D. CLONING
+
+For N=kC, copy each original unit k times, copy input weights unchanged, divide
+all weights out of each copied unit by k. Raw squared norms multiply by k in
+the first layer, remain unchanged internally, and divide by k in the readout.
+Comparing c_1=d/N and c_L=N with their width-C values gives exact invariance.
+
+For arbitrary N>=C, k=floor(N/C), then disconnect the unused units by zeroing
+incident weights. Nonzero phi(0) on these unused units is harmless because their
+outgoing weights are zero. The first-layer weighted norm is kC/N times its old
+value (<=1); the readout weighted norm is N/(kC) times its old value (<2); inner
+terms are unchanged. Hence kappa_N(clone)<2 kappa_C(w), not exact invariance.
+
+For a width-C witness with every weight bounded by C, a convenient explicit bound
+is
+
+  kappa_N(f) <= d(d+1) C^2 + L C^4,
+
+because the first layer has C(d+1) entries, each inner matrix C^2 entries, and
+the readout C entries. This covers all N>=C and L>=2. If the paper uses input
+dimension p=d+1 in the first-layer scaling, replace d(d+1) by p^2.
+
+F. RELATED WORK AND NOVELTY
+
+1. The standard parameter-count/volumetric discussion is sound. Karpinski and
+Macintyre is specifically about sigmoid / Pfaffian activations, not all bounded
+Lipschitz nonpolynomial functions. The present margin and norm restrictions
+make the elementary packing proof work for the much larger activation class.
+
+2. The claim that known Frobenius-norm Rademacher bounds replace the entire
+subsampling argument needs care. Familiar Neyshabur--Tomioka--Srebro and
+Golowich--Rakhlin--Shamir forms impose positive homogeneity or related additional
+activation hypotheses. A nonconstant bounded activation is not positively
+homogeneous, and phi(0)=0 is not assumed in the slides. Cite these as antecedents
+for norm-based width-independent capacity, without saying their displayed
+theorems directly establish the present general activation result unless an
+explicit adaptation is supplied. Verified bibliographic reference:
+Golowich, Rakhlin and Shamir, Size-Independent Sample Complexity of Neural
+Networks, COLT 2018, PMLR 75:297--299 (extended abstract; full arXiv 1712.06541).
+https://proceedings.mlr.press/v75/golowich18a.html
+
+3. Net2WiderNet attribution is appropriate. Exact weighted-norm accounting is
+easy to state directly; avoid a categorical novelty assertion about whether any
+previous widening paper ever noted a related norm identity.
+
+4. Buzaglo et al.'s linear student-width dependence is verified, but qualify the
+comparison by the different priors/activations. Their Theorem 4.3 (quantized
+weights, phi(0)=0) has FC bound sum_l(d_l^* d_{l-1}+d_l^*) log Q and scaled-FC
+bound sum_l(d_l^*d_{l-1}^*+2d_l) log Q. Their continuous two-layer LReLU theorem
+5.6 also contains a linear student-width term. Thus the slide's narrow statement
+about residual width dependence is supported. Full authors and publication:
+Gon Buzaglo, Itamar Harel, Mor Shpigel Nacson, Alon Brutzkus, Nathan Srebro,
+Daniel Soudry. How Uniform Random Weights Induce Non-uniform Bias: Typical
+Interpolating Neural Networks Generalize with Narrow Teachers. ICML 2024,
+PMLR 235:5035--5081.
+https://proceedings.mlr.press/v235/buzaglo24a.html
+https://arxiv.org/html/2402.06323v2 (theorem formulas inspected)
+
+5. The Kolmogorov-complexity contrast mixes valid observations with an unproved
+learning lower bound. A shortest-description diagonalization can indeed define
+Boolean functions with O(log d) description length and exponential nonuniform
+Boolean circuit complexity. A valid circuit-to-norm lower bound can then show
+large weighted norm. At fixed width/small sigma these functions have vanishing
+prior mass relative to cheaper implementable functions. However, neither large
+norm nor tiny prior mass implies slow learning on an unspecified distribution.
+A prior can put arbitrarily tiny mass on f but distinguish it from all other
+hypotheses with one labeled example. The sentence 'NNbayes will very likely not
+learn them quickly' must therefore be deleted or marked as a conjecture with a
+specified distribution and a real lower-bound argument. This is a major logical
+overreach in F, although it does not affect the main theorem. For the requested
+first paper I recommend omitting the Kolmogorov discussion entirely.
+
+Recommended inclusion: A as the elementary learning lemma, B as a short circuit
+simulation appendix, C and D in the core proof, F reduced to careful related work.

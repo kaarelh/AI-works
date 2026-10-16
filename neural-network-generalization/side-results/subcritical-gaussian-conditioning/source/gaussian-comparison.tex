@@ -1,0 +1,285 @@
+\section{Conditioned kernels and quantitative Gaussian comparison}
+\label{sec:quantitative-comparison}
+
+Fix the input dimension $d$, depth $L$, and margin $a>0$. Put
+$M=2^d$, $b_N=N^{(1-\gamma)/2}$ and $t_N=N^\gamma$, and let $Q_N$
+be the empirical covariance matrix of the last hidden layer. All norms
+in this section are the maximum entry norm, unless another norm is
+indicated. Constants may depend on $d,L,a$; none of the statements is
+uniform in these parameters. The exact independent Gaussian readout gives
+\[
+ Z_N\mid Q_N\sim\mathcal N(0,Q_N/t_N).
+\]
+For a full Boolean labeling $g$, set
+\[
+ O_g=\{z:g(x)z(x)>a\text{ for every }x\}.
+\]
+For a collection $S$ of observed labels, let $\mathcal G_S$ be the
+nonempty set of full labelings consistent with $S$, and let
+$A_S=\bigcup_{g\in\mathcal G_S}O_g$. Thus conditioning on $A_S$
+includes the margin requirement on every unobserved input.
+
+\subsection{The finite-gain center and conditional concentration}
+
+For a covariance matrix $R$, write
+\[
+ \Phi_b(R)_{xy}=\mathbb E[\tanh(bU_x)\tanh(bU_y)],
+ \qquad U\sim\mathcal N(0,R).
+\]
+Define deterministic matrices
+\[
+ R_0(x,y)=\frac{1+x\cdot y}{d},\qquad
+ K_N^1=\Phi_{b_N}(R_0),\qquad
+ K_N^s=\Phi_{b_N}(K_N^{s-1}),\qquad
+ \widehat K_N=K_N^{L-1}.
+\]
+The distinction between $\widehat K_N$ and $\mathbb E Q_N$ matters:
+at depth greater than two the nonlinear covariance recursion does not
+commute with expectation. The limiting saturated kernel is
+\[
+ K^{(0)}(x,y)=\frac{1+x\cdot y}{d+1},\qquad
+ K^{(s+1)}=\frac2\pi\arcsin K^{(s)},\qquad K=K^{(L-1)},
+\]
+where the arcsine is applied entrywise. This matrix is strictly positive
+definite. Indeed, the first-layer sign features associated to the
+nonparallel augmented inputs $(1,x)$ are linearly independent: crossing
+one of their distinct hyperplanes changes only its corresponding sign.
+Their Gram matrix is therefore positive definite. Subsequent arcsine
+maps preserve this property, by their positive power series and the
+Schur product theorem.
+
+\begin{lemma}[Concentration about the finite-gain kernel]
+\label{lem:cmp-concentration}
+For each fixed $\gamma<1$, there are positive constants $C,c,u_0$ and
+$N_0$ such that, for $N\ge N_0$ and $0<u\le u_0$,
+\begin{align}
+ \Pr\{\|Q_N-\widehat K_N\|>u\}&\le C e^{-cNu^2},
+ \label{eq:cmp-finite-concentration}\\
+ \|\widehat K_N-K\|&\le C b_N^{-1}.
+ \label{eq:cmp-finite-bias}
+\end{align}
+\end{lemma}
+
+\begin{proof}
+The diagonal variances of all limiting hidden kernels are one, and
+their distinct-coordinate correlations have absolute value strictly
+less than one. In fixed neighborhoods of these matrices, $\Phi_b$ has
+a Lipschitz constant independent of $b$. To verify the uniformity, each
+off-diagonal entry uses only a two-dimensional Gaussian marginal.
+Differentiate its density with respect to its covariance parameters.
+On a compact set of positive variances and correlations bounded away
+from $\pm1$, the $L^1$ norms of these density derivatives are bounded.
+The integrand $\tanh(bu)\tanh(bv)$ has absolute value at most one,
+so the resulting derivative bound is independent of $b$. The same
+one-dimensional argument handles diagonal entries. This argument does
+not require the full input covariance $R_0$ to be invertible.
+
+Given the preceding hidden layer, its $N$ successor rows are independent.
+Each entry of their empirical covariance averages $N$ variables in
+$[-1,1]$. Conditional Hoeffding bounds, a union bound over the $M^2$
+entries, and the uniform Lipschitz estimate give
+\eqref{eq:cmp-finite-concentration} by induction over the fixed number
+of layers. At each stage one applies the previous-layer estimate with
+a constant multiple of $u$; exits from the fixed neighborhoods have
+probability at most $C e^{-cN}$ and are absorbed into the same bound.
+
+For a centered Gaussian $U$ of variance bounded below,
+\[
+ \mathbb E|\tanh(bU)-\operatorname{sign}U|\le C/b.
+\]
+The Gaussian sign-correlation formula and the same Lipschitz induction
+therefore give \eqref{eq:cmp-finite-bias}.
+\end{proof}
+
+\begin{proposition}[Conditioning preserves the frozen kernel]
+\label{prop:cmp-conditional-freezing}
+For every fixed $\gamma<1$,
+\[
+ Q_N\longrightarrow K
+ \quad\text{in probability conditional on }A_S.
+\]
+For $0<\gamma<1$, there is $C_0$ such that
+$\Pr(A_S)\ge e^{-C_0t_N}$ for all sufficiently large $N$.
+Consequently, for fixed $\epsilon>0$,
+\[
+ \Pr\{\|Q_N-K\|>\epsilon\mid A_S\}
+ \le C_\epsilon e^{-c_\epsilon N+C_0t_N}.
+\]
+More quantitatively, for a fixed sufficiently large constant $A$,
+\[
+ \Pr\left\{\|Q_N-K\|>
+ C b_N^{-1}+A\sqrt{t_N/N}\,\middle|\,A_S\right\}
+ \le C\exp[-(cA^2-C_0)t_N].
+\]
+These bounds may be chosen simultaneously for all observed-label
+collections $S$ at the fixed input dimension.
+\end{proposition}
+
+\begin{proof}
+Choose any $g\in\mathcal G_S$ and any fixed bounded box strictly inside
+$O_g$. On a sufficiently small fixed neighborhood of $K$, all covariance
+eigenvalues are bounded above and below. Integrating the density of
+$\mathcal N(0,Q_N/t_N)$ over the box gives a lower bound
+$c t_N^{M/2}e^{-Ct_N}$. That kernel neighborhood has probability tending
+to one, proving the asserted denominator bound. Dividing the bounds of
+Lemma~\ref{lem:cmp-concentration} by this denominator proves the claims
+for positive $\gamma$. Here $t_N=o(N)$, and
+$b_N^{-1}=\sqrt{t_N/N}$ tends to zero.
+
+If $\gamma=0$, the normalized output converges to the nondegenerate
+Gaussian $\mathcal N(0,K)$ and the conditioning event has a positive
+limiting probability. If $\gamma<0$, its normalized margin is
+$a\sqrt{t_N}\to0$; the limiting conditioning event requires only the
+observed signs, again with positive Gaussian probability. The
+unconditional kernel concentration proves the corresponding conditional
+claim in both cases.
+\end{proof}
+
+\subsection{What holds at every positive subcritical exponent}
+
+Set
+\[
+ I_K(z)=\frac12z^TK^{-1}z,\qquad
+ E_K(g)=\min_{z\in\overline O_g}I_K(z),\qquad
+ E_S=\min_{g\in\mathcal G_S}E_K(g).
+\]
+Each orthant has a unique minimizing vector $z_g$. Write
+\[
+ \mathcal H_S=\{g\in\mathcal G_S:E_K(g)=E_S\},\qquad
+ V_S=\{z_g:g\in\mathcal H_S\}.
+\]
+
+\begin{proposition}[Conditional latent concentration and unique minima]
+\label{prop:cmp-minimizers}
+For every $0<\gamma<1$, the posterior concentrates on $V_S$. More
+precisely, for every $\delta>0$ there is $\eta_\delta>0$ such that
+\[
+ \limsup_{N\to\infty}t_N^{-1}\log
+ \Pr\{\operatorname{dist}(Z_N,V_S)\ge\delta\mid A_S\}
+ \le-\eta_\delta.
+\]
+If $\mathcal H_S=\{g_*\}$, the posterior on full Boolean functions
+converges in total variation to $\delta_{g_*}$. The fixed Gaussian
+$\mathcal N(0,K/t_N)$, conditioned on the same $A_S$, has the same
+limit. Thus their Boolean posteriors agree asymptotically throughout
+$0<\gamma<1$ whenever the compatible energy minimum is unique.
+\end{proposition}
+
+\begin{proof}
+Couple the output to $Y_N=K^{1/2}\xi/\sqrt{t_N}$ by writing
+$Z_N=Q_N^{1/2}\xi/\sqrt{t_N}$, with $\xi$ a standard independent
+$M$-dimensional Gaussian. Near the positive definite $K$, the matrix
+square root is Lipschitz. For fixed $\epsilon,\delta>0$, kernel
+concentration and the Gaussian tail therefore bound
+\[
+ \Pr\{\|Z_N-Y_N\|_2>\delta\}
+ \le C_\epsilon e^{-c_\epsilon N}
+ +\Pr\{\|\xi\|_2>\delta\sqrt{t_N}/(C\epsilon)\}.
+\]
+After division by $t_N$ in the logarithm, let $N\to\infty$ and then
+$\epsilon\downarrow0$. Since $t_N=o(N)$, this proves exponential
+equivalence at speed $t_N$. Hence $Z_N$ has the Gaussian large-deviation
+rate $I_K$.
+
+The minimum rate on the strict orthant equals that on its closure:
+multiply its minimizing vector by $1+\varepsilon$ and let
+$\varepsilon\downarrow0$. The full-margin denominator consequently
+has logarithmic rate $E_S$. Coercivity of $I_K$ and the finiteness of
+$\mathcal G_S$ give a strictly positive rate gap on the closed feasible
+set at distance at least $\delta$ from $V_S$. The large-deviation upper
+bound and the matching denominator lower bound give the displayed
+conditional estimate. If the minimizing labeling is unique, the same
+argument gives an exponential gap to every other compatible labeling.
+Apply the identical argument to $Y_N$.
+\end{proof}
+
+If several labelings minimize the energy, this proposition fixes their
+possible support but leaves their relative posterior weights undetermined.
+Those weights can decide whether a correct label has probability greater
+than $2/3$. The next result controls them on a smaller exponent range.
+
+\subsection{Relative probabilities and total variation}
+
+\begin{lemma}[Covariance sensitivity of an orthant probability]
+\label{lem:cmp-log-lipschitz}
+Let $p_g(Q,t)=\Pr\{\mathcal N(0,Q/t)\in O_g\}$. In a sufficiently
+small fixed convex neighborhood of $K$, uniformly over $g$ and $t\ge1$,
+\[
+ |\log p_g(Q,t)-\log p_g(Q',t)|\le Ct\|Q-Q'\|.
+\]
+\end{lemma}
+
+\begin{proof}
+Uniformly over this covariance neighborhood, integrating over a fixed
+box inside each orthant gives $p_g(Q,t)\ge e^{-C_1t}$, with constants
+chosen for all finitely many $g$. An unconditional Gaussian tail bound
+gives
+\[
+ \Pr\{\|Z\|_2^2>u\}\le C e^{-ctu}
+\]
+for $u$ above a fixed constant. Divide by the preceding lower bound
+and integrate the resulting conditional tail, starting at a sufficiently
+large fixed $u$. It follows that
+$\mathbb E[\|Z\|_2^2\mid Z\in O_g]\le C$ uniformly for $t\ge1$.
+Differentiating the Gaussian orthant integral along the segment from
+$Q$ to $Q'$ now gives a determinant derivative bounded by
+$C\|Q-Q'\|$ and a conditional quadratic-moment derivative bounded by
+$Ct\|Q-Q'\|$. Integration along the segment proves the claim.
+\end{proof}
+
+\begin{theorem}[Quantitative Gaussian comparison]
+\label{thm:cmp-relative}
+For $0<\gamma<1$, put $t=t_N$. There are positive constants $C,c$
+such that
+\[
+ \max_g\left|
+ \frac{\Pr\{Z_N\in O_g\}}{p_g(\widehat K_N,t)}-1\right|
+ \le C\frac{t}{\sqrt N}\exp(Ct^2/N)+C\exp(-cN+Ct)
+\]
+for all sufficiently large $N$. In particular, if $0<\gamma<1/2$,
+the Boolean posterior of $Z_N$ conditional on $A_S$ is $o(1)$ in total
+variation from that of
+$\mathcal N(0,\widehat K_N/t_N)$ conditional on $A_S$.
+If $0<\gamma<1/3$, the same statement holds with $K$ in place of
+$\widehat K_N$. These assertions include tied minimum-energy labelings.
+\end{theorem}
+
+\begin{proof}
+Put $D=\|Q_N-\widehat K_N\|$ and restrict first to $D\le u_0$,
+with $u_0$ chosen small enough for
+Lemma~\ref{lem:cmp-log-lipschitz}. On that event,
+\[
+ \left|\frac{p_g(Q_N,t)}{p_g(\widehat K_N,t)}-1\right|
+ \le e^{CtD}-1.
+\]
+Integration of the sub-Gaussian tail
+\eqref{eq:cmp-finite-concentration} yields
+\[
+ \mathbb E[(e^{CtD}-1)\mathbf 1_{D\le u_0}]
+ \le C\frac{t}{\sqrt N}\exp(Ct^2/N).
+\]
+For example, integrate
+$Ct\int_0^{u_0}e^{Ctu}\Pr(D>u)\,du$ and complete the square;
+enlarging the integral to $[0,\infty)$ gives the displayed bound.
+On $D>u_0$, the numerator is at most one, its probability is
+$Ce^{-cN}$, and the reference orthant probability is at least
+$e^{-Ct}$. This proves the relative-probability estimate, including
+the negligible subtraction needed in its lower bound.
+
+When $t=o(\sqrt N)$, the estimate tends to zero uniformly over all
+full sign patterns. Summing over $\mathcal G_S$ and dividing by the
+corresponding sums shows that conditional Boolean probabilities agree
+in total variation, uniformly over $S$. Finally,
+Lemmas~\ref{lem:cmp-concentration} and
+\ref{lem:cmp-log-lipschitz} show that replacing $\widehat K_N$ by
+$K$ changes each orthant probability by a factor
+$\exp[O(t/b_N)]$. This factor tends to one when
+$t/b_N=N^{(3\gamma-1)/2}\to0$, proving the last assertion.
+\end{proof}
+
+The two comparisons address distinct errors. Empirical fluctuations of
+the hidden kernel lead to the sufficient condition $\gamma<1/2$.
+Replacing the deterministic finite-gain kernel by its saturated limit
+introduces a separate bias, for which $\gamma<1/3$ is a sufficient
+condition. Conditional kernel convergence and the leading Gaussian
+large-deviation rate remain valid over the entire range $\gamma<1$.

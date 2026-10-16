@@ -1,0 +1,215 @@
+\section{Dictators separate the subcritical regimes}
+\label{sec:dictators}
+The smallest nonconstant parity already shows that a lower bound
+$d^{c k}$ cannot hold uniformly over all $k\ge1$ throughout
+$\gamma<1$. Here and below the width tends to infinity at fixed
+$d$, training sample, and exponent. We use the normalized Walsh
+eigenvalues $\lambda_j$ of $K/2^d$.
+
+\begin{lemma}[Exact ground states]\label{lem:dictator-ground}
+The largest normalized eigenvalue is
+$\lambda_*:=\lambda_0=\lambda_1$, and its eigenspace consists
+exactly of affine functions on the cube. Moreover,
+$\lambda_*\le1/(d+1)$. Among all vectors with $|z(x)|\ge a$
+at every input, the minimum of $z^{\mathsf T}K^{-1}z/2$ is
+$a^2/(2\lambda_*)$. Its minimizers are precisely
+\[
+ z\in\{\pm a,\ \pm a x_1,\ldots,\pm a x_d\}.
+\]
+\end{lemma}
+\begin{proof}
+The pairing and strict spectral ordering follow from
+Lemma~\ref{lem:power}. For an elementary verification of strictness,
+put $D=d+1$ and write $F(t)=\sum_{m\text{ odd}}c_mt^m$, where
+every odd coefficient is positive. The degree-$j$ eigenvalue on the
+full $D$-cube is $a_j=\sum_m c_mp_m(j)$, with $p_m(j)$ the
+coordinate-flip walk probability of a specified distance-$j$ vertex.
+Its exponential generating formula is
+\[
+ p_m(j)=\frac{m!}{D^m}[t^m](\sinh t)^j(\cosh t)^{D-j}.
+\]
+Subtracting the formula at $j+2$ leaves
+$(\sinh t)^j(\cosh t)^{D-j-2}$, whose coefficients are
+nonnegative. The coefficient at $m=j$ is positive. Thus
+$a_j>a_{j+2}$ at every available odd pair, and restricting the
+distinguished coordinate gives $\lambda_{2j}=\lambda_{2j+1}$.
+Consequently the top eigenspace on the original cube has dimension
+$d+1$ and consists of degrees zero and one. The normalized covariance
+has trace $K(x,x)=1$, so $(d+1)\lambda_*\le1$.
+
+For the uniform population norm,
+\[
+ z^{\mathsf T}K^{-1}z
+ =\sum_U\frac{\widehat z(U)^2}{\lambda_{|U|}}
+ \ge\frac{\|z\|_2^2}{\lambda_*}
+ \ge\frac{a^2}{\lambda_*}.
+\]
+Equality requires both $|z(x)|=a$ everywhere and membership in the
+top eigenspace. If $P=z/a=c_0+\sum_jc_jx_j$ takes values in
+$\{-1,1\}$, then $P^2=1$. Its degree-two coefficients give
+$c_ic_j=0$ for $i\ne j$, and its degree-one coefficients give
+$c_0c_i=0$. Hence at most one of $c_0,c_1,\ldots,c_d$ is nonzero;
+the constant coefficient of $P^2$ makes that coefficient $\pm1$.
+The listed functions attain equality.
+\end{proof}
+
+\begin{theorem}[Logarithmic samples for a dictator]
+\label{thm:dictator-fast}
+Fix $L\ge2$, $a>0$, $0<\gamma<1$, and $0<\delta<1$.
+For target $f(x)=x_1$, let $S$ consist of independent uniform
+training inputs. If
+\[
+ n\ge\left\lceil\log_2\frac{2d}{\delta}\right\rceil,
+\]
+then, with probability at least $1-\delta$,
+\[
+ \lim_{N\to\infty}q_{N,S}(x)=1\qquad\text{for every }x\in\mathcal X.
+\]
+In particular the strict-$2/3$ confidence-failure fraction is zero
+for all sufficiently large widths on this event.
+\end{theorem}
+\begin{proof}
+The target is always a compatible ground-state sign. Its opposite
+$-x_1$ is excluded by any training observation. Each of the other
+$2d$ constants or signed coordinate functions agrees with the target
+at a uniform input with probability $1/2$, and hence on all $n$
+independent inputs with probability $2^{-n}$. A union bound shows
+that the target is the unique compatible ground-state sign with
+probability at least $1-2d\,2^{-n}\ge1-\delta$.
+
+On this event, Lemma~\ref{lem:dictator-ground} makes the target the
+unique compatible sign function attaining the global minimum
+energy. Proposition~\ref{prop:rate} therefore puts posterior mass
+tending to one on this sign function. This proves the assertion
+simultaneously at all inputs, since the cube is finite at each width
+limit. No formula for weights among tied minimizers is used.
+\end{proof}
+
+The contrast with the negative-exponent limit concerns actual
+posterior probabilities as well. It does not identify confidence with
+the sign of a Gaussian posterior mean.
+
+\begin{theorem}[A universal linear-dimensional obstruction for
+negative exponents]\label{thm:negative-linear}
+Let $f:\mathcal X\to\{-1,1\}$ be any target and $S$ any training
+sample of size $n$, allowing repetitions. Under the Gaussian prior
+conditioned on the observed signs, set
+\[
+ F_\theta(S)=\mathbb P_x\{
+       \mathbb P(f(x)G(x)>0\mid f(X_i)G(X_i)>0\ \forall i)
+                  \le\theta\}.
+\]
+For every $1/2<\theta<1$,
+\begin{equation}\label{eq:negative-linear}
+ F_\theta(S)\ge
+ 1-\left(2+\frac1{\pi(\theta-1/2)^2}\right)\frac{n}{d+1}.
+\end{equation}
+Consequently, for every fixed $\gamma<0$, the actual neural-network
+posterior with the stipulated global-margin convention satisfies
+\begin{equation}\label{eq:negative-linear-width}
+ \liminf_{N\to\infty}F_N(S)
+ \ge1-\left(2+\frac{400}{9\pi}\right)\frac{n}{d+1}.
+\end{equation}
+In particular $n=o(d)$ leaves confidence failure $1-o(1)$, even
+for a dictator or a constant target.
+\end{theorem}
+\begin{proof}
+Remove repeated training inputs and let $s\le n$ be their number.
+Write Gaussian regression on these values as
+\[
+ G(x)=R(x)+\varepsilon(x),\qquad
+ R=K_{\mathcal X,S}K_{SS}^{-1}G_S,
+ \qquad\sigma_x^2=\operatorname{Var}\varepsilon(x).
+\]
+The residual process is independent of $G_S$. Whiten the training
+vector by $G_S=K_{SS}^{1/2}\xi$. The observed signs form a
+homogeneous cone in the standard Gaussian vector $\xi$. Its radius
+is independent of its direction, so conditioning on this cone
+preserves $\mathbb E\|\xi\|^2=s$. With $\mathbb E_S^*$ denoting
+expectation under that sign conditioning, the regression identity gives
+\[
+ \|R\|_K^2=\|\xi\|^2,\qquad
+ \mathbb E_S^*\|R\|_2^2\le\lambda_*s\le\lambda_*n.
+\]
+These statements concern the second moment of the random regression
+field, not just its posterior mean.
+
+The prior covariance of $R$ is positive semidefinite, bounded by
+$K$, and has rank at most $s$. Its normalized trace is at most
+$s\lambda_*$. Since $\sigma_x^2=1-\operatorname{Var}R(x)$,
+\[
+ \mathbb P_x\{\sigma_x^2<1/2\}\le2n\lambda_*.
+\]
+For every remaining input, conditional Gaussian regression yields
+\[
+ q_S(x)=\mathbb E_S^*\Phi\!\left(\frac{f(x)R(x)}{\sigma_x}\right),
+\]
+where $\Phi$ is the standard normal distribution function. The
+inequality $|\Phi(t)-1/2|\le |t|/\sqrt{2\pi}$ and
+$\sigma_x\ge1/\sqrt2$ imply
+\[
+ |q_S(x)-1/2|
+ \le\frac{\sqrt{\mathbb E_S^*R(x)^2}}{\sqrt\pi}.
+\]
+Thus $q_S(x)>\theta$ at such an input requires
+$\mathbb E_S^*R(x)^2>\pi(\theta-1/2)^2$. Markov's inequality,
+integrated over inputs, bounds the fraction of these inputs by
+$n\lambda_*/[\pi(\theta-1/2)^2]$. Adding the variance exception
+and using $\lambda_*\le1/(d+1)$ proves
+\eqref{eq:negative-linear}.
+
+Take $\theta=13/20<2/3$. For $\gamma<0$,
+Proposition~\ref{prop:gp-limits} gives convergence of each of the
+finitely many correct-label posterior probabilities to the
+sign-conditioned Gaussian value. Every input with limiting value
+at most $13/20$ therefore has finite-width value below $2/3$ for all
+sufficiently large widths. This proves
+\eqref{eq:negative-linear-width}. The case $n=0$ follows directly
+from sign symmetry and also satisfies the displayed bounds.
+\end{proof}
+
+\section{An exact pairing of parity sizes}
+\label{sec:projective-symmetry}
+The following symmetry holds before taking any width limit.
+\begin{proposition}[Projective-cube symmetry]
+\label{prop:projective-symmetry}
+At every width and exponent for which the conditioning is defined,
+the iid-sample learning laws of coordinate parities of sizes
+$0$ and $1$, of sizes $2$ and $3$, and so on, coincide whenever
+both sizes are available in ambient dimension $d$. The equality
+includes the distribution of the actual confidence-failure fraction.
+\end{proposition}
+\begin{proof}
+Fix a coordinate $i$ and define an involution of the cube by
+\[
+ (T_ix)_i=x_i,\qquad (T_ix)_j=x_ix_j\quad(j\ne i).
+\]
+If $P_i$ swaps augmented coordinates $0$ and $i$, then
+$(1,T_ix)=x_iP_i(1,x)$. For fixed weights $W$, replace only the first
+matrix by $W'^1=W^1P_i$. Oddness of every hidden activation and of
+the readout gives, inductively,
+\[
+ z_W(T_ix)=x_i z_{W'}(x).
+\]
+The laws of $W$ and $W'$ agree because the first-layer columns are
+exchangeable. For a target $g$, define $g'(T_ix)=x_ig(x)$.
+Absolute margins are invariant under this transformation, and the
+training-label event for $(g',T_iS)$ becomes exactly the event for
+$(g,S)$. Thus the correct-label posterior probabilities and their
+failure fractions agree after the change of variables. The involution
+preserves the uniform input distribution.
+
+For $g=\chi_U$, $|U|=k$, writing $u=T_ix$ gives
+\[
+ g'(u)=u_i^{k+1}\prod_{j\in U\setminus\{i\}}u_j.
+\]
+If $k$ is odd and $i\in U$, this is a $(k-1)$-coordinate parity.
+If $k$ is even and $i\notin U$, it is a $(k+1)$-coordinate parity.
+Ordinary coordinate permutations identify all supports of a fixed
+size, proving the assertion.
+\end{proof}
+
+These results refute a $d^{c k}$ lower bound asserted uniformly
+including $k=1$ across the entire subcritical regime. They do not
+refute a lower bound restricted to $k\to\infty$, and the symmetry
+reduces parity size only within one adjacent even--odd pair.

@@ -1,0 +1,214 @@
+\section{The regime \texorpdfstring{$\gamma<1$}{gamma < 1}: a frozen kernel and three posterior limits}
+\label{sec:gamma-less-one}
+
+Throughout this section the activation is $\tanh$, the depth $L\ge2$ and
+input dimension $d\ge1$ are fixed, and the width tends to infinity. Write
+$\mathcal X=\{-1,1\}^d$, $M=2^d$, and let $a>0$ be the required margin.
+All limits below hold at each fixed $\gamma<1$; uniformity in dimension,
+depth, or $\gamma\uparrow1$ is not asserted. Define
+\begin{equation}\label{eq:arcsine-kernel}
+ K^{(0)}(x,y)=\frac{1+x\cdot y}{d+1},\qquad
+ K^{(s+1)}(x,y)=\frac2\pi\arcsin K^{(s)}(x,y),\qquad
+ K=K^{(L-1)}.
+\end{equation}
+Thus the limiting kernel uses the saturated activation. It is not the
+unit-variance, finite-gain $\tanh$ kernel.
+
+\begin{theorem}[Exponential freezing of the feature kernel]
+\label{thm:kernel-freezing}
+Let $h_i^s(x)$ denote the activation of hidden neuron $i$ in layer $s$,
+and set
+\[
+ Q_N^s(x,y)=\frac1N\sum_{i=1}^N h_i^s(x)h_i^s(y).
+\]
+For every $\epsilon>0$ and each $1\le s\le L-1$, there are constants
+$c,C>0$ and $N_0$ such that
+\[
+ \Pr\!\left\{\max_{x,y}|Q_N^s(x,y)-K^{(s)}(x,y)|>\epsilon\right\}
+ \le C e^{-cN}\qquad(N\ge N_0).
+\]
+The matrix $K$ is positive definite. Conditional on all hidden layers,
+the output vector $Z_N=(z_N(x))_{x\in\mathcal X}$ has the exact law
+\begin{equation}\label{eq:conditional-output-kernel}
+ Z_N\mid (\text{hidden layers})\sim
+ \mathcal N(0,N^{-\gamma}Q_N^{L-1}).
+\end{equation}
+Consequently $N^{\gamma/2}Z_N$ converges in distribution to
+$G\sim\mathcal N(0,K)$.
+\end{theorem}
+
+\begin{proof}
+Put $b_N=N^{(1-\gamma)/2}\to\infty$. Conditional on the preceding
+layer, different preactivation rows are independent Gaussian vectors
+with covariance $b_N^2Q_N^{s-1}$. For the first layer, replace this
+covariance matrix by the deterministic matrix
+$b_N^2R_0$, where $R_0(x,y)=(1+x\cdot y)/d$; its correlation matrix is
+$K^{(0)}$.
+
+If $U\sim\mathcal N(0,q)$, then bounding the Gaussian density by its
+maximum and integrating $1-\tanh v$ gives
+\[
+ \mathbb E|\tanh(bU)-\operatorname{sign}U|
+ \le \frac{2\log2}{b\sqrt{2\pi q}}.
+\]
+For a centered Gaussian pair with correlation $r$, the expected product
+of its signs is $2\arcsin(r)/\pi$. Thus, uniformly when coordinate
+variances are bounded below, the expected product of the two saturated
+activations differs from this arcsine expression by $O(b_N^{-1})$.
+The appended constant input implies
+$|K^{(s)}(x,y)|<1$ for distinct $x,y$. In a sufficiently small fixed
+neighborhood of $K^{(s)}$, the map sending a covariance matrix to its
+normalized arcsine matrix is Lipschitz, and all diagonal variances are
+bounded below. Finally, conditional Hoeffding bounds for the $N$
+independent products in $[-1,1]$ give
+\[
+ \Pr\!\left\{\max_{x,y}|Q_N^s(x,y)
+ -\mathbb E[Q_N^s(x,y)\mid\text{preceding layer}]|>t
+ \,\middle|\,\text{preceding layer}\right\}
+ \le 2M^2 e^{-Nt^2/2}.
+\]
+Induction over the fixed number of layers proves the concentration
+statement, absorbing the deterministic $O(b_N^{-1})$ error by taking
+$N$ sufficiently large.
+
+For positive definiteness, $K^{(1)}$ is the Gram matrix of the functions
+$u\mapsto\operatorname{sign}(u\cdot(1,x))$ under a nondegenerate
+Gaussian measure. They are linearly independent: in a vanishing linear
+combination, cross the hyperplane $u\cdot(1,x)=0$ at a point on none of
+the other finitely many hyperplanes. Only the corresponding term
+changes sign, so its coefficient is zero. Such a point exists because
+the augmented vectors $(1,x)$ are pairwise nonparallel. The positive
+power-series coefficients of the arcsine function and the Schur product
+theorem then imply $K^{(s+1)}\succeq(2/\pi)K^{(s)}$, preserving strict
+positive definiteness. The independent Gaussian readout proves
+\eqref{eq:conditional-output-kernel}, and convergence follows.
+\end{proof}
+
+\subsection{Positive \texorpdfstring{$\gamma$}{gamma}: the actual posterior is a kernel-energy learner}
+
+For a Boolean function $g$ define
+\begin{equation}\label{eq:kernel-orthant-energy}
+ E_K(g)=\min\left\{\frac12z^TK^{-1}z:
+               g(x)z(x)\ge a\text{ for every }x\in\mathcal X\right\}.
+\end{equation}
+This minimum is finite and has a unique minimizing vector, by strict
+convexity and coercivity.
+
+\begin{theorem}[Kernel posterior limit]
+\label{thm:kernel-posterior}
+For each fixed $0<\gamma<1$, $Z_N$ satisfies a large-deviation principle
+with speed $N^\gamma$ and good rate function
+$I(z)=z^TK^{-1}z/2$. In particular,
+\begin{equation}\label{eq:kernel-orthant-rate}
+ \lim_{N\to\infty}-N^{-\gamma}
+ \log\Pr\{g(x)Z_N(x)>a\text{ for every }x\}=E_K(g).
+\end{equation}
+Let $\mathcal G_S$ be the Boolean functions consistent with the observed
+training labels and let $E_S=\min_{h\in\mathcal G_S}E_K(h)$. Under the
+all-input-margin prior followed by noiseless sign conditioning,
+\begin{equation}\label{eq:kernel-posterior-rate}
+ \lim_{N\to\infty}-N^{-\gamma}
+ \log\Pr\{\operatorname{sign}Z_N=g\mid\text{all margins and }S\}
+ =E_K(g)-E_S\qquad(g\in\mathcal G_S).
+\end{equation}
+The posterior therefore concentrates on the functions in
+$\operatorname*{argmin}_{g\in\mathcal G_S}E_K(g)$.
+\end{theorem}
+
+\begin{proof}
+On a common probability space let
+\[
+ Z_N=N^{-\gamma/2}(Q_N^{L-1})^{1/2}\xi,
+ \qquad Y_N=N^{-\gamma/2}K^{1/2}\xi,
+ \qquad \xi\sim\mathcal N(0,I_M),
+\]
+with $\xi$ independent of the hidden layers. The square-root map is
+locally Lipschitz near the positive definite $K$. For fixed
+$\delta,\epsilon>0$, Theorem~\ref{thm:kernel-freezing} consequently gives
+\[
+ \Pr\{\|Z_N-Y_N\|>\delta\}
+ \le C_\epsilon e^{-c_\epsilon N}
+   +\Pr\!\left\{\|\xi\|>
+          \frac{\delta N^{\gamma/2}}{C\epsilon}\right\}.
+\]
+Divide logarithms by $N^\gamma$, first let $N\to\infty$, and then let
+$\epsilon\downarrow0$. Because $\gamma<1$, the resulting upper limit
+is $-\infty$. Thus $Z_N$ is exponentially equivalent, at speed
+$N^\gamma$, to the elementary small-noise Gaussian family $Y_N$.
+The latter has rate $I$, proving the large-deviation statement.
+
+The strict margin orthant is open and its closure is the feasible set
+in~\eqref{eq:kernel-orthant-energy}. Scaling its unique minimizer by
+$1+\eta$ puts it in the open orthant and approaches the same energy
+as $\eta\downarrow0$. The open lower bound and closed upper bound
+therefore match. Summing over the finitely many compatible sign
+patterns and subtracting logarithmic asymptotics proves
+\eqref{eq:kernel-posterior-rate}.
+\end{proof}
+
+If the minimizing Boolean function is unique, the limiting posterior
+is its point mass. If there is a tie, the exponential rates do not
+determine the mixture weights. The result does not prescribe a uniform
+mixture of minimizers.
+
+The limit is governed by a fixed kernel, but its optimization problem
+retains the constraint $|z(x)|\ge a$ at every unseen input. Its feasible
+set is
+\[
+ \{z:f(x_i)z(x_i)\ge a\text{ at observed inputs},\quad
+             |z(x)|\ge a\text{ at every input}\}.
+\]
+This is a nonconvex union of orthants. Dropping the unseen-input
+constraints produces a different learner. In particular, ordinary
+kernel interpolation, Gaussian-process regression, and the usual
+hard-margin support-vector machine do not describe this posterior.
+
+\subsection{Zero and negative \texorpdfstring{$\gamma$}{gamma}}
+
+\begin{proposition}[The remaining fixed-kernel limits]
+\label{prop:nonpositive-gamma}
+At $\gamma=0$, the posterior on Boolean functions converges to that of
+$G\sim\mathcal N(0,K)$ conditioned on $|G(x)|>a$ at every input and on
+the observed training signs. At $\gamma<0$, it converges to the sign
+law of the same Gaussian vector conditioned only on observed training
+signs.
+\end{proposition}
+
+\begin{proof}
+The normalized outputs converge weakly to the nondegenerate $G$.
+At $\gamma=0$, every relevant conditioning event has boundary in a
+finite union of hyperplanes of Gaussian probability zero, and its
+probability is strictly positive. Conditional probabilities converge.
+At $\gamma<0$, the normalized margin is
+$aN^{\gamma/2}\to0$. The probability that any normalized coordinate
+falls within this margin tends to zero. Every prescribed finite set
+of observed signs has positive limiting probability, so the same
+conditional convergence argument applies.
+\end{proof}
+
+\subsection{What the kernel limit says about parity}
+
+Cube symmetries diagonalize $K$ in the parity basis. If
+$\chi_U(x)=\prod_{i\in U}x_i$ and $\lambda_U$ is its eigenvalue for
+the normalized operator $M^{-1}K$, then
+\begin{equation}\label{eq:parity-kernel-energy}
+ E_K(\chi_U)=\frac{a^2}{2\lambda_U}.
+\end{equation}
+Indeed $a\chi_U$ is feasible, and its gradient
+$K^{-1}(a\chi_U)$ is a positive multiple of $\chi_U$. Its inner product
+with every feasible displacement is nonnegative; the first-order
+criterion for convex minimization proves optimality.
+
+Equation~\eqref{eq:parity-kernel-energy} is an exact prior-rate
+calculation. It is not a sample-complexity lower bound. For
+$0<\gamma<1$, that question requires comparison with the energies of
+all compatible Boolean functions; for $\gamma=0$ it concerns globally
+margin-conditioned Gaussian orthant probabilities; for $\gamma<0$
+it concerns zero-margin Gaussian sign probabilities. A small parity
+eigenvalue by itself does not answer any of these posterior-learning
+questions. The regression subspace argument also does not apply: the
+full-cube conditioning need not leave the posterior mean in the span
+of training kernel sections. Moreover a lower bound stated in the
+parity size $k$ must specify the ambient dimension, depth, input
+distribution, order of limits, and whether error means posterior
+misclassification probability or majority-vote error.

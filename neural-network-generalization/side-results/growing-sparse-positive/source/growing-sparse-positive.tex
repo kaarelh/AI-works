@@ -1,0 +1,210 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools,needspace}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Exponential sample lower bounds for sparse parity under a globally separated neural prior},pdfauthor={Dmitry Vaintrob; Kaarel Hanni; OpenAI Codex}}
+\setlength{\emergencystretch}{2em}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\sign}{sign}
+\DeclareMathOperator{\dist}{dist}
+\DeclareMathOperator{\KL}{KL}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\title{Exponential sample lower bounds for sparse parity under a globally separated neural prior}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex}
+\date{October 15, 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We study a fixed-depth Bayesian neural network with Gaussian weights,
+hyperbolic-tangent hidden activations, and a linear output, conditioned
+to have a fixed absolute output margin on every Boolean input and then
+on noiseless training labels. For every fixed width-scaling exponent
+$0<\gamma<1$, we prove an $\exp(\Omega(k))$ sample lower bound for
+learning parity on any $k$ coordinates of a $d$-dimensional input,
+uniformly for growing $k\le d$. With probability at least $3/4$ over
+the training sample, every sign function selected in the width-first
+limit has test error at least $3/8$. Consequently, at least $1/16$ of
+inputs lack correct-label posterior probability greater than $2/3$,
+regardless of the actual mixture weights among tied minimizers.
+A random-restriction argument shows that a low-degree polynomial
+approximating a globally separated accurate parity predictor must have
+exponentially large squared amplitude in the ratio of parity degree to
+polynomial degree. We combine this with the paired Fourier spectrum of
+the limiting kernel and uniform bounds on sampled tail covariance
+matrices. A second argument improves the sample range to
+$\exp\{c\max[k,\sqrt{k}\log(e(d+1)/\sqrt{k})]\}$ in very large ambient
+dimensions. All width-limit, spectral, sampling, and interpolation
+arguments are included. A generalization upper bound has scale
+$\exp\{O(k\log(ed/k))\}$ for growing sparse $k$. This rules out a
+literal $d^{\Omega(k)}$ lower bound uniformly over all $k=o(d)$;
+a lower bound on the natural $\exp\{\Omega(k\log(ed/k))\}$ scale
+remains open.
+\end{abstract}
+
+\section{Model and main result}
+Let $\mathcal X=\{-1,1\}^d$ with uniform probability measure.
+Fix $U\subseteq[d]$, $|U|=k$, and let
+$f(x)=\chi_U(x)=\prod_{j\in U}x_j$.
+The learner is not given $U$. All hidden layers have width $N$, the
+number of weight matrices $L\ge2$ is fixed, and
+\[
+ h^0(x)=(1,x),\qquad
+ h^s(x)=\tanh(W^s h^{s-1}(x))\quad(1\le s<L),\qquad
+ z_N(x)=W^L h^{L-1}(x).
+\]
+There are no further biases. All weights are independent centered
+Gaussians with variances
+\begin{equation}\label{eq:weights}
+ \Var W^1_{ij}=N^{1-\gamma}/d,\qquad
+ \Var W^s_{ij}=N^{-\gamma}\quad(1<s<L),\qquad
+ \Var W^L_i=N^{-\gamma-1}.
+\end{equation}
+Fix $a>0$, for example $a=1/2$, and a fixed $0<\gamma<1$.
+Condition the prior on $|z_N(x)|>a$ for every input $x$.
+For independent uniform training inputs $S=(X_1,\ldots,X_n)$, condition
+further on $f(X_i)z_N(X_i)>0$ for every $i$.
+Define the actual correct-label probability and its confidence failure by
+\begin{align*}
+ q_{N,S}(x)&=\mathbb P\{f(x)z_N(x)>0\mid
+ |z_N(y)|>a\ \forall y;\ f(X_i)z_N(X_i)>0\ \forall i\},\\
+ F_N(S)&=\mathbb P_x\{q_{N,S}(x)\le2/3\}.
+\end{align*}
+A successful prediction therefore requires strictly more than $2/3$
+probability of the correct label. The test input is independent and
+uniform.
+
+Put $D=d+1$, $\beta=2^{-(L-1)}$, and
+\begin{equation}\label{eq:main-threshold}
+ B_{d,k}=\sqrt{k}\log\frac{eD}{\sqrt{k}},\qquad
+ W_{d,k}=\max\{k,B_{d,k}\}.
+\end{equation}
+\begin{theorem}[Actual-posterior sample lower bound]\label{thm:main}
+For each fixed $L\ge2$ and $a>0$, there are $c>0$, $k_0$, and $d_0$
+such that, for every $d\ge d_0$, $k_0\le k\le d$, support $U$ of
+size $k$, integer
+\[
+ 0\le n\le\exp(cW_{d,k}),
+\]
+and fixed $0<\gamma<1$,
+\[
+ \mathbb P_S\left\{\liminf_{N\to\infty}F_N(S)\ge\frac1{16}\right\}
+ \ge\frac34.
+\]
+The conditioning events have positive probability for all sufficiently
+large widths at every fixed dimension and training sample.
+\end{theorem}
+
+The width limit is taken first, with $d,k,L,a,\gamma,S$ fixed.
+No simultaneous width--dimension limit or quantified minimum width is
+asserted. The training-sample probability holds for each specified $n$,
+with constants uniform over the displayed range; no monotonicity of
+fixed-target posterior risk is used.
+
+The lower bound is exponential in the number $k$ of relevant
+coordinates even when $k/d\to0$. The extra $B_{d,k}$ term is useful
+when the ambient dimension is very large relative to $k$.
+For $k/d$ bounded below, the theorem gives an $\exp(\Omega(d))$
+sample lower bound. When $d/k\to\infty$, it does not reach
+$\exp\{c k\log(ed/k)\}$. In particular it does not resolve a
+$d^{\Omega(k)}$ lower bound in a polynomially sparse regime.
+
+\subsection{Proof structure and notation}
+Write $\Psi(t)=2\arcsin(t)/\pi$ and
+\[
+ K(x,y)=\Psi^{\circ(L-1)}\!\left(\frac{1+x\cdot y}{d+1}\right).
+\]
+The actual network has a Gaussian large-deviation rate with this
+covariance. Conditioning on the global margin and the labels therefore
+selects compatible sign functions of minimum energy
+$\|z\|_K^2/2=z^{\mathsf T}K^{-1}z/2$.
+We prove a simultaneous error lower bound for every minimizer, so the
+argument applies to arbitrary actual weights among tied minimizers.
+
+All function $L^p$ norms and Walsh coefficients use the uniform cube
+probability measure. The characters diagonalize the normalized
+covariance operator $2^{-d}K$; let $\lambda_j$ denote its degree-$j$
+eigenvalue. Thus
+\[
+ \|z\|_K^2=\sum_{V\subseteq[d]}
+             \frac{\widehat z(V)^2}{\lambda_{|V|}}.
+\]
+Put $D_r=\sum_{j\le r}\binom dj$, let $Q_r=K_{>r}$ retain the Fourier
+degrees above $r$, and write
+$\tau_r=Q_r(x,x)=\sum_{j>r}\binom dj\lambda_j$.
+For an arbitrary kernel $J$, $J_{SS}$ is its sample Gram matrix.
+
+Localized interpolation bounds every minimizing energy by
+$C(d+n d^\beta)$. At the largest odd cutoff with
+$n\ge A D_r\log(D_r+1)$, a one-sided squared sampling theorem controls
+the low-degree part of a minimizing field.
+The spectrum has equal eigenvalues at consecutive even and odd levels.
+A near-orthogonal estimate controls sampled tail covariance matrices
+both at the last sampled cutoff and one paired level above it. This
+bounds the low-degree amplitude by a polynomial in the ratio of ambient
+dimension to cutoff and makes the remaining tail small in $L^2$.
+A random restriction of the active coordinates turns this head bound
+into a test-error lower bound: restricting to about $(k/r)^2$ coordinates
+leaves almost all of a degree-$r$ polynomial below the threshold degree
+needed to approximate parity, unless its amplitude is exponentially
+large in $k/r$. A direct polynomial-threshold argument supplies the
+additional $B_{d,k}$ range and handles the smallest samples.
+
+\input{width-limits}
+\input{spectral}
+\input{comparator}
+\input{sampling}
+\input{ptf}
+\input{random-restriction}
+\input{tail-gram}
+\input{sparse-gram}
+\input{positive-partial}
+\input{upper-bound}
+\input{blocked-obstruction}
+\input{parity-circuit}
+
+\section{Scope}
+Theorem~\ref{thm:positive-sparse-partial}, together with the actual-network
+rate in Proposition~\ref{prop:rate}, proves Theorem~\ref{thm:main}.
+Parity has a Boolean circuit with $O(k)$ gates and the bounded-weight
+neural realization given above. Its difficulty here is a property of the
+specified posterior. An algorithm that searches parity supports can
+identify the target with $O(k\log(ed/k))$ noiseless examples at fixed
+success probability: each incorrect parity agrees with the target on
+each independent uniform example with probability $1/2$, and a union
+bound applies to the candidate supports.
+
+Section~\ref{sec:upper-bound} gives the corresponding actual-posterior
+upper bound and explains the dependence on ambient dimension. A matching
+$\exp\{c k\log(ed/k)\}$ lower bound remains open in the growing sparse
+regime, including a $d^{\Omega(k)}$ lower bound when $k\le d^{1-\eta}$
+for fixed $\eta>0$. No assertion about the endpoint $\gamma=0$ is made
+in this paper.
+
+\begin{thebibliography}{9}
+\bibitem{ABFR}
+J. Aspnes, R. Beigel, M. Furst, and S. Rudich.
+The expressive power of voting polynomials.
+\emph{Combinatorica} 14(2):135--148, 1994.
+\href{https://www.cs.yale.edu/homes/aspnes/papers/stoc91voting.pdf}{Author manuscript}.
+\bibitem{flajolet2009}
+P. Flajolet and R. Sedgewick. \emph{Analytic Combinatorics}.
+Cambridge University Press, 2009. Chapter VI.
+\bibitem{Lee2023}
+J. R. Lee. Spectral hypergraph sparsification via chaining.
+\href{https://arxiv.org/abs/2209.04539}{arXiv:2209.04539},
+Section 2.4, Lemma 2.12 and equation (2.20).
+\bibitem{tropp2008}
+J. A. Tropp. Norms of random submatrices and sparse approximation.
+\emph{Comptes Rendus Math\'ematique} 346:1271--1274, 2008.
+\href{https://tropp.caltech.edu/papers/Tro08-Norms-Random-v3.pdf}{Author manuscript},
+Theorem 1.1.
+\end{thebibliography}
+\end{document}

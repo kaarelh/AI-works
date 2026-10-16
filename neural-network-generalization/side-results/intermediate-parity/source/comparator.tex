@@ -1,0 +1,102 @@
+\section{A globally separated interpolation comparator}
+\label{sec:comparator}
+The next construction bounds the energy of every minimizer. It works
+for arbitrary training labels and enforces the margin on the entire cube.
+
+\begin{lemma}[Localized interpolation]\label{lem:comparator}
+For $1\le n\le e^{d/25}$, with probability at least $1-e^{-c_Ld}$
+over independent uniform inputs, the following holds simultaneously for
+every labeling $y_i\in\{-1,1\}$ and every $A>0$.
+There is a field $h$ with
+\[
+ |h(x)|>A\quad\text{for every }x,\qquad
+ y_i h(X_i)>A\quad\text{for every }i,
+ \qquad \|h\|_K^2\le C_L A^2(d+n d^\beta).
+\]
+For $n=0$, the same deterministic energy bound holds using a constant field.
+\end{lemma}
+\begin{proof}
+For $z\in\mathcal X$ define the nonnegative bump
+\[
+ b_z(x)=20\int_{2/5}^{9/20}(1-2p)^{\operatorname{dist}(x,z)}\,dp.
+\]
+It satisfies $b_z(z)=1$ and $b_z(x)\le(1/5)^{\operatorname{dist}(x,z)}$.
+Its degree-$j$ Walsh coefficients, apart from their translation signs,
+are
+\[
+ \widehat b_j=20\int_{2/5}^{9/20}(1-p)^{d-j}p^j\,dp,
+ \qquad
+ \binom dj\widehat b_j\le\frac{20}{d+1},\qquad
+ \widehat b_j\le(3/5)^d.
+\]
+The middle inequality follows by extending to the complete beta integral.
+By Corollary~\ref{cor:lower-spectrum},
+$\lambda_j\ge c_Ld^{-1-\beta}/\binom dj$ for $j\le.49d$.
+Hence these degrees contribute at most
+\[
+ C_Ld^{1+\beta}\sum_{j\le.49d}
+       \left[\binom dj\widehat b_j\right]^2\le C_Ld^\beta
+\]
+to $\|b_z\|_K^2$.
+For $j>.49d$, the integrand is increasing in $p$ on the integration
+interval, so $\widehat b_j\le.55^{d-j}.45^j$.
+Let $v=\lambda_{\min}(K)$ be the smallest matrix eigenvalue.
+The same corollary gives $v\ge c_L(d\log d)^{-\beta}$ and
+$\lambda_j\ge v/2^d$. Thus the remaining energy is at most
+\[
+ \frac{2^d}{v}\sum_{j>.49d}\binom dj .55^{2(d-j)}.45^{2j}
+ \le\operatorname{poly}(d)e^{-c_*d},
+\]
+where
+\[
+ c_*=-[\log2+\mathsf h(.49)+1.02\log(.55)+.98\log(.45)]>.0062,
+ \qquad \mathsf h(t)=-t\log t-(1-t)\log(1-t).
+\]
+The exponent decreases beyond $.49d$, so the binomial entropy bound
+applies. We have proved $A_d:=\|b_z\|_K^2\le C_Ld^\beta$.
+
+Put $J(z,w)=\langle b_z,b_w\rangle_K$.
+Its normalized Fourier eigenvalues are
+$\nu_j=\widehat b_j^2/\lambda_j\le .72^d/v$.
+Parseval and Cauchy--Schwarz give
+\[
+ \mathbb E_{X,Y}|J(X,Y)|
+ \le\left(\sum_j\binom dj\nu_j^2\right)^{1/2}
+ \le\sqrt{\nu_{\max}A_d}.
+\]
+For every subset $T$ of the sampled indices, including one chosen after
+the sample is seen,
+\[
+ \left\|\sum_{i\in T}b_{X_i}\right\|_K^2
+ \le nA_d+\sum_{i\ne j}|J(X_i,X_j)|.
+\]
+The cross sum has expectation at most
+$n(n-1)\sqrt{\nu_{\max}A_d}$.
+Markov's inequality at threshold $n d^\beta$ has exponentially small
+failure probability for $n\le e^{.04d}$, because
+$\tfrac12\log(1/.72)>.16$.
+Thus all subsets simultaneously have energy at most $C_Ln d^\beta$.
+
+Also, except with exponentially small probability, every pair of
+different sample indices has inputs at Hamming distance greater than
+$.2d$. A union bound costs at most
+\[
+ n^2\exp[-d(\log2-\mathsf h(.2))],
+ \qquad \log2-\mathsf h(.2)>.19.
+\]
+This event excludes repeated inputs.
+At any input at most one center is within distance $.1d$; the sum of
+all other bumps is at most $n(.2)^{.1d}=o(1)$.
+Consequently, for every selected subset of centers, its bump sum is
+$1+o(1)$ at a selected center and at most $.2+o(1)$ everywhere else.
+
+For $T=\{i:y_i=-1\}$, take
+\[
+ h=2A\left(1-2\sum_{i\in T}b_{X_i}\right).
+\]
+The preceding estimates prove its strict global and training margins
+for all sufficiently large $d$.
+Finally $\|1\|_K^2=1/\lambda_0\le C_Ld$ by
+Corollary~\ref{cor:lower-spectrum}; the squared triangle inequality
+proves the asserted energy bound. For $n=0$, use $h=2A$.
+\end{proof}

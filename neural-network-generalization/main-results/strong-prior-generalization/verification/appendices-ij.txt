@@ -1,0 +1,137 @@
+AUDIT OF APPENDICES I AND J
+Source: nnbayes-generalization.pdf, displayed slides 81/38--103/38.
+Scope: a rigorous first paper restricted to the strong-prior limit.
+
+RECOMMENDATION
+
+Exclude Appendix I's regime classification and Appendix J's NNGP/SGD comparison from the first paper. They are outside the requested scope. Appendix J contains a correct elementary Fourier-diagonalization result, and a correct raw-Gaussian parity-margin upper bound after qualification, but these are a separate research direction rather than part of the strong-prior proof. Appendix I supplies useful scaling heuristics, not a theorem classifying all priors.
+
+APPENDIX I: LARGE-WIDTH TYPOLOGY
+
+Status: heuristic. The qualifications on slide 89 are appropriate but do not support the stronger claims on slides 83--90 (in particular, that only two one-parameter families remain, or that off-line profiles reduce exactly to shallower learners).
+
+1. The single-input Gaussian calculation is sound in a restricted sense.
+
+For a fixed incoming vector a in R^N and an independent prior row w~N(0,sigma^2 I), z=<w,a> has variance sigma^2||a||^2. Prescribing z=b costs minimum squared row norm b^2/||a||^2, attained by w=ba/||a||^2. Thus when ||a||^2 is of order N, requiring order N rows each to have order-one preactivation has Gaussian energy of order 1/sigma^2; requiring one readout row has energy of order 1/(N sigma_L^2). Gaussian tail logarithmic prefactors must still be accounted for. This is an energy calculation for a fixed incoming representation, not a posterior theorem.
+
+For m inputs, let A be the m-by-N matrix whose rows are their incoming activation vectors. Prescribing the vector b of preactivations is feasible iff b is in the range of A, and its exact minimum Gaussian energy is
+
+    (1/(2 sigma^2)) b^T (A A^T)^+ b.
+
+This follows from the minimum-norm solution w=A^T(AA^T)^+b. The cost depends on the entire Gram matrix, including its conditioning and rank. It cannot generally be replaced by m/sigma^2 for a "computing" layer and 1/sigma^2 for a "copying" layer.
+
+2. Sequential posterior conditioning does not remove the problem.
+
+The chain rule decomposes posterior densities, but a row conditioned on all training labels is generally not an independent isotropic Gaussian. Its conditional law includes the likelihood induced by downstream layers. Fixing previous activations makes the unconditioned Gaussian calculation legitimate; it does not justify summing those scalar costs as the posterior's complete effective objective, and it omits representation volume and entropy. At the NNGP/mean-field boundary those order-N entropy contributions can be leading order.
+
+3. "Zero cost" at tau=Theta(1) needs qualification.
+
+For N independent rows, if a prescribed fraction of rows must satisfy |z_i|>=A, the probability tends to one only when the required fraction lies below the corresponding Gaussian success probability. Above that fraction the probability is exp(-Theta(N)), although each single-row event has order-one probability. Requiring simultaneous constraints over all training points adds further costs. A leading strong-prior energy calculation may neglect these terms; a general large-width classification cannot.
+
+4. The step-up minimization is algebraically correct but assumes an unrealized construction.
+
+For the toy cost A t^2+B t^(-2k), the minimizer and minimum are exactly
+
+    t_*=(kB/A)^(1/(2k+2)),
+    min cost=(k+1) k^(-k/(k+1)) A^(k/(k+1)) B^(1/(k+1)).
+
+However, an arbitrary multilayer computation cannot be rescaled this way simply by saying it "uses the degree-k part" of a nonlinear activation. One must isolate that Taylor component, cancel lower terms, control the remainder, and pay for all additional units and weights. The main activation assumptions (bounded, Lipschitz, non-polynomial) do not even imply a useful Taylor expansion. The argument also needs control of k when asymptotic parameters grow. Thus the conclusion that every step up in sigma forces posterior collapse is unproved.
+
+5. The step-down truncation and strong-prior-line assertions are unproved.
+
+Universal approximation provides existence, not polynomial width/norm bounds. It cannot establish equivalence of the polynomial-budget learners at different depths. Likewise, "copying" need not have function-independent cost until a precise representation and copying construction are fixed. Comparing layer energies does not by itself prove that all useful layers must have equal energy, or that a non-balanced prior is equivalent to a shallower learner. Bounds for comparable weighted norms can transfer with polynomial losses; equality of learners or a classification of all scaling limits does not follow from such bounds.
+
+6. A restricted version of the 1<beta<2 observation can be proved.
+
+Here is a clean fixed-data random-feature result. Let phi_j(x) be i.i.d. bounded random features, let K_N(x,x')=N^(-1) sum_j phi_j(x)phi_j(x'), and independently take readout weights w_j~N(0,N^(-beta)), with output z_N(x)=sum_j w_j phi_j(x). Fix finitely many training and test inputs. Suppose K_N concentrates exponentially at a limiting Gram matrix K, and the training block of K is positive definite. Conditional on features, z_N has covariance N^(1-beta)K_N. Write alpha=beta-1.
+
+For 0<alpha<1, fixed nonzero training margin constraints have conditional probability at least exp(-C N^alpha) on a typical feature event. A fixed deviation of K_N has unconditional probability at most exp(-cN). Therefore, after conditioning on the margins,
+
+    P(||K_N-K||>epsilon | training margins)
+      <= exp(-c_epsilon N+C N^alpha) -> 0.
+
+The feature Gram matrix consequently retains its limit despite this rare conditioning. The small-noise Gaussian large-deviation principle then concentrates the finite-dimensional posterior on the unique minimum-RKHS-norm function satisfying the training margins (the hard-margin kernel solution), including its evaluations at the fixed test points. This proves a precise version under these added hypotheses. It is not automatically a theorem for jointly inferred deep layers. In the limiting regime every fixed beta>1 already gives the hard-margin solution; "slides toward" describes finite-N behavior, not distinct limiting estimators throughout that interval.
+
+At beta=2, the margin cost and an order-N feature large deviation are of the same scale, which suggests feature learning. It does not identify a universal mean-field limit. At beta<1 the positive margin vanishes after output normalization, but conditioning on the labels remains nontrivial sign conditioning. At beta=1 the normalized positive margin remains constant.
+
+Major issue to report: Appendix I's asserted exhaustive classification is not established. Its algebraic balances may be retained as motivation in a later paper, with explicit model-dependent hypotheses, but not as a rigorous theorem.
+
+APPENDIX J: NNGP, FOURIER BASIS, AND PARITIES
+
+1. Correct structural theorem, with standard hypotheses.
+
+Let X={-1,+1}^d with the uniform measure, and let K be invariant under simultaneous coordinatewise sign flips:
+
+    K(g*x,g*x')=K(x,x') for all g,x,x'.
+
+Then K(x,x')=rho(x*x'), and for chi_S(x)=product_{i in S}x_i,
+
+    (T_K chi_S)(x)=lambda_S chi_S(x),
+    lambda_S=E_z[rho(z)chi_S(z)].
+
+Proof: substitute z=x*x' and use chi_S(x')=chi_S(x)chi_S(z). The characters form an orthonormal basis of all functions on X. If K is also coordinate-permutation invariant, lambda_S depends only on |S|. For a positive semidefinite kernel lambda_S>=0, and sum_S lambda_S=E_x K(x,x).
+
+A fully connected NNGP with centered, isotropic Gaussian first-layer weights and shared scalar activation has K(x,x')=kappa(<x,x'>/d), with the expected harmless modifications for an appended constant input or independent Gaussian biases. The usual covariance recursion preserves this form. The analogous NTK recursion also preserves it. This proves common eigenvectors, not common eigenvalues or statistical behavior.
+
+2. "Fourier-diagonal" does not itself mean "prefers lower degree."
+
+Permutation symmetry only gives equality of eigenvalues within a degree. It does not order eigenvalues across degrees. With a zero-bias odd activation, every network output is odd under x -> -x, so every even-degree Fourier eigenvalue is exactly zero. Linear activations give zero eigenvalues at all degrees >=2. Other activations or bias choices change which coefficients are nonzero. Even for sigmoid-type networks, monotonicity and lambda_k asymptotic to d^(-k) require separate assumptions and proofs. For normalized smooth inner-product kernels with a nonzero k-th Taylor coefficient, a fixed-k asymptotic of that order can often be established, but it is not a consequence of invariance alone and is not uniform in growing k.
+
+The RKHS formula sum_S hhat(S)^2/lambda_|S| is correct with the convention that a nonzero coefficient in a zero-eigenvalue direction gives infinite norm. Kernel interpolation uses a pseudoinverse if the training Gram matrix is singular.
+
+3. A rigorous raw-Gaussian parity-margin bound.
+
+Let z be the centered Gaussian process with kernel K. Its Fourier coefficients zhat(S)=E_x[z(x)chi_S(x)] are jointly Gaussian; in the invariant case their variances are lambda_S and distinct coefficients are independent. For the event
+
+    E_S={chi_S(x)z(x)>=a for every x in X},  a>0,
+
+one has zhat(S)>=a. Consequently
+
+    P_G(E_S) <= P(N(0,lambda_S)>=a)
+             <= exp(-a^2/(2 lambda_S))
+
+when lambda_S>0, and P_G(E_S)=0 when lambda_S=0. If K(x,x)=1 and the eigenvalue is constant within degree k, then binomial(d,k)lambda_k<=1, so
+
+    P_G(E_S) <= exp(-(a^2/2) binomial(d,k)).
+
+This is an upper bound. The slides' equality-scale claims P_G(E_S)=exp(-Theta(1/lambda_k)) need an additional lower bound controlling all other Fourier components; one large coefficient alone does not guarantee all margin constraints. For fixed k, binomial(d,k) is of order d^k; the factor k! and the distinction between fixed and growing k matter.
+
+4. Major conditioning error when applying that bound to the actual prior.
+
+The main setup first restricts the Gaussian prior to
+
+    A={|z(x)|>1/2 for every x in X},
+
+so that every prior sample implements a complete Boolean function. After this restriction the Fourier coefficients are no longer Gaussian. The actual mass assigned to a parity is
+
+    pi(chi_S)=P_G(E_S)/P_G(A)
+
+(using the strict-margin version of E_S). The raw bound above must therefore be divided by P_G(A), which can be very small. It does not establish the asserted conditional target-mass bound. Additional robustness restrictions create the same issue. In strong-prior arguments a common normalization may cancel in relative comparisons; it does not cancel in an inference from an absolute raw-Gaussian mass bound to a normalized target mass.
+
+5. Tiny target mass alone does not limit the relevance-count bound.
+
+Even if pi(f) is exponentially small, the number M needed to make the tail smaller than pi(f)/2000 need not be large. A prior supported on just {f,g}, with pi(f)=epsilon and pi(g)=1-epsilon, has M=2 for every epsilon>0. Thus the statement that the relevance accounting "cannot kick in before" about d^k samples does not follow from a target-mass upper bound. Such a bound can obstruct a particular guarantee based on log(1/pi(f)), but that is not the same as the relevance-count guarantee proved in Appendix A.
+
+6. Major error: a trace bound is not a sample lower bound.
+
+It is true that for any normalized positive semidefinite kernel, lambda_S=<chi_S,T_K chi_S>>=0 and sum_S lambda_S=1, so #{S:lambda_S>=1/n}<=n. For a non-invariant kernel these diagonal entries need not be eigenvalues. More importantly, "resolving chi_S needs n=Omega(1/lambda_S)" is false without further assumptions on noise, regularization, conditioning, or the estimator.
+
+Explicit counterexample: fix a nonconstant parity chi_S and 0<epsilon<1. Set
+
+    K_epsilon(x,x')=(1-epsilon)+epsilon chi_S(x)chi_S(x').
+
+This kernel is positive semidefinite, has K_epsilon(x,x)=1, and has parity eigenvalue epsilon. Its RKHS is span{1,chi_S}. In noiseless regression to chi_S, observing one sample of each label forces the unique interpolating function to be exactly chi_S, independent of epsilon. Under the uniform distribution, both labels are observed after n samples except with probability 2^(1-n). Thus O(log(1/delta)) samples suffice with confidence 1-delta even as 1/lambda_S=1/epsilon tends to infinity. The kernel is itself invariant under simultaneous sign flips. This disproves the asserted eigenvalue-to-sample implication, not merely a normalization convention.
+
+Class-level lower bounds for families of parities may be valid under precisely specified kernel-method models, but require their own theorem. They cannot be obtained from the displayed trace estimate alone. Likewise, the heuristic cutoff lambda~1/n is model-dependent.
+
+7. Citation transfer is not justified by a shared eigenbasis.
+
+An NTK lower bound cannot be applied to an NNGP just because both diagonalize in parities and are degree-symmetric. Their eigenvalues can differ substantially, and the estimator, regularization, distribution, and dimension/sample asymptotics matter. A theorem explicitly covering the relevant NNGP inner-product kernel might apply after checking all hypotheses, but that verification is absent. Similar spectral asymptotics between sphere and cube do not alone transfer a statistical lower bound between distributions. The citations should be checked directly before any theorem from them is stated in a later paper.
+
+8. Remaining discussion is explicitly conjectural or needs qualifications.
+
+Adding the intermediate XOR gates produces a Fourier support ordering with increments at most two: list the disjoint bottom-level pairs first, then larger gates, which introduce no new coordinates. The combinatorial leap claim is sound under the described definition. However the SGD rate is conjectural here, f_epsilon is real-valued rather than Boolean, and any learnability assertion depends on epsilon, requested accuracy, noise, and algorithm. A kernel lower bound based on the remaining high-degree component also needs a specified theorem and an error threshold that requires recovering that component.
+
+Conditioning a prior on A preserves the ratio of two whole function events only if both events are contained in A (up to null sets). Merely "keeping" some implementations of both functions does not preserve their mass ratio: the retained fractions can differ. A weight-space support restriction can therefore change function-prior ratios without deleting either Boolean function entirely.
+
+Major mistakes to report: the trace-to-sample implication is false (explicit counterexample above); the Gaussian prior-mass claim ignores the initial full-function conditioning; a small target mass does not force a large relevance count; and an NTK theorem cannot be transferred to an NNGP using only a shared eigenbasis. None of these points undermines the strong-prior proof directly, since this appendix concerns a different scaling regime.

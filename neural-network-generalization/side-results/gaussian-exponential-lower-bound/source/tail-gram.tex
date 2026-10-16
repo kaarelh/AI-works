@@ -1,0 +1,125 @@
+\section{Random tail covariance matrices}
+Let $Q$ be the covariance kernel retaining only degrees greater than an
+odd cutoff $r$, and write $\tau=\tau_r$, $\ell=\lambda_{r+1}$, and
+$s_2=s_{2,r}$. This section proves the sample event needed later, without
+assuming that a Gaussian approximation remains valid after conditioning.
+The entire argument concerns the exact limiting Gaussian covariance.
+
+\begin{lemma}[Far-pair decay]\label{lem:far}
+There are constants $c_0,C>0$ such that, when $r\le D/8$ is odd,
+\[
+ \max_{d/4\le\dist(x,y)\le3d/4}|Q(x,y)|
+ \le\rho_r:=C\sqrt D\,e^{-r/8}+Ce^{-c_0D}.
+\]
+\end{lemma}
+\begin{proof}
+The full-cube Krawtchouk polynomial satisfies
+\[
+ \sum_{j=0}^D\mathsf K_j(h;D)z^j=(1+z)^{D-h}(1-z)^h.
+\]
+If $\delta D\le h\le(1-\delta)D$, put $b=\min(h,D-h)$.
+On $|z|=t$ the generating function is bounded in absolute value by
+\[
+ (1+t^2)^b(1+t)^{D-2b}
+ \le(1+t)^D\exp\!\left[-\frac{2\delta Dt}{(1+t)^2}\right].
+\]
+Cauchy's coefficient bound at $t=j/(D-j)$ and the uniform Stirling
+lower bound for $\binom Dj$ therefore give, for $1\le j<D$,
+\begin{equation}\label{eq:kraw}
+ \frac{|\mathsf K_j(h;D)|}{\binom Dj}
+ \le C\sqrt D\exp[-2\delta j(1-j/D)].
+\end{equation}
+For reduced-cube points at distance in $[d/4,3d/4]$, their augmented
+full-cube distance lies in $[D/8,7D/8]$ for large $d$.
+Because $r$ is odd, the exact tail is
+$Q(x,y)=\sum_{j>r,\ j\text{ odd}}a_j\mathsf K_j(h;D)$.
+For $r<j\le D-r$, \eqref{eq:kraw} gives a bound
+$C\sqrt D e^{-r/8}$ after summation, since the total spectral mass
+is one. For $j>D-r$, monotonicity and an odd cutoff $b_D$ near $D/4$
+give
+\[
+ \sum_{j>D-r}\binom Dj a_j
+ \le a_{b_D}\sum_{k<r}\binom Dk
+ \le C D^{-\beta-1/2}
+       \exp[-D(h(1/4)-h(1/8))+O(1)].
+\]
+The positive entropy gap absorbs the polynomial factor and proves the
+claim. Adjust constants for bounded $d$.
+\end{proof}
+
+\begin{lemma}[A tail Gram deviation bound]\label{lem:gram-general}
+Let $X_1,\ldots,X_n$ be independent uniform cube points, with
+$1\ll n\le M/4$. Let
+\[
+ B_{\mathrm{near}}=\#\{y:\dist(x,y)\notin[d/4,3d/4]\}
+ \le 2e^{d h(1/4)},\qquad q=2\log M.
+\]
+The count is independent of $x$. For every $z>0$,
+\begin{align}
+ &\mathbb P\{\|Q_{SS}-\tau I_n\|_{\mathrm{op}}>z\tau\}
+ \notag\\
+ &\quad\le\frac C{z^2}
+ \left[\frac{q\rho_r}{\tau}
+       +\frac{\sqrt{nq s_2}}{\tau}
+       +\frac{n\ell}{\tau}
+       +\frac{n(1+B_{\mathrm{near}})}M\right]^2
+       +\frac{n^2(1+B_{\mathrm{near}})}M.
+ \label{eq:gram-bound}
+\end{align}
+Here the sampled matrix includes repeated training locations.
+\end{lemma}
+\begin{proof}
+Let $J=Q-\tau I_M$, a zero-diagonal Hermitian matrix. Form a deterministic
+mask $J_{\mathrm{far}}$ retaining only pairs at distances in
+$[d/4,3d/4]$. Since $Q$ is positive semidefinite with constant diagonal
+$\tau$, every entry has absolute value at most $\tau$. Thus
+\begin{align*}
+ \|J_{\mathrm{far}}\|_{\max}&\le\rho_r,\\
+ \|J_{\mathrm{far}}\|_{1\to2}^2&\le M s_2,\\
+ \|J_{\mathrm{far}}\|_{\mathrm{op}}
+ &\le M\ell+\tau+\tau B_{\mathrm{near}}.
+\end{align*}
+For the second inequality, Parseval gives squared column norm
+$M s_2-\tau^2$ for $J$, and entrywise masking only decreases it.
+For the third, $\|J\|\le M\ell+\tau$, while the removed matrix has
+maximum absolute row sum at most $\tau B_{\mathrm{near}}$.
+The entropy bound on $B_{\mathrm{near}}$ is the elementary binomial
+tail bound on distances to a fixed cube point.
+
+Let $R$ retain each of the $M$ coordinates independently with
+probability $p=2n/M$. The zero-diagonal case of Tropp's random
+principal-submatrix theorem \cite[Theorem 1.1]{tropp2008}, at moment
+order two and $q=2\log M$, states
+\[
+ (\mathbb E\|RJR\|^2)^{1/2}
+ \le C\left[q(\mathbb E\|RJR\|_{\max}^2)^{1/2}
+       +\sqrt{pq}(\mathbb E\|JR\|_{1\to2}^2)^{1/2}
+       +p\|J\|\right].
+\]
+Apply it to $J_{\mathrm{far}}$ and substitute the preceding bounds:
+\begin{equation}\label{eq:bernoulli-gram}
+ (\mathbb E\|R J_{\mathrm{far}}R\|^2)^{1/2}
+ \le C[q\rho_r+\sqrt{nq s_2}+n\ell
+               +(n/M)\tau(1+B_{\mathrm{near}})].
+\end{equation}
+The logarithm here is that of the original dimension $M$, not the
+sample size.
+
+To pass to a uniform subset of size $n$, use a uniform permutation of
+all cube points, independently of $B\sim\operatorname{Bin}(M,2n/M)$.
+Its first $B$ elements form the Bernoulli subset. On $B\ge n$, the
+first $n$ principal submatrix is a compression of the larger one, so
+its operator norm cannot be larger. The size-$n$ event is independent
+of $B$, and $\mathbb P(B\ge n)\ge1/2$ for large $n$. Thus Markov's
+inequality applied to \eqref{eq:bernoulli-gram} gives the same fixed-size
+probability bound with a constant factor loss.
+
+Conditional on no collisions, an independent size-$n$ sample is a
+uniform size-$n$ subset, up to an irrelevant ordering. Collisions have
+probability at most $n(n-1)/(2M)$. The probability of any sampled pair
+violating the distance condition is at most $n^2B_{\mathrm{near}}/M$.
+On their complement, the sampled matrices $J$ and $J_{\mathrm{far}}$
+agree. Adding these exceptional probabilities proves
+\eqref{eq:gram-bound}.
+\end{proof}
+

@@ -1,0 +1,285 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools,booktabs,hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+\newcommand{\E}{\mathbb E}
+\newcommand{\sgn}{\operatorname{sgn}}
+\newcommand{\cost}{\mathcal E}
+\title{Certified margin-repair bounds for structured parity predictors\\[3pt]\large Cubic and quartic heads, exact certificates, and parity-block lifts}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex}
+\date{16 October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We prove explicit lower bounds for repairing the errors of globally gapped parity predictors in a cusp variogram model. On twenty-seven bits, a degree-three predictor may depend arbitrarily on two coordinates and be symmetric in the remaining twenty-five. If its parity error is at most one third, its mean repair energy is at least $77247413969/13589544960>5.68$. The result allows unbounded amplitudes and arbitrary intermediate radial sign changes. A second complete family consists of degree-four heads on sixty-five bits, symmetric in sixty-four coordinates; its bounds exceed $14.56$ at error at most one third and $9.94$ at error at most $0.34$. We also give relaxed-error and other two-coordinate cubic results. The proof combines an analytic repair inequality with exhaustive, exactly verified rational certificates; the largest family contains $49149$ sign-cone orbits. Equal parity-block substitution extends these results to structured families in arbitrarily large dimension, including nonsymmetric amplitude representatives. These are theorems about the stated repair model and sign-pattern families, not general posterior or neural-network sample-complexity theorems.
+\end{abstract}
+
+\section{Model and result}
+Write $\Omega_K=\{-1,1\}^K$, with uniform measure, Hamming distance $d_H$, and parity $f(u)=\prod_{i=1}^K u_i$. A \emph{head} is a real function $P$ on $\Omega_K$ satisfying $|P(u)|\ge1$. Put $g=\sgn P$, $B=|P|$, and $E=\{u:g(u)\ne f(u)\}$. Degree always means degree of the multilinear Walsh expansion.
+
+Fix $0<\beta\le1/2$. A cell has points $(u,h)\in\Omega_K\times\mathbb Z_{\ge0}$. For a finitely supported real charge $q$ with $\sum q=0$, define its squared dual norm by
+\begin{equation}\label{eq:variance}
+ V_\beta(q)=-\sum_{u,h,v,j}q_{u,h}q_{v,j}\bigl(d_H(u,v)+h+j\bigr)^\beta.
+\end{equation}
+This is nonnegative. Indeed, the integral representation of $s^\beta$ reduces it to a positive integral of quadratic forms with kernel $e^{-t d_H(u,v)}e^{-th}e^{-tj}$, which is positive semidefinite. The zero-total-charge condition cancels the constant term.
+
+A repair $a(u,h)$ has squared energy $\cost$ if
+\begin{equation}\label{eq:duality}
+ \left|\sum q_{u,h}a(u,h)\right|^2\le \cost V_\beta(q)
+ \quad\text{for every such }q.
+\end{equation}
+Equivalently, its least possible energy is the supremum of these ratios; zero-variance contrasts have the usual limiting interpretation. At a wrong center $u_0\in E$, an admissible repair satisfies
+\begin{align*}
+ |P(u)+a(u,h)|&\ge1 &&\text{for every }(u,h),\\
+ \sgn(P(u_0)+a(u_0,0))&=f(u_0),\\
+ \sgn(P(u)+a(u,h))&=g(u) &&\text{for every }u\text{ and all sufficiently large }h.
+\end{align*}
+The last condition is eventual anchoring to the head signs. There is no restriction on intermediate signs. Repairs at different wrong centers may be chosen independently. Their population cost is $\E[\mathbf1_E(u)\cost_u]$; it is not normalized by the error probability. Define
+\[
+ C_0(\beta)=\frac4{2-2^\beta}\le4+2\sqrt2.
+\]
+
+\begin{theorem}\label{thm:main}
+Let $K=27$. Suppose $P$ has degree at most three, is invariant under permutations of coordinates $2,\ldots,27$, has global margin $|P|\ge1$, and has parity error at most $1/3$. Every collection of admissible repairs satisfies
+\[
+ \E[\mathbf1_E\cost_u]\ \ge\ L_*:=\frac{77247413969}{13589544960}
+ =5.684326752394806\ldots>\frac{11}{2}>\frac{C_0(\beta)}2.
+\]
+The conclusion holds uniformly for $0<\beta\le1/2$, without an amplitude bound. If the error assumption is relaxed to $R\le17/50=0.34$, the conclusion becomes
+\[
+ \E[\mathbf1_E\cost_u]\ge L_{.34}:=\frac{1785556483667}{380507258880}
+ =4.692568780219008\ldots>\frac92>\frac{C_0(\beta)}2.
+\]
+\end{theorem}
+
+The proof below is computer assisted only in a finite rational inequality. A standard-library Python checker and the rational certificate data accompany this paper. The checker does not call an optimization package.
+
+\section{A repair inequality valid through all radial sign changes}
+\begin{lemma}\label{lem:local}
+Let $u$ be wrong and have $n\ge12$ correct active neighbors. Set
+\[
+ L_u=2+B(u)-\frac1n\sum_{v\sim u,\ v\notin E}B(v),\qquad T=\frac{11}{3}.
+\]
+Every admissible repair at $u$ satisfies
+\begin{equation}\label{eq:loss}
+ \cost_u\ge\Phi_u(P):=
+ \max\left\{4,\ 2T\left[B(u)-\frac1n\sum_{v\sim u,\ v\notin E}B(v)\right]
+       +4T-T^2\left(1+\frac3{5n}\right)\right\}.
+\end{equation}
+When $n<12$, the bound $\Phi_u(P)=4$ remains valid.
+\end{lemma}
+\begin{proof}
+The variance of the contrast between $(v,h)$ and $(v,h+1)$ is
+\[
+ v_h=2(2h+1)^\beta-(2h)^\beta-(2h+2)^\beta.
+\]
+It is positive and decreasing. For $h\ge1$, the integral formula
+\[
+ v_h=\beta(1-\beta)\int_0^1\int_0^1(2h+s+t)^{\beta-2}\,ds\,dt
+\]
+gives $v_h\le[4(2h)^{3/2}]^{-1}$. Also $v_1$ increases with $\beta$ on the stated interval, since both factors in the integrand increase, so
+\[
+ v_h\le v_1\le2\sqrt3-\sqrt2-2<\frac1{20}.
+\]
+A radial sign change requires a contrast of magnitude at least two. Thus every such change costs at least $4/v_h$, and every change at $h\ge1$ costs more than $80$. Since a repaired wrong center must eventually regain its original sign, some radial change occurs. Consequently
+\begin{equation}\label{eq:baseline}
+ \cost_u\ge4/v_0=C_0(\beta)\ge4.
+\end{equation}
+
+If all correct neighbors have their head signs at shell $H\ge1$, their field signs are opposite to the repaired center sign: an active edge reverses parity, and $u$ is wrong while its chosen neighbors are correct. The center-to-uniform-neighbor contrast of the repair therefore has magnitude at least $(L_u)_+$. Its exact variance is
+\[
+ F_H=(2-2^\beta)(H+1)^\beta+\frac{(2H+2)^\beta-(2H)^\beta}{n}.
+\]
+At $H=1$, writing $x=2^\beta$,
+\[
+ F_1=x(2-x)+\frac{x^2-x}{n}\le1+\frac3{5n},
+\]
+because $1\le x\le\sqrt2$ and $x^2-x\le2-\sqrt2<3/5$.
+
+If $\cost_u<80$, eventual anchoring and the radial-change bound force all active points to have their head signs already at shell one. Cauchy--Schwarz in \eqref{eq:duality} gives $(L_u)_+^2\le\cost_uF_1$, hence
+$\cost_u\ge2tL_u-t^2F_1$ for every $t\ge0$.
+
+If $\cost_u\ge80$, put
+\[
+ H=\left\lfloor\frac12(\cost_u/16)^{2/3}\right\rfloor+1.
+\]
+A change at any shell $h\ge H$ would cost at least $16(2h)^{3/2}>\cost_u$. Thus shell $H$ is anchored. Since $n\ge12$,
+\begin{align*}
+ F_H&\le\sqrt{(H+1)/2}+1/12\\
+ &\le\sqrt{1+\tfrac14(\cost_u/16)^{2/3}}+1/12
+ \le\frac{\cost_u}{4T^2}.
+\end{align*}
+For the last inequality divide by $\cost_u$: both terms decrease, so it is enough to check $\cost_u=80$. There the left side before division is less than $17/12$, whereas $80/(4T^2)=180/121>17/12$. The contrast bound now gives $(L_u)_+\le\cost_u/(2T)$, and therefore $\cost_u\ge2TL_u\ge2TL_u-T^2F_1$. Combining the two energy regimes with \eqref{eq:baseline} proves \eqref{eq:loss}.
+\end{proof}
+
+For a fixed sign pattern, $\Phi_u$ is a maximum of affine functions of the head amplitudes, hence convex. This fact will also permit the block extension.
+
+\section{An exhaustive finite proof}
+Write $x\in\{0,1\}$ for the first coordinate's negative-bit indicator and $h\in\{0,\ldots,26\}$ for the remaining Hamming weight. A symmetric degree-three head has precisely the form
+\[
+ P(x,h)=A_3(h)+(-1)^x B_2(h),
+\]
+where the subscripts bound ordinary polynomial degrees. Each of its two fiber sign sequences has at most three transitions. There are exactly
+\[
+ 2\sum_{j=0}^3\binom{26}{j}=5904
+\]
+such sequences. For one sequence define
+\[
+ d(g)=2^{-26}\sum_{h=0}^{26}\binom{26}{h}(-1)^h g(h).
+\]
+The full parity advantage is $(d(g_0)-d(g_1))/2$. Integer binomial arithmetic enumerates exactly $1460$ ordered pairs with advantage at least $1/3$. The relaxed error cutoff $17/50$ requires advantage at least $8/25$ and gives $2256$ pairs.
+
+\begin{lemma}\label{lem:feasible}
+A pair of sign sequences with at most three transitions each is realizable by a globally gapped head of the displayed form if and only if it is not the case that both fibers have three transitions and opposite right-end signs.
+\end{lemma}
+\begin{proof}
+A fiber with three transitions has three real roots inside $(0,26)$ and degree exactly three. Its leading-coefficient sign is therefore its sign at $26$. The two fiber polynomials must have equal cubic coefficients, proving necessity.
+For sufficiency, put one root in each required transition interval. A fiber with fewer than three transitions can be completed to degree three by roots outside $[0,26]$. Choosing the parity of the number placed to the right permits either leading-coefficient sign while retaining the desired signs on the integer interval. Scale both fibers to the same sufficiently large leading coefficient. Their difference has degree at most two, and their integer-node margins are at least one.
+\end{proof}
+
+Exactly $762$ of the accurate pairs satisfy this criterion. The transformations $h\mapsto26-h$ and $(g_0,g_1)\mapsto(-g_1,-g_0)$ preserve the problem. They reduce the feasible pairs to $193$ orbits. For the relaxed cutoff there are $1176$ feasible pairs and $298$ orbits; the feasibility proof is unchanged.
+
+For each representative we use the seven integer-valued basis functions
+\[
+ (-1)^{ix}\binom hj,\qquad i\in\{0,1\},\quad i+j\le3.
+\]
+The polynomial coefficients and one cost variable at every wrong orbit are the linear-program variables. The constraints are the $54$ signed margin inequalities, cost at least four, and the affine bound in \eqref{eq:loss} where the correct-neighbor multiplicity is at least twelve. The objective weights are $\binom{26}{h}/2^{27}$. Every coefficient is rational.
+
+\begin{proposition}\label{prop:certificate}
+For every representative at either error cutoff, the companion data contain an exactly nonnegative rational dual vector. It annihilates the seven head coefficients and reproduces the negative objective coefficients on the cost variables. Its exact objective is at least $L_*$ for error at most $1/3$, and at least $L_{.34}$ for error at most $17/50$.
+\end{proposition}
+\begin{proof}
+This is a finite rational certificate, checked by the accompanying program. For clarity, if the constraints are $Az\le b$ and the objective is $c^Tz$, the checker verifies $y\ge0$ and $A^Ty=-c$. It then obtains $c^Tz\ge-b^Ty$. All identities and bounds are checked over $\mathbb Q$. The smallest certified bounds are exactly $77247413969/13589544960$ and $1785556483667/380507258880$, respectively. The checker separately re-enumerates all sign pairs and checks orbit coverage, so no floating optimization output is used as proof.
+\end{proof}
+Theorem~\ref{thm:main} follows from Lemma~\ref{lem:local}, exhaustive coverage, and Proposition~\ref{prop:certificate}.
+
+\section{A complete quartic family}
+\begin{theorem}\label{thm:quartic}
+Let $K=65$, and suppose $P$ has degree at most four, is symmetric in coordinates $2,\ldots,65$, and has global margin one. Every admissible collection of repairs satisfies
+\begin{align*}
+ R\le1/3\quad&\Longrightarrow\quad
+ \E[\mathbf1_E\cost_u]\ge\frac{114394263199}{7851737088}
+ =14.569293637433622\ldots,\\
+ R\le17/50\quad&\Longrightarrow\quad
+ \E[\mathbf1_E\cost_u]\ge\frac{150190794479}{15099494400}
+ =9.946743281616104\ldots.
+\end{align*}
+Both conclusions are uniform for $0<\beta\le1/2$.
+\end{theorem}
+\begin{proof}
+Write $P(x,h)=A_4(h)+(-1)^xB_3(h)$. The proof of Lemma~\ref{lem:feasible} applies with four in place of three: a pair is feasible exactly when the two fibers do not both have four transitions and opposite right-end signs. There are $2\sum_{j=0}^4\binom{64}{j}=1358242$ individual fiber patterns, but exact bias bounds permit a short exhaustive enumeration.
+
+For a fiber with left sign $\sigma$ and transition edges $j_0<\cdots<j_{s-1}$, summation by parts gives
+\[
+ d(g)=\sigma2^{-63}\sum_{i=0}^{s-1}(-1)^{j_i+i}\binom{63}{j_i}.
+\]
+Its absolute value is at most $M$, the sum of the four largest $\operatorname{Bin}(63,1/2)$ point masses. Accuracy requires $d(g_0)-d(g_1)\ge2(1-2R)$. Consequently both $d(g_0)$ and $-d(g_1)$ are at least $2(1-2R)-M$. This exact filter retains only $187$ fiber patterns for $R\le1/3$, and $644$ for $R\le17/50$. Enumerating the retained pairs and applying the leading-coefficient criterion gives the following complete counts:
+\begin{center}
+\begin{tabular}{lrrr}\toprule
+Error cutoff & Accurate pairs & Feasible pairs & Orbits\\\midrule
+$1/3$ &1145&522&132\\
+$17/50$ &6427&3196&801\\\bottomrule
+\end{tabular}
+\end{center}
+
+The certificate uses the nine basis functions $(-1)^{ix}\binom hj$ with $i+j\le4$. To avoid tiny objective coefficients in certificate discovery, replace each true weight $w_{x,h}=\binom{64}{h}/2^{65}$ by
+\[
+ \widetilde w_{x,h}=2^{-30}\lfloor2^{30}w_{x,h}\rfloor.
+\]
+Since $0\le\widetilde w\le w$ and each certified cell loss is nonnegative, this only weakens the lower bound. The companion rational dual vectors prove the stated bounds for these smaller objectives. The independent checker re-enumerates all feasible pairs and verifies every dual identity exactly, as in Proposition~\ref{prop:certificate}.
+\end{proof}
+
+\section{Two arbitrary bits}
+\begin{theorem}\label{thm:twofree}
+Let $P$ have degree at most three, global margin one, parity error at most $1/3$, and be symmetric in all but two of its $K$ coordinates. Uniformly for $0<\beta\le1/2$, every admissible repair collection satisfies
+\begin{align*}
+ K=27&:\quad \E[\mathbf1_E\cost_u]\ge\frac{77247413969}{13589544960}
+ =5.684326752394806\ldots,\\
+ K=41&:\quad \E[\mathbf1_E\cost_u]\ge\frac{563724295547}{41271951360}
+ =13.658774954201728\ldots,\\
+ K=47&:\quad \E[\mathbf1_E\cost_u]\ge\frac{185493561491}{12079595520}
+ =15.355941445546017\ldots.
+\end{align*}
+\end{theorem}
+Here is a complete algebraic feasibility test underlying the finite proof. Write $n=K-2$, and use $x,y\in\{0,1\}$ for the two arbitrary bits. The four fiber polynomials have the form
+\[
+ p_{xy}(h)=c h^3+a_{xy}h^2+b_{xy}h+d_{xy},\qquad
+ a_{00}+a_{11}=a_{01}+a_{10}.
+\]
+There are no further constraints on $b$ or $d$. For sign-cone enumeration it suffices to take $c=1$: a zero cubic coefficient can be perturbed positively without changing any of the finitely many strict signs, while a negative coefficient is changed to positive by flipping one arbitrary bit and negating the head. That transformation preserves correctness and repair energy. The perturbation is used only to enumerate sign cones, not to compare repair costs.
+
+Let a fiber have transition edges $j_1<\cdots<j_s$, and write $J=\sum j_i$. The possible quadratic coefficients of a monic cubic realizing those signs form the following open interval:
+\begin{center}
+\begin{tabular}{lll}\toprule
+Transitions & Left sign & Allowed quadratic coefficients\\\midrule
+$3$ & $-1$ & $(-J-3,-J)$\\
+$3$ & $+1$ & none\\
+$2$ & $+1$ & $(-J-2,\infty)$\\
+$2$ & $-1$ & $(-\infty,-J-n)$\\
+$0$ or $1$ & either & $\mathbb R$\\\bottomrule
+\end{tabular}
+\end{center}
+With three transitions, all three roots lie in their prescribed open unit intervals. With two, the third real root lies left of zero or right of $n$, according to the endpoint signs. This proves and realizes the first four rows. With zero or one transition, a linear factor times a positive quadratic, or three real roots with two exterior roots, permits an arbitrary root sum and hence arbitrary quadratic coefficient.
+
+Denote these intervals by $I_{xy}$. Four fiber signs are feasible exactly when
+\[
+ (I_{00}+I_{11})\cap(I_{01}+I_{10})\ne\varnothing.
+\]
+Sufficiency follows by choosing coefficients in the intersection and then multiplying all four polynomials by a common large constant to obtain margin one. The transition-bias formula from the preceding section gives exact integer accuracy tests. The target-preserving symmetries generated by interchanging $x,y$, flipping both, and reflecting $h\mapsto n-h$ while negating all fiber signs reduce the finite enumeration as follows:
+\begin{center}
+\begin{tabular}{rrrr}\toprule
+$K$& Accurate monic quadruples & Feasible quadruples & Orbits\\\midrule
+$27$&1146660&354584&49149\\
+$41$&1092&474&86\\
+$47$&12&10&3\\\bottomrule
+\end{tabular}
+\end{center}
+For every orbit, the exact dual data certify Theorem~\ref{thm:twofree} using Lemma~\ref{lem:local}, the twelve basis functions $(-1)^{ix+jy}\binom h\ell$ with $i+j+\ell\le3$, and the binomial orbit weights. For $K=41,47$, these weights are rounded down to multiples of $2^{-30}$; for $K=27$, the exact weights are retained. An independent standard-library checker repeats the sign enumeration and verifies all rational dual identities. In the $K=27$ family, the smallest bound is exactly the same rational number $L_*$ as in the one-arbitrary-coordinate case, despite the larger set of feasible sign patterns.
+
+\section{Parity-block lifts and scope}
+\begin{theorem}\label{thm:lift}
+Partition $27b$ active coordinates into $27$ blocks of size $b\ge1$. Suppose a head $P$ has degree at most $3b$, global margin one, and parity error at most $1/3$. Assume only its \emph{sign} depends on the $27$ block parities and is invariant under permutations of the last $26$ blocks. Its amplitudes may depend arbitrarily on all physical coordinates. Then the conclusion of Theorem~\ref{thm:main} holds with the same constant $L_*$. The error-$17/50$ conclusion also holds with constant $L_{.34}$.
+\end{theorem}
+\begin{proof}
+Average $P$ over even coordinate flips within each block and over permutations of the last $26$ blocks. These transformations preserve its sign pattern and the signed margin constraints. The resulting head is a function of block parities. An invariant Walsh monomial uses either every coordinate of a block or none; thus the degree bound $3b$ makes the averaged head an outer polynomial of degree at most three.
+
+An outer wrong point with $n$ correct neighbors corresponds to $nb$ correct physical neighbors. The uniform-neighbor contrast has variance at most $1+3/(5nb)\le1+3/(5n)$. Hence the same coarse rational loss used in the certificate is a valid physical loss whenever $n\ge12$. It is convex within the fixed sign cone and invariant under the averaging group. Jensen's inequality therefore lower-bounds the original mean loss by the loss of the averaged head. The relevant finite certificate applies to that head and yields $L_*$ or $L_{.34}$.
+\end{proof}
+
+The same proof applies to Theorem~\ref{thm:quartic}: use $65$ blocks, physical degree at most $4b$, and a sign pattern symmetric in the last $64$ block parities. Its degree fraction is $4/65$. Likewise, Theorem~\ref{thm:twofree} lifts to $K=27$, $41$, or $47$ equal blocks, physical degree at most $3b$, and signs symmetric in the last $K-2$ block parities; its amplitudes remain arbitrary. These sign-pattern hypotheses are essential. Averaging arbitrary sign patterns need not preserve accuracy or margin. These theorems do not transfer the cell model to an adaptive finite-dimensional posterior; such a transfer, and a result for unrestricted low-degree sign patterns, are separate questions.
+
+\section{Reproducibility}
+\begingroup\small\sloppy
+The companion directory contains:
+\begin{itemize}
+\item \path{one_bit_symmetric_k27r3_universal_exact_certificates.json}, the rational data for error at most $1/3$;
+\item \path{one_bit_symmetric_k27r3_risk034_exact_certificates.json}, the data for error at most $17/50$;
+\item \path{verify_one_bit_symmetric_certificates.py}, the independent standard-library checker;
+\item \path{certify_one_bit_symmetric_phi_universal.py}, the optional SciPy/SymPy certificate generator.
+\end{itemize}
+Place the certificate data and checker together and run
+\begin{verbatim}
+python verify_one_bit_symmetric_certificates.py
+python verify_one_bit_symmetric_certificates.py --risk034
+\end{verbatim}
+The checker verifies the fiber count $5904$, the pair/feasibility/orbit counts at both cutoffs, all rational dual identities, and the stated lower bounds. The generator is not required to verify the result. The quartic certificates are
+\path{one_bit_symmetric_k65r4_risk1_3_universal_exact_certificates.json}
+and its \texttt{risk17\_50} counterpart. Verify either using
+\begin{verbatim}
+python verify_one_bit_symmetric_general.py CERTIFICATE.json
+\end{verbatim}
+This checker also verifies the exact bias filter and the rounded-down objective weights. For the two-free-bit cases, use the matching source-enumeration JSON and rational-certificate JSON together with
+\begin{verbatim}
+python verify_two_free_cubic_general.py CERTIFICATE.json
+\end{verbatim}
+The certificate names are \path{two_free_cubic_general_exact_k41r3_0_86.json}
+and \path{two_free_cubic_general_exact_k47r3_0_3.json}. For the larger $K=27$ two-coordinate family, place its source-enumeration file and all five certificate chunks beside the checker and run
+\begin{verbatim}
+python verify_two_free_cubic_certificates.py
+\end{verbatim}
+It independently reconstructs all $49149$ orbits and checks every rational dual certificate. The optional flag \texttt{--enumeration-only} checks coverage alone; \texttt{--chunk FILE} checks one certificate chunk.
+\endgroup
+\end{document}

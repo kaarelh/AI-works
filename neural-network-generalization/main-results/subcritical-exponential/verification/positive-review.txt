@@ -1,0 +1,124 @@
+INDEPENDENT AUDIT OF THE ALL-SAMPLE-SIZE POSITIVE-GAMMA ARGUMENT
+15 October 2026. Reviewer: allwidth_bridge.
+
+STATUS: PASS. Reviewed positive-all-n.txt as written on 15 October 2026,
+together with the underlying product-bump comparator, paired spectral
+bounds, Tropp tail-Gram bound, clipping identity, and the established
+actual-network large-deviation proof. The one-logarithm squared-ReLU
+sampling lemma was separately audited against Lee's primary source by
+allwidth_adversarial_review; its application below is correct. No new
+assumption about relative weights of minimizing signs is introduced.
+
+1. CUTOFF AND ALL-n QUANTIFIERS
+For n>=exp(log^3(d+1)), take the largest odd r with
+ A D_r log(2D_r)<=n.
+Then n<A D_(r+2)log(2D_(r+2)). The upper entropy estimate on D_(r+2)
+combined with this strict next-threshold bound proves r>=c log^2 d.
+(The current cutoff inequality alone would not prove the lower bound;
+maximality is essential.) Choosing c_L<h(alpha)/2 makes r<=alpha d
+uniformly for n<=exp(c_L d). This is a separate fixed-n sample event
+for each n, with constants uniform in n; no simultaneous-prefix event
+or Bayesian risk monotonicity is asserted or required.
+
+2. SQUARED COERCIVITY AND THE COARSE GRAM FACTOR
+The Walsh evaluation vector has exact squared norm D_r and covariance I.
+Multiplying it by parity leaves covariance unchanged. Thus the new
+sampling theorem applies directly, with deterministic labels f(X_i).
+Its population balance gives empirical negative-square coercivity at
+n>=A D_r log(2D_r), with a numerical constant such as 1/4.
+
+At the next-shell upper endpoint, paired normalization is exact:
+ D_(r+2) is comparable to binom(d+1,r+2).
+Consequently
+ n ell_r/tau_r <= C A log(e(d+1)/r),
+ n d s2_r/tau_r^2 <= C A ((d+1)/r) log(e(d+1)/r).
+The resulting coarse factor
+ b_r <= C[1+sqrt(A rho^(-1)log(e/rho))+A log(e/rho)]
+is correct. It need not be bounded uniformly as rho goes to zero.
+Tropp's logarithm is d, not log n. The deterministic far-pair mask,
+Bernoulli-to-fixed-size transfer, and iid collision step were checked
+previously; the residual terms vanish uniformly here because
+r>=c log^2 d and 2c_L<log 2-h(1/4).
+
+3. EVERY MINIMIZER IS CONTROLLED ON THE SAME SAMPLE EVENT
+The comparator event bounds B=||z||_K^2<=C_(L,a)n d^beta for every
+minimizer, since the exponential lower threshold absorbs its additive d.
+For the low projection P, training margins imply (fP)_-<=|z-P| on the
+sample. The RKHS evaluation inequality and squared coercivity therefore
+give ||P||_2^2<=4 B b_r tau_r/n. This bound is simultaneous for all
+minimizers, with no posterior selection or finite-net argument.
+
+For u=r+2ceil(10log(d+1)), the middle band b satisfies
+ ||b||_2^2<=B ell_r<=C A rho^(-beta)log(e/rho).
+It is legitimate that this norm need not vanish. The final tail t has
+ ||t||_2^2<=B lambda_(u+1)=o(1)
+uniformly in n. In detail, the two-sided sharp bounds are used at the
+two endpoints only, so there is only one C_L factor:
+ lambda_(u+1)/ell_r
+ <=C_L (r/u)^(1+beta) binom(d+1,r+2)/binom(d+1,u+2)
+ <=C_L 4^(-(u-r)/2).
+The last factor is at most (d+1)^(-10log4), beating the polynomial
+upper bound on B ell_r. This avoids incorrectly accumulating C_L at
+each of O(log d) successive shell ratios. Also u/r=1+o(1) uniformly.
+
+4. THE EXACT CLIPPING IDENTITY IS STRONG ENOUGH
+For every cube function h, the Jensen identity gives
+ |E f clip(h/a)|<=||Delta h||_1/(ad).
+For degree at most u this is at most u||h||_2/(ad), since Delta has
+Fourier eigenvalues at most u. This is the crucial u/d factor.
+The weaker single-edge gradient estimate would lose a square root and
+would not by itself establish the current all-n conclusion.
+
+Because P and b are orthogonal, multiplying their squared norms by
+(u/d)^2 gives exactly
+ C[ rho^(2-beta)
+   +sqrt(A)rho^(3/2-beta)sqrt(log(e/rho))
+   +A rho^(2-beta)log(e/rho)] +o(1).
+All powers are positive for beta in (0,1/2], so a sufficiently small
+fixed alpha works, after fixing A and all depth-dependent constants.
+The original global margin on z yields clip(z/a)=sign(z), and the
+Lipschitz error from t is ||t||_2/a=o(1). Hence every minimizer has
+absolute parity correlation at most 1/4 and error at least 3/8.
+
+5. SMALL n
+For n<=exp(log^3(d+1)), an odd cutoff s asymptotic to d^(1/3) gives
+B lambda_(s+1)=o(1) uniformly, since the eigenvalue's inverse logarithm
+is of order d^(1/3)log d. The elementary polynomial-threshold lemma
+then gives error 1/2-o(1). The n=0 comparator is just the constant
+field and requires no random-sample event.
+
+Minor drafting correction communicated to the author: in the Q^2 proof,
+P Q^2 has degree<d and f P Q^2 is nonnegative; f P Q^2 itself need not
+have degree<d. This does not affect the intended argument.
+
+6. POSTERIOR AND CONFIDENCE TRANSFER
+At fixed d,S, there are finitely many sign orthants. The actual-network
+large-deviation proof is valid at speed N^gamma for every fixed
+0<gamma<1: hidden empirical covariances concentrate exponentially at
+speed N; readout is conditionally Gaussian; exponential equivalence
+with covariance K transfers the quadratic rate. Strict and closed
+margin orthants have the same infimum by radial dilation. A finite
+energy gap then forces posterior mass 1-o(1) on minimizing signs.
+There is no need for convergence, symmetry, or Gaussian approximation
+of tie weights, including gamma>=1/2.
+
+Every supported sign has risk>=3/8; hence any limiting or nonlimiting
+mixture has R_N>=3/8-o(1). At each finite N,
+ R_N<=1/3+(2/3)F_N,
+where F_N=P_x{correct-label posterior probability<=2/3}. Therefore
+ liminf_N F_N>=1/16.
+This does not require continuity of the threshold functional at ties.
+The strict >2/3 correctness convention is handled exactly.
+
+The fixed-n sample events have total failure at most 2/20+o(1), so the
+claimed probability 3/4 has slack. Constants may depend on fixed depth
+and margin; width is taken to infinity before dimension, as in the model.
+
+EXACT TEX FOLLOW-UP AUDIT
+Also checked paper/adaptive.tex and paper/positive.tex after assembly.
+PASS. The stronger shared estimate n ell_u<=d^(-10)tau_r has ample
+slack: 4^(-ceil(10log(d+1))) is at most d^(-13.86), while all remaining
+constants are fixed and H_r<=O(log d). The small-cutoff lemma is correct.
+Optional precision edit sent: state 0<=s<d in the PTF lemma, or explicitly
+make the s>=d case trivial, since its written dimension proof uses a
+nonnegative auxiliary degree. Every actual application has s<d.

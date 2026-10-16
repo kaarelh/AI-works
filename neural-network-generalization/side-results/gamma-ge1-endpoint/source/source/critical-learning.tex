@@ -1,0 +1,69 @@
+\section{Critical rate complexity and Bayesian generalization}
+\begin{theorem}[Polynomial rate-sublevel counting]\label{thm:critical-counting}
+For every fixed depth $L\geq2$, with activation $\tanh$, there is a polynomial
+$B_L$ such that, for every $K\geq1$,
+\[
+ \log\#\{f:\mathcal X\to\{-1,1\}:J(f)\leq K\}\leq B_L(d,K).
+\]
+Moreover every function in this sublevel set has a depth-$L$ implementation
+of width and weight magnitude at most $\operatorname{poly}_L(d,K)$.
+\end{theorem}
+\begin{proof}
+Take a minimizing tuple for $J(f)\leq K$ in
+Theorem~\ref{thm:critical-tilts}, with margin $a=1/2$.
+Its vector $\beta$ satisfies $\|\beta\|_1\leq4K$.
+Let $g_r^*=8K^2$ and recursively
+$g_s^*=3g_{s+1}^*+2(g_{s+1}^*)^2$ for $s<r=L-1$.
+Then $G=1+\max_s g_s^*$ is a polynomial in $K$ at fixed depth,
+and all the quadratic tilt matrices have entrywise norm at most $G$.
+The feature covariances satisfy
+$Q_s=\mathsf F_{\Gamma_s}(Q_{s-1})$, and the optimal output is
+$z=Q_r\beta$.
+Proposition~\ref{prop:tilt-compress} supplies a finite implementation with
+margin at least $3/4$, common width bounded by a polynomial in $d,K$, and
+weights bounded by another such polynomial.
+The bounds in its construction can be chosen uniformly for every function
+in the sublevel set. Lemma~\ref{lem:tilt-count} counts the resulting fixed
+parameter grid and gives the stated bound.
+For the complexity statement, increase width by zero padding if necessary
+so that the width also bounds every weight magnitude. This preserves the
+network for $\tanh$, since $\tanh(0)=0$.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:critical-learning}]
+The uniform cloning bound and the exact margin rate imply
+\[
+ J(f)\leq Q_L(d,C)/2,\qquad C=C_L(f).
+\]
+Let
+\[
+ \mathcal A_f=\{g:J(g)\leq J(f)+1\}.
+\]
+Its logarithmic cardinality is bounded by
+$B_L(d,Q_L(d,C)/2+1)$, and hence by a polynomial $p_L(d,C)$.
+For each $g\notin\mathcal A_f$, the exact rate formula gives
+\[
+ \frac{\mu_{N,1}(A_{N,g})}{\mu_{N,1}(A_{N,f})}\longrightarrow0
+ \quad(N\to\infty).
+\]
+Indeed the rate gap is greater than one; an infinite rate causes no
+problem. At fixed $d$ there are finitely many Boolean functions, so
+summing these ratios yields
+\[
+ \frac{\pi_{N,1}(\mathcal A_f^c)}{\pi_{N,1}(f)}\longrightarrow0.
+\]
+Thus there is $N_0\geq C$ such that for every $N\geq N_0$ this ratio is
+at most $\varepsilon/6$. This width threshold depends on the target and
+accuracy, but not on the input distribution or training sample.
+Lemma~\ref{lem:relevant}, with $a=\tau=\varepsilon/6$ and
+$H=p_L(d,C)$, now gives $R_D(\Pi_{N,1})\leq\varepsilon/3$ with
+probability at least $1-\delta$ whenever
+\[
+ n\geq\frac6\varepsilon[p_L(d,C)+\log(1/\delta)].
+\]
+At every input where the correct-label posterior probability is at most
+$2/3$, the posterior error is at least $1/3$. The distributional mass of
+such inputs is at most $3R_D(\Pi_{N,1})\leq\varepsilon$.
+This proves the claimed confidence guarantee, including its strict
+success threshold.
+\end{proof}

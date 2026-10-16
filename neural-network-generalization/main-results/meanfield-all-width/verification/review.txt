@@ -1,0 +1,69 @@
+Independent adversarial review of the all-width mean-field route
+Reviewer: /root/allwidth_adversarial_review
+Date: 2026-10-15
+Final status: PASS. Mathematical core and complete assembled manuscript checked; all requested corrections resolved. The chronological audit details follow.
+
+1. Capped entropy dual (sparse-dual.tex)
+PASS. The compact l1 ball ensures attainment, bounded observables ensure differentiability, and the concave optimum's normal-cone condition gives the exact identity
+Psi_G(q) = D(nu_lambda || mu) + G ||q-E_nu F||_infinity.
+This requires neither densities for mu nor a nonsingular covariance. The claim is valid for arbitrary q, not just empirical moments. Every optimizer has the stated property.
+
+2. Sparse certificate net (sparse-dual.tex)
+PASS. Sampling signed coordinate atoms of norm G (and zero for remaining probability) gives E V=lambda. Each scalar atom-observable pairing belongs to [-G,G], so Hoeffding gives the claimed G^2/(2s) error. Jensen has the correct direction for E log Z_V <= log E Z_V. Hence some sparse certificate preserves the dual objective up to that error. The cardinality (2D+1)^s is a valid upper bound, even though many atom sequences coincide.
+
+3. Nonasymptotic probability and conditional application
+PASS. For each fixed sparse certificate, E exp(N[v dot q_N-Lambda(v)])=1 exactly. The sparse net depends only on G,s,D, not on the underlying probability measure. Conditional on preceding layers the Gaussian reference covariance may be random or singular, but the same deterministic finite net and the same bound apply. No union over all previous-layer realizations is needed. Although the maximizer is data dependent, it is used only for deterministic existence after controlling a measurable supremum, so no measurable selection assumption is required.
+
+4. Matrix symmetrization
+PASS. For F_ij=h_i h_j and empirical symmetric q, replacing Gamma by (Gamma+Gamma^T)/2 preserves the objective, partition function, and tilted law, while not increasing entrywise l1 norm. Ordered-pair coordinates contribute D=m^2 and log(2D+1) <= (2d+2)log 2 for m=2^d.
+
+5. Empirical covariance to deterministic tilted tower
+PASS in proposed form. Each Gamma_s must first be obtained using the ACTUAL preceding empirical covariance Qhat_(s-1). Rebuilding Q_s=F_(Gamma_s)(Q_(s-1)) then yields
+error_s <= K/G_s + b(G_s) error_(s-1), b(G)=8(1+G)^2.
+Choosing caps backwards controls the product amplification. A fixed number of layers permits polynomial dependence on K, despite rapidly growing exponents as depth varies. No claim of polynomial dependence on variable depth is warranted.
+
+6. Readout representer and margin constants
+PASS for the revised convention T=N||v||_2^2 <= K. The minimum-energy readout in the original N-dimensional weight space has energy E=N||v_*||^2/2 <= K/2. Ordinary convex quadratic-program KKT applies because the original full-margin output is strictly feasible. With Qhat=H^T H/N, the minimizer has output Qhat beta and ||beta||_1=2E/a <= 2K for a=1/2. This identity remains valid when Qhat is singular; inversion is unnecessary. Covariance error 1/(32K) causes output error at most1/16. Doubling beta therefore gives a tilted-tower output with margin at least7/8, beta l1 norm at most4K. Finite realization error1/8 then leaves margin at least3/4.
+
+7. Dimension-free tilted-covariance comparison
+PASS. Independently checked the differentiation argument in critical-compression.tex. Gaussian interpolation plus quotient differentiation gives the claimed derivative formula. Bounds M1(V)<=2G, M2(V)<=6G, M1(F)<=2, M2(F)<=6 imply Lipschitz constant 3+10G+4G^2 <=8(1+G)^2. Regularization of singular covariances and dominated convergence are justified because V and all required derivatives are bounded. No exponentially large partition-function reciprocal enters the derivative estimate.
+
+8. Finite-network compression and count
+PASS in existing proof with the revised margin bookkeeping above. Sampling tilted Gaussian rows conditional on the previously constructed finite layer realizes the prescribed covariance map. Entrywise concentration needs only log(m^2)=O(d), while each row's density ratio is bounded by exp(2G), so scalar weight truncation costs sqrt(G+log(number of weights)), not exp(G). The compressed network has polynomial width and bounded weights at fixed depth. The cube-indexed beta and Gamma arrays are only existential devices for choosing finitely many actual network weights; they are not stored in the network or counted as parameters. An explicit disclaimer that no efficient construction algorithm is claimed remains appropriate.
+
+9. Aggregate-mass and all-width bridge
+STRUCTURALLY PASS; final numerical constants pending assembled version. Union the conditional layer exceptions and the actual N-dimensional Gaussian readout norm tail. Do not use an m-dimensional readout representation for the tail, which would restore an exp(d) factor. The union bound has form exp(poly_L(d,K)-c N K). The target mass lower bound exp(-A N/2), valid for every N>=C, then gives negligible out-of-class mass at a polynomial threshold if K is a sufficiently large multiple of A. Below the threshold, the elementary realizable Bayesian bound using log(1/pi_N(f))<=A N/2 gives a polynomial sample bound. This division covers all widths N>=C without using a limiting argument.
+
+No fatal flaw found in the mathematical core reviewed so far. The result depends crucially on bounded smooth tanh activations, fixed depth, a global positive margin on the finite input cube, and exact noiseless Bayesian conditioning.
+
+UPDATE: full bridge reviewed from bridge-route.txt.
+
+All numerical constants and both width branches PASS. Specifically:
+* G_r=32 r K^2, G_s=8 G_(s+1)(1+G_(s+1))^2 imply exactly G_s=32 r K^2 product_(t>s)b_t. Summing propagated K/G_s errors gives1/(32K).
+* q_s=ceil(G_s^2/2) makes sparse approximation error<=1. At N>=ceil(max(1,2q_1 log(2m^2+1)/(K-1))), each conditional hidden-layer failure probability is<=exp(-NK/4).
+* For T=N||v||^2, NT has chi-square_N distribution. The exponent1/4 mgf gives P(T>K)<=exp(-NK/4+(N/2)log2)<=exp(-NK/8) for K>=4.
+* Union over r hidden layers and one readout gives exactly L exp(-NK/8), with no independence assumptions on the layer certificates.
+* Choosing K=4A+8log(6L/epsilon) gives K/8-A/2=log(6L/epsilon). Dividing aggregate mass by target mass therefore yields <=epsilon/6 for every N>=T_K (indeed for every N>=1 whenever the aggregate estimate is available).
+* The finite compressed function class is independent of N. Rounding bounds the number of distinct represented Boolean sign functions even though the original weight parameters are continuous.
+* For C<=N<T_K, E_sample posterior_mass(error>epsilon/6)<=exp(-n epsilon/6)/pi_N(f). Applying Markov at epsilon/6 gives exactly the stated n >=(6/epsilon)[A T_K/2+log(6/(epsilon eta))]. This also covers T_K<C, when that width branch is empty.
+* In both branches posterior risk<=epsilon/3 implies the mass of points with correct-label probability<=2/3 is<=epsilon; the strict correctness convention is handled correctly.
+
+Conclusion: the complete bridge mathematically proves polynomial sample complexity uniformly over all N>=C_L(f), at fixed depth L. No limiting interchange, invertible empirical covariance, dimension-exponential union bound, or uniform-in-N asymptotic approximation is needed. The remaining review task is checking the assembled paper accurately transcribes these checked ingredients.
+
+FINAL ASSEMBLED-MANUSCRIPT AUDIT
+Reviewed meanfield-all-width.tex and all three local inputs cloning.tex, sparse-dual.tex, compression.tex after first successful compilation.
+
+PASS. The manuscript accurately transcribes all checked ingredients. The theorem explicitly quantifies fixed L, every d>=1, every finite-complexity f, every N>=C_L(f), every input distribution, and every epsilon,delta in(0,1). Its sample bound is independent of N and polynomial in target complexity/input dimension with only logarithmic epsilon dependence beyond1/epsilon. The explicit replacement P_L=max(H_L,A T_K/2) covers both width branches.
+
+The standalone Gaussian operator-norm estimate also checks: a1/4 sphere net of cardinality<=9^N gives norm<=2 max|u^T G v|; b_L^2=16log9+8log(4L) gives2*9^(2N)*exp(-b_L^2 N/8)=2(4L)^(-N)<=1/(2L). Conditional free-row Gaussian components are independent of the cylinder constraints.
+
+The modified finite-realization proposition correctly starts at margin7/8, incurs at most1/8 error, and yields margin>=3/4 with output weights<=4K/n. The explicit count uses that same bound. The final risk-to-confidence step includes equality at2/3 in the failure event.
+
+Only requested correction: the cloning proposition should explicitly assume activation supremum norm<=1, since the displayed constants use this. Its current phrase "bounded1-Lipschitz activation" is broader than the proved parameter-free constant statement. This does not affect the tanh theorem and was communicated to the author for correction.
+
+There is no mathematical dependence on an earlier paper: the target-mass proof, sparse certificate argument, covariance interpolation, finite realization/count, aggregate estimate, and posterior argument all appear in this manuscript. Standard Hoeffding, Gaussian moment, and convex quadratic-program facts are invoked in the usual self-contained-paper sense.
+
+AUTHOR RESOLUTION
+The requested normalization correction was incorporated: the cloning proposition now explicitly assumes |phi|<=1 and Lipschitz constant at most one. The final paper was rebuilt twice without warnings and visually inspected.
+
+RESOLVED: verified author corrected cloning.tex to assume |phi|<=1 and Lipschitz constant<=1 explicitly. The added growth bounds G_1=O_L(K^{2*3^{L-2}}) and T_K=O_L(d K^{4*3^{L-2}-1}) follow directly from the backward cubic recursion and q_1=ceil(G_1^2/2), K>=4. Final assembled-manuscript audit is PASS with no outstanding mathematical correction.

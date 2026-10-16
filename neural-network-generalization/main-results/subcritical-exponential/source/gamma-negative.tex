@@ -1,0 +1,215 @@
+\section{The Gaussian sign posterior: negative exponents}
+\label{sec:negative-gamma}
+
+Let $G\sim\mathcal N(0,K)$ on the finite cube, and condition on
+\[
+ \mathcal A_S=\{f(X_i)G(X_i)>0:\ 1\le i\le n\}.
+\]
+Write $m=\mathbb E[G\mid\mathcal A_S]$ and
+$q_S(x)=\mathbb P\{f(x)G(x)>0\mid\mathcal A_S\}$.
+We use the buffered threshold
+\[
+ \theta=\frac{13}{20},\qquad
+ c_\theta=\sqrt{2\pi}\left(\frac1e-\frac7{20}\right)>0,
+ \qquad F_\theta(S)=\mathbb P_x\{q_S(x)\le\theta\}.
+\]
+The buffer $\theta<2/3$ will preserve the strict confidence convention
+when taking the finite-width limit.
+
+\begin{lemma}[Gaussian mean and confidence]
+\label{lem:negative-mean-confidence}
+If $s$ is the number of distinct training inputs, then
+\[
+ \|m\|_K^2\le s\le n,\qquad f(X_i)m(X_i)>0.
+\]
+Let $\sigma_x^2=\operatorname{Var}(G(x)\mid G_S)$, with $S$ listing
+the distinct inputs. If $\sigma_x>0$ and $q_S(x)>\theta$, then
+$f(x)m(x)>c_\theta\sigma_x$.
+For every Fourier cutoff $v$, moreover,
+\begin{equation}\label{eq:negative-variance-tail}
+ \mathbb P_x\{\sigma_x^2<\tau_v/2\}
+       \le\frac{2n\ell_v}{\tau_v},
+ \qquad
+ \|m-\Pi_{\le v}m\|_2^2\le n\ell_v.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Whiten the training vector as $G_S=K_{SS}^{1/2}\xi$.
+The sign constraints form a homogeneous cone in $\xi$. Since a standard
+Gaussian's radius is independent of its direction, conditioning leaves
+$\mathbb E\|\xi\|_2^2=s$. Jensen's inequality and Gaussian regression
+therefore give
+\[
+ m_S^{\mathsf T}K_{SS}^{-1}m_S\le s,
+ \qquad m=K_{\mathcal X,S}K_{SS}^{-1}m_S.
+\]
+The squared RKHS norm of the regression vector is the first quadratic
+form, and its signed training values are positive.
+
+The conditional scalar variable $Y=f(x)G(x)$ has a log-concave density:
+it is a marginal of a Gaussian restricted to a convex set, by
+Pr\'ekopa's marginal theorem \cite{prekopa1973}. Its cdf $H$ is also
+log-concave. For $\mu=\mathbb E Y$, Jensen's inequality and the probability
+integral transform give
+\[
+ \log H(\mu)\ge\mathbb E\log H(Y)=-1,
+ \qquad \mathbb P\{Y>\mu\}\le1-e^{-1}.
+\]
+Conditioning first on $G_S$ expresses the density of $Y$ as a mixture
+of Gaussian densities of common variance $\sigma_x^2$. It is bounded
+above by $(\sqrt{2\pi}\sigma_x)^{-1}$. If $q_S(x)>\theta$, this first
+forces $\mu>0$, and then
+\[
+ \theta<q_S(x)\le1-e^{-1}
+                  +\frac{\mu}{\sqrt{2\pi}\sigma_x}.
+\]
+This proves the confidence margin.
+
+To bound residual variances, write $G=G_{\le v}+G_{>v}$ independently.
+Conditioning additionally on the entire low-degree field can only
+reduce a Gaussian conditional variance. The remaining covariance is
+\[
+ Q_v-Q_{v,\mathcal X,S}Q_{v,SS}^{\dagger}Q_{v,S,\mathcal X}.
+\]
+The subtracted matrix is positive semidefinite, bounded by $Q_v$, and
+has rank at most $s$. Its normalized trace is at most $n\ell_v$.
+Markov's inequality proves the first bound in
+\eqref{eq:negative-variance-tail}; this automatically includes the
+observed points, where the full residual variance vanishes.
+The second bound follows from Fourier orthogonality and
+$\|m\|_K^2\le n$.
+\end{proof}
+
+\begin{theorem}[An exponential lower bound for the sign posterior]
+\label{thm:negative-all-n}
+For every fixed depth $L\ge2$, there is $c_L>0$ such that, for every
+sufficiently large $d$ and each integer $0\le n\le e^{c_Ld}$,
+\[
+ \mathbb P_S\{F_{13/20}(S)\ge3/8\}\ge3/4.
+\]
+Consequently the same lower bound holds for the $\liminf$ of the
+finite-width strict-$2/3$ confidence-failure fraction, for each fixed
+$\gamma<0$. The width limit is taken at fixed $d$ and training sample.
+\end{theorem}
+
+\begin{proof}
+We give the cutoff estimates explicitly. Fix the sampling-failure
+probability at a sufficiently small universal constant and let $A$ be
+the resulting constant in Lemma~\ref{lem:parity-squared-balance}.
+Choose the largest odd $r$ such that
+\[
+ n\ge A D_r\log(2D_r).
+\]
+First suppose $n\ge\exp((\log(d+1))^3)$. Then the adaptive cutoff
+estimates of Lemma~\ref{lem:adaptive-cutoff} give
+$r\ge(\log d)^2/4$ for large $d$. By reducing $c_L$ we may ensure
+$r\le\alpha d$, for a fixed $\alpha<1/64$ to be chosen below.
+Write $\rho=r/d$ and $L_\rho=\log(e/\rho)$.
+Maximality and the sharp paired eigenvalue estimates give
+\begin{equation}\label{eq:negative-cutoff-bounds}
+ \frac{n\ell_r}{\tau_r}\le C_A L_\rho,
+ \qquad
+ \|Q_{r,SS}\|_{\mathrm{op}}\le b_r\tau_r,
+ \qquad b_r=C_{L,A}\left(1+\sqrt{L_\rho/\rho}+L_\rho\right),
+\end{equation}
+with probability at least $1-\delta$, where $\delta$ is a sufficiently
+small fixed constant. Indeed,
+$n<A D_{r+2}\log(2D_{r+2})$,
+$D_{r+2}\asymp\binom{d+1}{r+2}$, and
+$\log D_{r+2}\le C r\log(ed/r)$. The ratio estimate
+\eqref{eq:ratio} proves the first bound. For the Gram bound use
+Lemma~\ref{lem:gram-general}, with
+\[
+ \frac{nd\,s_{2,r}}{\tau_r^2}\le C_A L_\rho/\rho,
+ \qquad \frac{n\ell_r}{\tau_r}\le C_A L_\rho.
+\]
+The far-pair and collision errors vanish uniformly in this range when
+$c_L$ is sufficiently small.
+
+Let $p=\Pi_{\le r}m$. On the squared-coercivity event,
+training consistency and the RKHS evaluation inequality imply
+\[
+ \frac14\|p\|_2^2
+ \le\frac1n\sum_i(f(X_i)p(X_i))_-^2
+ \le\frac1n\sum_i(m(X_i)-p(X_i))^2
+ \le\frac{\|m\|_K^2}{n}\|Q_{r,SS}\|_{\mathrm{op}}
+ \le b_r\tau_r.
+\]
+Choose an odd $u=r+O(\log d)$, with a sufficiently large fixed implicit
+constant. Compare the sharp eigenvalue bounds at the two endpoints:
+$\ell_u/\ell_r\le C_L\binom{d+1}{r+2}/\binom{d+1}{u+2}$,
+up to a bounded power ratio. The binomial ratio is geometrically small
+in $u-r$, uniformly for $r\le\alpha d$. The sharp level masses
+and the bound $r\ge(\log d)^2/4$ therefore give
+\begin{equation}\label{eq:negative-high-cutoff}
+ \tau_u=(1-o(1))\tau_r,\qquad n\ell_u=o(\tau_r).
+\end{equation}
+These estimates are uniform over the sample-size range under
+consideration: the removed band has trace $O((\log d)/r)\tau_r$,
+and the geometric decay over $O(\log d)$ levels absorbs all polynomial
+factors in \eqref{eq:negative-cutoff-bounds}.
+Put $h=\Pi_{\le u}m$ and $t=m-h$. Orthogonality yields
+\begin{equation}\label{eq:negative-low-norm}
+ \|h\|_2^2\le4b_r\tau_r+n\ell_r
+             \le C_{L,A}\tau_r(b_r+L_\rho),
+ \qquad \|t\|_2^2=o(\tau_r).
+\end{equation}
+
+Lemma~\ref{lem:negative-mean-confidence} and
+\eqref{eq:negative-high-cutoff} show that outside an $o(1)$ fraction
+of inputs, $\sigma_x^2\ge\tau_r/3$ and
+$|t(x)|\le c_\theta\sqrt{\tau_r}/(2\sqrt3)$.
+Set $a_r=c_\theta\sqrt{\tau_r}/(2\sqrt3)$.
+At every remaining input where $q_S(x)>\theta$, we have
+$f(x)h(x)>a_r$. Consequently
+\begin{equation}\label{eq:negative-confidence-clipping}
+ \mathbb E f\,\operatorname{clip}(h/a_r,-1,1)
+ \ge1-2F_\theta(S)-o(1).
+\end{equation}
+For any polynomial $h$ of degree at most $u$,
+Lemma~\ref{lem:clipped-parity} gives
+\[
+ \left|\mathbb E f\,\operatorname{clip}(h/a_r,-1,1)\right|
+ \le\frac{\|\Delta h\|_1}{a_r d}
+ \le\frac{u\|h\|_2}{a_r d},
+ \qquad \Delta=\sum_{j=1}^dD_j.
+\]
+For clarity, the first inequality follows directly by setting $q=fh$
+and letting $R$ average the one-coordinate flips. Then
+$Rq=-q+(2/d)f\Delta h$. Stationarity, Jensen's inequality and the
+triangle inequality imply
+$|\mathbb E|q+a_r|-\mathbb E|q-a_r||
+\le(2/d)\|\Delta h\|_1$.
+Use $\operatorname{clip}(q/a_r,-1,1)
+=(|q+a_r|-|q-a_r|)/(2a_r)$.
+The second inequality uses the Walsh multiplier bound
+$\|\Delta h\|_2\le u\|h\|_2$.
+Thus \eqref{eq:negative-low-norm} bounds the absolute value in
+\eqref{eq:negative-confidence-clipping} by
+\[
+ C_{L,A,c_\theta}\rho
+       \sqrt{1+\sqrt{L_\rho/\rho}+L_\rho}+o(1),
+\]
+which tends to zero as $\rho\downarrow0$. Choose $\alpha$ small enough
+that it is at most $1/8$ for $0<\rho\le\alpha$, and then take $d$
+large enough to absorb the vanishing errors. This proves
+$F_\theta(S)\ge3/8$. The sampling and Gram events have combined
+probability at least $3/4$ after the initial fixed choices.
+
+It remains to cover smaller samples, including cases where the cutoff
+$r$ does not exist. If $n<\exp((\log(d+1))^3)$, choose an odd
+$v\asymp d^{1/3}$. The sharp spectrum gives
+$n\ell_v/\tau_v=o(1)$, because
+$\log\binom{d+1}{v+2}\asymp v\log(d/v)$ dominates $\log(n+1)$.
+Let $p=\Pi_{\le v}m$. By
+Lemma~\ref{lem:negative-mean-confidence}, outside an $o(1)$ fraction
+of inputs, the residual variance is at least $\tau_v/2$ and
+$|m-p|<c_\theta\sqrt{\tau_v}/(2\sqrt2)$.
+Therefore confidence above $\theta$ implies $fp>0$ there.
+Lemma~\ref{lem:ptf-parity}, with $v=o(\sqrt d)$, gives
+$F_\theta(S)\ge1/2-o(1)\ge3/8$ for every such training sample.
+For $n=0$ the conclusion also follows immediately from $q_S=1/2$.
+Finally, the conditional width limit and $\theta<2/3$ give the asserted
+finite-width $\liminf$ statement.
+\end{proof}

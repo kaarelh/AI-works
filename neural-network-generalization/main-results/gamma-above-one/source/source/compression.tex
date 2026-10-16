@@ -1,0 +1,195 @@
+\begin{theorem}[Compression]\label{thm:compression}
+Let $d\geq1$, $L\geq2$, and let $\phi:\mathbb R\to[-1,1]$ be
+$1$-Lipschitz. Suppose a width-$N$ network $W$ satisfies
+$\kappa_N(W)\leq K$, where $K\geq1$. Set
+\begin{equation}\label{eq:compression-parameters}
+ \begin{gathered}
+ \eta=\frac{1}{12(L-1)},\qquad
+ \rho=\eta 2^{-L}K^{-(L-1)/2},\\
+ m_L(d,K):=M=\max\left\{\lceil9K\rceil,
+ \left\lceil256\rho^{-4}\bigl(d+\log(L/\rho)\bigr)\right\rceil\right\}.
+ \end{gathered}
+\end{equation}
+There is a width-$M$ network $\widetilde W$ such that
+\begin{equation}\label{eq:compression-conclusion}
+ \max_{x\in\{-1,1\}^d}
+ |z_{\widetilde W}(x)-z_W(x)|\leq\frac1{12},
+ \qquad \kappa_M(\widetilde W)\leq4K.
+\end{equation}
+If $W$ implements a Boolean function $g$ with strict margin $1/2$,
+then multiplying the readout of $\widetilde W$ by $3/2$ gives a
+width-$M$ implementation of $g$ with strict margin $1/2$,
+weighted norm at most $9K$, and every weight of absolute value at most
+$M$. In particular, $C_L(g)\leq M$. For fixed $L$, $M$ is bounded by a
+polynomial in $d$ and $K$.
+\end{theorem}
+
+\begin{proof}
+We first truncate large entries and then sample the hidden neurons.
+All norms of rows below are Euclidean, and all matrix norms with
+subscript $F$ are Frobenius norms.
+
+\emph{Truncation.}
+For $2\leq s\leq L$, let $r_i^s=\|W^s_{i,*}\|_2$. In each nonzero
+row, delete entries larger in absolute value than
+\[
+ \tau_i^s=\frac{2r_i^s}{\rho\sqrt N}.
+\]
+Leave zero rows unchanged, write $\overline W^s$ for the resulting
+matrices, and set $\overline W^1=W^1$. Here and below $W^L$ is the
+single readout row. Because all hidden activations have absolute value
+at most one, deleting a row's large entries changes its preactivation
+by at most
+\[
+ \sum_{j:\,|W^s_{ij}|>\tau_i^s}|W^s_{ij}|
+ \leq \frac{(r_i^s)^2}{\tau_i^s}
+ =\frac\rho2\sqrt N\,r_i^s.
+\]
+The vector of changes at an internal layer therefore has norm at most
+$(\rho/2)\sqrt N\|W^s\|_F$. Every original or truncated internal
+matrix has operator norm at most $\sqrt K$, and the readout has norm
+at most $\sqrt{K/N}$. The activation is a contraction in Euclidean
+norm. Thus truncating layer $s<L$ changes the output by at most
+\[
+ \frac\rho2\sqrt{NK}\,K^{(L-s-1)/2}\sqrt{K/N}
+ =\frac\rho2 K^{(L-s+1)/2}\leq\frac\eta2.
+\]
+Truncating the readout changes it by at most
+$(\rho/2)\sqrt K\leq\eta/2$. These bounds also hold when other
+layers have already been truncated. Telescoping over the $L-1$
+truncations gives total output error at most $1/24$.
+
+\emph{Independent samples and three events.}
+For each hidden layer $s$, independently choose a list
+$I_s(1),\ldots,I_s(M)$ of independent uniform indices in
+$\{1,\ldots,N\}$. Repeated indices represent separate copies of a
+neuron. Define the fully sampled network by
+\begin{align*}
+ \widetilde W^1_{a,*}&=W^1_{I_1(a),*},\\
+ \widetilde W^s_{a,b}&=\frac NM
+      \overline W^s_{I_s(a),I_{s-1}(b)}
+      &&(2\leq s\leq L-1),\\
+ \widetilde W^L_b&=\frac NM\overline W^L_{I_{L-1}(b)}.
+\end{align*}
+For the analysis expose these independent lists in reverse order,
+$I_{L-1},\ldots,I_1$. At the stage sampling layer $m$, all earlier
+layers still have their original, truncated weights. Let
+$\overline h_j^m(x)$ denote their exactly computed activations. The
+estimated sum into a retained row $i$ of layer $m+1$ is
+\[
+ \frac NM\sum_{b=1}^M
+ \overline W^{m+1}_{i,I_m(b)}\overline h^m_{I_m(b)}(x).
+\]
+Its expectation is the corresponding full sum over $N$ neurons.
+Conditional on the later lists, its summands are independent and
+bounded in absolute value by $(N/M)\tau_i^{m+1}$. Hoeffding's inequality~\cite{hoeffding}
+shows that its deviation exceeds
+$(\rho/2)\sqrt N r_i^{m+1}$ with probability at most
+\[
+ 2\exp\left(-\frac{\rho^4 M}{32}\right).
+\]
+A zero row is estimated exactly. The bound is uniform in the retained
+row, so it remains valid after averaging over the later lists.
+
+Let $A$ be the event that all these row estimates, at all stages and
+all $2^d$ inputs, satisfy their deviation bounds. At the last hidden
+layer there is one output row; at every other stage there are $M$
+retained rows. Consequently
+\begin{equation}\label{eq:compression-hoeffding}
+ \Pr(A^c)\leq 2^{d+1}LM\exp(-\rho^4M/32)\leq\frac1{100}.
+\end{equation}
+For completeness, put $a=d+\log L+\log(1/\rho)$ and
+$M_0=\lceil256\rho^{-4}a\rceil$. Then
+$M_0\leq257\rho^{-4}a$, and $u\exp(-\rho^4u/32)$ decreases for
+$u\geq M_0$. Substituting $M_0$ and using $\log a\leq a-1$ bounds
+the logarithm of the right side before its final inequality by
+\[
+ -(7-\log2)d-6\log L-3\log(1/\rho)+\log514-1
+ \leq-\log100.
+\]
+This also proves the bound when $M$ was enlarged to be at least $9K$.
+
+Next define the total retained row mass using the \emph{original}
+row norms:
+\[
+ R=N\sum_{s=2}^{L-1}\sum_{a=1}^M(r^s_{I_s(a)})^2
+      +N\|W^L\|_2^2.
+\]
+Its expectation is
+\[
+ \mathbb E R
+ =M\sum_{s=2}^{L-1}\|W^s\|_F^2+N\|W^L\|_2^2
+ \leq MK.
+\]
+By Markov's inequality the event $B=\{R\leq8MK\}$ has probability
+at least $7/8$. In particular, on $B$ the retained row mass at each
+individual stage is at most $8MK$.
+
+Finally, direct calculation gives
+\begin{align*}
+ \mathbb E\left[\frac dM\|\widetilde W^1\|_F^2\right]
+     &=\frac dN\|W^1\|_F^2,\\
+ \mathbb E\|\widetilde W^s\|_F^2
+     &=\|\overline W^s\|_F^2 &&(2\leq s\leq L-1),\\
+ \mathbb E\left[M\|\widetilde W^L\|_2^2\right]
+     &=N\|\overline W^L\|_2^2.
+\end{align*}
+For an internal matrix, independence of the two adjacent layers'
+index lists makes each index pair uniform on $\{1,\ldots,N\}^2$;
+the factor $(N/M)^2$ is canceled by the $M^2/N^2$ sampling factor.
+Independence among different matrix entries is unnecessary.
+Thus $\mathbb E\kappa_M(\widetilde W)\leq K$, and the event
+$C=\{\kappa_M(\widetilde W)\leq4K\}$ has probability at least $3/4$.
+On $C$ every sampled internal matrix has operator norm at most
+$2\sqrt K$, and the sampled readout has norm at most $2\sqrt{K/M}$.
+
+The events need not be independent:
+\[
+ \Pr(A\cap B\cap C)\geq1-\frac1{100}-\frac18-\frac14>0.
+\]
+Fix a collection of lists in their intersection.
+
+\emph{Reverse-order telescoping.}
+Let $F_m$ be the network with hidden layers $m,\ldots,L-1$ sampled
+and layers $1,\ldots,m-1$ still original and truncated. Incoming
+weights to a sampled layer select its rows, and outgoing weights from
+a sampled layer are multiplied by $N/M$. This defines the intermediate
+networks with different widths in different layers. In particular,
+$F_L$ is the truncated network and $F_1$ is the fully sampled network.
+
+When comparing $F_{m+1}$ and $F_m$, layer $m$ computes the original
+truncated neuron functions before selection. The only new discrepancy
+is in the sums into the retained neurons of layer $m+1$.
+For $m=L-1$, event $A$ bounds the output discrepancy directly by
+$(\rho/2)\sqrt K\leq\eta/2$. For $m<L-1$, put $t=L-m$.
+Events $A$ and $B$ bound the Euclidean discrepancy in layer $m+1$'s
+preactivation by $(\rho/2)\sqrt{8MK}$. All matrices \emph{after}
+layer $m+1$ already equal their final sampled matrices, so their
+operator norms are controlled by $C$. Propagating the discrepancy
+therefore changes the output by at most
+\begin{align*}
+ \frac\rho2\sqrt{8MK}\,(2\sqrt K)^{t-2}
+       2\sqrt{K/M}
+ &=\rho\,2^{t-1/2}K^{t/2}\\
+ &\leq\eta\,2^{-3/2}\leq\frac\eta2,
+ \qquad 2\leq t\leq L-1.
+\end{align*}
+There are $L-1$ sampling stages, contributing at most $1/24$ in total.
+Adding the truncation error proves the approximation bound in
+\eqref{eq:compression-conclusion}; event $C$ proves its norm bound.
+
+If the original network has strict margin $1/2$, the sampled network
+has strict margin $5/12$. Multiplying its linear readout by $3/2$
+restores strict margin $1/2$ and multiplies the weighted norm by at
+most $9/4$. At width $M$ the resulting entrywise bounds are
+\[
+ |W^1_{aj}|\leq\sqrt{9KM/d},\qquad
+ |W^s_{ab}|\leq3\sqrt K\ (1<s<L),\qquad
+ |W^L_b|\leq3\sqrt{K/M}.
+\]
+Each is at most $M$ because $d\geq1$ and $M\geq9K\geq9$.
+The definition of $C_L$ now applies. Finally, substituting
+\eqref{eq:compression-parameters} gives
+$\rho^{-4}=12^4(L-1)^4 16^L K^{2(L-1)}$, which establishes the stated
+polynomial dependence at fixed depth.
+\end{proof}

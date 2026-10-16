@@ -1,0 +1,250 @@
+AUDIT: APPENDICES K AND L, AND RELATED CLAIMS ON SLIDES 30 AND 35
+Source: nnbayes-generalization.pdf, slides 104--110 (PDF pages); audited 2026-10-15.
+
+Executive status
+---------------
+K's deterministic formula-MDL conjunction ladder is essentially correct, once d>=3,
+a fixed finite gate vocabulary, and deterministic tie-breaking are specified. Its
+Bayesian weighted-majority comparison is also correct for the stated prefix-code
+prior. Several extensions in K are unsupported or need materially narrower wording;
+in particular that prefix-code mistake bound is not automatically a theorem for the
+strong-Gaussian-prior limit. K is tangential to the requested strong-prior PAC paper,
+so omission, with a clear scope statement, is appropriate.
+L correctly explains the assumptions used by the main proof. Its last paragraph
+understates the extra assumptions required for G and H.
+The additional total iid mistake, reverse-complexity, and rank-equivalence claims
+should not be included as established theorems.
+
+K.1. Rigorous deterministic conjunction ladder
+---------------------------------------------
+Take X={0,1}^d, d>=3, and formulas with binary AND, OR, XOR gates of cost 4,
+unary NOT of cost 2, constants of cost 3, and variable leaves of cost
+v=2+ceil(log_2 d). A formula's cost is the sum of token costs; a function's cost
+is the minimum formula cost. This cost admits a prefix code: token Kraft sum
+is at most d*2^{-v}+3*2^{-4}+2^{-2}+2*2^{-3} <=15/16, and node arities
+make complete prefix-notation formulas self-delimiting. Fix deterministic
+function tie-breaking and choose a minimum-cost consistent function.
+
+Target f=AND_{i=1}^d x_i. Present 1^d, then 0^d. Constants are cheaper than
+variables for d>=3. Thus at most the first of these two points is predicted
+correctly; 0^d is mispredicted by the surviving constant 1.
+
+At stage k=1,...,d-1, all points of Hamming weight below k have been shown,
+and 1^d was shown positive. For a consistent nonzero h, its GF(2) multilinear
+polynomial has coefficients c_S = XOR_{T subset S} h(1_T), so c_S=0 for
+|S|<k. Hence it has a monomial involving at least k distinct variables; any
+formula for h uses at least k variable leaves and k-1 binary gates, and costs
+at least kv+4(k-1).
+
+If equality holds, there are exactly k distinct variable leaves, no constant
+or NOT leaves, and exactly k-1 binary gates. The function is supported on
+these k variables. Any assignment other than all ones can be padded by zeros
+to a point of Hamming weight <k, where h vanishes. Its value at the all-ones
+assignment must be 1. Therefore h is precisely AND_S for a k-element set S.
+
+At every intermediate stage, the surviving k-conjunctions are exactly those
+whose point 1_S has not yet been shown: AND_{S'}(1_S)=1 for |S|=|S'|=k iff
+S=S'. Reveal 1_S for the currently selected conjunction. Each such prediction
+is wrong and eliminates exactly that conjunction among the minimum-cost
+survivors. All m=2^d points are eventually shown, with m or m-1 mistakes
+according to the initial constant tie. Also C(f)=dv+4(d-1)=Theta(d log d).
+Thus the worst-case deterministic mistake count is 2^{Theta(C/log C)}.
+
+Qualifications:
+* The literal "all but at most one" statement is false for some small d and
+  allowed ties. At d=1 variable x_1 is cheaper than a constant and is already
+  correct; at d=2 variables tie constants and an initial variable can make
+  both the initial all-ones and all-zeros examples correct. Restrict d>=3.
+* This is a formula-size theorem for the explicitly given costs. It is not a
+  proof for arbitrary circuit conventions, especially arbitrary shared DAGs.
+* The ordering can be fixed in advance for deterministic tie-breaking: simulate
+  the deterministic learner. Its short description requires that the learner's
+  tie-breaking rule itself have a fixed short description. An arbitrary
+  permutation tie-break can encode exponentially much information.
+* The alleged exact-DP computation was not provided; the proof above does not
+  rely on that unverified computation.
+
+K.2. The four prediction rules
+------------------------------
+(a) Prefix-code weighted majority. For pi(h)=2^{-C(h)} (unnormalized), Kraft
+says initial total weight W_0<=1. Every majority mistake removes at least half
+of the surviving weight. Since target weight 2^{-C(f)} is never removed,
+M<=C(f), for every adaptive realizable input sequence. This is correct.
+With normalized arbitrary pi, the general bound is
+M<=log_2(1/pi(f)). No stochastic-input assumption is needed.
+
+(b) Uniform consistent sampling with a doubling description budget. For a
+fixed finite class containing f, let q_t be the fraction eliminated by the
+next label. The sampled prediction errs with probability q_t and
+q_t <= -log(1-q_t). Summing gives expected mistakes <=log |H|. Restarting
+when a budget is exhausted, and doubling the budget, gives O(C(f)) expected
+mistakes, with an additive constant per restart. The adversary may use past
+randomness but cannot choose the current input after seeing the current
+private random prediction. A precise algorithm is required to state this.
+
+(c) Randomized MAP on the particular fixed conjunction-ladder ordering.
+If the learner draws uniformly from the surviving cheapest functions at each
+step, the k-th level contributes H_{binom(d,k)} expected mistakes: each
+point removes exactly one cheapest survivor, and has probability 1/r of
+being the currently sampled one when r remain. Summing k gives Theta(d^2),
+or Theta(C^2/log^2 C), plus the initial constant steps. This justifies the
+soft-Theta(C^2) claim for this particular oblivious ordering. It does not
+establish the table's apparent universal "worst case over orderings" claim.
+An adversary who sees the current sampled function can instead force every
+step to be a mistake, so the adversary protocol matters.
+
+(d) Strong-prior majority on the ladder. If the only surviving minimum-cost
+functions at level k are the k-conjunctions and all have equal prior mass,
+then a level makes at most one majority mistake: its displayed point is
+positive for exactly one current candidate, and hence gets a positive majority
+only at the end (with a possible additional tie-dependent mistake when two
+remain). Thus O(d) is valid for the ideal uniform-minimum-cost formula model;
+allowing arbitrary binary tie resolution gives at most two per level.
+
+This does not transfer to neural minimum norm merely because same-size
+conjunctions have equal kappa_N. Gaussian input-permutation symmetry DOES give
+equal induced prior masses to these conjunction functions, and conditioning
+preserves their ratios among the survivors. But it does NOT prove that they
+are the cheapest surviving neural functions, or that all other functions
+have negligible posterior mass. Appendix K correctly notes it is not a
+neural theorem; the intermediate "exactly what rescues" language should be
+qualified accordingly.
+
+The finite-code bound M<=C(f) uses prior 2^{-C}; the strong-prior family
+pi_sigma instead has log(1/pi_sigma(f)) generally diverging as sigma tends
+to zero. That bound cannot be imported unchanged into the strong-prior limit.
+
+K.3. Random ordering, descending ordering, and smoothing
+-------------------------------------------------------
+Uniform random permutation of the finite input domain IS safe for any
+consistent learner constrained to a finite candidate set S of size M.
+Let m=|X|. After t uniformly selected distinct examples, a fixed hypothesis
+with r errors survives with probability at most exp(-tr/m). If its remaining
+error rate exceeds eps, then r>eps(m-t). Union bounding over S gives
+P(max surviving remaining error>eps)<=M exp[-t eps(m-t)/m]. Integrating in
+eps bounds expected next error by
+min(1,(1+log M)m/[t(m-t)]) for 1<=t<m.
+Summing, expected total mistakes <=2+2(1+log M)H_{m-1}.
+For m=2^d and a prefix-code budget C, this is O((C+1)d), which establishes
+(and slightly improves) the displayed O((C+d)d) random-order bound.
+This is for a uniform random permutation, not an arbitrary iid distribution.
+
+"Descending weight gives exactly d+1" is not valid for the stated general
+AND/OR/XOR formula language and arbitrary tie-breaking. For d=3, after 111
+and all three weight-2 points, AND_3 and XOR_3 have equal minimum formula
+cost, both fit these observations, and both depend on all three variables.
+If the tie chooses XOR_3, the next weight-1 point adds an additional mistake.
+With initial constant 0 and the preceding cheapest conjunctions, this is at
+least five mistakes, exceeding d+1=4. Even the initial constant tie changes
+any exact count. Descending weight gives the familiar d+1-type guarantee
+for the restricted monotone-conjunction learner, with suitable conventions.
+
+The "smoothing by w helps only by factor w" assertion has no defined
+smoothing operation or quantifiers and cannot be verified as stated.
+
+Slide 30. Online and reverse-complexity additions
+------------------------------------------------
+An unlimited total expected iid mistake bound polynomial in (d,C_L(f)) is
+NOT established by the main counting/PAC proof. This audit does NOT supply
+a counterexample to that statement for the actual Gaussian neural prior;
+it identifies a missing independent theorem, and a false generic inference.
+
+General reason iid does not fix the issue: for any desired first-occurrence
+ordering x_1,...,x_m, choose p_j proportional to eps^{j-1}. In the iid stream,
+Poissonization gives independent first-arrival times T_j~Exp(p_j), so
+P(T_{j+1}<T_j)=p_{j+1}/(p_j+p_{j+1})<=eps. Union bounding shows the entire
+first-occurrence ordering follows the specified order with probability
+at least 1-(m-1)eps. Repeated points impose no new noiseless constraints.
+Thus an arbitrarily bad deterministic first-occurrence order can be induced
+with probability arbitrarily close to one by a sufficiently skewed iid D.
+The uniform-random-permutation argument does not apply to arbitrary D.
+
+A stronger counterexample to the abstract count inference, not to the neural
+model, uses target f=0 and point functions h_j=1_{x_j}. Set strictly increasing
+costs kappa(h_j)=j/(m+1), kappa(f)=1, and prior proportional to
+exp(-beta*kappa). For sufficiently large beta, the least-cost surviving
+h_j outweighs the sum of all remaining candidates. On input order x_1,...,x_m,
+posterior majority makes m mistakes. Here log |S|=log(m+1), yet total errors
+are m; the skewed iid construction makes expected total errors near m.
+For m=2^d all these Boolean functions have ordinary circuits of size O(d).
+This example shows exactly why count/relevance alone is insufficient.
+
+A finite-horizon result that DOES follow from the relevance hypotheses:
+if f in S, |S|<=M, and pi(H\S)<=tau*pi(f), then after T iid rounds,
+E[number of majority mistakes] <=2(1+log M)H_T+2tau.
+Proof: at time n, let R_n be the maximum population error of a surviving
+hypothesis in S. The exact union bound P(R_n>u)<=min(1,M(1-u)^n)
+implies E R_n <=(1+log M)/(n+1). Tail expected error is bounded by
+sum_{h notin S} [pi(h)/pi(f)] e_h(1-e_h)^n; summing n>=0 gives at most tau.
+A majority error is at most twice the posterior error. Sum over n<T.
+Classical Bayesian total mistakes <=log_2(1/pi_sigma(f)) is also valid,
+but is not uniform as sigma decreases. Recommend omitting the stronger claim.
+
+The claimed reverse implication "C_L of the learned function <=poly(d,
+number of mistakes)" lacks quantifiers and is unsupported. If "learned
+function" means the target or a globally recovered target, a distribution
+supported on one point provides no information about the target's values
+elsewhere: arbitrary high-complexity targets can be indistinguishable and
+have identical mistake behavior on the support. Low population error alone
+therefore cannot certify low global target complexity. If the phrase means
+the actual returned posterior-majority function, a separate theorem and a
+precise complexity convention are required; the sentence does not state one.
+
+Slide 35. Polynomial equivalence of log-indices
+-----------------------------------------------
+Pointwise polynomial equivalence of C_L and kappa_N, together with upper
+bounds on sublevel cardinalities, does NOT by itself imply polynomial
+relations between their ranks. A generic counterexample even has linear
+complexity equivalence: on 2^{2^d} objects choose distinguished g_0,f, put
+C(g_0)=kappa(g_0)=1, C(f)=R=2^d, kappa(f)=2R, and for every other object
+C=R+1, kappa=R. The measures are within a factor of two, and both have
+log sublevel counts <=O(their complexity), yet f's log-ranks are 1 and 2^d
+(using base-2 logs). This does not disprove the intended statement for the
+particular neural/circuit measures, but proves the stated derivation needs
+additional lower counting/density information or a different rank theorem.
+
+The displayed lower bound (s d)^{1/a} also has the wrong dependence for
+constant-rank examples: if both log-ranks stay 1 as d grows, this lower bound
+would exceed 1. Typical equivalence bounds would need additive constants
+and a polynomial factor of d on the other side, e.g. s' >=s^{1/a}/poly(d),
+but no such corrected theorem has been proved here.
+Prior ordering adds an additional subtlety: different minimum norm values
+are ordered in the small-sigma limit, whereas equal norms need not have
+comparable subexponential prefactors. Norm equivalence does not resolve
+ordering inside equal-norm blocks.
+
+L. Activation assumptions
+--------------------------
+Valid core content:
+* Global boundedness controls summands in width-independent subsampling.
+* Global Lipschitz continuity gives parameter-space separation and propagates
+  activation errors layer by layer. Differentiability is not required;
+  replace notation |phi'|<=const by an explicit Lipschitz condition.
+* Continuous nonpolynomial activations satisfy the finite interpolation
+  theorem used to realize the fixed finite gate vocabulary. Boundedness
+  plus nonconstancy already excludes polynomial activations on all of R.
+* tanh satisfies all the assumptions mentioned, including the stronger ones.
+
+Corrections/qualifications:
+* Bounded, Lipschitz, and nonpolynomial do not imply saturation, phi(0)=0,
+  or phi'(0)!=0. Examples: sin is bounded/Lipschitz/nonpolynomial but not
+  saturating; tanh(t)^3 is bounded/Lipschitz/nonpolynomial/saturating/odd
+  but has derivative zero at zero; 3/4+(1/4)tanh(t) is bounded in absolute
+  value by 1 and never vanishes. Hence the assumptions used in G/H ARE
+  additional hypotheses for their given constructions, not consequences
+  of the main hypotheses. Some may be arranged by recentering/reparametrizing
+  with constant channels, but that reduction must be proved, with its effects
+  on the norm and the quantization condition.
+* Oddness is indeed an extra symmetry assumption for the H construction.
+* ReLU being bounded on each bounded interval is insufficient to apply the
+  given global bounded-activation proof uniformly in width. The relevant
+  interval can depend on N under this prior scaling. A ReLU extension needs
+  another concentration argument or explicit width-independent bounds.
+
+Recommendation for the requested paper
+---------------------------------------
+Use L's valid observations to explain the hypotheses succinctly. Keep the
+paper focused on the finite-width strong-prior PAC theorem, state that it
+makes no adversarial-order or unlimited-online-mistake guarantee, and avoid
+slides 30/35's extra assertions. K's rigorous formula-MDL counterexample is
+optional separate background, not needed to prove the paper's result.

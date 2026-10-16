@@ -1,0 +1,541 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Symmetric parity predictors require large amplitudes},pdfauthor={Dmitry Vaintrob; Kaarel Hanni; OpenAI Codex}}
+\setlength{\emergencystretch}{2em}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}\newcommand{\Prb}{\mathbb P}
+\newcommand{\R}{\mathbb R}\newcommand{\N}{\mathbb N}
+\DeclareMathOperator{\sign}{sign}
+\title{Symmetric parity predictors require large amplitudes\\
+\large An exponential lower bound and a consequence for margin repairs}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex}
+\date{October 16, 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+A symmetric polynomial on the Boolean cube that predicts parity with
+error at most $1/3$, has absolute value at least one everywhere, and has
+degree at most a sufficiently small fixed fraction of the dimension
+must have $L^1$ norm at least $\exp(c\sqrt{k})$. The allowed degree
+fraction can be any fixed $\alpha<1-\sqrt3/2$.
+The proof uses a binomial generating function, an elementary
+Schr\"odinger barrier estimate, and an averaged form of Jensen's formula. It includes arbitrary choices of
+sign pattern and polynomial amplitudes. We also prove that every such
+symmetric head has diverging average cost in an explicitly defined
+cusp model of margin repairs, even when repairs may change unobserved
+signs at intermediate radii. This cost conclusion extends to arbitrary
+amplitudes whenever the head's sign pattern is symmetric in a sufficiently
+large block. Sign symmetry and eventual agreement with the head remain
+explicit hypotheses; no reduction of a general Bayesian posterior to
+this structured problem is asserted.
+\end{abstract}
+
+\section{Statement and scope}
+Write $\chi_k(x)=\prod_{i=1}^k x_i$ for parity on $\{-1,1\}^k$, equipped
+with the uniform measure. A symmetric real polynomial $P$ depends only
+on the Hamming weight $H=|\{i:x_i=-1\}|$. We use $P(h)$ for its value
+on that layer and
+\[
+ w_k(h)=2^{-k}\binom{k}{h},\qquad
+ \|P\|_p=\left(\sum_{h=0}^k w_k(h)|P(h)|^p\right)^{1/p}.
+\]
+Polynomial degree means multilinear Fourier degree on the cube. For a
+symmetric function this is also the degree in its Krawtchouk expansion.
+Its parity advantage is
+\[
+ c(P)=\E[\chi_k\sign P]=1-2\Prb(\sign P\ne\chi_k).
+\]
+All logarithms below are natural.
+
+\begin{theorem}[Exponential amplitude lower bound]\label{thm:main}
+Fix $0<\rho<1$ and a degree fraction $\alpha$ satisfying
+\begin{equation}\label{eq:criterion}
+ 0<\alpha<1-\cos(\pi\rho/2).
+\end{equation}
+There are constants $c>0$ and $k_0$, depending only on $\alpha,\rho$,
+with the following property. If $k\ge k_0$ and $P$ is symmetric with
+\[
+ \deg P\le\alpha k,\qquad |P(x)|\ge1\text{ for every }x,
+ \qquad c(P)\ge\rho,
+\]
+then $\|P\|_1\ge\exp(c\sqrt{k})$.
+\end{theorem}
+
+For error at most $1/3$, take $\rho=1/3$. The allowed degree fraction
+is any fixed $\alpha<1-\sqrt3/2=0.1339745962\ldots$.
+The constants and the threshold are not claimed optimal.
+
+The theorem concerns every symmetric polynomial of the indicated
+fractional degree, not merely a particular interpolation polynomial or
+a prescribed sign pattern. The norm conclusion is stronger than any
+polynomial lower bound in $k$. It does not hold for unrestricted
+nonsymmetric heads: substituting growing disjoint block parities into
+a fixed accurate polynomial preserves its norm and relative degree.
+Such an outer polynomial can have arbitrarily small relative degree:
+interpolate parity on a sufficiently wide central $O(\sqrt m)$ window
+of an $m$-cube and rescale to margin one, then hold $m$ fixed while
+increasing the substituted block sizes.
+Accordingly, this note supplies no symmetrization theorem and no
+sample-complexity theorem for a general posterior.
+
+\section{A Fourier cutoff from the degree bound}
+The key estimate uses the concentration of a finite-dimensional
+Schr\"odinger spectral subspace. We give the needed estimate directly.
+
+\begin{lemma}[Weighted Fourier concentration]\label{lem:fourier}
+Fix $0<\alpha<1$ and $\theta\in(0,\pi)$ with
+$\alpha<1-\cos(\theta/2)$. There are $\kappa>0$ and $k_0$ such that,
+for every $k\ge k_0$ and symmetric polynomial $P$ of degree
+$r\le\alpha k$, the quantities
+\[
+ a_h=w_k(h)P(h),\qquad Q(t)=\sum_{h=0}^k a_h e^{ith},
+ \qquad M=\|P\|_1
+\]
+satisfy
+\begin{equation}\label{eq:fourier}
+ \sup_{\theta\le|t|\le\pi}|Q(t)|\le M e^{-\kappa k}.
+\end{equation}
+No margin assumption is needed.
+\end{lemma}
+\begin{proof}
+Let $\mathcal Q(z)=\sum_h w_k(h)P(h)z^h$, so that
+$Q(t)=\mathcal Q(e^{it})$. The identity
+\[
+ \sum_{h=0}^k\binom kh(h)_jz^h=(k)_jz^j(1+z)^{k-j}
+\]
+for falling factorials shows that
+$\mathcal Q(z)=(1+z)^{k-r}R(z)$, where $R$ is real and has degree
+at most $r$. Put $m=k-r$ and $x=t/2$. Then
+\[
+ e^{-ikx}\mathcal Q(e^{2ix})
+ =2^m\cos^m x\,e^{-irx}R(e^{2ix}).
+\]
+The last factor has frequencies $r,r-2,\ldots,-r$. Elementary
+trigonometric identities imply that the real and imaginary parts of
+the centered generating function, in one order according to the parity
+of $r$, belong to the spaces
+\[
+ V_{m,r}=\{\cos^m x\,p(\sin x):\deg p\le r\},\qquad
+ V_{m+1,r-1}.
+\]
+The second component is zero when $r=0$. The constant $2^m$ is
+absorbed into the coefficients. Each real component has ordinary
+$L^2(-\pi/2,\pi/2)$ norm at most $\sqrt\pi M$, because
+$|Q(t)|\le M$.
+
+For $\lambda\ge2$, let $p_n$ be orthonormal polynomials for the weight
+$(1-y^2)^{\lambda-1/2}\,dy$ on $(-1,1)$. Integration by parts shows
+that
+\[
+ L_\lambda p=-(1-y^2)p''+(2\lambda+1)yp'
+\]
+is symmetric for this weight. It preserves degree and has leading
+coefficient $n(n+2\lambda)$ on a polynomial of degree $n$.
+Orthogonality therefore gives $L_\lambda p_n=n(n+2\lambda)p_n$.
+The functions $\phi_n(x)=\cos^\lambda x\,p_n(\sin x)$ are
+orthonormal in $dx$, span $V_{\lambda,s}$ for $0\le n\le s$, and
+satisfy, by direct differentiation,
+\begin{equation}\label{eq:schrodinger}
+ -\phi_n''+\lambda(\lambda-1)\sec^2x\,\phi_n
+ =(n+\lambda)^2\phi_n.
+\end{equation}
+In both spaces above, $\lambda\ge m$ and $n+\lambda\le k$.
+
+Choose
+$\arccos(1-\alpha)<x_1<x_0=\theta/2$. For some $\delta>0$ and all
+large $k$, the potential $V=\lambda(\lambda-1)\sec^2x$ and energy
+$E=(n+\lambda)^2$ obey
+\[
+ V-E\ge m(m-1)\sec^2x-k^2\ge\delta k^2
+ \qquad(|x|\ge x_1).
+\]
+Set $F(x)=k\sqrt{\delta/2}(|x|-x_1)_+$. Multiplying
+\eqref{eq:schrodinger} by $e^{2F}\phi_n$ and integrating gives
+\begin{equation}\label{eq:agmon}
+ \int\left(|(e^F\phi_n)'|^2+
+       (V-E-|F'|^2)e^{2F}|\phi_n|^2\right)dx=0.
+\end{equation}
+Boundary terms vanish since $\lambda\ge2$ for large $k$.
+The Lipschitz weight is justified directly in the weak identity, or
+by smoothing. Outside $[-x_1,x_1]$ the second coefficient is at least
+$\delta k^2/2$; inside, $F=0$ and $V-E\ge-k^2$. Consequently
+\[
+ \|(e^F\phi_n)'\|_2\le k,\qquad
+ \|e^F\phi_n\|_2^2\le1+2/\delta.
+\]
+The elementary one-dimensional bound
+$|u(x)|^2\le2\|u\|_2\|u'\|_2$ for a function vanishing at the
+endpoints now implies
+\[
+ |\phi_n(x)|\le C\sqrt{k}\,e^{-ck}
+ \qquad(|x|\ge x_0),
+\]
+where $c=\sqrt{\delta/2}(x_0-x_1)>0$. Expand either real component
+in its orthonormal basis and use Cauchy--Schwarz. There are at most
+$k+1$ terms, so each component is bounded by
+$Ck e^{-ck}$ times its $L^2$ norm in this region. The norm bound
+$\sqrt\pi M$ proves \eqref{eq:fourier}, after decreasing $c$ to
+absorb the polynomial factor and increasing $k_0$.
+\end{proof}
+
+The low-pass interpolation
+\begin{equation}\label{eq:F}
+ F(z)=\frac1{2\pi}\int_{-\theta}^{\theta}Q(t)e^{-itz}\,dt
+\end{equation}
+is entire and real on the real axis. Since $|Q(t)|\le M$, it satisfies
+\begin{equation}\label{eq:Fbounds}
+ |F(z)|\le M e^{\theta|\operatorname{Im}z|},\qquad
+ |F(h)-a_h|\le M e^{-\kappa k}\quad(h\in\mathbb Z).
+\end{equation}
+The second inequality follows by subtracting the omitted part of the
+Fourier inversion formula. A hard frequency cutoff suffices.
+
+\section{Parity advantage forces sign transitions}
+\begin{lemma}\label{lem:transitions}
+For any $g_0,\ldots,g_k\in\{-1,1\}$,
+\begin{equation}\label{eq:transition}
+ \left|\sum_{h=0}^k(-1)^h w_k(h)g_h\right|
+ \le\sum_{h:g_h\ne g_{h+1}}w_{k-1}(h).
+\end{equation}
+\end{lemma}
+\begin{proof}
+The alternating cumulative-binomial identity is
+$\sum_{i=0}^h(-1)^i\binom{k}{i}=(-1)^h\binom{k-1}{h}$.
+Summation by parts therefore expresses the sum on the left as
+\[
+ -2^{-k}\sum_{h=0}^{k-1}(g_{h+1}-g_h)(-1)^h\binom{k-1}{h}.
+\]
+Taking absolute values proves the result.
+\end{proof}
+
+We need a simple discrete logarithmic kernel. For $R>1$ define
+\[
+ L_R(j)=\left[\log\frac{R}{|j|+1}\right]_+,
+ \qquad S_R=\sum_{j\in\mathbb Z}L_R(j).
+\]
+Stirling's formula, or comparison with an integral, gives
+\begin{equation}\label{eq:SR}
+ S_R=2R+O(\log R).
+\end{equation}
+If $F(j)$ and $F(j+1)$ have opposite signs, a real zero lies between
+them. In Jensen's formula centered at an integer $h$, that zero
+contributes at least $L_R(j-h)$ at radius $R$.
+
+\section{Averaging Jensen's formula}
+\begin{proof}[Proof of Theorem~\ref{thm:main}]
+By \eqref{eq:criterion}, choose
+$2\arccos(1-\alpha)<\theta<\pi\rho$.
+Use $F$ and $\kappa$ from \eqref{eq:F}--\eqref{eq:Fbounds}.
+If $\log M>\kappa k/2$, the conclusion is already true for large $k$.
+We may therefore assume $M\le e^{\kappa k/2}$.
+
+Fix a large constant $B$ and then a small constant $\varepsilon>0$,
+and put $R=\varepsilon\sqrt{k}$. Throughout the central window
+$|h-k/2|\le(B+2\varepsilon)\sqrt{k}$, binomial weights are bounded
+below by $c_{B,\varepsilon}/\sqrt{k}$. Thus \eqref{eq:Fbounds} and the
+margin assumption imply, for all large $k$,
+\begin{equation}\label{eq:anchors}
+ \sign F(h)=\sign P(h),\qquad |F(h)|\ge\tfrac12 w_k(h).
+\end{equation}
+Let $J$ be the set of sign transitions $j$ with
+$|j-k/2|\le B\sqrt{k}$. Lemma~\ref{lem:transitions} and a binomial tail
+bound imply
+\begin{equation}\label{eq:Jmass}
+ \sum_{j\in J}w_k(j)\ge\rho-\tau_B-o(1),
+ \qquad \tau_B\longrightarrow0\quad(B\longrightarrow\infty).
+\end{equation}
+Here $w_{k-1}(j)/w_k(j)=2(k-j)/k=1+o(1)$ uniformly in the fixed central
+window. For example one can take
+$\tau_B=2e^{-2(B-o(1))^2}$ before absorbing the vanishing term.
+
+For central $j$ and $|h-j|\le R$, adjacent binomial ratios give
+\begin{equation}\label{eq:ratios}
+ w_k(h)\ge\eta_{B,\varepsilon,k}w_k(j),\qquad
+ \liminf_{k\to\infty}\eta_{B,\varepsilon,k}
+ \ge e^{-C\varepsilon(B+\varepsilon)}.
+\end{equation}
+Indeed each adjacent log ratio is $O((B+\varepsilon)/\sqrt{k})$ in
+this window, and there are at most $\varepsilon\sqrt{k}$ such steps.
+
+Apply Jensen's formula to $F$ centered at each integer $h$ in the
+anchor window $I=\{|h-k/2|\le(B+2\varepsilon)\sqrt{k}\}$. Keeping only
+the zeros supplied by $J$, and using \eqref{eq:Fbounds}, gives
+\[
+ \sum_{j\in J}L_R(j-h)
+ \le \log M-\log|F(h)|+\frac{2\theta R}{\pi}.
+\]
+Zeros on the integration circle are handled by a limiting radius.
+Multiply by $w_k(h)$ and sum over $h\in I$. The right side is at most
+\[
+ \log M+O_{B,\varepsilon}(\log k)+\frac{2\theta R}{\pi}
+\]
+by \eqref{eq:anchors}. On the left, \eqref{eq:ratios} and
+\eqref{eq:SR} give at least
+\[
+ \eta_{B,\varepsilon,k}S_R\sum_{j\in J}w_k(j).
+\]
+Every nonzero kernel term has its anchor in $I$, so no term is missing.
+Combining the estimates yields
+\begin{equation}\label{eq:Jensenfinal}
+ \log M\ge
+ 2R\left[\eta_{B,\varepsilon,k}(\rho-\tau_B-o(1))
+                 -\frac\theta\pi\right]-O_{B,\varepsilon}(\log k).
+\end{equation}
+Choose $B$ so that $\tau_B$ is much smaller than $\rho-\theta/\pi$,
+then choose $\varepsilon$ so that the loss in \eqref{eq:ratios} is also
+smaller than this gap. The bracket is then bounded below by a positive
+constant. Since $R=\varepsilon\sqrt{k}$, the theorem follows.
+\end{proof}
+
+\begin{proposition}[Vanishing margin defects]\label{prop:stable}
+Under the strict parameter condition of Theorem~\ref{thm:main}, its
+conclusion remains valid along sequences $P_k$ for which, for some
+fixed $a>0$,
+\[
+ \Prb(|P_k|<a)=o(1),\qquad c(P_k)\ge\rho-o(1).
+\]
+More precisely, $\liminf k^{-1/2}\log\|P_k\|_1>0$.
+\end{proposition}
+\begin{proof}
+Use the same central windows and remove transitions incident to a
+vertex with $|P_k|<a$. Their total central binomial weight is $o(1)$,
+so \eqref{eq:Jmass} changes by $o(1)$. At the remaining endpoints the
+low-pass interpolation preserves signs. Also omit bad anchor vertices
+from the averaged Jensen inequality. The lost left-hand contribution
+is at most
+\[
+ \sum_{h\text{ bad}}w_k(h)\sum_{j\in\mathbb Z}L_R(j-h)
+ =S_R\Prb(h\text{ bad})=o(R).
+\]
+At every retained anchor, $|F(h)|\ge a w_k(h)/2$. Thus
+\eqref{eq:Jensenfinal} changes only by $o(R)+O_a(1)$, proving the claim.
+\end{proof}
+If a symmetric $P_k$ is $o(1)$ in $L^2$ from a globally margin-one
+function $Z_k$ of parity error at most $(1-\rho)/2$, then the proposition
+applies with $a=1/2$. The approximating function $Z_k$ itself need not
+be symmetric.
+
+\begin{corollary}[Symmetry in one block]\label{cor:block}
+Let $P$ be a globally margin-one polynomial on $k$ target coordinates,
+invariant under permutations of a block $B$ of $n$ coordinates. Suppose
+its degree in the coordinates of $B$ is at most $\alpha n$ and its
+global parity advantage is at least $\rho$, with the strict parameter
+condition of Theorem~\ref{thm:main}. Arbitrary dependence on the other
+coordinates is allowed. For all sufficiently large $n$,
+\[
+ \|P\|_1\ge c\exp(c'\sqrt n),
+\]
+where the positive constants depend only on $\alpha,\rho$.
+\end{corollary}
+\begin{proof}
+Choose $0<\rho_0<\rho$ close enough that the strict parameter condition
+still holds. Condition on all coordinates outside $B$, and absorb
+their parity into the sign of the resulting symmetric polynomial.
+The conditional parity advantages lie in $[-1,1]$ and have mean at
+least $\rho$. Thus a fraction at least
+$(\rho-\rho_0)/(1-\rho_0)$ of fibers have advantage at least $\rho_0$.
+Each such fiber has the same degree and margin bounds, so
+Theorem~\ref{thm:main} applies uniformly. Average its conclusion over
+these fibers.
+\end{proof}
+
+\section{A consequence for all-radius margin repairs}
+We now define an auxiliary geometric problem independently of any
+neural-network posterior. Fix $0<\beta\le1/2$ and let the active points
+be $u\in\{-1,1\}^k$, with an integer radius $h\ge0$. For any finitely
+supported real charge $q=(q_{u,h})$ of total mass zero, put
+\begin{equation}\label{eq:cusp}
+ \mathcal V_\beta(q)=
+ -\sum_{u,h,v,j}q_{u,h}q_{v,j}\bigl(d_H(u,v)+h+j\bigr)^\beta.
+\end{equation}
+This quadratic form is nonnegative: use the integral representation of
+$t^\beta$ and positivity of the kernels
+$e^{-t d_H(u,v)}e^{-th}e^{-tj}$. Define the energy of a repair $g$ by
+\[
+ \mathcal E_\beta(g)=
+ \sup_{q:\,\sum q=0,\ \mathcal V_\beta(q)>0}
+ \frac{\left|\sum_{u,h}q_{u,h}g(u,h)\right|^2}
+      {\mathcal V_\beta(q)},
+\]
+with infinite energy if a zero-variance charge has nonzero pairing.
+This definition specifies the only norm property used below.
+
+A head $P$ has $|P(u)|\ge1$. At each wrong point $u$, a repair $g_u$
+is admissible if
+\[
+ |P(v)+g_u(v,h)|\ge1\quad\text{for all }v,h,
+ \qquad \sign(P(u)+g_u(u,0))=\chi_k(u),
+\]
+and $g_u(v,h)\to0$ as $h\to\infty$ for every $v$. Intermediate signs
+are unrestricted. The last condition supplies eventual agreement with
+the original head and is an explicit hypothesis of this model.
+
+\begin{lemma}[Contact drop with arbitrary intermediate sign changes]
+\label{lem:contact}
+Suppose $P(u)$ and $P(v)$ have the same sign, and
+$D=2+|P(u)|-|P(v)|>0$. Every admissible repair at $u$ has energy $E$
+satisfying
+\[
+ E\ge c_\beta\min\left\{
+ \frac{D^2}{(d_H(u,v)+1)^\beta},\ D^{2-\beta}\right\}.
+\]
+\end{lemma}
+\begin{proof}
+The charge comparing $(v,h)$ and $(v,h+1)$ has variance
+\[
+ v_h=2(2h+1)^\beta-(2h)^\beta-(2h+2)^\beta
+ \le C_\beta(h+1)^{\beta-2}.
+\]
+A sign change between these radii requires a jump of at least $2$, and
+therefore energy at least $4/v_h$. Choose an integer
+$R\le C_\beta(1+E^{1/(2-\beta)})$ large enough that this lower bound
+exceeds $E$ for every $h\ge R$. Eventual agreement implies agreement
+already at radius $R$. Comparing $(u,0)$ with $(v,R)$ now gives a repair
+difference of absolute value at least $D$. Its variance is
+\[
+ 2(d_H(u,v)+R)^\beta-(2R)^\beta
+ \le C_\beta\bigl[(d_H(u,v)+1)^\beta+E^{\beta/(2-\beta)}\bigr].
+\]
+Thus $D^2$ is bounded by $C_\beta E$ times the last bracket. At least
+one of its two terms accounts for half of $D^2$, proving the result.
+\end{proof}
+
+\begin{theorem}[Symmetric heads have diverging population repair cost]
+\label{thm:repair}
+Fix $\beta\in(0,1/2]$ and a degree fraction $\alpha$ satisfying
+\eqref{eq:criterion} with $\rho=1/3$. For all sufficiently large $k$,
+every symmetric head $P$ with degree at most $\alpha k$, global margin
+one, and parity error at most $1/3$, and every family of admissible
+repairs, satisfy
+\[
+ \E_u\left[\mathbf1_{\{\sign P(u)\ne\chi_k(u)\}}
+                  \mathcal E_\beta(g_u)\right]
+ \ge \frac{c_\beta}{(k+1)^\beta}\exp(c\sqrt{k}),
+\]
+where $c>0$ may depend on $\alpha,\beta$.
+\end{theorem}
+\begin{proof}
+Both signs occur, since a constant sign has parity error $1/2$.
+Let $b_+$ and $b_-$ be the smallest positive and negative absolute head
+values, and define
+\[
+ s=(b_++b_-)/2\ge1,\qquad t=(b_+-b_-)/2,\qquad Q=(P-t)/s.
+\]
+Then $Q$ is symmetric, has the same signs and degree bound, satisfies
+$|Q|\ge1$, and has a contact at each of $+1$ and $-1$.
+For every wrong $u$, choose a same-sign contact $v$. The contact drop
+for the original head is
+\[
+ D=2+|P(u)|-b_{\sign P(u)}=2+s(|Q(u)|-1)\ge1+|Q(u)|.
+\]
+Lemma~\ref{lem:contact}, using $d_H(u,v)\le k$, gives, with
+$p=2-\beta$,
+\[
+ \mathcal E_\beta(g_u)\ge
+ \frac{c_\beta}{(k+1)^\beta}|Q(u)|^p.
+\]
+Since $\deg Q<k$, parity orthogonality gives $\E[\chi_k Q]=0$.
+Consequently the wrong and correct sides have equal absolute first
+moments, and
+\[
+ \E[\mathbf1_{\rm wrong}|Q|]=\tfrac12\|Q\|_1.
+\]
+H\"older's inequality implies
+$\E[\mathbf1_{\rm wrong}|Q|^p]\ge2^{-p}\|Q\|_1^p$.
+Apply Theorem~\ref{thm:main} to $Q$ and average the preceding energy
+bound.
+\end{proof}
+
+The same proof applies to a head symmetric in a block of $n$ target
+coordinates, with block degree at most $\alpha n$: replace the final
+application of Theorem~\ref{thm:main} by Corollary~\ref{cor:block}.
+Parity orthogonality still holds because the degree in that block is
+less than $n$, regardless of the degree in the other coordinates.
+The resulting lower bound is
+$c(k+1)^{-\beta}\exp(c'\sqrt n)$. In particular it diverges
+exponentially in $\sqrt k$ when the block contains a fixed positive
+fraction of the target coordinates.
+
+\begin{corollary}[Only the sign pattern needs block symmetry]
+\label{cor:signblock}
+Let $P$ have global margin one on $k$ target coordinates, and suppose
+$\sign P$ is invariant under permutations of a block of $m$ coordinates.
+The amplitudes and the dependence on coordinates outside that block may
+be arbitrary. If the block degree is at most $\alpha m$, the parity
+error is at most $0.34$, and
+\[
+ 0<\alpha<1-\cos(4\pi/25)=0.123693319956\ldots,
+\]
+then every family of admissible repairs satisfies, for sufficiently
+large $m$,
+\[
+ \E_u[\mathbf1_{\rm wrong}\mathcal E_\beta(g_u)]
+ \ge c(m+1)^{-\beta}\exp(c'\sqrt m).
+\]
+The constants may depend on the strict gap in this degree condition.
+\end{corollary}
+\begin{proof}
+Choose $0<\rho_0<0.32$ sufficiently close to $0.32$ that
+$\alpha<1-\cos(\pi\rho_0/2)$. Condition on coordinates outside
+the block. Since the mean conditional parity advantage is at least
+$0.32$, a fraction at least $(0.32-\rho_0)/(1-\rho_0)>0$ of the
+fibers have advantage at least $\rho_0$. Fix such a fiber and absorb the fixed outside
+parity into its target $f$. Write $s=\sign P$, $E=\{fs=-1\}$,
+$C=\{fs=1\}$, $R=\Prb(E)\le(1-\rho_0)/2$, and $p=2-\beta$. Define
+\[
+ \Phi_s(P)=\E_{u}\mathbf1_E(u)
+   \max_{v\in C:\,s(v)=s(u)}
+   \frac{[s(u)(P(u)-P(v))]_+^p}{(1+d_H(u,v))^\beta}.
+\]
+This functional is convex in $P$ and invariant under permutations of
+the block. Averaging $P$ over those permutations gives a symmetric
+polynomial $\overline P$ with the same signs, margin, and degree bound,
+and $\Phi_s(\overline P)\le\Phi_s(P)$. The contact-drop lemma implies
+that the original repair cost on this fiber is at least
+$c_\beta\Phi_s(P)$.
+
+For completeness, $\Phi_s$ controls the first moment uniformly over
+this sign cone. Put $c_0=1-2R$ and
+$b_\sigma=\min_{v\in C:s(v)=\sigma}|\overline P(v)|$.
+Each phase has correct mass minus wrong mass $c_0/2$. With
+$D_u=(|\overline P(u)|-b_{s(u)})_+$ on $E$, parity orthogonality gives
+\[
+ \frac{c_0}{2}(b_++b_-)\le\E[\mathbf1_E D_u],\qquad
+ \|\overline P\|_1\le\frac2{c_0}\E[\mathbf1_E D_u].
+\]
+Consequently H\"older's inequality yields
+\[
+ \|\overline P\|_1
+ \le\frac2{c_0}R^{1-1/p}(m+1)^{\beta/p}
+       \Phi_s(\overline P)^{1/p}.
+\]
+Theorem~\ref{thm:main}, with advantage $\rho_0$, now gives
+$\Phi_s(P)\ge c(m+1)^{-\beta}\exp(c'\sqrt m)$.
+Averaging over the favorable fibers proves the claim. Restricting
+contact tests to one fiber is valid for every original repair, so no
+symmetry of the repairs or of the original amplitudes was imposed.
+\end{proof}
+
+This result allows every intermediate sign change and every choice of
+repair values. Its eventual-agreement condition and the stated symmetry
+of the head or its sign pattern remain assumptions of the statement. In particular,
+neither the rotational symmetry of a prior nor the radial form of a
+kernel makes a head fitted to an individual training set symmetric.
+A general posterior lower bound requires an additional argument beyond
+this note.
+
+\begin{thebibliography}{9}
+\bibitem{odonnell} R.~O'Donnell, \emph{Analysis of Boolean Functions},
+Cambridge University Press, 2014. Boolean Fourier expansions.
+\bibitem{ahlfors} L.~V.~Ahlfors, \emph{Complex Analysis}, 3rd ed.,
+McGraw--Hill, 1979. Jensen's formula.
+\end{thebibliography}
+\end{document}

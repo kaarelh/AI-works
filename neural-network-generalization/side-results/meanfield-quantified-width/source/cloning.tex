@@ -1,0 +1,117 @@
+% Standalone section: macros deliberately limited to standard AMS commands.
+\section{An all-width target-mass bound}\label{app:cloning}
+The following construction bounds the target's prior cost at every width $N\geq C$,
+at the mean-field exponent.
+
+\begin{proposition}[Uniform cloning mass bound]
+Fix $L\geq2$ and a bounded $1$-Lipschitz activation. There is a function $Q_L(d,C)$ bounded by a polynomial such that for every Boolean target with
+$C_L(f)\leq C$, and every $N\geq C$,
+\[
+ -\frac{2}{N}\log\Pr\{f(x)z_w(x)>1/2\text{ for all }x\}
+ \leq Q_L(d,C).
+\]
+The prior variances and absence of later-layer biases are exactly those in the
+main model.
+\end{proposition}
+\begin{proof}
+Choose a width-$C$ teacher, increase its readout by a factor of three, and write
+its hidden matrices as $B^s$ and readout as $v$. Thus the teacher has margin
+strictly greater than $3/2$, hidden entries bounded by $C$, and readout entries
+bounded by $3C$. If the original witness has smaller width, first use its actual
+width in the construction below; all estimates only improve.
+Partition $\{1,\ldots,N\}$ into $C$ groups of sizes $k_a$ differing by at most
+one. Then
+\[
+ 1\leq k_a,\qquad \frac{\max k_a}{\min k_a}\leq2,
+ \qquad \frac N{k_a}\leq2C.
+\]
+Let $u_a=k_a^{-1/2}{\bf1}_{\text{group }a}$ and let $P$ be the orthogonal
+projection onto their span. The exact clone $w_*$ has first-layer row $B^1_b$
+for a neuron in group $b$, hidden entry $B^s_{ba}/k_a$ from group $a$ to group
+$b$, and readout $v_b/k_b$ on group $b$. Every hidden activation of the exact
+clone is group-constant. Moreover,
+\[
+ \|W_*^s\|_{\mathrm{op}}\leq\sqrt2 C^2\quad(2\leq s<L),
+ \qquad \sqrt N\|W_*^L\|_2\leq3\sqrt2 C^2.
+\]
+The first bound follows by restricting to the group-constant subspace: the
+resulting matrix has entries $\sqrt{k_b/k_a}B^s_{ba}$, and its Frobenius norm
+is at most $\sqrt2 C^2$.
+
+Set $t=1$. The random coordinates
+$\sqrt d W^1_{ij}$, $\sqrt N W^s_{ij}$ for $2\leq s<L$, and
+$\alpha_j=NW^L_j$ are independent centered Gaussians of standard deviation
+$t$. Impose the following cylinder event $\mathcal C_\rho$, for
+$0<\rho\leq1$:
+\begin{itemize}
+\item every $\sqrt d W^1_{ij}$ is within $\rho t$ of
+$\sqrt d (W_*^1)_{ij}$;
+\item for every hidden row $j$ and group $a$, the coordinate
+$\langle\sqrt N W^s_{j,\cdot},u_a\rangle$ is within $\rho t$ of its
+cloned value $\sqrt{N/k_a}B^s_{ba}$;
+\item every $\alpha_j$ is within $\rho t$ of its cloned value $Nv_b/k_b$.
+\end{itemize}
+All these constraints concern independent scalar Gaussian coordinates.
+The orthogonal coordinates of each internal row remain independent prior
+Gaussians. Consequently write
+\[
+ W^s=W_*^s+R^s+E^s,\qquad R^s=R^sP,\quad E^sP=0.
+\]
+On the cylinder, $\|R^s\|_{\mathrm{op}}\leq\|R^s\|_F\leq\rho t\sqrt C$.
+The free matrix is distributed as $(t/\sqrt N)G^s(I-P)$, with $G^s$ a standard
+Gaussian matrix, independently of the cylinder coordinates. Let
+\[
+ b_L=2+\sqrt{2\log(2L)}.
+\]
+The Gaussian operator-norm bound and a union bound imply, conditionally on
+$\mathcal C_\rho$, that all $\|E^s\|_{\mathrm{op}}\leq b_Lt$ with probability
+at least $1/2$. This is also valid when $L=2$, where there are no such matrices.
+
+Let $e_s(x)=N^{-1/2}\|h^s_w(x)-h^s_*(x)\|_2$. The input constraints give
+$e_1(x)\leq\rho(d+1)/\sqrt d\leq\rho(d+1)$. Since $E^sh^{s-1}_*=0$,
+boundedness and Lipschitz continuity give, simultaneously for every input,
+\[
+ e_s(x)\leq (\sqrt2 C^2+\sqrt C+b_L)e_{s-1}(x)+\rho\sqrt C.
+\]
+Put $A=2+3C^2+b_L$. Induction yields
+$e_s(x)\leq\rho(d+L+1)A^{L-2}$ for $s<L$. At the output,
+\[
+ |z_w(x)-z_*(x)|
+ \leq3\sqrt2 C^2 e_{L-1}(x)+\rho.
+\]
+Hence choosing
+\[
+ \rho=\bigl[2+9C^2(d+L+1)A^{L-2}\bigr]^{-1}
+\]
+ensures output discrepancy at most $1/2$. All networks in the cylinder with
+the operator-norm event therefore implement $f$ with margin greater than one.
+
+It remains to price the cylinder. Its number of constrained coordinates is
+\[
+ m=N\bigl[d+2+(L-2)C\bigr].
+\]
+The sum of their squared centers is at most $NB_0$, where one may take
+\[
+ B_0=d(d+1)C^2+2(L-2)C^4+36C^4.
+\]
+Indeed, a first-layer center has magnitude at most $\sqrt d C$, an internal
+center at most $\sqrt{2C}C$, and a readout center at most $6C^2$.
+For $Z\sim N(0,t^2)$ and $|Z-a|\leq\rho t$,
+\[
+ \Pr\{|Z-a|\leq\rho t\}
+ \geq\frac{2\rho}{\sqrt{2\pi}}
+       \exp\{-a^2/t^2-\rho^2\}.
+\]
+Multiplication and $t=1$ show
+\[
+ -\log\Pr(\mathcal C_\rho)
+ \leq N B_0
+ +N[d+2+(L-2)C]\log\frac{e\sqrt{2\pi}}{2\rho}.
+\]
+The desired probability is at least $\Pr(\mathcal C_\rho)/2$. Since $N\geq1$, this proves the claim with
+\[
+ Q_L(d,C)=2B_0+\frac{4[d+2+(L-2)C]}{\rho}+2.
+\]
+Here we used $\log(e\sqrt{2\pi}/(2\rho))\leq2/\rho$ for $0<\rho\leq1$.
+The displayed expression is a polynomial in $d,C$ at every fixed depth.
+\end{proof}

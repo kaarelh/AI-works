@@ -1,0 +1,272 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{microtype,booktabs,enumitem}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
+\usepackage[nameinlink,noabbrev]{cleveref}
+\hypersetup{pdftitle={Width-independent generalization in the strong-prior limit of Bayesian neural networks},pdfauthor={Dmitry Vaintrob; Kaarel Hanni; ChatGPT},pdfsubject={Strong-prior Bayesian generalization and norm-based compression}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\PP}{\mathbb P}
+\newcommand{\cH}{\mathcal H}
+\newcommand{\cX}{\mathcal X}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\abs}[1]{\left|#1\right|}
+\DeclareMathOperator{\err}{err}
+\DeclareMathOperator{\Lip}{Lip}
+\DeclareMathOperator{\sgn}{sgn}
+\DeclareMathOperator{\diag}{diag}
+\setlist{itemsep=2pt,topsep=5pt}
+\setlength{\emergencystretch}{2em}
+\title{Width-independent generalization in the strong-prior limit\ of Bayesian neural networks}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and ChatGPT\thanks{AI assistant developed by OpenAI; contributed to drafting and mathematical checking.}}
+\date{October 15, 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We study noiseless Bayesian learning of Boolean functions by fully connected neural networks with bounded Lipschitz activations and a linear readout. The Gaussian prior uses layer-dependent variances chosen so that duplicating hidden neurons preserves a weighted squared norm. At every fixed depth, we prove a sample bound polynomial in the input dimension and the size of a bounded-weight network implementing the target, uniformly over all larger learner widths, in the limit of small prior variance at each fixed width. The proof has four ingredients: a posterior bound based on a finite set of relevant functions, a small-variance comparison of their Gaussian probabilities, a cloning construction, and a width-independent compression argument. Compression proceeds from the last hidden layer to the first, after pruning large edges row by row. This gives a polynomial equivalence between minimum weighted norm and bounded-weight network complexity. A separate tanh construction shows that the norm sublevel sets can grow exponentially with depth. The result concerns the strong-prior limit; it gives no width-uniform bound on how small the prior variance must be.
+\end{abstract}
+
+\section{Introduction}
+An overparameterized neural network can fit a training sample in many ways. A generalization argument must therefore explain which of those fits the learning rule favors. For Bayesian learning, this question is about the prior distribution on functions induced by the parameter distribution. Even for a simple Gaussian parameter prior, the probability of an individual function can be difficult to estimate and can depend strongly on the network width.
+
+We consider a regime in which a more tractable quantity determines the relevant functions: the smallest weighted squared parameter norm of a network implementing each function with a fixed output margin. When the Gaussian variance tends to zero at fixed width, a function with larger minimum norm has vanishing prior probability relative to a function with smaller minimum norm. Learning can then be controlled by counting the functions whose minimum norm is no larger than the target's. An absolute lower bound on the target's prior probability is unnecessary.
+
+Our main result is that this count is at most exponential in a polynomial of the target's bounded-weight network complexity, with a polynomial independent of the learner's width. Two constructions establish the connection between these complexity measures. Cloning embeds a small target network into any larger width at bounded cost. Conversely, a network of bounded weighted norm can be compressed to polynomial width while preserving its Boolean function. The latter construction is the main technical step: it first removes large entries using thresholds proportional to their row norms, then samples hidden neurons in reverse layer order. Reverse order ensures that each concentration bound ranges over the already compressed next layer, rather than over the original width.
+
+The proof develops the main argument of Vaintrob and H\"anni's lecture notes~\cite{notes}. We restrict attention to the small-variance limit at fixed width. We do not analyze the mean-field or Gaussian-process limits, noisy observations, gradient-based training, or generalization to a different input distribution. The depth is fixed in the polynomial learning guarantee. An appendix gives a rigorous tanh example explaining why depth dependence in the norm-counting argument cannot simply be discarded.
+
+\paragraph{Relation to earlier work.}
+The statistical step is a realizable Occam argument~\cite{blumer}, adapted to a posterior with a small tail outside a finite set. Norm-based capacity control independent of parameter count has a long history, including Bartlett~\cite{bartlett}, Neyshabur, Tomioka, and Srebro~\cite{neyshabur}, and Golowich, Rakhlin, and Shamir~\cite{golowich}. Their activation and norm assumptions differ, so we give a self-contained compression and counting proof. Buzaglo et al.~\cite{buzaglo} also analyze generalization of overparameterized networks through probabilities of fitting a teacher under random parameter sampling. Here the organizing quantity is a relative small-variance rate, and the theorem's width independence applies to sample complexity rather than to the required variance threshold.
+
+\section{Setting and main result}\label{sec:setting}
+Fix an input dimension $d\geq1$ and depth $L\geq2$. Write $\cX=\{-1,1\}^d$ and $\bar x=(1,x_1,\ldots,x_d)$. All $L-1$ hidden layers have width $N$. For a fixed activation $\phi:\R\to\R$ satisfying
+\begin{equation}\label{eq:activation}
+ |\phi(t)|\leq1,\qquad |\phi(t)-\phi(s)|\leq |t-s|,
+\end{equation}
+the network is
+\[
+ h^0(x)=\bar x,\qquad h^\ell(x)=\phi(W^\ell h^{\ell-1}(x))\quad(1\leq\ell<L),
+ \qquad z_w(x)=W^Lh^{L-1}(x).
+\]
+The activation acts coordinatewise, and the readout $W^L$ is linear. There are no separate biases beyond the constant input coordinate; constant hidden neurons may carry an offset to later layers.
+
+For a Boolean function $f:\cX\to\{-1,1\}$, let
+\[
+ U_{N,f}=\{w:f(x)z_w(x)>1/2\text{ for every }x\in\cX\}.
+\]
+These sets are open, disjoint, and indexed by a finite set of functions. Let $\cH_N=\{f:U_{N,f}\ne\varnothing\}$ and $U_N=\bigcup_{f\in\cH_N}U_{N,f}$. We only use widths for which $U_N$ is nonempty.
+
+\begin{definition}[Norm and target complexity]
+The weighted squared norm of a width-$N$ network is
+\begin{equation}\label{eq:norm}
+ \kappa_N(w)=\frac dN\norm{W^1}_F^2+
+ \sum_{\ell=2}^{L-1}\norm{W^\ell}_F^2+N\norm{W^L}_2^2,
+ \qquad
+ \kappa_N(f)=\inf_{w\in U_{N,f}}\kappa_N(w).
+\end{equation}
+An empty sum is zero and an infimum over the empty set is $+\infty$. The bounded-weight network complexity $C_L(f)$ is the smallest integer $C\geq1$ such that $U_{C,f}$ contains a network all of whose weights have absolute value at most $C$.
+\end{definition}
+
+We assume $C_L(f)<\infty$ for the target. The learning theorem itself needs no non-polynomiality assumption beyond~\eqref{eq:activation}. To connect $C_L$ to ordinary Boolean circuits, we additionally take $\phi$ to be nonconstant; boundedness then makes it non-polynomial. Tanh is a running example.
+
+Under the unconditioned Gaussian law $\mu_{N,\sigma}$, all weights are independent, with standard deviations
+\begin{equation}\label{eq:prior}
+ \sigma_1=\sqrt{N/d}\,\sigma,\qquad
+ \sigma_\ell=\sigma\ (2\leq\ell<L),\qquad
+ \sigma_L=\sigma/\sqrt N.
+\end{equation}
+Its density is proportional to $\exp[-\kappa_N(w)/(2\sigma^2)]$. Before observing data, condition this law on $U_N$. The induced function prior is
+\[
+ \pi_{N,\sigma}(g)=\frac{\mu_{N,\sigma}(U_{N,g})}{\mu_{N,\sigma}(U_N)}.
+\]
+This global margin conditioning is part of the model. It cannot be replaced silently by conditioning only on the observed training points.
+
+Let $D$ be any distribution on $\cX$. Given $S_n=((x_i,f(x_i)))_{i=1}^n$ with independent $x_i\sim D$, the posterior $\Pi_{N,\sigma}(\cdot\mid S_n)$ is $\pi_{N,\sigma}$ restricted to functions consistent with all labels. Define
+\[
+ \err_D(g)=\PP_{x\sim D}\{g(x)\ne f(x)\},\qquad
+ R_D(\Pi)=\E_{g\sim\Pi}\err_D(g).
+\]
+Thus $1-R_D(\Pi)$ is the average posterior probability of the correct label. A posterior-majority classifier, with any tie rule, has error at most $2R_D(\Pi)$.
+
+\begin{theorem}[Strong-prior generalization]\label{thm:learning}
+For every fixed $L\geq2$ there is a polynomial $p_L$ with the following property. Let $f$ have $C=C_L(f)<\infty$, and let $N\geq C$ be arbitrary. For every $\varepsilon,\delta\in(0,1)$ there is $\sigma_0>0$ such that, for all $0<\sigma<\sigma_0$, all distributions $D$ on $\cX$, and all
+\begin{equation}\label{eq:sample}
+ n\geq\frac{2}{\varepsilon}\left(p_L(d,C)+\log\frac1\delta\right),
+\end{equation}
+with probability at least $1-\delta$ over $S_n$,
+\[
+ R_D\bigl(\Pi_{N,\sigma}(\cdot\mid S_n)\bigr)\leq\varepsilon.
+\]
+The polynomial is independent of $N$. The threshold $\sigma_0$ may depend on $d,L,N,\phi,f,\varepsilon$, but not on $D,n$, or $\delta$.
+\end{theorem}
+
+Taking fixed $\varepsilon<10^{-3}$ and $\delta=e^{-C}$ gives the lecture notes' polynomial sample bound and average correct-label probability greater than $99.9\%$. The order of quantifiers matters: we first fix a width, however large, and then take the variance sufficiently small. The theorem provides neither a rate for $\sigma_0$ nor a simultaneous $N\to\infty$, $\sigma\to0$ theorem.
+
+\section{Relevant functions and the small-variance limit}
+\begin{lemma}[A finite relevant set]\label{lem:relevance}
+Let $\pi$ be a prior on a countable class containing a target $f$ with $\pi(f)>0$. Suppose a finite set $A$ contains $f$, $|A|\leq M$, and
+\[
+ \pi(\cH\setminus A)\leq\tau\pi(f).
+\]
+For any $a,\delta\in(0,1)$, if $n\geq a^{-1}(\log M+\log(1/\delta))$, then the consistency posterior satisfies $R_D(\Pi)\leq a+\tau$ with probability at least $1-\delta$.
+\end{lemma}
+\begin{proof}
+A function of error greater than $a$ survives $n$ independent examples with probability at most $e^{-an}$. A union bound over $A$ shows that, except on an event of probability at most $Me^{-an}$, every consistent member of $A$ has error at most $a$. On every training sample, the posterior denominator is at least $\pi(f)$, so the posterior mass outside $A$ is at most $\tau$. Its contribution to the posterior risk is at most $\tau$; the contribution inside $A$ is at most $a$.
+\end{proof}
+
+This lemma does not require $A$ to consist of the highest-prior functions. Nor does it require a unique simplest consistent function. Both points are useful when several functions have the same minimum norm.
+
+\begin{lemma}[Gaussian rate for a function]\label{lem:rate}
+At fixed $d,L,N$, for every $g\in\cH_N$,
+\begin{equation}\label{eq:rate}
+ \lim_{\sigma\downarrow0}2\sigma^2\log\mu_{N,\sigma}(U_{N,g})=-\kappa_N(g).
+\end{equation}
+Consequently, if $\kappa_N(g)>\kappa_N(f)$, then $\pi_{N,\sigma}(g)/\pi_{N,\sigma}(f)\to0$.
+\end{lemma}
+\begin{proof}
+Use coordinates $u^\ell=\sqrt{c_\ell}W^\ell$, where $c_1=d/N$, $c_L=N$, and the other $c_\ell$ equal one. Then $\kappa_N(w)=\norm{u}_2^2$ and $u\sim\mathcal N(0,\sigma^2I_P)$, where $P$ is the parameter count. Let $V$ be the image of $U_{N,g}$ and $b=\inf_{u\in V}\norm{u}^2$.
+
+For $0<\theta<1$, the Gaussian exponential-moment bound gives
+\[
+ \PP\{u\in V\}\leq\PP\{\norm{u}^2\geq b\}
+ \leq\theta^{-P/2}\exp\left(-\frac{(1-\theta)b}{2\sigma^2}\right).
+\]
+Take the upper limit and then $\theta\downarrow0$. Conversely, for any $r>0$, openness and the definition of $b$ give a positive-volume ball $B\subset V$ on which $\norm{u}^2<b+r$. Integrating the density over $B$ gives
+\[
+ \PP\{u\in V\}\geq\operatorname{vol}(B)(2\pi\sigma^2)^{-P/2}
+ \exp\left(-\frac{b+r}{2\sigma^2}\right).
+\]
+Take the lower limit and then $r\downarrow0$. This proves~\eqref{eq:rate}. Ratios of the conditioned function probabilities equal ratios of the unconditioned event probabilities, so their logarithmic rate is $-\kappa_N(g)+\kappa_N(f)$.
+\end{proof}
+
+For $A_{N,f}=\{g\in\cH_N:\kappa_N(g)\leq\kappa_N(f)\}$, finiteness of $\cH_N$ now implies
+\begin{equation}\label{eq:tail}
+ \frac{\pi_{N,\sigma}(\cH_N\setminus A_{N,f})}{\pi_{N,\sigma}(f)}\longrightarrow0.
+\end{equation}
+Equal-cost functions all remain in $A_{N,f}$; no claim about their limiting probability ratios is needed. Since there are finitely many targets at fixed $d,N$, a single sufficiently small variance can also enforce any prescribed tail ratio for every representable target at that width. This observation supplies no quantitative or width-uniform threshold.
+
+\section{Cloning: a small target stays cheap}\label{sec:cloning}
+\begin{lemma}[Cloning]\label{lem:cloning}
+If a width-$C$ network implements $f$, then for every $N\geq C$ a width-$N$ network implements the same real-valued output and has weighted norm at most $2\kappa_C(w)$. If $N$ is a multiple of $C$, the norm is preserved exactly. In particular, for $C=C_L(f)$,
+\begin{equation}\label{eq:cheap}
+ \kappa_N(f)\leq B_L(d,C):=d(d+1)C^2+LC^4.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Set $k=\lfloor N/C\rfloor$ and replace each hidden neuron by $k$ identical copies. Copy its first-layer incoming weights unchanged. For each later layer, divide every weight leaving a copied neuron by $k$; connect every destination copy in the same way. The copies compute identical activations, and their outgoing contributions sum to the original contribution. Pad unused positions with zero incident weights. This works even when $\phi(0)\ne0$, since the padded neurons have no outgoing effect.
+
+The first-layer squared norm is multiplied by $k$, each internal squared norm is unchanged, and the readout squared norm is divided by $k$. After including the width-dependent coefficients, the first-layer contribution is multiplied by $kC/N\leq1$, and the readout contribution by $N/(kC)<2$. These factors both equal one if $N=kC$.
+
+For a complexity-$C$ witness, the original first-layer contribution is at most $d(d+1)C^2$, the internal contribution at most $(L-2)C^4$, and the readout contribution at most $C^4$. Applying the separate factors above gives~\eqref{eq:cheap}.
+\end{proof}
+
+\section{Compression by reverse-order subsampling}\label{sec:compression}
+\input{compression}
+\input{packing-circuits}
+
+\section{Counting low-norm functions and proving the theorem}\label{sec:counting}
+The preceding ingredients give both a uniform function count and a comparison of complexity measures. We record explicit quantities to make the polynomial dependence unambiguous, without attempting to optimize it.
+
+For $K\geq1$, use the compression width $m_L(d,K)$ from \cref{thm:compression}, and put $m=m_L(d,K)$ and $R=3\sqrt K$. Write
+\begin{equation}\label{eq:Q}
+ \begin{split}
+ P_m&=m(d+1)+(L-2)m^2+m,\\
+ \Lambda_L(R,d)^2&=\frac{d+1}{d}R^{2(L-1)}+\sum_{j=0}^{L-2}R^{2j},\\
+ Q_L(d,K)&=P_m\log\bigl(1+2R\Lambda_L(R,d)\bigr).
+ \end{split}
+\end{equation}
+For fixed $L$, these quantities are bounded by polynomials in $d,K$.
+
+\begin{proposition}[Uniform count and complexity comparison]\label{prop:count}
+For every $N\geq1$ and $K\geq1$,
+\begin{equation}\label{eq:count}
+ \#\{g\in\cH_N:\kappa_N(g)\leq K\}\leq\exp Q_L(d,K+1).
+\end{equation}
+Every such $g$ has $C_L(g)\leq m_L(d,K+1)$. Together with cloning, this implies that at fixed depth, $C_L(f)$ and $\kappa_N(f)$ are polynomially related, with dependence on $d$ and with bounds independent of $N$, whenever $N\geq C_L(f)$.
+\end{proposition}
+\begin{proof}
+For each counted $g$, choose a strict-margin representative of norm less than $K+1$. This small slack avoids assuming that the infimum defining $\kappa_N(g)$ is attained. Compression gives a width-$m_L(d,K+1)$ representative of the same Boolean function with weighted norm at most $9(K+1)$. The packing bound gives~\eqref{eq:count}.
+
+The compression width is at least $9(K+1)$. The rescaled representative's first-layer entries have magnitude at most $3\sqrt{(K+1)m/d}\leq m$, its internal entries at most $3\sqrt{K+1}\leq m$, and its readout entries at most $3\sqrt{(K+1)/m}\leq m$. It is therefore a witness for $C_L(g)\leq m$. This implication applies to every represented $g$, without assuming in advance that $N\geq C_L(g)$. Cloning supplies the other direction.
+\end{proof}
+
+\begin{proof}[Proof of \cref{thm:learning}]
+Let $A=A_{N,f}$. By cloning, $\kappa_N(f)\leq B_L(d,C)$. By Proposition~\ref{prop:count},
+\[
+ \log|A|\leq Q_L\bigl(d,B_L(d,C)+1\bigr).
+\]
+Choose a polynomial $p_L$ majorizing the right-hand side. By~\eqref{eq:tail}, there is $\sigma_0>0$ such that the prior mass outside $A$ is at most $(\varepsilon/2)\pi_{N,\sigma}(f)$ whenever $0<\sigma<\sigma_0$. Apply Lemma~\ref{lem:relevance} with $a=\tau=\varepsilon/2$. The resulting risk bound and sample requirement are exactly those in the theorem.
+\end{proof}
+
+\input{circuits}
+
+\section{Scope and depth dependence}
+The argument separates two questions. The geometric question is how many Boolean functions can have low weighted norm; cloning and compression answer it uniformly in width. The probabilistic question is how much prior mass lies above a target's norm level; here we answer it only asymptotically at each fixed width. Quantitative control of this second question would be needed for a theorem at an explicitly specified nonzero variance or along a joint width--variance scaling.
+
+Our complexity comparison is between a margin-constrained norm and a bounded-weight network implementation. It does not assert a matching lower bound on the sample complexity of learning every high-complexity target. It also does not identify the prior probability of a function with an exponential of its circuit description length: the Gaussian rate has a factor $1/(2\sigma^2)$, and equal rates need not have equal prefactors.
+
+Depth enters compression through the amplification of errors by downstream operator norms. Proposition~\ref{prop:depth-lower-bound} shows, for tanh, that low-norm sublevel sets can indeed contain doubly exponentially many functions as depth increases in an appropriate joint parameter regime. This is a limitation of a uniform norm-sublevel counting strategy. It is not a lower bound on the sample complexity of the Bayesian learner for a circuit-simple target: the competing functions would also have to receive sufficient posterior mass.
+
+Finally, every statistical statement here uses fresh inputs from the same distribution as the training inputs. Neither an adversarial online mistake bound nor a claim about total mistakes over an unbounded iid stream is proved. Those require arguments beyond the finite-sample posterior bound established above.
+
+\appendix
+\input{depth-lower-bound}
+
+\begin{thebibliography}{9}
+\bibitem{notes}
+Dmitry Vaintrob and Kaarel H\"anni.
+\emph{A Generalization Result for Overparametrized Neural Net Bayesian Learning}.
+ILIAD lecture slides, 2026.
+\url{https://kaarelh.github.io/ai/nnbayes-generalization.pdf}.
+
+\bibitem{blumer}
+Anselm Blumer, Andrzej Ehrenfeucht, David Haussler, and Manfred K. Warmuth.
+Occam's razor. \emph{Information Processing Letters}, 24(6):377--380, 1987.
+\href{https://doi.org/10.1016/0020-0190(87)90114-1}{doi:10.1016/0020-0190(87)90114-1}.
+
+\bibitem{bartlett}
+Peter L. Bartlett. The sample complexity of pattern classification with neural networks: the size of the weights is more important than the size of the network.
+\emph{IEEE Transactions on Information Theory}, 44(2):525--536, 1998.
+\href{https://doi.org/10.1109/18.661502}{doi:10.1109/18.661502}.
+
+\bibitem{neyshabur}
+Behnam Neyshabur, Ryota Tomioka, and Nathan Srebro.
+Norm-based capacity control in neural networks.
+\emph{Proceedings of COLT}, PMLR 40:1376--1401, 2015.
+\url{https://proceedings.mlr.press/v40/Neyshabur15.html}.
+
+\bibitem{golowich}
+Noah Golowich, Alexander Rakhlin, and Ohad Shamir.
+Size-independent sample complexity of neural networks.
+\emph{Information and Inference}, 9(2):473--504, 2020.
+\href{https://doi.org/10.1093/imaiai/iaz007}{doi:10.1093/imaiai/iaz007}.
+
+\bibitem{buzaglo}
+Gon Buzaglo, Itamar Harel, Mor Shpigel Nacson, Alon Brutzkus, Nathan Srebro, and Daniel Soudry.
+How uniform random weights induce non-uniform bias: typical interpolating neural networks generalize with narrow teachers.
+\emph{Proceedings of ICML}, PMLR 235:5035--5081, 2024.
+\url{https://proceedings.mlr.press/v235/buzaglo24a.html}.
+
+\bibitem{pinkus}
+Allan Pinkus. Approximation theory of the MLP model in neural networks.
+\emph{Acta Numerica}, 8:143--195, 1999.
+\href{https://doi.org/10.1017/S0962492900002919}{doi:10.1017/S0962492900002919}.
+
+\bibitem{hoeffding}
+Wassily Hoeffding. Probability inequalities for sums of bounded random variables.
+\emph{Journal of the American Statistical Association}, 58(301):13--30, 1963.
+\href{https://doi.org/10.1080/01621459.1963.10500830}{doi:10.1080/01621459.1963.10500830}.
+\end{thebibliography}
+\end{document}

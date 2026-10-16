@@ -1,0 +1,280 @@
+% Paper-ready fragment. Depends only on the model definitions, the cylinder
+% mass proposition in unified-cloning.tex, and the earlier compression theorem.
+% Use \mathcal A_L for that proposition's mass bound (called Q_L there).
+
+\section{Width-independent learning at every fixed $\gamma>1$}
+Let $\mathcal A_L(d,C)=\max\{1,Q_L(d,C)\}$, where $Q_L$ is the bound
+from the preceding cylinder construction. Then $\mathcal A_L$ is
+polynomially bounded and
+\begin{equation}\label{eq:uniform-target-mass}
+ \mu_{N,\gamma}(U_{N,f})\geq
+ \exp\{-\mathcal A_L(d,C)N^\gamma/2\}
+ \qquad(\gamma\geq1,\ N\geq C).
+\end{equation}
+We now control the \emph{total} mass of functions of large circuit complexity.
+A Gaussian geometric argument gives this control for every fixed $\gamma>1$.
+
+\begin{lemma}[A Gaussian singular-value tail]\label{lem:gaussian-spectral-tail}
+Let $M$ be an $N\times N$ matrix with independent $N(0,\sigma^2)$ entries.
+For $a\geq8\sigma\sqrt N$, let $M_{>a}$ retain exactly the singular values of
+$M$ greater than $a$. Then, for every $K>0$,
+\[
+ \Pr\{\|M_{>a}\|_F^2>K\}\leq
+ \exp\{-K/(8\sigma^2)\}.
+\]
+\end{lemma}
+\begin{proof}
+The standard Gaussian operator-norm inequality~\cite{davidson} implies that
+the ball $B_a=\{T:\|T\|_{\mathrm{op}}\leq a/2\}$ has Gaussian
+probability at least $1-e^{-2N}>1/2$. Indeed,
+\[
+ \Pr\{\|M\|_{\mathrm{op}}>2\sigma\sqrt N+\sigma t\}
+ \leq e^{-t^2/2},
+\]
+and $a/2\geq4\sigma\sqrt N$. The Frobenius distance to $B_a$ is
+\[
+ D(M)=\operatorname{dist}_F(M,B_a)
+ =\left[\sum_j(s_j(M)-a/2)_+^2\right]^{1/2}.
+\]
+The Gaussian isoperimetric inequality~\cite{borell,ledoux}, applied to the Euclidean enlargement
+of $B_a$ in the $N^2$ matrix coordinates, gives
+\[
+ \Pr\{D(M)>t\}\leq1-\Phi(t/\sigma)
+ \leq e^{-t^2/(2\sigma^2)},\qquad t>0,
+\]
+where $\Phi$ is the standard normal distribution function. If $s>a$, then
+$s\leq2(s-a/2)$, so $\|M_{>a}\|_F\leq2D(M)$. Apply the last bound with
+$t=\sqrt K/2$.
+\end{proof}
+
+\begin{lemma}[Most margin-separated draws have low-norm descriptions]
+\label{lem:aggregate-structural-tail}
+Fix $K\geq1$, and set
+\[
+ a_K=\frac{1}{8L(\sqrt K+1)^{L-2}},\qquad
+ J_K=(L+3)K.
+\]
+Suppose $\gamma>1$ and
+\begin{equation}\label{eq:spectral-width-conditions}
+ N^{\gamma-1}\geq8(d+1),\qquad
+ N^{\gamma-1}\geq64a_K^{-2}.
+\end{equation}
+For
+$\mathcal S_N(K)=\{g\in\mathcal H_N:\kappa_N(g)\leq J_K\}$,
+\begin{equation}\label{eq:aggregate-tail}
+ \mu_{N,\gamma}\left(\bigcup_{g\notin\mathcal S_N(K)}U_{N,g}\right)
+ \leq L e^{-KN^\gamma/8}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Let $G_K$ be the event
+\[
+ \frac dN\|W^1\|_F^2\leq K,\qquad
+ N\|W^L\|_2^2\leq K,\qquad
+ \|(W^s)_{>a_K}\|_F^2\leq K\quad(2\leq s<L).
+\]
+The first and last weighted norms have distributions
+$N^{-\gamma}\chi^2_{N(d+1)}$ and $N^{-\gamma}\chi^2_N$.
+For $X\sim\chi_D^2$ and $u\geq8D$, the exponential-moment bound at
+parameter $3/8$ gives
+\[
+ \Pr\{X>u\}\leq 4^{D/2}e^{-3u/8}\leq e^{-u/4}.
+\]
+The first condition in~\eqref{eq:spectral-width-conditions} therefore bounds
+each of these two failure probabilities by $e^{-KN^\gamma/4}$.
+For each internal layer, the second condition gives
+$a_K\geq8N^{(1-\gamma)/2}$, so Lemma~\ref{lem:gaussian-spectral-tail}
+bounds its failure probability by $e^{-KN^\gamma/8}$.
+A union bound yields
+\begin{equation}\label{eq:good-draw-tail}
+ \mu_{N,\gamma}(G_K^c)\leq L e^{-KN^\gamma/8}.
+\end{equation}
+
+Fix a draw $w\in G_K$. Replace each internal matrix by its
+$>a_K$ singular-value truncation, obtaining $\widetilde w$.
+The retained matrices have operator norms at most $\sqrt K$; the discarded
+matrices have operator norms at most $a_K$.
+For any input, let $e_s$ be the Euclidean difference of the original and
+truncated activations at hidden layer $s$. Boundedness and Lipschitz
+continuity of the activation give
+\[
+ e_1=0,\qquad e_s\leq\sqrt K\,e_{s-1}+a_K\sqrt N
+ \quad(2\leq s<L).
+\]
+The readout has norm at most $\sqrt{K/N}$. Thus, when $L\geq3$,
+\[
+ |z_{\widetilde w}(x)-z_w(x)|
+ \leq a_K\sum_{j=1}^{L-2}K^{j/2}
+ \leq a_K(L-2)K^{(L-2)/2}\leq\frac18.
+\]
+When $L=2$, the networks are identical, so the same final bound holds.
+All these bounds hold simultaneously for every input.
+If $w\in U_{N,g}$, the truncated network has strict margin $3/8$ for $g$.
+Doubling its readout restores strict margin $1/2$ and gives weighted norm
+at most $K+(L-2)K+4K=J_K$. Therefore every $w\in G_K\cap U_N$ implements
+a function in $\mathcal S_N(K)$. The event on the left of
+\eqref{eq:aggregate-tail} is contained in $G_K^c$, and
+\eqref{eq:good-draw-tail} proves the claim.
+\end{proof}
+
+The key point is that~\eqref{eq:aggregate-tail} bounds an entire union of
+function events directly. No union bound over the $2^{2^d}$ Boolean functions
+is necessary. Conditioning the prior on $U_N$ does not affect its ratio to
+the target event's mass.
+
+\paragraph{The finite capacity bound used below.}
+The compression theorem from the strong-prior argument gives a polynomially
+bounded $m_L(d,J+1)$ such that every function with $\kappa_N(g)\leq J$ has
+a width-$m=m_L(d,J+1)$ realization, with strict margin $1/2$ and all weights
+bounded by $m$. The $+1$ permits an arbitrarily near minimizer when the
+infimum defining $\kappa_N(g)$ is not attained. For definiteness one can take
+\[
+ \rho=\frac{2^{-L}(J+1)^{-(L-1)/2}}{12(L-1)},\qquad
+ m_L(d,J+1)=\max\left\{\lceil9(J+1)\rceil,
+ \left\lceil256\rho^{-4}\bigl(d+\log(L/\rho)\bigr)\right\rceil\right\}.
+\]
+Writing $P_m=m(d+2)+(L-2)m^2$, define
+\begin{equation}\label{eq:finite-capacity-bound}
+ H_L(d,J)=P_m\log\left(
+ 3+16Lm\max\{m,d+1\}[m(m+1)]^{L-1}\right).
+\end{equation}
+Then
+\begin{equation}\label{eq:entropy-norm-class}
+ \log\#\{g\in\mathcal H_N:\kappa_N(g)\leq J\}
+ \leq H_L(d,J).
+\end{equation}
+To see this, round each weight of the compressed realization to a grid of
+spacing
+$r=[8L\max\{m,d+1\}\{m(m+1)\}^{L-1}]^{-1}$.
+The rounding changes each weight by at most $r$ and keeps weights bounded
+by $m+1$. A layerwise telescoping estimate in the maximum norm bounds the
+output change by
+$L\max\{m,d+1\}r[m(m+1)]^{L-1}=1/8$.
+Thus every rounded array has the same Boolean signs as its original
+realization. Distinct functions require distinct arrays, and the number of
+arrays is at most $(3+2m/r)^{P_m}$. This proves
+\eqref{eq:entropy-norm-class}. At fixed $L$, $H_L$ is bounded by a
+polynomial in its arguments.
+
+\begin{theorem}[All widths at fixed $\gamma>1$]
+\label{thm:all-width-gamma-gt-one}
+Fix $L\geq2$ and $\gamma>1$. There exists a polynomial $p_{L,\gamma}$ such
+that the following holds. Let $C=C_L(f)<\infty$, let $N\geq C$, and let the
+function prior and consistency posterior use the global margin conditioning
+specified above. For every distribution $D$ on $\{-1,1\}^d$, every
+$\varepsilon,\eta\in(0,1)$, and
+\[
+ n\geq\frac{2}{\varepsilon}\left[
+ p_{L,\gamma}\bigl(d,C,\log(1/\varepsilon)\bigr)
+ +\log\frac{2}{\varepsilon\eta}\right],
+\]
+with probability at least $1-\eta$ over $n$ independent labeled examples,
+\[
+ \mathbb E_{g\sim\Pi(\cdot\mid S_n)}\operatorname{err}_D(g)
+ \leq\varepsilon.
+\]
+The polynomial is independent of $N$. Its exponent may depend on $\gamma$;
+this theorem makes no uniform assertion as $\gamma\downarrow1$.
+\end{theorem}
+\begin{proof}
+Set
+\[
+ A=\mathcal A_L(d,C),\qquad K=4A+8\log(2L/\varepsilon),
+ \qquad a=a_K,
+\]
+and define the integer threshold
+\[
+ T=\left\lceil\max\left\{C,
+ [8(d+1)]^{1/(\gamma-1)},
+ (8/a)^{2/(\gamma-1)}\right\}\right\rceil.
+\]
+First suppose $N\geq T$. By the aggregate structural tail and the target
+mass bound,
+\begin{align*}
+ \frac{\pi_{N,\gamma}(\mathcal H_N\setminus\mathcal S_N(K))}
+ {\pi_{N,\gamma}(f)}
+ &=\frac{\mu_{N,\gamma}(\bigcup_{g\notin\mathcal S_N(K)}U_{N,g})}
+ {\mu_{N,\gamma}(U_{N,f})}\\
+ &\leq L\exp\{-(K/8-A/2)N^\gamma\}\leq\varepsilon/2.
+\end{align*}
+The set $\mathcal S_N(K)$ contains $f$: otherwise the left side would be
+at least one. Its log cardinality is at most
+$H_L(d,J_K)$ by~\eqref{eq:entropy-norm-class}.
+Any particular function of true error greater than $\varepsilon/2$ is
+consistent with $n$ independent examples with probability at most
+$e^{-n\varepsilon/2}$. A union bound shows that, if
+\[
+ n\geq\frac2\varepsilon
+ \left[H_L(d,J_K)+\log(1/\eta)\right],
+\]
+then, with probability at least $1-\eta$, every consistent function in
+$\mathcal S_N(K)$ has error at most $\varepsilon/2$.
+On every training sample, the posterior denominator is at least
+$\pi_{N,\gamma}(f)$, so posterior mass outside this set is at most
+$\varepsilon/2$. The posterior risk is therefore at most $\varepsilon$.
+
+Now suppose $C\leq N<T$. Since $\mu_{N,\gamma}(U_N)\leq1$,
+\[
+ -\log\pi_{N,\gamma}(f)
+ \leq-\log\mu_{N,\gamma}(U_{N,f})
+ \leq AN^\gamma/2\leq AT^\gamma/2.
+\]
+For any prior with positive target mass, let $B_n$ be posterior mass assigned
+to functions with true error greater than $\varepsilon/2$. The posterior
+denominator is at least the target's prior mass, giving
+\[
+ \mathbb E_{S_n}B_n
+ \leq\frac{1}{\pi_{N,\gamma}(f)}
+ \sum_{g:\operatorname{err}_D(g)>\varepsilon/2}
+ \pi_{N,\gamma}(g)(1-\operatorname{err}_D(g))^n
+ \leq\frac{e^{-n\varepsilon/2}}{\pi_{N,\gamma}(f)}.
+\]
+Markov's inequality gives $B_n\leq\varepsilon/2$ with probability at least
+$1-\eta$ as soon as
+\[
+ n\geq\frac2\varepsilon\left[AT^\gamma/2+
+ \log\frac{2}{\varepsilon\eta}\right].
+\]
+The remaining posterior mass contributes at most $\varepsilon/2$ to risk.
+
+It is consequently enough to majorize
+\[
+ \max\{H_L(d,(L+3)K),\ AT^\gamma/2\}
+\]
+by $p_{L,\gamma}(d,C,\log(1/\varepsilon))$.
+The cylinder bound makes $A$ polynomially bounded in $d,C$ at fixed $L$;
+then $K$ is polynomially bounded in $d,C,\log(1/\varepsilon)$.
+For fixed $L,\gamma>1$, so are $a^{-1}$, $T$, $T^\gamma$, and the last
+display. This proves the stated uniform-in-width polynomial guarantee.
+\end{proof}
+
+For a confidence threshold $q\in(0,1)$, define
+\[
+ F_q(\Pi;f,D)=\Pr_{x\sim D}\{\Pi(g(x)=f(x)\mid S_n)\leq q\}.
+\]
+This counts an input as successful only when the posterior probability of its
+correct label is strictly greater than $q$. Since the posterior probability
+of an error is at least $1-q$ on the failure set,
+\[
+ F_q(\Pi;f,D)\leq\frac{R_D(\Pi)}{1-q}.
+\]
+In particular $F_{2/3}\leq3R_D(\Pi)$. Applying the theorem at accuracy
+$\varepsilon/3$ proves the same width-independent polynomial sample bound
+for having correct-label confidence greater than $2/3$ on at least a
+$1-\varepsilon$ fraction of test inputs.
+
+A posterior-majority classifier has risk at most twice the posterior average
+risk, since every majority mistake places posterior mass at least $1/2$ on
+the wrong label. Applying the theorem with accuracy $\varepsilon/2$ therefore
+gives the same type of guarantee for majority prediction.
+
+\paragraph{Comparison with the supplied draft.}
+The supplied draft's structural estimates are compatible with the aggregate
+argument above, but its learning section instead sums a per-function bound
+over all Boolean functions. That step introduces an unnecessary
+$N^\gamma\gtrsim2^d$ condition. Controlling the bad parameter event directly
+removes this exponential width requirement. The present theorem also covers
+the remaining polynomial range of widths through the elementary posterior
+bound. Neither this repair nor the spectral lemma establishes the endpoint
+$\gamma=1$: at that endpoint the Gaussian bulk operator norm remains of
+constant order, whereas the truncation error requires a small cutoff.

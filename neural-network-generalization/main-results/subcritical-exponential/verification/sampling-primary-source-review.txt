@@ -1,0 +1,138 @@
+AUDIT: SINGLE-LOGARITHM SQUARED-RELU SAMPLING FROM LEE'S METRIC BOUND
+15 October 2026, allwidth_adversarial_review
+
+STATUS: PASS. The key is to use the stronger intermediate metric theorem,
+not to call a one-sided function a norm. The direct source checked is James
+R. Lee, Spectral hypergraph sparsification via chaining, arXiv:2209.04539v3,
+Section 2.4, especially equations (2.17), (2.20) and the proof following it.
+https://arxiv.org/html/2209.04539
+
+1. EXACT DETERMINISTIC BOUND
+Let a_1,...,a_n in R^D, R=max_i ||a_i||_2, and
+ B=sup_{u in T}(sum_i <a_i,u>^2)^{1/2},
+where T is any compact subset of the Euclidean unit ball containing zero.
+Then for independent Rademacher signs epsilon_i,
+
+ E_epsilon sup_{u in T}|sum_i epsilon_i (<a_i,u>_+)^2|
+   <= C R sqrt(log(2(n+D))) B.                       (1)
+
+The constant is universal. No symmetry of T, no symmetry of the a_i, and
+no probability law for the a_i is required. The same result holds for
+individual maps psi_i with psi_i(0)=0 and Lipschitz constant at most one,
+replacing (<a_i,u>_+)^2 by psi_i(<a_i,u>)^2.
+
+Proof. Put N_i(u)=|<a_i,u>|, genuine seminorms, and
+ d(u,v)^2=sum_i <a_i,u-v>^2(<a_i,u>^2+<a_i,v>^2).
+The norm formulation in Lee permits the rank-one case explicitly (see the
+paragraph after (1.5)); alternatively add an arbitrarily small Euclidean
+norm and pass to the limit. Let
+ lambda=max_i(E N_i(g)^2)^{1/2}=R,
+ kappa=E max_i N_i(g)<=C R sqrt(log(2n)).
+
+After normalizing B=1, Lee's equation (2.20) and the rest of its proof give
+ gamma_2(T,d)<=C(lambda sqrt(log(2D))+kappa).
+Restoring the scale gives
+ gamma_2(T,d)<=C(lambda sqrt(log(2D))+kappa)B.        (2)
+Indeed N_i -> N_i/B divides d by B^2 and lambda,kappa by B.
+The zero case B=0 is immediate. For general T one first passes to its
+closed convex hull, which remains in the Euclidean unit ball and has the
+same value of sup sum_i N_i^2, by convexity. Thus the stronger metric bound
+really does cover arbitrary T.
+
+For psi(0)=0 and Lip(psi)<=1, we have
+ |psi(s)^2-psi(t)^2|
+ <= |s-t|(|s|+|t|),
+so the squared increment metric of the centered Rademacher process
+ X_u=sum_i epsilon_i psi_i(<a_i,u>)^2
+is bounded by sqrt(2)d(u,v). Standard subgaussian generic chaining and (2)
+bound E sup X_u. Applying the same argument to -X_u bounds the absolute
+supremum by twice that amount; X_0=0 ensures the two suprema are nonnegative.
+This proves (1). In particular, it never assumes ReLU is a seminorm.
+
+2. SMALL SOURCE-PROOF PRESENTATIONAL GAP AND ITS DIRECT REPAIR
+In the source, after normalization B=1, equation (2.26) is printed as
+ gamma_2(T,d) <= C(1/c*+1).
+The subsequent sentence absorbs the last 1 into lambda sqrt(log D)+kappa.
+Such absorption is not automatic: lambda and kappa can both be small for
+many small rank-one rows. This does not invalidate the claimed bound; the
+preceding diameter and packing estimates directly sharpen to O(lambda).
+
+For rank-one N_i, N_i(u)<=lambda ||u||_2. Thus, on T subset B_2,
+ ||u||_N:=max_i N_i(u)<=lambda.
+Under B=1, the source's equation (2.23) gives
+ d(u,v)<=sqrt(2)||u-v||_N,
+so diam_d(T)<=2sqrt(2)lambda.
+Any d-separated collection at separation a is ||.||_N-separated at
+separation a/sqrt(2), and lies in the ||.||_N ball of radius lambda.
+The volume bound therefore gives K<=(C lambda/a)^D whenever K>=2.
+For seminorms apply this in the quotient by the common kernel (dimension
+at most D). Thus the parameter L in Corollary 2.11 is C lambda, not merely
+an absolute constant. The right side of (2.26) becomes
+ C(1/c*+lambda),
+which is absorbed into C(lambda sqrt(log(2D))+kappa). The same repair works
+for true norms by the Gaussian domination sup_{||u||2<=1}N_i(u)<=C lambda.
+All other parts of the proof use genuine N_i and are unchanged.
+
+3. UNIFORM SAMPLING CONSEQUENCE
+Suppose a(X) in R^D is isotropic, E a(X)a(X)^T=I_D, and ||a(X)||^2<=D.
+(The Walsh evaluation vector multiplied by an arbitrary +/-1 label has
+exactly these properties.) Let X_1,...,X_n be iid. If
+ n>=C D log(2(n+D)),
+then
+
+ E sup_{||u||<=1}| n^-1 sum_i (<a(X_i),u>_+)^2
+                     - E(<a(X),u>_+)^2 |
+ <= C sqrt[D log(2(n+D))/n].                        (3)
+
+Proof: symmetrize, apply (1) conditionally on the sample with R<=sqrt D,
+and use E||sum_i a_i a_i^T||op<=C n. The last estimate follows from the
+standard bounded isotropic covariance bound (matrix Bernstein), or from
+Rudelson's inequality plus its self-consistent second-moment bound. Jensen
+then gives E B<=C sqrt n.
+
+By Markov, for any fixed delta,eta>0, a sufficiently large constant in
+ n>=C delta^-2 eta^-2 D log(2(n+D))
+ensures, with probability at least 1-delta, that for EVERY u,
+ |P_n(<a,u>_+)^2-E(<a,u>_+)^2|<=eta ||u||_2^2.        (4)
+Positive homogeneity extends from the unit ball to all u. The constant
+need not be sharp; the applications require fixed confidence and fixed
+relative coercivity. For n polynomial in D, this is D log D sampling.
+
+4. WALSH/PARITY CONSEQUENCE
+Let V_r be the degree-at-most-r Walsh space, D=dim V_r, f full parity,
+and a(x)=-f(x)(chi_U(x))_{|U|<=r}. Then ||a(x)||^2=D and isotropy holds.
+Thus (4) applies to (-fP)_+^2 for EVERY P in V_r.
+The previously audited discrete-derivative identity gives
+ |E[f P|P|]|<=2sqrt(r/d)||P||_2^2,
+so
+ E(-fP)_+^2 >= (1/2-sqrt(r/d))||P||_2^2.
+For example r<=d/100 and eta=1/10 imply, on the event (4),
+ P_n(-fP)_+^2 >= (3/10)||P||_2^2
+simultaneously for every P in V_r. This is the desired one-sided squared
+coercivity at D log D rather than D log^3 D sample size.
+
+AUDIT LIMIT
+This note checks the metric theorem, its application, and the sampling
+corollary. It does not by itself establish the downstream all-n positive-
+gamma or gamma-zero lower bounds; their cutoff, spectral, and posterior
+arguments must be checked separately.
+
+5. INDEPENDENT RECHECK OF THE STRONGER CLIPPING STEP
+The exact argument in research-round3/clipping-laplacian-reduction.txt also
+passes independently. Write R for the uniformly chosen coordinate flip,
+Delta=(d/2)(I-R), q=fP, and e=(2/d)fDelta P. Then Rq=-q+e. Jensen and
+invariance of the uniform measure imply
+ E|Rq+a|<=E|q+a|,
+whereas the triangle inequality gives E|Rq+a|>=E|q-a|-||e||1. Apply the
+same argument with -a to conclude
+ |E|q+a|-E|q-a||<=||e||1.
+The exact clipping identity gives
+ |E f clip(P/a)|<=||Delta P||1/(ad).
+For degree-at-most-r P, Parseval yields ||Delta P||2<=r||P||2. Therefore
+
+ |E f clip(P/a)| <= (r/d)||P||2/a.                  (5)
+
+The r/d coefficient is stronger than the earlier sqrt(r/d) estimate.
+No unproved endpoint Bernstein inequality is needed: L1<=L2 is in the
+correct direction here. This is sufficient to make the entropy-based
+Gaussian-endpoint scaling decay even at beta=1/2.

@@ -1,0 +1,106 @@
+\section{Radial feature bounds and endpoint anchors}
+\label{sec:radial-geometry}
+Throughout this section the nuisance dimension $m=d-k$ is comparable
+to $d$. The bounds also hold after a positive spectral restriction.
+
+\begin{lemma}[Uniform Krawtchouk decay]\label{lem:uniform-kraw}
+For normalized Krawtchouk polynomials,
+\[
+ |R_s^n(h)|\le
+ \exp\left[-c\frac{\min(s,n-s)\min(h,n-h)}n\right].
+\]
+\end{lemma}
+\begin{proof}
+Reflection of either index preserves absolute value, and normalized
+duality gives $R_s(h)=R_h(s)$. It suffices to treat $R_b(a)$ with
+$1\le a\le b\le n/2$. Pair $q=\max(1,\lfloor a/4\rfloor)$ negative
+population signs with positive signs. In the average over uniform
+$b$-subsets, any subset splitting a pair cancels with the subset obtained
+by switching membership within its first split pair. Hence the absolute
+average is at most the probability that no pair splits.
+For $a\ge4$, expose pairs successively. Conditional on previous
+non-splitting patterns, at least $b/2$ selected and $n/4$ unselected
+positions remain. Each next pair splits with probability at least
+$b/(4n)$. Since $q\ge a/7$, the bound follows. For $a=1,2,3$, a single
+pair splits with probability at least $b/n$, which gives the same bound
+after reducing the absolute constant.
+\end{proof}
+
+\begin{lemma}[Sphere increments and windows]\label{lem:radial-increments}
+Let $L_h$ be the kernel feature averaged on nuisance sphere $h$.
+Then, uniformly for $0\le h<m$,
+\[
+ \|L_h-L_{h+1}\|_K^2\le Cd^{-\beta}
+        [1+\min(h,m-1-h)]^{\beta-2}.
+\]
+Consequently, if $q\ge128\ell$, $q\le m$, and
+$|h-q/2|\le\sqrt{2q\ell}$, then
+\[
+ \|L_h-L_{\lfloor q/2\rfloor}\|_K^2
+          \le Cd^{-\beta}q^{\beta-1}\ell.
+\]
+For an active modification of distance $l$,
+\[
+ \|K_{(u,v)}-L_h(u',v)\|_K^2
+              \le Cd^{-\beta}(l+h+1)^\beta.
+\]
+\end{lemma}
+\begin{proof}
+Let $\pi_j=\binom mj\kappa_j$ be the nuisance spectral distribution
+obtained by fixing the active input. Its degree is no greater than the
+full spectral degree, so $\sum_{j\ge t}\pi_j\le C(t+1)^{-\beta}$.
+Tail integration gives
+$\sum_j\pi_jj^2e^{-tj}\le Ct^{\beta-2}$ for $0<t\le1$.
+Monotonicity of $\kappa_j$ also gives
+$\sum_{j>3m/4}\pi_j\le2e^{-cm}$.
+The exact difference formula yields
+\[
+ \|L_h-L_{h+1}\|_K^2
+ =\frac4{m^2}\sum_{j=1}^m\pi_jj^2
+                      [R_{j-1}^{m-1}(h)]^2.
+\]
+By reflection assume $h\le(m-1)/2$. For $j\le m/2$, apply
+Lemma~\ref{lem:uniform-kraw} and the exponential second-moment bound.
+For $m/2<j\le3m/4$, the Krawtchouk factor is at most $Ce^{-ch}$ and
+the spectral mass at most $Cm^{-\beta}$. The remaining degree range
+is exponentially small. This proves the first claim, including $h=0$
+by the unweighted bound $\E j^2\le Cm^{2-\beta}$.
+Telescoping feature norms across the central window proves the second.
+The third follows from the endpoint cusp bound
+$1-K(x,y)\le C(\dist(x,y)/d)^\beta$ and Jensen.
+\end{proof}
+
+\subsection{Midpoint and full-nuisance means}
+For the total-degree highpass $Q_r$, the squared feature norm of nuisance
+midpoint averaging is at most
+\begin{equation}\label{eq:midpoint-trace}
+ \Delta_{\rm mid}\le
+ C\tau_r(k/d)^{r+1}+C\tau_r/d^2+C\sqrt d\,2^{-(d-k)}.
+\end{equation}
+To verify this, expand by nuisance degree $b$. At the middle sphere,
+$|R_b^m(\lfloor m/2\rfloor)|\le C/m$ for $1\le b<m$.
+For even $m=2t$ this follows directly from
+$(1-z)^t(1+z)^t=(1-z^2)^t$; for odd $m=2t+1$ the generating function
+is $(1+z)(1-z^2)^t$. Divide coefficients by $\binom mb$ and use
+reflection to bound the remaining ratios by their first internal value.
+The $b=0$ mass requires an entirely active support of degree above $r$,
+giving the first term. The $b=m$ mass is exponentially small by spectral
+monotonicity. Full nuisance averaging retains only $b=0$ and therefore
+has just the first term.
+
+Uniform translation makes the population endpoint operator norm at most
+$\lambda_{r+1}$. For source inputs, Lemma~\ref{lem:intrinsic-psd}
+applies directly. For a fixed contact coupling with bounded target
+marginal, use a scalar Gaussian prior of variance
+$a^2\epsilon^2/(C\Delta_{\rm mid}H)$ instead. Its uniform perturbation
+failure is $e^{-cH}$; the shifted KL divided by $n$ is at most
+$C\epsilon^{-2}d^\beta\Delta_{\rm mid}H$.
+Lemma~\ref{lem:gaussian-pac} gives coupled endpoint bad fraction
+\[
+ \rho^c+C\epsilon^{-2}d^\beta\Delta_{\rm mid}
+       +\frac{C[\log N_*+\log(n/\delta)]}{nH}
+\]
+simultaneously for a finite net of $N_*$ couplings. Polynomial sparsity
+makes the pure-active term negligible for growing $r$; the $d^{-2}$
+term is harmless. This avoids a union of endpoint matrix concentration
+events over head-dependent contacts.

@@ -1,0 +1,120 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools,microtype,booktabs,enumitem,xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\setlength{\emergencystretch}{3em}
+\setlist{itemsep=2pt,topsep=5pt}
+\hypersetup{pdftitle={Width-uniform Bayesian generalization above the mean-field scaling},pdfauthor={Dmitry Vaintrob; Kaarel Hanni; OpenAI Codex}}
+\title{Width-uniform Bayesian generalization\\above the mean-field scaling}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex\thanks{AI assistant developed by OpenAI; contributed to mathematical analysis and drafting.}}
+\date{October 15, 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We study noiseless Bayesian learning by fully connected neural networks with bounded Lipschitz activations, a linear readout, and a Gaussian weight prior with scale $\sigma=N^{-\gamma/2}$. Before observing data the prior is conditioned on a fixed absolute margin at every input of the Boolean cube. For every fixed depth and every fixed $\gamma>1$, we prove a sample bound polynomial in the input dimension and the bounded-weight network size of the target, uniformly over every larger learner width. The result holds at the specified nonzero prior variance, rather than only in a small-variance limit at fixed width. A cylinder construction gives a common target-mass lower bound for all $\gamma\geq1$. Above the critical scaling, Gaussian isoperimetry controls the Frobenius mass of singular values outside the vanishing operator-norm bulk. This yields a bound on the total probability of functions that lack a small description. Combining this bound with compression and a finite-class posterior argument proves width-uniform generalization without an exponential-in-dimension width assumption. A separate elementary argument covers the remaining smaller widths. We also prove polynomial equivalence between normalized negative log prior mass and bounded-weight network complexity. The full-depth learning theorem proved here is for $\gamma>1$; a companion paper treats the tanh mean-field endpoint through a different compression argument.
+\end{abstract}
+
+\section{Introduction and result}
+The probability assigned to a function by a neural-network weight prior reflects both the cost of its smallest representation and the volume of its other representations. In a sufficiently strong Gaussian prior, the first quantity is easier to isolate. Earlier small-variance arguments take the variance to zero at each fixed width. Here we instead specify the variance as a power of the width and prove a bound valid at every width, for every fixed exponent above the mean-field value.
+
+Our result is the following. Fix the depth $L$ and $\gamma>1$. If a Boolean target has a width-$C$ implementation with weights bounded by $C$, then the Bayesian learner defined below has sample complexity polynomial in $d,C,1/\varepsilon$, and $\log(1/\delta)$, independently of its width $N\geq C$. The polynomial degree may depend on $L$ and $\gamma$. The conclusion concerns posterior label error, with a corresponding bound for posterior majority prediction. It makes no claim about the computation needed to sample the posterior.
+
+The proof develops the argument in Vaintrob and H\"anni's lecture notes~\cite{notes} and the finite-$\gamma$ draft~\cite{fable}. It has three quantitative ingredients. First, a small target can be cloned into any larger network while constraining only linearly many Gaussian coordinates. Second, at $\gamma>1$, the total probability of functions whose implementation needs large weighted norm is exponentially small on the $N^\gamma$ scale. Third, bounded weighted norm implies a width-independent finite description. The second step controls a single exceptional parameter event, avoiding a union bound over all Boolean functions. We include the compression proof in an appendix so that the learning theorem is self-contained apart from standard Gaussian concentration and isoperimetry.
+
+\section{Model and prediction convention}\label{sec:model}
+Fix $d\geq1$, $L\geq2$, and $\mathcal X=\{-1,1\}^d$. Let $\bar x=(1,x_1,\ldots,x_d)$, and let $\phi:\R\to[-1,1]$ be $1$-Lipschitz. The architecture has $L-1$ hidden layers of common width $N$ and a linear readout:
+\[
+ h^0(x)=\bar x,\qquad h^s(x)=\phi(W^s h^{s-1}(x))\quad(1\leq s<L),
+ \qquad z_w(x)=W^Lh^{L-1}(x).
+\]
+There are no additional biases beyond the constant input coordinate. Tanh satisfies the activation assumptions. Non-polynomiality is not needed for the theorem when the target is assumed representable.
+
+For a Boolean function $g$, set
+\[
+ U_{N,g}=\{w:g(x)z_w(x)>1/2\text{ for every }x\in\mathcal X\},
+ \qquad \mathcal H_N=\{g:U_{N,g}\ne\varnothing\},
+ \qquad U_N=\bigcup_{g\in\mathcal H_N}U_{N,g}.
+\]
+Define
+\[
+ \kappa_N(w)=\frac dN\|W^1\|_F^2+
+ \sum_{s=2}^{L-1}\|W^s\|_F^2+N\|W^L\|_2^2,
+ \qquad \kappa_N(g)=\inf_{w\in U_{N,g}}\kappa_N(w).
+\]
+Let $C_L(g)$ be the smallest integer $C\geq1$ for which a width-$C$ network in $U_{C,g}$ has every weight bounded in absolute value by $C$. We assume $C_L(f)<\infty$ for the target. This is bounded-weight network complexity at fixed depth; it does not silently identify arbitrary Boolean circuit size with fixed-depth network size.
+
+Under the raw law $\mu_{N,\gamma}$ all weights are independent centered Gaussians with standard deviations
+\[
+ \sigma_1=N^{(1-\gamma)/2}/\sqrt d,\qquad
+ \sigma_s=N^{-\gamma/2}\ (2\leq s<L),\qquad
+ \sigma_L=N^{-(\gamma+1)/2}.
+\]
+The density is proportional to $\exp[-N^\gamma\kappa_N(w)/2]$.
+The function prior is the raw law conditioned on $U_N$:
+\[
+ \pi_{N,\gamma}(g)=\frac{\mu_{N,\gamma}(U_{N,g})}{\mu_{N,\gamma}(U_N)}.
+\]
+Given $S_n=((x_i,f(x_i)))_{i=1}^n$ with independent $x_i\sim D$, the posterior $\Pi(\cdot\mid S_n)$ restricts $\pi_{N,\gamma}$ to functions satisfying all observed labels. For any distribution $D$ on $\mathcal X$, write
+\[
+ \operatorname{err}_D(g)=\Pr_{x\sim D}\{g(x)\ne f(x)\},
+ \qquad R_D(\Pi)=\E_{g\sim\Pi}\operatorname{err}_D(g).
+\]
+The global margin condition applies before training, including at unobserved inputs. It is part of the learner, and differs from imposing margins only on the training sample. The theorem controls the posterior probability of an incorrect label, averaged over a fresh input.
+
+\input{reviews/unified-cloning.tex}
+\input{source/gamma-gt1-main.tex}
+
+\input{source/mass-complexity.tex}
+
+\section{Scope of the result}
+The theorem supplies an explicit finite-variance extension of the strong-prior argument. For large enough width the relevant-class sample bound depends on $L,d,C,\log(1/\varepsilon)$ but not on $\gamma$; $\gamma$ determines when the spectral cutoff lies above the Gaussian bulk. Covering all widths uses a polynomial whose degree grows as $\gamma$ approaches one. This is a limitation of the present argument, rather than a lower bound asserting that such deterioration is necessary.
+
+The cloning bound is uniform over $\gamma\geq1$, including the endpoint. At $\gamma=1$ the internal Gaussian matrices have a bulk of constant operator norm, so the small-cutoff argument does not establish a full-depth compression theorem. The companion mean-field paper~\cite{critical} gives a different proof for tanh at arbitrary fixed depth: it compresses the quadratic-tilt representations of exact rate minimizers and obtains polynomial sample complexity for all sufficiently large widths. Its width threshold is not quantified. For one hidden layer, a direct chi-square argument gives the stronger every-width conclusion for all $\gamma\geq1$ and any bounded $1$-Lipschitz activation.
+
+For $\gamma<1$, tanh's diverging preactivation variance leads to a saturated, iterated-arcsine kernel. Under global margin conditioning its learning limit depends further on the sign of $\gamma$. The companion kernel note~\cite{subcritical} treats these limits and explains why a lower bound for regression using the posterior mean cannot be substituted for a classification lower bound under the present conventions.
+
+\appendix
+\section{A complete norm-compression proof}\label{sec:compression}
+The next theorem is deterministic. It applies at any width and does not refer to the prior exponent. It is the compression result used in the finite capacity bound above.
+\input{source/compression.tex}
+
+\begin{thebibliography}{9}
+\bibitem{notes} Dmitry Vaintrob and Kaarel H\"anni.
+\emph{A Generalization Result for Overparametrized Neural Net Bayesian Learning}.
+Lecture notes, 2026.
+\url{https://kaarelh.github.io/ai/nnbayes-generalization.pdf}.
+\bibitem{fable} Claude Fable 5.
+\emph{The circuit prior across the whole strong prior regime: cloning and subsampling at every $\gamma>1$}.
+Draft dated August 27, 2026, prepared from an outline by Dmitry Vaintrob and Kaarel H\"anni; supplied by the authors.
+\bibitem{critical} Dmitry Vaintrob, Kaarel H\"anni, and OpenAI Codex.
+\emph{Bayesian circuit learning at mean-field scaling: a variational principle and width-independent generalization}.
+Companion manuscript, October 2026.
+\bibitem{subcritical} Dmitry Vaintrob, Kaarel H\"anni, and OpenAI Codex.
+\emph{The fixed-kernel regime of a margin-conditioned Bayesian neural-network prior}.
+Companion manuscript, October 2026.
+\bibitem{borell} Christer Borell.
+The Brunn--Minkowski inequality in Gauss space.
+\emph{Inventiones Mathematicae}, 30:207--216, 1975.
+\bibitem{ledoux} Michel Ledoux.
+\emph{The Concentration of Measure Phenomenon}.
+Mathematical Surveys and Monographs 89, American Mathematical Society, 2001.
+\bibitem{davidson} Kenneth R. Davidson and Stanis\l aw J. Szarek.
+Local operator theory, random matrices and Banach spaces.
+In \emph{Handbook of the Geometry of Banach Spaces}, Vol. 1, pp. 317--366, Elsevier, 2001.
+\bibitem{hoeffding} Wassily Hoeffding.
+Probability inequalities for sums of bounded random variables.
+\emph{Journal of the American Statistical Association}, 58(301):13--30, 1963.
+\end{thebibliography}
+\end{document}

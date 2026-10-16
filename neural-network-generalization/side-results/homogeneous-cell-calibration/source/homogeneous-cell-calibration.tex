@@ -1,0 +1,425 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools,microtype,hyperref}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}
+\newcommand{\1}{\mathbf 1}
+\newcommand{\cE}{\mathcal E}
+\DeclareMathOperator{\sgn}{sgn}
+\title{Homogeneous parity approximants have a strict local repair cost}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex}
+\date{October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We study a discrete cusp-kernel model of local repairs to a globally
+margin-separated prediction field. Repairs may depend on every active
+coordinate and may change their signs arbitrarily many times before
+returning to the background signs. We prove that a homogeneous polynomial
+of sufficiently small degree, with parity error at most $0.34$, has mean
+repair cost strictly above the constant-background benchmark. Amplitudes
+need not be bounded. The proof uses an amplitude transport and
+an inverse-amplitude normalization that remains valid for arbitrarily
+small transport rows. A more general theorem identifies the precise
+one-sided adjacency deficit that controls the cost. A weighted extension
+also covers certain affine homogeneous heads after the exact odd
+augmentation of the neural kernel. These are results
+about a fixed-background local model; they do not establish the desired
+sample lower bound for general adaptive neural-prior posteriors.
+\end{abstract}
+
+\section{Model and result}
+Let $\Omega_k=\{-1,1\}^k$ have uniform probability measure, let
+$f(x)=\prod_{i=1}^k x_i$, and write $d_H$ for Hamming distance. Fix
+$0<\beta\le1/2$. The local index set is
+$\mathcal X=\Omega_k\times\mathbb Z_{\ge0}$. Its second coordinate is a
+discrete nuisance radius. For finitely supported real coefficients
+$c_z$ satisfying $\sum_zc_z=0$, put
+\begin{equation}\label{eq:variance}
+ V_\beta(c)=-\sum_{(x,h),(y,j)}c_{x,h}c_{y,j}
+                    \bigl(d_H(x,y)+h+j\bigr)^\beta.
+\end{equation}
+This quadratic form is nonnegative. Indeed, the identity
+\[
+ s^\beta=\frac{\beta}{\Gamma(1-\beta)}
+       \int_0^\infty(1-e^{-st})t^{-1-\beta}\,dt
+\]
+reduces the assertion to positivity of the kernels
+$e^{-td_H(x,y)}e^{-th}e^{-tj}$. The first factor is a product of
+positive semidefinite two-point kernels.
+
+For a real correction $b$ on $\mathcal X$, define its squared energy by
+\begin{equation}\label{eq:energy}
+ \cE_\beta(b)=\sup_{\substack{c\text{ finitely supported},\ \sum c=0\\
+                              V_\beta(c)>0}}
+                  \frac{\left(\sum_zc_zb(z)\right)^2}{V_\beta(c)}.
+\end{equation}
+If a zero-variance contrast has nonzero value, the energy is defined as
+$+\infty$. Constants have zero energy. This is the Hilbert seminorm
+associated with the conditionally positive kernel in
+\eqref{eq:variance}; in particular, every contrast obeys
+\begin{equation}\label{eq:cs}
+ \left|\sum_zc_zb(z)\right|^2\le\cE_\beta(b)V_\beta(c).
+\end{equation}
+
+Fix a background $P:\Omega_k\to\mathbb R$ with $|P|\ge1$. Set
+$g=\sgn P$, $B=|P|$, $E=\{g\ne f\}$, $C=E^c$, and $R=\Pr(E)$.
+For each $u\in E$, an admissible repair is a correction $b_u$ for which
+\begin{enumerate}
+\item $Z_u(x,h)=P(x)+b_u(x,h)$ satisfies $|Z_u(x,h)|\ge1$ everywhere;
+\item $\sgn Z_u(u,0)=f(u)$;
+\item for every $x$, $\sgn Z_u(x,h)=g(x)$ for all sufficiently large $h$.
+\end{enumerate}
+No condition is imposed on intermediate signs. Write
+$e_u=\cE_\beta(b_u)$ and
+\[
+ v_0=2-2^\beta,\qquad C_0=\frac4{v_0},\qquad T=\frac{11}{3},
+ \qquad V=2^\beta(2-2^\beta)+\frac{2^{2\beta}-2^\beta}{24}.
+\]
+All averages below use the original uniform measure, so
+$\E[\1_E e_u]$ includes the error probability.
+
+For a correct vertex $v$, define
+\begin{equation}\label{eq:deficit}
+ H_v=\frac1k\sum_{u\sim v,\ u\in E}B_u,
+ \qquad \delta_v=\left(1-\frac{H_v}{B_v}\right)_+,
+ \qquad D_C=\E[\1_C\delta_v].
+\end{equation}
+
+Define also the error-to-correct edge mass and amplitude-ratio sum
+\[
+ F=\E\left[\1_E\frac{\#\{v\sim u:v\in C\}}k\right],
+ \qquad M=\E[\1_C H_v/B_v].
+\]
+
+\begin{theorem}[Signed surplus and one-sided deficit]\label{thm:deficit}
+For $k\ge2400$, every background and every family of admissible repairs
+as above satisfy
+\begin{equation}\label{eq:main-deficit}
+ \E[\1_Ee_u]\ge2T(2R+M-F)-T^2VR
+                  \ge2T(1-D_C)-T^2VR.
+\end{equation}
+There is no polynomial-degree or amplitude hypothesis in this statement.
+\end{theorem}
+
+\begin{corollary}[Homogeneous low degree]\label{cor:homogeneous}
+Suppose $P$ is supported on a single Walsh level $r$, with
+$r/k\le1/5$ and $|P|\ge1$. If $k\ge2400$ and $R\le17/50$, then
+\begin{equation}\label{eq:homogeneous}
+ \E[\1_Ee_u]\ge\frac{C_0}{2}+\frac25.
+\end{equation}
+The constants hold uniformly for $0<\beta\le1/2$.
+\end{corollary}
+
+The benchmark $C_0/2$ is exact for a constant background. To see this,
+take $P=-1$, and at each wrong center let $s=d_H(u,x)+h$ and
+\[
+ r_1(s)=(s+1)^\beta-s^\beta,\qquad
+ b_u(x,h)=2-\frac2{v_0}+\frac2{v_0}r_1(s).
+\]
+At the center $b_u=2$, while for integer $s\ge1$ monotonicity of
+$r_1$ gives $b_u\le0$. Thus all required margins and eventual signs
+hold. The function $r_1$ is the representer of the contrast between
+$(u,0)$ and $(u,1)$ and has energy $v_0$. Hence this repair has energy
+$C_0$. The constant background errs on half the cube.
+
+\section{A dual inequality allowing all sign changes}
+We first establish the geometric estimate used in the transport proof.
+
+\begin{lemma}[Bounded neighbor dual]\label{lem:dual}
+Fix a wrong center $u$. Let $w_v\ge0$ be supported on correct neighbors
+of $u$, with $a=\sum_vw_v\le1$ and $s=\sum_vw_v^2\le1/12$. Put
+\[
+ L_w=\sum_vw_v(2+B_u-B_v),\qquad
+ F_w=2^\beta(2-2^\beta)a^2+(2^{2\beta}-2^\beta)s.
+\]
+Every admissible repair satisfies $e_u\ge C_0$ and
+\begin{equation}\label{eq:dual}
+ e_u\ge2tL_w-t^2F_w\qquad(0\le t\le11/3).
+\end{equation}
+\end{lemma}
+\begin{proof}
+At a fixed active point, the contrast between radii $h$ and $h+1$ has
+variance
+\[
+ v_h=2(2h+1)^\beta-(2h)^\beta-(2h+2)^\beta
+ =\beta(1-\beta)\int_0^1\!\int_0^1
+                 (2h+s+t)^{\beta-2}\,ds\,dt.
+\]
+This decreases with $h$. An adjacent-radius sign change has magnitude
+at least $2$, so it costs at least $4/v_h$. The corrected center must
+eventually return to its background sign, proving $e_u\ge4/v_0=C_0$.
+For $h\ge1$,
+\begin{equation}\label{eq:late}
+ v_h\le\tfrac14(2h)^{-3/2},\qquad
+ v_h\le v_1\le2\sqrt3-\sqrt2-2<\tfrac1{20}.
+\end{equation}
+
+Correct neighbors of a wrong parity center have the same background
+sign as the center. If their signs have returned to that background
+sign by radius $H$, the contrast with coefficient $a$ at $(u,0)$ and
+coefficients $-w_v$ at $(v,H)$ has value of magnitude at least
+$(L_w)_+$. Direct substitution in \eqref{eq:variance} gives its variance
+\begin{equation}\label{eq:FH}
+ F_H=v_0a^2(H+1)^\beta+s\bigl((2H+2)^\beta-(2H)^\beta\bigr).
+\end{equation}
+Thus $(L_w)_+^2\le e_uF_H$.
+
+If $e_u<80$, \eqref{eq:late} excludes every sign change at radius
+$h\ge1$. Eventual anchoring therefore fixes all signs already at
+$H=1$. Since $F_1=F_w$, completing the square proves
+\eqref{eq:dual}, in this case for every $t\ge0$.
+
+If $e_u\ge80$, choose
+\[
+ H=\left\lfloor\tfrac12(e_u/16)^{2/3}\right\rfloor+1.
+\]
+The first bound in \eqref{eq:late} excludes every sign change at or
+beyond $H$. Moreover, $v_0 2^\beta\le1$, $\beta\le1/2$, and
+$s\le1/12$ give
+\[
+ F_H\le\sqrt{(H+1)/2}+\frac1{12}
+ \le\sqrt{1+\tfrac14(e_u/16)^{2/3}}+\frac1{12}
+ \le\frac{e_u}{4(11/3)^2}.
+\]
+For the last inequality, the ratio of the left side to $e_u$ decreases
+with $e_u$. At $e_u=80$, its numerator is less than $17/12$, whereas
+$80/[4(11/3)^2]=180/121>17/12$.
+Consequently $(L_w)_+\le e_u/[2(11/3)]$. This implies
+$e_u\ge2tL_w\ge2tL_w-t^2F_w$ for the asserted range of $t$.
+\end{proof}
+
+\section{Amplitude transport with no discarded rows}
+\begin{proof}[Proof of Theorem~\ref{thm:deficit}]
+On an error-to-correct neighbor edge define
+\begin{equation}\label{eq:flow}
+ \mu_{uv}=\frac{B_u}{k}.
+\end{equation}
+This raw transport gives
+\[
+ \sum_v\mu_{uv}\le B_u,\qquad
+ \sum_u\mu_{uv}=H_v,\qquad
+ 0\le\mu_{uv}\le B_u/k.
+\]
+Set
+\[
+ \theta_u=\frac{\sum_v\mu_{uv}}{B_u}\le1,\quad
+ w^0_{uv}=\frac{\mu_{uv}}{B_uB_v},\quad
+ a_u=\sum_vw^0_{uv},\quad J_u=B_ua_u-\theta_u.
+\]
+Here $\theta_u$ is exactly the fraction of correct neighbors of $u$.
+Since $B_v\ge1$, we have $a_u\le1$ and $w^0_{uv}\le1/k$.
+Zero rows are allowed and have $a_u=\theta_u=J_u=0$.
+
+Let $\eta=1/100$, $s_u=\max(a_u,\eta)$, and apply
+Lemma~\ref{lem:dual} to $w_{uv}=w^0_{uv}/s_u$. Its row sum is at most
+$1$, and
+\[
+ \sum_vw_{uv}^2\le\frac{a_u}{ks_u^2}
+                  \le\frac1{k\eta}\le\frac1{24}.
+\]
+Its linear contrast is $(J_u+2a_u)/s_u$ and its variance is at most
+$V$. Taking $t=T$ yields
+\[
+ J_u\le s_u A_u-2a_u,\qquad
+ A_u=\frac{e_u+T^2V}{2T}.
+\]
+The baseline bound $e_u\ge C_0$, together with $C_0\ge4$ and
+$V\ge2\sqrt2-2$, implies
+\[
+ A_u\ge\frac{4+(121/9)(2\sqrt2-2)}{22/3}>\frac{200}{99}.
+\]
+In particular $A_u-2\ge0$ and $\eta A_u\le A_u-2$. If
+$a_u\ge\eta$, then $J_u\le a_u(A_u-2)\le A_u-2$; if
+$a_u<\eta$, then $J_u\le\eta A_u-2a_u\le A_u-2$.
+Thus every row, including a zero or arbitrarily small row, obeys
+\begin{equation}\label{eq:pointwise}
+ J_u\le\frac{e_u+T^2V}{2T}-2.
+\end{equation}
+
+The inverse-amplitude weights now turn the transport into a count
+identity:
+\[
+ \E[\1_E B_ua_u]=M,\qquad \E[\1_E\theta_u]=F.
+\]
+Thus $\E[\1_EJ_u]=M-F$. Averaging \eqref{eq:pointwise} proves
+the first bound in \eqref{eq:main-deficit}. The second follows from
+$M\ge1-R-D_C$ and $F\le R$. In particular, surplus incoming amplitude
+at correct vertices has not been discarded.
+\end{proof}
+
+\section{Homogeneity and the explicit strict gap}
+Let $A$ be normalized cube adjacency. A homogeneous Walsh polynomial
+of degree $r$ satisfies $AP=(1-2r/k)P$. Multiplication by full parity
+reverses every edge, so $q=fP$ satisfies
+$Aq=-(1-2r/k)q$. At a correct vertex $v$, therefore,
+\[
+ H_v=(1-2r/k)B_v+\frac1k\sum_{w\sim v,\ w\in C}B_w
+       \ge(1-2r/k)B_v.
+\]
+This already gives $D_C\le(2r/k)(1-R)$, but retaining the
+correct--correct edges gives a substantially stronger bound. Pairing the
+two orientations of every such edge and using $a/b+b/a\ge2$ yields
+\[
+ M=(1-2r/k)(1-R)+\E\left[\1_C\frac{A_C B}{B}\right]
+ \ge (2-2r/k)(1-R)-F.
+\]
+Since $F\le R$, Theorem~\ref{thm:deficit} gives
+\begin{equation}\label{eq:alpha}
+ \E[\1_Ee_u]\ge4T(1-r/k)(1-R)-T^2VR.
+\end{equation}
+
+For completeness, the numerical gap in Corollary~\ref{cor:homogeneous}
+can be checked algebraically. The right side of \eqref{eq:alpha}
+decreases with both $r/k$ and $R$. At $r/k=1/5$ and $R=17/50$, its
+first term is $968/125$, exceeding $2T=22/3$ by $154/375$.
+Put $v=2-2^\beta\in[2-\sqrt2,1)$. Multiplying the excess of
+$2T-T^2V(17/50)$ above $C_0/2$ by $v$ gives
+\[
+ F_0(v)=\frac{47311}{10800}v^3-\frac{2057}{240}v^2
+                         +\frac{37543}{5400}v-2.
+\]
+The derivative has positive leading coefficient and discriminant
+$-696300671/9720000<0$, so $F_0$ is increasing. In particular
+\[
+ F_0(v)\ge F_0(2-\sqrt2)
+ =\frac{86567}{1800}-\frac{18359\sqrt2}{540}
+ >\frac{121}{10000}.
+\]
+Because $v\le1$, the unscaled gap is at least this large. Therefore the
+right side of \eqref{eq:alpha} exceeds $C_0/2$ by more than
+$121/10000+154/375>2/5$, proving the corollary.
+
+For a mixed-degree head, the same calculation identifies a sufficient
+relative generator condition. With
+$\Delta=\sum_i(I-\mathrm{flip}_i)/2$, at correct vertices
+\[
+ H_v=B_v-\frac2k\sgn(P_v)\Delta P(v)
+          +\frac1k\sum_{w\sim v,\ w\in C}B_w.
+\]
+Consequently
+\[
+ D_C\le\E\!\left[\1_C\min\left\{1,
+                  \left(\frac{2\Delta P}{kP}\right)_+\right\}\right].
+\]
+An ordinary norm bound on $\Delta P$ does not automatically control
+this relative quantity. Extending the theorem to arbitrary small-degree
+heads, and transferring an appropriate extension to the actual adaptive
+posterior, remain separate open steps.
+
+\section{Weighted homogeneity and two-level extensions}
+The argument uses a reversible nearest-neighbor walk, rather than any
+special property of equal coordinate weights. Let
+\[
+ A_w=\sum_{i=1}^n w_i\,\mathrm{flip}_i,
+ \qquad w_i>0,\qquad\sum_iw_i=1.
+\]
+\begin{theorem}\label{thm:weighted}
+Suppose a margin-one background $H$ on $\Omega_n$ satisfies
+$A_wH=(1-2a)H$, where $a\le1/5$ and
+$\max_iw_i\le1/2400$. If its full-parity error is at most $17/50$,
+then every admissible repair family in the model of Section~1 satisfies
+\[
+ \E[\1_Ee_u]\ge C_0/2+2/5.
+\]
+\end{theorem}
+\begin{proof}
+Use the raw transport $\mu_{uv}=w_iB_u$ on an error--correct edge in
+coordinate $i$. Its inverse-amplitude weight is $w_i/B_v$.
+After the same row normalization $s_u=\max(a_u,1/100)$ used above,
+\[
+ \sum_vw_{uv}^2\le100\max_iw_i\le1/24.
+\]
+Thus the pointwise bound \eqref{eq:pointwise}, including its treatment
+of zero rows, holds unchanged. Write
+$F=\E[\1_E A_w\1_C]\le R$ and
+$M=\E[\1_C A_{w,E}B/B]$. Full parity conjugates $A_w$ to $-A_w$,
+so on correct vertices
+\[
+ A_{w,E}B=(1-2a)B+A_{w,C}B.
+\]
+Reversibility and $x/y+y/x\ge2$ give
+$\E[\1_C A_{w,C}B/B]\ge1-R-F$. Consequently
+\[
+ 2R+M-F\ge2(1-a)(1-R)+2(R-F)\ge2(1-a)(1-R).
+\]
+Averaging the pointwise bound therefore gives
+$\E[\1_Ee_u]\ge4T(1-a)(1-R)-T^2VR$.
+The numerical estimate in the preceding section applies verbatim.
+\end{proof}
+
+There is a useful affine example, provided the signed antipodal sheet
+of the kernel is retained. Let $k$ be even, $r\ge1$ odd, and
+\[
+ P(x)=c+Q_r(x),\qquad H(x,b)=cb+Q_r(x),
+ \qquad F(x,b)=f(x)b,
+\]
+where $Q_r$ is homogeneous of degree $r$. Then
+$H(x,1)=P(x)$ and $H(x,-1)=-P(-x)$. Since $k$ is even, the two slices
+have exactly the same parity risk. Give each $x$-coordinate weight
+$1/(k+r)$ and the bias coordinate weight $r/(k+r)$. Every monomial
+of $H$ has weighted degree $a=r/(k+r)$.
+
+\begin{corollary}\label{cor:affine}
+Suppose $k$ is even, $r$ is odd, $r/k\le1/2399$, and
+$P=c+Q_r$ has margin one and parity error at most $17/50$.
+In the odd augmented cusp-cell model, its mean wrong-center repair
+energy is at least $C_0/2+2/5$.
+\end{corollary}
+\begin{proof}
+The lift $H$ has the same margin and risk, and
+$a=\max_iw_i\le1/2400$. Apply Theorem~\ref{thm:weighted}.
+\end{proof}
+
+The same construction also includes two nonconstant homogeneous levels.
+\begin{corollary}\label{cor:two-level}
+Let $k$ be even, let $r<s$ with $r$ even and $s$ odd, and suppose
+$P=P_r+P_s$ has margin one and parity error at most $17/50$.
+If
+\[
+ \frac{s}{k+s-r}\le\frac15,
+ \qquad \frac{s-r}{k+s-r}\le\frac1{2400},
+\]
+then the conclusion of Corollary~\ref{cor:affine} holds for $P$.
+In particular, adjacent levels $r,r+1$ are covered whenever
+$k+1\ge2400$ and $(r+1)/(k+1)\le1/5$.
+\end{corollary}
+\begin{proof}
+The odd extension is $H(x,b)=bP_r(x)+P_s(x)$ and again preserves
+risk because $k$ is even. Assign the ordinary coordinates weight
+$1/(k+s-r)$ and the bias coordinate weight $(s-r)/(k+s-r)$.
+Both homogeneous components then have weighted degree
+$a=s/(k+s-r)$. The stated assumptions are exactly those of
+Theorem~\ref{thm:weighted}.
+\end{proof}
+
+Here the geometry in the corollary has a precise kernel meaning.
+For an odd positive definite profile $F_L$, consider
+\[
+ K_d(y,z)=F_L\!\left(\frac{1+y\cdot z}{d+1}\right).
+\]
+It is the $b=1$ slice of the augmented kernel
+$\widetilde K(v,w)=F_L(v\cdot w/(d+1))$ on $\Omega_{d+1}$.
+In its canonical feature space, oddness gives
+$\Phi(-v)=-\Phi(v)$. The slice contains one representative from every
+antipodal pair, so restriction and the odd extension
+\[
+ \widetilde z(x,b)=b\,z(bx)
+\]
+are exactly isometric. Global margin constraints are equivalent on the
+two spaces. For either background above, its extension is precisely the displayed
+$H$ and remains independent of all nuisance coordinates.
+
+A bias flip is therefore a genuine distance-one edge in the augmented
+kernel. In original coordinates it is an antipodal input together with
+a sign reversal; the odd kernel's endpoint cusp is the same local cusp
+after this reversal. The corollary applies when the cusp-cell reduction
+is performed on this augmented space, with the same radial anchoring
+assumption as in Section~1. It does not identify an ordinary antipodal
+pair with adjacent points in a one-sheet Hamming model. Nor does it
+assert that the adaptive posterior head belongs to either two-level class.
+
+\end{document}

@@ -1,0 +1,166 @@
+\section{Tail covariance estimates at sparse cutoffs}\label{sec:sparse-gram}
+The original principal-submatrix estimate uses the logarithm of the full
+cube cardinality. We retain that estimate here. A more precise bound on
+entries near orthogonal input pairs makes it applicable even when the
+spectral cutoff is a sufficiently large fixed integer.
+
+\begin{lemma}[Near-orthogonal entries]\label{lem:near-orthogonal}
+There are constants $a_0,\delta_0,c,C>0$ such that the following holds.
+Put $D=d+1$, let $r$ be odd with $r+2\le\delta_0D$, and let $h$ be the
+Hamming distance between the augmented inputs $(1,x),(1,y)$.
+If $a=|D-2h|/D\le a_0$, then
+\begin{equation}\label{eq:near-orthogonal}
+ \frac{|Q_r(x,y)|}{\tau_r}
+ \le [C(a+\sqrt{(r+2)/D})]^{r+2}+C d^\beta e^{-cd},
+ \qquad Q_r=K_{>r}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+For $1\le j<D$, the Krawtchouk generating function gives
+\begin{equation}\label{eq:sparse-kraw}
+ \frac{|\mathsf K_j(h;D)|}{\binom Dj}
+ \le [e^{3/2}(a+\sqrt{j/D})]^j.
+\end{equation}
+Indeed, set $b=\min(h,D-h)$. On the circle $|z|=t$, the generating
+function has modulus at most
+\[
+ (1+t^2)^b(1+t)^{D-2b}\le \exp(Dt^2/2+Dat).
+\]
+Cauchy's coefficient bound and $\binom Dj\ge(D/j)^j$, with
+$t=j/[D(a+\sqrt{j/D})]$, prove \eqref{eq:sparse-kraw}: both $Dt^2$
+and $Dat$ are at most $j$.
+
+Choose $a_0,\delta_0$ so small that
+$e^{3/2}(a_0+\sqrt{\delta_0})\le e^{-1}$ and $\delta_0<1/8$.
+On $j\le\delta_0D$, the derivative of
+$j\log[e^{3/2}(a+\sqrt{j/D})]$ is at most $-1+1/2<0$.
+Consequently \eqref{eq:sparse-kraw} is bounded by its value at $r+2$
+throughout $r<j\le\delta_0D$. The sum of the corresponding positive
+spectral masses $\binom Dj a_j$ is at most $\tau_r$.
+For $\delta_0D<j\le(1-\delta_0)D$, the central-distance estimate
+\eqref{eq:kraw} bounds the normalized Krawtchouk polynomial by
+$C\sqrt D e^{-cD}$; its polynomial factor can be absorbed by decreasing
+$c$. For $j>(1-\delta_0)D$, choose an odd $b_D$ near $D/4$.
+Monotonicity of $a_j$ and Lemma~\ref{lem:sharp} bound the remaining
+mass by
+\[
+ a_{b_D}\sum_{i<\delta_0D}\binom Di
+ \le \operatorname{poly}(D)
+       e^{-D[\mathsf h(1/4)-\mathsf h(\delta_0)]},
+\]
+where $\mathsf h(t)=-t\log t-(1-t)\log(1-t)$.
+The entropy gap is positive. Finally $\tau_r\ge cD^{-\beta}$ by
+Lemma~\ref{lem:sharp}, proving \eqref{eq:near-orthogonal}.
+\end{proof}
+
+\begin{lemma}[Sparse adaptive tail Gram matrices]\label{lem:sparse-gram}
+Fix $A\ge1$, a failure probability $\delta>0$, and an odd integer
+$r_0\ge11$. There is $\alpha_0>0$ such that, for any fixed
+$0<\alpha\le\alpha_0$, the following assertions hold uniformly as
+$d\to\infty$. Suppose $r$ is odd,
+\[
+ r_0\le r\le\alpha d,\qquad
+ A D_r\log(D_r+1)\le n<A D_{r+2}\log(D_{r+2}+1).
+\]
+Put $u=r+2$, $\rho=r/(d+1)$, and $H=\log(e/\rho)$.
+For each such specified $n$, with probability at least $1-\delta$,
+\begin{align}
+ \|(Q_r)_{SS}\|_{\mathrm{op}}
+ &\le C_{L,\delta}\left[1+\frac{\sqrt{nd\,s_{2,r}}}{\tau_r}
+                   +\frac{n\ell_r}{\tau_r}\right]\tau_r
+ \notag\\
+ &\le C_{L,\delta}
+       [1+\sqrt{A\rho^{-1}H}+AH]\tau_r,
+       \label{eq:sparse-coarse-gram}\\
+ \|(Q_u)_{SS}-\tau_uI_n\|_{\mathrm{op}}
+ &\le\bigl[C_{L,\delta}
+       (\sqrt{A\rho H}+A\rho^2H)+o(1)\bigr]\tau_r.
+       \label{eq:sparse-fine-gram}
+\end{align}
+The $o(1)$ is uniform over the stated range. In particular, after
+reducing $\alpha_0$ if necessary,
+$\|(Q_u)_{SS}\|_{\mathrm{op}}\le2\tau_r$ on the same event for all
+sufficiently large $d$. Deterministically,
+\begin{align}
+ 0\le\tau_r-\tau_u&\le C_L\tau_r/r,
+       \label{eq:gram-sparse-band-trace}\\
+ n\ell_u/\tau_r&\le C_LA\rho^2H,
+       \label{eq:sparse-fine-eigenvalue}
+\end{align}
+where $\ell_v=\lambda_{v+1}$. No simultaneous event over different
+sample sizes is asserted.
+\end{lemma}
+\begin{proof}
+The dimension and spectral estimates already proved give
+\begin{align*}
+ n&\le C A\binom D{r+2}rH,&
+ \log(2n)&\le C_A rH,\\
+ n\ell_r/\tau_r&\le C_LAH,&
+ nd\,s_{2,r}/\tau_r^2&\le C_LA\rho^{-1}H.
+\end{align*}
+For $u=r+2$, the exact two-step binomial ratio gives
+\begin{align*}
+ n\ell_u/\tau_r&\le C_LA\rho^2H,&
+ nd\,s_{2,u}/\tau_r^2&\le C_LA\rho H.
+\end{align*}
+Moreover $\tau_r-\tau_u=\binom D{r+2}a_{r+2}$, so the level and
+trace estimates prove \eqref{eq:gram-sparse-band-trace}.
+
+We apply the proof of Lemma~\ref{lem:gram-general} with a different
+deterministic mask. Retain pairs satisfying
+\[
+ \left|\frac{1+x\cdot y}{d+1}\right|\le a_n,
+ \qquad a_n=\sqrt{128\log(2n)/d}.
+\]
+By choosing $\alpha_0$ sufficiently small, uniformly
+$\log(2n)/d\le C_A\alpha\log(e/\alpha)+o(1)$ is as small as needed,
+so $a_n\le a_0$. For independent uniform inputs, Hoeffding's bound
+(and $a_n\ge2/(d+1)$) gives exceptional-pair probability
+\[
+ b_n\le2\exp(-a_n^2d/8)=2(2n)^{-16}.
+\]
+The exceptional set is translation invariant on the cube. Its size
+is therefore the same in every row, so the masked-matrix proof applies
+with $B_{\mathrm{near}}/M=b_n$. This mask is deterministic for each
+fixed pair $(d,n)$; it does not depend on the observed sample.
+Lemma~\ref{lem:near-orthogonal} supplies the retained-entry bound
+\begin{equation}\label{eq:sparse-coherence}
+ \frac{\eta_v}{\tau_v}
+ \le\left[C\sqrt{\frac{\log(2n)+v+2}{d}}\right]^{v+2}
+       +C d^\beta e^{-cd},\qquad v\in\{r,u\}.
+\end{equation}
+Thus exactly the argument of Lemma~\ref{lem:gram-general}, still with
+$q=2\log M=2d\log2$, gives for every $z>0$
+\begin{align}
+ &\mathbb P\{\|(Q_v)_{SS}-\tau_vI_n\|>z\tau_v\}\notag\\
+ &\quad\le\frac C{z^2}
+ \left[\frac{q\eta_v}{\tau_v}
+       +\frac{\sqrt{nq s_{2,v}}}{\tau_v}
+       +\frac{n\ell_v}{\tau_v}+n(M^{-1}+b_n)\right]^2
+       +n^2(M^{-1}+b_n).
+ \label{eq:sparse-masked-tropp}
+\end{align}
+The collision and exceptional-pair terms tend to zero uniformly:
+$n\ge A D_{r_0}\log(D_{r_0}+1)\to\infty$, and $\alpha_0$ can be chosen
+so that $n\le e^{c_1d}$ with $2c_1<\log2$.
+
+The coherence term $q\eta_v/\tau_v$ also tends to zero uniformly.
+For $r\le\sqrt d$, its bracket in \eqref{eq:sparse-coherence} is at
+most $C_A d^{-1/4}\sqrt{\log d}$, and its exponent is at least
+$r_0+2\ge13$. Hence it is bounded, after multiplication by $q$, by
+\[
+ C d[C_A d^{-1/4}\sqrt{\log d}]^{13}
+       +C d^{1+\beta}e^{-cd}=o(1).
+\]
+For $r>\sqrt d$, reducing $\alpha_0$ makes the bracket at most $1/2$,
+so the bound is $Cd\,2^{-\sqrt d}+Cd^{1+\beta}e^{-cd}=o(1)$.
+Using \eqref{eq:sparse-masked-tropp} for $v=r,u$, with failure
+probability at most $\delta/2$ for each, now proves
+\eqref{eq:sparse-coarse-gram} and \eqref{eq:sparse-fine-gram}.
+For the latter, multiply by $\tau_u/\tau_r\le1$ before using the
+spectral bounds, so no lower comparison of the two traces is needed.
+Finally $\rho H\to0$ as $\rho\to0$, uniformly for $0<\rho\le\alpha$;
+choose $\alpha_0$ to make the fixed part of the fine deviation below
+$1/2$, and absorb the uniform $o(1)$. Since $\tau_u\le\tau_r$, this
+gives the asserted upper bound $2\tau_r$.
+\end{proof}

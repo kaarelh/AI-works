@@ -1,0 +1,281 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools,booktabs}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={The fixed-kernel regime of a margin-conditioned Bayesian neural-network prior},pdfauthor={Dmitry Vaintrob; Kaarel Hanni; OpenAI Codex}}
+\setlength{\emergencystretch}{2em}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\title{The fixed-kernel regime of a margin-conditioned\\Bayesian neural-network prior}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex}
+\date{October 15, 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We study the width limit of a fully connected $\tanh$ network on the
+Boolean cube with an appended constant input, under the Gaussian
+scaling $\operatorname{Var}(W^1_{ij})=N^{1-\gamma}/d$,
+$\operatorname{Var}(W^s_{ij})=N^{-\gamma}$ for later hidden layers, and
+$\operatorname{Var}(W^L_i)=N^{-\gamma-1}$ for the readout. The Bayesian
+prior is conditioned on an output margin at every Boolean input;
+training then conditions on observed signs. For every fixed
+$\gamma<1$, dimension, and depth, hidden-feature covariances concentrate
+at speed $N$ around an explicit iterated-arcsine kernel. For
+$0<\gamma<1$, outputs satisfy a Gaussian large-deviation principle at
+speed $N^\gamma$, and the actual posterior concentrates on compatible
+Boolean functions of minimum kernel margin energy. At $\gamma=0$ the
+limit is a Gaussian-process classifier with the global margin
+restriction; at $\gamma<0$ the margin disappears and the limit is a
+Gaussian sign classifier. These establish a fixed-kernel regime under
+the original prediction conventions, while distinguishing it from
+Gaussian-process regression. We derive exact parity prior rates, a
+strictly paired kernel spectrum, the complete set of unconditioned
+minimum-energy sign functions, and classification lower bounds. A
+prediction counts as successful only when the posterior probability
+of its correct label exceeds $2/3$. For $\gamma\le0$ and depth
+$O(d)$, we prove that the failure fraction is exactly the unseen
+fraction in the width limit, giving exponential sample complexity
+when the target is parity on $d$ bits. The
+stronger claim that every fixed
+$\gamma<1$ requires exponentially many examples for a $k$-bit parity
+is not established: a small parity eigenvalue alone does not imply
+that claim for this posterior.
+\end{abstract}
+
+\section{Model, posterior, and order of limits}
+
+Fix $d\ge1$, depth $L\ge2$, margin $a>0$, and a real exponent
+$\gamma<1$. Inputs are $x\in\mathcal X=\{-1,1\}^d$, with
+$h^0(x)=(1,x)$. All hidden layers have width $N$ and
+\[
+ h^s(x)=\tanh(W^s h^{s-1}(x)),\quad 1\le s\le L-1,
+ \qquad z_N(x)=W^Lh^{L-1}(x).
+\]
+The activation acts coordinatewise. There are no biases after the
+appended constant input. All weights are independent and centered
+Gaussian, with variances
+\begin{equation}\label{eq:model-variances}
+ \operatorname{Var}(W^1_{ij})=\frac{N^{1-\gamma}}d,
+ \qquad \operatorname{Var}(W^s_{ij})=N^{-\gamma}\ (1<s<L),
+ \qquad \operatorname{Var}(W^L_i)=N^{-\gamma-1}.
+\end{equation}
+This is the strong-prior scaling line in the source notes~\cite{notes},
+continued below $\gamma=1$. The main statements are specific to this
+line. Changing the relative layer variances or inserting additional
+biases can change the limiting kernel.
+
+Let $Z_N=(z_N(x))_{x\in\mathcal X}$. The prior on Boolean functions is
+obtained by first conditioning on
+\[
+ A_a=\{|Z_N(x)|>a\text{ for all }x\in\mathcal X\}
+\]
+and then taking $g(x)=\operatorname{sign}Z_N(x)$. A training sample
+$S=((X_i,f(X_i)))_{i=1}^n$ supplies noiseless signs. Write
+$\mathcal G_S=\{g:g(X_i)=f(X_i)\text{ for all }i\}$. For
+$A_g=\{g(x)Z_N(x)>a\text{ for every }x\}$, the exact posterior is
+\begin{equation}\label{eq:exact-finite-posterior}
+ \pi_N(g\mid S)=
+ \frac{\Pr(A_g)}{\sum_{h\in\mathcal G_S}\Pr(A_h)}
+ \quad(g\in\mathcal G_S),
+\end{equation}
+with zero mass outside $\mathcal G_S$. The normalization introduced by
+the initial global-margin conditioning cancels in this formula.
+
+At an input $x$, let
+$p_N(x\mid S,f)=\pi_N\{g:g(x)=f(x)\mid S\}$. We count a prediction as
+successful only when $p_N(x\mid S,f)>2/3$. Our primary error criterion
+is therefore the fraction of inputs failing this confidence requirement:
+\begin{equation}\label{eq:confidence-error}
+ F_N(S,f)=\frac1{2^d}\sum_{x\in\mathcal X}
+                    \mathbf 1\{p_N(x\mid S,f)\le2/3\}.
+\end{equation}
+As a useful auxiliary quantity, define the average posterior
+probability of a wrong label:
+\begin{equation}\label{eq:posterior-error}
+ R_N(S,f)=\frac1{2^d}\sum_{x\in\mathcal X}
+            \pi_N\{g:g(x)\ne f(x)\mid S\}.
+\end{equation}
+This is also the expected test error of a Boolean function drawn from
+the posterior. Pointwise comparison of the wrong-label probability
+on the failing and successful inputs gives
+\begin{equation}\label{eq:confidence-risk-comparison}
+ \max\{0,(3R_N-1)/2\}\le F_N\le\min\{1,3R_N\}.
+\end{equation}
+Indeed, failing inputs each contribute at least $1/3$ to $R_N$,
+while successful inputs contribute less than $1/3$ and all inputs
+contribute at most one. The same linear bounds hold after averaging
+over samples. In particular, posterior error near $1/2$ forces
+confidence failure on at least about a quarter of inputs.
+
+The majority rule chooses the more probable sign at
+each input and is a different performance criterion. Its error is at
+most twice~\eqref{eq:posterior-error}; the reverse implication fails.
+A posterior that assigns probability $0.5001$ to every correct sign
+can have a perfect majority classifier and posterior error close to
+$1/2$.
+
+Every width limit in this paper takes $N\to\infty$ with $d,L,\gamma,a$
+fixed. Sample-complexity statements then study the resulting family
+as $d,k,n$ vary, where $k$ is the parity size. We do not exchange these
+limits or claim quantitative uniformity in $d$ or $L$.
+
+\input{source/gamma-lt1.tex}
+
+\section{Classification bounds and the limits of eigenvalue arguments}
+\label{sec:classification-bounds}
+
+\input{source/parity-spectrum.tex}
+
+\subsection{An information bound that does apply to the posterior}
+
+\begin{proposition}[Parity-identification bound]
+\label{prop:information-bound}
+Let $1\le k\le d$ and $B=\binom dk$. For $n$ independent uniform
+training inputs and any fixed degree-$k$ parity $f$, the posterior
+learner in this paper satisfies
+\begin{equation}\label{eq:information-lower-bound}
+ \mathbb E_S R_N(S,f)\ge
+ \frac12\left(1-\sqrt{\frac{2^n}{B}}\right)
+\end{equation}
+whenever its posterior is defined. The same statement holds for its
+width limits and for a majority classifier whose tie rule respects
+coordinate permutations. Thus expected error at most
+$\epsilon<1/2$ requires
+\[
+ n\ge\log_2\binom dk+2\log_2(1-2\epsilon).
+\]
+\end{proposition}
+
+\begin{proof}
+First average the target uniformly over the $B$ degree-$k$ parities
+and fix the training inputs. The targets split into at most $2^n$
+cells $C_y$ according to their label vectors. Let $m_y(x)\in[-1,1]$
+denote the learner's mean signed prediction given the label vector
+$y$. For the posterior learner it is the posterior marginal mean of
+$g(x)$; for majority prediction it is the selected sign. Use the
+uniform inner product on the Boolean cube. Since
+$\|m_y\|_2\le1$, orthogonality of the parities and Bessel's inequality
+give
+\[
+ \sum_{U\in C_y}\langle m_y,\chi_U\rangle
+ \le \sqrt{|C_y|}
+       \left(\sum_{U\in C_y}\langle m_y,\chi_U\rangle^2\right)^{1/2}
+ \le \sqrt{|C_y|}.
+\]
+Summing over cells and applying Cauchy--Schwarz bounds average target
+correlation by $\sqrt{2^n/B}$. Classification error is half of one
+minus this correlation. Finally, coordinate permutations act
+transitively on degree-$k$ supports and preserve the network prior,
+the all-input margin event, the sampling distribution, and the
+posterior rule. The expected error is therefore identical for every
+degree-$k$ parity. This proves the fixed-target result as well as its
+stated extensions.
+\end{proof}
+
+This lower bound is of order $k\log(d/k)$ when $k\ll d$, and is
+vacuous when $k=d$. It is not exponential in $k$. It also illustrates
+why the ambient dimension matters in any statement about ``an XOR of
+size $k$.''
+For the primary confidence criterion, the same argument and
+\eqref{eq:confidence-risk-comparison} imply
+\[
+ \mathbb E_S F_N(S,f)\ge
+ \max\left\{0,\frac14-\frac34\sqrt{\frac{2^n}{\binom dk}}\right\}.
+\]
+
+\input{source/near-independent-confidence.tex}
+
+\subsection{A small parity eigenvalue does not by itself force slow learning}
+
+\begin{proposition}[A finite-rank Gaussian counterexample]
+\label{prop:rank-two-counterexample}
+Fix a nonconstant parity $f$ and $0<\lambda<1$. Consider the Gaussian
+kernel
+\[
+ K_\lambda(x,y)=(1-\lambda)+\lambda f(x)f(y).
+\]
+It has normalized parity eigenvalue $\lambda$. Nevertheless, for its
+Gaussian sign learner, either with any positive all-input margin or
+without that margin, expected confidence-failure, posterior, and majority errors after
+$n\ge1$ independent uniform labeled examples are at most $2^{-n}$.
+The same bound holds for every zero-temperature limit obtained by
+shrinking this Gaussian's overall amplitude while keeping the margin
+fixed.
+\end{proposition}
+
+\begin{proof}
+Write $G(x)=A+Bf(x)$ with independent
+$A\sim\mathcal N(0,1-\lambda)$ and $B\sim\mathcal N(0,\lambda)$.
+There are only two latent values, $A+B$ and $A-B$. With or without the
+global margin event, the only possible sign functions are
+$1,-1,f,-f$, each with positive probability. Once the training sample
+contains both target labels, $f$ is the unique compatible sign
+function. Otherwise the compatible signs are $f$ and the observed
+constant, which disagree on half the domain. Every input on the
+agreeing half has correct-label probability one; hence confidence
+failure, posterior error, and majority error are all at most $1/2$.
+The probability that all $n$ target
+labels coincide is $2^{1-n}$. Multiplication yields the claimed bound,
+uniformly in the Gaussian amplitude, so it persists in any of the
+specified limits.
+\end{proof}
+
+This is a counterexample to an eigenvalue-only inference, not a claim
+about the iterated-arcsine kernel~\eqref{eq:arcsine-kernel}. Its parity
+eigenvalue can be arbitrarily small while learning remains fast. The
+counterexample also shows why even an exact, very unfavorable parity
+prior rate such as~\eqref{eq:parity-kernel-energy} does not alone yield
+a lower bound on examples: a few observations can remove all
+competitors with larger prior mass.
+
+\section{The unresolved exponential parity question}
+
+For the precise architecture~\eqref{eq:model-variances}, a fixed kernel
+does govern every fixed $\gamma<1$. This follows from exponential
+freezing, with no substitution of a regression likelihood for the
+actual sign likelihood. Three statistical limits result:
+\[
+\begin{array}{c|l}
+ 0<\gamma<1 & \text{minimum kernel energy over compatible full-margin orthants},\\
+ \gamma=0 & \text{Gaussian signs conditioned on every margin},\\
+ \gamma<0 & \text{Gaussian signs conditioned on observed signs alone}.
+\end{array}
+\]
+The freezing proof separates the scales $N$ and $N^\gamma$. At
+$\gamma=1$ they coincide, so the argument cannot discard feature
+deviations at the scale relevant to learning.
+
+The statements proved here do not establish a uniform
+$\exp(\Omega(k))$ sample lower bound for $k$-bit parity throughout
+$\gamma<1$. For positive $\gamma$ the missing step is a quantitative
+comparison of the minimum energies of compatible sign patterns.
+For zero or negative $\gamma$ at fixed depth, it is a quantitative
+comparison of the relevant Gaussian orthant probabilities; the
+depth-growing subfamily in Theorem~\ref{thm:deep-confidence} is
+settled here. A regression mean's small
+correlation with parity, or a small parity kernel eigenvalue, does
+not supply either comparison. A majority-vote lower bound requires
+additional control beyond posterior error. These are mathematical
+gaps in an attempted deduction, rather than a proved counterexample
+for the specified neural-network kernel.
+
+\begin{thebibliography}{9}
+\bibitem{notes}
+D. Vaintrob and K. H\"anni.
+\emph{A Generalization Result for Overparametrized Neural Net Bayesian Learning}.
+Lecture notes, 2026.
+\url{https://kaarelh.github.io/ai/nnbayes-generalization.pdf}.
+\bibitem{nngp-note}
+D. Vaintrob, K. H\"anni, and ChatGPT.
+\emph{Small circuits under Gaussian-process classification:
+what sample complexity follows from the actual posterior?}
+Unpublished companion note, October 15, 2026.
+\end{thebibliography}
+\end{document}

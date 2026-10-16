@@ -1,0 +1,156 @@
+Appendices G and H: independent mathematical audit
+
+Scope and conventions
+The audit concerns the supplied slides, Appendix G (slides 70--75) and H
+(slides 76--80). Both constructions implicitly specialize the activation to
+tanh, despite the broader bounded/Lipschitz/non-polynomial assumptions in
+the main talk. The paper can use tanh only in a separately stated example.
+The proof fragment below uses L-1 tanh hidden layers and a linear readout,
+with first-layer coefficient d/N and readout coefficient N. With a final
+tanh, change the readout constant to give any fixed output margin; the
+asymptotic conclusions are unchanged.
+
+APPENDIX G: salvageable and proved
+
+A rigorous, slightly cleaner replacement is proved in the file
+/workspace/strong-prior-paper/depth-lower-bound.tex.
+
+For a universal constant A, L >= 4, 1 <= q <= d and N >= 2^(q+1), EVERY
+Boolean function of a specified q coordinates is realized with output
+exactly +/-1 and weighted squared norm at most
+
+ A [ d q^2 log^2(2q) + (L-2) 2^(2q/(L-2)) ].
+
+Thus a ball of that radius contains 2^(2^q) distinct functions. In
+particular, for d=q>=2 and L=d+2, radius O(d^3 log^2 d) suffices for all
+Boolean functions on d bits. A counting bound polynomial jointly in d,K,L
+is impossible. This remains a norm-ball statement, not a lower bound on
+sample complexity for an easy target.
+
+Proof repairs:
+1. The soft-bump dictionary is controlled by a diagonally dominant
+   interpolation matrix, rather than informally neglecting all tails.
+   With gamma=(log(16q))/2 and
+   T_xp=(1+tanh(gamma(<p,x>-(q-1))))/2,
+   ||T-I||_infty<1/4, so ||T^-1||_infty<=4/3. A bank of tanh(1) constant
+   neurons implements the constant offset exactly at the desired cost.
+2. The amplification uses exact tanh recurrences, not repeated
+   approximations tanh(z) approximately z. Define target signal sizes t_j,
+   and use gain atanh(t_j)/t_(j-1). Uniformly for t_j <=3/4 these gains
+   differ from t_j/t_(j-1) by a constant factor. This keeps constants
+   uniform in depth and removes an unquantified accumulation of error.
+3. Integer fan-out populations are rounded up. Their ratios are bounded
+   by twice the ideal ratio, giving a constant factor in each layer's
+   additive cost, not a factor exponential in depth.
+4. Arbitrary larger widths use unequal cloning and preserve cost within
+   factor 2. Exact norm preservation at every larger width, asserted in
+   the slides, is generally unavailable unless the relevant clone
+   multiplicities divide the width. Reserving a constant factor fixes it.
+5. The reader and amplification costs are optimized together, retaining
+   the L-2 term explicitly. This supports the advertised Theta(L)
+   exponent with no reliance on the slide's informal replacement of
+   L-3 by L.
+
+Main logical qualification: the packing/cardinality lower bound implies
+an obstruction to polynomial-size compression only if the proposed
+compressed class has an appropriate finite counting bound. Norm-bounded,
+margin-preserving compression has this property via the paper's packing
+lemma. A claim that arbitrary real weights intrinsically carry only a
+finite number of bits requires a separate capacity argument.
+
+Numerical sanity check (not the proof): q=1,2,3,4 and m=L-3=1,2,5 were
+checked with the exact interpolation and scalar amplification formulas.
+The dictionary row errors were .11765, .09094, .08166, .07695; all outputs
+were +/-1 to floating-point accuracy and the universal bound with A=32
+held. The proof does not depend on this check.
+
+APPENDIX H: correct counterexample for quantization margins, not a proof
+of the advertised positive robust-prior theorem
+
+There are two distinct properties:
+(a) On each Boolean input, every pre-rounding neuron activation is at
+    least h/4 away from a rounding boundary.
+(b) A neuron's rounded output stays fixed when all of its INPUT
+    activations are independently perturbed by up to h/4.
+Appendix H establishes (a), and explicitly exploits the failure of (b).
+This distinction must remain explicit. If 'robust' means (b), the
+construction is not robust and does not prove the stated counterexample
+for that class. If the intended notion is (a), the construction works.
+The body uses ambiguous wording about perturbing 'activations'; the
+paper should define which activations are perturbed before making any
+claim involving robustness.
+
+A rigorous margin-only construction can be recovered as follows. Fix
+h=1/r, integer r>=2, let Q_h round to the nearest multiple of h, and take
+alpha=h, z_t=atanh(h), c'=z_t/h. Use M=2^d point bumps, each repeated n
+times, and nM constant neurons, so N=2nM. Choose gamma with
+ tanh(gamma)>1-h/4.
+After rounding, the bump bank takes value +1 at its point and -1 off it,
+and the constant bank equals +1. Its weighted norm is exactly
+ gamma^2 d(d^2-d+2)/2.
+For target g let S=sum_p g(p), mu=1+S^2/M^2 in [1,2]. Each of n_2 reader
+neurons gives every copy of bump p the weight z_t g(p)/(2n), and every
+constant neuron weight z_t S/(2nM). Its preactivation is exactly z_t g(x),
+so its activation is h g(x), exactly a rounding representative. The reader
+cost is
+ R = mu c'^2 h^2 M^2 n_2/(2N).
+Subsequent populations n_j of identical h g signals use weights c'/n_j,
+with layer cost c'^2 n_(j+1)/n_j. If their total fan-out is F and there are
+m=L-3 such layers, equal population ratios give fan cost
+ c'^2 m F^(1/m)
+up to integer-rounding factors at sufficiently large width. A linear
+readout with output +/-1 costs
+ O = N/(h^2 F n_2),
+and hence
+ R O = mu c'^2 M^2/(2F).
+For a final tanh readout with preactivation magnitude z_o, multiply O and
+this product by z_o^2. Population fractions can be chosen so that R and O
+are comparable, provided F is not too large relative to h^4 M^2.
+Optimizing gives the advertised depth exponent: for fixed h and suitable
+large width, norm at most
+ O_h(d^3 + (L-1) 2^(2d/(L-1)))
+suffices (with harmless changes in constants and choices of populations).
+In particular, for L=Theta(d), the cost is O_h(d^3), yet every Boolean
+function on d coordinates is represented. All internal rounding margins
+are at least h/4.
+
+Why input perturbation robustness fails: the reader has absolute sum of
+incoming bump weights M z_t/2. Adversarial perturbations of size h/4 to
+these inputs can change its preactivation by h M z_t/8. This grows
+exponentially in d despite the perfect rounding margin at unperturbed
+inputs. For instance, an appropriately chosen parity target has balanced
+S=0, avoiding even the constant-bank contribution. This is the exact
+mechanism being exhibited, not a technical rounding issue.
+
+Two corrections to H's wording/calculations:
+1. The assertion that the required margin 'forces' h=1/r is too strong.
+   That choice conveniently makes 0,+/-h,+/-1 exact representatives, but
+   a margin condition does not require every value to be a representative.
+   E.g. h=.31 gives 0 and +/-h centered, while values sufficiently near
+   +/-1 remain >h/4 from the neighboring grid boundaries. The saturated
+   bank then rounds to +/- .93; rescaling the reader weights accommodates
+   it. Keeping h=1/r as a stated sufficient assumption is sound.
+2. The displayed reader/output budget inequality suppresses constants
+   that depend on the final readout convention and on whether B bounds
+   their sum or each separately. If B=R+O, AM-GM gives RO<=B^2/4; for a
+   linear +/-1 readout the preceding exact identity yields
+       M^2 <= B^2 F/(2 mu c'^2),
+   rather than the printed 2 B^2 F/(mu c'^2). This is only a constant-factor
+   error for the qualitative lower bound. A tanh readout additionally
+   introduces z_o^2.
+
+The no-large-relative-weights condition does exclude this particular
+construction: a live n_j by n_(j+1) block has
+ max|W|/(||W||_F/N) = N/sqrt(n_j n_(j+1)).
+At the first fan-out layer this is at least sqrt(F), if populations grow
+monotonically and N>=F n_2. Thus a polynomial bound on this ratio forces
+F polynomial and kills this example's exponential advantage. This does
+NOT establish the positive polynomial-depth learning theorem. That
+requires a complete compression and prior argument absent from H.
+
+Recommendation for the requested first paper
+Include the rigorous tanh-only G proposition as a short optional appendix
+about why depth is fixed. Omit H's quantized model from this first paper:
+it changes the model and is unnecessary for the strong-prior theorem.
+Report its margin/input-robustness distinction, the overstated grid
+necessity, and the missing positive theorem proof to the user.

@@ -1,0 +1,229 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,booktabs,tabularx,microtype,enumitem}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
+\hypersetup{pdftitle={Proof audit and editorial decisions: strong-prior paper},pdfauthor={ChatGPT}}
+\newcommand{\E}{\mathbb E}
+\newcommand{\PP}{\mathbb P}
+\newcommand{\R}{\mathbb R}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\setlength{\emergencystretch}{2em}
+\setlist{itemsep=3pt,topsep=5pt}
+\title{Proof audit and editorial decisions\\\large Companion to the strong-prior paper}
+\author{Prepared by ChatGPT for Dmitry Vaintrob and Kaarel H\"anni}
+\date{October 15, 2026}
+\begin{document}
+\maketitle
+
+This report checks Appendices A--L of \emph{A Generalization Result for Overparametrized Neural Net Bayesian Learning}, using the \href{https://kaarelh.github.io/ai/nnbayes-generalization.pdf}{source slides}. Page references below are the PDF's printed slide numbers, including the appendix numbers beyond 38. It distinguishes false statements, missing proofs, and statements that become rigorous after making their assumptions precise. The companion paper contains the repaired main proof; the broader scaling and online-learning claims are not part of its theorem.
+
+\section*{Main outcome}
+The strong-prior, fixed-depth, width-independent generalization theorem survives the audit. Its proof needs an explicit linear readout, globally bounded Lipschitz hidden activations, the prior's conditioning on a margin at \emph{every} Boolean input, and the order of limits ``fix width, then decrease variance.'' The subsampling argument is valid after spelling out its independence and telescoping details. There is no identified fatal error in the main proof thread.
+
+The most substantial problems are elsewhere:
+\begin{enumerate}
+\item Appendix J's inference from a small kernel eigenvalue to a large noiseless sample requirement is false in general. An explicit two-dimensional kernel counterexample appears below.
+\item Appendix J applies raw Gaussian function probabilities to a prior already conditioned on implementing a complete Boolean function. The omitted normalization can matter. Tiny target mass also does not imply a large relevance count.
+\item Appendix H establishes stability of rounding on the unperturbed computation, not stability under perturbations to a neuron's inputs. It does not prove the positive polynomial-in-depth robust-prior theorem.
+\item Appendix I remains a heuristic classification. Its layer-price comparisons do not establish the proposed exhaustive list of posterior scaling limits.
+\item Appendix K's deterministic conjunction ladder is sound with qualifications, but some later extensions are false or unproved. In particular, its exact descending-order mistake count fails for the stated formula language.
+\end{enumerate}
+None of these issues is needed for the main theorem proved in the paper.
+
+\section*{Disposition of every appendix}
+\small
+\begin{tabularx}{\textwidth}{@{}l l X@{}}
+\toprule
+Appendix & Status & Treatment in the paper\\
+\midrule
+A & Valid; simplified & Relevant-set posterior bound and full small-variance justification.\\
+B & Valid with conventions & Exact finite interpolation, constant channels, and precise circuit depth bookkeeping.\\
+C & Valid with care & Weighted-coordinate packing; infima handled by compactness.\\
+D & Valid up to rounding & Exact cloning at divisible widths; factor below two otherwise.\\
+E & Valid & Complete reverse-order subsampling proof, including all probability events.\\
+F & Mixed & Verified related-work discussion; unsupported lower-bound inferences removed.\\
+G & Repaired and proved & Tanh-only depth example with exact interpolation and amplification.\\
+H & Narrower result valid & Quantized-model example omitted; robustness distinction recorded here.\\
+I & Heuristic & Omitted as outside the strong-prior-limit scope.\\
+J & Mixed; major errors & Fourier facts valid, statistical overclaims removed; omitted.\\
+K & Mixed & Formula-MDL result valid; online discussion omitted.\\
+L & Mostly valid & Assumptions stated explicitly; stronger tanh assumptions separated.\\
+\bottomrule
+\end{tabularx}
+\normalsize
+
+\section{Appendix A: the relevance-based bound (slides 40--43)}
+The proof is valid. Its central advantage is that it controls a posterior without requiring a unique minimum-cost function. There is a simpler version sufficient for this paper. If $f\in A$, $|A|\leq M$, and $\pi(A^c)\leq\tau\pi(f)$, the posterior mass outside $A$ is at most $\tau$ on \emph{every} training sample: the denominator is always at least $\pi(f)$. A union bound eliminates all members of $A$ with error greater than $a$ after
+\[
+ n\geq a^{-1}\bigl(\log M+\log(1/\delta)\bigr).
+\]
+Thus posterior average error is at most $a+\tau$ with probability at least $1-\delta$. The source's additional Markov step is useful for a different tradeoff between tail mass and sample count but is unnecessary in the vanishing-tail regime.
+
+The asserted small-variance tail condition also holds, but deserves a proof. For each nonempty open function event $U_g$,
+\[
+ \lim_{\sigma\downarrow0}2\sigma^2\log\mu_{N,\sigma}(U_g)=-\kappa_N(g).
+\]
+An upper Gaussian radial bound and a lower bound obtained by integrating over a small ball inside $U_g$ prove this without assuming attainment of the infimum. Relative masses of strictly more expensive functions vanish; the finite number of Boolean functions makes their total relative mass vanish. The paper includes this argument. Equal-cost functions are all retained in the relevant set; no prefactor comparison is assumed.
+
+\section{Appendix B: circuit simulation (slides 44--45)}
+The finite-interpolation argument is valid. Pinkus's Theorem 5.1 is the appropriate result: continuous non-polynomial activations can interpolate arbitrary values at finitely many distinct points by a finite linear combination of ridge functions. Applied to a fixed finite collection of bounded-fan-in Boolean gates, every required coefficient is bounded by a constant depending only on the activation and gate basis.
+
+Three conventions need to be explicit. First, Boolean signals are represented as linear combinations of hidden activations, not necessarily as one neuron's activation. Second, one constant neuron per layer carries affine offsets after the initial bias coordinate. Third, identity-gate interpolation relays skipped signals and pads the depth exactly. With $D$ gate layers the resulting network has $D$ hidden layers and one linear readout, so our depth is $L=D+1$. At any layer only $O(C)$ signals need to be carried for a size-$C$ bounded-fan-in circuit.
+
+This establishes the forward simulation used in the paper. The source's informal converse, for ``any reasonable convention,'' needs computational assumptions on evaluating the activation and representing real weights. It is not asserted in the paper.
+
+\section{Appendix C: the bounded-width count (slides 46--50)}
+The packing proof is valid. When $\kappa_N(g)$ is an unattained infimum, compactness of a slightly larger closed parameter ball gives a limit representative with non-strict margin at least $1/2$. Opposite labels still force output separation at least one, which suffices for disjoint open packing balls.
+
+The phrase ``the learner stays in a ball'' is inaccurate at finite $\sigma$. The parameter posterior has no such compact support. What is counted is a set of \emph{functions}, each with a low-norm representative; the posterior mass of the remaining functions tends to zero relative to the target. The paper avoids the support claim.
+
+In fact the parameter sensitivity can be bounded independently of width in the rescaled coordinates $u^\ell=\sqrt{c_\ell}W^\ell$. On $\norm{u},\norm{v}\leq R$,
+\[
+ |z_u(x)-z_v(x)|\leq\Lambda_L(R,d)\norm{u-v},\quad
+ \Lambda_L(R,d)^2=\frac{d+1}{d}R^{2(L-1)}+\sum_{j=0}^{L-2}R^{2j}.
+\]
+The parameter count still depends on width, which is why compression is necessary.
+
+\section{Appendix D: cloning (slides 51--54)}
+Cloning exactly preserves the function and weighted norm when $N=kC$: first-layer squared norm grows by $k$, internal squared norms are unchanged, and readout squared norm decreases by $k$. The coefficients $d/N$ and $N$ cancel these changes.
+
+For an arbitrary $N\geq C$, use $k=\lfloor N/C\rfloor$ clones and pad the unused units. The first-layer contribution is multiplied by $kC/N\leq1$ and the readout contribution by $N/(kC)<2$. Thus the correct general statement is a factor below two, not exact equality. This constant has no effect on the theorem. Padding means zero incident weights; it need not mean zero activations when $\phi(0)\ne0$.
+
+\section{Appendix E: subsampling (slides 55--65)}
+The multilayer proof works. Its most delicate steps have been checked explicitly:
+\begin{itemize}
+\item Thresholds depend on original row norms. Deleting entries decreases Frobenius norms and gives a uniform, row-relative error bound.
+\item Each layer is sampled independently, with replacement; repeated indices are distinct copies. Adjacent layers' independent lists make the expected internal squared norm correct, even though sampled matrix entries are dependent.
+\item The deviation event is controlled by exposing the later lists first. Conditional on those lists, each row estimate is an average of independent bounded terms. The bound is uniform in the retained row and therefore holds unconditionally.
+\item Separate Markov bounds control the total retained row mass and the final network norm. No invalid conditioning on a favorable norm event is used in Hoeffding's inequality.
+\item In the reverse-order telescoping comparison, all matrices after the receiving layer already equal their final sampled matrices. Their operator norms are therefore controlled by the final norm event. Only the next compressed layer appears in the union bound, removing $\log N$.
+\end{itemize}
+The stated constants can be certified. With $K\geq1$, $\eta=[12(L-1)]^{-1}$, $\rho=\eta2^{-L}K^{-(L-1)/2}$, and
+\[
+ M=\max\!\left\{\lceil9K\rceil,
+ \left\lceil256\rho^{-4}(d+\log(L/\rho))\right\rceil\right\},
+\]
+one obtains uniform output error at most $1/12$ and weighted norm at most $4K$. Rescaling the linear readout by $3/2$ restores the strict $1/2$ margin with norm at most $9K$ and all weights bounded by $M$. The paper gives the complete proof. For a function-cost infimum, use a representative of cost below $\kappa_N(g)+1$ instead of assuming an optimizer exists.
+
+\section{Appendix F: related work and complexity interpretation (slides 66--69)}
+The connections to Occam learning and norm-based capacity control are appropriate. The paper cites the original works and avoids claiming that a particular existing norm theorem directly covers this activation class without checking its assumptions. Positive homogeneity or a condition such as $\phi(0)=0$ in familiar bounds is not automatically available here.
+
+Buzaglo et al.'s ICML 2024 paper is correctly relevant; its regimes and priors differ from the present small-variance result. The exact reference is \emph{How Uniform Random Weights Induce Non-uniform Bias: Typical Interpolating Neural Networks Generalize with Narrow Teachers}, PMLR 235:5035--5081.
+
+The inference ``tiny target prior probability implies slow learning'' is not valid by itself. Consider a prior on two functions $\{f,g\}$ with $\pi(f)=\epsilon$ and $\pi(g)=1-\epsilon$. If a single observed point distinguishes them, the posterior becomes certain of $f$ after that observation, regardless of how small $\epsilon$ is. A small target mass can make an upper bound based on $\log(1/\pi(f))$ uninformative; it does not establish a lower bound. The claimed reverse implications about circuit complexity and learnability are therefore not included.
+
+\section{Appendix G: the depth example (slides 70--75)}
+The main phenomenon is correct for tanh, but the original amplification sketch does not control accumulated linearization error. The paper replaces it with an exact construction and proves that a universal constant $A$ satisfies the following: if $L\geq4$, $1\leq q\leq d$, and $N\geq2^{q+1}$, every Boolean function of a specified $q$ coordinates has a margin-one implementation with
+\[
+ \kappa_N(w)\leq A\bigl[dq^2\log^2(2q)+(L-2)2^{2q/(L-2)}\bigr].
+\]
+The proof controls the soft-bump dictionary through diagonal dominance, implements its offset with a bank of constant units, and amplifies the encoded signal using exact gains $\operatorname{atanh}(t_j)/t_{j-1}$. Integer fan-out sizes and arbitrary larger widths only cost universal factors.
+
+Taking $q=d$ and $L=d+2$ puts all $2^{2^d}$ Boolean functions in a ball of norm $O(d^3\log^2(2d))$. Thus the logarithm of the norm-ball cardinality cannot be bounded by a polynomial jointly in $d,K,L$. This conclusion is rigorous and is included in the paper. It does not show that a simple target is hard to learn: cardinality alone does not control the competing functions' relative posterior mass.
+
+The source's language that a width-$M$ real network ``carries'' only a certain number of bits needs a norm/margin or other capacity restriction. The packing argument provides that restriction for the compression class used here; an unqualified finite-precision interpretation of arbitrary real weights does not follow.
+
+\section{Appendix H: quantization and robustness (slides 76--80)}
+Two different properties must be separated:
+\begin{enumerate}
+\item On each unperturbed Boolean computation, each pre-rounding activation is at least a quarter of a quantization step from a rounding boundary.
+\item A neuron's rounded output is unchanged when its \emph{incoming} activations are independently perturbed by a quarter step.
+\end{enumerate}
+The construction establishes the first property and exploits failure of the second. A reader combines exponentially many terms whose cancellation leaves one quantization step. Its absolute incoming-weight sum is of order $2^d\operatorname{atanh}(h)$, so perturbing its inputs by $h/4$ can alter its preactivation by order $h2^d\operatorname{atanh}(h)$. An excellent rounding margin at the original inputs does not control this sensitivity.
+
+Under the first interpretation, the quantized tanh construction can be made rigorous. With fixed step $h=1/r$, integer $r\geq2$, sufficiently wide networks can realize every Boolean function at norm
+\[
+ O_h\bigl(d^3+(L-1)2^{2d/(L-1)}\bigr).
+\]
+This is a useful counterexample for quantization margins alone, but it changes the model of the present paper. The positive robust-prior theorem in the main slides is not proved by this counterexample or by observing that a relative-weight condition excludes it.
+
+Two smaller corrections: the choice $h=1/r$ is sufficient, not forced by a margin requirement; and the displayed reader/output budget has a constant-factor mismatch. If their costs are $R,O$, their sum is at most $B$, and $M=2^d$, the exact linear-readout identity is $RO=\mu c'^2M^2/(2F)$. Hence $M^2\leq B^2F/(2\mu c'^2)$, rather than the displayed $2B^2F/(\mu c'^2)$. The qualitative exponent is unaffected. This appendix is excluded from the first paper.
+
+\section{Appendix I: large-width regime classification (slides 81--90)}
+The elementary one-input Gaussian energy calculation is sound. For a fixed activation vector $a$, prescribing $w\cdot a=b$ has minimum squared row norm $b^2/\norm a^2$. But this does not identify the posterior cost of a layer performing a computation on many inputs.
+
+For a matrix $A$ whose rows are incoming representations of those inputs, the exact minimum Gaussian energy of prescribing preactivations $b$ is
+\[
+ \frac{1}{2\sigma^2}b^\top(AA^\top)^+b,
+\]
+provided $b$ lies in the range of $A$. It depends on the full Gram matrix, including its rank and conditioning. Downstream label conditioning also changes the distribution of upstream representations. Representation volume and entropy cannot generally be omitted, particularly at large-width boundaries where they have leading-order costs.
+
+The toy optimization of $At^2+Bt^{-2k}$ is valid algebra. Its application assumes that arbitrary computations can be isolated in a degree-$k$ Taylor term and rescaled at the stated cost. The given activation assumptions do not even ensure the necessary Taylor expansion. Universal approximation alone supplies no polynomial resource bound for the proposed depth truncation. Therefore the step-up collapse, step-down truncation, and exhaustive classification are unproved.
+
+Some restricted random-feature versions can be proved under extra Gram-matrix concentration and nondegeneracy assumptions. They would be separate theorems and do not justify the full deep Bayesian typology. This appendix remains motivation for later work and is excluded here.
+
+\section{Appendix J: Fourier kernels and parities (slides 91--103)}
+\subsection*{What is correct}
+For a kernel on the uniform Boolean cube invariant under simultaneous sign flips, write $K(x,x')=\rho(xx')$. The characters $\chi_S(x)=\prod_{i\in S}x_i$ diagonalize its integral operator:
+\[
+ T_K\chi_S=\lambda_S\chi_S,\qquad
+ \lambda_S=\E_z\rho(z)\chi_S(z).
+\]
+Permutation invariance makes $\lambda_S$ depend only on $|S|$. Positive semidefiniteness gives $\lambda_S\geq0$, and $\sum_S\lambda_S=\E_xK(x,x)$. These statements apply to the usual isotropic fully connected NNGP construction, and analogous symmetry statements hold for its NTK.
+
+For an \emph{unconditioned} centered Gaussian process $z$ with this kernel, its Fourier coefficient $\widehat z(S)$ is Gaussian with variance $\lambda_S$. The event $E_S=\{\chi_S(x)z(x)>a\ \forall x\}$ implies $\widehat z(S)>a$, so
+\[
+ \PP_G(E_S)\leq\exp[-a^2/(2\lambda_S)]
+\]
+when $\lambda_S>0$. This is an upper bound, not a matching asymptotic estimate.
+
+\subsection*{Major error 1: an eigenvalue does not give the asserted sample lower bound}
+Fix a nonconstant parity $\chi_S$ and $0<\epsilon<1$. The kernel
+\[
+ K_\epsilon(x,x')=(1-\epsilon)+\epsilon\chi_S(x)\chi_S(x')
+\]
+is positive semidefinite, has $K_\epsilon(x,x)=1$, and has parity eigenvalue $\epsilon$. Its RKHS is the span of $1$ and $\chi_S$. Observing one sample of each label in noiseless regression to $\chi_S$ uniquely forces the interpolating function to be $\chi_S$, independently of $\epsilon$. Under uniform inputs, both labels have been observed except with probability $2^{1-n}$. Thus $O(\log(1/\delta))$ samples suffice, even as $1/\lambda_S\to\infty$.
+
+This disproves the generic implication ``resolving a direction requires $\Omega(1/\lambda)$ samples.'' A trace estimate cannot supply that missing implication. A valid lower bound needs a specified estimator, noise or regularization model, or a separately proved class-level restriction. This does not invalidate class-level kernel-regression lower bounds: the separate NNGP note proves one directly from the dimension of the training-kernel span. The missing transfer is to the actual margin-conditioned classification posterior.
+
+\subsection*{Major error 2: the actual prior is already conditioned}
+In the slides' main model, the prior is conditioned on $A=\{|z(x)|>1/2\ \forall x\}$. Fourier coefficients are no longer Gaussian after this conditioning. For $a=1/2$, the parity's function-prior mass is
+\[
+ \pi(\chi_S)=\frac{\PP_G(E_S)}{\PP_G(A)}.
+\]
+The denominator can be small and cannot be dropped. The raw Gaussian upper bound therefore does not establish the claimed bound on the normalized function prior.
+
+\subsection*{Other unsupported inferences}
+Tiny target mass does not imply a large relevant set: the two-function example in Appendix F has $M=2$ for every $\pi(f)>0$. A shared Fourier eigenbasis also does not transfer a statistical lower bound from the NTK to the NNGP; eigenvalues and learning rules matter. Symmetry by itself implies neither decreasing eigenvalues with degree nor $\lambda_k\asymp d^{-k}$. Such claims need additional activation, bias, regularity, and fixed-degree assumptions; some allowed kernels have entire zero-eigenvalue degrees.
+
+These problems affect the NNGP discussion, not the strong-prior theorem. The entire appendix is outside the requested first paper and is excluded.
+
+\section{Appendix K: online ordering and MDL (slides 104--109)}
+The conjunction ladder is a rigorous counterexample to a deterministic simplest-consistent \emph{formula} learner when $d\geq3$, the listed gate costs are fixed, and ties are deterministic. At Hamming-weight stage $k$, consistency with all lower-weight negative examples implies that a nonzero Boolean polynomial has no monomial of degree below $k$. A cheapest formula must therefore have at least $k$ variable leaves and $k-1$ binary gates. At equality it depends on exactly those $k$ variables and is zero on every assignment except all ones, so it is their conjunction. Presenting its unique weight-$k$ positive point eliminates exactly that candidate. The learner makes $2^d$ or $2^d-1$ mistakes, depending on the first constant tie, while the target has description length $\Theta(d\log d)$.
+
+The prefix-code Bayesian majority comparison is also valid: every mistake removes at least half the surviving prior weight, whereas the target's weight $2^{-C(f)}$ remains, giving at most $C(f)$ mistakes. However, this does not give a bound uniform in $\sigma$ for the Gaussian prior. The generic bound is $\log_2(1/\pi_{N,\sigma}(f))$, which can diverge as $\sigma\downarrow0$.
+
+Equal-size conjunctions have equal induced neural prior masses by coordinate-permutation symmetry, including after restricting to survivors. That does not show that these are all the cheapest surviving neural functions or that all other functions have negligible posterior mass. The ideal formula-model argument is not thereby a neural-prior theorem.
+
+\paragraph{A false exact claim.}
+``Descending weight gives exactly $d+1$'' fails for the stated AND/OR/XOR formula language. For $d=3$, after the positive $111$ and all three weight-two negative examples, $\mathrm{AND}_3$ and $\mathrm{XOR}_3$ are both cheapest consistent functions of equal cost. A tie rule selecting XOR makes another mistake on a weight-one input. Starting from constant zero, this gives at least five mistakes, exceeding $d+1=4$.
+
+The randomized-MAP rate in the table can be justified for the particular fixed conjunction ladder: summing harmonic numbers over its levels gives $\Theta(d^2)$. It is not a proved worst-case theorem over all ordering/adversary protocols. Uniform-random-permutation bounds can be established, but they should not be substituted for arbitrary iid-distribution bounds. Smoothing claims need a defined smoothing operation. The paper omits this separate online-learning direction.
+
+\section{Appendix L: activation assumptions (slide 110)}
+The explanation of the main proof's requirements is correct: boundedness controls sampled contributions, and Lipschitz continuity controls parameter sensitivity and error propagation. Differentiability is unnecessary. Non-polynomiality enters finite interpolation; boundedness plus nonconstancy already rules out global polynomials.
+
+Saturation, oddness, $\phi(0)=0$, and $\phi'(0)\ne0$ are additional hypotheses for the specific G/H constructions, not consequences of the main assumptions. For example, $\sin$ is bounded and Lipschitz but does not saturate; $\tanh^3$ has derivative zero at the origin; and $3/4+(1/4)\tanh$ never vanishes. These examples can be rescaled if a Lipschitz constant of exactly one is desired. The paper states the core theorem for bounded $1$-Lipschitz activations and specializes its depth example explicitly to tanh. A ReLU extension needs a different argument: boundedness on each compact interval is insufficient for the present width-uniform subsampling proof.
+
+\section{Additional claims in the main slides}
+\paragraph{Total expected iid mistakes (slide 30).}
+This does not follow from the finite-sample count/relevance argument. In an abstract finite class, a strongly ordered prior can make posterior majority behave like successive cheapest-candidate elimination and incur one mistake per candidate. Highly unequal iid point probabilities can make first occurrences follow any prescribed order with probability arbitrarily close to one. This is a counterexample to the \emph{generic inference}, not a disproof for the particular Gaussian neural prior. A separate theorem is required for the neural claim.
+
+A valid finite-horizon consequence of the relevance assumptions is
+\[
+ \E[\text{majority mistakes through }T]
+ \leq2(1+\log M)H_T+2\tau,
+\]
+where $H_T$ is the harmonic sum and $\pi(A^c)\leq\tau\pi(f)$. The union bound gives expected maximum surviving error inside $A$ at time $n$ at most $(1+\log M)/(n+1)$. For each tail function of error $r$, its expected surviving contribution is at most $[\pi(g)/\pi(f)]r(1-r)^n$; summing over all times gives at most $\tau$. This bound grows with the horizon and does not prove the displayed unlimited-total claim.
+
+\paragraph{Complexity from observed mistakes (slide 30).}
+The reverse implication lacks sufficient quantifiers. If the claimed complexity is that of the target, a distribution supported on one point cannot reveal the target's behavior elsewhere, even if essentially no mistakes occur. If it is the complexity of a returned predictor, a different precise theorem is needed. The paper makes neither claim.
+
+\paragraph{Polynomial equivalence of log-ranks (slide 35).}
+Polynomial equivalence of two numerical complexity measures, plus upper bounds on their sublevel counts, does not itself imply polynomial equivalence of their ranks. For example, take a distinguished simplest object $g_0$, a target $f$, and $2^{2^d}-2$ other objects. Set both costs of $g_0$ to one, set $C(f)=2^d$ and $\kappa(f)=2^{d+1}$, and give every other object costs $C=2^d+1$, $\kappa=2^d$. The costs agree within a factor of two and have logarithmic sublevel counts bounded by their costs. Yet $f$ has constant log-rank under $C$ and log-rank $2^d$ under $\kappa$. This refutes the generic derivation, not a special neural rank theorem; equal-norm Gaussian prefactors also need analysis.
+
+\end{document}

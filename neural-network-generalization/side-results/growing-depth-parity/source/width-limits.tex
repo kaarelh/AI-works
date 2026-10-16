@@ -1,0 +1,91 @@
+\section{The kernel rate of the actual network}
+Let $M=2^d$, and identify output functions with vectors in $\mathbb R^M$.
+Define
+\begin{equation}\label{eq:kernel}
+ H(t)=\frac2\pi\arcsin t,\qquad
+ K(x,y)=H^{\circ(L-1)}\!\left(\frac{1+x\cdot y}{d+1}\right).
+\end{equation}
+The positive definiteness of $K$ is proved in the next section.
+For each Boolean function $g$, put
+\begin{equation}\label{eq:energy}
+ E_K(g)=\min_{g(x)z(x)\ge a\ \forall x}\frac12 z^TK^{-1}z.
+\end{equation}
+The minimum exists since its feasible set is closed and nonempty and
+the objective is coercive. Replacing the closed inequalities by strict
+ones gives the same infimum, by scaling a feasible vector by $1+\epsilon$.
+
+\begin{proposition}[Posterior concentration on minimum-energy signs]
+\label{prop:rate}
+For the actual network~\eqref{eq:weights}, at every fixed
+$0<\gamma<1$,
+\begin{equation}\label{eq:rate}
+ \lim_{N\to\infty}N^{-\gamma}\log
+ \mathbb P\{g(x)z_N(x)>a\ \forall x\}=-E_K(g).
+\end{equation}
+Consequently, after any fixed noiseless training sample, posterior
+mass tends to one on the compatible functions minimizing $E_K$.
+No assertion about the relative weights of tied minimizers is needed.
+\end{proposition}
+
+\begin{proof}
+For hidden layer $s$, let
+$Q_N^s(x,y)=N^{-1}\sum_i h_i^s(x)h_i^s(y)$.
+We first establish, for each fixed $\epsilon>0$,
+\begin{equation}\label{eq:freeze}
+ \mathbb P\{\|Q_N^{L-1}-K\|>\epsilon\}
+       \le C_\epsilon e^{-c_\epsilon N}
+\end{equation}
+for all sufficiently large $N$. Any matrix norm can be used, since
+$M$ is fixed. Conditional on the preceding layer, the rows of the
+next hidden layer are independent bounded vectors. Hoeffding's
+inequality controls all their empirical second moments. Their
+preactivations have covariance $N^{1-\gamma}Q_N^{s-1}$; at the first
+layer the covariance is
+$N^{1-\gamma}(1+x\cdot y)/d$. Because $N^{1-\gamma}\to\infty$,
+the conditional second-moment map converges to the Gaussian-sign map
+\[
+ Q\longmapsto \left[H\!\left(
+ \frac{Q(x,y)}{\sqrt{Q(x,x)Q(y,y)}}\right)\right]_{x,y}.
+\]
+This follows by dominated convergence for a Gaussian vector, since
+each scalar variance stays bounded away from zero in a neighborhood
+of the limiting covariance. The convergence is uniform in such a
+neighborhood: a compactness subsequence and a continuous square root
+coupling reduce the assertion to the same dominated-convergence
+argument. The limiting map is continuous there. Inducting through
+the fixed number of layers, with smaller fixed tolerances at earlier
+layers, proves~\eqref{eq:freeze}. The first-layer limit normalizes
+the diagonal $(d+1)/d$, giving the kernel in~\eqref{eq:kernel}.
+
+Conditionally on the hidden layers, the readout is exactly Gaussian:
+\begin{equation}\label{eq:readout}
+ Z_N\mid Q_N^{L-1}\sim\mathcal N(0,N^{-\gamma}Q_N^{L-1}).
+\end{equation}
+Couple it to $Y_N=N^{-\gamma/2}K^{1/2}\xi$, where
+$\xi\sim\mathcal N(0,I_M)$ is independent of the hidden layers.
+On a fixed sufficiently small neighborhood of the positive-definite
+matrix $K$, the square-root map is Lipschitz. Hence, for $\delta>0$,
+\[
+ \mathbb P\{\|Z_N-Y_N\|>\delta\}
+ \le C_\epsilon e^{-c_\epsilon N}
+ +\mathbb P\{\|\xi\|>\delta N^{\gamma/2}/(C\epsilon)\}.
+\]
+First divide logarithms by $N^\gamma$ and let $N\to\infty$;
+then let $\epsilon\downarrow0$. The resulting upper limit is
+$-\infty$, since $\gamma<1$. The coupled vectors are therefore
+exponentially equivalent at speed $N^\gamma$.
+
+The fixed-dimensional Gaussian vectors $Y_N$ have large-deviation
+rate $I(z)=z^TK^{-1}z/2$, directly from their densities. Exponential
+equivalence transfers the same bounds to $Z_N$. Applying the upper
+bound to a closed margin orthant and the lower bound to its interior
+gives~\eqref{eq:rate}, since their infima agree. Finally, there are
+only finitely many Boolean functions for fixed $d$. Dividing each
+compatible orthant probability by their sum proves the posterior
+concentration claim.
+\end{proof}
+
+This is a rate statement for the network itself. It does not require
+relative-error approximation of rare probabilities, nor convergence
+in total variation to a Gaussian posterior.
+

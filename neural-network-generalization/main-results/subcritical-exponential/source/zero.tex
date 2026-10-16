@@ -1,0 +1,213 @@
+\section{The fixed-margin Gaussian endpoint}
+\label{sec:zero-endpoint}
+We now prove the confidence lower bound for the exact $\gamma=0$
+posterior. The full event $A_S$ from Section~\ref{sec:zero-conditioning}
+uses the parity labels $y_i=f(X_i)$. Write $\mathbb E_S^*$ for expectation
+under $G\mid A_S$, and let $\mathcal D=\mathcal D(S)$.
+Its relative entropy from $N(0,K)$ is exactly $\mathcal D$.
+
+\begin{lemma}[Gaussian quadratic entropy]\label{lem:zero-quadratic}
+Suppose $Z$ is a linear image of a centered Gaussian vector under a
+reference law, with covariance $T\succeq0$, trace $t$, and largest
+eigenvalue $\ell>0$. Under any law of relative entropy at most $D_0$
+from that reference law,
+\[
+ \mathbb E\|Z\|^2\le2t+4\ell D_0.
+\]
+\end{lemma}
+\begin{proof}
+The entropy variational inequality states that
+$\mathbb E_Q V\le\operatorname{KL}(Q\Vert P)+\log\mathbb E_Pe^V$.
+It follows immediately from nonnegativity of the relative entropy
+from $e^VdP/\mathbb E_Pe^V$, first for bounded $V$ and then by
+truncation. At $V=\|Z\|^2/(4\ell)$, the Gaussian moment generating
+function gives
+\[
+ \log\mathbb E_Pe^V
+ =-\frac12\sum_j\log\left(1-\frac{\lambda_j(T)}{2\ell}\right)
+ \le\frac{t}{2\ell},
+\]
+using $-\log(1-x)\le2x$ for $0\le x\le1/2$. The claim follows.
+The zero-covariance case is immediate.
+\end{proof}
+
+For any odd cutoff $r$, apply this lemma to the high-degree projection
+$G_{>r}$ as a vector scaled by $M^{-1/2}$, and to its restrictions at
+the $n$ training locations scaled by $n^{-1/2}$. The resulting exact
+bounds are
+\begin{align}
+ \mathbb E_S^*\|G_{>r}\|_2^2
+ &\le2\tau_r+4\lambda_{r+1}\mathcal D,
+ \label{eq:zero-tail-population}\\
+ \mathbb E_S^*\mathbb P_nG_{>r}^2
+ &\le2\tau_r+\frac{4\|Q_{r,SS}\|\mathcal D}{n}.
+ \label{eq:zero-tail-empirical}
+\end{align}
+Here $\|g\|_2^2=\mathbb E_xg(x)^2$ and
+$\mathbb P_ng=n^{-1}\sum_i g(X_i)$. The normalized empirical covariance
+has trace exactly $\tau_r$, even if locations repeat. Neither formula
+asserts independence under the posterior, or log-concavity of the
+globally conditioned law.
+
+\begin{theorem}[Endpoint confidence lower bound]\label{thm:zero-endpoint}
+For fixed $L\ge2$ and $a>0$, there are $c>0$ and $d_0$ such that, for
+every $d\ge d_0$ and each integer $0\le n\le e^{cd}$, with probability
+at least $3/4$ over independent uniform parity training inputs,
+\[
+ R_S:=\mathbb E_S^*\mathbb P_x\{f(x)G(x)<0\}\ge\frac38.
+\]
+Consequently the fraction of inputs whose correct-label posterior
+probability is at most $2/3$ is at least $1/16$.
+\end{theorem}
+\begin{proof}
+We first consider $1\le n\le\exp[(\log(d+1))^3]$.
+On the exponentially high-probability event of
+Lemma~\ref{lem:zero-denominator},
+$\mathcal D\le C(d^2+nd^{1+\beta})$.
+Let $s$ be odd with $s\sim d^{1/3}$ and put $p=G_{\le s}$.
+The spectral estimates give $\tau_s=o(1)$ and
+\[
+ \mathcal D\lambda_{s+1}
+ \le \frac{\operatorname{poly}(d)\exp[(\log(d+1))^3]}
+                {\binom{d+1}{s+2}}=o(1),
+\]
+uniformly in this range of sample sizes. Thus
+\eqref{eq:zero-tail-population} implies
+$\mathbb E_S^*\|G-p\|_2^2=o(1)$.
+Since $|G(x)|>a$ at every input, the signs of $G$ and $p$ can disagree
+only where $|G-p|\ge a$, using any fixed sign convention at $p=0$.
+Their posterior-averaged disagreement fraction is therefore $o(1)$.
+Lemma~\ref{lem:ptf-parity} gives parity error $1/2-o(1)$ for every
+degree-$s$ polynomial threshold, so $R_S\ge1/2-o(1)>3/8$.
+
+For the remaining range, fix $\delta=1/20$. Choose a fixed sufficiently
+large sampling constant $A$ and use the maximal odd cutoff of
+Lemma~\ref{lem:adaptive-cutoff}:
+\[
+ A D_r\log(2D_r)\le n<A D_{r+2}\log(2D_{r+2}),
+ \qquad \tfrac14(\log d)^2\le r\le\alpha d.
+\]
+Here $\alpha<1/256$ is a small positive constant to be chosen below;
+the exponential constant $c$ is then chosen small enough to enforce
+this upper bound. Write
+\[
+ \rho=r/d,\qquad H_\rho=\log(e/\rho),\qquad
+ \tau=\tau_r,\quad\ell=\lambda_{r+1},\qquad
+ B_r=C_\delta\bigl(1+\sqrt{A H_\rho/\rho}+A H_\rho\bigr).
+\]
+Using $r/d$ instead of $r/(d+1)$ in the adaptive lemma changes only
+fixed constants.
+With probability at least $1-2\delta-o(1)$, the denominator,
+one-sided squared-loss sampling, and tail Gram events all hold:
+\begin{align}
+ \mathcal D/n&\le C d\rho^{-\beta},
+ \label{eq:zero-normalized-cost}\\
+ \mathbb P_n(fP)_-^2&\ge\tfrac14\|P\|_2^2
+       \quad\hbox{for every degree-$r$ polynomial $P$},
+ \label{eq:zero-coercivity}\\
+ \|Q_{r,SS}\|&\le B_r\tau.
+ \label{eq:zero-gram}
+\end{align}
+For the first inequality use \eqref{eq:zero-adaptive-cost},
+$n\ge A D_r\log(2D_r)$, and $\tau\asymp r^{-\beta}$.
+Indeed $d^2/n=o(1)$ here and
+$D_r\log(r+1)/n\le C$, while the main term is
+$d^{1+\beta}\tau\le C d\rho^{-\beta}$.
+The other two inequalities follow from
+\eqref{eq:wrong-square-coercivity} and
+Lemma~\ref{lem:adaptive-cutoff}, respectively. Fix a sample on these
+events for the rest of the argument.
+
+Take $u=r+2\lceil10\log(d+1)\rceil$ and decompose the actual posterior
+output into orthogonal Walsh bands,
+\[
+ G=p+b+t,\qquad p=G_{\le r},\quad b=G_{(r,u]},\quad t=G_{>u}.
+\]
+Every posterior draw has $f(X_i)G(X_i)>0$. Therefore, pointwise at
+the training inputs, $(fp)_-\le|G_{>r}|$.
+Equations~\eqref{eq:zero-coercivity}--\eqref{eq:zero-gram} and
+\eqref{eq:zero-tail-empirical} give
+\begin{equation}\label{eq:zero-head}
+ \mathbb E_S^*\|p\|_2^2
+ \le8\tau+16 B_r\tau\mathcal D/n.
+\end{equation}
+The middle band has prior trace at most $\tau$ and largest normalized
+eigenvalue at most $\ell$. Lemma~\ref{lem:zero-quadratic} gives
+\[
+ \mathbb E_S^*\|b\|_2^2\le2\tau+4\ell\mathcal D.
+\]
+Orthogonality, together with the shell estimates
+$n\ell/\tau\le CAH_\rho$ and
+$n\lambda_{u+1}/\tau\le d^{-10}$ from
+Lemma~\ref{lem:adaptive-cutoff}, now implies
+\begin{align}
+ \mathbb E_S^*\|p+b\|_2^2
+ &\le10\tau+C\frac{\mathcal D\tau}{n}(B_r+AH_\rho),
+ \label{eq:zero-low-norm}\\
+ \mathbb E_S^*\|t\|_2^2
+ &\le2\tau_u+4d^{-10}\frac{\mathcal D\tau}{n}.
+ \label{eq:zero-final-tail}
+\end{align}
+No additional empirical sampling event at $u$ is needed.
+
+Set $A_d=b_0d^{(1-\beta)/2}$, with the fixed constant $b_0>0$ of
+Lemma~\ref{lem:zero-amplitude}. That lemma applies because
+$\mathcal D\le e^{.045d}$ on the denominator event.
+Its conclusion and \eqref{eq:zero-final-tail} yield, uniformly over
+the sample sizes in question,
+\begin{align}
+ \mathbb E_S^*\mathbb P_x\{|G(x)|\le A_d\}&\le C/d,
+ \label{eq:zero-large-outputs}\\
+ \mathbb E_S^*\|t\|_2^2/A_d^2
+ &\le C\{(d\rho^\beta)^{-1}+d^{-10}\rho^{-2\beta}\}=o(1).
+ \label{eq:zero-tail-relative}
+\end{align}
+The last assertion uses $\rho\ge(\log d)^2/(4d)$ and $\beta\le1/2$.
+
+Let $\operatorname{clip}(z)=\max(-1,\min(1,z))$.
+The exact clipped-parity identity in Lemma~\ref{lem:clipped-parity},
+applied to the degree-$u$ polynomial $p+b$, gives
+\[
+ \left|\mathbb E_x f(x)\operatorname{clip}((p+b)(x)/A_d)\right|
+ \le\frac{u}{dA_d}\|p+b\|_2.
+\]
+Clipping is $1$-Lipschitz, and
+$|\sign G-\operatorname{clip}(G/A_d)|\le\mathbf1_{\{|G|\le A_d\}}$.
+Consequently Cauchy--Schwarz and the preceding bounds show
+\begin{align}
+ \left|\mathbb E_S^*\mathbb E_x f(x)\sign G(x)\right|
+ &\le\frac{u}{dA_d}\sqrt{\mathbb E_S^*\|p+b\|_2^2}
+       +\frac{\sqrt{\mathbb E_S^*\|t\|_2^2}}{A_d}+C/d.
+ \label{eq:zero-correlation}
+\end{align}
+The second and third terms tend to zero uniformly. Since $u/r=1+o(1)$,
+\eqref{eq:zero-normalized-cost} and \eqref{eq:zero-low-norm} bound
+the square of the first term by
+\begin{equation}\label{eq:zero-rho-powers}
+ C\rho^{2-2\beta}
+       \bigl(1+\rho^{-1/2}\sqrt{H_\rho}+H_\rho\bigr)+o(1).
+\end{equation}
+All constants here are independent of $d,n,\rho$; they may depend on
+the fixed $L,a,A,\delta$.
+The worst power is $\rho^{3/2-2\beta}\sqrt{H_\rho}$, which tends to
+zero as $\rho\downarrow0$ for every $\beta\le1/2$.
+Choose $\alpha$ small enough and then $d$ large enough that the right
+side of \eqref{eq:zero-correlation} is at most $1/4$.
+Thus
+\[
+ R_S=\frac{1-\mathbb E_S^*\mathbb E_x f(x)\sign G(x)}2\ge\frac38.
+\]
+The good sample event has probability at least
+$1-2\delta-o(1)>3/4$. At $n=0$, global sign symmetry gives correct-label
+probability $1/2$ at every input and the same risk conclusion directly.
+
+Finally put $q_S(x)=\mathbb P\{f(x)G(x)>0\mid A_S\}$ and
+$F_S=\mathbb P_x\{q_S(x)\le2/3\}$. Then
+\[
+ R_S=\mathbb E_x(1-q_S(x))
+ \le\frac{1-F_S}{3}+F_S,
+ \qquad F_S\ge\frac{3R_S-1}{2}\ge\frac1{16}.
+\]
+This conclusion concerns the actual posterior probability, without
+identifying it with the sign of a posterior mean.
+\end{proof}

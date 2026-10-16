@@ -1,0 +1,261 @@
+% Gaussian-posterior part of the exponential sample-schedule theorem.
+% Requires theorem, lemma, proposition, corollary environments and amsmath,
+% amssymb, amsthm. The spectral/random-Gram lemma is supplied separately.
+
+\section{The actual Gaussian sign posterior}
+Let $\mathcal X=\{-1,1\}^d$, $M=2^d$, and
+$f(x)=\prod_{j=1}^d x_j$. All function norms and expectations on
+$\mathcal X$ use its uniform probability measure. Let $G$ be a
+nondegenerate centered Gaussian vector indexed by $\mathcal X$, with
+covariance matrix $K$. The training inputs $X_1,\ldots,X_n$ are independent
+and uniform. We condition on
+\[
+ \mathcal A_S=\{f(X_i)G(X_i)>0:1\le i\le n\}.
+\]
+The prediction at $x$ is its actual conditional correct-label probability
+$q_S(x)=\mathbb P(f(x)G(x)>0\mid\mathcal A_S)$, and we write
+\[
+ F_\theta(S)=\mathbb P_x\{q_S(x)\le\theta\},\qquad
+ \theta=\frac{13}{20},\qquad
+ c=\sqrt{2\pi}\left(\frac1e-\frac7{20}\right)>0.
+\]
+The threshold $\theta<2/3$ supplies a strict buffer for passage from
+limiting Gaussian posteriors to finite-width posterior probabilities.
+
+Suppose the Walsh characters are eigenfunctions of the normalized
+covariance operator, with degree-$j$ eigenvalue $\lambda_j$. Write
+$V_r=\operatorname{span}\{\chi_U:|U|\le r\}$ and $D_r=\dim V_r$.
+For $r<d$, let $Q$ be the covariance contributed by the complementary
+Fourier modes, and put
+\[
+ \tau=Q(x,x)=\sum_{j>r}\binom dj\lambda_j,
+ \qquad \ell=\max_{j>r}\lambda_j.
+\]
+The matrix eigenvalues of $Q$ are $M\lambda_j$; this normalization is
+used throughout. Define $\|h\|_K^2=h^TK^{-1}h$, and write $u_+=\max(u,0)$ and $u_-=\max(-u,0)$.
+
+\begin{lemma}[Mean norm and a confidence margin]\label{lem:schedule-mean}
+Let $m(x)=\mathbb E[G(x)\mid\mathcal A_S]$, and let $s\le n$ be the
+number of distinct sampled inputs. Then
+\[
+ \|m\|_K^2\le s,\qquad f(X_i)m(X_i)>0.
+\]
+Let $\sigma_x^2=\operatorname{Var}(G(x)\mid G_S)$, where $S$ here lists
+the distinct inputs. Whenever $\sigma_x>0$ and $q_S(x)>\theta$,
+\[
+ f(x)m(x)>c\sigma_x.
+\]
+\end{lemma}
+\begin{proof}
+Whiten the Gaussian training vector as $G_S=K_{SS}^{1/2}\xi$.
+The sign constraints form a homogeneous cone in $\xi$. Conditioning
+leaves the squared Gaussian radius with mean $s$, so Jensen's inequality
+and Gaussian regression give
+\[
+ m_S^TK_{SS}^{-1}m_S\le s,\qquad
+ m=K_{\mathcal X,S}K_{SS}^{-1}m_S.
+\]
+The RKHS norm of this regression vector is the preceding quadratic
+form. Its observed signed coordinates are strictly positive.
+
+For the confidence claim, the scalar conditional variable
+$Y=f(x)G(x)$ has a log-concave density: it is a marginal of a Gaussian
+restricted to a convex set, by the marginal log-concavity theorem \cite{prekopa1973}. If $\mu=\mathbb E Y$ and $F_Y$ is its
+cdf, log-concavity and Jensen's inequality imply
+\[
+ \log F_Y(\mu)\ge\mathbb E\log F_Y(Y)=-1.
+\]
+Consequently $\mathbb P(Y>\mu)\le1-e^{-1}<\theta$.
+Conditioning first on the full training vector shows that the density
+of $Y$ is a mixture of Gaussian densities with common variance
+$\sigma_x^2$, and is therefore at most
+$(\sqrt{2\pi}\sigma_x)^{-1}$. If $q_S(x)>\theta$, then $\mu>0$ and
+\[
+ \theta<\mathbb P(Y>0)
+ \le 1-e^{-1}+\frac{\mu}{\sqrt{2\pi}\sigma_x}.
+\]
+This gives the stated margin.
+\end{proof}
+
+\begin{lemma}[Most residual variances remain large]\label{lem:schedule-var}
+For every training sample,
+\[
+ \mathbb P_x\{\sigma_x^2<\tau/2\}\le \frac{2n\ell}{\tau}.
+\]
+Also, if $p$ is the degree-$r$ Fourier truncation of $m$ and $t=m-p$,
+then $\|t\|_2^2\le n\ell$.
+\end{lemma}
+\begin{proof}
+Write $G=G_{\le r}+G_{>r}$ as a sum of independent fields. Conditioning
+additionally on the full low-degree field can only decrease conditional
+Gaussian variance. The remaining covariance is
+\[
+ Q-Q_{\mathcal X,S}Q_{SS}^{\dagger}Q_{S,\mathcal X}.
+\]
+Its subtracted term is positive semidefinite, bounded above by $Q$,
+and has rank at most $s\le n$. Its normalized trace is at most $n\ell$.
+Markov's inequality proves the first assertion; it includes observed
+points automatically. Fourier orthogonality and the mean norm bound
+prove $\|t\|_2^2\le\ell\|m\|_K^2\le n\ell$.
+\end{proof}
+
+\section{Uniform sampling detects the negative part}
+\begin{lemma}[Uniform ReLU sampling on the cube]\label{lem:schedule-relu}
+For every fixed $\delta,\eta\in(0,1)$, there is a universal constant
+$C$ such that, if
+\[
+ n\ge C\eta^{-2}D_r\log\!\left(\frac{D_r}{\delta\eta}\right),
+\]
+then with probability at least $1-\delta$, simultaneously for all
+$p\in V_r$,
+\[
+ \left|\frac1n\sum_{i=1}^n(-f(X_i)p(X_i))_+
+             -\mathbb E_x(-f(x)p(x))_+\right|
+ \le\eta\mathbb E_x|p(x)|.
+\]
+In particular, when $r<d$ and $\eta=1/4$, the empirical negative
+part is at least $\mathbb E|p|/4$.
+\end{lemma}
+\begin{proof}
+Let $A$ have rows $f(x)(\chi_U(x))_{|U|\le r}$, one for each cube
+point. Then $A^TA=MI$ and every row has squared norm $D_r$.
+The $\ell_1$ Lewis weights of $A$ are exactly $D_r/M$: substitution
+in their defining equation
+\[
+ w_x^2=A_x(A^T\operatorname{diag}(w^{-1})A)^{-1}A_x^T
+\]
+verifies this constant solution, and Lewis weights are unique.
+The additive ReLU coreset theorem of Mai, Musco, and Rao
+\cite[Theorem~5]{mai2021coresets} therefore samples precisely the uniform
+distribution on the cube and gives the stated estimate. Its sample bound
+is $O(\eta^{-2}D_r\log(D_r/(\delta\eta)))$; no additional logarithmic
+factor is required. Finally $\mathbb E fp=0$, because $r<d$, so
+$\mathbb E(-fp)_+=\mathbb E|p|/2$.
+\end{proof}
+
+\begin{proposition}[A deterministic reduction to a tail Gram bound]
+\label{prop:schedule-deterministic}
+Suppose a design obeys the conclusion of Lemma~\ref{lem:schedule-relu}
+with $\eta=1/4$, and also
+\begin{align}
+ \|Q_{SS}\|_{\mathrm{op}}&\le B\tau,\label{eq:schedule-gram}\\
+ \frac1n\#\{i:f(X_i)p(X_i)<0\}
+       &\le\mathbb P_x\{f(x)p(x)\le0\}+u
+       \quad\hbox{for all }p\in V_r.\label{eq:schedule-vc}
+\end{align}
+Here $B\ge1$, and the matrix in \eqref{eq:schedule-gram} lists the training sample
+with multiplicity. Put $\zeta=n\ell/\tau$. If
+\[
+ u\le\frac{c^2}{2048B},\qquad
+ \left(2+\frac8{c^2}\right)\zeta\le\frac{c^2}{2048B},
+\]
+then the actual Gaussian sign posterior satisfies
+\[
+ F_\theta(S)\ge\frac{c^2}{1024B}.
+\]
+\end{proposition}
+\begin{proof}
+Let $m=p+t$ be the low/high decomposition of its conditional mean,
+and write $E_p=\mathbb P_x\{fp\le0\}$. Training consistency implies
+\[
+ (f(X_i)p(X_i))_-\le|t(X_i)|\mathbf1_{\{f(X_i)p(X_i)<0\}}.
+\]
+On the tail subspace $\|t\|_Q=\|t\|_K$. RKHS evaluation and $\|t\|_K^2\le n$ give
+\[
+ \frac1n\sum_i t(X_i)^2
+ \le\frac{\|t\|_K^2}{n}\|Q_{SS}\|_{\mathrm{op}}\le B\tau.
+\]
+Combining the ReLU estimate, Cauchy--Schwarz, and
+\eqref{eq:schedule-vc} yields
+\begin{equation}\label{eq:schedule-l1upper}
+ \mathbb E|p|\le4\sqrt{B\tau(E_p+u)}.
+\end{equation}
+
+Lemma~\ref{lem:schedule-var} and Markov's inequality show that, outside
+sets of total measure at most
+$a_0=(2+8/c^2)\zeta$, both
+$\sigma_x\ge\sqrt{\tau/2}$ and
+$|t(x)|\le c\sqrt\tau/(2\sqrt2)$ hold. At every remaining input
+with confidence greater than $\theta$, Lemma~\ref{lem:schedule-mean}
+gives
+\[
+ f(x)p(x)>\frac{c\sqrt\tau}{2\sqrt2}.
+\]
+Writing $e=F_\theta(S)+a_0$, we obtain $E_p\le e$ and
+\[
+ \frac{\mathbb E|p|}{\sqrt\tau}
+ \ge\frac c{2\sqrt2}(1-e).
+\]
+If $e\le1/2$, comparison with \eqref{eq:schedule-l1upper} gives
+$e+u\ge c^2/(512B)$, and hence
+$F_\theta(S)\ge c^2/(1024B)$ under the stated assumptions.
+If $e>1/2$, the same claimed lower bound follows directly from the
+upper bound on $a_0$.
+\end{proof}
+
+\section{An exponentially large sample schedule}
+The preceding proposition is deterministic. The remaining ingredients
+are a standard VC estimate and the spectral/random-Gram estimates proved
+in the preceding sections. We state their exact required form to make
+the scope of the conclusion explicit.
+
+\begin{theorem}[Failure along an exponential sample schedule]
+\label{thm:exponential-schedule}
+Fix the depth $L\ge2$. For the covariance
+\[
+ K(x,y)=H^{\circ(L-1)}\!\left(\frac{1+x\cdot y}{d+1}\right),
+ \qquad H(t)=\frac2\pi\arcsin t,
+\]
+there are constants $A>0$, $\alpha\in(0,1/2)$, and $\varepsilon>0$
+such that the following holds. Let $r_d$ be an odd integer with
+$r_d/d\to\alpha$, and set
+\[
+ n_d=\left\lceil A D_{r_d}\log(D_{r_d}+1)\right\rceil.
+\]
+For all sufficiently large $d$, the Gaussian sign posterior trained on
+$n_d$ independent uniform parity examples satisfies
+\[
+ \mathbb P_S\{F_{13/20}(S)\ge\varepsilon\}\ge\frac34.
+\]
+In particular $n_d=\exp((h(\alpha)+o(1))d)$, where
+$h(\alpha)=-\alpha\log\alpha-(1-\alpha)\log(1-\alpha)>0$.
+The same conclusion holds with $F_{13/20}(S)$ replaced by
+$\liminf_{N\to\infty}F_N(S)$ in any finite-width model whose conditional
+prediction probabilities converge to this Gaussian sign posterior.
+This includes the negative-$\gamma$ scaling width limit.
+\end{theorem}
+\begin{proof}
+Fix $B=2$ and $\varepsilon=c^2/(1024B)$. Set
+$u=c^2/(2048B)$ and $\delta=1/20$. First choose $A$ large enough
+for Lemma~\ref{lem:schedule-relu} with $\eta=1/4$ and this $\delta$.
+The class $\{x: f(x)p(x)<0,\ p\in V_r\}$ has VC dimension at most
+$D_r+1$. Thus the uniform VC theorem \cite{vapnik1971} gives
+\eqref{eq:schedule-vc} with probability at least $1-\delta$ for all
+large $d$, since $n_d/D_{r_d}\to\infty$.
+
+The spectral estimates give, for odd $r$ and $r/d$ sufficiently small,
+\[
+ \frac{n_d\lambda_{r+1}}{\tau_r}
+ \le C_L A\alpha^2\log(1/\alpha)+o(1).
+\]
+Corollary~\ref{cor:gram-schedule} gives
+$\mathbb P_S\{\|Q_{SS}\|_{\mathrm{op}}>2\tau_r\}\le\delta$
+for all large $d$ after $\alpha$ is made sufficiently small, depending
+on $A,L,\delta$. Decrease $\alpha$ further so that the preceding spectral
+ratio also meets Proposition~\ref{prop:schedule-deterministic}.
+A union bound over the three sampling events proves a probability of
+at least $1-3\delta>3/4$.
+
+For the final assertion, fix $d$ and the sampled training set. At every
+input with limiting correct-label probability at most $13/20$, the
+finite-width correct-label probability is eventually below $2/3$.
+The cube is finite, so this holds simultaneously at every such input,
+which proves $\liminf_N F_N(S)\ge F_{13/20}(S)$.
+\end{proof}
+
+The theorem concerns the displayed sample schedule. It does not assert
+failure at every smaller sample size, and no monotonicity of posterior
+confidence in sample size is assumed. Extending the conclusion across
+all intervening sample sizes remains a separate question. The proof
+also uses convexity of Gaussian sign conditioning; it does not establish
+the analogous exponential conclusion at $\gamma=0$ or $0<\gamma<1$.

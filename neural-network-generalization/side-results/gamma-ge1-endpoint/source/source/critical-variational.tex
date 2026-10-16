@@ -1,0 +1,211 @@
+\section{An exact variational principle at the critical exponent}
+\label{sec:critical-variational}
+
+For arbitrary fixed depth, the critical prior admits a direct finite-domain
+large-deviation description. This result requires neither a propagation-of-chaos
+assumption nor differentiability of the activation. It provides the variational
+foundation for the compression argument that follows.
+
+Fix $\gamma=1$, enumerate $\mathcal X=\{x^1,\ldots,x^m\}$, where $m=2^d$,
+and put $r=L-1$. All limits in this section hold with $d$ and $L$ fixed.
+Write $E=[-1,1]^m$ and let $\mathcal P(E)$ carry its weak topology.
+For $\nu\in\mathcal P(E)$ define
+\[
+ K(\nu)=\int_E hh^{\mathsf T}\,d\nu(h),\qquad
+ Q_0(a,b)=\frac{\bar x^a\cdot\bar x^b}{d}.
+\]
+For any positive semidefinite $m\times m$ matrix $Q$, let
+\[
+ \mathsf T_Q(u)=\bigl(\phi((Q^{1/2}u)_a)\bigr)_{a=1}^m,
+ \qquad
+ \mathsf M_Q=(\mathsf T_Q)_\#\mathcal N(0,I_m).
+\]
+Here $T_\#\rho$ is the distribution of $T(U)$ when $U$ has distribution $\rho$,
+and $Q^{1/2}$ is the positive semidefinite square root. Relative entropy is
+\[
+ D(\nu\Vert\rho)=
+ \begin{cases}
+ \displaystyle\int\log\frac{d\nu}{d\rho}\,d\nu,&\nu\ll\rho,\\
+ +\infty,&\text{otherwise}.
+ \end{cases}
+\]
+Finally define the Gaussian energy
+\[
+ \mathcal G_Q(z)=
+ \begin{cases}
+ \frac12 z^{\mathsf T}Q^+z,&z\in\operatorname{range}(Q),\\
+ +\infty,&z\notin\operatorname{range}(Q),
+ \end{cases}
+\]
+where $Q^+$ is the Moore--Penrose inverse.
+
+\begin{theorem}[Critical finite-domain large deviations]
+\label{thm:critical-ldp}
+Let $Z_N=(z_w(x^a))_{a=1}^m$ under the unconditioned prior
+$\mu_{N,1}$. The sequence $Z_N$ satisfies a large-deviation principle
+with speed $N$ and good rate function
+\begin{equation}\label{eq:critical-rate}
+ \begin{split}
+ I(z)=\inf_{\nu_1,\ldots,\nu_r\in\mathcal P(E)}
+ \bigg\{&D(\nu_1\Vert\mathsf M_{Q_0})
+  +\sum_{s=2}^{r}D\bigl(\nu_s\Vert\mathsf M_{K(\nu_{s-1})}\bigr)
+  +\mathcal G_{K(\nu_r)}(z)\bigg\}.
+ \end{split}
+\end{equation}
+In particular, for every open $O\subseteq\mathbb R^m$ and closed
+$F\subseteq\mathbb R^m$,
+\[
+ -\inf_{z\in O}I(z)
+ \leq\liminf_{N\to\infty}\frac1N\log\Prb(Z_N\in O),
+ \qquad
+ \limsup_{N\to\infty}\frac1N\log\Prb(Z_N\in F)
+ \leq-\inf_{z\in F}I(z).
+\]
+The infimum in \eqref{eq:critical-rate} is attained whenever it is finite.
+No covariance matrix in the statement is required to be nonsingular.
+\end{theorem}
+
+\begin{proof}
+We give an exact representation of the finite-width law and then apply
+Sanov's theorem and continuous contraction~\cite{dembozeitouni}.
+
+Let $\Gamma_m=\mathcal N(0,I_m)$. Independently for each
+$s=1,\ldots,r$, let $U_{s,1},\ldots,U_{s,N}$ have law $\Gamma_m$, and set
+\[
+ \eta_{s,N}=\frac1N\sum_{i=1}^N\delta_{U_{s,i}}.
+\]
+Also let $V_N=G/\sqrt N$, where $G\sim\Gamma_m$ is independent of these
+empirical measures. Recursively define
+\[
+ \nu_{1,N}=(\mathsf T_{Q_0})_\#\eta_{1,N},\qquad
+ \nu_{s,N}=(\mathsf T_{K(\nu_{s-1,N})})_\#\eta_{s,N}\quad(2\leq s\leq r).
+\]
+These are exactly the joint laws of the network's empirical hidden-activation
+vectors on $\mathcal X$. Indeed, first-layer preactivation vectors are
+independent Gaussians with covariance $Q_0$. Conditional on the preceding
+layer, each subsequent row of weights gives an independent Gaussian vector
+with covariance
+\[
+ \frac1N\sum_{i=1}^N
+ \bigl(h_i^{s-1}(x^a)h_i^{s-1}(x^b)\bigr)_{a,b}
+ =K(\nu_{s-1,N}).
+\]
+The conditional distribution depends on the previous layer only through its
+empirical measure. Finally, readout weights have variance $N^{-2}$, so
+\begin{equation}\label{eq:critical-output-representation}
+ Z_N\ \stackrel{\mathrm{law}}{=}\ K(\nu_{r,N})^{1/2}V_N.
+\end{equation}
+This representation is exact for every $N$.
+
+Sanov's theorem on $\mathcal P(\mathbb R^m)$ gives the good rate
+$D(\eta\Vert\Gamma_m)$ for each $\eta_{s,N}$. The elementary Gaussian
+large-deviation principle gives rate $\|v\|_2^2/2$ for $V_N$.
+Independence and the finite-product principle therefore give the good rate
+\[
+ \sum_{s=1}^r D(\eta_s\Vert\Gamma_m)+\frac12\|v\|_2^2
+\]
+for $(\eta_{1,N},\ldots,\eta_{r,N},V_N)$.
+
+The recursive map from these variables to $(\nu_1,\ldots,\nu_r,z)$ is
+continuous. To verify the only potentially delicate point, suppose
+$Q_j\to Q$ and $\eta_j\Rightarrow\eta$ weakly. For every continuous
+$b:E\to\mathbb R$, the functions $b\circ\mathsf T_{Q_j}$ converge
+uniformly on each compact subset of $\mathbb R^m$ to
+$b\circ\mathsf T_Q$, since matrix square roots are continuous and $\phi$
+is continuous. Their absolute values are uniformly bounded. Tightness of a
+weakly convergent sequence of probability measures then gives
+\[
+ \int b\circ\mathsf T_{Q_j}\,d\eta_j
+ \longrightarrow\int b\circ\mathsf T_Q\,d\eta.
+\]
+Also $\nu\mapsto K(\nu)$ is continuous because every coordinate
+$h_ah_b$ is continuous and bounded on $E$. This proves continuity of the
+whole recursive map, including \eqref{eq:critical-output-representation}.
+
+Continuous contraction now gives the rate by minimizing over its preimages.
+For a measurable map $T$ and a reference probability $\rho$, the entropy
+contraction identity is
+\begin{equation}\label{eq:entropy-contraction-identity}
+ \inf_{\eta:T_\#\eta=\nu}D(\eta\Vert\rho)
+ =D(\nu\Vert T_\#\rho).
+\end{equation}
+The lower bound is data processing. When the right side is finite and
+$q=d\nu/d(T_\#\rho)$, the measure $d\eta=q(T(u))\,d\rho(u)$ attains
+equality. If the right side is infinite, data processing already proves
+the identity in the extended real sense. Apply
+\eqref{eq:entropy-contraction-identity} successively with
+$T=\mathsf T_{Q_0}$ and $T=\mathsf T_{K(\nu_{s-1})}$.
+The last minimization is
+\[
+ \inf_{v:Q^{1/2}v=z}\frac12\|v\|_2^2=\mathcal G_Q(z),
+\]
+including singular $Q$. This proves \eqref{eq:critical-rate}.
+
+The contraction theorem supplies a good rate and exponential tightness.
+For completeness, the displayed minimization is also directly well behaved:
+relative entropy is jointly lower semicontinuous, the map
+$\nu\mapsto\mathsf M_{K(\nu)}$ is weakly continuous, and
+\[
+ \mathcal G_Q(z)=\sup_{t\in\mathbb R^m}
+ \left\{t^{\mathsf T}z-\frac12t^{\mathsf T}Qt\right\}
+\]
+is jointly lower semicontinuous in $(Q,z)$. Since $\mathcal P(E)^r$ is
+compact, every finite infimum in \eqref{eq:critical-rate} is attained.
+Moreover $K(\nu)\preceq mI_m$, so $I(z)\geq\|z\|_2^2/(2m)$.
+\end{proof}
+
+\begin{corollary}[Full-margin masses and posterior rates]
+\label{cor:critical-margin-rates}
+For a Boolean function $f$, regarded as a vector in $\{-1,1\}^m$, set
+\[
+ J(f)=\inf_{z:\ f_a z_a\geq1/2\ \forall a}I(z).
+\]
+Then the strict-margin event used throughout this paper has the exact rate
+\begin{equation}\label{eq:critical-full-margin-rate}
+ \lim_{N\to\infty}-\frac1N\log\mu_{N,1}(A_{N,f})=J(f).
+\end{equation}
+For a fixed noiseless training set $S$, let $\mathcal B_S$ be the Boolean
+functions agreeing with its labels. If
+$J_S=\min_{g\in\mathcal B_S}J(g)<\infty$, the actual globally conditioned
+posterior satisfies, for every $f\in\mathcal B_S$,
+\[
+ \lim_{N\to\infty}-\frac1N\log\Pi_{N,1}(f\mid S)=J(f)-J_S.
+\]
+In particular, posterior mass concentrates on the minimizers of $J$ within
+$\mathcal B_S$. These logarithmic asymptotics do not determine how mass is
+divided between tied minimizers.
+\end{corollary}
+
+\begin{proof}
+For $c\geq1$, retaining any feature laws in \eqref{eq:critical-rate} and
+scaling only the output gives
+\[
+ I(cz)\leq c^2 I(z),
+\]
+because the entropy terms are nonnegative and the Gaussian energy scales
+quadratically. If $f_a z_a\geq1/2$ for all $a$, then $cz$ has strict
+margin for every $c>1$. Letting $c\downarrow1$ shows that the infimum of
+$I$ over the open strict-margin orthant equals its infimum over the
+closed orthant. The lower and upper large-deviation bounds therefore agree,
+proving \eqref{eq:critical-full-margin-rate}.
+
+Conditioning the prior on the global margin event and subsequently on the
+labels gives exactly
+\[
+ \Pi_{N,1}(f\mid S)=
+ \frac{\mu_{N,1}(A_{N,f})}
+ {\sum_{g\in\mathcal B_S}\mu_{N,1}(A_{N,g})}.
+\]
+For fixed $d$ this is a finite sum, whose exponential rate is the smallest
+$J(g)$ among its terms. This proves the ratio formula and concentration
+claim.
+\end{proof}
+
+The variational principle exhibits the distinction between the critical
+regime and a frozen kernel model. At $\gamma=1$, deviations of a hidden
+feature law have an order-$N$ entropy cost, at the same scale as an order-one
+output. Thus the optimization is over every hidden feature law, with a
+separate entropy charge for each layer. It is not in general legitimate to
+set those laws to their unconditioned values. The following sections obtain a
+polynomial description of the minimizing feature laws for $\tanh$ and use it
+to compress every Boolean function with bounded full-margin rate.

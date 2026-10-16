@@ -1,0 +1,494 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Small circuits can have exponentially large prior complexity below the mean-field scaling},pdfauthor={Dmitry Vaintrob; Kaarel Hanni; OpenAI Codex}}
+\setlength{\emergencystretch}{2em}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\DeclareMathOperator{\sign}{sign}
+\DeclareMathOperator{\Var}{Var}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Prb}{\mathbb P}
+\title{Small circuits can have exponentially large prior complexity\\below the mean-field scaling}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex}
+\date{October 15, 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We study a fully connected Bayesian $\tanh$ network on the Boolean
+cube, with Gaussian layer variances on the scaling line indexed by
+$\gamma$, and a prior conditioned to have a fixed output margin at
+every input. For every fixed $\gamma<1$, we show that a small circuit
+need not have polynomial prior complexity. Full parity on $d$ bits
+has a depth-$L$ implementation with width $d+1$ and weights
+$O(d\log d)$, for every $L\ge2$. Nevertheless, for $\gamma\le0$ its
+limiting normalized prior probability is at most $2^{-2^d}$. For
+$0<\gamma<1$, its negative log prior probability, divided by
+$N^\gamma$, is at least $a^2(2^d-O_L(d))/2$ in the width limit,
+where $a$ is the margin. The proof uses the exact spectrum of the
+saturated neural-network kernel and a general Gaussian inequality:
+a Boolean minimum-eigenvalue eigenvector has probability at most
+$2^{-M}$ among sign patterns, even after conditioning on any common
+global margin. These are prior-mass separations. They do not by
+themselves establish exponential sample complexity for the resulting
+Bayesian classifier.
+\end{abstract}
+
+\section{Model and the prior-complexity question}
+
+Let $\mathcal X=\{-1,1\}^d$, $M=2^d$, and $L\ge2$. The input is
+augmented by a constant coordinate, $h^0(x)=(1,x)$. A network with
+$L-1$ hidden layers of common width $N$ has
+\[
+ h^s(x)=\tanh(W^s h^{s-1}(x)),\qquad
+ z_N(x)=W^L h^{L-1}(x).
+\]
+The readout is linear, and there are no further bias coordinates.
+All weights are independent centered Gaussians with variances
+\begin{equation}\label{eq:scaling}
+ \Var(W^1_{ij})=N^{1-\gamma}/d,\qquad
+ \Var(W^s_{ij})=N^{-\gamma}\quad(1<s<L),\qquad
+ \Var(W^L_i)=N^{-\gamma-1}.
+\end{equation}
+Fix $a>0$. Write $Z_N=(z_N(x))_{x\in\mathcal X}$, and define
+\[
+ A_a=\{|Z_N(x)|>a\text{ for every }x\},\qquad
+ A_f=\{f(x)Z_N(x)>a\text{ for every }x\}.
+\]
+The prior on Boolean functions is
+\begin{equation}\label{eq:prior}
+ \pi_{N,a}(f)=\Prb(A_f)/\Prb(A_a).
+\end{equation}
+Thus the all-input margin restriction is applied before observing
+any training data. It is not a margin imposed only on the sample.
+
+Let $C_L(f)$ be the smallest integer $C$ such that a depth-$L$
+network of width at most $C$, with all weights of magnitude at most
+$C$, satisfies $f(x)z(x)>1/2$ everywhere. This combines width and
+weight size in one circuit-complexity parameter.
+
+The natural prior complexity changes with the overall output
+scale. For the present paper define
+\begin{equation}\label{eq:complexity}
+ \mathcal C_{\gamma,a}(f)=
+ \begin{cases}
+ \displaystyle\lim_{N\to\infty}-\log\pi_{N,a}(f),&\gamma\le0,\\[4pt]
+ \displaystyle\lim_{N\to\infty}-N^{-\gamma}\log\pi_{N,a}(f),
+          &0<\gamma<1.
+ \end{cases}
+\end{equation}
+We prove below that these limits exist. The normalization for
+positive $\gamma$ removes the Gaussian small-noise speed. Without
+it, negative log probabilities would diverge even for many simple
+functions.
+
+All width limits take $N\to\infty$ at fixed $d,L,\gamma,a$.
+Statements about growth in $d$ concern the resulting limiting
+quantities. No uniform exchange of the width and dimension limits
+is made.
+
+\begin{theorem}[A circuit-prior separation throughout $\gamma<1$]
+\label{thm:main}
+Let $f_d(x)=\prod_{j=1}^d x_j$ be full parity, and put
+$c_L=(2/\pi)^{L-1}$. For every $L\ge2$,
+\begin{equation}\label{eq:circuit-bound}
+ C_L(f_d)\le \left\lceil(d+1)\log(16(d+1))\right\rceil.
+\end{equation}
+For every $\gamma\le0$,
+\begin{equation}\label{eq:nonpositive-bound}
+ \mathcal C_{\gamma,a}(f_d)\ge (\log2)2^d.
+\end{equation}
+For every $0<\gamma<1$,
+\begin{equation}\label{eq:positive-bound}
+ \mathcal C_{\gamma,a}(f_d)
+ \ge \frac{a^2}{2}\left(2^d-\frac{d+1}{c_L}\right).
+\end{equation}
+Consequently, at each fixed depth and fixed subcritical exponent,
+there is no polynomial in $d$ and $C_L(f)$ that upper-bounds
+$\mathcal C_{\gamma,a}(f)$ for every Boolean target $f$.
+\end{theorem}
+
+This theorem answers a prior-mass question: throughout this scaling
+regime, polynomial-size circuits need not receive polynomial
+description-length prior mass, on the natural scale of the prior.
+The distinction between this statement and a posterior learning
+lower bound is discussed in Section~\ref{sec:learning}.
+
+\section{The saturated kernel and its spectrum}
+
+Put
+\begin{equation}\label{eq:kernel}
+ H(t)=\frac2\pi\arcsin t,\qquad
+ F=H^{\circ(L-1)},\qquad
+ K(x,y)=F\!\left(\frac{1+x\cdot y}{d+1}\right).
+\end{equation}
+For $U\subseteq\{1,\ldots,d\}$, write
+$\chi_U(x)=\prod_{j\in U}x_j$. Translation symmetry on the Boolean
+cube makes these parity functions eigenvectors of $K$. Let
+$\lambda_r$ denote the eigenvalue of the normalized operator
+$M^{-1}K$ on the degree-$r$ parities.
+
+\begin{lemma}[Paired ordering of the eigenvalues]\label{lem:spectrum}
+The matrix $K$ is positive definite, and
+\begin{equation}\label{eq:paired}
+ \lambda_0=\lambda_1>\lambda_2=\lambda_3>
+ \lambda_4=\lambda_5>\cdots>0,
+\end{equation}
+with a final unpaired $\lambda_d$ if $d$ is even. Moreover,
+\begin{equation}\label{eq:spectral-bounds}
+ \lambda_d\le2^{-d},\qquad
+ \lambda_0\ge\frac{c_L}{d+1}.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Write $D=d+1$. The arcsine power series has positive coefficients
+at every odd degree, zero even coefficients, and sum one at $t=1$.
+These properties persist under composition. Thus
+$F(t)=\sum_{m\text{ odd}}c_mt^m$, where every $c_m>0$,
+$\sum_m c_m=1$, and $c_1=c_L$.
+
+First use the full $D$-dimensional cube and the kernel
+$F(u\cdot v/D)$. The degree-$r$ Fourier coefficient of
+$(u\cdot v/D)^m$ equals $p_m(r)$, the probability that the simple
+coordinate-flip walk reaches a specified vertex at distance $r$
+after $m$ steps. Indeed, a term in the power expansion survives
+Fourier averaging exactly when the coordinates chosen an odd
+number of times form that specified support.
+
+For $0\le r\le D-2$, the walk recursion gives
+\begin{align*}
+ D[p_{m+1}(r)-p_{m+1}(r+2)]
+ ={}&r[p_m(r-1)-p_m(r+1)]\\
+ &+(D-r-2)[p_m(r+1)-p_m(r+3)].
+\end{align*}
+Terms with zero coefficients at the boundary are omitted.
+Starting from a point mass at time zero, induction proves
+$p_m(r)\ge p_m(r+2)$. The full-cube eigenvalues
+$\mu_r=\sum_{m\text{ odd}}c_mp_m(r)$ vanish for even $r$ and
+strictly decrease through the odd values of $r$: for odd $r$,
+the term $m=r$ is positive at distance $r$ and zero at distance
+$r+2$. Each odd $\mu_r$ is positive.
+
+Restricting the distinguished coordinate to $+1$ gives
+$\lambda_r=\mu_r+\mu_{r+1}$. This proves
+\eqref{eq:paired} and positive definiteness. Since $K(x,x)=1$,
+\[
+ \sum_{r=0}^d\binom dr\lambda_r=1.
+\]
+Its smallest eigenvalue therefore satisfies
+$\lambda_d\le 1/M$. Finally, the linear term of $F$ contributes
+$c_L/(d+1)$ to $\lambda_0$, and all other contributions are
+nonnegative. This proves the remaining bound.
+\end{proof}
+
+\section{A Gaussian sign inequality that survives global conditioning}
+
+\begin{lemma}[Minimum-eigenvalue signs have at most uniform mass]
+\label{lem:gaussian-sign}
+Let $\Sigma$ be a positive-definite $M\times M$ covariance matrix,
+and let $f\in\{-1,1\}^M$ be an eigenvector for its smallest matrix
+eigenvalue $v>0$. If $G\sim\mathcal N(0,\Sigma)$, then for every
+$a\ge0$,
+\begin{equation}\label{eq:raw-gaussian-bound}
+ \Prb\{f_iG_i>a\text{ for every }i\}
+ \le \Phi(-a/\sqrt v)^M,
+\end{equation}
+and
+\begin{equation}\label{eq:conditioned-gaussian-bound}
+ \Prb\{\sign G=f\mid |G_i|>a\text{ for every }i\}
+ \le 2^{-M}.
+\end{equation}
+Here $\Phi$ is the standard normal distribution function.
+\end{lemma}
+
+\begin{proof}
+Conjugate the covariance by $\operatorname{diag}(f)$, so the target
+sign is the all-ones vector $\mathbf1$ and this vector has
+eigenvalue $v$. Write the conjugated Gaussian as
+\[
+ G'=\sqrt v\,\xi+Y,
+\]
+where $\xi$ has independent standard normal coordinates and $Y$
+is independent with covariance $\Sigma'-vI$. This covariance is
+positive semidefinite and kills $\mathbf1$. Consequently
+$\sum_iY_i=0$ almost surely. Set $\alpha=\Phi(-a/\sqrt v)$.
+
+The function $\log\Phi$ is concave. Conditional on $Y$, Jensen's
+inequality therefore gives
+\[
+ \Prb\{G'_i>a\ \forall i\mid Y\}
+ =\prod_{i=1}^M\Phi\!\left(\frac{Y_i-a}{\sqrt v}\right)
+ \le \alpha^M.
+\]
+Integrating proves~\eqref{eq:raw-gaussian-bound}. To verify the
+concavity directly, put $r(t)=\phi(t)/\Phi(t)$. Then
+$(\log\Phi)''(t)=-r(t)(t+r(t))<0$. For $t<0$ the last factor is
+positive because
+$\phi(t)=\int_{-\infty}^t(-s)\phi(s)\,ds>-t\Phi(t)$;
+for $t\ge0$ it is immediate.
+
+A one-dimensional Gaussian with variance $v$ is least likely to
+lie outside $[-a,a]$ when its mean is zero. Indeed the outside
+probability is even in the mean, and its derivative is nonnegative
+for nonnegative means. Thus, conditional on $Y$,
+\begin{align*}
+ \Prb\{|G'_i|>a\ \forall i\mid Y\}
+ &=\prod_{i=1}^M\left[
+   \Phi\!\left(\frac{Y_i-a}{\sqrt v}\right)
+  +\Phi\!\left(\frac{-Y_i-a}{\sqrt v}\right)\right]\\
+ &\ge (2\alpha)^M.
+\end{align*}
+Integrating and dividing the numerator and denominator bounds
+gives~\eqref{eq:conditioned-gaussian-bound}. Conjugation preserves
+the global absolute-margin event, completing the proof.
+\end{proof}
+
+The lemma does not require a quantitative lower bound on $v$ or
+an estimate of the global margin probability. In particular it
+does not lose a large factor when the conditioning event is rare.
+
+\section{Width limits and the prior-rate calculation}
+
+We include the limiting argument to specify exactly how the
+Gaussian calculation applies to the finite networks.
+
+\begin{proposition}[Kernel freezing and output limits]
+\label{prop:kernel-limit}
+Fix $\gamma<1$. Let $Q_N$ be the empirical covariance of the final
+hidden features on the full cube. For every $\epsilon>0$, there
+are $c,C>0$ and $N_0$ such that
+\begin{equation}\label{eq:freezing}
+ \Prb\{\|Q_N-K\|_{\mathrm{op}}>\epsilon\}\le Ce^{-cN}
+ \qquad(N\ge N_0).
+\end{equation}
+Conditional on the hidden layers,
+\begin{equation}\label{eq:output-covariance}
+ Z_N\sim\mathcal N(0,N^{-\gamma}Q_N).
+\end{equation}
+For $\gamma=0$, the globally margin-conditioned sign prior
+converges to that of $G\sim\mathcal N(0,K)$ with margin $a$.
+For $\gamma<0$, it converges to the unconditioned sign law of $G$.
+For $0<\gamma<1$, $Z_N$ has a large-deviation principle at speed
+$N^\gamma$ with rate $I(z)=z^TK^{-1}z/2$.
+\end{proposition}
+
+\begin{proof}
+Put $b_N=N^{(1-\gamma)/2}\to\infty$. Conditional on a hidden
+layer, the next preactivation rows are independent Gaussian
+vectors with covariance $b_N^2$ times that layer's empirical
+covariance. The first layer has the deterministic covariance
+$b_N^2(1+x\cdot y)/d$, whose correlation matrix is
+$(1+x\cdot y)/(d+1)$.
+
+If $U\sim\mathcal N(0,q)$ with $q$ bounded below, direct integration
+gives
+\[
+ \E|\tanh(bU)-\sign U|
+ \le \frac{2\log2}{b\sqrt{2\pi q}}.
+\]
+The correlation of the signs of a centered Gaussian pair with
+correlation $r$ is $H(r)$. Thus conditional expected products of
+hidden activations approach the normalized arcsine transform,
+uniformly in a sufficiently small neighborhood of each limiting
+covariance. All distinct-input correlations stay strictly between
+$-1$ and $1$, and diagonal variances stay bounded below. The
+off-diagonal normalized arcsine map is consequently locally
+Lipschitz there; the limiting diagonal is identically one.
+
+For each pair of inputs the $N$ conditional row products lie in
+$[-1,1]$ and are independent. Hoeffding's inequality and a union
+bound over the fixed $M^2$ pairs give exponential concentration
+at speed $N$. Induction over the fixed number of layers, absorbing
+the deterministic $O(b_N^{-1})$ error, proves~\eqref{eq:freezing}.
+The independent Gaussian readout gives~\eqref{eq:output-covariance}.
+
+It follows that $N^{\gamma/2}Z_N$ converges weakly to the
+nondegenerate Gaussian $G$. At $\gamma=0$, all margin orthants and
+their unions have boundary of Gaussian measure zero and positive
+probability. Their conditional probabilities therefore converge.
+At $\gamma<0$, the normalized margin is
+$aN^{\gamma/2}\to0$. The probability that any coordinate lies in
+this vanishing interval tends to zero, giving the asserted sign
+limit.
+
+For $0<\gamma<1$, couple
+\[
+ Z_N=N^{-\gamma/2}Q_N^{1/2}\xi,\qquad
+ Y_N=N^{-\gamma/2}K^{1/2}\xi,
+\]
+where $\xi\sim\mathcal N(0,I_M)$ is independent of $Q_N$.
+The square-root map is locally Lipschitz near the positive-definite
+$K$. For fixed $\delta,\epsilon>0$, this gives
+\[
+ \Prb\{\|Z_N-Y_N\|>\delta\}
+ \le C_\epsilon e^{-c_\epsilon N}
+   +\Prb\left\{\|\xi\|>
+             \frac{\delta N^{\gamma/2}}{C\epsilon}\right\}.
+\]
+Divide logarithms by $N^\gamma$, let $N\to\infty$, and then let
+$\epsilon\downarrow0$. The upper limit is $-\infty$, since
+$\gamma<1$. This is exponential equivalence at speed $N^\gamma$.
+The Gaussian family $Y_N$ has the claimed quadratic rate, and
+exponential equivalence transfers its large-deviation principle.
+\end{proof}
+
+\begin{proposition}[Exact normalized parity rate]
+\label{prop:rate}
+For $0<\gamma<1$,
+\begin{equation}\label{eq:exact-rate}
+ \mathcal C_{\gamma,a}(f_d)
+ =\frac{a^2}{2}\left(\frac1{\lambda_d}-\frac1{\lambda_0}\right).
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+For a Boolean sign function $g$, define
+\[
+ E_K(g)=\min\left\{\frac12z^TK^{-1}z:
+                           g(x)z(x)\ge a\text{ for all }x\right\}.
+\]
+The feasible set is closed and the objective strictly convex and
+coercive, so it has a unique minimizer. Scaling that minimizer by
+$1+\eta$ puts it in the strict margin orthant and approaches its
+energy as $\eta\downarrow0$. The open lower and closed upper bounds
+in Proposition~\ref{prop:kernel-limit} therefore agree:
+\[
+ \lim_{N\to\infty}-N^{-\gamma}\log\Prb(A_g)=E_K(g).
+\]
+The global event is the disjoint union of finitely many such
+orthants. Its rate is $\min_g E_K(g)$, so the normalized prior rate
+is $E_K(g)-\min_hE_K(h)$.
+
+If a Boolean vector $g$ has normalized eigenvalue $\lambda$, then
+$z=ag$ minimizes its margin energy. Its gradient is
+$K^{-1}(ag)=ag/(M\lambda)$, whose inner product with every
+feasible displacement is nonnegative. Hence
+$E_K(g)=a^2/(2\lambda)$.
+
+For any full-margin vector $z$,
+\[
+ \frac12z^TK^{-1}z
+ \ge \frac{\|z\|_2^2}{2M\lambda_0}
+ \ge \frac{a^2}{2\lambda_0}.
+\]
+The constant sign attains equality. Full parity has eigenvalue
+$\lambda_d$, proving~\eqref{eq:exact-rate}.
+\end{proof}
+
+For $\gamma\le0$, the limiting sign probabilities are positive,
+so negative logarithms converge as in~\eqref{eq:complexity}.
+Applying Lemma~\ref{lem:gaussian-sign} to full parity and the
+appropriate margin proves~\eqref{eq:nonpositive-bound}.
+Combining Proposition~\ref{prop:rate} with
+Lemma~\ref{lem:spectrum} proves~\eqref{eq:positive-bound}.
+
+\section{An explicit small circuit for parity}
+
+\begin{proposition}[Alternating Hamming-weight thresholds]
+\label{prop:circuit}
+For every $d\ge1$ and $L\ge2$, there is a depth-$L$ $\tanh$ network
+of width $d+1$, using only the appended input bias, whose output
+approximates $f_d$ uniformly within $1/8$ and whose weights have
+magnitude at most $(d+1)\log(16(d+1))$.
+\end{proposition}
+
+\begin{proof}
+Set $A=\log(16(d+1))$, $s(x)=\sum_i x_i$, and for $1\le j\le d$
+put
+\[
+ t_j=-d+2j-1,\qquad q_j(x)=\sign(s(x)-t_j),\qquad
+ c_j=(-1)^{d-j}.
+\]
+Let $\alpha_d=1$ for even $d$ and $\alpha_d=0$ for odd $d$.
+The exact identity
+\begin{equation}\label{eq:parity-thresholds}
+ f_d(x)=\alpha_d+\sum_{j=1}^d c_jq_j(x)
+\end{equation}
+follows by writing $r$ for the number of $+1$ bits. Then $q_j=+1$
+exactly when $j\le r$. At $r=0$ both sides equal $(-1)^d$, and
+each increment of $r$ changes both sides by $2(-1)^{d-r}$.
+
+The first hidden layer contains
+$h_j^1(x)=\tanh(A(s(x)-t_j))$ for $1\le j\le d$, together with
+the constant neuron $h_0^1(x)=\tanh A$. Each $s(x)-t_j$ is a nonzero
+odd integer. All these activations consequently have their desired
+sign and differ from it by at most
+$\delta=1/[8(d+1)]$.
+
+For every additional hidden layer use diagonal weights $A$ and
+zero off-diagonal weights. If an activation has the correct sign
+and magnitude at least $1/2$, its successor differs from that
+sign by at most $2e^{-A}=\delta$. Thus the same approximation
+holds at every hidden layer, without accumulated error.
+
+Use the linear readout
+\[
+ z(x)=\alpha_d h_0^{L-1}(x)
+             +\sum_{j=1}^d c_jh_j^{L-1}(x).
+\]
+By~\eqref{eq:parity-thresholds}, its uniform error is at most
+$(d+1)\delta=1/8$. In particular its correct margin is at least
+$7/8$. The largest weight is at most $A\max(1,d-1)$, including
+the first-layer threshold biases. This is bounded by $(d+1)A$.
+\end{proof}
+
+This proves~\eqref{eq:circuit-bound} and completes the proof of
+Theorem~\ref{thm:main}. If a circuit implementing an arbitrary
+fixed margin $a$ is desired, rescale the readout by a constant
+depending only on $a$; the polynomial size conclusion is unchanged.
+
+\section{What remains a learning question}\label{sec:learning}
+
+The theorem separates circuit complexity from prior complexity
+throughout $\gamma<1$, including $k=d$ for a $k$-bit XOR. It does
+not establish that the actual posterior requires exponentially many
+examples to achieve small test error or correct-label probability
+strictly greater than $2/3$. A low prior probability can be overcome
+by a small sample if that sample eliminates the competing functions.
+
+For example, consider the Gaussian process
+$G(x)=A+Bf(x)$, where $A$ and $B$ are independent nondegenerate
+centered Gaussians and $f$ is a nonconstant parity. Even after any
+global margin conditioning, its possible sign functions are only
+$1,-1,f,-f$. Once examples with both target labels have been seen,
+$f$ is the unique compatible sign function and every prediction
+has correct-label probability one. The variance of $B$ can be
+arbitrarily small, making the initial probability of $f$ arbitrarily
+unfavorable without changing that conclusion. This example does
+not contradict Lemma~\ref{lem:gaussian-sign}: its covariance is
+singular, and $f$ is not a minimum-eigenvalue eigenvector.
+
+For the networks studied here, the same kernel limit identifies the
+posterior completely at $\gamma\le0$ and its leading energy at
+$0<\gamma<1$. At $\gamma\le0$ it is a Gaussian sign
+classifier with the margin specified in
+Proposition~\ref{prop:kernel-limit}. At $0<\gamma<1$, conditioned
+on observed training signs, its mass concentrates on compatible
+sign functions minimizing $E_K$. The optimization retains
+$|z(x)|\ge a$ at every unseen input. Its leading optimization uses
+a fixed kernel and a nonconvex union of full margin orthants as its
+feasible set. This statement does not determine posterior weights
+between tied minimizers. In fact, the companion note on Gaussian
+conditioning gives an actual-network example where non-Gaussian
+corrections change those weights and a $2/3$-confidence prediction
+for $1/2\le\gamma<1$. Ordinary Gaussian-process regression or a hard-margin support
+vector machine using only the observed inputs is a different rule.
+
+An exponential sample lower bound for this precise classifier
+requires control of compatible competitors and posterior marginal
+sign probabilities, beyond the prior separation proved here.
+The confidence criterion $>2/3$ makes that distinction especially
+important: a tiny posterior mass on the exact target function can
+coexist with highly confident correct marginal predictions at
+every input.
+
+\end{document}

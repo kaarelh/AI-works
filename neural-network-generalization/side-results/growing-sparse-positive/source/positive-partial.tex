@@ -1,0 +1,251 @@
+% Standalone section: exact positive-subcritical posterior lower bound.
+\section{An exponential sample lower bound}
+\label{sec:positive-sparse-partial}
+Throughout this section $f=\chi_U$, where $U\subseteq[d]$ and $|U|=k$.
+Write $D=d+1$, $\beta=2^{-(L-1)}$, and
+\[
+ B_{d,k}=\sqrt{k}\log\frac{eD}{\sqrt{k}},\qquad
+ W_{d,k}=\max\{k,B_{d,k}\}.
+\]
+The $k$ term follows from the random-restriction amplitude tradeoff.
+The second term is useful in very large ambient dimensions and follows
+from a direct polynomial-threshold obstruction.
+
+\begin{theorem}[Sparse parity for $0<\gamma<1$]
+\label{thm:positive-sparse-partial}
+Fix $L\ge2$ and $a>0$. There are constants $c>0$, $k_0$, and $d_0$,
+depending only on $L,a$, such that the following holds. If
+$d\ge d_0$, $k_0\le k\le d$, and a specified sample size satisfies
+\[
+ 0\le n\le\exp(cW_{d,k}),
+\]
+then, with probability at least $3/4$ over independent uniform training
+inputs, every minimizer of
+\[
+ \min\left\{\frac12\|z\|_K^2:
+ |z(x)|\ge a\ \text{for all }x,\quad
+ f(X_i)z(X_i)\ge a\ \text{for all }i\right\}
+\]
+has population sign error at least $3/8$.
+On the same event, for every fixed $0<\gamma<1$, the actual network
+posterior in the width-first limit satisfies
+\[
+ \liminf_{N\to\infty}
+ \mathbb P_x\{q_{N,S}(x)\le2/3\}\ge\frac1{16}.
+\]
+The probability statement is for each specified sample size; it is not
+a simultaneous event over all sample prefixes.
+\end{theorem}
+
+In particular, the lower bound is exponential in $k$ throughout the
+entire growing sparse regime. It does not give the stronger scale
+$\exp\{c k\log(ed/k)\}$ when $d/k\to\infty$.
+
+\subsection{Squared balance on the target coordinates}
+\begin{lemma}[Active-coordinate squared balance]
+\label{lem:positive-active}
+If $P$ has total Walsh degree at most $r$, then
+\begin{equation}
+ \mathbb E(fP)_-^2
+ \ge\left(\frac12-\sqrt{\frac rk}\right)\|P\|_2^2.
+ \label{eq:positive-active-balance}
+\end{equation}
+For every fixed $\delta>0$, there is a universal $A_\delta$ such that
+if $r\le k/64$ and $n\ge A_\delta D_r\log(D_r+1)$, then, with
+probability at least $1-\delta$,
+\begin{equation}
+ \mathbb P_n(fP)_-^2\ge\frac14\|P\|_2^2
+ \quad\text{for every polynomial $P$ of degree at most $r$}.
+ \label{eq:positive-active-sampling}
+\end{equation}
+\end{lemma}
+\begin{proof}
+For $j\in U$ put $D_jP=(P-P\circ\mathrm{flip}_j)/2$.
+Because $f$ changes sign under these flips, the inequality
+$|F(s)-F(t)|\le(|s|+|t|)|s-t|$ for $F(t)=t|t|$ gives
+\[
+ |\mathbb E fP|P||\le2\|P\|_2\|D_jP\|_2.
+\]
+Averaging over $j\in U$ and using
+$\sum_{j\in U}\|D_jP\|_2^2\le r\|P\|_2^2$ proves
+\eqref{eq:positive-active-balance} from
+$(fP)_-^2=(P^2-fP|P|)/2$.
+The vector of all Walsh characters of degree at most $r$ is isotropic
+and has squared length $D_r$ at every input. Under $r\le k/64$,
+the population bound is at least $3\|P\|_2^2/8$.
+Apply Lemma~\ref{lem:squared-sampling} at accuracy $1/8$ and use
+homogeneity to obtain \eqref{eq:positive-active-sampling}.
+\end{proof}
+
+\subsection{The polynomial-threshold range}
+\begin{lemma}[A $\sqrt{k}$ cutoff]
+\label{lem:positive-sqrt-range}
+For fixed $L,a$, there are $c_b>0$, $k_b$, and $d_b$ such that, on the
+localized-comparator event, every minimizer has error at least $3/8$
+whenever $d\ge d_b$, $k_b\le k\le d$, and
+\[
+ n\le\exp\left(c_b\sqrt{k}\log\frac{eD}{\sqrt{k}}\right).
+\]
+\end{lemma}
+\begin{proof}
+The comparator gives the simultaneous bound
+\begin{equation}
+ \|z\|_K^2\le C_{L,a}(d+n d^\beta)
+ \label{eq:positive-comparator-budget}
+\end{equation}
+for every minimizer. Choose a sufficiently small constant $\kappa>0$
+and an odd $s$ with $s\sim\kappa\sqrt{k}$.
+Fixing the $d-k$ nuisance coordinates leaves a degree-$s$ polynomial
+on the active $k$-cube. Lemma~\ref{lem:ptf-parity} and the central
+binomial bound imply that every such polynomial threshold has error
+at least $7/16$, for all sufficiently large $k$.
+
+The sharp spectrum gives
+\[
+ \|z-z_{\le s}\|_2^2
+ \le C_{L,a}(d+n d^\beta)\lambda_{s+1}
+ \le\frac{C_{L,a}(d+n d^\beta)s^{-1-\beta}}
+            {\binom D{s+2}}.
+\]
+The binomial lower bound shows
+\[
+ \log\binom D{s+2}
+ \ge c_1\kappa\sqrt{k}\log\frac{eD}{\sqrt{k}}
+\]
+for a universal $c_1>0$ once $k$ is large.
+Choose $c_b<c_1\kappa/4$, then increase $k_b$ to absorb the factor
+$d^\beta$ and increase $d_b$ to make the displayed tail bound at most
+$a^2/16$, uniformly in the stated range. The additive $d$ is harmless
+because $s$ is then a sufficiently large fixed integer or larger.
+Since $|z|\ge a$, its sign differs from a fixed-tie threshold of
+$z_{\le s}$ on at most $1/16$ of the cube. Its error is therefore
+at least $7/16-1/16=3/8$.
+The comparator's allowed sample range contains the present one for all
+large $d$, because $\sqrt{k}\log(eD/\sqrt{k})=o(d)$ uniformly in $k\le d$.
+\end{proof}
+
+\subsection{Proof of the positive-subcritical theorem}
+\begin{proof}[Proof of Theorem~\ref{thm:positive-sparse-partial}]
+Fix $\delta=1/40$, choose $A$ large enough for
+Lemma~\ref{lem:positive-active}, and fix an odd $r_0\ge11$.
+Choose the small degree fraction in
+Lemma~\ref{lem:sparse-gram} after these choices.
+The localized comparator has failure probability $e^{-\Omega_L(d)}$.
+All its conclusions hold simultaneously over the minimizing fields.
+
+If $W_{d,k}=B_{d,k}$, choose $c\le c_b$ and apply
+Lemma~\ref{lem:positive-sqrt-range}. We may therefore assume
+$W_{d,k}=k$ and $n\le e^{ck}$.
+Let $r$ be the largest odd integer satisfying
+\[
+ A D_r\log(D_r+1)\le n.
+\]
+If this cutoff does not exist or $r<r_0$, then
+$n<A D_{r_0}\log(D_{r_0}+1)$.
+After increasing $k_0$, this entire range lies below the threshold of
+Lemma~\ref{lem:positive-sqrt-range}, which again proves the claim.
+
+Suppose $r\ge r_0$. Choose $c<(\log2)/4$.
+Since $k\le d$ and $D_r\ge2^{d-1}$ for $r\ge d/2$, the defining
+lower bound on $n$ excludes $r\ge d/2$ for sufficiently large $d$.
+In this range, the binomial lower bound implies
+\begin{equation}
+ rH\le C_0\log n\le C_0 c k,
+ \qquad \rho=\frac rD,\quad H=\log\frac e\rho,
+ \label{eq:positive-main-cutoff}
+\end{equation}
+for a universal constant $C_0$.
+By taking $c$ sufficiently small, we ensure $r\le k/64$,
+$r\le\alpha d$, and $n\le e^{d/25}$.
+All comparator and sparse-Gram hypotheses therefore hold.
+Moreover $r\ge r_0$ makes $n$ polynomially larger than $d$, so
+\eqref{eq:positive-comparator-budget} becomes
+\begin{equation}
+ B:=\|z\|_K^2\le C_{L,a}n d^\beta.
+ \label{eq:positive-main-budget}
+\end{equation}
+
+Work on the intersection of the comparator event, the squared-sampling
+event \eqref{eq:positive-active-sampling}, and the Gram event in
+Lemma~\ref{lem:sparse-gram}. Their total failure probability is
+at most $2\delta+e^{-\Omega_L(d)}<1/4$ for sufficiently large $d$.
+For an arbitrary minimizer write
+\[
+ z=P+b+t,\qquad P=z_{\le r},\quad b=z_{(r,r+2]},\quad t=z_{>r+2}.
+\]
+At a training point where $fP<0$, consistency gives
+$(fP)_-\le|z-P|$. The sampling bound, RKHS evaluation bound, and
+\eqref{eq:sparse-coarse-gram} yield
+\[
+ \frac14\|P\|_2^2
+ \le\mathbb P_n(fP)_-^2
+ \le\mathbb P_n(z-P)^2
+ \le\frac Bn\|(Q_r)_{SS}\|_{\mathrm{op}}.
+\]
+Using \eqref{eq:positive-main-budget}, $\tau_r\asymp r^{-\beta}$,
+and the deterministic estimates
+$n\lambda_{r+1}\le C_L A H\tau_r$ and
+$n\lambda_{r+3}\le C_L A\rho^2H\tau_r$, we obtain, simultaneously
+for every minimizer,
+\begin{align}
+ \|P\|_2^2&\le C_{L,a,A,\delta}\rho^{-(\beta+1)}H,
+ \label{eq:positive-partial-head}\\
+ \|b\|_2^2&\le B\lambda_{r+1}
+             \le C_{L,a,A}\rho^{-\beta}H,
+ \label{eq:positive-partial-band}\\
+ \|t\|_2^2&\le B\lambda_{r+3}
+             \le C_{L,a,A}\rho^{2-\beta}H.
+ \label{eq:positive-partial-tail}
+\end{align}
+For the first estimate we bounded
+$1+\sqrt{A\rho^{-1}H}+AH$ by $C_A\rho^{-1}H$.
+The eigenvalue estimates follow from the sharp spectrum and the
+maximality interval for $r$; the second is also stated in
+\eqref{eq:sparse-fine-eigenvalue}.
+Put $h=P+b=z_{\le u}$, where $u=r+2\le2r$.
+The first two pieces are orthogonal in $L^2$, and their sum therefore
+has squared norm at most $C\rho^{-(\beta+1)}H$. Hence
+Lemma~\ref{cor:restriction-amplitude} gives
+\begin{equation}
+ \mathbb P\{\operatorname{sign}z\ne f\}
+ \ge\frac7{16}
+       -C_1\rho^{2-\beta}H
+       -C_1\rho^{-(\beta+1)}H\exp\!\left(-c_*\frac{k}{u}\right),
+ \label{eq:positive-restriction-risk}
+\end{equation}
+where $c_*>0$ is universal and $C_1$ depends only on the already fixed
+constants $L,a,A,\delta$.
+
+We now choose the theorem's $c$. From
+\eqref{eq:positive-main-cutoff}, $\rho\le C_0c$ and
+$k/u\ge H/(2C_0c)$.
+Since $x^{2-\beta}\log(e/x)\to0$ as $x\downarrow0$, the first error
+term in \eqref{eq:positive-restriction-risk} is at most $1/32$ once
+$c$ is sufficiently small. For the second term, use
+$\rho^{-(\beta+1)}=\exp[(\beta+1)(H-1)]$ to obtain
+\[
+ C_1\rho^{-(\beta+1)}H e^{-c_*k/u}
+ \le C_1 H\exp\!\left[
+       \left(\beta+1-\frac{c_*}{2C_0c}\right)H\right].
+\]
+As $H\ge1$, taking $c$ still smaller makes this at most $1/32$
+uniformly. These choices also ensure all earlier degree-fraction
+restrictions. Finally increase $k_0,d_0$ to absorb finite rounding and
+uniform asymptotic estimates. Thus every minimizing sign has error at
+least $7/16-1/32-1/32=3/8$.
+
+For completeness, let $q(x)$ be any probability mixture of these
+minimizing signs, let $R=\mathbb E_x(1-q(x))$, and put
+$F=\mathbb P_x\{q(x)\le2/3\}$.
+The draw-error bound gives $R\ge3/8$, while
+\[
+ R\le\frac{1-F}{3}+F,
+ \qquad F\ge\frac{3R-1}{2}\ge\frac1{16}.
+\]
+The positive-gamma width-limit proposition says that, for each fixed
+$0<\gamma<1$, the actual finite-width posterior puts mass $1-o(1)$
+on these minimum-energy signs. Thus its draw error is at least
+$3/8-o(1)$, independently of the relative weights among ties.
+Apply the same inequality at every width and take the lower limit.
+This proves the asserted actual-posterior guarantee.
+\end{proof}

@@ -1,0 +1,137 @@
+\subsection{Exponential confidence sample complexity at sufficient depth}
+
+We can prove exponential sample complexity for the actual scaling
+family when $\gamma\le0$ and depth is allowed to grow linearly with
+dimension. This uses a uniform comparison after conditioning on
+all margins and any training signs. Its uniformity is essential:
+the conditioning event can itself be exponentially unlikely.
+
+\begin{lemma}[Gaussian comparison after margins and signs]
+\label{lem:gaussian-comparison}
+For each $a\ge0$ there is $c_a>0$ such that, for an $M\times M$
+covariance matrix $K$ and $0<\eta<1/4$, the condition
+\[
+ \|K-I\|_{\mathrm{op}}\le c_a\eta/M
+\]
+implies the following. If $B$ prescribes $|z_j|>a$ at every coordinate
+and arbitrary signs on any subset, then
+\[
+ \operatorname{TV}\bigl(\mathcal N(0,K)(\cdot\mid B),
+                        \mathcal N(0,I)(\cdot\mid B)\bigr)\le\eta.
+\]
+When $a=0$, the all-coordinate absolute-value condition is vacuous.
+\end{lemma}
+
+\begin{proof}
+Let $Q=\mathcal N(0,I)(\cdot\mid B)$,
+$H=K^{-1}-I$, and $h=\|H\|_{\mathrm{op}}$. Conditional densities have
+ratio $w/\mathbb E_Qw$, where $w(z)=\exp(-z^THz/2)$.
+Under $Q$, the squared coordinates are independent with the law of
+$G^2$ conditional on $|G|>a$, independently of the prescribed signs.
+Put $\mu_a=\mathbb E[G^2\mid |G|>a]$. For a finite $D_a$,
+\[
+ \log\mathbb E[e^{tG^2}\mid |G|>a]\le D_at
+ \quad(0\le t\le1/4),
+\]
+because the moment-generating function and its derivative are finite
+on this interval. With $T=\sum_jz_j^2$ and $h\le1/2$,
+\[
+ \mathbb E_Q|w-1|\le e^{D_aMh/2}-1,
+ \qquad \mathbb E_Qw\ge e^{-\mu_aMh/2}.
+\]
+The second inequality uses Jensen's inequality. Thus
+\[
+ \operatorname{TV}
+ \le\frac{\mathbb E_Q|w-1|}{\mathbb E_Qw}
+ \le e^{\mu_aMh/2}(e^{D_aMh/2}-1).
+\]
+For $Mh\le1$ the last expression is at most a constant depending
+only on $a$ times $Mh$. The inverse identity gives
+$h\le2\|K-I\|_{\mathrm{op}}$ when the latter norm is at most $1/2$.
+Choose $c_a$ small enough to obtain the claim.
+\end{proof}
+
+\begin{lemma}[Decay of saturated-kernel correlations]
+\label{lem:arcsine-decay}
+There is an absolute constant $C$ such that the kernel in
+\eqref{eq:arcsine-kernel} obeys $K(x,x)=1$ and
+$|K(x,y)|\le\rho$ for every distinct $x,y$, whenever
+\[
+ L-1\ge C\bigl(\log(d+1)+\log(1/\rho)+1\bigr).
+\]
+\end{lemma}
+
+\begin{proof}
+Write $T(r)=2\arcsin(r)/\pi$. This map is odd and satisfies
+$0<T(r)<r$ for $0<r<1$. Since $T'(r)\to\infty$ as $r\uparrow1$,
+there is $r_*<1$ for which
+$1-T(r)\ge2(1-r)$ whenever $r_*\le r<1$.
+Initially the absolute correlation of any distinct augmented cube
+points is at most $(d-1)/(d+1)$. Its distance from one therefore
+doubles until its iterates fall below $r_*$, requiring at most
+$O(\log(d+1)+1)$ steps. The positive power series shows
+$T(r)/r\le T(r_*)/r_*=:q<1$ for $0<r\le r_*$.
+A further $O(\log(1/\rho)+1)$ steps suffice. Oddness handles
+negative correlations, and $T(1)=1$ preserves the diagonal.
+\end{proof}
+
+\begin{theorem}[Exact confidence failure in a deep subfamily]
+\label{thm:deep-confidence}
+Fix $\gamma\le0$ and $a>0$. There is a constant $C_a$ such that,
+if $L\ge C_a(d+1)$, then for every target and every fixed training
+sample $S$, the width-limit confidence failure is exactly
+\[
+ \lim_{N\to\infty}F_N(S,f)=\frac{U_S}{2^d},
+\]
+where $U_S$ is the number of cube inputs absent from the sample.
+Consequently, for $n$ independent uniform training inputs,
+\begin{equation}\label{eq:deep-exact-confidence}
+ \lim_{N\to\infty}\mathbb E_S F_N(S,f)
+       =(1-2^{-d})^n.
+\end{equation}
+For $0<\epsilon\le1/2$, expected confidence failure at most
+$\epsilon$ therefore requires and is achieved by
+$\Theta(2^d\log(1/\epsilon))$ examples. In particular, for $d=k$
+this is exponential in the size of a parity circuit.
+\end{theorem}
+
+\begin{proof}
+Choose a fixed $\eta<1/6$, for example $\eta=1/12$.
+Apply Lemma~\ref{lem:arcsine-decay} with
+$\rho=c\eta/M^2$, where $M=2^d$ and $c$ is the smaller of the
+comparison constants for margins $a$ and zero. Its depth requirement
+is $O(d+1)$, and
+$\|K-I\|_{\mathrm{op}}\le(M-1)\rho\le c\eta/M$.
+At $\gamma=0$ use Lemma~\ref{lem:gaussian-comparison} with margin
+$a$; at $\gamma<0$ use it with margin zero, in accordance with
+Proposition~\ref{prop:nonpositive-gamma}.
+
+Under the independent Gaussian comparator, every unobserved sign
+is fair after conditioning. The actual limiting probability of
+either sign at each such input is consequently at most
+$1/2+\eta<2/3$. Every observed input has correct-label probability
+one. Conditional convergence and the strict separation from $2/3$
+then give the first assertion. Averaging over the finite set of
+sample sequences is legitimate; each input is unobserved with
+probability $(1-1/M)^n$. Solving the resulting equality proves the
+sample bound.
+\end{proof}
+
+This theorem lets $d$ and the chosen depth vary after the width
+limit. It does not prove an exponential bound for depth fixed
+independently of $d$, nor for $0<\gamma<1$, where the effective
+Gaussian margin diverges and a fixed near-independence estimate
+does not control the zero-temperature posterior.
+
+The same confidence conclusion sharpens the separate NNGP note
+\cite{nngp-note}. That note uses first-layer variance $1/(d+1)$,
+later hidden-layer and readout variances $1/(vN)$, where
+$v=\mathbb E\tanh^2(G)$, and depth $O(d)$.
+Its uniform Gaussian comparison gives
+$|p(x\mid S,f)-1/2|\le\eta$ at every unseen input.
+Taking $\eta<1/6$ makes confidence failure exactly the unseen
+fraction, not merely close to it. Its expected value is again
+\eqref{eq:deep-exact-confidence}. That is a concrete exponential
+result under the requested confidence criterion, with the specified
+layer gains and depth; it does not extend to every fixed-depth
+kernel by changing the prediction rule.

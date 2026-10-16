@@ -1,0 +1,207 @@
+\subsection{The spectrum and the first functions eliminated by data}
+
+\begin{proposition}[Paired spectrum and minimum-energy signs]
+\label{prop:paired-spectrum}
+Let $\lambda_r$ be the eigenvalue of $M^{-1}K$ on degree-$r$ parities.
+For the kernel~\eqref{eq:arcsine-kernel},
+\[
+ \lambda_0=\lambda_1>\lambda_2=\lambda_3>
+ \lambda_4=\lambda_5>\cdots>0,
+\]
+with a final unpaired $\lambda_d$ when $d$ is even. The minimum of
+$E_K(g)$ over all Boolean functions is $a^2/(2\lambda_0)$, attained
+exactly by the constants and signed coordinate functions
+$g\in\{1,-1,x_1,-x_1,\ldots,x_d,-x_d\}$.
+For every finite width, all these functions have identical
+unconditioned full-margin prior probabilities.
+\end{proposition}
+
+\begin{proof}
+Put $D=d+1$ and write $F$ for the $(L-1)$-fold composition of
+$t\mapsto2\arcsin(t)/\pi$. Its power series is
+$F(t)=\sum_{m\text{ odd}}c_mt^m$, with every $c_m>0$ and
+$\sum_m c_m=1$. Positivity follows from the arcsine series and is
+preserved under composition. First consider the kernel $F(u\cdot v/D)$
+on the full $D$-dimensional cube. The degree-$r$ Fourier eigenvalue
+of $(u\cdot v/D)^m$ is the probability $p_m(r)$ that a simple random
+walk, starting at one cube vertex and flipping a uniformly chosen
+coordinate at each step, reaches a specified vertex at Hamming
+distance $r$ after $m$ steps. This follows by expanding the power:
+a term survives Fourier averaging exactly when the coordinates
+chosen an odd number of times form the specified support.
+
+These probabilities decrease with distance within each parity class.
+Indeed, for $0\le r\le D-2$,
+\begin{align*}
+ D\bigl[p_{m+1}(r)-p_{m+1}(r+2)\bigr]
+ ={}&r\bigl[p_m(r-1)-p_m(r+1)\bigr]\\
+ &+(D-r-2)\bigl[p_m(r+1)-p_m(r+3)\bigr],
+\end{align*}
+where terms with zero coefficients at the boundaries are omitted.
+Induction starts from the point mass at time zero. Since
+$p_r(r)>0=p_r(r+2)$ and $c_r>0$ for odd $r$, the positive odd-degree
+eigenvalues of the full-cube kernel decrease strictly; its even-degree
+eigenvalues vanish. Restricting the distinguished coordinate to $+1$
+makes the reduced degree-$r$ eigenvalue the sum of the full-cube
+degree-$r$ and degree-$(r+1)$ eigenvalues. This gives the paired
+ordering stated.
+
+The largest matrix eigenvalue of $K$ is $M\lambda_0$. Every
+full-margin output satisfies
+\[
+ \frac12z^TK^{-1}z\ge\frac{\|z\|_2^2}{2M\lambda_0}
+                     \ge\frac{a^2}{2\lambda_0}.
+\]
+Equality requires both $|z(x)|=a$ everywhere and
+$z/a$ in the span of $1,x_1,\ldots,x_d$. An affine function
+$c+\sum_j b_jx_j$ is Boolean only if it is a constant or signed
+coordinate: expanding its square shows $b_ib_j=0$ for $i\ne j$
+and $cb_i=0$, so at most one coefficient is nonzero, with magnitude
+one. These functions attain equality, completing the characterization.
+
+To prove the finite-width equality of prior weights, exchange
+columns $0$ and $j$ of the first-layer weight matrix. Its Gaussian
+law is unchanged. Let $P_j$ denote this exchange and let $T_j$ be
+the cube bijection defined by $(T_jx)_j=x_j$ and
+$(T_jx)_i=x_jx_i$ for $i\ne j$. Then
+$P_j(1,x)=x_j(1,T_jx)$. The network as a function of its augmented
+input is odd, since all activations are odd and there are no later
+biases. Thus the transformed output is $x_j z_N(T_jx)$.
+The all-positive margin orthant is mapped bijectively to that of
+$x_j$, proving equality. Flipping the readout weights proves
+equality with the negative functions as well.
+\end{proof}
+
+\begin{corollary}[A posterior-error lower bound from surviving coordinates]
+\label{cor:surviving-coordinates}
+Fix $0<\gamma<1$ and let $f=\chi_U$ be a parity of size $k\ge2$.
+If any constant or signed coordinate agrees with a training sample
+$S$, the posterior converges to the uniform distribution over all
+such compatible functions. In particular,
+\[
+ \lim_{N\to\infty}R_N(S,f)=\frac12.
+\]
+For $d>k$ and $n\ge1$ independent uniform training examples,
+\begin{equation}\label{eq:coordinate-sample-bound}
+ \liminf_{N\to\infty}\mathbb E_S R_N(S,f)
+ \ge\frac12\left[1-\left(1-2^{1-n}\right)^{d-k}\right].
+\end{equation}
+\end{corollary}
+
+\begin{proof}
+If such a function survives, the compatible absolute minimizers in
+Proposition~\ref{prop:paired-spectrum} exhaust the compatible
+minimum-energy functions. Theorem~\ref{thm:kernel-posterior} forces
+the posterior onto these functions, and their exact equal prior
+weights make the conditional distribution uniform. Each has uniform error exactly
+$1/2$ against a parity of degree at least two, independently of
+the mixture weights. This proves the first statement.
+
+Conditional on all samples in coordinates belonging to $U$, the
+target labels are fixed. Each of the $d-k$ irrelevant coordinates
+has an independent uniform sample column in $\{-1,1\}^n$. One of
+its two signs agrees with all labels with probability $2^{1-n}$.
+These events are conditionally independent. The probability that
+at least one such coordinate survives is consequently
+$1-(1-2^{1-n})^{d-k}$. On this event the limiting error is $1/2$;
+on its complement error is nonnegative. Fatou's lemma proves the
+bound.
+\end{proof}
+
+\begin{lemma}[Parity correlation with a halfspace]
+\label{lem:halfspace-parity}
+If $h$ is a Boolean halfspace on $\{-1,1\}^d$ and $|U|=k\ge1$, then
+$|\mathbb E[\chi_U h]|\le1/\sqrt{k}$. Either inclusion or exclusion
+of the threshold boundary is allowed.
+\end{lemma}
+
+\begin{proof}
+Condition on coordinates outside $U$ and flip selected input
+coordinates so that the halfspace is monotone in the remaining $k$
+coordinates. These flips change the parity only by a constant sign.
+For a monotone Boolean function $h$, its discrete derivative
+$D_i h=(h(x_i=1)-h(x_i=-1))/2$ is nonnegative. Thus, for every
+$i\in U$,
+\[
+ |\widehat h(U)|
+ =|\mathbb E[\chi_{U\setminus\{i\}}D_ih]|
+ \le\mathbb E D_i h=\widehat h(\{i\}).
+\]
+Summing over the $k$ coordinates and using Cauchy--Schwarz and
+Parseval gives $k|\widehat h(U)|\le\sqrt{k}$.
+Average the conditional estimate over the other coordinates.
+\end{proof}
+
+\begin{corollary}[Failure to attain posterior confidence $2/3$]
+\label{cor:confidence-groundstates}
+Under the hypotheses of Corollary~\ref{cor:surviving-coordinates},
+if any constant or signed coordinate is consistent with $S$, then
+\[
+ \liminf_{N\to\infty}F_N(S,f)
+ \ge b_k:=\max\left\{\frac14,\frac12-\frac1{2\sqrt{k}}\right\}.
+\]
+If there are $m$ such compatible functions, the additional bound
+$\liminf_N F_N(S,f)\ge1-9/m$ holds.
+Consequently, when $d>k$ and $n\ge1$,
+\[
+ \liminf_{N\to\infty}\mathbb E_S F_N(S,f)
+ \ge b_k\left[1-\left(1-2^{1-n}\right)^{d-k}\right].
+\]
+\end{corollary}
+
+\begin{proof}
+The bound $1/4$ follows from
+\eqref{eq:confidence-risk-comparison} and
+Corollary~\ref{cor:surviving-coordinates}. To obtain the stronger
+bound for large $k$, write $\epsilon_N\to0$ for the posterior mass
+outside the consistent absolute minimizers. The mean Boolean
+prediction conditioned on those minimizers is an affine function
+$\widetilde m_N(x)=c_N+\sum_jb_{N,j}x_j$. The full posterior mean
+$m_N(x)$ satisfies
+$\|m_N-\widetilde m_N\|_\infty\le2\epsilon_N$.
+Confidence success is the event $f(x)m_N(x)>1/3$, which implies
+$f(x)\widetilde m_N(x)>t_N:=1/3-2\epsilon_N>0$ for large $N$.
+
+For any affine $m$ and any $t>0$, set
+$w(x)=\mathbf1\{m(x)>t\}-\mathbf1\{m(x)<-t\}$.
+This is the average of two Boolean halfspaces, using the appropriate
+boundary conventions. By Lemma~\ref{lem:halfspace-parity},
+$|\mathbb E fw|\le1/\sqrt{k}$. Moreover
+\[
+ \Pr\{fm>t\}=\frac12\mathbb E(|w|+fw)
+          \le\frac12+\frac1{2\sqrt{k}}.
+\]
+Apply this to $m=\widetilde m_N$ and $t=t_N$. This proves the
+pointwise-in-sample bound without assuming convergence of the
+weights among tied minimizers. The expected bound follows using
+the event probability calculated in
+Corollary~\ref{cor:surviving-coordinates} and Fatou's lemma.
+
+For the additional bound, equal weights make
+$\widetilde m_N=m^{-1}\sum_{j=1}^m g_j$ independent of $N$.
+Distinct signed constants and coordinates are orthogonal unless
+they are negatives of one another. Hence
+$\mathbb E\widetilde m_N^2\le1/m$. Confidence success implies
+$|\widetilde m_N|>t_N$, so Markov's inequality bounds its fraction
+by $1/(mt_N^2)\to9/m$.
+\end{proof}
+
+More explicitly, put $D=d-k$ and $p=2^{1-n}$ for $n\ge1$.
+The number of surviving irrelevant coordinates is
+$\operatorname{Bin}(D,p)$. For any integer $t>9$, the same proof gives
+\[
+ \liminf_N\mathbb E_S F_N(S,f)
+ \ge (1-9/t)\Pr\{\operatorname{Bin}(D,p)\ge t\}.
+\]
+Thus confidence failure can be close to one while many spurious
+coordinates remain compatible with the sample.
+
+These results establish a necessary sample scale of order
+$\log(d-k)$ for posterior confidence in this regime. They are not
+exponential-in-$k$ bounds, nor do they assert the same error for
+posterior majority.
+The spectrum also gives
+$E_K(\chi_U)\ge(a^2/2)\binom dk$, since
+$\sum_{r=0}^d\binom dr\lambda_r=1$. Even an exponentially large
+parity energy when $d\ge2k$ is a prior statement rather than a
+sample lower bound.

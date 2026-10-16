@@ -1,0 +1,109 @@
+INDEPENDENT REVIEW OF THE GAMMA=0 EXPONENTIAL LOWER-BOUND ARGUMENT
+Reviewer: subcritical_sample_positive. Date: 2026-10-15.
+
+Reviewed proof notes: zero-endpoint-proof.txt.
+Reviewed assembled support: paper/condition.tex, paper/width-limits.tex,
+and the exact clipping argument in research-round3/clipping-laplacian-
+reduction.txt. The final paper/zero.tex transcription has also been checked
+in full. The squared-sampling lemma and common spectrum/Gram statements
+are separate inputs reviewed independently by the other team members.
+
+VERDICT ON THE ARGUMENT: PASS.
+
+1. Exact posterior and entropy.
+The posterior is the original finite Gaussian vector conditioned on the
+entire global-margin and training-label event. Its entropy from the raw
+Gaussian prior is precisely D=-log P(A). No convexity, independence of
+posterior Fourier components, or posterior-mean surrogate is used.
+
+2. Quadratic entropy inequality.
+For a centered Gaussian linear image Z with covariance eigenvalues
+lambda_i<=ell, trace t, at theta=1/(4ell),
+  log E exp(theta ||Z||²)
+    =-.5 sum log(1-lambda_i/(2ell)) <=t/(2ell).
+The variational entropy inequality therefore gives
+  E_post||Z||² <=2t+4ell D.
+The population Fourier tail has t=tau and ell=lambda_next. The empirical
+tail has covariance Q_SS/n, trace exactly tau (including repetitions),
+and largest eigenvalue ||Q_SS||/n. All normalizations are correct.
+
+3. Adaptive denominator.
+Damping only degrees <=r by tau_r gives a density ratio bounded below
+pointwise by tau_r^(D_r/2), in the stated direction. Its diagonal is
+<=2tau_r. The global shift amplitude squared is O(d tau_r), its constant
+energy O(d/tau_r), and its bump energy O(n d^beta). Hence its translation
+cost is O(d²+n d^(1+beta)tau_r). The determinant adds O(D_r log(r+1)).
+On the adaptive shell n>=A D_r log(2D_r), in the large-n range, this gives
+D/n<=C d rho^(-beta), rho=r/d, with constants independent of rho.
+
+The product-bump proof was checked including: the beta-integral bound;
+the high-degree exponent c_*>.0062; the damped low-degree leakage;
+the absolute cross-energy Markov bound; uniformity over arbitrary labels;
+and pairwise separation of different sample INDICES, which excludes
+repetitions. The undamped proof provides the stated rough cost.
+
+4. Actual-output amplitude.
+The auxiliary subset is independent of the actual posterior. For each
+fixed good subset its Gaussian augmentation has exactly the original full
+G marginal, so conditioning always gives the same G|A. Event inclusion
+suffices to bound all selected margins by a product conditional on H_T;
+no independence of the outside constraints is needed. Averaging over T
+therefore yields the exact population-input amplitude statement.
+The auxiliary failure probability is exponentially small in the stated
+spectral regime, and the remaining error is O(1/d).
+
+5. Adaptive Fourier decomposition.
+On the uniform squared-coercivity event, every posterior draw satisfies
+training (fp)_- <=|G_{>r}|, so
+  E_post||p||² <=8tau_r+16 D B_r tau_r/n.
+The middle and high bands have expected norm² bounded by
+  2tau_r+4ell_r D,  and  2tau_u+4ell_u D,
+respectively. They require no posterior independence and no additional
+empirical event at u. Orthogonality of the two low bands is pathwise.
+The extra 2ceil(10log(d+1)) degrees make n ell_u/tau_r<=d^-10 uniformly;
+the prior trace term is harmless after division by the growing output
+amplitude squared.
+
+6. Exact clipping estimate and exponents.
+The Jensen argument with the one-coordinate-flip Markov operator proves
+  |E parity clip(P/A)| <=||Delta P||_1/(dA)
+                         <=u||P||_2/(dA)
+for degree <=u, without any unsupported L1 Bernstein inequality.
+Combining with A_d²~d^(1-beta) gives squared correlation at most
+  C rho^(2-2beta)[1+sqrt(log(e/rho)/rho)+log(e/rho)]+o(1).
+The worst exponent is 3/2-2beta>=1/2. Thus it tends to zero uniformly as
+the upper endpoint alpha for rho tends to zero, including depth L=2.
+The ambient log M in the Gram bound causes no remaining obstruction.
+
+7. Small n and exact confidence.
+For n<=exp(log(d+1)^3), choose odd s~d^(1/3). The rough denominator and
+spectral decay give D ell_s=o(1), while tau_s=o(1). The fixed global
+margin a already suffices to compare signs with the degree-s truncation;
+no large-output result is needed here. The parity PTF bound gives draw
+risk 1/2-o(1). At n=0 sign symmetry gives correct probability 1/2.
+
+For every finite-width posterior, R_N<=1/3+(2/3)F_N, where F_N counts
+inputs whose correct-label probability is <=2/3. Exact finite-dimensional
+Gaussian posterior convergence implies R_N->R. Therefore R>=3/8 yields
+liminf_N F_N>=1/16, with the required strict >2/3 success convention.
+No continuity claim about the discontinuous confidence functional is
+needed. The statement is for each specified n, not one simultaneous
+event over all sample prefixes.
+
+MINOR SOURCE CLARIFICATION RESOLVED
+condition.tex referred to a Gaussian tail ratio 'used above' without
+showing it. The needed one-line bound is
+barPhi(t+c)<=exp(-ct-c²/2)barPhi(t), obtained by shifting its integral.
+The author inserted the bound in the final source. The undamped energy
+comparator is now deduced from the same good event using cutoff r=1,
+so no unmentioned additional random event is required.
+
+FINAL TRANSCRIPTION CHECK: PASS
+paper/zero.tex reproduces the argument correctly. In particular its
+explicit relative-tail estimate is
+  E_post||t||²/A_d² <=C[(d rho^beta)^(-1)+d^(-10)rho^(-2beta)],
+which is uniformly o(1) for rho>=(log d)^2/(4d), beta<=1/2.
+The low-band correlation estimate has the correct exponents and absorbs
+only fixed constants. The small-n proof now correctly uses the fixed
+margin a. The stated sample probability is for each specified n, and the
+n=0 case is handled by exact global sign symmetry.

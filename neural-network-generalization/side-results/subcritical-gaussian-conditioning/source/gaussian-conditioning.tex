@@ -1,0 +1,288 @@
+\section{A Gaussian rate function need not determine the conditioned posterior}
+\label{sec:non-gaussian-tie}
+
+Moderate deviations do justify a Gaussian rate function throughout
+$0<\gamma<1$. They do not, however, justify replacing the actual
+posterior by a conditioned Gaussian in total variation throughout this
+interval. The distinction already occurs with three input bits and one
+hidden layer. It affects the criterion that the correct label must
+have posterior probability greater than $2/3$.
+
+We first give the estimate that makes the counterexample rigorous.
+All vectors in the following lemma have a fixed dimension $m$.
+
+\begin{lemma}[Annealed Gaussian corner probabilities]
+\label{lem:annealed-corner}
+For every $N$, let $H_{N,1},\ldots,H_{N,N}$ be independent copies of a
+random vector $H_N\in[-1,1]^m$. Suppose
+\[
+ K_N=\mathbb E H_NH_N^T\longrightarrow K>0,
+ \qquad H_N\ \Longrightarrow\ H.
+\]
+Set $Q_N=N^{-1}\sum_i H_{N,i}H_{N,i}^T$, and, conditionally on the
+features, let $Z_N\sim\mathcal N(0,t_N^{-1}Q_N)$, where
+$t_N\to\infty$ and $t_N/N\to0$.
+Fix $a>0$ and $g\in\{-1,1\}^m$. Assume
+\[
+ g_i(K^{-1}g)_i>0\quad\hbox{for every }i.
+\]
+Writing $v=K^{-1}g$, define
+\[
+ E_{N,g}=\frac{a^2}{2}g^TK_N^{-1}g,
+ \qquad
+ C_g=(2\pi)^{-m/2}(\det K)^{-1/2}
+             \prod_{i=1}^m\bigl[a g_i v_i\bigr]^{-1}.
+\]
+Then
+\begin{align}
+ \log\Pr\{g_iZ_{N,i}>a\ \forall i\}
+ ={}&-t_NE_{N,g}-\frac m2\log t_N+\log C_g\notag\\
+ &+\frac{a^4t_N^2}{8N}
+       \operatorname{Var}\bigl((v^TH)^2\bigr)
+       +o\bigl(1+t_N^2/N\bigr).
+ \label{eq:annealed-corner}
+\end{align}
+In particular, the leading correction to the deterministic Gaussian
+corner probability can grow without bound even though $t_N=o(N)$.
+\end{lemma}
+
+\begin{proof}
+Write $D_g=\operatorname{diag}(g)$ and
+$E_g(Q)=a^2g^TQ^{-1}g/2$. In a fixed neighborhood of $K$, the
+matrices $Q$ are positive definite and all entries of
+$\beta_g(Q)=aD_gQ^{-1}g$ are bounded below by a positive constant.
+The change of variables $z=ag+D_gu/t_N$ in the Gaussian density gives
+\begin{align*}
+ \Pr_{Q}\{g_iZ_i>a\ \forall i\}
+ ={}&(2\pi)^{-m/2}(\det Q)^{-1/2}t_N^{-m/2}e^{-t_NE_g(Q)}\\
+ &\quad\times\int_{[0,\infty)^m}
+  \exp\left\{-\beta_g(Q)^Tu
+       -\frac{u^TD_gQ^{-1}D_gu}{2t_N}\right\}\,du.
+\end{align*}
+The integral equals $\prod_i\beta_g(Q)_i^{-1}[1+O(t_N^{-1})]$
+uniformly in this neighborhood: use
+$0\le1-e^{-r}\le r$ and the finite second moments of the product
+exponential density. Denote the resulting smooth positive prefactor
+by $C_g(Q)$.
+
+Put $v_N=K_N^{-1}g$ and $\Delta_N=Q_N-K_N$. Matrix inversion has the
+uniform expansion
+\[
+ -t_NE_g(Q_N)
+ =-t_NE_{N,g}+t_N\ell_N(\Delta_N)
+                  +O(t_N\|\Delta_N\|^2),
+ \qquad
+ \ell_N(\Delta)=\frac{a^2}{2}v_N^T\Delta v_N.
+\]
+The linear statistic is the average of the bounded centered variables
+\[
+ Y_{N,i}=\frac{a^2}{2}
+   \left[(v_N^TH_{N,i})^2-
+                   \mathbb E(v_N^TH_N)^2\right].
+\]
+Consequently, with $\theta_N=t_N/N$,
+\begin{align*}
+ \log\mathbb E e^{t_N\ell_N(\Delta_N)}
+ &=N\log\mathbb E e^{\theta_NY_{N,1}}\\
+ &=\frac{t_N^2}{2N}\operatorname{Var}(Y_{N,1})
+                              +O(t_N^3/N^2).
+\end{align*}
+All bounds here are uniform, since the $Y_{N,i}$ are uniformly bounded.
+
+For completeness, the quadratic remainder is negligible at the
+claimed precision, even when $t_N^2/N$ diverges. Tilt the independent
+feature rows by the density proportional to
+$\exp(\theta_NY_{N,i})$. Under this product law their mean covariance
+differs from $K_N$ by $O(\theta_N)$, and Hoeffding's inequality still
+gives, for a fixed number of matrix entries,
+\[
+ \Pr_{\theta_N}\{\|\Delta_N-
+       \mathbb E_{\theta_N}\Delta_N\|>r\}
+       \le C e^{-cNr^2}.
+\]
+Integrating this bound, and using $t_N/N\to0$, yields
+\[
+ \log\mathbb E_{\theta_N}
+   \exp\{C t_N\|\Delta_N\|^2+C\|\Delta_N\|\}
+ =O\left(\frac{t_N^3}{N^2}+\frac{t_N}{N}
+                                      +N^{-1/2}\right).
+\]
+A matching lower estimate for the negative of the expression follows
+from Jensen's inequality. These bounds control both the inversion
+remainder and the smooth prefactor $C_g(Q_N)/C_g(K_N)$.
+
+The complement of the fixed covariance neighborhood has probability
+$O(e^{-cN})$, by entrywise Hoeffding. Its contribution to the original
+orthant probability is at most this quantity. Inside the neighborhood
+the calculation gives a probability $\exp[-O(t_N)-O(\log t_N)]$;
+hence the omitted contribution is negligible. The same truncation
+under the tilted law is harmless, since the tilt is $o(N)$ and the
+features are bounded. We have thus obtained the expansion with
+$C_g(K_N)$, $v_N$, and $H_N$, and an error
+\[
+ O\left(t_N^{-1}+N^{-1/2}+t_N/N+t_N^3/N^2\right)
+                  =o(1+t_N^2/N).
+\]
+Finally $C_g(K_N)\to C_g$, and boundedness and weak convergence give
+$\operatorname{Var}((v_N^TH_N)^2)\to
+\operatorname{Var}((v^TH)^2)$. This proves the displayed claim.
+\end{proof}
+
+\begin{theorem}[An actual-network counterexample to Gaussian posterior equivalence]
+\label{thm:gaussian-posterior-counterexample}
+Use the original architecture with $d=3$, one hidden layer ($L=2$),
+activation $\tanh$, and any fixed margin $a>0$. Order the cube inputs
+lexicographically, starting with $x_0=(-1,-1,-1)$. Define
+\[
+ g=(-1,1,1,-1,-1,-1,-1,1),\qquad
+ h=(1,1,1,-1,-1,-1,-1,1).
+\]
+Observe the seven common labels at every input other than $x_0$.
+Let $p_N$ be the actual posterior probability of $g$, after the
+all-input-margin restriction and these observations. Let
+$\widetilde p_N$ be the corresponding probability for the deterministic
+Gaussian output vector $\mathcal N(0,N^{-\gamma}K_N)$, where $K_N$
+is the exact mean feature covariance at width $N$. Then
+\[
+ \widetilde p_N\longrightarrow \frac{189}{314}
+                  \qquad (0<\gamma<1),
+\]
+whereas
+\[
+ p_N\longrightarrow
+ \begin{cases}
+  189/314,&0<\gamma<1/2,\\[2pt]
+  \displaystyle\left[1+\frac{125}{189}
+              e^{-8586a^4/625}\right]^{-1},&\gamma=1/2,\\[6pt]
+  1,&1/2<\gamma<1.
+ \end{cases}
+\]
+The same Gaussian limit holds if $K_N$ is replaced by the limiting
+arcsine kernel $K$. Thus, for $1/2\le\gamma<1$, the actual Boolean
+posterior need not converge in total variation to either of these
+conditioned Gaussian posteriors.
+
+For the original margin $a=1/2$ and target $g$, the Gaussian learner's
+correct-label probability at the unseen input tends to
+$189/314\simeq0.602$, whereas the actual learner's probability tends
+to approximately $0.781$ at $\gamma=1/2$ and to one for
+$\gamma>1/2$. The proposed $2/3$ confidence criterion therefore
+separates their predictions.
+\end{theorem}
+
+\begin{proof}
+Let $A$ be the $8\times4$ matrix with rows $(1,x)$, in the specified
+order; then $A^TA=8I_4$. A feature row has distribution
+\[
+ H_N=\tanh\left(\frac{N^{(1-\gamma)/2}}{\sqrt3}AW\right),
+                 \qquad W\sim\mathcal N(0,I_4).
+\]
+For $\gamma<1$ it converges almost surely to $H=\operatorname{sign}(AW)$.
+Gaussian symmetry and oddness show, exactly at every finite width,
+\[
+ K_N=(q_N-2c_N)I_8+\frac{c_N}{2}AA^T,
+\]
+where $q_N$ is the diagonal feature covariance and $c_N$ is the
+covariance between cube neighbors. The other off-diagonal entries are
+zero at Hamming distance two and $-c_N$ at distance three. Moreover
+$q_N\to1$ and $c_N\to1/3$, so
+\[
+ K=\frac13I_8+\frac16AA^T,\qquad
+ K^{-1}=3I_8-\frac3{10}AA^T.
+\]
+The two functions satisfy
+\[
+ A^Tg=(-2,-2,2,2)^T,\qquad A^Th=(0,-4,0,0)^T.
+\]
+Their squared lengths are both eight and the displayed projection
+vectors both have squared length sixteen. Therefore
+$g^TK_N^{-1}g=h^TK_N^{-1}h$ exactly for all sufficiently large $N$;
+the finite-gain correction cannot break the energy tie.
+
+Direct multiplication gives
+\begin{align*}
+ v:=K^{-1}g&=\frac35(-3,5,5,-7,-1,-3,-3,5),\\
+ w:=K^{-1}h&=\frac35(3,3,3,-7,-3,-3,-3,7).
+\end{align*}
+All signed gradient coordinates are strictly positive, and
+$g^Tv=h^Tw=96/5$. Both orthant minimizers are therefore their corners
+$ag$ and $ah$. The Gaussian corner prefactors have ratio
+\[
+ \frac{C_g}{C_h}
+ =\frac{\prod_i h_i w_i}{\prod_i g_i v_i}
+ =\frac{3^6\,7^2}{3^3\,5^3\,7}=\frac{189}{125}.
+\]
+The uniform Gaussian corner estimate in
+Lemma~\ref{lem:annealed-corner}, before averaging over features, proves
+$\widetilde p_N\to189/314$.
+
+It remains to compute a fourth moment of the saturated feature row.
+Here this calculation is exact and finite. Signed permutations of the
+four coordinates of $W$ give three orbits of possible threshold
+vectors $H$, of sizes $8,64,32$. To check completeness, first sort the
+absolute coordinates as $r_1>r_2>r_3>r_4>0$. Only the signs of
+$r_1-r_2-r_3-r_4$ and $r_1-r_2-r_3+r_4$ are undetermined; their
+three feasible sign combinations give precisely these three orbits.
+The exceptional equalities have probability zero.
+
+Let $P=AA^T/8$. The following table records finite averages within
+each orbit. Representatives are coefficient vectors $W$, not feature
+vectors. The column $n_+$ counts orbit elements with coordinates
+$H_1,H_2,H_4,H_7$ all positive, using zero-based cube indices.
+\[
+\begin{array}{c|r|r|r|r|r}
+ \text{representative }W&\text{size}&\|PH\|^2&n_+
+ &\text{mean }(v^TH)^4&\text{mean }(w^TH)^4\\ \hline
+ (10,3,2,1)&8&8&1&1296/625&5184/625\\
+ (5,4,2,3/2)&64&6&4&964224/625&1174176/625\\
+ (4,7/2,3,1)&32&6&0&1174176/625&754272/625
+\end{array}
+\]
+Each entry can be checked by applying the $2^4 4!$ signed
+permutations to the representative, taking $\operatorname{sign}(AW)$,
+removing duplicates, and summing the indicated integer fourth powers.
+Gaussian invariance makes the distribution uniform within each orbit.
+To determine the three orbit probabilities $p_1,p_2,p_3$, note that
+\[
+ 8p_1+6p_2+6p_3
+       =\mathbb E\|PH\|^2=\operatorname{tr}(PK)=20/3.
+\]
+Thus $p_1=1/3$. The four rows of $A$ with indices $1,2,4,7$ are
+orthogonal, so their Gaussian projections have independent signs.
+Using the $n_+$ column,
+\[
+ \frac1{16}=\Pr\{H_1=H_2=H_4=H_7=1\}
+            =\frac{p_1}{8}+\frac{p_2}{16}.
+\]
+It follows that $p_2=p_3=1/3$. The table consequently gives
+\[
+ \mathbb E(v^TH)^4=\frac{713232}{625},\qquad
+ \mathbb E(w^TH)^4=\frac{644544}{625}.
+\]
+The second moments are equal, both being $96/5$. Hence the difference
+of the two variances of squared projections is $68688/625$.
+
+Apply Lemma~\ref{lem:annealed-corner} with $t_N=N^\gamma$.
+Since the two energies agree exactly, their prior log odds satisfy
+\[
+ \log\frac{\Pr(A_g)}{\Pr(A_h)}
+ =\log\frac{189}{125}
+    +\frac{8586a^4}{625}N^{2\gamma-1}
+    +o(1+N^{2\gamma-1}).
+\]
+The seven observed labels leave exactly these two Boolean functions
+compatible, so these are also their posterior odds. The three stated
+limits follow directly.
+\end{proof}
+
+\begin{remark}[What this counterexample does and does not show]
+The leading kernel margin energy remains correct at every
+$0<\gamma<1$: both functions in the example have the same energy, and
+the actual posterior selects one of these tied minimizers. The
+counterexample disproves full conditional-Gaussian equivalence, even
+with the exact finite-width mean covariance. It does not by itself
+establish a circuit prior or a general sample-complexity advantage.
+It shows that the leading kernel energy alone need not determine the
+posterior's confidence, and that fourth-order feature statistics can
+remain visible after rare-event conditioning.
+\end{remark}

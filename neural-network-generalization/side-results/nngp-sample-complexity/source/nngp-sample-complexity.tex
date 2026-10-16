@@ -1,0 +1,497 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools,microtype,booktabs,enumitem}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
+\usepackage[nameinlink,noabbrev]{cleveref}
+\hypersetup{pdftitle={Small circuits under Gaussian-process classification: what sample complexity follows from the actual posterior?},pdfauthor={Dmitry Vaintrob; Kaarel Hanni; ChatGPT}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}
+\newcommand{\PP}{\mathbb P}
+\newcommand{\R}{\mathbb R}
+\newcommand{\X}{\mathcal X}
+\newcommand{\TV}{\operatorname{TV}}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\abs}[1]{\left|#1\right|}
+\DeclareMathOperator{\sgn}{sgn}
+\DeclareMathOperator{\diag}{diag}
+\setlength{\emergencystretch}{2em}
+\setlist{itemsep=2pt,topsep=4pt}
+\title{Small circuits under Gaussian-process classification:\\what sample complexity follows from the actual posterior?}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and ChatGPT\thanks{AI assistant developed by OpenAI; contributed to drafting and mathematical checking.}}
+\date{October 15, 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We examine the Gaussian-process version of the Boolean Bayesian learner in Vaintrob and H\"anni's lecture notes. The prior is conditioned to have an output margin at every Boolean input; training conditions on labels, and performance is the posterior probability of a correct label. This differs from Gaussian-process regression. We give the exact finite-domain posterior. A subspace argument proves an $\Omega(\binom dk)$ sample bound for learning a degree-$k$ parity by a kernel regression mean; a different information argument gives an $\Omega(\log\binom dk)$ bound for the actual posterior and majority rule. An arbitrarily small parity eigenvalue alone does not imply slow learning, even with the global margin restriction. We also prove a positive lower-bound result: an explicitly specified, variance-normalized tanh neural-network Gaussian process of depth $O(d)$ requires $\Theta(2^d)$ samples for any fixed nontrivial posterior-error target, including when the target is a small XOR circuit. The proof controls the actual conditioned posterior uniformly over all training sets. This is a deep, specified-gain example, not a lower bound for fixed-depth unit-gain tanh. We also prove that, for correct-label confidence strictly greater than $2/3$, the failure fraction in this family is exactly the fraction of unseen inputs. Posterior-majority classification is treated separately: the finite-depth lower bound is for posterior confidence, and does not establish a majority-vote lower bound.
+\end{abstract}
+
+\section{The question and the conventions}\label{sec:conventions}
+A parity on $k$ inputs has a circuit with $k-1$ two-input XOR gates, or $O(k)$ gates over a fixed functionally complete Boolean basis. Nevertheless, many kernel regression procedures learn high-degree parities poorly. Does this imply poor learning for the Bayesian classification procedure in the lecture notes~\cite{notes}? It does not follow directly. Both the likelihood and the performance criterion matter.
+
+Fix $\X=\{-1,1\}^d$, $M=2^d$, and the uniform test and training distribution. A target $f:\X\to\{-1,1\}$ is deterministic. Let
+\[
+ Z=(Z(x):x\in\X)\sim G_K=\mathcal N(0,K),\qquad a>0,
+ \qquad A_a=\{\abs{Z(x)}>a\text{ for all }x\in\X\}.
+\]
+The notes use $a=1/2$. First condition on $A_a$, and then take the Boolean function $g=\sgn Z$. For a sample $S=((x_i,f(x_i)))_{i=1}^n$, write $T=\{x_1,\ldots,x_n\}$ and
+\begin{equation}\label{eq:BS}
+ B_S=A_a\cap\{f(x)Z(x)>a\text{ for all }x\in T\}.
+\end{equation}
+The actual posterior is the sign pushforward of $G_K(\cdot\mid B_S)$. We assume $G_K(B_S)>0$ for the data under discussion. Positive-definite $K$ guarantees this for every Boolean target and sample.
+
+The finite-width conventions pass to this model without changing the order of conditioning. Suppose a finite network's output vector $Z_N$ on the whole cube converges weakly to $Z\sim G_K$. The boundary of $B_S$ is contained in finitely many hyperplanes $z(x)=\pm a$. If each limiting coordinate has positive variance, these boundaries have Gaussian probability zero. Whenever $G_K(B_S)>0$, the probabilities of $B_S$ and of each joint sign event therefore converge, and
+\[
+ \mathcal L(Z_N\mid B_S)\ \Longrightarrow\ G_K(\cdot\mid B_S).
+\]
+One can see conditional weak convergence by testing bounded continuous functions and applying the same boundary-zero argument to their products with $\mathbf1_{B_S}$. Thus both the global margin restriction and training survive the finite-domain NNGP limit. This statement takes width to infinity at fixed $d$, depth, and sample; it does not claim uniformity when those parameters grow simultaneously.
+
+The primary error criterion is
+\begin{equation}\label{eq:risks}
+ R_K(S;f)=\frac1M\sum_{x\in\X}G_K\{f(x)Z(x)<0\mid B_S\}.
+\end{equation}
+Equivalently, draw a function from the posterior and measure its average test error. We call this the \emph{posterior error}. If $h_S(x)$ chooses the label with the greater posterior probability, with any specified tie rule, its classification error satisfies
+\begin{equation}\label{eq:majority}
+ \operatorname{err}(h_S,f)\le 2R_K(S;f).
+\end{equation}
+The implication is one-sided. A posterior can give the correct label probability $0.5001$ everywhere, producing an excellent majority classifier but posterior error close to $1/2$.
+
+\paragraph{What is held fixed.}
+An NNGP is specified by its activation, depth, input normalization, all layer variances, and bias convention. Its overall output amplitude matters because $a$ is fixed. Multiplying $K$ by $s^2$ replaces the effective margin by $a/s$. Section~\ref{sec:tanh} gives a particular fully connected tanh model with an appended constant input and no additional biases. Its layer gains are explicit and differ from the unit-gain scaling in the notes. All results before that section apply to a general finite Gaussian covariance, subject to their stated assumptions.
+
+\section{The posterior is a collection of orthant probabilities}\label{sec:exact}
+For a Boolean $g$, define
+\[
+ E_g=\{g(x)Z(x)>a\text{ for every }x\in\X\},\qquad
+ w_K(g)=G_K(E_g),\qquad Z_A=G_K(A_a)=\sum_g w_K(g).
+\]
+Then the normalized prior is $\pi_K(g)=w_K(g)/Z_A$. Its posterior is exactly
+\begin{equation}\label{eq:posterior}
+ \Pi_K(g\mid S)=
+ \frac{w_K(g)\,\mathbf1\{g|_T=f|_T\}}
+ {\displaystyle\sum_{h:h|_T=f|_T}w_K(h)}.
+\end{equation}
+For positive-definite $K$, each weight is the ordinary Gaussian integral
+\begin{equation}\label{eq:orthant}
+ w_K(g)=\frac{1}{(2\pi)^{M/2}\sqrt{\det K}}
+ \int_{(a,\infty)^M}
+ \exp\!\left[-\frac12u^\top D_gK^{-1}D_gu\right]du,
+ \qquad D_g=\diag(g(x):x\in\X).
+\end{equation}
+Thus every finite case is well-defined without any regression surrogate. Formula~\eqref{eq:posterior} also makes clear which missing estimate a sample lower bound must supply: relative weights of target-inconsistent functions that survive the observed labels.
+
+The familiar interpolation formula $K(x,T)K(T,T)^{-1}f(T)$ is the conditional mean after observing \emph{real equalities} $Z(T)=f(T)$. It is not the posterior in~\eqref{eq:BS}. Even ordinary GP classification has a non-Gaussian posterior~\cite{gpml}; here the all-input restriction adds constraints at the unobserved points. In particular, the posterior mean need not have the usual span-of-training-kernels representation. Conditioning on the full Boolean cube preserves its coordinate permutations and simultaneous sign flips, but does not preserve arbitrary rotations of the ambient Euclidean space. A lower bound for a rotationally invariant regression method therefore requires a new argument before it applies here.
+
+\section{What Fourier eigenvalues do establish}\label{sec:fourier}
+Let $\chi_U(x)=\prod_{j\in U}x_j$. If $K$ is invariant under simultaneous coordinatewise sign flips, then
+\[
+ K(x,x')=\rho(x\odot x'),\qquad
+ \lambda_U=\E_{z\in\X}\rho(z)\chi_U(z)
+\]
+are its eigenvalues as an integral operator with the uniform measure. Indeed, substituting $z=x\odot x'$ gives $T_K\chi_U=\lambda_U\chi_U$. The characters are an orthonormal basis. If coordinate permutations also preserve $K$, then $\lambda_U=\lambda_{|U|}$, and if $K(x,x)=1$,
+\begin{equation}\label{eq:trace}
+ \lambda_U\ge0,\qquad \sum_U\lambda_U=1,
+ \qquad \binom dk\lambda_k\le1.
+\end{equation}
+These symmetries hold for the usual isotropic fully connected NNGPs, including the models used below. They do not imply monotone eigenvalues across degrees.
+
+Under the \emph{unconditioned} Gaussian law, the Fourier coefficients
+\[
+ \widehat Z(U)=\frac1M\sum_x Z(x)\chi_U(x)
+\]
+are independent centered Gaussians of variances $\lambda_U$. This follows by computing their covariances and using joint Gaussianity.
+
+\begin{proposition}[Parity mass, with its normalization]\label{prop:mass}
+For $f=\chi_U$ and $\lambda_U>0$,
+\begin{equation}\label{eq:massbound}
+ w_K(f)\le \exp\!\left(-\frac{a^2}{2\lambda_U}\right),
+ \qquad
+ \pi_K(f)\le
+ \min\left\{1,\frac{\exp(-a^2/(2\lambda_U))}{G_K(A_a)}\right\}.
+\end{equation}
+If $\lambda_U=0$, then $w_K(f)=0$.
+\end{proposition}
+\begin{proof}
+On $E_f$, averaging $f(x)Z(x)>a$ gives $\widehat Z(U)>a$. Apply the one-dimensional Gaussian tail bound, and then divide by $G_K(A_a)$.
+\end{proof}
+The Fourier coefficients cease to be independent Gaussians after conditioning on $A_a$. Omitting the denominator in~\eqref{eq:massbound} changes the prior being analyzed. An upper bound on $w_K(f)$ is also not a matching asymptotic: a large parity coefficient alone does not control all other coefficients sufficiently to guarantee every margin.
+
+The normalizer can sometimes be controlled. This is a useful qualification to the normalization issue, although it still does not give a sample lower bound.
+\begin{proposition}[A sufficient bound on the normalizer]\label{prop:normalizer}
+Suppose $K(x,x)=1$ and its constant eigenvalue satisfies $\lambda_0>0$. Put
+\[
+ t=\sqrt{2(1-\lambda_0)\log(4M)},\qquad
+ b=\frac{a+t}{\sqrt{\lambda_0}}.
+\]
+Then
+\begin{equation}\label{eq:normalizer}
+ G_K(A_a)\ge \frac12\,\overline\Phi(b)
+ \ge\frac{1}{2\sqrt{2\pi}}\exp\!\left[-\frac{(b+1)^2}{2}\right],
+\end{equation}
+where $\overline\Phi(b)=\PP\{N(0,1)>b\}$. Consequently, if $a$ is fixed and $\lambda_0$ is bounded below, $-\log G_K(A_a)=O(d+1)$.
+\end{proposition}
+\begin{proof}
+Write $Z(x)=C+V(x)$, where $C=\widehat Z(\varnothing)$ is independent of $V$, $\operatorname{Var}(C)=\lambda_0$, and $\operatorname{Var}(V(x))=1-\lambda_0$. A union bound gives $\PP\{\max_x\abs{V(x)}\le t\}\ge1/2$ when $\lambda_0<1$. For $\lambda_0=1$, $V=0$ and the same assertion holds with probability one. On this event, $C>a+t$ implies $A_a$. Finally integrate the standard Gaussian density over $[b,b+1]$.
+\end{proof}
+Under these extra hypotheses, a small $\lambda_k$ does give a small normalized parity mass, roughly $\exp[-a^2/(2\lambda_k)+O(d)]$. It remains a \emph{mass estimate}, not a sample lower bound.
+
+\section{A rigorous regression benchmark, and its boundary}\label{sec:regression}
+The familiar difficulty of learning parity by a kernel mean can be made precise without using the heuristic $n\gtrsim1/\lambda_k$.
+\begin{proposition}[The training-kernel span obstruction]\label{prop:regression}
+Let $K$ be coordinate-permutation invariant, fix $1\le k\le d$, and draw $n$ training inputs uniformly and independently. Write
+\[
+ V_S=\operatorname{span}\{K(\cdot,x_i):1\le i\le n\},\qquad B=\binom dk.
+\]
+For any fixed degree-$k$ parity $f=\chi_U$ and any estimator $m_S\in V_S$, allowing arbitrary dependence on the training labels,
+\begin{equation}\label{eq:regressionbound}
+ \E_S\norm{m_S-f}_{L^2}^2\ge1-\frac nB,
+ \qquad
+ \E_S\frac{\langle m_S,f\rangle^2}{\norm{m_S}_{L^2}^2}\le\frac nB,
+\end{equation}
+where the fraction is defined to be zero when $m_S=0$. The second bound is squared normalized $L^2$ correlation. The same bound holds for squared Pearson correlation after centering the estimator, with the usual zero-variance convention.
+\end{proposition}
+\begin{proof}
+Let $P_S$ be orthogonal projection onto $V_S$. Bessel's inequality, summed over an orthonormal basis of $V_S$, gives
+\[
+ \sum_{|U|=k}\norm{P_S\chi_U}_{L^2}^2\le\dim V_S\le n.
+\]
+Permutation symmetry makes the expected projection norm the same for every degree-$k$ support. Thus $\E\norm{P_Sf}_{L^2}^2\le n/B$. For any $m_S\in V_S$, the projection principle and Cauchy--Schwarz give respectively
+\[
+ \norm{m_S-f}_{L^2}^2\ge1-\norm{P_Sf}_{L^2}^2,
+ \qquad
+ \frac{\langle m_S,f\rangle^2}{\norm{m_S}_{L^2}^2}
+ \le\norm{P_Sf}_{L^2}^2.
+\]
+For Pearson correlation, replace $V_S$ by the span of the centered sections $K(\cdot,x_i)-\E_xK(x,x_i)$. It still has dimension at most $n$ and the same permutation equivariance, and contains $m_S-\E_xm_S(x)$. The target has mean zero.
+\end{proof}
+The equality-conditioned GP regression mean belongs to $V_S$, so a constant normalized correlation or a fixed improvement in squared error requires $n=\Omega(\binom dk)$. For $d\ge2k$ this is at least exponential in $k$; for fixed $k$ and large $d$ it is of order $d^k/k!$. For $k=d$ the bound is vacuous, since $\binom dd=1$. An assertion merely of ``exponential in $k$ for XOR'' needs its ambient-dimension regime stated.
+
+This proof identifies the exact obstruction for the regression benchmark: a data-dependent subspace of dimension at most $n$ must capture one among many symmetric, orthogonal targets. It does \emph{not} apply to the sign of that mean, to the posterior marginal of a Boolean label, or to a majority classifier, all of which can lie outside $V_S$. Under the global event $A_a$, even the latent posterior mean need not belong to $V_S$. The classification problem therefore does not inherit~\eqref{eq:regressionbound} just because its unconditioned Gaussian has the same eigenfunctions.
+
+\section{General sample bounds and a fast parity counterexample}\label{sec:fast}
+Two elementary guarantees help separate what is known from what an eigenvalue heuristic might suggest.
+
+\begin{proposition}[Bounds for the actual finite prior]\label{prop:upper}
+Suppose $\pi_K(f)>0$. With probability at least $1-\delta$ over $n\ge1$ independent uniform samples,
+\begin{equation}\label{eq:occam}
+ R_K(S;f)\le 1-(\delta\pi_K(f))^{1/n}
+ \le\frac{\log(1/\pi_K(f))+\log(1/\delta)}{n}.
+\end{equation}
+Independently of the size of $\pi_K(f)$, if $U_S=M-|T|$ is the number of unobserved inputs, then
+\begin{equation}\label{eq:coverage}
+ R_K(S;f)\le U_S/M,
+ \qquad \E_S R_K(S;f)\le(1-1/M)^n.
+\end{equation}
+In particular $n\ge M\log(1/(\varepsilon\delta))$ suffices for posterior error at most $\varepsilon$ with probability at least $1-\delta$.
+\end{proposition}
+\begin{proof}
+For a Boolean hypothesis $g$, let $r_g=\PP_x\{g(x)\ne f(x)\}$ and let $I_g$ indicate sample consistency. Put $Z_S=\sum_g\pi_K(g)I_g\ge\pi_K(f)$. For $r_g<1$, $\E I_g=(1-r_g)^n$. Therefore
+\[
+ W_S=\sum_{g:r_g<1}\pi_K(g)I_g(1-r_g)^{-n}
+ \quad\text{satisfies}\quad \E W_S\le1.
+\]
+Hypotheses with $r_g=1$ have zero posterior almost surely. Markov's inequality gives $W_S\le1/\delta$ with probability $1-\delta$. On that event, convexity of $(1-r)^{-n}$ yields
+\[
+ (1-R_K(S;f))^{-n}\le \E_{g\sim\Pi_K}(1-r_g)^{-n}
+ =W_S/Z_S\le1/(\delta\pi_K(f)).
+\]
+This proves~\eqref{eq:occam}. Observed inputs have zero posterior error, proving the first part of~\eqref{eq:coverage}; each input is unobserved with probability $(1-1/M)^n$. The final statement follows from Markov's inequality and $(1-1/M)^n\le e^{-n/M}$.
+\end{proof}
+These are sufficient conditions. A large $\log(1/\pi_K(f))$ cannot be read backwards as a necessary sample size.
+
+A general lower bound does apply to a fixed degree under the actual classification conventions, although it is logarithmic in the number of parities rather than proportional to that number.
+\begin{proposition}[A fixed-degree information lower bound]\label{prop:information}
+Let $K$ be coordinate-permutation invariant and suppose the posterior is defined for every degree-$k$ target and sample. For any fixed $U\subseteq[d]$ with $|U|=k$, the posterior error satisfies
+\begin{equation}\label{eq:information}
+ \E_S R_K(S;\chi_U)\ge
+ \max\left\{0,\frac12\left(1-\sqrt{\frac{2^n}{\binom dk}}\right)\right\}.
+\end{equation}
+The same bound holds for posterior-majority error when its tie rule is coordinate-permutation equivariant, for example a fixed constant tie label. Therefore expected error at most $\varepsilon<1/2$ requires
+\[
+ n\ge\log_2\binom dk+2\log_2(1-2\varepsilon).
+\]
+\end{proposition}
+\begin{proof}
+Write $B=\binom dk$ and average the target uniformly over the $B$ degree-$k$ parities. Fix the training inputs. The targets split into at most $2^n$ cells $C_y$ according to their training-label vector $y$. Let $h_y(x)\in[-1,1]$ be the learner's expected signed prediction; for posterior error this is the marginal mean of the Boolean sign, and for majority it is the chosen label. Its $L^2$ norm is at most one. Orthogonality of the parities and Bessel's inequality give
+\[
+ \sum_{U\in C_y}\langle h_y,\chi_U\rangle
+ \le\sqrt{|C_y|}
+ \left(\sum_{U\in C_y}\langle h_y,\chi_U\rangle^2\right)^{1/2}
+ \le\sqrt{|C_y|}.
+\]
+Summing over cells and applying Cauchy--Schwarz bounds the target-averaged correlation by $\sqrt{2^n/B}$. Error is half of one minus this correlation. Finally average over training inputs. Coordinate permutations act transitively on degree-$k$ supports and preserve the prior, global margin event, and learning rule, so all these fixed targets have the same expected error.
+\end{proof}
+For $k\ll d$, this is the familiar order $k\log(d/k)$ necessary number of examples. For $k=d$ the displayed bound is vacuous; the sole positive full parity can be favored by a prior, as the following example shows.
+
+\begin{proposition}[Tiny eigenvalue, fast learning under the exact conventions]\label{prop:fast}
+For every $d\ge1$ and $\lambda\in(0,1)$, let $f=\chi_{[d]}$ and
+\begin{equation}\label{eq:ranktwo}
+ K_\lambda(x,x')=(1-\lambda)+\lambda f(x)f(x').
+\end{equation}
+This is a positive-semidefinite, normalized, coordinate-permutation- and sign-flip-invariant covariance with parity eigenvalue $\lambda$. For every margin $a>0$, its globally conditioned prior is supported on exactly
+\[
+ \{+1,-1,+f,-f\}.
+\]
+After one observation of each target label, its posterior equals the point mass at $f$. For $n\ge1$,
+\begin{equation}\label{eq:fast}
+ \E_S R_{K_\lambda}(S;f)\le2^{-n},
+ \qquad \E_S\operatorname{err}(h_S,f)\le2^{-n},
+\end{equation}
+and both errors are zero with probability at least $1-2^{1-n}$. These bounds are independent of $\lambda$.
+\end{proposition}
+\begin{proof}
+Realize $Z(x)=A+Bf(x)$ with independent $A\sim N(0,1-\lambda)$ and $B\sim N(0,\lambda)$. There are only two output values, $A+B$ and $A-B$. Conditioning on both having absolute value greater than $a$ gives exactly the four sign patterns stated; every pattern has positive probability. Observing both labels eliminates the two constants and $-f$. Otherwise, the only surviving functions are $f$ and the observed constant, which disagree on exactly half the domain. The probability that all $n$ target labels coincide is $2^{1-n}$. On that event posterior error and majority error are each at most $1/2$.
+\end{proof}
+The target's normalized prior mass can itself be arbitrarily tiny here. As $\lambda\downarrow0$, $G_{K_\lambda}(A_a)\to\PP\{\abs G>a\}>0$, while Proposition~\ref{prop:mass} bounds the parity numerator by $\exp[-a^2/(2\lambda)]$. The rapid sample guarantee is therefore compatible with exponentially small actual target mass.
+
+This is a counterexample within invariant Gaussian priors, not a claim that~\eqref{eq:ranktwo} is the kernel of a standard fully connected tanh network. It refutes an inference based only on eigenvalues, the trace bound, or the all-input margin convention. One can choose $\lambda=e^{-d}$, or smaller. Nor is the phenomenon confined to singular kernels: adding $\tau I$ and letting $\tau\downarrow0$ preserves the counterexample to any uniform eigenvalue-only lower bound, as explained in Appendix~\ref{app:positive}.
+
+\section{An exact exponential example: independent Gaussian outputs}\label{sec:independent}
+For $K=I_M$, the margin-conditioned signs remain independent fair bits. Training fixes the observed bits and leaves the others independent.
+\begin{proposition}[Exact posterior learning curve]\label{prop:independent}
+For $K=I_M$, every target $f$, every $a>0$, and every training sample,
+\begin{equation}\label{eq:iidrisk}
+ R_I(S;f)=\frac{U_S}{2M},
+ \qquad
+ \E_S R_I(S;f)=\frac12(1-1/M)^n.
+\end{equation}
+Hence, for $0<\varepsilon<1/2$, expected posterior error at most $\varepsilon$ requires and is achieved by
+\begin{equation}\label{eq:iidcomplexity}
+ n\ge
+ \frac{\log(1/(2\varepsilon))}{-\log(1-1/M)}
+ =\Theta\!\left(2^d\log\frac1\varepsilon\right).
+\end{equation}
+The asymptotic statement holds uniformly, for example, for $0<\varepsilon\le1/4$.
+\end{proposition}
+\begin{proof}
+A fresh point already observed has zero posterior error; every unobserved point has error $1/2$. Average over inputs and then over the sample.
+\end{proof}
+For the $k$-bit XOR on a $d$-dimensional cube, the rate depends on $d$, not merely $k$: this prior ignores all circuit structure and all irrelevant-coordinate structure. Taking $d=k$ gives $\Theta(2^k)$ samples for fixed expected posterior accuracy.
+
+For majority prediction, every unobserved marginal is an exact tie. A fixed constant tie label gives~\eqref{eq:iidrisk} after averaging over samples whenever $f$ is balanced, as every nonconstant parity is. Independent fair tie-breaking gives it for every target. An arbitrary input-dependent tie rule could hardcode a particular parity, so a majority lower bound must state its tie convention.
+
+\section{A finite-depth tanh NNGP lower bound}\label{sec:tanh}
+The preceding independent prior is the depth limit of a concrete tanh NNGP. More strongly, a depth linear in $d$ suffices for a uniform lower bound on the \emph{actual posterior error}. The argument must control conditioning on rare events; unconditional convergence of kernels alone would not give the uniform statement we need.
+
+\subsection{The specified network}
+Set
+\[
+ v=\E\tanh^2(G)\in(0,1),\quad G\sim N(0,1),\qquad
+ F(r)=\frac{\E[\tanh(G_1)\tanh(G_2)]}{v},
+\]
+where $(G_1,G_2)$ have unit variances and correlation $r$. Start with
+\begin{equation}\label{eq:recursion}
+ q_0(x,x')=\frac{1+\langle x,x'\rangle}{d+1},\qquad
+ K_L(x,x')=F^{\circ L}(q_0(x,x')).
+\end{equation}
+The covariance $K_L$ is realized by $L$ hidden tanh layers and a linear readout: first-layer weights have variance $1/(d+1)$, all subsequent hidden-layer weights have variance $1/(vN)$, and readout weights have variance $1/(vN)$, with width $N$ taken to infinity. All weights are centered independent Gaussians; the first layer receives $(1,x)$ and there are no additional biases. In the common-width limit $N\to\infty$, the preactivation variance at each layer, and the output variance, tend to one. The standard NNGP covariance recursion gives~\eqref{eq:recursion}~\cite{lee}. For completeness, conditional on the preceding layer, different rows have independent Gaussian preactivation vectors on the finite cube, with covariance given by the preceding empirical feature covariance. Boundedness of tanh gives a conditional law of large numbers for every entry of the next empirical covariance; continuity of Gaussian expectations then yields the deterministic recursion inductively at fixed $d,L$. The final Gaussian readout converges because its conditional covariance converges. This also supplies the finite-dimensional convergence required in Section~\ref{sec:conventions}.
+
+The factor $1/v$ is a constant gain choice, not a consequence of width scaling. The unit-gain tanh recurrence instead has changing variances $q_{\ell+1}=\E\tanh^2(\sqrt{q_\ell}G)$; it is a different kernel. The theorem below does not silently substitute one for the other. The depth order in the theorem also differs from a fixed-depth limit.
+
+\begin{theorem}[Exponential posterior sample complexity in a specified tanh family]\label{thm:tanh}
+Fix $a>0$. There is a constant $C_a<\infty$ such that, for every $d\ge1$, $\eta\in(0,1/4)$, and
+\begin{equation}\label{eq:depth}
+ L\ge C_a\bigl(d+\log(1/\eta)+1\bigr),
+\end{equation}
+the tanh NNGP in~\eqref{eq:recursion} has, for every target $f$ and every training sample $S$,
+\begin{equation}\label{eq:uniformrisk}
+ \left(\frac12-\eta\right)\frac{U_S}{M}
+ \le R_{K_L}(S;f)\le
+ \left(\frac12+\eta\right)\frac{U_S}{M}.
+\end{equation}
+In particular,
+\begin{equation}\label{eq:expectedrisk}
+ \left(\frac12-\eta\right)(1-1/M)^n
+ \le\E_S R_{K_L}(S;f)\le
+ \left(\frac12+\eta\right)(1-1/M)^n.
+\end{equation}
+For fixed $\eta$ and fixed posterior-error tolerance $\varepsilon\in(0,1/2-\eta)$, the necessary and sufficient order of the expected sample complexity is $\Theta(2^d)$. For $\varepsilon\le1/4$ and fixed $\eta<1/4$, it is $\Theta(2^d\log(1/\varepsilon))$.
+\end{theorem}
+The statement covers parities on any $k\le d$ coordinates. Setting $d=k$ gives an exponential lower bound in the size of an XOR circuit under the source's posterior-probability criterion. It does not assert a majority-vote lower bound for finite $L$: the majority could exploit small deviations of a marginal from $1/2$ that this proof deliberately does not estimate in sign.
+
+For confidence rather than expectation,~\eqref{eq:uniformrisk} also gives explicit bounds. No sample with
+\[
+ n<M\left(1-\frac{\varepsilon}{1/2-\eta}\right)
+\]
+can have posterior error at most $\varepsilon$, since $U_S\ge M-n$. Conversely,
+\[
+ n\ge M\log\frac{1/2+\eta}{\varepsilon\delta}
+\]
+suffices with probability $1-\delta$, by Markov's inequality. Thus fixed posterior accuracy and fixed confidence again require and suffice with $\Theta(2^d)$ samples.
+
+\subsection{Success only above two-thirds correct-label probability}
+For a fixed sample, write
+\[
+ p_S(x)=\Pi_K(g(x)=f(x)\mid S),\qquad
+ F_q(S;f)=\Pr_x\{p_S(x)\leq q\}.
+\]
+Thus an input counts as successful only when the correct label has posterior
+probability strictly greater than $q$. For any posterior and $0<q<1$,
+\[
+ F_q\leq\frac{R_K}{1-q},\qquad
+ F_q\geq\max\left\{0,\frac{R_K-(1-q)}q\right\}.
+\]
+The first bound integrates the error probability on the failure set; the
+second uses error at most one there and less than $1-q$ on its complement.
+At $q=2/3$ these become $F_{2/3}\leq3R_K$ and
+$F_{2/3}\geq\max\{0,(3R_K-1)/2\}$.
+
+For the tanh family in Theorem~\ref{thm:tanh}, a stronger exact conclusion
+holds. Fix $\eta<1/6$. The proof below bounds each unseen correct-label
+probability between $1/2-\eta$ and $1/2+\eta$, uniformly over every target and
+sample. Every unseen input therefore fails the $2/3$ confidence criterion.
+At an observed input, noiseless label conditioning gives probability one.
+Consequently
+\[
+ F_{2/3}(S;f)=\frac{U_S}{2^d},\qquad
+ \mathbb E_S F_{2/3}(S;f)=(1-2^{-d})^n.
+\]
+Expected confidence failure at most $\varepsilon$ is equivalent to
+\[
+ n\geq\frac{\log(1/\varepsilon)}{-\log(1-2^{-d})},
+\]
+with integer rounding understood, and has order
+$2^d\log(1/\varepsilon)$. No sample with $n<(1-\varepsilon)2^d$ can
+meet that failure target. A sufficient high-probability bound is
+$n\geq2^d\log(1/(\varepsilon\delta))$, by Markov's inequality.
+The confidence criterion therefore removes the tiny-majority-bias ambiguity
+for this family. It does not turn the regression-span bound into a theorem
+for every NNGP kernel or every depth.
+
+\subsection{A conditioning lemma uniform over all labels}
+\begin{lemma}[Gaussian comparison after all margins and any training signs]\label{lem:comparison}
+Fix $a>0$. There is $c_a>0$ such that, if a covariance matrix on $M$ coordinates obeys
+\begin{equation}\label{eq:opcondition}
+ \norm{K-I}_{\mathrm{op}}\le c_a\eta/M,
+ \qquad 0<\eta<1/4,
+\end{equation}
+then, for every event $B$ imposing $\abs{z_j}>a$ at all coordinates and arbitrary prescribed signs on any subset of coordinates,
+\begin{equation}\label{eq:tv}
+ \TV\bigl(G_K(\cdot\mid B),G_I(\cdot\mid B)\bigr)\le\eta.
+\end{equation}
+The bound has no dependence on $G_I(B)$ or on the number of prescribed signs.
+\end{lemma}
+\begin{proof}
+Let $Q=G_I(\cdot\mid B)$, $H=K^{-1}-I$, and $h=\norm H_{\mathrm{op}}$. Determinants and the probability of $B$ cancel in the conditional density ratio, leaving
+\[
+ \frac{dG_K(\cdot\mid B)}{dQ}(z)=\frac{w(z)}{\E_Qw},
+ \qquad w(z)=\exp(-z^\top Hz/2).
+\]
+Under $Q$, the squared coordinates are independent and have the same law as $G^2$ conditional on $\abs G>a$, regardless of the prescribed signs. Write $\mu_a=\E[G^2\mid\abs G>a]$. There is a finite constant $D_a$ such that
+\[
+ \log\E[e^{tG^2}\mid\abs G>a]\le D_at\qquad(0\le t\le1/4),
+\]
+since the moment-generating function and its derivative are finite on that compact interval. For $T=\sum_jz_j^2$ and $h\le1/2$,
+\[
+ \E_Q\abs{w-1}\le\E_Q(e^{hT/2}-1)
+ \le e^{D_aMh/2}-1,
+ \qquad
+ \E_Qw\ge\E_Qe^{-hT/2}\ge e^{-\mu_aMh/2}.
+\]
+Consequently
+\[
+ \TV\le\frac{\E_Q\abs{w-1}}{\E_Qw}
+ \le e^{\mu_aMh/2}\bigl(e^{D_aMh/2}-1\bigr).
+\]
+For $Mh\le1$ the last expression is at most a constant depending only on $a$ times $Mh$. If $\norm{K-I}_{\mathrm{op}}\le1/2$, the inverse identity gives $h\le2\norm{K-I}_{\mathrm{op}}$. Choosing $c_a$ sufficiently small proves the result and ensures all intermediate inequalities apply.
+\end{proof}
+A generic conditioning bound based on dividing an unconditional total-variation estimate by $G_I(B)$ would be far weaker. The product structure of the squared coordinates is what permits uniform control even when many signs have been observed.
+
+\subsection{Decay of the tanh correlations}
+\begin{lemma}[Quantitative convergence to independence]\label{lem:decay}
+There is a constant $C>0$, depending only on tanh, such that for $d\ge1$, $0<\rho<1$, and
+\[
+ L\ge C\bigl(\log(d+1)+\log(1/\rho)+1\bigr),
+\]
+the covariance in~\eqref{eq:recursion} satisfies $K_L(x,x)=1$ and $\abs{K_L(x,x')}\le\rho$ for all distinct $x,x'$.
+\end{lemma}
+\begin{proof}
+Expand $\tanh(G)/\sqrt v$ in the orthonormal Hermite basis:
+\[
+ \tanh(G)/\sqrt v=\sum_{j\ge0}b_jH_j(G),\qquad
+ \sum_jb_j^2=1.
+\]
+Oddness makes every even coefficient zero. The correlated-Gaussian Hermite identity
+\[
+ \E[H_i(G_1)H_j(G_2)]=\mathbf1_{i=j}r^j
+\]
+follows by comparing coefficients in $\E e^{tG_1-t^2/2}e^{sG_2-s^2/2}=e^{rst}$. It gives
+\[
+ F(r)=\sum_{j\text{ odd}}b_j^2r^j.
+\]
+Since tanh is not a linear function in Gaussian $L^2$, at least one $b_j$ with $j\ge3$ is nonzero. Hence $F$ is odd, increasing on $[0,1]$, and $0\le F(r)<r$ for $0<r<1$. Moreover
+\[
+ F'(1)=\sum_jj b_j^2
+ =\frac{\E\operatorname{sech}^4(G)}{v}>1.
+\]
+The derivative identity follows by differentiating the Hermite expansion in Gaussian $L^2$; finiteness follows from boundedness of the derivative of tanh. The strict inequality also follows directly from the nonzero coefficient of degree greater than one.
+
+It follows that some $r_*\in(0,1)$ and $\gamma>0$ satisfy
+\[
+ 1-F(r)\ge(1+\gamma)(1-r)\qquad(r_*\le r<1).
+\]
+For distinct cube points,
+\[
+ \abs{q_0(x,x')}\le (d-1)/(d+1).
+\]
+As long as the iterated absolute correlation remains at least $r_*$, its distance from one grows by a factor at least $1+\gamma$ each step. It therefore falls below $r_*$ in $O(\log(d+1)+1)$ steps. Once there,
+\[
+ \frac{F(r)}r\le b_1^2+(1-b_1^2)r_*^2=:q_*<1
+ \qquad(0<r\le r_*).
+\]
+An additional $O(\log(1/\rho)+1)$ steps suffice. Oddness gives the same estimate for negative correlations. The diagonal remains one because $F(1)=1$.
+\end{proof}
+\begin{proof}[Proof of Theorem~\ref{thm:tanh}]
+Choose $\rho=c_a\eta/M^2$ in Lemma~\ref{lem:decay}. Since $\log M=d\log2$, the resulting depth is bounded by the right side of~\eqref{eq:depth}, after increasing $C_a$. The maximum absolute row sum bounds the operator norm, so
+\[
+ \norm{K_L-I}_{\mathrm{op}}\le (M-1)\rho\le c_a\eta/M.
+\]
+In particular $K_L$ is positive definite. Apply Lemma~\ref{lem:comparison} to $B=B_S$. At an observed input the error probability is zero. At an unobserved input the independent posterior has error $1/2$, and total variation changes that probability by at most $\eta$. This proves~\eqref{eq:uniformrisk}. Averaging $U_S/M$ gives~\eqref{eq:expectedrisk}; solving the two exponential bounds gives the stated sample orders.
+\end{proof}
+
+\section{What this resolves, and what still needs a proof}\label{sec:scope}
+Under the actual conventions, exponentially poor \emph{posterior confidence} is possible for a small-circuit target in a genuine tanh NNGP. The finite-depth theorem establishes this directly for a fully specified family, including the global margin event. It does not use posterior-mean regression.
+
+There is no sample-complexity conclusion based just on circuit size and the phrase ``NNGP.'' Depth, variances, bias convention, the input distribution, and the error criterion must be specified. Even a small parity eigenvalue and full cube symmetry do not suffice, as Proposition~\ref{prop:fast} demonstrates. Symmetry alone also cannot prohibit rapid parity learning: the uniform posterior over all signed parities is equivariant under coordinate permutations and flips and learns with $O(d+\log(1/\delta))$ uniform samples. Its constraints can be solved by linear algebra over $\mathbb F_2$; each wrong signed parity is eliminated with probability at least $1/2$ per sample, so a union bound proves this rate. One must use the particular posterior, not merely its symmetries.
+
+For the more specific question suggested by Appendix J of the notes---\emph{fixed shallow depth, unit-gain isotropic tanh, the all-input margin prior, and a $k$-bit parity}---this note does \emph{not} establish an $\exp(k)$ or $d^{\Omega(k)}$ sample lower bound. Nor does it establish efficient learning in that setting. The existing argument from the parity eigenvalue to such a lower bound has a missing statistical step; a regression theorem does not fill it. For majority-vote prediction there is a second missing step, because large posterior error alone is insufficient. Resolving this fixed-depth problem requires a quantitative comparison of the compatible orthant weights in~\eqref{eq:posterior}, or another argument that applies directly to that likelihood and decision rule.
+
+For a small-circuit generalization theorem, the object needed is likewise a bound on the relative posterior mass of wrong but sample-consistent functions. The strong-prior argument supplies such a bound through norm sublevel counts. An NNGP Fourier diagonalization supplies a useful coordinate system, but does not by itself supply the corresponding counting or likelihood estimate.
+
+\appendix
+\section{The fast example can be positive definite}\label{app:positive}
+Fix $d$, $\lambda$, and $a$, and let $K_{\lambda,\tau}=K_\lambda+\tau I_M$, $\tau>0$. It is strictly positive definite and preserves all cube symmetries. Couple its Gaussian output as
+\[
+ Z_\tau(x)=A+Bf(x)+\sqrt\tau\,\xi_x,
+\]
+where the $\xi_x$ are independent standard Gaussians. As $\tau\downarrow0$, $Z_\tau\to Z_0$ almost surely on the finite cube. The boundaries of $A_a$, each training event, and each wrong-sign event have probability zero under $Z_0$: each coordinate $A\pm B$ has a continuous, nondegenerate Gaussian law. Every target-data event has positive probability under $Z_0$. Dominated convergence therefore proves convergence of every conditional predictive probability, and hence of posterior error, for every sample. There are finitely many sample sequences of any fixed length, so the expected posterior errors converge too. At samples with both labels present the limiting correct-label probabilities are one, so the majority errors there are zero for all sufficiently small $\tau$. At the remaining samples a majority error is at most $1/2+o(1)$, giving the same expected upper bound up to $o(1)$.
+
+With the uniform-measure eigenvalue convention, adding $\tau I_M$ adds $\tau/M$ to each $\lambda_U$. If a diagonal-one covariance is desired, divide by $1+\tau$; the same convergence argument applies. Thus an arbitrarily small parity eigenvalue can coexist with rapid learning even in positive-definite, fully symmetric Gaussian models. These examples still make no tanh-realizability claim.
+
+\begin{thebibliography}{9}
+\bibitem{notes}
+Dmitry Vaintrob and Kaarel H\"anni.
+\emph{A Generalization Result for Overparametrized Neural Net Bayesian Learning}.
+ILIAD lecture slides, 2026. Main setup and Appendix J.
+\url{https://kaarelh.github.io/ai/nnbayes-generalization.pdf}.
+
+\bibitem{lee}
+Jaehoon Lee, Yasaman Bahri, Roman Novak, Samuel S. Schoenholz, Jeffrey Pennington, and Jascha Sohl-Dickstein.
+\emph{Deep Neural Networks as Gaussian Processes}.
+International Conference on Learning Representations, 2018.
+\url{https://openreview.net/forum?id=B1EA-M-0Z}.
+
+\bibitem{gpml}
+Carl Edward Rasmussen and Christopher K. I. Williams.
+\emph{Gaussian Processes for Machine Learning}.
+MIT Press, 2006. Chapter 3.
+\url{https://gaussianprocess.org/gpml/chapters/RW3.pdf}.
+\end{thebibliography}
+\end{document}

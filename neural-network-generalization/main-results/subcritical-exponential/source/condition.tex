@@ -1,0 +1,219 @@
+\section{Conditioning cost and amplitude at the Gaussian endpoint}
+\label{sec:zero-conditioning}
+Fix $a>0$. For an input sample $S$ and arbitrary labels $y_i\in\{-1,1\}$,
+define the full event
+\[
+ A_S=\{|G(x)|>a\ \forall x\in\mathcal X;\ y_iG(X_i)>0\ \forall i\},
+ \qquad \mathcal D(S)=-\log\mathbb P\{G\in A_S\},\quad G\sim N(0,K).
+\]
+All probabilities below concern this exact event. Write $M=2^d$ and
+$v=\lambda_{\min}(K)>0$ for the smallest \emph{matrix} eigenvalue;
+it differs from the normalized Walsh eigenvalues $\lambda_j$.
+
+\begin{lemma}[Adaptive conditioning cost]\label{lem:zero-denominator}
+For $1\le n\le e^{d/25}$, with probability at least $1-e^{-c d}$ over
+independent uniform inputs, simultaneously for all labelings and every
+odd $1\le r\le d/200$,
+\begin{align}
+ \mathcal D(S)&\le C\{d^2+n d^{1+\beta}\tau_r+D_r\log(r+1)\},
+ \label{eq:zero-adaptive-cost}\\
+ \mathcal D(S)&\le C\{d^2+n d^{1+\beta}\}.
+ \label{eq:zero-rough-cost}
+\end{align}
+The constants depend only on $L,a$.
+\end{lemma}
+For a covariance $J$ on the cube, use the Gaussian Cameron--Martin norm $\|h\|_J^2=h^TJ^{-1}h$. For a translation-invariant kernel it equals $\sum_U\widehat h(U)^2/\lambda^J_{|U|}$, using normalized Walsh coefficients.
+
+To prove the lemma, let $Q$ retain degrees greater than $r$, let $K_{\rm low}=K-Q$, and set $\tau=\tau_r$. Define
+\[
+ \widetilde K=\tau K_{\rm low}+Q.
+\]
+Lemma~\ref{lem:sharp} proves $\tau\asymp r^{-\beta}$, while Corollary~\ref{cor:lower-spectrum} gives $\lambda_0\ge c/d$ and $v\ge c(d\log d)^{-\beta}$. In particular $0<\tau<1$ for large $d$. The diagonal of $\widetilde K$ is $\tau(1-\tau)+\tau\le2\tau$. Its low-degree eigenvalues are those of $K$ multiplied by $\tau$, while all remaining eigenvalues agree. The Gaussian densities thus satisfy, pointwise,
+\begin{equation}\label{eq:zero-density-compare}
+ \frac{dN(0,K)}{dN(0,\widetilde K)}(g)
+ =\tau^{D_r/2}\exp\!\left[\frac12g^T(\widetilde K^{-1}-K^{-1})g\right]
+ \ge\tau^{D_r/2}.
+\end{equation}
+The comparison covariance is only a proof device; it does not replace the prior in the theorem.
+
+\begin{lemma}[Localized interpolation]\label{lem:zero-bump}
+With probability at least $1-e^{-cd}$ over an independent uniform sample with $1\le n\le e^{d/25}$, simultaneously for every labeling, every odd $1\le r\le d/200$, and every $A>0$, there is a function $h$ such that
+\[
+ |h(x)|>A\quad\forall x,\qquad y_i h(X_i)>A\quad\forall i,
+ \qquad \|h\|_{\widetilde K}^2\le C A^2(d/\tau+nd^\beta).
+\]
+\end{lemma}
+\begin{proof}
+For $z\in\mathcal X$ define
+\[
+ b_z(x)=20\int_{2/5}^{9/20}(1-2p)^{\dist(x,z)}\,dp.
+\]
+Then $b_z(z)=1$, $0\le b_z(x)\le(1/5)^{\dist(x,z)}$, and its Walsh coefficients have magnitudes
+\[
+ \widehat b_j=20\int_{2/5}^{9/20}(1-p)^{d-j}p^j\,dp,
+ \qquad \binom dj\widehat b_j\le\frac{20}{d+1},\qquad \widehat b_j\le(3/5)^d.
+\]
+The middle inequality follows by extending to the complete beta integral. Corollary~\ref{cor:lower-spectrum} gives
+\[
+ \lambda_j\ge\frac{c d^{-1-\beta}}{\binom dj}\quad(j\le .49d).
+\]
+Therefore the contribution of these degrees to $\|b_z\|_K^2$ is at most
+\[
+ C d^{1+\beta}\sum_{j\le .49d}\left[\binom dj\widehat b_j\right]^2\le C d^\beta.
+\]
+For $j>.49d$ the integrand increases with $p$ on the integration interval, giving $\widehat b_j\le .55^{d-j}.45^j$. Since every $\lambda_j\ge v/M$, the remaining energy is at most
+\[
+ \frac{2^d}{v}\sum_{j>.49d}\binom dj .55^{2(d-j)}.45^{2j}\le \operatorname{poly}(d)e^{-c_*d},
+\]
+where
+\[
+ c_*=-[\log2+h(.49)+1.02\log(.55)+.98\log(.45)]>.0062.
+\]
+Here $h(t)=-t\log t-(1-t)\log(1-t)$, and the binomial entropy bound applies because the exponent decreases for $j/d\ge .49$.
+
+The low-degree energy increases by at most
+\[
+ \tau^{-1}D_r( .72)^d/v
+\]
+under damping. Uniformly in the stated range, $D_r\le\exp[(h(1/200)+o(1))d]$. Since $h(1/200)<.04$, this term decays exponentially. Hence $A_d:=\|b_z\|_{\widetilde K}^2\le Cd^\beta$.
+
+Let $J(z,w)=\langle b_z,b_w\rangle_{\widetilde K}$. Its normalized Fourier eigenvalues are $\nu_j=\widehat b_j^2/\lambda^{\widetilde K}_j\le .72^d/(\tau v)$. Parseval and Cauchy--Schwarz give
+\[
+ \E_{X,Y}|J(X,Y)|\le\left(\sum_j\binom dj\nu_j^2\right)^{1/2}
+ \le\sqrt{\nu_{\max} A_d}.
+\]
+For every subset $T$ of the sampled indices, even one chosen after seeing the sample,
+\[
+ \left\|\sum_{i\in T}b_{X_i}\right\|_{\widetilde K}^2
+ \le nA_d+\sum_{i\ne j}|J(X_i,X_j)|.
+\]
+The expected cross sum is at most $n(n-1)\sqrt{\nu_{\max}A_d}$. Markov's inequality at threshold $nd^\beta$ has exponentially small failure when $n\le e^{.04d}$, because $\tfrac12\log(1/.72)>.16$. Thus all subsets simultaneously have energy at most $Cnd^\beta$. A union bound over the at most $d$ cutoffs preserves exponentially small failure; the estimates are uniform because $\tau_r\ge c d^{-\beta}$.
+
+Also, with exponentially high probability, every pair of different sample indices has inputs at distance greater than $.2d$: a union bound costs at most $n^2\exp[-d(\log2-h(.2))]$, with $\log2-h(.2)>.19$. This event excludes repetitions. At any input at most one center is within distance $.1d$, and the contribution of all other centers is at most $n(.2)^{.1d}=o(1)$. Thus the bump sum over any selected centers is $1+o(1)$ at a selected center and at most $.2+o(1)$ everywhere else.
+
+For $T=\{i:y_i=-1\}$ take $h=2A(1-2\sum_{i\in T}b_{X_i})$. The preceding bounds give its strict global and training margins. Since $\|1\|_{\widetilde K}^2=1/(\tau\lambda_0)\le Cd/\tau$, the squared triangle inequality gives the asserted energy bound.
+\end{proof}
+
+\begin{corollary}[A strict-margin comparator]\label{lem:comparator}
+On the same sample event, for every labeling and every $a_0>0$ there
+is a function $h$ with $|h(x)|>a_0$ at every input,
+$y_i h(X_i)>a_0$ at every training location, and
+\[
+ \|h\|_K^2\le C a_0^2(d+nd^\beta).
+\]
+\end{corollary}
+\begin{proof}
+Apply Lemma~\ref{lem:zero-bump} at the fixed cutoff $r=1$, for which
+$\tau_1\asymp1$. Since $\widetilde K\preceq K$, its Gaussian energy
+bounds the original energy from above:
+$\|h\|_K^2\le\|h\|_{\widetilde K}^2$. The same event therefore also
+supplies the undamped comparator used below.
+\end{proof}
+
+\begin{proof}[Proof of Lemma~\ref{lem:zero-denominator}]
+Put $t_0=\sqrt{4\tau\log(4M)}$ and $A=a+t_0+1$. Under $N(0,\widetilde K)$ the symmetric event $B=\{\max_x|G(x)|\le t_0\}$ has probability at least $1/2$, by the diagonal bound and a Gaussian union bound. Lemma~\ref{lem:zero-bump} makes $h+B$ a subset of $A_S$. Because $a$ is fixed, $\tau\ge c d^{-\beta}$, and $\beta<1$, we have $A^2\le C_a\tau d$ for large $d$. Hence
+\[
+ \|h\|_{\widetilde K}^2\le C(d^2+n d^{1+\beta}\tau).
+\]
+For a symmetric event $B$, the Gaussian translation formula, symmetry, and $\cosh t\ge1$ imply
+\[
+ \Pp_{\widetilde K}(h+B)\ge \Pp_{\widetilde K}(B)e^{-\|h\|_{\widetilde K}^2/2}.
+\]
+Combine this with \eqref{eq:zero-density-compare} and
+$\log(1/\tau)\le C\log(r+1)$ to obtain
+\eqref{eq:zero-adaptive-cost}. The identical argument without damping
+uses $K$ itself, a buffer of squared size $O(d)$, constant-function
+energy $O(d)$, and bump energy $O(nd^\beta)$, proving
+\eqref{eq:zero-rough-cost}.
+\end{proof}
+
+
+\subsection{Large magnitudes for actual output draws}
+Write $\Phi$ for the standard normal distribution function and
+$\overline\Phi=1-\Phi$.
+\begin{lemma}[A finite Gaussian amplitude estimate]\label{lem:zero-auxiliary}
+Let $G$ be a nondegenerate centered Gaussian vector on a finite set. Suppose an event $A$ implies $|G(x)|>a$ at every coordinate and $-\log\Pp(A)\le D$, with $D\ge1$. Let $T=(x_1,\ldots,x_m)$ be distinct coordinates with $K_T\succeq wI_m$, where $w>0$. Assume $D<m$ and $e^{-2a^2/w}\le1/2$. Set
+\[
+ t=\sqrt{\log(m/D)},\qquad b_0=a+\sqrt w\,t,\qquad c_0=\frac{e^{-3/2}}{\sqrt{2\pi}}.
+\]
+Then
+\begin{align}\label{eq:zero-auxiliary}
+ &\E\!\left[\frac1m\sum_{i=1}^m\mathbf1_{\{|G(x_i)|\le b_0/2\}}\,\middle|\,A\right]\\
+ &\qquad\le \frac2{c_0}(t+1)\frac{D+1}{\sqrt{mD}}+\frac{8w}{b_0^2}+\frac{16wD}{mb_0^2}.\notag
+\end{align}
+The event may impose arbitrary further constraints outside $T$.
+\end{lemma}
+\begin{proof}
+On an enlarged Gaussian space draw $H_T\sim N(0,K_T-wI)$ and $\xi\sim N(0,I_m)$ independently, set $G_T=H_T+\sqrt w\xi$, and draw the other coordinates from their original conditional law given $G_T$. This reproduces the original full law of $G$. The outside coordinates may depend on $\xi$; no independence from them is asserted. The event inclusion alone gives
+\[
+ \Pp(A\mid H_T)\le\prod_{i=1}^m B_{a,w}(H_T(i)),\quad
+ B_{a,w}(h)=\Phi((h-a)/\sqrt w)+\Phi((-h-a)/\sqrt w).
+\]
+The even function $B_{a,w}$ increases with $|h|$. If $q_H=m^{-1}\#\{i:|H_T(i)|\le b_0\}$ and $c_b=-\log B_{a,w}(b_0)$, then
+\[
+ \Pp(q_H\ge q\mid A)\le\min\{1,e^{D-mc_bq}\},\qquad
+ \E[q_H\mid A]\le\frac{D+1}{mc_b}.
+\]
+Now $1-B_{a,w}(b_0)=\overline\Phi(t)-\overline\Phi(t+2a/\sqrt w)\ge\overline\Phi(t)/2$. Indeed, for $t,c\ge0$, changing variables in the Gaussian integral gives
+\[
+ \overline\Phi(t+c)=\int_t^\infty\phi(s+c)\,ds
+ \le e^{-ct-c^2/2}\overline\Phi(t).
+\]
+Apply this with $c=2a/\sqrt w$ and the hypothesis
+$e^{-2a^2/w}\le1/2$. Integrating the normal density over $[t,t+1/(t+1)]$ gives $\overline\Phi(t)\ge c_0 e^{-t^2/2}/(t+1)$. Since $-\log B\ge1-B$, these estimates give the first term on the right of \eqref{eq:zero-auxiliary} as an upper bound for $\E[q_H\mid A]$.
+
+The enlarged posterior has relative entropy exactly $-\log\Pp(A)\le D$ from its prior. Data processing gives the same upper bound for the relative entropy of its $\xi$ marginal from $N(0,I_m)$. The entropy variational inequality and the Gaussian moment generating function imply
+\[
+ \tfrac14\E[\|\xi\|^2\mid A]\le D+\log\E e^{\|\xi\|^2/4}=D+\tfrac m2\log2,
+\]
+so $\E[\|\xi\|^2\mid A]\le4D+2m$. If $|G_T(i)|\le b_0/2$ and $|H_T(i)|>b_0$, then $\sqrt w|\xi_i|>b_0/2$. The averaged Markov inequality completes the proof.
+\end{proof}
+
+
+\begin{lemma}[Posterior output amplitude]\label{lem:zero-amplitude}
+There are constants $b,C>0$, depending only on $L,a$, such that every
+event $A$ implying $|G(x)|>a$ for all inputs and satisfying
+$-\log\mathbb P(A)\le e^{.045d}$ obeys
+\begin{equation}\label{eq:zero-amplitude}
+ \mathbb E\!\left[\mathbb P_x\{|G(x)|\le b d^{(1-\beta)/2}\}
+                    \,\middle|\,A\right]\le C/d
+\end{equation}
+for sufficiently large $d$.
+\end{lemma}
+\begin{proof}
+Increase $-\log\mathbb P(A)$ to a deterministic upper bound $D_0\ge1$
+with $D_0\le e^{.045d}$. Independently draw an auxiliary uniform sample
+$T$ of size $m=\lfloor e^{.05d}\rfloor$. Let $u$ be odd with
+$u/d\to1/50$, and put $w=\tau_u/2\asymp d^{-\beta}$.
+Lemma~\ref{lem:gram-general} and the spectral estimates imply, with
+exponentially high probability over $T$,
+\[
+ Q_{u,TT}\succeq (\tau_u/2)I_m,
+ \qquad K_T\succeq wI_m.
+\]
+This event excludes repetitions. Indeed its error terms decay
+exponentially because
+$ .05<h(1/50)$ and $.10<\log2-h(1/4)$; the far-pair error also decays
+exponentially since $u$ is a fixed positive fraction of $d$.
+
+Lemma~\ref{lem:zero-auxiliary} applies for every such $T$, to the same
+full event $A$. Here $\log(m/D_0)\ge .004d$ for all large $d$, so
+$b_0^2\ge c d^{1-\beta}$. Its first error term is exponentially small;
+the other terms are $O(1/d)$. Fix $b>0$ small enough that
+$b d^{(1-\beta)/2}\le b_0/2$.
+
+Although the enlarged Gaussian splitting depends on $T$, its marginal
+law of the full $G$ is always the original Gaussian law, and its
+conditional marginal is always the same actual posterior $G\mid A$.
+Averaging the lemma over the independent auxiliary sample therefore
+changes its left side exactly into the left side of
+\eqref{eq:zero-amplitude}. Bad auxiliary samples contribute at most
+their exponentially small probability. This proves the claim.
+\end{proof}
+
+On the sample event in Lemma~\ref{lem:zero-denominator}, both its
+adaptive and rough bounds are at most $e^{.045d}$ for large $d$ when
+$n\le e^{.04d}$. For the adaptive bound this uses
+$D_r\le\exp[(h(1/200)+o(1))d]$ and $h(1/200)<.04$.
+Consequently Lemma~\ref{lem:zero-amplitude} applies to the exact
+margin-and-label posterior, uniformly over all labelings on that event.

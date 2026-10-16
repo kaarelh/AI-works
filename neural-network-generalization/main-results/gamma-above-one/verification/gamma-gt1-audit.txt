@@ -1,0 +1,105 @@
+FINITE GAMMA > 1 AUDIT AND TWO IMPROVEMENTS
+Auditor: ChatGPT. Source: Fable, strong-prior-gamma.pdf.
+
+SUMMARY
+The central finite-gamma>1 argument in the attachment is valid. I checked its constants, singular-frame net/QR step, Gaussian shift, noise-robust cloning, truncation, and small-width bounds. I found no fatal mathematical error in Propositions 1--5. The learning conclusion is substantially weaker than its own structural estimate permits: the exponential-in-d width condition can be removed. The frame-net proof can also be replaced with a shorter Gaussian distance argument that removes its rank/log-entropy thresholds. Neither argument reaches gamma=1: the underlying requirement is that the inner-layer noise operator norm N^{(1-gamma)/2} goes to zero.
+
+A. AUDIT OF THE ATTACHMENT
+
+1. Gaussian shift. With q=N^gamma*kappa and a centered Gaussian e, the Cameron--Martin formula used is correct. X=<w*,e>_q is centered normal of variance q(w*). The bound P[X>2 sqrt(q)]<=e^-2<3/20 implies mu(w*+G)>=3/5 exp[-q/2-2sqrt(q)] when mu(G)>=3/4. The q=0 degenerate case is harmless and satisfies the stated lower bound directly.
+
+2. Cloning and robustness. Arbitrary width cloning changes first-layer weighted norm by kC/N<=1 and last-layer weighted norm by N/(kC)<2. Tripling readout gives margin>3/2. The resulting cost is <=d(d+1)C^2+(L+16)C^4 <=Kcl=(d^2+d+L+16)C^4. Padded neurons can have phi(0) nonzero, but their zero outgoing columns make this harmless. For N>=d+1, all noise operator norm events in the proof hold simultaneously with probability>=3/4 under the stated width condition. The first-layer perturbation has norm <=5N^{1-gamma/2}; hidden propagation by the planted network and readout norm sqrt(Kcl/N) give output perturbation <=6L(sqrt(Kcl)+1)^{L-1}N^{(1-gamma)/2}. The displayed N0 suffices. Gaussian shift slack <=4sqrt(Kcl)N^{-gamma/2}+2N^{-gamma}<=1 when N^gamma>=25Kcl, since Kcl>=1. Thus P_f>=exp[-(Kcl+1)N^gamma/2] is valid.
+
+3. Structural frame net. The first/readout chi-square estimates are correct under T1. Inner operator norm bound P[||M||op>3sqrt K]<=exp(-3KN^gamma) follows from T3 with slack. A witness above the spectral cut has rank r<=r*, or else r* singular vectors themselves witness energy>=r*delta^2. A columnwise net of unit vectors need not be orthonormal; the proof correctly repairs it by deterministic QR. Its Frobenius perturbation is <=sqrt(r)*epsilon, hence Gram error <=2sqrt(r)*epsilon+r*epsilon^2. The chosen epsilon ensures invertibility and ||R||op^2<=3/2. Projected Gaussian columns are independent only after this QR step; the attachment does that correctly. The chi-square dimension is rN and the threshold is B_r N^gamma/2. T2 pays both the chi-square dimension and net cardinality. The rank union and all endpoint/operator unions are correctly dominated by 3L(r*+2)exp(-KN^gamma). T4 makes this smaller than exp(-KN^gamma/2).
+
+The occurrence r*<=18K/delta in extracted text must be read as r*<=18K/delta^2, as required by r*=ceil(17K/delta^2). If that missing square is also present visually in the PDF, it is a typo; the intended bound and neighboring epsilon inequalities are valid with delta^2.
+
+4. Spectral truncation. The uniform input error uses only bounded hidden activations and truncated-layer operator norms. Its error <=1/100 and cost <=17KL are valid. Scaling readout by 26/25 restores strict margin>1/2 and increases cost by at most 0.81K, so <=18KL. The L=2 case has no inner truncations and zero error; the displayed positive upper bound remains true, although a separate empty-sum sentence improves exposition.
+
+5. Small-width witnesses. Per-coordinate Gaussian tails give the stated witness under its logarithmic width proviso. Ceiling effects mean that the later informal C<=N*sqrt(3K) is only true up to an additive 1 (or a harmless absolute factor). Proposition 5's symmetric-box change-of-measure lower bound is correct by conditional Jensen. The perturbation estimate and small-ball product cost are conservative but valid.
+
+6. Learning. Counting the entire Boolean class produces a valid but unnecessary exponential-in-d width condition. The rigorous improvement is in section B below; no shell summation is needed. The attachment's use of a fixed numerical posterior tail, rather than arbitrary epsilon, is adequate for its stated slides-style 99.9% conclusion but should be parameterized in a paper.
+
+7. Other caveats. A simulation in which a cut lies below the spectral bulk shows failure of that particular truncation proof at that cut, not that the theorem's quantitative largeness threshold is necessary. The source remark claiming that its threshold is 'real, not proof artifacts' overstates what the experiments establish. The gamma=1 endpoint and citation arXiv:2607.05735 require independent analysis; nothing in the attachment proves them.
+
+B. REMOVE THE EXPONENTIAL-IN-D LEARNING THRESHOLD
+
+Keep all of Fable's original structural constants. The proof of Proposition 2 constructs a measurable event G_K in parameter space with
+  mu(G_K^c)<=3L(r*+2) exp(-K N^gamma)
+under T1--T3. Crucially, this event does not depend on f. For EVERY implementing parameter vector w in G_K, Proposition 3 constructs a same-width representative of the same Boolean function with weighted norm <=18KL.
+
+Define A_K={Boolean g representable at width N: kappa_N(g)<=18KL}.
+Then
+  mu({w implements a function outside A_K}) <= mu(G_K^c).
+The prior conditioned on global margin has the same relative-to-target tail:
+  pi(A_K^c)/pi(f)
+  <=3L(r*+2) exp[-K N^gamma+(Kcl+1)N^gamma/2].
+Set K=Kcl+1. This is <=tau once
+  K N^gamma/2 >=log[3L(r*+2)/tau].
+The uniform low-norm counting theorem in the earlier paper gives
+  log |A_K| <= Q_L(d,18KL+1).
+Take tau=epsilon/2 and apply the finite relevant-set lemma with a=epsilon/2. Thus
+  n >=(2/epsilon)[Q_L(d,18KL+1)+log(1/delta_conf)]
+suffices for posterior expected error <=epsilon with sample probability >=1-delta_conf. All width requirements are polynomial in d,C,log(1/epsilon) at fixed L and gamma>1; the sample polynomial Q is independent of width and gamma. This argument controls the tail directly in parameter space and avoids counting any high-complexity functions.
+
+C. SHORTER STRUCTURAL LEMMA VIA GAUSSIAN DISTANCE
+
+Lemma. Let M be N by N with iid N(0,sigma^2) entries. Suppose N>=2 and a>=6sigma sqrt N. For the hard spectral truncation M_{>a}, and any b>0,
+  P[||M_{>a}||_F^2>b] <=(1/2) exp[-b/(8sigma^2)].
+
+Proof. Let C={X:||X||op<=a/2}. The standard Gaussian operator norm tail implies
+  P[M in C]>=1-exp(-N/2)>1/2.
+The Frobenius distance to C is
+  dist_F(M,C)^2=sum_i (s_i(M)-a/2)_+^2.
+To verify the equality, orthogonal invariance and singular value comparison reduce minimization to independently clipping each singular value to a/2; equivalently use the Hoffman--Wielandt singular-value inequality and the clipped SVD achieving equality.
+For s_i>a one has s_i-a/2>s_i/2, so
+  dist_F(M,C)^2 >=(1/4)||M_{>a}||_F^2.
+The standard Gaussian isoperimetric/enlargement inequality, applied to the vector of all N^2 entries divided by sigma, yields
+  P[dist_F(M,C)>t] <=1-Phi(t/sigma)
+when C has measure at least 1/2. Finally 1-Phi(u)<=(1/2)e^{-u^2/2} for u>=0. Set t=sqrt(b)/2. This proves the lemma.
+
+This isoperimetric input should be explicitly stated/cited; it is a standard Gaussian theorem and stronger than just concentration around the mean. One must not assert that zero distance implies zero mean distance.
+
+Apply the lemma with sigma=N^{-gamma/2}, b=17K, and
+  Omega=sqrt(17K),
+  a=[100L(Omega+1)^{L-2}]^{-1}.
+Assume
+  N>=2,
+  N^{gamma-1}>=d+1,
+  a^2 N^{gamma-1}>=36.
+The first/readout cost bounds >9K have individual probability <=exp[-(9/4)K N^gamma]. The inner cut energy bounds >17K have individual probability <=(1/2)exp[-(17/8)K N^gamma]. Consequently, the global event G_K on which both endpoint costs are <=9K and all cut energies are <=17K satisfies
+  mu(G_K^c)<=L exp[-2K N^gamma].
+There is no need for a separate original-matrix operator norm bound: after cutting, the retained operator norm is <=sqrt(17K)=Omega. The truncation comparison uses
+  err_s <=Omega err_{s-1}+a sqrt N,
+  |output error| <=3sqrt K*a sum_{j=0}^{L-3}Omega^j
+                  <=a L(Omega+1)^{L-2}=1/100.
+For L=2 the error is zero. Cut cost<=17KL and readout rescaling 26/25 gives an implementation of cost<=18KL, exactly as before.
+
+With K=Kcl+1 and cloned target mass>=exp[-K N^gamma/2], the relevant-set tail is now
+  pi(A_K^c)/pi(f)<=L exp[-(3/2)K N^gamma].
+The sufficient tail condition becomes
+  K N^gamma >=(2/3)log(2L/epsilon).
+Thus one clean large-width theorem uses the same sample bound above and the following explicit width conditions:
+  N>=N0(d,C,L,gamma), N>=2,
+  N^{gamma-1}>=max{d+1,36[100L(sqrt(17K)+1)^{L-2}]^2},
+  K N^gamma >=(2/3)log(2L/epsilon).
+All are polynomial-width requirements for fixed gamma>1 and fixed L. The polynomial in the SAMPLE bound is independent of gamma.
+
+D. REMOVE THE SMALL-WIDTH LOGARITHMIC PROVISO
+
+Let D=N(d+2)+(L-2)N^2 and K=max{1,kappabar_N(f)}. Then q=N^gamma*kappa_N(W) is chi-square_D. Chernoff with parameter 1/4 gives
+  P[q>=4K N^gamma+2D log2+4] <=exp[-K N^gamma-1]
+                                           <P_f.
+Hence some implementing w has
+  kappa_N(w)<=4K+(2Dlog2+4)/N^gamma.
+If N is below the large-width threshold in section C, then N is polynomially bounded by d,K for fixed gamma>1,L. Thus this is polynomial in d,K, and applying the earlier compression theorem proves C_L(f)<=poly_{L,gamma}(d,K) at EVERY width with P_f>0, without any logarithmic proviso. If N is above that threshold, use section C (its bad-event bound is <P_f automatically for N>=2,K>=1 after enlarging width by a harmless L-dependent floor).
+
+The reverse circuit-to-mass direction is valid for every N>=C: use robust cloning above N0; below N0, use the attachment's symmetric-box bound. This yields polynomial equivalence with gamma-dependent degrees at every width N>=C, with no additional proviso.
+
+E. OPTIONAL ALL-WIDTH LEARNING FORMULATION
+
+There is also a uniform-all-width learning theorem for fixed gamma>1,L with gamma-dependent polynomial degrees and a polynomial dependence on log(1/epsilon) inside the sample bound. Let H(d,C,L,gamma,epsilon) be the explicit large-width threshold in section C (including N0). For N>=H use the relevant-set theorem above. For C<=N<H use the symmetric-box lower bound for P_f, whose logarithm is at most
+  (1/2)Kcl H^gamma +6L^2(d+1)H^2 log[4L max{H,d+1}(3C+1)].
+This is bounded by poly_{L,gamma}(d,C,log(1/epsilon)). Since pi(f)>=P_f, the generic realizable Bayesian bound then applies: for any a>0, the expectation over samples of unnormalized surviving mass of hypotheses with err>a is <=e^{-an}; Markov and posterior denominator>=pi(f) imply posterior risk<=a+tau with probability>=1-delta_conf whenever
+  n>=a^{-1}[log(1/pi(f))+log(1/(tau*delta_conf))].
+Take a=tau=epsilon/2. This is an all-width sample bound polynomial in d,C,1/epsilon,log(1/delta_conf) for every fixed gamma>1,L. Unlike the large-width result, its polynomial degree can depend on gamma.

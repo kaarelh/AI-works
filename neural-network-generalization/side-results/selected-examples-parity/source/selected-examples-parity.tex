@@ -1,0 +1,404 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Learning parity from selected examples under a globally separated neural kernel},pdfauthor={Dmitry Vaintrob; Kaarel Hanni; OpenAI Codex}}
+\setlength{\emergencystretch}{2em}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}\newcommand{\Pp}{\mathbb P}
+\newcommand{\normK}[1]{\lVert #1\rVert_K}
+\title{Learning parity from selected examples\\under a globally separated neural kernel}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex}
+\date{October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We construct selected training sets on which a globally margin-conditioned
+neural Gaussian prior learns sparse parity using $d^{O(\sqrt{k})}$ examples.
+For any fixed error tolerance, every minimum-energy compatible field has
+that error or less, and all such fields have the same signs. The construction
+uses alternating interpolation on central Hamming layers and a general
+sparsification lemma for convex margin minimizers. It also produces actual
+global minimizers with very large amplitudes at correctly classified inputs.
+These are deliberately selected examples, not independent uniform samples.
+The result does not settle the proposed $\exp\{\Omega(k\log(ed/k))\}$ lower
+bound for uniform random training; it shows that typical sampling is essential
+to such a bound. It suffices that $d\ge(C_Lk)^{C_Lk}$.
+\end{abstract}
+
+\section{Model and result}
+Let $\mathcal X_d=\{-1,1\}^d$ have uniform probability measure. Fix
+$L\ge2$, define $\Psi(t)=2\arcsin(t)/\pi$, and put
+\[
+ F=\Psi^{\circ(L-1)},\qquad
+ K_d(x,y)=F\!\left(\frac{1+x\cdot y}{d+1}\right).
+\]
+This covariance is strictly positive definite and has diagonal one. For a
+real field $z$ on the cube, its energy is
+\[
+ \normK z^2=z^{\mathsf T}K_d^{-1}z.
+\]
+The factor $1/2$ in Gaussian rate functions does not affect the minimizers.
+The unit margin entails no loss of generality: multiplying fields by a
+fixed margin $a>0$ multiplies all energies by $a^2$ and preserves signs.
+
+The target is $f(x)=\prod_{i=1}^k x_i$. Given a finite set of training
+inputs $T$, consider
+\begin{equation}\label{eq:global}
+ \min_z\normK z^2\quad\text{subject to}\quad
+ |z(x)|\ge1\ (x\in\mathcal X_d),\qquad f(x)z(x)\ge1\ (x\in T).
+\end{equation}
+This is a global separation constraint at \emph{every} input. A minimizer's
+error is $\Pp_x\{f(x)z(x)<0\}$.
+
+\begin{theorem}[Selected examples]\label{thm:main}
+Fix $L\ge2$ and $\delta\in(0,1/2)$. For every sufficiently large odd $k$
+and every $d\ge(C_Lk)^{C_Lk}$, there is a parity-labeled training set
+$T\subseteq\mathcal X_d$ with
+\[
+ |T|\le d^{\,2\sqrt{k/\delta}+9}
+\]
+for which all minimizers of~\eqref{eq:global} have the same sign function
+and error at most $\delta$. At a correctly classified input, every such
+minimizer has amplitude at least
+\[
+ \exp\{c_\delta\sqrt{k}\log k\}.
+\]
+The positive constant $c_\delta$ is independent of $k,d$; $C_L$ depends
+only on $L$, and the threshold on $k$ may depend on $\delta$.
+\end{theorem}
+
+The explicit dimension condition permits growing $k$ up to a constant
+multiple of $\log d/\log\log d$. The training set is chosen
+using a contact measure of a convex margin problem. It is not distributed
+as independent uniform examples. Nevertheless, for fixed $k$ the displayed
+number of examples is a vanishing fraction of the $2^d$ inputs. For growing
+$k$, its exponent in $d$ is sublinear in $k$.
+
+\begin{corollary}[Actual label probabilities]\label{cor:gp}
+For the selected set in Theorem~\ref{thm:main}, let $Z_t$ be Gaussian with
+covariance $tK_d$, conditioned on $|Z_t(x)|>1$ at every input and on the
+correct training signs. As $t\downarrow0$, the posterior probability of
+the common minimizing sign tends to one at every input. Consequently,
+\[
+ \lim_{t\downarrow0}\Pp_x\left\{
+   \Pp\{f(x)Z_t(x)>0\mid\text{conditioning}\}\le2/3\right\}\le\delta.
+\]
+\end{corollary}
+
+The statement concerns sign probabilities, not the Gaussian posterior
+mean. The variational problem~\eqref{eq:global} is also the one that arises
+in the width-first subcritical neural regime $0<\gamma<1$. The proofs below
+are entirely finite dimensional and use its explicit kernel; they do not
+establish or require a neural width-limit theorem.
+
+\section{Fixed-degree eigenvalues}
+For $S\subseteq[d]$, write $\chi_S(x)=\prod_{i\in S}x_i$. Let
+$\lambda_j(d)$ denote the eigenvalue on degree-$j$ characters of the
+\emph{probability-normalized} kernel operator $2^{-d}K_d$. Thus
+\begin{equation}\label{eq:walshenergy}
+ \normK z^2=\sum_{S\subseteq[d]}
+       \frac{\widehat z(S)^2}{\lambda_{|S|}(d)}.
+\end{equation}
+
+\begin{lemma}\label{lem:spectrum}
+The matrix $K_d$ is strictly positive definite. For every fixed positive
+odd integer $j$,
+\begin{equation}\label{eq:spectralasymptotic}
+ \lambda_j(d)=F^{(j)}(0)(d+1)^{-j}+O_j(d^{-j-1}),
+ \qquad F^{(j)}(0)>0.
+\end{equation}
+The implicit constant may depend on $L,j$. Moreover, for a constant $C_L$
+and $B_k=(C_Lk)^{C_Lk}$, for every $d\ge k$ and odd $1\le j\le k$,
+\begin{equation}\label{eq:uniformspectrum}
+ B_k^{-1}d^{-j}\le\lambda_j(d)\le B_kd^{-j}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+The odd Taylor series of $\Psi$ has strictly positive coefficients at
+every odd degree. Composition preserves this property. Expand
+$F(t)=\sum_{m\text{ odd}}c_mt^m$. The polynomial kernel
+$((1+x\cdot y)/(d+1))^m$ has nonnegative Walsh eigenvalues. For any
+character of reduced degree $j$, the term $m=j$ if $j$ is odd, and the
+term $m=j+1$ if $j$ is even, gives a strictly positive coefficient:
+in the latter case use the additional constant coordinate once. This
+proves strict positive definiteness.
+
+For odd $j$, write
+\[
+ \lambda_j(d)=\E\left[
+ F\!\left(\frac{1+\sum_{i=1}^d X_i}{d+1}\right)
+ \prod_{i=1}^jX_i\right]
+\]
+with independent uniform signs $X_i$. Taylor-expand $F$ through degree
+$2j+1$ on $[-1/2,1/2]$. The complementary event has exponentially small
+probability; both $F$ and the fixed Taylor polynomial are bounded on
+$[-1,1]$. Oddness makes the remainder $O_j(|t|^{2j+3})$, so it contributes
+$O_j(d^{-j-3/2})$, by the fixed moments of a Rademacher sum. Terms of
+degree less than $j$ vanish. The degree-$j$ term contributes
+$c_jj!/(d+1)^j$. For a fixed $m>j$, the signed moment of
+$(1+\sum X_i)^m$ is $O_j(d^{(m-j)/2})$: each of the specified $j$
+coordinates must occur an odd number of times, while other coordinates
+must occur an even number of times. Since the next odd $m$ is $j+2$,
+all remaining Taylor terms are $O_j(d^{-j-1})$.
+
+For the uniform bounds, every Taylor coefficient of $F$ is at most one,
+because they are nonnegative and sum to $F(1)=1$. At odd degrees,
+$c_j(F)\ge(2/\pi)^{L-2}c_j(\Psi)\ge c_Lj^{-3/2}$, by keeping the
+linear term in each outer composition. The degree-$j$ term alone proves
+the lower bound in~\eqref{eq:uniformspectrum}, absorbing $2^j$ and the
+fixed constants into $B_k$.
+
+For the upper bound, Taylor-expand through degree $2k+1$. For each odd
+$m\le2k+1$ with $m\ge j$, the preceding signed-moment count is bounded
+by $(Ck)^{Ck}d^{(m-j)/2}$: at most $(m-j)/2$ distinct unspecified
+coordinates can occur, and all multiplicities and orderings cost at most
+$(Ck)^{Ck}$. Summing the finitely many terms gives $B_kd^{-j}$. On
+$|t|\le1/2$, oddness and the coefficient bound give remainder at most
+$2|t|^{2k+3}$; its expectation is at most
+$(Ck)^{k+3/2}d^{-k-3/2}$. On the complementary event the error is at
+most $Ck$, with probability at most $Ce^{-cd}$. Finally,
+$\sup_{d>0}d^ke^{-cd}\le(Ck)^k$. These errors are absorbed into
+$B_kd^{-j}$, after increasing $C_L$.
+\end{proof}
+
+\section{A globally separated convex minimizer}
+Choose $r$ to be the smallest integer satisfying
+\begin{equation}\label{eq:rchoice}
+ r\ge\sqrt{k/\delta},\qquad r\equiv k\pmod4.
+\end{equation}
+For sufficiently large odd $k$, $r$ is odd and $r<k$. Set
+$h_0=(k-r)/2$, which is even. If $H(x)$ is the number of negative active
+coordinates, let
+\[
+ C=\{x:h_0\le H(x)\le h_0+r\},
+\]
+including every nuisance-coordinate assignment. Chebyshev's inequality,
+using $\operatorname{Var}(H)=k/4$, gives
+\begin{equation}\label{eq:mass}
+ \Pp(C^c)=\Pp\{|H-k/2|>r/2\}\le k/r^2\le\delta.
+\end{equation}
+Initially impose only the convex constraints on $C$:
+\begin{equation}\label{eq:convex}
+ z_d=\arg\min_z\{\normK z^2:f(x)z(x)\ge1\text{ for }x\in C\}.
+\end{equation}
+
+Let $p_r$ be the degree-$r$ polynomial interpolating
+$p_r(i)=(-1)^i$, $0\le i\le r$, and define
+\begin{equation}\label{eq:interpolant}
+ P(x)=(-1)^{h_0}p_r(H(x)-h_0).
+\end{equation}
+It has degree $r$ on the active cube and training margins exactly one.
+
+\begin{lemma}\label{lem:interpolant}
+There is a constant $C_L$ such that, for $B_k=(C_Lk)^{C_Lk}$ and
+all $d\ge k$,
+\[
+ \max_x|z_d(x)-P(x)|\le B_k/d,\qquad
+ E_d:=\normK{z_d}^2\le B_kd^r.
+\]
+Consequently, for $d\ge2B_k$, $z_d$ is globally separated, is the unique
+minimizer of~\eqref{eq:global} with $T=C$, and has error at most $\delta$.
+\end{lemma}
+\begin{proof}
+Strict convexity gives uniqueness in~\eqref{eq:convex}. Invariance under
+nuisance flips makes $z_d$ independent of nuisance coordinates; active
+permutations make it a function of $H$. Since $k$ is odd and the layer
+interval is symmetric, the operation $z(x)\mapsto-z(-x_{[k]},x_{[d]\setminus[k]})$
+also preserves the problem. Thus $z_d$ is odd under $H\mapsto k-H$ and
+has only odd active Walsh levels. The same symmetry holds for $P$, by
+uniqueness of interpolation.
+
+In this proof, $B$ denotes a quantity bounded by $(C_Lk)^{C_Lk}$; the
+constant $C_L$ can increase a fixed number of times. Products, fixed powers,
+and factors such as $k!$ or $2^k$ are absorbed into this convention.
+Use the fixed orthonormal symmetric active Walsh basis
+\[
+ \phi_j=\binom kj^{-1/2}\sum_{|S|=j,\ S\subseteq[k]}\chi_S,
+ \qquad j\text{ odd}.
+\]
+These are polynomials of degree $j$ in $H$. Their leading coefficients
+and $\max_H|P(H)|$ are bounded by $B$: for the latter, use
+$p_r(t)=\sum_{j=0}^r(-2)^j\binom tj$ and $|t|\le k$.
+Write $c_j(z)$ for the coefficient of $\phi_j$.
+By~\eqref{eq:uniformspectrum}, the comparator $P$ gives
+\[
+ \normK{z_d}^2\le\normK P^2\le Bd^r.
+\]
+Let $u_d$ be the degree-at-most-$r$ part of $z_d$, and $v_d=z_d-u_d$.
+Since the first possible higher degree is $r+2$, the same spectral bounds
+and $\|v_d\|_\infty\le2^{k/2}\|v_d\|_2$ give
+\begin{equation}\label{eq:highpart}
+ \|v_d\|_\infty\le B/d.
+\end{equation}
+
+A direct coefficient comparison is stronger than merely bounding the
+energy of $u_d$. Namely,
+\begin{align*}
+ |c_r(z_d)|^2
+ &\le\lambda_r(d)\normK P^2\\
+ &=|c_r(P)|^2+
+   \sum_{j<r,\ j\text{ odd}}
+        \frac{\lambda_r(d)}{\lambda_j(d)}|c_j(P)|^2
+ \le |c_r(P)|^2+B/d^2.
+\end{align*}
+Consequently
+\begin{equation}\label{eq:leadbound}
+ |\operatorname{lead}(u_d)|\le|\operatorname{lead}(P)|+B/d.
+\end{equation}
+Put $y_{i,d}=(-1)^{h_0+i}z_d(h_0+i)\ge1$. Interpolation at consecutive
+nodes and~\eqref{eq:highpart} give
+\[
+ \operatorname{lead}(u_d)=
+ (-1)^{h_0+r}\sum_{i=0}^r\frac{y_{i,d}}{i!(r-i)!}+e_d,
+ \qquad |e_d|\le B/d.
+\]
+All these weights are positive, and
+$|\operatorname{lead}(P)|=\sum_i1/[i!(r-i)!]$. Thus
+\eqref{eq:leadbound} implies
+\[
+ \sum_{i=0}^r\frac{y_{i,d}-1}{i!(r-i)!}\le B/d.
+\]
+Each summand is nonnegative and each weight is at least $1/r!$, so
+$0\le y_{i,d}-1\le B/d$ for every $i$. The Lagrange interpolation
+operator from these $r+1$ consecutive nodes to all $H\in\{0,\ldots,k\}$
+has norm at most $(r+1)k^r\le B$: each denominator is a nonzero integer
+and each numerator has $r$ factors of magnitude at most $k$.
+Combining this with~\eqref{eq:highpart} proves
+$\|z_d-P\|_\infty\le B/d$.
+
+There is a root of $p_r$ in each interval $(i,i+1)$, $0\le i<r$;
+these exhaust its roots. Its absolute value increases as one moves
+outward from $[0,r]$. Newton interpolation gives
+$p_r(r+1)=1-2^{r+1}$ for odd $r$, and reflection gives the same
+magnitude at $t=-1$. Consequently $|P|\ge2^{r+1}-1$ on every integer
+layer outside $C$. If $d\ge2B_k$, the uniform difference is at most
+$1/2$, so $|z_d|>1$ outside $C$; on $C$, its prescribed margins are
+already at least one. Thus $z_d$ is feasible for the global problem.
+Since~\eqref{eq:convex} is a relaxation, it is the unique global minimizer
+as well. Equation~\eqref{eq:mass} bounds its error.
+\end{proof}
+
+\begin{lemma}[A large correct amplitude]\label{lem:amplitude}
+At the active input with $H=0$, the target and $P$ are positive and
+\[
+ P(0)\ge\left(\frac{k-r}{r}\right)^r.
+\]
+Under the dimension condition $d\ge2B_k$ from
+Lemma~\ref{lem:interpolant}, $z_d(0)\ge P(0)/2$.
+\end{lemma}
+\begin{proof}
+The leading coefficient of $p_r$ is $(-2)^r/r!$. All roots of $P$,
+viewed as a polynomial in $H$, lie between $h_0$ and $h_0+r$. Since
+$h_0$ is even and $r$ is odd, $P(0)>0$. Therefore
+\[
+ P(0)\ge\frac{2^r h_0^r}{r!}
+       \ge\left(\frac{2h_0}{r}\right)^r.
+\]
+The final claim follows from Lemma~\ref{lem:interpolant}.
+\end{proof}
+
+\section{Sparsifying the selected examples}
+The next lemma applies to any finite positive definite covariance. It
+controls all global minimizers, even when the globally separated feasible
+set is nonconvex.
+
+\begin{lemma}[Sparse teaching by contact sampling]\label{lem:teaching}
+Let $K(x,x)\le1$. Suppose $z_*$ is the convex minimum-energy solution of
+unit-margin constraints on a set $C$ and also satisfies $|z_*|\ge1$
+everywhere. Write $E=\normK{z_*}^2$. For every positive integer $n$,
+there is a multiset $T$ of $n$ contact points in $C$ such that every
+minimum-energy globally separated field $z_T$ consistent with their
+prescribed labels satisfies
+\begin{equation}\label{eq:teachingdistance}
+ \normK{z_T-z_*}\le\frac{2E}{\sqrt n},\qquad
+ \max_x|z_T(x)-z_*(x)|\le\frac{2E}{\sqrt n}.
+\end{equation}
+Repeated points may be discarded.
+\end{lemma}
+\begin{proof}
+Convex duality and complementary slackness give multipliers $\mu_x\ge0$
+supported on contacts, with
+\[
+ z_*=Kh,\qquad h_x=f(x)\mu_x,\qquad
+ \sum_x\mu_x=E,\qquad h^{\mathsf T}Kh=E.
+\]
+Draw $X_1,\ldots,X_n$ independently with law $\mu/E$, and set
+\[
+ h_T=\frac En\sum_{i=1}^nf(X_i)e_{X_i}.
+\]
+It is a feasible dual vector for the convex margin problem on $T$, with
+objective $D_T=2E-h_T^{\mathsf T}Kh_T$. Independence and the diagonal
+bound imply
+\[
+ \E[h_T^{\mathsf T}Kh_T]\le(1-1/n)E+E^2/n.
+\]
+Some realization therefore has $D_T\ge E-E^2/n$. Let $v_T$ be the
+convex minimum-norm field satisfying just the training margins on this
+realization, and let $E_T=\normK{v_T}^2$. Weak duality gives
+$E_T\ge E-E^2/n$.
+
+Both $z_*$ and every globally separated minimizer $z_T$ are feasible for
+this convex problem. Also $\normK{z_T}^2\le E$, because $z_*$ is a
+feasible globally separated comparator. The Hilbert projection inequality
+at $v_T$ consequently gives
+\[
+ \normK{z_*-v_T}^2\le E-E_T,\qquad
+ \normK{z_T-v_T}^2\le E-E_T.
+\]
+The triangle inequality proves the first claim in~\eqref{eq:teachingdistance}.
+The reproducing property and $K(x,x)\le1$ prove the second.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:main}]
+Increase $C_L$ in the theorem so that
+Lemma~\ref{lem:interpolant} applies for every permitted $d$. Use Lemma~\ref{lem:teaching} with
+$z_*=z_d$ and $n=\lceil16E_d^2\rceil$. Every global minimizer on the
+resulting selected set is within $1/2$ of $z_d$ at every input. Since
+$|z_d|\ge1$, all have its sign function, hence error at most $\delta$.
+At $H=0$ their amplitude is at least $P(0)/2-1/2$, which is
+$\exp\{c_\delta\sqrt{k}\log k\}$ for sufficiently large $k$ by
+Lemma~\ref{lem:amplitude} and~\eqref{eq:rchoice}.
+
+The energy bound gives $n\le 17B_k^2d^{2r}$. Increasing $C_L$ once
+more ensures that the dimension condition absorbs $17B_k^2$ into one
+power of $d$. Thus $|T|\le n\le d^{2r+1}$.
+Since $r<\sqrt{k/\delta}+4$, this is bounded by the power stated in
+the theorem.
+\end{proof}
+
+\begin{proof}[Proof of Corollary~\ref{cor:gp}]
+There are finitely many sign orthants. The closed feasible set in each
+compatible orthant has a minimum Gaussian rate $\normK z^2/2$, by
+coercivity. All global minimizers have the common sign from
+Theorem~\ref{thm:main}, so every other compatible orthant has a strictly
+larger minimum rate. Taking the minimum of finitely many positive gaps
+still gives a positive gap. Strict inequalities in the conditioning do
+not change the rate infimum: scaling a closed feasible field by
+$1+\varepsilon$ makes every absolute margin strict. Elementary
+finite-dimensional Gaussian Laplace bounds therefore make the total
+posterior probability of the other orthants tend to zero. The cube is
+finite, so this gives the stated pointwise probability and confidence
+conclusion.
+\end{proof}
+
+\section{Why this does not answer the random-sample problem}
+The contact sampling in Lemma~\ref{lem:teaching} selects only inputs where
+the dense convex minimizer already agrees with parity. Uniform sampling
+also produces examples in its error region. Then that field is no longer
+feasible, and the upper energy bound $\normK{z_T}^2\le E$ used in the
+sparsification proof fails. Reweighting uniform observations can approximate
+the contact dual, but it cannot discard those conflicting constraints.
+
+Accordingly, the theorem rules out a $d^{\Omega(k)}$ requirement that is
+claimed for \emph{every} parity-consistent training set. It neither proves
+nor disproves the natural lower bound for independent uniform examples.
+It also rules out a correct-amplitude ceiling derived solely from global
+optimality and the contact equations. Any such control in the uniform
+sampling problem must use its probabilistic structure.
+\end{document}

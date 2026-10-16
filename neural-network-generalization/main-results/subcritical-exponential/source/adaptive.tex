@@ -1,0 +1,165 @@
+\section{Clipped parity and adaptive spectral cutoffs}
+\label{sec:adaptive}
+All function norms in this section use the uniform cube probability
+measure. Write $\operatorname{clip}(t)=\max\{-1,\min\{1,t\}\}$ and
+$\Delta=\sum_{j=1}^d(I-\mathrm{flip}_j)/2$. Thus $\Delta$ has eigenvalue
+$j$ on Fourier level $j$.
+
+\begin{lemma}[Clipped parity correlation]\label{lem:clipped-parity}
+For any real cube function $P$ and any $b>0$,
+\begin{equation}\label{eq:laplacian-clip}
+ \left|\mathbb E f\operatorname{clip}(P/b)\right|
+ \le\frac{\|\Delta P\|_1}{bd}.
+\end{equation}
+In particular, if $P$ has degree at most $u$, the right side is at most
+$u\|P\|_2/(bd)$. If $z=P+t$ and $|z|\ge b$ everywhere, then
+\begin{equation}\label{eq:margin-clip}
+ \left|\mathbb E f\operatorname{sign}z\right|
+ \le\frac{u\|P\|_2}{bd}+\frac{\|t\|_2}{b}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Let $R$ flip one uniformly chosen coordinate, put $q=fP$, and set
+$e=2f\Delta P/d$. Since $f$ changes sign along every edge,
+$Rq=-q+e$. Put $A=\mathbb E|q+b|$ and $B=\mathbb E|q-b|$.
+Jensen's inequality and invariance of the uniform measure give
+$\mathbb E|Rq+b|\le A$, whereas the triangle inequality gives
+$\mathbb E|Rq+b|\ge B-\|e\|_1$. Replacing $b$ by $-b$ gives the
+opposite inequality, so $|A-B|\le\|e\|_1$. The identity
+\[
+ \operatorname{clip}(q/b)=\frac{|q+b|-|q-b|}{2b}
+\]
+proves \eqref{eq:laplacian-clip}. For a degree-$u$ function,
+$\|\Delta P\|_1\le\|\Delta P\|_2\le u\|P\|_2$.
+Finally, $\operatorname{sign}z=\operatorname{clip}(z/b)$ under the
+margin assumption. Clipping is $1$-Lipschitz, so its difference from
+$\operatorname{clip}(P/b)$ has mean absolute value at most
+$\|t\|_1/b\le\|t\|_2/b$.
+\end{proof}
+
+The following elementary polynomial-threshold obstruction is due to
+Aspnes, Beigel, Furst, and Rudich~\cite{ABFR}; we include its proof.
+\begin{lemma}[Polynomial thresholds cannot approximate parity]
+\label{lem:ptf-parity}
+For $0\le s<d$, every degree-$s$ polynomial threshold, with a fixed common convention
+for zero ties, has parity error at least
+\begin{equation}\label{eq:ptf-parity}
+ 2^{-d}\sum_{j=0}^{\lfloor(d-s-1)/2\rfloor}\binom dj.
+\end{equation}
+This lower bound tends to $1/2$ whenever $s=o(\sqrt d)$.
+\end{lemma}
+\begin{proof}
+A sufficiently small constant perturbation resolves any zero ties
+without changing the specified threshold classifier. Thus suppose
+$P$ has no zeros. Put $t=\lfloor(d-s-1)/2\rfloor$. If its error set
+had fewer than $\sum_{j\le t}\binom dj$ points, a nonzero polynomial
+$Q$ of degree at most $t$ could be chosen to vanish on every error.
+The function $fPQ^2$ would then be nonnegative everywhere and positive
+somewhere. But $PQ^2$, after multilinear reduction, has degree at most
+$s+2t<d$, so its parity Fourier coefficient
+$\mathbb E fPQ^2$ is zero, a contradiction. This proves
+\eqref{eq:ptf-parity}. The last assertion follows from the central
+binomial bound $\max_j2^{-d}\binom dj=O(d^{-1/2})$.
+\end{proof}
+
+\begin{lemma}[The small-sample cutoff]\label{lem:small-cutoff}
+Let $s$ be an odd integer with $s\sim d^{1/3}$. For every fixed
+$C,m>0$, uniformly over $0\le n\le\exp[(\log(d+1))^3]$,
+\[
+ C d^m(1+n)\lambda_{s+1}=o(1).
+\]
+Consequently, a globally margin-$a$ function $z$ satisfying
+$\|z\|_K^2\le C d^m(1+n)$ has parity error at least $1/2-o(1)$,
+uniformly over such functions and sample sizes. Here
+$\|z\|_K^2=z^{\mathsf T}K^{-1}z$.
+\end{lemma}
+\begin{proof}
+Lemma~\ref{lem:sharp} gives
+$\lambda_{s+1}\le C s^{-1-\beta}/\binom{d+1}{s+2}$.
+The logarithm of this binomial coefficient is of order
+$d^{1/3}\log d$, which dominates $(\log(d+1))^3+O(\log d)$.
+For $P=z_{\le s}$, spectral orthogonality therefore gives
+$\|z-P\|_2^2\le\lambda_{s+1}\|z\|_K^2=o(1)$.
+Because $|z|\ge a$, the signs of $z$ and $P$ can disagree on at
+most $\|z-P\|_2^2/a^2=o(1)$ of the cube. Apply
+Lemma~\ref{lem:ptf-parity} with $s=o(\sqrt d)$.
+\end{proof}
+
+For an odd integer $r$, retain the notation $D_r,\tau_r,s_{2,r}$
+from \eqref{eq:paired} and Lemma~\ref{lem:sharp}, and write
+$\ell_r=\lambda_{r+1}$.
+
+\begin{lemma}[Adaptive cutoff and a short additional band]
+\label{lem:adaptive-cutoff}
+Fix $A\ge1$, $\delta>0$, and $0<\alpha<1/256$.
+There exists $c>0$ such that the following holds uniformly for
+\[
+ \exp[(\log(d+1))^3]\le n\le e^{cd}
+\]
+as $d\to\infty$. Let $r$ be the largest odd integer satisfying
+$A D_r\log(2D_r)\le n$, and put
+\[
+ \rho=\frac r{d+1},\qquad H_r=\log(e/\rho),\qquad
+ u=r+2\lceil10\log(d+1)\rceil.
+\]
+Then
+\begin{align}
+ &\tfrac14(\log d)^2\le r\le\alpha d,\quad
+ u/r=1+o(1),\quad u\le d/64,\label{eq:adaptive-range}\\
+ &n<A D_{r+2}\log(2D_{r+2}),\qquad
+ \frac{n\ell_r}{\tau_r}\le C_L A H_r,\label{eq:adaptive-ell}\\
+ &\frac{nd\,s_{2,r}}{\tau_r^2}\le C_L A\rho^{-1}H_r,
+ \qquad \frac{\tau_u}{\tau_r}=1+o(1),
+ \qquad n\ell_u\le d^{-10}\tau_r.\label{eq:adaptive-tail}
+\end{align}
+Moreover, with probability at least $1-\delta$,
+\begin{equation}\label{eq:adaptive-gram}
+ \|(K_{>r})_{SS}\|_{\mathrm{op}}\le b_r\tau_r,
+ \qquad b_r=C_{L,\delta}
+     \left[1+\sqrt{A\rho^{-1}H_r}+A H_r\right].
+\end{equation}
+The estimates and the probability are uniform over each specified
+$n$ in the range; no simultaneous event over all $n$ is asserted.
+\end{lemma}
+\begin{proof}
+The bound $D_r\le (ed/r)^r$ for $r\le d/2$, with an immaterial
+constant enlargement at bounded $r$, shows that the sampling threshold
+is met by an odd integer just above $(\log d)^2/4$.
+Conversely, binomial entropy bounds show that $D_r>e^{cd}$ whenever
+$r>\alpha d$, if $c$ is sufficiently small. Maximality of $r$ then
+gives the next-threshold inequality in \eqref{eq:adaptive-ell}.
+Using \eqref{eq:dimensionratios} and
+$\log(2D_{r+2})\le C r\log(e(d+1)/r)$ in that inequality yields
+\[
+ n\le C A\binom{d+1}{r+2}rH_r.
+\]
+Equations \eqref{eq:ratio} and \eqref{eq:secondmoment} now prove
+the bounds involving $\ell_r$ and $s_{2,r}$.
+
+For the additional band, apply the two-sided level estimate only at
+its endpoints, to obtain
+\[
+ \frac{\ell_u}{\ell_r}
+ \le C_L\left(\frac{r+2}{u+2}\right)^{1+\beta}
+      \frac{\binom{d+1}{r+2}}{\binom{d+1}{u+2}}
+ \le C_L4^{-(u-r)/2}.
+\]
+The last inequality follows by multiplying the exact two-step
+binomial ratios below $(d+1)/8$. In particular the fixed comparison
+constant $C_L$ is used once, not once per level.
+Together with \eqref{eq:adaptive-ell} and the choice of $u$, this
+implies $n\ell_u\le d^{-10}\tau_r$ for all sufficiently large $d$.
+Also
+$0\le\tau_r-\tau_u\le C_L(u-r)r^{-1-\beta}$,
+so \eqref{eq:trace} gives $\tau_u/\tau_r=1+o(1)$ uniformly.
+
+Finally apply Lemma~\ref{lem:gram-general}. Its far-coherence term
+$q\rho_r/\tau_r$ tends to zero uniformly by
+Lemma~\ref{lem:far} and the lower bound on $r$.
+Choose $c$ also to satisfy
+$2c<\log2-h(1/4)$, so that its near-pair and collision terms vanish.
+The two remaining terms are bounded by
+$C_L[\sqrt{A\rho^{-1}H_r}+A H_r]$.
+Increasing $C_{L,\delta}$ in \eqref{eq:adaptive-gram} makes the
+failure probability at most $\delta$ for all sufficiently large $d$.
+\end{proof}

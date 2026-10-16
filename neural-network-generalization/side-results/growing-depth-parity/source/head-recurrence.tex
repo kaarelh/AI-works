@@ -1,0 +1,90 @@
+\section{Head recurrence and local drift}\label{sec:head-recurrence}
+
+\begin{lemma}[Uniform recurrence of a head window]\label{lem:head-recurrence}
+Let $P$ range over a $D_0$-dimensional linear space. Partition a bounded
+range into $J_0$ fixed intervals. For a center and an independent nuisance
+order, call it bad if its interval has relative mass less than $q$ in
+some nested nuisance cell. For every $p_0>0$, the empirical bad fraction
+is, simultaneously for all $P$, at most
+\[
+ Cq/p_0+CJ_0p_0+C(d+1)e^{-Lq/16}
+ +C\sqrt{\frac{D_0\log(2+D_0J_0(d+1)(L+1))
+                         +\log(1/\delta)}n},
+\]
+with probability $1-\delta$, provided $Lq\ge10$.
+The loss may be averaged over nuisance orders and auxiliary active
+inputs. For canonical head-dependent face contacts, the same bound has
+an additional $O(D_0m_f)$ complexity and a fixed marginal-density factor.
+\end{lemma}
+\begin{proof}
+For a fixed head and fixed active input, ignore intervals of population
+mass less than $p_0$, losing at most $J_0p_0$. If $A$ is another interval,
+under the law conditioned on membership in $A$, the reciprocal of its
+conditional likelihood is a nonnegative supermartingale. Ville's
+inequality shows that its cell mass drops below $q$ on at most a
+$q/\Pp(A)$ fraction of this conditional law. Summing gives the fixed-head
+bound $q/p_0+J_0p_0$.
+
+For uniformity, draw $L$ independent ghost points in every nested cell.
+Use the event that some cell has at most $3Lq/2$ ghost points in the
+center's interval. A truly bad center triggers this ghost event with
+probability at least $1/2$. If all cell masses exceed $2q$, the ghost
+event has probability at most $(d+1)e^{-Lq/16}$ by Chernoff. Its fixed-head
+expectation is therefore bounded by $2q/p_0+J_0p_0$ plus this term.
+For $N$ augmented observations, all ghost labels use only
+$O(NJ_0(d+1)(L+1))$ affine comparisons in the head coefficients.
+The arrangement bound gives VC dimension
+$CD_0\log(2+D_0J_0(d+1)(L+1))$. VC entropy, symmetrization, and Jensen
+for ghost averaging prove the stated uniform bound.
+
+For a canonical contact, first fix its face sign/order pattern.
+The chosen contact is then fixed for each auxiliary random seed and
+all ghost head evaluations remain linear in the coefficients.
+The additional $O(4^{m_f})$ pattern comparisons add $O(D_0m_f)$ to
+the VC dimension. Population bad mass grows by at most the contact
+marginal-density constant. This is a bounded head-only argument; it
+makes no covariance-event union over contact patterns.
+\end{proof}
+
+\begin{lemma}[Maximal local head drift]\label{lem:head-drift}
+For degree at most $r$ and $S\le(d-k)/2$, the population local drift is
+bounded by
+\[
+ \E_X\max_{h\le S}\E_{W\in S_h(V)}|P(U,W)-P(U,V)|^2
+ \le C\frac{rS}{d-k}\log^2(2S)\|P\|_2^2.
+\]
+The same bound holds empirically, uniformly over the degree-$r$ space,
+up to a fixed constant when $n\ge CD_r\log(D_r/\delta)$.
+For head-dependent balanced contacts, the threshold bad fraction is
+controlled by this population bound and bounded VC transfer.
+\end{lemma}
+\begin{proof}
+Couple the spheres by a uniformly random distinct-coordinate nuisance
+path. Every path prefix is a union of at most $O(\log S)$ dyadic blocks.
+Cauchy bounds the maximum squared increment by $O(\log S)$ times the
+sum of squared dyadic block increments. A block of length $l$ changes
+a degree at most $r$ character with probability at most $rl/(d-k)$.
+Translation orthogonality therefore bounds the expected block quadratic
+form by $Clr/(d-k)$ times the identity. On each dyadic scale the total
+length is at most $2S$, proving the population estimate.
+The resulting positive envelope has mean norm
+$\mu=C(rS/(d-k))\log^2(2S)$ and trace at most $D_r\mu$.
+The trace bound is pointwise (translation changes character signs), so
+the envelope norm is at most $D_r\mu$. Matrix Chernoff gives its
+empirical bound for the stated sample size.
+For a balanced contact, the population bound gains only its fixed target
+marginal density. The indicator of a threshold failure is determined,
+on a face pattern cell, by at most $S+1$ quadratic forms in the head
+coefficients. Its VC dimension is $CD_r[m_f+\log(2S)+1]$, so bounded
+statistical transfer applies. This avoids multiplying a matrix bound
+by the number of head patterns.
+\end{proof}
+
+The head cap used in recurrence is justified similarly by
+$\|P\|_2^2\le Ca^2\rho^{-\beta}H$ and bounded threshold VC transfer.
+Taking cap $a\rho^{-\beta/2-10e}$, interval width at most $a/16$,
+$p_0=\rho^{\beta/2+20e}$, and $q=\rho^{\beta/2+30e}$ makes the
+uniform recurrence failure a positive power of $\rho$ at the exact
+sample sizes. Markov over the auxiliary nuisance order then gives
+simultaneous recurrence along at least three quarters of orders outside
+a positive-power exceptional set of center/contact pairs.

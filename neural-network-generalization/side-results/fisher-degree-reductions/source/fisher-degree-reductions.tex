@@ -1,0 +1,380 @@
+\documentclass[10pt]{article}
+\usepackage[margin=0.9in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,enumitem,hyperref}
+\hypersetup{hidelinks,pdftitle={Degree and square-root energy on the Boolean cube},
+ pdfauthor={Dmitry Vaintrob, Kaarel Hanni, OpenAI Codex}}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Prb}{\mathbb P}
+\newcommand{\En}{\mathcal E}
+\newcommand{\F}{\mathbb F}
+\newcommand{\sgn}{\operatorname{sgn}}
+\title{Degree and square-root energy on the Boolean cube:\\
+equivalent positive estimates and a signed obstruction}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex}
+\date{October 16, 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+For nonnegative Boolean-cube polynomials, we show that any universal
+square-root energy bound which vanishes with the degree-to-dimension
+ratio implies a linear degree bound. The same assertion is equivalent
+to approximation, in relative $L^1$ error, by sums of squares of
+polynomials of degree proportional to the original degree. One fixed
+relative approximation error strictly below one suffices. The proof
+uses exact linear-code embeddings and tensor powers. For arbitrary
+signed polynomials the analogous square-root statement is false, even
+with a global unit absolute margin and with all Fourier coefficients
+on one level. The signed obstruction persists at any fixed prediction accuracy below
+one for full parity, without a bound on the predictor's source cost.
+These are auxiliary analytic results. The positive inequality itself,
+and the intended natural-scale posterior sample
+complexity bound for sparse parity, remain open.
+\end{abstract}
+
+\section{Definitions and the positive equivalence}
+All expectations on $\{-1,1\}^k$ use the uniform probability measure.
+Write $\chi_S(x)=\prod_{i\in S}x_i$ and
+\[
+ \Delta\chi_S=|S|\chi_S,\qquad
+ \En(q)=\E q\Delta q=\sum_S |S|\widehat q(S)^2.
+\]
+Degree always means exact multilinear Walsh degree. For $P\ge0$,
+the quantity considered below is $\En(\sqrt P)$, and
+$\|\sqrt P\|_2^2=\E P$. Zero polynomials and constants are harmless
+and may be omitted from statements involving their degree in a denominator.
+
+\begin{theorem}\label{thm:equivalence}
+The following universal assertions are equivalent. Each is quantified
+over every dimension $k$ and every nonzero nonnegative polynomial $P$
+on the $k$-cube of positive degree $r$.
+\begin{enumerate}[label=(\roman*),leftmargin=*]
+\item There is a finite absolute constant $C$ such that
+\[
+ \En(\sqrt P)\le Cr\E P.
+\]
+\item There is $\omega:[0,1]\to[0,\infty)$ with $\omega(t)\to0$
+as $t\downarrow0$ such that
+\[
+ \En(\sqrt P)\le k\omega(r/k)\E P.
+\]
+\item For each $\varepsilon>0$ there is a finite $C_\varepsilon$ such that
+\[
+ \sum_{|S|>C_\varepsilon r}\widehat{\sqrt P}(S)^2
+       \le\varepsilon\E P.
+\]
+\item For each $\varepsilon>0$ there is a finite $D_\varepsilon$ such that
+there are real polynomials $Q_j$ with
+\[
+ \deg Q_j\le D_\varepsilon r,\qquad
+ \E\left|P-\sum_jQ_j^2\right|\le\varepsilon\E P.
+\]
+\end{enumerate}
+Moreover, (iii) for one fixed $\varepsilon<1$ already implies (i).
+Likewise, (iv) for one fixed relative error $\varepsilon<1$ already
+implies (i). If (iv) holds for all errors, its approximant can always
+be chosen to be a single square, with a possibly different degree constant.
+\end{theorem}
+
+The theorem is an equivalence of existence statements. It does not
+establish any of them or assert a sharp constant. In particular,
+a weak degree-fraction estimate on the full positive cone is not an
+easier existence target than the linear estimate.
+
+\section{An exact noise embedding}
+We identify cube coordinates with $\F_2$ bits when applying a binary
+linear map. This identification does not change the Walsh notation.
+
+\begin{lemma}\label{lem:code}
+Let $\theta\in(0,1/2)$ be rational. For every $k$ there are an integer
+$K$ and a surjective binary linear map $A:\F_2^K\to\F_2^k$ such that
+the lift $\widetilde P(Y)=P(AY)$ preserves the distribution of $P$ and
+sends a Walsh character of degree $j$ to a character of degree
+\[
+ d_\theta(j)=\frac K2\bigl(1-(1-2\theta)^j\bigr)\le K\theta j.
+\]
+For every real function $q$ on the original cube,
+\begin{equation}\label{eq:energy-code}
+ \frac{\En(q\circ A)}K
+  =\frac12\sum_S\bigl(1-(1-2\theta)^{|S|}\bigr)\widehat q(S)^2.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Let $\mu_\theta$ be the law on $\F_2^k$ with independent
+Bernoulli$(\theta)$ coordinates. Choose a common denominator $K$ for
+all its masses, and form a $k$-by-$K$ matrix with exactly
+$K\mu_\theta(v)$ copies of each $v$ as columns. The zero column is
+allowed and merely creates an irrelevant physical variable. Every
+standard basis vector occurs, so the matrix has full row rank and
+$AY$ is uniform when $Y$ is uniform. The lift of $\chi_S$ has degree
+$K\Prb_{v\sim\mu_\theta}(v\cdot S=1)=d_\theta(|S|)$.
+Distinct characters remain distinct by full row rank. Parseval's
+identity now gives \eqref{eq:energy-code}.
+\end{proof}
+
+\section{Proof of the positive equivalence}
+First, (i) implies (ii) and (iii), using Markov's inequality for the
+nonnegative Fourier masses of $\sqrt P$.
+
+Suppose (ii). We may replace $\omega$ near zero by a nondecreasing
+envelope, which still tends to zero. Apply Lemma~\ref{lem:code} to $P$.
+Since $\deg\widetilde P/K\le\theta r$, it gives
+\begin{equation}\label{eq:weak-noise}
+ \frac12\sum_S\bigl(1-(1-2\theta)^{|S|}\bigr)
+               \widehat{\sqrt P}(S)^2
+       \le\omega(\theta r)\E P.
+\end{equation}
+For rational $c\in(0,1/2)$ take $\theta=c/r$. If $|S|>r/c$,
+then $(1-2\theta)^{|S|}<e^{-2}$. Consequently
+\[
+ \sum_{|S|>r/c}\widehat{\sqrt P}(S)^2
+ \le\frac{2\omega(c)}{1-e^{-2}}\E P.
+\]
+Letting $c$ be a sufficiently small fixed rational proves (iii).
+
+Next suppose (iii) holds for one fixed $\varepsilon<1$, with constant
+$C_\varepsilon=C$. Normalize $\E P=1$ and put $q=\sqrt P$.
+The masses $\widehat q(S)^2$ define a probability distribution;
+let $J$ be the degree $|S|$ under this distribution. Then
+$\E J=\En(q)$. For the tensor power
+\[
+ P_m(x^{(1)},\ldots,x^{(m)})=\prod_{a=1}^mP(x^{(a)}),
+\]
+degree is $mr$, and the Fourier degree distribution of $\sqrt{P_m}$
+is the law of $J_1+\cdots+J_m$ for independent copies of $J$.
+Thus $\Prb(J_1+\cdots+J_m>Cmr)\le\varepsilon$ for every $m$.
+If $\E J>Cr$, the weak law of large numbers makes this probability
+tend to one. Therefore $\En(\sqrt P)\le Cr$, proving (i).
+
+For (iii)$\Rightarrow$(iv), let $Q$ be the Fourier projection of
+$q=\sqrt P$ to degrees at most $C_\delta r$. Cauchy--Schwarz gives
+\[
+ \E|P-Q^2|\le\|q-Q\|_2(\|q\|_2+\|Q\|_2)
+       \le2\sqrt\delta\,\E P.
+\]
+Choose $\delta=(\varepsilon/2)^2$.
+
+Conversely, suppose that for one fixed $\delta<1$ there is
+$R=\sum_jQ_j^2$ with $\deg Q_j\le Dr$ and
+$\E|P-R|\le\delta\E P$. The Euclidean norm is Lipschitz, so
+on every edge
+\[
+ (\sqrt{R(x)}-\sqrt{R(y)})^2
+       \le\sum_j(Q_j(x)-Q_j(y))^2.
+\]
+It follows that $\En(\sqrt R)\le Dr\E R\le Dr(1+\delta)\E P$.
+Also $\|\sqrt P-\sqrt R\|_2^2\le\E|P-R|$. Hence
+\[
+ \frac{\|\Pi_{>Cr}\sqrt P\|_2}{\sqrt{\E P}}
+    \le\sqrt\delta+\sqrt{\frac{D(1+\delta)}C}.
+\]
+For a sufficiently large fixed $C$, the right side is strictly below
+one. We have obtained a fixed version of (iii), which already implies
+(i). This proves all assertions of Theorem~\ref{thm:equivalence}.
+
+There is also a direct constant conversion. In \eqref{eq:weak-noise},
+apply the embedding to $P_m$ with $\theta=c/(mr)$. The left side,
+after dividing by $\E P_m$, tends to
+\[
+ \frac12\left[1-\exp\left(-\frac{2c\En(\sqrt P)}{r\E P}\right)\right].
+\]
+Thus whenever $\omega(c)<1/2$,
+\begin{equation}\label{eq:constant}
+ \frac{\En(\sqrt P)}{r\E P}
+       \le\frac{-\log(1-2\omega(c))}{2c}.
+\end{equation}
+The embeddings are finite and exact, although their dimensions can be
+very large.
+
+In fact, one fixed improvement on the trivial bound suffices: if there
+are $c>0$ and $\eta<1/2$ such that
+\[
+ \En(\sqrt P)\le\eta k\E P
+ \quad\text{whenever }P\ge0\text{ and }\deg P\le ck,
+\]
+then the same tensor-code argument proves (i). For any positive rational
+$c'<\min(c,1/2)$ it gives
+$C=-\log(1-2\eta)/(2c')$. Here the trivial universal bound is
+$\En(\sqrt P)\le k\E P/2$, obtained by expanding each edge square
+and using $\sqrt{P(x)P(y)}\ge0$.
+
+\section{A signed obstruction, including a global absolute margin}
+For a real function $P$ define its signed square root
+\[
+ M(P)=\sgn(P)\sqrt{|P|},\qquad \|M(P)\|_2^2=\E|P|.
+\]
+
+\begin{theorem}\label{thm:signed}
+There is a sequence of real polynomials $G_j$ on cubes of dimensions
+$N_j$, with degrees $r_j$, such that
+\[
+ |G_j(x)|\ge1\quad\hbox{for every }x,\qquad
+ \frac{r_j}{N_j}\longrightarrow0,\qquad
+ \frac{\En(M(G_j))}{N_j\E|G_j|}\ge\frac{1-e^{-1}}4.
+\]
+Each $G_j$ has all its nonzero Walsh coefficients on a single level.
+Consequently no universal bound
+$\En(M(P))\le k\omega(\deg(P)/k)\E|P|$ with $\omega(t)\to0$
+can hold for arbitrary signed polynomials, even under the displayed
+global absolute-margin condition.
+\end{theorem}
+
+\begin{proof}
+For odd $m$, set $S_m=\sum_{i=1}^m x_i$ and
+$a_m=\En(M(S_m))/\E|S_m|$. We first verify
+\begin{equation}\label{eq:affine-log}
+ a_m=\frac18\log m+O(1).
+\end{equation}
+Let $T$ be a sum of $m-1$ independent signs, and put $p_0=\Prb(T=0)$.
+Coordinate symmetry gives
+\[
+ \En(M(S_m))=\frac m4\E\bigl(M(T+1)-M(T-1)\bigr)^2,
+       \qquad \E|S_m|=mp_0.
+\]
+The squared increment is $4$ at $T=0$. For positive even $t\ge2$,
+it equals
+\[
+ d(t)=\frac4{(\sqrt{t+1}+\sqrt{t-1})^2}
+       =\frac1t+O(t^{-3}),
+\]
+and the expression is even in $t$. The local binomial estimate
+$\Prb(T=t)/p_0=1+O((t^2+1)/m)$, uniformly for even
+$2\le t\le\sqrt m$, yields
+\[
+ 2\sum_{\substack{2\le t\le\sqrt m\\t\text{ even}}}
+       \frac{\Prb(T=t)}{p_0}d(t)
+       =\frac12\log m+O(1).
+\]
+The local-estimate errors and the $O(t^{-3})$ terms are summable with
+total $O(1)$. For $t>\sqrt m$, use $d(t)\le C/\sqrt m$ and
+$p_0\asymp m^{-1/2}$ to bound the remaining normalized contribution
+by $O(1)$. Dividing the energy identity by $mp_0$ proves
+\eqref{eq:affine-log}.
+
+Fix odd $m$ and form the $\ell$-fold tensor product
+$F_\ell=\prod_{b=1}^\ell S_m(x^{(b)})$. It is homogeneous of
+Walsh degree $\ell$, and $|F_\ell|\ge1$. The signed square root
+tensorizes. If $Z$ has the Walsh degree distribution of
+$M(S_m)/\sqrt{\E|S_m|}$, then $\E Z=a_m$, and the corresponding
+degree distribution for $M(F_\ell)$ is $Z_1+\cdots+Z_\ell$.
+
+Choose rational $\theta_\ell\in(0,1/2)$ with
+$\ell\theta_\ell\to1/(2a_m)$ and apply Lemma~\ref{lem:code}
+to obtain $G_\ell=F_\ell\circ A$ on a $K_\ell$-cube. The lift
+preserves $|G_\ell|\ge1$, and \eqref{eq:energy-code} gives
+\[
+ \frac{\En(M(G_\ell))}{K_\ell\E|G_\ell|}
+   =\frac12\E\left[1-(1-2\theta_\ell)^{Z_1+\cdots+Z_\ell}\right]
+   \longrightarrow\frac{1-e^{-1}}2.
+\]
+Here the law of large numbers and bounded convergence justify the
+limit. Homogeneity and the exact character-degree formula give
+\[
+ \frac{\deg G_\ell}{K_\ell}
+ =\frac12\bigl(1-(1-2\theta_\ell)^\ell\bigr)
+ \longrightarrow\frac12(1-e^{-1/a_m})\le\frac1{2a_m}.
+\]
+For each increasing odd $m$, choose $\ell$ sufficiently large to make
+the energy ratio at least $(1-e^{-1})/4$ and the degree fraction at
+most $1/a_m$. Equation~\eqref{eq:affine-log} then gives the required
+diagonal sequence. All nonzero characters of each $G_\ell$ have the
+same physical degree, so the final homogeneity assertion also follows.
+\end{proof}
+
+The global margin in Theorem~\ref{thm:signed} is absolute.
+Indeed $\E|G_\ell|=(\E|S_m|)^\ell$ can be enormous, so the theorem
+does not assert a unit margin after normalization by $\E|G_\ell|$
+or by a neural-network source cost. Nor is agreement with any specified
+target parity imposed. The result therefore obstructs a universal
+analytic shortcut, not the desired learning lower bound.
+
+It also does not contradict a bound for the different nonlinear
+Rayleigh functional $\E\sgn(P)\Delta P$. For the homogeneous
+polynomials just constructed, this functional is exactly
+$\deg(P)\E|P|$, while the signed-square-root energy has the behavior
+in Theorem~\ref{thm:signed}. Finally, $|S_m|$ itself does not have
+degree one; the signed counterexample makes no claim against the
+nonnegative-polynomial conjecture in Theorem~\ref{thm:equivalence}.
+
+\section{Fixed parity accuracy does not remove the signed obstruction}
+The preceding counterexamples need not predict parity. A selector
+construction adds arbitrary fixed accuracy while retaining the energy
+obstruction. The absence of a source-cost bound remains essential to
+the scope of the conclusion.
+
+\begin{corollary}\label{cor:accuracy}
+Fix $\alpha<1$. There is a sequence of real polynomials $P_j$ on
+$n_j$-cubes such that
+\[
+ |P_j|\ge1\text{ everywhere},\qquad
+ \frac{\deg P_j}{n_j}\longrightarrow0,\qquad
+ \Prb\left(\sgn(P_j)=\prod_{i=1}^{n_j}x_i\right)\ge\alpha,
+\]
+and
+\[
+ \frac{\En(M(P_j))}{n_j\E|P_j|}\ge\frac{1-e^{-1}}{16}.
+\]
+No bound on actual neural-network source cost or posterior cell energy
+is asserted.
+\end{corollary}
+\begin{proof}
+Let $B$ on a $K$-cube be a member of the sequence constructed in
+Theorem~\ref{thm:signed}, and put $b_0=(1-e^{-1})/4$. Its code has
+zero columns by Lemma~\ref{lem:code}, so $B$ ignores at least one
+physical bit. Hence $\sgn B$ agrees with full parity $f_K$ on exactly
+half of the cube.
+
+For any fixed $\varepsilon>0$ there is a polynomial $G$ of degree
+$O_\varepsilon(\sqrt K)$ with $|G|\ge1$ everywhere and
+$\Prb(\sgn G=f_K)\ge1-\varepsilon$. To see this, let
+$h(y)=(K-\sum_i y_i)/2$ be Hamming weight. Choose integers $a\le b$
+with $\Prb(a\le h\le b)\ge1-\varepsilon$ and
+$b-a\le\sqrt{K/\varepsilon}+2$, using Chebyshev's inequality and
+rounding. The polynomial
+\[
+ G_0(h)=(-1)^b\prod_{j=a}^{b-1}(h-j-1/2)
+\]
+has sign $(-1)^h$ for integer $a\le h\le b$, and has no zeros at
+any integer. Divide by its positive minimum absolute value on
+$\{0,\ldots,K\}$ to obtain $G$.
+
+Add $t$ selector bits $z$, where $t$ is fixed, and write
+$H(z)=\prod_{i=1}^t(1+z_i)/2$, $\chi(z)=\prod_{i=1}^t z_i$,
+and $p=2^{-t}$. For $A\ge1$ set
+\[
+ P(z,y)=H(z)A B(y)+(1-H(z))\chi(z)G(y).
+\]
+This has global absolute margin one, degree at most
+$t+\max(\deg B,\deg G)=o(K)$, and full-parity accuracy at least
+\[
+ p/2+(1-p)(1-\varepsilon).
+\]
+Choose the fixed $t$ and $\varepsilon$ so this is at least $\alpha$.
+The old-coordinate energies and nonnegativity of selector-coordinate
+energies give
+\[
+ \En(M(P))\ge pA\En(M(B)),\qquad
+ \E|P|=pA\E|B|+(1-p)\E|G|.
+\]
+Choose $A\ge(1-p)\E|G|/(p\E|B|)$. For $K\ge t$ this yields
+\[
+ \frac{\En(M(P))}{(K+t)\E|P|}
+ \ge\frac{b_0K}{2(K+t)}\ge\frac{b_0}{4}.
+\]
+Taking the sequence of $B$'s proves the corollary.
+\end{proof}
+
+The multiplier $A$ separates prediction accuracy from normalized
+signed-root energy. A separate direct calculation in the motivating
+posterior cell model shows that this particular selector family has
+diverging actual repair cost, even when all radial sign relays are
+allowed. That calculation uses wrong-to-correct neighbor contrasts;
+large amplitude alone would not justify its conclusion. The cell
+model and that additional argument are not needed for the analytic
+results proved here. Thus these counterexamples are excluded from a
+uniformly bounded-cost calibration setting, and the desired calibration
+statement for accurate heads with bounded actual source cost remains
+open. The natural-scale learning target remains open as well.
+\end{document}

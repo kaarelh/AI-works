@@ -1,0 +1,372 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools,microtype}
+\usepackage[margin=1in]{geometry}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref}
+\newtheorem{theorem}{Theorem}[section]\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}\newcommand{\PP}{\mathbb P}\newcommand{\R}{\mathbb R}
+\setlength{\emergencystretch}{2em}
+\hypersetup{pdftitle={Finite-width circuit learning below mean-field scaling},pdfauthor={Dmitry Vaintrob; Kaarel Hanni; OpenAI Codex}}
+\title{Finite-width circuit learning\\below mean-field scaling}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex\thanks{AI assistant; contributed to mathematical analysis and drafting.}}
+\date{October 15, 2026}
+\begin{document}\maketitle
+\begin{abstract}
+For fixed-depth Bayesian tanh networks with Gaussian scaling exponent
+$\gamma<1$, we prove a finite-width sample bound of order
+$\operatorname{poly}(d,C)N\log(eN)$, where $d$ is input dimension,
+$C$ is the target's bounded-weight network complexity, and $N\ge C$
+is the hidden width. The prior is restricted to a fixed positive output
+margin on the entire Boolean cube, followed by exact noiseless conditioning
+on the training labels. The guarantee concerns the actual posterior:
+its correct-label probability exceeds $2/3$ on almost all test inputs.
+Consequently, polynomial widths permit polynomial-sample learning of
+parity, and every subexponential width sequence permits subexponential
+sample complexity. These statements concern simultaneous growth of width
+and dimension. They do not settle sample complexity when width first tends
+to infinity at each fixed dimension. The proof gives an explicit Gaussian
+probability bound by cloning a small target network and constraining only
+linearly many parameter directions in width.
+\end{abstract}
+
+\section{Model, theorem, and order of limits}
+Let $d\ge1$, $L\ge2$, and $\mathcal X=\{-1,1\}^d$.
+A depth-$L$ network with common hidden width $N$ computes
+\[
+ h^0(x)=(1,x),\qquad
+ h^s(x)=\tanh(W^sh^{s-1}(x))\quad(1\le s<L),
+ \qquad z_w(x)=W^Lh^{L-1}(x).
+\]
+There are no additional biases, and the readout is linear. Fix a real
+exponent $\gamma<1$. Under the product Gaussian law $\mu_{N,\gamma}$,
+the independent centered weights have standard deviations
+\begin{equation}\label{eq:scaling}
+ \sigma_1=N^{(1-\gamma)/2}/\sqrt d,
+ \qquad \sigma_s=N^{-\gamma/2}\quad(2\le s<L),
+ \qquad \sigma_L=N^{-(\gamma+1)/2}.
+\end{equation}
+Fix an output margin $a>0$. For each Boolean function $g$, write
+\[
+ A_{N,g}^a=\{w:g(x)z_w(x)>a\ \text{for every }x\in\mathcal X\},
+ \qquad
+ \pi_N(g)=\frac{\mu_{N,\gamma}(A_{N,g}^a)}
+ {\mu_{N,\gamma}(\bigcup_h A_{N,h}^a)}.
+\]
+Thus the global margin restriction precedes training. The posterior
+$\Pi_N(\cdot\mid S_n)$ conditions this function prior on agreement with
+noiseless examples $S_n=((x_i,f(x_i)))_{i=1}^n$, with independent $x_i\sim D$.
+The distribution $D$ may be arbitrary on the cube.
+
+Let $C=C_L(f)$ be the least integer $C\ge1$ for which a depth-$L$,
+width-$C$ tanh network implements $f$ with strict margin $1/2$ and all
+weights bounded in absolute value by $C$. We assume $C<\infty$.
+The definition uses margin $1/2$ even when the Bayesian margin $a$ differs;
+a constant readout rescaling handles this distinction.
+Define
+\begin{align*}
+ R_N(S_n)&=\E_{g\sim\Pi_N}\PP_{x\sim D}\{g(x)\ne f(x)\},\\
+ F_N(S_n)&=\PP_{x\sim D}\left\{
+      \Pi_N(g(x)=f(x)\mid S_n)\le2/3\right\}.
+\end{align*}
+The equality case at $2/3$ is counted as a failure.
+
+Here are explicit constants for the main bound:
+\begin{align}
+ b_L&=\sqrt{16\log9+8\log(4L)},&
+ A&=2+3C^2+b_L,\notag\\
+ D_0&=1+4a\sqrt2\,C^2(d+2)A^{L-2},&
+ \rho_0&=\frac{a}{2D_0},\notag\\
+ q&=d+2+(L-2)C,&
+ B_0&=d(d+1)C^2+2(L-2)C^4+64a^2C^4.
+ \label{eq:constants}
+\end{align}
+For every $N\ge C$, set
+\begin{equation}\label{eq:cost}
+ B_N=B_0N^\gamma
+ +Nq\left[\log\frac{e\sqrt{2\pi}}{2\rho_0}
+       +\frac{(L-1)(1-\gamma)}2\log N\right]+\log2.
+\end{equation}
+
+\begin{theorem}[Finite-width learning]\label{thm:learning}
+For every $N\ge C$, the target has raw prior mass
+\begin{equation}\label{eq:mass}
+ \mu_{N,\gamma}(A_{N,f}^a)\ge e^{-B_N}.
+\end{equation}
+For every input distribution $D$ and every $\varepsilon,\delta\in(0,1)$,
+if
+\begin{equation}\label{eq:samples}
+ n\ge\frac6\varepsilon
+       \left[B_N+\log\frac6{\varepsilon\delta}\right],
+\end{equation}
+then, with probability at least $1-\delta$ over $S_n$,
+\[
+ R_N(S_n)\le\varepsilon/3,
+ \qquad F_N(S_n)\le\varepsilon.
+\]
+At fixed $L,\gamma,a$, the cost obeys
+\begin{equation}\label{eq:order}
+ B_N\le p_{L,\gamma,a}(d,C)\,N\log(eN)
+\end{equation}
+for a polynomial $p_{L,\gamma,a}$ independent of width.
+\end{theorem}
+
+\begin{corollary}[Polynomial and subexponential widths]\label{cor:joint}
+At fixed $L,\gamma,a,\varepsilon,\delta$, widths bounded by a polynomial
+in $d,C_L(f)$ admit polynomial sample complexity under the actual posterior.
+For full parity on $k$ bits, $C_L(f)=O_L(k\log(k+1))$.
+Consequently, for every integer width sequence $N(k)\ge C_L(f)$ satisfying
+$\log N(k)=o(k)$, there is a sample schedule $n(k)=\exp(o(k))$ for which
+$F_{N(k)}(S_{n(k)})\le\varepsilon$ with probability at least $1-\delta$.
+In particular, polynomial widths admit polynomial-sample parity learning.
+\end{corollary}
+
+The order of limits is part of the conclusion. The corollary permits width
+to grow with dimension, for example $N(k)=\lceil e^{\sqrt{k}}\rceil$.
+A different question fixes $k$ and its sample budget and then sends
+$N\to\infty$. The sample bound~\eqref{eq:samples} grows with $N$, so it
+does not establish an upper bound for that width-first limiting learner.
+Nor does it contradict a lower bound proved for that learner.
+An exponential-in-$k$ obstruction asserted uniformly over growing widths,
+however, would conflict with Corollary~\ref{cor:joint}.
+
+The guarantee is statistical. No efficient method for evaluating the
+posterior is asserted. The following proofs are finite-dimensional and
+do not require a Gaussian-process approximation.
+
+\section{Cloning the target at an arbitrary width}
+Choose a width-$C$ implementation of $f$ from its complexity definition.
+Multiply its readout by $4a$. Write its hidden matrices as $B^s$ and
+readout as $v$. The resulting teacher has strict margin greater than $2a$,
+hidden entries bounded by $C$, and readout entries bounded by $4aC$.
+Partition the $N$ neurons into $C$ groups with sizes $k_b$ differing by
+at most one. Since $N\ge C$,
+\begin{equation}\label{eq:groups}
+ k_b\ge1,\qquad \frac{\max_b k_b}{\min_b k_b}\le2,
+ \qquad \frac{N}{k_b}\le2C.
+\end{equation}
+The exact clone $w_*$ has first-layer row $B_b^1$ in group $b$, internal
+entry $B^s_{ba}/k_a$ from group $a$ to group $b$, and readout entry
+$v_b/k_b$ in group $b$. It computes precisely the teacher's output.
+Each hidden activation is constant within every group.
+
+Let $u_a=k_a^{-1/2}\mathbf1_{\text{group }a}$ and let $P$ be the
+orthogonal projection onto their span. Restricting an internal cloned
+matrix to this subspace gives entries $\sqrt{k_b/k_a}B^s_{ba}$.
+Its Frobenius norm and~\eqref{eq:groups} imply
+\begin{equation}\label{eq:clone-norms}
+ \|W_*^s\|_{\mathrm{op}}\le\sqrt2\,C^2\quad(2\le s<L),
+ \qquad \sqrt N\|W_*^L\|_2\le4a\sqrt2\,C^2.
+\end{equation}
+The cloned internal matrices vanish on the orthogonal complement of the
+same group-constant subspace.
+
+Put
+\begin{equation}\label{eq:cylinder-radius}
+ t=N^{(1-\gamma)/2}\ge1,
+ \qquad \rho=\rho_0t^{-(L-1)}.
+\end{equation}
+The normalized coordinates $\sqrt d\,W^1_{ij}$,
+$\sqrt N\,W^s_{ij}$ for $2\le s<L$, and $\alpha_j=NW^L_j$
+are independent centered Gaussians with standard deviation $t$.
+Impose the following cylinder event $\mathcal C_\rho$:
+
+\begin{itemize}
+\item Every $\sqrt d\,W^1_{ij}$ is within $\rho t$ of its cloned value.
+\item For each internal row $j$ and group $a$, the coordinate
+$\langle\sqrt N\,W^s_{j,\cdot},u_a\rangle$ is within $\rho t$ of
+its cloned value $\sqrt{N/k_a}B^s_{ba}$, where $j$ belongs to group $b$.
+\item Every $\alpha_j$ is within $\rho t$ of its cloned value $Nv_b/k_b$.
+\end{itemize}
+
+These are $Nq$ constraints on independent scalar Gaussian coordinates.
+The orthogonal coordinates of each internal row retain their Gaussian
+law and remain independent of the constrained coordinates. Thus
+\[
+ W^s=W_*^s+R^s+E^s,
+ \qquad R^s=R^sP,\quad E^sP=0,
+ \qquad \|R^s\|_{\mathrm{op}}\le\rho t\sqrt C.
+\]
+Conditionally on the cylinder, each free matrix $E^s$ has law
+$(t/\sqrt N)G^s(I-P)$ with $G^s$ a standard Gaussian matrix.
+
+\begin{lemma}[Free Gaussian directions]\label{lem:operator}
+Conditionally on $\mathcal C_\rho$, all internal free matrices satisfy
+$\|E^s\|_{\mathrm{op}}\le b_Lt$ with probability at least $1/2$.
+\end{lemma}
+\begin{proof}
+A $1/4$-net of the unit sphere in $\R^N$ has at most $9^N$ points,
+by the disjoint-ball volume argument. Approximating both vectors in a
+bilinear form gives
+$\|G\|_{\mathrm{op}}\le2\max_{u,v\text{ in the net}}|u^TGv|$.
+Each such bilinear form for standard Gaussian $G$ is standard normal.
+The scalar Gaussian tail bound gives
+\[
+ \PP\{\|G\|_{\mathrm{op}}>b_L\sqrt N\}
+ \le2\,9^{2N}e^{-b_L^2N/8}
+ =2(4L)^{-N}\le\frac1{2L}.
+\]
+Use $\|G(I-P)\|_{\mathrm{op}}\le\|G\|_{\mathrm{op}}$ and a union
+bound over the $L-2$ internal matrices. For $L=2$ the event is automatic.
+\end{proof}
+
+\begin{lemma}[Uniform preservation of the target margin]\label{lem:robustness}
+Every draw in $\mathcal C_\rho$ satisfying the event of
+Lemma~\ref{lem:operator} implements $f$ with strict margin greater than
+$3a/2$ on the entire cube.
+\end{lemma}
+\begin{proof}
+The choice of $D_0$ implies $0<\rho_0<1$, and therefore
+$\rho t=\rho_0t^{-(L-2)}\le1$.
+For each input define
+$e_s=N^{-1/2}\|h_w^s-h_*^s\|_2$.
+The first-layer constraints and $\tanh$'s Lipschitz constant give
+$e_1\le\rho t(d+1)$.
+Since $E^s h_*^{s-1}=0$, unit boundedness of the hidden activations and
+\eqref{eq:clone-norms} give
+\[
+ e_s\le(\sqrt2 C^2+\rho t\sqrt C+b_Lt)e_{s-1}+\rho t\sqrt C
+      \le tA e_{s-1}+\rho t\sqrt C.
+\]
+Summing the geometric series and using $\sqrt C/(tA-1)\le1$ yields
+\[
+ e_s\le\rho t^s(d+2)A^{s-1}.
+\]
+In particular,
+$e_{L-1}\le\rho_0(d+2)A^{L-2}$.
+At the output the perturbation is bounded by
+\[
+ |z_w-z_*|\le4a\sqrt2\,C^2e_{L-1}+\rho t
+ \le\rho_0[4a\sqrt2\,C^2(d+2)A^{L-2}+1]
+ =a/2.
+\]
+These bounds hold simultaneously for every input, without a union bound
+on cube points. The teacher has strict margin greater than $2a$.
+\end{proof}
+
+\section{The probability cost and posterior bound}
+\begin{lemma}[Cylinder probability]\label{lem:cylinder-cost}
+The target-mass bound~\eqref{eq:mass} holds with $B_N$ from
+\eqref{eq:cost}.
+\end{lemma}
+\begin{proof}
+The sum of squared centers of the $Nq$ constrained normalized coordinates
+is at most $NB_0$. A first-layer center has magnitude at most $\sqrt d C$.
+An internal center has magnitude at most $\sqrt{2C}\,C$.
+A readout center has magnitude at most $8aC^2$.
+Counting the coordinates of each kind gives the expression for $B_0$ in
+\eqref{eq:constants}.
+
+For a centered Gaussian $Z$ of standard deviation $t$, integrating the
+minimum density on an interval and using
+$(|c|/t+\rho)^2/2\le c^2/t^2+\rho^2$ gives
+\[
+ \PP\{|Z-c|\le\rho t\}
+ \ge\frac{2\rho}{\sqrt{2\pi}}e^{-c^2/t^2-\rho^2}.
+\]
+Multiply over the independent constrained coordinates and use $\rho\le1$.
+Lemmas~\ref{lem:operator} and~\ref{lem:robustness} imply
+\begin{align*}
+ -\log\mu_{N,\gamma}(A_{N,f}^a)
+ &\le \frac{NB_0}{t^2}
+       +Nq\log\frac{e\sqrt{2\pi}}{2\rho}+\log2\\
+ &=B_0N^\gamma
+   +Nq\left[\log\frac{e\sqrt{2\pi}}{2\rho_0}
+       +\frac{(L-1)(1-\gamma)}2\log N\right]+\log2.
+\end{align*}
+This is $B_N$. Because $N^\gamma\le N$, while $B_0,q$, and
+$\rho_0^{-1}$ are polynomially bounded in $d,C$ at fixed $L,a$,
+\eqref{eq:order} follows.
+\end{proof}
+
+\begin{lemma}[A target-mass posterior guarantee]\label{lem:bayes}
+Let $\pi$ be a prior on a finite class of Boolean functions and suppose
+$\pi(f)\ge e^{-B}>0$. Under exact consistency conditioning on $n$
+independent noiseless examples, the sample bound
+\[
+ n\ge(6/\varepsilon)[B+\log(6/(\varepsilon\delta))]
+\]
+implies $R\le\varepsilon/3$ and $F\le\varepsilon$ with probability
+at least $1-\delta$.
+\end{lemma}
+\begin{proof}
+Let $Z(S_n)$ be the posterior normalizer. The target is always consistent,
+so $Z(S_n)\ge\pi(f)$. A fixed function of true error $r$ survives all
+labels with probability $(1-r)^n$. Thus, if $U(S_n)$ denotes posterior
+mass on functions of error greater than $\varepsilon/6$,
+\[
+ \E_{S_n}U(S_n)
+ \le\frac1{\pi(f)}
+   \sum_{g:\operatorname{err}_D(g)>\varepsilon/6}
+       \pi(g)(1-\operatorname{err}_D(g))^n
+ \le e^{B-n\varepsilon/6}.
+\]
+Markov's inequality gives $U\le\varepsilon/6$ with probability
+at least $1-\delta$ at the displayed sample size.
+The remaining posterior mass has error at most $\varepsilon/6$, so
+$R\le\varepsilon/3$. On an input with correct-label probability at most
+$2/3$, the posterior error probability is at least $1/3$.
+Consequently $F\le3R\le\varepsilon$, including equality in the failure event.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:learning}]
+Lemma~\ref{lem:cylinder-cost} proves the raw mass bound and its growth
+estimate. The global-margin normalizer is at most one, so
+$\pi_N(f)\ge\mu_{N,\gamma}(A_{N,f}^a)\ge e^{-B_N}$.
+In particular all posterior normalizers are positive.
+Apply Lemma~\ref{lem:bayes}.
+\end{proof}
+
+\section{Parity and simultaneous growth}
+\begin{lemma}[A small parity network]\label{lem:parity}
+At every fixed depth $L\ge2$, full parity on $k$ bits has
+$C_L(f)=O_L(k\log(k+1))$.
+\end{lemma}
+\begin{proof}
+Put
+\[
+ t(x)=\frac{k+\sum_{i=1}^k x_i}{2},\qquad
+ y_j=(-1)^{k-j},\qquad A_k=\log(16(k+1)).
+\]
+At integer $t\in\{0,\ldots,k\}$, define
+$s_j(t)=\operatorname{sign}(t-j+1/2)$ for $1\le j\le k$.
+The identity
+\[
+ y_t=c+\sum_{j=1}^k y_js_j(t),\qquad c=(y_0+y_k)/2\in\{0,1\},
+\]
+is checked by its value at $t=0$ and its jumps.
+Replace $s_j$ by $h_j=\tanh(A_k(t-j+1/2))$.
+Each replacement has error at most $2e^{-A_k}$, since its argument
+has absolute value at least $A_k/2$. A constant neuron $h_0=\tanh1$
+provides the term $c$ with readout weight $c/\tanh1$.
+The resulting output differs from parity by less than $1/8$.
+This network has width $k+1$, first-layer weights bounded by
+$O(k\log(k+1))$, and readout weights bounded by two.
+
+For $L\ge3$, let the next hidden layer apply $\tanh$ to this sum.
+Its correct-signed output is greater than $\tanh(7/8)>1/2$.
+Every additional hidden layer preserves the margin using a single
+weight two, and the final readout has weight one. Pad unused neurons
+with zero weights. Finally pad the common width to an integer
+$C=O_L(k\log(k+1))$ that also bounds every weight. Since $\tanh0=0$,
+this preserves the implementation.
+\end{proof}
+
+\begin{proof}[Proof of Corollary~\ref{cor:joint}]
+The polynomial-width statement follows directly from
+\eqref{eq:order} and~\eqref{eq:samples}. For parity use
+Lemma~\ref{lem:parity}. At fixed accuracy and confidence parameters, the
+sufficient sample size is bounded by a polynomial in $k$ times
+$N(k)\log(eN(k))$. Its logarithm is $o(k)$ whenever
+$\log N(k)=o(k)$.
+\end{proof}
+
+The cylinder uses $N[d+2+(L-2)C]$ constrained directions even though a
+dense deep network has quadratically many parameters in width. The other
+internal directions are retained at their prior scale; their effect is
+controlled by shrinking the constrained radius. For $\gamma<1$, this
+shrinking costs an additional $\log N$ per constrained direction.
+That finite-width cost is why these learning guarantees coexist with
+possible statistical obstructions after taking width to infinity first.
+\end{document}

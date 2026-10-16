@@ -1,0 +1,112 @@
+\section{Positive subcritical exponents}
+\label{sec:positive}
+We now prove the lower bound for $0<\gamma<1$. The argument applies
+simultaneously to every energy-minimizing sign function, so no rule
+for choosing among ties is required.
+
+\begin{theorem}[All minimum-energy signs have large error]
+\label{thm:positive-subcritical}
+For fixed $L\ge2$ and $a>0$, there exist $c>0$ and $d_0$ such that,
+for every $d\ge d_0$ and every specified $0\le n\le e^{cd}$, with
+probability at least $3/4$ over the training inputs, every minimizer of
+\[
+ \min\left\{\frac12\|z\|_K^2:
+      |z(x)|\ge a\ \text{for every }x,\quad
+      f(X_i)z(X_i)\ge a\ \text{for every }i\right\}
+\]
+has parity error at least $3/8$. On this event, for every fixed
+$0<\gamma<1$, the actual network posterior satisfies
+$\liminf_{N\to\infty}F_N(S)\ge1/16$.
+\end{theorem}
+\begin{proof}
+Apply Lemma~\ref{lem:zero-bump} with its fixed cutoff $r=1$ and
+$A=a$. Since $\tau_1\asymp1$ and $\widetilde K\preceq K$, its
+interpolant has $K$-norm squared at most $C_{L,a}(d+nd^\beta)$.
+By optimality this gives, except on a set of sample probability
+$e^{-\Omega_L(d)}$, the simultaneous
+bound
+\begin{equation}\label{eq:positive-energy}
+ B:=\|z\|_K^2\le C_{L,a}(d+nd^\beta)
+\end{equation}
+for all minimizers. The statement includes $n=0$, using the constant
+comparator. If $n\le\exp[(\log(d+1))^3]$, Lemma~\ref{lem:small-cutoff}
+therefore gives error $1/2-o(1)$, which is at least $3/8$ for large $d$.
+
+For the remaining sample sizes, fix $\delta=1/20$, choose $A$ at least
+as large as the constant required by
+Lemma~\ref{lem:parity-squared-balance}, and use the cutoffs and notation
+of Lemma~\ref{lem:adaptive-cutoff}. Work on the intersection of the
+comparator event, the squared-coercivity event
+\eqref{eq:wrong-square-coercivity}, and the tail-Gram event
+\eqref{eq:adaptive-gram}. Its probability is at least
+$1-2\delta-e^{-\Omega_L(d)}>3/4$ for large $d$.
+The range of $n$ absorbs the additive $d$ in
+\eqref{eq:positive-energy}, giving $B\le C_{L,a}nd^\beta$.
+
+For an arbitrary minimizer write the orthogonal Fourier decomposition
+\[
+ z=P+b+t,\qquad P=z_{\le r},\quad
+ b=z_{(r,u]},\quad t=z_{>u}.
+\]
+At each observed input where $fP<0$, training consistency implies
+$(fP)_-\le|z-P|$. The squared sampling bound, the RKHS evaluation
+bound, and the tail-Gram event therefore give
+\[
+ \frac14\|P\|_2^2
+ \le\frac1n\sum_i(f(X_i)P(X_i))_-^2
+ \le\frac1n\sum_i(z(X_i)-P(X_i))^2
+ \le\frac Bn b_r\tau_r.
+\]
+Consequently,
+\begin{align}
+ \|P\|_2^2&\le C_{L,a}\rho^{-\beta}b_r,
+       \label{eq:positive-head}\\
+ \|b\|_2^2&\le B\ell_r
+       \le C_{L,a}A\rho^{-\beta}H_r,
+       \label{eq:positive-band}\\
+ \|t\|_2^2&\le B\ell_u
+       \le C_{L,a}d^\beta d^{-10}\tau_r=o(1).
+       \label{eq:positive-tail}
+\end{align}
+All bounds are uniform over the minimizers and the specified sample
+range. The middle-band norm need not vanish; it is included in the
+polynomial to which the clipped-parity estimate is applied.
+
+Put $h=P+b$. Its degree is at most $u$, and orthogonality gives
+\begin{equation}\label{eq:positive-correlation-scale}
+ \left(\frac ud\right)^2\|h\|_2^2
+ \le C_{L,a,\delta}\left[
+ \rho^{2-\beta}
+ +\sqrt A\,\rho^{3/2-\beta}\sqrt{H_r}
+ +A\rho^{2-\beta}H_r\right]+o(1).
+\end{equation}
+In particular the $\rho^{-1/2}$ loss in the tail-Gram bound has been
+retained. Because $0<\beta\le1/2$, every power of $\rho$ on the
+right is positive. Choose the upper cutoff fraction $\alpha$ sufficiently
+small, after fixing these constants, that
+$u\|h\|_2/(ad)\le1/8$ for all sufficiently large $d$.
+Decrease $c$ in Lemma~\ref{lem:adaptive-cutoff} accordingly.
+By \eqref{eq:positive-tail}, also $\|t\|_2/a\le1/8$.
+Since $|z|\ge a$ everywhere, Lemma~\ref{lem:clipped-parity} now yields
+\[
+ |\mathbb E f\operatorname{sign}z|\le\frac14,
+ \qquad
+ \mathbb P_x\{\operatorname{sign}z(x)\ne f(x)\}\ge\frac38.
+\]
+This proves the assertion about every minimizer.
+
+For any probability mixture of these minimizing signs, let $q(x)$
+be the probability of the correct label and $R=\mathbb E_x(1-q(x))$.
+The result just proved gives $R\ge3/8$, independently of the mixture
+weights. With $F=\mathbb P_x\{q(x)\le2/3\}$, one always has
+\[
+ R\le\frac{1-F}{3}+F,
+ \qquad F\ge\frac{3R-1}{2}\ge\frac1{16}.
+\]
+Finally, Proposition~\ref{prop:rate} shows that for each fixed
+$0<\gamma<1$, the actual finite-width posterior puts mass $1-o(1)$
+on these signs. Its draw error is therefore at least $3/8-o(1)$,
+without requiring convergence of the relative weights among ties.
+Apply the same elementary inequality at every $N$ and take the
+lower limit to obtain $\liminf_{N\to\infty}F_N(S)\ge1/16$.
+\end{proof}

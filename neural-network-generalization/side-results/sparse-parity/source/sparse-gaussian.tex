@@ -1,0 +1,262 @@
+\section{A lower bound for sparse parity at every sample size}
+\label{sec:sparse-gaussian}
+Let $U\subseteq[d]$, $|U|=k$, and $f=\chi_U$. Write
+$F_\theta(S)=\mathbb P_x\{q_S(x)\le\theta\}$ for the actual
+Gaussian sign-posterior confidence failure, with
+\[
+ \theta=\frac{13}{20},\qquad
+ c_\theta=\sqrt{2\pi}\left(\frac1e-\frac7{20}\right),\qquad
+ a_\theta=\frac{c_\theta}{2\sqrt2}.
+\]
+The next theorem has a failure fraction independent of both $k$ and $d$.
+
+\begin{theorem}[Ambient-dimension lower bound]
+\label{thm:sparse-gaussian}
+For each fixed depth $L\ge2$, there are constants $c>0$ and $d_0$
+such that, whenever $d\ge d_0$, $1\le k\le d$, and
+\[
+ 0\le n\le\exp\!\left(c k\log\frac{ed}{k}\right),
+\]
+independent uniform training inputs satisfy
+\[
+ \mathbb P_S\{F_{13/20}(S)\ge\varepsilon\}\ge\frac34,
+ \qquad \varepsilon=\frac{c_\theta^2}{256}>0.
+\]
+The assertion holds for each specified sample size. In the network model
+of the width-limit proposition, every fixed $\gamma<0$ consequently
+satisfies the same lower bound for
+$\liminf_{N\to\infty}\mathbb P_x\{q_{N,S}(x)\le2/3\}$.
+\end{theorem}
+
+\begin{proof}
+Fix a failure probability $\delta=1/40$. We choose a sampling constant
+$A$ sufficiently large, a degree fraction $\alpha>0$ sufficiently small,
+and an odd integer $r_0\ge11$ sufficiently large, in that order.
+All these choices depend only on the fixed depth and universal constants.
+Further decreases in $\alpha$ are harmless.
+
+We first treat $k\ge K_0$, where the fixed constant $K_0$ is chosen
+below; bounded $k$ will be covered at the end.
+For a specified $n>0$, let $r$ be the largest odd integer satisfying
+\begin{equation}\label{eq:sparse-coarse-cutoff}
+ A D_r\log(D_r+1)\le n.
+\end{equation}
+First suppose this cutoff exists and $r\ge r_0$. By choosing $c$ in the
+theorem sufficiently small and then $K_0$ sufficiently large, we ensure
+\begin{equation}\label{eq:sparse-cutoff-range}
+ r\le\alpha k\le\alpha d,\qquad u:=r+2<k,
+ \qquad n<A D_{r+2}\log(D_{r+2}+1).
+\end{equation}
+Indeed, the binomial lower bound
+$\binom dr\ge(d/r)^r$ shows that, for $r\ge\alpha k$, the logarithm
+of the sampling threshold is at least a constant multiple of
+$\alpha k\log(ed/k)$. Rounding by two can be absorbed by increasing
+$K_0$. Also $k\log(ed/k)\le d$, so the same choice of $c$ puts $n$
+within the small-exponential range needed for the random Gram bounds.
+Uniformly in this shell interval, for large $d$,
+\[
+ \log(2n)\le C\log(D_r+1)\le C r\log(eD/r),\qquad D=d+1.
+\]
+
+Put $\rho=r/D$, $H_\rho=\log(e/\rho)$, $\tau=\tau_r$,
+$\ell_r=\lambda_{r+1}$, and
+\[
+ B=C_{L,\delta}\left(1+
+             \frac{\sqrt{nd\,s_{2,r}}}{\tau}
+             +\frac{n\ell_r}{\tau}\right),
+ \qquad \eta^2=C_0\frac{D_r\log(2n)}n.
+\]
+Choose $C_0$ as required by Lemma~\ref{lem:multiband-process}.
+Lemma~\ref{lem:sparse-gram} and its near-orthogonal coherence estimate
+imply, with probability at least $1-\delta$ for all sufficiently large
+$d$,
+\begin{equation}\label{eq:sparse-low-gram}
+ \|Q_{r,SS}\|_{\mathrm{op}}\le B\tau.
+\end{equation}
+This holds uniformly over $r\ge r_0$ in
+\eqref{eq:sparse-cutoff-range}; it does not require $r\gg\log d$.
+The sharp spectral ratios give the crucial cancellation
+\begin{equation}\label{eq:sparse-variable-accuracy}
+ \eta^2B\le C_{L,\delta}\left[
+      \frac1A+\sqrt{\frac{\rho H_\rho}{A}}+
+                     \rho^2H_\rho\right].
+\end{equation}
+For completeness, the constant term uses $\eta^2\le C/A$.
+The eigenvalue term is bounded by
+\[
+ \eta^2\frac{n\ell_r}{\tau}
+ \le\frac{C D_r\log(2n)}{r\binom D{r+2}}
+ \le C\rho^2H_\rho.
+\]
+The square of the variance term is at most
+\[
+ \left(\eta^2\frac{\sqrt{nd\,s_{2,r}}}{\tau}\right)^2
+ \le\frac CA\frac{C D_r\log(2n)d}{r^2\binom D{r+2}}
+ \le\frac CA\rho H_\rho.
+\]
+Thus $\eta\sqrt B$ can be made arbitrarily small uniformly in $n$
+by choosing $A$ large and then $\alpha$ small.
+
+Let $m=\mathbb E[G\mid\mathcal A_S]$ and $p=\Pi_{\le r}m$.
+By Lemma~\ref{lem:schedule-mean}, $\|m\|_K^2\le n$ and its training
+signs are correct. The ordinary first-power ReLU sampling event in
+Lemma~\ref{lem:schedule-relu}, at accuracy $1/4$, has probability at
+least $1-\delta$ after increasing $A$. Since $r<k$, Walsh orthogonality
+gives $\mathbb E fp=0$, so on this event and
+\eqref{eq:sparse-low-gram},
+\begin{equation}\label{eq:sparse-head-radius}
+ \frac14\mathbb E|p|
+ \le\mathbb P_n(-fp)_+
+ \le\sqrt{\mathbb P_n(m-p)^2}
+ \le\sqrt{B\tau}.
+\end{equation}
+Set the deterministic radius $R=4\sqrt{B\tau}$.
+
+\medskip\noindent
+\emph{Only one additional paired level is required.}
+Write
+\[
+ m=p+b+t,\qquad b=\Pi_{(r,u]}m,\quad t=\Pi_{>u}m,\quad u=r+2,
+ \qquad \Delta=\tau_r-\tau_u.
+\]
+The level-mass estimate and the two-step binomial ratio give
+\begin{align}
+ \Delta/\tau&\le C_L/r,\label{eq:sparse-band-trace}\\
+ n\ell_u/\tau&\le C_L A\rho^2H_\rho,
+       \label{eq:sparse-high-eigenvalue}\\
+ nd\,s_{2,u}/\tau^2&\le C_L A\rho H_\rho.
+       \label{eq:sparse-high-variance}
+\end{align}
+For example, maximality yields
+$n\le C A\binom D{r+2}rH_\rho$, whereas the two high-tail bounds
+involve $\binom D{r+4}$ in the denominator; its ratio with
+$\binom D{r+2}$ supplies a factor $O(\rho^2)$.
+By increasing $r_0$ we have $\tau_u\ge3\tau/4$.
+By reducing $\alpha$, Lemma~\ref{lem:sparse-gram} applied at $u$
+now gives, with probability at least $1-\delta$,
+\begin{equation}\label{eq:sparse-high-gram}
+ \|Q_{u,SS}\|_{\mathrm{op}}\le2\tau.
+\end{equation}
+The coherence remainder tends to zero uniformly, including at fixed
+$r_0$. The two displayed high-tail terms can be made as small as needed
+before taking $d$ large.
+
+Put $\zeta=n\ell_u/\tau$. We choose $\alpha$ small enough that
+\begin{equation}\label{eq:sparse-zeta-choice}
+ e_*:=(4+a_\theta^{-2})\zeta\le a_\theta^2/32.
+\end{equation}
+This is possible uniformly by \eqref{eq:sparse-high-eigenvalue}.
+The RKHS bound, the high-tail Gram event, and the variance rank bound
+imply
+\[
+ \mathbb P_n t^2\le2\tau,\qquad
+ \|t\|_2^2\le\zeta\tau,
+ \qquad
+ \mathbb P_x\{\sigma_x^2<\tau/2\}\le4\zeta.
+\]
+For the last assertion, condition additionally on the full degree-$u$
+field. Its remaining diagonal before training is
+$\tau_u\ge3\tau/4$, and the normalized trace of the variance reduction
+is at most $n\ell_u=\zeta\tau$.
+Consequently, except on an input set of measure at most $e_*$, both
+$\sigma_x^2\ge\tau/2$ and $|t(x)|\le a_\theta\sqrt\tau$ hold.
+The confidence lemma then shows that
+\begin{equation}\label{eq:sparse-confidence-margin}
+ f(x)(p(x)+b(x))>a_\theta\sqrt\tau
+\end{equation}
+at every remaining point where $q_S(x)>\theta$.
+
+\medskip\noindent
+\emph{A fixed stop-loss bound rules out hiding the negative mass.}
+Choose the deterministic threshold
+$T=4\sqrt\tau/a_\theta$.
+Apply Lemma~\ref{lem:multiband-process} to the deterministic radius
+$R=4\sqrt{B\tau}$ and this $T$.
+By Markov's inequality its uniform empirical error is at most
+\[
+ 4\delta^{-1}(R\eta+\sqrt\Delta)
+ \le a_\theta\sqrt\tau/8
+\]
+with probability at least $1-\delta$, after the stated choices:
+\eqref{eq:sparse-variable-accuracy} controls the first term and
+\eqref{eq:sparse-band-trace} controls the second by increasing $r_0$.
+The actual $p,b$ belong to this class on the earlier events, since
+\eqref{eq:sparse-head-radius} bounds $\mathbb E|p|$ and
+$\|b\|_K\le\sqrt n$.
+Let $h=p+b$. Training consistency gives $(-f_i h_i)_+\le|t_i|$.
+Using $(z-T)_+\le z^2/(4T)$ for $z\ge0$ and
+\eqref{eq:sparse-high-gram}, we obtain
+\[
+ \mathbb P_n(-fh-T)_+
+ \le\frac{\mathbb P_n t^2}{4T}
+ \le a_\theta\sqrt\tau/8,
+ \qquad
+ \mathbb E_x(-fh-T)_+\le a_\theta\sqrt\tau/4.
+\]
+By \eqref{eq:sparse-confidence-margin}, the positive-part integral of
+$fh$ is at least
+$a_\theta\sqrt\tau(1-F_\theta-e_*)$, and its negative set has measure
+at most $F_\theta+e_*$. Crucially, $\deg h\le u<k$, so
+$\mathbb E fh=0$ exactly. Equality of the positive and negative
+integrals therefore gives
+\[
+ a_\theta(1-F_\theta-e_*)
+ \le\frac4{a_\theta}(F_\theta+e_*)+\frac{a_\theta}4.
+\]
+It follows that
+\[
+ F_\theta\ge\frac{3a_\theta^2}{4(4+a_\theta^2)}-e_*
+             \ge\frac{a_\theta^2}{32}=\varepsilon,
+\]
+where we used \eqref{eq:sparse-zeta-choice} and $a_\theta^2<1$.
+The low Gram, high Gram, ReLU, and fixed-stop-loss events have combined
+probability at least $1-4\delta>3/4$ for all sufficiently large $d$.
+No independence between these events is assumed.
+
+\medskip\noindent
+\emph{The remaining, smaller samples.}
+If the maximal cutoff is below $r_0$, or does not exist, then
+$n<A D_{r_0}\log(D_{r_0}+1)$. Fix the odd integer $s=r_0+2$.
+The sharp spectrum gives, uniformly in this entire range,
+\[
+ \frac{n\ell_s}{\tau_s}
+ \le C_{L,A,r_0}\frac{D_{r_0}\log(D_{r_0}+1)}
+                           {s\binom D{s+2}}=o(1)
+ \qquad(d\to\infty).
+\]
+Let $p=\Pi_{\le s}m$. The mean-norm, residual-variance, and confidence
+lemmas show that, except on an $o(1)$ fraction of inputs, confidence
+above $\theta$ implies $fp>0$. Conditional on any values of the
+$d-k$ nuisance coordinates, $p$ is a degree-$s$ polynomial on the
+$k$ target coordinates. Lemma~\ref{lem:ptf-parity} thus bounds its
+strictly correct fraction by $1-b_k(s)$, where
+\[
+ b_k(s)=2^{-k}\sum_{j=0}^{\lfloor(k-s-1)/2\rfloor}\binom kj.
+\]
+Choose $K_0$ sufficiently large relative to the fixed $s$ that
+$b_k(s)\ge2/5$ for every $k\ge K_0$.
+This gives $F_\theta\ge2/5-o(1)>\varepsilon$ for every such training
+sample. At $n=0$, $q_S=1/2$ identically.
+All errors above are uniform over $k\ge K_0$ and the specified sample
+range after fixing the constants.
+
+Finally shrink $c$, if necessary, so that $c\le1/(2K_0)$.
+For $1\le k<K_0$ the sample bound implies $n\le\sqrt{ed}$.
+The degree-zero projection $p_0=\Pi_{\le0}m$ is constant.
+The first paired eigenvalues satisfy $\lambda_0=\lambda_1$;
+since the total trace is one, $(d+1)\lambda_0\le1$.
+Consequently its tail satisfies the exact bound
+$\ell_0/\tau_0=\lambda_1/(1-\lambda_0)\le1/d$.
+The same mean and residual-variance estimates show that, outside a
+fraction $O_\theta(n/d)=o(1)$ of inputs, confidence above $\theta$
+implies $fp_0>0$. A constant can be strictly correct on at most half
+the cube for any nonconstant parity. Therefore
+$F_\theta\ge1/2-o(1)>\varepsilon$ for every training sample in this
+remaining range. A single sufficiently large $d_0$ covers all cases.
+
+Finally, the Gaussian sign-posterior width limit holds at fixed
+$d,k,S$ for every fixed $\gamma<0$. At any point with
+$q_S(x)\le13/20$, finite-width correct-label probabilities are eventually
+below $2/3$. Since the cube is finite, the asserted $\liminf$ transfer
+holds simultaneously at all these points.
+\end{proof}

@@ -1,0 +1,293 @@
+% Standalone mathematical sections for inclusion in the common subcritical paper.
+% Authoring agent: /root/subcritical_sample_gp, 2026-10-15.
+% Requires amsmath, amssymb, amsthm; uses theorem, lemma, proposition environments.
+
+\section{The Gaussian sign posterior: \texorpdfstring{$\gamma<0$}{gamma < 0}}
+\label{sec:negative-gamma}
+
+Write $M=2^d$, let $K$ denote the $M\times M$ limiting covariance
+matrix, and let $v=M\lambda_d>0$ be its smallest matrix eigenvalue.
+All norms and averages on the cube below use the uniform probability
+measure.  The RKHS norm of a vector $h$ is
+$\|h\|_K^2=h^TK^{-1}h$.
+Let $S$ be any training sample, let $s$ be its number of distinct
+locations, and condition $G\sim N(0,K)$ on the observed sign constraints.
+In the regime $\gamma<0$ this is exactly the limiting posterior: the
+fixed original margin vanishes after output normalization.
+
+\begin{lemma}[A norm bound for the conditional mean]
+\label{lem:sign-mean-norm}
+Let $m(x)=\mathbb E[G(x)\mid S]$.  Then
+\[
+ m=K_{\mathcal X,S}K_{S,S}^{-1}m_S,
+ \qquad \|m\|_K^2\le s.
+\]
+\end{lemma}
+\begin{proof}
+Distinct training coordinates have a nonsingular covariance matrix.
+Whiten their Gaussian vector as $G_S=K_{S,S}^{1/2}\xi$, with
+$\xi\sim N(0,I_s)$.  The observed sign event is a homogeneous cone
+in $\xi$.  A standard Gaussian radius is independent of its direction,
+so conditioning on this cone leaves
+$\mathbb E[\|\xi\|^2\mid S]=s$.  Jensen's inequality gives
+$m_S^TK_{S,S}^{-1}m_S\le s$.  Gaussian conditioning gives the
+representer formula; its RKHS norm squared is exactly the preceding
+quadratic form.
+\end{proof}
+
+\begin{lemma}[Posterior confidence gives a latent margin]
+\label{lem:confidence-latent-margin}
+Put
+\[
+ \theta_0=\frac{13}{20},\qquad
+ c_* = \sqrt{2\pi}\left(\frac1e-\frac7{20}\right)>0.
+\]
+At any unobserved input $x$, correct-label probability strictly
+larger than $\theta_0$ implies
+\[
+ f(x)m(x)>c_*\sqrt v.
+\]
+\end{lemma}
+\begin{proof}
+The conditioned Gaussian is log-concave, since its conditioning
+set is convex.  Its scalar marginal $X=f(x)G(x)$ is therefore
+log-concave.  If $\mu=\mathbb E X$, both its distribution function
+$F_X$ and survival function are log-concave.  Jensen's inequality
+and the probability integral transform give
+\[
+ F_X(\mu)\ge e^{-1},\qquad
+ \mathbb P(X\ge\mu)\ge e^{-1}.
+\]
+For example,
+$\log F_X(\mu)\ge\mathbb E\log F_X(X)=-1$.
+Consequently $\mathbb P(X>0)>\theta_0$ implies $\mu>0$,
+since $\theta_0>1-e^{-1}$.
+
+Conditionally on the full vector $G_S$, $G(x)$ is Gaussian with
+variance
+\[
+ \sigma_x^2=K(x,x)-K(x,S)K_{S,S}^{-1}K(S,x).
+\]
+The same variance occurs in every component after conditioning only
+on the signs, so the scalar density is at most
+$(\sqrt{2\pi}\sigma_x)^{-1}$.  Since
+$\mathbb P(X>\mu)\le1-e^{-1}$, we obtain
+\[
+ \theta_0<\mathbb P(X>0)
+ \le1-e^{-1}+\frac{\mu}{\sqrt{2\pi}\sigma_x},
+\]
+which implies $\mu>c_*\sigma_x$.
+Finally, $K\succeq vI$, and for every vector $b$ of training
+coefficients,
+\[
+ \operatorname{Var}(G(x)-b^TG_S)
+ \ge v(1+\|b\|_2^2)\ge v.
+\]
+Minimization over $b$ gives $\sigma_x^2\ge v$.
+\end{proof}
+
+Define the polynomial-threshold parity obstruction
+\[
+ B(d,r)=2^{-d}\sum_{j=0}^{\lfloor(d-r-1)/2\rfloor}\binom dj
+ \quad(0\le r<d).
+\]
+The polynomial-threshold lemma proved above says that every real
+polynomial of degree at most $r$, thresholded at zero, has error
+at least $B(d,r)$ against full parity.  The convention at zero can
+be either fixed sign: adding an arbitrarily small constant removes
+all zeros without changing that convention.
+
+\begin{theorem}[A confidence bound for negative exponents]
+\label{thm:negative-confidence}
+For full parity, every training sample with $s$ distinct locations
+satisfies, in the $\gamma<0$ width limit,
+\begin{equation}\label{eq:negative-confidence}
+ F_{\theta_0}(S)\ge B(d,r)-\frac{s}{M}
+             -\frac{s\lambda_{r+1}}{c_*^2v},
+ \qquad 0\le r<d.
+\end{equation}
+Here $F_{\theta_0}(S)$ is the fraction of inputs where correct-label
+probability is at most $\theta_0=13/20$.  These points also fail
+the requested strict $2/3$ confidence criterion.  Moreover, for the
+original finite-width posteriors,
+\[
+ \liminf_{N\to\infty}F_N(S)
+ \ge B(d,r)-\frac{s}{M}
+             -\frac{s\lambda_{r+1}}{c_*^2v}.
+\]
+\end{theorem}
+\begin{proof}
+Let $p$ be the Fourier truncation of $m$ to degree at most $r$.
+The eigenvalues decrease with Fourier degree, and
+Lemma~\ref{lem:sign-mean-norm} gives
+\[
+ \|m-p\|_2^2\le\lambda_{r+1}\|m\|_K^2
+                    \le s\lambda_{r+1}.
+\]
+At an unobserved input with confidence strictly larger than $\theta_0$,
+Lemma~\ref{lem:confidence-latent-margin} gives
+$f(x)m(x)>c_*\sqrt v$.  If the sign of $p(x)$ is wrong there,
+then $|m(x)-p(x)|\ge c_*\sqrt v$.  Thus the error of the
+polynomial threshold $p$ is at most
+$F_{\theta_0}(S)+s/M+s\lambda_{r+1}/(c_*^2v)$.
+The polynomial-threshold lower bound proves the claim.  The term
+$s/M$ is needed because observed coordinates do not have a
+positive Gaussian residual variance.
+\end{proof}
+
+\section{A fixed global margin: \texorpdfstring{$\gamma=0$}{gamma = 0}}
+\label{sec:zero-gamma}
+
+Now the limiting posterior is $G\sim N(0,K)$ conditioned on
+$|G(x)|>a$ at every input and on the observed labels.
+This conditioning is not convex.  The argument in the previous
+section therefore does not apply.  Instead we control the Fourier
+tail of an entire posterior draw.
+
+\begin{lemma}[High-degree covariance mass]
+\label{lem:tail-trace}
+Put $\beta=2^{-(L-1)}$ and let
+$\tau_r=\sum_{j>r}\binom dj\lambda_j$.  For every $r\ge0$,
+\[
+ \tau_r\le \frac{2}{1-e^{-1}}(r+1)^{-\beta}.
+\]
+\end{lemma}
+\begin{proof}
+Write the saturated kernel function as
+$F(t)=H^{\circ(L-1)}(t)=\sum_{m\ge0}c_mt^m$, where $c_m\ge0$
+and $\sum_m c_m=1$.  The kernel
+$((1+x\cdot y)/(d+1))^m$ has Fourier degree at most $m$ and
+normalized trace one.  Consequently
+$\tau_r\le\sum_{m>r}c_m$.
+For $u=1/(r+1)$,
+\[
+ (1-e^{-1})\sum_{m>r}c_m
+ \le1-F(1-u).
+\]
+The elementary inequality
+$1-H(1-u)\le\sqrt{2u}$, valid for $0\le u\le1$, follows
+from $u=2\sin^2(\tfrac12\arccos(1-u))$ and
+$\sin t\ge2t/\pi$ on $[0,\pi/2]$.
+Iteration gives $1-F(1-u)\le2u^{\beta}$.
+\end{proof}
+
+\begin{lemma}[A denominator bound uniform in the labels]
+\label{lem:margin-denominator}
+Set
+\[
+ t=\sqrt{2\log(4M)},\qquad b=a+t+1,\qquad
+ D_s=b^2\left(\lambda_0^{-1}+\frac{4s}{v}\right).
+\]
+The event $A_S$ imposing the global margin and any consistent labels
+on $s$ distinct inputs satisfies
+\[
+ \mathbb P(A_S)\ge\tfrac12 e^{-D_s}.
+\]
+\end{lemma}
+\begin{proof}
+Since every marginal of $G$ has variance one, a union bound gives
+$\mathbb P(E)\ge1/2$ for the symmetric set
+$E=\{\max_x|G(x)|\le t\}$.
+Let $u$ be the indicator vector of the observed locations with
+negative labels, and put $h=b(\mathbf1-2u)$.  Then $h+E\subset A_S$.
+The constant vector has squared RKHS norm $1/\lambda_0$, while
+$\|u\|_K^2\le s/v$.  Thus
+\[
+ \tfrac12\|h\|_K^2
+ \le b^2(\lambda_0^{-1}+4s/v)=D_s.
+\]
+The Gaussian shift identity and symmetry of $E$ give
+\begin{align*}
+ \mathbb P(G\in h+E)
+ &=e^{-\|h\|_K^2/2}
+   \mathbb E[\mathbf1_E(G)e^{-h^TK^{-1}G}]\\
+ &\ge e^{-\|h\|_K^2/2}\mathbb P(E).
+\end{align*}
+Indeed the conditional mean of the linear form on the symmetric
+set $E$ is zero, so Jensen's inequality applies.  This proves
+the bound.
+\end{proof}
+
+\begin{theorem}[A confidence bound at zero exponent]
+\label{thm:zero-confidence}
+Fix $0\le r<d$ and $\delta>0$ with $\tau_r\le\delta/4$.
+Put $\ell=\lambda_{r+1}$ and
+\[
+ q_s=\min\{1,\ 2\exp(D_s-\delta/(8\ell))\}.
+\]
+For full parity, the limiting posterior mean error $R(S)$ and
+confidence failure $F(S)$ satisfy
+\begin{align}
+ R(S)&\ge B(d,r)-\delta/a^2-q_s,\label{eq:zero-risk}\\
+ F(S)&\ge\max\left\{0,
+       \frac{3[B(d,r)-\delta/a^2-q_s]-1}{2}\right\}.
+       \label{eq:zero-confidence}
+\end{align}
+\end{theorem}
+\begin{proof}
+Let $G_{>r}$ be the high-degree Fourier part of the Gaussian draw.
+In an orthonormal Fourier basis,
+$W=\|G_{>r}\|_2^2=\sum_{|U|>r}\lambda_{|U|}\xi_U^2$,
+with independent standard Gaussian $\xi_U$.
+Every coefficient is at most $\ell$, and their sum is $\tau_r$.
+For $\theta=1/(4\ell)$,
+\[
+ \log\mathbb E e^{\theta W}
+ =-\tfrac12\sum_{|U|>r}\log(1-2\theta\lambda_{|U|})
+ \le2\theta\tau_r.
+\]
+Markov's inequality and $\tau_r\le\delta/4$ imply
+\[
+ \mathbb P(W>\delta)\le e^{-\delta/(8\ell)}.
+\]
+Lemma~\ref{lem:margin-denominator} therefore gives
+$\mathbb P(W>\delta\mid A_S)\le q_s$.
+
+On $A_S$, if $\operatorname{sign}G$ and the threshold of
+$G_{\le r}$ disagree at an input, then $|G_{>r}(x)|>a$.
+When $W\le\delta$, their disagreement fraction is consequently
+at most $\delta/a^2$.  The degree-$r$ polynomial threshold has
+parity error at least $B(d,r)$.  Hence the posterior draw has
+error at least $B(d,r)-\delta/a^2$ except on an event of
+probability at most $q_s$.  Averaging gives
+\eqref{eq:zero-risk}.
+Finally, if $p(x)$ is correct-label posterior probability, then
+$R=\mathbb E_x(1-p(x))\le (1-F)/3+F$.
+Rearranging proves~\eqref{eq:zero-confidence}.
+\end{proof}
+
+\subsection{Consequence at fixed depth}
+For fixed $L$ and fixed margin $a>0$, the preceding bounds imply
+constants $c>0$ and $d_0$ such that, for $d\ge d_0$, every sample
+with
+\[
+ n\le\exp(c\sqrt d\log(d+1))
+\]
+has limiting confidence failure at least $1/16$, for every
+$\gamma\le0$.
+To see this, take $r=\lfloor\sqrt d/64\rfloor$.
+Elementary central-binomial estimates give $B(d,r)\ge7/16$ for
+all sufficiently large $d$.  Spectral ordering and trace one give
+$\lambda_{r+1}\le\binom d{r+1}^{-1}
+=\exp[-\Omega(\sqrt d\log(d+1))]$.
+The spectral bounds proved earlier give
+$\lambda_0^{-1}=O_L(d)$ and $v^{-1}=O_L(d\log(d+1))$.
+For negative exponents these estimates apply directly to
+\eqref{eq:negative-confidence}; its two error terms tend to zero
+when $c$ is sufficiently small.
+At exponent zero choose $\delta=a^2/32$.
+Lemma~\ref{lem:tail-trace} eventually gives $\tau_r\le\delta/4$,
+and the same estimates ensure $D_n\le\delta/(16\ell)$ and
+$q_n\le1/32$.  Thus $R\ge3/8$ and $F\ge1/16$.
+The threshold $d_0$ can be very large at large fixed depth because
+the trace exponent is $2^{-(L-1)}$.
+
+These are bounds for the limiting posterior, and they also give
+$\liminf_{N\to\infty}F_N(S)\ge1/16$ for the requested finite-width
+strict $2/3$ criterion.  At negative exponents, the proof uses
+$\theta_0=13/20<2/3$: every input counted by limiting
+$F_{\theta_0}$ remains a failure at all sufficiently large widths.
+The input cube is finite, so this holds simultaneously on the
+counted inputs.  At exponent zero, the risk lower bound is continuous
+under finite-state posterior convergence; the universal inequality
+$F_N\ge(3R_N-1)/2$ transfers it directly.

@@ -1,0 +1,189 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Exponential parity sample complexity throughout the subcritical width regime},pdfauthor={Dmitry Vaintrob; Kaarel Hanni; OpenAI Codex}}
+\setlength{\emergencystretch}{2em}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\sign}{sign}
+\DeclareMathOperator{\dist}{dist}
+\DeclareMathOperator{\KL}{KL}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\title{Exponential parity sample complexity\\throughout the subcritical width regime}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex}
+\date{October 15, 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We prove an exponential sample lower bound for learning parity with a
+specified Bayesian neural-network prior throughout its subcritical scaling
+regime. The network has fixed depth, Gaussian weights, $\tanh$ hidden
+activations, and a linear readout. Before training, its prior is conditioned
+to have a fixed absolute output margin at every Boolean input; training
+then conditions on exact observed labels. For every fixed $\gamma<1$,
+there is $c>0$ such that each sample size $n\le e^{ck}$ leaves at least
+$1/16$ of the inputs of $k$-bit parity without correct-label posterior
+probability greater than $2/3$, with probability at least $3/4$ over
+independent uniform training inputs, in the width-first limit.
+The proof treats the sign-conditioned Gaussian limit, the Gaussian limit
+with a fixed global margin, and concentration on minimum-energy sign
+functions. Its main ingredients are one-sided squared-loss sampling in
+$O(D\log D)$ examples, a discrete Laplacian identity for clipped parity
+correlation, sharp kernel spectra, and a conditioning estimate forcing
+large output magnitudes at the fixed-margin Gaussian endpoint. The result
+concerns the actual posterior confidence, includes every sample size below
+the exponential threshold, and permits arbitrary weights among tied
+minimum-energy functions.
+\end{abstract}
+
+\section{Model and main theorem}
+Let $\mathcal X=\{-1,1\}^d$, with uniform probability measure, and let
+$f(x)=\prod_{j=1}^d x_j$. We study the following precisely specified prior.
+All hidden layers have width $N$, the depth $L\ge2$ is fixed, and
+\[
+ h^0(x)=(1,x),\qquad h^s(x)=\tanh(W^sh^{s-1}(x))\quad(1\le s<L),
+ \qquad z_N(x)=W^Lh^{L-1}(x).
+\]
+There are no further biases. All weights are independent centered
+Gaussians, with variances
+\begin{equation}\label{eq:weights}
+ \Var W^1_{ij}=N^{1-\gamma}/d,\qquad
+ \Var W^s_{ij}=N^{-\gamma}\quad(1<s<L),\qquad
+ \Var W^L_i=N^{-\gamma-1}.
+\end{equation}
+Fix a margin $a>0$; the convention $a=1/2$ is included. Before training,
+condition on $|z_N(x)|>a$ for every $x\in\mathcal X$. Given independent
+uniform inputs $S=(X_1,\ldots,X_n)$, subsequently condition on
+$\sign z_N(X_i)=f(X_i)$ for all $i$. These two conditioning operations
+are equivalent to conditioning on their intersection.
+
+Define the correct-label posterior probability and its confidence-failure
+fraction by
+\begin{align*}
+ q_{N,S}(x)&=\mathbb P\{f(x)z_N(x)>0\mid
+       |z_N(y)|>a\ \forall y;\ f(X_i)z_N(X_i)>0\ \forall i\},\\
+ F_N(S)&=\mathbb P_x\{q_{N,S}(x)\le2/3\}.
+\end{align*}
+Thus a prediction succeeds only when its actual posterior probability of
+being correct is strictly greater than $2/3$. This includes equality among
+failures. Expectations over a fresh input always use the uniform cube
+distribution independently of the training inputs.
+
+\begin{theorem}\label{thm:main}
+For every fixed $L\ge2$ and $a>0$, there are constants $c>0$ and $d_0$
+such that, for every $d\ge d_0$, every integer $0\le n\le e^{cd}$, and
+every fixed $\gamma<1$,
+\[
+ \mathbb P_S\!\left\{\liminf_{N\to\infty}F_N(S)\ge\frac1{16}\right\}
+ \ge\frac34.
+\]
+The conditioning probabilities are positive for all sufficiently large
+$N$, at each fixed $d,L,a,\gamma,S$.
+\end{theorem}
+
+The width limit is taken at fixed dimension and fixed training sample.
+The exponential statement then concerns $d=k\to\infty$. No joint limit
+or quantitative minimum width is asserted here. The probability guarantee
+holds for each specified sample size with uniform constants; it does not
+assert a single event for every prefix of an infinite sample sequence.
+In particular, the proof does not assume monotonicity of this learner's
+fixed-target risk in sample size.
+
+Parity has a Boolean circuit with $O(d)$ gates. It also has a
+polynomial-size, polynomial-weight $\tanh$ realization at every fixed
+depth, as shown in Appendix~\ref{sec:paritycircuit}. The theorem therefore
+rules out a sample guarantee polynomial in those complexity measures for
+this width-first learner. It does not claim that identifying parity from
+examples is intrinsically exponentially difficult.
+
+\subsection{Proof structure and the three limiting posteriors}
+Write $\Psi(t)=2\arcsin(t)/\pi$ and $\beta=2^{-(L-1)}$. The relevant
+covariance is
+\[
+ K(x,y)=\Psi^{\circ(L-1)}\!\left(\frac{1+x\cdot y}{d+1}\right).
+\]
+All population function norms use the uniform probability measure on the
+cube. Write $\Pi_{\le r}g=g_{\le r}$ for the Walsh projection to degrees
+at most $r$, and $g_{>r}=g-g_{\le r}$. For the positive-definite covariance
+$K$, the Gaussian energy norm is $\|g\|_K^2=g^{\mathsf T}K^{-1}g$;
+this uses the covariance matrix itself, without an extra factor $2^{-d}$.
+At $\gamma<0$ the limit is a Gaussian process conditioned on the training
+signs. At $\gamma=0$ it retains the fixed absolute margin at every input.
+For $0<\gamma<1$ the actual network posterior concentrates on compatible
+globally separated functions of minimum Gaussian energy; the proof needs
+no formula for the weights of ties.
+
+The common obstacle is to control low-degree functions selected after
+seeing the training data. We prove a uniform squared negative-part
+estimate using the stronger metric bound inside Lee's chaining argument
+\cite{Lee2023}. A discrete Laplacian identity then converts an $L^2$
+bound on a degree-$r$ polynomial into a clipped parity-correlation bound
+with factor $r/d$. An additional short band of Fourier levels handles the
+gaps between adjacent sampling thresholds. At $\gamma=0$, Gaussian
+entropy bounds and an auxiliary independent sample preserve the exact
+globally conditioned posterior throughout the argument.
+
+\input{width-limits}
+\input{spectral}
+\input{sampling}
+\input{tail-gram}
+\input{adaptive}
+\input{condition}
+\input{positive}
+\input{zero}
+\input{gamma-negative}
+
+\section{Proof of the main theorem}
+The positive-exponent, zero-exponent, and negative-exponent conclusions
+proved above each hold with probability at least $3/4$ for every specified
+$n\le e^{cd}$. Decrease $c$ and increase $d_0$ to satisfy their finitely
+many requirements. The width-limit propositions transfer these conclusions
+to the stated neural-network posterior.
+
+For clarity, when the posterior's mean classification error is $R_N$,
+the confidence fraction always satisfies
+\[
+ R_N=\mathbb E_x(1-q_{N,S}(x))
+ \le\frac{1-F_N}{3}+F_N,
+ \qquad F_N\ge\frac{3R_N-1}{2}.
+\]
+The nonnegative-exponent arguments give $\liminf R_N\ge3/8$, hence the
+required $1/16$. The negative-exponent argument instead directly bounds
+the fraction with limiting confidence at most $13/20<2/3$, so convergence
+of each of the finitely many posterior label probabilities gives the same
+conclusion. This proves Theorem~\ref{thm:main}.
+
+\appendix
+\input{parity-circuit}
+
+\begin{thebibliography}{9}
+\bibitem{ABFR}
+J. Aspnes, R. Beigel, M. Furst, and S. Rudich.
+The expressive power of voting polynomials.
+\emph{Combinatorica} 14(2):135--148, 1994.
+\href{https://www.cs.yale.edu/homes/aspnes/papers/stoc91voting.pdf}{Author manuscript}.
+\bibitem{flajolet2009}
+P. Flajolet and R. Sedgewick. \emph{Analytic Combinatorics}.
+Cambridge University Press, 2009. Chapter VI.
+\bibitem{Lee2023}
+J. R. Lee. Spectral hypergraph sparsification via chaining.
+\href{https://arxiv.org/abs/2209.04539}{arXiv:2209.04539},
+Section 2.4, Lemma 2.12 and equation (2.20).
+\bibitem{tropp2008}
+J. A. Tropp. Norms of random submatrices and sparse approximation.
+\emph{Comptes Rendus Math\'ematique} 346:1271--1274, 2008.
+\href{https://tropp.caltech.edu/papers/Tro08-Norms-Random-v3.pdf}{Author manuscript},
+Theorem 1.1.
+\bibitem{prekopa1973}
+A. Pr\'ekopa. On logarithmic concave measures and functions.
+\emph{Acta Scientiarum Mathematicarum} 34:335--343, 1973.
+\end{thebibliography}
+\end{document}

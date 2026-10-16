@@ -1,0 +1,204 @@
+\section{Uniform middle-band estimates by Gaussian perturbation}
+\label{sec:middle-pac}
+This section uses the exact sample size~\eqref{eq:exact-size}. Put
+$\tau=\tau_r$, $\rho=r/(d+1)$, and $H=\log(e/\rho)$.
+Let $B=Cna^2d^\beta$ be a deterministic upper energy bound. The constants
+may depend on fixed depth, polynomial sparsity, and a fixed upper
+multiple $v_*/r$. Throughout the applications, $\epsilon\ge\rho^e$
+for a sufficiently small fixed $e>0$; the positive-power remainders are
+asserted only in this range. Auxiliary targets have uniform marginal,
+or marginal density bounded by a fixed constant relative to uniform.
+Their source is uniform, and the coupling is candidate independent
+until the finite-net extension at the end of the section.
+
+\begin{lemma}[A rare-event Gaussian PAC bound]\label{lem:gaussian-pac}
+Let $\mathcal H$ be finite dimensional and
+$F_h(X)=\max_{j\le M}\|T_{X,j}h\|$ for linear maps into Hilbert spaces.
+Suppose
+\[
+ \operatorname{tr}(T_{X,j}^*T_{X,j})\le\Delta,
+ \qquad \|T_{X,j}^*T_{X,j}\|\le L,
+ \qquad \Pp\{F_h>z\}\le\Lambda\|h\|^2/z^2.
+\]
+Choose a centered isotropic Gaussian prior with variance $\sigma^2$ such
+that $\Pp_G\{F_G>z/4\}\le\varepsilon_0$ uniformly in $X$.
+Put $p_*=16\Lambda B/z^2+\varepsilon_0$ and suppose $p_*\le e^{-8}$.
+With probability at least $1-\delta$, simultaneously for all
+$\|h\|^2\le B$,
+\[
+ \Pp_n\{F_h>z\}\le C\sqrt{p_*}
+ +C\frac{B/(n\sigma^2)+\log(2\sqrt n/\delta)/n}
+              {\log(1/p_*)}.
+\]
+The conclusion remains true for auxiliary-averaged losses, with the
+original $n$ independent observations as the sampling units.
+\end{lemma}
+\begin{proof}
+For the bounded loss $\ell_g=1_{\{F_g>z/2\}}$, the binary PAC-Bayes
+inequality holds simultaneously for every posterior $Q$:
+\[
+ \operatorname{kl}(\E_Q\Pp_n\ell_g\,\|\,\E_Q\Pp\ell_g)
+ \le\frac{\KL(Q\|\Pi)+\log(2\sqrt n/\delta)}n.
+\]
+For completeness, the binomial exponential-moment bound
+$\E\exp[n\operatorname{kl}(\Pp_n\ell\|\Pp\ell)]\le2\sqrt n$,
+Fubini, Markov, and the entropy variational inequality prove this;
+joint convexity of binary relative entropy passes from individual
+losses to $Q$. The same argument applies to bounded losses in $[0,1]$
+by Bernoulli randomization and Jensen.
+Choose $Q=N(h,\sigma^2I)$, so $\KL(Q\|\Pi)=\|h\|^2/(2\sigma^2)$.
+The triangle inequality gives empirical posterior loss at least
+$(1-\varepsilon_0)\Pp_n(F_h>z)$ and population posterior loss at most
+$p_*$. If its empirical value $q$ exceeds $\sqrt{p_*}$, then
+\[
+ \operatorname{kl}(q\|p')\ge q\log(1/p_*)
+                 -q\log(e/q)
+ \ge\tfrac14q\log(1/p_*)\qquad(p'\le p_*).
+\]
+Otherwise $q\le\sqrt{p_*}$. These alternatives prove the result.
+Pointwise Gaussian estimates can be averaged over auxiliary variables
+before applying the same bounded-loss inequality.
+\end{proof}
+
+The needed perturbation probabilities follow from Gaussian norm
+concentration. In particular,
+\begin{equation}\label{eq:gaussian-noise-options}
+ \sigma^2=\frac{z^2}{C\Delta}
+ \ \Longrightarrow\ 
+ \varepsilon_0\le M e^{-c\Delta/L},\qquad
+ \sigma^2=\frac{z^2}{C\Delta D_0},\quad D_0\ge\log(2M)
+ \ \Longrightarrow\ 
+ \varepsilon_0\le e^{-cD_0}.
+\end{equation}
+Indeed the mean norm is at most $\sigma\sqrt\Delta$ and the squared
+Lipschitz constant is at most $\sigma^2L$.
+
+\subsection{Dyadic completed pairs}
+Index omitted pairs by $j\ge1$, with pair $j$ containing degrees
+$r+2j-1,r+2j$. Group $t\le j<2t$ for $t=1,2,4,\ldots$, stopping at
+$v_*$. If $I_t$ denotes a block, its kernel trace $\Delta_t$ and largest
+eigenvalue $\Lambda_t$ satisfy
+\begin{equation}\label{eq:dyadic-middle-spectrum}
+ \Delta_t\le C(t/r)\tau,
+ \qquad B\Lambda_t/a^2
+       \le CH\rho^{-\beta-1/400}(C\rho)^{2t}.
+\end{equation}
+These follow by summing the paired level masses and iterating their
+two-step binomial ratio. Thus the first omitted pair is included.
+Give block $t=2^s$ threshold $a\epsilon_t$, where
+$\epsilon_t=c\epsilon/(s+1)^2$ and $\sum_t\epsilon_t\le\epsilon$.
+The triangle inequality reduces a bad event for the sum to the union
+of block bad events. All fields may be sample dependent.
+
+\subsection{Nested angular fluctuations}
+For centered restriction to a nuisance subcube, the feature covariance
+in a block has trace at most $\Delta_t$ and norm at most $C\rho\Delta_t$.
+To verify the norm bound, diagonalize on the free coordinates. Every
+nonconstant restricted character contains some specified free coordinate;
+the sum of original Fourier weights containing that coordinate is at
+most $(v_*/d)\Delta_t$. This bounds each restricted eigenvalue.
+For each fixed nuisance order, reverse-martingale Doob gives
+\[
+ \Pp_X\left\{\max_q\Var_{C_{\pi,q}(X)}h>z^2\right\}
+ \le\|h\|_2^2/z^2\le\Lambda_t\|h\|_K^2/z^2.
+\]
+The same bound holds after averaging random orders.
+Use the first choice in~\eqref{eq:gaussian-noise-options}, with at most
+$d+1$ stages. The perturbation failure is $e^{-c/\rho}$, and
+\eqref{eq:dyadic-middle-spectrum} gives
+$\log(1/p_*)\ge c\min(tH,1/\rho)$.
+Lemma~\ref{lem:gaussian-pac} and dyadic summation yield
+\begin{equation}\label{eq:nested-angular-pac}
+ \Pp_{n,\pi}\left\{\max_q\Var_{C_{\pi,q}(X)}J>
+                                      a^2\epsilon^2\right\}
+ \le C\epsilon^{-2}\left[
+ \frac{\rho^{-\beta}\log^5(r+2)}{rH}
+           +\rho^{1-\beta}\log^4(r+2)\right]+\rho^c,
+\end{equation}
+with negligible confidence terms at the sample sizes under consideration.
+Replacing $\epsilon^2$ by $p_{\rm bin}\epsilon^2$ divides the displayed
+complexity terms by $p_{\rm bin}$. This controls subcube angular
+fluctuations; it asserts no spherical weak-type estimate.
+
+\subsection{Local common offsets}
+Let $Y$ differ from $X$ only on an active face of dimension $m_f$.
+For $h\le S$, the feature map
+$h_0\mapsto[h_0(X)-h_0(Y,W)]_{W\in S_h(V)}$ has squared
+Hilbert--Schmidt norm at most
+\[
+ C\rho(m_f+S)\Delta_t.
+\]
+The bound follows by averaging character differences: a degree at most
+$v_*$ support meets the changed coordinates with probability at most
+$C\rho(m_f+S)$. For the population mean-square maximum, the crude union
+bound gives
+\[
+ \E\max_{h\le S}\E_{W\in S_h(V)}|h_0(X)-h_0(Y,W)|^2
+       \le C(S+1)\Lambda_t\|h_0\|_K^2.
+\]
+Only the source and target marginals are used. Choose
+$D_0=C[tH+\log(2S+2)]$ in the second Gaussian option. If
+$S\le\rho^{-\Theta}$ and $2-1/400-\beta-\Theta>0$, the rare-event
+logarithm is at least $ctH$. Consequently
+\begin{equation}\label{eq:local-middle-pac}
+ \Pp_{n,Y}\left\{
+ \max_{h\le S}\E_{W\in S_h(V)}|J(X)-J(Y,W)|^2>a^2\epsilon^2
+ \right\}
+ \le C\epsilon^{-2}\rho^{1-\beta}(m_f+S)\log^4(r+2)+\rho^c.
+\end{equation}
+This proves the mean-square version needed to preserve a global gap.
+
+\subsection{Radial windows and steps}
+Let $R_b^m(h)$ be the normalized degree-$b$ nuisance sphere multiplier.
+Its difference identity is
+\[
+ R_b^m(h)-R_b^m(h+1)=\frac{2b}mR_{b-1}^{m-1}(h).
+\]
+The Krawtchouk decay estimate implies, for $q\ge128\ell$,
+$|h-q/2|\le\sqrt{2q\ell}$, and $b\le v_*$,
+\[
+ |R_b^m(h)-R_b^m(\lfloor q/2\rfloor)|^2
+ \le C\ell b/m.
+\]
+Indeed sum the difference identity across the window and use
+$|R_{b-1}^{m-1}(h)|\le C\exp[-c(b-1)q/m]$; maximizing
+$(b/m)^2q\ell\exp[-c(b-1)q/m]$ proves the claim, with $b=0,1$
+handled directly. Window feature variance is therefore at most
+$C\ell\rho\Delta_t$.
+The dimension-free spherical-mean maximal theorem~\cite{HKS} gives
+\[
+ \left\|\max_h|S_hh_0|\right\|_2\le C\|h_0\|_2,
+\]
+so it bounds the population loss of radial windows. Gaussian union over
+at most $d^2$ windows and the preceding dyadic argument give
+\begin{equation}\label{eq:middle-window-pac}
+ \Pp_n\left\{\max_{\substack{q\ge128\ell\\|h-q/2|\le\sqrt{2q\ell}}}|S_hJ-S_{\lfloor q/2\rfloor}J|
+                                   >a\epsilon\right\}
+ \le C\epsilon^{-2}\rho^{1-\beta}\ell\log^4(r+2)+\rho^c.
+\end{equation}
+This invokes the maximal theorem for ordinary means, not for angular
+variances or for spherical averages of squared functions.
+
+For permutation-averaged subcube means the multiplier is
+$A_b(q)=\binom{m-q}{b}/\binom mb$, with
+$A_b(q)-A_b(q+1)=bA_b(q)/(m-q)$. Its absolute value is at most
+$Cb/m$ for $b\le v_*$. The step feature variance is thus at most
+$C\rho^2\Delta_t$. Jensen and reverse Doob give the population
+$L^2$ maximal bound for $\mu_q$. The same proof yields
+\begin{equation}\label{eq:middle-binomial-step-pac}
+ \Pp_n\{\max_q|\mu_qJ-\mu_{q+1}J|>a\epsilon\}
+       \le C\epsilon^{-2}\rho^{2-\beta}\log^4(r+2)+\rho^c.
+\end{equation}
+
+\subsection{Fixed couplings and a finite net}
+Every proof above remains valid when the target active point is drawn
+from a fixed candidate-independent coupling whose source is uniform,
+whose target marginal density is bounded by a fixed constant, and whose
+active changes stay within the indicated face. The pointwise Gaussian
+feature bounds are unchanged, while population bounds gain only the
+marginal-density constant. For a finite set of $N_*$ such couplings,
+apply each PAC bound with confidence $\delta/N_*$. The additional
+complexity is $\log N_*/n$, divided by the same rare-event logarithm.
+A data-dependent head coupling is handled by the finite pattern net in
+Section~\ref{sec:balanced-contacts}; no covariance concentration event is
+unioned over that net.

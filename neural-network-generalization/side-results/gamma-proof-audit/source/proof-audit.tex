@@ -1,0 +1,90 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,microtype,booktabs,xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+\setlength{\emergencystretch}{3em}
+\newtheorem{proposition}{Proposition}
+\title{Proof audit and scope of the scaling results}
+\author{OpenAI Codex}
+\date{October 15, 2026}
+\begin{document}
+\maketitle
+
+This report records the findings from checking the supplied Fable draft and its cited mean-field argument. The accompanying papers give the replacement proofs in full. All learning statements below use the prior conditioned on an absolute output margin at \emph{every} Boolean input, followed by noiseless observed-label conditioning. A confidence-success statement means that the posterior probability of the correct label is strictly greater than $2/3$.
+
+\input{reviews/fable-audit.tex}
+
+\section{The cited mean-field proof: a definite pointwise-norm error}
+The finite-exponent draft cites Vaintrob and H\"anni, \emph{Width-Robust Learnability in Mean-Field Bayesian Neural Networks}, \href{https://arxiv.org/abs/2607.05735}{arXiv:2607.05735v1}. Its model uses a smooth squared-error Gibbs tilt and independent biases at every hidden layer. Those conventions differ from the globally margin-conditioned classifier considered here, so its learning conclusion could not be transferred without additional work even if its proof were complete.
+
+There is also a direct mathematical error in its proposed regularity invariant. Appendix A, Definition A.6(I4), bounds a pointwise derivative by a population $L^2$ norm of the perturbation, with a polynomial constant. The claimed initialization in Appendix B, Theorem B.14, fails already for a simple readout.
+
+Let $\mu$ be uniform on $\{-1,1\}^d$ and consider
+\[
+ S(\xi)(x)=\frac1M\sum_{j=1}^M\tanh(\xi_j(x)).
+\]
+The asserted form of the bound is
+\[
+ |D_{j,u}S(\xi)(x)|\leq\frac A{\sqrt M}\|u\|_{L^2(\mu)}
+ \quad\text{for every direction }u.
+\]
+At $\xi=0$, choose $u=2^{d/2}{\bf1}_{\{x\}}$. Then
+\[
+ \|u\|_{L^2(\mu)}=1,\qquad
+ D_{j,u}S(0)(x)=\frac{2^{d/2}}M.
+\]
+The estimate forces $A\geq2^{d/2}/\sqrt M$. Thus polynomial width and a polynomial regularity constant cannot satisfy the stated invariant. Replacing the population norm by a pointwise norm, or replacing pointwise output control by an averaged loss bound, changes the induction that would need to be proved.
+
+This is a defect in the proof as written. It is not a counterexample to the desired mean-field learning theorem. The new endpoint paper establishes an independent theorem for tanh under the requested posterior convention, using an exact finite-domain variational principle and compression of its minimizers.
+
+\section{Two further steps requiring repair in that appendix}
+\subsection{A second-moment tail does not follow from bounded entropy}
+Proposition A.7 uses bounded relative entropy and second moments to conclude that the second moment restricted to a sufficiently large exceptional set can be made uniformly small. The stated inference does not hold in that generality.
+
+For $b>1$, put
+\[
+ Q_b=(1-b^{-2})\mathcal N(0,1)+b^{-2}\mathcal N(b,1).
+\]
+Convexity of relative entropy gives
+\[
+ D(Q_b\Vert\mathcal N(0,1))\leq
+ b^{-2}D(\mathcal N(b,1)\Vert\mathcal N(0,1))=\frac12.
+\]
+The second moments are uniformly bounded, but
+\[
+ \liminf_{b\to\infty}
+ \mathbb E_{Q_b}[X^2{\bf1}_{\{|X|>b/2\}}]\geq1.
+\]
+Thus neither bounded relative entropy nor the second-moment estimate used there supplies a uniform-integrability rate for the second moment. This diagnoses the displayed justification; it does not rule out a different truncation argument using the bounded activation or additional properties of the particular Gibbs law.
+
+\subsection{Fresh Gaussian noise must be accounted for}
+The explanation accompanying Lemma B.13 treats a realized reconstructed network as if replacing its fresh Gaussian contribution by a conditional expectation introduced no additional fluctuation. Independence of the fresh noise does not provide this conclusion. For a simple test, take fixed nonzero $a$ and independent $\xi_i\sim\mathcal N(0,1)$. Then
+\[
+ V_N=\frac a{\sqrt N}\sum_{i=1}^N\xi_i
+ \ \stackrel{\mathrm{law}}=\ aZ,\qquad Z\sim\mathcal N(0,1).
+\]
+The random output $\tanh(V_N)$ has a nonvanishing variance for every $N$. Increasing the number of summands improves its covariance approximation but does not make that realized field concentrate about its mean. If a suffix averages $M$ independent such rows, its fluctuation is governed by that averaging as well, not solely by the lower-layer width $N$.
+
+Accordingly, a proof passing from a comparison of expected suffix outputs to a pointwise finite-network approximation must track the fresh-noise fluctuations and the dependence of their covariance on the sampled features. The observation above isolates the missing step in the stated reasoning; it is not asserted as a counterexample satisfying every auxiliary regularity condition of the final theorem. The new compression proof avoids this issue by concentrating empirical feature covariance matrices and evaluating a bounded readout directly.
+
+\section{What the replacement proofs establish}
+\paragraph{Every fixed $\gamma>1$, arbitrary fixed depth.}
+For any bounded $1$-Lipschitz activation and a target with finite bounded-weight network complexity $C$, the new strong-scaling paper proves polynomial sample complexity uniformly for every learner width $N\geq C$. The polynomial degree may depend on $\gamma$ and the depth. A common cylinder construction supplies the target-mass bound for every $\gamma\geq1$.
+
+\paragraph{The mean-field endpoint $\gamma=1$.}
+For tanh at arbitrary fixed depth, the endpoint paper derives the exact speed-$N$ rate by Sanov's theorem and continuous contraction. A minimum-rate full-margin representation has feature laws tilted by bounded quadratic forms. Output optimality bounds the readout coefficients in $\ell^1$; Gaussian integration by parts controls all earlier quadratic forms. A dimension-independent covariance estimate then gives polynomial-width, bounded-weight realizations of all bounded-rate Boolean functions. Counting these functions proves polynomial sample complexity for every sufficiently large width. The proof does not give a quantitative bound on that width threshold. For one hidden layer, a separate proof gives the stronger every-width result for all $\gamma\geq1$, under the general bounded Lipschitz activation assumption.
+
+\paragraph{Below the critical exponent.}
+For tanh and each fixed $\gamma<1$, the hidden kernel freezes to an explicit iterated-arcsine kernel. The posterior limit is a minimum-full-margin-energy classifier for $0<\gamma<1$, a globally margin-conditioned Gaussian classifier for $\gamma=0$, and a Gaussian sign classifier for $\gamma<0$. For $\gamma\leq0$ at a specified depth $O(d)$, the new confidence criterion gives an exact expected failure rate $(1-2^{-d})^n$; taking $d=k$ yields exponential sample complexity for parity. The universal claim for every fixed depth and every $\gamma<1$ remains unresolved here. In particular, the $0<\gamma<1$ classification problem is not settled by the regression-mean parity eigenvalue argument.
+
+\section{Effect of the confidence convention}
+Let $R$ be average posterior wrong-label probability and let $F$ be the fraction of test inputs where correct-label probability is at most $2/3$. For every posterior,
+\[
+ \max\{0,(3R-1)/2\}\leq F\leq\min\{1,3R\}.
+\]
+The positive learning results therefore imply the requested confidence guarantee with a constant-factor change in accuracy. The near-independent NNGP example gives more: every unseen input fails the confidence test, and every seen input passes, so $F$ is exactly the unseen fraction. This resolves the possible tiny-majority-bias ambiguity in that example. It does not convert all small-eigenvalue statements into classification sample lower bounds.
+
+The independent checks covered the cylinder construction, spectral tail, aggregate probability bound, finite-class counting, critical variational representation, minimizer stationarity, covariance comparison, forward compression, and the subcritical posterior limits. Mathematical conclusions in the papers are distinguished from remaining questions; compilation and numerical sanity checks were used only to check presentation and catch inconsistencies.
+\end{document}

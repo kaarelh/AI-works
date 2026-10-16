@@ -1,0 +1,77 @@
+\section{Boolean circuits as neural-network witnesses}
+\label{sec:circuit-simulation}
+
+This section relates the witness complexity $C_L$ to the usual size of a
+Boolean circuit. We fix a finite Boolean gate basis with fan-in bounded by a
+constant $q$. Circuit depth counts gate layers, whereas network depth $L$
+counts weight matrices, including the final linear readout.
+
+\begin{proposition}[Simulation of a fixed Boolean gate basis]
+\label{prop:circuit-simulation}
+Let $\phi$ be continuous and nonpolynomial. Fix a finite Boolean gate basis
+of fan-in at most $q$. There is a constant $a$, depending only on $\phi$
+and the basis, with the following property. If a Boolean function $f$ has
+a circuit with $C\geq1$ gates and depth $D$, then for every $L\geq D+1$
+with $L\geq2$, it has a depth-$L$ network of width at most $aC$ whose
+weights have absolute value at most $a$. The network has only the constant
+input $x_0=1$, no separate bias parameters, and its linear output equals
+$f(x)$ on every Boolean input. In particular, after increasing $a$ if necessary,
+\[
+ C_L(f)\leq aC.
+\]
+\end{proposition}
+
+\begin{proof}
+We use the finite interpolation theorem of Pinkus
+\cite[Theorem~5.1]{pinkus}: if $\phi$ is continuous and nonpolynomial,
+then arbitrary values on $r$ distinct points can be interpolated by a
+linear combination of $r$ functions of the form
+$v\mapsto\phi(a\cdot v-\theta)$.
+Apply it to the Boolean input patterns of each gate in the fixed basis,
+and also to the unary identity gate. Choose one representation for each:
+\[
+ G(v)=\sum_{s=1}^{r_G}\lambda_{G,s}
+       \phi(a_{G,s}\cdot v-\theta_{G,s}),
+ \qquad v\in\{-1,1\}^{q_G},\qquad r_G\leq2^{q_G}.
+\]
+There are finitely many chosen representations, so all their coefficients
+are bounded by a constant depending only on $\phi$ and the gate basis.
+
+We supply affine shifts using a constant unit in each hidden layer.
+Choose $\beta$ such that $c=\phi(\beta)\ne0$, which exists because
+$\phi$ is not the zero function. In the first layer this unit receives
+weight $\beta$ from $x_0=1$. In each later hidden layer it receives
+weight $\beta/c$ from the preceding constant unit, and again outputs $c$.
+A gate preactivation obtains its shift $-\theta$ through weight
+$-\theta/c$ from this constant unit (and through $x_0$ in the first layer).
+
+Carry each Boolean signal as the indicated linear combination of a
+constant number of hidden activations. A gate in the next layer can read
+this signal by substituting that linear combination into its
+preactivation. At most $q$ signals occur in one gate, so the resulting
+weights remain bounded by a constant determined by the finite dictionary.
+Allocate disjoint blocks of units to distinct signals; this prevents any
+uncontrolled accumulation of coefficients through shared encodings.
+
+To account for edges skipping layers, relay every needed earlier signal
+using the identity-gate representation. A circuit with $C$ gates and
+fan-in at most $q$ references at most $qC$ distinct input coordinates,
+and creates at most $C$ gate outputs. Thus at most $(q+1)C$ Boolean
+signals need to be carried at any layer. Each uses a constant number of
+units, in addition to the one constant unit, giving width at most $aC$.
+This realizes the circuit after $D$ hidden layers. If $L-1>D$, relay
+the final Boolean value through the remaining hidden layers by the same
+identity dictionary. The linear readout extracts its exact value
+$f(x)\in\{-1,1\}$, which in particular satisfies the required margin.
+All constants used in these constructions are independent of $d,C,D,L$.
+\end{proof}
+
+\begin{remark}
+Finite interpolation also shows that every Boolean function has a
+finite $C_L$ for $L\geq2$: first interpolate its values on the $2^d$
+Boolean inputs, and then relay the resulting exact Boolean value with
+the identity dictionary. No approximation by near-identity layers is
+needed. The circuit proposition above is a forward simulation statement;
+it does not assert an efficient uniform procedure for evaluating an
+arbitrary nonpolynomial activation or for constructing the interpolants.
+\end{remark}

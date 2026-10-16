@@ -1,0 +1,415 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools,microtype,xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black,citecolor=blue!50!black]{hyperref}
+\newtheorem{theorem}{Theorem}[section]\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}\newcommand{\Prb}{\mathbb P}\newcommand{\R}{\mathbb R}
+\newcommand{\normmax}[1]{\lVert#1\rVert_{\max}}
+\setlength{\emergencystretch}{3em}
+\hypersetup{pdftitle={An explicit sufficient width for mean-field Bayesian circuit learning},pdfauthor={Dmitry Vaintrob; Kaarel Hanni; OpenAI Codex}}
+\title{An explicit sufficient width for\\mean-field Bayesian circuit learning}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex\thanks{AI assistant; contributed to mathematical analysis and drafting.}}
+\date{October 15, 2026}
+\begin{document}\maketitle
+\begin{abstract}
+For fixed-depth tanh networks with mean-field Gaussian scaling, a global
+Boolean margin restriction, and exact noiseless Bayesian conditioning, we
+quantify the width threshold in a polynomial-sample learning theorem.
+The proof replaces an asymptotic large-deviation comparison by a finite-width
+method-of-types bound. Gaussian innovations are partitioned into finitely many
+cells, and each empirical type is lifted to a finite-entropy Gaussian
+conditional law. Entropy controls both the lift's second moment and its tail
+mass; these controls propagate through the hidden covariances.
+The resulting threshold is explicit and depends on the target only through
+its bounded-weight network complexity. It is double exponential in input
+dimension, while the sample bound above the threshold remains polynomial in
+input dimension and target complexity. A polynomial threshold, and a
+polynomial sample bound valid at every width above target complexity, remain
+open for deep networks. We include the variational and compression ingredients
+so that the result can be read independently.
+\end{abstract}
+
+\section{Model and result}
+Let $d\geq1$, $L\geq2$, $m=2^d$, and $r=L-1$. The input space is
+$\mathcal X=\{-1,1\}^d$, with augmented input $\bar x=(1,x)$.
+Every hidden layer has width $N$, and
+\[
+ h^0(x)=\bar x,\qquad h^s(x)=\tanh(W^sh^{s-1}(x))\quad(1\leq s<L),
+ \qquad z_w(x)=W^Lh^{L-1}(x).
+\]
+There are no additional biases. The independent centered Gaussian weights
+have standard deviations $d^{-1/2}$ in the first layer, $N^{-1/2}$ in
+internal layers, and $N^{-1}$ in the readout. Their law is $\mu_N$.
+For a Boolean function $g$ write
+\[
+ A_{N,g}=\{w:g(x)z_w(x)>a\text{ for every }x\},\qquad a=1/2,
+ \qquad A_N=\bigcup_g A_{N,g}.
+\]
+The function prior is $\pi_N(g)=\mu_N(A_{N,g})/\mu_N(A_N)$.
+Learning conditions this prior on agreement with independent noiseless
+examples $(x_i,f(x_i))$, with $x_i\sim D$. We denote the posterior by
+$\Pi_N(\cdot\mid S_n)$ and its average error by
+\[
+ R_D(\Pi_N)=\E_{g\sim\Pi_N}\Prb_{x\sim D}\{g(x)\ne f(x)\}.
+\]
+Let $C=C_L(f)$ be the least integer for which $f$ has a depth-$L$,
+width-$C$ implementation with every weight bounded by $C$ and strict global
+margin $1/2$.
+
+Our threshold uses the following explicit target-cost bound. Set
+\begin{align*}
+ b_L&=2+\sqrt{2\log(2L)},& A_*&=2+3C^2+b_L,\\
+ \rho&=[2+9C^2(d+L+1)A_*^{L-2}]^{-1},\\
+ B_0&=d(d+1)C^2+2(L-2)C^4+36C^4,\\
+ A&=2B_0+4[d+2+(L-2)C]/\rho+2,& K&=4A+4.
+\end{align*}
+The cylinder construction in Appendix~\ref{app:cloning} proves, for all
+$N\geq C$,
+\begin{equation}\label{eq:target-mass}
+ \mu_N(A_{N,f})\geq e^{-AN/2}.
+\end{equation}
+All these quantities are polynomially bounded in $d,C$ at fixed $L$.
+
+Define the quantization parameters
+\begin{align}
+ B&=4K+2m\log2,& b&=2\sqrt{mB},& \beta&=\frac{1}{128mK},\notag\\
+ c&=\left(\frac{\beta}{4b^2}\right)^{2^{r-1}},&
+ t&=\frac c8,& \Delta&=\frac{c}{8\sqrt{2m}},\notag\\
+ R^2&=4\left[\frac{K+\log2}{t}+\frac m2\log2\right],&&
+ q&=1+\left\lceil1+\frac{2R\sqrt m}{\Delta}\right\rceil^m.
+ \label{eq:quantization-parameters}
+\end{align}
+Here $q$ is an upper bound on the number of quantization cells; it is an
+integer, and should not be confused with a prediction-confidence threshold.
+For $\varepsilon\in(0,1)$ set
+\begin{equation}\label{eq:width-threshold}
+ N_0=\left\lceil\max\left\{C,1,
+ \left(\frac{8rq}{K}\right)^2,
+ \frac{4m\log2}{K},\frac8K\log\frac6\varepsilon\right\}\right\rceil.
+\end{equation}
+
+\begin{theorem}[Explicit sufficient width]\label{thm:main}
+At every fixed depth $L$, there is a polynomial $p_L$ such that the following
+holds for every target of finite complexity $C=C_L(f)$, every
+$\varepsilon,\delta\in(0,1)$, every input distribution $D$, and every
+$N\geq N_0$ from \eqref{eq:width-threshold}.
+If
+\[
+ n\geq\frac6\varepsilon\left[p_L(d,C)+\log\frac1\delta\right],
+\]
+then, with probability at least $1-\delta$ over the training sample,
+\[
+ R_D(\Pi_N)\leq\frac\varepsilon3,\qquad
+ \Prb_{x\sim D}\!\left\{
+ \Pi_N(g(x)=f(x)\mid S_n)>\frac23\right\}\geq1-\varepsilon.
+\]
+An explicit substitute for $p_L(d,C)$ is $B_L(d,2K)$ from the finite-network
+count in Appendix~\ref{app:rate-counting}.
+The threshold satisfies
+\[
+ N_0\leq C+\exp\!\left[O_L\bigl(2^d(d+\log K)\bigr)\right]
+       +O\!\left(K^{-1}\log\frac1\varepsilon\right).
+\]
+In particular, the width threshold is quantified, but is not polynomial in
+input dimension. The theorem does not establish the same polynomial sample
+bound for every width $N\geq C$.
+\end{theorem}
+
+The sample bound and the width threshold play distinct roles. The sample
+bound is polynomial in the target complexity and independent of $N$.
+The threshold is much larger: quantizing all $2^d$ coordinates of a
+Gaussian field leads to an exponential number of cells in $2^d$.
+For one hidden layer, an existing direct norm argument already gives a
+polynomial sample bound for every $N\geq C$; the present threshold is useful
+as a general-depth quantitative statement.
+
+\section{An exact representation and a variational complexity}
+Enumerate the inputs by $1,\ldots,m$ and let $\Gamma_m=\mathcal N(0,I_m)$.
+For a positive semidefinite matrix $Q$, put
+\[
+ T_Q(u)=\tanh(Q^{1/2}u),\qquad
+ F_Q(u)=T_Q(u)T_Q(u)^{\mathsf T},\qquad
+ Q_0(x,y)=\bar x\cdot\bar y/d.
+\]
+Given probability laws $\eta_1,\ldots,\eta_r$ on $\R^m$ and $v\in\R^m$,
+recursively set
+\[
+ Q_s=\int F_{Q_{s-1}}(u)\,d\eta_s(u),\qquad z=Q_r^{1/2}v.
+\]
+Define
+\begin{equation}\label{eq:innovation-rate}
+ I(z)=\inf\left\{\sum_{s=1}^rD(\eta_s\Vert\Gamma_m)+\frac12\|v\|_2^2:
+          (\eta_1,\ldots,\eta_r,v)\text{ gives }z\right\},
+ \qquad
+ J(g)=\inf_{g_xz_x\geq a\ \forall x}I(z).
+\end{equation}
+Entropy contraction makes this equal to the hidden-feature formula proved
+in Appendix~\ref{sec:critical-variational}. We use that appendix and the
+quadratic-tilt compression in subsequent appendices only to obtain the
+polynomial count of $J$ sublevels. The new finite-width probability estimate
+below does not invoke an unquantified large-deviation limit.
+
+For each layer $s$ let $U_{s,1},\ldots,U_{s,N}$ be independent standard
+Gaussian vectors, independently across layers, and let
+$\eta_{s,N}=N^{-1}\sum_i\delta_{U_{s,i}}$. Independently take
+$V_N\sim\mathcal N(0,I_m/N)$. The recursion above gives empirical
+covariances $Q_{s,N}$. Exactly for every finite $N$,
+\begin{equation}\label{eq:exact-output}
+ Z_N\stackrel{\mathrm{law}}=Q_{r,N}^{1/2}V_N.
+\end{equation}
+Indeed, conditional on the preceding layer, the next preactivation rows are
+independent Gaussian fields with covariance equal to that layer's empirical
+activation covariance. The readout has conditional covariance $Q_{r,N}/N$.
+This proves the representation, including singular covariance matrices.
+
+\section{A finite-entropy lift of an empirical type}
+Partition the Euclidean ball $\{u:\|u\|_2\leq R\}$ into intersections with
+axis-aligned grid cells of side $\Delta/\sqrt m$, and add its complement as
+one outside cell. Ignore cells of zero Gaussian probability; the sampled innovations avoid their union almost surely. Every inside
+cell has diameter at most $\Delta$, and their total number, including the
+outside cell, is at most $q$ in \eqref{eq:quantization-parameters}.
+Write the Gaussian cell probabilities as $\alpha_j$.
+
+\begin{lemma}[Entropy controls the lift]\label{lem:lift}
+For a cell-frequency vector $p=(p_j)$ define
+\[
+ \eta^p=\sum_jp_j\,\Gamma_m(\,\cdot\mid\text{cell }j).
+\]
+Then $D(\eta^p\Vert\Gamma_m)=D(p\Vert\alpha)$.
+If this entropy is at most $K$, then
+\[
+ \int\|u\|_2^2\,d\eta^p(u)\leq B,
+ \qquad p_{\mathrm{out}}\leq t.
+\]
+\end{lemma}
+\begin{proof}
+The lift has density $p_j/\alpha_j$ on cell $j$, proving the entropy identity.
+The entropy inequality at exponent $1/4$ gives
+\[
+ \frac14\int\|u\|_2^2\,d\eta^p
+ \leq D(\eta^p\Vert\Gamma_m)
+      +\log\E_{\Gamma_m}e^{\|U\|_2^2/4}
+ \leq K+\frac m2\log2.
+\]
+For an initially unbounded test function this follows by truncation and
+monotone convergence. It is the stated moment bound.
+Gaussian Markov gives
+\[
+ \alpha_{\mathrm{out}}\leq2^{m/2}e^{-R^2/4}
+ \leq\exp[-(K+\log2)/t].
+\]
+Data processing to the two-cell inside/outside partition and the bound on
+binary entropy imply
+\[
+ D(p\Vert\alpha)\geq
+ p_{\mathrm{out}}\log(1/\alpha_{\mathrm{out}})-\log2.
+\]
+It follows that $p_{\mathrm{out}}\leq t$.
+\end{proof}
+
+\begin{lemma}[Uniform covariance comparison]\label{lem:quantization}
+Suppose an empirical measure $\eta$ has cell type $p$, with
+$D(p\Vert\alpha)\leq K$. For every positive semidefinite $Q$ with diagonal
+entries at most two,
+\[
+ \left\|\int F_Q\,d\eta-\int F_Q\,d\eta^p\right\|_{\max}\leq c.
+\]
+For any two positive semidefinite matrices $Q,Q'$ and any lift of entropy
+at most $K$,
+\[
+ \left\|\int F_Q\,d\eta^p-\int F_{Q'}\,d\eta^p\right\|_{\max}
+ \leq b\sqrt{\|Q-Q'\|_{\max}}.
+\]
+\end{lemma}
+\begin{proof}
+Each entry of $F_Q$ is bounded in absolute value by one and is
+$2\|Q^{1/2}\|_{\mathrm{op}}$-Lipschitz. If the diagonal of $Q$ is bounded
+by two, then $\|Q\|_{\mathrm{op}}\leq\operatorname{tr}Q\leq2m$.
+Couple each empirical point with an independent conditional Gaussian draw
+in its own cell. Inside cells the difference is at most
+$2\sqrt{2m}\Delta$; outside it is at most two. Lemma~\ref{lem:lift}
+therefore bounds the integrated difference by
+\[
+ 2\sqrt{2m}\Delta+2t=c/2\leq c.
+\]
+For the second claim, the positive square-root inequality gives
+\[
+ \|Q^{1/2}-(Q')^{1/2}\|_{\mathrm{op}}
+ \leq\|Q-Q'\|_{\mathrm{op}}^{1/2}
+ \leq\sqrt{m\|Q-Q'\|_{\max}}.
+\]
+The entrywise product bound and Cauchy--Schwarz, with
+Lemma~\ref{lem:lift}, give an upper bound of
+$2\sqrt{m\|Q-Q'\|_{\max}}\sqrt B$, as required.
+\end{proof}
+
+\section{A nonasymptotic rate-sublevel bound}
+\begin{proposition}[Low type cost implies low variational complexity]
+\label{prop:deterministic}
+Let $p_s$ be the types of any empirical innovation measures
+$\eta_{s,N}$, and let $v\in\R^m$. If
+\[
+ H:=\sum_{s=1}^rD(p_s\Vert\alpha)+\frac12\|v\|_2^2\leq K,
+\]
+and $Q_{r,N}^{1/2}v$ has strict margin $a$ and sign $g$, then
+$J(g)\leq16K/9<2K$.
+\end{proposition}
+\begin{proof}
+Replace each empirical law by its conditional Gaussian lift $\eta_s^*$
+and let $Q_s^*$ be the resulting recursive covariances.
+Both recursions start at $Q_0$, whose diagonal is at most two; every later
+covariance has diagonal at most one. For
+$e_s=\|Q_{s,N}-Q_s^*\|_{\max}$, Lemma~\ref{lem:quantization} gives
+\[
+ e_0=0,\qquad e_s\leq c+b\sqrt{e_{s-1}}.
+\]
+Since $b\geq1$ and $c\leq1$, induction yields
+\[
+ e_s\leq4b^2c^{1/2^{s-1}},\qquad e_r\leq\beta.
+\]
+For the induction step, $b\sqrt{4b^2c^{1/2^{s-2}}}
+=2b^2c^{1/2^{s-1}}$, and the additional $c$ is bounded by the same
+power of $c$.
+The lifted output $z^*=(Q_r^*)^{1/2}v$ satisfies
+\[
+ \|z^*-Q_{r,N}^{1/2}v\|_\infty
+ \leq\sqrt{m\beta}\|v\|_2
+ \leq\sqrt{2mK\beta}=a/4.
+\]
+Thus $(4/3)z^*$ has strict margin $a$ and sign $g$.
+It is obtained from the lifted laws and output vector $(4/3)v$.
+Its cost in \eqref{eq:innovation-rate} is at most
+\[
+ \sum_sD(p_s\Vert\alpha)+\frac{16}{9}\frac12\|v\|_2^2
+ \leq\frac{16}{9}H\leq\frac{16}{9}K.
+\]
+This proves the claim.
+\end{proof}
+
+\begin{theorem}[Finite-width aggregate bound]\label{thm:aggregate}
+Let $\mathcal A_K=\{g:J(g)\leq2K\}$. At every width $N\geq1$,
+\begin{equation}\label{eq:aggregate}
+ \mu_N\left(\bigcup_{g\notin\mathcal A_K}A_{N,g}\right)
+ \leq (N+1)^{rq}\,2^{m/2}e^{-NK/2}.
+\end{equation}
+\end{theorem}
+\begin{proof}
+The probability of a fixed empirical type $p$ from $N$ independent draws
+with cell probabilities $\alpha$ is at most $e^{-ND(p\Vert\alpha)}$.
+Indeed, the multinomial coefficient is at most $e^{NH(p)}$.
+There are at most $(N+1)^q$ possible types per layer.
+For a fixed tuple of types put $D_* =\sum_sD(p_s\Vert\alpha)$.
+Independence across layers and from $V_N$ gives
+\begin{align*}
+ &\Prb\!\left\{\text{these types},\ D_*+\tfrac12\|V_N\|_2^2>K\right\}\\
+ &\quad\leq e^{-ND_*}
+       \exp\{ND_*/2-NK/2\}
+       \E\exp\{N\|V_N\|_2^2/4\}\\
+ &\quad=2^{m/2}\exp\{-ND_*/2-NK/2\}
+ \leq2^{m/2}e^{-NK/2}.
+\end{align*}
+The exponential bound remains valid when $D_*>K$.
+By Proposition~\ref{prop:deterministic}, every full-margin draw whose sign
+function lies outside $\mathcal A_K$ has total cost greater than $K$.
+Summing over at most $(N+1)^{rq}$ tuples proves \eqref{eq:aggregate}.
+\end{proof}
+
+This controls the entire union of undesired functions. It does not sum an
+asymptotic estimate separately over all $2^{2^d}$ Boolean functions. The
+large dimensional dependence enters instead through quantizing Gaussian
+innovations in $\R^{2^d}$.
+
+\section{Proof of the learning theorem and the remaining goal}
+\begin{proof}[Proof of Theorem~\ref{thm:main}]
+The target-mass bound, Theorem~\ref{thm:aggregate}, and cancellation of
+the global-margin normalization give
+\[
+ \frac{\pi_N(\mathcal A_K^c)}{\pi_N(f)}
+ \leq\exp\left[rq\log(N+1)+\frac m2\log2
+                   -\frac N2(K-A)\right].
+\]
+For $N\geq1$, $\log(N+1)\leq\sqrt N$. The first two nonconstant
+constraints in \eqref{eq:width-threshold} therefore give
+\[
+ rq\log(N+1)\leq NK/8,\qquad (m/2)\log2\leq NK/8.
+\]
+Since $A<K/4$, the ratio is at most $e^{-NK/8}\leq\varepsilon/6$.
+In particular $f\in\mathcal A_K$: otherwise the ratio would be at least
+one. Appendix~\ref{app:rate-counting} gives
+$\log|\mathcal A_K|\leq B_L(d,2K)$, a polynomially bounded quantity.
+
+Every particular function with $D$-error greater than $\varepsilon/6$
+survives $n$ noiseless examples with probability at most
+$e^{-n\varepsilon/6}$. A union bound over $\mathcal A_K$ shows that,
+except on a sample event of probability at most $\delta$, every surviving
+function in this set has error at most $\varepsilon/6$ for the stated $n$.
+For every sample the posterior denominator is at least $\pi_N(f)$;
+therefore its mass outside $\mathcal A_K$ is at most $\varepsilon/6$.
+The total posterior error is at most $\varepsilon/3$.
+On each input where the correct-label probability is at most $2/3$, the
+posterior error probability is at least $1/3$. The mass of these inputs is
+at most $3R_D(\Pi_N)\leq\varepsilon$. This proves the strict confidence
+claim, including equality in the failure event.
+
+Finally, at fixed $L$, every reciprocal precision and truncation radius in
+\eqref{eq:quantization-parameters} is polynomially bounded in $m,K$.
+Hence $\log q=O_L(m\log(mK))$. Substitution into
+\eqref{eq:width-threshold} proves the asserted growth bound.
+\end{proof}
+
+The next research goal is a width threshold polynomial in $d,C$ and the
+accuracy parameters, followed ideally by a polynomial sample guarantee at
+every $N\geq C$. The present proof does not supply either improvement.
+Its costly step is a uniform quantization of all coordinates of a Gaussian
+field on the entire cube. The quadratic-tilt compression used for counting
+is dimension efficient, but it applies to variational minimizers. A
+finite-width counterpart that controls the aggregate mass of networks
+without first quantizing an arbitrary $2^d$-dimensional field would be needed
+to obtain a substantially sharper threshold by this strategy.
+
+\appendix
+For compatibility with the variational notation below, write $\phi=\tanh$ and $\mu_{N,1}=\mu_N$.
+\input{cloning.tex}
+\input{critical-variational.tex}
+\input{critical-stationarity.tex}
+\input{critical-compression.tex}
+\input{rate-counting.tex}
+
+\paragraph{An explicit count.}
+For completeness, a numerical expression for $B_L(d,U)$, $U\geq1$, follows
+directly from the preceding proofs. Put $g_r=8U^2$,
+$g_s=3g_{s+1}+2g_{s+1}^2$, $G=1+\max_s g_s$, and
+\[
+ b_*=8(1+G)^2,\qquad
+ \eta_*=[32Ur b_*^{r-1}]^{-1},\qquad
+ n_* =\left\lceil2\eta_*^{-2}\log(8r\,2^{2d})\right\rceil.
+\]
+Let $D_*=n_*(d+1)+(L-2)n_*^2$ and
+\[
+ B_* =\max\{1,\sqrt{4G+2\log(8\max\{D_*,1\})},8U/n_*\},
+ \qquad P_*=D_*+n_*.
+\]
+\[
+ \Lambda_*=(d+Ln_*)[1+n_*(B_*+1)]^{L-1}.
+\]
+Then one may take
+\[
+ B_L(d,U)=P_*\log(3+16B_*\Lambda_*).
+\]
+It is polynomially bounded at each fixed depth. It is a count of Boolean
+functions, not a claim that the optimal tilts can be computed efficiently.
+
+\begin{thebibliography}{9}
+\bibitem{dembozeitouni} Amir Dembo and Ofer Zeitouni.
+\emph{Large Deviations Techniques and Applications}. Second edition.
+Springer, 1998.
+\bibitem{companion} Dmitry Vaintrob, Kaarel H\"anni, and OpenAI Codex.
+\emph{Bayesian circuit learning at mean-field scaling: a variational principle
+and width-independent generalization}. Companion manuscript, October 2026.
+The variational, stationarity, and compression proofs reproduced in the
+appendices originate in that manuscript.
+\end{thebibliography}
+\end{document}

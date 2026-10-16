@@ -1,0 +1,195 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Failure of Bayesian Gaussian process classification at exponentially large sample sizes},pdfauthor={Dmitry Vaintrob; Kaarel Hanni; OpenAI Codex}}
+\setlength{\emergencystretch}{2em}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\sign}{sign}
+\DeclareMathOperator{\dist}{dist}
+\title{Failure of Bayesian Gaussian process classification\\at exponentially large sample sizes}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex}
+\date{October 15, 2026}
+\begin{document}\maketitle
+\begin{abstract}
+We study the exact Gaussian sign posterior for the saturated neural-network
+Gaussian process on the Boolean cube. At every fixed depth, we prove that
+there is an exponentially large sample schedule on which learning
+full parity still leaves a fixed positive fraction of inputs without
+correct-label probability greater than $2/3$, with probability at least
+$3/4$ over independent uniform training inputs. The result also applies
+to the width limit of globally margin-conditioned Bayesian $\tanh$
+networks at every fixed scaling exponent $\gamma<0$. The proof combines
+sharp Fourier level masses, a random tail-covariance operator bound,
+and uniform ReLU sampling with exact constraints on the posterior mean.
+It concerns the posterior predictive probability, rather than the sign
+of a regression mean. The conclusion is failure at specified exponential
+sample sizes; a lower bound covering every smaller sample size is not
+proved. The fixed-margin case $\gamma=0$ and the regime $0<\gamma<1$
+are outside the exponential result established here.
+\end{abstract}
+
+\section{Model, result, and scope}
+Let $\mathcal X=\{-1,1\}^d$ with the uniform probability measure, and
+let $f(x)=\prod_{j=1}^d x_j$ be full parity. Although parity has Boolean
+circuits of size $O(d)$, its learnability depends on the specified prior
+and prediction rule. We analyze Gaussian-process classification with
+covariance
+\begin{equation}\label{eq:paper-kernel}
+ K(x,y)=H^{\circ(L-1)}\!\left(\frac{1+x\cdot y}{d+1}\right),
+ \qquad H(t)=\frac2\pi\arcsin t,
+\end{equation}
+where the depth $L\ge2$ is fixed. For a centered Gaussian vector
+$G\sim N(0,K)$ and training inputs $X_1,\ldots,X_n$, the posterior
+conditions on the exact signs $f(X_i)G(X_i)>0$. Its probability of
+being correct at $x$ is
+\[
+ q_S(x)=\mathbb P\{f(x)G(x)>0\mid f(X_i)G(X_i)>0\text{ for all }i\}.
+\]
+We count an input as a failure when $q_S(x)\le2/3$. Thus the criterion
+concerns the actual posterior probability and includes equality as a
+failure. It is not identified with the error of the sign of a posterior
+mean.
+
+Our main theorem, Theorem~\ref{thm:exponential-schedule}, gives constants
+$A,\alpha,\varepsilon>0$ depending at most on the fixed depth. With
+$r_d$ odd and $r_d/d\to\alpha$, put
+\begin{equation}\label{eq:paper-schedule}
+ D_{r_d}=\sum_{j=0}^{r_d}\binom dj,
+ \qquad n_d=\left\lceil A D_{r_d}\log(D_{r_d}+1)\right\rceil.
+\end{equation}
+Then $n_d=\exp((h(\alpha)+o(1))d)$, where $h$ is the binary entropy
+with natural logarithms. With probability at least $3/4$ over $n_d$
+independent uniform training inputs, a fraction at least $\varepsilon$
+of test inputs has correct-label probability at most $13/20<2/3$.
+One conservative choice in the proof is
+\[
+ \varepsilon=\frac{2\pi(1/e-7/20)^2}{2048}>9\cdot10^{-7}.
+\]
+The constants are not optimized. In particular the theorem establishes
+a fixed positive failure fraction, not a numerical failure fraction
+such as $1/10$.
+
+The quantifiers in this conclusion matter. It establishes failure on
+the displayed exponential sample schedule and does not assert failure
+at every smaller sample size. Posterior confidence for a fixed target
+has not been shown to be monotone in the sample size. The argument also
+does not establish an exponential statement at zero or positive
+subcritical scaling exponents. These limitations are discussed after
+the proof.
+
+\subsection{The finite-width network and its Gaussian limit}
+The same theorem applies to the following network convention. All
+hidden layers have width $N$, with
+\[
+ h^0(x)=(1,x),\quad
+ h^s(x)=\tanh(W^s h^{s-1}(x))\quad(1\le s<L),\quad
+ z_N(x)=W^L h^{L-1}(x).
+\]
+There are no additional biases. The weights are independent centered
+Gaussians with variances
+\begin{equation}\label{eq:paper-weights}
+ \Var(W^1_{ij})=N^{1-\gamma}/d,\quad
+ \Var(W^s_{ij})=N^{-\gamma}\ (1<s<L),\quad
+ \Var(W^L_i)=N^{-\gamma-1}.
+\end{equation}
+Before training, condition on the global margin event
+$A_a=\{|z_N(x)|>a\text{ for every }x\in\mathcal X\}$, where $a>0$
+is fixed. Training then conditions on $\sign z_N(X_i)=f(X_i)$.
+Let $q_{N,S}(x)$ be the resulting correct-label probability and
+$F_N(S)=\mathbb P_x\{q_{N,S}(x)\le2/3\}$.
+
+\begin{proposition}[Conditional width limit]\label{prop:paper-width}
+At fixed $d,L,a,S$ and $\gamma<0$, for every $x\in\mathcal X$,
+\[
+ q_{N,S}(x)\longrightarrow q_S(x).
+\]
+All these posteriors are well defined for sufficiently large $N$.
+Consequently
+\[
+ \liminf_{N\to\infty}F_N(S)\ge
+ \mathbb P_x\{q_S(x)\le13/20\}.
+\]
+\end{proposition}
+\begin{proof}
+Let $Q_N^s(x,y)=N^{-1}\sum_i h_i^s(x)h_i^s(y)$. Conditional on
+the preceding layer, hidden rows are independent bounded random vectors.
+The conditional law of large numbers therefore applies to all empirical
+second moments, since the cube is finite. Preactivation variances grow
+like $N^{1-\gamma}$. Thus $\tanh$ converges to the sign function under
+a Gaussian coupling. The identity
+$\mathbb E[\sign U\sign V]=(2/\pi)\arcsin\rho$ for standard jointly
+Gaussian $U,V$ of correlation $\rho$ follows, for example, by measuring
+the corresponding angular sectors of a rotationally invariant planar
+Gaussian. Dominated convergence and induction over layers yield
+\[
+ Q_N^{L-1}\longrightarrow K\quad\text{in probability}.
+\]
+For completeness, the convergence of the conditional moment map is
+uniform near its limiting covariance: if it were not, choose a
+converging covariance subsequence, couple by continuous matrix square
+roots, and apply dominated convergence. Its diagonal is positive, so
+the limiting scalar Gaussian coordinates vanish with probability zero.
+The first layer normalizes $(d+1)/d$ on the diagonal and hence gives
+the argument $(1+x\cdot y)/(d+1)$ in \eqref{eq:paper-kernel}.
+
+Conditionally on the hidden layers,
+$N^{\gamma/2}z_N\sim N(0,Q_N^{L-1})$. Therefore the whole output
+vector $G_N=N^{\gamma/2}z_N$ converges in law to $G\sim N(0,K)$.
+The global margin in these coordinates is
+$|G_N(x)|>aN^{\gamma/2}$, whose threshold tends to zero. The spectral
+proof below shows $K$ is positive definite. Hence all coordinate
+hyperplanes are Gaussian null sets and every sign orthant has positive
+probability. A shrinking-neighborhood argument around the coordinate
+hyperplanes shows that imposing this vanishing margin changes the
+probability of each fixed sign event by $o(1)$. Ratios of probabilities
+of sign events now give $q_{N,S}(x)\to q_S(x)$ and positivity of the
+conditioning probability for large $N$.
+
+At a point where $q_S(x)\le13/20$, convergence implies
+$q_{N,S}(x)<2/3$ eventually. The cube is finite, so the implication
+holds simultaneously at all these points, proving the final assertion.
+\end{proof}
+
+The width limit is always taken at fixed $d,L,\gamma,a,S$. The
+subsequent exponential statement concerns $d\to\infty$ for these
+limiting learners. No uniform interchange of the width and dimension
+limits is asserted.
+
+\input{spectral}
+\input{tail-gram}
+\input{gaussian-posterior}
+
+\begin{thebibliography}{9}
+\bibitem{flajolet2009}
+P. Flajolet and R. Sedgewick.
+\emph{Analytic Combinatorics}. Cambridge University Press, 2009.
+Chapter VI, algebraic singularity analysis and multiple dominant
+singularities.
+\bibitem{mai2021coresets}
+T. Mai, C. Musco, and A. Rao.
+Coresets for Classification---Simplified and Strengthened.
+\emph{Advances in Neural Information Processing Systems} 34, 2021.
+\href{https://papers.neurips.cc/paper_files/paper/2021/file/6098ed616e715171f0dabad60a8e5197-Paper.pdf}{Primary paper}; Theorem 5.
+\bibitem{tropp2008}
+J. A. Tropp.
+Norms of random submatrices and sparse approximation.
+\emph{Comptes Rendus Math\'ematique} 346:1271--1274, 2008.
+\href{https://tropp.caltech.edu/papers/Tro08-Norms-Random-v3.pdf}{Author manuscript}; Theorem 1.1.
+\bibitem{vapnik1971}
+V. N. Vapnik and A. Ya. Chervonenkis.
+On the uniform convergence of relative frequencies of events to their probabilities.
+\emph{Theory of Probability and its Applications} 16:264--280, 1971.
+\bibitem{prekopa1973}
+A. Pr\'ekopa.
+On logarithmic concave measures and functions.
+\emph{Acta Scientiarum Mathematicarum} 34:335--343, 1973.
+\end{thebibliography}
+\end{document}

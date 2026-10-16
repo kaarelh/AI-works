@@ -1,0 +1,213 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools,needspace}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Natural sparse-parity lower bounds at slowly growing depth},pdfauthor={Dmitry Vaintrob; Kaarel Hanni; OpenAI Codex}}
+\setlength{\emergencystretch}{2em}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\sign}{sign}
+\DeclareMathOperator{\dist}{dist}
+\DeclareMathOperator{\KL}{KL}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\title{Natural sparse-parity lower bounds at slowly growing depth}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex}
+\date{October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We study the width-first posterior of Gaussian neural networks with
+hyperbolic-tangent hidden activations, conditioned on a fixed output
+margin at every Boolean input and on noiseless training labels.
+For every fixed subcritical width exponent $0<\gamma<1$, we prove an
+$\exp\{c k\log(ed/k)\}$ eventual sample-complexity lower bound for
+parity on $k$ coordinates when $k$ lies in a fixed polynomial sparsity
+window and the depth grows as $L(d)=\log_2\log\log d+O(1)$.
+The proof gives failure at explicitly specified sample sizes, for the
+actual posterior and the criterion that the correct label must have
+probability greater than $2/3$.
+The new uniform ingredient is a coefficient estimate for iterated
+arcsine kernels, obtained from an explicit B\"ottcher coordinate and a
+uniform contour argument. It permits a depth-independent interpolation
+budget and a linear parity obstruction on logarithmic active faces.
+The theorem does not resolve the corresponding natural-scale lower
+bound at a fixed depth.
+\end{abstract}
+
+\section{Model and statement}
+Let $\mathcal X=\{-1,1\}^d$ carry uniform probability measure.
+Fix $U\subseteq[d]$ with $|U|=k$ and
+$f(x)=\chi_U(x)=\prod_{j\in U}x_j$.
+The learner is not given $U$. For depth $L=L(d)\ge2$ and hidden width
+$N$, define
+\[
+ h^0(x)=(1,x),\qquad
+ h^s(x)=\tanh(W^s h^{s-1}(x))\quad(1\le s<L),\qquad
+ z_N(x)=W^L h^{L-1}(x).
+\]
+There are no additional biases. All weights are independent centered
+Gaussians, with
+\begin{equation}\label{eq:weights}
+ \Var W^1_{ij}=N^{1-\gamma}/d,\qquad
+ \Var W^s_{ij}=N^{-\gamma}\quad(1<s<L),\qquad
+ \Var W^L_i=N^{-\gamma-1}.
+\end{equation}
+Fix $a>0$ and $0<\gamma<1$. Condition the prior on
+$|z_N(x)|>a$ for every $x\in\mathcal X$ and then on
+$f(X_i)z_N(X_i)>0$ for independent uniform training inputs
+$S=(X_1,\ldots,X_n)$. Write
+\begin{align*}
+ q_{N,S}(x)&=\Pp\{f(x)z_N(x)>0\mid
+        |z_N(y)|>a\ \forall y,\ f(X_i)z_N(X_i)>0\ \forall i\},\\
+ F_N(S)&=\Pp_x\{q_{N,S}(x)\le2/3\}.
+\end{align*}
+The width limit is always taken first: $d,k,L,a,\gamma,S$ are fixed
+while $N\to\infty$.
+
+Put $D=d+1$, $\beta=2^{-(L-1)}$, $p=2-\beta$, and
+$D_r=\sum_{j=0}^r\binom dj$. All logarithms other than $\log_2$ are
+natural.
+
+\begin{theorem}[Natural scale at slowly growing depth]\label{thm:main}
+Fix $a>0$, $0<\eta_1<1-\eta_2<1$, and $0<b_-\le b_+<\infty$.
+There are constants $\alpha,A,c,C>0$ and $d_0$ such that the following
+holds. For $d\ge d_0$, suppose
+\[
+ d^{\eta_1}\le k\le d^{1-\eta_2},\qquad
+ b_-\le\beta\log\log d\le b_+,
+ \qquad \beta=2^{-(L(d)-1)}.
+\]
+Choose the largest odd integer $r\le\alpha k$, put
+$\rho=r/(d+1)$, $H=\log(e/\rho)$, and set
+\begin{equation}\label{eq:exact-size}
+ n_r=\left\lceil A D_r rH\rho^{-1/400}\right\rceil.
+\end{equation}
+Then
+\[
+ c k\log(ed/k)\le\log n_r\le C k\log(ed/k),
+\]
+and for every target support $U$ of size $k$ and every fixed
+$0<\gamma<1$,
+\[
+ \Pp_S\left\{\liminf_{N\to\infty}F_N(S)\ge\frac1{16}\right\}
+ \ge\frac34.
+\]
+The conditioning events have positive probability for all sufficiently
+large widths at every fixed dimension and sample.
+\end{theorem}
+
+The depth condition is equivalent to
+$L(d)=\log_2\log\log d+O(1)$ with fixed bounds on the additive term.
+The result concerns the particular sample sizes \eqref{eq:exact-size}.
+It does not assert failure at every smaller sample size, and no
+monotonicity of posterior risk is used. It implies the stated lower
+bound for an eventual sample threshold: a guarantee that holds at
+\emph{every} $n\ge m$ with sample success probability greater than
+$1/4$ and width-limit confidence failure below $1/16$ must have
+$m>n_r$. Width is taken first at each $d$ and $L(d)$; no minimum width
+or interchange of limits is asserted.
+
+\subsection{Variational formulation and proof organization}
+Let $\Psi(t)=2\arcsin(t)/\pi$ and
+\[
+ K(x,y)=\Psi^{\circ(L-1)}\!\left(\frac{1+x\cdot y}{d+1}\right).
+\]
+All $L^p$ norms and Walsh coefficients below use the uniform cube
+probability measure. Let $\lambda_j$ be the degree-$j$ eigenvalue of
+the normalized covariance operator $2^{-d}K$. The corresponding energy
+is
+\[
+ \|z\|_K^2=z^{\mathsf T}K^{-1}z
+      =\sum_{V\subseteq[d]}\frac{\widehat z(V)^2}{\lambda_{|V|}}.
+\]
+Write $Q_r=K_{>r}$ and
+$\tau_r=Q_r(x,x)=\sum_{j>r}\binom dj\lambda_j$.
+The width-first posterior selects compatible sign functions minimizing
+$\|z\|_K^2/2$ under
+\begin{equation}\label{eq:obstacle}
+ |z(x)|\ge a\quad(x\in\mathcal X),\qquad
+ f(X_i)z(X_i)\ge a\quad(i\le n).
+\end{equation}
+We prove that every minimizer has test error at least $3/8$. The final
+confidence conclusion is therefore independent of the posterior weights
+among tied minimizers.
+
+The main additional ingredient beyond a norm bound is transport of the
+all-input margin. A minimizing field is split into a low-degree head,
+a middle band, and a sufficiently high-degree tail. Near a sampled
+nuisance input, the first two parts reduce to a frozen head and a common
+scalar offset. A recurrence argument and angular concentration force
+the radial tail profile to return to the head's sign. A center with an
+incorrect head sign consequently produces a quantitative kernel-energy
+witness. These witnesses control bounded, normalized wrong-side moments
+on random active faces. A scalar $L^p$ Bernstein inequality and parity
+influence then force the restricted head degree to be too large.
+
+\input{width-limits}
+\input{spectral}
+\input{uniform-kernel}
+\input{comparator}
+\input{sampling}
+\input{tail-gram}
+\input{sparse-gram}
+\input{head-control}
+\input{middle-band-pac}
+\input{angular-concentration}
+\input{radial-geometry}
+\input{head-recurrence}
+\input{transport}
+\input{balanced-contacts}
+\input{analytic-calibration}
+\input{uniform-calibration}
+\input{face-restriction}
+\input{assembly}
+
+\section{Scope}
+The theorem concerns the globally conditioned neural posterior itself,
+including arbitrary mixtures among tied variational minimizers. It is
+not a statement about posterior means or kernel ridge prediction.
+The natural exponent is proved here with slowly increasing depth.
+For any fixed depth, the same natural-scale lower bound remains open.
+The lower polynomial bound on $k$ ensures that the relevant Fourier
+levels exceed the uniform coefficient threshold $\exp(C/\beta)$ and
+that the logarithmic active faces fit within the parity support.
+
+\begin{thebibliography}{99}
+\bibitem{flajolet2009}
+P. Flajolet and R. Sedgewick. \emph{Analytic Combinatorics}.
+Cambridge University Press, 2009. Chapter VI.
+\bibitem{Lee2023}
+J. R. Lee. Spectral hypergraph sparsification via chaining.
+\href{https://arxiv.org/abs/2209.04539}{arXiv:2209.04539}, Section 2.4.
+\bibitem{tropp2008}
+J. A. Tropp. Norms of random submatrices and sparse approximation.
+\emph{Comptes Rendus Math\'ematique} 346:1271--1274, 2008.
+\bibitem{tropp2012}
+J. A. Tropp. User-friendly tail bounds for sums of random matrices.
+\emph{Foundations of Computational Mathematics} 12:389--434, 2012.
+\bibitem{EI}
+A. Eskenazis and P. Ivanisvili.
+Polynomial inequalities on the Hamming cube.
+\href{https://arxiv.org/abs/1902.02406}{arXiv:1902.02406}.
+\bibitem{HKS}
+A. W. Harrow, A. Kolla, and L. J. Schulman.
+Dimension-free $L^2$ maximal inequality for spherical means in the
+hypercube. \emph{Theory of Computing} 10:55--75, 2014.
+\bibitem{CD} A. Carbonaro and O. Dragi\v cevi\'c.
+\emph{Functional calculus for generators of symmetric contraction semigroups}.
+Duke Math. J. 166 (2017), 937--974.
+\href{https://arxiv.org/abs/1308.1338}{arXiv:1308.1338}; imaginary-power estimate in Proposition 11 of version 2.
+\bibitem{Domelevo} K. Domelevo, P. Durcik, V. Fragkiadaki, O. Klein, D. Oliveira e Silva, L. Slav\'ikov\'a, and B. Wr\'obel.
+\emph{Dimension-free estimates for low degree functions on the Hamming cube}.
+Studia Math. 280 (2025), 161--173.
+\href{https://arxiv.org/abs/2401.07699}{arXiv:2401.07699}.
+
+\end{thebibliography}
+\end{document}

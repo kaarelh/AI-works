@@ -1,0 +1,154 @@
+\section{The complete low-degree head}\label{sec:head}
+\subsection{Squared balance on the target coordinates}
+\begin{lemma}[Active-coordinate squared balance]
+\label{lem:positive-active}
+If $P$ has total Walsh degree at most $r$, then
+\begin{equation}
+ \mathbb E(fP)_-^2
+ \ge\left(\frac12-\sqrt{\frac rk}\right)\|P\|_2^2.
+ \label{eq:positive-active-balance}
+\end{equation}
+For every fixed $\delta>0$, there is a universal $A_\delta$ such that
+if $r\le k/64$ and $n\ge A_\delta D_r\log(D_r+1)$, then, with
+probability at least $1-\delta$,
+\begin{equation}
+ \mathbb P_n(fP)_-^2\ge\frac14\|P\|_2^2
+ \quad\text{for every polynomial $P$ of degree at most $r$}.
+ \label{eq:positive-active-sampling}
+\end{equation}
+\end{lemma}
+\begin{proof}
+For $j\in U$ put $D_jP=(P-P\circ\mathrm{flip}_j)/2$.
+Because $f$ changes sign under these flips, the inequality
+$|F(s)-F(t)|\le(|s|+|t|)|s-t|$ for $F(t)=t|t|$ gives
+\[
+ |\mathbb E fP|P||\le2\|P\|_2\|D_jP\|_2.
+\]
+Averaging over $j\in U$ and using
+$\sum_{j\in U}\|D_jP\|_2^2\le r\|P\|_2^2$ proves
+\eqref{eq:positive-active-balance} from
+$(fP)_-^2=(P^2-fP|P|)/2$.
+The vector of all Walsh characters of degree at most $r$ is isotropic
+and has squared length $D_r$ at every input. Under $r\le k/64$,
+the population bound is at least $3\|P\|_2^2/8$.
+Apply Lemma~\ref{lem:squared-sampling} at accuracy $1/8$ and use
+homogeneity to obtain \eqref{eq:positive-active-sampling}.
+\end{proof}
+
+
+\subsection{Separating the first omitted pair of Fourier levels}
+\begin{lemma}[The first paired shell]
+\label{lem:positive-first-shell}
+Fix $A\ge1$, $\delta>0$, and an odd $r_0\ge11$.
+There is a sufficiently small $\alpha>0$ such that, uniformly for all
+large $d$, the following holds. Suppose $r$ is odd and
+\[
+ r_0\le r\le\alpha d,\qquad
+ A D_r\log(D_r+1)\le n<A D_{r+2}\log(D_{r+2}+1).
+\]
+Write $\rho=r/D$, $H=\log(e/\rho)$, and $\tau=\tau_r$.
+Then, with probability at least $1-2\delta$,
+\begin{equation}
+ \|(Q_r)_{SS}\|_{\mathrm{op}}\le C_{L,A,\delta}H\tau.
+ \label{eq:positive-improved-gram}
+\end{equation}
+Deterministically,
+\begin{align}
+ n\lambda_{r+1}&\le C_L A H\tau,
+ \label{eq:positive-first-eigen}\\
+ n\lambda_{r+3}&\le C_L A\rho^2H\tau.
+ \label{eq:positive-second-eigen}
+\end{align}
+\end{lemma}
+\begin{proof}
+Let $B_r=K_{(r,r+2]}$, so $Q_r=B_r+Q_{r+2}$.
+The two levels in $B_r$ have the common normalized eigenvalue
+$\ell=\lambda_{r+1}=\lambda_{r+2}$ and total dimension
+\[
+ m=\binom d{r+1}+\binom d{r+2}=\binom D{r+2}.
+\]
+Its diagonal is $\Delta=m\ell=\tau_r-\tau_{r+2}$.
+Choose the feature vector
+$v(x)=\sqrt\ell(\chi_V(x))_{r<|V|\le r+2}\in\mathbb R^m$.
+Then $\|v(x)\|_2^2=\Delta$ and
+$\mathbb E vv^{\mathsf T}=\ell I_m$.
+For $A_i=v(X_i)v(X_i)^{\mathsf T}-\ell I_m$,
+\[
+ \|A_i\|_{\mathrm{op}}\le\Delta,\qquad
+ \left\|\sum_{i=1}^n\mathbb E A_i^2\right\|_{\mathrm{op}}
+ \le n\ell\Delta.
+\]
+The self-adjoint matrix Bernstein inequality
+\cite[Theorem~1.4]{tropp2012}, with $h=\log(2m/\delta)$, therefore gives,
+with probability at least $1-\delta$,
+\begin{equation}
+ \|(B_r)_{SS}\|_{\mathrm{op}}
+ \le n\ell+C\sqrt{n\ell\Delta h}+C\Delta h.
+ \label{eq:positive-band-bernstein}
+\end{equation}
+Here the nonzero eigenvalues of the sample Gram matrix equal those of
+$\sum_i v(X_i)v(X_i)^{\mathsf T}$.
+
+The sharp spectrum and maximality interval imply
+\[
+ n\le C A m rH,\quad
+ \ell\le\frac{C_L\tau}{rm},\quad
+ \Delta\le\frac{C_L\tau}{r},\quad
+ h\le C_\delta rH.
+\]
+Thus every term in \eqref{eq:positive-band-bernstein} is at most
+$C_{L,A,\delta}\tau H$.
+The fine-tail conclusion of Lemma~\ref{lem:sparse-gram} for the current
+adaptive cutoff $r$ gives $\|(Q_{r+2})_{SS}\|\le2\tau$ with probability
+at least $1-\delta$
+after reducing $\alpha$ and increasing $d_0$.
+The triangle inequality proves \eqref{eq:positive-improved-gram}.
+The first eigenvalue estimate is among the displayed spectral bounds;
+the two-step binomial ratio
+$\binom D{r+2}/\binom D{r+4}\le C\rho^2$ proves the second.
+No independence between the two sample events is used.
+\end{proof}
+
+
+\subsection{The complete head at an exact sample size}
+\begin{proposition}[Head norm and population leakage]\label{prop:head}
+Let $r$ be odd, $r\le k/64$, $\rho=r/(d+1)$,
+$H=\log(e/\rho)$, and $n=n_r$ from~\eqref{eq:exact-size}.
+Outside an event of arbitrarily small fixed probability, every minimizer
+of~\eqref{eq:obstacle}, with $P=z_{\le r}$, satisfies
+\begin{align}
+ \|z\|_K^2&\le C n a^2d^\beta,\label{eq:budget}\\
+ \|P\|_2^2&\le C a^2\rho^{-\beta}H,\label{eq:head-norm}\\
+ \|z-P\|_2^2&\le C a^2\rho^{2-1/400-\beta}H.
+ \label{eq:head-leakage}
+\end{align}
+The estimates hold simultaneously for all minimizers.
+\end{proposition}
+\begin{proof}
+The interpolation comparator gives~\eqref{eq:budget}; at the displayed
+sample size, its $d$ term is absorbed by $nd^\beta$.
+The one-sided squared sampling theorem and the parity balance estimate
+give
+\[
+ \frac14\|P\|_2^2\le\frac1n\sum_i(f(X_i)P(X_i))_-^2
+ \le\frac1n\sum_i(z(X_i)-P(X_i))^2
+ \le\frac{\|z\|_K^2}{n}\|(Q_r)_{SS}\|.
+\]
+Lemma~\ref{lem:positive-first-shell} bounds the last Gram matrix by
+$CH\tau_r$, proving~\eqref{eq:head-norm}.
+The first omitted pair has common eigenvalue
+$\lambda_{r+1}=\lambda_{r+2}$, dimension
+$\binom{d+1}{r+2}\asymp D_r\rho^{-2}$, and trace at most
+$C\tau_r/r$. Therefore
+\[
+ n_r\lambda_{r+1}\le C\tau_r H\rho^{2-1/400}.
+\]
+Since $\|z-P\|_2^2\le\lambda_{r+1}\|z\|_K^2$, this proves
+\eqref{eq:head-leakage}. The sample size belongs to the interval in
+Lemma~\ref{lem:positive-first-shell}, because $1/400<2$.
+\end{proof}
+
+In particular the low-degree head inherits the sign of $z$ outside a
+set of vanishing population measure, and its mass in $(-a/2,a/2)$ tends
+to zero. The estimate~\eqref{eq:head-norm} concerns the entire head;
+the much weaker bound $\lambda_0\|z\|_K^2$ would not suffice below.
