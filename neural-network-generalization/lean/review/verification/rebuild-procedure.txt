@@ -1,0 +1,104 @@
+Independent main-theorem rebuild procedure
+=========================================
+
+Purpose
+-------
+Rebuild the complete transitive PROJECT import closure of a chosen main theorem,
+or all four main theorems, without reusing any project object file. Check each
+main theorem's exact type and full axiom closure. Record the exact source,
+configuration, pinned package revisions, reused package artifacts, and toolchain
+executable hashes. This procedure does not publish anything.
+
+Implementation: rebuild_main.py in this directory. Python 3.11+ is required.
+
+SubcriticalMain.lean and all its imports now have closed proofs. Run from the
+Lean project directory, using a NEW destination path:
+
+  python3 review/verification/rebuild_main.py \
+    --main subcritical \
+    --destination /workspace/neural-lean-verify-subcritical-final \
+    --toolchain-bin /workspace/lean-toolchains/lean-4.32.0-linux/bin \
+    --cpu-list 0,1
+
+For a single clean snapshot containing the union of all four main closures:
+
+  python3 review/verification/rebuild_main.py \
+    --main all \
+    --destination /workspace/neural-lean-verify-all-final \
+    --toolchain-bin /workspace/lean-toolchains/lean-4.32.0-linux/bin \
+    --cpu-list 0,1
+
+--subcritical-module may override the expected module name if the final assembly
+module is renamed. The expected proof name and exact proposition remain fixed:
+MainProofs.subcriticalExponential : MainStatements.SubcriticalExponentialLowerBound.
+
+What the procedure checks
+-------------------------
+1. Computes every transitive NeuralGeneralization import, rejecting missing
+   sources, import cycles, and unsupported import syntax.
+2. Requires every external git package to be clean in tracked files and at the
+   exact revision in lake-manifest.json. It does not update dependencies.
+3. Creates a new isolated directory, copies the full project source closure and
+   lean-toolchain/lakefile.toml/lake-manifest.json, and checks SHA-256 equality.
+   No project .lake/build directory or .olean is copied.
+4. Uses an empty local build directory. By default, only external packages and
+   their caches are shared. Hashes all reusable external .olean, .olean.private,
+   .olean.server, .ir, and .so artifacts before and after. Existing artifacts
+   must remain byte-identical; newly built dependencies are recorded afterward.
+5. Unsets an inherited LEAN_PATH, checks the Lean version against lean-toolchain,
+   and records Lean/Lake executable hashes.
+6. Runs lake --no-cache build on the requested main module(s), allowing Lake to
+   build all their project dependencies from source in dependency order.
+7. Runs a newly generated ExactMainAudit.lean. It checks an explicit example of
+   each exact target type, requires a theorem declaration, compares the declared
+   type to the exact proposition definition, prints all axioms, and rejects
+   every axiom except propext, Classical.choice, and Quot.sound. In particular,
+   sorryAx, hidden project axioms, and native-decision axioms do not pass.
+8. Rehashes the original sources, copied sources, and dependency state. It fails
+   if the checked source snapshot differs from the current original source or
+   if a reused external artifact changed while the build ran.
+
+Evidence is placed under DESTINATION/verification/: source-before/after,
+snapshot-after, project-import-closure, dependencies-before/after,
+external-artifacts-before/after, build.log, audit.log, and result.json.
+A PASS result requires both successful commands and unchanged source/dependency
+state. PREPARED_ONLY is never proof certification.
+
+External dependency boundary
+----------------------------
+The default rechecks every project proof from source. Pinned external mathlib
+and support-library objects may be reused, with their exact bytes recorded. This
+must not be described as a fresh build of every mathlib proof from source.
+
+For the stronger check, add --fresh-dependencies. It copies the pinned package
+sources and git metadata but excludes each package's .lake directory, then lets
+Lake rebuild external dependencies as well. This is substantially more costly.
+Both modes start with no project objects. Neither mode downloads or updates
+packages as an explicit step; all required pinned source packages must already
+be available.
+
+Publication checks after the independent run
+--------------------------------------------
+- Curate the union of the four main project closures plus any separately audited
+  supplementary theorem modules. Unrelated in-progress modules are unnecessary.
+- Update the published root NeuralGeneralization.lean to import the four main
+  proof modules and intended supplements.
+- In the CURATED publication copy, run lake build, lake env lean Audit.lean, and
+  lake env lean CheckMain.lean. CheckMain must report all four exact proofs.
+- Match curated source/configuration hashes against the independently checked
+  snapshot. If any mathematical source changes, rebuild/re-audit the affected
+  closure before claiming the new snapshot is verified.
+- Verify paper hashes against review/source-manifest.json, and make the public
+  coverage description distinguish exact main learning statements from optional
+  appendix and auxiliary results. Do not state that all contents of every PDF
+  are machine checked merely because the four exact main gates pass.
+
+Procedure validation completed during preparation
+------------------------------------------------
+The script passes Python syntax compilation. Prepare-only on the already proved
+mean-field target finds 136 project modules plus the three configuration files,
+matching the earlier 139-file source manifest. The generated exact audit was
+also compiled against the existing project objects as a syntax/logic smoke test.
+These checks validate the procedure; they are not a new independent main proof
+rebuild. The closed subcritical main theorem still requires the separate
+complete dependency rebuild and exact-type/axiom gate described above.

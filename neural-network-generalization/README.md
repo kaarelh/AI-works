@@ -6,6 +6,14 @@ The four papers below are the main results. The remaining papers are listed as s
 
 Every paper has a PDF, editable LaTeX source, and a build script. This collection contains 30 distinct papers and notes; duplicate builds, superseded versions of the same manuscript, and externally authored source material are omitted.
 
+## Lean verification
+
+The four main learning statements have Lean proofs for the actual Gaussian network model, including the all-input margin and strict `>2/3` confidence convention. The subcritical theorem covers **all gamma < 1, including gamma = 0 and gamma < 0**. The parity-network appendix is also formalized, with bounded-weight complexity at most `32*(d+1)^2` at every depth.
+
+[Lean project and instructions](lean/) · [Exact statements](lean/NeuralGeneralization/Statements.lean) · [Verification record](lean/VERIFICATION.md) · [Coverage and auxiliary exclusions](lean/review/formal-coverage-inventory.txt)
+
+The checked scope is the four exact main learning theorems and the stated parity supplement. Some formal proofs use different sufficient estimates from the papers. This does not certify every auxiliary result, sharp constant, or side paper.
+
 ## Main results
 
 ### 1. The strong-prior limit argument
@@ -97,6 +105,6 @@ The principal unfinished target is the fixed-depth natural sparse-parity lower b
 
 Each paper folder contains `paper.pdf`, its complete source dependencies under `source/`, and `build.sh`. Run a paper's script to rebuild it with a standard TeX Live installation. The collection also includes relevant mathematical review records and the computational certificate archives used by the structured papers.
 
-The manuscripts have not been rewritten for this collection. One earlier draft PDF was rebuilt from unchanged source to resolve missing cross-references; the other 29 PDFs are unchanged. Existing internal mathematical audits are retained where available; they are not external peer review or machine-checked formal proofs. Packaging checks are recorded in [verification/README.md](verification/README.md). [catalog.json](catalog.json) records the canonical paper inventory and PDF checksums; [SHA256SUMS](SHA256SUMS) records the published file checksums.
+The manuscripts have not been rewritten for this collection. One earlier draft PDF was rebuilt from unchanged source to resolve missing cross-references; the other 29 PDFs are unchanged. Existing internal mathematical audits are retained where available; they are not external peer review. The separate Lean project verifies the main learning statements and the parity supplement as described above. Packaging checks are recorded in [verification/README.md](verification/README.md). [catalog.json](catalog.json) records the canonical paper inventory and PDF checksums; [SHA256SUMS](SHA256SUMS) records the published file checksums.
 
-The working branch for this publication is `codex/neural-network-generalization-papers-2026-10-16`. This folder on `main` contains the papers and their supporting records; exploratory scratch work remains outside the published collection.
+The paper collection was assembled on `codex/neural-network-generalization-papers-2026-10-16`; the Lean formalization was prepared on `codex/neural-network-lean-2026-10-16`. This folder on `main` contains the papers and their supporting records; exploratory scratch work remains outside the published collection.

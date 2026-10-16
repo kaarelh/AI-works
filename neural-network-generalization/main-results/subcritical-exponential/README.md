@@ -6,6 +6,10 @@ For every fixed gamma < 1 and fixed depth, full parity in dimension d requires e
 
 [Paper (PDF)](paper.pdf) · [LaTeX source](source/subcritical-exponential.tex) · [Collection index](../../README.md)
 
+## Formal main theorem
+
+The main learning statement is proved by [`MainProofs.subcriticalExponential`](../../lean/NeuralGeneralization/SubcriticalMain.lean). See the [Lean verification record](../../lean/VERIFICATION.md) for reproduction and the precise scope; this does not claim that every auxiliary assertion in the PDF is formalized.
+
 ## Build
 
 Run `bash build.sh` in this directory with a standard TeX Live installation. The script runs two LaTeX passes, stores temporary output in `build/`, and refreshes `paper.pdf`. No network access is required.

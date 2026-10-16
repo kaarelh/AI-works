@@ -6,6 +6,10 @@ For gamma = 1, fixed-depth tanh networks have a polynomial sample bound at every
 
 [Paper (PDF)](paper.pdf) · [LaTeX source](source/meanfield-all-width.tex) · [Collection index](../../README.md)
 
+## Formal main theorem
+
+The main learning statement is proved by [`MainProofs.meanField`](../../lean/NeuralGeneralization/MeanFieldMain.lean). See the [Lean verification record](../../lean/VERIFICATION.md) for reproduction and the precise scope; this does not claim that every auxiliary assertion in the PDF is formalized.
+
 ## Build
 
 Run `bash build.sh` in this directory with a standard TeX Live installation. The script runs two LaTeX passes, stores temporary output in `build/`, and refreshes `paper.pdf`. No network access is required.

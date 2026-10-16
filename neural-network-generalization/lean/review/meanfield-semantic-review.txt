@@ -1,0 +1,31 @@
+Independent semantic audit: exact mean-field main theorem
+
+Scope reviewed: main-results/meanfield-all-width/source/meanfield-all-width.tex, Theorem 1.1; MainStatements.MeanFieldGeneralization; concrete network/prior/posterior definitions; new backward-budget, finite-tower, class-count, and learning-envelope chain.
+
+Statement match:
+- Depth L=r+2, with exactly r+1 hidden layers. All hidden activations are Real.tanh, with a linear readout. The only bias is the constant augmented input coordinate.
+- Power prior at gamma=1 has independent centered Gaussian variances 1/d, 1/N, and 1/N^2 in the first, internal, and readout blocks respectively. These agree with the paper's standard deviations d^(-1/2), N^(-1/2), N^(-1). No infinite-width limit appears in the statement.
+- Input domain Fin d -> Bool is the exact {-1,+1} cube through labelReal. All d>=1 and every finite input probability law are quantified.
+- isComplexity requires C>=1, an actual depth-L width-C strict-margin network with every weight bounded by C, and minimality over such C. Every N>=C is quantified. No larger-width hypothesis is added to the main statement.
+- marginEvent imposes signed output strictly >1/2 on every cube input. This includes all unseen inputs. Function masses are probabilities of these exact global sign events.
+- networkPosterior weights those raw function masses by exact noiseless sample consistency. The proved networkPosterior_eq_globalConditioned identity establishes equality with first conditioning on the global absolute-margin event and then on training labels. The main theorem also asserts positive posterior denominator for every possible sample.
+- sampleProbability is the exact finite product of n IID draws from the arbitrary input law. posteriorRisk averages the Boolean disagreement probability under the full posterior.
+- confidenceFailure counts inputs with correctConfidence <=2/3, including equality. Therefore the claimed failure<=epsilon is precisely the strict >2/3 success criterion in the paper, rather than posterior-mean thresholding.
+- The coefficient A>0 and natural degree m are selected after depth and before d,C,N,D,epsilon,delta,n. Thus the polynomial is uniform in width, target, data law, and confidence. The sample factor is exactly 6/epsilon and additive log(6/(epsilon*delta)); the conclusions are simultaneous risk<=epsilon/3 and confidenceFailure<=epsilon with sample probability>=1-delta.
+
+Deterministic/new-budget chain:
+- Actual tilt index j=0,...,r uses layerBudget(r,K,j+1). The terminal budget is 32(r+1)K^2. The auxiliary zero index only closes the backward recurrence and does not add a network layer.
+- Backward recurrence gives terminal covariance error<=1/(32K), with no ambient matrix dimension factor. The actual minimum-readout dual is scaled to unit signed margin and l1<=4K, so transport loses at most1/8 and leaves margin>=7/8.
+- The finite-tower precision E=32K(r+1)[8(1+Gmax)^2]^r makes its covariance error<=1/(32K); the same dual therefore loses at most another1/8. Its actual finite network has signed margin>=3/4, which implies the required strict >1/2.
+- Counted functions have concrete bounded weights at the exact finite-tower width and bound. The class is independent of the original width. Capacity is bounded by the proved parameter-grid counting theorem.
+- Replacing the paper's ceil(G^2/2) by Gmax^2+1 and its sharper threshold by 8*d*(Gmax^2+1)+1 only enlarges polynomial constants. The theorem asserts existence of a polynomial and is unchanged.
+- Final energy K=8*(targetBudget+6*(r+2)+d+shiftedC+1) pays the target rate and log(6(r+2)/epsilon). Sample budget adds the actual class-capacity bound and targetBudget*widthThreshold. Rounded log(1/epsilon) is absorbed into a checked polynomial envelope.
+
+Initial status at semantic review: final statistical-envelope theorem still had its explicit aggregate-tail premise. Subsequent closure: MeanFieldHiddenTail proves the actual hidden-event tail; MeanFieldReadoutTail proves the actual readout tail; MeanFieldAggregate.aggregate_tail combines those with actual certificate extraction and finite-network compression. MeanFieldMain now proves the exact MainStatements.MeanFieldGeneralization with no remaining hypotheses. A fresh exact-type example and full #print axioms audit passed with only propext, Classical.choice, and Quot.sound. No statement weakening or semantic mismatch was found. Dependency-aware independent Lake rebuild remains the parent agent's next verification step.
+
+Source hashes at review:
+c4d512357029f1d8a8fe02bc48a6a156dee65f25078fddb0f15e43f9af8687b1  /workspace/neural-papers-publish/neural-network-generalization/main-results/meanfield-all-width/source/meanfield-all-width.tex
+b8d0f280352c492d02feadc4e5176c808b24b0552603a3db3398ed3cc4b84732  /workspace/neural-lean/NeuralGeneralization/Statements.lean
+d57b883e2532cb0c2ba5c2cd638aeac177888f1d0127a24e2c503e8335967d79  /workspace/neural-lean/NeuralGeneralization/Model.lean
+0f80a56542f31ea6cedb60d51aa5e9cf8b8e8bd4e4d72bb6c2c5f08302d66553  /workspace/neural-lean/NeuralGeneralization/Network.lean
+9a785def179a0515def2f7064f7e3ce9a99b5f9ee5ecaccb568053ce9f3b818a  /workspace/neural-lean/NeuralGeneralization/FunctionPrior.lean

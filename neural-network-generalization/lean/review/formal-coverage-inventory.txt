@@ -1,0 +1,147 @@
+Formal verification coverage inventory
+=====================================
+
+Scope snapshot: the four main papers in the collection at published commit
+7d256b846523529482c8b65c468667ee0b5ec9b1. Exact manuscript file hashes are in
+review/source-manifest.json. This inventory distinguishes the four requested
+main learning statements from additional assertions appearing in their PDFs.
+All four exact main proofs passed the independent combined source rebuild and
+exact-type/axiom gate on 2026-10-16. Evidence: review/verification/final/result.json
+and audit.log. This inventory describes the semantic scope of that verification.
+
+Exact gate coverage
+-------------------
+1. MainStatements.StrongPriorGeneralization
+   Fixed depth, arbitrary bounded 1-Lipschitz hidden activation, arbitrary input
+   distribution, every width N at least the actual bounded-weight network
+   complexity. At each fixed width, sufficiently small prior variance gives
+   polynomial sample complexity for posterior average error. The variance
+   threshold precedes input law, sample size, and delta, but may depend on width.
+   MainProofs.strongPrior is closed and independently rebuilt.
+
+2. MainStatements.AboveMeanFieldGeneralization
+   Every fixed gamma>1, every N at least bounded-weight target complexity,
+   arbitrary admissible activation and input law, polynomial sample complexity
+   at the specified actual nonzero Gaussian variance. Polynomial degree and
+   coefficient may depend on depth and gamma. No uniform degree as gamma tends
+   to one is asserted. MainProofs.aboveMeanField is closed and independently
+   rebuilt, using an alternative finite-grid Gaussian-tail proof.
+
+3. MainStatements.MeanFieldGeneralization
+   Gamma=1, tanh, every N at least bounded-weight target complexity, arbitrary
+   input law. Simultaneous posterior average error <=epsilon/3 and strict
+   correct-label confidence >2/3 on all but an epsilon input fraction, with
+   sample probability >=1-delta. MainProofs.meanField is closed and independently
+   rebuilt. There is no extra minimum-width or infinite-width hypothesis.
+
+4. MainStatements.SubcriticalExponentialLowerBound
+   Every fixed depth and positive global margin admit c>0,d0 BEFORE gamma.
+   Every d>=d0 and every specified 0<=n<=exp(cd), for each fixed gamma<1, has
+   sample probability >=3/4 of width-first liminf confidence failure >=1/16.
+   Actual finite network posterior denominators are eventually positive for
+   every sample. The target is full parity: k=d. This single statement includes
+   gamma=0 and gamma<0, so the user's nonpositive-gamma main result is covered
+   without a fifth gate. MainProofs.subcriticalExponential is now closed.
+   Its source assembly has been reviewed independently, and the combined
+   independent rebuild and exact-type/axiom gate passed. Evidence:
+   review/verification/final/result.json and audit.log.
+
+All four definitions use the actual finite Gaussian parameter laws and exact
+noiseless posterior, with strict absolute margin at EVERY Boolean input before
+training. Confidence failure includes equality with 2/3. None uses the sign of
+a posterior mean as its prediction rule.
+
+Additional main-paper contents outside those four exact theorem types
+--------------------------------------------------------------------
+Strong-prior paper:
+- The fixed-gate-basis circuit simulation for arbitrary continuous nonpolynomial
+  activation (circuits.tex, Proposition circuit-simulation) is separate. Its
+  proof invokes finite interpolation. No closed Lean declaration for this
+  general simulation was found in this audit. The main theorem is explicitly
+  conditional on actual bounded-weight network complexity, so it does not
+  silently assume this simulation or identify arbitrary circuit size with
+  fixed-depth network complexity.
+- The depth-dependent tanh norm-ball cardinality lower bound
+  (depth-lower-bound.tex, Proposition depth-lower-bound) is also separate and was
+  not found as a closed Lean theorem. It concerns growing depth and is not
+  needed for the fixed-depth learning theorem.
+- The particular sharp packing/sensitivity formulas and displayed compression
+  constants are not certified merely by the exact main gate. The checked proof
+  has actual compression/counting and sufficient polynomial bounds, sometimes
+  with looser constants. Any claim of formula-by-formula coverage needs a
+  separate declaration mapping.
+- The norm-versus-network-complexity comparison is mathematically supported by
+  checked compression/cloning ingredients, but the exact main proposition does
+  not state that separate equivalence. Do not advertise its precise displayed
+  quantitative form as checked solely from MainProofs.strongPrior.
+
+Gamma>1 paper:
+- The separate corollary equating normalized negative log raw prior mass with
+  bounded-weight network complexity (source/mass-complexity.tex) is outside the
+  exact learning statement and has no complete formal equivalent identified.
+  The actual target-mass upper-cost direction is a proved ingredient; this does
+  not by itself certify the inverse mass-to-complexity direction.
+- The paper's specific singular-value tail via Gaussian isoperimetry, including
+  its exp(-K/(8 sigma^2)) constant, is not what the Lean proof verifies. The
+  finite-grid/orthogonal-energy replacement proves the same existential
+  polynomial learning conclusion with different intermediate constants.
+- The special all-gamma>=1, one-hidden-layer, arbitrary-activation remark is not
+  an additional conclusion of the four main types: at gamma=1 the main formal
+  theorem is tanh-specific.
+- Its description of an older mean-field companion as having an unquantified
+  width threshold is historically stale. The newer all-width result is now the
+  separate third main paper; this is an editorial issue, not a contradiction.
+
+Gamma=1 paper:
+- The exact main theorem is covered, including its stated strict-confidence
+  guarantee. The remark allowing every fixed threshold greater than 1/2 is not
+  a quantified parameter of the exact main theorem. It can follow from the
+  generic risk-to-confidence argument with changed constants, but should be
+  distinguished if separately advertised.
+- Precise auxiliary entropy/compression constants may differ in the formal
+  proof; the exact gate certifies the final existential polynomial statement.
+
+Subcritical paper:
+- The appendix constructs an explicit bounded-weight tanh realization of parity
+  at every fixed depth. This supplement is now proved by
+  ParityNetwork.parity_realizes_every_depth and exists_parity_complexity, with
+  bound C <= 32*(d+1)^2. The checked construction uses a linear slope instead
+  of the appendix's logarithmic slope, so it proves the polynomial-complexity
+  conclusion with a looser coefficient bound. MainProofs.subcriticalSmallNetworkLowerBound
+  combines it with the exact exponential theorem. Its source rebuild and axiom
+  audit are recorded separately from the four-main closure.
+- The stronger standalone gamma<0 conclusion with failure >=3/8 at buffered
+  confidence 13/20 is not the numerical conclusion of the unified main type,
+  which uses >=1/16 at finite-network confidence 2/3. Supporting negative-endpoint
+  theorems prove stronger conditional statements; a closed probability theorem
+  is needed before advertising the stronger standalone result as formalized.
+- The Gaussian gamma=0 draw-risk theorem and all displayed sharp spectral or
+  scalar auxiliary estimates are not automatically covered formula by formula
+  by the final confidence lower bound. The proof may use alternative sufficient
+  bounds, including a coarser full-spectrum floor and different cutoff constants.
+- The actual squared-loss sampling theorem currently proved has the explicit
+  D_r*(log(8n)+ceil(log_2 D_r)+1) budget, sufficient for the main adaptive proof.
+  It is not literally the paper's standalone O(D_r log D_r) formulation for
+  arbitrary n without an additional reduction.
+
+Shared consequences and limits of coverage
+-----------------------------------------
+- Strong-prior and gamma>1 exact main types state posterior average-error bounds.
+  The confidence conversion is separately proved in
+  ModelLearning.network_confidenceFailure_le_three_risk; rescaling epsilon by
+  three gives the collection's strict >2/3 interpretation. This distinction is
+  already described in the collection README.
+- No main statement asserts efficient computation of the posterior, an online
+  mistake bound, arbitrary-label noisy learning, or a joint dimension/width
+  limit. No main subcritical theorem gives a quantitative minimum width.
+- The fixed-depth sparse-parity target exp(Omega(k log(ed/k))) for k much smaller
+  than d is explicitly not the full-parity main theorem. Sparse, growing-depth,
+  selected-example, prior-complexity, and structured-certificate papers remain
+  outside this four-main audit.
+- The 30-paper collection's side results and earlier treatments are not all
+  machine verified by completion of these four proofs.
+
+Publication wording should identify the exact four main learning theorems and
+any separately audited supplements. Passing the gate is substantially stronger
+than a conditional reduction, but it is not a claim that every lemma, appendix,
+or historical side manuscript has been formalized.
