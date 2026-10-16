@@ -1,0 +1,165 @@
+# c9_revision.py  seed=20261016  numpy 2.4.6  python 3.11.15
+## (1) conservation world: the law's value per raw step and per question (bits)
+#  m     g_0=log2(S/C)  g_{C/2}   per question: uniform{0..m}   iid Binomial (realised, |x|=m/2)   induced by raw no-law model at step t
+     8       1.8707     2.6586           3.1699                 1.8707              = g_t exactly
+    12       2.1483     2.9756           3.7004                 2.1483              = g_t exactly
+    16       2.3483     3.1992           4.0875                 2.3483              = g_t exactly
+    32       2.8370     3.7324           5.0444                 2.8370              = g_t exactly
+    64       3.3314     4.2579           6.0224                 3.3314              = g_t exactly
+   128       3.8286     4.7769           7.0112                 3.8286              = g_t exactly
+  1024       5.3261     6.3080          10.0014                 5.3261              = g_t exactly
+# chain rule: under RAW-NOLAW the step-t loss log2(S-t) = log2((S-t)/(C-t)) [the induced probability
+# of the observed weight class] + log2(C-t) [the state within the class], and RAW-LAW's loss is the
+# second term; so the law's raw gain g_t IS the no-law raw model's loss on the question 'what is |x_t+1|?'.
+# identity checked at m = 12 for t = 0..C-1: largest |difference| 1.8e-15 bits
+
+## (2) least-squares fits to the c4 data (N = 7306)
+circle     RMS   454.4470'   max   668.4108'   (c4 minimax 640.7908')
+eccentric  RMS    15.8123'   max    23.4767'   (c4 minimax 23.0508')
+equant     RMS     5.2633'   max     8.3883'   (c4 minimax 8.1653')
+vicarious  RMS     0.6285'   max     1.7489'   (c4 minimax 1.4127')
+ellipse    RMS     0.4457'   max     1.2523'   (c4 minimax 1.0733')
+
+## (3) Gaussian noise: expected penalty per observation relative to the ellipse, and crossovers
+#  where F's text is shorter than the ellipse's in syntax S: N* = (|LAW_ell| - |LAW_F|) / penalty observations
+  sigma 1'  eccentric    180.2136 bits/obs   S1: text adv   100 -> N* 0.6;  S2: text adv   312 -> N* 1.7;  S3: text adv  -185 -> none
+  sigma 1'  equant        19.8395 bits/obs   S1: text adv  -445 -> none;  S2: text adv   204 -> N* 10.3;  S3: text adv  -730 -> none
+  sigma 1'  vicarious      0.1416 bits/obs   S1: text adv  -445 -> none;  S2: text adv   186 -> N* 1313.3;  S3: text adv  -730 -> none
+  sigma 2'  eccentric     45.0534 bits/obs   S1: text adv   100 -> N* 2.2;  S2: text adv   312 -> N* 6.9;  S3: text adv  -185 -> none
+  sigma 2'  equant         4.9599 bits/obs   S1: text adv  -445 -> none;  S2: text adv   204 -> N* 41.1;  S3: text adv  -730 -> none
+  sigma 2'  vicarious      0.0354 bits/obs   S1: text adv  -445 -> none;  S2: text adv   186 -> N* 5253.3;  S3: text adv  -730 -> none
+  sigma 4'  eccentric     11.2633 bits/obs   S1: text adv   100 -> N* 8.9;  S2: text adv   312 -> N* 27.7;  S3: text adv  -185 -> none
+  sigma 4'  equant         1.2400 bits/obs   S1: text adv  -445 -> none;  S2: text adv   204 -> N* 164.5;  S3: text adv  -730 -> none
+  sigma 4'  vicarious      0.0089 bits/obs   S1: text adv  -445 -> none;  S2: text adv   186 -> N* 21013.0;  S3: text adv  -730 -> none
+
+## (5) guaranteed tolerance, no text prior: uniform over the five forms, c4's uniform element prior
+delta'      circle  eccentric     equant  vicarious    ellipse   MAP   margin over runner-up (bits)
+720          0.219      0.354      0.182     0.0612      0.184   eccentric  0.69
+120              0      0.379      0.262     0.0841      0.275   eccentric  0.46
+60               0      0.233      0.321     0.0775      0.369   ellipse    0.20
+30               0     0.0108      0.353     0.0632      0.573   ellipse    0.70
+20               0          0      0.233     0.0528      0.715   ellipse    1.62
+12               0          0     0.0412     0.0393       0.92   ellipse    4.48
+9                0          0   0.000655     0.0309      0.968   ellipse    4.97
+6                0          0          0      0.018      0.982   ellipse    5.77
+4                0          0          0    0.00953       0.99   ellipse    6.70
+3                0          0          0    0.00495      0.995   ellipse    7.65
+2                0          0          0   0.000879      0.999   ellipse    10.15
+1.6              0          0          0      4e-05          1   ellipse    14.61
+1.3              0          0          0          0          1   ellipse    inf
+# parametrisation of the prior box: halving the eccentricity ranges ([0,1) -> [0,0.5)) adds 1 bit of prior
+# density per eccentricity element (the compatible regions lie inside [0,0.5) at every delta <= 120'),
+# so it moves the vicarious hypothesis (two eccentricities) by 1 bit against the 4-element forms and the
+# circle (no eccentricity) by -1 bit against them.
+
+## (6) honest uniform-tolerance theories (tolerance = c4 minimax error): per-datum cost against the ellipse
+  eccentric  4.425 bits/datum   S1: N* 23;  S2: N* 71;  S3: none
+  equant     2.927 bits/datum   S1: none;  S2: N* 70;  S3: none
+  vicarious  0.396 bits/datum   S1: none;  S2: N* 469;  S3: none
+
+## (8) law texts in a second serialisation: Polish notation (no brackets; 'neg' for unary minus)
+law        S1: brackets/Polish (bits)   S2: brackets/Polish (bits)   S3: brackets/Polish (bits)
+circle       155 /    75        186 /    90        155 /    75
+eccentric    445 /   195        342 /   150        445 /   195
+equant       990 /   440        450 /   198        990 /   440
+vicarious    990 /   440        468 /   204        990 /   440
+ellipse      545 /   245        654 /   294        260 /   120
+K3           375 /   165        450 /   198        375 /   165
+# compact K3 (Polish, '^' and '3' added): 23 tokens, 115 bits
+#   |K3| =  375 bits: bodies whose size it must fix to pay, at s = 11.3 / 14.7 bits per body: 33.2 / 25.5
+#   |K3| =  165 bits: bodies whose size it must fix to pay, at s = 11.3 / 14.7 bits per body: 14.6 / 11.2
+#   |K3| =  115 bits: bodies whose size it must fix to pay, at s = 11.3 / 14.7 bits per body: 10.2 / 7.8
+
+## (9) exact K3 for Jupiter and Saturn: geocentric direction error from q_b != q_Ea, 1580-1600 daily
+  Jupiter  q = 1.000955  relative a change 3.170e-04   geocentric error max 0.233'  median 0.150'
+  Saturn   q = 1.001500  relative a change 4.985e-04   geocentric error max 0.193'  median 0.129'
+#  (q: scout P c3 -- Jupiter two-body; Saturn the middle of its fitted range 1.0013-1.0019)
+
+## (7) intrinsic errors: minimax of each form against an exact Kepler ellipse (the ellipse's LS elements)
+#  exact ellipse: e = 0.093017; its own deviation from plan94: max 1.2523'
+  eccentric  minimax against the exact ellipse  22.3427'   (against plan94, c4: 23.0508')
+  equant     minimax against the exact ellipse   7.4326'   (against plan94, c4: 8.1653')
+  vicarious  minimax against the exact ellipse   0.6248'   (against plan94, c4: 1.4127')
+
+## (4) Gaussian noise, full simulation (Laplace evidence; uniform element prior; 20 seeds per cell)
+# sigma = 2'
+n      S    MAP counts over 20 seeds (circle/eccentric/equant/vicarious/ellipse);  median log2 odds ellipse : vicarious (evidence only, no text)
+5      S1    0 / 20 /  0 /  0 /  0      2.2
+5      S2    0 / 20 /  0 /  0 /  0
+5      S3    0 /  0 /  0 /  0 / 20
+10     S1    0 /  0 /  0 /  0 / 20      5.4
+10     S2    0 /  1 /  8 / 11 /  0
+10     S3    0 /  0 /  0 /  0 / 20
+20     S1    0 /  0 /  0 /  0 / 20      6.0
+20     S2    0 /  0 /  0 / 20 /  0
+20     S3    0 /  0 /  0 /  0 / 20
+40     S1    0 /  0 /  0 /  0 / 20      8.0
+40     S2    0 /  0 /  0 / 20 /  0
+40     S3    0 /  0 /  0 /  0 / 20
+80     S1    0 /  0 /  0 /  0 / 20      10.2
+80     S2    0 /  0 /  0 / 20 /  0
+80     S3    0 /  0 /  0 /  0 / 20
+160    S1    0 /  0 /  0 /  0 / 20      11.8
+160    S2    0 /  0 /  0 / 20 /  0
+160    S3    0 /  0 /  0 /  0 / 20
+320    S1    0 /  0 /  0 /  0 / 20      18.4
+320    S2    0 /  0 /  0 / 20 /  0
+320    S3    0 /  0 /  0 /  0 / 20
+640    S1    0 /  0 /  0 /  0 / 20      31.1
+640    S2    0 /  0 /  0 / 20 /  0
+640    S3    0 /  0 /  0 /  0 / 20
+1280   S1    0 /  0 /  0 /  0 / 20      52.4
+1280   S2    0 /  0 /  0 / 20 /  0
+1280   S3    0 /  0 /  0 /  0 / 20
+2560   S1    0 /  0 /  0 /  0 / 20      105.2
+2560   S2    0 /  0 /  0 / 20 /  0
+2560   S3    0 /  0 /  0 /  0 / 20
+5120   S1    0 /  0 /  0 /  0 / 20      186.0
+5120   S2    0 /  0 /  0 / 10 / 10
+5120   S3    0 /  0 /  0 /  0 / 20
+7306   S1    0 /  0 /  0 /  0 / 20      276.5
+7306   S2    0 /  0 /  0 /  0 / 20
+7306   S3    0 /  0 /  0 /  0 / 20
+# sigma = 1'
+n      S    MAP counts over 20 seeds (circle/eccentric/equant/vicarious/ellipse);  median log2 odds ellipse : vicarious (evidence only, no text)
+5      S1    0 / 13 /  0 /  0 /  7      3.4
+5      S2    0 / 13 /  5 /  2 /  0
+5      S3    0 /  0 /  0 /  0 / 20
+10     S1    0 /  0 /  0 /  0 / 20      6.8
+10     S2    0 /  0 /  3 / 17 /  0
+10     S3    0 /  0 /  0 /  0 / 20
+20     S1    0 /  0 /  0 /  0 / 20      7.6
+20     S2    0 /  0 /  0 / 20 /  0
+20     S3    0 /  0 /  0 /  0 / 20
+40     S1    0 /  0 /  0 /  0 / 20      14.9
+40     S2    0 /  0 /  0 / 20 /  0
+40     S3    0 /  0 /  0 /  0 / 20
+80     S1    0 /  0 /  0 /  0 / 20      19.1
+80     S2    0 /  0 /  0 / 20 /  0
+80     S3    0 /  0 /  0 /  0 / 20
+160    S1    0 /  0 /  0 /  0 / 20      26.5
+160    S2    0 /  0 /  0 / 20 /  0
+160    S3    0 /  0 /  0 /  0 / 20
+320    S1    0 /  0 /  0 /  0 / 20      56.2
+320    S2    0 /  0 /  0 / 20 /  0
+320    S3    0 /  0 /  0 /  0 / 20
+640    S1    0 /  0 /  0 /  0 / 20      98.0
+640    S2    0 /  0 /  0 / 20 /  0
+640    S3    0 /  0 /  0 /  0 / 20
+1280   S1    0 /  0 /  0 /  0 / 20      189.1
+1280   S2    0 /  0 /  0 /  7 / 13
+1280   S3    0 /  0 /  0 /  0 / 20
+2560   S1    0 /  0 /  0 /  0 / 20      372.8
+2560   S2    0 /  0 /  0 /  0 / 20
+2560   S3    0 /  0 /  0 /  0 / 20
+5120   S1    0 /  0 /  0 /  0 / 20      741.7
+5120   S2    0 /  0 /  0 /  0 / 20
+5120   S3    0 /  0 /  0 /  0 / 20
+7306   S1    0 /  0 /  0 /  0 / 20      1050.2
+7306   S2    0 /  0 /  0 /  0 / 20
+7306   S3    0 /  0 /  0 /  0 / 20
+# (the Laplace evidence includes the parameter-fitting (Occam) terms that the expected-penalty estimate
+#  of part (3) omits; the noise model's own text is common to all forms and cancels.  n = 7306 uses every
+#  day of 1580-1600, with fresh noise per seed.)
+
+# done in 27 s
