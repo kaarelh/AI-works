@@ -1,4 +1,195 @@
-% STUB written by the planning editor. INTERNAL record, switched off in main.tex (\sairecordfalse); never \cref it from another file.
-% Plan: ../OUTLINE.md (section "app:verification"); results: ../CLAIMS.md; notation: ../NOTATION.md.
+% Appendix J (front writer). INTERNAL record of how the results were checked. It is switched off in main.tex
+% (\sairecordfalse) and is not part of the arXiv version; it may use process vocabulary. Never \cref it from another file.
+% Sources: research/notes-final.md §8 (Verification log of the synthesis), research/final-check.md, the thread records'
+% Verification logs and referee reports (research/tracks/<key>/), paper/bib/bib-report.md, paper/logs/*.md.
+% The status table is generated from the \status and \src arguments of the main-text section files (script in the
+% front writer's scratchpad; see ../logs/front.md), so it shows exactly the statuses the sources carry.
 \section{How the results were checked (internal record)}\label{app:verification}
-\emph{(To be written.)}
+
+This appendix is an internal record. It is not part of the version of the paper meant for arXiv, where the account of checking is the title-page footnote and the acknowledgements.
+
+\subsection{The process}
+
+\paragraph{Research threads.} The results come from seven research threads, each with a final record in the folder \texttt{research/tracks/<key>/} of the project: \texttt{fundamentals} (\cref{sec:setting,sec:basic}), \texttt{sfi} (\cref{sec:soi}), \texttt{logic} (\cref{sec:logic}), \texttt{philosophy} (\cref{sec:phil,sec:kepler,sec:limits}), \texttt{shape} (\cref{sec:shape}), \texttt{terms} (\cref{sec:terms}) and \texttt{laws} (\cref{sec:laws}). Each thread was developed by one Claude instance from a brief that fixed the epistemic policy of the project (the paper asserts only what we believe, whoever proposed it). Every claim in a record carries a status: proved (a full proof in the record), proved given a cited result, computed (a seeded script and its saved output in the thread's \texttt{checks/} folder), known (with the level at which the reference was verified), proof sketch, conjecture, open, refuted (kept with its counterexample) or assessment (a philosophical judgement argued in the record).
+
+\paragraph{Referees.} Each thread record was refereed by two separate Claude instances (referee A and referee B; reports \texttt{referee-A.md}, \texttt{referee-B.md} next to the record). The referees re-derived the proofs and re-implemented the main computations with independent code (\texttt{referee\_code/}, and \texttt{referee\_A\_code/} for \texttt{philosophy}). No report found a fatal issue. The major issues (2 in \texttt{fundamentals}, 2 in \texttt{sfi}, 3 in \texttt{logic}, 2 in \texttt{terms}, 11 in \texttt{shape}, 8 in \texttt{laws}, 14 in \texttt{philosophy}) were all handled in a revision round, whose results are the final records: statements were corrected or weakened, refuted claims were kept as refuted, and new checks were written. Examples: the consistency statement of \cref{prop:logic:con} needs a true background (the version without it is refuted by $B=\PA+\neg\Con(\PA)$); the doubly exponential bound for reading (a1) on Presburger data was withdrawn and is open (\cref{q:soi:presburger}); the written construction behind \cref{thm:terms:binary} was rewritten and re-checked; a distance table of the Kepler computations was refuted and replaced.
+
+\paragraph{Synthesis and final check.} A synthesis assembled the seven final records into one map of results and a plan of the paper, quoting every statement with its record's status, and re-ran every developer script with a saved output on fresh copies: 43 of 47 reproduced (29 byte-identical, 14 identical apart from a line reporting the run time); the four longest Kepler computations were not re-run there, and their figures rest on the revision round's runs and on the referees' independent code. A separate final check compared every headline statement of the synthesis with the records and corrected 19 passages in which the synthesis had dropped a qualifier, a hypothesis or a status (for example, that only the companion paper's results that hold up to additive constants transfer, \cref{cor:soi:transfer}; that declarative against procedural form costs only a constant factor once intermediate concepts are available and the reasoner can chain, \cref{thm:shape:directions}); it found no headline result false and no cited proof missing. It re-ran three key scripts (the one-tape finite stand-ins, the lottery, the Kepler residuals), with byte-identical outputs apart from a run-time line.
+
+\paragraph{Writing.} A planning editor fixed the notation, a ledger of every result with its label, source, status and binding wording, and the outline. Every cited reference was verified by web search, by a scout, a thread, a referee or the bibliography editor, and the bibliography editor recorded the level reached (bibliographic data, abstract, quotation, secondary source) in \texttt{paper/bib/bib-report.md}; no page could be fetched, so no full text was read. Section writers then wrote the sections from the final records, each checking its statements against the record (hypotheses, quantifiers, constants, status) and logging every deviation (\texttt{paper/logs/}); several corrected the records' wording where it overstated what the proofs give, always by weakening (for example, the constant of \cref{prop:phil:extractor} depends on the question family; the text lengths in the flagpole example of \cref{prop:phil:flagpole}; the time-constructibility hypothesis of \cref{thm:soi:sandwich}; the entries of \cref{tab:shape:regimes} that are sizes of constructions). The front matter, this appendix and the full build were written last.
+
+\subsection{What was not checked}
+
+\begin{itemize}[leftmargin=*]
+\item Nothing was verified in a proof assistant.
+\item No human has independently checked all of the mathematics. The checking described above was done by Claude instances, which can share blind spots.
+\item References were verified only at the levels recorded in \texttt{paper/bib/bib-report.md}, from the text a search tool returned; the paper attributes content to a work only at that level. The definition of the modified Demski prior is known only from published descriptions and forum posts cited for attribution, so the comparison with it (\cref{prop:basic:demski}) is stated for the processes as defined in the paper.
+\item The novelty claims are at search level (\cref{sec:related}); for \cref{thm:shape:systems} the paper says only that we did not find it stated and that it is probably known to specialists.
+\item Results of the earlier report and of the companion papers that are cited by number (for example Lemma E.12 and Theorem 6.14 of the earlier report, used under Assumption (S)) were checked when those reports were written, not re-derived here. The assumptions (S), (S$_{\rm tape}$) and (F1) of \cref{sec:soi}, and the two assumptions behind the conditional Presburger result (\cref{prop:soi:presburgerCond}), are not proved.
+\item Computations check finite analogues, constructions and numbers; they add no evidence for statements about universal machines beyond what the proofs give. Every arcminute figure of \cref{sec:kepler} is against the plan94 ephemeris, whose own error is quoted from its documentation.
+\item The philosophical conclusions are assessments, argued but not proved; \cref{sec:phil:map} separates them from the theorems they rest on.
+\end{itemize}
+
+\subsection{Status of every main-text result}
+
+The table lists every theorem-like environment, labelled paragraph, table and figure of the main text, with the status and source item that its \verb|\status| and \verb|\src| calls record (sources: \texttt{<thread> <item>} of the final record; ``syn'' is the synthesis, ``fc'' the final check). Items whose statement is in an appendix are not listed; their status is recorded in the same way in the appendix files.
+
+{\scriptsize
+\renewcommand{\arraystretch}{1.05}\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.13\textwidth}>{\raggedright\arraybackslash}p{0.21\textwidth}>{\raggedright\arraybackslash}p{0.38\textwidth}>{\raggedright\arraybackslash}p{0.22\textwidth}@{}}
+\toprule
+item & label & status & source\\
+\endfirsthead
+\toprule
+item & label & status & source\\
+\endhead
+\bottomrule
+\endfoot
+\midrule
+\multicolumn{4}{@{}l}{\texttt{setting.tex}}\\
+\cref{def:setting:data} & \texttt{def:\allowbreak setting:\allowbreak data} & definition & fundamentals Def 1.1\\
+\cref{def:setting:fresh} & \texttt{def:\allowbreak setting:\allowbreak fresh} & definition & fundamentals Def 1.1'; terms Def 1.2\\
+\cref{def:setting:machine} & \texttt{def:\allowbreak setting:\allowbreak machine} & definition & fundamentals Def 1.2; Prop 2.1(g)\\
+\cref{def:setting:MA} & \texttt{def:\allowbreak setting:\allowbreak MA} & definition & fundamentals Def 1.4; NOTATION \S4\\
+\cref{def:setting:conventions} & \texttt{def:\allowbreak setting:\allowbreak conventions} & definition & fundamentals Def 1.5; logic \S1.3\\
+\cref{rem:setting:defects} & \texttt{rem:\allowbreak setting:\allowbreak defects} & proved & fundamentals Rem 1.6\\
+\cref{def:setting:versions} & \texttt{def:\allowbreak setting:\allowbreak versions} & definition & fundamentals Def 1.7\\
+\cref{rem:setting:versions} & \texttt{rem:\allowbreak setting:\allowbreak versions} & (a), (c) proved; (b) proved, given Lemma E.12 and Theorem 6.14(a) of the earlier report, under Assumption (S) & fundamentals Prop 1.8(a)--(c)\\
+\cref{def:setting:complexities} & \texttt{def:\allowbreak setting:\allowbreak complexities} & definition; the inequalities proved & fundamentals Def 1.9\\
+\cref{def:setting:variants} & \texttt{def:\allowbreak setting:\allowbreak variants} & definition & fundamentals Def 1.10; \S7\\
+\cref{def:setting:questions} & \texttt{def:\allowbreak setting:\allowbreak questions} & definition & NOTATION \S3.2; philosophy Def 2.0; shape Def 1.2, \S1.3\\
+\midrule
+\multicolumn{4}{@{}l}{\texttt{basic.tex}}\\
+\cref{prop:basic:structure} & \texttt{prop:\allowbreak basic:\allowbreak structure} & proved; computed & fundamentals Prop 2.1\\
+\cref{prop:basic:geometric} & \texttt{prop:\allowbreak basic:\allowbreak geometric} & proved; computed; the names of the rules known & fundamentals Prop 2.2\\
+\cref{prop:basic:dempster} & \texttt{prop:\allowbreak basic:\allowbreak dempster} & proved; computed; the name of the rule known & fundamentals Prop 2.3\\
+\cref{prop:basic:form} & \texttt{prop:\allowbreak basic:\allowbreak form} & proved & fundamentals Prop 3.1\\
+\cref{thm:basic:inc} & \texttt{thm:\allowbreak basic:\allowbreak inc} & (a), (b) proved; (c) proved, given Chaitin's theorem that $\Omega_V$ is Martin-L\"of random and the Levin--Schnorr characterisation & fundamentals Thm 3.2\\
+\cref{thm:basic:dominance} & \texttt{thm:\allowbreak basic:\allowbreak dominance} & proved & fundamentals Thm 4.1\\
+\cref{prop:basic:invariance} & \texttt{prop:\allowbreak basic:\allowbreak invariance} & proved & fundamentals Prop 4.2\\
+\cref{prop:basic:background} & \texttt{prop:\allowbreak basic:\allowbreak background} & proved & fundamentals Prop 4.3\\
+\cref{thm:basic:translation} & \texttt{thm:\allowbreak basic:\allowbreak translation} & proved & fundamentals Thm 4.4\\
+\cref{cor:basic:vocabulary} & \texttt{cor:\allowbreak basic:\allowbreak vocabulary} & proved & fundamentals Cor 4.5\\
+\cref{thm:basic:loss} & \texttt{thm:\allowbreak basic:\allowbreak loss} & proved & fundamentals Thm 5.1\\
+\cref{prop:basic:exceptions} & \texttt{prop:\allowbreak basic:\allowbreak exceptions} & proved & fundamentals Prop 5.2\\
+\cref{prop:basic:mistakes} & \texttt{prop:\allowbreak basic:\allowbreak mistakes} & (a) proved; (b), (c) proved; computed & fundamentals Prop 5.3\\
+\cref{thm:basic:merging} & \texttt{thm:\allowbreak basic:\allowbreak merging} & proved; computed & fundamentals Thm 5.4\\
+\cref{cor:basic:threeloss} & \texttt{cor:\allowbreak basic:\allowbreak threeloss} & proved & fundamentals Cor 5.5\\
+\cref{prop:basic:lower} & \texttt{prop:\allowbreak basic:\allowbreak lower} & proved & fundamentals Prop 5.6\\
+\cref{prop:basic:chain} & \texttt{prop:\allowbreak basic:\allowbreak chain} & proved & fundamentals Prop 6.1\\
+\cref{thm:basic:nocoding} & \texttt{thm:\allowbreak basic:\allowbreak nocoding} & proved; computed & fundamentals Thm 6.2\\
+\cref{prop:basic:cr} & \texttt{prop:\allowbreak basic:\allowbreak cr} & proved; computed & fundamentals Prop 7.1\\
+\cref{prop:basic:crorder} & \texttt{prop:\allowbreak basic:\allowbreak crorder} & (a), (b) proved; computed & fundamentals Prop 7.2(a), (b)\\
+\cref{prop:basic:prcr} & \texttt{prop:\allowbreak basic:\allowbreak prcr} & proved & fundamentals Prop 10.1(f)\\
+\cref{q:basic:domination} & \texttt{q:\allowbreak basic:\allowbreak domination} & open & fundamentals Q6, Prop 11.4\\
+\midrule
+\multicolumn{4}{@{}l}{\texttt{soi.tex}}\\
+\cref{def:soi:objects} & \texttt{def:\allowbreak soi:\allowbreak objects} & definition & sfi \S1.1, Def 1.1\\
+\cref{thm:soi:coinfree} & \texttt{thm:\allowbreak soi:\allowbreak coinfree} & proved; Craig's construction known & sfi Thm 2.1\\
+\cref{thm:soi:onetape} & \texttt{thm:\allowbreak soi:\allowbreak onetape} & proved; computed & sfi Thm 3.1\\
+\cref{cor:soi:closed} & \texttt{cor:\allowbreak soi:\allowbreak closed} & proved; computed & sfi Cor 3.2\\
+\cref{ass:soi:S} & \texttt{ass:\allowbreak soi:\allowbreak S} & assumption & sfi \S7 (the earlier report's (S))\\
+\cref{ass:soi:Stape} & \texttt{ass:\allowbreak soi:\allowbreak Stape} & assumption & sfi \S3.3, Assumption (S$_{\rm tape}$)\\
+\cref{thm:soi:penalty} & \texttt{thm:\allowbreak soi:\allowbreak penalty} & (a) proved, under (S$_{\rm tape}$); (b) proved, under (S) & sfi Thm 3.4 (a); Thm 7.1 (b)\\
+\cref{thm:soi:transfer} & \texttt{thm:\allowbreak soi:\allowbreak transfer} & proved; computed & sfi Thm 5.1\\
+\cref{cor:soi:transfer} & \texttt{cor:\allowbreak soi:\allowbreak transfer} & proved, by \cref{thm:soi:transfer} and the cited results of the companion paper & sfi Cor 5.2, \S5.5\\
+\cref{rem:soi:encoding} & \texttt{rem:\allowbreak soi:\allowbreak encoding} & proved; computed & sfi Rem 5.4\\
+\cref{prop:soi:closure} & \texttt{prop:\allowbreak soi:\allowbreak closure} & proved; (a), (b), (d) computed & sfi Prop 6.1\\
+\cref{prop:soi:independent} & \texttt{prop:\allowbreak soi:\allowbreak independent} & proved, given the productivity lemma (classical) and, one-tape, the Lebesgue density theorem; computed & sfi Props 6.3, 6.5\\
+\cref{prop:soi:noRE} & \texttt{prop:\allowbreak soi:\allowbreak noRE} & proved & sfi Prop 6.4\\
+\cref{cor:soi:onesided} & \texttt{cor:\allowbreak soi:\allowbreak onesided} & proved; for the penalised versions under (S) & sfi Cor 7.3$'$; Thm 7.8(a)\\
+\cref{thm:soi:diagonal} & \texttt{thm:\allowbreak soi:\allowbreak diagonal} & proved, given Kleene's recursion theorem and the MRDP theorem & sfi Thm 7.4\\
+\cref{prop:soi:freededuction} & \texttt{prop:\allowbreak soi:\allowbreak freededuction} & proved & sfi Prop 7.6 (a), (b)\\
+\cref{rem:soi:timereading} & \texttt{rem:\allowbreak soi:\allowbreak timereading} & assessment & sfi Rem 7.9\\
+\cref{ass:soi:F1} & \texttt{ass:\allowbreak soi:\allowbreak F1} & assumption & sfi \S8 (the earlier report's (F1))\\
+\cref{thm:soi:sandwich} & \texttt{thm:\allowbreak soi:\allowbreak sandwich} & proved, under (F1); the correspondence of proof systems with NP known & sfi Thm 8.1\\
+\cref{rem:soi:whatcharged} & \texttt{rem:\allowbreak soi:\allowbreak whatcharged} & assessment & sfi Rem 8.5\\
+\cref{prop:soi:presburger} & \texttt{prop:\allowbreak soi:\allowbreak presburger} & proved, given Presburger's theorem, the Fischer--Rabin bound and, for (c), the Lebesgue density theorem & sfi Props 9.1, 9.2\\
+\cref{prop:soi:presburgerCharged} & \texttt{prop:\allowbreak soi:\allowbreak presburgerCharged} & proved, given the Fischer--Rabin bound, Presburger's theorem, Lemma E.28, Proposition E.23(a) and the proof of Theorem 6.9 of the earlier report & sfi Props 9.4, 9.4$'$\\
+\cref{rem:soi:presburgerSummary} & \texttt{rem:\allowbreak soi:\allowbreak presburgerSummary} & assessment (summary of proved results; the (a1) correspondence is a reading for sentence data) & sfi Rem 9.5\\
+\cref{tab:soi} & \texttt{tab:\allowbreak soi} & see the items it collects & --\\
+\midrule
+\multicolumn{4}{@{}l}{\texttt{logic.tex}}\\
+\cref{thm:logic:lottery} & \texttt{thm:\allowbreak logic:\allowbreak lottery} & proved; computed & logic Thm 2.2\\
+\cref{prop:logic:arity} & \texttt{prop:\allowbreak logic:\allowbreak arity} & proved; computed & logic Prop 2.3\\
+\cref{cor:logic:Q1} & \texttt{cor:\allowbreak logic:\allowbreak Q1} & proved & logic Cor 2.5\\
+\cref{q:logic:computablefast} & \texttt{q:\allowbreak logic:\allowbreak computablefast} & open & logic E-Q2, \S2.6\\
+\cref{thm:logic:arith} & \texttt{thm:\allowbreak logic:\allowbreak arith} & proved, given \cref{lem:logic:flexible}; (b) computed & logic Thm 2.9\\
+\cref{cor:logic:false} & \texttt{cor:\allowbreak logic:\allowbreak false} & proved; computed & logic Cor 2.10\\
+\cref{thm:logic:threshold} & \texttt{thm:\allowbreak logic:\allowbreak threshold} & proved; computed & logic Thm 3.2\\
+\cref{cor:logic:coding} & \texttt{cor:\allowbreak logic:\allowbreak coding} & proved & logic Cor 3.3\\
+\cref{cor:logic:chaitin} & \texttt{cor:\allowbreak logic:\allowbreak chaitin} & proved & logic Cor 3.6\\
+\cref{prop:logic:normalised} & \texttt{prop:\allowbreak logic:\allowbreak normalised} & proved, given (Uniq); computed & logic Prop 3.11\\
+\cref{prop:logic:shape} & \texttt{prop:\allowbreak logic:\allowbreak shape} & proved; computed & logic Prop 4.1\\
+\cref{thm:logic:soundness} & \texttt{thm:\allowbreak logic:\allowbreak soundness} & proved, given (G2) & logic Thm 4.2\\
+\cref{thm:logic:soundnessPi1} & \texttt{thm:\allowbreak logic:\allowbreak soundnessPi1} & proved, given (G2); computed & logic Thm 4.4\\
+\cref{q:logic:soundness} & \texttt{q:\allowbreak logic:\allowbreak soundness} & open & logic D-Q1, \S4.4\\
+\cref{prop:logic:oldevidence} & \texttt{prop:\allowbreak logic:\allowbreak oldevidence} & proved & logic Prop 4.6\\
+\cref{prop:logic:omega} & \texttt{prop:\allowbreak logic:\allowbreak omega} & proved & logic Prop 5.1\\
+\cref{thm:logic:goedelomega} & \texttt{thm:\allowbreak logic:\allowbreak goedelomega} & proved, given (G2) & logic Thm 5.3\\
+\cref{rem:logic:closures} & \texttt{rem:\allowbreak logic:\allowbreak closures} & (a) proved; (b) proved, given Dedekind's categoricity theorem; (c) known & logic \S5.4\\
+\cref{thm:logic:thn} & \texttt{thm:\allowbreak logic:\allowbreak thn} & proved, given that $\Omega_V$ is Martin-L\"of random; the exponent computed & logic Thm 6.1\\
+\cref{cor:logic:undecided} & \texttt{cor:\allowbreak logic:\allowbreak undecided} & proved & logic Cor 6.2\\
+\cref{q:logic:thn} & \texttt{q:\allowbreak logic:\allowbreak thn} & open & logic Q3, \S6.2\\
+\midrule
+\multicolumn{4}{@{}l}{\texttt{phil.tex}}\\
+\cref{tab:phil:map} & \texttt{tab:\allowbreak phil:\allowbreak map} & see the items it collects & --\\
+\cref{q:phil:declarative} & \texttt{q:\allowbreak phil:\allowbreak declarative} & open & syn §6 item 26; philosophy §1.2, §5 (L11)\\
+\cref{def:phil:questions} & \texttt{def:\allowbreak phil:\allowbreak questions} & definition & philosophy Def 2.0\\
+\cref{prop:phil:answers} & \texttt{prop:\allowbreak phil:\allowbreak answers} & proved; computed & philosophy Prop 2.1\\
+\cref{prop:phil:extractor} & \texttt{prop:\allowbreak phil:\allowbreak extractor} & proved, given \texttt{thm:\allowbreak basic:\allowbreak dominance} and the standard sampling construction & philosophy Prop 2.4\\
+\cref{rem:phil:practice} & \texttt{rem:\allowbreak phil:\allowbreak practice} & assessment & philosophy §1.3 (o4), §2.6; syn §2.2 row D\\
+\cref{rem:phil:purpose} & \texttt{rem:\allowbreak phil:\allowbreak purpose} & assessment & philosophy §2.2 remark; syn §7 item 2\\
+\cref{rem:phil:craig} & \texttt{rem:\allowbreak phil:\allowbreak craig} & assessment, resting on \texttt{thm:\allowbreak soi:\allowbreak coinfree}, \texttt{thm:\allowbreak soi:\allowbreak onetape}, \texttt{cor:\allowbreak basic:\allowbreak vocabulary}, \texttt{thm:\allowbreak terms:\allowbreak horn}, \texttt{thm:\allowbreak terms:\allowbreak KCV}, \texttt{thm:\allowbreak shape:\allowbreak invisible}, \texttt{prop:\allowbreak phil:\allowbreak flagpolesystem}, \texttt{prop:\allowbreak soi:\allowbreak freededuction} (proved) & syn §2.8 row 1; philosophy §1.4 item 1\\
+\cref{prop:phil:flagpole} & \texttt{prop:\allowbreak phil:\allowbreak flagpole} & proved; computed & philosophy Prop 3.1\\
+\cref{tab:phil:differences} & \texttt{tab:\allowbreak phil:\allowbreak differences} & see the items it collects & --\\
+\midrule
+\multicolumn{4}{@{}l}{\texttt{shape.tex}}\\
+\cref{def:shape:model} & \texttt{def:\allowbreak shape:\allowbreak model} & definition & shape Defs 1.1--1.4, 1.6\\
+\cref{thm:shape:invisible} & \texttt{thm:\allowbreak shape:\allowbreak invisible} & proved; computed & shape Thm 1.11\\
+\cref{thm:shape:visible} & \texttt{thm:\allowbreak shape:\allowbreak visible} & proved & shape Thm 1.12\\
+\cref{prop:shape:onlyforced} & \texttt{prop:\allowbreak shape:\allowbreak onlyforced} & proved; computed & shape Prop 2.5a\\
+\cref{thm:shape:minimum} & \texttt{thm:\allowbreak shape:\allowbreak minimum} & proved; computed & shape Thm 2.6\\
+\cref{cor:shape:simplex} & \texttt{cor:\allowbreak shape:\allowbreak simplex} & proved; computed & shape Cor 2.8\\
+\cref{prop:shape:oneround} & \texttt{prop:\allowbreak shape:\allowbreak oneround} & proved; computed & shape Prop 3.1a\\
+\cref{prop:shape:depth} & \texttt{prop:\allowbreak shape:\allowbreak depth} & (a), (b) proved; computed; (c), (d) proved, given Hastad 1986 & shape Prop 3.8\\
+\cref{thm:shape:systems} & \texttt{thm:\allowbreak shape:\allowbreak systems} & proved, given Goos--Kamath--Robere--Sokolov 2019; computed & shape Thm 3.6\\
+\cref{cor:shape:regimes} & \texttt{cor:\allowbreak shape:\allowbreak regimes} & proved, given Hastad 1986 and Goos--Kamath--Robere--Sokolov 2019 as indicated; the reading: assessment & shape Cor 3.9\\
+\cref{tab:shape:regimes} & \texttt{tab:\allowbreak shape:\allowbreak regimes} & see the items it collects & --\\
+\cref{q:shape:beyond} & \texttt{q:\allowbreak shape:\allowbreak beyond} & open & synthesis 6 item 17; philosophy 1.4 item 2; shape 10\\
+\cref{rem:shape:reading} & \texttt{rem:\allowbreak shape:\allowbreak reading} & assessment, resting on \texttt{cor:\allowbreak shape:\allowbreak regimes}, \texttt{thm:\allowbreak shape:\allowbreak invisible}, \texttt{thm:\allowbreak shape:\allowbreak systems} & shape 10; philosophy 5.1\\
+\midrule
+\multicolumn{4}{@{}l}{\texttt{terms.tex}}\\
+\cref{def:terms:obs} & \texttt{def:\allowbreak terms:\allowbreak obs} & definition & terms Def 1.1\\
+\cref{def:terms:literal} & \texttt{def:\allowbreak terms:\allowbreak literal} & definition & terms Def 1.2\\
+\cref{def:terms:named} & \texttt{def:\allowbreak terms:\allowbreak named} & definition & terms Def 1.3\\
+\cref{thm:terms:dilemma} & \texttt{thm:\allowbreak terms:\allowbreak dilemma} & proved, with the conditions of the parts listed in the proof & terms Thm 8.1\\
+\cref{thm:terms:horn} & \texttt{thm:\allowbreak terms:\allowbreak horn} & (a), (b), (d) proved; computed (a finite analogue of (d)); (c) proved, under (S) and (S$_{\rm tape}$), given Lemma E.12 and Theorem 6.14 of the earlier report, \texttt{thm:\allowbreak soi:\allowbreak penalty} and \texttt{prop:\allowbreak soi:\allowbreak classes} & terms Thm 2.1\\
+\cref{rem:terms:hempel} & \texttt{rem:\allowbreak terms:\allowbreak hempel} & proved (the comparison); the reading is an assessment & terms Rem 2.2\\
+\cref{thm:terms:padded} & \texttt{thm:\allowbreak terms:\allowbreak padded} & proved; (b) is Lemma E.22 of the earlier report in this form & terms Thm 3.3\\
+\cref{thm:terms:regular} & \texttt{thm:\allowbreak terms:\allowbreak regular} & proved, given the Ehrenfeucht--Fraisse theorem & terms Thm 5.1\\
+\cref{rem:phil:hempel} & \texttt{rem:\allowbreak phil:\allowbreak hempel} & assessment, resting on \texttt{thm:\allowbreak terms:\allowbreak horn} and \texttt{thm:\allowbreak terms:\allowbreak dilemma} & philosophy \S1.6; synthesis \S2.4\\
+\midrule
+\multicolumn{4}{@{}l}{\texttt{laws.tex}}\\
+\cref{def:laws:setting} & \texttt{def:\allowbreak laws:\allowbreak setting} & definition & laws Defs 1.1--1.3, 1.5, 1.7; \S2 setting; Setting S3\\
+\cref{prop:laws:rounding} & \texttt{prop:\allowbreak laws:\allowbreak rounding} & proved; computed & laws Prop 2.5\\
+\cref{prop:laws:errormodel} & \texttt{prop:\allowbreak laws:\allowbreak errormodel} & proved; computed & laws Prop 3.6a, Def 3.6a\\
+\cref{rem:laws:typical} & \texttt{rem:\allowbreak laws:\allowbreak typical} & computed & laws Rem 4.4\\
+\cref{prop:laws:kink} & \texttt{prop:\allowbreak laws:\allowbreak kink} & proved, given Lemma 3.8 and Corollary 5.4 of the companion paper on steeper priors; computed & laws Prop 5.6\\
+\cref{def:laws:EP} & \texttt{def:\allowbreak laws:\allowbreak EP} & definition & laws Def 5.2\\
+\cref{rem:laws:domainlearning} & \texttt{rem:\allowbreak laws:\allowbreak domainlearning} & assessment & laws \S8\\
+\midrule
+\multicolumn{4}{@{}l}{\texttt{kepler.tex}}\\
+\cref{def:kepler:language} & \texttt{def:\allowbreak kepler:\allowbreak language} & definition & philosophy \S4.1\\
+\cref{prop:kepler:helio} & \texttt{prop:\allowbreak kepler:\allowbreak helio} & proved & philosophy Prop 4.2\\
+\cref{prop:kepler:geo} & \texttt{prop:\allowbreak kepler:\allowbreak geo} & proved; computed & philosophy Prop 4.3\\
+\cref{prop:kepler:K3worth} & \texttt{prop:\allowbreak kepler:\allowbreak K3worth} & proved; computed & philosophy Prop 4.4\\
+\cref{ex:kepler:K3cost} & \texttt{ex:\allowbreak kepler:\allowbreak K3cost} & computed (conditional on the code; the extrapolation and the compact-code threshold are estimates) & philosophy \S4.4 Part B; laws Prop 5.5(b)\\
+\cref{tab:kepler:minimax} & \texttt{tab:\allowbreak kepler:\allowbreak minimax} & see the items it collects & --\\
+\cref{tab:kepler:map} & \texttt{tab:\allowbreak kepler:\allowbreak map} & see the items it collects & --\\
+\cref{fig:kepler:map} & \texttt{fig:\allowbreak kepler:\allowbreak map} & see the items it collects & --\\
+\cref{ex:kepler:graded} & \texttt{ex:\allowbreak kepler:\allowbreak graded} & computed (the honest-band crossovers are estimates from the pricing of section 9) & philosophy \S4.4 Part A'\\
+\midrule
+\multicolumn{4}{@{}l}{\texttt{limits.tex}}\\
+\cref{tab:limits:concepts} & \texttt{tab:\allowbreak limits:\allowbreak concepts} & see the items it collects & --\\
+\end{longtable}}
