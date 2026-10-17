@@ -126,7 +126,7 @@ Only NOTATION macros and local symbols are used: `\Win`, `\Lot`, `\Glot`, `\Tick
   * the eight moved rows (§4.1);
   * the F5/F7 typo in the CLAIMS row `prop:logic:oldevidence` (§4.4);
   * the unnumbered partial-answers paragraph (§4.6).
-* **soi writer.** `soi.tex` cites `cor:logic:versions` ("forward to …") and `lem:logic:density`. Both exist; `cor:logic:versions` is now in App. C, so a reference reading "§5" should read "Appendix C".
+* **soi writer.** `soi.tex` and `app-soi.tex` cite `cor:logic:versions`, `cor:logic:coding`, `lem:logic:density` and `thm:logic:lottery`, all by `\cref`, and all exist. `cor:logic:versions` is now in App. C; since every reference is a `\cref`, nothing needs to change.
 * **front writer (§12 Related work).**
   * The full lottery ancestry is in App. C.2, and the $\Pi_1$ novelty hedge is in §5.3.
   * The Gaifman sentence for §12 can cite `prop:logic:gaifman` (now in App. C) and `prop:logic:omega` (§5).
