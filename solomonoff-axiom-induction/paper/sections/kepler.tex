@@ -1,4 +1,238 @@
-% STUB written by the planning editor. The section writer replaces this file.
-% Plan: ../OUTLINE.md (section "sec:kepler"); results: ../CLAIMS.md; notation: ../NOTATION.md.
+% Section "kepler" (paper section 10). Owner group: kepler.
+% Sources: research/tracks/philosophy/notes-final.md section 4 (Props 4.1-4.4, sections 4.3-4.5) with its
+% status table (section 11) and refuted/withdrawn list (11.1; nothing refuted is printed); laws section 3.6 and
+% Prop 5.5; synthesis H11, 2.6, 5.5 (statement discipline). Proofs, law texts, full tables and witnessing
+% elements: sections/app-kepler.tex. Figure 1 is drawn below in TikZ from the saved outputs of the Mars-pool
+% computation (no recomputation): switch points = the minimax errors of tab:kepler:minimax; MAP rows = table A4
+% of the saved output; dots = the precisions at which the posterior was computed.
 \section{A worked example: Kepler and Newton}\label{sec:kepler}
-\emph{(To be written.)}
+
+We now work through one example in detail: Kepler's laws of planetary motion, the theories of the motion of Mars that preceded the ellipse, and what Newton's theory adds. The example shows three things. What a law says depends on the data language (\cref{sec:kepler:content}). A proof-requiring posterior over the historical theories of Mars can be computed, and it shows which parts of the selection the data decide and which parts the language of the law texts decides (\cref{sec:kepler:pool}). And the gain of a successor theory need not lie in a better fit to the old data (\cref{sec:kepler:newton}). All computations take the plan94 analytical ephemeris (as implemented in the ERFA library) as the data, so \emph{every arcminute figure in this section is an error against plan94, not against the sky}; the error budget is in \cref{sec:kepler:wrong}. The code is in the accompanying repository, and \cref{app:kepler} gives the proofs, the law texts, the full tables and the elements that witness each reported fit.
+
+% ------------------------------------------------------------------
+\subsection{The language and the data}\label{sec:kepler:language}
+
+\begin{definition}[the Kepler languages and theories]\label{def:kepler:language}
+\status{definition}\src{philosophy \S4.1}
+\leavevmode
+\begin{enumerate}[label=(\roman*),leftmargin=*,itemsep=1pt]
+\item \emph{Data languages.} There are two sorts, bodies and reals (times in days from an epoch, angles in radians, lengths in astronomical units), body constants Sun, Me, Ve, Ea, Ma, Ju, Sa, Mo, and a predicate Planet. The \emph{heliocentric language} $\mathcal L_{\rm hel}$ has functions $\theta(b,t),\beta(b,t),r(b,t)$: the heliocentric ecliptic longitude, latitude and distance of body $b$ at time $t$ (for the Moon, geocentric). Its direction-only part $\mathcal L_{\rm dir}$ omits $r$. The \emph{geocentric language} $\mathcal L_{\rm geo}$ has functions $\theta_g(b,t),\beta_g(b,t)$, the geocentric ecliptic direction $\mathrm{dir}_g(b,t)\in S^2$. It is a modern idealisation of Tycho's data; the computed data below are geometric plan94 positions, without aberration or light time.
+\item \emph{Background.} $B$ consists of the axioms of real closed fields with $\sin$, $\cos$ and $\pi$, and enough true analysis to prove the numerical bounds used (rational-function bounds of the kind that MetiTarski proves automatically \citep{akbarpour2010metitarski}). The full first-order theory of the reals with $\sin$ is undecidable ($\sin(\pi x)=0$ defines the integers), so $B$ is a decidable set of true sentences, and each result below names the true sentences it needs in $B$.
+\item \emph{Theoretical vocabulary.} Heliocentric positions $\mathbf r(b,t)\in\mathbb R^3$ (in $\mathcal L_{\rm hel}$ they are definable from $\theta,\beta,r$), and the elements $a,e,i,\Omega,\varpi,M_0,P$ (semi-major axis, eccentricity, inclination, node, longitude of perihelion, mean anomaly at the epoch, period), functions from bodies to reals.
+\item \emph{Kepler's first two laws} $\mathrm{K12}$: for every planet $b$ and every $t$, with $M:=M_0(b)+2\pi t/P(b)$, there is $\psi$ with $\psi-e(b)\sin\psi=M$ and $\mathbf r(b,t)=\mathrm{Rot}(b)\big(a(b)(\cos\psi-e(b)),\,a(b)\sqrt{1-e(b)^2}\sin\psi,\,0\big)$, where $\mathrm{Rot}(b)$ is the rotation given by $i(b),\Omega(b),\varpi(b)$; moreover $0\le e(b)<1$, $a(b),P(b)>0$, and $\mathbf r(\mathrm{Sun},t)=0$. Over $\mathcal L_{\rm geo}$, K12 also contains the \emph{bridge}: $\mathrm{dir}_g(b,t)$ is the unit vector of $\mathbf r(b,t)-\mathbf r(\mathrm{Ea},t)$ if this is nonzero, and the north ecliptic pole $\mathbf z$ otherwise; and the frame convention $i(\mathrm{Ea})=0$.
+\item \emph{Kepler's third law} $\mathrm{K3}$: $P(b)^2a(b')^3=P(b')^2a(b)^3$ for all planets $b,b'$.
+\item \emph{Elements} (the initial conditions) are numerals, or intervals, for the elements of a body.
+\item \emph{Data} are true interval sentences $\mathrm{Near}(b,t,\mathbf v,\delta)$, ``the direction of $b$ at $t$ lies within angle $\delta$ of $\mathbf v$'' (heliocentric; $\mathrm{Near}_g$ for geocentric directions), with $t,\mathbf v,\delta$ given by numerals, and, where available, distance sentences $r(b,t)\in[r_1,r_2]$. \emph{Questions} (cf.\ \cref{def:setting:questions}) are covers of the sphere of directions by such sentences (``where is Mars at $t$, to within $2'$?'') and structural questions (``is the orbit of $b$ planar?'', ``does the line from the Sun to $b$ sweep equal areas in equal times?''), which the laws answer without elements.
+\end{enumerate}
+\end{definition}
+
+Laws alone answer no position question.\footnote{Even the Ramsey sentence of $\mathrm{K12}\cup\mathrm{K3}$, with second-order semantic consequence, entails no datum $\mathrm{Near}(b,t,\mathbf v,\delta)$ with $\delta<\pi$: \cref{prop:kepler:ramsey} in \cref{app:kepler}.} Laws with elements do; in the format of conditional questions the elements belong in the antecedent, and then the laws alone answer every conditional question and elements never enter the theory (\cref{prop:laws:questions}). This is where the distinction between laws and initial conditions sits formally.
+
+% ------------------------------------------------------------------
+\subsection{What the laws say, and in which language}\label{sec:kepler:content}
+
+Kepler's third law relates the periods of different planets to their sizes. Whether it says anything about the data depends on the data language.
+
+\begin{proposition}[no content in heliocentric directions]\label{prop:kepler:helio}
+\status{proved}\src{philosophy Prop 4.2}
+For every $B$ that contains the axioms of real closed fields, $\mathrm{K12}$ and $\mathrm{K12}\cup\mathrm{K3}$ have the same $\mathcal L_{\rm dir}$-consequences.
+\end{proposition}
+
+\begin{proof}
+A Kepler direction depends on $(e,i,\Omega,\varpi,M_0,P)$ and not on $a$, since $\mathbf r(b,t)$ is $a(b)$ times an expression free of $a$. Given a model of $B\cup\mathrm{K12}$, put $a'(b):=(k^2P(b)^2/4\pi^2)^{1/3}$ for a fixed $k>0$ (cube roots exist in a real closed field) and leave the other elements unchanged. Positions and distances scale by $a'(b)/a(b)>0$, directions are unchanged, and K3 holds because $a'(b)^3/P(b)^2$ is constant. So an $\mathcal L_{\rm dir}$-sentence true in every model of $B\cup\mathrm{K12}\cup\mathrm{K3}$ is true in every model of $B\cup\mathrm{K12}$; the converse is trivial.
+\end{proof}
+
+\begin{proposition}[content in geocentric directions]\label{prop:kepler:geo}
+\status{proved; computed}\src{philosophy Prop 4.3}
+Let $\chi_{\rm opp}$ be the $\mathcal L_{\rm geo}$-sentence $\exists t\ \mathrm{dir}_g(\mathrm{Ma},t)\ne-\mathrm{dir}_g(\mathrm{Sun},t)$ (``Mars is not permanently in opposition'').
+\begin{enumerate}[label=(\alph*),leftmargin=*,itemsep=0pt]
+\item $\chi_{\rm opp}$ holds in every model of $\mathrm{K12}\cup\mathrm{K3}$ whose real sort is $\mathbb R$. Hence $B\cup\mathrm{K12}\cup\mathrm{K3}\vdash\chi_{\rm opp}$ for every $B$ that contains the two true sentences $\zeta_{\rm K3}$ and $\zeta_{\rm pos}$ of the real field with $\sin$ and $\cos$ given in \cref{sec:kepler:proofs}.
+\item For every $B$ true in $\mathbb R$, $B\cup\mathrm{K12}\nvdash\chi_{\rm opp}$.
+\end{enumerate}
+\end{proposition}
+
+For (b), let the Earth and Mars move on circular orbits in the ecliptic with the same period and phase, Mars at distance $\rho>1$: Mars is then permanently in opposition, and this is a model of K12, which imposes no relation between bodies. It violates K3. For (a), a model over $\mathbb R$ in which Mars is permanently in opposition keeps Mars on the ray from the Sun through the Earth, beyond the Earth; Kepler's second law for both bodies then forces $\mathbf r(\mathrm{Ma},t)=\kappa\,\mathbf r(\mathrm{Ea},t)$ with a constant $\kappa>1$, so the two orbits have the same period and different semi-major axes, against K3. The sentence $\zeta_{\rm K3}$ states this conclusion about the elements, and $\zeta_{\rm pos}$ keeps the Earth away from the Sun, so that the argument also covers non-standard models (\cref{sec:kepler:proofs}). The sentence $\chi_{\rm opp}$ is odd (its negation describes a fantastic world); it only shows that the geocentric language can register K3. The natural form of K3's content is the following.
+
+\begin{proposition}[what K3 does in geocentric directions]\label{prop:kepler:K3worth}
+\status{proved; computed}\src{philosophy Prop 4.4}
+Let $\mathrm{Num}^-$ be numerals for all elements of the Earth and Mars except $a(\mathrm{Ma})$, with $a(\mathrm{Ea})=1$. Let $\mathbf F(t)$ be Mars's heliocentric position computed from $\mathrm{Num}^-$ with semi-major axis $1$, so that $\mathbf r(\mathrm{Ma},t)=\rho\,\mathbf F(t)$ with $\rho:=a(\mathrm{Ma})$, and let $\mathbf u(t)$ be the unit vector of $\mathbf r(\mathrm{Ea},t)$.
+\begin{enumerate}[label=(\alph*),leftmargin=*,itemsep=0pt]
+\item $\mathrm{K12}\cup\mathrm{K3}\cup\mathrm{Num}^-$ fixes $\rho=(P(\mathrm{Ma})/P(\mathrm{Ea}))^{2/3}$ and hence every geocentric direction of Mars: it proves $\mathrm{Near}_g(\mathrm{Ma},t,\mathbf v,\delta)$ whenever the computed direction lies within $\delta$ of $\mathbf v$ and $B$ proves the numerical bound involved.
+\item $\mathrm{K12}\cup\mathrm{Num}^-$ leaves $\rho$ free. At every $t$ at which $\mathbf r(\mathrm{Ea},t)$ and $\mathbf F(t)$ are not parallel, the geocentric directions of Mars at $t$ in the models of $\mathrm{K12}\cup\mathrm{Num}^-$ over $\mathbb R$ (with $\rho$ ranging over $(0,\infty)$) form the open great-circle arc from $-\mathbf u(t)$, the direction of the Sun, to $\mathbf F(t)/\lvert\mathbf F(t)\rvert$; its length $\alpha(t)\in(0,\pi)$ is the angle between these two directions. So for every $B$ true in $\mathbb R$, $B\cup\mathrm{K12}\cup\mathrm{Num}^-$ proves no datum $\mathrm{Near}_g(\mathrm{Ma},t,\mathbf v,\delta)$ with $\delta<\alpha(t)/2$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(a) K3 with $a(\mathrm{Ea})=1$ gives $a(\mathrm{Ma})^3=P(\mathrm{Ma})^2/P(\mathrm{Ea})^2$; K12 and the bridge then determine the direction. (b) The geocentric vector $\rho\mathbf F(t)-\mathbf r(\mathrm{Ea},t)$ runs, as $\rho$ runs over $(0,\infty)$, along the open ray from $-\mathbf r(\mathrm{Ea},t)$ in the direction $\mathbf F(t)$, which misses the origin since the two vectors are not parallel. Seen from the origin, its direction moves monotonically along the great circle through $-\mathbf u(t)$ and $\mathbf F(t)/\lvert\mathbf F(t)\rvert$, from the first towards the second, and covers the open arc between them. Every $\rho>0$ gives a model of K12, which constrains $a$ only by $a>0$; and an arc of length $\alpha$ lies in no cap of radius less than $\alpha/2$.
+\end{proof}
+
+So, given the other elements, K3's content in the geocentric language is exactly the size element $\rho$, and this content is large: a computation (code in the accompanying repository) gives, over 1580--1600, a median arc length $\alpha(t)$ of $90^\circ$ (5th and 95th percentiles $9.5^\circ$ and $170^\circ$). What is it worth? Take as data the daily geocentric longitudes of Mars over 1580.0--1600.0 at a common tolerance $\delta$, and as hypotheses Kepler ellipses for the Earth and Mars, either with $\rho\in[0,4)$ as a free ninth element or with $\rho$ given by K3 (\cref{sec:kepler:K3details}). Under fixed-length numerals for the elements, the posterior odds of the hypothesis with K3 against the one without are $2^{s_{\rm K3}(\delta)-\lvert\mathrm{K3}\rvert}$, where $\lvert\mathrm{K3}\rvert$ is the length of K3's text, $\mathrm{Vol}_8(\delta)$ and $\mathrm{Vol}_9(\delta)$ are the volumes of the compatible element regions with and without K3, and $s_{\rm K3}(\delta):=\log(4\,\mathrm{Vol}_8(\delta)/\mathrm{Vol}_9(\delta))$ is what K3 saves: the bits of $\rho$ that the data require. A computation gives $s_{\rm K3}=11.3$, $12.3$, $13.4$ and $14.7$ bits at $\delta=8'$, $4'$, $2'$ and $1'$: about one more bit per halving of $\delta$, as for any real-valued element stated to the precision the data require. (K3 costs $0.005'$ of fit: the minimax geocentric error is $0.627'$ with $\rho$ free and $0.632'$ with K3. A prior range $[0,2)$ for $\rho$ would lower each saving by one bit.)
+
+\begin{example}[K3's worth against its cost; a computation]\label{ex:kepler:K3cost}
+\status{computed (conditional on the code; the extrapolation and the compact-code threshold are estimates)}\src{philosophy \S4.4 Part B; laws Prop 5.5(b)}
+K3's text costs $375$ bits in the plain arithmetic syntax S1 of \cref{sec:kepler:pool}, with brackets counted, $165$ bits in Polish notation, and $115$ bits in a compact Polish code with a power symbol. It is paid once, however many bodies K3 relates, and it saves $s_{\rm K3}(\delta)$ bits for each body whose size it fixes. By the criterion of \cref{prop:laws:K3} (with the law in place, K3 pays iff the bits it saves exceed its length, at exchange rate $1$; this compares law choices and is not membership of a steeper MAP), K3 pays once it fixes the sizes of about $25$--$33$ bodies ($375$ bits), $11$--$15$ ($165$ bits) or $8$--$10$ ($115$ bits), at $11.3$--$14.7$ bits per body. The five planets other than the Earth give about $55$--$75$ bits if each saves about as much as Mars (an extrapolation; we computed Mars only). So in none of these codes does compression alone select K3 at Kepler's precision; it would under a code in which K3 costs less than about $55$--$75$ bits. The conclusion is conditional on the code: under the universal prior the relevant cost is the complexity of K3 given the rest of the theory, which these computations do not determine.
+\end{example}
+
+K3 is thus a law about initial conditions in a quantitative sense: it is worth what it saves on the elements of the bodies it relates (\cref{prop:laws:K3}). This depends on Kepler's kinematic parametrisation, in which the period and the semi-major axis are both free elements. In a state-space parametrisation (positions and velocities as initial conditions, with a dynamics) K3 is the dynamical relation that fixes the mean motion from the energy, and whether it pays is a different question. In Newton's theory the third law, with its mass correction, follows from the one law that does all the other work, so there it costs nothing extra.
+
+% ------------------------------------------------------------------
+\subsection{How wrong Kepler's laws are}\label{sec:kepler:wrong}
+
+Kepler's laws are approximately true, with an error that grows with the domain (\cref{tab:kepler:residuals}). The third-law ``constant'' differs between planets at the $10^{-3}$ level: Jupiter's fitted value matches the two-body value $1+m/M$ of Newtonian mechanics, while Saturn's needs Jupiter's pull. At the precision of Tycho's data K3's own error is invisible: an exact K3 calibrated on the Earth misplaces Jupiter and Saturn geocentrically by at most $0.23'$ and $0.19'$ over 1580--1600. \Cref{sec:laws} uses the same kind of residuals, fitted differently, as data for approximate laws (\cref{tab:laws:residuals}).
+
+\begin{table}[t]
+\centering\small
+\caption{How wrong Kepler's laws are, against plan94. Largest angular separation (arcminutes) between one fixed Kepler ellipse, fitted by least squares, and the plan94 positions, over windows centred on J2000; for the Moon (moon98, geocentric), in degrees over one month, one year and 18.6 years. Last column: the fitted third-law constant $q:=(2\pi/P)^2a^3/k^2$ ($k$ Gauss's constant) over the windows of 30 years and more, with the Newtonian two-body value $1+m/M$ in brackets.}\label{tab:kepler:residuals}
+\status{computed}\src{philosophy \S4.3}
+\begin{tabular}{@{}lrrrrrrl@{}}
+\toprule
+window (years) & 12 & 30 & 100 & 300 & 1000 & 2000 & third-law constant $q$\\
+\midrule
+Mercury & 0.46 & 0.89 & 2.17 & 6.04 & 19.3 & 38.6 & \\
+Mars & 1.58 & 1.86 & 3.61 & 9.17 & 26.2 & 51.8 & \\
+Jupiter & 1.05 & 4.19 & 7.64 & 7.74 & 31.8 & 38.5 & 1.00075--1.00099 (1.00095)\\
+Saturn & 1.70 & 3.32 & 9.73 & 11.7 & 91.3 & 92.4 & 1.0013--1.0019 (1.00029)\\
+\midrule
+Moon & \multicolumn{6}{l}{$1.12^\circ$ (one month), $3.0^\circ$ (one year), $9.6^\circ$ (18.6 years)} & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\emph{The error budget.} ERFA's documentation of plan94 quotes maximum errors in heliocentric longitude of $17''$ (Mars), $71''$ (Jupiter) and $81''$ (Saturn) over 1800--2050, and an accuracy no worse than $1.5$ times that over 1000--3000. So for Mars over 1580--1600 plan94's longitude error is at most about $0.43'$. This is the size of the gap between the two best forms of the Mars pool below ($1.41'-1.07'=0.34'$): their ordering is established against plan94, and against the sky it rests on the intrinsic errors of \cref{tab:kepler:minimax}. The 12-year entries for Jupiter and Saturn lie inside 1800--2050, where plan94's own errors reach $1.18'$ and $1.35'$, so they measure the ellipse against plan94, not against the sky; the longer windows' residuals are far above plan94's error.
+
+% ------------------------------------------------------------------
+\subsection{The proof-requiring posterior over the historical Mars pool}\label{sec:kepler:pool}
+
+\paragraph{The pool and the data.} We take a hand-picked pool of five forms of theory for the motion of Mars, as heliocentric reconstructions: the circle about the Sun (2 elements), the eccentric circle of Hipparchus (4), Ptolemy's bisected equant (4), Kepler's vicarious hypothesis (5) and the ellipse K12 (4). (The historical models were geocentric and also had to represent the Earth's motion; we do not reconstruct that.) The data are the 7306 daily heliocentric longitudes of Mars over 1580.0--1600.0 from plan94, reduced to the best plane through the Sun, each stated as the interval sentence ``$\theta(t_i)$ lies within $\delta$ of $v_i$'' with $v_i$ the plan94 value. This is the guaranteed-tolerance regime with zero measurement error (\cref{prop:laws:tolerance}): the noise-free special case. A form with suitable elements proves every datum iff $\delta$ is at least its \emph{minimax error}, the least over elements of its largest longitude error (\cref{tab:kepler:minimax}).
+
+\begin{table}[t]
+\centering\small
+\caption{The historical Mars pool: minimax errors in heliocentric longitude over 1580--1600 (arcminutes). Middle column: against plan94; each value is an upper bound on the true minimax error, witnessed by elements listed in \cref{sec:kepler:pooldetails}. Right column: against an exact, unperturbed Kepler ellipse.}\label{tab:kepler:minimax}
+\status{computed (upper bounds witnessed by elements, reproduced by an independent search; global optimality not proved)}\src{philosophy \S4.3--\S4.4}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+form & elements & against plan94 & against an exact ellipse\\
+\midrule
+circle about the Sun & 2 & 640.79 & --\\
+eccentric circle & 4 & 23.05 & 22.34\\
+bisected equant & 4 & 8.17 & 7.43\\
+vicarious hypothesis & 5 & 1.41 & 0.62\\
+ellipse (K12) & 4 & 1.07 & 0\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A second implementation, with a different algorithm and other starting points, finds the same minimax values to four decimals; that they are global minima is not proved, except for the circle, a one-dimensional convex problem. Against an exact ellipse the equant's $8'$ remains: it is intrinsic to the bisected equant, and $8.17'$ is close to the famous discrepancy of about eight minutes of arc in Kepler's \emph{Astronomia Nova} \citep{kepler1992new}. More than half of the vicarious hypothesis's $1.41'$ is perturbation error that it shares with the ellipse.
+
+\paragraph{The posterior.} We put a prior on the pool through an explicit code. A theory is a law text in one of three syntaxes together with numerals for its elements, each a fixed-length 64-bit numeral for a cell of the element's range (eccentricities in $[0,1)$, angles in $[0,2\pi)$, mean motion in $[0,0.1)$ radians per day). The proof-requiring rule of $\MA$ (\cref{def:setting:MA}), with the universal machine replaced by this code, gives a theory weight $2^{-\text{length}}$ if it proves every datum (it is then consistent with the data) and $0$ otherwise. Summing over numerals, the posterior weight of a form $\mathsf F$ is proportional to $2^{-(\lvert\mathrm{LAW}_{\mathsf F}\rvert_S+\Occ_{\mathsf F}(\delta))}$, where $\lvert\mathrm{LAW}_{\mathsf F}\rvert_S$ is the length of its law text in syntax $S$ and $\Occ_{\mathsf F}(\delta):=-\log(\mathrm{Vol}_{\mathsf F}(\delta)/\prod\text{ranges})$ is its \emph{Occam factor}, $\mathrm{Vol}_{\mathsf F}(\delta)$ being the volume of the elements with which $\mathsf F$ proves all the data (the term is MacKay's \citep{mackay1992bayesian}; \citealp{jefferys1992ockham} read Bayes factors this way in the case of Mercury's perihelion). The syntaxes are: \emph{S1}, arithmetic ($+,-,\cdot,/,\sin,\cos,\mathrm{atan2},\sqrt{\ }$, the numerals $0,1,2$, quantifiers; the equant constructions and Kepler's equation are implicit definitions with $\exists$); \emph{S2}, epicyclic (S1 with a unit-vector primitive, a direction primitive, and ``the point where the ray from $Q$ at a given angle meets the unit circle about $C$''); and \emph{S3}, Keplerian (S1 with the true anomaly as a function of the eccentricity and the mean anomaly). \Cref{tab:kepler:map} gives the two ingredients and \cref{fig:kepler:map} the result.
+
+\begin{table}[t]
+\centering\small
+\caption{The two ingredients of the proof-requiring posterior over the Mars pool (bits): law-text lengths in the three syntaxes, and Occam factors $\Occ_{\mathsf F}(\delta)$ at selected precisions (``--'': $\delta$ is below the form's minimax error). A form's posterior weight is proportional to $2^{-(\text{text}+\text{Occam factor})}$. All tolerances are against plan94; noise-free data at one common tolerance.}\label{tab:kepler:map}
+\status{computed}\src{philosophy \S4.4 Part A}
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+& circle & eccentric & equant & vicarious & ellipse & K3\\
+\midrule
+text in S1 (arithmetic) & 155 & 445 & 990 & 990 & 545 & 375\\
+text in S2 (epicyclic) & 186 & 342 & 450 & 468 & 654 & 450\\
+text in S3 (Keplerian) & 155 & 445 & 990 & 990 & 260 & 375\\
+\midrule
+$\Occ_{\mathsf F}(720')$ & 20.93 & 20.24 & 21.20 & 22.77 & 21.18 &\\
+$\Occ_{\mathsf F}(120')$ & -- & 31.17 & 31.70 & 33.34 & 31.63 &\\
+$\Occ_{\mathsf F}(30')$ & -- & 45.38 & 40.35 & 42.83 & 39.65 &\\
+$\Occ_{\mathsf F}(12')$ & -- & -- & 49.49 & 49.56 & 45.01 &\\
+$\Occ_{\mathsf F}(9')$ & -- & -- & 57.34 & 51.78 & 46.81 &\\
+$\Occ_{\mathsf F}(4')$ & -- & -- & -- & 58.56 & 51.86 &\\
+$\Occ_{\mathsf F}(1.6')$ & -- & -- & -- & 74.54 & 59.93 &\\
+$\Occ_{\mathsf F}(1.3')$ & -- & -- & -- & -- & 63.81 &\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm,font=\small]
+% x = 4 log10(720/delta); switch points at the minimax errors 640.79, 23.05, 8.17, 1.41, 1.07 (arcmin)
+\def\keplerxc{0.202}\def\keplerxe{5.979}\def\keplerxq{7.781}\def\keplerxv{10.829}\def\keplerxl{11.306}\def\keplerxr{11.612}
+\tikzset{keplerbar/.style={draw=black!60,line width=0.3pt}}
+\foreach \y/\lab in {2/{S1 (arithmetic)},1/{S2 (epicyclic)},0/{S3 (Keplerian)}}{
+  \node[anchor=east,font=\small] at (-0.15,\y) {\lab};
+  \fill[black!7,keplerbar] (\keplerxl,\y-0.28) rectangle (\keplerxr,\y+0.28);
+  \fill[black!45,keplerbar] (0,\y-0.28) rectangle (\keplerxc,\y+0.28);
+}
+% S1
+\fill[orange!35,keplerbar] (\keplerxc,1.72) rectangle (\keplerxe,2.28); \node at ({(\keplerxc+\keplerxe)/2},2) {eccentric};
+\fill[blue!25,keplerbar] (\keplerxe,1.72) rectangle (\keplerxl,2.28); \node at ({(\keplerxe+\keplerxl)/2},2) {ellipse};
+% S2
+\fill[orange!35,keplerbar] (\keplerxc,0.72) rectangle (\keplerxe,1.28); \node at ({(\keplerxc+\keplerxe)/2},1) {eccentric};
+\fill[violet!25,keplerbar] (\keplerxe,0.72) rectangle (\keplerxq,1.28); \node at ({(\keplerxe+\keplerxq)/2},1) {equant};
+\fill[teal!30,keplerbar] (\keplerxq,0.72) rectangle (\keplerxv,1.28); \node at ({(\keplerxq+\keplerxv)/2},1) {vicarious};
+\fill[blue!25,keplerbar] (\keplerxv,0.72) rectangle (\keplerxl,1.28);
+% S3
+\fill[blue!25,keplerbar] (\keplerxc,-0.28) rectangle (\keplerxl,0.28); \node at ({(\keplerxc+\keplerxl)/2},0) {ellipse};
+% thresholds
+\foreach \x in {\keplerxc,\keplerxe,\keplerxq,\keplerxv,\keplerxl}{\draw[dashed,black!70] (\x,-0.45) -- (\x,2.55);}
+\node[anchor=south,font=\scriptsize] at (\keplerxc,2.55) {$640.8'$};
+\node[anchor=south,font=\scriptsize] at (\keplerxe,2.55) {$23.05'$};
+\node[anchor=south,font=\scriptsize] at (\keplerxq,2.55) {$8.17'$};
+\node[anchor=south east,font=\scriptsize,inner sep=1pt] at (\keplerxv,2.57) {$1.41'$};
+\node[anchor=south west,font=\scriptsize,inner sep=1pt] at (\keplerxl,2.57) {$1.07'$};
+% labels for the narrow segments
+\node[anchor=south west,font=\scriptsize,inner sep=1pt] at (0.25,2.62) {circle};
+\draw[black!70] (0.27,2.64) -- (0.1,2.28);
+\node[font=\scriptsize] at ({(\keplerxv+\keplerxl)/2},1.45) {ell.};
+\node[font=\scriptsize,rotate=90] at ({(\keplerxl+\keplerxr)/2},1) {none};
+% axis
+\draw[->] (0,-0.6) -- (\keplerxr+0.2,-0.6);
+\foreach \x/\l in {0/720',3.429/100',7.429/10',11.429/1'}{\draw (\x,-0.6) -- (\x,-0.68) node[below,font=\scriptsize] {$\l$};}
+\foreach \x in {0,3.113,4.317,5.521,6.225,7.113,7.612,8.317,9.021,9.521,10.225,10.613,10.974}{\fill (\x,-0.6) circle (1.1pt);}
+\node[font=\scriptsize] at ({\keplerxr/2},-1.15) {precision $\delta$ (arcminutes, logarithmic scale; finer to the right)};
+\end{tikzpicture}
+\caption{The MAP form of the proof-requiring posterior over the Mars pool against the precision $\delta$ of the data, in the three syntaxes, in the noise-free common-tolerance regime (tolerances against plan94). Dashed lines: the minimax errors of \cref{tab:kepler:minimax}, below which a form is incompatible with the data; below $1.07'$ no form in the pool is compatible. Dots: the precisions at which the posterior was computed (\cref{sec:kepler:pooldetails}); at each of them the runner-up has at most $2^{-12.4}$ of the MAP's weight. Between them the switches are drawn at the minimax errors, where a form becomes incompatible.}\label{fig:kepler:map}
+\status{computed}\src{philosophy \S4.4 Part A (MAP table)}
+\end{figure}
+
+\paragraph{What the data decide and what the syntax decides.}
+(i)~\emph{The data decide compatibility.} As $\delta$ falls below their minimax errors the forms drop out in the order circle, eccentric, equant, vicarious hypothesis, ellipse. This does not depend on the syntax, and it is the historical order, as one expects, since each successor was adopted because it fitted better. (ii)~\emph{Among compatible forms the data contribute only the Occam factors, and on their own they point weakly to the true form.} With a uniform prior over the five forms and no text prior, the MAP is the eccentric at $720'$ and $120'$ (margins $0.69$ and $0.46$ bits) and the ellipse at every $\delta\le60'$, with margins rising from $0.20$ bits at $60'$ to $14.61$ bits at $1.6'$. These margins depend on the element ranges: halving the eccentricity ranges moves the vicarious hypothesis by one bit against the four-element forms. (iii)~\emph{The text prior decides the rest in this regime.} Law-text differences are $100$--$800$ bits for every pair of forms except one: the epicyclic syntax's equant and vicarious texts differ by $18$ bits, and there the Occam factors move the margin by up to $5.6$ bits, so the text difference still decides. (In S1 and S3 the equant and vicarious texts have equal length, but both lose to the ellipse by more than $400$ bits.) So in the noise-free common-tolerance regime the sequence of preferred theories is set by the syntax (\cref{fig:kepler:map}): with epicyclic primitives the posterior runs through every form in the historical order, switching only when a form becomes incompatible; with plain arithmetic it goes from the eccentric to the ellipse at $23'$; with a Keplerian primitive, from the circle to the ellipse at $641'$. A variable-length numeral code, Polish notation for the texts, and a natural form outside the pool change none of this (\cref{sec:kepler:pooldetails}).
+
+In this regime, then, ``the simplest theory compatible with the data'' is relative to the language in which laws are written. The universal prior bounds this relativity by the cost $K(\tau)$ of a faithful translation (\cref{thm:basic:translation}), but here that cost, the definitions of the extra primitives in S1, is of the order of a few hundred bits (an estimate), as large as the text differences. Best-system accounts of laws face the same relativity: Lewis treats it as a problem and requires natural properties \citep{lewis1983new}, while Cohen and Callender accept relativity to a chosen set of kinds \citep{cohen2009better}. The relation is an analogy, since best systems are a metaphysics of laws and \SAIabbr is inference from finite data. The noise-free regime is special, however: a form proves all the data or none, so the discriminating power of the data among compatible forms cannot grow with their number. Under dithered rounding every form in the pool, the ellipse included, is eventually refuted (\cref{prop:laws:rounding}), and randomised theories with error models take over (\cref{prop:laws:errormodel}).
+
+\begin{example}[graded fit; a computation]\label{ex:kepler:graded}
+\status{computed (the honest-band crossovers are estimates from the pricing of section 9)}\src{philosophy \S4.4 Part A'}
+Inside $\MA$ a theory may be a sampler: the law with a Gaussian error model of stated $\sigma$, randomised by the tape (\cref{prop:laws:randomised}); its error model's text is the same for every form and cancels. On the 7306 longitudes, the expected log-likelihood penalty per independent observation relative to the ellipse is, at $\sigma=2'$ (roughly Tycho's precision), $45.05$ bits for the eccentric, $4.96$ for the equant and $0.035$ for the vicarious hypothesis. A form's text advantage over the ellipse is then overcome after $2$ observations for the eccentric in S1, $7$ in S2, $41$ for the equant in S2, and about $5{,}300$ for the vicarious hypothesis in S2 (about $1{,}300$ at $\sigma=1'$); in S1 and S3 the ellipse already has the shorter text against the equant and the vicarious hypothesis. A full simulation with noisy data agrees: at $\sigma=2'$ the epicyclic syntax's MAP is the vicarious hypothesis in all of 20 runs for $20$ to $2560$ observations, in half of them at $5120$, and the ellipse in all of them at $7306$. With honest uniform-tolerance theories, the simplest honest form (\cref{prop:laws:randomised}), the crossovers come after $23$ to $71$ data, and about $470$ for the vicarious hypothesis in S2; this is a conservative estimate, since \SAIabbr's mixture prefers a law with a calibrated error model (\cref{prop:laws:errormodel}). So with graded fit the data, not the syntax, decide every step within tens of observations, except the epicyclic syntax's choice between the vicarious hypothesis and the ellipse on longitudes, which needs thousands of longitudes at Tycho-level noise.
+\end{example}
+
+\paragraph{Distances as data.} Distance data decide that last step. Add, for every day, the sentence ``$r(t_i)$ lies within a factor $1\pm\tau_{\rm d}$ of $r_i$'', with $r_i$ the plan94 distance; each form gets one more element, its scale. \Cref{tab:kepler:distances} gives, for each distance tolerance $\tau_{\rm d}$, the least longitude tolerance at which a form was found to prove all the data. At $\tau_{\rm d}=1\%$ the vicarious hypothesis stays compatible only down to a longitude tolerance of at most $5.12'$, while the ellipse fits both kinds of data at $1.07'$. So for $\delta$ below the vicarious hypothesis's least tolerance only the ellipse is compatible, in every syntax; with longitudes alone that happens only below $1.41'$, close to the limit of the data. At $\tau_{\rm d}=0.2\%$ the ellipse is the only compatible form for every $\delta$ below $23.7'$. Compatibility alone thus eliminates the circle-based vicarious hypothesis once the data language contains distances: this reproduces the abandonment of circular orbits, not Kepler's last step from an oval to the ellipse, which is outside the pool. We have not computed the Occam factors with distance data (hence the MAP form above the thresholds) or lower bounds on the least tolerances.
+
+\begin{table}[t]
+\centering\small
+\caption{Distances as data: the least longitude tolerance (arcminutes, against plan94) found at which a form proves every longitude datum and every distance datum at relative distance tolerance $\tau_{\rm d}$; ``none'': no elements meeting $\tau_{\rm d}$ were found. Every entry is an upper bound on the least tolerance, witnessed by elements; minimality is not proved. $r^*$: the least distance tolerance found with no longitude constraint. Full table in \cref{sec:kepler:distdetails}.}\label{tab:kepler:distances}
+\status{computed (every entry an upper bound witnessed by printed elements; minimality not proved)}\src{philosophy \S4.4 Part C}
+\begin{tabular}{@{}lrrrrrrr@{}}
+\toprule
+form & $r^*$ & $\tau_{\rm d}=5\%$ & $2\%$ & $1\%$ & $0.5\%$ & $0.2\%$ & $0.05\%$\\
+\midrule
+eccentric & 0.226\% & 150.73 & 252.45 & 286.70 & 305.33 & none & none\\
+bisected equant & 0.222\% & 8.17 & 8.17 & 8.17 & 8.17 & none & none\\
+vicarious hypothesis & 0.0164\% & 1.41 & 2.01 & 5.12 & 6.95 & 23.74 & 132.04\\
+ellipse & 0.0117\% & 1.07 & 1.07 & 1.07 & 1.07 & 1.07 & 1.07\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ------------------------------------------------------------------
+\subsection{What Newton adds}\label{sec:kepler:newton}
+\status{assessment, with computed figures and literature}\src{philosophy \S4.5}
+
+Newton's theory extends the language by masses, the constant $G$ and accelerations; its law is $m_b\ddot{\mathbf r}_b=\sum_{b'\ne b}Gm_bm_{b'}(\mathbf r_{b'}-\mathbf r_b)/\lvert\mathbf r_{b'}-\mathbf r_b\rvert^3$. The data language is unchanged: this is step 3 of the ladder of \cref{sec:phil:map}, theoretical terms with no new data vocabulary. Masses are theoretical in Sneed's sense, measurable only by using the theory \citep{sneed1971logical,balzer1987architectonic}. Most of what follows is the achievement of Newtonian mechanics as developed over about 150 years, from Newton to Laplace and Le Verrier, not of Newton alone; for instance, Newton accounted for about half of the motion of the lunar apsides, and Clairaut for the rest in 1749 \citep{nauenberg2015reception,bodenmann2010battle}. We see five points.
+
+\emph{Parameters and fit on the old data.} Newton does not reduce the number of parameters: per body he needs six initial conditions, equivalent to osculating elements, as Kepler does, and a mass, and his law is much longer than $\mathrm{K12}\cup\mathrm{K3}$. On planetary longitudes at the precision of Kepler's data the extra parameters buy nothing measurable over 20 years: the ellipse fits Mars to $1.07'$. So we think that a \SAIabbr posterior on planetary data alone at that precision would not prefer Newton's theory; this is consistent with \cref{ex:kepler:graded}, where the ellipse is already the best form.
+
+\emph{Unification across domains,} where Newton's gain lies. One law covers the planets, the Moon (the Moon test puts terrestrial gravity and the Moon's acceleration under one law), falling bodies, tides, comets, and satellite systems, for which the third law gets a mass-dependent constant: the two-body form is $(2\pi/P)^2a^3=G(M+m)$, so $q=1+m/M$. Jupiter's fitted $q$ matches its two-body value; Saturn's does not, and the orbit-averaged pull of Jupiter, which acts like an interior ring, accounts for it (a heuristic estimate gives $q=1.00154$; \cref{tab:kepler:residuals}). So the ``constant'' of K3 differs between planets at the $10^{-3}$ level, and Newtonian mechanics says why. Some of these domains need more base vocabulary, so the data language grows too.
+
+\emph{Corrections inside the old domain.} Mercury's line of apsides turns by $575.4''$ per century in a fixed frame in our fits to plan94. Of the observed advance relative to the equinox, about $5600''$ per century, all but about $43''$ is accounted for by general precession and Newtonian planetary perturbations \citep{clemence1947relativity}; in a fixed frame the advance is about $574''$, of which the perturbations account for about $531''$, and the remainder is the effect of general relativity. The great inequality of Jupiter and Saturn, an oscillation of period about 900 years with amplitudes $18.3'$ and $43.8'$ in our fits, was explained by Laplace \citep{wilson1985great}.
+
+\emph{New questions.} In the old language: where Neptune is (Le Verrier's prediction from the residuals of Uranus, also a standard example of reference fixed by a description \citep{kripke1980naming}), or when Halley's comet returns. In a new language: the masses of the Sun and of the planets with satellites. Masses are theoretical, so ``the mass of Jupiter'' is a question the old language cannot pose (step 3 of the ladder).
+
+\emph{No deductive entailment of Kepler's laws.} Newton's axioms do not entail K12 or K3; with the planets' masses they are incompatible with their exact form, as \citet{duhem1954aim} observed. Together with masses and initial conditions they entail corrected statements and honest tolerance forms, ``K12 holds within $\varepsilon(b,W)$ on the window $W$'', with $\varepsilon$ as in \cref{tab:kepler:residuals}; \cref{prop:laws:correction} is a provable toy version. A formal derivation of even one such bound needs an existence-and-uniqueness theorem and a validated integration or perturbation estimate: a very long derivation that no textbook writes out. This is a concrete case of the computational gap between a written theory and the reasoner who uses it (\cref{sec:limits:textbook}).

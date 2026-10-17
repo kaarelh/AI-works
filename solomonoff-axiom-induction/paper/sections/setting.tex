@@ -1,4 +1,119 @@
-% STUB written by the planning editor. The section writer replaces this file.
-% Plan: ../OUTLINE.md (section "sec:setting"); results: ../CLAIMS.md; notation: ../NOTATION.md.
+% Section 2 (writer: core). Sources: research/tracks/fundamentals/notes-final.md §1 (Defs 1.1, 1.1', 1.2, Lemma 1.3,
+% Examples, Defs 1.4, 1.5, Rem 1.6, Def 1.7, Prop 1.8(a)-(c), Defs 1.9, 1.10); logic §1.3; shape Def 1.2, §1.3;
+% philosophy Def 2.0; terms Def 1.2; laws Props 1.8-1.9 (pointer only). Proofs: sections/app-basic.tex.
 \section{Setting}\label{sec:setting}
-\emph{(To be written.)}
+
+The hypotheses of \SAI are axiom systems, sets of first-order sentences produced by programs; the word ``axiom'' refers to them, not to the induction axiom. The data are sentences labelled true or false. A hypothesis is compatible with the data when it is consistent and proves every datum: it must \emph{explain} each datum, not merely tolerate it. Randomness enters as in the one-tape version of \SOI \citep{claudeSFI2026fundamentals}, which we call the companion paper: a universal machine reads one random tape and emits sentences, and the prior probability of a data set is the probability that the emitted theory is consistent and proves every datum. This section fixes the definitions; \cref{sec:basic} develops their basic theory, and the proofs are in \cref{app:basic}.
+
+\subsection{Language, background and data}\label{sec:setting:data}
+
+\begin{definition}[Setting and data]\src{fundamentals Def 1.1}\label{def:setting:data}
+$\mathcal L$ is a countable first-order language with equality and computable syntax, $\Sent:=\Sent_{\mathcal L}$, and $\vdash$ is derivability in a fixed sound and complete calculus. The \emph{background} $B\subseteq\Sent$ is decidable and consistent; by default $B=\emptyset$. Put $\Cn(\Gamma):=\{\varphi:B\cup\Gamma\vdash\varphi\}$. ``$\Gamma$ proves $\varphi$'' means $B\cup\Gamma\vdash\varphi$; $\Gamma$ is \emph{consistent} if $B\cup\Gamma$ is; $\Gamma$ \emph{decides} $\varphi$ if it proves $\varphi$ or $\neg\varphi$; $\varphi^1:=\varphi$ and $\varphi^0:=\neg\varphi$.
+
+A \emph{data set} is a finite partial function $D:\Sent\rightharpoonup\{0,1\}$ (label $1$ means true); a \emph{three-valued} data set maps into $Y_3:=\{1,0,\iota\}$, where $\iota$ means ``independent''. Put $D^\pm:=\{\varphi^{D(\varphi)}:D(\varphi)\in\{0,1\}\}$, and let $\psi_D$ be the conjunction of $D^\pm$ in a fixed canonical order ($\top$ if $D^\pm=\emptyset$); $D$ is \emph{consistent} if $B\cup D^\pm$ is. $D+(\varphi,y)$ is defined for $\varphi\notin\dom D$. A \emph{reveal sequence} $(\varphi_t,y_t)_{t\le n}$ is consistent if $D_n:=\{(\varphi_t,y_t):t\le n\}$ is a partial function; $D_t$ are its prefixes. An infinite stream $D_\infty$ has $D_\infty^\pm:=\bigcup_nD_n^\pm$. For a map $\nu$ from data sets to $[0,1]$ the \emph{conditional} is $\nu(y\mid D,\varphi):=\nu(D+(\varphi,y))/\nu(D)$ for $\varphi\notin\dom D$ ($0$ if $\nu(D)=0$), and $\nu(y\mid D,\varphi):=\ind[y=D(\varphi)]$ for $\varphi\in\dom D$ (the repeated-input convention of the companion paper).
+\end{definition}
+
+An r.e.\ background would serve as well, since by Craig's trick it has a decidable axiomatisation with the same consequences. The data $(\varphi,1)$ and $(\neg\varphi,0)$ are different data with the same content; weights will depend only on content (\cref{prop:basic:structure}(c)).
+
+\paragraph{Algorithmic notation.} $V$ is a fixed universal prefix machine, $K$ prefix complexity, $\mm(i):=\sum_{V(p)=i}2^{-\lvert p\rvert}\ge2^{-K(i)}$ and $\Omega_V:=\sum_{p\in\dom V}2^{-\lvert p\rvert}$; $\re e$ is the $e$-th r.e.\ set of sentences. $\Unif$ is the fair-coin measure on tapes $\omega\in\{0,1\}^\infty$, $[w]$ the cylinder of a finite string $w$, and $\omega_{1:n}$ the first $n$ bits of $\omega$. Logarithms are binary and losses are in bits. The constants $c,c',\dots$ depend only on the fixed universal machines, the coding of syntax and $B$; ``lsc'' means lower semicomputable. We use two standard facts (see \citealp{li2008introduction}): $\mm$ dominates every lsc discrete semimeasure up to a constant factor; and the conditional coding theorem: if $P(a\mid z)$ is lsc uniformly in $(a,z)$ and $\sum_aP(a\mid z)\le1$, then $K(a\mid z)\le-\log P(a\mid z)+K(P)+c$.
+
+\begin{definition}[Literal setting; fresh atoms]\src{fundamentals Def 1.1'; terms Def 1.2}\label{def:setting:fresh}
+In the \emph{literal setting}, $\mathcal L$ contains a unary relation symbol $R$ that does not occur in $B$, and closed terms $t_w$ ($w\in\{0,1\}^*$) that some model of $B$ interprets as pairwise distinct elements. \emph{Fresh atoms} are sentences $R(t_w)$ for pairwise distinct words $w$; so $R(t_w)$ and $\neg R(t_w)$ are never two fresh atoms. The standard instance is the \emph{literal language}: a constant $\mathtt e$, unary function symbols $\mathtt s_0,\mathtt s_1$ and $R$, with $t_w:=\mathtt s_{w_1}(\cdots\mathtt s_{w_k}(\mathtt e)\cdots)$ and $\varphi_w:=R(t_w)$, of $\lvert w\rvert+2$ symbols; its \emph{named structure} $\mathfrak T$ is the free term algebra on $\mathtt e,\mathtt s_0,\mathtt s_1$. For a set of words $X\subseteq\{0,1\}^*$, $D^X$ lists $(\varphi_w,\ind[w\in X])$ in length-lexicographic order and $f_X$ is the literal labeller of $X$. The \emph{fit class} of an inducer is the set of $X$ on whose sequence $D^X$ it has bounded loss.
+\end{definition}
+
+Every result stated for fresh atoms or on literal data assumes this setting. Two facts carry all such uses (\cref{lem:basic:fresh}): a set of literals of $R$ with at most one literal per word is consistent with $B$, and a consistent such set proves exactly its own members among the literals.
+
+\subsection{Theory machines and their laws}\label{sec:setting:machines}
+
+A hypothesis of \SAI is produced by a machine that reads random bits and writes sentences. A function machine of \SOI must give each input at most one label; a theory machine may write anything. Emitting more axioms is always allowed, and consistency is a property of the output, a random event.
+
+\begin{definition}[Theory machine]\src{fundamentals Def 1.2; Prop 2.1(g)}\label{def:setting:machine}
+A \emph{theory machine} is a c.e.\ set $G\subseteq\{0,1\}^*\times\Sent$ (``after reading $w$ from the tape, emit $\chi$''). For finite $w$ put $A^G_w:=\{\chi:(v,\chi)\in G,\ v\sqsubseteq w\}$, and for a tape $\omega$ let $A^G_\omega:=\bigcup_nA^G_{\omega_{1:n}}$ be the axioms emitted on $\omega$. Let
+\[
+O^G_\chi:=\{\omega:B\cup A^G_\omega\vdash\chi\},\qquad \mathrm{Cons}^G:=\{0,1\}^\infty\setminus O^G_\bot,\qquad E^G_D:=O^G_{\psi_D}\cap\mathrm{Cons}^G .
+\]
+The \emph{law} of $G$ is $\nu_G(D):=\Unif(E^G_D)$, the probability that the random theory is consistent and proves every datum. The \emph{three-valued law} is $\nu^3_G(D):=\Unif(E^{3,G}_D)$ with $E^{3,G}_D:=E^G_D\cap\bigcap_{D(\varphi)=\iota}\big(\{0,1\}^\infty\setminus(O^G_\varphi\cup O^G_{\neg\varphi})\big)$: in addition, the theory decides no $\iota$-labelled sentence. On $\mathrm{Cons}^G$ the \emph{trichotomy function} $\tri^G_\omega:\Sent\to Y_3$ is $1$ at the sentences $B\cup A^G_\omega$ proves, $0$ at those it refutes and $\iota$ elsewhere. $(G_i)$ is a fixed effective enumeration of the c.e.\ subsets of $\{0,1\}^*\times\Sent$; $K(G):=\min\{K(i):G_i=G\}$ and, for a law $\nu$, $K(\nu):=\min\{K(i):\nu_{G_i}=\nu\}$.
+\end{definition}
+
+These events are measurable: $O^G_\chi$ is effectively open uniformly in $\chi$ and an index of $G$, $\mathrm{Cons}^G$ is a $\Pi^0_1$ class, and $\nu_G(D)=\Unif(O^G_{\psi_D})-\Unif(O^G_\bot)$ (\cref{lem:setting:measurable}). \emph{Examples.} (i) A deterministic r.e.\ theory $\re e$: $G=\{(\epsilon,\chi):\chi\in\re e\}$, with $\nu_G(D)=\ind[B\cup\re e\text{ consistent and }\vdash\psi_D]$. (ii) Fair-coin facts on a family $(\alpha_j)_{j\ge1}$ of sentences: $G=\{(w,\alpha_j^{w_j}):\lvert w\rvert=j\}$. (iii) A theory plus coin facts: the union of (i) and (ii). (iv) A finite mixture of finite theories $T_1,\dots,T_r$: $G=\{(w_j,\chi):\chi\in T_j\}$ for a prefix-free set $\{w_1,\dots,w_r\}$, which gives $T_j$ weight $2^{-\lvert w_j\rvert}$; a tape with no prefix among the $w_j$ emits nothing, and its theory is the empty one, consistent since $B$ is. More generally, a theory machine can complete a law at random inside what the law allows; such randomised theories are how approximate laws enter \SAI (\cref{prop:laws:randomised}).
+
+\begin{definition}[\SAI]\src{fundamentals Def 1.4; NOTATION \S4}\label{def:setting:MA}
+The \emph{universal theory machine} is $G_U:=\{(pw,\chi):p\in\dom V,\ (w,\chi)\in G_{V(p)}\}$: it reads a self-delimiting program and runs that machine on the rest of the tape. Write $A_\omega:=A^{G_U}_\omega$, $O_\chi:=O^{G_U}_\chi$, $\mathrm{Cons}:=\mathrm{Cons}^{G_U}$, $E_D:=E^{G_U}_D$, $E^3_D:=E^{3,G_U}_D$ and $\tri_\omega:=\tri^{G_U}_\omega$.
+\begin{itemize}[leftmargin=*]
+\item \emph{\SAIabbr} is the one-tape proof-requiring law $\MA:=\nu_{G_U}$. Put $\MAthree:=\nu^3_{G_U}$, $\LA:=-\log\MA$ and $\Inc_0:=\Unif(O_\bot)$, the probability that the random theory is inconsistent.
+\item The \emph{posterior} after $D$ with $\MA(D)>0$ is the law of $A_\omega$ under $\Unif(\cdot\mid E_D)$; three-valued, under $\Unif(\cdot\mid E^3_D)$.
+\item \emph{Trichotomy.} $\Bel_D(\chi):=\Unif(E_D\cap O_\chi)/\Unif(E_D)$ is the posterior probability that the random theory proves $\chi$; $\Dis_D(\chi):=\Bel_D(\neg\chi)$; $\Indep_D(\chi):=1-\Bel_D(\chi)-\Dis_D(\chi)$.
+\item The \emph{prior probability of provability} $\Bel_0(\chi):=\MA(\{(\chi,1)\})=\Unif(O_\chi)-\Inc_0$ is not normalised: $\Bel_0(\top)=1-\Inc_0$. Its normalisation is $\Belhat_0:=\Bel_0/(1-\Inc_0)=\Bel_\emptyset$. The \emph{plausibility} is $\Pl_0(\chi):=\Bel_0(\top)-\Bel_0(\neg\chi)$, and $\Pl_D(\chi):=1-\Bel_D(\neg\chi)$.
+\item \emph{Class probabilities.} For a class $\mathcal C$ of deductively closed theories, $\UA(\mathcal C;D):=\Unif\{\omega:B\cup A_\omega\text{ consistent},\ \vdash\psi_D,\ \Cn(A_\omega)\in\mathcal C\}$ and $\UA(\mathcal C):=\UA(\mathcal C;\emptyset)$. For a theory $T$, $\UA[T]:=\Unif\{\omega:B\cup A_\omega\text{ consistent},\ \Cn(A_\omega)=\Cn(T)\}$ and $\UA(\Exts T):=\Unif\{\omega:B\cup A_\omega\text{ consistent},\ \Cn(A_\omega)\supseteq\Cn(T)\}$.
+\end{itemize}
+\end{definition}
+
+If $\omega=p\omega'$ with $p\in\dom V$, then $A_\omega=A^{G_{V(p)}}_{\omega'}$, since $\dom V$ is prefix-free; a tape with no prefix in $\dom V$ emits nothing. So $G_U$ reads one tape in two parts, a program and that program's coins. By \cref{prop:basic:structure}, $\MA(D)=\Bel_0(\psi_D)$, $\MA(b\mid D,\varphi)=\Bel_D(\varphi^b)$ and $\MAthree(\iota\mid D,\varphi)=\Indep_D(\varphi)$ for $\varphi\notin\dom D$: the predictions of \SAIabbr are posterior probabilities that the random theory proves, refutes, or leaves open the queried sentence.
+
+\subsection{Conventions and the two defects}\label{sec:setting:conventions}
+
+\begin{definition}[Loss conventions]\src{fundamentals Def 1.5; logic \S1.3}\label{def:setting:conventions}
+\begin{itemize}[leftmargin=*]
+\item \emph{Semimeasure convention} (primary): the cumulative loss of a consistent reveal sequence is $\sum_{t\le n}-\log\MA(y_t\mid D_{t-1},\varphi_t)$, which equals $\LA(D_n)-\LA(\emptyset)$ (\cref{prop:basic:structure}(d)); for the coin-free version it is $-\log\WA(D_n)+\log\WA(\emptyset)$.
+\item \emph{Normalised convention}: each conditional is divided by $\Bel_D(\varphi)+\Dis_D(\varphi)$.
+\item \emph{Three-valued convention}: labels in $Y_3$, scored by $\MAthree$, whose conditionals sum to $1$ (\cref{prop:basic:structure}(f)).
+\item The consistency-requiring predictor (\cref{def:setting:variants}) has its own loss, $\sum_t-\log\Belnc_{D_{t-1}}(\varphi_t^{b_t})$.
+\end{itemize}
+\end{definition}
+
+Upper bounds proved in the semimeasure convention hold in the normalised convention, since each normalised conditional is at least the raw one. Lower bounds do not transfer: a lower bound in the semimeasure convention can fail in the normalised convention by an unbounded amount (\cref{prop:logic:normalised}), and the normalised loss depends on the reveal order (\cref{thm:basic:order}). Every lower bound below names its convention; statements about $\KA$, $\Kfin$ and the posterior need none.
+
+The missing mass of $\MA$ has two sources, and we keep both rather than renormalise.\footnote{The proof-requiring and consistency-requiring variants, the three outcomes true, false and independent, and the choice to keep the defect of the semimeasure rather than renormalise first appeared in H\"anni's working notes \citep{hanni2026notes}.}
+
+\begin{remark}[Two defects]\status{proved}\src{fundamentals Rem 1.6}\label{rem:setting:defects}
+$\MA$ has a \emph{global} defect $1-\MA(\emptyset)=\Inc_0>0$ and a \emph{local} defect $\Indep_D(\varphi)$ at each query (\cref{prop:basic:structure}(b), (e)). The one-tape law $\MF$ of \SOIabbr has only the local one ($\MF(\emptyset)=1$), because function machines are consistent by definition. The correspondence is: ``proves $\varphi$'' is a $\Sigma_1$ property of the tape, like ``halts with output $1$''; ``independent'' is $\Pi_1$, like ``diverges''; ``inconsistent'' corresponds to ``halts with both outputs'', which a function machine cannot do. Removing the independent mass and renormalising, or splitting it equally between the two labels, gives incoherent predictions (Examples 2.15, 2.16 and Proposition 2.17 of \citet{claude2026axiominduction}); keeping it, the pair $(\Bel_D,\Pl_D)$ is a coherent lower and upper probability (\cref{prop:basic:geometric}).
+\end{remark}
+
+\subsection{Versions and complexities of theories}\label{sec:setting:versions}
+
+As for \SOIabbr, the one-tape law has a coin-free version, a mixture over deterministic programs, and a Kolmogorov version, the shortest compatible program.
+
+\begin{definition}[Versions]\src{fundamentals Def 1.7}\label{def:setting:versions}
+For a data set $D$:
+\begin{itemize}[leftmargin=*]
+\item $\WA(D):=\sum_{p\in\dom V}2^{-\lvert p\rvert}\ind[B\cup\re{V(p)}\text{ consistent and }\vdash\psi_D]=\sum_e\mm(e)\ind[B\cup\re e\text{ consistent and }\vdash\psi_D]$ (coin-free, over enumerators);
+\item $\KA(D):=\min\{\lvert p\rvert:p\in\dom V,\ B\cup\re{V(p)}\text{ consistent and }\vdash\psi_D\}$ ($\infty$ if there is none; the Kolmogorov version);
+\item $\WAdec$, $\KAdec$: the same over \emph{deciders}, the $p\in\dom V$ such that $V(p)$ is an index of a total $\{0,1\}$-valued function $d$, read as the axiom set $\{\chi:d(\chi)=1\}$ (Definition 6.2 of \citet{claude2026axiominduction});
+\item $\WAgen t$: the same over enumerators of the delay form (Definition E.10 of \citet{claude2026axiominduction}), which write each axiom $a$ within $O(t(\lvert a\rvert))$ steps of the previous one;
+\item $\Kfin(D):=\min\{K(\psi):\psi\in\Sent,\ B\cup\{\psi\}\text{ consistent},\ B\cup\{\psi\}\vdash\psi_D\}$ and $\Wfin(D):=\sum_\psi\mm(\psi)\ind[B\cup\{\psi\}\text{ consistent},\ B\cup\{\psi\}\vdash\psi_D]$ (finite axiomatisations).
+\end{itemize}
+\end{definition}
+
+\begin{remark}[Deciders, enumerators and polynomial-delay enumerators agree]\status{(a), (c) proved; (b) proved, given Lemma E.12 and Theorem 6.14(a) of the earlier report, under Assumption (S)}\src{fundamentals Prop 1.8(a)--(c)}\label{rem:setting:versions}
+There is $c$ such that for every $D$:
+(a) $2^{-c}\WAdec(D)\le\WA(D)\le2^c\WAdec(D)$ and $\lvert\KA(D)-\KAdec(D)\rvert\le c$;
+(b) under \cref{ass:soi:S}, for $t$ time-constructible, nondecreasing and superadditive with $t(m)\ge m$ and $t(m)\ge m^{a^*}$ ($a^*$ fixed by the universal machine): $2^{-c}\WA(D)\le\WAgen t(D)\le2^c\WA(D)$, and likewise for the Kolmogorov versions;
+(c) $\KA(D)\le\Kfin(D)+c\le K(\psi_D)+c$ if $D$ is consistent; if $D$ is inconsistent, $\KA(D)=\Kfin(D)=\infty$, while $K(\psi_D)$ is finite.
+\end{remark}
+
+Part (a) is Craig's trick between two kinds of axiom hypotheses; (b) uses the padded Craig sets of \citet[Lemma E.12]{claude2026axiominduction}, proved there under the self-simulation assumption, which we do not re-derive (\cref{app:setting}). The inequality $\KA\le\Kfin+c$ can be far from tight: $\Kfin-\KA$ is unbounded (\cref{rem:terms:named}).
+
+\begin{definition}[Complexities of theories]\status{proved}\src{fundamentals Def 1.9}\label{def:setting:complexities}
+For an r.e.\ theory $T$: $[T]:=\{e:\Cn(\re e)=\Cn(T)\}$; $\Keq(T):=\min_{e\in[T]}K(e)$, the complexity of $T$ up to deductive equivalence; $\mmeq(T):=\sum_{e\in[T]}\mm(e)$; $\Exts(T):=\{e:B\cup\re e\text{ consistent},\ \Cn(\re e)\supseteq\Cn(T)\}$ and $\mm(\Exts T):=\sum_{e\in\Exts T}\mm(e)$. If $B\cup T$ is consistent, then $[T]\subseteq\Exts T$, so $2^{-\Keq(T)}\le\mmeq(T)\le\mm(\Exts T)$, and $\UA[T]\ge2^{-c}\mmeq(T)$, $\UA(\Exts T)\ge2^{-c}\mm(\Exts T)$ (\cref{thm:basic:dominance}(i)). The hypothesis is needed: for $T=\{\bot\}$, $\UA[T]=0$ and $\Exts T=\emptyset$, while $\mmeq(T)\ge2^{-\Keq(T)}>0$.
+\end{definition}
+
+\subsection{Variants and questions}\label{sec:setting:variants}
+
+Proof-requiring compatibility asks the hypothesis to prove each datum. Two weaker requirements are natural: that the hypothesis be consistent with the data, or that it be graded by how many data it proves. A third variant replaces labelled data by sentences sampled from the theory. \Cref{sec:basic:primary} explains why we take the proof-requiring law as primary.
+
+\begin{definition}[Variants]\src{fundamentals Def 1.10; \S7}\label{def:setting:variants}
+Let $\epsempty:=\Unif\{\omega:A_\omega=\emptyset\}$, the mass of the empty theory; $\epsempty\ge2^{-\lvert p_\emptyset\rvert}>0$ for a $V$-program $p_\emptyset$ of an index of the empty machine.
+\begin{itemize}[leftmargin=*]
+\item \emph{Consistency-requiring, $0/1$}: $\MAnc(D):=\Unif\{\omega:B\cup A_\omega\cup D^\pm\text{ consistent}\}$. Its posterior is the law of $A_\omega$ given that event, and its predictor uses the hypothesis together with the data: $\Belnc_D(\varphi):=\Unif\{\omega:B\cup A_\omega\cup D^\pm\text{ consistent and }\vdash\varphi\}/\MAnc(D)$ and $\Disnc_D(\varphi):=\Belnc_D(\neg\varphi)$.
+\item \emph{Graded consistency-requiring, grade $\frac12$}: for consistent $A$, $\nu^{1/2}_A(D):=\ind[B\cup A\cup D^\pm\text{ consistent}]\prod_{\varphi\in\dom D}\mathrm{gr}_A(\varphi)$, with $\mathrm{gr}_A(\varphi):=1$ if $B\cup A\vdash\varphi^{D(\varphi)}$ and $\frac12$ otherwise; $\MAhalf(D):=\int_{\mathrm{Cons}}\nu^{1/2}_{A_\omega}(D)\,d\Unif(\omega)$.
+\item \emph{Generative}: a theory $A$ has a law $P_A$ on sentences, given by a derivation grammar with citation weights on the axioms (the likelihood $L_1$ of Definition 2.9 of \citet{claude2026axiominduction}); the data are unlabelled sentences $X_1,X_2,\dots$, and the universal law of data streams is $\Xi(X_{1:n}):=\int\prod_{i\le n}P_{A_\omega}(X_i)\,d\Unif(\omega)$, with the sampling coins read from separate parts of the tape (\cref{app:basic:generative}).
+\end{itemize}
+\end{definition}
+
+The graded weight is the symmetric form of the graded score $S_g$ of \citet[Definition 2.12]{claude2026axiominduction} with $g\equiv1$ on proved data and $g_\infty=\frac12$: $S_g$ grades only the data labelled true, $\nu^{1/2}$ grades the data labelled false too. The results below use only data labelled true, where the two agree.
+
+\begin{definition}[Questions]\src{NOTATION \S3.2; philosophy Def 2.0; shape Def 1.2, \S1.3}\label{def:setting:questions}
+A \emph{question} is a finite set $\mathcal Q=\{\varphi_1,\dots,\varphi_k\}$ of pairwise $B$-incompatible sentences whose disjunction $B$ proves, its \emph{direct answers}; a yes/no question is $\{\varphi,\neg\varphi\}$. A theory \emph{answers} $\mathcal Q$ if it proves some $\varphi_i$. A \emph{conditional question} is a pair $(\alpha,\ell)$, read ``given $\alpha$, is $\ell$ the case?''. Under the \emph{encoding} \Ethree, a theory $T$ is compatible with the conditional datum $(\alpha,\ell)$ iff $B\cup T\cup\{\alpha\}$ is consistent and proves $\ell$; equivalently, $T\vdash\alpha\to\ell$ and $T\nvdash\neg\alpha$.
+\end{definition}
+
+This follows the tradition of erotetic logic (cf.\ \citealp{belnap1976logic}); results that need only pairwise incompatibility say so. \Ethree{} is not a single datum of $\MAthree$: it combines ``the label of $\alpha\to\ell$ is $1$'' with ``the label of $\neg\alpha$ is not $1$'', a union of two $\MAthree$-events. The two-valued encoding by the datum $(\alpha\to\ell,1)$ is degenerate, since a single world satisfying the law fits all of its question data (\cref{prop:shape:E2}); it is never used for conditional data. \Ethree{} makes ``given $\alpha$'' hypothetical: a compatible theory must leave every antecedent open.

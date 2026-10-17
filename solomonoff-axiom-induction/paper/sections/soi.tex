@@ -1,4 +1,265 @@
-% STUB written by the planning editor. The section writer replaces this file.
-% Plan: ../OUTLINE.md (section "sec:soi"); results: ../CLAIMS.md; notation: ../NOTATION.md.
+% Section 4 (writer: soi). Sources: research/tracks/sfi/notes-final.md §0-§11, §15 (final record; item numbers in \src);
+% synthesis research/notes-final.md H1, H7, §3 (as corrected by research/final-check.md §4 items 1, 3, 4, 9, 10);
+% terms Thm 2.1, 6.5 and fit-class rows only through \cref in Table 1. Proofs: sections/app-soi.tex.
+% Results of the earlier report (claude2026axiominduction) are cited by printed number (its main.aux).
 \section{Relation to \SOI}\label{sec:soi}
-\emph{(To be written.)}
+
+\SOI \citep{claudeSFI2026fundamentals} puts the universal prior on programs that label inputs, and conditions on the labelled inputs seen. Here the inputs are sentences. A hypothesis of \SAIabbr is a theory, a hypothesis of \SOIabbr is a labeller, a partial function from sentences to labels, and a labeller whose labels are consistent with $B$ is the natural program-shaped counterpart of a theory. So it is natural to compare \SAIabbr with \SOIabbr restricted to consistent labellers.\footnote{The comparison of \SAIabbr with consistent \SOIabbr, the example in which plain \SOIabbr beats \SAIabbr (\cref{rem:soi:encoding}), and the axiom schema of \cref{rem:soi:schema} first appeared in H\"anni's working notes \citep{hanni2026notes}.}
+They agree version by version, up to constant factors: the coin-free versions through Craig's construction \citep{craig1953axiomatizability}, the one-tape versions without it (\cref{sec:soi:equiv}); on positive literals of a fresh predicate, \SAIabbr \emph{is} \SOIabbr on strings (\cref{sec:soi:literals}). The equivalences control semimeasure losses, not the meaning of ``undefined'', and logically structured data separate the two (\cref{sec:soi:breaks}). Under time bounds the relation becomes one-sided, and the separations come from free deduction (\cref{sec:soi:time,sec:soi:charged,sec:soi:presburger}). \Cref{tab:soi} collects the relations; the proofs are in \cref{app:soi}. Losses are in the semimeasure convention unless stated, and $\asymp$ means equality within $2^{\pm c}$ on every finite data set.
+
+\subsection{The objects and four maps}\label{sec:soi:objects}
+
+\begin{definition}[The operator-induction side]\status{definition}\src{sfi \S1.1, Def 1.1}\label{def:soi:objects}
+Let $\mathcal L$ and $B$ be as in \cref{def:setting:data}.
+\begin{itemize}[leftmargin=*]
+\item A \emph{function machine} is a c.e.\ set $F\subseteq\Sent\times\{0,1\}^*\times\{0,1\}$ such that $(\varphi,w,y),(\varphi,w',y')\in F$ with $w,w'$ comparable implies $y=y'$ \citep[Definition 3.6]{claudeSFI2026fundamentals}. On a tape $\omega$ it computes the partial labeller $f^F_\omega$, with $f^F_\omega(\varphi):=y$ if $(\varphi,w,y)\in F$ for a prefix $w$ of $\omega$, and $f^F_\omega(\varphi)$ undefined ($\bot$) otherwise; its law is $\nu_F(D):=\Unif\{\omega:f^F_\omega\supseteq D\}$. $F_U$ is the universal function machine (read $p\in\dom V$, then run $F_{V(p)}$ on the rest of the tape), $f_\omega:=f^{F_U}_\omega$, and $\MF:=\nu_{F_U}$ is \SOIabbr.
+\item For a partial $f:\Sent\rightharpoonup\{0,1\}$ let $\Gamma_f:=\{\varphi^{f(\varphi)}:\varphi\in\dom f\}$. The labeller $f$ is \emph{consistent} if $B\cup\Gamma_f$ is consistent, and \emph{closed} if moreover $f(\varphi)=b$ iff $B\cup\Gamma_f\vdash\varphi^b$, for all $\varphi$ and $b$.
+\item \emph{One-tape consistent and closed \SOIabbr}: $\MFcons(D):=\Unif\{\omega:f_\omega\supseteq D,\ f_\omega\text{ consistent}\}$, and $\MFcl(D)$ likewise with ``closed and consistent''; $\nu^{\mathrm{cons}}_F$, $\nu^{\mathrm{cl}}_F$ are the same for one machine $F$.
+\item \emph{Random deciders} are function machines $F$ with $f^F_\omega$ total for every $\omega$, read as theory machines with axiom set $A^{\mathrm{dec}}_F(\omega):=\{\chi:f^F_\omega(\chi)=1\}$; $\MAdec(D)$ is the sum of $2^{-\lvert p\rvert}\,\Unif\{\omega:B\cup A^{\mathrm{dec}}_{F_{V(p)}}(\omega)\text{ consistent and}\vdash\psi_D\}$ over the $p\in\dom V$ for which $F_{V(p)}$ is a random decider.
+\item \emph{Coin-free and Kolmogorov}: $\Wcons(D)$ is the sum of $2^{-\lvert p\rvert}$ over the $p\in\dom V$ for which the partial computable labeller $\{V(p)\}$ is consistent and extends $D$, and $\KFcons(D)$ the least such $\lvert p\rvert$; $\Wcl$, $\KFcl$ likewise with closed labellers; $\Wall$ drops the consistency condition (plain coin-free \SOIabbr on sentences). $W$ and $\KF$ are the companion paper's coin-free and Kolmogorov versions on strings.
+\end{itemize}
+\end{definition}
+
+\paragraph{Four maps.} Every equivalence below is proved with four computable maps between hypotheses (\cref{lem:soi:maps}). \emph{Proof search} turns a theory machine $G$ into the function machine $F_G$ that labels $\varphi$ by searching for a derivation of $\varphi$ or of $\neg\varphi$ from $B$ and the axioms emitted so far; on every tape on which the theory is consistent, the labeller is consistent and closed and decides every sentence as the theory does. \emph{Emission} turns a function machine $F$ into the theory machine $G_F$ that emits $\varphi^y$ whenever $F$ certifies the label $y$ of $\varphi$; its axioms on $\omega$ are $\Gamma_{f^F_\omega}$. \emph{Craig's map with the tape} turns $F$ into a random decider $C_F$ whose axioms on $\omega$ are the padded copies $\psi^{\wedge(k+1)}$ of the members $\psi$ of $\Gamma_{f^F_\omega}$, with $k$ the number of steps $F$ takes to certify $\psi$, so that $\Cn$ is preserved. \emph{Closure} turns a consistent labeller $f$ into the closed labeller that searches for proofs from $B\cup\Gamma_f$. Each map is a constant-size prefix in front of a program, so it is injective and changes weights by a constant factor.
+
+\subsection{Equivalence, version by version}\label{sec:soi:equiv}
+
+\begin{theorem}[Coin-free equivalence]\status{proved; Craig's construction known}\src{sfi Thm 2.1}\label{thm:soi:coinfree}
+There is $c$, depending only on $V$, the coding of syntax and $B$, such that for every finite data set $D$:
+\begin{enumerate}[label=(\alph*),leftmargin=*]
+\item $\WA\asymp\Wcons\asymp\WAdec$ at $D$, and $2^{-c}\Wcons(D)\le\Wcl(D)\le\Wcons(D)$;
+\item $\KA(D)$, $\KAdec(D)$, $\KFcons(D)$ and $\KFcl(D)$ agree up to $\pm c$, and all are finite iff $D$ is consistent;
+\item for every $\varphi\notin\dom D$ and $o\in\{1,0,\bot\}$, $2^{-c}\WA(D;\varphi\mapsto o)\le\Wcl(D;\varphi\mapsto o)\le2^c\WA(D;\varphi\mapsto o)$, where $\WA(D;\varphi\mapsto o)$ is the weight of the enumerators compatible with $D$ whose theory proves $\varphi$ ($o=1$), proves $\neg\varphi$ ($o=0$) or decides neither ($o=\bot$), and $\Wcl(D;\varphi\mapsto o)$ is the weight of the closed labellers extending $D$ with $f(\varphi)=o$.
+\end{enumerate}
+Hence the semimeasure losses of $\WA$, $\WAdec$, $\Wcons$ and $\Wcl$ agree within $2c$ on every data set.
+\end{theorem}
+
+Proof search maps enumerators to closed labellers and emission maps labellers back; Craig's map (without tape) turns a labeller into a decider of a set with the same consequences, and it halts on every input even when the labeller is partial, because every run it performs is bounded by the exponent of the candidate conjunction. For deciders, (a) is Theorem~6.3 of our earlier report \citep{claude2026axiominduction}. The construction is Craig's; what the theorem adds is that it works inside the universal prior, weight by weight. Apart from that report, we have not found this weight-by-weight equivalence in the literature. Between enumerators and labellers no Craig construction is needed.
+
+\begin{remark}[The schema route]\status{(a) proved; (b) proved, the schema argument fails in one sort; (c) proved, given MRDP; (d) proved, given partial truth predicates}\src{sfi Prop 2.2}\label{rem:soi:schema}
+A different route to \cref{thm:soi:coinfree} turns a labeller $f$ into the axiom schema $A_f:=\{\mathrm{Acc}_f(\gn\varphi)\to\varphi\}\cup\{\mathrm{Rej}_f(\gn\varphi)\to\neg\varphi\}$, with $\Sigma_1$ formulas $\mathrm{Acc}_f$, $\mathrm{Rej}_f$ (written without $<$) expressing that $f$ accepts or rejects. (a) With two sorts, $B=B_A\cup B_L$ with arithmetic axioms $\Q\subseteq B_A\subseteq\Th(\mathbb N)$ on one sort, axioms $B_L$ on the other and no mixed axioms, the schema works: if $B_L\cup\Gamma_f$ is consistent, so is $B\cup A_f$, and the consequences of $A_f$ in the language of the non-arithmetic sort are exactly those of $B_L\cup\Gamma_f$ (Proposition~6.4 of the earlier report). (b) In one sort over $\PA$ it fails: assuming $\Con(\PA)$, the labeller that accepts $\neg\Con(\PA)$ and, on $\Con(\PA)$, searches for a $\PA$-proof of $\bot$ has $\Gamma_f=\{\neg\Con(\PA)\}$ consistent with $\PA$, while $\PA\cup A_f$ is inconsistent (Proposition~6.5 there). (c) A bounded form of the schema, with witnesses bounded by binary numerals, works in one sort over every decidable $B\supseteq\Q$: $\Cn(A^{\mathrm{bd}}_f)=\Cn(\Gamma_f)$, with membership decidable in polynomial time (Proposition~E.17 there); the bound plays the role of Craig's padding. (d) No non-ground template of the earlier report's template class has all its instances in the acceptance part of $A_f$, but one ground reflection sentence reproduces every $\Sigma_n$-sound labeller on $\Sigma_n$ sentences over $\PA$ (Propositions~6.6 and~6.7 there). The conclusion of \cref{thm:soi:coinfree} does not need the schema.
+\end{remark}
+
+\begin{theorem}[One-tape equivalence]\status{proved; computed}\src{sfi Thm 3.1}\label{thm:soi:onetape}
+There is $c$, depending only on $V$, the coding and $B$, such that for every finite $D$, the empty one included:
+\begin{enumerate}[label=(\alph*),leftmargin=*]
+\item $2^{-c}\MA(D)\le\MFcons(D)\le2^c\MA(D)$;
+\item $2^{-c}\MA(D)\le\MAdec(D)\le2^c\MA(D)$;
+\item tape by tape: for every theory machine $G$ and tape $\omega$, if $B\cup A^G_\omega$ is consistent and proves $\psi_D$, then $f^{F_G}_\omega$ is consistent and extends $D$; for every function machine $F$ and tape $\omega$, if $f^F_\omega$ is consistent and extends $D$, then $G_F$ and $C_F$ are compatible with $D$ on $\omega$.
+\end{enumerate}
+\end{theorem}
+
+Part (c) is the four maps applied tape by tape; summing over programs with the mixture decompositions of $\MA$ and $\MFcons$ (\cref{lem:soi:mixture}) gives (a) and (b). The tapes that carry no program emit nothing, so their theory is $B$; they are covered by the deterministic labeller that searches for proofs from $B$. For $\MA\asymp\MFcons$ no Craig construction is needed: a theory machine reads a tape, so it can emit $\Gamma_{f_\omega}$ itself. Only inclusions of events are claimed; the inclusion given by proof search can be strict, since on a tape with an inconsistent theory the labeller may already have committed to a consistent set of labels.
+
+\begin{corollary}[Closed labellers and the trichotomy]\status{proved; computed}\src{sfi Cor 3.2}\label{cor:soi:closed}
+For every finite $D$ and $\varphi\notin\dom D$, the three outcome weights $\MA(D+(\varphi,1))$, $\MA(D+(\varphi,0))$, $\MAthree(D+(\varphi,\iota))$ (the theory proves $\varphi$, proves $\neg\varphi$, decides neither) agree within $2^{\pm c}$ with the measures of the tapes on which $f_\omega$ is closed, consistent, extends $D$ and has $f_\omega(\varphi)=1$, $0$, $\bot$ respectively; and $2^{-c}\MA\le\MFcl\le\MFcons$.
+\end{corollary}
+
+So the trichotomy of \SAIabbr (true, false or independent of the sampled theory) is the three-way split of \SOIabbr over \emph{closed} labellers. Over all consistent labellers it is not (\cref{prop:soi:closure}).
+
+\paragraph{Penalties on the axiom side.} One may also charge a hypothesis for the time it takes to check or to generate its axioms, while deduction stays free. Let $\MAchk{t}$ be the one-tape mixture over random decider programs that answer every query $\chi$ within $O(t(\lvert\chi\rvert))$ steps on every tape, and $\MAgen{t}$ the mixture over random enumerator programs that write each axiom $a_i$ within $O(t(\lvert a_i\rvert))$ steps of the previous one on every tape (the delay form; also the strict and cumulative forms of \cref{def:soi:penalised}); $\WAchk{t}$ and $\WAgen{t}$ are their coin-free forms (Definition~E.10 of the earlier report). These results rest on an assumption about the universal machine $U$ whose programs are the hypotheses, from Appendix~E.6 of the earlier report; it is standard for multitape machines, and we do not prove it for a particular $U$.
+
+\begin{assumption}[(S): efficient self-simulation]\status{assumption}\src{sfi \S7 (the earlier report's (S))}\label{ass:soi:S}
+Penalised hypotheses are programs of a fixed universal prefix machine $U$, read to their end before the input. There are constants $\alpha,a\ge1$ such that the fixed wrappers used in the proofs read, copy and measure a program $q$ within $\alpha(\lvert q\rvert+1)$ steps; parse, compare or copy strings of total length $L$ within $\alpha(L+1)^2$ steps; and run the \emph{dovetailing schedule} of $q$ (at stage $s$, start $q$ on the $s$-th sentence and advance every unfinished run by one simulated step) while keeping a \emph{work counter} $T$ (the simulated steps, plus the lengths of the sentences started, plus $\lvert q\rvert$), within $\alpha(T+1)^a$ steps up to work $T$, writing a string of length $L$ at cost at most $\alpha L$. Put $a^*:=\max(a,3)$.
+\end{assumption}
+
+\begin{assumption}[(S$_{\rm tape}$): self-simulation with a tape]\status{assumption}\src{sfi \S3.3, Assumption (S$_{\rm tape}$)}\label{ass:soi:Stape}
+There are constants $\alpha,a\ge1$ with the properties of \cref{ass:soi:S} when $q$ also reads a one-way random tape: all runs of the dovetailing schedule read the same tape $\omega$ one-way from its start, the work counter also counts tape reads, and up to work $T$ the schedule costs at most $\alpha(T+1)^a$ steps and reads at most $T$ tape bits.
+\end{assumption}
+
+\begin{theorem}[Axiom-side penalties change nothing]\status{(a) proved, under (S$_{\rm tape}$); (b) proved, under (S)}\src{sfi Thm 3.4 (a); Thm 7.1 (b)}\label{thm:soi:penalty}
+Let $t(m)\ge m^{a^*}$ be time-constructible. There is $c$ such that, for every finite $D$:
+(a) under \cref{ass:soi:Stape}, $2^{-c}\MFcons(D)\le\MAchk{t}(D)\le2^c\MA(D)$ and $2^{-c}\MFcons(D)\le\MAgen{t}(D)\le2^c\MA(D)$ (each form), the empty $D$ included, so $\MAchk{t}\asymp\MAgen{t}\asymp\MA\asymp\MFcons$;
+(b) under \cref{ass:soi:S}, $2^{-c}\Wcons(D)\le\WAchk{t}(D)\le\WAdec(D)\le2^c\Wcons(D)$ and $2^{-c}\Wcons(D)\le\WAgen{t}(D)\le2^c\Wcons(D)$.
+\end{theorem}
+
+The lower bounds pad Craig's set by the work counter of the dovetailing schedule, one copy $\psi^{\wedge(T+1)}$ per detection at work $T$, tape by tape; under the assumption, membership then costs time polynomial in $\lvert\chi\rvert$, uniformly in $\omega$ (the padded sets of Lemma~E.12 of the earlier report, with the tape). The upper bounds read a penalised hypothesis as a theory machine with the same theory. The equivalence also holds class by class: for every class $\mathcal C$ of deductively closed theories, the restricted laws $X(\mathcal C;D)$ of $X\in\{\MAchk{t},\MAgen{t}\}$ are within $2^{\pm c}$ of $\UA(\mathcal C;D)$, so the posterior odds of any two classes of theories, genuine axiom systems and disguised labellers alike, move by at most $2^{2c}$ (\cref{prop:soi:classes}; coin-free, \cref{prop:soi:disguised}).
+
+\subsection{Positive literals: \SAIabbr is \SOIabbr}\label{sec:soi:literals}
+
+\begin{theorem}[Transfer principle]\status{proved; computed}\src{sfi Thm 5.1}\label{thm:soi:transfer}
+Let $\mathcal I\subseteq\{0,1\}^*$ be the companion paper's (infinite, decidable) input set and $x\mapsto t_x$ a computable injective map from $\mathcal I$ to closed $\mathcal L$-terms, with decidable range and computable inverse. Let $R$ be a unary relation symbol that does not occur in $B$, and suppose some model of $B$ interprets the terms $t_x$ as pairwise distinct elements. For $D$ with $\dom D\subseteq\{R(t_x):x\in\mathcal I\}$ put $D^{\rm str}:=\{(x,b):(R(t_x),b)\in D\}$. Then there is $c$ with
+\[
+\lvert\KA(D)-\KF(D^{\rm str})\rvert\le c,\qquad\WA(D)\asymp W(D^{\rm str}),\qquad\MA(D)\asymp\MF(D^{\rm str})\ \ (D\ne\emptyset),
+\]
+where $\KF$, $W$, $\MF$ are the companion paper's objects over $\mathcal I$ with labels $\{0,1\}$; the same holds for $\KAdec$, $\WAdec$, $\MAdec$, and for the three outcome weights of a literal query $R(t_y)$ (proves, refutes, decides neither; label $1$, $0$, undefined at $y$).
+\end{theorem}
+
+By \cref{thm:soi:coinfree,thm:soi:onetape} it suffices to compare consistent \SOIabbr on sentences with plain \SOIabbr on $\mathcal I$. A labeller of strings, read on the literals, is consistent: in a model of $B$ with distinct $t_x$, the symbol $R$, which $B$ does not mention, can be interpreted as the set of $t_x$ labelled $1$. Without distinct terms the transfer fails: if $B\vdash t_x=t_y$, the data $(R(t_x),1),(R(t_y),0)$ are inconsistent for \SAIabbr, while $D^{\rm str}$ is fine for \SOIabbr.
+
+\begin{corollary}[What transfers]\status{proved, by \cref{thm:soi:transfer} and the cited results of the companion paper}\src{sfi Cor 5.2, \S5.5}\label{cor:soi:transfer}
+In the setting of \cref{thm:soi:transfer}, every result of the companion paper about binary labels that holds up to additive constants in $K$, $-\log W$ and $-\log\MF$ holds for \SAIabbr on literal data, with the same quantities. In particular:
+\begin{enumerate}[label=(\alph*),leftmargin=*]
+\item \emph{No coding theorem for axiom systems}: for every $d\ge2$ there are distinct $x_1,x_2\in\{0,1\}^d$ such that $D:=\{(R(t_{x_1}),0),(R(t_{x_2}),1)\}$ has $\KA(D)\ge\log d-2-c$, $-\log\WA(D)\le2+K(\lceil\log(d+1)\rceil)+c$ and $-\log\MA(D)\le2+c$; and over two-point literal data $\log d-c\le\max_D(\KA(D)-\LA(D))\le\log d+O(\log\log d)$ \citep[Theorem 4.9, Corollary 4.10]{claudeSFI2026fundamentals}. (\Cref{thm:basic:nocoding} proves the first three bounds directly.)
+\item \emph{Random theories beat deterministic ones}: $\sup_D\MA(D)/\WA(D)=\infty$ over two-point literal data, and $\WA(D)\ge2^{-\lvert D\rvert-\Kpad(2^{d+1})-c}$ for every literal data set over words of length at most $d$ \citep[Propositions 4.5(a), 4.6]{claudeSFI2026fundamentals}.
+\item \emph{Shared randomness is not a mixture of private coins}, read as a comparison of $\MA$ on literal data $D$ with the companion paper's product mixture $\Mprod$ on $D^{\rm str}$: $\MA/\Mprod$ is unbounded \citep[Proposition 4.7]{claudeSFI2026fundamentals}. No product law internal to \SAIabbr is defined here.
+\item \emph{Solomonoff induction}: with unary numerals $t_i:=S^i0$ and $B\in\{\emptyset,\Q\}$, $\MA(\{(R(S^i0),x_{i+1}):i<n\})$ is within $2^{\pm c}$ of the universal semimeasure of $x\in\{0,1\}^n$ \citep[Proposition 3.24]{claudeSFI2026fundamentals}.
+\end{enumerate}
+\end{corollary}
+
+What does not transfer: cumulative statements in the normalised convention (each normalised conditional transfers only within $2^{\pm2c}$), computability statements ($\MA$ is not lower semicomputable, \cref{thm:basic:inc}, although it is within a constant factor of the lsc function $\MF$ on literal data), statements about private randomness other than (c), and statements about weak semimeasures. So the content of \SAIabbr beyond \SOIabbr lies in logically structured data: what \SAIabbr adds appears only where sentences entail, exclude or leave open one another.
+
+\begin{remark}[An encoding effect]\status{proved; computed}\src{sfi Rem 5.4}\label{rem:soi:encoding}
+Let $\lambda_i$ be $R(t_{w_i})$ or $\neg R(t_{w_i})$ by independent fair coins, for distinct words $w_i$, and let the data be $(\lambda_i,1)$, $i\le n$. Plain coin-free \SOIabbr on sentences, $\Wall$, has bounded loss, through the labeller ``always $1$'', while \SAIabbr and consistent \SOIabbr, coin-free or one-tape, lose at least $n$ bits in expectation (Proposition~E.1 of the earlier report). This is an encoding effect. The map $(\neg R(t_w),1)\mapsto(R(t_w),0)$ turns these data into fair-coin labels on positive literals and leaves $\MA$ and $\WA$ unchanged, since they depend on $D$ only through $\Cn(D^\pm)$ (\cref{prop:basic:structure}); there \SAIabbr is \SOIabbr on strings, which loses $n-c$ bits in expectation on fair coins. $\Wall$ gains by treating $\neg R(t_w)$ as an input unrelated to $R(t_w)$; its labeller ``always $1$'' is inconsistent, and consistency is what ties the two inputs together.
+\end{remark}
+
+\subsection{What breaks}\label{sec:soi:breaks}
+
+\begin{proposition}[Logical closure]\status{proved; (a), (b), (d) computed}\src{sfi Prop 6.1}\label{prop:soi:closure}
+Let $D$ be consistent and $\chi\notin\dom D$.
+\begin{enumerate}[label=(\alph*),leftmargin=*]
+\item If $B\cup D^\pm\vdash\chi$, every hypothesis of \SAIabbr compatible with $D$ proves $\chi$: $\MA(1\mid D,\chi)=1$, $\MA(0\mid D,\chi)=0$ and $\Indep_D(\chi)=0$; the same for $\WA$.
+\item If $B\cup D^\pm\vdash\chi$, then $\Wcons(0\mid D,\chi)=0$ and $\Wcons(1\mid D,\chi)\ge2^{-2c}$; the same for $\MFcons$.
+\item For every $\chi\notin\dom D$, entailed or not, the consistent labellers extending $D$ that are undefined at $\chi$ have weight at least $2^{-K(\chi)-c}\,\Wcons(D)$, and the tapes on which $f_\omega$ is consistent, extends $D$ and is undefined at $\chi$ have measure at least $2^{-K(\chi)-c}\,\MFcons(D)$.
+\item Over closed labellers, the three predictive probabilities agree with those of \SAIabbr within $2^{\pm2c}$.
+\end{enumerate}
+\end{proposition}
+
+So, in the semimeasure convention, consistent \SOIabbr never becomes certain of a logical consequence: for a fixed simple $\chi$ its undefined mass stays above $2^{-K(\chi)-c}$ whatever the data. In the normalised convention its prediction on an entailed $\chi$ is $1$, by (b). For (c), restrict any consistent labeller to be undefined at $\chi$: this keeps it consistent and extending $D$, at the cost of a description of $\chi$. The equivalences of \cref{sec:soi:equiv} control the losses (an entailed datum costs consistent \SOIabbr at most $2c$ bits and \SAIabbr nothing), not the size of the undefined mass, which in \SOIabbr mixes logical independence with laziness.
+
+\paragraph{An observed ``independent'' label.} With three-valued data the label $\iota$ is observed. A partial labeller $f$ with values in $Y_3$ is \emph{consistent} if $B\cup\Gamma_f$ is consistent ($\Gamma_f$ formed from the labels $1$, $0$) and decides none of the sentences $f$ labels $\iota$. $\WAthree(D)$ is the weight of the enumerators whose theory is consistent, proves the $1/0$ data of $D$ and decides no $\iota$-labelled sentence; $\Wthreecons(D)$ is the weight of the consistent three-valued labellers extending $D$; $\MAthree$ is as in \cref{def:setting:MA}, and $\MFthreecons(D):=\Unif\{\omega:f_\omega\supseteq D,\ f_\omega\text{ consistent}\}$ for the universal function machine with labels in $Y_3$. $\IndB$ is the set of sentences that $B$ decides neither way.
+
+\begin{proposition}[An observed independent label breaks the equivalence]\status{proved, given the productivity lemma (classical) and, one-tape, the Lebesgue density theorem; computed}\src{sfi Props 6.3, 6.5}\label{prop:soi:independent}
+Let $\mathcal L\supseteq\Lar$, and let $B$ be decidable and consistent with $\Q\subseteq\Cn(B)$.
+\begin{enumerate}[label=(\alph*),leftmargin=*]
+\item $2^{-c}\Wthreecons(D)\le\WAthree(D)$ for every three-valued $D$, and $\MFthreecons(D)\le2^c\MAthree(D)$ for every three-valued $D\ne\emptyset$.
+\item For every $n$ there is $\sigma_n\in\IndB$ with $\Wthreecons(\{(\sigma_n,\iota)\})\le\Omtail{n+1}$ while $\WAthree(\{(\sigma_n,\iota)\})\ge2^{-c}$; and there is $\sigma'_n\in\IndB$ with $\MFthreecons(\{(\sigma'_n,\iota)\})\le2^{1-n}+\Omtail{n+1}$ while $\MAthree(\{(\sigma'_n,\iota)\})\ge2^{-c}$.
+\item For every $\sigma\in\IndB$, $\WAthree(\{(\sigma,\iota)\})\le2^{K(\sigma)+c}\,\Wthreecons(\{(\sigma,\iota)\})$ and $\MFthreecons(\{(\sigma,\iota)\})\ge2^{-K(\sigma)-c}$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proposition}[Large gaps have no r.e.\ witnesses]\status{proved}\src{sfi Prop 6.4}\label{prop:soi:noRE}
+In the setting of \cref{prop:soi:independent}: (a) for every r.e.\ $S\subseteq\IndB$ and every $\sigma\in S$, $\Wthreecons(\{(\sigma,\iota)\})\ge2^{-K(S)-c}$ and $\MFthreecons(\{(\sigma,\iota)\})\ge2^{-K(S)-c}$, with $K(S)$ the complexity of an index of $S$; so no computable sequence $\sigma_n\in\IndB$ has $\Wthreecons(\{(\sigma_n,\iota)\})\to0$. (b) If $n(\sigma)$ is the length of a shortest program of a consistent three-valued labeller that labels $\sigma$ with $\iota$, then $2^{-n(\sigma)}\le\Wthreecons(\{(\sigma,\iota)\})\le\Omtail{n(\sigma)}$.
+\end{proposition}
+
+The mechanism: that a theory decides neither $\sigma$ nor $\neg\sigma$ is a $\Pi_1$ property, which a theory has without committing to anything, while a labeller must output $\iota$ after finitely many steps. The sentences that the short consistent labellers label $\iota$ form an r.e.\ subset of $\IndB$, and $\IndB$ is productive, by a classical effective-inseparability argument (\cref{lem:soi:productive}; cf.\ \citealp{smullyan1961theory}), so some independent sentence lies outside that subset. For one tape, the set of sentences that a random machine labels $\iota$ on its consistent tapes need not be r.e.; thresholding the $\iota$-mass at a Lebesgue density point (\cref{lem:logic:density}), in the manner of the majority vote of \citet{deleeuw1956computability}, restores an r.e.\ subset of $\IndB$ that carries almost all of it. An r.e.\ family of independent sentences, in contrast, is labelled $\iota$ by one consistent labeller, which gives \cref{prop:soi:noRE}.
+
+Consistency constraints of unbounded arity separate the versions of consistent \SOIabbr from one another: in the setting of \cref{thm:logic:lottery}, on its lottery stream, one-tape consistent \SOIabbr has bounded loss, while coin-free consistent \SOIabbr and $\WA$ do not, and plain $\Wall$ has bounded loss (\cref{cor:logic:versions}). Finally, none of the versions is lower semicomputable when consistency of finite data sets is not r.e.; $\WA$, $\Wcons$, $\MA$ and $\MFcons$ are computable relative to $\emptyset'$, and the closed and decider versions relative to $\emptyset''$ (\cref{prop:soi:computability}).
+
+\subsection{Time bounds with free deduction}\label{sec:soi:time}
+
+The time penalties of \cref{thm:soi:penalty} fall on the axioms. On the labeller side, a labeller is run for a bounded time. For a time-constructible $\tau$ and a string $f$, let $f^\tau(\varphi):=U_0(f,\varphi)$ if a fixed plain universal machine $U_0$ halts within $\tau(\lvert\varphi\rvert)$ steps with a label, and let $f^\tau$ abstain otherwise; the weight of $f$ is $w(f):=2^{-\lvert E(f)\rvert}$, with $E$ the Elias-$\delta$ code of $\lvert f\rvert+1$ followed by $f$, so that $\sum_fw(f)=1$ with computable tails. \emph{Clocked consistent} \SOIabbr is $W^{\mathrm{cons},\tau}(D):=\sum_fw(f)\ind[f^\tau\text{ consistent and}\supseteq D]$; $W^{\mathrm{all},\tau}$ drops consistency; the one-tape forms $\MF^{\mathrm{cons},\tau}$, $\MF^{\mathrm{all},\tau}$ run $f$ with a tape-reading instruction (\cref{thm:soi:onetapetime}). Let $c_\bot:=-\log w(f_\bot)$ for the always-abstaining string $f_\bot$. A \emph{computable predictor} $P$ maps a data set $D$ and a sentence $\varphi\notin\dom D$ to a pair $(q_0,q_1)$ with $q_0+q_1\le1$, computable to any precision; its loss on a reveal sequence is $\ell_P(D_n):=\sum_{j\le n}-\log q_{b_j}(D_{j-1},\varphi_j)$.
+
+\begin{corollary}[A one-sided equivalence]\status{proved; for the penalised versions under (S)}\src{sfi Cor 7.3$'$; Thm 7.8(a)}\label{cor:soi:onesided}
+For every time-constructible $\tau$ there is $c_\tau$ such that, on every data set $D$, the losses of $\WA$ and $\WAdec$ exceed that of $W^{\mathrm{cons},\tau}$ by at most $c_\tau$, and the loss of $\MA$ exceeds that of $\MF^{\mathrm{cons},\tau}$ by at most $c_\tau$. Under \cref{ass:soi:S} the same holds for $\WAchk{t}$ and $\WAgen{t}$, $t(m)\ge m^{a^*}$ time-constructible.
+\end{corollary}
+
+A clocked consistent labeller is, unclocked, a consistent labeller that computes the same partial map, so a domination lemma (\cref{thm:soi:domination}) bounds the regret by the cost of the clock wrapper and $c_\bot$. The reverse fails badly, on sentences that encode a diagonal argument. Let $\mathrm{Out}(e,x,y)$ be a $\Sigma_1$ formula without $<$ that holds in $\mathbb N$ iff program $e$ halts on input $x$ with output $y$ (by the MRDP theorem, \citealp{matiyasevich1970enumerable,davis1973hilbert}; Lemma~E.14 of the earlier report), and let $\mathrm{DET}$ be the true $\Pi_1$ sentence saying that no program has two outputs on one input.
+
+\begin{theorem}[Diagonal separation]\status{proved, given Kleene's recursion theorem and the MRDP theorem}\src{sfi Thm 7.4}\label{thm:soi:diagonal}
+Let $\mathcal L\supseteq\Lar$ and let $B$ be decidable and true in an expansion of $\mathbb N$. For every computable predictor $P$ there is a program $e$ such that, with $s_n:=\mathrm{Out}(\num e,\num n,S0)$ labelled by truth: $e$ is total with values in $\{0,1\}$; $\Q\cup\{\mathrm{DET}\}$ decides every $s_n$; $\ell_P(D_n)\ge n-\sum_j\log(1+2^{-j-2})\ge n-1/(4\ln2)\ge n-0.361$; and $\WA$, $\WAchk{t}$, $\WAgen{t}$ lose at most $\log(1/\omega_0)$, where $\omega_0>0$ is the least weight of a decider or enumerator of $\Q\cup\{\mathrm{DET}\}$ in these mixtures, independent of $P$. Moreover $W^{\mathrm{all},\tau}$ loses at least $n-1.37$ and $W^{\mathrm{cons},\tau}$ at least $n-1.37-c_\bot$ on such sequences.
+\end{theorem}
+
+The program $e$ is a fixed point that runs $P$ on its own sentences and outputs the less probable label (Theorem~6.15 of the earlier report). With $P$ replaced by a computable predictor built from $\MF^{\mathrm{all},\tau}$, the same holds one-tape: $\MF^{\mathrm{all},\tau}$ and $\MF^{\mathrm{cons},\tau}$ lose at least $n-1.37$ and $n-1.37-c_\bot$, while $\MA$ loses at most $\log(1/\omega_0)$ (\cref{thm:soi:onetapetime}).
+
+\begin{proposition}[Incomparability with time-bounded predictors that may be inconsistent]\status{proved; the strengthening to every time-bounded predictor refuted}\src{sfi Prop 7.5}\label{prop:soi:incomparable}
+On the data of \cref{rem:soi:encoding}, $W^{\mathrm{all},\tau}$ has bounded loss for every $\tau$ that covers the constant running time of ``always $1$'', while every consistent inducer (\SAIabbr and consistent \SOIabbr, coin-free or one-tape) loses at least $n$ bits in expectation; on the sequences of \cref{thm:soi:diagonal}, $W^{\mathrm{all},\tau}$ loses at least $n-1.37$ while \SAIabbr loses $O(1)$. So $W^{\mathrm{all},\tau}$ and \SAIabbr are incomparable.
+\end{proposition}
+
+The natural strengthening, that \SAIabbr is strictly stronger than every time-bounded predictor, therefore fails; what holds is strict superiority over clocked \emph{consistent} \SOIabbr (\cref{cor:soi:onesided,thm:soi:diagonal}). And even this gain is not a gain of axioms over programs:
+
+\begin{proposition}[The separation comes from free deduction]\status{proved}\src{sfi Prop 7.6 (a), (b)}\label{prop:soi:freededuction}
+(a) Let $u$ be the labeller that, on a sentence $\mathrm{Out}(\num e,\num n,S0)$, runs $e$ on $n$ and outputs $1$ if the result is $1$ and $0$ if it is anything else (diverging if $e$ diverges), and is undefined on all other sentences. Then $\Gamma_u\subseteq\Th(\mathbb N)$, so $u$ is consistent with every $B$ true in an expansion of $\mathbb N$, and $\lvert u\rvert$ is a constant.
+(b) On every sequence of \cref{thm:soi:diagonal}, \emph{unpenalised} $\Wcons$ (and $\Wall$) has loss at most $\lvert u\rvert+c$.
+\end{proposition}
+
+\paragraph{What the time bounds show.}\label{rem:soi:timereading}\status{assessment}\src{sfi Rem 7.9} Penalising the axiom side, by the time to check or to generate axioms, does not change which theories win: the equivalence survives, also class by class (\cref{thm:soi:penalty}). Penalising the labeller side makes the relation one-sided (\cref{cor:soi:onesided,thm:soi:diagonal}), and the gap is the free deduction of \SAIabbr, which unpenalised consistent \SOIabbr also has, through one constant-size evaluator (\cref{prop:soi:freededuction}). So the time-bounded separations do not show that axioms are better hypotheses than programs; they show that free deduction is free computation. (Under a time bound, the sequence that defeats a predictor is itself computable within a slightly larger bound, a time-hierarchy effect; we give only a proof sketch, \cref{rem:soi:freededuction}.)
+
+\subsection{Charged deduction}\label{sec:soi:charged}
+
+The natural repair is to charge deduction. We use the setting of Definition~E.18 of the earlier report: $\mathcal L$ is finite, $B$ is decidable in polynomial time, derivations are in the Hilbert calculus $\mathsf K$ of the earlier report, with sizes counting symbols, and a hypothesis is a program $p$ that decides an axiom set $A_p$ in time $O(t)$. Each datum $\varphi$ must have a derivation of $\varphi^b$ from $B\cup A_p$ in which: the size is at most $s(\lvert\varphi\rvert)$ (written $W_A[t,s]$); every axiom instance, logical ones included, has at most $h(\lvert\varphi\rvert)$ symbols (reading (a1), $W_A^{a1}[t,h]$); every nonlogical instance does (reading (a2), $W_A^{a2}[t,h]$); the \emph{material}, the total size of the distinct instances used, is at most $g(\lvert\varphi\rvert)$ (reading (b), $W_A^{b}[t,g]$); or the nonlogical material is (reading (b2), $W_A^{b2}[t,g]$). \emph{Certificate} \SOIabbr, $\Wcert[t',s']$, weighs the consistent labellers $f_{\mathcal V}$ defined by verifiers $\mathcal V$ that run in time $O(t')$: $f_{\mathcal V}(\varphi)$ is $1$ ($0$) if some certificate of length at most $s'(\lvert\varphi\rvert)$ makes $\mathcal V$ accept (reject). All charged results assume the renaming condition of the earlier report; without it the index of a single parameter, which costs one symbol, could carry a certificate of any length (\cref{rem:soi:F1}).
+
+\begin{assumption}[(F1): renaming closure]\status{assumption}\src{sfi \S8 (the earlier report's (F1))}\label{ass:soi:F1}
+For every hypothesis $p$ of a charged reading, $B\cup A_p$ is closed under permutations of the parameters.
+\end{assumption}
+
+\begin{theorem}[Charged deduction is certificate \SOIabbr]\status{proved, under (F1); the correspondence of proof systems with NP known}\src{sfi Thm 8.1}\label{thm:soi:sandwich}
+Under \cref{ass:soi:F1}:
+(a) in a normal derivation of $\varphi$ every line sits at its own node of an axiom instance used or of $\varphi$, up to abstracting parameters; so its size is at most $(M+\lvert\varphi\rvert)(M+\lvert\varphi\rvert+1)/2$, with $M$ its material, and the factor $\frac12$ is attained;
+(b) with $G(m):=(g+m+1)(g+m+2)/2$, $t^+(m):=m^{k_0}(t(m)+1)$ and $t'^\#(m):=m^{k_0}+t'(m)$, for constants $k_0$, $\beta$ and $c$: $W_A[t,g]\le W_A^b[t,g]\le W_A[t,G]$ hypothesis by hypothesis; $W_A^b[t,g]\le2^c\,\Wcert[t^+,\beta G\log(G+2)]$; and $\Wcert[t',s']\le2^c$ times each of $W_A^b[t'^\#,2s'+m+31]$, $W_A^{a1}[t'^\#,s'+m+16]$ and $W_A[t'^\#,2s'+2m+31]$.
+\end{theorem}
+
+This is Theorem~6.16 of the earlier report, with the constants re-checked; its classical core is the correspondence of propositional proof systems with $\cplx{NP}$ \citep{cook1979relative}. A certificate is a derivation; conversely, a certificate $\gamma$ becomes the axiom $\theta_\gamma\to\varphi^b$, where $\theta_\gamma$ is a tautology of size $\lvert\gamma\rvert+14$ that encodes $\gamma$. On literal data (\cref{def:setting:fresh}) this fixes the fit classes.
+
+\begin{corollary}[Fit classes]\status{proved, under (F1); conditional parts as stated; hierarchy theorems and APSPACE = EXPTIME known}\src{sfi Cor 8.2}\label{cor:soi:fit}
+Under \cref{ass:soi:F1}, on literal sequences $D^X$, at polynomial budgets whose degrees are charged in the prior, and with standard simulation overheads:
+(i) reading (b) fits exactly the $X\in\cplx{NP}\cap\cplx{coNP}$; it beats polynomial-time consistent \SOIabbr, $W^{\mathrm{cons},\mathrm{poly}}$, on some sequence if $\cplx{NP}\cap\cplx{coNP}\ne\cplx P$, and fits the same sequences if $\cplx P=\cplx{NP}$; with degrees uncharged, $W^{\mathrm{cons},\mathrm{poly}}$ fails to dominate it, unconditionally; and against $W^{\mathrm{cons},\tau}$ it wins at a budget a hierarchy gap above $\tau$ (this clause under \cref{ass:soi:S});
+(ii) reading (a1) fits exactly the $X\in\cplx{EXPTIME}$; at any computable budgets some decidable $X$ defeats it; and every predictor computable in time polynomial in the number of data loses at least $n-0.361$ on a sequence on which (a1) at a linear budget loses $O(1)$;
+(iii) readings (a2) and (b2) fit every decidable $X$, by a finite set of universally closed Horn sentences.
+\end{corollary}
+
+These are Corollary~6.17 of the earlier report; (ii) uses $\cplx{APSPACE}=\cplx{EXPTIME}$ \citep{chandra1981alternation}, and the comparisons use the time hierarchy theorems (standard; cf.\ \citealp{hartmanis1965computational}, and \citealp{seiferas1978separating} for nondeterministic time).
+
+\paragraph{What is charged.}\label{rem:soi:whatcharged}\status{assessment}\src{sfi Rem 8.5} Every reading bounds the size of a derivation that \emph{exists}; none charges \emph{finding} it. Derivation-charged \SAIabbr is certificate \SOIabbr, a notion of the type $\cplx{NP}\cap\cplx{coNP}$, not deterministic time-bounded \SOIabbr. So charged deduction cannot express the point that a written theory is far from sufficient for a simple reasoner; a deterministic bounded reasoner can (\cref{sec:shape}, in particular \cref{thm:shape:knowhow}).
+
+\subsection{A natural separation: Presburger arithmetic}\label{sec:soi:presburger}
+
+The diagonal sequences of \cref{thm:soi:diagonal} are built against the predictor. A natural theory separates as well. Let $\mathcal L_{\rm Pr}:=\{0,1,+\}$ (with equality), $B=\emptyset$, and let $D^{\rm Pres}$ list all $\mathcal L_{\rm Pr}$-sentences in length-lexicographic order, labelled by truth in $(\mathbb N,0,1,+)$; $\mathrm{PrA}:=\Th(\mathbb N,0,1,+)$. The length of a sentence is its symbol count, and clocks and budgets are functions of it. Presburger's axioms (successor, addition and the induction schema) form a decidable, consistent and complete axiomatisation of $\mathrm{PrA}$ \citep{presburger1929vollstandigkeit}, with polynomial-time membership. \citet{fischer1974super} show that some constant $c_{\rm FR}>0$ has the following property: every decision procedure for $\mathrm{PrA}$, deterministic or nondeterministic, takes more than $2^{2^{c_{\rm FR}n}}$ steps on some sentence of length $n$, for every large $n$. Under a proviso on their measure of length (\cref{rem:soi:lengths}), this gives a constant $c>0$ such that, for all large $m$, every such procedure takes more than $2^{2^{cm}}$ steps on some sentence with exactly $m$ symbols; $c$ denotes this constant below.
+
+\begin{proposition}[Presburger arithmetic separates \SAIabbr from clocked \SOIabbr]\status{proved, given Presburger's theorem, the Fischer--Rabin bound and, for (c), the Lebesgue density theorem}\src{sfi Props 9.1, 9.2}\label{prop:soi:presburger}
+(a) $\WA$, $\WAdec$ and $\MA$, and the penalised $\WAchk{t}$, $\WAgen{t}$ and $\MAchk{t}$ for a large enough polynomial $t$, have bounded loss on $D^{\rm Pres}$.
+(b) If $\tau$ is time-constructible and $\tau(m)\le2^{2^{c'm}}$ for large $m$, with $c'<c$, the losses of $W^{\mathrm{cons},\tau}$ and $W^{\mathrm{all},\tau}$ on $D^{\rm Pres}_n$ tend to infinity.
+(c) If $\tau(m)\le2^{c'm}$ for large $m$, with $c'<c$, the losses of $\MF^{\mathrm{cons},\tau}$ and $\MF^{\mathrm{all},\tau}$ on $D^{\rm Pres}_n$ tend to infinity.
+\end{proposition}
+
+The decider of Presburger's axioms is one deterministic hypothesis compatible with every prefix. Conversely, bounded loss of a clocked mixture gives one clocked labeller that labels every sentence correctly; that is a decision procedure for $\mathrm{PrA}$ below the Fischer--Rabin bound, deterministically in (b), and in (c) by a majority vote over the tape completions at a density point, which costs a factor $2^{\tau(m)}$. With deduction charged, \SAIabbr meets the same bound.
+
+\begin{proposition}[Charged deduction on Presburger data]\status{proved, given the Fischer--Rabin bound, Presburger's theorem, Lemma E.28, Proposition E.23(a) and the proof of Theorem 6.9 of the earlier report}\src{sfi Props 9.4, 9.4$'$}\label{prop:soi:presburgerCharged}
+Let $p$ be a hypothesis of a charged reading over $\mathcal L_{\rm Pr}$ with $B=\emptyset$, deciding $A_p$ in polynomial time and satisfying \cref{ass:soi:F1}, and compatible with every prefix of $D^{\rm Pres}$. Let $c''<c$.
+(a) Size reading, budget $s$: $s(m)>2^{2^{c''m}}$ for infinitely many $m$, and for all large $m$ if $s$ is time-constructible.
+(b) Material reading (b), budget $g$: the same with $g$ in place of $s$.
+(c) Reading (a1), with $h$ nondecreasing and time-constructible: $h(m)>2^{c''m}$ for all large $m$.
+\end{proposition}
+
+Since compatibility is inherited by prefixes, a mixture of such hypotheses has bounded loss on $D^{\rm Pres}$ only if one of them is compatible with every prefix. For (a) and (b), guessing a derivation within the budget and checking it is a nondeterministic decision procedure; for (c), searching all derivations whose instances are within the budget is a deterministic one, in time $2^{O(h\log h)}$. Whether (a1) needs doubly exponential instance budgets, and what (a2) and (b2) need, is open (\cref{q:soi:presburger}). Under two further assumptions, a $\Sigma_2$-time lower bound for $\mathrm{PrA}$ and a time-bounded form of $\cplx{BPP}\subseteq\Sigma_2^p$, one-tape clocked \SOIabbr is also unbounded for doubly exponential clocks (\cref{prop:soi:presburgerCond}).
+
+\paragraph{Each charged reading matches one version of \SOIabbr.}\label{rem:soi:presburgerSummary}\status{assessment (summary of proved results; the (a1) correspondence is a reading for sentence data)}\src{sfi Rem 9.5} With free deduction \SAIabbr has bounded loss on $D^{\rm Pres}$, while clocked \SOIabbr below the stated clocks has not. Once deduction is charged, the budget \SAIabbr needs is that of the matching version of \SOIabbr: under the size and material readings \SAIabbr is certificate \SOIabbr (\cref{thm:soi:sandwich}), and the nondeterministic bound of Fischer and Rabin forces doubly exponential budgets on both; under (a1) \SAIabbr behaves like deterministic \SOIabbr with an exponential clock (Proposition~E.23 and Corollary~6.17(b) of the earlier report; the converse direction is proved there for literal data only, so for sentence data this correspondence is a reading), and the deterministic bound forces exponential instance sizes, which the exponential clock turns into doubly exponential time. So on a natural theory, as on the diagonal sequences, the separation from clocked \SOIabbr is the free deduction, for every reading in which the derivation is charged and the conclusion is proved; for (a2) and (b2) the question is open.
+
+\subsection{Summary}\label{sec:soi:summary}
+
+\begin{table}[t]
+\centering\footnotesize\crefabbrev
+\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.27\textwidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{0.17\textwidth}>{\raggedright\arraybackslash}p{0.13\textwidth}@{}}
+\toprule
+pair & relation & hypotheses & where\\
+\midrule
+\multicolumn{4}{@{}l}{\emph{Equivalences}}\\
+$\WA,\WAdec$ -- $\Wcons,\Wcl$; $\KA,\KAdec$ -- $\KFcons,\KFcl$ & $\asymp$, also the three outcome weights against $\Wcl$; $\pm c$, finite iff $D$ consistent & -- & \cref{thm:soi:coinfree}\\
+$\MA,\MAdec$ -- $\MFcons,\MFcl$ & $\asymp$ on every finite $D$, tape by tape; three outcome weights against $\MFcl$ & -- & \cref{thm:soi:onetape,cor:soi:closed}\\
+axiom-side penalties $\MAchk{t},\MAgen{t}$; $\WAchk{t},\WAgen{t}$; $\WAKt{t}$ & $\asymp$ unpenalised, also class by class; a Levin penalty costs a labeller $\log(\lvert f\rvert+1)+O(1)$ bits & $t\ge m^{a^*}$; (S$_{\rm tape}$), (S) & \cref{thm:soi:penalty,prop:soi:classes,prop:soi:kt}\\
+any version on positive literals -- the same version on strings & $\asymp$, $\pm c$: \SAIabbr \emph{is} \SOIabbr there & fresh predicate, distinct terms & \cref{thm:soi:transfer,cor:soi:transfer}\\
+all axioms -- observational axioms (free deduction) & $\asymp$ in every version, class by class & -- & \cref{thm:terms:horn}\\
+r.e.\ axioms in $\mathcal L$ -- finite theories in a three-sorted $\mathcal L^+$ & $\Kfin^{\mathcal L^+}=\KA^{\mathcal L}\pm c$, $\Wfin^{\mathcal L^+}\asymp\WA^{\mathcal L}$; not one-tape & $\mathcal L$ finite & \cref{thm:terms:KCV}\\
+derivation-charged $W_A[t,s]$, $W_A^b[t,g]$ -- $\Wcert$ & $\asymp$ up to $O(1)$ bits and polynomial budget changes & (F1) & \cref{thm:soi:sandwich}\\
+finite axiom sets with derivation budgets -- verifier circuits & polynomially related; Bayes over verifier circuits as in the companion paper & literal data & \cref{thm:soi:circuit,cor:soi:circuitBayes}\\
+\midrule
+\multicolumn{4}{@{}l}{\emph{Gaps between versions}}\\
+$2^{-\KA}$ -- $\WA$ -- $\MA$ & no coding theorem: $\KA\ge\log d-2$, $-\log\MA\le2+c$ on two literals & fresh atoms & \cref{thm:basic:nocoding,cor:soi:transfer}\\
+$\WA$ -- $\MA$, literal data, words of length $\le d$ & gap $\le\delta_D+\Kpad(2^{d+1})+c$, $\delta_D$ the randomness deficiency of the labels & fresh atoms & \cref{prop:soi:price}\\
+$\Wcons$ -- $\MFcons$ (and $\WA$ -- $\MA$) on the lottery & $\MFcons$ bounded, $\Wcons$ unbounded; $\Wall$ bounded & lottery setting & \cref{cor:logic:versions}\\
+$\MA$ -- $\WA$ on $\Pi_1$ data & a coding theorem holds & $B$ true, $\supseteq\Q$ & \cref{cor:logic:coding}\\
+$\MFcons$ -- machine-wise consistent $\MFmw$ & $\asymp$ if consistency of finite sets is decidable; in general open & -- & \cref{prop:soi:pathwise,q:soi:pathwise}\\
+computability & none lsc if finite consistency is not r.e.; $\emptyset'$ resp.\ $\emptyset''$ & -- & \cref{prop:soi:computability}\\
+\midrule
+\multicolumn{4}{@{}l}{\emph{Separations}}\\
+\SAIabbr -- $\Wall$, coin literals labelled $1$ & $\Wall$ wins by $n$ bits: an encoding effect & -- & \cref{rem:soi:encoding}\\
+entailed query & \SAIabbr certain; consistent \SOIabbr keeps undefined mass $\ge2^{-K(\chi)-c}$ & semimeasure convention & \cref{prop:soi:closure}\\
+observed independence & one-sided; unbounded gap on one datum; bounded on r.e.\ families & $\mathcal L\supseteq\Lar$, $\Q\subseteq\Cn(B)$ & \cref{prop:soi:independent,prop:soi:noRE}\\
+\SAIabbr -- clocked $W^{\mathrm{cons},\tau}$, $\MF^{\mathrm{cons},\tau}$ & one-sided: regret $\le c_\tau$; reverse $\ge n-1.37-c_\bot$ & $\mathcal L\supseteq\Lar$, $B$ true & \cref{cor:soi:onesided,thm:soi:diagonal}\\
+\SAIabbr -- $W^{\mathrm{all},\tau}$ & incomparable & as above & \cref{prop:soi:incomparable}\\
+unpenalised $\Wcons$, $\MFcons$ on the diagonal sequences & loss $\le\lvert u\rvert+c$: the gap is free deduction & as above & \cref{prop:soi:freededuction}\\
+\SAIabbr -- clocked \SOIabbr on Presburger data & bounded against unbounded ($\tau\le2^{2^{c'm}}$ coin-free, $\tau\le2^{c'm}$ one-tape; doubly exponential one-tape conditional) & $B=\emptyset$; symbol counts & \cref{prop:soi:presburger,prop:soi:presburgerCond}\\
+charged \SAIabbr on Presburger data & size, material: doubly exponential; (a1): exponential, doubly exponential open; (a2), (b2) open & (F1) & \cref{prop:soi:presburgerCharged,q:soi:presburger}\\
+\midrule
+\multicolumn{4}{@{}l}{\emph{Fit classes under charged deduction (literal data, polynomial budgets)}}\\
+readings (b); (a1); (a2), (b2) & $\cplx{NP}\cap\cplx{coNP}$; $\cplx{EXPTIME}$; every decidable set & (F1) & \cref{cor:soi:fit}\\
+run-padded (Craig-type) observational axiomatisations; all observational hypotheses & exactly $\cplx P$, in every reading; the same classes as all hypotheses & (F1) & \cref{cor:terms:table,prop:terms:a1fit,thm:terms:binary}\\
+finite theories with unary theoretical predicates and constants & exactly the regular sets, in every reading & compatible with the named structure & \cref{thm:terms:regular}\\
+finite theories with one binary theoretical relation & every decidable set ((a2), (b2)); $\cplx{NP}\cap\cplx{coNP}$ ((b)); $\cplx{EXPTIME}$ ((a1)) & about the named objects; (F1) & \cref{thm:terms:binary}\\
+\bottomrule
+\end{tabularx}
+\caption{\SAIabbr and \SOIabbr: equivalences, gaps between versions, separations and fit classes. Semimeasure convention unless stated; $\asymp$ is equality within $2^{\pm c}$ on every finite data set; $B$ is decidable and consistent throughout. ``Open'' and ``conditional'' mark the only entries that are not theorems.}\label{tab:soi}
+\end{table}
+
+\paragraph{How to read the table.} The equivalence is version by version: coin-free with coin-free (through Craig's construction), one-tape with one-tape (without it), Kolmogorov with Kolmogorov. It controls semimeasure losses, not the meaning of ``undefined'': the undefined mass of \SOIabbr mixes logical independence with laziness, and once ``independent'' is an observed label the relation is one-sided. Penalising the axiom side changes nothing; penalising the labeller side makes the relation one-sided, and the gap is the free deduction of \SAIabbr. Charging deduction turns \SAIabbr into certificate \SOIabbr, a nondeterministic notion. The natural separation is Presburger arithmetic, and once deduction is charged its strength depends on the reading. On literals \SAIabbr and \SOIabbr coincide; they separate only through logical closure, observed independence, consistency constraints of unbounded arity, or deduction that is free. In the idealised setting every consistent labeller is an axiom system at a cost of $O(1)$ bits, and every theory a closed labeller, so the formalism cannot see the difference in shape between a theory and a program; where shape matters, it is relative to a reasoner and a vocabulary (\cref{sec:shape}).
