@@ -4,11 +4,23 @@
 % Local symbols as listed at the top of phil.tex.
 \section{Proofs for what a theory does and is}\label{app:phil}
 
-This appendix proves the propositions of \cref{sec:phil}, and states in full the three that the section summarises in prose (\cref{prop:phil:conservation,prop:phil:predicting,prop:phil:flagpolesystem}). \Cref{app:phil:answers,app:phil:conservation,app:phil:extractor,app:phil:predicting} concern questions against raw data; \cref{app:phil:flagpole,app:phil:system} give the precise setting of the flagpole toys, prove \cref{prop:phil:flagpole}, and extend it to a system of laws.
+This appendix proves the propositions of \cref{sec:phil}, and states in full the five that the section summarises in prose (\cref{prop:phil:conservation,prop:phil:extractor,prop:phil:predicting,prop:phil:flagpole,prop:phil:flagpolesystem}). \Cref{app:phil:answers,app:phil:conservation,app:phil:extractor,app:phil:predicting} concern questions against raw data; \cref{app:phil:flagpole,app:phil:system} give the precise setting of the flagpole toys, prove \cref{prop:phil:flagpole}, and extend it to a system of laws.
 
 \subsection{The answer distribution}\label{app:phil:answers}
 
-\begin{proof}[Proof of \cref{prop:phil:answers}]
+Questions, and the answers a theory proves, are defined in \cref{def:setting:questions}; $[k]:=\{1,\dots,k\}$.
+
+\begin{definition}[Answers]\label{def:phil:questions}
+\status{definition}\src{philosophy Def 2.0}
+A theory $T$ \emph{answers} a question $\mathcal Q=\{\varphi_1,\dots,\varphi_k\}$ if $B\cup T\vdash\varphi_i$ for some $i$, and \emph{answers it partially} if $B\cup T\vdash\bigvee_{i\in J}\varphi_i$ for some $J$ with $\emptyset\ne J\subsetneq[k]$.
+\end{definition}
+
+\begin{proposition}[The answer distribution]\label{prop:phil:answers}
+\status{proved; computed}\src{philosophy Prop 2.1}
+Let $\MA(D)>0$, let $\mathcal Q=\{\varphi_1,\dots,\varphi_k\}$ be a question, and let $\mathrm{Un}_D(\mathcal Q):=\Unif(E_D\setminus\bigcup_iO_{\varphi_i})/\Unif(E_D)$, the posterior probability that the random theory proves no direct answer. (a) $\sum_{i\le k}\Bel_D(\varphi_i)+\mathrm{Un}_D(\mathcal Q)=1$. (b) For $\emptyset\ne J\subsetneq[k]$, $\Bel_D(\bigvee_{i\in J}\varphi_i)\ge\sum_{i\in J}\Bel_D(\varphi_i)$, and the difference is the posterior probability that the random theory answers $\mathcal Q$ partially through $J$ but proves no $\varphi_i$ with $i\in J$; for $J=[k]$, $\Bel_D(\bigvee_i\varphi_i)=1$ and the difference is $\mathrm{Un}_D(\mathcal Q)$. (c) For $\mathcal Q=\{\varphi,\neg\varphi\}$, (a) is the trichotomy $\Bel_D(\varphi)+\Dis_D(\varphi)+\Indep_D(\varphi)=1$ of \cref{prop:basic:structure}.
+\end{proposition}
+
+\begin{proof}
 On $E_D$ the theory $B\cup A_\omega$ is consistent. If it proved $\varphi_i$ and $\varphi_j$ with $i\ne j$, it would prove $\varphi_i\wedge\varphi_j$, while $B\vdash\neg(\varphi_i\wedge\varphi_j)$; so it proves at most one direct answer. Hence the sets $E_D\cap O_{\varphi_i}$, $i\le k$, are pairwise disjoint, and together with $E_D\setminus\bigcup_iO_{\varphi_i}$ they partition $E_D$. Dividing the measures by $\Unif(E_D)>0$ gives (a), since $\Bel_D(\varphi_i)=\Unif(E_D\cap O_{\varphi_i})/\Unif(E_D)$.
 
 (b) For $i\in J$, $O_{\varphi_i}\subseteq O_{\bigvee_{j\in J}\varphi_j}$, and the sets $E_D\cap O_{\varphi_i}$ are pairwise disjoint; so
@@ -58,7 +70,14 @@ A computation (code in the accompanying repository, seeded) gives the following.
 
 \subsection{Questions from raw data and an extractor}\label{app:phil:extractor}
 
-\begin{proof}[Proof of \cref{prop:phil:extractor}]
+Answers never cost more description than raw modelling plus an \emph{extractor} that reads them off the raw data. Let $\mathbb X$ be a finite alphabet, $\mu$ a computable probability measure on $\mathbb X^{\mathbb N}$ (the raw world), $(\varphi_q)_{q\in\mathbb N}$ a fixed computable family of sentences (the questions), and $\eta$ a partial computable function with $\eta(q,x)\in\{0,1\}$ computed from a finite prefix of $x$; put $f_x(\varphi_q):=\eta(q,x)$ and $\mu_\eta(D):=\mu\{x:f_x\supseteq D\}$.
+
+\begin{proposition}[Raw modelling plus an extractor]\label{prop:phil:extractor}
+\status{proved, given thm:basic:dominance and the standard sampling construction}\src{philosophy Prop 2.4}
+If $f_x$ is consistent with $B$ for $\mu$-almost every $x$, then $\MA(D)\ge2^{-K(\mu)-K(\eta)-c}\mu_\eta(D)$ for every finite data set $D$ of question--answer pairs, so $\LA(D)\le-\log\mu_\eta(D)+K(\mu)+K(\eta)+c$; here $c$ depends also on the family $(\varphi_q)$. For a computable sequence $x$ with $f_x$ consistent with $B$, $\LA(D)\le K(x)+K(\eta)+c$ on every $D$ with $f_x\supseteq D$.
+\end{proposition}
+
+\begin{proof}
 \emph{Sampling.} There is a partial computable map $\Psi$ from tapes to $\mathbb X^{\mathbb N}$, computable from an index of $\mu$, that is defined for $\Unif$-almost every tape and satisfies $\Psi_*\Unif=\mu$. This is the standard construction: read tape bits to refine a dyadic interval, and output the next symbol $s$ as soon as the interval lies inside the $\mu$-interval of $s$ given the symbols already output; it fails only on the null set of tapes that hit interval boundaries. Each output symbol depends on a finite prefix of the tape.
 
 \emph{The theory machine.} Let $G$ be the theory machine that, on a tape $\omega$, computes $\Psi(\omega)$ as far as needed and, for each $q$, emits $\varphi_q^{\eta(q,\Psi(\omega))}$ once the tape prefix read so far fixes a prefix of $\Psi(\omega)$ on which the computation of $\eta(q,\cdot)$ halts. Each emission depends on a finite prefix of $\omega$, so $G$ is a c.e.\ set of pairs (prefix, sentence) as \cref{def:setting:machine} requires, and $K(G)\le K(\mu)+K(\eta)+c$, where $c$ includes an index of the fixed family $(\varphi_q)$. If $\Psi(\omega)$ is defined, then $A^G_\omega=\Gamma_{f_{\Psi(\omega)}}$, the set of labelled sentences of the labelling $f_{\Psi(\omega)}$.
@@ -114,7 +133,12 @@ C_S&:=T_S+\big\{\forall p\,\forall u\,\forall v\,\mathrm{sh}_H(p,u,v)=\mathrm{sh
 
 \paragraph{Derivation charges.} The cost of a derivation is the number of closed instances it uses of the universally quantified conjuncts of the law axioms ($\Lambda_h$ has one such conjunct, $\Lambda_s$ two); steps in $B$ and uses of the initial conditions are free. The \emph{least cost} of a datum for a theory is the least number of such instances that, together with $B$ and the theory's initial conditions, entail it. By completeness this is the least cost of a derivation, so the count is semantic, as in Herbrand's theorem.
 
-The precise form of \cref{prop:phil:flagpole}(b) is as follows. For a shadow datum $\mathrm{sh}(p_i,u)=a_i/u$ with $u\ne1$, the least costs for $T_H$, $T_S$, $T'_H$, $T'_S$ are $1$, $2$, $2$, $1$; for a height datum $\mathrm{ht}(p_i)=a_i$ they are $0$, $1$, $0$, $1$; and for a reference-shadow datum $\mathrm{sh}(p_i,1)=a_i$ they are $1$, $0$, $1$, $0$. So the two hub theories $T_H$ and $T'_S$ have equal costs on all shadow data with $u\ne1$. Their law texts differ by the constant $\lvert\Lambda_s\rvert-\lvert\Lambda_h\rvert$, and in a literal code (\cref{app:phil:system}) their initial conditions differ by $N_{\rm p}\Delta_{\rm sh}$, where $\Delta_{\rm sh}:=\lvert\mathrm{sh}(x,1)\rvert-\lvert\mathrm{ht}(x)\rvert$ is the extra length of the reference-shadow term; this is $0$ if the language has a primitive for the reference shadow, and then the two texts differ by $\lvert\Lambda_s\rvert-\lvert\Lambda_h\rvert$, independently of $N_{\rm p}$ and the data. The precise form of (c) is: $C_H$ and $C_S$ have the same consequences in the language without $\mathrm{sh}_H$ and $\mathrm{ht}_S$; $C_H\vdash\mathrm{sh}_H(p_1,1,2a_1)=2a_1$ (``doubling the pole doubles its $45^\circ$ shadow''), while $C_S\vdash\mathrm{sh}_H(p_1,1,2a_1)=a_1$, which refutes it when $a_1\ne0$; and $C_H\vdash\mathrm{ht}_S(p_1,v)=a_1$ while $C_S\vdash\mathrm{ht}_S(p_1,v)=v$, for every numeral $v$.
+\begin{proposition}[The flagpole]\label{prop:phil:flagpole}
+\status{proved; computed}\src{philosophy Prop 3.1}
+(a) $T_H$, $T_S$, $T'_H$, $T'_S$ are deductively equivalent over $B$; so every data set is compatible with all four or with none, in the coin-free version the posterior odds of any two programs for them equal their prior odds on every data set compatible with them, and $\lvert K(T_S)-K(T_H)\rvert\le c$. (b) Under derivation charges, every shadow datum $\mathrm{sh}(p_i,u)=v$ with $u\ne1$ that they entail needs exactly one instance from $T_H$ and $T'_S$, whose initial conditions sit at the hub of their formulation, and exactly two from $T_S$ and $T'_H$: which quantity is the hub is a property of the formulation, not of the world. (c) $C_H$ and $C_S$ have the same consequences in the old vocabulary, and one interventional datum separates them.
+\end{proposition}
+
+The precise form of part (b) is as follows. For a shadow datum $\mathrm{sh}(p_i,u)=a_i/u$ with $u\ne1$, the least costs for $T_H$, $T_S$, $T'_H$, $T'_S$ are $1$, $2$, $2$, $1$; for a height datum $\mathrm{ht}(p_i)=a_i$ they are $0$, $1$, $0$, $1$; and for a reference-shadow datum $\mathrm{sh}(p_i,1)=a_i$ they are $1$, $0$, $1$, $0$. So the two hub theories $T_H$ and $T'_S$ have equal costs on all shadow data with $u\ne1$. Their law texts differ by the constant $\lvert\Lambda_s\rvert-\lvert\Lambda_h\rvert$, and in a literal code (\cref{app:phil:system}) their initial conditions differ by $N_{\rm p}\Delta_{\rm sh}$, where $\Delta_{\rm sh}:=\lvert\mathrm{sh}(x,1)\rvert-\lvert\mathrm{ht}(x)\rvert$ is the extra length of the reference-shadow term; this is $0$ if the language has a primitive for the reference shadow, and then the two texts differ by $\lvert\Lambda_s\rvert-\lvert\Lambda_h\rvert$, independently of $N_{\rm p}$ and the data. The precise form of (c) is: $C_H$ and $C_S$ have the same consequences in the language without $\mathrm{sh}_H$ and $\mathrm{ht}_S$; $C_H\vdash\mathrm{sh}_H(p_1,1,2a_1)=2a_1$ (``doubling the pole doubles its $45^\circ$ shadow''), while $C_S\vdash\mathrm{sh}_H(p_1,1,2a_1)=a_1$, which refutes it when $a_1\ne0$; and $C_H\vdash\mathrm{ht}_S(p_1,v)=a_1$ while $C_S\vdash\mathrm{ht}_S(p_1,v)=v$, for every numeral $v$.
 
 \begin{lemma}[Least costs in a star]\label{lem:phil:star}
 \status{proved}\src{philosophy Props 3.1(b), 3.2(d), proofs of the lower bounds}

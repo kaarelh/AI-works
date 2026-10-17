@@ -5,7 +5,10 @@
 % prop:basic:tape, q:basic:tape, prop:basic:crmix, prop:basic:gradedgap, lem:basic:majority, prop:basic:limitpost,
 % prop:basic:textinformant, prop:basic:structures, prop:basic:noncomplete, prop:basic:incomplete, cor:basic:localdefect,
 % thm:basic:order, q:basic:indeporder, thm:basic:kolmogorov, prop:basic:generative, rem:basic:generative, prop:basic:demski,
-% prop:basic:domination.
+% prop:basic:domination. Moved here in the editing pass (logs/edit-basic.md), statement before proof: par:setting:examples,
+% rem:setting:versions, rem:setting:complexities, par:setting:defects, par:setting:E3, prop:basic:dempster, prop:basic:form,
+% prop:basic:invariance, prop:basic:background, prop:basic:exceptions, prop:basic:mistakes, thm:basic:merging,
+% cor:basic:threeloss, prop:basic:lower, def:setting:graded, prop:basic:crorder, def:setting:generative.
 \section{Proofs for the setting and the basic theorems}\label{app:basic}
 
 This appendix proves the results of \cref{sec:setting,sec:basic} in their order, and states and proves the results that the main text only mentions. Throughout, $G$ is a theory machine and the notation is that of \cref{def:setting:machine,def:setting:MA}.
@@ -20,14 +23,31 @@ This appendix proves the results of \cref{sec:setting,sec:basic} in their order,
 (a) If $B\cup A^G_\omega\vdash\chi$, a derivation uses finitely many axioms $\chi_1,\dots,\chi_r\in A^G_\omega$, each emitted under some prefix of $\omega$. The prefixes of $\omega$ are linearly ordered, so the longest of them, $w$, has $\chi_1,\dots,\chi_r\in A^G_w$, and every $\omega'\sqsupseteq w$ has $B\cup A^G_{\omega'}\vdash\chi$. Conversely $[w]\subseteq O^G_\chi$ whenever $B\cup A^G_w\vdash\chi$. The set of pairs $(w,\chi)$ with $B\cup A^G_w\vdash\chi$ is c.e.: enumerate $G$ and all derivations, using that $B$ is decidable. (b) $\mathrm{Cons}^G$ is the complement of an effectively open class, and an inconsistent set proves everything. (c) $E^G_D=O^G_{\psi_D}\setminus O^G_\bot$ with $O^G_\bot\subseteq O^G_{\psi_D}$; and $E^{3,G}_D$ is $E^G_D$ intersected with finitely many closed classes.
 \end{proof}
 
-\begin{proof}[Proof of \cref{rem:setting:versions}]
-(a) \emph{Deciders to enumerators.} By universality of $V$ there is a string $r_1$ such that, whenever $p$ is a decider, $V(r_1p)$ is an index of the r.e.\ set $\{\chi:\{V(p)\}(\chi)=1\}$. The map $p\mapsto r_1p$ is injective, adds $\lvert r_1\rvert$ to the length and preserves the axiom set.
-\emph{Enumerators to deciders (Craig's trick).} Write $\chi^{\wedge1}:=\chi$ and $\chi^{\wedge(m+1)}:=\chi\wedge\chi^{\wedge m}$. For an index $e$ fix the step-by-step enumeration of $\re e$ and let $A^{\rm C}_e:=\{\chi^{\wedge(s+1)}:\chi\text{ is enumerated at step }s\}$. A sentence $\theta$ has at most two readings $\theta=\chi^{\wedge m}$: $(\chi,m)=(\theta,1)$, and, if $\theta$ is a conjunction, $\chi$ its left conjunct with $m$ the number of times $\chi$ can be stripped off. (If $\theta=\chi^{\wedge m}$ with $m\ge2$, then $\chi$ is the left conjunct of $\theta$, and stripping stops exactly at $\chi$, because $\chi$ is not of the form $\chi\wedge X$.) So $A^{\rm C}_e$ is decided by the procedure: find the readings, and for each reading $(\chi,m)$ run the enumeration for exactly $m-1$ steps and check whether $\chi$ appears at step $m-1$. It halts on every input, also when $\re e$ is finite. Since $\chi^{\wedge m}$ is logically equivalent to $\chi$, $\Cn(A^{\rm C}_e)=\Cn(\re e)$. A fixed string $r_2$ makes $V(r_2p)$ an index of this decider for $e=V(p)$; the map $p\mapsto r_2p$ is injective and adds $\lvert r_2\rvert$. Both maps preserve consistency and what is proved, so summing over programs, and taking shortest programs, gives (a) with $c:=\max(\lvert r_1\rvert,\lvert r_2\rvert)$. This is the argument of Theorem 6.3 of \citet{claude2026axiominduction}, here between two kinds of axiom hypotheses rather than between axiom and labeller hypotheses.
+\paragraph{Examples of theory machines.}\label{par:setting:examples}\status{definition}\src{fundamentals \S1, Examples after Lemma 1.3} (i) A deterministic r.e.\ theory $\re e$: $G=\{(\epsilon,\chi):\chi\in\re e\}$, with $\nu_G(D)=\ind[B\cup\re e\text{ consistent and }\vdash\psi_D]$. (ii) Fair-coin facts on a family $(\alpha_j)_{j\ge1}$ of sentences: $G=\{(w,\alpha_j^{w_j}):\lvert w\rvert=j\}$. (iii) A theory plus coin facts: the union of (i) and (ii). (iv) A finite mixture of finite theories $T_1,\dots,T_r$: $G=\{(w_j,\chi):\chi\in T_j\}$ for a prefix-free set $\{w_1,\dots,w_r\}$, which gives $T_j$ weight $2^{-\lvert w_j\rvert}$; a tape with no prefix among the $w_j$ emits nothing, and its theory is the empty one, consistent since $B$ is.
 
-(b) Under \cref{ass:soi:S}, Theorem 6.14(a) of \citet{claude2026axiominduction} shows that $\WAgen t$ is within a constant factor of the coin-free consistent mixture $\Wcons$ of labellers, and its Theorem 6.3 shows $\Wcons\asymp\WAdec$; combined with (a) this gives the claim for $\WAgen t$. For the Kolmogorov versions we use the map behind it. An enumerator $p$ of $A$ is sent to the padded enumerator of the semi-decider of $A$ (``yes on $\chi$ iff $\chi$ is enumerated'') of Lemma E.12 of \citet{claude2026axiominduction}; that lemma, proved there under \cref{ass:soi:S}, gives an enumerator of the delay form with the same consequences as $A$, injectively and with length at most $\lvert p\rvert+c$. Conversely, an enumerator of the delay form is an enumerator. The translation between the universal machine of the earlier report and programs of $V$ that print indices costs a constant. We do not re-derive \cref{ass:soi:S}.
+\begin{remark}[Deciders, enumerators and polynomial-delay enumerators agree]\status{(a), (c) proved; (b) proved, given Lemma E.12 and Theorem 6.14(a) of the earlier report, under Assumption (S)}\src{fundamentals Prop 1.8(a)--(c)}\label{rem:setting:versions}
+There is $c$ such that for every $D$:
+(a) $2^{-c}\WAdec(D)\le\WA(D)\le2^c\WAdec(D)$ and $\lvert\KA(D)-\KAdec(D)\rvert\le c$;
+(b) under \cref{ass:soi:S}, for $t$ time-constructible, nondecreasing and superadditive with $t(m)\ge m$ and $t(m)\ge m^{a^*}$ ($a^*$ fixed by the universal machine): $2^{-c}\WA(D)\le\WAgen t(D)\le2^c\WA(D)$, and $\lvert\KA(D)-K_A^{\mathrm{gen},t}(D)\rvert\le c$;
+(c) $\KA(D)\le\Kfin(D)+c\le K(\psi_D)+c$ if $D$ is consistent; if $D$ is inconsistent, $\KA(D)=\Kfin(D)=\infty$, while $K(\psi_D)$ is finite.
+\end{remark}
+
+\begin{proof}
+(a) \emph{Deciders to enumerators.} By universality of $V$ there is a string $r_1$ such that, whenever $p$ is a decider, $V(r_1p)$ is an index of the r.e.\ set $\{\chi:\{V(p)\}(\chi)=1\}$. The map $p\mapsto r_1p$ is injective, adds $\lvert r_1\rvert$ to the length and preserves the axiom set.
+\emph{Enumerators to deciders (Craig's trick).} Write $\chi^{\wedge1}:=\chi$ and $\chi^{\wedge(m+1)}:=\chi\wedge\chi^{\wedge m}$. For an index $e$ fix the step-by-step enumeration of $\re e$ and let $A^{\rm C}_e:=\{\chi^{\wedge(s+1)}:\chi\text{ is enumerated at step }s\}$. A sentence $\theta$ has at most two readings $\theta=\chi^{\wedge m}$: $(\chi,m)=(\theta,1)$, and, if $\theta$ is a conjunction, $\chi$ its left conjunct with $m$ the number of times $\chi$ can be stripped off. (If $\theta=\chi^{\wedge m}$ with $m\ge2$, then $\chi$ is the left conjunct of $\theta$, and stripping stops exactly at $\chi$, because $\chi$ is not of the form $\chi\wedge X$.) So $A^{\rm C}_e$ is decided by the procedure: find the readings, and for each reading $(\chi,m)$ run the enumeration for exactly $m-1$ steps and check whether $\chi$ appears at step $m-1$. It halts on every input, also when $\re e$ is finite. Since $\chi^{\wedge m}$ is logically equivalent to $\chi$, $\Cn(A^{\rm C}_e)=\Cn(\re e)$. A fixed string $r_2$ makes $V(r_2p)$ an index of this decider for $e=V(p)$; the map $p\mapsto r_2p$ is injective and adds $\lvert r_2\rvert$. Both maps preserve consistency and what is proved, so summing over programs, and taking shortest programs, gives (a) with $c:=\max(\lvert r_1\rvert,\lvert r_2\rvert)$. This is the argument of Theorem 6.3 of our earlier report \citep{claude2026axiominduction}, here between two kinds of axiom hypotheses rather than between axiom and labeller hypotheses.
+
+(b) Under \cref{ass:soi:S}, Theorem 6.14(a) of the earlier report shows that $\WAgen t$ is within a constant factor of the coin-free consistent mixture $\Wcons$ of labellers, and its Theorem 6.3 shows $\Wcons\asymp\WAdec$; combined with (a) this gives the claim for $\WAgen t$. For the Kolmogorov versions, $\lvert\KA(D)-K_A^{\mathrm{gen},t}(D)\rvert\le c$, we use the map behind it. An enumerator $p$ of $A$ is sent to the padded enumerator of the semi-decider of $A$ (``yes on $\chi$ iff $\chi$ is enumerated'') of Lemma E.12 of the earlier report; that lemma, proved there under \cref{ass:soi:S}, gives an enumerator of the delay form with the same consequences as $A$, injectively and with length at most $\lvert p\rvert+c$. Conversely, an enumerator of the delay form is an enumerator. The translation between the universal machine of the earlier report and programs of $V$ that print indices costs a constant. We do not re-derive \cref{ass:soi:S}.
 
 (c) If $\psi$ witnesses $\Kfin(D)$, a fixed prefix $r_3$ turns a shortest program for $\psi$ into a program for an index of $\{\psi\}$, which is consistent with $B$ and proves $\psi_D$; so $\KA\le\Kfin+\lvert r_3\rvert$. For consistent $D$, $\psi_D$ itself is a candidate for $\Kfin$. If $D$ is inconsistent, no consistent set proves $\psi_D$.
 \end{proof}
+
+\begin{remark}[Complexities of consistent theories]\status{proved}\src{fundamentals Def 1.9}\label{rem:setting:complexities}
+If $B\cup T$ is consistent, then $[T]\subseteq\Exts T$, so $2^{-\Keq(T)}\le\mmeq(T)\le\mm(\Exts T)$, and $\UA[T]\ge2^{-c}\mmeq(T)$, $\UA(\Exts T)\ge2^{-c}\mm(\Exts T)$ (\cref{thm:basic:dominance}(i)). The hypothesis is needed: for $T=\{\bot\}$, $\UA[T]=0$ and $\Exts T=\emptyset$, while $\mmeq(T)\ge2^{-\Keq(T)}>0$.
+\end{remark}
+
+\paragraph{The two defects and function machines.}\label{par:setting:defects}\status{proved}\src{fundamentals Rem 1.6} The outcomes of a theory machine at a sentence $\varphi$ correspond to those of a function machine at an input: ``proves $\varphi$'' is a $\Sigma_1$ property of the tape, like ``halts with output $1$''; ``independent'' is $\Pi_1$, like ``diverges''; ``inconsistent'' corresponds to ``halts with both outputs'', which a function machine cannot do.
+
+\paragraph{The encoding \Ethree.}\label{par:setting:E3}\status{definition}\src{NOTATION \S3.2; shape Def 1.2, \S1.3} \Ethree{} is not a single datum of $\MAthree$: it combines ``the label of $\alpha\to\ell$ is $1$'' with ``the label of $\neg\alpha$ is not $1$'', a union of two $\MAthree$-events. The two-valued encoding by the datum $(\alpha\to\ell,1)$ is degenerate, since a single world satisfying the law fits all of its question data (\cref{prop:shape:E2}); it is never used for conditional data.
 
 \subsection{Structure and updating}\label{app:basic:structure}
 
@@ -55,11 +75,24 @@ This appendix proves the results of \cref{sec:setting,sec:basic} in their order,
 (c) Fix an enumeration $(\sigma_k)$ of $\Sent$. For $\omega\in\mathrm{Cons}$ let $T_0(\omega):=B\cup A_\omega$, and $T_{k+1}:=T_k\cup\{\sigma_k\}$ if that set is consistent, $T_{k+1}:=T_k\cup\{\neg\sigma_k\}$ otherwise. $T_\infty(\omega):=\bigcup_kT_k$ is a complete consistent extension of $B$: it is consistent by compactness, and complete and deductively closed because it is maximal consistent. Each choice depends on whether $B\cup A_\omega\cup F$ is consistent for a finite set $F$, that is, on membership of $\omega$ in the open class $O_{\neg\bigwedge F}$; so $\omega\mapsto T_\infty(\omega)$ is Borel. Let $P_D$ be its law under $\Unif(\cdot\mid E_D)$. If $B\cup A_\omega\vdash\chi$ then $\chi\in T_\infty$, and if $\chi\in T_\infty$ then $B\cup A_\omega\nvdash\neg\chi$. So $\Bel_D\le P_D\le\Pl_D$.
 \end{proof}
 
-\begin{proof}[Proof of \cref{prop:basic:dempster}]
+\begin{proposition}[Consistency-requiring updating is Dempster conditioning]\status{proved; computed; the name of the rule known}\src{fundamentals Prop 2.3}\label{prop:basic:dempster}
+Let $\psi:=\psi_D$ and $\MAnc(D)>0$. Then $\MAnc(D)=\Pl_0(\psi)$ and
+$\Belnc_D(\varphi)=\dfrac{\Bel_0(\varphi\vee\neg\psi)-\Bel_0(\neg\psi)}{\Bel_0(\top)-\Bel_0(\neg\psi)}=\dfrac{\Belhat_0(\varphi\vee\neg\psi)-\Belhat_0(\neg\psi)}{1-\Belhat_0(\neg\psi)}$.
+\end{proposition}
+
+\begin{proof}
 For consistent $B\cup A$: $B\cup A\cup\{\psi\}$ is consistent iff $B\cup A\nvdash\neg\psi$, and $B\cup A\cup\{\psi\}\vdash\varphi$ iff $B\cup A\vdash\varphi\vee\neg\psi$ (the deduction theorem; $\psi$ is a sentence). So $\MAnc(D)=\Unif(\mathrm{Cons})-\Unif(\mathrm{Cons}\cap O_{\neg\psi})=\Bel_0(\top)-\Bel_0(\neg\psi)=\Pl_0(\psi)$. Since $B\cup A\vdash\neg\psi$ implies $B\cup A\vdash\varphi\vee\neg\psi$, the numerator of $\Belnc_D(\varphi)$ is $\Unif(\mathrm{Cons}\cap O_{\varphi\vee\neg\psi})-\Unif(\mathrm{Cons}\cap O_{\neg\psi})=\Bel_0(\varphi\vee\neg\psi)-\Bel_0(\neg\psi)$. Dividing numerator and denominator by $1-\Inc_0$ gives the form with $\Belhat_0$.
 \end{proof}
 
 \subsection{Computability}\label{app:basic:computability}
+
+\begin{proposition}\status{proved}\src{fundamentals Prop 3.1}\label{prop:basic:form}
+$\MA(D)=\Unif(O_{\psi_D})-\Inc_0$, where $\Unif(O_{\psi_D})$ is left-c.e.\ uniformly in $D$ and $\Inc_0=\Unif(O_\bot)$ is left-c.e.
+\end{proposition}
+
+\begin{proof}
+\Cref{lem:setting:measurable}(a), (c) for $G=G_U$.
+\end{proof}
 
 The following lemma is a form of a theorem of Demuth \citep{demuth1975constructive}, as it is attributed in the literature: a left-c.e.\ real plus a random left-c.e.\ real is random (the converse is attributed to \citealp{downey2002randomness}). We prove the form we need, for completeness. For a real $x\in(0,1)$, $x_{1:n}$ denotes its first $n$ binary digits; we use the Levin--Schnorr characterisation (standard; see \citealp{li2008introduction}): $x$ is Martin-L\"of random iff $K(x_{1:n})\ge n-c_x$ for all $n$.
 
@@ -89,6 +122,8 @@ and $\gamma_\alpha$ is left-c.e., because $\dom V\setminus\{p_\alpha\}$ is c.e.\
 (c) $\Omega_V$ is Martin-L\"of random \citep{chaitin1975theory}. Apply the decomposition with $\alpha:=\Omega_V$, and \cref{lem:basic:demuth} with $k=\lvert p_\alpha\rvert$ and $\gamma=\gamma_\alpha$; here $\Inc_0<1$ by \cref{prop:basic:structure}(e), and $k$ and $\gamma_\alpha$ are fixed by $V$, so the constant of the lemma is a machine constant.
 \end{proof}
 
+Probabilities of other machine behaviours are studied by \citet{becher2006randomness} and \citet{barmpalias2016random}. By \citet{kucera2001randomness} and \citet{calude2001recursively}, $\Inc_0$ is then an $\Omega$-number; we do not use this.
+
 \begin{proposition}[Computability relative to the halting problem]\status{proved}\src{fundamentals Prop 3.4}\label{prop:basic:oracle}
 (a) $\MA(D)$ and the conditionals $\MA(b\mid D,\varphi)$, $\MAthree(y\mid D,\varphi)$ and $\Bel_D(\chi)$ are computable relative to $\emptyset'$, uniformly. (b) $D\mapsto\MA(D)+\Inc_0$ is lower semicomputable; so $\MA$ is lower semicomputable relative to the single real $\Inc_0$.
 \end{proposition}
@@ -108,14 +143,22 @@ $\dom V$ is prefix-free, so the cylinders $[p]$, $p\in\dom V$, are disjoint, and
 
 (iii) The map $i\mapsto\sum_{g(e)=i}v(e)$ is an lsc semimeasure of complexity at most $K(v)+c$, so $\mm(g(e))\ge2^{-K(v)-c}v(e)$. With $v=\mm$ this gives $\MA\ge2^{-c}\WA$.
 
-(iv) The machine of Example (iii) after \cref{def:setting:machine} has an index computable from indices of $T$ and of the family.
+(iv) The machine of Example (iii) in \cref{par:setting:examples} has an index computable from indices of $T$ and of the family.
 \end{proof}
 
-\begin{proof}[Proof of \cref{prop:basic:invariance}]
+\begin{proposition}[Choice of the universal machine]\status{proved}\src{fundamentals Prop 4.2}\label{prop:basic:invariance}
+Call a theory machine $G'$ \emph{universal} if for every theory machine $G$ there is a string $p_G$ with $A^{G'}_{p_G\omega}=A^G_\omega$ for all $\omega$. If $G'$ is universal, then $2^{-c}\MA\le\nu_{G'}\le2^c\MA$, and the same for the three-valued laws, with $c$ depending only on $G_U$ and $G'$.
+\end{proposition}
+
+\begin{proof}
 $G_U$ is universal, with $p_G$ a $V$-program for an index of $G$. $\MA\ge2^{-K(G')}\nu_{G'}$ by \cref{thm:basic:dominance}. Conversely, the tapes $p_{G_U}\omega'$ give $G'$ the axiom set $A_{\omega'}$, so $\nu_{G'}(D)\ge2^{-\lvert p_{G_U}\rvert}\MA(D)$. The three-valued laws are handled in the same way. So posteriors change by at most a constant factor, and losses in the semimeasure convention by an additive constant.
 \end{proof}
 
-\begin{proof}[Proof of \cref{prop:basic:background}]
+\begin{proposition}[The background is a prior shift]\status{proved}\src{fundamentals Prop 4.3}\label{prop:basic:background}
+Let $B,B'$ be decidable and consistent with $B\subseteq\Cn_\emptyset(B')$ (plain logical consequence), and write $\MA^B$, $\MA^{B'}$ for \SAIabbr with these backgrounds. Then $\MA^B(D)\ge2^{-K(B')-c}\MA^{B'}(D)$ for every $D$, with $K(B')$ the complexity of an index of $B'$; likewise $\WA^B\ge2^{-K(B')-c}\WA^{B'}$ and $\KA^B\le\KA^{B'}+K(B')+c$. The converse fails: a $D$ consistent with $B$ and inconsistent with $B'$ has $\MA^{B'}(D)=0<\MA^B(D)$.
+\end{proposition}
+
+\begin{proof}
 The machine $G_{B'}:=\{(\epsilon,\chi):\chi\in B'\}\cup G_U$ emits $B'\cup A_\omega$ on $\omega$. Under the background $B$, the set $B\cup B'\cup A_\omega$ is equivalent to $B'\cup A_\omega$, so the law of $G_{B'}$ under the background $B$ is $\MA^{B'}$; apply \cref{thm:basic:dominance}. (Both laws use the same $G_U$, which does not depend on the background.) The same map on single programs gives the statements for $\WA$ and $\KA$. The converse fails as stated, since $D$ is consistent with $B$ (\cref{prop:basic:structure}(a)).
 \end{proof}
 
@@ -135,19 +178,37 @@ The same two maps act on single enumerator programs, with a prefix of length $K(
 
 \subsection{Loss bounds}\label{app:basic:loss}
 
-\begin{proof}[Proof of \cref{prop:basic:exceptions}]
+\begin{proposition}[Laws plus exceptions]\status{proved}\src{fundamentals Prop 5.2}\label{prop:basic:exceptions}
+(a) $\LA(D_n)\le-\log\nu(D_n)+K(\nu)$ for every theory-machine law $\nu$. (b) For every r.e.\ $T$ and every $E\subseteq D_n$ with $B\cup T\cup E^\pm$ consistent and $B\cup T\cup E^\pm\vdash\psi_{D_n}$: $\LA(D_n)\le\Keq(T)+K(E)+c$. (c) Let $(\alpha_j)_{j\ge1}$ be a computable family of sentences and $T$ r.e.\ with $B\cup T\cup\{\alpha_j^{x_j}:j\ge1\}$ consistent for every $x\in\{0,1\}^{\mathbb N}$. If every datum of $D_n$ is proved by $T$ or is one of the $\alpha_j$ with some label, and $m$ distinct $j$ occur, then $\LA(D_n)\le K(T,(\alpha_j))+m+c$.
+\end{proposition}
+
+\Cref{sec:laws} extends (c) from atoms a law is silent about to answers it only constrains.
+
+\begin{proof}
 (a) is \cref{thm:basic:dominance}. (b) For $e\in[T]$, the set $\re e\cup\{\psi_E\}$ has an index computable from $(e,E)$; it is consistent with $B$, since $B\cup T\cup E^\pm$ is, and it proves $\psi_{D_n}$. As $K(e,E)\le K(e)+K(E)+c$, \cref{thm:basic:dominance}(i) gives $\LA(D_n)\le K(e)+K(E)+c'$; minimise over $e\in[T]$. (c) Consider the machine that emits $T$ and $\alpha_j^{\omega_j}$ for every $j$. By the hypothesis its theory is consistent on every tape, and $T$ decides no $\alpha_j$. Its theory proves every datum proved by $T$, and proves the $\alpha_j$-data whenever $\omega$ agrees with their $m$ labels, which has probability $2^{-m}$. The machine has an index computable from those of $T$ and of the family; apply (a).
 \end{proof}
 
-\begin{proof}[Proof of \cref{prop:basic:mistakes}(a), (b)]
-(a) At a repeat the predictor outputs the stored label and makes no mistake. Otherwise the posterior trichotomy sums to $1$, so if $\MA(b_t\mid D_{t-1},\varphi_t)=\Bel_{D_{t-1}}(\varphi_t^{b_t})>\frac12$, then $b_t$ is the unique maximiser. Each mistake therefore costs at least one bit of cumulative loss in the semimeasure convention, and by \cref{thm:basic:loss} the cumulative loss is $\LA(D_n)-\LA(\emptyset)\le-\log\UA(\Exts T)+\log\MA(\emptyset)$. This is the halving argument (the companion paper's Corollary 5.4).
+\begin{proposition}[Mistake bounds]\status{(a) proved; (b), (c) proved; computed}\src{fundamentals Prop 5.3}\label{prop:basic:mistakes}
+(a) Under the hypotheses of \cref{thm:basic:loss}, the predictor that outputs the most probable of $1,0,\iota$ under $(\Bel,\Dis,\Indep)_{D_{t-1}}(\varphi_t)$ (ties broken arbitrarily; the stored label at a repeat) makes at most $-\log(\UA(\Exts T)/\MA(\emptyset))\le\Keq(T)+c$ mistakes, a mistake being any output other than $b_t$, $\iota$ included. (b) Fix a well-order of $\dom V$ that refines length. The \emph{Kolmogorov predictor} takes at step $t$ the first program $p_t$ with $B\cup\re{V(p_t)}$ consistent and proving $\psi_{D_{t-1}}$, predicts $1$ (resp.\ $0$) if $\re{V(p_t)}$ proves $\varphi_t$ (resp.\ $\neg\varphi_t$), and abstains otherwise. If $k:=\sup_n\KA(D_n)<\infty$ (for instance $k\le\Keq(T)+c$ as in \cref{thm:basic:loss}), it errs or abstains at most $2^k$ times. (c) The order hypothesis in (b) is needed: for every $m$ there are a well-order of $\dom V$ of type $\omega$ and a data set $D$ with $\KA(D)\le K(m)+c\le2\log m+c'$ on which the Kolmogorov predictor with that order errs or abstains $2^m-1$ times.
+\end{proposition}
+
+The bound of (b) is essentially attained even for length-refining orders, on data where the Bayes predictor makes at most $\KA(D)+c$ mistakes (\cref{thm:basic:kolmogorov}): it is the selection rule that fails, not the prior.
+
+\begin{proof}[Proof of (a) and (b)]
+(a) At a repeat the predictor outputs the stored label and makes no mistake. Otherwise the posterior trichotomy sums to $1$, so if $\MA(b_t\mid D_{t-1},\varphi_t)=\Bel_{D_{t-1}}(\varphi_t^{b_t})>\frac12$, then $b_t$ is the unique maximiser. Each mistake therefore costs at least one bit of cumulative loss in the semimeasure convention, and by \cref{thm:basic:loss} the cumulative loss is $\LA(D_n)-\LA(\emptyset)\le-\log\UA(\Exts T)+\log\MA(\emptyset)$. This is the halving argument of Corollary 5.4 of the companion paper \citep{claudeSFI2026fundamentals}.
 
 (b) At an error or abstention, $p_t$ does not prove $\varphi_t^{b_t}$, so it is incompatible with $D_t$ and with every later $D_{t'}$, and it is never chosen again. (At a repeat $p_t$ proves the stored label, since it is compatible with $D_{t-1}$.) Since the order refines length, each $p_t$ is a shortest compatible program, of length $\KA(D_{t-1})\le k$. Kraft's inequality for the prefix-free set $\dom V$ allows at most $2^k$ programs of length at most $k$.
 \end{proof}
 
 Part (c) is proved in \cref{app:basic:order}, after \cref{thm:basic:kolmogorov}.
 
-\begin{proof}[Proof of \cref{thm:basic:merging}]
+\begin{theorem}[Merging for three-valued data]\status{proved; computed}\src{fundamentals Thm 5.4}\label{thm:basic:merging}
+Let $G$ be a theory machine with $\nu_G(\emptyset)=1$, $\omega\sim\Unif$ and $A:=A^G_\omega$. Let $(u_t)$ be random variables independent of $\omega$, with any joint law, and let the questions be $\varphi_t:=s_t(h_{t-1},u_t)$ for arbitrary measurable rules $s_t$, where $h_{t-1}=(\varphi_1,y_1,\dots,\varphi_{t-1},y_{t-1})$ and $y_t\in Y_3$ is the trichotomy label of $\varphi_t$ under $A$. Let $D_t:=\{(\varphi_s,y_s):s\le t\}$ and $d_t:=\KL(\nu^3_G(\cdot\mid D_{t-1},\varphi_t)\,\|\,\MAthree(\cdot\mid D_{t-1},\varphi_t))$ in bits ($0$ at a repeat). Then for every $n$, $\sum_{t\le n}\Ex d_t=\Ex\log\frac{\nu^3_G(D_n)}{\MAthree(D_n)}+\log\MA(\emptyset)\le K(G)+\log\MA(\emptyset)<K(G)$. Hence $d_t\to0$ almost surely, and $\sum_t\Ex\lVert\nu^3_G(\cdot\mid D_{t-1},\varphi_t)-\MAthree(\cdot\mid D_{t-1},\varphi_t)\rVert_1^2\le2\ln2\cdot K(G)$.
+\end{theorem}
+
+With two-valued data the question rule would have to see $A$ for the two-valued conditionals to be the data law, and the expected bound can fail (as in the remark after Theorem 5.3 of the companion paper); the pathwise bound of \cref{prop:basic:exceptions}(a) still holds.
+
+\begin{proof}
 \emph{Step 1: the conditional law of the next label.} Histories take countably many values. For a value $h$ of the history and a value of $u_{<t}$, the event $\{h_{t-1}=h\}$ is the intersection of an event in $u_{<t}$ (the rules produce the questions of $h$ from its labels) with the event $\{\tri^G_\omega\supseteq D_h\}$ (\cref{prop:basic:structure}(g)), where $D_h$ is the data set of $h$. Since $\nu_G(\emptyset)=1$, the theory is consistent and $\tri^G_\omega$ is defined on almost every tape. Since $(u_t)$ is independent of $\omega$, given $(h_{t-1},u_{\le t})$ the tape has the law $\Unif(\cdot\mid\tri^G_\omega\supseteq D_{t-1})$, and $y_t=\tri^G_\omega(\varphi_t)$ has the law $\nu^3_G(\cdot\mid D_{t-1},\varphi_t)$. (Almost surely $\nu^3_G(D_{t-1})>0$.)
 
 \emph{Step 2: telescoping.} Let $Z_t:=\log\nu^3_G(y_t\mid D_{t-1},\varphi_t)-\log\MAthree(y_t\mid D_{t-1},\varphi_t)$ ($0$ at a repeat) and $S_n:=\sum_{t\le n}Z_t$. Since $\nu^3_G(\emptyset)=1$ and $\MAthree(\emptyset)=\MA(\emptyset)$, $S_n=\log\nu^3_G(D_n)-\log\MAthree(D_n)+\log\MA(\emptyset)$.
@@ -157,12 +218,12 @@ Part (c) is proved in \cref{app:basic:order}, after \cref{thm:basic:kolmogorov}.
 \emph{Step 4.} By Step 1, $\Ex[Z_t\mid h_{t-1},u_{\le t}]=d_t$, which is nonnegative because the conditionals of $\MAthree$ are probability distributions (\cref{prop:basic:structure}(f)). Taking expectations and summing gives $\sum_{t\le n}\Ex d_t=\Ex S_n$, which is the identity and the bound. Pinsker's inequality in bits, $\KL\ge\lVert P-Q\rVert_1^2/(2\ln2)$, gives the last claim, and $\Ex\sum_td_t<\infty$ gives $d_t\to0$ almost surely.
 \end{proof}
 
-\begin{proof}[Proof of \cref{cor:basic:threeloss}]
-The tapes with $B\cup A_\omega$ consistent and $\Cn(A_\omega)=\Cn(T)$ lie in $E^3_{D_n}$. Order independence holds for $\MAthree$ with the proof of \cref{prop:basic:structure}(d), using (f) in place of (b); then apply \cref{thm:basic:dominance}(i). Here $[T]$ replaces $\Exts T$: three-valued data penalise theories that decide more than $T$.
-\end{proof}
+\begin{corollary}[Three-valued loss]\status{proved}\src{fundamentals Cor 5.5}\label{cor:basic:threeloss}
+If $D_n$ is three-valued and labelled by the trichotomy of an r.e.\ $T$ with $B\cup T$ consistent, then in any reveal order the loss in the three-valued convention is $-\log\MAthree(D_n)+\log\MA(\emptyset)\le-\log\UA[T]\le\Keq(T)+c$.
+\end{corollary}
 
-\begin{proof}[Proof of \cref{prop:basic:lower}]
-The inequality is \cref{prop:basic:chain}(b). For the expectation, the weights $2^{-K(b\mid\dom D)}$ sum to at most $1$ (Kraft's inequality), so Gibbs' inequality gives $\Ex_bK(b\mid\dom D)\ge n$ for uniform $b\in\{0,1\}^n$. With logically dependent sentences, inconsistent labellings have $\LA=\infty$, and the bound holds trivially for them.
+\begin{proof}
+The tapes with $B\cup A_\omega$ consistent and $\Cn(A_\omega)=\Cn(T)$ lie in $E^3_{D_n}$. Order independence holds for $\MAthree$ with the proof of \cref{prop:basic:structure}(d), using (f) in place of (b); then apply \cref{thm:basic:dominance}(i). Here $[T]$ replaces $\Exts T$: three-valued data penalise theories that decide more than $T$.
 \end{proof}
 
 \subsection{Coding bounds and the absence of a coding theorem}\label{app:basic:coding}
@@ -183,6 +244,14 @@ In the literal setting: (L1) every set $\Lambda$ of literals $R(t_w)^b$ with at 
 (c) The first inequality is one term of $\WA$; the second is \cref{thm:basic:dominance}(iii). For the third, $\KA(D)\le K(\psi_D)+c$ (\cref{rem:setting:versions}(c)) $\le K(S)+K(\psi_D\mid S)+c'$, and (a) bounds $K(\psi_D\mid S)$ by $\LA(D)+c$.
 \end{proof}
 
+\begin{proposition}[Lower bound]\status{proved}\src{fundamentals Prop 5.6}\label{prop:basic:lower}
+$\LA(D)\ge K(b_D\mid\dom D)-c$ for every $D$, where $b_D$ is the vector of two-valued labels in canonical order. So in the semimeasure convention, on fair-coin labels of any fixed $n$ sentences, $\Ex\LA\ge n-c$.
+\end{proposition}
+
+\begin{proof}
+The inequality is \cref{prop:basic:chain}(b). For the expectation, the weights $2^{-K(b\mid\dom D)}$ sum to at most $1$ (Kraft's inequality), so Gibbs' inequality gives $\Ex_bK(b\mid\dom D)\ge n$ for uniform $b\in\{0,1\}^n$. With logically dependent sentences, inconsistent labellings have $\LA=\infty$, and the bound holds trivially for them.
+\end{proof}
+
 \begin{proof}[Proof of \cref{thm:basic:nocoding}]
 (i) Let $\ell:=\ell_d$, so that $2^\ell<d/\log3$ and $3^{2^\ell}<2^d$. There are fewer than $2^\ell$ programs of length less than $\ell$. Colour each $x\in\{0,1\}^d$ by the vector, over these programs $p$, of the following symbols: ``$+$'' if $B\cup\re{V(p)}$ is consistent and proves $R(t_x)$; ``$-$'' if it is consistent and proves $\neg R(t_x)$; ``$*$'' otherwise. There are at most $3^{2^\ell-1}<2^d$ colours, so two distinct words $x_1,x_2$ share a colour. A program $p$ with $\lvert p\rvert<\ell$ that is compatible with $D$ would colour $x_1$ ``$-$'' and $x_2$ ``$+$''. So every compatible program has length at least $\ell$, which gives both claims of (i); and $\ell\ge\log(d/\log3)-1>\log d-2$, since $\log\log3<0.67$.
 
@@ -193,7 +262,7 @@ In the literal setting: (L1) every set $\Lambda$ of literals $R(t_w)^b$ with at 
 The consequences: $\KA+\log\WA\ge\ell_d-2-K(s)-c$, and $\Omtail{\ell}$ is the tail of a convergent series, with $\ell_d\to\infty$.
 \end{proof}
 
-The bound $\Keq(T)\le\KA(D)+c$ of \cref{thm:basic:loss} is about single theories; for whole theories the question is how $\Keq$ compares with the mixture weight $\mmeq$. For an r.e.\ set $Y\subseteq\Sent$ let $\Kenum(Y):=\min\{\lvert p\rvert:p\in\dom V,\ \re{V(p)}=Y\}$ and $\mmenum(Y):=\sum\{2^{-\lvert p\rvert}:p\in\dom V,\ \re{V(p)}=Y\}$, its enumeration complexity and the corresponding discrete semimeasure. A theorem of Solovay \citep{solovay1977random}, in the form stated by \citet{vereshchagin2007kolmogorov}, says that $\Kenum(Y)\le3I(Y)+O(\log I(Y))$ for every r.e.\ set $Y$, where $I(Y)$ is the negative logarithm of the probability that a machine with a random input tape enumerates exactly $Y$.
+The bounds of \cref{thm:basic:loss} are stated with $\Keq(T)$, the least complexity of an index of a theory equivalent to $T$ (\cref{def:setting:complexities}); for whole theories the question is how $\Keq$ compares with the mixture weight $\mmeq$. For an r.e.\ set $Y\subseteq\Sent$ let $\Kenum(Y):=\min\{\lvert p\rvert:p\in\dom V,\ \re{V(p)}=Y\}$ and $\mmenum(Y):=\sum\{2^{-\lvert p\rvert}:p\in\dom V,\ \re{V(p)}=Y\}$, its enumeration complexity and the corresponding discrete semimeasure. A theorem of Solovay \citep{solovay1977random}, in the form stated by \citet{vereshchagin2007kolmogorov}, says that $\Kenum(Y)\le3I(Y)+O(\log I(Y))$ for every r.e.\ set $Y$, where $I(Y)$ is the negative logarithm of the probability that a machine with a random input tape enumerates exactly $Y$.
 
 \begin{proposition}[Coding for whole theories]\status{(a) proved; (b) proved, given Solovay's theorem}\src{fundamentals Prop 6.4}\label{prop:basic:wholetheory}
 (a) For every r.e.\ $T$: $\Keq(T)=\Kenum(\Cn T)\pm c$ and $2^{-c}\mmenum(\Cn T)\le\mmeq(T)\le2^c\mmenum(\Cn T)$.
@@ -232,18 +301,31 @@ The question matters for identification: the limit loss on a complete presentati
 
 \subsection{The consistency-requiring variants}\label{app:basic:cr}
 
+\begin{definition}[Graded consistency-requiring weight]\status{definition}\src{fundamentals Def 1.10; \S7}\label{def:setting:graded}
+For consistent $A$ let $\mathrm{gr}_A(\varphi):=1$ if $B\cup A\vdash\varphi^{D(\varphi)}$ and $\mathrm{gr}_A(\varphi):=\frac12$ otherwise, and
+\[
+\nu^{1/2}_A(D):=\ind[B\cup A\cup D^\pm\text{ consistent}]\prod_{\varphi\in\dom D}\mathrm{gr}_A(\varphi),\qquad\MAhalf(D):=\int_{\mathrm{Cons}}\nu^{1/2}_{A_\omega}(D)\,d\Unif(\omega).
+\]
+\end{definition}
+
+The graded weight is the symmetric form of the graded score $S_g$ of Definition 2.12 of the earlier report with $g\equiv1$ on proved data and $g_\infty=\frac12$: $S_g$ grades only the data labelled true, $\nu^{1/2}$ grades the data labelled false too. The results below use only data labelled true, where the two agree.
+
 Throughout, $H_\omega:=B\cup A_\omega\cup D^\pm$; when $\MAnc(D)>0$, write $\Pr_D:=\Unif(\cdot\mid H_\omega\text{ consistent})$, so that $\Belnc_D(\varphi)=\Pr_D[H_\omega\vdash\varphi]$.
 
 \begin{proof}[Proof of \cref{prop:basic:cr}]
 (a) For consistent $H$, the set $H\cup\{\varphi^b\}$ is consistent iff $H\nvdash\varphi^{1-b}$; so both labels are possible iff $H$ decides neither $\varphi$ nor $\neg\varphi$, and exactly one is possible otherwise; for inconsistent $H$ neither is. That $\MAnc(D)=\Pl_0(\psi_D)$ is \cref{prop:basic:dempster}. (b) If $A_\omega=\emptyset$, then $H_\omega=B\cup D^\pm$ is consistent; and these tapes include those beginning with $p_\emptyset$. For the coin-free and Kolmogorov versions, the program $p_\emptyset$ is a witness on every consistent $D$. (c) holds by definition.
 \end{proof}
 
-\begin{proof}[Proof of \cref{prop:basic:crorder}]
+\begin{proposition}[The consistency-requiring predictor]\status{(a), (b) proved; computed}\src{fundamentals Prop 7.2(a), (b)}\label{prop:basic:crorder}
+(a) For every consistent $D$ and $\varphi\notin\dom D$ with $B\cup D^\pm\nvdash\varphi^b$, $\Belnc_D(\varphi^b)\le1-\epsempty/\MAnc(D)\le1-\epsempty$. So on every consistent reveal sequence the cumulative loss $\sum_t-\log\Belnc_{D_{t-1}}(\varphi_t^{b_t})$ is at least $\log\frac1{1-\epsempty}$ times the number of steps whose datum is not entailed by the earlier data. (b) In the literal setting, let $a_i,s_{i,j}$ ($i,j\ge1$) be fresh atoms, computable in $(i,j)$, $\zeta_{i,j}:=\neg s_{i,1}\wedge\dots\wedge\neg s_{i,j-1}\wedge s_{i,j}$, $b_{i,j}:=a_i\vee\zeta_{i,j}$, and $c_R:=\lvert p_R\rvert$ for a $V$-program $p_R$ of an index of the deterministic machine emitting $\forall x\,R(x)$. (b1) For $D_j:=\{(a_1,1),(b_{1,j},1)\}$ and all but at most $1/(\Bel_0(a_1)\epsempty)$ indices $j$, the consistency-requiring probability of $D_j$ is strictly larger in the order $(a_1,b_{1,j})$ than in the order $(b_{1,j},a_1)$. (b2) For every $n$ there are $j_1,\dots,j_n\le\lceil2^{c_R+1}/\epsempty\rceil$ such that, for $D_n:=\{(a_i,1),(b_{i,j_i},1):i\le n\}$, the cumulative loss in the order $(b_{1,j_1},a_1,b_{2,j_2},a_2,\dots)$ exceeds that in the order $(a_1,b_{1,j_1},a_2,b_{2,j_2},\dots)$ by at least $n\log(1+2^{-c_R}\epsempty/2)$ bits.
+\end{proposition}
+
+On a stream $(\alpha_j,1)_{j\ge1}$ of fresh atoms no datum is entailed, so (a) gives a loss linear in $n$, while $\{\forall x\,R(x)\}$ proves the stream and the proof-requiring loss is $O(1)$ (\cref{thm:basic:loss}). In (b) revealing the stronger datum first is more probable; under normalised proof-requiring prediction the weaker datum first is (\cref{thm:basic:order}).
+
+\begin{proof}
 (a) The tapes with $A_\omega=\emptyset$, of mass $\epsempty$, lie in the event $\{H_\omega\text{ consistent}\}$ that normalises $\Belnc_D$, and not in its numerator, since $B\cup D^\pm\nvdash\varphi^b$.
 
-(b) Write $\zeta_{i,j}$ for the sentence $e_{i,j}$ of the statement, so that $b_{i,j}=a_i\vee\zeta_{i,j}$ (this avoids a clash with indices $e$).
-
-\emph{Step 1: one pair, after any revealed set.} Let $D$ be consistent with $\MAnc(D)>0$, let $a,\zeta$ be sentences and $b:=a\vee\zeta$; write $\Pr:=\Pr_D$ and $H:=H_\omega$. Put
+(b) \emph{Step 1: one pair, after any revealed set.} Let $D$ be consistent with $\MAnc(D)>0$, let $a,\zeta$ be sentences and $b:=a\vee\zeta$; write $\Pr:=\Pr_D$ and $H:=H_\omega$. Put
 \[
 \begin{aligned}
 \kappa&:=\Pr[H\cup\{b\}\text{ consistent}],&\theta&:=\Pr[H\cup\{b\}\text{ consistent},\ H\vdash b\to a],\\
@@ -271,15 +353,15 @@ For a single pair the sign of $z$ is not determined by universality; the countin
 \paragraph{An explicit law.}\status{proved; computed}\src{fundamentals Prop 7.2(c)} For a single law the order effect is easy to see. Let $a,\chi$ be fresh atoms and $G:=\{(1,a)\}$, whose theory is $\{a\}$ on the tapes beginning with $1$ and $\emptyset$ otherwise, and let $D:=\{(a,1),(a\vee\chi,1)\}$. In the order $(a,a\vee\chi)$ the consistency-requiring probability of $D$ under $G$ is $\frac12$: only $\{a\}$ proves $a$, and then $a\vee\chi$ is entailed. In the order $(a\vee\chi,a)$ it is $\frac14$: the first factor is $\frac12$, and given $a\vee\chi$ both theories remain consistent and only $\{a\}\cup\{a\vee\chi\}$ proves $a$, so the second factor is $\frac12$.
 
 \begin{proposition}[Graded consistency-requiring weight]\status{proved; computed}\src{fundamentals Prop 7.3}\label{prop:basic:graded}
-(a) For consistent $A$, $\nu^{1/2}_A$ is an order-independent weak semimeasure with $\nu^{1/2}_A(\emptyset)=1$; hence $\MAhalf$ is a weak semimeasure with $\MAhalf(\emptyset)=1-\Inc_0$, and the conditionals of $\MAhalf/\MAhalf(\emptyset)$ form an order-independent predictor. (b) $\MAhalf\ge\MA$. (c) For fresh atoms $p,q$ and $D:=\{(p,1)\}$, $\MAhalf(D+(p\vee q,1))\le\MAhalf(D)-\epsempty/4$, although $B\cup D^\pm\vdash p\vee q$; so $\MAhalf$ is not the law of any theory machine. (d) $\MA(\{(p\wedge q,1)\})=\MA(\{(p,1),(q,1)\})$, but $\MAhalf(\{(p\wedge q,1)\})-\MAhalf(\{(p,1),(q,1)\})\ge\epsempty/4$. (e) $\MAhalf/\MAhalf(\emptyset)$ is not a containment functional, not even of a random partial function on $\Sent$ that ignores logic: for every $\varphi$, its Möbius sum on the inputs $\varphi,\neg\varphi$ (the companion paper's Proposition A.2) equals $-\frac12\Unif\{\omega\in\mathrm{Cons}:A_\omega\text{ decides neither }\varphi\text{ nor }\neg\varphi\}$, which is at most $-\frac12\epsempty<0$ when $B$ does not decide $\varphi$; for $\MA$ the same sum is $\Unif\{\omega\in\mathrm{Cons}:A_\omega\text{ decides neither}\}\ge0$.
+(a) For consistent $A$, $\nu^{1/2}_A$ is an order-independent weak semimeasure with $\nu^{1/2}_A(\emptyset)=1$; hence $\MAhalf$ is a weak semimeasure with $\MAhalf(\emptyset)=1-\Inc_0$, and the conditionals of $\MAhalf/\MAhalf(\emptyset)$ form an order-independent predictor. (b) $\MAhalf\ge\MA$. (c) For fresh atoms $p,q$ and $D:=\{(p,1)\}$, $\MAhalf(D+(p\vee q,1))\le\MAhalf(D)-\epsempty/4$, although $B\cup D^\pm\vdash p\vee q$; so $\MAhalf$ is not the law of any theory machine. (d) $\MA(\{(p\wedge q,1)\})=\MA(\{(p,1),(q,1)\})$, but $\MAhalf(\{(p\wedge q,1)\})-\MAhalf(\{(p,1),(q,1)\})\ge\epsempty/4$. (e) $\MAhalf/\MAhalf(\emptyset)$ is not a containment functional, not even of a random partial function on $\Sent$ that ignores logic: for every $\varphi$, its Möbius sum on the inputs $\varphi,\neg\varphi$ (Proposition A.2 of the companion paper) equals $-\frac12\Unif\{\omega\in\mathrm{Cons}:A_\omega\text{ decides neither }\varphi\text{ nor }\neg\varphi\}$, which is at most $-\frac12\epsempty<0$ when $B$ does not decide $\varphi$; for $\MA$ the same sum is $\Unif\{\omega\in\mathrm{Cons}:A_\omega\text{ decides neither}\}\ge0$.
 \end{proposition}
 
 \begin{proof}[Proof of \cref{prop:basic:graded}]
-(a) Let $B\cup A\cup D^\pm$ be consistent; otherwise every term is $0$. If $B\cup A\vdash\varphi^{b^*}$, then $D+(\varphi,b^*)$ keeps the value (it is consistent with $A$ and has factor $1$), and $D+(\varphi,1-b^*)$ is inconsistent with $A$. If $A$ decides neither $\varphi$ nor $\neg\varphi$, each extension has factor at most $\frac12$. Integrating over $\mathrm{Cons}$ preserves the inequality, and dividing by $\MAhalf(\emptyset)=1-\Inc_0>0$ gives a weak semimeasure with value $1$ at $\emptyset$, to which the companion paper's Proposition 3.3 applies.
+(a) Let $B\cup A\cup D^\pm$ be consistent; otherwise every term is $0$. If $B\cup A\vdash\varphi^{b^*}$, then $D+(\varphi,b^*)$ keeps the value (it is consistent with $A$ and has factor $1$), and $D+(\varphi,1-b^*)$ is inconsistent with $A$. If $A$ decides neither $\varphi$ nor $\neg\varphi$, each extension has factor at most $\frac12$. Integrating over $\mathrm{Cons}$ preserves the inequality, and dividing by $\MAhalf(\emptyset)=1-\Inc_0>0$ gives a weak semimeasure with value $1$ at $\emptyset$, to which Proposition 3.3 of the companion paper applies.
 (b) For a consistent $A$ that proves $\psi_D$, $\nu^{1/2}_A(D)=1$.
 (c) For each consistent $A$ the new datum keeps consistency (it is entailed) and multiplies the value by $1$ or $\frac12$; for $A=\emptyset$ the value drops from $\frac12$ to $\frac14$.
 (d) Per consistent theory: if it proves $p\wedge q$, both values are $1$; if it proves exactly one of $p,q$ and is consistent with the other, both are $\frac12$; if it proves neither and is consistent with $p\wedge q$, they are $\frac12$ and $\frac14$; otherwise both are $0$. Integrate; the empty theory contributes at least $\epsempty/4$ to the difference.
-(e) The Möbius sum on the inputs $\varphi,\neg\varphi$ at $\emptyset$ is $\nu(\emptyset)-\sum_b\nu(\{(\varphi,b)\})-\sum_b\nu(\{(\neg\varphi,b)\})+\sum_{b,b'}\nu(\{(\varphi,b),(\neg\varphi,b')\})$, which we compute per consistent theory $A$ for $\nu=\nu^{1/2}_A$. If $A$ decides $\varphi$, say $B\cup A\vdash\varphi^{b^*}$, the singletons consistent with $A$ are $(\varphi,b^*)$ and $(\neg\varphi,1-b^*)$, both proved (value $1$), and the only pair consistent with $A$ is $\{(\varphi,b^*),(\neg\varphi,1-b^*)\}$ (value $1$); the sum is $1-1-1+1=0$. If $A$ decides neither, all four singletons are consistent and unproved (value $\frac12$ each); of the four pairs, $\{(\varphi,1),(\neg\varphi,0)\}$ and $\{(\varphi,0),(\neg\varphi,1)\}$ are consistent and unproved (value $\frac14$ each), and the other two are inconsistent; the sum is $1-2+\frac12=-\frac12$. Integrate over $\mathrm{Cons}$; the empty-theory tapes decide nothing that $B$ does not decide. For $\MA$ the same computation gives $0$ for a deciding theory and $1-0-0+0=1$ for an undeciding one, since an undeciding theory proves no singleton datum on these inputs; so its sum is the undecided mass. By the companion paper's Proposition A.2, a weak $\nu$ with $\nu(\emptyset)=1$ is a containment functional iff all its Möbius sums are nonnegative.
+(e) The Möbius sum on the inputs $\varphi,\neg\varphi$ at $\emptyset$ is $\nu(\emptyset)-\sum_b\nu(\{(\varphi,b)\})-\sum_b\nu(\{(\neg\varphi,b)\})+\sum_{b,b'}\nu(\{(\varphi,b),(\neg\varphi,b')\})$, which we compute per consistent theory $A$ for $\nu=\nu^{1/2}_A$. If $A$ decides $\varphi$, say $B\cup A\vdash\varphi^{b^*}$, the singletons consistent with $A$ are $(\varphi,b^*)$ and $(\neg\varphi,1-b^*)$, both proved (value $1$), and the only pair consistent with $A$ is $\{(\varphi,b^*),(\neg\varphi,1-b^*)\}$ (value $1$); the sum is $1-1-1+1=0$. If $A$ decides neither, all four singletons are consistent and unproved (value $\frac12$ each); of the four pairs, $\{(\varphi,1),(\neg\varphi,0)\}$ and $\{(\varphi,0),(\neg\varphi,1)\}$ are consistent and unproved (value $\frac14$ each), and the other two are inconsistent; the sum is $1-2+\frac12=-\frac12$. Integrate over $\mathrm{Cons}$; the empty-theory tapes decide nothing that $B$ does not decide. For $\MA$ the same computation gives $0$ for a deciding theory and $1-0-0+0=1$ for an undeciding one, since an undeciding theory proves no singleton datum on these inputs; so its sum is the undecided mass. By Proposition A.2 of the companion paper, a weak $\nu$ with $\nu(\emptyset)=1$ is a containment functional iff all its Möbius sums are nonnegative.
 \end{proof}
 
 \begin{proposition}[The consistency-requiring predictor is a mixture]\status{proved; computed}\src{fundamentals Prop 7.4}\label{prop:basic:crmix}
@@ -383,7 +465,7 @@ Let $\mathfrak M$ be a computable structure in which every element is the value 
 (a) \Cref{thm:basic:loss} with $T=\mathrm{Diag}(\mathfrak M)$, which is consistent with $B$, proves every datum, and has an index computable from one of $\mathfrak M$. (b) \Cref{prop:basic:limits}(b) with $\psi=\vartheta$; it needs $\mathrm{Diag}(\mathbb N)\cup\{\vartheta\}$ and $\mathrm{Diag}(\mathbb N)\cup\{\neg\vartheta\}$ to be consistent with $B$. The first holds in $\mathbb N$. For the second take $\mathbb N\sqcup\{\star\}$ with $S(\star):=\star$, $\star+y:=0$ for every $y$ (including $y=\star$), $y+\star:=\star$ for $y\in\mathbb N$, $\star\cdot y=y\cdot\star:=\star$ for every $y$, and $\star$ incomparable under $<$ with everything. Closed terms take values in $\mathbb N$, which is closed under the operations, so the diagram holds; and $\star+0=0\ne\star$.
 \end{proof}
 
-This is the one-tape form of the coin-free $\omega$-gap of \citet[Theorem 3.9 and Proposition B.8]{claude2026axiominduction}; \cref{sec:logic} studies its anatomy.
+This is the one-tape form of the coin-free $\omega$-gap of Theorem 3.9 and Proposition B.8 of the earlier report; \cref{sec:logic} studies its anatomy.
 
 \begin{proposition}[Complete truths that are not decidable]\status{proved}\src{fundamentals Prop 8.6}\label{prop:basic:noncomplete}
 (a) If $\Cn(D_\infty^\pm)$ is complete and not decidable (for example $\mathcal L=\Lar$, $B\subseteq\Th(\mathbb N)$ decidable, and every sentence labelled by its truth in $\mathbb N$), then $a=0$: $\MA(D_n)\to0$, and the cumulative loss in the semimeasure convention is unbounded.
@@ -394,9 +476,9 @@ This is the one-tape form of the coin-free $\omega$-gap of \citet[Theorem 3.9 an
 (a) On $E_\infty$ the theory is consistent and contains the complete set $\Cn(D_\infty^\pm)$, so it has exactly these consequences. Let $\mathsf M^\omega(\sigma)$ be $1$ or $0$ according as $\sigma$ or $\neg\sigma$ is found first to be provable from $B\cup A_\omega$. On $E_\infty$ it is total and decides $\Cn(D_\infty^\pm)$. If $a>0$, \cref{lem:basic:majority}, with $Z=S:=\Sent$, $\mathcal G=E_\infty$ and $\kappa$ the characteristic function of $\Cn(D_\infty^\pm)$, gives a decision procedure for it, a contradiction. ($\Th(\mathbb N)$ is not decidable, for instance by the inseparability step in the proof of \cref{prop:basic:incomplete}.) (b) The lower bound is \cref{prop:basic:chain}(b), since $\dom D_n$ is computable from $n$. For the upper bound, $\KA(D_n)\le K(\psi_{D_n})+c\le K(n)+n+c'$, since given $n$ the labels are $n$ bits; then use $\LA\le\KA+c$ (\cref{thm:basic:loss}).
 \end{proof}
 
-The coin-free analogues are Proposition 7.11 and Lemma E.11 of \citet{claude2026axiominduction}; \cref{sec:logic} gives the growth rate on $\Th(\mathbb N)$.
+The coin-free analogues are Proposition 7.11 and Lemma E.11 of the earlier report; \cref{sec:logic} gives the growth rate on $\Th(\mathbb N)$.
 
-For the next proposition, $F$ is a function machine of the companion paper (its Definition 3.6) on the inputs $\Sent_{\Lar}$ with labels $\{0,1\}$, and $f^F_\omega$ its random partial labeller. We use two standard facts about $\Q$ (see \citealp{boolos2007computability}): it strongly represents every computable set, and it satisfies the diagonal lemma.
+For the next proposition, $F$ is a function machine in the sense of Definition 3.6 of the companion paper on the inputs $\Sent_{\Lar}$ with labels $\{0,1\}$, and $f^F_\omega$ its random partial labeller. We use two standard facts about $\Q$ (see \citealp{boolos2007computability}): it strongly represents every computable set, and it satisfies the diagonal lemma.
 
 \begin{proposition}[Random theories above $\Q$ are almost surely incomplete]\status{proved, given standard facts about $\Q$}\src{fundamentals Prop 8.7}\label{prop:basic:incomplete}
 Let $\mathcal L\supseteq\Lar$.
@@ -443,10 +525,10 @@ and the numerator minus the denominator is $(p_{11}+p_{01})p_{0\iota}+p_{\iota1}
 (b) After the first $i-1$ pairs both orders have revealed the same set $D_{i-1}(y)$, and the normalised conditionals depend only on the current set and the queried sentence. So the difference is the sum over $i$ of $\log(q^{(i)}_2/q^{(i)}_1)$, computed as in (a) under the posterior $P_{i-1}:=\Unif(\cdot\mid E_{D_{i-1}(y)})$ in place of the prior restricted to $\mathrm{Cons}$; the zero cells of (a) hold for every consistent theory. Write $m_1:=p_{11}+p_{01}$, $m_2:=p_{\iota1}$, $m_3:=p_{00}$ and $m_4:=p_{0\iota}$ for the cell masses under $P_{i-1}$; they sum to at most $1$, and $m_1>0$ (the tapes of $G_{\rm ca}$ that agree with $y$ up to $i$). The ratio is $1+[m_1m_4+m_2(m_3+m_4)]/[(m_1+m_2+m_3)m_1]\ge1+m_4/(m_1+m_2+m_3)\ge1+m_4=1+v_i(y)$. Next, $\log(1+v)\ge v$ for $v\in[0,1]$. The tapes $p\,\omega'$, with $p$ the program for $G_{\rm ca}$, $\omega'_{<i}=y_{<i}$ and $\omega'_i\ne y_i$, lie in $E_{D_{i-1}(y)}$ (their theory proves $\alpha_j$, hence $\beta_j$, for $j<i$), refute $\alpha_i$, and do not decide $a'_i$ (by (L2) of \cref{lem:basic:fresh}); they have measure $2^{-c_1-i}$. So $v_i(y)\ge2^{-c_1-i}/\MA(D_{i-1}(y))$. Over uniform $y$, Jensen's inequality gives $\Ex[1/\MA(D_{i-1})]\ge1/\Ex[\MA(D_{i-1})]$. Moreover $\MA(D_{i-1}(y))=\Bel_0(\bigwedge_{j<i}\alpha_j)$, and these conjunctions are pairwise incompatible for distinct $y_{<i}$, so $\sum_{y_{<i}}\MA(D_{i-1}(y))\le1$ and $\Ex[\MA(D_{i-1})]\le2^{-(i-1)}$. Hence $\Ex\,v_i\ge2^{-c_1-1}$; sum over $i\le n$.
 \end{proof}
 
-The mechanism is the failure of the companion paper's two-point criterion (its Proposition A.7): whether the random theory decides $a\vee\chi$ depends on its answer to $a$, since a theory proving $a$ always decides $a\vee\chi$ and one refuting $a$ need not. The witnesses use logical structure: in one order the second datum is entailed. On logically independent data the question stays open.
+The mechanism is the failure of the two-point criterion of Proposition A.7 of the companion paper: whether the random theory decides $a\vee\chi$ depends on its answer to $a$, since a theory proving $a$ always decides $a\vee\chi$ and one refuting $a$ need not. The witnesses use logical structure: in one order the second datum is entailed. On logically independent data the question stays open.
 
 \begin{question}\status{open}\src{synthesis \S6 item 3; fundamentals Thm 11.1 remarks}\label{q:basic:indeporder}
-Is the normalised loss of $\MA$ order dependent on logically independent data, for instance on positive literals of a fresh predicate? This is the companion paper's Question A.8 in another guise: on such data $\MA\asymp\MF$ (\cref{thm:soi:transfer}), but constant factors do not control normalised conditionals.
+Is the normalised loss of $\MA$ order dependent on logically independent data, for instance on positive literals of a fresh predicate? This is Question A.8 of the companion paper in another guise: on such data $\MA\asymp\MF$ (\cref{thm:soi:transfer}), but constant factors do not control normalised conditionals.
 \end{question}
 
 The single shortest compatible theory can be a poor predictor where the mixture is good. Let $a_1,\dots,a_m$ be fresh atoms, and for $w\in\{0,1\}^m$ let $\mathrm{desc}(w):=\bigwedge_{i\le m}a_i^{w_i}$.
@@ -471,7 +553,7 @@ Then: (1) every presented sentence is true in the valuation $w^*$, so the data s
 If $\prec$ refines length, every program compatible with $D$ proves $\mathrm{desc}(w^*)$, and the $\prec$-first of them is $p_{w^*}$, so $\KA(D)=\lvert p_{w^*}\rvert$. The $2^m$ distinct programs $p_w$ all have length at most $\lvert p_{w^*}\rvert$, and Kraft's inequality gives $2^m\le2^{\lvert p_{w^*}\rvert}$. Finally $K(m)\le2\log m+c\le2\log k+c$.
 \end{proof}
 
-The stream is not computable, since it depends on the programs $p_w$. The construction is logical: in \SOIabbr on strings the analogous decoys would be beaten by the constant labeller ``true'', which is not available here because $\{\neg\mathrm{desc}(v):v\in\{0,1\}^m\}$ is inconsistent. As in the conjunction ladder of the companion paper (its Theorem 9.10), it is the selection rule that fails, not the prior.
+The stream is not computable, since it depends on the programs $p_w$. The construction is logical: in \SOIabbr on strings the analogous decoys would be beaten by the constant labeller ``true'', which is not available here because $\{\neg\mathrm{desc}(v):v\in\{0,1\}^m\}$ is inconsistent. As in the conjunction ladder of Theorem 9.10 of the companion paper, it is the selection rule that fails, not the prior.
 
 \begin{proof}[Proof of \cref{prop:basic:mistakes}(c)]
 For each $w\ne0^m$ fix a program $q_w\in\dom V$ for an index of $\{\mathrm{desc}(w)\}$. Let $\prec$ list the $2^m-1$ programs $q_w$ first, in any order, and then the rest of $\dom V$ by length; this is a well-order of type $\omega$. A consistent theory proves at most one $\mathrm{desc}(w)$, so $p_w=q_w$ for $w\ne0^m$ (notation of the proof of \cref{thm:basic:kolmogorov}), and $p_{0^m}$ lies in the tail; hence $w^*=0^m$. \Cref{thm:basic:kolmogorov}, which holds for every well-order, gives $2^m-1$ errors or abstentions on a data set $D$ whose conjunction is equivalent to $\mathrm{desc}(0^m)$, so $\KA(D)\le K(\mathrm{desc}(0^m))+c\le K(m)+c'$; and $K(m)\le2\log m+c''$.
@@ -479,9 +561,11 @@ For each $w\ne0^m$ fix a program $q_w\in\dom V$ for an index of $\{\mathrm{desc}
 
 \subsection{The generative variant}\label{app:basic:generative}
 
-We make the generative variant of \cref{def:setting:variants} precise. Take $B=\emptyset$, or include $B$ among the axioms. Fix the likelihood of Definition 2.9 of \citet{claude2026axiominduction}: a derivation grammar with positive rule probabilities, a full-support instantiation grammar, and admissible parameters. For a set $A$ of axioms with an enumeration $(\chi_1,\chi_2,\dots)$, give $\chi_j$ the citation weight proportional to $2^{-j}$ (normalised; no axiom is cited if $A=\emptyset$), and let $P_A$ be the resulting law on sentences. In the one-tape form, split the tape into $\omega^{(0)},\omega^{(1)},\dots$ by a computable interleaving; the theory is $A_\omega:=A^{G_U}_{\omega^{(0)}}$, enumerated in the order of emission, and the $i$-th datum $\sigma_i$ is sampled from $P_{A_\omega}$ with the coins $\omega^{(i)}$. The universal law of unlabelled data streams is $\Xi(\sigma_{1:n}):=\int\prod_{i\le n}P_{A_\omega}(\sigma_i)\,d\Unif(\omega)$, and the generative posterior $\varrho_n$ after $n$ data has density proportional to $\prod_{i\le n}P_{A_\omega}(\sigma_i)$ with respect to $\Unif$.
+\begin{definition}[Generative law]\status{definition}\src{fundamentals Def 1.10; \S9}\label{def:setting:generative}
+Take $B=\emptyset$, or include $B$ among the axioms. Fix the likelihood $L_1$ of Definition 2.9 of the earlier report: a derivation grammar with positive rule probabilities, a full-support instantiation grammar, and admissible parameters. For a set $A$ of axioms with an enumeration $(\chi_1,\chi_2,\dots)$, give $\chi_j$ the citation weight proportional to $2^{-j}$ (normalised; no axiom is cited if $A=\emptyset$), and let $P_A$ be the resulting law on sentences. The data are unlabelled sentences $\sigma_1,\sigma_2,\dots$. In the one-tape form, split the tape into $\omega^{(0)},\omega^{(1)},\dots$ by a computable interleaving; the theory is $A_\omega:=A^{G_U}_{\omega^{(0)}}$, enumerated in the order of emission, and the $i$-th datum $\sigma_i$ is sampled from $P_{A_\omega}$ with the coins $\omega^{(i)}$. The universal law of unlabelled data streams is $\Xi(\sigma_{1:n}):=\int\prod_{i\le n}P_{A_\omega}(\sigma_i)\,d\Unif(\omega)$, and the generative posterior $\varrho_n$ after $n$ data has density proportional to $\prod_{i\le n}P_{A_\omega}(\sigma_i)$ with respect to $\Unif$.
+\end{definition}
 
-Consider the \emph{support condition}: $\supp P_A=\Cn(A)$ for every set of axioms $A$. Lemma 2.10(c) of \citet{claude2026axiominduction} proves it for finite template theories; we use it here as a hypothesis.
+Consider the \emph{support condition}: $\supp P_A=\Cn(A)$ for every set of axioms $A$. Lemma 2.10(c) of the earlier report proves it for finite template theories; we use it here as a hypothesis.
 
 \begin{proposition}[Generative updating, given the support condition]\status{proved, given the support condition}\src{fundamentals Prop 9.1 (ii), (iii)}\label{prop:basic:generative}
 Assume the support condition.
@@ -497,12 +581,12 @@ the proof-requiring belief under a posterior reweighted by how likely each theor
 (a) By the support condition, $P_A(\sigma_i)>0$ iff $\sigma_i\in\Cn(A)$. (b) $\supp P_A=\Cn(A)$ contains at most one of $\varphi,\neg\varphi$, by consistency, and contains one of them iff $A$ decides $\varphi$; then apply Bayes' rule.
 \end{proof}
 
-Inconsistent theories pay the size principle: by Lemma 2.21 of \citet{claude2026axiominduction}, a theory with mass $\varepsilon$ outside the support of the data law loses at least $\log\frac1{1-\varepsilon}$ bits per datum in expectation. The generative variant thus models which sentences get stated; the outcome ``independent'' disappears because the model presupposes that asked questions are answered.
+Inconsistent theories pay the size principle: by Lemma 2.21 of the earlier report, a theory with mass $\varepsilon$ outside the support of the data law loses at least $\log\frac1{1-\varepsilon}$ bits per datum in expectation. The generative variant thus models which sentences get stated; the outcome ``independent'' disappears because the model presupposes that asked questions are answered.
 
 \begin{remark}[Supports and identification]\status{proof sketch}\src{fundamentals Prop 9.1 (i), (iv)}\label{rem:basic:generative}
 We expect the following two statements to hold, and give only proof sketches. (i) \emph{Supports}: the support condition holds for every axiom set in which every axiom has positive citation weight. (ii) \emph{Identification}: if $\sigma_1,\sigma_2,\dots$ are independent draws from $P_{T^*}$, the law of the deterministic machine that emits a consistent r.e.\ $T^*$, then the generative posterior probability of $\{\omega:\Cn(A_\omega)=\Cn(T^*)\}$ tends to $1$ almost surely; by contrast, the proof-requiring posterior on two-valued data presenting $T^*$ reaches only the prior restricted to the consistent extensions of $T^*$ (\cref{prop:basic:limits}(b)).
 
-\emph{Proof sketch.} We do not write out the support condition for r.e.\ axiom sets, nor the measurability of $\omega\mapsto P_{A_\omega}$ that (ii) needs. For (i), the argument of Lemma 2.10(c) of \citet{claude2026axiominduction} applies to such axiom sets: each derivation tree that cites finitely many axioms has positive probability. For (ii), $\supp P_{A_\omega}=\Cn(A_\omega)$ is almost surely a function of the infinite sample (the set of sentences that occur), so Doob's consistency theorem (Theorem 4.2 of \citealp{claude2026axiominduction}; \citealp{doob1949application}) gives posterior consistency for it at $\Unif$-almost every $\omega$; the tapes whose theory has the law $P_{T^*}$ form a set of positive measure, so the statement holds almost surely under $P_{T^*}$.
+\emph{Proof sketch.} We do not write out the support condition for r.e.\ axiom sets, nor the measurability of $\omega\mapsto P_{A_\omega}$ that (ii) needs. For (i), the argument of Lemma 2.10(c) of the earlier report applies to such axiom sets: each derivation tree that cites finitely many axioms has positive probability. For (ii), $\supp P_{A_\omega}=\Cn(A_\omega)$ is almost surely a function of the infinite sample (the set of sentences that occur), so Doob's consistency theorem (Theorem 4.2 of the earlier report; \citealp{doob1949application}) gives posterior consistency for it at $\Unif$-almost every $\omega$; the tapes whose theory has the law $P_{T^*}$ form a set of positive measure, so the statement holds almost surely under $P_{T^*}$.
 \end{remark}
 
 \subsection{Priors that complete their random theory}\label{app:basic:demski}
@@ -528,7 +612,7 @@ We compare $\MA$ with two processes that draw sentences or theories until the th
 (d) is \cref{prop:basic:prcr}.
 \end{proof}
 
-Running either process needs a consistency test at every step: already for $B=\emptyset$, a language with a binary relation symbol and one draw, it asks whether a sentence is satisfiable, which is undecidable by Church's theorem in Kalmár's form \citep{church1936note,kalmar1937zuruckfuhrung}; the processes are computable relative to $\emptyset'$, since consistency of a finite set is $\Pi^0_1$ (a single draw of Process 2 can output one sentence). A theory machine emits sentences unconditionally, and consistency enters $\MA$ only once, as the event measured (\cref{prop:basic:form}). So Process 2 and $\MA$ share the sampling stage, and with it the program-length credit for infinite schemas and dominance over the laws of machines; that stage is not new here. They differ in completion (iterated draws to a complete theory against a single draw, whose theory is incomplete with positive probability), in what a prediction is (a coherent probability over completions against a belief function of provability with an independent outcome), and in what is conditioned on (for complete theories the two compatibility notions coincide; for $\MA$ they differ, and the proof-requiring one carries the learning guarantees of \cref{sec:basic}).
+Running either process needs a consistency test at every step: already for $B=\emptyset$, a language with a binary relation symbol and one draw, it asks whether a sentence is satisfiable, which is undecidable by Church's theorem in Kalmár's form \citep{church1936note,kalmar1937zuruckfuhrung}. Process 1 is computable relative to $\emptyset'$, since consistency of a finite set is $\Pi^0_1$. Process 2 needs a consistency test relative to the tapes, which is $\Pi^0_1$ in them. Neither is computable, since a single draw of Process 2 can output one sentence. A theory machine emits sentences unconditionally, and consistency enters $\MA$ only once, as the event measured (\cref{prop:basic:form}). So Process 2 and $\MA$ share the sampling stage, and with it the program-length credit for infinite schemas and dominance over the laws of machines; that stage is not new here. They differ in completion (iterated draws to a complete theory against a single draw, whose theory is incomplete with positive probability), in what a prediction is (a coherent probability over completions against a belief function of provability with an independent outcome), and in what is conditioned on (for complete theories the two compatibility notions coincide; for $\MA$ they differ, and the proof-requiring one carries the learning guarantees of \cref{sec:basic}).
 
 \subsection{Domination of provability functions}\label{app:basic:domination}
 
@@ -537,11 +621,11 @@ Recall from \cref{sec:basic:order} that a random consistent theory $\Theta$ has 
 \begin{proposition}[Partial domination]\status{(a), (b) proved; (c) proved, given \cref{thm:soi:transfer}}\src{fundamentals Prop 11.4}\label{prop:basic:domination}
 (a) For every lsc provability function $\beta$, every finite set $S$ of pairwise $B$-incompatible sentences and every $\sigma\in S$: $\Bel_0(\sigma)\ge2^{-K(\beta)-K(S)-c}\beta(\sigma)$. In particular $\MA(D)\ge2^{-K(\beta)-K(\dom D)-c}\beta(\psi_D)$.
 (b) If $\Theta$ is the deductive closure of the output of a theory machine $G$ whose output is almost surely consistent, then $\Bel_0\ge2^{-K(G)}\beta$.
-(c) In the literal setting, \cref{q:basic:domination} restricted to random sets of literals of $R$ with at most one literal per word (with a lower semicomputable containment functional on literal data, and domination required on literal data) is equivalent to the companion paper's Question 3.14 for labels $\{0,1\}$: whether its one-tape law $\MF$ dominates every lower semicomputable law of a random partial function, up to a constant factor.
+(c) In the literal setting, \cref{q:basic:domination} restricted to random sets of literals of $R$ with at most one literal per word (with a lower semicomputable containment functional on literal data, and domination required on literal data) is equivalent to Question 3.14 of the companion paper for labels $\{0,1\}$: whether its one-tape law $\MF$ dominates every lower semicomputable law of a random partial function, up to a constant factor.
 \end{proposition}
 
 \begin{proof}
 (a) $\Theta$ contains at most one member of $S$, by consistency, so $\sum_{\sigma\in S}\beta(\sigma)\le1$, and $\beta$ restricted to $S$ is a semimeasure, lsc uniformly in $S$. The conditional coding theorem (\cref{sec:setting:data}) gives $K(\sigma\mid S)\le-\log\beta(\sigma)+K(\beta)+c$. If $\beta(\sigma)>0$, then $\sigma$ is consistent with $B$, and the one-axiom theory $\{\sigma\}$ gives $\Bel_0(\sigma)\ge2^{-K(\sigma)-c}\ge2^{-K(S)-K(\sigma\mid S)-c'}$. For $D$, take $S$ to be the label conjunctions on $\dom D$. (b) Then $\beta(\chi)=\nu_G(\{(\chi,1)\})$, and \cref{thm:basic:dominance} gives $\Bel_0(\chi)=\MA(\{(\chi,1)\})\ge2^{-K(G)}\nu_G(\{(\chi,1)\})$. (c) A random set $\Lambda$ of literals with at most one literal per word corresponds to the random partial function $h_\Lambda$ with $h_\Lambda(x)=b$ iff $R(t_x)^b\in\Lambda$, and $\Pr[\Lambda\supseteq D^\pm]=\Pr[h_\Lambda\supseteq D^{\rm str}]$, with $D^{\rm str}$ the string data set of $D$; and $\MA(D)\asymp\MF(D^{\rm str})$ on literal data (\cref{thm:soi:transfer}).
 \end{proof}
 
-So \cref{q:basic:domination} is at least as hard as the binary case of the companion paper's question, and for general sentences it is open. The obstacle is the same: a lower semicomputable law of a random object need not be realisable by a machine that reads one tape. Note that $\Bel_0$ itself is not lower semicomputable (\cref{thm:basic:inc}), while $\Bel_0+\Inc_0$ is; and by \cref{cor:basic:localdefect}, a theory-machine law above $\Q$ always has a local defect somewhere, so the question is not trivial.
+So \cref{q:basic:domination} is at least as hard as the binary case of Question 3.14 of the companion paper, and for general sentences it is open. The obstacle is the same: a lower semicomputable law of a random object need not be realisable by a machine that reads one tape. Note that $\Bel_0$ itself is not lower semicomputable (\cref{thm:basic:inc}), while $\Bel_0+\Inc_0$ is; and by \cref{cor:basic:localdefect}, a theory-machine law above $\Q$ always has a local defect somewhere, so the question is not trivial.
