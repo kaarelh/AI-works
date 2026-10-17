@@ -1,4 +1,539 @@
-% STUB written by the planning editor. The section writer replaces this file.
-% Plan: ../OUTLINE.md (section "app:shape"); results: ../CLAIMS.md; notation: ../NOTATION.md.
+% Appendix E: proofs for theory shape. Writer: group shape. Plan: ../OUTLINE.md (Appendix E); rows: ../CLAIMS.md §6.
+% Source: research/tracks/shape/notes-final.md §1-§8 (proofs, statuses), §9 (literature), §13 (open problems);
+% bib/bib-report.md §2.4, §4.1, §5. Local renames (logged in logs/write-shape.md): Elias delta -> El; s_k(m) -> sp_k(m);
+% s(w) -> sz(w); pi(q) -> pat; gamma (positive point) -> zeta; E_q -> Lambda_q, g_star -> e_star, (u,c) -> (u,a);
+% N(v) -> Nb(v); c(j) -> cnt(j); events E_a -> B_a; U -> U_0; gates g_t -> o_t; f_q -> Unsat_q; Theta (Thm 5.2) -> Gamma;
+% J (Prop 8.2) -> Obj; pi (a proof) -> \mathcal D; lambda_i (Prop 2.9a) -> literals x_i^{x^0_i}; class sizes c_i -> |J_i|.
 \section{Proofs for theory shape}\label{app:shape}
-\emph{(To be written.)}
+
+Throughout, $\mathcal S$ is a law on the base variables $x_1,\dots,x_m$, $\Phi$ an explicit or linear theory with $m_{\rm aux}$ auxiliary variables and $\bar m:=m+m_{\rm aux}$ variables in all, and $\mathbf e_j$ the $j$-th unit vector. A partial assignment is identified with the set of literals it makes true, and $\hat x$ is the conjunction of the base literals true at $x\in\{0,1\}^m$. For a sentence or literal $\varphi$, $\varphi^1:=\varphi$ and $\varphi^0:=\neg\varphi$.
+
+% ======================================================================
+\subsection{The model: the listing code, the two encodings, the bridge}\label{app:shape:setting}
+
+Theories that differ only by a renaming of their auxiliary variables are identified, and each class has a fixed canonical representative whose auxiliary variables are $y_1,\dots,y_{m_{\rm aux}}$ and whose clauses are listed in a fixed canonical order (for instance the lexicographically least listing). Let $\ell_{\mathbb N}(n):=\lvert\mathrm{El}(n+1)\rvert$ for $n\ge0$, with $\mathrm{El}$ the Elias delta code of the positive integers; $\ell_{\mathbb N}$ is nondecreasing and the lengths of a prefix code of $\{0,1,2,\dots\}$. The \emph{listing length} of a canonical explicit theory is
+\begin{equation}\label{eq:shape:lst}
+\ell_{\rm lst}(\Phi):=\ell_{\mathbb N}(m_{\rm aux})+\ell_{\mathbb N}(\lvert\Phi\rvert)+\sum_{C\in\Phi}\bigl(\ell_{\mathbb N}(\lvert C\rvert)+\lvert C\rvert(\lceil\log\bar m\rceil+1)\bigr),
+\end{equation}
+each literal being written as a variable index and a sign; a linear theory is listed likewise, each equation by its support and its constant, with $\ell_{\mathbb N}(\lvert u\rvert)+\lvert u\rvert\lceil\log\bar m\rceil+1$ bits for an equation of support size $\lvert u\rvert$. Clearly $\ell_{\rm lst}(\Phi)\ge\lVert\Phi\rVert$.
+
+\begin{lemma}[The listing code]\label{lem:shape:code}
+\status{proved; computed}\src{shape Lemma 1.7}
+$\sum2^{-\ell_{\rm lst}(\Phi)}\le1$ over the canonical explicit theories, and $\ell_{\rm lst}(\Phi\setminus\{C\})<\ell_{\rm lst}(\Phi)$ for every $C\in\Phi$. In particular an $\ell_{\rm lst}$-shortest $\mathcal R$-compatible theory is inclusion-minimal among the $\mathcal R$-compatible theories.
+\end{lemma}
+
+\begin{proof}
+Fix $m_{\rm aux}$. The code of a single clause (its length by $\ell_{\mathbb N}$, then that many literals of $\lceil\log\bar m\rceil+1$ bits each) is a prefix code on finite sequences of literals, so $\sum_C2^{-\ell(C)}\le1$ over clauses written in canonical order, where $\ell(C)$ is the summand of \eqref{eq:shape:lst}. The sets of $s$ distinct clauses have total weight at most $(\sum_C2^{-\ell(C)})^s/s!\le1$. The codes $\ell_{\mathbb N}(m_{\rm aux})$ and $\ell_{\mathbb N}(s)$ contribute factors whose sums over $m_{\rm aux}$ and over $s$ are at most $1$, and canonical theories are a subset of all clause sets; this gives the Kraft inequality. Removing a clause $C$ removes $\ell(C)>0$ bits and replaces $\ell_{\mathbb N}(s)$ by $\ell_{\mathbb N}(s-1)\le\ell_{\mathbb N}(s)$; if it removes the last occurrence of an auxiliary variable, then $m_{\rm aux}$ and $\lceil\log\bar m\rceil$ do not increase either (after renaming to canonical form, which does not change $\ell_{\rm lst}$).
+\end{proof}
+
+For two base variables the Kraft sum is $0.2525$ (a direct computation over all $256$ theories; code in the accompanying repository).
+
+\begin{lemma}[Compatibility with all questions forces the projection]\label{lem:shape:forces}
+\status{proved; computed; for the chain law with m=2 refuted (counterexample kept)}\src{shape Lemma 1.5}
+Let $\mathcal R$ be sound and $\Phi$ $\mathcal R$-compatible with $\mathcal Q(\mathcal S)$. Then $\proj\Phi\subseteq\mathcal S$; and $\proj\Phi=\mathcal S$ if every $x\in\mathcal S$ has a coordinate that is determined on $\mathcal S$ by the others. This holds for every affine law and for the chain law $\mathrm{Ch}_m:=\{x:x_1\le\dots\le x_m\}$ with $m\ge3$; so for these laws, $\mathcal R$-compatibility with $\mathcal Q(\mathcal S)$ and $\mathcal R$-usability coincide.
+\end{lemma}
+
+\begin{proof}
+Let $x\notin\mathcal S$. Choose $I\subsetneq[m]$ maximal such that $\alpha:=x|_I$ is consistent with $\mathcal S$ ($I=\emptyset$ qualifies since $\mathcal S\ne\emptyset$, and $I\ne[m]$ since $x\notin\mathcal S$). For $j\notin I$, the extension of $\alpha$ by the value of $x_j$ at $x$ is inconsistent with $\mathcal S$, so $\mathcal S\wedge\alpha$ entails the literal $\ell$ on $x_j$ that is false at $x$, and $(\alpha,\ell)\in\mathcal Q(\mathcal S)$. Compatibility and soundness give $\Phi\cup\alpha\models\ell$; $x$ extends $\alpha$ and falsifies $\ell$, so $x\notin\proj\Phi$. Conversely, let $x\in\mathcal S$ have its coordinate $j$ determined by $\alpha:=x|_{[m]\setminus\{j\}}$. Then $(\alpha,\ell)\in\mathcal Q(\mathcal S)$ for the literal $\ell$ on $x_j$ true at $x$, so $\Phi\cup\alpha$ is satisfiable, by a point of $\proj\Phi\subseteq\mathcal S$ extending $\alpha$, and the only such point of $\mathcal S$ is $x$.
+For an affine law, a coordinate $j$ is determined by the others if and only if $j$ lies in the support of a nonzero derived equation (\cref{lem:shape:circuits} with $I=[m]\setminus\{j\}$); such a $j$ exists since $r\ge1$, and the property does not depend on $x$. For $\mathrm{Ch}_m$, the points are $0^a1^{m-a}$; if $a\ge2$, then $x_2=0$ forces $x_1=0$, and if $m-a\ge2$, then $x_{m-1}=1$ forces $x_m=1$; one of the two holds as $m\ge3$.
+\end{proof}
+
+The hypothesis $m\ge3$ is needed: $\Phi=\{\neg x_1\vee x_2,\ x_1\vee\neg x_2\}$ is $\UP$- and $\PS_\infty$-compatible with $\mathcal Q(\mathrm{Ch}_2)$, whose only questions are ``$x_1=1$, so $x_2=1$'' and ``$x_2=0$, so $x_1=0$'', but $\proj\Phi=\{00,11\}\ne\mathrm{Ch}_2$; the point $01$ has no determined coordinate.
+
+\begin{proposition}[The two-valued encoding is degenerate]\label{prop:shape:E2}
+\status{proved; computed}\src{shape Prop 1.8}
+Encode a conditional datum $(\alpha,\ell)$ by the sentence $\bigwedge\alpha\to\ell$ labelled true, with $B=\emptyset$. Then every consistent theory that proves all sentences proved by a compatible theory is compatible. In particular, for every law $\mathcal S$ and every $x^0\in\mathcal S$, the theory $T_{x^0}:=\{x_i^{x^0_i}:i\le m\}$ proves $\bigwedge\alpha\to\ell$ for every $(\alpha,\ell)\in\mathcal Q(\mathcal S)$, so $\KA(\{(\bigwedge\alpha\to\ell,1):(\alpha,\ell)\in\mathcal Q(\mathcal S)\})\le K(x^0)+c$; for a homogeneous affine law ($b=0$, $x^0=0$) this is at most $K(m)+c$.
+\end{proposition}
+
+\begin{proof}
+Compatibility with a datum labelled true asks only that the theory be consistent and prove the sentence, which passes to consistent theories proving more. If $\alpha$ agrees with $x^0$, then $x^0$ is a point of $\mathcal S$ extending $\alpha$, so $x^0$ satisfies $\ell$ and $T_{x^0}\vdash\ell$; otherwise $T_{x^0}\vdash\neg\bigwedge\alpha$. Either way $T_{x^0}\vdash\bigwedge\alpha\to\ell$, and $T_{x^0}$ is consistent and computable from $x^0$.
+\end{proof}
+
+Under this encoding the data cannot distinguish a law from a single world that satisfies it. Encoding \Ethree{} of \cref{def:setting:questions} makes ``given $\alpha$'' hypothetical: a compatible theory may not refute an antecedent, so no single world fits question data with two incompatible antecedents. \Ethree{} is not upward closed, so it cannot be expressed by two-valued proof-requiring labels. For a conditional data set $D$ we write $\KA(D)$ and $\WA(D)$ for the inducers of \cref{def:setting:versions} over the language $\mathcal L_m$ with $B=\emptyset$, in which an r.e.\ theory $T$ is compatible with $D$ if it is compatible with every datum of $D$ under \Ethree.
+
+\begin{proposition}[The bridge to \SAIabbr]\label{prop:shape:bridge}
+\status{proved}\src{shape Prop 1.9}
+(a) With $\mathcal R=\PS_\infty$ and as hypotheses the r.e.\ sets of $\mathcal L_m$-sentences, or the r.e.\ sets of clauses over the base variables, $\KA^{\PS_\infty}(D)=\KA(D)\pm c$ and $\WA^{\PS_\infty}(D)\asymp\WA(D)$ on every conditional data set $D$.
+(b) With finite explicit theories, of either class, $\KA(D)-c\le\KA^{\PS_\infty}(D)\le\KA(D)+\ell_{\mathbb N}(m)+\ell_{\mathbb N}(2^m)+c$, that is, up to $m+O(\log m)$ bits.
+\end{proposition}
+
+\begin{proof}
+(a) For sets of sentences, $\PS_\infty$-compatibility of an r.e.\ set $T$ is \Ethree, by the completeness theorem: $T\cup\alpha$ is satisfiable if and only if it is consistent, and $\PS_\infty$ returns $\ell$ if and only if $T\cup\alpha\vdash\ell$. For sets of clauses, a fixed program turns an enumeration of $T$ into an enumeration of $\mathrm{Cl}(T)$, the set of clauses over the base variables derivable from $T$. For every question, $T\cup\alpha$ is inconsistent iff $T\vdash\neg\bigwedge\alpha$ iff the clause $\neg\alpha$ is in $\mathrm{Cl}(T)$ iff $\mathrm{Cl}(T)\cup\alpha$ is inconsistent (as $\mathrm{Cl}(T)\subseteq\Cn(T)$); and $T\cup\alpha\vdash\ell$ iff the clause $\neg\alpha\vee\ell$ (non-tautological, as $\ell$ is on a variable outside $\dom\alpha$) is in $\mathrm{Cl}(T)$ iff $\mathrm{Cl}(T)\cup\alpha\vdash\ell$. So $T$ and $\mathrm{Cl}(T)$ are compatible with the same conditional data. (A theory of $\mathcal L_m$ need not consist of Boolean combinations of the atoms, since $\mathcal L_m$ has equality and quantifiers; $\mathrm{Cl}(T)$ replaces a normal form.) Conversely, clauses are sentences. The weights compare in the same way, through the fixed maps on programs.
+(b) \emph{Left.} A fixed prefix replaces a finite explicit theory $\Phi$, whose auxiliary variables are not symbols of $\mathcal L_m$, by $\PI(\proj\Phi)$, a finite set of $\mathcal L_m$-sentences. It is compatible with the same data: $\Phi\cup\alpha$ is satisfiable iff $\proj\Phi$ meets $\alpha$, and for a base literal $\ell$, $\Phi\cup\alpha\models\ell$ iff every point of $\proj\Phi$ extending $\alpha$ satisfies $\ell$. \emph{Right.} Let $p$ enumerate a consistent $T$ that is compatible with $D$ under \Ethree, and let $\mathcal S_T:=\{x:T\cup\{\hat x\}\text{ consistent}\}$. Then $\mathcal S_T\ne\emptyset$, since otherwise $T$ proves $\bigwedge_x\neg\hat x$, which is refutable. Since $x\notin\mathcal S_T$ iff $T\vdash\neg\hat x$, a program given $p$, $m$ and $\lvert\mathcal S_T\rvert$ (self-delimiting, with $\ell_{\mathbb N}(m)+\ell_{\mathbb N}(\lvert\mathcal S_T\rvert)+c$ extra bits) enumerates refutations until $2^m-\lvert\mathcal S_T\rvert$ points are refuted, and outputs $\PI(\mathcal S_T)$. By completeness, $T\cup\alpha$ is consistent iff $\mathcal S_T$ meets $\alpha$, and $T\cup\alpha\vdash\ell$ iff every point of $\mathcal S_T$ extending $\alpha$ satisfies $\ell$, as $\ell$ is a base literal. So $\PI(\mathcal S_T)$ is $\PS_\infty$-compatible with $D$ exactly when $T$ is, and $\ell_{\mathbb N}(\lvert\mathcal S_T\rvert)\le\ell_{\mathbb N}(2^m)$.
+\end{proof}
+
+So the reasoner-relative inducers extend \SAIabbr: with an ideal deducer and \Ethree{} they are \SAIabbr on question data, up to the gap between finite and r.e.\ hypotheses in (b). We do not know whether that gap is attained.
+
+% ======================================================================
+\subsection{Program length, listing and time}\label{app:shape:invisible}
+
+\begin{lemma}[Prime implicates and one round of propagation]\label{lem:shape:PI}
+\status{proved ((a) folklore; del Val 1994 in substance); computed}\src{shape Lemma 1.10}
+Let $\mathcal S$ be any law.
+(a) If $\alpha$ is consistent with $\mathcal S$ and $\mathcal S\wedge\alpha\models\ell$, one round of unit propagation on $\PI(\mathcal S)\cup\alpha$ derives $\ell$.
+(b) Every $\UP_1$-usable $\Phi\in\mathcal E^{\rm base}_m$ contains $\PI(\mathcal S)$.
+\end{lemma}
+
+Part (a) is folklore; compiling a theory so that unit resolution becomes complete is studied by \citet{delval1994tractable}.
+
+\begin{proof}
+(a) The clause $\neg\alpha\vee\ell$ is an implicate of $\mathcal S$, so it contains a prime implicate $C$. If $\ell\notin C$, then $C\subseteq\neg\alpha$ is falsified by $\alpha$, contradicting the consistency of $\alpha$ with $\mathcal S$. So $\ell\in C$ and all other literals of $C$ are falsified by $\alpha$: $C$ fires in round $1$. No conflict arises, since $\PI(\mathcal S)\cup\alpha$ is satisfiable.
+(b) Let $C=\neg\alpha'\vee\ell\in\PI(\mathcal S)$. Since $C$ is prime, $\neg\alpha'$ is not an implicate, so $\alpha'$ is consistent with $\mathcal S$ and $(\alpha',\ell)\in\mathcal Q(\mathcal S)$. In one round from $\alpha'$, the clause of $\Phi$ that derives $\ell$ has all its other literals falsified by $\alpha'$, so it is some $C'\subseteq C$ with $\ell\in C'$; $C'$ is an implicate of $\mathcal S$ (as $\Phi$ is a theory over the base variables with $\proj\Phi=\mathcal S$), so $C'=C$ by primality.
+\end{proof}
+
+\begin{proof}[Proof of \cref{thm:shape:invisible}]
+Let $\mathrm{comp}(\Phi'):=\PI(\proj\Phi')$, computable from $\Phi'$ (a linear theory is first written as clauses). If $\Phi'$ is $\mathcal R'$-compatible with $D$ then, by soundness, for each $(\alpha,\ell)\in D$ the set $\Phi'\cup\alpha$ is satisfiable and entails $\ell$; so $\proj\Phi'$ meets $\alpha$, and every point of it extending $\alpha$ satisfies $\ell$, as $\ell$ is a base literal. By \cref{lem:shape:PI}(a) applied to the law $\proj\Phi'$, $\mathrm{comp}(\Phi')\in\mathcal E^{\rm base}_m$ is $\UP_1$-compatible with $D$. A program for $\mathrm{comp}(\Phi')$ is a fixed prefix followed by a program for $\Phi'$, which gives both inequalities. For the equalities: $\UP_1$, $\UP$ and $\PS_\infty$ are sound, so each is covered by the inequality, within either class; conversely a $\UP_1$-compatible theory is $\UP$- and $\PS_\infty$-compatible, since on a satisfiable $\Phi\cup\alpha$ these reasoners derive at least what $\UP_1$ derives and never reach a conflict.
+\end{proof}
+
+On the question data of any law, a one-round unit-propagation reasoner over the base variables is therefore as good, under program length, as Gaussian elimination or unbounded proof search with any intermediate concepts, up to a machine constant.
+
+\begin{proof}[Proof of \cref{thm:shape:visible}]
+(a) By \cref{lem:shape:forces}, for an affine law and a sound reasoner, compatibility with $\mathcal Q(\mathcal S)$ is usability.
+(b) The lower bound is the printing time: $V$ needs at least $\lVert\Phi\rVert$ steps to print $\langle\Phi\rangle$. For the upper bounds, a program runs a program $p$ for $(A,b)$ (time $t_p$), enumerates the $2^r$ derived equations, keeps the circuits (time $\mathrm{poly}(m)4^r$), and prints either their clauses, which form $\PI(\mathcal S)$ (\cref{prop:shape:primeimpl}; time $\mathrm{poly}(m)\lvert\PI(\mathcal S)\rvert$), or the library of \cref{prop:shape:library} with intermediate concepts (at most $2^r$ circuits, each with at most $4m$ clauses), or, for $\GE$, just the $r$ equations, without enumerating the derived equations. Then $\log$ of the total time is at most $\log t_p$ plus $\log\lvert\PI(\mathcal S)\rvert+O(r+\log m)$, resp.\ $O(r+\log m)$, resp.\ $O(\log m)$, and $\lvert p\rvert+\log t_p=\Kt(A,b)$ for an optimal $p$. (A program of length $K(A,b)$ for $(A,b)$ need not run within any computable time bound, which is why $\Kt$ appears.)
+(c) Upper bounds: from $\mathcal S$ a fixed program computes $\PI(\mathcal S)\in\mathcal E^{\rm base}_m$, which is usable for every $\UP_k$, $\UP$ and $\PS_\infty$ (\cref{lem:shape:PI}(a)), and a canonical system of equations for $\mathcal S$, which is usable for $\GE$. Lower bound: from a program for any compatible $\Phi$ a fixed program computes $\proj\Phi=\mathcal S$ (\cref{lem:shape:forces}).
+\end{proof}
+
+% ======================================================================
+\subsection{Linear laws over the base variables}\label{app:shape:base}
+
+Throughout this subsection $\mathcal S=\{x:Ax=b\}\ne\emptyset$ with $A\in\mathrm{GF}(2)^{r\times m}$ of rank $r\ge1$, $\mathrm{Row}(A)$ is the set of derived equations, $b_u:=y\cdot b$ for $u=yA$ (well defined as $A$ has full row rank, and linear in $u$), and $a_*$ is the number of derived equations of weight $d_*$. Over $\mathrm{GF}(2)$ a vector is determined by its support, so a circuit is the unique nonzero derived equation supported in its support.
+
+\begin{lemma}[Determination]\label{lem:shape:circuits}
+\status{proved; computed}\src{shape Lemma 2.1}
+For $I\subseteq[m]$ and $j\notin I$ the following are equivalent: (i) $x_j$ is a function of $x_I$ on $\mathcal S$; (ii) some $u\in\mathrm{Row}(A)$ has $j\in\supp(u)\subseteq I\cup\{j\}$; (iii) some circuit has this property.
+\end{lemma}
+
+\begin{proof}
+(ii)$\Rightarrow$(i): $x_j=b_u+\sum_{i\in\supp(u)\setminus\{j\}}x_i$ on $\mathcal S$. (i)$\Rightarrow$(ii): if no such $u$ exists, then $\mathbf e_j\notin\mathrm{Row}(A)+\mathrm{span}\{\mathbf e_i:i\in I\}$, so some $z$ is orthogonal to that space and has $z_j=1$; then $z\in\ker A$ and $z_i=0$ on $I$, and $x,x+z\in\mathcal S$ agree on $I$ and differ at $j$. (ii)$\Rightarrow$(iii): take $u$ of least support among the witnesses of (ii). If a nonzero derived equation $u'$ had $\supp(u')\subsetneq\supp(u)$, then either $j\in\supp(u')$, contradicting minimality, or $u+u'$, with support $\supp(u)\setminus\supp(u')\ni j$, is a smaller witness. So $u$ is a circuit.
+\end{proof}
+
+\begin{proposition}[Prime implicates of an affine law]\label{prop:shape:primeimpl}
+\status{proved; computed}\src{shape Prop 2.2}
+For $Z\subseteq[m]$, the projection of $\mathcal S$ to $Z$ is the affine subspace cut out by the derived equations supported in $Z$; so $C_{Z,\beta}$ is an implicate of $\mathcal S$ if and only if $\beta$ violates some derived equation supported in $Z$. The prime implicates of $\mathcal S$ are exactly the clauses $C_{\supp(u),\beta}$ with $u$ a circuit and $u\cdot\beta\ne b_u$; there are $\sum_{\text{circuits }u}2^{\lvert u\rvert-1}$ of them, and $\PI(\mathcal S)$ is $\UP_1$-usable.
+\end{proposition}
+
+\begin{proof}
+An affine subspace is the common solution set of the affine functionals constant on it. The functionals on $\{0,1\}^Z$ that are constant on the projection of $\mathcal S$ are the restrictions of the functionals constant on $\mathcal S$, that is of $\mathrm{Row}(A)$ (as $\mathcal S=x^0+\ker A$ and $(\ker A)^\perp=\mathrm{Row}(A)$), that vanish off $Z$. So $C_{Z,\beta}$ is an implicate iff $\beta$ is outside the projection iff $\beta$ violates some derived equation $u$ with $\supp(u)\subseteq Z$. Every such $u$ is a sum of circuits supported in $\supp(u)$: if $u$ is not a circuit, some circuit $u'$ has $\supp(u')\subsetneq\supp(u)$, and $u+u'$ has the smaller support $\supp(u)\setminus\supp(u')$; induct. Since $u\mapsto b_u$ is linear, $\beta$ violates one of these circuits, $u_0$, and $C_{\supp(u_0),\beta|_{\supp(u_0)}}\subseteq C_{Z,\beta}$ is an implicate. A clause $C_{\supp(u),\beta}$ with $u$ a circuit and $u\cdot\beta\ne b_u$ is prime, since a strictly smaller implicate would be violated on a smaller support, by a derived equation supported there, against the minimality of circuits. For each circuit there are $2^{\lvert u\rvert-1}$ such $\beta$, and distinct circuits have distinct supports. $\PI(\mathcal S)$ defines $\mathcal S$, and is $\UP_1$-compatible with $\mathcal Q(\mathcal S)$ by \cref{lem:shape:PI}(a).
+\end{proof}
+
+\begin{proposition}[Any CNF]\label{prop:shape:cnf}
+\status{proved; computed}\src{shape Prop 2.3}
+Every implicate of $\mathcal S$ has width at least $d_*$, so every CNF over the base variables equivalent to $\mathcal S$ has at least $(1-2^{-r})2^{d_*}$ clauses.
+\end{proposition}
+
+\begin{proof}
+For $\lvert Z\rvert<d_*$ no nonzero derived equation is supported in $Z$, so the projection of $\mathcal S$ to $Z$ is $\{0,1\}^Z$ (\cref{prop:shape:primeimpl}) and no clause over $Z$ is an implicate. A clause of width $w\ge d_*$ excludes $2^{m-w}\le2^{m-d_*}$ points, and the $2^m-2^{m-r}$ non-solutions must all be excluded.
+\end{proof}
+
+\begin{lemma}[Subsumption]\label{lem:shape:subsumption}
+\status{proved; computed}\src{shape Lemma 2.4}
+Let $\mathcal S$ be any law, $\Phi$ a set of implicates of $\mathcal S$ over the base variables, and $\Phi'$ obtained by replacing each clause $C$ by any prime implicate $C'\subseteq C$. For every $\alpha$ consistent with $\mathcal S$ and every $k$, every literal derived by $\UP_k$ on $\Phi\cup\alpha$ is derived by $\UP_k$ on $\Phi'\cup\alpha$, and neither run reaches a conflict. So minimum usable theories over the base variables may be sought among subsets of $\PI(\mathcal S)$, round for round.
+\end{lemma}
+
+\begin{proof}
+Both runs derive only literals entailed by $\mathcal S\wedge\alpha\ne\emptyset$, so neither conflicts. Induct on rounds. If $C$ fires in round $t$ of the $\Phi$-run, deriving $L$, all other literals of $C$ are falsified after round $t-1$, hence, by induction, in the $\Phi'$-run. If $L\notin C'$, every literal of $C'\subseteq C$ would be falsified by the state of the $\Phi$-run after round $t-1$; that state holds at every point of $\mathcal S\wedge\alpha$, and such a point would falsify the implicate $C'$, which is impossible. So $L\in C'$, and $C'$ fires by round $t$.
+\end{proof}
+
+Only one direction holds: $\Phi'$ derives at least what $\Phi$ derives, and the converse fails (see the counterexamples after \cref{thm:shape:spanner}).
+
+\paragraph{Decomposable circuits.} Recall that a circuit $u$ is decomposable if $u=u'+u''$ with $u',u''\in\mathrm{Row}(A)$ nonzero and $\supp(u')\cap\supp(u'')=\{i\}$ for a single $i\notin\supp(u)$. Equivalently:
+\begin{equation}\label{eq:shape:decomp}
+\begin{gathered}
+\text{for some, equivalently every, }j\in\supp(u)\text{ there are }u'\in\mathrm{Row}(A)\text{ and }i\notin\supp(u)\\
+\text{with }i\in\supp(u')\subseteq(\supp(u)\setminus\{j\})\cup\{i\}.
+\end{gathered}
+\end{equation}
+Indeed, a decomposition through $i$ gives such a $u'$ for every $j$, taking $u'$ or $u''$, whichever does not contain $j$ (they partition $\supp(u)$); conversely such a $u'$ gives the decomposition $u=u'+(u+u')$, whose supports meet in $\{i\}$.
+
+\begin{proposition}[Indecomposable circuits must be written]\label{prop:shape:forced}
+\status{proved; computed}\src{shape Prop 2.5}
+For every $d_*$, every $\UP$-usable explicit theory over the base variables contains all $2^{\lvert u\rvert-1}$ clauses $C_{\supp(u),\beta}$, $u\cdot\beta\ne b_u$, of every indecomposable circuit $u$.
+\end{proposition}
+
+\begin{proof}
+Let $\Phi$ be usable (so its clauses are implicates), $u$ indecomposable, $j\in\supp(u)$, $I:=\supp(u)\setminus\{j\}$, and $\alpha$ any assignment to $I$. No nonzero derived equation is supported in $I$, as $u$ is a circuit, so $\alpha$ is consistent and determines $x_j$ (\cref{prop:shape:primeimpl,lem:shape:circuits}). Unit propagation never conflicts on the satisfiable $\Phi\cup\alpha$, and by usability it derives a literal outside $I$; so round $1$ derives one. A literal derived in round $1$ on $x_i$, $i\notin I$, comes from a clause $C\in\Phi$ whose other literals are on $I$ and falsified by $\alpha$, so $\supp(C)\subseteq I\cup\{i\}$, and $C$ is an implicate. By \cref{prop:shape:primeimpl} some derived equation $u'$ with $\supp(u')\subseteq\supp(C)$ is violated by the assignment that falsifies $C$, and $i\in\supp(u')$, since otherwise $u'$ would be supported in $I$. If $i\ne j$, then $i\notin\supp(u)$ and $u'$ contradicts indecomposability by \eqref{eq:shape:decomp}. So $i=j$, $\supp(u')\subseteq\supp(u)$, hence $u'=u$ by the minimality of circuits, and $C=C_{\supp(u),\beta}$ for the assignment $\beta$ that extends $\alpha$ by the value of $x_j$ opposite to the derived one. The $2^{\lvert u\rvert-1}$ choices of $\alpha$ give all the clauses of $u$.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:shape:onlyforced}]
+By \cref{prop:shape:forced} it remains to show that for every clause $C\notin\Phi_{\rm ind}(\mathcal S)$ some $\UP$-usable theory over the base variables omits $C$. Let $\mathrm{Imp}(\mathcal S)$ be the set of all non-tautological implicates over the base variables; we show that $\mathrm{Imp}(\mathcal S)\setminus\{C\}$ is usable. It consists of implicates, so unit propagation on it from a consistent antecedent never conflicts, and once it is compatible with $\mathcal Q(\mathcal S)$ its projection is $\mathcal S$ (\cref{lem:shape:forces}). If $C$ is not a prime implicate, the set contains $\PI(\mathcal S)$ and is usable by \cref{lem:shape:PI}(a) and the monotonicity of unit propagation in the clause set. Otherwise $C=C_{\supp(u),\beta}$ for a decomposable circuit $u$. Let $(\alpha,\ell)\in\mathcal Q(\mathcal S)$. In the one-round run on $\PI(\mathcal S)\cup\alpha$ some prime implicate $C'\subseteq\neg\alpha\vee\ell$ fires. If $C'\ne C$, it is in our set. If $C'=C$, then $\ell$ is the literal of $C$ on some $j\in\supp(u)$, and $\alpha$ contains $\beta|_{\supp(u)\setminus\{j\}}$. By \eqref{eq:shape:decomp} there are $u'$ and $i\notin\supp(u)$ with $i\in\supp(u')\subseteq(\supp(u)\setminus\{j\})\cup\{i\}$; put $u'':=u+u'$, so that $j\in\supp(u'')\subseteq(\supp(u)\setminus\supp(u'))\cup\{i\}$. Let $v_i$ be the value of $x_i$ that $u'$ forces given $\alpha$. The clause on $\supp(u')$ falsified by $\alpha|_{\supp(u')\setminus\{i\}}\cup\{x_i=1-v_i\}$ is an implicate (that assignment violates $u'$), differs from $C$ (its support contains $i\notin\supp(u)$) and fires in round $1$, deriving $x_i=v_i$. The clause on $\supp(u'')$ falsified by the restriction of $\alpha\cup\{x_i=v_i\}$ to $\supp(u'')\setminus\{j\}$, extended by the value of $x_j$ opposite to $\ell$, is likewise an implicate different from $C$, and fires in round $2$, deriving $\ell$ ($\alpha\cup\{x_i=v_i\}$ is consistent and entails $\ell$). So every question is answered.
+\end{proof}
+
+\begin{proof}[Proof of \cref{thm:shape:minimum}]
+We show by induction on $\lvert w\rvert$: for every nonzero $w\in\mathrm{Row}(A)$, every $j\in\supp(w)$ and every assignment $\alpha$ to $\supp(w)\setminus\{j\}$ consistent with $\mathcal S$, unit propagation on $\Phi_{\rm ind}\cup\alpha$ derives the value of $x_j$, and it never conflicts, as $\Phi_{\rm ind}\cup\alpha$ is satisfiable. By \cref{lem:shape:circuits} and the monotonicity of unit propagation in the antecedent (a larger consistent antecedent derives at least as much), this is usability; the projection is $\mathcal S$ by \cref{lem:shape:forces}.
+\begin{itemize}[leftmargin=*]
+\item \emph{$w$ is not a circuit.} By \cref{lem:shape:circuits}(iii) with $I=\supp(w)\setminus\{j\}$ there is a circuit $c'\ne w$ with $j\in\supp(c')\subseteq\supp(w)$, hence $\lvert c'\rvert<\lvert w\rvert$; apply the induction hypothesis to $c'$ and the restriction of $\alpha$.
+\item \emph{$w=u$ is an indecomposable circuit.} Its clauses are in $\Phi_{\rm ind}$, and one of them fires.
+\item \emph{$w=u$ is a decomposable circuit.} By \eqref{eq:shape:decomp} write $u=u'+u''$ through $i\notin\supp(u)$ with $j\in\supp(u'')$. If $\supp(u')=(\supp(u)\setminus\{j\})\cup\{i\}$, then $u''=\mathbf e_i+\mathbf e_j$ has weight $2<d_*$, which is impossible; so $\lvert u'\rvert\le\lvert u\rvert-1$. Also $\lvert\supp(u')\cap\supp(u)\rvert=\lvert u'\rvert-1\ge d_*-1\ge2$, so $\lvert u''\rvert=\lvert\supp(u)\setminus\supp(u')\rvert+1\le\lvert u\rvert-1$. By induction on $u'$ (target $i$, antecedent the restriction of $\alpha$ to $\supp(u')\setminus\{i\}\subseteq\supp(u)\setminus\{j\}$), unit propagation derives the value $v_i$ of $x_i$ determined by $\alpha$. The assignment $\alpha\cup\{x_i=v_i\}$ is consistent, and its restriction to $\supp(u'')\setminus\{j\}\subseteq(\supp(u)\setminus\{j\})\cup\{i\}$ is an antecedent for $u''$ and target $j$; by induction unit propagation derives $x_j$.
+\end{itemize}
+The base case is contained in the induction: a circuit of weight $d_*\ge3$ is indecomposable, since a decomposition would give, by the two bounds above, $\lvert u'\rvert,\lvert u''\rvert\le d_*-1$, against the minimality of $d_*$. Necessity: every usable theory over the base variables contains $\Phi_{\rm ind}$ (\cref{prop:shape:forced}). Sufficiency: an explicit theory over the base variables equivalent to $\mathcal S$ consists of implicates, so adding its clauses to $\Phi_{\rm ind}$ keeps every derivation and causes no conflict on consistent antecedents.
+\end{proof}
+
+\begin{corollary}[Counting, and when the given equations suffice]\label{cor:shape:core}
+\status{proved; computed}\src{shape Cor 2.7}
+Let $d_*\ge3$.
+(a) Every circuit of weight $d_*$ is indecomposable, so every $\UP$-usable theory over the base variables has at least $a_*2^{d_*-1}$ clauses.
+(b) The \emph{core}, the $r$ given equations each written as all of its $2^{\lvert\text{row}\rvert-1}$ clauses, is $\UP$-usable if and only if every indecomposable circuit is one of the given rows. So a circuit must be written down if and only if it cannot be obtained by chaining two derived equations through one intermediate base quantity, and the core suffices for unit propagation exactly when it already contains every such circuit.
+(c) One parity law on $m\ge3$ variables needs exactly its $2^{m-1}$ clauses over the base variables.
+\end{corollary}
+
+\begin{proof}
+(a) As in the base case of the proof of \cref{thm:shape:minimum}. (b) The core is equivalent to $\mathcal S$, so by \cref{thm:shape:minimum} it is usable iff it contains $\Phi_{\rm ind}$. A clause on the support of a circuit $u$ belongs to the core iff some row has that support, that is, as a vector is determined by its support, iff $u$ is a row. (c) $\mathrm{Row}(A)=\{0,1^m\}$, and $1^m$ is an indecomposable circuit of weight $m=d_*\ge3$.
+\end{proof}
+
+A derived equation that is not a circuit, for example the sum of two circuits with disjoint supports, never needs to be written.
+
+\begin{proof}[Proof of \cref{cor:shape:simplex}]
+Every nonzero $u=yA$ ($y\ne0$) has $u_c=y\cdot c$ at the column $c$, which is $1$ for exactly half of the $2^r$ vectors $c$, none of them $0$: so $u$ has weight $2^{r-1}=(m+1)/2$. Equal weights make every nonzero derived equation a circuit, and $d_*=2^{r-1}\ge4$, so all $m$ of them are indecomposable by \cref{cor:shape:core}(a). By \cref{thm:shape:minimum} the unique minimum is $\Phi_{\rm ind}=\PI(\mathcal S)$, with $m2^{(m-1)/2}$ clauses of width $(m+1)/2$.
+\end{proof}
+
+For $r=3,\dots,7$ the minimum is $56$, $1{,}920$, $1{,}015{,}808$, about $1.35\cdot10^{11}$ and about $1.2\cdot10^{21}$ clauses, against $r$ equations; for $r=3$ a direct computation (code in the accompanying repository) confirms that $\PI(\mathcal S)$ answers all $2{,}352$ entailed literals and that deleting any one of its $56$ clauses breaks usability.
+
+\begin{remark}[The hypothesis $d_*\ge3$]\label{rem:shape:dstar2}
+\status{refuted for d*<=2 (counterexamples kept); equivalence laws: proved; computed}\src{shape Rem 2.9, Prop 2.9a}
+The natural extension of \cref{thm:shape:minimum} and \cref{cor:shape:core}(a) to $d_*=2$ fails. The law $x_1=x_2=x_3=x_4$ has $a_*=6$ derived equations of weight $2$, so the bound of \cref{cor:shape:core}(a) would be $12$ clauses, but $4$ suffice (a directed cycle; see below); likewise the simplex family with $r=2$ is the law $x_1=x_2=x_3$, with $\lvert\PI\rvert=6=a_*2^{d_*-1}$ and minimum $3$. For every $d_*$, $\Phi_{\rm ind}$ is necessary (\cref{prop:shape:forced}) and nothing else is forced (\cref{prop:shape:onlyforced}), but for $d_*=2$ it need not be usable: a direct computation (code in the accompanying repository) finds, for example, a law with $m=6$, $r=3$ and $d_*=2$ for which $\Phi_{\rm ind}$ has $4$ clauses and the least usable theory over the base variables has $8$. For $d_*\le2$ the difficulty is the choice among alternative clauses, not which clauses are forced.
+
+One case is exact. Call $\mathcal S$ an \emph{equivalence law} if $\mathrm{Row}(A)$ is spanned by derived equations of weight $2$. Then $i\sim j:\iff\mathbf e_i+\mathbf e_j\in\mathrm{Row}(A)$ partitions the variables that occur in derived equations into classes $J_1,J_2,\dots$ of sizes at least $2$, and \emph{the least $\UP$-usable theory over the base variables has exactly $\lvert J_1\rvert+\lvert J_2\rvert+\cdots$ clauses: a directed cycle of implications on each class.}
+
+\emph{Proof.} Every derived equation is a sum of vectors $\mathbf e_i+\mathbf e_j$ with $i\sim j$, so its restriction to each class has even weight; hence a derived equation of weight at least $3$ contains two variables of one class in its support, the circuits are exactly the weight-$2$ equations, which lie within classes, and there is no derived equation of weight $1$. \emph{Lower bound.} Fix a class $J$, $i\in J$ and $v\in\{0,1\}$. The antecedent $\{x_i=v\}$ is consistent and entails a literal on each $x_{i'}$, $i'\in J\setminus\{i\}$, so unit propagation derives something in round $1$, by a clause whose other literals are falsified by $\{x_i=v\}$: a unit clause, which is not an implicate (no variable is fixed), or a $2$-clause containing the literal $x_i^{1-v}$. A $2$-clause implicate has as support the support of a derived equation (\cref{prop:shape:primeimpl}), a pair within one class. So each of the $2\lvert J\rvert$ literals on $J$ has its negation in some $2$-clause within $J$; a $2$-clause contains two literals, so at least $\lvert J\rvert$ clauses lie within $J$, and different classes share no clause. \emph{Upper bound.} Fix $x^0\in\mathcal S$; on $\mathcal S$, $x_i^{x^0_i}\leftrightarrow x_{i'}^{x^0_{i'}}$ for $i\sim i'$. For $J=\{i_1,\dots,i_{\lvert J\rvert}\}$ take the $\lvert J\rvert$ implicates $\neg x_{i_t}^{x^0_{i_t}}\vee x_{i_{t+1}}^{x^0_{i_{t+1}}}$ (indices mod $\lvert J\rvert$). A question $(\alpha,\ell)$ with $\ell$ on $x_j$, $j\in J$, has $\alpha$ assigning some $x_i$ with $i\in J$ (\cref{lem:shape:circuits}(iii): the circuits are the pairs); if $\alpha$ makes $x_i^{x^0_i}$ true, propagation runs forward around the cycle to $x_j$, and if false, backward. No conflict arises. \qed
+
+A direct computation (exhaustive over subsets of $\PI$; code in the accompanying repository) confirms that the minimum is the size of the class for one class of $2,\dots,5$ variables, and is $3$ for $x_1=x_2\oplus1=x_3$, and $5$ and $6$ for two classes of sizes $(2,3)$ and $(3,3)$.
+\end{remark}
+
+% ======================================================================
+\subsection{Intermediate concepts, systems of laws and depth}\label{app:shape:aux}
+
+\begin{proposition}[The chain encoding]\label{prop:shape:chainenc}
+\status{proved; computed}\src{shape Prop 3.1}
+Let $m\ge4$. Encode $x_1\oplus\dots\oplus x_m=b$ by the constraints $y_1=x_1\oplus x_2$, $y_i=y_{i-1}\oplus x_{i+1}$ for $2\le i\le m-2$, and $y_{m-2}\oplus x_m=b$, each three-variable constraint written as its $4$ clauses and the last as its $2$ clauses: $4m-6$ clauses and $m-2$ auxiliary variables. The encoding is \emph{propagation complete on all variables}: for every partial assignment $\alpha$ to the base and auxiliary variables, unit propagation derives every literal entailed by the encoding and $\alpha$, and reaches a conflict if and only if $\alpha$ is inconsistent with the encoding. Without auxiliary variables $2^{m-1}$ clauses are necessary (\cref{cor:shape:core}(c)) and sufficient.
+\end{proposition}
+
+\begin{proof}
+Each constraint's clause set is the set of all prime implicates of that constraint, so (\cref{lem:shape:PI}(a)) it derives its last variable when the others are assigned, and gives a conflict when all are assigned inconsistently. Consider a fixpoint of unit propagation without conflict. Every constraint is then either fully assigned, and satisfied, or has at least two unassigned variables; call the latter \emph{active}. Each variable occurs in at most two constraints, and consecutive constraints share exactly one auxiliary variable, so the graph on the active constraints, joined when they share an unassigned variable, is a disjoint union of paths. Fix an unassigned variable $z$ and a value for it. Process each component breadth-first from a root (in the component of $z$, a constraint containing $z$, with $z$ set first). When a constraint is processed, at most one of its variables is already set: the one it shares with its parent, or $z$ at the root. It has at least two unassigned variables, so at least one of them is still free: give the other free ones arbitrary values and solve for that one. This yields a solution extending the fixpoint with either value of $z$, so no unassigned variable is entailed. If $\alpha$ were inconsistent and no conflict arose, the same construction (without $z$) would give a solution extending $\alpha$; so unit propagation reaches a conflict on every inconsistent $\alpha$, and by soundness only on those.
+\end{proof}
+
+The chain encoding is standard. Every CNF encoding of parity with auxiliary variables has at least $3m$ clauses \citep{emdin2022cnf}, so the chain is within a factor $4/3$ of the least clause count even among encodings that need not be usable.
+
+\begin{proof}[Proof of \cref{prop:shape:oneround}]
+Let $\Phi\in\mathcal E_m$ be $\UP_1$-usable and $\alpha$ the antecedent of a question; it assigns base variables only. In round $1$ a clause fires only if all its literals but one are falsified; auxiliary literals are unassigned, so a clause containing an auxiliary literal fires only if that literal is its only unfalsified one, and then it derives that auxiliary literal. Hence the base literals derived in round $1$ are derived by the clauses of $\Phi$ over the base variables, $\Phi_{\rm base}$; no conflict occurs, as $\Phi\cup\alpha$ is satisfiable. Each $C\in\Phi_{\rm base}$ is an implicate of $\mathcal S$, as $\Phi\models C$ and $\proj\Phi=\mathcal S$. The proof of \cref{lem:shape:PI}(b), which uses only that the firing clause is an implicate of $\mathcal S$, gives $\Phi_{\rm base}\supseteq\PI(\mathcal S)$. For one parity law $\PI$ consists of the $2^{m-1}$ clauses of its single circuit; for the simplex family, of $2^{(m-1)/2}$ clauses for each of its $m$ circuits (\cref{cor:shape:simplex}).
+\end{proof}
+
+A direct computation (code in the accompanying repository) confirms on twelve random laws that deleting any clause of $\PI(\mathcal S)$, in all its copies, from $\PI(\mathcal S)$ together with a library with intermediate concepts destroys $\UP_1$-usability, and that the chain-encoded libraries of the simplex family for $r=3,4$ are $\UP$-usable but not $\UP_1$-usable.
+
+\begin{proposition}[Libraries with intermediate concepts]\label{prop:shape:library}
+\status{proved; computed}\src{shape Prop 3.2}
+Let $\mathrm{Circ}_{\rm aux}(\mathcal S)$ write each circuit $u$ of an affine law by the cheaper of its full clause set and its chain encoding with its own auxiliary variables: directly if $\lvert u\rvert\le4$, and by the chain if $\lvert u\rvert\ge5$. It is $\UP$-usable, of size $\sum_{\text{circuits }u}\mathrm{sz}(\lvert u\rvert)$, where $\mathrm{sz}(w):=2^{w-1}$ for $w\le4$ and $\mathrm{sz}(w):=4w-6$ for $w\ge5$. The same holds for the library over all $2^r-1$ nonzero derived equations, of size at most $(2^r-1)(4m-6)$ for $m\ge4$.
+\end{proposition}
+
+\begin{proof}
+A question $(\alpha,\ell)$, $\ell$ on $x_j$, has a circuit $u$ with $j\in\supp(u)\subseteq\dom\alpha\cup\{j\}$ (\cref{lem:shape:circuits}). The encoding of $u$ is propagation complete (\cref{prop:shape:chainenc}, or \cref{lem:shape:PI}(a) for the full clause set of the one-equation law), and $\alpha$ fixes all of $\supp(u)$ but $j$, so unit propagation on that encoding alone derives $\ell$; unit propagation is monotone in the clause set. Each auxiliary variable is a partial sum of base variables, so the union is satisfied exactly by the extensions of the points satisfying every circuit, and its projection is $\mathcal S$, since the circuits span $\mathrm{Row}(A)$ (proof of \cref{prop:shape:primeimpl}); a consistent $\alpha$ therefore gives no conflict. For the second library, a derived equation of weight $w$ costs at most $\max(8,4w-6)\le4m-6$ clauses when $m\ge4$.
+\end{proof}
+
+The second form has size $O(m2^r)$, in line with the fixed-parameter tractability in the number of equations shown by \citet{gwynne2014sat}.
+
+\begin{remark}[The simplex family with intermediate concepts]\label{rem:shape:simplexaux}
+\status{proved; computed}\src{shape Rem 3.2a}
+For the simplex family with $r\ge4$, $\mathrm{Circ}_{\rm aux}$ has $m(2m-4)$ clauses of width at most $3$ and $m(m-3)/2$ auxiliary variables, and is $\UP$-usable: a theory of polynomial size. Writing each circuit by the balanced-tree encoding of \cref{prop:shape:depth}(b) instead of the chain gives the same size and a $\UP_{2\lceil\log((m+1)/2)\rceil-1}$-usable theory. So with intermediate concepts and enough rounds the gap to $\GE$ is polynomial in written length, and $O(\log m)$ bits under time charging.
+\end{remark}
+
+\begin{proof}
+Every circuit has weight $w=2^{r-1}=(m+1)/2\ge8$, so each is chain-encoded with $4w-6=2m-4$ clauses and $w-2=(m-3)/2$ auxiliary variables; usability is \cref{prop:shape:library}. With balanced trees, each question is answered inside the encoding of one circuit, as in the proof of \cref{prop:shape:library}, within $2\lceil\log w\rceil-1$ rounds by \cref{prop:shape:depth}(b), and unit propagation with a fixed number of rounds is monotone in the clause set on satisfiable inputs; the auxiliary variables are again partial sums, so the projection is $\mathcal S$. The simplex family is computable from $m$ in polynomial time, so $\Kt(A,b)=O(\log m)$, and \cref{thm:shape:visible}(b) with $r=\log(m+1)$ gives $\KtA^{\UP}(\mathcal Q(\mathcal S))=O(\log m)$.
+\end{proof}
+
+A direct computation (code in the accompanying repository) of the listing lengths \eqref{eq:shape:lst} gives ratios of about $65$, $137$, $256$ and $461$ between this library and the $r$ given equations for $r=4,5,6,7$: polynomial growth, not $2^{(m-1)/2}$; with chains the library at $r=4$ needs $7$ rounds, with balanced trees $5$.
+
+\begin{proposition}[Private intermediate concepts add nothing to a system]\label{prop:shape:private}
+\status{proved; computed}\src{shape Prop 3.3}
+Let $\Phi=\bigcup_t\Phi_t$, where $\Phi_t$ encodes a constraint $c_t$ on base variables $X_t$ with auxiliary variables $Y_t$ private to it ($Y_t\cap Y_s=\emptyset$ for $t\ne s$, $Y_t$ occurs only in $\Phi_t$, and $\exists Y_t\,\Phi_t\equiv c_t$), and each $\Phi_t$ is propagation complete on $X_t\cup Y_t$. For a partial assignment $\alpha$ to the base variables, let its \emph{arc-consistency closure} $\mathrm{AC}(\alpha)$ be the least set of base literals that contains $\alpha$ and is closed under adding, for every $t$, every base literal on $X_t$ entailed by $c_t$ and the current literals on $X_t$; call it \emph{contradictory} if it contains two opposite literals or its literals on some $X_t$ are inconsistent with $c_t$. Then unit propagation on $\Phi\cup\alpha$ reaches a conflict if and only if $\mathrm{AC}(\alpha)$ is contradictory, and otherwise the base literals at its fixpoint are exactly $\mathrm{AC}(\alpha)$. In particular the given equations written directly and the given equations each chain-encoded derive the same base literals and conflict on the same antecedents.
+\end{proposition}
+
+\begin{proof}
+\emph{Invariant.} At every point of the run, the literals on $Y_t$ are entailed by $\Phi_t$ and the literals on $X_t$: they are derived only by clauses of $\Phi_t$, and each derivation step preserves this. Hence a literal derived by a clause of $\Phi_t$ is entailed by $\Phi_t$ and the current literals on $X_t$; if it is a base literal, it is entailed by $c_t$ and the current literals on $X_t$, as $\exists Y_t\,\Phi_t\equiv c_t$. By induction on rounds, every base literal derived before a conflict lies in $\mathrm{AC}(\alpha)$. A conflict arises either from a clause of some $\Phi_t$ with all literals falsified, so that the current literals on $X_t\cup Y_t$ are inconsistent with $\Phi_t$ and, by the invariant, those on $X_t$ are inconsistent with $c_t$; or from two opposite derivations, both from one $\Phi_t$ if the variable is auxiliary (with the same conclusion), or both base literals of $\mathrm{AC}(\alpha)$. Either way $\mathrm{AC}(\alpha)$ is contradictory. \emph{Conversely,} suppose the run reaches a conflict-free fixpoint $\gamma'$ with base part $\beta$. No clause of $\Phi_t$ fires at $\gamma'$ and $\Phi_t$ is propagation complete, so the restriction of $\gamma'$ to $X_t\cup Y_t$ is consistent with $\Phi_t$ and contains every literal it entails with $\Phi_t$. So $\beta|_{X_t}$ is consistent with $c_t$, and if $c_t\wedge\beta|_{X_t}\models\ell$ then $\Phi_t$ and the literals of $\gamma'$ on $X_t\cup Y_t$ entail $\ell$, so $\ell\in\gamma'$. Thus $\beta\supseteq\alpha$ is closed and not contradictory; hence $\beta\supseteq\mathrm{AC}(\alpha)$ and $\mathrm{AC}(\alpha)$ is not contradictory, and with the first part $\beta=\mathrm{AC}(\alpha)$. The direct encoding of one equation (all its clauses) is propagation complete on its own variables by \cref{lem:shape:PI}(a), and the chain encoding by \cref{prop:shape:chainenc}.
+\end{proof}
+
+So intermediate concepts that each belong to one law cannot help a weak reasoner combine laws; the useful intermediate concepts are shared across laws, such as derived equations and their partial sums. On sparse random systems a direct computation (code in the accompanying repository) finds that unit propagation on the given equations fully answers only a part of the sampled questions, between about $0.62$ and $0.89$ of them depending on the system, while the circuit library answers all of them.
+
+\begin{lemma}[Usability is arc consistency]\label{lem:shape:arc}
+\status{proved; computed}\src{shape Lemma 3.4}
+If $\Phi$ is $\UP$-usable for $\mathcal S$, then for every partial assignment $\alpha$ to the base variables that is inconsistent with $\mathcal S$, unit propagation on $\Phi\cup\alpha$ reaches a conflict. So $\UP$-usability is \emph{arc consistency} of a representation in the sense of \citet{gwynne2014sat}: unit propagation detects every forced base literal and every inconsistency.
+\end{lemma}
+
+\begin{proof}
+Take $\alpha'\subseteq\alpha$ minimal inconsistent and a literal $x_j^v$ of $\alpha'$. Then $\alpha'':=\alpha'\setminus\{x_j^v\}$ is consistent and entails $x_j^{1-v}$, so unit propagation on $\Phi\cup\alpha''$ derives it. Unit propagation is monotone up to conflict: in the run on the larger $\Phi\cup\alpha$, every clause that fired in the smaller run either fires again or meets a conflict. So the larger run derives $x_j^{1-v}$ against $x_j^v\in\alpha$, or conflicts earlier.
+\end{proof}
+
+\begin{lemma}[Unit propagation as a monotone circuit]\label{lem:shape:upcircuit}
+\status{proved (Bessiere et al. in substance); computed}\src{shape Lemma 3.5}
+Let $\Phi$ be an explicit theory with $\bar m$ variables, written length $\lVert\Phi\rVert$ and clause width at most $w$, and let $\mathcal I$ be a set of literals (the inputs).
+(a) There is a monotone circuit of $O(\bar m(\lVert\Phi\rVert+\bar m))$ fan-in-$2$ AND and OR gates, with one input per literal of $\mathcal I$, that outputs, for every literal $L$, whether unit propagation on $\Phi\cup\alpha$ derives $L$, on every input $\alpha\subseteq\mathcal I$ for which $\Phi\cup\alpha$ is satisfiable.
+(b) For every $k$ there is a monotone circuit of unbounded fan-in AND and OR gates, of depth $2k$, with at most $k(\lVert\Phi\rVert+2\bar m)$ gates and at most $k(w\lVert\Phi\rVert+2\bar m)$ wires, with the same inputs, that outputs whether $\UP_k$ derives $L$, on the same inputs.
+\end{lemma}
+
+The direction ``small usable theory gives small monotone circuit'' of the equivalence of \citet{bessiere2009circuit} is (a).
+
+\begin{proof}
+Define $o_0(L)$ as the input bit if $L\in\mathcal I$ and the constant $0$ otherwise, and $o_{t+1}(L):=o_t(L)\vee\bigvee_{C\ni L}\bigwedge_{L'\in C,\,L'\ne L}o_t(\neg L')$, where the empty conjunction, for a unit clause $C=(L)$, is the constant $1$. On a satisfiable $\Phi\cup\alpha$ unit propagation never conflicts, so a clause whose other literals are all falsified fires (its last literal is unassigned or already true), exactly as in the formula; by induction $o_t(L)$ says whether $L$ is known after $t$ rounds. (a) Prefix and suffix products give the $\lvert C\rvert$ conjunctions of a clause with $3\lvert C\rvert$ fan-in-$2$ gates, so a round costs $O(\lVert\Phi\rVert+\bar m)$ gates; each round before the fixpoint assigns at least one new variable and no variable is assigned twice, so $\bar m$ rounds suffice. (b) Per round, one AND gate for each pair (clause, literal of it), of fan-in $\lvert C\rvert-1\le w-1$, and one OR gate for each literal, of fan-in one plus the number of clauses containing it: at most $\lVert\Phi\rVert+2\bar m$ gates and $w\lVert\Phi\rVert+2\bar m$ wires per round. AND layers and OR layers alternate (an OR gate feeding an OR gate of the next round is merged into it), so the depth is $2k$. Constants are removed by simplification without increasing size or depth.
+\end{proof}
+
+\begin{proof}[Proof of \cref{thm:shape:systems}]
+\emph{The law.} $\lvert\Lambda_q\rvert=2\binom q3+2q$, so $m=2\binom q3+2q+1=\Theta(q^3)$. The vectors of $\Lambda_q$ span $\mathrm{GF}(2)^{q+1}$ (already $(\mathbf e_v,0)$ and $(\mathbf e_v,1)$, $v\le q$, do), so $\dim\mathcal H_q=q+1$ and $\mathcal H_q$ is an affine law of rank $r=m-q-1\ge1$. The $m$ equations $x_{(u,a)}=u\cdot y+a\,z_0$, $x_\star=z_0$, with $z=(y,z_0)$ as auxiliary variables, have projection $\mathcal H_q$, and $\GE$ returns exactly the entailed base literals, so they are $\GE$-usable.
+\emph{The lower bound.} For $S\subseteq\Lambda_q$ the antecedent $\alpha_S:=\{\neg x_v:v\in S\}$ is consistent, as $0\in\mathcal H_q$. On $\mathcal H_q$, $x_\star$ is determined by $x_S$ iff $\mathbf e_\star\in\mathrm{span}(S)$ (if not, some $z$ has $z\cdot v=0$ for $v\in S$ and $z\cdot\mathbf e_\star=1$, and $z$ and $0$ give two points that agree on $S$ and differ at $x_\star$; if so, $x_\star$ is a sum of the $x_v$, $v\in S$), iff the XOR system $\{u\cdot y=a:(u,a)\in S\}$ over $y\in\mathrm{GF}(2)^q$ is unsatisfiable (a subset of the equations sums to $0=1$, that is, a subset of $S$ sums to $\mathbf e_\star$). If $x_\star$ is determined, its value is that at the point $0$, so usability gives ``unit propagation on $\Phi\cup\alpha_S$ derives $\neg x_\star$''; if not, soundness ($\proj\Phi=\mathcal H_q$) excludes any literal on $x_\star$. So the output for $\neg x_\star$ of the circuit of \cref{lem:shape:upcircuit}(a), with inputs $\mathcal I=\{\neg x_v:v\in\Lambda_q\}$, computes the monotone function $\mathrm{Unsat}_q(S):=[$the system $S$ is unsatisfiable$]$, with $O((\lVert\Phi\rVert+m)^2)$ gates (auxiliary variables that do not occur in $\Phi$ are dropped, so $\bar m\le\lVert\Phi\rVert+m$).
+\citet{goos2019adventures} show that a monotone variant of XOR-SAT has exponential monotone circuit complexity. In the form we use, their function $3\mathrm{XorSat}_q$ has one input for each ordered triple $(v_1,v_2,v_3)\in[q]^3$ and each constant $a\in\{0,1\}$ ($2q^3$ inputs), accepts iff the selected constraints $y_{v_1}\oplus y_{v_2}\oplus y_{v_3}=a$ are unsatisfiable, and requires monotone circuits of size $2^{q^{\varepsilon}}$ for some $\varepsilon>0$. Each input $(v_1,v_2,v_3,a)$ is the constraint $u\cdot y=a$ with $u=\mathbf e_{v_1}+\mathbf e_{v_2}+\mathbf e_{v_3}$, of weight $1$ (if two indices coincide) or $3$, so $(u,a)\in\Lambda_q$; hence $3\mathrm{XorSat}_q(Z)=\mathrm{Unsat}_q(\mathrm{pr}(Z))$, where $\mathrm{pr}(Z)_v$ is the OR of the inputs that map to $v$. A monotone circuit for $\mathrm{Unsat}_q$ together with at most $2q^3$ OR gates is a monotone circuit for $3\mathrm{XorSat}_q$. (If the inputs are only the triples of distinct indices, $3\mathrm{XorSat}_q$ is $\mathrm{Unsat}_q$ with the weight-$1$ inputs set to $0$, and a circuit for $\mathrm{Unsat}_q$ again gives one for it.) Hence $O((\lVert\Phi\rVert+m)^2)+2q^3\ge2^{q^{\varepsilon}}$, so $\lVert\Phi\rVert\ge2^{q^\varepsilon/2-O(1)}-m$ for $q\ge q_0$, and $q^\varepsilon=\Theta(m^{\varepsilon/3})$.
+\end{proof}
+
+The weight-$1$ functionals matter: with weight-$3$ functionals only, the function computed would be the restriction of $3\mathrm{XorSat}_q$ that sets the inputs with repeated indices to $0$, and a monotone lower bound does not pass to a restriction. A direct computation (code in the accompanying repository) confirms for $q=3,4$ that ``$x_\star$ determined'', ``system unsatisfiable'' and ``$\mathbf e_\star\in\mathrm{span}(S)$'' agree on all $2^{\lvert\Lambda_q\rvert}$ sets $S$, and that unit propagation on $\PI(\mathcal H_3)$ derives $\neg x_\star$ from $\alpha_S$ exactly when the system is unsatisfiable.
+
+\begin{remark}[XOR systems without auxiliary-variable restrictions]\label{rem:shape:GK}
+\status{known}\src{shape Rem 3.7}
+\citet{gwynne2014sat} show that systems of XOR constraints have no polynomial-size arc-consistent representation in general, even with auxiliary variables, and that the standard translation is propagation complete for one equation and fails for two, the counterpart with auxiliary variables of \cref{cor:shape:core}(b). By \cref{lem:shape:arc} their notion is our $\UP$-usability, so their superpolynomial bound applies to usable theories; \cref{thm:shape:systems} gives an explicit family with an exponential bound.
+\end{remark}
+
+\begin{proof}[Proof of \cref{prop:shape:depth}]
+For one parity law every question has $\lvert\dom\alpha\rvert=m-1$, as the only circuit is $1^m$.
+(a) Write $C_1=(x_1,x_2,y_1)$, $C_i=(y_{i-1},x_{i+1},y_i)$ for $2\le i\le m-2$, and $C_{m-1}=(y_{m-2},x_m)$ for the constraints. Each constraint's clauses mention only its own variables and fire only when all but one of them are assigned. \emph{Upper bound:} let $x_j$ be the unknown base variable and $C_{j'}$ its constraint ($j'=\max(1,j-1)$). The constraints to the left of $C_{j'}$ resolve from the left end ($C_1$ derives $y_1$ in round $1$, $C_2$ derives $y_2$ in round $2$, and so on), and those to the right from the right end ($C_{m-1}$ derives $y_{m-2}$ in round $1$, and so on); $C_{j'}$ then has all its variables but $x_j$ assigned by round $\max(j'-1,m-1-j')$, and derives $x_j$ one round later, by round $m-1$. \emph{Lower bound:} for the question with $x_1$ unknown, after round $t\le m-2$ exactly the auxiliary variables $y_{m-2},\dots,y_{m-1-t}$ are assigned (induction on $t$: $C_1$ has the two unknowns $x_1,y_1$, and each $C_i$, $2\le i\le m-2$, the two unknowns $y_{i-1},y_i$, until the boundary reaches it, so in each round exactly one constraint has a single unknown); so $x_1$ is derived in round $m-1$ and not before.
+(b) Let $H:=\lceil\log m\rceil$ be the height of the tree. Each constraint's clause set is its set of prime implicates, so it derives its third variable in the round after the other two are known (\cref{lem:shape:PI}(a)). Let $x_j$ be the unknown leaf and $v_0,\dots,v_s=x_j$ the path from the root, $s\le H$; for $1\le i\le s$ let $w_i$ be the sibling of $v_i$. Every node $v$ not on the path has only known leaves below it, and by induction on its height $\mathrm{ht}(v)$ its value is derived by round $\mathrm{ht}(v)$; $w_i$ is at depth $i$, so $\mathrm{ht}(w_i)\le H-i$. The root constraint gives $y_{v_1}$ by round $\mathrm{ht}(w_1)+1\le H$. If $y_{v_i}$ is known by round $H+i-1$, the constraint at $v_i$ gives $y_{v_{i+1}}$ by round $\max(H+i-1,H-i-1)+1=H+i$. So $x_j$ is derived by round $H+s-1\le2H-1$. No conflict arises, as the antecedent is consistent. Counting: there are $m-1$ internal nodes, $m-2$ of them non-root with $4$ clauses each, and the root with $2$.
+(c) Let $\Phi$ be $\UP_k$-usable, and drop auxiliary variables that do not occur, so that $\bar m\le m+\lVert\Phi\rVert$. Apply \cref{lem:shape:upcircuit}(b) with inputs the literals on $x_2,\dots,x_m$ (for a general affine law: on $\supp(u)\setminus\{j\}$ for a circuit $u$ of weight $w$ and some $j\in\supp(u)$). Every assignment to these variables is consistent (no nonzero derived equation is supported among them) and determines $x_1$ (resp.\ $x_j$) as a constant plus their parity (\cref{lem:shape:circuits}); so by usability and soundness the output gate for the literal $x_1$ computes, on the inputs that make exactly one literal of each variable true, the parity of $m-1$ bits or its negation. This is a circuit of depth $2k$ with unbounded fan-in AND and OR gates over the literals of $m-1$ variables, with at most $k(\lVert\Phi\rVert+2\bar m)\le k(3\lVert\Phi\rVert+2m)$ gates. By H{\aa}stad's theorem \citep{hastad1986almost}, in its standard form, every such circuit of depth $d\ge2$ computing the parity of $n$ variables has at least $2^{c_{\rm H}n^{1/(d-1)}}$ gates, for an absolute constant $c_{\rm H}>0$ and $n$ large enough given $d$. With $n=m-1$ (resp.\ $w-1$) and $d=2k$ the claim follows. (For $k=1$, \cref{prop:shape:oneround} gives the exact value $2^{m-1}$.)
+(d) By (c), for fixed $k$ the written length is $2^{\Omega(m^{1/(2k-1)})}$, superpolynomial in $m$; and comparing a polynomial size $2^{O(\log m)}$ with $2^{c_{\rm H}(m-1)^{1/(2k-1)}}/k$ gives $(m-1)^{1/(2k-1)}=O(\log m)$, that is, $k=\Omega(\log m/\log\log m)$. This comparison applies (c) with $k$ growing with $m$, that is, Håstad's bound for depths up to this order. By (b), $2\lceil\log m\rceil-1$ rounds suffice for $4m-6$ clauses.
+\end{proof}
+
+A direct computation over all $m2^{m-1}$ questions, $m=3,\dots,10$ (code in the accompanying repository), confirms that the chain needs exactly $m-1$ rounds for $m\ge4$ and that the balanced tree needs $1,3,4,5,5,5,6,7$ rounds for $m=3,\dots,10$, within the bound $2\lceil\log m\rceil-1$. Part (c) is a direct application of H{\aa}stad's theorem and very probably folklore.
+
+\begin{proof}[Proof of \cref{cor:shape:regimes}]
+\emph{First column.} One parity law has the single circuit $1^m$, indecomposable, so every $\UP$-usable theory over the base variables, and a fortiori every $\UP_k$-usable one, contains its $2^{m-1}$ clauses (\cref{prop:shape:forced}), and these clauses are $\UP_1$-usable (\cref{cor:shape:core}(c), \cref{prop:shape:primeimpl}). \emph{Row $\UP_1$.} \Cref{prop:shape:oneround}, with $\PI(\mathcal S)$ itself $\UP_1$-usable. \emph{Row $\UP_k$, $k$ fixed.} \Cref{prop:shape:depth}(c), for parity with $w=m$ and for the simplex family with $w=(m+1)/2$. \emph{Row $\UP_k$, $k\ge2\lceil\log m\rceil-1$, and $\UP$.} \Cref{prop:shape:depth}(b) and \cref{rem:shape:simplexaux} (for $r=3$, $\PI(\mathcal S)$ has $56\le m(2m-4)$ clauses); more rounds never hurt. \emph{Last column.} \Cref{thm:shape:systems}, for every number of rounds. \emph{Row $\GE$.} A linear theory with $e$ equations in $m+m_{\rm aux}$ variables has a solution set of dimension at least $m+m_{\rm aux}-e$, whose projection has dimension at least $m-e$; so a theory for a law of rank $r$ has at least $r$ equations, and the given equations (one for parity, $r=\log(m+1)$ for the simplex family) or the $m$ equations of \cref{thm:shape:systems} are usable.
+\end{proof}
+
+% ======================================================================
+\subsection{Directionality}\label{app:shape:directions}
+
+A \emph{directed rule} is $P\Rightarrow\ell$, with $P$ a set of literals (the premise) and $\ell$ a literal on a variable that does not occur in $P$; a ``rule'' whose conclusion's variable occurs in its premise corresponds to a tautological clause and is excluded, as tautological clauses are excluded from explicit theories. Its written length is $\lvert P\rvert+1$. \emph{Forward chaining} $\FC_k$ applies, in each of $k$ parallel rounds, every rule whose premise is satisfied by the current assignment; a conclusion whose opposite is assigned, or two opposite conclusions, give a conflict; $\FC:=\FC_\infty$. A rule over the base variables is \emph{sound} for $\mathcal S$ if $P$ is consistent with $\mathcal S$ and $\mathcal S\wedge P\models\ell$. The projection of a rule set, possibly with auxiliary variables, is that of its clauses $\neg P\vee\ell$; a rule set is \emph{$\FC_k$-usable} for $\mathcal S$ if its projection is $\mathcal S$ and $\FC_k$ derives every entailed base literal from every consistent antecedent. A \emph{rule base} is a set of sound rules over the base variables.
+
+\begin{proposition}[Directed rules against clauses]\label{prop:shape:rules}
+\status{proved; computed}\src{shape Prop 4.2}
+(a) For a clause $C$ let $\mathrm{rules}(C):=\{\neg(C\setminus\{L\})\Rightarrow L:L\in C\}$, where $\neg(C\setminus\{L\})$ is the set of negations of the other literals. For every theory $\Phi$, every $k$ and every $\alpha$, $\FC_k$ with $\mathrm{rules}(\Phi)$ and $\UP_k$ with $\Phi$ derive the same literals and conflict together. Conversely a rule $P\Rightarrow\ell$ gives the clause $\neg P\vee\ell$, and unit propagation with the clause derives at least what forward chaining with the rule derives. Hence, for every law and every round budget $k$, with or without auxiliary variables, the smallest usable rule set has at least as many rules as the smallest usable clausal theory has clauses, and at most $w$ times as many, $w$ the largest clause width of a smallest usable clausal theory; in written length the factor is likewise at most $w$.
+(b) \emph{One parity law on $m\ge2$ variables, no auxiliary variables.} A sound rule concluding a literal on $x_j$ has all other $m-1$ variables in its premise. So there are exactly $m2^{m-1}$ sound rules, each question needs its own rule, and the only usable rule base is the set of all of them: $m2^{m-1}$ rules of length $m$, against the unique minimum of $2^{m-1}$ clauses of length $m$; a factor $m$, the number of query directions, in count and in written length.
+(c) \emph{With auxiliary variables, for every law.} Splitting each clause $(l_1\vee\dots\vee l_w)$ with $w\ge4$ into $(l_1\vee l_2\vee z_1),(\neg z_1\vee l_3\vee z_2),\dots,(\neg z_{w-3}\vee l_{w-1}\vee l_w)$ with fresh variables $z_1,\dots,z_{w-3}$ preserves the projection and $\UP$-usability. So every law has an $\FC$-usable rule set of written length at most $9$ times the least written length of a $\UP$-usable clausal theory with auxiliary variables. For the chain encoding of parity: $4m-6$ clauses against $3(4m-6)-2$ rules.
+(d) \emph{One round, any vocabulary.} For one parity law on $m\ge2$ variables, every $\FC_1$-usable set of sound rules, with any auxiliary variables, contains all $m2^{m-1}$ sound rules over the base variables, while every $\UP_1$-usable theory with any auxiliary variables must contain the $2^{m-1}$ clauses of $\PI(\mathcal S)$ (\cref{prop:shape:oneround}).
+\end{proposition}
+
+\begin{proof}
+(a) Induction on rounds: a clause $C$ fires in round $t$ deriving $L$ exactly when the rule $\neg(C\setminus\{L\})\Rightarrow L$ has its premise satisfied after round $t-1$ and $L$ is not yet assigned; forward chaining signals a conflict when a conclusion's opposite is assigned, as unit propagation does when a clause is falsified. A rule $P\Rightarrow\ell$ whose premise is satisfied leaves its clause with all literals but $\ell$ falsified. The bounds follow by translating a smallest usable theory in either direction: $\mathrm{rules}(\Phi)$ has at most $w\lvert\Phi\rvert$ rules and written length $\sum_{C\in\Phi}\lvert C\rvert^2\le w\lVert\Phi\rVert$, and the clauses of a rule set are at most as many as its rules and are usable for the same round budget.
+(b) If a sound rule $P\Rightarrow x_j^v$ had a premise missing some $x_i$, $i\ne j$, then by \cref{lem:shape:circuits} (the only circuit is $1^m$) $x_j$ would not be determined by the consistent premise $P$, and the rule would be unsound. So each sound rule is $\beta|_{[m]\setminus\{j\}}\Rightarrow x_j^{v}$ with $v$ the forced value, one for each $j$ and each of the $2^{m-1}$ assignments $\beta$ to the other variables, and the question with that antecedent is answered only by that rule. The minimum of $2^{m-1}$ clauses is \cref{cor:shape:core}(c) for $m\ge3$, and for $m=2$ the equivalence-law case of \cref{rem:shape:dstar2} with one class of two variables.
+(c) The pieces, with the $z$'s quantified out, are equivalent to the clause. If all literals of the clause but $l_t$ are falsified, propagation from the left derives $z_1,\dots,z_{t-2}$, from the right $\neg z_{w-3},\dots,\neg z_{t-1}$, and the piece containing $l_t$ fires (the end cases are the same with one side empty). Every derivation of the original run is reproduced, in more rounds, and soundness is unchanged. A clause of length $w\ge4$ becomes $w-2$ clauses of length $3$, of total length at most $3w$, and each $3$-clause becomes $3$ rules of length $3$; clauses of width at most $3$ become rules of total length at most $3$ times their own. The chain encoding has $4m-8$ clauses of width $3$ and $2$ of width $2$, so $\mathrm{rules}$ gives $3(4m-8)+4=3(4m-6)-2$ rules.
+(d) From an antecedent $\alpha$ on base variables, a rule fires in round $1$ only if its premise is satisfied by $\alpha$, so its premise consists of base literals of $\alpha$. A rule answering the question with antecedent $\beta|_{[m]\setminus\{j\}}$ concludes a literal on $x_j$, so it is a sound rule over the base variables, and by (b) its premise is that whole antecedent.
+\end{proof}
+
+A direct computation (code in the accompanying repository) confirms for $m=2,\dots,7$ that the sound rules of one parity law number exactly $m2^{m-1}$, all with premises of size $m-1$, and that for $m\le5$ deleting any one of them breaks usability; on random theories, forward chaining with $\mathrm{rules}(\Phi)$ and unit propagation with $\Phi$ agree in every run.
+
+\begin{theorem}[Directionality is real but cheap]\label{thm:shape:directions}
+\status{proved}\src{shape Thm 4.3}
+(1) For one parity law on $m\ge2$ variables, the only $\FC$-usable rule base is the set of all $m2^{m-1}$ sound rules, of written length $m$ each, while the least $\UP$-usable theory over the base variables has $2^{m-1}$ clauses of length $m$: a factor $m$, the number of query directions. With any auxiliary variables, every $\FC_1$-usable set of sound rules contains these $m2^{m-1}$ rules, while every $\UP_1$-usable theory must contain $2^{m-1}$ clauses.
+(2) For every law and round budget $k$, with or without auxiliary variables, the least $\FC_k$-usable rule set has at least as many rules as the least $\UP_k$-usable theory has clauses and at most $w$ times as many, $w$ the largest clause width of a smallest such theory; in written length the factor is likewise at most $w$. With auxiliary variables and unbounded rounds, every law has an $\FC$-usable rule set of written length at most $9$ times the least written length of a $\UP$-usable theory (at most $3$ times for the chain encoding of parity). A program with internal variables answers all $m$ directions of parity with $O(m)$ operations.
+(3) $\KA^{\FC_k}=\KA^{\UP_1}\pm c$ on every conditional data set.
+\end{theorem}
+
+\begin{proof}
+(1) is \cref{prop:shape:rules}(b), (d). (2) is \cref{prop:shape:rules}(a), (c); the chain encoding has width at most $3$, so its rules have written length at most $3$ times its own; and a program answers the question with $x_j$ unknown by outputting $b$ plus the sum of the given bits. (3) A fixed program maps an $\FC_k$-compatible rule set $R$ to its clauses and then to $\PI$ of their projection, which is $\UP_1$-compatible with the same data by \cref{lem:shape:PI}(a), since forward chaining derives only literals entailed by the clauses; conversely it maps a $\UP_1$-compatible $\Phi$ to $\mathrm{rules}(\Phi)$, which is $\FC_1$-compatible by \cref{prop:shape:rules}(a), hence $\FC_k$-compatible for every $k\ge1$.
+\end{proof}
+
+\begin{remark}[Programs, rule bases and time bounds]\label{rem:shape:cellprobe}
+\status{assessment, with the proved part in thm:shape:directions(3); time bounds below elimination open}\src{shape Rem 4.4}
+A program may consist of a generic solver applied to a declarative law, at $O(1)$ extra length, so ``programs lose'' cannot be the statement; \cref{thm:shape:invisible} is the precise form for reasoners: under program length the weakest reasoner together with a compiler is as good as any. The separations above concern what a \emph{fixed} weak reasoner needs written. The translation of \cref{prop:shape:rules}(a) is round for round, so the directionality factor is the same under every round budget. A per-question time bound below that of elimination ($O(r^2m)$ bit operations for $\GE$ on $r$ equations) does not separate directed rules from clauses either: $\PI(\mathcal S)$ and its rule translation both answer every question of the simplex family in one round. What a time bound changes is the comparison between reasoners: a reasoner that may not run elimination must be handed a lemma library, which over the base variables is exponentially larger (\cref{app:shape:base}); if its time is charged at least linearly in the size of the theory it reads, it cannot even read that library.
+\end{remark}
+
+\begin{question}\label{q:shape:cellprobe}
+\status{open}\src{shape Rem 4.4; synthesis 6 item 20}
+In a cell-probe-type model of a reasoner, is there a theory of size polynomial in $m$ that answers every question of the simplex family in time below that of elimination?
+\end{question}
+
+% ======================================================================
+\subsection{Where the know-how lives}\label{app:shape:homes}
+
+\begin{proposition}[Three homes of know-how]\label{prop:shape:homes}
+\status{proved; the derivation size in (c): proof sketch (rem:shape:knowhowsketch)}\src{shape Prop 5.1}
+For an affine law $\mathcal S=\{x:Ax=b\}$, the know-how to answer every question of $\mathcal Q(\mathcal S)$ can be placed in any of the following.
+(a) \emph{In the reasoner:} the $r$ equations with $\GE$, of listing length $O(rm\log m)$ bits.
+(b) \emph{In written lemmas:} for $\UP$ over explicit theories, exactly $\Phi_{\rm ind}(\mathcal S)$ over the base variables when $d_*\ge3$ (\cref{thm:shape:minimum}; exponential for the simplex family), and a library such as $\mathrm{Circ}_{\rm aux}$ with intermediate concepts (\cref{prop:shape:library}; polynomial for the simplex family by \cref{rem:shape:simplexaux}, exponential for some systems whatever the intermediate concepts by \cref{thm:shape:systems}, and for one parity law at any fixed depth by \cref{prop:shape:depth}(c)).
+(c) \emph{In a computation that the cost model does not charge:} either a membership test with free search for derivations: for a suitable polynomial $q$, the axiom set $\PI(\mathcal S)$ has a decider of length $K^q(A,b)+c$ that runs in time polynomial in $m$ and in the length of its input, and for every $(\alpha,\ell)\in\mathcal Q(\mathcal S)$ the sentence $\bigwedge\alpha\to\ell$ follows by propositional reasoning from a single member of $\PI(\mathcal S)$; or a generator of the explicit theory under program length (\cref{thm:shape:invisible}: the compiler $\Phi'\mapsto\PI(\proj\Phi')$ costs $O(1)$ bits). Here $K^q(A,b)\le rm+r+O(\log m)$, and $K^q(A,b)=O(\log m)$ for one parity law and for the simplex family.
+\end{proposition}
+
+\begin{proof}
+(a) and (b) collect the results cited. (c) A clause $C_{Z,\beta}$ is in $\PI(\mathcal S)$ iff the derived equations supported in $Z$ are exactly $0$ and the all-ones vector $1_Z$ on $Z$, and $\beta$ violates $1_Z$ (\cref{prop:shape:primeimpl}; a circuit is the unique nonzero derived equation supported in its support). The derived equations supported in $Z$ are the $yA$ with $y$ in the kernel of the columns of $A$ outside $Z$, computable by Gaussian elimination in time polynomial in $m$ once $(A,b)$ is available, and a program of length $K^q(A,b)$ produces $(A,b)$ within $q(\lvert(A,b)\rvert)$ steps. A question $(\alpha,\ell)$ has a prime implicate $C=\neg\alpha'\vee\ell$ with $\alpha'\subseteq\alpha$ (\cref{lem:shape:PI}(a)), and $\bigwedge\alpha\to\ell$ follows from the single instance $C$ by propositional reasoning. Printing the literal matrix and vector, with $r$ and $m$ coded self-delimitingly, takes polynomial time and gives $K^q(A,b)\le rm+r+O(\log m)$; one parity law and the simplex family are computed from $m$ in polynomial time.
+\end{proof}
+
+A direct computation (code in the accompanying repository) confirms that the decider agrees with prime-implicate membership computed by brute force on $9{,}852$ clauses over $30$ random laws.
+
+\begin{definition}[Charged deduction with conditional data]\label{def:shape:charged}
+\status{definition}\src{shape Def 5.1a}
+We use the readings of charged deduction of \cref{thm:soi:sandwich} (derivation size; every instance short, (a1), or every nonlogical instance short, (a2); total material, (b), or nonlogical material, (b2)) at polynomial budgets with the degrees charged, as in Definition~E.18 of \citet{claude2026axiominduction}. A hypothesis is a triple $(p,i,j)$; $A_{p,i}$ is the set of sentences $\chi$ that $p$ accepts within $(\lvert\chi\rvert+2)^i$ steps; the budget for a datum $\varphi$ is $(\lvert\varphi\rvert+2)^j$; and the weight is $2^{-\lvert\mathrm{El}(p)\rvert-2\lceil\log(i+1)\rceil-2\lceil\log(j+1)\rceil-2}$, with $\mathrm{El}(p)$ a self-delimiting code of $p$ of length $\lvert p\rvert+O(\log\lvert p\rvert)$. The \emph{conditional} version: $(p,i,j)$ is compatible with a conditional data set $D$ if for each $(\alpha,\ell)\in D$ the set $B\cup A_{p,i}\cup\{\alpha\}$ is consistent (this is not charged) and the sentence $\bigwedge\alpha\to\ell$ has a derivation in the calculus $\mathsf K$ of that report from $B\cup A_{p,i}$ within the budget under the reading. In our setting $\mathcal L_m$ is finite, $B=\emptyset$ is decidable in polynomial time, and \cref{ass:soi:F1} holds vacuously, as the axioms are sentences of $\mathcal L_m$, which contain no parameters.
+\end{definition}
+
+The readings are defined for two-valued data; question data reach them only through the two-valued encoding, which is degenerate (\cref{prop:shape:E2}), or through this definition.
+
+\begin{theorem}[Charged deduction does not charge for the lemma library]\label{thm:shape:knowhow}
+\status{proved from the definitions; the bounded degree used after it: proof sketch}\src{shape Thm 5.2}
+Let $\mathcal S$ be an affine law and take any reading of charged deduction in \cref{def:shape:charged}, at polynomial budgets with the degrees charged. (i) If each derivation of \cref{prop:shape:homes}(c) has size at most $(\lvert\bigwedge\alpha\to\ell\rvert+2)^{j_0}$, the decider of $\PI(\mathcal S)$ with derivation degree $j_0$ is a hypothesis compatible with $\mathcal Q(\mathcal S)$ of weight at least $2^{-K^q(A,b)-O(\log m)-2\lceil\log(j_0+1)\rceil}$. (ii) Every hypothesis compatible with $\mathcal Q(\mathcal S)$ has weight at most $2^{-K(\mathcal S)+c}$.
+\end{theorem}
+
+\begin{proof}
+(i) By \cref{prop:shape:homes}(c) the decider runs in time $\mathrm{poly}(m)\cdot\mathrm{poly}(\lvert\chi\rvert)\le(\lvert\chi\rvert+2)^i$ with $i=O(\log m)$, as $\lvert\chi\rvert+2\ge3$, so the degree charge is $O(\log\log m)$; it has length $K^q(A,b)+c$, so $\lvert\mathrm{El}(p)\rvert=K^q(A,b)+O(\log m)$. $\PI(\mathcal S)\cup\alpha$ is consistent for every antecedent of $\mathcal Q(\mathcal S)$, and by hypothesis each datum has a derivation from a single member of $\PI(\mathcal S)$ of size at most $(\lvert\bigwedge\alpha\to\ell\rvert+2)^{j_0}$, which bounds its instances and its material as well, so it is within the budget under every reading.
+(ii) Let $(p,i,j)$ be compatible with $\mathcal Q(\mathcal S)$ and $\Gamma:=A_{p,i}$. \emph{Claim:} $x\notin\mathcal S$ iff there are $I\subsetneq[m]$ and $j'\notin I$ such that $\bigwedge x|_I\to\ell$ has a derivation from $\Gamma$ within the budget, where $\ell$ is the literal on $x_{j'}$ false at $x$. If $x\notin\mathcal S$, the proof of \cref{lem:shape:forces} gives a question $(x|_I,\ell)\in\mathcal Q(\mathcal S)$ with $\ell$ false at $x$, and compatibility gives the derivation. If $x\in\mathcal S$, then $x$ has a determined coordinate $j''$ (\cref{lem:shape:forces}), and the datum $(x|_{[m]\setminus\{j''\}},\ell'')$, with $\ell''$ the literal on $x_{j''}$ true at $x$, makes $\Gamma\cup\{\hat x\}$ consistent; a derivation of $\bigwedge x|_I\to\ell$ with $\ell$ false at $x$ would refute $\Gamma\cup\{\hat x\}$. The condition is decidable from $(p,i,j)$: there are finitely many derivations within the budget, and membership in $\Gamma$ is decided by running $p$ with its clock. So $\mathcal S$ is computable from $(p,i,j)$, and $K(\mathcal S)\le\lvert\mathrm{El}(p)\rvert+2\lceil\log(i+1)\rceil+2\lceil\log(j+1)\rceil+c$, which is the claim.
+\end{proof}
+
+\begin{remark}[Derivation sizes, and the two-valued encoding under charged deduction]\label{rem:shape:knowhowsketch}
+\status{proof sketch}\src{shape Prop 5.1(c), Thm 5.2(i), (iii)}
+We do not count the nodes of the derivations below. (1) In the calculus $\mathsf K$ (connectives $\neg$ and $\to$, with $\vee$ and $\wedge$ defined), the tautology $(\neg\alpha'\vee\ell)\to(\bigwedge\alpha\to\ell)$ has a derivation of size polynomial in $\lvert\alpha\rvert+\lvert\ell\rvert=O(m)$, assembled from the standard derivations of the deduction theorem, $\wedge$-elimination and the double-negation laws, used $O(\lvert\alpha\rvert)$ times; one modus ponens with the axiom $C=\neg\alpha'\vee\ell$ finishes. So the hypothesis of \cref{thm:shape:knowhow}(i) holds with $j_0=O(1)$, the decider has weight at least $2^{-K^q(A,b)-O(\log m)}$, and by \cref{thm:shape:knowhow}(ii) these readings give the full lemma library, whose explicit form has $m2^{(m-1)/2}$ clauses for the simplex family, a cost within $K^q(A,b)-K(\mathcal S)+O(\log m)$ bits of the least possible. (2) Under the two-valued encoding these readings are degenerate as \SAIabbr is: the point theory $T_{x^0}$ of \cref{prop:shape:E2} has a polynomial-time decider and is consistent, and the case distinction in the proof of \cref{prop:shape:E2} gives each $\bigwedge\alpha\to\ell$ from one literal of $T_{x^0}$ by propositional steps of polynomial size.
+\end{remark}
+
+Charged deduction thus measures the length of a membership test, not the length of what a reader must be handed; the membership test for the full library runs Gaussian elimination, so the know-how lives in the decider. On literal sequences, under \cref{ass:soi:F1}, at polynomial budgets with the degrees charged, charged-deduction \SAIabbr corresponds to certificate \SOIabbr (\cref{thm:soi:sandwich,cor:soi:fit}), and the nondeterminism is the free search for derivations.
+
+% ======================================================================
+\subsection{Learning know-how pattern by pattern}\label{app:shape:learning}
+
+Let $m\ge3$ and $\Par_m:=\Par^0_m$ (the constant $1$ is symmetric). Every question of $\mathcal Q(\Par_m)$ has an antecedent on $m-1$ variables; write it as $(j,\zeta)$ with $\zeta\in\Par_m$, its \emph{positive point}, antecedent $\zeta|_{[m]\setminus\{j\}}$ and answer $x_j^{\zeta_j}$. Its \emph{pattern} is the violating point $\mathrm{pat}(j,\zeta):=\zeta\oplus\mathbf e_j\in\mathcal P_m:=\{0,1\}^m\setminus\Par_m$. So $\lvert\mathcal Q(\Par_m)\rvert=m2^{m-1}$ and $\lvert\mathcal P_m\rvert=2^{m-1}$, and every pattern and every positive point carries exactly $m$ questions. For a conditional data set $D\subseteq\mathcal Q(\Par_m)$, $\mathrm{pat}(D)$ is the set of \emph{seen} patterns. For $\beta\in\{0,1\}^m$, $C_\beta$ is the full-width clause falsified exactly by $\beta$; in the listing code it costs $\mathrm{len}_m:=\ell_{\mathbb N}(m)+m(\lceil\log m\rceil+1)$ bits. A theory \emph{fails} on a question if it errs, abstains, or is inconsistent with the antecedent.
+
+\begin{lemma}[Answers of a theory over the base variables]\label{lem:shape:noaux}
+\status{proved; computed}\src{shape Lemma 6.1}
+For an explicit theory $\Phi$ over the base variables and a question $(j,\zeta)$ the following are equivalent: (i) $\Phi$ is $\UP$-compatible with $(j,\zeta)$; (ii) $\Phi$ answers it correctly (unit propagation derives exactly $x_j^{\zeta_j}$, without conflict); (iii) $\zeta$ satisfies $\Phi$, and some clause of $\Phi$ with a literal on $x_j$ is falsified by $\mathrm{pat}(j,\zeta)$.
+\end{lemma}
+
+\begin{proof}
+Only $x_j$ is unassigned, so unit propagation either finds a clause falsified by the antecedent (a conflict), or derives values of $x_j$ from clauses whose other literals are falsified by it. A clause with a literal on $x_j$ and all other literals falsified by the antecedent derives $x_j^{\zeta_j}$ iff it is falsified by $\mathrm{pat}(j,\zeta)$, and derives the opposite iff it is falsified by $\zeta$; a clause without $x_j$ that is falsified by the antecedent is falsified by $\zeta$. So (iii) gives a derivation of the answer and no conflict, that is (ii), and $\zeta$ witnesses satisfiability, so (i) follows. If (i), the satisfying completion of the antecedent is $\zeta$, since the clause that derives $x_j^{\zeta_j}$ excludes $\mathrm{pat}(j,\zeta)$; this gives (iii). (ii)$\Rightarrow$(iii): a correct derivation needs a clause falsified by $\mathrm{pat}(j,\zeta)$, and a clause falsified by $\zeta$ would cause a conflict or a wrong derivation.
+\end{proof}
+
+\begin{theorem}[A weak reasoner learns its know-how pattern by pattern]\label{thm:shape:learning}
+\status{proved; computed}\src{shape Thm 6.2}
+(a) \emph{Full correctness.} An explicit theory over the base variables answers every question of $\mathcal Q(\Par_m)$ correctly iff it is $\PI(\Par_m)=\{C_\beta:\beta\in\mathcal P_m\}$.
+(b) \emph{Minimal theories, any order.} Let $D\subseteq\mathcal Q(\Par_m)$ and let $\Phi$ be an inclusion-minimal explicit theory over the base variables that is $\UP$-compatible with $D$ (for instance any $\ell_{\rm lst}$-shortest one, \cref{lem:shape:code}). Then for every unseen pattern $\beta\notin\mathrm{pat}(D)$, $\Phi$ fails on some question of pattern $\beta$. Hence $\Phi$ fails on at least $\lvert\mathcal P_m\setminus\mathrm{pat}(D)\rvert$ questions, and a shortest compatible theory is fully correct only after all $2^{m-1}$ patterns have been seen.
+(c) \emph{Random order.} If the questions are drawn independently and uniformly from $\mathcal Q(\Par_m)$, the patterns are independent and uniform on $\mathcal P_m$; after $n$ questions the expected number of unseen patterns is $2^{m-1}(1-2^{1-m})^n$, and the expected time until all have been seen is $2^{m-1}\sum_{i=1}^{2^{m-1}}1/i=2^{m-1}\bigl((m-1)\ln2+0.5772\ldots\bigr)+\frac12+O(2^{-m})$, where $0.5772\ldots$ is Euler's constant.
+(d) \emph{Bayes, block-complete data (semimeasure convention).} If $D$ contains all $m$ questions of each seen pattern, every $\UP$-compatible explicit theory over the base variables contains $\{C_\beta:\beta\in\mathrm{pat}(D)\}$, and $-\log\Wlst^{\UP,\mathrm{base}}(D)\ge\lvert\mathrm{pat}(D)\rvert\,\mathrm{len}_m$. So the cumulative loss is at least $\lvert\mathrm{pat}(D)\rvert\,\mathrm{len}_m-c$ bits: about $m\log m$ bits per pattern, and $2^{m-1}\mathrm{len}_m$ in all.
+(e) \emph{With the reasoner or with intermediate concepts.} For every $D\subseteq\mathcal Q(\Par_m)$, $-\log\Wlst^{\GE}(D)\le\ell_{\rm lst}(\text{the one equation})=m\lceil\log m\rceil+O(\log m)$, and $-\log\Wlst^{\UP}(D)\le\ell_{\rm lst}(\text{the chain encoding})=O(m\log m)$ (\cref{prop:shape:chainenc}). So these inducers pay $O(m\log m)$ bits in total on every question sequence.
+(f) \emph{Other measures.} Under program length there is no gap: $\KA^{\UP,\mathrm{base}}(\mathcal Q(\Par_m))=K(m)\pm c$. Under time charging, $\KtA^{\UP,\mathrm{base}}(\mathcal Q(\Par_m))\ge\log(m2^{m-1})=m-1+\log m$, while $\KtA^{\UP}(\mathcal Q(\Par_m))$ and $\KtA^{\GE}(\mathcal Q(\Par_m))$ are $O(\log m)$.
+\end{theorem}
+
+\begin{proof}
+(a) By \cref{lem:shape:noaux}(iii) for all questions: every point of $\Par_m$ satisfies $\Phi$, so every clause is an implicate, of width $m$ (\cref{prop:shape:cnf}, $d_*=m$), that is, some $C_\beta$ with $\beta\in\mathcal P_m$; and every pattern $\beta$ needs a clause falsified by it, which among full-width clauses is $C_\beta$ itself.
+(b) $C_\beta$ is falsified only by $\beta$, so by \cref{lem:shape:noaux} it serves only questions of pattern $\beta$; for unseen $\beta$, removing it keeps compatibility with $D$, so by minimality $C_\beta\notin\Phi$. If for some $j$ no clause of $\Phi$ with a literal on $x_j$ is falsified by $\beta$, then $\Phi$ fails on $(j,\beta\oplus\mathbf e_j)$, of pattern $\beta$. Otherwise take a clause $C\in\Phi$ falsified by $\beta$; $C\ne C_\beta$, so $\lvert C\rvert<m$; take $i\notin\supp(C)$. The question $(i,\beta\oplus\mathbf e_i)$ has pattern $\beta$, and its positive point $\beta\oplus\mathbf e_i$ agrees with $\beta$ on $\supp(C)$, so it falsifies $C$, and $\Phi$ fails on it (\cref{lem:shape:noaux}). Distinct patterns give distinct questions.
+(c) Each pattern carries $m$ of the $m2^{m-1}$ questions; the rest is the coupon collector's problem, with $\sum_{i\le N}1/i=\ln N+0.5772\ldots+\frac1{2N}+O(N^{-2})$.
+(d) For a seen pattern $\beta$, every $\beta\oplus\mathbf e_i$ is a seen positive point, so every clause of a compatible $\Phi$ is satisfied by all of them (\cref{lem:shape:noaux}). A clause falsified by $\beta$ of width less than $m$ is falsified by $\beta\oplus\mathbf e_i$ for $i$ outside its support; so the only admissible clause falsified by $\beta$ is $C_\beta$, and \cref{lem:shape:noaux} requires one. With $R:=\{C_\beta:\beta\in\mathrm{pat}(D)\}$ and $\sigma_D:=\lvert\mathrm{pat}(D)\rvert$, summing the listing weights of all theories over the base variables that contain $R$ (here $m_{\rm aux}=0$) gives, as in the proof of \cref{lem:shape:code}, at most $\sum_s2^{-\ell_{\mathbb N}(s)}2^{-\sigma_D\mathrm{len}_m}\sum_{\lvert\Phi'\rvert=s-\sigma_D}\prod_{C\in\Phi'}2^{-\ell(C)}\le2^{-\sigma_D\mathrm{len}_m}\sum_s2^{-\ell_{\mathbb N}(s)}/(s-\sigma_D)!\le2^{-\sigma_D\mathrm{len}_m}$. The cumulative loss in the semimeasure convention is $-\log\Wlst(D)+\log\Wlst(\emptyset)$, and $\Wlst(\emptyset)\ge2^{-c}$.
+(e) The single equation (respectively the chain encoding) is compatible with every $D\subseteq\mathcal Q(\Par_m)$, so $\Wlst\ge2^{-\ell_{\rm lst}}$ of it; the listing lengths are direct from \eqref{eq:shape:lst}.
+(f) \Cref{thm:shape:visible}(b), (c): the unique usable theory over the base variables has $2^{m-1}$ clauses of width $m$, and the chain encoding and the equation are printed from $m$ in polynomial time.
+\end{proof}
+
+A simulation (code in the accompanying repository) with uniformly random question sequences for $m=4,5,6$, which computes an exactly $\ell_{\rm lst}$-shortest compatible theory at checkpoints, found in each of $330$ checkpoints at least as many failures as unseen patterns, as (b) requires, and typically about $m$ times as many; the exact expected times until all patterns are seen are $21.74$, $54.09$ and $129.87$.
+
+\begin{question}\label{q:shape:learning}
+\status{open}\src{shape 13 item 4; synthesis 6 item 19}
+Is there a learning theorem of this kind for systems of laws, and for a fixed number of rounds with intermediate concepts? Is there a Bayes lower bound like (d) for arbitrary question sequences that are not block-complete?
+\end{question}
+
+% ======================================================================
+\subsection{Depth against size for the implication chain}\label{app:shape:spanner}
+
+Let $\mathrm{Ch}_m=\{x:x_1\le\dots\le x_m\}$, $m\ge2$. A \emph{$k$-hop transitive-closure spanner} of the directed path on $[m]$ is a set $E$ of pairs $(i,j)$, $i<j$, such that for all $i<j$ there is a path from $i$ to $j$ in $E$ with at most $k$ edges; $\mathrm{sp}_k(m)$ is the least size of one.
+
+\begin{theorem}[Depth against size: the reduction to spanners]\label{thm:shape:spanner}
+\status{proved; values computed; Theta(m ia_k(m)) known; the converse of (iii) refuted}\src{shape Thm 7.1 (i)-(iv)}
+(i) The prime implicates of $\mathrm{Ch}_m$ are exactly the clauses $\neg x_i\vee x_j$, $i<j$.
+(ii) A $2$-CNF of prime implicates, with edge set $E$, is $\UP_k$-usable iff $E$ is a $k$-hop transitive-closure spanner of the path.
+(iii) If an explicit theory $\Phi$ over the base variables, with clauses of any width, is $\UP_k$-usable, then for every choice of a prime implicate contained in each clause, the chosen edges form a $k$-hop transitive-closure spanner of the path.
+(iv) Hence the least number of clauses of a $\UP_k$-usable theory over the base variables is exactly $\mathrm{sp}_k(m)$, for every $k$.
+\end{theorem}
+
+\begin{proof}
+(i) A partial assignment is consistent with $\mathrm{Ch}_m$ iff it sets no $x_i=1$, $x_j=0$ with $i<j$; so a clause is an implicate iff it contains some $\neg x_i\vee x_j$ with $i<j$, and these $2$-clauses are the prime implicates. (ii) For an edge set $E$, $\UP_k$ from a consistent $\alpha$ derives $x_j$ iff some $x_i$ true in $\alpha$ has a path to $j$ of at most $k$ edges, and $\neg x_i$ iff some $x_j$ false in $\alpha$ is reached from $i$ within $k$ edges (the same clauses read contrapositively); and an entailed literal is entailed by a single literal of $\alpha$. So usability is the spanner property (take $\alpha=\{x_i\}$ for necessity). (iii) \Cref{lem:shape:subsumption} holds for every law: the replaced theory derives, round for round, at least what $\Phi$ derives, so it is $\UP_k$-usable, and it is a $2$-CNF of prime implicates, so (ii) applies (two clauses may give the same edge). (iv) By (iii) a usable $\Phi$ has $\lvert\Phi\rvert\ge\lvert E\rvert\ge\mathrm{sp}_k(m)$, and a minimum spanner written as a $2$-CNF is usable by (ii).
+\end{proof}
+
+The converse of (iii) fails for wide clauses. For $m=3$, $k=1$, the theory $\{\neg x_1\vee x_2,\ \neg x_2\vee x_3,\ \neg x_1\vee\neg x_2\vee x_3\}$ consists of implicates, and choosing $\neg x_1\vee x_3$ inside the wide clause gives the $1$-hop spanner $\{12,23,13\}$, but from $x_1=1$ one round does not derive $x_3$. The failure persists when the choice is forced: in $\{\neg x_1\vee x_2,\ \neg x_1\vee x_3,\ \neg x_2\vee x_1\vee x_3\}$ the wide clause contains only $\neg x_2\vee x_3$, the edges $\{12,13,23\}$ form a $1$-hop spanner, but from $x_3=0$ one round does not derive $x_2=0$. A wide clause propagates in fewer situations than the edge it contains.
+
+The minimum size of a $k$-hop transitive-closure spanner of the directed path is $\Theta(m\,\ia_k(m))$, with $\ia_k$ the $k$-th row of the inverse Ackermann function: $\ia_2(m)=\log m$, $\ia_3(m)=\log\log m$, $\ia_4(m)=\log^*m$. This is the bound of \citet{alon1987optimal} for answering product queries in at most $k$ steps, in the language of transitive-closure spanners \citep{bhattacharyya2012transitive,berman2014steiner}; \citet{yao1982space} gave the first inverse-Ackermann trade-off for range queries. A direct computation (integer programming, confirmed by exhaustive search for $m\le7$; code in the accompanying repository) gives the exact values:
+\begin{center}\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}l*{17}{r}@{}}
+\toprule
+$m$ & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 & 14 & 15 & 16 & 17 & 18\\
+\midrule
+$\mathrm{sp}_1(m)=\binom m2$ & 1 & 3 & 6 & 10 & 15 & 21 & 28 & 36 & 45 & 55 & 66 & 78 & 91 & 105 & 120 & 136 & 153\\
+$\mathrm{sp}_2(m)$ & 1 & 2 & 4 & 6 & 8 & 10 & 13 & 16 & 19 & 22 & 25 & 28 & 31 & 34 & 38 & 42 & 46\\
+$\mathrm{sp}_3(m)$ & 1 & 2 & 3 & 5 & 6 & 8 & 10 & 12 & 14 & 16 & 18 & 20 & & & & & \\
+$\mathrm{sp}_4(m)$ & 1 & 2 & 3 & 4 & 6 & 7 & 9 & 10 & 12 & 14 & 16 & & & & & & \\
+\bottomrule
+\end{tabular}
+\end{center}
+At these sizes $\mathrm{sp}_3(m)=2m-6$ for $6\le m\le13$; the $\log\log$ growth is not yet visible.
+
+\begin{proposition}[The midpoint construction]\label{prop:shape:midpoint}
+\status{proved; computed}\src{shape Prop 7.1a}
+The midpoint recursion, $S(1)=0$ and $S(n)=n-1+S(\lceil\frac{n-1}2\rceil)+S(\lfloor\frac{n-1}2\rfloor)$, gives $2$-hop spanners of the path, so $\mathrm{sp}_2(m)\le S(m)=\sum_{i=1}^m\lfloor\log i\rfloor=(m+1)L-2^{L+1}+2$, where $L:=\lfloor\log m\rfloor$.
+\end{proposition}
+
+\begin{proof}
+Join a hub vertex $h$ to all other vertices ($i\to h$ for $i<h$, $h\to j$ for $j>h$), with $\lceil\frac{n-1}2\rceil$ vertices on one side and $\lfloor\frac{n-1}2\rfloor$ on the other, and recurse on both sides: pairs on opposite sides of $h$, or containing $h$, are joined within $2$ hops, and pairs on one side by the recursion. $\Sigma(m):=\sum_{i\le m}\lfloor\log i\rfloor$ satisfies the same recursion: splitting $i=2i'$ and $i=2i'+1$ ($i\ge2$), $\lfloor\log i\rfloor=1+\lfloor\log i'\rfloor$, so $\Sigma(m)=(m-1)+\Sigma(\lfloor m/2\rfloor)+\Sigma(\lfloor(m-1)/2\rfloor)$, and $\lfloor m/2\rfloor=\lceil(m-1)/2\rceil$. The closed form is standard.
+\end{proof}
+
+The construction attains $\mathrm{sp}_2(m)$ for every $m\le18$ in the table above.
+
+\begin{conjecture}\label{conj:shape:depth2}
+\status{conjecture (true for m<=18 by computation)}\src{shape Conj 7.1b}
+$\mathrm{sp}_2(m)=\sum_{i=1}^m\lfloor\log i\rfloor$ for every $m\ge2$.
+\end{conjecture}
+
+We have neither a proof nor a counterexample; a computation confirms it for $m\le18$. The best lower bound we prove is that of \cref{thm:shape:depth2}, about $\frac12m\log m$, which holds even with intermediate concepts.
+
+\begin{theorem}[Intermediate concepts and wide clauses gain at most a factor about $2$ at depth $2$]\label{thm:shape:depth2}
+\status{proved; computed (ingredients); the 2-clause case implied up to constants by Berman et al.}\src{shape Thm 7.2}
+Let $m\ge4$. Every $\UP_2$-usable explicit theory $\Phi$ for $\mathrm{Ch}_m$, with any auxiliary variables and clauses of any width, has
+\[
+\lvert\Phi\rvert\ \ge\ \tfrac12\Bigl((m-2)\log\tfrac{m-2}{2}-m\Bigr),
+\]
+while $\mathrm{sp}_2(m)\le m\log m$. So at depth $2$ the least usable theory has $\Theta(m\log m)$ clauses with or without intermediate concepts, and they save at most a factor of about $2$.
+\end{theorem}
+
+\begin{proof}
+\emph{Upper bound.} In the midpoint recursion $S(n)=n-1+S(a)+S(b)$ with $a+b=n-1$ and $a,b\le n/2$, so by induction $S(n)\le n-1+(n-1)\log(n/2)\le n\log n$.
+\emph{Simplification.} Let $U_0$ be the set of literals derived by unit propagation from $\Phi$ alone; they are auxiliary, as $\mathrm{Ch}_m$ fixes no base variable. Simplifying $\Phi$ by $U_0$ (deleting the clauses satisfied by $U_0$ and the literals falsified by it) gives $\Phi'$ with $\lvert\Phi'\rvert\le\lvert\Phi\rvert$ and the same projection, which does not mention the variables of $U_0$ and has no unit clauses, and in which every $\UP_2$ derivation of $\Phi$ outside $U_0$ is made no later (induction on rounds: a clause of $\Phi$ that fires in a run from a base antecedent contains no literal of $U_0$, since such a literal would be falsified, that is, its negation derived, against soundness; so its simplification is in $\Phi'$ and fires). So we may assume that $\Phi$ has no unit clauses.
+\emph{Single sources.} For a base index $v$ let $\mathrm{Nb}(v):=\{x_v\}\cup\{L:(\neg x_v\vee L)\in\Phi\}$, the literals known after one round from $\alpha=\{x_v\}$. For a clause $C$ containing $x_j$ let $P(C,j):=\{\neg L':L'\in C\setminus\{x_j\}\}$, its premises for deriving $x_j$. From $\{x_u\}$, $\UP_2$ derives $x_j$ iff some $C\ni x_j$ has $P(C,j)\subseteq\mathrm{Nb}(u)$ (round $1$ is the case $C=\neg x_u\vee x_j$); say that $C$ \emph{serves} $u$ for $j$. By soundness, if $C$ serves $u$ for $j$ then $u\le j$. A clause serving any source for $j$ contains no other positive base literal $x_{w'}$, since its premise $\neg x_{w'}$ would follow from a single $x_u$, which is unsound. Let $\mathrm{cnt}(j)$ be the number of clauses containing $x_j$ that serve some $u<j$; then $\sum_j\mathrm{cnt}(j)\le\lvert\Phi\rvert$, and $\sum_v\lvert\mathrm{Nb}(v)\rvert\le m+\lvert\Phi\rvert$, since a $2$-clause $\neg x_v\vee L$ is counted only for $v$ (a $2$-clause with two negative base literals is not an implicate).
+\emph{Random experiment.} Give every literal an independent fair coin, \emph{left} or \emph{right}. Call $v$ \emph{source-alive} if all of $\mathrm{Nb}(v)$ is right, and $j$ \emph{target-alive} if every clause containing $x_j$ that serves some $u<j$ has a left premise. No $u<j$ has $u$ source-alive and $j$ target-alive: by usability some $C$ serves $u$ for $j$, and all its premises lie in $\mathrm{Nb}(u)$ and are right.
+\emph{Pairing.} For $a=1,\dots,M':=\lfloor m/2\rfloor$ let $\mathcal B_a$ be the event that $2a$ is source-alive and $2a-1$ target-alive. For $a<a'$ we have $2a<2a'-1$, so at most one $\mathcal B_a$ occurs and $\sum_a\Pr[\mathcal B_a]\le1$. Given that $\mathrm{Nb}(2a)$ is all right, a clause serving some $u<2a-1$ for $2a-1$ cannot have all its premises in $\mathrm{Nb}(2a)$ (it would serve $2a$ for $2a-1$, which is unsound), so it is blocked by a left coin outside $\mathrm{Nb}(2a)$ with probability at least $\frac12$, independently of the coins of $\mathrm{Nb}(2a)$; these blocking events are increasing in the set of left coins, so by Harris's inequality they occur together with probability at least $2^{-\mathrm{cnt}(2a-1)}$. Hence $\Pr[\mathcal B_a]\ge2^{-\lvert\mathrm{Nb}(2a)\rvert-\mathrm{cnt}(2a-1)}$, and by the convexity of $x\mapsto2^{-x}$, $\sum_a(\lvert\mathrm{Nb}(2a)\rvert+\mathrm{cnt}(2a-1))\ge M'\log M'$. The shifted pairing ($2a+1$ source-alive and $2a$ target-alive, for $a\le M'':=\lfloor(m-1)/2\rfloor$; $a<a'$ gives $2a+1<2a'$) gives $\sum_a(\lvert\mathrm{Nb}(2a+1)\rvert+\mathrm{cnt}(2a))\ge M''\log M''$. Adding, and using $M',M''\ge(m-2)/2\ge1$, $m+2\lvert\Phi\rvert\ge\sum_v\lvert\mathrm{Nb}(v)\rvert+\sum_j\mathrm{cnt}(j)\ge(m-2)\log\frac{m-2}2$.
+\end{proof}
+
+The bound is asymptotic: it is positive only from $m=8$ on, and gives $11.7$ at $m=16$ against $\mathrm{sp}_2(16)=38$. The argument adapts Hansel's lemma, that covering the complete graph on $n$ vertices by bicliques needs total size at least $n\log n$ \citep{hansel1964nombre,katona1967problem}, to ordered pairs and to conjunctive premises: the pairing keeps the diagonal out, and Harris's inequality handles clauses with several premises. For $2$-CNFs, after the simplification step the implication graph of a $\UP_2$-usable theory (edges $\neg a\to b$ and $\neg b\to a$ for each clause $a\vee b$) is a Steiner $2$-hop transitive-closure spanner of the path, with the positive base literals as its vertices and at most $2\lvert\Phi\rvert$ edges, so lower bounds for Steiner $2$-transitive-closure spanners of directed hypergrids \citep{berman2014steiner}, of which the path is the one-dimensional case, bear on that case; what \cref{thm:shape:depth2} adds is the case of wide clauses and an explicit constant.
+
+\begin{proposition}[Every fixed depth: superlinear with intermediate concepts]\label{prop:shape:fixeddepth}
+\status{proved, given Chandra--Fortune--Lipton (as a hypothesis)}\src{shape Prop 7.3}
+Suppose that for every fixed depth $d$, every monotone circuit of depth $d$ with unbounded fan-in AND and OR gates that computes all the prefix ORs $x_1$, $x_1\vee x_2$, \dots, $x_1\vee\dots\vee x_m$ has $m\cdot\omega(1)$ wires. Then for every fixed $k$ and every bound $w$ on clause width, every $\UP_k$-usable theory $\Phi$ for $\mathrm{Ch}_m$ with clauses of width at most $w$, with any auxiliary variables, has $\lVert\Phi\rVert\ge m\cdot\omega(1)$.
+\end{proposition}
+
+Lower bounds of this form for constant-depth prefix circuits are due to Chandra, Fortune and Lipton, in a companion paper to \citet{chandra1985unbounded}, which gives the matching constant-depth constructions; we state the property as a hypothesis. Size must be counted in wires: counting gates, prefix OR has depth-$1$ circuits with $m$ gates.
+
+\begin{proof}
+On the antecedents $\alpha_{A'}=\{x_i:i\in A'\}$, $A'\subseteq[m]$, all consistent, soundness and usability give: $\UP_k$ derives $x_j$ iff $A'\cap[1,j]\ne\emptyset$. So the circuit of \cref{lem:shape:upcircuit}(b), with inputs the literals $x_i$, is a monotone circuit of depth $2k$ with at most $k(w\lVert\Phi\rVert+2\bar m)$ wires that computes all prefix ORs, and $\bar m\le m+\lVert\Phi\rVert$. Hence $(w+2)k\lVert\Phi\rVert+2km\ge m\cdot\omega(1)$.
+\end{proof}
+
+\begin{question}\label{q:shape:minimum}
+\status{open}\src{shape 13 items 1-3; synthesis 6 item 18}
+(a) What is the least $\UP$-usable theory over the base variables when $d_*=2$, beyond equivalence laws? (b) What is the constant at depth $2$ with intermediate concepts, between $\frac12m\log m$ (\cref{thm:shape:depth2}) and $\sum_{i\le m}\lfloor\log i\rfloor\approx m\log m$ (\cref{conj:shape:depth2})? What is the effect of intermediate concepts at depth $k\ge3$ beyond \cref{prop:shape:fixeddepth}? (c) How many rounds does one parity law need for usable theories of polynomial size: between $\Omega(\log m/\log\log m)$ and $2\lceil\log m\rceil-1$ (\cref{prop:shape:depth}(d))?
+\end{question}
+
+% ======================================================================
+\subsection{Lemmas in first-order logic}\label{app:shape:fo}
+
+In first-order logic the cost of a lemma-free theory for an analytic reasoner can be non-elementary: there are sentences with proofs of size linear in $k$ in Gentzen's sequent calculus $\mathsf{LK}$ with cuts whose cut-free proofs have size not bounded by any Kalm\'ar-elementary function of $k$ \citep{orevkov1982lower}; see also the non-elementary lower bounds of \citet{statman1979lower}. Cut formulas are lemmas, and cut-free proofs are lemma-free reasoning.
+
+\begin{remark}[Valid lemma sentences restore short cut-free proofs]\label{rem:shape:cutfree}
+\status{proof sketch}\src{shape Prop 8.1}
+Let $\mathcal D$ be an $\mathsf{LK}$ proof of $T_0\vdash\varphi$, with $T_0\subseteq T$ finite and cuts numbered $1,\dots,n_{\rm cut}$, the $i$-th with left premise $\Gamma_i\vdash\Delta_i,A_i$. Let $L_i:=\forall\vec v\,(\bigwedge\Gamma_i\to\bigvee\Delta_i\vee A_i)$, the universal closure over the free variables. Then (a) each $L_i$ is valid, since the sequent $\Gamma_i\vdash\Delta_i,A_i$ is derivable and $\mathsf{LK}$ is sound, so $T\cup\{L_1,\dots,L_{n_{\rm cut}}\}$ is deductively equivalent to $T$; and (b) $L_1,\dots,L_{n_{\rm cut}},T_0\vdash\varphi$ has a cut-free proof of size polynomial in the size of $\mathcal D$.
+
+\emph{Proof sketch.} We do not write out the bookkeeping of contexts in the chosen sequent calculus. Replace the $i$-th cut, with premises $\Gamma\vdash\Delta,A$ and $A,\Gamma'\vdash\Delta'$, as follows. From the right premise and identity sequents $\delta\vdash\delta$ ($\delta\in\Delta$), $\vee$-left gives $\bigvee\Delta\vee A,\Gamma'\vdash\Delta,\Delta'$; from identity sequents $\gamma\vdash\gamma$, $\wedge$-right gives $\Gamma\vdash\bigwedge\Gamma$; $\to$-left gives $\bigwedge\Gamma\to\bigvee\Delta\vee A,\Gamma,\Gamma'\vdash\Delta,\Delta'$; and $\forall$-left steps, instantiating the bound variables by the free variables of the cut's premises, give $L_i,\Gamma,\Gamma'\vdash\Delta,\Delta'$. The subproof of the left premise is dropped. Carry $L_i$ down to the end sequent, by weakening where branches meet and contraction for duplicates; $L_i$ is closed, so no eigenvariable condition below the former cut is affected. Identity sequents for composite formulas have cut-free proofs of size polynomial in the formula. \qed
+\end{remark}
+
+The added sentences are valid: the theory's deductive closure, and so everything the idealised inducer sees, is unchanged, and only its written form changes. If every cut's left premise has the form $T_i\vdash A_i$ with $T_i\subseteq T$, the closures $\forall\vec v\,A_i$ of the cut formulas are theorems of $T$ and serve directly; in general they are not, since a cut formula can be arbitrary.
+
+\begin{proposition}[When a lemma pays]\label{prop:shape:lemmaenters}
+\status{proved}\src{shape Prop 8.2}
+Let $\mathrm{Obj}(T):=\mathrm{lh}(T)+\sum_{\varphi\in D}\rho_T(\varphi)$, with $\mathrm{lh}$ additive over axioms and $\rho_T(\varphi)$ the cost of the cheapest derivation of the datum $\varphi$ from $T$, non-increasing when axioms are added. Adding a theorem $L\notin T$ of $T$ as an axiom lowers $\mathrm{Obj}$ if and only if $\sum_{\varphi\in D}\bigl(\rho_T(\varphi)-\rho_{T\cup\{L\}}(\varphi)\bigr)>\mathrm{lh}(L)$: a lemma enters iff the derivation cost it saves on the data exceeds its own length.
+\end{proposition}
+
+\begin{proof}
+By additivity, $\mathrm{Obj}(T\cup\{L\})-\mathrm{Obj}(T)=\mathrm{lh}(L)-\sum_{\varphi\in D}(\rho_T(\varphi)-\rho_{T\cup\{L\}}(\varphi))$.
+\end{proof}
+
+This is the general form of the observation in Remark~E.9(iv) of \citet{claude2026axiominduction} that a time-bounded likelihood favours adopting theorems with long proofs as axioms.

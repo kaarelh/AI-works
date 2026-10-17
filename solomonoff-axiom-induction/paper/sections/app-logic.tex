@@ -1,4 +1,469 @@
-% STUB written by the planning editor. The section writer replaces this file.
-% Plan: ../OUTLINE.md (section "app:logic"); results: ../CLAIMS.md; notation: ../NOTATION.md.
+% Appendix C (writer: logic). Proofs for Section 5 (logic.tex).
+% Source: research/tracks/logic/notes-final.md (final record; item numbers in \src), as corrected by
+% research/final-check.md §4 (items 5, 11, 18); sfi Cor 4.2 for cor:logic:versions.
+% Rows stated here only (CLAIMS.md "app"): lem:logic:density, prop:logic:horizon, cor:logic:rate, lem:logic:flexible,
+% q:logic:soundtrue, thm:logic:thresholdtheories, rem:logic:Wbound, q:logic:codingO1, prop:logic:extension,
+% prop:logic:falsesigma, prop:logic:unsound, prop:logic:lines, ex:logic:lines, q:logic:kreisel, prop:logic:generic.
+% Local symbols (renamed from the record, NOTATION §11 and write-logic.md): flexible formulas \Upsilon (record \Phi);
+% diagonal-lemma formula \vartheta (record \Theta); \Lambda (record \Psi); true winner j^\circ_k (record t_k);
+% \sigma_\Upsilon, \pi_\Upsilon (record \mathcal A, \mathcal N); \mathrm{Bd}_m (record \beta_m); \mathrm{Comp} (Kleene's T);
+% growth constant \kappa (record \gamma); exponent \xi (record \delta); \mathcal K^G (record \mathcal C^G).
 \section{Proofs for random theories, \texorpdfstring{$\Pi_1$}{Pi1} data and G\"odel phenomena}\label{app:logic}
-\emph{(To be written.)}
+
+This appendix proves the results of \cref{sec:logic} in their order and states and proves the results that the main text only mentions. The notation is that of \cref{def:setting:machine,def:setting:MA,def:setting:versions}.
+
+\subsection{Standing facts and conventions}\label{app:logic:conv}
+
+\paragraph{Facts from \cref{sec:basic}.} We use four facts throughout.
+\begin{itemize}[leftmargin=*]
+\item \emph{(Dom)} If $\omega=p\omega'$ with $p\in\dom V$, then $A_\omega=A^{G_{V(p)}}_{\omega'}$ (\cref{def:setting:MA}). So for every theory machine $G$, every event about the random theory of $G$ is matched, at a cost of a factor $2^{-K(G)}$, by the same event for $G_U$: the tapes $p\omega'$ with $p$ a shortest program for an index of $G$ carry it. In particular $\MA\ge2^{-K(\nu)}\nu$ for every theory-machine law $\nu$, and $\MA(D)\ge2^{-K(e)-c}$ whenever $B\cup\re e$ is consistent and proves $\psi_D$ (\cref{thm:basic:dominance}).
+\item \emph{(Chain)} $2^{-\KA(D)}\le\WA(D)\le2^c\MA(D)$ for consistent $D$ (\cref{prop:basic:chain}(c)).
+\item \emph{(Lim)} If $\Unif(E_\infty)>0$, the posterior converges in total variation to $P_\infty=\Unif(\cdot\mid E_\infty)$ and the cumulative loss is bounded; if $\Unif(E_\infty)=0$, the loss tends to $\infty$. For every $\Gamma$ with $\Cn(\Gamma)=\Cn(D_\infty^\pm)$, complete or not, $E_\infty=\{\omega:B\cup A_\omega\text{ consistent},\ \Cn(A_\omega)\supseteq\Cn(\Gamma)\}$ (\cref{prop:basic:limitpost}).
+\item \emph{(Old)} $\MA(D)$ depends on $D$ only through $\Cn(D^\pm)$, and data entailed by $B$ change nothing (\cref{prop:basic:structure}(c)). The same holds for $\WA$ and $\KA$, whose definitions mention $D$ only through ``proves $\psi_D$''.
+\end{itemize}
+$\Unif(O_\varphi\cap[w])$ is left-c.e.\ uniformly in $\varphi$ and $w$ (\cref{lem:setting:measurable}). For a set $\mathcal X$ of tapes and a finite string $w$ we write $\Unif(\mathcal X\mid[w])=2^{\lvert w\rvert}\Unif(\mathcal X\cap[w])$. For a class $\mathcal C$ of deductively closed theories, $P_D(\mathcal C):=\UA(\mathcal C;D)/\MA(D)$ is the posterior probability that the random theory lies in $\mathcal C$, and $\WA(\mathcal C;D):=\sum_e\mm(e)\ind[B\cup\re e\text{ consistent},\ \vdash\psi_D,\ \Cn(\re e)\in\mathcal C]$.
+
+\paragraph{Arithmetic.} $\Lar=\{0,S,+,\cdot,<\}$ with numerals $\num n=S^n0$. The classes $\Delta_0$, $\Sigma_1$, $\Pi_1$ are syntactic; $\Pi_1^*$ is the class of finite conjunctions of $\Pi_1$ sentences and negations of $\Sigma_1$ sentences; a sentence that is equivalent to a member of a class only provably in $\Q$ is called \emph{$\Q$-equivalent} to one. ``$B$ is true'' means that $B$ has a model whose $\Lar$-reduct is $\mathbb N$ (for $\mathcal L=\Lar$: $B\subseteq\Th(\mathbb N)$), likewise ``$B\cup T$ is true''; ``$B\supseteq\Q$'' means $\Q\subseteq\Cn(B)$, likewise for $\PA$. A theory is \emph{$\Sigma_1$-sound} if it proves no false $\Sigma_1$ sentence. Binary strings are coded by numbers through their length-lexicographic rank (the empty string is $0$, then $0,1,00,01,\dots$); the coding is injective across lengths, the length of a string is computable from its code, and the strings of length at most $m$ are exactly the codes at most $\mathrm{rk}_m:=2^{m+1}-2$. We use the following standard facts (see \citealp{smorynski1977incompleteness,boolos2007computability}).
+\begin{itemize}[leftmargin=*]
+\item \emph{($\Sigma_1$C)} $\Q$ proves every true $\Sigma_1$ sentence (in particular every true $\Delta_0$ sentence) and refutes every false $\Delta_0$ sentence.
+\item \emph{($\Pi_1$T)} Hence, if $B\supseteq\Q$ and $B\cup A$ is consistent, every $\Pi_1^*$ sentence that $B\cup A$ proves is true: if a conjunct were false, its negation would be a true $\Sigma_1$ sentence, provable in $\Q$.
+\item \emph{(O)} $\Q\vdash\forall z\,(z\le\num n\to z=\num0\vee\dots\vee z=\num n)$ for every $n$; so $\Q$ unfolds bounded quantifiers with a numeral bound into finite conjunctions and disjunctions.
+\item \emph{(G2)} For every consistent r.e.\ presentation $Z$ with $\PA\subseteq\Cn(Z)$, $Z\nvdash\Con(Z)$, where $\Con(Z)$ is the canonical consistency statement of the presentation, a $\Pi_1$ sentence.
+\item \emph{(Diag)} For every formula $\vartheta(z,x)$ there is a formula $\Upsilon(x)$ with $\Q\vdash\forall x\,(\Upsilon(x)\leftrightarrow\vartheta(\gn\Upsilon,x))$.
+\item \emph{(Uniq)} Let $\mathrm{Comp}(p,t,y)$ be Kleene's $\Delta_0$ predicate ``$t$ codes the halting computation of $V$ on the program $p$, with output $y$''. Each halting computation has a unique code, and $\PA\vdash\forall p,t,t',y,y'\,(\mathrm{Comp}(p,t,y)\wedge\mathrm{Comp}(p,t',y')\to t=t'\wedge y=y')$.
+\end{itemize}
+
+\paragraph{Loss conventions.} As \cref{def:setting:conventions} requires, every loss statement in \cref{sec:logic} names its convention. Unless stated otherwise losses are in the semimeasure convention: the cumulative loss of $D_n$ is $\LA(D_n)-\LA(\emptyset)$, and $-\log\WA(D_n)+\log\WA(\emptyset)$ for the coin-free version. The lower bounds \cref{thm:logic:lottery}(c), \cref{cor:logic:rate}, \cref{cor:logic:chaitin} and \cref{thm:logic:thn} are statements in this convention. Upper bounds transfer to the normalised convention, since each normalised conditional is at least the raw one; lower bounds do not, and \cref{prop:logic:normalised} shows that the lower bound of \cref{cor:logic:chaitin} fails in the normalised convention for most strings. In the three-valued convention the conditional probability of the label $1$ on a query $\varphi$ after two-valued data $D$ is $\Bel_D(\varphi)$, so a lower bound on $-\log\Bel_D(\varphi)$ is a lower bound on the three-valued cost of a true label. Statements about $\KA$, $\Kfin$ and the posterior ($P_\infty$, $\Bel$, $\Dis$, $\Indep$) depend on no convention.
+
+\subsection{The lottery}\label{app:logic:lottery}
+
+\begin{lemma}[Lebesgue density on Cantor space]\status{proved (known; proof given)}\src{logic Lemma 2.1}\label{lem:logic:density}
+Let $\mathcal X$ be a Borel set of tapes with $\Unif(\mathcal X)>0$ and let $\varepsilon\in(0,1)$. Then there is a finite string $w$ with $\Unif(\mathcal X\mid[w])>1-\varepsilon$.
+\end{lemma}
+
+\begin{proof}
+By outer regularity there is an open $O\supseteq\mathcal X$ with $\Unif(O)<\Unif(\mathcal X)/(1-\varepsilon)$. Write $O=\bigsqcup_i[w_i]$ with $\{w_i\}$ prefix-free. If $\Unif(\mathcal X\cap[w_i])\le(1-\varepsilon)2^{-\lvert w_i\rvert}$ for every $i$, summing gives $\Unif(\mathcal X)\le(1-\varepsilon)\Unif(O)<\Unif(\mathcal X)$, a contradiction.
+\end{proof}
+
+\begin{proof}[Proof of \cref{thm:logic:lottery}]
+\emph{The random lottery theory is consistent.} Take a model $\mathfrak M$ of $B$ in which the numerals denote pairwise distinct elements, and for a tape $\omega$ put $\Win^{\mathfrak M}:=\{(\num k^{\mathfrak M},\num{J_k}^{\mathfrak M}):k\in\mathbb N\}$. Because the numerals are distinct, the only $\Win$-partner of $\num k^{\mathfrak M}$ is $\num{J_k}^{\mathfrak M}$, so every sentence $\Glot$ emits holds; $B$ does not mention $\Win$. So $B\cup A^{\Glot}_\omega$ is consistent for every $\omega$.
+
+\emph{The stream.} Let $\re0,\re1,\dots$ enumerate the r.e.\ sets of $\mathcal L$-sentences. For each $e$ define $j^*_e\in\{0,\dots,N_e\}$: if $B\cup\re e$ is consistent and proves $\Lot_e$, let $j^*_e$ be the least $j\le N_e$ with $B\cup\re e\nvdash\neg\Win(\num e,\num j)$; otherwise $j^*_e:=0$. In the first case such a $j$ exists: if $B\cup\re e$ proved $\neg\Win(\num e,\num j)$ for all $j\le N_e$, then with the second conjunct of $\Lot_e$ and the equality axioms it would prove $\forall x\,\neg\Win(\num e,x)$, contradicting the first conjunct and its consistency. Put
+\[
+D_\infty:=(\Lot_0,1),\ (\Win(\num0,\num{j^*_0}),0),\ (\Lot_1,1),\ (\Win(\num1,\num{j^*_1}),0),\ \dots
+\]
+``$B\cup\re e$ is consistent'' is $\Pi_1$, and ``$B\cup\re e\vdash\Lot_e$'' and ``$B\cup\re e\vdash\neg\Win(\num e,\num j)$'' are $\Sigma_1$, uniformly; so $e\mapsto j^*_e$ and the stream are computable from $\emptyset'$.
+
+(a) Let $\mathrm{Surv}:=\{\omega:J_k(\omega)\ne j^*_k\text{ for all }k\}$. The $J_k$ are independent and uniform on $\{0,\dots,N_k\}$, so by continuity from above $\Unif(\mathrm{Surv})=\prod_k(1-2^{-(k+1)})$, which is positive because $\sum_k2^{-(k+1)}<\infty$. For $\omega\in\mathrm{Surv}$ the theory $B\cup A^{\Glot}_\omega$ is consistent, emits every $\Lot_k$, and emits $\neg\Win(\num k,\num{j^*_k})$ because $j^*_k\le N_k$ and $j^*_k\ne J_k$. So $\nu_{\Glot}(D_n)\ge\Unif(\mathrm{Surv})$ for all $n$, and (Dom) gives the bound. The rest is (Lim), with $\MA(\emptyset)\le1$ for the bound on the cumulative loss.
+
+(b) If $B\cup\re e$ is consistent and proves every member of $D_\infty^\pm$, it proves $\Lot_e$, so $j^*_e$ was chosen with $B\cup\re e\nvdash\neg\Win(\num e,\num{j^*_e})$; but that sentence is in $D_\infty^\pm$.
+
+(c) $\WA(D_n)=\sum_e\mm(e)\ind[B\cup\re e\text{ consistent},\ \vdash\psi_{D_n}]$. Each indicator is non-increasing in $n$ and, by (b), eventually $0$; dominated convergence ($\sum_e\mm(e)\le1$) gives $\WA(D_n)\to0$, and $\KA\ge-\log\WA$ by (Chain). For a single sentence $\psi$ of $\mathcal L'$ with $B\cup\{\psi\}$ consistent, its $\mathcal L$-content $\mathrm{Cont}(\psi):=\{\varphi\in\Sent_{\mathcal L}:B\cup\{\psi\}\vdash\varphi\}$ is r.e., because $\mathcal L'$ has computable syntax, and $B\cup\mathrm{Cont}(\psi)$ is consistent; so by (b) $\mathrm{Cont}(\psi)\not\supseteq D_\infty^\pm$, and every consistent $\psi$ fails some datum. Only finitely many $\psi$ have $K(\psi)\le j$, so $\Kfin^{\mathcal L'}(D_n)\to\infty$.
+
+(d) Let $P_{\rm det}$ be the set of $p\in\dom V$ with $G_{V(p)}\subseteq\{\epsilon\}\times\Sent$, and $A^{(p)}$ the set that $G_{V(p)}$ emits. Then
+\[
+\Unif\{\omega\in E_{D_n}:\omega\text{ begins with some }p\in P_{\rm det}\}=\sum_{p\in P_{\rm det}}2^{-\lvert p\rvert}\ind[B\cup A^{(p)}\text{ consistent},\ \vdash\psi_{D_n}]\to0
+\]
+by (b) and dominated convergence; divide by $\MA(D_n)$, which is bounded below by (a). If $\omega\in E_\infty$ and $\Cn(B\cup A_\omega)$ were r.e., it would be a consistent r.e.\ theory proving every member of $D_\infty^\pm$, contrary to (b).
+\end{proof}
+
+A computation (code in the accompanying repository) confirms the survival probabilities $\prod_{k<K}(1-2^{-(k+1)})$ for $K\le5$ by enumerating winner vectors, and runs the diagonal against random lists of theories and against an adversarial list in which each listed theory survives until its own lottery.
+
+\begin{remark}[Which streams, which variant]\status{proved}\src{logic \S2.3}\label{rem:logic:lotteryremarks}
+(i) A stream with $\Unif(E_\infty)>0$ that no consistent r.e.\ theory proves is not r.e.: otherwise $D_\infty^\pm$ itself would be such a theory. For the lottery classes it is not co-r.e.\ either (\cref{prop:logic:core}). The streams constructed here are $\Delta_2$; an arbitrary stream with these properties need not be arithmetical (for instance, a diagonal against a non-arithmetical list). (ii) The phenomenon needs proof-requiring compatibility: the r.e.\ theory $\{\Lot_k:k\in\mathbb N\}$ is consistent with every finite part of $D_\infty$, so under the consistency-requiring variant it stays compatible forever. Proof-requiring compatibility demands that each reported loser be \emph{derived}. (iii) On the stream of \cref{thm:logic:lottery} every random \emph{finite} theory, in any extended language with computable syntax, fails, because its content is r.e.; so random r.e.\ theories strictly beat random finite theories there.
+\end{remark}
+
+\paragraph{Relatives of the lottery.} The closest relative in computability theory is that randomness helps for mass problems: a class of positive measure can have no computable member. For a computable bound $q$, the $q$-bounded diagonally non-computable functions ($f(n)<q(n)$, and $f(n)$ differs from the value at $n$ of a fixed partial computable diagonal function) form a $\Pi^0_1$ class with no computable member; under the uniform product measure on $\prod_n\{0,\dots,q(n)-1\}$ it has measure at least $\prod_n(1-1/q(n))$, which is positive exactly when $\sum_n1/q(n)<\infty$. Every Martin-L\"of random sequence computes a diagonally non-computable function (\citealp{kucera1985measure}; see \citealp{bienvenu2017diagonally}), and \citet{bienvenu2016deep} show that the bounded classes are not tt-negligible when $\sum_n1/q(n)<\infty$ and are deep when the sum diverges. The lottery's survival condition $\sum_k1/(N_k+1)=\sum_k2^{-(k+1)}<\infty$ is this convergence condition, and the diagonal ticket $j^*_k$ plays the role of the diagonal value. The differences: the lottery's diagonal is computed from $\emptyset'$, against r.e.\ theories rather than partial computable functions; what fails are consistent r.e.\ theories proving the stream, not computable members of a class; and the class of surviving tapes is the inducer's compatibility event, so its measure is the inducer's likelihood. The modified Demski prior \citep{garrabrant2015modification,garrabrant2016inductive}, which also draws random axiom systems from a universal machine, gives the lottery stream positive probability as well, for the process as described in those works: with probability at least $2^{-K(\Glot)-c}\prod_k(1-2^{-(k+1)})$ its first draw is a surviving lottery theory, every later draw is kept only if consistent with it, and the final theory extends it. Its completed theories containing the stream are not r.e., but completions of extensions of $\Q$ never are, so the contrast between random and r.e.\ hypotheses is not visible in that prior.
+
+\begin{proof}[Proof of \cref{prop:logic:arity}]
+(a) The argument is the majority vote of \cref{lem:basic:majority}, with a threshold adapted to the arity. Put $\varepsilon:=1/(r+1)$ and choose $w$ by \cref{lem:logic:density} with $\Unif(E_\infty\mid[w])>1-\varepsilon$. Let $T:=\{\varphi\in Z:\Unif(O_\varphi\mid[w])>1-\varepsilon\}$; it is r.e., because $\Unif(O_\varphi\mid[w])$ is left-c.e.\ uniformly in $\varphi$. For $\varphi\in D_\infty^\pm$ we have $O_\varphi\supseteq E_\infty$, so $\varphi\in T$. Suppose $B\cup T$ is inconsistent. By compactness and the hypothesis, some $\varphi_1,\dots,\varphi_j\in T$ with $j\le r$ are jointly $B$-inconsistent. Then $\Unif(\bigcap_iO_{\varphi_i}\mid[w])>1-j\varepsilon\ge1-r\varepsilon=\varepsilon$, and every tape in that intersection has an inconsistent theory, so $\Unif(O_\bot\mid[w])>\varepsilon$. But $O_\bot\cap E_\infty=\emptyset$ gives $\Unif(O_\bot\mid[w])<\varepsilon$, a contradiction. So $T$ is consistent, and $\inf_n\WA(D_n)\ge\mm(e)>0$ for an index $e$ of $T$.
+
+(b) $\Unif\{\omega:f_\omega\supseteq D_\infty\}=\lim_n\MF(D_n)>0$ by continuity from above. Choose $w$ with $\Unif(\{\omega:f_\omega\supseteq D_\infty\}\mid[w])>\frac12$ and let $f(x):=y$ iff $\Unif(\{\omega:f_\omega(x)=y\}\mid[w])>\frac12$. The events $\{f_\omega(x)=y\}$ are effectively open and disjoint in $y$, so $f$ is a well-defined partial computable function; for $x\in\dom D_\infty$ the event $\{f_\omega(x)=D_\infty(x)\}$ contains $\{f_\omega\supseteq D_\infty\}$, so $f(x)=D_\infty(x)$.
+
+\emph{The threshold is exact for the argument.} Let $\{\varphi_1,\dots,\varphi_s\}$ be a minimal $B$-inconsistent set, and consider a law with inconsistent mass $a$ and mass $(1-a)/s$ on each of $s$ consistent types, type $i$ proving exactly the $\varphi_j$ with $j\ne i$ (and their consequences). Then every $\varphi_j$ is proved with probability $a+(s-1)(1-a)/s$, so the majority set at threshold $1-\varepsilon$ contains all of $\varphi_1,\dots,\varphi_s$ iff $a>1-s\varepsilon$, while the consistent mass exceeds $1-\varepsilon$ iff $a<\varepsilon$. Both hold for some $a$ iff $\varepsilon>1/(s+1)$. So $1/(r+1)$ is the largest threshold at which the argument is guaranteed to return a consistent set, and a family of minimal inconsistent sets of unbounded size defeats every threshold. A computation (code in the accompanying repository) confirms the critical value for $s\le12$, and a linear program over all laws, for each of the $166$ nonempty families of minimal inconsistent sets on four sentences, finds the same critical value.
+\end{proof}
+
+\emph{Instances.} Literal data of a fresh predicate ($r=2$, by \cref{lem:basic:fresh}). Plain \SOIabbr, by (b). For the lottery class the sets $\{\Lot_k\}\cup\{\neg\Win(\num k,\num j):j\le N_k\}$ are minimal inconsistent, of size $N_k+2$, so no $r$ works; and for every threshold $1-\varepsilon$ the majority set refutes every ticket of each lottery $k$ with $2^{k+1}>1/\varepsilon$, so it is inconsistent: this is the formal content of Kyburg's lottery paradox.
+
+\begin{proposition}[Majority over true theories]\status{proved; computed}\src{logic Prop 2.4}\label{prop:logic:true}
+Let $\mathcal L=\Lar$ and $B\subseteq\Th(\mathbb N)$ decidable. If $\mathcal T_{\rm true}:=\{\omega:B\cup A_\omega\subseteq\Th(\mathbb N),\ B\cup A_\omega\vdash D_\infty^\pm\}$ has positive measure, then some r.e.\ $T\subseteq\Th(\mathbb N)$ has $B\cup T\vdash D_\infty^\pm$.
+\end{proposition}
+
+\begin{proof}
+$\mathcal T_{\rm true}$ is Borel: $\{\omega:A_\omega\subseteq\Th(\mathbb N)\}=\bigcap_{\chi\text{ false}}\{\omega:\chi\notin A_\omega\}$ is closed, and the proving condition is a countable intersection of open sets. Choose $w$ with $\Unif(\mathcal T_{\rm true}\mid[w])>\frac12$ by \cref{lem:logic:density} and let $T:=\{\varphi:\Unif(O_\varphi\mid[w])>\frac12\}$, an r.e.\ set. It contains $D_\infty^\pm$, since $O_\varphi\supseteq\mathcal T_{\rm true}$ for $\varphi\in D_\infty^\pm$. For $\varphi\in T$, $\Unif(O_\varphi\cap\mathcal T_{\rm true}\mid[w])>0$, so a true theory proves $\varphi$ and $\varphi$ is true. Hence $T\subseteq\Th(\mathbb N)$ and $B\cup T$ proves $D_\infty^\pm$.
+\end{proof}
+
+Truth is a constraint of arity one; this is why the majority argument transfers to it, while $\Sigma_1$-soundness, which is not a constraint of arity one, escapes it (\cref{q:logic:soundtrue}).
+
+\begin{proposition}[Co-r.e.\ streams over block-decidable classes]\status{proved; computed}\src{logic Prop 2.7}\label{prop:logic:core}
+Let $Z\subseteq\Sent$ be decidable and computably partitioned into finite blocks $Z_0,Z_1,\dots$ (each given by a canonical index) such that (i) for every finite $X\subseteq Z$, $B\cup X$ is consistent iff $B\cup(X\cap Z_k)$ is consistent for every $k$, and (ii) consistency of $B\cup X$ for finite $X\subseteq Z_k$ is decidable, uniformly in $k$. If $D_\infty^\pm\subseteq Z$ is co-r.e.\ and $B\cup D_\infty^\pm$ is consistent, then some consistent decidable $T\subseteq Z$ contains $D_\infty^\pm$.
+\end{proposition}
+
+\begin{proof}
+$Z_k\setminus D_\infty^\pm$ is r.e.\ uniformly in $k$; let $C^s_k$ be $Z_k$ minus what has been enumerated into it by stage $s$. As $Z_k$ is finite, $C^s_k=D_\infty^\pm\cap Z_k$ for large $s$, and that set is consistent with $B$; so by (ii) the least $s_k$ with $B\cup C^{s_k}_k$ consistent exists and is computable from $k$. Put $T:=\bigcup_kC^{s_k}_k$, a decidable set. $C^s_k\supseteq D_\infty^\pm\cap Z_k$ for all $s$, so $T\supseteq D_\infty^\pm$, and $B\cup T$ is consistent by compactness and (i).
+\end{proof}
+
+\emph{Instances.} (1) The lottery class $Z=\{\Lot_k\}\cup\{\Win(\num k,\num j)^b:j\le N_k,\ b\in\{0,1\}\}$ with blocks by $k$: under the hypotheses of \cref{thm:logic:lottery} a finite $X\subseteq Z$ is consistent with $B$ iff no block contains a complementary pair, or $\Lot_k$ together with all $N_k+1$ negative literals of lottery $k$ (choose the $\Win$-row of each $\num k$ separately in a model with distinct numerals); so (i) and (ii) hold. A computation (code in the accompanying repository) checks this criterion against satisfiability in all structures with at most five elements, for $B=\emptyset$ and two blocks. (2) The arithmetic lottery classes of \cref{thm:logic:arith}: by \cref{lem:logic:flexible}(i) every propositionally satisfiable finite set of Boolean combinations of the tickets is consistent with $B$, so consistency is a propositional, decidable and blockwise property. Hence every stream of these kinds that answers the question of \cref{cor:logic:Q1} negatively is neither r.e.\ (\cref{rem:logic:lotteryremarks}) nor co-r.e. Whether some co-r.e.\ stream over a sentence class on which consistency is not decidable has $\Unif(E_\infty)>0$ and no consistent r.e.\ theory proving it is open (it is the second part of \cref{q:logic:computablefast}). The adversary in the proof waits, in each block, for a stage at which the remaining data are certifiably consistent; a counterexample must deny it any such certificate at every finite stage.
+
+\begin{proof}[Proof of \cref{cor:logic:Q1}]
+\Cref{thm:logic:lottery}(a),(b) give the negative answer, and \cref{thm:logic:arith} gives one inside true arithmetic. The positive cases are \cref{prop:logic:arity}(a), \cref{cor:logic:onetrue} (for a stream of $\Pi_1$ type, bounded loss gives $\sup_n\LA(D_n)\le k$ for some $k$), \cref{prop:logic:core} (with $B\cup D_\infty^\pm$ consistent because $\Unif(E_\infty)>0$), and \cref{prop:logic:true}.
+\end{proof}
+
+For a theory machine $G$ and a finite string $u$, $A^G_u$ is the set of axioms emitted under prefixes of $u$ (\cref{def:setting:machine}).
+
+\begin{proposition}[The proof horizon bounds the coin-free loss]\status{proved}\src{logic Prop 2.6}\label{prop:logic:horizon}
+Let $G$ be a theory machine and $D_\infty$ a stream with
+\[
+a_G:=\Unif\{\omega:B\cup A^G_\omega\text{ consistent},\ B\cup A^G_\omega\vdash D_\infty^\pm\}>0 .
+\]
+Let the \emph{proof horizon} $h_G(n)$ be the least $m$ with $\Unif\{\omega:B\cup A^G_\omega\text{ consistent},\ B\cup A^G_{\omega_{1:m}}\vdash\psi_{D_n}\}\ge a_G/2$. Then, in the semimeasure convention, for every $n$,
+\[
+-\log\WA(D_n)\ \le\ \Kpad(h_G(n))+K(G)+\log(2/a_G)+c .
+\]
+\end{proposition}
+
+\begin{proof}
+$h_G(n)$ exists: a derivation of $\psi_{D_n}$ uses finitely many axioms, all emitted under some finite prefix, so the events in the definition increase in $m$ to a set containing the one that defines $a_G$. Fix $m\ge h_G(n)$ and let $\mathrm{Good}_m$ be the set of $u\in\{0,1\}^m$ such that $B\cup A^G_u\vdash\psi_{D_n}$ and $[u]$ contains a tape $\omega$ with $B\cup A^G_\omega$ consistent. For $u\in\mathrm{Good}_m$, $A^G_u\subseteq A^G_\omega$ for such an $\omega$, so $B\cup A^G_u$ is consistent and proves $\psi_{D_n}$; and $\lvert\mathrm{Good}_m\rvert2^{-m}\ge a_G/2$. The set $A^G_u$ is r.e.\ with an index $e(G,u)$ computable from $(G,u)$ and injective in $u$ (write $u$ into the index). Hence, using $K(e(G,u))\le K(G)+K(u)+c$ and $K(u)\le m+K(m)+c$ for $\lvert u\rvert=m$,
+\[
+\WA(D_n)\ge\sum_{u\in\mathrm{Good}_m}\mm(e(G,u))\ge\sum_{u\in\mathrm{Good}_m}2^{-K(G)-m-K(m)-c}\ge\tfrac{a_G}{2}\,2^{-K(G)-K(m)-c}.
+\]
+Minimise $K(m)$ over $m\ge h_G(n)$.
+\end{proof}
+
+\begin{corollary}[Rate on the lottery stream]\status{proved; computed}\src{logic Cor 2.6'}\label{cor:logic:rate}
+On the stream of \cref{thm:logic:lottery}, in the semimeasure convention:
+\begin{enumerate}[label=(\alph*),leftmargin=*]
+\item $-\log\WA(D_n)\le\Kpad(n)+c$ for all $n$. Hence the coin-free loss diverges, but more slowly than any computable unbounded nondecreasing function: for every such $f$, $-\log\WA(D_n)\le\frac23f(n)+c_f$.
+\item $\KA(D_n)\le\lceil n/2\rceil+O(\log n)$, and $\KA(D_n)\to\infty$.
+\item \emph{Batch lottery.} Give lottery $k$ the $2^{2k+1}$ tickets $0,\dots,2^{2k+1}-1$ and diagonalise in it against every $e<2^k$ at once. Then \cref{thm:logic:lottery}(a)--(d) hold with the same product, $\WA(D_n)\le\sum_{e\ge2^k}\mm(e)$ once lottery $k$ is complete, and again $-\log\WA(D_n)\le\Kpad(n)+c$.
+\end{enumerate}
+\end{corollary}
+
+The restriction to nondecreasing functions in (a) is needed: a computable unbounded function that vanishes on the odd numbers is not eventually above $\Kpad$.
+
+\begin{proof}
+(a) For $G=\Glot$, every tape gives a consistent theory, and $a_G=\Unif(\mathrm{Surv})>0$. For $\omega\in\mathrm{Surv}$ the axioms needed for $D_n$ are emitted once the first $\lceil n/2\rceil$ blocks are read, that is, by the prefix of length $m(n):=\sum_{k<\lceil n/2\rceil}(k+1)$; so $h_{\Glot}(n)\le m(n)$, which is computable from $n$, and $\Kpad(h_{\Glot}(n))\le K(m(n))\le K(n)+c$. \Cref{prop:logic:horizon} gives $-\log\WA(D_n)\le K(n)+c'$. As $D_n\subseteq D_{n'}$ for $n\le n'$, $\WA(D_n)\ge\WA(D_{n'})$, so $-\log\WA(D_n)\le\min_{n'\ge n}K(n')+c'=\Kpad(n)+c'$. \emph{Slow growth.} For a computable nondecreasing unbounded $g$ let $\eta_g(j)$ be the least $n'$ with $g(n')\ge j$, a computable function. Then $\eta_g(g(n)+1)>n$, so $\Kpad(n)\le K(\eta_g(g(n)+1))\le2\log(g(n)+1)+c$. For a computable unbounded nondecreasing $f$, apply this to $g:=\lfloor2^{f/3}\rfloor$, which gives $\Kpad(n)\le\frac23f(n)+c_f$. Divergence is \cref{thm:logic:lottery}(c).
+
+(b) Let $K:=\lceil n/2\rceil$. The tickets $j^*_k$, $k<K$, are determined by the truth values of the $\Sigma_1$ facts ``$B\cup\re k\vdash\Lot_k$'' and ``$B\cup\re k\vdash\neg\Win(\num k,\num j)$'' ($j\le N_k$): $j^*_k$ is the least unrefuted ticket if $\re k$ proves $\Lot_k$ and some ticket is unrefuted, and $0$ otherwise (an inconsistent $\re k$ refutes every ticket). There are $2^{K+1}+K-2$ such facts. Given $n$ and the number of true ones ($K+2$ bits, given $K$), enumerate proofs until that many facts are found true. So $K(\psi_{D_n})\le K+O(\log n)$, and $\KA(D_n)\le K(\psi_{D_n})+c$ by \cref{rem:setting:versions}(c). $\KA(D_n)\to\infty$ is \cref{thm:logic:lottery}(c).
+
+(c) The data of lottery $k$ are $(\Lot_k,1)$ and $(\Win(\num k,\num{j^*_{k,e}}),0)$ for $e<2^k$, where $\Lot_k$ now names the tickets $0,\dots,2^{2k+1}-1$ and $j^*_{k,e}$ is the least ticket that $B\cup\re e$ does not refute if $B\cup\re e$ is consistent and proves $\Lot_k$, and $0$ otherwise. The random theory reads a block of $2k+1$ bits for lottery $k$. At most $2^k$ tickets are reported, so it survives lottery $k$ with probability at least $1-2^k/2^{2k+1}=1-2^{-(k+1)}$, and the proof of \cref{thm:logic:lottery} goes through with the same product. After lottery $k$ every $e<2^k$ has failed, which gives the bound on $\WA$. At most $n$ lotteries are complete after $n$ data, so the horizon is at most $\sum_{k<n}(2k+1)=n^2$, which is computable from $n$, and (a)'s argument applies.
+\end{proof}
+
+A computation (code in the accompanying repository) checks the bookkeeping of (b) and the survival probabilities of the batch lottery for three lotteries.
+
+\begin{corollary}[The lottery separates the versions of consistent \SOIabbr]\status{proved, given \cref{thm:logic:lottery} and \cref{prop:logic:arity}(b)}\src{sfi Cor 4.2}\label{cor:logic:versions}
+On the stream of \cref{thm:logic:lottery}: (a) $\MFcons(D_n)$ is bounded below, so one-tape consistent \SOIabbr has bounded loss; (b) $\Wcons(D_n)\to0$ and $\WA(D_n)\to0$, so coin-free consistent \SOIabbr has unbounded loss; (c) plain coin-free \SOIabbr on sentences has bounded loss: $\Wall(D_n)\ge\mm(f)>0$ for a partial computable $f$ extending $D_\infty$, and every such $f$ is inconsistent.
+\end{corollary}
+
+\begin{proof}
+\Cref{thm:soi:onetape} gives $\MFcons\asymp\MA$, and \cref{thm:soi:coinfree} gives $\Wcons\asymp\WA$. (a) $\MFcons(D_n)\ge2^{-c}\MA(D_n)$ is bounded below by \cref{thm:logic:lottery}(a). (b) $\Wcons(D_n)\le2^c\WA(D_n)\to0$ by \cref{thm:logic:lottery}(c). (c) $\MF(D_n)\ge\MFcons(D_n)$ is bounded below, so by \cref{prop:logic:arity}(b), applied with inputs $\Sent_{\mathcal L}$ and labels $\{0,1\}$, some partial computable $f$ extends $D_\infty$, and $\Wall(D_n)\ge\mm(f)>0$. Such an $f$ is inconsistent: a consistent one would give $\Wcons(D_n)\ge\mm(f)>0$, against (b).
+\end{proof}
+
+\subsection{Lotteries in arithmetic}\label{app:logic:arith}
+
+The lottery needs a family of sentences that behave, with respect to consistency with $B$, like independent atoms. Inside arithmetic with a true background, self-referential (``flexible'') formulas provide them. \Cref{lem:logic:flexible} is a self-contained proof of the weak form we need, in a version that also prescribes the truth values in $\mathbb N$. It is the standard self-referential construction behind Kripke's flexible formulas \citep{kripke1962flexible} and Mostowski's independent sequences \citep{mostowski1961generalization}; Woodin's universal algorithm is a much stronger statement of the same kind \citep{woodin2011potential,blanck2017marginalia,hamkins2018modal}. We did not find the version with a prescribed truth set stated in this form, but it is a routine variant, and we claim no novelty for it. For a code $z$ let $\varphi_{[z]}$ be the formula with code $z$.
+
+\begin{lemma}[Flexible formulas with prescribed truth]\status{proved, given (Diag), ($\Sigma_1$C)}\src{logic Lemma 2.8}\label{lem:logic:flexible}
+Let $\mathcal L=\Lar$ and let $B$ be decidable and true with $B\supseteq\Q$. Write $\mathrm{In}(y,e)$ for a $\Delta_0$ formula saying ``$y$ is in the finite set with canonical index $e$'', and for a finite $F\subseteq\mathbb N$ with index $e_F$ write $y\in F$ for $\mathrm{In}(y,\num{e_F})$. For every formula $\Lambda(z,x)$ there is a formula $\Upsilon(x)$ such that:
+\begin{enumerate}[label=(\roman*),leftmargin=*]
+\item $B+\forall y\,(\Upsilon(y)\leftrightarrow y\in F)$ is consistent for every finite $F\subseteq\mathbb N$; hence every finite pattern $\{\Upsilon(\num n)^{b_n}:n\in F'\}$ is consistent with $B$;
+\item $\mathbb N\models\Upsilon(\num n)$ iff $\mathbb N\models\Lambda(\gn\Upsilon,\num n)$, for every $n$;
+\item $\Q\vdash\forall x\,\big(\Upsilon(x)\leftrightarrow\sigma_\Upsilon(x)\vee(\pi_\Upsilon\wedge\Lambda(\gn\Upsilon,x))\big)$ for a $\Sigma_1$ formula $\sigma_\Upsilon(x)$ that is false of every number and a true $\Pi_1$ sentence $\pi_\Upsilon$.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+Fix a computable enumeration $\tau_0,\tau_1,\dots$ of the theorems of $B$. Call a sentence \emph{of form $(z,e)$} if it is $\neg\forall y\,(\varphi_{[z]}(y)\leftrightarrow\mathrm{In}(y,\num e))$; whether $\tau_s$ is of form $(z,e)$ for some $e$, and for which $e$, is decidable from $(s,z)$. Let $\sigma_0(z,x)$ be the $\Sigma_1$ formula ``there are $s$ and $e$ such that $\tau_s$ is of form $(z,e)$, no $\tau_{s'}$ with $s'<s$ is of form $(z,e')$ for any $e'$, and $\mathrm{In}(x,e)$'' (the computation of $\tau_0,\dots,\tau_s$ is an existentially quantified witness, checked by a $\Delta_0$ formula), and $\pi_0(z)$ the $\Pi_1$ formula ``no $\tau_s$ is of form $(z,e)$ for any $e$''. By (Diag), applied to $\vartheta(z,x):=\sigma_0(z,x)\vee(\pi_0(z)\wedge\Lambda(z,x))$, take $\Upsilon$ with
+\[
+\Q\vdash\forall x\,\big(\Upsilon(x)\leftrightarrow\sigma_0(\gn\Upsilon,x)\vee(\pi_0(\gn\Upsilon)\wedge\Lambda(\gn\Upsilon,x))\big).
+\]
+As $\Q$ is true, the same equivalence holds in $\mathbb N$. Suppose some $\tau_s$ is of form $(\gn\Upsilon,e)$; let $s_0$ be the least such $s$, with index $e_0$ and set $F_0$. In $\mathbb N$, $\sigma_0(\gn\Upsilon,n)$ holds iff $n\in F_0$, and $\pi_0(\gn\Upsilon)$ fails; so $\mathbb N\models\forall y\,(\Upsilon(y)\leftrightarrow y\in F_0)$. But $\tau_{s_0}$, the negation of this sentence, is a theorem of the true theory $B$, a contradiction. Hence no theorem of $B$ is of form $(\gn\Upsilon,e)$, which is (i); the pattern follows from $\forall y\,(\Upsilon(y)\leftrightarrow y\in F)$ with $F:=\{n\in F':b_n=1\}$, since $\Q$ decides each $\num n\in F$ correctly by ($\Sigma_1$C). Moreover $\pi_0(\gn\Upsilon)$ is true and $\sigma_0(\gn\Upsilon,\num n)$ is false for every $n$, which gives (ii), and (iii) with $\sigma_\Upsilon(x):=\sigma_0(\gn\Upsilon,x)$ and $\pi_\Upsilon:=\pi_0(\gn\Upsilon)$.
+\end{proof}
+
+Let $\langle k,j\rangle$ be a $\Delta_0$ pairing with $k,j\le\langle k,j\rangle$.
+
+\begin{proof}[Proof of \cref{thm:logic:arith}]
+\emph{The tickets.} In (a), $\Upsilon_0$ is \cref{lem:logic:flexible}'s formula for $\Lambda(z,x):\equiv(x\ne x)$. In (b), let $\mathrm{Ref}(z,k,j)$ be the $\Sigma_1$ formula ``$B\cup\re k\vdash\neg\varphi_{[z]}(\num{\langle k,j\rangle})$'', and let $\Lambda(z,x)$ be the formula, with all quantifiers outside $\mathrm{Ref}$ bounded,
+\begin{multline*}
+\exists k\le x\,\exists t\le x\,\Big(x=\langle k,t\rangle\wedge t\le N_k\\
+\wedge\big[(\mathrm{Ref}(z,k,t)\wedge\forall i<t\,\neg\mathrm{Ref}(z,k,i))\vee(t=0\wedge\forall i\le N_k\,\neg\mathrm{Ref}(z,k,i))\big]\Big);
+\end{multline*}
+$\Upsilon_1$ is the lemma's formula for this $\Lambda$. In both cases $\Tick_{k,j}:=\Upsilon(\num{\langle k,j\rangle})$ for the formula $\Upsilon\in\{\Upsilon_0,\Upsilon_1\}$, and $\Lot^{\rm ar}_k:=\bigvee_{j\le N_k}\Tick_{k,j}$. In (a), $j^*_e$ is defined as in \cref{thm:logic:lottery}, with $\Tick_{e,j}$ in place of $\Win(\num e,\num j)$. In (b), let $j^\circ_k$ be the least $j\le N_k$ with $B\cup\re k\vdash\neg\Tick_{k,j}$ ($j^\circ_k:=0$ if there is none), and let $j^*_k$ be the least $j\le N_k$ with $j\ne j^\circ_k$ and $B\cup\re k\nvdash\neg\Tick_{k,j}$ if $B\cup\re k$ is consistent and proves $\Lot^{\rm ar}_k$, and the least $j\ne j^\circ_k$ otherwise. The stream is $((\Lot^{\rm ar}_k,1),(\Tick_{k,j^*_k},0))_{k\ge0}$.
+
+\emph{The random theory.} $G^{\rm ar}_{\rm lot}$ reads the tape in blocks as $\Glot$ does and emits $\Lot^{\rm ar}_k$, $\Tick_{k,J_k}$ and $\neg\Tick_{k,j}$ ($j\le N_k$, $j\ne J_k$) after reading block $k$. A finite part of its output is implied by $B+\forall y\,(\Upsilon(y)\leftrightarrow y\in F)$ with $F:=\{\langle k,J_k\rangle:k\le K\}$ for some $K$, so by \cref{lem:logic:flexible}(i) and compactness its theory is consistent with $B$ on every tape.
+
+\emph{The diagonal.} If $B\cup\re e$ is consistent and proves $\Lot^{\rm ar}_e$, it does not refute every $\Tick_{e,j}$, $j\le N_e$, since $\Lot^{\rm ar}_e\wedge\bigwedge_j\neg\Tick_{e,j}$ is propositionally contradictory. In (b), $j^*_e$ exists in this case: if $\re e$ refutes some ticket, then $j^\circ_e$ is refuted and every unrefuted ticket differs from $j^\circ_e$; if it refutes none, then $j^\circ_e=0$ and $j=1$ is unrefuted ($N_e\ge1$). Everything else is the proof of \cref{thm:logic:lottery} verbatim, with $\Tick$ for $\Win$: survival probability $\prod_k(1-2^{-(k+1)})$, the diagonal kills every consistent r.e.\ theory, dominated convergence, and the posterior on deterministic machines.
+
+\emph{Truth and complexity.} (a) By \cref{lem:logic:flexible}(ii) with $\Lambda\equiv(x\ne x)$, every $\Tick_{k,j}$ is false, and by (iii) $\Q\vdash\Tick_{k,j}\leftrightarrow\sigma_{\Upsilon_0}(\num{\langle k,j\rangle})$, since the second disjunct is $\Q$-refutable: a $\Sigma_1$ sentence. So $\Lot^{\rm ar}_k$ is $\Q$-equivalent to a false $\Sigma_1$ sentence and $\neg\Tick_{k,j^*_k}$ to a true $\Pi_1^*$ sentence. (b) By \cref{lem:logic:flexible}(ii), $\Tick_{k,j}$ is true iff $j=j^\circ_k$: for $z=\gn{\Upsilon_1}$, $\mathrm{Ref}(z,k,j)$ holds iff $B\cup\re k\vdash\neg\Tick_{k,j}$, and $\Lambda(z,\num{\langle k,j\rangle})$ says exactly that $j$ is the least refuted ticket, or $0$ if none is refuted. Hence $\Lot^{\rm ar}_k$ is true, and $\Tick_{k,j^*_k}$ is false because $j^*_k\ne j^\circ_k$; every datum is true. By (iii), $\Tick_{k,j}$ is $\Q$-equivalent to $\sigma_{\Upsilon_1}(\num{\langle k,j\rangle})\vee(\pi_{\Upsilon_1}\wedge\Lambda(\gn{\Upsilon_1},\num{\langle k,j\rangle}))$. With a numeral argument, (O) and ($\Sigma_1$C) unfold the bounded quantifiers of $\Lambda$ and decide its $\Delta_0$ parts, provably in $\Q$ ($t\le N_k$ is $\Delta_0$ because the graph of $2^x$ is); so $\Lambda(\gn{\Upsilon_1},\num{\langle k,j\rangle})$ is $\Q$-equivalent to a Boolean combination of the $\Sigma_1$ sentences $\mathrm{Ref}(\gn{\Upsilon_1},\num k,\num i)$, $i\le N_k$. Hence every datum is $\Q$-equivalent to a Boolean combination of $\Sigma_1$ sentences.
+\end{proof}
+
+\begin{proof}[Proof of \cref{cor:logic:false}]
+(i) \Cref{thm:logic:arith}(b) with \cref{thm:logic:lottery}(a),(c). (ii) If $\Unif\{\omega\in E_\infty:B\cup A_\omega\text{ true}\}>0$, \cref{prop:logic:true} gives a true r.e.\ theory proving the stream, contrary to \cref{thm:logic:lottery}(b). (iii) Fix $k$ with $J:=J_k\ne j^\circ_k$. The random lottery theory proves $\Tick_{k,J}$, which is $\Q$-equivalent to $\sigma_{k,J}\vee(\pi_{\Upsilon_1}\wedge\Lambda_{k,J})$ with $\sigma_{k,J}:=\sigma_{\Upsilon_1}(\num{\langle k,J\rangle})$ a false $\Sigma_1$ sentence and $\Lambda_{k,J}:=\Lambda(\gn{\Upsilon_1},\num{\langle k,J\rangle})$. Write $\mathrm{Ref}_i$ for $\mathrm{Ref}(\gn{\Upsilon_1},\num k,\num i)$. If some ticket is refuted and $J>j^\circ_k$, then $\mathrm{Ref}_{j^\circ_k}$ is a true $\Sigma_1$ sentence, so $\Q\vdash\mathrm{Ref}_{j^\circ_k}$ and $\Q\vdash\neg\Lambda_{k,J}$, and the theory proves the false $\Sigma_1$ sentence $\sigma_{k,J}$. If $J<j^\circ_k$, or no ticket is refuted (then $j^\circ_k=0<J$), then $\Q$ proves $\Lambda_{k,J}\to\mathrm{Ref}_J$ (for $J=0<j^\circ_k$ through $\Q\vdash\mathrm{Ref}_{j^\circ_k}$, which refutes the ``none refuted'' disjunct), and $\mathrm{Ref}_J$ is false; so the theory proves $\sigma_{k,J}\vee\mathrm{Ref}_J$, a false $\Sigma_1$ sentence. Given survival ($J_k\ne j^*_k$ for all $k$), the events $J_k=j^\circ_k$ are independent with probabilities $1/N_k$, so all of them hold with probability $\prod_k1/N_k=0$.
+\end{proof}
+
+A computation (code in the accompanying repository) checks the bookkeeping of \cref{thm:logic:arith}(b) and the three cases of (iii) exhaustively in a propositional model with up to eight tickets per lottery, for every behaviour of $\re k$ and every winner.
+
+\begin{question}\status{open}\src{logic \S2.7}\label{q:logic:soundtrue}
+On the stream of \cref{thm:logic:arith}(b), is $P_\infty(\{\text{$\Sigma_1$-sound theories}\})=0$?
+\end{question}
+
+\Cref{cor:logic:false}(ii) proves that the limit posterior lives on false theories, and (iii) that the random lottery theories among them are $\Sigma_1$-unsound; \cref{prop:logic:true}'s majority argument does not transfer to $\Sigma_1$-soundness, which is not a constraint of arity one.
+
+\subsection{\texorpdfstring{$\Pi_1$}{Pi1} data}\label{app:logic:pi1}
+
+Throughout this subsection $\mathcal L\supseteq\Lar$ and $B$ is decidable and true with $B\supseteq\Q$. $\Inc_0$ is left-c.e.\ and not computable (\cref{thm:basic:inc}(a)), hence irrational. Put $I'_k:=\lfloor2^{k+2}\Inc_0\rfloor2^{-(k+2)}$, so that $I'_k\le\Inc_0<I'_k+2^{-(k+2)}$; given $k$, $I'_k$ is given by $k+2$ bits. If $D$ is of $\Pi_1$ type, then $\psi_D$ is $B$-equivalent to $\pi_D\wedge\sigma_D$ with $\pi_D\in\Pi_1^*$ (the class is closed under conjunction) and $\sigma_D$ a conjunction of true $\Sigma_1$ sentences; $B\vdash\sigma_D$ by ($\Sigma_1$C); so $B\vdash\psi_D\leftrightarrow\pi_D$, $O_{\psi_D}=O_{\pi_D}$ and $\MA(D)=\Bel_0(\pi_D)$. The definition is invariant under $B$-equivalence of literals, as it must be, since $\MA$, $\WA$ and $\KA$ depend on $D$ only through $\Cn(D^\pm)$ (Old).
+
+\begin{theorem}[Threshold theories]\status{proved; computed}\src{logic Thm 3.1}\label{thm:logic:thresholdtheories}
+There is $c$ such that for every $k\ge0$ the set
+\[
+T_k:=\{\pi\in\Pi_1^*:\Unif(O_\pi)>I'_k+2^{-(k+2)}\}
+\]
+(i) is r.e., with an index $e_k$ of complexity $K(e_k)\le k+K(k)+c$; (ii) contains every $\pi\in\Pi_1^*$ with $\Bel_0(\pi)\ge2^{-k}$; (iii) consists of true sentences of positive prior belief, so $B\cup T_k$ is true, consistent and $\Sigma_1$-sound.
+\end{theorem}
+
+\begin{proof}
+(i) $\Unif(O_\pi)$ is left-c.e.\ uniformly in $\pi$, and $\Pi_1^*$ is decidable, so $T_k$ is r.e.\ uniformly in $(k,I'_k)$; a program consists of a self-delimiting description of $k$, the $k+2$ bits of $I'_k$, and a fixed code. (ii) $\Unif(O_\pi)=\Inc_0+\Bel_0(\pi)\ge I'_k+2^{-k}>I'_k+2^{-(k+2)}$. (iii) If $\Unif(O_\pi)>I'_k+2^{-(k+2)}>\Inc_0$, then $\Bel_0(\pi)>0$: some tape has $B\cup A_\omega$ consistent and proving $\pi$, and $\pi$ is true by ($\Pi_1$T).
+\end{proof}
+
+\begin{proof}[Proof of \cref{thm:logic:threshold}]
+$\pi$ is emitted on the tape $r$ iff $\Unif(O_\pi)>0.r_{1:s}+2^{-s}$ for some $s$; as $0.r_{1:s}+2^{-s}$ decreases strictly to $r$ for non-dyadic $r$, this holds iff $\Unif(O_\pi)>r$. If $r<\Inc_0$, every $\pi\in\Pi_1^*$ has $\Unif(O_\pi)\ge\Inc_0>r$, including false ones such as $\neg(0=0)$, so the theory is inconsistent. If $r>\Inc_0$, every emitted $\pi$ has $\Bel_0(\pi)>0$ and is true by ($\Pi_1$T); $B$ is true; so $B\cup A^{\Gthr}_r$ is true. For $D$ of $\Pi_1$ type: if $\Inc_0<r<\Unif(O_{\pi_D})$, the theory is consistent and contains $\pi_D$, and $B\vdash\psi_D\leftrightarrow\pi_D$; the dyadic tapes form a null set, so $\nu_{\Gthr}(D)\ge\Unif(O_{\pi_D})-\Inc_0=\Bel_0(\pi_D)=\MA(D)$. The upper bound is (Dom), with $K(\nu_{\Gthr})\le K(\Gthr)+c$.
+\end{proof}
+
+A computation (code in the accompanying repository) checks \cref{thm:logic:thresholdtheories,thm:logic:threshold} in finite models of the prior.
+
+\begin{proof}[Proof of \cref{cor:logic:coding}]
+The first two inequalities are (Chain). For the last, let $k:=\lceil\LA(D)\rceil$, so that $\Bel_0(\pi_D)=\MA(D)\ge2^{-k}$. By \cref{thm:logic:thresholdtheories}, $\pi_D\in T_k$, and $B\cup T_k$ is consistent and proves $\pi_D$, hence $\psi_D$. So $\KA(D)\le K(e_k)+c\le k+K(k)+c$.
+\end{proof}
+
+\begin{remark}[The coin-free version sums over levels]\status{proved; computed}\src{logic Rem 3.4}\label{rem:logic:Wbound}
+For every $D$ of $\Pi_1$ type, $-\log\WA(D)\le\LA(D)+\Kpad(\lceil\LA(D)\rceil+1)+c$. This is a bound on $-\log\WA$; the proved bound on $\KA$ is the weaker $\LA+K(\lceil\LA\rceil)+c'$ of \cref{cor:logic:coding}.
+\end{remark}
+
+\begin{proof}
+For a pair $(j,L)$ with $L\ge0$ and $0\le j\le2^L$ let $Z_{j,L}:=\{\pi\in\Pi_1^*:\Unif(O_\pi)>j2^{-L}\}$. It is r.e., with an index $e(j,L)$ computable from the \emph{pair} and injective in the pair (write the pair into the index), and $K(e(j,L))\le K(j,L)+c\le L+K(L)+c'$, since $j$ has $L+1$ bits given $L$. If $j2^{-L}\in(\Inc_0,\Unif(O_{\pi_D}))$, then every member of $Z_{j,L}$ has $\Bel_0>0$ and is true by ($\Pi_1$T), so $B\cup Z_{j,L}$ is true, contains $\pi_D$ and proves $\psi_D$. With $k:=\lceil\LA(D)\rceil$ the open interval $(\Inc_0,\Unif(O_{\pi_D}))$ has length $\MA(D)\ge2^{-k}$, so for each $L\ge k+1$ it contains at least $2^{L-k}-1\ge2^{L-k-1}$ multiples of $2^{-L}$. The indices $e(j,L)$ are distinct for distinct pairs, so
+\[
+\WA(D)\ \ge\ \sum_{L\ge k+1}2^{L-k-1}\,2^{-L-K(L)-c'}\ =\ 2^{-k-1-c'}\sum_{L\ge k+1}2^{-K(L)}\ \ge\ 2^{-k-1-c'-\Kpad(k+1)}.
+\]
+Indexing the sets by the rational $j2^{-L}$ instead of by the pair would count $j2^{-L}=2j2^{-(L+1)}$ once at every finer level, and the displayed sum would not bound $\WA$ as written; a computation (code in the accompanying repository) confirms that the pair-indexed count meets the bound on all test intervals.
+\end{proof}
+
+\begin{question}\status{open}\src{logic Rem 3.4}\label{q:logic:codingO1}
+On data of $\Pi_1$ type, is $\KA\le\LA+O(1)$?
+\end{question}
+
+The deterministic threshold needs the level written in full; the random threshold of \cref{thm:logic:threshold} does not.
+
+\begin{corollary}[Bounded loss on a $\Pi_1$ stream is one true theory]\status{proved}\src{logic Cor 3.5}\label{cor:logic:onetrue}
+If every finite part of $D_\infty$ is of $\Pi_1$ type and $\sup_n\LA(D_n)\le k$, then one true theory, $B\cup T_k$, of complexity at most $k+K(k)+c$, proves every datum; so $\sup_n-\log\WA(D_n)\le k+K(k)+c$.
+\end{corollary}
+
+\begin{proof}
+For each $n$, $\Bel_0(\pi_{D_n})=\MA(D_n)\ge2^{-k}$, so $\pi_{D_n}\in T_k$ by \cref{thm:logic:thresholdtheories}(ii); $T_k$ does not depend on $n$. By (iii), $B\cup T_k$ is true, and it proves every $\psi_{D_n}$; its index has complexity at most $k+K(k)+c$ by (i), which bounds $\sup_n-\log\WA(D_n)$ through \cref{def:setting:versions}.
+\end{proof}
+
+\begin{proof}[Proof of \cref{cor:logic:chaitin}]
+\emph{The deterministic bound (Chaitin).} If $B\cup\re e$ is consistent and proves $\Kgt_m(x)$, the program ``given $e$ and $m$, enumerate the theorems of $B\cup\re e$ and output the first $z$ such that $\Kgt_m(z)$ is among them'' halts with some $z$, and $K(z)\le K(e)+K(m)+c$; $\Kgt_m(z)$ is true by ($\Pi_1$T), so $K(z)>m$, whence $K(e)>m-K(m)-c$. So $\KA(\{(\Kgt_m(x),1)\})\ge m-K(m)-c$.
+
+(b) Let $s_m$ be the largest code of a halting computation of $V$ on a program of length at most $m$ ($0$ if there is none); it exists because there are finitely many such programs and each halting computation has one code (Uniq). Let $\mathrm{Bd}_m:=\forall t\,\forall p\,\forall y\,(p\le\num{\mathrm{rk}_m}\wedge\mathrm{Comp}(p,t,y)\to t\le\num{s_m})$, a true $\Pi_1$ sentence. For $x$ with $K(x)>m$, the $\Delta_0$ sentence $\forall p\le\num{\mathrm{rk}_m}\,\forall t\le\num{s_m}\,\neg\mathrm{Comp}(p,t,\num x)$ is true, hence $\Q$-provable, and together with $\mathrm{Bd}_m$ it gives $\Kgt_m(x)$ by pure logic. $s_m$ is computable from $m$ and the number $H_m\le2^m$ of halting programs of length at most $m$ (Kraft's inequality), an $(m+1)$-bit number: run the programs until $H_m$ of them have halted. So $K(\mathrm{Bd}_m)\le K(m)+m+c$. Since $B\cup\{\mathrm{Bd}_m\}$ is true, hence consistent, and proves $\Kgt_m(x)$, \cref{rem:setting:versions}(c) gives $\KA\le\Kfin+c\le m+K(m)+c'$; and $\LA\le\KA+c$ by (Chain). Without unique codes a halting program could have infinitely many codes, and $\mathrm{Bd}_m$ would be false.
+
+(a) For $K(x)\le m$ the datum is a false $\Pi_1$ sentence, and $\MA=0$ by ($\Pi_1$T). Otherwise \cref{cor:logic:coding} and the deterministic bound give $\LA\ge\KA-K(\lceil\LA\rceil)-c'\ge m-K(m)-K(\lceil\LA\rceil)-c''$. By (b), $\lceil\LA\rceil\le m+K(m)+c$, so $K(\lceil\LA\rceil)\le\log m+O(\log\log m)$, and $K(m)\le\log m+O(\log\log m)$. For the three-valued convention: for a single two-valued datum $\MAthree(\{(\varphi,1)\})=\MA(\{(\varphi,1)\})$, and $\MAthree(\emptyset)=1-\Inc_0$, so the three-valued cost of the label $1$ is $-\log\Bel_\emptyset(\Kgt_m(x))=\LA(\{(\Kgt_m(x),1)\})+\log(1-\Inc_0)$, which differs from $\LA$ by a constant.
+\end{proof}
+
+The deterministic step is Chaitin's bound \citep{chaitin1974information}, used only in its upper-bound form (a consistent extension of $\Q$ that proves $\Kgt_m(x)$ has complexity greater than $m-K(m)-c$); it makes no claim about least constants, which depend on the coding of machines \citep{raatikainen1998interpreting}.
+
+\begin{proof}[Proof of \cref{prop:logic:normalised}]
+\emph{Step 1: few refutable strings per theory.} Let $x_1,\dots,x_{2^{m+1}}$ be distinct strings. By (O), $\Q\vdash p\le\num{\mathrm{rk}_m}\to\bigvee_{q\le\mathrm{rk}_m}p=\num q$, so $\neg\Kgt_m(x_i)$ is $\Q$-equivalent to $\bigvee_{q\le\mathrm{rk}_m}\exists t\,\mathrm{Comp}(\num q,t,\num{x_i})$. Hence $\bigwedge_{i\le2^{m+1}}\neg\Kgt_m(x_i)$ is $\Q$-equivalent to the disjunction, over all maps $f:\{1,\dots,2^{m+1}\}\to\{0,\dots,\mathrm{rk}_m\}$, of $\bigwedge_i\exists t\,\mathrm{Comp}(\num{f(i)},t,\num{x_i})$. There are $\mathrm{rk}_m+1=2^{m+1}-1$ programs, fewer than the strings, so every $f$ has $f(i)=f(i')$ for some $i\ne i'$, and then (Uniq) gives $x_i=x_{i'}$, which $\Q$ refutes. So $\PA\vdash\neg\bigwedge_{i\le2^{m+1}}\neg\Kgt_m(x_i)$: every consistent extension of $B$ refutes $\Kgt_m(x)$ for at most $2^{m+1}-1$ strings $x$. Integrating over the consistent tapes (Tonelli), $\sum_x\Bel_0(\neg\Kgt_m(x))\le2^{m+1}$.
+
+\emph{Step 2: a lower bound on belief.} For $K(x)>m$, \cref{cor:logic:chaitin}(b) and (Dom) give $\Bel_0(\Kgt_m(x))\ge2^{-m-K(m)-c}$.
+
+\emph{Step 3: Markov's inequality.} By Step 1, fewer than $2^{m+1}\cdot2^{j+m+K(m)+c}$ strings have $\Bel_0(\neg\Kgt_m(x))>2^{-j}2^{-m-K(m)-c}$, and fewer than $2^{m+1}$ strings have $K(x)\le m$. For every other $x$, Step 2 gives $\Bel_0(\neg\Kgt_m(x))\le2^{-j}\Bel_0(\Kgt_m(x))$; and $\Dis_\emptyset$, $\Bel_\emptyset$ are $\Bel_0(\neg\cdot)$, $\Bel_0(\cdot)$ divided by the same $1-\Inc_0$. The normalised probability of the label $1$ is $\Bel_\emptyset/(\Bel_\emptyset+\Dis_\emptyset)\ge1/(1+2^{-j})$, and $\log(1+y)\le y/\ln2$.
+\end{proof}
+
+So for $d\ge2m+K(m)+j+c'$ almost every string of length $d$ costs essentially nothing in the normalised convention, while every $x$ with $K(x)>m$ costs $m\pm O(\log m)$ bits in the semimeasure and three-valued conventions (\cref{cor:logic:chaitin}). In the three-valued convention most of the remaining mass goes to ``independent'': by Step 1, $\sum_x\Dis_\emptyset(\Kgt_m(x))\le2^{m+1}/(1-\Inc_0)$, so for most $x$ the inducer predicts ``independent'' with probability $1-2^{-m+O(\log m)}$. One-tape consistent \SOIabbr behaves the same way: \cref{thm:soi:onetape} transfers $\MA(\{(\varphi,b)\})$ to $\MFcons(\{(\varphi,b)\})$ up to factors $2^{\pm c}$, which leaves the semimeasure statement unchanged and shifts $j$ by a constant in the normalised one. With $B=\Q$ alone, Step 1 needs $\Q$ to prove the uniqueness of outputs, which it may not; the normalised behaviour is then open. A computation (code in the accompanying repository) checks the finite bookkeeping of Steps 1 and 3 in finite models in which uniqueness of outputs is imposed.
+
+\begin{proposition}[True $\Pi_1^*$-axiomatised theories]\status{proved}\src{logic Prop 3.7}\label{prop:logic:extension}
+Let $T$ be an r.e.\ set of true $\Pi_1^*$ sentences and $k:=\lceil-\log\UA(\Exts T)\rceil$. Then
+\[
+-\log\UA(\Exts T)-c\ \le\ -\log\mm(\Exts T)\ \le\ -\log\UA(\Exts T)+K(k)+c .
+\]
+\end{proposition}
+
+\begin{proof}
+Right: each $\pi\in T$ has $\Bel_0(\pi)\ge\UA(\Exts T)\ge2^{-k}$, since every consistent theory extending $\Cn(T)$ proves $\pi$; so $T\subseteq T_k$. $B\cup T_k$ is consistent, so $e_k\in\Exts(T)$ and $\mm(\Exts T)\ge\mm(e_k)\ge2^{-k-K(k)-c}$. Left: $\UA(\Exts T)\ge2^{-c}\mm(\Exts T)$ (\cref{def:setting:complexities}; $B\cup T$ is consistent because it is true).
+\end{proof}
+
+The same comparison for the exact class $[T]$, and for general $T$, is part of \cref{q:basic:tape}.
+
+\begin{proposition}[One false $\Sigma_1$ datum]\status{proved, given \cref{lem:logic:flexible}; computed}\src{logic Prop 3.8}\label{prop:logic:falsesigma}
+Let $\mathcal L=\Lar$, $B$ decidable and true with $B\supseteq\Q$, and $\Upsilon_0$ the formula of \cref{thm:logic:arith}(a). For every $d\ge2$ there are distinct $x_1,x_2\in\{0,1\}^d$ such that $D:=\{(\Upsilon_0(\num{x_1}),0),(\Upsilon_0(\num{x_2}),1)\}$ (strings coded by length-lexicographic rank) has $\KA(D)>\log d-2$ and $\LA(D)\le2+c$. The literal $\neg\Upsilon_0(\num{x_1})$ is $\Q$-equivalent to a true $\Pi_1^*$ sentence, and $\Upsilon_0(\num{x_2})$ to a false $\Sigma_1$ sentence.
+\end{proposition}
+
+\begin{proof}
+\emph{Upper bound.} The machine that, for every $n$, reads a fresh bit $b_n$ and emits $\Upsilon_0(\num n)^{b_n}$ has a consistent theory on every tape (\cref{lem:logic:flexible}(i) and compactness) and proves $D$ with probability $\frac14$; apply (Dom). \emph{Lower bound} (the colouring argument of \cref{thm:basic:nocoding}). Let $\ell:=\lceil\log(d/\log3)\rceil-1$, so that $2^\ell<d/\log3$ and $3^{2^\ell-1}<2^d$. Fewer than $2^\ell$ programs have length less than $\ell$. Colour each $x\in\{0,1\}^d$ by the vector, over these programs $p$, of ``$+$'' if $V(p)$ halts with an index $e$ such that $B\cup\re e$ is consistent and proves $\Upsilon_0(\num x)$, ``$-$'' if it is consistent and proves $\neg\Upsilon_0(\num x)$, and ``$*$'' otherwise. Two distinct $x_1,x_2$ share a colour, and then no program shorter than $\ell$ gives a consistent theory proving $\neg\Upsilon_0(\num{x_1})\wedge\Upsilon_0(\num{x_2})$. So $\KA(D)\ge\ell\ge\log d-\log\log3-1>\log d-2$. The complexity claims are \cref{thm:logic:arith}(a)'s.
+\end{proof}
+
+\begin{proposition}[Two true data]\status{proved, given \cref{lem:logic:flexible}}\src{logic Prop 3.9}\label{prop:logic:boundary}
+Let $\mathcal L=\Lar$, and let $B$ be decidable and true with $B\supseteq\Q$. There is a formula $\Upsilon_2$ such that for every $d\ge2$ some distinct $x_1,x_2\in\{0,1\}^d$ give true data $D_d:=\{(\Upsilon_2(\num{x_1}),0),(\Upsilon_2(\num{x_2}),1)\}$ with $\KA(D_d)>\log d-2$ and $\LA(D_d)\le2+c$. Each datum is $\Q$-equivalent to a Boolean combination of $\Sigma_1$ sentences (hence, by prenexing, both to a $\Sigma_2$ and to a $\Pi_2$ sentence).
+\end{proposition}
+
+\begin{proof}
+\emph{The colour formulas.} For a program $p$ (a numeral) put
+\begin{itemize}[leftmargin=*]
+\item $\mathrm{Halt}_p:\equiv\exists t\,\exists e\,\mathrm{Comp}(\num p,t,e)$, a $\Sigma_1$ sentence ($V(p)$ halts);
+\item $\mathrm{Ok}_p:\equiv\forall t\,\forall e\,\big(\mathrm{Comp}(\num p,t,e)\to\Con(B\cup\re e)\big)$, a $\Pi_1$ sentence, with $\Con(B\cup\re e)$ the canonical $\Pi_1$ formula in $e$;
+\item $\mathrm{Prv}^b_p(z,y):\equiv\exists t\,\exists e\,\big(\mathrm{Comp}(\num p,t,e)\wedge\mathrm{Prov}_{B\cup\re e}(\gn{\varphi_{[z]}(\dot y)^b})\big)$, a $\Sigma_1$ formula, for $b\in\{0,1\}$.
+\end{itemize}
+The colour entry of $y$ at $p$ is ``$+$'' iff $\mathrm{Halt}_p\wedge\mathrm{Ok}_p\wedge\mathrm{Prv}^1_p(z,y)$, ``$-$'' iff $\mathrm{Halt}_p\wedge\mathrm{Ok}_p\wedge\mathrm{Prv}^0_p(z,y)$, and ``$*$'' otherwise. In $\mathbb N$, where $V(p)$ has at most one output, these say exactly what the colouring in the proof of \cref{prop:logic:falsesigma} says (with $\varphi_{[z]}$ for $\Upsilon_0$). The consistency condition is written with a universal quantifier because ``$\exists e\,(\mathrm{Comp}(p,t,e)\wedge\Con(\dots))$'' would be $\Sigma_2$. Let $\Lambda(z,x)$ say: ``$x$ is the code of a string of some length $d\ge2$, and $x$ is the second element of the lexicographically first pair of distinct strings of length $d$ that have the same colour'', colours taken over the programs of length less than $\ell_d:=\lceil\log(d/\log3)\rceil-1$, with all quantifiers outside the colour formulas bounded by $x$. Let $\Upsilon_2$ be \cref{lem:logic:flexible}'s formula for $\Lambda$, and $(x_1,x_2)$ that pair for $z=\gn{\Upsilon_2}$; it exists by the pigeonhole count of \cref{prop:logic:falsesigma}. By \cref{lem:logic:flexible}(ii), $\Upsilon_2(\num{x_2})$ is true and $\Upsilon_2(\num{x_1})$ is false, so both data are true. The fair-coin machine of \cref{prop:logic:falsesigma}, with $\Upsilon_2$ in place of $\Upsilon_0$, gives $\LA(D_d)\le2+c$ by \cref{lem:logic:flexible}(i). The pair has the same colour for the actual $\Upsilon_2$, which gives $\KA(D_d)\ge\ell_d>\log d-2$ as in \cref{prop:logic:falsesigma}. For a numeral argument, (O) and ($\Sigma_1$C) unfold the bounded quantifiers of $\Lambda(\gn{\Upsilon_2},\num x)$ and decide its $\Delta_0$ parts in $\Q$, leaving a Boolean combination of the $\Sigma_1$ sentences $\mathrm{Halt}_p$, $\mathrm{Prv}^b_p$ and the $\Pi_1$ sentences $\mathrm{Ok}_p$; with \cref{lem:logic:flexible}(iii), each datum is $\Q$-equivalent to a Boolean combination of $\Sigma_1$ sentences, hence, by prenexing, both to a $\Sigma_2$ and to a $\Pi_2$ sentence.
+\end{proof}
+
+\subsection{G\"odel phenomena}\label{app:logic:goedel}
+
+\begin{proof}[Proof of \cref{prop:logic:shape}]
+(a) The posterior lives on consistent extensions of $\Q$, and all of them prove $\sigma$ by ($\Sigma_1$C). (b) Some conjunct of $\pi$ is false; its negation is a true $\Sigma_1$ sentence, so every consistent extension of $\Q$ proves $\neg\pi$. (c) Consider the r.e.\ theories $D^\pm\cup\{\pi\}$, $D^\pm\cup\{\neg\pi\}$ and $D^\pm$. The first is true in a model of $B\cup D^\pm$ whose $\Lar$-reduct is $\mathbb N$, so it is consistent with $B$, and it proves $\pi$. The second is consistent with $B$ because $B\cup D^\pm\nvdash\pi$ (by the deduction theorem for the finite set $D^\pm$), and it proves $\neg\pi$. The third proves neither: not $\pi$ by hypothesis, and not $\neg\pi$ because $B\cup D^\pm$ is true and $\neg\pi$ is false. All three prove $\psi_D$ and have positive weight by (Dom). (d) Apply (c) to the $\Pi_1^*$ sentence $\neg\sigma$.
+\end{proof}
+
+\emph{An extreme case.} If the data present $T:=\PA+\neg\Con(\PA)$, a consistent and $\Sigma_1$-unsound theory, every consistent extension of $T$ proves $\neg\Con(T)$, since $\PA\vdash\Con(T)\to\Con(\PA)$; so $\Dis(\Con(T))=1$ although $\Con(T)$ is true. A computation (code in the accompanying repository) checks (a)--(d) and the one-sided error pattern on random instances of a finite model in which ($\Sigma_1$C) is the only arithmetical input.
+
+\begin{proof}[Proof of \cref{thm:logic:soundness}]
+By the s-m-n theorem there is an injective computable $g$ with $\re{g(e)}=\re e\cup\{\neg\Con(B\cup\re e)\}$, the canonical consistency statement of the presentation $e$. If $B\cup\re e$ is consistent, (G2) gives $B\cup\re e\nvdash\Con(B\cup\re e)$, so $B\cup\re{g(e)}$ is consistent; its new axiom is a false $\Sigma_1$ sentence; and it proves everything $\re e$ proves. As $\mm(g(e))\ge2^{-c}\mm(e)$ and $K(g(e))\le K(e)+c$, summing over the $\Sigma_1$-sound compatible $e$, whose images are distinct, gives the claim, and the posterior bound follows from $\WA(\mathcal U;D)\ge2^{-c}\WA(\overline{\mathcal U};D)$. A true theory is $\Sigma_1$-sound, which gives ``a fortiori''.
+\end{proof}
+
+The event that $B\cup A_\omega$ is $\Sigma_1$-unsound is $\bigcup_\sigma O_\sigma$ over the false $\Sigma_1$ sentences $\sigma$, an open set, so $\UA(\mathcal U;D)$ and $P_D(\mathcal U)$ are defined.
+
+\begin{proposition}[One-tape soundness is controlled by the coding gap]\status{proved, given (G2)}\src{logic Prop 4.3}\label{prop:logic:unsound}
+Under the hypotheses of \cref{thm:logic:soundness}, for every consistent $D$,
+\[
+P_D(\mathcal U)\ \ge\ 2^{\LA(D)-\KA(D)-c}.
+\]
+\end{proposition}
+
+\begin{proof}
+Let $e$ witness $\KA(D)$. Its companion $g(e)$ from the proof of \cref{thm:logic:soundness} is consistent, $\Sigma_1$-unsound, proves $\psi_D$, and has $K(g(e))\le\KA(D)+c$; by (Dom) the tapes that begin with a shortest program for it have measure at least $2^{-\KA(D)-c}$, and their theory is $\re{g(e)}$. Divide by $\MA(D)=2^{-\LA(D)}$.
+\end{proof}
+
+So one-tape \SAIabbr can become confident of soundness only on data where the coding theorem fails badly, which is where randomness dominates (\cref{sec:logic:pi1}). On data of $\Pi_1$ type, \cref{prop:logic:unsound} and \cref{cor:logic:coding} give $P_D(\mathcal U)\ge2^{-K(\lceil\LA(D)\rceil)-c}$, a bound that degrades as the loss grows; the threshold machine removes the degradation.
+
+\begin{proof}[Proof of \cref{thm:logic:soundnessPi1}]
+For a finite string $w$ let $U_w$ be the set of sentences that $\Gthr$ (\cref{thm:logic:threshold}) emits on some tape extending $w$; it is r.e.\ uniformly in $w$, and $U_w=\{\pi\in\Pi_1^*:\Unif(O_\pi)>0.w\}$, since the emissions under prefixes $v\sqsupseteq w$ have thresholds $0.v+2^{-\lvert v\rvert}$ with infimum $0.w$, not attained, and those under shorter prefixes $u\sqsubseteq w$ have thresholds at least $0.w+2^{-\lvert w\rvert}$. Hence $U_w$ is true if $0.w>\Inc_0$, and is all of $\Pi_1^*$, an inconsistent set, if $0.w<\Inc_0$ (equality is impossible, since $\Inc_0$ is irrational). Moreover $U_{w'}\subseteq U_w$ for $w\sqsubseteq w'$, provably in $\PA$ from the definitions (every prefix of $w'$ is comparable with $w$). Let $\Gthr^{\mathrm u}$ emit everything $\Gthr$ emits and, for every prefix $w$ of the tape, $\chi_w:=\neg\Con(B\cup U_w)$.
+
+\emph{Consistency.} Let $r>\Inc_0$ be a non-dyadic tape and $F$ a finite subset of $A^{\Gthr^{\mathrm u}}_r$, with companion sentences $\chi_{w_1},\dots,\chi_{w_j}$; let $w^*$ be the longest $w_i$. If $0.w^*<\Inc_0$, every $U_{w_i}\supseteq U_{w^*}$ is inconsistent, every $\chi_{w_i}$ is a true $\Sigma_1$ sentence, provable from $B$, and the rest of $F$ lies in the true theory $A^{\Gthr}_r$. If $0.w^*>\Inc_0$, then $B\cup U_{w^*}$ is consistent, r.e.\ and contains $\PA$, so $B\cup U_{w^*}\cup\{\chi_{w^*}\}$ is consistent by (G2); it contains $F\cap A^{\Gthr}_r$, because $A^{\Gthr}_r=\{\pi:\Unif(O_\pi)>r\}\subseteq U_{w^*}$ as $r>0.w^*$; and it proves each $\chi_{w_i}$ with $w_i\sqsubseteq w^*$, because $U_{w^*}\subseteq U_{w_i}$ provably, so a proof of $\bot$ from $B\cup U_{w^*}$ is one from $B\cup U_{w_i}$.
+
+\emph{Unsoundness.} $r>\Inc_0$ has a prefix $w$ with $0.w>\Inc_0$, since the truncations increase to $r$; for it $\chi_w$ is a false $\Sigma_1$ sentence.
+
+\emph{Measure.} For $\Inc_0<r<\Unif(O_{\pi_D})$ the theory of $\Gthr^{\mathrm u}$ is consistent, $\Sigma_1$-unsound and contains $\pi_D$, and $B\vdash\psi_D\leftrightarrow\pi_D$. So $\nu_{\Gthr^{\mathrm u}}$ gives the event ``consistent, unsound and proving $\psi_D$'' probability at least $\MA(D)$, as in the proof of \cref{thm:logic:threshold}, and (Dom), tape by tape, gives $\UA(\mathcal U;D)\ge2^{-K(\Gthr^{\mathrm u})-c}\MA(D)$.
+\end{proof}
+
+A computation (code in the accompanying repository) checks the dyadic and prefix facts of this proof in finite models with non-dyadic weights.
+
+\paragraph{What is known about \cref{q:logic:soundness}.} With $B$ true and $\PA\subseteq\Cn(B)$, the answer is yes for data of $\Pi_1$ type (\cref{thm:logic:soundnessPi1}) and for data with a bounded coding gap $\KA-\LA$ (\cref{prop:logic:unsound}). On the $\Win$-lottery stream with $\mathcal L=\Lar\cup\{\Win\}$ it is yes as well: the machine ``$\Glot$ plus the axiom $\neg\Con(B)$'' has the same survival event; its theories are consistent (a model of $B+\neg\Con(B)$ exists by (G2), has distinct numerals as every model of $\Q$ does, and is expanded by the winners) and $\Sigma_1$-unsound; so $P_{D_n}(\mathcal U)\ge2^{-c}\prod_k(1-2^{-(k+1)})$ for every $n$. On the arithmetic lotteries the random lottery theories are themselves unsound (\cref{cor:logic:false}(iii) for (b); in (a) they affirm the false $\Sigma_1$ sentences $\Tick_{k,J_k}$). In general we can prove only the following. For a theory machine $G$ let $U^G_w$ be the set of sentences that $G$ emits on some tape extending $w$, and $\mathcal K^G:=\{\omega:B\cup U^G_w\text{ is consistent for some prefix }w\text{ of }\omega\}$. Under the hypotheses of \cref{thm:logic:soundness}, for every $D$,
+\[
+\UA(\mathcal U;D)\ \ge\ 2^{-K(G)-c}\,\Unif\big(\{\omega:B\cup A^G_\omega\text{ consistent},\ \vdash\psi_D\}\cap\mathcal K^G\big).
+\]
+Indeed, the companion $G^{\mathrm u}$ emits what $G$ emits and $\neg\Con(B\cup U^G_w)$ for every prefix $w$ of the tape, and $K(G^{\mathrm u})\le K(G)+c$; on a tape $\omega$ on which $B\cup A^G_\omega$ is consistent, the longest-prefix argument above shows that $B\cup A^{G^{\mathrm u}}_\omega$ is consistent ($A^G_\omega\subseteq U^G_{w^*}$ because $w^*$ is a prefix of $\omega$), and on $\mathcal K^G$ some added sentence is a false $\Sigma_1$ sentence; then apply (Dom) tape by tape. This answers the question for no class of data by itself: it fails for coin machines, all of whose sets $U^G_w$ are inconsistent. The difficulty in general is that a companion must add a false $\Sigma_1$ sentence that the random theory $A_\omega$ does not refute, chosen from finitely much of the tape. $\neg\Con(A_\omega)$ is not a sentence, and $A_\omega$ may prove $\Con(Z)$ for every r.e.\ $Z$ read off a finite prefix (a machine can emit, at each stage, the consistency of everything it has emitted so far). The natural companions need either a consistent $U_w$, which fails for coin machines, or a fixed false $\Sigma_1$ sentence that the random theory leaves open, which fails for such reflective machines.
+
+\begin{proposition}[$\Con(B\cup T)$ given data from $T$]\status{proved, given (G2); computed}\src{logic Prop 4.5}\label{prop:logic:con}
+Let $T$ be r.e., with $B\cup T$ true and $\PA\subseteq\Cn(B\cup T)$, and let the data present $T$: $\Cn(D_\infty^\pm)=\Cn(B\cup T)$. Write $\chi_T$ for $\Con(B\cup T)$ or the Gödel sentence of $B\cup T$.
+(a) $\lim_n\Bel_{D_n}(\chi_T)$, $\lim_n\Dis_{D_n}(\chi_T)$ and $\lim_n\Indep_{D_n}(\chi_T)$ exist and lie in $(0,1)$.
+(b) The belief and independent shares certify the truth of $\chi_T$ in the sense of \cref{prop:logic:shape}(b).
+(c) Which of ``true'' and ``false'' gets more mass is a choice of universal machine: for every universal prefix machine $V$ and every $j$ there are universal prefix machines $V'$, $V''$ under which the ratio of the limits of $\Bel(\chi_T)$ and $\Dis(\chi_T)$ is at least $2^j-1$, respectively at most $1/(2^j-1)$.
+\end{proposition}
+
+\begin{proof}
+(a) By (Lim) (\cref{prop:basic:limitpost}(d)), the limit posterior is the prior restricted to the consistent extensions of $B\cup T$, which is incomplete by (G2). Three deterministic theories have positive weight. $T+\Con(B\cup T)$ is true, because $B\cup T$ is true, hence consistent, and $\Con(B\cup T)$ is a true $\Pi_1$ sentence. $T+\neg\Con(B\cup T)$ is consistent with $B$ by (G2) for the presentation $B\cup T\supseteq\PA$. $T$ decides neither: not $\Con(B\cup T)$ by (G2), and not its negation because $B\cup T$ is true and $\neg\Con(B\cup T)$ is false. Each of the three limits is therefore positive, and each is less than $1$ because the other two are positive. (b) is \cref{prop:logic:shape}(b) applied to the $\Pi_1$ sentence $\Con(B\cup T)$. (c) Let $V'(0^i1)$ be an index of the deterministic machine for $T+\Con(B\cup T)$ for $i<j$, and $V'(0^jp):=V(p)$; $V'$ is a universal prefix machine. The tapes that begin with some $0^i1$, $i<j$, have measure $1-2^{-j}$ and give a compatible theory proving $\Con(B\cup T)$; all tapes on which $\neg\Con(B\cup T)$ is proved begin with $0^j$. So, within $E_\infty$, the masses of the two events are at least $1-2^{-j}$ and at most $2^{-j}$; dividing both by the common normaliser $\Unif(E_\infty)$ gives the ratio. $V''$ is symmetric, with $T+\neg\Con(B\cup T)$. The Gödel sentence of $B\cup T$ is $\PA$-provably equivalent to $\Con(B\cup T)$ \citep{smorynski1977incompleteness}, so the same holds for it.
+\end{proof}
+
+\emph{The truth hypothesis is needed.} With $B:=\PA+\neg\Con(\PA)$, which is decidable and consistent by (G2), and $T:=\emptyset$: since $\PA\vdash\Con(B)\to\Con(\PA)$, $B\vdash\neg\Con(B)$, so every compatible theory refutes $\Con(B\cup T)$, $\lim\Dis=1$, and (a) and (c) fail. A computation (code in the accompanying repository) checks the construction of (c) in a finite model.
+
+\begin{proof}[Proof of \cref{prop:logic:oldevidence}]
+If $B\vdash\varphi^b$ for every $(\varphi,b)\in D$, then $\Cn(D^\pm)=\Cn(\emptyset)$, so $\MA(D)=\MA(\emptyset)$, $E_D=E_\emptyset$, and the same for $\WA$ and $\KA$ (Old). With $\Q\subseteq\Cn(B)$ and $P$ a $\Delta_0$ formula, every true instance $P(\num n)$ is $\Q$-provable by ($\Sigma_1$C), and a false one is $\Q$-refutable, so its datum would be inconsistent with $B$.
+\end{proof}
+
+Instances of a fresh predicate (empirical induction, $B=\emptyset$) do confirm $\forall x\,R(x)$, up to the $\omega$-gap (\cref{prop:logic:omega}). So the inference from checked instances needs a reasoner for whom computing $P(\num n)$ is costly: logical induction \citep{garrabrant2016logical} is one, and a derivation-charged axiom inducer (Section 6 of \citealp{claude2026axiominduction}) is another. Whether a derivation-charged posterior then concentrates on provers of $\forall x\,P(x)$ depends on competitors that prove the instances cheaply without proving the universal (compare \cref{prop:logic:lines}); we do not settle this.
+
+\subsection{The \texorpdfstring{$\omega$}{omega}-gap}\label{app:logic:omega}
+
+\begin{proof}[Proof of \cref{prop:logic:omega}]
+$I$ is a consistent r.e.\ theory proving the stream, so $\Unif(E_\infty)\ge2^{-K(I)-c}>0$ (\cref{prop:basic:limitpost}(c)) and (Lim) applies; by \cref{prop:basic:limitpost}(d) with $\Gamma=I$, $P_\infty$ is the prior restricted to the consistent extensions of $I$, whether or not $I$ is complete. In (i) and (ii) every consistent extension of $I$ proves what $I$ proves. In (iii), $I$, $I+\forall x\,\varphi$ and $I+\neg\forall x\,\varphi$ are consistent r.e.\ theories with positive weight, which prove $\forall x\,\varphi$, refute it, and decide it neither way, respectively; and a consistent extension of $I$ refutes $\forall x\,\varphi$ iff it is $\omega$-inconsistent at $\varphi$, since it proves every instance.
+\end{proof}
+
+Two standard cases. With $B=\emptyset$ and the atomic diagram of a computable structure this is \cref{prop:basic:structures}. With $B\supseteq\Q$ and $\varphi\in\Delta_0$ the instances are free (\cref{prop:logic:oldevidence}) and the posterior does not move at all; case (iii) holds iff $B$ decides $\forall x\,\varphi$ neither way. For $\Sigma_1$-sound $B$ this is iff $B\nvdash\forall x\,\varphi$: with all instances true, $\neg\forall x\,\varphi$ is logically equivalent to the false $\Sigma_1$ sentence $\exists x\,\neg\varphi$, which a $\Sigma_1$-sound $B$ does not prove. Without $\Sigma_1$-soundness this fails: for $B=\PA+\neg\Con(\PA)$ and $\varphi(x)$ the $\Delta_0$ formula ``$x$ is not a $\PA$-proof of $\bot$'', every instance is true and $\Q$-provable, so $\Cn(I)=\Cn(B)$, and $B\vdash\neg\forall x\,\varphi$: case (ii) holds although $B\nvdash\forall x\,\varphi$.
+
+\begin{proposition}[The Gaifman condition]\status{proved}\src{logic Prop 5.2}\label{prop:logic:gaifman}
+Under the hypotheses of \cref{prop:logic:omega}, enumerate $\mathrm{CT}=\{t_0,t_1,\dots\}$. Then $\lim_n\Bel_0(\bigwedge_{i\le n}\varphi(t_i))$ exists, and
+\[
+\lim_n\Bel_0\Big(\bigwedge_{i\le n}\varphi(t_i)\Big)-\Bel_0(\forall x\,\varphi)=\Unif\{\omega:B\cup A_\omega\text{ consistent, proves every }\varphi(t_i),\ \nvdash\forall x\,\varphi\}.
+\]
+This is $0$ iff $I\vdash\forall x\,\varphi$, and otherwise at least $2^{-K(I)-c}$, where $K(I)$ is the complexity of an index of $I$. The same holds for every posterior $\Bel_D$ with $D$ proved by $I$, after dividing by $\MA(D)$.
+\end{proposition}
+
+\begin{proof}
+The events $\{\omega:B\cup A_\omega\text{ consistent and proves }\varphi(t_0),\dots,\varphi(t_n)\}$ decrease in $n$ to the event of proving every instance; continuity from above gives the limit. A theory proving $\forall x\,\varphi$ proves every instance, so the difference is the stated measure. If $I\vdash\forall x\,\varphi$, every consistent theory proving all instances proves $\forall x\,\varphi$, and the difference is $0$. Otherwise $I$ itself lies in the event, with weight at least $2^{-K(I)-c}$ by (Dom). For $\Bel_D$, divide by $\MA(D)$.
+\end{proof}
+
+``Prove'', not ``decide'', is the right word: in the $\omega$-inconsistent case (ii) of \cref{prop:logic:omega} the instances refute the universal, yet the gap equals the whole consistent mass of the extensions of $I$.
+
+\begin{proof}[Proof of \cref{thm:logic:goedelomega}]
+Let $\forall x\,\zeta_k$ be the canonical consistency statement $\Con(B\cup T_k)$ of the presentation $e_k$ (\cref{thm:logic:thresholdtheories}), rewritten with one universal quantifier over a code of a pair (a derivation of $\bot$, an enumeration stage), with membership in $B$ and in $T_k$ certified inside the $\Delta_0$ matrix by computation witnesses and the quantifiers contracted by $\Delta_0$ pairing. For such a natural rewriting $\PA\vdash\forall x\,\zeta_k\leftrightarrow\Con(B\cup T_k)$ (standard). $B\cup T_k$ is true (\cref{thm:logic:thresholdtheories}(iii)), so $\forall x\,\zeta_k$ is true and its instances are true $\Delta_0$ sentences. If $\Bel_0(\forall x\,\zeta_k)\ge2^{-k}$, \cref{thm:logic:thresholdtheories}(ii) puts $\forall x\,\zeta_k$ into $T_k$, so $B\cup T_k\vdash\forall x\,\zeta_k$, hence, by the $\PA$-provable equivalence, $B\cup T_k\vdash\Con(B\cup T_k)$, contradicting (G2) for the consistent r.e.\ presentation $B\cup T_k\supseteq\PA$. The lower bound is (Dom) for the true one-sentence theory $\{\forall x\,\zeta_k\}$, whose index is computable from $e_k$, of complexity at most $K(e_k)+c\le k+K(k)+c'$. The posterior after $B$-entailed data is the prior normalised by $\MA(\emptyset)=1-\Inc_0$, that is $\Belhat_0=\Bel_\emptyset$, so the posterior belief is $\Bel_0(\forall x\,\zeta_k)/(1-\Inc_0)<2^{-k+c'}$.
+\end{proof}
+
+\paragraph{The closures of \cref{rem:logic:closures}.} (a) \emph{The $\omega$-rule.} Let $\vdash_\omega$ be closure under first-order deduction and the $\omega$-rule (from $\varphi(\num n)$ for all $n$, infer $\forall x\,\varphi$). Then $\Q\vdash_\omega\chi$ for every true $\Lar$-sentence $\chi$: write $\chi$ in prenex form with a $\Delta_0$ matrix and argue by induction on the prefix. True $\Delta_0$ sentences are $\Q$-provable; a true $\exists x\,\psi(x)$ has a true instance $\psi(\num n)$, provable by induction, and $\exists$-introduction applies; a true $\forall x\,\psi(x)$ has all instances true and provable, and the $\omega$-rule applies. So with $B\supseteq\Q$ every $\vdash_\omega$-consistent random theory has $\Lar$-content exactly $\Th(\mathbb N)$: it proves every truth and, being consistent, no falsehood. The gap closes because the inducer is omniscient about arithmetic a priori.
+(b) \emph{Full second-order consequence} (given Dedekind's categoricity theorem, standard). Let hypotheses be second-order sentences, and let compatibility mean ``has a full model, and every full model satisfies $\psi_D$''. Every full model of second-order Peano arithmetic $\PA^2$ is isomorphic to $\mathbb N$, so $\{\PA^2\}$ is compatible with every finite correctly labelled data set. By the dominance argument (the tapes that begin with a program for $\{\PA^2\}$), the loss on any presentation of $\Th(\mathbb N)$, in any order, is at most $K(\PA^2)+c$, and the limit posterior has $\Bel(\varphi)=\ind[\mathbb N\models\varphi]$ for every $\Lar$-sentence, trivially, since every sentence is a datum; the content is the loss bound. This places the unlearnability of $\Th(\mathbb N)$ (\cref{prop:basic:noncomplete}) on effective consequence, not on the complexity of arithmetical truth.
+(c) \emph{The generative variant.} Theorem 3.9 of \citet{claude2026axiominduction} concerns the generative inducer over a countable class with i.i.d.\ data from a generator $T^*$. Its parts (a), (b): the posterior probability of ``proves $\forall x\,\varphi$'' tends to the prior share of provers in the class of theories with the generator's law. Its part (c1): in the faithful regime, with $\forall x\,\varphi$ in the data space, the limit is $\ind[T^*\vdash_{\mathsf C}\forall x\,\varphi]$, whether the generator proves the universal in the calculus $\mathsf C$ used there, not the truth value of $\forall x\,\varphi$. So this closes the gap only in the sense that the universal sentence is itself observed. For filtered data the gap stays open: for quantifier-free $\varphi$ in the minimal class of that paper, the limit is $0$ under its plain likelihood and the prior share under its selection-aware likelihood (its part (d1)), and with an unknown filter it is a filter-prior mixture (its part (e)). The generative variant is therefore not a closure of the $\omega$-gap on instance data.
+
+\paragraph{Line budgets.} Let hypotheses be single sentences $\psi$, and call a datum $\chi$ \emph{$\ell$-compatible} with $\psi$ if $B\cup\{\psi\}$ is consistent and proves $\chi$ in a fixed Hilbert calculus by a derivation of at most $\ell$ lines (lines, not symbols). The data are the closed instances $\varphi(S^n0)$, $n\in\mathbb N$.
+
+\begin{proposition}[Line budgets and a Kreisel-type property]\status{proved}\src{logic Prop 5.4}\label{prop:logic:lines}
+Assume that some sentence is $\ell$-compatible with every datum (for instance $\forall x\,\varphi$, when $B\cup\{\forall x\,\varphi\}$ is consistent and $\ell$ is at least the constant number of lines of instantiation). Then for any prior with full support on sentences, the limit posterior gives $\Bel(\forall x\,\varphi)=1$ iff every $\psi$ that is consistent with $B$ and proves every $\varphi(S^n0)$ within $\ell$ lines also proves $\forall x\,\varphi$ (a \emph{Kreisel property} of $(B,\varphi,\ell)$).
+\end{proposition}
+
+\begin{proof}
+The set of sentences compatible with the first $n$ data decreases in $n$ to the set of $\psi$ that are consistent with $B$ and $\ell$-compatible with every datum, which is nonempty by hypothesis. If every such $\psi$ proves $\forall x\,\varphi$, the limit belief is $1$; a $\psi$ in it that does not prove $\forall x\,\varphi$ has positive weight, and then the limit belief is less than $1$.
+\end{proof}
+
+With $B=\emptyset$ and $\varphi(x):=x=0\vee\exists y\,x=Sy$, the property already fails at a constant budget, but that example is degenerate: every instance is logically valid, so the data are old evidence (\cref{prop:logic:oldevidence}), and the budget plays no role. The following example is not degenerate.
+
+\begin{example}[A non-degenerate failure]\status{proved; computed}\src{logic Ex 5.4(ii)}\label{ex:logic:lines}
+Let $B=\emptyset$, $\mathcal L=\{0,S,R\}$ with $R$ a fresh unary predicate, and data $R(S^n0)$; they are not valid, since the one-point structure with $R$ empty refutes $R(0)$. With $\varphi(x):=x=0\vee\exists y\,x=Sy$, let $\psi_1:=\forall x\,(\varphi(x)\to R(x))$ and $\psi_2:=\forall x\,R(x)$. Each instance $\varphi(S^n0)$ has a derivation of at most five lines (an equality axiom $S^n0=S^n0$, the axiom $\chi(t)\to\exists y\,\chi(y)$ with $t=S^{n-1}0$ and modus ponens, the axiom $\beta\to\alpha\vee\beta$ and modus ponens; three lines for $n=0$), so $\psi_1$ derives $R(S^n0)$ in nine lines (seven for $n=0$): the hypothesis, its instance at $S^n0$ by $\forall$-elimination and modus ponens, the derivation of $\varphi(S^n0)$, and modus ponens. $\psi_2$ derives each datum in three lines. The structure $\{0,1,2,a\}$ with $S(0)=1$, $S(1)=2$, $S(2)=2$, $S(a)=0$ and $R:=\{0,1,2\}$ satisfies $\psi_1$ (the only element outside $R$ is $a$, and $\varphi(a)$ fails) and every $R(S^n0)$ (closed terms denote $0$, $1$ or $2$), but not $\forall x\,R(x)$. So with $\ell=9$ both $\psi_1$ and $\psi_2$ stay $\ell$-compatible with every datum, $\psi_1$ is consistent and does not prove $\forall x\,R(x)$, and under any full-support prior the limit belief in $\forall x\,R(x)$ lies strictly between $0$ and $1$: the Kreisel property fails for $(\emptyset,R,9)$, with instances that are not valid.
+\end{example}
+
+A computation (code in the accompanying repository) checks the derivations line by line for $n\le60$ in a small Hilbert-style proof checker, and the countermodel.
+
+Kreisel's conjecture says that if $\PA$ proves $\varphi(S^n0)$ in at most $k$ lines for every $n$, then $\PA\vdash\forall x\,\varphi$; it is open for the usual Hilbert-style $\PA$, with partial results and counterexamples for nearby theories \citep{parikh1973some,baaz1993kreisel,hrubes2007theories,hrubes2009kreisel,santos2021variants}. These concern infinite theories with schemata. The property of \cref{prop:logic:lines} concerns finite extensions $B\cup\{\psi\}$, in which a $k$-line derivation can use only the finitely many axioms of $\psi$ and logical axioms; we know of no result on it, so the link is a reformulation.
+
+\begin{question}\status{open}\src{logic \S5.5}\label{q:logic:kreisel}
+For $B=\Q$ and $\Delta_0$ formulas $\varphi$, does every finite $\psi$ that proves all instances of $\varphi$ in boundedly many lines prove $\forall x\,\varphi$?
+\end{question}
+
+Over $\Q$ with $\varphi\in\Delta_0$ the instances are old evidence again; the question is which finite theories the line-budget inducer keeps, not what it learns from the instances.
+
+\subsection{True arithmetic}\label{app:logic:thn}
+
+\begin{proof}[Proof of \cref{thm:logic:thn}]
+Let $\Omega_s\uparrow\Omega_V$ be the computable approximations. Since $\Omega_V$ is irrational, its $k$-th binary digit is the eventual value of the $k$-th digit of $\Omega_s$. Let $\Bit'(y)$ be a formula with $\mathbb N\models\Bit'(\num k)$ iff that digit is $1$: ``there is $s$ such that for all $s'\ge s$ the $y$-th digit of $\Omega_{s'}$ is $1$'', with the digit predicate expressed by a $\Delta_0$ formula about a computation witness. Put $\Bit(x):=\exists y\,(y=x\wedge\Bit'(y))$, so that $x$ occurs once, and $\Bit_k:=\Bit(\num k^{\rm b})$. Then $\lvert\Bit_k\rvert\le\lvert\Bit\rvert+c_1\log k+c_2$, and the position of $\Bit_k$ in the enumeration is at most $C\kappa^{\lvert\Bit\rvert+c_2}\kappa^{c_1\log k}=C'k^{1/\xi}$. The first $n$ sentences therefore contain $\Bit_1,\dots,\Bit_{m(n)}$, at positions computable from $k$, and their labels are the digits $\Omega_{1:m(n)}$. So $\Omega_{1:m(n)}$ is computable from $n$ and $b_{1:n}$, and $K(\Omega_{1:m(n)})\le K(b_{1:n}\mid n)+K(n)+c$. By Chaitin's theorem $K(\Omega_{1:m})\ge m-c$. This is (a). (b) is (a) with \cref{prop:basic:noncomplete}(b) and $m(n)\ge(n/C')^\xi-1$. (c) $\LA(D_n)$ is nondecreasing in $n$, because $E_{D_{n+1}}\subseteq E_{D_n}$. For $n\ge4$ let $n':=2^{\lfloor\log n\rfloor}\in(n/2,n]$; then $K(n')\le K(\lfloor\log n\rfloor)+c\le2\log\log n+c'$, and by monotonicity and (b), $\LA(D_n)\ge\LA(D_{n'})\ge(n/(2C'))^\xi-2\log\log n-c''$.
+\end{proof}
+
+\emph{The exponent for a stated syntax.} Take the Polish-notation syntax with fourteen symbols: terms $0$, $St$, ${+}tt$, ${\cdot}tt$ and variables $x'\cdots'$ ($x$ followed by $i\ge0$ primes); formulas ${=}tt$, ${<}tt$, $\neg f$, ${\wedge}ff$, ${\vee}ff$, ${\to}ff$, $\forall vf$, $\exists vf$; and binary numerals $\num1^{\rm b}=S0$, $\num{2m}^{\rm b}={\cdot}\,\num m^{\rm b}\,SS0$, $\num{2m+1}^{\rm b}=S{\cdot}\,\num m^{\rm b}\,SS0$, so that $c_1=5$ and $c_2=2$. Counting all strings ($\kappa=14$) gives $\xi\ge1/(5\log14)>0.0525$. Counting formulas gives more. With $V(x)=x/(1-x)$, the generating function of the variables, the generating functions of terms and formulas satisfy
+\[
+T=x+V+xT+2xT^2,\qquad F=2xT^2+xF+3xF^2+2xVF,
+\]
+and every term on the right carries a factor $x$. If rationals $x_0,T^*,F^*>0$ satisfy both equations with ``$\ge$'' in place of ``$=$'', then the iterates of the right-hand sides from $0$ have nonnegative coefficients, agree with the series up to degree $k$ after $k$ steps, and stay below $(T^*,F^*)$ at $x_0$; so $\sum_LF_Lx_0^L\le F^*$, and the number of formulas, hence of sentences, of length at most $L$ is at most $\frac{F^*}{1-x_0}x_0^{-L}$ for every $L$. A computation with exact rational arithmetic (code in the accompanying repository) verifies such a super-solution at $x_0=1000/5385$, with $T^*\approx0.800042$ and $F^*\approx0.609287$; this gives $C=0.7482$ and $\kappa=5.385$, hence $\xi\ge1/(5\log5.385)>0.0823$. The same computation finds no certificate at $\kappa=5.38$; the growth rate of the formula counts is about $5.383$.
+
+Only the numeral length and the growth of the syntax enter $\xi$; the (large) size of $\Bit$ enters only the constant. With unary numerals the position of $\Bit_k$ is at most $C''\kappa^k$, so $m(n)$ is only about $\log_\kappa n$; then (b) is vacuous as written, since $K(n)$ can be about $\log n>\log_\kappa n$, but (c)'s monotonicity argument still gives $\LA(D_n)\ge\log_\kappa n-2\log\log n-c$. The bound is weak in absolute terms (for $n=10^6$, $n^{0.0823}$ is about $3.1$); it is a statement about the shape of the growth, not a usable estimate.
+
+\begin{proof}[Proof of \cref{cor:logic:undecided}]
+$b_{1:n}$ is computable from an index $e_T$ of $T$, $n$, the set of undecided positions among the first $n$ and their labels, since a true theory decides correctly. Using $\log\binom nu\le u\log(en/u)$ and $K(u\mid n)\le\log n+c$, this gives $K(b_{1:n}\mid n)\le K(e_T)+u_n(T)(\log n+3)+2\log n+c$. Compare with \cref{thm:logic:thn}(a), which is the inequality needed here (the statement (b) about $\LA$ would not suffice): $u_n(T)(\log n+3)\ge(n/C')^\xi-K(n)-K(e_T)-2\log n-c'$, and the right-hand side grows like $n^\xi$ while the subtracted terms are $O(\log n)$.
+\end{proof}
+
+\begin{proposition}[An upper bound by a reduction]\status{proved}\src{logic Prop 6.3}\label{prop:logic:generic}
+For every r.e.\ $T$ with $B\cup T\subseteq\Th(\mathbb N)$ and every $n$,
+\[
+\LA(D_n)\le K(e_T)+\log\tbinom{n}{u_n(T)}+u_n(T)+2\log n+O(\log\log n).
+\]
+Hence if some such $T$ has $u_n(T)/n\to0$, then $\LA(D_n)=o(n)$.
+\end{proposition}
+
+\begin{proof}
+$B\cup T$ together with the correctly labelled undecided sentences among the first $n$ is a consistent (true) r.e.\ theory proving $D_n$, with an index computable from $e_T$, $n$, $u_n$, the positions ($\log\binom n{u_n}$ bits, given $n$ and $u_n$) and the $u_n$ labels; then (Chain) gives $\LA\le\KA+c$. If $u_n/n\to0$, then $\log\binom n{u_n}\le nH(u_n/n)=o(n)$, with $H$ the binary entropy function.
+\end{proof}
+
+By \cref{prop:logic:generic}, a positive answer to \cref{q:logic:thn} would follow if some true r.e.\ theory decided a set of sentences of asymptotic density one in the enumeration, that is, if the truth of arithmetic were generically decidable in the sense of generic-case complexity \citep{myasnikov2008generic}. Such questions depend on the representation: the halting problem is decidable on a set of asymptotic probability one for one model of Turing machines \citep{hamkins2006halting}. \citet{calude2005complexity} show that the probability that a true sentence of length $n$ is provable tends to $0$, in a probability space of statements with $n$-bit codes under their numbering. If a version of this held for the length enumeration used here, every true r.e.\ theory would leave a positive fraction of the sentences of each length undecided, and the sufficient condition of \cref{prop:logic:generic} would fail for every $T$. It would not settle \cref{q:logic:thn}: $K(b_{1:n}\mid n)$ could still be $o(n)$, since truth values along the enumeration are highly redundant (for instance $\psi$ and $\neg\neg\psi$). \Cref{cor:logic:undecided} gives only a polynomial lower bound on $u_n$.
