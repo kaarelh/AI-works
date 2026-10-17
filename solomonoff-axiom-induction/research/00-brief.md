@@ -95,6 +95,23 @@ The two companion papers are being renamed from "Solomonoff function induction (
 * **In new records,** write SOI rather than SFI. Older records keep SFI.
 * **This paper's working name stays "Solomonoff axiom induction"** (macro), in parallel with SOI.
 
+## Approximate correctness: where the discussion stands (2026-10-17)
+
+The published draft said that "Kepler's laws are only approximately true" is a limitation of proof-requiring compatibility with deterministic theories, "not of the axiom view as SAI formalises it", because under SAI's pricing an approximately true law is a law with a calibrated error model (Prop. 9.2). The author objected (verbatim):
+
+> i'm not a huge fan of this move philosophically (though it's fine to do this when working out something toy) because it reduces everything to some low-level predictive loss like log loss, but really some mistakes are much worse than others, even if they look the same on log loss. eg if you have uniform over 5 nearby values, that's much better than having uniform over 5 random values. i think even just calculating the L^2 diff between real-valued outputs is often more principled/[philosophically correct] than log loss. in reality, there is some practical messy grading of whether the theory gave answers that were good enough for some purpose
+
+Claude's reply, which the author accepted ("sounds good"):
+* The paper overclaimed. Prop. 9.2 is true, but it says what the log-loss-best predictor in the mixture looks like, not what approximate correctness is. Retract "not a limitation".
+* For credence about hypotheses that might be exactly true, locality (the score depends only on the probability of what happened) is defensible: the log score is the local proper scoring rule, and conditioning is cumulative log loss.
+* The objection bites under misspecification, which is the approximate-truth case: proper scores all rank the truth first but rank wrong theories differently (log loss picks the KL projection), so there is no purpose-neutral best approximately true law.
+* For a point law with an additive location error model, log loss is distance-sensitive through the error density: a fixed-scale Gaussian gives squared error, Laplace absolute error, uniform on [−δ, δ] the tolerance forms. The "5 scattered values" problem needs multimodal forecasts (or nonparametric error models). In the law-plus-noise case the problems are that "calibrated" means fitted for log loss, and that real residuals are systematic.
+* L² is one purpose among others, not the principled one; Kepler's own test was a maximum-error tolerance. The grading is set by a purpose.
+* The objection reaches the whole Solomonoff framework: by the chain rule, Bayesian cumulative log loss over any questions about the same quantity is −log of the probability of the cell their answers pick out, so a question family can encode "good enough at resolution δ" (a partition) but not "how bad is a miss" (a metric). Distance-sensitive scores such as the CRPS sum marginal scores over threshold questions without conditioning.
+* What may survive: Vovk's aggregating algorithm with prior weights 2^(−K(T)) gives Solomonoff-style competitive bounds for mixable losses (square loss on a bounded range); the weights are then not credences and "best theory" is relative to the purpose loss.
+
+Agreed changes: keep Prop. 9.2 and the Kepler computations as toy treatments; drop the "not a limitation" claim (abstract, §9 opening, §11, §13, README); state that approximate correctness is purpose-relative and remains a limitation of SAI and of any Bayesian cumulative log loss; add an open question on SAI with a purpose loss; check the claims above in a short research track (`tracks/purpose/`) with an adversarial referee before they enter the paper; verify the new references by search.
+
 ## Target
 
 An arXiv-quality paper. **Authors: Kaarel Hänni and Claude (Anthropic).** The author asked on 2026-10-15 that Claude be listed as a co-author on all the papers in their GitHub versions:
