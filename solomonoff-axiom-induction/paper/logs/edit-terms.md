@@ -1,14 +1,56 @@
 # Edit log: group "terms" (sections/terms.tex, sections/app-terms.tex)
 
-Status: phase 1 in progress (started 2026-10-17). Pre-edit copies of both files in the editor's scratchpad.
-Baseline (isolated build before edits): §8 main text 5.80 pp (isolated build; 5.96 in the full build of 15:17), App F 21.6 pp.
+Status: **phase 1 done** (2026-10-17). Inputs: `review/DECISIONS.md` (§0, §U7, §L, G-terms, X2, X7, X10), `review/issues-terms.json` (10 entries), the `terms` record (Cor 5.4, §6 preamble, Thm 4.6, Prop 7.1(c), Thm 6.2(b), §8 statuses, §10). Pre-edit copies of both files are in the editor's scratchpad (`terms-editor/terms.orig.tex`, `terms-editor/app-terms.orig.tex`). Only `terms.tex` and `app-terms.tex` were edited.
 
-## Done so far (app-terms.tex)
-* TER-X19 (appendix part): first mention "Theorem 6.14 of our earlier report \citep{...}, which is \cref{thm:soi:penalty}(b)" (proof of thm:terms:horn (c)); later mentions "Lemma E.12 / Lemma E.22 / Proposition E.21 / Proposition E.23(b) of the earlier report" without citation commands.
-* TER-07: paragraph after thm:terms:everyregular now "two regular languages on all data with |w|<=9, and three more, in an independent implementation, on all data with |w|<=8".
-* TER-01 (appendix part): B=\emptyset added to cor:terms:table rows 3 and 4 (dagger note "with B=\emptyset"; the "Hence" sentence restricts the comparison with non-run-padded observational hypotheses to B=\emptyset), prop:terms:a1fit, thm:terms:binary, cor:terms:freededuction, prop:terms:ontology (whole proposition, see below).
-* Moves (list A 1, 2, 3, 4) into App F: thm:terms:horn with def:terms:classes (new) and its outline into app:terms:horn; thm:terms:padded with the paragraph after it into app:terms:craig; thm:terms:regular with its outline into app:terms:ontology.
+## Issues
 
-## Progress note (interim)
-* terms.tex rewritten with the moves of list A and the fixes TER-01..06, TER-08, TER-X19 (main-text part); list B (1) and (2) applied (still over target after list A: 4.15 pp isolated). Isolated build after list B: 4.00 pp; further prose cuts in progress.
-* def:terms:named and the paragraph after it moved to App F (after the appendix preamble, before app:terms:horn).
+| id | what changed | where |
+|---|---|---|
+| **TER-01** (B1, major) | `thm:terms:dilemma`: added "In the fit-class statements of (iii), and in (iv) and (v), $B=\emptyset$." after the readings sentence. `cor:terms:table`: rows 3 and 4 carry a dagger, note "$^\dagger$with $B=\emptyset$"; the "Hence" sentence now compares run-padded sets with non-run-padded observational hypotheses "with $B=\emptyset$" (the comparison with axiom sets with theoretical symbols uses row 5, any admissible $B$). "Let $B=\emptyset$" added to `prop:terms:a1fit`, `thm:terms:binary`, `cor:terms:freededuction`, and to `prop:terms:ontology` (for the whole proposition: (b)'s "consistent with all the data" fails under the reviewer's $B_1$ too, so restricting only (a) would leave (b) unproved). Main-text prose: "with empty background" in §8.3 (the binary-relation sentence) and §8.4 (the fit-class sentence); §8.5 starts "With deduction free and $B=\emptyset$". The reviewer's alternative sufficient conditions were not adopted. `thm:terms:horn`, `thm:terms:padded`, `thm:terms:KCV` unchanged. **Also, under X2** ("any group that finds it elsewhere adds 'with empty background'"): "Let $B=\emptyset$" added to `thm:terms:regular` (its proof transplants labels in a model of $T\cup\ThT$ alone; the reviewer's $B_2$ makes $B_2\cup T$ prove the literals of a non-regular set), `prop:terms:conservativity` (with $B=\{\forall x\forall y\,\neg\mathsf C(x,y)\}$, $R$-free and admissible, $B\cup T^{\mathsf C}_{\mathcal V}$ is inconsistent while $B\cup\ThT\cup\Gamma$ is not) and `prop:terms:binaryobs`(a) (same mechanism as `thm:terms:regular`). All are weakenings that match the proofs and the record (Cor 5.4 "$B=\emptyset$"). | terms.tex `thm:terms:dilemma`, §8.3, §8.4, §8.5; app-terms.tex the labels named |
+| **TER-02** (B2, major) | The clause now reads "and no finite first-order theory in pure equality, or in pure equality with unary predicates added, has the same consequences"; no strict-order example; no phrasing that a function is what a finite theory needs. | terms.tex §8.5 (`sec:terms:finite`) |
+| **TER-03** (B3) | "though more slowly than every computable unbounded nondecreasing function". | terms.tex §8.5 |
+| **TER-04** (B4) | Proof line now "(iii) is \cref{prop:terms:eliminate,prop:terms:a1fit,thm:terms:binary}, under \cref{ass:soi:F1}, given the one-tape simulation and $\cplx{APSPACE}=\cplx{EXPTIME}$." | terms.tex proof of `thm:terms:dilemma` |
+| **TER-05** (B5) | "... linear in the time and space of a one-tape simulation of $\mathcal V$ plus the lengths of the input and the certificate". | terms.tex §8.3 |
+| **TER-06** (B6) | After the length cut $\theta_2$ is described in words, "an observational formula $\theta_2(a,b)$, with a fresh bound variable $y_\theta$, says that $R$ holds of the pair of $a$ and $b$" (the pairs being the elements $z$ with $\mathtt s_1\mathtt s_1z=z$), pointing to `lem:terms:pairing`, whose preceding paragraph has the definition with $y_\theta$ and the freshness remark. The unmarked $\forall y$ and $\mathrm{Std}(y)$ are gone from the main text. | terms.tex §8.3 |
+| **TER-07** (B7) | "two regular languages on all data with $\lvert w\rvert\le9$, and three more, in an independent implementation, on all data with $\lvert w\rvert\le8$". | app-terms.tex paragraph after `thm:terms:everyregular` |
+| **TER-08** (consistency 5) | "theoretical \emph{entities} (for the theory we build, objects outside the named structure)". | terms.tex §8.6 (`sec:terms:reading`) |
+| **TER-X19** (consistency 19, §U7) | terms.tex: "as in Definition E.18 of our earlier report \citep{claude2026axiominduction}; ... (Lemma E.11 there)". app-terms.tex: first mention "Theorem 6.14 of our earlier report \citep{claude2026axiominduction}, which is \cref{thm:soi:penalty}(b)" (proof of `thm:terms:horn` (c), the first printed mention in App F after the moves); then "Lemma E.12 / Lemma E.22 / Proposition E.21 / Proposition E.23(b) of the earlier report" without citation commands. The companion papers are not cited in these files. Item numbers unchanged. | both files |
+| **TER-L1** (consistency 1, length) | List A 1–5 and list B (1), (2) applied; see "Moves" and "Shortened". | both files |
+
+## Moves (all inside the group; labels unchanged; one new label)
+
+| label | from | to |
+|---|---|---|
+| `thm:terms:horn` (with its "Consequently" note, the sentence before it and its proof idea, now "In outline: ...") | terms.tex §8.2 | app-terms.tex `app:terms:horn`, before its proof (proof header now plain). The proof idea's sentence on the 37 of 40 machines was dropped as a duplicate of the computation paragraph after the proof. |
+| `def:terms:classes` (**new**): class-restricted laws $\mathcal C_\Theta$, $\UA(\mathcal C_\Theta;D)$, ... and the observational restrictions of the penalised versions (formerly the end of `def:terms:obs`) | terms.tex `def:terms:obs` | app-terms.tex `app:terms:horn`, before `thm:terms:horn`. `def:terms:obs` keeps $\LO$, $T_O$, observational data, $\MA^{\LO}$, $\WA^{\LO}$, $\KA^{\LO}$. |
+| `thm:terms:padded` with its proof idea (kept: the $O(\log)$-bits comparison and the failure of the natural strengthening) and the paragraph after it (Krajíček; losses against all hypotheses) | terms.tex §8.3 | app-terms.tex `app:terms:craig`, after `lem:terms:unary`, before its proof. The novelty sentence stays in the main text (summary sentence). The definition of "run-padded" stays in the main text (parenthesis in the summary sentence); the appendix statement points to `sec:terms:craig`. |
+| `thm:terms:regular` with its proof idea ("In outline: ...") | terms.tex §8.4 | app-terms.tex `app:terms:ontology`, after `lem:terms:EF`, before its proof. "the relational signature of \cref{app:terms:ontology}" became "the relational signature defined above". The main-text residual definition was cut (it is in the appendix paragraph "Residuals and the relational form"). |
+| `def:terms:named` and the paragraph after it (list B (2)) | terms.tex §8.1 | app-terms.tex, after the appendix preamble, before `app:terms:horn`. Main text keeps both notions in one sentence with `\cref{def:terms:named}`. The appendix sentence "the axioms of $\ThT$ listed after \cref{def:terms:named}" stays true. |
+
+No theorem-like environment, table or figure was dropped: label sets before and after compared (54 labels before, 55 after; the only difference is the new `def:terms:classes`). Every environment keeps `\status` and `\src` (terms.tex 4 environments + the `rem:phil:hempel` paragraph; app-terms.tex 36 environments). Footnote F8 (factoring) stays in terms.tex.
+
+## Shortened (main text)
+
+* Opening paragraph: 1,100 → about 780 bytes (keeps the dilemma, Craig and Ramsey with citations, the question, the ladder pointer).
+* §8.2: one sentence with `\cref{thm:terms:horn}` (reworded from the suggested sentence, not strengthened: "which states it for each version named in (i) and each Borel class of observational contents, and proves the identity of laws tape by tape"), then `rem:terms:hempel` (kept; "$c$ the constant of that theorem" added, since the theorem moved).
+* §8.3 Craig paragraph: about 1,000 bytes including the summary sentence for `thm:terms:padded` (keeps the $10^{204.6}$ against 795 example in one sentence, with "in a small proof system for ground literals", and the novelty sentence). Elimination paragraph: about 1,900 bytes (keeps certificates under (b) with a pointer to `thm:soi:sandwich`, the pairing structure in one sentence, the binary-relation result in one sentence with the bounds of B5 and $B=\emptyset$ of B1, the Kleene/Craig–Vaught sentence as stated in Pakhomov–Visser, the novelty sentence). Dropped: the two-stack/backward-theory description (in App F).
+* §8.4: one paragraph, about 1,250 bytes, starting with the decided sentence (with "with empty background" inserted); keeps the fit classes (`cor:terms:ontology`, `cor:terms:freededuction`), the forced commitment in the record's wording (some sentence; $\exists z\,\mathtt s_1\mathtt s_1z=z$ for the theory built), conservativity, the binary observable. Dropped: the Ramsey/pairing-gadget comparison sentence.
+* §8.5: about 1,700 bytes (infinity separation with B2 and B3 fixed, Ramsey/Craig/function comparison, PA with sorts "given the theorem of Ryll-Nardzewski", `thm:terms:KCV` with its novelty statement, the one-tape failure). Dropped: the mentions of `rem:terms:named`, `prop:terms:bits` and ACA$_0$ (all in App F).
+* Factoring paragraph: about 500 bytes plus footnote F8.
+* §8.6: about 450 bytes. Its first sentence (the classical reply) was dropped as a duplicate of the "Impracticality" reply in the paragraph `rem:phil:hempel`.
+* `rem:phil:hempel` ("Hempel's replies", retitled from "Hempel's three replies"): list B (1), the last two sentences (Putnam; question-answering view) cut; also cut, as a repetition of `related.tex` §12, the sentence on monadic inductive logic (\citep{niiniluoto1973theoretical}); the last sentence tightened. Label kept.
+
+## Page counts (isolated builds, `./test-section.sh terms app-terms`: OK, 0 undefined citations, 0 overfull boxes > 10pt; the undefined references are all labels of other sections, each checked to exist exactly once in `sections/`)
+
+* Before: §8 main text 5.80 pp (isolated; 5.96 in the full build of 15:17), App F 21.6 pp.
+* After: §8 main text about **3.45–3.55 pp** of content (measured by compiling §8 alone on a 60-inch page and scaling by the original section, 285 lines = 5.80 pp isolated / 5.96 pp full build: now 169 lines). In the isolated build the appendix heading falls at the top of page 5 because the main text ends near the foot of page 4 (heading-based measure 4.00, which counts that white space). Target 3.5 (+0.25). App F: about 22.7 pp.
+
+## Final greps (rule 0.8)
+
+Outside comments and `\status`/`\src`: no process vocabulary; one hit, "tracks of one tape" in the proof of `thm:terms:binary` (multitape simulation; mathematical use, kept). No model names. Hänni's notes only in footnote F8. No `\citet`/`\citep` of the companion works beyond the first mention per file.
+
+## Requests to other groups
+
+1. **front** (`app-notation.tex` l. 104): $\mathcal C_\Theta$ (and the class-restricted laws) are now defined in `def:terms:classes` (App F), not in `def:terms:obs`; please point that entry to `\cref{def:terms:classes}` (FRO-20 already lists the new label). `def:terms:named` (l. 105) now prints as a definition in App F; the `\cref` resolves.
+2. **limits** (`related.tex` l. 24): "\Cref{sec:terms} sets them against our results" refers to all three Hempel replies; after list B (1) §8 discusses only impracticality and inductive systematisation (the Putnam reply now appears only in §12). Suggested: "\Cref{sec:terms} sets the first two against our results."
+3. **soi** (Table 1): rows citing `thm:terms:padded`, `thm:terms:regular` and `thm:terms:horn` resolve to App F; the B=∅ restriction for the rows on finite and observational theories is SOI-08.

@@ -2,7 +2,7 @@
 
 Phase 1 started 2026-10-17. Inputs: review/DECISIONS.md, review/issues-limits.json (13 issues: LIM-01 to LIM-10, LIM-X19, LIM-L1, LIM-L2).
 
-Status: IN PROGRESS. limits.tex: all issues applied, list A and list B applied, about 2.67 pp. with references resolved (estimate of the full build). related.tex: in progress. (Restart: read this log and the two files first; originals of both files are in the scratchpad folder limits-edit/.)
+Status: IN PROGRESS. limits.tex: all issues applied, list A and list B applied, about 2.67 pp. with references resolved (estimate of the full build). related.tex: all issues applied, list A and list B applied, about 2.35 pp. with references resolved. Remaining: final greps, cross-reference checks, log details. (Restart: read this log and the two files first; originals of both files are in the scratchpad folder limits-edit/.)
 
 ## Plan (order of work)
 
