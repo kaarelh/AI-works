@@ -123,3 +123,8 @@ None required. Notes for the front group:
 1. `discussion.tex` l. 10 and `phil.tex` l. 37 cite §11 for "misses the procedural, statistical and dynamic sides". §11 still says so in its closing paragraph.
 2. `kepler.tex` l. 144 and `discussion.tex` l. 23 cite "the computational gap" of `sec:limits:textbook`. The paragraph still names it.
 3. LIM-08 kept the word "limiting" (see above). The lead editor may delete it.
+
+## Post-edit fix (2026-10-17, after the front editor's report)
+
+* related.tex, the Craig/Hempel paragraph: "which \cref{sec:terms} sets against our results" became "the first two of which \cref{sec:terms} sets against our results", because §8 (rem:phil:hempel) now treats only the impracticality and inductive-systematisation replies, not the third (science does not aim only at prediction). Requested by the front editor (logs/edit-front.md).
+* LIM-08 "limiting" in the Sawin–Demski sentence: kept. Their theorem is about the limit of the probabilities as true Π1 sentences are conditioned on, so the word is accurate.
