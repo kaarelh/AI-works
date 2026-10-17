@@ -1,0 +1,141 @@
+% Section "shape" (§7). Writer: group shape. Plan: ../OUTLINE.md §7; rows: ../CLAIMS.md §6; notation: ../NOTATION.md §7.
+% Source: research/tracks/shape/notes-final.md (§0-§10, §12-§13); synthesis research/notes-final.md H3, §2.8 (as corrected by
+% research/final-check.md §4: "only by a constant factor" needs intermediate concepts AND a reasoner that can chain;
+% "at least len_m bits per pattern"); philosophy record §1.4, §5 L1; bib/bib-report.md §2.4, §4.1, §5.
+% Renames of record symbols (NOTATION §11 and local; listed in logs/write-shape.md): superscript X -> base;
+% C^X, C^{XY} -> \mathcal E^{base}_m, \mathcal E_m; m_Y -> m_aux; F_ind -> \Phi_ind (F is the function machine);
+% E_q -> \Lambda_q with elements v=(u,a) (lambda is reserved; c is a machine constant); g_star -> \mathbf e_\star;
+% unit vectors e_j -> \mathbf e_j; Elias delta -> El; s_k(m) -> sp_k(m); s(w) -> sz(w); pi(q) -> pat; gamma -> zeta;
+% K_A^cond, W_A^cond -> K_A, W_A on conditional data under (E3) (NOTATION §3.2).
+% Moved to the appendix for the page budget (logged in logs/write-shape.md): the statements of prop:shape:E2,
+% rem:shape:simplexaux, thm:shape:directions, prop:shape:homes, thm:shape:knowhow, thm:shape:learning and
+% thm:shape:spanner (the last two are "a paragraph" in OUTLINE); the main text keeps a sentence or a paragraph on each.
+% Moved in the edit pass (logs/edit-shape.md; DECISIONS §L3): prop:shape:onlyforced and cor:shape:simplex (App E,
+% app:shape:base), prop:shape:oneround and prop:shape:depth (App E, app:shape:aux); old §7.6-§7.8 merged into
+% sec:shape:directions, with sec:shape:homes and sec:shape:learning as paragraph labels.
+\section{Theory shape relative to a reasoner}\label{sec:shape}
+
+The axioms of a mechanics textbook do not yield the solutions of its exercises by a simple mechanical procedure: the reader brings methods, lemmas and understanding that are not written down.\footnote{That written theories are far from sufficient for a simple reasoner, and are aids for a reasoner with much tacit understanding, is argued in H\"anni's working notes \citep{hanni2026notes}.} Program length cannot express this: a short program can contain a generic solver, and by Craig's construction every consistent assigner of truth values is an axiom set at constant cost (\cref{thm:soi:coinfree,rem:phil:craig}). In a simple model with a reasoner, program length sees neither the reasoner nor the vocabulary, the written size of a usable theory depends exponentially on the pair (reasoner, vocabulary) (\cref{tab:shape:regimes}), and declarative against procedural form matters only by a constant factor once intermediate concepts are available and the reasoner can chain through them.
+
+% ------------------------------------------------------------------
+\subsection{The model}\label{sec:shape:model}
+
+Laws constrain the joint values of $m$ observed quantities, and questions give some values and ask for another (the conditional questions of \cref{def:setting:questions}, with literals as sentences).
+
+\begin{definition}[Theories, laws, reasoners, inducers]\label{def:shape:model}
+\status{definition}\src{shape Defs 1.1--1.4, 1.6}
+Fix base variables $x_1,\dots,x_m$ and auxiliary variables $y_1,y_2,\dots$, the \emph{intermediate concepts} (0-ary relation symbols of a first-order language $\mathcal L_m$ with equality).
+(a) An \emph{explicit theory} $\Phi$ is a finite set of non-tautological clauses, a \emph{linear theory} a finite set of equations over $\mathrm{GF}(2)$, in these variables, up to renaming of the auxiliary ones; $\proj\Phi:=\{x\in\{0,1\}^m:\exists y\ (x,y)\models\Phi\}$. The hypothesis classes are $\mathcal E^{\rm base}_m$ (no auxiliary variables) and $\mathcal E_m$ (any); likewise for linear theories. $\lvert\Phi\rvert$ counts clauses (equations), the \emph{written length} $\lVert\Phi\rVert$ literal occurrences.
+(b) A \emph{law} is a nonempty $\mathcal S\subseteq\{0,1\}^m$. $\mathcal Q(\mathcal S)$ is the set of conditional questions $(\alpha,\ell)$, $\alpha$ a partial assignment to the base variables consistent with $\mathcal S$ and $\ell$ a literal on a base variable outside $\dom\alpha$, with $\mathcal S\wedge\alpha\models\ell$; a \emph{conditional data set} is a finite set of such pairs.
+(c) A \emph{reasoner} $\mathcal R$ maps a theory and an antecedent $\alpha$ to a set of base literals or to a conflict $\bot$; it is \emph{sound} if $\ell\in\mathcal R(\Phi,\alpha)$ implies $\Phi\cup\alpha\models\ell$, and $\bot$ occurs only if $\Phi\cup\alpha$ is unsatisfiable. The named reasoners are sound: $\UP_k$, $k$ \emph{parallel} rounds of unit propagation (in each round every clause whose literals are all falsified but one, that one unassigned, assigns it; opposite derivations or a falsified clause give $\bot$); $\UP:=\UP_\infty$; Gaussian elimination $\GE$ on linear theories and unbounded proof search $\PS_\infty$, which return exactly the entailed base literals.
+(d) $\Phi$ is \emph{$\mathcal R$-compatible} with $D$ if for every $(\alpha,\ell)\in D$, $\Phi\cup\alpha$ is satisfiable and $\ell\in\mathcal R(\Phi,\alpha)$; \emph{$\mathcal R$-usable} for $\mathcal S$ if $\proj\Phi=\mathcal S$ and $\Phi$ is $\mathcal R$-compatible with $\mathcal Q(\mathcal S)$.
+(e) The inducers range over the $\mathcal R$-compatible $\Phi\in\mathcal E_m$ (linear theories for $\GE$); a superscript $\mathrm{base}$ restricts them to $\mathcal E^{\rm base}_m$. \emph{Program length}: $\KA^{\mathcal R}(D):=\min\lvert p\rvert$ over the $p$ with $V(p)=\langle\Phi\rangle$, and $\WA^{\mathcal R}(D):=\sum2^{-\lvert p\rvert}$ over the same $p$. \emph{Listing}: $\Klst^{\mathcal R}(D):=\min\ell_{\rm lst}(\Phi)$ and $\Wlst^{\mathcal R}(D):=\sum2^{-\ell_{\rm lst}(\Phi)}$, for the prefix code $\ell_{\rm lst}\ge\lVert\cdot\rVert$ of \cref{eq:shape:lst}, which lists the clauses literal by literal. \emph{Time-charged}: $\KtA^{\mathcal R}(D):=\min(\lvert p\rvert+\log t_p)$ over the $p$ of $\KA^{\mathcal R}$, $t_p$ the running time of $V$ on $p$.
+\end{definition}
+
+With $\PS_\infty$ and \Ethree{} (the two-valued encoding is degenerate, \cref{prop:shape:E2}), the program-length inducers are the \SAIabbr inducers $\KA$ and $\WA$ on question data, up to $O(1)$ for r.e.\ hypotheses and $m+O(\log m)$ bits for finite ones (\cref{prop:shape:bridge}). An \emph{affine law} is $\mathcal S=\{x:Ax=b\}\ne\emptyset$, $A\in\mathrm{GF}(2)^{r\times m}$ of rank $r\ge1$. For affine laws and the implication chain on $m\ge3$ variables, $\mathcal R$-compatibility with $\mathcal Q(\mathcal S)$, for a sound $\mathcal R$, already forces $\proj\Phi=\mathcal S$ (\cref{lem:shape:forces}).
+
+% ------------------------------------------------------------------
+\subsection{Program length sees neither the reasoner nor the vocabulary}\label{sec:shape:invisible}
+
+The prime implicates $\PI(\mathcal S)$ of a law are its inclusion-minimal implicates among the clauses over the base variables; one round of unit propagation on them answers every question of $\mathcal Q(\mathcal S)$ (\cref{lem:shape:PI}).
+
+\begin{theorem}[Reasoner invariance under program length]\label{thm:shape:invisible}
+\status{proved; computed}\src{shape Thm 1.11}
+Let $\mathcal R'$ be a sound reasoner whose hypotheses are explicit or linear theories, of either class. For every conditional data set $D$, $\KA^{\UP_1,\mathrm{base}}(D)\le\KA^{\mathcal R'}(D)+c$ and $\WA^{\UP_1,\mathrm{base}}(D)\ge2^{-c}\WA^{\mathcal R'}(D)$; and $\KA^{\UP_1}=\KA^{\UP}=\KA^{\PS_\infty}\pm c$ for finite explicit theories of either class.
+\end{theorem}
+
+\emph{Proof idea} (\cref{app:shape:invisible}). If $\Phi'$ is $\mathcal R'$-compatible with $D$, soundness makes $\PI(\proj\Phi')$ $\UP_1$-compatible with $D$, and a fixed prefix computes it from a program for $\Phi'$.
+
+This is Craig's collapse again, now for reasoners and vocabularies: the know-how a weak reasoner lacks can live in a generator of the written theory, at constant cost. In this model it becomes visible when what is written, or the time to write it, is charged.
+
+\begin{theorem}[Where the reasoner and the vocabulary become visible]\label{thm:shape:visible}
+\status{proved}\src{shape Thm 1.12(a), (c)}
+Let $\mathcal S$ be an affine law, $\mathcal R$ a sound reasoner, and take either class.
+(a) $\Klst^{\mathcal R}(\mathcal Q(\mathcal S))$ is the least $\ell_{\rm lst}(\Phi)$ over the $\mathcal R$-usable $\Phi$ of the class.
+(b) $\KA^{\mathcal R}(\mathcal Q(\mathcal S))=K(\mathcal S)\pm c$ for $\mathcal R\in\{\UP_k\ (k\ge1),\UP,\PS_\infty,\GE\}$.
+\end{theorem}
+
+\emph{Proof idea} (\cref{app:shape:invisible}). (a) is \cref{lem:shape:forces}; for (b), a compatible $\Phi$ gives $\proj\Phi=\mathcal S$, which gives $\PI(\mathcal S)$.
+
+When the time to write the theory is charged instead, $\KtA^{\mathcal R}(\mathcal Q(\mathcal S))$ is at least the logarithm of the least written length of an $\mathcal R$-usable theory, and for $\UP_1$, $\UP$ and $\GE$ it exceeds Levin's $\Kt(A,b)$ by at most $\log\lvert\PI(\mathcal S)\rvert+O(r+\log m)$, $O(r+\log m)$ and $O(\log m)$ bits (\cref{prop:shape:timecharged}).
+
+% ------------------------------------------------------------------
+\subsection{Over the base variables: the exact minimum}\label{sec:shape:base}
+
+How large must a theory be for unit propagation if it may use only the observed quantities? A \emph{derived equation} of an affine law is $u=yA$, with $u\cdot x=b_u:=y\cdot b$ on $\mathcal S$; $d_*$ is the least weight of a nonzero one; a \emph{circuit} is a nonzero derived equation whose support contains the support of no other. Let $C_{Z,\beta}$ be the clause over the variable set $Z$ falsified exactly by the assignment $\beta$; the prime implicates are the $C_{\supp(u),\beta}$ with $u$ a circuit and $u\cdot\beta\ne b_u$ (\cref{prop:shape:primeimpl}). A circuit $u$ is \emph{decomposable} if $u=u'+u''$ for nonzero derived equations whose supports meet in a single base variable outside $\supp(u)$: two derived equations chained through one intermediate base quantity. Let $\Phi_{\rm ind}(\mathcal S):=\{C_{\supp(u),\beta}:u$ an indecomposable circuit, $u\cdot\beta\ne b_u\}$. For every affine law the clauses contained in every $\UP$-usable explicit theory over the base variables are exactly those of $\Phi_{\rm ind}(\mathcal S)$ (\cref{prop:shape:onlyforced}), and:
+
+\begin{theorem}[The unique minimum when $d_*\ge3$]\label{thm:shape:minimum}
+\status{proved; computed}\src{shape Thm 2.6}
+If $d_*\ge3$, $\Phi_{\rm ind}(\mathcal S)$ is $\UP$-usable. Hence an explicit theory over the base variables equivalent to $\mathcal S$ is $\UP$-usable if and only if it contains $\Phi_{\rm ind}(\mathcal S)$, which is the unique minimum, with $\sum_{u\text{ indecomposable}}2^{\lvert u\rvert-1}$ clauses.
+\end{theorem}
+
+\emph{Proof idea} (\cref{app:shape:base}). From an antecedent that fixes all of an indecomposable circuit but one variable, the first round must fire a clause supported on that circuit, since a clause through another variable would decompose it. For sufficiency, induct on the weight: a decomposable circuit is answered in two steps through its intermediate variable, and $d_*\ge3$ makes both parts lighter.
+
+So a circuit must be written down if and only if it cannot be obtained by chaining two derived equations through one base quantity: base quantities already act as intermediate concepts (\cref{cor:shape:core} says when the given equations suffice; \cref{rem:shape:dstar2} treats $d_*\le2$). For the \emph{simplex family}, whose matrix $A$ has as its columns the $m=2^r-1$ nonzero vectors of $\mathrm{GF}(2)^r$ ($r\ge3$), the unique minimum over the base variables has $m2^{(m-1)/2}$ clauses against $r=\log(m+1)$ equations for $\GE$ (\cref{cor:shape:simplex}); with intermediate concepts and unbounded propagation $m(2m-4)$ clauses suffice for $r\ge4$ (\cref{rem:shape:simplexaux}), so the family separates the reasoners exponentially only over the base variables or for one round.
+
+% ------------------------------------------------------------------
+\subsection{Intermediate concepts help only a reasoner that can chain through them}\label{sec:shape:aux}
+
+One parity law $\Par^b_m:=\{x:x_1\oplus\dots\oplus x_m=b\}$, $m\ge3$, needs all its $2^{m-1}$ clauses for unit propagation over the base variables (\cref{cor:shape:core}). With the partial sums $y_1=x_1\oplus x_2$, $y_i=y_{i-1}\oplus x_{i+1}$ as intermediate concepts, $4m-6$ clauses suffice for unit propagation when $m\ge4$ (\cref{prop:shape:chainenc}), but only for a reasoner that can chain. One round cannot use intermediate concepts: every $\UP_1$-usable theory for a law, with any auxiliary variables, contains all its prime implicates, $2^{m-1}$ clauses for one parity law (\cref{prop:shape:oneround}). With $k$ rounds and any intermediate concepts, one parity law needs written length $2^{\Omega(m^{1/(2k-1)})}$ for each fixed $k$, given H{\aa}stad's lower bound for parity \citep{hastad1986almost}, while $2\lceil\log m\rceil-1$ rounds suffice for the $4m-6$ clauses of a balanced tree of partial sums (\cref{prop:shape:depth}).
+
+% ------------------------------------------------------------------
+\subsection{Systems of laws, and the regimes}\label{sec:shape:systems}
+
+For systems of laws, neither intermediate concepts nor depth need help. In the following law the observed quantities are fixed linear functionals of an unobserved state. Let $\Lambda_q$ be the set of $v=(u,a)\in\mathrm{GF}(2)^{q+1}$ with $u\in\mathrm{GF}(2)^q$ of weight $1$ or $3$ and $a\in\{0,1\}$, and $\mathbf e_\star:=(0^q,1)$. The \emph{hidden-state law} on the $m=\lvert\Lambda_q\rvert+1$ base variables $(x_v)_{v\in\Lambda_q}$, $x_\star$ is $\mathcal H_q:=\{((z\cdot v)_{v\in\Lambda_q},z\cdot\mathbf e_\star):z\in\mathrm{GF}(2)^{q+1}\}$. With the state $z=(y,z_0)$ as intermediate concept it is written as the $m$ equations $x_{(u,a)}=u\cdot y+a\,z_0$, $x_\star=z_0$, each of weight at most $5$.
+
+\begin{theorem}[Systems of laws need exponential written length]\label{thm:shape:systems}
+\status{proved, given Goos--Kamath--Robere--Sokolov 2019; computed}\src{shape Thm 3.6}
+The $m$ equations above are $\GE$-usable for $\mathcal H_q$. There are $\varepsilon>0$ and $q_0$ such that for every $q\ge q_0$, every $\UP$-usable explicit theory $\Phi$ for $\mathcal H_q$, with any auxiliary variables, clause widths and number of rounds, has $\lVert\Phi\rVert\ge2^{q^{\varepsilon}/2-O(1)}-m=2^{\Omega(m^{\varepsilon/3})}$.
+\end{theorem}
+
+\emph{Proof idea} (\cref{app:shape:aux}). Setting a set $S$ of the $x_v$ to $0$ determines $x_\star$ exactly when the XOR system $\{u\cdot y=a:(u,a)\in S\}$ is unsatisfiable, so unit propagation on a usable $\Phi$, read as a monotone circuit (\cref{lem:shape:upcircuit}), decides this with $O((\lVert\Phi\rVert+m)^2)$ gates. The monotone 3-XOR-SAT function of \citet{goos2019adventures} is a projection of it and needs monotone circuits of size $2^{q^{\varepsilon}}$.
+
+Through the monotone-circuit view of unit propagation \citep{bessiere2009circuit}, this improves the superpolynomial bound of \citet{gwynne2014sat} for arc-consistent representations of XOR systems (\cref{lem:shape:arc,rem:shape:GK}); we did not find it stated, and it is probably known to specialists. Private intermediate concepts add nothing (\cref{prop:shape:private}); a solver whose unit propagation does linear algebra \citep{beame2026extending} is a reasoner for which such laws are cheap.
+
+\begin{corollary}[The regimes]\label{cor:shape:regimes}
+\status{proved, given Hastad 1986 and Goos--Kamath--Robere--Sokolov 2019 as indicated; the reading: assessment}\src{shape Cor 3.9}
+For one parity law ($m\ge3$), the simplex family and the hidden-state law, the least sizes of theories usable by $\UP_1$, by $\UP_k$ ($k$ fixed, or $k\ge2\lceil\log m\rceil-1$), by $\UP$ and by $\GE$, over the base variables or with any intermediate concepts, are as stated in \cref{tab:shape:regimes}.
+\end{corollary}
+
+\begin{table}[t]
+\centering\small\crefabbrev
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}lllll@{}}
+\toprule
+reasoner $\mathcal R$ & parity, base & parity, interm. & simplex, interm. & hidden state, interm.\\
+\midrule
+$\UP_1$ & $2^{m-1}$ & $2^{m-1}$ & $m2^{(m-1)/2}$ & $2^{\Omega(m^{\varepsilon/3})}$\\
+$\UP_k$, $k$ fixed & $2^{m-1}$ & $2^{\Omega(m^{1/(2k-1)})}$ & $2^{\Omega(m^{1/(2k-1)})}$ & $2^{\Omega(m^{\varepsilon/3})}$\\
+$\UP_k$, $k\ge2\lceil\log m\rceil-1$; $\UP$ & $2^{m-1}$ & ${}\le4m-6$ & ${}\le m(2m-4)$ & $2^{\Omega(m^{\varepsilon/3})}$\\
+$\GE$ & 1 equation & 1 equation & $\log(m+1)$ equations & ${}\le m$ equations\\
+\bottomrule
+\end{tabular}
+\caption{The regimes (\cref{cor:shape:regimes}): the least size of a theory usable by the reasoner of the row, with the round budget the row states, in the class of the column (base: no auxiliary variables; interm.: any intermediate concepts). The inducer is $\Klst^{\mathcal R}$ (superscript $\mathrm{base}$ in the first column), whose value on $\mathcal Q(\mathcal S)$ is the listing length of a least usable theory (\cref{thm:shape:visible}(a)): at least its written length, which is at least the number of clauses given here, and at most a factor $O(w\log\bar m)$ larger for clauses of width $w$ over $\bar m$ variables. Entries without a sign are exact and count clauses (equations for $\GE$); ${}\le$ marks the size of an explicit usable theory; $2^{\Omega(\cdot)}$ bounds the written length from below, given the bound of \citet{hastad1986almost} for fixed $k$ and that of \citet{goos2019adventures} in the last column. Under program length every entry is $K(\mathcal S)\pm c$ (\cref{thm:shape:visible}(b)).}
+\label{tab:shape:regimes}
+\end{table}
+
+So the exponential separations are between pairs (reasoner, vocabulary). For the hidden-state law no vocabulary helps unit propagation at any depth, while elimination needs only the natural one.
+
+% ------------------------------------------------------------------
+\subsection{Directions, know-how and learning}\label{sec:shape:directions}
+
+\paragraph{Directionality.} Logical form might matter because a law can be used in every direction, while a program computes one. Take as the procedural counterpart a \emph{rule base}: sound directed rules $P\Rightarrow\ell$ over the base variables ($P$ consistent with $\mathcal S$, $\mathcal S\wedge P\models\ell$), used by forward chaining. For one parity law the only usable rule base has all $m2^{m-1}$ sound rules, $m$ times the clauses of the least $\UP$-usable theory over the base variables, a factor $m$ (the number of query directions) that also holds for one round with any vocabulary. But for every law and round budget the factor is at most the largest clause width of a smallest usable theory, with intermediate concepts and unbounded rounds at most $9$ in written length, and under program length it vanishes (\cref{thm:shape:directions}): the dependence on directions is real but cheap.
+
+\paragraph{Where the know-how lives.}\label{sec:shape:homes} Know-how can be paid for in the reasoner (the $r$ equations with $\GE$), in written lemmas, or in a computation that the cost model does not charge: a generator under program length, or a membership test with free search for derivations, such as a polynomial-time decider of $\PI(\mathcal S)$ of length $K^q(A,b)+c$, $K^q$ being description length under a suitable polynomial time bound $q$ (\cref{prop:shape:homes}). So the charged-deduction readings of \cref{thm:soi:sandwich}, extended to conditional data, give the full lemma library a cost within $K^q(A,b)-K(\mathcal S)+O(\log m)$ bits of the least possible, given a derivation bound that we sketch (\cref{thm:shape:knowhow,rem:shape:knowhowsketch}). They do not charge finding a derivation (\cref{rem:soi:whatcharged}), so they cannot express the textbook point, which concerns a reasoner that must find the answer.
+
+\paragraph{Learning.}\label{sec:shape:learning} For one parity law ($m\ge3$), an inclusion-minimal $\UP$-compatible theory over the base variables fails on some question of every unseen \emph{pattern} (the non-solution obtained by flipping the asked variable), and on data made of whole patterns the listing inducer pays at least the listing length $\mathrm{len}_m\approx m\log m$ of a full clause per pattern (semimeasure convention); with $\GE$, or with intermediate concepts and unbounded propagation, it pays $O(m\log m)$ bits in all (\cref{thm:shape:learning}).
+
+\paragraph{Depth against size.} For the implication chain $x_1\to\dots\to x_m$ the least $\UP_k$-usable theory over the base variables has as many clauses as a minimum $k$-hop transitive-closure spanner of the path (\cref{thm:shape:spanner}), $\Theta(m\,\ia_k(m))$ with $\ia_k$ the $k$-th inverse-Ackermann row \citep{alon1987optimal,bhattacharyya2012transitive}: $\binom m2$ at $k=1$, $\Theta(m\log m)$ at $k=2$; at depth $2$ intermediate concepts and wide clauses save at most a factor of about $2$ (\cref{thm:shape:depth2}).
+
+% ------------------------------------------------------------------
+\subsection{What this shows and does not show}\label{sec:shape:reading}
+
+\begin{question}\label{q:shape:beyond}
+\status{open}\src{synthesis 6 item 17; philosophy 1.4 item 2; shape 10}
+Does the dependence of written size on the pair (reasoner, vocabulary) extend beyond Boolean laws: to real-valued laws with numerical solvers, to probabilistic programs with conditioning, to simulation codes?
+\end{question}
+
+This is the precise form of the open question why theories are shaped like logical theories (\cref{q:phil:declarative}).
+
+\paragraph{Reading.}\label{rem:shape:reading}\status{assessment, resting on cor:shape:regimes, thm:shape:invisible, thm:shape:systems}\src{shape 10; philosophy 5.1}
+Whether a written theory suffices depends on the reader. Paired with a reasoner that can do algebra, a linear law's few equations suffice. Paired with one that only applies rules, the theory must spell out exponentially many derived laws, unless it is written with new intermediate quantities and the reader can chain many steps through them. Even then, some systems of laws need exponentially long written theories for such a reader, whatever quantities are introduced. The idealised inducer cannot see any of this, because it charges a theory by the length of a program that may compute the missing lemmas. The model does not show that logic, rather than probabilistic programs with conditioning or classes of models, is the right formal home for theories: the large separations are between pairs (reasoner, vocabulary). It does not touch the gap between a problem as posed and its formalisation, nor tacit skill (\cref{sec:limits:textbook}). Its laws are linear or implicational, its reasoners unit propagation, forward chaining and elimination, and its cost the written length. It is not a theorem about textbooks.

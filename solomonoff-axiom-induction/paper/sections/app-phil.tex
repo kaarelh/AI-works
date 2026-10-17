@@ -1,0 +1,191 @@
+% Appendix D (owner: phil). Plan: ../OUTLINE.md, section "app:phil"; rows: ../CLAIMS.md §5; notation: ../NOTATION.md.
+% Sources: philosophy Props 2.1, 2.2, 2.4, 2.5, 3.1, 3.2 with their proofs and computations (final record);
+% the computations are the record's c5, c6, c9 (1) outputs (numbers quoted outside statements).
+% Local symbols as listed at the top of phil.tex.
+\section{Proofs for what a theory does and is}\label{app:phil}
+
+This appendix states and proves the results that \cref{sec:phil} summarises in prose. \Cref{app:phil:answers,app:phil:conservation,app:phil:extractor,app:phil:predicting} concern questions against raw data; \cref{app:phil:flagpole,app:phil:system} give the precise setting of the flagpole toys, state and prove \cref{prop:phil:flagpole}, and extend it to a system of laws.
+
+\subsection{The answer distribution}\label{app:phil:answers}
+
+Questions, and the answers a theory proves, are defined in \cref{def:setting:questions}; $[k]:=\{1,\dots,k\}$.
+
+\begin{definition}[Answers]\label{def:phil:questions}
+\status{definition}\src{philosophy Def 2.0}
+A theory $T$ \emph{answers} a question $\mathcal Q=\{\varphi_1,\dots,\varphi_k\}$ if $B\cup T\vdash\varphi_i$ for some $i$, and \emph{answers it partially} if $B\cup T\vdash\bigvee_{i\in J}\varphi_i$ for some $J$ with $\emptyset\ne J\subsetneq[k]$.
+\end{definition}
+
+\begin{proposition}[The answer distribution]\label{prop:phil:answers}
+\status{proved; computed}\src{philosophy Prop 2.1}
+Let $\MA(D)>0$, let $\mathcal Q=\{\varphi_1,\dots,\varphi_k\}$ be a question, and let $\mathrm{Un}_D(\mathcal Q):=\Unif(E_D\setminus\bigcup_iO_{\varphi_i})/\Unif(E_D)$, the posterior probability that the random theory proves no direct answer. (a) $\sum_{i\le k}\Bel_D(\varphi_i)+\mathrm{Un}_D(\mathcal Q)=1$. (b) For $\emptyset\ne J\subsetneq[k]$, $\Bel_D(\bigvee_{i\in J}\varphi_i)\ge\sum_{i\in J}\Bel_D(\varphi_i)$, and the difference is the posterior probability that the random theory answers $\mathcal Q$ partially through $J$ but proves no $\varphi_i$ with $i\in J$; for $J=[k]$, $\Bel_D(\bigvee_i\varphi_i)=1$ and the difference is $\mathrm{Un}_D(\mathcal Q)$. (c) For $\mathcal Q=\{\varphi,\neg\varphi\}$, (a) is the trichotomy $\Bel_D(\varphi)+\Dis_D(\varphi)+\Indep_D(\varphi)=1$ of \cref{prop:basic:structure}.
+\end{proposition}
+
+\begin{proof}
+On $E_D$ the theory $B\cup A_\omega$ is consistent. If it proved $\varphi_i$ and $\varphi_j$ with $i\ne j$, it would prove $\varphi_i\wedge\varphi_j$, while $B\vdash\neg(\varphi_i\wedge\varphi_j)$; so it proves at most one direct answer. Hence the sets $E_D\cap O_{\varphi_i}$, $i\le k$, are pairwise disjoint, and together with $E_D\setminus\bigcup_iO_{\varphi_i}$ they partition $E_D$. Dividing the measures by $\Unif(E_D)>0$ gives (a), since $\Bel_D(\varphi_i)=\Unif(E_D\cap O_{\varphi_i})/\Unif(E_D)$.
+
+(b) For $i\in J$, $O_{\varphi_i}\subseteq O_{\bigvee_{j\in J}\varphi_j}$, and the sets $E_D\cap O_{\varphi_i}$ are pairwise disjoint; so
+\[
+\Unif\Big(E_D\cap O_{\bigvee_{j\in J}\varphi_j}\Big)=\sum_{i\in J}\Unif(E_D\cap O_{\varphi_i})+\Unif\Big(E_D\cap O_{\bigvee_{j\in J}\varphi_j}\setminus\bigcup_{i\in J}O_{\varphi_i}\Big).
+\]
+Divide by $\Unif(E_D)$: the last term is the posterior probability that the random theory proves $\bigvee_{j\in J}\varphi_j$, that is, answers $\mathcal Q$ partially through $J$, but proves no $\varphi_i$ with $i\in J$. For $J=[k]$, $B\vdash\bigvee_i\varphi_i$, so $E_D\subseteq O_{\bigvee_i\varphi_i}$ and $\Bel_D(\bigvee_i\varphi_i)=1$; by (a) the difference is $1-\sum_i\Bel_D(\varphi_i)=\mathrm{Un}_D(\mathcal Q)$.
+
+(c) For $\mathcal Q=\{\varphi,\neg\varphi\}$ ($k=2$), $\Bel_D(\neg\varphi)=\Dis_D(\varphi)$ and $\mathrm{Un}_D(\mathcal Q)$ is the posterior probability that the random theory decides neither, which is $\Indep_D(\varphi)$.
+\end{proof}
+
+\subsection{The conservation-law world}\label{app:phil:conservation}
+
+For even $m$, micro-states are $x\in\{0,1\}^m$ with weight $\lvert x\rvert$; the dynamics $\sigma$ is a uniformly random permutation of each weight class, so the weight is conserved (the law); $x_0$ is uniform on the class of weight $m/2$, of size $Z:=\binom m{m/2}$, and $x_{t+1}:=\sigma(x_t)$. The raw predictors $\mathsf{Raw}^+$, $\mathsf{Raw}^-$ are Bayes for ``$\sigma$ is a uniformly random permutation of each weight class'', resp.\ ``of $\{0,1\}^m$'', and their step-$t$ loss is that of predicting $x_{t+1}$ from $x_0,\dots,x_t$. The questions are ``what is $\lvert x_t\rvert$?'', $t=0,1,\dots$; the question predictors $\mathsf{Qa}^+$, $\mathsf{Qa}^-$, $\mathsf{Qa}^{\rm bin}$ are Bayes for ``$\lvert x_t\rvert=\lvert x_0\rvert$, with $\lvert x_0\rvert$ uniform on $\{0,\dots,m\}$'', ``the $\lvert x_t\rvert$ are i.i.d.\ uniform on $\{0,\dots,m\}$'' and ``the $\lvert x_t\rvert$ are i.i.d.\ binomial$(m,\frac12)$''. In each task $\mathsf{Mix}$ gives prior $\frac12$ to each of the task's two hypotheses ($\mathsf{Raw}^\pm$, resp.\ $\mathsf{Qa}^\pm$). Let $t^*$ be the length of the cycle of $\sigma$ through $x_0$.
+
+\begin{proposition}[The conservation-law world]\label{prop:phil:conservation}
+\status{proved; computed}\src{philosophy Prop 2.2}
+(a) For $t<t^*$ the step-$t$ losses of $\mathsf{Raw}^+$ and $\mathsf{Raw}^-$ are $\log(Z-t)$ and $\log(2^m-t)$; for $t\ge t^*$ both are $0$. The law's gain $\kappa_t:=\log\frac{2^m-t}{Z-t}$ ($t<t^*$) is nondecreasing in $t$; for $t\le Z/2$, $\log\frac{2^m}Z\le\kappa_t\le\log\frac{2^m}Z+1$, where $\log\frac{2^m}Z=\frac12\log\frac{\pi m}2+o(1)$, and the share $\kappa_t/\log(2^m-t)$ of the step loss is $O(\log m/m)$.
+(b) $\mathsf{Qa}^+$ pays $\log(m+1)$ for $\lvert x_0\rvert$ and $0$ afterwards, $\mathsf{Qa}^-$ pays $\log(m+1)$ per question; over $t_{\max}+1$ questions the law's share of the no-law loss is $t_{\max}/(t_{\max}+1)$.
+(c) In each task the cumulative loss of $\mathsf{Mix}$ exceeds that of the better of its two hypotheses by at most one bit, on every trajectory.
+(d) For $t<t^*$, $\log(2^m-t)=\kappa_t+\log(Z-t)$ with $\kappa_t=-\log P_{\mathsf{Raw}^-}(\lvert x_{t+1}\rvert=m/2\mid x_0,\dots,x_t)$: the law's raw gain is exactly the loss of $\mathsf{Raw}^-$'s own answer to ``what is $\lvert x_{t+1}\rvert$?''. The loss of $\mathsf{Qa}^{\rm bin}$ on each question is $\kappa_0$.
+\end{proposition}
+
+\begin{lemma}[Next state of a random permutation]\label{lem:phil:permutation}
+\status{proved}\src{philosophy Prop 2.2, proof of (a)}
+Let $\sigma$ be a uniformly random permutation of a finite set $X$, and let $x_0,\dots,x_t\in X$ be distinct with $\sigma(x_s)=x_{s+1}$ for $s<t$. Conditionally on these $t$ values of $\sigma$, $\sigma(x_t)$ is uniform on $(X\setminus\{x_0,\dots,x_t\})\cup\{x_0\}$, a set of $\lvert X\rvert-t$ elements.
+\end{lemma}
+
+\begin{proof}
+Conditionally on $\sigma(x_s)=x_{s+1}$ for $s<t$, the restriction of $\sigma$ to $X\setminus\{x_0,\dots,x_{t-1}\}$ is a uniformly random bijection onto $X\setminus\{x_1,\dots,x_t\}$, since every such bijection extends the given values to exactly one permutation. So $\sigma(x_t)$ is uniform on $X\setminus\{x_1,\dots,x_t\}=(X\setminus\{x_0,\dots,x_t\})\cup\{x_0\}$, which has $\lvert X\rvert-t$ elements.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:phil:conservation}]
+(a) For $t<t^*$ the states $x_0,\dots,x_t$ are distinct, all of weight $m/2$, and $x_{t+1}$ is either unvisited or $x_0$. Under the hypothesis of $\mathsf{Raw}^+$ the permutations of the weight classes are independent, and the trajectory stays in the class of $x_0$; \cref{lem:phil:permutation} with $X$ that class ($\lvert X\rvert=Z$) gives the predictive probability $1/(Z-t)$ of the true $x_{t+1}$, a step loss of $\log(Z-t)$. Under the hypothesis of $\mathsf{Raw}^-$ the lemma with $X=\{0,1\}^m$ gives $\log(2^m-t)$. For $t\ge t^*$ the path has returned to $x_0$, the cycle through $x_0$ is known to both predictors, and later states are determined: both losses are $0$.
+
+Since $2^m>Z\ge t^*>t$, the map $t\mapsto(2^m-t)/(Z-t)$ is increasing on $[0,Z)$ (its derivative is $(2^m-Z)/(Z-t)^2>0$), so $\kappa_t$ is nondecreasing and $\kappa_t\ge\kappa_0=\log(2^m/Z)$. For $t\le Z/2$, $(2^m-t)/(Z-t)\le2^m/(Z/2)$, so $\kappa_t\le\log(2^m/Z)+1$. By Stirling's formula, $Z=\binom m{m/2}=2^m\sqrt{2/(\pi m)}\,(1+o(1))$, so $\log(2^m/Z)=\frac12\log\frac{\pi m}2+o(1)$. Finally $\kappa_t\le\log(2^m/Z)+1=O(\log m)$, and $\log(2^m-t)\ge\log(2^m-Z/2)\ge m-1$ since $Z\le2^m$; so the share is $O(\log m/m)$ for $t\le Z/2$.
+
+(b) $\mathsf{Qa}^+$ predicts $\lvert x_0\rvert$ uniformly on $\{0,\dots,m\}$, a loss of $\log(m+1)$, and then $\lvert x_t\rvert=\lvert x_0\rvert$ with probability $1$, which is true since the weight is conserved: loss $0$. $\mathsf{Qa}^-$ pays $\log(m+1)$ on each question. Over the questions $t=0,\dots,t_{\max}$ the losses are $\log(m+1)$ and $(t_{\max}+1)\log(m+1)$, and the law saves the share $t_{\max}/(t_{\max}+1)$ of the latter.
+
+(c) In each task $\mathsf{Mix}$ is the Bayes mixture with prior $\frac12$ on the task's two hypotheses; $x_0$ has the same law under both raw hypotheses, so the posterior after $x_0$ is still $(\frac12,\frac12)$. By the chain rule, the cumulative loss of a Bayes mixture is $-\log$ of the mixture probability of the whole sequence. If the two hypotheses give the sequence probabilities $2^{-a}$ and $2^{-b}$, the mixture's loss is $-\log(\frac122^{-a}+\frac122^{-b})\le-\log(\frac122^{-\min(a,b)})=\min(a,b)+1$, on every trajectory.
+
+(d) Under $\mathsf{Raw}^-$, by \cref{lem:phil:permutation}, $x_{t+1}$ is uniform on a set of $2^m-t$ states, of which exactly $Z-t$ have weight $m/2$: the $Z-(t+1)$ unvisited states of the class of $x_0$, and $x_0$. So $P_{\mathsf{Raw}^-}(\lvert x_{t+1}\rvert=m/2\mid x_0,\dots,x_t)=(Z-t)/(2^m-t)=2^{-\kappa_t}$, and conditionally on that weight $x_{t+1}$ is uniform on those $Z-t$ states, which is exactly the predictive distribution of $\mathsf{Raw}^+$. The chain rule splits the step loss $\log(2^m-t)$ of $\mathsf{Raw}^-$ into $\kappa_t$, the loss of its prediction of the weight, and $\log(Z-t)$, the loss of $\mathsf{Raw}^+$. Finally, every $\lvert x_t\rvert$ equals $m/2$, and the binomial probability of $m/2$ is $Z2^{-m}$, so $\mathsf{Qa}^{\rm bin}$ pays $\log(2^m/Z)=\kappa_0$ on each question.
+\end{proof}
+
+\paragraph{Computations.}\status{computed}\src{philosophy §2.2 (computed: c5 A-D, c9 (1))}
+A computation (code in the accompanying repository, seeded) gives the following. At the start of a trajectory the law's gain per raw step is $1.871$, $2.148$, $2.348$, $2.837$, $3.331$, $3.829$, $5.326$ and $10.292$ bits at $m=8$, $12$, $16$, $32$, $64$, $128$, $1024$ and $10^6$, against $\frac12\log\frac{\pi m}2=1.826$, $2.118$, $2.326$, $2.826$, $3.326$, $3.826$, $5.326$, $10.292$; its share of the raw step loss is $0.23$, $0.18$, $0.15$, $0.089$, $0.052$, $0.030$, $0.0052$ and $1.0\times10^{-5}$. The value $\kappa_{Z/2}$ is $2.659$, $2.976$, $3.199$, $3.732$, $4.258$, $4.777$ and $6.308$ bits at $m=8,\dots,1024$; the loss of $\mathsf{Qa}^-$ per question is $3.170$, $3.700$, $4.088$, $5.044$, $6.022$, $7.011$ and $10.001$ bits, about twice $\kappa_0$. At $m=12$ ($Z=924$), averaging exactly over the cycle length (uniform on $\{1,\dots,Z\}$), the expected raw loss over $300$ steps is $2415.6$ bits with the law and $3004.9$ without (share $0.196$), and the mixture's is $2416.6$; over the $301$ questions the losses are $3.70$ and $1113.8$ bits (share $0.997$). Over a whole cycle the raw share is $0.232$ and the mean gain $2.75$ bits per step. In $2000$ simulated runs the mean raw losses are within one standard error of these values, and the mixture never exceeds the better hypothesis by more than one bit. The identity of (d) holds at $m=12$ for every $t<Z$ to within $1.8\times10^{-15}$ bits in floating point.
+
+\subsection{Questions from raw data and an extractor}\label{app:phil:extractor}
+
+\paragraph{Setting.} Let $\mathbb X$ be a finite alphabet, $\mu$ a computable probability measure on $\mathbb X^{\mathbb N}$ (the raw world), $(\varphi_q)_{q\in\mathbb N}$ a fixed computable family of sentences (the questions), and $\eta$ a partial computable function (the \emph{extractor}, which reads the answers off the raw data) with $\eta(q,x)\in\{0,1\}$ computed from a finite prefix of $x$; put $f_x(\varphi_q):=\eta(q,x)$ and $\mu_\eta(D):=\mu\{x:f_x\supseteq D\}$.
+
+\begin{proposition}[Raw modelling plus an extractor]\label{prop:phil:extractor}
+\status{proved, given thm:basic:dominance and the standard sampling construction}\src{philosophy Prop 2.4}
+If $f_x$ is consistent with $B$ for $\mu$-almost every $x$, then $\MA(D)\ge2^{-K(\mu)-K(\eta)-c}\mu_\eta(D)$ for every finite data set $D$ of question--answer pairs, so $\LA(D)\le-\log\mu_\eta(D)+K(\mu)+K(\eta)+c$; here $c$ depends also on the family $(\varphi_q)$. For a computable sequence $x$ with $f_x$ consistent with $B$, $\LA(D)\le K(x)+K(\eta)+c$ on every $D$ with $f_x\supseteq D$.
+\end{proposition}
+
+\begin{proof}
+\emph{Sampling.} There is a partial computable map $\Psi$ from tapes to $\mathbb X^{\mathbb N}$, computable from an index of $\mu$, that is defined for $\Unif$-almost every tape and satisfies $\Psi_*\Unif=\mu$. This is the standard construction: read tape bits to refine a dyadic interval, and output the next symbol $s$ as soon as the interval lies inside the $\mu$-interval of $s$ given the symbols already output; it fails only on the null set of tapes that hit interval boundaries. Each output symbol depends on a finite prefix of the tape.
+
+\emph{The theory machine.} Let $G$ be the theory machine that, on a tape $\omega$, computes $\Psi(\omega)$ as far as needed and, for each $q$, emits $\varphi_q^{\eta(q,\Psi(\omega))}$ once the tape prefix read so far fixes a prefix of $\Psi(\omega)$ on which the computation of $\eta(q,\cdot)$ halts. Each emission depends on a finite prefix of $\omega$, so $G$ is a c.e.\ set of pairs (prefix, sentence) as \cref{def:setting:machine} requires, and $K(G)\le K(\mu)+K(\eta)+c$, where $c$ includes an index of the fixed family $(\varphi_q)$. If $\Psi(\omega)$ is defined, then $A^G_\omega=\Gamma_{f_{\Psi(\omega)}}$, the set of labelled sentences of the labelling $f_{\Psi(\omega)}$.
+
+\emph{The bound.} Let $H$ be the set of $x$ for which $f_x$ is consistent with $B$; $\mu(H)=1$ by hypothesis. On every tape $\omega$ with $\Psi(\omega)$ defined, $\Psi(\omega)\in H$ and $f_{\Psi(\omega)}\supseteq D$, the theory $B\cup A^G_\omega$ is consistent and proves $\psi_D$, so $\omega\in E^G_D$. Hence $\nu_G(D)\ge\Unif\{\omega:\Psi(\omega)\in H,\ f_{\Psi(\omega)}\supseteq D\}=\mu\{x\in H:f_x\supseteq D\}=\mu_\eta(D)$. By \cref{thm:basic:dominance}, $\MA(D)\ge2^{-K(\nu_G)}\nu_G(D)\ge2^{-K(G)}\nu_G(D)\ge2^{-K(\mu)-K(\eta)-c}\mu_\eta(D)$, and taking $-\log$ gives the bound on $\LA$. For a computable sequence $x$, take $\mu=\delta_x$, with $K(\delta_x)\le K(x)+c$; the hypothesis is that $f_x$ is consistent with $B$, and $\mu_\eta(D)=1$ exactly when $f_x\supseteq D$.
+\end{proof}
+
+The constant depends on the question family because the theory machine must write the sentences $\varphi_q$. The converse of the proposition fails badly, since answers do not determine raw data; in the conservation-law world the raw loss exceeds the question loss by the whole micro-entropy (\cref{prop:phil:conservation}).
+
+\subsection{Answering and predicting}\label{app:phil:predicting}
+
+The following gives a formal vocabulary for ``answering questions is more than predicting data'': answering implies predicting, (a), but not conversely, (b), and success at predicting data that present a theory does not settle the questions the data leave open, (c). Part (d) is the coherence that a predictor of separate labels lacks.
+
+\begin{proposition}[Answering and predicting]\label{prop:phil:predicting}
+\status{(a)-(c) proved there; (d) proved; computed}\src{philosophy Prop 2.5}
+(a) If a consistent r.e.\ theory $T$ proves every datum of a consistent reveal sequence, the cumulative loss of $\MA$ is at most $-\log\UA(\Exts T)\le\Keq(T)+c$ in the semimeasure convention, in any order.
+(b) On the lottery stream of \cref{thm:logic:lottery}, $\MA$ has bounded loss in the semimeasure convention, while no consistent r.e.\ theory proves every datum and $\WA(D_n)\to0$.
+(c) On two-valued data presenting an incomplete consistent r.e.\ theory $T^*$, the limit posterior is the prior restricted to the consistent extensions of $T^*$, and on every sentence independent of $B\cup T^*$ all three values $\Bel$, $\Dis$, $\Indep$ have positive limits; three-valued data identify the class of $T^*$.
+(d) For all $D$ with $\MA(D)>0$ and all sentences, $\Bel_D(\bigwedge_{i\le k}\varphi_i)\ge1-\sum_{i\le k}(1-\Bel_D(\varphi_i))$, and $\Bel_D(\psi)\ge\Bel_D(\varphi)$ whenever $B\cup\{\varphi\}\vdash\psi$. So the sentences with belief at least $1-\delta$ are closed under entailment and, with error $k\delta$, under $k$-fold conjunction.
+\end{proposition}
+
+\begin{proof}[Proof of \cref{prop:phil:predicting}]
+(a) By \cref{prop:basic:structure}(d) the cumulative loss in the semimeasure convention is $\LA(D_n)-\LA(\emptyset)$, in any order, and by \cref{thm:basic:loss} it is at most $-\log\UA(\Exts T)\le\Keq(T)+c$.
+
+(b) In the setting of \cref{thm:logic:lottery}, part (a) of that theorem bounds $\MA(D_n)$ below by a positive constant independent of $n$, so the cumulative loss $\LA(D_n)-\LA(\emptyset)$ is bounded; part (b) says that no consistent r.e.\ theory proves every datum (with $B$); and part (c) gives $\WA(D_n)\to0$.
+
+(c) This is \cref{prop:basic:limits}(b), (c): if $B\cup T^*$ is incomplete and $\Cn(D_\infty^\pm)=\Cn(T^*)$, the limit posterior is the prior restricted to the consistent extensions of $T^*$, and for every $\psi$ independent of $B\cup T^*$ the limits of $\Bel_{D_n}(\psi)$ and $\Dis_{D_n}(\psi)$ lie in $(0,1)$ while $\lim_n\Indep_{D_n}(\psi)\ge\UA[T^*]/\UA(\Exts T^*)>0$; and if every sentence appears with its $T^*$-trichotomy label, the posterior probability of the class of $T^*$ tends to $1$.
+
+(d) A theory that proves $\varphi$ and $\psi$ proves $\varphi\wedge\psi$, so $O_\varphi\cap O_\psi\subseteq O_{\varphi\wedge\psi}$. Within $E_D$,
+\[
+\Unif(O_\varphi\cap O_\psi\cap E_D)\ge\Unif(O_\varphi\cap E_D)+\Unif(O_\psi\cap E_D)-\Unif(E_D);
+\]
+dividing by $\Unif(E_D)$ gives $\Bel_D(\varphi\wedge\psi)\ge\Bel_D(\varphi)+\Bel_D(\psi)-1$, and induction on $k$ gives $\Bel_D(\bigwedge_{i\le k}\varphi_i)\ge1-\sum_{i\le k}(1-\Bel_D(\varphi_i))$. If $B\cup\{\varphi\}\vdash\psi$, then $O_\varphi\subseteq O_\psi$, so $\Bel_D(\psi)\ge\Bel_D(\varphi)$.
+\end{proof}
+
+\subsection{The flagpole}\label{app:phil:flagpole}
+
+\paragraph{Setting.} The language has two sorts, poles and reals; $B$ is the theory of real closed fields on the real sort. There are pole constants $p_1,\dots,p_{N_{\rm p}}$, a function symbol $\mathrm{ht}$ from poles to reals (the height) and a function symbol $\mathrm{sh}$ from poles and reals to reals ($\mathrm{sh}(p,u)$ is the length of the shadow of $p$ when the tangent of the sun's elevation is $u>0$). Data are sentences $\mathrm{sh}(p_i,u)=v$ and $\mathrm{ht}(p_i)=v$ with rational numerals $u,v$; interval versions behave in the same way. The two formulations of the shadow law are
+\begin{align*}
+\Lambda_h&:=\forall p\,\forall u\,\big(u>0\to\mathrm{sh}(p,u)\cdot u=\mathrm{ht}(p)\big),\\
+\Lambda_s&:=\forall p\,\forall u\,\big(u>0\to\mathrm{sh}(p,u)\cdot u=\mathrm{sh}(p,1)\big)\ \wedge\ \forall p\,\mathrm{ht}(p)=\mathrm{sh}(p,1),
+\end{align*}
+and, with rational numerals $a_i$ for the heights, the four theories are
+\begin{align*}
+T_H&:=\Lambda_h+\{\mathrm{ht}(p_i)=a_i\}_{i\le N_{\rm p}}, & T_S&:=\Lambda_h+\{\mathrm{sh}(p_i,1)=a_i\}_{i\le N_{\rm p}},\\
+T'_H&:=\Lambda_s+\{\mathrm{ht}(p_i)=a_i\}_{i\le N_{\rm p}}, & T'_S&:=\Lambda_s+\{\mathrm{sh}(p_i,1)=a_i\}_{i\le N_{\rm p}}.
+\end{align*}
+In $T_S$ the shadow at $45^\circ$ ``explains'' the height. The \emph{intervention vocabulary} consists of $\mathrm{sh}_H(p,u,v)$, the shadow length after the height of $p$ is set to $v$, and $\mathrm{ht}_S(p,v)$, the height after the reference shadow $\mathrm{sh}(p,1)$ is set to $v$ by an intervention on the shadow (for instance, by an obstacle). The causal extensions, with the height exogenous and with the shadow exogenous, are
+\begin{align*}
+C_H&:=T_H+\big\{\forall p\,\forall u\,\forall v\,\big(u>0\to\mathrm{sh}_H(p,u,v)\cdot u=v\big),\ \forall p\,\forall v\,\mathrm{ht}_S(p,v)=\mathrm{ht}(p)\big\},\\
+C_S&:=T_S+\big\{\forall p\,\forall u\,\forall v\,\mathrm{sh}_H(p,u,v)=\mathrm{sh}(p,u),\ \forall p\,\forall v\,\mathrm{ht}_S(p,v)=v\big\}.
+\end{align*}
+
+\paragraph{Derivation charges.} The cost of a derivation is the number of closed instances it uses of the universally quantified conjuncts of the law axioms ($\Lambda_h$ has one such conjunct, $\Lambda_s$ two); steps in $B$ and uses of the initial conditions are free. The \emph{least cost} of a datum for a theory is the least number of such instances that, together with $B$ and the theory's initial conditions, entail it. By completeness this is the least cost of a derivation, so the count is semantic, as in Herbrand's theorem.
+
+\begin{proposition}[The flagpole]\label{prop:phil:flagpole}
+\status{proved; computed}\src{philosophy Prop 3.1}
+(a) $T_H$, $T_S$, $T'_H$, $T'_S$ are deductively equivalent over $B$; so every data set is compatible with all four or with none, in the coin-free version the posterior odds of any two programs for them equal their prior odds on every data set compatible with them, and $\lvert K(T_S)-K(T_H)\rvert\le c$. (b) Under derivation charges, every shadow datum $\mathrm{sh}(p_i,u)=v$ with $u\ne1$ that they entail needs exactly one instance from $T_H$ and $T'_S$, whose initial conditions sit at the hub of their formulation, and exactly two from $T_S$ and $T'_H$: which quantity is the hub is a property of the formulation, not of the world. (c) $C_H$ and $C_S$ have the same consequences in the old vocabulary, and one interventional datum separates them.
+\end{proposition}
+
+The precise form of part (b) is as follows. For a shadow datum $\mathrm{sh}(p_i,u)=a_i/u$ with $u\ne1$, the least costs for $T_H$, $T_S$, $T'_H$, $T'_S$ are $1$, $2$, $2$, $1$; for a height datum $\mathrm{ht}(p_i)=a_i$ they are $0$, $1$, $0$, $1$; and for a reference-shadow datum $\mathrm{sh}(p_i,1)=a_i$ they are $1$, $0$, $1$, $0$. So the two hub theories $T_H$ and $T'_S$ have equal costs on all shadow data with $u\ne1$. Their law texts differ by the constant $\lvert\Lambda_s\rvert-\lvert\Lambda_h\rvert$, and in a literal code (\cref{app:phil:system}) their initial conditions differ by $N_{\rm p}\Delta_{\rm sh}$, where $\Delta_{\rm sh}:=\lvert\mathrm{sh}(x,1)\rvert-\lvert\mathrm{ht}(x)\rvert$ is the extra length of the reference-shadow term; this is $0$ if the language has a primitive for the reference shadow, and then the two texts differ by $\lvert\Lambda_s\rvert-\lvert\Lambda_h\rvert$, independently of $N_{\rm p}$ and the data. The precise form of (c) is: $C_H$ and $C_S$ have the same consequences in the language without $\mathrm{sh}_H$ and $\mathrm{ht}_S$; $C_H\vdash\mathrm{sh}_H(p_1,1,2a_1)=2a_1$ (``doubling the pole doubles its $45^\circ$ shadow''), while $C_S\vdash\mathrm{sh}_H(p_1,1,2a_1)=a_1$, which refutes it when $a_1\ne0$; and $C_H\vdash\mathrm{ht}_S(p_1,v)=a_1$ while $C_S\vdash\mathrm{ht}_S(p_1,v)=v$, for every numeral $v$.
+
+\begin{lemma}[Least costs in a star]\label{lem:phil:star}
+\status{proved}\src{philosophy Props 3.1(b), 3.2(d), proofs of the lower bounds}
+Let $T$ be one of the theories of this appendix without the dark poles: law axioms whose universally quantified conjuncts have closed instances of the form $\pi\to s_1=\rho\cdot s_2$, with $\pi$ a condition on real numerals, $s_1,s_2$ terms of one pole and $\rho$ a real term that $B$ proves nonzero when $\pi$ holds, and one initial condition $s(p_i)=a_i$ per pole. For a pole $p_i$, let the \emph{instance graph} have as vertices the closed terms $\mathrm{ht}(p_i)$, $\mathrm{sh}(p_i,u)$ (terms whose real arguments $B$ proves equal are identified) and, in \cref{app:phil:system}, $\mathrm{qt}_j(p_i)$, and an edge for each closed instance whose condition $B$ proves, joining the two terms it relates (an instance that relates a term to itself is trivial and is ignored). If the instance graph is a tree, the least cost of a datum $s'(p_i)=v$ that $T$ entails is the distance in the graph from $s'(p_i)$ to the vertex fixed by the initial condition.
+\end{lemma}
+
+\begin{proof}
+The instances along the path from the fixed vertex to $s'(p_i)$, together with $B$ and the initial condition, determine the value of $s'(p_i)$; since $T$ entails the datum, that value is $v$, so the distance is an upper bound. Conversely, let $I$ be a set of fewer instances than the distance. As the graph is a tree, the edges of $I$ do not connect $s'(p_i)$ to the fixed vertex. Fix a model of $T$ over $\mathbb R$ (each theory of this appendix has one). Build a model of $B$, the initial conditions and $I$ over $\mathbb R$ as follows: on the connected component (for the edges of $I$) of the fixed vertex, and on every term of another pole, keep the values of the fixed model; on the component of $s'(p_i)$, give $s'(p_i)$ a value other than $v$ and propagate it along the edges of $I$, which is consistent because the component is a tree and each edge is an invertible linear relation; give all other terms arbitrary values. Instances with a false condition hold trivially. This model falsifies the datum, so $I$ does not entail it.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:phil:flagpole}]
+(a) At $u=1$, $\Lambda_h$ gives $\mathrm{sh}(p,1)=\mathrm{ht}(p)$; given this, $\mathrm{sh}(p,u)\cdot u=\mathrm{ht}(p)$ and $\mathrm{sh}(p,u)\cdot u=\mathrm{sh}(p,1)$ are equivalent. So $B\vdash\Lambda_h\to\Lambda_s$; conversely $\Lambda_s$ gives $\mathrm{ht}(p)=\mathrm{sh}(p,1)$ and hence $\Lambda_h$. Given either law, the initial conditions $\mathrm{ht}(p_i)=a_i$ and $\mathrm{sh}(p_i,1)=a_i$ are interderivable, so the four theories are deductively equivalent over $B$. Compatibility of a theory with a data set (consistent with $B$ and proving every datum) depends only on its deductive closure, so every data set is compatible with all four or with none. In the coin-free version the posterior weight of a program is $2^{-\lvert p\rvert}$ times the indicator of compatibility, divided by the normaliser, so the odds of two compatible programs are their prior odds. The map on axiom lists that replaces each $\mathrm{ht}(p_i)=a_i$ by $\mathrm{sh}(p_i,1)=a_i$, and its inverse, are fixed computable maps, so $\lvert K(T_S)-K(T_H)\rvert\le c$.
+
+(b) For each pole, the instances of $\Lambda_h$ join $\mathrm{ht}(p_i)$ to each $\mathrm{sh}(p_i,u)$ (a star centred at the height), and the instances of $\Lambda_s$ join $\mathrm{sh}(p_i,1)$ to each $\mathrm{sh}(p_i,u)$ with $u\ne1$ and to $\mathrm{ht}(p_i)$ (a star centred at the reference shadow); instances with $u\le0$ have false conditions, and instances at other poles are not connected to $p_i$. Both graphs are trees, and \cref{lem:phil:star} gives the counts: in the height-centred star with the height fixed ($T_H$), shadows and the reference shadow are at distance $1$; with the reference shadow fixed ($T_S$), a shadow with $u\ne1$ is at distance $2$ and the height at $1$; in the shadow-centred star with the height fixed ($T'_H$), a shadow with $u\ne1$ is at distance $2$ and the reference shadow at $1$; with the reference shadow fixed ($T'_S$), shadows and the height are at distance $1$. The law texts of $T_H$ and $T'_S$ are $\Lambda_h$ and $\Lambda_s$; their initial conditions differ only in the terms $\mathrm{ht}(p_i)$ and $\mathrm{sh}(p_i,1)$, once per pole.
+
+(c) Without the intervention symbols, $C_H$ and $C_S$ are $T_H$ and $T_S$ plus axioms about fresh symbols. Every model of $T_H$ expands to a model of $C_H$ (put $\mathrm{sh}_H(p,u,v):=v/u$ for $u>0$, arbitrary otherwise, and $\mathrm{ht}_S(p,v):=\mathrm{ht}(p)$), and every model of $T_S$ to a model of $C_S$ (put $\mathrm{sh}_H(p,u,v):=\mathrm{sh}(p,u)$ and $\mathrm{ht}_S(p,v):=v$). So $C_H$ and $C_S$ are conservative over $T_H$ and $T_S$, whose consequences coincide by (a). The interventional consequences are instances of the added axioms: in $C_H$, $\mathrm{sh}_H(p_1,1,2a_1)\cdot1=2a_1$ and $\mathrm{ht}_S(p_1,v)=\mathrm{ht}(p_1)=a_1$; in $C_S$, $\mathrm{sh}_H(p_1,1,2a_1)=\mathrm{sh}(p_1,1)=a_1$ and $\mathrm{ht}_S(p_1,v)=v$. If $a_1\ne0$ then $2a_1\ne a_1$, so $C_S$ refutes the datum $\mathrm{sh}_H(p_1,1,2a_1)=2a_1$ that $C_H$ proves.
+\end{proof}
+
+\paragraph{Computations.}\status{computed}\src{philosophy §3.2 (computed: c6)}
+A computation (code in the accompanying repository) confirms the counts by exhaustive search over all subsets of finite instance pools, with exact linear algebra over the rationals, on $500$ random data sets with one to four poles (shadows at $u=2$, and at $u=3$ in a second implementation); on $2000$ random data the four theories prove, refute or leave open exactly the same data. In the literal syntax of that code (numerals counted as one token), $\lvert\Lambda_s\rvert-\lvert\Lambda_h\rvert=20$ tokens and $\Delta_{\rm sh}=1$ token, so $T_S$ is longer than $T_H$ by one token per pole.
+
+\subsection{The flagpole with a system of laws}\label{app:phil:system}
+
+Kitcher's answer to the asymmetry appeals to other laws in which the height figures, which the toy of \cref{prop:phil:flagpole} lacks. We add such laws.
+
+\paragraph{Setting.} As in \cref{app:phil:flagpole}, with further function symbols $\mathrm{qt}_1,\dots,\mathrm{qt}_k$ from poles to reals (further quantities: weight, the height on the construction plan, and so on), nonzero rational numerals $\theta_1,\dots,\theta_k$, and data $\mathrm{qt}_j(p_i)=v$. The laws in height form and in shadow form are $\Lambda^{\rm ht}_j:=\forall p\,\mathrm{qt}_j(p)=\theta_j\cdot\mathrm{ht}(p)$ and $\Lambda^{\rm sh}_j:=\forall p\,\mathrm{qt}_j(p)=\theta_j\cdot\mathrm{sh}(p,1)$. The theories are the height hub $T^k_H:=\Lambda_h+\{\Lambda^{\rm ht}_j\}_{j\le k}+\{\mathrm{ht}(p_i)=a_i\}_i$, the mixed theory $T^k_S:=\Lambda_h+\{\Lambda^{\rm ht}_j\}_j+\{\mathrm{sh}(p_i,1)=a_i\}_i$, and the shadow hub $T^k_{SS}:=\Lambda_s+\{\Lambda^{\rm sh}_j\}_j+\{\mathrm{sh}(p_i,1)=a_i\}_i$.
+
+\emph{Dark variant.} Add a predicate $\mathrm{Sunlit}$ on poles, restrict the shadow law to sunlit poles, $\Lambda^{\rm D}_h:=\forall p\,\big(\mathrm{Sunlit}(p)\to\forall u\,(u>0\to\mathrm{sh}(p,u)\cdot u=\mathrm{ht}(p))\big)$, and take sunlit poles $p_1,\dots,p_{N_{\rm p}}$ and dark poles $p'_1,\dots,p'_{N_{\rm d}}$, with the axioms $\mathrm{Sunlit}(p_i)$ and $\neg\mathrm{Sunlit}(p'_l)$ in every theory and rational numerals $a'_l$ for the heights of the dark poles. Laws in shadow form must split cases:
+\[
+\Lambda^{\rm sh,D}_j:=\forall p\,\Big(\big(\mathrm{Sunlit}(p)\to\mathrm{qt}_j(p)=\theta_j\cdot\mathrm{sh}(p,1)\big)\wedge\big(\neg\mathrm{Sunlit}(p)\to\mathrm{qt}_j(p)=\theta_j\cdot\mathrm{ht}(p)\big)\Big).
+\]
+The theories are $T^{k,\rm D}_H:=\Lambda^{\rm D}_h+\{\Lambda^{\rm ht}_j\}_j+\{\mathrm{ht}(p_i)=a_i\}_i+\{\mathrm{ht}(p'_l)=a'_l\}_l$ and $T^{k,\rm D}_{SS}:=\Lambda^{\rm D}_h+\{\Lambda^{\rm sh,D}_j\}_j+\{\mathrm{sh}(p_i,1)=a_i\}_i+\{\mathrm{ht}(p'_l)=a'_l\}_l$, each with the $\mathrm{Sunlit}$ axioms. A \emph{literal code} charges a theory by the number of symbols it writes, each axiom separately, without definitions; $\lvert\cdot\rvert$ denotes this length, a symbol $\mathrm{qt}_j$ counts as one token, and $\Delta_{\rm sh}:=\lvert\mathrm{sh}(x,1)\rvert-\lvert\mathrm{ht}(x)\rvert$ is the extra length of the reference-shadow term ($\Delta_{\rm sh}=0$ if the language has a primitive for the reference shadow).
+
+\begin{proposition}[The flagpole with a system of laws]\label{prop:phil:flagpolesystem}
+\status{proved}\src{philosophy Prop 3.2}
+(a) \emph{Class tie.} $T^k_H$, $T^k_S$ and $T^k_{SS}$ are deductively equivalent over $B$, and so are $T^{k,\rm D}_H$ and $T^{k,\rm D}_{SS}$; so for every $k$ no data set separates them, and their deductive classes coincide.
+(b) \emph{Universal prior.} $\lvert K(T^k_{SS})-K(T^k_H)\rvert\le c$ and $\lvert K(T^{k,\rm D}_{SS})-K(T^{k,\rm D}_H)\rvert\le c$, with $c$ independent of $k$, $N_{\rm p}$, $N_{\rm d}$ and the numerals.
+(c) \emph{Literal codes.} $\lvert T^k_{SS}\rvert-\lvert T^k_H\rvert=(\lvert\Lambda_s\rvert-\lvert\Lambda_h\rvert)+(k+N_{\rm p})\Delta_{\rm sh}$. In the dark variant, $\lvert T^{k,\rm D}_{SS}\rvert-\lvert T^{k,\rm D}_H\rvert=k\,\Delta_{\rm split}+\sum_{j\le k}\lvert\theta_j\rvert+N_{\rm p}\Delta_{\rm sh}$, where $\Delta_{\rm split}>0$ is the length of the case-split frame and $\lvert\theta_j\rvert$ the length of the numeral $\theta_j$, which the split law writes twice; so the shadow hub loses by at least $k\,\Delta_{\rm split}$, an amount growing with $k$, even when $\Delta_{\rm sh}=0$. With one definition the overhead of the laws is a constant: define $\mathrm{z}(p)$ once as $\mathrm{sh}(p,1)$ on sunlit poles and $\mathrm{ht}(p)$ on dark ones, and write every law in $\mathrm{z}$; in every model of the theory, $\mathrm{z}$ is coextensive with $\mathrm{ht}$.
+(d) \emph{Derivation charges} (instances of universally quantified conjuncts, as in \cref{app:phil:flagpole}). A datum $\mathrm{qt}_j(p_i)=\theta_ja_i$ has least cost $1$ for $T^k_H$ and $T^k_{SS}$, and $2$ for the mixed theory $T^k_S$. On shadow data with $u\ne1$ the two hub theories have least cost $1$ each; on heights $T^k_H$ has $0$ and $T^k_{SS}$ has $1$; on reference shadows the reverse.
+\end{proposition}
+
+\begin{proof}
+(a) Each theory contains a form of the shadow law, which gives $B\vdash\mathrm{ht}(p)=\mathrm{sh}(p,1)$ for every pole $p$ (for every sunlit pole in the dark variant), as in the proof of \cref{prop:phil:flagpole}(a). Substituting, each law in shadow form is equivalent to the law in height form, and each reference-shadow initial condition to the corresponding height condition. In the dark variant, the case split collapses to $\mathrm{qt}_j(p)=\theta_j\cdot\mathrm{ht}(p)$, because on sunlit poles $\mathrm{sh}(p,1)=\mathrm{ht}(p)$ by $\Lambda^{\rm D}_h$ at $u=1$.
+
+(b) The syntactic translations and their inverses are fixed computable maps on axiom lists: from $T^k_H$ to $T^k_{SS}$, replace $\Lambda_h$ by $\Lambda_s$, each $\Lambda^{\rm ht}_j$ by $\Lambda^{\rm sh}_j$ and each $\mathrm{ht}(p_i)=a_i$ by $\mathrm{sh}(p_i,1)=a_i$; from $T^{k,\rm D}_H$ to $T^{k,\rm D}_{SS}$, replace each $\Lambda^{\rm ht}_j$ by $\Lambda^{\rm sh,D}_j$ (reading $\theta_j$ and $\mathrm{qt}_j$ off the axiom) and the initial condition of each pole declared sunlit by its reference-shadow form. So a program for one list yields a program for the other at a constant extra length, independent of $k$, $N_{\rm p}$, $N_{\rm d}$ and the numerals.
+
+(c) Counting symbols: each $\Lambda^{\rm sh}_j$ differs from $\Lambda^{\rm ht}_j$ by one occurrence of the replaced term, and so does each sunlit initial condition; this gives $(k+N_{\rm p})\Delta_{\rm sh}$ besides the law texts. Each $\Lambda^{\rm sh,D}_j$ is longer than $\Lambda^{\rm ht}_j$ by a fixed frame of length $\Delta_{\rm split}>0$ (the connectives, the two $\mathrm{Sunlit}$ atoms, a second copy of $\mathrm{qt}_j(p)=\cdot$, and the term $\mathrm{sh}(p,1)$) and by a second copy of the numeral $\theta_j$; both dark theories contain $\Lambda^{\rm D}_h$, the dark initial conditions and the $\mathrm{Sunlit}$ axioms. The definition of $\mathrm{z}$ is a single axiom of constant length, and laws written in $\mathrm{z}$ have the length of the laws written in $\mathrm{ht}$. In every model of the theory, $\mathrm{z}(p)=\mathrm{sh}(p,1)=\mathrm{ht}(p)$ on sunlit poles by $\Lambda^{\rm D}_h$ at $u=1$, and $\mathrm{z}(p)=\mathrm{ht}(p)$ on dark poles by the definition.
+
+(d) For each pole the instance graphs are trees: for $T^k_H$ and $T^k_S$, a star centred at $\mathrm{ht}(p_i)$ with leaves $\mathrm{sh}(p_i,u)$ and $\mathrm{qt}_j(p_i)$; for $T^k_{SS}$, a star centred at $\mathrm{sh}(p_i,1)$ with leaves $\mathrm{sh}(p_i,u)$ ($u\ne1$), $\mathrm{ht}(p_i)$ and $\mathrm{qt}_j(p_i)$. \Cref{lem:phil:star} gives the counts: $\mathrm{qt}_j(p_i)$ is at distance $1$ from the fixed centre in $T^k_H$ and $T^k_{SS}$, and at distance $2$ from the fixed leaf $\mathrm{sh}(p_i,1)$ in $T^k_S$; the shadow, height and reference-shadow counts are those of \cref{prop:phil:flagpole}(b) for $T_H$ and $T'_S$.
+\end{proof}

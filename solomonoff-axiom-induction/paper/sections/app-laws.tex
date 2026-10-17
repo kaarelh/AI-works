@@ -1,0 +1,678 @@
+% Appendix G: proofs for approximate laws and the best system (owner: laws group).
+% Plan: ../OUTLINE.md (app:laws); rows: ../CLAIMS.md section 8; notation: ../NOTATION.md section 8.1.
+% Full statements of the results that sec:laws states in words, and the proofs of all results of sec:laws.
+% Local symbols (renamed from the source items, NOTATION section 11 and local choices):
+%   c_time (pi_c); zeta_j (eta_j); patch set Z (S); \underline f,\overline f (l,u); \mathcal G, \mathcal F (G, F);
+%   band position w (x); boundary position v (V); \vartheta (phi of Lemma 3.6); \bar c_\Delta(w) (C_Delta(w));
+%   P^\star (true conditional law P); level x, times tau_x, varsigma_x (L, tau_L, sigma_L of Thm 3.8);
+%   map Psi (F of section 4), dimension m (d), propagated tolerance \varepsilon^{(r)} (e_r);
+%   T_tr, h_tr (N, h_N); system \star (M); \mathrm{El}_b (E_b); literal cost gamma (c); n_tot (N);
+%   Rot, \mathbf P, \eta_c, \bar t, T_new (R, P, eta, W, T_N); Pt_f, Pt_s, Cop (P_f, P_s, C);
+%   \theta_{sh}, k_{sh} (C, k_C); Act (Lewis's F); module lengths ||.|| without stop bit.
+\section{Proofs for approximate laws and the best system}\label{app:laws}
+
+This appendix states in full the results of \cref{sec:laws} that the main text states in words, and proves every result of that section. The notation is that of \cref{def:laws:setting,def:laws:settingfull}. We measure a finite theory by $\lVert T\rVert$, without the stop bit of a prefix-free code of theories; using the prefix-free length $\lVert T\rVert+1$ instead changes every statement below by an additive constant at most, and shifts $J_\lambda$ by the same amount $\lambda$ on every theory, so that it leaves the $\lambda$-MAPs unchanged. Computed numbers come from seeded scripts in the accompanying repository; they are never part of a statement.
+
+\subsection{The setting in full}\label{app:laws:setting}
+
+\begin{definition}[The setting in full, continuing \cref{def:laws:setting}]\status{definition}\src{laws Defs 1.1, 1.3, 1.5, 1.7; \S2 setting; Setting S3}\label{def:laws:settingfull}
+\leavevmode
+\begin{enumerate}[label=(\alph*),itemsep=1pt,topsep=2pt]
+\item \emph{Answers and objectives.} $\dom D$ lists the questions of a data set $D$ in a canonical order, and $y_D$ their answers. $A_T(\mathcal Q):=\{a'\in\mathcal Q:B\cup T\nvdash\neg a'\}$ is the set of answers that $T$ allows. $J^Q_\lambda$, $J^F_\lambda$ and $J^R_\lambda$ are $J_\lambda$ with $\Exc^Q$, $\Exc^F$ and $\Exc^R$.
+\item \emph{Interval laws.} $B=\mathrm{RCF}$ is decidable and complete (standard; \citealp{tarski1951decision}), and $\mathsf R$ is rational. The total computable maps $\underline f\le\overline f:I\to\mathbb Q\cap[0,\mathsf R]$ of a pointwise interval law are named by a codeword of a fixed decidable prefix-free presentation language, and $\lVert T\rVert$ is the codeword's length. The honest law $T^\varepsilon$ has $\underline f=f-\varepsilon$ and $\overline f=f+\varepsilon$, clipped to $[0,\mathsf R]$. The questions of interval data partition $[0,\mathsf R)$ into finitely many cells with rational endpoints. With $C_t$ the intersection of the cells that $D$ assigns to the time $t$,
+\[P^R_T(D):=\prod_t\frac{\lvert C_t\cap[\underline f(t),\overline f(t)]\rvert}{\overline f(t)-\underline f(t)}\]
+($\lvert\cdot\rvert$ the length; the factor is $\ind[\underline f(t)\in C_t]$ if $\underline f(t)=\overline f(t)$), the probability that values drawn uniformly and independently from the law's intervals lie in the cells of the data.
+\item \emph{Regime G.} Datum $j$ is ``$q(t_j)\in[v_j-\delta,v_j+\delta]$'', with $v_j=q(t_j)+\zeta_j$ rational and $\lvert\zeta_j\rvert\le\delta_0\le\delta$.
+\item \emph{Regime R.} $q$ lives on a circle of circumference $\mathsf R$. Datum $j$ is about a \emph{fresh} time $t_j$ (the $t_j$ form an injective computable sequence of numerals); the errors $e_j:=e(t_j)$ are i.i.d.; and datum $j$ is the cell of width $\Delta$ ($\mathsf R/\Delta$ an integer) that contains $q(t_j)$ in a grid shifted by a dither $u_j$, uniform and independent of everything else.
+\end{enumerate}
+\end{definition}
+
+\paragraph{Technical points.} (i) \emph{Rational cells.} In regime R the dither $u_j$ is uniform on a grid $\{k/N_{\rm d}:0\le k<N_{\rm d}\}$, so that cell endpoints are rational. Every event used below has the form ``$u_j$ lies in an interval of length $\ell'$'', whose grid probability is within $1/N_{\rm d}$ of $\ell'$; the formulas are the limit $N_{\rm d}\to\infty$ (equivalently, endpoints may be real algebraic numbers). A cell that crosses the zero point of the circle is a disjunction of two interval sentences. (ii) \emph{Fresh times.} Data are sentences, so they mention numerals, a countable set; no atomless law lives on it. Times drawn i.i.d.\ from a law on numerals repeat: the number of distinct times among $n$ draws is $o(n)$ almost surely (take a finite set of mass at least $1-\epsilon$ and apply the strong law of large numbers). A repeat changes the cost of every form except an exact law: a patched law withdraws the law at a whole time, so every later datum at a refuted time is an exception, and the cells of an honest law at one time intersect, which narrows its band. A computation with times drawn uniformly from the $4383$ days of a twelve-year window (sinusoidal error, $\varepsilon^*=1'$, $\Delta=60'$, $\lambda=1$, $c_{\rm time}=\log4383+2$) gives a patched law's cost per datum of $0.40$, $1.96$ and $3.23$ bits at $n=10^3$, $10^5$ and $2\times10^5$, against the rate $0.240$ at fresh times, and a code-R cost of the honest law falling from $0.037$ to $0.022$, against $0.030$. This is why regime R takes fresh times: an injective computable sequence of numerals, with i.i.d.\ errors and dithers. Fresh times have names that grow, and \cref{prop:laws:patches} says what that costs. (iii) \emph{Presentations.} No decidable set of programs covers all total computable maps, so the class of pointwise interval laws depends on the presentation language (for example, primitive recursive definitions, or programs paired with an explicit clock); every statement holds for each fixed choice. (iv) \emph{A model of the data.} In regime R the error at a fresh time is a draw from a fixed law; for the Kepler residuals this law is the law of $e(t)$ for $t$ uniform in the window. Answered data with a question $\mathcal Q$ are read through \cref{def:setting:questions}: for consistent $B\cup T$, $T$ proves $(\mathcal Q,a)$ iff $A_T(\mathcal Q)=\{a\}$, since $T\vdash a$ refutes every other answer by incompatibility, and refuting every other answer proves $a$ because $B$ proves $\bigvee\mathcal Q$.
+
+\begin{lemma}[Decidability]\status{proved}\src{laws Lemma 1.6}\label{lem:laws:decidable}
+Let $T$ be a pointwise interval law and $C$ a cell, a finite union of intervals with rational endpoints. Then $T$ proves the datum ``$q_t\in C$'' iff $[\underline f(t),\overline f(t)]\subseteq C$, and refutes it iff $[\underline f(t),\overline f(t)]\cap C=\emptyset$; and $B\cup T\cup D^\pm$ is consistent iff, for every time $t$ of $D$, $[\underline f(t),\overline f(t)]$ meets the intersection $C_t$ of the cells that $D$ assigns to $t$. All three are decidable from the presentation of $T$.
+\end{lemma}
+
+\begin{proof}
+Every choice of reals $q_t\in[\underline f(t),\overline f(t)]$ gives a model of $B\cup T$ in $\mathbb R$, and if the $q_t$ also lie in the assigned cells, a model of $B\cup T\cup D^\pm$. This gives the ``only if'' of the first two claims (choose $q_t$ outside the cell, respectively inside it) and the ``if'' of the third. Inclusion and disjointness of finite unions of rational intervals are Boolean combinations of inequalities between rational numerals, which $\mathrm{RCF}$ proves or refutes; this gives the ``if'' of the first two claims. If for some $t$ the interval misses $C_t$, the finitely many inequalities involved are jointly refutable in $\mathrm{RCF}$, which gives the ``only if'' of the third. The values $\underline f(t),\overline f(t)$ are computable from the presentation, so all three conditions are decidable.
+\end{proof}
+
+\begin{proposition}[Laws plus listed exceptions are deterministic hypotheses]\status{proved}\src{laws Prop 1.4}\label{prop:laws:exceptions}
+\leavevmode
+\begin{enumerate}[label=(\alph*),itemsep=1pt,topsep=2pt]
+\item For every finite $T$ with $B\cup T\cup D^\pm$ consistent, $\LA(D)-c\le\KA(D)\le\lVert T\rVert+\Exc^F_D(T)+c$.
+\item For an r.e.\ $T$ and $E\subseteq D$ with $B\cup T\cup E^\pm$ consistent and $B\cup T\cup E^\pm\vdash\psi_D$, $\LA(D)\le\Keq(T)+K(E)+c$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(a) The finite set $T':=T\cup\{a:(\mathcal Q,a)\text{ a datum of $D$ that $T$ does not prove}\}$ is contained in the consistent set $T\cup D^\pm$, so $B\cup T'$ is consistent, and $T'$ proves every datum. Concatenating the codewords of the sentences of $T$, each after a continuation bit, the codewords $c_S(a)$ of the exceptions, each after a continuation bit, and a stop bit gives a prefix-free code of $T'$ of length $\lVert T\rVert+\Exc^F_D(T)+1$, and a fixed program turns it into an index of $T'$. So $\KA(D)\le\lVert T\rVert+\Exc^F_D(T)+c$. The instance form of dominance (\cref{thm:basic:dominance}) gives $\MA(D)\ge2^{-K(e)-c}$ for every index $e$ of a theory consistent with $B$ that proves $\psi_D$, hence $\LA(D)\le\KA(D)+c$. (b) is \cref{prop:basic:exceptions}(b).
+\end{proof}
+
+So code F pays for \emph{which} questions are exceptions, since the answer sentence names its question; a deterministic theory cannot avoid this, because it does not see the questions.
+
+\subsection{Randomised theories and the best two-part code}\label{app:laws:random}
+
+\begin{proposition}[Randomised theories pay question-relative costs]\status{proved}\src{laws Prop 1.8}\label{prop:laws:randomised}
+Let $T$ be a pointwise interval law and $D$ a set of interval data consistent with $T$.
+\begin{enumerate}[label=(\alph*),itemsep=1pt,topsep=2pt]
+\item $\LA(D)\le K(T)+\Exc^R_D(T)+c\le\lVert T\rVert+\Exc^R_D(T)+c$.
+\item If $D$ comes from a computable question family with one question $\mathcal Q_t$ per time, and $k_t(T):=\lvert A_T(\mathcal Q_t)\rvert\le\lvert\mathcal Q_t\rvert$, then $\LA(D)\le K(T,(\mathcal Q_t)_t)+\sum\log k_t(T)+c$, the sum over the data that $T$ does not prove; in particular $\LA(D)\le K(T,(\mathcal Q_t)_t)+\Exc^Q_D(T)+c$.
+\item Code R charges an exception of a patched law, at a time where $\underline f=0$ and $\overline f=\mathsf R$, exactly $\log(\mathsf R/\lvert C_t\rvert)$, which is the code-Q cost for equal cells; it charges the honest law $-\log(\lvert C_t\cap[f(t)-\varepsilon,f(t)+\varepsilon]\rvert/2\varepsilon)$, which is $0$ when the band lies inside the cell.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(a) \emph{The machine.} Enumerate $I$ as $t_1,t_2,\dots$ and fix a computable injection $(i,k)\mapsto\langle i,k\rangle$ into tape positions, increasing in $k$. On a tape $\omega$ put $U_i:=\sum_{k\ge1}\omega_{\langle i,k\rangle}2^{-k}$; under $\Unif$ the $U_i$ are independent and uniform on $[0,1]$. Let $G_T$ be the theory machine that emits the sentences of $T$ at the empty prefix and, once the prefix read contains the positions $\langle i,1\rangle,\dots,\langle i,k\rangle$, whose bits form the binary numeral of an integer $m$, also emits
+\[\underline f(t_i)+(\overline f-\underline f)(t_i)\,m2^{-k}\ \le\ q_{t_i}\ \le\ \underline f(t_i)+(\overline f-\underline f)(t_i)\,(m+1)2^{-k}.\]
+This set of (prefix, sentence) pairs is c.e., and an index of it is computable from the presentation of $T$, so $K(G_T)\le K(T)+c$.
+
+\emph{The random theory is always consistent.} Put $q_{t_i}:=v_i:=\underline f(t_i)+(\overline f-\underline f)(t_i)U_i$. Each emitted closed interval contains $v_i$, so these values satisfy every emitted sentence, and $\mathbb R$ with them is a model.
+
+\emph{It proves a datum ``$q_{t_i}\in C$'' whenever $v_i$ lies in the interior of $C$.} The emitted intervals contain $v_i$ and have lengths $(\overline f-\underline f)(t_i)2^{-k}\to0$, so one of them lies in the interior of $C$, and $\mathrm{RCF}$ proves the inclusion. (If $\underline f(t_i)=\overline f(t_i)$, $T$ alone decides the datum.) The times of $D$ are distinct indices $i$, the $U_i$ are independent, and endpoints have probability $0$, so
+\[\nu_{G_T}(D)\ \ge\ \Unif\{\omega:v_t\in\operatorname{int}C_t\text{ for every time $t$ of $D$}\}\ =\ P^R_T(D).\]
+Dominance (\cref{thm:basic:dominance}), $\MA\ge2^{-K(\nu)}\nu$ for every theory-machine law $\nu$, gives $\MA(D)\ge2^{-K(G_T)-c}\nu_{G_T}(D)$, which is (a); and $K(T)\le\lVert T\rVert+c$.
+
+(b) Let the machine use $U_i$ to pick the $\lfloor k_{t_i}(T)U_i\rfloor$-th element $a$ of $A_T(\mathcal Q_{t_i})$, which is computable by \cref{lem:laws:decidable}, and emit $a$ as soon as enough bits have been read (almost surely after finitely many). The cell $a$ meets $[\underline f(t_i),\overline f(t_i)]$, so the random theory has a model in $\mathbb R$; it proves the true answer with probability $1/k_{t_i}(T)$, independently across times, and $k_t(T)=1$ when $T$ proves the datum. Since $D$ is consistent with $T$, $T$ refutes no datum. The machine's index is computable from $T$ and the question family, and dominance gives the bound; the last claim follows from $\log k_t(T)\le\log\lvert\mathcal Q_t\rvert=\gamma(\mathcal Q_t)$. (c) is the definition of $P^R_T$.
+\end{proof}
+
+\begin{proposition}[\SAIabbr is the best two-part code over theory machines]\status{proved, given thm:basic:dominance, rem:terms:named, thm:basic:nocoding and Proposition 5.7 of the companion paper on steeper priors}\src{laws Prop 1.9}\label{prop:laws:twopart}
+\leavevmode
+\begin{enumerate}[label=(\alph*),itemsep=1pt,topsep=2pt]
+\item For every data set $D$, $\LA(D)=\min_G[K(G)-\log\nu_G(D)]\pm c$, the minimum over theory machines $G$; it is attained, up to $c$, by $G_U$.
+\item Restricting $G$ gives upper bounds: $\LA(D)\le\min_TJ^R_1(T;D)+c$ over pointwise interval laws, $\LA(D)\le\min_TJ^F_1(T;D)+c$ over finite theories, and $\LA(D)\le\KA(D)+c$.
+\item Neither $\KA$ nor $\min_TJ^Q_1(T;\cdot)$ over finite theories is within an additive constant of $\LA$ in general; nor, therefore, is $\min_TJ^F_1(T;\cdot)$ when $\gamma\le\ell$.
+\item Over all theory machines steeper selection collapses. Take the point family of programs $p\in\dom V$ for theory machines, with length $\lvert p\rvert$ and fit $-\log\nu_{G_{V(p)}}(D)$, and let $\ell_U$ be the length of a program for $G_U$. For $\lambda>1$, every $\lambda$-MAP $p$ has $\lvert p\rvert\le\ell_U+\ell_U/(\lambda-1)$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(a) Dominance gives $\LA(D)\le K(G)-\log\nu_G(D)+c$ for every theory machine $G$, and $\MA=\nu_{G_U}$ gives $K(G_U)-\log\nu_{G_U}(D)=\LA(D)+O(1)$. (b) is \cref{prop:laws:exceptions,prop:laws:randomised} with $\Keq$ and $K$ of a finite theory at most its length plus a constant.
+
+(c) That $\KA-\LA$ is unbounded is the absence of a coding theorem (\cref{thm:basic:nocoding}). For $\min_TJ^Q_1(T;\cdot)$, take the language $\{R\}\cup\{c_j:j\in\mathbb N\}$ with $B=\emptyset$ and the yes/no data $D_n:=\{(R(c_j),1):j<n\}\cup\{(\exists x\,\neg R(x),1)\}$, so that every datum has literal cost $\gamma=1$. By \cref{rem:terms:named}, applied to the r.e.\ theory $\{R(c_j):j\in\mathbb N\}\cup\{\exists x\,\neg R(x)\}$, $\KA(D_n)\le c$, hence $\LA(D_n)\le\KA(D_n)+c\le c'$. Let $T$ be finite with $B\cup T\cup D_n^\pm$ consistent. If $c_j$ does not occur in $T$ and $T\vdash R(c_j)$, then $T\vdash\forall x\,R(x)$ by the theorem on constants, which contradicts consistency with $\exists x\,\neg R(x)$. So $T$ proves at most the data $R(c_j)$ with $c_j$ occurring in $T$, together with $\exists x\,\neg R(x)$. In a syntax code in which each symbol occurrence costs at least one bit, each constant occurring in $T$ costs at least one bit of $\lVert T\rVert$, and each unproved datum one bit of $\Exc^Q$; so $J^Q_1(T;D_n)\ge n$. Finally $\Exc^F\ge\Exc^Q$ when $\gamma\le\ell$, since then each exception costs at least as much in code F.
+
+(d) Proposition~5.7(ii) of the companion paper on steeper priors \citep{claudeSFI2026steeper} states: if a point family contains a member $\pi_U$, of length $\ell_U$, with fit $L(\pi_U)\le L(\pi)+\ell(\pi)+\kappa_0$ for every member $\pi$, then for every $\lambda>1$ every $\lambda$-MAP has length at most $\ell_U+(\ell_U+\kappa_0)/(\lambda-1)$. The mixture identity of \cref{thm:basic:dominance} gives $\MA(D)\ge\sum_{p\in\dom V}2^{-\lvert p\rvert}\nu_{G_{V(p)}}(D)\ge2^{-\lvert p\rvert}\nu_{G_{V(p)}}(D)$ for each $p$, so a program $p_U$ for $G_U$ has fit $-\log\nu_{G_U}(D)=\LA(D)\le-\log\nu_{G_{V(p)}}(D)+\lvert p\rvert$ for every $p$. This is the hypothesis with $\kappa_0=0$.
+\end{proof}
+
+So over all theory machines a steeper penalty collapses onto the universal machine, and the best-system analyses of \cref{sec:laws:best} use laws with private literal facts instead.
+
+\begin{remark}[Pointwise interval laws: the separation is open]\status{proved, given prop:basic:chain and prop:laws:codingbound; open}\src{laws Rem 1.9a}\label{rem:laws:JR}
+For every set $D$ of interval data, both $\LA(D)$ and $\min_TJ^R_1(T;D)$ over pointwise interval laws are at least $K(y_D\mid\dom D)-c$. For $\LA$: the answer conjunctions of the questions in $\dom D$ form a finite set $S$ of pairwise $B$-incompatible sentences, computable from $\dom D$, and $\MA(D)=\MA(\{(\psi_D,1)\})$ (\cref{prop:basic:structure}); so the coding lower bound of \cref{prop:basic:chain} gives $\LA(D)\ge K(\psi_D\mid S)-c\ge K(y_D\mid\dom D)-c'$. For $J^R_1$: \cref{prop:laws:codingbound}(b). So neither bound separates the two. The natural candidate for a separation, data in which pairs of times share a random cell, has $\LA\approx n\gamma/2$; but it does not separate them either, because a presentation may store values: the program that stores the $n/2$ shared cells and returns each for both times of its pair has length $n\gamma/2+O(\log n)$ and $\Exc^R=0$, so $\min_TJ^R_1\le n\gamma/2+O(\log n)$ as well.
+\end{remark}
+
+\begin{question}\status{open}\src{laws Rem 1.9a}\label{q:laws:JR}
+Fix a presentation language for pointwise interval laws. Is $\min_TJ^R_1(T;D)-\LA(D)$ bounded over all sets $D$ of interval data? (For $\KA$ and for $\min_TJ^Q_1$ over finite theories the answer is no, by \cref{prop:laws:twopart}(c).)
+\end{question}
+
+\begin{proposition}[Which hypotheses of the companion paper on steeper priors hold here]\status{proved, given the companion paper on steeper priors}\src{laws Prop 1.10}\label{prop:laws:P2hyp}
+\leavevmode
+\begin{enumerate}[label=(\alph*),itemsep=1pt,topsep=2pt]
+\item \emph{Pointwise interval laws in code R} (a fixed presentation language; one question family with finitely many cells). The codewords form a decidable prefix-free set; $P^R_T$ is computable uniformly in $T$, is the law $\nu_{G_T}$ of a theory machine (a shared hypothesis in the sense of Definition~3.4 of the companion paper on steeper priors) and, on data at distinct times, a product hypothesis (Definition~3.3 there); Kraft's inequality holds, lengths are integers, and finitely many laws have each length. So Lemmas~A.1, 3.8, 3.9 and 5.3, Corollaries~5.4 and 5.5 and Theorem~5.6 of the companion paper on steeper priors apply, with $J_\lambda=J^R_\lambda$.
+\item \emph{Finite theories over a decidable consistent $B$, in code Q}, with $P_T(D):=2^{-\Exc^Q_D(T)}\ind[B\cup T\cup D^\pm\text{ consistent}]$. $P_T$ satisfies the semimeasure inequalities of Definition~3.4 of the companion paper on steeper priors, and it is a product over questions when consistency can be checked question by question (pointwise laws at distinct times). It is not lower semicomputable in general (for $B=\emptyset$ and a language with a binary relation symbol), so this class is not a hypothesis class of the companion paper. Its hull lemma (Lemma~3.8), kink lemma (Lemma~5.3), Corollary~5.4, Theorem~5.6 and Lemma~A.1(i) use only the point family $(\lVert T\rVert,\Exc^Q_D(T))_T$ and apply. Its coding bound (Lemma~3.9) is replaced by \cref{prop:laws:codingbound}, with which Corollary~5.5 holds with offset $b+\kappa+n$ in general, and $b+\kappa$ when provability of the answers from the theories is decidable ($\kappa$ the constant of \cref{prop:laws:codingbound}).
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+\emph{Which hypotheses are used.} Each listed property is checked in the statement: for (a), $P^R_T=\nu_{G_T}$ on interval data by the proof of \cref{prop:laws:randomised}(a) (the random theory proves ``$q_t\in C$'' iff $v_t\in\operatorname{int}C$, up to null events), and the product form holds because the $U_i$ are independent. That the hull, kink and converse results need only the point family can be read off their statements, which concern countable point families, and their proofs, which use only lengths, fits, and the finiteness of the set of programs of each length.
+
+\emph{The semimeasure inequalities in (b).} $P_T(\emptyset)=\ind[B\cup T\text{ consistent}]\le1$. Let $\mathcal Q\notin\dom D$ and $P_T(D)>0$. If $T$ proves an answer $a_0$, every other answer is refuted by $T$ and contributes $0$, while $a_0$ adds no cost and keeps consistency; so the sum is $P_T(D)$. If $T$ proves no answer, each of the at most $\lvert\mathcal Q\rvert$ answers consistent with $B\cup T\cup D^\pm$ contributes at most $2^{-\gamma(\mathcal Q)}P_T(D)=P_T(D)/\lvert\mathcal Q\rvert$. If $P_T(D)=0$, every term is $0$.
+
+\emph{Not lower semicomputable.} Take $B=\emptyset$ and a language with a binary relation symbol. If $T\mapsto P_T(\emptyset)$ were lower semicomputable uniformly in $T$, the set of finite theories with $P_T(\emptyset)>\frac12$, that is the consistent ones, would be r.e. The inconsistent ones are r.e.\ as well, so consistency of finite theories would be decidable, contrary to Church's theorem (standard; \citealp{church1936note}).
+\end{proof}
+
+\begin{proposition}[Coding bound for laws with literal exceptions]\status{proved}\src{laws Prop 1.11}\label{prop:laws:codingbound}
+Let $n:=\lvert D\rvert$.
+\begin{enumerate}[label=(\alph*),itemsep=1pt,topsep=2pt]
+\item For every finite $T$ with $B\cup T\cup D^\pm$ consistent, $\lVert T\rVert+n+\Exc^Q_D(T)\ge K(y_D\mid\dom D)-c$.
+\item Suppose that provability of answers from $T$ is decidable uniformly in $T$, for $T$ ranging over a class of presented theories with $K(T)\le\lVert T\rVert+c$ (finite theories over a decidable complete $B$, or pointwise interval laws). Then $\lVert T\rVert+\Exc^Q_D(T)\ge K(y_D\mid\dom D)-c$ and $\lVert T\rVert+\Exc^R_D(T)\ge K(y_D\mid\dom D)-c$ for every member $T$ consistent with $D$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(a) For a question $\mathcal Q$ put
+\[w_T(a\mid\mathcal Q):=\tfrac12\ind[a\text{ is the first answer of }\mathcal Q\text{ found provable from }B\cup T]+\tfrac12\lvert\mathcal Q\rvert^{-1},\]
+where ``first'' refers to a fixed dovetailed proof search. Then $\sum_aw_T(a\mid\mathcal Q)\le1$, and $w_T$ is lower semicomputable uniformly in $(T,\mathcal Q)$, because the first answer found never changes. So $P'_T(y):=\prod_jw_T(y_j\mid\mathcal Q_j)$ is a semimeasure on the answer lists for $\dom D$, lower semicomputable uniformly in $(T,\dom D)$. If $B\cup T$ is consistent and proves $y_j$, it proves no other answer of $\mathcal Q_j$, so $y_j$ is the first found and $w_T(y_j\mid\mathcal Q_j)\ge\frac12$; otherwise $w_T(y_j\mid\mathcal Q_j)\ge\frac12\lvert\mathcal Q_j\rvert^{-1}$. Hence $-\log P'_T(y_D)\le n+\Exc^Q_D(T)$. The conditional coding theorem ($K(y\mid z)\le-\log P(y\mid z)+c_P$ for a semimeasure $P(\cdot\mid z)$ lower semicomputable uniformly in $z$; standard, see \citealp{li2008introduction}) gives $K(y_D\mid T,\dom D)\le n+\Exc^Q_D(T)+c$, and $K(y_D\mid\dom D)\le K(T)+K(y_D\mid T,\dom D)+c\le\lVert T\rVert+n+\Exc^Q_D(T)+c'$.
+
+(b) With decidable provability put $w_T(a\mid\mathcal Q):=1$ if $a$ is the first answer, in a fixed order of $\mathcal Q$, that $T$ proves; $:=0$ for the other answers that $T$ proves; and $:=\lvert\mathcal Q\rvert^{-1}$ for every answer if $T$ proves none. This sums to at most $1$ for every $T$, consistent or not, and it is computable. For $T$ consistent with $D$ the cost bound of (a) holds without the flag bit, and the same coding argument gives the first inequality. For code R, $P^R_T(\cdot\mid\dom D)$ is itself a semimeasure on answer lists, computable uniformly in $(T,\dom D)$ (\cref{prop:laws:P2hyp}(a)), and the same argument gives the second.
+\end{proof}
+
+So the right line of slope $1$ around a sufficient law (Corollary~5.5(a) of the companion paper on steeper priors) holds in both classes; in code Q without decidability it carries the flag cost $n$, which makes it useless, and for that reason the analyses of \cref{sec:laws} use laws whose provability on the data is decidable.
+
+\subsection{Deterministic theories and precision}\label{app:laws:precision}
+
+\begin{proposition}[Compatibility is monotone in logical strength]\status{proved}\src{laws Prop 2.1, Cor 2.2}\label{prop:laws:strength}
+\leavevmode
+\begin{enumerate}[label=(\alph*),itemsep=1pt,topsep=2pt]
+\item Let $B\cup T$ be consistent and $\Cn(T)\supseteq\Cn(T')$. On every data set with which $T'$ is compatible ($B\cup T'$ consistent and proving every datum), $T$ is compatible. So among the deterministic hypotheses of $\WA$ and $\MA$ the posterior odds of $T$ against $T'$ equal their prior odds on every data set with which $T'$ is compatible, and $T'$ is incompatible whenever $T$ is: data never move the odds towards the weaker theory.
+\item $T_0\vdash T^\varepsilon$ for every $\varepsilon\ge0$, so every data set compatible with the honest law $T^\varepsilon$ is compatible with the exact law $T_0$, at every sample size and every precision. With prior weights $2^{-\lVert T\rVert}$ in a code in which the tolerance clause costs at least one bit, the posterior odds of $T_0$ against $T^\varepsilon$ are at least $2^{\lVert T^\varepsilon\rVert-\lVert T_0\rVert}\ge2$ on every such data set.
+\item If $\sup_t\lvert e(t)\rvert>0$, then $T_0$ is false and, on a question at precision $\delta'<\sup_t\lvert e(t)\rvert$, proves a false answer at some times; $T^\varepsilon$ with $\varepsilon\ge\sup_t\lvert e(t)\rvert$ is true and is silent wherever its band straddles a cell boundary.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+A consistent theory that proves everything $T'$ proves proves every datum that $T'$ proves; this is (a), and (b) is (a) with $T=T_0$, $T'=T^\varepsilon$. (c) is immediate from the definitions.
+\end{proof}
+
+\begin{proposition}[Precision monotonicity]\status{proved}\src{laws Prop 2.3}\label{prop:laws:monotone}
+If $B\cup T$ proves ``$q(t)\in[v-\delta',v+\delta']$'', then it proves ``$q(t)\in[v-\delta,v+\delta]$'' for every $\delta\ge\delta'$. So compatibility with data at a fixed set of centres is monotone in the precision.
+\end{proposition}
+
+\begin{proof}
+The first interval is contained in the second.
+\end{proof}
+
+\begin{proposition}[Guaranteed tolerances]\status{proved; computed}\src{laws Prop 2.4}\label{prop:laws:tolerance}
+In regime G:
+\begin{enumerate}[label=(\alph*),itemsep=1pt,topsep=2pt]
+\item $T_0$ proves datum $j$ iff $\lvert e(t_j)-\zeta_j\rvert\le\delta$, and refutes it otherwise.
+\item If $\delta\ge\varepsilon^*+\delta_0$, then $T_0$ is compatible, at every $n$, with every such data set whose errors lie in the essential range (so almost surely).
+\item Suppose the pairs $(e(t_j),\zeta_j)$ are i.i.d., $e(t_j)$ is independent of $\zeta_j$, both $\pm\delta_0$ lie in the support of the law of $\zeta_j$, and $\delta<\varepsilon^*+\delta_0$. Then the per-datum refutation probability $r(\delta):=\Prob[\lvert e-\zeta\rvert>\delta]$ is positive, $T_0$ survives $n$ data with probability $(1-r(\delta))^n$, and it is almost surely refuted eventually.
+\end{enumerate}
+So the switch point $\delta=\varepsilon^*+\delta_0$ is sharp.
+\end{proposition}
+
+\begin{proof}
+(a) $T_0$ proves $q(t_j)=f(t_j)=v_j+e(t_j)-\zeta_j$. This point lies in $[v_j-\delta,v_j+\delta]$ iff $\lvert e(t_j)-\zeta_j\rvert\le\delta$, and if it does not, $T_0$ proves the negation of the datum. (b) $\lvert e-\zeta\rvert\le\lvert e\rvert+\lvert\zeta\rvert\le\varepsilon^*+\delta_0$ almost surely. (c) Pick $\varepsilon'<\varepsilon^*$ and $s>0$ with $\varepsilon'+\delta_0-s>\delta$. Since $\varepsilon^*$ is the essential supremum of $\lvert e\rvert$, $\Prob[e>\varepsilon']>0$ or $\Prob[e<-\varepsilon']>0$. In the first case $\Prob[\zeta<-\delta_0+s]>0$ (support), and independence gives $\Prob[e-\zeta>\delta]>0$; the second case is symmetric, with $\zeta>\delta_0-s$. Refutations of distinct data are independent, so survival has probability $(1-r(\delta))^n\to0$, and a refuted theory stays refuted.
+\end{proof}
+
+\begin{proposition}[Dithered rounding]\status{proved; computed}\src{laws Prop 2.5}\label{prop:laws:rounding}
+In regime R, given $e(t_j)$, $T_0$ proves datum $j$ with probability $(1-\lvert e(t_j)\rvert/\Delta)^+$ and refutes it otherwise. So $T_0$ survives $n$ data with probability $(1-p_\Delta)^n$, its first refutation has a geometric index with mean $1/p_\Delta$, and it is almost surely refuted eventually iff $\Prob[e\ne0]>0$, for every $\Delta$, however coarse. For $\Delta\ge\varepsilon^*$, $p_\Delta=\Ex\lvert e\rvert/\Delta$: the exact law survives about $\Delta/\Ex\lvert e\rvert$ data.
+\end{proposition}
+
+\begin{proof}
+$T_0$ proves ``$q(t_j)$ lies in the cell of $f(t_j)$'' and so refutes every other cell. Two points at distance $\lvert e\rvert<\Delta$ fall into different cells of a uniformly shifted grid of width $\Delta$ with probability $\lvert e\rvert/\Delta$, and at distance at least $\Delta$ they always do; this gives the conditional proof probability $(1-\lvert e(t_j)\rvert/\Delta)^+$. The refutation indicators of distinct data are independent (they depend only on each datum's own error and dither), which gives the product $(1-p_\Delta)^n$ and the geometric law of the first refutation; and $p_\Delta>0$ iff $\Prob[e\ne0]>0$. For $\Delta\ge\varepsilon^*$, $\min(\lvert e\rvert/\Delta,1)=\lvert e\rvert/\Delta$ almost surely.
+\end{proof}
+
+This corrects the natural expectation that coarse data protect a false exact law: precision belongs to the data set, not to the datum. An exact law with a sinusoidal error of amplitude $1'$ is refuted by positions rounded to a dithered grid of $1^\circ$ after about $94$ data (the computations below), and \cref{prop:laws:choice} compares several exact laws. We have not found these two regimes stated elsewhere; precision-dependent selection as such is familiar from accounts based on AIC, MDL and MML (cf.\ \citealp{forster1994how,rissanen1978modeling,wallace2005statistical}).
+
+\begin{proposition}[Which exact theory a proof-requiring inducer settles on]\status{proved; computed}\src{laws Prop 2.6}\label{prop:laws:choice}
+Let $T_1,\dots,T_k$ be exact pointwise laws for the same quantity, with lengths $\lVert T_1\rVert<\dots<\lVert T_k\rVert$ and errors $e_1,\dots,e_k$, and let the inducer choose the shortest compatible theory in this pool (the MAP of any prior that decreases with length, or $\KA$ restricted to the pool). Let the data be i.i.d.
+\begin{enumerate}[label=(\alph*),itemsep=1pt,topsep=2pt]
+\item[(G)] Under the hypotheses of \cref{prop:laws:tolerance}(c) at precision $\delta$, almost surely the choice is eventually $T_{i^*(\delta)}$, $i^*(\delta):=\min\{i:\varepsilon^*_i+\delta_0\le\delta\}$; if no $i$ qualifies, every theory is eventually refuted. As $\delta$ decreases past the thresholds $\varepsilon^*_i+\delta_0$, the eventual choice moves to longer and more exact theories.
+\item[(R)] In regime R, for every $\Delta>0$, almost surely the choice is eventually the shortest $T_i$ with $\Prob[e_i\ne0]=0$, whatever $\Delta$ is; if there is none, every theory is eventually refuted. At sample size $n$, $T_i$ survives with probability $(1-p_{\Delta,i})^n$, and for $\Delta\ge\varepsilon^*_i$ it is abandoned after about $\Delta/\Ex\lvert e_i\rvert$ data.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+Apply \cref{prop:laws:tolerance} and \cref{prop:laws:rounding} to each $T_i$. The choice at $n$ is the first survivor in order of length, and a finite pool has a last refutation time almost surely.
+\end{proof}
+
+\paragraph{Computations.} In regime G, with $\varepsilon^*=1'$, $\delta_0=0.5'$ and $\zeta$ uniform on $[-\delta_0,\delta_0]$, the refutation probability is exactly $r(\delta)=0.218$ at $\delta=1'$, $6.0\times10^{-4}$ at $\delta=1.49'$ and $0$ for $\delta\ge1.5'$ for a sinusoidal error, and $0.025$, $5.0\times10^{-4}$ and $0$ for an error equal to $\pm\varepsilon^*$ on $5\%$ of the times and $0$ otherwise: positive below $\varepsilon^*+\delta_0$ and zero above it for both. In regime R, simulated survival after $1$, $10$ and $100$ data matches $(1-p_\Delta)^n$ at every $\Delta$ from $0.5'$ to $600'$; for the sinusoid with $\varepsilon^*=1'$ the mean first-refutation index is $94.1$ against the exact $1/p_\Delta=\pi\Delta/2=94.25$ at $\Delta=60'$, and $942.7$ against $942.48$ at $\Delta=600'$. For the pool $T_1$ (length $100$, $\varepsilon^*=10'$), $T_2$ (length $150$, $\varepsilon^*=1'$), $T_3$ (length $400$, exact), with sinusoidal errors and $2000$ runs, every run chooses the predicted theory at $n=10^4$ in regime G with $\delta_0=0.5'$ at each of $\delta=20'$, $10.5'$, $5'$, $1.5'$, $1.2'$ (predictions $T_1,T_1,T_2,T_2,T_3$); in regime R every run ends at $T_3$, $T_1$ being abandoned after about $94$ data at $\Delta=10^\circ$ and $9.4$ at $\Delta=1^\circ$, and $T_2$ after about $942$ and $94$.
+
+\subsection{Honest laws, laws with exceptions, laws with error models}\label{app:laws:honest}
+
+\paragraph{Forms and pricings.} Work in regime R. The forms are: the empty law $\emptyset$; the \emph{patched tolerance law} $T^{\varepsilon,-Z}$, the tolerance law $T^\varepsilon$ withdrawn at the set $Z$ of times of the data it refutes (fewer patches are inconsistent with the data, more only add cost); for $\varepsilon=0$ the exact law, written $T_0$ while it has no patch and $T_0^{-Z}$ after; for $\varepsilon\ge\varepsilon^*$ the honest law $T^\varepsilon$, which is true and never patched; and a true exact theory $T_{\rm tr}$. Their lengths, relative to a common part, are $\lVert\emptyset\rVert=0$, $\lVert T_0\rVert=\ell_0$, $\lVert T^\varepsilon\rVert=\ell_0+h$ ($h$ the length of the tolerance clause and its numeral) and $\lVert T_{\rm tr}\rVert=\ell_0+h_{\rm tr}$. A pricing fixes the price $\gamma_{\rm si}$ of a datum on which a form is silent and the price $\gamma_{\rm ex}$ of an exception:
+\begin{itemize}[itemsep=1pt,topsep=2pt]
+\item \emph{Q/det}: code Q, each patch naming its time inside the law at $c_{\rm time}$ bits; $\gamma_{\rm si}=\gamma$ and $\gamma_{\rm ex}=\lambda c_{\rm time}+\gamma$. This is a finite-horizon cost model (\cref{prop:laws:patches}).
+\item \emph{Q/rand}: code Q with randomised exceptions: a theory machine withdraws the law at each time independently with probability $\rho$, and the fit is charged $-\log(1-\rho)$ per kept datum and $-\log\rho+\gamma$ per exception. The share $\rho$ can be stated in $O(\log n)$ bits or integrated out: drawing $\rho$ uniformly from the tape and then withdrawing independently is a single theory machine, whose cost for $k$ exceptions among $n$ data is $\log\big((n+1)\binom nk\big)+k\gamma$. With $\rho=p_\Delta$, or integrated out, the rate is $H_2(p_\Delta)+p_\Delta\gamma$, where $H_2$ is the binary entropy, so $\gamma_{\rm ex}=\gamma+H_2(p_\Delta)/p_\Delta$. These are exact theory-machine costs for every $n$.
+\item \emph{R/det} and \emph{R/rand}: as above, with a silent datum priced by random completion inside the band (code R); an exception of a patched law is priced $\gamma$ in code R too (\cref{prop:laws:randomised}(c)).
+\end{itemize}
+\SAIabbr's pricing is R/rand: the honest law with random completion and the exact law with random exceptions are theory machines, and R/rand compares their weights in $\MA$'s mixture.
+
+\begin{lemma}[What a tolerance law does with one datum]\status{proved; computed}\src{laws Lemma 3.2}\label{lem:laws:tolerancelaw}
+In regime R, fix a datum with error $e$ and let $\varepsilon\ge0$. Over the dither, $T^\varepsilon$ refutes the datum with probability $\min\big((\lvert e\rvert-\varepsilon)^+/\Delta,1\big)$, proves it with probability $\big(1-(\varepsilon+\max(\lvert e\rvert,\varepsilon))/\Delta\big)^+$, and is silent otherwise. In the \emph{coarse regime} $\Delta\ge\varepsilon+\max(\varepsilon,\varepsilon^*)$ it is silent with probability exactly $2\varepsilon/\Delta$, whatever $e$ is, and refutes with probability $(\lvert e\rvert-\varepsilon)^+/\Delta$. For $\varepsilon=0$ it refutes with probability $\min(\lvert e\rvert/\Delta,1)$ and is never silent.
+\end{lemma}
+
+\begin{proof}
+Place $q$ at $0$. The cell containing it is $[-u\Delta,(1-u)\Delta)$ with $u$ uniform on $[0,1)$, and the band is $[e-\varepsilon,e+\varepsilon]$, since $f=q+e$; by symmetry let $e\ge0$. \emph{Refutation} means that the band misses the cell. If $e\le\varepsilon$, the band contains $0$, so this is impossible. If $e>\varepsilon$, the band lies in $(0,\infty)$, and it misses the cell iff $(1-u)\Delta\le e-\varepsilon$, of probability $\min((e-\varepsilon)/\Delta,1)$. \emph{Proof of the datum} means that the band lies in the cell: $-u\Delta\le e-\varepsilon$ and $e+\varepsilon<(1-u)\Delta$. If $e\le\varepsilon$, this is $u\in[(\varepsilon-e)/\Delta,(\Delta-\varepsilon-e)/\Delta)$, of probability $(1-2\varepsilon/\Delta)^+$; if $e>\varepsilon$, the first condition holds automatically and the second is $u<(\Delta-e-\varepsilon)/\Delta$. Both cases equal $(1-(\varepsilon+\max(e,\varepsilon))/\Delta)^+$. When $\Delta\ge\varepsilon+\max(\varepsilon,\varepsilon^*)$ the positive parts are inactive for every $e$ in the essential range, and silence has probability $1-\big(1-(\varepsilon+\max(e,\varepsilon))/\Delta\big)-(\max(e,\varepsilon)-\varepsilon)/\Delta=2\varepsilon/\Delta$.
+\end{proof}
+
+The coarse-regime condition cannot be weakened to $\Delta\ge\varepsilon+\varepsilon^*$ when $\varepsilon>\varepsilon^*$: with $\lvert e\rvert=\varepsilon^*=1$, $\varepsilon=2$ and $\Delta=3$ the formula $2\varepsilon/\Delta$ would give a silence probability of $4/3$.
+
+\begin{proposition}[Rates]\status{proved; computed}\src{laws Prop 3.3}\label{prop:laws:rates}
+In regime R, write $z_j:=(e_j,u_j)$. Each form $X$ has $J_\lambda(X;D_n)=a_X+\sum_{j\le n}c_X(z_j)$ with a constant $a_X$ and i.i.d.\ per-datum costs $c_X(z_j)$ (under Q/rand and R/rand with $\rho$ stated; integrating $\rho$ out adds $O(\log n)$). In the coarse regime $\Delta\ge2\varepsilon^*$ the rates $m_X:=\Ex c_X$ are: $m_\emptyset=\gamma$; $m_{T_{\rm tr}}=0$; $m_{T_0}=\infty$ if $\Prob[e\ne0]>0$ (an unpatched exact law is eventually refuted); $m_{T_0^{-Z}}=p_\Delta\gamma_{\rm ex}$, that is $p_\Delta(\lambda c_{\rm time}+\gamma)$ under the det pricings and $H_2(p_\Delta)+p_\Delta\gamma$ under the rand pricings, with $p_\Delta=\Ex\lvert e\rvert/\Delta$; and $m_{T^{\varepsilon^*}}=s_\Delta\gamma_{\rm si}$ with $s_\Delta=2\varepsilon^*/\Delta$, that is $s_\Delta\gamma$ in code Q and $s_\Delta\beta_e$ in code R, $\beta_e$ as in \cref{lem:laws:codeR}.
+\end{proposition}
+
+\begin{proof}
+For the patched exact law at its cheapest patch set, a datum costs $\gamma_{\rm ex}$ if $T_0$ refutes it and $0$ otherwise: under det the patch names the time ($\lambda c_{\rm time}$) and the datum is then literal ($\gamma$); under rand it is the flag code. \Cref{lem:laws:tolerancelaw} with $\varepsilon=0$ gives the probability $p_\Delta$. The honest law costs $\gamma_{\rm si}$ on a datum iff it is silent, which in the coarse regime has probability $2\varepsilon^*/\Delta$ independently of $e$ (\cref{lem:laws:tolerancelaw}); in code R the expected cost given silence, averaged over the errors, is $\beta_e$ (\cref{lem:laws:codeR}(i)).
+\end{proof}
+
+\begin{proposition}[The price of naming exceptions deterministically]\status{proved; computed}\src{laws Prop 3.3a}\label{prop:laws:patches}
+In regime R, let $Z_n\subseteq\{1,\dots,n\}$ be the indices of the data that the exact law refutes, so that the events $j\in Z_n$ are independent with probability $p_\Delta\in(0,1)$.
+\begin{enumerate}[label=(\alph*),itemsep=1pt,topsep=2pt]
+\item For every prefix-free code of the finite subsets of $\{1,\dots,n\}$, even one that depends on $n$, the expected code length of $Z_n$ is at least $nH_2(p_\Delta)$; so the expected cost per exception is at least $H_2(p_\Delta)/p_\Delta$ bits, the cost of randomised exceptions.
+\item If the patched law names each patched time $t_j$ by a numeral in a prefix-free code $\ell_{\rm num}$ of numerals, then $\Ex\sum_{j\in Z_n}\ell_{\rm num}(t_j)\ge p_\Delta n\log n$, so the cost per exception is at least $\log n$ on average. If $\ell_{\rm num}(t_j)\ge\log j-c$ for all $j$ (any standard numeral code), the cost per datum $\frac1n\sum_{j\in Z_n}\ell_{\rm num}(t_j)$ tends to $\infty$ almost surely.
+\item Hence Q/det and R/det with a constant $c_{\rm time}$ are cost models valid only while the times used cost about $c_{\rm time}$ bits to name, that is for $n\lesssim2^{c_{\rm time}}$. Asymptotically, at fresh times, deterministic patching costs at least as much per exception as randomised exceptions, and literal patching costs unboundedly more; so the patched exact law under det is eventually beaten by the exact law with random exceptions.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(a) Let $P_Z$ be the law of $Z_n$ and $\ell'$ a prefix-free code. By Kraft's inequality $\sum_Z2^{-\ell'(Z)}\le1$, and by Jensen's inequality, with $H$ the entropy,
+\[\Ex\ell'(Z_n)-H(Z_n)=-\sum_ZP_Z(Z)\log\frac{2^{-\ell'(Z)}}{P_Z(Z)}\ge-\log\sum_Z2^{-\ell'(Z)}\ge0,\]
+where $H(Z_n)=nH_2(p_\Delta)$. The expected number of exceptions is $p_\Delta n$. (b) The numerals $t_1,\dots,t_n$ are distinct, so Kraft gives $\sum_{j\le n}2^{-\ell_{\rm num}(t_j)}\le1$, and Jensen gives $2^{-\frac1n\sum_j\ell_{\rm num}(t_j)}\le\frac1n\sum_j2^{-\ell_{\rm num}(t_j)}\le\frac1n$, that is $\sum_{j\le n}\ell_{\rm num}(t_j)\ge n\log n$. Since $\Prob[j\in Z_n]=p_\Delta$ for every $j$, $\Ex\sum_{j\in Z_n}\ell_{\rm num}(t_j)\ge p_\Delta n\log n$. If $\ell_{\rm num}(t_j)\ge\log j-c$, then $\frac1n\sum_{j\in Z_n}\ell_{\rm num}(t_j)\ge\frac1n\#\{j\in Z_n:j>n/2\}\,(\log n-1-c)$, and the count over $n$ tends to $p_\Delta/2$ almost surely by the strong law of large numbers. (c) follows from (a), (b) and \cref{prop:laws:rates}.
+\end{proof}
+
+A computation (code in the accompanying repository) gives, at $p_\Delta=0.01$, $15.0$, $23.0$ and $30.3$ bits per exception for literal listing by Elias delta numerals at $n=10^3$, $10^5$ and $10^7$, and $9.02$, $8.13$ and $8.08$ bits for an enumerative code of the set, against $H_2(p_\Delta)/p_\Delta=8.08$.
+
+\begin{proposition}[The peakedness criterion]\status{proved; computed}\src{laws Prop 3.4}\label{prop:laws:peaked}
+Let $\Delta\ge2\varepsilon^*$, under any of the four pricings (the deterministic ones as a cost model).
+\begin{enumerate}[label=(\alph*),itemsep=1pt,topsep=2pt]
+\item The honest law $T^{\varepsilon^*}$ has a lower rate than the exact law with exceptions $T_0^{-Z}$ iff $\pk(e)<\gamma_{\rm ex}/(2\gamma_{\rm si})$.
+\item If the exact law with exceptions comes from a law $f_1$ with error $e_1$, and the honest law from a law $f_2$ of the same length up to $O(1)$, with tolerance $\varepsilon_2\ge\operatorname{ess\,sup}\lvert e_2\rvert$ and $\Delta\ge2\varepsilon_2$, then the honest law has the lower rate iff $\varepsilon_2/\Ex\lvert e_1\rvert<\gamma_{\rm ex}/(2\gamma_{\rm si})$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+By \cref{prop:laws:rates}, $s_\Delta\gamma_{\rm si}<p_\Delta\gamma_{\rm ex}$ iff $2\varepsilon^*\gamma_{\rm si}<\Ex\lvert e\rvert\,\gamma_{\rm ex}$. In (b), $s_\Delta=2\varepsilon_2/\Delta$ (\cref{lem:laws:tolerancelaw}) and $p_\Delta=\Ex\lvert e_1\rvert/\Delta$.
+\end{proof}
+
+Under Q/det the criterion reads $\lambda c_{\rm time}>\gamma(2\pk(e)-1)$. Simulated rates for a sinusoid ($\pk=\pi/2$) with $c_{\rm time}=22$ pick the exact law with exceptions at $\lambda=1$ and the honest law at $\lambda=2$ for $\Delta=2'$, $3'$ and $10'$, and the honest law at both for $\Delta=60'$, as the threshold $(\lambda c_{\rm time}+\gamma)/(2\gamma)$ predicts; for an error with $\pk=20$ they pick the exact law with exceptions everywhere. Under Q/rand it reads $\pk(e)<\frac12+H_2(p_\Delta)/(2p_\Delta\gamma)$; since $H_2(p)/p\approx\log(\mathrm e/p)$ for small $p$, the threshold grows only logarithmically in $1/p_\Delta$: at $\gamma=\log360$ it is $1.17$ at $p_\Delta=10^{-3}$, $1.76$ at $10^{-6}$ and $2.93$ at $10^{-12}$. For the sinusoid it is $0.637$, $0.742$ and $0.971$ at $\Delta=3'$, $10'$ and $60'$, so the exact law with random exceptions wins although the error is spread. Within the pool $\{\emptyset,T_0^{-Z},T^{\varepsilon^*}\}$ under R/rand the threshold is $\big(\gamma+H_2(p_\Delta)/p_\Delta\big)/(2\beta_e)$, roughly $5$ to $30$ for typical cell widths ($9.2$--$9.3$ for the sinusoid, $20.4$--$20.5$ for the error with $\pk=20$). This comparison is relative to its pool: the exact law with random exceptions completes its exceptions over the whole circle, while the equally short two-point completion $\mathrm{HY}(\rho)$ completes them inside the band, and against it the error with $\pk=20$ is held as ``exact except in about $10\%$ of cases'' at a third of the uniform band's rate (\cref{prop:laws:errormodel}(d) and the computation after its proof).
+
+\begin{proposition}[Optimal tolerance]\status{proved; computed; known in form}\src{laws Prop 3.5}\label{prop:laws:quantile}
+Under Q/det in the regime $\Delta\ge2\varepsilon^*$, the patched tolerance law $T^{\varepsilon,-Z}$ with $0\le\varepsilon\le\varepsilon^*$ has rate
+\[\bar m(\varepsilon)=\frac{2\varepsilon\gamma+(\lambda c_{\rm time}+\gamma)\,\Ex(\lvert e\rvert-\varepsilon)^+}{\Delta}.\]
+$\bar m$ is convex, with right derivative $\big(2\gamma-(\lambda c_{\rm time}+\gamma)\Prob[\lvert e\rvert>\varepsilon]\big)/\Delta$, and its minimisers on $[0,\varepsilon^*]$ are the $\varepsilon$ with $\Prob[\lvert e\rvert>\varepsilon]\le\theta_{\rm ex}$ and, if $\varepsilon>0$, $\theta_{\rm ex}\le\Prob[\lvert e\rvert\ge\varepsilon]$, where $\theta_{\rm ex}:=2\gamma/(\lambda c_{\rm time}+\gamma)$. So the optimal law states the $(1-\theta_{\rm ex})$-quantile of $\lvert e\rvert$ as its tolerance and lists the remaining share $\theta_{\rm ex}$ of cases as exceptions. If $\theta_{\rm ex}\ge1$ ($\lambda c_{\rm time}\le\gamma$), the exact law with patches is optimal. The pure honest law ($\varepsilon=\varepsilon^*$, no exceptions) is optimal iff $\Prob[\lvert e\rvert\ge\varepsilon^*]\ge\theta_{\rm ex}$, which never holds for an error law without an atom at its maximum.
+\end{proposition}
+
+\begin{proof}
+A datum costs $\gamma$ if it is not proved, and in addition $\lambda c_{\rm time}$ if it is refuted (the patch). By \cref{lem:laws:tolerancelaw}, with $\Delta\ge2\varepsilon^*\ge\varepsilon+\varepsilon^*$, $\Prob[\text{not proved}]=(2\varepsilon+\Ex(\lvert e\rvert-\varepsilon)^+)/\Delta$ and $\Prob[\text{refuted}]=\Ex(\lvert e\rvert-\varepsilon)^+/\Delta$, which gives $\bar m$. The function $\varepsilon\mapsto\Ex(\lvert e\rvert-\varepsilon)^+$ is convex, with right derivative $-\Prob[\lvert e\rvert>\varepsilon]$ and left derivative $-\Prob[\lvert e\rvert\ge\varepsilon]$. This gives convexity and the derivatives of $\bar m$, and a convex function is minimised exactly where its right derivative is non-negative and its left derivative non-positive (at $\varepsilon=0$ only the right derivative matters), which is the stated condition. The last two claims are the cases $\varepsilon=0$ and $\varepsilon=\varepsilon^*$ of it.
+\end{proof}
+
+Minimising $\theta\varepsilon+\Ex(\lvert e\rvert-\varepsilon)^+$ over $\varepsilon$ is the quantile-loss fact, and in $\nu$-support-vector regression the parameter $\nu$ likewise bounds the share of points outside an $\varepsilon$-tube whose width is a quantile of the residuals (cf.\ \citealp{scholkopf2000new}). What is specific here is the reading for axiom inducers: the tube is a tolerance clause, the points outside it are patched exceptions, and $\theta_{\rm ex}$ is a ratio of literal costs. The steeper the prior, or the dearer the naming of an exception, the smaller $\theta_{\rm ex}$: the law states a wider tolerance and lists fewer exceptions. A computation at $\Delta=10'$, $c_{\rm time}=22$ finds the grid minimiser at $0.52$, $0.80$ and $0.94$ for a sinusoid of amplitude $1$ at $\lambda=1,2,4$, against the predicted quantiles $0.496$, $0.807$ and $0.939$.
+
+\begin{lemma}[The code-R cost of the honest law, exactly]\status{proved; computed}\src{laws Lemma 3.6}\label{lem:laws:codeR}
+Let $\varepsilon\ge\varepsilon^*$ and let $w:=(\varepsilon-e)/(2\varepsilon)\in[0,1]$ be the position of the true value in the band. Put $\vartheta(z):=1-z+z\ln z$ for $0\le z<1$ ($\vartheta(0)=1$) and $\vartheta(z):=0$ for $z\ge1$. The expected code-R cost of a datum for $T^\varepsilon$, over the dither, is
+\[\bar c_\Delta(w)=\begin{cases}\dfrac{2\varepsilon}{\Delta}\big(\log\mathrm e-H_2(w)\big)&\text{if }\Delta\ge2\varepsilon,\\[2mm]\log\dfrac{2\varepsilon}{\Delta}+\log\mathrm e\,\Big[\vartheta\Big(\dfrac{2\varepsilon w}{\Delta}\Big)+\vartheta\Big(\dfrac{2\varepsilon(1-w)}{\Delta}\Big)\Big]&\text{if }\Delta\le2\varepsilon.\end{cases}\]
+\begin{enumerate}[label=(\roman*),itemsep=1pt,topsep=2pt]
+\item In the coarse regime the cost given silence is $\log\mathrm e-H_2(w)$. Averaged over the errors, $\gamma_{\rm si}=\beta_e:=\log\mathrm e-\Ex H_2(w)\in[\log\mathrm e-1,\log\mathrm e]=[0.443,1.443]$ bits.
+\item In the fine regime $T^\varepsilon$ is silent on every datum, and $\log(2\varepsilon/\Delta)\le\bar c_\Delta(w)\le\log(2\varepsilon/\Delta)+\log\mathrm e$; the upper bound is approached as $w\to0$ at $\Delta=2\varepsilon$.
+\item For every $w$, $\bar c_\Delta(w)$ is continuous and strictly decreasing in $\Delta\in(0,\infty)$.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+\emph{Coarse regime.} The band straddles a cell boundary with probability $2\varepsilon/\Delta$ (\cref{lem:laws:tolerancelaw}, since $\varepsilon\ge\varepsilon^*$); otherwise it lies in a cell and the datum costs $0$. Given a straddle, exactly one boundary lies in the band, at a relative position $v$ uniform on $[0,1]$ (a uniformly shifted lattice of spacing at least the band's length). The true cell contains the part of the band on the true value's side, of relative length $v$ if $w<v$ and $1-v$ otherwise, and random completion inside the band puts that much probability on it. So the expected cost given a straddle is, in nats,
+\[\int_w^1-\ln v\,dv+\int_0^w-\ln(1-v)\,dv=1+w\ln w+(1-w)\ln(1-w),\]
+which is $\log\mathrm e-H_2(w)$ in bits.
+
+\emph{Fine regime.} Let $y$ be the length of the part of the true cell inside the band; the cost is $\log(2\varepsilon/y)=\log(2\varepsilon/\Delta)-\log(y/\Delta)$. With $a:=2\varepsilon w/\Delta$ and $b:=2\varepsilon(1-w)/\Delta$, so that $a+b=2\varepsilon/\Delta\ge1$, the band is $[-a\Delta,b\Delta]$ around the true value, and with dither $u$ the true cell is $[-u\Delta,(1-u)\Delta)$, so $y/\Delta=\min(u,a)+\min(1-u,b)$. If $a,b\ge1$, then $y=\Delta$ and the excess $-\ln(y/\Delta)$ is $0$. If $a<1\le b$, then $y/\Delta=1$ for $u<a$ and $1+a-u$ for $u\ge a$, so the expected excess is $\int_a^1-\ln(1+a-u)\,du=\int_a^1-\ln s\,ds=\vartheta(a)$; the case $b<1\le a$ is symmetric. If $a,b<1$, then $1-b\le a$, and $y/\Delta=u+b$ for $u<1-b$, $1$ on $[1-b,a]$, and $a+1-u$ for $u>a$; the expected excess is $\int_b^1-\ln s\,ds+\int_a^1-\ln s\,ds=\vartheta(a)+\vartheta(b)$.
+
+(i) is the coarse case, and $\Ex H_2(w)\in[0,1]$. (ii) In the fine regime $2\varepsilon\ge\Delta$, so $T^\varepsilon$ is silent on every datum by \cref{lem:laws:tolerancelaw}. $\vartheta\ge0$ and $\vartheta$ is decreasing on $[0,1]$ ($\vartheta'(z)=\ln z$). In the last case $\vartheta(a)+\vartheta(b)$ is largest on $a+b=1$, where it equals $1-H_2(a)\ln2\le1$; in the middle case $\vartheta(a)\le\vartheta(0)=1$. The value $1$ is approached as $a\to0$, $b\to1$. (iii) Write $r:=2\varepsilon/\Delta$ and the cost in nats. In the coarse regime ($r\le1$) it is $r(1-H_2(w)\ln2)$, increasing in $r$ because $1-H_2(w)\ln2\ge1-\ln2>0$. In the fine regime ($r\ge1$) it is $\ln r+\vartheta(wr)+\vartheta((1-w)r)$, and on each piece its derivative in $r$ is $\frac1r\big(1+\sum z\ln z\big)$, the sum over $z\in\{wr,(1-w)r\}$ with $z<1$; since $z\ln z\ge-1/\mathrm e$, this is at least $\frac1r(1-2/\mathrm e)>0$. The cost is continuous in $r$ ($\vartheta$ is continuous at $1$), and at $r=1$ the two forms agree, since $\vartheta(w)+\vartheta(1-w)=1-H_2(w)\ln2$. So it is strictly increasing in $r$, that is strictly decreasing in $\Delta$.
+\end{proof}
+
+A computation (code in the accompanying repository) confirms the closed form against a $5000$-point quadrature over the dither to $10^{-4}$ bits on $36090$ cells, with largest fine-regime excess $1.442695=\log\mathrm e$; the coarse averages are $\beta_e=0.885$ for a sinusoid and $0.493$ for an error equal to $\pm\varepsilon^*$ on $5\%$ of the times.
+
+\paragraph{Band-confined completions.} The machine $\mathrm{BC}_{\mathcal G}$ of \cref{sec:laws:random} draws $\hat w_i\sim\mathcal G$ by the inverse distribution function from the uniform variables $U_i$ of the proof of \cref{prop:laws:randomised}, and emits the value $f(t_i)-\varepsilon+2\varepsilon\hat w_i$ by narrowing intervals for the continuous part of $\mathcal G$ and exactly at an atom. A computable $\mathcal G$ is, for instance, piecewise linear with rational knots plus finitely many atoms at rational points. The argument of \cref{prop:laws:randomised}(a) gives $K(\mathrm{BC}_{\mathcal G})\le\lVert T^\varepsilon\rVert+K(\mathcal G)+c$, the random theory is always consistent, and on data at fresh times $\nu_{\mathrm{BC}_{\mathcal G}}(D)=\prod_j\mathcal G(C'_j)$ (cell endpoints are null events for continuous dithers).
+
+\begin{proof}[Proof of \cref{prop:laws:errormodel}]
+(a) As in \cref{lem:laws:codeR}: a cell boundary falls into the band with probability $2\varepsilon/\Delta$, at a relative position $v$ uniform on $[0,1]$ and independent of $w$. With no boundary in the band the cell contains the band and the datum costs $0$. With a boundary at $v$, the true cell contains $[0,v)$ if $w<v$, of $\mathcal G$-mass $\mathcal G(v)$, and $[v,1]$ if $w>v$, of mass $1-\mathcal G(v)$; this gives $c_{\mathcal G}$, which does not depend on $\Delta$.
+
+(b) Given $v$, the event $w<v$ has probability $\mathcal F(v)$, so the conditional expected cost is $\mathcal F(v)(-\log\mathcal G(v))+(1-\mathcal F(v))(-\log(1-\mathcal G(v)))\ge H_2(\mathcal F(v))$, with equality iff $\mathcal G(v)=\mathcal F(v)$ (Gibbs' inequality). Integrate over $v$. The uniform band has $\mathcal G(v)=v$, which equals $\mathcal F$ on $[0,1]$ iff $w$ is uniform, that is iff $e$ is uniform on $[-\varepsilon,\varepsilon]$.
+
+(c) Let $P^\star$ be the true conditional law of the answer list given the question list. The errors are independent of the questions, and $q=f-e$, so the conditional probability of the observed cell of $q(t_j)$ is $\mathcal F(C'_j)$; hence $P^\star(D_n)=\nu_{\mathrm{BC}_{\mathcal F}}(D_n)=\prod_{j\le n}\mathcal F(C'_j)$, and $-\log\nu_{\mathrm{BC}_{\mathcal F}}(D_n)$ is a sum of i.i.d.\ terms with finite mean $r_{\mathcal F}(\Delta)$; the strong law of large numbers gives the limit. Let $G'$ be any theory machine. Answers to one question are pairwise $B$-incompatible, so for a fixed question list the events ``the random theory is consistent and proves the answer list $y$'' are disjoint across $y$; hence $\sum_y\nu_{G'}(y)\le1$ and $\Ex_{P^\star}[\nu_{G'}(D_n)/P^\star(D_n)\mid\text{questions}]\le1$. By Markov's inequality $\Prob[-\log\nu_{G'}(D_n)<-\log P^\star(D_n)-2\log n]\le n^{-2}$, and by the Borel--Cantelli lemma, almost surely $-\log\nu_{G'}(D_n)\ge-\log P^\star(D_n)-2\log n$ for all large $n$. Dividing by $n$ gives the $\liminf$ bound, and $G'=G_U$ gives it for $\LA$. If $\mathcal F$ is computable, dominance gives $\LA(D_n)\le K(\mathrm{BC}_{\mathcal F})+c-\log\nu_{\mathrm{BC}_{\mathcal F}}(D_n)$, hence the limit. In the coarse regime $r_{\mathcal F}(\Delta)=(2\varepsilon/\Delta)c_{\mathcal F}$ by (a) and the equality case of (b).
+
+(d) Write $\sigma:=1-\rho$ for the weight of the atom at $\frac12$. The family is symmetric, $\mathcal G(1-v)=1-\mathcal G(v)$, so the cost given $w$ equals the cost given $1-w$, and we may take $w\le\frac12$. \emph{Convexity.} For fixed $(w,v)$ the probability assigned to the true side is affine in $\sigma$ and positive for $\sigma\in[0,1)$, and $-\ln$ of a positive affine function is convex; so $c_{\mathrm{HY}(\rho)}$, an expectation of convex functions, is convex in $\sigma$, hence in $\rho\in(0,1]$. \emph{Right derivative at $\sigma=0$, in nats.} For $v<w$ the true side has probability $1-(1-\sigma)v$, and the derivative of $-\ln$ of it at $\sigma=0$ is $-v/(1-v)\in[-1,0]$; for $w<v<\frac12$ the probability is $(1-\sigma)v$, with derivative $+1$; for $v>\frac12$ it is $\sigma+(1-\sigma)v$, with derivative $-(1-v)/v\in[-1,0]$. Difference quotients of convex functions decrease monotonically as $\sigma\downarrow0$, so by monotone convergence the derivative of the expectation is the expectation of the derivatives:
+\[c'(0^+)=\Ex\Big[-\int_0^w\tfrac{v}{1-v}\,dv+\big(\tfrac12-w\big)-\int_{1/2}^1\tfrac{1-v}{v}\,dv\Big]=\Ex\big[\ln(1-w)+1-\ln2\big],\]
+using $\int_0^w\frac v{1-v}dv=-\ln(1-w)-w$ and $\int_{1/2}^1\frac{1-v}vdv=\ln2-\frac12$. For $w\le\frac12$, $1-w=(1+\lvert e\rvert/\varepsilon)/2$, so $c'(0^+)=\Ex\ln(1+\lvert e\rvert/\varepsilon)+1-2\ln2$. \emph{The criterion.} If $c'(0^+)<0$, some $\sigma>0$ beats $\sigma=0$, which is the uniform band; if $c'(0^+)\ge0$, convexity gives $c(\sigma)\ge c(0)$ for every $\sigma$. \emph{Necessity.} $\ln(1+z)\ge z\ln2$ on $[0,1]$ (a concave function lies above its chord), so $\Ex\ln(1+\lvert e\rvert/\varepsilon)\ge\ln2/\pk_\varepsilon(e)$, and $c'(0^+)<0$ forces $\pk_\varepsilon(e)>\ln2/(2\ln2-1)$. \emph{Sufficiency.} Jensen's inequality gives $\Ex\ln(1+\lvert e\rvert/\varepsilon)\le\ln(1+1/\pk_\varepsilon(e))$, which is below $2\ln2-1$ iff $\pk_\varepsilon(e)>\mathrm e/(4-\mathrm e)$. \emph{Boundary.} $\int_0^1\ln(1+z)\,dz=2\ln2-1$.
+\end{proof}
+
+The following computation (synthetic errors, $2\times10^5$ samples, band $\varepsilon=\varepsilon^*$; code in the accompanying repository) gives per-straddle costs in bits in the coarse regime. SH is a 40-bin smoothed histogram fitted on a random half of the samples and evaluated on the other half, $c_{\mathcal F}$ is the bound of \cref{prop:laws:errormodel}(b) on that half, and $c'(0^+)$ (in nats) is the derivative that decides whether some $\mathrm{HY}(\rho)$ with $\rho<1$ beats the uniform band.
+\begin{center}\small
+\begin{tabular}{lccccccc}
+\toprule
+error & $\pk$ & uniform & best HY & $\rho$ & SH & $c_{\mathcal F}$ & $c'(0^+)$\\
+\midrule
+sinusoid & 1.57 & 0.8854 & 0.8854 & 1 & 0.8514 & 0.8510 & $+0.087$\\
+$\pm\varepsilon^*$ on $5\%$ & 20.1 & 0.4924 & 0.1790 & 0.099 & 0.2006 & 0.1704 & $-0.352$\\
+$\lvert e\rvert$ uniform & 2.00 & 0.7213 & 0.7213 & 1 & 0.7227 & 0.7227 & $\approx0$\\
+$0.25$ or $1$ ($90/10\%$) & 3.08 & 0.5832 & 0.5543 & 0.68 & 0.4797 & 0.4640 & $-0.116$\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+So the two-point form beats the uniform band exactly when $c'(0^+)<0$, and the fitted histogram comes within about $0.02$ bits of the Gibbs bound of the half it did not see.
+
+\begin{proposition}[Fine data]\status{proved}\src{laws Prop 3.7}\label{prop:laws:fine}
+Let $\Delta\le2\varepsilon^*$. The honest law $T^{\varepsilon^*}$ is silent on every datum.
+\begin{enumerate}[label=(\alph*),itemsep=1pt,topsep=2pt]
+\item In code Q its rate is $\gamma=m_\emptyset$, so it never beats the empty law, and $T_0^{-Z}$ beats the empty law iff $p_\Delta\gamma_{\rm ex}<\gamma$.
+\item In code R its rate is at most $\log(2\varepsilon^*/\Delta)+\log\mathrm e$, which is below $m_\emptyset=\gamma=\log(\mathsf R/\Delta)$ by at least $\log(\mathsf R/2\varepsilon^*)-\log\mathrm e$ bits per datum; this is positive iff $\varepsilon^*<\mathsf R/(2\mathrm e)$, about $66.2^\circ$ for a longitude.
+\item If moreover $\varepsilon^*<\mathsf R/(2\mathrm e)$ and $\Prob[\lvert e\rvert<\Delta]\log(1/\Delta)\to0$ as $\Delta\to0$ (for instance, if $\lvert e\rvert$ has a bounded density near $0$), then in code R the honest law has the least rate among $\emptyset$, $T_0^{-Z}$ and $T^{\varepsilon^*}$ for all small $\Delta$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+Silence and (a) are \cref{lem:laws:tolerancelaw} and \cref{prop:laws:rates}'s argument with silence probability $1$. (b) is \cref{lem:laws:codeR}(ii). (c) $m_{T_0^{-Z}}\ge p_\Delta\gamma$, and $1-p_\Delta=\Ex(1-\lvert e\rvert/\Delta)^+\le\Prob[\lvert e\rvert<\Delta]$, so $m_{T_0^{-Z}}-m_{T^{\varepsilon^*}}\ge\log(\mathsf R/2\varepsilon^*)-\log\mathrm e-\Prob[\lvert e\rvert<\Delta]\log(\mathsf R/\Delta)$, which is positive for small $\Delta$; and (b) handles the empty law.
+\end{proof}
+
+So under \SAIabbr's pricing an approximate law keeps its value at precisions finer than its error: it narrows each answer to its band, which is worth $\log(\mathsf R/2\varepsilon^*)$ bits per datum (about $13$ bits for a $1'$ error on a full circle of longitude), and by \cref{prop:laws:errormodel} a completion shaped like the error narrows it further.
+
+\begin{theorem}[Almost-sure selection]\status{proved, given standard probability (strong law of large numbers, central limit theorem, Hewitt--Savage 0--1 law, Wald's identity); computed}\src{laws Thm 3.8}\label{thm:laws:as}
+Let $\mathcal X$ be a finite set of forms with $J_\lambda(X;D_n)=a_X+\sum_{j\le n}c_X(z_j)+r_X(n)$, where the $z_j$ are i.i.d., $c_X(z)\in[0,\infty]$, and $r_X(n)=o(n)$ almost surely ($r_X=0$ for deterministic forms and for stated $\rho$; $O(\log n)$ when $\rho$ is integrated out). Let $m_X:=\Ex c_X\in[0,\infty]$, $m_{\min}:=\min_Xm_X<\infty$ and $\mathcal X^*:=\{X:m_X=m_{\min}\}$.
+\begin{enumerate}[label=(\roman*),itemsep=1pt,topsep=2pt]
+\item Almost surely, for all large $n$ every $\lambda$-MAP within $\mathcal X$ lies in $\mathcal X^*$. If $\mathcal X^*=\{X^*\}$, the $\lambda$-MAP is eventually $X^*$ alone.
+\item Let $X,Y\in\mathcal X^*$ with $r_X=r_Y=0$. If $c_X-c_Y$ is almost surely finite, with finite variance, and not almost surely constant, then almost surely $J_\lambda(X;D_n)<J_\lambda(Y;D_n)$ for infinitely many $n$ and $J_\lambda(Y;D_n)<J_\lambda(X;D_n)$ for infinitely many $n$: there is no eventual winner. If $c_X-c_Y=0$ almost surely, $a_X$ against $a_Y$ decides at every $n$.
+\item Let $r_X=r_Y=0$, $m_Y<m_X<\infty$, $\Ex\lvert c_X-c_Y\rvert<\infty$ and $x:=a_Y-a_X>0$. Let $\tau_x$ be the first $n$ with $J_\lambda(Y;D_n)<J_\lambda(X;D_n)$, $\varsigma_x$ the last $n$ with $J_\lambda(Y;D_n)\ge J_\lambda(X;D_n)$, and $\mu:=m_X-m_Y$. Then $\Ex\tau_x>x/\mu$; if moreover $c_X-c_Y\le b$ almost surely, then $\Ex\tau_x\le(x+b)/\mu$; and on almost every sample path, $\tau_x/x\to1/\mu$ and $\varsigma_x/x\to1/\mu$ as $x\to\infty$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+The probabilistic facts used are standard (see \citealp{durrett2019probability}). (i) Let $X^*\in\mathcal X^*$; then $\frac1nJ_\lambda(X^*;D_n)\to m_{\min}$ almost surely. Let $X\notin\mathcal X^*$. If $\Prob[c_X=\infty]>0$, almost surely some datum has infinite cost, after which $J_\lambda(X;D_n)=\infty$. If $c_X<\infty$ almost surely and $m_X=\infty$, then for each $K$, $\frac1n\sum_{j\le n}\min(c_X(z_j),K)\to\Ex\min(c_X,K)$, and $\Ex\min(c_X,K)\to\infty$ as $K\to\infty$, so $\frac1nJ_\lambda(X;D_n)\to\infty$. If $m_X<\infty$, then $\frac1n(J_\lambda(X;D_n)-J_\lambda(X^*;D_n))\to m_X-m_{\min}>0$. Since $\mathcal X$ is finite, the claim follows. (ii) $S_n:=\sum_{j\le n}(c_X-c_Y)(z_j)$ is a random walk with mean-zero, non-degenerate increments of finite variance. For each $K$, $\Prob[S_n>K]\to\frac12$ by the central limit theorem, so $\Prob[S_n>K\text{ infinitely often}]\ge\limsup_n\Prob[S_n>K]=\frac12$. This event is invariant under finite permutations of the increments, so by the Hewitt--Savage 0--1 law its probability is $1$. Intersecting over $K\in\mathbb N$ gives $\limsup_nS_n=+\infty$ almost surely, and likewise $\liminf_nS_n=-\infty$; so $J_\lambda(X;D_n)-J_\lambda(Y;D_n)=a_X-a_Y+S_n$ changes sign infinitely often. The degenerate case is immediate. (iii) $S_n:=\sum_{j\le n}(c_X-c_Y)(z_j)$ has i.i.d.\ integrable increments with mean $\mu>0$, and $J_\lambda(Y;D_n)<J_\lambda(X;D_n)$ iff $S_n>x$. So $\tau_x=\min\{n:S_n>x\}$ is a stopping time with $\Ex\tau_x<\infty$ (a random walk with positive drift), and Wald's identity gives $\Ex S_{\tau_x}=\mu\Ex\tau_x$ with $S_{\tau_x}>x$; if the increments are at most $b$, also $S_{\tau_x}\le x+b$. For the path statement fix $\epsilon\in(0,\mu)$; by the strong law there is $N(\omega)$ with $\lvert S_n-n\mu\rvert\le\epsilon n$ for $n\ge N$. For $x>\max_{n\le N}S_n$ we have $\tau_x-1\ge N$, and $S_{\tau_x}>x\ge S_{\tau_x-1}$ gives $x/(\mu+\epsilon)<\tau_x\le x/(\mu-\epsilon)+1$. Similarly $\varsigma_x\ge\tau_x-1\ge N$ and $S_{\varsigma_x}\le x$ give $\varsigma_x\le x/(\mu-\epsilon)$. Divide by $x$, let $x\to\infty$ and then $\epsilon\to0$.
+\end{proof}
+
+The code-R cost of a silent datum is $-\log$ of a share that is uniform near $0$ (the proof of \cref{lem:laws:codeR}), so it has all moments, and (i)--(iii) cover every application in this section. The bounded-increment bound of (iii) applies to the race between $T_0^{-Z}$ and $T^{\varepsilon^*}$, whose cost differences are bounded above by the largest cost of $T_0^{-Z}$; for the race between $T^{\varepsilon^*}$ and $T_{\rm tr}$ in code R the increments are unbounded, and only the lower bound and the path limits apply.
+
+\begin{corollary}[The phases of selection, coarse data]\status{proved; computed}\src{laws Cor 3.9}\label{cor:laws:phases}
+Take a pricing with i.i.d.\ per-datum costs as in \cref{prop:laws:rates}: exactly Q/rand and R/rand (with $\rho$ stated), or Q/det and R/det as a constant-$c_{\rm time}$ cost model (\cref{prop:laws:patches}). Assume $\Delta\ge2\varepsilon^*$, $\Prob[e\ne0]>0$, $\varepsilon^*>0$ and $h_{\rm tr}>h$. The pool is $\{\emptyset,T_0\text{ (and }T_0^{-Z}),T^{\varepsilon^*},T_{\rm tr}\}$, with $a_\emptyset=0$, $a_{T_0}=\lambda\ell_0$, $a_{T^{\varepsilon^*}}=\lambda(\ell_0+h)$ and $a_{T_{\rm tr}}=\lambda(\ell_0+h_{\rm tr})$. Almost surely:
+\begin{enumerate}[label=(\alph*),itemsep=1pt,topsep=2pt]
+\item the exact law is refuted for the first time at a geometric index of mean $1/p_\Delta$, and until then $T_0$ and $T_0^{-Z}$ coincide;
+\item $T_{\rm tr}$ is eventually the unique $\lambda$-MAP; the first time it beats $T^{\varepsilon^*}$ has mean above $\lambda(h_{\rm tr}-h)/m_{T^{\varepsilon^*}}$, and at most $(\lambda(h_{\rm tr}-h)+\gamma)/m_{T^{\varepsilon^*}}$ under code Q, where the costs of $T^{\varepsilon^*}$ are bounded by $\gamma$;
+\item without $T_{\rm tr}$, the eventual $\lambda$-MAP is the form of least rate among $m_\emptyset$, $m_{T_0^{-Z}}$ and $m_{T^{\varepsilon^*}}$ ($T^{\varepsilon^*}$ against $T_0^{-Z}$ by \cref{prop:laws:peaked}, ties by \cref{thm:laws:as}(ii));
+\item the expected switch points are: $\emptyset\to T_0$ at $\lambda\ell_0/\gamma$ (deterministic, if $T_0$ is not yet refuted); $T_0\to T_0^{-Z}$ at the first refutation, of mean $1/p_\Delta$; $T_0^{-Z}\to T^{\varepsilon^*}$, if $m_{T_0^{-Z}}>m_{T^{\varepsilon^*}}$, at a time of mean above $\lambda h/(m_{T_0^{-Z}}-m_{T^{\varepsilon^*}})$, and at most $(\lambda h+\gamma_{\rm ex})/(m_{T_0^{-Z}}-m_{T^{\varepsilon^*}})$ when $\gamma_{\rm ex}$ is bounded; and $T^{\varepsilon^*}\to T_{\rm tr}$ as in (b).
+\end{enumerate}
+When these expected switch points increase in this order, the predicted order of the $\lambda$-MAPs is $\emptyset\to T_0\to T_0^{-Z}\to T^{\varepsilon^*}\to T_{\rm tr}$.
+\end{corollary}
+
+\begin{proof}
+\Cref{thm:laws:as} with the costs of \cref{prop:laws:rates} and \cref{lem:laws:tolerancelaw}: refutation by $T_0$ has probability $p_\Delta$ per datum, independently, and while unrefuted $T_0$ proves every datum (it is never silent), so $J_\lambda(T_0;D_n)=\lambda\ell_0<n\gamma=J_\lambda(\emptyset;D_n)$ once $n>\lambda\ell_0/\gamma$. $T_{\rm tr}$ has rate $0$ and every other form a positive rate ($p_\Delta>0$, $s_\Delta>0$, $\gamma_{\rm si}\ge\log\mathrm e-1>0$), which gives (b) with \cref{thm:laws:as}(iii) at level $\lambda(h_{\rm tr}-h)$. The bound in (d) for $T_0^{-Z}\to T^{\varepsilon^*}$ is \cref{thm:laws:as}(iii) applied to the race between these two forms from $n=0$, at level $\lambda h$.
+\end{proof}
+
+A simulation of the Q/det cost model ($\ell_0=200$, $h=20$, $h_{\rm tr}=2000$, $c_{\rm time}=22$; $400$ runs per setting; code in the accompanying repository) shows the five phases in this order when the predicted switch points are ordered: for a sinusoidal error at $\Delta=60'$ and $\lambda=1$ (rates $0.323$ and $0.283$) the mean switch time to the honest law is $529.8$, inside the interval $[495.6,1251.3]$ given by (d), the mean switch time to the true theory is $7010.1$, inside $[6994.9,7024.9]$, and the mean first refutation is $91.8$ against $94.25$; when the two rates are close, the patched and the honest law alternate several times before the honest law settles. With rates tuned to be equal, the sign of $J_\lambda(T_0^{-Z})-J_\lambda(T^{\varepsilon^*})$ changes $148$ times on average up to $n=2\times10^5$, and $43\%$ of runs still change sign after $n=10^5$. Under \SAIabbr's pricing with exact theory-machine costs (R/rand, sinusoid, $\varepsilon^*=1'$, $\Delta=60'$, $\lambda=1$; rates $0.1749$ and $0.02953$), the mean first time the honest law is the $\lambda$-MAP is $133.6$ against a predicted switch near $138$, and the mean first time the true theory is is $67060$ against $67055$; all $400$ runs reach it.
+
+\begin{proposition}[Humility]\status{proved}\src{laws Prop 3.10}\label{prop:laws:humility}
+Let $\Pi_\lambda(T\mid D)\propto2^{-J_\lambda(T;D)}$ be the power-prior posterior (Definition~3.6 of the companion paper on steeper priors) restricted to a finite pool of deterministic forms (code Q) containing $\emptyset$, $T_0^{-Z}$, $T^{\varepsilon^*}$ and possibly $T_{\rm tr}$, and ask a new question at a fresh time $t'$, with cell width $\Delta'\le2\varepsilon^*$.
+\begin{enumerate}[label=(\alph*),itemsep=1pt,topsep=2pt]
+\item The pool's three-valued prediction (the analogue, for the pool, of the trichotomy of \cref{prop:basic:structure}) puts mass $\Pi_\lambda(T^{\varepsilon^*}\mid D)+\Pi_\lambda(\emptyset\mid D)$ on ``independent'', mass $\Pi_\lambda(T_0^{-Z}\mid D)$ on the cell of $f(t')$, which is wrong with probability $p_{\Delta'}$ over the dither, and mass $\Pi_\lambda(T_{\rm tr}\mid D)$ on the true cell.
+\item Without $T_{\rm tr}$, if the least rate at the training cell width $\Delta$ is attained by one form only, the posterior concentrates on it almost surely: the inducer ends humble (independent mass tending to $1$ on finer questions) if $T^{\varepsilon^*}$ or $\emptyset$ is selected, and overconfident (a wrong cell with probability $p_{\Delta'}$) if $T_0^{-Z}$ is; \cref{prop:laws:peaked} at $\Delta$ and \cref{prop:laws:fine} decide which. If two forms tie in rate with a non-degenerate cost difference of finite variance, the posterior oscillates between them forever.
+\item In a randomised pool (code R) a band-confined completion $\mathrm{BC}_{\mathcal G}$ is not silent: it puts on each cell its $\mathcal G$-mass, a spread over the cells its band meets and never probability one on a wrong cell; the exact law with random exceptions puts probability $1-\rho$ on the cell of $f(t')$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(a) $T^{\varepsilon^*}$ is silent on every question with $\Delta'\le2\varepsilon^*$ (\cref{lem:laws:tolerancelaw}), and $\emptyset$ is silent. $T_0^{-Z}$ proves the cell of $f(t')$, since $t'$ is fresh and so not a patched time, and $T_{\rm tr}$ proves the true cell. (b) \Cref{thm:laws:as}(i), (ii), with $\Pi_\lambda(X\mid D)/\Pi_\lambda(Y\mid D)=2^{-(J_\lambda(X;D)-J_\lambda(Y;D))}$, whose exponent diverges linearly when the rates differ. (c) The definition of $\mathrm{BC}_{\mathcal G}$, and the withdrawal probability $\rho$.
+\end{proof}
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lccc}
+\toprule
+body & $\varepsilon^*$, minimax fit (12 / 100 / 2000 yr) & $\pk$, minimax fit & $\pk$, mean fit\\
+\midrule
+Mercury & $0.38'$ / $2.02'$ / $37.4'$ & 2.80--3.19 & 3.29--4.71\\
+Venus & $0.36'$ / $0.47'$ / $3.6'$ & 2.27--3.65 & 2.81--4.07\\
+Earth--Moon barycentre & $0.27'$ / $0.62'$ / $7.3'$ & 2.34--3.95 & 2.91--4.03\\
+Mars & $1.44'$ / $3.04'$ / $49.9'$ & 2.71--3.38 & 3.33--4.47\\
+Jupiter & $0.70'$ / $6.57'$ / $34.0'$ & 1.60--2.65 & 3.00--7.08\\
+Saturn & $0.17'$ / $7.46'$ / $81.9'$ & 1.66--2.39 & 3.21--6.91\\
+Moon (1 month / 1 yr / 18.6 yr) & $30.9'$ / $156'$ / $480'$ & 1.89--2.21 & 1.89--3.17\\
+\bottomrule
+\end{tabular}
+\caption{Longitude errors of one fixed Kepler ellipse per body and window, against the plan94 and moon98 ephemerides (not the sky): the largest error of the minimax fit, and the peakedness of each fit over the windows of 12 to 2000 years (for the Moon, one month to 18.6 years). Largest longitude errors of the minimax fit; the least-squares fits of \cref{tab:kepler:residuals} measure angular separation and differ. Computed; code in the accompanying repository.}\label{tab:laws:residuals}
+\end{table}
+
+\paragraph{The Kepler residuals.} \Cref{tab:laws:residuals} summarises the error laws. For each body and window, one fixed Kepler ellipse (seven elements) was fitted four ways (three-dimensional least squares, least squares on longitude and latitude, a robust fit for small mean error, and an $L_p$ continuation for small maximum error), and two series of longitude errors at $8000$ uniform times were kept: that of the fit with the least sample maximum (the \emph{minimax fit}) and that of the fit with the least sample mean (the \emph{mean fit}). The ephemerides are plan94 for the planets and moon98 for the Moon. An honest law whose tolerance is the sample maximum is slightly false if the window's true supremum is larger. A local parabola through the three time-sorted samples around the maximum estimates the excess at a median $2\times10^{-4}$ (relative) and at most $1.9\%$ in $33$ of the $39$ series apart from one, Mercury over $2000$ years, where the estimate is unreliable because the sampling interval of about $91$ days is comparable to Mercury's $88$-day period. The band machines therefore use $\varepsilon=(1+\kappa_{\rm b})\varepsilon^*$ with $\kappa_{\rm b}\in\{0,0.01,0.05\}$, and every comparison below comes out the same for the three values. The rates are computed at eleven cell widths from $0.1'$ to $30^\circ$, so that there are $429$ (body, window, cell width) cells. Within the pool $\{\emptyset,T_0^{-Z},T^{\varepsilon^*}\}$ under R/rand (and under R/det at $\lambda=1$ and $4$), the uniform band has the least rate in all $429$ cells, with exact closed-form costs; in that pool's tolerance family with whole-circle exceptions the optimum is a tolerance of about $0.7$--$1.0\,\varepsilon^*$ with at most $1\%$ of the data as exceptions. With band-confined completions, the histogram machine SH has the least rate in all $429$ cells at each $\kappa_{\rm b}$, between $0.4\%$ and $25.7\%$ below the uniform band (median $6.6\%$), and lies within $0.0011$ bits of the Gibbs bound of its test half in every coarse-regime pair; the best two-point form beats the uniform band in $379$ of the $429$ cells at $\kappa_{\rm b}=0.01$, and in the coarse regime in $34$ of the $39$ body--window pairs, with best $\rho$ between $0.52$ and $0.997$, exactly where the criterion of \cref{prop:laws:errormodel}(d) says. The five pairs in which the uniform band beats every two-point form are Jupiter over $12$ and $30$ years, Saturn over $100$ years and the Moon over one month and $18.6$ years, whose minimax-fit peakedness is $1.60$--$1.96$. The gain persists at fine precision: for the Earth--Moon barycentre over $100$ years at $\Delta=1'$ the rates of the uniform band, the best two-point form and SH are $0.651$, $0.560$ and $0.503$ bits per datum, and for Mars over $12$ years $1.660$, $1.558$ and $1.496$. Under Q/det (naming a time costs $c_{\rm time}=\log(\text{days in the window})+2$ bits, $14.1$--$21.5$ for the planets and $6.8$, $10.5$ and $14.7$ for the Moon's windows; a finite-horizon cost model) the threshold $(\lambda c_{\rm time}+\gamma)/(2\gamma)$ grows as the cells coarsen. At $\lambda=1$ the exact law with exceptions wins from cell widths of about $\varepsilon^*$ upwards, the honest law only at the coarsest cells ($30^\circ$, and from $10^\circ$ for Jupiter over $30$ years and Saturn over $2000$ years) and not even there for $17$ of the $39$ pairs, and at finer cells no law pays; the best member of the tolerance family is then a small tolerance ($0.05$--$0.5\,\varepsilon^*$) with exception shares up to tens of per cent. At $\lambda=2$ the honest law takes over at cell widths from $8.1'$ to $962'$ (median $134'$), and at $\lambda=4$ from $0.72'$ to $962'$ (median $13.4'$). Under Q/rand the exact law with random exceptions wins almost everywhere. The residuals are deterministic functions of time, so a better theory (Newton's, or the ephemeris itself) eventually beats every Kepler-based machine.
+
+\subsection{Derivation horizons and sound reasoning with approximate models}\label{app:laws:sound}
+
+Work over $B=\mathrm{RCF}$ with constants $x_0,x_1,\dots$ for the states of a system in $\mathbb R^m$ (one constant per coordinate), a rational initial state $a$, a map $\Psi$ definable in $B$, and a norm $\lvert\cdot\rvert$ for which $B$ proves that $\Psi$ is $L$-Lipschitz (for a linear $\Psi(x)=Ax$ with rational $A$ and the sup-norm, $L=\lVert A\rVert_\infty$, provably in $\mathrm{RCF}$). The \emph{honest dynamical law} is $T^\varepsilon_\Psi:=\{\lvert x_0-a\rvert\le\varepsilon^{(0)}\}\cup\{\lvert x_{s+1}-\Psi(x_s)\rvert\le\varepsilon:s\ge0\}$, and the \emph{exact law} is $T^0_\Psi:=\{x_0=a\}\cup\{x_{s+1}=\Psi(x_s):s\ge0\}$.
+
+\begin{proposition}[Derivation horizon]\status{proved; computed}\src{laws Prop 4.1}\label{prop:laws:horizon}
+\leavevmode
+\begin{enumerate}[label=(\alph*),itemsep=1pt,topsep=2pt]
+\item For every $L\ge0$, $T^\varepsilon_\Psi\vdash\lvert x_r-\Psi^r(a)\rvert\le\varepsilon^{(r)}$, with $\varepsilon^{(r)}:=L^r\varepsilon^{(0)}+\varepsilon(L^r-1)/(L-1)$ for $L\ne1$ and $\varepsilon^{(r)}:=\varepsilon^{(0)}+r\varepsilon$ for $L=1$.
+\item Let $\Psi(x)=Ax$ be linear, with sup-norm tolerances. The values of the $i$-th coordinate $x_{r,i}$ over the models of $B\cup T^\varepsilon_\Psi$ form exactly the interval $(A^ra)_i\pm h_{r,i}$, where $h_{r,i}:=\varepsilon^{(0)}\lVert(A^r)_{i\cdot}\rVert_1+\varepsilon\sum_{s<r}\lVert(A^s)_{i\cdot}\rVert_1$ (the projection of a zonotope). So $T^\varepsilon_\Psi$ proves ``$x_{r,i}\in[v-\delta,v+\delta]$'' iff that interval contains $(A^ra)_i\pm h_{r,i}$. In dimension one, $h_r=\varepsilon^{(r)}$ with $L=\lvert A\rvert$, so (a) is tight.
+\item Put $r^*(\delta):=\max\{r:\varepsilon^{(r)}\le\delta\}$. For $\varepsilon^{(0)}=0$: $r^*(\delta)=\lfloor\delta/\varepsilon\rfloor$ for $L=1$; $r^*(\delta)=\lfloor\log_L(1+\delta(L-1)/\varepsilon)\rfloor$ for $L>1$; and for $L<1$, $r^*(\delta)=\infty$ iff $\delta\ge\varepsilon/(1-L)$, and $r^*(\delta)=\lfloor\log_L(1-\delta(1-L)/\varepsilon)\rfloor$ otherwise. For every $L$-Lipschitz $\Psi$, $T^\varepsilon_\Psi$ proves a datum at precision $\delta$ about $x_r$, centred at $\Psi^r(a)$, if $r\le r^*(\delta)$; for linear $\Psi$ in dimension one with $L=\lvert A\rvert$, also only if.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(a) By induction, $\lvert x_{s+1}-\Psi^{s+1}(a)\rvert\le\lvert x_{s+1}-\Psi(x_s)\rvert+\lvert\Psi(x_s)-\Psi(\Psi^s(a))\rvert\le\varepsilon+L\varepsilon^{(s)}$; each step is an instance of the axioms and of the provable Lipschitz inequality, and the recursion $\varepsilon^{(s+1)}=L\varepsilon^{(s)}+\varepsilon$ has the stated solution. (b) $x_r-A^ra=A^r(x_0-a)+\sum_{s<r}A^{r-1-s}u_s$ with $u_s:=x_{s+1}-Ax_s$, and in the real model the deviations $x_0-a$ and $u_s$ range freely over sup-norm boxes of half-widths $\varepsilon^{(0)}$ and $\varepsilon$. A linear image of a product of boxes is a zonotope, which is convex; its projection on coordinate $i$ is the interval of half-width the sum of the $\ell_1$-norms of the corresponding rows, with the extreme values attained by sign choices. So exactly the stated interval of values occurs in $\mathbb R$. Since $\mathrm{RCF}$ is complete and the claim about $x_{r,i}$ involves only the finitely many axioms with $s<r$, $T^\varepsilon_\Psi$ proves an interval statement about $x_{r,i}$ iff it holds in every real model, that is iff the interval contains $(A^ra)_i\pm h_{r,i}$. (c) Solve $\varepsilon^{(r)}\le\delta$; the ``if'' is (a), and the ``only if'' for linear $\Psi$ in dimension one is (b).
+\end{proof}
+
+For non-linear $\Psi$ the ``only if'' fails. Let $\Psi(x)=0$ on $[-1,1]$ and $\Psi(x)=2(x-\operatorname{sign}x)$ outside, so that $L=2$, with $a=0$, $\varepsilon^{(0)}=0$ and $\varepsilon=1/10$. Then $\lvert x_s\rvert\le1/10\le1$ gives $\Psi(x_s)=0$ and so $\lvert x_{s+1}\rvert\le1/10$; by induction $T^\varepsilon_\Psi$ proves ``$x_r\in[-1/10,1/10]$'' at every depth, while $\varepsilon^{(r)}=(2^r-1)/10$ gives $r^*(1/10)=1$. A computation (code in the accompanying repository) confirms the closed form against exact interval propagation for $r\le200$ and several $L$ between $0.5$ and $2$; at $\delta/\varepsilon=10^4$ the horizons are $10^4$, $463$, $72$ and $13$ for $L=1$, $1.01$, $1.1$ and $2$, and infinite for $L\le0.99$. In dimensions $3$ and $10$, for random matrices of spectral radius $0.95$--$1.05$, propagating boxes by interval arithmetic overestimates the exact tolerance $h_{r,i}$ by a median factor of $5$--$300$ at $r=10$ and up to about $10^{10}$ at $r=30$, and the $\infty$-norm Lipschitz bound by up to about $7\times10^{13}$: a reasoner that propagates boxes has a much shorter effective horizon than the theory.
+
+\begin{remark}[Typical against worst case]\status{computed}\src{laws Rem 4.4}\label{rem:laws:typical}
+With $L=1$ and $r=100$ steps the propagated tolerance is $100\varepsilon$, while with independent random-sign errors $\pm\varepsilon$ the mean deviation is $\varepsilon r\binom{r}{r/2}2^{-r}\approx7.96\varepsilon$: a probabilistic error model answers much further out, with a stated confidence instead of a guarantee.
+\end{remark}
+
+\begin{proposition}[The horizon of an exact approximation]\status{proved}\src{laws Prop 4.2}\label{prop:laws:exacthorizon}
+Suppose the true trajectory satisfies $T^\varepsilon_\Psi$, but the inducer holds the exact law $T^0_\Psi$ with the same $a$. Then $T^0_\Psi$ is consistent and proves $x_r=\Psi^r(a)$, which is within $\varepsilon^{(r)}$ of the true $x_r$. If $r\le r^*(\delta)$, the depth-$r$ conclusions of $T^0_\Psi$ are $\delta$-correct for every trajectory compatible with the honest law. For linear $\Psi$ in dimension one with $L=\lvert A\rvert$, some trajectory compatible with the honest law attains the deviation $\varepsilon^{(r)}$, so in that case they are $\delta$-correct for all such trajectories only if $r\le r^*(\delta)$. And $T^0_\Psi$ together with one true datum about $x_r$ whose interval excludes $\Psi^r(a)$ is inconsistent, and so proves every sentence.
+\end{proposition}
+
+\begin{proof}
+The exact trajectory is a model of $T^0_\Psi$, and the true trajectory is a model of $T^\varepsilon_\Psi$. The middle claims are \cref{prop:laws:horizon}(a), (b). For the last, the datum and $x_r=\Psi^r(a)$ are jointly refutable in $B$.
+\end{proof}
+
+\begin{proposition}[Sound reasoning with approximate models]\status{proved (Helly's theorem known); computed}\src{laws Prop 4.3}\label{prop:laws:sound}
+Let $T_i:=\{\forall t\in\mathrm{Dom}_i:\ \lvert q(t)-f_i(t)\rvert\le\varepsilon_i\}$, $i\le k$, be honest pointwise models of one quantity $q$ (scalar, or vector-valued with a norm), with $q$ otherwise unconstrained, and let $T^0_i$ be their exact versions ($\varepsilon_i=0$).
+\begin{enumerate}[label=(\alph*),itemsep=1pt,topsep=2pt]
+\item Let $B$ be true in the intended structure. If every $T_i$ is true, then $\bigcup_iT_i$ is consistent and every sentence derivable from $B\cup\bigcup_iT_i$ is true; every derived statement about $q(t)$ is a set containing the true value.
+\end{enumerate}
+For (b)--(d) assume moreover that $B$ decides every sentence built from the $f_i$, the $\mathrm{Dom}_i$ and the $\varepsilon_i$ at the times concerned (for example $B=\mathrm{RCF}$, with semialgebraic $f_i$ and $\mathrm{Dom}_i$ and rational $\varepsilon_i$).
+\begin{enumerate}[label=(\alph*),resume,itemsep=1pt,topsep=2pt]
+\item $\bigcup_iT^0_i$ is inconsistent, and so proves every sentence, iff $f_i(t)\ne f_j(t)$ for some $t\in\mathrm{Dom}_i\cap\mathrm{Dom}_j$.
+\item $\bigcup_iT_i$ is consistent iff for each $t$ the balls $\{v:\lvert v-f_i(t)\rvert\le\varepsilon_i\}$ with $t\in\mathrm{Dom}_i$ have a common point. For scalar $q$, and for vector $q$ with sup-norm (box) tolerances, this holds iff it holds pairwise, $\lvert f_i(t)-f_j(t)\rvert\le\varepsilon_i+\varepsilon_j$ on every overlap. For Euclidean tolerances in $\mathbb R^m$, $(m+1)$-wise intersection is necessary and sufficient, and pairwise intersection is not sufficient.
+\item If $B$ proves that a map $\Psi$ is $L_\Psi$-Lipschitz, then $T_i\vdash\lvert\Psi(q(t))-\Psi(f_i(t))\rvert\le L_\Psi\varepsilon_i$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(a) The intended structure is a model, and derivations preserve truth. (b) If two exact models disagree at a common time $t$, together they prove $f_i(t)=f_j(t)$, which $B$ refutes by the hypothesis. If they agree on all overlaps, then in every model of $B$ (in which $B$'s decisions fix the values $f_i(t)$) setting $q(t):=f_i(t)$ for $t\in\mathrm{Dom}_i$, and arbitrarily elsewhere, gives a model. (c) The constants $q(t)$ for distinct $t$ are distinct and otherwise unconstrained, so by compactness $B\cup\bigcup_iT_i$ is consistent iff for each $t$, $B$ is consistent with ``some $v$ lies in all the balls at $t$''. By the hypothesis $B$ decides this sentence, and $B$ is true in the intended structure, so it is consistent with $B$ iff it holds there, that is iff the balls have a common point. Intervals that meet pairwise have $\max_i(\text{left end})\le\min_j(\text{right end})$, which is a common point (Helly's theorem in dimension one), and boxes are products of intervals. Helly's theorem in $\mathbb R^m$ (standard; \citealp{helly1923mengen}) gives the $(m+1)$-wise criterion. Three discs of radius $1.1$ centred at the vertices of an equilateral triangle of side $2$ meet pairwise but have no common point, since the circumradius is $2/\sqrt3\approx1.155$. (d) is the Lipschitz inequality in $B$.
+\end{proof}
+
+Without the hypothesis on $B$, (b) and (c) fail: take $B=\emptyset$, $f_i(t)$ and $f_j(t)$ distinct constant symbols and $\mathrm{Dom}_i=\mathrm{Dom}_j$ a single time; then $T^0_i\cup T^0_j$ is consistent (interpret the two constants as equal), although the values differ in the intended structure. A computation finds pairwise and joint overlap in agreement on $10^5$ random families of $2$ to $6$ intervals and on $2\times10^4$ random families of boxes in $\mathbb R^2$.
+
+\subsection{Best systems}\label{app:laws:best}
+
+\begin{definition}[Explanatory power]\status{definition}\src{laws Def 5.2}\label{def:laws:EP}
+For a theory $T$ and a module $\mathcal A\subseteq T$, $\EP_D(\mathcal A;T):=\big(\Exc_D(T\setminus\mathcal A)-\Exc_D(T)\big)/\lVert\mathcal A\rVert$: the bits of data the module explains per bit of its statement, in the context $T$.
+\end{definition}
+
+\begin{proposition}[Marginal slopes]\status{proved}\src{laws Prop 5.1}\label{prop:laws:slopes}
+Let $T^*$ be a $\lambda$-MAP within a family of theories that contains $T^*\setminus\mathcal A$ and $T^*\cup\mathcal B$ for the modules considered. For every module $\mathcal A\subseteq T^*$, $\Exc_D(T^*\setminus\mathcal A)-\Exc_D(T^*)\ge\lambda\lVert\mathcal A\rVert$; and for every $\mathcal B$ disjoint from $T^*$, $\Exc_D(T^*)-\Exc_D(T^*\cup\mathcal B)\le\lambda\lVert\mathcal B\rVert$.
+\end{proposition}
+
+\begin{proof}
+$J_\lambda(T^*;D)\le J_\lambda(T^*\setminus\mathcal A;D)$ and $J_\lambda(T^*;D)\le J_\lambda(T^*\cup\mathcal B;D)$, with $\lVert T^*\rVert-\lVert T^*\setminus\mathcal A\rVert=\lVert\mathcal A\rVert$ and $\lVert T^*\cup\mathcal B\rVert-\lVert T^*\rVert=\lVert\mathcal B\rVert$.
+\end{proof}
+
+\begin{proof}[Proof of \cref{prop:laws:kink}]
+By the hypotheses (\cref{prop:laws:P2hyp}) the hull lemma (Lemma~3.8(v) of the companion paper on steeper priors) applies: for $\lambda\in(\sigma_{i+1},\sigma_i)$ the $\lambda$-MAPs are exactly the theories at $v_i$, and at $\lambda=\sigma_j$ ($j\ge1$) they are the theories on the closed edge $[v_{j-1},v_j]$. (b)$\Rightarrow$(a): $(\tau,\sigma)\subseteq(\sigma_{i+1},\sigma_i)$. (a)$\Rightarrow$(b): if some edge slope $\sigma_j$ lay in $(\tau,\sigma)$, the $\lambda$-MAP set at $\lambda=\sigma_j$, the theories on $[v_{j-1},v_j]$, would differ from the set just below $\sigma_j$, the theories at $v_j$ only, since $v_{j-1}\ne v_j$. So no edge slope lies in $(\tau,\sigma)$, and $(\tau,\sigma)$ lies in one interval $(\sigma_{i+1},\sigma_i)$, which is (b). (b)$\Leftrightarrow$(c) is Corollary~5.4(c) of the companion paper on steeper priors: a zero-window $(\sigma,\tau)$-kink with $\tau<\sigma$ is a vertex $v_i$ with $(\tau,\sigma)\subseteq(\sigma_{i+1},\sigma_i)$, and conversely every vertex $v_i$ is a zero-window $(\sigma_i,\sigma_{i+1})$-kink, hence a $(\sigma,\tau)$-kink whenever $\sigma\le\sigma_i$ and $\tau\ge\sigma_{i+1}$.
+\end{proof}
+
+A computation on $400$ random point families with $10$ random intervals each, testing ``the $\lambda$-MAP set is constant on $(\tau,\sigma)$'' exactly at every crossing point and between consecutive ones, agrees with (b) in all $4000$ cases.
+
+\begin{proposition}[The trivialisation is blocked]\status{proved, given prop:laws:codingbound}\src{laws Prop 5.7}\label{prop:laws:trivial}
+Let $\mathcal L'\supseteq\mathcal L$ be any extension of the language, for example by a predicate $\mathrm{Act}$ true of exactly the actual things, with the axiom $\forall x\,\mathrm{Act}(x)$; fix a syntax code for $\mathcal L'$, and let the data be base-language answers whose provability from the theories considered is decidable. Then every finite theory $T$ in $\mathcal L'$ consistent with $D$ has $\lVert T\rVert+\Exc^Q_D(T)\ge K(y_D\mid\dom D)-K(\mathcal L')-c$, where $K(\mathcal L')$ is the complexity of a decoder for $\mathcal L'$ and its syntax code. Without decidability, add $n$ on the left. If $\mathcal L'$ and its code are fixed independently of $D$, $K(\mathcal L')$ is a constant.
+\end{proposition}
+
+\begin{proof}
+The weights in the proof of \cref{prop:laws:codingbound} search for, or decide, proofs from $T$ of base-language answers. Given a decoder for the syntax of $\mathcal L'$ they are computable (respectively lower semicomputable) from $T$ and the questions, and they do not otherwise depend on the language. So the argument of \cref{prop:laws:codingbound}(b) (respectively (a)) gives $K(y_D\mid\dom D)\le K(\mathcal L')+K(T\mid\mathcal L')+\Exc^Q_D(T)+c$ (respectively with $n$ added), and $K(T\mid\mathcal L')\le\lVert T\rVert+c$.
+\end{proof}
+
+\begin{proposition}[Facts used once never enter for $\lambda>1$]\status{(a) proved; (b) proved, given prop:laws:codingbound and Corollary 5.5 of the companion paper on steeper priors}\src{laws Prop 5.3}\label{prop:laws:once}
+\leavevmode
+\begin{enumerate}[label=(\alph*),itemsep=1pt,topsep=2pt]
+\item Let $T^*$ be a $\lambda$-MAP with $\lambda>1$ and $\chi$ a sentence. Suppose that, in the context $T^*\setminus\{\chi\}$, adding $\chi$ turns exactly the exceptions in a set $\mathcal D_\chi\subseteq D$ into proved data and changes nothing else, and that $\sum_{(\mathcal Q,a)\in\mathcal D_\chi}\gamma(\mathcal Q)<\lambda\ell(\chi)$. Then $\chi\notin T^*$. In particular this applies to a datum's answer $a$ stated as an axiom whenever $\gamma(\mathcal Q)\le\ell(a)$ and stating it proves no other datum in that context.
+\item Let provability on the data be decidable in the class, with $\kappa$ the constant of \cref{prop:laws:codingbound}, and let $T_s$ be \emph{$b$-sufficient}: $\lVert T_s\rVert+\Exc_D(T_s)\le K(y_D\mid\dom D)+b$. Every theory $T$ has $\Exc_D(T)\ge\Exc_D(T_s)-(\lVert T\rVert-\lVert T_s\rVert)-(b+\kappa)$; a module $\mathcal A$ added to $T_s$ has $\EP_D(\mathcal A;T_s\cup\mathcal A)\le1+(b+\kappa)/\lVert\mathcal A\rVert$; and every $\lambda$-MAP $T$ with $\lambda>1$ has $\lVert T\rVert\le\lVert T_s\rVert+(b+\kappa)/(\lambda-1)$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(a) If $\chi\in T^*$, deleting it raises $\Exc_D$ by exactly $\sum_{\mathcal D_\chi}\gamma(\mathcal Q)<\lambda\ell(\chi)=\lambda\lVert\{\chi\}\rVert$, contradicting \cref{prop:laws:slopes}. For an answer stated as an axiom, $\mathcal D_\chi$ is the one datum, and $\gamma(\mathcal Q)\le\ell(a)<\lambda\ell(a)$. (b) \Cref{prop:laws:codingbound}(b) gives $\lVert T\rVert+\Exc_D(T)\ge K(y_D\mid\dom D)-\kappa\ge\lVert T_s\rVert+\Exc_D(T_s)-b-\kappa$, which is the first claim, a right line of slope $1$ through the point of $T_s$. For a module $\mathcal A$ disjoint from $T_s$, $\lVert T_s\cup\mathcal A\rVert-\lVert T_s\rVert=\lVert\mathcal A\rVert$, which gives the second. For a $\lambda$-MAP $T$, $\lambda\lVert T\rVert+\Exc_D(T)\le\lambda\lVert T_s\rVert+\Exc_D(T_s)$; combined with the first claim this gives $(\lambda-1)(\lVert T\rVert-\lVert T_s\rVert)\le b+\kappa$, which is Corollary~5.5(a) of the companion paper on steeper priors in this class.
+\end{proof}
+
+So at $\lambda=1$ a fact that explains only itself is excluded only by the code's per-axiom overhead, while every $\lambda>1$ excludes every module whose explanatory power is below $\lambda$.
+
+\paragraph{The solar-system toy.} Bodies $b\le k_{\rm b}$ have $n_b$ observations each, each of literal cost $\gamma$ (code Q), and $n_{\rm tot}:=\sum_bn_b$. The modules are the law $\Lambda$ ($L$ bits), body $b$'s elements $\mathrm{El}_b$ ($k$ bits), and Kepler's third law $\mathrm{K3}$ ($L_3$ bits), which shortens every elements module by $s$ bits, $0<s<k$, because it derives the period from the semi-major axis. $\Lambda\cup\mathrm{El}_b$ proves all of $b$'s observations, and no other combination proves any observation: laws alone answer no position question, and neither do elements alone. The theories are $\Lambda$ or not, $\mathrm{K3}$ or not, and a set $S$ of bodies whose elements are axioms.
+
+\begin{proposition}[Laws and initial conditions in the solar-system toy]\status{proved; computed}\src{laws Prop 5.5}\label{prop:laws:K3}
+Put $k_\Lambda:=k$, $k_{\Lambda+\mathrm{K3}}:=k-s$ and $S_x(\lambda):=\{b:\gamma n_b>\lambda k_x\}$ for $x\in\{\Lambda,\Lambda+\mathrm{K3}\}$. The optimal values of the three law choices are
+\[J^*_\emptyset=\gamma n_{\rm tot},\qquad J^*_\Lambda=\lambda L+\sum_b\min(\gamma n_b,\lambda k),\qquad J^*_{\Lambda+\mathrm{K3}}=\lambda(L+L_3)+\sum_b\min(\gamma n_b,\lambda(k-s)),\]
+attained by $S=S_x(\lambda)$ (bodies with $\gamma n_b=\lambda k_x$ may go either way); the $\lambda$-MAP is the best of the three ($\mathrm{K3}$ without $\Lambda$ is useless).
+\begin{enumerate}[label=(\alph*),itemsep=1pt,topsep=2pt]
+\item $\Lambda$ beats the empty theory iff $\sum_{b\in S_\Lambda(\lambda)}(\gamma n_b-\lambda k)>\lambda L$.
+\item $J^*_{\Lambda+\mathrm{K3}}-J^*_\Lambda=\lambda L_3-\sum_b\big[\min(\gamma n_b,\lambda k)-\min(\gamma n_b,\lambda(k-s))\big]$. If no body has $\lambda(k-s)<\gamma n_b\le\lambda k$, so that $S$ is the same with and without $\mathrm{K3}$, then $J^*_{\Lambda+\mathrm{K3}}<J^*_\Lambda$ iff $s\lvert S\rvert>L_3$, whatever $\lambda$ is. $\mathrm{K3}$ is in the $\lambda$-MAP iff in addition $J^*_{\Lambda+\mathrm{K3}}<J^*_\emptyset$.
+\item In the $\lambda$-MAP $\Lambda\cup\{\mathrm{El}_b:b\in S\}$ (with or without $\mathrm{K3}$), $\EP(\Lambda)=\gamma\sum_{b\in S}n_b/L$ and $\EP(\mathrm{El}_b)=\gamma n_b/k_x$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+Without $\Lambda$ no observation is proved, so the best such theory is empty, with $J=\gamma n_{\rm tot}$. For a law choice $x$ with $\Lambda$, $J_\lambda$ is a constant plus a sum over bodies, where including $\mathrm{El}_b$ costs $\lambda k_x$ and excluding it costs $\gamma n_b$; minimise each term. (a) is the comparison of $J^*_\Lambda$ with $J^*_\emptyset$. (b) The bracket is $\lambda s$ when $\gamma n_b>\lambda k$, $\gamma n_b-\lambda(k-s)$ when $\lambda(k-s)<\gamma n_b\le\lambda k$, and $0$ otherwise; without bodies in the middle range the difference is $\lambda(L_3-s\lvert S\rvert)$. The $\lambda$-MAP is the best of the three law choices, the empty one included. (c) Deleting $\Lambda$ (respectively $\mathrm{El}_b$) makes exactly the observations of the bodies in $S$ (respectively of $b$) literal.
+\end{proof}
+
+Part (b) compares law choices; it is not membership of the $\lambda$-MAP. With two bodies of one observation each, $\gamma=10$, $L=1000$, $k=5$, $s=4$, $L_3=1$ and $\lambda=1$, $S$ is both bodies with and without $\mathrm{K3}$ and $s\lvert S\rvert=8>L_3$, but the $\lambda$-MAP is the empty theory: $J^*_\emptyset=20$ against $J^*_{\Lambda+\mathrm{K3}}=1003$ and $J^*_\Lambda=1010$. The middle-range condition of (b) matters too: in a population of eight planets with $655$ to $3838$ observations, sixty asteroids with a median of about five and thirty comets with one or two ($L=300$, $L_3=150$, $k=60$, $s=15$, $\gamma=12.4$), $\mathrm{K3}$ is in the $\lambda$-MAP at $\lambda=6.75$ although $s\lvert S_\Lambda(\lambda)\rvert=135<L_3$, because with $\mathrm{K3}$ more bodies pay for their elements. A computation (code in the accompanying repository) confirms the closed form against brute force over all theories in $2100$ random cases, and the criterion of (b) in all $13250$ random cases with the same $S$ under both law choices.
+
+In the same population the elements of a well-observed body explain hundreds of bits per bit (\cref{prop:laws:K3}(c)) and sit on the steep side of the hull with the law, and a computation (code in the accompanying repository) finds that the $\lambda$-MAP is ``the law plus the elements of all eight planets'' for every $\lambda\in(7.03,135.37)$, while below $\lambda\approx7$ it changes with every asteroid. Inside such an interval the worry that the best system depends on an arbitrary choice of balance (cf.\ \citealp{woodward2014simplicity}) is moot, and robustness to the balance (\cref{prop:laws:kink}) is a checkable property of a language, a family of candidates and a data set.
+
+\begin{proposition}[Laws and initial conditions in the question format]\status{proved; computed}\src{laws Prop 5.9}\label{prop:laws:questions}
+Let the data be conditional questions ``given the elements $\alpha_b$ of body $b$, is $\ell$ the case?'', with compatibility as in \Ethree: a datum is compatible with $T$ when $B\cup T\cup\{\alpha_b\}$ is consistent and proves $\ell$. In the toy, every theory of the family (the law, $\mathrm{K3}$, and elements modules stating the true elements) is consistent with every true antecedent. Then an elements module $\mathrm{El}_b$ with the same content as $\alpha_b$ adds nothing, so $\EP(\mathrm{El}_b)=0$ and no $\lambda$-MAP contains elements; and $\Lambda$ alone answers every question, with $\EP(\Lambda)=\gamma n_{\rm tot}/L$ however the $n_{\rm tot}$ observations are spread over bodies.
+\end{proposition}
+
+\begin{proof}
+Immediate from the definition of compatibility: $T\cup\{\alpha_b\}\cup\mathrm{El}_b$ and $T\cup\{\alpha_b\}$ prove the same sentences, and $\Lambda\cup\{\alpha_b\}$ proves all of $b$'s observations. Adding $\mathrm{El}_b$ raises $J_\lambda$ by $\lambda k>0$ and lowers no exception cost.
+\end{proof}
+
+Without the consistency condition the encoding is degenerate: a theory that refutes the antecedents would prove every datum (\cref{prop:shape:E2}). In the question format the distinction between laws and initial conditions is the distinction between theory and question antecedent.
+
+\subsection{Explanatory power, unification and correction}\label{app:laws:explain}
+
+\begin{proposition}[Explanatory power as a likelihood ratio; unification]\status{proved; computed}\src{laws Prop 5.8}\label{prop:laws:EP}
+Write $P_T(D):=2^{-\Exc_D(T)}$ (code Q or R). For a hypothesis $h$, a background theory $T_\flat$, data sets $D_1,D_2$ on disjoint questions and a theory $x$, put $I(h;D\mid T_\flat):=\log(P_{T_\flat\cup h}(D)/P_{T_\flat}(D))$, $I_x(D_1;D_2):=\log\frac{P_x(D_1\cup D_2)}{P_x(D_1)P_x(D_2)}$ and $U(D_1,D_2;h\mid T_\flat):=I(h;D_1\cup D_2\mid T_\flat)-I(h;D_1\mid T_\flat)-I(h;D_2\mid T_\flat)$.
+\begin{enumerate}[label=(\alph*),itemsep=1pt,topsep=2pt]
+\item $\lVert\mathcal A\rVert\,\EP_D(\mathcal A;T)=I(\mathcal A;D\mid T\setminus\mathcal A)$.
+\item $U(D_1,D_2;h\mid T_\flat)=I_{T_\flat\cup h}(D_1;D_2)-I_{T_\flat}(D_1;D_2)$. If $P$ is a product over questions for both theories, then $U=0$ for every split.
+\item Let $h$ be a law family with a $k$-bit parameter $\theta$ under the uniform prior, $P_h(D):=2^{-k}\sum_\theta P_{h\cup\{\theta\}}(D)$, and $P_\emptyset$ a product. If each of $D_1,D_2$ is proved by $h\cup\{\theta^*\}$ and has likelihood $0$ under every other $\theta$, then $U(D_1,D_2;h)=k$. If $\theta=(\theta_1,\theta_2)$ with $D_i$ depending only on $\theta_i$, then $U=0$. If $\theta_i=(\theta_{\rm sh},\theta'_i)$ share a $k_{\rm sh}$-bit constant $\theta_{\rm sh}$ and each $D_i$ identifies $(\theta_{\rm sh},\theta'_i)$, then $U=k_{\rm sh}$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(a) is the definition of $\EP$. (b) Expand the six logarithms: the first term of the difference is $\log P_{T_\flat\cup h}(D_1\cup D_2)-\log P_{T_\flat\cup h}(D_1)-\log P_{T_\flat\cup h}(D_2)$, and the second is the same expression for $T_\flat$; a product law makes $I_x(D_1;D_2)=0$. (c) Use (b) with $I_\emptyset=0$. In the first case $P_h(D_1)=P_h(D_2)=P_h(D_1\cup D_2)=2^{-k}$, so $I_h(D_1;D_2)=k$. In the second, $P_h(D_1\cup D_2)=P_h(D_1)P_h(D_2)$. In the third, with $\theta'_i$ of $k'$ bits, $P_h(D_i)=2^{-k_{\rm sh}-k'}$ and $P_h(D_1\cup D_2)=2^{-k_{\rm sh}-2k'}$, so $I_h(D_1;D_2)=k_{\rm sh}$.
+\end{proof}
+
+A computation with $k=6$ and observations given by a random table gives $U=0.00$ for a stated parameter, $6.00$ for a marginalised parameter and one body, $0.00$ for two bodies with independent parameters, and $3.00$ for two bodies sharing a $3$-bit constant; the identity (b) holds to $3\times10^{-15}$ on $1000$ random joint laws. Myrvold describes unification as the degree to which a hypothesis renders phenomena informationally relevant to one another, a contribution to evidential support \citep{myrvold2003bayesian}; by (b), $U$ is the change in the mutual information between $D_1$ and $D_2$ that adding $h$ brings about, which has that form. We do not claim that his formula coincides with $U$ in every detail. At $\lambda=1$ a module pays iff its explanatory power exceeds $1$, which is the compression criterion of inductive logic programming (cf.\ \citealp{muggleton1995inverse,srinivasan1994justification}).
+
+Copernicus against Ptolemy (for the history, see \citealp{kuhn1957copernican}) is unification without better prediction. The lengths in the following comparison are not measured.
+
+\begin{proposition}[Unification without better prediction]\status{proved (the lengths are not measured)}\src{laws \S5.3 (Copernicus against Ptolemy); philosophy \S3.4}\label{prop:laws:copernicus}
+Consider three theories with a common part: $\mathrm{Pt}_f$, Ptolemy's system with free epicycle phases, which pays for the coincidence of each superior planet $p$'s retrograde motion with its opposition in its fit, $a_p$ bits per planet; $\mathrm{Pt}_s$, the same with the coincidences stated as axioms, $\sum_pa_p$ law bits more than $\mathrm{Pt}_f$ and with the fit of $\mathrm{Cop}$; and $\mathrm{Cop}$, Copernicus's system, $H$ law bits more than $\mathrm{Pt}_f$ and with the fit of $\mathrm{Pt}_s$.
+\begin{enumerate}[label=(\alph*),itemsep=1pt,topsep=2pt]
+\item $\mathrm{Cop}$ beats $\mathrm{Pt}_s$, which makes the same predictions, at every $\lambda$ iff $H<\sum_pa_p$.
+\item $\mathrm{Cop}$ is $\mathrm{Pt}_f$ plus a module with $\EP=\sum_pa_p/H$, so it beats $\mathrm{Pt}_f$ iff $\lambda<\sum_pa_p/H$.
+\item $\mathrm{Pt}_s$ beats $\mathrm{Pt}_f$ iff $\lambda<1$.
+\end{enumerate}
+Hence if $H<\sum_pa_p$, $\mathrm{Cop}$ is the best of the three exactly for $\lambda<\sum_pa_p/H$, and $\mathrm{Pt}_f$ above; if $H\ge\sum_pa_p$, $\mathrm{Cop}$ is never strictly best: $\mathrm{Pt}_s$ is best for $\lambda<1$ (tying $\mathrm{Cop}$ if $H=\sum_pa_p$) and $\mathrm{Pt}_f$ for $\lambda>1$.
+\end{proposition}
+
+\begin{proof}
+Measure lengths and fits relative to $\mathrm{Pt}_f$ and write $a:=\sum_pa_p$. Then $J_\lambda(\mathrm{Pt}_f)=0$, $J_\lambda(\mathrm{Pt}_s)=\lambda a-a$ and $J_\lambda(\mathrm{Cop})=\lambda H-a$. (a) $J_\lambda(\mathrm{Cop})-J_\lambda(\mathrm{Pt}_s)=\lambda(H-a)$, negative for every $\lambda>0$ iff $H<a$. (b) $J_\lambda(\mathrm{Cop})-J_\lambda(\mathrm{Pt}_f)=\lambda H-a$, and the module of $H$ bits lowers the fit by $a$. (c) $J_\lambda(\mathrm{Pt}_s)-J_\lambda(\mathrm{Pt}_f)=(\lambda-1)a$. If $H<a$, then $a/H>1$: for $\lambda<a/H$, $\mathrm{Cop}$ beats both others; for $\lambda>a/H>1$, $\mathrm{Pt}_f$ beats both. If $H\ge a$: for $\lambda<1$, $\mathrm{Pt}_s$ beats $\mathrm{Pt}_f$ and is at least as good as $\mathrm{Cop}$, with equality iff $H=a$; for $\lambda>1\ge a/H$, $\mathrm{Pt}_f$ beats both; at $\lambda=1$, $\mathrm{Pt}_s$ and $\mathrm{Pt}_f$ tie and $\mathrm{Cop}$ is no better.
+\end{proof}
+
+Newton's theory does not entail Kepler's laws; with the planets' masses and initial conditions it contradicts their exact form (cf.\ \citealp{duhem1954aim}) and derives corrected statements, and Kepler's laws within tolerances on windows, as in the model of reduction to a corrected reduced theory (cf.\ \citealp{schaffner1967approaches}); deriving ``Kepler within $\varepsilon$ on a window'' from Newton's theory itself needs validated perturbation bounds (\cref{sec:kepler:newton}). The following toy makes the structure provable. Over $B=\mathrm{RCF}$ with constants $x_{t,1},x_{t,2}$ for $t\le\bar t$ (a planar state $x_t$ per step), let $\mathrm{Rot}$ be the rotation with cosine $3/5$ and sine $4/5$, $\mathbf P$ a rational $2\times2$ matrix with operator norm $\lVert\mathbf P\rVert$, $\eta_{\rm c}:=1/100$, $A:=\mathrm{Rot}+\eta_{\rm c}\mathbf P$ and $a:=(1,0)$; $\lvert\cdot\rvert$ is the Euclidean norm, and $\lvert v\rvert\le\varepsilon$ is stated as $\lvert v\rvert^2\le\varepsilon^2$ with $\varepsilon^2$ rational. The \emph{old exact law} is $T_0:=\{x_t=\mathrm{Rot}^ta:t\le\bar t\}$ (uniform circular motion), the \emph{successor} is $T_{\rm new}:=\{x_0=a\}\cup\{x_{t+1}=Ax_t:t<\bar t\}$, the \emph{honest old law} is $T^\varepsilon:=\{\lvert x_t-\mathrm{Rot}^ta\rvert\le\varepsilon:t\le\bar t\}$, and a \emph{time-dependent form} is $T^{(\varepsilon_\cdot)}:=\{\lvert x_t-\mathrm{Rot}^ta\rvert\le\varepsilon_t:t\le\bar t\}$.
+
+\begin{proposition}[Explanation by approximate correction]\status{proved; computed}\src{laws Prop 7.1(a)--(d'')}\label{prop:laws:correction}
+\leavevmode
+\begin{enumerate}[label=(\alph*),itemsep=1pt,topsep=2pt]
+\item $T_{\rm new}\vdash T^\varepsilon$ for every rational $\varepsilon\ge\varepsilon(\bar t):=((1+\eta_{\rm c}\lVert\mathbf P\rVert)^{\bar t}-1)\lvert a\rvert$.
+\item $T_{\rm new}\vdash T^\varepsilon$ iff $\varepsilon^2\ge\varepsilon_{\min}(\bar t)^2:=\max_{t\le\bar t}\lvert A^ta-\mathrm{Rot}^ta\rvert^2$, a rational number. So $\varepsilon_{\min}(\bar t)\le\varepsilon(\bar t)$, and $T^{\varepsilon_{\min}(\bar t)}$ is the strongest uniform-tolerance form of the old law on the window that the successor proves.
+\item If $\eta_{\rm c}\mathbf Pa\ne0$ and $\bar t\ge1$, then $T_{\rm new}\vdash\neg\bigwedge T_0$.
+\item Among uniform-tolerance forms, $T^\varepsilon$ is a common consequence of $T_0$ and $T_{\rm new}$ iff $\varepsilon\ge\varepsilon_{\min}(\bar t)$; the strongest common one is $T^{\varepsilon_{\min}(\bar t)}$.
+\item The time-dependent form with $\varepsilon_t:=\lvert A^ta-\mathrm{Rot}^ta\rvert$ is a common consequence of both theories, strictly stronger than $T^{\varepsilon_{\min}(\bar t)}$ whenever $\varepsilon_t<\varepsilon_{\min}(\bar t)$ for some $t$.
+\item The strongest common consequence of the two finite theories is their disjunction $\bigwedge T_0\vee\bigwedge T_{\rm new}$, which is not a tolerance law; if $\varepsilon_{\min}(\bar t)>0$, $T^{\varepsilon_{\min}(\bar t)}$ does not entail it.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+Write $\varepsilon_t:=\lvert A^ta-\mathrm{Rot}^ta\rvert$; $\varepsilon_t^2$ is rational because $A^ta$ and $\mathrm{Rot}^ta$ are rational vectors. In every model of $B\cup T_{\rm new}$, that is in any real closed field with interpretations of the constants, the recurrence determines $x_t=A^ta$, a rational vector, since $\mathbb Q$ embeds uniquely into every ordered field; instantiating the recurrence $t$ times gives $T_{\rm new}\vdash x_t=A^ta$.
+
+(a) $\lVert\mathrm{Rot}\rVert=1$ and $\lVert A\rVert\le1+\eta_{\rm c}\lVert\mathbf P\rVert$, so $\varepsilon_{t+1}=\lvert A(A^ta-\mathrm{Rot}^ta)+\eta_{\rm c}\mathbf P\,\mathrm{Rot}^ta\rvert\le(1+\eta_{\rm c}\lVert\mathbf P\rVert)\varepsilon_t+\eta_{\rm c}\lVert\mathbf P\rVert\lvert a\rvert$ with $\varepsilon_0=0$, and by induction $\varepsilon_t\le((1+\eta_{\rm c}\lVert\mathbf P\rVert)^t-1)\lvert a\rvert\le\varepsilon(\bar t)$ for $t\le\bar t$. Since $T_{\rm new}$ proves $\lvert x_t-\mathrm{Rot}^ta\rvert^2=\varepsilon_t^2$, it proves each conjunct of $T^\varepsilon$ for rational $\varepsilon\ge\varepsilon(\bar t)$.
+
+(b) Over $B\cup T_{\rm new}$ each conjunct of $T^\varepsilon$ is equivalent to the inequality $\varepsilon_t^2\le\varepsilon^2$ between rationals, which $\mathrm{RCF}$ proves or refutes. So $T_{\rm new}\vdash T^\varepsilon$ iff all $\bar t+1$ inequalities hold, iff $\varepsilon^2\ge\max_{t\le\bar t}\varepsilon_t^2=\varepsilon_{\min}(\bar t)^2$; and $\varepsilon_{\min}(\bar t)\le\varepsilon(\bar t)$ by the bound in (a).
+
+(c) $T_{\rm new}\vdash x_1=Aa$ and $T_0\ni(x_1=\mathrm{Rot}\,a)$, with $Aa-\mathrm{Rot}\,a=\eta_{\rm c}\mathbf Pa\ne0$.
+
+(d) $T_0$ proves $x_t=\mathrm{Rot}^ta$, hence $T^\varepsilon$ for every $\varepsilon\ge0$; combine with (b).
+
+(e) $T_{\rm new}$ proves $\lvert x_t-\mathrm{Rot}^ta\rvert^2=\varepsilon_t^2$, and $T_0$ proves $\lvert x_t-\mathrm{Rot}^ta\rvert^2=0\le\varepsilon_t^2$. If $\varepsilon_t<\varepsilon_{\min}(\bar t)$ at some $t$, choose a real point $x_t$ with $\varepsilon_t<\lvert x_t-\mathrm{Rot}^ta\rvert\le\varepsilon_{\min}(\bar t)$ and put $x_s:=\mathrm{Rot}^sa$ for $s\ne t$: this is a model of $T^{\varepsilon_{\min}(\bar t)}$ that violates the time-dependent form.
+
+(f) For finite theories, a sentence follows from both iff it follows from their disjunction (proof by cases), so the disjunction is the strongest common consequence. Put $x_t:=\mathrm{Rot}^ta+(\varepsilon_{\min}(\bar t),0)$ for every $t\le\bar t$: if $\varepsilon_{\min}(\bar t)>0$, this is a model of $T^{\varepsilon_{\min}(\bar t)}$ with $x_0\ne a$, so it is a model of neither theory, and $T^{\varepsilon_{\min}(\bar t)}$ does not entail the disjunction; in particular the disjunction is not equivalent to a uniform-tolerance law.
+\end{proof}
+
+\begin{remark}[Derivations of polynomial size]\status{proof sketch (numeral sizes computed)}\src{laws Prop 7.1(e)}\label{rem:laws:correction}
+\emph{Proof sketch.} What is not written out is the size of derivations of arithmetic on binary numerals from the field axioms, which is standard. The natural derivation of $T^{\varepsilon}$ from $T_{\rm new}$ instantiates the recurrence $t$ times, writes each $x_t$ as an exact rational vector and checks $\bar t+1$ numerical inequalities; the numerals it writes have total bit size $\sum_{t\le\bar t}\mathrm{bits}(A^ta)=O(\bar t^2\log\mathrm{ht})$, where $\mathrm{ht}$ is the height of the entries of $A$. If the numeral arithmetic has derivations of size polynomial in the numerals' size, the whole derivation has size polynomial in $\bar t$. For $\mathbf P=\mathbf J\,\mathrm{Rot}$, with $\mathbf J$ the rotation by $90^\circ$, the numerals have $1894$ bits at $\bar t=10$ and about $1.8\times10^5$ at $\bar t=100$.
+\end{remark}
+
+Exact rational arithmetic (code in the accompanying repository) gives, for three perturbations with $\lVert\mathbf P\rVert=1$ ($\mathbf J$ is the rotation by $90^\circ$):
+\begin{center}\small
+\begin{tabular}{lll}
+\toprule
+$\mathbf P$ & $\varepsilon_{\min}(\bar t)$ at $\bar t=1,10,100,200$ & bound $\varepsilon(\bar t)$\\
+\midrule
+$\mathbf J\,\mathrm{Rot}$ (outward spiral with precession) & $0.0100,\ 0.0999,\ 0.961,\ 1.69$ & $0.0100,\ 0.105,\ 1.70,\ 6.32$\\
+$\mathrm{diag}(1,-1)\,\mathrm{Rot}$ (distortion) & $0.0100,\ 0.0127,\ 0.0186,\ 0.0243$ & the same\\
+identity (spiral) & $0.0100,\ 0.103,\ 1.33,\ 3.49$ & the same\\
+\bottomrule
+\end{tabular}
+\end{center}
+In each case $T_{\rm new}$ refutes $T_0$ at $t=1$. The bound $\varepsilon(\bar t)$ is nearly tight for small windows when the perturbation accumulates, and very loose for a bounded distortion (ratio $0.004$ at $\bar t=200$). For $\mathbf P=\mathbf J\,\mathrm{Rot}$ the time-dependent tolerances have mean $0.0500$ at $\bar t=10$ and $0.490$ at $\bar t=100$, about half of $\varepsilon_{\min}(\bar t)$. A circle refitted on the window (radius and angular speed; floating point, for comparison only) absorbs the precession almost entirely in the first case ($2.5\times10^{-4}$ and $2.5\times10^{-3}$ at $\bar t=10,100$) and the growth not at all in the third ($3.7\times10^{-2}$ and $0.80$): the toy analogue of the fitted ellipses of \cref{tab:laws:residuals}.
+
+\subsection{Domains of applicability and retention}\label{app:laws:domains}
+
+Let a law $\Lambda$ with per-system elements prove the data of every system but one, $\star$, whose $n_\star$ data it fits, with $\star$'s elements ($k_\star$ bits), at the per-datum rate $m^\star_{\rm pat}$ of the exact law with exceptions, or at the rate $m^\star_{\rm hon}$ of an honest tolerance for $\star$, at a one-off cost of $h_\star$ bits. The \emph{domain-restricted law} $\Lambda_{\rm Dom}:=\forall b\,(\mathrm{Dom}(b)\to\mathrm{law}(b))$, with $\mathrm{Dom}$ a definable predicate that $B$ proves of the other systems and refutes of $\star$, costs $\lVert\mathrm{Dom}\rVert$ bits more than $\Lambda$ (a few bits if ``planet'' is a base predicate, about the logarithm of the number of systems to name $\star$) and leaves $\star$'s data literal, at rate $\gamma$. So $\star$'s data have three treatments: restriction (rate $\gamma$, constant $\lambda\lVert\mathrm{Dom}\rVert$), patched (rate $m^\star_{\rm pat}$, constant $\lambda k_\star$) and honest (rate $m^\star_{\rm hon}$, constant $\lambda(k_\star+h_\star)$).
+
+\begin{proposition}[Domain restriction]\status{proved; computed}\src{laws Prop 6.1}\label{prop:laws:domain}
+\leavevmode
+\begin{enumerate}[label=(\alph*),itemsep=1pt,topsep=2pt]
+\item $J_\lambda(\Lambda_{\rm Dom})-J_\lambda(\Lambda\cup\mathrm{El}_\star\text{ with }\star\text{'s exceptions})=\lambda\lVert\mathrm{Dom}\rVert-\lambda k_\star+\sum_{\star\text{'s data}}(\gamma-c_{\rm pat})$, and likewise against the honest treatment of $\star$, with $\lambda(k_\star+h_\star)$ and $c_{\rm hon}$, where $c_{\rm pat},c_{\rm hon}$ are the per-datum costs.
+\item With i.i.d.\ data and $n_\star\to\infty$, the restriction is eventually the $\lambda$-MAP's treatment of $\star$ iff $\gamma<\min(m^\star_{\rm pat},m^\star_{\rm hon})$, or $\gamma=m^\star_{\rm hon}<m^\star_{\rm pat}$ with the honest cost almost surely $\gamma$ and $\lVert\mathrm{Dom}\rVert<k_\star+h_\star$. If the least rate is shared by two treatments whose costs differ non-degenerately, there is no eventual winner.
+\item Under \SAIabbr's pricing (code R), $m^\star_{\rm hon}<\gamma$ whenever $\varepsilon^*_\star<\mathsf R/(2\mathrm e)$ (for $\Delta\le2\varepsilon^*_\star$) or $\Delta<\mathsf R/\mathrm e$ (for $\Delta\ge2\varepsilon^*_\star$). So a system that the law confines within about $66^\circ$ of longitude (a sufficient bound) is never cut out asymptotically at any cell width below $\mathsf R/\mathrm e$: it is kept with its own, wider tolerance. Under code Q with $\Delta\le2\varepsilon^*_\star$ the honest treatment costs exactly $\gamma$ per datum, and the restriction is eventually selected iff $m^\star_{\rm pat}>\gamma$ and $\lVert\mathrm{Dom}\rVert<k_\star+h_\star$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(a) The two theories differ in the domain clause, in $\star$'s elements, and in the treatment of $\star$'s data; the other systems' data are proved by both. (b) \Cref{thm:laws:as}(i), (ii) applied to the three treatments (code-Q costs are bounded and code-R costs have all moments): a unique least rate wins eventually; a tie with an almost surely zero cost difference is decided by the constants, which is the case of the restriction and the honest treatment under code Q in the fine regime, where the honest law is silent on every datum and costs exactly $\gamma$; and a tie with a non-degenerate difference has no eventual winner. (c) In the fine regime \cref{lem:laws:codeR}(ii) gives $m^\star_{\rm hon}\le\log(2\varepsilon^*_\star/\Delta)+\log\mathrm e$, which is below $\log(\mathsf R/\Delta)$ iff $2\mathrm e\varepsilon^*_\star<\mathsf R$. In the coarse regime $m^\star_{\rm hon}=s_\Delta\beta_e\le\log\mathrm e$, which is below $\log(\mathsf R/\Delta)$ iff $\Delta<\mathsf R/\mathrm e$. Under code Q with $\Delta\le2\varepsilon^*_\star$ the honest law is silent on every datum (\cref{lem:laws:tolerancelaw}), and (b) applies.
+\end{proof}
+
+For the Moon over one year, with one fixed ellipse ($\varepsilon^*=156.3'=2.6^\circ$, $\Ex\lvert e\rvert=61.7'$ for the mean fit, $k_\star=60$, $h_\star=20$, $\lVert\mathrm{Dom}\rVert=4$, $c_{\rm time}=10.5$), an exact computation (code in the accompanying repository) gives the eventually selected treatment of the Moon's data, with rates in bits per datum (``excluded'' is the domain restriction, chosen at an exact tie between the honest and the literal treatment):
+\begin{center}\small
+\begin{tabular}{lllll}
+\toprule
+$\Delta$ & $\gamma$ & code Q, $\lambda=1$ & code Q, $\lambda=2$ & code R, $\lambda=1,2$\\
+\midrule
+$10'$ & $11.08$ & excluded (tie; patched $20.52$) & excluded (patched $30.51$) & honest ($4.973$)\\
+$60'$ & $8.49$ & excluded (tie; patched $13.66$) & excluded (patched $21.22$) & honest ($2.445$)\\
+$300'$ & $6.17$ & patched ($3.430$) & patched ($5.592$) & honest ($0.686$)\\
+$600'$ & $5.17$ & patched ($1.612$; honest $2.694$) & patched ($2.6933$; honest $2.6939$) & honest ($0.343$)\\
+$1800'$ & $3.58$ & patched ($0.483$; honest $0.623$) & honest ($0.623$; patched $0.843$) & honest ($0.114$)\\
+\bottomrule
+\end{tabular}
+\end{center}
+At the exact ties the constants decide ($\lVert\mathrm{Dom}\rVert=4$ against $k_\star+h_\star=80$). In code R the honest treatment overtakes the restriction after about $\lambda\cdot76/(\gamma-m^\star_{\rm hon})$ of the Moon's data in expectation, about $12$ at $\lambda=1$ and $25$ at $\lambda=2$ at $\Delta=10'$ and $60'$. More generally, for every planet and window of \cref{tab:laws:residuals}, and for the Moon over a month, a year and $18.6$ years, a law with its own tolerance has a lower rate under code R than leaving the body's data literal at every cell width computed, by \cref{prop:laws:domain}(c); a sharp boundary is selected only when even an honest tolerance is worse than literal data, or under literal pricing at fine precision.
+
+For retention, let a datum proved from $T$ cost in addition $r_{\rm d}\,\mathrm{dl}_T$ bits, where $\mathrm{dl}_T$ is the size of the derivation used, and let $J^{\rm der}_\lambda(T;D):=\lambda\lVert T\rVert+\Exc_D(T)+\sum_{\text{data proved}}r_{\rm d}\,\mathrm{dl}_T$. Compare an honest old law $T_{\rm old}$ (tolerance $\varepsilon_{\rm old}$ on a window) with an exact successor $T_{\rm new}$ that proves every datum, with per-datum derivation charges $c_{\rm old}<c_{\rm new}$.
+
+\begin{proposition}[Retention of a superseded theory]\status{proved; computed (derivation sizes assumed)}\src{laws Prop 6.2}\label{prop:laws:retention}
+\leavevmode
+\begin{enumerate}[label=(\alph*),itemsep=1pt,topsep=2pt]
+\item $T_{\rm old}$ beats $T_{\rm new}$ on $D$ iff
+\[\lambda(\lVert T_{\rm new}\rVert-\lVert T_{\rm old}\rVert)+(c_{\rm new}-c_{\rm old})\,N_{\rm p}+c_{\rm new}\,(n-N_{\rm p})>\Exc_D(T_{\rm old}),\]
+where $N_{\rm p}$ is the number of data that $T_{\rm old}$ proves and $n=\lvert D\rvert$.
+\item With i.i.d.\ data the rates are $m_{\rm old}=s_{\rm old}\gamma_{\rm si}+(1-s_{\rm old})c_{\rm old}$, with $s_{\rm old}$ the silence probability of $T_{\rm old}$, and $m_{\rm new}=c_{\rm new}$. If $m_{\rm old}<m_{\rm new}$ (respectively $>$), then almost surely $T_{\rm old}$ (respectively $T_{\rm new}$) is eventually the $\lambda$-MAP of the two, whatever $\lambda$ and the lengths are. At $m_{\rm old}=m_{\rm new}$ the lengths decide if the cost difference is almost surely constant, and otherwise there is no eventual winner.
+\item Let $s_{\rm old}=\min(2\varepsilon_{\rm old}/\Delta,1)$. Under code Q, $m_{\rm old}$ is non-increasing in $\Delta$ on $\{\Delta:\gamma(\Delta)\ge c_{\rm old}\}$; under code R it is non-increasing in $\Delta$ on $(0,\infty)$ if $\beta_e\ge c_{\rm old}$. In either case the cell widths in that range at which $T_{\rm old}$ is retained form an interval with no upper bound inside the range; call its lower end $\Delta^*$. For $\Delta\ge2\varepsilon_{\rm old}$ under code Q, $\Delta^*$ solves $2\varepsilon_{\rm old}(\gamma(\Delta)-c_{\rm old})/\Delta=c_{\rm new}-c_{\rm old}$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(a) $J^{\rm der}_\lambda(T_{\rm new})=\lambda\lVert T_{\rm new}\rVert+c_{\rm new}n$ and $J^{\rm der}_\lambda(T_{\rm old})=\lambda\lVert T_{\rm old}\rVert+\Exc_D(T_{\rm old})+c_{\rm old}N_{\rm p}$; compare term by term. (b) $T_{\rm old}$ is honest, so it never refutes a datum; a datum costs $c_{\rm old}$ when it proves it and $\gamma_{\rm si}$ when it is silent. Apply \cref{thm:laws:as}. (c) \emph{Code Q.} In the coarse regime $m_{\rm old}=c_{\rm old}+s_{\rm old}(\gamma(\Delta)-c_{\rm old})$, and $s_{\rm old}$ and $\gamma(\Delta)-c_{\rm old}\ge0$ are both non-negative and non-increasing in $\Delta$, so their product is too; in the fine regime $m_{\rm old}=\gamma(\Delta)$, which is decreasing. \emph{Code R.} In the fine regime $T_{\rm old}$ is silent on every datum and $m_{\rm old}=\Ex\bar c_\Delta(w)$, strictly decreasing by \cref{lem:laws:codeR}(iii); in the coarse regime $m_{\rm old}=c_{\rm old}+s_{\rm old}(\beta_e-c_{\rm old})$, non-increasing when $\beta_e\ge c_{\rm old}$. The two forms agree at $\Delta=2\varepsilon_{\rm old}$. A non-increasing rate stays below $c_{\rm new}$ once it is below it, which gives the interval, and the equation for $\Delta^*$ is $m_{\rm old}=c_{\rm new}$ in the coarse regime under code Q.
+\end{proof}
+
+With derivations from the successor assumed a thousand times larger ($\mathrm{dl}_{T_{\rm new}}/\mathrm{dl}_{T_{\rm old}}=1000$, as for a validated integration against solving Kepler's equation), exact code-R costs and bisection (code in the accompanying repository) give the least retained cell width $\Delta^*$ for $c_{\rm new}=0.01$, $0.1$ and $1$ bit per datum:
+\begin{center}\small
+\begin{tabular}{llll}
+\toprule
+body, window & $\varepsilon^*$ & code Q & code R\\
+\midrule
+Mercury, 100 yr & $2.02'$ & $1542'$, $258.5'$, $37.2'$ & $229.8'$, $22.97'$, $2.33'$\\
+Mars, 12 yr & $1.44'$ & $1202'$, $195.6'$, $27.7'$ & $174.2'$, $17.42'$, $1.744'$\\
+Mars, 2000 yr & $49.9'$ & $10450'$, $2895'$, $533'$ & $5717'$, $572'$, $57.8'$\\
+Jupiter, 100 yr & $6.57'$ & $3468'$, $661'$, $101.6'$ & $867'$, $86.7'$, $8.61'$\\
+Saturn, 2000 yr & $81.9'$ & never, $3994'$, $784'$ & $10320'$, $1032'$, $102.9'$\\
+Moon, 1 month & $30.9'$ & $8414'$, $2086'$, $364'$ & $4473'$, $447'$, $44.4'$\\
+\bottomrule
+\end{tabular}
+\end{center}
+Under random completion the retention region reaches precisions $1.8$ to $6.9$ times finer than under literal pricing at $c_{\rm new}=0.01$, $3.9$ to $11$ times at $0.1$, and $7.6$ to $16$ times at $1$, because the honest law's silence is cheap.
+
+\begin{question}\status{open}\src{laws \S8}\label{q:laws:domains}
+What is the posterior over an explicit pool of domain predicates (base predicates such as ``planet'', windows, and their conjunctions, with stated syntax costs) on the Kepler residuals? By \cref{prop:laws:domain} we expect the answer to depend on the pricing: tolerances with error models under \SAIabbr's pricing, and sharp domains under literal pricing at fine precision.
+\end{question}

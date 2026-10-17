@@ -1,0 +1,200 @@
+# parts run: AB
+# c4_mars_pool.py  seed=20261015  numpy 2.4.6  scipy 1.17.1  pyerfa 2.0.1.5  python 3.11.15
+# data: plan94 Mars 1580.0-1600.0 daily, N = 7306; best plane: inclination 1.8828 deg, node 50.757 deg; largest out-of-plane angle 0.070'
+
+## A1. minimax fits to heliocentric longitudes (multi-start LM, L_p refinement, sequential-LP polish)
+form        k     minimax '    c2 value '   elements (e; w, L in deg; n rad/day)
+circle      2      640.7908       641.034   L=309.45, n=0.00914611
+eccentric   4       23.0508        23.455   e=0.184516, w=283.471, L=309.448, n=0.0091461
+equant      4        8.1653         8.276   e=0.0933767, w=283.465, L=309.446, n=0.00914613
+vicarious   5        1.4127         1.495   e1=0.115724, e2=0.0707907, w=283.462, L=309.446, n=0.00914609
+ellipse     4        1.0733         1.172   e=0.0930389, w=283.445, L=309.442, n=0.00914609
+# (the c2 values are L_p-refined least squares; the polished minimax is at most that.)
+
+## A2. Occam factor C_F(delta) = -log2(V_F(delta)/prod ranges) [bits]; '-' = incompatible (delta below the minimax error)
+delta'   form         C_F bits     +-se     hits   samples   grow sampling parallelepiped: element ranges
+720      circle          20.93     0.02     5940     20000      0 L 5.37..5.43; n 0.00914..0.00916
+720      eccentric       20.24     0.03     2171    180000      2 e -0.0917..0.457; w 0.644..8.19; L 5.04..5.73; n 0.00907..0.00922
+720      equant          21.20     0.03     2147    160000      1 e -0.0518..0.239; w 1.71..8.19; L 5.06..5.74; n 0.00907..0.00922
+720      vicarious       22.77     0.03     2007   2000000      0 e1 -2.97..3.2; e2 -3.04..3.18; w 3.45..6.45; L 5.07..5.73; n 0.00907..0.00922
+720      ellipse         21.18     0.03     2181    160000      1 e -0.0502..0.236; w 1.7..8.2; L 5.06..5.74; n 0.00907..0.00922
+120      circle              -
+120      eccentric       31.17     0.03     2349     80000      0 e 0.14..0.224; w 4.72..5.18; L 5.36..5.44; n 0.00914..0.00916
+120      equant          31.70     0.03     2288     80000      0 e 0.07..0.117; w 4.7..5.19; L 5.35..5.45; n 0.00913..0.00916
+120      vicarious       33.34     0.03     2099    400000      0 e1 -0.394..0.627; e2 -0.446..0.586; w 4.7..5.2; L 5.35..5.46; n 0.00913..0.00916
+120      ellipse         31.63     0.03     2252     80000      0 e 0.0695..0.116; w 4.7..5.19; L 5.35..5.45; n 0.00913..0.00916
+60       circle              -
+60       eccentric       36.34     0.03     2460     80000      0 e 0.166..0.201; w 4.85..5.04; L 5.38..5.42; n 0.00914..0.00915
+60       equant          35.88     0.03     2320     80000      0 e 0.0821..0.105; w 4.83..5.07; L 5.38..5.42; n 0.00914..0.00915
+60       vicarious       37.93     0.03     2020    280000      0 e1 -0.137..0.37; e2 -0.186..0.327; w 4.82..5.07; L 5.37..5.43; n 0.00914..0.00915
+60       ellipse         35.68     0.03     2225     80000      0 e 0.0813..0.105; w 4.83..5.07; L 5.38..5.43; n 0.00914..0.00915
+30       circle              -
+30       eccentric       45.38     0.03     2069     60000      0 e 0.18..0.188; w 4.93..4.97; L 5.4..5.4; n 0.00915..0.00915
+30       equant          40.35     0.03     2631     80000      0 e 0.0883..0.0987; w 4.89..5; L 5.39..5.41; n 0.00914..0.00915
+30       vicarious       42.83     0.03     2127    260000      0 e1 -0.00883..0.242; e2 -0.0565..0.197; w 4.89..5.01; L 5.39..5.41; n 0.00914..0.00915
+30       ellipse         39.65     0.03     2361     80000      0 e 0.0872..0.0988; w 4.89..5.01; L 5.39..5.41; n 0.00914..0.00915
+20       circle              -
+20       eccentric           -
+20       equant          43.63     0.03     2009     60000      0 e 0.0905..0.0965; w 4.92..4.98; L 5.4..5.41; n 0.00914..0.00915
+20       vicarious       45.77     0.03     2055    240000      0 e1 0.034..0.199; e2 -0.0131..0.153; w 4.91..4.99; L 5.39..5.41; n 0.00914..0.00915
+20       ellipse         42.01     0.03     2409     80000      0 e 0.0892..0.0968; w 4.91..4.99; L 5.39..5.41; n 0.00914..0.00915
+12       circle              -
+12       eccentric           -
+12       equant          49.49     0.03     2242     60000      0 e 0.0924..0.0945; w 4.94..4.96; L 5.4..5.4; n 0.00915..0.00915
+12       vicarious       49.56     0.03     2162    240000      0 e1 0.0683..0.165; e2 0.0216..0.119; w 4.92..4.97; L 5.4..5.41; n 0.00914..0.00915
+12       ellipse         45.01     0.03     2514     80000      0 e 0.0908..0.0952; w 4.92..4.97; L 5.4..5.41; n 0.00914..0.00915
+9        circle              -
+9        eccentric           -
+9        equant          57.34     0.03     2061     60000      0 e 0.0931..0.0936; w 4.94..4.95; L 5.4..5.4; n 0.00915..0.00915
+9        vicarious       51.78     0.03     2000    220000      0 e1 0.0812..0.152; e2 0.0346..0.106; w 4.93..4.97; L 5.4..5.4; n 0.00915..0.00915
+9        ellipse         46.81     0.03     2462     80000      0 e 0.0914..0.0946; w 4.93..4.96; L 5.4..5.4; n 0.00915..0.00915
+6        circle              -
+6        eccentric           -
+6        equant              -
+6        vicarious       54.98     0.03     2115    220000      0 e1 0.0941..0.139; e2 0.0478..0.0928; w 4.94..4.96; L 5.4..5.4; n 0.00915..0.00915
+6        ellipse         49.21     0.03     2047     60000      0 e 0.092..0.094; w 4.94..4.96; L 5.4..5.4; n 0.00915..0.00915
+4        circle              -
+4        eccentric           -
+4        equant              -
+4        vicarious       58.56     0.03     2161    220000      0 e1 0.103..0.13; e2 0.0567..0.084; w 4.94..4.95; L 5.4..5.4; n 0.00915..0.00915
+4        ellipse         51.86     0.03     2121     60000      0 e 0.0924..0.0937; w 4.94..4.95; L 5.4..5.4; n 0.00915..0.00915
+3        circle              -
+3        eccentric           -
+3        equant              -
+3        vicarious       61.53     0.03     2187    220000      0 e1 0.107..0.125; e2 0.0613..0.0796; w 4.94..4.95; L 5.4..5.4; n 0.00915..0.00915
+3        ellipse         53.88     0.03     2204     60000      0 e 0.0926..0.0935; w 4.94..4.95; L 5.4..5.4; n 0.00915..0.00915
+2        circle              -
+2        eccentric           -
+2        equant              -
+2        vicarious       67.56     0.03     2128    260000      0 e1 0.112..0.12; e2 0.0664..0.0749; w 4.95..4.95; L 5.4..5.4; n 0.00915..0.00915
+2        ellipse         57.41     0.03     2681     80000      0 e 0.0928..0.0933; w 4.94..4.95; L 5.4..5.4; n 0.00915..0.00915
+1.6      circle              -
+1.6      eccentric           -
+1.6      equant              -
+1.6      vicarious       74.54     0.03     2029    460000      0 e1 0.114..0.118; e2 0.0688..0.0728; w 4.95..4.95; L 5.4..5.4; n 0.00915..0.00915
+1.6      ellipse         59.93     0.03     2525     80000      0 e 0.0929..0.0932; w 4.95..4.95; L 5.4..5.4; n 0.00915..0.00915
+1.3      circle              -
+1.3      eccentric           -
+1.3      equant              -
+1.3      vicarious           -
+1.3      ellipse         63.81     0.03     2220    120000      0 e 0.0929..0.0931; w 4.95..4.95; L 5.4..5.4; n 0.00915..0.00915
+
+## A3. law texts: tokens (atoms + brackets) and bits = tokens * ceil(log2 |alphabet|)
+law          S1 tok  S1 bits   S2 tok  S2 bits   S3 tok  S3 bits
+circle           31      155       31      186       31      155
+eccentric        89      445       57      342       89      445
+equant          198      990       75      450      198      990
+vicarious       198      990       78      468      198      990
+ellipse         109      545      109      654       52      260
+K3               75      375       75      450       75      375
+# alphabet sizes: S1 31, S2 34, S3 32 symbols
+# faithfulness (revision): max |theta(text) - theta(model)| over 40 random (elements, time) points, rad:
+#   S1: circle 0.0e+00, eccentric 0.0e+00, equant 4.4e-16, vicarious 0.0e+00, ellipse 8.9e-15
+#   S2: circle 0.0e+00, eccentric 0.0e+00, equant 4.4e-16, vicarious 0.0e+00, ellipse 1.4e-14
+#   S3: circle 0.0e+00, eccentric 0.0e+00, equant 4.4e-16, vicarious 4.4e-16, ellipse 0.0e+00
+#   every text computes its form's longitude (all differences < 1e-8 rad)
+
+## A4. posterior over the pool (proof-requiring, fixed-length numerals) by delta and syntax;
+#     each K3 variant has exactly 2^-|K3| times the weight of its no-K3 form (one planet: K3 is
+#     vacuous; also Prop 4.2 of notes.md); shares below are over the five no-K3 forms, and the
+#     K3 share of the whole pool is 2^-|K3|/(1+2^-|K3|) in every row.
+# syntax S1
+delta'        circle   eccentric      equant   vicarious     ellipse   MAP
+720                1    8.12e-88   3.64e-252   1.22e-252   3.34e-118   circle
+120                0           1   5.99e-165   1.92e-165    5.72e-31   eccentric
+60                 0           1    1.2e-164    2.9e-165    1.25e-30   eccentric
+30                 0           1   2.83e-163    5.1e-164    4.21e-29   eccentric
+20                 0           0   3.58e-135   8.13e-136           1   ellipse
+12                 0           0   4.95e-136   4.71e-136           1   ellipse
+9                  0           0   7.43e-138    3.5e-136           1   ellipse
+6                  0           0           0   2.02e-136           1   ellipse
+4                  0           0           0   1.06e-136           1   ellipse
+3                  0           0           0   5.48e-137           1   ellipse
+2                  0           0           0   9.69e-138           1   ellipse
+1.6                0           0           0    4.4e-139           1   ellipse
+1.3                0           0           0           0           1   ellipse
+
+# syntax S2
+delta'        circle   eccentric      equant   vicarious     ellipse   MAP
+720                1    1.77e-47    2.81e-80     3.6e-86   1.11e-141   circle
+120                0           1    2.13e-33     2.6e-39    8.68e-95   eccentric
+60                 0           1    4.25e-33    3.92e-39     1.9e-94   eccentric
+30                 0           1    1.01e-31    6.91e-38    6.39e-93   eccentric
+20                 0           0           1    8.66e-07     1.2e-61   equant
+12                 0           0           1    3.63e-06    8.64e-61   equant
+9                  0           0           1     0.00018    5.76e-59   equant
+6                  0           0           0           1    5.54e-55   vicarious
+4                  0           0           0           1    1.06e-54   vicarious
+3                  0           0           0           1    2.05e-54   vicarious
+2                  0           0           0           1    1.16e-53   vicarious
+1.6                0           0           0           1    2.55e-52   vicarious
+1.3                0           0           0           0           1   ellipse
+
+# syntax S3
+delta'        circle   eccentric      equant   vicarious     ellipse   MAP
+720                1    8.12e-88   3.64e-252   1.22e-252    2.08e-32   circle
+120                0    2.81e-56   1.69e-220    5.4e-221           1   ellipse
+60                 0    1.29e-56   1.54e-220   3.72e-221           1   ellipse
+30                 0    3.82e-58   1.08e-220   1.95e-221           1   ellipse
+20                 0           0   5.76e-221   1.31e-221           1   ellipse
+12                 0           0   7.97e-222   7.57e-222           1   ellipse
+9                  0           0    1.2e-223   5.63e-222           1   ellipse
+6                  0           0           0   3.26e-222           1   ellipse
+4                  0           0           0   1.71e-222           1   ellipse
+3                  0           0           0   8.82e-223           1   ellipse
+2                  0           0           0   1.56e-223           1   ellipse
+1.6                0           0           0   7.08e-225           1   ellipse
+1.3                0           0           0           0           1   ellipse
+
+## A5. what the data decide and what the syntax decides: for each delta, the Occam-factor
+#     differences C_G - C_F (bits) between compatible forms; form F beats form G iff
+#     |LAW_F| - |LAW_G| < C_G - C_F.  Text differences |LAW_F| - |LAW_G| in S1/S2/S3 for comparison.
+delta'              elli-vica            elli-equa            vica-equa            equa-ecce            ecce-circ            elli-ecce            elli-circ
+720                      1.59                 0.02                -1.58                -0.95                 0.69                -0.94                -0.25
+120                      1.71                 0.07                -1.64                -0.53             circ out                -0.46             circ out
+60                       2.25                 0.20                -2.05                 0.46             circ out                 0.67             circ out
+30                       3.18                 0.71                -2.47                 5.03             circ out                 5.74             circ out
+20                       3.76                 1.62                -2.14             ecce out             both out             ecce out             circ out
+12                       4.55                 4.47                -0.07             ecce out             both out             ecce out             circ out
+9                        4.97                10.53                 5.56             ecce out             both out             ecce out             circ out
+6                        5.76             equa out             equa out             both out             both out             ecce out             circ out
+4                        6.70             equa out             equa out             both out             both out             ecce out             circ out
+3                        7.65             equa out             equa out             both out             both out             ecce out             circ out
+2                       10.15             equa out             equa out             both out             both out             ecce out             circ out
+1.6                     14.61             equa out             equa out             both out             both out             ecce out             circ out
+1.3                  vica out             equa out             both out             both out             both out             ecce out             circ out
+text S1                  -445                 -445                    0                  545                  290                  100                  390
+text S2                   186                  204                   18                  108                  156                  312                  468
+text S3                  -730                 -730                    0                  545                  290                 -185                  105
+# Note: with a variable-length numeral code (an Elias-gamma length prefix per element) each
+# element costs about 2*log2(b_k)+1 more bits, b_k ~ 4-27 bits needed (c2 table E): about 5-11
+# bits per element, so ~25-35 bits per 4-element form and ~6-11 more for the 5-element vicarious
+# hypothesis.  This shifts the vicarious-vs-4-element comparisons by ~6-11 bits and the 2-element
+# circle against 4-element forms by ~12-20 bits; it does not change which forms are compatible.
+
+## B. geocentric longitudes of Mars, 1580.0-1600.0 daily (Mars - EMB, J2000 ecliptic): what K3 is worth
+# Earth start from a heliocentric ellipse fit: e=0.01688, period 365.256 d; Mars start from Part A; rho0 = 1.52369
+  rho free (9 elements): minimax geocentric error 0.627'   rho = 1.523676, K3 value (n_E/n_M)^(2/3) = 1.523687
+  K3       (8 elements): minimax geocentric error 0.632'
+  (the planes are fixed: Earth in the J2000 ecliptic, Mars in the best heliocentric plane of Part A)
+# K3 saving by the shear identity V8/V9 = p_Y(0), y = rho - (n_E/n_M)^(2/3), with hit-and-run on the
+# exact compatible region (see k3_saving).  'K3 saves' = log2(range_rho * p_Y(0)), range_rho = 4, with
+# p_Y(0) estimated as the fraction of samples with |y| < h over 2h, h = 0.05 / 0.1 / 0.2 sd(y); +-se over
+# independent chains; in brackets the estimate from the first and the second half of the kept steps.
+delta'    rho lo    rho hi     sd(y) y(minimax)  y q01..q99   K3 saves (bits), h = 0.05 / 0.1 / 0.2 sd
+8        1.52122   1.52627  6.47e-04  -1.18e-05 -1e-03..2e-03   11.28+-0.04 [11.33,11.23]  11.28+-0.03 [11.33,11.23]  11.28+-0.02 [11.30,11.27]
+4        1.52249   1.52497  3.10e-04  -1.18e-05 -7e-04..7e-04   12.33+-0.03 [12.32,12.35]  12.31+-0.03 [12.28,12.34]  12.30+-0.02 [12.29,12.31]
+2        1.52313   1.52429  1.47e-04  -1.18e-05 -3e-04..3e-04   13.39+-0.03 [13.40,13.39]  13.39+-0.03 [13.38,13.40]  13.38+-0.02 [13.36,13.41]
+1        1.52347   1.52390  5.54e-05  -1.18e-05 -1e-04..1e-04   14.73+-0.04 [14.76,14.71]  14.74+-0.03 [14.77,14.72]  14.73+-0.03 [14.75,14.71]
+# rho lo/hi: the linearised LP extent of rho over the compatible region at that delta.
+# Posterior odds (with K3 : without K3) = 2^(saves - |K3|), |K3| in bits from table A3 (375 in S1, 450 in S2).
+# diagnostics: chains; share of linear-polytope starting points that are exactly compatible; proposals per
+# chain-step (acceptance = 1/that); step-out expansions per chain-step; chains that failed to bracket or
+# to accept (must be 0); seconds.
+#  8    chains 492  lin->exact 0.820  proposals 1.61  expansions 0.744  failures 38  928 s
+#  4    chains 537  lin->exact 0.895  proposals 1.57  expansions 0.239  failures 5  804 s
+#  2    chains 569  lin->exact 0.948  proposals 1.53  expansions 0.072  failures 1  957 s
+#  1    chains 583  lin->exact 0.972  proposals 1.52  expansions 0.023  failures 0  1034 s
+
+# done in 4692 s
+# done in 4692 s

@@ -1,0 +1,266 @@
+% Appendix H (owner group: kepler). Proofs and computations behind sections/kepler.tex.
+% Sources: research/tracks/philosophy/notes-final.md section 4 (Props 4.1-4.4, sections 4.3-4.5), its status
+% table (section 11) and its list of refuted/withdrawn claims (11.1: nothing refuted is printed); laws section 3.6
+% and Prop 5.5; the saved outputs of philosophy/checks (c4, c4b, c7, c9, c10) and scouts/philosophy/checks (c1, c3).
+% Every number below is copied from those saved outputs; no number is recomputed here.
+% Edit pass of 2026-10-17 (review/DECISIONS.md): prop:kepler:geo (with its proof idea), ex:kepler:K3cost,
+% ex:kepler:graded and the main-text paragraph "Distances as data" moved here from sections/kepler.tex; list B:
+% tab:kepler:minimax moved here and merged with the table of witnessing elements.
+\section{The Kepler computations}\label{app:kepler}
+
+This appendix gives the proofs of the Kepler propositions, the definitions behind each computation, the full tables, and the elements that witness each reported fit. All computations take the plan94 analytical ephemeris of the planets and the moon98 ephemeris of the Moon, as implemented in the ERFA library, as the data; every positional error is against the plan94 ephemeris (moon98 for the Moon), not against the sky.
+
+% ==================================================================
+\subsection{Proofs}\label{sec:kepler:proofs}
+
+The background $B$ of \cref{def:kepler:language} cannot be the whole theory of the reals with $\sin$, which is undecidable ($\sin(\pi x)=0$ defines $\mathbb Z$); the numerical bounds it must prove are rational-function bounds of the kind MetiTarski proves \citep{akbarpour2010metitarski}.
+
+The Ramsey sentence $R(T)$ of a theory $T$ is obtained by replacing its theoretical function symbols by second-order variables and quantifying them existentially; its consequences are taken in second-order semantic consequence.
+
+\begin{proposition}[The Ramsey sentence of Kepler's laws]\label{prop:kepler:ramsey}
+\status{proved}\src{philosophy Prop 4.1}
+\leavevmode
+\begin{enumerate}[label=(\alph*),leftmargin=*,itemsep=0pt]
+\item $R(T)$ has the same $\mathcal L_{\rm hel}$-consequences as $T$.
+\item For every $B$ true in $\mathbb R$, $R(\mathrm{K12}\cup\mathrm{K3})\cup B$ entails no datum $\mathrm{Near}(b,t,\mathbf v,\delta)$ with $\delta<\pi$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(a) A model of $R(T)$ is an $\mathcal L_{\rm hel}$-structure that expands to a model of $T$, so $R(T)$ and $T$ have the same $\mathcal L_{\rm hel}$-reducts of models. (b) Fix $b$, $t$, $\mathbf v$ and $\delta<\pi$, and a model of $B\cup\mathrm{K12}\cup\mathrm{K3}$ on the standard reals. If $b$ is a planet, keep $a(b)$ and $P(b)$, so that $\mathrm{K3}$ is untouched, and choose $i(b),\Omega(b),\varpi(b)$ and $M_0(b)$ so that the Keplerian direction of $b$ at $t$ is $-\mathbf v$: the orbital plane can be any plane through the Sun (the three angles give every rotation), and the phase can place the body at any point of its orbit, which meets every direction of its plane. If $b$ is not a planet, $\mathrm{K12}\cup\mathrm{K3}$ does not constrain its direction at $t$ (for the Sun it requires only $r(\mathrm{Sun},t)=0$), and we set that direction to $-\mathbf v$. Defining $\theta,\beta,r$ from the positions gives a model of $B\cup\mathrm{K12}\cup\mathrm{K3}$, hence of $R(\mathrm{K12}\cup\mathrm{K3})\cup B$, in which the direction of $b$ at $t$ makes the angle $\pi>\delta$ with $\mathbf v$.
+\end{proof}
+
+So the laws alone answer only structural questions; the laws together with the elements answer position questions.
+
+\paragraph{Proof of \cref{prop:kepler:helio}.}
+The position $\mathbf r(b,t)$ that $\mathrm{K12}$ gives is $a(b)$ times an expression free of $a$, so a Kepler direction depends on $(e,i,\Omega,\varpi,M_0,P)$ and not on $a$. Given a model of $B\cup\mathrm{K12}$, put $a'(b):=(k^2P(b)^2/4\pi^2)^{1/3}$ for a fixed $k>0$ (cube roots exist in a real closed field) and leave every other element unchanged. Positions and distances scale by $a'(b)/a(b)>0$, directions are unchanged, and $\mathrm{K3}$ holds because $a'(b)^3/P(b)^2=k^2/4\pi^2$ is the same for every body. So an $\mathcal L_{\rm dir}$-sentence true in every model of $B\cup\mathrm{K12}\cup\mathrm{K3}$ is true in every model of $B\cup\mathrm{K12}$; the converse is trivial. \qed
+
+\begin{proposition}[Content in geocentric directions]\label{prop:kepler:geo}
+\status{proved; computed}\src{philosophy Prop 4.3}
+Let $\chi_{\rm opp}$ be the sentence $\exists t\ \mathrm{dir}_g(\mathrm{Ma},t)\ne-\mathrm{dir}_g(\mathrm{Sun},t)$ of $\mathcal L_{\rm geo}$ (``Mars is not permanently in opposition'').
+\begin{enumerate}[label=(\alph*),leftmargin=*,itemsep=0pt]
+\item $\chi_{\rm opp}$ holds in every model of $\mathrm{K12}\cup\mathrm{K3}$ whose real sort is $\mathbb R$. Hence $B\cup\mathrm{K12}\cup\mathrm{K3}\vdash\chi_{\rm opp}$ for every $B$ that contains the two true sentences $\zeta_{\rm K3}$ and $\zeta_{\rm pos}$ of the real field with $\sin$ and $\cos$ given in the proof below.
+\item For every $B$ true in $\mathbb R$, $B\cup\mathrm{K12}\nvdash\chi_{\rm opp}$.
+\end{enumerate}
+\end{proposition}
+
+The sentence $\chi_{\rm opp}$ is odd (its negation describes a fantastic world); it only shows that the geocentric language can register $\mathrm{K3}$. The natural form of $\mathrm{K3}$'s content is \cref{prop:kepler:K3worth}.
+
+\emph{Proof idea.} (b) Circular coplanar orbits with equal periods and phases, Mars at distance $\rho>1$, satisfy $\mathrm{K12}$ (which relates no bodies), violate $\mathrm{K3}$ and keep Mars in opposition. (a) Over $\mathbb R$, a Mars permanently in opposition stays on the ray from the Sun through the Earth, and Kepler's second law forces $\mathbf r(\mathrm{Ma},t)=\kappa\,\mathbf r(\mathrm{Ea},t)$ with a constant $\kappa>1$: equal periods, different semi-major axes, against $\mathrm{K3}$. $\zeta_{\rm K3}$ states this about the elements, and $\zeta_{\rm pos}$ (the Earth is never at the Sun) lets the argument cover non-standard models.
+
+\begin{proof}
+(b) Let $\mathcal M_0$ have the Earth with $a=1$, $e=0$, $i=0$, period $P_0$ and some phase, and Mars with $a=\rho>1$, $e=0$, $i=0$, the same period $P_0$ and the same phase. Then $\mathbf r(\mathrm{Ma},t)=\rho\,\mathbf r(\mathrm{Ea},t)$ for all $t$, so $\mathbf r(\mathrm{Ma},t)-\mathbf r(\mathrm{Ea},t)=(\rho-1)\mathbf r(\mathrm{Ea},t)\ne0$ and $\mathrm{dir}_g(\mathrm{Ma},t)=\mathbf r(\mathrm{Ea},t)/\lvert\mathbf r(\mathrm{Ea},t)\rvert=-\mathrm{dir}_g(\mathrm{Sun},t)$ for every $t$. So $\mathcal M_0\models\neg\chi_{\rm opp}$. $\mathcal M_0$ satisfies $\mathrm{K12}$, since each body moves on a Kepler orbit and $\mathrm{K12}$ imposes no relation between bodies, and it violates $\mathrm{K3}$ (equal periods, unequal semi-major axes). It is a model of every $B$ true in $\mathbb R$, so $B\cup\mathrm{K12}\nvdash\chi_{\rm opp}$.
+
+(a), standard models. Let $\mathcal M$ be a model of $\mathrm{K12}\cup\mathrm{K3}$ whose real sort is $\mathbb R$, and suppose $\mathcal M\models\neg\chi_{\rm opp}$. The Earth moves in the ecliptic ($i(\mathrm{Ea})=0$), so $\mathbf u(t):=\mathbf r(\mathrm{Ea},t)/\lvert\mathbf r(\mathrm{Ea},t)\rvert$ lies in the ecliptic and differs from $\mathbf z$. By $\neg\chi_{\rm opp}$, $\mathrm{dir}_g(\mathrm{Ma},t)=\mathbf u(t)\ne\mathbf z$ for all $t$, so the bridge gives $\mathbf r(\mathrm{Ma},t)\ne\mathbf r(\mathrm{Ea},t)$ and $\mathbf r(\mathrm{Ma},t)=\mathbf r(\mathrm{Ea},t)+c(t)\mathbf u(t)=(r_{\rm E}(t)+c(t))\,\mathbf u(t)$ with $c(t)>0$, where $r_b(t):=\lvert\mathbf r(b,t)\rvert$. So Mars is always on the ray from the Sun through the Earth, beyond the Earth: it moves in the ecliptic, its heliocentric direction equals the Earth's at every $t$, and $r_{\rm M}(t)>r_{\rm E}(t)$. Take continuous polar angles $\theta_{\rm M}=\theta_{\rm E}$ in the ecliptic. Kepler's second law, a consequence of $\mathrm{K12}$, gives $r_b(t)^2\dot\theta_b(t)=h_b$ with a nonzero constant $h_b$ for each body (from $r=a(1-e\cos\psi)$, $\tan\frac\nu2=\sqrt{(1+e)/(1-e)}\,\tan\frac\psi2$ for the true anomaly $\nu$, and $\dot M=2\pi/P$, one gets $r^2\dot\nu=2\pi a^2\sqrt{1-e^2}/P$; standard). Hence $r_{\rm M}^2/r_{\rm E}^2=h_{\rm M}/h_{\rm E}$ is constant: $r_{\rm M}(t)=\kappa\,r_{\rm E}(t)$ with a constant $\kappa>1$, so $\mathbf r(\mathrm{Ma},t)=\kappa\,\mathbf r(\mathrm{Ea},t)$ for all $t$. The period of a Kepler orbit is the least period of $t\mapsto\mathbf r(b,t)$, and its semi-major axis is half the sum of its largest and smallest distances from the Sun ($r=a(1-e\cos\psi)$). So $P(\mathrm{Ma})=P(\mathrm{Ea})$ and $a(\mathrm{Ma})=\kappa\,a(\mathrm{Ea})\ne a(\mathrm{Ea})$, contradicting $\mathrm{K3}$.
+
+(a), arbitrary models. Let $\zeta_{\rm K3}$ be the following sentence of the language of the real field with $\sin$ and $\cos$:
+\[
+\forall\vec\varepsilon_{\rm Ea}\,\forall\vec\varepsilon_{\rm Ma}\Big(\mathrm{Adm}(\vec\varepsilon_{\rm Ea},\vec\varepsilon_{\rm Ma})\to\exists t\;\forall\psi_{\rm Ea}\,\forall\psi_{\rm Ma}\big(\mathrm{Kep}_{\rm Ea}(t,\psi_{\rm Ea})\wedge\mathrm{Kep}_{\rm Ma}(t,\psi_{\rm Ma})\to\Delta(t,\psi_{\rm Ea},\psi_{\rm Ma})\big)\Big).
+\]
+Here $\vec\varepsilon_b$ are the seven elements of body $b$; $\mathrm{Adm}$ says that $0\le e<1$ and $a,P>0$ for both bodies, that $i_{\rm Ea}=0$, and that $\mathrm{K3}$ holds for the pair; $\mathrm{Kep}_b(t,\psi)$ is Kepler's equation $\psi-e_b\sin\psi=M_{0,b}+2\pi t/P_b$; and $\Delta$ says that the positions $\boldsymbol\xi_b:=\mathrm{Rot}_b\big(a_b(\cos\psi_b-e_b),\,a_b\sqrt{1-e_b^2}\sin\psi_b,\,0\big)$ either coincide or satisfy $(\boldsymbol\xi_{\rm Ma}-\boldsymbol\xi_{\rm Ea})/\lvert\boldsymbol\xi_{\rm Ma}-\boldsymbol\xi_{\rm Ea}\rvert\ne\boldsymbol\xi_{\rm Ea}/\lvert\boldsymbol\xi_{\rm Ea}\rvert$. Let $\zeta_{\rm pos}$ be the sentence $\forall a\,\forall e\,\forall\psi\,\big(a>0\wedge0\le e<1\to a(1-e\cos\psi)>0\big)$. Both are true in $\mathbb R$: $\zeta_{\rm pos}$ obviously, and $\zeta_{\rm K3}$ because, for standard element values satisfying $\mathrm{Adm}$, Kepler's equation has exactly one solution for each $t$ (its left side is strictly increasing in $\psi$ when $0\le e<1$), so the antecedent of the inner implication fixes the true positions, and the standard case above gives a $t$ at which they coincide or the directions differ.
+
+Now let $\mathcal M$ be any model of $B\cup\mathrm{K12}\cup\mathrm{K3}$ with $\zeta_{\rm K3},\zeta_{\rm pos}\in B$; its real sort may be non-standard. Instantiate $\zeta_{\rm K3}$ at the elements of the Earth and Mars in $\mathcal M$ ($\mathrm{Adm}$ holds by $\mathrm{K12}$, $\mathrm{K3}$ and the frame convention) and obtain $t$. $\mathrm{K12}$ supplies, for this $t$, values $\psi_{\rm Ea},\psi_{\rm Ma}$ that solve Kepler's equations and give $\mathbf r(b,t)=\boldsymbol\xi_b$; the universal quantifiers over $\psi_{\rm Ea},\psi_{\rm Ma}$ apply to them, so $\Delta$ holds of the actual positions. By $\zeta_{\rm pos}$, $\lvert\mathbf r(\mathrm{Ea},t)\rvert=a_{\rm Ea}(1-e_{\rm Ea}\cos\psi_{\rm Ea})>0$, so $-\mathrm{dir}_g(\mathrm{Sun},t)=\mathbf r(\mathrm{Ea},t)/\lvert\mathbf r(\mathrm{Ea},t)\rvert$. If the positions coincide, the bridge gives $\mathrm{dir}_g(\mathrm{Ma},t)=\mathbf z$, which differs from $\mathbf r(\mathrm{Ea},t)/\lvert\mathbf r(\mathrm{Ea},t)\rvert$, whose third coordinate is $0$ since $i_{\rm Ea}=0$. Otherwise the bridge gives $\mathrm{dir}_g(\mathrm{Ma},t)\ne\mathbf r(\mathrm{Ea},t)/\lvert\mathbf r(\mathrm{Ea},t)\rvert$. Either way $\mathcal M\models\chi_{\rm opp}$, and by the completeness theorem $B\cup\mathrm{K12}\cup\mathrm{K3}\vdash\chi_{\rm opp}$.
+\end{proof}
+
+The universal quantifier over $\psi$ in $\zeta_{\rm K3}$ is what makes the instantiation valid in a model in which Kepler's equation might have several solutions; an existential quantifier would leave that case open. The sentence $\zeta_{\rm pos}$ supplies $\mathbf r(\mathrm{Ea},t)\ne0$ in non-standard models, the only fact about the reals used outside $\zeta_{\rm K3}$.
+
+\paragraph{Remarks on \cref{prop:kepler:geo}.}
+\status{proved; computed}\src{philosophy Prop 4.3, Remarks (i)--(iii) and Computed}
+(i) The bridge needs a convention at coincidence: without it, a $\mathrm{K3}$-model in which Mars coincides with the Earth would leave $\mathrm{dir}_g(\mathrm{Ma},t)$ unconstrained there and could imitate $\mathcal M_0$. (ii) For an inner co-moving planet ($\rho<1$) the analogue fails: a $\mathrm{K3}$-model with the planet on the Earth's orbit, diametrically opposite (behind the Sun), is always in the direction of the Sun; so $\chi_{\rm opp}$ is stated for an outer planet. (iii) A computation (code in the accompanying repository) illustrates the difference in the circular coplanar case with $\rho=1.5237$: $\mathcal M_0$ keeps Mars at opposition to rounding error ($1.2\times10^{-6}$ degrees in floating point), while the $\mathrm{K3}$-model with the same Earth, the same $\rho$ and the same initial phase leaves opposition by $1.3^\circ$ within a day, $13^\circ$ within 10 days and $87^\circ$ within 100 days. A second, independently written implementation finds, over 300 random $\mathrm{K12}\cup\mathrm{K3}$ models (an outer planet, the Earth in the ecliptic, the planet's plane random), a largest angle from opposition over 20 years of at least $175^\circ$ in every model, and over 50 random models of the kind of $\mathcal M_0$ never more than $6\times10^{-14}$ degrees. Whether finitely many interval data true in $\mathcal M_0$ refute every $\mathrm{K3}$-model was not examined.
+
+\paragraph{Proof of \cref{prop:kepler:K3worth}.}
+(a) $\mathrm{K3}$ with $a(\mathrm{Ea})=1$ gives $a(\mathrm{Ma})^3=P(\mathrm{Ma})^2/P(\mathrm{Ea})^2$, so $\rho=(P(\mathrm{Ma})/P(\mathrm{Ea}))^{2/3}$; then $\mathrm{K12}$ and $\mathrm{Num}^-$ determine $\mathbf r(\mathrm{Ma},t)$ and $\mathbf r(\mathrm{Ea},t)$, and the bridge determines the geocentric direction. A datum $\mathrm{Near}_g(\mathrm{Ma},t,\mathbf v,\delta)$ satisfied by the computed direction then follows once $B$ proves the numerical bound that places the computed direction within $\delta$ of $\mathbf v$.
+
+(b) Fix $t$ with $\mathbf r(\mathrm{Ea},t)$ and $\mathbf F(t)$ not parallel. Every $\rho>0$ gives a model of $\mathrm{K12}\cup\mathrm{Num}^-$ over $\mathbb R$, since $\mathrm{K12}$ constrains $a$ only by $a>0$. The geocentric vector is $\mathbf g(\rho)=\rho\mathbf F(t)-\mathbf r(\mathrm{Ea},t)$; as $\rho$ runs over $(0,\infty)$ it runs along the open ray from $-\mathbf r(\mathrm{Ea},t)$ in the direction $\mathbf F(t)$, inside the plane spanned by the two vectors. The ray does not pass through the origin because the two vectors are not parallel. Seen from the origin, its direction therefore moves continuously and monotonically along the great circle through $-\mathbf u(t)$ and $\mathbf F(t)/\lvert\mathbf F(t)\rvert$, tends to $-\mathbf u(t)$ as $\rho\to0$ and to $\mathbf F(t)/\lvert\mathbf F(t)\rvert$ as $\rho\to\infty$, and covers the open arc between them, whose length $\alpha(t)$ lies in $(0,\pi)$. If $B\cup\mathrm{K12}\cup\mathrm{Num}^-$ proved $\mathrm{Near}_g(\mathrm{Ma},t,\mathbf v,\delta)$ for a $B$ true in $\mathbb R$, the whole arc would lie in the closed cap of angular radius $\delta$ about $\mathbf v$; its two end points, at angular distance $\alpha(t)$ from each other, would then lie in that cap too, so $\alpha(t)\le2\delta$. \qed
+
+A computation over 1580--1600 (daily, plan94) gives the distribution of $\alpha(t)$ quoted in \cref{ex:kepler:K3cost}: percentiles $0,5,25,50,75,95,100$ of $0.11^\circ$, $9.52^\circ$, $46.68^\circ$, $90.22^\circ$, $133.91^\circ$, $170.34^\circ$, $179.96^\circ$; no sampled day is within $2'$ of conjunction or opposition. Along the arc the direction moves monotonically as $\rho$ grows on every one of 21 sampled days (a second implementation finds the same on 60 seeded days, with the great-circle identity to $9\times10^{-15}$ radians), and the sensitivity of the geocentric direction to $\rho$ at the true $\rho$ has median $969'$ and maximum $3555'$ per unit of $\rho$.
+
+% ==================================================================
+\subsection{Data, fits and the error budget}\label{sec:kepler:data}
+
+\begin{table}[ht]
+\centering\small
+\caption{How wrong Kepler's laws are, against plan94: largest angular separation (arcminutes) between one fixed Kepler ellipse, fitted by least squares, and the plan94 positions, over windows centred on J2000; for the Moon (moon98, geocentric), in degrees. Last column: the fitted third-law constant $q:=(2\pi/P)^2a^3/k^2$ ($k$ Gauss's constant) over the windows of 30 years and more, with the Newtonian two-body value $1+m/M$ in brackets. Least-squares fits, angular separation; the minimax longitude errors of the same windows, used in \cref{sec:laws}, are in \cref{tab:laws:residuals}.}\label{tab:kepler:residuals}
+\status{computed}\src{philosophy \S4.3}
+\begin{tabular}{@{}lrrrrrrl@{}}
+\toprule
+window (years) & 12 & 30 & 100 & 300 & 1000 & 2000 & third-law constant $q$\\
+\midrule
+Mercury & 0.46 & 0.89 & 2.17 & 6.04 & 19.3 & 38.6 & \\
+Mars & 1.58 & 1.86 & 3.61 & 9.17 & 26.2 & 51.8 & \\
+Jupiter & 1.05 & 4.19 & 7.64 & 7.74 & 31.8 & 38.5 & 1.00075--1.00099 (1.00095)\\
+Saturn & 1.70 & 3.32 & 9.73 & 11.7 & 91.3 & 92.4 & 1.0013--1.0019 (1.00029)\\
+\midrule
+Moon & \multicolumn{6}{l}{$1.12^\circ$ (one month), $3.0^\circ$ (one year), $9.6^\circ$ (18.6 years)} & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Residuals of one fixed ellipse.} For each body and window, centred on J2000, one fixed Kepler ellipse (seven elements) is fitted by least squares to the plan94 heliocentric positions (for the Moon, the moon98 geocentric positions) in the J2000 ecliptic, and the table reports the largest angular separation between the fit and the data. The fitted third-law constant is $q:=(2\pi/P)^2a^3/k^2$, with $k$ Gauss's constant. Over the 12-year window the fits give $q=1.00062$ (Jupiter) and $1.00487$ (Saturn); over the windows of 30 years and more they give the ranges of the table. The Newtonian two-body value is $1+m/M$; for Saturn, a secular, circular and coplanar estimate that treats the orbit-averaged pull of each other planet as that of a ring gives $q=1.00154$, of which Jupiter supplies $1.25\times10^{-3}$. This is a heuristic estimate, not a perturbation theory. A second computation, with other sample times and longitude errors only, agrees with the table to within about $8\%$ in every planetary cell. The same fits, with a precessing ellipse, give Mercury's line of apsides a rotation of $575.4''$ per century in the fixed J2000 frame (fits over 100--2000 years), and the 2000-year longitude residuals of Saturn and Jupiter carry oscillations of period about 900 and 910 years and amplitude $43.8'$ and $18.3'$.
+
+\paragraph{The third law's own error.} With $q-1=9.5\times10^{-4}$ (Jupiter, the two-body value) and $1.5\times10^{-3}$ (Saturn, the middle of its fitted range), an exact $\mathrm{K3}$ calibrated on the Earth changes the semi-major axes by the relative amounts $3.170\times10^{-4}$ and $4.985\times10^{-4}$ and misplaces Jupiter and Saturn geocentrically by at most $0.233'$ and $0.193'$ over 1580--1600 (medians $0.150'$ and $0.129'$).
+
+\paragraph{The error budget.} The figures of this paragraph are those quoted in the documentation of the ERFA routine \texttt{eraPlan94} (which pyerfa wraps): from comparisons with JPL's DE102 ephemeris over 1800--2050, maximum errors in heliocentric longitude of $17''$ (Mars), $71''$ (Jupiter) and $81''$ (Saturn); an accuracy over 1000--3000 no worse than 1.5 times that, and, against DE200 over 1800--2100, $26''$, $78''$ and $87''$. Hence: (i) over 1580--1600 plan94's longitude error for Mars is at most about $25''\approx0.43'$, the size of the gap $1.41'-1.07'=0.34'$ between the two best forms of the Mars pool, so the ordering of those two forms is established against plan94, and against the sky it rests on the errors against an exact ellipse in \cref{tab:kepler:minimax}; (ii) the 12-year entries for Jupiter ($1.05'$) and Saturn ($1.70'$) lie inside 1800--2050, where plan94's own errors reach $1.18'$ and $1.35'$, so they measure the ellipse against plan94; (iii) plan94's Mars distance error (at most 7700\,km over 1800--2050, about $3\times10^{-5}$ of Mars's distance) is far below the distance tolerances of \cref{sec:kepler:distdetails}.
+
+\paragraph{The data of the Mars pool.} The 7306 daily heliocentric positions of Mars over 1580.0--1600.0 are reduced to the best plane through the Sun (inclination $1.8828^\circ$ and node $50.757^\circ$ to the J2000 ecliptic; the largest angle of a position out of this plane is $0.070'$), and $v_i$ is the longitude in that plane. The geocentric data of \cref{sec:kepler:K3details} are the ecliptic longitudes of plan94 Mars minus plan94 Earth--Moon barycentre (J2000 ecliptic): geometric positions, without aberration or light time, and taken from the barycentre rather than from the Earth.
+
+% ==================================================================
+\subsection{The Mars pool: forms, law texts and Occam factors}\label{sec:kepler:pooldetails}
+
+\paragraph{The forms.} Write $\mathbf u(\varphi):=(\cos\varphi,\sin\varphi)$ and $\Lambda(t):=L+n(t-t_{\rm mid})$ for the mean longitude, with $t_{\rm mid}$ the middle of the window, $L$ the mean longitude at $t_{\rm mid}$ and $n$ the mean motion; $w$ is the longitude of perihelion and $M(t):=\Lambda(t)-w$ the mean anomaly. Each form gives the heliocentric longitude $\theta(t)$ in the plane of the data; in longitude the forms are scale-free, so the circle has radius 1. The forms are heliocentric reconstructions: the historical models before Kepler were geocentric and also represented the Earth's motion.
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item \emph{Circle about the Sun} (elements $L,n$): $\theta(t)=\Lambda(t)$.
+\item \emph{Circle with centre $C=-e_1\mathbf u(w)$ and equant point $Q=-(e_1+e_2)\mathbf u(w)$}, both on the line of apsides on the aphelion side of the Sun: the planet moves on the unit circle about $C$ so that its direction seen from $Q$ is $\Lambda(t)$, and $\theta(t)$ is its direction seen from the Sun. The \emph{eccentric circle} is the case $e_2=0$ (uniform motion about the centre; elements $e,w,L,n$ with $e=e_1$), the \emph{bisected equant} the case $e_1=e_2=e$ (centre halfway between the Sun and the equant point; elements $e,w,L,n$), and the \emph{vicarious hypothesis} the case of free $e_1,e_2$ (elements $e_1,e_2,w,L,n$).
+\item \emph{Ellipse} (elements $e,w,L,n$): $\theta(t)=w+\nu$, where $\nu$ is the true anomaly that Kepler's equation $\psi-e\sin\psi=M(t)$ gives for eccentricity $e$.
+\end{itemize}
+The element ranges are $e,e_1,e_2\in[0,1)$, $w,L\in[0,2\pi)$ and $n\in[0,0.1)$ radians per day. Each element is written as a fixed-length 64-bit binary numeral for the midpoint of a cell of its range. The weight of the compatible numerals of a form is then $\mathrm{Vol}_{\mathsf F}(\delta)/\prod(\text{ranges})$ up to a grid error of order $2^{-64}$, which gives the posterior weight $2^{-(\lvert\mathrm{LAW}_{\mathsf F}\rvert_S+\Occ_{\mathsf F}(\delta))}$ of \cref{sec:kepler:pool}.
+
+\paragraph{Minimax errors.} Each form is fitted by least squares from several starts, refined by $L_p$ fits with increasing $p$, and its largest residual is then minimised by sequential linear programming. \Cref{tab:kepler:minimax} lists the minimax errors and the elements that witness them; each value against plan94 is an upper bound on the true minimax error. A second implementation, an exchange algorithm written independently and started elsewhere, finds the same values to four decimals. The circle's value is exact: its minimax problem is a one-dimensional convex minimisation. For the others, global optimality is not proved. The column ``exact'' gives the minimax errors against an exact, unperturbed Kepler ellipse (the ellipse's own least-squares elements on these data, $e=0.0930$, whose largest deviation from plan94 is $1.25'$); so more than half of the vicarious hypothesis's $1.41'$ is perturbation error shared with the ellipse. The eccentric's error against the exact ellipse agrees with the second-order expansions of the two equations of centre, $2e^2\sin2M$ for the eccentric and $\frac54e^2\sin2M$ for the ellipse, whose difference $\frac34e^2$ is about $22.5'$ for Mars.
+
+\begin{table}[ht]
+\centering\small
+\caption{Minimax errors of the Mars pool, 1580--1600 (arcminutes): against plan94, upper bounds witnessed by the elements shown ($w$ and $L$ in degrees, $L$ at the middle of the window; $n$ in radians per day), and against an exact ellipse; $k$ is the number of elements.}\label{tab:kepler:minimax}
+\status{computed (upper bounds witnessed by elements, reproduced by an independent search; global optimality not proved)}\src{philosophy \S4.3--\S4.4, c4 table A1}
+\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\textwidth}{@{}lrrr>{\raggedright\arraybackslash}X@{}}
+\toprule
+form & $k$ & plan94 & exact & witnessing elements\\
+\midrule
+circle & 2 & 640.7908 & -- & $L=309.45$, $n=0.00914611$\\
+eccentric & 4 & 23.0508 & 22.34 & $e=0.184516$, $w=283.471$, $L=309.448$, $n=0.0091461$\\
+equant & 4 & 8.1653 & 7.43 & $e=0.0933767$, $w=283.465$, $L=309.446$, $n=0.00914613$\\
+vicarious & 5 & 1.4127 & 0.62 & $e_1=0.115724$, $e_2=0.0707907$, $w=283.462$, $L=309.446$, $n=0.00914609$\\
+ellipse & 4 & 1.0733 & 0 & $e=0.0930389$, $w=283.445$, $L=309.442$, $n=0.00914609$\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{The law texts.} A law text is a sentence $\forall b\,\forall t\,(\theta(b,t)=\ldots)$, or with an existential quantifier as below, in which the elements are unary function symbols $L(b),n(b),w(b),e(b),e_1(b),e_2(b)$ and the mean longitude is written out as $L(b)+n(b)\cdot t$, with $t$ measured from the middle of the window, wherever it occurs (below we abbreviate it by $\Lambda$, and $\Lambda-w(b)$ by $M$; the abbreviations are expanded in the counted texts). The syntaxes are: \emph{S1}, with $+,-,\cdot,/,\sin,\cos,\mathrm{atan2},\sqrt{\ }$, the numerals $0,1,2$, $\forall$, $\exists$, $\wedge$, $=$, $>$; \emph{S2}, S1 with a unit-vector primitive $\mathrm{uc}(\varphi)=\mathbf u(\varphi)$, a direction primitive $\mathrm{dir}(\mathbf x)$ (the polar angle of $\mathbf x$) and $\mathrm{rc}(Q,C,\varphi)$, the point where the ray from $Q$ at angle $\varphi$ meets the unit circle about $C$; and \emph{S3}, S1 with $\mathrm{kep}(e,M)$, the true anomaly for eccentricity $e$ and mean anomaly $M$. The texts are (arguments $b$ of the element symbols omitted):
+\begin{itemize}[leftmargin=*,itemsep=1pt]
+\item circle (all syntaxes): $\theta(b,t)=L+n\cdot t$;
+\item eccentric: in S1 and S3, $\theta(b,t)=\mathrm{atan2}(\sin\Lambda-e\cdot\sin w,\ \cos\Lambda-e\cdot\cos w)$; in S2, $\theta(b,t)=\mathrm{dir}(\mathrm{uc}(\Lambda)+(-e)\cdot\mathrm{uc}(w))$;
+\item vicarious hypothesis: in S1 and S3, $\exists s\,\big(s>0\wedge s\cdot s-2\cdot(e_2\cdot(s\cdot\cos M))+e_2\cdot e_2=1\wedge\theta(b,t)=\mathrm{atan2}(-((e_1+e_2)\cdot\sin w)+s\cdot\sin\Lambda,\ -((e_1+e_2)\cdot\cos w)+s\cdot\cos\Lambda)\big)$; in S2, $\theta(b,t)=\mathrm{dir}(\mathrm{rc}(-(e_1+e_2)\cdot\mathrm{uc}(w),\ (-e_1)\cdot\mathrm{uc}(w),\ \Lambda))$;
+\item bisected equant: the vicarious texts with $e$ for $e_1$ and $e_2$ in S1 and S3, and with $2\cdot e$ for $e_1+e_2$ and $e$ for $e_1$ in S2;
+\item ellipse: in S1 and S2, $\exists E\,\big(E-e\cdot\sin E=M\wedge\theta(b,t)=w+\mathrm{atan2}(\sqrt{1-e\cdot e}\cdot\sin E,\ \cos E-e)\big)$; in S3, $\theta(b,t)=w+\mathrm{kep}(e,M)$;
+\item $\mathrm{K3}$ (all syntaxes; with $P=2\pi/n$): $\forall b\,\forall c\,\big((n(b)\cdot n(b))\cdot(a(b)\cdot(a(b)\cdot a(b)))=(n(c)\cdot n(c))\cdot(a(c)\cdot(a(c)\cdot a(c)))\big)$.
+\end{itemize}
+A text is serialised with one opening and one closing bracket per compound, and its length is its number of tokens times $\lceil\log_2(\text{alphabet size})\rceil$. The alphabets have 31 (S1), 34 (S2) and 32 (S3) symbols, so a token costs 5, 6 and 5 bits. This gives the text lengths of \cref{tab:kepler:map}: 31, 89, 198, 198, 109 and 75 tokens in S1 for the circle, eccentric, equant, vicarious hypothesis, ellipse and $\mathrm{K3}$; 31, 57, 75, 78, 109, 75 in S2; 31, 89, 198, 198, 52, 75 in S3. Every text was evaluated numerically and compared with the model it is attached to, at 40 random elements and times each: all agree to within $1.4\times10^{-14}$ radians. A second serialisation, Polish notation with fixed arities and a separate symbol for unary minus, gives about half these lengths: in S1 75, 195, 440, 440, 245 and 165 bits, in S2 90, 150, 198, 204, 294, 198 and in S3 75, 195, 440, 440, 120, 165; a compact Polish code for $\mathrm{K3}$ with a power symbol and the numeral 3 has 23 tokens, 115 bits.
+
+\paragraph{Occam factors.} $\Occ_{\mathsf F}(\delta)$ is estimated by hit-or-miss Monte Carlo with the exact model on all 7306 data: points are drawn uniformly in a parallelepiped built from the whitened linearisation of the residuals at the minimax point, enlarged where hits come close to a face, and capped at the element ranges; about 2000 hits per entry give a standard error of about $0.03$ bits. The table below gives every value. Two cross-checks support them where the region is far from linear. Hit-or-miss sampling in an axis-aligned box with the full range of the eccentricities gives, for the vicarious hypothesis, $22.73\pm0.03$, $33.36\pm0.03$, $37.87\pm0.07$ and $43.02\pm0.24$ bits at $720'$, $120'$, $60'$ and $30'$, within about one combined standard error of the table. An independent implementation, with boxes found by its own random-walk explorer, gives $21.16$ (ellipse, $720'$), $20.21$ (eccentric, $720'$), $21.17$ (equant, $720'$), $31.72$ (equant, $120'$), $31.69$ (ellipse, $120'$), $35.67$ (ellipse, $60'$), each $\pm0.03$ or better, and $20.929$ (circle, $720'$, an exact one-dimensional integral): all within $0.06$ bits of the table. At $720'$ the compatible regions have a thin part with the apsidal angle opposite the true perihelion and small eccentricity (since the circle fits to $640.8'<720'$, every apsidal angle is compatible for small $e$); the parallelepiped at $720'$ spans $6.5$ radians in $w$, and a full-range rerun shows the effect of this part to be within the noise.
+
+\begin{center}\small
+\status{computed}\src{philosophy \S4.4 Part A, c4 table A2}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lrrrrrrrrrrrrr@{}}
+\toprule
+$\delta$ & $720'$ & $120'$ & $60'$ & $30'$ & $20'$ & $12'$ & $9'$ & $6'$ & $4'$ & $3'$ & $2'$ & $1.6'$ & $1.3'$\\
+\midrule
+circle & 20.93 & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & --\\
+eccentric & 20.24 & 31.17 & 36.34 & 45.38 & -- & -- & -- & -- & -- & -- & -- & -- & --\\
+equant & 21.20 & 31.70 & 35.88 & 40.35 & 43.63 & 49.49 & 57.34 & -- & -- & -- & -- & -- & --\\
+vicarious & 22.77 & 33.34 & 37.93 & 42.83 & 45.77 & 49.56 & 51.78 & 54.98 & 58.56 & 61.53 & 67.56 & 74.54 & --\\
+ellipse & 21.18 & 31.63 & 35.68 & 39.65 & 42.01 & 45.01 & 46.81 & 49.21 & 51.86 & 53.88 & 57.41 & 59.93 & 63.81\\
+\bottomrule
+\end{tabular}
+
+\smallskip Occam factors $\Occ_{\mathsf F}(\delta)$ in bits (``--'': $\delta$ below the form's minimax error).
+\end{center}
+
+\paragraph{The MAP form.} At these 13 precisions the MAP form is: in S1, the circle at $720'$, the eccentric at $120'$--$30'$ and the ellipse from $20'$ on; in S2, the circle at $720'$, the eccentric at $120'$--$30'$, the bisected equant at $20'$--$9'$, the vicarious hypothesis at $6'$--$1.6'$ and the ellipse at $1.3'$; in S3, the circle at $720'$ and the ellipse from $120'$ on. Below $1.07'$ no form is compatible. In every row the runner-up has at most $2^{-12.4}$ of the MAP's weight. Each $\mathrm{K3}$ variant of a form has exactly $2^{-\lvert\mathrm{K3}\rvert}$ times the form's weight: with one planet $\mathrm{K3}$ is vacuous, and in heliocentric direction data it has no content (\cref{prop:kepler:helio}).
+
+\paragraph{The data without the text prior.} With a uniform prior over the five forms, the element prior above and no text prior, the MAP is the eccentric at $720'$ and $120'$ (margins $0.69$ and $0.46$ bits) and the ellipse at every $\delta\le60'$, with margins $0.20$, $0.70$, $1.62$, $4.48$, $4.97$, $5.77$, $6.70$, $7.65$, $10.15$ and $14.61$ bits at $60'$, $30'$, $20'$, $12'$, $9'$, $6'$, $4'$, $3'$, $2'$ and $1.6'$. These margins are largest just above a competitor's minimax error, where its compatible volume shrinks to zero. They depend on the element ranges: halving the ranges of the eccentricities (the compatible regions lie inside $[0,0.5)$ at every $\delta\le120'$) adds one bit of prior density per eccentricity, which moves the vicarious hypothesis by one bit against the four-element forms and the circle by one bit the other way.
+
+\paragraph{Text against data.} Form $\mathsf F$ beats form $\mathsf G$ iff $\lvert\mathrm{LAW}_{\mathsf F}\rvert_S-\lvert\mathrm{LAW}_{\mathsf G}\rvert_S<\Occ_{\mathsf G}(\delta)-\Occ_{\mathsf F}(\delta)$. For the epicyclic syntax's equant and vicarious texts (18 bits apart), the Occam-factor difference moves from $2.14$ bits in the equant's favour at $20'$ to $5.56$ bits in the vicarious hypothesis's favour at $9'$, so the equant keeps a margin of $12.4$ bits at $9'$; text and data contributions are of the same order there. For every other pair of forms the text difference is between $100$ and $835$ bits, an order of magnitude larger than any Occam-factor difference, except that in S1 and S3 the equant and vicarious texts have equal length; both lose to the ellipse there by more than $400$ bits.
+
+\paragraph{Robustness.} A variable-length numeral code (an Elias-gamma length prefix per element) adds about 5--11 bits per element; this moves the vicarious hypothesis against the four-element forms by 6--11 bits and the circle against them by 12--20 bits, and changes none of the MAP rows. In Polish notation the text differences shrink by about half and no MAP row changes; the closest case is the epicyclic syntax's equant and vicarious texts, which then differ by 6 bits (198 against 204), against an Occam-factor difference of at most $5.56$ bits. A natural form outside the pool, the equation-of-centre series truncated at second or third order (four elements, like the ellipse), has S1 texts of 680 and 1345 bits, against the ellipse's 545, and minimax errors $4.11'$ and $1.31'$, so it changes no S1 row.
+
+% ==================================================================
+\subsection{Graded fit}\label{sec:kepler:gradeddetails}
+
+\begin{example}[Graded fit; a computation]\label{ex:kepler:graded}
+\status{computed (the honest-band crossovers are estimates from the pricing of section 9)}\src{philosophy \S4.4 Part A'}
+Under dithered rounding every form in the Mars pool of \cref{sec:kepler:pool}, the ellipse included, is eventually refuted (\cref{prop:laws:rounding}); but inside $\MA$ a theory may be a sampler, the law with a Gaussian error model of stated $\sigma$ (\cref{prop:laws:randomised}). At $\sigma=2'$, roughly Tycho's precision, the expected penalty per independent observation relative to the ellipse is $45.05$ bits (eccentric), $4.96$ (equant) and $0.035$ (vicarious hypothesis), so the text advantages over the ellipse are overcome after $2$ and $7$ observations (eccentric, S1 and S2), $41$ (equant, S2) and about $5{,}300$ (vicarious hypothesis, S2); a simulation agrees. Honest uniform-tolerance theories give $23$ to $71$ and about $470$ data, a conservative estimate, since \SAIabbr's mixture prefers a law with a calibrated error model (\cref{prop:laws:errormodel}; details below). So with graded fit the data, not the syntax, decide every step within tens of observations, except the epicyclic syntax's choice between the vicarious hypothesis and the ellipse on longitudes, which needs thousands of longitudes at Tycho-level noise.
+\end{example}
+
+\paragraph{Gaussian noise.} Least-squares fits to the 7306 longitudes have root-mean-square residuals $454.4'$ (circle), $15.81'$ (eccentric), $5.26'$ (equant), $0.628'$ (vicarious hypothesis) and $0.446'$ (ellipse). For a sampler with Gaussian errors of standard deviation $\sigma$, the expected log-likelihood penalty per independent observation relative to the ellipse is $(\mathrm{RMS}_{\mathsf F}^2-\mathrm{RMS}_{\rm ell}^2)/(2\sigma^2\ln2)$ bits. A form's text advantage over the ellipse is overcome after (text advantage)/(penalty) observations, which omits the parameter-fitting terms:
+
+\begin{center}\small
+\begin{tabular}{@{}lrrrl@{}}
+\toprule
+& \multicolumn{3}{c}{penalty (bits per observation)} & observations needed to overcome the\\
+form & $\sigma=1'$ & $\sigma=2'$ & $\sigma=4'$ & text advantage at $\sigma=1',2',4'$\\
+\midrule
+eccentric & 180.2 & 45.05 & 11.26 & S1 (100 bits): 0.6, 2.2, 8.9; S2 (312 bits): 1.7, 6.9, 27.7\\
+equant & 19.84 & 4.96 & 1.24 & S2 (204 bits): 10.3, 41.1, 164.5\\
+vicarious & 0.142 & 0.035 & 0.0089 & S2 (186 bits): 1313, 5253, 21013\\
+\bottomrule
+\end{tabular}
+\end{center}
+In S1 and S3 the ellipse already has the shorter text against the equant and the vicarious hypothesis, by 445 and 730 bits, and in S3 also against the eccentric.
+
+\paragraph{A simulation.} For $n$ days drawn at random from 1580--1600 (seeded; 20 runs per cell), the plan94 longitude plus Gaussian noise is fitted by each form by least squares, and the evidence is computed by the Laplace approximation under the element prior above; the noise model's text is common to all forms and cancels. At $\sigma=2'$, in S1 and S3 the MAP is the ellipse in 20 of 20 runs for every $n\ge10$ (at $n=5$, S1's MAP is the eccentric in all runs); in S2 it is the vicarious hypothesis in 20 of 20 runs for $n=20$ to $2560$, in 10 of 20 at $n=5120$, and the ellipse in 20 of 20 at $n=7306$. At $\sigma=1'$ the S2 switch to the ellipse comes between $n=640$ (vicarious hypothesis in 20 of 20) and $n=2560$ (ellipse in 20 of 20). The median evidence ratio of the ellipse over the vicarious hypothesis, without text prior, grows from $2^{2.2}$ at $n=5$ to $2^{276}$ at $n=7306$ ($\sigma=2'$). The simulation agrees with the expected-penalty estimates.
+
+\paragraph{Honest uniform-tolerance theories.} Give each form the honest law with tolerance equal to its minimax error (\cref{prop:laws:randomised}). For cells much narrower than the tolerances, the cost per datum against the ellipse is about $\log_2(\varepsilon_{\mathsf F}/\varepsilon_{\rm ell})$: $4.43$ bits (eccentric), $2.93$ (equant) and $0.40$ (vicarious hypothesis). The text advantages are then overtaken after 23 (S1) and 71 (S2) data for the eccentric, 70 for the equant (S2) and about 470 for the vicarious hypothesis (S2). These are estimates from the pricing of \cref{sec:laws}, not a separate posterior computation, and they are conservative: \SAIabbr's mixture prefers a law with a calibrated error model to the uniform band (\cref{prop:laws:errormodel}).
+
+% ==================================================================
+\subsection{What \texorpdfstring{$\mathrm{K3}$}{K3} is worth}\label{sec:kepler:K3details}
+
+\begin{example}[K3's worth against its cost; a computation]\label{ex:kepler:K3cost}
+\status{computed (conditional on the code; the extrapolation and the compact-code threshold are estimates)}\src{philosophy \S4.4 Part B; laws Prop 5.5(b)}
+By \cref{prop:kepler:K3worth}, given the other elements, $\mathrm{K3}$'s geocentric content is exactly $\rho$, and it is large: over 1580--1600 the median of $\alpha(t)$ is $90^\circ$ (5th and 95th percentiles $9.5^\circ$ and $170^\circ$). Take as data the daily geocentric longitudes of Mars over 1580.0--1600.0 at a common tolerance $\delta$, and Kepler ellipses for the Earth and Mars with $\rho\in[0,4)$ free or given by $\mathrm{K3}$. With fixed-length numerals for the elements, the posterior odds for $\mathrm{K3}$ are $2^{s_{\rm K3}(\delta)-\lvert\mathrm{K3}\rvert}$, where $\lvert\mathrm{K3}\rvert$ is the length of its text and $s_{\rm K3}(\delta):=\log(4\,\mathrm{Vol}_8(\delta)/\mathrm{Vol}_9(\delta))$ ($\mathrm{Vol}_8,\mathrm{Vol}_9$ the volumes of the compatible element regions with and without $\mathrm{K3}$) is what $\mathrm{K3}$ saves (the method is described below). A computation gives $s_{\rm K3}=11.3$, $12.3$, $13.4$, $14.7$ bits at $\delta=8'$, $4'$, $2'$, $1'$, about one more bit per halving of $\delta$, as for any real-valued element; $\mathrm{K3}$ costs $0.005'$ of fit. Its text costs $375$ bits in the syntax S1 of \cref{sec:kepler:pool} (brackets counted), $165$ in Polish notation and $115$ in a compact Polish code; it is paid once and saves $s_{\rm K3}(\delta)$ bits per body whose size it fixes. By \cref{prop:laws:K3} (with the law in place, at exchange rate $1$; a comparison of law choices, not membership of a steeper MAP), $\mathrm{K3}$ pays once it fixes the sizes of about $25$--$33$, $11$--$15$ or $8$--$10$ bodies in the three codes, while the five planets other than the Earth give about $55$--$75$ bits if each saves about as much as Mars (an extrapolation; we computed Mars only). So in none of these codes does compression alone select $\mathrm{K3}$ at Kepler's precision. This is conditional on the code: under the universal prior the relevant cost is the complexity of $\mathrm{K3}$ given the rest of the theory, which these computations do not determine.
+\end{example}
+
+\paragraph{Setting.} The data are those of \cref{ex:kepler:K3cost} (\cref{sec:kepler:data}). The hypotheses are Kepler ellipses for the Earth (in the ecliptic, $a=1$) and for Mars (its plane fixed at the best heliocentric plane of \cref{sec:kepler:data}), each with elements $e,w,L,n$, and either $\rho=a(\mathrm{Ma})/a(\mathrm{Ea})$ as a ninth free element in $[0,4)$ (without $\mathrm{K3}$) or $\rho:=(n_{\rm Ea}/n_{\rm Ma})^{2/3}$ (with $\mathrm{K3}$, eight elements). As in \cref{sec:kepler:pooldetails}, the numerals are of fixed length, which gives the posterior odds $2^{s_{\rm K3}(\delta)-\lvert\mathrm{K3}\rvert}$ of \cref{ex:kepler:K3cost}, with $\mathrm{Vol}_8$ and $\mathrm{Vol}_9$ the volumes of the exact compatible regions with and without $\mathrm{K3}$.
+
+\paragraph{Fit.} The minimax geocentric error is $0.627'$ with $\rho$ free (fitted $\rho=1.523676$, against the $\mathrm{K3}$ value $1.523687$ from the fitted periods) and $0.632'$ with $\mathrm{K3}$; an independent fit gives $0.6266'$ and $0.6318'$ with the same values of $\rho$. So $\mathrm{K3}$ costs $0.005'$ of fit and is compatible with the data at every $\delta\ge0.632'$. These minimax values are upper bounds witnessed by elements. The data are values of a model, so plan94's own error does not affect the comparison.
+
+\paragraph{Method.} With $y:=\rho-(n_{\rm Ea}/n_{\rm Ma})^{2/3}$, a shear of unit Jacobian turns the volume ratio into a density: $\mathrm{Vol}_8/\mathrm{Vol}_9=p_y(0)$, the density at $0$ of $y$ under the uniform distribution on the nine-dimensional compatible region. That distribution is sampled by hit-and-run \citep{smith1984efficient}, with stepping-out brackets in the manner of slice sampling \citep{neal2003slice} and the exact membership test on all data; $p_y(0)$ is estimated as the fraction of samples with $\lvert y\rvert<h$ divided by $2h$, for $h=0.05$, $0.1$ and $0.2$ standard deviations of $y$. Box sampling cannot be used here: the linearised compatible region fills a fraction of $10^{-5}$ or less of its bounding box.
+
+\begin{center}\small
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+$\delta$ & $8'$ & $4'$ & $2'$ & $1'$\\
+\midrule
+$s_{\rm K3}(\delta)$ (bits) & $11.28\pm0.04$ & $12.31\pm0.03$ & $13.39\pm0.03$ & $14.73\pm0.04$\\
+second implementation & 11.27--11.32 & 12.28--12.32 & 13.32--13.35 & 14.69--14.71\\
+standard deviation of $y$ & $6.47\cdot10^{-4}$ & $3.10\cdot10^{-4}$ & $1.47\cdot10^{-4}$ & $5.54\cdot10^{-5}$\\
+$\log_2\big(4/(\sqrt{2\pi}\,\mathrm{sd}(y))\big)$ & 11.27 & 12.33 & 13.41 & 14.81\\
+\bottomrule
+\end{tabular}
+\end{center}
+The fourth row is the value for a Gaussian $y$, as a check. The errors in the first row are one standard error over the 492--583 independent chains (of 600) that start at exactly compatible points. The three kernel widths agree to within $0.03$ bits, and the first and second halves of the kept steps agree to within $0.06$ bits except at $8'$ ($11.33$ against $11.23$), where we quote $11.3\pm0.1$. The second implementation, written independently and run with three kernel widths, is a hit-and-run on the linearised compatible polytope with exact chords (60{,}000 samples per $\delta$); its shares of linearised samples that are exactly compatible, $0.819$, $0.901$, $0.958$, $0.968$, match the first implementation's $0.820$, $0.895$, $0.948$, $0.972$. The sampler failed to bracket or to accept in 38, 5, 1 and 0 of about 128{,}000--152{,}000 chain steps per row; the direct effect is at most about $0.01$ bits at $8'$. A cruder estimate from the single most sensitive day ($9.8$, $10.8$, $11.8$ bits at $8'$, $4'$, $2'$) is lower, as it should be. $s_{\rm K3}$ includes $\log_2$ of the range of $\rho$ ($[0,4)$, 2 bits); the range $[0,2)$ would lower every entry by one bit.
+
+\paragraph{Against the text.} $\lvert\mathrm{K3}\rvert$ is 375 bits in S1 with brackets counted (450 in S2), 165 bits in Polish notation and 115 bits in the compact Polish code (\cref{sec:kepler:pooldetails}). For one pair of planets the posterior odds against $\mathrm{K3}$ at $8'$ are therefore about $2^{-364}$ (S1) to $2^{-104}$ (compact code). By the criterion of \cref{prop:laws:K3}(b), when the same bodies' elements are in the theory with and without $\mathrm{K3}$, $\mathrm{K3}$ pays, with the law in place, iff the number $\lvert S\rvert$ of bodies whose size it fixes satisfies $s_{\rm K3}\lvert S\rvert>\lvert\mathrm{K3}\rvert$; at $s_{\rm K3}=11.3$ and $14.7$ bits per body this needs $\lvert S\rvert>33.2$ and $25.5$ (375 bits), $14.6$ and $11.2$ (165 bits), $10.2$ and $7.8$ (115 bits). The extrapolation to the five planets other than the Earth (about 55--75 bits) assumes that each saves about as much as Mars; the other planets were not computed.
+
+% ==================================================================
+\subsection{Distances as data}\label{sec:kepler:distdetails}
+
+The data are those of the Mars pool together with, for every day, the sentence ``$r(t_i)$ lies within a factor $1\pm\tau_{\rm d}$ of $r_i$'', with $r_i$ the plan94 heliocentric distance in the best plane. Each form gets one more element, its scale. An entry of \cref{tab:kepler:distances} is the least longitude tolerance found at which a form, with suitable elements and scale, proves every longitude datum and every distance datum. The search combines sequential linear programming from many starts: earlier optima, perturbations of them, the optimum at the neighbouring $\tau_{\rm d}$ in a decreasing and in an increasing sweep, and six seeded random starts; a second, independently written search was run as well, and each entry is the best value found by either. Every entry is witnessed by printed elements and was re-checked with the same residual function; none is proved minimal. The circle about the Sun is not in this computation. The equant and ellipse rows come from a coarser search; their entries at $3\%$, $1.5\%$ and $0.75\%$ follow by monotonicity (elements feasible at a smaller $\tau_{\rm d}$ are feasible at a larger one, and no form beats its longitude minimax), and the independent search confirms them: at its longitude minimax the ellipse needs only a distance tolerance of $0.0153\%$ and the equant $0.2487\%$.
+
+\begin{table}[ht]
+\centering\small
+\caption{Distances as data: the least longitude tolerance found (arcminutes, against plan94) at which a form proves every longitude datum and every distance datum at relative distance tolerance $\tau_{\rm d}$; ``none'': no elements meeting $\tau_{\rm d}$ were found; $r^*$: the least distance tolerance found with no longitude constraint. Every entry is an upper bound on the least tolerance, witnessed by elements; minimality is not proved.}\label{tab:kepler:distances}
+\status{computed (every entry an upper bound witnessed by printed elements; minimality not proved)}\src{philosophy \S4.4 Part C}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lrrrrrrrrrrr@{}}
+\toprule
+form & $r^*$ & $5\%$ & $3\%$ & $2\%$ & $1.5\%$ & $1\%$ & $0.75\%$ & $0.5\%$ & $0.2\%$ & $0.1\%$ & $0.05\%$\\
+\midrule
+eccentric & 0.226\% & 150.73 & 218.31 & 252.45 & 269.56 & 286.70 & 295.32 & 305.33 & none & none & none\\
+equant & 0.222\% & 8.17 & 8.17 & 8.17 & 8.17 & 8.17 & 8.17 & 8.17 & none & none & none\\
+vicarious & 0.0164\% & 1.41 & 1.41 & 2.01 & 3.54 & 5.12 & 5.97 & 6.95 & 23.74 & 94.95 & 132.04\\
+ellipse & 0.0117\% & 1.07 & 1.07 & 1.07 & 1.07 & 1.07 & 1.07 & 1.07 & 1.07 & 1.07 & 1.07\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{What the distances decide.} At $\tau_{\rm d}=1\%$ the least longitude tolerance at which the vicarious hypothesis fits all the data is at most $5.12'$ (witnessed by elements; two independent searches found nothing lower), while the ellipse fits both kinds of data at $1.07'$. So for $\delta$ below the former only the ellipse is compatible, in every syntax; with longitudes alone, only below $1.41'$. Compatibility alone thus eliminates the circle-based vicarious hypothesis once the data language contains distances: this reproduces the abandonment of circular orbits, not Kepler's last step from an oval to the ellipse, which is outside the pool.
+
+\paragraph{The witness at $\tau_{\rm d}=1\%$.} The elements $e_1=0.102835781$, $e_2=0.0837969992$, $w=-1.33587144$, $L=-0.882335245$ (radians), $n=0.00914611825$ radians per day and scale $1.52509743$ fit every distance of the vicarious hypothesis to within $1.00000\%$ and every longitude to within $5.119'$. The fit is sensitive to rounding: with the elements rounded to six decimals (the rounding of $n$ to $0.009146$ is the largest change) the longitude error rises to $6.2'$. The vicarious entry at $0.05\%$ ($132.04'$) is the independent search's; the other search found $132.35'$ there.
+
+\paragraph{Reading.} Distances order the forms differently from longitudes. The bisected equant fits the distances to within $0.5\%$ without giving up any longitude accuracy, and to $0.22\%$ at best. The eccentric circle fits distances alone to $0.23\%$, but not with the elements its longitudes need: the distance fit wants a smaller eccentricity ($e=0.142$ at $5\%$, against $0.185$ for the longitude fit). The vicarious hypothesis fits distances alone to $0.016\%$ (with $e_1\approx e_2$ it is close to the equant), but not together with its longitude fit. The ellipse fits both at once, at its longitude minimax, for every $\tau_{\rm d}$ down to $0.05\%$. Not computed: the Occam factors with distance data, and hence the MAP form above the thresholds; a lower bound on any least tolerance (it would need, for example, interval arithmetic over a covering of the element space); and the precision of Kepler's own distance determinations, so the table does not say which $\tau_{\rm d}$ was historically available.
+
+% ==================================================================
+\subsection{Reproducing the computations}\label{sec:kepler:rerun}
+
+The scripts in the accompanying repository are deterministic or seeded (seed 20261015 for the residual fits and the Mars pool, 20261016 for the graded-fit and distance computations) and were run with Python 3.11.15, NumPy 2.4.6, SciPy 1.17.1 and pyerfa 2.0.1.5. Their saved outputs contain every computed number of \cref{sec:kepler} and of this appendix, except the two sampler figures (the bounding-box fraction and the number of chain steps), which follow from the script's parameters; the other figures are from the literature cited. Re-running reproduces them apart from timing lines; the Mars-pool posterior with the value of $\mathrm{K3}$ takes about 80 minutes on one core, the distance search about 36 minutes, the residual fits about 2 minutes and the graded-fit computations under a minute. The independently written implementations quoted above are in the same repository.

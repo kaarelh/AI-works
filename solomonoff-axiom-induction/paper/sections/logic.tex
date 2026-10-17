@@ -1,0 +1,130 @@
+% Section 5 (writer: logic). Source: research/tracks/logic/notes-final.md (final record; item numbers in \src),
+% as corrected by research/final-check.md §4 (items 5, 11, 18); sfi Cor 4.2 (cor:logic:versions); synthesis H2, H5, H9, H14.
+% Proofs: sections/app-logic.tex. Local symbols as listed at the top of app-logic.tex.
+% Moved to Appendix C for the page budget (statement there, one sentence here): rem:logic:lotteryremarks,
+% prop:logic:true, prop:logic:core, cor:logic:versions, cor:logic:onetrue, prop:logic:boundary, prop:logic:con,
+% prop:logic:gaifman (see logs/write-logic.md); in the edit pass (DECISIONS §L3, logs/edit-logic.md):
+% prop:logic:arity, cor:logic:chaitin, prop:logic:normalised, thm:logic:soundnessPi1, prop:logic:oldevidence,
+% thm:logic:goedelomega, rem:logic:closures, thm:logic:thn, cor:logic:undecided, q:logic:thn
+% (sec:logic:thn is now a paragraph label at the end of the omega-gap subsection).
+\section{Logic: random theories, \texorpdfstring{$\Pi_1$}{Pi1} truth and G\"odel phenomena}\label{sec:logic}
+
+Up to constant factors, every version of \SAIabbr is the corresponding version of consistent \SOIabbr (\cref{sec:soi}). This section studies what is specific to data that are sentences of a logic. Random theories can succeed where every r.e.\ theory fails (\cref{sec:logic:lottery,sec:logic:arith}); on $\Pi_1$ data the mixture is, up to a constant factor, one random true theory (\cref{sec:logic:pi1}); Gödel's theorems leave fixed marks on the posterior (\cref{sec:logic:goedel}); given all its instances, a universal sentence gets belief $1$ only when the background and the instances prove it (\cref{sec:logic:omega}); and the loss on true arithmetic grows at least polynomially (\cref{sec:logic:thn}). Proofs are in \cref{app:logic}.
+
+\emph{Conventions.} $\Lar=\{0,S,+,\cdot,<\}$ with numerals $\num n$; $\Delta_0$, $\Sigma_1$, $\Pi_1$ are syntactic classes, and $\Pi_1^*$ consists of the finite conjunctions of $\Pi_1$ sentences and negations of $\Sigma_1$ sentences. ``$\Q$-equivalent'' means provably equivalent in $\Q$; ``$B$ is true'' means that $B$ has a model whose $\Lar$-reduct is $\mathbb N$; ``$B\supseteq\Q$'' means $\Q\subseteq\Cn(B)$. $\mathcal U$ is the class of $\Sigma_1$-unsound deductively closed theories (those proving a false $\Sigma_1$ sentence), $\overline{\mathcal U}$ its complement, and $P_D(\mathcal C):=\UA(\mathcal C;D)/\MA(D)$. (G2) is Gödel's second theorem for r.e.\ extensions of $\PA$; other standard facts are in \cref{app:logic:conv}. Losses are in the semimeasure convention unless stated otherwise.
+
+\subsection{The lottery}\label{sec:logic:lottery}
+
+The one-tape loss on a stream is bounded iff $\Unif(E_\infty)>0$ (\cref{prop:basic:limitpost}). For \SOIabbr on strings, bounded one-tape loss implies that some partial computable labeller extends the stream (\cref{prop:logic:arity}(b)). Does bounded one-tape loss of \SAIabbr imply that some consistent r.e.\ theory proves every datum? It does not; the obstruction is a consistency constraint of unbounded arity.
+
+Let $\mathcal L$ contain $0$, $S$ and a binary relation symbol $\Win$, and let $B$ be decidable and consistent, not mention $\Win$, and have a model in which the numerals denote pairwise distinct elements (for example $B=\emptyset$, $\Q$ or $\PA$). With $N_k:=2^{k+1}-1$, the \emph{lottery sentences}
+\[
+\Lot_k:=\exists x\,\Win(\num k,x)\ \wedge\ \forall x\,\big(\Win(\num k,x)\to x=\num0\vee\dots\vee x=\num{N_k}\big)
+\]
+say that lottery $k$ has a winner among its tickets $0,\dots,N_k$. The \emph{random lottery theory} $\Glot$ reads the tape in consecutive blocks of $k+1$ bits, reads block $k$ as a number $J_k\in\{0,\dots,N_k\}$, and emits $\Lot_k$, $\Win(\num k,\num{J_k})$, and $\neg\Win(\num k,\num j)$ for $j\le N_k$, $j\ne J_k$. Its theory is consistent with $B$ on every tape.
+
+\begin{theorem}[The lottery]\status{proved; computed}\src{logic Thm 2.2}\label{thm:logic:lottery}
+There is an infinite stream $D_\infty$ of labelled sentences, computable from $\emptyset'$, such that:
+\begin{enumerate}[label=(\alph*),leftmargin=*]
+\item for every $n$, $\MA(D_n)\ge2^{-K(\Glot)-c}\prod_{k\ge0}(1-2^{-(k+1)})$; so $\Unif(E_\infty)>0$, the cumulative loss is at most $K(\Glot)-\log\prod_{k\ge0}(1-2^{-(k+1)})+c$, and the posterior converges in total variation to $P_\infty$;
+\item no consistent r.e.\ theory proves (together with $B$) every member of $D_\infty^\pm$;
+\item $\WA(D_n)\to0$ and $\KA(D_n)\to\infty$, so the coin-free loss is unbounded; and $\Kfin^{\mathcal L'}(D_n)\to\infty$ for every language $\mathcal L'\supseteq\mathcal L$ with computable syntax;
+\item the posterior probability that the tape's program is a deterministic machine (one that emits only under the empty prefix) tends to $0$, and no tape in $E_\infty$ has a theory with r.e.\ deductive closure: the limit posterior lives on random theories whose closure is not r.e.
+\end{enumerate}
+\end{theorem}
+
+The product equals $0.288788\ldots$ (a computation; code in the accompanying repository). The stream is a diagonal: if $B\cup\re e$ is consistent and proves $\Lot_e$, it cannot refute every ticket of lottery $e$, and the stream reports as a loser the least ticket $j^*_e$ that it does not refute. So every consistent r.e.\ theory fails at its own lottery, while a random lottery theory dies at lottery $k$ only if its winner is the reported loser, with probability $2^{-(k+1)}$. Such a stream is neither r.e.\ nor, for the lottery classes, co-r.e., and the phenomenon needs proof-requiring compatibility (\cref{rem:logic:lotteryremarks}). The random lottery theories share the law $\{\Lot_k\}_k$ and differ only in random contingent facts, the winners: a forced form of the split between laws and random initial conditions (\cref{sec:laws}).
+
+\paragraph{Where it cannot happen.} The lottery's minimal inconsistent sets $\{\Lot_k\}\cup\{\neg\Win(\num k,\num j):j\le N_k\}$ have unbounded size, and at every threshold the majority-vote theory refutes every ticket of the late lotteries, as in Kyburg's lottery paradox \citep{kyburg1961probability}. Bounded arity removes the obstruction: if $\Unif(E_\infty)>0$ and the data lie in a decidable sentence class in which every $B$-inconsistent finite set has a $B$-inconsistent subset with at most $r$ elements, the majority vote above a Lebesgue density point of $E_\infty$, at a threshold $1-1/(r+1)$ that is exact for the argument, is a consistent r.e.\ theory proving the stream, and the coin-free loss is bounded too (\cref{prop:logic:arity}(a); cf.\ \citealp{deleeuw1956computability}).
+
+\begin{corollary}[Bounded loss and r.e.\ theories]\status{proved}\src{logic Cor 2.5}\label{cor:logic:Q1}
+$\Unif(E_\infty)>0$ does not in general imply that a consistent r.e.\ theory proves every datum of $D_\infty$ (\cref{thm:logic:lottery}; inside true arithmetic, \cref{thm:logic:arith}). It does when the inconsistency arity of the data's sentence class is bounded (\cref{prop:logic:arity}), for streams of $\Pi_1$ type over a true background $B\supseteq\Q$ (\cref{cor:logic:onetrue}), and for co-r.e.\ streams over block-decidable sentence classes, which include the lottery classes (\cref{prop:logic:core}); and if a positive-measure set of true random theories proves the stream, a true r.e.\ theory does (\cref{prop:logic:true}).
+\end{corollary}
+
+We do not claim that these are the only cases. Since consistent \SOIabbr agrees with \SAIabbr version by version up to constant factors (\cref{thm:soi:coinfree,thm:soi:onetape}), the lottery separates one-tape from coin-free consistent \SOIabbr, while plain coin-free \SOIabbr on sentences has bounded loss on it, through an inconsistent labeller (\cref{cor:logic:versions}).
+
+On the lottery stream the coin-free loss diverges more slowly than any computable unbounded nondecreasing function, and $\KA(D_n)\le\lceil n/2\rceil+O(\log n)$ (\cref{cor:logic:rate}, through the proof horizon of \cref{prop:logic:horizon}).
+
+\begin{question}\status{open}\src{logic E-Q2, \S2.6}\label{q:logic:computablefast}
+Is there a stream with bounded one-tape loss on which $-\log\WA(D_n)\ge f(n)$ for some computable unbounded nondecreasing $f$? And does bounded one-tape loss on a co-r.e.\ stream imply, in general, that a consistent r.e.\ theory proves it?
+\end{question}
+
+\paragraph{Relatives.} Random axiom systems drawn by a universal machine are not new (\cref{sec:related,app:logic:lottery}); to our knowledge, the comparison of the one-tape law with its own coin-free and Kolmogorov versions, the identification of the succeeding hypotheses as random theories r.e.\ in the tape, the arity boundary and the arithmetic versions are new.
+
+\subsection{Lotteries in arithmetic}\label{sec:logic:arith}
+
+Inside arithmetic, self-referential formulas behave like independent atoms with respect to consistency with a true background, with prescribed truth values in $\mathbb N$ (\cref{lem:logic:flexible}, a variant of the flexible formulas of \citealp{kripke1962flexible}). With them the lottery needs no fresh symbol, and survives even with true data. Let $\langle k,j\rangle$ be a $\Delta_0$ pairing with $k,j\le\langle k,j\rangle$.
+
+\begin{theorem}[Lotteries in arithmetic]\status{proved, given \cref{lem:logic:flexible}; (b) computed}\src{logic Thm 2.9}\label{thm:logic:arith}
+Let $\mathcal L=\Lar$, and let $B$ be decidable and true with $B\supseteq\Q$. For a formula $\Upsilon(x)$ put $\Tick_{k,j}:=\Upsilon(\num{\langle k,j\rangle})$ and $\Lot^{\rm ar}_k:=\bigvee_{j\le N_k}\Tick_{k,j}$.
+(a) There are a formula $\Upsilon_0$ and a stream $((\Lot^{\rm ar}_k,1),(\Tick_{k,j^*_k},0))_{k\ge0}$ satisfying (a)--(d) of \cref{thm:logic:lottery} in which every $\Tick_{k,j}$ is $\Q$-equivalent to a false $\Sigma_1$ sentence; so the data are $\Q$-equivalent to false $\Sigma_1$ sentences labelled true and to true $\Pi_1^*$ sentences.
+(b) There are a formula $\Upsilon_1$ and a stream of the same form satisfying (a)--(d) of \cref{thm:logic:lottery} in which every datum is true in $\mathbb N$ and $\Q$-equivalent to a Boolean combination of $\Sigma_1$ sentences.
+\end{theorem}
+
+In (b), $\Upsilon_1$ is chosen by self-reference so that the true winner of lottery $k$ is the least ticket that $B\cup\re k$ refutes ($0$ if none); the diagonal reports as the loser a different ticket, one that $B\cup\re k$ does not refute whenever $B\cup\re k$ is consistent and proves $\Lot^{\rm ar}_k$, and that report is true.
+
+\begin{corollary}[True data, false theories]\status{proved; computed}\src{logic Cor 2.10}\label{cor:logic:false}
+On the stream of \cref{thm:logic:arith}(b):
+(i) every datum is true, $\LA(D_n)$ is bounded, and $\KA(D_n)-\LA(D_n)\to\infty$; so no coding theorem of the form $\KA\le\LA+f(\LA)$ holds for true data beyond $\Sigma_1\cup\Pi_1$;
+(ii) $P_\infty\{\omega:B\cup A_\omega\subseteq\Th(\mathbb N)\}=0$: the limit posterior is concentrated on false theories, although every datum is true;
+(iii) the random lottery theory is $\Sigma_1$-unsound on every tape on which, for some $k$, its winner $J_k$ differs from the true winner of lottery $k$; conditionally on its survival this has probability $1$.
+\end{corollary}
+
+On this stream of true sentences the one-tape inducer predicts with bounded loss and comes to believe, with probability one, false theories: a random theory that guesses winners is right where the data check it and wrong where they do not. The data are adversarial (a $\Delta_2$ diagonal), so this is a possibility result in an idealised setting, not evidence about actual science. Whether also $P_\infty(\overline{\mathcal U})=0$ is open (\cref{q:logic:soundtrue}).
+
+\subsection{\texorpdfstring{$\Pi_1$}{Pi1} data: derandomisation, a coding theorem, Chaitin's theorem}\label{sec:logic:pi1}
+
+On $\Pi_1$ data positive probability of provability certifies truth. Throughout, $\mathcal L\supseteq\Lar$ and $B$ is decidable and true with $B\supseteq\Q$. A data set $D$ is \emph{of $\Pi_1$ type} if each literal in $D^\pm$ is $B$-equivalent to a $\Pi_1^*$ sentence or to a true $\Sigma_1$ sentence; then $B\vdash\psi_D\leftrightarrow\pi_D$ for some $\pi_D\in\Pi_1^*$, and $\MA(D)=\Bel_0(\pi_D)$ (\cref{app:logic:pi1}).
+
+\begin{theorem}[The threshold machine]\status{proved; computed}\src{logic Thm 3.2}\label{thm:logic:threshold}
+Let $\Gthr$ be the theory machine that, after reading $s$ tape bits $u$, emits every $\pi\in\Pi_1^*$ for which some lower approximation of $\Unif(O_\pi)$ exceeds $0.u+2^{-s}$ ($0.u$ the dyadic rational with digits $u$). For a tape $r$ that is not a dyadic rational, read as a real, $A^{\Gthr}_r=\{\pi\in\Pi_1^*:\Unif(O_\pi)>r\}$; this theory is inconsistent if $r<\Inc_0$ and true if $r>\Inc_0$. For every data set $D$ of $\Pi_1$ type, $\MA(D)\le\nu_{\Gthr}(D)\le2^{K(\Gthr)+c}\MA(D)$.
+\end{theorem}
+
+So on $\Pi_1$ data the universal mixture is, up to a constant factor, one random true theory: every $\Pi_1^*$ sentence $\pi$ with $\Unif(O_\pi)$ above a uniformly random level. The tape helps only by choosing the level, and that costs only what the probability of the datum already charges. Fixing $k+2$ bits of the level just above $\Inc_0$ gives a true r.e.\ theory $T_k$ of complexity at most $k+K(k)+c$ that proves every $\Pi_1^*$ sentence $\pi$ with $\Bel_0(\pi)\ge2^{-k}$ (\cref{thm:logic:thresholdtheories}).
+
+\begin{corollary}[A coding theorem for $\Pi_1$ data]\status{proved}\src{logic Cor 3.3}\label{cor:logic:coding}
+For every $D$ of $\Pi_1$ type, $\LA(D)\le-\log\WA(D)+c\le\KA(D)+c\le\LA(D)+K(\lceil\LA(D)\rceil)+c'$.
+\end{corollary}
+
+Likewise, if every finite part of a stream is of $\Pi_1$ type and $\sup_n\LA(D_n)\le k$, the single true theory $B\cup T_k$ proves every datum (\cref{cor:logic:onetrue}). For literals no coding theorem holds (\cref{thm:basic:nocoding}). For $\WA$ the bound improves to $-\log\WA\le\LA+\Kpad(\lceil\LA\rceil+1)+c$ (\cref{rem:logic:Wbound}); whether $\KA\le\LA+O(1)$ is open (\cref{q:logic:codingO1}).
+
+Code strings by length-lexicographic rank, so that those of length at most $m$ are the codes at most $\mathrm{rk}_m:=2^{m+1}-2$, and let $\mathrm{Comp}(p,t,y)$ be Kleene's $\Delta_0$ predicate ``$t$ codes the halting computation of $V$ on $p$, with output $y$''. The $\Pi_1$ sentence $\Kgt_m(x):=\forall t\,\forall p\,(p\le\num{\mathrm{rk}_m}\to\neg\mathrm{Comp}(p,t,\num x))$ is true iff $K(x)>m$. If $K(x)>m$, the single true datum $(\Kgt_m(x),1)$ costs between $m-2\log m-O(\log\log m)$ and $m+K(m)+c$ bits in the semimeasure and three-valued conventions, and one true theory of complexity at most $m+K(m)+c$ proves all true $\Kgt_m(x)$ at once (\cref{cor:logic:chaitin}): Chaitin's theorem for random theories. In the normalised convention, with $B$ true and $\PA\subseteq\Cn(B)$ and for every $j\ge0$, the datum costs at most $\log(1+2^{-j})$ for all but at most $2^{2m+K(m)+j+c}+2^{m+1}$ strings $x$ of each length (\cref{prop:logic:normalised}): the $m$ bits are the price of deciding the sentence, not of predicting its truth value.
+
+The boundary of the coding theorem is exact: with $\mathcal L=\Lar$, for every $d\ge2$ there are data $D_d$ with $\KA(D_d)>\log d-2$ and $\LA(D_d)\le2+c$ made of one datum $\Q$-equivalent to a false $\Sigma_1$ sentence and one to a true $\Pi_1^*$ sentence, and others made of two true data $\Q$-equivalent to Boolean combinations of $\Sigma_1$ sentences (\cref{prop:logic:falsesigma,prop:logic:boundary}); on a stream, the gap is bounded against unbounded (\cref{cor:logic:false}). To our knowledge, the threshold just above the unknown $\Inc_0$, the single random threshold theory and the coding theorem for an inductive inference rule are new.
+
+\subsection{G\"odel phenomena}\label{sec:logic:goedel}
+
+\begin{proposition}[The arithmetical shape of the trichotomy]\status{proved; computed}\src{logic Prop 4.1}\label{prop:logic:shape}
+Let $B$ be decidable and consistent with $\Q\subseteq\Cn(B)$, and let $D$ be consistent.
+(a) If $\sigma$ is a true $\Sigma_1$ sentence, then $\Bel_D(\sigma)=1$.
+(b) If $\pi\in\Pi_1^*$ is false, then $(\Bel_D,\Dis_D,\Indep_D)(\pi)=(0,1,0)$; equivalently, $\Bel_D(\pi)>0$ or $\Indep_D(\pi)>0$ implies that $\pi$ is true.
+(c) If $B\cup D^\pm$ is true, $\pi\in\Pi_1^*$ is true and $B\cup D^\pm\nvdash\pi$, then $\Bel_D(\pi)$, $\Dis_D(\pi)$, $\Indep_D(\pi)$ are all positive.
+(d) If $B\cup D^\pm$ is true, $\sigma$ is a false $\Sigma_1$ sentence and $B\cup D^\pm\nvdash\neg\sigma$, then all three values of $\sigma$ are positive.
+\end{proposition}
+
+The inducer errs one-sidedly: on $\Sigma_1$ sentences it may believe a falsehood but never disbelieves a truth; on $\Pi_1$ sentences (consistency statements, Gödel sentences, $\Kgt_m(x)$) the reverse. So ``independent'' on a $\Pi_1$ question certifies truth, the inducer's form of ``the Gödel sentence is true because it is unprovable''; the normalised convention discards exactly this share.
+
+\begin{theorem}[Soundness is never learned, coin-free]\status{proved, given (G2)}\src{logic Thm 4.2}\label{thm:logic:soundness}
+Let $B$ be decidable and consistent with $\PA\subseteq\Cn(B)$. There is $c$ such that $\WA(\mathcal U;D)\ge2^{-c}\WA(\overline{\mathcal U};D)$ for every consistent $D$. Hence the coin-free posterior probability of $\Sigma_1$-soundness, and a fortiori of truth, is at most $1/(1+2^{-c})$ for every $D$, in particular for every finite part of true arithmetic; and in the Kolmogorov version the shortest compatible $\Sigma_1$-unsound theory is at most $c$ bits longer than the shortest compatible $\Sigma_1$-sound one.
+\end{theorem}
+
+Every consistent $\re e$ has a companion $\re e\cup\{\neg\Con(B\cup\re e)\}$, consistent by (G2), unsound, and only $O(1)$ bits longer. One-tape it gives $P_D(\mathcal U)\ge2^{\LA(D)-\KA(D)-c}$ (\cref{prop:logic:unsound}): confidence in soundness needs a large coding gap. On data of $\Pi_1$ type the bound is uniform: one-tape, over a decidable true background containing $\PA$, the posterior probability of $\Sigma_1$-soundness is at most $1-2^{-c}$, with $c$ independent of the data (\cref{thm:logic:soundnessPi1}, given (G2)); whether this holds for all data is open (for partial answers see \cref{app:logic:goedel}):
+
+\begin{question}\status{open}\src{logic D-Q1, \S4.4}\label{q:logic:soundness}
+With $B$ true and $\PA\subseteq\Cn(B)$, is $P_D(\overline{\mathcal U})$ bounded away from $1$ uniformly over all data $D$?
+\end{question}
+
+On data presenting an r.e.\ $T$ with $B\cup T$ true and $\PA\subseteq\Cn(B\cup T)$, $\Con(B\cup T)$ keeps positive limit shares on all three answers, and which of ``true'' and ``false'' is favoured is a choice of universal machine (\cref{prop:logic:con}); without truth this fails (for $B=\PA+\neg\Con(\PA)$ and $T=\emptyset$, $\lim\Dis(\Con(B))=1$). Checking instances of a decidable property, the classic case of induction in mathematics,\footnote{The question of how checking instances can confirm a universal mathematical statement first appeared in H\"anni's working notes \citep{hanni2026notes}.} confirms nothing when deduction is free: data entailed by $B$ leave the posterior equal to the prior, for $\MA$, $\WA$ and $\KA$ alike, so with $\Q\subseteq\Cn(B)$ and a $\Delta_0$ formula $P(x)$, consistent data $\{(P(\num n),1):n\le N\}$ leave $\Bel(\forall x\,P(x))$ at its prior value for every $N$ (\cref{prop:logic:oldevidence}): the problem of old evidence and logical omniscience (cf.\ \citealp{hacking1967slightly,garber1983old}). Instances of a fresh predicate do confirm, up to the $\omega$-gap; induction in mathematics needs a reasoner for whom computing $P(\num n)$ is costly, such as a logical inductor \citep{garrabrant2016logical} or a derivation-charged inducer (\cref{app:logic:goedel}).
+
+\subsection{The \texorpdfstring{$\omega$}{omega}-gap}\label{sec:logic:omega}
+
+\begin{proposition}[Anatomy of the $\omega$-gap]\status{proved}\src{logic Prop 5.1}\label{prop:logic:omega}
+Let $\mathcal L$ have a nonempty set $\mathrm{CT}$ of closed terms, $B$ be decidable and consistent, $\varphi(x)$ have one free variable, and $I:=B\cup\{\varphi(t):t\in\mathrm{CT}\}$ be consistent. Let the stream list $(\varphi(t),1)$ for all $t\in\mathrm{CT}$, in any order. Then $\Unif(E_\infty)>0$, the posterior converges in total variation to the prior restricted to the consistent extensions of $I$, and the limit trichotomy of $\forall x\,\varphi$ is
+(i) $(1,0,0)$ if $I\vdash\forall x\,\varphi$;
+(ii) $(0,1,0)$ if $I\vdash\neg\forall x\,\varphi$ ($I$ is $\omega$-inconsistent at $\varphi$);
+(iii) otherwise in $(0,1)^3$, with $\lim\Dis=P_\infty(\text{the theory is $\omega$-inconsistent at }\varphi)$ and $\lim\Indep=P_\infty(\text{the theory proves every instance and decides }\forall x\,\varphi\text{ neither way})$.
+\end{proposition}
+
+So the Bayesian $\omega$-gap is the $\omega$-incompleteness of the background plus the instances, weighted by prior shares. In particular $\Bel$ satisfies the Gaifman condition \citep{gaifman1964concerning} exactly when $I\vdash\forall x\,\varphi$, and otherwise misses it by at least $2^{-K(I)-c}$ (\cref{prop:logic:gaifman}), the provability analogue of Proposition B.10 of our earlier report \citep{claude2026axiominduction}. That condition is a desideratum for credences about truth \citep{hutter2013probabilities}; $\Bel$ is a probability of provability, and its failure is not a defect. The universal prior does not close the gap even for true $\Pi_1$ sentences with trivially checkable instances: over a decidable true background containing $\PA$, for every $k$ there is such a sentence whose belief stays below $2^{-k+c'}$ after any instance data (\cref{thm:logic:goedelomega}, given (G2)). In arithmetic the gap closes under the $\omega$-rule (with $B\supseteq\Q$) and under full second-order consequence, and in the generative variant only with the universal sentence among the data (\cref{rem:logic:closures}). A bound on the number of lines of derivations does not close it either: under a full-support prior the limit belief is then $1$ iff a Kreisel-type property holds, and that fails already for a fresh predicate and nine lines (\cref{prop:logic:lines,ex:logic:lines}).
+
+\paragraph{True arithmetic.}\label{sec:logic:thn} On true arithmetic, listed by length in a syntax with short binary numerals, the loss in the semimeasure convention grows at least like $n^\xi$ up to logarithmic terms, for an exponent $\xi>0$ of the syntax ($\xi\ge0.0823$ for a stated syntax, by an exact computation; code in the accompanying repository), and every true r.e.\ theory leaves at least $C'^{-\xi}n^\xi/(2\log n)$ of the first $n$ sentences undecided for large $n$, for a constant $C'$ (\cref{thm:logic:thn,cor:logic:undecided}); whether the loss is $o(n)$ is open (\cref{q:logic:thn}).

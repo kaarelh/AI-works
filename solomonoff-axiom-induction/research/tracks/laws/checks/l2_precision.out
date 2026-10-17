@@ -1,0 +1,42 @@
+# l2_precision.py seed=20261016 python 3.11.15 numpy 2.4.6
+
+== A. regime (G): per-datum refutation probability r(delta) = Pr[|e(t) - eta| > delta], eta ~ U[-d0, d0]
+   eps* = 1', delta0 = 0.5'; prediction: r > 0 iff delta < eps* + delta0 = 1.5' (Prop 2.3)
+   spread delta=1.00: 2.18e-01; delta=1.25: 7.57e-02; delta=1.40: 1.91e-02; delta=1.45: 6.66e-03; delta=1.49: 6.14e-04; delta=1.50: 0.00e+00; delta=1.60: 0.00e+00; delta=2.00: 0.00e+00
+          survival of n=1000 data at delta=1.45: (1-r)^1000 = 1.248e-03
+   peaked delta=1.00: 2.49e-02; delta=1.25: 1.24e-02; delta=1.40: 5.00e-03; delta=1.45: 2.48e-03; delta=1.49: 4.89e-04; delta=1.50: 0.00e+00; delta=1.60: 0.00e+00; delta=2.00: 0.00e+00
+          survival of n=1000 data at delta=1.45: (1-r)^1000 = 8.340e-02
+
+== B. regime (R): survival of the exact law over n dithered data; first refutation index
+   columns: Delta | p_Delta (MC) | p formula (Delta >= 2eps*: E|e|/Delta) | Pr[survive n=1,10,100] sim vs (1-p)^n | mean first-refutation index sim vs 1/p
+   error shape: spread (E|e| = 0.6366, eps* = 1, pk = 1.571)
+   Delta=    0.5' | p=0.837100 |     -    | 0.1651/0.1629 0.0000/0.0000 0.0000/0.0000 |        1.2 vs        1.2  (20000 runs)
+   Delta=    1.0' | p=0.636658 |     -    | 0.3608/0.3633 0.0000/0.0000 0.0000/0.0000 |        1.6 vs        1.6  (20000 runs)
+   Delta=    2.0' | p=0.318389 | 0.318310 | 0.6833/0.6816 0.0215/0.0216 0.0000/0.0000 |        3.1 vs        3.1  (20000 runs)
+   Delta=   10.0' | p=0.063661 | 0.063662 | 0.9375/0.9363 0.5163/0.5180 0.0011/0.0014 |       15.7 vs       15.7  (20000 runs)
+   Delta=   60.0' | p=0.010619 | 0.010610 | 0.9895/0.9894 0.9010/0.8987 0.3457/0.3438 |       94.1 vs       94.2  (20000 runs)
+   Delta=  600.0' | p=0.001060 | 0.001061 | 0.9992/0.9989 0.9901/0.9895 0.9059/0.8994 |      942.7 vs      943.4  (20000 runs)
+   error shape: peaked (E|e| = 0.0500, eps* = 1, pk = 20.000)
+   Delta=    0.5' | p=0.049828 |     -    | 0.9522/0.9502 0.5998/0.5998 0.0062/0.0060 |       20.3 vs       20.1  (20000 runs)
+   Delta=    1.0' | p=0.050195 |     -    | 0.9489/0.9498 0.5964/0.5975 0.0056/0.0058 |       19.9 vs       19.9  (20000 runs)
+   Delta=    2.0' | p=0.024808 | 0.025000 | 0.9767/0.9752 0.7805/0.7779 0.0814/0.0811 |       40.0 vs       40.3  (20000 runs)
+   Delta=   10.0' | p=0.004989 | 0.005000 | 0.9948/0.9950 0.9500/0.9512 0.6038/0.6064 |      200.8 vs      200.4  (20000 runs)
+   Delta=   60.0' | p=0.000832 | 0.000833 | 0.9993/0.9992 0.9928/0.9917 0.9196/0.9201 |     1195.3 vs     1201.4  (20000 runs)
+   Delta=  600.0' | p=0.000083 | 0.000083 | 1.0000/0.9999 0.9991/0.9992 0.9925/0.9917 |    11940.7 vs    12006.4  (3331 runs)
+
+== C. pool of three exact theories, proof-requiring; the shortest compatible theory is chosen
+   T1: |T1| = 100, error 10*sin (eps* = 10'); T2: |T2| = 150, error 1*sin (eps* = 1'); T3: |T3| = 400, exact.
+   (G) prediction: eventual choice = shortest T_i with eps*_i + delta0 <= delta (delta0 = 0.5')
+   (R) prediction: T_i survives about 1/p_i data, p_i = E min(|e_i|/Delta, 1); eventually only T3
+   (G) delta=  20.0': shares of T1/T2/T3: n=1     1.00/0.00/0.00  n=10    1.00/0.00/0.00  n=100   1.00/0.00/0.00  n=1000  1.00/0.00/0.00  n=10000 1.00/0.00/0.00   [eventual choice T1]
+   (G) delta=  10.5': shares of T1/T2/T3: n=1     1.00/0.00/0.00  n=10    1.00/0.00/0.00  n=100   1.00/0.00/0.00  n=1000  1.00/0.00/0.00  n=10000 1.00/0.00/0.00   [eventual choice T1]
+   (G) delta=   5.0': shares of T1/T2/T3: n=1     0.33/0.67/0.00  n=10    0.00/1.00/0.00  n=100   0.00/1.00/0.00  n=1000  0.00/1.00/0.00  n=10000 0.00/1.00/0.00   [eventual choice T2]
+   (G) delta=   1.5': shares of T1/T2/T3: n=1     0.09/0.91/0.00  n=10    0.00/1.00/0.00  n=100   0.00/1.00/0.00  n=1000  0.00/1.00/0.00  n=10000 0.00/1.00/0.00   [eventual choice T2]
+   (G) delta=   1.2': shares of T1/T2/T3: n=1     0.08/0.82/0.10  n=10    0.00/0.35/0.65  n=100   0.00/0.00/1.00  n=1000  0.00/0.00/1.00  n=10000 0.00/0.00/1.00   [eventual choice T3]
+   (R) Delta= 600.0': shares of T1/T2/T3: n=1     0.99/0.01/0.00  n=10    0.90/0.09/0.01  n=100   0.35/0.55/0.10  n=1000  0.00/0.34/0.66  n=10000 0.00/0.00/1.00   [1/p1 = 94.3, 1/p2 = 942.3]
+   (R) Delta=  60.0': shares of T1/T2/T3: n=1     0.89/0.10/0.01  n=10    0.33/0.58/0.09  n=100   0.00/0.34/0.66  n=1000  0.00/0.00/1.00  n=10000 0.00/0.00/1.00   [1/p1 = 9.4, 1/p2 = 94.3]
+   (R) Delta=  10.0': shares of T1/T2/T3: n=1     0.38/0.56/0.07  n=10    0.00/0.51/0.49  n=100   0.00/0.00/1.00  n=1000  0.00/0.00/1.00  n=10000 0.00/0.00/1.00   [1/p1 = 1.6, 1/p2 = 15.7]
+   (R) Delta=   1.0': shares of T1/T2/T3: n=1     0.04/0.33/0.63  n=10    0.00/0.00/1.00  n=100   0.00/0.00/1.00  n=1000  0.00/0.00/1.00  n=10000 0.00/0.00/1.00   [1/p1 = 1.0, 1/p2 = 1.6]
+
+# runtime 17 s
+# done

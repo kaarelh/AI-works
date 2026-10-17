@@ -1,0 +1,33 @@
+# c5_conservation.py  seed=20261015  numpy 2.4.6  python 3.11.15
+== A. per-step raw loss at the start of a trajectory (bits); per-question QA loss
+        m   law known  law unknown   gain/step   share of raw   1/2 log2(pi m/2)   QA no law  QA law
+        8       6.129          8.0       1.871      2.338e-01              1.826        3.17       0
+       12       9.852         12.0       2.148      1.790e-01              2.118        3.70       0
+       16      13.652         16.0       2.348      1.468e-01              2.326        4.09       0
+       32      29.163         32.0       2.837      8.866e-02              2.826        5.04       0
+       64      60.669         64.0       3.331      5.205e-02              3.326        6.02       0
+      128     124.171        128.0       3.829      2.991e-02              3.826        7.01       0
+     1024    1018.674       1024.0       5.326      5.201e-03              5.326       10.00       0
+  1000000  999989.708    1000000.0      10.292      1.029e-05             10.292       19.93       0
+
+== B. exact expectations over the cycle length ell ~ Uniform{1..C}; m = 12, w = 6, C = 924, S = 4096
+  T=300: E raw loss  law 2415.58   no law 3004.85   mixture 2416.58   law's share of the no-law loss 0.1961
+  T=300: QA loss (301 questions incl. t=0)  law 3.70   no law 1113.83   mixture 4.70   law's share 0.9967
+  T=inf (whole cycle): E raw loss  law 4223.17   no law 5496.77   mixture 4224.17   law's share of the no-law loss 0.2317
+  T=inf (whole cycle): QA loss (1000001 questions incl. t=0)  law 3.70   no law 3700443.42   mixture 4.70   law's share 1.0000
+  per-step raw gain of the law, averaged over the pre-closure steps of a whole cycle:
+    E[gain] / E[steps] = 2.7537 bits per step; log2(S/C) = 2.1483; 1/2 log2(pi m/2) = 2.1182
+
+== C. simulation by sequential sampling of the path (m = 12, T = 300, 2000 runs)
+  mean raw loss  law 2405.87 (se 18.25)   no law 2992.55 (se 22.87)   mixture 2406.87   law's share of mean no-law loss 0.1960
+  max over runs of (mixture - law) = 1.0000 bits (bound: 1)
+  cycle length deciles (expected 200 each under Uniform{1..924}): [197, 209, 210, 202, 209, 190, 181, 197, 200, 205]; KS distance 0.0195
+  first run: cycle length 154; raw loss law 1497.7, no law 1843.8, mixture 1498.7; law's share 0.1877
+
+== D. comparison with scout N2's n4_raw_vs_questions.out
+  part A: largest difference from n4's printed per-step values: 0.0005 bits (n4 prints 3 decimals)
+  part B of n4 is one run (cycle closed at step 275): raw loss law 2643.5, no law 3286.4, share 0.1956.
+  this script's exact formula for ell = 275, T = 300: law 2643.5, no law 3286.4, share 0.1956
+  n4's QA convention: T = 300 questions t = 1..300 with x_0's weight given to the law-knower (0 bits)
+  and 1110.1 bits without the law; this script counts t = 0 too and does not give |x_0|.
+# done

@@ -1,0 +1,62 @@
+# c2_mars_models.py  numpy 2.4.6  scipy 1.17.1  pyerfa 2.0.1.5  (deterministic)
+# data: ERFA plan94 Mars, heliocentric, 1580.0-1600.0, daily: N = 7306
+# best plane through the Sun: inclination to the J2000 ecliptic 1.8828 deg; largest out-of-plane angle 0.070 arcmin
+
+## (A) fit to longitudes only; (B) distance error of that fit (scale fitted)
+theory       k   max |dlon| '   rms |dlon| '   max |dr|/r (B)   elements
+circle       2        641.034        454.711         1.05e-01   th0=304.362, n=0.00914606 (angles deg; n rad/day)
+eccentric    4         23.455         15.814         1.10e-01   e=0.184542, w=283.502, M0=21.1145, n=0.00914609 (angles deg; n rad/day)
+equant       4          8.276          5.265         2.66e-03   e=0.0933409, w=283.466, M0=21.3551, n=0.00914612 (angles deg; n rad/day)
+vicarious    5          1.495          0.658         2.85e-02   e1=0.115427, e2=0.0710775, w=283.47, M0=21.2835, n=0.00914611 (angles deg; n rad/day)
+ellipse      4          1.172          0.460         1.47e-04   e=0.093033, w=283.48, M0=21.2703, n=0.00914611 (angles deg; n rad/day)
+   ellipse: e = 0.09303, period 2pi/n = 686.979 d
+   vicarious: e1 = 0.11543, e2 = 0.07108, e1/(e1+e2) = 0.6189  (bisection would be 0.5)
+
+## (C) fit to longitudes and distances jointly (1 arcmin ~ 2.9e-4 relative distance)
+theory       max |dlon| '       max |dr|/r
+eccentric         167.002         4.98e-02
+equant              9.036         2.51e-03   e = 0.09323
+vicarious           8.979         2.44e-03   e1 = 0.09317, e2 = 0.09332
+ellipse             1.251         1.48e-04   e = 0.09302
+   second-order estimate of the equant's longitude error, e^2/4 = 7.44 arcmin
+
+## (D) compatibility with longitude data at tolerance delta (max |dlon| <= delta)
+delta(')       circle  eccentric     equant  vicarious    ellipse
+720               yes        yes        yes        yes        yes
+60                  -        yes        yes        yes        yes
+30                  -        yes        yes        yes        yes
+10                  -          -        yes        yes        yes
+8                   -          -          -        yes        yes
+5                   -          -          -        yes        yes
+2                   -          -          -        yes        yes
+1                   -          -          -          -          -
+0.5                 -          -          -          -          -
+
+## (E) crude two-part code at tolerance delta (element bits only)
+# datum cost log2(pi/delta) bits (a longitude to within delta on the circle);
+# N_even = element bits / datum cost: the number of data at which stating the
+# elements is cheaper than stating the data outright.  Law texts are NOT counted:
+# each is a short formula, and in any fixed syntax they differ by a few hundred bits
+# at most; this offset is formalisation-dependent and is left out.
+delta'   theory      elem bits         bits per element     N_even
+60       eccentric          34            [4, 7, 8, 15]        4.5
+60       equant             35            [5, 7, 8, 15]        4.7
+60       vicarious          37         [3, 4, 7, 8, 15]        4.9
+60       ellipse            35            [5, 7, 8, 15]        4.7
+60                  datum cost 7.49 bits
+10       equant             60         [11, 12, 12, 25]        6.0
+10       vicarious          51       [7, 7, 11, 11, 15]        5.1
+10       ellipse            42          [5, 11, 11, 15]        4.2
+10                  datum cost 10.08 bits
+8        vicarious          51       [7, 7, 11, 11, 15]        4.9
+8        ellipse            55          [5, 12, 11, 27]        5.3
+8                   datum cost 10.40 bits
+5        vicarious          68       [7, 7, 14, 14, 26]        6.1
+5        ellipse            56         [10, 12, 11, 23]        5.1
+5                   datum cost 11.08 bits
+2        vicarious          73      [9, 10, 14, 14, 26]        5.9
+2        ellipse            62         [12, 13, 11, 26]        5.0
+2                   datum cost 12.40 bits
+1                   datum cost 13.40 bits
+
+# done

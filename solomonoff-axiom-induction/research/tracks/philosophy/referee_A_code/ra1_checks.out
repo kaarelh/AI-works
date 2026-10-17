@@ -1,0 +1,56 @@
+# ra1_checks.py seed=20261016 numpy 2.4.6
+
+## (1) conservation world: law's value per raw step vs per question, two no-law QA baselines
+       m       raw gain       uniform QA      binomial QA H   ratio unif  ratio binom
+       8         1.8707           3.1699             2.5442        1.694        1.360
+      12         2.1483           3.7004             2.8385        1.723        1.321
+      16         2.3483           4.0875             3.0465        1.741        1.297
+      32         2.8370           5.0444             3.5470        1.778        1.250
+      64         3.3314           6.0224             4.0471        1.808        1.215
+     128         3.8286           7.0112             4.5471        1.831        1.188
+    1024         5.3261          10.0014             6.0471        1.878        1.135
+# asymptotics: raw gain ~ 0.5 log2(pi m/2); H(Bin) ~ 0.5 log2(pi e m/2); difference -> 0.5 log2 e = 0.7213 bits
+
+## (2) law-text lengths: c4 serialisation (brackets counted) vs Polish notation (no brackets)
+# bits/token with brackets: {'S1': 5, 'S2': 6, 'S3': 5} ; Polish (alphabet without brackets): {'S1': 5, 'S2': 5, 'S3': 5}
+law        S1:br/Pol  S2:br/Pol  S3:br/Pol
+circle       155/   75     186/   75     155/   75
+eccentric    445/  195     342/  125     445/  195
+equant      1030/  460     450/  165    1030/  460
+vicarious   1060/  470     468/  170    1060/  470
+ellipse      545/  245     654/  245     260/  120
+K3           375/  165     450/  165     375/  165
+# S1 differences (brackets / Polish): equant-ellipse 485 / 215; vicarious-ellipse 515 / 225; ellipse-vicarious -515 / -225
+# S2 differences (brackets / Polish): equant-ellipse -204 / -80; vicarious-ellipse -186 / -75; ellipse-vicarious 186 / 75
+# compact K3 (Polish, with '^' and numeral '3' added to S1, 32 symbols -> 5 bits/token): 23 tokens = 115 bits
+#   |K3| =  375 bits: bodies needed at s = 11.3 / 14.7 bits per body: 33.2 / 25.5
+#   |K3| =  165 bits: bodies needed at s = 11.3 / 14.7 bits per body: 14.6 / 11.2
+#   |K3| =  115 bits: bodies needed at s = 11.3 / 14.7 bits per body: 10.2 / 7.8
+
+## (3) noise regime: least-squares fits to the c4 data (N = 7306 daily heliocentric longitudes)
+eccentric  RMS   15.812'   max   23.477'
+equant     RMS    5.263'   max    8.388'
+vicarious  RMS    0.628'   max    1.749'
+ellipse    RMS    0.446'   max    1.252'
+# expected penalty per independent Gaussian observation (bits) relative to the ellipse: (RMS_F^2 - RMS_ell^2)/(2 sigma^2 ln 2).  text = |LAW_F| - |LAW_ellipse| (c4 bits); where text < 0 the form is the shorter text and N* = -text/penalty observations overcome it; n/a: the ellipse is already shorter
+  sigma 1'  eccentric  penalty 180.2136 bits/obs   N*(S1, text  -100) =      0.6   N*(S2, text  -312) =      1.7
+  sigma 1'  equant     penalty  19.8395 bits/obs   N*(S1, text  +485) =      n/a   N*(S2, text  -204) =     10.3
+  sigma 1'  vicarious  penalty   0.1416 bits/obs   N*(S1, text  +515) =      n/a   N*(S2, text  -186) =   1313.3
+  sigma 2'  eccentric  penalty  45.0534 bits/obs   N*(S1, text  -100) =      2.2   N*(S2, text  -312) =      6.9
+  sigma 2'  equant     penalty   4.9599 bits/obs   N*(S1, text  +485) =      n/a   N*(S2, text  -204) =     41.1
+  sigma 2'  vicarious  penalty   0.0354 bits/obs   N*(S1, text  +515) =      n/a   N*(S2, text  -186) =   5253.3
+# honest uniform-tolerance theories with eps_F = minimax error: per-datum cost difference log2(eps_F/eps_ell)
+  eccentric  4.429 bits/datum; N*(S1) = 23, N*(S2) = 70
+  equant     2.933 bits/datum; N*(S1) = n/a, N*(S2) = 70
+  vicarious  0.398 bits/datum; N*(S1) = n/a, N*(S2) = 467
+
+## (4) intrinsic form errors against an exact unperturbed Kepler ellipse (e = 0.0934, P = 686.98 d)
+eccentric  minimax vs exact ellipse   22.527'   (vs plan94, notes §4.3: 23.05')
+equant     minimax vs exact ellipse    7.494'   (vs plan94, notes §4.3: 8.17')
+vicarious  minimax vs exact ellipse    0.633'   (vs plan94, notes §4.3: 1.41')
+
+## (5) exact K3 for Jupiter and Saturn: geocentric angular error from q != q_Earth (1580-1600)
+Jupiter  q-1 = 9.55e-04   relative a error 3.17e-04   geocentric error max 0.233'  median 0.150'
+Saturn   q-1 = 1.50e-03   relative a error 4.98e-04   geocentric error max 0.193'  median 0.129'
+
+# done in 11 s

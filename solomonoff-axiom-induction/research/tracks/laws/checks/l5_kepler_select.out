@@ -1,0 +1,480 @@
+# l5_kepler_select.py seed=20261016 python 3.11.15 numpy 2.4.6; input l4_residuals.npz (117 series)
+
+== A. residual statistics (arcmin): eps* = max|e| of the minimax fit; E|e| of the mean fit; pk = eps*/E|e|;
+   beta_e = log2 e - E H2((eps* - e)/(2 eps*)) for the minimax fit (Lemma 3.6); share of times with |e| > eps*/2
+   body      window |     eps*     E|e|     pk | beta_e >eps*/2 | days
+   Mercury       12 |    0.380    0.110   3.46 |  0.593   0.328 | 4382
+   Mercury       30 |    0.713    0.212   3.36 |  0.559   0.221 | 10956
+   Mercury      100 |    2.023    0.633   3.19 |  0.567   0.241 | 36521
+   Mercury      300 |    5.725    1.888   3.03 |  0.583   0.268 | 109547
+   Mercury     1000 |   19.126    6.214   3.08 |  0.580   0.262 | 365212
+   Mercury     2000 |   37.411   12.384   3.02 |  0.587   0.272 | 730325
+   Venus         12 |    0.357    0.149   2.39 |  0.661   0.419 | 4382
+   Venus         30 |    0.379    0.153   2.48 |  0.629   0.384 | 10950
+   Venus        100 |    0.473    0.159   2.98 |  0.567   0.239 | 36521
+   Venus        300 |    0.786    0.220   3.58 |  0.537   0.153 | 109563
+   Venus       1000 |    1.994    0.544   3.66 |  0.536   0.172 | 365139
+   Venus       2000 |    3.619    1.062   3.41 |  0.555   0.213 | 730218
+   EMB           12 |    0.269    0.111   2.42 |  0.646   0.359 | 4382
+   EMB           30 |    0.338    0.112   3.02 |  0.576   0.245 | 10957
+   EMB          100 |    0.623    0.156   3.98 |  0.519   0.121 | 36514
+   EMB          300 |    1.325    0.360   3.68 |  0.534   0.163 | 109554
+   EMB         1000 |    3.690    1.145   3.22 |  0.566   0.235 | 365180
+   EMB         2000 |    7.276    2.241   3.25 |  0.565   0.231 | 730447
+   Mars          12 |    1.440    0.437   3.29 |  0.604   0.273 | 4382
+   Mars          30 |    1.536    0.460   3.34 |  0.602   0.335 | 10957
+   Mars         100 |    3.041    0.896   3.40 |  0.557   0.205 | 36517
+   Mars         300 |    8.482    2.442   3.47 |  0.549   0.198 | 109548
+   Mars        1000 |   25.234    8.144   3.10 |  0.579   0.254 | 365193
+   Mars        2000 |   49.879   15.730   3.17 |  0.573   0.247 | 730366
+   Jupiter       12 |    0.704    0.250   2.82 |  0.707   0.580 | 4381
+   Jupiter       30 |    3.728    2.013   1.85 |  0.837   0.696 | 10956
+   Jupiter      100 |    6.565    2.564   2.56 |  0.660   0.442 | 36521
+   Jupiter      300 |    7.196    2.653   2.71 |  0.611   0.330 | 109541
+   Jupiter     1000 |   25.787    9.208   2.80 |  0.596   0.326 | 365134
+   Jupiter     2000 |   34.020   12.991   2.62 |  0.602   0.319 | 730373
+   Saturn        12 |    0.172    0.068   2.54 |  0.651   0.506 | 4382
+   Saturn        30 |    1.411    0.590   2.39 |  0.678   0.530 | 10957
+   Saturn       100 |    7.457    3.022   2.47 |  0.813   0.620 | 36523
+   Saturn       300 |   10.998    4.775   2.30 |  0.677   0.465 | 109548
+   Saturn      1000 |   59.186   21.997   2.69 |  0.674   0.481 | 365110
+   Saturn      2000 |   81.927   32.621   2.51 |  0.629   0.397 | 730166
+   Moon      1month |   30.898   16.306   1.89 |  0.723   0.583 | 27
+   Moon       1year |  156.323   61.689   2.53 |  0.658   0.408 | 365
+   Moon      18.6yr |  479.740  243.520   1.97 |  0.710   0.552 | 6793
+
+   (rates: 10909 (fit, eps, Delta) cells averaged exactly over the dither, 7109 by Monte Carlo)
+
+== B. pure forms: which of 0 (no law), P (exact law with exceptions), H (honest law) has the least rate
+   (asymptotic lambda-MAP among the three, Thm 3.8(i)); lower-case = within 2% of the runner-up
+
+   pricing Q/det lam=1
+   body      window |   0.1   0.3     1     3    10    30    60   120   300   600  1800
+   Mercury       12 |     0     P     P     P     P     P     P     P     P     P     P
+   Mercury       30 |     0     0     P     P     P     P     P     P     P     P     P
+   Mercury      100 |     0     0     0     P     P     P     P     P     P     P     P
+   Mercury      300 |     0     0     0     0     P     P     P     P     P     P     H
+   Mercury     1000 |     0     0     0     0     0     P     P     P     P     P     H
+   Mercury     2000 |     0     0     0     0     0     0     P     P     P     P     H
+   Venus         12 |     0     P     P     P     P     P     P     P     P     P     H
+   Venus         30 |     0     p     P     P     P     P     P     P     P     P     H
+   Venus        100 |     0     0     P     P     P     P     P     P     P     P     P
+   Venus        300 |     0     0     P     P     P     P     P     P     P     P     P
+   Venus       1000 |     0     0     0     P     P     P     P     P     P     P     P
+   Venus       2000 |     0     0     0     P     P     P     P     P     P     P     H
+   EMB           12 |     0     P     P     P     P     P     P     P     P     P     h
+   EMB           30 |     0     P     P     P     P     P     P     P     P     P     P
+   EMB          100 |     0     0     P     P     P     P     P     P     P     P     P
+   EMB          300 |     0     0     P     P     P     P     P     P     P     P     P
+   EMB         1000 |     0     0     0     p     P     P     P     P     P     P     H
+   EMB         2000 |     0     0     0     0     P     P     P     P     P     P     H
+   Mars          12 |     0     0     P     P     P     P     P     P     P     P     P
+   Mars          30 |     0     0     P     P     P     P     P     P     P     P     P
+   Mars         100 |     0     0     0     P     P     P     P     P     P     P     P
+   Mars         300 |     0     0     0     0     P     P     P     P     P     P     P
+   Mars        1000 |     0     0     0     0     0     P     P     P     P     P     H
+   Mars        2000 |     0     0     0     0     0     0     P     P     P     P     H
+   Jupiter       12 |     0     0     P     P     P     P     P     P     P     P     P
+   Jupiter       30 |     0     0     0     0     P     P     P     P     P     H     H
+   Jupiter      100 |     0     0     0     0     P     P     P     P     P     P     H
+   Jupiter      300 |     0     0     0     0     P     P     P     P     P     P     H
+   Jupiter     1000 |     0     0     0     0     0     P     P     P     P     P     H
+   Jupiter     2000 |     0     0     0     0     0     0     P     P     P     p     H
+   Saturn        12 |     P     P     P     P     P     P     P     P     P     P     P
+   Saturn        30 |     0     0     0     P     P     P     P     P     P     P     H
+   Saturn       100 |     0     0     0     0     P     P     P     P     P     P     H
+   Saturn       300 |     0     0     0     0     0     P     P     P     P     h     H
+   Saturn      1000 |     0     0     0     0     0     0     0     P     P     P     H
+   Saturn      2000 |     0     0     0     0     0     0     0     0     P     H     H
+   Moon      1month |     0     0     0     0     0     P     P     P     P     P     P
+   Moon       1year |     0     0     0     0     0     0     0     0     P     P     P
+   Moon      18.6yr |     0     0     0     0     0     0     0     0     0     0     H
+
+   pricing Q/det lam=2
+   body      window |   0.1   0.3     1     3    10    30    60   120   300   600  1800
+   Mercury       12 |     0     P     P     P     P     P     P     P     P     P     H
+   Mercury       30 |     0     0     P     P     P     P     P     P     P     H     H
+   Mercury      100 |     0     0     0     P     P     P     P     P     H     H     H
+   Mercury      300 |     0     0     0     0     P     P     P     p     H     H     H
+   Mercury     1000 |     0     0     0     0     0     0     P     H     H     H     H
+   Mercury     2000 |     0     0     0     0     0     0     0     H     H     H     H
+   Venus         12 |     0     0     P     P     P     P     P     p     H     H     H
+   Venus         30 |     0     0     P     P     P     P     P     H     H     H     H
+   Venus        100 |     0     0     P     P     P     P     P     P     H     H     H
+   Venus        300 |     0     0     P     P     P     P     P     P     p     H     H
+   Venus       1000 |     0     0     0     P     P     P     P     P     H     H     H
+   Venus       2000 |     0     0     0     0     P     P     P     p     H     H     H
+   EMB           12 |     0     0     P     P     P     P     P     p     H     H     H
+   EMB           30 |     0     0     P     P     P     P     P     P     p     H     H
+   EMB          100 |     0     0     P     P     P     P     P     P     P     P     H
+   EMB          300 |     0     0     0     P     P     P     P     P     P     H     H
+   EMB         1000 |     0     0     0     0     P     P     P     h     H     H     H
+   EMB         2000 |     0     0     0     0     0     P     P     H     H     H     H
+   Mars          12 |     0     0     0     P     P     P     P     P     P     p     H
+   Mars          30 |     0     0     0     P     P     P     P     P     P     H     H
+   Mars         100 |     0     0     0     0     P     P     P     P     P     H     H
+   Mars         300 |     0     0     0     0     0     P     P     P     h     H     H
+   Mars        1000 |     0     0     0     0     0     0     P     H     H     H     H
+   Mars        2000 |     0     0     0     0     0     0     0     H     H     H     H
+   Jupiter       12 |     0     0     P     P     P     P     P     P     p     H     H
+   Jupiter       30 |     0     0     0     0     H     H     H     H     H     H     H
+   Jupiter      100 |     0     0     0     0     0     P     p     H     H     H     H
+   Jupiter      300 |     0     0     0     0     0     P     p     H     H     H     H
+   Jupiter     1000 |     0     0     0     0     0     0     H     H     H     H     H
+   Jupiter     2000 |     0     0     0     0     0     0     0     H     H     H     H
+   Saturn        12 |     0     P     P     P     P     P     P     P     H     H     H
+   Saturn        30 |     0     0     0     P     P     P     P     H     H     H     H
+   Saturn       100 |     0     0     0     0     0     P     H     H     H     H     H
+   Saturn       300 |     0     0     0     0     0     H     H     H     H     H     H
+   Saturn      1000 |     0     0     0     0     0     0     0     h     H     H     H
+   Saturn      2000 |     0     0     0     0     0     0     0     0     H     H     H
+   Moon      1month |     0     0     0     0     0     0     P     P     P     P     H
+   Moon       1year |     0     0     0     0     0     0     0     0     P     p     H
+   Moon      18.6yr |     0     0     0     0     0     0     0     0     0     0     H
+
+   pricing Q/det lam=4
+   body      window |   0.1   0.3     1     3    10    30    60   120   300   600  1800
+   Mercury       12 |     0     0     P     P     P     h     H     H     H     H     H
+   Mercury       30 |     0     0     0     P     P     H     H     H     H     H     H
+   Mercury      100 |     0     0     0     0     H     H     H     H     H     H     H
+   Mercury      300 |     0     0     0     0     0     H     H     H     H     H     H
+   Mercury     1000 |     0     0     0     0     0     0     H     H     H     H     H
+   Mercury     2000 |     0     0     0     0     0     0     0     H     H     H     H
+   Venus         12 |     0     0     H     H     H     H     H     H     H     H     H
+   Venus         30 |     0     0     H     H     H     H     H     H     H     H     H
+   Venus        100 |     0     0     P     H     H     H     H     H     H     H     H
+   Venus        300 |     0     0     0     P     H     H     H     H     H     H     H
+   Venus       1000 |     0     0     0     0     H     H     H     H     H     H     H
+   Venus       2000 |     0     0     0     0     H     H     H     H     H     H     H
+   EMB           12 |     0     0     h     H     H     H     H     H     H     H     H
+   EMB           30 |     0     0     P     P     H     H     H     H     H     H     H
+   EMB          100 |     0     0     P     P     P     H     H     H     H     H     H
+   EMB          300 |     0     0     0     P     H     H     H     H     H     H     H
+   EMB         1000 |     0     0     0     0     H     H     H     H     H     H     H
+   EMB         2000 |     0     0     0     0     0     H     H     H     H     H     H
+   Mars          12 |     0     0     0     P     P     H     H     H     H     H     H
+   Mars          30 |     0     0     0     P     p     H     H     H     H     H     H
+   Mars         100 |     0     0     0     0     H     H     H     H     H     H     H
+   Mars         300 |     0     0     0     0     0     H     H     H     H     H     H
+   Mars        1000 |     0     0     0     0     0     0     H     H     H     H     H
+   Mars        2000 |     0     0     0     0     0     0     0     H     H     H     H
+   Jupiter       12 |     0     0     0     P     H     H     H     H     H     H     H
+   Jupiter       30 |     0     0     0     0     H     H     H     H     H     H     H
+   Jupiter      100 |     0     0     0     0     0     H     H     H     H     H     H
+   Jupiter      300 |     0     0     0     0     0     H     H     H     H     H     H
+   Jupiter     1000 |     0     0     0     0     0     0     H     H     H     H     H
+   Jupiter     2000 |     0     0     0     0     0     0     0     H     H     H     H
+   Saturn        12 |     0     P     P     H     H     H     H     H     H     H     H
+   Saturn        30 |     0     0     0     H     H     H     H     H     H     H     H
+   Saturn       100 |     0     0     0     0     0     H     H     H     H     H     H
+   Saturn       300 |     0     0     0     0     0     H     H     H     H     H     H
+   Saturn      1000 |     0     0     0     0     0     0     0     h     H     H     H
+   Saturn      2000 |     0     0     0     0     0     0     0     0     H     H     H
+   Moon      1month |     0     0     0     0     0     0     0     H     H     H     H
+   Moon       1year |     0     0     0     0     0     0     0     0     0     H     H
+   Moon      18.6yr |     0     0     0     0     0     0     0     0     0     0     H
+
+   pricing Q/rand
+   body      window |   0.1   0.3     1     3    10    30    60   120   300   600  1800
+   Mercury       12 |     P     P     P     P     P     P     P     P     P     P     P
+   Mercury       30 |     P     P     P     P     P     P     P     P     P     P     P
+   Mercury      100 |     P     P     P     P     P     P     P     P     P     P     P
+   Mercury      300 |     p     P     P     P     P     P     P     P     P     P     P
+   Mercury     1000 |     p     p     P     P     P     P     P     P     P     P     P
+   Mercury     2000 |     p     p     P     P     P     P     P     P     P     P     P
+   Venus         12 |     P     P     P     P     P     P     P     P     P     P     H
+   Venus         30 |     P     P     P     P     P     P     P     P     P     P     H
+   Venus        100 |     P     P     P     P     P     P     P     P     P     P     P
+   Venus        300 |     P     P     P     P     P     P     P     P     P     P     P
+   Venus       1000 |     P     P     P     P     P     P     P     P     P     P     P
+   Venus       2000 |     P     P     P     P     P     P     P     P     P     P     P
+   EMB           12 |     P     P     P     P     P     P     P     P     P     P     H
+   EMB           30 |     P     P     P     P     P     P     P     P     P     P     P
+   EMB          100 |     P     P     P     P     P     P     P     P     P     P     P
+   EMB          300 |     P     P     P     P     P     P     P     P     P     P     P
+   EMB         1000 |     P     P     P     P     P     P     P     P     P     P     P
+   EMB         2000 |     p     P     P     P     P     P     P     P     P     P     P
+   Mars          12 |     P     P     P     P     P     P     P     P     P     P     P
+   Mars          30 |     P     P     P     P     P     P     P     P     P     P     P
+   Mars         100 |     P     P     P     P     P     P     P     P     P     P     P
+   Mars         300 |     p     P     P     P     P     P     P     P     P     P     P
+   Mars        1000 |     p     p     P     P     P     P     P     P     P     P     P
+   Mars        2000 |     p     p     p     P     P     P     P     P     P     P     P
+   Jupiter       12 |     P     P     P     P     P     P     P     P     P     P     P
+   Jupiter       30 |     p     P     P     P     P     P     P     P     P     P     H
+   Jupiter      100 |     p     P     P     P     P     P     P     P     P     P     P
+   Jupiter      300 |     p     P     P     P     P     P     P     P     P     P     P
+   Jupiter     1000 |     p     p     p     P     P     P     P     P     P     P     P
+   Jupiter     2000 |     p     p     p     P     P     P     P     P     P     P     P
+   Saturn        12 |     P     P     P     P     P     P     P     P     P     P     H
+   Saturn        30 |     P     P     P     P     P     P     P     P     P     P     P
+   Saturn       100 |     P     P     P     P     P     P     P     P     P     P     P
+   Saturn       300 |     p     P     P     P     P     P     P     P     P     P     P
+   Saturn      1000 |     p     p     p     P     P     P     P     P     P     P     P
+   Saturn      2000 |     p     p     p     p     P     P     P     P     P     P     P
+   Moon      1month |     p     p     p     p     P     P     P     P     P     P     P
+   Moon       1year |     p     p     p     p     P     P     P     P     P     P     P
+   Moon      18.6yr |     p     p     p     p     p     p     p     P     P     P     P
+
+   pricing R/det lam=1
+   body      window |   0.1   0.3     1     3    10    30    60   120   300   600  1800
+   Mercury       12 |     H     H     H     H     H     H     H     H     H     H     H
+   Mercury       30 |     H     H     H     H     H     H     H     H     H     H     H
+   Mercury      100 |     H     H     H     H     H     H     H     H     H     H     H
+   Mercury      300 |     H     H     H     H     H     H     H     H     H     H     H
+   Mercury     1000 |     H     H     H     H     H     H     H     H     H     H     H
+   Mercury     2000 |     H     H     H     H     H     H     H     H     H     H     H
+   Venus         12 |     H     H     H     H     H     H     H     H     H     H     H
+   Venus         30 |     H     H     H     H     H     H     H     H     H     H     H
+   Venus        100 |     H     H     H     H     H     H     H     H     H     H     H
+   Venus        300 |     H     H     H     H     H     H     H     H     H     H     H
+   Venus       1000 |     H     H     H     H     H     H     H     H     H     H     H
+   Venus       2000 |     H     H     H     H     H     H     H     H     H     H     H
+   EMB           12 |     H     H     H     H     H     H     H     H     H     H     H
+   EMB           30 |     H     H     H     H     H     H     H     H     H     H     H
+   EMB          100 |     H     H     H     H     H     H     H     H     H     H     H
+   EMB          300 |     H     H     H     H     H     H     H     H     H     H     H
+   EMB         1000 |     H     H     H     H     H     H     H     H     H     H     H
+   EMB         2000 |     H     H     H     H     H     H     H     H     H     H     H
+   Mars          12 |     H     H     H     H     H     H     H     H     H     H     H
+   Mars          30 |     H     H     H     H     H     H     H     H     H     H     H
+   Mars         100 |     H     H     H     H     H     H     H     H     H     H     H
+   Mars         300 |     H     H     H     H     H     H     H     H     H     H     H
+   Mars        1000 |     H     H     H     H     H     H     H     H     H     H     H
+   Mars        2000 |     H     H     H     H     H     H     H     H     H     H     H
+   Jupiter       12 |     H     H     H     H     H     H     H     H     H     H     H
+   Jupiter       30 |     H     H     H     H     H     H     H     H     H     H     H
+   Jupiter      100 |     H     H     H     H     H     H     H     H     H     H     H
+   Jupiter      300 |     H     H     H     H     H     H     H     H     H     H     H
+   Jupiter     1000 |     H     H     H     H     H     H     H     H     H     H     H
+   Jupiter     2000 |     H     H     H     H     H     H     H     H     H     H     H
+   Saturn        12 |     H     H     H     H     H     H     H     H     H     H     H
+   Saturn        30 |     H     H     H     H     H     H     H     H     H     H     H
+   Saturn       100 |     H     H     H     H     H     H     H     H     H     H     H
+   Saturn       300 |     H     H     H     H     H     H     H     H     H     H     H
+   Saturn      1000 |     H     H     H     H     H     H     H     H     H     H     H
+   Saturn      2000 |     H     H     H     H     H     H     H     H     H     H     H
+   Moon      1month |     H     H     H     H     H     H     H     H     H     H     H
+   Moon       1year |     H     H     H     H     H     H     H     H     H     H     H
+   Moon      18.6yr |     H     H     H     H     H     H     H     H     H     H     H
+
+   pricing R/det lam=4
+   body      window |   0.1   0.3     1     3    10    30    60   120   300   600  1800
+   Mercury       12 |     H     H     H     H     H     H     H     H     H     H     H
+   Mercury       30 |     H     H     H     H     H     H     H     H     H     H     H
+   Mercury      100 |     H     H     H     H     H     H     H     H     H     H     H
+   Mercury      300 |     H     H     H     H     H     H     H     H     H     H     H
+   Mercury     1000 |     H     H     H     H     H     H     H     H     H     H     H
+   Mercury     2000 |     H     H     H     H     H     H     H     H     H     H     H
+   Venus         12 |     H     H     H     H     H     H     H     H     H     H     H
+   Venus         30 |     H     H     H     H     H     H     H     H     H     H     H
+   Venus        100 |     H     H     H     H     H     H     H     H     H     H     H
+   Venus        300 |     H     H     H     H     H     H     H     H     H     H     H
+   Venus       1000 |     H     H     H     H     H     H     H     H     H     H     H
+   Venus       2000 |     H     H     H     H     H     H     H     H     H     H     H
+   EMB           12 |     H     H     H     H     H     H     H     H     H     H     H
+   EMB           30 |     H     H     H     H     H     H     H     H     H     H     H
+   EMB          100 |     H     H     H     H     H     H     H     H     H     H     H
+   EMB          300 |     H     H     H     H     H     H     H     H     H     H     H
+   EMB         1000 |     H     H     H     H     H     H     H     H     H     H     H
+   EMB         2000 |     H     H     H     H     H     H     H     H     H     H     H
+   Mars          12 |     H     H     H     H     H     H     H     H     H     H     H
+   Mars          30 |     H     H     H     H     H     H     H     H     H     H     H
+   Mars         100 |     H     H     H     H     H     H     H     H     H     H     H
+   Mars         300 |     H     H     H     H     H     H     H     H     H     H     H
+   Mars        1000 |     H     H     H     H     H     H     H     H     H     H     H
+   Mars        2000 |     H     H     H     H     H     H     H     H     H     H     H
+   Jupiter       12 |     H     H     H     H     H     H     H     H     H     H     H
+   Jupiter       30 |     H     H     H     H     H     H     H     H     H     H     H
+   Jupiter      100 |     H     H     H     H     H     H     H     H     H     H     H
+   Jupiter      300 |     H     H     H     H     H     H     H     H     H     H     H
+   Jupiter     1000 |     H     H     H     H     H     H     H     H     H     H     H
+   Jupiter     2000 |     H     H     H     H     H     H     H     H     H     H     H
+   Saturn        12 |     H     H     H     H     H     H     H     H     H     H     H
+   Saturn        30 |     H     H     H     H     H     H     H     H     H     H     H
+   Saturn       100 |     H     H     H     H     H     H     H     H     H     H     H
+   Saturn       300 |     H     H     H     H     H     H     H     H     H     H     H
+   Saturn      1000 |     H     H     H     H     H     H     H     H     H     H     H
+   Saturn      2000 |     H     H     H     H     H     H     H     H     H     H     H
+   Moon      1month |     H     H     H     H     H     H     H     H     H     H     H
+   Moon       1year |     H     H     H     H     H     H     H     H     H     H     H
+   Moon      18.6yr |     H     H     H     H     H     H     H     H     H     H     H
+
+   pricing R/rand
+   body      window |   0.1   0.3     1     3    10    30    60   120   300   600  1800
+   Mercury       12 |     H     H     H     H     H     H     H     H     H     H     H
+   Mercury       30 |     H     H     H     H     H     H     H     H     H     H     H
+   Mercury      100 |     H     H     H     H     H     H     H     H     H     H     H
+   Mercury      300 |     H     H     H     H     H     H     H     H     H     H     H
+   Mercury     1000 |     H     H     H     H     H     H     H     H     H     H     H
+   Mercury     2000 |     H     H     H     H     H     H     H     H     H     H     H
+   Venus         12 |     H     H     H     H     H     H     H     H     H     H     H
+   Venus         30 |     H     H     H     H     H     H     H     H     H     H     H
+   Venus        100 |     H     H     H     H     H     H     H     H     H     H     H
+   Venus        300 |     H     H     H     H     H     H     H     H     H     H     H
+   Venus       1000 |     H     H     H     H     H     H     H     H     H     H     H
+   Venus       2000 |     H     H     H     H     H     H     H     H     H     H     H
+   EMB           12 |     H     H     H     H     H     H     H     H     H     H     H
+   EMB           30 |     H     H     H     H     H     H     H     H     H     H     H
+   EMB          100 |     H     H     H     H     H     H     H     H     H     H     H
+   EMB          300 |     H     H     H     H     H     H     H     H     H     H     H
+   EMB         1000 |     H     H     H     H     H     H     H     H     H     H     H
+   EMB         2000 |     H     H     H     H     H     H     H     H     H     H     H
+   Mars          12 |     H     H     H     H     H     H     H     H     H     H     H
+   Mars          30 |     H     H     H     H     H     H     H     H     H     H     H
+   Mars         100 |     H     H     H     H     H     H     H     H     H     H     H
+   Mars         300 |     H     H     H     H     H     H     H     H     H     H     H
+   Mars        1000 |     H     H     H     H     H     H     H     H     H     H     H
+   Mars        2000 |     H     H     H     H     H     H     H     H     H     H     H
+   Jupiter       12 |     H     H     H     H     H     H     H     H     H     H     H
+   Jupiter       30 |     H     H     H     H     H     H     H     H     H     H     H
+   Jupiter      100 |     H     H     H     H     H     H     H     H     H     H     H
+   Jupiter      300 |     H     H     H     H     H     H     H     H     H     H     H
+   Jupiter     1000 |     H     H     H     H     H     H     H     H     H     H     H
+   Jupiter     2000 |     H     H     H     H     H     H     H     H     H     H     H
+   Saturn        12 |     H     H     H     H     H     H     H     H     H     H     H
+   Saturn        30 |     H     H     H     H     H     H     H     H     H     H     H
+   Saturn       100 |     H     H     H     H     H     H     H     H     H     H     H
+   Saturn       300 |     H     H     H     H     H     H     H     H     H     H     H
+   Saturn      1000 |     H     H     H     H     H     H     H     H     H     H     H
+   Saturn      2000 |     H     H     H     H     H     H     H     H     H     H     H
+   Moon      1month |     H     H     H     H     H     H     H     H     H     H     H
+   Moon       1year |     H     H     H     H     H     H     H     H     H     H     H
+   Moon      18.6yr |     H     H     H     H     H     H     H     H     H     H     H
+
+== C. the tolerance family (Prop 3.5): optimal eps/eps* and share of exceptions at the optimum;
+   entries 'x/s' = eps_opt/eps*, exception share in %; '0' if the empty law is cheaper
+
+   pricing Q/det lam=1
+   body      window |       0.1       0.3         1         3        10        30        60       120       300       600      1800
+   Mercury       12 |         0 0.00/35.5 0.00/11.0  0.00/3.7  0.05/0.9  0.05/0.3  0.10/0.1  0.10/0.1  0.15/0.0  0.20/0.0  0.30/0.0
+   Mercury       30 |         0         0 0.00/21.2  0.05/6.0  0.05/1.8  0.10/0.5  0.15/0.2  0.15/0.1  0.20/0.0  0.25/0.0  0.30/0.0
+   Mercury      100 |         0         0         0 0.05/18.0  0.10/4.6  0.10/1.5  0.15/0.6  0.20/0.3  0.25/0.1  0.30/0.0  0.40/0.0
+   Mercury      300 |         0         0         0         0 0.10/13.9  0.15/4.0  0.20/1.7  0.20/0.8  0.30/0.2  0.35/0.1  0.45/0.0
+   Mercury     1000 |         0         0         0         0         0 0.15/13.0  0.20/5.5  0.25/2.3  0.30/0.8  0.35/0.3  0.45/0.1
+   Mercury     2000 |         0         0         0         0         0         0 0.20/11.1  0.25/4.7  0.30/1.6  0.35/0.6  0.50/0.1
+   Venus         12 |         0 0.00/48.1 0.00/14.9  0.05/4.4  0.10/1.2  0.15/0.3  0.20/0.1  0.25/0.1  0.30/0.0  0.35/0.0  0.45/0.0
+   Venus         30 |         0 0.00/50.2 0.05/13.5  0.05/4.5  0.10/1.2  0.20/0.3  0.20/0.1  0.25/0.1  0.35/0.0  0.40/0.0  0.50/0.0
+   Venus        100 |         0         0 0.05/13.6  0.10/3.8  0.15/1.0  0.20/0.3  0.20/0.1  0.25/0.1  0.30/0.0  0.35/0.0  0.40/0.0
+   Venus        300 |         0         0 0.05/18.2  0.10/5.0  0.10/1.5  0.15/0.4  0.20/0.2  0.20/0.1  0.25/0.0  0.30/0.0  0.35/0.0
+   Venus       1000 |         0         0         0 0.10/12.4  0.10/3.7  0.15/1.0  0.15/0.5  0.20/0.2  0.25/0.1  0.30/0.0  0.35/0.0
+   Venus       2000 |         0         0         0 0.10/25.1  0.10/7.5  0.15/2.1  0.20/0.9  0.20/0.4  0.25/0.1  0.30/0.1  0.40/0.0
+   EMB           12 |         0 0.00/37.2 0.00/11.1  0.00/3.7  0.05/1.0  0.15/0.3  0.15/0.1  0.20/0.1  0.35/0.0  0.40/0.0  0.45/0.0
+   EMB           30 |         0 0.00/37.1 0.00/11.2  0.05/3.2  0.10/0.8  0.10/0.3  0.15/0.1  0.20/0.0  0.25/0.0  0.30/0.0  0.40/0.0
+   EMB          100 |         0         0 0.05/12.7  0.05/4.2  0.10/1.0  0.10/0.3  0.15/0.1  0.15/0.1  0.20/0.0  0.25/0.0  0.30/0.0
+   EMB          300 |         0         0 0.05/29.7  0.05/9.9  0.10/2.4  0.15/0.7  0.15/0.3  0.20/0.1  0.25/0.0  0.25/0.0  0.35/0.0
+   EMB         1000 |         0         0         0 0.10/27.5  0.15/7.0  0.15/2.3  0.20/1.0  0.25/0.4  0.30/0.1  0.35/0.1  0.40/0.0
+   EMB         2000 |         0         0         0         0 0.15/13.6  0.15/4.5  0.20/1.9  0.25/0.8  0.30/0.3  0.35/0.1  0.45/0.0
+   Mars          12 |         0         0 0.00/40.0 0.00/14.6  0.05/3.7  0.05/1.2  0.05/0.6  0.10/0.3  0.15/0.1  0.15/0.0  0.25/0.0
+   Mars          30 |         0         0 0.00/43.8 0.05/12.9  0.10/3.2  0.10/1.1  0.15/0.4  0.15/0.2  0.20/0.1  0.25/0.0  0.30/0.0
+   Mars         100 |         0         0         0 0.10/20.7  0.10/6.2  0.15/1.7  0.15/0.9  0.20/0.3  0.25/0.1  0.25/0.1  0.35/0.0
+   Mars         300 |         0         0         0         0 0.10/17.0  0.15/4.7  0.15/2.3  0.20/1.0  0.25/0.3  0.30/0.1  0.35/0.0
+   Mars        1000 |         0         0         0         0         0 0.15/16.9  0.20/7.2  0.25/3.0  0.30/1.0  0.35/0.4  0.45/0.1
+   Mars        2000 |         0         0         0         0         0         0 0.20/13.5  0.25/5.7  0.30/1.9  0.35/0.8  0.45/0.2
+   Jupiter       12 |         0         0 0.00/23.7  0.05/7.2  0.10/1.8  0.10/0.6  0.15/0.3  0.20/0.1  0.25/0.0  0.25/0.0  0.30/0.0
+   Jupiter       30 |         0         0         0         0 0.10/16.8  0.15/5.1  0.15/2.6  0.20/1.2  0.60/0.2  0.65/0.1  0.80/0.0
+   Jupiter      100 |         0         0         0         0 0.15/17.1  0.15/5.7  0.20/2.5  0.25/1.1  0.30/0.4  0.35/0.2  0.60/0.0
+   Jupiter      300 |         0         0         0         0 0.15/17.2  0.20/4.9  0.20/2.4  0.25/1.0  0.35/0.3  0.40/0.1  0.50/0.0
+   Jupiter     1000 |         0         0         0         0         0 0.25/13.0  0.25/6.6  0.30/2.7  0.35/0.9  0.35/0.4  0.50/0.1
+   Jupiter     2000 |         0         0         0         0         0         0  0.30/8.2  0.35/3.3  0.40/1.0  0.45/0.4  0.55/0.1
+   Saturn        12 | 0.00/54.5 0.00/21.8  0.00/6.8  0.05/2.0  0.10/0.5  0.15/0.1  0.15/0.1  0.20/0.0  0.25/0.0  0.30/0.0  0.60/0.0
+   Saturn        30 |         0         0         0 0.05/17.4  0.05/5.2  0.10/1.6  0.15/0.7  0.15/0.3  0.25/0.1  0.50/0.0  0.60/0.0
+   Saturn       100 |         0         0         0         0 0.05/24.4  0.05/9.0  0.05/4.5  0.10/2.1  0.10/0.8  0.15/0.4  0.75/0.0
+   Saturn       300 |         0         0         0         0         0 0.20/10.0  0.40/2.6  0.45/1.0  0.50/0.3  0.50/0.2  0.60/0.0
+   Saturn      1000 |         0         0         0         0         0         0         0  0.30/6.6  0.35/2.1  0.40/0.9  0.45/0.2
+   Saturn      2000 |         0         0         0         0         0         0         0  0.35/9.0  0.45/2.3  0.50/0.9  0.55/0.2
+   Moon      1month |         0         0         0         0         0 0.00/54.3 0.00/27.2 0.00/13.6  0.05/4.9  0.15/2.0  0.40/0.3
+   Moon       1year |         0         0         0         0         0         0         0         0 0.20/11.7  0.25/5.0  0.35/1.2
+   Moon      18.6yr |         0         0         0         0         0         0         0         0         0         0  0.60/1.8
+
+   pricing Q/det lam=4
+   body      window |       0.1       0.3         1         3        10        30        60       120       300       600      1800
+   Mercury       12 |         0         0  0.30/3.4  0.35/0.9  0.35/0.3  0.40/0.1  0.40/0.0  0.45/0.0  0.45/0.0  0.50/0.0  0.70/0.0
+   Mercury       30 |         0         0  0.30/6.6  0.35/1.8  0.40/0.4  0.45/0.1  0.45/0.1  0.50/0.0  0.55/0.0  0.60/0.0  0.65/0.0
+   Mercury      100 |         0         0         0  0.45/3.7  0.45/1.1  0.50/0.3  0.50/0.1  0.55/0.1  0.60/0.0  0.65/0.0  0.70/0.0
+   Mercury      300 |         0         0         0         0  0.50/2.8  0.55/0.7  0.55/0.4  0.60/0.1  0.65/0.0  0.65/0.0  0.75/0.0
+   Mercury     1000 |         0         0         0         0         0  0.55/2.3  0.60/0.9  0.60/0.4  0.65/0.1  0.70/0.0  0.75/0.0
+   Mercury     2000 |         0         0         0         0         0         0  0.60/1.9  0.65/0.7  0.70/0.2  0.70/0.1  0.75/0.0
+   Venus         12 |         0         0  0.45/3.6  0.50/1.0  0.50/0.3  0.60/0.1  0.65/0.0  0.65/0.0  0.70/0.0  0.75/0.0  0.80/0.0
+   Venus         30 |         0         0  0.50/2.4  0.50/0.8  0.55/0.2  0.55/0.1  0.60/0.0  0.60/0.0  0.70/0.0  0.70/0.0  0.75/0.0
+   Venus        100 |         0         0  0.40/3.0  0.45/0.7  0.45/0.2  0.50/0.1  0.50/0.0  0.55/0.0  0.55/0.0  0.60/0.0  0.65/0.0
+   Venus        300 |         0         0  0.35/4.5  0.35/1.5  0.40/0.3  0.45/0.1  0.45/0.0  0.45/0.0  0.50/0.0  0.55/0.0  0.60/0.0
+   Venus       1000 |         0         0         0  0.40/3.1  0.45/0.7  0.45/0.2  0.50/0.1  0.50/0.0  0.55/0.0  0.60/0.0  0.65/0.0
+   Venus       2000 |         0         0         0         0  0.50/1.3  0.50/0.4  0.55/0.2  0.55/0.1  0.60/0.0  0.65/0.0  0.70/0.0
+   EMB           12 |         0         0  0.45/2.6  0.50/0.7  0.55/0.2  0.55/0.1  0.60/0.0  0.65/0.0  0.70/0.0  0.70/0.0  0.80/0.0
+   EMB           30 |         0         0  0.40/2.5  0.40/0.8  0.45/0.2  0.50/0.0  0.50/0.0  0.55/0.0  0.55/0.0  0.60/0.0  0.65/0.0
+   EMB          100 |         0         0  0.30/3.6  0.30/1.2  0.35/0.3  0.35/0.1  0.40/0.0  0.40/0.0  0.45/0.0  0.45/0.0  0.50/0.0
+   EMB          300 |         0         0         0  0.35/2.6  0.40/0.6  0.45/0.1  0.45/0.1  0.50/0.0  0.50/0.0  0.55/0.0  0.60/0.0
+   EMB         1000 |         0         0         0         0  0.50/1.5  0.55/0.4  0.55/0.2  0.60/0.1  0.60/0.0  0.65/0.0  0.70/0.0
+   EMB         2000 |         0         0         0         0  0.50/2.9  0.55/0.7  0.55/0.4  0.60/0.1  0.65/0.0  0.65/0.0  0.70/0.0
+   Mars          12 |         0         0         0  0.30/6.0  0.35/1.5  0.45/0.4  0.50/0.2  0.55/0.1  0.60/0.0  0.65/0.0  0.75/0.0
+   Mars          30 |         0         0         0  0.35/3.6  0.40/0.9  0.40/0.3  0.45/0.1  0.45/0.1  0.50/0.0  0.55/0.0  0.60/0.0
+   Mars         100 |         0         0         0         0  0.40/1.6  0.45/0.4  0.45/0.2  0.50/0.1  0.50/0.0  0.55/0.0  0.60/0.0
+   Mars         300 |         0         0         0         0         0  0.45/1.1  0.50/0.4  0.50/0.2  0.55/0.1  0.60/0.0  0.65/0.0
+   Mars        1000 |         0         0         0         0         0         0  0.60/1.2  0.60/0.6  0.65/0.2  0.70/0.1  0.75/0.0
+   Mars        2000 |         0         0         0         0         0         0         0  0.60/1.0  0.65/0.3  0.70/0.1  0.75/0.0
+   Jupiter       12 |         0         0  0.30/8.3  0.30/3.1  0.35/0.8  0.35/0.3  0.35/0.1  0.75/0.0  0.75/0.0  0.80/0.0  0.80/0.0
+   Jupiter       30 |         0         0         0         0  0.80/1.3  0.85/0.2  0.85/0.1  0.90/0.0  0.90/0.0  0.90/0.0  0.95/0.0
+   Jupiter      100 |         0         0         0         0         0  0.65/0.8  0.70/0.3  0.70/0.1  0.75/0.0  0.75/0.0  0.80/0.0
+   Jupiter      300 |         0         0         0         0         0  0.60/0.8  0.65/0.3  0.65/0.1  0.70/0.0  0.70/0.0  0.75/0.0
+   Jupiter     1000 |         0         0         0         0         0         0  0.60/1.0  0.65/0.3  0.65/0.1  0.65/0.1  0.70/0.0
+   Jupiter     2000 |         0         0         0         0         0         0  0.65/0.9  0.65/0.5  0.65/0.2  0.70/0.1  0.75/0.0
+   Saturn        12 |         0  0.35/7.6  0.60/0.6  0.60/0.2  0.60/0.1  0.65/0.0  0.65/0.0  0.65/0.0  0.65/0.0  0.70/0.0  0.70/0.0
+   Saturn        30 |         0         0         0  0.60/2.1  0.65/0.4  0.65/0.1  0.70/0.0  0.70/0.0  0.70/0.0  0.75/0.0  0.75/0.0
+   Saturn       100 |         0         0         0         0         0  0.85/0.5  0.85/0.2  0.90/0.1  0.90/0.0  0.90/0.0  0.95/0.0
+   Saturn       300 |         0         0         0         0         0  0.65/1.4  0.70/0.5  0.75/0.2  0.75/0.1  0.80/0.0  0.85/0.0
+   Saturn      1000 |         0         0         0         0         0         0         0  0.55/2.2  0.75/0.3  0.80/0.1  0.80/0.0
+   Saturn      2000 |         0         0         0         0         0         0         0         0  0.70/0.4  0.75/0.1  0.75/0.0
+   Moon      1month |         0         0         0         0         0         0  0.60/3.9  0.65/1.4  0.70/0.3  0.75/0.1  0.80/0.0
+   Moon       1year |         0         0         0         0         0         0         0         0  0.65/1.8  0.70/0.6  0.75/0.1
+   Moon      18.6yr |         0         0         0         0         0         0         0         0         0         0  0.85/0.2
+
+   pricing R/rand
+   body      window |       0.1       0.3         1         3        10        30        60       120       300       600      1800
+   Mercury       12 |  0.85/0.3  0.85/0.1  0.90/0.1  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0
+   Mercury       30 |  0.90/0.3  0.80/0.5  0.80/0.1  0.80/0.0  0.80/0.0  0.80/0.0  0.80/0.0  0.80/0.0  0.80/0.0  0.80/0.0  0.80/0.0
+   Mercury      100 |  0.95/0.0  0.90/0.2  0.85/0.2  0.85/0.1  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0
+   Mercury      300 |  0.95/0.3  0.95/0.1  0.95/0.0  0.90/0.1  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0
+   Mercury     1000 |  0.95/0.3  0.95/0.3  0.95/0.1  0.95/0.0  0.90/0.1  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0
+   Mercury     2000 |  1.00/0.0  1.00/0.0  1.00/0.0  0.95/0.1  0.95/0.0  0.90/0.1  0.90/0.1  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0
+   Venus         12 |  1.00/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0
+   Venus         30 |  0.95/0.1  0.90/0.1  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0
+   Venus        100 |  0.85/0.2  0.80/0.2  0.80/0.0  0.80/0.0  0.80/0.0  0.80/0.0  0.80/0.0  0.80/0.0  0.80/0.0  0.80/0.0  0.80/0.0
+   Venus        300 |  0.85/0.4  0.80/0.3  0.75/0.2  0.75/0.1  0.75/0.0  0.75/0.0  0.75/0.0  0.75/0.0  0.75/0.0  0.75/0.0  0.75/0.0
+   Venus       1000 |  0.85/0.4  0.80/0.5  0.75/0.4  0.75/0.1  0.75/0.0  0.75/0.0  0.75/0.0  0.75/0.0  0.75/0.0  0.75/0.0  0.75/0.0
+   Venus       2000 |  0.90/0.4  0.90/0.2  0.85/0.3  0.80/0.2  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0
+   EMB           12 |  1.00/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0
+   EMB           30 |  0.90/0.3  0.85/0.3  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0
+   EMB          100 |  0.75/0.7  0.70/0.4  0.70/0.1  0.70/0.0  0.70/0.0  0.70/0.0  0.70/0.0  0.70/0.0  0.70/0.0  0.70/0.0  0.70/0.0
+   EMB          300 |  0.85/0.4  0.80/0.4  0.75/0.2  0.75/0.1  0.75/0.0  0.75/0.0  0.75/0.0  0.75/0.0  0.75/0.0  0.75/0.0  0.75/0.0
+   EMB         1000 |  0.95/0.1  0.95/0.1  0.90/0.1  0.85/0.2  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0
+   EMB         2000 |  0.95/0.2  0.95/0.1  0.90/0.3  0.85/0.3  0.85/0.1  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0
+   Mars          12 |  1.00/0.0  1.00/0.0  0.95/0.1  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0
+   Mars          30 |  1.00/0.0  0.95/0.2  0.80/1.0  0.80/0.3  0.80/0.1  0.80/0.0  0.80/0.0  0.80/0.0  0.80/0.0  0.80/0.0  0.80/0.0
+   Mars         100 |  0.95/0.3  0.95/0.1  0.85/0.4  0.80/0.3  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0
+   Mars         300 |  0.90/0.2  0.90/0.1  0.85/0.3  0.80/0.3  0.75/0.2  0.80/0.0  0.80/0.0  0.80/0.0  0.80/0.0  0.80/0.0  0.80/0.0
+   Mars        1000 |  1.00/0.0  1.00/0.0  0.95/0.4  0.95/0.1  0.90/0.2  0.85/0.2  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0
+   Mars        2000 |  1.00/0.0  1.00/0.0  0.95/0.4  0.95/0.2  0.90/0.3  0.85/0.3  0.85/0.2  0.85/0.1  0.85/0.0  0.85/0.0  0.85/0.0
+   Jupiter       12 |  0.90/0.2  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0
+   Jupiter       30 |  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0
+   Jupiter      100 |  1.00/0.0  1.00/0.0  1.00/0.0  0.95/0.1  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0
+   Jupiter      300 |  1.00/0.0  1.00/0.0  0.95/0.2  0.95/0.1  0.90/0.1  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0
+   Jupiter     1000 |  0.90/0.6  0.90/0.6  0.85/1.0  0.85/0.7  0.85/0.2  0.85/0.1  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0
+   Jupiter     2000 |  0.90/0.4  0.90/0.3  0.90/0.2  0.90/0.1  0.85/0.2  0.85/0.1  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0
+   Saturn        12 |  0.85/0.1  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0  0.85/0.0
+   Saturn        30 |  0.90/0.3  0.90/0.1  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0  0.90/0.0
+   Saturn       100 |  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0
+   Saturn       300 |  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0
+   Saturn      1000 |  1.00/0.0  1.00/0.0  1.00/0.0  0.95/0.3  0.95/0.1  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0
+   Saturn      2000 |  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  0.95/0.1  0.90/0.3  0.90/0.1  0.90/0.1  0.90/0.0  0.90/0.0  0.90/0.0
+   Moon      1month |  0.90/0.5  0.90/0.5  0.90/0.4  0.90/0.3  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0
+   Moon       1year |  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  0.95/0.2  0.95/0.1  0.95/0.0  0.95/0.0  0.95/0.0  0.95/0.0
+   Moon      18.6yr |  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  1.00/0.0  0.95/0.1  1.00/0.0  1.00/0.0  1.00/0.0
+
+== D. Prop 3.4 against the simulated rates, coarse regime (Delta >= 2 eps*), pure forms P and H:
+   predicted H iff pk < gamma_ex/(2 gamma_si) with p = E|e|/Delta (mean fit) and q = 2 eps*/Delta;
+   'agree' counts (body, window, Delta, pricing) cells where the predicted and the simulated winner agree
+   agree in 1757 of 1757 cells
+
+# runtime 321 s
+# done
