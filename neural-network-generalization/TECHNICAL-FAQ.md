@@ -8,7 +8,7 @@ This FAQ explains what the current results say, which assumptions matter, and wh
 
 ## 1. What is the basic model, and what does “a circuit prior” mean here?
 
-**Proved, with several different quantifier orders.** The original model is a fully connected network with bounded hidden activations, usually tanh, and a real-valued linear readout $z_w(x)$. Inputs and target labels are Boolean: $x\in\{-1,1\}^d$, $f(x)\in\{-1,1\}$. There are $L-1$ hidden layers of width $N$, a constant input coordinate, and no separate internal biases.
+**Proved, with several different quantifier orders.** The original model is a fully connected network with bounded hidden activations, usually tanh, and a real-valued linear readout $z_w(x)$. Inputs and target labels are Boolean: $x\in\lbrace -1,1\rbrace ^d$, $f(x)\in\lbrace -1,1\rbrace $. There are $L-1$ hidden layers of width $N$, a constant input coordinate, and no separate internal biases.
 
 The original Gaussian prior is conditioned, before observing labels, on
 
@@ -72,9 +72,9 @@ $$
 be the error of a posterior draw, usually called Gibbs error. There are two different conversions:
 
 $$
-D\{p_S\le q\}\le \frac{R_S}{1-q},
+D\lbrace p_S\le q\rbrace \le \frac{R_S}{1-q},
 \qquad
-D\{p_S\le q\}\ge \frac{R_S-(1-q)}{q}.
+D\lbrace p_S\le q\rbrace \ge \frac{R_S-(1-q)}{q}.
 $$
 
 The second is informative only when its numerator is positive.
@@ -158,8 +158,8 @@ In contrast, the usual nondegenerate tanh NNGP scaling is $(0,1,\ldots,1,1)$. Ca
 **Heuristic for typical unconditioned amplitudes:** for fixed depth, tanh, fixed dimension, and nondegenerate coordinates, let the hidden activation variance scale like $N^{-b_s}$. Then
 
 $$
-b_1\approx\max\{a_1,0\},\qquad
-b_s\approx\max\{a_s+b_{s-1}-1,0\},
+b_1\approx\max\lbrace a_1,0\rbrace ,\qquad
+b_s\approx\max\lbrace a_s+b_{s-1}-1,0\rbrace ,
 $$
 
 and the output variance has scale $N^{1-a_L-b_{L-1}}$. This suggests linear, order-one nonlinear, and saturated layers. It is useful bookkeeping, **not a classification of the conditioned Bayesian learner**. Covariances can degenerate, boundary constants matter, and rare margin conditioning can select features that are atypical under the unconditioned calculation.
@@ -186,10 +186,10 @@ $$
 
 For $k\le d^{1-\eta}$ with fixed $\eta>0$, this is $d^{\Omega(k)}$. For $k=d$, it becomes exponential in $d$, as it must: observing most of the finite input space is enough.
 
-- **Proved for $\gamma<0$:** the natural sparse scale, at the $2/3$ confidence criterion, with width taken first. The theorem's universal failure fraction is positive but small; it is not a claim of, say, $10\%$ error.
+- **Proved for $\gamma<0$:** the natural sparse scale, at the $2/3$ confidence criterion, with width taken first. The theorem's universal failure fraction is positive but small; it is not a claim of, say, 10% error.
 - **Proved for $0<\gamma<1$:** for growing sparse parity, a lower bound of the form
   $$
-  n\le\exp\!\left(c\max\left\{k,\sqrt{k}\log\frac{e(d+1)}{\sqrt{k}}\right\}\right).
+  n\le\exp\!\left(c\max\left\lbrace k,\sqrt{k}\log\frac{e(d+1)}{\sqrt{k}}\right\rbrace \right).
   $$
   This includes the desired $\exp(\Omega(k))$ obstruction, but does not give the full natural sparse scale.
 - **Open:** that full growing-sparse scale for $0<\gamma<1$, and the corresponding growing-sparse endpoint problem at $\gamma=0$.
@@ -203,16 +203,16 @@ See [sparse parity](side-results/sparse-parity/paper.pdf) and [growing positive-
 **Proved in the new robust paper.** Add a disturbance after each hidden layer and at the readout, with total budget
 
 $$
-\|\eta\|_*^2=\sum_{s=1}^{L-1}\frac{\|\eta^s\|_2^2}{N}+|\eta^{\mathrm{out}}|^2.
+\Vert \eta\Vert _*^2=\sum_{s=1}^{L-1}\frac{\Vert \eta^s\Vert _2^2}{N}+|\eta^{\mathrm{out}}|^2.
 $$
 
-For $E_v=N\|v\|_2^2$, use radius
+For $E_v=N\Vert v\Vert _2^2$, use radius
 
 $$
 r_c(w)=\frac{c}{\sqrt{1+(L-1)E_v}},
 $$
 
-where $c>0$ is fixed. Clip the output at the training margin, $T(z)=\max\{-1/2,\min\{1/2,z\}\}$. Restrict the Gaussian prior to networks for which
+where $c>0$ is fixed. Clip the output at the training margin, $T(z)=\max\lbrace -1/2,\min\lbrace 1/2,z\rbrace \rbrace $. Restrict the Gaussian prior to networks for which
 
 $$
 |T(z_w(x;\eta))-T(z_w(x))|\le1/16
@@ -267,14 +267,14 @@ Other candidates include robustness to dropout, random quantization, or random i
 
 There is now substantial positive evidence against treating bad depth dependence as automatic. For every fixed gap $\gamma\ge1+\zeta$, the [unrestricted-depth paper](works-in-progress/unrestricted-depth/paper.pdf) gives polynomial dependence on learner depth for all bounded-weight shallow tanh targets and for all Boolean halfspaces, at every actual width above the original $C_L(f)$. The halfspace result does not depend on the target's original coefficient precision or geometric margin. Other covered classes include fixed-depth threshold circuits and functions with polynomially bounded Fourier $\ell_1$ norm, including parity.
 
-For a general fan-in-two Boolean circuit of size $s$, logical depth $h$, and $S=\max\{16,2+d+s\}$, a current bound is
+For a general fan-in-two Boolean circuit of size $s$, logical depth $h$, and $S=\max\lbrace 16,2+d+s\rbrace $, a current bound is
 
 $$
 S^{O_\zeta(1+h/\log\log S)}\,
 \operatorname{poly}(L,\varepsilon^{-1},\log(1/\delta)),
 $$
 
-at learner depths $L\ge\max\{2,h\}$. This improves the direct exponential dependence on $h\log S$, but is not a joint polynomial. Formula balancing gives a quasipolynomial alternative for formulas, with the corresponding learner-depth qualification.
+at learner depths $L\ge\max\lbrace 2,h\rbrace $. This improves the direct exponential dependence on $h\log S$, but is not a joint polynomial. Formula balancing gives a quasipolynomial alternative for formulas, with the corresponding learner-depth qualification.
 
 The same paper identifies a function-level product-norm representation barrier: low sample complexity forces suitable approximate low-product-norm representatives in a specified large-width regime. No explicit small deep circuit violating the necessary approximation condition is known here. Indeed, an explicit superpolynomial-sample counterexample within $\mathsf{NC}^1$, in the regime covered by these positive results, would separate $\mathsf{NC}^1$ from $\mathsf{TC}^0$. This is a reason for caution about easy purported counterexamples, not a proof that the desired theorem is true.
 
@@ -283,7 +283,7 @@ The same paper identifies a function-level product-norm representation barrier: 
 **It gives both rate information and a separate, more limited learning lower bound.** At $\gamma=1$, define the raw prior rate
 
 $$
-J_L(f)=\lim_{N\to\infty}-\frac1N\log\Pr\{f(x)z_w(x)>1/2\text{ for all }x\}.
+J_L(f)=\lim_{N\to\infty}-\frac1N\log\Pr\lbrace f(x)z_w(x)>1/2\text{ for all }x\rbrace .
 $$
 
 The [critical-depth paper](works-in-progress/critical-depth/paper.pdf) proves that the absolute rates of all Boolean functions approach the same universal $V_*\in(1,2)$ as depth increases, with quantitative polynomial-depth bounds. It also identifies the minimum rate scale, up to universal factors, as
@@ -297,7 +297,7 @@ $$
 A separate rate comparison does prove a critical parity lower bound. At fixed $L\ge2$, put
 
 $$
-M=\min\{k,d^{1/(L-1)}\}.
+M=\min\lbrace k,d^{1/(L-1)}\rbrace .
 $$
 
 For fixed $\eta>0$, $M\to\infty$, and $n\le M^{1-\eta}$, the limiting Gibbs error is $1/2$ with high probability over uniform training inputs. Thus full parity remains difficult up to $d^{(1-\eta)/(L-1)}$ examples. This is a **polynomial** lower bound, not the subcritical exponential bound. It is compatible with the fixed-depth polynomial upper theorem and does not resolve the unrestricted joint polynomial-depth question.
@@ -327,8 +327,8 @@ Its compression width at energy $K$ can be taken as
 $$
 \rho=\frac{2^{-L}K^{-(L-1)/2}}{12(L-1)},
 \qquad
-m_L(d,K)=\max\!\left\{\lceil9K\rceil,
-\left\lceil256\rho^{-4}[d+\log(L/\rho)]\right\rceil\right\}.
+m_L(d,K)=\max\!\left\lbrace \lceil9K\rceil,
+\left\lceil256\rho^{-4}[d+\log(L/\rho)]\right\rceil\right\rbrace .
 $$
 
 Counting the compressed networks gives an explicit log-class-size bound $Q_L(d,K)$ in the paper, and
