@@ -99,9 +99,14 @@ A majority of bad predictors can nevertheless be accurate. Their mistakes may oc
 
 An earlier informal explanation that treated mixture ties as a problem unique to a particular scaling regime was too broad. The right questions are the available Gibbs-error bound, the requested confidence threshold, and whether a stronger pointwise or voting argument is available.
 
-## 7. Is this just kernel regression or NNGP posterior-mean prediction?
+## 7. How do the NNBayes results here relate to NNGP and kernel regression?
 
-**No.** A Gaussian-process prior conditioned on training signs is not the same posterior as Gaussian regression conditioned on exact real output values. Conditioning additionally on an absolute margin at every input changes it again. Moreover,
+**For the main positive learning results, width and prior scaling are the first distinctions.**
+
+- **No infinite-width limit is required.** The positive theorems apply at every actual learner width above the relevant target complexity, including widths close to that complexity. They also cover arbitrarily large finite widths. In the strong-prior theorem, width is fixed before the prior variance tends to zero.
+- **The prior scalings differ from the usual nondegenerate NNGP scaling.** For example, at $\gamma=1$ the readout-weight variance scales as $N^{-2}$, whereas the standard NNGP parameterization uses $N^{-1}$. Taking a large width alone therefore does not justify replacing these learners by the usual NNGP. [Questions 8](#8-what-is-actually-known-for-the-one-parameter-family-of-scalings) and [9](#9-can-we-classify-all-tuples-of-layerwise-scaling-exponents) give the layerwise scalings.
+
+**Conditioning and prediction rules are additional distinctions where a GP description does apply.** These matter for the Gaussian limits used in some lower bounds and for the separate NNGP note below. A Gaussian-process prior conditioned on training signs is not the same posterior as Gaussian regression conditioned on exact real output values. Conditioning additionally on an absolute margin at every input changes it again. Moreover,
 
 $$
 \mathrm{sign}\,\mathbb E[z(x)\mid S]
@@ -112,6 +117,8 @@ $$
 are different prediction rules: a few large-magnitude outputs can affect the former without affecting the latter in the same way.
 
 A small parity eigenvalue, or poor correlation of the regression mean, is therefore not by itself a lower bound for the posterior-confidence convention used here. This was a substantive gap in the original slides' kernel discussion. The later lower bounds analyze the appropriate conditioned law.
+
+Nor does every Gaussian rate description identify an exact GP posterior: this distinction is important for $0<\gamma<1$, as explained in [Question 10](#10-does-a-quantitative-central-limit-theorem-make-all-0gamma1-into-gaussian-conditioning).
 
 There is a separate [NNGP note](side-results/nngp-sample-complexity/paper.pdf) with an exponential confidence lower bound for a deep, variance-normalized tanh GP family. Its depth grows with the input dimension. It should not be silently substituted for the fixed-depth theorem for all $\gamma<1$.
 
