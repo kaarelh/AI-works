@@ -33,31 +33,35 @@ These should not be interchanged without a representation theorem. See the [stro
 
 **Partly technical, partly substantive.** A finite domain permits global margin conditioning, a finite list of Boolean functions, and uniform compression over the input set. The cube has $2^d$ points, so a union bound over all inputs costs only $O(d)$ in a logarithm. Its Fourier structure is also central to the parity lower bounds; those are not distribution-free lower bounds.
 
-**Extension suggested by the proof:** several upper-bound arguments should extend to a general finite input set, with dependence on its log-cardinality and input norm. A continuous bounded domain would require an additional covering or regularity argument. The exact statements in the main papers should not be read as already covering arbitrary continuous inputs.
+**The positive learning results extend to continuous inputs for real-valued regression.** The [continuous-domain paper](side-results/continuous-domains/paper.pdf) treats arbitrary input distributions on a compact subset of the unit ball, including the full sphere. A teacher has depth $L$, width $C$, and weights bounded by $B$. At each fixed depth, the sample bound is polynomial in $d,C,B$ and accuracy parameters, independently of **every learner width $N\ge C$**. This holds for the strong-prior limit and for each finite exponent $\gamma\ge1$, including mean field, with Gaussian weights or the non-Gaussian family in Question 20. The proof uses an input net; the learner and data remain continuous.
+
+The finite-scale regression theorem observes clean real-valued labels, accepts training error below a positive tolerance $\rho$, and requires test error at most a larger tolerance $\tau>\rho$. It controls the actual posterior's probability of meeting that test tolerance. A separate exact-interpolation result covers minimum-energy interpolants and Gaussian posteriors with the **strong-prior limit taken before the zero-tolerance limit**. Neither result assumes a teacher margin or a gap in the input distribution's support. Teacher weight magnitude is counted; a pure-width bound for arbitrarily large weights is not proved.
+
+Binary classification needs a distinction. A continuous network with a nonzero absolute margin everywhere on a connected sphere has a constant sign. The original globally margin-conditioned learner therefore cannot simply be transplanted there. Training-only margin conditioning does give a learning theorem when the data support stays a positive teacher margin away from its decision boundary. The corresponding unrestricted binary-label theorem on the full sphere remains open. These continuous-domain results are side results with conventional proofs, not Lean verified.
 
 There is also a useful distinction between finite precision and a change of prior. An 8-bit pixel can be expressed exactly as a linear combination of eight Boolean bits. Composing that fixed decoder with a network preserves its computations and internal-noise stability on the corresponding images. It does **not** identify the resulting tied first-layer weights with independent Gaussian weights on the bits, and checking real images does not check all bit strings.
 
 ## 3. Are the network outputs Boolean? What if we scale them up?
 
-**The labels are Boolean; the network outputs are real.** Classification uses their signs, with output margins imposed in the prior or likelihood. The arguments do not require a network to output exactly $+1$ or $-1$.
+**In the main classification papers, the labels are Boolean and the network outputs are real.** Classification uses their signs, with output margins imposed in the prior or likelihood. The arguments do not require a network to output exactly $+1$ or $-1$. The [continuous-domain paper](side-results/continuous-domains/paper.pdf) also studies learning the teacher's real-valued outputs directly, as described in Question 2.
 
 Multiplying the readout by $A>0$ preserves signs and can improve output margins, but multiplies its squared Gaussian energy by $A^2$. It is therefore not free in a Bayesian prior. In particular, an implementation that needs an enormous output scale to become stable need not give a polynomial prior-mass or sample bound in the original implementation's size.
 
 For a finite input cube and nonzero clean outputs, sufficiently large readout amplification can eventually enforce the clipped-score stability condition used below. This does not show that the **raw trained network** satisfies the condition, or that the required amplification has polynomial cost. The robust Boolean-circuit construction instead supplies a controlled implementation and a controlled neighborhood of prior mass around it.
 
-**Open:** an equally general theory for real-valued regression with noisy observations, or for multiclass outputs. The binary margin proofs suggest useful starting points, but they are not regression theorems. Binary label noise is discussed in [Question 24](#24-do-the-good-generalization-results-survive-a-small-amount-of-label-noise).
+**Open:** an equally general theory for real-valued regression with noisy observations, or for multiclass outputs. The continuous-domain regression theorem uses clean observations; its nonzero training tolerance is not a theorem about corrupted labels. Binary label noise is discussed in [Question 24](#24-do-the-good-generalization-results-survive-a-small-amount-of-label-noise).
 
 ## 4. Can we drop the requirement of a margin on every input before training?
 
-**Yes, under the internal-stability restriction described in Question 12.** The polynomial-depth generalization theorem allows the prior to contain outputs arbitrarily close to zero at unobserved inputs. It still uses the training likelihood
+**Yes at fixed depth, while retaining a quantitative training margin.** The [continuous-domain paper](side-results/continuous-domains/paper.pdf) proves a classification theorem for the raw prior in the strong-prior and finite-scale $\gamma\ge1$ regimes, at every width above teacher width. It assumes a bounded-weight teacher has a uniform positive signed margin on the input distribution's support. This includes the original finite Boolean targets, and requires no internal-stability restriction on the prior. The posterior conditions only on
 
 $$
 f(X_i)z_w(X_i)>1/2,
 $$
 
-and bounds the posterior probability of test-margin error $f(X)z_w(X)\le1/4$. Consequently it also bounds sign error. Keeping the original all-input clean-margin restriction is permitted and gives the same conclusion.
+and its correct-sign probability exceeds $2/3$ on almost all test inputs after polynomially many samples at fixed depth. The teacher-margin assumption is substantive on continuous supports: it excludes data arbitrarily close to a sign-changing decision boundary.
 
-The replacement assumption is a finite internal-noise stability condition on the prior's support. This is doing real work. We have not shown that one can simultaneously remove the original global margin restriction **and** the internal-stability restriction while retaining the same guarantees.
+**For a bound jointly polynomial in depth,** the theorem under the internal-stability restriction described in Question 12 also permits outputs arbitrarily close to zero at unobserved inputs. It uses the same training likelihood and bounds posterior test-margin error $f(X)z_w(X)\le1/4$, hence also sign error. Removing both restrictions while retaining a general polynomial-depth guarantee remains open.
 
 The constants $1/2$ and $1/4$ are not fundamental. The robust argument has a version with training margin $m$, test threshold $u<m$, and quantitative dependence on the gap $m-u$. Taking $u=0$ addresses sign prediction directly. Merely conditioning on positive training signs with no quantitative training margin is a different problem.
 

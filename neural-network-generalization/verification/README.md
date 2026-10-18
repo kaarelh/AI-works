@@ -20,6 +20,8 @@ The latest full collection rebuild is recorded in [depth-publication-all-builds.
 
 The non-Gaussian extension was added separately after that full rebuild. Its [review and build record](../side-results/non-gaussian-priors/verification/README.md) includes an isolated source rebuild with identical extracted PDF text and no unresolved references or LaTeX warnings. The collection contains 38 catalogued papers after this addition; the historical counts below describe their respective publication snapshots. The extension is not Lean verified.
 
+The continuous-domain regression paper brings the inventory to 39 papers. Its [review and build record](../side-results/continuous-domains/verification/README.md) covers the tolerance-regression and iterated exact-interpolation statements, independent mathematical reviews, and an isolated source rebuild with matching PDF text. It is also a conventional proof, outside the current Lean verification.
+
 ## Publication checks, 16 October 2026
 
 - All 30 papers rebuilt successfully from the copied source dependencies using two LaTeX passes. No unresolved references or LaTeX warnings were reported.

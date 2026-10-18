@@ -6,7 +6,7 @@ Papers and notes by Dmitry Vaintrob, Kaarel Hänni, and OpenAI Codex (credited a
 
 The five papers below are the main results. The remaining papers are listed as side results, earlier treatments, or works in progress. “Side result” does not mean unproved: several contain complete theorems, but they are not the main presentation of this project. These are research drafts, not externally peer-reviewed publications; the FAQ distinguishes proved statements from plausible extensions and open questions.
 
-Every paper has a PDF, editable LaTeX source, and a build script. The collection contains 38 distinct papers and notes, with experimental code and selected exact certificates. The [catalog](catalog.json) identifies the canonical manuscripts; older treatments retain their historical scope and open-status remarks.
+Every paper has a PDF, editable LaTeX source, and a build script. The collection contains 39 distinct papers and notes, with experimental code and selected exact certificates. The [catalog](catalog.json) identifies the canonical manuscripts; older treatments retain their historical scope and open-status remarks.
 
 ## Lean verification
 
@@ -72,6 +72,7 @@ These results develop the model, strengthen special cases, or analyze ingredient
 
 | Paper | Scope |
 |---|---|
+| [Width-independent Bayesian neural-network learning on continuous input domains](side-results/continuous-domains/paper.pdf) · [source and reviews](side-results/continuous-domains/) | Real-valued regression on compact domains, including the full sphere, at every width above teacher width. Strong-prior and all finite $\gamma\ge1$ regimes; positive training tolerance and a larger test tolerance. Includes exact interpolation in an iterated strong-prior limit and classification with a teacher margin on the data support. Conventional proof, not Lean verified. |
 | [Bayesian neural-network learning with non-Gaussian weight priors](side-results/non-gaussian-priors/paper.pdf) · [source and reviews](side-results/non-gaussian-priors/) | Extends main results 1–3 to independent symmetric densities whose negative log has positive curvature bounded above and below, at the original layer scales and every width above target complexity. Includes polynomial prior-complexity comparison and a broader strong-prior extension. Conventional proof, not Lean verified. |
 | [Small circuits under Gaussian-process classification: what sample complexity follows from the actual posterior?](side-results/nngp-sample-complexity/paper.pdf) · [source](side-results/nngp-sample-complexity/) | NNGP regression, classification, and confidence are distinguished; a specified deep tanh family has an exponential confidence sample requirement. |
 | [The fixed-kernel regime of a margin-conditioned Bayesian neural-network prior](side-results/gamma-below-one/paper.pdf) · [source](side-results/gamma-below-one/) | Kernel freezing and the three width-first limits for positive, zero, and negative gamma. Its original sample-bound discussion predates the main exponential theorem. |

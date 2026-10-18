@@ -1,0 +1,306 @@
+\section{The mean-field endpoint}\label{sec:meanfield}
+At $\gamma=1$ the typical internal matrices have nonvanishing operator
+norm. Discarding their bulk does not produce a good approximation.
+Instead, finite covariance tests describe most prior outputs, and a
+bounded dual representation turns covariance approximation into output
+approximation. The argument below retains the actual first-layer law.
+Auxiliary Gaussian rows are used to construct finite descriptions; the
+learner's posterior is not replaced by a Gaussian process.
+
+\subsection{A bounded dual for an arbitrary readout}
+\begin{lemma}[Approximate-readout duality]\label{lem:readout}
+Let $H\in\R^{s\times N}$, $Q=HH^T/N$, $z=Hv$, and
+$N\|v\|_2^2\leq K$. For every $t>0$ there exists $\beta\in\R^s$
+such that
+\[
+ \|Q\beta-z\|_\infty\leq t,\qquad
+ \|\beta\|_1\leq\frac K{4t}.
+\]
+\end{lemma}
+\begin{proof}
+Minimize $N\|u\|_2^2/2$ subject to $\|Hu-z\|_\infty\leq t$.
+The point $v$ is strictly feasible. Convex optimality gives a signed
+difference $\beta$ of the lower and upper multipliers with
+$Nu=H^T\beta$. Complementarity gives
+\[
+ t\|\beta\|_1=\beta^T(z-Hu)
+ =Nv^Tu-N\|u\|^2.
+\]
+The two multipliers for the same coordinate cannot both be positive,
+because $t>0$. Put $r=\sqrt N\|u\|$. The right side is at most
+$\sqrt K r-r^2\leq K/4$. Also $Hu=Q\beta$, proving both claims.
+Neither a sign margin nor invertibility of $Q$ is required.
+\end{proof}
+
+\subsection{Finite covariance certificates}
+For a law $\mu$ on $[-1,1]^s$, a symmetric matrix $\Gamma$, and an
+empirical covariance $\widehat Q$, write
+\[
+ \mathcal J_G(\widehat Q;\mu)=
+ \max_{\|\Gamma\|_{1,\rm ent}\leq G}
+ \left\{\langle\Gamma,\widehat Q\rangle
+       -\log\E_\mu e^{h^T\Gamma h}\right\},\qquad
+ \|\Gamma\|_{1,\rm ent}=\sum_{i,j}|\Gamma_{ij}|.
+\]
+The norm dual to this entrywise $\ell^1$ norm is
+$\|A\|_{\max}=\max_{i,j}|A_{ij}|$.
+
+\begin{lemma}[Distribution-free certificate]\label{lem:certificate}
+For an empirical second moment of $N$ independent samples from $\mu$,
+\begin{equation}\label{eq:certificate}
+ \Prb\{\mathcal J_G(\widehat Q;\mu)>K\}
+ \leq\exp\{q\log(2s^2+1)-N(K-1)\},
+ \qquad q=\lceil G^2/2\rceil.
+\end{equation}
+If $\mathcal J_G\leq K$, some quadratic exponential tilt of $\mu$,
+with parameter norm at most $G$, has covariance within $K/G$ of
+$\widehat Q$ in maximum norm.
+\end{lemma}
+\begin{proof}
+Flatten the $s^2$ bounded observables $F_{ij}=h_ih_j$ into a vector
+$F\in[-1,1]^D$, and write
+$\Lambda(\lambda)=\log\E e^{\lambda\cdot F}$.
+Every $\ell^1$-ball vector $\lambda$ is the mean of a random vector
+in $\{0,\pm Ge_1,\ldots,\pm Ge_D\}$. Average $q$ independent such
+vectors to get a finite set $\mathcal V$ of size at most $(2D+1)^q$.
+Hoeffding's exponential-moment bound and Jensen imply
+$\E\Lambda(V)\leq\Lambda(\lambda)+G^2/(2q)$.
+Thus for every moment vector $a$,
+\[
+ \max_{\|\lambda\|_1\leq G}\{\lambda\cdot a-\Lambda(\lambda)\}
+ \leq1+\max_{v\in\mathcal V}\{v\cdot a-\Lambda(v)\}.
+\]
+For empirical $a$, independence gives
+$\E e^{N[v\cdot a-\Lambda(v)]}=1$. Markov and the finite union
+bound prove~\eqref{eq:certificate}.
+
+For the approximation assertion, let $\lambda_*$ maximize the dual and
+let $\mu_*$ be the corresponding exponential tilt, with moments $a_*$.
+The first-order condition for maximization over the $\ell^1$ ball gives
+$\lambda_*\cdot(a-a_*)=G\|a-a_*\|_\infty$. Therefore
+\[
+ \mathcal J_G=\KL(\mu_*\Vert\mu)+G\|a-a_*\|_\infty.
+\]
+Relative entropy is nonnegative. Symmetrizing the parameter matrix does
+not change its quadratic form or increase its norm.
+\end{proof}
+
+For $Q\succeq0$, let $\mathsf F_\Gamma(Q)$ be the covariance of
+$h=\tanh Z$, $Z\sim\mathcal N(0,Q)$, tilted by $e^{h^T\Gamma h}$.
+Two bounds control this Gaussian auxiliary family.
+
+\begin{lemma}[Relative comparison and covariance stability]
+\label{lem:comparisons}
+Let $\|a_j\|_\infty\leq N^{-1/2}$, let $\xi_j\sim\nu$ and
+$g_j\sim\mathcal N(0,1)$ independently, and put
+$Z_\nu=\sum_j a_j\xi_j$, $Z_G=\sum_j a_jg_j$.
+For $\|\Gamma\|_{1,\rm ent}\leq G$ and $N\geq4G^2$,
+\begin{equation}\label{eq:lindeberg}
+ \left|\log\E e^{\tanh(Z_\nu)^T\Gamma\tanh(Z_\nu)}
+      -\log\E e^{\tanh(Z_G)^T\Gamma\tanh(Z_G)}\right|
+ \leq\frac{c_\nu P_3(G)}{\sqrt N},
+\end{equation}
+where $P_3(G)=24G+36G^2+8G^3$ and
+$c_\nu=(e/6)(\E|\xi|^3e^{|\xi|}+\E|g|^3e^{|g|})<\infty$.
+Also, for all positive semidefinite $Q,Q'$,
+\begin{equation}\label{eq:covariance-stability}
+ \|\mathsf F_\Gamma(Q)-\mathsf F_\Gamma(Q')\|_{\max}
+ \leq8(1+G)^2\|Q-Q'\|_{\max}.
+\end{equation}
+Neither bound depends on the number $s$ of field coordinates.
+\end{lemma}
+\begin{proof}
+Put $F(z)=\tanh(z)^T\Gamma\tanh(z)$. In a direction
+$\|a\|_\infty\leq N^{-1/2}$ its first three directional derivatives
+are bounded by $2G/\sqrt N$, $6G/N$, and $24G/N^{3/2}$.
+Consequently $|D_a^3e^F|\leq P_3(G)N^{-3/2}e^F$.
+At a one-coordinate replacement, fix the residual $z$ and define
+$f_z(t)=e^{F(z+at)}$. Since $2G/\sqrt N\leq1$,
+\[
+ e^{-|t|}f_z(0)\leq f_z(t)\leq e^{|t|}f_z(0).
+\]
+Taylor expansion through order two and matched mean and variance imply
+that the two averaged values differ by at most
+$P_3(G)N^{-3/2}(\E|\xi|^3e^{|\xi|}+\E|g|^3e^{|g|})f_z(0)/6$.
+Each average is at least $e^{-1}f_z(0)$ by Jensen and variance one.
+These bounds persist after averaging over the residual. The inequality
+$|\log u-\log v|\leq|u-v|/\min(u,v)$ and $N$ replacements give
+\eqref{eq:lindeberg}. This relative calculation avoids an exponential
+loss in the tilt budget.
+
+For~\eqref{eq:covariance-stability}, interpolate covariance linearly
+and differentiate the Gaussian tilted expectation of
+$H(z)=\tanh(z_i)\tanh(z_j)$, using the quotient rule. If
+$M_k$ denotes the supremum of the sum of absolute derivatives of order
+$k$, then $M_1(F)\leq2G$, $M_2(F)\leq6G$,
+$M_1(H)\leq2$, and $M_2(H)\leq6$. Gaussian differentiation bounds
+the derivative by
+\[
+ \tfrac12\|Q-Q'\|_{\max}
+       [6+8G+2(6G+4G^2)]
+ \leq8(1+G)^2\|Q-Q'\|_{\max}.
+\]
+All terms are expectations or covariances under the normalized tilted
+law, so no reciprocal partition-function estimate is used. Integrate
+the derivative. Adding $\eta I$ and taking $\eta\downarrow0$
+justifies singular covariance matrices. Expanded calculations for both
+estimates appear in~\cite{nongaus}.
+\end{proof}
+
+\subsection{Most outputs have a common finite cover}
+\begin{proposition}[Mean-field output cover]\label{prop:mf-cover}
+There are fixed-depth polynomially bounded functions
+$T_L(d,K,1/a)$ and $H_L^{\rm mf}(d,K,1/a)$ with the following
+property. For $0<a<1$ and $K$ above a fixed-law constant at least $4$,
+there is a finite deterministic family $\mathcal C_{K,a}$, independent
+of learner width, such that for every $N\geq T_L(d,K,1/a)$,
+\[
+ \log|\mathcal C_{K,a}|\leq H_L^{\rm mf}(d,K,1/a),
+ \qquad
+ \mu_{N,1}\!\left\{\inf_{h\in\mathcal C_{K,a}}\sup_X|z_w-h|>a\right\}
+ \leq2Le^{-cNK},
+\]
+where $c=\min\{1/4,m/16\}$.
+\end{proposition}
+\begin{proof}
+We give the construction, including its width and net dependencies.
+
+\emph{Lipschitz event.}
+Require
+\[
+ \|W^1\|_F^2\leq NK,\qquad
+ \|W^\ell\|_{\rm op}\leq\sqrt K\ (2\leq\ell<L),\qquad
+ N\|v\|^2\leq K.
+\]
+On this event $\Lip(z_w)\leq K^{L/2}$. The square moment
+bound~\eqref{eq:squares} gives first-layer and readout failure at most
+$e^{-mNK/8}$ for sufficiently large fixed-law $K$. For the first layer
+the exponent before simplification is
+$-mdNK/4+N(d+1)\log2/2$.
+The sphere-net estimate gives internal failure at most
+$2e^{2N\log9-mNK/8}\leq e^{-mNK/16}$ after enlarging the same
+constant baseline. Thus total failure is at most $Le^{-mNK/16}$.
+
+Choose a net $S\subset X$ of radius $a/(4K^{L/2})$ and cardinality
+\begin{equation}\label{eq:mf-net}
+ s\leq(1+8K^{L/2}/a)^d.
+\end{equation}
+Fix a Borel nearest-net-point map $t:X\to S$. The actual output changes
+by at most $a/4$ between $x$ and $t(x)$ on the Lipschitz event.
+
+\emph{Proxy covariance tower.}
+Write $r=L-1$, $\bar K=K+1$, and
+\[
+ G_r=8rK\bar K/a^2,\qquad
+ G_\ell=8G_{\ell+1}(1+G_{\ell+1})^2\quad(\ell<r),\qquad
+ b_\ell=8(1+G_\ell)^2.
+\]
+Let $\ell_0=\log3+2d\log(1+8K^{L/2}/a)$, so that
+$\log(2s^2+1)\leq\ell_0$ uniformly over the domain $X$. Take
+\begin{equation}\label{eq:T}
+ T_L=\left\lceil\max\left\{1,
+ \frac{2\lceil G_1^2/2\rceil\ell_0}{K-1},
+ 4G_1^2,c_\nu^2P_3(G_1)^2\right\}\right\rceil.
+\end{equation}
+These budgets and this threshold have polynomial majorants in
+$d,K,1/a$ at fixed $L$, using~\eqref{eq:mf-net}.
+
+Let $Q_{\ell,N}$ be the empirical activation covariance indexed by $S$.
+At the first layer, apply Lemma~\ref{lem:certificate} to its actual
+non-Gaussian field law $\mu_0$. At later layers apply it conditionally
+to the true row law. A union bound bounds failure by $r e^{-NK/4}$.
+An internal preactivation is $N^{-1/2}\sum_j\xi_jh_j$, so
+\eqref{eq:lindeberg} compares its log partition functions to the Gaussian
+law of covariance $Q_{\ell-1,N}$ with error at most one under~\eqref{eq:T}.
+The Gaussian certificate is therefore at most $\bar K$.
+The lift in Lemma~\ref{lem:certificate} produces matrices $\Gamma_\ell$
+with entrywise norm at most $G_\ell$. Define $Q_1^*$ by tilting the
+actual first-layer law with $\Gamma_1$, and recursively set
+$Q_\ell^*=\mathsf F_{\Gamma_\ell}(Q_{\ell-1}^*)$ for $\ell\geq2$.
+Equation~\eqref{eq:covariance-stability} gives
+\[
+ \|Q_{r,N}-Q_r^*\|_{\max}
+ \leq\sum_{\ell=1}^r\frac{\bar K}{G_\ell}
+                     \prod_{j=\ell+1}^r b_j
+ =\frac{r\bar K}{G_r}=\frac{a^2}{8K}.
+\]
+
+\emph{Readout and finite realization.}
+On the readout norm event, Lemma~\ref{lem:readout} with tolerance $a/4$
+gives $\|\beta\|_1\leq K/a$ and
+$\|Q_{r,N}\beta-z_w|_S\|_\infty\leq a/4$.
+Replacing the covariance by $Q_r^*$ adds error at most $a/8$.
+
+Here is a finite network realizing the proxy to another $a/8$.
+Put $b=8(1+G_1)^2$ and
+\[
+ \eta=\frac{a^2}{8Kr b^{r-1}},\qquad
+ J=\left\lceil2\eta^{-2}\log(8rs^2)\right\rceil.
+\]
+Sample $J$ first-layer rows from the actual incoming law tilted by
+$e^{h^T\Gamma_1h}$. At each later layer, sample independent Gaussian
+rows divided by $\sqrt J$, tilted by
+$e^{\tanh(Z)^T\Gamma_\ell\tanh(Z)}$ conditionally on the previous
+sampled activations. Their reference Gaussian field has covariance equal
+to the previous empirical covariance. Hoeffding and a union bound over
+$rs^2$ covariance entries give simultaneous empirical error at most
+$\eta$ with probability at least $3/4$.
+Covariance stability then gives final covariance error at most
+$r b^{r-1}\eta$. Set each readout coefficient to $(\beta\cdot h_i)/J$.
+The output error against $Q_r^*\beta$ is at most
+$(K/a)r b^{r-1}\eta=a/8$.
+
+All sampled weights can simultaneously be bounded polynomially.
+Each row's tilted density relative to its reference is at most $e^{2G_1}$.
+The reference coordinates obey $\E e^{a_0\xi^2}\leq\sqrt2$ for
+$a_0=\min\{m,1\}/4$. If $D_J=J(d+1)+(L-2)J^2$, choose
+\[
+ B_0=\max\left\{1,\frac K{aJ},
+ \sqrt{\frac{2G_1+\log(4\sqrt2\max\{D_J,1\})}{a_0}}\right\}.
+\]
+A union bound gives probability at least $3/4$ that all incoming weights
+are bounded by $B_0$. Internal weights are additionally divided by
+$\sqrt J$, so the bound remains valid. The readout bound is deterministic.
+Intersecting with the covariance event gives a realization with width and
+weights polynomially bounded in $d,K,1/a$ at fixed depth.
+
+\emph{Counting and extension off the net.}
+For that common width and weight bound, put
+\[
+ P=J(d+1)+(L-2)J^2+J,\qquad
+ \Lambda=(d+LJ)[1+J(B_0+1)]^{L-1}.
+\]
+Round parameters to mesh $a/(8\Lambda)$. A layer-by-layer
+coordinate-error induction bounds the output change by $a/8$ on all
+inputs with coordinates at most one. There are at most
+$\exp\{P\log(3+16B_0\Lambda/a)\}$ rounded networks, with logarithm
+polynomially bounded in the required parameters.
+
+Include the functions $h(x)=z_{\rm rounded}(t(x))$ in the cover.
+Its error to the actual output is at most
+\[
+ \underbrace{a/4}_{\text{readout dual}}
+ +\underbrace{a/8}_{\text{proxy covariance}}
+ +\underbrace{a/8}_{\text{finite realization}}
+ +\underbrace{a/8}_{\text{rounding}}
+ +\underbrace{a/4}_{\text{input net}}=7a/8<a.
+\]
+Only the actual output needs a Lipschitz bound; no circular choice of net
+based on the approximant occurs. The norm and certificate failures total
+at most $2Le^{-cNK}$. The grid of possible centers depends on the common
+bounds and the fixed net, and hence is independent of $N$ and of the draw.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:finite} when $\gamma=1$]
+Let $A=A_L(d,C,B,\rho)$ and $a=\min\{1/2,(\tau-\rho)/4\}$.
+Choose $K$ above the baseline in Proposition~\ref{prop:mf-cover} and with
+$cK\geq A+\log(12L/\varepsilon)$. At $N\geq T_L(d,K,1/a)$,
+the exceptional-to-tube mass ratio is at most
+$2Le^{-N(cK-A)}\leq\varepsilon/6$. Lemma~\ref{lem:posterior}
+gives risk at most $\varepsilon/3$ at sample size
+$(6/\varepsilon)[H_L^{\rm mf}(d,K,1/a)+\log(1/\delta)]$.
+For $C\leq N<T_L$, Lemma~\ref{lem:mass-posterior} uses the tube
+cost $AT_L$. Both bounds have the polynomial majorant
+in~\eqref{eq:finite-samples}. Equation~\eqref{eq:confidence} completes
+the argument at every width $N\geq C$.
+\end{proof}

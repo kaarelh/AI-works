@@ -1,0 +1,794 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools,microtype,xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black,citecolor=blue!50!black]{hyperref}
+\newtheorem{theorem}{Theorem}[section]\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}\newcommand{\Prb}{\mathbb P}\newcommand{\R}{\mathbb R}
+\newcommand{\norm}[1]{\left\Vert#1\right\Vert}
+\newcommand{\Lip}{\mathrm{Lip}}\newcommand{\KL}{\mathrm{KL}}
+\setlength{\emergencystretch}{3em}
+\hypersetup{pdftitle={Width-independent Bayesian neural-network learning on continuous input domains},pdfauthor={Dmitry Vaintrob; Kaarel Hanni; OpenAI Codex}}
+\title{Width-independent Bayesian neural-network learning on continuous input domains}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex\thanks{AI assistant; contributed to mathematical analysis and drafting. This research draft has not been formalized in Lean.}}
+\date{October 18, 2026}
+\begin{document}\maketitle
+\begin{abstract}
+We prove sample-complexity bounds for Bayesian tanh networks with inputs in
+any compact subset of the Euclidean unit ball, including an entire sphere.
+A real-valued target is implemented by a teacher of width $C$, depth $L$,
+and weight bound $B$. For every learner width $N\geq C$, the sample bound
+is polynomial in $d,C,B$ at fixed depth, independently of $N$.
+The result holds in the strong-prior limit and at every finite-scale
+exponent $\gamma\geq1$, including mean-field scaling. Gaussian weights
+and a family of smooth, strongly log-concave non-Gaussian weights are covered.
+Training observes clean real-valued labels and conditions on fitting them
+within a positive tolerance $\rho$; testing uses a larger tolerance
+$\tau>\rho$. The full posterior assigns probability greater than $2/3$
+to a prediction within $\tau$ on almost all test inputs. No restriction
+on the input distribution beyond its support is needed, and no global
+output-margin condition is imposed on the prior.
+The continuous-domain argument uses a finite input net only inside the
+proof. Bounded-energy compression handles the strong-prior and
+$\gamma>1$ regimes. A bounded dual representation of an arbitrary readout
+extends the mean-field covariance argument from signs to real outputs.
+We also obtain exact interpolation in an iterated Gaussian strong-prior
+limit, and binary classification on supports where a teacher has a
+uniform positive margin. Exact equality conditioning at fixed prior scale,
+unbounded teacher weights, and margin-free binary-label classification
+are not covered.
+\end{abstract}
+
+\section{Introduction}
+A small neural-network implementation can be a useful source of statistical
+complexity even when the Bayesian learner has many more parameters. This
+paper establishes such a guarantee on continuous input domains. The sample
+requirement depends on the width and weight magnitude of a teacher, rather
+than on the width of the learner. The dependence on depth is allowed to be
+large: throughout the paper, depth is fixed.
+
+There is a basic obstacle to directly importing a Boolean-domain model.
+A continuous real-valued network whose output is bounded away from zero
+everywhere on a connected domain has a constant sign. Thus conditioning a
+prior to have an absolute margin at every point of a connected sphere
+would exclude every nonconstant binary classifier. We instead work with
+the raw independent-weight prior and condition only on the observed
+training constraints. Our principal result concerns real-valued regression,
+which permits nonconstant targets on the whole sphere without a margin
+assumption. For example, $f(x)=\tanh(x_1)$ on $S^{d-1}$ is covered by a
+width-one, depth-two teacher.
+
+The labels in this theorem are clean, exact values of the target, but the
+likelihood accepts a fit within a fixed positive tolerance. Test error
+means exceeding a strictly larger tolerance. This difference between
+training and test thresholds provides room for finite approximation.
+Conditioning directly on exact equality of continuously distributed real
+outputs at fixed prior scale is a different problem. We nevertheless obtain
+an exact-interpolation corollary by taking the strong-prior limit first and
+then sending the training tolerance to zero, in that specified order.
+
+The proofs have three parts. First, a neighborhood of a cloned teacher has
+enough prior mass, uniformly in the learner width. Second, a finite family
+approximates all but a sufficiently small amount of prior mass. Third, a
+union bound shows that an inaccurate member of this family is unlikely to
+fit the data. For continuous domains, Lipschitz control lets us use a finite
+input net whose logarithmic cardinality is polynomial in the relevant
+parameters. The net is a proof device; the data distribution remains
+arbitrary and continuous inputs are not discretized by the learning rule.
+
+Several probabilistic ingredients extend the finite-input analysis
+in~\cite{nongaus}. We give their statements and the necessary derivations
+here, and identify where that paper contains a longer proof of a shared
+compression calculation. The new continuous-domain reductions, posterior
+arguments, teacher-tube construction, and approximate-readout duality are
+proved below.
+
+\section{Model and main results}\label{sec:model}
+Fix $d\geq1$, $L\geq2$, and a nonempty compact set
+$X\subseteq\{x\in\R^d:\|x\|_2\leq1\}$. Write $\bar x=(1,x)$.
+A network of width $N$ and depth $L$ computes
+\[
+ h^0(x)=\bar x,\qquad h^\ell(x)=\tanh(W^\ell h^{\ell-1}(x))
+ \quad(1\leq\ell<L),\qquad z_w(x)=v^Th^{L-1}(x).
+\]
+All hidden layers have width $N$, there are no separate internal biases,
+and the readout is linear. Let $f:X\to\R$ be computed by a teacher of
+the same depth, width $C\geq1$, and weights of absolute value at most
+$B\geq1$. Width and weight magnitude are separate parameters. The theorem
+does not claim that width alone controls arbitrary unbounded-weight teachers.
+
+For a raw parameter prior $\mu$, inputs $x_i$ sampled independently from
+any Borel probability distribution $D$ on $X$, and exact labels $f(x_i)$,
+define the posterior by
+\begin{equation}\label{eq:posterior}
+ \Pi(dw\mid S_n)=
+ \frac{\prod_{i=1}^n\mathbf1\{|z_w(x_i)-f(x_i)|<\rho\}\,\mu(dw)}
+ {\int\prod_{i=1}^n\mathbf1\{|z_u(x_i)-f(x_i)|<\rho\}\,\mu(du)},
+ \qquad \rho>0.
+\end{equation}
+There is no prior conditioning on unobserved inputs. The denominator is
+positive because a neighborhood of the teacher clone fits uniformly.
+For $\tau>\rho$, put
+\[
+ R_\tau(\Pi)=\E_{w\sim\Pi}D\{|z_w-f|>\tau\},\qquad
+ q_\tau(x)=\Pi\{|z_w(x)-f(x)|\leq\tau\mid S_n\}.
+\]
+Tonelli and Markov give the posterior-confidence implication
+\begin{equation}\label{eq:confidence}
+ D\{q_\tau\leq2/3\}\leq3R_\tau(\Pi).
+\end{equation}
+The result controls the whole posterior, including mixtures, rather than
+only its mean output or a selected parameter minimizer.
+
+Our coordinate law $\nu$ has an even variance-one density
+\begin{equation}\label{eq:law}
+ q(t)=Z^{-1}e^{-V(t)},\qquad V\in C^2(\R),\qquad
+ 0<m\leq V''(t)\leq M<\infty.
+\end{equation}
+The law is fixed as width varies. Standard Gaussian coordinates are the
+case $m=M=1$. A non-Gaussian example is the variance-standardized density
+proportional to $\exp\{-t^2/2-b\log\cosh t\}$ for any fixed $b>0$.
+All scalar coordinates below are independent copies of $\xi\sim\nu$.
+The strong-prior scales are
+\begin{equation}\label{eq:strong-scales}
+ W^1_{ij}=\sigma\sqrt{N/d}\,\xi^1_{ij},\qquad
+ W^\ell_{ij}=\sigma\xi^\ell_{ij}\ (2\leq\ell<L),\qquad
+ v_j=\sigma N^{-1/2}\xi^L_j.
+\end{equation}
+The finite-scale family sets $\sigma=N^{-\gamma/2}$:
+\begin{equation}\label{eq:finite-scales}
+ W^1_{ij}=N^{(1-\gamma)/2}\xi^1_{ij}/\sqrt d,\quad
+ W^\ell_{ij}=N^{-\gamma/2}\xi^\ell_{ij},\quad
+ v_j=N^{-(\gamma+1)/2}\xi^L_j.
+\end{equation}
+At $\gamma=1$, the three variances are $1/d$, $1/N$, and $1/N^2$.
+For compact notation write
+\[
+ u=\frac1{\min\{1,\tau-\rho\}},\qquad
+ v_\rho=\log\frac1{\min\{1,\rho\}}.
+\]
+
+\begin{theorem}[Strong-prior regression]\label{thm:strong}
+For every fixed $L$ and coordinate law~\eqref{eq:law}, there is a
+polynomial $p_L$ such that the following holds. For every teacher as above,
+every $N\geq C$, every $0<\rho<\tau$, and every $\varepsilon\in(0,1)$,
+there is $\sigma_0>0$ such that, for all $0<\sigma<\sigma_0$, all
+distributions $D$ on $X$, all $\delta\in(0,1)$, and
+\[
+ n\geq\frac6\varepsilon
+ \left[p_L(d,C,B,u)+\log\frac1\delta\right],
+\]
+the posterior~\eqref{eq:posterior} satisfies, with probability at least
+$1-\delta$ over the sample,
+\[
+ R_\tau(\Pi)\leq\varepsilon/3,\qquad
+ D\{q_\tau\leq2/3\}\leq\varepsilon.
+\]
+The polynomial is independent of learner width. The scale threshold may
+depend on that finite width, the teacher, $\rho$, and $\varepsilon$;
+it does not depend on $D,n,\delta$.
+\end{theorem}
+
+\begin{theorem}[Finite-scale regression, including mean field]
+\label{thm:finite}
+Fix $L$, a coordinate law~\eqref{eq:law}, and $\gamma\geq1$.
+There is a polynomial $p_{L,\gamma}$ such that, for every teacher as above,
+every $N\geq C$, every $D$ on $X$, all $0<\rho<\tau$, and
+$\varepsilon,\delta\in(0,1)$, the condition
+\begin{equation}\label{eq:finite-samples}
+ n\geq\frac6\varepsilon\left[
+ p_{L,\gamma}\!\left(d,C,B,u,v_\rho,\log\frac1\varepsilon\right)
+ +\log\frac6{\varepsilon\delta}\right]
+\end{equation}
+implies the same risk and posterior-confidence bounds with sample
+probability at least $1-\delta$.
+The polynomial is independent of $N$. Its degree and constants may depend
+on $L,\gamma$ and the coordinate law; no uniformity as
+$\gamma\downarrow1$ is claimed for the $\gamma>1$ proof.
+The endpoint has a separate proof.
+\end{theorem}
+
+These theorems are finite-width statistical statements. They assert no
+efficient method for sampling the posterior, no polynomial dependence on
+depth, and no theorem for $\gamma<1$. The polynomial degree can itself grow
+quickly with depth; we do not assert a bound with merely an exponential
+depth prefactor. A different fixed confidence level
+below one follows by replacing the factor $3$ in~\eqref{eq:confidence}.
+
+\begin{remark}[Any bounded coordinate domain]\label{rem:cube}
+The same conclusions hold for every compact $X\subseteq[-1,1]^d$.
+All stability and rounding estimates below already use only coordinate
+bounds. In the input-net estimates replace the unit-ball radius by
+$\sqrt d$, so a mesh $r$ needs at most $(1+2\sqrt d/r)^d$ points.
+Its logarithm still has a polynomial majorant. This includes finite input
+sets as well as balls and spheres.
+\end{remark}
+
+\section{Two posterior estimates}\label{sec:posterior}
+Let
+\begin{equation}\label{eq:tube}
+ U_\rho=\{w:\sup_{x\in X}|z_w(x)-f(x)|<\rho\}.
+\end{equation}
+This is an open parameter event, since $X$ is compact. It lower-bounds
+the posterior denominator for every sample.
+
+\begin{lemma}[Learning from a finite approximate cover]\label{lem:posterior}
+Suppose $\mu(U_\rho)>0$, a measurable event $G$ obeys
+$\mu(G^c)/\mu(U_\rho)\leq b$, and every output from $G$ is within
+$a$ uniformly on $X$ of a member of a deterministic finite family
+$\mathcal H$. If $2a<\tau-\rho$ and
+\[
+ n\geq t^{-1}[\log|\mathcal H|+\log(1/\delta)],
+\]
+then $R_\tau(\Pi)\leq t+b$ with sample probability at least $1-\delta$.
+\end{lemma}
+\begin{proof}
+For each $h\in\mathcal H$, set
+$A_h=\{x:|h(x)-f(x)|>\rho+a\}$. If $D(A_h)>t$, its probability
+of containing no training input is at most $e^{-nt}$. A union bound
+excludes all such surviving $h$ with the asserted probability.
+Every fitted $w\in G$ has an approximant $h$ whose set $A_h$ contains
+no training input. Moreover $|z_w-f|>\tau$ implies $x\in A_h$,
+by $\tau-a>\rho+a$. Thus its test risk is at most $t$.
+For every sample, $\Pi(G^c\mid S_n)\leq\mu(G^c)/\mu(U_\rho)\leq b$.
+Integrating establishes the conclusion.
+\end{proof}
+
+\begin{lemma}[Learning from a uniform tube]\label{lem:mass-posterior}
+If $\mu(U_\rho)\geq e^{-A}$, then
+$n\geq t^{-1}[A+\log(1/(b\delta))]$ implies
+$R_\tau(\Pi)\leq t+b$ with sample probability at least $1-\delta$.
+\end{lemma}
+\begin{proof}
+A fixed parameter with test risk greater than $t$ fits all stricter
+training constraints with probability at most $e^{-nt}$. Tonelli gives
+expected raw mass of such fitted parameters at most $e^{-nt}$.
+Divide by the deterministic denominator lower bound $e^{-A}$ and apply
+Markov to bound their posterior mass by $b$ with probability $1-\delta$.
+The remaining parameters each have risk at most $t$.
+\end{proof}
+
+All covers constructed below are finite collections of Borel functions.
+The relevant exceptional events are measurable: for each such function,
+the uniform distance from a network output is a Borel function of the
+parameters, and the constructions alternatively supply explicit measurable
+norm and covariance-certificate events. No measurable choice of approximant
+or of teacher-network parameters is needed.
+
+\section{Cloning and the mass of a teacher tube}\label{sec:mass}
+Define the weighted energy
+\begin{equation}\label{eq:energy}
+ \kappa_N(w)=\frac dN\|W^1\|_F^2+
+       \sum_{\ell=2}^{L-1}\|W^\ell\|_F^2+N\|v\|_2^2.
+\end{equation}
+Partition each learner layer into $C$ groups with balanced sizes
+$k_j\in\{\lfloor N/C\rfloor,\lceil N/C\rceil\}$. Copy the
+teacher neuron in every position of its group, divide an internal teacher
+edge by its source-group size, and divide each readout edge by its group
+size. The clone computes $f$ exactly for every real input. Since
+$\max k_i/\min k_i\leq2$ and $N/\min k_i\leq2C$, its energy is at most
+\begin{equation}\label{eq:teacher-energy}
+ E_*:=d(d+1)B^2+2(L-1)C^2B^2.
+\end{equation}
+In particular, the first-layer contribution is at most $d(d+1)B^2$,
+each internal contribution at most $2C^2B^2$, and the readout contribution
+at most $2C^2B^2$. These estimates are independent of $N$.
+
+We use three consequences of~\eqref{eq:law}. A product of $\nu$
+coordinates conditioned on a centrally symmetric convex set is centered
+and has
+\begin{equation}\label{eq:subgaussian}
+ \E e^{t\langle u,Z\rangle}\leq e^{t^2\|u\|^2/(2m)}.
+\end{equation}
+Indeed convex conditioning preserves $m$-strong log-concavity. The
+Brascamp--Lieb variance inequality after every linear tilt bounds the
+Hessian of the log moment generating function by $m^{-1}I$; symmetry
+sets its derivative at zero to zero. Smooth convex barriers justify
+conditioning on sets. For the unconditioned product, Caffarelli's
+contraction theorem and Gaussian isoperimetry give
+\begin{equation}\label{eq:enlargement}
+ \mu(A_r)\geq\Phi(\Phi^{-1}(\mu(A))+\sqrt m\,r).
+\end{equation}
+Here $A_r$ is Euclidean enlargement. Finally any symmetric event $E$ and
+translation $a$ satisfy
+\begin{equation}\label{eq:translation}
+ \mu(E+a)\geq\mu(E)e^{-M\|a\|^2/2}.
+\end{equation}
+To prove the last inequality, translate the conditional law on $E$.
+Its relative entropy against $\mu$ is
+$-\log\mu(E)+\E[\sum_i(V(Z_i+a_i)-V(Z_i))\mid E]$.
+Taylor's theorem bounds the added expectation by $M\|a\|^2/2$:
+the linear score term vanishes by oddness of $V'$ and symmetry.
+A law supported on $E+a$ has relative entropy at least $-\log\mu(E+a)$.
+References for the two concentration theorems are
+\cite{brascamp-lieb,caffarelli,ledoux}.
+
+\begin{proposition}[A uniform teacher tube at every width]\label{prop:tube}
+For $N\geq C$ and $\gamma\geq1$,
+\begin{equation}\label{eq:tube-mass}
+ \mu_{N,\gamma}(U_\rho)\geq e^{-A_L(d,C,B,\rho)N^\gamma},
+\end{equation}
+where $A_L$ has a polynomial majorant in $d,C,B,v_\rho$ at fixed
+depth and coordinate law.
+\end{proposition}
+\begin{proof}
+Let $P$ project onto the group-constant subspace of the clone, with basis
+$u_j=k_j^{-1/2}\mathbf1_{\text{group }j}$. Put
+$t=N^{(1-\gamma)/2}\leq1$. In standardized coordinates impose the
+centered cylinder consisting of $|\xi|\leq\eta$ for first-layer and
+readout entries, and $|\langle Z_{i,*},u_j\rangle|\leq\eta$ for every
+internal row and group. These scalar constraints concern independent
+variables, because groups are disjoint.
+
+Every normalized group sum is even, log-concave, and has variance at most
+$1/m$. Symmetric unimodality and Chebyshev yield, for $0<\eta\leq1$,
+\[
+ \Prb(|Y|\leq\eta)\geq c_m\eta,
+ \qquad c_m=\tfrac38\min\{1,\sqrt m\}.
+\]
+For example take the interval of radius
+$2\max\{1,m^{-1/2}\}$, which has mass at least $3/4$, and compare
+average densities on concentric intervals. Hence the cylinder has mass
+at least $(c_m\eta)^{N[d+2+(L-2)C]}$.
+
+Conditional on the cylinder,~\eqref{eq:subgaussian} and two $1/4$ sphere
+nets of size at most $9^N$ give
+\[
+ \Prb(\|Z\|_{\rm op}>2q\sqrt N\mid\text{cylinder})
+ \leq2e^{(2\log9-mq^2/2)N}.
+\]
+Set $b_0=2\sqrt{(2/m)[2\log9+\log(4L)]}$. Intersect the cylinder
+with $\|Z\|_{\rm op}\leq b_0\sqrt N$ for every internal layer.
+The resulting symmetric event $E$ has at least half the cylinder's mass.
+
+Translate by the standardized clone. The internal perturbation is
+$tZ/\sqrt N=tZP/\sqrt N+tZ(I-P)/\sqrt N$. Its second summand
+annihilates the teacher activations, and its first has norm at most
+$\eta\sqrt C$. If $e_\ell=N^{-1/2}\|h^\ell-h_*^\ell\|_2$,
+boundedness and contraction of tanh give, uniformly on $X$,
+\[
+ e_1\leq\eta(d+1),\qquad
+ e_\ell\leq(\sqrt2CB+b_0)e_{\ell-1}+\eta\sqrt C.
+\]
+Put $A_0=2+3CB+b_0$. Then
+$e_{L-1}\leq\eta(d+L+1)A_0^{L-2}$. The clone has
+$\sqrt N\|v_*\|\leq\sqrt2CB$; the perturbation readout has
+$\ell^1$ norm at most $\eta$. Its output error is therefore at most
+$\eta P_0$, where
+\[
+ P_0=1+2CB(d+L+1)A_0^{L-2},\qquad
+ \eta=\min\{1/2,\rho/(2P_0)\}.
+\]
+The translated event lies in $U_\rho$. Its standardized translation has
+squared norm $N^\gamma\kappa_N(w_*)\leq E_*N^\gamma$.
+Equation~\eqref{eq:translation} and $N\leq N^\gamma$ prove the claim
+with, for instance,
+\begin{equation}\label{eq:A}
+ A_L=1+\tfrac M2E_*+[d+2+(L-2)C]\log\frac1{c_m\eta}+\log2.
+\end{equation}
+All stability estimates used only bounded input coordinates, so they
+hold simultaneously on the continuous domain.
+\end{proof}
+
+\section{Uniform covers for bounded energy}\label{sec:energy-cover}
+The following finite-input calculation is the deterministic compression
+ingredient shared with~\cite{nongaus}. Only the logarithm of the number
+of input points enters it.
+
+\begin{lemma}[Finite-input neuron compression]\label{lem:compression}
+Let $T\subset[-1,1]^d$ be finite of cardinality $s$, $K\geq1$, and
+$0<a\leq1$. Every network with $\kappa_N(w)\leq K$ has a
+width-$J$ approximant with energy at most $4K$ and error at most $a/4$
+on $T$, where $J$ has a polynomial majorant in
+$d,K,1/a,\log(2s)$ at fixed $L$. One may take
+\[
+ \lambda=\frac{a2^{-L}K^{-(L-1)/2}}{4(L-1)},\quad
+ D_T=\max\{1,\lceil\log_2s\rceil\},\quad
+ J=\max\left\{\lceil4K\rceil,
+ \left\lceil256\lambda^{-4}[D_T+\log(L/\lambda)]\right\rceil\right\}.
+\]
+All weights of the approximant have magnitude at most $J$.
+\end{lemma}
+\begin{proof}
+Here are the estimates underlying the neuron-sampling construction;
+the full reverse-order telescoping calculation is also given in the
+bounded-energy compression appendix of~\cite{nongaus}.
+In each internal or readout row of Euclidean norm $r_i$, delete entries
+exceeding $2r_i/(\lambda\sqrt N)$. Their total absolute contribution
+against a bounded hidden vector is at most
+$(\lambda/2)\sqrt N r_i$. At every hidden layer independently sample
+$J$ uniform neuron indices with replacement. Retain the sampled first-layer
+rows; multiply each retained edge out of a sampled neuron by $N/J$.
+
+For each retained row and input, Hoeffding's inequality bounds the
+probability that the estimated sum differs from the truncated sum by
+more than $(\lambda/2)\sqrt N r_i$ by
+$2e^{-\lambda^4J/32}$. Union bounding over inputs, rows, and layers
+costs at most $2sLJ e^{-\lambda^4J/32}\leq1/100$.
+The expected weighted energy of the sampled network is at most $K$;
+independence of adjacent layers' index lists suffices for the internal
+matrix calculation. Thus its energy is at most $4K$ with probability
+at least $3/4$. The sum of the squared norms of retained rows, with
+the $N$ normalization, is at most $8JK$ with probability at least $7/8$,
+again by Markov. These three events have a nonempty intersection.
+
+Fix a realization in that intersection and expose sampled layers in
+reverse order. The downstream matrices at each step already equal their
+final sampled matrices, whose norms are at most $2\sqrt K$, and the
+sampled readout has norm at most $2\sqrt{K/J}$. Propagating the row
+errors shows that each truncation and each sampling stage changes the
+output by at most $a/[8(L-1)]$. The $2(L-1)$ stages total at most
+$a/4$. This is precisely why the choice of $\lambda$ contains
+$2^{-L}K^{-(L-1)/2}$. The energy bound gives entrywise bounds
+$\sqrt{4KJ/d}$, $2\sqrt K$, and $2\sqrt{K/J}$ at the three layer
+types, each at most $J$ since $J\geq4K$.
+\end{proof}
+
+\begin{proposition}[A continuous-domain energy cover]\label{prop:energy-cover}
+For fixed $L$, $K\geq1$, and $0<a\leq1$, there is a deterministic finite
+family $\mathcal H_{K,a}$ of Borel functions on $X$, common to all
+learner widths, such that
+\[
+ \inf_{h\in\mathcal H_{K,a}}\sup_X|z_w-h|\leq a
+ \quad\text{whenever }\kappa_N(w)\leq K,
+\]
+and $\log|\mathcal H_{K,a}|\leq H_L(d,K,1/a)$ for a polynomially
+bounded function at fixed depth.
+\end{proposition}
+\begin{proof}
+Multiplying the layer norm bounds from~\eqref{eq:energy} gives
+\begin{equation}\label{eq:energy-lipschitz}
+ \Lip(z_w)\leq K^{L/2}/\sqrt d.
+\end{equation}
+Choose an input net $T\subset X$ of radius
+$r=\min\{1,a\sqrt d/(8K^{L/2})\}$ and size
+$s\leq(1+2/r)^d$. Fix a nearest-net-point map $t:X\to T$, resolving
+ties by a fixed enumeration. It is Borel. Apply
+Lemma~\ref{lem:compression} on $T$.
+
+For any width-$J$ network with weights bounded by $J$, rounding every
+weight to a grid of mesh
+\[
+ \Delta\leq\frac{a}{4(d+L+1)(2J^2)^L}
+\]
+changes its output by at most $a/4$ whenever the input coordinates are
+bounded by one. To check this, a first-layer coordinate error is at most
+$(d+1)\Delta$; each next coordinate error is at most $2J^2$ times
+the preceding error plus $J\Delta$, including the readout. Induction
+gives the displayed bound.
+There are $P=J(d+1)+(L-2)J^2+J$ coordinates, so at most
+$(1+2(J+1)/\Delta)^P$ rounded networks.
+
+Use their functions $x\mapsto z_{\rm rounded}(t(x))$ as cover centers.
+Compression, rounding, and~\eqref{eq:energy-lipschitz} give total error
+at most $a/4+a/4+a/8<a$. The centers need not themselves be continuous
+or neural networks; they are used only in the statistical union bound.
+Since $\log s=O_L(d\log(2+K+1/a))$, the logarithm of their number has
+a fixed-depth polynomial majorant and is independent of $N$.
+\end{proof}
+
+\section{The strong-prior and super-mean-field proofs}\label{sec:strong-above}
+\begin{proof}[Proof of Theorem~\ref{thm:strong}]
+Fix $N$ and the exact clone $w_*$. The tube $U_\rho$ is an open
+neighborhood of $w_*$. Evenness and~\eqref{eq:law} give two-sided
+quadratic density envelopes
+$c e^{-Mt^2/2}\leq q(t)\leq C_0e^{-mt^2/2}$.
+In the finite-dimensional parameter space, elementary Gaussian-integral
+bounds therefore yield
+\[
+ \liminf_{\sigma\downarrow0}\sigma^2\log\mu_\sigma(U_\rho)
+ \geq-\tfrac M2E_*,\qquad
+ \limsup_{\sigma\downarrow0}\sigma^2\log
+       \mu_\sigma\{\kappa_N>K\}\leq-\tfrac m2K.
+\]
+For the lower bound integrate a sufficiently small open neighborhood of
+$w_*$ whose energy is at most $E_*+\zeta$, then let $\zeta\downarrow0$.
+For the upper bound integrate the quadratic envelope outside the ellipsoid;
+fixed dimension contributes only subexponential factors.
+Take $K=(M/m)E_*+2$. The exceptional-to-tube mass ratio tends to zero.
+Choose $\sigma_0$ making it at most $\varepsilon/6$ for all smaller
+scales. Apply Proposition~\ref{prop:energy-cover} with
+$a=\min\{1/2,(\tau-\rho)/4\}$ and then
+Lemma~\ref{lem:posterior} with $t=b=\varepsilon/6$.
+Equation~\eqref{eq:confidence} finishes the proof.
+\end{proof}
+
+The same proof uses only independent coordinate densities with common
+two-sided envelopes $c_j e^{-b_0t^2}\leq q_j(t)\leq C_j e^{-a_0t^2}$,
+where $0<a_0\leq b_0<\infty$ do not depend on width. Symmetry and
+log-concavity are unnecessary in this strong-prior extension. Replace
+$K$ by $(b_0/a_0)E_*+2$; prefactors affect only the fixed-width scale
+threshold.
+
+\begin{lemma}[Spectral truncation at $\gamma>1$]\label{lem:spectral}
+Fix $K\geq1$ and $0<a<1$, and put
+$b=a/[2L(\sqrt K+1)^{L-2}]$. If
+\begin{equation}\label{eq:above-threshold}
+ N^{\gamma-1}\geq8(d+1)/m,\qquad
+ N^{\gamma-1}\geq256/(mb^2),
+\end{equation}
+then, except with probability $Le^{-mKN^\gamma/8}$, the network output
+is uniformly within $a/2$ on $X$ of a network of energy at most $LK$.
+\end{lemma}
+\begin{proof}
+Equation~\eqref{eq:subgaussian} implies
+$\E e^{m\xi^2/4}\leq\sqrt2$ by integrating against a one-dimensional
+Gaussian. Hence, for $D_0$ independent coordinates,
+\begin{equation}\label{eq:squares}
+ \Prb\left(\sum_{j=1}^{D_0}\xi_j^2>u\right)
+ \leq2^{D_0/2}e^{-mu/4}\leq e^{-mu/8}
+ \quad\text{if }mu\geq8D_0.
+\end{equation}
+This controls the first-layer weighted norm and the readout weighted norm
+by $K$ outside two events of probability $e^{-mKN^\gamma/8}$.
+
+For an internal matrix $A=\sigma Z$, the net bound gives
+$\Prb(\|A\|_{\rm op}\leq8\sigma\sqrt{N/m})\geq1/2$.
+If $b\geq16\sigma\sqrt{N/m}$, the operator-norm ball of radius $b/2$
+has mass at least $1/2$. Its Frobenius distance from $A$ is
+$D(A)^2=\sum_j(s_j(A)-b/2)_+^2$. Equation~\eqref{eq:enlargement}
+implies $\Prb(D(A)>r)\leq e^{-mr^2/(2\sigma^2)}$.
+The singular part $A_{>b}$ has $\|A_{>b}\|_F\leq2D(A)$, whence
+\[
+ \Prb(\|A_{>b}\|_F^2>K)\leq e^{-mK/(8\sigma^2)}.
+\]
+At $\sigma=N^{-\gamma/2}$ the second condition
+in~\eqref{eq:above-threshold} permits this estimate.
+
+Discard all internal singular values at most $b$. The retained network
+has energy at most $LK$. If $e_\ell$ denotes its Euclidean hidden error,
+$e_1=0$ and $e_\ell\leq\sqrt K e_{\ell-1}+b\sqrt N$.
+The readout norm is at most $\sqrt{K/N}$, so the uniform output error
+is at most $b\sum_{j=1}^{L-2}K^{j/2}\leq a/2$.
+The $L=2$ sum is empty. A union bound proves the assertion.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:finite} when $\gamma>1$]
+Let $A=A_L(d,C,B,\rho)$, $a=\min\{1/2,(\tau-\rho)/4\}$, and
+\[
+ K=\max\{1,(8/m)[A+\log(6L/\varepsilon)]\}.
+\]
+Let $T$ be the ceiling of the maximum of $C$ and the two thresholds
+in~\eqref{eq:above-threshold}. For $N\geq T$,
+Lemma~\ref{lem:spectral} and a cover of the retained networks to accuracy
+$a/2$ give a common finite output cover of accuracy $a$.
+By~\eqref{eq:tube-mass}, its exceptional-to-tube mass ratio is at most
+$Le^{-N^\gamma(mK/8-A)}\leq\varepsilon/6$.
+Apply Lemma~\ref{lem:posterior}.
+For $C\leq N<T$, use Lemma~\ref{lem:mass-posterior} with tube cost
+at most $AT^\gamma$. At fixed $L,\gamma>1$, the cover entropy and
+$AT^\gamma$ have polynomial majorants in the arguments
+of~\eqref{eq:finite-samples}. This covers every $N\geq C$.
+\end{proof}
+
+\input{meanfield.tex}
+
+\section{Exact interpolation in an iterated strong-prior limit}
+\label{sec:exact}
+Positive training tolerance is necessary for the ordinary conditional
+posterior~\eqref{eq:posterior} to be defined by a positive-probability
+event. There is nonetheless a precise strong-prior exact-interpolation
+conclusion. It follows from one sample event that controls all low-energy
+interpolants, including all mixtures of them.
+
+\begin{proposition}[Every low-energy interpolant generalizes]
+\label{prop:exact}
+Let $E_*$ be the clone energy bound~\eqref{eq:teacher-energy}, and fix
+$\tau>0$. For fixed $L$, let $H$ be the logarithmic cardinality of the
+all-width energy cover at energy $E_*$ and radius
+$a=\min\{1,\tau/8\}$. It is polynomially bounded in
+$d,C,B,1/\min\{1,\tau\}$. If
+\[
+ n\geq\frac3\varepsilon[H+\log(1/\delta)],
+\]
+then, with probability at least $1-\delta$, simultaneously for every
+$N\geq C$ and every parameter satisfying
+\[
+ \kappa_N(w)\leq E_*,\qquad
+ \max_i|z_w(x_i)-f(x_i)|\leq\tau/2,
+\]
+one has $D\{|z_w-f|>\tau\}\leq\varepsilon/3$.
+In particular the same bound holds for every minimum-energy exact
+interpolant and for every probability mixture of such interpolants.
+All these mixtures satisfy~\eqref{eq:confidence}.
+\end{proposition}
+\begin{proof}
+For a cover center $h$ set $A_h=\{|h-f|>3\tau/4\}$.
+A covered parameter fitting within $\tau/2$ has
+$|h(x_i)-f(x_i)|\leq\tau/2+a\leq5\tau/8$, so all training inputs
+avoid $A_h$. Its test errors lie in $A_h$, since
+$\tau-a\geq7\tau/8>3\tau/4$. A union bound excludes every surviving
+center with $D(A_h)>\varepsilon/3$ at the displayed sample size.
+The cover is common to all widths, so the assertion is simultaneous
+without a union bound over widths. An exact teacher clone is feasible
+with energy at most $E_*$, so every energy-minimizing exact interpolant
+belongs to the covered sublevel. The risk bound persists under mixtures.
+\end{proof}
+
+\begin{corollary}[An exact Bayesian strong-prior limit]\label{cor:exact}
+Use Gaussian coordinates in~\eqref{eq:strong-scales}. At every fixed
+$N\geq C$, every iterated weak limit of the posterior obtained by first
+sending $\sigma\downarrow0$ at fixed $\rho>0$, and then sending
+$\rho\downarrow0$, is supported on minimum-energy exact interpolants.
+Such subsequential limits exist. With the sample bound of
+Proposition~\ref{prop:exact}, all of them obey the stated regression and
+posterior-confidence guarantees.
+\end{corollary}
+\begin{proof}
+Fix a clean sample and put $e_S(w)=\max_i|z_w(x_i)-f(x_i)|$,
+$O_\rho=\{e_S<\rho\}$,
+$b_\rho=\inf_{O_\rho}\kappa_N$, and
+$b_0=\min_{\{e_S=0\}}\kappa_N$.
+The exact feasible set is nonempty and closed. Since $\kappa_N$ is
+continuous and coercive, its minimum exists, with $b_0\leq E_*$.
+
+The Gaussian density is proportional to
+$e^{-\kappa_N/(2\sigma^2)}$. For every fixed $\rho,\eta>0$, an
+open ball inside $O_\rho$ has energy below $b_\rho+\eta/2$.
+Comparing its Gaussian mass to the tail
+$\{\kappa_N>b_\rho+\eta\}$ proves
+\[
+ \Pi_{\sigma,\rho}\{\kappa_N>b_\rho+\eta\}\longrightarrow0.
+\]
+This gives tightness, since energy sublevels are compact. Each posterior
+has $e_S\leq\rho$ and $\kappa_N\geq b_\rho$ almost surely, so every
+inner weak limit is supported on
+$\{e_S\leq\rho,\ \kappa_N=b_\rho\}$.
+This does not require identifying the closure of $O_\rho$ with the
+whole non-strict feasible set.
+
+As $\rho\downarrow0$, $b_\rho$ increases to $b_0$. Indeed choose
+almost minimizers at tolerances tending to zero. They lie in a common
+compact energy sublevel; a convergent subsequence has exact fit and
+energy at most $\lim b_\rho$, giving the reverse inequality to
+$b_\rho\leq b_0$.
+The inner limiting measures are supported on the common compact set
+$\{\kappa_N\leq b_0\}$, and every outer weak limit is supported on
+$\{e_S=0,\kappa_N=b_0\}$. Proposition~\ref{prop:exact} then applies
+directly to their support on its single high-probability sample event.
+\end{proof}
+
+The limit order in Corollary~\ref{cor:exact} is part of the statement.
+It does not identify a fixed-scale regular conditional posterior given
+exact outputs, reverse the two limits, or prove a result along arbitrary
+joint paths $(\sigma,\rho)\to(0,0)$. No rank or regular-value assumption
+on the sample-evaluation map was used. Under two-sided quadratic
+tail envelopes with exponents $0<c_-\leq c_+$, the analogous safe energy
+bound is $(c_+/c_-)E_*$, giving the same polynomial conclusion, without
+identifying minimum-quadratic-energy interpolants.
+
+\section{Binary classification and the role of a margin}\label{sec:classification}
+The continuous-regression theorem does not assume that the teacher output
+avoids zero. Classification requires a separate denominator argument.
+
+\begin{corollary}[Classification on a support with a teacher margin]
+\label{cor:classification}
+Let $g:X\to\{-1,1\}$ and suppose a teacher of width $C$, depth $L$,
+and weight bound $B$ satisfies $g(x)z_*(x)\geq r>0$ on $X$.
+Condition the raw prior only on the training margins
+$g(x_i)z_w(x_i)>1/2$. For both the strong-prior regime and every fixed
+$\gamma\geq1$, there are fixed-depth sample bounds polynomial in
+$d,C,B,1/r$ and the accuracy parameters, independent of learner width
+for every $N\geq C$, such that with sample probability at least
+$1-\delta$,
+\[
+ D\{x:\Pi(g(x)z_w(x)>0\mid S_n)\leq2/3\}\leq\varepsilon.
+\]
+The teacher margin may hold on any full-measure support; no assertion
+about unobserved points outside that support is required.
+\end{corollary}
+\begin{proof}
+Multiply the teacher readout by $3/(2r)$, obtaining signed output at
+least $3/2$. Its width is still $C$, and its weight bound is at most
+$\max\{B,3B/(2r)\}$. A uniform output tube of radius $1/2$ fits all
+training margins. The preceding target-tube estimates therefore apply.
+For the finite-cover step use radius $a<1/4$. If $h$ approximates a
+fitted network, every training point satisfies $g(x_i)h(x_i)>1/2-a$.
+Every sign error of that network lies in
+$\{x:g(x)h(x)\leq1/2-a\}$, since $a<1/2-a$. A union bound over
+these sets replaces Lemma~\ref{lem:posterior}; the small-width mass-only
+argument is unchanged. The risk-to-confidence bound is again Markov.
+\end{proof}
+
+For $d\geq2$, the sphere $S^{d-1}$ is connected. A continuous network
+with $|z_*|\geq r>0$ everywhere on it has a constant sign, by the
+intermediate value theorem. Thus a nonconstant full-sphere binary target
+does not satisfy the corollary's uniform-margin premise. The corollary is
+useful, for example, for distributions whose support excludes a band around
+a decision boundary. The disconnected sphere $S^0$ is an exception to
+the connectedness observation.
+
+For a nonconstant example on the entire connected sphere,
+take the regression target $f(x)=\tanh(x_1)$, represented at depth two
+and width one with weights bounded by one. Every $N\geq1$ is covered,
+for every distribution on the sphere, and any fixed $0<\rho<\tau$.
+This example needs no exclusion of an equatorial band. At larger fixed
+depth, iterated compositions of tanh give corresponding width-one examples.
+
+Real score labels also permit sign prediction without a uniform margin.
+For any nonzero target value with $|f(x)|>\tau$, the event
+$|z_w(x)-f(x)|\leq\tau$ implies the correct sign. Hence
+\begin{equation}\label{eq:score-sign}
+ D\{\Pi(\operatorname{sign}z_w=\operatorname{sign}f\mid S_n)\leq2/3\}
+ \leq\varepsilon+D\{|f|\leq\tau\}
+\end{equation}
+on the regression theorem's success event. Any convention for the sign
+of zero is harmless, since zeros lie in the second set. This is a
+corollary for training on real-valued scores, not for training on binary
+labels alone.
+
+For $f(x)=\tanh(x_1)$ and uniform spherical inputs in dimension $d\geq2$,
+\begin{equation}\label{eq:sphere}
+ D\{|f|\leq\tau\}\leq3\sqrt d\,\tau\qquad(0<\tau\leq1/2).
+\end{equation}
+To check it, let $s=\operatorname{artanh}\tau$. Then
+$s\leq4\tau/3$ and $s\leq\operatorname{artanh}(1/2)<0.55$.
+For $d\geq3$, the first-coordinate density is
+$c_d(1-t^2)^{(d-3)/2}$ with
+$c_d=\Gamma(d/2)/(\sqrt\pi\Gamma((d-1)/2))\leq\sqrt d$;
+the ratio bound follows by applying Jensen to the square root of a
+Gamma variable. For $d=2$, the density
+$1/(\pi\sqrt{1-t^2})$ is at most one on $[-s,s]$.
+Integrating yields at most $2s\sqrt d\leq3\sqrt d\tau$.
+Taking regression accuracy $\varepsilon/2$,
+$\tau=\varepsilon/(6\sqrt d)$, and $\rho=\tau/2$ gives correct-sign
+posterior confidence on all but an $\varepsilon$ fraction of the entire
+sphere, with a fixed-depth sample bound polynomial in $d,1/\varepsilon$,
+at every learner width $N\geq1$. The observed labels here remain the
+real scores $\tanh(x_1)$.
+
+\section{What this result does and does not establish}
+The argument establishes a continuous-input version of width-independent
+learning with a positive training tolerance. Its sample bound is polynomial
+in teacher width and weight bound at fixed depth, for every learner width
+above the teacher width. The distribution may have atoms, a density, or
+lower-dimensional support; no covering-number assumption on the distribution
+itself is made. The unit-ball assumption is used to bound the logarithm of
+an input-net size and the dependence of outputs on parameters. A bounded
+domain of a different radius can be rescaled, changing the teacher's
+first-layer weight bound.
+
+The positive tolerance in the finite-scale theorem is substantive. It does
+not prove exact real-valued interpolation under a regular conditional
+posterior or a zero-tolerance limit at fixed prior scale.
+Section~\ref{sec:exact} supplies a distinct exact-interpolation result
+with a specified order of limits. In the strong-prior tolerance theorem,
+the sample polynomial can be independent of the absolute training tolerance,
+but the scale threshold may deteriorate as that tolerance shrinks.
+At finite scale the displayed bound tracks this cost through
+$\log^+(1/\rho)$. The inverse gap $1/(\tau-\rho)$ also enters the
+polynomial, so the theorem does not make a uniform assertion as the test
+and training thresholds coincide.
+
+The binary corollary assumes a uniform teacher margin on the data support.
+Dropping that assumption would require a different lower bound on posterior
+normalization, or quantitative control of how much input mass lies near the
+teacher's decision boundary. The present proofs do not establish a
+width-only, margin-free classification theorem. They also do not establish
+the bounds for ReLU, noisy labels, $\gamma<1$, or efficient posterior
+computation. No robustness restriction on the network prior is imposed,
+and no polynomial dependence on depth is claimed.
+
+\begingroup\small
+\begin{thebibliography}{9}
+\bibitem{nongaus} D. Vaintrob, K. H\"anni, and OpenAI Codex.
+\emph{Bayesian neural-network learning with non-Gaussian weight priors}.
+Research draft, 2026.
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/side-results/non-gaussian-priors}.
+\bibitem{hoeffding} W. Hoeffding.
+Probability inequalities for sums of bounded random variables.
+\emph{Journal of the American Statistical Association} 58 (1963), 13--30.
+\bibitem{brascamp-lieb} H. J. Brascamp and E. H. Lieb.
+On extensions of the Brunn--Minkowski and Pr\'ekopa--Leindler theorems,
+including inequalities for log concave functions, and with an application
+to the diffusion equation.
+\emph{Journal of Functional Analysis} 22 (1976), 366--389.
+\bibitem{caffarelli} L. A. Caffarelli.
+Monotonicity properties of optimal transportation and the FKG and related
+inequalities. \emph{Communications in Mathematical Physics} 214 (2000), 547--563.
+\bibitem{ledoux} M. Ledoux.
+\emph{The Concentration of Measure Phenomenon}. AMS, 2001.
+\end{thebibliography}\endgroup
+\end{document}
