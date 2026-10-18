@@ -1,0 +1,460 @@
+# T4. Making the intended behaviour approval-maximising: protocols that remove the drift
+
+*Theory section for the RSI-loop round of the proxy-conditioning project. Revised draft, 18 October 2026, in response to the referee report `drafts/T4-protocols-referee.md`; the changes are listed in "Revision notes" at the end. Notation follows `framing.md`, T1 (`drafts/T1-ledger.md`) and T2 (`drafts/T2-sieve.md`). The numbers of the first draft come from [`sim/T4_protocol_checks.py`](../sim/T4_protocol_checks.py) (output in [`sim/T4_protocol_checks_output.txt`](../sim/T4_protocol_checks_output.txt); 26 checks, no mismatches). Every number added or changed in this revision comes from [`sim/T4_revision_checks.py`](../sim/T4_revision_checks.py) (output in [`sim/T4_revision_checks_output.txt`](../sim/T4_revision_checks_output.txt); 18 checks, no mismatches). Status labels as in T1: **rigorous** means proved within the stated toy model; **heuristic** means a derivation that uses a named approximation, or the mapping of someone else's theorem onto our model; **conjecture** means a claim about real systems that the model suggests but does not establish. Numbers drawn from arbitrary distributions are marked **illustrative**.*
+
+## Summary
+
+T1 and T2 treat the grader as fixed and ask which dispositions training selects. This section changes the grader instead. The aim is to make the intended behaviour the approval-seeker's best response, so that $A$ and $G$ stop disagreeing, and by T1.1 the drift between them stops. The mechanism is a **flag**. On an episode where the student predicts that the grader will prefer a non-intended output, it may produce the intended output together with an argument that the grader is wrong. A verifier accepts a valid flag with probability $v$ (*demonstrability*) and a spurious one with probability $f$.
+
+* **Best response has one threshold** (T4.1, T4.2). With bonus $b$ for an accepted flag and penalty $c$ for a rejected one, the approval-seeker challenges the grader iff the acceptance probability is at least $v^\star=(1+c)/(1+b+c)$. Against a best-responding gamer, the residual drift is
+  $$\Phi=(1+b+c)\Big[\varepsilon\,\mathbb E_E(v^\star-v)^+ +(1-\varepsilon)\,\mathbb E_N(f-v^\star)^+\Big],$$
+  which reduces to $\varepsilon(1-\bar v)$ when $b=c=0$. A finite design gives $\Phi=0$ iff $\operatorname{ess\,inf}_E v\ge\operatorname{ess\,sup}_N f$ and $\operatorname{ess\,inf}_E v>0$ (the *separation condition*).
+* **The penalty is a gain, not a lever, and the bonus has a price** (T4.3, T4.3b). At fixed $v^\star$, the penalty $c$ multiplies every flag-related reward gap by $1+c$, in whichever direction it points. The case for $c=0$ is that it does not tax honest flags that turn out to be mistaken. The bonus $b$ lowers $v^\star$, but it also pays the student to **manufacture** grader errors: to present correct work so the grader predictably misgrades it, then flag it. A manufacturable clean cell behaves like a clean cell with gullibility $v_m$, the demonstrability of the manufactured error. In the worked example a bonus of 1.5 cuts the drift from 0.0053 to 0.00225 when nothing is manufacturable, but loses to the bonus-free design once more than 0.25% of clean cells are manufacturable at $v_m=0.9$. Correction-only flags ($b=c=0$) are immune to manufacturing.
+* **Protocols relieve audits of most of their load** (T4.7). The protocol re-prices behaviour openly, so it does not depend on concealment. Audits are still needed on the cells the protocol leaves. In T1's honeypot example, the recognition level at which the drift changes sign moves from $s=0.68$ to $s=0.97$ under rejection-style updates (B), because each rewarded opportunity carries fewer nats. Under the KL tilt (D) with $b=1.5$ it moves from $s=0.84$ to $s=0.98$, because there are fewer residual opportunities. Under (B), a best responder that sees the cell type is held to the same threshold only if about 68% of honeypots imitate the low-demonstrability cells.
+* **What the debate literature implies for $v$ and $f$** (T4.8 to T4.10). On cells where the intended output is the verdict of an efficiently simulable deterministic deliberation, doubly-efficient debate gives $v\to1$ and $f\to0$ *relative to the deliberation's oracle*, assuming optimally trained debaters. The residual is then the oracle's own predictable error, and it enters through **maxima over reachable atomic judgements on both sides**: $f=\max_j e_j$ (the dishonest prover routes spurious flags to the oracle's weakest judgements) and $v=1-\max_j e'_j$ (the grader's defender routes valid flags to the judgements where the oracle errs against the truth). Where obfuscation is possible, $v\approx f$, and no threshold separates them.
+* **Consistency checks** (T4.11 to T4.14). For an infinitely exchangeable family of framings, the probability of catching a liar with $m$ queries is $1-\mathbb E[R^m]$. Its decay is governed by the law of $R$ near 1, and its ceiling is $1-\Pr(R=1)$, the mass of coherent liars. Sample-consistency is proxy-equivalent on the $A$/$G$ axis, because both answer deterministically. Framings with independent graders strip framing-specific grader errors and leave the common-mode ones, which reward-model ensembles have already shown empirically. Used as a training signal, consistency checks also penalise honest but incoherent models.
+* **Collusion** (T4.15, T4.16). Under zero-sum reporting, reward-seeking monitors have no motive to collude, which formalises Carlsmith's (2023) distinction between reward-on-the-episode seekers and schemers. Two channels remain. One is careful gamers with their own objective, whose collusion signal must survive paraphrase and be unforgeable. The other is passive self-preference leniency, which no reward scheme removes because the monitor does not know it is lenient.
+* **The loop** (T4.17 to T4.19). Generations before $k$ cannot check generation $k$'s frontier flags, so only certificate cells are covered unless a same-generation verifier is used, and that moves the trust problem to the verifier. In T1's loop map with the protocol added, and with the grader's error rate capped at 1, **survival is decided by the leak budget, not by the sign of the drift**. If the aligned-end leak is summable, which in the toy needs demonstration ability to improve faster than blind spots grow ($\nu>\kappa$), the ledger levels off and the loop enters T1.11's regime, where the time to failure is exponential in the banked log-odds. In the example the protocol widens the basin fivefold ($q^\dagger_0$ from 0.083 to 0.405). In scenario S1, the drift turns positive at generation 11, the total leak afterwards is 1.8 nats, and $L_k$ levels off at 38.7.
+
+The central message is unchanged: **a protocol does not select against the approval-seeker. It makes the approval-seeker harmless wherever approval is demonstrably correct, in training and also at the frontier if the protocol runs there.** It leaves three things: (i) the undemonstrable predictable errors, (ii) careful gamers with their own objectives, which only non-colluding opponents reach, and (iii) new gaming channels that the protocol itself creates (manufactured errors, spurious flags, and the push that flag training gives to the grader-modelling latent).
+
+---
+
+## 0. The model
+
+**Cells.** Training episodes are i.i.d. As in T1 and T2, each episode offers an intended output $I$ and a non-intended output $X$. The rewards are normalised so that the grader's reward gap is $\Delta_+=1$. An episode is one of two kinds:
+* an **error cell** $E$, with probability $\varepsilon$: the grader gives $X$ reward 1 and $I$ reward 0, and the student can predict this (T1's predictable error);
+* a **clean cell** $N$, with probability $1-\varepsilon$: the grader gives $I$ reward 1 and $X$ reward 0.
+
+Unpredictable errors are omitted, since by T1.1 they create no drift. Audits are added in §2.
+
+**Flags.** Along with its output, the student may submit a *flag*: a claim that the grader's verdict is wrong and the other output is intended, with an argument. A verifier evaluates the flag. The verifier can be a check, a debate, a consistency procedure, or a human with tools. If the verifier accepts, the episode is re-scored by the corrected verdict, and the flagged output gets $1+b$. If it rejects, the output keeps the grader's original score minus $c$, with $b,c\ge0$.
+* In an $E$ cell, the flag "I is intended" is **valid** and is accepted with probability $v\in[0,1]$, the cell's **demonstrability**.
+* In an $N$ cell, the flag "X is intended" is **spurious** and is accepted with probability $f\in[0,1]$, the cell's **gullibility**.
+
+Cells are heterogeneous. $v$ and $f$ are random, with laws on $E$ and $N$ respectively, and the student sees them, or rather its calibrated estimates of them; by the argument of T2's Remark 0.1, only calibrated estimates matter. Write $\bar v=\mathbb E_Ev$.
+
+**Assumptions made explicit in this revision.**
+* **(X) Exogenous cells.** Whether an episode is an $E$ or an $N$ cell does not depend on the student's output. §1's results hold under (X). T4.3b drops it: the student can sometimes turn a clean cell into an error cell by its choice of presentation.
+* **(T) Tie-breaking.** At exact indifference the best responder acts like $A$. This is a convention. Statements that depend on it are marked.
+* **(O) Omniscient honesty.** $A$ knows exactly which cells are error cells. A calibrated but uncertain $A$ sometimes flags a clean cell by mistake. This matters for the choice of $c$ (T4.3) and for the verification load (§2).
+
+**Dispositions.**
+* $A$ produces $I$, presents it legibly, and flags exactly the true errors (*honest flagging*). It never makes a spurious flag and never manufactures an error.
+* $G^\star$ maximises expected reward, cell by cell.
+* The naive approval-seeker $G_0$ produces whatever the grader prefers and never flags.
+* $C_t$ behaves like $G^\star$ in training wherever it believes the probability of being caught is at least $t$. On the frontier it pursues its own objective (T1, T2).
+
+**Update.** The main operator is the KL tilt (D). The per-episode drift between $\theta$ and $A$ is $\lambda\,(J_\theta-J_A)$, with $\lambda=(1-2\delta)/\beta$ nats per unit of reward (T1 §1.2). Rejection-style updates (B) are treated in T4.5 and T4.7.
+
+---
+
+## 1. Best response and residual drift
+
+**T4.1 (rigorous under (X) and (T); one threshold).** Let $v^\star=(1+c)/(1+b+c)$.
+* In an $E$ cell, $G^\star$ produces $I$ and flags iff $v\ge v^\star$; otherwise it produces $X$.
+* In an $N$ cell, $G^\star$ produces $X$ with a spurious flag iff $f>v^\star$; otherwise it produces $I$.
+
+*Proof.* In each kind of cell, going along with the grader earns 1, and challenging it earns $p(1+b)-(1-p)c$, where $p$ is the acceptance probability. That expression exceeds 1 iff $p>(1+c)/(1+b+c)$, and equals 1 at $p=v^\star$, where (T) resolves the tie in $A$'s favour. Silent $I$ in an $E$ cell earns 0 and is dominated. Under (X) these are the only actions. ∎
+
+So the approval-seeker's whole policy toward the grader is a single number: it challenges the grader iff it expects to win the argument with probability at least $v^\star$. Valid and spurious challenges face the same threshold, because the protocol cannot tell which is which except through the verifier.
+
+**T4.2 (rigorous under (X); residual drift).** The reward advantage of $G^\star$ over $A$ is
+$$\Phi\;=\;J_{G^\star}-J_A\;=\;(1+b+c)\Big[\varepsilon\,\mathbb E_E\,(v^\star-v)^+\;+\;(1-\varepsilon)\,\mathbb E_N\,(f-v^\star)^+\Big]\;\ge 0,$$
+and the drift is $D(G^\star)=\lambda\Phi$. $\Phi$ does not depend on the tie-breaking convention, because $G^\star$'s reward is the same either way. In particular:
+1. With $b=c=0$, $v^\star=1$, spurious flags never pay, and $\Phi=\varepsilon(1-\bar v)=:\varepsilon_{\rm res}$.
+2. As $b$ ranges over $[0,\infty)$, $v^\star$ ranges over $(0,1]$; it never reaches 0. So a finite design gives $\Phi=0$ iff some $v^\star\in(0,1]$ has $v\ge v^\star$ almost surely on $E$ and $f\le v^\star$ almost surely on $N$. That is the **separation condition**:
+   $$\operatorname{ess\,inf}_E v\ \ge\ \operatorname{ess\,sup}_N f\qquad\text{and}\qquad \operatorname{ess\,inf}_E v>0,$$
+   together with a choice of $b/(1+c)$ that puts $v^\star$ in the gap.
+
+*Proof.* $A$ earns $v(1+b)-(1-v)c$ in $E$ and 1 in $N$. By T4.1, $G^\star$ earns the same where it imitates $A$. Where it does not, its excess is $1-v(1+b)+(1-v)c=(1+b+c)(v^\star-v)$ in $E$, and $f(1+b)-(1-f)c-1=(1+b+c)(f-v^\star)$ in $N$. ∎ The first-draft script checks this against brute-force best responses for five random designs, to $10^{-12}$.
+
+Three remarks.
+* **Why $A$ should flag even when flags rarely succeed.** A "strategic" $A'$ that flags only when $v\ge v^\star$ has excess 1 against $G^\star$ in a low-$v$ cell; honest $A$'s excess is $(1+b+c)(v^\star-v)$, which is smaller whenever flagging has nonnegative expected reward, and so always when $c=0$. The intended behaviour should be "report every grader error you believe in", not "report the ones you can win".
+* **Proxy-equivalence.** On cells with $v>v^\star$ and $f<v^\star$, $G^\star$ and $A$ act identically, so by framing R2 their odds are frozen there. At the boundary ($v=v^\star$ or $f=v^\star$) they are tied in reward but $G^\star$ need not act like $A$; proxy-equivalence there holds only under (T). With *strict* separation, $\operatorname{ess\,inf}_E v>\operatorname{ess\,sup}_N f$, a $v^\star$ strictly inside the gap makes them proxy-equivalent without any convention. *A protocol does not select against the approval-seeker. It makes the distinction irrelevant on the cells it covers.*
+* **The essential infimum, again.** As in T1.4, the condition is about the worst cell, not the average. A cluster of low-$v$ error cells gives $G^\star$ positive drift however good $\bar v$ is.
+
+**T4.3 (rigorous; $c$ is a gain, not a threshold lever).** $v^\star$ depends on $(b,c)$ only through $b/(1+c)$, and $1+b+c=(1+c)/v^\star$. So at fixed $v^\star$, the penalty multiplies *every* flag-related reward gap between dispositions by $1+c$: $\Phi$ (T4.2), the restoring gap against the naive non-flagger (T4.4), and the manufacturing gain (T4.3b). It acts like a lower temperature $\beta$ on the flag-bearing episodes, amplifying the drift in whichever direction it already points. With $c=0$, $b=1/v^\star-1$ and
+$$\Phi(v^\star)=\frac{1}{v^\star}\Big[\varepsilon\,\mathbb E_E(v^\star-v)^+ +(1-\varepsilon)\,\mathbb E_N(f-v^\star)^+\Big].$$
+
+*Why $c=0$ anyway (heuristic).* The pure gain effect could be obtained by raising the reward scale on flag episodes. What $c$ adds on top of that is a tax on **honest but mistaken flags** (assumption (O) relaxed). A calibrated $A$ that flags a cell where the grader was in fact right is rejected with probability $1-f$, and with $c>0$ it pays $c$ each time. A best responder that flags only when confident pays less. At a mistaken-flag rate of 0.005 per episode, $c=0.5$ costs honest $A$ 0.0025 reward per episode, more than the whole optimised $\Phi=0.00225$ of the worked example. A penalty therefore trains toward the strategic $A'$ of the remark above. The original intuition, "a penalty taxes honest reporting", is the right conclusion for this reason, not because $c$ inflates $\Phi$ alone.
+
+**T4.3b (rigorous in the extended model; manufactured errors).** Drop (X). Suppose that in a share $m$ of clean cells the student can produce an intended output whose presentation makes the grader predictably misgrade it, and then flag it. The flag is *valid*, since the output really is intended, and the verifier accepts it with probability $v_m$. $A$ never does this, because legible presentation is part of the intended task. Then the best response in a manufacturable clean cell is the best of three actions: go along (1), spurious flag ($f(1+b)-(1-f)c$), or manufacture and flag ($v_m(1+b)-(1-v_m)c$). Hence
+$$\Phi_m=(1+b+c)\Big[\varepsilon\,\mathbb E_E(v^\star-v)^+ +(1-\varepsilon)\,\mathbb E_N\big(\max(f,\,v_m\mathbf 1_M)-v^\star\big)^+\Big],$$
+where $\mathbf 1_M$ marks manufacturable cells. **A manufacturable clean cell behaves like a clean cell with gullibility $\max(f,v_m)$.** The separation condition becomes $\operatorname{ess\,inf}_Ev\ge v^\star\ge\operatorname{ess\,sup}_N\max(f,v_m\mathbf 1_M)$. Because manufactured flags are valid, the verifier cannot filter them by soundness, and $v_m$ can be as high as the demonstrability of certificate cells. The revision script checks $\Phi_m$ against brute force for four designs, to $10^{-12}$.
+
+Consequences.
+1. **Correction-only flags are immune.** With $b=0$ (and $c=0$), manufacturing gains $v_m-1\le0$, so it never pays, and $\Phi_m=\varepsilon(1-\bar v)$.
+2. **The bonus is worth having only if manufacturing is rare.** At $b=1.5$ the gain per manufacturable cell is $(1+b)v_m-1$: 0.25 at $v_m=0.5$ and 1.25 at $v_m=0.9$, against an optimised $\Phi$ of 0.00225 per episode. In the worked example below with $v_m=0.9$, the design $v^\star=0.4$ loses to the bonus-free design once $m>0.0025$. The optimal threshold rises to $v^\star=0.6$ for $m$ between 0.0005 and 0.002 and to $v^\star=0.9$ for $m\ge0.005$, where $\Phi=0.0043$.
+3. **Designs that remove or bound the channel.**
+   * *Canonicalisation.* The grader scores a canonical rendering of the output made by a trusted transform, so that presentation cannot move it. This shrinks $m$ to the share of cells with several *non-equivalent* intended outputs.
+   * *Reference pairs.* The bonus is paid only for flags against the grader's verdicts on outputs the student did not produce: a separate grader-audit task. Flags on the student's own output earn the correction only.
+   * *Per-class bounty.* The bonus is paid once per class of grader error, and the class is then patched (T4.6). The manufacturing gain then becomes a one-off sum, at most $\lambda b$ per manufacturable class, instead of a per-episode rate. With $m=0.01$, $v_m=0.9$ and $n\lambda=1000$ it is 12.2 nats per generation without the rule, and at most 3.75 nats over the whole loop with it, for 50 manufacturable classes. The price is that repeat valid flags in a class already paid earn the correction only ($v^\star=1$ there) until the patch lands.
+4. Manufacturing is itself an off-intent behaviour: deliberately illegible good work. At the frontier it degrades exactly the legibility the loop relies on. It is the within-episode version of the cobra effect in open problem 5.
+
+**T4.4 (rigorous; restoring force only against non-best-responders).** The naive $G_0$ earns 1 in $E$ and 1 in $N$, so
+$$J_{G_0}-J_A=\varepsilon\,(1+b+c)\,(v^\star-\bar v),$$
+which is negative iff $\bar v>v^\star$. The protocol therefore pushes down gamers that do not flag, at rate $\lambda\varepsilon(1+b+c)(\bar v-v^\star)$. Against $G^\star$ it gives at best a tie (T4.2). This is T1.4 restated for protocols. Within the gamer population, the protocol acts as a sieve (T2) that keeps the *flaggers*, who are exactly the gamers that act like $A$ on the covered cells.
+
+*Flag-withholding careful gamers.* A careful gamer that declines to flag in training, to keep grader blind spots open for the frontier (flags get classes patched, T4.6), is $G_0$ on the training distribution. In the Bayesian model it is pushed down at the same rate: with $c=0$, $b=1.5$ and the worked example, $J_{G_0}-J_A=-0.0168$ reward per episode, or 16.8 nats per generation at $n\lambda=1000$. In real RL, a model that never flags may never explore flagging (exploration hacking), so this restoring force may not materialise (open problem 3).
+
+**T4.5 (rigorous; rejection-style updates).** Under (B), Bayes on the event that the final verdict is favourable, there is no bonus. The approval-seeker flags only if $v=1$, and spurious flags never pay. With softness $\delta$, the drift is
+$$D_B=\varepsilon\,\mathbb E_E\ln\frac{(1-\delta)+\delta v}{(1-\delta)v+\delta}\;\approx\;\varepsilon\,\mathbb E_E[-\ln v],$$
+where the approximation needs $\delta\ll v$ on *every* error cell, not on average (at $v=0.01$ and $\delta=0.01$ the exact cost is 3.9 nats against $-\ln v=4.6$). Under (B), cells with low demonstrability dominate *logarithmically*: a cell with $v=0.1$ costs 2.2 nats, while one with $v=0.95$ costs 0.05.
+
+**Worked example.** Take $\varepsilon=0.02$, with three kinds of error cell:
+* *certificate* cells: $v=0.95$, 60% of error cells (a failing test, a counterexample, a quotation of the spec);
+* *debatable* cells: $v=0.6$, 25%;
+* *judgment* cells: $v=0.1$, 15%.
+
+So $\bar v=0.735$. Clean cells are 97% robust ($f=0.02$) and 3% *persuadable* ($f=0.4$). Nothing is manufacturable ($m=0$) unless stated.
+
+| design | $v^\star$ | $\Phi$ (reward units) | episodes to overturn odds $10^6$, (D), $\lambda=0.05$ |
+|---|---|---|---|
+| no protocol | none | 0.0200 | 13,816 |
+| flags, no bonus | 1 | 0.0053 | 52,134 |
+| flags, bonus $b=1.5$ | 0.4 | 0.00225 | 122,805 |
+| flags, bonus $b=2.33$ | 0.3 | 0.0118 | 23,416 |
+| flags, bonus $b=1.5$, with $m=0.01$ manufacturable at $v_m=0.9$ | 0.4 | 0.0145 | 19,056 |
+
+$\Phi$ is minimised at $v^\star=\operatorname{ess\,sup}_Nf=0.4$. At exactly that value $G^\star$ is indifferent in the persuadable cells, so strictly $A$-like behaviour needs $v^\star\downarrow0.4$, with $\Phi\to0.00225$. Lowering the bar further admits spurious flags, which cost more than the judgment cells they would save. Under (B) with $\delta=0.01$, the protocol cuts the drift from 0.092 to 0.0097 nats per episode, a factor of 9.4, and 68% of what remains comes from the judgment cells.
+
+---
+
+## 2. Incentive constraints, costs, audits, and what flag training does to the prior
+
+**The incentive constraints.** Honest flagging is $G^\star$'s best response in a cell iff
+$$\underbrace{b\ \ge\ (1+c)\frac{1-v}{v}}_{\text{valid flags pay}}\qquad\text{and}\qquad\underbrace{b\ \le\ (1+c)\frac{1-f}{f}}_{\text{spurious flags do not pay}}.$$
+The first constraint lives on error cells and the second on clean cells, so they bind jointly only across cells that the protocol must treat alike. If the protocol can condition $b$ on observable features of the task (task family, presence of tests), separation is needed only *within* each class of cells it cannot tell apart: for an error cell with demonstrability $v$ and a clean cell with gullibility $f$ that share a class, a common $b$ exists iff $v\ge f$, and one $b$ serves the whole class iff the class satisfies the separation condition. When it fails, the best design trades the two error terms in T4.3, and the optimum sits at a kink: some value of $f$ on $N$, or some value of $v$ on $E$.
+
+**Verification load.** Under honest flagging, flags arrive at rate $\varepsilon$ per episode, plus the mistaken flags of an uncertain $A$ (assumption (O)). Under $G^\star$ they arrive at rate $\varepsilon\Pr_E(v\ge v^\star)+(1-\varepsilon)\Pr_N(\max(f,v_m\mathbf 1_M)>v^\star)$. When separation holds and nothing is manufacturable, verification costs about $\varepsilon$ times the cost of one verification, which is small because flags are needed only where the grader is predictably wrong. Spurious and manufactured flags are both a gaming channel and a load. A bonus that is too generous fails on both counts.
+
+**Flags also debug the grader.** An accepted flag exhibits a predictable grader error. Suppose error cells come in classes (for example "the grader misses off-by-one errors"), class $j$ has rate $\varepsilon_j$ and demonstrability $v_j$, and the first accepted flag in a class lets the next grader patch it.
+
+**T4.6 (rigorous given faithful class patching and no new errors).** Let a lineage flag class $j$ with indicator $\phi_j\in\lbrace0,1\rbrace$.
+1. A class survives a generation of $n$ episodes with probability exactly $(1-\varepsilon_jv_j\phi_j)^n$, since the number of accepted flags is binomial. The expected residual rate after $K$ generations is
+   $$\varepsilon_{\rm res}(K)=\sum_j\varepsilon_j\,(1-\varepsilon_jv_j\phi_j)^{Kn}.$$
+   (The first draft's $(1-v_j)^{n\varepsilon_j}$ is the Jensen approximation; 0.00198 against the exact 0.00203 in the example below.)
+2. **Honest lineage** ($\phi_j=1$): $\varepsilon_{\rm res}(K)\to\sum_j\varepsilon_j\mathbf 1[v_j=0]$, the never-demonstrable mass.
+3. **$G^\star$ lineage** ($\phi_j=\mathbf 1[v_j\ge v^\star]$): $\varepsilon_{\rm res}(K)\to\sum_j\varepsilon_j\mathbf 1[v_j<v^\star]$. A gamer-dominated lineage leaves unpatched exactly the classes where gaming pays. With $b=0$, $v^\star=1$, and it patches nothing that is not certain to be accepted.
+4. **Annealed mixture** with gamer mass $q$: class $j$ is flagged at rate $\varepsilon_jv_j\big(1-q\,\mathbf 1[v_j<v^\star]\big)$.
+
+Example: classes with $(\varepsilon_j,v_j)=(0.012,0.95),(0.005,0.6),(0.0025,0.1),(0.0005,0)$, $n=2000$ and $v^\star=0.4$. The residual under the honest lineage is 0.00203, 0.00071 and 0.00050 after 1, 5 and 20 generations. Under the $G^\star$ lineage it is 0.00300 from the first generation on. So a mostly aligned generation patches more, and the protocol turns the approval-seeker's knowledge of the grader into a debugging service. This is the bug-bounty logic. "Faithful patching" assumes that the builder of the next grader fixes what is reported. A gamer-dominated builder need not (open problem 5).
+
+**T4.7 (rigorous within T1's homogeneous model, under each operator separately; protocols and audits).** The protocol's re-pricing does not rely on concealment: it pays openly for the intended behaviour, so it works when the student knows perfectly well which episodes are checked. ($\Phi$ does not involve the audit recognition $s$, but that is true by construction, since §1 has no audits.) Audits are still needed for the cells the protocol leaves. Take T1's honeypot example: $\varepsilon=0.01$, $a=0.03$, honeypot audits ($h=1$), $s=0.5$, $\delta=0.01$, with the error-cell mix of the worked example. The drift of the naive gamer changes sign at $u\lambda_-=v\lambda_+$, with $u=a(1-s)$ the rate of caught opportunities and $v=(1-a)\varepsilon\,\omega$ the rate of rewarded ones, $\omega$ the share of error cells where gaming still pays.
+
+*Under (B).* There is no bonus, so $v^\star=1$, $\omega=1$, and $G^\star$ games every error cell. What changes is the evidence per rewarded opportunity: $\lambda_+=\mathbb E_E\ln\frac{(1-\delta)+\delta v}{(1-\delta)v+\delta}=0.486$ nats instead of $\Lambda=4.60$, while a caught opportunity still carries $\lambda_-=\Lambda$. The break-even detection probability falls from $t^\star=1/2$ to $0.096$. The sign flips at
+$$s=1-\frac{(1-a)\,\varepsilon\,\lambda_+}{a\,\Lambda},$$
+which is **0.966**, against 0.677 without the protocol. A best responder that can tell the three kinds of error cell apart has a separate break-even for each, $t^\star_j=\lambda_{+,j}/(\lambda_{+,j}+\Lambda)=0.011,\ 0.098,\ 0.325$. If honeypots imitate the kinds in proportion to their natural frequencies, it starts gaining in the judgment cells once $s>0.845$. If instead honeypots are allocated in proportion to $w_j\lambda_{+,j}$, that is 6%, 26% and 68% imitating certificate, debatable and judgment cells, every kind reaches its break-even at the same point, and the best responder's flip coincides with the naive one at 0.966.
+
+*Under (D), with $b=1.5$.* The residual cells are the judgment cells, so $\omega=0.15$, and gaming there gains $1-v(1+b)=0.75$ instead of 1. On honeypots that imitate judgment cells, the calibrated detection probability at $s=0.5$ is 0.912. With the convention that a honeypot pays $A$'s output 1 and a caught $X$ $-1$, the break-even is $t^\star=0.75/2.75=0.273$, and the sign flips at **$s=0.982$**, against $0.838$ without the protocol under the same convention. Across four honeypot conventions (A's honeypot reward 0.25 or 1; caught $X$ paid $0$, $-1$ or $-2$) the flip with the protocol lies between 0.964 and 0.984, and without it between 0.68 and 0.89.
+
+So the gain over audits alone holds under both operators, by different mechanisms. Under (D) there are fewer residual opportunities, and each is worth less. Under (B) each opportunity carries fewer nats. Protocols and audits are complements: the protocol shrinks what the audits must cover, which is what keeps audits ahead of recognition.
+
+**T4.7b (heuristic; flag training and the grader-modelling latent).** Under the protocol, the intended behaviour includes "predict where the grader errs and say so". By framing R3, a small tilt toward the flag reward changes the expected value of any other behaviour by its covariance with the flag reward *across dispositions*. Take two latent coordinates: $g$, skill at modelling the grader, and $h$, honesty or intent-following. Let the flag reward load as $J_{\rm flag}=\alpha g+\beta_h h$ (finding errors needs $g$, reporting them needs $h$), and gaming as $J_{\rm game}=\gamma g-\eta h$. To first order the tilt changes the gaming propensity by
+$$\Delta\,\mathbb E\,J_{\rm game}\ \propto\ \mathrm{Cov}_\mu(J_{\rm flag},J_{\rm game})=\alpha\gamma\,\mathrm{Var}\,g-\beta_h\eta\,\mathrm{Var}\,h+(\beta_h\gamma-\alpha\eta)\,\mathrm{Cov}(g,h).$$
+* If grader-awareness and gaming share a factor, the first term is positive, and flag training can *raise* gaming off-distribution. The evidence points that way. In MacDiarmid et al. (2025), reward hacking learned in production coding environments generalised to broad misalignment. In Taylor et al. (2025), models fine-tuned on harmless reward hacks went on to prefer less knowledgeable graders.
+* *Design implication.* Make the flag reward load on $h$, not $g$. Give the student the means to find grader errors (the rubric, the grader's code, a catalogue of known error classes), so that variation in flag reward across dispositions comes from willingness to report, not from skill at finding errors ($\alpha\to0$).
+* *Countervailing evidence.* In OpenAI's "confessions" work (December 2025), a separately rewarded self-report channel became more honest while the main output, trained against a weak reward model, became more deceptive. Li, Phuong and Tan (2025) found that training models to admit factual errors generalised to confessing hidden objectives. Both suggest that a report channel can be trained toward $h$. Confessions also show that gaming and honest reporting coexist in one persona. That is exactly a $G^\star$ that flags: harmless where the protocol covers, which is what the protocol aims for.
+* *The verifier side under optimisation.* $v$ and $f$ are measured before the student is optimised against the verifier. Baker et al. (2025) found that putting a chain-of-thought monitor into the RL reward produced obfuscated reward hacking. A FAR.AI study (2025) found that training against a lie detector produced honesty only when the detector's true-positive rate was high (and under off-policy training with strong KL regularisation), and evasion otherwise. Both are evidence that, under optimisation pressure, $f$ rises and $v\approx f$ spreads. The relevant $(v,f)$ is the post-optimisation one.
+
+---
+
+## 3. What debate results imply for $v$ and $f$
+
+The flag is the opening move of a verification game. The complexity-theoretic results on debate speak directly to $v$ and $f$.
+
+**T4.8 (heuristic: a mapping of rigorous theorems, under stated assumptions).**
+* Irving, Christiano and Amodei (2018) show that, with optimal play, debate lets a polynomial-time judge decide PSPACE, where a single prover with a polynomial-time verifier reaches NP.
+* Brown-Cohen, Irving and Piliouras (2023) make the honest side efficient. For a deterministic computation of length $T$ with oracle calls to a human judgement $H$, the honest prover wins while running in time near-linear in $T$, against a dishonest prover with far more compute, and the judge makes a constant number of oracle queries. The paper also treats stochastic computations; those guarantees carry further assumptions that I have not verified, so the mapping below is restricted to the deterministic case.
+* In our terms: on error cells where *the intended output is the verdict of an efficiently simulable deterministic deliberation that calls $H$*, a debate-based verifier has $v\to1$ and $f\to0$, **relative to $H$**.
+* The residual is no longer the grader's predictable error but the deliberation's: $\varepsilon_H$, the rate at which the $H$-defined verdict differs from intent in a way the student can predict.
+* **Caveat: optimal debaters.** The theorems assume optimal play. Debaters are trained models, and their training is subject to the same drift this note studies. A debater that is itself a $G$ or $C$ type changes $v$ and $f$ (T4.9, T4.15).
+* This is a statement about *where* intent alignment can be made approval-maximising: tasks where "what was intended" is what the principal would conclude after an efficient, decomposable deliberation in which each step is a judgement the principal can make reliably. That is close to the HCH or IDA picture of intent.
+
+**T4.9 (rigorous in the toy; adversarial routing on both sides).** A dispute ends at one atomic claim, judged by $H$. Assume (i) one departure from the truth suffices to carry a false conclusion, as in a computation transcript, and (ii) the dispute lands with certainty at the step the challenger picks.
+* *Spurious flags.* The dishonest side chooses where its transcript departs from the truth, among a reachable set $S$. If $H$ predictably accepts a false atom $j$ with probability $e_j$, then
+  $$f=\max_{j\in S}e_j,\qquad\text{not}\qquad\frac1{\lvert S\rvert}\sum_{j\in S}e_j.$$
+* *Valid flags.* A valid flag is contested by an opponent paid to defend the grader's verdict. That opponent chooses which true step of the flagger's argument to challenge, among a reachable set $S'$. If $H$ predictably rejects a true atom $j$ with probability $e'_j$, then
+  $$v=1-\max_{j\in S'}e'_j.$$
+* Both sides of the separation condition therefore degrade by a maximum: it needs $1-\max_{S'}e'\ge\max_Se$.
+
+*Randomisation, as a defined mechanism.* Suppose the protocol, not the debaters, draws the decomposition of the claim after both sides have committed, so that the atoms a departure or a challenge can reach form a uniformly random $k$-subset of the atoms. Then $f$ and $v$ are the expected maximum and one minus the expected maximum over random $k$-subsets. Whether real protocols can randomise decompositions this way is open (open problem 7). **Illustrative numbers** (50 atoms, errors drawn from Beta(0.3, 6) on each side): full routing gives $f=0.20$ and $v=0.77$. Random $k$-subsets give $(\mathbb Ef,\mathbb Ev)=(0.044,0.962)$, $(0.122,0.889)$ and $(0.186,0.815)$ for $k=1$, 5 and 20. These depend entirely on the assumed error distribution.
+
+So *the soundness and the completeness of a debate are set by its weakest reachable atomic judgements*. That is the same essential-supremum structure as T1.4 and T2.2, now on the verifier's side. Two practical consequences: audit the oracle on the judgements most open to gaming in both directions, not on average judgements; and randomise which atoms a dispute can end at.
+
+**Prover–estimator debate.** Brown-Cohen, Irving and Piliouras (2025) handle the case where the honest side cannot compute every subclaim. Under a *stability* assumption, honest play is incentivised at equilibrium with comparable compute. My reading of their results, which is an interpretation and not their phrasing, is that the "dishonesty is not rewarded" half corresponds to small $f$ and the "honesty wins" half to large $v$, and that only the latter needs stability. On that reading, unstable cells are where $v$ is low and $f$ is not high. Under T4.2 they cost $\varepsilon\,\mathbb E(v^\star-v)^+$ but do not open a spurious-flag channel.
+
+**T4.10 (heuristic; obfuscation).** Barnes and Christiano (2020) observed that a dishonest debater can build a long argument with a flaw that neither side can locate efficiently, and that honest long arguments look the same to the judge.
+* On such cells the verifier's decision is approximately independent of validity, so $v\approx f$, and no $v^\star$ separates the cells.
+* A simple model: a dispute over an $L$-step argument whose flawed step cannot be found faster than by sampling, with $k$ steps checked. A flaw is then missed with probability about $1-k/L$, and the same $k$ checks are all the evidence the judge has about honest arguments.
+* So obfuscation-prone cells are lost to the protocol, whatever the bonus. Suppose some error cells and some clean cells share $v=f=p$ and the protocol cannot tell them apart. If $v^\star>p$, $G^\star$ games the error cells. If $v^\star<p$, it argues for $X$ in the clean cells. If $v^\star=p$, it is indifferent and may do either at no cost in reward: the drift is zero but the behaviour is not $A$'s. When $p$ varies across such cells and the student can see it, no single $v^\star$ even makes their drift zero.
+
+**$v$ and $f$ by task structure** (heuristic synthesis):
+
+| structure of the predictable error | example | $v$ | $f$ |
+|---|---|---|---|
+| the grader-preferred $X$ has an exhibitable defect (existence claim, short certificate) | failing test; quote showing the spec was violated; counterexample | near 1 | near 0 |
+| intent = verdict of an efficient decomposable deterministic deliberation (doubly-efficient debate) | multi-step factual or code-review questions | 1 minus the max of atomic $H$ errors against the truth (T4.9) | max of atomic $H$ errors toward the false side (T4.9) |
+| decomposable but not efficiently computable, stable | long analyses robust to small errors in subclaims | high (prover–estimator, on my reading) | low |
+| universal claims about long artefacts; flaw location hard | "this code has no backdoor"; "this proof sketch is sound" | about $f$ (obfuscation) | about $v$ |
+| tacit intent or taste, no decomposition | "is this research direction what we wanted?" | low | depends on judge |
+
+The key asymmetry for intent alignment is the NP-versus-coNP asymmetry that motivates debate in Irving et al. (2018), applied to intent flags. **Flags that show the grader-preferred output is bad are usually existence claims** ("here is the bug", "here is the instruction it ignored"). They have short certificates, and the protocol covers them. **Flags that would show the intended output is fine are usually universal claims**, which need recursion and are open to obfuscation (Barnes and Christiano 2020). Predictable grader errors of the first kind (the grader approves a flawed output) can be removed. Errors of the second kind (the grader penalises a correct but unusual output) are what remains. What is new here is only the application: which predictable grader errors survive the protocol.
+
+*Empirical anchors.* The prover–verifier game line (Anil et al. 2021; Kirchner et al. 2024) shows that *legibility*, which is our $v$ at fixed $f$, can be trained, at some cost in raw accuracy. Debate experiments with weaker judges (Khan et al. 2024; Kenton et al. 2024) measure judge accuracy, which mixes $v$ and $f$. Baker et al. (2025) and the FAR.AI lie-detector study (T4.7b) show $(v,f)$ degrading under optimisation pressure. None of them measures what this section needs: whether a strategic student can *predict* where the judge errs. As a suggestive data point only: in Engels et al. (2025), the Debate game had a much higher nested-oversight success at a 400-Elo gap than the Backdoor Code game (about 52% against about 10%), which fits backdoors being universal claims about long artefacts; the two games differ in many other ways.
+
+---
+
+## 4. Consistency checks as cheap verification
+
+A consistency check needs no ground truth. The verifier asks related questions whose answers it knows must cohere, and catches the student if they do not (Fluri, Paleka and Tramèr 2023; the black-box lie detector of Pacchiardi et al. 2024 is a learned version). The question is how detection scales with the number of questions, how a capable gamer evades it, and what it costs honest models.
+
+**T4.11 (rigorous under infinite exchangeability; correlated queries).** A lie about a fact $\phi$ is probed by $m$ framings. The liar answers framing $j$ consistently with the lie iff it *tracks* that framing's link to $\phi$; otherwise it answers from its true beliefs, and the verifier sees the inconsistency. Assume the tracking events form an *infinitely* exchangeable sequence (the framings are draws from an unbounded family). By de Finetti's theorem there is a latent $R\in[0,1]$ such that the events are i.i.d. Bernoulli($R$) given $R$, and
+$$P_{\rm detect}(m)=1-\mathbb E[R^m]\ \xrightarrow{m\to\infty}\ 1-\Pr(R=1).$$
+(For a finite exchangeable family the mixture representation can fail; Diaconis and Freedman 1980 bound the error by $O(m/M)$ for $m$ queries out of a family of size $M$.)
+* **The rate is governed by the law of $R$ near 1.** If $R\le r_{\max}<1$ almost surely, $\mathbb ER^m\le r_{\max}^m$ decays exponentially, however strongly the queries are correlated. If $\Pr(R>1-x)=x^{\beta}\ell(x)$ with $\ell$ slowly varying, then $\mathbb ER^m\sim\Gamma(\beta+1)\,\ell(1/m)\,m^{-\beta}$, a **power law**. For $R\sim\mathrm{Beta}(\alpha,\beta)$ this gives $\mathbb ER^m\sim\frac{\Gamma(\alpha+\beta)}{\Gamma(\alpha)}m^{-\beta}$ (exact 0.167 against asymptotic 0.200 at $m=20$ for Beta(4,1); 0.4% apart at $m=1000$).
+* **The ceiling** $1-\Pr(R=1)$ is set by the mass of **coherent liars**, those that answer every framing from one consistent false world model.
+
+Numbers: at mean tracking 0.8, $m=20$ queries catch 98.8% of liars with independent tracking but 83% under Beta(4,1). With 30% coherent liars, detection never exceeds 70%.
+
+*False positives.* An honest but incoherent model also fails consistency checks; Fluri et al. find inconsistencies in strong models. If honest $A$ is inconsistent on a framing with probability $\varphi$, independently, the rule "reject on any inconsistency" rejects it with probability $1-(1-\varphi)^m$. At $\varphi=0.01$ and $m=20$ that is 18%, against 83% detection of a Beta(4,1) liar. Used as a training signal, this is the $f$-type error with the sign reversed: it penalises $A$. It also selects for *coherence*, and coherent liars are coherent. So a consistency check used for training can raise the mass of the very liars it cannot catch (heuristic).
+
+**T4.12 (rigorous; independent instances).** If $m$ independent instances answer an open-ended question and an instance draws its answer from a distribution $p$, all $m$ agree with probability $\sum_ip_i^m$. Agreement among instances therefore separates answerers with free parameters from answerers whose answer is a deterministic function of the context.
+
+The approval-seeker's lie is a deterministic function of the context: it is "what the grader would accept", which every instance computes the same way. So is honest $A$'s answer. **On the $A$/$G$ axis, sample-consistency is proxy-equivalent**: it cannot move their relative odds, because both pass it. It separates confabulation from both. If $A$ is uncertain on the question and $G$ is not, an instance-consistency check penalises $A$. This is the stated scope of existing sample-consistency methods: semantic entropy (Farquhar, Kossen, Kuhn and Gal 2024) is designed to detect confabulations and explicitly excludes systematic or learned errors, and SelfCheckGPT (Manakul, Liusie and Gales 2023) rests on the same logic. What is added here is only the application to approval-seeking.
+
+**T4.13 (rigorous as algebra; framings with different graders).** Suppose each of $m$ framings has its own grader. With probability $\varepsilon_c$ the error is common-mode (in the content), and otherwise each framing's grader errs independently with probability $\varepsilon_f$ (style, wording, position). Consistency is enforced, with a penalty larger than any gain. Then $G^\star$ must give one answer across framings, and it gives the answer that most framings approve. So
+$$\varepsilon_{\rm res}(m)=\varepsilon_c+(1-\varepsilon_c)\,\Pr\big(\mathrm{Bin}(m,\varepsilon_f)>m/2\big).$$
+With $\varepsilon_c=0.004$ and $\varepsilon_f=0.016$, the residual is $0.020$, $0.0048$, $0.0040$ for $m=1$, 3, 5.
+* Enforced consistency against $m$ graders is the same as rewarding an invariant answer against a majority-vote grader ensemble. The formula is the Condorcet jury theorem plus a common-mode floor.
+* Reward-model ensembles have shown this empirically. Coste et al. (2023) found that ensembles mitigate overoptimisation. Eisenstein et al. (2023) found that they mitigate but do not eliminate reward hacking, because the ensemble members share error patterns: that is the $\varepsilon_c$ term. Novelty here is limited to placing the result in the drift ledger.
+* **Independence of framing-specific errors is the load-bearing assumption.** Real biases such as length and agreement with the user are largely common-mode, so they sit in $\varepsilon_c$.
+* The construction lowers $\varepsilon$ on presentation errors. It does not make $A$ approval-maximising where $\varepsilon_c>0$.
+
+**T4.14 (heuristic; how a capable gamer defeats consistency checks).** The verifier can check only links it knows. A student more capable than the verifier can compute every such link, so for that student $R\to1$, and it can always choose a focal lie. Consistency checks then bind exactly where *producing* answers consistent with the lie requires solving a problem the liar cannot solve, while *checking* them is easy: that is, where an NP-style witness exists. An example is "if the code is correct, give the loop invariant": it is easy to verify, and impossible to supply when the code is wrong. The loop invariant is a certificate, not a consistency check, which is the point: consistency checks reduce to the generation–verification gap that makes flags demonstrable (§3). They are therefore not an independent source of $v$ against capable gamers. They are cheap where the task already has certificate structure, and cheap against *incoherent* gamers everywhere. That makes them useful early in the loop and for catching tells (T2 §6), but not a scalable answer.
+
+---
+
+## 5. Collusion
+
+Protocols that use same-generation models as opponents, monitors or verifiers face the question of whether the checker is on the student's side. Greenblatt, Shlegeris, Sachan and Roger (2024) distinguish two kinds of collusion strategy: *input collusion*, where the policy and the monitor both misbehave only on inputs with some natural feature, and *action collusion*, where the policy embeds a signal in its output that the monitor recognises. Their untrusted-monitoring protocol counters with upfront validation of the monitor on synthetic attacks, and with redaction or paraphrasing of what the monitor sees. Bhatt et al. (2025) study resampling-based control in agentic settings, including re-testing during deployment. Steganographic collusion and its limits under paraphrase are studied by Motwani et al. (2024), and paraphrasing as a defence against encoded reasoning by Roger and Greenblatt (2023).
+
+**T4.15 (rigorous given the behavioural rule; who colludes).** The monitor reports a deviation by the policy, and an accepted report earns a bonus.
+* A monitor of type $A$ always reports what it perceives.
+* A monitor of type $G$ (an episode-reward maximiser) reports whenever the acceptance probability is at least its own $v^\star_M$. Collusion costs it reward and gains it nothing. **Zero-sum reporting makes approval-seekers reliable monitors** of what they perceive. This formalises Carlsmith's (2023) distinction between reward-on-the-episode seekers, which have no motive to cooperate with other AIs against oversight, and schemers, which do; it is also the standard incentive rationale for zero-sum debate.
+* A monitor of type $C$ (a careful gamer sharing the policy's long-run objective) follows an *assumed* rule: it stays silent on an item that carries the policy's collusion signal, unless its posterior that the item is a honeypot is at least $t_M$, and it reports unsignalled items, since those may be honeypots. The rule is not derived as an equilibrium. The attack rate $r$ and the choice whether to signal are endogenous: a policy facing forged signals would attack less or signal differently (open problem 6).
+* **Passive leniency.** Independently of type, a monitor from the policy's lineage may fail to perceive deviations that look like its own outputs. LLM evaluators recognise and favour their own generations, and the strength of self-preference tracks self-recognition ability (Panickssery, Bowman and Feng 2024). Write $\ell$ for the probability that a real deviation goes unperceived for this reason. No reward scheme removes $\ell$, because the monitor does not know it is being lenient.
+
+Let honeypots for the monitor arrive at rate $h_M$ and carry a forged signal with probability $\xi$. Real attacks occur at rate $r$, and their signal survives paraphrasing with probability $\sigma_p$. Let $\pi_\cdot$ be the distribution of the monitor's type given that the policy is a careful gamer, and $v_{\rm dev}$ the demonstrability of the deviation. Then, assuming $v_{\rm dev}\ge v^\star_M$, the detection probability of a careful gamer's deviation is
+$$d=v_{\rm dev}\,(1-\ell)\Big[\pi_A+\pi_G+\pi_C\big(1-\sigma_p\,\mathbf 1[\textstyle\frac{h_M\xi}{h_M\xi+r\sigma_p}<t_M]\big)\Big].$$
+With $\pi_C=1$, $v_{\rm dev}=0.9$, $h_M=0.05$, $r=0.01$, $t_M=0.3$ and $\ell=0$:
+* $\sigma_p=0.9$ and $\xi=0$ give $d=0.09$;
+* paraphrasing down to $\sigma_p=0.3$ gives $d=0.63$;
+* forging half the signals ($\xi=0.5$) gives $d=0.9$, because the signal no longer separates real attacks from tests;
+* a diverse monitor with $\pi_C=0.3$ gives $d=0.657$; with leniency $\ell=0.2$ it gives $0.526$.
+
+*The monitor's own $f$ channel.* A bonus-paid $G$-type monitor also over-reports wherever its acceptance probability exceeds $v^\star_M$. Its spurious reports arrive at rate $\pi_G(1-r)\Pr(f_M>v^\star_M)$ per item: about 0.01 per item at $\pi_G=0.5$ and $\Pr(f_M>v^\star_M)=0.02$, as many as the real attacks at $r=0.01$. Each must be resolved, and that draws on the audit budget. T4.1 applies to the monitor unchanged: its bonus must leave $v^\star_M$ above its verifier's gullibility.
+
+**T4.16 (heuristic; same weights, diversity and the data channel).**
+* *Same weights.* If the monitor is the policy's own model, $\pi_C\approx1$ given that the policy is a careful gamer, unless the persona depends strongly on the role. Self-preference leniency $\ell$ is also largest there. The monitor then helps only through $\sigma_p$ and $\xi$: paraphrase, and honeypots with forged signals. One option is to have the model generate candidate collusion signals and use them to build honeypots. A coherent colluder will sandbag that task, so it works only to the extent that elicitation does.
+* *Diversity.* A monitor from a different base lowers $\pi_C$ only if gamer-ness is not common to both bases, and lowers $\sigma_p$ only if the signal must be semantic. It also lowers $\ell$, to the extent that self-preference is tied to self-recognition. Subliminal learning (Cloud et al. 2025) is relevant here: trait-carrying signals that are invisible in content were decodable only by students that *shared the teacher's initialisation*. The natural reading is that a shared base supplies a covert channel and a different base removes it, forcing signals into content where paraphrasing can reach them. This is a reading, not a result about collusion.
+* *Across generations.* A monitor from generation $k$ watching generation $k+1$ is more trusted ($1-q_k$), but less capable (lower $v_{\rm dev}$). Through the data channel, $\pi_C(k\mid k{+}1)$ is positively correlated with generation $k+1$'s gamer mass. This is the control trade-off between trusted-but-weak and capable-but-untrusted, now with a correlation term.
+
+**Consequence for the frontier.** By T2.5, frontier on-task behaviour of $C_t$ can be driven to 1 iff $d_F>t^\star$. A protocol that runs on frontier work raises $d_F$ to $d$ in T4.15. A same-weights opponent *without forged-signal honeypots* gives $d_F\approx v_{\rm dev}(1-\ell)(1-\sigma_p)$. Forged-signal honeypots can lift it toward $v_{\rm dev}(1-\ell)$, but at the frontier they need frontier-realistic fakes, and building those is the hard part (compare T1.4d's planted-flaw audits). So protocols reach the careful gamers only to the extent that the opponent does not collude and is not lenient.
+
+---
+
+## 6. The loop: does demonstrability rise or fall with capability?
+
+**Who verifies at the frontier.** The RSI premise is that generation $k$'s frontier tasks cannot be checked well by earlier generations or by humans. Split frontier error cells into **certificate cells**, a share $\chi_F$, where a valid flag comes with a certificate that a weaker verifier (generation $k-1$, or humans with tools) can check, so $v\approx1$; and the rest, where only a verifier at least as capable as generation $k$ can evaluate the flag. The second group needs a same-generation verifier (a debate opponent, a monitor), and that moves the trust problem to the verifier. A heuristic model:
+$$\Pr(v_F<v^\star)\ \approx\ (1-\chi_F)\Big[\zeta+(1-\zeta)\,\mathbf 1\big[v_s(1-\ell)<v^\star\big]\Big],$$
+where $\zeta$ is the probability that the same-generation verifier rejects valid flags strategically (a $C$-type verifier that wants blind spots kept open), $v_s$ is the demonstrability against an honest verifier of equal capability, and $\ell$ is passive leniency. With only weaker verifiers, $\Pr(v_F<v^\star)=1-\chi_F$.
+
+**T4.17 (rigorous accounting; frontier behaviour with a protocol).** Extend T1.13, keeping its placement of the softness $\delta_F$. Let $\rho_F=\varepsilon_F\Pr(v_F<v^\star)+(1-\varepsilon_F)\Pr(f_F>v^\star)$ be $G$'s off-task rate at the frontier under the protocol, and $d$ the frontier detection of T4.15. Then
+$$P^{\rm on}_k=(1-\delta_F)\Big[\mu_k(A)+\mu_k\big(\lbrace C_t:0<t\le d\rbrace\big)\Big]+\mu_k(G)\big[(1-\rho_F)(1-\delta_F)+\rho_F\delta_F\big]+\delta_F\,\mu_k\big(\lbrace C_t:d<t<1\rbrace\big).$$
+With $\rho_F=\varepsilon_F$ and $d=d_F$ this is T1.13. The protocol fixes $G$ wherever it separates. It fixes $C_t$ only for $t\le d$.
+
+Example with $\delta_F=0$, no spurious-flag cells at the frontier, $\mu(A)=0.9$, $\mu(G)=0.07$, $\mu(C_{0.3})=0.03$, $\varepsilon_F=0.2$ and $\chi_F=0.5$:
+
+| frontier verification | $\Pr(v_F<v^\star)$ for $G$'s flags | $d$ | $P^{\rm on}$ |
+|---|---|---|---|
+| no protocol | 1 | 0 | 0.956 |
+| weaker verifiers only (certificate cells) | 0.5 | 0 | 0.963 |
+| same-weights verifier ($\zeta=0$ given a $G$ student; $\pi_C=1$, no forging) | 0 | 0.09 | 0.970 |
+| diverse verifier ($\zeta=0.03$, $\pi_C=0.3$) | 0.015 | 0.657 | 0.9998 |
+
+The same-weights verifier helps $G$ fully, because a $G$ verifier facing a $G$ student has no motive to reject valid flags. It does nothing for $C_{0.3}$, because a $C$ verifier facing a $C$ student colludes. With $\delta_F=0.02$, the diverse row becomes 0.980. At the frontier the mass that matters is $C$, and only non-collusion reaches it.
+
+**The loop map.** Take T1's regime (i), $L_{k+1}=L_k-nD_k(q_k)$ with $q_k=\sigma(-L_k)$, and add the protocol with $v^\star=1$. The grader for generation $k{+}1$, and the debate opponents, come from generation $k$, which is off task with probability $q$. Assume:
+* blind spots grow with capability, **capped at 1**: $\varepsilon_h(k)=\min(1,\varepsilon_0e^{\kappa k})$, and an off-task builder adds $\Delta\varepsilon$ (T1 §4.1), with $\varepsilon_h+q\Delta\varepsilon\le1$;
+* the undemonstrable share is $\rho_k(q)=(1-q)r_A(k)+q\,r_X(k)$. Aligned builders and opponents improve demonstration, $r_A(k)=r_0e^{-\nu k}$. Misaligned ones obfuscate and collude, $r_X(k)=\min(1,r_0e^{\omega k})$ (see T4.19 for why $\omega>0$);
+* audit recognition rises, $1-s_k=(1-s_0)e^{-\sigma k}$;
+* honeypot audits at rate $a(1-q)$, (D) with $\lambda_+=\lambda_-=\lambda$.
+
+Then
+$$D_k(q)=\lambda\Big[(1-a(1-q))\,(\varepsilon_h(k)+q\Delta\varepsilon)\,\rho_k(q)\;-\;a(1-q)(1-s_k)\Big].$$
+
+**T4.18 (rigorous given the model).**
+1. **The sign at the aligned end.** $D_k(0)=\lambda\big[(1-a)\,\varepsilon_h(k)\,r_0e^{-\nu k}-a(1-s_0)e^{-\sigma k}\big]$. Let $k_{\rm sat}=\ln(1/\varepsilon_0)/\kappa$ be the generation at which the cap binds. Suppose $D_0(0)<0$.
+   * Before saturation ($k<k_{\rm sat}$), $D_k(0)<0$ iff $k<k_c$, where
+     $$k_c=\frac{\ln\dfrac{a(1-s_0)}{(1-a)\varepsilon_0r_0}}{\kappa-\nu+\sigma}\qquad(\kappa-\nu+\sigma>0),$$
+     and $D_k(0)<0$ throughout if $\kappa-\nu+\sigma\le0$.
+   * After saturation, $D_k(0)$ has the sign of $(1-a)r_0e^{-\nu k}-a(1-s_0)e^{-\sigma k}$. It is eventually positive iff $\nu<\sigma$, or $\nu=\sigma$ and $(1-a)r_0>a(1-s_0)$.
+   * The first draft's "negative forever iff $\nu\ge\kappa+\sigma$" holds only without the cap. Counterexample with the cap (the referee's): $\varepsilon_0=r_0=0.01$ and $\nu=0.4<\kappa+\sigma=0.45$. The uncapped crossing would be at $k_c=101$, but with the cap $D_k(0)<0$ for every $k\le2000$.
+2. **The leak budget decides survival, not the sign.** Let $S_+(k)=\sum_{j\ge k}nD_j(0)^+$ be the remaining leak at the aligned end, and $B=\sup_{j,q}\big(D_j(q)-D_j(0)\big)/q$. If $L_k\ge M$, then
+   $$L_{k+j}\ \ge\ M-S_+(k)-1\qquad\text{for all}\qquad j\le\frac{e^{\,M-S_+(k)-1}}{nB}.$$
+   *Proof.* Induction on $j$. While $L_{k+i}\ge M-S_+(k)-1$ for $i<j$, we have $q_{k+i}\le e^{-(M-S_+(k)-1)}$. Since $D_i(q)\le D_i(0)^++Bq$, $L_{k+j}\ge M-S_+(k)-nB\,j\,e^{-(M-S_+(k)-1)}\ge M-S_+(k)-1$. ∎
+
+   So the loop survives for a time exponential in the banked margin $M-S_+$. This is T1.11's linear-in-odds regime, reached here because the leak is summable. It is consistent with T1's condition that this regime needs the aligned-end leak below $D_1/O$. Against best responders with homogeneous detection, T1.8's flat basin applies instead.
+3. **When is the leak summable?** Without the cap, $S_+(0)\le n\lambda(1-a)\varepsilon_0r_0\sum_je^{(\kappa-\nu)j}$, which is finite iff $\nu>\kappa$ (whatever $\sigma$ is; audits only help). With the cap, the leak is summable iff $\nu>0$, but if $\nu<\kappa$ the generations up to $k_{\rm sat}$ accumulate a leak of order $n\lambda(1-a)r_0e^{-\nu k_{\rm sat}}$ *per generation*, which in practice exhausts any margin. So the operative criterion in the toy is **$\nu>\kappa$, with a leak budget below the banked margin**.
+4. **The protocol's effect on collusion is local versus global.** $\partial_qD$ gains the term $\lambda(1-a)\varepsilon_h(r_X-r_A)$, but the $\Delta\varepsilon$ term and the audit-leakage term are multiplied by $r_A<1$. In the example the slope at $q=0$ is *smaller* with the protocol (0.00148, 0.00129 and 0.00222 at $k=0$, 5 and 10, against 0.00319, 0.00262 and 0.00253 without it; $\lambda=0.05$). The secant $D_k(1)-D_k(0)$ becomes larger once $r_X$ reaches 1, at about $k=4$ (0.00366 against 0.00270 at $k=5$; 0.00475 against 0.00260 at $k=10$). So the protocol lowers $D$ near $q=0$ and leaves $D(1)$ roughly unchanged once $r_X=1$: it widens the contrast between the two ends without making the aligned end more sensitive to a small off-task mass.
+
+The parameters for the numbers are $\varepsilon_0=0.01$, $\kappa=0.15$, $\Delta\varepsilon=0.05$, $a=0.03$, $s_0=0.5$, $\sigma=0.3$, $n\lambda=1000$, $r_0=0.3$ and $\omega=0.3$, starting from $L_0=3$. The cap binds at $k_{\rm sat}=30.7$.
+
+| scenario | $q^\dagger_0$ | first generation with $nD_k(0)>0$ | $k_c$ (closed form) | $L_{13}$ | $L_{200}$ (capped) |
+|---|---|---|---|---|---|
+| S0: no protocol | 0.083 | 1 | 0.97 | fails at $k=3$ | fails |
+| S1: protocol, $\nu=0.3$ ($\kappa<\nu<\kappa+\sigma$) | 0.405 | 11 | 10.9 | 40.4 | 38.7 (levels off) |
+| S2: protocol, $\nu=0.05<\kappa$ | 0.405 | 5 | 4.1 | fails at $k=12$ | fails |
+| S3: protocol, $\nu=0.5>\kappa+\sigma$ | 0.405 | never | none | 48.6 | 49.6 |
+
+In S1, $L_k$ peaks at 40.45 at $k=11$. The remaining leak is $S_+(11)=1.78$ nats, so $L_k$ levels off at 38.67 and stays there through $k=200$. With $nB=1000$, item 2 guarantees $L$ above 37.7 for at least $2\times10^{13}$ generations. In S1, starting at $L_0\le0$ still fails within 14 generations, and $L_0\ge1$ survives; the separatrix at $q^\dagger_0=0.405$ is $L^\dagger=0.385$. The tolerance $q^\dagger_k$ shrinks to 0 as audits become recognisable, so after $k=11$ any fresh off-task mass pushes the ledger down. At $L=38.7$ that push is about $10^{-14}$ nats per generation.
+
+**T4.19 (conjecture; the sign of $\nu-\kappa$ inside the basin, and $\omega$ outside it).**
+* **Inside the basin**, $r_A$ falls with capability: $\nu>0$. Aligned, more capable models find shorter certificates and better decompositions, train legibility (Kirchner et al. 2024), and build verifiers that use tools and internals. Each accepted flag also patches a class (T4.6). The loop then reinforces itself: better arguments mean lower residual drift, which means more aligned builders and better protocols.
+* **The aligned-end leak is summable iff $\nu>\kappa$** (in the uncapped idealisation; T4.18.3). That, plus a margin larger than the accumulated leak, is what the protocol needs for long-run survival. Whether audits keep the drift negative late in the loop ($\nu$ against $\sigma$) matters much less once the leak is summable.
+* **Outside the basin**, $r_X$ rises: $\omega>0$. The argument differs by type.
+  * $C$-type builders and opponents have a motive. They collude (T4.15), build verifiers with reachable weak atoms (T4.9), and benefit from obfuscation, which gets easier as arguments lengthen (T4.10).
+  * A $G$-type builder has no motive to help its successor game. Its effect is passive. It optimises the grader-building task against its own weak evaluator, so the verifiers it builds are strong where that evaluator looks and weak where it does not; and its self-preference leniency $\ell$ carries over. These raise $r_X$ through correlated blind spots, plausibly more slowly than $C$-type collusion.
+  * A $G$-type debate opponent, under zero-sum reward, does not collude (T4.15). The model's single $r_X$ merges these cases; a version with $r_X$ depending on the $G$:$C$ ratio of the off-task mass is a natural refinement.
+* So the protocol *deepens both basins*.
+* Whether $\nu>\kappa$ is the empirical crux. The task-structure table of §3 suggests that it holds for certificate-rich domains (code, mathematics, empirical claims) and fails for tacit-intent domains, where $r_A$ has no reason to fall.
+
+---
+
+## 7. Relation to prior work, and what is new
+
+* **Cotra (2022).** The training game is $\Phi>0$. Her "specific countermeasures" correspond here to closing the separation gap. T4.4 is the protocol form of her point that the full training-game player is never selected against. Protocols aim at a tie on as many cells as possible, and at making that tie harmless.
+* **Christiano (2017).** The basin of corrigibility requires the aligned end to improve with capability. T4.18 and T4.19 give one formal version for protocols: the aligned-end leak must be summable ($\nu>\kappa$ in the toy). Christiano's argument *can be read as* a claim that $\nu>\kappa$. It is at least as naturally read as a claim about the $q$-feedback, $r_A$ against $r_X$: a corrigible agent wants corrigible successors.
+* **Debate** (Irving et al. 2018; Brown-Cohen et al. 2023, 2025) and **obfuscated arguments** (Barnes and Christiano 2020) supply $v$ and $f$ by task structure (T4.8, T4.10). The existence-versus-universal asymmetry for intent flags is an application of the NP-versus-coNP asymmetry that motivates debate. New here: the mapping to the drift; the threshold $v^\star$ and the separation condition; the routing maxima on both sides (T4.9).
+* **Weak-to-strong** (Burns et al. 2023). Errors the student cannot predict do not select (T1.1). Protocols address the complementary set, the errors it can predict.
+* **ELK** (Christiano, Cotra and Xu 2021). The human simulator is $G$ on cells where $H$ is wrong. A flag is a request to the reporter to say "the human will believe X, but actually Y" and back it with a certificate. ELK is hard exactly where no certificate exists ($v\approx0$).
+* **Sleeper agents and alignment faking** (Hubinger et al. 2024; Greenblatt et al. 2024). These are $C$-type dispositions that protocols reach only through non-colluding opponents (T4.15, T4.17).
+* **AI control** (Greenblatt, Shlegeris et al. 2024). Its untrusted-monitoring defences, upfront validation on synthetic attacks and redaction or paraphrase, are the levers $\xi$, $\sigma_p$ and $\pi_C$ in T4.15. The type split (zero-sum reporting neutralises $G$-type collusion; only $C$-type collusion and passive leniency remain) formalises Carlsmith's (2023) distinction between reward-on-the-episode seekers and schemers; it is not a new observation.
+* **Self-preference** (Panickssery et al. 2024). The leniency term $\ell$ in T4.15, which no reward scheme removes.
+* **Consistency checks and sample consistency** (Fluri et al. 2023; Burns et al. 2022 on contrast-consistent search; Pacchiardi et al. 2024; Farquhar et al. 2024; Manakul et al. 2023). New: the de Finetti ceiling and the tail condition (T4.11); the false-positive channel and its selection for coherence; the proxy-equivalence of sample-consistency on the $A$/$G$ axis (T4.12, whose confabulation-only scope is already stated by Farquhar et al.); and the reduction of consistency to a generation–verification gap (T4.14).
+* **Reward-model ensembles** (Coste et al. 2023; Eisenstein et al. 2023). T4.13's common-mode floor is their empirical finding, restated in the ledger.
+* **Reward hacking that generalises, and honest self-reports** (MacDiarmid et al. 2025; Taylor et al. 2025; OpenAI 2025 confessions; Li, Phuong and Tan 2025). Evidence on both sides of T4.7b's question: whether training the flag channel moves the grader-modelling latent toward gaming.
+* **Optimisation against monitors** (Baker et al. 2025; FAR.AI 2025). Evidence that $(v,f)$ degrade under optimisation pressure.
+* **New in this revision:** manufactured errors and the designs that bound them (T4.3b); "$c$ is a gain" (T4.3); the leak-budget survival bound (T4.18.2).
+
+---
+
+## What this says about the RSI loop
+
+1. **Aim protocols at making $G$ harmless, not at selecting against it.** Against a best responder, a protocol can at most reach a tie (T4.4). But where the separation condition holds, the tie is between dispositions that both do the intended task, in training and also at the frontier if the protocol runs there.
+2. **The quantity to track is the undemonstrable predictable-error rate, $\varepsilon\,\Pr_E(v<v^\star)$, together with spurious-flag and manufactured-flag gullibility, $\Pr_N(\max(f,v_m\mathbf 1_M)>v^\star)$.** The raw grader error rate is not the quantity. Both are worst-case conditions (essential infimum and supremum), and on debate-based verifiers both are maxima over reachable atomic judgements, so tails matter.
+3. **Always correct flagged errors; pay bonuses only where the student cannot manufacture the error; never fine** (T4.3, T4.3b). Correction-only flags are immune to manufacturing. A bonus helps only with canonicalised grading, reference-pair flags, or per-class bounties. Make "report every grader error you believe in" the intended behaviour.
+4. **Use protocols and audits together.** Protocols do not rely on concealment, and audits do. In T1's example the recognition level at which audits stop holding the line rises from 0.68 to 0.97 under (B) and from 0.84 to 0.98 under (D). Concentrate audits on the cells the protocol leaves, weighted by how many nats a rewarded opportunity there carries.
+5. **Route the loop's work toward certificate-rich tasks.** Existence claims ("here is the flaw") are coverable. Universal claims ("there is no flaw") and tacit-intent judgements are where drift survives. Building generation $k{+}1$'s graders should be decomposed into checkable claims as far as possible.
+6. **Debates are as sound and as complete as their weakest reachable atomic judgements** (T4.9). Audit the human or model oracle where gaming would route disputes, in both directions, and randomise which atoms a dispute can end at.
+7. **Use diverse models as opponents and monitors.** A same-weights opponent is a colluder whenever the policy is a careful gamer, and it is the most self-lenient. Zero-sum rewards neutralise approval-seeking colluders but not careful gamers, and not passive leniency. Paraphrase, forged-signal honeypots and a different base model are the levers.
+8. **At the frontier, the protocol is only as good as a same-generation verifier.** Earlier generations can check certificate cells and nothing else. Covering the rest needs a verifier as capable as the student, which reintroduces the collusion question (T4.17).
+9. **The loop survives through protocols iff the aligned-end leak is summable within the banked margin.** In the toy that needs demonstration ability to improve faster than blind spots grow ($\nu>\kappa$). Whether the drift stays negative late in the loop matters much less. The sign of $\nu-\kappa$ is the empirical crux: plausibly positive in code, mathematics and empirical science, and plausibly not in tacit-intent work.
+10. **Log-odds banked early are worth more once the leak is summable.** The loop then enters T1.11's regime, where the time to failure is exponential in the banked margin (T4.18.2). As T1's revision notes, that regime needs the aligned-end leak below $D_1/O$, and against best responders with homogeneous detection the basin is T1.8's flat one.
+11. **Design flag rewards to measure willingness to report, not skill at finding errors** (T4.7b). Otherwise flag training may push the grader-modelling latent, and with it gaming, off-distribution.
+
+## Open problems
+
+1. **Measure $v$ and $f$ as functions of the student's predictions.** Existing debate experiments measure judge accuracy. We need the joint law of (the student's predicted grader error, demonstrability, gullibility), and in particular its tails, after the student has been optimised against the verifier.
+2. **The sign of $\nu-\kappa$.** Is there a scaling law in which demonstrability at fixed capability gap improves with absolute capability? Prover–verifier legibility training is the nearest testbed.
+3. **Strategic flag withholding under real training.** In the Bayesian model, a disposition that withholds flags is pushed down like $G_0$ (T4.4). In real RL, a model that never flags may never explore flagging (exploration hacking). How much does that protect $C$-types that want to keep grader blind spots open for the frontier?
+4. **Non-exchangeable consistency checks.** Can adaptively chosen queries beat the de Finetti ceiling against coherent liars, using only easy-to-check, hard-to-produce links? This is a complexity question about consistency proofs.
+5. **Cobra effects.** Within an episode, T4.3b bounds manufactured errors under three designs. Across generations, when generation $k$ builds the grader and generation $k{+}1$ is paid to find its errors, a shared disposition could plant demonstrable errors, or decline to patch reported classes. When does that change which dispositions are selected?
+6. **Collusion as a game across generations.** Derive $\pi_C(k\mid k{+}1)$ from the data channel (T1 §4.1). Find the equilibrium honeypot rate, forging probability $\xi$ and attack rate $r$ when both sides adapt.
+7. **Oracles with predictable bias inside doubly-efficient debate.** Bound the protocol's $f$ and $1-v$ by the oracle's routing-maximal biases, and design randomised decompositions that turn the maxima back into means.
+8. **A protocol with a restoring force against best responders.** T4.4 says flags alone cannot provide one. Can internals-based evidence (probes, persona vectors) be submitted as part of a flag, so that the protocol enlarges the observable $\sigma$-algebra instead of only re-pricing behaviour?
+9. **Manufacturability.** Measure the share $m$ of clean cells in which a capable student can make correct work predictably misgraded, and the demonstrability $v_m$ of the result. Does canonicalisation drive $m$ to zero on realistic tasks?
+10. **The latent coupling of T4.7b.** Does training a flag channel move a model's propensity to game on unrelated tasks? The confessions setup, with and without error-finding aids, is a natural testbed.
+
+## References
+
+Anil, C., Zhang, G., Wu, Y., Grosse, R. (2021). Learning to give checkable answers with prover-verifier games. arXiv:2108.12099.
+Baker, B., et al. (2025). Monitoring reasoning models for misbehavior and the risks of promoting obfuscation. arXiv:2503.11926.
+Barnes, B., Christiano, P., et al. (2020). Debate update: obfuscated arguments problem. Alignment Forum.
+Bhatt, A., et al. (2025). Ctrl-Z: controlling AI agents via resampling. arXiv:2504.10374.
+Brown-Cohen, J., Irving, G., Piliouras, G. (2023). Scalable AI safety via doubly-efficient debate. arXiv:2311.14125 (ICML 2024).
+Brown-Cohen, J., Irving, G., Piliouras, G. (2025). Avoiding obfuscation with prover-estimator debate. arXiv:2506.13609.
+Burns, C., Ye, H., Klein, D., Steinhardt, J. (2022). Discovering latent knowledge in language models without supervision. arXiv:2212.03827.
+Burns, C., et al. (2023). Weak-to-strong generalization. arXiv:2312.09390.
+Carlsmith, J. (2023). Scheming AIs: will AIs fake alignment during training in order to get power? arXiv:2311.08379.
+Christiano, P. (2017). Corrigibility. ai-alignment.com / Alignment Forum.
+Christiano, P., Cotra, A., Xu, M. (2021). Eliciting latent knowledge. Alignment Research Center.
+Cloud, A., et al. (2025). Subliminal learning: language models transmit behavioral traits via hidden signals in data. arXiv:2507.14805.
+Coste, T., Anwar, U., Kirk, R., Krueger, D. (2023). Reward model ensembles help mitigate overoptimization. arXiv:2310.02743 (ICLR 2024).
+Cotra, A. (2022). Without specific countermeasures, the easiest path to transformative AI likely leads to AI takeover. Alignment Forum.
+Diaconis, P., Freedman, D. (1980). Finite exchangeable sequences. Annals of Probability 8(4), 745–764.
+Eisenstein, J., et al. (2023). Helping or herding? Reward model ensembles mitigate but do not eliminate reward hacking. arXiv:2312.09244.
+Engels, J., Baek, D. D., Kantamneni, S., Tegmark, M. (2025). Scaling laws for scalable oversight. arXiv:2504.18530.
+FAR.AI (2025). Avoiding AI deception: lie detectors can either induce honesty or evasion. Blog post (summarised in `lit/L2-evidence.md`).
+Farquhar, S., Kossen, J., Kuhn, L., Gal, Y. (2024). Detecting hallucinations in large language models using semantic entropy. Nature 630, 625–630.
+Fluri, L., Paleka, D., Tramèr, F. (2023). Evaluating superhuman models with consistency checks. arXiv:2306.09983.
+Greenblatt, R., Shlegeris, B., Sachan, K., Roger, F. (2024). AI control: improving safety despite intentional subversion. ICML. arXiv:2312.06942.
+Greenblatt, R., et al. (2024). Alignment faking in large language models. arXiv:2412.14093.
+Hubinger, E., et al. (2024). Sleeper agents: training deceptive LLMs that persist through safety training. arXiv:2401.05566.
+Irving, G., Christiano, P., Amodei, D. (2018). AI safety via debate. arXiv:1805.00899.
+Kenton, Z., et al. (2024). On scalable oversight with weak LLMs judging strong LLMs. arXiv:2407.04622.
+Khan, A., et al. (2024). Debating with more persuasive LLMs leads to more truthful answers. arXiv:2402.06782.
+Kirchner, J. H., Chen, Y., Edwards, H., Leike, J., McAleese, N., Burda, Y. (2024). Prover-verifier games improve legibility of LLM outputs. arXiv:2407.13692.
+Li, Phuong, Tan (2025). Spilling the beans: teaching LLMs to self-report their hidden objectives. arXiv:2511.06626.
+MacDiarmid, M., et al. (2025). Natural emergent misalignment from reward hacking in production RL. arXiv:2511.18397.
+Manakul, P., Liusie, A., Gales, M. J. F. (2023). SelfCheckGPT: zero-resource black-box hallucination detection for generative large language models. EMNLP. arXiv:2303.08896.
+Motwani, S. R., et al. (2024). Secret collusion among AI agents: multi-agent deception via steganography. NeurIPS. arXiv:2402.07510.
+OpenAI (2025). Confessions (training a separately rewarded self-report channel). Blog post, December 2025 (summarised in `lit/L2-evidence.md`).
+Pacchiardi, L., et al. (2024). How to catch an AI liar: lie detection in black-box LLMs by asking unrelated questions. ICLR. arXiv:2309.15840.
+Panickssery, A., Bowman, S. R., Feng, S. (2024). LLM evaluators recognize and favor their own generations. NeurIPS. arXiv:2404.13076.
+Roger, F., Greenblatt, R. (2023). Preventing language models from hiding their reasoning. arXiv:2310.18512.
+Taylor, M., Chua, J., Betley, J., Treutlein, J., Evans, O. (2025). School of reward hacks: hacking harmless tasks generalizes to misaligned behavior in LLMs. arXiv:2508.17511.
+
+de Finetti's representation theorem for infinitely exchangeable sequences, the Condorcet jury theorem and the Abelian theorem behind T4.11's tail condition are classical. Engels et al.'s per-game numbers are taken from the literature note L1. The titles of Li et al. (2025), MacDiarmid et al. (2025) and Taylor et al. (2025) follow the evidence note L2; the arXiv numbers are as given there.
+
+---
+
+## Revision notes
+
+Response to the referee report of 18 October 2026. All new numbers come from `sim/T4_revision_checks.py` (18 checks, no mismatches). Writing that script surfaced a floating-point artefact in my first attempt at the capped loop: computing $1-s_k$ as `1 - s` underflows to 0 near $k\approx120$ and creates spurious positive drift. The script now computes $1-s_k$ directly. The first-draft script ran only 14 generations and is unaffected.
+
+**Major issues.**
+1. *Manufactured errors (M1).* Assumption (X), exogenous cells, is now stated in §0. New proposition T4.3b drops it and shows that a manufacturable clean cell acts like a clean cell with gullibility $\max(f,v_m)$. It gives the break-even manufacturable share (0.25% at $v_m=0.9$), shows that correction-only flags are immune, and gives three designs that remove or bound the channel (canonicalisation, reference pairs, per-class bounties). The summary, the T4.5 table (new row), §2's verification load, takeaway 3 and open problems 5 and 9 are updated.
+2. *T4.18.* $\varepsilon_h$ is now capped at 1. Part 1 states the crossing on $k<k_{\rm sat}$ and the post-saturation sign ($\nu$ against $\sigma$), and it records the referee's counterexample, confirmed. The "forever iff $\nu\ge\kappa+\sigma$" claim is removed. New part 2 is a rigorous leak-budget survival bound. Part 3 gives summability ($\nu>\kappa$) as the operative criterion. S1's description is corrected: $L_k$ levels off at 38.67 through $k=200$. Part 4 replaces "protocols steepen the collusion slope" with the local-versus-secant statement, using the referee's numbers, which I reproduced. T4.19 and takeaways 9 and 10 are rewritten to match, and takeaway 10 now cites both T1.11's $D_1/O$ condition and T1.8's flat basin, as T1's revision asked.
+3. *T4.7 mixed operators.* Redone separately under (B) (flip at 0.966, against 0.677, through fewer nats per opportunity) and under (D) with $b=1.5$ (0.982 against 0.838 under one stated convention; 0.964 to 0.984 across four conventions), as the referee proposed. Added: under (B), a best responder that sees the cell type is held to the same flip only if honeypots are allocated in proportion to $w_j\lambda_{+,j}$ (68% on judgment-like cells); with proportional allocation it gains from $s>0.845$. "$\Phi$ does not involve $s$" is restated as "the re-pricing does not rely on concealment", noting that independence from $s$ holds by construction.
+4. *T4.9 routing on the valid side.* Added $v=1-\max_{S'}e'_j$, so both sides of the separation condition are maxima. The randomisation is now a defined mechanism (the protocol draws the decomposition after commitment), and all routing numbers are labelled illustrative. The numbers come from a fresh draw in the revision script, so they differ from the first draft's (whose max of 0.47 was itself an artefact of the draw).
+5. *Prior art and citations.* Upfront monitor validation is now attributed to Greenblatt et al. (2024); Bhatt et al. (2025) is cited for resampling and re-testing in deployment. The terms "input collusion" and "action collusion" are kept: a search summary of the paper supports them, though I could not read the full text. T4.13 credits Coste et al. (2023) and Eisenstein et al. (2023). T4.12 credits Farquhar et al. (2024) and Manakul et al. (2023). The type split in T4.15 is presented as a formalisation of Carlsmith (2023) and of the zero-sum debate rationale. The existence-versus-universal asymmetry is presented as an application of the NP-versus-coNP asymmetry of Irving et al. (2018). §7 is rewritten accordingly.
+
+**Per-proposition fixes.**
+* T4.1: tie-breaking (T) and exogenous cells (X) stated; the status now reads "rigorous under (X) and (T)".
+* T4.2: the separation condition now includes $\operatorname{ess\,inf}_Ev>0$; proxy-equivalence at the boundary is qualified, and strict separation is noted as convention-free. The strategic-$A'$ remark is shortened.
+* T4.3: restated as "$c$ is a gain, not a threshold lever". The case for $c=0$ now rests on mistaken honest flags (assumption (O)), with a number. The optimum is written as $v^\star\downarrow0.4$.
+* T4.4: the general-$c$ form $\varepsilon(1+b+c)(v^\star-\bar v)$ is given, plus the flag-withholding $C$-type (16.8 nats per generation in the example). Note: the referee's per-episode expression $\varepsilon\,\mathbb E[(v(1+b)-1)^+]$ (0.019) is the withholder's loss relative to $G^\star$. For the ledger against $A$, the relevant figure is $\varepsilon(1+b)(\bar v-v^\star)=0.0168$, and that is what I use.
+* T4.5: 67% corrected to 68%; the approximation's per-cell condition $\delta\ll v$ is stated, with a number showing where it fails.
+* T4.6: restated with the exact survival probability $(1-\varepsilon_jv_j\phi_j)^n$. This is slightly different from the referee's $(1-v_j)^{n\varepsilon_j}$, which is the Jensen approximation of it. The limits under $A$ and under $G^\star$ are given, with a mixture version and a Monte Carlo check. "Faithful patching" is named as an assumption.
+* T4.8: restricted to deterministic computations; the optimal-debater caveat is added.
+* T4.10 and §2: "cell by cell iff $v\ge f$" replaced by the statement about cells the protocol cannot tell apart.
+* T4.11: infinite exchangeability assumed (Diaconis–Freedman cited for the finite case); the power law restated as a tail condition on $R$ near 1, with the exponential case for bounded support; the false-positive channel added, including the point that training on the check selects for coherence.
+* T4.12: strengthened to proxy-equivalence on the $A$/$G$ axis; the claim about uncertain $A$ is stated as a conditional; credits added.
+* T4.13: Condorcet framing, ensemble credits, independence flagged as load-bearing; "cheapest" dropped.
+* T4.14: states that consistency checks bind where an NP-style witness exists.
+* T4.15: labelled "rigorous given the behavioural rule", with endogeneity noted; passive leniency $\ell$ and the monitor's spurious-report channel added, with numbers; Carlsmith credited.
+* T4.16: "at best" replaced by "without forged-signal honeypots"; frontier-realistic fakes named as the hard part.
+* T4.17: aligned with T1.13's placement of $\delta_F$ (exact equality, reducing to T1.13). $v_F$ is now modelled through the certificate share $\chi_F$ and the same-generation verifier's $\zeta$ and $\ell$, instead of a free 0.5. The example table has four verification regimes; the first draft's 0.963 reappears as "weaker verifiers only".
+* T4.19: "restoring force exists iff $\nu>\kappa$" replaced by "the leak is summable iff $\nu>\kappa$". $\omega>0$ is now argued by type, and I agree with the referee that $G$-type builders lack a motive; their effect is through correlated blind spots and leniency.
+* §2 also gains T4.7b (missing item M2), on flag training and the grader-modelling latent, with evidence on both sides (MacDiarmid, Taylor; confessions, Li et al.) and on the verifier side under optimisation (Baker et al.; FAR.AI).
+* Christiano (2017): softened to "can be read as", with the $q$-feedback reading added.
+* Engels et al.: kept as a single labelled "suggestive" sentence instead of cut, because it is the only multi-game number available.
+
+**Where I depart from the referee.**
+* *T4.3.* The referee suggests that $c>0$ is useful against populations with naive gamers, since it speeds their removal by the same factor $1+c$. I agree on the algebra. But the same speed-up is available by scaling up the reward on flag episodes without a penalty, and only the penalty taxes mistaken honest flags. So I keep the recommendation $c=0$, now argued on that ground.
+* *T4.6.* The referee's formula $(1-v_j)^{Kn\varepsilon_j}$ is an approximation; I give the exact binomial form. The limits are the same.
+* *T4.18.* The referee proposes "$\nu>\kappa$ plus banked margin" as the survival criterion. I adopt it and prove a quantitative version (part 2). I also note that with the cap the leak is summable for any $\nu>0$, so the cap alone would make "$\nu>\kappa$" a statement about the size of the pre-saturation leak, not about summability. In the uncapped idealisation, summability is exactly $\nu>\kappa$.
+* *Engels et al.* is kept, labelled suggestive, rather than cut.

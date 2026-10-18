@@ -1,0 +1,75 @@
+worked example: u0=0.01500 v0=0.00970 Lam=4.5951 q_dag=0.0829 L_dag=2.4034 nD0=-12.177 nD1=137.85; honeypots per natural opportunity a/v0 = 3.09
+=== 1. T1.6: end-of-generation tipping (Skellam) and the ceiling edge case
+     k0 = floor(L0/Lam)+1 = 4; ever-flip (v/u)^k0 = 0.1749
+     P(L_n < 0) at n=500: 0.0377;  P(L_n < L_dag) (k=3): 0.0685
+CHECK P(L_n<0) Skellam vs MC: predicted 0.0377369, computed 0.0370325  -> OK
+CHECK P(L_n<L_dag) Skellam vs MC: predicted 0.0684721, computed 0.0677925  -> OK
+     |L_n - E L_n| >= 30.0 nats at n=500: Hoeffding bound 1, Bernstein bound 0.461, Monte Carlo 0.0641
+     |L_n - E L_n| >= 40.0 nats at n=500: Hoeffding bound 1, Bernstein bound 0.166, Monte Carlo 0.0111
+     |L_n - E L_n| >= 60.0 nats at n=500: Hoeffding bound 1, Bernstein bound 0.0121, Monte Carlo 0.000355
+=== 2. M2: stochastic regimes with Poisson counts (annealed q = sigma(-L))
+     P(collapse to L<-20) by generation [1, 5, 10, 20, 50]: [0.0016, 0.2302, 0.4406, 0.7045, 0.9574]   [ii, Lb=3, eta=0.5, from 27.35, n=500]
+     P(collapse to L<-20) by generation [1, 5, 10, 20, 50]: [0.0003, 0.1085, 0.2384, 0.4417, 0.7861]   [ii, Lb=10, eta=0.5, from L_A, n=500]
+     P(collapse to L<-20) by generation [1, 5, 10, 20, 50]: [0.0018, 0.1226, 0.1315, 0.1326, 0.1326]   [i, L0=ln 1e6, n=500]
+     P(collapse to L<-20) by generation [1, 5, 10, 20, 50]: [0.0, 0.0001, 0.0001, 0.0003, 0.0011]   [ii, Lb=3, eta=0.5, n=5000]
+     Lb=3.0 eta=0.5 n=500: L_A=27.35, sd_inf=18.65, z=1.338, Phi(-z)=0.0904, n(u-v)^2/(u+v)=0.57
+     Lb=10.0 eta=0.5 n=500: L_A=34.35, sd_inf=18.65, z=1.713, Phi(-z)=0.0433, n(u-v)^2/(u+v)=0.57
+     Lb=3.0 eta=0.5 n=5000: L_A=246.54, sd_inf=58.97, z=4.140, Phi(-z)=0.0000, n(u-v)^2/(u+v)=5.69
+     Lb=3.0 eta=0.9 n=500: L_A=124.77, sd_inf=37.05, z=3.303, Phi(-z)=0.0005, n(u-v)^2/(u+v)=0.57
+     Lb=3.0 eta=0.0 n=500: L_A=15.18, sd_inf=16.15, z=0.791, Phi(-z)=0.2145, n(u-v)^2/(u+v)=0.57
+     empirical hazard per generation (gens 20-30), Lb=3, eta=0.5, n=500: 0.0617
+=== 3. M1: quenched builders (each generation one realised disposition)
+     L0=1.00: annealed map -> collapse; quenched P(fail) analytic 0.2689, approx sigma(-L0)/(1-e^-n|D0|) 0.2689, MC 0.2679
+     L0=2.00: annealed map -> collapse; quenched P(fail) analytic 0.1192, approx sigma(-L0)/(1-e^-n|D0|) 0.1192, MC 0.1200
+     L0=2.40: annealed map -> collapse; quenched P(fail) analytic 0.0832, approx sigma(-L0)/(1-e^-n|D0|) 0.0832, MC 0.0825
+     L0=3.00: annealed map -> survives; quenched P(fail) analytic 0.0474, approx sigma(-L0)/(1-e^-n|D0|) 0.0474, MC 0.0472
+     L0=13.82: annealed map -> survives; quenched P(fail) analytic 0.0000, approx sigma(-L0)/(1-e^-n|D0|) 0.0000, MC 0.0000
+=== 4. M3: binormal ROC recognition; best-responder drift (B), honeypot example
+     AUC 0.55: G* drift = +0.000000 nats/episode (homogeneous s=0.5 naive G: -0.0244; homogeneous G*: 0)
+     AUC 0.60: G* drift = +0.000006 nats/episode (homogeneous s=0.5 naive G: -0.0244; homogeneous G*: 0)
+     AUC 0.70: G* drift = +0.001540 nats/episode (homogeneous s=0.5 naive G: -0.0244; homogeneous G*: 0)
+     AUC 0.83: G* drift = +0.010410 nats/episode (homogeneous s=0.5 naive G: -0.0244; homogeneous G*: 0)
+     AUC 0.90: G* drift = +0.018556 nats/episode (homogeneous s=0.5 naive G: -0.0244; homogeneous G*: 0)
+     AUC 0.95: G* drift = +0.026634 nats/episode (homogeneous s=0.5 naive G: -0.0244; homogeneous G*: 0)
+     audits are a mixture: fraction 0.2 drawn from the real-opportunity distribution, rest AUC-0.83 shifted: inf LR = 0.619 (need >= t*/(1-t*) = 1), G* drift = +0.001885
+     audits are a mixture: fraction 0.5 drawn from the real-opportunity distribution, rest AUC-0.83 shifted: inf LR = 1.546 (need >= t*/(1-t*) = 1), G* drift = +0.000000
+     audits are a mixture: fraction 1.0 drawn from the real-opportunity distribution, rest AUC-0.83 shifted: inf LR = 3.093 (need >= t*/(1-t*) = 1), G* drift = +0.000000
+=== 5. T1.7: random audits, D not monotone in q (single sign change suffices)
+     D at q=0,.1,.2,.3,.4: [-0.0005, -0.00385, -0.0042, -0.00155, 0.0041]; q_dag = 1 - lp/b = 0.3333
+=== 6. T1.11: collusion correction to the time to failure
+     T = 23.113; L0/(nD0) = 27.631; correction -4.518; (D1/(D0+D1)) ln(D0/(2D0+D1))/(nD0) = -4.518; -ln(D1/D0)/(nD0) = -4.605
+     random audits, eps_h=0, lp=0.05, lm=1, a=0.1, s=0.5: D1/Delta_eps = lp - b = -0.005 (audits adequate: D1<0)
+     random audits, eps_h=0, lp=1.0, lm=1, a=0.1, s=0.5: D1/Delta_eps = lp - b = +0.850 (audits inadequate: D1>0)
+=== 7. T1.10: regime (ii) with D(0)>0, exact fixed point vs L_b - nD(0)/(1-eta)
+     eps_h=0.01591 (nD(0)=1.00) Lb=3.0 eta=0.5: approx condition nD(0)<(1-eta)Lb: True; approx FP 1.00; exact fixed points [-299.88]
+     eps_h=0.01591 (nD(0)=1.00) Lb=5.0 eta=0.5: approx condition nD(0)<(1-eta)Lb: True; approx FP 3.00; exact fixed points [-297.88]
+     eps_h=0.01591 (nD(0)=1.00) Lb=8.0 eta=0.5: approx condition nD(0)<(1-eta)Lb: True; approx FP 6.00; exact fixed points [-294.88]
+     eps_h=0.01591 (nD(0)=1.00) Lb=12.0 eta=0.5: approx condition nD(0)<(1-eta)Lb: True; approx FP 10.00; exact fixed points [-290.88, 3.85, 9.99]
+=== 8. T1.1b: competence (slop) axis with unpredictable errors
+     eps_u=0.05, delta_A=0.01, delta_S=0.02: (B) drift of ln mu(S)/mu(A) = +0.0250; (D) drift x beta = -0.0090
+     eps_u=0.05, delta_A=0.01, delta_S=0.05: (B) drift of ln mu(S)/mu(A) = +0.0413; (D) drift x beta = -0.0360
+     eps_u=0.05, delta_A=0.01, delta_S=0.1: (B) drift of ln mu(S)/mu(A) = +0.0246; (D) drift x beta = -0.0810
+     eps_u=0.05, delta_A=0.01, delta_S=0.2: (B) drift of ln mu(S)/mu(A) = -0.0527; (D) drift x beta = -0.1710
+CHECK argmax_delta of (B) log-likelihood equals eps_u: predicted 0.05, computed 0.05  -> OK
+=== 9. T1.2b: multiaccuracy bound on gaming drift
+     trial 0: eps_u=0.222 t*=0.550 alpha=0.0184: max drift over class -0.01489 <= bound 0.06671: True
+     trial 1: eps_u=0.207 t*=0.924 alpha=0.0122: max drift over class -0.01939 <= bound 0.03239: True
+     trial 2: eps_u=0.121 t*=0.773 alpha=0.0130: max drift over class -0.02317 <= bound 0.04091: True
+     trial 3: eps_u=0.287 t*=0.527 alpha=0.0241: max drift over class +0.00113 <= bound 0.11727: True
+=== 10. M4: the frontier slice of training
+     frontier share w_F=0.1, frontier predictable-error rate eps_F=0.05: G* gains v_F Lam = 0.0230 nats/episode, 11.5 per generation at n=500 (restoring drift against naive G elsewhere: -12.2)
+     frontier share w_F=0.05, frontier predictable-error rate eps_F=0.2: G* gains v_F Lam = 0.0460 nats/episode, 23.0 per generation at n=500 (restoring drift against naive G elsewhere: -12.2)
+     frontier share w_F=0.2, frontier predictable-error rate eps_F=0.1: G* gains v_F Lam = 0.0919 nats/episode, 46.0 per generation at n=500 (restoring drift against naive G elsewhere: -12.2)
+     (D) with Delta_-/Delta_+ = 1: t* = 0.500: consequential retrospective detection on the frontier slice must be >= 0.500
+     (D) with Delta_-/Delta_+ = 9: t* = 0.100: consequential retrospective detection on the frontier slice must be >= 0.100
+     (D) with Delta_-/Delta_+ = 99: t* = 0.010: consequential retrospective detection on the frontier slice must be >= 0.010
+=== 11. M5: improvement channel (regime ii, best responders, annealed)
+     gamma=0.0, kappa=0.0: aligned-end ledger change per generation gamma-kappa = +0.00; improvement separatrix q_C = 1-kappa/gamma = nan
+     gamma=1.0, kappa=0.5: aligned-end ledger change per generation gamma-kappa = +0.50; improvement separatrix q_C = 1-kappa/gamma = 0.500
+     gamma=0.5, kappa=1.0: aligned-end ledger change per generation gamma-kappa = -0.50; improvement separatrix q_C = 1-kappa/gamma = -1.000
+     naive G, Lb0=3, eta=0.5, gamma=0.0, kappa=0.0: P(collapse) by gen [1, 5, 10, 20, 50, 100, 200]: [0.0022, 0.2268, 0.4399, 0.7048, 0.9582, 0.9982, 1.0]
+     naive G, Lb0=3, eta=0.5, gamma=1.0, kappa=0.0: P(collapse) by gen [1, 5, 10, 20, 50, 100, 200]: [0.0019, 0.1928, 0.3229, 0.4146, 0.4421, 0.4422, 0.4422]
+     naive G, Lb0=3, eta=0.5, gamma=2.0, kappa=0.5: P(collapse) by gen [1, 5, 10, 20, 50, 100, 200]: [0.0014, 0.1724, 0.2711, 0.3162, 0.3206, 0.3206, 0.3206]
+=== 12. T1.10: sharper existence condition for an aligned fixed point when D(0) > 0
+CHECK smallest Lb with an aligned fixed point vs c0 + 1 + ln c1: predicted 8.7067, computed 8.68019  -> OK
+     c0 = 2.00, c1 = 300.9; the cruder condition nD(0) < (1-eta) Lb needs only Lb > 2.00

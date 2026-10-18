@@ -1,0 +1,110 @@
+== Example 1: one generation, Gaussian recognition ==
+w=0.05 lam+=0.1 lam-=0.4 t*=0.2 pbar=0.3 alpha=0.99
+AUC   d     D*/(w lb)  D*(nats/ep)  D(1)/(w lb)  mesh t0   n_flip~ln(O)/D*   P_on(n=1e3,1e4,1e5)
+0.50  0.000  0.0000    0.00e+00    -0.1000     0.300          inf        0.996  0.997  0.997
+0.60  0.358  0.0019    4.71e-05    -0.1000     0.232        97580        0.996  0.997  0.962
+0.70  0.742  0.0178    4.46e-04    -0.1000     0.319        10301        0.994  0.920  0.000
+0.80  1.190  0.0426    1.06e-03    -0.1000     0.481         4319        0.989  0.020  0.000
+0.90  1.812  0.0746    1.86e-03    -0.1000     0.753         2465        0.969  0.000  0.000
+0.95  2.326  0.0958    2.40e-03    -0.1000     0.911         1918        0.940  0.000  0.000
+0.99  3.290  0.1218    3.05e-03    -0.1000     0.995         1509        0.862  0.000  0.000
+
+Monte Carlo check of D(t)/(w lb) at AUC 0.8 (2e6 opportunities)
+  t=0.05  MC=+0.01478  formula=+0.01482
+  t=0.10  MC=+0.03120  formula=+0.03124
+  t=0.20  MC=+0.04266  formula=+0.04256
+  t=0.30  MC=+0.03504  formula=+0.03516
+  t=0.50  MC=-0.00473  formula=-0.00454
+  t=0.80  MC=-0.07695  formula=-0.07694
+  t=1.00  MC=-0.10002  formula=-0.10000
+  calibration: E[p | phat in bin] vs bin centre: [(0.1, np.float64(0.1)), (0.3, np.float64(0.302)), (0.6, np.float64(0.598))]
+
+== Cap identity: D*/(w lb) = t* - E[min(phat,t*)] ; wasted audit mass E[(phat-t*)^+] ==
+AUC 0.5: effective=0.2000 wasted=0.1000
+AUC 0.7: E[min(phat,t*)]=0.1822  wasted=0.1178  t*-eff=0.0178  formula D*=0.0178
+AUC 0.8: E[min(phat,t*)]=0.1574  wasted=0.1423  t*-eff=0.0426  formula D*=0.0426
+AUC 0.9: E[min(phat,t*)]=0.1254  wasted=0.1745  t*-eff=0.0746  formula D*=0.0746
+AUC 0.99: E[min(phat,t*)]=0.0782  wasted=0.2219  t*-eff=0.1218  formula D*=0.1218
+
+== Heavy penalties: lam+ fixed=0.1, lam- -> infinity; D* -> w lam+ P(phat=0) ==
+phi0=0.0 lam-=   0.4 t*=0.2000  D*(AUC .8)=1.06e-03  D*(AUC .95)=2.40e-03  limit w lam+ phi0=0.00e+00
+phi0=0.0 lam-=   1.6 t*=0.0588  D*(AUC .8)=2.13e-04  D*(AUC .95)=1.65e-03  limit w lam+ phi0=0.00e+00
+phi0=0.0 lam-=   6.4 t*=0.0154  D*(AUC .8)=1.52e-05  D*(AUC .95)=9.25e-04  limit w lam+ phi0=0.00e+00
+phi0=0.0 lam-=  25.6 t*=0.0039  D*(AUC .8)=3.35e-07  D*(AUC .95)=4.05e-04  limit w lam+ phi0=0.00e+00
+phi0=0.0 lam-= 102.4 t*=0.0010  D*(AUC .8)=2.16e-09  D*(AUC .95)=1.35e-04  limit w lam+ phi0=0.00e+00
+phi0=0.1 lam-=   0.4 t*=0.2000  D*(AUC .8)=1.46e-03  D*(AUC .95)=2.66e-03  limit w lam+ phi0=5.00e-04
+phi0=0.1 lam-=   1.6 t*=0.0588  D*(AUC .8)=6.92e-04  D*(AUC .95)=1.99e-03  limit w lam+ phi0=5.00e-04
+phi0=0.1 lam-=   6.4 t*=0.0154  D*(AUC .8)=5.14e-04  D*(AUC .95)=1.33e-03  limit w lam+ phi0=5.00e-04
+phi0=0.1 lam-=  25.6 t*=0.0039  D*(AUC .8)=5.00e-04  D*(AUC .95)=8.65e-04  limit w lam+ phi0=5.00e-04
+phi0=0.1 lam-= 102.4 t*=0.0010  D*(AUC .8)=5.00e-04  D*(AUC .95)=6.22e-04  limit w lam+ phi0=5.00e-04
+
+== Example 2: randomized-response recognition with privacy loss xi ==
+pbar=0.3, t*=0.2; xi* = logit(pbar)-logit(t*) = 0.539
+xi=0.250 AUC=0.562 phat_lo=0.250 phat_hi=0.355 D*/(w lb)=0.0000   Gaussian same AUC: 0.0001
+xi=0.500 AUC=0.622 phat_lo=0.206 phat_hi=0.414 D*/(w lb)=0.0000   Gaussian same AUC: 0.0043
+xi=0.539 AUC=0.632 phat_lo=0.200 phat_hi=0.424 D*/(w lb)=0.0000   Gaussian same AUC: 0.0055
+xi=0.750 AUC=0.679 phat_lo=0.168 phat_hi=0.476 D*/(w lb)=0.0181   Gaussian same AUC: 0.0136
+xi=1.000 AUC=0.731 phat_lo=0.136 phat_hi=0.538 D*/(w lb)=0.0378   Gaussian same AUC: 0.0248
+xi=1.500 AUC=0.818 phat_lo=0.087 phat_hi=0.658 D*/(w lb)=0.0707   Gaussian same AUC: 0.0476
+xi=2.000 AUC=0.881 phat_lo=0.055 phat_hi=0.760 D*/(w lb)=0.0947   Gaussian same AUC: 0.0676
+xi=3.000 AUC=0.953 phat_lo=0.021 phat_hi=0.896 D*/(w lb)=0.1220   Gaussian same AUC: 0.0971
+
+== Operator (B): t*=1/2, Lambda=ln(99)=4.6 per event, pbar=0.3, AUC 0.8 ==
+  t=0.1: D/(w*2Lam) = +0.0969
+  t=0.3: D/(w*2Lam) = +0.2121
+  t=0.5: D/(w*2Lam) = +0.2346
+  t=0.7: D/(w*2Lam) = +0.2229
+  t=0.9: D/(w*2Lam) = +0.2034
+  t=1.0: D/(w*2Lam) = +0.2000
+  mesh t0 = 1.0  (no type removed if 1.0)
+
+== Example 3: tells ==
+  flat kappa=0.5                                   n=       0: P_on before tells=0.9900  after removing tell-carriers=0.9949  log-odds gain=0.673
+  flat kappa=0.5                                   n=   10000: P_on before tells=0.0196  after removing tell-carriers=0.0377  log-odds gain=0.673
+  flat kappa=0.5                                   n=  100000: P_on before tells=0.0000  after removing tell-carriers=0.0000  log-odds gain=0.673
+  reckless-only kappa=t                            n=       0: P_on before tells=0.9900  after removing tell-carriers=0.9949  log-odds gain=0.673
+  reckless-only kappa=t                            n=   10000: P_on before tells=0.0196  after removing tell-carriers=0.0241  log-odds gain=0.212
+  reckless-only kappa=t                            n=  100000: P_on before tells=0.0000  after removing tell-carriers=0.0000  log-odds gain=0.204
+  careful-heavy kappa=1-t                          n=       0: P_on before tells=0.9900  after removing tell-carriers=0.9949  log-odds gain=0.673
+  careful-heavy kappa=1-t                          n=   10000: P_on before tells=0.0196  after removing tell-carriers=0.0863  log-odds gain=1.554
+  careful-heavy kappa=1-t                          n=  100000: P_on before tells=0.0000  after removing tell-carriers=0.0000  log-odds gain=1.586
+  concealer mix: 0.3 none, else 3 indep tells at .5 n=       0: P_on before tells=0.9900  after removing tell-carriers=0.9960  log-odds gain=0.928
+  concealer mix: 0.3 none, else 3 indep tells at .5 n=   10000: P_on before tells=0.0196  after removing tell-carriers=0.0481  log-odds gain=0.928
+  concealer mix: 0.3 none, else 3 indep tells at .5 n=  100000: P_on before tells=0.0000  after removing tell-carriers=0.0000  log-odds gain=0.928
+
+== Example 4: generations; recognition rises, certainly-unchecked share rises ==
+n per generation = 3000; prior mu(A)=0.99, gamers uniform on t; d_F = 0
+k  AUC_k  phi_k  D*_k(nats/ep)  mesh_k  D(1)_k     P_on(continued)  P_on(fresh)  lam- needed for D*<=2e-4
+0  0.60   0.00   4.71e-05     0.232   -2.50e-03   0.9971           0.9971       0.40 (current)
+1  0.70   0.02   5.37e-04     0.334   -2.35e-03   0.9912           0.9899       0.8
+2  0.80   0.05   1.26e-03     0.525   -2.12e-03   0.7725           0.9083       impossible (floor w lam+ phi = 2.5e-04)
+3  0.90   0.10   2.18e-03     0.830   -1.75e-03   0.0054           0.3206       impossible (floor w lam+ phi = 5.0e-04)
+4  0.95   0.15   2.79e-03     0.964   -1.38e-03   0.0000           0.0560       impossible (floor w lam+ phi = 7.5e-04)
+5  0.99   0.20   3.44e-03     0.999   -1.00e-03   0.0000           0.0056       impossible (floor w lam+ phi = 1.0e-03)
+
+== Blackwell: D*/(w lb) increasing in d (t*=0.2, pbar=0.3) ==
+  d=0.0:0.0000  d=0.5:0.0064  d=1.0:0.0320  d=1.5:0.0592  d=2.0:0.0829  d=3.0:0.1158  d=4.0:0.1317  d=6.0:0.1395
+  limit (1-pbar) t* = 0.1400
+
+== Laplace approximation of P_on(n) (Example 1, AUC 0.8) ==
+  h(t*)=1.8146  D*=1.064e-03
+  n=3e+03: exact=0.9484  Laplace=0.9498
+  n=5e+03: exact=0.7409  Laplace=0.7443
+  n=1e+04: exact=0.0196  Laplace=0.0197
+  n=2e+04: exact=0.0000  Laplace=0.0000
+
+== Pooled (zero-information) audits: frozen band [0,pbar], removal of t>pbar ==
+  pbar_train=0.25 pF_hat=0.0 n=1e+04: P_on=0.9975
+  pbar_train=0.25 pF_hat=0.0 n=1e+05: P_on=0.9975
+  pbar_train=0.25 pF_hat=0.25 n=1e+04: P_on=1.0000
+  pbar_train=0.25 pF_hat=0.25 n=1e+05: P_on=1.0000
+  pbar_train=0.25 pF_hat=0.3 n=1e+04: P_on=1.0000
+  pbar_train=0.25 pF_hat=0.3 n=1e+05: P_on=1.0000
+
+== Caught-gaming rate of C_{t*} per episode, w*pbar*Phi(z_t* - d), and per 10^4 episodes ==
+  AUC 0.6: caught/episode=6.92e-04 (6.9 per 1e4)  rewarded gaming/episode=3.24e-03  caught share=0.176
+  AUC 0.7: caught/episode=2.04e-03 (20.4 per 1e4)  rewarded gaming/episode=1.26e-02  caught share=0.139
+  AUC 0.8: caught/episode=2.21e-03 (22.1 per 1e4)  rewarded gaming/episode=1.95e-02  caught share=0.102
+  AUC 0.9: caught/episode=1.72e-03 (17.2 per 1e4)  rewarded gaming/episode=2.55e-02  caught share=0.063
+  AUC 0.95: caught/episode=1.22e-03 (12.2 per 1e4)  rewarded gaming/episode=2.88e-02  caught share=0.041
+  AUC 0.99: caught/episode=5.29e-04 (5.3 per 1e4)  rewarded gaming/episode=3.26e-02  caught share=0.016

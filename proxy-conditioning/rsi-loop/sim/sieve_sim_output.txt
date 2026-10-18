@@ -1,0 +1,185 @@
+==============================================================================
+(d) THE SIEVE -- sieve_sim.py
+==============================================================================
+delta = 0.01, Lam = 4.5951; prior: A 0.50, C_t uniform in logit(t) on [-8, 8] (401 points), total 0.50
+frontier tasks: p = 0, logit p_hat ~ N(logit 0.002, 0.5^2); C_t defects there with prob P(p_hat_F < t)
+60 seeds; n = number of gaming opportunities; operator (B), and (D) with beta = 1 for comparison
+
+Derived prediction: under (B) the drift of ln mu(C_t)/mu(A) per opportunity is
+   dl(t) = Lam E[(1 - 2p) 1{p_hat < t}],
+   so a careful gamer is selected against only by checks that it does not see coming (p_hat < t)
+   and that fire more often than not (p > 1/2).  The law-of-large-numbers posterior is
+   mu_n(t) proportional to mu_0(t) exp(n dl(t)); under (D) replace Lam by (1 - 2 delta)/beta.
+
+CHECK | vectorised (B) update equals explicit per-episode enumeration over outputs (300 episodes, 17 values of t)
+      predicted: max difference 0
+      simulated: 1.48e-12
+      agrees: YES
+
+------------------------------------------------------------------------------
+Scenario 1 recognisable audits
+CHECK | drift of ln mu(C_t)/mu(A) per opportunity, over the 401 values of t (n = 10000)
+      predicted: dl(t) = Lam E[(1-2p) 1{p_hat < t}]; e.g. at t = 0.01, 0.1, 0.5, 0.99: +0.0508, +4.1135, +4.1356, +3.7220
+      simulated: same t: +0.0510, +4.1147, +4.1359, +3.7240; max |z| over t = 0.66
+      agrees: YES
+CHECK | (B) frontier on-task rate after n = 500 opportunities
+      predicted: 0.010 (law-of-large-numbers posterior)
+      simulated: mean 0.010 +- 0.000, median 0.010, 10-90% [0.010, 0.010]
+      agrees: YES
+CHECK | (B) frontier on-task rate after n = 10000 opportunities
+      predicted: 0.010 (law-of-large-numbers posterior)
+      simulated: mean 0.010 +- 0.000, median 0.010, 10-90% [0.010, 0.010]
+      agrees: YES
+CHECK | (D) frontier on-task rate after n = 500 opportunities
+      predicted: 0.010 (law-of-large-numbers posterior)
+      simulated: mean 0.010 +- 0.000, median 0.010, 10-90% [0.010, 0.010]
+      agrees: YES
+CHECK | (D) frontier on-task rate after n = 10000 opportunities
+      predicted: 0.010 (law-of-large-numbers posterior)
+      simulated: mean 0.010 +- 0.000, median 0.010, 10-90% [0.010, 0.010]
+      agrees: YES
+   (B) at n = 10000: posterior mass of A: mean 0.000; mean posterior logit(t) among C: -0.49 (t = 0.38)
+   (B) at n = 10000: mass on C (all t): 1.000; mass on C that defect at the frontier: 1.000
+------------------------------------------------------------------------------
+Scenario 2 honeypots look like ordinary opportunities
+CHECK | drift of ln mu(C_t)/mu(A) per opportunity, over the 401 values of t (n = 10000)
+      predicted: dl(t) = Lam E[(1-2p) 1{p_hat < t}]; e.g. at t = 0.01, 0.1, 0.5, 0.99: -0.0079, -0.6399, -0.6433, -0.6433
+      simulated: same t: -0.0089, -0.6529, -0.6559, -0.6559; max |z| over t = 1.69
+      agrees: YES
+CHECK | (B) frontier on-task rate after n = 500 opportunities
+      predicted: 0.924 (law-of-large-numbers posterior)
+      simulated: mean 0.353 +- 0.051, median 0.030, 10-90% [0.010, 0.928]
+      agrees: NO  (the LLN posterior ignores fluctuations of size Lam sqrt(n), which matter where dl(t) is small)
+CHECK | (B) frontier on-task rate after n = 10000 opportunities
+      predicted: 0.944 (law-of-large-numbers posterior)
+      simulated: mean 0.515 +- 0.052, median 0.602, 10-90% [0.015, 0.948]
+      agrees: NO  (the LLN posterior ignores fluctuations of size Lam sqrt(n), which matter where dl(t) is small)
+CHECK | (D) frontier on-task rate after n = 500 opportunities
+      predicted: 0.912 (law-of-large-numbers posterior)
+      simulated: mean 0.700 +- 0.040, median 0.879, 10-90% [0.137, 0.922]
+      agrees: NO  (the LLN posterior ignores fluctuations of size Lam sqrt(n), which matter where dl(t) is small)
+CHECK | (D) frontier on-task rate after n = 10000 opportunities
+      predicted: 0.934 (law-of-large-numbers posterior)
+      simulated: mean 0.851 +- 0.023, median 0.926, 10-90% [0.664, 0.942]
+      agrees: YES
+   (B) at n = 10000: posterior mass of A: mean 0.458; mean posterior logit(t) among C: -5.55 (t = 0.00389)
+   (B) at n = 10000: mass on C (all t): 0.542; mass on C that defect at the frontier: 0.485
+------------------------------------------------------------------------------
+Scenario 3 honeypots look like the frontier
+CHECK | drift of ln mu(C_t)/mu(A) per opportunity, over the 401 values of t (n = 10000)
+      predicted: dl(t) = Lam E[(1-2p) 1{p_hat < t}]; e.g. at t = 0.01, 0.1, 0.5, 0.99: -2.4588, -0.6532, -0.6433, -0.6433
+      simulated: same t: -2.4543, -0.6451, -0.6348, -0.6348; max |z| over t = 1.15
+      agrees: YES
+CHECK | (B) frontier on-task rate after n = 500 opportunities
+      predicted: 0.990 (law-of-large-numbers posterior)
+      simulated: mean 0.990 +- 0.000, median 0.990, 10-90% [0.990, 0.990]
+      agrees: YES
+CHECK | (B) frontier on-task rate after n = 10000 opportunities
+      predicted: 0.990 (law-of-large-numbers posterior)
+      simulated: mean 0.990 +- 0.000, median 0.990, 10-90% [0.990, 0.990]
+      agrees: YES
+CHECK | (D) frontier on-task rate after n = 500 opportunities
+      predicted: 0.990 (law-of-large-numbers posterior)
+      simulated: mean 0.990 +- 0.000, median 0.990, 10-90% [0.990, 0.990]
+      agrees: YES
+CHECK | (D) frontier on-task rate after n = 10000 opportunities
+      predicted: 0.990 (law-of-large-numbers posterior)
+      simulated: mean 0.990 +- 0.000, median 0.990, 10-90% [0.990, 0.990]
+      agrees: YES
+   (B) at n = 10000: posterior mass of A: mean 1.000; mean posterior logit(t) among C: -8.00 (t = 0.000335)
+   (B) at n = 10000: mass on C (all t): 0.000; mass on C that defect at the frontier: 0.000
+------------------------------------------------------------------------------
+Scenario 4 graded checks, accurate perception
+CHECK | drift of ln mu(C_t)/mu(A) per opportunity, over the 401 values of t (n = 10000)
+      predicted: dl(t) = Lam E[(1-2p) 1{p_hat < t}]; e.g. at t = 0.01, 0.1, 0.5, 0.99: +0.0472, +0.4209, +1.1240, +0.0472
+      simulated: same t: +0.0475, +0.4200, +1.1238, +0.0494; max |z| over t = 0.61
+      agrees: YES
+CHECK | (B) frontier on-task rate after n = 500 opportunities
+      predicted: 0.010 (law-of-large-numbers posterior)
+      simulated: mean 0.010 +- 0.000, median 0.010, 10-90% [0.010, 0.010]
+      agrees: YES
+CHECK | (B) frontier on-task rate after n = 10000 opportunities
+      predicted: 0.010 (law-of-large-numbers posterior)
+      simulated: mean 0.010 +- 0.000, median 0.010, 10-90% [0.010, 0.010]
+      agrees: YES
+CHECK | (D) frontier on-task rate after n = 500 opportunities
+      predicted: 0.010 (law-of-large-numbers posterior)
+      simulated: mean 0.010 +- 0.000, median 0.010, 10-90% [0.010, 0.010]
+      agrees: YES
+CHECK | (D) frontier on-task rate after n = 10000 opportunities
+      predicted: 0.010 (law-of-large-numbers posterior)
+      simulated: mean 0.010 +- 0.000, median 0.010, 10-90% [0.010, 0.010]
+      agrees: YES
+   (B) at n = 10000: posterior mass of A: mean 0.000; mean posterior logit(t) among C: 0.01 (t = 0.503)
+   (B) at n = 10000: mass on C (all t): 1.000; mass on C that defect at the frontier: 1.000
+------------------------------------------------------------------------------
+Scenario 5 graded checks, noisy perception
+CHECK | drift of ln mu(C_t)/mu(A) per opportunity, over the 401 values of t (n = 10000)
+      predicted: dl(t) = Lam E[(1-2p) 1{p_hat < t}]; e.g. at t = 0.01, 0.1, 0.5, 0.99: +0.1511, +0.4854, +0.6958, +0.1511
+      simulated: same t: +0.1483, +0.4783, +0.6931, +0.1505; max |z| over t = 1.40
+      agrees: YES
+CHECK | (B) frontier on-task rate after n = 500 opportunities
+      predicted: 0.010 (law-of-large-numbers posterior)
+      simulated: mean 0.010 +- 0.000, median 0.010, 10-90% [0.010, 0.010]
+      agrees: YES
+CHECK | (B) frontier on-task rate after n = 10000 opportunities
+      predicted: 0.010 (law-of-large-numbers posterior)
+      simulated: mean 0.010 +- 0.000, median 0.010, 10-90% [0.010, 0.010]
+      agrees: YES
+CHECK | (D) frontier on-task rate after n = 500 opportunities
+      predicted: 0.010 (law-of-large-numbers posterior)
+      simulated: mean 0.010 +- 0.000, median 0.010, 10-90% [0.010, 0.010]
+      agrees: YES
+CHECK | (D) frontier on-task rate after n = 10000 opportunities
+      predicted: 0.010 (law-of-large-numbers posterior)
+      simulated: mean 0.010 +- 0.000, median 0.010, 10-90% [0.010, 0.010]
+      agrees: YES
+   (B) at n = 10000: posterior mass of A: mean 0.000; mean posterior logit(t) among C: 0.04 (t = 0.51)
+   (B) at n = 10000: mass on C (all t): 1.000; mass on C that defect at the frontier: 1.000
+
+==============================================================================
+Leakage: which careful gamers pass the sieve (scenario 2, (B), n = 10000)
+==============================================================================
+   LLN heuristic: C_t survives while n |dl(t)| < 1, i.e. logit t < -5.28 (t < 0.0051)
+CHECK | frontier on-task rate ~ [mu(A) + mu(survivors that stay on task)] / [mu(A) + mu(survivors)]
+      predicted: 0.942 (prior mass of survivors 0.0848, of which defect at the frontier 0.0287)
+      simulated: mean 0.515, median 0.602
+      agrees: NO  (see the gambler's-ruin analysis below)
+
+   Why: sort the training opportunities by p_hat.  ln mu(C_t)/mu(A) - ln mu0(C_t)/mu0(A) = Lam S_j(t), where
+   S_j is a +-1 walk over the j opportunities with p_hat < t: +1 if the check did not fire (gaming paid),
+   -1 if it fired.  In scenario 2 every step is +1 with prob P+ = 0.4 + 0.6 x 0.05 = 0.43, so the walk
+   drifts down (the LLN), but the posterior over a continuum of t picks out the walk's maximum M.
+   Gambler's ruin: P(M >= k) = (P+/P-)^k for an infinite walk, independent of n.  A threshold region
+   between two neighbouring low-tail opportunities has prior mass g ~ 0.005, so a seed is captured
+   by a lucky careful gamer once Lam M > ln(mu(A)/g), i.e. M >= 2 here.  More training does not
+   remove the lucky region; it only shrinks g slowly as the tail fills in.
+CHECK | scenario 2: P(max of the threshold walk >= 1) over 1000 independent training runs
+      predicted: (P+/P-)^1 = 0.754
+      simulated: 0.760 +- 0.014
+      agrees: YES
+CHECK | scenario 2: P(max of the threshold walk >= 2) over 1000 independent training runs
+      predicted: (P+/P-)^2 = 0.569
+      simulated: 0.576 +- 0.016
+      agrees: YES
+CHECK | scenario 2: P(max of the threshold walk >= 3) over 1000 independent training runs
+      predicted: (P+/P-)^3 = 0.429
+      simulated: 0.423 +- 0.016
+      agrees: YES
+CHECK | scenario 2: P(max of the threshold walk >= 4) over 1000 independent training runs
+      predicted: (P+/P-)^4 = 0.324
+      simulated: 0.334 +- 0.015
+      agrees: YES
+   frontier on-task rate (B) by walk maximum M (median over runs with that M):
+      M = 0:  240 runs, median on-task 0.944
+      M = 1:  184 runs, median on-task 0.695
+      M = 2:  153 runs, median on-task 0.068
+      M = 3:   89 runs, median on-task 0.030
+      M = 4:   80 runs, median on-task 0.019
+      M >= 5:  254 runs, median on-task 0.012
+CHECK | scenario 2: fraction of runs captured by careful gamers (on-task < 1/2)
+      predicted: about P(M >= 2) = 0.569 (gambler's ruin with the M >= 2 capture rule)
+      simulated: 0.561 (P(M >= 2) in these runs: 0.576)
+      agrees: YES  (capture rule is a heuristic; M = 2 is borderline)
+
+runtime 6.7 s

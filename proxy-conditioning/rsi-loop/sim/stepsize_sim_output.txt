@@ -1,0 +1,138 @@
+==============================================================================
+(c) STEP SIZE -- stepsize_sim.py
+==============================================================================
+capability range 1 crossed in N = 1/g generations; eps_h(g) = eps_0 + kappa g, kappa = 0.020
+other parameters as in loop_sim.py: a0=0.05 s=0.5 d_eps=0.15 delta=0.01 L_base=4 m=100 rho=0.1
+two types {A, G}, operator (B), human start, 200 seeds per point; failure = q_N > 1/2
+
+Predictions (derived here):
+  mean map: the aligned state exists iff D(0) < 0, i.e. eps_h(g) < eps* = a0(1-s)/(1-a0) = 0.0263,
+     so g* = (eps* - eps_0)/kappa; deterministic failure iff g > g*.
+  fresh regime, with noise: each generation leaves the aligned basin independently with p_esc(g)
+     (loopcore.p_fail_fresh), so P(fail) ~ 1 - (1 - p_esc(g))^(1/g).  If p_esc(eps_0) > 0, then
+     P(fail) -> 1 as g -> 0 and there is an interior optimum (roughly where g p_esc'(g)/p_esc(g) = 1);
+     if p_esc(eps_0) is negligible, small steps are safe.
+  continued regime: the log-odds is a random walk with drift -n D(0) per generation, absorbed at
+     logit(1 - q_dagger); smaller steps add more generations of positive drift, so P(fail) is
+     non-increasing as g -> 0 while g < g* (loopcore.p_fail_continued, exact DP).
+
+------------------------------------------------------------------------------
+fresh regime, n = 2000, eps_0 = 0.000  (mean-map threshold g* = 1.316)
+   g       :  1.000  0.500  0.333  0.250  0.200  0.167  0.125  0.100  0.083  0.062  0.050  0.040  0.031  0.025  0.020  0.016
+   P(fail) :  0.095  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000   simulated
+   P(fail) :  0.060  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000   predicted
+CHECK | fresh, n = 2000, eps_0 = 0.000: failure probability against g (16 step sizes)
+      predicted: semi-analytic curve above
+      simulated: max |sim - pred| = 0.035; points beyond 3 SE + 0.02: 0
+      agrees: YES
+   best simulated step size: g = 0.500 (N = 2), P(fail) = 0.000; predicted best g = 0.050, P(fail) = 0.000
+------------------------------------------------------------------------------
+fresh regime, n = 2000, eps_0 = 0.010  (mean-map threshold g* = 0.816)
+   g       :  1.000  0.500  0.333  0.250  0.200  0.167  0.125  0.100  0.083  0.062  0.050  0.040  0.031  0.025  0.020  0.016
+   P(fail) :  0.625  0.130  0.030  0.015  0.005  0.005  0.005  0.005  0.000  0.000  0.010  0.000  0.000  0.005  0.000  0.000   simulated
+   P(fail) :  0.664  0.125  0.034  0.014  0.008  0.005  0.003  0.002  0.002  0.002  0.002  0.002  0.002  0.002  0.002  0.002   predicted
+CHECK | fresh, n = 2000, eps_0 = 0.010: failure probability against g (16 step sizes)
+      predicted: semi-analytic curve above
+      simulated: max |sim - pred| = 0.039; points beyond 3 SE + 0.02: 0
+      agrees: YES
+   best simulated step size: g = 0.083 (N = 12), P(fail) = 0.000; predicted best g = 0.040, P(fail) = 0.002
+------------------------------------------------------------------------------
+fresh regime, n = 2000, eps_0 = 0.020  (mean-map threshold g* = 0.316)
+   g       :  1.000  0.500  0.333  0.250  0.200  0.167  0.125  0.100  0.083  0.062  0.050  0.040  0.031  0.025  0.020  0.016
+   P(fail) :  0.985  0.900  0.835  0.795  0.785  0.800  0.800  0.820  0.810  0.880  0.850  0.915  0.950  0.985  0.985  1.000   simulated
+   P(fail) :  0.982  0.887  0.842  0.796  0.777  0.772  0.776  0.793  0.811  0.851  0.885  0.918  0.949  0.971  0.986  0.995   predicted
+CHECK | fresh, n = 2000, eps_0 = 0.020: failure probability against g (16 step sizes)
+      predicted: semi-analytic curve above
+      simulated: max |sim - pred| = 0.035; points beyond 3 SE + 0.02: 0
+      agrees: YES
+   best simulated step size: g = 0.200 (N = 5), P(fail) = 0.785; predicted best g = 0.167, P(fail) = 0.772
+------------------------------------------------------------------------------
+fresh regime, n = 20000, eps_0 = 0.000  (mean-map threshold g* = 1.316)
+   g       :  1.000  0.500  0.333  0.250  0.200  0.167  0.125  0.100  0.083  0.062  0.050  0.040  0.031  0.025  0.020  0.016
+   P(fail) :  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000   simulated
+   P(fail) :  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000   predicted
+CHECK | fresh, n = 20000, eps_0 = 0.000: failure probability against g (16 step sizes)
+      predicted: semi-analytic curve above
+      simulated: max |sim - pred| = 0.000; points beyond 3 SE + 0.02: 0
+      agrees: YES
+   best simulated step size: g = 1.000 (N = 1), P(fail) = 0.000; predicted best g = 0.500, P(fail) = 0.000
+------------------------------------------------------------------------------
+fresh regime, n = 20000, eps_0 = 0.010  (mean-map threshold g* = 0.816)
+   g       :  1.000  0.500  0.333  0.250  0.200  0.167  0.125  0.100  0.083  0.062  0.050  0.040  0.031  0.025  0.020  0.016
+   P(fail) :  0.990  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000   simulated
+   P(fail) :  0.980  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000   predicted
+CHECK | fresh, n = 20000, eps_0 = 0.010: failure probability against g (16 step sizes)
+      predicted: semi-analytic curve above
+      simulated: max |sim - pred| = 0.010; points beyond 3 SE + 0.02: 0
+      agrees: YES
+   best simulated step size: g = 0.500 (N = 2), P(fail) = 0.000; predicted best g = 0.200, P(fail) = 0.000
+------------------------------------------------------------------------------
+fresh regime, n = 20000, eps_0 = 0.020  (mean-map threshold g* = 0.316)
+   g       :  1.000  0.500  0.333  0.250  0.200  0.167  0.125  0.100  0.083  0.062  0.050  0.040  0.031  0.025  0.020  0.016
+   P(fail) :  1.000  1.000  0.895  0.560  0.330  0.125  0.085  0.030  0.020  0.000  0.005  0.000  0.000  0.000  0.000  0.000   simulated
+   P(fail) :  1.000  1.000  0.909  0.581  0.301  0.158  0.057  0.028  0.017  0.009  0.006  0.004  0.004  0.003  0.003  0.003   predicted
+CHECK | fresh, n = 20000, eps_0 = 0.020: failure probability against g (16 step sizes)
+      predicted: semi-analytic curve above
+      simulated: max |sim - pred| = 0.033; points beyond 3 SE + 0.02: 0
+      agrees: YES
+   best simulated step size: g = 0.062 (N = 16), P(fail) = 0.000; predicted best g = 0.020, P(fail) = 0.003
+------------------------------------------------------------------------------
+continued regime, n = 2000, eps_0 = 0.000  (mean-map threshold g* = 1.316)
+   g       :  1.000  0.500  0.333  0.250  0.200  0.167  0.125  0.100  0.083  0.062  0.050  0.040  0.031  0.025  0.020  0.016
+   P(fail) :  0.070  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000   simulated
+   P(fail) :  0.091  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000   predicted
+CHECK | continued, n = 2000, eps_0 = 0.000: failure probability against g (16 step sizes)
+      predicted: semi-analytic curve above
+      simulated: max |sim - pred| = 0.021; points beyond 3 SE + 0.02: 0
+      agrees: YES
+   best simulated step size: g = 0.500 (N = 2), P(fail) = 0.000; predicted best g = 0.016, P(fail) = 0.000
+------------------------------------------------------------------------------
+continued regime, n = 2000, eps_0 = 0.010  (mean-map threshold g* = 0.816)
+   g       :  1.000  0.500  0.333  0.250  0.200  0.167  0.125  0.100  0.083  0.062  0.050  0.040  0.031  0.025  0.020  0.016
+   P(fail) :  0.755  0.100  0.010  0.010  0.000  0.015  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000   simulated
+   P(fail) :  0.735  0.103  0.019  0.006  0.003  0.002  0.001  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000   predicted
+CHECK | continued, n = 2000, eps_0 = 0.010: failure probability against g (16 step sizes)
+      predicted: semi-analytic curve above
+      simulated: max |sim - pred| = 0.020; points beyond 3 SE + 0.02: 0
+      agrees: YES
+   best simulated step size: g = 0.200 (N = 5), P(fail) = 0.000; predicted best g = 0.016, P(fail) = 0.000
+------------------------------------------------------------------------------
+continued regime, n = 2000, eps_0 = 0.020  (mean-map threshold g* = 0.316)
+   g       :  1.000  0.500  0.333  0.250  0.200  0.167  0.125  0.100  0.083  0.062  0.050  0.040  0.031  0.025  0.020  0.016
+   P(fail) :  0.975  0.915  0.655  0.595  0.445  0.425  0.265  0.270  0.195  0.240  0.200  0.135  0.160  0.125  0.090  0.120   simulated
+   P(fail) :  0.989  0.876  0.707  0.591  0.488  0.414  0.291  0.243  0.214  0.181  0.164  0.151  0.140  0.133  0.127  0.122   predicted
+CHECK | continued, n = 2000, eps_0 = 0.020: failure probability against g (16 step sizes)
+      predicted: semi-analytic curve above
+      simulated: max |sim - pred| = 0.059; points beyond 3 SE + 0.02: 0
+      agrees: YES
+   best simulated step size: g = 0.020 (N = 50), P(fail) = 0.090; predicted best g = 0.016, P(fail) = 0.122
+
+==============================================================================
+Shape of P(fail) against g
+==============================================================================
+CHECK | fresh, n = 2000, eps_0 = 0.00: is P(fail) U-shaped in g (too many small steps fail through noise, too few large steps through grader error)?
+      predicted: U-shaped: no (predicted P(fail) at g = 1/64: 0.00, min 0.00 at g = 0.050, at g = 1: 0.06)
+      simulated: U-shaped: no (P(fail) at g = 1/64: 0.00, min 0.00 at g = 0.500, at g = 1: 0.10)
+      agrees: YES
+CHECK | continued, n = 2000, eps_0 = 0.00: P(fail) non-increasing as g decreases below g* = 1.32
+      predicted: monotone
+      simulated: P(fail) by g (large to small): 0.07 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+      agrees: YES
+CHECK | fresh, n = 2000, eps_0 = 0.01: is P(fail) U-shaped in g (too many small steps fail through noise, too few large steps through grader error)?
+      predicted: U-shaped: no (predicted P(fail) at g = 1/64: 0.00, min 0.00 at g = 0.040, at g = 1: 0.66)
+      simulated: U-shaped: no (P(fail) at g = 1/64: 0.00, min 0.00 at g = 0.083, at g = 1: 0.62)
+      agrees: YES
+CHECK | continued, n = 2000, eps_0 = 0.01: P(fail) non-increasing as g decreases below g* = 0.82
+      predicted: monotone
+      simulated: P(fail) by g (large to small): 0.76 0.10 0.01 0.01 0.00 0.01 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+      agrees: YES
+CHECK | fresh, n = 2000, eps_0 = 0.02: is P(fail) U-shaped in g (too many small steps fail through noise, too few large steps through grader error)?
+      predicted: U-shaped: yes (predicted P(fail) at g = 1/64: 0.99, min 0.77 at g = 0.167, at g = 1: 0.98)
+      simulated: U-shaped: yes (P(fail) at g = 1/64: 1.00, min 0.79 at g = 0.200, at g = 1: 0.98)
+      agrees: YES
+CHECK | continued, n = 2000, eps_0 = 0.02: P(fail) non-increasing as g decreases below g* = 0.32
+      predicted: monotone
+      simulated: P(fail) by g (large to small): 0.97 0.92 0.66 0.59 0.45 0.42 0.27 0.27 0.20 0.24 0.20 0.14 0.16 0.12 0.09 0.12
+      agrees: YES
+
+runtime 3.2 s

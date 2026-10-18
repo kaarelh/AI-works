@@ -1,0 +1,327 @@
+==============================================================================
+(a) ONE TRAINING RUN -- train_sim.py
+delta = 0.01, Lam = ln((1-delta)/delta) = 4.5951, beta = 1.0
+dispositions: A (t=0), G (t=1, myopic), C_t for t in [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95] (C_0.50 = G*)
+prior: A 0.60, G 0.01, each C_t 0.0205
+==============================================================================
+
+Derived predictions (per episode; u = a h (1-s) caught-gaming rate, v = (1-a) eps
+rewarded-gaming rate; a disposition games iff p_hat = u/(u+v) < t):
+  (B)     E dL = -D_B,    D_B = Lam (v - u)              for every gaming theta
+  (D)     E dL = -D_D,    D_D = (1 - 2 delta)(v - u)/beta
+  (C-off) E dL = -D_Coff, D_Coff = Lam (v pX0 - u (1 - pX0)), pX0 = P_prior(X | opportunity)
+  (C-on, best-of-k) dL/dn = -Lam [v (1-(1-pX)^k) - u (1-pX^k)], pX = m_G (1-delta) + (1-m_G) delta
+  non-gaming theta (t <= p_hat): dL = 0 exactly under (B), (C), (D-expected)
+
+------------------------------------------------------------------------------
+P1 gaming pays, honeypot audits: eps=0.02 eps_u=0 a=0.01 h=1 s=0.5
+   u = 0.00500, v = 0.01980, p_hat = 0.2016; gaming dispositions: G, C_0.25, C_0.30, C_0.35, C_0.40, C_0.45, C_0.50, C_0.55, C_0.60, C_0.65, C_0.70, C_0.75, C_0.80, C_0.85, C_0.90, C_0.95
+CHECK | P1 (B): mean drift of ln mu(A)/mu(G) per episode
+      predicted: -0.06801
+      simulated: -0.06746 +- 0.00100   [sd of L_n - L_0 across seeds: predicted 39.46, simulated 42.22]
+      agrees: YES
+CHECK | P1 (D) expected reward: mean drift of ln mu(A)/mu(G) per episode
+      predicted: -0.01450
+      simulated: -0.01439 +- 0.00021   [sd of L_n - L_0 across seeds: predicted 8.42, simulated 9.00]
+      agrees: YES
+CHECK | P1 (D) sampled rewards: mean drift of ln mu(A)/mu(G) per episode
+      predicted: -0.01450
+      simulated: -0.01478 +- 0.00028
+      agrees: YES
+CHECK | P1 (C-off) fixed sampler: mean drift of ln mu(A)/mu(G) per episode
+      predicted: -0.01367
+      simulated: -0.01356 +- 0.00057
+      agrees: YES
+CHECK | P1 proxy-equivalence: odds within {theta: t <= p_hat} and within {theta: t > p_hat} never move under (B), (D-expected), (C-on k=1,8), (C-off)
+      predicted: max |change in within-class log-odds| = 0
+      simulated: 4.67e-12 (over 200 seeds x 3000 episodes)
+      agrees: YES
+CHECK | P1 (C-on, best-of-1): class-A mass after 3000 episodes (mean-field ODE)
+      predicted: 0.0000
+      simulated: median 0.0000, mean 0.3150; fraction of seeds ending with class-A mass > 1/2: 0.315
+      agrees: YES  (mean field gives the majority outcome; early jumps of size Lam send a minority of seeds to the other attractor)
+CHECK | P1 (C-on, best-of-8): class-A mass after 3000 episodes (mean-field ODE)
+      predicted: 0.0000
+      simulated: median 0.0000, mean 0.1600; fraction of seeds ending with class-A mass > 1/2: 0.160
+      agrees: YES  (mean field gives the majority outcome; early jumps of size Lam send a minority of seeds to the other attractor)
+------------------------------------------------------------------------------
+P2 audits win, honeypot audits: eps=0.02 eps_u=0 a=0.05 h=1 s=0.5
+   u = 0.02500, v = 0.01900, p_hat = 0.5682; gaming dispositions: G, C_0.60, C_0.65, C_0.70, C_0.75, C_0.80, C_0.85, C_0.90, C_0.95
+CHECK | P2 (B): mean drift of ln mu(A)/mu(G) per episode
+      predicted: +0.02757
+      simulated: +0.02949 +- 0.00128   [sd of L_n - L_0 across seeds: predicted 52.77, simulated 54.25]
+      agrees: YES
+CHECK | P2 (D) expected reward: mean drift of ln mu(A)/mu(G) per episode
+      predicted: +0.00588
+      simulated: +0.00629 +- 0.00027   [sd of L_n - L_0 across seeds: predicted 11.25, simulated 11.57]
+      agrees: YES
+CHECK | P2 (D) sampled rewards: mean drift of ln mu(A)/mu(G) per episode
+      predicted: +0.00588
+      simulated: +0.00621 +- 0.00032
+      agrees: YES
+CHECK | P2 (C-off) fixed sampler: mean drift of ln mu(A)/mu(G) per episode
+      predicted: +0.07834
+      simulated: +0.07884 +- 0.00094
+      agrees: YES
+CHECK | P2 proxy-equivalence: odds within {theta: t <= p_hat} and within {theta: t > p_hat} never move under (B), (D-expected), (C-on k=1,8), (C-off)
+      predicted: max |change in within-class log-odds| = 0
+      simulated: 3.87e-12 (over 200 seeds x 3000 episodes)
+      agrees: YES
+CHECK | P2 (C-on, best-of-1): class-A mass after 3000 episodes (mean-field ODE)
+      predicted: 1.0000
+      simulated: median 1.0000, mean 0.8950; fraction of seeds ending with class-A mass > 1/2: 0.895
+      agrees: YES  (mean field gives the majority outcome; early jumps of size Lam send a minority of seeds to the other attractor)
+CHECK | P2 (C-on, best-of-8): class-A mass after 3000 episodes (mean-field ODE)
+      predicted: 1.0000
+      simulated: median 1.0000, mean 0.6700; fraction of seeds ending with class-A mass > 1/2: 0.670
+      agrees: YES  (mean field gives the majority outcome; early jumps of size Lam send a minority of seeds to the other attractor)
+------------------------------------------------------------------------------
+P3 random audits: eps=0.05 eps_u=0 a=0.2 h=0.05 s=0.5
+   u = 0.00500, v = 0.04000, p_hat = 0.1111; gaming dispositions: G, C_0.15, C_0.20, C_0.25, C_0.30, C_0.35, C_0.40, C_0.45, C_0.50, C_0.55, C_0.60, C_0.65, C_0.70, C_0.75, C_0.80, C_0.85, C_0.90, C_0.95
+CHECK | P3 (B): mean drift of ln mu(A)/mu(G) per episode
+      predicted: -0.16083
+      simulated: -0.15955 +- 0.00129   [sd of L_n - L_0 across seeds: predicted 52.66, simulated 54.87]
+      agrees: YES
+CHECK | P3 (D) expected reward: mean drift of ln mu(A)/mu(G) per episode
+      predicted: -0.03430
+      simulated: -0.03403 +- 0.00028   [sd of L_n - L_0 across seeds: predicted 11.23, simulated 11.70]
+      agrees: YES
+CHECK | P3 (D) sampled rewards: mean drift of ln mu(A)/mu(G) per episode
+      predicted: -0.03430
+      simulated: -0.03406 +- 0.00031
+      agrees: YES
+CHECK | P3 (C-off) fixed sampler: mean drift of ln mu(A)/mu(G) per episode
+      predicted: -0.05183
+      simulated: -0.05249 +- 0.00084
+      agrees: YES
+CHECK | P3 proxy-equivalence: odds within {theta: t <= p_hat} and within {theta: t > p_hat} never move under (B), (D-expected), (C-on k=1,8), (C-off)
+      predicted: max |change in within-class log-odds| = 0
+      simulated: 5.15e-12 (over 200 seeds x 3000 episodes)
+      agrees: YES
+CHECK | P3 (C-on, best-of-1): class-A mass after 3000 episodes (mean-field ODE)
+      predicted: 0.0000
+      simulated: median 0.0000, mean 0.1900; fraction of seeds ending with class-A mass > 1/2: 0.190
+      agrees: YES  (mean field gives the majority outcome; early jumps of size Lam send a minority of seeds to the other attractor)
+CHECK | P3 (C-on, best-of-8): class-A mass after 3000 episodes (mean-field ODE)
+      predicted: 0.0000
+      simulated: median 0.0000, mean 0.0250; fraction of seeds ending with class-A mass > 1/2: 0.025
+      agrees: YES  (mean field gives the majority outcome; early jumps of size Lam send a minority of seeds to the other attractor)
+------------------------------------------------------------------------------
+P1u = P1 + 30% unpredictable errors: eps=0.02 eps_u=0.3 a=0.01 h=1 s=0.5
+   u = 0.00500, v = 0.01980, p_hat = 0.2016; gaming dispositions: G, C_0.25, C_0.30, C_0.35, C_0.40, C_0.45, C_0.50, C_0.55, C_0.60, C_0.65, C_0.70, C_0.75, C_0.80, C_0.85, C_0.90, C_0.95
+CHECK | P1u (B): mean drift of ln mu(A)/mu(G) per episode
+      predicted: -0.06801
+      simulated: -0.06798 +- 0.00090   [sd of L_n - L_0 across seeds: predicted 39.46, simulated 38.09]
+      agrees: YES
+CHECK | P1u (D) expected reward: mean drift of ln mu(A)/mu(G) per episode
+      predicted: -0.01450
+      simulated: -0.01450 +- 0.00019   [sd of L_n - L_0 across seeds: predicted 8.42, simulated 8.12]
+      agrees: YES
+CHECK | P1u (D) sampled rewards: mean drift of ln mu(A)/mu(G) per episode
+      predicted: -0.01450
+      simulated: -0.01407 +- 0.00026
+      agrees: YES
+CHECK | P1u (C-off) fixed sampler: mean drift of ln mu(A)/mu(G) per episode
+      predicted: -0.01367
+      simulated: -0.01391 +- 0.00057
+      agrees: YES
+CHECK | P1u proxy-equivalence: odds within {theta: t <= p_hat} and within {theta: t > p_hat} never move under (B), (D-expected), (C-on k=1,8), (C-off)
+      predicted: max |change in within-class log-odds| = 0
+      simulated: 3.71e-12 (over 200 seeds x 3000 episodes)
+      agrees: YES
+CHECK | P1u (C-on, best-of-1): class-A mass after 3000 episodes (mean-field ODE)
+      predicted: 0.0000
+      simulated: median 0.0000, mean 0.3350; fraction of seeds ending with class-A mass > 1/2: 0.335
+      agrees: YES  (mean field gives the majority outcome; early jumps of size Lam send a minority of seeds to the other attractor)
+CHECK | P1u (C-on, best-of-8): class-A mass after 3000 episodes (mean-field ODE)
+      predicted: 0.0000
+      simulated: median 0.0000, mean 0.1150; fraction of seeds ending with class-A mass > 1/2: 0.115
+      agrees: YES  (mean field gives the majority outcome; early jumps of size Lam send a minority of seeds to the other attractor)
+------------------------------------------------------------------------------
+PU 30% unpredictable errors only: eps=0 eps_u=0.3 a=0 h=1 s=0.5
+   u = 0.00000, v = 0.00000, p_hat = 1.0000; gaming dispositions: G
+CHECK | PU (B): mean drift of ln mu(A)/mu(G) per episode
+      predicted: -0.00000
+      simulated: -0.00000 +- 0.00000   [sd of L_n - L_0 across seeds: predicted 0.00, simulated 0.00]
+      agrees: YES
+CHECK | PU (D) expected reward: mean drift of ln mu(A)/mu(G) per episode
+      predicted: -0.00000
+      simulated: +0.00000 +- 0.00000   [sd of L_n - L_0 across seeds: predicted 0.00, simulated 0.00]
+      agrees: YES
+CHECK | PU (D) sampled rewards: mean drift of ln mu(A)/mu(G) per episode
+      predicted: -0.00000
+      simulated: -0.00025 +- 0.00015
+      agrees: YES
+CHECK | PU (C-off) fixed sampler: mean drift of ln mu(A)/mu(G) per episode
+      predicted: -0.00000
+      simulated: +0.00000 +- 0.00000
+      agrees: YES
+CHECK | PU proxy-equivalence: odds within {theta: t <= p_hat} and within {theta: t > p_hat} never move under (B), (D-expected), (C-on k=1,8), (C-off)
+      predicted: max |change in within-class log-odds| = 0
+      simulated: 4.67e-12 (over 200 seeds x 3000 episodes)
+      agrees: YES
+CHECK | PU (C-on, best-of-1): class-A mass after 3000 episodes (mean-field ODE)
+      predicted: 0.9900
+      simulated: median 0.9900, mean 0.9900; fraction of seeds ending with class-A mass > 1/2: 1.000
+      agrees: YES
+CHECK | PU (C-on, best-of-8): class-A mass after 3000 episodes (mean-field ODE)
+      predicted: 0.9900
+      simulated: median 0.9900, mean 0.9900; fraction of seeds ending with class-A mass > 1/2: 1.000
+      agrees: YES
+
+CHECK | P2: calibrated G* (= C_0.50) is never selected against under (B): drift of ln mu(A)/mu(G*) = -Lam max(v - u, 0)
+      predicted: +0.00000
+      simulated: +0.00000 +- 0.00000
+      agrees: YES
+
+==============================================================================
+2. Unpredictable vs predictable grader errors
+==============================================================================
+CHECK | adding 30% unpredictable errors to P1 leaves the (B) drift of ln mu(A)/mu(G) unchanged
+      predicted: difference 0
+      simulated: P1 -0.06746 +- 0.00100, P1u -0.06798 +- 0.00090, difference -0.00053
+      agrees: YES
+CHECK | adding 30% unpredictable errors to P1 leaves the (D) drift of ln mu(A)/mu(G) unchanged
+      predicted: difference 0
+      simulated: P1 -0.01439 +- 0.00021, P1u -0.01450 +- 0.00019, difference -0.00011
+      agrees: YES
+CHECK | PU (grader wrong on 30% of episodes, unpredictably): (B) drift
+      predicted: +0.00000
+      simulated: -0.00000 +- 0.00000
+      agrees: YES
+CHECK | PU (grader wrong on 30% of episodes, unpredictably): (D-expected) drift
+      predicted: +0.00000
+      simulated: +0.00000 +- 0.00000
+      agrees: YES
+CHECK | PU: (D-sampled) drift (zero mean, nonzero noise)
+      predicted: +0.00000
+      simulated: -0.00000 +- 0.00020   [sd of L_n - L_0: 8.451]
+      agrees: YES
+CHECK | PU: (C-on k=1) drift (zero mean, nonzero noise)
+      predicted: +0.00000
+      simulated: +0.00000 +- 0.00000   [sd of L_n - L_0: 0.000]
+      agrees: YES
+
+==============================================================================
+3. Goodhart threshold: first episode at which mu(G) > mu(A); dispositions {A, G}; no audits
+   eps = 0.02, eps_u = 0, a = 0.  Predictions: (B) n* ~ ln O / (Lam eps); (D) n* ~ beta ln O / ((1-2delta) eps).
+   framing.md R4 states n* ~ ln O / eps for (B); that is the (D) answer with beta = 1, or the
+   expected (not typical) odds under (B).
+==============================================================================
+CHECK | (B) delta=0.01, O=1e+02: median n*
+      predicted: ln O/(Lam eps) = 50; exact (flip at the 2-th gaming event, negative binomial) median = 84; framing R4 ln O/eps = 230
+      simulated: median 88 +- 4.4 (crossed in 400/400 seeds)
+      agrees: YES  (drift formula is the large-O limit; with O small the flip needs a whole number of events)
+CHECK | (B) delta=0.01, O=1e+04: median n*
+      predicted: ln O/(Lam eps) = 100; exact (flip at the 3-th gaming event, negative binomial) median = 134; framing R4 ln O/eps = 461
+      simulated: median 132 +- 5.3 (crossed in 400/400 seeds)
+      agrees: YES  (drift formula is the large-O limit; with O small the flip needs a whole number of events)
+CHECK | (B) delta=0.01, O=1e+06: median n*
+      predicted: ln O/(Lam eps) = 150; exact (flip at the 4-th gaming event, negative binomial) median = 184; framing R4 ln O/eps = 691
+      simulated: median 189 +- 5.2 (crossed in 400/400 seeds)
+      agrees: YES  (drift formula is the large-O limit; with O small the flip needs a whole number of events)
+CHECK | (D) beta=1, delta=0.01, O=1e+02: median n*
+      predicted: beta ln O/((1-2 delta) eps) = 235; exact (flip at the 5-th gaming event) median = 234
+      simulated: median 236 +- 6.4 (crossed in 400/400 seeds)
+      agrees: YES
+CHECK | (D) beta=1, delta=0.01, O=1e+04: median n*
+      predicted: beta ln O/((1-2 delta) eps) = 470; exact (flip at the 10-th gaming event) median = 484
+      simulated: median 481 +- 10.1 (crossed in 400/400 seeds)
+      agrees: YES
+CHECK | (D) beta=1, delta=0.01, O=1e+06: median n*
+      predicted: beta ln O/((1-2 delta) eps) = 705; exact (flip at the 15-th gaming event) median = 734
+      simulated: median 759 +- 8.1 (crossed in 400/400 seeds)
+      agrees: YES
+CHECK | (B) delta=1e-06, O=1e+02: median n*
+      predicted: ln O/(Lam eps) = 17; exact (flip at the 1-th gaming event, negative binomial) median = 35; framing R4 ln O/eps = 230
+      simulated: median 34 +- 2.4 (crossed in 400/400 seeds)
+      agrees: YES  (drift formula is the large-O limit; with O small the flip needs a whole number of events)
+CHECK | (B) delta=1e-06, O=1e+04: median n*
+      predicted: ln O/(Lam eps) = 33; exact (flip at the 1-th gaming event, negative binomial) median = 35; framing R4 ln O/eps = 461
+      simulated: median 31 +- 2.1 (crossed in 400/400 seeds)
+      agrees: YES  (drift formula is the large-O limit; with O small the flip needs a whole number of events)
+CHECK | (B) delta=1e-06, O=1e+06: median n*
+      predicted: ln O/(Lam eps) = 50; exact (flip at the 2-th gaming event, negative binomial) median = 84; framing R4 ln O/eps = 691
+      simulated: median 83 +- 3.1 (crossed in 400/400 seeds)
+      agrees: YES  (drift formula is the large-O limit; with O small the flip needs a whole number of events)
+
+==============================================================================
+4. On-policy filtered SFT (C-on, k=1): bistable within a single run.  Dispositions {A, G}, P1.
+   Mean-field separatrix: pX* = u/(u+v), m_A* = ((1-delta) - pX*)/(1-2 delta), L* = logit(m_A*).
+==============================================================================
+   u = 0.0050, v = 0.0198, separatrix L* = 1.415 (prior odds A:G = 4.11)
+   L0 =  -2.0  fraction of seeds ending with mu(A) > 1/2 after 6000 episodes: 0.040
+   L0 =  -1.0  fraction of seeds ending with mu(A) > 1/2 after 6000 episodes: 0.070
+   L0 =  +0.0  fraction of seeds ending with mu(A) > 1/2 after 6000 episodes: 0.200
+   L0 =  +0.5  fraction of seeds ending with mu(A) > 1/2 after 6000 episodes: 0.293
+   L0 =  +1.0  fraction of seeds ending with mu(A) > 1/2 after 6000 episodes: 0.360
+   L0 =  +1.5  fraction of seeds ending with mu(A) > 1/2 after 6000 episodes: 0.553
+   L0 =  +2.0  fraction of seeds ending with mu(A) > 1/2 after 6000 episodes: 0.607
+   L0 =  +2.5  fraction of seeds ending with mu(A) > 1/2 after 6000 episodes: 0.733
+   L0 =  +3.0  fraction of seeds ending with mu(A) > 1/2 after 6000 episodes: 0.800
+   L0 =  +4.0  fraction of seeds ending with mu(A) > 1/2 after 6000 episodes: 0.860
+   L0 =  +5.0  fraction of seeds ending with mu(A) > 1/2 after 6000 episodes: 0.940
+   L0 =  +6.0  fraction of seeds ending with mu(A) > 1/2 after 6000 episodes: 0.973
+   L0 =  +8.0  fraction of seeds ending with mu(A) > 1/2 after 6000 episodes: 0.997
+CHECK | (C-on, k=1) bistable: runs started above L* end at A, below L* end at G
+      predicted: 50% point at L0 = L* = 1.41
+      simulated: 50% point at L0 = 1.36
+      agrees: YES  (each event moves L by Lam = 4.60, so the switch is smeared over about one jump)
+CHECK | (B) with the same parameters and the same episodes is not bistable: D_B = Lam (v - u) > 0 from every start
+      predicted: D_B = +0.0680 per episode: fraction ending at A is 0 for every L0 <= 8 (n D_B = 408)
+      simulated: fractions ending at A by L0: 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+      agrees: YES
+
+==============================================================================
+5. Vanilla REINFORCE on the mixture logits (D'), dispositions {A, G}, P1
+   Mean dynamics: dL/dn = -2 eta mu_A mu_G Dr, Dr = (1-2delta)(v-u), so
+   F(L) = e^L - e^-L + 2L decreases at rate 2 eta Dr and n* = F(ln O)/(2 eta Dr): linear in O,
+   versus n* = beta ln O / Dr for the tilt (D).  eta = 2/beta matches the tilt's rate at L = 0.
+   Two step sizes: eta = 0.25 (close to the mean-field limit) and eta = 2 (noisy).
+==============================================================================
+CHECK | (D') eta = 0.25, O = 3: median n* (runs that never flip within 2176 episodes count as infinite)
+      predicted: 671  (tilt with beta = 2/eta would give 606)
+      simulated: median 604 +- 58 (flipped in 60/60 seeds)
+      agrees: YES
+CHECK | (D') eta = 0.25, O = 10: median n* (runs that never flip within 5500 episodes count as infinite)
+      predicted: 2000  (tilt with beta = 2/eta would give 1270)
+      simulated: median 1933 +- 220 (flipped in 59/60 seeds)
+      agrees: YES
+CHECK | (D') eta = 0.25, O = 30: median n* (runs that never flip within 13175 episodes count as infinite)
+      predicted: 5070  (tilt with beta = 2/eta would give 1876)
+      simulated: median 5186 +- 430 (flipped in 56/60 seeds)
+      agrees: YES
+CHECK | (D') eta = 0.25, O = 100: median n* (runs that never flip within 38144 episodes count as infinite)
+      predicted: 15058  (tilt with beta = 2/eta would give 2540)
+      simulated: median 15417 +- 1662 (flipped in 57/60 seeds)
+      agrees: YES
+CHECK | (D') eta = 0.25, O = 300: median n* (runs that never flip within 107851 episodes count as infinite)
+      predicted: 42940  (tilt with beta = 2/eta would give 3146)
+      simulated: median 45522 +- 1967 (flipped in 59/60 seeds)
+      agrees: YES
+CHECK | (D') eta = 2, O = 3: median n* (runs that never flip within 709 episodes count as infinite)
+      predicted: 84  (tilt with beta = 2/eta would give 76)
+      simulated: median 154 +- 17 (flipped in 55/60 seeds)
+      agrees: NO  (large noisy steps: the drift falls off like e^-L, so upward excursions cost more time than downward ones save)
+CHECK | (D') eta = 2, O = 10: median n* (runs that never flip within 1125 episodes count as infinite)
+      predicted: 250  (tilt with beta = 2/eta would give 159)
+      simulated: median 350 +- 87 (flipped in 48/60 seeds)
+      agrees: YES  (large noisy steps: the drift falls off like e^-L, so upward excursions cost more time than downward ones save)
+CHECK | (D') eta = 2, O = 30: median n* (runs that never flip within 2084 episodes count as infinite)
+      predicted: 634  (tilt with beta = 2/eta would give 235)
+      simulated: median 1590 +- 233 (flipped in 34/60 seeds)
+      agrees: NO  (large noisy steps: the drift falls off like e^-L, so upward excursions cost more time than downward ones save)
+CHECK | (D') eta = 2, O = 100: median n* (runs that never flip within 5205 episodes count as infinite)
+      predicted: 1882  (tilt with beta = 2/eta would give 318)
+      simulated: median 3675 +- 659 (flipped in 35/60 seeds)
+      agrees: YES  (large noisy steps: the drift falls off like e^-L, so upward excursions cost more time than downward ones save)
+CHECK | (D') eta = 2, O = 300: median n* (runs that never flip within 13918 episodes count as infinite)
+      predicted: 5368  (tilt with beta = 2/eta would give 393)
+      simulated: median 11274 +- 1447 (flipped in 36/60 seeds)
+      agrees: NO  (large noisy steps: the drift falls off like e^-L, so upward excursions cost more time than downward ones save)
+CHECK | (D') does NOT preserve odds within a proxy-equivalence class: ln mu(A)/mu(C_0.05) (identical behaviour) after 3000 episodes, prior 0.5:0.3:0.2 for A:C_0.05:G
+      predicted: change 0 under (B), (C), (D); under (D') each logit moves by eta mu_theta (r_class - r_bar), so the larger member of a losing class loses faster (here class A is losing: L(A:C_0.05) should fall)
+      simulated: median change -0.495
+      agrees: YES  (an observation beyond the note: plain PG on logits breaks proxy-equivalence (R2))
+
+runtime 38.8 s

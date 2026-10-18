@@ -1,0 +1,117 @@
+== 1. Mesh t0 = sup{t: D(t) >= 0} as d -> 0+ (pbar=0.3, t*=0.2) ==
+  d=0.001  AUC=0.5003  mesh=0.2000
+  d=0.01   AUC=0.5028  mesh=0.2000
+  d=0.05   AUC=0.5141  mesh=0.2007
+  d=0.1    AUC=0.5282  mesh=0.2029
+  d=0.358  AUC=0.5999  mesh=0.2321
+  d=1.19   AUC=0.8000  mesh=0.4808
+  d=0 exactly (pooled): D=0 on [0,0.3], D<0 above, so t0 = 0.3
+
+== 2. Mean-field condition: sd and mean of S_n(t*) ==
+  (D) Example 1: D*=1.064e-03/ep, w E[l^2]=5.484e-04, n_flip=L0/D*=4319
+     n=    4319: mean=    4.60  sd=  1.54  sd/mean=0.335
+     n=   10000: mean=   10.64  sd=  2.34  sd/mean=0.220
+     condition n >> w E[l^2]/D*^2 = 484;  flip sharp iff L0 >> w E[l^2]/D* = 0.52 (L0=4.60)
+     MC at n_flip (4000 runs): mean=4.63 sd=1.52; P_on(A vs C_t* only) quartiles = [0.73, 0.474, 0.249]
+  (B) hard grader, Lambda=ln99: D*=1.078e-01/ep, w E[l^2]=8.415e-01, n_flip=L0/D*=43
+     n=      43: mean=    4.60  sd=  5.95  sd/mean=1.294
+     n=   10000: mean= 1077.86  sd= 91.10  sd/mean=0.085
+     condition n >> w E[l^2]/D*^2 = 72;  flip sharp iff L0 >> w E[l^2]/D* = 7.81 (L0=4.60)
+     MC at n_flip (4000 runs): mean=4.63 sd=5.95; P_on(A vs C_t* only) quartiles = [0.99, 0.5, 0.01]
+
+== 3. Mixed operators: SFT on trusted demonstrations of opportunity prompts ==
+  w_d=0.002, Lambda=ln99=4.595; break-even shift w_d Lambda/(w lambar) = 0.3676; t*_eff = -0.1676
+  t=0.05: H(t)=0.088  RL drift=+3.70e-04  demo drift=-8.08e-04  total=-4.37e-04
+  t=0.10: H(t)=0.219  RL drift=+7.81e-04  demo drift=-2.01e-03  total=-1.23e-03
+  t=0.20: H(t)=0.434  RL drift=+1.06e-03  demo drift=-3.99e-03  total=-2.92e-03
+  t=0.50: H(t)=0.797  RL drift=-1.13e-04  demo drift=-7.32e-03  total=-7.44e-03
+  t=1.00: H(t)=1.000  RL drift=-2.50e-03  demo drift=-9.19e-03  total=-1.17e-02
+
+== 4. Cell-dependent penalties and false positives ==
+  Counterexample B: cells (phat=0.05, lam-=10) and (phat=0.5, lam-=0.4), equal share, lam+=0.1
+    t=0.1 games only in cell 1: drift/w = -0.2025
+  independent false flags f=0.05: lam-=   0.4 t*=0.2000 t*_f = t*+f(1-t*) = 0.2400
+  independent false flags f=0.05: lam-=   4.0 t*=0.0244 t*_f = t*+f(1-t*) = 0.0732
+  independent false flags f=0.05: lam-=  40.0 t*=0.0025 t*_f = t*+f(1-t*) = 0.0524
+  independent false flags f=0.05: lam-= 400.0 t*=0.0002 t*_f = t*+f(1-t*) = 0.0502
+  check-coupled false flags (p=a c, f=a phi), a=0.1, c=0.8, phi=0.05: bracket (1-ac)lam+ - a(c-phi) lam-
+    lam-=  0.4: bracket=+0.0620
+    lam-=  4.0: bracket=-0.2080
+    lam-= 40.0: bracket=-2.9080
+
+== 5. Adaptive best responder G* versus fixed-threshold types (Example 1, AUC 0.8, n=1e4, d_F=0) ==
+  design 1 (RL only):  D*=1.064e-03; design 2 (RL + demos w_d=0.002): max_t D(t)=-1.029e-27, D(G*)=0.0e+00
+  n=      0: design1 [uniform 0.990 | naive-only 0.990 | half G* 0.990]   design2 [uniform 0.990 | naive-only 0.990 | half G* 0.990]
+  n=  10000: design1 [uniform 0.020 | naive-only 1.000 | half G* 0.004]   design2 [uniform 1.000 | naive-only 1.000 | half G* 0.995]
+  n= 100000: design1 [uniform 0.000 | naive-only 1.000 | half G* 0.000]   design2 [uniform 1.000 | naive-only 1.000 | half G* 0.995]
+  ceiling with G* frozen and everything else removed: 0.99/(0.99+0.005) = 0.9950
+
+== 6. Posterior-predictive caught / gaming rates over training (Example 1, AUC 0.8) ==
+  alpha=0.99, gamers uniform
+    n=     0: caught/1e4=  0.79  gaming/1e4=    3.5  P_on=0.990
+    n=  2000: caught/1e4=  0.70  gaming/1e4=    5.3  P_on=0.977
+    n=  5000: caught/1e4=  6.58  gaming/1e4=   57.8  P_on=0.741
+    n= 10000: caught/1e4= 23.29  gaming/1e4=  215.8  P_on=0.020
+    n= 20000: caught/1e4= 22.92  gaming/1e4=  218.5  P_on=0.000
+  alpha=0.99, half of gamers atom at t=1
+    n=     0: caught/1e4=  1.15  gaming/1e4=    4.3  P_on=0.990
+    n=  2000: caught/1e4=  0.36  gaming/1e4=    2.7  P_on=0.988
+    n=  5000: caught/1e4=  3.78  gaming/1e4=   33.2  P_on=0.851
+    n= 10000: caught/1e4= 22.84  gaming/1e4=  211.6  P_on=0.038
+    n= 20000: caught/1e4= 22.92  gaming/1e4=  218.5  P_on=0.000
+  alpha=0.5, half of gamers atom at t=1
+    n=     0: caught/1e4= 57.26  gaming/1e4=  212.5  P_on=0.500
+    n=  2000: caught/1e4= 16.66  gaming/1e4=  125.6  P_on=0.464
+    n=  5000: caught/1e4= 24.01  gaming/1e4=  210.8  P_on=0.055
+    n= 10000: caught/1e4= 23.74  gaming/1e4=  220.0  P_on=0.000
+    n= 20000: caught/1e4= 22.92  gaming/1e4=  218.5  P_on=0.000
+  long-run limit = caught rate of C_t*: 22.10 per 1e4
+  Cov identity at n=0: Cov=-9.414e-08, finite difference=-9.404e-08
+
+== 7. ROC-tangent identity D*/(w lb) = (1-pbar) t* max_c [TPR(c) - e^xi* FPR(c)] ==
+  AUC 0.7: ROC form=0.017844  direct D*/(w lb)=0.017844  argmax c=0.539 (xi*=0.539)
+  AUC 0.8: ROC form=0.042561  direct D*/(w lb)=0.042561  argmax c=0.539 (xi*=0.539)
+  AUC 0.95: ROC form=0.095815  direct D*/(w lb)=0.095815  argmax c=0.539 (xi*=0.539)
+
+== 8. Example 2: bounded binary signal vs Gaussian at the same AUC ==
+  xi=0.500 AUC=0.622 bounded=0.0000 gaussian=0.0043
+  xi=0.539 AUC=0.632 bounded=0.0000 gaussian=0.0055
+  xi=0.550 AUC=0.634 bounded=0.0010 gaussian=0.0058
+  xi=0.600 AUC=0.646 bounded=0.0053 gaussian=0.0076
+  xi=0.640 AUC=0.655 bounded=0.0088 gaussian=0.0091
+  xi=0.650 AUC=0.657 bounded=0.0097 gaussian=0.0095
+  xi=0.700 AUC=0.668 bounded=0.0139 gaussian=0.0115
+  xi=0.750 AUC=0.679 bounded=0.0181 gaussian=0.0136
+  xi=1.000 AUC=0.731 bounded=0.0378 gaussian=0.0248
+  xi=2.000 AUC=0.881 bounded=0.0947 gaussian=0.0676
+  crossing at xi = 0.646
+
+== 9. Example 3, row 4 corrected (A also carries three tells at 0.02) ==
+  n=     0 A one tell (original script): P_on 0.9900 -> 0.9960, gain=0.928
+  n=     0 A three tells: P_on 0.9900 -> 0.9959, gain=0.887
+  n= 10000 A one tell (original script): P_on 0.0196 -> 0.0481, gain=0.928
+  n= 10000 A three tells: P_on 0.0196 -> 0.0463, gain=0.887
+
+== 10. Best-responder caught rate per 1e4 vs AUC ==
+  AUC 0.6: 6.9  AUC 0.7: 20.4  AUC 0.75: 22.3  AUC 0.8: 22.1  AUC 0.85: 20.3  AUC 0.9: 17.2  AUC 0.95: 12.2  AUC 0.99: 5.3
+
+== 11. Example 4 with loop feedback: audit catch rate scales with builder's on-task share ==
+  exogenous:
+    k=0 pbar=0.300 D*=4.71e-05 P_on=0.9971
+    k=1 pbar=0.300 D*=5.37e-04 P_on=0.9912
+    k=2 pbar=0.300 D*=1.26e-03 P_on=0.7725
+    k=3 pbar=0.300 D*=2.18e-03 P_on=0.0054
+    k=4 pbar=0.300 D*=2.79e-03 P_on=0.0000
+    k=5 pbar=0.300 D*=3.44e-03 P_on=0.0000
+  coupled:
+    k=0 pbar=0.300 D*=4.71e-05 P_on=0.9971
+    k=1 pbar=0.299 D*=5.41e-04 P_on=0.9911
+    k=2 pbar=0.297 D*=1.28e-03 P_on=0.7630
+    k=3 pbar=0.229 D*=2.59e-03 P_on=0.0015
+    k=4 pbar=0.000 D*=4.99e-03 P_on=0.0000
+    k=5 pbar=0.000 D*=5.00e-03 P_on=0.0000
+
+== 12. Pooled audits with d_F=0.3 > t*=0.2: removal rate of types t>pbar is w lb (pbar - t*) ==
+  pbar=0.21: removal rate 2.5e-04 nats/ep; frozen band [0,0.21] all on task at frontier (t<=d_F)
+  pbar=0.25: removal rate 1.2e-03 nats/ep; frozen band [0,0.25] all on task at frontier (t<=d_F)
+  pbar=0.3: removal rate 2.5e-03 nats/ep; frozen band [0,0.3] all on task at frontier (t<=d_F)

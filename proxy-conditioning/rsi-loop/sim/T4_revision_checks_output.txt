@@ -1,0 +1,169 @@
+
+==============================================================================
+R1. Manufactured errors: the student chooses whether a clean cell becomes an error cell
+==============================================================================
+CHECK Phi_m brute force b=1.5, c=0, m=0.01, v_m=0.9: predicted 0.0145, computed 0.0145  -> OK
+CHECK Phi_m brute force b=1.5, c=0, m=0.05, v_m=0.5: predicted 0.0145, computed 0.0145  -> OK
+CHECK Phi_m brute force b=0.5, c=0.5, m=0.02, v_m=0.95: predicted 0.01324, computed 0.01324  -> OK
+CHECK Phi_m brute force b=0.0, c=0.0, m=0.1, v_m=0.99: predicted 0.0053, computed 0.0053  -> OK
+--- gain per manufacturable clean cell, (1+b) v_m - 1, at b = 1.5
+     v_m=0.5: gain 0.250 reward units per cell
+     v_m=0.9: gain 1.250 reward units per cell
+--- worked example: optimal v* (c = 0) as the manufacturable share m grows (v_m = 0.9)
+     m=0.0    : Phi at v*=1: 0.00530;  at v*=0.4: 0.00225;  optimum v*=0.400, Phi=0.00225
+     m=0.0005 : Phi at v*=1: 0.00530;  at v*=0.4: 0.00286;  optimum v*=0.600, Phi=0.00275
+     m=0.001  : Phi at v*=1: 0.00530;  at v*=0.4: 0.00348;  optimum v*=0.600, Phi=0.00299
+     m=0.002  : Phi at v*=1: 0.00530;  at v*=0.4: 0.00470;  optimum v*=0.600, Phi=0.00348
+     m=0.005  : Phi at v*=1: 0.00530;  at v*=0.4: 0.00838;  optimum v*=0.900, Phi=0.00433
+     m=0.01   : Phi at v*=1: 0.00530;  at v*=0.4: 0.01450;  optimum v*=0.900, Phi=0.00433
+     v*=0.4 loses to v*=1 once m > 0.00249
+CHECK Phi(0.4) = Phi(1) at the break-even m: predicted 0.0053, computed 0.0053  -> OK
+--- certificate-backed manufactured errors (v_m -> 1): any bonus is dominated
+     m=0.0001: optimum v*=0.400, Phi=0.00240 (v*=1 gives 0.00530)
+     m=0.001: optimum v*=0.600, Phi=0.00315 (v*=1 gives 0.00530)
+--- with b = 0 (correction only) manufacturing never pays: gain v_m - 1 <= 0
+CHECK b=c=0: manufacturing adds nothing to Phi: predicted 0.0053, computed 0.0053  -> OK
+--- per-class bounty: bonus paid once per error class, class then patched
+     per-episode manufacture gain (m=0.01, v_m=0.9): 0.01225 reward -> 12.2 nats per generation
+     per-class bounty, M=50 manufacturable classes: at most 3.75 nats over the whole loop
+
+==============================================================================
+R2. c is a gain on all flag-related reward gaps (T4.3, T4.4)
+==============================================================================
+CHECK J(G0)-J(A) = eps(1+b+c)(v*-vbar), v*=0.4, c=0.0: predicted -0.01675, computed -0.01675  -> OK
+     v*=0.4, c=0.0: Phi = 0.00225, J(G0)-J(A) = -0.01675
+CHECK J(G0)-J(A) = eps(1+b+c)(v*-vbar), v*=0.4, c=1.0: predicted -0.0335, computed -0.0335  -> OK
+     v*=0.4, c=1.0: Phi = 0.00450, J(G0)-J(A) = -0.03350
+CHECK J(G0)-J(A) = eps(1+b+c)(v*-vbar), v*=0.6, c=0.0: predicted -0.0045, computed -0.0045  -> OK
+     v*=0.6, c=0.0: Phi = 0.00250, J(G0)-J(A) = -0.00450
+CHECK J(G0)-J(A) = eps(1+b+c)(v*-vbar), v*=0.6, c=1.0: predicted -0.009, computed -0.009  -> OK
+     v*=0.6, c=1.0: Phi = 0.00500, J(G0)-J(A) = -0.00900
+--- mistaken honest flags: an honest A whose flag is wrong pays c, a G* that flags only when confident does not
+     c=0.0: extra reward loss of honest A = 0.0000 per episode (vs Phi(0.4,c=0)=0.00225)
+     c=0.5: extra reward loss of honest A = 0.0025 per episode (vs Phi(0.4,c=0)=0.00225)
+     c=1.0: extra reward loss of honest A = 0.0050 per episode (vs Phi(0.4,c=0)=0.00225)
+--- flag-withholding careful gamer (keeps blind spots open), c = 0, b = 1.5
+     reward lost relative to A: eps E[(v(1+b)-1)^+] = 0.01900 per episode -> 19.0 nats per generation at n lam = 1000
+
+==============================================================================
+R3. T4.5: judgment-cell share and per-cell validity
+==============================================================================
+     per-cell nats [0.0503 0.5002 2.2074], drift 0.00973, judgment share 0.6809
+CHECK judgment share = 68.1%: predicted 0.681, computed 0.680854  -> OK
+     v=0.95: exact 0.0503 vs -ln v 0.0513
+     v=0.6: exact 0.5002 vs -ln v 0.5108
+     v=0.1: exact 2.2074 vs -ln v 2.3026
+     v=0.03: exact 3.2167 vs -ln v 3.5066
+     v=0.01: exact 3.9071 vs -ln v 4.6052
+
+==============================================================================
+R4. T4.6: class patching, exact expected residual
+==============================================================================
+     K= 1: residual under A 0.00203; under G* (v*=0.4) 0.00301
+     K= 2: residual under A 0.00142; under G* (v*=0.4) 0.00300
+     K= 5: residual under A 0.00071; under G* (v*=0.4) 0.00300
+     K=20: residual under A 0.00050; under G* (v*=0.4) 0.00300
+     limits: A -> sum eps_j 1[v_j=0] = 0.00050;  G* -> sum eps_j 1[v_j<v*] = 0.00300
+CHECK MC one-generation residual under A: predicted 0.00202851, computed 0.00201787  -> OK
+     Jensen approximation (1-v)^(n eps): 0.00198 (exact 0.00203)
+--- annealed mixture: class j is flagged at rate eps_j v_j [mu_A + mu_G* 1(v_j >= v*)]
+     mu_A=0.9, K=5: residual 0.00076
+
+==============================================================================
+R5. T4.7 under one operator at a time (T1's honeypot example: eps=0.01, a=0.03, h=1, s=0.5)
+==============================================================================
+     (B) no protocol: lambda+ = lambda- = 4.595; flip at s = 0.6767
+     (B) protocol (b=0): lambda+ = E_E ln(...) = 0.4863; t* = 0.0957; flip at s = 0.9658
+CHECK (B) protocol flip s = 0.966: predicted 0.966, computed 0.965781  -> OK
+     (B) per-type t*_j = [0.0108 0.0982 0.3245]; best responder, proportional honeypots: G* gains once s > 0.8447
+     (B) optimal honeypot allocation across cell types (prop. to w_j lambda+_j): [0.062 0.257 0.681]; best-responder flip then = naive flip = 0.9658
+CHECK optimal allocation: min_j (p_hat_j - t*_j) >= 0 just below the flip: predicted 1, computed 1  -> OK
+     (D) b=1.5, A gets 1, caught X gets -1: t* = 0.2727, flip at s = 0.9818;  no protocol (same convention): t* = 0.3333, flip at s = 0.8383;  p_hat on residual cells at s=0.5: 0.912
+     (D) b=1.5, A gets 0.25, X -1: t* = 0.3750, flip at s = 0.9709;  no protocol (same convention): t* = 0.3333, flip at s = 0.8383;  p_hat on residual cells at s=0.5: 0.912
+     (D) b=1.5, A gets 1, X gets 0: t* = 0.4286, flip at s = 0.9636;  no protocol (same convention): t* = 0.5000, flip at s = 0.6767;  p_hat on residual cells at s=0.5: 0.912
+     (D) b=1.5, A 0.25, X -2: t* = 0.2500, flip at s = 0.9838;  no protocol (same convention): t* = 0.2500, flip at s = 0.8922;  p_hat on residual cells at s=0.5: 0.912
+
+==============================================================================
+R6. T4.9 routing on both sides
+==============================================================================
+     illustrative atoms: mean e 0.0438, max e 0.2024; mean e' 0.0378, max e' 0.2349
+     prover routes spurious flags: f = 0.2024;  defender routes valid flags: v = 1 - max e' = 0.7651
+     separation needs v >= f: 0.7651 >= 0.2024
+--- randomised decomposition: the protocol draws the decomposition after commitment, so the
+    dishonest side can route only among a uniformly random k-subset of atoms (illustrative)
+     k= 1: E f = 0.0437,  E v = 0.9623
+     k= 5: E f = 0.1219,  E v = 0.8890
+     k=20: E f = 0.1858,  E v = 0.8149
+
+==============================================================================
+R7. T4.11: tail condition and false positives
+==============================================================================
+     Beta(4.0,1.0) m=20: E R^m = 0.16667, asymptotic 0.20000
+     Beta(4.0,1.0) m=100: E R^m = 0.03846, asymptotic 0.04000
+     Beta(4.0,1.0) m=1000: E R^m = 0.00398, asymptotic 0.00400
+     Beta(2.0,2.0) m=20: E R^m = 0.01186, asymptotic 0.01500
+     Beta(2.0,2.0) m=100: E R^m = 0.00057, asymptotic 0.00060
+     Beta(2.0,2.0) m=1000: E R^m = 0.00001, asymptotic 0.00001
+--- a mixing law bounded away from 1 (R uniform on [0.5, 0.9]) decays exponentially
+     m=10: E R^m = 0.071210  (0.9^m = 0.348678)
+     m=20: E R^m = 0.013026  (0.9^m = 0.121577)
+     m=40: E R^m = 0.000811  (0.9^m = 0.014781)
+--- false positives on an honest but incoherent model: inconsistency rate phi per framing
+     phi=0.005, m=5: detect Beta(4,1) liar 0.556; false positive on honest A 0.025
+     phi=0.005, m=20: detect Beta(4,1) liar 0.833; false positive on honest A 0.095
+     phi=0.005, m=50: detect Beta(4,1) liar 0.926; false positive on honest A 0.222
+     phi=0.01, m=5: detect Beta(4,1) liar 0.556; false positive on honest A 0.049
+     phi=0.01, m=20: detect Beta(4,1) liar 0.833; false positive on honest A 0.182
+     phi=0.01, m=50: detect Beta(4,1) liar 0.926; false positive on honest A 0.395
+
+==============================================================================
+R8. T4.15 with passive leniency and spurious reports
+==============================================================================
+     pi_C=1.0, sigma_p=0.9, xi=0.0, leniency ell=0.0: d = 0.0900
+     pi_C=1.0, sigma_p=0.3, xi=0.0, leniency ell=0.0: d = 0.6300
+     pi_C=1.0, sigma_p=0.9, xi=0.5, leniency ell=0.0: d = 0.9000
+     pi_C=0.3, sigma_p=0.9, xi=0.0, leniency ell=0.0: d = 0.6570
+     pi_C=0.3, sigma_p=0.9, xi=0.0, leniency ell=0.2: d = 0.5256
+     pi_C=1.0, sigma_p=0.9, xi=0.5, leniency ell=0.2: d = 0.7200
+CHECK T4.15 diverse monitor pi_C=0.3, ell=0: predicted 0.657, computed 0.657  -> OK
+--- spurious reports by a bonus-paid G-monitor: rate pi_G (1-r) Pr(f_M > v*_M) per item
+     pi_G=0.5, Pr(f_M>v*_M)=0.02: spurious reports 0.0099 per item vs real attacks 0.01
+     pi_G=0.5, Pr(f_M>v*_M)=0.1: spurious reports 0.0495 per item vs real attacks 0.01
+
+==============================================================================
+R9. T4.17 with T1.13's placement of delta and v_F from the verifier
+==============================================================================
+     no protocol: Pr(v_F<v*) = 1.0000; P_on = 0.9560
+     weaker verifier only (chi=0.5): Pr(v_F<v*) = 0.5000; P_on = 0.9630
+     same-weights verifier: zeta=0, d=0.09: Pr(v_F<v*) = 0.0000; P_on = 0.9700
+     diverse verifier: zeta=0.03, d=0.657: Pr(v_F<v*) = 0.0150; P_on = 0.9998
+     diverse verifier with leniency ell=0.2: zeta=0.03, d=0.526: Pr(v_F<v*) = 0.0150; P_on = 0.9998
+     diverse verifier, delta_F = 0.02: 0.9798
+CHECK T4.17 no-protocol value 0.956: predicted 0.956, computed 0.956  -> OK
+
+==============================================================================
+R10. T4.18 with eps_h capped at 1
+==============================================================================
+     eps_h reaches 1 at k_sat = ln(1/eps0)/kappa = 30.7
+     S0: first k with D_k(0)>0: 1; L_13 = -816.46; L_50 = -10000.00; L_200 = -10000.00; total positive leak over k<200 = 170086.09 nats
+     S1: first k with D_k(0)>0: 11; L_13 = 40.38; L_50 = 38.67; L_200 = 38.67; total positive leak over k<200 = 1.78 nats
+     S2: first k with D_k(0)>0: 5; L_13 = -124.34; L_50 = -10000.00; L_200 = -10000.00; total positive leak over k<200 = 1821.82 nats
+     S3: first k with D_k(0)>0: None; L_13 = 48.55; L_50 = 49.61; L_200 = 49.61; total positive leak over k<200 = 0.00 nats
+CHECK S1 levels off: L_200 - L_30: predicted 0, computed -0.127833  -> OK
+     S1: max L = 40.45 at k = 11; L_200 = 38.67
+     S1 gross-leak bound nlam(1-a)eps0 r0/(1-e^(kappa-nu)) = 20.89 nats
+--- referee's counterexample: eps0 = r0 = 0.01, nu = 0.4 < kappa + sigma = 0.45
+     uncapped k_c = 100.8 (first positive uncapped k = 101); capped: D_k(0) < 0 for all k <= 2000: True
+CHECK counterexample: capped D_k(0) never positive: predicted 1, computed 1  -> OK
+--- slope at q = 0 and secant D(1) - D(0), per unit lambda
+     k= 0: slope at 0: protocol 0.02964, none 0.06380;  secant: protocol 0.03009, none 0.06530;  D(0): protocol -0.012090, none -0.005300
+     k= 5: slope at 0: protocol 0.02580, none 0.05248;  secant: protocol 0.07314, none 0.05398;  D(0): protocol -0.001972, none 0.017188
+     k=10: slope at 0: protocol 0.04431, none 0.05059;  secant: protocol 0.09491, none 0.05209;  D(0): protocol -0.000097, none 0.042726
+--- linear-in-odds tail: once D_k(0) -> 0, L declines at about n lam q dD/dq, q ~ e^{-L}
+     S1 at k=199: dD/dq = 0.9700; decline per generation at L=38.7: 1.512e-14 nats
+
+--- R10b. Leak-budget survival bound: B = sup_{k,q} (D_k(q) - D_k(0))/q, per unit lambda
+     S1: B = 1.0000 per unit lambda, n lam B = 1000.0; M = L_11 = 40.45; S_+ from k=11 = 1.78
+     guaranteed generations above M - S_+ - 1 = 37.67: e^(M-S_+-1)/(n lam B) = 2.298e+13
+
+TOTAL: 18 checks, 0 mismatches

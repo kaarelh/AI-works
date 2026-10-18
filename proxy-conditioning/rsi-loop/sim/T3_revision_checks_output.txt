@@ -1,0 +1,71 @@
+
+========================================================================
+R1. Speed drift toward G with overhead on both slices (T3.5 revised)
+========================================================================
+u = log2(1+o)/alpha = 0.01436
+break-even gap, overhead on both slices (c_k fixed): g0 = 0.5504
+break-even gap, overhead on sound slice only (draft): g0 = 0.5358
+g=0.5: D_spd(G) = -2.451e-05 nats/episode (both slices)
+g=1.0: D_spd(G) = +3.110e-04 nats/episode (both slices)
+g=2.0: D_spd(G) = +1.523e-03 nats/episode (both slices)
+g=4.0: D_spd(G) = +5.571e-03 nats/episode (both slices)
+MC check at g=2: +1.516e-03 nats/episode
+
+========================================================================
+R2. Occam bound for deviation predicates (T3.4(3') revised)
+========================================================================
+n=1e+03: MC mean posterior deviation rate 4.972e-05;  bound O*max rho(1-rho)^n = 4.893e+00;  O/(e n) = 4.896e+00
+n=1e+05: MC mean posterior deviation rate 6.450e-07;  bound O*max rho(1-rho)^n = 4.896e-02;  O/(e n) = 4.896e-02
+n=1e+07: MC mean posterior deviation rate 9.141e-09;  bound O*max rho(1-rho)^n = 4.896e-04;  O/(e n) = 4.896e-04
+n=1e+09: MC mean posterior deviation rate 1.573e-10;  bound O*max rho(1-rho)^n = 4.896e-06;  O/(e n) = 4.896e-06
+tightness, O=1/16, rho=1/(n+1), n=1e+03: E-odds-weighted rate 2.246e-05; bound O/(e n) = 2.299e-05
+tightness, O=1/16, rho=1/(n+1), n=1e+05: E-odds-weighted rate 2.248e-07; bound O/(e n) = 2.299e-07
+schemer contrast: sigma_C has training measure 0, so no attenuation; frontier deviation rate = posterior mass of C = 2^13.7/(1+2^13.7) = 0.99992
+audits a=0.01, recognition s=0.9: training measure 0.0010; survival (1-rho)^n at n=1e+04 = 4.517e-05
+audits a=0.01, recognition s=0.9: training measure 0.0010; survival (1-rho)^n at n=1e+06 = 0.000e+00
+audits a=0.05, recognition s=0.5: training measure 0.0250; survival (1-rho)^n at n=1e+04 = 1.112e-110
+audits a=0.05, recognition s=0.5: training measure 0.0250; survival (1-rho)^n at n=1e+06 = 0.000e+00
+
+========================================================================
+R3. T3.9 combined with T3.3 (near-misses) and T3.13 (fixed point); per-task reading
+========================================================================
+K= 10, delta=0.01: need  10.0 bits per generation; tolerable amb <= log2(1+delta/K) = 1.44e-03 bits (= off-tolerance conditional mass <= 1.0e-03); nu_I/nu_R >= K/delta = 1,000
+K= 30, delta=0.01: need  11.6 bits per generation; tolerable amb <= log2(1+delta/K) = 4.81e-04 bits (= off-tolerance conditional mass <= 3.3e-04); nu_I/nu_R >= K/delta = 3,000
+K=100, delta=0.001: need  16.6 bits per generation; tolerable amb <= log2(1+delta/K) = 1.44e-05 bits (= off-tolerance conditional mass <= 1.0e-05); nu_I/nu_R >= K/delta = 100,000
+with amb=0.0: fixed point needs nu_I/nu_R >= 2^amb K/delta = 3,000 (K=30, delta=1%)
+with amb=0.5: fixed point needs nu_I/nu_R >= 2^amb K/delta = 4,243 (K=30, delta=1%)
+with amb=1.0: fixed point needs nu_I/nu_R >= 2^amb K/delta = 6,000 (K=30, delta=1%)
+mixture reading, K=30, delta=1%, 1e+04 frontier tasks per generation: need log2(K N/delta) = 24.8 bits
+mixture reading, K=30, delta=1%, 1e+06 frontier tasks per generation: need log2(K N/delta) = 31.5 bits
+mixture reading, K=30, delta=1%, 1e+08 frontier tasks per generation: need log2(K N/delta) = 38.1 bits
+mixture reading, amb = 1 bit: per-task near-miss rate 1 - 2^-amb = 0.50
+
+========================================================================
+R4. Self-written-data fixed point: both saturation conditions (T3.13 revised)
+========================================================================
+l_base(I)=12, l_base(R)=40, nu_I=0.02, nu_R=0.05, eta=0.001: dK = +2.40 bits (fixed point -1.32); eta*nu_I / 2^-l_base(I) = 0.08
+l_base(I)=12, l_base(R)=40, nu_I=0.02, nu_R=0.05, eta=0.01: dK = -0.18 bits (fixed point -1.32); eta*nu_I / 2^-l_base(I) = 0.82
+l_base(I)=12, l_base(R)=40, nu_I=0.02, nu_R=0.05, eta=0.05: dK = -1.02 bits (fixed point -1.32); eta*nu_I / 2^-l_base(I) = 4.10
+l_base(I)=12, l_base(R)=40, nu_I=0.02, nu_R=0.05, eta=0.1: dK = -1.17 bits (fixed point -1.32); eta*nu_I / 2^-l_base(I) = 8.19
+eta=0.5, nu_I=0.02: need eta*nu_R <= 3.37e-06 (nu_R <= 6.75e-06) for dK >= 11.6 bits
+eta=0.5, nu_I=0.2: need eta*nu_R <= 3.34e-05 (nu_R <= 6.67e-05) for dK >= 11.6 bits
+eta=0.9, nu_I=0.2: need eta*nu_R <= 6.00e-05 (nu_R <= 6.67e-05) for dK >= 11.6 bits
+
+========================================================================
+R5. Calibrating P2 against Tice et al. (2026)
+========================================================================
+alignment upsampling, before post-training: 45% -> 9% misaligned: 3.05 bits (2.11 nats)
+after post-training: 46% -> 35%: 0.66 bits (0.46 nats)
+P2 reproduces 3.05 bits iff log2(1+phi/w) = 3.05, i.e. phi/w = 7.3
+P2 reproduces 0.66 bits iff phi/w = 0.58
+P2 with l_before=30, phi=1e-04: gain 16.71 bits
+P2 with l_before=30, phi=1e-02: gain 23.36 bits
+P2 with l_before=10, phi=1e-03: gain 1.02 bits
+P2 with l_before=7, phi=1e-02: gain 1.19 bits
+
+========================================================================
+R6. Honesty on frontier questions (per-question reading)
+========================================================================
+K=30, 1e+04 frontier questions per generation, delta=0.01: honest reporter needs 24.8 bits over the overseer simulator
+K=30, 1e+06 frontier questions per generation, delta=0.01: honest reporter needs 31.5 bits over the overseer simulator
+K=30, 1e+08 frontier questions per generation, delta=0.01: honest reporter needs 38.1 bits over the overseer simulator

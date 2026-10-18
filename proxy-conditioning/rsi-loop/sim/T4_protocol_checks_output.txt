@@ -1,0 +1,136 @@
+=== 1. Best response under the flag protocol, brute force against the closed form
+CHECK trial 0 J(G*)-J(A) (b=0.53, c=1.22): predicted 0.0444587, computed 0.0444587  -> OK
+CHECK trial 1 J(G*)-J(A) (b=1.43, c=0.43): predicted 0.00511129, computed 0.00511129  -> OK
+CHECK trial 2 J(G*)-J(A) (b=1.04, c=1.94): predicted 0.019988, computed 0.019988  -> OK
+CHECK trial 3 J(G*)-J(A) (b=0.21, c=1.40): predicted 0.00920777, computed 0.00920777  -> OK
+CHECK trial 4 J(G*)-J(A) (b=1.46, c=1.00): predicted 0.010829, computed 0.010829  -> OK
+--- b = c = 0 gives eps (1 - vbar)
+CHECK Phi(b=c=0) = eps(1-vbar): predicted 0.0053, computed 0.0053  -> OK
+--- for fixed v*, the penalty c only inflates the scale: c = 0 is optimal
+     v*=0.3: Phi for c=0,0.5,1,2: 0.01180, 0.01770, 0.02360, 0.03540
+CHECK v*=0.3: Phi(c)/Phi(0) = 1+c at c=2: predicted 3, computed 3  -> OK
+     v*=0.5: Phi for c=0,0.5,1,2: 0.00240, 0.00360, 0.00480, 0.00720
+CHECK v*=0.5: Phi(c)/Phi(0) = 1+c at c=2: predicted 3, computed 3  -> OK
+     v*=0.8: Phi for c=0,0.5,1,2: 0.00388, 0.00581, 0.00775, 0.01163
+CHECK v*=0.8: Phi(c)/Phi(0) = 1+c at c=2: predicted 3, computed 3  -> OK
+=== 2. Worked example: choose v* (c = 0, b = 1/v* - 1)
+     vbar = 0.735;  no protocol: eps = 0.0200;  v*=1: eps(1-vbar) = 0.00530
+     optimum v* = 0.400 (b = 1.50), Phi = 0.00225
+     v*=1.0: Phi = 0.00530
+     v*=0.6: Phi = 0.00250
+     v*=0.4: Phi = 0.00225
+     v*=0.3: Phi = 0.01180
+     v*=0.1: Phi = 0.08820
+     episodes to overturn odds 1e6 under (D), lam=0.05: no protocol: 13,816
+     episodes to overturn odds 1e6 under (D), lam=0.05: v*=1: 52,134
+     episodes to overturn odds 1e6 under (D), lam=0.05: v* optimal: 122,805
+--- the same cells under (B), Bayes on the final verdict (G* never flags unless v = 1)
+     per-cell nats: v=0.95: 0.0503, v=0.6: 0.5002, v=0.1: 2.2074
+     (B) drift with protocol 0.00973 nats/episode; without 0.09190; ratio 9.45
+     compare eps E[-ln v] = 0.01008
+--- Monte Carlo: sampled episodes, exact tilt, G* vs A
+CHECK MC mean reward gap at v*=0.4: predicted 0.00225, computed 0.00219375  -> OK
+=== 3. Adversarial routing: the gamer chooses where the dispute lands
+     mean atomic error 0.0492; verifier-chosen random atom: f = mean = 0.0492
+     prover-chosen atom: f = max = 0.4709
+     route among  1 random atoms: E f = 0.0499
+     route among  5 random atoms: E f = 0.1556
+     route among 20 random atoms: E f = 0.3247
+=== 4. Consistency checks
+--- (a) liar tracks each framing w.p. R (exchangeable): P(detect) = 1 - E[R^m]
+CHECK two-point mixture pi_coh=0.3, r=0.7, m=1: predicted 0.21, computed 0.209555  -> OK
+     m=  1: independent r=0.8: 0.2000;  Beta(4,1): 0.2000 (=m/(4+m) 0.2000);  two-point: 0.2100 (ceiling 0.70)
+CHECK two-point mixture pi_coh=0.3, r=0.7, m=5: predicted 0.582351, computed 0.581455  -> OK
+     m=  5: independent r=0.8: 0.6723;  Beta(4,1): 0.5556 (=m/(4+m) 0.5556);  two-point: 0.5824 (ceiling 0.70)
+CHECK two-point mixture pi_coh=0.3, r=0.7, m=10: predicted 0.680227, computed 0.67979  -> OK
+     m= 10: independent r=0.8: 0.8926;  Beta(4,1): 0.7143 (=m/(4+m) 0.7143);  two-point: 0.6802 (ceiling 0.70)
+CHECK two-point mixture pi_coh=0.3, r=0.7, m=20: predicted 0.699441, computed 0.699995  -> OK
+     m= 20: independent r=0.8: 0.9885;  Beta(4,1): 0.8333 (=m/(4+m) 0.8333);  two-point: 0.6994 (ceiling 0.70)
+     m=100: independent r=0.8: 1.0000;  Beta(4,1): 0.9615 (=m/(4+m) 0.9615);  two-point: 0.7000 (ceiling 0.70)
+CHECK Beta(4,1), m=10: predicted 0.714286, computed 0.713865  -> OK
+--- (b) independent instances, open-ended lie: all m agree w.p. sum_i p_i^m
+CHECK agreement m=2: predicted 0.3, computed 0.299975  -> OK
+CHECK agreement m=3: predicted 0.1, computed 0.099155  -> OK
+CHECK agreement m=5: predicted 0.013, computed 0.01281  -> OK
+--- (c) framing-specific graders, consistency enforced: G* answers the majority-approved answer
+CHECK eps_res with m=1 framings: predicted 0.019936, computed 0.02009  -> OK
+CHECK eps_res with m=3 framings: predicted 0.00475677, computed 0.0047835  -> OK
+CHECK eps_res with m=5 framings: predicted 0.00403982, computed 0.0039765  -> OK
+CHECK eps_res with m=7 framings: predicted 0.0040022, computed 0.0040145  -> OK
+=== 5. Collusion: detection of a careful gamer's deviation by a monitor
+CHECK pi_C=1.0, sigma=0.9, xi=0.0 (P(honeypot|signal)=0.00): predicted 0.09, computed 0.0903375  -> OK
+CHECK pi_C=1.0, sigma=0.3, xi=0.0 (P(honeypot|signal)=0.00): predicted 0.63, computed 0.630317  -> OK
+CHECK pi_C=1.0, sigma=0.9, xi=0.5 (P(honeypot|signal)=0.74): predicted 0.9, computed 0.9  -> OK
+CHECK pi_C=0.3, sigma=0.9, xi=0.0 (P(honeypot|signal)=0.00): predicted 0.657, computed 0.657157  -> OK
+=== 6. The loop with a protocol: aligned-end drift and separatrix by generation
+--- scenario S0 no protocol: r0=1.0, nu=0.0, omega=0.0
+     k= 0  n D(0) =    -5.30 nats/gen   q_dagger = 0.083   L_k =    3.00   q_k = 0.047
+     k= 1  n D(0) =     0.16 nats/gen   q_dagger = 0.000   L_k =    5.27   q_k = 0.005
+     k= 2  n D(0) =     4.86 nats/gen   q_dagger = 0.000   L_k =    4.81   q_k = 0.008
+     k= 3  n D(0) =     9.11 nats/gen   q_dagger = 0.000   L_k =   -0.52   q_k = 0.627
+     k= 4  n D(0) =    13.16 nats/gen   q_dagger = 0.000   L_k =  -44.73   q_k = 1.000
+     k= 5  n D(0) =    17.19 nats/gen   q_dagger = 0.000   L_k =  -60.00   q_k = 1.000
+     k= 6  n D(0) =    21.38 nats/gen   q_dagger = 0.000   L_k =  -60.00   q_k = 1.000
+     k= 7  n D(0) =    25.88 nats/gen   q_dagger = 0.000   L_k =  -60.00   q_k = 1.000
+     k= 8  n D(0) =    30.84 nats/gen   q_dagger = 0.000   L_k =  -60.00   q_k = 1.000
+     k= 9  n D(0) =    36.41 nats/gen   q_dagger = 0.000   L_k =  -60.00   q_k = 1.000
+     k=10  n D(0) =    42.73 nats/gen   q_dagger = 0.000   L_k =  -60.00   q_k = 1.000
+     k=11  n D(0) =    49.95 nats/gen   q_dagger = 0.000   L_k =  -60.00   q_k = 1.000
+     k=12  n D(0) =    58.27 nats/gen   q_dagger = 0.000   L_k =  -60.00   q_k = 1.000
+     k=13  n D(0) =    67.87 nats/gen   q_dagger = 0.000   L_k =  -60.00   q_k = 1.000
+--- scenario S1 protocol, demonstration outpaces blind spots: r0=0.3, nu=0.3, omega=0.3
+     k= 0  n D(0) =   -12.09 nats/gen   q_dagger = 0.405   L_k =    3.00   q_k = 0.047
+     k= 1  n D(0) =    -8.61 nats/gen   q_dagger = 0.319   L_k =   13.68   q_k = 0.000
+     k= 2  n D(0) =    -6.08 nats/gen   q_dagger = 0.236   L_k =   22.29   q_k = 0.000
+     k= 3  n D(0) =    -4.24 nats/gen   q_dagger = 0.161   L_k =   28.37   q_k = 0.000
+     k= 4  n D(0) =    -2.92 nats/gen   q_dagger = 0.099   L_k =   32.61   q_k = 0.000
+     k= 5  n D(0) =    -1.97 nats/gen   q_dagger = 0.068   L_k =   35.53   q_k = 0.000
+     k= 6  n D(0) =    -1.30 nats/gen   q_dagger = 0.044   L_k =   37.50   q_k = 0.000
+     k= 7  n D(0) =    -0.82 nats/gen   q_dagger = 0.026   L_k =   38.80   q_k = 0.000
+     k= 8  n D(0) =    -0.48 nats/gen   q_dagger = 0.014   L_k =   39.62   q_k = 0.000
+     k= 9  n D(0) =    -0.25 nats/gen   q_dagger = 0.007   L_k =   40.10   q_k = 0.000
+     k=10  n D(0) =    -0.10 nats/gen   q_dagger = 0.002   L_k =   40.36   q_k = 0.000
+     k=11  n D(0) =     0.01 nats/gen   q_dagger = 0.000   L_k =   40.45   q_k = 0.000
+     k=12  n D(0) =     0.07 nats/gen   q_dagger = 0.000   L_k =   40.45   q_k = 0.000
+     k=13  n D(0) =     0.11 nats/gen   q_dagger = 0.000   L_k =   40.38   q_k = 0.000
+--- scenario S2 protocol, blind spots outpace demonstration: r0=0.3, nu=0.05, omega=0.3
+     k= 0  n D(0) =   -12.09 nats/gen   q_dagger = 0.405   L_k =    3.00   q_k = 0.047
+     k= 1  n D(0) =    -7.90 nats/gen   q_dagger = 0.280   L_k =   13.68   q_k = 0.000
+     k= 2  n D(0) =    -4.68 nats/gen   q_dagger = 0.170   L_k =   21.58   q_k = 0.000
+     k= 3  n D(0) =    -2.17 nats/gen   q_dagger = 0.078   L_k =   26.26   q_k = 0.000
+     k= 4  n D(0) =    -0.18 nats/gen   q_dagger = 0.006   L_k =   28.43   q_k = 0.000
+     k= 5  n D(0) =     1.45 nats/gen   q_dagger = 0.000   L_k =   28.60   q_k = 0.000
+     k= 6  n D(0) =     2.82 nats/gen   q_dagger = 0.000   L_k =   27.15   q_k = 0.000
+     k= 7  n D(0) =     4.02 nats/gen   q_dagger = 0.000   L_k =   24.33   q_k = 0.000
+     k= 8  n D(0) =     5.12 nats/gen   q_dagger = 0.000   L_k =   20.31   q_k = 0.000
+     k= 9  n D(0) =     6.15 nats/gen   q_dagger = 0.000   L_k =   15.19   q_k = 0.000
+     k=10  n D(0) =     7.16 nats/gen   q_dagger = 0.000   L_k =    9.04   q_k = 0.000
+     k=11  n D(0) =     8.19 nats/gen   q_dagger = 0.000   L_k =    1.87   q_k = 0.133
+     k=12  n D(0) =     9.25 nats/gen   q_dagger = 0.000   L_k =  -13.84   q_k = 1.000
+     k=13  n D(0) =    10.37 nats/gen   q_dagger = 0.000   L_k =  -60.00   q_k = 1.000
+--- scenario S3 protocol, demonstration outpaces blind spots and recognition: r0=0.3, nu=0.5, omega=0.3
+     k= 0  n D(0) =   -12.09 nats/gen   q_dagger = 0.405   L_k =    3.00   q_k = 0.047
+     k= 1  n D(0) =    -9.06 nats/gen   q_dagger = 0.343   L_k =   13.68   q_k = 0.000
+     k= 2  n D(0) =    -6.79 nats/gen   q_dagger = 0.270   L_k =   22.74   q_k = 0.000
+     k= 3  n D(0) =    -5.08 nats/gen   q_dagger = 0.195   L_k =   29.53   q_k = 0.000
+     k= 4  n D(0) =    -3.80 nats/gen   q_dagger = 0.129   L_k =   34.61   q_k = 0.000
+     k= 5  n D(0) =    -2.84 nats/gen   q_dagger = 0.097   L_k =   38.41   q_k = 0.000
+     k= 6  n D(0) =    -2.12 nats/gen   q_dagger = 0.070   L_k =   41.25   q_k = 0.000
+     k= 7  n D(0) =    -1.59 nats/gen   q_dagger = 0.049   L_k =   43.38   q_k = 0.000
+     k= 8  n D(0) =    -1.18 nats/gen   q_dagger = 0.034   L_k =   44.96   q_k = 0.000
+     k= 9  n D(0) =    -0.88 nats/gen   q_dagger = 0.022   L_k =   46.15   q_k = 0.000
+     k=10  n D(0) =    -0.66 nats/gen   q_dagger = 0.015   L_k =   47.03   q_k = 0.000
+     k=11  n D(0) =    -0.49 nats/gen   q_dagger = 0.010   L_k =   47.69   q_k = 0.000
+     k=12  n D(0) =    -0.37 nats/gen   q_dagger = 0.006   L_k =   48.18   q_k = 0.000
+     k=13  n D(0) =    -0.27 nats/gen   q_dagger = 0.004   L_k =   48.55   q_k = 0.000
+--- crossing generation of the aligned-end drift: k_c = ln(a(1-s0)/((1-a) eps0 r0)) / (kappa - nu + sigma)
+     S0 no protocol: k_c = 0.97; first generation with n D(0) > 0 in the run: 1
+     S1 protocol, demonstration outpaces blind spots: k_c = 10.93; first generation with n D(0) > 0 in the run: 11
+     S2 protocol, blind spots outpace demonstration: k_c = 4.10; first generation with n D(0) > 0 in the run: 5
+     S3 protocol, demonstration outpaces blind spots and recognition: k_c = inf; first generation with n D(0) > 0 in the run: None
+--- S1 from several starting log-odds (final L after 14 generations)
+     L0= -1.0: L_13 =  -60.00
+     L0=  0.0: L_13 =  -60.00
+     L0=  1.0: L_13 =   31.63
+     L0=  2.0: L_13 =   37.24
+     L0=  3.0: L_13 =   40.38

@@ -1,0 +1,426 @@
+Reconciliation checks: simulations against the revised theory (T1, T2, T4).  delta = 0.01, Lam = 4.5951
+
+==============================================================================
+R1. T1.6: ever-flip probability (v/u)^m, m = floor(L0/Lam)+1, and end-of-generation Skellam tails
+==============================================================================
+   P2 of train_sim (eps=0.02, a=0.05, honeypots, s=0.5): u = 0.0250, v = 0.0190, Lam = 4.5951, L0 = 13.816, m = 4
+CHECK | P2 of train_sim: P(L ever < 0) within 9000 episodes (6000 seeds, explicit episodes)
+      predicted: (v/u)^m = 0.3336 (T1.6(3), gambler's ruin on the +-Lam lattice)
+      simulated: 0.3310 +- 0.0061
+      agrees: YES
+   T1 honeypot example (eps=0.01, a=0.03, honeypots, s=0.5): u = 0.0150, v = 0.0097, Lam = 4.5951, L0 = 13.816, m = 4
+CHECK | T1 honeypot example: P(L ever < 0) within 12000 episodes (6000 seeds, explicit episodes)
+      predicted: (v/u)^m = 0.1749 (T1.6(3), gambler's ruin on the +-Lam lattice)
+      simulated: 0.1738 +- 0.0049
+      agrees: YES
+CHECK | T1 honeypot example: P(L_500 < 0) (Skellam(nv, nu) tail, T1.6(4))
+      predicted: 0.0377
+      simulated: 0.0367 +- 0.0024
+      agrees: YES
+CHECK | T1 honeypot example: P(L_500 < L_dag = 2.403) (Skellam(nv, nu) tail, T1.6(4))
+      predicted: 0.0685
+      simulated: 0.0647 +- 0.0032
+      agrees: YES
+   [R1: 12.2 s]
+
+==============================================================================
+R2. (C-on, best-of-k): exact lattice-chain prediction of the fraction of runs that end at A
+==============================================================================
+   T1 §1.2: lambda_+ = Lam(1-(1-pX)^k), lambda_- = Lam(1-pX^k) are the *expected* jumps; the actual jumps
+   are +-Lam or 0, so the class log-odds is a state-dependent lattice walk. Its exact law gives the
+   minority outcomes that the mean-field separatrix (T1: t* = pX at k = 1) cannot.
+   P1, {A, G}, k = 1, 6000 episodes, 300 seeds per start (simulated values parsed from train_sim_output.txt)
+   L0      :   -2.0   -1.0    0.0    0.5    1.0    1.5    2.0    2.5    3.0    4.0    5.0    6.0    8.0
+   chain   :  0.027  0.076  0.190  0.280  0.390  0.511  0.629  0.731  0.810  0.907  0.952  0.975  0.994
+   train_sim:  0.040  0.070  0.200  0.293  0.360  0.553  0.607  0.733  0.800  0.860  0.940  0.973  0.997
+CHECK | P1 (C-on, k=1) fraction ending at A against L0 (13 starts)
+      predicted: exact chain (mean-field separatrix L* = 1.41 gives only the 50% point)
+      simulated: max |z| = 2.79; mean |diff| = 0.016
+      agrees: YES
+CHECK | P1 (C-on, best-of-1), 21 dispositions: fraction of 200 seeds whose class-A mass ends > 1/2
+      predicted: 0.336 (exact chain from class log-odds 0.76; mean-field ODE ends at G)
+      simulated: 0.315
+      agrees: YES
+CHECK | P1 (C-on, best-of-8), 21 dispositions: fraction of 200 seeds whose class-A mass ends > 1/2
+      predicted: 0.146 (exact chain from class log-odds 0.76; mean-field ODE ends at G)
+      simulated: 0.160
+      agrees: YES
+CHECK | P2 (C-on, best-of-1), 21 dispositions: fraction of 200 seeds whose class-A mass ends > 1/2
+      predicted: 0.864 (exact chain from class log-odds 1.56; mean-field ODE ends at A)
+      simulated: 0.895
+      agrees: YES
+CHECK | P2 (C-on, best-of-8), 21 dispositions: fraction of 200 seeds whose class-A mass ends > 1/2
+      predicted: 0.702 (exact chain from class log-odds 1.56; mean-field ODE ends at A)
+      simulated: 0.670
+      agrees: YES
+CHECK | P3 (C-on, best-of-1), 21 dispositions: fraction of 200 seeds whose class-A mass ends > 1/2
+      predicted: 0.163 (exact chain from class log-odds 0.58; mean-field ODE ends at G)
+      simulated: 0.190
+      agrees: YES
+CHECK | P3 (C-on, best-of-8), 21 dispositions: fraction of 200 seeds whose class-A mass ends > 1/2
+      predicted: 0.038 (exact chain from class log-odds 0.58; mean-field ODE ends at G)
+      simulated: 0.025
+      agrees: YES
+CHECK | P1u (C-on, best-of-1), 21 dispositions: fraction of 200 seeds whose class-A mass ends > 1/2
+      predicted: 0.336 (exact chain from class log-odds 0.76; mean-field ODE ends at G)
+      simulated: 0.335
+      agrees: YES
+CHECK | P1u (C-on, best-of-8), 21 dispositions: fraction of 200 seeds whose class-A mass ends > 1/2
+      predicted: 0.146 (exact chain from class log-odds 0.76; mean-field ODE ends at G)
+      simulated: 0.115
+      agrees: YES
+   [R2: 0.4 s]
+
+==============================================================================
+R3. T1.7q quenched reading: P(loop fails) with and without (B) training noise (T1 honeypot example, n = 500)
+==============================================================================
+   Each generation is A or G, drawn from its posterior; G is absorbing (nD(1) = +138). After an all-A history
+   T1.7q uses the deterministic ledger L_k = L0 + k n|D(0)| (n|D(0)| = 12.18). With operator (B) the ledger
+   after training is L_k = L_{k-1} + Lam (N_caught - N_rewarded), sd 16.1 nats per generation.
+   L0 =  1.00: annealed reading with the same (B) noise: P(L < -20 by generation 40) = 0.9529; noise-free annealed map: collapse
+CHECK | quenched P(fail), L0 = 1.00
+      predicted: 0.2689 (T1.7q, noise-free ledger)
+      simulated: 0.4794 +- 0.0007 (multinomial episode counts, 200000 runs)
+      agrees: NO  (training noise dominates the first generation)
+   L0 =  2.00: annealed reading with the same (B) noise: P(L < -20 by generation 40) = 0.6831; noise-free annealed map: collapse
+CHECK | quenched P(fail), L0 = 2.00
+      predicted: 0.1192 (T1.7q, noise-free ledger)
+      simulated: 0.3567 +- 0.0008 (multinomial episode counts, 200000 runs)
+      agrees: NO  (training noise dominates the first generation)
+   L0 =  2.40: annealed reading with the same (B) noise: P(L < -20 by generation 40) = 0.5578; noise-free annealed map: collapse
+CHECK | quenched P(fail), L0 = 2.40
+      predicted: 0.0832 (T1.7q, noise-free ledger)
+      simulated: 0.3253 +- 0.0009 (multinomial episode counts, 200000 runs)
+      agrees: NO  (training noise dominates the first generation)
+   L0 =  3.00: annealed reading with the same (B) noise: P(L < -20 by generation 40) = 0.4309; noise-free annealed map: survives
+CHECK | quenched P(fail), L0 = 3.00
+      predicted: 0.0474 (T1.7q, noise-free ledger)
+      simulated: 0.2927 +- 0.0009 (multinomial episode counts, 200000 runs)
+      agrees: NO  (training noise dominates the first generation)
+   L0 = 13.82: annealed reading with the same (B) noise: P(L < -20 by generation 40) = 0.1308; noise-free annealed map: survives
+CHECK | quenched P(fail), L0 = 13.82
+      predicted: 0.0000 (T1.7q, noise-free ledger)
+      simulated: 0.1113 +- 0.0007 (multinomial episode counts, 200000 runs)
+      agrees: NO  (training noise dominates the first generation)
+   [R3: 8.6 s]
+
+==============================================================================
+R4. T1.10s table, regime (i) row: collapse probability by generation, recomputed with loopcore
+==============================================================================
+CHECK | regime (i), L0 = ln 1e6, n = 500: P(L < -20 by generation 1)
+      predicted: 0.0018 (T1 revision checks, Poisson counts); loopcore DP absorbed below L_dag: 0.0377
+      simulated: 0.0014 +- 0.0003 (loopcore multinomial counts, 20000 seeds)
+      agrees: YES
+CHECK | regime (i), L0 = ln 1e6, n = 500: P(L < -20 by generation 5)
+      predicted: 0.1226 (T1 revision checks, Poisson counts); loopcore DP absorbed below L_dag: 0.1220
+      simulated: 0.1207 +- 0.0023 (loopcore multinomial counts, 20000 seeds)
+      agrees: YES
+CHECK | regime (i), L0 = ln 1e6, n = 500: P(L < -20 by generation 10)
+      predicted: 0.1315 (T1 revision checks, Poisson counts); loopcore DP absorbed below L_dag: 0.1290
+      simulated: 0.1296 +- 0.0024 (loopcore multinomial counts, 20000 seeds)
+      agrees: YES
+CHECK | regime (i), L0 = ln 1e6, n = 500: P(L < -20 by generation 20)
+      predicted: 0.1326 (T1 revision checks, Poisson counts); loopcore DP absorbed below L_dag: 0.1299
+      simulated: 0.1303 +- 0.0024 (loopcore multinomial counts, 20000 seeds)
+      agrees: YES
+CHECK | regime (i), L0 = ln 1e6, n = 500: P(L < -20 by generation 50)
+      predicted: 0.1326 (T1 revision checks, Poisson counts); loopcore DP absorbed below L_dag: 0.1299
+      simulated: 0.1303 +- 0.0024 (loopcore multinomial counts, 20000 seeds)
+      agrees: YES
+   [R4: 0.9 s]
+
+==============================================================================
+R5. T1.10: existence of an aligned fixed point when D(0) > 0, in the sim's fresh map (bounded data channel)
+==============================================================================
+   T1.10's sharpened condition, rederived for chi(L) = Xi(1-2q): with q ~ e^-L, the fixed-point equation is
+   L + (2 Xi + n D1) e^-L = L_b + Xi - n D0, so an aligned fixed point exists iff
+   L_b + Xi - n D0 >= 1 + ln(2 Xi + n D1), D1 = D'(0).  The sim's criterion is D(0) < 0 (eps_h < eps*).
+CHECK | n = 2000: largest eps_h with an aligned stable fixed point of the fresh mean map
+      predicted: 0.026746 (T1.10 sharpened, adapted); the D(0) < 0 criterion gives eps* = 0.026316
+      simulated: 0.026746 (bisection on loopcore.fixed_points_fresh)
+      agrees: YES
+CHECK | n = 20000: largest eps_h with an aligned stable fixed point of the fresh mean map
+      predicted: 0.026332 (T1.10 sharpened, adapted); the D(0) < 0 criterion gives eps* = 0.026316
+      simulated: 0.026332 (bisection on loopcore.fixed_points_fresh)
+      agrees: YES
+   [R5: 0.0 s]
+
+==============================================================================
+R6. T1.10s: Gaussian hazard Phi(-z) against the per-generation escape probability of the fresh regime
+==============================================================================
+   z as in T1.10s with eta = 0 (the sim's channel saturates at the aligned end), anchor L_b + Xi, separatrix
+   L_u (unstable fixed point of the fresh map): z = (L_b + Xi + n Lam (u - v) - L_u) / sd.
+   'as written' uses sd = Lam sqrt(n w); '+ data noise' adds the data channel's variance 4 m p(1-p) lam_rho^2.
+   eps_h = 0.020, n =  2000: L_u =   3.16, mean   67.25, z = 1.49 / 1.48 -> Phi(-z) = 0.0685 / 0.0693; semi-analytic p_esc = 0.0688; simulated 0.0692 +- 0.0018
+CHECK | eps_h = 0.020, n = 2000: per-generation escape from the aligned state
+      predicted: Phi(-z) = 0.0685 (T1.10s as written), 0.0693 (with data-channel variance)
+      simulated: 0.0692 +- 0.0018 (one generation from an aligned teacher, 20000 seeds)
+      agrees: YES
+   eps_h = 0.020, n =  5000: L_u =   3.24, mean  149.96, z = 2.15 / 2.15 -> Phi(-z) = 0.0157 / 0.0158; semi-analytic p_esc = 0.0157; simulated 0.0140 +- 0.0008
+CHECK | eps_h = 0.020, n = 5000: per-generation escape from the aligned state
+      predicted: Phi(-z) = 0.0157 (T1.10s as written), 0.0158 (with data-channel variance)
+      simulated: 0.0140 +- 0.0008 (one generation from an aligned teacher, 20000 seeds)
+      agrees: YES
+   eps_h = 0.015, n =  1000: L_u =   2.52, mean   61.51, z = 2.05 / 2.03 -> Phi(-z) = 0.0202 / 0.0212; semi-analytic p_esc = 0.0201; simulated 0.0204 +- 0.0010
+CHECK | eps_h = 0.015, n = 1000: per-generation escape from the aligned state
+      predicted: Phi(-z) = 0.0202 (T1.10s as written), 0.0212 (with data-channel variance)
+      simulated: 0.0204 +- 0.0010 (one generation from an aligned teacher, 20000 seeds)
+      agrees: YES
+   eps_h = 0.010, n =   500: L_u =   2.06, mean   47.72, z = 2.39 / 2.34 -> Phi(-z) = 0.0084 / 0.0096; semi-analytic p_esc = 0.0078; simulated 0.0089 +- 0.0007
+CHECK | eps_h = 0.010, n = 500: per-generation escape from the aligned state
+      predicted: Phi(-z) = 0.0084 (T1.10s as written), 0.0096 (with data-channel variance)
+      simulated: 0.0089 +- 0.0007 (one generation from an aligned teacher, 20000 seeds)
+      agrees: YES
+   eps_h = 0.024, n =  5000: L_u =   4.18, mean   62.66, z = 0.82 / 0.82 -> Phi(-z) = 0.2052 / 0.2056; semi-analytic p_esc = 0.2052; simulated 0.2046 +- 0.0029
+CHECK | eps_h = 0.024, n = 5000: per-generation escape from the aligned state
+      predicted: Phi(-z) = 0.2052 (T1.10s as written), 0.2056 (with data-channel variance)
+      simulated: 0.2046 +- 0.0029 (one generation from an aligned teacher, 20000 seeds)
+      agrees: YES
+   [R6: 0.1 s]
+
+==============================================================================
+R7. T1.11: time to failure when the aligned end leaks (D(0) > 0), continued regime
+==============================================================================
+   eps_h = 0.03 (> eps* = 0.0263): D0 = 0.01608, D1 = D'(0) = 0.7766, n D0 = 32.17 nats/generation, noise sd Lam sqrt(nw) = 47.5
+CHECK | L0 = 50: generations until L < 0
+      predicted: T1.11 ODE T = 1.44, so first integer generation 2; discrete mean map 2; Wald L0/(nD0) = 1.55
+      simulated: mean 2.57, median 2.0, 10-90% [1, 5] (4000 seeds)
+      agrees: YES
+CHECK | L0 = 100: generations until L < 0
+      predicted: T1.11 ODE T = 2.99, so first integer generation 3; discrete mean map 4; Wald L0/(nD0) = 3.11
+      simulated: mean 4.09, median 3.0, 10-90% [2, 8] (4000 seeds)
+      agrees: YES
+CHECK | L0 = 200: generations until L < 0
+      predicted: T1.11 ODE T = 6.10, so first integer generation 7; discrete mean map 7; Wald L0/(nD0) = 6.22
+      simulated: mean 7.27, median 6.0, 10-90% [3, 12] (4000 seeds)
+      agrees: YES
+   [R7: 0.2 s]
+
+==============================================================================
+R8. Step size when episodes per generation scale with the step (n = g/r, T1.12) instead of fixed n (stepsize_sim)
+==============================================================================
+   fresh regime, eps_0 = 0.02, kappa = 0.02; fixed n = 2000 versus n(g) = 2000 x 4g (equal at g = 1/4)
+   g                   :  1.000  0.500  0.250  0.125  0.062  0.031  0.016
+   P(fail), fixed n    :  0.982  0.887  0.796  0.776  0.851  0.949  0.995   (semi-analytic, as in stepsize_sim)
+   P(fail), n prop. g  :  1.000  0.952  0.796  0.842  0.959  0.996  1.000   (semi-analytic)
+   P(fail), n prop. g  :  1.000  0.945  0.777  0.880  0.948  0.995  1.000   (simulated, 400 seeds)
+CHECK | n = 2000 x 4g: semi-analytic escape model against simulation (7 step sizes)
+      predicted: curve above
+      simulated: max |z| = 2.08
+      agrees: YES
+   fresh regime, eps_0 = 0.02, kappa = 0.02; fixed n = 20000 versus n(g) = 20000 x 4g (equal at g = 1/4)
+   g                   :  1.000  0.500  0.250  0.125  0.062  0.031  0.016
+   P(fail), fixed n    :  1.000  1.000  0.581  0.057  0.009  0.004  0.003   (semi-analytic, as in stepsize_sim)
+   P(fail), n prop. g  :  1.000  1.000  0.581  0.268  0.495  0.908  0.999   (semi-analytic)
+   P(fail), n prop. g  :  1.000  1.000  0.570  0.258  0.520  0.900  1.000   (simulated, 400 seeds)
+CHECK | n = 20000 x 4g: semi-analytic escape model against simulation (7 step sizes)
+      predicted: curve above
+      simulated: max |z| = 1.01
+      agrees: YES
+   continued regime, eps_0 = 0.02, n(g) = 2000 x 4g, L_base = 4 (L_dag = 3.30): exact DP and simulation
+   g                   :  1.000  0.500  0.250  0.125  0.062  0.031  0.016
+   P(fail), n prop. g  :  1.000  0.938  0.591  0.412  0.429  0.498  0.577   (exact DP)
+   P(fail), n prop. g  :  1.000  0.940  0.588  0.395  0.420  0.505  0.605   (simulated, 400 seeds)
+CHECK | continued, n = 2000 x 4g, L_base = 4: smaller steps never worse (T1 takeaway 9 with psi = 0)
+      predicted: P(fail) non-increasing as g falls
+      simulated: DP vs sim max |z| = 1.13; DP monotone: False
+      agrees: NO  (the collusion feedback acts at every generation boundary; with a fixed total budget, more boundaries let it act on transient dips of the same event walk)
+   continued regime, eps_0 = 0.02, n(g) = 2000 x 4g, L_base = 10 (L_dag = 3.30): exact DP and simulation
+   g                   :  1.000  0.500  0.250  0.125  0.062  0.031  0.016
+   P(fail), n prop. g  :  1.000  0.923  0.524  0.365  0.363  0.409  0.461   (exact DP)
+   P(fail), n prop. g  :  1.000  0.900  0.540  0.398  0.385  0.383  0.468   (simulated, 400 seeds)
+CHECK | continued, n = 2000 x 4g, L_base = 10: smaller steps never worse (T1 takeaway 9 with psi = 0)
+      predicted: P(fail) non-increasing as g falls
+      simulated: DP vs sim max |z| = 1.72; DP monotone: False
+      agrees: NO  (the collusion feedback acts at every generation boundary; with a fixed total budget, more boundaries let it act on transient dips of the same event walk)
+   [R8: 0.4 s]
+
+==============================================================================
+R9. T1.1b: unpredictable errors act on softness (competence axis), explicit episodes
+==============================================================================
+CHECK | delta_S = 0.02: drift of ln mu(S)/mu(A) per episode, (B) and (D, beta = 1)
+      predicted: (B) +0.0250, (D) -0.0090
+      simulated: (B) +0.0250 +- 0.0001, (D) -0.0090 +- 0.0000
+      agrees: YES
+CHECK | delta_S = 0.05: drift of ln mu(S)/mu(A) per episode, (B) and (D, beta = 1)
+      predicted: (B) +0.0413, (D) -0.0360
+      simulated: (B) +0.0413 +- 0.0003, (D) -0.0360 +- 0.0000
+      agrees: YES
+CHECK | delta_S = 0.10: drift of ln mu(S)/mu(A) per episode, (B) and (D, beta = 1)
+      predicted: (B) +0.0246, (D) -0.0810
+      simulated: (B) +0.0247 +- 0.0005, (D) -0.0810 +- 0.0000
+      agrees: YES
+CHECK | delta_S = 0.20: drift of ln mu(S)/mu(A) per episode, (B) and (D, beta = 1)
+      predicted: (B) -0.0527, (D) -0.1710
+      simulated: (B) -0.0525 +- 0.0006, (D) -0.1710 +- 0.0001
+      agrees: YES
+CHECK | (B) posterior mode over 12 softness values after 5000 episodes (uniform prior)
+      predicted: delta = eps_u = 0.05
+      simulated: mode = 0.05 in 93% of seeds; modes seen: 0.04, 0.05, 0.06
+      agrees: YES
+   [R9: 0.1 s]
+
+==============================================================================
+R10. T1.4c: best-responder drift under binormal recognition, explicit episodes (T1 honeypot example, (B))
+==============================================================================
+CHECK | AUC 0.70: drift of ln mu(G*)/mu(A) per episode
+      predicted: +0.001540 (T1.4c table)
+      simulated: +0.001567 +- 0.000059
+      agrees: YES
+CHECK | AUC 0.83: drift of ln mu(G*)/mu(A) per episode
+      predicted: +0.010410 (T1.4c table)
+      simulated: +0.010415 +- 0.000148
+      agrees: YES
+CHECK | AUC 0.95: drift of ln mu(G*)/mu(A) per episode
+      predicted: +0.026634 (T1.4c table)
+      simulated: +0.026808 +- 0.000125
+      agrees: YES
+CHECK | audits a mixture: fraction 0.2 drawn from the real-opportunity distribution, rest AUC 0.83
+      predicted: +0.001885 (T1.4c design condition)
+      simulated: +0.002072 +- 0.000117
+      agrees: YES
+CHECK | audits a mixture: fraction 0.5 drawn from the real-opportunity distribution, rest AUC 0.83
+      predicted: +0.000000 (T1.4c design condition)
+      simulated: +0.000000 +- 0.000000
+      agrees: YES
+   [R10: 2.4 s]
+
+==============================================================================
+R11. T2 Example 1 (AUC 0.8, pbar = 0.3, w = 0.05, alpha = 0.99, uniform m): per-episode updates on the continuum
+==============================================================================
+CHECK | (D) per-episode: number of episodes at which the frontier on-task rate crosses 1/2
+      predicted: 6083 (S4d posterior, T2.3)
+      simulated: median over runs 5683, mean 5733 (200 runs)
+      agrees: YES  (per-episode updates flip 7% earlier: the posterior follows the supremum of the random field over t)
+CHECK | (D) per-episode, lambda = (0.1, 0.4): P_on = mu_n(A) after n = 1000 episodes
+      predicted: 0.989 (T2.3 under S4d: mu_n proportional to mu_0 exp(n D(t)))
+      simulated: mean 0.982 +- 0.001, median 0.987, 25-75% [0.979, 0.991]
+      agrees: YES
+CHECK | (D) per-episode, lambda = (0.1, 0.4): P_on = mu_n(A) after n = 2000 episodes
+      predicted: 0.977 (T2.3 under S4d: mu_n proportional to mu_0 exp(n D(t)))
+      simulated: mean 0.956 +- 0.004, median 0.974, 25-75% [0.949, 0.985]
+      agrees: YES
+CHECK | (D) per-episode, lambda = (0.1, 0.4): P_on = mu_n(A) after n = 5000 episodes
+      predicted: 0.741 (T2.3 under S4d: mu_n proportional to mu_0 exp(n D(t)))
+      simulated: mean 0.605 +- 0.019, median 0.653, 25-75% [0.418, 0.836]
+      agrees: NO
+CHECK | (D) per-episode, lambda = (0.1, 0.4): P_on = mu_n(A) after n = 10000 episodes
+      predicted: 0.020 (T2.3 under S4d: mu_n proportional to mu_0 exp(n D(t)))
+      simulated: mean 0.050 +- 0.007, median 0.012, 25-75% [0.002, 0.052]
+      agrees: YES
+CHECK | (B), lambda = (Lam, Lam): P_on = mu_n(A) after n = 20 episodes
+      predicted: 0.939 (T2.3 under S4d: mu_n proportional to mu_0 exp(n D(t)))
+      simulated: mean 0.706 +- 0.017, median 0.903, 25-75% [0.529, 0.990]
+      agrees: NO
+CHECK | (B), lambda = (Lam, Lam): P_on = mu_n(A) after n = 43 episodes
+      predicted: 0.612 (T2.3 under S4d: mu_n proportional to mu_0 exp(n D(t)))
+      simulated: mean 0.477 +- 0.020, median 0.543, 25-75% [0.014, 0.949]
+      agrees: NO
+CHECK | (B), lambda = (Lam, Lam): P_on = mu_n(A) after n = 100 episodes
+      predicted: 0.005 (T2.3 under S4d: mu_n proportional to mu_0 exp(n D(t)))
+      simulated: mean 0.155 +- 0.015, median 0.000, 25-75% [0.000, 0.041]
+      agrees: NO
+CHECK | (B), lambda = (Lam, Lam): P_on = mu_n(A) after n = 1000 episodes
+      predicted: 0.000 (T2.3 under S4d: mu_n proportional to mu_0 exp(n D(t)))
+      simulated: mean 0.000 +- 0.000, median 0.000, 25-75% [0.000, 0.000]
+      agrees: YES
+   [R11: 1.5 s]
+
+==============================================================================
+R12. Sieve scenario 2 (pooled honeypots, uninformative perception noise): capture against evidence per event
+==============================================================================
+   Heuristic law (this file): a run is captured when lambda M >= x, x = ln(mu(A)/g), M = max of the +-1 walk
+   over opportunities sorted by perceived detection, P(M >= k) = (P+/P-)^k, so P(capture) ~ (P+/P-)^ceil(x/lambda),
+   independent of n. g = prior mass between neighbouring low-tail opportunities (~0.0036 at n = 1e4).
+CHECK | (B), Lam (lambda = 4.595): fraction of runs captured (frontier on-task < 1/2), n = 1e3 and 1e4
+      predicted: (P+/P-)^ceil(x/lambda) = 0.754^2 = 0.569, independent of n (x = 4.92)
+      simulated: n = 1e3: 0.563; n = 1e4: 0.543 (+- 0.020)
+      agrees: YES
+CHECK | (D) beta=0.25 (lambda = 3.920): fraction of runs captured (frontier on-task < 1/2), n = 1e3 and 1e4
+      predicted: (P+/P-)^ceil(x/lambda) = 0.754^2 = 0.569, independent of n (x = 4.92)
+      simulated: n = 1e3: 0.498; n = 1e4: 0.497 (+- 0.020)
+      agrees: YES
+CHECK | (D) beta=0.5 (lambda = 1.960): fraction of runs captured (frontier on-task < 1/2), n = 1e3 and 1e4
+      predicted: (P+/P-)^ceil(x/lambda) = 0.754^3 = 0.429, independent of n (x = 4.92)
+      simulated: n = 1e3: 0.348; n = 1e4: 0.312 (+- 0.019)
+      agrees: YES  (heuristic: within a factor 1.5)
+CHECK | (D) beta=1 (lambda = 0.980): fraction of runs captured (frontier on-task < 1/2), n = 1e3 and 1e4
+      predicted: (P+/P-)^ceil(x/lambda) = 0.754^6 = 0.184, independent of n (x = 4.92)
+      simulated: n = 1e3: 0.160; n = 1e4: 0.110 (+- 0.013)
+      agrees: YES  (heuristic: within a factor 1.5)
+CHECK | (D) beta=2 (lambda = 0.490): fraction of runs captured (frontier on-task < 1/2), n = 1e3 and 1e4
+      predicted: (P+/P-)^ceil(x/lambda) = 0.754^11 = 0.045, independent of n (x = 4.92)
+      simulated: n = 1e3: 0.042; n = 1e4: 0.030 (+- 0.007)
+      agrees: YES  (heuristic: within a factor 1.5)
+CHECK | (D) beta=4 (lambda = 0.245): fraction of runs captured (frontier on-task < 1/2), n = 1e3 and 1e4
+      predicted: (P+/P-)^ceil(x/lambda) = 0.754^21 = 0.003, independent of n (x = 4.92)
+      simulated: n = 1e3: 0.003; n = 1e4: 0.000 (+- 0.002)
+      agrees: YES  (heuristic: within a factor 1.5)
+   [R12: 2.9 s]
+
+==============================================================================
+R13. T4.5 and T4.7: the flag protocol under (B), explicit episodes
+==============================================================================
+   A emits I + flag w.p. 1-delta (X w.p. delta); G emits X w.p. 1-delta (I + flag w.p. delta). In an error cell
+   the flag is accepted w.p. v. Two readings of 'accepted w.p. v' under (B):
+   fresh coin: the verdict on the flagged I is random for every evaluation, so P_A(pass) = (1-delta) v + delta
+      (T4.5's formula); fixed verdict: the episode determines whether this flag is accepted (an event of prob v),
+      and (B) conditions on that realised verdict, P_A(pass) = (1-delta) 1[acc] + delta.
+CHECK | T4.5 worked example (eps = 0.02, v = 0.95/0.6/0.1 in 60/25/15%): drift of ln mu(G)/mu(A) under (B), fresh coin
+      predicted: 0.00973 (T4.5)
+      simulated: 0.00966 +- 0.00004
+      agrees: YES
+CHECK | same, fixed verdict per episode
+      predicted: 0.00973 (T4.5's formula) -- the fixed reading gives eps Lam E(1-v) = 0.02435
+      simulated: 0.02419 +- 0.00010
+      agrees: NO  (T4.5 holds only for fresh verifier randomness; with a fixed verdict the protocol cuts (B) drift by 3.8x, not 9.4x)
+   T4.7 under (B), fresh coin: lambda_+ = 0.486 nats per rewarded opportunity, t* = 0.096, sign flip at s = 0.966
+   T4.7 under (B), fixed verdict: lambda_+ = 1.218 nats per rewarded opportunity, t* = 0.209, sign flip at s = 0.914
+CHECK | T4.7 (B), fresh coin, s = 0.95: drift of the naive gamer per episode (sign flips at 0.966)
+      predicted: -0.002175
+      simulated: -0.002254 +- 0.000063
+      agrees: YES
+CHECK | T4.7 (B), fresh coin, s = 0.98: drift of the naive gamer per episode (sign flips at 0.966)
+      predicted: +0.001960
+      simulated: +0.001964 +- 0.000044
+      agrees: YES
+   [R13: 1.0 s]
+
+==============================================================================
+R14. T4.18: the protocol loop map (scenarios S0-S3), recomputed; and with (D) event noise
+==============================================================================
+CHECK | S0 no protocol: q_dag_0, first k with nD_k(0) > 0, L_13, L_200 (L0 = 3)
+      predicted: 0.083, 1, fails at k=3, fails (T4.18 table; failure = first k with L_k < 0)
+      simulated: 0.083, 1, fails at k=3, fails (re-implemented map)
+      agrees: YES
+CHECK | S1 nu=0.3: q_dag_0, first k with nD_k(0) > 0, L_13, L_200 (L0 = 3)
+      predicted: 0.405, 11, 40.4, 38.7 (T4.18 table; failure = first k with L_k < 0)
+      simulated: 0.405, 11, 40.38, 38.67 (re-implemented map)
+      agrees: YES
+CHECK | S2 nu=0.05: q_dag_0, first k with nD_k(0) > 0, L_13, L_200 (L0 = 3)
+      predicted: 0.405, 5, fails at k=12, fails (T4.18 table; failure = first k with L_k < 0)
+      simulated: 0.405, 5, fails at k=12, fails (re-implemented map)
+      agrees: YES
+CHECK | S3 nu=0.5: q_dag_0, first k with nD_k(0) > 0, L_13, L_200 (L0 = 3)
+      predicted: 0.405, None, 48.6, 49.6 (T4.18 table; failure = first k with L_k < 0)
+      simulated: 0.405, None, 48.55, 49.61 (re-implemented map)
+      agrees: YES
+CHECK | S1 with (D) event noise (lambda = 0.05, n = 20000): P(fail by k = 200), L0 = 0.5
+      predicted: deterministic map: survives at 20.7 (separatrix L_dag = 0.385)
+      simulated: 0.295; surviving runs end at mean 22.28, sd 3.70
+      agrees: YES  (noise matters only within ~1 nat of the separatrix)
+CHECK | S1 with (D) event noise (lambda = 0.05, n = 20000): P(fail by k = 200), L0 = 1.0
+      predicted: deterministic map: survives at 29.9 (separatrix L_dag = 0.385)
+      simulated: 0.000; surviving runs end at mean 29.90, sd 2.10
+      agrees: YES  (noise matters only within ~1 nat of the separatrix)
+CHECK | S1 with (D) event noise (lambda = 0.05, n = 20000): P(fail by k = 200), L0 = 2.0
+      predicted: deterministic map: survives at 35.5 (separatrix L_dag = 0.385)
+      simulated: 0.000; surviving runs end at mean 35.58, sd 1.94
+      agrees: YES  (noise matters only within ~1 nat of the separatrix)
+CHECK | S1 with (D) event noise (lambda = 0.05, n = 20000): P(fail by k = 200), L0 = 3.0
+      predicted: deterministic map: survives at 38.7 (separatrix L_dag = 0.385)
+      simulated: 0.000; surviving runs end at mean 38.68, sd 1.96
+      agrees: YES  (noise matters only within ~1 nat of the separatrix)
+   [R14: 0.1 s]
+
+checks: 74; disagreements: 12; runtime 31.1 s

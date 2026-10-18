@@ -1,0 +1,47 @@
+=== 1. Master formula under (B), exact expectation over episode categories
+CHECK (B) eps=0.02 a=0.05 h=1 s=0.5 t=1.0 p=0.568: predicted -0.0275707, computed -0.0275707  -> OK
+CHECK (B) eps=0.05 a=0.2 h=0.05 s=0.5 t=0.3 p=0.111: predicted 0.103055, computed 0.103055  -> OK
+CHECK (B) eps=0.01 a=0.03 h=1 s=0.5 t=0.55 p=0.607: predicted -0, computed 0  -> OK
+CHECK (B) eps=0.01 a=0.03 h=1 s=0.5 t=0.65 p=0.607: predicted -0.0243541, computed -0.0243541  -> OK
+=== 2. Best-responding gamer with heterogeneous detection d: max_t E[(t*-d)1{d<t}] at t=t*, >= 0
+CHECK trial 0: argmax_t (t*=0.554): predicted 0.553919, computed 0.555  -> OK
+     max value 0.05718 >= 0; E[(t*-d)^+] = 0.05718
+CHECK trial 1: argmax_t (t*=0.551): predicted 0.550568, computed 0.55  -> OK
+     max value 0.1254 >= 0; E[(t*-d)^+] = 0.1254
+CHECK trial 2: argmax_t (t*=0.597): predicted 0.597055, computed 0.5975  -> OK
+     max value 0.2161 >= 0; E[(t*-d)^+] = 0.2161
+CHECK trial 3: argmax_t (t*=0.904): predicted 0.904384, computed 0.905  -> OK
+     max value 0.1563 >= 0; E[(t*-d)^+] = 0.1563
+CHECK trial 4: argmax_t (t*=0.839): predicted 0.838835, computed 0.84  -> OK
+     max value 0.5549 >= 0; E[(t*-d)^+] = 0.5549
+=== 3. Ruin probability with negative drift: lattice walk, steps of Lam, up w.p. u, down w.p. v
+CHECK P(posterior ever flips) m=4 steps, (v/u)^m: predicted 0.174873, computed 0.175015  -> OK
+     Lundberg bound (v/u)^(L0/Lam) = 0.2696
+     with 0.05-nat events: bound exp(-theta* L0) = 4.89e-53
+=== 4. Separatrix q_dagger
+CHECK random audits a=0.6 s=0.0 lp=1 lm=1: predicted 0.166667, computed 0.166667  -> OK
+CHECK random audits a=0.1 s=0.3 lp=0.05 lm=1.0: predicted 0.333333, computed 0.333333  -> OK
+     honeypot worked example: u0=0.0150 v0=0.0097 p0=0.607 D0/ep=-0.0244  D(1)/ep=0.2757  q_dag=0.0829  L_dag=2.403
+     per generation (n=500): n D0 = -12.18 nats, n D(1) = 137.9 nats
+=== 5. Time to failure, regime (i): dL/dk = -n (D0 + D1 q(L)), q = 1/(1+e^L)
+CHECK ODE time L0=13.82 nD0=0.5 nD1=5.0: predicted 23.113, computed 23.113  -> OK
+     discrete map: fails after 24 generations; L0/(nD0) = 27.6; O/(nD1) = 2e+05
+CHECK ODE time L0=13.82 nD0=0.0 nD1=5.0: predicted 200003, computed 200003  -> OK
+     discrete map: fails after 200009 generations; L0/(nD0) = inf; O/(nD1) = 2e+05
+CHECK ODE time L0=6.91 nD0=0.2 nD1=20.0: predicted 12.1192, computed 12.1192  -> OK
+     discrete map: fails after 14 generations; L0/(nD0) = 34.5; O/(nD1) = 50
+CHECK ODE time L0=5.00 nD0=0.0 nD1=0.5: predicted 304.826, computed 304.826  -> OK
+     discrete map: fails after 307 generations; L0/(nD0) = inf; O/(nD1) = 297
+=== 6. Regime (ii): L' = (1-eta) Lb + eta L - n D(q(L)), honeypot worked example
+     Lb=3.0 eta=0.5 best_resp=False: fixed points (L*, F'(L*)) = [(-272.707, 0.5), (2.376, 11.95), (27.354, 0.5)]; orbits from [10,3,2.6,2.3,0] end at [27.35, 27.35, 27.35, -272.71, -272.71]
+     Lb=3.0 eta=0.5 best_resp=True: fixed points (L*, F'(L*)) = [(-272.707, 0.5), (2.376, 11.95), (3.0, 0.5)]; orbits from [10,3,2.6,2.3,0] end at [3.0, 3.0, 3.0, -272.71, -272.71]
+     Lb=2.0 eta=0.5 best_resp=True: fixed points (L*, F'(L*)) = [(-273.707, 0.5)]; orbits from [10,3,2.6,2.3,0] end at [-273.71, -273.71, -273.71, -273.71, -273.71]
+     Lb=1.0 eta=0.5 best_resp=False: fixed points (L*, F'(L*)) = [(-274.707, 0.5), (2.471, 11.069), (25.354, 0.5)]; orbits from [10,3,2.6,2.3,0] end at [25.35, 25.35, 25.35, -274.71, -274.71]
+     step-limit prediction for aligned FP (naive, D~D0): Lb + n|D0|/(1-eta) = 27.35
+=== 7. Step size: Lambda_tot(g) = C psi/g + (C/r) Phi (eps0 + kappa g)
+CHECK g* = sqrt(r psi/(Phi kappa)): predicted 0.612372, computed 0.612374  -> OK
+CHECK Lambda* = C Phi eps0/r + 2C sqrt(psi Phi kappa/r): predicted 13.798, computed 13.798  -> OK
+     g*=0.612, K*=C/g*=16.3 generations, total loss 13.80 nats
+=== 8. Recognition selection under (B), random audits: drift between gamers G_s', G_s = a h (s'-s) lm
+CHECK s'=0.5, s=0.0: predicted 0.00459512, computed 0.00459512  -> OK
+CHECK s'=0.9, s=0.2: predicted 0.00643317, computed 0.00643317  -> OK
