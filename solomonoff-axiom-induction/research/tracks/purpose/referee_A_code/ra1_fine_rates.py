@@ -6,14 +6,18 @@ Seed 20261018 (paired bootstrap over the 8000 sample times; nothing else is rand
 
 For each fit's error sample e (arcmin) we compute, with no fit-dependent band and no fixed bin count:
   r(D)  = E_u H(cell of e in the grid {kD - u}) in bits, the ideal rate of Thm T3.3 for the empirical law of e(t),
-          t uniform in the window; E_u by a 64-point midpoint rule over the dither (exact for the coarse regime
-          up to the rule's error, which is far below the differences reported).  Miller-Madow bias correction
-          (m-1)/(2N ln 2), m = number of occupied cells, is applied (and reported without it as well).
+          t uniform in the window, computed exactly through the identity of Lemma T3.2 (h(e+V) - log2 D, the
+          density of e+V being piecewise constant for the empirical law).  No bias correction: the plug-in rate of an
+          empirical law is biased low when a cell holds few samples, so a (series, D) is flagged UNRELIABLE when
+          N D / (2 max|e|) < 20 samples per cell, and unreliable cells are excluded from every count below.
+          (Version 1 of this script averaged over 64 midpoint dithers, which misses narrow supports at coarse D:
+          its output is kept as ra1_fine_rates_v1_midpoint_BUG.out and is not used.)
   hKL   = Kozachenko-Leonenko differential entropy estimate (k = 4), bits; the fine-limit rate is hKL - log2 D.
   h40, h160, h640 = plug-in histogram differential entropies on [-max, max] with 40, 160, 640 bins (h40 is the
           quantity the developer reports SH agrees with at 0.1').
 Decisions between two fits use a paired bootstrap (B = 100 resamples of the time indices, shared by all fits):
-a sign counts only if |difference| > 2 bootstrap SE.
+a sign counts only if |difference| > 2 bootstrap SE.  The developer's SH winners are read from
+../checks/p4_kepler_allfits.out and compared with the ideal-rate winners at 0.1' and 1800'.
 """
 import itertools
 import math
@@ -27,7 +31,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = []
 DELTAS = [0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 60.0, 120.0, 300.0, 600.0, 1800.0]
 BOOT_D = [0.1, 1.0, 10.0, 60.0, 1800.0]
-NU = 64
+MINCELL = 20.0
 NB = 100
 FITS = ["F3", "L2", "L1", "Linf"]
 
@@ -37,22 +41,21 @@ def out(s=""):
     print(s, flush=True)
 
 
-def rate(e, D, mm=True):
-    """E_u H(cell | u) in bits for the empirical law of e, grid of width D shifted by u."""
+def rate(e, D, mm=False):
+    """E_u H(cell | u) in bits for the empirical law of e, grid of width D shifted by a uniform dither u.
+    Exact, by the identity of Lemma T3.2: H(C_U(e) | U) = h(e + V) - log2 D, where for the empirical law e + V has
+    the piecewise-constant density f(y) = #{i : y - D <= e_i < y} / (N D); integrate -f log2 f over its pieces."""
     N = e.size
-    tot = 0.0
-    for k in range(NU):
-        u = (k + 0.5) / NU * D
-        c = np.floor((e + u) / D).astype(np.int64)
-        c -= c.min()
-        cnt = np.bincount(c)
-        cnt = cnt[cnt > 0]
-        p = cnt / N
-        H = float(-np.sum(p * np.log2(p)))
-        if mm:
-            H += (cnt.size - 1) / (2 * N * math.log(2))
-        tot += H
-    return tot / NU
+    pts = np.concatenate([e, e + D])
+    inc = np.concatenate([np.ones(N), -np.ones(N)])
+    o = np.argsort(pts, kind="mergesort")
+    pts, inc = pts[o], inc[o]
+    cnt = np.cumsum(inc)[:-1]
+    ln = np.diff(pts)
+    ok = (cnt > 0) & (ln > 0)
+    f = cnt[ok] / (N * D)
+    h = float(np.sum(-ln[ok] * f * np.log2(f)))
+    return h - math.log2(D)
 
 
 def h_hist(e, nb):
@@ -89,10 +92,16 @@ def main():
     Z = np.load(os.path.join(HERE, "..", "checks", "p4_allfits.npz"))
     rows = sorted({k[:-2] for k in Z.files if k.endswith("_t")})
     rng = np.random.default_rng(SEED)
-    out("# ra1_fine_rates.py seed=%d numpy %s; %d series; dithers %d; bootstrap %d" % (
-        SEED, np.__version__, len(rows), NU, NB))
-    out("# r(D): ideal SAI rate (Thm T3.3) of the empirical error law, Miller-Madow corrected, bits per datum")
+    out("# ra1_fine_rates.py seed=%d numpy %s; %d series; exact dither integral; min samples per cell %g; bootstrap %d" % (
+        SEED, np.__version__, len(rows), MINCELL, NB))
+    out("# r(D): ideal SAI rate (Thm T3.3) of the empirical error law, exact, bits per datum")
 
+    shw = {}
+    txt = open(os.path.join(HERE, "..", "checks", "p4_kepler_allfits.out")).read().split("== winners")[1]
+    for line in txt.splitlines():
+        parts = line.split()
+        if len(parts) == 16 and parts[4] == "|":
+            shw[parts[0]] = {"SH0.1": parts[5], "SH1800": parts[15]}
     agree = {"h40_vs_r0.1": [0, 0], "h40_vs_hKL": [0, 0], "h40_vs_h640": [0, 0], "r0.1_vs_hKL": [0, 0]}
     flips = []
     winners = []
@@ -112,7 +121,6 @@ def main():
                        "h640": h_hist(e, 640), "hKL": h_kl(e)}
             for D in DELTAS:
                 crit[f]["r%g" % D] = rate(e, D)
-            crit[f]["r0.1raw"] = rate(e, 0.1, mm=False)
         # paired bootstrap
         boot = {f: {D: [] for D in BOOT_D} for f in uniq}
         bootkl = {f: [] for f in uniq}
@@ -124,13 +132,14 @@ def main():
                     boot[f][D].append(rate(eb, D))
                 bootkl[f].append(h_kl(eb))
         span = 2 * max(crit[f]["max"] for f in uniq)
+        rel = {D: (N * D / span >= MINCELL) or (D >= span) for D in DELTAS}
         out("\n   %s  (N = %d; samples per 0.1' cell over the range: %.1f)" % (kser, N, N * 0.1 / span))
         for f in uniq:
             c = crit[f]
             out("      %-4s max %8.3f rms %8.3f mae %8.3f | h40 %7.4f h160 %7.4f h640 %7.4f hKL %7.4f | r(0.1') %7.4f"
-                " [raw %7.4f] r(1') %7.4f r(10') %7.4f r(60') %7.4f r(1800') %8.5f" % (
+                " r(1') %7.4f r(10') %7.4f r(60') %7.4f r(1800') %8.5f" % (
                     f, c["max"], c["rms"], c["mae"], c["h40"], c["h160"], c["h640"], c["hKL"], c["r0.1"],
-                    c["r0.1raw"], c["r1"], c["r10"], c["r60"], c["r1800"]))
+                    c["r1"], c["r10"], c["r60"], c["r1800"]))
 
         def sig(f, g, D):
             d = crit[f]["r%g" % D] - crit[g]["r%g" % D]
@@ -147,7 +156,7 @@ def main():
             n_pairs += 1
             s40 = np.sign(crit[f]["h40"] - crit[g]["h40"])
             s640 = np.sign(crit[f]["h640"] - crit[g]["h640"])
-            sr, _, _ = sig(f, g, 0.1)
+            sr, _, _ = sig(f, g, 0.1) if rel[0.1] else (0, 0, 0)
             sk, _, _ = sigkl(f, g)
             for key, a, b in (("h40_vs_r0.1", s40, sr), ("h40_vs_hKL", s40, sk), ("h40_vs_h640", s40, s640),
                               ("r0.1_vs_hKL", sr, sk)):
@@ -157,14 +166,16 @@ def main():
                         agree[key][0] += 1
             s_lo, d_lo, sd_lo = sig(f, g, 0.1)
             s_hi, d_hi, sd_hi = sig(f, g, 1800.0)
-            if s_lo != 0 and s_hi != 0 and s_lo != s_hi:
+            if rel[0.1] and s_lo != 0 and s_hi != 0 and s_lo != s_hi:
                 flips.append((kser, f, g, d_lo, sd_lo, d_hi, sd_hi))
         w = {"max": min(uniq, key=lambda f: crit[f]["max"]), "rms": min(uniq, key=lambda f: crit[f]["rms"]),
              "mae": min(uniq, key=lambda f: crit[f]["mae"])}
         for D in (0.1, 1800.0):
             cand = min(uniq, key=lambda f: crit[f]["r%g" % D])
-            ok = all(sig(cand, g, D)[0] == -1 for g in uniq if g != cand)
-            w["r%g" % D] = cand if ok else "?"
+            ok = rel[D] and all(sig(cand, g, D)[0] == -1 for g in uniq if g != cand)
+            w["r%g" % D] = cand if ok else ("?" if rel[D] else "unrel")
+        w["SH0.1"] = shw.get(kser, {}).get("SH0.1", "-")
+        w["SH1800"] = shw.get(kser, {}).get("SH1800", "-")
         winners.append((kser, w))
 
     out("\n== summary over %d fit pairs" % n_pairs)
@@ -175,14 +186,23 @@ def main():
         out("      %-13s %s vs %s: r(0.1') diff %+.4f [2SE %.4f]; r(1800') diff %+.5f [2SE %.5f]" % (
             k, f, g, dl, 2 * sl, dh, 2 * sh))
     out("\n== winners by the ideal rate (significantly best against every other fit, else '?')")
-    out("   %-13s %5s %5s %5s | %6s %6s" % ("series", "max", "rms", "mae", "r0.1", "r1800"))
+    out("   %-13s %5s %5s %5s | %6s %6s | developer's SH: %6s %6s" % ("series", "max", "rms", "mae", "r0.1", "r1800",
+                                                                   "SH0.1", "SH1800"))
     for k, w in winners:
-        out("   %-13s %5s %5s %5s | %6s %6s" % (k, w["max"], w["rms"], w["mae"], w["r0.1"], w["r1800"]))
+        out("   %-13s %5s %5s %5s | %6s %6s |                 %6s %6s" % (k, w["max"], w["rms"], w["mae"], w["r0.1"],
+                                                                        w["r1800"], w["SH0.1"], w["SH1800"]))
     for D in ("r0.1", "r1800"):
-        dec = [w for _, w in winners if w[D] != "?"]
+        dec = [w for _, w in winners if w[D] not in ("?", "unrel")]
         out("   %-6s decided %2d | =max %2d | =rms %2d | =mae %2d | none %2d" % (
             D, len(dec), sum(w[D] == w["max"] for w in dec), sum(w[D] == w["rms"] for w in dec),
             sum(w[D] == w["mae"] for w in dec), sum(w[D] not in (w["max"], w["rms"], w["mae"]) for w in dec)))
+    for D, S in (("r0.1", "SH0.1"), ("r1800", "SH1800")):
+        both = [w for _, w in winners if w[D] not in ("?", "unrel") and w[S] not in ("?", "-")]
+        shonly = [w for _, w in winners if w[S] not in ("?", "-")]
+        out("   %-6s vs developer's %-6s: SH decided in %2d series; of these, ideal rate unreliable in %2d, undecided in %2d,"
+            " decided in %2d (same winner in %2d)" % (D, S, len(shonly), sum(w[D] == "unrel" for w in shonly),
+                                                     sum(w[D] == "?" for w in shonly), len(both),
+                                                     sum(w[D] == w[S] for w in both)))
     out("\n# done")
     with open(os.path.join(HERE, "ra1_fine_rates.out"), "w") as fo:
         fo.write("\n".join(OUT) + "\n")
