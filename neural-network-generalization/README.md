@@ -6,7 +6,7 @@ Papers and notes by Dmitry Vaintrob, Kaarel Hänni, and OpenAI Codex (credited a
 
 The five papers below are the main results. The remaining papers are listed as side results, earlier treatments, or works in progress. “Side result” does not mean unproved: several contain complete theorems, but they are not the main presentation of this project. These are research drafts, not externally peer-reviewed publications; the FAQ distinguishes proved statements from plausible extensions and open questions.
 
-Every paper has a PDF, editable LaTeX source, and a build script. The collection contains 39 distinct papers and notes, with experimental code and selected exact certificates. The [catalog](catalog.json) identifies the canonical manuscripts; older treatments retain their historical scope and open-status remarks.
+Every paper has a PDF, editable LaTeX source, and a build script. The collection contains 40 distinct papers and notes, with experimental code and selected exact certificates. The [catalog](catalog.json) identifies the canonical manuscripts; older treatments retain their historical scope and open-status remarks.
 
 ## Lean verification
 
@@ -116,10 +116,11 @@ This note is not Lean verified and remains separate from the main results. The [
 
 ## Recent depth research
 
-These are supporting results and works in progress, retained separately from the main generalization theorem under a robustness restriction. In particular, the improvements for the unrestricted learner are promising but do not resolve the general small-deep-circuit problem.
+These are supporting results and works in progress, retained separately from the main generalization theorem under a robustness restriction. The unrestricted Boolean-cube problem remains open. For continuous-output regression, a counterexample proves that exponential depth dependence is necessary in a general width-independent guarantee.
 
 | Paper or package | Scope |
 |---|---|
+| [Exponential depth dependence in Bayesian neural-network regression](works-in-progress/continuous-depth-lower-bound/paper.pdf) · [source and reviews](works-in-progress/continuous-depth-lower-bound/) | Constant-width, bounded-weight teachers on a fixed nonatomic distribution on the unit circle require exponentially many samples. Covers the strong-prior limit, exact minimum-energy interpolation, every fixed $\gamma>1$ at sufficiently large finite widths, and $\gamma=1$ in the width-first limit. Controls posterior mixtures; does not settle the Boolean-cube problem or uniform spherical inputs. |
 | [Unrestricted depth](works-in-progress/unrestricted-depth/paper.pdf) · [source](works-in-progress/unrestricted-depth/) | Removes exponential learner-depth dependence for substantial target classes when $\gamma$ stays above one, including halfspaces and controlled shallow representations. Gives improved general-circuit bounds and representation obstructions; the arbitrary deep-target polynomial bound remains open. |
 | [Critical depth](works-in-progress/critical-depth/paper.pdf) · [source](works-in-progress/critical-depth/) | Quantitative mean-field prior-rate results and a separate polynomial parity sample lower bound. Nearly equal prior rates do not imply a uniform conditioned function prior or an exponential sample lower bound. |
 | [Earlier depth reports and standalone notes](works-in-progress/depth-supporting-notes/) | The first two depth research reports, the shallow-target treatment, and the earlier critical-rate note. Useful historical arguments and audits, with their original scope retained. |

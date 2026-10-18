@@ -1,0 +1,346 @@
+\section{An exponential lower bound at the mean-field exponent}
+\label{sec:critical-depth-lower}
+
+At the critical exponent $\gamma=1$, a different argument gives an
+exponential lower bound for the same teacher family and the same fixed
+nonatomic input distribution $D$. The width tends to infinity with
+teacher depth and the realized sample fixed. Only finite-dimensional
+large deviations are needed: apply them separately to the training
+sample and to one test pair, then integrate over the test pairing.
+
+\begin{theorem}[Critical regression lower bound]
+\label{thm:critical-regression-depth-lower}
+Use the distribution $D$ and targets $f_h(x)=F^h(x_1)$ from
+Theorem~\ref{thm:strong}. There are universal constants $c>0$ and $h_0$
+such that the following holds for every $h\ge h_0$ and integer
+$1\le n\le e^{ch}$. Draw $n$ independent inputs from $D$ and observe
+their exact teacher outputs. Use the original Gaussian prior at depth
+$L=h+1$, with first-layer entry variance $1/2$, internal entry variance
+$1/N$, and readout entry variance $1/N^2$. Condition solely on
+\[
+ |z_w(X_i)-f_h(X_i)|<\rho,\qquad \rho=1/8.
+\]
+With sample probability at least $49/50$, the posterior satisfies
+\[
+ \liminf_{N\to\infty}
+ \mathbb E_{w\mid S}D\{|z_w-f_h|>1/4\}\ge\frac12.
+\]
+Moreover, writing
+$p_N(x)=\Pr_{w\mid S}\{|z_w(x)-f_h(x)|\le1/4\}$, the same samples obey
+\[
+ \liminf_{N\to\infty}D\{x:p_N(x)<2/3\}\ge\frac12.
+\]
+The teacher still has width three and weights bounded by thirty.
+There is no global output-margin condition. These statements concern
+the actual posterior, including mixtures, and give no width threshold
+uniform in growing $h$.
+\end{theorem}
+
+\subsection{Finite-domain rates and a metric bound}
+
+We include the large-deviation argument needed below. It works for any
+fixed finite input set $X=\{x^1,\ldots,x^m\}\subset S^1$. For a feature
+law $\nu$ on $E=[-1,1]^m$, write
+$Q(\nu)=\int hh^T\,d\nu(h)$. Let $\mathsf M_Q$ be the law of
+coordinatewise tanh applied to $\mathcal N(0,Q)$, and put
+\[
+ Q_0(x,y)=\frac{1+x\cdot y}{2},\qquad
+ \mathcal G_Q(z)=
+ \begin{cases}\frac12z^TQ^+z,&z\in\operatorname{range}Q,\\
+ +\infty,&\text{otherwise}.
+ \end{cases}
+\]
+Here and below singular covariance matrices are allowed.
+
+\begin{lemma}[Finite-domain critical large deviations]
+\label{lem:critical-finite-ldp-depth}
+The output vector $Z_N=(z_w(x))_{x\in X}$ obeys a large-deviation
+principle with speed $N$ and good rate
+\[
+ I_L(z)=\inf_{\nu_1,\ldots,\nu_{L-1}}
+ \left\{\sum_{s=1}^{L-1}D(\nu_s\Vert\mathsf M_{Q_{s-1}})
+                   +\mathcal G_{Q_{L-1}}(z)\right\},
+ \qquad Q_s=Q(\nu_s).
+\]
+For every finite-cost path of total cost $A$ in this formula,
+\begin{equation}\label{eq:critical-metric-bound-depth}
+ |z(x)-z(y)|\le\sqrt A\,|x-y|
+                         \exp\!\bigl(\sqrt{2(L-1)A}\bigr)
+ \qquad(x,y\in X).
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Let $\Gamma_m=\mathcal N(0,I_m)$, and take independent empirical
+measures $\eta_{s,N}$ of $N$ samples from $\Gamma_m$, for
+$1\le s<L$. Independently take $V_N=G/\sqrt N$, $G\sim\Gamma_m$.
+For $\mathsf T_Q(u)=\tanh(Q^{1/2}u)$, recursively define
+\[
+ \nu_{1,N}=(\mathsf T_{Q_0})_\#\eta_{1,N},\qquad
+ \nu_{s,N}=(\mathsf T_{Q(\nu_{s-1,N})})_\#\eta_{s,N}.
+\]
+These are exactly the network's empirical hidden-feature laws on $X$:
+conditionally on the preceding layer, its next rows are independent
+Gaussian fields with that empirical second moment. The final output
+has exactly the law $Q(\nu_{L-1,N})^{1/2}V_N$.
+
+Sanov's theorem and the Gaussian large-deviation principle give joint
+good rate $\sum_s D(\eta_s\Vert\Gamma_m)+\|v\|^2/2$.
+The recursive map just described is continuous in the weak topology
+for the measures and the ordinary topology for $v$. Indeed, matrix
+square roots are continuous; the bounded continuous test functions
+composed with $\mathsf T_Q$ converge uniformly on compact sets when
+$Q$ varies; and weakly convergent measures form a tight sequence.
+Second moments on the compact feature space $E$ are also continuous.
+The contraction principle therefore applies. The entropy-contraction
+identity
+\[
+ \inf_{\eta:T_\#\eta=\nu}D(\eta\Vert\Gamma_m)
+       =D(\nu\Vert T_\#\Gamma_m)
+\]
+follows by data processing and, for the reverse inequality, the lift
+$d\eta=q(T(u))\,d\Gamma_m(u)$ when
+$q=d\nu/d(T_\#\Gamma_m)$. Finally
+$\inf_{Q^{1/2}v=z}\|v\|^2/2=\mathcal G_Q(z)$.
+These identities give the displayed rate, including the singular cases.
+This is an application of the standard Sanov and contraction theorems
+\cite{dembozeitouni}.
+
+For the metric bound, write $D_s$ for each hidden-layer entropy and
+$r$ for the readout cost. Inverse tanh lifts a finite-entropy feature
+law to a law $\eta$ with the same entropy relative to its reference
+Gaussian. The Gaussian quadratic transport inequality
+\cite{talagrand1996}, applied after whitening on the covariance range,
+gives a coupling $(U,G)$ satisfying
+\[
+ \mathbb E\|Q^{+1/2}(U-G)\|^2\le2D_s.
+\]
+For $b=e_x-e_y$, Cauchy--Schwarz and Minkowski imply
+\[
+ \|b^TU\|_{L^2}\le(1+\sqrt{2D_s})\sqrt{b^TQb}.
+\]
+Tanh is $1$-Lipschitz, so this is also an upper bound on the next
+feature distance. The initial distance is $|x-y|/\sqrt2$.
+The readout inequality is
+$|b^Tz|\le\sqrt{2r}\sqrt{b^TQ_{L-1}b}$.
+Multiply these inequalities and use
+\[
+ \sum_{s=1}^{L-1}\log(1+\sqrt{2D_s})
+ \le\sqrt{2(L-1)\sum_sD_s}\le\sqrt{2(L-1)A},\qquad r\le A.
+\]
+This proves~\eqref{eq:critical-metric-bound-depth}.
+\end{proof}
+
+Each test pair $(X_+,X_-)$ from Lemma~\ref{lem:pairing} has
+input distance at most $3\cdot3^{-h}$ and target gap at least one.
+Predicting both to tolerance $1/4$ requires an output gap of at least
+$1/2$. At $L=h+1$, the metric bound shows that every such output on
+the two-point domain has
+\begin{equation}\label{eq:critical-correct-pair-rate}
+ I_L(z)\ge h/100
+\end{equation}
+for all sufficiently large $h$: a path of cost $A\le h/100$ would
+instead give gap at most
+$3\cdot3^{-h}\sqrt{h/100}\exp(h/\sqrt{50})$, which tends to zero.
+The same conclusion holds after taking the infimum over paths.
+
+\subsection{A low-rate training interpolator}
+
+The next construction spends entropy only in the first layer and in
+logarithmically many final layers. Most hidden layers follow the
+uncontrolled Gaussian recursion.
+
+\begin{lemma}[A first-feature mean seed]
+\label{lem:critical-mean-seed-depth}
+Suppose $t_1<\cdots<t_n$ belong to $[-2/3,2/3]$ and have
+separation at least $\Delta\le1$. For any signs $y_i$ and any fixed
+finite domain containing $x(t_i)$, a genuine first-feature law $\nu$
+satisfies
+\[
+ D(\nu\Vert\mathsf M_{Q_0})\le D,\qquad
+ \mathbb E_\nu H(x(t_i))=a_n y_i,\qquad a_n=\frac1{2n},
+\]
+where $1\le D\le C\Delta^{-2}[1+\log(n+1)]^2$ for a universal $C$.
+\end{lemma}
+
+\begin{proof}
+Use the ideal step vectors $s_0=1$ and
+$s_j(i)=\operatorname{sign}(t_i-(t_j+t_{j+1})/2)$, $1\le j<n$.
+The inverse of this basis maps the maximum norm to coefficient
+$\ell^1$ norm with norm at most $n$: the coefficients are successive
+half-differences and the half-sum of the two endpoint values.
+
+In first-layer weight space, shift the bias and first coordinate so
+that a row's preactivation mean is $B(t-u_j)$, where $u_j$ is the
+corresponding midpoint. For the constant vector use constant mean $B$.
+The random preactivation variance is one on $S^1$. Since
+\[
+ 1-\mathbb E\tanh(m+Z)\le2e^{-2m+2}\qquad(Z\sim\mathcal N(0,1)),
+\]
+choosing $B=C\Delta^{-1}[1+\log(n+1)]$ makes the resulting mean
+vectors $v_j$ approximate $s_j$ to maximum error $1/(4n)$.
+A Neumann series gives exact coefficients
+$y=\sum_j c_jv_j$ with $\sum_j|c_j|\le4n/3$.
+Mix the corresponding signed Gaussian shifts with weights
+$a_n|c_j|$, and put the remaining probability on the unshifted
+Gaussian law. Negating a shift negates its feature mean by oddness.
+The desired mean identity follows. Each shift has Gaussian relative
+entropy at most $CB^2$, and convexity and data processing give the
+stated bound. These are laws of actual weight vectors, so their
+feature means and covariances are defined on the entire finite domain,
+not only on the sample.
+\end{proof}
+
+\begin{lemma}[Free cooling and late amplification]
+\label{lem:critical-late-amplification-depth}
+Suppose a first-feature law has entropy at most $D\ge1$ and mean
+$a_0y_i$ at selected inputs, where $y_i\in\{-1,1\}$ and
+$0<a_0\le1$. For every fixed $0<\eta<1$, there are constants
+$C_1,C_2$, depending only on $\eta$, such that if
+\[
+ L\ge C_1[1+\log(D/a_0^2)+\log(L+1)],
+\]
+then the critical rate admits an output $z$ with
+\[
+ |z(x_i)-a y_i|<a\eta,
+ \qquad I_L(z)\le C_2[1+\log(D/a_0^2)+\log(L+1)],
+ \qquad a=3/5.
+\]
+\end{lemma}
+
+\begin{proof}
+Mix the supplied law with the reference first-feature law at weight
+$1/D$. This costs at most one and yields a covariance $Q\succeq bb^T$
+with $b(x_i)=a_0y_i/\sqrt D$. The vector $b$ is the full-domain mean
+of the supplied law divided by $\sqrt D$.
+
+Consider an uncontrolled transition with $Q\succeq bb^T$ and
+$q_x=Q(x,x)\le1$. Write the reference Gaussian field as $bZ_0+G_R$.
+Project its tanh features onto $Z_0$. Gaussian integration by parts
+shows that the resulting covariance dominates $b'b'^T$, where
+\[
+ b'_x=b_xh(q_x),\qquad
+ h(q)=\mathbb E\operatorname{sech}^2(\sqrt qZ)=1-F_0(q),\qquad
+ F_0(q)=\mathbb E\tanh^2(\sqrt qZ).
+\]
+The new diagonal is $F_0(q_x)$. There are universal $c>0,C<\infty$
+such that
+\[
+ F_0(q)\le q-cq^2,\qquad -\log h(q)\le Cq\quad(0\le q\le1).
+\]
+For example $c=1/100$ works. On $|u|\le1$,
+$u^2-\tanh^2u\ge u^4/6$; integrate over $|Z|\le1$ to obtain the
+first bound. For the second, $h(q)\ge h(1)\ge1/8$ and $F_0(q)\le q$.
+It follows that after $H$ free layers the diagonal is at most
+$(1+cH)^{-1}$ and the signed seed at every selected input is at least
+\begin{equation}\label{eq:critical-free-seed}
+ u_*:=e^{-8}(L+1)^{-800}a_0/\sqrt D
+ \qquad(H\le L).
+\end{equation}
+Indeed the diagonal reciprocals grow by at least $c$ per step, and
+summing $-\log h(q)\le8q$ proves this loose explicit bound.
+
+Now suppose $Q\succeq bb^T$ and $y_ib_i\ge u>0$ on the sample.
+Shift the reference Gaussian by $A b$. The entropy cost is at most
+$A^2/2$, since $b^TQ^+b\le1$. The new mean $b'$ satisfies
+\[
+ y_i b'_i\ge c_0\min\{Au,1\},\qquad c_0=1/100,
+\]
+and the new covariance dominates $b'b'^T$. To check the inequality,
+integrate the derivative
+$\mathbb E\operatorname{sech}^2(v+\sqrt qZ)$ for $0\le v\le1$
+and $q\le1$, restricting to $|Z|\le1$; larger means follow by
+monotonicity. Choose $A=2/c_0$. Repeating this shift doubles the
+minimum signed mean until it reaches $c_0/2$, and preserves this
+lower bound thereafter.
+
+Choose
+\[
+ m=\max\{0,\lceil\log_2(c_0/(2u_*))\rceil\},\qquad
+ H=L-m-3.
+\]
+The stated depth condition, with a sufficiently large $C_1$, ensures
+$H\ge0$. Use one initial seed layer, $H$ free layers, $m$ shift
+layers, and one final saturation layer. This is exactly $L-1$ hidden
+layers and avoids any circular choice of the cooling time.
+For the final shift use $B b$, with $B$ large enough in terms of
+$\eta$ that its feature mean $v$ obeys $|v_i-y_i|<\eta$.
+The bound
+\[
+ 1-y_i\mathbb E\tanh(G_i+B b_i)\le2e^{2-Bc_0}
+\]
+suffices. Its entropy cost is at most $B^2/2$. Finally $Q_{L-1}\succeq vv^T$,
+so $z=av$ has readout cost at most $a^2/2$.
+The total cost is at most $1+mA^2/2+B^2/2+a^2/2$, which has the
+asserted bound. Every Gaussian shift and rank-one domination is on
+the full finite domain throughout the construction.
+\end{proof}
+
+\subsection{Comparison of posterior masses}
+
+\begin{proof}[Proof of Theorem~\ref{thm:critical-regression-depth-lower}]
+By Lemma~\ref{lem:separation}, the training scalar coordinates are
+$\Delta_n$-separated with probability at least $49/50$, where
+$\Delta_n=(100n^2)^{-1/\alpha}$ and $\alpha=\log2/\log20$.
+Fix any such sample. Since the Cantor measure is invariant under $F$,
+every teacher label belongs to
+$[-13/20,-1/2]\cup[1/2,13/20]$.
+Set $y_i=\operatorname{sign}f_h(X_i)$ and $a=3/5$. Thus
+\[
+ |f_h(X_i)-ay_i|\le1/10.
+\]
+Apply Lemma~\ref{lem:critical-mean-seed-depth} on the finite training
+set. Its quantity $D/a_n^2$ is polynomial in $n$.
+Lemma~\ref{lem:critical-late-amplification-depth}, with $\eta=1/100$,
+then supplies an output whose training errors are less than
+\[
+ 1/10+a\eta=53/500<1/8.
+\]
+Reduce the universal $c$ and increase $h_0$ so that, whenever
+$n\le e^{ch}$, the depth condition holds and this witness's rate is
+less than $h/200$. The open training event $A_S$ therefore satisfies
+\begin{equation}\label{eq:critical-training-rate-depth}
+ \liminf_{N\to\infty}\frac1N\log\Pr(A_S)>-h/200.
+\end{equation}
+The strict inequality follows from the strict witness cost bound.
+
+Now fix one test pair $(X_+,X_-)$ in the balanced pairing of
+Lemma~\ref{lem:pairing}. Let $B_{X_+,X_-}$ be the closed event that
+both real outputs are within $1/4$ of their teacher values.
+Apply the two-point version of Lemma~\ref{lem:critical-finite-ldp-depth}.
+Equation~\eqref{eq:critical-correct-pair-rate} gives
+\[
+ \limsup_{N\to\infty}\frac1N\log\Pr(B_{X_+,X_-})\le-h/100.
+\]
+Together with~\eqref{eq:critical-training-rate-depth}, the elementary
+ratio bound
+\[
+ \Pr_{w\mid S}(B_{X_+,X_-})
+ \le\frac{\Pr(B_{X_+,X_-})}{\Pr(A_S)}
+\]
+shows that this posterior probability tends to zero for every fixed
+test pair. No joint or functional large-deviation principle is being
+assumed. The width at which the ratio becomes small may depend on
+the test pair.
+
+Let $b_N(X_+,X_-)$ denote this pair-correct probability and average
+with respect to the pairing law. Bounded convergence gives
+$\mathbb E b_N\to0$. Inclusion--exclusion gives, pair by pair,
+\[
+ p_N(X_+)+p_N(X_-)\le1+b_N(X_+,X_-).
+\]
+A fair choice between the paired inputs has law $D$. Averaging proves
+that the posterior Gibbs error is at least
+$(1-\mathbb E b_N)/2$, giving its asserted lower limit.
+
+For the confidence assertion, if $b_N<1/3$, both correct-output
+probabilities cannot be at least $2/3$. At least one member of the
+pair has probability strictly below $2/3$. Consequently
+\[
+ D\{x:p_N(x)<2/3\}\ge\frac12\Pr_{\rm pair}\{b_N<1/3\}
+ \ge\frac{1-3\mathbb E b_N}{2}.
+\]
+Taking lower limits proves the confidence claim, since $\mathbb E b_N\to0$.
+The argument applies
+for every separated sample and handles arbitrary posterior mixtures.
+\end{proof}

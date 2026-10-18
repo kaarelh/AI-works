@@ -1,0 +1,555 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools,microtype,xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black,citecolor=blue!50!black]{hyperref}
+\newtheorem{theorem}{Theorem}[section]\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}\newcommand{\E}{\mathbb E}\newcommand{\Prb}{\mathbb P}
+\newcommand{\Lip}{\mathrm{Lip}}\newcommand{\sech}{\mathrm{sech}}
+\newcommand{\norm}[1]{\left\Vert#1\right\Vert}
+\setlength{\emergencystretch}{3em}
+\hypersetup{pdftitle={Exponential depth dependence in Bayesian neural-network regression},pdfauthor={Dmitry Vaintrob; Kaarel Hanni; OpenAI Codex}}
+\title{Exponential depth dependence in Bayesian neural-network regression}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex\thanks{AI assistant; contributed to mathematical analysis and drafting. This research draft has not been formalized in Lean.}}
+\date{October 18, 2026}
+\begin{document}\maketitle
+\begin{abstract}
+We construct bounded-weight tanh teachers of constant width and depth $L$
+for which a Gaussian Bayesian neural-network learner requires
+$\exp(\Omega(L))$ examples to generalize. Inputs follow one fixed nonatomic
+distribution on an arc of the unit circle, and training observes the
+teacher's real-valued outputs. The posterior conditions only on fitting
+these outputs within a fixed positive tolerance. In the strong-prior
+limit, and at every finite prior exponent $\gamma>1$ at widths above a
+polynomial threshold in sample size and depth, the posterior fails to assign probability greater than
+$2/3$ to a correct prediction on at least half the test inputs, with sample
+probability at least $49/50$.
+The teacher iterates a fixed expanding map. Its outputs differ by a constant
+on exponentially close paired inputs. A sample of subexponential size,
+however, admits an exact interpolant with sufficiently low quadratic
+energy that the posterior concentrates on functions, or uniform
+approximations to functions, having much smaller Lipschitz constants.
+The pairing argument handles arbitrary posterior mixtures. All
+minimum-energy exact interpolants fail as well, including the specified
+iterated strong-prior, zero-tolerance posterior limits.
+Thus arbitrary continuous input distributions admit no sample bound
+jointly polynomial in teacher width, bounded weights, and depth for these
+learners. The fixed distribution is a Cantor measure; allowing the
+distribution to vary with depth also gives smooth arclength densities.
+Neither construction uses uniform measure on the circle.
+A separate width-first argument gives the same exponential obstruction
+at the mean-field endpoint $\gamma=1$, for the same fixed input law,
+without a quantified width threshold.
+The original Boolean-cube classification problem remains outside
+these results.
+\end{abstract}
+
+\section{Introduction}
+Can a Bayesian neural network learn every small bounded-weight teacher
+with a number of examples polynomial in both width and depth, without
+restricting the networks in its prior? On arbitrary continuous input
+distributions, the answer is negative for the Gaussian learners considered
+here. We give a family with fixed input dimension, fixed teacher width,
+fixed weight bound, fixed training and testing tolerances, and a single
+fixed input distribution. Only the teacher depth grows. Learning requires
+exponentially many examples in that depth.
+
+The obstruction is a property of the learning rule, rather than an
+information-theoretic impossibility for every algorithm. A teacher can
+iterate a small expanding map, producing a highly oscillatory function.
+The independent Gaussian weight prior instead rewards a low-energy
+interpolant of the observed sample. At large learner width, such an
+interpolant can transmit a scalar signal through many layers with a
+small excess energy cost. Its product of layer norms, and hence its
+Lipschitz constant, is polynomial in the sample size. Below an exponential
+sample size this smoothness prevents it from approximating the teacher.
+
+The proof requires more than a large Lipschitz constant for one teacher
+implementation. We prove an approximation barrier for \emph{every}
+function of small Lipschitz constant, exhibit a low-energy competitor
+for each typical sample, and transfer the resulting competition to the
+full posterior. A measure-preserving pairing of test inputs shows that
+mixing individually inaccurate predictions cannot repair the confidence
+guarantee.
+
+We prove the strong-prior result first, then give a finite-scale extension
+for every fixed exponent above one. The latter uses Gaussian isoperimetry
+to remove a typical small-operator-norm Gaussian component. The actual
+posterior parameter vector need not itself have small Frobenius energy.
+We include the required memorization and perturbation arguments, so the
+proof does not require another paper from this research program.
+At the mean-field endpoint, a separate argument uses entropy costs and
+finite-dimensional large deviations. It establishes the same depth
+obstruction for the fixed nonatomic distribution as width tends to
+infinity, without a quantitative threshold on width.
+
+\section{Model and main conclusions}\label{sec:main}
+For input $x\in S^1\subset\R^2$, write $\bar x=(1,x)$ and consider
+depth-$L$ networks with $L-1$ hidden layers, all of width $N$:
+\[
+ h^0(x)=\bar x,\qquad
+ h^j(x)=\tanh(W^jh^{j-1}(x))\quad(1\le j<L),\qquad
+ z_w(x)=v^Th^{L-1}(x).
+\]
+There are no separate internal biases. More generally, in input dimension
+$d$ the independent centered Gaussian prior has variances
+\begin{equation}\label{eq:scales}
+ \mathrm{Var}(W^1_{ij})=\sigma^2N/d,\qquad
+ \mathrm{Var}(W^j_{ab})=\sigma^2\ (2\le j<L),\qquad
+ \mathrm{Var}(v_a)=\sigma^2/N.
+\end{equation}
+Its density in energy coordinates is proportional to
+$\exp[-\kappa_N(w)/(2\sigma^2)]$, where
+\begin{equation}\label{eq:energy}
+ \kappa_N(w)=\frac dN\norm{W^1}_F^2+
+ \sum_{j=2}^{L-1}\norm{W^j}_F^2+N\norm v_2^2.
+\end{equation}
+The strong-prior limit means $\sigma\downarrow0$ at fixed finite $N,L$.
+The finite exponent family sets $\sigma^2=N^{-\gamma}$.
+
+For a target $f$, independent sample inputs $X_i\sim D$, and observed
+real labels $Y_i=f(X_i)$, let $\Pi_{S,\sigma}$ be this prior conditioned on
+\begin{equation}\label{eq:training}
+ |z_w(X_i)-Y_i|<\rho\qquad(1\le i\le n).
+\end{equation}
+There is no condition on unobserved inputs and no global output margin.
+Throughout the main results we fix
+\[
+ \rho=1/8,\qquad \tau=1/4,
+\]
+and define the posterior's correct-output probability by
+\[
+ q_{S,\sigma}(x)=\Pi_{S,\sigma}\{|z_w(x)-f(x)|\le\tau\}.
+\]
+Thus an input is a confidence error if $q_{S,\sigma}(x)\le2/3$.
+
+Here are explicit sample-dependent resource bounds used in the theorems:
+\begin{equation}\label{eq:resources}
+ \alpha=\frac{\log2}{\log20},\quad
+ \Delta_n=(100n^2)^{-1/\alpha},\quad
+ a_n=\Delta_n^{-1}\log(16n),\quad R_n=\max\{2,a_n\},
+\end{equation}
+\begin{equation}\label{eq:MT}
+ M_n=\left\lceil\max\{4,n,6nR_n^2\}\right\rceil,
+ \qquad T_n=4M_n n,\qquad
+ K_n(L)=2+(L+14)T_n^{1/(L-1)}.
+\end{equation}
+These bounds are fixed polynomials in $n$ up to logarithmic factors.
+In particular $M_n$ and $T_n$ admit universal polynomial upper bounds.
+
+\begin{theorem}[Exponential lower bound in the strong-prior limit]
+\label{thm:strong}
+There exist a fixed nonatomic Borel probability distribution $D$ on
+$S^1$, targets $f_r:S^1\to\R$ for all integers $r\ge1$, and a universal
+integer $r_0$ with the following properties. Each $f_r$ is implemented
+by a tanh teacher of width three, depth $L=r+1$, and weights of absolute
+value at most $30$. It satisfies $|f_r|\le13/20$ on the support of $D$.
+For every $r\ge r_0$, every integer $1\le n\le e^{r/100}$, and every
+fixed finite learner width $N\ge\max\{30,M_n\}$,
+\begin{equation}\label{eq:strong-result}
+ \liminf_{\sigma\downarrow0}\Prb_{S\sim D^n}
+ \left\{D\{x:q_{S,\sigma}(x)\le2/3\}\ge1/2\right\}
+ \ge49/50.
+\end{equation}
+The distribution, input dimension, teacher width and weight bound, and
+both tolerances are independent of $r,n,N$.
+\end{theorem}
+
+Padding the teacher to width $30$ makes its weights bounded by its width,
+if that is the chosen definition of teacher complexity. Thus its
+width-based complexity remains an absolute constant. The learner widths
+in Theorem~\ref{thm:strong} are allowed by any guarantee asserted for
+\emph{every} width above teacher complexity. The theorem does not claim
+failure at every smaller width, including width equal to the teacher's.
+
+\begin{theorem}[Exponential lower bound at finite exponents above one]
+\label{thm:finite}
+Use the distribution, targets and constants of
+Theorem~\ref{thm:strong}. Fix $\zeta>0$. There is a width threshold
+$\mathcal N_\zeta(n,L)$ with a polynomial upper bound in $n,L$, whose
+degree may depend on $\zeta$, such that for every $r\ge r_0$,
+$1\le n\le e^{r/100}$, $L=r+1$, every
+$N\ge\mathcal N_\zeta(n,L)$, and every
+$0<\sigma^2\le N^{-(1+\zeta)}$,
+\[
+ \Prb_{S\sim D^n}
+ \left\{D\{x:q_{S,\sigma}(x)\le2/3\}\ge1/2\right\}\ge49/50.
+\]
+In particular this applies at the actual finite scale
+$\sigma^2=N^{-\gamma}$ for each fixed $\gamma>1$, by taking
+$\zeta=\gamma-1$. An explicit threshold is given in
+Lemma~\ref{lem:finite-ceiling}.
+\end{theorem}
+
+The same construction obstructs minimum-energy exact interpolation and
+a specified iterated Bayesian limit; see Section~\ref{sec:exact}.
+At $\gamma=1$, Theorem~\ref{thm:critical-regression-depth-lower}
+gives a separate width-first lower bound: on a sample event of probability
+at least $49/50$, the lower limit of the confidence-error mass as
+$N\to\infty$ is at least $1/2$, for an exponential range of sample sizes.
+This endpoint theorem does not quantify how large the width must be.
+These conclusions are specific to the stated learner. They are not a
+lower bound for every method that knows the teacher family.
+
+\section{A constant-width expanding teacher}\label{sec:map}
+Define
+\begin{equation}\label{eq:map}
+ J=[-3/4,3/4],\qquad
+ F(t)=2\{\tanh(10(t+1/2))-\tanh(10(t-1/2))\}-1.
+\end{equation}
+
+\begin{lemma}[Two expanding branches]\label{lem:branches}
+There are inverse branches $\phi_\pm:J\to J$ of $F$, with images
+in $[1/2,13/20]$ and $[-13/20,-1/2]$, respectively, such that
+\begin{equation}\label{eq:branches}
+ \frac1{20}|s-t|\le|\phi_\pm(s)-\phi_\pm(t)|
+ \le\frac13|s-t|\qquad(s,t\in J).
+\end{equation}
+The two images have distance at least one.
+\end{lemma}
+\begin{proof}
+The map $F$ is even. On $[1/2,13/20]$ it is strictly decreasing, and
+\[
+ F(1/2)=2\tanh(10)-1>3/4,
+ \qquad F(13/20)<1-2\tanh(3/2)<-3/4.
+\]
+Moreover
+\[
+ 20\{\sech^2(3/2)-\sech^2(10)\}
+ \le |F'(t)|\le20.
+\]
+For explicit elementary bounds, the degree-four Taylor sum gives
+$e^3>15$, while the Taylor series and its geometric remainder give
+$e<11/4$, hence $e^3<21$. These inequalities imply
+$\tanh(3/2)>7/8$ and $\sech^2(3/2)>1/6$, while
+$e^{20}>20^4/24>4000$ gives $\sech^2(10)<1/1000$.
+Thus the lower derivative bound exceeds three. The inverse function
+theorem gives the positive branch and its derivative bounds. Reflection
+gives the negative branch. Their image locations give the gap.
+\end{proof}
+
+\begin{lemma}[Teacher implementation]\label{lem:teacher}
+For every $r\ge1$, the function $f_r(x)=F^r(x_1)$ on $S^1$ has a
+width-three, depth-$(r+1)$ tanh implementation with weights bounded by $30$.
+\end{lemma}
+\begin{proof}
+The first hidden layer computes
+\[
+ a_1=\tanh(10x_1+5),\qquad
+ a_2=\tanh(10x_1-5),\qquad c=\tanh(\operatorname{artanh}(1/2))=1/2.
+\]
+Every subsequent hidden layer applies
+\[
+ a'_1=\tanh(20a_1-20a_2-10c),\quad
+ a'_2=\tanh(20a_1-20a_2-30c),\quad
+ c'=\tanh(2\operatorname{artanh}(1/2)c)=1/2.
+\]
+If $2a_1-2a_2-2c=t$, the next two nonconstant neurons equal
+$\tanh(10(t+1/2))$ and $\tanh(10(t-1/2))$.
+The final readout $2a_1-2a_2-2c$ therefore gives $F^r(x_1)$.
+Every stated weight is at most $30$ in absolute value, and the
+constant rail uses only the input constant and internal linear weights.
+\end{proof}
+
+\section{A fixed input distribution and an approximation barrier}
+\label{sec:distribution}
+For independent fair signs $b_1,b_2,\ldots$, let
+\[
+ T=\lim_{j\to\infty}\phi_{b_1}\circ\cdots\circ\phi_{b_j}(0).
+\]
+The contraction bound in Lemma~\ref{lem:branches} makes this limit
+well-defined. Let $\mu$ be its law and $K$ its compact support. Then
+\[
+ K\subset[-13/20,-1/2]\cup[1/2,13/20],\qquad F_*\mu=\mu.
+\]
+Define $x(t)=(t,\sqrt{1-t^2})$ on $[-13/20,13/20]$ and let
+$D=x_*\mu$. This is a Borel probability distribution on $S^1$.
+Since $\norm{x'(t)}_2=1/\sqrt{1-t^2}<2$ there, the embedding is
+two-Lipschitz. In particular the same $D$ is used at every teacher depth.
+
+\begin{lemma}[Small balls and sample separation]\label{lem:separation}
+The measure $\mu$ is nonatomic. For every interval $I$ of length
+$0<\ell\le1$,
+\begin{equation}\label{eq:frostman}
+ \mu(I)\le2\ell^\alpha,\qquad \alpha=\log2/\log20.
+\end{equation}
+For $n$ independent inputs from $D$, with probability at least $49/50$
+their first coordinates are pairwise separated by at least $\Delta_n$
+from~\eqref{eq:resources}.
+\end{lemma}
+\begin{proof}
+Every sign word of length $j$ specifies a cylinder of mass $2^{-j}$.
+Distinct depth-$j$ cylinders have distance at least $20^{-(j-1)}$:
+their first differing branch supplies a gap of one, and their common
+outer prefix contracts no distance by more than the lower bound in
+\eqref{eq:branches}. The cylinder masses tending to zero show that
+$\mu$ has no atoms.
+
+Put $j=\lfloor\log_{20}(1/\ell)\rfloor$. If $j\ge1$, an interval
+of length $\ell$ meets at most one depth-$j$ cylinder, because their
+separation is strictly larger than $\ell$. Its mass is at most
+$2^{-j}\le2\ell^\alpha$. The case $j=0$ follows from the trivial
+mass bound one. Endpoints do not alter this argument.
+
+Conditioning on one of two independent first coordinates gives
+\[
+ \Prb\{|T_i-T_j|<\Delta_n\}
+ \le2(2\Delta_n)^\alpha.
+\]
+A union bound over unordered pairs is at most
+$2n^2\Delta_n^\alpha=1/50$, since $2^\alpha\le2$.
+\end{proof}
+
+\begin{lemma}[Paired-input barrier, including posterior mixtures]
+\label{lem:pairing}
+Let $r\ge1$, $H\le3^r/10$, and $0\le h\le1/32$.
+Suppose a distribution on predictors assigns mass at least $1-\beta$,
+where $\beta\le1/3$, to functions within uniform distance $h$ on $S^1$
+of some $H$-Lipschitz function. For target $f_r$ and test tolerance
+$\tau=1/4$, its correct-output probabilities satisfy
+\[
+ D\{x:q(x)\le2/3\}\ge1/2.
+\]
+If the distribution is supported entirely on $H$-Lipschitz predictors,
+the conclusion also holds with $1/2$ in place of the confidence
+threshold $2/3$.
+\end{lemma}
+\begin{proof}
+Let $w$ be a uniform sign word of length $r$, let $Y\sim\mu$ be
+independent, and write $\phi_w$ for its composition. Pair
+\[
+ X_\pm=x(\phi_w(\phi_\pm(Y))).
+\]
+A fair choice between these two points has law $D$, while
+\[
+ |f_r(X_+)-f_r(X_-)|=|\phi_+(Y)-\phi_-(Y)|\ge1,
+\]
+\begin{equation}\label{eq:pair-gap}
+ \norm{X_+-X_-}_2\le\frac{13}{5}\,3^{-r}.
+\end{equation}
+Thus an $H$-Lipschitz function changes by at most $13/50$ between
+the pair. A predictor within $h$ of such a function cannot be correct
+at both points: that would force the approximating function's change
+to be at least $1-2(\tau+h)\ge7/16>13/50$.
+For each pair, integration over the predictor distribution gives
+\[
+ q(X_+)+q(X_-)\le1+\beta\le4/3.
+\]
+At least one of the two probabilities is therefore at most $2/3$.
+Averaging the balanced pairing proves the claim. If every predictor
+is $H$-Lipschitz, the same sum is at most one and proves the final
+assertion.
+\end{proof}
+
+\input{memorization}
+\input{posterior}
+
+\section{Proof of the exponential lower bounds}\label{sec:proof}
+For fixed $d=2$, the quantities in~\eqref{eq:resources}--\eqref{eq:MT}
+obey
+\[
+ T_n\le C_0 n^{4+4/\alpha},\qquad
+ \Lambda_n:=\frac{e^{17/2}}{\sqrt2}T_n^{3/4}
+ \le C_1 n^{3+3/\alpha}
+\]
+for universal constants $C_0,C_1$. For instance use
+$\log(16n)\le Cn$ in the displayed definitions. The exponent
+$3+3/\alpha$ is less than $16$. Hence there is a universal $r_0\ge2$
+such that, for all $r\ge r_0$ and $n\le e^{r/100}$,
+\begin{equation}\label{eq:exp-comparison}
+ \Lambda_n\le3^r/10.
+\end{equation}
+No constant in this comparison depends on learner width or depth.
+
+\begin{proof}[Proof of Theorem~\ref{thm:strong}]
+The distribution and teachers were constructed in
+Sections~\ref{sec:map}--\ref{sec:distribution}.
+On the sample-separation event of Lemma~\ref{lem:separation}, all labels
+belong to $K\subset[-13/20,13/20]$, so
+Lemma~\ref{lem:memorizer} supplies an exact-fitting witness with energy
+at most $K_n(L)$ at every stated width. For each fixed such sample and
+fixed width, Lemma~\ref{lem:strong-ceiling} makes the posterior mass
+outside the $\Lambda_n$-Lipschitz class tend to zero. By
+\eqref{eq:exp-comparison}, Lemma~\ref{lem:pairing} applies as soon as
+that exceptional mass is at most $1/3$. Thus the indicator of the
+sample event inside~\eqref{eq:strong-result} is eventually one for
+each separated sample. Fatou's lemma and the probability $49/50$ of
+separation prove the asserted lower limit. This use of Fatou does not
+require a small-noise threshold uniform over realized samples.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:finite}]
+Use Lemma~\ref{lem:finite-ceiling} with $K=K_n(L)$, $M=M_n$,
+$\beta=1/4$ and $h=\rho/4=1/32$, increasing its width threshold to
+at least $30$. On every separated sample the exact memorizer exists
+and the lemma gives posterior mass at least $3/4$ on outputs within
+$h$ of $\Lambda_n$-Lipschitz functions. Equations
+\eqref{eq:exp-comparison} and Lemma~\ref{lem:pairing} give the
+confidence-error conclusion. Separation has probability at least
+$49/50$. The explicit width threshold has a polynomial upper bound
+in $n,L$ for fixed $\zeta$, as proved in that lemma.
+\end{proof}
+
+\section{Exact interpolation and the order of limits}\label{sec:exact}
+\begin{corollary}[Exact minimum-energy interpolants also fail]
+\label{cor:exact}
+Under the parameters of Theorem~\ref{thm:strong}, with sample
+probability at least $49/50$, every minimum-energy exact interpolant
+at every fixed width $N\ge\max\{30,M_n\}$ is $\Lambda_n$-Lipschitz
+and has regression error at least $1/2$ at tolerance $1/4$.
+Every mixture of such interpolants has confidence-error mass at least
+$1/2$, at confidence threshold $2/3$ or even $1/2$.
+
+At each such finite width, iterated weak limits of the posterior
+obtained by first sending $\sigma\downarrow0$ at fixed positive
+training tolerance and then sending that tolerance to zero exist
+subsequentially. Every such limit is supported on minimum-energy exact
+interpolants and obeys the same lower bounds.
+\end{corollary}
+\begin{proof}
+For a separated sample the exact memorizer has energy at most $K_n(L)$.
+The exact feasible set is nonempty and closed, and the quadratic energy
+is coercive. Its minimum therefore exists. Every minimizer has energy
+at most $K_n(L)$, so the arithmetic--geometric mean calculation in
+Lemma~\ref{lem:strong-ceiling} bounds its Lipschitz constant by
+$\Lambda_n$. The pairing argument gives error at least $1/2$ for
+each function and the stated conclusions for all mixtures.
+
+For completeness, fix the sample and width, and put
+\[
+ e_S(w)=\max_i|z_w(X_i)-Y_i|,\quad
+ b_a=\inf_{\{e_S<a\}}\kappa_N,\quad
+ b_0=\min_{\{e_S=0\}}\kappa_N.
+\]
+An open ball within $\{e_S<a\}$ of energy arbitrarily close to
+$b_a$ and the Gaussian tail estimate show that, as $\sigma\downarrow0$,
+posterior energy concentrates at $b_a$. The measures are tight and
+every weak limit is supported on
+$\{e_S\le a,\ \kappa_N=b_a\}$. In particular it is supported on
+the common compact set $\{\kappa_N\le b_0\}$.
+
+As $a\downarrow0$, the numbers $b_a$ increase to $b_0$. To verify
+the nontrivial inequality, take approximate minimizers at tolerances
+tending to zero. They lie in a compact energy sublevel, and a
+convergent subsequence has exact fit with energy at most
+$\lim_{a\downarrow0}b_a$. Every outer weak limit is consequently
+supported on $\{e_S=0,\kappa_N=b_0\}$. Compactness supplies the
+subsequential limits at both stages.
+\end{proof}
+
+The order of limits in the corollary is part of the statement. It does
+not identify a regular conditional posterior given exact real-valued
+observations at a fixed prior scale, or describe arbitrary simultaneous
+limits of the scale and tolerance.
+
+\input{meanfield}
+
+\section{Smooth input densities when the distribution may vary with depth}
+\label{sec:smoothing}
+\begin{corollary}[Smooth-distribution variant]\label{cor:smooth}
+For every $r$ there is a probability distribution $D_r$ on $S^1$
+with a smooth density with respect to arclength such that
+Theorems~\ref{thm:strong} and~\ref{thm:finite} and
+Corollary~\ref{cor:exact} hold with $D_r$ replacing $D$.
+The teacher $f_r$, sample range, resource bounds and confidence-error
+conclusions are unchanged. The width-first mean-field conclusion of
+Theorem~\ref{thm:critical-regression-depth-lower} also holds, with
+that theorem's own universal sample exponent and depth threshold.
+No uniform bound on the density or its
+derivatives is asserted as $r$ grows.
+\end{corollary}
+\begin{proof}
+Let $U_r$ have a smooth compactly supported probability density on
+$[-10^{-2}20^{-r},10^{-2}20^{-r}]$, independently of $T\sim\mu$,
+and let $D_r$ be the law of $x(T+U_r)$. The scalar law is the
+convolution of $\mu$ with that smooth density. Its support is in
+$(-.66,.66)$, so its pushforward has a smooth arclength density on
+the circle, extended by zero off this arc.
+
+For every interval $I$, conditioning on $U_r$ preserves the bound
+$\Prb(T+U_r\in I)\le2|I|^\alpha$. Thus the sample-separation
+probability and all resources remain unchanged. Globally $|F'|\le20$,
+so
+\[
+ |F^r(t+u)-F^r(t)|\le20^r|u|\le1/100.
+\]
+The real training labels therefore have magnitude at most
+$13/20+1/100=.66<7/8$, as required by
+Lemma~\ref{lem:memorizer}.
+
+Use the same jitter $U_r$ for both members of each pair in
+Lemma~\ref{lem:pairing}. The scalar input gap is unchanged, the arc
+embedding remains two-Lipschitz, and the target gap is at least
+$1-2/100=.98$. For the test tolerance and every $h\le1/32$, the
+lower bound on an approximating function's change is now
+$.98-2(1/4+h)\ge.4175$, still greater than $13/50$.
+The same pairing and posterior arguments therefore apply.
+
+For the mean-field statement, the smoothed real label differs from
+$3/5$ times its sign by at most $.11$. The low-rate witness in
+Theorem~\ref{thm:critical-regression-depth-lower} adds less than
+$.006$ training error, so its total error is less than $.116<1/8$.
+The first-feature seed applies on the slightly enlarged arc and
+uses the unchanged sample separation. Correct prediction of both
+members of a smoothed pair requires an output gap of at least
+$.98-2(1/4)=.48$. The same entropy-based metric bound excludes this
+at rate at most $r/100$ for large $r$. The finite-pair posterior
+ratio and bounded-convergence argument then prove the mean-field
+conclusion as well.
+\end{proof}
+
+\section{Scope and interpretation}
+The construction rules out a general guarantee jointly polynomial in
+teacher width, bounded weights and depth for the stated Gaussian learners
+on arbitrary continuous-domain distributions. Given any proposed joint
+polynomial, one can choose depth large enough that its sample requirement
+is below $e^{(L-1)/100}$ and then choose an allowed learner width from
+the theorem. In the strong-prior case the failure persists arbitrarily
+far into the small-scale limit. At every fixed exponent above one it
+already occurs at the actual finite prior scale, for sufficiently large
+polynomial learner width.
+
+The distributional qualification is substantial. The fixed input law is
+nonatomic but singular: it is supported on a Cantor subset of a circle
+arc. Smooth arclength densities are possible when the input law may
+vary with depth, by Corollary~\ref{cor:smooth}. This paper does not
+prove the same lower bound for uniform measure on the circle or sphere,
+for one fixed smooth input density, or for every smooth density. Nor does it
+claim a lower bound for every possible learning algorithm. Its proof
+uses the specific energy competition induced by the Gaussian prior.
+
+The continuous domain matters. It contains distinct points at
+exponentially small Euclidean distances. Distinct Boolean-cube vertices
+have distance at least two, so this close-pair mechanism does not transfer
+to the original Boolean classification model. A coordinate restriction
+or a grid encoding by Boolean strings also changes the network
+representation and its norm. Consequently this result leaves open the
+general small-deep-circuit question on the Boolean cube.
+
+The Gaussian-distance proof requires $\gamma>1$ because the typical
+Gaussian component then has operator norm tending to zero with width.
+The separate mean-field proof instead uses finite-dimensional entropy
+costs and takes width to infinity without a quantified threshold.
+At this endpoint, the positive sample exponent need not equal
+$1/100$, and the one-half confidence-error bound is a lower limit
+in width rather than a finite-width assertion.
+The theorem concerns increasing \emph{teacher} depth, and does not
+contradict polynomial dependence on additional learner depth for a fixed
+shallow target. No claim about non-Gaussian priors is made here.
+
+\begingroup\small
+\begin{thebibliography}{9}
+\bibitem{borell} C. Borell. The Brunn--Minkowski inequality in Gauss space.
+\emph{Inventiones Mathematicae} 30 (1975), 207--216.
+\bibitem{ledoux} M. Ledoux. \emph{The Concentration of Measure Phenomenon}.
+American Mathematical Society, 2001.
+\bibitem{dembozeitouni} A. Dembo and O. Zeitouni.
+\emph{Large Deviations Techniques and Applications}. Second edition,
+Springer, 1998.
+\bibitem{talagrand1996} M. Talagrand. Transportation cost for Gaussian
+and other product measures. \emph{Geometric and Functional Analysis}
+6 (1996), 587--600.
+\end{thebibliography}\endgroup
+\end{document}

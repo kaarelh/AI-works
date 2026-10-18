@@ -41,7 +41,9 @@ With binary training labels, conditioning only on training margins also gives a 
 
 A nonconstant continuous classifier on a connected sphere cannot have a nonzero absolute margin everywhere. Binary-only learning without a support-margin assumption remains a separate question. Learning real scores can imply sign generalization through a bound on the probability of small teacher scores; that consequence uses score labels during training.
 
-The results allow large dependence on depth, including rapidly growing polynomial degrees. They do not establish computationally efficient inference, learning from noisy real-valued observations, or a finite-scale zero-tolerance regression theorem.
+The results allow large dependence on depth, including rapidly growing polynomial degrees. The [continuous-depth lower bound](../../works-in-progress/continuous-depth-lower-bound/) shows that an exponential depth dependence is necessary in general for the unrestricted Gaussian regression learner, even at constant teacher width and bounded weights. It covers the strong-prior limit, every fixed exponent above one at sufficiently large finite widths, and mean-field scaling in the width-first limit, on a particular fixed nonatomic distribution on the circle. It does not concern uniform spherical inputs.
+
+The upper bounds do not establish computationally efficient inference, learning from noisy real-valued observations, or a finite-scale zero-tolerance regression theorem.
 
 ## Build
 

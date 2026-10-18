@@ -1,0 +1,146 @@
+\section{Exact memorization with a depth-independent Lipschitz ceiling}
+\label{sec:memorization}
+The next construction is useful because its energy grows almost linearly
+with depth, while its product norm has a bound independent of depth.
+It fits the observed real labels exactly.
+
+\begin{lemma}[Exact bounded-label memorization]\label{lem:memorizer}
+Let $d,n\ge1$, $L\ge3$, and suppose sample inputs have projected
+coordinates $s_i=\langle u,x_i\rangle\in[-1,1]$, for some unit vector
+$u$, with $|s_i-s_j|\ge\Delta>0$ whenever $i\ne j$.
+For any labels $|y_i|\le7/8$, set
+\[
+ a=\Delta^{-1}\log(16n),\quad R=\max\{2,a\},\quad
+ M=\left\lceil\max\{4,n,3dnR^2\}\right\rceil,\quad T=4Mn.
+\]
+At every width $N\ge M$ there is a depth-$L$ network with
+\[
+ z(x_i)=y_i,\qquad |z(x)|\le1\quad(x\in\R^d),\qquad
+ \kappa_N(w)\le K:=2+(L+14)T^{1/(L-1)}.
+\]
+Furthermore
+\begin{equation}\label{eq:product-bound}
+ \left(\frac{K+1}{L}\right)^L\le e^{17}T^{3/2}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Order the coordinates as $s_1<\cdots<s_n$ and put
+$c_j=(s_j+s_{j+1})/2$. For a vector $t\in\R^n$ define
+\begin{equation}\label{eq:step-interpolator}
+ g_t(x)=\frac{t_1+t_n}{2}+
+ \sum_{j=1}^{n-1}\frac{t_{j+1}-t_j}{2}
+       \tanh(a(\langle u,x\rangle-c_j)).
+\end{equation}
+The constant term is implemented using the hidden feature $1/2$ with
+first-layer bias $\operatorname{artanh}(1/2)$ and readout weight
+$t_1+t_n$. Thus the hidden width is $n$, including when $n=1$ and
+the sum is empty.
+
+Write $\theta_j=\tanh(a(\langle u,x\rangle-c_j))$. Since the
+centers increase, $\theta_1\ge\cdots\ge\theta_{n-1}$.
+Equation~\eqref{eq:step-interpolator} is a convex combination of the
+$t_i$, with coefficients
+\[
+ \frac{1-\theta_1}{2},\quad
+ \frac{\theta_1-\theta_2}{2},\quad\ldots,\quad
+ \frac{\theta_{n-2}-\theta_{n-1}}2,\quad
+ \frac{1+\theta_{n-1}}2.
+\]
+For $n=1$ the sole coefficient is one. Hence $|g_t|\le\norm t_\infty$
+globally. Each sample is at distance at least $\Delta/2$ from every
+threshold, so $|\tanh v-\operatorname{sign}v|\le2e^{-2|v|}$ gives
+\[
+ |g_t(x_i)-t_i|\le2(n-1)e^{-a\Delta}\norm t_\infty.
+\]
+Let $A$ be the linear map $t\mapsto(g_t(x_i))_{i=1}^n$. Then
+\begin{equation}\label{eq:A-inverse}
+ \norm{A-I}_{\infty\to\infty}<1/8,
+ \qquad \norm{A^{-1}}_{\infty\to\infty}\le8/7.
+\end{equation}
+
+We next construct a scalar channel before selecting $t$.
+Put $m=L-1\ge2$, $D_0=2T$ and
+\[
+ q=(D_0/4)^{1/(2m)}\ge1,\qquad
+ k_s=\min\{s,m-s\},\qquad
+ r_s=\frac{q^s}{\sqrt{D_0}\,k_s}\quad(1\le s\le m-1).
+\]
+These numbers satisfy $r_s\le1/(2qk_s)\le1/2$ and
+$r_{m-1}=1/(2q)$. Define positive weights
+\[
+ \alpha_0=\operatorname{artanh}(r_1),\qquad
+ b_s=\frac{\operatorname{artanh}(r_s)}{r_{s-1}}\quad(2\le s\le m-1),
+\]
+and the scalar function
+\[
+ G(t)=2q\tanh\bigl(b_{m-1}\tanh(\cdots\tanh(b_2\tanh(\alpha_0t))\cdots)\bigr).
+\]
+For $m=2$ this means $G(t)=2q\tanh(\alpha_0t)$.
+By construction $G(1)=1$. It is odd and strictly increasing, and is
+concave on $[0,1]$ because positive rescaling and composition preserve
+increasing concave functions there. Thus $G$ maps $[-1,1]$ bijectively
+onto itself, $G(t)\ge t$ on $[0,1]$, and
+$|G^{-1}(y)|\le|y|$ for $|y|\le1$.
+
+Choose
+\[
+ t=A^{-1}(G^{-1}(y_1),\ldots,G^{-1}(y_n))^T.
+\]
+Equation~\eqref{eq:A-inverse} gives
+$\norm t_\infty\le(8/7)(7/8)=1$. Consequently $G\circ g_t$
+has exact sample values $y_i$ and is globally bounded by one.
+
+We verify its energy. For $\norm t_\infty\le1$, the first matrix
+in~\eqref{eq:step-interpolator} has squared Frobenius norm at most
+$3nR^2$. Its readout has squared norm at most $n+3\le4n$.
+Pad with zero neurons to width $M$. The first-layer energy is then
+at most one, and the weighted readout energy at most $T$.
+For $N\ge M$, divide its $N$ neurons into $M$ balanced groups.
+Duplicate each old neuron within its group, and divide its outgoing
+readout coefficient by the group size. Since each group size is
+between $N/(2M)$ and $2N/M$, this preserves the shallow function and
+gives first energy at most two and weighted readout energy
+$c^2=N\norm{v_N}_2^2\le2T=D_0$.
+
+To implement $G$ after that first layer, make every row of the next
+matrix equal to $\alpha_0v_N^T$. Each subsequent scalar-channel
+matrix has all entries $b_s/N$, and the final readout has all entries
+$2q/N$. Their respective energy costs are
+$\alpha_0^2c^2\le D_0\alpha_0^2$, $b_s^2$, and $4q^2$.
+
+The following elementary estimates bound their sum. The power series
+for $\operatorname{artanh}$ gives
+\begin{equation}\label{eq:atanh-bound}
+ (\operatorname{artanh}(v)/v)^2\le1+v^2\quad(0\le v\le1/2).
+\end{equation}
+One verification is to bound
+$\operatorname{artanh}(v)/v\le1+v^2/[3(1-v^2)]\le1+4v^2/9$;
+squaring this upper bound gives at most $1+v^2$ for $v^2\le1/4$.
+If $R_s=k_{s-1}/k_s$, then
+\[
+ \sum_{s=2}^{m-1}R_s^2\le m-2+7,\qquad
+ R_s\le2,\qquad \sum_{s=1}^{m-1}k_s^{-2}<4.
+\]
+For the first inequality, pair the ratios $k/(k+1)$ and $(k+1)/k$
+and use
+\[
+ \left(\frac{k+1}{k}\right)^2+
+ \left(\frac{k}{k+1}\right)^2-2\le4/k^2,
+\]
+whose sum is less than seven. A possible central ratio equals one.
+Equation~\eqref{eq:atanh-bound} now gives
+\[
+ D_0\alpha_0^2\le q^2+1/4,\qquad
+ \sum_{s=2}^{m-1}b_s^2\le q^2(m-2+7)+4.
+\]
+The second remainder is bounded by
+$\sum_s q^2R_s^2r_s^2\le\sum_s k_s^{-2}<4$.
+Including a readout of size $q$ would cost at most $(m+12)q^2$;
+the actual readout $2q$ adds $3q^2$. Including the first layer,
+\[
+ \kappa_N\le2+(m+15)q^2
+ =2+(L+14)(T/2)^{1/(L-1)}\le K.
+\]
+Finally $K+1\le(L+17)T^{1/(L-1)}$ and $L/(L-1)\le3/2$,
+which give~\eqref{eq:product-bound}.
+\end{proof}

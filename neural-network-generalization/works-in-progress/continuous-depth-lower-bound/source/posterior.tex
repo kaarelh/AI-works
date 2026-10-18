@@ -1,0 +1,156 @@
+\section{Posterior energy and output ceilings}\label{sec:posterior}
+\begin{lemma}[Strong-prior ceiling]\label{lem:strong-ceiling}
+Fix a sample, a finite width $N$, depth $L\ge3$, and positive tolerance
+$\rho$. Suppose it has an exact interpolant of energy at most $K$.
+Then the posterior defined by~\eqref{eq:scales}--\eqref{eq:training}
+satisfies
+\[
+ \Pi_{S,\sigma}\{\kappa_N>K+1\}\longrightarrow0
+ \qquad(\sigma\downarrow0).
+\]
+If $K=2+(L+14)T^{1/(L-1)}$, it consequently assigns probability
+tending to one to functions of Lipschitz constant at most
+\begin{equation}\label{eq:Lip-ceiling}
+ \Lambda=\frac{e^{17/2}}{\sqrt d}T^{3/4}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Continuity gives a parameter ball around the witness that still fits
+the sample within $\rho$ and whose energies are at most $K+1/4$.
+In the fixed finite parameter dimension its Gaussian probability has
+lower exponential rate at least $-(K+1/4)/2$ at speed $\sigma^{-2}$.
+The Gaussian radial tail outside energy $K+1$ has upper rate at most
+$-(K+1)/2$. These bounds follow directly by integrating the density
+over the ball and by the Gaussian squared-norm tail, respectively.
+Their quotient tends to zero.
+
+For an energy at most $K+1$, arithmetic--geometric mean and the
+one-Lipschitz tanh activation give
+\[
+ \Lip(z_w)^2\le
+ \norm{W^1}_F^2\cdots\norm{W^{L-1}}_F^2\norm v_2^2
+ \le\frac1d\left(\frac{K+1}{L}\right)^L
+ \le\frac{e^{17}}dT^{3/2},
+\]
+using~\eqref{eq:product-bound}. The constant input coordinate does
+not change the Lipschitz bound with respect to the actual input.
+\end{proof}
+
+At finite exponents above one we need a ceiling for a nearby function,
+rather than for the full parameter energy. We give its proof explicitly.
+
+\begin{lemma}[Finite-scale approximation ceiling]\label{lem:finite-ceiling}
+Suppose that for a sample on the Euclidean unit ball and every
+$N\ge M$ there is an exact interpolant of energy at most
+$K=2+(L+14)T^{1/(L-1)}$, where $L\ge3$ and $T\ge1$ are independent
+of $N$. Fix $\zeta>0$, $0<\beta<1$, and $0<h<\rho$.
+Define
+\[
+ A=\left(\frac{K+2}{L-1}\right)^{(L-1)/2},\qquad
+ b^2=\max\{2(d+1)\log2+4\log8,\ 16\log9+8\log(8L)\},
+\]
+\[
+ \eta=\min\left\{1,\frac1{4\sqrt{L(K+1)}},
+                         \frac h{\sqrt2 LA}\right\}.
+\]
+For every
+\begin{equation}\label{eq:width-threshold}
+ N\ge\left\lceil\max\left\{M,2,(b/\eta)^{2/\zeta},
+                         2\log(2/\beta)\right\}\right\rceil,
+ \qquad 0<\sigma^2\le N^{-(1+\zeta)},
+\end{equation}
+the posterior assigns mass at least $1-\beta$ to outputs uniformly
+within $h$ on the unit ball of a function with energy at most $K+1$
+and Lipschitz constant at most~\eqref{eq:Lip-ceiling}.
+The width threshold has a polynomial upper bound in
+$d,M,T,L,h^{-1},\log(1/\beta)$ for fixed $\zeta$.
+\end{lemma}
+\begin{proof}
+The energy-coordinate matrices are
+\[
+ A_1=\sqrt{d/N}W^1,\qquad A_j=W^j\ (2\le j<L),\qquad
+ A_L=\sqrt N v^T.
+\]
+Their entries are independent $\mathcal N(0,\sigma^2)$ and their
+total squared Euclidean norm is $\kappa_N$.
+After normalizing the augmented input by $\sqrt d$ and hidden states
+by $\sqrt N$, the first activation map is
+$u\mapsto N^{-1/2}\tanh(\sqrt N A_1u)$, and the other hidden
+activation maps have the same form. They are one-Lipschitz in their
+linear argument and zero-preserving. The normalized input norm on
+the unit ball is at most $\sqrt2$.
+
+Suppose a residual network $U$ has energy at most $K+1$, and a
+perturbation $B$ has operator norm at most $\eta$ in each normalized
+block. Telescoping one layer at a time and applying
+arithmetic--geometric mean to the other $L-1$ layer norms gives
+\begin{equation}\label{eq:perturbation}
+ \sup_{\norm x_2\le1}|z_{U+B}(x)-z_U(x)|
+ \le\sqrt2 L\eta
+ \left[\frac{K+1+2\eta\sqrt{L(K+1)}+L\eta^2}{L-1}
+ \right]^{(L-1)/2}.
+\end{equation}
+Indeed, writing the residual block norms as $a_j$, each telescoping
+term is at most $\sqrt2\eta$ times a product of $L-1$ numbers
+$a_j+\eta$. Their squared sum is bounded by the numerator, since
+$\sum a_j^2\le K+1$ and $\sum a_j\le\sqrt{L(K+1)}$.
+The choice of $\eta$ makes the cross term at most $1/2$ and
+$L\eta^2\le1/[16(K+1)]$. Thus that numerator is at most $K+2$
+and~\eqref{eq:perturbation} is at most $\sqrt2L\eta A\le h$.
+
+Put $t^2=N\sigma^2$. Let
+\[
+ a_d^2=2(d+1)\log2+4\log8,\qquad
+ b_L^2=16\log9+8\log(8L).
+\]
+In energy coordinates let $\mathcal T$ be the set where first and
+last block Frobenius norms are at most $ta_d$, and internal block
+operator norms are at most $tb_L$. This set is nonempty, closed,
+convex and centrally symmetric, and its Gaussian probability is
+at least $1/2$. To verify the last assertion, the first squared norm
+has law $(t^2/N)\chi^2_{N(d+1)}$; the last uses $N$ degrees of
+freedom. The exponential moment at parameter $1/4$ bounds either
+failure probability by $1/8$. A $1/4$-net of the unit sphere has at
+most $9^N$ points. Applying the scalar Gaussian tail on two such
+nets gives, for each internal matrix $tG/\sqrt N$,
+\[
+ \Prb\{\norm{tG/\sqrt N}_{\rm op}>tb_L\}
+ \le2\exp(2N\log9-Nb_L^2/8)\le1/(4L).
+\]
+The union bound proves the required mass. Every normalized block
+in $\mathcal T$ has operator norm at most $tb$.
+
+Condition~\eqref{eq:width-threshold} gives $t\le N^{-\zeta/2}$,
+so $tb\le\eta$. If $w_S$ is the exact-fitting witness, then
+$w_S+\mathcal T$ fits the sample within $h<\rho$ by the perturbation
+bound. The Gaussian shift identity and central symmetry give
+\[
+ \mu(w_S+\mathcal T)
+ =e^{-\kappa_N(w_S)/(2\sigma^2)}
+   \int_{\mathcal T}e^{-\langle w_S,B\rangle_\kappa/\sigma^2}\,d\mu(B)
+ \ge\tfrac12e^{-K/(2\sigma^2)}.
+\]
+Pairing $B$ with $-B$ in the integral proves the inequality.
+
+Gaussian isoperimetry~\cite{borell,ledoux}, applied to a set of
+Gaussian mass at least $1/2$, gives
+\[
+ \mu\{\operatorname{dist}_\kappa(w,\mathcal T)^2>K+1\}
+ \le e^{-(K+1)/(2\sigma^2)}.
+\]
+Dividing by the preceding lower bound for the conditioning event
+shows that the posterior probability of this event is at most
+$2e^{-1/(2\sigma^2)}\le\beta$. Off this event, let $B$ be the metric
+projection of $w$ onto $\mathcal T$ and set $U=w-B$.
+Then $\kappa_N(U)\le K+1$, and~\eqref{eq:perturbation} gives
+$\sup|z_w-z_U|\le h$. The product-norm bound gives the stated
+Lipschitz ceiling. No claim that $w$ itself has low energy is needed.
+
+Finally
+\[
+ K+2\le(L+18)T^{1/(L-1)},\qquad
+ A^2\le\left(\frac{L+18}{L-1}\right)^{L-1}T\le e^{19}T.
+\]
+Thus every inverse radius and threshold in the lemma has the claimed
+polynomial upper bound for fixed $\zeta$.
+\end{proof}
