@@ -2,7 +2,7 @@
 
 **Status:** Main result; public research draft
 
-Can Bayesian neural networks learn small circuits with sample complexity polynomial in depth as well as circuit size? This paper proves such a bound after restricting the Gaussian prior to networks whose clipped predictions are stable under calibrated internal perturbations. One polynomial works jointly in input dimension, layered Boolean-circuit width, learner depth, robustness calibration, and statistical parameters, simultaneously at every learner width above circuit width and every Gaussian scale in the stated family, including all $\gamma\ge1$. The full joint polynomial result without this additional restriction remains open.
+Can Bayesian neural networks learn small circuits with sample complexity polynomial in circuit width and depth? This paper proves such a bound after restricting the Gaussian prior to networks whose clipped predictions are stable under calibrated internal perturbations. One polynomial works jointly in input dimension, layered Boolean-circuit width, learner depth, robustness calibration, and statistical parameters, simultaneously at every learner width above circuit width and every Gaussian scale in the stated family, including all $\gamma\ge1$. The full joint polynomial result without this additional restriction remains open.
 
 The paper defines the learning setup and restriction before stating the theorem, then gives the statistical proof and robust target construction. Certificates, variants, and detailed experiments are collected in appendices. Training requires signed output above $1/2$; test error is measured at margin $1/4$, which also controls sign error. No global clean-output margin is assumed.
 
@@ -22,4 +22,4 @@ The empirical findings are separate from the learning theorem: trained-network a
 
 Run `bash build.sh` from this directory with a standard TeX Live installation. It runs three LaTeX passes in `build/` and refreshes `paper.pdf`. All LaTeX inputs and figures are included under `source/`; no network access is needed.
 
-[Source provenance](verification/source-provenance.json) retains the original source hashes and the editorial revision history. The [latest editorial build record](../../verification/main-papers-editorial-revision-2026-10-18.json) checks an independent rebuild against the published PDF text and verifies that the mathematical source files are unchanged.
+[Source provenance](verification/source-provenance.json) retains the original source hashes and the editorial revision history. The [latest editorial build record](../../verification/robust-abstract-revision-2026-10-18.json) checks an independent rebuild against the published PDF text and verifies that the mathematical source files are unchanged.

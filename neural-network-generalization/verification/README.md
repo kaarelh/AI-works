@@ -16,7 +16,7 @@ python verify_collection.py --rebuild --jobs 4
 
 Run these commands from the collection root. They require Python 3, `pdflatex`, `pdfinfo`, and `pdftotext`; no network access is needed. Published PDFs are not changed by the verification script.
 
-The latest full collection rebuild is recorded in [depth-publication-all-builds.json](depth-publication-all-builds.json). The five main papers were subsequently revised editorially and independently rebuilt; their current source and PDF hashes are in the [editorial revision record](main-papers-editorial-revision-2026-10-18.json). The earlier `build-results.json` remains the 16 October snapshot.
+The latest full collection rebuild is recorded in [depth-publication-all-builds.json](depth-publication-all-builds.json). The five main papers were subsequently revised editorially and independently rebuilt; their source and PDF hashes are in the [editorial revision record](main-papers-editorial-revision-2026-10-18.json). A subsequent [robust-paper abstract clarification](robust-abstract-revision-2026-10-18.json) records that paper's current hashes and independent rebuild. The earlier `build-results.json` remains the 16 October snapshot.
 
 ## Publication checks, 16 October 2026
 
