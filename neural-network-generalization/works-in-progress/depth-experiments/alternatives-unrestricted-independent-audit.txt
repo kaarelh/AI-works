@@ -1,0 +1,56 @@
+Independent audit by robustness-theory agent, 2026-10-17, round 3
+
+FILES: unrestricted-alternative-target-corruption.tex;
+       unrestricted-primary-halfspaces.tex.
+VERDICT: PASS, within their stated regimes.
+
+1. External circuit theorem checked directly.
+Read the primary source at https://theory.cs.uni-bonn.de/marek/publications/STCbMC.pdf,
+Theorem 10 (pp. 10--11 in the source, extracted lines 882--1007), and its
+preliminaries (lines 101--128). The theorem constructs two levels of
+threshold gates, with polynomial size and polynomial integer coefficients.
+The proof's explicit bounds are O(log^12 W) wires and O(log^8 W) coefficient
+magnitudes. Applying the Muroga reduction gives log W=O(d log d), uniformly
+over Boolean halfspaces independently of their initially specified weights.
+The convention excludes zero affine arguments; the displayed construction's
+bottom offsets are half-integral before multiplying weights by two, and its
+top argument has strictly positive signed value. Thus the paper's exact
+integer-margin lemma applies, not merely a randomized approximation theorem.
+
+2. Halfspace-to-tanh conversion.
+At each bottom integer affine form, tanh at scale lambda=(1/2)log(8A)
+incurs <=1/(4A) error, A=max(1,sum|b_j|). The top affine error is <=1/4;
+doubling leaves signed margin >=3/2. The output constant is implemented
+by a legitimate first-layer constant neuron with activation 1/2. Width
+and physical weights are polynomial in d. No uncounted later-layer bias
+is introduced. The source's depth-two circuit is exactly one hidden
+threshold layer followed by a threshold readout, so it matches the
+shallow tanh representation required by the posterior theorem.
+
+3. Patch construction.
+The point isolator has preactivation a/2 at its designated Boolean input
+and at most -3a/2 elsewhere. Its indicator approximation error is <=e^-a.
+Since |z_g|<=CR=Z, flipping the score at at most b points and approximating
+these point indicators costs <1/8 globally. Doubling the corrected score
+leaves margin >7/4. The split constant readout uses |P|+1 constant neurons
+and each coefficient is <=4Z, avoiding a hidden factor b in R_b.
+The advertised bounds C_b=C+2b+1 and R_b cover all physical parameters.
+
+4. Statistical extension.
+The binomial disagreement event has failure <=(e/4)^b<=delta/2 under the
+stated b and rho*n constraints. Its sample-dependent interpolant needs
+correct target labels only on the observed sample: the Gaussian-distance
+proof uses its global output margin and energy only for the partition
+function lower bound. The uniform residual-network margin event does not
+depend on the witness or patch set. Therefore no patch-set union cost is
+needed. The finite-width split uses a true-target C_L(f) realization only
+when C_L(f)<=N<W, so all its parameters are then polynomially bounded by W.
+This does not silently require C_L(f) to be polynomial in the base shallow
+representation. If C_L(f)>=W, that width range is empty.
+
+5. Scope.
+The corruption result requires BOTH n>=the displayed polynomial and
+rho*n<=b/4. It is not a uniform-in-n theorem at a fixed positive corruption
+rate. The halfspace result applies to every gamma>=1+zeta with zeta fixed;
+it does not prove the mean-field endpoint. Neither result gives a learning
+algorithm or efficient exact posterior sampler.

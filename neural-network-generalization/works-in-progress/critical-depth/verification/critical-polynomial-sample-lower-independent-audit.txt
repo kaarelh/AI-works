@@ -1,0 +1,64 @@
+Independent audit by /root/depth2_unrestricted_review
+17 October 2026, 23:44 UTC
+Sources: unrestricted-critical-polynomial-sample-lower.tex and
+critical-oriented-majority-interpolant.tex
+Verdict: PASS, including the final n <= M^(1-eta) strengthening and
+slowly growing-depth corollary.
+
+Amplification lemma:
+- The mixture has KL at most theta D=q and second moment at least
+  theta hh^T. The tracked vector sqrt(theta)h is correctly distinguished
+  from the actual mixture mean theta h.
+- q=(D/a^2)^(1/L)>=1, theta=q/D<=1, and the tracked minimum is
+  q^(-(L-1)/2). The L=2 readout costs q/8.
+- The second hidden Gaussian shift sqrt(q)b1 costs <=q/2. Later
+  shifts (sqrt(q)/c)b cost <=q/(2c^2). The bound c min(u,1)
+  handles unequal coordinate magnitudes and prevents a hidden c^L loss.
+- Covariance domination places every shift in the covariance range.
+  Each marginal reference variance is <=1. The final readout costs
+  <=q/(8c^2), and the total 5000Lq bound is conservative.
+
+Oriented-majority interpolant:
+- Conditional on parity labels, deleting one target-parity coordinate
+  leaves all other input columns independent uniform signs. This is
+  true for sparse parity too, including coordinates outside its support.
+- Exchangeability gives E[epsilon_i sign(sum epsilon)]=E|sum epsilon|/n.
+  The stated Holder/fourth-moment calculation yields >=1/sqrt(3n).
+- The oriented terms are independent across columns for each fixed
+  training row. Hoeffding gives exp(-m/(6n)); row dependence is harmless
+  under the union bound.
+- Odd m makes the defining integer linear form nonzero everywhere.
+  The shifted first-row Gaussian costs dm/2 and has residual variance
+  (d+1)/d<=2. The signed feature mean is uniformly >=1/100.
+- D=dm and a=1/100 satisfy the mixture condition once dm>=10000.
+  This yields J_L(g)<=5000L(10000dm)^(1/L).
+
+Posterior theorem:
+- With M=min{k,d^(1/(L-1))}, n<=M^(1-eta), the smallest odd m at least
+  12n log(2M(n+1)) is O(n log M)=o(M)<=o(d), hence m<=d-1 eventually.
+  n exp(-m/(6n))<=1/(2M).
+- Any function depending on every target coordinate has augmented
+  relevance at least k. Its lower rate is exactly bounded below by
+  (dM)^(1/L)/64, using the audited relevance theorem.
+- Competitor/lower-rate ratio is <=C L M^(-eta/L) log(M+1)^(1/L).
+  It tends to zero for every fixed L and fixed eta>0.
+- A positive gap in the exact finite-domain posterior rates removes
+  all functions retaining every target coordinate. Each remaining
+  function has exact uniform parity error1/2, even if it depends on
+  irrelevant coordinates. Tied minimizers therefore cause no problem.
+- E_x p_N(x)->1/2 implies confidence-error liminf>=1/4 by Markov.
+  This does not imply failure of posterior majority at threshold1/2.
+
+Growing-depth corollary:
+- For full parity M=d^(1/(L-1)), the ratio is bounded by
+  C L exp[-eta log d/(L(L-1))] log(d+1)^(1/L).
+  Its logarithm tends to -infinity when
+  L=o(sqrt(log d/log log d)). All other construction bounds are uniform
+  in L>=2. Width is still taken to infinity separately for each d.
+
+Scope: an actual width-first critical-posterior lower bound, polynomial
+in M; no uniform finite-width threshold, no exponential-in-k theorem,
+and no majority-prediction lower bound.
+
+The earlier point-isolator audit is preserved separately as
+critical-point-memorizer-previous-independent-audit.txt.

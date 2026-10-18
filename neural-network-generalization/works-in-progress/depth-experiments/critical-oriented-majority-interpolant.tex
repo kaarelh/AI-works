@@ -1,0 +1,70 @@
+\begin{lemma}[A low-rate majority interpolant for parity samples]
+\label{lem:critical-oriented-majority}
+Let the labels be a parity on a nonempty coordinate set $S$, and draw
+$n\ge1$ independent uniform cube inputs. Fix one $i_0\in S$ and an
+odd number $m\le d-1$ of other coordinate indices $I$.
+There is a sample-dependent Boolean majority function
+\[
+ g(x)=\operatorname{sign}\!\left(\sum_{j\in I}s_jx_j\right),
+ \qquad s_j\in\{-1,1\},
+\]
+which fits every training label with probability at least
+$1-n\exp[-m/(6n)]$.
+For every sample, this function admits a first-feature law $\nu$ with
+\[
+ D(\nu\Vert\mu_1)\le dm,
+ \qquad g(x)\mathbb E_\nu H(x)\ge1/100
+       \quad\text{for every input }x.
+\]
+Consequently, whenever $dm\ge10000$,
+\[
+ J_L(g)\le5000L(10000dm)^{1/L}
+       \qquad(L\ge2).
+\]
+\end{lemma}
+
+\begin{proof}
+Write $Y_i$ for the parity label of training row $i$, and choose
+\[
+ s_j=\operatorname{sign}\!\left(\sum_{i=1}^nY_iX_{ij}\right),
+\]
+with either fixed convention for a zero sum.
+Conditional on the entire label vector $Y$, all coordinate columns
+other than $i_0$ are independent uniform sign vectors: the missing
+parity coordinate is uniquely determined by these columns and $Y$.
+Thus $A_{ij}=Y_iX_{ij}$, for $j\in I$, are independent uniform sign
+columns conditionally on $Y$.
+
+If $T=\sum_{i=1}^n\varepsilon_i$ is a sum of independent uniform
+signs, exchangeability gives
+\[
+ \mathbb E\left[\varepsilon_i\operatorname{sign}(T)\right]
+       =\frac{\mathbb E|T|}{n}\ge\frac1{\sqrt{3n}}.
+\]
+Indeed $\mathbb ET^2=n$ and $\mathbb ET^4\le3n^2$, while Holder's
+inequality gives
+$\mathbb ET^2\le(\mathbb E|T|)^{2/3}(\mathbb ET^4)^{1/3}$.
+For each training row, the variables $s_jA_{ij}$ are therefore
+independent across $j$, bounded by one in absolute value, and have
+mean at least $1/\sqrt{3n}$. Hoeffding's inequality bounds the
+probability that their sum is nonpositive by $e^{-m/(6n)}$.
+A union bound proves the training-fit probability. Dependence between
+different training rows is irrelevant to that union bound.
+
+Since $m$ is odd, the affine form defining $g$ is a nonzero integer
+at every cube input, so its global signed margin is at least one.
+Shift the first-row Gaussian weight mean to have coefficient $s_j$
+on $I$ and zero elsewhere, including its bias. This costs exactly
+$dm/2$ in relative entropy. At each input its residual Gaussian
+variance is $(d+1)/d\le2$, and its feature mean is
+\[
+ \mathbb E\tanh\!\left(\sum_{j\in I}s_jx_j+
+                       \sqrt{(d+1)/d}\,Z\right).
+\]
+The elementary mean-response bound from the constant-target
+construction gives signed mean at least $1/100$ everywhere.
+Data processing therefore proves the first-feature-law assertion.
+Apply Lemma~\ref{lem:critical-mixture-mean-seed} with
+$D=dm$ and $a=1/100$. Its hypothesis
+$(10000D)^{1/L}\le D$ holds whenever $D\ge10000$ and $L\ge2$.
+\end{proof}

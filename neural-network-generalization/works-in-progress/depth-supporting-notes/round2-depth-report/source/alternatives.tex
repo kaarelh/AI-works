@@ -1,0 +1,249 @@
+\section{Alternative priors and operational stability conditions}
+\label{sec:alternative-priors}
+
+This section gives two changes with complete statistical bridges. A soft
+inverse-margin penalty retains the support of the raw Gaussian. A bounded
+activation-fault condition weakens the previous hard support rule and has a
+direct interpretation in terms of numerical errors and neuron failures.
+Neither is a theorem for the \emph{unchanged} Gaussian prior.
+
+\subsection{A soft prior with the same support as the raw Gaussian}
+
+Let $\mu_{N,t}$ be the raw Gaussian of the preceding report, $0<t\le1$,
+and put $a=N/t^2\ge1$. Retain the postactivation disturbance convention
+\[
+ \|\eta\|_*^2=\sum_{s=1}^{L-1}\frac{\|\eta_s\|_2^2}{N}
+                         +|\eta_{\rm out}|^2.
+\]
+Define the exact all-input distance to a zero output by
+\[
+ \rho(w)=\min_{x\in\{-1,1\}^d}
+       \inf\{\|\eta\|_*:z_w(x;\eta)=0\},\qquad
+ r(w)=\min\{1,\rho(w)\}.
+\]
+An output-only disturbance makes $\rho$ finite. If all clean outputs are
+nonzero, continuity and finiteness of the input cube make $\rho>0$.
+Every disturbance ball with radius strictly below $\rho$ preserves the clean
+signs: a sign change would yield a zero along the segment from zero noise.
+The function $\rho$ is measurable, since the noise balls are compact and
+the input set is finite. Under the raw Gaussian, all clean outputs are
+nonzero almost surely. To see this, condition successively on the preceding
+layers: each nonzero state gives nondegenerate Gaussian preactivations,
+and finally a nondegenerate Gaussian scalar readout. A finite union over
+inputs completes the argument.
+
+Fix constants $p>0$ and $\lambda>0$, and define
+\begin{equation}\label{eq:soft-margin-prior}
+ \Phi(w)=r(w)^{-p},\qquad
+ d\nu_{N,t}(w)=Z^{-1}\exp[-a\lambda\Phi(w)]\,d\mu_{N,t}(w).
+\end{equation}
+On the null set $\rho=0$, set the density to zero. The normalizer is positive
+and finite, and $\nu_{N,t}$ and $\mu_{N,t}$ are mutually absolutely
+continuous. Thus no set of positive Gaussian probability is excluded.
+In energy notation, the new density is proportional to
+$\exp\{-a[\kappa_N(w)+2\lambda\Phi(w)]/2\}$.
+One can optionally retain the original clean-margin restriction
+$\min_x|z_w(x)|>1/2$; without that optional restriction, even the original
+hard output-margin condition is unnecessary for the following result.
+In both versions, the likelihood is noiseless \emph{sign consistency} with
+the observed training labels.
+
+\begin{theorem}[Soft robustness prior]
+\label{thm:soft-margin-prior}
+Suppose that, for a Boolean target $f$, there is a set $A_f$ of exact sign
+representations such that
+\[
+ \mu_{N,t}(A_f)\ge e^{-aD},\qquad
+ \rho(w)\ge r_*\quad(w\in A_f),
+\]
+where $D\ge1$ and $0<r_*\le1$ are independent of $N,t$.
+For fixed $p,\lambda$, the consistency posterior under
+\eqref{eq:soft-margin-prior} has a Gibbs-risk sample bound polynomial in
+\[
+ d,L,D,r_*^{-1},\varepsilon^{-1},\log(1/\delta).
+\]
+If the cylinder hypotheses hold at every $N\ge C$ and $0<t\le1$, the
+guarantee holds on one sample event simultaneously for all those widths
+and scales. The optional clean-margin version has the same conclusion
+when $A_f$ also satisfies that clean margin.
+\end{theorem}
+
+\begin{proof}
+Set $B=D+\lambda r_*^{-p}$. For every sample $S$ from $f$, its unnormalized
+partition function satisfies
+\[
+ Z_S=\int \mathbf1_{\text{consistent with }S}
+                 e^{-a\lambda\Phi}\,d\mu_{N,t}\ge e^{-aB}.
+\]
+The global prior normalizer cancels after conditioning. The posterior
+$Q_S$ therefore obeys
+\[
+ D_{\rm KL}(Q_S\Vert\mu_{N,t})
+  =-a\lambda\mathbb E_{Q_S}\Phi-\log Z_S\le aB,
+ \qquad
+ Q_S\{\Phi>u\}\le e^{a(B-\lambda u)}.
+\]
+Choose $0<\beta\le1/2$ and
+$u=[B+\log(1/\beta)]/\lambda\ge1$. Since $a\ge1$, the displayed tail is
+at most $\beta$. Let $Q_S'$ be $Q_S$ conditioned on $\Phi\le u$. Its
+explicit density gives
+\[
+ D_{\rm KL}(Q_S'\Vert\mu_{N,t})
+  \le aB+\log\frac1{1-\beta}\le a(B+1).
+\]
+Its support is strictly sign-robust at radius
+$r_0=\tfrac12u^{-1/p}$. Apply the uniform robust posterior-compression
+theorem from the preceding report with $K=B+1$ and $r=r_0$. It gives one
+finite class $\mathcal H$, with polynomial log cardinality, and a common
+candidate marginal whose prediction can be coupled to $Q_S'$ at each
+input with disagreement at most $\alpha$.
+Since $Q_S'$ is training-consistent, the finite-class relative Chernoff
+bound from that report gives
+\[
+ R(Q_S)\le\beta+3\alpha+
+       \frac{8[\log|\mathcal H|+\log(1/\delta)]}{n}
+\]
+with probability at least $1-\delta$. Choose $\beta,\alpha$ proportional
+to $\varepsilon$. All class parameters are independent of $N,t$, which
+also proves simultaneity. The same calculation with the extra clean-margin
+indicator proves the optional version.
+\end{proof}
+
+The robust digital cylinder from the earlier report has
+$D=\operatorname{poly}(d,L,C)$ and $r_*^{-1}=\operatorname{poly}(C)$.
+Consequently Theorem~\ref{thm:soft-margin-prior} gives a polynomial-depth
+bound for every $N\ge C$ and every $\gamma\ge1$ while retaining the support
+of the raw Gaussian. The prior probabilities have changed. The result
+therefore does not settle whether ordinary independent Gaussian weights
+alone give the same guarantee.
+An inverse-squared margin ($p=2$) is a particularly simple choice.
+A penalty merely logarithmic in $1/\rho$ would only produce an exponentially
+small retained radius through this proof, so would not give the same
+polynomial conclusion.
+
+\subsection{Robustness only within the activation range}
+
+Call a disturbance \emph{bounded-state} if every perturbed hidden activation
+belongs to $[-1,1]^N$. This allows replacing an activation by another legal
+activation value, and leaves scalar output noise unrestricted. Require
+sign stability only against bounded-state disturbances in the specified
+RMS ball.
+
+\begin{proposition}[Bounded-state compression]
+\label{prop:bounded-state-compression}
+The deterministic and posterior compression theorems from the preceding
+report remain valid under bounded-state robustness in place of unrestricted
+postactivation robustness. The previously established target Gaussian-mass
+estimates remain valid.
+\end{proposition}
+
+\begin{proof}
+On every successful compression event, every virtual hidden state is a
+$\tanh$ output. First-layer clipping occurs before the activation;
+active-coordinate clipping, Gaussian replacement, and source reconstruction
+also feed the activation. The exact postactivation errors comparing the
+virtual computation to the original weights therefore produce states in
+$[-1,1]^N$, and have the same total RMS bound as before. The margin argument
+adds only output noise. Subsequent finite-grid rounding uses that positive
+output margin and does not invoke robustness again. The small-width case
+also uses only output noise. These are all uses of robustness in the two
+proofs. Finally, the previous target cylinder satisfies the stronger,
+unrestricted condition, so its probability lower bound is unchanged.
+\end{proof}
+
+This relaxation can be substantial at a fixed radius. With one hidden
+layer, let $n=N-1$, $c=0.9$, and take a constant hidden state
+$h=(c,\ldots,c,-c)$ and readout
+$v=(2/(nc),\ldots,2/(nc),1/c)$. Its output is $1$.
+Unrestricted hidden and output noise can erase it at norm
+$[N\|v\|^2+1]^{-1/2}=O(N^{-1/2})$.
+For bounded-state noise, the last coordinate can decrease by at most
+$1-c$. The remaining coordinates and scalar output noise can decrease the
+output by at most
+$\sqrt{4N/(nc^2)+1}\,\|\eta\|_*$.
+Thus a zero requires
+\[
+ \|\eta\|_*\ge\frac{2c-1}{\sqrt{4N/n+c^2}}>0.26
+ \qquad(N\ge2).
+\]
+This separates the notions of robustness; its readout energy grows with
+$N$, so it is not a sample lower bound or a separation of the calibrated
+prior supports.
+
+\subsection{Small numerical errors and rare neuron faults}
+
+Say a network tolerates $(a,p,b)$ if it preserves its own clean signs at
+every input under all simultaneous bounded-state disturbances such that,
+in each hidden layer, at most $pN$ coordinates have $|\eta_i|>a$, and
+$|\eta_{\rm out}|\le b$. Exceptional coordinates may be replaced
+arbitrarily within $[-1,1]$. This combines numerical errors at all neurons
+with an adversarial fraction of neuron faults. Dropout and pruning are
+particular faults; average performance under random dropout is a weaker
+property than this adversarial condition.
+
+\begin{lemma}[Fault and RMS bridges]
+\label{lem:fault-rms}
+Tolerance of $(a,p,b)$ implies bounded-state RMS robustness at
+$r=\min\{a\sqrt p,b\}$. Conversely, unrestricted RMS robustness at $\tau$
+implies tolerance of $(a,p,b)$ whenever
+\[
+ (L-1)(a+2\sqrt p)^2+b^2\le\tau^2.
+\]
+\end{lemma}
+\begin{proof}
+If the total RMS error is at most $r$, each layer has at most
+$Nr^2/a^2\le pN$ coordinates with error larger than $a$; output noise is
+at most $r\le b$. Conversely, the ordinary coordinates contribute at most
+$a\sqrt N$ to a layer's Euclidean error. Each faulty coordinate differs
+by at most $2$, so their contribution is at most $2\sqrt{pN}$.
+Sum the squared layer RMS bounds and the scalar output bound.
+\end{proof}
+
+For a single rule independent of target and data, retain the original
+clean margin and define
+\begin{align*}
+ E_v&=N\|v\|^2,&
+ \tau(w)&=\frac{0.01}{\sqrt{1+(L-1)E_v}},\\
+ a(w)&=\frac{\tau(w)}{4\sqrt L},&
+ p(w)&=\frac{\tau(w)^2}{64L},&
+ b(w)&=\frac{\tau(w)}2.
+\end{align*}
+Restrict the Gaussian to networks tolerating these faults, then condition
+on noiseless training sign consistency. Every network in the previous
+radius-$\tau(w)$ support belongs to this support: the second bound in
+Lemma~\ref{lem:fault-rms} is at most $\tau(w)^2/2$.
+In particular, the previous target cylinder still lies in the support.
+
+\begin{corollary}[Polynomial-depth learning with activation faults]
+\label{cor:fault-prior}
+For this fixed fault-tolerance support rule, the same qualitative
+polynomial-depth sample theorem holds for all $\gamma\ge1$ and every
+width above the layered Boolean target circuit's width.
+\end{corollary}
+\begin{proof}
+The same target partition bound and Gaussian readout tail as before allow
+conditioning on $E_v\le B$ while discarding posterior mass at most
+$\beta$, where $B=\operatorname{poly}(d,L,C,\log(1/\beta))$.
+Every retained network has bounded-state robustness radius at least
+\[
+ r_B=\frac{10^{-4}}{32L[1+(L-1)B]},
+\]
+because $a(w)\sqrt{p(w)}=\tau(w)^2/(32L)\le b(w)$.
+The conditional posterior has the same polynomial scaled-KL bound as in
+the previous argument. Apply Proposition~\ref{prop:bounded-state-compression}
+and the finite-class generalization step. All parameters are independent
+of width and Gaussian scale, giving the simultaneous conclusion.
+\end{proof}
+
+This condition has an operational interpretation, but it is not established
+as a universal outcome of ordinary gradient descent. Likewise, random-noise
+stability alone cannot simply replace it. A network that reads a single
+hidden coordinate can be stable under small independent per-coordinate
+Gaussian noise while that coordinate can be erased with only
+$O(N^{-1/2})$ RMS adversarial noise. Testing particular dropout masks or
+one quantization grid similarly does not control the disturbances used by
+the compression coupling.
+The conservative constants may give $p(w)N<1$ at small widths; then the
+allowed number of arbitrary faults is zero, and the condition concerns
+bounded errors at all coordinates. No claim of tolerance to a practically
+large dropout fraction follows from these constants.

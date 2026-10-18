@@ -1,0 +1,130 @@
+\subsection{Targets of any fixed intrinsic depth}
+\label{sec:fixed-intrinsic-depth}
+
+The shallow-target argument extends to any fixed target depth by using
+different numbers of clones at its successive hidden layers. The degree
+of the resulting polynomial may depend on the target depth, but not on
+the learner's additional depth.
+
+\begin{corollary}[Fixed target depth, arbitrary learner depth]
+\label{cor:fixed-intrinsic-depth}
+Fix an integer $D_0\ge2$ and $\zeta>0$. Suppose $f$ has a width-$C$,
+depth-$D_0$ tanh realization in the present architecture, with signed
+output at least one on the Boolean cube and all weights bounded by
+$R\ge1$. For every specified learner depth $L\ge D_0$, the original
+unrestricted Gaussian learner has sample complexity polynomial in
+\[
+ d,C,R,L,\varepsilon^{-1},\log(1/\delta).
+\]
+The degree and constants may depend on $D_0$ and $\zeta$.
+For every input distribution, one sample event of probability at least
+$1-\delta$ gives Gibbs error at most $\varepsilon$ simultaneously for
+every $N\ge C_L(f)$ and every
+$0<\sigma^2\le N^{-(1+\zeta)}$.
+Here $C_L(f)$ is the actual bounded-weight network complexity defined in
+Theorem~\ref{thm:shallow-all-depths}. The prior retains the original
+global clean-margin conditioning and sign-only training likelihood.
+\end{corollary}
+
+\begin{proof}
+Put $H=D_0-1$. Pad the target's hidden layers to width $C$ with zero
+neurons if necessary, and write $W^1,\ldots,W^H,v$ for its weights.
+Choose an integer
+\[
+ B=\left\lceil\max\left\{4,2R,\frac dC\|W^1\|_F^2,
+                 \|W^2\|_F^2,\ldots,\|W^H\|_F^2\right\}\right\rceil,
+ \qquad M=CB^H,
+\]
+omitting the internal-layer terms when $H=1$.
+Since $\|W^1\|_F^2\le C(d+1)R^2$ and
+$\|W^s\|_F^2\le C^2R^2$ internally, $B$ is polynomial in $d,C,R$,
+and so is $M$ for fixed $D_0$.
+
+At hidden layer $s$, give each original neuron exactly
+\[
+ n_s=B^{H-s}
+\]
+active copies, and fill the other positions up to width $M$ with zero
+neurons. Copy first-layer rows. For $s\ge2$, give every edge from a copy
+of source $j$ to a copy of target $i$ weight $W^s_{ij}/n_{s-1}$.
+All unused edges are zero. Since $n_H=1$, retain the original readout
+on the final active neurons. This preserves the function exactly.
+The first-layer and internal energy terms are respectively
+\[
+ \frac dM n_1\|W^1\|_F^2
+      =\frac d{CB}\|W^1\|_F^2\le1,
+ \qquad
+ \frac{n_s}{n_{s-1}}\|W^s\|_F^2
+      =\frac1B\|W^s\|_F^2\le1.
+\]
+Thus the energy before the readout is at most $H$. Put
+\[
+ T=\max\{1,M\|v\|_2^2\}\le MC R^2.
+\]
+It is polynomial in $d,C,R$ for fixed $D_0$.
+
+Balanced cloning of this width-$M$ network into any $N\ge M$ preserves
+the function and gives
+\[
+ E_{\rm pre}\le2H,\qquad c^2=N\|v_N\|_2^2\le2T.
+\]
+If $L=D_0$, these are already unit-margin witnesses with
+$K=2H+2T$, and
+\[
+ Q_*^2=\left(\frac{K+2}{D_0}\right)^{D_0}
+       \le(4T)^{D_0}.
+\]
+
+If $L>D_0$, set $m=L-H\ge2$. Replace the old readout by the scalar
+transmission from Lemma~\ref{lem:scalar-transmission}, using $D=4c^2$,
+and double the final scalar readout to obtain unit margin. Its readout
+cost before doubling is
+$q^2=\max\{c^2,1\}^{1/m}\le(2T)^{1/m}$.
+The total energy is at most
+\[
+ K_L=2H+(m+15)(2T)^{1/m}.
+\]
+This is the desired depth: the $H$ old hidden layers and $m-1$ new hidden
+layers total $L-1$. Since $(2T)^{1/m}\ge1$,
+\begin{align*}
+ Q_*^2
+ &=\left(\frac{K_L+2}{L}\right)^L\\
+ &\le\left(1+\frac{H+17}{L}\right)^L(2T)^{L/(L-H)}\\
+ &\le e^{H+17}(2T)^{(D_0+1)/2}.
+\end{align*}
+The last step uses $L/(L-H)=1+H/m\le1+H/2$.
+For $L\ge2D_0$, the sharper upper bound
+$Q_*^2\le e^{H+17}(2T)^2$ also holds.
+Both $K_L$ and $Q_*$ are polynomial in the stated parameters when
+$D_0$ is fixed, uniformly over the learner depth.
+Theorem~\ref{thm:unrestricted-above-one} now controls every $N\ge M$.
+
+It remains to check admissible widths below $M$.
+First $C_L(f)\le M$ at every $L\ge D_0$.
+The tapered construction has all original weights at most $R\le M/2$.
+In a padded scalar channel, $\alpha\le\operatorname{atanh}(1/2)<0.55$,
+so its first added weights $2\alpha v_j$ have magnitude less than $M$.
+The scalar construction has $b_s<2.2q$, and
+\[
+ T\le MC R^2\le M^4,\qquad
+ q\le(2T)^{1/4}\le2^{1/4}M.
+\]
+Its dense internal entries $b_s/M$ and final readout entries $2q/M$
+are therefore less than $3\le M$.
+This gives a bounded-weight width-$M$ witness with unit margin at each
+learner depth; for $L=D_0$ no scalar channel is needed.
+
+For $C_L(f)\le N<M$, clone a defining width-$C_L(f)$ realization to
+width $N$ and double its readout. Its margin is greater than one and
+all weights are at most $2M$. The Gaussian box estimate and
+Theorem~\ref{thm:finitewidth-unrestricted} give a bound polynomial in
+$d,L,M,\varepsilon^{-1},\log(1/\delta)$ for all these widths and all
+$t\le1$. Allocate failure probability $\delta/2$ to this event and to
+the preceding event for $N\ge M$. Their intersection proves the claim.
+\end{proof}
+
+Thus polynomial dependence on learner depth holds for targets of any
+fixed intrinsic depth with polynomial target-size dependence. The width
+$M=CB^{D_0-1}$ and the exponents above explain why this does not give a
+single polynomial jointly in the intrinsic target depth and target size.
+The mean-field exponent $\gamma=1$ is also still outside this result.

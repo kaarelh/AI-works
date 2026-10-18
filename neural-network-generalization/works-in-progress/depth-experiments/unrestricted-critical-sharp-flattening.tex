@@ -1,0 +1,109 @@
+\section{A sharper upper error using rank-one purification}
+\label{sec:critical-sharp-flattening}
+
+\begin{lemma}[Purifying an exact target component]
+\label{lem:exact-target-purification}
+There are universal $p_0,c,C>0$ with the following property.
+Suppose $Q=vff^T+R$, where $R\succeq0$ has constant diagonal
+$0\le r\le v\le p_0$. One Gaussian covariance-inflation step of
+entropy at most $Cv^2$ produces a feature covariance
+\[
+ Q'=vff^T+R',\qquad R'\succeq0,
+ \qquad R'(x,x)=r'\le(1-cv)r.
+\]
+Consequently $T$ such steps have cost at most $CTv^2$, preserve
+the exact coefficient $v$, and reduce the residual diagonal by
+$e^{-cvT}$.
+\end{lemma}
+
+\begin{proof}
+Inflate the target component by $\epsilon vff^T$. Write
+$\psi_r(a)=\mathbb E\tanh(a+\sqrt rZ)$ and
+\[
+ v'(\epsilon)=
+ \mathbb E\psi_r(\sqrt{(1+\epsilon)v}Z)^2.
+\]
+This is continuous, $v'(0)\le v$, and the first-Hermite lower bound
+from the preceding construction gives
+\[
+ v'(\epsilon)\ge(1+\epsilon)v
+                   [1-2(v+r+\epsilon v)].
+\]
+For sufficiently small $v+r$, its value at $\epsilon=16(v+r)$
+is at least $v$. Choose an intermediate $\epsilon$ with
+$v'(\epsilon)=v$. Its entropy cost is at most
+$\epsilon^2/4\le256v^2$.
+
+The residual diagonal is the average conditional variance
+\[
+ r'=\mathbb E_A\operatorname{Var}_{Z}
+               [\tanh(A+\sqrt rZ)],
+ \qquad A\sim\mathcal N(0,(1+\epsilon)v).
+\]
+Gaussian Poincare gives
+\[
+ r'\le r\mathbb E\operatorname{sech}^4(\sqrt uZ),
+ \qquad u=(1+\epsilon)v+r.
+\]
+The expansion $\mathbb E\operatorname{sech}^4(\sqrt uZ)
+=1-2u+O(u^2)$ implies that it is at most $1-u$ for all sufficiently
+small $u$. Since $u\ge v$ and $u\le2(v+r)$, reducing $p_0$
+gives $r'\le(1-v)r$. The conditional-mean covariance supplies the
+exact rank-one component $vff^T$; the remaining covariance is positive
+semidefinite and has the displayed constant diagonal. Iterate.
+\end{proof}
+
+\begin{theorem}[Sharper common-rate upper error]
+\label{thm:critical-sharp-upper}
+There is a universal $C$ such that, with $D=d+1$, whenever
+$L\ge CD^2$, every Boolean function satisfies
+\[
+ J_L(f)\le V_*+
+ C\frac{D^2+D[\log(2L)]^2}{L}.
+\]
+\end{theorem}
+
+\begin{proof}
+Use Lemma~\ref{lem:critical-dyadic-short-path}: a path starting
+at $p\le p_0$ of cost at most $V(p)+p$ can be chosen with at most
+$C_0/p$ steps. All other ingredients are those of the quantitative
+flattening construction. Choose sufficiently large universal constants
+$B_1,B_2$ and set
+\[
+ \delta=B_1D/L,\qquad p=B_2D\log(2L)/L.
+\]
+For $L\ge CD^2$, after increasing the universal threshold $C$,
+we have $\delta\le p\le p_0$.
+
+Free cooling reaches diagonal at most $\delta$ in $O(1/\delta)$
+layers, with the previously constructed target seed
+$v_0=\delta e^{-AD}$. The prescribed rank-one growth construction
+reaches coefficient exactly $p$ with residual diagonal at most
+$\delta$, in at most $BD/\delta$ layers and at cost
+$C(p+D\delta)$. At this point apply
+Lemma~\ref{lem:exact-target-purification} for
+\[
+ T=\left\lceil\frac{4\log(2L)}{cp}\right\rceil
+\]
+layers. The coefficient remains exactly $p$, and the residual diagonal
+becomes at most $\delta(2L)^{-4}$. The purification cost is
+$O(p\log(2L))$.
+
+Append the near-optimal scalar path of length $m\le C_0/p$ using
+the stable scalar lift. Its extra readout cost is
+$O(m\delta(2L)^{-4})=O(L^{-4})$, and its scalar cost is at most
+$V(p)+p\le V_*+p$.
+
+The cooling and growth stages occupy less than $L/3$ layers when
+$B_1$ is large enough. The purification and scalar stages also occupy
+less than $L/3$ when $B_2$ is large enough. Their lengths are fixed
+independently of any preceding holding interval. Fill all unused
+hidden layers by the old exact cold-holding construction before
+growth, at cost at most $64L\delta^2$. This gives exactly the
+specified depth. Summing the excess costs gives
+\[
+ O(L\delta^2+p+D\delta+p\log(2L)+L^{-4})
+ =O\left(\frac{D^2+D[\log(2L)]^2}{L}\right),
+\]
+as asserted.
+\end{proof}

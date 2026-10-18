@@ -1,6 +1,6 @@
-# Lean proofs of the four main learning results
+# Lean proofs of the five main learning results
 
-This project proves the four main learning statements for the actual finite
+This project proves the five main learning statements for the actual finite
 Gaussian neural-network model. The proofs use only Lean's standard axioms
 `propext`, `Classical.choice`, and `Quot.sound`: there are no admitted proofs or
 project axioms asserting analytic or probabilistic ingredients.
@@ -11,9 +11,10 @@ project axioms asserting analytic or probabilistic ingredients.
 | Every width above complexity, fixed gamma > 1 | `MainStatements.AboveMeanFieldGeneralization` | [`MainProofs.aboveMeanField`](NeuralGeneralization/AboveMeanFieldMain.lean) |
 | Every width above complexity, gamma = 1 | `MainStatements.MeanFieldGeneralization` | [`MainProofs.meanField`](NeuralGeneralization/MeanFieldMain.lean) |
 | Full-parity exponential sample lower bound, every fixed gamma < 1 | `MainStatements.SubcriticalExponentialLowerBound` | [`MainProofs.subcriticalExponential`](NeuralGeneralization/SubcriticalMain.lean) |
+| Robustness-restricted prior: polynomial depth, all widths and gamma >= 1 | `RobustMainStatements.RobustPolynomialDepthGeneralization` | [`RobustMainProofs.robustPolynomialDepth`](NeuralGeneralization/RobustMain.lean) |
 
 [Statements.lean](NeuralGeneralization/Statements.lean) defines the exact
-propositions; the separately named theorems prove them. The fourth theorem
+first four propositions; [RobustStatements.lean](NeuralGeneralization/RobustStatements.lean) defines the fifth. The separately named theorems prove them. The fourth theorem
 includes gamma = 0 and gamma < 0. Its constants are chosen before gamma, and it
 covers every specified sample size from zero to `exp(c*d)`. Its target is full
 parity, `k = d`; the stronger sparse-parity question remains open.
@@ -25,7 +26,7 @@ The construction uses a simpler polynomial bound than the appendix's optimized l
 
 ## Model and quantifiers
 
-[Network.lean](NeuralGeneralization/Network.lean) defines the concrete network,
+For the first four theorems, [Network.lean](NeuralGeneralization/Network.lean) defines the concrete network,
 all weight coordinates, and bounded-weight network complexity. Depth is `r + 2`.
 [Model.lean](NeuralGeneralization/Model.lean) defines the independent Gaussian
 weight laws, the strict absolute output margin at **every** Boolean input,
@@ -47,6 +48,20 @@ subcritical lower bound uses uniform IID inputs and holds for each specified
 sample size, with common constants. It does not assert one event for all
 prefixes of a sample sequence or monotonicity of this learner in sample size.
 
+## The robustness theorem's distinct conventions
+
+[RobustModel.lean](NeuralGeneralization/RobustModel.lean) defines stability of the clipped score under a ball of simultaneous hidden-activation and output perturbations. Its radius is calibrated by depth and readout energy. The Gaussian prior is restricted to this support event; **no clean-output margin on every input is imposed**. Training requires signed output strictly above `1/2`; test risk uses signed output at most `1/4`.
+
+The target is a concrete [layered Boolean circuit](NeuralGeneralization/RobustCircuit.lean) of width `C`, with its constant wire and compilation resources counted. It is not an arbitrary small analog neural circuit. There exist universal constants `A > 0` and a natural-number exponent `m`, chosen before dimension, depth, target circuit, robustness calibration, and statistical parameters, giving a bound
+
+```text
+A * (2 + d + C + r + c + 1/c + 1/epsilon + log(1/delta))^m
+```
+
+Here depth is `r + 2`. For arbitrary input law, **one sample event** of probability at least `1-delta` works for every `N >= C` and every positive `sigma` with `N*sigma^2 <= 1`. This includes every `gamma >= 1` under `sigma^2 = N^(-gamma)`. The exact theorem gives positive posterior normalization, Gibbs test-margin risk at most `epsilon/3`, and test-input fraction at most `epsilon` whose correct-label margin confidence is at most `2/3`.
+
+The proof constructs the actual large-width couplings and histories; a conditional compression theorem is not substituted for the main proof. Small widths, target prior mass, conditioning, finite coding, and sampling are also discharged. [CheckRobust.lean](CheckRobust.lean) rejects a purported main theorem with extra hypotheses.
+
 ## Proof coverage
 
 The main proofs discharge the Gaussian mass and width limits, compression,
@@ -62,12 +77,14 @@ It proves the same existential-polynomial main learning statement. The
 subcritical proof also uses different numerical constants and explicit
 buffered confidence thresholds.
 
-This verifies the **four exact main learning theorems**, not every sentence,
+The robustness proof uses a conservative Pinsker-and-energy argument in place of the manuscript's sharper transport estimate. [RobustCompressionExplicitDegree.lean](NeuralGeneralization/RobustCompressionExplicitDegree.lean) checks a loose degree **10974** for its exact finite-class sample-budget formulas. This is a sufficient envelope, not a practical estimate or an optimality claim.
+
+This verifies the **five exact main learning theorems**, not every sentence,
 appendix, or auxiliary sharp constant in the PDFs. The general circuit
 simulation, depth-dependent cardinality lower bound, and separate inverse
 mass-to-complexity equivalence are not additional conclusions of this gate.
 The side-result papers and open sparse-parity refinements are outside its
-scope. See the [coverage inventory](review/formal-coverage-inventory.txt)
+scope. For the robustness manuscript, the optional extra all-input-margin learning variant, other robustness extensions, empirical certificates, and sharper displayed constants are not additional conclusions of the exact main gate. See the [coverage inventory](review/formal-coverage-inventory.txt)
 and the semantic reviews for the precise distinction.
 
 The Gaussian quadratic-form implementation adapts some locally included
@@ -87,12 +104,13 @@ lake build
 lake env lean Audit.lean
 lake env lean CheckMain.lean
 lake env lean CheckParity.lean
+lake env lean CheckRobust.lean
 ```
 
 The cache command is optional. Without access to the official cache, Lake can
 build the imported mathlib sources. `Audit.lean` checks every imported project
 theorem's axiom closure and reports exact main-proof coverage. `CheckMain.lean`
-requires all four exact types and rejects unexpected axioms, including
+requires the four earlier exact types; `CheckRobust.lean` requires the fifth. Both reject unexpected axioms, including
 `sorryAx`. A component compilation alone does not pass this gate.
 
 For an independent rebuild without reusing project object files:

@@ -1,0 +1,105 @@
+\section{Variants of the prediction-stability condition}
+\label{sec:theory-variants}
+
+\subsection{The tolerance is determined by the margin gap}
+
+The constants in the main condition arise from the gap between the training
+and test margins. They need not be treated as separate modeling choices.
+
+\begin{corollary}[General training and test margins]
+\label{cor:general-margin-gap}
+Fix $m>0$ and $0\le u<m$, and put $\Delta=m-u$.
+Replace the training likelihood by $f(X_i)z_w(X_i)>m$, the test error by
+$f(X)z_w(X)\le u$, and the clipping map by
+$T_m(z)=\max\{-m,\min\{m,z\}\}$.
+Require clipped-score variation at most $\Delta/4$ on the calibrated ball
+of radius $c/\sqrt{1+HE_v}$. Then the main theorem holds with a sample
+bound polynomial also in $m$ and $\Delta^{-1}$.
+\end{corollary}
+\begin{proof}
+Use readout coefficient $a=\max\{2,2m,256c\}$ in the target cylinder.
+Its noisy signed output is greater than $m$, its calibrated radius is still
+at most $\tau_0$, and its Gaussian negative log-mass remains polynomial
+in $m,c,d,L,C$. After the usual readout truncation use
+\[
+ r=\min\{1,2\Delta/3,c/\sqrt{1+HB}\}.
+\]
+Successful compression changes the clipped score by at most
+$\Delta/4+r/8\le\Delta/3$.
+Training scores are therefore at least $m-\Delta/3$, whereas a test
+margin failure has candidate score at most $u+\Delta/3$.
+Use a $[0,1]$-valued ramp which is zero above the former threshold and
+one below the latter; these thresholds are separated by $\Delta/3$.
+The same relative-Chernoff argument proves the result.
+\end{proof}
+
+The main theorem is $m=1/2$, $u=1/4$, so $\Delta/4=1/16$.
+If only the sign is scored at test time, take $u=0$: the permissible
+score-variation tolerance increases to $1/8$. This concerns the raw-output
+test margin, separately from whether posterior confidence is judged at
+$1/2$ or $2/3$.
+
+\subsection{Disturbances confined to valid activation states}
+
+One may restrict the support condition to disturbances whose complete
+noisy hidden trajectory lies in $[-1,1]^N$ at every layer. This permits
+perturbations only to values within the range of the tanh activation.
+The same main theorem holds. Indeed, before grid rounding, every successful
+virtual hidden state in the constructive entropy compressor is a tanh
+output. Thus the disturbances used in its prediction comparison satisfy
+this extra state restriction. The separate output injection and subsequent
+grid-rounding error are treated exactly as before. The original target
+cylinder was stable even without the state restriction and therefore
+retains its probability lower bound.
+
+This condition is weaker than unrestricted additive-disturbance stability.
+A negative empirical attack for this variant must verify the state
+constraint at every intermediate layer; an attack outside the activation
+range does not refute it. The primary empirical condition can remain the
+unrestricted one, with this variant stated separately.
+
+\subsection{A condition involving hidden disturbances only}
+
+The scalar output injection can also be omitted from the prior condition.
+For $E_v>0$ define the hidden-only calibrated radius
+\[
+ r^{\rm hid}_c(w)=\frac{c}{\sqrt{H E_v(w)}}.
+\]
+When $v=0$, the output is identically zero and hidden disturbances cannot
+change it, so declare hidden-only score stability automatically satisfied.
+Require score variation at most $1/16$ for every hidden disturbance with
+$\sum_s\|\eta^s\|^2/N\le(r^{\rm hid}_c(w))^2$, with no output injection.
+The main theorem continues to hold for this Gaussian-conditioned prior.
+
+To see this, use the same target cylinder, which has
+$r^{\rm hid}_c\le\tau_0$, and after readout truncation choose
+\[
+ r=\min\{1/30,c/\sqrt{HB}\}.
+\]
+The raw compression lemma supplies hidden disturbances of norm less than
+$r/2$, plus an output injection of magnitude less than $r/2$.
+Use stability only for the hidden disturbances and treat the output
+injection as an approximation error. Including grid rounding, the total
+clipped-score error is at most
+\[
+ \frac1{16}+\frac r2+\frac r8\le\frac1{12}.
+\]
+The training/test ramp proof is unchanged. In a nonexpansive stack the
+hidden-only gain bound is $\sqrt{H E_v}$, so this calibration yields raw
+output variation at most $c$ without the additional scalar-noise term.
+
+\subsection{Amplification is not evidence about unmodified trained weights}
+
+Every finite-cube network with no zero clean outputs eventually satisfies
+the calibrated clipped condition after a sufficiently large positive
+readout amplification. To verify this, continuity and finiteness of the
+input cube give a hidden-disturbance radius $\rho>0$ and $b>0$ such that
+the unamplified noisy output has its clean sign and magnitude at least $b$
+throughout that radius. Scaling the readout by $A$ makes the calibrated
+radius tend to zero while the noisy signed output is at least
+$Ab-r_c(w^{(A)})$. Eventually this exceeds $1/2$, so the clean and noisy
+clipped scores agree exactly. The readout energy simultaneously grows by
+$A^2$. The scale needed may be enormous; this observation gives no
+polynomial target-mass bound for arbitrary neural representations and
+cannot justify reporting rescaled networks as evidence about ordinary
+training.

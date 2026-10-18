@@ -1,0 +1,67 @@
+Independent audit: unrestricted-primary-width-compression.tex
+Reviewer: robustness-theory agent, round 3, 2026-10-17
+Verdict: PASS, including width-free posterior sufficiency corollary.
+
+1. Adjacent-pair setup.
+The current incoming feature norm is <=SR. Changing the preactivation
+immediately after V propagates with Lipschitz constant <=P_*/(SA), also
+when V is itself a hidden matrix (its tanh contributes a factor <=1).
+Current normalized row thresholds use S and cancel it in every width bound.
+
+2. Large and small rows.
+There are <=S^2||W||_F^2/B^2 large rows; bounded tanh and the suffix norm
+give output change <=P_*/B. For small rows, cubic linearization error
+has Euclidean norm <=tau^2 S R^3||W||_F/3. Propagation gives exactly
+P_*tau^2R^3/3. The nuclear norm of the resulting linear branch is bounded
+by sum a_i b_i. These operations do not require tanh homogeneity.
+
+3. Middle sampling and concentration.
+For p_i=b_i/(a_i Z), a sampled outgoing column has norm a_i Z/m=a_i/c.
+Consequently incoming/outgoing squared Frobenius norms are exactly
+c Ahat and Ahat/c, with E Ahat=A_m. The ratio of extreme middle row
+squares is Q, giving Z max a_i^2<=A_m Q<=A Q. Hence the sampled vector
+at each x has norm <=A Q S R. Its mean-error expectation is <=that/sqrt m;
+the Euclidean norm of the error changes by <=2AQSR/m per sampled index.
+McDiarmid therefore supplies a dimension-free concentration bound. The
+stated m constant is more than sufficient for its union with the scalar
+Hoeffding event over all finite X. No ambient output dimension is hidden.
+
+4. Linear branch.
+Rank-k truncation has operator error <=||B0||_*/(k+1)<=A/(k+1).
+Balanced SVD factors U,V0 have squared Frobenius norms nu. K copies with
+incoming sqrt(c/K)V0 and outgoing U/sqrt(cK) have exact total squared
+norms c nu and nu/c. Their summed linear map is U V0. Cubic tanh error
+is <=c nu^2(SR)^3/(3K), using ||U||op,||V0||op<=sqrt nu. Propagation
+uses nu<=A, giving <=P_* c nu S^2 R^3/(3K).
+In the sampled case Z>=A_m S^2/B^2 and A_m>=Delta A imply
+c nu S^2<=mB^2/Delta; in the deleted-middle case it equals one.
+The chosen K therefore works independently of the old widths and scales.
+
+5. Exact norm bookkeeping.
+Concatenating the sampled and linear channels gives new pair product
+Ahat+nu, not merely a bound on a hypothetical linearized network.
+It is <=A_m+sum_small a_i b_i+eta A <=(1+eta)A by Cauchy--Schwarz.
+The construction continues to use ordinary tanh after every layer.
+There is no hidden conversion from freely rescaled activations.
+
+6. Sequential steps.
+Only the selected hidden dimension and its two adjacent matrices change.
+Compressing the next dimension preserves the preceding width bound.
+At most six error allocations per layer sum to 6H e<epsilon, and
+(1+1/(4H))^H<exp(1/4)<2 bounds the total product growth. Parameters m,k,K
+are fixed polynomials of the displayed scale-invariant quantities and
+log(2|X|). Uniform zero padding preserves the network because tanh(0)=0.
+Minor presentation clarification sent to the author: if both branches
+vanish at an intermediate step, stop and use the zero network; already
+accumulated approximation estimates justify this and no later positive
+prefix normalization is then needed.
+
+7. Posterior corollary.
+On the Boolean cube, log|X|=d log2 and R=sqrt(d+1). Compress to error1/4
+and double the readout: new width is polynomial, signed margin>=3/2,
+and product norm<=4P0. The prior polynomial-product target theorem then
+has T polynomial in d,D0,P0, so its logarithmic depth overhead is bounded
+by c log(2+d+D0+P0). Its smaller-width branch continues to use actual
+C_L(f), and gamma>=1+zeta is retained. The original width and individual
+weight magnitudes do not enter. This does not claim the same property at
+gamma=1 or at the original depth without the stated additional layers.

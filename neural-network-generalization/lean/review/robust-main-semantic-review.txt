@@ -1,0 +1,210 @@
+Independent semantic review of the robustness-restricted polynomial-depth theorem
+18 October 2026
+
+Reviewer: a separate Codex agent assigned to inspect theorem semantics and the
+final assembly. This is a source-level mathematical review, not a substitute
+for the separately recorded Lean build, exact-type gate, or source provenance.
+
+Scope examined
+--------------
+RobustMain, RobustStatements, RobustModel, RobustPosterior, RobustConfidence, RobustCircuit,
+RobustTargetAllWidths, RobustMainAssembly, RobustMainReduction,
+RobustCompressionParametersMain, RobustCompressionLargeWidthProof,
+RobustCompressionInductionComplete, RobustCompressionInductionTerminalResources,
+RobustCompressionInductionResources, RobustCompressionInductionSelectedRun,
+RobustCompressionInductionSelectedHistory, RobustCompressionInductionInvariantStep,
+RobustCompressionInductionAlignment, RobustCompressionInductionLayer,
+RobustCompressionSelectedLocalCost, RobustCompressionSelectedLayerCoupling,
+RobustCompressionSelectedLayerFiberLaw, RobustCompressionSelectedLayerAlignment,
+RobustCouplingRawPath, RobustCouplingTerminalPath, and RobustCouplingAllWidths.
+The underlying analytic components had separate independent reviews. This
+review traces their actual instantiation at the last assembly rather than
+claiming a fresh line-by-line review of every imported module.
+
+Conclusion on semantics
+-----------------------
+The reviewed final construction has the intended unconditional theorem shape.
+No mathematical defect or hidden compressor/realizability assumption was found
+in this review. Publication is additionally contingent on the exact closed
+main declaration passing the Lean type/axiom gate and the independent build.
+
+1. Exact model and support condition
+-----------------------------------
+The weights have the literal finite independent Gaussian law smallPrior,
+with variances N*sigma^2/d, sigma^2, and sigma^2/N for first-layer, internal,
+and readout entries. The first layer has a constant input coordinate; internal
+biases must be implemented as ordinary counted wires. There are r+1 hidden
+tanh layers and a linear readout (total matrix depth L=r+2).
+
+The support event quantifies over every Boolean input and every simultaneous
+finite postactivation disturbance, including a scalar readout disturbance.
+Its squared budget is sum_s ||eta_s||_2^2/N + eta_out^2. Clipped output at
++/-1/2 may move by at most 1/16 inside the actual network-dependent radius
+c/sqrt(1+(r+1)*N*||v||_2^2). This is an adversarial finite-disturbance condition,
+not a Jacobian condition, a Gaussian-average condition, or an on-distribution
+condition. Disturbed hidden states are not artificially confined to [-1,1].
+
+The formal posterior is the actual Gaussian conditioned on the intersection
+of that support event and the observed strict signed-margin constraints
+f(x_i)*z_w(x_i)>1/2. It does not impose a global clean-output margin. A proved
+two-stage identity identifies it with conditioning the robust prior on the
+training event. Positivity is an explicit conclusion, backed by the actual
+target-cylinder probability bound; it is not assumed.
+
+2. Quantifiers, comparator, and prediction convention
+----------------------------------------------------
+RobustPolynomialDepthGeneralization places one positive universal coefficient
+A and one natural exponent m before all d,C,r,c,epsilon,delta,D,n. In particular,
+neither exponent nor coefficient may depend on depth, width, target, scale, or
+input distribution. Its sample envelope is
+ A*(2+d+C+r+c+c^-1+epsilon^-1+log(1/delta))^m.
+The base is positive on the stated domain, so the sample condition and the
+high-probability event are nonvacuous.
+
+The comparator is an actual LayeredBooleanCircuit with C slots at each of
+r+1 stages, using NAND, copy, and negation, with an explicitly counted constant
+wire. Its existence implies C>=1. It is not an arbitrary analog network of
+neural-circuit complexity C. Padding a smaller logical circuit must count
+retained wires and any required constant wire. An arbitrary distribution D
+on the Boolean cube is allowed; uniform inputs are not required.
+
+One measurable sample event, of probability at least 1-delta, works
+simultaneously for every integer learner width N>=C and every sigma>0 with
+N*sigma^2<=1. This is stronger than separately choosing a good event for each
+width or scale. In t=sqrt(N)*sigma coordinates it is exactly 0<t<=1, hence
+includes the finite gamma=1 scale and all gamma>=1 exponent scalings at
+positive integer widths. No width-first limit is needed.
+
+The conclusion concerns the full posterior mixture: Gibbs probability of
+signed output <=1/4 is at most epsilon/3, and the D-mass of inputs whose
+posterior probability of signed output >1/4 is <=2/3 is at most epsilon.
+The confidence implication is proved by integrating 1-p(x), so it does not
+assume concentration on a single predictor. Sign correctness is a weaker
+requirement; the margin guarantee controls it as well. Equalities at both
+thresholds are explicitly counted as failures in the exact statement.
+
+3. No hidden final compression assumption
+----------------------------------------
+RobustMainReduction alone is correctly labeled a conditional reduction:
+its premise LargeWidthRawCompression is not the final learning theorem.
+RobustCompressionLargeWidthProof.largeWidthRawCompression supplies that
+premise from an arbitrary original probability law Q and its literal KL
+bound relative to smallPrior. Its remaining parameters are the scalar
+compression resources and the large-width cutoff. It does not retain a
+score approximation, target-mass, robustness, or selected-law hypothesis.
+RobustMainProofs.robustPolynomialDepth applies the reduction directly to this
+proved raw theorem; its declared type is exactly the transparent proposition
+RobustMainStatements.RobustPolynomialDepthGeneralization. The arbitrary
+measurable-space parameters used in some intermediate finite-message lemmas
+are instantiated with the discrete finite measurable space, not retained as
+a premise of the raw or final learning theorem.
+
+The complete history construction calls exists_resource_selectedRun on the
+original Q. At each stage the selection is from the actual conditional law
+produced by the preceding canonical transition. The terminal law is selected
+before the per-input histories. Therefore the candidate marginal is common
+to all test inputs; only the coupling and virtual path vary with x.
+
+The per-layer ProbabilityCoupling is instantiated from selectedLayerJoint.
+Its left marginal is the actual old state law, including full original
+current rows and unconsumed future. Its right marginal is the actual
+selectedNext canonical state law, via the proved full-field observation and
+state decoder identities. There is no replacement of a Gaussian coefficient
+law by an unproved equal law on a bad-bank event: both constructions use the
+same totalized state on abort. Pointwise future-tail alignment and the
+implication that new-alive implies old-alive are supplied to the history
+induction explicitly.
+
+The normalized local live cost is the genuine hidden discrepancy with
+physical matrix scale t/sqrt(N)=sigma; its bound is 10/E. The raw full-field
+squared-error estimate is divided by N, matching the RMS disturbance budget.
+Cost is charged only on successful paths; failures are counted separately.
+The initial genuine first-layer clipping history costs at most 1/E. The
+induction therefore accumulates (1+10*r)/E, without an exponential-depth
+recurrence. It preserves the full original weights in every glued history.
+
+The resource invariant pays for finite selected messages in conditional
+future entropy, keeps actual coefficient bounds, and accumulates abort
+probability by 2/H per hidden step. In particular, conditioning on the future
+is not silently replaced by a posterior independence assumption. Terminal
+entropy is allowed to double the original energy envelope; the terminal
+readout-energy failure is correctly budgeted as 2/H rather than H^-1.
+The final sampled-readout law and the actual terminal histories yield
+RawPathCompression with exact original and compact marginals.
+
+4. All widths and polynomial bookkeeping
+----------------------------------------
+The raw compressor is only needed above its explicit polynomial width
+cutoff. At smaller widths, direct Gaussian moment bounds and deterministic
+padding/rounding supply the same finite candidate class. The final all-width
+split includes the equality case in the small-width branch and has no gap
+between C and the cutoff.
+
+The finite code, its size bound, all target-cylinder costs, readout
+truncation, and reciprocal robustness radius are substituted into the
+proved scalar polynomial estimates. mainCompressionSampleBudget_polynomial
+has universal A,m outside all parameters. The finite-class sample event is
+chosen from this common code before the later width/scale/posterior choices.
+Thus neither a union over an uncountable scale set nor a hidden depth-dependent
+exponent is being used.
+
+5. Relation to the manuscript and publication limits
+----------------------------------------------------
+The exact formal statement matches the qualitative principal theorem of
+main-results/robust-polynomial-depth/source/robustness-theory.tex, after the
+harmless rescaling of epsilon used to state an epsilon confidence guarantee.
+The formal proof uses a looser Pinsker-and-energy compression route and a
+looser concentration/sample envelope. It does not certify the manuscript's
+sharper transport constants or every quantitative parameter formula.
+
+The manuscript also asserts a version with additional all-input clean
+absolute-margin conditioning. The target-mass lemma for that extra event
+is formally proved as robust_boolean_target_mass_with_global_margin.
+At the mathematical level the full learning extension is sound: the same
+target cylinder remains inside the new event, the raw conditioning-mass
+lower bound is unchanged, and the entropy compressor applies to the modified
+posterior. Nevertheless this changes the posterior and is not the literal
+RobustPolynomialDepthGeneralization theorem checked by the main gate.
+
+The margin-band, localized-exception, output-rescaling, unlabeled-pool,
+input-neighborhood, alternative-activation, and empirical extensions in the
+paper are not all covered by that gate. Nor does it establish that ordinary
+gradient descent samples this posterior or commonly produces the global
+support condition. The empirical certificates have their own computational
+checks, not an implication from this Lean theorem.
+
+The manuscript introduction at robustness-paper.tex lines 97-99 currently
+states that its arguments are not Lean formalizations. After the exact gate
+passes this should be replaced by a narrow statement about the qualitative
+main theorem and the above explicit scope limits.
+
+6. Check discipline
+------------------
+A source scan of Robust*.lean found no sorry/admit/new-axiom/unsafe declaration
+at review time. This is a useful sanity check only: the exact final theorem
+must additionally pass Lean's inferred-type and transitive-axiom audit, allowing
+only the standard propext, Classical.choice, and Quot.sound axioms. Independent
+source/object provenance and build results are recorded separately and must
+not be inferred from this review.
+
+7. Label-noise FAQ review
+-------------------------
+The FAQ's added label-noise discussion correctly separates finite-class noisy
+Occam learning from the actual hard-conditioning posterior. Contradictory
+labels at one input can make that posterior undefined. For independent
+symmetric flips eta<1/2 the identity noisy risk = eta+(1-2*eta)*clean risk
+is correct, as is the stated loose finite-class Hoeffding sample bound.
+With independent input-dependent flip probabilities <=eta<1/2, the noisy
+excess risk relative to the clean target is >=(1-2*eta)*clean error, giving
+the analogous argument. The fixed-n flip-likelihood ratio bound
+((1-eta)/eta)^n cannot overcome a positive prior-rate gap Delta kappa divided
+by 2*sigma^2 as sigma tends to zero. Thus the warning about taking the
+strong-prior limit first is mathematically appropriate. None of these FAQ
+observations is being included in the exact robust main theorem.
+
+Publication follow-up
+---------------------
+The exact main type/axiom gate and independent source rebuild subsequently
+passed; see ../VERIFICATION.md and verification/robust-2026-10-18/. The
+manuscript introduction was updated to the narrowly scoped verification
+statement recommended above, with no mathematical source changes.

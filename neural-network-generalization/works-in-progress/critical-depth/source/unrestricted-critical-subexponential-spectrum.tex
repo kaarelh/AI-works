@@ -1,0 +1,88 @@
+\section{A subexponential lower bound for the first-layer spectrum}
+\label{sec:critical-subexponential-spectrum}
+
+\begin{theorem}[Subexponential spectral floor]
+\label{thm:first-tanh-subexponential-spectrum}
+Let $D=d+1\ge2$, $m=2^d$, and
+\[
+ K(x,y)=\mathbb E_w\tanh(w\cdot\bar x)\tanh(w\cdot\bar y),
+ \qquad w\sim\mathcal N(0,I_D/d).
+\]
+Then
+\[
+ \lambda_{\min}(K)\ge
+ p_d:=\exp\{-13\sqrt{D\log(4D)}\}.
+\]
+\end{theorem}
+
+\begin{proof}
+Set $q=D/d\in[1,2]$. The positive integral formula from
+Lemma~\ref{lem:first-tanh-spectrum} gives, for every odd $n\ge1$,
+\[
+ |h_n|=\frac1{\sqrt{qn!}}\int_0^\infty
+       \frac{t^ne^{-t^2/2}}{\sinh(\pi t/(2\sqrt q))}\,dt,
+\]
+where $h_n$ is the normalized Hermite coefficient of
+$z\mapsto\tanh(\sqrt qz)$.
+Use the elementary Stirling upper bound
+$n!\le3\sqrt n(n/e)^n$ and restrict the integral to
+$[\sqrt n,\sqrt n+1]$. Since $1/\sinh u\ge2e^{-u}$,
+\[
+ |h_n|\ge\sqrt{2/3}\,n^{-1/4}
+ \exp\left[-(1+\pi/2)\sqrt n-(1+\pi)/2\right]
+ \ge e^{-6\sqrt n}.
+\]
+For the last inequality, use $\pi<4$, $\log n\le\sqrt n$,
+and $\sqrt n\ge1$.
+
+The normalized Walsh coefficient of
+\[
+ \left(\frac{1+\sum_{i=1}^d z_i}{D}\right)^n
+\]
+at a subset $S\subseteq\{1,\ldots,d\}$ is the probability
+$P_n(S)$ that the lazy walk on $\mathbb F_2^d$, choosing uniformly
+between staying put and toggling any of its $d$ coordinates, reaches
+$S$ after $n$ steps. Fourier inversion gives
+\[
+ |mP_n(S)-1|
+ \le\sum_{j=1}^{d}\binom dj\left|1-\frac{2j}{D}\right|^n.
+\]
+For $1\le j\le D-1$, put $k=\min(j,D-j)$ and bound the last
+factor by $e^{-2nk/D}$. Pairing $j=k$ with $j=D-k$ and using
+Pascal's identity bounds the sum by
+\[
+ \sum_{k=1}^{\lfloor D/2\rfloor}\binom Dk e^{-2nk/D}
+ \le(1+e^{-2n/D})^D-1.
+\]
+At the middle index when $D$ is even this only overcounts, so the
+inequality remains valid.
+Choose the smallest odd integer
+$n\ge(D/2)\log(4D)$. Then $n\le D\log(4D)$ and the displayed
+sum is at most $e^{1/4}-1<1/2$. Thus $mP_n(S)\ge1/2$ for every
+$S$.
+
+The kernel's Hermite expansion has nonnegative coefficients, so every
+eigenvalue of $K$ is at least
+\[
+ m h_n^2P_n(S)\ge\frac12 e^{-12\sqrt n}
+ \ge e^{-13\sqrt{D\log(4D)}}.
+\]
+\end{proof}
+
+\begin{corollary}[Empirical first-layer kernel]
+\label{cor:empirical-first-layer-spectrum}
+Let $h_1,\ldots,h_N$ be independent first-layer feature vectors and
+$\widehat K=N^{-1}\sum_i h_i h_i^T$. For $0<\delta<1$, if
+\[
+ N\ge\frac{8m}{p_d}\log\frac m\delta,
+\]
+then $\widehat K\succeq K/2\succeq(p_d/2)I_m$ with probability
+at least $1-\delta$.
+\end{corollary}
+
+\begin{proof}
+The whitened summands $K^{-1/2}h_ih_i^TK^{-1/2}$ have expectation
+$I_m$ and operator norm at most $m/p_d$, because
+$\|h_i\|_2^2\le m$. The lower-tail matrix Chernoff inequality gives
+failure probability at most $m\exp[-Np_d/(8m)]$.
+\end{proof}

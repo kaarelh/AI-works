@@ -1,0 +1,148 @@
+% Standalone theorem/proof fragment. Uses amsmath, amssymb, amsthm.
+\section{Input robustness does not control the depth-dependent norm capacity}
+\label{sec:inputcounter}
+
+The following statement concerns norm-class capacity, not the posterior of the
+independent Gaussian weight prior.
+
+\begin{proposition}
+For every integer $d\ge2$, put $N=2^{d+1}$ and $L=d+3$.
+Every $f:\{-1,1\}^d\to\{-1,1\}$ has a width-$N$, depth-$L$ tanh network,
+with a linear readout and no biases except the constant input coordinate,
+whose real-valued output $z:\mathbb R^d\to\mathbb R$ satisfies
+\[
+ z(x)=f(x)\quad(x\in\{-1,1\}^d),\qquad
+ \kappa_N(z)\le100d^3\log^2(16d),\qquad
+ \operatorname{Lip}(z)\le300d^{3/2}\log^2(16d).
+\]
+Here $\kappa_N$ is the weighted squared parameter norm from the main paper.
+In particular the correct signed output remains at least $3/4$ under every
+Euclidean input perturbation of radius
+$[1200d^{3/2}\log^2(16d)]^{-1}$ around a Boolean vertex.
+Nevertheless this witness fails the hidden-activation robustness condition
+at RMS radius
+\[
+ \tau_d=\frac{3\sqrt2}{4}\,2^{-d}.
+\]
+Thus polynomial bounds on weighted norm and even global input Lipschitz
+constant do not give a norm-class counting bound polynomial jointly in depth
+and the displayed parameters.
+\end{proposition}
+
+\begin{proof}
+Put $M=2^d$, $m=d-1$, $s=3/4$, $a=\tfrac12\log(16d)$,
+$B=\log(4d)$, $c=\tanh B$, and $b=\tanh1$.
+For $p\in\{-1,1\}^d$ define
+\[
+ T_p(u)=\frac{1+\tanh(a(p\cdot u-(d-1)))}2.
+\]
+The $M\times M$ matrix $T=(T_p(x))_{x,p}$, evaluated on the Boolean cube,
+satisfies
+\[
+ \|T-I\|_\infty
+ \le e^{-2a}+e^{2a}\bigl[(1+e^{-4a})^d-1\bigr]<\frac14.
+\]
+Indeed the first term bounds its diagonal defect and the second sums the
+positive off-diagonal terms by Hamming distance.
+Consequently $v=T^{-1}f$ satisfies $\|v\|_\infty\le4/3$.
+Write $F(u)=\sum_pv_pT_p(u)$.
+
+The first hidden layer contains $r=\lfloor N/(d+1)\rfloor$ copies of
+$\tanh(Bx_i)$ for each $i=1,\ldots,d$, and $r$ copies of the constant $c$;
+any unused neurons are zero. The next layer has $M$ detector neurons. For
+detector $p$, give each copy of coordinate $i$ weight $ap_i/(rc)$ and each
+constant copy weight $-a(d-1)/(rc)$. This computes
+$\tanh(a(p\cdot u(x)-(d-1)))$, where
+\[
+ u_i(x)=\frac{\tanh(Bx_i)}c.
+\]
+Its other $M$ neurons compute the constant $b$, using weight $1/(rc)$ from
+each of the $r$ constant predecessors.
+
+Set
+\[
+ t_0=s2^{-(d-2)/2},\qquad
+ R=2^{(d-2)/(2(d-1))},\qquad t_j=t_0R^j\quad(0\le j\le m).
+\]
+The third hidden layer has one active neuron with weights
+$a_p=\tfrac12\operatorname{atanh}(t_0)v_p$ from the detectors and common
+weight $(\sum_pa_p)/(Mb)$ from the constant neurons. It computes
+$\tanh(\operatorname{atanh}(t_0)F(u(x)))$.
+For each of the next $m$ hidden layers put $n_j=\lceil N^{j/m}\rceil$ active
+neurons, where $n_0=1$. Each has incoming weight
+$\operatorname{atanh}(t_j)/(n_{j-1}t_{j-1})$ from every active predecessor.
+Finally use readout weight $1/(Ns)$ on each last-layer neuron.
+Since $u$ fixes the Boolean vertices and $F(x)=f(x)$ there, induction shows
+that the active neurons of stage $j$ equal $t_jf(x)$ and the output is $f(x)$.
+There are $3+m=d+2$ hidden layers, hence depth $L=d+3$.
+
+For completeness, the norm accounting has no hidden exponential factor.
+The first layer costs at most $dB^2$. Since $r\ge N/[2(d+1)]$, the second
+layer costs at most
+\[
+ \frac{d+1}{c^2}\bigl[a^2(d+(d-1)^2)+1\bigr]
+ \le2(d+1)\bigl[a^2(d^2-d+1)+1\bigr].
+\]
+The third-layer cost is at most
+$(1+b^{-2})(\operatorname{atanh}(s)/s)^2<5$, using $Mt_0^2=9/4$.
+Each amplification layer costs at most
+\[
+ 2\Bigl(\frac{\operatorname{atanh}(s)}s\Bigr)^2N^{1/m}R^2
+ =2\Bigl(\frac{\operatorname{atanh}(s)}s\Bigr)^2
+     2^{2+1/(d-1)}<27,
+\]
+and the readout costs $s^{-2}=16/9$. These bounds imply the stated
+$100d^3\log^2(16d)$ bound with ample slack.
+
+We next bound input sensitivity on all of $\mathbb R^d$. One has
+$c^{-1}\le1+1/(7d^2)$ and $\operatorname{Lip}(u)\le B/c<2B$.
+For $|u_i|\le c^{-1}$,
+\[
+ \begin{split}
+ \sum_p e^{2a(p\cdot u-(d-1))}
+ &\le16d\exp\!\left(\frac1{256d}+2ad(c^{-1}-1)\right)\\
+ &\le16d\exp\!\left(\frac1{256d}+\frac{\log(16d)}{7d}\right)<21d.
+ \end{split}
+\]
+Using $\operatorname{sech}^2(t)\le4e^{2t}$ and $\|v\|_\infty\le4/3$ gives
+$\|\nabla F(u)\|_2\le56ad^{3/2}$ throughout that box.
+
+The remainder of the network is a scalar map $H$, so $z=H\circ F\circ u$.
+By $|\tanh'|\le1$ and telescoping the scale factors,
+\[
+ \operatorname{Lip}(H)
+ \le\prod_{j=0}^{m}\frac{\operatorname{atanh}(t_j)}{t_j}.
+\]
+For $0<t\le s$, the power series gives
+$\log(\operatorname{atanh}(t)/t)\le t^2/[3(1-s^2)]=16t^2/21$.
+If $d\ge3$, then $R^2\ge\sqrt2$ and
+$\sum_jt_j^2\le s^2/(1-1/\sqrt2)$, hence
+\[
+ \operatorname{Lip}(H)
+ \le\exp\!\left(\frac3{7(1-1/\sqrt2)}\right)<5.
+\]
+The case $d=2$ has two values $t_j=s$ and satisfies the same bound.
+Multiplying the three Lipschitz bounds yields
+\[
+ \operatorname{Lip}(z)\le560aBd^{3/2}
+ \le280d^{3/2}\log^2(16d)<300d^{3/2}\log^2(16d).
+\]
+The claimed input-perturbation guarantee follows from $z(x)=f(x)$.
+
+Finally, at any Boolean input the third hidden layer has just one nonzero
+coordinate, $t_0f(x)$. An additive post-activation perturbation
+$-t_0f(x)$ in that coordinate sets the layer to zero. All subsequent hidden
+activations and the output are then zero. Its Euclidean norm is $t_0$, and
+\[
+ \frac{t_0}{\sqrt N}=\frac{3\sqrt2}{4}2^{-d}.
+\]
+Thus the internal robustness condition fails at that RMS radius.
+The $2^{2^d}$ truth tables give the counting conclusion.
+\end{proof}
+
+\paragraph{Scope.}
+This rules out polynomial-depth \emph{norm-class counting} under polynomial
+input-Lipschitz bounds, and gives an explicit internal-fragility mechanism.
+It does not prove a sample lower bound for a simple target under the original
+independent Gaussian parameter prior: that would require a posterior mass or
+minimum-energy comparison specific to that prior.

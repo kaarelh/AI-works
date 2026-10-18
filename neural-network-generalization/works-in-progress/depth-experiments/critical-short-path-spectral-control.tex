@@ -1,0 +1,160 @@
+\section{Short near-optimal scalar paths and residual spectral control}
+\label{sec:critical-short-path-control}
+
+The scalar-path length bound can be strengthened by using its
+near-optimality at every prefix, rather than only its total entropy.
+This also controls the spectral loss when a scalar path is lifted to
+vector features. Here $V$, $V_*$ and the constant $c>0$ in
+\eqref{eq:scalar-step-dissipation} have their earlier meanings.
+
+\begin{lemma}[Dyadic bounds for a near-optimal increasing path]
+\label{lem:critical-dyadic-short-path}
+There is a universal $C$ such that, for every $0<p\le1/256$, an
+increasing scalar path from $p$ with total cost at most $V(p)+p$ has
+length $m$ and states $q_0=p,q_1,\ldots,q_m$ satisfying
+\[
+ m\le C/p,\qquad
+ \sum_{j=0}^{m-1}q_j\le C\log(2/p).
+\]
+Such a path exists by the increasing-path reduction. The same sum bound
+holds with the post-step states $q_1,\ldots,q_m$.
+\end{lemma}
+
+\begin{proof}
+Write $D_j$ for the entropy cost of step $j$. Every suffix from $q_i$
+including its readout costs at least $V(q_i)$, so
+\begin{equation}\label{eq:critical-prefix-cost}
+ \sum_{j=1}^{i}D_j
+ \le V(p)+p-V(q_i)\le V_*-V(q_i)+p.
+\end{equation}
+Consider a dyadic band $[u,2u)$, where $u=2^kp<1/256$.
+Because states increase, its transitions form one consecutive segment.
+At most one transition exits the band. Every other transition has
+post-state below $2u$, and the prefix ending at the last such transition
+has cost, by~\eqref{eq:critical-prefix-cost}, at most
+\[
+ V_*-V(2u)+p\le34u+p\le35u.
+\]
+Every step whose pre-state lies in this band has cost at least $cu^2$,
+by increasing states and strict dissipation. Thus at most
+$35/(cu)+1$ steps start in the band, contributing at most $70/c+2u$
+to the sum of their pre-states.
+
+Choose the last band so that its next lower endpoint lies in
+$[1/256,1/128)$. All remaining pre-states are at least $1/256$.
+Since total cost is less than three, at most $3\cdot256^2/c$
+steps remain. Summing the dyadic counts gives $m\le C/p$, and summing
+the pre-state contributions gives $C\log(2/p)$.
+Finally, the post-state sum differs from the pre-state sum by
+$q_m-p\le1$.
+\end{proof}
+
+Using this lemma in the previously stated scalar-lifting proof replaces
+the flattening upper estimate by
+\[
+ J_L(f)\le V_*+
+ C\left[\sqrt{\frac{d+1}{L}}+\frac{(d+1)^2}{L}\right]
+\]
+for $L\ge C(d+1)^2$, after changing the universal constant.
+Indeed take $\delta=B(d+1)/L$ and $p=\sqrt{(d+1)/L}$.
+Then $m\le C/p$ and the lifting error $m\delta$ is $O(p)$;
+the original holding and growth costs are unchanged. For sufficiently
+large threshold constant, the cooling, growth and scalar-path lengths
+fit within the specified depth and $2m\delta\le1/2$ as required.
+
+\begin{lemma}[A lower spectral bound for a lifted residual]
+\label{lem:critical-residual-spectral}
+Let $f\in\{-1,1\}^M$, let $R\succeq0$ have constant diagonal $r$,
+and let $G\sim\mathcal N(0,R)$ be independent of a scalar random
+variable $\xi$. Define vector features
+\[
+ h_x=\tanh(f_x\xi+G_x),\qquad
+ \psi_r(z)=\mathbb E\tanh(z+\sqrt r Z),
+\]
+\[
+ v'=\mathbb E\psi_r(\xi)^2,\qquad
+ q'=\mathbb E\tanh^2(\xi+\sqrt r Z),\qquad
+ R'=\mathbb Ehh^\top-v'ff^\top.
+\]
+Then
+\begin{equation}\label{eq:critical-residual-spectral-bound}
+ R'\succeq(1-q')^2R.
+\end{equation}
+This applies to arbitrary scalar control laws with finite second moment,
+not only Gaussian controls.
+\end{lemma}
+
+\begin{proof}
+Condition on $\xi$. The conditional mean of $h$ is $f\psi_r(\xi)$.
+Put $a(\xi)=\mathbb E\operatorname{sech}^2(\xi+\sqrt rZ)$.
+Gaussian integration by parts gives
+\[
+ \operatorname{Cov}(h,G\mid\xi)=a(\xi)R.
+\]
+The coefficient is the same at every input because the derivative is
+even and the residual diagonal is constant. The covariance matrix of
+$h-\mathbb E[h\mid\xi]-a(\xi)G$ is positive semidefinite, hence
+\[
+ \operatorname{Cov}(h\mid\xi)\succeq a(\xi)^2R.
+\]
+This argument also handles singular $R$ by Gaussian approximation, or
+directly by a linear representation of $G$.
+Average over $\xi$ and apply Jensen:
+$R'=\mathbb E\operatorname{Cov}(h\mid\xi)
+\succeq(\mathbb Ea(\xi))^2R=(1-q')^2R$.
+\end{proof}
+
+\begin{corollary}[Only polynomial spectral loss through a near-optimal lift]
+\label{cor:critical-polynomial-residual-loss}
+Lift a scalar path from Lemma~\ref{lem:critical-dyadic-short-path} by
+the earlier scalar-lifting construction. Suppose the initial residual
+has constant diagonal at most $\delta\le p$. Then for universal
+$c_0>0,C_0<\infty$, its final residual satisfies
+\[
+ R_m\succeq c_0p^{C_0}R_0.
+\]
+\end{corollary}
+
+\begin{proof}
+At each step the scalar control is rescaled by the square root of the
+ratio of the tracked component $v$ to the nominal state $q$.
+The tracked component never exceeds the nominal state. To check this,
+for $z\ge0$ and $r\ge0$, averaging the tanh addition formula at
+opposite Gaussian shifts gives
+\[
+ 0\le\psi_r(z)\le\tanh z.
+\]
+If $v\le q$, rescaling by $\sqrt{v/q}\le1$ can therefore only decrease
+the absolute scalar feature. Induction from $v=q=p$ proves the claim.
+The residual diagonal stays at most $\delta$ by conditional Gaussian
+Poincare. Thus the actual total feature variance at step $j$ is at most
+$q_j+\delta$.
+
+Every nominal step has entropy at most three and reference variance
+at most one. Gaussian entropy duality gives its preactivation second
+moment at most $12+2\log2<14$. Rescaling does not increase this moment;
+adding the independent residual raises it by at most one. Consequently
+for each actual total post-step variance $\widehat q_j$,
+\[
+ 1-\widehat q_j
+ =\mathbb E\operatorname{sech}^2(\xi+\sqrt rZ)
+ \ge\mathbb E e^{-2|\xi+\sqrt rZ|}
+ \ge e^{-2\sqrt{15}}=:a_0>0.
+\]
+For $0\le u\le1-a_0$, one has $\log(1-u)\ge-u/a_0$.
+Lemma~\ref{lem:critical-residual-spectral} therefore gives
+\[
+ R_m\succeq
+ \exp\left[-\frac2{a_0}\sum_{j=1}^m\widehat q_j\right]R_0
+ \succeq
+ \exp\left[-\frac2{a_0}
+       \left(\sum_{j=1}^mq_j+m\delta\right)\right]R_0.
+\]
+The dyadic lemma bounds the state sum by $C\log(2/p)$ and
+$m\delta\le C$, proving the assertion.
+\end{proof}
+
+These are variational-path and population-covariance statements.
+They do not alone give a finite-width lower probability or a sample
+lower bound. Their role is to avoid an unnecessarily exponential
+spectral loss when constructing such a finite-width comparison.

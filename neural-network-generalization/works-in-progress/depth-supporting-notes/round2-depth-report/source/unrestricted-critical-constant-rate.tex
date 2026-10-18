@@ -1,0 +1,216 @@
+% Covariance-control result: independently audited PASS; see critical-constant-rate-fresh-audit.txt.
+\section{Bounded critical rate for all functions at quadratic depth}
+\label{sec:critical-constant-rate}
+
+Covariance changes are cheaper than coherent mean shifts when the
+relative change is small. The following sharper capacity obstruction
+uses that fact. It concerns the critical variational rate, and does not
+compare the optimal rates of competing functions closely enough to
+prove a posterior sample-complexity lower bound.
+
+\begin{theorem}[Universal bounded rate at quadratic depth]
+\label{thm:critical-constant-rate}
+There are universal finite constants $A,K_0>0$ such that, for every
+$d\ge1$, there is an integer depth $L_d\le A(d+1)^2$ for which
+\[
+ J_{L_d}(f)\le K_0
+ \qquad\hbox{for every Boolean }f:\{-1,1\}^d\to\{-1,1\}.
+\]
+The depth $L_d$ is the same for all functions on that cube.
+\end{theorem}
+
+We first record exact scalar formulas for a controlled feature law.
+Put
+\[
+ F(q)=\mathbb E\tanh^2(\sqrt q Z),\qquad
+ a(q)=1-F(q),\qquad
+ R(q)=\frac{q[1-F(q)]^2}{F(q)}\quad(q>0).
+\]
+The value $R(0)=1$ makes it continuous at zero.
+
+\begin{lemma}[Rank-one covariance control]
+\label{lem:rankone-critical-control}
+Suppose a feature covariance $Q$ has every diagonal entry equal to $q$
+and $Q\succeq vff^T$ for $v>0$, where $f$ is Boolean.
+For any $\epsilon\ge0$, let the next feature law be coordinatewise tanh
+of a centered Gaussian with covariance $Q+\epsilon vff^T$.
+Its entropy relative to the ordinary next-layer law $\mathsf M_Q$ is
+at most $\epsilon^2/4$. Its second moment $Q'$ has constant diagonal
+$q'$ and obeys $Q'\succeq v'ff^T$, where
+\begin{equation}\label{eq:critical-covariance-control}
+ u=q+\epsilon v,\qquad
+ q'=F(u),\qquad v'=(1+\epsilon)v[1-F(u)]^2.
+\end{equation}
+Consequently, for $w=v/q$ and $w'=v'/q'$,
+\[
+ w'=w\frac{1+\epsilon}{1+\epsilon w}R(u).
+\]
+All these scalar quantities depend only on $q,v,\epsilon$, not on the
+other entries of $Q$ or on the choice of $f$.
+\end{lemma}
+
+\begin{proof}
+The Loewner bound implies $f\in\operatorname{range}(Q)$ and
+$v f^TQ^+f\le1$. The two Gaussian laws have the same support, and the
+rank-one determinant identity gives their relative entropy as
+\[
+ \frac12\{t-\log(1+t)\},\qquad
+ t=\epsilon v f^TQ^+f\le\epsilon.
+\]
+This is at most $t^2/4\le\epsilon^2/4$. Applying coordinatewise tanh
+can only decrease relative entropy.
+Write the changed Gaussian as
+$\sqrt{(1+\epsilon)v}\,fZ+G$, where $Z$ is standard Gaussian and
+$G$ is an independent centered Gaussian of covariance $Q-vff^T$.
+Its conditional feature mean given $Z$ is $f\psi(Z)$, since the
+variances of the coordinates of $G$ all equal $q-v$.
+Thus $Q'\succeq\mathbb E\psi(Z)^2 ff^T$.
+Gaussian integration by parts and projection onto the first Hermite
+polynomial give
+\[
+ \mathbb E\psi(Z)^2\ge(\mathbb E Z\psi(Z))^2
+     =(1+\epsilon)v\,[\mathbb E\operatorname{sech}^2(\sqrt u Z)]^2.
+\]
+This is the claimed $v'$, and the diagonal formula and ratio identity
+follow directly. In particular, these formulas automatically retain
+$0<v'\le q'$, since they arise from a valid covariance lower bound.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:critical-constant-rate}]
+Write $D=d+1$ and $m=2^d$. Begin with the unperturbed first feature law.
+Its covariance $Q$ has constant diagonal
+$q_0=F(D/d)\in[F(1),F(2)]$, and
+Lemma~\ref{lem:first-tanh-spectrum} implies
+\[
+ Q\succeq e^{-20D}I\succeq v_0ff^T,
+ \qquad v_0=e^{-20D}/m.
+\]
+This first layer costs zero entropy. We will use
+Lemma~\ref{lem:rankone-critical-control} at each subsequent layer,
+tracking its guaranteed scalar component $v$, not the largest possible
+rank-one component of the covariance.
+
+We collect universal scalar estimates. The function $F$ is increasing,
+$0<F(q)<q$ for $q>0$, and Taylor expansion gives
+\[
+ F(q)=q-2q^2+O(q^3),\qquad R(q)=1+O(q^2).
+\]
+There consequently exist universal $u_0>0$ and $C\ge1$ such that,
+for $0<u\le u_0$,
+\begin{equation}\label{eq:critical-local-estimates}
+ F(u)\le u-u^2,\qquad R(u)\ge1-Cu^2.
+\end{equation}
+We may and do take $u_0\le1/4$.
+A useful global lower bound is
+\begin{equation}\label{eq:critical-variance-lower}
+ F(q)\ge\frac q{1+3q}.
+\end{equation}
+Indeed $\tanh^2 t\ge t^2/(1+t^2)$ follows from $|\sinh t|\ge|t|$.
+Cauchy--Schwarz applied to $V=qZ^2$ gives
+$\mathbb E[V/(1+V)]\ge(\mathbb EV)^2/\mathbb E[V(1+V)]
+=q/(1+3q)$.
+
+Choose a sufficiently small universal $v_*>0$ satisfying
+\[
+ v_*\le\min\{u_0/4,1/64,1/(100C)\}.
+\]
+Then choose a positive universal $c$ so small that
+\[
+ c\le\min\{v_*/4,u_0/3,1/3,1/(144C)\}.
+\]
+Put $\delta=c/D$.
+
+\emph{Free cooling.}
+Apply the unmodified next-layer law, that is, $\epsilon=0$, until
+$q\le\delta$ for the first time. This costs no entropy.
+There is a universal $c_F>0$ with
+$q-F(q)\ge c_Fq^2$ for $0<q\le F(2)$: the ratio is positive and
+continuous, and tends to two at zero. Hence the number of cooling
+layers is at most a universal constant times $1/\delta$.
+The final cooled variance $q_c$ lies in $[\delta/2,\delta]$, by
+monotonicity and~\eqref{eq:critical-variance-lower}.
+
+During cooling the ratio $w=v/q$ is multiplied by $R(q)$ at each step.
+This loses at most a fixed positive factor, uniformly in the number
+of cooling layers. To see this directly, on $[0,F(2)]$ one has
+$|\log R(q)|\le C_R q^2$ for a universal $C_R$, by continuity,
+positivity and the expansion at zero. Also
+$\sum q_s^2\le c_F^{-1}\sum(q_s-q_{s+1})\le F(2)/c_F$.
+Thus the cooled ratio satisfies
+\[
+ w_c\ge c_0v_0,
+ \qquad \log(1/w_c)\le A_0D
+\]
+for universal $c_0>0,A_0<\infty$.
+
+\emph{Amplifying the relative component.}
+Now set $\epsilon=\delta$ at each layer until $w\ge1/2$.
+Throughout this phase $q\le2\delta$. Indeed
+$u=q+\delta v\le(1+\delta)q$, and the increasing function $u-u^2$
+on the relevant interval gives
+\[
+ q'\le2\delta(1+\delta)-[2\delta(1+\delta)]^2\le2\delta.
+\]
+While $w\le1/2$, the exact ratio identity and
+$u\le3\delta$ imply
+\[
+ \log(w'/w)
+ \ge\frac\delta4-18C\delta^2\ge\frac\delta8.
+\]
+Here we used $\log(1-Cu^2)\ge-2Cu^2$, valid by the chosen constants.
+The number $\tau$ of these layers is therefore at most
+$8A_0D/\delta+1=O(D^2)$. Their total entropy is at most
+\[
+ \tau\delta^2/4\le2A_0D\delta+\delta^2/4=O(1).
+\]
+Furthermore, since $u\ge q$, monotonicity and
+\eqref{eq:critical-variance-lower} imply
+$1/q'\le1/q+3$ at every layer. Thus, at the end of this phase,
+\[
+ q\ge\frac1{2/\delta+3\tau}\ge\frac{c_1}{D^2},
+ \qquad v\ge\frac q2\ge\frac{c_1}{2D^2}
+\]
+for some universal $c_1>0$.
+At the same time $v\le q\le2\delta<v_*$.
+
+\emph{Growing the absolute component.}
+Set $\epsilon=16v$ until $v\ge v_*$.
+The invariant $w\ge1/3$, or equivalently $q\le3v$, is preserved.
+To check this, while $v<v_*$ one has
+$u=q+16v^2\le4v$. If $w\ge1/2$, the ratio identity gives
+$w'\ge\frac12(1-16Cv^2)\ge1/3$.
+If $1/3\le w\le1/2$, it gives
+\[
+ \log(w'/w)\ge4v-32Cv^2\ge0.
+\]
+The initial ratio is at least $1/2$, so induction proves the invariant.
+Using $F(u)\le u$ also gives
+\[
+ v'\ge v(1+16v)(1-2u)
+       \ge v(1+16v)(1-8v)\ge v+4v^2,
+ \qquad v'\le v+16v^2.
+\]
+Thus $1/v-1/v'\ge2$ until the stopping time, which is $O(D^2)$.
+The final value is between $v_*$ and $2v_*$, and the total entropy
+of this phase telescopes:
+\[
+ \sum\frac{(16v)^2}{4}
+   =64\sum v^2\le16\sum(v'-v)\le32v_*.
+\]
+
+Finally choose output $z=f$. Its signed margin is one, and
+$Q\succeq v_*ff^T$ bounds its Gaussian readout cost by $1/(2v_*)$.
+All entropy costs plus this readout cost are bounded by a universal
+constant $K_0$.
+The number of hidden layers, and therefore the depth, is at most a
+universal constant times $D^2$.
+Crucially, $q_0,v_0$, every subsequent scalar recursion, every control,
+and every stopping rule depend only on $d$. Although the full
+covariance matrices depend on $f$, the resulting depth $L_d$ is common
+to all Boolean functions. This proves the theorem.
+\end{proof}
+
+This construction sharpens an absolute-rate capacity obstruction. It
+still does not show that the optimal rate of a complex competitor is
+below, or sufficiently close to, the optimal rate of a specified simple
+target. That comparison remains essential for a posterior lower bound.

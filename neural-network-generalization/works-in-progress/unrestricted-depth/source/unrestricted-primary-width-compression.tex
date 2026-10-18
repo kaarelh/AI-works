@@ -1,0 +1,232 @@
+\section{Width compression with controlled product norm}
+\label{sec:pf-width-compression}
+
+The width dependence in Theorem~\ref{thm:product-target-log-padding}
+can be removed. Boundedness and near-linearity of tanh permit a
+norm-preserving compression: very large normalized rows can be dropped,
+very small rows can be linearized, and the remaining neurons can be
+sampled with a probability chosen to balance their two adjacent norms.
+
+\begin{theorem}[Finite-set width compression for tanh]
+\label{thm:pf-width-compression}
+Let $X$ be a nonempty finite set of inputs of norm at most $R\ge1$.
+Suppose a depth-$D_0\ge2$ tanh network with linear readout, arbitrary
+finite hidden widths, and no later biases has product of Frobenius norms
+at most $P_0\ge1$. For every $0<\epsilon<1$, it has a same-depth
+approximation $\widetilde z$ such that
+\[
+ \max_{x\in X}|z(x)-\widetilde z(x)|\le\epsilon,
+ \qquad \prod_{j=1}^{D_0}\|\widetilde W^j\|_F\le2P_0,
+\]
+and every new hidden width is bounded by a universal polynomial in
+\[
+ P_0,D_0,R,\log(2|X|),\epsilon^{-1}.
+\]
+The bound is independent of the original widths and individual weights.
+An augmented constant input is allowed and counts toward $R$.
+\end{theorem}
+
+\begin{proof}
+Put $H=D_0-1$, $P_*=2P_0$, $e=\epsilon/(8H)$ and
+$\eta=1/(4H)$. We compress the hidden layers in order from the first
+to the last. At each step the product norm increases by at most
+$1+\eta$, and the output changes by at most $6e$ on $X$.
+Thus every intermediate product is below $P_*$, and the final product
+is at most $e^{1/4}P_0<2P_0$, while total error is less than $\epsilon$.
+A zero matrix makes the entire network zero and is trivial, so all
+prefix and pair norms used below may be assumed positive. If a
+compression step produces a zero matrix, stop and use the zero network
+with width one; the accumulated approximation estimates still apply.
+
+Consider a hidden matrix $W$ and its immediately following matrix $V$;
+the latter may be the final linear readout. Let $S$ be the product of
+all Frobenius norms strictly before $W$, with $S=1$ at the first layer,
+and put
+\[
+ A=\|W\|_F\|V\|_F.
+\]
+The incoming feature vector $h(x)$ has norm at most $SR$. The part
+strictly after $V$ has Lipschitz constant at most $P_*/(SA)$.
+If $w_i^T$ is row $i$ of $W$ and $v_i$ is column $i$ of $V$, write
+$a_i=\|w_i\|_2$ and $b_i=\|v_i\|_2$.
+Zero rows or zero outgoing columns can be deleted.
+
+Set
+\[
+ B=P_*/e,\qquad \tau^2=3e/(P_*R^3),\qquad
+ \Delta=e/(P_*R),\qquad Q=(B/\tau)^2.
+\]
+Partition neurons into large, small and middle according as
+$Sa_i>B$, $Sa_i<\tau$, or $\tau\le Sa_i\le B$.
+There are at most $S^2\|W\|_F^2/B^2$ large neurons. Their activation
+vector has norm at most the square root of this count. Deleting them
+therefore changes the final output by at most $P_*/B=e$.
+
+For the small neurons, replace tanh by the identity. Since
+$|u-\tanh u|\le |u|^3/3$, their combined activation error has norm at
+most $\tau^2R^3S\|W\|_F/3$. Propagation through the suffix bounds
+the output error by $P_*\tau^2R^3/3=e$.
+Their resulting contribution to the next preactivation is the linear map
+\[
+ B_0=\sum_{i\ \mathrm{small}}v_iw_i^T,
+ \qquad \|B_0\|_*\le\sum_{i\ \mathrm{small}}a_ib_i,
+\]
+where $\|\cdot\|_*$ is the nuclear norm.
+
+Let $A_m=\sum_{i\ \mathrm{middle}}a_ib_i$.
+If $A_m<\Delta A$, delete all middle neurons: their output contribution
+is at most $P_*R A_m/A\le e$. Otherwise $A_m\ge\Delta A>0$, and
+we approximate their contribution by sampling. Define
+\[
+ Z=\sum_{i\ \mathrm{middle}}b_i/a_i,
+ \qquad p_i=(b_i/a_i)/Z.
+\]
+Draw $m$ independent indices from $(p_i)$. A sampled neuron keeps its
+incoming row $w_i^T$ and has outgoing column $v_i/(mp_i)$.
+If $\widehat A=(Z/m)\sum_{r=1}^m a_{i_r}^2$ and $c=m/Z$, its new
+incoming and outgoing squared Frobenius norms are exactly
+\[
+ c\widehat A\quad\hbox{and}\quad \widehat A/c.
+\]
+Moreover $\mathbb E\widehat A=A_m$. Since middle row norms lie between
+$\tau/S$ and $B/S$, one has
+\[
+ Z\max_i a_i^2\le A_m Q\le AQ.
+\]
+The random vector $v_i\tanh(w_i^Th(x))/p_i$ has norm at most
+$AQSR$, uniformly on $X$.
+
+Consequently some choice of the samples has both
+\[
+ \widehat A\le A_m+\eta A
+\]
+and middle-preactivation approximation error at most $eSA/P_*$
+simultaneously for every $x\in X$, provided
+\[
+ m\ge64Q^2\max\{\eta^{-2},(P_*R/e)^2\}
+                       \log(8(|X|+1)).
+\]
+Here and below take integer ceilings. For detail, the scalar random
+variables $Za_i^2/A$ are bounded by $Q$, so Hoeffding controls their
+mean. For a Hilbert-valued random vector bounded by $AQSR$, the mean
+deviation has expectation at most $AQSR/\sqrt m$; bounded differences
+gives a dimension-free tail. A union bound over $X$ and the scalar
+condition has positive success probability with the displayed constant.
+Propagation of the vector error gives final output error at most $e$.
+
+We next compress the linear branch. Truncate the singular-value
+decomposition of $B_0$ to rank
+\[
+ k=\lceil P_*R/e\rceil,
+\]
+obtaining $B_k=UV_0$ with
+$\|U\|_F^2=\|V_0\|_F^2=\nu:=\|B_k\|_*\le\|B_0\|_*$.
+The residual operator norm is at most $\|B_0\|_* /(k+1)\le A/(k+1)$,
+so its final output error is at most $P_*R/(k+1)\le e$.
+If $\nu=0$, omit the linear branch entirely.
+
+When the middle branch was sampled, retain $c=m/Z$. When it was
+deleted and $\nu>0$, choose $c=1/(\nu S^2)$ instead.
+Represent $B_k$ approximately using $K$ copies of each of its at most
+$k$ singular channels: their incoming rows are the rows of
+$\sqrt{c/K}\,V_0$, repeated $K$ times, and their outgoing columns are
+the corresponding columns of $U/\sqrt{cK}$.
+Their total incoming and outgoing squared norms are $c\nu$ and
+$\nu/c$. Their linear limit is exactly $B_kh$.
+The tanh linearization error at the next preactivation has norm at most
+\[
+ \frac{c\nu^2(SR)^3}{3K}.
+\]
+After propagation this is at most
+$P_*c\nu S^2R^3/(3K)$, using $\nu\le A$.
+In the sampled case,
+\[
+ Z\ge A_mS^2/B^2,
+ \qquad c\nu S^2\le mB^2/\Delta;
+\]
+in the deleted case this quantity equals one. Hence it suffices to use
+\[
+ K=\left\lceil\frac{P_*R^3}{e}
+                   \max\{1,mB^2/\Delta\}\right\rceil.
+\]
+The linear-channel approximation then contributes at most $e$ error.
+When there is no sampled middle branch, the same bound is harmless;
+one may use the displayed deterministic value of $m$ merely to define
+a common width upper bound.
+
+Combining the sampled and linear branches gives pair product norm
+\[
+ \widehat A+\nu
+ \le A_m+\sum_{i\ \mathrm{small}}a_ib_i+\eta A
+ \le(1+\eta)A.
+\]
+The last inequality is Cauchy--Schwarz over the original rows and
+columns. If the middle branch was deleted, the pair product is simply
+$\nu\le A$. These are exact norm calculations for the constructed
+tanh matrices, not only bounds on their linear limits.
+
+The compressed hidden width is at most $m+kK$. All quantities in this
+bound are universal polynomials in $P_0,H,R,e^{-1}$ and
+$\log(2|X|)$. Crucially, no original dimension of either adjacent hidden
+layer occurs. Only the two adjacent matrices are altered. Processing
+the next hidden layer changes its own width without undoing the width
+bound for the preceding one. Uniform zero-padding at the end makes
+all hidden widths equal if desired. Summing the at most six errors and
+multiplying the pair-product bounds proves the theorem.
+\end{proof}
+
+\begin{corollary}[Uniform compression on a bounded input set]
+\label{cor:pf-compact-compression}
+If the input dimension is $q$ and $X$ is any subset of the Euclidean
+ball of radius $R\ge1$, the same conclusion holds with width polynomial
+in $q,P_0,D_0,R,\epsilon^{-1}$, independently of whether $X$ is finite.
+\end{corollary}
+
+\begin{proof}
+Choose an $\epsilon/(6P_0)$-net of the radius-$R$ ball with at most
+$(1+12P_0R/\epsilon)^q$ points. Apply the finite-set theorem to this net
+with error $\epsilon/2$. The original and compressed networks have
+Lipschitz constants at most $P_0$ and $2P_0$, respectively. Their
+difference therefore changes by at most $\epsilon/2$ between any point
+and its nearest net point. This proves uniform error at most $\epsilon$.
+The logarithm of the net size is polynomial in the displayed quantities.
+\end{proof}
+
+\begin{corollary}[A width-free sufficient representation condition]
+\label{cor:width-free-pf-sufficiency}
+Suppose $f$ has some finite-width, depth-$D_0$ tanh representation with
+unit global margin and product of Frobenius norms at most $P_0\ge1$.
+For each fixed $\zeta>0$, there are universal polynomials and a universal
+constant $c$ such that its unrestricted Gaussian posterior sample
+complexity is polynomial in
+\[
+ d,D_0,P_0,L,\varepsilon^{-1},\log(2/\delta)
+\]
+whenever
+\[
+ L\ge D_0+c\log(2+d+D_0+P_0),
+\]
+simultaneously for every $N\ge C_L(f)$ and every
+$0<\sigma^2\le N^{-(1+\zeta)}$.
+The same conclusion holds at every $L\ge2D_0$.
+There is no dependence on the original width or on individual weights.
+\end{corollary}
+
+\begin{proof}
+Apply Theorem~\ref{thm:pf-width-compression} with the augmented Boolean
+cube, $R=\sqrt{d+1}$, $|X|=2^d$, and approximation error $1/4$.
+The resulting representation has width polynomial in $d,D_0,P_0$,
+the same depth, and global signed margin at least $3/4$.
+Double its readout to obtain unit margin and product norm at most
+$4P_0$. Theorem~\ref{thm:product-target-log-padding} then applies.
+Its $T$ is polynomial in $d,D_0,P_0$, so the required logarithmic
+overhead has the displayed form after increasing a universal constant.
+\end{proof}
+
+Together with the posterior ceiling, this identifies polynomial product
+norm as a substantive representation criterion for this prior. The
+necessity statement concerns constant-error approximations at the same
+learner depth; the sufficiency statement above assumes an exact Boolean
+representation and permits logarithmically many added layers. These
+qualifications prevent treating the two statements as an exact
+equivalence.

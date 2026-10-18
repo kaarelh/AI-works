@@ -1,0 +1,97 @@
+\section{An optional weakening: transport of two margin levels}
+\label{sec:two-margin-transport}
+
+The statistical argument needs separation of the training and test
+margin levels, rather than stability of every intermediate score.
+The following optional prior condition expresses precisely that
+separation. It is a mathematical extension, not the condition used in
+the primary empirical protocol.
+
+For each network use the same calibrated radius
+$r_c(w)=c/\sqrt{1+H E_v(w)}$ as before. Require, for every input $x$,
+every perturbation with $\|\eta\|_*\le r_c(w)$, and both
+$y\in\{-1,1\}$, the implications
+\begin{align}
+ yz_w(x)\ge\tfrac12
+ &\quad\Longrightarrow\quad yz_w(x;\eta)\ge\tfrac7{16},
+ \label{eq:transport-training-level}\\
+ yz_w(x)\le\tfrac14
+ &\quad\Longrightarrow\quad yz_w(x;\eta)\le\tfrac5{16}.
+ \label{eq:transport-test-level}
+\end{align}
+Because both choices of $y$ are required, this is a label-free condition
+on the network. It asks a perturbation to preserve a gap between a
+confident training output and an output counted as a test error.
+The condition is Borel measurable: extrema over a compact perturbation
+ball are continuous functions of the weights, and the Boolean input
+set and label set are finite.
+
+If the original global clean-margin condition $|z_w(x)|>1/2$ is
+also retained, the second implication is redundant. The first one
+for the network's predicted sign guarantees perturbed margin at least
+$7/16$; negating this inequality gives the second implication for the
+opposite label, the only label for which it is triggered. In this original
+globally separated model, the restriction is an ordinary all-layer
+adversarial margin requirement. The second implication is needed when
+the theorem permits globally uncertain outputs.
+
+\begin{proposition}[The same bound under two-margin transport]
+\label{prop:two-margin-transport}
+Replace the clipped-score support restriction in the main theorem by
+\eqref{eq:transport-training-level}--\eqref{eq:transport-test-level}.
+All its sample bounds and all-width conclusions remain valid, with the
+same training likelihood, test margin, and posterior-confidence
+consequences. The same replacement is valid for the localized versions,
+where the implications are imposed outside the permitted exception set.
+\end{proposition}
+
+\begin{proof}
+Use the same common compression radius $r\le1/6$. On a successful
+compression coupling, the candidate's raw output differs from a
+perturbed original output by at most $r/8\le1/48$.
+At an observed training input, $yz_w(x)>1/2$, so
+\eqref{eq:transport-training-level} implies
+\[
+ yh(x)\ge\frac7{16}-\frac1{48}=\frac5{12}.
+\]
+At a test input where $yz_w(x)\le1/4$,
+\eqref{eq:transport-test-level} implies
+\[
+ yh(x)\le\frac5{16}+\frac1{48}=\frac13.
+\]
+Thus the same ramp, zero at and above $5/12$ and one at and below
+$1/3$, has zero training loss on successful couplings and dominates
+the original test-error indicator on successful couplings. The
+compression entropy and readout-tail bounds are unchanged.
+
+Every weight in the target cylinder has the correct signed output
+greater than one both before and after every admissible perturbation.
+It therefore satisfies both implications for both labels. The original
+raw Gaussian target-mass lower bound, and hence the posterior entropy
+bound, remain valid. The rest of the proof is identical. Masking by the
+controlled exception sets gives the localized version.
+\end{proof}
+
+The margin-band score
+$U(z)=\operatorname{sign}(z)\min\{1/4,(|z|-1/4)_+\}$ gives a
+sufficient condition for these implications: if
+$|U(z_w(x;\eta))-U(z_w(x))|\le1/16$, then a clean signed score at
+least $1/2$ has perturbed $U$-score at least $3/16$, hence perturbed
+signed score at least $7/16$. A clean signed score at most $1/4$ has
+$U$-score at most zero, so its perturbed signed score is at most
+$5/16$. Oddness of $U$ handles either label.
+
+The implications allow additional changes at intermediate scores.
+For example, the pair of scores $3/8$ and $11/20$ respects both
+implications for both labels, although its $U$-score change is $1/8$.
+Such an increase in confidence need not affect either of the two
+loss-transfer steps. This explains the weakening; it does not establish
+that trained networks satisfy it globally.
+
+More generally, with training margin $m$, test margin $u<m$, and a
+noise tolerance $a<(m-u)/2$, replace the four numerical levels by
+$m,m-a,u,u+a$. If the compressor's output-rounding error is $e$ and
+$m-u-2a-2e>0$, the same proof uses a ramp across this positive gap.
+Its sample dependence is polynomial in the inverse gap. As before,
+an empirical assessment of this optional condition would require a
+separate stated protocol; the primary experiments are not relabeled.

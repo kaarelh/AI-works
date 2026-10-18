@@ -1,0 +1,137 @@
+\section{A polynomially quantified mean-field prefactor window}
+\label{sec:small-prefactor}
+
+The bulk-subtraction proof depends on the prefactor $t$, not directly
+on the exponent $\gamma$. This gives a separate finite-temperature
+statement at mean-field scaling. It does not include the original
+critical convention $t=1$.
+
+\begin{theorem}[Small prefactor at every width]
+\label{thm:small-meanfield-prefactor}
+Assume the witness hypothesis of
+Theorem~\ref{thm:unrestricted-above-one}, with parameters $d,L,C,K$
+and $Q_*=[(K+2)/L]^{L/2}$. Define
+\[
+ A=\left(\frac{K+2}{L-1}\right)^{(L-1)/2},\qquad
+ \eta=\min\left\{1,\frac1{4\sqrt{L(K+1)}},
+                         \frac1{8\sqrt2\,LA}\right\},
+\]
+\[
+ b^2=\max\{2(d+1)\log2+4\log8,\;16\log9+8\log(8L)\},
+\qquad
+ t_0=\min\left\{1,\frac\eta b,
+                    \frac1{\sqrt{2\log(4/\varepsilon)}}\right\}.
+\]
+There is a sample bound polynomial in
+$d,L,K,Q_*,\varepsilon^{-1},\log(2/\delta)$ such that, with probability
+at least $1-\delta$, the unrestricted posterior has Gibbs error at most
+$\varepsilon$, simultaneously for all $N\ge C$ and all
+\[
+ 0<t\le t_0,\qquad \sigma^2=t^2/N.
+\]
+The inverse threshold $t_0^{-1}$ is polynomial in
+$d,L,K,Q_*,\varepsilon^{-1}$. Neither bound depends on the realized
+training sample or on its size through a circular condition.
+\end{theorem}
+
+\begin{proof}
+Use the typical set $T$ and the perturbation estimate from
+Section~\ref{sec:gaussian-distance}. For every width in the statement,
+$tb\le\eta$, so the target shift has raw mass at least
+$\frac12e^{-K/(2\sigma^2)}$. The posterior distance tail is therefore
+\[
+ Q_S\{d_\kappa(w,T)^2>K+1\}
+ \le2e^{-1/(2\sigma^2)}
+ =2e^{-N/(2t^2)}\le\varepsilon/2.
+\]
+Every remaining draw has exactly the same Boolean function as a
+residual of energy at most $K+1$, with training margin greater than
+$3/8$. The single width-independent generalization event underlying
+\eqref{eq:distance-sample-bound} controls all of these residuals
+simultaneously. Choosing its right-hand side at most $\varepsilon/2$
+proves the claim. This sample choice is polynomial: for example, if
+$G=\sqrt{(d+1)/d}[(K+1)/L]^{L/2}$, then a sufficiently large universal
+constant times
+\[
+ [1+G+L+\varepsilon^{-1}+\log(4/\delta)]^{12}
+\]
+suffices. Finally $G\le\sqrt2Q_*$ and $A\le\sqrt eQ_*$ give all the
+stated polynomial dependences. This proof requires no width split,
+because the small-bulk condition has been imposed directly on $t$.
+\end{proof}
+
+\paragraph{A sample bound without an additional depth factor.}
+The global-margin counting theorem gives a sharper choice of sample
+size in Theorem~\ref{thm:small-meanfield-prefactor}. Put
+\[
+ \overline P=\max\left\{1,\frac8{3\sqrt d}
+                  \left(\frac{K+1}{L}\right)^{L/2}\right\}.
+\]
+Rescale the residual readout by $8/3$. Its Boolean function now belongs
+to $\mathcal H_{\overline P}$ from
+Corollary~\ref{cor:all-depth-pf-counting}. Therefore it suffices to use
+\[
+ n\ge\frac2\varepsilon
+   \left[p(\overline P)+\overline P^2\log(d+1)
+                         +\log(2/\delta)\right],
+\]
+for a universal polynomial $p$. In particular, if $K\le L+B$ with
+$B$ independent of the learner depth, then
+\[
+ \overline P\le\max\{1,(8/3)d^{-1/2}e^{(B+1)/2}\}.
+\]
+The required sample size has no remaining learner-depth dependence.
+The sufficient prefactor $t_0$ still depends on $L$, and the original
+critical choice $t=1$ is still excluded. Likewise, when this argument
+is combined with the small-width fallback below, that finite-width
+part retains its polynomial dependence on $L$.
+
+\begin{corollary}[Polynomial product targets at mean-field scaling]
+\label{cor:small-prefactor-product-targets}
+Suppose $f$ has an arbitrary finite-width, depth-$D_0$ tanh
+representation with unit global margin and product norm at most
+$P\ge1$. There are universal polynomials $p,q$ and a universal
+constant $c$ such that, whenever
+\[
+ L\ge D_0+c\log(2+d+D_0+P)
+ \quad\hbox{or}\quad L\ge2D_0,
+\]
+sample size at least
+\[
+ p(d,D_0,P,L,\varepsilon^{-1},\log(2/\delta))
+\]
+gives Gibbs error at most $\varepsilon$ with probability at least
+$1-\delta$, simultaneously for every actual width $N\ge C_L(f)$
+and every mean-field scale
+\[
+ \sigma^2=t^2/N,
+ \qquad 0<t\le
+ q(d,D_0,P,L,\varepsilon^{-1},\log(2/\delta))^{-1}.
+\]
+For a bounded shallow target, or for a Boolean halfspace using
+Theorem~\ref{thm:halfspace-unrestricted-all-depths}, the corresponding
+statement holds at every $L\ge2$, with the same polynomial dependence
+as in those positive theorems. The original critical prior $t=1$
+is not asserted to satisfy this condition.
+\end{corollary}
+
+\begin{proof}
+The width-compression and product-target constructions provide a
+polynomial threshold $M$ and, at all $N\ge M$, unit-margin witnesses
+with $K$ and $Q_*$ polynomial in $d,D_0,P,L$. Apply
+Theorem~\ref{thm:small-meanfield-prefactor} to these widths. The physical
+weight bound in that construction gives $C_L(f)\le M$.
+
+For the remaining interval $C_L(f)\le N<M$, choose an actual
+minimum-width bounded-weight witness and double its readout. It now
+has unit margin and weights at most $2M$. Balanced cloning gives
+unit-margin witnesses throughout this finite width interval with
+energy polynomial in $d,L,M$. The finite-width theorem, with its
+Gaussian-coordinate-box denominator, gives a polynomial sample bound
+uniformly for all $t\le1$. Its constants can be bounded using $M$
+and $2M$, independently of the actual minimum width. Union bound
+this sample event and the large-width event, each with failure
+probability $\delta/2$. Their thresholds are deterministic
+polynomials of the displayed parameters. The same proof applies to
+the bounded shallow and halfspace witnesses at all $L\ge2$.
+\end{proof}

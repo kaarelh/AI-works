@@ -1,0 +1,58 @@
+Independent audit: unrestricted-primary-width-compression.tex and its
+integration with unrestricted-primary-product-targets.tex.
+
+Verdict: PASS. No substantive gap found.
+
+The proof does not rescale tanh homogeneously. It instead drops saturated
+large rows, linearizes genuinely small normalized rows, samples the
+middle rows without changing their incoming weights, and implements the
+linear branch by replicated small-amplitude tanh neurons.
+
+Detailed checks:
+
+* Prefix incoming norm is at most S R because every preceding activation
+  is zero-preserving and one-Lipschitz; no later biases are allowed.
+  Suffix Lipschitz bound P_*/(S A) is valid even when V is hidden, since
+  its following activation is also one-Lipschitz.
+
+* Large-row count and bounded activation give output loss P_*/B=e.
+  Small-row cubic error gives P_* tau^2 R^3/3=e. Middle deletion costs
+  at most P_* R A_m/A, so the threshold Delta is correctly normalized.
+
+* For p_i=(b_i/a_i)/Z, sampled incoming/outgoing squared Frobenius norms
+  are exactly c Ahat and Ahat/c, where c=m/Z. This equality survives
+  repeated indices. Bounded Hilbert-valued differences give a tail with
+  no dependence on either adjacent layer dimension. The stated m has
+  ample constants for both the scalar norm event and all finite-input
+  vector approximation events.
+
+* The small-row linear map has nuclear norm <=sum a_i b_i. Its rank-k
+  operator residual is <=A/(k+1). For its square-root SVD factorization,
+  K replicated channels give actual tanh error at most
+  c nu^2 (S R)^3/(3K), before the remaining suffix. If the middle branch
+  is sampled, Z>=A_m S^2/B^2 and A_m>=Delta A give
+  c nu S^2<=m B^2/Delta. If deleted, the chosen c makes this quantity
+  exactly one. Hence K has no original-width or individual-weight term.
+
+* Concatenating the two branches with the same c gives pair product
+  Ahat+nu <=(1+eta)A by Cauchy--Schwarz. The next compression alters the
+  next layer width without re-expanding an earlier compressed width.
+  Every intermediate full product remains below 2P0. The at-most-six
+  local output errors sum below epsilon. The zero-matrix stop is valid.
+
+* Q, m, k and K have universal polynomial degrees in P0,D0,R,epsilon^-1
+  and log(2|X|). There is no degree depending on D0 and no original
+  dimensional parameter hidden in concentration or SVD estimates.
+
+* On the augmented Boolean cube, compression error 1/4 leaves signed
+  margin >=3/4. Doubling the readout leaves unit margin and product <=4P0.
+  The product-target theorem then removes individual-weight dependence
+  through small-prefix linearization and balanced cloning. Its T and
+  admissible base width are polynomial in the compressed parameters.
+  Therefore the claimed O(log(d+D0+P0)) extra depth and the alternative
+  L>=2D0 condition are both sound, including all actual admissible widths.
+
+Scope: necessity from the posterior ceiling concerns approximating
+functions with low product norm; this sufficiency uses an exact Boolean
+representation and extra depth. The statement correctly avoids claiming
+an equivalence or deriving a polynomial product bound from circuit size.

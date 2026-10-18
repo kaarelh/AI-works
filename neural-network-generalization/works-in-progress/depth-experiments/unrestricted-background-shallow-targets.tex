@@ -1,0 +1,214 @@
+\section{Polynomial unrestricted learning of shallow targets at every depth}
+\label{sec:shallow-unrestricted}
+
+A shallow target can have a small first-layer Gaussian energy at a
+polynomial base width simply by adding zero neurons. Its readout energy
+is then polynomial. Distributing that readout cost over the learner's
+remaining layers makes the product-norm parameter polynomial uniformly
+in depth. This gives a family for which neither arbitrary width nor
+arbitrary added depth requires a robustness restriction.
+
+\begin{theorem}[Shallow targets, all depths and all admissible widths]
+\label{thm:shallow-all-depths}
+Suppose a Boolean target $f:\{-1,1\}^d\to\{-1,1\}$ has a one-hidden-layer
+representation
+\[
+ z(x)=\sum_{j=1}^{C}v_j\tanh(a_j^T\bar x),\qquad
+ \bar x=(1,x),\qquad f(x)z(x)\ge1
+\]
+with every coordinate of $a_j$ and every $v_j$ bounded in absolute value
+by $R\ge1$. Let $C_L(f)$ denote its bounded-weight network complexity
+at depth $L$: the least width $N$ admitting a realization with all
+weights at most $N$ in absolute value and signed output greater than
+$1/2$ everywhere.
+
+For each fixed $\zeta>0$, the original unrestricted Gaussian learner has
+sample complexity polynomial in
+\[
+ d,C,R,L,\varepsilon^{-1},\log(1/\delta),
+\]
+for every specified learner depth $L\ge2$ and every input distribution,
+simultaneously for every width $N\ge C_L(f)$ and every
+$\gamma\ge1+\zeta$. With probability at least
+$1-\delta$ over a sample of that size, posterior Gibbs error is at most
+$\varepsilon$ simultaneously at all these widths and all prior scales
+$0<\sigma^2\le N^{-(1+\zeta)}$. The polynomial's degree may depend on
+$\zeta$. The prior is conditioned only on the original global clean
+margin and the training labels.
+\end{theorem}
+
+\begin{proof}
+Let $A$ have rows $a_j^T$, and set
+\[
+ M=\left\lceil\max\{4,C,2R,d\|A\|_F^2\}\right\rceil,
+ \qquad T=\max\{1,M\|v\|_2^2\}.
+\]
+Both are polynomial in $d,C,R$. Add zero hidden neurons to obtain width
+$M$. This preserves the function, and its first-layer and readout
+energies satisfy
+\[
+ E_{\rm pre}=\frac dM\|A\|_F^2\le1,
+ \qquad c^2=M\|v\|_2^2\le T.
+\]
+In fact $M\|v\|_2^2\ge1$, since unit margin and $|\tanh|\le1$ imply
+$\|v\|_2\ge1/\sqrt C$, but the maximum makes this unneeded.
+
+For any $N\ge M$, balanced cloning of this shallow network preserves its
+output exactly and gives
+\[
+ E_{\rm pre}\le2,\qquad c^2=N\|v_N\|_2^2\le2T.
+\]
+Explicitly, assign each of the $M$ original neurons either
+$\lfloor N/M\rfloor$ or $\lceil N/M\rceil$ clones, copy its incoming
+weights, and divide its readout weight by its number of clones.
+The first cost increases by at most $M\lceil N/M\rceil/N\le2$,
+and the readout cost by at most $N/(M\lfloor N/M\rfloor)\le2$.
+For learner depth $L=2$ we already have a unit-margin witness with
+\[
+ K_2=2+2T,\qquad
+ Q_*^2=\left(\frac{K_2+2}{2}\right)^2=(T+2)^2.
+\]
+
+For $L\ge3$, apply Lemma~\ref{lem:scalar-transmission} with
+$D=4c^2$ and $m=L-1$. Replace the old readout by a layer whose every
+row is $2\alpha v_N^T$. Follow it with the scalar transmission layers,
+implemented by equal coordinates with dense matrix entries $b_s/N$,
+and final readout entries $q/N$, where
+\[
+ q^2=\max\{c^2,1\}^{1/(L-1)}\le(2T)^{1/(L-1)}.
+\]
+The target had margin at least one, hence in particular at least
+$1/2$, so the scalar construction gives margin at least $1/2$.
+Double its final readout to restore margin at least one. This adds
+$3q^2$ to the energy. Thus every width $N\ge M$ has a depth-$L$
+unit-margin witness with
+\[
+ \kappa_N\le K_L:=2+(L+14)(2T)^{1/(L-1)}.
+\]
+Writing $q_*^2=(2T)^{1/(L-1)}\ge1$, we have
+$K_L+2\le(L+18)q_*^2$. Consequently
+\begin{equation}\label{eq:shallow-product-polynomial}
+ Q_*^2=\left(\frac{K_L+2}{L}\right)^L
+ \le e^{18}(2T)^{L/(L-1)}
+ \le e^{18}(2T)^{3/2}\qquad(L\ge3).
+\end{equation}
+The exponent $L/(L-1)$ is at most $3/2$ for $L\ge3$.
+Theorem~\ref{thm:unrestricted-above-one}, with base width $M$, therefore
+provides a sample bound polynomial in the stated quantities for all
+$N\ge M$.
+
+We verify admissible smaller widths rather than silently identifying
+$M$ with the target's minimum complexity. First, $C_L(f)\le M$ for all
+$L\ge2$. At width $M$, the original incoming weights have magnitude
+at most $R\le M/2$. In the added scalar channel,
+$\alpha\le\operatorname{atanh}(1/2)<0.55$, so its first weights
+$2\alpha v_j$ have magnitude at most $1.1R<M$.
+The scalar construction has $b_s\le2.2q$ and final weights $2q/M$.
+Since $T\le MC R^2\le M^4$ and $L\ge3$,
+\[
+ q\le(2T)^{1/4}\le2^{1/4}M,
+ \qquad b_s/M<3\le M,\qquad 2q/M<3\le M.
+\]
+Thus this depth-$L$, width-$M$ circuit satisfies the bounded-weight
+convention and has margin at least one. The case $L=2$ is immediate.
+
+For $C_L(f)\le N<M$, start from a defining width-$C_L(f)$ circuit,
+clone it to width $N$, and double its readout. It has margin greater
+than one, all weights at most $2M$, and Gaussian energy bounded by a
+polynomial in $d,L,M$. The Gaussian box estimate and
+Theorem~\ref{thm:finitewidth-unrestricted} consequently give a sample
+bound polynomial in $d,L,M,\varepsilon^{-1},\log(1/\delta)$,
+simultaneously for all these widths and all $t\le1$.
+Use failure probability $\delta/2$ for this event and $\delta/2$ for
+the preceding event for $N\ge M$. Their intersection proves the claim.
+\end{proof}
+
+The complexity parameter controlling this theorem's sample size is the
+size and weight bound of a \emph{shallow} representation. Its width
+admissibility is the actual depth-$L$ complexity $C_L(f)$. The theorem
+does not identify shallow complexity with the minimum complexity of an
+arbitrary deep circuit, and therefore does not settle the unrestricted
+problem for all small deep circuits. It also makes no claim at $\gamma=1$.
+
+\begin{corollary}[Parity at arbitrary depth and admissible width]
+\label{cor:parity-full-polynomial}
+For every fixed $\zeta>0$, parity of any $k\ge1$ chosen coordinates in
+$\{-1,1\}^d$ has unrestricted Gaussian posterior sample complexity
+polynomial in $d,k,L,\varepsilon^{-1},\log(1/\delta)$, for every
+$L\ge2$, every $N\ge C_L(f)$, and every $\gamma\ge1+\zeta$.
+The bound holds for every input distribution and for the original
+finite-variance posterior.
+\end{corollary}
+
+\begin{proof}
+Let $q=(k-\sum_{i\in S}x_i)/2\in\{0,\ldots,k\}$ count negative
+coordinates, and put $a=\log(16k)$. Define
+\[
+ \tau_j(x)=\tanh\bigl(a(q-j+1/2)\bigr),\qquad 1\le j\le k.
+\]
+Every argument has magnitude at least $a/2$, so
+$|\tau_j-\operatorname{sign}(q-j+1/2)|\le2e^{-a}=1/(8k)$.
+Writing $c_k=1$ for even $k$ and $c_k=0$ for odd $k$, the exact step
+identity is
+\[
+ (-1)^q=c_k+\sum_{j=1}^k(-1)^j
+                  \operatorname{sign}(q-j+1/2).
+\]
+Hence $F=c_k+\sum_j(-1)^j\tau_j$ satisfies
+$|F-(-1)^q|\le1/8$. Represent the constant by one extra hidden neuron
+with augmented-input weight $\operatorname{atanh}(1/2)$ and no other
+incoming weights. A linear readout equal to $2F$ has signed margin
+at least $7/4$. Its threshold-neuron readout weights are $2(-1)^j$,
+and its constant-neuron weight is $4c_k$.
+Its incoming weights have magnitude at most $a(k+1)$.
+Thus $C=k+1$ and $R=\max\{4,a(k+1)\}$ are polynomial in $k$.
+Apply Theorem~\ref{thm:shallow-all-depths}.
+\end{proof}
+
+\begin{corollary}[Symmetric Boolean targets]
+The conclusion of Corollary~\ref{cor:parity-full-polynomial} holds for
+any Boolean function of the Hamming weight of $k$ selected coordinates.
+\end{corollary}
+
+\begin{proof}
+If its values are $h(0),\ldots,h(k)\in\{-1,1\}$, then
+\[
+ h(q)=\frac{h(0)+h(k)}2+
+       \sum_{j=1}^k\frac{h(j)-h(j-1)}2
+                    \operatorname{sign}(q-j+1/2).
+\]
+Each coefficient has magnitude at most one. Replacing the signs by
+the same $\tau_j$ and doubling the output gives margin at least $7/4$,
+using the same width and weight bounds as in the parity proof.
+\end{proof}
+
+
+\begin{corollary}[Polynomial-size DNF and CNF targets]
+A Boolean function on $d$ bits represented by a DNF or CNF with $s\ge1$
+clauses has unrestricted Gaussian posterior sample complexity polynomial
+in $d,s,L,\varepsilon^{-1},\log(1/\delta)$, for every specified $L\ge2$,
+every $N\ge C_L(f)$, and every $\gamma\ge1+\zeta$, with $\zeta>0$ fixed.
+\end{corollary}
+
+\begin{proof}
+For a DNF, let $q_j(x)$ be the number of false literals in clause $j$,
+and put $a=\log(16s)$ and
+$\tau_j(x)=\tanh(a(1/2-q_j(x)))$.
+The exact clause indicator is
+$[1+\operatorname{sign}(1/2-q_j)]/2$.
+Thus
+\[
+ H(x)=s-1+\sum_{j=1}^s\operatorname{sign}(1/2-q_j(x))
+\]
+is $-1$ when no clause is satisfied and at least $1$ otherwise.
+Replacing the signs by $\tau_j$ changes $H$ by at most $1/8$.
+Doubling the resulting expression gives global signed margin at least
+$7/4$. It is a shallow tanh network with $s+1$ features: the extra
+feature is the constant $1/2$, with readout weight $4(s-1)$.
+After removing duplicate literals and discarding contradictory clauses,
+each clause has at most $d$ literals. Each $q_j$ is affine in the bits,
+so the remaining incoming and readout weights have magnitude at most
+$R=\max\{4s,a(d+1)\}$. The shallow-target theorem applies.
+A CNF is the negation of a DNF in negated literals, and negating the
+readout preserves every bound. Constant functions are immediate.
+\end{proof}

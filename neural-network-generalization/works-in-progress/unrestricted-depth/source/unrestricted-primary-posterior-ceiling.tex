@@ -1,0 +1,225 @@
+\section{A posterior energy ceiling and a necessary representation condition}
+\label{sec:posterior-energy-ceiling}
+
+The following argument identifies a necessary condition for the desired
+jointly polynomial unrestricted learning theorem. It concerns the actual
+finite Gaussian scales above exponent one, not just a cold limit.
+Throughout, the prior is conditioned on the original global clean margin
+$|z(x)|>1/2$ and on the observed training signs.
+
+\begin{lemma}[A uniform memorizing witness]
+\label{lem:uniform-memorizing-witness}
+For integers $d,n\ge1$, there are explicitly polynomial quantities
+$M=M(d,n)$ and $T=T(d,n)\ge1$ such that every consistently labeled sample
+of at most $n$ Boolean inputs admits a globally unit-margin interpolating
+network at every width $N\ge M$ and every depth $L\ge3$, with energy at most
+\[
+ K=2+(L+14)(2T)^{1/(L-1)}.
+\]
+One may take
+\[
+ C=n+1,\quad
+ R=\max\{4(n+1),(d+1)\log(16(n+1))\},
+\]
+\[
+ M=\left\lceil\max\{4,C,2R,dC(d+1)R^2\}\right\rceil,
+ \qquad T=MCR^2.
+\]
+In particular, if $L-1\ge\log(2T)$, then
+\[
+ K\le L+B(d,n),\qquad B(d,n)=16+32\log(2T)=O(\log(d+n)).
+\]
+\end{lemma}
+
+\begin{proof}
+Let $p_1,\ldots,p_m$ be the distinct negatively labeled sample points,
+where $0\le m\le n$. Set $a=\log(16(n+1))$ and
+\[
+ q_j(x)=\frac{d-p_j\cdot x}{2},\qquad
+ \tau_j(x)=\tanh\bigl(a(1/2-q_j(x))\bigr).
+\]
+Each $q_j$ is a nonnegative integer on the cube and is zero exactly at
+$p_j$. Thus $\tau_j$ differs by at most $2e^{-a}$ from the sign which
+equals $+1$ at $p_j$ and $-1$ elsewhere. Since the $p_j$ are distinct,
+\[
+ z(x)=-2\left[m-1+\sum_{j=1}^m\tau_j(x)\right]
+\]
+has the desired interpolating signs, equals $+2$ or $-2$ in the ideal
+sign-feature limit, and differs from those values by at most
+$4me^{-a}<1/4$. The formula also gives the constant $+2$ when $m=0$.
+Implement its constant term using a first-layer constant feature $1/2$,
+whose input bias is $\operatorname{atanh}(1/2)$. Pad with zero neurons
+to $C=n+1$. Every physical weight is bounded by the stated $R$, and the
+global signed margin is greater than $7/4$.
+
+Zero-padding this shallow network to $M$ makes its first-layer energy
+at most one and its weighted readout energy at most $T$. Balanced
+cloning to any $N\ge M$ gives first energy at most two and readout
+energy at most $2T$. The scalar-transmission construction of
+Lemma~\ref{lem:scalar-transmission},
+applied to this one-hidden-layer witness, gives the displayed bound
+at every $L\ge3$.
+
+For the final assertion, put $u=\log(2T)/(L-1)\le1$. The inequality
+$e^u\le1+2u$ on $[0,1]$, and
+$(L+14)/(L-1)\le16$, give
+\[
+ 2+(L+14)e^u\le L+16+32\log(2T).
+\]
+\end{proof}
+
+\begin{theorem}[A finite-scale posterior energy ceiling]
+\label{thm:posterior-energy-ceiling}
+Fix $d,n\ge1$, $L\ge3$, $\zeta>0$, and $0<\beta<1$. Use the quantities
+$M,T,K$ above and put
+\[
+ Q_* = ((K+2)/L)^{L/2}.
+\]
+There is a width threshold polynomial in
+$d,n,L,\log(2/\beta)$, with degree depending only on $\zeta$,
+such that at every width above this threshold and every
+$0<\sigma^2\le N^{-(1+\zeta)}$, the following holds for \emph{every}
+consistently labeled sample of size at most $n$.
+
+With posterior probability at least $1-\beta$, the posterior Boolean
+function has a same-width, same-depth realization with global signed
+margin greater than $3/8$ and energy at most $K+1$.
+Rescaling its readout gives a unit-margin realization at the same
+width and depth, with product of layer Frobenius norms bounded by
+\[
+ P_F^2\le d^{-1}e^{19}(2T)^{3/2}.
+\]
+Alternatively, it has a same-width realization at depth $L+1$, with
+unit margin and energy at most $K+82/9$.
+
+When $L-1\ge\log(2T)$, the last energy bound is
+$L+O(\log(d+n))$.
+\end{theorem}
+
+\begin{proof}
+Use Gaussian energy coordinates
+$A_1=\sqrt{d/N}W^1$, $A_s=W^s$ internally, and $A_L=\sqrt N v$.
+Their entries are independent $\mathcal N(0,\sigma^2)$ and their squared
+Euclidean norm is $\kappa_N$. Write $t^2=N\sigma^2$.
+
+We recall the explicit estimates from the Gaussian-distance bridge.
+There is a closed, convex, centrally symmetric Gaussian set
+$\mathcal T$ of probability at least $1/2$ whose normalized block
+operator norms are at most $tb$, where
+\[
+ b^2=\max\{2(d+1)\log2+4\log8,
+                    16\log9+8\log(8L)\}.
+\]
+Put
+\[
+ A=\left(\frac{K+2}{L-1}\right)^{(L-1)/2},\qquad
+ \xi=\min\left\{1,\frac1{4\sqrt{L(K+1)}},
+                         \frac1{8\sqrt2 LA}\right\}.
+\]
+If $tb\le\xi$, adding any $B\in\mathcal T$ to any network of energy
+at most $K+1$ changes its output uniformly on the cube by at most $1/8$.
+This follows by telescoping the layer perturbations and applying
+arithmetic--geometric mean to the other $L-1$ layer norms.
+
+For the realized sample, choose the unit-margin memorizing witness
+$w_S$ above. Its shifted set $w_S+\mathcal T$ lies in the conditioning
+event. Central symmetry and the Gaussian shift identity give
+\[
+ \mu(w_S+\mathcal T)\ge\tfrac12 e^{-K/(2\sigma^2)}.
+\]
+Gaussian isoperimetry gives
+$\mu\{\operatorname{dist}_\kappa(w,\mathcal T)^2>K+1\}
+\le e^{-(K+1)/(2\sigma^2)}$. Dividing yields
+\[
+ Q_S\{\operatorname{dist}_\kappa(w,\mathcal T)^2>K+1\}
+       \le2e^{-1/(2\sigma^2)}.
+\]
+On the complementary event, subtract the metric projection of $w$
+onto $\mathcal T$. The residual $U$ has energy at most $K+1$, and
+its output differs by at most $1/8$ everywhere. The original clean
+margin is greater than $1/2$, so the residual has the same Boolean
+function and margin greater than $3/8$. Multiplying its readout by
+$8/3$ gives unit margin without changing its depth.
+Lemma~\ref{lem:one-layer-margin-transfer} adds at most $73/9$ energy
+to obtain unit margin at one extra layer.
+
+It suffices to take
+\[
+ N\ge\left\lceil\max\left\{M,2,(b/\xi)^{2/\zeta},
+                                   2\log(2/\beta)\right\}\right\rceil.
+\]
+Indeed, $t\le N^{-\zeta/2}$ and $\sigma^{-2}\ge N$, so both estimates
+hold simultaneously for every permitted scale. Since
+$A\le\sqrt e Q_*$, this is a polynomial threshold in those quantities.
+In fact, put $q^2=(2T)^{1/(L-1)}\ge1$. Since
+$K+2\le(L+18)q^2$, one has for every $L\ge3$
+\[
+ Q_*^2\le e^{18}(2T)^{L/(L-1)}
+          \le e^{18}(2T)^{3/2}.
+\]
+Thus the threshold is polynomial in $d,n,L,\log(2/\beta)$ for all
+the stated depths. Since $K+1\le(L+17)q^2$, the same-depth residual
+and arithmetic--geometric mean give, after rescaling the readout,
+\[
+ dP_F^2\le\frac{64}{9}\left(\frac{K+1}{L}\right)^L
+ \le\frac{64}{9}e^{17}(2T)^{L/(L-1)}
+ \le e^{19}(2T)^{3/2}.
+\]
+The additive-excess conclusion follows from the memorizing-witness
+lemma. All constants and the set $\mathcal T$ are uniform over the
+realized sample; only the translating witness depends on its labels.
+\end{proof}
+
+\begin{corollary}[Approximation-energy barriers force posterior error]
+\label{cor:approximation-energy-obstruction}
+Let $f$ and its input distribution $D$ be arbitrary. Under the conditions
+of Theorem~\ref{thm:posterior-energy-ceiling}, suppose
+\[
+ \mathcal E_{L+1,1}(f;\epsilon)>K+82/9.
+\]
+Then, for every realized sample of at most $n$ examples labeled by $f$,
+the posterior Gibbs error is at least $(1-\beta)\epsilon$.
+The same conclusion holds if no globally unit-margin depth-$L$
+network with $P_F^2\le d^{-1}e^{19}(2T)^{3/2}$ has $D$-error less
+than $\epsilon$, allowing arbitrary finite widths.
+If $p_S(x)$ is the posterior probability of the correct label, then
+\[
+ \Pr_D\{p_S(X)\le2/3\}
+ \ge \max\left\{0,\frac{3(1-\beta)\epsilon-1}{2}\right\}.
+\]
+Conversely, if some sample gives posterior Gibbs error at most $r$,
+then for every $r'>r/(1-\beta)$,
+\[
+ \mathcal E_{L+1,1}(f;r')\le K+82/9.
+\]
+There is also a globally unit-margin approximation of error less than
+$r'$ at the original depth $L$, with
+$P_F^2\le d^{-1}e^{19}(2T)^{3/2}$.
+\end{corollary}
+
+\begin{proof}
+The energy ceiling puts posterior mass at least $1-\beta$ on Boolean
+functions with unit-margin representatives of energy at most $K+82/9$.
+Under the barrier, every such function has error at least $\epsilon$.
+The same posterior event has the same-depth product-norm realization
+in the theorem, proving the alternative barrier statement.
+For the confidence claim, if the displayed confidence-error probability
+is $e$, then Gibbs error is at most $(1-e)/3+e$.
+For the converse, condition the posterior on its event of mass at least
+$1-\beta$. Its average error is at most $r/(1-\beta)$, so for every
+larger $r'$ it contains a function of error less than $r'$.
+\end{proof}
+
+Thus a jointly polynomial sample theorem for all small deep targets
+would imply a representation theorem at every $L\ge3$: every target
+learned with polynomially many samples must admit a constant-error,
+unit-margin approximation at the same depth $L$ whose product of layer
+Frobenius norms is polynomial in the target parameters and $d$.
+At depths sufficiently large
+compared with $\log(d+n)$, every such target must admit a constant-error
+approximation of energy $L+O(\log(d+n))$ at depth $L+1$. In particular,
+if $n$ is polynomial in $d,C,L$, the required excess energy is only
+$O(\log(d+C+L))$. This conclusion does not depend on choosing the
+product-norm proof strategy for the upper bound; it is forced by the
+posterior itself. No example of a small target violating this necessary
+condition has been established here.

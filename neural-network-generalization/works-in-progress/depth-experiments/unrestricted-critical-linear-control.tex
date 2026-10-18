@@ -1,0 +1,76 @@
+\section{A solvable comparison model: flattening can preserve kernel ordering}
+\label{sec:linear-control-comparison}
+
+The following auxiliary model isolates an obstruction to inferring
+posterior behavior from the preceding flattening theorem. It is a
+Gaussian covariance-control model, not an identification of the tanh
+network's critical rate.
+
+Fix a positive-definite matrix $K$ on a finite input set and an integer
+$H\ge0$. For a nonzero output vector $z$, define
+\[
+ I_{H,K}(z)=\inf_{Q_1,\ldots,Q_H\succ0}
+ \left\{\sum_{j=1}^H D\bigl(\mathcal N(0,Q_j)
+                  \Vert\mathcal N(0,Q_{j-1})\bigr)
+           +\frac12z^TQ_H^{-1}z\right\},\qquad Q_0=K.
+\]
+There is no tanh transition in this definition.
+
+\begin{proposition}[Exact Gaussian covariance-control value]
+\label{prop:linear-control-value}
+Put $s=z^TK^{-1}z$. For $H\ge1$, let $a>1$ be the unique solution of
+\[
+ s=a^H(a-1).
+\]
+Then
+\[
+ I_{H,K}(z)=\frac12\{H(a-1-\log a)+(a-1)\}.
+\]
+For $H=0$ the value is $s/2$. For every fixed $H$ the value is strictly
+increasing in $s$, while for every fixed $s>0$ it tends to zero as
+$H\to\infty$.
+\end{proposition}
+
+\begin{proof}
+Apply the invertible transformation $K^{-1/2}$ to all Gaussian vectors
+and to $z$. Relative entropy is unchanged, so the initial covariance
+becomes the identity. Write $u=K^{-1/2}z/\sqrt{s}$ and
+$q_j=u^T(K^{-1/2}Q_jK^{-1/2})u$, with $q_0=1$.
+Data processing under projection onto $u$ gives
+\[
+ D\bigl(\mathcal N(0,Q_j)\Vert\mathcal N(0,Q_{j-1})\bigr)
+ \ge\frac12\left\{\frac{q_j}{q_{j-1}}-1
+                     -\log\frac{q_j}{q_{j-1}}\right\}.
+\]
+Cauchy--Schwarz gives $z^TQ_H^{-1}z\ge s/q_H$.
+Both inequalities are attained simultaneously by keeping the covariance
+equal to the identity on $u^\perp$ and changing only its variance on
+$u$. Hence, putting $b_j=\log(q_j/q_{j-1})$, the exact value is
+\[
+ \inf_{b_1,\ldots,b_H\in\mathbb R}
+ \frac12\left\{\sum_{j=1}^H(e^{b_j}-1-b_j)
+                    +s\exp\left(-\sum_{j=1}^H b_j\right)\right\}.
+\]
+At a fixed sum of the $b_j$, Jensen's inequality makes them all equal.
+The remaining strictly convex scalar objective has derivative zero
+exactly when $a-1=s a^{-H}$. Substitution gives the formula.
+Strict monotonicity follows by differentiating the minimized objective
+with respect to $s$, giving derivative $1/(2a^H)>0$.
+For convergence to zero, take every $b_j=2\log H/H$ for $H\ge2$.
+Then the transition cost is $O((\log H)^2/H)$ and the readout cost is
+$s/(2H^2)$.
+\end{proof}
+
+For a prescribed sign pattern $f$ and margin $r>0$, minimize this value
+over $f(x)z(x)\ge r$. Its minimizers are exactly the minimizers of
+$z^TK^{-1}z$ under those constraints, at every $H$. The same is true
+when only training-point sign constraints are imposed. Thus this
+comparison model has rates that flatten to a common value while its
+minimum-rate sign predictions retain the kernel minimum-norm ordering
+at every finite depth.
+
+This demonstrates why absolute flattening alone cannot answer the
+target-relative question for the actual tanh learner. To use this model
+as more than a comparison one would have to control the nonlinearity
+and arbitrary non-Gaussian feature-law controls at the scale of the
+remaining rate differences. No such comparison is established here.

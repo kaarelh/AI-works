@@ -1,0 +1,55 @@
+\section{Output scale and membership in the restricted prior}
+\label{sec:output-rescaling}
+
+The restriction is a property of a parameterized predictor. It is not a
+property of its Boolean sign function alone. This matters when comparing
+networks trained with different losses or readout conventions.
+
+\begin{proposition}[Every strictly signed finite-domain predictor can be rescaled]
+\label{prop:output-rescaling}
+Fix a finite input domain and a tanh network whose clean outputs obey
+$a:=\min_x|z_w(x)|>0$. Write
+\[
+ B_s=\prod_{j=s+1}^{H}\|W^j\|_{\rm op},\qquad
+ B=c\max\left\{1,
+                 \sqrt{\frac1H\sum_{s=1}^{H}B_s^2}\right\},
+\]
+where an empty product is one. Keep every hidden weight fixed and replace
+the readout by $\lambda v$. If $\lambda a>1/2+B$, the resulting network
+satisfies the global clipped-score condition with \emph{zero} score
+change, at the radius prescribed for its new readout. It also satisfies
+the weaker margin-band condition.
+\end{proposition}
+
+\begin{proof}
+The $1$-Lipschitz property of tanh and layerwise propagation give, for
+every simultaneous disturbance,
+\[
+ |z_{\lambda v}(x;\eta)-\lambda z_v(x)|
+ \le \|\eta\|_*
+       \sqrt{1+\lambda^2 E_v\sum_{s=1}^{H}B_s^2}.
+\]
+At the calibrated radius this is at most
+\[
+ c\sqrt{\frac{1+\lambda^2 E_v\sum_s B_s^2}
+                 {1+\lambda^2 H E_v}}
+ \le B.
+\]
+Thus clean and noisy outputs remain beyond the same clipping endpoint
+at every input. Both bounded scores are constant there.
+\end{proof}
+
+This observation does not supply a polynomial sample theorem for arbitrary
+small analog circuits. The sufficient $\lambda$ can be exponentially large
+in depth, or large because of a tiny minimum output on the finite domain.
+Its readout energy becomes $\lambda^2E_v$, and the Gaussian probability
+cost is charged accordingly. The main theorem instead constructs a robust
+target implementation with polynomial probability cost. The empirical
+protocol retains the actual trained readout and does not rescale a saved
+model to make the condition pass.
+
+Likewise, a larger allowed inverse-polynomial factor in the noise radius
+is a meaningful calibration choice only when it is stated. The theorem
+allows such choices because it tracks polynomial dependence on $c^{-1}$;
+it does not turn an exponentially small required noise radius into a
+polynomial-depth guarantee.

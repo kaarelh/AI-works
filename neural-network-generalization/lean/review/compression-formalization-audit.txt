@@ -1,0 +1,51 @@
+Compression formalization audit (2026-10-18)
+
+The main formal proof does not assume an entropy-compression oracle. The actual
+construction consists of measurable finite query selection from the actual
+conditional current-block law, an actual finite query message, iid source-bank
+sampling, and an explicit Gaussian residual kernel. All canonical reconstruction
+laws are independent of the test input. The comparison law may depend on that
+input, but its candidate marginal is exactly the common canonical law.
+
+Important formalization details:
+
+1. The current-block law is conditioned on both the canonical prefix and the
+   entire remaining original future. It is not assumed independent of either.
+   Future entropy grows by at most the logarithm of the finite message count.
+
+2. The Gaussian transport estimate is implemented through an elementary two-scale
+   argument. In the small-variance regime it uses the actual entropy second-moment
+   bound; in the large-variance regime it uses the constructed sequential scalar
+   maximal coupling and Pinsker bound. The selected residual KL budget is
+   N*delta^3/t^2, and the actual activation discrepancy is at most 14*N*delta.
+   This changes the polynomial exponent, not the stated polynomial conclusion.
+
+3. Zero residual directions have an independent dummy Gaussian. This avoids the
+   false claim that a deterministic zero residual has finite KL against a
+   nondegenerate standard Gaussian, while preserving the full original field.
+
+4. Gaussian covariance is totalized on bad source banks only inside the comparison
+   construction. The literal canonical coefficient law remains unchanged. Its
+   decoded state agrees exactly with the comparison law because both branches
+   enter the same absorbing abort state off the good event.
+
+5. The path error is charged only on successful states. Arbitrary aborted paths
+   are not claimed to have small unconditional squared disturbance. The final
+   failure bound separately includes the abort probability and the successful
+   disturbance Markov bound.
+
+6. The actual full original row-and-dummy comparison cost is bounded in
+   RobustCompressionSelectedRawCostResources.actual_selected_raw_cost_resources.
+   RobustCompressionSelectedLocalCost.selectedLayerJoint_liveLocalCost_le pushes
+   this exact law through the actual old/new state decoder and divides by N,
+   obtaining integral liveLocalCost <= ofReal(10/inverseLayerError).
+
+7. The readout discrepancy is included in the full reconstruction cost. The final
+   allocation reserves hidden cost radius^2/8 and readout error radius/8, rather
+   than incorrectly spending the complete radius^2/4 on the hidden path alone.
+
+The local-cost theorem was checked with Lean 4.32.0 and built through Lake.
+The theorem is unconditional apart from the actual current-law entropy bound and
+its actual PrefixSelection, both supplied by the separately constructed recursive
+program. The final main theorem must instantiate this recursive program and must
+not retain LargeWidthRawCompression as a hypothesis.

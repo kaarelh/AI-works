@@ -1,0 +1,166 @@
+% Standalone theorem/proof fragment. Uses amsmath, amssymb, amsthm.
+\section{A depth-independent Gaussian result for the simplest targets}
+\label{sec:simpletargets}
+
+The norm-capacity obstruction does not automatically make even the simplest
+targets hard for the specified Gaussian prior. In fact constants and dictators
+have a depth-independent sample bound in the strong-prior limit.
+
+\begin{theorem}
+Fix $d\ge1$, $N\ge1$, and $L\ge2$, with tanh hidden activations, the constant
+input coordinate, and a linear readout as in the main paper. Let
+\[
+ \mathcal M_d=\{+1,-1,+x_1,-x_1,\ldots,+x_d,-x_d\}.
+\]
+Among all Boolean functions implemented with the all-input strict margin
+$1/2$, the functions of smallest weighted norm are exactly $\mathcal M_d$.
+Their common infimum norm value depends on $d,L$ but not on $N$.
+
+Consequently, for every $f\in\mathcal M_d$ and every $\varepsilon,\delta\in(0,1)$,
+there is $\sigma_0>0$ such that the original globally margin-conditioned
+Gaussian posterior has posterior-draw risk at most $\varepsilon$, with
+probability at least $1-\delta$, whenever
+\[
+ 0<\sigma<\sigma_0,\qquad
+ n\ge\frac2\varepsilon
+       \left(\log(2(d+1))+\log\frac1\delta\right).
+\]
+The guarantee holds for arbitrary input distributions on the Boolean cube.
+The sample bound is independent of depth and learner width.
+The variance threshold may depend on $d,L,N,\varepsilon,f$; no uniform
+threshold over depths or widths is asserted.
+\end{theorem}
+
+\begin{proof}
+First, the function $Q(u)=\tanh^2\sqrt u$ is strictly increasing and strictly
+concave for $u\ge0$. To see concavity, put $t=\sqrt u>0$ and $y=\tanh t$.
+A direct derivative computation gives
+\[
+ Q''(u)=\frac{1-y^2}{2t^3}\bigl[t(1-3y^2)-y\bigr]<0.
+\]
+Indeed $y-t(1-y^2)>0$ for $t>0$, since it vanishes at zero and has derivative
+$2ty(1-y^2)>0$; hence the bracket is less than $-2ty^2$.
+The continuous extension at zero preserves concavity.
+Jensen's inequality therefore implies, for every $v\in\mathbb R^N$,
+\begin{equation}\label{eq:tanh-rms}
+ \frac{\|\tanh v\|_2}{\sqrt N}
+ \le\tanh\!\left(\frac{\|v\|_2}{\sqrt N}\right).
+\end{equation}
+
+For any network weights define
+\[
+ a=\frac{\|W^1\|_F}{\sqrt N},\qquad
+ b_s=\|W^s\|_F\ (2\le s<L),\qquad
+ c=\sqrt N\|v\|_2.
+\]
+Their weighted squared norm is
+\[
+ \kappa_N=d a^2+\sum_{s=2}^{L-1}b_s^2+c^2.
+\]
+Define the scalar recursion $r_1=\tanh a$, $r_s=\tanh(b_s r_{s-1})$ for
+$2\le s<L$, and let $F(a,b,c)=c r_{L-1}$.
+Let $K_*(d,L)$ be the minimum of the displayed cost over nonnegative
+$(a,b_2,\ldots,b_{L-1},c)$ with $F\ge1/2$.
+The minimum exists: the constraint is closed and nonempty and the cost is
+coercive. Every feasible tuple has all entries positive. At a minimizer,
+$F=1/2$, since otherwise decreasing $c$ lowers the cost.
+
+Every tuple is realized by a constant-channel network: all first-layer rows
+have weight $a$ on the constant input and zero elsewhere; every entry of
+$W^s$ is $b_s/N$; and every readout entry is $c/N$.
+Its output is the constant $F$ and its norm is the stated cost, at every width.
+Moving the first-layer weight from the constant input to input $x_i$ gives
+output $F x_i$ by oddness of tanh; negating the readout gives the negative
+functions. Thus all members of $\mathcal M_d$ have infimum norm at most $K_*$,
+with strict margins obtained by an arbitrarily small increase of the readout.
+
+Conversely, consider a network with $|z_w(x)|\ge1/2$ at every Boolean input.
+For uniform $x$ on the Boolean cube and $\bar x=(1,x)$,
+\[
+ \mathbb E_x\frac{\|W^1\bar x\|_2^2}{N}
+ =\frac{\|W^1\|_F^2}{N}=a^2.
+\]
+There is therefore an $x_*$ with
+$\|W^1\bar x_*\|_2/\sqrt N\le a$.
+Apply \eqref{eq:tanh-rms} at each hidden layer, the inequality
+$\|Wh\|_2\le\|W\|_F\|h\|_2$ at each internal affine map, and Cauchy--Schwarz
+at the readout. These give
+\[
+ \frac12\le|z_w(x_*)|\le F(a,b,c).
+\]
+Thus its norm is at least $K_*$. In particular, the members of
+$\mathcal M_d$ have exactly the global infimum norm $K_*$.
+
+We check the equality case to exclude all other Boolean functions.
+Suppose a globally margin-$1/2$ network has norm exactly $K_*$.
+Its associated scalar tuple minimizes the scalar problem, so $F=1/2$.
+All parameters in that tuple are positive, so the scalar recursion is strictly
+increasing in the first preactivation RMS.
+Choose $x_*$ minimizing that RMS. If its value were strictly less than $a$,
+then the preceding chain would yield $|z_w(x_*)|<1/2$.
+Hence the minimum RMS equals its quadratic mean $a$, so
+\[
+ \frac{\|W^1\bar x\|_2}{\sqrt N}=a
+ \quad\text{for every Boolean }x.
+\]
+For every input, the entire output bound is consequently an equality:
+$|z_w(x)|=F=1/2$. In particular the first hidden vector has the fixed nonzero
+norm $\sqrt N\tanh a$.
+If $L=2$, equality in readout Cauchy--Schwarz says that all first hidden
+vectors are collinear with the same nonzero readout vector.
+If $L\ge3$, equality in
+$\|W^2h^1(x)\|_2\le\|W^2\|_F\|h^1(x)\|_2$ says the same: every nonzero row
+of $W^2$ is collinear with $h^1(x)$, and $W^2\ne0$.
+Thus, fixing any reference input $x_0$, there is
+$\epsilon(x)\in\{-1,1\}$ with
+\[
+ h^1(x)=\epsilon(x)h^1(x_0).
+\]
+Oddness and injectivity of tanh imply
+$W^1\bar x=\epsilon(x)W^1\bar x_0$.
+Choose a nonzero coordinate of $W^1\bar x_0$; the corresponding first-layer
+affine form therefore has constant nonzero absolute value on the cube.
+An affine form $\alpha_0+\sum_i\alpha_i x_i$ with constant squared value can
+have only one nonzero coefficient: expanding its square forces
+$\alpha_0\alpha_i=0$ and $\alpha_i\alpha_j=0$ for $i\ne j$.
+Therefore $\epsilon$ is a signed constant or dictator.
+Every remaining layer is odd, so $z_w(x)=\epsilon(x)z_w(x_0)$, proving that
+its Boolean function belongs to $\mathcal M_d$.
+
+The strict-margin infimum causes no missing equality case.
+For each representable Boolean function $g$, replace strict constraints by
+$g(x)z_w(x)\ge1/2$. The relaxed feasible set is closed and its minimum norm
+is attained by coercivity in the finite-dimensional parameter space.
+Its minimum equals the strict infimum: scaling the readout by $1+\eta$ gives
+strict feasibility with norm converging to the relaxed value as $\eta\downarrow0$.
+Consequently every representable $g\notin\mathcal M_d$ has
+$\kappa_N(g)>K_*$.
+
+Finally, the small-variance Gaussian calculation in
+Section~\ref{sec:strong-limit}, applied to the open strict-margin
+implementation sets $U_{N,g}$, gives
+\[
+ \frac{\mu_{N,\sigma}(U_{N,g})}
+      {\mu_{N,\sigma}(U_{N,f})}\longrightarrow0
+ \quad\text{when }\kappa_N(g)>\kappa_N(f).
+\]
+There are finitely many Boolean functions. Therefore, for $f\in\mathcal M_d$,
+\[
+ \frac{\pi_{N,\sigma}(\mathcal M_d^c)}{\pi_{N,\sigma}(f)}\longrightarrow0.
+\]
+Choose $\sigma_0$ so that this ratio is at most $\varepsilon/2$.
+At the displayed sample size, a union bound shows that, with probability
+$1-\delta$, every consistent member of $\mathcal M_d$ has error at most
+$\varepsilon/2$. The posterior mass outside $\mathcal M_d$ is at most
+$\pi_{N,\sigma}(\mathcal M_d^c)/\pi_{N,\sigma}(f)\le\varepsilon/2$,
+because $f$ is always consistent. Averaging errors proves the claimed
+posterior risk guarantee.
+\end{proof}
+
+\paragraph{Scope.}
+This is a result for the actual independent Gaussian prior in the strong-prior
+limit, with the all-input margin conditioning retained. It does not settle
+arbitrary circuit-simple targets, the specified nonzero variances in the
+$\gamma\ge1$ papers, or a width/depth-uniform variance threshold.
+It shows specifically why a uniform-truth-table low-norm prior counterexample
+with a constant target cannot simply be transferred to this Gaussian prior.

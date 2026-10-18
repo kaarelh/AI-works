@@ -1,0 +1,124 @@
+% Standalone theorem/proof fragment. Uses amsmath, amssymb, amsthm.
+\section{Polynomial-overhead robustification}
+\label{sec:digitize}
+
+\begin{proposition}
+Suppose a width-$C$, depth-$L$ tanh network, with every weight bounded in
+absolute value by $C$, implements $f:\{-1,1\}^d\to\{-1,1\}$ with strict
+output margin $1/2$. Then $f$ has a tanh implementation of width and depth
+polynomial in $(d,C,L)$ that tolerates simultaneous adversarial hidden-layer
+activation perturbations of inverse-polynomial RMS size.
+More precisely, there is a fan-in-two Boolean circuit for $f$ of size
+$S=\operatorname{poly}(d,C,L)$. Put
+\[
+ W=\max\{8,d+S+1\},\qquad D=S+2.
+\]
+There is a width-$W$, depth-$D$ tanh network, all of whose weights have absolute
+value at most $8$, such that every sequence of post-activation injections with
+\[
+ \|\zeta^s\|_2\le\frac18\quad(1\le s<D),\qquad
+ |\zeta^{\rm out}|\le\frac1{8\sqrt W}
+\]
+preserves signed output margin strictly greater than $5/8$, on every Boolean
+input. Its weighted norm is at most
+\[
+ \frac{64d(d+1)}W+192SW+W.
+\]
+At every width $N\ge W$, cloning preserves this guarantee at RMS radius
+$1/(8\sqrt{2W})$ and increases weighted norm by at most a factor of two.
+The construction allows polynomial depth and width overhead; it makes no
+claim at the original depth $L$ or every original width $N\ge C$.
+\end{proposition}
+
+\begin{proof}
+We first replace the analog computation by a finite Boolean computation.
+Round every parameter to absolute precision $\eta=2^{-p}$. Evaluate each
+hidden tanh to precision $\eta$ and clip its approximation into $[-1,1]$;
+evaluate the readout to the same precision. If $E_s$ is the maximum coordinate
+error after layer $s$, the first hidden layer satisfies
+$E_1\le(d+2)\eta$, and the subsequent layers and readout satisfy
+\[
+ E_s\le C^2E_{s-1}+(C+1)\eta.
+\]
+This follows by writing each affine error as the original weights times
+activation errors, plus weight errors times bounded approximate activations.
+The clipping operation does not increase the approximation error.
+It suffices to choose
+\[
+ 2^{-p}\,[d+2+L(C+1)](C^2+1)^{L-1}\le\frac18.
+\]
+Thus $p=O(L\log(C+1)+\log(d+L+1))$ bits suffice, and the final sign is unchanged.
+The rounded parameters are hardwired constants; no efficient description of
+the original real numbers is required.
+
+Here is an elementary polynomial-cost tanh evaluation algorithm. For a dyadic
+argument $t$ with $|t|\ge p+2$, return its sign; the error is less than $2^{-p}$.
+Otherwise set $x=2|t|\le2(p+2)$ and approximate $e^{-x}$ by its degree
+$m=16(p+2)$ Taylor polynomial. Its error is at most
+\[
+ \frac{x^{m+1}}{(m+1)!}
+ \le\left(\frac{ex}{m+1}\right)^{m+1}
+ \le(e/8)^{m+1}<2^{-p-4}.
+\]
+The Taylor sum can be evaluated exactly using the common denominator
+$2^{bm}m!$, where $b$ is the number of fractional bits of $x$.
+All integers involved have polynomial bit length, even though some Taylor
+terms are large and cancel. Round and clip the answer into $[0,1]$, then use
+$(1-u)/(1+u)$ and oddness to obtain $\tanh t$.
+This rational map has derivative of magnitude at most $2$ on $[0,1]$, so a
+constant number of guard bits gives the required accuracy. Integer addition,
+multiplication, comparison, and division have polynomial-size Boolean
+circuits. Applying this algorithm throughout the rounded network gives a
+Boolean circuit of size $S=\operatorname{poly}(d,C,L)$ for $f$.
+
+We now simulate that circuit by noisy tanh gates. Express bits as $\pm1$, and
+carry a constant $+1$ channel. Use
+\[
+ \begin{array}{ll}
+ \mathrm{COPY}(a)=\tanh(8a),&\mathrm{NOT}(a)=\tanh(-8a),\\
+ \mathrm{AND}(a,b)=\tanh(8(a+b-c)),&
+ \mathrm{OR}(a,b)=\tanh(8(a+b+c)),
+ \end{array}
+\]
+where $c$ is the constant channel, itself updated by $\tanh(8c)$.
+Simplify gates with repeated or constant inputs beforehand, so each displayed
+nonzero edge has magnitude $8$.
+If all incoming signals are within $1/4$ of their ideal values, the signed
+affine expression for AND and OR is at least $1-3/4=1/4$; COPY and NOT have
+larger margin. Consequently each gate output is within
+$1-\tanh2<1/8$ of its ideal value. Adding any coordinate perturbation of
+magnitude at most $1/8$ leaves the error strictly below $1/4$.
+This invariant holds at arbitrarily many layers, with no accumulated error.
+
+Use one Boolean gate per hidden layer and copy all previously computed
+signals forward. The first hidden layer initializes the input signals and
+constant from $\tanh(8x_i)$, including $x_0=1$.
+The $W$ channels accommodate all inputs, gate outputs, and the constant.
+Unused channels have zero outgoing weights until used.
+Each hidden-layer Euclidean noise budget $1/8$ bounds every coordinate
+injection by $1/8$, so the invariant applies. Read out the desired final
+signal with coefficient one. It has signed value greater than $3/4$; the
+output injection is at most $1/8$, leaving signed margin greater than $5/8$.
+The first layer has $d+1$ nonzero edges, each of the $S$ gate layers has at
+most $3W$ nonzero edges, and the readout has one edge. This gives the stated
+weighted norm.
+
+Finally, at width $N\ge W$ use $k=\lfloor N/W\rfloor$ copies of each hidden
+neuron, divide outgoing weights by $k$, and leave the remaining channels dead.
+Clone-group means obey exactly the original computation with averaged
+post-activation injections. Their Euclidean noise norm is at most
+\[
+ \frac1{8\sqrt{2W}}\sqrt{\frac Nk}\le\frac18,
+\]
+because $N/k\le2W$. Thus the same invariant and margin hold.
+The first-layer norm does not increase, internal-layer norm is unchanged,
+and the weighted readout norm increases by at most two.
+\end{proof}
+
+\paragraph{Interpretation.}
+Inverse-polynomial internal robustness does not prevent representation of
+any Boolean function already having a bounded-weight tanh implementation,
+provided polynomial increases in depth and width are allowed. This is an
+expressivity statement, not a claim that gradient descent produces the
+constructed digital simulation. The point is that exponentially small analog
+precision costs only polynomially many digital bits.

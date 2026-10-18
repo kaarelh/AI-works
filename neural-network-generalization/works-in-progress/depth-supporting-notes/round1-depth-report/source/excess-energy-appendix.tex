@@ -1,0 +1,151 @@
+% Standalone appendix fragment; amsmath, amssymb, amsthm required.
+\section{What excess Gaussian energy does and does not control}
+\label{app:excessenergy}
+
+Write a width-$N$, depth-$L$ tanh network as
+$h^1=\tanh(W^1\bar x)$, $h^s=\tanh(W^sh^{s-1})$ for $2\le s<L$,
+and $z=v^Th^{L-1}$, where $\bar x=(1,x)$ and $x\in\{-1,1\}^d$.
+Its weighted Gaussian energy is
+\[
+ \kappa_N=\frac dN\|W^1\|_F^2+
+       \sum_{s=2}^{L-1}\|W^s\|_F^2+N\|v\|_2^2.
+\]
+The following facts concern this actual energy. They do not establish a
+sample-complexity lower bound for the unrestricted Gaussian posterior.
+
+\begin{proposition}[Excess energy controls total deviation from rank one]
+Suppose $|z(x)|\ge1/2$ on the whole Boolean cube. Let $R_s$ be a best
+rank-one Frobenius approximation to $W^s$, and let
+$\rho_s=\|W^s\|_F^2/\|W^s\|_{\mathrm{op}}^2$ be its stable rank.
+Then
+\begin{align}
+ \sum_{s=2}^{L-1}\|W^s-R_s\|_F^2
+ &\le \kappa_N-L(d/4)^{1/L},\label{eq:excessrank}\\
+ \sum_{s=2}^{L-1}\log\rho_s
+ &\le L\log(\kappa_N/L)-\log(d/4).
+\end{align}
+In particular, if $\kappa_N\le L+B$, both right-hand sides are at most
+$B-\log(d/4)$.
+\end{proposition}
+
+\begin{proof}
+Set $a=\|W^1\|_F/\sqrt N$, $c=\sqrt N\|v\|_2$, and
+$p_s=\|W^s\|_{\mathrm{op}}$. Cube averaging supplies an input with
+$\|W^1\bar x\|_2/\sqrt N\le a$. Tanh contraction gives
+$1/2\le ac\prod_s p_s$. Thus the product of the $L$ numbers
+$da^2,p_2^2,\ldots,p_{L-1}^2,c^2$ is at least $d/4$, and their sum is at
+least $L(d/4)^{1/L}$. Subtract this sum from $\kappa_N$ and use
+$\|W^s-R_s\|_F^2=\|W^s\|_F^2-p_s^2$ to obtain
+\eqref{eq:excessrank}. Alternatively, the product of the Frobenius energy
+terms is at least $(d/4)\prod_s\rho_s$ and at most $(\kappa_N/L)^L$,
+which proves the logarithmic bound. Finally use $e^u\ge1+u$ and
+$\log(1+u)\le u$.
+\end{proof}
+
+Thus bounded excess permits only a bounded total squared residual after
+replacing internal matrices by rank-one matrices. This does not justify
+replacing those matrices in the computation: the suffix can amplify the
+replacement errors. The next example shows that even a constant excess
+allowance does not imply inverse-polynomial hidden-state robustness.
+
+\begin{proposition}[Bounded excess permits a fragile scalar transmission]
+For $d=4$, every even $L\ge4$, and every $N\ge1$, there is a network with
+$z(x)=1$ for all inputs and
+\[
+ \kappa_N\le L+76\le K_*(4,L)+76,
+\]
+whose output can be made zero by a perturbation at one hidden layer of
+normalized RMS at most $L^{-1}e^{-\sqrt L/4}$.
+Here $K_*(4,L)$ is the globally minimum margin-$1/2$ energy characterized
+in the main text.
+\end{proposition}
+
+\begin{proof}
+Put $n=L/2$, $h=L^{-1/2}$, $k_s=\min(s,L-s)$, and
+\[
+ r_s=\frac{e^{-h(k_s-1)}}{2k_s},\qquad 1\le s<L.
+\]
+Give each first-layer row the sole constant-input weight
+$\operatorname{atanh}(1/2)$. Let every entry of $W^s$ be $b_s/N$, where
+$b_s=\operatorname{atanh}(r_s)/r_{s-1}$, and let $v_i=2/N$.
+The hidden vector is exactly $r_s\mathbf1$, so the output is
+$2r_{L-1}=1$ and the energy is
+\[
+ 4\operatorname{atanh}(1/2)^2+\sum_{s=2}^{L-1}b_s^2+4.
+\]
+For completeness, the following loose constants are uniform in depth.
+The ratios $r_s/r_{s-1}$ occur in reciprocal pairs $t_k,t_k^{-1}$,
+where $t_k=(1+1/k)e^h$ and $1\le k<n$. Since $h\le1/2$,
+\[
+ t_k-t_k^{-1}\le e^h(2/k+2h),\qquad
+ t_k^2+t_k^{-2}-2\le8e^{2h}(k^{-2}+h^2).
+\]
+Using $e^{2h}<3$, $\sum_{k\ge1}k^{-2}<2$, and $(n-1)h^2\le1/2$ gives
+$\sum_s(r_s/r_{s-1})^2<L-2+60$.
+Also $\max_s(r_s/r_{s-1})^2<12$ and $\sum_s r_s^2<1$.
+For $0<t\le1/2$ the power series gives
+$(\operatorname{atanh}(t)/t)^2\le1+t^2$. Consequently
+\[
+ \sum_s b_s^2<L-2+72,
+ \qquad 4\operatorname{atanh}(1/2)^2\le5/4,
+ \qquad \kappa_N<L+76.
+\]
+The baseline lower bound gives $K_*(4,L)\ge L$.
+Finally, adding $-r_n\mathbf1$ after the middle activation zeros that
+state and hence every later state. Its normalized RMS is
+\[
+ r_n=L^{-1}\exp\!\left(-\frac{L/2-1}{\sqrt L}\right)
+ \le L^{-1}e^{-\sqrt L/4}.
+\]
+\end{proof}
+
+This example represents a statistically easy target: the earlier theorem
+proves depth-independent strong-prior learning for constants. It therefore
+separates fragility of a cheap parameter realization from difficulty of
+learning its Boolean function. It does not show that the fragile realization
+is a minimum-energy representative.
+
+\begin{proposition}[Additional depth has asymptotically unit energy cost]
+Suppose a width-$N$, depth-$L_0$ network realizes $f$ with margin at least
+$1/2$. Write $c^2=N\|v\|_2^2>0$ and $E_{\mathrm{pre}}=\kappa_N-c^2$.
+For every integer $t\ge1$, there is a width-$N$, depth-$(L_0+t)$ realization
+of the same function, with margin at least $1/2$ and energy at most
+\[
+ E_{\mathrm{pre}}+(t+13)\max\{c^2,1\}^{1/(t+1)}.
+\]
+Thus, for each fixed representable $f,d,N$, its strict-margin infimum energy
+satisfies $\kappa_{N,L}(f)=L+O_{f,d,N}(1)$ as $L\to\infty$.
+\end{proposition}
+
+\begin{proof}
+Extend the scalar minimum $K_*(D,m)$ to any real $D>0$: minimize
+$Da^2+\sum_{j=2}^{m-1}b_j^2+c'^2$ subject to $c'r_{m-1}\ge1/2$,
+where $r_1=\tanh a$ and $r_j=\tanh(b_jr_{j-1})$.
+The scalar baseline upper-bound argument works unchanged for real $D>0$:
+\[
+ K_*(D,m)\le(m+12)(\max\{D,4\}/4)^{1/m}.
+\]
+Indeed, setting $q=(\max\{D,4\}/4)^{1/(2m)}$ and
+$r_j=q^j/[\sqrt{\max\{D,4\}}\min(j,m-j)]$ gives this bound by
+$a=\operatorname{atanh}r_1$, $b_j=\operatorname{atanh}(r_j)/r_{j-1}$,
+$c'=q$, and the summable reciprocal-ratio estimates used earlier.
+
+Take the scalar tuple for $D=4c^2$ and $m=t+1$. Replace the old readout
+by a hidden layer whose every row is $2a v^T$, followed by the remaining
+scalar layers and readout. Its first new preactivation is $2az(x)$, whose
+absolute value is at least $a$ and whose sign is $f(x)$. Monotonicity and
+oddness give the same sign with final margin at least $1/2$.
+The first new block has energy $4a^2c^2$; the remaining new blocks have
+exactly the remaining scalar costs. The total is therefore
+$E_{\mathrm{pre}}+K_*(4c^2,t+1)$, proving the displayed upper bound.
+An arbitrarily small readout increase supplies strict margins.
+Expanding this bound as $t\to\infty$, and combining it with
+$L(d/4)^{1/L}\le\kappa_{N,L}(f)$, proves the final assertion.
+\end{proof}
+
+These results leave the unrestricted Gaussian sample-complexity question
+open. They rule out exponential growth of minimum target energy under depth
+padding, while showing that bounded excess does not make every cheap
+realization robust. A target-relative argument must also control competing
+functions and their prior masses; subtracting a common transmission cost
+alone does not do so.

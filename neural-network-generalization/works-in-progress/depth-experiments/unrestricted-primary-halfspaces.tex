@@ -1,0 +1,109 @@
+\section{Boolean halfspaces need no geometric-margin assumption}
+\label{sec:halfspaces-no-geometric-margin}
+
+The shallow-target theorem applies to every Boolean linear threshold
+function, even when its most natural affine representation has extremely
+small geometric margin. The relevant fact is a classical circuit
+simulation theorem; retaining the original affine representation would
+miss this conclusion.
+
+\begin{lemma}[Classical threshold-to-majority simulation]
+\label{lem:goldmann-karpinski-simulation}
+There is a universal polynomial $p$ with the following property.
+Every Boolean threshold function $f:\{-1,1\}^d\to\{-1,1\}$ can be
+written
+\[
+ f(x)=\operatorname{sign}\!\left(b_0+
+       \sum_{j=1}^m b_j\operatorname{sign}
+       \left(a_{j0}+\sum_{i=1}^d a_{ji}x_i\right)\right),
+\]
+where $m\le p(d)$, all $a_{ji},b_j$ are integers of absolute value
+at most $p(d)$, and every displayed sign has a nonzero argument on
+every Boolean input.
+\end{lemma}
+
+This is the depth-two majority simulation of
+Goldmann and Karpinski~\cite{goldmann1998}. Majority gates allow repeated and negated
+inputs and constants; collecting these wires gives the integer
+coefficients in the lemma. Their size convention counts wires, so their
+polynomial size bound also bounds all these coefficients. Their paper
+also gives the statement directly in terms of polynomially bounded
+integer weights. This is an external circuit theorem, not a new proof
+of threshold simulation here. A threshold function initially specified
+with a fixed convention for ties can be put in strictly separating
+form by an arbitrarily small bias change on the finite Boolean cube.
+
+\begin{lemma}[A polynomial shallow tanh realization]
+\label{lem:halfspace-shallow-tanh}
+Every Boolean threshold function on $d$ inputs has a one-hidden-layer
+tanh network with linear readout, global signed margin at least $3/2$,
+and both width and maximum absolute physical weight bounded by a
+universal polynomial in $d$. These bounds are independent of the
+coefficients and geometric margin of its original threshold
+representation.
+\end{lemma}
+
+\begin{proof}
+Use Lemma~\ref{lem:goldmann-karpinski-simulation}. Put
+$A=\max\{1,\sum_{j=1}^m|b_j|\}$ and
+$\lambda=\tfrac12\log(8A)$. Each inner affine form is a nonzero
+integer, so, with $h_j(x)$ denoting its sign,
+\[
+ \left|\tanh\!\left(\lambda
+      \left(a_{j0}+\sum_i a_{ji}x_i\right)\right)-h_j(x)\right|
+       \le 2e^{-2\lambda}=\frac1{4A}.
+\]
+Consequently replacing all bottom signs by these tanh features changes
+the top affine form by at most $1/4$. Its exact signed value is a
+positive integer and hence at least one. Therefore
+\[
+ z(x)=2b_0+2\sum_{j=1}^m b_j
+       \tanh\!\left(\lambda
+       \left(a_{j0}+\sum_i a_{ji}x_i\right)\right)
+\]
+satisfies $f(x)z(x)\ge3/2$ everywhere.
+
+Implement the constant $2b_0$ by one additional hidden feature equal
+to $1/2$, using first-layer bias $\operatorname{atanh}(1/2)$ and
+readout coefficient $4b_0$. The resulting width is $m+1$, and every
+physical weight has magnitude at most
+\[
+ \max\{\lambda p(d),4p(d),\operatorname{atanh}(1/2)\},
+\]
+which is polynomial in $d$. No later bias is used.
+\end{proof}
+
+\begin{theorem}[Unrestricted learning of every Boolean halfspace]
+\label{thm:halfspace-unrestricted-all-depths}
+Fix $\zeta>0$. There is a polynomial $P_\zeta$ such that, for every
+Boolean threshold target $f$ on $d$ inputs, every learner depth
+$L\ge2$, and every input distribution, a sample of size
+\[
+ n\ge P_\zeta\bigl(d,L,\varepsilon^{-1},\log(2/\delta)\bigr)
+\]
+has, with probability at least $1-\delta$, the following simultaneous
+guarantee. At every width $N\ge C_L(f)$ and every prior scale
+$0<\sigma^2\le N^{-(1+\zeta)}$, the original unrestricted Gaussian
+posterior has Gibbs error at most $\varepsilon$. Here $C_L(f)$ is
+the actual bounded-weight network complexity at the specified learner
+depth, and the posterior is conditioned only on the original global
+clean output margin and the observed training labels.
+
+In particular, the guarantee holds for every $\gamma\ge1+\zeta$,
+with no dependence on an inverse geometric margin or on the precision
+of a specified affine representation of $f$.
+\end{theorem}
+
+\begin{proof}
+Lemma~\ref{lem:halfspace-shallow-tanh} supplies polynomial-in-$d$
+values of the shallow width $C$ and physical weight bound $R$ in
+Theorem~\ref{thm:shallow-all-depths}. Substitute these values in that
+theorem. Its smaller-width argument already covers every
+$C_L(f)\le N<M$ below the polynomial-width constructed witness; no
+identification of $C_L(f)$ with that constructed width is required.
+\end{proof}
+
+This is an information-theoretic posterior guarantee. It does not
+assert that sampling the conditioned posterior, or recovering the
+alternative shallow representation from examples, is computationally
+efficient.

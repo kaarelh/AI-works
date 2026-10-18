@@ -1,0 +1,154 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,microtype}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Depth-uniform Gaussian Bayesian learning of shallow Boolean targets},pdfauthor={Dmitry Vaintrob, Kaarel Hanni, OpenAI Codex}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\op}{\mathrm{op}}
+\newcommand{\poly}{\operatorname{poly}}
+\title{Depth-uniform Gaussian Bayesian learning\\of shallow Boolean targets}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex}
+\date{Research draft --- 17 October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+Consider fully connected tanh networks with an independent Gaussian prior,
+conditioned on absolute output margin greater than $1/2$ on the Boolean
+cube and on noiseless training labels. Suppose the target has a
+one-hidden-layer representation of width $C$, weights bounded by $R$, and
+signed output margin at least one. For each fixed $\zeta>0$, we prove a
+sample bound polynomial in input dimension, $C,R$, learner depth, inverse
+error, and logarithmic inverse confidence, simultaneously for every learner
+width above its depth-specific bounded-weight circuit complexity and every
+Gaussian exponent $\gamma\ge1+\zeta$. No internal robustness restriction
+or infinite-width limit is required. The result covers parity, all
+symmetric Boolean functions, and polynomial-size DNF/CNF. An extension
+covers targets of any fixed intrinsic depth, with polynomial degree
+depending on that intrinsic depth. More precisely, target depth $D_0$
+costs a factor $(2+d+C+R)^{O_\zeta(D_0)}$, with polynomial dependence
+on every learner depth $L\ge D_0$. The proof combines
+a Gaussian-distance decomposition, a width-independent tanh product-norm
+bound, and an energy-efficient representation obtained by zero-padding
+and scalar transmission. It does not establish the mean-field case
+$\gamma=1$ or polynomial dependence on the size of an arbitrary deep
+representation.
+\end{abstract}
+
+\section{Statement and conventions}
+
+The target $f:\{-1,1\}^d\to\{-1,1\}$ is learned from independent
+examples $(x_i,f(x_i))$, where $x_i$ have an arbitrary fixed distribution
+$D$. A learner of depth $L\ge2$ has $L-1$ hidden layers, all of width $N$,
+and computes
+\[
+ h^0=(1,x),\qquad h^s=\tanh(W^sh^{s-1})\quad(1\le s<L),
+ \qquad z_w(x)=v^Th^{L-1}.
+\]
+There are no biases after the augmented input. Define
+\[
+ \kappa_N(w)=\frac dN\|W^1\|_F^2+
+    \sum_{s=2}^{L-1}\|W^s\|_F^2+N\|v\|_2^2.
+\]
+The raw Gaussian $\mu_{N,t}$ has independent entry variances
+$t^2/d,t^2/N,t^2/N^2$, respectively. In energy coordinates its density is
+proportional to $\exp[-N\kappa_N/(2t^2)]$.
+Write $\sigma^2=t^2/N$. The exponent-$\gamma$ convention is
+$t^2=N^{1-\gamma}$, equivalently $\sigma^2=N^{-\gamma}$.
+
+The prior conditions this Gaussian on $|z_w(x)|>1/2$ at every Boolean
+input. The posterior additionally conditions on
+$f(x_i)z_w(x_i)>0$ at every training input. Thus it is equivalently the
+raw Gaussian conditioned on the intersection of these events. Throughout,
+``unrestricted'' means that no additional internal robustness condition
+is imposed; it does not remove the original all-input output margin.
+
+Let $C_L(f)$ be the least width $N$ for which a depth-$L$ representation
+has all weights bounded by $N$ and signed output greater than $1/2$
+on the entire cube. The main theorem, proved in
+Section~\ref{sec:shallow-unrestricted}, states that a width-$C$,
+weight-bound-$R$, unit-margin shallow target has sample complexity
+\[
+ \poly_\zeta(d,C,R,L,\varepsilon^{-1},\log(1/\delta))
+\]
+for every specified $L\ge2$, simultaneously at all $N\ge C_L(f)$ and
+all $0<\sigma^2\le N^{-(1+\zeta)}$. The sample event has probability
+at least $1-\delta$, and posterior Gibbs error is at most $\varepsilon$.
+The polynomial degree may depend on $\zeta$; no uniform limit as
+$\zeta\downarrow0$ is asserted. No claim of computationally efficient
+posterior evaluation is made.
+
+If $p_S(x)$ is posterior probability of the correct label, then
+\[
+ D\{x:p_S(x)\le q\}
+ \le\frac{\operatorname{GibbsErr}(Q_S)}{1-q}\quad(0<q<1).
+\]
+Hence the same theorem gives the probability-of-correct-answer thresholds
+$2/3$ and $1/2$ after multiplying the Gibbs error bound by three and two.
+Arbitrary mixtures of tied or untied posterior functions are allowed.
+For auxiliary classifiers, take $\operatorname{sign}(0)=+1$.
+
+\paragraph{Proof organization and scope.}
+A finite parameter grid handles polynomially bounded learner widths.
+At larger widths and $\gamma>1$, a typical Gaussian weight array has small
+operator norms in normalized coordinates. Gaussian isoperimetry forces the
+posterior close to this typical set. Subtracting the typical part leaves a
+low-energy signal with exactly the same Boolean signs. Product-norm
+Rademacher control bounds its generalization error. Finally, a shallow
+representation can be padded and transmitted through any number of layers
+so that the relevant product-norm cost stays polynomial in its shallow
+parameters. All arguments and quantitative estimates needed for this
+result are included here. The draft has undergone independent AI-agent
+proof reviews but is not Lean-certified.
+
+\paragraph{Related representation-cost questions.}
+Jacot~\cite{jacot2023} studies the infinite-depth limit of normalized
+representation cost for homogeneous networks. Our scalar padding serves
+a related purpose, but tanh is nonhomogeneous and the required estimates
+also control finite Gaussian posterior mass at every admissible width.
+Depth separations for norm-controlled ReLU classes
+\cite{parkinson2024} concern another learning model; they do not by
+themselves settle the Gaussian-posterior question considered here.
+
+\input{unrestricted-polynomial-width.tex}
+\input{paper-productnorm.tex}
+\input{unrestricted-gaussian-distance.tex}
+\input{unrestricted-shallow-targets.tex}
+\input{fixed-intrinsic-depth.tex}
+\input{intrinsic-depth-quantitative.tex}
+
+\section{Limitations}
+
+The result separates learner depth from shallow target complexity. A target
+that has only an exponentially large shallow representation need not receive
+a polynomial bound in the size of a much smaller deep representation.
+The unrestricted general small-deep-circuit problem therefore remains open.
+The mean-field exponent $\gamma=1$ also remains outside the Gaussian-distance
+argument: its typical hidden Gaussian bulk has order-one operator norm.
+This failure of one proof is not a sample lower bound. The present result
+retains the original all-input output-margin conditioning; removing that
+condition would require another argument or a change of prediction and
+training conventions.
+
+\begin{thebibliography}{9}
+\bibitem{jacot2023} A. Jacot.
+Implicit bias of large depth networks: a notion of rank for nonlinear functions.
+\emph{ICLR}, 2023. \url{https://arxiv.org/abs/2209.15055}.
+\bibitem{parkinson2024} S. Parkinson, G. Ongie, R. Willett, O. Shamir,
+and N. Srebro. Depth separation in norm-bounded infinite-width neural networks.
+\emph{COLT}, 2024. \url{https://proceedings.mlr.press/v247/parkinson24a.html}.
+\bibitem{borell1975} C. Borell.
+The Brunn--Minkowski inequality in Gauss space.
+\emph{Inventiones Mathematicae} 30, 207--216, 1975.
+\url{https://doi.org/10.1007/BF01425510}.
+\bibitem{golowich2018} N. Golowich, A. Rakhlin, and O. Shamir.
+Size-independent sample complexity of neural networks.
+\emph{COLT}, 2018. \url{https://proceedings.mlr.press/v75/golowich18a.html}.
+\bibitem{nakhleh2026} J. Nakhleh and R. D. Nowak.
+Deep Neural Variation Spaces: A Unifying Perspective on Depth and Complexity.
+2026. \url{https://arxiv.org/abs/2607.05546}.
+\end{thebibliography}
+\end{document}

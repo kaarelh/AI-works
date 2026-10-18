@@ -1,0 +1,156 @@
+\section{A polynomial sample lower bound at each fixed critical depth}
+\label{sec:critical-polynomial-sample-lower}
+
+A low-rate interpolating halfspace gives a sample lower bound for the
+actual critical posterior. The bound is polynomial in the parity and
+ambient dimensions, and the width limit is taken before those dimensions
+grow.
+
+\begin{lemma}[Amplifying a first-feature mean through its second moment]
+\label{lem:critical-mixture-mean-seed}
+Let $\mu_1$ be the uncontrolled first-feature law. Suppose a feature law
+$\nu$ satisfies $D(\nu\Vert\mu_1)\le D$, where $D\ge1$, and its mean
+$h$ satisfies $g(x)h(x)\ge a$ at every input, with $0<a\le1$ and
+$g$ Boolean. Set $R=D/a^2$ and $q=R^{1/L}$. If $q\le D$, then
+\[
+ J_L(g)\le5000L R^{1/L}.
+\]
+\end{lemma}
+
+\begin{proof}
+Put $\theta=q/D\le1$. The first controlled law
+$(1-\theta)\mu_1+\theta\nu$ has entropy at most $\theta D=q$ by
+convexity, and its second moment dominates
+$\theta hh^T$. Thus it has a tracked rank-one vector
+$b_1=\sqrt\theta h$ with
+\[
+ g(x)b_1(x)\ge\sqrt\theta a=q^{-(L-1)/2}.
+\]
+This is a second-moment component; it need not equal the first
+controlled law's mean.
+
+For $L=2$, choose the readout $z=h/(2a)$. Its cost is at most
+$1/(8\theta a^2)=q/8$, proving the assertion in this case.
+Suppose $L\ge3$ and put $c=1/100$. For every $0\le v\le1$ and
+$u\ge0$, the elementary estimate used in the constant-target
+construction gives
+\[
+ \mathbb E\tanh(u+\sqrt v Z)\ge c\min\{u,1\}.
+\]
+At the second hidden layer shift the reference Gaussian by
+$\sqrt q\,b_1$. Its mean-shift entropy is at most $q/2$, because
+$Q_1\succeq b_1b_1^T$. After tanh, its actual mean $b_2$ satisfies
+$g(x)b_2(x)\ge c q^{-(L-2)/2}$. Its second moment dominates
+$b_2b_2^T$.
+
+At each hidden layer $s=3,\ldots,L-1$, shift the reference Gaussian
+by $(\sqrt q/c)b_{s-1}$. The entropy is at most $q/(2c^2)$, and
+the new feature mean satisfies
+\[
+ g(x)b_s(x)\ge c q^{-(L-s)/2}.
+\]
+The induction uses only that every reference diagonal is at most one,
+not that the diagonals or feature magnitudes are equal. If some shift
+coordinate exceeds one in magnitude, the displayed minimum estimate
+still gives the required lower bound. All shift vectors lie in the
+corresponding covariance range; the formulas therefore also apply to
+singular covariances. Tanh pushforward cannot increase the entropy.
+
+Finally take $z=b_{L-1}/(2c q^{-1/2})$. It has the required global
+margin and Gaussian readout cost at most $q/(8c^2)$. Summing all
+costs gives the claimed bound.
+\end{proof}
+
+\input{critical-oriented-majority-interpolant.tex}
+
+\begin{theorem}[Critical parity sample lower bound]
+\label{thm:critical-polynomial-sample-lower}
+Fix $L\ge2$ and $0<\eta<1$. Let the target be parity on $k\le d$
+specified input coordinates, and put
+\[
+ M=\min\{k,d^{1/(L-1)}\}.
+\]
+Suppose $M\to\infty$ and $1\le n\le M^{1-\eta}$. Draw $n$ independent
+uniform cube inputs labeled by this parity. For all sufficiently large
+$M$, with training-sample probability at least $1-1/(2M)$, the globally
+margin-conditioned posterior at
+$\gamma=1$ has Gibbs error tending to $1/2$ as $N\to\infty$ at
+this fixed $d,L,n$. If $p_N(x)$ is its posterior probability of the
+correct label, then on the same event
+\[
+ \liminf_{N\to\infty}\Pr_x\{p_N(x)<2/3\}\ge1/4.
+\]
+For full parity, this gives $n\le d^{(1-\eta)/(L-1)}$. If
+$d\ge k^{L-1}$, it gives $n\le k^{1-\eta}$.
+\end{theorem}
+
+\begin{proof}
+Let $m$ be the smallest odd integer at least
+$12n\log(2M(n+1))$. Since $n\le M^{1-\eta}$, one has
+$m=O(n\log(M+1))=o(M)\le o(d)$, so $m\le d-1$ for large $M$.
+Lemma~\ref{lem:critical-oriented-majority} supplies, with probability at
+least $1-1/(2M)$, a training-consistent halfspace and a first-feature
+law of entropy at most $D=dm$ with mean margin $a=1/100$.
+
+Apply Lemma~\ref{lem:critical-mixture-mean-seed}. Its hypothesis
+$(D/a^2)^{1/L}\le D$ is equivalent to $D^{L-1}\ge10000$ and holds
+for large $M$. The resulting training-consistent competitor has rate
+at most
+\[
+ 5000L(10000dm)^{1/L}.
+\]
+
+Any Boolean function depending on every one of the $k$ parity coordinates
+has at least $k$ relevant augmented coordinates. By
+Theorem~\ref{thm:critical-fixed-depth-ordering}, its critical rate is at least
+\[
+ \frac1{64}\min\{d^{1/(L-1)},(dk)^{1/L}\}
+       =\frac1{64}(dM)^{1/L}.
+\]
+The ratio of the
+preceding competitor upper bound to this lower bound is at most
+\[
+ C L\,M^{-\eta/L}[\log(M+1)]^{1/L},
+\]
+which tends to zero. Thus there is a positive rate gap between a
+training-consistent competitor and every function retaining all
+parity coordinates.
+
+The exact finite-domain posterior-rate principle now implies that
+posterior mass on the latter functions tends to zero in the width
+limit. A function omitting any one parity coordinate has uniform
+parity error exactly $1/2$, even if it depends on irrelevant coordinates.
+This proves the Gibbs limit. Finally
+$\mathbb E_xp_N(x)\to1/2$ and Markov's inequality give
+$\Pr_x\{p_N(x)<2/3\}\ge1-(3/2)\mathbb E_xp_N(x)$.
+\end{proof}
+
+The theorem concerns the actual posterior, but takes width to infinity
+at fixed dimension, depth, and sample size. It gives no finite-width
+threshold uniform in growing dimension and no corresponding lower
+bound for posterior-majority prediction at confidence threshold $1/2$.
+
+\begin{corollary}[Slowly growing learner depth]
+\label{cor:critical-growing-depth-sample-lower}
+Fix $0<\eta<1$. For full parity, the same conclusion holds at sample sizes
+$n\le d^{(1-\eta)/(L-1)}$ along integer depths $L=L(d)\ge2$ satisfying
+\[
+ L=o\!\left(\sqrt{\frac{\log d}{\log\log d}}\right).
+\]
+For each $d$, the width limit is taken with its corresponding $L(d)$
+and sample size fixed.
+\end{corollary}
+
+\begin{proof}
+Here $M=d^{1/(L-1)}\to\infty$. The halfspace construction has
+$m\le Cn\log(M+1)=o(M)\le o(d)$ uniformly in $L\ge2$ at the
+specified sample sizes. Its first-feature entropy bound and amplification
+are also uniform. The rate ratio is therefore at most
+\[
+ C L\,d^{-\eta/[L(L-1)]}[\log(d+1)]^{1/L}
+\]
+with universal $C$. Its logarithm tends to minus infinity under the
+stated depth assumption. The mixture hypothesis and the training
+success probability also hold uniformly, so the same rate-gap argument
+applies.
+\end{proof}

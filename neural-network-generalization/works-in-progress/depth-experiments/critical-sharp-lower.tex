@@ -1,0 +1,118 @@
+\section{A matching inverse-depth lower error up to logarithms}
+\label{sec:critical-sharp-lower}
+
+The common critical value also has a sharper lower approximation.
+The key is that a low-total-cost path has a small entropy budget at
+\emph{every} prefix ending at a small variance.
+
+\begin{lemma}[A last-exit occupation bound]
+\label{lem:critical-last-exit}
+Let $q_0,\ldots,q_H\in(0,1]$, with transition costs $D_j\ge0$.
+Suppose there are universal constants $c,C_0>0$ such that
+\[
+ D_j\ge q_j-q_{j-1}+cq_{j-1}^2,
+ \qquad \sum_{j=1}^{i}D_j\le C_0q_i\quad(0\le i\le H),
+ \qquad \sum_{j=1}^H D_j\le2.
+\]
+Then, for a constant $C$ depending only on $c,C_0$,
+\[
+ H\le C/\epsilon,\qquad \epsilon=\min_{0\le j\le H}q_j.
+\]
+The states need not be monotone.
+\end{lemma}
+
+\begin{proof}
+Concavity of $q\mapsto-1/q$ gives
+\[
+ \frac{q_j-q_{j-1}}{q_{j-1}^2}
+ \ge\frac1{q_{j-1}}-\frac1{q_j}.
+\]
+On an interval of $\ell$ transitions whose pre-states are all at least
+$u>0$, division of the dissipation inequality and summation therefore
+imply
+\begin{equation}\label{eq:critical-weighted-occupation}
+ c\ell\le\frac{\text{entropy spent on the interval}}{u^2}
+              +\frac1{q_{\rm end}}-\frac1{q_{\rm start}}.
+\end{equation}
+
+Fix $u_*=1/256$. If $\epsilon\ge u_*$, apply this inequality to
+the entire path with total entropy at most two; its length is bounded
+by a universal constant, which is enough. Otherwise choose the least
+$J$ such that $u_J=2^J\epsilon\ge u_*$. Then
+$u_J<2u_*$. For $0\le j\le J$, let
+\[
+ \tau_j=\max\{i:q_i\le u_j\}.
+\]
+These indices exist and are nondecreasing. The prefix ending at
+$\tau_0$ ends at the global minimum $\epsilon$, stays above it,
+and has entropy at most $C_0\epsilon$. By
+\eqref{eq:critical-weighted-occupation}, its length is at most
+$(C_0+1)/(c\epsilon)$.
+
+Consider a nonempty block from $\tau_j$ to $\tau_{j+1}$.
+Remove its first transition temporarily. Every pre-state in the
+remaining interval exceeds $u_j$, by definition of $\tau_j$, and
+its endpoint lies in $(u_j,2u_j]$. The entropy of this interval is
+at most the total prefix entropy at $\tau_{j+1}$, hence at most
+$2C_0u_j$. Its length is consequently at most
+$(2C_0+1)/(cu_j)$. Restoring the first transition adds one.
+If the two last-exit indices coincide, the block is empty.
+
+After $\tau_J$, remove one first transition if present. Every remaining
+state exceeds $u_J\ge u_*$, and the total remaining entropy is at most
+two. The same weighted inequality bounds this final tail by a universal
+constant. Summing the geometric series
+$\sum_{j<J}u_j^{-1}\le2/\epsilon$ and absorbing the at most $J$
+removed transitions proves the assertion.
+\end{proof}
+
+\begin{theorem}[Sharper common-rate lower error]
+\label{thm:critical-sharp-lower}
+There is a universal constant $C$ such that, for every input dimension
+$d\ge1$, depth $L\ge2$, and Boolean function $f$,
+\[
+ J_L(f)\ge V_*-\frac{C}{L-1}.
+\]
+\end{theorem}
+
+\begin{proof}
+Use the signed pair from the previous critical lower bound: opposite
+labels on one cube edge for a nonconstant target, and equal labels on
+an antipodal pair for a constant target. Write $q_0=1/d$ and let
+$q_1,\ldots,q_H$, $H=L-1$, be its successive pair variances.
+Every finite-cost path satisfying the required nonzero readout has
+positive pair variances. All lie in $(0,1]$.
+The full layer entropy costs satisfy the strict pair dissipation
+inequality appearing in Lemma~\ref{lem:critical-last-exit}.
+
+Let $A$ be the total path cost including the readout. If $A>V_*$,
+the desired conclusion is immediate. Otherwise the suffix comparison
+with the scalar control value gives, at every layer $i$,
+\[
+ \sum_{j=1}^{i}D_j\le A-V(q_i)
+ \le V_*-V(q_i)\le C_0q_i.
+\]
+The last inequality follows from the small-state bridge for
+$q_i\le1/128$ and from $0\le V(q_i)\le V_*<2$ for larger states;
+for example one may take $C_0=256$. Also
+$\sum_jD_j\le A\le V_*<2$.
+Lemma~\ref{lem:critical-last-exit} shows that the minimum pair variance
+$\epsilon$ is at most $C/H$. At a layer attaining it, the scalar
+suffix comparison gives
+\[
+ A\ge V(\epsilon)\ge V_*-C_0\epsilon\ge V_*-\frac{C'}H.
+\]
+Take the infimum over admissible variational paths and rename the
+universal constant.
+\end{proof}
+
+Together with the purified upper construction, this places all Boolean
+function rates in the interval
+\[
+ V_*-\frac{C}{L-1}
+ \ \le\ J_L(f)\ \le\
+ V_*+C\frac{(d+1)^2+(d+1)[\log(2L)]^2}{L}
+\]
+when $L\ge C(d+1)^2$. The statement still concerns absolute rates.
+It does not compare the sign or size of the remaining target-relative
+rate gaps and does not itself imply a learning lower bound.

@@ -1,0 +1,124 @@
+\section{A finite-sample extension to targets close to a shallow function}
+\label{sec:unrestricted-target-corruption}
+
+The denominator witness need only interpolate the observed labels. This
+permits a limited positive extension beyond targets having an exact cheap
+shallow representation. The restriction below is quantitative: the target
+disagreement probability times the chosen sample size must fit a prescribed
+patch budget. It is not an unrestricted theorem for every fixed nonzero
+corruption rate at arbitrarily large sample sizes or confidence levels.
+
+\begin{lemma}[Patching finitely many Boolean inputs]
+\label{lem:shallow-point-patching}
+Suppose a shallow width-$C$ tanh network $z_g$ has weights bounded by
+$R\ge1$ and satisfies $g(x)z_g(x)\ge1$ on the Boolean cube.
+For an integer $b\ge0$, define
+\[
+ Z=CR,\quad a=\log(16(b+1)(Z+1)),\quad
+ C_b=C+2b+1,\qquad R_b=\max\{2R,4Z,(d+1)a\}.
+\]
+For any set $P$ of at most $b$ cube inputs, the Boolean function obtained
+by flipping $g$ exactly on $P$ has a shallow width-$C_b$, weight-bound-$R_b$
+representation with unit signed margin.
+\end{lemma}
+
+\begin{proof}
+For each $p\in P$, let
+\[
+ h_p(x)=\tanh\bigl(a(p\cdot x-d+1/2)\bigr),\qquad
+ I_p(x)=\frac{1+h_p(x)}2,\qquad c_p=-2z_g(p).
+\]
+Then $|I_p(x)-\mathbf1\{x=p\}|\le e^{-a}$ and $|c_p|\le2Z$.
+The ideal expression $z_g(x)+\sum_pc_p\mathbf1\{x=p\}$ has signed
+margin at least one for the flipped function. Replacing each indicator
+by $I_p$ changes it by at most $2Zb e^{-a}<1/8$.
+Double the resulting expression. Its original-feature readout weights
+are $2v_j$; its isolator readout weights are $c_p$; and its additional
+constant output is $\sum_pc_p$.
+Implement this constant with $|P|+1$ neurons of activation $1/2$, each
+having readout weight $2\sum_pc_p/(|P|+1)$, of magnitude at most $4Z$.
+Their bias is $\operatorname{atanh}(1/2)$ and their other incoming
+weights are zero. The number and weight bounds follow, and the signed
+margin is greater than $7/4$.
+\end{proof}
+
+\begin{theorem}[A finite-sample target-corruption guarantee]
+\label{thm:unrestricted-target-corruption}
+Fix $\zeta>0$. There is a polynomial $P_\zeta$, whose degree and constants
+depend only on $\zeta$, with the following property. Let $D$ be any input
+distribution on the Boolean cube, let $f$ be any Boolean target, and let
+$g$ have the shallow representation in Lemma~\ref{lem:shallow-point-patching}.
+Put $\rho=\Pr_D\{f(X)\ne g(X)\}$.
+Fix a learner depth $L\ge2$, $0<\varepsilon,\delta<1$, and an integer
+patch budget $b\ge4\log(2/\delta)$.
+For any integer sample size $n$ satisfying both
+\[
+ n\ge P_\zeta(d,L,C_b,R_b,\varepsilon^{-1},\log(2/\delta)),
+ \qquad \rho n\le b/4,
+\]
+the original Gaussian posterior, conditioned only on global clean output
+margin and on ordinary training signs, has Gibbs error at most
+$\varepsilon$ with probability at least $1-\delta$.
+The sample event is simultaneous for every actual admissible width
+$N\ge C_L(f)$ and every $0<\sigma^2\le N^{-(1+\zeta)}$.
+No shallow representation or circuit-size bound for the exact target $f$
+is assumed.
+\end{theorem}
+
+\begin{proof}
+The number of observed disagreements between $f$ and $g$ is binomial with
+mean $\rho n\le b/4$. A Chernoff bound gives
+\[
+ \Pr\{\text{more than }b\text{ disagreements}\}
+ \le(e/4)^b\le\delta/2.
+\]
+On the complementary event, flip $g$ at the distinct observed disagreement
+inputs. Lemma~\ref{lem:shallow-point-patching} supplies a globally
+unit-margin, sample-consistent shallow witness with the same deterministic
+parameter bounds $C_b,R_b$, independently of which disagreements occur.
+
+Apply zero-padding, balanced cloning, and scalar transmission to this
+witness. With
+\[
+ M=\left\lceil\max\{4,C_b,2R_b,dC_b(d+1)R_b^2\}\right\rceil,
+ \qquad T=MC_bR_b^2,
+\]
+one obtains unit-margin interpolants at every $N\ge M$, with energy
+$K_2=2+2T$ at depth two and
+$K_L=2+(L+14)(2T)^{1/(L-1)}$ at depth $L\ge3$.
+Their energy-product parameters are polynomial in $d,C_b,R_b$, uniformly
+over $L$.
+
+The Gaussian-distance proof uses its witness only to lower-bound the raw
+probability of the posterior conditioning event. A globally margin-valid
+sample interpolant suffices for that step; its labels away from the sample
+need not equal $f$. Therefore the same proof yields, on a sample event of
+probability at least $1-\delta/2$, the desired risk bound whenever the
+disagreement budget is met. The uniform Rademacher and finite-grid sample
+events depend only on the displayed deterministic bounds, not on the
+locations or labels of the patched inputs. There is no union bound over
+patch sets in this argument.
+
+For completeness, this also handles every smaller actual admissible width.
+The Gaussian-distance argument has a deterministic polynomial width cutoff
+$W\ge M$. For $C_L(f)\le N<W$, a defining width-$C_L(f)$ realization of
+the true target has weights at most $C_L(f)\le W$. Clone it to width $N$
+and double its readout. Its weights are at most $2W$, and its energy and
+Gaussian-box target-mass exponent are polynomial in $d,L,W$.
+The finite-grid proof therefore applies uniformly to this width range.
+If $C_L(f)\ge W$, that range is empty. In either case its sample bound has
+the stated polynomial form and does not require an upper bound on
+$C_L(f)$ as a separate parameter. Combining the two sample events proves
+the theorem.
+\end{proof}
+
+For example, choose $b=\lceil4\log(2/\delta)\rceil$ and take $n$ to be
+the ceiling of the displayed polynomial bound. The permitted corruption
+level $b/(4n)$ is inverse polynomial in the base representation and the
+statistical parameters. This is stronger than the elementary comparison
+that requires observing no disagreement, whose failure probability is
+controlled only when $\rho n\lesssim\delta$. Here a nonzero number of
+contradictory training labels is explicitly interpolated.
+The two inequalities on $n$ are essential: this argument does not imply
+that the guarantee persists for every larger sample size at a fixed
+positive corruption probability.

@@ -1,0 +1,298 @@
+\section{Expanded experiments on trained networks}
+\label{sec:expanded-experiments}
+
+The strongest positive observation is that twenty unmodified trained digit
+networks satisfy the new numerical-stability condition at \emph{every real
+input}, with interval-verified matrix inequalities and an exact rational
+final bound. All twenty also fit every training example with signed output
+greater than $1/2$. The condition is nevertheless not universal: a separate
+well-performing trained network has an interval-verified violation even
+at an actual held-out image. The old sign condition and the new numerical
+condition must be kept separate when interpreting these findings.
+
+\subsection{Protocol and what is being measured}
+
+We trained 168 networks in five retained cohorts: 80 initial synthetic
+models, 32 synthetic extensions, 32 main digit models, 16 deeper digit
+models, and eight smaller-step-size controls. Configurations were fixed
+before training each cohort; later cohorts were chosen after some earlier
+results were visible. These are exploratory experiments, not a publicly
+preregistered confirmatory study. Failed fits were retained. No Bayesian
+posterior was sampled: the experiments test properties of trained
+parameters, not posterior prediction probabilities or statistical sample
+complexity. The new numerical condition was proposed after training, and
+its evaluation is a post-training audit of the resulting networks.
+
+The architecture is $h_0=(x,1)$,
+$h_s=\tanh(h_{s-1}W_s)$, and $z=h_Jv$, with no biases beyond the input
+augmentation. Synthetic widths are $32$ or $64$, dimensions $8,10,12$,
+and hidden depths $4,8,16,32$. Tasks include majority, parity, random
+Boolean labels, and labels from a fixed small tanh teacher. Training
+uses either the whole cube or a fixed subset, with all cube inputs
+subsequently audited. Image models have width $64$ and hidden depths
+$4,16,32,64$. Initialization uses Gaussian first and final weights and
+orthogonal internal matrices, with gains $0.7$, $1.1$, or $1.5$ in the
+synthetic cohorts and $1.1$ for images.
+
+Both optimizers run for 6000 steps with $10^{-6}$ weight decay.
+The code's label \texttt{sgd} means \emph{full-batch vanilla gradient
+descent}, without momentum or minibatch noise. Its learning rate is
+$0.05$. Adam uses learning rate $0.003$, except in the separately
+declared $0.0003$ control; rates are multiplied by $0.3$ after $80\%$
+of training. Synthetic losses are half the squared error, while image
+losses are binary logistic. No test-driven rescaling is used for images.
+Exact saved floating-point weights, data splits, protocols, source, and
+detailed records accompany the report.
+
+For clarity, write $E_v=N\|v\|_2^2$ and
+\[
+ \|\eta\|_*^2=\sum_{s=1}^J\frac{\|\eta_s\|_2^2}{N}
+                    +|\eta_{\rm out}|^2.
+\]
+There are four distinct measurements:
+\begin{enumerate}
+\item correctness relative to the target labels;
+\item the inherited global clean-margin requirement $|z(x)|>1/2$;
+\item preservation of the network's own clean sign throughout radius
+      $r_{\rm sign}=10^{-2}/\sqrt{1+JE_v}$;
+\item numerical output change at most $1/16$ throughout
+      $r_{\rm num}=10^{-3}/\sqrt{1+JE_v}$, as in
+      Section~\ref{sec:numerical-stability}.
+\end{enumerate}
+The last condition imposes no all-input clean margin. Its likelihood still
+requires $y_i z(x_i)>1/2$ for \emph{every training example}; we audit this
+separately on the raw trained networks. A constant failed fit can be stable
+without being eligible under this likelihood.
+
+Positive pointwise tests use the finite-radius clean-transport certificate,
+including nonlinear Taylor remainder bounds; they are not just tests of
+the clean Jacobian. Unless explicitly marked interval verified, the
+sufficient inequalities are evaluated in float64. Failure to certify is
+reported as unresolved. Negative witnesses use explicit perturbations
+strictly inside the normalized noise ball. Selected witnesses and the
+twenty global positive results receive the stronger checks described below.
+
+\subsection{Full-cube synthetic audits}
+
+Of 112 synthetic runs, 105 fit every training label, and all 105 have
+correct signed training outputs greater than $1/2$. Under the old global
+sign-support condition, 52 pass a sufficient certificate on their entire
+cube, 59 fail the clean-margin requirement at an explicit cube point,
+and one remains unresolved. Seventy networks certify their own sign on
+the whole cube, independently of the clean-margin requirement; 35 have
+explicit, strictly budget-checked sign-flipping perturbations.
+
+\begin{center}
+\begin{tabular}{lrrrrr}
+\toprule
+Cohort & Runs & Fits & Old support & All-cube sign & Sign attacks\\
+ & & & in/out/? & certified & found\\
+\midrule
+Full cube, $d=8$ & 24 & 23 & $23/1/0$ & 24 & 0\\
+Half cube, $d=8$ & 24 & 23 & $12/12/0$ & 17 & 6\\
+Initialization gains, $d=8$ & 16 & 16 & $7/9/0$ & 10 & 5\\
+Subset, $d=10$ & 16 & 15 & $6/10/0$ & 10 & 5\\
+Subset, $d=12$ & 8 & 8 & $2/6/0$ & 5 & 2\\
+Small teacher, $d=10$ & 16 & 13 & $0/15/1$ & 0 & 14\\
+Depth $32$, $d=10$ & 8 & 7 & $2/6/0$ & 4 & 3\\
+\bottomrule
+\end{tabular}
+\end{center}
+Here ``out'' means a witnessed clean-margin failure; ``?'' is not a
+nonrobustness claim. Counts include failed fits.
+
+The apparent fragility is concentrated near the decision boundary.
+Across all 105 successful fits, \emph{every} cube point whose clean
+absolute output exceeds $1/2$ passes the finite-radius sign certificate:
+80,603 input--model pairs in total, with a nonempty qualifying set for
+every model. Seven networks classify their entire held-out set correctly
+but fail the global clean margin; all seven certify sign stability on
+their whole cube. Two depth-16, dimension-12 full-batch-GD models achieve
+held-out accuracies $99.55\%$ and $99.44\%$ yet admit sign attacks at rare
+inputs with clean margins about $0.0072$ and $0.0021$.
+
+Rescaling the readout using the global minimum margin makes 108 of the
+112 networks pass the old support certificate, leaving four unresolved.
+This is a changed-network diagnostic, not a raw training outcome:
+rescaling raises the margin and simultaneously shrinks the required noise
+radius, and may incur a large Gaussian energy cost. On a finite cube,
+eventual membership under sufficiently large rescaling is possible for
+every network with no zero clean outputs, so this statistic alone provides
+little evidence of a natural training bias.
+
+At the new numerical radius, 108 of 112 raw networks pass on the entire
+cube, including \emph{all 105} training-margin-eligible fits. Of 90,112
+input--model pairs, 90,108 pass; the four unresolved points belong to
+failed training runs. These positive counts use floating-point evaluation
+of sufficient bounds, not interval arithmetic.
+
+\subsection{Actual images, depth, and failed optimization}
+
+We use the locally bundled \texttt{sklearn} handwritten-digit dataset:
+1797 images of $8\times8$ pixels, with tasks ``3 versus 8'' and
+``even versus odd''. A $70/30$ split is stratified by the original digit
+labels. Boolean features threshold pixels at $8$; continuous features
+map a pixel value $p$ to $p/8-1$. These are distinct experiments. The
+continuous feature results extend the numerical audit, not the Boolean
+input premise of the statistical theorem. The main cohort crosses both
+tasks, both feature maps, depths $4,16$, both optimizers, and two seeds.
+All 32 models satisfy the training-margin likelihood.
+
+\begin{center}
+\begin{tabular}{llrrr}
+\toprule
+Task & Features & Test accuracy & Own-sign certificate & Margin and sign\\
+\midrule
+3 versus 8 & Boolean & $95.37$--$97.22\%$ & $100\%$ & $98.15$--$100\%$\\
+3 versus 8 & Continuous & $97.22$--$100\%$ & $100\%$ & $99.07$--$100\%$\\
+Even/odd & Boolean & $93.33$--$95.00\%$ & $99.63$--$100\%$ & $98.89$--$100\%$\\
+Even/odd & Continuous & $97.04$--$98.15\%$ & $99.81$--$100\%$ & $98.89$--$100\%$\\
+\bottomrule
+\end{tabular}
+\end{center}
+Each row contains eight models; ranges are across those models. The last
+two columns concern \emph{held-out image inputs} and the old radius,
+not all possible inputs. Every held-out point with $|z|>1/2$ passes
+the sign certificate in all 32 models. Thresholding can give identical
+feature vectors in different images: at most 23 held-out vectors per
+model occur in the training set. Counts and accuracy restricted to novel
+feature vectors are recorded separately; these are descriptive robustness
+experiments, not a benchmark generalization claim.
+
+The separate depth-$32/64$ cohort uses only the 3-versus-8 task. All eight
+full-batch-GD models fit the training likelihood and achieve
+$96.30$--$100\%$ test accuracy. All eight standard-rate Adam runs fail
+to fit: depth-32 accuracies range from $50.93\%$ to $75.93\%$, and all
+four depth-64 runs collapse to $50.93\%$. The separately declared
+smaller-rate Adam cohort is retained alongside these failures: seven of
+eight fit every training margin and achieve $96.30$--$100\%$ test accuracy;
+one depth-64 Boolean-feature run still collapses to $50.93\%$.
+Stable constant predictions in failed runs do not support a claim about
+successful learning. No failed optimization run was replaced by a
+successful rerun in the reported cohort.
+
+\subsection{Off-data sign failures and global numerical stability}
+
+For each of the sixteen Boolean-feature models in the main digit cohort,
+we sampled 10,000 uniform 64-bit inputs. All sixteen have explicit
+clean-margin violations and sign-flipping perturbations at such inputs;
+all sixteen attacks still work after deleting scalar output noise.
+These inputs generally do not resemble digit images. A separate attack
+on 32 sampled points just above clean margin $1/2$ per model found no
+flips; a failed attack is not a certificate.
+
+Three hidden-only sign witnesses are checked using exact rational noise
+budgets and 60-digit interval forward evaluation of the saved binary
+floating-point weights and perturbations. Their outputs change as follows:
+\[
+ \begin{array}{c|rr}
+ \text{Model ID}&\text{clean output}&\text{perturbed output}\\\hline
+ 203&+0.00164981&-0.0274141\\
+ 204&+0.0287959&-0.364879\\
+ 205&-0.0192534&+0.300013
+ \end{array}
+\]
+All three already fail the inherited $1/2$ margin. They therefore do not
+show that added internal robustness excludes a parameterization which
+otherwise meets the original global-margin support restriction.
+
+The new numerical condition gives a substantially better positive result.
+All 10,368 held-out input--model pairs in the main digit cohort pass its
+sufficient inequality. Twenty of these 32 raw trained models---all sixteen
+depth-4 models and four depth-16 models---have a \emph{global} positive
+certificate, covering every real input, not only images or the cube.
+Ten of these twenty use Boolean features and ten use continuous features.
+These twenty results are additionally interval verified. For each
+hidden-to-hidden matrix, an exact dyadic-integer Gram matrix and a
+90-digit interval $LDL^\top$ decomposition prove
+$W^\top W\prec g^2I$ for an explicitly stored rational $g^2$.
+Cauchy--Schwarz and global Lipschitzness of tanh bound the simultaneous
+noise gain. The final comparison to $(1/16)^2$ is an exact rational
+inequality. The resulting output-change upper bounds range from
+$0.00453$ to $0.04950$, all below $1/16$. This is a numerical proof
+trusting the interval-arithmetic implementation, not a Lean formalization.
+
+The radius calibration matters. Reusing these same verified operator bounds
+and rescaling the final inequality with exact rational arithmetic, sixteen,
+twelve, and four of these twenty models also certify output change at most
+$1/16$ when the radius coefficient $0.001$ is increased to $0.002$, $0.005$,
+and $0.01$, respectively. The last coefficient equals the old sign-radius
+coefficient, although numerical stability and sign stability remain
+different properties. A failed sufficient inequality at a larger radius
+does not establish a violation. The rescaling code and records are supplied
+separately from the frozen experiment archive.
+
+\begin{center}
+\small\begin{tabular}{lrrrr}
+\toprule
+Cohort & Models & Training-margin & Numerical certificate & Full tested set\\
+ & & eligible & input--model pairs & certified models\\
+\midrule
+Synthetic, full cubes & 112 & 105 & $90{,}108/90{,}112$ & 108\\
+Main digits, held out & 32 & 32 & $10{,}368/10{,}368$ & 32\\
+Deep digits, held out & 16 & 8 & $1{,}728/1{,}728$ & 16\\
+Smaller-rate digits, held out & 8 & 7 & $863/864$ & 7\\
+\bottomrule
+\end{tabular}
+\end{center}
+The deep numerical certificates in this table concern held-out images,
+not global input support. Three failed synthetic fits and eight failed
+standard-rate deep image fits pass their entire tested set; this illustrates
+why the likelihood eligibility column is essential. The one unresolved
+smaller-rate image point has the negative witness described next.
+Pooled input--model counts reuse inputs across models and are not counts
+of independent test examples for statistical inference.
+
+Model 203 illustrates the distinction particularly clearly. It has the
+old hidden-only sign flip displayed above, but the new global certificate
+bounds output changes by $0.004744$ throughout the smaller numerical
+radius, for every real input. Numerical stability intentionally allows
+small-margin decisions to change sign; it need not rule out otherwise
+useful trained networks because of a decision boundary away from the data.
+
+There are also genuine counterexamples to automatic numerical stability.
+The smaller-rate Adam model 400, with depth 32 and Boolean pixels, fits
+every training margin and achieves $98.15\%$ test accuracy. At held-out
+image index 25, an exactly budget-checked perturbation changes its output
+from about $+0.188308$ to $-0.006960$, an absolute change of $0.195268$.
+A 120-digit interval calculation proves that this exceeds $1/16$.
+The true label is $-1$, so this particular perturbation \emph{corrects}
+an existing classification error; it is a counterexample to numerical
+stability, not an induced label error. Other verified violations occur
+on uniform-cube inputs. One changes $5.296417$ to $5.218443$, which violates
+raw numerical stability while leaving both clipped scores equal to one.
+This supports considering the bounded-score condition of
+Section~\ref{sec:clipped-stability}; it does not establish that every
+trained model satisfies that weaker condition. In fact, clipping leaves
+model 400's small-output held-out violation unchanged, so that trained
+model also violates the bounded-score condition at the same radius.
+
+\subsection{Other diagnostics and limits of the evidence}
+
+The product of layer Frobenius norms can be enormous even when the new
+stability test succeeds. For raw main digit models, the median
+$\log_{10}(\sqrt d\prod_s\|W_s\|_F)$, including the readout as its last
+factor, is $4.80$ at depth 4 and $15.74$ at depth 16. In the standard
+deeper cohort it is $31.34$ at depth 32 and $58.96$ at depth 64. Thus a
+small product-Frobenius condition can be much more restrictive on these
+trained parameterizations than finite-noise output stability. These finite
+depths do not establish an asymptotic exponential law, and the experiment
+does not exclude a lower-product implementation of the same function.
+
+A separate, fixed activation-rounding diagnostic rounds every hidden
+activation and the final output to $8$, $12$, or $16$ binary fractional
+bits, without rounding weights. Across the main digit models, 8-bit
+rounding changes two held-out signs; 12- and 16-bit rounding change none.
+Only 16 bits uniformly place the worst-case rounding budget within the
+old radius for all 32 models. Success of one deterministic rounding rule
+is weaker than robustness against every allowed perturbation.
+
+These are modest tanh multilayer perceptrons, not evidence about large
+contemporary ResNets or Transformers. The strongest positive global
+certificates occur at depths 4 and 16; favorable on-image behavior at
+depths 32 and 64 does not prove all-input membership. None of these finite
+experiments proves a polynomial-depth scaling law or a universal property
+of gradient descent. They support the naturalness of numerical stability
+for some successful trained networks, expose its exceptions, and show why
+training correctness, confident-point stability, global margin, and global
+numerical stability should be reported separately.

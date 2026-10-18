@@ -1,0 +1,151 @@
+\section{Cheap purification of an approximate rank-one sign component}
+\label{sec:critical-purification}
+
+The following lemma addresses amplitude errors in a finite-width
+rank-one construction. Its contraction is multiplicative: it has no
+permanent additive sampling-error floor.
+
+\begin{lemma}[One-step Gaussian purification]
+\label{lem:critical-purification-step}
+There are universal constants $q_*,\eta,c_0,c_1,c_2,C>0$, with
+$c_0\le c_1/100$, with the following
+property. Fix $0<q\le q_*$ and put $s=F^{-1}(q)$, where
+$F(s)=\mathbb E\tanh^2(\sqrt sZ)$. Suppose
+\[
+ |q_0-q|\le c_0 q^2,\qquad
+ |a-1|\le\eta,\qquad 0\le r\le\eta^2q_0.
+\]
+For independent $A\sim\mathcal N(0,s)$ and
+$B\sim\mathcal N(0,r)$, define
+\[
+ D=q_0(a-1)^2+r.
+\]
+Then
+\[
+ \mathbb E[\tanh(aA+B)-\tanh A]^2\le(1-c_1q)D.
+\]
+Moreover, for $N$ independent copies, the empirical squared difference
+is at most $(1-c_1q/2)D$ except on an event of probability
+$2\exp(-c_2Nq^2)$. When $D=0$ the conclusion holds identically.
+The empirical anchor variance $N^{-1}\sum_i\tanh^2 A_i$ differs
+from $q$ by at most $c_0q^2$ except on an event of the same form, after
+changing the universal constants.
+\end{lemma}
+
+\begin{proof}
+Write $u=a-1$ and $E=uA+B$. The global Taylor-remainder bound
+\[
+ \operatorname{sech}^2 t=1-t^2+R(t),\qquad |R(t)|\le C t^4
+\]
+implies, by integrating the derivative between $A$ and $A+E$ and
+squaring, that
+\[
+ \mathbb E[\tanh(A+E)-\tanh A]^2
+ =\mathbb E E^2-2\mathbb E[A^2E^2+AE^3+E^4/3]
+                 +O(s^2\mathbb E E^2).
+\]
+The remainder constant is uniform for $|u|\le\eta$,
+$r\le\eta^2q_0$, and small $q$, because all variables are jointly
+Gaussian, $q_0\asymp s$, and their moments of each fixed order are
+bounded by the corresponding powers of $s$ and $\mathbb E E^2$.
+Explicitly, the error after squaring is bounded by a constant times
+$\mathbb E[E^2(A^4+E^4+A^8+E^8)]$, which has the stated bound.
+
+The necessary Gaussian moments are
+\[
+ \mathbb E E^2=su^2+r,\quad
+ \mathbb E A^2E^2=3s^2u^2+sr,\quad
+ \mathbb E AE^3=3s^2u^3+3sur,\quad
+ \mathbb E E^4=3(su^2+r)^2.
+\]
+Also $F(s)=s-2s^2+O(s^3)$, and hence
+$s-q_0=2s^2+O(s^3)+O(c_0q^2)$.
+Substitution shows that the squared difference is at most
+\[
+ D-(4-O(\eta)-O(q)-O(c_0))s^2u^2
+       -(2-O(\eta)-O(q))sr.
+\]
+Choose first $\eta$, then $q_*$ and the allowable anchor tolerance
+constant sufficiently small. Since $s\asymp q\asymp q_0$, this
+proves a contraction $1-c_1q$ for some universal $c_1>0$.
+
+For concentration, the pointwise Lipschitz bound gives
+$|\tanh(A+E)-\tanh A|\le|E|$. The variable $E$ is Gaussian
+with variance $su^2+r\le CD$. Thus its squared activation difference
+divided by $D$ has a uniformly bounded subexponential norm.
+Bernstein's inequality at relative accuracy $c_1q/2$ gives the stated
+$2e^{-c_2Nq^2}$ bound. Similarly, $\tanh^2 A\le A^2$ and
+$s\asymp q$, so the anchor square divided by $q$ has uniformly
+bounded subexponential norm. Bernstein at relative accuracy $c_0q$
+gives the anchor assertion. Relabeling constants completes the proof.
+\end{proof}
+
+\begin{proposition}[Finite-width iterative purification]
+\label{prop:finite-width-purification}
+Let $H$ be a matrix of $N$ current feature rows on a finite set of $m$
+inputs, and put $Q=H^TH/N$. Fix a reference input $x_0$ and a sign
+pattern $f$. Suppose, with $q_0=Q(x_0,x_0)$,
+\[
+ |q_0-q|\le c_0q^2,\qquad
+ Q(x,x)+q_0-2f(x)f(x_0)Q(x,x_0)\le\eta^2q_0
+ \quad\text{for all }x.
+\]
+At each new layer, let
+\[
+ b=H(\cdot,x_0)/\sqrt{Nq_0},\qquad
+ \epsilon=F^{-1}(q)/q_0-1,
+\]
+and draw its rows independently with weight covariance
+$(I_N+\epsilon bb^T)/N$. There are universal constants such that
+$0\le\epsilon\le Cq$, and this layer has relative entropy at most
+$CNq^2$ from the original conditional Gaussian layer.
+
+Except with probability at most $2T(m+1)e^{-c_2Nq^2}$, after every
+one of $T$ such layers the anchor-variance condition persists, and
+every signed squared column distance contracts by the factor
+$(1-c_1q/2)$ at each step. In particular, at time $T$ every such
+distance is at most
+\[
+ \eta^2(q+c_0q^2)e^{-c_1qT/2}.
+\]
+Stop the controlled dynamics on first failure and use the original
+Gaussian transition thereafter. The relative entropy of this complete
+stopped proposal law is at most $CNq^2T$, up to a change of universal
+constants. This is not a claim about the entropy after conditioning
+the proposal law on success.
+\end{proposition}
+
+\begin{proof}
+The vector $b$ has unit norm. Decompose the current covariance as
+\[
+ Q=gg^T+R,\qquad
+ g=Qe_{x_0}/\sqrt{q_0},\qquad R\succeq0,
+ \qquad R(x_0,x_0)=0.
+\]
+The modified preactivation covariance is exactly
+$Q+\epsilon gg^T$. After multiplying the coordinate at $x$ by
+$f(x)f(x_0)$, its joint Gaussian law with the anchor can be written
+as $(a_xA+B_x,A)$, where
+\[
+ a_x=\frac{f(x)f(x_0)Q(x,x_0)}{q_0},\quad
+ \operatorname{Var}(B_x)=R(x,x),\quad B_x\perp A.
+\]
+The old signed squared column distance is exactly
+$q_0(a_x-1)^2+R(x,x)$. The assumed bound puts each pair in the
+preceding lemma's range, after reducing the initial constant $\eta$
+if necessary. Its contraction and anchor concentration, followed by
+a union bound over inputs and layers, prove the claim. The contraction
+preserves the hypotheses because $c_0\le c_1/100$ and $q$ is small:
+the reduction of squared distance exceeds the possible relative change
+of the anchor variance.
+
+Finally, $F^{-1}(q)=q+2q^2+O(q^3)$ gives
+$0\le\epsilon\le Cq$ under the anchor tolerance. The rank-one
+Gaussian entropy formula gives per row
+\[
+ \frac12[\epsilon-\log(1+\epsilon)]\le\epsilon^2/4.
+\]
+Summing over rows and layers proves the cost bound. If a stopping rule
+switches to the original prior on first failure, no later entropy is
+incurred, so the same bound holds for the complete controlled law.
+\end{proof}

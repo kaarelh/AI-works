@@ -1,0 +1,83 @@
+\section{A limitation of neuronwise cloning, even at polynomial path weight}
+\label{sec:neuronwise-cloning-barrier}
+
+The previous representation limitation based on absolute path weight does
+not exhaust the obstruction to improving the intrinsic-depth exponent.
+Even a circuit with polynomial absolute path weight can have a
+quasipolynomial minimum product of layer Frobenius norms under \emph{all}
+neuronwise cloning choices. The statement below concerns an exact
+representation-preserving method; it is not a lower bound on the minimum
+energy of the represented Boolean function, which may have a different
+and much cheaper realization.
+
+\begin{proposition}[Complete-tree cloning obstruction]
+Let $H\ge1$, $d=2^H$, and consider a complete binary computation tree with
+$H$ hidden layers. Layer $s$ contains $n_s=2^{H-s}$ computational neurons.
+Each neuron has two computational incoming edges of absolute weight $a>0$;
+the first layer takes its two inputs from distinct Boolean coordinates.
+The final scalar readout has absolute weight $\beta>0$.
+Arbitrary additional bias-supply neurons and edges are permitted.
+
+Replace every computational neuron by any positive integer number of
+identical copies, divide its outgoing edges by the number of its copies,
+and fill unused positions with zero neurons to obtain common hidden width
+$N$. Write $E_1,\ldots,E_{H+1}$ for the weighted squared layer norms of the
+resulting network. Then
+\[
+ \prod_{s=1}^{H+1}E_s
+ \ge d\beta^2(2a^2)^H 2^{H(H-1)/2}.
+\]
+Consequently its Gaussian energy satisfies
+\[
+ \kappa_N\ge (H+1)
+ \left[d\beta^2(2a^2)^H 2^{H(H-1)/2}\right]^{1/(H+1)}.
+\]
+The computational input-to-output absolute path sum is merely
+$\beta(2a)^H$. For fixed $a,\beta>0$, this is polynomial in $d$, whereas
+the lower bound on the product of layer energies is
+$\exp(\Omega((\log d)^2))$.
+\end{proposition}
+
+\begin{proof}
+For a computational node $v$, let $r_v>0$ denote its number of copies
+divided by $N$. Discard all non-computational edges when lower-bounding
+layer energies. The remaining contributions are
+\[
+ F_1=2da^2\sum_{v\text{ at level }1}r_v,
+ \qquad
+ F_s=a^2\sum_{v\text{ at level }s}
+       \sum_{u\text{ a child of }v}\frac{r_v}{r_u}
+       \quad(2\le s\le H),
+ \qquad
+ F_{H+1}=\frac{\beta^2}{r_{\rm root}}.
+\]
+Each $F_s$ is a convex function of the log multiplicities
+$y_v=\log r_v$, being a sum of exponentials of affine functions.
+Average $y$ over the finite automorphism group of the complete binary
+tree. The group preserves every $F_s$ and acts transitively on each level,
+so Jensen's inequality decreases every $F_s$ simultaneously and makes
+$r_v=r_s$ constant on level $s$. This averaging is used only for a lower
+bound and need not give integer clone counts. The width constraints also
+remain valid, by convexity of the exponential, although that fact is not
+needed for the lower bound.
+
+At these averaged log multiplicities,
+\[
+ F_1=2da^2 n_1r_1,\quad
+ F_s=2a^2 n_s\frac{r_s}{r_{s-1}},\quad
+ F_{H+1}=\frac{\beta^2}{r_H}.
+\]
+Their product telescopes to
+$d\beta^2(2a^2)^H\prod_{s=1}^H n_s$.
+Since $E_s\ge F_s$ before averaging and every $F_s$ decreases on
+averaging, this lower-bounds the original product of layer energies.
+Now $\prod_s n_s=2^{H(H-1)/2}$, and arithmetic--geometric mean gives the
+energy bound. There are $2^H$ computational input-to-output paths, each
+with absolute weight $\beta a^H$, proving the last assertion.
+\end{proof}
+
+In particular, allowing nonuniform clone counts within a layer does not
+turn a polynomial absolute path bound into the polynomial energy-product
+bound needed by the unrestricted Gaussian-distance theorem. A proof of
+that implication would need a change of representation beyond exact
+cloning, or a different posterior argument.

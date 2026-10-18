@@ -1,0 +1,47 @@
+\paragraph{A limitation of the global metric certificate on the deeper trained models.}
+The global diagonal-metric certificate cannot certify the depth-32 and
+-depth-64 gradient-descent digit models in this experiment, even after
+optimizing its metrics. This failure has an elementary exact certificate;
+an SDP solver is unnecessary. In column-vector notation, define the
+\emph{unactivated suffix readouts}
+\[
+ g_H=v,\qquad g_{s-1}=(W^s)^\top g_s\quad(2\le s\le H).
+\]
+For any positive semidefinite metric family satisfying
+$M_H\succeq vv^\top$ and
+$M_{s-1}\succeq(W^s)^\top M_sW^s$, induction gives
+$M_s\succeq g_sg_s^\top$. Consequently,
+\[
+ Q_M=N\sum_{s=1}^H\lambda_{\max}(M_s)
+       \ge N\sum_{s=1}^H\|g_s\|_2^2=:G_{\rm lin}^2.
+\]
+Thus if
+\[
+ \frac{1+G_{\rm lin}^2}{1+H E_v}>3906.25,
+\]
+no such metric family can meet the proposed numerical certificate.
+The argument even permits arbitrary positive semidefinite metrics in this
+necessary inequality; restricting to diagonal metrics cannot help.
+
+We preselected the two successful Boolean-input GD models with seed zero,
+302 ($H=32$) and 306 ($H=64$). Their respective ratios are approximately
+$93\,243.76$ and $63\,136\,897.94$, both strictly above $3906.25$.
+The implied lower bounds on the output-change \emph{certificate} are
+$0.30536$ and $7.94587$, versus the required $1/16=0.0625$.
+These inequalities were checked with exact integer dyadic matrix--vector
+products and rational arithmetic on the saved weights. An exploratory
+check of the other six successful deep GD models gives the same
+impossibility, again with exact rational verification: at $H=32$ the
+necessary output-change certificate lies between $0.24417$ and $0.32754$;
+at $H=64$ it lies between $6.31046$ and $13.65547$.
+
+This is an impossibility result for the \emph{global sufficient certificate},
+not a violation of numerical stability itself. The unactivated suffixes
+need not be derivatives at any actual Boolean input. The successful
+pointwise certificates for these models use saturation, which the global
+metric inequalities above omit. A positive global certificate for these
+particular networks therefore needs additional information about the
+reachable states, rather than merely a better choice of diagonal scales.
+The exploratory source and exact rational records are kept separately
+from the frozen experiment archive in
+\texttt{diagonal-metric-exploration/}.

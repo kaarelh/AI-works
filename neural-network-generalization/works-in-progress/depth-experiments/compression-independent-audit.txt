@@ -1,0 +1,116 @@
+INDEPENDENT RAW-COMPRESSION AUDIT -- PASS
+Reviewer: depth2_alternatives, round 3.
+Reviewed full compression-proof.tex, with the previous full construction
+read line-by-line; not merely the change from signs to clipped scores.
+The argument is mathematical, not machine-checked.
+
+1. ENTROPY MOMENT AND SCALINGS
+For standard Gaussian G_D, KL variational inequality with |Z|^2/4 gives
+E|Z|^2<=4 KL+2D log2. Standardized blocks are sqrt(d)W1/t,
+sqrt(N)Ws/t, and Nv/t. Thus all physical moment normalizations in the
+construction are correct. In particular E[N|v|^2]<=4K+2log2.
+
+2. FUTURE-ENTROPY LEMMA
+E_A' KL(Q_Y|A'||P_Y)=KL(Q_Y||P_Y)+I(Y;A'). Data processing through
+(A,J,H), H=f(A,J,X), yields the bound by
+KL(Q_Y||P_Y)+I(Y;A)+I(Y;X|A)+H(J|A), which is at most B+H(J|A)
+by the KL chain rule. No density for the constructed prefix is required.
+The canonical fresh source indices and Gaussian coefficients depend on Y
+only through the transmitted A,J,H, as required.
+
+3. ACTIVE-DIRECTION RANK
+Conditional on A,Y, each greedy query is chosen after averaging over
+active-coordinate values, so its identity depends only on A,Y, not on
+H's realized values. Each added orthogonal direction contributes its
+conditional whole-N-vector KL to the Gaussian chain rule. Rank is bounded
+by t^2 R/(N delta). A basis is recovered from A and the finite input list
+by fixed Gram-Schmidt. Gaussian Talagrand supplies squared RMS transport
+<=2 delta after multiplying by residual feature length <=1. Projection
+and disintegration preserve the stated joint marginals.
+
+4. MESSAGE BUDGET
+A list of at most q Boolean inputs, length information, and an abort flag
+fit the stated [(d+1)q+2]-bit code. N>N0 and N0>=ceil(LD0/K) imply
+NK/t^2+sD0<=2NK/t^2 because t<=1. Markov on the conditional rank gives
+abort probability <=eta with q>=2K/(e eta).
+
+5. FIRST-LAYER AND ACTIVE-MATRIX CLIPPING
+First-layer row zeroing affects expected squared RMS activation by <=e,
+using bounded activations and the physical row moment. For active H, use
+the success INDICATOR in the entropy moment estimate, not a conditional
+success law. This gives E[|H|_F^2/N;success]<=8K+2q=V. Clipping rows at
+BH gives <=4V/BH^2=e activation RMS error. Clipping every row before any
+future-dependent selection avoids an illicit maximum over width.
+
+6. SOURCE SAMPLING AND COVARIANCE
+For u(j)=sqrt(N)U_j, E uu^T=I. Whole-vector clipping c gives E cc^T<=I
+and E|u-c|<=q/T. The chosen m dominates the entrywise/vector/kernel
+Hoeffding bounds and their finite-cube union factors. Dividing sampled
+vectors by sqrt(1+a) guarantees D^TD<=I, hence I-DD^T is PSD.
+The reconstructed row covariance is exactly t^2(Khat-psihat^T psihat).
+Both psi and psihat have norm <=1, so covariance error <=a+2 zeta.
+The scalar Gaussian same-normal coupling bounds variance contribution by
+t^2 times that covariance error. Couplings can be extended to full row
+coefficients by disintegration and assembled across independent Gaussian
+rows. No simultaneous-in-input transport is claimed or needed.
+
+7. GAUSSIAN COORDINATE CLIPPING
+Each xi coordinate has variance <=1, even though coordinates in a row
+are correlated. Cauchy-Schwarz bounds the output contribution by the sum
+of coordinate squared tails; independence across coordinates is not used.
+The bound 3m exp(-BG^2/4)<=e is valid. All coordinates are clipped before
+later row selection. Every final row is therefore bounded independently
+of N. The four transport contributions yield <20e by the four-term
+squared triangle bound.
+
+8. READOUT
+The original readout marginal remains Q. Ev>K0 has probability <=eta.
+On Ev<=K0, truncating |Nv_i|>Bv changes any bounded-feature evaluation by
+<=K0/Bv=r/16. Uniform source sampling contributes another <=r/16 except
+probability eta, with the stated m and finite-input union bound.
+
+9. FULL ORIGINAL MARGINAL AND CANONICAL PREFIX MARGINAL
+The comparison coupling need not preserve the canonical joint law with
+all discarded original matrices. It preserves both (a) the complete
+original Q marginal and (b) the canonical current-prefix/future marginal.
+At each step, extend the new coupling by the old conditional law of past
+original matrices given incoming A,X,Y. This preserves the incoming full
+history and previous prefixes, while obtaining the required outgoing
+A',Y marginal. The next entropy step uses (b); the final original-network
+comparison uses (a). These requirements are compatible.
+
+10. NOISE BUDGET
+Abort probability <=2L eta=.02 alpha. Expected hidden squared RMS summed
+over layers gives the Markov failure probability <=160Le/r^2=.16 alpha.
+On success hidden noise squared <=r^2/8 and output injection <=r/8, so
+total squared norm <=9r^2/64<r^2/4. The combined exceptional probability
+is <alpha/4, stronger than the stated alpha. The virtual computation is
+exactly the original network with these postactivation injections.
+
+11. SMALL WIDTH AND GRID
+For N<=N0, the global physical-weight norm bound gives an event of
+probability >=1-alpha/4 on which the original network is retained;
+eta=0 is allowed. Zero-outgoing-weight padding preserves the output even
+for an activation with phi(0) !=0. The chosen mesh gives output error
+<=r/8 by the elementary layerwise Lipschitz recurrence. Although the
+mesh is exponentially fine in depth, log grid cardinality is polynomial.
+All widths pad to the same M=N0; all bounds are independent of t. Thus
+there is one finite candidate class for all N,t.
+
+12. NUMERICAL FORMULATION
+Before rounding the candidate equals the original noisy output. Rounding
+adds <=r/8. This proves the raw numerical lemma without using sign
+robustness or a clean margin anywhere. It also explains why the successful
+virtual hidden states stay in the valid activation range.
+
+PRESENTATION-ONLY SUGGESTION
+In the small-width branch, replace 'default classifier' with 'default
+zero-readout network' to match the numerical-output statement. This is not
+a mathematical defect: the failure event permits any fixed candidate.
+
+MAIN THEOREM REVIEW
+A separate independent review by depth2_fresh_audit passed
+robustness-theory.tex, including cap-at-training-margin equality, arbitrary
+c extension, target cylinder constants, counted NAND constant wires, and
+Gaussian mass. Its pass was conditional on the raw compression appendix;
+the present review supplies an independent check of that appendix.

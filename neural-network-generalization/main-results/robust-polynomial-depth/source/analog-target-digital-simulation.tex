@@ -1,0 +1,106 @@
+\section{Analog targets after polynomial architecture overhead}
+\label{sec:analog-target-digital-simulation}
+
+The main all-width theorem uses Boolean circuit width at the specified
+layered depth. It does not identify that width with the minimum width of
+an arbitrary real-valued tanh circuit. Nevertheless, the Boolean target
+assumption permits a useful extension when polynomial changes to the
+architecture are allowed.
+
+\begin{proposition}[Digital simulation with controlled precision]
+\label{prop:analog-target-digital-simulation}
+Suppose a width-$C$, depth-$L$ tanh network, with the architecture used
+in the main theorem, has physical weights bounded by $R\ge1$ and
+satisfies
+\[
+ f(x)z(x)\ge1/2\qquad(x\in\{-1,1\}^d).
+\]
+Then $f$ has a Boolean circuit using two-input NAND gates, copies and
+negations, with both size and layered depth bounded by a universal
+polynomial in
+\[
+ d,C,L,\log(2+R).
+\]
+All constant wires and their propagation are included in this bound.
+In particular, under the bounded-weight convention $R\le C$, this
+is polynomial in the original input dimension, width and depth.
+\end{proposition}
+
+\begin{proof}
+Let $H=L-1$, $A=CR+1$, and $T=d+2+L(C+1)$. Choose an integer
+\[
+ b\ge\log_2(8T)+L\log_2A,
+ \qquad \delta=2^{-b}.
+\]
+Round each weight to the nearest multiple of $\delta$. Compute every
+affine sum exactly as a rational number, and approximate each resulting
+tanh value to absolute error at most $\delta$ by a number in
+$[-1,1]\cap\delta\mathbb Z$. We justify a polynomial Boolean cost
+for this operation below.
+
+Let $e_s$ be the maximum coordinate error at hidden layer $s$.
+Using the original weights for the propagated error, the rounded
+activations bounded by one, and $1$-Lipschitzness of tanh gives
+\[
+ e_1\le(d+2)\delta,\qquad
+ e_s\le CR e_{s-1}+(C+1)\delta.
+\]
+The exact rational readout then differs from the original real
+readout by at most $CR e_H+C\delta\le\delta T A^L\le1/8$.
+It has the correct sign everywhere, with signed value at least $3/8$.
+Thus deciding the sign of this rational computation computes $f$
+exactly. The needed weight precision is
+\[
+ b=O\bigl(\log(d+LC+2)+L\log(CR+1)\bigr).
+\]
+The total binary length of the rounded weights is polynomial in the
+parameters stated in the proposition.
+
+For completeness, tanh at this precision has a direct polynomial
+Boolean evaluation algorithm. Its input $q$ is a rational affine sum
+of numbers with polynomial binary length. By oddness it suffices to
+handle $q\ge0$. If $q\ge b+10$, output one; the error is at most
+$2e^{-2(b+10)}<2^{-b-4}$. Otherwise set $x=2q\le2(b+10)$ and
+$m=\lceil16(b+10)^2\rceil$. Evaluate the rational Taylor sum
+\[
+ E_m=\sum_{j=0}^{m}\frac{x^j}{j!}
+\]
+exactly. The tail is at most twice its first omitted term, since the
+ratio of successive omitted terms is less than $1/2$. The bound
+$j!\ge(j/e)^j$ then gives
+\[
+ 0\le e^x-E_m
+ \le2\left(\frac{ex}{m+1}\right)^{m+1}
+ \le2^{-m}<2^{-b-4}.
+\]
+All numerators and denominators involved have polynomial binary length:
+a common denominator may be taken as the denominator of $x$ to power
+$m$, multiplied by $m!$. Since $E_m\ge1$ and the derivative of
+$(u-1)/(u+1)$ is at most $1/2$ for $u\ge1$, the rational value
+$(E_m-1)/(E_m+1)$ approximates $\tanh q$ to error less than
+$2^{-b-5}$. Rounding it to the nearest multiple of $2^{-b}$ gives
+error less than $\delta$ and preserves the interval $[-1,1]$.
+Restore the sign for negative $q$.
+
+Binary addition, comparison, multiplication and long division on
+integers of polynomial binary length have Boolean circuits of polynomial size,
+by the usual digit-by-digit algorithms. This also follows directly by
+unrolling those finite algorithms into two-input NAND gates. The number
+of neurons, affine operations and bits in the preceding computation
+is polynomial. Hence its full Boolean circuit has polynomial size.
+Its depth is at most its size; making it layered, forwarding still-needed
+bits by copy gates, and including all rounded-weight constant bits
+increases size and width by at most another polynomial factor.
+No real-number oracle or exact evaluation of tanh is used by the Boolean
+circuit.
+\end{proof}
+
+Combining this proposition with the main theorem gives polynomial sample
+bounds for analog Boolean targets with bounded weights, after a
+polynomial increase of logical depth and width. The resulting learner
+must have enough layers for this digital simulation and width at least
+its layered Boolean width. This is a representational extension of the
+robust theorem, not a proof at the original analog depth or for every
+width above the original analog minimum complexity $C_L(f)$.
+An increase in the learner architecture cannot be silently substituted
+for those stronger quantifiers.

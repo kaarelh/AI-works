@@ -1,0 +1,75 @@
+\subsection{A normalization with a nonexpansive-network interpretation}
+\label{sec:readout-reference}
+
+An alternative support rule has a simpler interpretation. Write $J=L-1$,
+$E_v=N\|v\|_2^2$, and require the same global clean margin and all-layer
+sign robustness, now at radius
+\[
+ r_{\rm ref}(w)=\frac{1}{100\sqrt{1+J E_v(w)}}.
+\]
+The denominator is the total-noise gain bound for a network with
+nonexpansive hidden transitions and the same readout. This is a fixed
+fraction of its guaranteed noise radius, with no target-size or Gaussian-scale
+parameter and no hard energy cutoff.
+
+\begin{proposition}\label{prop:nonexpansive-reference}
+If every internal hidden matrix satisfies $\|W^s\|_{\op}\le1$ and the
+clean output margin exceeds $1/2$, this support condition holds.
+The first matrix need not be nonexpansive.
+\end{proposition}
+\begin{proof}
+Let $a_s$ be the Euclidean hidden displacement. There is no input noise,
+so $a_1\le\|\eta^1\|_2$; subsequently,
+$a_s\le a_{s-1}+\|\eta^s\|_2$ by nonexpansiveness. Thus
+\[
+ |z(x;\eta)-z(x)|
+ \le\sqrt{E_v}\sum_{s=1}^J\frac{\|\eta^s\|_2}{\sqrt N}+|\eta^L|
+ \le\sqrt{1+JE_v}\,\|\eta\|_*.
+\]
+At the specified radius this is at most $.01<1/2$.
+\end{proof}
+
+The support itself permits larger operator norms whenever the actual
+finite-radius robustness suffices. Hence this is an interpretation and a
+sufficient architectural condition, not an additional spectral restriction.
+
+\begin{corollary}\label{cor:readout-reference}
+All conclusions of Theorem~\ref{thm:unified} also hold for this
+readout-reference support: one polynomial sample bound simultaneously for
+every $N\ge C$ and every $0<t\le1$, including all $\gamma\ge1$.
+\end{corollary}
+\begin{proof}
+Every draw in the target cylinder of Appendix~\ref{sec:cylinder} has
+$E_v\ge C$ and sign robustness at radius $\tau_0=1/(64\sqrt{2C})$.
+Since $J\ge1$,
+\[
+ r_{\rm ref}(w)\le .01/\sqrt{1+C}<\tau_0.
+\]
+The same target mass lower bound $\exp(-DN/t^2)$ therefore applies.
+For $0<\beta\le1/2$, put
+\[
+ B=\max\{8,8[D+\log(1/\beta)]\},\qquad G=\{E_v\le B\}.
+\]
+Under the raw Gaussian, $E_v=(t^2/N)\chi_N^2$. Its exponential moment gives
+\[
+ \mu_{N,t}(G^c)\le\exp[-NB/(8t^2)],\qquad Q_s(G^c)\le\beta,
+\]
+where the second bound divides by the target cylinder mass.
+The consistent conditional law $Q_s(\cdot\mid G)$ has radius at least
+$r_0=.01/\sqrt{1+JB}$ and KL at most $N(D+1)/t^2$.
+Theorem~\ref{thm:robust-entropy} and the same finite-class argument as in
+Theorem~\ref{thm:unified} give
+\[
+ \operatorname{GibbsErr}(Q_s)
+ \le\beta+3\alpha+8[\log|\mathcal H|+\log(1/\delta)]/n,
+\]
+with one class $\mathcal H(d,L,D+1,r_0,\alpha)$ independent of $N,t$.
+The earlier choices of $\alpha,\beta,n$ prove the claim.
+\end{proof}
+
+This normalization is less tied to the intermediate spectral estimates than
+$S_N$. The two required radii have no universal ordering: that ordering depends
+on whether $S_N$ is larger or smaller than $JE_v$. Both are proposed prior
+designs, not established laws of ordinary training. In our saved toy models,
+the readout-reference radius is always smaller than the spectral-calibrated
+radius, so every successful certificate reported below transfers to it.

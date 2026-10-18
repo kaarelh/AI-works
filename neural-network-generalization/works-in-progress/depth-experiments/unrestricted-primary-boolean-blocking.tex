@@ -1,0 +1,88 @@
+\section{A depth-blocking bound for general Boolean circuits}
+\label{sec:boolean-blocking}
+
+A simple circuit transformation slightly improves the exponential
+dependence on growing intrinsic depth. It does not make the dependence
+polynomial for general small circuits.
+
+\begin{proposition}[Blocking Boolean layers]
+\label{prop:boolean-layer-blocking}
+Let $f$ be computed by an AND/OR/NOT circuit of fan-in at most two,
+depth $h\ge1$, and at most $s$ gates and input wires. Put
+\begin{align*}
+ S&=\max\{16,2+d+s\},\qquad
+ b=\max\{1,\lfloor\log_2\log_2 S\rfloor\},\\
+ a&=\lfloor h/b\rfloor,\qquad r=h-ab,\qquad
+ q=\max\{2,2a+\min\{2,r\}\}.
+\end{align*}
+Then $f$ has a depth-$q$ tanh representation with unit global margin,
+width and physical weights bounded by a universal polynomial in $S$.
+Consequently, for each fixed $\zeta>0$, at every learner depth $L\ge q$
+the unrestricted posterior has a sample bound of the form
+\[
+ S^{\,O_\zeta(1+h/\log\log S)}
+ \bigl(L+\varepsilon^{-1}+\log(2/\delta)\bigr)^{O_\zeta(1)},
+\]
+uniformly for every actual width $N\ge C_L(f)$ and every
+$0<\sigma^2\le N^{-(1+\zeta)}$.
+One has $q\le\max\{2,h\}$, so in particular the result applies
+at every learner depth $L\ge\max\{2,h\}$.
+For polynomial-size logarithmic-depth circuits, this is
+$\exp[O_\zeta(\log^2 S/\log\log S)]$ times a polynomial in the
+learner depth and statistical parameters.
+\end{proposition}
+
+\begin{proof}
+First insert identity gates along skip wires and at an output of depth
+less than $h$. The resulting layered circuit has polynomial size in $S$,
+since $h\le s$ after removing unused gates. Divide its layers into
+consecutive blocks of at most $b$ layers.
+
+Each gate at the end of a block depends on at most $2^b$ signals at the
+beginning of that block. Regard its subcomputation as a Boolean function
+of these boundary signals, and express that function by its full DNF.
+The DNF has at most
+\[
+ 2^{2^b}\le S
+\]
+terms, each of length at most $2^b\le\log_2 S$. Implementing its
+conjunctions in one threshold layer and its final disjunction in the
+next uses polynomially many wires and integer coefficients bounded by
+a polynomial in $S$. A gate whose function is constant can be
+implemented by a constant threshold. Use two threshold layers for
+every full block. A final one-layer block can simply retain its
+original AND/OR/NOT threshold gates, rather than be expanded to two
+layers; a longer final partial block uses two layers. The resulting
+threshold depth is $2a+\min\{2,r\}\le h$. When $h=1$, pad to depth
+two by inserting one identity threshold layer. All blocks together
+therefore form a depth-$q$ threshold circuit of polynomial size and
+polynomial integer weights. Choose odd integer thresholds after doubling literal
+coefficients, so every gate has signed preactivation at least one on
+Boolean inputs.
+
+Here the threshold circuit already has small integer weights; no
+threshold-to-majority replacement is needed. Convert its first $q-1$
+layers directly to tanh. If $B\ge1$ bounds each gate's total absolute
+incoming coefficients, including its bias, use gain
+$\lambda=2\log(8B)$ and accuracy $1/(4B)$ at every hidden layer.
+Inductively the affine perturbation from preceding approximate signs
+is at most $1/4$, and the tanh error is at most
+$2e^{-3\lambda/2}\le1/(4B)$. Biases are represented by an exact
+hidden constant $1/2$, propagated using weight
+$2\operatorname{arctanh}(1/2)$; its contribution is included in $B$.
+At the last threshold, use twice the affine form as the linear readout.
+It has signed value at least $3/2$. This construction has exactly $q$
+weighted layers, no later biases, and polynomial width and weights.
+
+The quantified fixed-intrinsic-depth theorem then gives a sample bound
+$S^{O_\zeta(q)}$ times the displayed polynomial in $L$ and the
+statistical parameters. Since $q=O(1+h/\log\log S)$, this is the
+claimed estimate. Its small-width part is already expressed using the
+actual complexity $C_L(f)$, so the alternative circuit's larger width
+does not impose an additional lower-width assumption.
+\end{proof}
+
+This is a circuit-size/depth tradeoff rather than a polynomial-product
+representation theorem. In particular, for balanced recursive majority
+it improves the available quasipolynomial upper bound but does not
+settle whether a polynomial bound is possible.

@@ -1,0 +1,174 @@
+\section{A depth-independent lower bound on every critical rate}
+\label{sec:critical-universal-baseline}
+
+At every prior scale $0<t\le1$, the global clean-margin event has an
+exponentially small probability, uniformly in depth. The exponent has a
+universal positive lower bound as the input dimension grows. This result
+does not compare the excess rates of different Boolean functions and is
+not a posterior sample-complexity lower bound.
+
+Throughout this section the hidden activation is $\tanh$, the input is
+$\bar x=(1,x)$ for $x\in\{-1,1\}^d$, the first-layer variance is $t^2/d$,
+the subsequent hidden-weight variance is $t^2/N$, and the readout variance
+is $t^2/N^2$, where $0<t\le1$. There are $L-1$ hidden layers, with $L\ge2$.
+Write $A_{N,f}$ for the event $f(x)z(x)>1/2$ at every cube input, and
+$A_N=\bigcup_f A_{N,f}$ for the global clean-margin event.
+
+\begin{lemma}[A scalar exponential potential]
+\label{lem:critical-exponential-potential}
+For $0<t\le1$, $0\le a\le1$, and $G\sim\mathcal N(0,t^2q)$, $q\ge0$,
+\[
+ \mathbb E\exp\{(2a/t^2)\tanh^2G\}\le e^{2aq/t^2}.
+\]
+If $(G_x,G_y)$ is any centered Gaussian pair, $s\in\{-1,1\}$,
+and $t^2v=\operatorname{Var}[(G_x+sG_y)/2]$, then
+\[
+ \mathbb E\exp\left\{\frac{2a}{t^2}\left(
+       \frac{\tanh G_x+s\tanh G_y}{2}\right)^2\right\}
+ \le e^{2av/t^2}.
+\]
+\end{lemma}
+
+\begin{proof}
+The case $a=0$ is immediate. Otherwise put $\lambda=2a/t^2$ and
+$F_\lambda(z)=\exp(\lambda\tanh^2z)$. Writing
+$u=\tanh^2z\in[0,1)$, direct differentiation gives
+\[
+ \frac{F_\lambda''(z)}{F_\lambda(z)}
+ =2\lambda(1-u)[1-3u+2\lambda u(1-u)]\le\frac{2\lambda}{t^2}.
+\]
+To check the inequality, multiply its bracket by $t^2$. The resulting
+quantity $t^2(1-u)(1-3u)+4a u(1-u)^2$ is affine in $t^2\in[0,1]$.
+At the two endpoints it is at most $16/27$ and
+$1-5u^2+4u^3\le1$, respectively.
+The Gaussian heat equation and Gronwall's inequality therefore give
+$\mathbb E F_\lambda(\sqrt r Z)\le\exp(\lambda r/t^2)$ for $r\ge0$.
+All derivatives needed here are bounded for each fixed $\lambda$.
+Taking $r=t^2q$ proves the first assertion.
+The elementary identities for the sum and difference of two hyperbolic
+tangents imply
+\[
+ \left|\frac{\tanh a+s\tanh b}{2}\right|
+ \le\tanh\left|\frac{a+sb}{2}\right|.
+\]
+For example, after writing $a=A+D$, $b=A-D$, the half-sum equals
+$\sinh(2A)/[\cosh(2A)+\cosh(2D)]$, whose absolute value is at most
+$\tanh|A|$. The half-difference is identical with $A,D$ interchanged.
+Applying the scalar assertion to $(G_x+sG_y)/2$ proves the claim,
+without any nonsingularity assumption.
+\end{proof}
+
+\begin{theorem}[Finite-width clean-margin upper bounds for all $\gamma\ge1$]
+\label{thm:critical-clean-upper}
+For every $d\ge1$, $N\ge1$, $L\ge2$, $0<t\le1$, and every Boolean function $f$,
+\[
+ \mu_{N,t}(A_{N,f})\le
+       \exp\{-(N/t^2)\psi(d)\},
+ \qquad
+ \psi(d)=\begin{cases}d/8,&d\le4,\\1-2/d,&d\ge4.\end{cases}
+\]
+The unconditioned Gaussian probability of global clean margin satisfies
+\[
+ \mu_{N,t}(A_N)\le
+       \min\{1,\ 2^{d+1}\exp[-(N/t^2)\psi(d)]\}.
+\]
+In the usual scaling $t^2=N^{1-\gamma}$, the exponential speed $N/t^2$
+is $N^\gamma$, and the assumption is $\gamma\ge1$.
+The first bound holds with no factor depending on depth or width outside
+its exponential. The simpler exponent $1-2/d$ is valid in every dimension.
+\end{theorem}
+
+\begin{proof}
+Fix two inputs $x,y$, a choice $s\in\{-1,1\}$, and $a\in(0,1]$.
+For the empirical
+hidden feature covariance $Q_j$, set
+\[
+ v_j=\frac14\bigl(Q_j(x,x)+Q_j(y,y)+2sQ_j(x,y)\bigr),
+ \qquad 0\le j\le L-1,
+\]
+where $Q_0(x,y)=\bar x\cdot\bar y/d$. Conditional on the previous
+layer, the $N$ preactivation pairs are independent centered Gaussians
+with covariance given by $t^2Q_{j-1}$. Lemma~\ref{lem:critical-exponential-potential}
+therefore gives
+\[
+ \mathbb E[\exp((2aN/t^2)v_j)\mid\text{previous layers}]
+       \le\exp((2aN/t^2)v_{j-1}).
+\]
+Consequently $\mathbb E\exp((2aN/t^2)v_{L-1})\le\exp((2aN/t^2)v_0)$.
+
+Conditional on the hidden layers, the readout combination
+$Z=(z(x)+sz(y))/2$ is centered Gaussian with variance $t^2v_{L-1}/N$.
+For either specified sign of $Z$, its probability of exceeding $1/2$
+in that sign is at most $\exp[-N/(8t^2v_{L-1})]$, interpreted as zero
+when $v_{L-1}=0$. Since
+\[
+ \frac1{8v}\ge\sqrt a-2av\qquad(v>0),
+\]
+the unconditional one-sided probability is at most
+$\exp[-(N/t^2)(\sqrt a-2av_0)]$.
+
+If $f$ is nonconstant, some adjacent cube vertices have opposite
+labels. Choose such $x,y$ and $s=-1$. Their input difference has
+squared norm four, so $v_0=1/d$, and $A_{N,f}$ implies a specified
+sign of $Z$ exceeds $1/2$. If $f$ is constant, use antipodal inputs
+$y=-x$ and $s=+1$. Their augmented-input half-sum is the bias
+coordinate, again giving $v_0=1/d$. Maximizing $\sqrt a-2a/d$ over
+$a\in[0,1]$ gives $\psi(d)$, proving the first assertion.
+
+For the second assertion fix a spanning tree of the cube graph and
+one antipodal pair. Every nonconstant sign function changes sign on
+one of the tree's $2^d-1$ edges; a constant function has equal signs
+on the fixed antipodal pair. Each case implies $|Z|>1/2$ for its
+corresponding difference or sum. The two-sided bound and a union bound
+over these $2^d$ pairs give the result.
+\end{proof}
+
+\begin{corollary}[Universal lower critical-rate baseline]
+\label{cor:critical-rate-baseline}
+For the critical variational rate functional $J_L$ with output margin
+$1/2$, every Boolean function satisfies
+\[
+ J_L(f)\ge\psi(d)\ge1-\frac2d\qquad(L\ge2).
+\]
+\end{corollary}
+
+\begin{proof}
+This can be read directly from the finite-width upper bound whenever
+the corresponding large-deviation formula is available. There is also
+a direct proof from the variational functional, which avoids any
+interchange of width and depth limits. Choose the signed pair from the
+preceding proof, put $b=(e_x+se_y)/2$, and write $v_j=b^TQ_jb$ for
+the covariances along any admissible variational path.
+For any $a\in(0,1]$, the entropy variational inequality and
+Lemma~\ref{lem:critical-exponential-potential} at $t=1$ give, for every hidden layer,
+\[
+ D(\nu_j\Vert\mathsf M_{Q_{j-1}})\ge2a(v_j-v_{j-1}).
+\]
+The output constraints imply $|b^Tz|\ge1/2$. If the readout cost is
+finite, Cauchy--Schwarz on the range of $Q_{L-1}$ gives
+\[
+ \tfrac12 z^TQ_{L-1}^{+}z\ge\frac1{8v_{L-1}}.
+\]
+The inequality is immediate if this cost is infinite. Summing the
+entropy inequalities and minimizing over $v=v_{L-1}>0$ now yields
+\[
+ J_L(f)\ge\inf_{v>0}\left(2av+\frac1{8v}\right)-2av_0
+             =\sqrt a-\frac{2a}{d}.
+\]
+Maximizing in $a$ gives $\psi(d)$.
+\end{proof}
+
+For completeness, the same argument with an arbitrary required output
+margin $r>0$ replaces $\psi(d)$ by
+\[
+ \psi_r(d)=\max_{0\le u\le1}(2ru-2u^2/d)
+ =\begin{cases}r^2d/2,&rd\le2,\\2r-2/d,&rd\ge2.\end{cases}
+\]
+This applies to both finite-width bounds and the corresponding critical
+variational rate. No change to the network architecture is needed.
+
+The lower bound supplies a common baseline for rate comparisons. It
+does not identify the minimum rate, bound the difference between a
+target's rate and a competitor's rate, or show that the posterior is
+diffuse among functions of bounded rate. In particular, even a small
+positive rate gap is amplified by width in the critical posterior.

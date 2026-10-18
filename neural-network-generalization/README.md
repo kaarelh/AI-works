@@ -1,18 +1,20 @@
 # Bayesian neural-network generalization
 
-Papers and notes by Dmitry Vaintrob, Kaarel Hänni, and OpenAI Codex (credited as ChatGPT in the earliest manuscripts), collected on 16 October 2026.
+Papers and notes by Dmitry Vaintrob, Kaarel Hänni, and OpenAI Codex (credited as ChatGPT in the earliest manuscripts). Public research snapshot, updated 18 October 2026.
 
-The four papers below are the main results. The remaining papers are listed as side results, earlier treatments, or works in progress. “Side result” does not mean unproved: several contain complete theorems, but they are not the main presentation of this project.
+**Start here:** [main results](#main-results) · [technical FAQ: assumptions, interpretation, and open problems](TECHNICAL-FAQ.md) · [Lean verification](lean/VERIFICATION.md) · [recent depth research](#recent-depth-research)
 
-Every paper has a PDF, editable LaTeX source, and a build script. This collection contains 30 distinct papers and notes; duplicate builds, superseded versions of the same manuscript, and externally authored source material are omitted.
+The five papers below are the main results. The remaining papers are listed as side results, earlier treatments, or works in progress. “Side result” does not mean unproved: several contain complete theorems, but they are not the main presentation of this project. These are research drafts, not externally peer-reviewed publications; the FAQ distinguishes proved statements from plausible extensions and open questions.
+
+Every paper has a PDF, editable LaTeX source, and a build script. The collection contains 37 distinct papers and notes, with experimental code and selected exact certificates. The [catalog](catalog.json) identifies the canonical manuscripts; older treatments retain their historical scope and open-status remarks.
 
 ## Lean verification
 
-The four main learning statements have Lean proofs for the actual Gaussian network model, including the all-input margin and strict `>2/3` confidence convention. The subcritical theorem covers **all gamma < 1, including gamma = 0 and gamma < 0**. The parity-network appendix is also formalized, with bounded-weight complexity at most `32*(d+1)^2` at every depth.
+All five main learning statements have closed Lean proofs. The earlier four concern the original Gaussian model and its all-input margin convention; the stated strict `>2/3` confidence guarantees are included or follow from the checked risk-to-confidence conversion. The subcritical theorem covers **all gamma < 1, including gamma = 0 and gamma < 0**. The parity-network appendix is also formalized, with bounded-weight complexity at most `32*(d+1)^2` at every depth.
 
 [Lean project and instructions](lean/) · [Exact statements](lean/NeuralGeneralization/Statements.lean) · [Verification record](lean/VERIFICATION.md) · [Coverage and auxiliary exclusions](lean/review/formal-coverage-inventory.txt)
 
-The checked scope is the four exact main learning theorems and the stated parity supplement. Some formal proofs use different sufficient estimates from the papers. This does not certify every auxiliary result, sharp constant, or side paper.
+The new robustness theorem is proved for its actual robustness-restricted Gaussian posterior, with one sample event uniform over every eligible width and variance. Its [exact statement](lean/NeuralGeneralization/RobustStatements.lean) and [closed proof](lean/NeuralGeneralization/RobustMain.lean) are included. The verification record identifies the checked scope and independent source rebuild. Some formal proofs use different sufficient estimates from the papers. Lean coverage does not extend automatically to every appendix, sharp constant, or side paper.
 
 ## Main results
 
@@ -46,9 +48,19 @@ More precisely, there are $c>0$ and $k_0$ such that, for every $k\ge k_0$ and ea
 
 This is the completed full-parity exponential theorem. The stronger fixed-depth sparse-parity target $\exp\{\Omega(k\log(ed/k))\}$ in the positive subcritical regime is still open; the partial results below do not replace that target with a solved claim.
 
+### 5. Robust priors: polynomial dependence on depth
+
+[Paper (PDF)](main-results/robust-polynomial-depth/paper.pdf) · [Source and build instructions](main-results/robust-polynomial-depth/) · [Robustness FAQ](TECHNICAL-FAQ.md#12-what-robustness-condition-gives-polynomial-depth-dependence)
+
+**Polynomial depth from stability of clipped neural-network predictions.** Restrict the Gaussian prior to networks whose clipped predictions survive a calibrated ball of simultaneous internal activation and output perturbations. For layered Boolean-circuit targets of width $C$, one universal polynomial bounds sample complexity jointly in input dimension, depth, circuit width, robustness calibration, and statistical parameters, simultaneously at **every width $N\ge C$ and every $\gamma\ge1$**.
+
+The learner conditions on signed training output above $1/2$ and controls posterior test-margin error at $1/4$, hence sign error and confidence failure. The main theorem needs no all-input clean-output margin; the manuscript also treats an optional extra conditioning variant, outside the exact Lean learning statement. The comparator is a layered Boolean circuit with constant wires and compilation overhead counted; this is not an unconditional polynomial-depth theorem for every small analog neural circuit.
+
+The [experiments](works-in-progress/depth-experiments/) include genuine trained-network certificates and counterexamples. They support studying the condition, but do not establish it for arbitrary gradient-descent-trained networks or validate Bayesian posterior sample complexity empirically.
+
 ## Shared conventions
 
-In the four main papers, the learner conditions the Gaussian parameter prior on a strict absolute output margin **at every input of the Boolean cube before observing training data**, then conditions on exact noiseless labels. These are information-theoretic results about the exact posterior; efficient posterior computation is not asserted.
+In the four earlier main papers, the learner conditions the Gaussian parameter prior on a strict absolute output margin **at every input of the Boolean cube before observing training data**, then conditions on exact noiseless labels. Main result 5 uses the different, explicit robustness-support and training-margin conventions described above. These are information-theoretic results about the exact posterior; efficient posterior computation is not asserted.
 
 At fixed depth, $C_L(f)$ is the bounded-weight network complexity defined in the papers: the smallest eligible width $C$ with weights bounded by $C$. Circuit simulations are proved where used; arbitrary circuit size is not silently identified with fixed-depth network complexity.
 
@@ -94,6 +106,19 @@ These manuscripts are retained because their proofs or scope can still be useful
 
 The principal unfinished target is the fixed-depth natural sparse-parity lower bound for $0<\gamma<1$, with uniform IID samples and the actual posterior-confidence criterion. Selected-example results, symmetry-restricted certificates, and analytic reductions are side results, not a resolution of that target.
 
+## Recent depth research
+
+These are supporting results and works in progress, retained separately from the main robustness theorem. In particular, the improvements for the unrestricted learner are promising but do not resolve the general small-deep-circuit problem.
+
+| Paper or package | Scope |
+|---|---|
+| [Unrestricted depth](works-in-progress/unrestricted-depth/paper.pdf) · [source](works-in-progress/unrestricted-depth/) | Removes exponential learner-depth dependence for substantial target classes when $\gamma$ stays above one, including halfspaces and controlled shallow representations. Gives improved general-circuit bounds and representation obstructions; the arbitrary deep-target polynomial bound remains open. |
+| [Critical depth](works-in-progress/critical-depth/paper.pdf) · [source](works-in-progress/critical-depth/) | Quantitative mean-field prior-rate results and a separate polynomial parity sample lower bound. Nearly equal prior rates do not imply a uniform conditioned function prior or an exponential sample lower bound. |
+| [Earlier depth reports and standalone notes](works-in-progress/depth-supporting-notes/) | The first two depth research reports, the shallow-target treatment, and the earlier critical-rate note. Useful historical arguments and audits, with their original scope retained. |
+| [Depth experiments and reproduction guide](works-in-progress/depth-experiments/) | All 70 model configurations and outcome summaries, training/certificate code, selected original weights, and independently replayable exact positive and negative certificates. Large omitted replay archives and their availability are explicitly documented. |
+
+The [technical FAQ](TECHNICAL-FAQ.md) explains the distinction between teacher and learner depth, alternative robustness conditions, empirical evidence, and the remaining unrestricted problem.
+
 ## Companion audits
 
 | Audit | Scope |
@@ -105,6 +130,6 @@ The principal unfinished target is the fixed-depth natural sparse-parity lower b
 
 Each paper folder contains `paper.pdf`, its complete source dependencies under `source/`, and `build.sh`. Run a paper's script to rebuild it with a standard TeX Live installation. The collection also includes relevant mathematical review records and the computational certificate archives used by the structured papers.
 
-The manuscripts have not been rewritten for this collection. One earlier draft PDF was rebuilt from unchanged source to resolve missing cross-references; the other 29 PDFs are unchanged. Existing internal mathematical audits are retained where available; they are not external peer review. The separate Lean project verifies the main learning statements and the parity supplement as described above. Packaging checks are recorded in [verification/README.md](verification/README.md). [catalog.json](catalog.json) records the canonical paper inventory and PDF checksums; [SHA256SUMS](SHA256SUMS) records the published file checksums.
+The earlier collection's PDFs retain their original text. The seven new depth manuscripts were independently rebuilt from their complete source and checked against the frozen manuscripts' extracted PDF text. Existing internal mathematical audits are retained where available; they are not external peer review. The separate Lean project has the precisely delimited scope described above. Packaging checks are recorded in [verification/README.md](verification/README.md); the new paper builds are recorded in [depth-publication-builds.json](verification/depth-publication-builds.json). [catalog.json](catalog.json) records the canonical paper inventory and PDF checksums; [SHA256SUMS](SHA256SUMS) records the published file checksums.
 
 The paper collection was assembled on `codex/neural-network-generalization-papers-2026-10-16`; the Lean formalization was prepared on `codex/neural-network-lean-2026-10-16`. This folder on `main` contains the papers and their supporting records; exploratory scratch work remains outside the published collection.

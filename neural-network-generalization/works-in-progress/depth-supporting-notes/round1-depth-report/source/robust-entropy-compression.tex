@@ -1,0 +1,356 @@
+\section{Robust posterior compression uniformly for \texorpdfstring{$\gamma\ge1$}{gamma at least one}}
+\label{sec:robust-entropy}
+
+This section gives a different statistical bridge. It uses robustness of the
+original network while constructing a finite candidate, and tracks entropy
+only in the original weights that have not yet been processed. Consequently
+the intermediate compressed prefix need not have a density under a Gaussian
+prior. The result applies to a posterior containing many different functions.
+
+Let $\mu_{N,t}$, $0<t\le1$, have independent weight-entry variances
+$t^2/d$, $t^2/N$, and $t^2/N^2$ in the first, internal, and readout layers.
+The exponent-$\gamma$ prior is obtained by $t=N^{(1-\gamma)/2}$.
+All-layer sign robustness refers to the total noise norm
+in~\eqref{eq:noisenorm}; the clean $1/2$ margin may additionally be imposed.
+
+\begin{theorem}[Uniform robust posterior compression]
+\label{thm:robust-entropy}
+Fix a scalar $1$-Lipschitz activation $|\phi|\le1$, and parameters
+$d\ge1$, $L\ge2$, $K\ge1$, $0<r\le1$, and $0<\alpha\le1/8$.
+There is a finite class $\mathcal H=\mathcal H(d,L,K,r,\alpha)$, consisting of
+signs of bounded-weight depth-$L$ networks, such that
+\[
+ \log|\mathcal H|\le\poly(d,L,K,r^{-1},\alpha^{-1}).
+\]
+The polynomial is universal and does not depend on $N$ or $t$.
+If $Q\ll\mu_{N,t}$ is supported on all-layer sign-$r$ robust networks and
+\[
+ D_{\rm KL}(Q\Vert\mu_{N,t})\le NK/t^2,
+\]
+then there is a distribution $\Gamma_Q$ on $\mathcal H$ such that, for every
+$x\in\X$, a coupling of $w\sim Q$ and $h\sim\Gamma_Q$ satisfies
+\[
+ \Pp\{h(x)\ne\sgn z_w(x)\}\le\alpha.
+\]
+The coupling may depend on $x$; its two marginals do not. Neither the support
+of $Q$ nor its samples need represent a single Boolean function.
+\end{theorem}
+
+We give the proof, including deliberately loose polynomial choices.
+Two elementary entropy facts organize the construction. First, for a standard
+$D$-dimensional Gaussian $G$, the entropy variational inequality gives
+\begin{equation}\label{eq:entropy-moment}
+ \E_P\|Z\|^2\le4D_{\rm KL}(P\Vert G)+2D\log2.
+\end{equation}
+Second, Gaussian Talagrand~\cite{talagrand} gives
+$W_2^2(P,G)\le2D_{\rm KL}(P\Vert G)$.
+
+\begin{lemma}[Entropy of the unprocessed weights]
+\label{lem:future-entropy}
+Let $A,X,Y$ be random variables, with fixed reference laws $P_X,P_Y$, and put
+\[
+ B=\E_A D_{\rm KL}(Q_{X,Y\mid A}\Vert P_X\otimes P_Y).
+\]
+Let $J$ be a finite message, possibly depending on $(A,X,Y)$, and let
+$H=f(A,J,X)$. If $A'$ is a randomized function of $(A,J,H)$ whose fresh
+randomness is conditionally independent of $Y$, then
+\[
+ \E_{A'}D_{\rm KL}(Q_{Y\mid A'}\Vert P_Y)\le B+H(J\mid A).
+\]
+\end{lemma}
+\begin{proof}
+The left side equals $D_{\rm KL}(Q_Y\Vert P_Y)+I(Y;A')$.
+Data processing and
+\[
+ I(Y;J,H\mid A)\le I(Y;X,J\mid A)
+ \le I(Y;X\mid A)+H(J\mid A)
+\]
+bound it by $\E_{A,X}D_{\rm KL}(Q_{Y\mid A,X}\Vert P_Y)+H(J\mid A)$,
+which is at most the claimed bound by the KL chain rule. These expressions
+can equivalently be justified by finite partitions and lower semicontinuity.
+\end{proof}
+
+Here $A$ will be a constructed prefix, $X$ the current original weight block,
+and $Y$ all later original blocks. The lemma imposes no reference law on $A$.
+
+\begin{lemma}[Whole-layer active directions]
+\label{lem:block-entropy}
+Condition on $(A,Y)$ and let $X$ be a standardized Gaussian-reference matrix,
+with conditional relative entropy $R(A,Y)$. For vectors $b_x(A)$ of norm at
+most one, one can select a list $J$ of inputs and its span
+$U=\operatorname{span}\{b_x:x\in J\}$ with
+\[
+ \dim U\le\frac{t^2R(A,Y)}{N\delta}
+\]
+such that preserving $H=tXU$ and replacing the orthogonal coordinates by fresh
+Gaussian coordinates changes the physical evaluation vectors $tXb_x$, under
+a suitable coupling, by expected squared RMS at most $2\delta$ at each $x$.
+The candidate matrix law preserves $(A,Y,H)$ and does not depend on $x$.
+\end{lemma}
+\begin{proof}
+Use a fixed ordering of the finite input set. Whenever the averaged conditional
+KL of the entire residual evaluation vector $Xv$ exceeds $N\delta/t^2$, add
+the unit residual direction $v$ of that input. Each query is selected from
+the conditional law given $(A,Y)$, averaging over active-coordinate values;
+thus $J$ is a function of $(A,Y)$. Orthogonal Gaussian coordinates
+are independent, so the active-coordinate entropy increases by precisely this
+conditional KL. The displayed rank bound follows. At termination, Gaussian
+Talagrand on the entire evaluation vector, multiplication by the squared
+residual-vector length, and division by $N/t^2$ give the error bound.
+Scalar-vector couplings extend to full matrices by disintegration.
+The basis of $U$ is a measurable function of $A,J$ under fixed Gram--Schmidt;
+it has no further dependence on $Y$ once those variables are supplied.
+\end{proof}
+
+\paragraph{Parameter choices.}
+Write
+\begin{align*}
+ e&=\alpha r^2/(1000L),& \eta&=\alpha/(100L),&
+ q&=\lceil2K/(e\eta)\rceil,\\
+ D_0&=[(d+1)q+2]\log2,& V&=8K+2q,& B_H^2&=4V/e,\\
+ T&=128(q+1)(B_H^2+1)/e,& a&=e/[128(B_H^2+1)],\\
+ K_0&=(4K+2\log2)/\eta,& B_v&=16K_0/r.
+\end{align*}
+Choose $m$ to be the least positive integer no smaller than both
+\begin{align*}
+ &10000T^4(q+1)^2a^{-2}[d+\log(10(q+1)/\eta)+1],\\
+ &10000B_v^2r^{-2}[d+\log(10/\eta)+1],
+\end{align*}
+and put
+\[
+ N_0=\max\{m,\lceil LD_0/K\rceil,1\},\quad
+ B_G=\max\{2,2\sqrt{\log(3m/e)}\},\quad
+ B_1^2=4[4K+2(d+1)\log2]/e.
+\]
+All quantities have a fixed polynomial upper bound in the theorem parameters.
+
+\paragraph{The small-width case.}
+If $N\le N_0$, let
+$P_0=N_0(d+1)+(L-2)N_0^2+N_0$. Applying~\eqref{eq:entropy-moment} to all
+standardized weights, and then multiplying by $t^2$, gives
+\[
+ \E_Q\|tZ_{\rm all}\|^2\le4N_0K+2P_0\log2.
+\]
+With probability at least $1-\alpha/4$, all actual weights are bounded by
+\[
+ B_{\rm small}=[4(4N_0K+2P_0\log2)/\alpha]^{1/2}.
+\]
+Keep the original network on this event and use a default classifier otherwise.
+Padding with nodes having zero outgoing weights preserves the original output.
+The successful candidate has output margin greater than $r$.
+It remains to treat $N>N_0$.
+
+\paragraph{The virtual prefix and its entropy budget.}
+The constructed prefix $A$ has $N$ virtual nodes in its current layer. Each
+virtual row acts on $m$ stored nodes of the preceding layer. The auxiliary
+description may keep all $N$ rows; the final network will keep just the rows
+selected at the following stage. Track the conditional KL of the unprocessed
+\emph{original} weights. By Lemma~\ref{lem:future-entropy}, it is at most
+\[
+ B_s\le NK/t^2+sD_0\le2NK/t^2.                              \tag{*}
+\]
+This is not a KL bound for the singular compressed prefix itself.
+
+For the first layer, zero every physical standardized row $tZ_{1,i}$ of norm
+greater than $B_1$, and retain all other rows. Bounded activations and
+\eqref{eq:entropy-moment} bound the expected squared RMS activation change
+at each input by $e$. This deterministic prefix channel does not increase the
+future entropy budget.
+
+\paragraph{An internal layer: retain active data.}
+Condition on the current prefix $A$ and the future original weights $Y$.
+Apply Lemma~\ref{lem:block-entropy} to
+$b_x=h_A(x)/\sqrt N$ and $\delta=e$. Abort if more than $q$ inputs are needed.
+By (*) and Markov, this failure has probability at most $\eta$.
+The successful query list, together with an abort flag, has a code of at most
+$[(d+1)q+2]$ bits. Its entropy is at most $D_0$.
+
+Let $H=tXU$ be the physical active matrix. Averaging the Gaussian entropy
+moment bound, with the success indicator rather than conditioning on success, gives
+\[
+ \E\left[\frac{\|H\|_F^2}{N};\ \text{success}\right]
+ \le4t^2B_s/N+2t^2q\log2\le V.
+\]
+Zero every row $H_i$ whose norm exceeds $B_H$. The expected squared RMS
+activation change from this operation is at most $4V/B_H^2=e$.
+All rows are clipped before any later selection, including selections that
+may depend on future weights.
+
+\paragraph{An internal layer: reconstruct using $m$ source nodes.}
+For the orthonormal active basis let $u(j)=\sqrt N\,U_{j,:}$; uniform source
+sampling gives $\E_j u(j)u(j)^\top=I$.
+Clip the \emph{whole vector} at radius $T$:
+$c(j)=u(j)\mathbf1_{\{\|u(j)\|\le T\}}$. Then
+\[
+ \E cc^\top\preceq I,\qquad \E\|u-c\|\le q/T.
+\]
+Sample $m$ uniform source indices $S_j$. Entrywise Hoeffding and a union bound
+give, with probability at least $1-\eta$,
+\begin{align*}
+ \|\widehat G-\E cc^\top\|_{\op}&\le a,\quad
+ \sup_x\|\widehat v(x)-\E c h_A(x)\|\le a,\\
+ \sup_{x,y}|\widehat K(x,y)-K(x,y)|&\le a,
+\end{align*}
+where $\widehat G=m^{-1}\sum_jc(S_j)c(S_j)^\top$,
+$\widehat v(x)=m^{-1}\sum_jc(S_j)h_{A,S_j}(x)$, and $\widehat K$ is the
+empirical feature covariance; its population counterpart is
+$K(x,y)=N^{-1}\sum_i h_{A,i}(x)h_{A,i}(y)$.
+Abort on failure; this event depends only on
+$A,J,S$, so it does not reveal further future information.
+
+Set $\widetilde c_j=c(S_j)/\sqrt{1+a}$, and let $D$ have rows
+$\widetilde c_j^\top/\sqrt m$. Then $D^\top D\preceq I$ and
+$I-DD^\top\succeq0$. Independently for every target virtual row draw
+$\xi_i\sim N(0,I-DD^\top)$ and use coefficients
+\begin{equation}\label{eq:finite-row}
+ \widehat w_{ij}=m^{-1}H_i^{\rm clip}\cdot\widetilde c_j
+                         +t\xi_{ij}/\sqrt m.
+\end{equation}
+These are actual neural-network rows on the $m$ sampled nodes.
+Their active feature vector is
+$\widehat\psi(x)=m^{-1}\sum_j\widetilde c_jh_{A,S_j}(x)$, and the lazy
+covariance is exactly $t^2(\widehat K-\widehat\psi^\top\widehat\psi)$.
+For the ideal field, write $\psi(x)=U^\top b_x$ and
+$C(x,y)=K(x,y)-\psi(x)^\top\psi(y)$. Direct calculation gives
+\[
+ \sup_x\|\widehat\psi(x)-\psi(x)\|\le q/T+2a=:\zeta,
+ \qquad \sup_{x,y}|\widehat C(x,y)-C(x,y)|\le a+2\zeta.
+\]
+Here $\widehat C=\widehat K-\widehat\psi^\top\widehat\psi$.
+Bessel's inequality and $D^\top D\preceq I$ give
+$\|\psi(x)\|,\|\widehat\psi(x)\|\le1$, which justify the covariance bound.
+At a fixed input, coupling scalar Gaussian evaluations with a common standard
+normal bounds the squared preactivation transport error, per row, by
+\[
+ B_H^2\zeta^2+t^2(a+2\zeta)\le e/8.
+\]
+Extend these scalar couplings to full row fields. The candidate weight law is
+the same at every input; there is no claim of a single Gaussian-field coupling
+that is close at all inputs simultaneously.
+
+Finally clip \emph{all} coordinates $\xi_{ij}$ to $[-B_G,B_G]$ before later
+row selection. Since each has variance at most one,
+\[
+ \E\left|\frac{t}{\sqrt m}\sum_j
+   (\xi_{ij}-\operatorname{clip}_{B_G}\xi_{ij})h_{A,S_j}(x)\right|^2
+ \le3m e^{-B_G^2/4}\le e.
+\]
+Thus every virtual coefficient is bounded by $B_HT/m+B_G/\sqrt m$,
+without a union bound over $N$.
+
+All newly constructed data are a randomized function of $A,J,H$.
+Lemma~\ref{lem:future-entropy} therefore proves (*) for the next step.
+Combining entropy replacement, active clipping, finite reconstruction, and
+Gaussian clipping by $(a_1+\cdots+a_4)^2\le4\sum_i a_i^2$, the expected
+squared RMS activation injection at this layer is less than $20e$.
+
+\paragraph{The readout and final network.}
+The original readout marginal has never changed. Its physical moment satisfies
+$\E_Q[N\|v\|^2]\le4K+2\log2$.
+Abort if $N\|v\|^2>K_0$, an event of probability at most $\eta$.
+Zero coefficients with $|Nv_i|>B_v$. This changes the output uniformly on
+bounded virtual feature vectors by at most $K_0/B_v=r/16$.
+Sampling $m$ uniform last-layer sources and using readout coefficients
+$(Nv_i\mathbf1_{|Nv_i|\le B_v})/m$ adds at most $r/16$ uniformly on $\X$,
+except with probability $\eta$, by Hoeffding and the chosen $m$.
+
+At each stage, retain in the final network just the $m$ source rows selected
+from the preceding virtual layer. Each such row already acts on the previously
+stored $m$ nodes. The result is an ordinary width-$m$ network; repeated indices
+are duplicate nodes. Its weights are bounded by
+\[
+ B_{\rm large}=\max\{B_1,B_HT/m+B_G/\sqrt m,B_v/m,1\}.
+\]
+The larger virtual construction is not part of the final predictor.
+
+\paragraph{The original network receives all perturbations.}
+Fix an input $x$ and glue the conditional couplings, retaining the original
+weight history. The current and future original blocks are untouched until
+their own stages. Define
+\[
+ \eta^s=h^s_{\rm virtual}(x)
+           -\phi(W^s_{\rm original}h^{s-1}_{\rm virtual}(x)).
+\]
+The analogous readout difference is $\eta^L$. Later stages leave earlier
+computational prefixes unchanged, so the final candidate output is exactly
+the \emph{original} network's output under these postactivation injections.
+No intermediate robustness assumption is made.
+
+For precision, the canonical construction draws its new Gaussian coefficients
+independently of the discarded current block given $(A,J,H)$. The comparison
+coupling may correlate them with that discarded block. It preserves the same
+joint marginal of the new prefix and the future original blocks, as well as
+the original full-network marginal, but need not preserve the canonical joint
+law with all discarded weights. The next entropy step uses the first marginal;
+original-network robustness uses the second. There is no conflicting demand
+for independence in the comparison coupling itself.
+
+More explicitly, the induction invariant is that the comparison law has
+full original-weight marginal $Q$ and the canonical marginal of
+$(A,X,Y)$. The conditional transports supply a joint law of
+$(A,X,Y,A')$ with this incoming marginal and the prescribed outgoing
+$(A',Y)$ marginal. Extend it by the previous conditional law of the past
+original weights given $(A,X,Y)$. The extension keeps the complete original
+weight law unchanged, preserves all earlier computational prefixes, and
+establishes the same invariant for the next layer. This is ordinary
+disintegration on finite-dimensional standard Borel spaces.
+
+Abort probability is at most $2L\eta$. The unconditional moment bound gives
+\[
+ \Pp\left\{\text{no abort and }\sum_{s<L}\|\eta^s\|^2/N>r^2/8\right\}
+ \le160Le/r^2=0.16\alpha.
+\]
+Otherwise the readout injection is at most $r/8$, and total squared noise is
+at most $9r^2/64<r^2/4$. Robustness then gives candidate margin greater than
+$r/2$ relative to the original network's label: a smaller margin could be
+cancelled by an additional output shift within the radius-$r$ noise ball.
+The exceptional probability is less than $\alpha/4$.
+
+\paragraph{A fixed finite class.}
+Pad candidates to width $M=N_0$ and take
+$B=\max(B_{\rm small},B_{\rm large},1)$. Round every parameter to a fixed
+grid on $[-B,B]$ of mesh at most
+\[
+ h=\frac{r}{16(d+L+1)(2M(B+1))^L}.
+\]
+The bounded-activation, Lipschitz layer recursion gives uniform output change
+at most $r/8$. Thus rounding preserves every successful coupled prediction.
+Writing $P=M(d+1)+(L-2)M^2+M$, the grid class satisfies
+\[
+ \log|\mathcal H|\le
+ P\log\left[3+\frac{32B(d+L+1)(2M(B+1))^L}{r}\right].
+\]
+Although grid precision is exponentially small in $L$, its number of bits is
+polynomial in $L$. All other bounds above are polynomial too. Rounding is a
+fixed map on candidate networks, giving the common marginal $\Gamma_Q$ and
+proving Theorem~\ref{thm:robust-entropy}.
+
+\begin{corollary}[Polynomial-depth learning at every width]
+\label{cor:robust-entropy-pac}
+Suppose the raw Gaussian target event, consisting of networks with all-layer
+sign margin $r$ and clean margin $1/2$ for $f$, has mass at least
+$\exp(-NK/t^2)$. Restrict the prior to all sign-$r$ robust networks having
+global clean margin $1/2$, regardless of their Boolean function, then condition
+on $n$ noiseless iid training examples. With probability at least $1-\beta$,
+the resulting posterior satisfies
+\[
+ \operatorname{GibbsErr}(Q)
+ \le2\alpha+\sqrt{\frac{\log(2|\mathcal H|/\beta)}{2n}}.
+\]
+Consequently the sample bound is jointly polynomial in
+$d,L,K,r^{-1}$ and inverse desired error, uniformly in $N$ and $0<t\le1$.
+For posterior-confidence error at threshold $2/3$, multiply Gibbs error by
+three; for threshold $1/2$, multiply it by two.
+\end{corollary}
+\begin{proof}
+The posterior is the raw Gaussian conditioned on an event containing the target
+event, so its KL is at most $NK/t^2$. Its training error is zero. The compression
+couplings imply that $\Gamma_Q$ has expected empirical error at most $\alpha$.
+Finite-class uniform convergence holds for every member of $\mathcal H$, hence
+also for this sample-dependent mixture. Its true error is at most $\alpha$
+plus the displayed square-root term. The pointwise coupling adds at most one
+more $\alpha$ to recover original posterior Gibbs error. This argument does
+not require a global coupling over inputs or a common function for all draws.
+The confidence-error statements follow from Markov on posterior error
+probability at a random test input.
+\end{proof}

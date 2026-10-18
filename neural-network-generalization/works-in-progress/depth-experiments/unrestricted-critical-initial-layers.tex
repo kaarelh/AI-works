@@ -1,0 +1,74 @@
+\section{Every fixed initial segment becomes unconditioned}
+\label{sec:critical-initial-layers}
+
+The common-rate theorem has a qualitative consequence about where a
+near-optimal path can change the features. This is a statement about
+variational paths; it does not control the later low-variance layers.
+
+\begin{proposition}[Unconditioned fixed prefixes of deep optimal paths]
+\label{prop:critical-unconditioned-prefix}
+Fix the input dimension $d$ and a Boolean target $f$. Let $L_n\to\infty$
+and choose admissible critical variational paths of costs $A_n$ with
+$A_n\to V_*$. Write their feature laws and second moments as
+$\nu_{n,j},Q_{n,j}$. Let the unconditioned feature sequence be
+\[
+ \nu_j^0=\mathsf M_{Q_{j-1}^0},\qquad
+ Q_j^0=\int hh^T\,d\nu_j^0(h),
+\]
+starting from the prescribed first-layer covariance $Q_0$.
+For every fixed integer $T\ge1$,
+\[
+ \sum_{j=1}^T
+ D(\nu_{n,j}\Vert\mathsf M_{Q_{n,j-1}})\longrightarrow0,
+ \qquad Q_{n,j}\longrightarrow Q_j^0\quad(1\le j\le T).
+\]
+In fact $\nu_{n,j}\to\nu_j^0$ in total variation for every fixed
+$j\ge1$.
+\end{proposition}
+
+\begin{proof}
+Choose the signed pair used in the common-rate lower bound, and let
+$v_{n,j}$ be its pair variances. Strict dissipation and bounded total
+cost show
+\[
+ \sum_{j=0}^{L_n-2}v_{n,j}^2\le C.
+\]
+Choose an index $i_n\in\{0,\ldots,L_n-2\}$ minimizing these
+variances. Then $v_{n,i_n}\to0$. The suffix scalar comparison gives
+\[
+ 0\le\sum_{j=1}^{i_n}
+ D(\nu_{n,j}\Vert\mathsf M_{Q_{n,j-1}})
+ \le A_n-V(v_{n,i_n})\longrightarrow0.
+\]
+
+We claim $i_n\to\infty$. Otherwise pass to a subsequence on which
+$i_n=i$ is a fixed nonnegative integer. For $i=0$, its variance is
+the fixed positive number $1/d$, a contradiction. For $i\ge1$,
+Pinsker's inequality and continuity of the Gaussian feature-covariance
+map inductively imply $Q_{n,j}\to Q_j^0$ for $j\le i$.
+The first unconditioned feature covariance is positive definite by
+the spectrum lemma. Every subsequent one remains positive definite:
+if $Q\succ0$, a nonzero linear combination of the coordinatewise
+tanh functions is nonzero on an open subset of $\mathbb R^m$,
+and a nonsingular Gaussian assigns that subset positive probability.
+Thus the selected pair variance in $Q_i^0$ is strictly positive,
+contradicting $v_{n,i_n}\to0$. This proves the claim.
+
+For any fixed $T$, eventually $i_n\ge T$, so the prefix entropy
+sum through $T$ tends to zero. Pinsker and induction again give the
+covariance convergence. At the first layer the reference law is fixed,
+so total variation convergence follows directly from Pinsker. At
+every later fixed layer, $Q_{j-1}^0$ is positive definite. Gaussian
+laws are continuous in total variation under convergence to a positive
+definite covariance; applying coordinatewise tanh cannot increase
+total variation. A final triangle inequality with Pinsker proves the
+claimed convergence of each feature law.
+\end{proof}
+
+The result applies to nearly minimizing paths because the upper and
+lower common-rate bounds force their costs to tend to $V_*$. It says
+that target-specific modification moves beyond every fixed initial
+layer as depth grows. It does not say that all later features are
+Gaussian, or that the final predictor is a kernel method: a long
+low-variance segment can accumulate a target-specific change with
+vanishing total entropy cost.

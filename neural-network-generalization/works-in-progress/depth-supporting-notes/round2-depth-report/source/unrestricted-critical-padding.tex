@@ -1,0 +1,166 @@
+\section{Two partial results at the critical exponent}
+\label{sec:critical-padding-new}
+
+The preceding unrestricted learning theorem stops at $\gamma>1$.
+At $\gamma=1$, polynomial-depth target-mass estimates alone are already
+available from robust neighborhood constructions; they do not settle the
+posterior's generalization. The next estimate supplies a particularly
+simple stochastic padding construction whose additional depth costs only
+a universal constant per layer. It also identifies precisely which part
+of the argument is still missing.
+
+\begin{proposition}[Finite-width critical target mass by stochastic padding]
+\label{prop:critical-stochastic-padding}
+Let $f$ have the shallow unit-margin representation from
+Theorem~\ref{thm:shallow-all-depths}, with $C$ features and all weights
+bounded by $R\ge1$. Set
+\[
+ \rho=(8\sqrt2 CR)^{-1},\quad
+ B=\frac12\left[d\max_j\|a_j\|^2+
+                (d+1)(\rho^2-1-\log\rho^2)\right],
+ \qquad K=B+8C^2R^2+18L+2.
+\]
+At the exact critical prior scale $\gamma=1$, for every $L\ge2$ and
+\[
+ N\ge512C^2R^2\bigl[(d+1)\log2+\log(8L)\bigr],
+\]
+the raw Gaussian probability of the target's global clean-margin event is
+\[
+ \mu_{N,1}(A_{N,f})\ge\tfrac14e^{-2NK}.
+\]
+No support restriction is imposed on the original prior.
+\end{proposition}
+
+\begin{proof}
+We construct an auxiliary law $\mathbb Q$ on network weights and show
+that it has relative entropy at most $NK$ from the original Gaussian
+law, while assigning the target event probability at least $1/2$.
+Introduce independent uniform labels $J_i\in\{1,\ldots,C\}$, also under
+the reference law; forgetting these labels can only decrease entropy.
+Under $\mathbb Q$, the first-layer row is
+\[
+ W_i^1=a_{J_i}+\rho G_i/\sqrt d,
+ \qquad G_i\sim\mathcal N(0,I_{d+1}).
+\]
+Its conditional entropy from the reference $\mathcal N(0,I_{d+1}/d)$
+is at most $B$, so the entire first layer costs at most $NB$.
+Let $h_i(x)=\tanh(W_i^1\bar x)$ and
+\[
+ u_i=Cv_{J_i}/N,\qquad z_N(x)=\sum_i u_i h_i(x).
+\]
+The expected value of $z_N$ differs from the original shallow output
+by at most $CR\sqrt2\rho=1/8$. Its summands before division by $N$
+are bounded in absolute value by $CR$. Hoeffding's inequality and a
+union bound over the cube imply, except with probability at most $1/8$,
+\[
+ f(x)z_N(x)\ge3/4\qquad\hbox{for every }x.
+\]
+Indeed the probability that the uniform approximation to its expectation
+exceeds $1/8$ is at most $2^{d+1}e^{-N/(128C^2R^2)}$.
+
+For $L\ge3$, give each row of the next weight matrix the mean $4u$
+and retain its reference covariance $I/N$. The conditional preactivation
+mean is $4z_N(x)$, and its variance is at most one.
+If a Gaussian has signed mean at least $3$ and variance at most one,
+its expected signed tanh is greater than $2/3$. For example, its signed
+value is at least $1$ except on an event of probability at most
+$\Phi(-2)<1/32$, and $\tanh1>3/4$, giving the lower bound $89/128>2/3$.
+The layer's conditional entropy cost is
+\[
+ \frac{N^2}{2}\|4u\|^2\le8NC^2R^2.
+\]
+Its empirical mean activation therefore has signed value at least
+$7/12$ at every input, except on an event of conditional probability
+at most $2^d e^{-N/288}$.
+
+For every remaining hidden layer, give each incoming weight mean $6/N$
+and retain variance $1/N$. Its preactivation mean is six times the
+preceding empirical mean. Thus the same induction preserves the signed
+empirical mean bound $7/12$: its next preactivation mean is at least
+$7/2>3$, and the same concentration estimate applies.
+Each such layer costs exactly $18N$ in conditional relative entropy.
+The union of the bad events over all hidden layers has probability
+less than $1/8$ under the displayed width assumption.
+
+Finally, give each readout weight mean $2/N$ and retain variance $1/N^2$.
+This costs $2N$. Conditional on the hidden layers, its mean has signed
+value at least $7/6$ and its noise variance is at most $1/N$ at each
+input. A Gaussian tail bound and the union bound show that its noise
+is uniformly at most $1/2$, except with probability at most
+$2^{d+1}e^{-N/8}<1/8$. Consequently the output has signed margin at
+least $2/3$, strictly above the required $1/2$.
+When $L=2$, omit the extra hidden layers and instead give the readout
+mean $2u$, at entropy cost at most $2NC^2R^2$. The same final Gaussian
+noise estimate applies, and its mean has signed margin at least $3/2$.
+
+The relative entropy chain rule gives
+$D(\mathbb Q\Vert\mu_{N,1})\le NK$, and the preceding good events have
+joint probability at least $1/2$. Binary data processing yields, for
+$p=\mu_{N,1}(A_{N,f})$ and $q=\mathbb Q(A_{N,f})\ge1/2$,
+\[
+ NK\ge q\log(1/p)-\log2\ge\tfrac12\log(1/p)-\log2.
+\]
+Rearranging proves the stated target-mass lower bound.
+\end{proof}
+
+The estimate is deliberately elementary. In particular, it proves
+neither polynomial counting of all low critical-rate Boolean functions
+nor polynomial sample complexity at arbitrary learner width. The
+existing critical-rate compression argument propagates tilt bounds by
+$g\mapsto3g+2g^2$; a linear-in-depth target rate does not prevent that
+recursion from growing very rapidly. The unresolved issue is control of
+\emph{competing posterior functions}, rather than construction of a
+likely enough target.
+
+\begin{lemma}[Polynomial attenuation in the unperturbed critical bulk]
+\label{lem:critical-bulk-attenuation}
+Fix $q_0>0$, and define
+\[
+ q_{s+1}=\mathbb E\tanh^2(\sqrt{q_s}Z),\qquad
+ a_s=\mathbb E\operatorname{sech}^2(\sqrt{q_s}Z),
+ \qquad Z\sim\mathcal N(0,1).
+\]
+Then, as $s\to\infty$,
+\[
+ q_s=\frac1{2s}+O\!\left(\frac{\log s}{s^2}\right),\qquad
+ \prod_{s=0}^{L-1}a_s=c(q_0)L^{-1/2}(1+o(1)),
+\]
+where $0<c(q_0)<\infty$. Moreover
+\[
+ \sum_{s=0}^{L-1}(a_s^{-2}-1)=\log L+O(1).
+\]
+The constants may depend on $q_0$.
+\end{lemma}
+
+\begin{proof}
+The strict inequality $\tanh^2 u<u^2$ for $u\ne0$ shows that $q_s$
+decreases to zero; continuity excludes a positive limit.
+Taylor expansion, with globally bounded derivatives and Gaussian
+moments controlling the remainder, gives
+\[
+ F(q):=\mathbb E\tanh^2(\sqrt qZ)=q-2q^2+O(q^3).
+\]
+For all sufficiently large $s$ this implies
+$1/q_{s+1}-1/q_s=2+O(q_s)$, first giving $q_s=\Theta(1/s)$ and then,
+by summation, $1/q_s=2s+O(\log s)$. This proves the variance estimate.
+The identity $a_s=1-q_{s+1}$ is exact. Hence
+\[
+ \log a_s=-q_{s+1}+O(q_{s+1}^2),\qquad
+ a_s^{-2}-1=2q_{s+1}+O(q_{s+1}^2).
+\]
+Since $q_s-1/(2s)$ and $q_s^2$ are summable, summing the first identity
+shows that $\log\prod_{s<L}a_s+(1/2)\log L$ converges to a finite real
+constant. Exponentiating gives the positive constant $c(q_0)$.
+Summing the second identity proves the final assertion.
+\end{proof}
+
+The factor $a_s$ is the derivative at zero of
+$m\mapsto\mathbb E\tanh(m+\sqrt{q_s}Z)$. Thus a weak coherent signal
+in the \emph{unperturbed} critical bulk experiences polynomial, rather
+than exponential, total attenuation. Compensating each infinitesimal
+attenuation with a gain $a_s^{-1}$ would add only $\log L+O(1)$ to the
+sum of squared scalar gains. This motivates a possible
+$L/2+O(\log L)$ entropy padding cost. It is not a proof of such a
+posterior result: a finite coherent signal changes the covariance
+recursion, and the conditioned posterior need not retain the
+unperturbed Gaussian feature laws.

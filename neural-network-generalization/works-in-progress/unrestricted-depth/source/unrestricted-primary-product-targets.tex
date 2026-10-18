@@ -1,0 +1,155 @@
+\section{Polynomial product norm suffices after logarithmic added depth}
+\label{sec:product-targets}
+
+The posterior representation ceiling has a partial converse for a
+specified finite-width target representation. Polynomial product norm
+alone does not balance the physical tanh layers, but small-prefix
+linearization and unequal clone counts balance all retained hidden
+layers. Only a polynomial readout cost then needs to be transmitted.
+
+\begin{theorem}[Deep targets with polynomial product norm]
+\label{thm:product-target-log-padding}
+Suppose a width-$C$, depth-$D_0\ge2$ tanh network has global signed
+margin at least one for $f$, and product of layer Frobenius norms at
+most $P$. Put $P_0=\max\{1,P\}$ and
+\[
+ \tau^2=\frac1{16P_0D_0(d+1)^{3/2}},\qquad
+ T=\frac{32CP_0^2}{\tau^2}.
+\]
+For every fixed $\zeta>0$, the original unrestricted Gaussian posterior
+has sample complexity polynomial in
+\[
+ d,C,D_0,P_0,L,\varepsilon^{-1},\log(2/\delta)
+\]
+at every learner depth
+\[
+ L\ge D_0+\lceil\log T\rceil,
+\]
+simultaneously for every $N\ge C_L(f)$ and every
+$0<\sigma^2\le N^{-(1+\zeta)}$. The same polynomial conclusion holds
+under the alternative depth condition $L\ge2D_0$.
+There is no bound on the individual weights of the specified target
+representation and no internal robustness restriction.
+\end{theorem}
+
+\begin{proof}
+Write $M_j$ for the actual Frobenius norm of its $j$th matrix, including
+the readout, and $S_j=\prod_{i\le j}M_i$ for the prefix products.
+All norms are positive, since the global margin excludes a zero map.
+The augmented input norm is $R_0=\sqrt{d+1}$.
+At every hidden layer, boundedness of tanh and the suffix Lipschitz
+bound give
+\[
+ 1\le |z(x)|\le\sqrt C\,\frac P{S_j},
+ \qquad S_j\le P\sqrt C.
+\]
+Using an upper bound $P$ instead of the exact full product only weakens
+this inequality.
+
+Replace the tanh activation by the identity at each hidden layer whose
+original prefix product satisfies $S_j<\tau$.
+The inequality $|u-\tanh u|\le |u|^3/3$ and a telescoping argument give
+total output change at most
+\[
+ \sum_{j:S_j<\tau}\frac{P}{S_j}
+      \frac{(S_jR_0)^3}{3}
+ \le\frac{PD_0\tau^2R_0^3}{3}\le\frac1{48}.
+\]
+The same prefix and suffix bounds apply throughout this telescoping,
+since both identity and tanh are zero-preserving and one-Lipschitz.
+Collapse the resulting consecutive linear matrices into their next
+nonlinear layer or the final readout, then double the readout. The
+result still computes $f$ with unit margin.
+
+If every hidden activation was removed, $f$ is a Boolean halfspace,
+and Theorem~\ref{thm:halfspace-unrestricted-all-depths} proves the claim.
+Otherwise let $H\ge1$ be the number of retained hidden layers, with
+original indices $j_1<\cdots<j_H$. Their retained prefix bounds satisfy
+\[
+ \tau\le S_{j_s}\le P_0\sqrt C.
+\]
+The first collapsed matrix has Frobenius norm at most $S_{j_1}$;
+the $s$th has norm at most $S_{j_s}/S_{j_{s-1}}$; and the doubled
+readout has norm at most $2P_0/S_{j_H}$. These are assigned norm bounds;
+matrix multiplication can make the actual norms smaller without
+affecting any subsequent upper bound. In particular every collapsed
+physical weight is at most
+\[
+ R=\max\{1,2P_0\sqrt C/\tau\}.
+\]
+
+Define
+\[
+ a=\frac{d\tau^2}{8C},\qquad
+ r_s=\frac{a}{dS_{j_s}^2}=\frac{\tau^2}{8C S_{j_s}^2},
+ \qquad r_{\min}=\frac{\tau^2}{8C^2P_0^2}.
+\]
+Then $r_{\min}\le r_s\le1/(8C)$ and $a<1/8$.
+At common width $N$, give every original neuron in retained layer $s$
+exactly $c_s=\lceil Nr_s\rceil$ clones, divide outgoing weights by
+$c_s$, and fill the remaining positions with zero neurons.
+For
+\[
+ N\ge M:=\left\lceil\max\{2C,8D_0/r_{\min},2R,4T,4\}\right\rceil,
+\]
+the clone counts fit in width $N$ and
+$Nr_s\le c_s\le Nr_s(1+1/(8D_0))$.
+This preserves the collapsed network exactly. Its pre-readout energy
+and readout energy obey
+\[
+ E_{\rm pre}\le a\left(1+\frac1{8D_0}\right)
+ +(H-1)\left(1+\frac1{8D_0}\right)\le H,
+\]
+\[
+ c^2=N\|v_N\|_2^2
+ \le\frac{dS_{j_H}^2}{a}\frac{4P_0^2}{S_{j_H}^2}
+ =\frac{32CP_0^2}{\tau^2}=T.
+\]
+For the first inequality, $H\le D_0-1$ and $a<1/8$ leave more than
+enough slack to absorb all clone rounding.
+
+Replace the readout by the scalar-transmission construction with
+$m=L-H$ weighted layers, and double its final readout as in the
+shallow-target proof. The resulting unit-margin witness has energy
+\[
+ K\le H+(m+15)T^{1/m}.
+\]
+The stated depth conditions ensure $m\ge2$.
+If $L\ge D_0+\lceil\log T\rceil$, then $m\ge\log T$, and
+$e^u\le1+2u$ for $0\le u\le1$ gives
+\[
+ K\le L+15+32\log T.
+\]
+Hence the Gaussian-distance parameter is bounded by
+\[
+ Q_*^2=((K+2)/L)^L\le e^{17}T^{32}.
+\]
+Under the alternative condition $L\ge2D_0$, one has $L/m\le2$ and
+the direct estimate
+\[
+ K+2\le(L+17)T^{1/m},\qquad Q_*^2\le e^{17}T^2.
+\]
+In either case, $K,Q_*$ and $M$ are polynomial in the stated target
+parameters and learner depth. The Gaussian-distance theorem therefore
+gives the required sample bound for all $N\ge M$.
+
+We check the actual smaller-width convention. The collapsed weights
+are at most $R\le M/2$, and cloning can only reduce internal and
+readout weights. The first scalar-transmission matrix has weights at
+most $1.1R<M$. If $q^2=\max\{c^2,1\}^{1/m}\le T$, the remaining
+scalar weights have magnitudes at most $2.2q/N$ and $2q/N$.
+Since $M\ge4T\ge4$, these are less than $M$.
+Thus the constructed width-$M$ target is admissible and $C_L(f)\le M$.
+For $C_L(f)\le N<M$, clone a defining minimum-width target and double
+its readout; its width and weights are bounded by a polynomial in $M$.
+The finite-width theorem supplies the same polynomial sample form.
+Intersect the two sample events, with failure probabilities $\delta/2$
+each, to conclude.
+\end{proof}
+
+The theorem is polynomial in $P$ itself. For a generic bounded-weight
+deep circuit, $P$ may still grow exponentially with its depth. Thus this
+does not settle the unrestricted general small-circuit conjecture.
+It does show that a polynomial product-norm representation is a
+sufficient target condition after a logarithmic number of additional
+layers, without imposing that condition on the support of the prior.

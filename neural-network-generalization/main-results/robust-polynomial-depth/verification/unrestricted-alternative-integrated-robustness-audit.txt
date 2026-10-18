@@ -1,0 +1,183 @@
+Integrated independent audit of robustness-paper.tex and its current inputs
+and certificate verifiers. Completed 17 October 2026, round three.
+
+Verdict: PASS, with one example-wording issue identified and corrected by
+its author during review. No substantive gap found in the integrated
+learning theorem or the exact certificates checked here.
+
+Integrated mathematical scope
+-----------------------------
+The target is a layered NAND/copy/negation Boolean circuit whose required
+internal constant wires count toward C and whose logical depth fits the
+H hidden stages. It is not an arbitrary same-width analog target. The
+posterior is exactly the raw Gaussian conditioned on support stability
+and all observed signed margins >1/2. There is no hidden global clean
+margin assumption in the statistical proof. The guarantee is Gibbs
+test-margin error at threshold1/4, hence implies sign error and the stated
+posterior confidence criteria. Neither efficient posterior computation
+nor sampling by gradient descent is claimed.
+
+Target cylinder and raw probability
+-----------------------------------
+Balanced clone groups work at every integer N>=C, including N=C.
+The group-constant projection isolates only N[d+2+(L−2)C] constrained
+independent Gaussian coordinates. The unconstrained internal bulk is
+independent and has simultaneous operator-norm control with probability
+at least1/2. Gate fan-in, clone-group averaging, and the global secant
+bound preserve the RMS invariant without an exponential depth factor.
+The first-layer initialization and the readout perturbation obey the
+same invariant. The center-energy bounds cover coincident input wires.
+
+The cylinder has noisy signed output >1 on the whole cube at radius
+tau0. Its readout energy is >=a^2 C/8; a=max(2,256c) therefore places
+the calibrated radius below tau0 for every c>0. The one-coordinate
+Gaussian interval bound is uniform for all0<t<=1, with no omitted log t
+factor. Multiplying only the constrained coordinates gives the stated
+raw mass exp(−N D*/t^2), with D* polynomial in d,L,C,c and independent
+of N,t. This is a subset of every labeled posterior event, so the two
+conditioning normalizers cancel exactly in the raw-KL calculation.
+
+Compression-to-statistics interface
+----------------------------------
+Readout truncation produces a common radius and common raw-KL bound.
+The compressor's class is fixed independently of N,t and the sample;
+its pointwise couplings may vary with input, while both marginals remain
+fixed. This is sufficient when averaging the ramp loss, and no global
+coupling or robustness of compressed candidates is assumed. The
+training score1/2, successful discrepancy<=1/12, and test threshold1/4
+give the correct ramp endpoints5/12 and1/3, including equality cases.
+The relative-Chernoff event is finite-class and shared by every width
+and Gaussian scale. Dependence on c+c^{-1} remains polynomial, so an
+explicit inverse-polynomial-in-depth calibration preserves the theorem.
+
+The appendix's entropy accounting tracks only unprocessed original
+weights. The active-list message cost, conditional transport, preserved
+original-network marginal, and canonical new-prefix/future marginal are
+compatible. All virtual states are actual bounded activation outputs;
+later row selection cannot invalidate bounds because all rows were
+clipped first. Final rounding costs polynomially many bits despite an
+exponentially fine grid. The valid-state and hidden-only variants use
+these properties correctly.
+
+Localized and transformed support
+--------------------------------
+The exact union-conditioned posterior has one raw KL bound. Partitioning
+by first witnessing exception set gives average component KL equal to
+the whole-posterior KL plus the partition entropy. Markov truncation of
+components and readout tails is properly weighted; no component is
+incorrectly assumed to contain the target cylinder. Masked loss gives
+rho+epsilon, with the original training likelihood maintained on all
+points. Pilot independence, the fixed-family same-input corollary,
+finite-cube VC reduction, and width/scale simultaneity are consistent.
+
+Identified and repaired: the final neighborhoods example originally
+called B a union of balls while interpreting stability inside the union.
+B must be its complement, the uncovered region. The author corrected
+this wording; the cardinality bound is unchanged.
+
+General margins and monotone score transforms preserve the target
+cylinder and use the correct transformed margin gap. The margin-band
+minimality statement is restricted to the explicitly stated odd,
+monotone,1-Lipschitz, saturated full-gap transform class; no general
+optimality is claimed. The analytic gradient-descent example separates
+on-support from global stability and is not represented as a sample
+lower bound or a prevalence estimate.
+
+Certificate code and exact replay
+--------------------------------
+verify_witness.py converts saved weights/noise exactly from their dyadic
+floating representations, and optional pixels from exact rationals.
+The noise budget is Fraction arithmetic. Network evaluation uses actual
+mpmath interval operations, including interval exp in tanh, and monotone
+endpoint clipping. Thus its output is an outward enclosure, not merely
+a high-precision point computation. The stated trust in mpmath remains.
+
+Replayed the model029 random-cube witness directly, without optimization:
+  experiment/attacks/029-mnist3vs8-boolean-H16-N128-sgd-s1-c0.01-cap0.5-random_cube-i11.npz
+  Exact budget: PASS; input Boolean: true.
+  Clean output: approximately0.255460574855860829.
+  Noisy output: approximately0.340999177468494281.
+  Outward clipped-change lower endpoint exceeds0.08553860261263345,
+  strictly above1/16. The full replay record is in
+  /tmp/fresh-audit-witness-029.json. Replay took about7.2seconds.
+
+exact_svd_bound.py uses exact Python-integer Gram and residual products
+of arbitrary saved dyadic factors. Symmetric Gram infinity norms bound
+the two factor operator norms; rational Young's inequality combines the
+factor product with the exact residual. No numerical SVD accuracy or
+orthogonality assertion is trusted. interval_norm_bound.py instead uses
+exact Gram entries and positive outward-interval LDL pivots; this is also
+a valid sufficient test, not a floating spectral estimate.
+
+Replayed all three internal norm bounds for model104 using saved factors,
+then recomputed its full global gain inequality in exact rational
+arithmetic. The final ratio matched the saved certificate exactly and
+passed. Its all-real-input raw-output change bound at c=.003 is
+approximately0.03229599063256578<1/16. Total replay took about12.4seconds.
+
+Independently replayed the model105 TV exclusion dual from its saved
+multipliers, without running or trusting the LP solver. All inequality
+multipliers are nonpositive. Equality/inequality signs, full box residual
+correction, fixed black border, and ink-TV factor1/2 are correct. The
+exact rational lower bound matches the stored result:
+  TV>=284.877652091593 (decimal approximation).
+For TV<=150, the corresponding max-preactivation lower threshold is
+approximately0.11755170561703968. This excludes the stated near-zero
+first-state mechanism; it does not certify stability on that region.
+
+The reachable-tube verifier also uses outward clean intervals, outward
+dyadic derivative caps, exact matrix-product rounding residuals, and a
+finite-radius prefix-energy induction. I inspected this implementation
+but did not rerun its larger selected certificate in this pass.
+
+Empirical scope
+---------------
+The paper distinguishes float64 sufficient tests from exact/interval
+certificates, pointwise from global claims, finite pixel grids from the
+continuous box, and likelihood eligibility from support stability.
+The exact Boolean bit decoder preserves hidden trajectories and noise
+budgets but does not preserve the original independent Gaussian prior;
+that limitation is stated. Training accuracy/margins are explicitly
+empirical measurements, not interval-certified eligibility. No remaining
+scope mismatch was found in the integrated inputs read for this audit.
+
+Independent exhaustive-cube replay, during the final certificate pass:
+Model 500-majority9-tanh-H4-N64-sgd-s0 at c=3/100: PASS. Readonly replay recomputed all three saved-factor exact rational operator-norm bounds, exact readout energy and noise radius, all 512 outward-interval clean output endpoints, every clipped-change inequality, and all 400 signed training-margin inequalities. Saved model hash matched. Every clipped-change upper bound was exactly zero, although the uniform raw-output change upper bound is approximately 0.16290224294023897, larger than 1/16. Thus this is a full Boolean-domain positive, not a pointwise or sampled-domain certificate; clipping/saturation is essential. Verification uses exact Python integer/rational arithmetic and outward mpmath intervals, not a Lean proof. No author output was modified.
+
+Fast exact norm / partition-tube audit:
+PASS after guards were added to fast_exact_svd_bound.py for positive exact epsilon, conforming factors, integer conversion/range, and per-operand bounds. The int64 criterion k*maxabs(A)*maxabs(B)<=2^63-1 controls every product and every partial sum, so checked GEMMs are exact; other cases use Python integers. Independently compared three square/rectangular norm proposals against the original pure-object verifier, with identical rational results. Independently tested safe int64 and large-integer fallback GEMMs against object multiplication, with identical results.
+
+partition_exact_cube.py shared_tube is mathematically sound: its clean-preactivation distance is the minimum across every vertex in the group, and common prefix q therefore gives uniform derivative caps and noise bounds. The minimum of the global norm and the exact derivative-cap norm remains valid. Float partitions/splitting only select candidate certificates; rows start false and a full claim requires all 512 actual rows certified. Unresolved singletons remain false. Cached clean intervals rely on their prior verified computation; model hash and fixed 320-bit convention bind the intended data, and a final independent replay can regenerate them. No H64 full-domain outcome is asserted by this code audit alone.
+
+Independent exhaustive-cube replay of model501:
+Model 501-majority9-tanh-H16-N64-sgd-s0 at c=1/16: PASS. Recomputed all fifteen exact operator-norm bounds from saved factors, exact readout energy/radius, all512 clean interval endpoints, every clipped-change inequality, and all400 signed training-margin inequalities. Every clipped-change bound is exactly zero; the uniform raw-output bound is approximately3.4747174582790956. This confirms the archived whole-domain certificate independently and demonstrates why the clipped condition is materially weaker than a raw-output bound. No author outputs were changed.
+
+Full independent model504 replay: PASS in337.3421854750195 seconds.
+All512 clean output intervals were regenerated at320-bit dyadic/120-decimal interval precision and matched exactly. All52 shared-tube groups,3216 local exact matrix bounds, every final score inequality, and all400 training margins were replayed. The groups form an exact disjoint partition of all512 indices. Three worst-raw groups (8,25,29) additionally used the original pure-object norm calculation rather than the guarded int64 acceleration. The majority target is correctly classified at511/512 inputs; stability is certified at all512.
+Certificate SHA256: b83e8658c9b3c29c67d82cd2e20376ed6dfc89ed9b0e996aaa17a3f86a412e3e
+Model SHA256: ec5f97ce551e973f86d5218088bc9dd694940bc4499ef4942ad2139ba84268a5
+Replay source: unrestricted-alternative-full-cube-replay.py. Complete source hashes and result: unrestricted-alternative-full-cube-504-replay.json. All author artifacts remained unchanged.
+
+Full independent model505 composite replay: PASS.
+Fresh all512 clean intervals, all122 shared-tube groups,7585 local
+exact matrix bounds,63 global norms, all400 training margins, and all
+recursive-majority labels were checked. Runtime503.8878788820002seconds.
+The original partition retains its sole unresolved vertex325. The
+separately replayed covariance-state certificate supplies that vertex;
+model hash, calibrated radius and exact clean intervals agree. Its126
+additional exact matrix bounds were replayed in17.14285882099648seconds.
+The122 groups form a disjoint partition of512 vertices. Three largest
+raw-bound groups(6,7,13) used pure-object norm arithmetic as a cross-check.
+Stability covers all512 vertices, while504/512 labels are correct.
+All400 training signed margins exceed1/2; minimum absolute clean output
+over the cube is2.4064906247877844, so the original global clean margin
+is also verified. No population/prevalence inference is made.
+Partition SHA256: f047b47d4dffaea01c716555c8e129231b60ab6ad8454f6c7f35d279ad8028d5
+Point SHA256: 586329f096c35177f398235d468b7770805f9b8f9617960f49cb51274f28fa7d
+Composite SHA256: 8973bcc03756d4cb6755284d4f2a6f4ac9fdf2cf58231f8ea530c7acede95861
+Model SHA256: 3b811e6fd2f7e3efc2b9372f819f55cca92903041437ce02351a5a1ef4052067
+Records: unrestricted-alternative-full-cube-505-replay.json,
+unrestricted-alternative-covariance-505-replay.json, and
+unrestricted-alternative-505-manifest-check.json. Author artifacts
+remained unchanged. PROOF-STATUS.md was updated only after success,
+and all its links were converted to checked archive-relative paths.

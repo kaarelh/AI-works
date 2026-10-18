@@ -1,0 +1,77 @@
+\section{Why population stability alone does not complete the argument}
+\label{sec:distributional-only-obstruction}
+
+Small population instability for each network does not itself control
+instability at training inputs selected by posterior conditioning. This
+is a statistical obstruction, even when compression is trivial away from
+the exceptional inputs. The example below concerns an abstract prior;
+it is not a lower bound for the particular Gaussian network prior.
+
+\begin{proposition}[Sparse exceptional sets can absorb the training sample]
+\label{prop:distributional-sparse-patches}
+Let $\mathcal X$ have $M$ points with the uniform distribution, let
+$f\equiv+1$, and fix $1\le r\le M/2$. Write $\rho=r/M$.
+For every subset $B\subset\mathcal X$ of size $r$, let $h_B$ be $+1$
+on $B$ and $-1$ elsewhere, and assign it exceptional set $B$.
+The target has empty exceptional set. Put prior mass $q\in(0,1)$ on
+$f$, and distribute mass $1-q$ uniformly over the $h_B$.
+Then every hypothesis has population exception probability at most
+$\rho$ and has an exact compression outside its exceptions into the
+two-element class $\{+1,-1\}$.
+
+For every labeled sample of size $n\le r/2$, if
+\[
+ q\le\tfrac12(\rho/2)^n,
+\]
+the ordinary consistency posterior has Gibbs error at least
+$(1-\rho)/2$. The assertion holds for every sample, including samples
+with repeated inputs.
+\end{proposition}
+
+\begin{proof}
+Let $s\le n$ be the number of distinct observed inputs. A bad hypothesis
+$h_B$ is consistent exactly when all these inputs belong to $B$.
+Under the uniform prior on size-$r$ subsets, this has probability
+\[
+ p_s=\frac{\binom{M-s}{r-s}}{\binom Mr}
+     =\prod_{j=0}^{s-1}\frac{r-j}{M-j}
+     \ge(\rho/2)^s\ge(\rho/2)^n,
+\]
+because $s\le r/2$. Therefore the posterior mass of bad hypotheses is
+\[
+ \frac{(1-q)p_s}{q+(1-q)p_s}\ge\frac12.
+\]
+Indeed $q\le p_s/2$ and $q\le1/2$ imply $(1-q)p_s\ge q$.
+Every bad hypothesis has true error $1-\rho$. It also has empirical
+exception probability exactly one, although its population exception
+probability is only $\rho$. The two-element compressor simply maps
+$h_B$ to the constant negative function and leaves the target positive.
+\end{proof}
+
+If $q=e^{-aD}$, where $a=N/t^2$ is the width-and-scale factor in the
+Gaussian target-mass bound, the displayed condition follows whenever
+\[
+ aD\ge n\log(2/\rho)+\log2.
+\]
+Thus a target-mass estimate of this form, a width-independent finite
+compression class, and per-hypothesis population instability at most
+$\rho$ do not by themselves imply a width-independent sample bound.
+An additional structural property of the actual Gaussian prior could
+still do so; the proposition neither supplies nor rules out such a
+property.
+
+This obstruction is relevant to interpreting certificates. An independent
+held-out set can estimate the population instability of one fixed trained
+network, or of one frozen posterior. That estimate does not bound the
+training instability of a posterior obtained by selecting among many
+possible exceptional sets. The controlled-family localized theorem
+removes exactly this ambiguity by paying for the family of exceptional
+sets. A trusted input region fixed before labeled training is the
+simplest special case.
+
+One can also require stability at every observed training input in an
+input-dependent prior while retaining the ordinary label likelihood.
+That gives the same mathematical benefit as a robust training constraint:
+the empirical exception probability is then zero. It changes the posterior
+conditioning event, however, and should not be presented as a consequence
+of population stability alone under the original event.

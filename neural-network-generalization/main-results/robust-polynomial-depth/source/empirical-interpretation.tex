@@ -1,0 +1,71 @@
+\section{What empirical evidence can establish}
+\label{sec:empirical-interpretation}
+
+The prior's support condition quantifies over every Boolean input and every
+allowed simultaneous disturbance. A finite-noise certificate at a held-out
+image proves stability at that image only. A successful adversarial search
+provides a counterexample when both its disturbance budget and its score
+change are verified. Failure to find an attack proves neither stability
+nor membership in the prior. Floating-point sufficient tests are reported
+separately from interval or exact-arithmetic checks.
+
+There are two distinct empirical eligibility questions. First, does a
+trained network satisfy the stability restriction? Second, does it satisfy
+the likelihood, which requires every signed training output to exceed
+$1/2$? A stable network that has training mistakes is evidence about the
+condition's occurrence under training, but is not a draw admissible under
+the noiseless posterior for that training set. Conversely, successful
+optimization alone provides no stability guarantee. All declared runs,
+including optimization failures, are retained.
+
+The original all-input clean-margin convention imposes a further
+requirement beyond training eligibility. The image counterexamples near
+zero output already fail that clean-margin requirement at their witness
+input. They refute automatic global stability of the trained
+parameterization; they are not examples already inside that stronger
+base support. In contrast, selected exhaustive Boolean-domain positives
+verify absolute clean margins above $1/2$ everywhere, as well as all
+signed training margins and internal stability. The separate readout
+rescaling result explains how a finite-domain parameterization can enter
+both supports, but charges the resulting Gaussian energy cost.
+
+\paragraph{Finite grayscale images and Boolean inputs.}
+An eight-bit pixel $p\in\{0,\ldots,255\}$ normalized as $x=2p/255-1$
+can be written exactly as
+\[
+ x=\sum_{b=0}^{7}\frac{2^b}{255}B_b,\qquad B_b\in\{-1,1\}.
+\]
+Composing the first affine layer with this fixed linear encoding represents
+the same image network as a Boolean-input tanh network with eight times
+as many input coordinates. All hidden computations and internal disturbance
+responses are unchanged at corresponding inputs. This observation connects
+the stability property to a finite image domain; it does not equate the
+independent Gaussian prior on pixel weights with the independent Gaussian
+prior on bit weights, and it does not turn a test-set check into a proof
+over all possible images.
+
+\paragraph{Why a continuous-box counterexample has a different scope.}
+When the input dimension exceeds the first hidden width, one may solve
+$W^1\bar x=0$ and sometimes obtain $x\in[-1,1]^d$. With no later biases,
+every clean hidden state and the readout then vanish. This exposes
+amplification that saturation at ordinary data inputs can hide. Such an
+input is a useful stress test for a continuous-box version of the condition.
+It is a counterexample to the Boolean-domain condition only if it is a
+Boolean input, or if a separate valid discrete input is found and verified.
+Likewise, an interpolated image need not lie on the exact eight-bit grid.
+
+\paragraph{Interpreting calibration.}
+The factor $\sqrt{1+HE_v}$ is the worst-case noise gain for hidden layers
+that are individually nonexpansive in Euclidean norm. Hence every such
+network satisfies the score condition when $c\le1/16$. Smaller $c$ allows
+greater amplification relative to this reference. A positive result only
+at a small radius should not be described as stability to arbitrary
+percent-level changes of every activation. Both the normalized total
+budget and the readout calibration are part of the claim.
+
+Global failures motivate studying fixed trusted input regions, chosen
+independently of the labeled sample, on which the restriction is imposed.
+If such a region has input-distribution mass at least $1-\rho$, the
+statistical proof adds at most $\rho$ to the test error. Proving stability
+throughout the region remains necessary; merely observing no failures on
+a finite set of images does not supply that proof.

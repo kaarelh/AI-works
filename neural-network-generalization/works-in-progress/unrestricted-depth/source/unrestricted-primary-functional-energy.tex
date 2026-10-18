@@ -1,0 +1,116 @@
+\section{Excess Gaussian energy and intrinsic product complexity}
+\label{sec:intrinsic-product-energy}
+
+Define a function-level complexity, allowing all finite architectures,
+by
+\[
+ \mathfrak P(f)=\inf\left\{
+   \prod_j\|W^j\|_F:
+   f(x)z_w(x)\ge1\ \hbox{on the entire cube}
+   \right\}.
+\]
+The infimum permits arbitrary finite depth and width, retains tanh
+hidden layers and a linear readout, and allows biases only through
+the augmented input. It is finite, for example by a truth-table
+shallow construction. It is also at least one: the network extends
+oddly to the full augmented cube $\{-1,1\}^{d+1}$ and has absolute
+margin at least one there. This nonconstant odd Boolean extension
+has a bichromatic cube edge. Along that edge the product of layer
+operator norms, and hence the Frobenius product, must be at least one.
+
+Let $J_{L,N}(f)$ be the infimum of the Gaussian energy $\kappa_N$
+over width-$N$, depth-$L$ unit-margin representations of $f$, with
+$J_{L,N}(f)=+\infty$ if none exists. This is a deterministic energy
+quantity, not a finite-temperature posterior probability.
+
+\begin{theorem}[Intrinsic product complexity characterizes excess energy]
+\label{thm:intrinsic-product-energy}
+For every $d\ge1$, $L\ge2$ and $N\ge1$,
+\[
+ J_{L,N}(f)\ge L+\log d+2\log\mathfrak P(f).
+\]
+Conversely, there are universal polynomials $p,q$ and a universal
+constant $c$ such that
+\[
+ L\ge p(\mathfrak P(f))+c\log(d+1),\qquad
+ N\ge q(d,\mathfrak P(f))
+\]
+imply
+\[
+ J_{L,N}(f)\le L+c\log(2d\mathfrak P(f)).
+\]
+The upper-bound witness can be chosen with all physical weights at
+most $q(d,\mathfrak P(f))$. The polynomials do not depend on any
+supplied representation's depth, width, or coefficient precision.
+\end{theorem}
+
+\begin{proof}
+The product of the $L$ weighted layer energies is
+$d\prod_j\|W^j\|_F^2$. Arithmetic--geometric mean and
+$e^u\ge1+u$ therefore give
+\[
+ \kappa_N\ge L\left(d\prod_j\|W^j\|_F^2\right)^{1/L}
+ \ge L+\log d+2\log\mathfrak P(f).
+\]
+This proves the lower bound without any width or depth restriction.
+
+Choose a finite representation of product norm less than
+$2\mathfrak P(f)$. The depth-independent normal form supplies a
+unit-margin representation whose depth $D_0$, width $C$, physical
+weights and product norm $P_0$ are all polynomial in $\mathfrak P(f)$.
+Apply the product-target construction of
+Theorem~\ref{thm:product-target-log-padding}. Its width threshold $M$
+and transmission parameter $T$ are polynomial in $d,C,D_0,P_0$,
+hence polynomial in $d,\mathfrak P(f)$, and do not depend on the
+subsequently chosen learner depth. For
+$L\ge D_0+\lceil\log T\rceil$, that construction has energy at most
+\[
+ L+15+32\log T.
+\]
+If the small-prefix linearization in that proof removes every hidden
+activation, its separate halfspace learning conclusion is not needed
+here. The collapsed affine map has norm at most $2P_0$ and margin
+greater than one. Apply tanh to that map and append readout $2$.
+This is a width-one shallow unit-margin representation with weights
+polynomial in $P_0$. The shallow scalar-transmission construction
+therefore supplies, at every sufficiently large polynomial width and
+every $L\ge2+O(\log(d+P_0))$, energy
+$L+O(\log(2dP_0))$. It also has polynomially bounded physical weights.
+Thus the affine branch has the same claimed upper-bound form.
+
+Its physical weights are bounded by a polynomial width threshold.
+Since $\log T=O(\log(d+1)+\log\mathfrak P(f))$, increasing universal
+polynomials and constants gives the stated conditions and upper
+bound. No attainment of the infimum defining $\mathfrak P(f)$ was
+assumed.
+\end{proof}
+
+\begin{corollary}[Learning from intrinsic product complexity]
+\label{cor:intrinsic-product-learning}
+For each fixed $\zeta>0$, the unrestricted Gaussian posterior has a
+sample bound polynomial in
+\[
+ d,\mathfrak P(f),L,\varepsilon^{-1},\log(2/\delta)
+\]
+at every $L\ge p(\mathfrak P(f))+c\log(d+1)$, simultaneously for
+all actual widths $N\ge C_L(f)$ and all
+$0<\sigma^2\le N^{-(1+\zeta)}$.
+\end{corollary}
+
+\begin{proof}
+Use the same depth-independent normal form and apply the all-width
+product-target learning theorem. Its intrinsic parameters are all
+polynomial in $\mathfrak P(f)$. Its finite-width branch covers the
+interval between the actual minimum width and the constructed
+polynomial-width witness threshold.
+\end{proof}
+
+Thus, once depth and width are sufficiently large, the excess above
+the depth baseline is, up to universal constants, the logarithm of
+intrinsic product complexity together with the input normalization
+cost $\log d$. This does not identify $\mathfrak P(f)$ with ordinary
+circuit size. The normal form proves that ordinary Boolean description
+size is polynomial in $\mathfrak P(f)$; a converse polynomial bound
+for arbitrary small deep circuits remains the central unresolved
+representation question. The learning corollary also retains its
+displayed learner-depth threshold.

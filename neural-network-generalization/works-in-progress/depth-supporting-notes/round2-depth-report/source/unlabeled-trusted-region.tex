@@ -1,0 +1,114 @@
+\section{Choosing and validating a trusted region from unlabeled data}
+\label{sec:unlabeled-trusted-region}
+
+A trusted region need not be specified before seeing any data. Independent
+unlabeled sample splitting supplies a simple rigorous version of this idea.
+This is a standard statistical construction, not a new sample-splitting
+principle. Its role here is to make the coverage assumption in the preceding
+robust-prior results independently checkable.
+
+Let $D$ be the test input distribution on $\{-1,1\}^d$. Draw three mutually
+independent samples: an unlabeled pilot $P$, an unlabeled validation sample
+$V=(X'_1,\ldots,X'_m)$, and the labeled training sample
+$S=((X_i,f(X_i)))_{i=1}^n$. Using only $P$, choose any measurable region
+$G=G(P)$. The selection rule can be arbitrarily complicated. For example,
+$P$ may determine a density level set, a union of neighborhoods of observed
+inputs, or a support estimate in a fixed representation. The theorem does
+not assert that such regions admit an easy all-input stability certificate.
+Define
+\[
+ \widehat\rho_G=\frac1m\sum_{j=1}^m\mathbf1\{X'_j\notin G\},\qquad
+ \overline\rho_G=\min\!\left\{1,\widehat\rho_G+
+            \sqrt{\frac{\log(1/\delta_u)}{2m}}\right\}.
+\]
+
+\begin{theorem}[An independently learned trusted region]
+\label{thm:unlabeled-trusted-region}
+Fix $0<\delta_u,\delta_l<1$ and $0<\varepsilon<1$.
+Suppose the target has a width-$C$ layered Boolean circuit. For the selected
+$G(P)$, form any one of the following priors by conditioning the raw Gaussian
+on the indicated condition at every $x\in G(P)$:
+\begin{enumerate}
+\item The calibrated sign stability condition of
+Theorem~\ref{thm:trusted-region}, followed by ordinary training sign
+consistency. Let $R(Q)$ denote Gibbs sign error.
+\item The numerical stability condition of
+Theorem~\ref{thm:numeric-prior}, with signed training outputs greater
+than $1/2$. Let $R(Q)$ denote
+$\Pr_{w\sim Q,X\sim D}\{f(X)z_w(X)\le1/4\}$.
+\item The clipped-score stability condition of
+Corollary~\ref{cor:clipped-stability}, with the same training-margin
+likelihood and the same test loss as in item 2.
+\end{enumerate}
+No stability condition is imposed outside $G(P)$, and no additional
+all-input clean-margin restriction is imposed. For the clipped condition, fix $0<c\le1/100$ once and for all;
+constants in the following bound may depend on $c$. The numerical
+condition retains its stated fixed calibration. There is a
+polynomial sample bound
+\[
+ n\ge\operatorname{poly}
+       (d,L,C,\varepsilon^{-1},\log(1/\delta_l))
+\]
+such that, with probability at least $1-\delta_u-\delta_l$ over $P,V,S$,
+\[
+ R(Q)\le\overline\rho_G+\varepsilon,
+\]
+simultaneously for all widths $N\ge C$ and scales $0<t\le1$.
+The complexity of the pilot selection rule does not appear in this bound.
+The Gaussian is conditioned exactly on the selected support condition;
+no robust training likelihood or soft reweighting is introduced.
+\end{theorem}
+
+\begin{proof}
+Condition on the pilot. The set $G$ is now fixed and independent of both
+$V$ and $S$. Hoeffding's inequality implies
+$D(G^c)\le\overline\rho_G$ with probability at least $1-\delta_u$ over
+$V$. The corresponding fixed-region theorem gives
+$R(Q)\le D(G^c)+\varepsilon$ with probability at least $1-\delta_l$ over
+$S$. Its constants and common finite compression class are uniform over
+$G$: in particular, the globally stable target cylinder belongs to the
+conditioned support for every possible $G$. A union bound, followed by
+averaging over the pilot, proves the result. The sample event supplied by
+the fixed-region theorem is simultaneous in width and Gaussian scale.
+\end{proof}
+
+For any of these losses, a pointwise posterior correct-answer probability
+of at most $2/3$ entails pointwise Gibbs error at least $1/3$.
+Consequently the measure of such inputs is at most
+$3(\overline\rho_G+\varepsilon)$. For items 2 and 3, ``correct answer''
+can mean the stronger event $f(x)z_w(x)>1/4$.
+An exact one-sided binomial upper confidence limit can replace Hoeffding.
+For example, when the validation sample has no misses, the upper limit is
+$1-\delta_u^{1/m}\le\log(1/\delta_u)/m$.
+
+\paragraph{Validation candidates.}
+The pilot may produce a catalog of $M$ regions, denoted $G_j(P)$.
+Using
+\[
+ \overline\rho_j=\min\!\left\{1,\widehat\rho_j+
+              \sqrt{\frac{\log(M/\delta_u)}{2m}}\right\}
+\]
+certifies all $M$ coverages simultaneously. One may then choose any single
+index $J=J(P,V)$ before seeing $S$, for example the index with the best
+coverage among regions admitting a convenient certificate. The theorem
+holds with $G_J$ and $\overline\rho_J$. There is no extra $\log M$ cost in
+the labeled sample bound: conditional on $P,V$, just one region has been
+chosen independently of $S$. The $\log M$ cost is paid in the unlabeled
+validation confidence bound. If the region index is instead chosen using
+$S$, the additional complexity control of the finite-catalog theorem is
+needed. Reusing validation to generate an unbounded number of new regions
+also requires further control; the single-region guarantee cannot simply
+be applied after that adaptation.
+
+\paragraph{What is still required.}
+Coverage validation checks only how often an input lies in $G$. The prior
+must still impose stability throughout $G$, simultaneously for every
+admissible disturbance. Certifying stability merely on the finite pilot or
+validation inputs is not sufficient. In particular, high average certified
+robustness of one trained network does not by itself prove a theorem about
+the Bayesian posterior. A network-dependent exceptional region can adapt
+to the training labels, which is precisely the difficulty exhibited by the
+sparse-patch example. The present construction avoids that difficulty by
+freezing a shared region before the labeled sample. It modifies the support
+of the Gaussian prior; it does not establish the same conclusion for the
+unrestricted Gaussian prior.

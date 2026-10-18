@@ -1,0 +1,31 @@
+Independent audit: unrestricted-critical-flattening.tex
+Reviewer: fresh theory audit
+Date: 2026-10-17, round 3
+
+Verdict: PASS. No substantive error found in the stated quantitative critical-rate flattening theorem. This audit uses the previously audited first-layer spectral bound, critical variational formulation, and free-cooling estimates.
+
+Scalar control:
+- Scaling a preactivation control by sqrt(larger reference variance / smaller reference variance) preserves its Gaussian relative entropy and increases the next tanh second moment. Iteration proves V is nonincreasing. Deleting a nonincreasing step and rescaling the remaining controls cannot raise cost; repeated deletion terminates because path length decreases.
+- Gaussian inflation 1+16q has cost <=64q^2 and grows q by between 4q^2 and 16q^2 for q<=1/128. Stopping exactly at p by reducing the last inflation is justified by continuity, since zero inflation decreases q while the full step overshoots p. This gives V_*<=V(p)+17p and V_*<=17.
+- For G=exp(tanh^2), G''<2G away from zero; its heat-kernel average has log=q-q^2+O(q^3). Strict positivity away from zero plus compactness gives the uniform cq^2 dissipation on [0,1]. Increasing paths of cost <=18 therefore have O(p^-2) steps.
+
+Lower comparison:
+- The feature-to-preactivation inverse tanh map and then the signed-pair projection permit data processing even for singular reference covariance. Pair contraction gives a scalar next second moment at least the actual pair moment, and monotonicity of V gives the Bellman inequality in the stated direction.
+- The chosen adjacent/opposite or antipodal/equal pair starts at 1/d. Summed strict dissipation guarantees a pair moment O(L^-1/2) in every cost<=18 path. The remaining path then costs at least V of that small moment. Paths of larger cost are harmless because V_*<=17.
+
+Upper construction:
+- Free cooling preserves the tracked target component up to a universal ratio loss; decreasing it to the common v0=delta exp(-AD) leaves a positive-semidefinite residual with constant diagonal.
+- Holding preserves v0 exactly: at zero inflation the target component does not increase, while inflation 16delta exceeds the desired value. Residual diagonal is nonincreasing, so q<=delta remains invariant.
+- Prescribed growth v_next=min(p,v[1+2(delta+v)]) is attainable by continuous inflation <=16(delta+v). The entropy summation and step count O(D/delta) check. Because this scalar sequence is prescribed, its length does not depend on the preceding holding duration or on f.
+- For arbitrary scalar control laws, conditioning on the scalar and applying Gaussian Poincare to the residual proves the same residual-diagonal bound. Oddness ensures equal diagonals across signs of f even without symmetry of the scalar control. The second moment of the conditional mean gives the claimed rank-one component; no centering assumption is used.
+- The smoothing bound psi_r(z)>=(1-r)tanh(z) for z>=0 and concavity of tanh yield the multiplicative (1-delta)^(2m) loss. The readout cost increase <=72m delta follows when 2m delta<=1/2.
+- With delta=B1 D/L and p=(D/L)^(1/3), cooling/growth, scalar control, and holding fit the prescribed depth after increasing a universal constant in L>=C D^2. Holding cost is O(D^2/L), and lifting cost is O(p). All constants are universal, though potentially large.
+
+Scope: the note correctly says that convergence of absolute rates, even uniformly over all Boolean functions at a common depth, is not a posterior sample lower bound. In the width-first limit any remaining positive rate gap can dominate after multiplication by N. No limit interchange or target-relative ordering is claimed.
+
+Updated scalar constants and separate free-cooling lemma: PASS.
+The uniform scalar upper construction has cost <=199/200+log(5/2)<2. The lower bound F(u)>=u/(1+3u), the 6q inflation increment, increasing cost/increment ratio, and its exact integral all check. Strict V_*>1 follows from the first crossing of .1: a cost<=2 path cannot jump from <=.01 because the Gaussian second-moment entropy cost would exceed2. The preceding state lies in a compact interval where g(q)=2q-log E exp(2tanh^2(sqrt(q)Z)) is strictly positive. A path ending below.1 costs>1.25, which dominates1+min g since min g<=g(.01)<=.02. No uniformity gap in taking q down to zero remains.
+
+critical-free-cooling.tex independently checked in full: q-F(q)>=c q^2 on the relevant compact interval yields O(1/delta) hitting time; monotonicity and F(delta)>=delta/(1+3delta) give overshoot lower bound delta/2. Conditional expectation and first Hermite projection preserve the rank-one component by factor [1-F(q)]^2. R(q)=q[1-F(q)]^2/F(q)=1+O(q^2), while sum q_j^2 is universally bounded, so the ratio product stays above a universal positive constant. This gives the claimed target component b v0 delta.
+
+The current unrestricted-critical-baseline.tex was re-read in full. Its t-dependent exponential potential, finite-width bounds for every0<t<=1, optimized exponent psi(d), global spanning-tree union, and direct critical variational lower bound remain PASS.

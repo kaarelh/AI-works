@@ -1,0 +1,84 @@
+\section{What width compression does and does not say about circuits}
+\label{sec:product-normal-form}
+
+\begin{corollary}[A finite-description normal form]
+\label{cor:product-finite-description}
+Suppose a Boolean function on $\{-1,1\}^d$ has an arbitrary finite-width,
+depth-$D\ge2$ tanh representation with global signed margin at least one
+and product of Frobenius norms at most $P\ge1$. There is a representation
+of the same function, with margin at least one, using at most $D$
+weighted layers, polynomial width and polynomially bounded individual
+weights in $d,D,P$, and product norm at most $8P$.
+Here a purely affine function of the augmented input is allowed as the
+case of one weighted layer. The weights may moreover be chosen dyadic
+with polynomial bit length, at the expense of replacing the product
+bound by $16P$. Consequently the function has a Boolean circuit of size
+polynomial in $d,D,P$, with no dependence on the original widths,
+weights, or their precision.
+\end{corollary}
+
+\begin{proof}
+Apply Theorem~\ref{thm:pf-width-compression} on the augmented cube with
+error $1/4$, and double its readout. This gives width
+$C=\operatorname{poly}(d,D,P)$, product at most $P_1=4P$, and signed
+margin at least $3/2$. Apply the small-prefix linearization from the
+proof of Theorem~\ref{thm:product-target-log-padding}, with
+\[
+ \tau^2=\frac1{16P_1D(d+1)^{3/2}}.
+\]
+It changes every output by at most $1/48$. Collapse the resulting linear
+blocks and double the final readout. The resulting signed margin exceeds
+two, the product is at most $2P_1=8P$, and every physical weight is at
+most
+\[
+ R=\max\{1,2P_1\sqrt C/\tau\}
+   =\operatorname{poly}(d,D,P).
+\]
+The number of weighted layers does not increase. If every hidden
+activation is removed, the remaining affine map has norm at most
+$2P_1$ and satisfies the same claims.
+
+For completeness, polynomial precision can be imposed without assuming
+that the displayed real weights were efficiently computable. Let $D'$
+be the remaining depth and choose a polynomial $B\ge2$ that bounds the
+Frobenius norm and the row absolute sum of every remaining matrix, and
+also bounds all input and hidden dimensions. Each matrix norm $M_j$
+satisfies
+\[
+ M_j\ge\frac1{\sqrt{d+1}\,B^{D'-1}}.
+\]
+Indeed the margin gives
+$1\le |z(x)|\le\sqrt{d+1}\prod_iM_i$, and all other norms are at most
+$B$. Round each entry to a dyadic mesh $2^{-b}$, where
+\[
+ b=O\bigl(D'\log B+\log(d+D'+2)\bigr)
+\]
+with a sufficiently large universal constant. The matrix Frobenius
+perturbations are then at most $M_j/(4D')$, so the product increases
+by at most $(1+1/(4D'))^{D'}<2$. The standard layerwise error recursion,
+using the row-sum bound $B$ and the one-Lipschitz property of tanh,
+makes the total output change less than $1/2$ at the same precision.
+The initial margin exceeding two therefore leaves margin at least one.
+There are polynomially many entries and $b$ is polynomial in $d,D,P$.
+
+Finally, evaluate each affine map and tanh to sufficiently many binary
+digits and propagate a total error smaller than $1/2$. Arithmetic on
+these polynomial-length numbers and approximation of tanh on the
+polynomially bounded preactivation range use polynomial-size Boolean
+circuits. The output sign remains exact because of the margin.
+\end{proof}
+
+The converse direction is not supplied by width compression: a
+polynomial-size Boolean circuit is not thereby given a polynomial
+product-norm tanh representation. In particular, widening an existing
+implementation is not itself a proof of such a bound. If a polynomial
+product-norm implementation exists at any finite width, the corollary
+shows that a polynomial-width, finite-description implementation exists
+as well.
+
+Nor does this normal form impose constant threshold depth. The
+rank-one approximation argument gives retained depth of order
+$dP^2\log(2P)$, which is only a polynomial depth bound when $P$ is
+polynomial. Its combination with width compression therefore gives
+no inclusion in $\mathrm{TC}^0$ or $\mathrm{NC}^1$ and no separation of
+those circuit classes.

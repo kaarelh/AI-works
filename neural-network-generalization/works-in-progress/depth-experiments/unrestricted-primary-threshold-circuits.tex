@@ -1,0 +1,106 @@
+\section{Constant-depth threshold circuits and a lower-bound barrier}
+\label{sec:threshold-circuits}
+
+The coefficient-independent halfspace construction also clarifies which
+explicit targets could disprove the general unrestricted sample
+conjecture. Here a threshold circuit may have arbitrary real weights,
+and its size counts wires, including input and constant wires.
+
+\begin{lemma}[Threshold circuits as bounded-weight tanh networks]
+\label{lem:threshold-circuit-tanh}
+There is a universal constant $a$ such that every depth-$h$, $h\ge1$, threshold
+circuit of wire size at most $s$ on $d$ Boolean inputs has a tanh
+realization with linear readout, unit global margin, depth at most
+$2h$, and both width and maximum absolute physical weight bounded by
+$(2+d+s)^a$. It uses no biases after the augmented input. The bound is
+independent of the original real coefficients and of every original
+gate's geometric margin.
+\end{lemma}
+
+\begin{proof}
+Replace each threshold gate by its depth-two polynomial-size,
+polynomial-integer-weight simulation from
+Lemma~\ref{lem:goldmann-karpinski-simulation}. Each gate has at most
+$s$ inputs. The total wire count, coefficient bound, and maximum
+weighted fan-in of the resulting circuit are bounded by a universal
+polynomial in $d+s$. Its depth is at most $2h$. Subdivide skip wires by
+identity threshold gates to make the circuit layered; since $h\le s$,
+this costs only another polynomial factor. Pad with identity gates as
+needed so that the output is at a common depth $q=2h\ge2$.
+
+Every gate can be taken to have integer affine form with absolute value
+at least one on Boolean inputs. Let $B\ge1$ bound the sum of the
+absolute coefficients of any such affine form, including its constant.
+Put $\delta=1/(4B)$ and $\lambda=2\log(8B)$. Replace every gate except
+the final output gate by tanh applied to $\lambda$ times its affine
+form. If all preceding features approximate their intended signs to
+accuracy $\delta$, the affine perturbation is at most $B\delta=1/4$.
+Its signed value is therefore at least $3/4$, and the new feature error
+is at most
+\[
+ 2e^{-3\lambda/2}=\frac{2}{(8B)^3}\le\delta.
+\]
+This inductive accuracy bound does not deteriorate with depth.
+
+To implement constants without later biases, add a constant feature
+equal to $1/2$ at every hidden layer. The first such feature has bias
+$\operatorname{atanh}(1/2)$; each later one receives weight
+$2\operatorname{atanh}(1/2)$ from the preceding constant feature.
+An affine constant $b$ is then supplied by weight $2\lambda b$ to
+this feature. Thus all constants are exact. The last threshold is
+replaced by twice its affine form, as a linear readout; its signed
+value is at least $3/2$. Uniform zero-padding of the hidden layers
+preserves the function. Every used parameter is polynomial in $d+s$,
+as asserted.
+\end{proof}
+
+\begin{corollary}[Precision-independent threshold-circuit learning]
+\label{cor:threshold-circuit-learning}
+Fix $\zeta>0$. A target with a depth-$h$, wire-size-$s$ threshold circuit
+has unrestricted Gaussian posterior sample complexity
+\[
+ (2+d+s)^{O_\zeta(h)}
+ \bigl(L+\varepsilon^{-1}+\log(2/\delta)\bigr)^{O_\zeta(1)}
+\]
+at every learner depth $L\ge2h$, simultaneously for every
+$N\ge C_L(f)$ and every $0<\sigma^2\le N^{-(1+\zeta)}$.
+No original coefficient magnitude or geometric margin enters the bound.
+In particular, for each fixed $h$, this is polynomial in the circuit
+size, input dimension, learner depth, and statistical parameters.
+\end{corollary}
+
+\begin{proof}
+Apply the fixed-intrinsic-depth theorem and its quantitative corollary
+below to Lemma~\ref{lem:threshold-circuit-tanh}, with intrinsic depth
+$D_0=2h$ and polynomial bounds on the tanh width and weights.
+\end{proof}
+
+Recall that nonuniform $\mathsf{TC}^0$ consists of Boolean families
+having polynomial-size threshold circuits of some fixed depth.
+Consequently every such family enjoys a polynomial sample guarantee
+under the present posterior at all sufficiently large learner depths.
+This gives the following precise limitation on a negative-result route.
+
+\begin{corollary}[A circuit-complexity consequence of a counterexample]
+\label{cor:tc0-counterexample-barrier}
+Fix $\zeta>0$. Suppose a family $(f_d)$, at learner depths $L(d)\to\infty$,
+requires more than every polynomial in $d,L(d)$ examples for some fixed
+positive error and confidence targets, under the present unrestricted
+posterior and the all-admissible-width guarantee with
+$\gamma\ge1+\zeta$. Then $(f_d)\notin\mathsf{TC}^0$.
+In particular, a family in $\mathsf{NC}^1$ with this property would
+separate $\mathsf{NC}^1$ from $\mathsf{TC}^0$.
+\end{corollary}
+
+\begin{proof}
+If the family were in $\mathsf{TC}^0$, it would have fixed depth $h$
+and wire size polynomial in $d$. Eventually $L(d)\ge2h$, so
+Corollary~\ref{cor:threshold-circuit-learning} would supply a polynomial
+sample bound simultaneously for every admissible width and stated
+Gaussian scale, a contradiction.
+\end{proof}
+
+This is a logical consequence, not a claimed circuit separation or a
+proof that unrestricted learning is always polynomial. It also does not
+cover exponents approaching one with dimension, fixed learner depths
+below the alternative representation's depth, or the mean-field case.

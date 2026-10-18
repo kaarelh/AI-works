@@ -1,0 +1,92 @@
+\section{From a point certificate to an input neighborhood}
+\label{sec:certified-input-neighborhoods}
+
+A pointwise certificate can sometimes establish stability on a whole
+region, as required by the localized-prior theorem. The following
+elementary transfer also makes its quantitative limitation explicit.
+Write $W^1_{\rm in}$ for the input columns of the first-layer matrix,
+excluding the bias column, and define the network-dependent input
+semimetric
+\[
+ d_w(x,x_0)=\frac{\|W^1_{\rm in}(x-x_0)\|_2}{\sqrt N}.
+\]
+Its balls are ellipsoidal cylinders; directions in the nullspace of
+$W^1_{\rm in}$ have zero distance.
+
+\begin{lemma}[Transfer of a confident point certificate]
+\label{lem:input-neighborhood-transfer}
+Fix a network, $r'>r_c(w)$, an input $x_0$, and $p\in\{-1,1\}$.
+Suppose that
+\[
+ pz_w(x_0;\eta)>1/2\qquad\text{for every }\|\eta\|_*\le r'.
+\]
+Then every $x$ with $d_w(x,x_0)\le r'-r_c(w)$ satisfies
+\[
+ T(z_w(x;\eta))=T(z_w(x))=p/2
+ \qquad(\|\eta\|_*\le r_c(w)).
+\]
+In particular, the clipped-score stability condition holds throughout
+this ellipsoidal cylinder, with zero score change.
+\end{lemma}
+\begin{proof}
+The clean first-layer states differ by
+\[
+ b=\tanh(W^1\bar x)-\tanh(W^1\bar x_0),\qquad
+ \|b\|_2/\sqrt N\le d_w(x,x_0).
+\]
+A perturbed computation at $x$ is exactly the computation at $x_0$ with
+$b$ added to its first-layer disturbance; every subsequent disturbance
+is unchanged. The combined disturbance has norm at most
+$\|\eta\|_*+\|b\|_2/\sqrt N\le r'$. Apply the assumed margin bound,
+first to this computation and then to the clean computation at $x$.
+\end{proof}
+
+This construction can be used with a controlled-complexity exception
+family. On the Boolean cube, a quadratic inequality is a linear
+threshold in at most $J=(d+1)(d+2)/2$ monomials. Its VC dimension is at
+most $J+1$, and hence it defines at most $(2^d+1)^{J+1}$ distinct
+subsets of the cube. Complements of unions of at most $k$ ellipsoidal
+cylinders therefore form a fixed family with
+\[
+ \log M\le k(J+1)(d+1)\log2.
+\]
+This deliberately loose bound allows both centers and matrices to vary
+with the network, and does not depend on network width. To apply
+Theorem~\ref{thm:localized-union}, one must still establish the full
+center certificates and validate the population coverage of their
+union. Testing only the centers does not establish either premise.
+
+There is an absolute upper limit on the center radii in this particular
+construction, for the primary unrestricted disturbance model. Last-layer
+and scalar-output disturbances can decrease a signed output by exactly
+$r'\sqrt{1+E_v}$. Consequently the premise of
+Lemma~\ref{lem:input-neighborhood-transfer} requires
+\[
+ r'\le\frac{|z_w(x_0)|-1/2}{\sqrt{1+E_v}}.
+\]
+This upper bound is not asserted for the variant that restricts noisy
+hidden states to the activation range.
+
+\paragraph{A feasibility diagnostic, not a neighborhood certificate.}
+For model 008, a plain tanh network with 32 hidden layers and width 128
+trained by minibatch SGD on MNIST digits 3 versus 8, we used the fixed
+128 uniformly sampled pilot images from its 1,984-image test split and
+measured coverage on the other 1,856 images. The pilot indices were
+chosen before this diagnostic, without selecting for margins or
+coverage. At target calibration $c=0.001$, even granting every center
+the larger calibration $c'=0.0625$, whether certified there or not,
+would give the common cylinder radius
+\[
+ \frac{c'-c}{\sqrt{1+HE_v}}=0.000658742.
+\]
+None of the 1,856 remaining images was covered. Their nearest-center
+distances in $d_w$ had minimum $0.31845$ and median $0.60165$; the
+minimum was 483 times the granted radius. Replacing every center's
+radius by the absolute upper bound above, minus $r_c(w)$, yielded only
+125 covered images, or $6.74\%$. These are float64 geometric diagnostics,
+not outward-rounded proofs or distributional coverage estimates. They
+show that the current certificates and this fixed 128-center transfer
+construction do not produce useful coverage in this example. They do
+not bound stability on more general input regions, or imply that the
+actual stable neighborhoods of the data are small. The diagnostic is
+recorded in \texttt{pilot-neighborhood-diagnostic.json}.

@@ -4,14 +4,14 @@ Independent main-theorem rebuild procedure
 Purpose
 -------
 Rebuild the complete transitive PROJECT import closure of a chosen main theorem,
-or all four main theorems, without reusing any project object file. Check each
+or all five main theorems, without reusing any project object file. Check each
 main theorem's exact type and full axiom closure. Record the exact source,
 configuration, pinned package revisions, reused package artifacts, and toolchain
 executable hashes. This procedure does not publish anything.
 
 Implementation: rebuild_main.py in this directory. Python 3.11+ is required.
 
-SubcriticalMain.lean and all its imports now have closed proofs. Run from the
+All five main modules and their imports now have closed proofs. Select --main robust for RobustMain.lean, or --main all for the five-main union. Run from the
 Lean project directory, using a NEW destination path:
 
   python3 review/verification/rebuild_main.py \
@@ -20,7 +20,7 @@ Lean project directory, using a NEW destination path:
     --toolchain-bin /workspace/lean-toolchains/lean-4.32.0-linux/bin \
     --cpu-list 0,1
 
-For a single clean snapshot containing the union of all four main closures:
+For a single clean snapshot containing the union of all five main closures:
 
   python3 review/verification/rebuild_main.py \
     --main all \
@@ -79,22 +79,22 @@ be available.
 
 Publication checks after the independent run
 --------------------------------------------
-- Curate the union of the four main project closures plus any separately audited
+- Curate the union of the five main project closures plus any separately audited
   supplementary theorem modules. Unrelated in-progress modules are unnecessary.
-- Update the published root NeuralGeneralization.lean to import the four main
+- Update the published root NeuralGeneralization.lean to import the five main
   proof modules and intended supplements.
 - In the CURATED publication copy, run lake build, lake env lean Audit.lean, and
-  lake env lean CheckMain.lean. CheckMain must report all four exact proofs.
+  lake env lean CheckMain.lean, and lake env lean CheckRobust.lean. CheckMain must report the four earlier proofs and CheckRobust the fifth exact proof.
 - Match curated source/configuration hashes against the independently checked
   snapshot. If any mathematical source changes, rebuild/re-audit the affected
   closure before claiming the new snapshot is verified.
 - Verify paper hashes against review/source-manifest.json, and make the public
   coverage description distinguish exact main learning statements from optional
   appendix and auxiliary results. Do not state that all contents of every PDF
-  are machine checked merely because the four exact main gates pass.
+  are machine checked merely because the exact main gates pass.
 
-Procedure validation completed during preparation
-------------------------------------------------
+Historical procedure validation during October 16 preparation
+-------------------------------------------------------------
 The script passes Python syntax compilation. Prepare-only on the already proved
 mean-field target finds 136 project modules plus the three configuration files,
 matching the earlier 139-file source manifest. The generated exact audit was
@@ -102,3 +102,11 @@ also compiled against the existing project objects as a syntax/logic smoke test.
 These checks validate the procedure; they are not a new independent main proof
 rebuild. The closed subcritical main theorem still requires the separate
 complete dependency rebuild and exact-type/axiom gate described above.
+
+October 18 extension
+--------------------
+MAINS now includes RobustMain with the separate RobustMainStatements and
+RobustMainProofs namespaces. The generated five-main exact audit passed in the
+independent robustness rebuild. verify_supplement.py now requires --main all
+and runs CheckRobust in addition to the old gates. The published source-only
+rebuild includes 614 project modules and passes the 7,202-declaration audit.

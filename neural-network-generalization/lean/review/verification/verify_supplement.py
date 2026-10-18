@@ -3,7 +3,7 @@
 from pathlib import Path
 import argparse,json,os,shutil,subprocess,sys
 from datetime import datetime,timezone
-from rebuild_main import digest,write_json,project_closure,package_state,package_artifacts,run_logged
+from rebuild_main import MAINS,digest,write_json,project_closure,package_state,package_artifacts,run_logged
 
 p=argparse.ArgumentParser(description=__doc__)
 p.add_argument('--project',type=Path,default=Path(__file__).resolve().parents[2])
@@ -13,7 +13,9 @@ p.add_argument('--cpu-list',help='Optional Linux taskset CPU list')
 a=p.parse_args(); source=a.project.resolve(); destination=a.destination.resolve()
 evidence=destination/'verification'
 main=json.loads((evidence/'result.json').read_text())
-if main['status']!='PASS': raise SystemExit('The independent four-main gate must pass first.')
+if main['status']!='PASS': raise SystemExit('The independent main gate must pass first.')
+if {t[0] for t in main['targets']} != {t[0] for t in MAINS.values()}:
+ raise SystemExit('Run rebuild_main.py --main all before the aggregate supplement check.')
 core=json.loads((evidence/'source-before.json').read_text())
 for path,sha in core.items():
  if digest(source/path)!=sha or digest(destination/path)!=sha:
@@ -23,7 +25,7 @@ extras=[str(q) for q in closure if str(q) not in core]
 for path in extras:
  artifact=destination/'.lake/build/lib/lean'/Path(path).with_suffix('.olean')
  if artifact.exists(): raise SystemExit('Supplement object already exists: '+str(artifact))
-controls=['NeuralGeneralization.lean','Audit.lean','CheckMain.lean','CheckParity.lean']
+controls=['NeuralGeneralization.lean','Audit.lean','CheckMain.lean','CheckParity.lean','CheckRobust.lean']
 paths=sorted(set(core)|set(extras)|set(controls))
 before={q:digest(source/q) for q in paths}
 for path in extras+controls:
@@ -51,7 +53,8 @@ write_json(evidence/'supplement-result.json',summary)
 commands=[('supplement-build.log',[*prefix,lake,'--no-cache','build','NeuralGeneralization']),
  ('aggregate-audit.log',[*prefix,lake,'env','lean','-j1','Audit.lean']),
  ('main-gate.log',[*prefix,lake,'env','lean','-j1','CheckMain.lean']),
- ('parity-gate.log',[*prefix,lake,'env','lean','-j1','CheckParity.lean'])]
+ ('parity-gate.log',[*prefix,lake,'env','lean','-j1','CheckParity.lean']),
+ ('robust-gate.log',[*prefix,lake,'env','lean','-j1','CheckRobust.lean'])]
 codes={}
 for log,command in commands:
  print('Running '+log,flush=True)

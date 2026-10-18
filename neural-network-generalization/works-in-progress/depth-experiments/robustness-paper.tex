@@ -1,0 +1,158 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,booktabs,array,longtable,graphicx}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\usepackage{microtype}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\Prb}{\mathbb P}
+\newcommand{\R}{\mathbb R}
+\newcommand{\X}{\{-1,1\}^d}
+\newcommand{\op}{\mathrm{op}}
+\newcommand{\poly}{\operatorname{poly}}
+\newcommand{\sgn}{\operatorname{sign}}
+\title{Polynomial depth from stability of clipped neural-network predictions}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex}
+\date{18 October 2026}
+\hypersetup{pdftitle={Polynomial depth from stability of clipped neural-network predictions},pdfauthor={Dmitry Vaintrob, Kaarel Hanni, OpenAI Codex}}
+\begin{document}
+\maketitle
+\begin{abstract}
+We study Gaussian Bayesian learning of Boolean functions by fully connected
+tanh networks. We restrict the prior using stability of the output clipped
+at the training margin, under simultaneous small internal perturbations.
+The condition permits arbitrarily small clean outputs on unobserved inputs
+and ignores changes between sufficiently confident outputs of the same sign.
+For every layered Boolean target circuit, the resulting posterior has a
+sample bound polynomial in circuit width, input dimension, and network depth,
+simultaneously at every network width above circuit width and at every
+Gaussian exponent $\gamma\ge1$, including the finite-variance mean-field
+scale. The noise calibration is explicit, and its constant can be varied
+without changing the qualitative theorem. We also prove a weaker
+margin-band version and a localized version allowing network-dependent
+exceptional regions of controlled complexity. We give self-contained proofs
+and an empirical assessment on networks trained by gradient methods, with
+selected exact-arithmetic certificates. The evidence is mixed: exact
+certificates establish global stability for some fully fitted image models
+and full-domain stability for two 64-hidden-layer Boolean classifiers.
+Another fitted image model has a verified confident-input counterexample,
+although exact certificates establish stability on all 10,000 of its
+official held-out images at the same radius.
+An exact gradient-descent construction shows that
+on-distribution stability alone cannot imply the global condition.
+The empirical calibration may decrease polynomially with depth without
+losing the polynomial sample theorem.
+The empirical question is whether trained parameterizations satisfy this
+specified support condition; it is distinct from a theorem about the
+generalization of gradient descent or an experiment sampling the Bayesian
+posterior.
+\end{abstract}
+
+\section{Introduction and scope}
+
+Small parameter perturbations, small internal activation perturbations,
+and stability of classification are different properties. A network may
+have stable confident predictions despite changes in the magnitude of a
+large output. Conversely, a network can fit its training set accurately
+and be highly sensitive at inputs away from the data distribution. A useful
+prior restriction must make its input domain, disturbance model, and output
+criterion explicit.
+
+We use the output margin already present in the likelihood to define a
+bounded prediction score. Training requires signed output greater than
+$1/2$. We clip raw outputs at $\pm1/2$, and require a score change of at
+most $1/16$ under a specified ball of simultaneous internal perturbations.
+The test guarantee controls signed outputs at most $1/4$. Thus stability
+is calibrated to the gap between training and test margins. It does not
+forbid every sign change: moving from $0.02$ to $-0.02$ changes the score
+by only $0.04$. The statistical proof shows that weak or incorrect test
+outputs receive little posterior mass after sufficiently many examples.
+
+The main theorem concerns a particular restricted Gaussian prior and an
+exact margin-conditioning likelihood. Its comparator complexity is the
+width of a layered Boolean circuit. It does not assume that every small
+analog neural circuit has a robust implementation of the same width and
+depth. Nor does it assert that ordinary gradient descent samples this
+posterior. These distinctions matter when assessing the empirical evidence.
+
+Compression through noise stability and all-layer margins has precedents
+in work of Arora et al.\ and Wei and Ma~\cite{arora,weima}.
+Wei, Chen, and Ma~\cite{weichenma} prove polynomial circuit-size sample
+bounds for overparameterized feedforward networks using a suitable
+all-layer-margin surrogate and robust circuit simulation. Thus the general
+idea that robust simulation can avoid exponential depth factors predates
+this paper. Here the object being analyzed is the posterior of a specified
+Gaussian prior, including its target probability and uniformity over widths
+and finite Gaussian scales.
+Our proof uses Gaussian entropy and transport to construct one finite
+candidate class shared by all widths and scales. We include that construction
+and the Gaussian target-mass bound, so the result can be read independently.
+The polynomial constants are deliberately loose and do not provide practical
+sample estimates. The mathematical arguments have been reviewed independently
+by AI agents; they are not Lean formalizations.
+
+Published experiments support internal noise stability as a research
+direction, with different quantifiers from our support condition.
+Arora et al.\ report attenuation of injected Gaussian activation noise
+in a VGG-19 trained on CIFAR-10 and measure their stability quantities
+on training inputs~\cite{arora}. Yu and Tomasi report improved noise
+stability in residual networks relative to matched plain
+networks~\cite{yutomasi}. Neither establishes stability at every input
+under every simultaneous disturbance in our calibrated ball. The
+experiments below test that particular condition directly in the tanh
+architecture of the theorem. They do not establish its prevalence in
+modern convolutional networks or transformers.
+
+\input{robustness-theory.tex}
+\input{robustness-variants.tex}
+\input{margin-band-variant.tex}
+\input{localized-prior-theorem.tex}
+\input{stability-certificates.tex}
+\input{naturalness-gd-counterexample.tex}
+\input{output-rescaling.tex}
+\input{empirical-interpretation.tex}
+\IfFileExists{empirical-results.tex}{\input{empirical-results.tex}}{}
+\IfFileExists{certificates/report-fragment.tex}{\input{certificates/report-fragment.tex}}{}
+
+\clearpage
+\appendix
+\input{compression-proof.tex}
+\input{distributional-only-obstruction.tex}
+\input{analog-target-digital-simulation.tex}
+\input{two-margin-transport.tex}
+\input{unlabeled-stability-pool.tex}
+\input{certified-input-neighborhoods.tex}
+
+\begin{thebibliography}{9}
+\bibitem{arora}
+S. Arora, R. Ge, B. Neyshabur, and Y. Zhang.
+Stronger generalization bounds for deep nets via a compression approach.
+\emph{Proceedings of ICML}, 2018.
+\bibitem{weima}
+C. Wei and T. Ma.
+Improved sample complexities for deep neural networks and robust classification
+via an all-layer margin. \emph{Proceedings of ICLR}, 2020.
+\bibitem{talagrand}
+M. Talagrand. Transportation cost for Gaussian and other product measures.
+\emph{Geometric and Functional Analysis} 6, 587--600, 1996.
+\bibitem{weichenma}
+C. Wei, Y. Chen, and T. Ma.
+Statistically meaningful approximation: a case study on approximating
+Turing machines with transformers.
+\emph{Advances in Neural Information Processing Systems} 35,
+12071--12083, 2022.
+\bibitem{yutomasi}
+S. Yu and C. Tomasi.
+Identity connections in residual nets improve noise stability.
+\emph{ICML Workshop on Understanding and Improving Generalization
+in Deep Learning}, 2019.
+\url{https://arxiv.org/abs/1905.10944}.
+\end{thebibliography}
+\end{document}

@@ -1,0 +1,119 @@
+\section{Limits of cloning and absolute-energy counting}
+\label{sec:representation-limits}
+
+These observations delimit two proof strategies. Neither is a lower bound
+on the sample complexity of the original Gaussian learner.
+
+\paragraph{Cloning preserves an absolute path quantity.}
+For a depth-$D_0$ realization with $H=D_0-1$ hidden layers, define
+\[
+ A=|v|^T|W_H|\cdots|W_1|\mathbf1_{d+1},\qquad
+ P_F=\|v\|_2\prod_{s=1}^H\|W_s\|_F.
+\]
+Absolute values are entrywise. By the operator norm bound,
+\begin{equation}\label{eq:absolute-path-product-bound}
+ A\le\sqrt{d+1}\,P_F.
+\end{equation}
+Replacing each neuron by any positive integer number of exact clones,
+and dividing each outgoing weight equally among its source clones,
+preserves $A$. Indeed, the multiplicity of each original path cancels
+exactly against the product of the source-clone divisors on that path.
+Adding zero neurons also preserves $A$.
+
+Suppose the original output attains absolute value one, and append a
+zero-bias tanh network that takes this scalar output as its input and
+restores unit signed margin. Write its scalar response as $F$. Oddness
+implies $F(1)\ge1$. Since $|\tanh u|\le|u|$, its own absolute path sum
+$A_F$ satisfies $1\le|F(1)|\le A_F$. The appended realization has
+absolute path sum $AA_F\ge A$. Thus these two operations cannot reduce
+the lower bound in \eqref{eq:absolute-path-product-bound}.
+
+For any resulting width-$N$, depth-$L$ network, its $L$ Gaussian layer
+energies have product exactly $dP_F^2$. Consequently
+\begin{equation}\label{eq:cloning-product-obstruction}
+ \left(\frac{\kappa_N+2}{L}\right)^L
+ \ge dP_F^2\ge\frac{d}{d+1}A^2.
+\end{equation}
+In particular, cloning followed by scalar output transmission cannot
+always make the product-norm parameter polynomial in the size of the
+\emph{given realization}.
+
+A simple example makes the qualification essential. On one bit, let
+$h_0(x)=x$, $h_s(x)=\tanh(2h_{s-1}(x))$ for $1\le s\le H$, and use
+readout $z(x)=h_H(x)/h_H(1)$. This width-one, depth-$H+1$ network
+represents $f(x)=x$ with exact unit margin. Inductively $h_H(1)>0.9$,
+so all weights are at most two, whereas $A=2^H/h_H(1)\ge2^H$.
+The right side of \eqref{eq:cloning-product-obstruction} is therefore
+at least $4^H/2$. The same function has an inexpensive shallow
+representation. This is an obstruction to the specified representation
+operations, not to finding a different representation of the function.
+
+For uniform-per-layer clone counts $n_s$ and common padded width $M$,
+one has the stronger exact identity
+\[
+ a_1=\frac{dn_1}{M}\|W_1\|_F^2,\quad
+ a_s=\frac{n_s}{n_{s-1}}\|W_s\|_F^2\ (2\le s\le H),\quad
+ a_{H+1}=\frac{M}{n_H}\|v\|_2^2,\qquad
+ \prod_{s=1}^{H+1}a_s=dP_F^2.
+\]
+If the hidden-layer energy is at most $H+B$ with $B\ge0$, AM--GM
+gives $\prod_{s=1}^H a_s\le(1+B/H)^H\le e^B$, and hence
+$a_{H+1}\ge dP_F^2e^{-B}$. This explains why tapering can leave an
+exponentially expensive readout when intrinsic depth grows.
+
+\begin{proposition}[An absolute energy sublevel contains every Boolean function]
+\label{prop:all-functions-linear-energy}
+For every integer $d\ge1$, put
+\[
+ L=20(d+1)+4,\qquad M=64\,2^d(d+1)^6.
+\]
+For every Boolean function $f$ on $d$ bits and every width $N\ge M$,
+there is a depth-$L$, width-$N$ tanh network with unit signed margin
+on the entire cube and Gaussian energy $\kappa_N\le3L$.
+In particular, the logarithm of the number of Boolean functions in this
+energy sublevel is $2^d\log2=\exp(\Omega(L))$.
+\end{proposition}
+
+\begin{proof}
+Write $m=2^d$ and $b=\log(16m)$. For each cube point $a$, let
+\[
+ h_a(x)=\tanh\bigl(b(a\cdot x-d+1/2)\bigr),\qquad
+ s_a(x)=2\mathbf1\{x=a\}-1.
+\]
+The preactivation has magnitude at least $b/2$, with the correct sign,
+so $|h_a-s_a|\le2e^{-b}=1/(8m)$. The exact identity
+\[
+ f(x)=\frac12\sum_a f(a)\bigl(s_a(x)+1\bigr)
+\]
+therefore gives a shallow tanh realization
+\[
+ z(x)=\sum_a f(a)h_a(x)+\sum_a 2f(a)\,(1/2)
+\]
+with signed margin at least $2-1/8>1$. Implement the second sum by
+$m$ constant neurons, each with first-layer bias
+$\operatorname{atanh}(1/2)$ and all other incoming weights zero.
+There are $C=2m$ hidden neurons and $\|v\|_2^2=5m$.
+All weights have magnitude at most $R=4(d+1)^2$.
+
+Our chosen $M=32C(d+1)^6$ satisfies
+$M\ge\max\{4,C,2R,d\|W_1\|_F^2\}$, since
+$d\|W_1\|_F^2\le dC(d+1)R^2\le16C(d+1)^6$.
+Thus the zero-padding and balanced-cloning construction in
+Theorem~\ref{thm:shallow-all-depths} applies at every $N\ge M$ with
+\[
+ T=M\|v\|_2^2=320m^2(d+1)^6,
+ \qquad \kappa_N\le2+(L+14)(2T)^{1/(L-1)}.
+\]
+Since $d+1\le2^d$ and $640<2^{10}$,
+$2T\le2^{8d+10}\le2^{L-1}$. Therefore
+$\kappa_N\le2L+30\le3L$.
+\end{proof}
+
+This proposition concerns representations and energy, independently of
+the prior variance exponent. It rules out a bound polynomial in $d,L,K$
+for the logarithm of the number of all Boolean functions with energy
+at most $K=3L$. The exhibited shallow widths are exponential in $d$;
+the proposition does not say these are all small-circuit targets.
+It also does not compare competing posterior masses relative to a
+particular simple target, and gives no sample-complexity lower bound.
+The product-norm parameter can still be exponential when $K=3L$.

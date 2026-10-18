@@ -1,0 +1,191 @@
+\section{Unrestricted finite-variance learning for \texorpdfstring{$\gamma>1$}{gamma greater than one}}
+\label{sec:gaussian-distance}
+
+There is a stronger bridge than concentration of the full Frobenius energy.
+A typical Gaussian bulk has small operator norms when $\gamma>1$, even when
+its total Frobenius energy is large. Gaussian isoperimetry shows that the
+posterior lies near such a bulk, with the remaining signal having energy
+close to a target witness's. Removing the bulk then preserves all Boolean
+signs under an explicit product-norm condition. No additional restriction of prior
+support is used.
+
+Write $\sigma^2=t^2/N$, so the original Gaussian has independent entry
+variances $N\sigma^2/d,\sigma^2,\sigma^2/N$. Its energy coordinates are
+\[
+ A_1=\sqrt{d/N}\,W^1,\qquad A_s=W^s\ (2\le s<L),
+ \qquad A_L=\sqrt N\,v,
+\]
+and all their entries are independent $\mathcal N(0,\sigma^2)$.
+Their squared Euclidean norm is exactly $\kappa_N$.
+
+\begin{theorem}[Unrestricted learning above exponent one]
+\label{thm:unrestricted-above-one}
+Fix integers $d\ge1$, $L\ge2$, $C\ge1$, and a real $K\ge L$.
+Use tanh hidden activations and a linear readout. Suppose that for every
+$N\ge C$ there is a width-$N$, depth-$L$ target witness satisfying
+\[
+ f(x)z(x)\ge1\quad\hbox{for every Boolean input},\qquad \kappa_N\le K.
+\]
+Put
+\[
+ Q_* = \left(\frac{K+2}{L}\right)^{L/2}.
+\]
+For every fixed $\zeta>0$, every $0<\varepsilon,\delta<1$, and every
+distribution $D$ on the Boolean cube, the original Gaussian learner, conditioned only
+on the original global clean margin and noiseless training consistency,
+has a sample bound polynomial in
+\[
+ d,L,C,K,Q_*,\varepsilon^{-1},\log(1/\delta)
+\]
+which, with probability at least $1-\delta$ over independent training
+inputs drawn from $D$ and labeled by $f$, gives Gibbs error at most
+$\varepsilon$, simultaneously for all
+$N\ge C$ and all $0<\sigma^2\le N^{-(1+\zeta)}$.
+Thus it covers all $\gamma\ge1+\zeta$ at their actual finite Gaussian scales.
+The polynomial degree may depend on $\zeta$; no uniform claim as
+$\zeta\downarrow0$ is made.
+\end{theorem}
+
+We prove the statement with explicit width thresholds and sample inequalities.
+The hypothesis $K\ge L$ costs nothing: averaging over the cube and using
+AM--GM shows that a global unit-margin witness has
+$\kappa_N\ge Ld^{1/L}\ge L$.
+
+\paragraph{A perturbation estimate using operator norms.}
+Normalize hidden states by $\sqrt N$ and the augmented input by $\sqrt d$.
+The input norm is at most $\sqrt2$, all coordinate activations remain
+$1$-Lipschitz and zero-preserving, and the layer maps are the $A_s$ above.
+If $U$ has energy at most $K+1$, and an additive weight perturbation $B$
+has operator norm at most $\eta$ in every normalized layer, telescoping
+one layer at a time gives
+\begin{equation}\label{eq:operator-perturbation}
+ \sup_x|z_{U+B}(x)-z_U(x)|
+ \le\sqrt2\,L\eta
+ \left[\frac{K+1+2\eta\sqrt{L(K+1)}+L\eta^2}{L-1}\right]^{(L-1)/2}.
+\end{equation}
+Indeed, each summand is at most $\sqrt2\eta$ times a product of $L-1$
+other layer norms. The sum of squares of all perturbed layer-norm bounds
+is at most the numerator, and AM--GM bounds each such product.
+Set
+\[
+ A=\left(\frac{K+2}{L-1}\right)^{(L-1)/2},\qquad
+ \eta=\min\left\{1,\frac1{4\sqrt{L(K+1)}},
+                         \frac1{8\sqrt2\,LA}\right\}.
+\]
+The numerator in~\eqref{eq:operator-perturbation} is at most $K+2$, so the
+output change is at most $1/8$. Furthermore
+$A\le\sqrt e\,Q_*$, hence $\eta^{-1}$ is polynomial in $L,K,Q_*$.
+
+\paragraph{A symmetric typical Gaussian set.}
+For completely explicit constants, put
+\[
+ a_d^2=2(d+1)\log2+4\log8,\qquad
+ b_L^2=16\log9+8\log(8L),\qquad b=\max\{a_d,b_L\}.
+\]
+Let $T$ consist of bulk matrices whose first and last energy-coordinate
+Frobenius norms are at most $ta_d$, and whose internal operator norms are
+at most $tb_L$. Then $T$ is closed, convex and centrally symmetric, and
+\begin{equation}\label{eq:typical-half}
+ \mu_{N,t}(T)\ge1/2.
+\end{equation}
+For the first block, its squared Frobenius norm is
+$(t^2/N)\chi^2_{N(d+1)}$; the readout is the same expression with $d+1$
+replaced by one. The exponential moment of $\chi^2$ bounds each failure
+probability by $1/8$. For an internal matrix $tG/\sqrt N$, a $1/4$-net of
+the unit sphere has at most $9^N$ points, and the two-net scalar Gaussian
+bound gives
+\[
+ \Pr\{\|tG/\sqrt N\|_{\rm op}>tb_L\}
+ \le2\exp(2N\log9-Nb_L^2/8)\le\frac1{4L}.
+\]
+Union bounding over the $L-2$ internal blocks proves~\eqref{eq:typical-half}.
+Every normalized block of a member of $T$ has operator norm at most $tb$.
+
+\paragraph{Target mass by a Gaussian shift.}
+Suppose $tb\le\eta$. For a target witness $w_*$, the shifted set $w_*+T$
+has target margin at least $7/8$, by~\eqref{eq:operator-perturbation}.
+Central symmetry and the Gaussian change-of-mean identity yield
+\begin{align*}
+ \mu(w_*+T)
+ &=e^{-\kappa_N(w_*)/(2\sigma^2)}
+   \int_T e^{-\langle w_*,B\rangle_\kappa/\sigma^2}\,d\mu(B)\\
+ &\ge e^{-K/(2\sigma^2)}\mu(T)
+ \ge\tfrac12 e^{-K/(2\sigma^2)}.
+\end{align*}
+The inequality follows by pairing $B$ with $-B$ and using $\cosh u\ge1$.
+This lower bound holds for the raw probability of the conditioning event
+for every correctly labeled sample.
+
+\paragraph{The posterior is close to the typical set.}
+Let $d_\kappa(w,T)$ be Euclidean distance in energy coordinates. Gaussian
+isoperimetry~\cite{borell1975} and~\eqref{eq:typical-half} imply
+\[
+ \mu\{d_\kappa(w,T)>r\}\le e^{-r^2/(2\sigma^2)}.
+\]
+Dividing by the preceding target-mass lower bound gives, for every sample,
+\begin{equation}\label{eq:posterior-distance-tail}
+ Q_s\{d_\kappa(w,T)^2>K+1\}\le2e^{-1/(2\sigma^2)}.
+\end{equation}
+On the complement, let $B$ be the metric projection of $w$ onto $T$ and
+write $U=w-B$. The projection is well defined and continuous, since $T$
+is nonempty, closed and convex. Then $\kappa_N(U)\le K+1$ and
+$\sup_x|z_w(x)-z_U(x)|\le1/8$. The original posterior has clean margin
+$>1/2$ everywhere, so $U$ has \emph{exactly the same Boolean function}
+as $w$ and training margins $>3/8$. It is enough to use a margin-$1/4$
+ramp loss below.
+
+\paragraph{A polynomial width split.}
+Take $\beta=\varepsilon/2$ and
+\[
+ M=\left\lceil\max\left\{C,2,(b/\eta)^{2/\zeta},
+                                      2\log(2/\beta)\right\}\right\rceil.
+\]
+For every $N\ge M$ and $\sigma^2\le N^{-(1+\zeta)}$, one has
+$t\le N^{-\zeta/2}$, hence $tb\le\eta$, and
+$2e^{-1/(2\sigma^2)}\le\beta$.
+The product norm of $U$ is at most
+$d^{-1/2}[(K+1)/L]^{L/2}$. Write
+\[
+ G=\sqrt{(d+1)/d}\left(\frac{K+1}{L}\right)^{L/2},\qquad H=L-1.
+\]
+The product-norm Rademacher bound, now with the $4$-Lipschitz ramp loss
+$\min\{1,\max\{0,1-4yz\}\}$, gives one sample event of probability at
+least $1-\delta/2$ on which every such consistent residual network has
+error at most
+\begin{equation}\label{eq:distance-sample-bound}
+ F_n=\frac{8G}{\sqrt n}\left[2+\sqrt{2H\log(3+nH^2)}\right]
+                     +\sqrt{\frac{\log(2/\delta)}{2n}}.
+\end{equation}
+This event already includes all finite widths. When $F_n\le\varepsilon/2$,
+adding the posterior exceptional mass $\beta$ proves the required bound
+for every $N\ge M$ and every stated scale.
+
+For $C\le N\le M$, use Theorem~\ref{thm:finitewidth-unrestricted}.
+Here is a target-mass constant requiring only the present witness assumption.
+Every witness weight is at most $R=\sqrt{MK}$. Put
+\begin{align*}
+ a&=[4(d+1+M(L-1))(MR)^{L-1}]^{-1},\\
+ D_M&=\max\{1,K+[d+2+(L-2)M][2+\log(1/a)]\}.
+\end{align*}
+The same Gaussian-coordinate box calculation as in the finite-width proof
+has physical perturbation at most $a$, retains target margin at least $3/4$,
+and has mass at least $\exp(-ND_M/t^2)$.
+Applying that theorem with error $\varepsilon$ and failure probability
+$\delta/2$ controls all these widths and all $t\le1$ simultaneously.
+Its finite-grid logarithm is polynomial in $M,d,L,\log K$.
+The union of the two sample events proves the theorem.
+Finally, $G\le\sqrt2 Q_*$, $b^2=O(d+\log L)$ and
+$A\le\sqrt e Q_*$ show that $M$ and a sample size satisfying all the
+displayed inequalities are polynomial in the stated arguments for fixed
+$\zeta$. This proves the asserted quantitative dependence.
+
+\paragraph{Scope.}
+This argument does not apply at $\gamma=1$: the Gaussian bulk's operator
+norm does not tend to zero with width there. It also does not make $Q_*$
+polynomial for every small circuit. If a fixed base witness can be padded
+with energy $K=L+B$, where $B$ is independent of the added depth, then
+$Q_*\le e^{(B+2)/2}$. The theorem therefore removes exponential dependence
+on \emph{additional depth}, at every width and every fixed exponent above
+one, while retaining a potentially exponential dependence on base-witness
+energy. Stronger target-specific energy estimates can make $Q_*$ itself
+polynomial.

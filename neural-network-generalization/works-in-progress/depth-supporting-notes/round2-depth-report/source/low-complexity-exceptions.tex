@@ -1,0 +1,124 @@
+\section{Network-dependent exceptions with controlled input-set complexity}
+\label{sec:low-complexity-exceptions}
+
+The exceptional inputs need not be shared by all networks if the family of
+permitted exceptional sets has controlled complexity. This provides a
+second way to retain the ordinary training likelihood. The restriction is
+on where instability may occur, rather than on an altered likelihood.
+
+Fix a family $\mathcal B$ of subsets of the Boolean cube, including the
+empty set. Write $M$ for its number of distinct sets and suppose
+$\log M\le H_B$. A family learned from an independent unlabeled pilot is
+also allowed: all definitions below are then conditional on that pilot,
+and $H_B$ must be a uniform bound. Draw an independent unlabeled sample
+$V$ of size $m$ and a labeled sample $S$ of size $n$. Fix $0\le\rho<1$.
+For a network $w$, permit any exceptional set $B\in\mathcal B$ satisfying
+\[
+ \widehat D_V(B)\le\rho.
+\]
+Condition the raw Gaussian on the existence of such a $B$ for which the
+calibrated sign-stability condition holds at every $x\notin B$.
+Here the radius is $[100\sqrt{1+(L-1)N\|v\|^2}]^{-1}$, as in the
+trusted-region theorem. Then condition on ordinary training sign
+consistency at every example, including examples in the exceptional set.
+The exceptional set may depend on the network and hence on the labels
+through the posterior. This prior is the Gaussian conditioned on a union
+of admissible support events; it is not a mixture of separately normalized
+conditioned Gaussians.
+
+\begin{theorem}[Low-complexity distributional exceptions]
+\label{thm:low-complexity-exceptions}
+For every $0<\varepsilon,\delta<1$ there are sample bounds
+\[
+ m\ge O\!\left(\frac{H_B+\log(1/\delta)}{\varepsilon^2}\right),
+ \qquad
+ n\ge\operatorname{poly}
+       (d,L,C,H_B,\varepsilon^{-1},\log(1/\delta))
+\]
+such that a width-$C$ layered Boolean target circuit has posterior Gibbs
+sign error at most $3\rho+\varepsilon$, with probability at least
+$1-\delta$. The guarantee holds simultaneously for every $N\ge C$ and
+$0<t\le1$. There is no all-input clean-margin assumption.
+
+The same result holds when sign stability is replaced by numerical or
+clipped-score stability, the training likelihood is
+$f(X_i)z_w(X_i)>1/2$, and the test loss is
+$\mathbf1\{f(X)z_w(X)\le1/4\}$. The numerical radius is unchanged.
+In the clipped case fix $0<c\le1/100$ once and for all, with bound
+constants allowed to depend on $c$.
+\end{theorem}
+
+\begin{proof}
+Set $u=\varepsilon/20$. Uniform one-sided Hoeffding bounds, one for each
+sample, imply that, except on events of probability $\delta/3$ each,
+\begin{align*}
+ D(B)&\le\widehat D_V(B)+u&&\text{for every }B\in\mathcal B,\\
+ \widehat D_S(B)&\le D(B)+u&&\text{for every }B\in\mathcal B,
+\end{align*}
+provided $m,n\ge[H_B+\log(3/\delta)]/(2u^2)$.
+Every admissible exceptional set therefore has population mass at most
+$\rho+u$ and empirical training mass at most $\rho+2u$.
+These statements hold uniformly and hence also for sets chosen by a
+posterior network.
+
+The global robust target cylinder qualifies using $B=\varnothing$, for
+every realization of $V$. It has the same raw Gaussian mass lower bound
+$\exp(-ND_*/t^2)$ as before and is consistent with all labels. Consequently
+the full posterior---including the union in its support event---has
+scaled KL at most $ND_*/t^2$. The usual readout-energy truncation discards
+mass at most $\beta$ and leaves a law $Q'$ with a common inverse-polynomial
+stability radius and the same polynomial scaled entropy bound.
+
+For each retained network choose one witnessing exceptional set; the
+selection can be measurable because there are only finitely many distinct
+sets. Let $b_D$ and $b_S$ denote its population and empirical masses,
+averaged under $Q'$. The preceding uniform events give
+$b_D\le\rho+u$ and $b_S\le\rho+2u$.
+The pointwise-defect compression argument and its finite-class relative
+Chernoff bound give, on one further event of probability at least
+$1-\delta/3$,
+\[
+ R(Q)\le\beta+3\alpha+b_D+2b_S+
+       \frac{8[\log|\mathcal H|+\log(3/\delta)]}{n}
+ \le3\rho+5u+\beta+3\alpha+
+       \frac{8[\log|\mathcal H|+\log(3/\delta)]}{n}.
+\]
+Take $\beta=\varepsilon/8$, $\alpha=\varepsilon/24$, and choose $n$ so
+the last term is at most $\varepsilon/2$. The numerical and clipped cases
+use the same bounded ramp loss as before; an exceptional input contributes
+at most one to its population or empirical comparison, giving the same
+inequality. The common finite class is independent of $N,t$, and the
+uniform set-mass events do not involve either parameter. This proves the
+simultaneous statement.
+\end{proof}
+
+\paragraph{A VC-dimension formulation.}
+If $\mathcal B$ has VC dimension at most $h\ge1$, its restriction to the
+$2^d$ Boolean inputs has at most
+\[
+ \sum_{j=0}^{\min(h,2^d)}\binom{2^d}{j}
+ \le(2^d+1)^h
+\]
+distinct sets. Thus $H_B=h\log(2^d+1)\le h(d+1)\log2$ suffices.
+No finiteness of a continuous parameterization is required. The theorem
+therefore gives polynomial depth bounds whenever the exceptional-set VC
+dimension is polynomial in the stated parameters and independent of
+network width. This use of the finite Boolean domain is intentionally
+simple; ordinary VC uniform-convergence estimates can also be used.
+
+For example, one can permit exceptional sets that are halfspaces or balls
+in a fixed $p$-dimensional input representation, or unions of a bounded
+number of such sets. The corresponding VC dimensions are polynomial in
+$p$ and the number of components. The representation may be learned from
+the independent pilot. These are candidate restrictions, not a claim that
+the actual failure sets of unconstrained trained networks have small VC
+dimension. Whole-region stability outside a witnessing exceptional set
+must still hold. A certificate proving that all failures lie inside such
+a region is enough; high empirical robustness alone is not.
+
+The theorem gives a genuine distributional relaxation with
+network-dependent exceptions and the original sign likelihood. It still
+changes the Gaussian prior's support. It neither proves an unrestricted
+Gaussian result nor evades the sparse-patch obstruction without an added
+assumption: the family of arbitrary sparse patches has large input-set
+complexity, precisely what is controlled here.

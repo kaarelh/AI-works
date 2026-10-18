@@ -1,0 +1,81 @@
+\section{A concrete data-local stability condition}
+\label{sec:local-geometry-condition}
+
+A natural way to allow off-distribution failures is to require stability on
+neighborhoods of representative unlabeled inputs. The neighborhoods need
+not have the same radii for every network. Their input-set complexity,
+rather than the complexity of the network that selects the radii, controls
+the statistical price of this adaptation.
+
+Choose $M\ge1$ pilot centers $a_1,\ldots,a_M\in\mathcal X$ using data
+independent of the labeled sample and subsequent coverage-validation
+sample. Fix an input metric $d_0$ independently of those two samples. For
+nonnegative radii $s=(s_1,\ldots,s_M)$ set
+\[
+ G_s=\bigcup_{j=1}^M\{x:d_0(x,a_j)\le s_j\},\qquad B_s=G_s^c.
+\]
+A network is admissible if there exists $s$ such that it satisfies the
+calibrated clipped-score condition at every input of $G_s$, and the
+independent unlabeled validation sample assigns at most $\rho$ mass to
+$B_s$. The prior is the raw Gaussian conditioned on existence of such
+radii; the radii may differ across posterior networks.
+
+\begin{proposition}[Input complexity of adaptive neighborhood radii]
+The family $\{B_s:s\in[0,\infty)^M\}$ has VC dimension at most $M$.
+Consequently the controlled-exception theorem applies with polynomial
+labeled and unlabeled sample bounds and final Gibbs test-margin error
+at most $3\rho+\varepsilon$, uniformly in width and Gaussian scale.
+\end{proposition}
+\begin{proof}
+Map $x$ to its fixed distance vector
+$(d_0(x,a_1),\ldots,d_0(x,a_M))$. Each $B_s$ is the inverse image of an
+upper orthant. If $k$ points were shattered, excluding point $i$ while
+including every other point would require a coordinate in which point
+$i$ is the unique minimum. Different points require different such
+coordinates. Hence $k\le M$.
+
+For completeness, on the finite Boolean domain the number of distinct
+exception sets is at most $(2^d+1)^M$. Uniform one-sided Hoeffding bounds
+on independent validation and labeled samples give, simultaneously for
+all admissible radii,
+\[
+ D(B_s)\le\rho+u,\qquad \widehat D_S(B_s)\le\rho+2u.
+\]
+The global robust Boolean target cylinder is admissible by taking radii
+large enough to cover $\mathcal X$, so its probability lower bound is
+unchanged. Apply entropy compression to the full union-conditioned
+posterior. Exceptional inputs add at most one to each score/ramp
+comparison, giving
+\[
+ R(Q)\le\beta+3\alpha+3\rho+5u+
+       \frac{8[\log|\mathcal H|+\log(3/\delta)]}{n}.
+\]
+Taking $u,\alpha,\beta$ proportional to $\varepsilon$ proves the stated
+bound. This argument uses the ordinary training-margin likelihood and
+controls the empirically selected exception set uniformly; it does not
+replace that likelihood by robust training consistency.
+\end{proof}
+
+The metric may, for example, be Euclidean distance or distance in a fixed
+representation learned from the independent pilot. The theorem does not
+promise that a small number of neighborhoods covers a high-dimensional
+input distribution while satisfying the stability condition. That is a
+substantive empirical question. A common radius makes the exception family
+nested and reduces its VC dimension to at most one, but may give much
+poorer coverage.
+
+A sound empirical sufficient certificate is a raw output enclosure
+$[\ell_j,u_j]$ valid jointly for every input in a neighborhood and every
+allowed internal disturbance, with
+$T(u_j)-T(\ell_j)\le1/16$. In particular, an enclosure entirely beyond a
+saturation threshold has zero clipped-score diameter. This connects the
+condition to confidently classified input clusters. A tighter certificate
+can bound the noisy-minus-clean score directly and exploit their shared
+input.
+
+These are sufficient ways to verify membership for an individual trained
+network. They must not silently be made additional restrictions on the
+prior: a conservative interval certificate can fail for an actually stable
+Boolean target, and a prior restricted to that certificate would need a
+new target-mass proof. Likewise, certifying finitely many centers without
+certifying their neighborhoods does not establish coverage of a region.

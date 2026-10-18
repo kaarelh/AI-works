@@ -1,0 +1,156 @@
+\section{Distributional localization with network-dependent exceptions}
+\label{sec:localized-prior-theorem}
+
+Stability need not hold on the full cube. The exceptional region can even
+vary with the network, provided its input-set complexity is controlled.
+The prior below is an exactly conditioned Gaussian, rather than a mixture
+of separately normalized Gaussian components.
+
+Let $\mathcal B=\{B_1,\ldots,B_M\}$ be a family of distinct subsets of
+$\mathcal X$, containing the empty set. The family may be chosen using an
+independent unlabeled pilot. Draw a further unlabeled validation sample
+$V$ of size $m$, independent of the labeled sample $S$. Fix $0\le\rho<1$.
+Condition the raw Gaussian on the existence of an index $j$ such that
+\begin{equation}\label{eq:localized-support}
+ \widehat D_V(B_j)\le\rho,\qquad
+ |T(z_w(x;\eta))-T(z_w(x))|\le1/16
+ \quad(x\notin B_j,\ \|\eta\|_*\le r_c(w)).
+\end{equation}
+Then apply the unchanged training likelihood $f(X_i)z_w(X_i)>1/2$ at every
+training example, including examples in the exceptional region.
+
+\begin{theorem}[Localized stability under exact union conditioning]
+\label{thm:localized-union}
+For targets covered by Theorem~\ref{thm:standalone-clipped}, the posterior
+with support~\eqref{eq:localized-support} has Gibbs test-margin error at
+most $\rho+\varepsilon$, with probability at least $1-\delta$, whenever
+\[
+ m\ge O\!\left(\frac{\log M+\log(1/\delta)}{\varepsilon^2}\right),
+ \qquad
+ n\ge\operatorname{poly}
+   (d,L,C,c+c^{-1},\log M,\varepsilon^{-1},\log(1/\delta)).
+\]
+One sample event gives the guarantee simultaneously for all $N\ge C$ and
+$0<t\le1$. No modification of the training likelihood is required.
+\end{theorem}
+
+\begin{proof}
+Write $a=N/t^2\ge1$. By a one-sided Hoeffding bound and a union bound,
+with probability at least $1-\delta/2$ over $V$,
+\[
+ D(B_j)\le\widehat D_V(B_j)+u\qquad(1\le j\le M),
+\]
+provided $m\ge[\log M+\log(2/\delta)]/(2u^2)$.
+The global target cylinder is admissible with the empty exceptional set,
+so for every $V,S$ the full posterior $Q$ satisfies
+$D_{\rm KL}(Q\Vert\mu_{N,t})\le aD_*$.
+
+Assign to each network the first index witnessing
+\eqref{eq:localized-support}. Write $q_j$ for its posterior probability
+and $Q_j$ for the conditional network law. The assignment is measurable
+because the family is finite. The relative-entropy chain rule gives
+\begin{equation}\label{eq:localized-component-entropy}
+ \sum_jq_jD_{\rm KL}(Q_j\Vert\mu_{N,t})
+ =D_{\rm KL}(Q\Vert\mu_{N,t})+H(q)
+ \le aD_*+\log M.
+\end{equation}
+Thus indices for which $D_{\rm KL}(Q_j\Vert\mu_{N,t})>aK_1$ have total
+posterior mass at most $\beta$, where
+\[
+ K_1=\frac{D_*+\log M}{\beta}.
+\]
+This step avoids assuming that each assigned component separately contains
+the target cylinder; that assumption would be false in general.
+
+For each retained component, the Gaussian entropy moment bound implies
+$\mathbb E_{Q_j}E_v\le4K_1+2\log2$. Set
+$B=(4K_1+2\log2)/\beta$ and discard its readout tail $E_v>B$, of mass at
+most $\beta$. Denote the resulting conditional law by $Q'_j$.
+For any conditioning event $E$ of probability $p$, KL decomposition gives
+\[
+ pD_{\rm KL}(Q_j(\cdot\mid E)\Vert\mu_{N,t})
+ \le D_{\rm KL}(Q_j\Vert\mu_{N,t})+\log2.
+\]
+Consequently, for $\beta\le1/2$,
+$D_{\rm KL}(Q'_j\Vert\mu_{N,t})\le2a(K_1+1)$.
+All retained components are stable outside their own $B_j$ at the common
+radius $r=\min\{1/6,c/\sqrt{1+HB}\}$.
+
+Compress each $Q'_j$ separately, using the common finite class from
+Lemma~\ref{lem:raw-entropy-compression} with $K=2(K_1+1)$.
+Apply the finite-class relative-Chernoff bound simultaneously to the
+$M|\mathcal H|$ masked ramp losses
+\[
+ \ell_{j,h}(x)=\mathbf1\{x\notin B_j\}\,
+                      \psi(f(x)T(h(x))).
+\]
+This event has probability at least $1-\delta/2$ over the labeled sample.
+Outside $B_j$, training margin consistency and the compression coupling
+make the candidate's empirical masked loss at most $\alpha$ after
+averaging. The population comparison adds another $\alpha$.
+Therefore every retained component has masked test-margin risk at most
+\[
+ 3\alpha+\frac{8[\log M+\log|\mathcal H|+\log(2/\delta)]}{n}.
+\]
+On the validation event, its unmasked risk costs at most another
+$D(B_j)\le\rho+u$. Averaging the components and restoring both discarded
+masses gives
+\[
+ R(Q)\le\rho+u+2\beta+3\alpha+
+       \frac{8[\log M+\log|\mathcal H|+\log(2/\delta)]}{n}.
+\]
+Take $u=\varepsilon/4$, $\beta=\varepsilon/8$,
+$\alpha=\varepsilon/12$, and make the last term at most
+$\varepsilon/4$. All entropy, radius, and cardinality parameters are
+polynomial in the stated quantities and independent of $N,t$.
+Conditional on the pilot, the same finite masked-loss event works for
+all widths and scales. Averaging over the pilot completes the proof.
+\end{proof}
+
+If the family has VC dimension at most $h\ge1$, its restriction to the
+finite Boolean cube has at most $(2^d+1)^h$ distinct subsets. The theorem
+therefore applies with $\log M\le h(d+1)\log2$, even for a continuously
+parameterized family. The family must be fixed before the validation and
+labeled samples, or obtained from an independent pilot. No assertion is
+made that arbitrary network instability sets have width-independent VC
+dimension.
+
+A concrete example is a union of neighborhoods of $M_0$ pilot centers,
+with separate radii chosen by each network. Its uncovered region is an
+upper orthant in the fixed vector of distances to the centers and has VC
+dimension at most $M_0$. Thus network-dependent local coverage can be
+handled with polynomial sample complexity. The prior still requires
+actual stability throughout the covered regions. Pointwise testing of the
+centers or observed validation inputs alone does not verify that condition.
+
+
+\begin{corollary}[Using the training inputs to choose the support]
+\label{cor:localized-same-inputs}
+If the full exception family is fixed independently of $S$, the input
+locations of $S$ itself may replace the independent validation sample in
+\eqref{eq:localized-support}. The resulting input-dependent Gaussian prior,
+followed by the ordinary training-margin likelihood, has the same
+$\rho+\varepsilon$ guarantee when $n$ also satisfies the coverage sample
+bound. No additional unlabeled sample is needed.
+\end{corollary}
+\begin{proof}
+The coverage bound is uniform over the fixed family, and the masked-loss
+bound is uniform over its product with the common finite candidate class.
+Both events hold for the same iid input sample; their failure probabilities
+can be added without independence. The component entropy and compression
+arguments are deterministic statements for each realized sample.
+\end{proof}
+
+This corollary does not allow an arbitrarily complex exception family to be
+learned from the same sample without accounting for its complexity. For
+example, take as exception sets the complements of all unions of at most
+$k$ Euclidean balls with centers in the Boolean cube. This family is fixed
+in advance. On that cube each center
+has at most $d+2$ distinct radius/inclusion choices, including an unused
+ball, so the family has at most $[2^d(d+2)]^k$ descriptions. Posterior-chosen
+centers and radii are therefore allowed at a cost
+$\log M\le k[d\log2+\log(d+2)]$. This formalizes a condition that stability
+holds on a few input neighborhoods covering most observed inputs, with a
+statistical guarantee for their population coverage. It does not assert
+that a small number of such neighborhoods suffices for any particular
+high-dimensional data distribution.

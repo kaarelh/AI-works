@@ -1,0 +1,112 @@
+\section{What a polynomial product norm does imply about depth}
+\label{sec:product-norm-depth-reduction}
+
+A polynomial product of Frobenius norms does not, by the argument below,
+imply a constant-depth threshold representation. There is nevertheless a
+concrete analytic depth reduction. It clarifies the gap between a norm
+condition and a Boolean-circuit depth-collapse claim.
+The rank-one mechanism is the same as the depth-reduction argument of
+Golowich--Rakhlin--Shamir~\cite{golowich2018}, Theorem~3; the calculation
+below specializes it to a unit-margin Boolean target and gives the
+needed constants directly.
+
+Write $D=d+1$, let $H=L-1$ be the number of hidden layers, and let
+\[
+ P=\|W^1\|_F\cdots\|W^H\|_F\|v\|_2.
+\]
+The input is $\bar x=(x,1)$, and all later layers have no bias, as in the
+original model. Suppose $z$ has global signed margin at least one for a
+nonconstant Boolean function. Then
+\begin{equation}\label{eq:pf-spectral-lower}
+ S:=\|W^1\|_{\rm op}\cdots\|W^H\|_{\rm op}\|v\|_2\ge1,
+ \qquad P\ge1.
+\end{equation}
+Indeed some cube edge has opposite labels at its endpoints. The output
+changes by at least two along an input displacement of Euclidean length
+two, whereas the network is globally $S$-Lipschitz in its augmented input.
+
+\begin{lemma}[An early approximate rank-one layer]
+\label{lem:early-rank-one-layer}
+For every integer $1\le r\le H$, some layer $s\le r$ can be replaced by
+a rank-one matrix so that the resulting network $\widetilde z$ satisfies
+\[
+ \max_{x\in\{-1,1\}^d}|z(x)-\widetilde z(x)|
+ \le P\sqrt{D}\sqrt{\frac{\log P^2}{r}}.
+\]
+\end{lemma}
+\begin{proof}
+For each nonzero hidden matrix define its stable rank
+$\rho_s=\|W^s\|_F^2/\|W^s\|_{\rm op}^2\ge1$.
+The readout has stable rank one, so
+\[
+ \sum_{s=1}^H\log\rho_s=\log(P^2/S^2)\le\log P^2.
+\]
+Since $1-1/\rho\le\log\rho$, there is $s\le r$ with
+$1-1/\rho_s\le\log(P^2)/r$.
+Retain the leading singular component of $W^s$, obtaining $\widetilde W^s$.
+Then
+\[
+ \|W^s-\widetilde W^s\|_{\rm op}
+ \le\|W^s-\widetilde W^s\|_F
+ =\|W^s\|_F\sqrt{1-1/\rho_s}.
+\]
+Because tanh is one-Lipschitz and vanishes at zero, the incoming activation
+norm is at most $\sqrt D\prod_{j<s}\|W^j\|_F$.
+Propagating the single-layer error through the remaining layers proves
+the displayed bound. No rescaling identity for tanh is used.
+\end{proof}
+
+After this replacement, all subsequent computation is a univariate
+function of the rank-one projection. More precisely, factor
+$\widetilde W^s=\sigma uv^T$ with unit singular vectors, and put
+\[
+ A=\sigma\sqrt D\prod_{j<s}\|W^j\|_{\rm op}>0,
+ \qquad t(x)=\sigma v^Th^{s-1}(x)/A\in[-1,1].
+\]
+Then $\widetilde z(x)=g(t(x))$, where $g$ is an odd scalar function with
+$g(0)=0$ and Lipschitz constant at most
+\[
+ A\prod_{j>s}\|W^j\|_{\rm op}\|v_{\rm out}\|_2
+ \le P\sqrt D.
+\]
+Here $v_{\rm out}$ denotes the original readout; it is distinct from the
+right singular vector in the factorization.
+
+For completeness, a scalar $Q$-Lipschitz function on $[-1,1]$ can be
+uniformly approximated to any error $0<\eta<1$ by a one-hidden-layer tanh
+network with $O(1+Q/\eta)$ features and coefficients polynomial in
+$1+Q+\eta^{-1}+|g(0)|$. Take an evenly spaced grid with mesh
+$h\le\eta/(8(Q+1))$, write its piecewise-constant interpolant as a sum
+of jumps, and replace each step by $(1+\tanh(\lambda(t-t_i)))/2$ with
+$\lambda h\ge2$. Each jump has magnitude at most $Qh$. At any input,
+the sum of the exponentially decaying step errors is at most two,
+so smoothing contributes at most $2Qh$, and interpolation adds at most
+$Qh$. A constant feature implements the remaining constant output.
+
+Thus, taking
+\[
+ r=\max\{1,\lceil16DP^2\log P^2\rceil\},
+\]
+if $r\le H$ one may replace a layer among the first $r$ by rank one
+and replace its entire downstream computation by one shallow scalar
+approximator. Both approximation errors can be at most $1/4$, preserving
+the Boolean function with margin at least $1/2$. Doubling the readout
+restores unit margin. The new network uses at most $r$ hidden layers.
+When $H<r$, the original network already meets this depth bound.
+To realize scalar-approximator biases in the original no-internal-bias
+architecture, carry one extra constant feature of activation $1/2$
+through the retained prefix; its copying coefficient is
+$2\operatorname{atanh}(1/2)$. This does not change the prefix computation.
+
+\paragraph{Limits of this conclusion.}
+The guaranteed retained depth is $O(1+dP^2\log(2P))$, not constant or
+logarithmic when $P$ is polynomial in target size. The construction also
+retains the original prefix width and makes no polynomial product-norm
+claim for the replacement network. Its scalar normalization can introduce
+large physical weights. Therefore this analytic lemma alone gives no
+polynomial-size constant-depth threshold circuit, no $\mathsf{TC}^0$
+collapse, and no separation involving $\mathsf{NC}^1$. A circuit-class
+consequence would require further control of prefix width, precision,
+and depth. Conversely, an expensive given circuit or an exact-cloning
+barrier cannot establish that every alternative representation has large
+product norm.

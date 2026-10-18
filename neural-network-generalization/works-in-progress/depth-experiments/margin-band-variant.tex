@@ -1,0 +1,117 @@
+\section{A weaker condition based on the gap between training and test margins}
+\label{sec:margin-band-variant}
+
+The primary condition uses the score clipped at the training margins.
+The argument admits a further weakening which ignores changes entirely
+inside the region already counted as a test-margin error. We present
+this as a mathematical variant; it does not retroactively change the
+primary condition used in the empirical protocol.
+
+\begin{theorem}[Monotone score transforms]
+\label{thm:monotone-score-transform}
+Fix, independently of the training sample, an odd, nondecreasing and
+$1$-Lipschitz map $F:\mathbb R\to\mathbb R$ that is constant on
+$[1/2,\infty)$. Put
+\[
+ A=F(1/2),\qquad B=F(1/4),\qquad \Delta=A-B>0.
+\]
+Replace the main support condition by
+\begin{equation}\label{eq:transformed-score-support}
+ |F(z_w(x;\eta))-F(z_w(x))|\le\Delta/4
+ \quad\text{for every }x\text{ and every }
+       \|\eta\|_*\le r_c(w).
+\end{equation}
+Keep the same Gaussian prior, observed training margin $yz>1/2$,
+and test error event $yz\le1/4$. Then the main all-width, all-$\gamma\ge1$
+polynomial sample guarantee remains valid, with additional polynomial
+dependence on $\Delta^{-1}$.
+The same replacement is valid in the controlled-exception localized
+prior theorem, with its $\rho+\varepsilon$ conclusion.
+\end{theorem}
+
+\begin{proof}
+The existing target cylinder has clean and perturbed signed output
+larger than one, so all these outputs have transformed score $fA$.
+Its support membership and raw Gaussian probability are unchanged.
+The readout-tail and entropy estimates are also unchanged.
+After the readout truncation $E_v\le B_v$, use common compression radius
+\[
+ r=\min\{1,2\Delta/3,c/\sqrt{1+HB_v}\}.
+\]
+On a successful coupling, $1$-Lipschitzness of $F$ gives transformed
+score discrepancy at most
+\[
+ \Delta/4+r/8\le\Delta/3.
+\]
+At a training input, $yF(z_w)=A$, so the compressed candidate has
+signed transformed score at least $A-\Delta/3$. At a test-margin
+error, monotonicity and oddness give
+$yF(z_w)=F(yz_w)\le B$, so its compressed signed score is at most
+$B+\Delta/3$. These endpoints are separated by $\Delta/3$.
+Use the $[0,1]$ ramp equal to one below $B+\Delta/3$, zero above
+$A-\Delta/3$, and linear between them. Its slope magnitude is
+$3/\Delta$. The same finite-class bounded-loss concentration and
+coupling argument therefore gives the same risk inequality.
+All common class parameters are polynomial in the old parameters and
+$\Delta^{-1}$. Masking the ramp outside a controlled exceptional set
+also gives exactly the earlier localized proof.
+\end{proof}
+
+\paragraph{The margin-band score.}
+The particularly natural choice is
+\begin{equation}\label{eq:margin-band-score}
+ U(z)=\operatorname{sign}(z)
+          \min\{1/4,(|z|-1/4)_+\}.
+\end{equation}
+It is zero on $[-1/4,1/4]$, grows linearly toward the training margins,
+and saturates at $\pm1/4$ once $z$ reaches $\pm1/2$.
+Here $A=1/4$, $B=0$ and $\Delta=1/4$. The support tolerance is
+still $1/16$, and the common compression radius still satisfies
+$r\le1/6$. The separating ramp thresholds are $1/12$ and $1/6$.
+Thus all constants in the main statistical argument remain unchanged.
+
+The score measures signed excess beyond the test-error threshold.
+For example, changing an output from $0.1$ to $-0.1$ leaves both
+transformed scores zero. Both outputs already fail the $1/4$ margin
+criterion for either label; forbidding this
+fluctuation is unnecessary for the proof. In contrast, movement from
+an unconfident output into the training-confidence region remains
+controlled. Training-margin satisfaction and posterior probability of
+correct test answers retain their original meanings; the transform
+only defines the prior's stability condition.
+
+This is genuinely weaker than clipping at $\pm1/2$: with
+$T(z)=\operatorname{clip}(z,-1/2,1/2)$,
+\[
+ U(z)=\operatorname{sign}(T(z))(|T(z)|-1/4)_+,
+\]
+and the map on the right is $1$-Lipschitz in $T(z)$.
+Every network satisfying the primary condition therefore satisfies the
+margin-band condition at the same radius and tolerance.
+
+There is a precise minimality statement within this class of score
+transforms. Suppose $F$ satisfies the theorem and retains the full
+available gap $F(1/2)-F(1/4)=1/4$. Monotonicity and
+$1$-Lipschitzness imply, with $B=F(1/4)\ge0$,
+\[
+ F(z)=B+z-1/4\quad(1/4\le z\le1/2),\qquad
+ 0\le F(z)\le B\quad(0\le z\le1/4).
+\]
+Using saturation and oddness elsewhere gives
+\[
+ U(z)=\operatorname{sign}(F(z))(|F(z)|-B)_+.
+\]
+Thus stability of any such $F$ implies stability of $U$ at the same
+radius and tolerance. In this explicitly specified class, the
+margin-band score imposes the weakest stability requirement while
+retaining the full training-to-test gap. This is not a claim of
+optimality among all possible prior conditions.
+
+A raw-output interval certificate $z_w(x;\eta)\in[z-B_x,z+B_x]$
+certifies this variant whenever
+\[
+ \max\{U(z+B_x)-U(z),U(z)-U(z-B_x)\}\le1/16.
+\]
+Existing interval-certified attacks can likewise be evaluated with
+$U$ without a new attack search. A failure or success of the primary
+clipped-score condition need not have the same outcome for this variant.

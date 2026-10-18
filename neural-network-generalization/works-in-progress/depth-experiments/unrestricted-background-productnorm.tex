@@ -1,0 +1,182 @@
+\section{A width-independent tanh bound without robustness}
+\label{sec:productnorm}
+
+We first establish the width-independent function-class bound used to
+control the low-energy signal extracted from a posterior draw. The proof
+accounts for the fact that tanh is not positively homogeneous.
+
+The normalized-activation and exponential-moment method is closely related
+to Nakhleh--Nowak's treatment of deep neural variation spaces
+\cite{nakhleh2026}, which explicitly uses $\tanh(st)/s$ and slope
+discretization, and to the exponential peeling argument of
+Golowich--Rakhlin--Shamir~\cite{golowich2018}. We give a self-contained
+product-Frobenius version for the present Gaussian-energy conventions;
+we do not claim the underlying proof technique is new.
+
+\begin{theorem}[Product-Frobenius bound for tanh]\label{thm:tanh-product}
+Let $\mathcal F_{L,P}$ contain all scalar-output tanh networks with $L-1$
+hidden layers, arbitrary finite widths, a linear readout, and product of
+layer Frobenius norms at most $P$. Biases are absent except through an
+augmented input. On every sample $x_1,\ldots,x_n$ with $\|x_i\|\le R$,
+\[
+ \widehat{\mathfrak R}_n(\mathcal F_{L,P})
+ \le \frac{PR}{\sqrt n}
+ \left[2+\sqrt{2(L-1)\log\bigl(3+n(L-1)^2\bigr)}\right].
+\]
+The bound is independent of every hidden width and of the individual layer
+norms apart from their product.
+\end{theorem}
+
+\begin{proof}
+If $R=0$, every sampled input and every network output on the sample is
+zero, so the bound is immediate. Assume $R>0$ below.
+Define $\phi_s(u)=\tanh(su)/s$ for $s>0$, $\phi_0(u)=u$, and
+$\phi_\infty(u)=0$. These functions are odd, $1$-Lipschitz, and zero at zero.
+For finite $s,t\ge0$ and $r\ge0$,
+\[
+ \phi_s(ru)=r\phi_{sr}(u),\qquad
+ |\phi_s(u)-\phi_t(u)|\le u^2|s-t|,
+ \qquad |\phi_s(u)|\le1/s\quad(s>0).
+\]
+The derivative bound follows by differentiating
+$\phi_s(u)=u\int_0^1\operatorname{sech}^2(suv)\,dv$.
+
+Let $\mathcal G_0$ contain the identity feature map. Inductively allow
+arbitrary finite-dimensional features
+\[
+ g_j(x)=\phi_{s_j}(a_j^T h(x)),\quad
+ h\in\mathcal G_{\ell-1},\quad \sum_j\|a_j\|^2\le1,
+ \quad s_j\in[0,\infty].
+\]
+All these feature vectors have norm at most $R$ on the sample. Put
+$B_\ell(\epsilon)=\sup_{g\in\mathcal G_\ell}
+ \|\sum_i\epsilon_i g(x_i)\|$ for independent Rademacher signs.
+Writing $a_j=r_j u_j$ and using the scaling identity shows
+\[
+ B_\ell\le
+ \sup_{h,\,\|u\|\le1,\,s\in[0,\infty]}
+ \left|\sum_i\epsilon_i\phi_s(u^T h(x_i))\right|.
+\]
+For any $\eta>0$, uniformly on $[-R,R]$ the slope family admits an
+$\eta/n$ approximation using at most
+$J=3+n^2R^2/\eta^2$ choices: truncate $s>n/\eta$ to the zero function,
+and round slopes below that threshold down at mesh $\eta/(nR^2)$.
+The error in the Rademacher sum is at most $\eta$.
+
+We use the convex contraction principle
+\[
+ \mathbb E G\!\left(\sup_{t\in T}\sum_i\epsilon_i\psi_i(t_i)\right)
+ \le
+ \mathbb E G\!\left(\sup_{t\in T}\sum_i\epsilon_i t_i\right)
+\]
+for convex nondecreasing $G$ and $1$-Lipschitz $\psi_i$ vanishing at zero.
+For completeness, the single-coordinate proof compares
+$X_\pm=\sup_t(a_t\pm\psi(t_k))$ and
+$Y_\pm=\sup_t(a_t\pm t_k)$. One has
+$\max(Y_+,Y_-)\ge\max(X_+,X_-)$ by $|\psi(t)|\le|t|$.
+An approximately maximizing pair for $X_+,X_-$ also gives
+$Y_++Y_-\ge X_++X_-$, by the Lipschitz property.
+Convex monotonicity therefore gives
+$G(Y_+)+G(Y_-)\ge G(X_+)+G(X_-)$; iterate over coordinates.
+Bounded separable classes follow by approximation from finite classes.
+In our application, $u$ ranges symmetrically and $\phi_s$ is odd, so the
+absolute supremum is the same as the one-sided supremum.
+
+Apply this principle with $G(t)=e^{\lambda t}$ to each grid slope, then
+bound the exponential of a maximum by the sum of the exponentials:
+\[
+ \mathbb E e^{\lambda B_\ell}
+ \le e^{\lambda\eta}J\,\mathbb E e^{\lambda B_{\ell-1}}.
+\]
+Furthermore, $\mathbb E B_0\le R\sqrt n$, and bounded differences gives
+$\mathbb E e^{\lambda B_0}
+ \le e^{\lambda R\sqrt n+\lambda^2nR^2/2}$.
+Writing $H=L-1$, iteration and Jensen yield
+\[
+ \mathbb E B_H\le H\eta+R\sqrt n+
+             \frac{H\log J}{\lambda}+\frac{\lambda nR^2}{2}.
+\]
+Take $\eta=R\sqrt n/H$ and optimize $\lambda$ to obtain
+$\mathbb E B_H\le R\sqrt n[2+\sqrt{2H\log(3+nH^2)}]$.
+
+Finally, for a particular original network, write
+$M_\ell=\|W^\ell\|_F$ and $S_\ell=\prod_{j\le\ell}M_j$.
+Dividing its $\ell$th hidden vector by $S_\ell$ changes its recursion to
+$\phi_{S_\ell}((W^\ell/M_\ell)g^{\ell-1})$.
+Thus its normalized hidden features belong to the enlarged classes above,
+and its scalar output is at most $P$ times a norm-one linear readout of
+$\mathcal G_H$. Zero-norm layers give the zero function and require no
+normalization. This proves the theorem. All suprema are measurable by
+countable approximation of finite-dimensional parameter spaces and then
+union over widths.
+\end{proof}
+
+For the Gaussian energy in our model, the product of the $L$ weighted
+squared layer norms is $dP^2$. Consequently
+\[
+ P\le d^{-1/2}(\kappa_N/L)^{L/2}
+ \le d^{-1/2}e^{B/2}\qquad\text{if }\kappa_N\le L+B.
+\]
+Applying the theorem to the ramp loss
+$\ell(yz)=\min\{1,\max\{0,1-2yz\}\}$ gives the following explicit bound.
+
+\begin{corollary}[All widths at bounded excess energy]\label{cor:excess-risk}
+Fix $B\ge0$. With probability at least $1-\delta$, every sample-consistent
+depth-$L$ network, at any finite width, with training margins at least $1/2$
+and energy $\kappa_N\le L+B$ has sign error at most
+\[
+ \frac{4\sqrt2 e^{B/2}}{\sqrt n}
+ \left[2+\sqrt{2(L-1)\log\bigl(3+n(L-1)^2\bigr)}\right]
+ +\sqrt{\frac{\log(1/\delta)}{2n}}.
+\]
+No internal robustness assumption is imposed.
+\end{corollary}
+
+\begin{proof}
+Augmented Boolean inputs have norm $\sqrt{d+1}$, so $PR\le\sqrt2e^{B/2}$.
+The ramp loss is bounded by one and is $2$-Lipschitz. Symmetrization,
+scalar contraction, and bounded differences give population loss at most
+empirical loss plus four times the network Rademacher bound and the
+stated confidence term. Empirical loss is zero and population loss
+upper-bounds sign error.
+\end{proof}
+
+\begin{lemma}[A scalar transmission construction]\label{lem:scalar-transmission}
+For every real $D>0$ and integer $m\ge2$, there are positive scalar weights
+$\alpha,b_2,\ldots,b_{m-1},c$ such that
+\[
+ r_1=\tanh\alpha,\quad r_s=\tanh(b_s r_{s-1}),\quad
+ cr_{m-1}=1/2,
+\]
+and, writing $D'=\max\{D,4\}$,
+\[
+ D\alpha^2+\sum_{s=2}^{m-1}b_s^2+c^2
+ \le(m+12)(D'/4)^{1/m},\qquad c^2=(D'/4)^{1/m}.
+\]
+\end{lemma}
+
+\begin{proof}
+Set $q=(D'/4)^{1/(2m)}$, $k_s=\min\{s,m-s\}$, and
+$r_s=q^s/(\sqrt{D'}k_s)$. Then $0<r_s\le1/(2qk_s)\le1/2$ and
+$r_{m-1}=1/(2q)$. Choose
+$\alpha=\operatorname{atanh}r_1$,
+$b_s=\operatorname{atanh}(r_s)/r_{s-1}$ and $c=q$.
+For $0<u\le1/2$ the power series gives
+$(\operatorname{atanh}(u)/u)^2\le1+u^2$.
+Writing $R_s=k_{s-1}/k_s$, the reciprocal pairs
+$k/(k+1),(k+1)/k$ satisfy
+\[
+ \left(\frac{k+1}{k}\right)^2+
+ \left(\frac{k}{k+1}\right)^2-2\le4/k^2.
+\]
+Consequently $\sum_{s=2}^{m-1}R_s^2\le m-2+7$,
+$R_s\le2$, and $\sum_{s=1}^{m-1}k_s^{-2}<4$.
+Using $q^{2m}=D'/4$ therefore gives
+\[
+ D\alpha^2\le q^2+1/4,\qquad
+ \sum_{s=2}^{m-1}b_s^2\le q^2(m-2+7)+4,\qquad c^2=q^2.
+\]
+Their sum is at most $(m+12)q^2$. Empty internal sums at $m=2$
+satisfy the same estimates.
+\end{proof}
+

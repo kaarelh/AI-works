@@ -1,0 +1,88 @@
+\section{Stability of a bounded prediction score}
+\label{sec:clipped-stability}
+
+Raw output stability may penalize changes between two very large outputs
+that represent the same confident prediction. A bounded score avoids this.
+Write $T(u)=\max\{-1,\min\{1,u\}\}$, fix $0<c\le1/100$, and put
+\[
+ r_{\rm clip}(w)=\frac{c}{\sqrt{1+(L-1)E_v(w)}}.
+\]
+Restrict the Gaussian to networks satisfying
+\begin{equation}\label{eq:clipped-support}
+ |T(z_w(x;\eta))-T(z_w(x))|\le1/16
+ \quad\text{for all }x\text{ and }\|\eta\|_*\le r_{\rm clip}(w).
+\end{equation}
+Impose no all-input clean margin, and retain the training likelihood
+$y_i z_w(x_i)>1/2$.
+
+\begin{corollary}[Bounded-score stability]
+\label{cor:clipped-stability}
+This prior and likelihood satisfy the polynomial-depth conclusion of
+Theorem~\ref{thm:numeric-prior}, including its test signed-output margin
+$1/4$, every width above Boolean circuit width, and every $\gamma\ge1$.
+The condition can also be imposed only on a fixed trusted region $G$,
+at an added test-error cost $D(G^c)$.
+\end{corollary}
+\begin{proof}
+Before rounding, the entropy compressor evaluates the original network at
+a disturbance of norm less than the retained common radius divided by two.
+Condition~\eqref{eq:clipped-support} bounds the resulting change of $T(z)$
+by $1/16$. Since $T$ is $1$-Lipschitz, the grid-rounding error adds at most
+$r/8$, so the total bounded-score error is at most $1/12$.
+Apply the ramp proof to $T(h(x))$ instead of $h(x)$.
+Oddness and monotonicity of $T$ ensure
+\[
+ yz>1/2\Longrightarrow yT(z)>1/2,\qquad
+ yz\le1/4\Longrightarrow yT(z)\le1/4.
+\]
+Thus the same training and test implications, and the same finite-class
+bound, hold.
+
+For target mass, even the original robust digital cylinder from the
+preceding report suffices: it has correct noisy signed output greater
+than one at every input throughout per-layer RMS radius
+$\tau_0=1/(64\sqrt{2C})$, and $E_v\ge C$.
+Since $r_{\rm clip}\le(100\sqrt C)^{-1}<\tau_0$, its clean and noisy
+scores are both exactly $f(x)$. Hence it satisfies the new support
+condition with zero score change and retains the same Gaussian mass bound.
+The entropy and readout-tail steps are unchanged. Masked ramp losses give
+the trusted-region version.
+\end{proof}
+
+The raw numerical condition implies the clipped condition at the same
+radius, but not conversely. Any finite-noise raw output enclosure
+$z_w(x;\eta)\in[z-B,z+B]$ gives the sound clipped-score certificate
+\[
+ \max\{T(z+B)-T(z),\ T(z)-T(z-B)\}\le1/16.
+\]
+This is often much smaller than $B$ for large clean outputs. An attack
+that changes only the raw magnitude while leaving both scores saturated
+does not refute~\eqref{eq:clipped-support}.
+
+\paragraph{Soft version.}
+Let $\rho_{\rm clip}(w)$ be the smallest disturbance norm, minimized over
+inputs, at which the clipped score changes by at least $1/16$.
+Continuity makes it positive for every finite weight array; output noise
+makes it finite. A density proportional to
+\[
+ \exp\{-(N/t^2)\lambda\min(1,\rho_{\rm clip}(w))^{-p}\}
+\]
+relative to the raw Gaussian therefore has full support. For fixed
+$p,\lambda>0$, the soft-prior tail calculation and the bounded-score
+compression argument give the same polynomial-depth theorem. After
+truncating the penalty at $u$, use common radius
+$\min\{1/6,\tfrac12u^{-1/p}\}$; this both lies strictly below the first
+score-change radius and satisfies the rounding constants above.
+
+\paragraph{Readout amplification.}
+The bounded-score condition restores the scaling effect of calibrated
+sign robustness. If a fixed finite-cube network has no clean zero outputs,
+then sufficiently large positive readout amplification makes it satisfy
+\eqref{eq:clipped-support}. Indeed there are a hidden-noise radius $\rho>0$
+and signed unscaled output lower bound $m>0$ valid on the whole cube.
+The calibrated radius tends to zero as the readout scale $A$ grows, while
+$Am-r_{\rm clip}>1$ eventually. Both clean and noisy scores then equal
+the clean sign. The required scale can be very large, and its Gaussian
+readout-energy cost is $A^2E_v$; this observation supplies no uniform sample
+bound by itself. The large-readout obstruction for raw numerical stability
+in~\eqref{eq:readout-scaling-limit} concerns a different condition.

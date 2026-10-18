@@ -1,0 +1,169 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,microtype,booktabs,graphicx}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\Prb}{\mathbb P}
+\title{Depth dependence of Gaussian prior costs in critical neural networks}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex}
+\date{18 October 2026}
+\hypersetup{pdftitle={Depth dependence of Gaussian prior costs in critical neural networks},pdfauthor={Dmitry Vaintrob, Kaarel Hanni, OpenAI Codex}}
+\begin{document}
+\maketitle
+\begin{abstract}
+For fully connected tanh networks under the critical Gaussian prior, we
+study the exponential probability cost of realizing a Boolean function
+with a fixed output margin on the entire input cube. We prove that this
+cost converges, with increasing depth, to the same universal constant
+$V_*$ for every Boolean function. The constant satisfies $1<V_*<2$ and
+is characterized by a one-dimensional relative-entropy control problem.
+Quantitative bounds are uniform over all functions on $d$ inputs: a
+depth polynomial in $d$ and inverse accuracy makes their absolute rates
+nearly equal. A separate finite-width baseline bound applies to every Gaussian
+exponent at least one. Entropy transport also shows that any uniformly
+bounded critical rate requires depth of order at least $(\log d)^2$.
+More precisely, the rate of constants and dictators is comparable,
+uniformly at every dimension and depth, to
+$1+L(d^{1/(2L)}-1)^2$; the same expression is a universal lower bound
+up to a constant factor. At fixed depth, functions depending on a growing
+number of augmented coordinates have asymptotically greater cost.
+The proofs include the finite-domain large-deviation foundation.
+These rate bounds do not settle general learning: small remaining rate
+differences can govern a width-first posterior. A separate comparison
+does give a sample lower bound for full parity: at each fixed depth $L$,
+$n\le d^{(1-\eta)/(L-1)}$ examples leave limiting Gibbs error $1/2$
+with high sample probability, for every fixed $\eta>0$. This is a
+polynomial lower bound, not an exponential bound in parity degree.
+For parity on $k$ coordinates, the corresponding effective dimension is
+$\min\{k,d^{1/(L-1)}\}$.
+\end{abstract}
+
+\section{Model and meaning of the result}
+
+Let $\mathcal X=\{-1,1\}^d$, $d\ge1$, and $L\ge2$. A width-$N$
+network has $L-1$ hidden layers and computes
+\[
+ h^0(x)=\bar x=(1,x),\qquad
+ h^s(x)=\tanh(W^s h^{s-1}(x))\quad(1\le s<L),\qquad
+ z_w(x)=v^T h^{L-1}(x).
+\]
+There are no biases after the augmented input. Under the raw critical
+Gaussian prior $\mu_{N,1}$, entries are independent centered Gaussians
+with variances $1/d$ in $W^1$, $1/N$ in internal matrices, and $1/N^2$
+in $v$. For a Boolean function $f$, write
+\[
+ A_{N,f}=\{w:f(x)z_w(x)>1/2\text{ for every }x\in\mathcal X\},
+ \qquad
+ J_L(f)=\lim_{N\to\infty}-\frac1N\log\mu_{N,1}(A_{N,f}).
+\]
+The limit exists at each fixed $d,L$. Its proof, including the strict
+margin convention, appears in Appendix~\ref{sec:critical-variational}.
+
+For a feature law $\nu$ on $[-1,1]^{\mathcal X}$, let
+$Q(\nu)=\mathbb E_\nu hh^T$. Let $\mathsf M_Q$ be the law of
+coordinatewise tanh applied to a centered Gaussian with covariance $Q$,
+and put $Q_0(x,y)=(1+x\cdot y)/d$. The rate is
+\[
+\begin{split}
+ J_L(f)=\inf\biggl\{&D(\nu_1\Vert\mathsf M_{Q_0})+
+  \sum_{s=2}^{L-1}D(\nu_s\Vert\mathsf M_{Q(\nu_{s-1})})
+  +\tfrac12 z^TQ(\nu_{L-1})^+z:\\[-2pt]
+ &\hspace{35mm}f(x)z(x)\ge1/2\quad(x\in\mathcal X)\biggr\}.
+\end{split}
+\]
+The last term is infinite outside the covariance range. The matrices
+$Q(\nu)$ are uncentered second moments, not necessarily centered
+covariances.
+
+The main result, Theorem~\ref{thm:critical-rate-flattening}, identifies
+a universal constant $V_*$ such that, with $D=d+1$,
+\[
+ V_*-\frac C{L-1}\le J_L(f)\le
+ V_*+C\frac{D^2+[\log(2L)]^2}{L}
+ \qquad(L\ge CD).
+\]
+The same bound holds for every Boolean function at the same specified
+depth. In particular, an absolute rate budget cannot provide a
+polynomial bound on the logarithm of the number of possible functions:
+at sufficiently large polynomial depth, a fixed budget already contains
+all $2^{2^d}$ functions.
+
+This is not a claim that the conditioned prior is approximately uniform.
+For a fixed training sample $S$, its exponential posterior rate at a
+consistent function is
+\[
+ J_L(f)-\min_{g\text{ consistent with }S}J_L(g).
+\]
+Any positive difference, however small, is multiplied by width $N$.
+The theorem neither orders these differences nor controls finite-width
+probabilities to accuracy $1/N$. The general sample-complexity question
+for small deep circuits remains open. All limits in width are taken
+with dimension and depth fixed before studying the resulting function
+$J_L$ as depth varies.
+
+A complementary theorem describes the cost scale at every depth. Put
+\[
+ \Phi_L(d)=1+L\bigl(d^{1/(2L)}-1\bigr)^2.
+\]
+Theorem~\ref{thm:critical-depth-profile} gives universal constants
+$0<c<C$ such that every target has $J_L(f)\ge c\Phi_L(d)$, while
+constants and dictators have $J_L(f)\le C\Phi_L(d)$.
+Thus this expression characterizes the minimum absolute-rate scale
+without asserting which function minimizes the exact rate at every
+dimension and depth. Later sections give a target-relative separation
+and a polynomial sample lower bound at fixed depth, with an extension
+to a specified slowly growing-depth regime.
+
+The proof first supplies a finite-width exponential potential. It then
+uses a quantitative first-layer spectrum bound to seed an arbitrary
+Boolean component, reduces the unused variance without entropy cost,
+and amplifies that component through small covariance changes. A scalar
+control problem describes the universal final cost. The arguments have
+received independent AI-agent mathematical review; they have not been
+formalized in Lean. Constants are not optimized.
+
+\input{critical-main-theorem.tex}
+\input{unrestricted-critical-baseline.tex}
+\input{paper-critical-spectrum.tex}
+\input{unrestricted-critical-subexponential-spectrum.tex}
+\IfFileExists{critical-free-cooling.tex}{\input{critical-free-cooling.tex}}{}
+\input{critical-rate-foundations.tex}
+\input{critical-scalar-paths.tex}
+\input{critical-rate-lower-proof.tex}
+\input{critical-rate-upper-proof.tex}
+\input{unrestricted-alternative-finite-width-upper.tex}
+\input{unrestricted-critical-counting-obstruction.tex}
+\input{unrestricted-critical-projective-symmetry.tex}
+\input{unrestricted-critical-entropy-transport.tex}
+\input{unrestricted-critical-fixed-depth-ordering.tex}
+\input{unrestricted-critical-depth-profile.tex}
+\input{critical-depth-profile-plot.tex}
+\input{unrestricted-critical-shallow-ordering.tex}
+\input{unrestricted-critical-polynomial-sample-lower.tex}
+\input{unrestricted-critical-scalar-expansion.tex}
+
+\appendix
+\input{critical-variational-background.tex}
+
+\begin{thebibliography}{9}
+\bibitem{andreis2026}
+L. Andreis, F. Bassetti, and C. Hirsch.
+LDP for the covariance process in fully connected Gaussian neural networks.
+\emph{Electronic Journal of Probability} 31, 2026.
+\url{https://doi.org/10.1214/26-ejp1477}.
+\bibitem{dembozeitouni}
+A. Dembo and O. Zeitouni.
+\emph{Large Deviations Techniques and Applications}. Second edition,
+Springer, 1998.
+\bibitem{talagrand}
+M. Talagrand.
+Transportation cost for Gaussian and other product measures.
+\emph{Geometric and Functional Analysis} 6, 587--600, 1996.
+\end{thebibliography}
+\end{document}

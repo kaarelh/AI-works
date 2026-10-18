@@ -1,0 +1,154 @@
+\section{Targets with small Fourier spectral norm}
+\label{sec:fourier-spectral-targets}
+
+For a Boolean function $f:\{-1,1\}^d\to\{-1,1\}$, write
+\[
+ f(x)=\sum_{S\subseteq[d]}\widehat f(S)\chi_S(x),
+ \qquad \chi_S(x)=\prod_{i\in S}x_i,
+ \qquad A(f)=\sum_S|\widehat f(S)|.
+\]
+The Fourier coefficients here use the uniform distribution, even when
+the learning distribution is different. Parseval implies $A(f)\ge1$.
+The following sufficient condition imposes neither a Fourier-degree
+bound nor a bound on the number of nonzero Fourier coefficients.
+
+\begin{lemma}[A shallow realization from Fourier spectral norm]
+\label{lem:fourier-spectral-shallow}
+Every such $f$, with $A=A(f)$, has a one-hidden-layer tanh realization
+with linear readout, signed margin at least $13/8$, width at most
+\[
+ 1+d\left\lceil128A^2(d+2)\log2\right\rceil,
+\]
+and physical weights bounded by
+\[
+ \max\{3A,\tfrac d2\log(32Ad),1\}.
+\]
+\end{lemma}
+
+\begin{proof}
+Sample a set $S$ with probability $|\widehat f(S)|/A$ and attach
+the sign $s_S=\operatorname{sign}\widehat f(S)$.
+The random function $A s_S\chi_S$ has mean $f$ and takes values
+in $[-A,A]$. For
+$m=\lceil128A^2(d+2)\log2\rceil$, Hoeffding's inequality and a
+union bound over the $2^d$ inputs show that, with positive probability,
+\[
+ \left|\frac A m\sum_{j=1}^m s_{S_j}\chi_{S_j}(x)-f(x)\right|
+ \le\frac18\qquad\text{for every }x.
+\]
+Fix one such choice.
+
+Each parity on $k\ge1$ variables admits an elementary real-output
+threshold expansion. Put $t=\sum_{i\in S}x_i$ and
+$\theta_j=-k+2j-1$ for $1\le j\le k$. On the permitted values
+$t\in\{-k,-k+2,\ldots,k\}$,
+\[
+ \chi_S(x)=b_k+\sum_{j=1}^k(-1)^{k-j}
+                  \operatorname{sign}(t-\theta_j),
+ \qquad b_k\in\{0,1\}.
+\]
+Indeed, both sides start at $(-1)^k$ and have the same jump at
+each threshold; explicitly $b_k=1$ for even $k$ and zero for odd $k$.
+Every threshold has absolute affine margin at least one.
+With $\lambda=\tfrac12\log(32Ad)$, replace each sign by
+$\tanh(\lambda(t-\theta_j))$. The resulting parity approximation
+has uniform error at most
+\[
+ 2k e^{-2\lambda}\le\frac1{16A}.
+\]
+The empty parity is the constant one. A single constant hidden neuron,
+whose output is $\tanh1$, supplies all constant terms.
+
+Replacing the $m$ sampled parities by these approximations adds error
+at most $1/16$. Thus the resulting scalar output is within $3/16$ of
+$f$ everywhere. Doubling the readout gives signed margin at least
+$13/8$. There are at most $md$ nonconstant hidden neurons. Their
+first-layer coefficients and biases have magnitude at most $d\lambda$;
+their output coefficients have magnitude at most $2A/m$. The single
+constant neuron's output coefficient has magnitude at most
+$2A/\tanh1<3A$. These are the stated bounds.
+\end{proof}
+
+\begin{corollary}[Unrestricted learning from small spectral norm]
+\label{cor:fourier-spectral-unrestricted}
+For each fixed $\zeta>0$, there is a polynomial $P_\zeta$ such that
+for every Boolean target $f$, every input distribution, and every
+learner depth $L\ge2$, a sample size
+\[
+ n\ge P_\zeta\bigl(d,A(f),L,\varepsilon^{-1},\log(2/\delta)\bigr)
+\]
+gives, with probability at least $1-\delta$, Gibbs error at most
+$\varepsilon$ for the original unrestricted Gaussian posterior,
+simultaneously for every $N\ge C_L(f)$ and every
+$0<\sigma^2\le N^{-(1+\zeta)}$.
+The posterior retains its original conditioning on a global clean
+output margin and the training labels.
+\end{corollary}
+
+\begin{proof}
+Substitute Lemma~\ref{lem:fourier-spectral-shallow} into
+Theorem~\ref{thm:shallow-all-depths}. All witness parameters are
+polynomial in $d$ and $A(f)$. The all-width conclusion is the
+all-width conclusion of that theorem and does not require
+$C_L(f)$ to equal the width of the constructed shallow realization.
+\end{proof}
+
+Both the realization lemma and its learning corollary also hold with
+$A(f)$ replaced by $\sum_S|\widehat g(S)|$ for any real-valued Fourier
+polynomial $g$ satisfying $f(x)g(x)\ge1$ on every input. The same
+sampling argument approximates $g$ to error $3/16$, which still leaves
+the stated signed margin after doubling the readout. Thus a small
+normalized coefficient sum for a margin-separated vote of parities
+is enough, even when the Boolean sign function itself has a larger
+Fourier norm.
+
+For example, every parity has $A(f)=1$, independently of its degree.
+More generally, a function with $s$ nonzero Fourier coefficients has
+$A(f)\le\sqrt s$ by Cauchy--Schwarz and Parseval. These are sufficient
+representation conditions. The argument does not assert that all small
+Boolean formulas or all narrow branching programs have polynomial
+Fourier spectral norm.
+
+\begin{corollary}[Two-state branching programs]
+\label{cor:two-state-branching}
+Every Boolean function computed by a deterministic layered width-two
+branching program of length $T$ has $A(f)\le T+1$. Consequently the sample bound
+in Corollary~\ref{cor:fourier-spectral-unrestricted} is polynomial in
+$d,T,L,\varepsilon^{-1},\log(2/\delta)$ for this class.
+The program may query variables repeatedly, and its two nodes in a
+layer may query different variables.
+\end{corollary}
+
+\begin{proof}
+Encode the two states as $-1,+1$, and let $s_j(x)$ be the state after
+$j$ transitions. Given the old state $+1$ or $-1$, the next state is
+a Boolean function $u_+(x)$ or $u_-(x)$ of at most one input bit.
+Each such function is constant or a signed input bit, so
+$A(u_+)=A(u_-)=1$. The transition can be written
+\[
+ s_{j+1}(x)=a_j(x)s_j(x)+b_j(x),\qquad
+ a_j=(u_+-u_-)/2,\quad b_j=(u_++u_-)/2.
+\]
+The Fourier coefficient norm is subadditive and submultiplicative:
+the latter follows because multiplication of parities uses symmetric
+difference of their index sets. Thus $A(a_j),A(b_j)\le1$ and
+\[
+ A(s_{j+1})\le A(s_j)+1.
+\]
+The initial state is constant, so $A(s_0)=1$. The final output is
+either constant or a signed copy of the final state, proving the claim.
+Unused state slots can be filled arbitrarily. If the program uses
+absorbing states for early termination, these states count toward its
+width-two bound.
+\end{proof}
+
+The same proof allows a node to query a parity rather than a single
+bit, since a signed parity also has Fourier norm one. Decision lists
+with $T$ parity tests likewise have Fourier norm at most $T+1$, by a
+separate direct argument: write the output as the sum of its $T+1$
+signed first-accept and default indicators. Each indicator is a
+product of factors $(1\pm\chi_S)/2$, each of Fourier norm at most
+one, so submultiplicativity and the triangle inequality give the
+bound. These extensions concern representation and sample bounds
+only; no efficient algorithm for identifying a program from samples
+is asserted.

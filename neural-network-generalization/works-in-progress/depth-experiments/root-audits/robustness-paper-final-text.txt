@@ -1,0 +1,2908 @@
+Polynomial depth from stability of clipped neural-network predictions
+Dmitry Vaintrob
+Kaarel Hänni
+OpenAI Codex
+18 October 2026
+Abstract
+We study Gaussian Bayesian learning of Boolean functions by fully connected tanh networks.
+We restrict the prior using stability of the output clipped at the training margin, under simulta-
+neous small internal perturbations. The condition permits arbitrarily small clean outputs on
+unobserved inputs and ignores changes between sufficiently confident outputs of the same sign.
+For every layered Boolean target circuit, the resulting posterior has a sample bound polynomial in
+circuit width, input dimension, and network depth, simultaneously at every network width above
+circuit width and at every Gaussian exponent γ ≥1, including the finite-variance mean-field scale.
+The noise calibration is explicit, and its constant can be varied without changing the qualitative
+theorem. We also prove a weaker margin-band version and a localized version allowing network-
+dependent exceptional regions of controlled complexity. We give self-contained proofs and an
+empirical assessment on networks trained by gradient methods, with selected exact-arithmetic
+certificates. The evidence is mixed: exact certificates establish global stability for some fully
+fitted image models and full-domain stability for two 64-hidden-layer Boolean classifiers. Another
+fitted image model has a verified confident-input counterexample, although exact certificates
+establish stability on all 10,000 of its official held-out images at the same radius. An exact
+gradient-descent construction shows that on-distribution stability alone cannot imply the global
+condition. The empirical calibration may decrease polynomially with depth without losing the
+polynomial sample theorem. The empirical question is whether trained parameterizations satisfy
+this specified support condition; it is distinct from a theorem about the generalization of gradient
+descent or an experiment sampling the Bayesian posterior.
+1
+Introduction and scope
+Small parameter perturbations, small internal activation perturbations, and stability of classification
+are different properties. A network may have stable confident predictions despite changes in the
+magnitude of a large output. Conversely, a network can fit its training set accurately and be highly
+sensitive at inputs away from the data distribution. A useful prior restriction must make its input
+domain, disturbance model, and output criterion explicit.
+We use the output margin already present in the likelihood to define a bounded prediction score.
+Training requires signed output greater than 1/2. We clip raw outputs at ±1/2, and require a
+score change of at most 1/16 under a specified ball of simultaneous internal perturbations. The
+test guarantee controls signed outputs at most 1/4. Thus stability is calibrated to the gap between
+training and test margins. It does not forbid every sign change: moving from 0.02 to −0.02 changes
+the score by only 0.04. The statistical proof shows that weak or incorrect test outputs receive little
+posterior mass after sufficiently many examples.
+The main theorem concerns a particular restricted Gaussian prior and an exact margin-
+conditioning likelihood.
+Its comparator complexity is the width of a layered Boolean circuit.
+It does not assume that every small analog neural circuit has a robust implementation of the same
+1
+
+width and depth. Nor does it assert that ordinary gradient descent samples this posterior. These
+distinctions matter when assessing the empirical evidence.
+Compression through noise stability and all-layer margins has precedents in work of Arora et
+al. and Wei and Ma [1, 2]. Wei, Chen, and Ma [4] prove polynomial circuit-size sample bounds
+for overparameterized feedforward networks using a suitable all-layer-margin surrogate and robust
+circuit simulation. Thus the general idea that robust simulation can avoid exponential depth factors
+predates this paper. Here the object being analyzed is the posterior of a specified Gaussian prior,
+including its target probability and uniformity over widths and finite Gaussian scales. Our proof
+uses Gaussian entropy and transport to construct one finite candidate class shared by all widths
+and scales. We include that construction and the Gaussian target-mass bound, so the result can be
+read independently. The polynomial constants are deliberately loose and do not provide practical
+sample estimates. The mathematical arguments have been reviewed independently by AI agents;
+they are not Lean formalizations.
+Published experiments support internal noise stability as a research direction, with different
+quantifiers from our support condition.
+Arora et al. report attenuation of injected Gaussian
+activation noise in a VGG-19 trained on CIFAR-10 and measure their stability quantities on training
+inputs [1]. Yu and Tomasi report improved noise stability in residual networks relative to matched
+plain networks [5]. Neither establishes stability at every input under every simultaneous disturbance
+in our calibrated ball. The experiments below test that particular condition directly in the tanh
+architecture of the theorem. They do not establish its prevalence in modern convolutional networks
+or transformers.
+2
+Model, prediction convention, and stability restriction
+Let X = {−1, 1}d, let D be any distribution on X, and let f : X →{−1, 1} be the target. A network
+has H = L −1 hidden layers, each of width N, tanh activations, and a linear readout:
+h1 = tanh(W 1¯x),
+hs = tanh(W shs−1) (2 ≤s ≤H),
+zw(x) = v⊤hH,
+¯x = (x, 1).
+The first layer includes a bias coordinate; internal constants are carried by ordinary hidden wires.
+Let µN,t be the product Gaussian with entry variances t2/d in W 1, t2/N in the internal matrices,
+and t2/N2 in v, where 0 < t ≤1. The exponent convention t = N(1−γ)/2 therefore gives every γ ≥1.
+Define
+κN(w) = d
+N ∥W 1∥2
+F +
+H
+X
+s=2
+∥W s∥2
+F + N∥v∥2,
+Ev(w) = N∥v∥2.
+In these energy coordinates the Gaussian density is proportional to exp[−NκN/(2t2)].
+A disturbance is added after every hidden activation and at the readout:
+h1
+η = tanh(W 1¯x) + η1,
+hs
+η = tanh(W shs−1
+η
+) + ηs,
+zw(x; η) = v⊤hH
+η + ηout.
+The simultaneous disturbance budget is
+∥η∥2
+∗=
+H
+X
+s=1
+∥ηs∥2
+2
+N
++ |ηout|2.
+(1)
+This is an adversarial finite perturbation, not a Gaussian-noise average or a derivative evaluated
+only at the clean computation. Noisy hidden states need not stay in [−1, 1]N.
+2
+
+Our training likelihood is
+LS(w) =
+n
+Y
+i=1
+1{f(Xi)zw(Xi) > 1/2}.
+(2)
+At test time we count f(x)zw(x) ≤1/4 as an error. This stronger loss also bounds sign error. There
+is no requirement that unobserved inputs have any clean output margin.
+Clip the output at the training margin:
+T(u) = max{−1/2, min{1/2, u}}.
+For a calibration parameter c > 0, set
+rc(w) =
+c
+p
+1 + HEv(w).
+(3)
+Let RN,c be the set of networks satisfying
+|T(zw(x; η)) −T(zw(x))| ≤1/16
+for every x ∈X and every ∥η∥∗≤rc(w).
+(4)
+The prior is exactly µN,t conditioned on RN,c. The posterior QS,N,t,c additionally conditions on (2).
+Both conditioning events have positive probability by the target construction below. No tractable
+sampling algorithm is assumed or supplied by the theorem.
+The clipping scale is set by the existing likelihood convention. For example, changing a raw
+output from 10 to 1 causes no score change. Clipping at ±1/2 gives a weaker condition than clipping
+at ±1 with the same tolerance and noise radius, because T = T ◦T1, where T1 clips at ±1, and T is
+1-Lipschitz.
+3
+The learning theorem
+A width-C, depth-H layered Boolean circuit has at most C Boolean wires at each of its H stages.
+We use NAND gates, copies, and negations; constant wires required by internal gate implementations
+are carried through the circuit and count toward C. This is a universal Boolean basis. Compiling
+another fixed basis into this one may change the width and depth, and those resources must be
+counted. Its output is one final wire. The circuit’s logical depth must fit the H hidden layers; idle
+stages can be filled with copies.
+Theorem 3.1 (Polynomial depth at every width and every γ ≥1). Suppose f is computed by such
+a width-C, depth-H Boolean circuit. There is a universal polynomial P such that, for every c > 0
+and every 0 < ε, δ < 1, if
+n ≥P
+ d, L, C, c + c−1, ε−1, log(1/δ)
+,
+then with probability at least 1 −δ over the iid labeled sample,
+Ew∼QS,N,t,c, X∼D1{f(X)zw(X) ≤1/4} ≤ε
+(5)
+simultaneously for every N ≥C and 0 < t ≤1. The polynomial degree is independent of width,
+depth, and Gaussian scale. In particular, the result includes the actual finite-variance mean-field
+scale γ = 1 and every stronger-prior scale γ > 1.
+3
+
+The same theorem holds if the prior is additionally conditioned on |zw(x)| > 1/2 at every
+input, as in the original globally margin-conditioned model. The target cylinder constructed below
+already satisfies this extra condition. Its probability bound and every subsequent statistical step
+are therefore unchanged. Under that additional condition, test-margin error coincides with sign
+error. Dropping the extra condition is permitted, but is not required for the result.
+The width threshold concerns a layered Boolean circuit, not an arbitrary real-valued neural-
+network representation of the same Boolean function. The theorem does not assert that every
+function with a small real neural circuit has a comparably small Boolean circuit at the same
+depth, or that all its low-energy neural representations satisfy the stability condition. The proof
+instead supplies one robust implementation of each Boolean circuit, together with enough Gaussian
+probability around that implementation.
+Define the posterior correct-margin probability pS(x) = QS,N,t,c{f(x)zw(x) > 1/4}. Equation (5)
+immediately implies
+D{x : pS(x) ≤2/3} ≤3ε,
+D{x : pS(x) ≤1/2} ≤2ε.
+The same bounds hold for posterior sign correctness, since the correct-sign event contains the
+correct-margin event. These conclusions allow arbitrary posterior mixtures; they do not require
+concentration on one predictor.
+4
+Compression and the statistical proof
+The constructive compression statement needed here concerns numerical outputs before any robust-
+ness condition is used.
+Lemma 4.1 (Entropy compression before the prediction comparison). For d ≥1, L ≥2, K ≥1,
+0 < r ≤1, and 0 < α ≤1/8, there is a finite class H of real-valued bounded-weight depth-L tanh
+networks, independent of N, t, such that
+log |H| ≤poly(d, L, K, r−1, α−1).
+If Q ≪µN,t satisfies DKL(Q∥µN,t) ≤NK/t2, there is one distribution ΓQ on H with the following
+property. For every fixed x, one can couple w ∼Q and h ∼ΓQ so that, except with probability at
+most α, there is a disturbance η with
+∥η∥∗< r/2,
+|h(x) −zw(x; η)| ≤r/8.
+The couplings and disturbances may depend on x, but their two marginals are the same at every
+input. No robustness or clean-margin assumption is made on Q.
+The proof is constructive: it retains a bounded number of input directions carrying conditional
+Gaussian relative entropy in each layer, replaces the remaining directions by Gaussian randomness,
+samples a bounded number of source neurons, and rounds a bounded-size network to a fixed grid.
+The resulting virtual computation is the original network under small postactivation disturbances.
+The appendix gives the complete construction; the prediction comparison below is the first step
+that uses stability.
+Lemma 4.2 (Readout truncation). Suppose a posterior is the raw Gaussian conditioned on an
+event of mass at least exp(−ND∗/t2), where D∗≥1. For 0 < β ≤1/2, put
+B = max{8, 8[D∗+ log(1/β)]}.
+It assigns mass at most β to Ev > B. Its conditional law Q′ on Ev ≤B satisfies DKL(Q′∥µN,t) ≤
+N(D∗+ 1)/t2.
+4
+
+Proof. Under the Gaussian, NEv/t2 has the chi-square distribution with N degrees of freedom. Its
+exponential moment gives, for B ≥8,
+µN,t{Ev > B} ≤e−NB/(4t2)2N/2 ≤e−NB/(8t2).
+Divide by the conditioning-event probability and use N/t2 ≥1. The further conditioning event has
+raw probability at least (1−β)e−ND∗/t2, so its negative logarithm is at most ND∗/t2+log[1/(1−β)] ≤
+N(D∗+ 1)/t2.
+Statistical proof of Theorem 3.1. The next section constructs a subset of the support with correct
+noisy margin on every input and raw mass at least e−ND∗/t2, where D∗= poly(d, L, C, c) is
+independent of N, t. It is contained in the posterior conditioning event for every correctly labeled
+sample. Apply Lemma 4.2 with β = ε/4, and write Q′ for the retained law. Set
+K = D∗+ 1,
+r = min{1/6, c/
+√
+1 + HB},
+α = ε/12.
+Every retained network satisfies the score-stability condition at the common radius r. Lemma 4.1
+and the 1-Lipschitz property of T therefore give pointwise couplings with
+Pr{|T(h(x)) −T(zw(x))| > 1/12} ≤α,
+because 1/16 + r/8 ≤1/12.
+Use the bounded ramp loss
+ψ(u) =
+
+
+
+
+
+
+
+1,
+u ≤1/3,
+5 −12u,
+1/3 < u < 5/12,
+0,
+u ≥5/12.
+At a training input, f(x)zw(x) > 1/2 implies f(x)T(zw(x)) = 1/2. A successful coupling therefore
+gives f(x)T(h(x)) ≥5/12, so its ramp loss is zero. The candidate’s averaged empirical ramp risk is
+at most α. At a test input with f(x)zw(x) ≤1/4, a successful coupling gives f(x)T(h(x)) ≤1/3, so
+its ramp loss is one.
+For any finite class of [0, 1]-valued losses, a relative Chernoff bound and a union bound give,
+with probability at least 1 −δ,
+EDψ(f(X)T(h(X))) ≤2
+n
+n
+X
+i=1
+ψ(f(Xi)T(h(Xi))) + 8[log |H| + log(1/δ)]
+n
+(h ∈H).
+For completeness, e−u ≤1 −(1 −e−1)u on [0, 1] gives the usual lower-tail exponent at least the
+mean divided by eight. This proves the displayed bound for one loss, and a union bound proves
+simultaneity. Average under the sample-dependent law ΓQ′, apply the population comparison, and
+restore the discarded posterior mass. The result is
+Pr
+QS,N,t,c,D{f(X)zw(X) ≤1/4} ≤β + 3α + 8[log |H| + log(1/δ)]
+n
+.
+Choose n so the last term is at most ε/2. Every quantity entering log |H| is bounded by a universal
+polynomial in the theorem’s parameters. Its class and the displayed sample event are independent
+of N, t, establishing the simultaneous statement.
+5
+
+5
+A robust target cylinder at every width
+We give the probability bound used in the statistical proof. It uses a robust digital implementation,
+not a claim that every implementation is stable. Let N ≥C. Partition the neurons into C balanced
+clone groups of sizes ka ∈{⌊N/C⌋, ⌈N/C⌉}, so C/2 ≤N/ka ≤2C. Let P project onto vectors
+constant on each clone group. Fill unused logical slots with available constants or copies of an
+existing Boolean wire. The ideal wire vector bs(x) then has entries in {−1, 1}, belongs to the range
+of P, and has Euclidean norm
+√
+N.
+Use gain A in the tanh simulation of every Boolean gate. For example, NAND on u, v ∈{−1, 1}
+is the sign of 1 −u −v; copies and negations use u and −u. Bias constants in internal layers are
+supplied by counted constant wires. The ideal signed preactivation of every gate is at least A. In
+the clone implementation, each coefficient from a logical wire is divided equally among that wire’s
+clones. Set
+e∗=
+1
+16
+√
+2C
+,
+τ0 = e∗
+4 ,
+bL =
+q
+16 log 9 + 8 log(4L),
+A = max{32bL, 2 log(8/e∗)},
+a = max{2, 256c},
+ρ = min{1/4, A/[4(d + 1)], Ae∗/(64
+√
+C)}.
+The teacher readout averages the clones of the output wire with total coefficient a.
+In Gaussian coordinates
+√
+d W 1,
+√
+N W s, and Nv, all entries have variance t2. Restrict each
+first-layer coordinate, each internal row’s projection onto every normalized clone-group direction,
+and each readout coordinate to an interval of radius ρt about its teacher value. The internal matrices
+then decompose as
+W s = W s
+∗+ Rs + Es,
+Rs = RsP,
+∥Rs∥op ≤ρt
+√
+C,
+EsP = 0.
+The remaining Gaussian bulk Es is independent of the constrained coordinates. A 1/4-net of the
+unit sphere has at most 9N points, and the usual two-net Gaussian bound gives
+Pr{∥Es∥op > bLt} ≤2 exp(2N log 9 −Nb2
+L/8) ≤1
+2L.
+Thus all bulk norms are at most bLt with conditional probability at least 1/2.
+Finite disturbance robustness.
+Allow a separate RMS disturbance of size τ0 at each hidden
+layer and scalar output disturbance at most τ0. This includes the entire total-budget ball ∥η∥∗≤τ0.
+Write es = ∥hs
+η −bs∥2/
+√
+N. If es−1 ≤e∗, every clone-group mean differs from its ideal bit by at
+most e∗
+p
+N/ka ≤1/16. At most three teacher coefficients, including a constant coefficient, enter
+a gate, so its intended signed preactivation remains at least A/2. For ϵ ∈{−1, 1} and real u, the
+elementary global secant bound
+ϵq ≥A/2
+=⇒
+| tanh(q + u) −ϵ| ≤2e−A/2 + 8|u|/A
+holds: for |u| < A/4 use saturation, and otherwise the linear term is at least two. Since Esbs−1 = 0
+and ∥hs−1
+η
+∥2/
+√
+N ≤1 + τ0, it follows that
+es ≤2e−A/2 + (8/A)ρ
+√
+C(1 + τ0) + (8bL/A)es−1 + τ0 ≤e∗.
+Each of the four terms is at most e∗/4. The first layer initializes the same invariant: its coordinatewise
+preactivation perturbation is at most ρ(d + 1) ≤A/4, and its postactivation disturbance contributes
+at most τ0 in RMS norm. Consequently the noisy signed readout is at least
+f(x)zw(x; η) ≥15a
+16 −ρ(1 + τ0) −τ0 > 1
+(x ∈X, ∥η∥∗≤τ0).
+6
+
+The readout center satisfies
+√
+N∥v∗∥≥a
+p
+C/2, and its permitted perturbation has
+√
+N∥v−v∗∥≤
+ρ. Therefore Ev ≥a2C/8, whence
+rc(w) ≤2
+√
+2c
+a
+√
+C
+≤
+1
+64
+√
+2C
+= τ0.
+All clean and noisy clipped scores on the calibrated ball equal f(x)/2. The entire cylinder, with
+the bulk-norm event imposed, therefore belongs to RN,c and satisfies the training likelihood for
+every sample. This also proves why every fixed c > 0 is allowed: a larger calibration requires only a
+polynomially larger readout coefficient.
+Gaussian mass.
+There are Nq constrained independent scalar coordinates, where q = d + 2 +
+(L −2)C. The sum of their squared centers is at most NB0, with
+B0 = 9dA2 + 18(L −2)CA2 + 2a2C.
+These loose constants cover the fan-in-two gate implementation above. For Z ∼N(0, t2), ρ ≤1/4,
+and any center m,
+Pr{|Z −m| ≤ρt} ≥
+2ρ
+e
+√
+2π exp(−m2/t2).
+Multiplication over the coordinates and the independent bulk event gives
+µN,t(target cylinder) ≥exp(−ND∗/t2),
+D∗= B0 + q log e
+√
+2π
+2ρ
++ log 2.
+(6)
+Here D∗≥1 and is bounded by a universal polynomial in d, L, C, c. The construction and estimate
+hold at every integer width N ≥C.
+6
+Variants of the prediction-stability condition
+6.1
+The tolerance is determined by the margin gap
+The constants in the main condition arise from the gap between the training and test margins. They
+need not be treated as separate modeling choices.
+Corollary 6.1 (General training and test margins). Fix m > 0 and 0 ≤u < m, and put ∆= m−u.
+Replace the training likelihood by f(Xi)zw(Xi) > m, the test error by f(X)zw(X) ≤u, and the
+clipping map by Tm(z) = max{−m, min{m, z}}. Require clipped-score variation at most ∆/4 on the
+calibrated ball of radius c/√1 + HEv. Then the main theorem holds with a sample bound polynomial
+also in m and ∆−1.
+Proof. Use readout coefficient a = max{2, 2m, 256c} in the target cylinder. Its noisy signed output
+is greater than m, its calibrated radius is still at most τ0, and its Gaussian negative log-mass remains
+polynomial in m, c, d, L, C. After the usual readout truncation use
+r = min{1, 2∆/3, c/
+√
+1 + HB}.
+Successful compression changes the clipped score by at most ∆/4 + r/8 ≤∆/3. Training scores
+are therefore at least m −∆/3, whereas a test margin failure has candidate score at most u + ∆/3.
+Use a [0, 1]-valued ramp which is zero above the former threshold and one below the latter; these
+thresholds are separated by ∆/3. The same relative-Chernoff argument proves the result.
+The main theorem is m = 1/2, u = 1/4, so ∆/4 = 1/16. If only the sign is scored at test time,
+take u = 0: the permissible score-variation tolerance increases to 1/8. This concerns the raw-output
+test margin, separately from whether posterior confidence is judged at 1/2 or 2/3.
+7
+
+6.2
+Disturbances confined to valid activation states
+One may restrict the support condition to disturbances whose complete noisy hidden trajectory lies
+in [−1, 1]N at every layer. This permits perturbations only to values within the range of the tanh
+activation. The same main theorem holds. Indeed, before grid rounding, every successful virtual
+hidden state in the constructive entropy compressor is a tanh output. Thus the disturbances used
+in its prediction comparison satisfy this extra state restriction. The separate output injection and
+subsequent grid-rounding error are treated exactly as before. The original target cylinder was stable
+even without the state restriction and therefore retains its probability lower bound.
+This condition is weaker than unrestricted additive-disturbance stability. A negative empirical
+attack for this variant must verify the state constraint at every intermediate layer; an attack outside
+the activation range does not refute it. The primary empirical condition can remain the unrestricted
+one, with this variant stated separately.
+6.3
+A condition involving hidden disturbances only
+The scalar output injection can also be omitted from the prior condition. For Ev > 0 define the
+hidden-only calibrated radius
+rhid
+c
+(w) =
+c
+p
+HEv(w).
+When v = 0, the output is identically zero and hidden disturbances cannot change it, so declare
+hidden-only score stability automatically satisfied. Require score variation at most 1/16 for every
+hidden disturbance with P
+s ∥ηs∥2/N ≤(rhid
+c
+(w))2, with no output injection. The main theorem
+continues to hold for this Gaussian-conditioned prior.
+To see this, use the same target cylinder, which has rhid
+c
+≤τ0, and after readout truncation
+choose
+r = min{1/30, c/
+√
+HB}.
+The raw compression lemma supplies hidden disturbances of norm less than r/2, plus an output
+injection of magnitude less than r/2. Use stability only for the hidden disturbances and treat the
+output injection as an approximation error. Including grid rounding, the total clipped-score error is
+at most
+1
+16 + r
+2 + r
+8 ≤1
+12.
+The training/test ramp proof is unchanged. In a nonexpansive stack the hidden-only gain bound is
+√HEv, so this calibration yields raw output variation at most c without the additional scalar-noise
+term.
+6.4
+Amplification is not evidence about unmodified trained weights
+Every finite-cube network with no zero clean outputs eventually satisfies the calibrated clipped
+condition after a sufficiently large positive readout amplification. To verify this, continuity and
+finiteness of the input cube give a hidden-disturbance radius ρ > 0 and b > 0 such that the
+unamplified noisy output has its clean sign and magnitude at least b throughout that radius. Scaling
+the readout by A makes the calibrated radius tend to zero while the noisy signed output is at least
+Ab −rc(w(A)). Eventually this exceeds 1/2, so the clean and noisy clipped scores agree exactly. The
+readout energy simultaneously grows by A2. The scale needed may be enormous; this observation
+gives no polynomial target-mass bound for arbitrary neural representations and cannot justify
+reporting rescaled networks as evidence about ordinary training.
+8
+
+7
+A weaker condition based on the gap between training and test
+margins
+The primary condition uses the score clipped at the training margins. The argument admits a
+further weakening which ignores changes entirely inside the region already counted as a test-margin
+error. We present this as a mathematical variant; it does not retroactively change the primary
+condition used in the empirical protocol.
+Theorem 7.1 (Monotone score transforms). Fix, independently of the training sample, an odd,
+nondecreasing and 1-Lipschitz map F : R →R that is constant on [1/2, ∞). Put
+A = F(1/2),
+B = F(1/4),
+∆= A −B > 0.
+Replace the main support condition by
+|F(zw(x; η)) −F(zw(x))| ≤∆/4
+for every x and every ∥η∥∗≤rc(w).
+(7)
+Keep the same Gaussian prior, observed training margin yz > 1/2, and test error event yz ≤1/4.
+Then the main all-width, all-γ ≥1 polynomial sample guarantee remains valid, with additional
+polynomial dependence on ∆−1. The same replacement is valid in the controlled-exception localized
+prior theorem, with its ρ + ε conclusion.
+Proof. The existing target cylinder has clean and perturbed signed output larger than one, so all
+these outputs have transformed score fA. Its support membership and raw Gaussian probability
+are unchanged. The readout-tail and entropy estimates are also unchanged. After the readout
+truncation Ev ≤Bv, use common compression radius
+r = min{1, 2∆/3, c/
+p
+1 + HBv}.
+On a successful coupling, 1-Lipschitzness of F gives transformed score discrepancy at most
+∆/4 + r/8 ≤∆/3.
+At a training input, yF(zw) = A, so the compressed candidate has signed transformed score at
+least A −∆/3. At a test-margin error, monotonicity and oddness give yF(zw) = F(yzw) ≤B,
+so its compressed signed score is at most B + ∆/3. These endpoints are separated by ∆/3. Use
+the [0, 1] ramp equal to one below B + ∆/3, zero above A −∆/3, and linear between them. Its
+slope magnitude is 3/∆. The same finite-class bounded-loss concentration and coupling argument
+therefore gives the same risk inequality. All common class parameters are polynomial in the old
+parameters and ∆−1. Masking the ramp outside a controlled exceptional set also gives exactly the
+earlier localized proof.
+The margin-band score.
+The particularly natural choice is
+U(z) = sign(z) min{1/4, (|z| −1/4)+}.
+(8)
+It is zero on [−1/4, 1/4], grows linearly toward the training margins, and saturates at ±1/4 once
+z reaches ±1/2. Here A = 1/4, B = 0 and ∆= 1/4. The support tolerance is still 1/16, and the
+common compression radius still satisfies r ≤1/6. The separating ramp thresholds are 1/12 and
+1/6. Thus all constants in the main statistical argument remain unchanged.
+9
+
+The score measures signed excess beyond the test-error threshold. For example, changing an
+output from 0.1 to −0.1 leaves both transformed scores zero. Both outputs already fail the 1/4
+margin criterion for either label; forbidding this fluctuation is unnecessary for the proof. In contrast,
+movement from an unconfident output into the training-confidence region remains controlled.
+Training-margin satisfaction and posterior probability of correct test answers retain their original
+meanings; the transform only defines the prior’s stability condition.
+This is genuinely weaker than clipping at ±1/2: with T(z) = clip(z, −1/2, 1/2),
+U(z) = sign(T(z))(|T(z)| −1/4)+,
+and the map on the right is 1-Lipschitz in T(z). Every network satisfying the primary condition
+therefore satisfies the margin-band condition at the same radius and tolerance.
+There is a precise minimality statement within this class of score transforms.
+Suppose F
+satisfies the theorem and retains the full available gap F(1/2) −F(1/4) = 1/4. Monotonicity and
+1-Lipschitzness imply, with B = F(1/4) ≥0,
+F(z) = B + z −1/4
+(1/4 ≤z ≤1/2),
+0 ≤F(z) ≤B
+(0 ≤z ≤1/4).
+Using saturation and oddness elsewhere gives
+U(z) = sign(F(z))(|F(z)| −B)+.
+Thus stability of any such F implies stability of U at the same radius and tolerance. In this explicitly
+specified class, the margin-band score imposes the weakest stability requirement while retaining the
+full training-to-test gap. This is not a claim of optimality among all possible prior conditions.
+A raw-output interval certificate zw(x; η) ∈[z −Bx, z + Bx] certifies this variant whenever
+max{U(z + Bx) −U(z), U(z) −U(z −Bx)} ≤1/16.
+Existing interval-certified attacks can likewise be evaluated with U without a new attack search. A
+failure or success of the primary clipped-score condition need not have the same outcome for this
+variant.
+8
+Distributional localization with network-dependent exceptions
+Stability need not hold on the full cube. The exceptional region can even vary with the network,
+provided its input-set complexity is controlled. The prior below is an exactly conditioned Gaussian,
+rather than a mixture of separately normalized Gaussian components.
+Let B = {B1, . . . , BM} be a family of distinct subsets of X, containing the empty set. The family
+may be chosen using an independent unlabeled pilot. Draw a further unlabeled validation sample V
+of size m, independent of the labeled sample S. Fix 0 ≤ρ < 1. Condition the raw Gaussian on the
+existence of an index j such that
+bDV (Bj) ≤ρ,
+|T(zw(x; η)) −T(zw(x))| ≤1/16
+(x /∈Bj, ∥η∥∗≤rc(w)).
+(9)
+Then apply the unchanged training likelihood f(Xi)zw(Xi) > 1/2 at every training example,
+including examples in the exceptional region.
+10
+
+Theorem 8.1 (Localized stability under exact union conditioning). For targets covered by Theo-
+rem 3.1, the posterior with support (9) has Gibbs test-margin error at most ρ + ε, with probability at
+least 1 −δ, whenever
+m ≥O
+log M + log(1/δ)
+ε2
+
+,
+n ≥poly(d, L, C, c + c−1, log M, ε−1, log(1/δ)).
+One sample event gives the guarantee simultaneously for all N ≥C and 0 < t ≤1. No modification
+of the training likelihood is required.
+Proof. Write a = N/t2 ≥1. By a one-sided Hoeffding bound and a union bound, with probability
+at least 1 −δ/2 over V ,
+D(Bj) ≤bDV (Bj) + u
+(1 ≤j ≤M),
+provided m ≥[log M + log(2/δ)]/(2u2). The global target cylinder is admissible with the empty
+exceptional set, so for every V, S the full posterior Q satisfies DKL(Q∥µN,t) ≤aD∗.
+Assign to each network the first index witnessing (9). Write qj for its posterior probability and
+Qj for the conditional network law. The assignment is measurable because the family is finite. The
+relative-entropy chain rule gives
+X
+j
+qjDKL(Qj∥µN,t) = DKL(Q∥µN,t) + H(q) ≤aD∗+ log M.
+(10)
+Thus indices for which DKL(Qj∥µN,t) > aK1 have total posterior mass at most β, where
+K1 = D∗+ log M
+β
+.
+This step avoids assuming that each assigned component separately contains the target cylinder;
+that assumption would be false in general.
+For each retained component, the Gaussian entropy moment bound implies EQjEv ≤4K1+2 log 2.
+Set B = (4K1 + 2 log 2)/β and discard its readout tail Ev > B, of mass at most β. Denote the
+resulting conditional law by Q′
+j. For any conditioning event E of probability p, KL decomposition
+gives
+pDKL(Qj(· | E)∥µN,t) ≤DKL(Qj∥µN,t) + log 2.
+Consequently, for β ≤1/2, DKL(Q′
+j∥µN,t) ≤2a(K1 + 1). All retained components are stable outside
+their own Bj at the common radius r = min{1/6, c/
+√
+1 + HB}.
+Compress each Q′
+j separately, using the common finite class from Lemma 4.1 with K = 2(K1 +1).
+Apply the finite-class relative-Chernoff bound simultaneously to the M|H| masked ramp losses
+ℓj,h(x) = 1{x /∈Bj} ψ(f(x)T(h(x))).
+This event has probability at least 1 −δ/2 over the labeled sample. Outside Bj, training margin
+consistency and the compression coupling make the candidate’s empirical masked loss at most α
+after averaging. The population comparison adds another α. Therefore every retained component
+has masked test-margin risk at most
+3α + 8[log M + log |H| + log(2/δ)]
+n
+.
+On the validation event, its unmasked risk costs at most another D(Bj) ≤ρ + u. Averaging the
+components and restoring both discarded masses gives
+R(Q) ≤ρ + u + 2β + 3α + 8[log M + log |H| + log(2/δ)]
+n
+.
+11
+
+Take u = ε/4, β = ε/8, α = ε/12, and make the last term at most ε/4. All entropy, radius, and
+cardinality parameters are polynomial in the stated quantities and independent of N, t. Conditional
+on the pilot, the same finite masked-loss event works for all widths and scales. Averaging over the
+pilot completes the proof.
+If the family has VC dimension at most h ≥1, its restriction to the finite Boolean cube has
+at most (2d + 1)h distinct subsets. The theorem therefore applies with log M ≤h(d + 1) log 2,
+even for a continuously parameterized family. The family must be fixed before the validation and
+labeled samples, or obtained from an independent pilot. No assertion is made that arbitrary network
+instability sets have width-independent VC dimension.
+A concrete example is a union of neighborhoods of M0 pilot centers, with separate radii chosen
+by each network. Its uncovered region is an upper orthant in the fixed vector of distances to the
+centers and has VC dimension at most M0. Thus network-dependent local coverage can be handled
+with polynomial sample complexity. The prior still requires actual stability throughout the covered
+regions. Pointwise testing of the centers or observed validation inputs alone does not verify that
+condition.
+Corollary 8.2 (Using the training inputs to choose the support). If the full exception family is fixed
+independently of S, the input locations of S itself may replace the independent validation sample
+in (9). The resulting input-dependent Gaussian prior, followed by the ordinary training-margin
+likelihood, has the same ρ + ε guarantee when n also satisfies the coverage sample bound. No
+additional unlabeled sample is needed.
+Proof. The coverage bound is uniform over the fixed family, and the masked-loss bound is uniform
+over its product with the common finite candidate class. Both events hold for the same iid input
+sample; their failure probabilities can be added without independence. The component entropy and
+compression arguments are deterministic statements for each realized sample.
+This corollary does not allow an arbitrarily complex exception family to be learned from the same
+sample without accounting for its complexity. For example, take as exception sets the complements
+of all unions of at most k Euclidean balls with centers in the Boolean cube. This family is fixed in
+advance. On that cube each center has at most d + 2 distinct radius/inclusion choices, including an
+unused ball, so the family has at most [2d(d+2)]k descriptions. Posterior-chosen centers and radii are
+therefore allowed at a cost log M ≤k[d log 2 + log(d + 2)]. This formalizes a condition that stability
+holds on a few input neighborhoods covering most observed inputs, with a statistical guarantee for
+their population coverage. It does not assert that a small number of such neighborhoods suffices for
+any particular high-dimensional data distribution.
+9
+Sufficient stability conditions and finite-radius certificates
+The support condition is a finite-perturbation requirement. Clean Jacobians, loss Hessians, or
+held-out margins alone do not prove it. The following certificates make the condition explicit. They
+are sufficient tests for membership in the support already defined, not additional restrictions on
+that support. Restricting the prior to only networks passing a particular conservative test would
+require a new target-mass argument.
+12
+
+9.1
+Global spectral and diagonal-metric conditions
+For 1 ≤j ≤H, put
+pj =
+H
+Y
+s=j+1
+∥W s∥op,
+S =
+H
+X
+j=1
+p2
+j,
+where the empty product is one. For every input and every finite postactivation disturbance,
+|zw(x; η) −zw(x)| ≤
+p
+1 + EvS ∥η∥∗.
+(11)
+Indeed, tanh is 1-Lipschitz, so the final hidden-state difference is at most P
+j pj∥ηj∥2 in Euclidean
+norm. Apply the readout, add the output disturbance, and use Cauchy–Schwarz in the normalized
+noise coordinates. In particular,
+c2 1 + EvS
+1 + HEv
+≤
+1
+256
+(12)
+is sufficient for the clipped support condition globally. If every internal operator norm is at most
+one, then S ≤H; hence every such network qualifies whenever c ≤1/16, without a restriction on its
+first layer or readout.
+The suffix products permit compensating expansion and contraction. For scalar internal weights
+alternating between 2 and 1/2, every pj ≤2, so S ≤4H. Thus c ≤1/32 suffices, even though a
+positive fraction of the layers expand by a factor two. More generally, if pj ≤R for every j, where
+R ≥1, then the output change at the calibrated radius is at most cR. The point of controlling
+suffix products is that noise can enter at every depth: a bound on only the product of all layer
+norms does not control this situation.
+A sharper global certificate can ignore expansive directions that never affect the output. Suppose
+diagonal positive semidefinite matrices M1, . . . , MH satisfy
+MH ⪰vv⊤,
+(W s)⊤MsW s ⪯Ms−1
+(2 ≤s ≤H).
+(13)
+Then, writing QM = N P
+s λmax(Ms),
+|zw(x; η) −zw(x)| ≤
+p
+1 + QM ∥η∥∗.
+(14)
+To prove this, use the diagonal seminorms ∥u∥Ms =
+p
+u⊤Msu. Coordinatewise 1-Lipschitzness
+implies
+∥∆hs∥Ms ≤∥∆hs−1∥Ms−1 + ∥ηs∥Ms.
+At the first layer ∆h1 = η1. Sum, apply MH ⪰vv⊤, and use Cauchy–Schwarz. Diagonality matters:
+a coordinatewise contraction need not contract an arbitrary quadratic form with off-diagonal entries.
+Taking Ms = ∥v∥2p2
+sI recovers the spectral certificate. With W s = diag(1, 10) and v = (1, 0)⊤,
+however, taking Ms = diag(1, 0) gives QM = HEv despite the exponentially large spectral suffix
+products. For fixed weights, minimizing P
+s bs under (13) and 0 ⪯Ms ⪯bsI is a semidefinite
+program. Penalizing this certificate during training is a concrete proposed regularizer; it is not a
+claim that ordinary gradient descent automatically produces such matrices with a favorable value.
+9.2
+A clean-Jacobian bound with an explicit finite-radius remainder
+There is also a sufficient condition that uses the clean trajectory but controls the nonlinear remainder
+quantitatively. Fix x and write as = W shs−1 and Ds = diag(sech2 as) for s ≥2. On the stacked
+13
+
+space RHN, let A be strictly block lower bidiagonal, with block As,s−1 = DsW s and all other blocks
+zero. Define
+K = (I −A)−1,
+k = ∥K∥op,
+ℓ= v⊤PHK,
+g = ∥ℓ∥2,
+where PH selects the last hidden-state block. The inverse exists because A is nilpotent. Put
+b = max
+2≤s≤H ∥W s∥op,
+b∞= max
+2≤s≤H
+1≤i≤N
+∥(W s)i,:∥2.
+When H = 1, set b = b∞= 0. Given r > 0, set
+R = r
+√
+N,
+θ = 2bb∞k2R.
+Proposition 9.1 (Finite-radius Jacobian certificate). If θ < 1, then every disturbance with ∥η∥∗≤r
+satisfies
+|zw(x; η) −zw(x)| ≤r
+q
+1 + Ng2(1 + θ)2.
+(15)
+Consequently a right-hand side at most 1/16 certifies the support condition at x and radius r.
+Proof. Let X stack all hidden-state differences, and let ηh stack the hidden injections. Taylor
+expansion about the clean preactivations gives
+X = AX + ηh + e(X),
+X = K(ηh + e(X)).
+Let B be the block operator sending X to the stacked internal preactivation changes.
+Then
+∥B∥op ≤b and ∥BX∥∞≤b∞∥X∥2. Since supu∈R | tanh′′(u)| = 4/(3
+√
+3) < 1,
+∥e(X)∥2 ≤1
+2∥BX∥∞∥BX∥2 ≤1
+2bb∞∥X∥2
+2.
+(16)
+Put u = ∥ηh∥2 ≤R. If u = 0, then X = 0. If u > 0, vary the hidden injection continuously from
+zero to ηh. The corresponding feedforward states depend continuously on this variation. At a first
+crossing of ∥X∥2 = 2ku, the preceding identity would imply
+2ku ≤ku + 1
+2kbb∞(2ku)2 = ku
+ 1 + 2bb∞k2u
+ < 2ku,
+a contradiction. Thus ∥X∥2 < 2ku throughout the homotopy. Applying the last-layer readout to
+the exact identity gives
+|v⊤PHX| ≤gu + 1
+2gbb∞(2ku)2 ≤g(1 + θ)u.
+Finally combine this with |ηout| by Cauchy–Schwarz, using u2/N + |ηout|2 ≤r2.
+The proposition permits cancellations in the clean transport and saturation along the clean
+trajectory. Its curvature condition is essential: a small clean Jacobian alone gives no positive
+finite-radius guarantee. One can upper-bound k using the H × H block-norm matrix with entries
+Tsj =
+
+
+
+
+
+
+
+1,
+s = j,
+∥DsW s · · · Dj+1W j+1∥op,
+s > j,
+0,
+s < j.
+Then k ≤∥T∥op; replacing each product norm by the product of its factor norms is another valid,
+more conservative upper bound. The quantity g2 is the sum of squared Euclidean norms of the
+clean readout derivatives with respect to all hidden injections.
+Finite reachable-tube certificates offer a different refinement: they bound derivatives throughout
+explicitly bounded reachable activation intervals and propagate those bounds. They can succeed
+when the preceding single global curvature budget fails. Conversely, retaining signed products in K
+may exploit cancellation lost by scalar interval propagation. Neither method generally dominates
+the other. Both certify finite disturbances; an uncorrected clean-Jacobian test does not.
+14
+
+9.3
+Using clipping and controlling the domain
+Any raw-output certificate |zw(x; η) −zw(x)| ≤B(x) can be converted to the sharper clipped
+certificate
+max{T(zw(x) + B(x)) −T(zw(x)), T(zw(x)) −T(zw(x) −B(x))} ≤1/16.
+Monotonicity of clipping proves this implication. In particular, large raw-output variation can be
+harmless when the entire certified interval lies beyond the same training-margin endpoint.
+Global spectral or diagonal-metric certificates hold on the entire input domain automatically.
+The trajectory-dependent certificates are pointwise. Testing them at independent held-out inputs
+estimates their success probability for one fixed network; it does not establish global membership or
+the low-complexity exceptional-set hypothesis of the localized posterior theorem. To certify an input
+region, its clean activation ranges and noise-perturbed ranges must both be controlled uniformly
+over that region. The distinction is necessary even for a finite pixel grid or a Boolean encoding of
+images.
+10
+Gradient descent can be perfectly stable on the data and fragile
+elsewhere
+A global support condition need not hold for a network obtained by ordinary gradient descent,
+even when the network is robust on the entire data distribution. The following exact construction
+separates these requirements without numerical attacks or a continuous-input relaxation. It is
+a counterexample to an automatic guarantee, not a prevalence claim about commonly trained
+networks.
+Proposition 10.1 (A gradient-descent trajectory with off-distribution fragility). Take d = 2, width
+N = 1, and H ≥1 hidden tanh layers. Let the data distribution be uniform on (1, 1) and (−1, −1),
+with label f(x) = x1. Initialize the first-layer affine map as (x1 + x2)/2, all internal scalar weights
+as 2, and the readout as v = 1. Train all weights and the first-layer bias by full-batch gradient
+descent on logistic loss, using any finite positive learning rates.
+At every finite iterate, the classifier is correct on the entire data support with signed output at
+least tanh(1) > 1/2. For every 0 < c ≤1/100, it has zero clipped-score change on this support under
+every simultaneous disturbance of norm
+∥η∥∗≤
+c
+√
+1 + Hv2 .
+The same assertion holds for the margin-band score.
+At the valid Boolean input x0 = (1, −1), however, its clean output is zero and there is an
+admissible first-layer postactivation disturbance giving
+z(x0; η) ≥min
+(
+1
+2, c(3/2)H−1
+√
+H + 1
+)
+.
+(17)
+Consequently every iterate fails the global clipped-score condition when the second expression in the
+minimum exceeds 1/16. Every iterate fails the global margin-band condition when it exceeds 5/16.
+For c = 10−3, H ≥16 suffices for the former and H ≥20 for the latter.
+15
+
+Proof. Write the first-layer weights as (a, a) and its bias as zero, the internal scalar weights as
+ws for 2 ≤s ≤H, and the readout as v. At initialization a = 1/2, ws = 2, and v = 1. The
+two examples have opposite inputs and labels, and tanh is odd. Their signed outputs are equal.
+Their loss derivatives with respect to the first-layer bias cancel, and the derivatives with respect
+to the two first-layer weights are equal. Moreover the signed output strictly increases with each
+of a, w2, . . . , wH, v when they are positive: all factors in the corresponding chain derivatives are
+positive. The derivative of logistic loss with respect to the signed output is negative. Thus gradient
+descent preserves zero bias and equal first-layer weights, while increasing a, ws, v. In particular,
+throughout the trajectory,
+a ≥1/2,
+ws ≥2,
+v ≥1.
+The same conclusion holds for minibatches containing equal numbers of the two examples. It does
+not assume arbitrary stochastic minibatches preserve the symmetry.
+At either data input, let y ∈{−1, 1} be its label. The clean first signed hidden value is at
+least tanh(1) > 3/4. Induction gives that every subsequent signed hidden value is at least tanh(1)
+because 2 tanh(1) > 1. Hence the signed readout is greater than 1/2.
+For the finite-noise assertion, each scalar disturbance, including the output disturbance, has
+magnitude at most c. The first noisy signed hidden state is at least tanh(1)−c > 0.7. If the preceding
+noisy signed state is greater than 0.7, then the next is at least tanh(1.4) −c > tanh(1) −c > 0.7.
+Induction gives a final signed output greater than 0.7v −c ≥0.69 > 1/2. Clean and noisy outputs
+therefore lie beyond the same clipping endpoint. Both the clipped score and margin-band score are
+exactly unchanged on the data support.
+At x0, the equal first-layer weights cancel and every clean hidden state is zero. Inject only at
+the first hidden layer, with
+η1 =
+c
+v
+√
+H + 1.
+This is admissible because (1 + Hv2)η2
+1 ≤c2 follows from v ≥1. All subsequent noisy hidden states
+are nonnegative. Concavity of tanh on the positive half-line and tanh(1) > 3/4 imply
+tanh(2u) ≥min{1/2, (3/2)u}
+(u ≥0).
+For 0 ≤u ≤1/2, use the chord bound tanh(2u) ≥2u tanh(1) ≥(3/2)u; for larger u, use tanh(2u) ≥
+tanh(1) > 1/2. Since ws ≥2, iterating the displayed bound yields
+z(x0; η) ≥min
+(
+v/2, c(3/2)H−1
+√
+H + 1
+)
+,
+which proves (17). The clean transformed scores are zero. A noisy output greater than 1/16 violates
+the clipped-score tolerance; an output greater than 1/4 + 1/16 = 5/16 violates the margin-band
+tolerance. At c = 10−3, the latter expression is greater than 0.106 at H = 16 and greater than 0.483
+at H = 20. It increases with H, proving the stated sufficient depths.
+This example also shows why the trusted-region variant is substantive. Taking the trusted
+region to be the two-point data support gives an exact whole-region stability certificate for every
+gradient-descent iterate, whereas a full-cube condition rejects all these same networks at sufficient
+depth. Extending this observation to realistic data requires an actual region-wide certificate or a
+controlled family of exceptional regions; held-out pointwise success alone is not such a certificate.
+16
+
+11
+Output scale and membership in the restricted prior
+The restriction is a property of a parameterized predictor. It is not a property of its Boolean sign
+function alone. This matters when comparing networks trained with different losses or readout
+conventions.
+Proposition 11.1 (Every strictly signed finite-domain predictor can be rescaled). Fix a finite input
+domain and a tanh network whose clean outputs obey a := minx |zw(x)| > 0. Write
+Bs =
+H
+Y
+j=s+1
+∥W j∥op,
+B = c max
+
+
+1,
+v
+u
+u
+t 1
+H
+H
+X
+s=1
+B2s
+
+
+,
+where an empty product is one. Keep every hidden weight fixed and replace the readout by λv. If
+λa > 1/2+B, the resulting network satisfies the global clipped-score condition with zero score change,
+at the radius prescribed for its new readout. It also satisfies the weaker margin-band condition.
+Proof. The 1-Lipschitz property of tanh and layerwise propagation give, for every simultaneous
+disturbance,
+|zλv(x; η) −λzv(x)| ≤∥η∥∗
+v
+u
+u
+t1 + λ2Ev
+H
+X
+s=1
+B2s.
+At the calibrated radius this is at most
+c
+s
+1 + λ2Ev
+P
+s B2s
+1 + λ2HEv
+≤B.
+Thus clean and noisy outputs remain beyond the same clipping endpoint at every input. Both
+bounded scores are constant there.
+This observation does not supply a polynomial sample theorem for arbitrary small analog circuits.
+The sufficient λ can be exponentially large in depth, or large because of a tiny minimum output on
+the finite domain. Its readout energy becomes λ2Ev, and the Gaussian probability cost is charged
+accordingly. The main theorem instead constructs a robust target implementation with polynomial
+probability cost. The empirical protocol retains the actual trained readout and does not rescale a
+saved model to make the condition pass.
+Likewise, a larger allowed inverse-polynomial factor in the noise radius is a meaningful calibration
+choice only when it is stated.
+The theorem allows such choices because it tracks polynomial
+dependence on c−1; it does not turn an exponentially small required noise radius into a polynomial-
+depth guarantee.
+12
+What empirical evidence can establish
+The prior’s support condition quantifies over every Boolean input and every allowed simultaneous
+disturbance. A finite-noise certificate at a held-out image proves stability at that image only. A
+successful adversarial search provides a counterexample when both its disturbance budget and its
+score change are verified. Failure to find an attack proves neither stability nor membership in the
+prior. Floating-point sufficient tests are reported separately from interval or exact-arithmetic checks.
+There are two distinct empirical eligibility questions. First, does a trained network satisfy the
+stability restriction? Second, does it satisfy the likelihood, which requires every signed training
+17
+
+output to exceed 1/2? A stable network that has training mistakes is evidence about the condition’s
+occurrence under training, but is not a draw admissible under the noiseless posterior for that training
+set. Conversely, successful optimization alone provides no stability guarantee. All declared runs,
+including optimization failures, are retained.
+The original all-input clean-margin convention imposes a further requirement beyond training
+eligibility. The image counterexamples near zero output already fail that clean-margin requirement
+at their witness input. They refute automatic global stability of the trained parameterization; they
+are not examples already inside that stronger base support. In contrast, selected exhaustive Boolean-
+domain positives verify absolute clean margins above 1/2 everywhere, as well as all signed training
+margins and internal stability. The separate readout rescaling result explains how a finite-domain
+parameterization can enter both supports, but charges the resulting Gaussian energy cost.
+Finite grayscale images and Boolean inputs.
+An eight-bit pixel p ∈{0, . . . , 255} normalized
+as x = 2p/255 −1 can be written exactly as
+x =
+7
+X
+b=0
+2b
+255Bb,
+Bb ∈{−1, 1}.
+Composing the first affine layer with this fixed linear encoding represents the same image network as
+a Boolean-input tanh network with eight times as many input coordinates. All hidden computations
+and internal disturbance responses are unchanged at corresponding inputs. This observation connects
+the stability property to a finite image domain; it does not equate the independent Gaussian prior
+on pixel weights with the independent Gaussian prior on bit weights, and it does not turn a test-set
+check into a proof over all possible images.
+Why a continuous-box counterexample has a different scope.
+When the input dimension
+exceeds the first hidden width, one may solve W 1¯x = 0 and sometimes obtain x ∈[−1, 1]d. With no
+later biases, every clean hidden state and the readout then vanish. This exposes amplification that
+saturation at ordinary data inputs can hide. Such an input is a useful stress test for a continuous-box
+version of the condition. It is a counterexample to the Boolean-domain condition only if it is a
+Boolean input, or if a separate valid discrete input is found and verified. Likewise, an interpolated
+image need not lie on the exact eight-bit grid.
+Interpreting calibration.
+The factor √1 + HEv is the worst-case noise gain for hidden layers
+that are individually nonexpansive in Euclidean norm. Hence every such network satisfies the score
+condition when c ≤1/16. Smaller c allows greater amplification relative to this reference. A positive
+result only at a small radius should not be described as stability to arbitrary percent-level changes
+of every activation. Both the normalized total budget and the readout calibration are part of the
+claim.
+Global failures motivate studying fixed trusted input regions, chosen independently of the labeled
+sample, on which the restriction is imposed. If such a region has input-distribution mass at least
+1 −ρ, the statistical proof adds at most ρ to the test error. Proving stability throughout the region
+remains necessary; merely observing no failures on a finite set of images does not supply that proof.
+13
+Experiments on image classifiers
+We tested the support condition on raw parameterizations produced by minibatch optimization.
+These experiments do not sample from the Bayesian prior or posterior. In particular, a trained
+18
+
+network’s test accuracy does not verify the posterior generalization theorem.
+Tasks and optimization.
+The data are the official MNIST and Fashion-MNIST training and test
+sets. The two-class tasks use all MNIST digits 3 and 8, and all Fashion-MNIST classes 0 and 6. A
+harder task uses all 60,000 MNIST training images and 10,000 test images with an even-versus-odd
+label. The main architecture is a plain tanh network with width 128, 256, or 512, hidden depth 4,
+16, or 32, a first-layer bias, and a scalar linear readout. There are no later hidden biases and no
+residual connections. Training uses logistic loss and actual shuffled minibatches of size 128. Vanilla
+SGD and Adam are distinguished; a small exploratory ReLU cohort uses momentum SGD and lies
+outside the tanh theorem.
+Every cohort has a timestamped protocol fixed before that cohort’s training. Later cohorts were
+motivated by earlier observations, so the whole research sequence is exploratory. All runs, including
+failed fits and collapsed classifiers, are retained. We use the final prescribed checkpoint and never
+rescale its readout. Unless separately declared, training lasts 60 epochs. The two depth-32 MNIST
+SGD seeds also have separately recorded continuations for 180 further epochs, at a fixed lower
+learning rate; both original models remain in the data. Four later SGD runs probe depths 64 and
+128 at width 128, with fixed orthogonal initialization gains 1 and 1.1. All four also receive separately
+declared 180-epoch lower-rate continuations; the original fixed-budget runs remain in the record.
+Continuous pixels are mapped to [−1, 1] in float32; Boolean pixels use threshold 128. Final
+metrics and ordinary numerical audits cast those same input values and saved weights to float64.
+Thus auditing does not change the represented input. These are small fully connected image models,
+rather than modern convolutional networks or transformers.
+Eligibility and calibration.
+For every model we separately record whether all training signed
+outputs exceed 1/2. High accuracy alone does not meet this likelihood condition. The primary
+score is clipped at ±1/2, the allowed score change is 1/16, and the radius constants are
+c ∈{0.001, 0.003, 0.01, 0.03, 0.0625}.
+The primary constant is 0.001; the rest are a fixed calibration study. The cap 1 is an additional
+recorded comparison. Neither radius nor readout scale is adjusted to make an individual model
+pass.
+The final collection contains 70 parameterizations: 60 tanh image models, four ReLU comparisons,
+and six Boolean-domain models. Every training margin exceeds 1/2 for 13, three, and six of these,
+respectively, for a total of 22. These counts include every prescribed failed fit and every separately
+retained continuation.
+Pointwise audit and its limits.
+For each tanh image model the prescribed audit uses uniformly
+sampled held-out images, the 16 held-out images with smallest absolute clean output, and indepen-
+dent uniform Boolean-cube probes. The second group is deliberately concentrated near the decision
+boundary. At width 512, the uniform positive-certificate budget is reduced to the first 32 of the
+same prescribed 128 points. Figure 1 uses common per-model denominators: 32 uniform images, 16
+boundary images, and 32 Boolean probes at every radius. Missing or inconclusive certificates remain
+unresolved. A companion file applies exactly the same display rules to training-margin-eligible
+models only.
+The positive audit propagates finite reachable-state bounds and saturation-aware tanh remainder
+bounds. Its ordinary pointwise results use float64 evaluations of sufficient inequalities. Attacks
+optimize both raw-output directions over simultaneous perturbations of every hidden layer and the
+19
+
+Cohort
+Runs
+All train margins > 1/2
+Test accuracy (%)
+Initial continuous images
+24
+3
+49.95–99.55
+Initial Boolean images
+8
+1
+49.95–99.19
+Initial width-256 extension
+4
+1
+49.95–99.29
+Width-512 extension
+4
+3
+87.10–99.50
+All MNIST, even versus odd
+4
+4
+98.92–99.03
+ReLU comparisons
+4
+3
+86.90–99.13
+Spectral-projection intervention
+4
+0
+86.20–98.95
+Additional matched reference
+1
+0
+87.15
+Projected-SGD continuation
+1
+0
+98.83
+Depth-32 SGD continuations
+2
+1
+99.14–99.24
+Depth-64/128 extension
+4
+0
+98.79–98.99
+Depth-64/128 continuations
+4
+0
+98.74–98.94
+Enumerated Boolean domains
+6
+6
+92.86–100.00
+Total
+70
+22
+Table 1: Every declared training run is retained. Accuracy ranges are descriptive extrema over
+the specified cohort, not confidence intervals. Continuations are additional parameterizations of
+retained original runs. Training-margin eligibility is separate from robustness.
+Test accuracy (%)
+Minimum train margin
+Task, depth
+SGD
+Projected
+SGD
+Projected
+MNIST even/odd, H = 4
+98.94
+98.95
+2.69
+-3.59
+MNIST even/odd, H = 16
+98.92
+98.87
+4.49
+-1.66
+Fashion 0/6, H = 4
+87.15
+87.10
+-4.96
+-5.44
+Fashion 0/6, H = 16
+86.85
+86.20
+-3.41
+-4.10
+Table 2: Matched spectral-projection intervention. The models share initialization and minibatch
+order, and receive the same gradient-step budget. Raw readouts are not rescaled.
+scalar output, with two starts and 100 projected gradient steps per direction. The main attack subset
+is the first 16 points of each group; points without an attack search are still certified only when a
+positive bound succeeds. All observed violating tuples are saved and re-evaluated strictly inside
+the prescribed budget. Selected positive and negative results receive independent exact-rational
+or outward interval verification, as described separately. An unsuccessful attack is not a positive
+certificate, and an unsuccessful certificate is not a counterexample. Pooled input/model counts
+reuse data and are not independent statistical observations.
+Among the 13 training-margin-eligible tanh image models, the primary radius receives sufficient
+float64 certificates on all 1,184 uniformly held-out, 208 boundary held-out, and 832 random Boolean
+input/model pairs in the prescribed positive-certificate subsets. At c = 0.01, the corresponding
+counts are 1,181, 150, and 820. These finite sampled successes coexist with the separately targeted
+global counterexamples below. An independent audit compares all 28,800 matched attack/certificate
+evaluations across the 60 tanh image models; none exceeds its sufficient bound beyond 10−8.
+A same-model positive and negative result.
+The Boolean-input MNIST model 029 has
+hidden depth 16, width 128, was trained by vanilla SGD, and has minimum training signed output
+above 4.23 and test accuracy 99.19%. Its raw output has a global all-real-input certificate at
+c = 0.001. At c = 0.01, exact-budget checks and outward interval arithmetic verify clipped-score
+20
+
+violations on both a held-out Boolean image and a uniform Boolean probe. The score changes
+exceed 0.0845 and 0.0855, respectively. In both attacks every disturbed hidden state remains in
+[−1, 1]. Thus the calibration constant matters even for a fitted classifier, and the larger-radius
+failures are not caused by allowing hidden states outside the activation range.
+The full-MNIST even-versus-odd model 104, with hidden depth 4 and width 256, fits every
+training margin above 2.68, reaches 98.94% test accuracy, and has an exact-rational global certificate
+at c = 0.003: its raw output changes by at most 0.03230 < 1/16. This certificate covers every real
+input, not merely the recorded images. The statement concerns its trained parameterization; it does
+not identify its training process with Bayesian inference.
+The matched-task depth-16, width-256 model 105 illustrates the limitation of a universal support
+claim. Exact integer/rational verification puts all 60,000 training signed margins above 4.48157.
+Certified clean-output intervals give 9,892 correct predictions among the 10,000 test labels, confirming
+98.92% accuracy. Yet it has a rigorously verified violation already at the primary constant c = 0.001.
+A synthesized 8-bit image with mean ink about 0.172 and 64.2% black pixels has clean output
+approximately −0.00163 and perturbed output −0.15496, giving clipped-score change above 0.1533.
+Every disturbed hidden state remains in [−1, 1]. This is a constructed off-distribution image, not
+a held-out natural image, and its encoding into Boolean pixel bits is discussed separately. Thus
+fitting every training margin does not by itself enforce the proposed global condition.
+A later, separately declared search addresses the objection that the first witness starts near
+the decision boundary. On another synthetic 8-bit input, the same model has clean output in
+[0.53934, 0.53935], above the training margin. A hidden-only disturbance at c = 0.001 lowers it to
+[0.38661, 0.38662], below 7/16. The scalar output disturbance is exactly zero, and every disturbed
+hidden coordinate remains inside [−1, 1]. Exact budget and outward interval checks establish this
+for both rational pixel normalization and the original float32 preprocessing. Thus the global failure
+also affects a confident positive output and violates the optional one-sided margin-gap restriction;
+no true label is assigned to this constructed image.
+This failure is sharply separated from the observed image distribution. A separately declared
+follow-up checked every official held-out image for selected models. For model 105, all 10,000 images
+receive a sufficient pointwise certificate at both c = 0.001 and c = 0.003. At the latter constant,
+9,960 pass by combining the global raw-output bound with clipping, and the remaining 40 pass using
+local finite-radius bounds. Both original depth-32 MNIST SGD seeds similarly certify all 1,984 test
+images at both constants, despite their failed training-margin fits. These initial whole-pool sweeps
+evaluate sufficient inequalities in float64 on a finite held-out set; they do not cover every natural
+image or the whole input cube. Across all six prescribed follow-up models (005, 008, 009, 029, 105,
+and 107), all 27,936 held-out input/model pairs are certified at both constants. Eleven initially
+unresolved points for model 107 at c = 0.003 were subsequently certified by stronger finite-radius
+enclosures; that refinement history is retained.
+Model 105 subsequently receives an exact upgrade at the primary constant c = 0.001: exact
+integer/rational arithmetic and outward interval bounds certify every one of its 10,000 official test
+inputs, using their original float32-normalized values. A global bound covers 9,988 inputs and local
+bounds cover the remaining 12, with maximum certified clipped-score change below 0.017653 < 1/16.
+This quantifies over every allowed simultaneous disturbance at each of those inputs. It does not
+certify unknown images or the population distribution. The result at c = 0.003 and the other
+models’ whole-pool results retain their float64 qualification. The same exact method also verifies
+the training-margin statement above and clipped-score stability at all 60,000 training inputs at
+c = 0.001. Thus this model has verified likelihood eligibility and verified stability on both official
+data sets while still failing the global input-domain condition.
+21
+
+An explicit spectral-norm intervention.
+Four further vanilla-SGD runs project every hidden-
+to-hidden matrix to operator norm at most 0.99 after each epoch, including after the final update.
+The first layer and readout are untouched. Each has a matched unconstrained run with the same
+initialization, minibatch order, data, number of gradient steps, and learning-rate schedule. The
+nonexpansive certificate then guarantees score stability up to c = 1/16 when the saved internal
+norms are verified below one. This is an intervention in training, rather than evidence that ordinary
+SGD spontaneously enforces the condition. Its accuracy and training margin cost must be assessed
+alongside the guaranteed stability. The matched MNIST test accuracies change from 98.94% to
+98.95% at depth 4, and from 98.92% to 98.87% at depth 16. Fashion test accuracy decreases by 0.05
+and 0.65 percentage points, respectively. All four projected runs retain training errors and hence
+fail the hard training-margin likelihood. They demonstrate useful classification under an enforced
+support restriction, not fitted examples under that likelihood. The separately declared 240-epoch
+continuation of the depth-16 full-MNIST projected run still has 154 training errors, compared with
+169 initially, and test accuracy 98.83%. Thus the fixed longer optimization budget does not resolve
+the training-likelihood failure. All five projected parameterizations nevertheless have exact-rational
+global certificates at c = 1/16, including the continued model, whose uniform raw-output variation
+bound is below 0.058087.
+A polynomial-depth calibration variant.
+After observing the fixed-radius failures, we also
+screened the explicitly exploratory choice cH = 0.001/H. This weakens the radius by one additional
+power of depth; a theorem polynomial in c + c−1 continues to have polynomial depth dependence
+under this substitution. For the same model 105, exact-rational operator bounds certify global
+raw-output variation at most 0.023658 at cH = 1/16000, so it passes this weaker condition on every
+real input. This does not undo its failure at the original fixed constant. The larger-depth cohort
+tests this variant further, without inferring an asymptotic law from finitely many trained networks.
+The fitted depth-32 continuation 301 yields the same distinction: an interval-verified primary-radius
+violation coexists with an exact global raw-variation bound below 0.017821 at cH = 1/32000. Its
+minimum training margin is 2.41066 and test accuracy is 99.244%; the other prescribed continuation
+still has three training errors.
+Reduced-precision diagnostic.
+We additionally round hidden activations to IEEE float16 or
+bfloat16, leaving weights fixed, on the official test set. Hidden-only rounding and hidden-plus-
+output rounding are separate modes. The realized joint noise norm is recorded and compared with
+each calibrated radius. This is one deterministic perturbation map, not a test of every allowed
+perturbation and not a worst-case certificate. In particular, successful rounding can occur even
+when its realized noise lies outside the certified ball. The smallest calibrated ball should not be
+equated with ordinary low-precision arithmetic: the realized rounding budgets can exceed it even
+when the classifier’s clipped score barely changes. The complete diagnostic reports both the score
+changes and the actual noise-budget coverage.
+Exhaustive Boolean audit.
+Six additional networks use the exact domain {−1, 1}9, with target
+either majority of the nine bits or majority of the three majorities on disjoint groups of three. A
+fixed permutation selects 400 training and 112 held-out inputs. Width is 64, hidden depths are 4, 16,
+and 64, and every model receives the same prescribed 500-epoch SGD schedule. These models are
+reported separately from the image cohort. The audit enumerates all 512 inputs at the original five
+radius constants and at cH = 0.001/H. Thus successful coverage concerns the entire Boolean target
+domain, even when a sufficient bound uniform over all real inputs is inconclusive. Domain coverage
+22
+
+Format
+Rounded values
+Sign flips
+Score changes > 1/16
+c = .001
+c = .0625
+float16
+Hidden
+1
+0
+0.00%
+87.52%
+float16
+Hidden and output
+1
+0
+0.00%
+32.28%
+bfloat16
+Hidden
+19
+54
+0.00%
+1.22%
+bfloat16
+Hidden and output
+19
+53
+0.00%
+0.05%
+Table 3: Deterministic activation-rounding diagnostic on 175,520 held-out input/model pairs across
+60 tanh image models. The last two columns give the fraction whose realized joint noise lies inside
+the corresponding calibrated ball. The clipped score has cap 1/2. Failures to fit the training
+likelihood are retained; no adversarial or distribution-wide claim follows from this fixed rounding
+map.
+is exhaustive, but the arithmetic is still float64 unless separately verified exactly. All six runs fit the
+training margin empirically. The initial exhaustive audit certifies all vertices at c = 0.001 for five
+models, and 511 of 512 for the remaining depth-64 recursive-majority model; all six pass on every
+vertex at cH. A separately recorded stronger bound resolves the last vertex, enclosing its noisy raw
+output in [−2.45149, −2.36141] and hence giving zero clipped-score change. Thus all six ultimately
+pass on the entire Boolean domain at the primary constant. These finite examples test the support
+condition, not an empirical sample-complexity law.
+The predeclared first exact verification selected depth-4 majority model 500 at c = 0.03. Exact
+interval arithmetic verifies all 400 training signed margins above 1/2 and all 512 clean absolute
+outputs above 4.72037. Combined with an exact uniform raw-output variation bound below 0.162903,
+this proves that every clipped score is constant throughout the allowed noise ball on the entire
+Boolean domain. The raw variation bound exceeds 1/16, so this certificate uses clipping rather
+than merely a small raw-output bound; it does not show that the network violates the raw-output
+stability condition.
+A deeper exact positive is model 504, the depth-64 majority network. All 400 training margins
+are interval-verified, and the network correctly labels 511 of the 512 Boolean vertices. At the
+primary constant c = 0.001, an exact finite partition and reachable-tube calculation proves zero
+clipped-score change on every vertex for every allowed simultaneous perturbation. The scalar global
+raw-output bound is approximately 13.4145 and is insufficient on its own. Thus this is a fitted
+deep SGD example satisfying the actual finite-domain support condition, certified using the states
+reached by its inputs. The depth-64 recursive-majority model 505 also receives an exact all-domain
+certificate at c = 0.001, combining 511 reachable-tube cases with an exact covariance calculation for
+the remaining vertex. Every training margin is interval-verified above 7.47388; it correctly labels
+504 of the 512 vertices. Both deep examples thus satisfy the support condition without requiring
+perfect generalization.
+The experiment directory preserves protocols, raw weights, dataset hashes, per-example outputs,
+failed fits, all saved attack witnesses, certificate records, and plotting code. Exact proofs, pointwise
+numerical evidence, and empirical training outcomes have distinct qualifications throughout.
+14
+Independent finite-radius verification of trained networks
+The aggregate empirical audits above use numerical sufficient inequalities and numerical attacks. This
+section separates out selected positive and negative examples checked by exact rational arithmetic
+and outward interval evaluation. A certificate for all real inputs is distinguished from an exhaustive
+certificate on a specified finite Boolean domain. Both quantify over every allowed disturbance. A
+23
+
+Target
+H
+Min. margin
+Test acc.
+c = .001
+c = .001/H
+All-input c∗
+Majority9
+4
+4.99
+100.00%
+512/512
+512/512
+0.0625
+Majority9
+16
+6.94
+100.00%
+512/512
+512/512
+0.0625
+Recursive majority
+4
+4.04
+100.00%
+512/512
+512/512
+0.0625
+Recursive majority
+16
+6.56
+96.43%
+512/512
+512/512
+0.03
+Majority9
+64
+7.61
+99.11%
+512/512
+512/512
+0.001
+Recursive majority
+64
+7.47
+92.86%
+512/512
+512/512
+0.001
+Table 4: Exact finite Boolean domains, with float64 evaluation of sufficient finite-radius inequalities.
+Certified counts cover all 512 inputs; c∗is the largest original-grid constant for which every input
+passes, a lower bound on the valid radius rather than an estimate of its maximum. The minimum
+margin is over the 400 training inputs. One initially unresolved vertex at c = .001 receives a
+separately recorded stronger certificate. A failed sufficient certificate remains unresolved; it is not a
+counterexample.
+pointwise certificate covers every disturbance at one specified input, while a negative witness is one
+verified input–disturbance pair. These scopes are kept distinct.
+Global certificates for raw trained models.
+The global restriction is satisfied by some ordinary,
+unconstrained trained networks. A width-256, depth-4 tanh network trained by minibatch SGD on
+all 60,000 MNIST images for even-versus-odd classification has test accuracy 98.94%, no training
+errors, and minimum signed training output exceeding 2.6876. Its raw saved weights satisfy the
+global condition at c = .003: for every real input and every allowed simultaneous disturbance,
+the raw output changes by at most 0.032296 < 1/16. This global bound was verified using exact
+rational operator-norm certificates and a rational final gain comparison, rather than relying on a
+floating-point spectral estimate.
+There are also eligible depth-16, width-128 examples at c = .001: the selected SGD models
+for continuous and thresholded-Boolean MNIST 3-versus-8 inputs have minimum training margins
+exceeding .692 and 4.236, respectively, test accuracy 99.29% and 99.19%, and rigorously verified
+global raw-change bounds .060795 and .062230. These use raw trained weights, without output
+rescaling. Their global certificates apply to every real input, so imply either clipped-score convention.
+The radius constant matters: for the latter Boolean model we independently verified violations at
+c = .01 on both a held-out image and a Boolean cube probe, with clipped-score changes exceeding
+.08450 and .08553, respectively. The successful small-radius certificate and larger-radius failure are
+compatible.
+An exploratory inverse-depth calibration.
+A later, separate calibration sets cH = .001/H.
+For the depth-16 full-MNIST model 105, which has a verified global failure at the original c = .001,
+exact rational spectral bounds prove global raw-output variation at most .02365730 < 1/16 at
+cH = 1/16000. Thus this same trained parameterization passes a weaker, explicitly depth-dependent
+support condition. This is not a revision of the original protocol or evidence that a fixed c works
+uniformly in depth. Since the theoretical bound has polynomial dependence on c + c−1, such a
+polynomial depth calibration preserves a polynomial formal sample bound. The training-eligible
+depth-32 continuation 301 also has an exact global raw-change bound .01782087 at cH = 1/32000,
+despite its verified failure at fixed c = .001.
+24
+
+Projected SGD at a larger fixed radius.
+All four predeclared projected-SGD models (depths
+4 and 16, width 256, on full MNIST parity and Fashion-MNIST shirt-versus-T-shirt) have exact
+rational certificates that every internal matrix has operator norm below one. Their global raw-output
+change bounds at c = 1/16 are respectively .061573, .058087, .061573, and .058087, all below 1/16.
+The corresponding test accuracies are 98.95%, 98.87%, 87.10%, and 86.20%. None attains every
+training margin above 1/2: this is evidence that the support condition can coexist with useful trained
+prediction, not an example satisfying the paper’s exact interpolation likelihood. The separately
+declared longer-training continuation 600 retains an exact global bound .058087 at the same radius,
+but still has 154 training errors after 240 additional epochs, with 98.83% test accuracy. Thus all
+five projected parameterizations have verified global stability, and none is presented as satisfying
+the exact training-likelihood event.
+Exhaustive Boolean-domain certificates.
+A separate, predeclared cohort trains width-64
+tanh networks on 400 of the 512 vertices of {−1, 1}9, with the remaining 112 vertices held out.
+For the protocol-selected depth-4 majority network 500, exact arithmetic and outward intervals
+certify the clipped-score condition on every Boolean input at c = .03. All 400 training margins are
+independently interval-verified above 1/2, and the network correctly predicts all 512 labels. The
+global raw-change bound is .162903 > 1/16, whereas every clean absolute output exceeds 4.72037.
+Consequently the clipped score is exactly constant under every permitted disturbance at every
+vertex. A separate auditor replayed the saved matrix factors, all 512 interval trajectories, and all
+400 training inequalities.
+A subsequent, separately recorded check gives the same exhaustive conclusion for the depth-16
+majority network 501 at the largest primary radius c = 1/16. Its raw-change bound is 3.474718,
+while every clean absolute output exceeds 5.12034; all 512 labels and every training margin are
+correct. These finite-domain certificates use the elementary implication
+|z(x)| ≥m,
+|zη(x) −z(x)| ≤B ≤m −1
+2
+=⇒
+clip1/2(zη(x)) = clip1/2(z(x)).
+They therefore certify the actual clipped-score condition even when the stronger raw-output-change
+condition is not certified. Their scope is the entire finite Boolean domain, not all real inputs.
+A depth-64 example requiring reachable-state bounds.
+The first depth-64 majority network,
+504, also satisfies the condition on all 512 Boolean vertices at the primary c = .001. Every one
+of the 400 training margins is interval-verified above 7.61170, and every clean absolute output on
+the full cube exceeds 5.64786. Thus this network also satisfies the original all-input clean-margin
+restriction, not only the newer clipped-score restriction. Exact interval label comparisons give
+511/512 correct predictions on the full cube, including 111/112 held-out predictions; the remaining
+vertex is a confidently wrong prediction, not an omitted or ambiguous case. Its global raw-change
+bound, 13.414533, cannot establish this conclusion, even with output clipping. Instead, 52 finite
+groups of vertices share rigorously bounded reachable-state tubes. Each group’s disturbed outputs
+remain beyond the corresponding clipping threshold, with the smallest verified surplus exceeding
+1.40770. Thus the clipped score is exactly invariant for every allowed disturbance at every vertex.
+This is an exhaustive finite-domain certificate for an ordinary SGD-trained depth-64 network, rather
+than a sampled-input audit or a claim about every real input.
+For completeness, sharing a tube across finitely many inputs does not alter the underlying proof.
+At each layer and coordinate, replace the clean preactivation’s distance from zero by the minimum
+of that distance over all vertices in the group. A common prefix-energy bound then encloses every
+group’s noisy trajectory, so the same derivative and matrix-norm bounds apply to each vertex. The
+25
+
+grouping only reduces computation. Every input is still checked, and any unresolved input would
+prevent a full-domain conclusion. The certificate uses exact integer matrix arithmetic, outward
+interval tanh, saved norm-factor proposals, and explicit source hashes; it is not a Lean proof. A
+separate auditor regenerated all 512 clean interval trajectories, checked all 52 groups and 3,216 saved
+matrix bounds, and replayed every training inequality. The three worst groups were additionally
+checked with the original pure-integer matrix-norm verifier.
+A depth-64 nonlinear target.
+The corresponding recursive-majority network 505, trained on
+majority of three disjoint three-bit majorities, also satisfies the clipped-score condition on the entire
+512-vertex cube at c = .001. Every one of its 400 training margins is interval-verified above 7.47388,
+and every clean absolute output exceeds 2.40649, so the original all-input clean-margin condition
+holds as well. Its full-domain accuracy is 504/512; the held-out accuracy is 104/112. All eight errors
+remain in the verified domain.
+For this network, the shared reachable-tube proof establishes 511 of the 512 cases. The remaining
+vertex, index 325, is explicitly retained as unresolved in that component certificate. A separate
+finite-radius proof propagates the exact clean-response covariance and bounds the nonlinear Taylor
+remainder in state norm. It encloses the noisy output at this same vertex in [−2.586691, −2.226290],
+proving that its clipped score is also invariant. The composite certificate records the union of these
+two proofs, with model, radius, source, and component hashes; the input domain never changes.
+The exceptional-vertex proof was independently replayed, including all 126 exact matrix-norm
+bounds. A further independent replay regenerated all 512 clean trajectories, all 122 groups and
+7,585 local matrix bounds, and every training margin, then checked the composite coverage. The
+state-covariance inequality used for this refinement is given below.
+14.1
+The global condition can fail on valid finite-grid inputs
+A universal prior-support restriction and a statement about typical data are different claims. The
+distinction persists after clipping at the training margin, even for a network that fits all training
+examples with substantial margin. Our strongest example is an ordinary minibatch-SGD tanh
+network of hidden depth 16 and width 256, trained on all 60,000 MNIST images for even-versus-odd
+classification. It has 98.92% empirical test accuracy, and a separate exact computation verifies every
+signed training output above 4.4815762. The finite-radius counterexample below is independently
+verified. The saved weights are used without rescaling.
+The left image in Figure 3 is a valid 28 × 28 eight-bit grayscale input. At the smallest tested
+radius constant c = 10−3, its clean and disturbed real outputs are enclosed around
+−0.00162845134 7−→−0.15496440197.
+The resulting score change exceeds 0.15333 > 1/16 after clipping at either 1/2 or 1. The image
+has a black two-pixel border, mean ink 0.17200, and 64.2% black pixels. It is a synthetic off-data
+image, not an image to which we assign a natural digit label. Its pixel pj is interpreted as the exact
+rational input xj = 2pj/255 −1; we also independently checked the same witness under the original
+float32 pixel preprocessing used for training.
+The disturbance budget was checked using exact integer-rational arithmetic, and the two
+network evaluations used 100-decimal outward interval arithmetic with the saved dyadic weights. In
+particular,
+(1 + HEv)
+ 
+N−1
+H
+X
+s=1
+∥ηs∥2
+2 + ξ2
+!
+< 10−6.
+26
+
+The intervals verify that every perturbed hidden coordinate remains in [−1, 1]: their absolute
+values are all below 0.061110. Thus requiring disturbances to leave activations within their original
+range does not remove this counterexample. Its scalar output disturbance has absolute value below
+7.3 × 10−10. Removing it decreases the noise budget and changes either clipped score by at most
+that amount, so hidden disturbances alone still give a violation. These are finite-radius witnesses,
+rather than conclusions drawn only from a large Jacobian or from an unverified optimization output.
+They trust the interval-arithmetic implementation and are not Lean formalizations.
+The right image provides a second example in a depth-32, width-128 SGD model for MNIST 3
+versus 8, with test accuracy 99.09%. Its output changes from −0.0034068096 to −0.3168576499 at
+the same c = 10−3, a clipped-score change greater than 0.31345. All perturbed hidden coordinates
+have absolute value below 0.128211. This second model has three training errors, so it is evidence
+about the naturalness of a support restriction rather than an additional example in the exact
+training-likelihood event. A related near-gray eight-bit witness for this model has score change
+greater than 0.30799. The low-ink examples exclude an explanation specific to a uniformly gray
+background, while remaining clearly off-data.
+Each exploratory search had a fixed budget declared before that search. For the low-ink examples
+we solved an ink-minimizing linear program, subject to zero first preactivations and a black border,
+generated 4,096 stochastic roundings to the pixel grid using a fixed seed, and attacked the 16
+candidates with smallest absolute clean output. We then verified selected witnesses independently.
+This protocol proves existence, not the prevalence of instability under the data distribution. In
+separate probes preserving empirical one-pixel foreground probabilities and on interpolations of
+opposite-class test images, some violations were verified at c = 10−2; failure to find violations at
+smaller radii was not treated as a certificate.
+A precise Boolean interpretation.
+The finite-grid issue is not inherently a continuous-input
+phenomenon. Write each pixel in bits pj = P7
+b=0 2bqjb, with sjb = 2qjb −1 ∈{−1, 1}. Since
+P
+b 2b = 255,
+2pj
+255 −1 =
+7
+X
+b=0
+2b
+255sjb.
+Replacing row j of the first-layer matrix by eight rows (2b/255)W0,j gives a network on 8·784 = 6272
+Boolean inputs with exactly the same outputs, hidden trajectories, readout energy, and internal-
+noise budgets. Its depth and width are unchanged. Thus every rational-pixel witness is also an
+exact Boolean-input witness for this linearly decoded network. With the usual dimension-weighted
+first-layer Frobenius energy, the non-bias weight contribution grows only by
+8
+7
+X
+b=0
+(2b/255)2 = 8(48 −1)
+3 · 2552
+< 2.69.
+The first-layer bias is unchanged but its dimension weight grows eightfold. Consequently total
+first-layer energy, including the bias, increases by at most a factor of eight. This equivalence uses
+exact rational pixel normalization. The software used to train and evaluate the original model
+normalizes pixels in float32; the original-preprocessing witnesses were checked separately, and the
+held-out empirical audits use precisely those float32-normalized inputs. We do not identify the two
+normalization maps as exact equalities.
+An optional margin-band score.
+As a separate, post-protocol comparison, consider U(z) =
+sign(z) min{1/4, (|z| −1/4)+}, which ignores changes entirely inside the already-failing test-margin
+27
+
+band. The original depth-32 low-ink witness still violates its 1/16 condition, with U-score change
+greater than 0.0668576; its near-gray witness does not. For the fitted full-MNIST depth-16 model,
+the zero-centered witness lies entirely within the ignored band. We therefore declared a new,
+explicitly variant-specific exploratory protocol: move the continuous low-ink input toward clean
+output 3/8, generate 4,096 pixel-grid roundings, retain the 16 closest to 3/8, and apply the same
+internal-noise attack budget. The independently verified witness has
+z = 0.3628586342 7−→0.5158098496,
+|∆U| > 0.1371413 > 1/16
+at c = .001. All disturbed hidden coordinates have absolute value below 0.089882. Here too
+the scalar output disturbance is below 7.3 × 10−10, so the same 1-Lipschitz argument gives a
+hidden-disturbance-only violation. This secondary result shows that the weaker score can move
+the fragile input region without eliminating the global obstruction; it does not change the primary
+clipped-score protocol.
+The predeclared longer-training check also supplies a depth-32 example. Of the two fixed
+continuations, model 301 fits all 11,982 training examples with minimum signed output above
+2.4106 and achieves 99.24% held-out accuracy. A valid low-ink, black-border 8-bit image has
+interval-verified output change −.00895437 7→+.30415992 at c = .001, hence clipped-score change
+exceeding .31311. Every noisy hidden state remains in [−1, 1]. The other continuation retains three
+training errors; both outcomes and both prescribed searches are retained. Training metrics in this
+paragraph are ordinary float64 evaluations, whereas the displayed counterexample has an exact
+rational noise-budget check and outward interval forward evaluation.
+A still weaker, exploratory implication-only condition asks that, for both labels y, yz ≥1/2
+imply yzη ≥7/16, and yz ≤1/4 imply yzη ≤5/16. Negating the already saved perturbation for
+model 301, without any new optimization or input selection, yields the interval-verified output
+−.32205298 from the same clean value −.00895437. With y = −1, the second implication fails. Its
+margin-band score also changes by more than .07205 > 1/16. The exact noise budget is unchanged
+by negation and every disturbed hidden state remains in [−1, 1]. This auxiliary check concerns later
+proposed variants; it does not change the primary score convention or empirical protocol.
+Failure starting from a confident output.
+A further, separately declared finite-budget check
+targets clean output .55 in the fitted full-MNIST model 105. The resulting valid eight-bit, low-ink
+input has independently replayed interval enclosures around
+z = 0.539345460246 7−→zη = 0.386611305539
+(c = .001).
+Here the scalar output disturbance is exactly zero. The exact rational hidden-noise budget passes,
+and every disturbed hidden coordinate has absolute value below .101215. Thus the first implication
+above fails for y = +1: a clean signed output above 1/2 falls below 7/16. Both the clipped score and
+the optional margin-band score change by more than .113388 > 1/16. The same saved disturbance
+was independently verified under the original float32 pixel preprocessing. The input is synthetic and
+has no assigned digit label; the positive clean output establishes the implication’s premise. This
+check refutes an explanation of the observed instability based solely on clean outputs near zero. It
+does not show that this image model satisfies the original all-input clean-margin restriction, which
+its other near-zero inputs already violate.
+14.2
+Exact stability on the complete held-out image set
+For the same fitted full-MNIST depth-16, width-256 model 105, we can verify the primary clipped-
+score condition on every one of the 10,000 official held-out images at c = .001. This includes
+28
+
+incorrectly classified images; the certificate concerns stability, not correctness. It uses the exact
+float32-normalized inputs of the training and evaluation pipeline and quantifies over every allowed
+simultaneous hidden/output disturbance at each such input.
+A separate exact pass also verifies all 60,000 signed training margins, with a minimum certified
+lower bound exceeding 4.4815762 > 1/2. Every training input satisfies the clipped-score condition
+at c = .001 as well. Thus, for this particular image model, training-likelihood eligibility is verified by
+exact arithmetic rather than inferred only from the float64 training metrics. Exact sign comparisons
+against every archived test label also confirm 9,892 correct and 108 incorrect predictions, with no
+ambiguous cases, reproducing the 98.92% test accuracy.
+A guarded integer computation with rigorously enclosed activation-table and quantization errors
+gives a clean-output interval at every image, with uniform scalar error below .007149522. Combining
+these intervals with an exact global disturbance bound certifies 9,988 images. The remaining 12
+inputs are explicitly retained as unresolved in that component record. Separate 160-bit interval
+clean trajectories, exact reachable-tube matrix bounds, and signed Taylor-remainder certificates
+prove those same 12 cases. The largest certified clipped-score change over the complete set is below
+.01765217 < 1/16. A hash-checked composite record verifies that the two components cover precisely
+indices 0, . . . , 9,999, with the same model, input archive, and radius.
+The integer clean-output computations were independently repeated, reproducing all 10,000
+test and 60,000 training rational row records exactly. A separate replay also reproduced every
+exact rational row of all 12 local certificates, and the complete-set composition was independently
+checked. The worst local case received an additional replay of every matrix bound using the original
+pure-Python-integer verifier. These are exact integer/rational and outward-interval sufficient proofs,
+not ordinary float64 sufficient tests and not Lean formalizations. The analogous larger-radius
+c = .003 audit remains numerical.
+This finite-set result coexists with the independently verified synthetic-input failures at the same
+c = .001, including the confident-input witness above. It therefore establishes a precise distinction
+between stability on every image in the official test set and stability over every possible image. It
+does not prove uniform stability on a neighborhood of those images or a distributional coverage
+guarantee.
+14.3
+A limited test of a smooth-image trusted region
+The preceding low-ink images are visibly atypical. We therefore tested a separate, simple image
+restriction based on anisotropic total variation,
+TV(p) =
+X
+(i,j)∈E
+|pi −pj|,
+p ∈[0, 1]784,
+where E consists of horizontal and vertical nearest-neighbor edges. The 10,000 official MNIST test
+images have median TV 102.55, 99th percentile 143.74, and maximum 180.41. These image statistics
+do not themselves establish that an input is natural.
+For the fitted depth-16 full-MNIST model 105, we minimized TV subject to zero first preactiva-
+tions, a black two-pixel border, and mean ink at most 1/5. The resulting rounded eight-bit image
+remains a verified counterexample at c = .001, but its TV is 284.93, above every test image. This
+search therefore does not refute a trusted region with TV at most 150.
+We can rigorously exclude this particular mechanism from that region. An exact rational dual
+certificate gives
+TV(p) ≥284.87765209159
+29
+
+for every image satisfying the stated border and ink constraints and exactly zero first preactivations.
+More generally, the same certificate implies that an image in the border/ink region with TV at most
+150 has
+max
+i
+|a1,i| ≥0.1175517.
+These claims exclude zero and uniformly near-zero first states; they do not bound the later Jacobians
+or prove stability on the region.
+A separately declared check gives the same qualitative conclusion for the fitted depth-32 model
+301. Its exact rational dual certificate proves TV at least 287.04761391129 for a zero first state
+under the same border and ink constraints. TV at most 150 instead forces maximum absolute first
+preactivation at least .26750111067. None of the 4,097 prescribed nearest and stochastic pixel-grid
+roundings of the numerical minimizer entered the region. These are additional exclusions of this
+particular construction, not a uniform output-stability certificate or evidence that every fragile
+input has high TV.
+For completeness, the certificate does not assume that the numerical linear-program solver is
+correct. In normalized coordinates x = 2p −1, introduce te ∈[0, 2] with ±(xi −xj) ≤te, so TV is
+one half of the linear objective P
+e te. Write the resulting problem as minimizing cT y with equality
+constraints Ay = b, inequalities By ≤d, and coordinate box l ≤y ≤u. For arbitrary exact dyadic
+multipliers λ and µ ≤0, put q = c −AT λ −BT µ. Then
+cT y ≥λT b + µT d +
+X
+j
+min{qjlj, qjuj}.
+We evaluate this expression using integer-rational arithmetic against the actual stored first-layer
+weights. It remains valid even when the proposed dual multipliers are inaccurate. If the equality
+constraint is violated by a first-preactivation vector a1, the right side decreases by at most ∥λ∥1∥a1∥∞;
+dividing by two gives the stated near-zero exclusion. The exact coefficients and bound are saved for
+replay.
+A complementary, separately declared stress test interpolated 256 deterministic opposite-parity
+pairs of correctly classified held-out MNIST images, using endpoints with TV at most 140, ink at
+most .195, and black two-pixel borders. We bisected toward output 0 and 3/8, rounded to eight-bit
+pixels, and retained all 512 rounded candidates satisfying TV at most 150, ink at most .2, and the
+same border condition. We attacked the 32 candidates with largest clean internal-noise gain for
+each target. All 64 selected inputs pass the numerical finite-radius sufficient tests at c = .001 and
+.003, for both scores. These are float64 evaluations of rigorous real inequalities, not interval proofs.
+The corresponding attacks found no violations; that observation is not used as a substitute for the
+sufficient tests.
+At c = .01, all 64 selected inputs have numerical primary-score violations. Independently verified
+examples have TV 88.93 and 100.13, and mean ink .118 and .158. To test disturbances confined
+to valid activation states, we set one offending noise coordinate to zero in each selected witness
+and reverified the resulting trajectories: all hidden states remain in [−1, 1], while the primary
+score changes by more than .1474 and the optional margin-band score changes by more than
+.1384, respectively. The exact pixel sums verify the region constraints. Figure 4 shows one such
+interpolation. Therefore a TV/ink restriction excludes the zero-state counterexample mechanism
+and improves this stress test at the smaller radii, but does not ensure the larger-radius condition.
+No conclusion of uniform stability on the trusted region follows from these finite samples.
+30
+
+15
+Finite-radius certificates using reachable activation states
+A product of global operator norms ignores saturation. The following certificate uses activation
+ranges reachable from one clean input under all disturbances in the prescribed ball. It applies at
+any radius; small radii are not needed for its logical validity. The resulting bounds can become
+conservative or vacuous at large radii.
+Write the hidden network in column-vector notation as hs = tanh(as), as = Ashs−1, 1 ≤s ≤H,
+with a scalar readout z = v⊤hH. The input and its bias coordinate are fixed. Add postactivation
+disturbances ηs and output disturbance ξ, with
+H
+X
+s=1
+∥ηs∥2
+2/N + ξ2 ≤r2.
+All clean activations, preactivations, and derivative matrices Ds = diag(sech2 as) below are fixed by
+this input. Set Js = DsAs for s ≥2.
+Forward enclosures.
+We construct a scalar Bs and a nonnegative vector Cs satisfying, simulta-
+neously for every allowed disturbance,
+∥∆hs∥2 ≤Bs,
+|∆hs| ≤Cs.
+Initialize B1 =
+√
+Nr, C1 =
+√
+Nr 1, qlin
+1
+= qtube
+1
+= 1, and e1 = 0. Given the preceding enclosures, set
+componentwise
+bs,i = min{∥(As)i,:∥2Bs−1, (|As|Cs−1)i}.
+Then the perturbed preactivation lies in [as,i −bs,i, as,i + bs,i]. For the scalar remainder
+Ra(u) = tanh(a + u) −tanh(a) −sech2(a)u,
+compute bounds ρ−
+s,i ≤Ras,i(u) ≤ρ+
+s,i for |u| ≤bs,i. Its exact extrema occur among the endpoints,
+u = 0, and u = −2as,i when this point belongs to the interval: the derivative vanishes exactly when
+a + u = ±a. These extrema may be intersected with any valid quadratic curvature bound. Put
+ρs,i = max{|ρ−
+s,i|, |ρ+
+s,i|}.
+Choose upper bounds ℓs ≥∥Js∥op and
+Ls ≥∥UsAs∥op,
+Us = diag
+
+sech2((|as,i| −bs,i)+)
+
+.
+Update
+qlin
+s
+= 1 + ℓ2
+sqlin
+s−1,
+es = ℓses−1 + ∥ρs∥2,
+qtube
+s
+= 1 + L2
+sqtube
+s−1 ,
+Bs = min{
+√
+Nr
+q
+qlin
+s
++ es,
+√
+Nr
+q
+qtube
+s
+}.
+Finally set
+Cs,i = min
+(
+Bs,
+√
+Nr +
+max
+u∈{−bs,i,bs,i} | tanh(as,i + u) −hs,i|
+)
+.
+These intersections combine independent valid enclosures; they do not assume that every disturbance
+can attain all their endpoints together.
+31
+
+Why the forward bounds hold.
+The exact perturbed recurrence is ∆hs = Js∆hs−1 + ηs + Rs,
+where Rs lies in the specified componentwise remainder interval. The sum of the clean linear
+responses to all ηj has norm at most
+√
+Nr
+q
+qlin
+s , by Cauchy–Schwarz over the layerwise noise
+norms and the products of the ℓj. The propagated remainder has norm at most es. Independently,
+every mean-value derivative on the reachable interval has coordinatewise absolute value bounded
+by Us. Its operator norm is therefore at most ∥UsAs∥op: writing its diagonal derivative as a
+diagonal contraction times Us proves this assertion. Telescoping the nonlinear recurrence and using
+Cauchy–Schwarz now gives
+√
+Nr
+q
+qtube
+s
+. The coordinate bound follows by monotonicity of tanh and
+|ηs,i| ≤
+√
+Nr. These arguments close the induction, including the use of the previously intersected
+scalar and coordinate bounds to construct each new tube.
+An output-specific interval.
+Define clean reverse adjoints
+gH = v,
+gs−1 = J⊤
+s gs,
+G =
+v
+u
+u
+t1 + N
+H
+X
+s=1
+∥gs∥2
+2.
+Set ρ−
+1 = ρ+
+1 = 0 and
+E−=
+X
+s,i
+min{gs,iρ−
+s,i, gs,iρ+
+s,i},
+E+ =
+X
+s,i
+max{gs,iρ−
+s,i, gs,iρ+
+s,i}.
+Then every allowed disturbed output belongs to
+[z −rG + E−, z + rG + E+].
+(18)
+Indeed the exact output difference is ξ + P
+s g⊤
+s ηs + P
+s g⊤
+s Rs. The first two terms have absolute
+value at most rG; the last terms lie between E−and E+. One may further intersect this interval
+with
+[z −T, z + T],
+T = r + min{∥v∥2BH, |v|⊤CH}.
+In particular these are finite-radius statements, not merely clean Jacobian estimates.
+For the clipped score ψa(z) = max{−a, min{a, z}} and any verified output interval [l, u], the
+sufficient stability test is
+max{|ψa(l) −ψa(z)|, |ψa(u) −ψa(z)|} ≤1/16.
+The main empirical convention uses a = 1/2, with a = 1 reported separately. A saturated clean
+score may satisfy this test even when the raw output interval is much wider than 1/8. The certificate
+never requires a task label or assumes that the clean prediction is correct.
+Computing the clean adjoints costs O(HN2 + Nd); computing all local spectral norms costs
+O(HN3 + Nd) for each input and radius. The construction does not store the earlier N by HN
+transfer arrays. Our implementation first tries cheaper global spectral bounds and reuses any
+certificate at a larger radius for smaller radii. Ordinary float64 evaluations of these real inequalities
+are reported as numerical sufficient tests; selected claims receive separate interval or exact-rational
+verification.
+Checking many data points or random cube points does not constitute a global
+certificate. On a small finite cube, exhaustive coverage does.
+32
+
+A stronger refinement using signed clean transfers.
+When the preceding inexpensive bounds
+are inconclusive, one may retain the full clean transfer matrices from all previous layers. Let Ts
+map RMS-normalized past disturbances to the current clean linear preactivation response, so each
+injected hidden-noise block initially has coefficient
+√
+NI. If all earlier nonlinear remainders have
+stacked component bounds ρ−≤R ≤ρ+, then each current preactivation displacement lies in
+"
+−r∥(Ts)i,:∥2 + ((Ts)+ρ−+ (Ts)−ρ+)i
+√
+N
+,
+r∥(Ts)i,:∥2 + ((Ts)+ρ+ + (Ts)−ρ−)i
+√
+N
+#
+.
+Here (Ts)+ and (Ts)−denote its positive and negative parts. The exact scalar remainder extrema
+above apply on this asymmetric interval as well. Update the transfer matrix with the clean derivative
+and append the new
+√
+NI noise block. At the output use the same signed interval propagation
+and include scalar output noise in the linear Euclidean coefficient norm. This is an exact algebraic
+decomposition of the perturbed recurrence, followed by interval bounds; no linearization remainder
+has been discarded. It strengthens the earlier recurrence that propagated only absolute remainder
+bounds. Its cost is O(H2N3), so it is used only where the cheaper certificates are inconclusive.
+A verified saturated example.
+The preceding sufficient inequalities are mathematical statements;
+the large empirical tables evaluate them in ordinary float64 and are not themselves outward-rounded
+interval proofs. We separately verified one illustrative finite-radius saturation certificate using
+outward intervals and exact integer-rational matrix bounds. For the depth-32, width-128 MNIST
+3-versus-8 SGD model used in the finite-grid counterexample, the fourth input in the fixed uniform
+held-out sample has clean output in a narrow interval around 8.282734267956. At c = 1/16,
+reachable-tube derivative bounds prove
+|z(x; η, ξ) −z(x; 0, 0)| < 6.559413
+for every simultaneous hidden/output disturbance in the prescribed ball. Consequently the clipped
+output is unchanged, for both cap 1/2 and cap 1. This is a pointwise, all-disturbances certificate
+on one actual held-out image; it is not a claim about every input. The same saved network has
+the verified finite-grid global counterexamples at c = 10−3 described above. Thus the distinction
+between stability on data and global stability is present even in independently verified examples,
+and clipping can certify a useful condition when the raw-output variation bound is much larger than
+1/16.
+For this computation, the clean trajectory is enclosed with 90-decimal outward interval arithmetic.
+At each layer we round the reachable-tube upper derivative bounds upward to exact dyadic numbers.
+For the resulting matrix A = W diag(D), the stored floating-point SVD merely proposes dyadic
+factors U, S, V T . All Gram matrices and the residual are recomputed with exact integers. Writing
+a = ∥UT U∥∞,
+b = ∥V T V ∥∞,
+t = max
+i
+|Sii|,
+e2 = ∥A −USV T ∥2
+F ,
+we use the rational inequality
+∥A∥2
+op ≤(1 + ϵ)t2ab + (1 + ϵ−1)e2,
+ϵ > 0.
+Here the matrix infinity norm is the maximum absolute row sum. The bound follows from the
+symmetric Gram-matrix spectral bound, the triangle inequality, and Young’s inequality, and makes
+no accuracy assumption about the proposed SVD. Product rounding when constructing A is
+enclosed by an additional exact Frobenius residual. This yields a replayable certificate with saved
+dyadic factors. It still trusts the interval library for transcendental evaluations and is not a Lean
+formalization.
+33
+
+A covariance refinement for a difficult vertex.
+Products of clean Jacobian norms can also
+be replaced by the exact covariance of the clean linear response. In column-vector notation, write
+Js = DsAs for the clean hidden-state Jacobian, set G1 = I, and define
+Gs = I + JsGs−1JT
+s
+(s ≥2).
+If Ts maps the stacked hidden disturbances to the clean linearized state, then Gs = TsT T
+s by induction.
+This is a deterministic Gramian identity; the certificate makes no Gaussian assumption about the
+disturbances. Thus its linear part has norm at most
+√
+Nr
+q
+∥Gs∥op. Suppose coordinatewise Taylor
+remainder intervals on the already established preactivation tube imply a vector norm bound Rs.
+With ρ1 = 0, the recursion
+ρs = ∥Js∥opρs−1 + Rs,
+Bs =
+√
+Nr
+q
+∥Gs∥op + ρs
+then bounds the nonlinear remainder and total state displacement, respectively. Indeed, subtracting
+the exact clean linear response gives es = Jses−1 + Rs(∆as), while each preactivation coordinate
+lies within ∥As,j:∥2Bs−1 of its clean value. Finally,
+|zη −z| ≤∥v∥2BH + r
+is a valid output bound, including the simultaneous scalar disturbance. Using the full radius in both
+terms only makes this last bound conservative.
+The implementation encloses each Gs by outward-rounded dyadic interval matrix products. An
+arbitrary dyadic midpoint proposal M gives ∥Gs∥op ≤∥M∥op + supG∈[Gs] ∥G −M∥F ; both terms
+are bounded with exact rational matrix arithmetic and outward square roots. Scalar remainder
+extrema occur at the two tube endpoints, zero, and −2a when that critical point lies in the tube;
+intersecting this enclosure with |R(u)| ≤u2/2 is valid because | tanh′′ | ≤1. No floating estimate of
+a covariance eigenvalue is accepted as a certificate.
+Exact clean-output enclosures at dataset scale.
+For the finite held-out set, the stored float32
+inputs and weights are dyadic rational numbers. We approximate hidden states at denominator
+Qh = 224 and weights at denominator Qw = 230, and compute all approximate affine maps by integer
+matrix multiplication. Before every product, an exact bound on the sum of absolute products rules
+out signed 64-bit overflow, including intermediate accumulation. The resulting affine arguments are
+therefore exact rational numbers.
+The activation computation uses a piecewise-linear tanh table on [−12, 12] with grid spacing
+h = 1/4096. Every proposed table value is independently enclosed using outward interval arithmetic.
+Since | tanh′′ | ≤1, interpolation adds at most h2/8 to the maximum table-entry error; rounding the
+interpolated value adds at most 1/(2Qh). Outside the table, the approximation is the appropriate
+sign and its error is at most 2e−24. Thus every approximate activation has a common rigorously
+established coordinate error τ, without trusting floating-point evaluations of tanh.
+If a clean hidden state is enclosed around its approximate value with Euclidean error e, then the
+next state’s error is at most
+e′ ≤∥W∥ope +
+√
+N ∥W −f
+W∥F +
+√
+N τ.
+Here ∥W∥op has an exact matrix-factor certificate, the quantization residual is evaluated exactly,
+and the approximate hidden coordinates remain in [−1, 1]. The first layer separately accounts for
+input quantization through the exact identity
+xW −exf
+W = x(W −f
+W) + (x −ex)f
+W.
+34
+
+It uses column sums for the first term and exact integer products for the second. The final scalar
+error is at most ∥v∥2e + ∥v −ev∥1. These bounds produce a clean-output interval at every recorded
+input. Combining each interval with an independently verified global disturbance bound gives
+a pointwise clipped-score certificate whenever the resulting interval comparison succeeds. Every
+remaining input must receive a separate local proof before a full held-out-set conclusion is drawn.
+The method certifies the specified finite dataset, not the input distribution or all possible images.
+35
+
+.001
+.003
+.01
+.03
+.0625
+0%
+50%
+100%
+Hidden depth 4
+11 models
+4/11 train-margin eligible
+Uniform held-out images
+.001
+.003
+.01
+.03
+.0625
+4/11 train-margin eligible
+Images nearest decision boundary
+.001
+.003
+.01
+.03
+.0625
+4/11 train-margin eligible
+Uniform Boolean-cube probes
+.001
+.003
+.01
+.03
+.0625
+0%
+50%
+100%
+Hidden depth 16
+26 models
+8/26 train-margin eligible
+.001
+.003
+.01
+.03
+.0625
+8/26 train-margin eligible
+.001
+.003
+.01
+.03
+.0625
+8/26 train-margin eligible
+.001
+.003
+.01
+.03
+.0625
+Noise constant c
+0%
+50%
+100%
+Hidden depth 32
+10 models
+1/10 train-margin eligible
+.001
+.003
+.01
+.03
+.0625
+Noise constant c
+1/10 train-margin eligible
+.001
+.003
+.01
+.03
+.0625
+Noise constant c
+1/10 train-margin eligible
+Sufficient certificate (float64)
+Saved attack, budget checked (float64)
+Unresolved / not assessed
+Figure 1: Fixed-subset audit of all depth-4/16/32 unconstrained tanh runs, including failed training
+fits. Green denotes a sufficient finite-radius certificate evaluated in float64; red denotes an explicit
+saved attack that passes a float64 budget and score recheck; hatched gray denotes an unresolved
+or unassessed point. Selected exact verifications are reported separately. The same points and
+denominators are used at every radius. Boundary images and uniform Boolean probes have different
+sampling interpretations from uniformly selected test images.
+36
+
+MNIST even/odd
+Depth 4
+MNIST even/odd
+Depth 16
+Fashion 0/6
+Depth 4
+Fashion 0/6
+Depth 16
+70
+75
+80
+85
+90
+95
+100
+Official test accuracy (%)
+98.9 99.0
+98.9 98.9
+87.2 87.1
+86.9 86.2
+MNIST even/odd
+Depth 4
+MNIST even/odd
+Depth 16
+Fashion 0/6
+Depth 4
+Fashion 0/6
+Depth 16
+none
+.001
+.003
+.01
+.03
+.0625
+Largest tested c with a global
+sufficient certificate
+Unconstrained SGD
+Same SGD + spectral projection
+Figure 2: Matched vanilla-SGD comparison with and without a spectral projection after each epoch.
+The right panel gives the largest tested radius constant with a global sufficient certificate, a lower
+bound on stability rather than an estimate of the largest valid radius. Training-margin eligibility is
+reported separately from accuracy.
+Score: 
+0.00163 
+ 
+0.15496
+Full MNIST even/odd; all training margins > 4.48
+Score: 
+0.00341 
+ 
+0.31686
+MNIST 3/8; three training errors
+Synthetic 8-bit inputs: verified internal-noise violations at c = 0.001
+Figure 3: Synthetic, valid eight-bit inputs violating the global clipped-score condition at c = .001.
+Both have a fixed black border and low total ink. The left network was trained on the full MNIST
+even-versus-odd task and has exactly verified training margins above 4.4815762; the right network
+was trained on digits 3 and 8. The images themselves are unchanged by the internal disturbances.
+These are off-data counterexamples, not mislabeled examples from a test set.
+37
+
+Held-out digit 3
+Held-out digit 6
+TV = 88.93; mean ink = .118
+Score: .37523 
+ .22781 at c = .01
+Synthetic interpolation
+Figure 4: An interpolation of opposite-parity held-out images, rounded to the eight-bit grid. The
+interpolated image is synthetic and is not assigned a parity label. At c = .01, a verified internal
+disturbance changes its clipped score by more than .1474, while every hidden state stays in [−1, 1].
+Its TV and mean ink are within the stated smooth-image region. This is a larger-radius example;
+the selected interpolation set passes numerical sufficient tests at c = .001 and .003.
+38
+
+A
+Finite posterior compression by internal-noise coupling
+This appendix gives the compression construction used in the main theorem. It tracks relative
+entropy only in the original weights that have not yet been processed. The compressed prefix need
+not have a Gaussian density. No stability assumption is needed until the coupling is used in the
+main statistical argument.
+Theorem A.1 (Finite compression before invoking stability). Fix a scalar 1-Lipschitz activation
+|ϕ| ≤1, and parameters d ≥1, L ≥2, K ≥1, 0 < r ≤1, and 0 < α ≤1/8. There is a finite class
+H = H(d, L, K, r, α) of real-valued bounded-weight depth-L network outputs with
+log |H| ≤poly(d, L, K, r−1, α−1).
+The polynomial and class are independent of width N and scale 0 < t ≤1. For every Q ≪µN,t
+with DKL(Q∥µN,t) ≤NK/t2, there is a law ΓQ on H such that, at every Boolean input x, one can
+couple w ∼Q, h ∼ΓQ, and a disturbance η so that
+P {∥η∥∗< r/2,
+|h(x) −zw(x; η)| ≤r/8} ≥1 −α.
+The coupling may depend on x; its two specified marginals do not.
+We give the proof, including deliberately loose polynomial choices. Two elementary entropy facts
+organize the construction. First, for a standard D-dimensional Gaussian G, the entropy variational
+inequality gives
+EP ∥Z∥2 ≤4DKL(P∥G) + 2D log 2.
+(19)
+Second, Gaussian Talagrand [3] gives W 2
+2 (P, G) ≤2DKL(P∥G).
+Lemma A.2 (Entropy of the unprocessed weights). Let A, X, Y be random variables, with fixed
+reference laws PX, PY , and put
+B = EADKL(QX,Y |A∥PX ⊗PY ).
+Let J be a finite message, possibly depending on (A, X, Y ), and let H = f(A, J, X). If A′ is a
+randomized function of (A, J, H) whose fresh randomness is conditionally independent of Y , then
+EA′DKL(QY |A′∥PY ) ≤B + H(J | A).
+Proof. The left side equals DKL(QY ∥PY ) + I(Y ; A′). Data processing and
+I(Y ; J, H | A) ≤I(Y ; X, J | A) ≤I(Y ; X | A) + H(J | A)
+bound it by EA,XDKL(QY |A,X∥PY )+H(J | A), which is at most the claimed bound by the KL chain
+rule. These expressions can equivalently be justified by finite partitions and lower semicontinuity.
+Here A will be a constructed prefix, X the current original weight block, and Y all later original
+blocks. The lemma imposes no reference law on A.
+Lemma A.3 (Whole-layer active directions). Condition on (A, Y ) and let X be a standardized
+Gaussian-reference matrix, with conditional relative entropy R(A, Y ). For vectors bx(A) of norm at
+most one, one can select a list J of inputs and its span U = span{bx : x ∈J} with
+dim U ≤t2R(A, Y )
+Nδ
+such that preserving H = tXU and replacing the orthogonal coordinates by fresh Gaussian coordinates
+changes the physical evaluation vectors tXbx, under a suitable coupling, by expected squared RMS at
+most 2δ at each x. The candidate matrix law preserves (A, Y, H) and does not depend on x.
+39
+
+Proof. Use a fixed ordering of the finite input set. Whenever the averaged conditional KL of the
+entire residual evaluation vector Xv exceeds Nδ/t2, add the unit residual direction v of that input.
+Each query is selected from the conditional law given (A, Y ), averaging over active-coordinate
+values; thus J is a function of (A, Y ). Orthogonal Gaussian coordinates are independent, so the
+active-coordinate entropy increases by precisely this conditional KL. The displayed rank bound
+follows. At termination, Gaussian Talagrand on the entire evaluation vector, multiplication by the
+squared residual-vector length, and division by N/t2 give the error bound. Scalar-vector couplings
+extend to full matrices by disintegration. The basis of U is a measurable function of A, J under
+fixed Gram–Schmidt; it has no further dependence on Y once those variables are supplied.
+Parameter choices.
+Write
+e = αr2/(1000L),
+η = α/(100L),
+q = ⌈2K/(eη)⌉,
+D0 = [(d + 1)q + 2] log 2,
+V = 8K + 2q,
+B2
+H = 4V/e,
+T = 128(q + 1)(B2
+H + 1)/e,
+a = e/[128(B2
+H + 1)],
+K0 = (4K + 2 log 2)/η,
+Bv = 16K0/r.
+Choose m to be the least positive integer no smaller than both
+10000T 4(q + 1)2a−2[d + log(10(q + 1)/η) + 1],
+10000B2
+vr−2[d + log(10/η) + 1],
+and put
+N0 = max{m, ⌈LD0/K⌉, 1},
+BG = max{2, 2
+q
+log(3m/e)},
+B2
+1 = 4[4K + 2(d + 1) log 2]/e.
+All quantities have a fixed polynomial upper bound in the theorem parameters.
+The small-width case.
+If N ≤N0, let P0 = N0(d + 1) + (L −2)N2
+0 + N0. Applying (19) to all
+standardized weights, and then multiplying by t2, gives
+EQ∥tZall∥2 ≤4N0K + 2P0 log 2.
+With probability at least 1 −α/4, all actual weights are bounded by
+Bsmall = [4(4N0K + 2P0 log 2)/α]1/2.
+Keep the original network on this event and use a default zero-readout network otherwise. Padding
+with nodes having zero outgoing weights preserves the original output. It remains to treat N > N0.
+The virtual prefix and its entropy budget.
+The constructed prefix A has N virtual nodes in
+its current layer. Each virtual row acts on m stored nodes of the preceding layer. The auxiliary
+description may keep all N rows; the final network will keep just the rows selected at the following
+stage. Track the conditional KL of the unprocessed original weights. By Lemma A.2, it is at most
+Bs ≤NK/t2 + sD0 ≤2NK/t2.
+(*)
+This is not a KL bound for the singular compressed prefix itself.
+For the first layer, zero every physical standardized row tZ1,i of norm greater than B1, and
+retain all other rows. Bounded activations and (19) bound the expected squared RMS activation
+change at each input by e. This deterministic prefix channel does not increase the future entropy
+budget.
+40
+
+An internal layer: retain active data.
+Condition on the current prefix A and the future
+original weights Y . Apply Lemma A.3 to bx = hA(x)/
+√
+N and δ = e. Abort if more than q inputs
+are needed. By (*) and Markov, this failure has probability at most η. The successful query list,
+together with an abort flag, has a code of at most [(d + 1)q + 2] bits. Its entropy is at most D0.
+Let H = tXU be the physical active matrix. Averaging the Gaussian entropy moment bound,
+with the success indicator rather than conditioning on success, gives
+E
+"
+∥H∥2
+F
+N
+; success
+#
+≤4t2Bs/N + 2t2q log 2 ≤V.
+Zero every row Hi whose norm exceeds BH. The expected squared RMS activation change from
+this operation is at most 4V/B2
+H = e. All rows are clipped before any later selection, including
+selections that may depend on future weights.
+An internal layer: reconstruct using m source nodes.
+For the orthonormal active basis let
+u(j) =
+√
+N Uj,:; uniform source sampling gives Eju(j)u(j)⊤= I. Clip the whole vector at radius T:
+c(j) = u(j)1{∥u(j)∥≤T}. Then
+Ecc⊤⪯I,
+E∥u −c∥≤q/T.
+Sample m uniform source indices Sj. Entrywise Hoeffding and a union bound give, with probability
+at least 1 −η,
+∥bG −Ecc⊤∥op ≤a,
+sup
+x ∥bv(x) −EchA(x)∥≤a,
+sup
+x,y |c
+K(x, y) −K(x, y)| ≤a,
+where bG = m−1 P
+j c(Sj)c(Sj)⊤, bv(x) = m−1 P
+j c(Sj)hA,Sj(x), and c
+K is the empirical feature
+covariance; its population counterpart is K(x, y) = N−1 P
+i hA,i(x)hA,i(y). Abort on failure; this
+event depends only on A, J, S, so it does not reveal further future information.
+Set ecj = c(Sj)/√1 + a, and let D have rows ec⊤
+j /√m. Then D⊤D ⪯I and I −DD⊤⪰0.
+Independently for every target virtual row draw ξi ∼N(0, I −DD⊤) and use coefficients
+bwij = m−1Hclip
+i
+· ecj + tξij/√m.
+(20)
+These are actual neural-network rows on the m sampled nodes. Their active feature vector is
+bψ(x) = m−1 P
+j ecjhA,Sj(x), and the lazy covariance is exactly t2(c
+K −bψ⊤bψ). For the ideal field,
+write ψ(x) = U⊤bx and C(x, y) = K(x, y) −ψ(x)⊤ψ(y). Direct calculation gives
+sup
+x ∥bψ(x) −ψ(x)∥≤q/T + 2a =: ζ,
+sup
+x,y | bC(x, y) −C(x, y)| ≤a + 2ζ.
+Here bC = c
+K −bψ⊤bψ. Bessel’s inequality and D⊤D ⪯I give ∥ψ(x)∥, ∥bψ(x)∥≤1, which justify the
+covariance bound. At a fixed input, coupling scalar Gaussian evaluations with a common standard
+normal bounds the squared preactivation transport error, per row, by
+B2
+Hζ2 + t2(a + 2ζ) ≤e/8.
+Extend these scalar couplings to full row fields. The candidate weight law is the same at every
+input; there is no claim of a single Gaussian-field coupling that is close at all inputs simultaneously.
+41
+
+Finally clip all coordinates ξij to [−BG, BG] before later row selection. Since each has variance
+at most one,
+E
+
+t
+√m
+X
+j
+(ξij −clipBG ξij)hA,Sj(x)
+
+2
+≤3me−B2
+G/4 ≤e.
+Thus every virtual coefficient is bounded by BHT/m + BG/√m, without a union bound over N.
+All newly constructed data are a randomized function of A, J, H. Lemma A.2 therefore proves
+(*) for the next step. Combining entropy replacement, active clipping, finite reconstruction, and
+Gaussian clipping by (a1 + · · · + a4)2 ≤4 P
+i a2
+i , the expected squared RMS activation injection at
+this layer is less than 20e.
+The readout and final network.
+The original readout marginal has never changed. Its physical
+moment satisfies EQ[N∥v∥2] ≤4K + 2 log 2. Abort if N∥v∥2 > K0, an event of probability at
+most η. Zero coefficients with |Nvi| > Bv. This changes the output uniformly on bounded virtual
+feature vectors by at most K0/Bv = r/16. Sampling m uniform last-layer sources and using readout
+coefficients (Nvi1|Nvi|≤Bv)/m adds at most r/16 uniformly on {−1, 1}d, except with probability η,
+by Hoeffding and the chosen m.
+At each stage, retain in the final network just the m source rows selected from the preceding
+virtual layer. Each such row already acts on the previously stored m nodes. The result is an ordinary
+width-m network; repeated indices are duplicate nodes. Its weights are bounded by
+Blarge = max{B1, BHT/m + BG/√m, Bv/m, 1}.
+The larger virtual construction is not part of the final predictor.
+The original network receives all perturbations.
+Fix an input x and glue the conditional
+couplings, retaining the original weight history. The current and future original blocks are untouched
+until their own stages. Define
+ηs = hs
+virtual(x) −ϕ(W s
+originalhs−1
+virtual(x)).
+The analogous readout difference is ηL. Later stages leave earlier computational prefixes unchanged,
+so the final candidate output is exactly the original network’s output under these postactivation
+injections. No intermediate robustness assumption is made.
+For precision, the canonical construction draws its new Gaussian coefficients independently of
+the discarded current block given (A, J, H). The comparison coupling may correlate them with that
+discarded block. It preserves the same joint marginal of the new prefix and the future original blocks,
+as well as the original full-network marginal, but need not preserve the canonical joint law with all
+discarded weights. The next entropy step uses the first marginal; original-network robustness uses
+the second. There is no conflicting demand for independence in the comparison coupling itself.
+More explicitly, the induction invariant is that the comparison law has full original-weight
+marginal Q and the canonical marginal of (A, X, Y ). The conditional transports supply a joint law
+of (A, X, Y, A′) with this incoming marginal and the prescribed outgoing (A′, Y ) marginal. Extend it
+by the previous conditional law of the past original weights given (A, X, Y ). The extension keeps the
+complete original weight law unchanged, preserves all earlier computational prefixes, and establishes
+the same invariant for the next layer. This is ordinary disintegration on finite-dimensional standard
+Borel spaces.
+42
+
+Abort probability is at most 2Lη. The unconditional moment bound gives
+P
+(
+no abort and
+X
+s<L
+∥ηs∥2/N > r2/8
+)
+≤160Le/r2 = 0.16α.
+Otherwise the readout injection is at most r/8, and total squared noise is at most 9r2/64 < r2/4.
+The unrounded candidate is therefore exactly the original network evaluated with a disturbance of
+norm less than r/2. The exceptional probability is less than α/4.
+A fixed finite class.
+Pad candidates to width M = N0 and take B = max(Bsmall, Blarge, 1).
+Round every parameter to a fixed grid on [−B, B] of mesh at most
+h =
+r
+16(d + L + 1)(2M(B + 1))L .
+The bounded-activation, Lipschitz layer recursion gives uniform output change at most r/8. Thus
+rounding gives the stated numerical comparison at every successfully coupled input.
+Writing
+P = M(d + 1) + (L −2)M2 + M, the grid class satisfies
+log |H| ≤P log
+"
+3 + 32B(d + L + 1)(2M(B + 1))L
+r
+#
+.
+Although grid precision is exponentially small in L, its number of bits is polynomial in L. All other
+bounds above are polynomial too. Rounding is a fixed map on candidate networks, giving the
+common marginal ΓQ and proving Theorem A.1.
+B
+Why population stability alone does not complete the argument
+Small population instability for each network does not itself control instability at training inputs
+selected by posterior conditioning. This is a statistical obstruction, even when compression is trivial
+away from the exceptional inputs. The example below concerns an abstract prior; it is not a lower
+bound for the particular Gaussian network prior.
+Proposition B.1 (Sparse exceptional sets can absorb the training sample). Let X have M points
+with the uniform distribution, let f ≡+1, and fix 1 ≤r ≤M/2. Write ρ = r/M. For every subset
+B ⊂X of size r, let hB be +1 on B and −1 elsewhere, and assign it exceptional set B. The target
+has empty exceptional set. Put prior mass q ∈(0, 1) on f, and distribute mass 1 −q uniformly
+over the hB. Then every hypothesis has population exception probability at most ρ and has an exact
+compression outside its exceptions into the two-element class {+1, −1}.
+For every labeled sample of size n ≤r/2, if
+q ≤1
+2(ρ/2)n,
+the ordinary consistency posterior has Gibbs error at least (1 −ρ)/2. The assertion holds for every
+sample, including samples with repeated inputs.
+Proof. Let s ≤n be the number of distinct observed inputs. A bad hypothesis hB is consistent
+exactly when all these inputs belong to B. Under the uniform prior on size-r subsets, this has
+probability
+ps =
+ M−s
+r−s
+
+ M
+r
+
+=
+s−1
+Y
+j=0
+r −j
+M −j ≥(ρ/2)s ≥(ρ/2)n,
+43
+
+because s ≤r/2. Therefore the posterior mass of bad hypotheses is
+(1 −q)ps
+q + (1 −q)ps
+≥1
+2.
+Indeed q ≤ps/2 and q ≤1/2 imply (1 −q)ps ≥q. Every bad hypothesis has true error 1 −ρ. It also
+has empirical exception probability exactly one, although its population exception probability is
+only ρ. The two-element compressor simply maps hB to the constant negative function and leaves
+the target positive.
+If q = e−aD, where a = N/t2 is the width-and-scale factor in the Gaussian target-mass bound,
+the displayed condition follows whenever
+aD ≥n log(2/ρ) + log 2.
+Thus a target-mass estimate of this form, a width-independent finite compression class, and per-
+hypothesis population instability at most ρ do not by themselves imply a width-independent sample
+bound.
+An additional structural property of the actual Gaussian prior could still do so; the
+proposition neither supplies nor rules out such a property.
+This obstruction is relevant to interpreting certificates. An independent held-out set can estimate
+the population instability of one fixed trained network, or of one frozen posterior. That estimate
+does not bound the training instability of a posterior obtained by selecting among many possible
+exceptional sets. The controlled-family localized theorem removes exactly this ambiguity by paying
+for the family of exceptional sets. A trusted input region fixed before labeled training is the simplest
+special case.
+One can also require stability at every observed training input in an input-dependent prior
+while retaining the ordinary label likelihood. That gives the same mathematical benefit as a robust
+training constraint: the empirical exception probability is then zero. It changes the posterior
+conditioning event, however, and should not be presented as a consequence of population stability
+alone under the original event.
+C
+Analog targets after polynomial architecture overhead
+The main all-width theorem uses Boolean circuit width at the specified layered depth. It does not
+identify that width with the minimum width of an arbitrary real-valued tanh circuit. Nevertheless, the
+Boolean target assumption permits a useful extension when polynomial changes to the architecture
+are allowed.
+Proposition C.1 (Digital simulation with controlled precision). Suppose a width-C, depth-L tanh
+network, with the architecture used in the main theorem, has physical weights bounded by R ≥1 and
+satisfies
+f(x)z(x) ≥1/2
+(x ∈{−1, 1}d).
+Then f has a Boolean circuit using two-input NAND gates, copies and negations, with both size and
+layered depth bounded by a universal polynomial in
+d, C, L, log(2 + R).
+All constant wires and their propagation are included in this bound.
+In particular, under the
+bounded-weight convention R ≤C, this is polynomial in the original input dimension, width and
+depth.
+44
+
+Proof. Let H = L −1, A = CR + 1, and T = d + 2 + L(C + 1). Choose an integer
+b ≥log2(8T) + L log2 A,
+δ = 2−b.
+Round each weight to the nearest multiple of δ. Compute every affine sum exactly as a rational
+number, and approximate each resulting tanh value to absolute error at most δ by a number in
+[−1, 1] ∩δZ. We justify a polynomial Boolean cost for this operation below.
+Let es be the maximum coordinate error at hidden layer s. Using the original weights for the
+propagated error, the rounded activations bounded by one, and 1-Lipschitzness of tanh gives
+e1 ≤(d + 2)δ,
+es ≤CRes−1 + (C + 1)δ.
+The exact rational readout then differs from the original real readout by at most CReH + Cδ ≤
+δTAL ≤1/8. It has the correct sign everywhere, with signed value at least 3/8. Thus deciding the
+sign of this rational computation computes f exactly. The needed weight precision is
+b = O
+ log(d + LC + 2) + L log(CR + 1)
+.
+The total binary length of the rounded weights is polynomial in the parameters stated in the
+proposition.
+For completeness, tanh at this precision has a direct polynomial Boolean evaluation algorithm.
+Its input q is a rational affine sum of numbers with polynomial binary length. By oddness it suffices
+to handle q ≥0. If q ≥b + 10, output one; the error is at most 2e−2(b+10) < 2−b−4. Otherwise set
+x = 2q ≤2(b + 10) and m = ⌈16(b + 10)2⌉. Evaluate the rational Taylor sum
+Em =
+m
+X
+j=0
+xj
+j!
+exactly. The tail is at most twice its first omitted term, since the ratio of successive omitted terms
+is less than 1/2. The bound j! ≥(j/e)j then gives
+0 ≤ex −Em ≤2
+
+ex
+m + 1
+m+1
+≤2−m < 2−b−4.
+All numerators and denominators involved have polynomial binary length: a common denominator
+may be taken as the denominator of x to power m, multiplied by m!. Since Em ≥1 and the derivative
+of (u −1)/(u + 1) is at most 1/2 for u ≥1, the rational value (Em −1)/(Em + 1) approximates
+tanh q to error less than 2−b−5. Rounding it to the nearest multiple of 2−b gives error less than δ
+and preserves the interval [−1, 1]. Restore the sign for negative q.
+Binary addition, comparison, multiplication and long division on integers of polynomial binary
+length have Boolean circuits of polynomial size, by the usual digit-by-digit algorithms. This also
+follows directly by unrolling those finite algorithms into two-input NAND gates. The number of
+neurons, affine operations and bits in the preceding computation is polynomial. Hence its full
+Boolean circuit has polynomial size. Its depth is at most its size; making it layered, forwarding
+still-needed bits by copy gates, and including all rounded-weight constant bits increases size and
+width by at most another polynomial factor. No real-number oracle or exact evaluation of tanh is
+used by the Boolean circuit.
+Combining this proposition with the main theorem gives polynomial sample bounds for analog
+Boolean targets with bounded weights, after a polynomial increase of logical depth and width. The
+resulting learner must have enough layers for this digital simulation and width at least its layered
+Boolean width. This is a representational extension of the robust theorem, not a proof at the
+original analog depth or for every width above the original analog minimum complexity CL(f). An
+increase in the learner architecture cannot be silently substituted for those stronger quantifiers.
+45
+
+D
+An optional weakening: transport of two margin levels
+The statistical argument needs separation of the training and test margin levels, rather than
+stability of every intermediate score. The following optional prior condition expresses precisely that
+separation. It is a mathematical extension, not the condition used in the primary empirical protocol.
+For each network use the same calibrated radius rc(w) = c/
+p
+1 + HEv(w) as before. Require,
+for every input x, every perturbation with ∥η∥∗≤rc(w), and both y ∈{−1, 1}, the implications
+yzw(x) ≥1
+2
+=⇒
+yzw(x; η) ≥7
+16,
+(21)
+yzw(x) ≤1
+4
+=⇒
+yzw(x; η) ≤5
+16.
+(22)
+Because both choices of y are required, this is a label-free condition on the network. It asks a
+perturbation to preserve a gap between a confident training output and an output counted as a test
+error. The condition is Borel measurable: extrema over a compact perturbation ball are continuous
+functions of the weights, and the Boolean input set and label set are finite.
+If the original global clean-margin condition |zw(x)| > 1/2 is also retained, the second implication
+is redundant. The first one for the network’s predicted sign guarantees perturbed margin at least
+7/16; negating this inequality gives the second implication for the opposite label, the only label
+for which it is triggered. In this original globally separated model, the restriction is an ordinary
+all-layer adversarial margin requirement. The second implication is needed when the theorem
+permits globally uncertain outputs.
+Proposition D.1 (The same bound under two-margin transport). Replace the clipped-score support
+restriction in the main theorem by (21)–(22). All its sample bounds and all-width conclusions remain
+valid, with the same training likelihood, test margin, and posterior-confidence consequences. The
+same replacement is valid for the localized versions, where the implications are imposed outside the
+permitted exception set.
+Proof. Use the same common compression radius r ≤1/6. On a successful compression coupling,
+the candidate’s raw output differs from a perturbed original output by at most r/8 ≤1/48. At an
+observed training input, yzw(x) > 1/2, so (21) implies
+yh(x) ≥7
+16 −1
+48 = 5
+12.
+At a test input where yzw(x) ≤1/4, (22) implies
+yh(x) ≤5
+16 + 1
+48 = 1
+3.
+Thus the same ramp, zero at and above 5/12 and one at and below 1/3, has zero training loss on
+successful couplings and dominates the original test-error indicator on successful couplings. The
+compression entropy and readout-tail bounds are unchanged.
+Every weight in the target cylinder has the correct signed output greater than one both before
+and after every admissible perturbation. It therefore satisfies both implications for both labels. The
+original raw Gaussian target-mass lower bound, and hence the posterior entropy bound, remain
+valid. The rest of the proof is identical. Masking by the controlled exception sets gives the localized
+version.
+The margin-band score U(z) = sign(z) min{1/4, (|z| −1/4)+} gives a sufficient condition for
+these implications: if |U(zw(x; η)) −U(zw(x))| ≤1/16, then a clean signed score at least 1/2 has
+46
+
+perturbed U-score at least 3/16, hence perturbed signed score at least 7/16. A clean signed score at
+most 1/4 has U-score at most zero, so its perturbed signed score is at most 5/16. Oddness of U
+handles either label.
+The implications allow additional changes at intermediate scores. For example, the pair of scores
+3/8 and 11/20 respects both implications for both labels, although its U-score change is 1/8. Such
+an increase in confidence need not affect either of the two loss-transfer steps. This explains the
+weakening; it does not establish that trained networks satisfy it globally.
+More generally, with training margin m, test margin u < m, and a noise tolerance a < (m−u)/2,
+replace the four numerical levels by m, m −a, u, u + a. If the compressor’s output-rounding error
+is e and m −u −2a −2e > 0, the same proof uses a ramp across this positive gap. Its sample
+dependence is polynomial in the inverse gap. As before, an empirical assessment of this optional
+condition would require a separate stated protocol; the primary experiments are not relabeled.
+E
+Pointwise support checks with an explicit unlabeled-data cost
+There is another way to avoid a global support restriction or a low-complexity family of exceptional
+regions: use enough unlabeled inputs to pay for unrestricted variation of the instability sets. The
+price is an unlabeled sample size that depends on width and prior scale. The labeled sample bound
+remains width independent.
+Fix one Gaussian learner, with width N, 0 < t ≤1, and raw prior µ = µN,t. Put a = N/t2. Let
+Stable(w, x) denote the primary clipped-score condition at the single input x, with its calibrated
+radius rc(w). The margin-band or two-margin conditions may be used instead. Define
+b(w) = D{x : Stable(w, x) fails}.
+Draw an independent unlabeled sample U = (U1, . . . , Um) and a labeled sample S = ((Xi, f(Xi)))n
+i=1.
+Condition the raw Gaussian on stability at every input in U and S, then apply the usual likelihood
+f(Xi)zw(Xi) > 1/2. Thus the support restriction depends on input locations but not on their
+labels. Optional original global clean-margin conditioning may also be retained. Write QU,S for the
+resulting posterior.
+Lemma E.1 (Uniform coverage from an unlabeled stability pool). With probability at least 1 −δU
+over U, every probability law Q supported on stability at all Uj satisfies
+EQb(w) ≤2
+m [DKL(Q∥µ) + log(1/δU)] .
+The assertion includes laws selected after observing the labeled sample and its labels.
+Proof. For a fixed w, the probability of stability at all Uj is (1 −b(w))m. Consequently
+EU
+Z
+emb(w)/21{Stable(w, Uj) for every j} dµ(w) ≤
+Z
+emb(w)/2(1 −b(w))m dµ(w) ≤1.
+Markov’s inequality bounds the displayed integral by 1/δU on an event of probability at least 1 −δU.
+On this event apply the entropy variational inequality to the measure with density emb/2 on the
+empirical stability set and zero outside it. Since Q is supported on that set, it gives
+m
+2 EQb ≤DKL(Q∥µ) + log(1/δU).
+Equivalently one may first truncate the logarithmic density below and then pass to the limit. This
+proves the simultaneous assertion.
+47
+
+Theorem E.2 (Width-independent labeled complexity with an unlabeled pool). Under the Boolean-
+target assumptions of the main theorem, let D∗be its polynomial target-cylinder cost, so that the
+raw target cylinder has mass at least e−aD∗. For every fixed N ≥C and 0 < t ≤1, there is a labeled
+sample bound polynomial in the same parameters as the main theorem, independent of N and t,
+such that the following holds. If
+m ≥8
+ε [aD∗+ log(2/δ)] ,
+then, with probability at least 1 −δ over U, S, the posterior QU,S has Gibbs test-margin error at
+most ε. The usual posterior-confidence consequences follow.
+Proof. Every member of the target cylinder is stable on the entire cube and has the correct signed
+margin greater than one. Thus it belongs to every conditioning event here, for every realization of
+U, S. The posterior is a raw Gaussian conditioned on an event of probability at least e−aD∗, and
+therefore
+DKL(QU,S∥µ) ≤aD∗.
+Lemma E.1, with δU = δ/2, gives EQU,Sb(w) ≤ε/4 under the displayed unlabeled sample bound.
+The same entropy bound gives the main theorem’s readout truncation and width-independent
+compressor. Choose the discarded posterior mass at most β = ε/4 and the coupling failure probability
+α = ε/12. All posterior draws are stable at the labeled input locations, so the finite candidate law
+has empirical ramp loss at most α. The same uniform finite-class event over S bounds its population
+ramp loss by 2α + 8[log |H| + log(2/δ)]/n.
+At a fresh test input, loss transfer can fail only on a compression failure or when the original
+network is unstable at that input. Restoring the truncated mass and weighting the conditional
+instability term by its retained mass gives
+R(QU,S) ≤β + 3α + 8[log |H| + log(2/δ)]
+n
++ EQU,Sb(w).
+Choose n so that the finite-class term is at most ε/4. The four terms then sum to ε. The compression
+class has the same polynomial logarithmic size as before, independently of N, t, U, S. The two
+sample events have total failure probability at most δ.
+This is an input-adapted prior with the usual label likelihood. In particular, observing each
+labeled input also imposes an additional label-free stability constraint; this is a specified change to
+the learning rule, not a theorem about the original fixed prior. It requires stability only at finitely
+many specified inputs, so it does not infer region-wide stability from pointwise certificates. It also
+does not provide a width-independent bound on the total data used: at t = N(1−γ)/2 its unlabeled
+cost contains a = Nγ. For each fixed learner the probability statement above is complete. To cover a
+prescribed countable collection of widths and scales simultaneously, use the one common finite-class
+event for the labeled sample with failure probability δ/2, and allocate unlabeled failure probabilities
+δj with P
+j δj ≤δ/2. Use unlabeled sizes mj ≥8[ajD∗+ log(1/δj)]/ε; the labeled sample size is
+unchanged, and the unlabeled pools may be nested prefixes of one iid sequence. No simultaneous
+statement over a continuum of changing Gaussian priors is asserted without further argument.
+An equivalent semi-supervised protocol chooses the prior before any labels are revealed. Draw
+one iid pool of M ≥max{m, n} input locations, impose stability on the whole pool, and then
+reveal the labels of its first n points. The coverage argument uses all M inputs, and the finite-class
+generalization event uses the first n. These two events need not be independent: each has its
+stated marginal probability, and their failures are combined by a union bound. The same guarantee
+therefore holds, with n labels and M input locations.
+48
+
+F
+From a point certificate to an input neighborhood
+A pointwise certificate can sometimes establish stability on a whole region, as required by the
+localized-prior theorem. The following elementary transfer also makes its quantitative limitation
+explicit. Write W 1
+in for the input columns of the first-layer matrix, excluding the bias column, and
+define the network-dependent input semimetric
+dw(x, x0) = ∥W 1
+in(x −x0)∥2
+√
+N
+.
+Its balls are ellipsoidal cylinders; directions in the nullspace of W 1
+in have zero distance.
+Lemma F.1 (Transfer of a confident point certificate). Fix a network, r′ > rc(w), an input x0,
+and p ∈{−1, 1}. Suppose that
+pzw(x0; η) > 1/2
+for every ∥η∥∗≤r′.
+Then every x with dw(x, x0) ≤r′ −rc(w) satisfies
+T(zw(x; η)) = T(zw(x)) = p/2
+(∥η∥∗≤rc(w)).
+In particular, the clipped-score stability condition holds throughout this ellipsoidal cylinder, with zero
+score change.
+Proof. The clean first-layer states differ by
+b = tanh(W 1¯x) −tanh(W 1¯x0),
+∥b∥2/
+√
+N ≤dw(x, x0).
+A perturbed computation at x is exactly the computation at x0 with b added to its first-layer
+disturbance; every subsequent disturbance is unchanged. The combined disturbance has norm at
+most ∥η∥∗+ ∥b∥2/
+√
+N ≤r′. Apply the assumed margin bound, first to this computation and then
+to the clean computation at x.
+This construction can be used with a controlled-complexity exception family. On the Boolean
+cube, a quadratic inequality is a linear threshold in at most J = (d + 1)(d + 2)/2 monomials. Its
+VC dimension is at most J + 1, and hence it defines at most (2d + 1)J+1 distinct subsets of the
+cube. Complements of unions of at most k ellipsoidal cylinders therefore form a fixed family with
+log M ≤k(J + 1)(d + 1) log 2.
+This deliberately loose bound allows both centers and matrices to vary with the network, and
+does not depend on network width. To apply Theorem 8.1, one must still establish the full center
+certificates and validate the population coverage of their union. Testing only the centers does not
+establish either premise.
+There is an absolute upper limit on the center radii in this particular construction, for the
+primary unrestricted disturbance model. Last-layer and scalar-output disturbances can decrease a
+signed output by exactly r′√1 + Ev. Consequently the premise of Lemma F.1 requires
+r′ ≤|zw(x0)| −1/2
+√1 + Ev
+.
+This upper bound is not asserted for the variant that restricts noisy hidden states to the activation
+range.
+49
+
+A feasibility diagnostic, not a neighborhood certificate.
+For model 008, a plain tanh
+network with 32 hidden layers and width 128 trained by minibatch SGD on MNIST digits 3 versus 8,
+we used the fixed 128 uniformly sampled pilot images from its 1,984-image test split and measured
+coverage on the other 1,856 images. The pilot indices were chosen before this diagnostic, without
+selecting for margins or coverage. At target calibration c = 0.001, even granting every center the
+larger calibration c′ = 0.0625, whether certified there or not, would give the common cylinder radius
+c′ −c
+√1 + HEv
+= 0.000658742.
+None of the 1,856 remaining images was covered. Their nearest-center distances in dw had minimum
+0.31845 and median 0.60165; the minimum was 483 times the granted radius. Replacing every
+center’s radius by the absolute upper bound above, minus rc(w), yielded only 125 covered images,
+or 6.74%. These are float64 geometric diagnostics, not outward-rounded proofs or distributional
+coverage estimates. They show that the current certificates and this fixed 128-center transfer
+construction do not produce useful coverage in this example. They do not bound stability on more
+general input regions, or imply that the actual stable neighborhoods of the data are small. The
+diagnostic is recorded in pilot-neighborhood-diagnostic.json.
+References
+[1] S. Arora, R. Ge, B. Neyshabur, and Y. Zhang. Stronger generalization bounds for deep nets via
+a compression approach. Proceedings of ICML, 2018.
+[2] C. Wei and T. Ma. Improved sample complexities for deep neural networks and robust classifica-
+tion via an all-layer margin. Proceedings of ICLR, 2020.
+[3] M. Talagrand. Transportation cost for Gaussian and other product measures. Geometric and
+Functional Analysis 6, 587–600, 1996.
+[4] C. Wei, Y. Chen, and T. Ma. Statistically meaningful approximation: a case study on approxi-
+mating Turing machines with transformers. Advances in Neural Information Processing Systems
+35, 12071–12083, 2022.
+[5] S. Yu and C. Tomasi. Identity connections in residual nets improve noise stability. ICML
+Workshop on Understanding and Improving Generalization in Deep Learning, 2019. https:
+//arxiv.org/abs/1905.10944.
+50

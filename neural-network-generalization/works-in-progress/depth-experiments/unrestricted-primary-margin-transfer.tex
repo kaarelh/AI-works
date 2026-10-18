@@ -1,0 +1,65 @@
+\section{Changing the output margin at constant additional energy}
+\label{sec:margin-transfer}
+
+\begin{lemma}[One-layer margin transfer]
+\label{lem:one-layer-margin-transfer}
+Suppose a width-$N$, depth-$L$ tanh network with linear readout computes
+a Boolean function $g$ with global signed margin at least $r>0$ and
+Gaussian energy $K$. For every $r'>0$, there is a network at the same
+width and depth $L+1$ computing $g$ with signed margin at least $r'$ and
+energy at most
+\[
+ K+(r'/r)^2+(r')^2.
+\]
+The construction uses no biases after the original first layer.
+\end{lemma}
+
+\begin{proof}
+Let $v$ be the old linear readout, and write
+$c^2=N\|v\|_2^2$. The global margin implies $c\ge r>0$, because the
+hidden coordinates have absolute value at most one. Define
+\[
+ a^2=\frac{r'}{cr},\qquad b=\frac{r'}{\tanh(ar)}.
+\]
+Replace the original readout by a hidden layer all of whose rows are
+$av^T$, and give the new readout the constant entries $b/N$. The new
+output is exactly $b\tanh(az(x))$. Oddness and monotonicity give the
+claimed signed margin. The new two-layer energy is $a^2c^2+b^2$ in
+place of the old readout energy $c^2$.
+
+For every real $u$, $|\sinh u|\ge |u|$, so
+\[
+ \tanh^2u=\frac{\sinh^2u}{1+\sinh^2u}
+       \ge\frac{u^2}{1+u^2}.
+\]
+Consequently
+\[
+ b^2\le(r')^2+\frac{(r')^2}{a^2r^2},\qquad
+ a^2c^2+b^2\le 2c\frac{r'}r+(r')^2.
+\]
+Completing the square gives
+$-c^2+2cr'/r\le(r'/r)^2$, proving the result.
+\end{proof}
+
+For example, a globally clean residual network with signed margin at
+least $3/8$ can be converted to unit margin by adding one layer and at
+most $73/9$ energy. The increase is independent of the old readout cost;
+simply multiplying the old readout need not have that property.
+
+Define the approximation energy
+\[
+ \mathcal E_{L,r}(f;\epsilon)
+ =\inf\left\{\kappa_N(W):\begin{array}{l}
+ N\ge1,\quad |z_W(x)|\ge r\text{ for all Boolean }x,\\
+ \Pr_{X\sim D}\{\operatorname{sign}z_W(X)\ne f(X)\}<\epsilon
+ \end{array}\right\},
+\]
+where $D$ is a specified input distribution and an empty infimum is
+$+\infty$. The lemma implies the exact comparison
+\[
+ \mathcal E_{L+1,r'}(f;\epsilon)
+ \le \mathcal E_{L,r}(f;\epsilon)+(r'/r)^2+(r')^2.
+\]
+Thus a unit-margin approximation-energy lower bound at one extra layer
+implies a lower bound at any fixed smaller positive margin, losing only
+a universal additive constant when the two margins are fixed.

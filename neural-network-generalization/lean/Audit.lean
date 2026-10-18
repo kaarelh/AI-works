@@ -6,9 +6,10 @@ import Lean.Elab.Command
 # Axiom audit of the main proofs and their project dependencies
 
 This audit checks every imported project theorem and reports exact main-proof
-coverage. The four declarations in `MainStatements` define propositions; their
-separate `MainProofs` declarations prove them. `CheckMain.lean` additionally
-requires all four proofs to exist. These checks certify the exact main learning
+coverage. The four declarations in `MainStatements` and the robustness
+declaration in `RobustMainStatements` define propositions; their separately
+named declarations prove them. `CheckMain.lean` and `CheckRobust.lean`
+additionally require all five proofs to exist. These checks certify the exact main learning
 statements and their imported proofs, not every assertion in every paper.
 -/
 
@@ -33,7 +34,9 @@ run_cmd do
     (``NeuralGeneralization.MainStatements.MeanFieldGeneralization,
       `NeuralGeneralization.MainProofs.meanField),
     (``NeuralGeneralization.MainStatements.SubcriticalExponentialLowerBound,
-      `NeuralGeneralization.MainProofs.subcriticalExponential)]
+      `NeuralGeneralization.MainProofs.subcriticalExponential),
+    (``NeuralGeneralization.RobustMainStatements.RobustPolynomialDepthGeneralization,
+      `NeuralGeneralization.RobustMainProofs.robustPolynomialDepth)]
   let mut complete : Nat := 0
   for (name, proofName) in obligations do
     let some info := env.find? name | throwError "Missing main statement: {name}"
@@ -49,4 +52,4 @@ run_cmd do
         throwError "Main proof {proofName} does not have the exact requested type"
       complete := complete + 1
       logInfo m!"PROVED MAIN STATEMENT: {name}"
-  logInfo m!"Main results proved end to end: {complete} / 4. Use CheckMain.lean for the all-results publication gate."
+  logInfo m!"Main results proved end to end: {complete} / 5. Use CheckMain.lean and CheckRobust.lean for the all-results publication gates."

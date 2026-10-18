@@ -1,0 +1,233 @@
+\section{An obstruction to a uniform critical-rate counting theorem}
+\label{sec:critical-rate-obstruction}
+
+There is a stronger reason to avoid treating the critical exponent as
+only a technical extension of the preceding proof. Absolute critical-rate
+sublevel sets cannot have a counting bound jointly polynomial in input
+dimension, depth, and rate. This is a statement about the actual
+mean-field rate functional, although it is still not a sample-complexity
+lower bound for a simple target.
+
+We use the critical finite-domain variational formula proved in
+Appendix~\ref{sec:critical-variational}.
+For a feature law $\nu$ on $[-1,1]^{\mathcal X}$, let
+$Q(\nu)=\mathbb E_\nu hh^T$, and let $\mathsf M_Q$ be the law of
+coordinatewise $\tanh(G)$ for $G\sim\mathcal N(0,Q)$.
+The critical rate of a global-margin Boolean function is
+\[
+ J_L(f)=\inf\left\{
+ D(\nu_1\Vert\mathsf M_{Q_0})+
+ \sum_{s=2}^{L-1}D(\nu_s\Vert\mathsf M_{Q(\nu_{s-1})})+
+ \frac12z^TQ(\nu_{L-1})^+z:
+ f(x)z(x)\ge\frac12\ \forall x\right\},
+\]
+where the final term is infinite outside the covariance range and
+$Q_0(x,y)=\bar x\cdot\bar y/d$.
+
+\begin{theorem}[Every Boolean function has polynomial critical rate at a polynomial depth]
+\label{thm:critical-counting-obstruction}
+For each $d\ge2$, set
+\[
+ r=20(d+1)^5,\qquad L=r+4.
+\]
+Every Boolean function on $\{-1,1\}^d$ satisfies
+\[
+ J_L(f)\le100000L.
+\]
+Consequently no polynomial $P$ can satisfy
+\[
+ \log\#\{f:J_L(f)\le K\}\le P(d,L,K)
+\]
+for every $d,L,K$.
+\end{theorem}
+
+\begin{proof}
+Write $m=2^d$. First we obtain a crude quantitative lower bound on the
+smallest eigenvalue of the unperturbed first hidden covariance
+\[
+ Q=\mathbb E_w h(w)h(w)^T,\qquad
+ h(w)_x=\tanh(w\cdot\bar x),\qquad
+ w\sim\mathcal N(0,I_{d+1}/d).
+\]
+For each $a\in\{-1,1\}^d$, choose the center
+\[
+ w_a=\bigl(-b(d-1/2),ba_1,\ldots,ba_d\bigr),
+ \qquad b=\log(16m).
+\]
+At $x=a$ its preactivation is $b/2$, whereas at every other cube point
+it is at most $-3b/2$. Thus its feature vector is within $1/(8m)$
+coordinatewise of the vector that is $+1$ at $a$ and $-1$ elsewhere.
+Let $E_a$ be the coordinate box of radius
+$\rho=1/[8m(d+1)]$ around $w_a$. These boxes are disjoint, and changing
+weights within a box changes every activation by at most $1/(8m)$.
+The conditional mean vectors
+$\bar h_a=\mathbb E[h(w)\mid w\in E_a]$ therefore form a matrix
+$H$ within operator norm $1/4$ of $2I-\boldsymbol1\boldsymbol1^T$.
+Since $m\ge4$, that matrix has smallest singular value at least two;
+hence $HH^T\succeq I$.
+
+Every box has Gaussian probability at least
+\[
+ (2\rho)^{d+1}\left(\frac d{2\pi}\right)^{(d+1)/2}
+ \exp\left[-\frac d2
+       (\|w_a\|+\sqrt{d+1}\rho)^2\right]
+ \ge p:=e^{-20(d+1)^5}.
+\]
+For the last crude estimate, use
+$b\le3(d+1)$, $\|w_a\|+\sqrt{d+1}\rho\le4(d+1)^2$,
+$(d+1)\log(1/(2\rho))\le3(d+1)^2$, and
+$(d/(2\pi))^{(d+1)/2}\ge e^{-(d+1)}$.
+Conditional Jensen's inequality, together with disjointness, gives
+\[
+ Q\succeq\sum_a\Pr(E_a)\bar h_a\bar h_a^T\succeq pI.
+\]
+
+Fix any Boolean vector $f\in\{-1,1\}^m$ and put
+$\eta=\sqrt{p/m}\le1$. Take the first feature law to be its
+unperturbed law, at zero entropy cost. For the second feature law,
+shift its Gaussian preactivation mean to $\eta f$, retaining covariance
+$Q$. Gaussian relative entropy and data processing give cost at most
+\[
+ \frac12\eta^2 f^TQ^{-1}f\le\frac12.
+\]
+All diagonal entries of $Q$ coincide, so the new feature mean is
+exactly $m_0f$ for some $m_0>0$. It satisfies $m_0\ge\eta/32$:
+for $0\le t\le1$ and variance $q\le1$,
+\[
+ \mathbb E\operatorname{sech}^2(t+\sqrt qZ)
+ \ge\Pr\{|Z|\le1\}\operatorname{sech}^2(2)>1/32,
+\]
+and integration from zero to $\eta$ proves the claim.
+
+For any feature law with mean vector $u$, its second moment obeys
+$Q\succeq uu^T$, hence $u$ lies in its range and $u^TQ^+u\le1$.
+Therefore shifting the next Gaussian preactivation mean to $g u$
+costs at most $g^2/2$ in entropy. All feature variances remain at most
+one. In our construction all diagonal second moments remain identical,
+so mean vectors remain of the form $m_sf$.
+Choose $g=100$ for $r$ successive layers. If $0<m_s\le1/100$, the
+preceding derivative estimate gives
+\[
+ m_{s+1}\ge100m_s/32>3m_s.
+\]
+If $m_s\ge1/100$, monotonicity gives $m_{s+1}>1/32>1/100$.
+Since
+\[
+ \log(1/\eta)=10(d+1)^5+(d/2)\log2<11(d+1)^5,
+\]
+the choice $r=20(d+1)^5$ guarantees $m_r\ge1/100$.
+Each amplification layer costs at most $5000$.
+
+Use one last mean shift with $g=400$. Its mean preactivation has
+signed magnitude at least four. With Gaussian variance at most one,
+the expected signed tanh is greater than $2/3$, by the Gaussian tail
+estimate used in Proposition~\ref{prop:critical-stochastic-padding}.
+This layer costs at most $80000$.
+Take the final output $z$ equal to this last feature mean. It has
+signed margin greater than $2/3$, and its Gaussian readout cost is
+at most $1/2$, again by $Q\succeq zz^T$.
+The number of hidden layers is $1+1+r+1=r+3$, so the depth is
+$L=r+4$. The total rate is at most
+\[
+ \tfrac12+5000r+80000+\tfrac12\le100000L.
+\]
+Finally, at these polynomial values of $L$ and $K=100000L$, the rate
+sublevel contains every one of the $2^{2^d}$ Boolean functions. Its
+logarithmic cardinality is $2^d\log2$, which exceeds every polynomial
+in $d,L,K$ for sufficiently large $d$.
+\end{proof}
+
+This does not prove that a simple target is hard for the critical
+posterior. Such a lower bound would require comparison with the target's
+\emph{own optimal rate}, sufficiently accurately to control which
+functions win after conditioning. The theorem instead rules out a
+specific proposed upper-bound route: a universal counting theorem based
+only on absolute critical rate, with polynomial dependence on depth.
+It is compatible with more precise comparison to the target, or with
+additional structural information about posterior minimizers.
+
+
+\begin{proposition}[The obstruction also holds directly at finite width]
+\label{prop:critical-finitewidth-capacity}
+With $d,L$ as in Theorem~\ref{thm:critical-counting-obstruction}, for
+all widths $N\ge\lceil e^{100(d+1)^5}\rceil$ and every Boolean $f$,
+\[
+ \mu_{N,1}(A_{N,f})\ge\tfrac14
+                  \exp\{-200000NL\}.
+\]
+This is a direct statement about the original finite-width Gaussian
+prior and requires no appeal to a large-deviation limit.
+\end{proposition}
+
+\begin{proof}
+Retain $m=2^d$, $p=e^{-20(d+1)^5}$ and $r=20(d+1)^5$, and now put
+$\eta=\sqrt{p/(4m)}$. Sample the first layer from its original law.
+Let $H$ be its $N\times m$ matrix of activations and
+$\widehat Q=H^TH/N$. The preceding covariance bound and entrywise
+Hoeffding imply
+\[
+ \Pr\{\lambda_{\min}(\widehat Q)<p/2\}
+ \le2m^2e^{-Np^2/(8m^2)}\le1/8.
+\]
+Indeed entrywise error at most $p/(2m)$ implies operator error at most
+$p/2$. On the good event, set
+\[
+ u=\frac\eta N H\widehat Q^{-1}f;
+\]
+on its complement set $u=0$. Give every row of the next matrix this
+mean vector $u$, preserving reference covariance $I/N$.
+On the good event,
+\[
+ H^Tu=\eta f,\qquad
+ \|u\|^2=\frac{\eta^2}{N}f^T\widehat Q^{-1}f
+             \le\frac1{2N}.
+\]
+This changed layer has conditional relative entropy at most $N/4$.
+Every conditional variance is at most one, so its signed expected
+activation is at least $\eta/32$ on the good event.
+
+At each of the next $r$ layers give every incoming weight mean $100/N$,
+and at one last hidden layer use mean $400/N$, always retaining
+variance $1/N$. Simultaneously over all cube inputs and all these
+$r+2$ shifted hidden layers, conditional Hoeffding gives absolute
+empirical-mean error at most $\eta/128$, with total failure probability
+at most
+\[
+ 2m(r+2)e^{-N\eta^2/32768}\le1/8.
+\]
+On this event, the first shifted empirical mean has signed value at
+least $\eta/64$ everywhere. As long as its minimum signed value is
+at most $1/100$, a gain-$100$ layer increases it by at least a factor
+of two: its expected increase is at least a factor of three, and
+$\eta/128$ is at most half the current minimum. Once the minimum
+reaches $1/100$ it stays above that level, by monotonicity and the
+bound $1/32-\eta/128>1/100$.
+The choice of $r$ ensures $2^r\eta/64\ge1/100$.
+The final gain-$400$ layer then has signed expected mean greater than
+$2/3$ and signed empirical mean greater than $5/8$.
+
+Give the final readout mean $2/N$ per entry and preserve variance
+$1/N^2$. Its signed mean exceeds $5/4$, and its Gaussian noise is
+uniformly at most $1/2$ except with probability
+$2m e^{-N/8}\le1/8$. Its clean margin is consequently greater than
+$3/4$. The proposed weight law assigns $A_{N,f}$ probability at least
+$5/8$, hence at least $1/2$.
+
+The relative entropy chain rule bounds this law's entropy from the
+original Gaussian by
+\[
+ N/4+5000Nr+80000N+2N\le100000NL.
+\]
+Binary data processing as in
+Proposition~\ref{prop:critical-stochastic-padding} proves the mass bound.
+For completeness, the displayed width assumption dominates each of
+\[
+ \frac{8m^2}{p^2}\log(16m^2),\qquad
+ \frac{32768}{\eta^2}\log(16m(r+2)),\qquad 8\log(16m),
+\]
+which are the three concentration thresholds used above. This follows
+directly by substituting $m=2^d$, $p=e^{-20(d+1)^5}$ and $d\ge2$.
+All adaptive means are measurable functions of preceding weights;
+the inverse is used only on the event with smallest eigenvalue at
+least $p/2$.
+\end{proof}

@@ -1,0 +1,179 @@
+\section{A trusted input region retains the original sign likelihood}
+\label{sec:trusted-region}
+
+The distributional robustness restriction can be combined with the original
+sign-only likelihood if the exceptional region is shared across hypotheses.
+This is relevant when non-data-like inputs, rather than ordinary test inputs,
+are responsible for a failed all-cube certificate.
+
+Fix an input region $G\subseteq\{-1,1\}^d$ before the labeled sample is
+drawn. Suppose the test input distribution satisfies
+$D(G^c)\le\rho$. The region may be selected using independent unlabeled
+information; its coverage is an assumption to be justified separately.
+It is independent of the unknown labels. Set
+\[
+ E_v(w)=N\|v\|^2,\qquad
+ r_{\rm ref}(w)=\frac1{100\sqrt{1+(L-1)E_v(w)}}.
+\]
+Restrict the raw Gaussian only to networks whose own clean sign is preserved
+under every disturbance of total RMS norm at most $r_{\rm ref}(w)$ at
+every input in $G$. Impose no margin or robustness condition outside $G$,
+and no additional global clean margin. Then condition on \emph{ordinary
+sign consistency at every observed training example}, including examples
+outside $G$.
+
+\begin{theorem}[Trusted-region prior, original likelihood]
+\label{thm:trusted-region}
+For a target represented by a width-$C$ layered Boolean circuit, this
+posterior has Gibbs error at most $\rho+\varepsilon$ after
+\[
+ n\ge\operatorname{poly}(d,L,C,\varepsilon^{-1},\log(1/\delta))
+\]
+examples, with probability at least $1-\delta$, simultaneously for every
+$N\ge C$ and $0<t\le1$. The polynomial's degree is independent of width,
+depth, and Gaussian scale. The likelihood is the original sign-only
+likelihood, rather than a robust training likelihood.
+\end{theorem}
+
+\begin{proof}
+The earlier global robust target cylinder belongs to the new support and
+satisfies ordinary training consistency for every sample. Its raw Gaussian
+mass is at least $\exp(-ND_*/t^2)$, where
+$D_*=\operatorname{poly}(d,L,C)$. Therefore the posterior has scaled KL
+at most $ND_*/t^2$. The same Gaussian readout tail bound permits discarding
+posterior mass at most $\beta$ while retaining $E_v\le B$, where
+$B=\operatorname{poly}(D_*,\log(1/\beta))$.
+The retained law $Q'$ has KL at most $N(D_*+1)/t^2$ and is robust on $G$
+at the common radius $r_0=[100\sqrt{1+(L-1)B}]^{-1}$.
+
+The pointwise-defect compression proposition gives a common law $\Gamma$
+on a finite class $\mathcal H$ and a prediction coupling with disagreement
+at most $\alpha$ at each $x\in G$. No prediction approximation is needed
+outside $G$. Apply the finite-class relative Chernoff bound to the
+\emph{masked losses}
+\[
+ \ell_G(h,x)=\mathbf1_G(x)\mathbf1\{h(x)\ne f(x)\}.
+\]
+With probability at least $1-\delta$, simultaneously for every
+$h\in\mathcal H$,
+\[
+ \mathbb E_D\ell_G(h,X)
+ \le\frac2n\sum_{i=1}^n\ell_G(h,x_i)
+       +\frac{8[\log|\mathcal H|+\log(1/\delta)]}{n}.
+\]
+The law $Q'$ is training-consistent, so averaging the empirical loss under
+$\Gamma$ gives at most $\alpha$. The population comparison adds at most
+another $\alpha$. Hence
+\[
+ \mathbb E_{w\sim Q',X\sim D}
+    \mathbf1_G(X)\mathbf1\{\operatorname{sign}z_w(X)\ne f(X)\}
+ \le3\alpha+
+       \frac{8[\log|\mathcal H|+\log(1/\delta)]}{n}.
+\]
+Outside $G$ the error costs at most $\rho$, and the discarded posterior
+mass costs at most $\beta$. Choosing $\alpha,\beta$ proportional to
+$\varepsilon$ proves the theorem. The finite class is independent of
+$N,t$, so its one sample event proves simultaneity.
+\end{proof}
+
+The fixed exceptional region is crucial. This theorem does not allow each
+hypothesis to select its own exceptional inputs after seeing the sample.
+It also does not justify choosing $G$ from that same labeled sample without
+additional complexity control. A finite collection of independently
+obtained unlabeled inputs need not cover most of $D$ merely because all its
+points are certified. Coverage and certification over $G$ are separate
+requirements.
+
+The soft-prior construction also localizes to $G$. Replace the global
+margin in Theorem~\ref{thm:soft-margin-prior} by
+\[
+ \rho_G(w)=\min_{x\in G}\inf\{\|\eta\|_*:z_w(x;\eta)=0\}.
+\]
+For nonempty $G$, this is positive and finite Gaussian-almost surely.
+The soft density proportional to
+$\exp\{-(N/t^2)\lambda\min(1,\rho_G(w))^{-p}\}$ therefore retains the
+support of the raw Gaussian and does not penalize instability outside $G$.
+The same target cylinder and posterior truncation as in
+Theorem~\ref{thm:soft-margin-prior}, followed by the masked-loss proof above,
+give error at most $D(G^c)+\varepsilon$ with the original sign likelihood
+and polynomial sample complexity. This combines a soft prior with
+restriction of the stability requirement to a trusted data region.
+
+\begin{corollary}[A finite catalog of trusted regions]
+\label{cor:trusted-catalog}
+Let $G_1,\ldots,G_M$ be fixed before the labeled sample, with
+$D(G_j^c)\le\rho$ for every $j$. Choose any prior distribution on the
+index $j$, and conditional on $j$ use the Gaussian restricted to robustness
+on $G_j$ as above. Condition the resulting joint prior on the original
+training signs. Then the marginal network posterior satisfies the same
+error guarantee with polynomial sample complexity also in $\log M$.
+\end{corollary}
+\begin{proof}
+Conditional on any index $j$ and the observed sample, the network law is
+the raw Gaussian conditioned on robustness on $G_j$ and sign consistency.
+The global robust target cylinder belongs to every such conditioning event,
+so its same raw mass lower bound applies separately to every component.
+Consequently every component has the same entropy bound, readout tail
+bound, and common finite compression class $\mathcal H$.
+Apply the preceding masked-loss proof simultaneously to the $M|\mathcal H|$
+loss functions $\mathbf1_{G_j}(x)\mathbf1\{h(x)\ne f(x)\}$.
+Only $\log M$ is added to the finite-class bound. Every component posterior
+then has error at most $\rho+\varepsilon$ on the same sample event, so
+averaging under the posterior law of $j$ preserves the guarantee.
+\end{proof}
+
+Thus the exceptional region may adapt to the labels through posterior
+selection from a predeclared catalog, with an explicit complexity cost.
+The prior here is a mixture of region-conditioned Gaussians; it is not
+silently identified with the Gaussian conditioned on their union.
+
+\subsection{Why a per-hypothesis distributional exception is insufficient}
+\label{sec:patch-obstruction}
+
+The following abstract example shows why the compression-with-defect and
+target-mass facts alone cannot remove the empirical defect term under
+ordinary sign conditioning. It is \emph{not} a lower bound for the exact
+Gaussian neural prior.
+
+Let the input domain have $M$ points, uniformly distributed, and let the
+target be $f\equiv+1$. Fix an integer $q$ with $\rho=q/M<1/2$. For each
+size-$q$ set $S$, define the patch predictor
+\[
+ h_S(x)=\begin{cases}+1,&x\in S,\\-1,&x\notin S,\end{cases}
+ \qquad b_{h_S}(x)=\mathbf1_S(x).
+\]
+Include the target predictor $h_+\equiv+1$ with bad-set indicator zero.
+Every predictor has population bad-set mass at most $\rho$.
+The two-element class $\{h_+,h_-\}$, where $h_-\equiv-1$, compresses these
+predictors exactly outside their bad sets: map $h_S$ to $h_-$ and $h_+$
+to itself. Thus the pointwise prediction-compression conclusion holds with
+zero approximation error and $\log|\mathcal H|=\log2$.
+
+Give $h_+$ prior mass $\eta=e^{-aD_*}$ and distribute the remaining mass
+uniformly over the patch predictors. Suppose $\eta\le1/2$, $q\ge2n$, and
+\[
+ n\le\frac{aD_*}{2\log(2/\rho)}.
+\]
+If the sample has $k\le n$ distinct inputs, the patch component's probability
+of consistency is
+\[
+ L_S=\frac{(q)_k}{(M)_k}\ge(\rho/2)^n\ge\sqrt\eta.
+\]
+Here $(u)_k=u(u-1)\cdots(u-k+1)$. Consequently the posterior mass on the
+target is at most
+$\eta/[(1-\eta)L_S]\le2\sqrt\eta$, and its Gibbs error is at least
+\[
+ (1-\rho)(1-2e^{-aD_*/2}).
+\]
+The posterior still has population bad-set mass at most $\rho$, but its
+empirical bad-set mass is at least $1-2\sqrt\eta$: every training point
+belongs to every consistent patch's bad set. Its KL to this abstract prior
+is at most $\log(1/\eta)=aD_*$, because conditioning has a partition
+function at least $\eta$.
+
+Thus a target-mass exponent of size $aD_*$, bounded population defect,
+scaled KL control, and a tiny compressed class do not by themselves yield
+a bound independent of $a$. In our neural setting $a=N/t^2$, exactly the
+quantity that the robust compression argument must eliminate. The example
+isolates a logical obstruction; showing that the specified Gaussian prior
+does or does not exhibit it would require additional analysis.

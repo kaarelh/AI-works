@@ -1,0 +1,225 @@
+\section{Product norm controls Boolean description size independently of depth}
+\label{sec:boolean-product-depth-saturation}
+
+The rank-one bottleneck strategy of Golowich--Rakhlin--Shamir
+\cite{golowich2018} underlies depth-independent norm-based complexity
+bounds. Here we use it for a more specific representation statement:
+global Boolean margin permits a short, polynomial-norm tanh
+implementation of the scalar suffix, without carrying a constant rail
+through the retained prefix. The conclusion bounds a finite Boolean
+description independently of the original depth as well as width.
+
+\begin{lemma}[Relevant coordinates and freezing]
+\label{lem:pf-junta-freezing}
+A Boolean function with a globally unit-margin tanh representation
+of product norm at most $P$ depends on at most $P^2$ coordinates.
+After deleting all irrelevant coordinates, it has a representation
+of the same depth and no larger product norm.
+\end{lemma}
+
+\begin{proof}
+Let $T=\prod_{j\ge2}\|W^j\|_F$. For every relevant coordinate $i$,
+some cube edge in that coordinate has opposite labels at its endpoints.
+The two outputs differ by at least two, whereas the Lipschitz bound
+along that edge is $2\|W^1e_i\|_2T$. Thus
+$\|W^1e_i\|_2T\ge1$. Squaring and summing over the relevant coordinates
+gives their number at most $\|W^1\|_F^2T^2\le P^2$.
+
+Freeze each irrelevant coordinate $i$ to an independent uniform sign
+$a_i$. This replaces the first-layer bias column $w_0$ by
+$w_0+\sum_i a_iw_i$, while retaining the relevant columns. Its expected
+squared Frobenius norm is exactly the original squared Frobenius norm.
+Some assignment therefore does not increase that norm. Since the
+function is independent of these coordinates, the reduced network
+retains its unit margin on the full reduced cube.
+\end{proof}
+
+\begin{lemma}[A bias-free odd scalar classifier]
+\label{lem:odd-scalar-classifier}
+Let $P,R\ge1$ and let $g:[-R,R]\to\mathbb R$ be odd and $P$-Lipschitz.
+Let $T\subset[-R,R]$ be finite and nonempty, with
+$|g(t)|\ge7/8$ for $t\in T$. There is a tanh network with two hidden
+layers, a linear readout and no biases, whose sign agrees with $g$
+on $T$ and whose signed output there is at least $7/4$.
+Its width, weights, and product of Frobenius norms are bounded by
+universal polynomials in $P,R$.
+\end{lemma}
+
+\begin{proof}
+Extend the set to $T\cup(-T)$ and sort its positive absolute values.
+All are at least $7/(8P)$, since $g(0)=0$. Consecutive values with
+opposite signs of $g$ are separated by at least $7/(4P)$.
+Place a threshold $\theta_j$ at the midpoint of each such transition
+gap. There are $m\le2PR$ transitions, every $0<\theta_j\le R$,
+and every actual absolute value is at distance at least $7/(8P)$
+from every threshold.
+
+The resulting odd step classifier has the exact expression
+\[
+ F(t)=c_0\operatorname{sign}(t)+
+   \sum_{j=1}^m c_j\operatorname{sign}
+       \bigl(t-\theta_j\operatorname{sign}(t)\bigr),
+ \qquad |c_0|\le1,\quad c_j\in\{-1,1\}.
+\]
+Indeed, the positive-side label changes by $2c_j$ at transition $j$.
+The changes alternate, so the coefficient
+$c_0=\ell_0+\sum_jc_j$ is in $\{-1,0,1\}$, where $\ell_0$ is the
+first positive-side label. The displayed formula is the odd extension
+of this step classifier and equals $\operatorname{sign}g(t)$ on $T$.
+
+Set
+\[
+ \rho=\frac1{2P},\qquad
+ \delta=\min\left\{\frac\rho{4R},\frac1{32(m+1)}\right\},\qquad
+ A=\frac1{2\rho}\log\frac2\delta,
+\]
+\[
+ \alpha^2=\frac\rho{4R^3},\qquad
+ B=\rho^{-1}\log(64(m+1)),\qquad
+ c=\operatorname{arctanh}(1/2).
+\]
+The first hidden layer computes
+$u(t)=\tanh(\alpha t)$ and $s(t)=\tanh(At)$.
+On $T\cup(-T)$,
+\[
+ |u(t)/\alpha-t|\le\rho/12,
+ \qquad |s(t)-\operatorname{sign}(t)|\le\delta.
+\]
+Thus replacing $t-\theta_j\operatorname{sign}(t)$ by
+$u(t)/\alpha-\theta_js(t)$ changes it by at most
+$\rho/12+R\delta\le\rho/3$. The original magnitude exceeds $\rho$,
+so its sign is unchanged and its new magnitude exceeds $\rho/2$.
+The second hidden layer computes
+\[
+ r(t)=\tanh(cs(t)),\qquad
+ v_j(t)=\tanh\bigl(B[u(t)/\alpha-\theta_js(t)]\bigr).
+\]
+Consequently $2r(t)$ approximates $\operatorname{sign}(t)$ to error
+at most $2\delta$, and each $v_j$ approximates its desired sign to
+error at most $1/[32(m+1)]$. Therefore
+\[
+ z(t)=2\left[2c_0r(t)+\sum_{j=1}^m c_jv_j(t)\right]
+\]
+has signed value at least
+$2[1-2\delta-m/(32(m+1))]\ge15/8>7/4$ on $T$.
+This includes $m=0$, when only the sign rail is needed.
+
+The three squared matrix norms are bounded respectively by
+\[
+ \alpha^2+A^2,\qquad
+ c^2+mB^2(\alpha^{-2}+R^2),\qquad 16+4m.
+\]
+Since $m\le2PR$, these expressions, their product, and every physical
+weight are polynomially bounded in $P,R$. All biases are zero.
+\end{proof}
+
+\begin{theorem}[A depth-independent Boolean normal form]
+\label{thm:depth-independent-pf-normal-form}
+There is a universal polynomial $p$ with the following property.
+Suppose $f:\{-1,1\}^d\to\{-1,1\}$ has some finite-depth,
+finite-width tanh representation with unit global margin and product
+of Frobenius norms at most $P\ge1$. Then $f$ has a globally
+unit-margin representation using only its relevant input coordinates,
+with depth, hidden widths, individual weights, and product of
+Frobenius norms at most $p(P)$. Its weights can be chosen dyadic
+with at most $p(P)$ bits each. The bounds are independent of the
+original depth, widths, individual weights and their precision.
+There are at most $P^2$ relevant coordinates.
+\end{theorem}
+
+\begin{proof}
+First use Lemma~\ref{lem:pf-junta-freezing}. If no coordinate is
+relevant, a constant network of width one and depth two suffices.
+Otherwise write $k\le P^2$ for the number of remaining coordinates
+and $R=\sqrt{k+1}$. Let $D$ be the remaining original depth, and put
+\[
+ r=\left\lceil128P^2R^2\log(2PR)\right\rceil.
+\]
+If $D\le r+2$, retain the network for the moment. Otherwise we
+produce a representation with at most $r+2$ weighted layers and
+polynomial product norm.
+
+Write $M_j=\|W^j\|_F$, $s_j=\|W^j\|_{\rm op}$ and
+$\operatorname{sr}_j=M_j^2/s_j^2$. Unit margin implies
+$\prod_js_j\ge1/R$, because all activations are zero-preserving
+and one-Lipschitz. Hence
+\[
+ \sum_j\log\operatorname{sr}_j
+ =2\log\frac{\prod_jM_j}{\prod_js_j}
+ \le2\log(PR).
+\]
+Among the first $r$ hidden layers choose one, $j$, with
+$\log\operatorname{sr}_j\le2\log(PR)/r$.
+Replace $W^j$ by its leading singular component $s_juv^T$.
+The discarded operator norm is at most
+$M_j\sqrt{1-1/\operatorname{sr}_j}
+ \le M_j\sqrt{\log\operatorname{sr}_j}$.
+Propagation through the original prefix and suffix therefore changes
+every output by at most
+\[
+ PR\sqrt{2\log(PR)/r}\le1/8.
+\]
+The modified network retains the target's signs and margin at least
+$7/8$.
+
+Put $S=\prod_{i<j}M_i$, with $S=1$ if $j=1$, and normalize the
+bottleneck scalar as $t(x)=v^Th^{j-1}(x)/S$. Its absolute value is at
+most $R$. Everything from the rank-one matrix onward is an odd
+scalar function $g(t)$ with Lipschitz constant at most
+$s_jS\prod_{i>j}M_i\le P$. Apply
+Lemma~\ref{lem:odd-scalar-classifier} on the finite set of these
+actual scalar values.
+
+Attach its two-hidden-layer classifier to the original prefix.
+The first two new rows are $\alpha v^T/S$ and $Av^T/S$.
+Their common factor $1/S$ cancels the prefix product $S$ in the
+total Frobenius product. Thus the complete new network has polynomial
+product norm in $P,R$, independent of every original dimension and
+weight scale. Its depth is $j+2\le r+2$, and it has the required
+global signs with margin at least $7/4$.
+
+In either case we now have depth and product norm polynomial in $P$,
+while widths may still be arbitrary. Apply the finite-description
+normal form, Corollary~\ref{cor:product-finite-description}, with
+input dimension $k\le P^2$. It gives polynomial width, physical
+weights and dyadic bit length, keeping unit margin and a polynomial
+product norm. Restore zero columns for the irrelevant original
+coordinates if a $d$-input network is desired. If the normal form is
+purely affine, apply tanh to that affine output and append the
+readout $2$; its unit margin is preserved and all bounds remain
+polynomial, now within the usual architecture with a hidden layer.
+\end{proof}
+
+\begin{corollary}[Counting globally margined product-norm classifiers]
+\label{cor:all-depth-pf-counting}
+Let $\mathcal H_P$ contain all Boolean functions admitting any
+finite-depth, finite-width globally unit-margin tanh representation
+with product norm at most $P\ge1$. For a universal polynomial $p$,
+\[
+ \log|\mathcal H_P|\le p(P)+P^2\log(d+1).
+\]
+Consequently, with probability at least $1-\delta$, every member
+of $\mathcal H_P$ consistent with $n$ independent realizable examples
+has error at most $\varepsilon$, provided
+\[
+ n\ge\frac{p(P)+P^2\log(d+1)+\log(1/\delta)}{\varepsilon}.
+\]
+There is no depth or width restriction in this simultaneous event.
+\end{corollary}
+
+\begin{proof}
+There are at most $(d+1)^{\lfloor P^2\rfloor}$ possible ordered
+lists of relevant coordinates, allowing a padding symbol. Once the
+coordinates are chosen, Theorem~\ref{thm:depth-independent-pf-normal-form}
+encodes the entire polynomial-size dyadic network in $p(P)$ bits,
+after enlarging a universal polynomial. Count these descriptions and
+apply the usual union bound: an error-$\varepsilon$ classifier is
+consistent with $n$ independent examples with probability at most
+$e^{-n\varepsilon}$.
+\end{proof}
+
+In particular, counting implies that most Boolean functions of $k$
+variables require product norm at least $2^{c k}$ for some universal
+$c>0$, even when arbitrary depth and width are allowed. This is not
+a small-circuit lower bound: those generic functions also require
+exponentially large ordinary Boolean descriptions.

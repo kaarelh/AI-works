@@ -1,0 +1,113 @@
+\section{Gradient descent can be perfectly stable on the data and fragile elsewhere}
+\label{sec:analytic-gd-counterexample}
+
+A global support condition need not hold for a network obtained by
+ordinary gradient descent, even when the network is robust on the entire
+data distribution. The following exact construction separates these
+requirements without numerical attacks or a continuous-input relaxation.
+It is a counterexample to an automatic guarantee, not a prevalence claim
+about commonly trained networks.
+
+\begin{proposition}[A gradient-descent trajectory with off-distribution fragility]
+\label{prop:analytic-gd-counterexample}
+Take $d=2$, width $N=1$, and $H\ge1$ hidden tanh layers. Let the data
+distribution be uniform on $(1,1)$ and $(-1,-1)$, with label $f(x)=x_1$.
+Initialize the first-layer affine map as $(x_1+x_2)/2$, all internal
+scalar weights as $2$, and the readout as $v=1$. Train all weights and
+the first-layer bias by full-batch gradient descent on logistic loss,
+using any finite positive learning rates.
+
+At every finite iterate, the classifier is correct on the entire data
+support with signed output at least $\tanh(1)>1/2$. For every
+$0<c\le1/100$, it has zero clipped-score change on this support under
+every simultaneous disturbance of norm
+\[
+ \|\eta\|_*\le\frac{c}{\sqrt{1+Hv^2}}.
+\]
+The same assertion holds for the margin-band score.
+
+At the valid Boolean input $x_0=(1,-1)$, however, its clean output is zero
+and there is an admissible first-layer postactivation disturbance giving
+\begin{equation}\label{eq:gd-offdata-amplification}
+ z(x_0;\eta)\ge
+ \min\left\{\frac12,
+       \frac{c(3/2)^{H-1}}{\sqrt{H+1}}\right\}.
+\end{equation}
+Consequently every iterate fails the global clipped-score condition
+when the second expression in the minimum exceeds $1/16$. Every iterate
+fails the global margin-band condition when it exceeds $5/16$.
+For $c=10^{-3}$, $H\ge16$ suffices for the former and $H\ge20$ for the
+latter.
+\end{proposition}
+
+\begin{proof}
+Write the first-layer weights as $(a,a)$ and its bias as zero, the
+internal scalar weights as $w_s$ for $2\le s\le H$, and the readout as
+$v$. At initialization $a=1/2$, $w_s=2$, and $v=1$.
+The two examples have opposite inputs and labels, and tanh is odd.
+Their signed outputs are equal. Their loss derivatives with respect to
+the first-layer bias cancel, and the derivatives with respect to the
+two first-layer weights are equal. Moreover the signed output strictly
+increases with each of $a,w_2,\ldots,w_H,v$ when they are positive:
+all factors in the corresponding chain derivatives are positive.
+The derivative of logistic loss with respect to the signed output is
+negative. Thus gradient descent preserves zero bias and equal first-layer
+weights, while increasing $a,w_s,v$. In particular, throughout the
+trajectory,
+\[
+ a\ge1/2,\qquad w_s\ge2,\qquad v\ge1.
+\]
+The same conclusion holds for minibatches containing equal numbers of
+the two examples. It does not assume arbitrary stochastic minibatches
+preserve the symmetry.
+
+At either data input, let $y\in\{-1,1\}$ be its label. The clean first
+signed hidden value is at least $\tanh(1)>3/4$. Induction gives that every subsequent signed hidden value is at least
+$\tanh(1)$ because $2\tanh(1)>1$. Hence the signed readout is greater than $1/2$.
+
+For the finite-noise assertion, each scalar disturbance, including the
+output disturbance, has magnitude at most $c$. The first noisy signed
+hidden state is at least $\tanh(1)-c>0.7$. If the preceding noisy signed
+state is greater than $0.7$, then the next is at least
+$\tanh(1.4)-c>\tanh(1)-c>0.7$.
+Induction gives a final signed output greater than
+$0.7v-c\ge0.69>1/2$. Clean and noisy outputs therefore lie beyond the
+same clipping endpoint. Both the clipped score and margin-band score
+are exactly unchanged on the data support.
+
+At $x_0$, the equal first-layer weights cancel and every clean hidden
+state is zero. Inject only at the first hidden layer, with
+\[
+ \eta_1=\frac{c}{v\sqrt{H+1}}.
+\]
+This is admissible because
+$(1+Hv^2)\eta_1^2\le c^2$ follows from $v\ge1$.
+All subsequent noisy hidden states are nonnegative. Concavity of tanh
+on the positive half-line and $\tanh(1)>3/4$ imply
+\[
+ \tanh(2u)\ge\min\{1/2,(3/2)u\}\qquad(u\ge0).
+\]
+For $0\le u\le1/2$, use the chord bound
+$\tanh(2u)\ge2u\tanh(1)\ge(3/2)u$; for larger $u$, use
+$\tanh(2u)\ge\tanh(1)>1/2$.
+Since $w_s\ge2$, iterating the displayed bound yields
+\[
+ z(x_0;\eta)\ge
+ \min\left\{v/2,\frac{c(3/2)^{H-1}}{\sqrt{H+1}}\right\},
+\]
+which proves~\eqref{eq:gd-offdata-amplification}.
+The clean transformed scores are zero. A noisy output greater than
+$1/16$ violates the clipped-score tolerance; an output greater than
+$1/4+1/16=5/16$ violates the margin-band tolerance.
+At $c=10^{-3}$, the latter expression is greater than $0.106$ at
+$H=16$ and greater than $0.483$ at $H=20$. It increases with $H$,
+proving the stated sufficient depths.
+\end{proof}
+
+This example also shows why the trusted-region variant is substantive.
+Taking the trusted region to be the two-point data support gives an exact
+whole-region stability certificate for every gradient-descent iterate,
+whereas a full-cube condition rejects all these same networks at sufficient
+depth. Extending this observation to realistic data requires an actual
+region-wide certificate or a controlled family of exceptional regions;
+held-out pointwise success alone is not such a certificate.

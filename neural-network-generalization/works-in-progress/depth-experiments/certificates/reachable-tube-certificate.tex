@@ -1,0 +1,199 @@
+\section{Finite-radius certificates using reachable activation states}
+\label{sec:reachable-tube}
+
+A product of global operator norms ignores saturation. The following
+certificate uses activation ranges reachable from one clean input under
+\emph{all} disturbances in the prescribed ball. It applies at any radius;
+small radii are not needed for its logical validity. The resulting bounds
+can become conservative or vacuous at large radii.
+
+Write the hidden network in column-vector notation as
+$h_s=\tanh(a_s)$, $a_s=A_sh_{s-1}$, $1\le s\le H$, with a scalar readout
+$z=v^\top h_H$. The input and its bias coordinate are fixed. Add
+postactivation disturbances $\eta_s$ and output disturbance $\xi$, with
+\[
+ \sum_{s=1}^H\|\eta_s\|_2^2/N+\xi^2\le r^2.
+\]
+All clean activations, preactivations, and derivative matrices
+$D_s=\operatorname{diag}(\operatorname{sech}^2a_s)$ below are fixed by this
+input. Set $J_s=D_sA_s$ for $s\ge2$.
+
+\paragraph{Forward enclosures.}
+We construct a scalar $B_s$ and a nonnegative vector $C_s$ satisfying,
+simultaneously for every allowed disturbance,
+\[
+ \|\Delta h_s\|_2\le B_s,\qquad |\Delta h_s|\le C_s.
+\]
+Initialize
+$B_1=\sqrt N r$, $C_1=\sqrt N r\,\boldsymbol1$,
+$q_1^{\rm lin}=q_1^{\rm tube}=1$, and $e_1=0$.
+Given the preceding enclosures, set componentwise
+\[
+ b_{s,i}=\min\{\|(A_s)_{i,:}\|_2 B_{s-1},
+                        (|A_s|C_{s-1})_i\}.
+\]
+Then the perturbed preactivation lies in
+$[a_{s,i}-b_{s,i},a_{s,i}+b_{s,i}]$.
+For the scalar remainder
+\[
+ R_a(u)=\tanh(a+u)-\tanh(a)-\operatorname{sech}^2(a)u,
+\]
+compute bounds $\rho^-_{s,i}\le R_{a_{s,i}}(u)\le\rho^+_{s,i}$ for
+$|u|\le b_{s,i}$. Its exact extrema occur among the endpoints, $u=0$,
+and $u=-2a_{s,i}$ when this point belongs to the interval: the derivative
+vanishes exactly when $a+u=\pm a$. These extrema may be intersected with
+any valid quadratic curvature bound. Put
+$\rho_{s,i}=\max\{|\rho^-_{s,i}|,|\rho^+_{s,i}|\}$.
+
+Choose upper bounds $\ell_s\ge\|J_s\|_{\rm op}$ and
+\[
+ L_s\ge\|U_sA_s\|_{\rm op},\qquad
+ U_s=\operatorname{diag}\!\left(
+  \operatorname{sech}^2((|a_{s,i}|-b_{s,i})_+)\right).
+\]
+Update
+\begin{align*}
+ q_s^{\rm lin}&=1+\ell_s^2q_{s-1}^{\rm lin},&
+ e_s&=\ell_se_{s-1}+\|\rho_s\|_2,\\
+ q_s^{\rm tube}&=1+L_s^2q_{s-1}^{\rm tube},&
+ B_s&=\min\{\sqrt N r\sqrt{q_s^{\rm lin}}+e_s,
+                    \sqrt N r\sqrt{q_s^{\rm tube}}\}.
+\end{align*}
+Finally set
+\[
+ C_{s,i}=\min\!\left\{B_s,\sqrt N r+
+   \max_{u\in\{-b_{s,i},b_{s,i}\}}
+          |\tanh(a_{s,i}+u)-h_{s,i}|\right\}.
+\]
+These intersections combine independent valid enclosures; they do not
+assume that every disturbance can attain all their endpoints together.
+
+\paragraph{Why the forward bounds hold.}
+The exact perturbed recurrence is
+$\Delta h_s=J_s\Delta h_{s-1}+\eta_s+R_s$, where $R_s$ lies in the
+specified componentwise remainder interval. The sum of the clean linear
+responses to all $\eta_j$ has norm at most
+$\sqrt N r\sqrt{q_s^{\rm lin}}$, by Cauchy--Schwarz over the layerwise
+noise norms and the products of the $\ell_j$. The propagated remainder
+has norm at most $e_s$.
+Independently, every mean-value derivative on the reachable interval has
+coordinatewise absolute value bounded by $U_s$. Its operator norm is
+therefore at most $\|U_sA_s\|_{\rm op}$: writing its diagonal derivative
+as a diagonal contraction times $U_s$ proves this assertion.
+Telescoping the nonlinear recurrence and using Cauchy--Schwarz now gives
+$\sqrt N r\sqrt{q_s^{\rm tube}}$. The coordinate bound follows by
+monotonicity of $\tanh$ and $|\eta_{s,i}|\le\sqrt N r$.
+These arguments close the induction, including the use of the previously
+intersected scalar and coordinate bounds to construct each new tube.
+
+\paragraph{An output-specific interval.}
+Define clean reverse adjoints
+\[
+ g_H=v,\qquad g_{s-1}=J_s^\top g_s,
+ \qquad G=\sqrt{1+N\sum_{s=1}^H\|g_s\|_2^2}.
+\]
+Set $\rho_1^-=\rho_1^+=0$ and
+\[
+ E^- =\sum_{s,i}\min\{g_{s,i}\rho^-_{s,i},g_{s,i}\rho^+_{s,i}\},\qquad
+ E^+ =\sum_{s,i}\max\{g_{s,i}\rho^-_{s,i},g_{s,i}\rho^+_{s,i}\}.
+\]
+Then every allowed disturbed output belongs to
+\begin{equation}\label{eq:reachable-output-interval}
+ [z-rG+E^-,\ z+rG+E^+].
+\end{equation}
+Indeed the exact output difference is
+$\xi+\sum_sg_s^\top\eta_s+\sum_sg_s^\top R_s$.
+The first two terms have absolute value at most $rG$; the last terms lie
+between $E^-$ and $E^+$. One may further intersect this interval with
+\[
+ [z-T,z+T],\qquad
+ T=r+\min\{\|v\|_2B_H,\ |v|^\top C_H\}.
+\]
+In particular these are finite-radius statements, not merely clean
+Jacobian estimates.
+
+For the clipped score $\psi_a(z)=\max\{-a,\min\{a,z\}\}$ and any verified
+output interval $[l,u]$, the sufficient stability test is
+\[
+ \max\{|\psi_a(l)-\psi_a(z)|,|\psi_a(u)-\psi_a(z)|\}\le1/16.
+\]
+The main empirical convention uses $a=1/2$, with $a=1$ reported separately.
+A saturated clean score may satisfy this test even when the raw output
+interval is much wider than $1/8$. The certificate never requires a task
+label or assumes that the clean prediction is correct.
+
+Computing the clean adjoints costs $O(HN^2+Nd)$; computing all local
+spectral norms costs $O(HN^3+Nd)$ for each input and radius. The construction
+does not store the earlier $N$ by $HN$ transfer arrays. Our implementation
+first tries cheaper global spectral bounds and reuses any certificate at
+a larger radius for smaller radii. Ordinary float64 evaluations of these
+real inequalities are reported as numerical sufficient tests; selected
+claims receive separate interval or exact-rational verification. Checking
+many data points or random cube points does not constitute a global
+certificate. On a small finite cube, exhaustive coverage does.
+
+\paragraph{A stronger refinement using signed clean transfers.}
+When the preceding inexpensive bounds are inconclusive, one may retain
+the full clean transfer matrices from all previous layers. Let $T_s$ map
+RMS-normalized past disturbances to the current clean linear
+preactivation response, so each injected hidden-noise block initially has
+coefficient $\sqrt N I$. If all earlier nonlinear remainders have stacked
+component bounds $\rho^-\le R\le\rho^+$, then each current preactivation
+displacement lies in
+\[
+ \left[-r\|(T_s)_{i,:}\|_2+
+  \frac{((T_s)_+\rho^-+(T_s)_-\rho^+)_i}{\sqrt N},\quad
+  r\|(T_s)_{i,:}\|_2+
+  \frac{((T_s)_+\rho^++(T_s)_-\rho^-)_i}{\sqrt N}\right].
+\]
+Here $(T_s)_+$ and $(T_s)_-$ denote its positive and negative parts.
+The exact scalar remainder extrema above apply on this asymmetric
+interval as well. Update the transfer matrix with the clean derivative
+and append the new $\sqrt N I$ noise block. At the output use the same
+signed interval propagation and include scalar output noise in the linear
+Euclidean coefficient norm. This is an exact algebraic decomposition of
+the perturbed recurrence, followed by interval bounds; no linearization
+remainder has been discarded. It strengthens the earlier recurrence that
+propagated only absolute remainder bounds. Its cost is $O(H^2N^3)$, so it
+is used only where the cheaper certificates are inconclusive.
+
+\paragraph{A verified saturated example.}
+The preceding sufficient inequalities are mathematical statements; the large empirical tables evaluate them in ordinary float64 and are not themselves outward-rounded interval proofs.  We separately verified one illustrative finite-radius saturation certificate using outward intervals and exact integer-rational matrix bounds.  For the depth-32, width-128 MNIST 3-versus-8 SGD model used in the finite-grid counterexample, the fourth input in the fixed uniform held-out sample has clean output in a narrow interval around $8.282734267956$.  At $c=1/16$, reachable-tube derivative bounds prove
+\[
+ |z(x;\eta,\xi)-z(x;0,0)|<6.559413
+\]
+for every simultaneous hidden/output disturbance in the prescribed ball.  Consequently the clipped output is unchanged, for both cap $1/2$ and cap $1$.  This is a pointwise, all-disturbances certificate on one actual held-out image; it is not a claim about every input.  The same saved network has the verified finite-grid global counterexamples at $c=10^{-3}$ described above.  Thus the distinction between stability on data and global stability is present even in independently verified examples, and clipping can certify a useful condition when the raw-output variation bound is much larger than $1/16$.
+
+For this computation, the clean trajectory is enclosed with 90-decimal outward interval arithmetic.  At each layer we round the reachable-tube upper derivative bounds upward to exact dyadic numbers.  For the resulting matrix $A=W\operatorname{diag}(D)$, the stored floating-point SVD merely proposes dyadic factors $U,S,V^T$.  All Gram matrices and the residual are recomputed with exact integers.  Writing
+\[
+ a=\|U^TU\|_\infty,\quad b=\|V^TV\|_\infty,
+ \quad t=\max_i|S_{ii}|,\quad e^2=\|A-USV^T\|_F^2,
+\]
+we use the rational inequality
+\[
+ \|A\|_{\rm op}^2
+ \le (1+\epsilon)t^2ab+(1+\epsilon^{-1})e^2,
+ \qquad \epsilon>0.
+\]
+Here the matrix infinity norm is the maximum absolute row sum.  The bound follows from the symmetric Gram-matrix spectral bound, the triangle inequality, and Young's inequality, and makes no accuracy assumption about the proposed SVD.  Product rounding when constructing $A$ is enclosed by an additional exact Frobenius residual.  This yields a replayable certificate with saved dyadic factors.  It still trusts the interval library for transcendental evaluations and is not a Lean formalization.
+
+\paragraph{A covariance refinement for a difficult vertex.}
+Products of clean Jacobian norms can also be replaced by the exact covariance of the clean linear response.  In column-vector notation, write $J_s=D_sA_s$ for the clean hidden-state Jacobian, set $G_1=I$, and define
+\[
+ G_s=I+J_sG_{s-1}J_s^{\mathsf T}\qquad(s\ge2).
+\]
+If $T_s$ maps the stacked hidden disturbances to the clean linearized state, then $G_s=T_sT_s^{\mathsf T}$ by induction.  This is a deterministic Gramian identity; the certificate makes no Gaussian assumption about the disturbances.  Thus its linear part has norm at most $\sqrt N r\sqrt{\|G_s\|_{\rm op}}$.  Suppose coordinatewise Taylor remainder intervals on the already established preactivation tube imply a vector norm bound $R_s$.  With $\rho_1=0$, the recursion
+\[
+ \rho_s=\|J_s\|_{\rm op}\rho_{s-1}+R_s,
+ \qquad
+ B_s=\sqrt N r\sqrt{\|G_s\|_{\rm op}}+\rho_s
+\]
+then bounds the nonlinear remainder and total state displacement, respectively.  Indeed, subtracting the exact clean linear response gives $e_s=J_se_{s-1}+R_s(\Delta a_s)$, while each preactivation coordinate lies within $\|A_{s,j:}\|_2B_{s-1}$ of its clean value.  Finally,
+\[
+ |z^\eta-z|\le\|v\|_2B_H+r
+\]
+is a valid output bound, including the simultaneous scalar disturbance.  Using the full radius in both terms only makes this last bound conservative.
+
+The implementation encloses each $G_s$ by outward-rounded dyadic interval matrix products.  An arbitrary dyadic midpoint proposal $M$ gives
+$\|G_s\|_{\rm op}\le\|M\|_{\rm op}+\sup_{G\in[G_s]}\|G-M\|_F$;
+both terms are bounded with exact rational matrix arithmetic and outward square roots.  Scalar remainder extrema occur at the two tube endpoints, zero, and $-2a$ when that critical point lies in the tube; intersecting this enclosure with $|R(u)|\le u^2/2$ is valid because $|\tanh''|\le1$.  No floating estimate of a covariance eigenvalue is accepted as a certificate.

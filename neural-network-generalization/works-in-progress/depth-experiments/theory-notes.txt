@@ -1,0 +1,161 @@
+ROUND 3 THEORY NOTES -- initial consolidated version
+
+Preferred condition
+-------------------
+The strongest defensible primary theorem uses clipped-score stability with
+clip at the TRAINING margin, +/-1/2, score variation <=1/16, and radius
+  c/sqrt(1+(L-1) N ||v||^2).
+This is strictly weaker than the old clip-at-1 condition, for a principled
+reason fixed by the likelihood rather than by empirical outcomes. Training
+signed output >1/2 maps to clipped signed score exactly 1/2; approximation
+error <=1/12 still puts the candidate at >=5/12, where the ramp is zero.
+Test signed output <=1/4 maps to candidate <=1/3, where the ramp is one.
+No clean-margin restriction is imposed on unobserved inputs.
+
+All c>0 are allowed
+------------------
+The old hidden Boolean cylinder is retained. Increase the readout coefficient
+from 2 to a=max(2,256c). Its readout energy is >=a^2 C/8, making the calibrated
+radius no larger than the old per-layer noise tolerance 1/(64 sqrt(2C)).
+Its noisy signed outputs remain >1. The Gaussian target exponent changes
+only through the readout term 2a^2 C. Sample complexity is polynomial in
+c+c^{-1}, as well as d,L,C,error^{-1},log(delta^{-1}). Thus .03 and .1 are
+legitimate stress parameters. No empirical calibration choice is required.
+
+What the standalone paper needs
+------------------------------
+robustness-theory.tex includes:
+- complete finite-width Gaussian model, postactivation disturbances, and loss;
+- theorem at every N>=Boolean width C, every t<=1 (hence gamma>=1);
+- a precise raw entropy-compression lemma statement;
+- readout truncation, common radius, clipped-score/ramp proof;
+- full robust target cylinder and Gaussian mass calculation.
+The root's appendix must prove lem:raw-entropy-compression. It must retain the
+common candidate marginal across inputs and full original Q marginal in each
+pointwise comparison coupling. It must not assume the intermediate compressed
+prefix itself has a Gaussian density.
+
+Target-class limitation
+-----------------------
+C is the width of a layered BOOLEAN circuit with constant wires counted and
+logical depth fitting the actual hidden depth. This is not automatically the
+width of a small real-valued NN circuit. Digit tasks need not have a useful
+Boolean-C bound, and empirical verification of the condition does not by itself
+supply one. The statement covers a robust implementation for each Boolean
+circuit, not every implementation. The posterior theorem is not a theorem
+about the predictor returned by ordinary gradient descent.
+
+Why the radius is interpretable
+-------------------------------
+For a nonexpansive hidden stack, independent hidden injection sites have total
+linear gain bounded by sqrt((L-1)N||v||^2), and scalar output noise adds the 1.
+Thus any finite perturbation in this calibrated ball changes raw output by at
+most c. In particular, c<=1/16 automatically certifies all nonexpansive stacks.
+The radius is normalized by readout energy, rather than arbitrary raw logit
+scale, and uses per-layer RMS hidden perturbations, compatible with cloning.
+Finite-tube or diagonal quadratic-metric certificates can allow expansion and
+contraction, saturation, and output-invisible directions. A clean Jacobian
+alone is insufficient unless a whole finite tube is verified.
+
+Optional valid weakenings (not changes to the agreed primary experiment)
+-----------------------------------------------------------------------
+1. Only demand stability for trajectories staying inside [-1,1]^N at every
+   hidden layer. The compressor's successful virtual activations are tanh
+   outputs, so it automatically produces such trajectories. Target cylinder
+   still qualifies. Negative attacks for this variant must check the bounds.
+2. Exclude scalar output noise from the prior condition. With compression
+   parameter r<=1/30, account for its output injection as an approximation
+   error: 1/16 + r/2 + r/8 <=1/12. A cleaner hidden-only radius is
+   c/sqrt((L-1)Ev), with the zero-readout case interpreted separately.
+   Same target construction and polynomial proof apply. Keep this a corollary
+   unless experiments are explicitly revised in advance.
+3. Freeze a trusted region using an independent unlabeled pilot, then validate
+   its input-distribution mass independently. Gaussian-condition on stability
+   throughout that region; error adds its excluded mass. Certifying only the
+   pilot/validation points does not certify a larger region.
+4. Permit network-specific exceptional sets from a fixed width-independent
+   low-VC family. Independent unlabeled validation plus uniform control on the
+   training sample gives the defect bound 3rho+epsilon with ordinary sign or
+   margin likelihood. This is a real distributional relaxation, but empirical
+   evidence must certify failure containment in the region family, not merely
+   observe a few failures. Round-two proof was independently audited.
+
+What current evidence would and would not establish
+--------------------------------------------------
+A global certificate establishes membership for that trained parameter array.
+A sound pointwise certificate on heldout inputs only establishes those points;
+a binomial bound can estimate that fixed network's population failure rate.
+It does not establish the entire Bayesian posterior's defect class or its
+training defect. A trained-network average is not a posterior sample average.
+Gradient-based attacks give lower bounds on instability; unsuccessful attacks
+are not certificates. Float arithmetic with loose margins is persuasive
+numerical evidence, but is not an interval-arithmetic proof.
+
+Raw outputs must be assessed before any rescaling. Every finite-cube network
+with no zero outputs eventually enters calibrated clipped support after large
+positive readout amplification. The cost is quadratic readout energy and can
+be enormous, so this does not show ordinary training naturally finds a useful
+low-energy member. Raw numerical stability does not share this automatic
+amplification effect.
+
+Unpromising automatic replacements
+----------------------------------
+Ordinary parameter flatness does not imply hidden-state robustness: previous
+fragile-chain examples have an open gradient-descent basin and benign local
+parameter geometry while failing this condition. Random dropout/noise success
+is weaker than adversarial RMS stability. A margin-relative radius that shrinks
+to zero at uncertain inputs does not provide the common inverse-polynomial
+radius used in compression; controlling those small-radius inputs requires
+an additional trusted-region or complexity assumption. General ReLU/residual
+architectures require their own prior/compression/target-mass extension.
+
+ROUND-3 ADDITIONS THROUGH 22:45 UTC
+
+All following fragments received independent mathematical PASS from the
+fresh-audit agent; the assembled local /tmp/round3-theory-check.tex compiled
+twice, without remaining warnings or overfull boxes. This check document
+is not the final paper assembled by root.
+
+1. stability-certificates.tex
+   Global exact suffix-spectral condition, diagonal-metric refinement,
+   and a finite-radius clean-Jacobian certificate with explicit curvature
+   and a continuity barrier. Pointwise finite tubes are distinguished
+   from global certificates. Conservative certificate membership is not
+   silently made a stricter prior support condition.
+
+2. margin-band-variant.tex
+   General odd monotone 1-Lipschitz saturated score transform theorem.
+   Optional U(z)=sign(z)min(.25,(|z|-.25)_+) uses identical constants and
+   is weaker than clipping at training margins. Among such score maps
+   preserving the full .25 train-test gap, it is least restrictive in
+   the precise support-inclusion sense U=soft_threshold_B composed F.
+   This is optional, not a retroactive change to the primary experiment.
+
+3. distributional-only-obstruction.tex
+   Explicit abstract prior on sparse patches. Population instability rho
+   and two-element compression outside exceptions coexist with empirical
+   instability 1 and poor ordinary consistency-posterior risk until a
+   width-dependent target prior mass penalty is overcome. This is NOT a
+   lower bound for the specified Gaussian neural-network prior.
+
+4. naturalness-gd-counterexample.tex
+   Exact full-batch logistic-GD trajectory: two equally likely correlated
+   Boolean inputs, d=2,N=1. Every iterate is correct and exactly stable
+   in clipped/margin-band score throughout the entire data support, yet
+   all iterates violate full-cube stability at sufficient depth. At c=.001,
+   H>=16 suffices for clipped-score and H>=20 for margin-band failure.
+   Every positive finite learning rate is allowed. Arbitrary unbalanced
+   stochastic batches and prevalence under random initialization are NOT
+   claimed. The adversarial hidden trajectory stays in the valid cube.
+
+5. analog-target-digital-simulation.tex
+   Global margin>=.5, width C, depth L, weights<=R yields a Boolean circuit
+   with size/depth poly(d,C,L,log(2+R)). Explicit weight precision and
+   rational Taylor evaluation avoid an oracle for real tanh. This explains
+   coverage of analog targets after polynomial architecture overhead,
+   without preserving original depth or the original minimum-width bound.
+
+6. alternatives-unrestricted-independent-audit.txt
+   Independent PASS on the finite-corruption target extension and the
+   Boolean halfspace theorem, including direct inspection of the external
+   Goldmann--Karpinski Theorem 10 and its explicit size/weight bounds.

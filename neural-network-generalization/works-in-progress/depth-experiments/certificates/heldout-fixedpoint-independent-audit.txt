@@ -1,0 +1,119 @@
+Independent audit by depth2_alternatives, 17 October 2026.
+
+PASS: exact_heldout_105.py, mathematical method and source code.
+This audit covers the global component only. A full held-out conclusion
+also requires separate valid certificates for every unresolved index.
+
+For an exact approximate state hq and quantized weight Wq,
+    h W-hq Wq=(h-hq)W+hq(W-Wq).
+Thus the inherited exact spectral bound for W and the exact Frobenius
+residual give the stated L2 recurrence, since ||hq||<=sqrt(N).
+For the first layer, input quantization is not assumed exact: the script
+explicitly computes the integer residual product (x-xq)Wq, and bounds
+x(W-Wq) by column L1 norms using |x_i|<=1. All original float32 inputs
+are interpreted as exact dyadic real numbers. The bias coordinate is
+included and is exactly one. The final readout uses the analogous
+operator/state term plus an exact L1 coefficient-residual term.
+
+Every tanh table proposal is checked against an outward interval value.
+Linear interpolation has error <=grid_step^2/8 because |tanh''|<=1.
+Endpoint errors combine convexly; nearest fixed-point interpolation
+adds at most 1/(2 QH). Beyond |x|>=12, replacing tanh by its sign has
+error at most 2 exp(-24). The implementation evaluates interpolation
+as left+(right-left)*fraction, with a direct overflow guard.
+
+The exact matrix-product guard bounds every absolute partial sum by
+max_abs_input times the maximum column L1 norm. It therefore excludes
+overflow in products and arbitrary accumulation orders, not merely in
+the final sum. The table shift and interpolation intermediate products
+have separate guards. Integer outputs are converted to Fractions
+without a floating approximation.
+
+The global raw-noise recursion q_1=1, q_s=1+||W_s||op^2 q_{s-1} gives
+the simultaneous hidden/output bound r sqrt(1+Ev q_H). The clipped
+comparison is conservative for the full clean-output interval, so
+every passing row establishes its pointwise support condition.
+
+All inherited operator bounds are tied to the saved model hash. The
+source and input archive hashes are recorded. The scope is the exact
+declared held-out input set, not a population statement or full image
+domain. This uses trusted integer/rational and outward-interval
+implementations and is not a Lean formalization.
+
+At the inspected global-component completion, 9,988 of 10,000 inputs
+passed at c=1/1000. The uniform clean-output enclosure error was about
+0.0071495212 and the raw-noise bound about 0.3785166625. The twelve
+remaining indices were explicitly listed, so no full-set conclusion
+was drawn from this component alone.
+
+Independent reproduction completed using a separate output directory:
+all 10,000 exact rational row records and the entire unresolved-index
+list match the saved global component. The replay summary is saved as
+heldout-fixedpoint-independent-replay.json.
+
+PASS: exact_heldout_105_local.py, mathematical method and source code.
+The exact clean forward and reverse-adjoint recurrences use outward
+dyadic interval arithmetic. At each internal layer, the prior prefix
+gain q bounds every preactivation displacement by the column norm
+times r sqrt(N q). The derivative caps are valid on this full tube;
+||W diag(cap)|| bounds every coordinatewise secant matrix. Thus the
+updated q=1+ell q is a finite-radius bound for simultaneous noise.
+
+The separate clean-Jacobian expansion is exact: output displacement
+equals its linear response to every injection plus the sum of each
+layer's nonlinear Taylor remainder against its clean suffix adjoint.
+The script encloses the scalar remainders at both tube endpoints and
+all possible stationary points, propagates adjoints with intervals,
+and bounds each signed product. The linear gain uses the joint
+hidden/output Euclidean noise norm. Intersecting this enclosure with
+the independent reachable-tube output bound is valid. There is no
+first-layer Taylor remainder because its injection occurs after the
+activation at a fixed input.
+
+The final composite verifier must check actual model and input archive
+hashes against both components, verify the inherited exact global norm
+source, and check that local rows cover precisely every unresolved
+global index. These checks avoid upgrading a partial certificate or
+mixing proofs for different stored networks, inputs, or radii.
+
+PASS: full local computation reproduction. Copied the required inputs
+and saved factor proposals to a separate temporary folder, reran all
+twelve exact clean trajectories, adjoints, finite tubes, matrix-factor
+checks, Taylor intervals and output comparisons, and compared every
+rational row with the canonical component. All twelve match exactly;
+the replay took 73 seconds and did not alter canonical artifacts.
+See heldout-local-independent-replay.json.
+
+PASS: final exhaustive union replay. Independently checked current
+model/input/norm/source hashes; all original indices 0,...,9999;
+the exact radius recomputed from stored readout weights; the complete
+partition into 9,988 global and twelve local proofs; every rational
+clipped-output comparison; every local prefix-gain recurrence; and
+the maximum bound. All 10,000 points are accounted for at c=.001,
+with maximum certified clipped change approximately 0.017652162503.
+See heldout-composition-independent-replay.json. This establishes the
+specified finite held-out set, not the entire image domain.
+
+PASS: exact_training_105.py thin wrapper. It verifies all 60,000 input
+indices and binary labels, uses lower endpoints for positive labels
+and minus upper endpoints for negative labels, and tests the strict
+training margin >1/2. Training-input stability is separately reported.
+The wrapper audit alone does not assert that its pending run succeeds.
+
+PASS: full 60,000-input training reproduction, subsequently completed.
+Reran the entire input quantization, certified table, integer forward
+propagation, exact error bookkeeping, signed-margin comparisons and
+stability checks in a separate temporary folder. Every rational row,
+the input archive hash, model hash and minimum margin match exactly.
+The minimum signed-output lower bound is
+1354473310624679376050525/302231454903657293676544,
+approximately 4.481576251076999. Every training margin exceeds 1/2,
+and every training input satisfies the c=.001 stability condition.
+See training-fixedpoint-independent-replay.json. Runtime: 131 seconds.
+
+PASS: independent arithmetic-backend crosscheck on the worst held-out
+local case, input2437. Replayed all fifteen saved layer norm proposals
+with the original pure-Python-integer Gram/residual verifier instead
+of the guarded-int64 helper. All rational norm bounds and the separate
+matrix-quantization Young corrections match. Runtime: 36 seconds.
+See heldout-worst-local-pure-integer-replay.json.

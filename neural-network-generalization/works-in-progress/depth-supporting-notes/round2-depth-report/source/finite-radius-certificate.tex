@@ -1,0 +1,68 @@
+\section{A finite-radius certificate using clean Jacobian products}
+\label{sec:clean-transport-certificate}
+
+Products of individual spectral norms discard cancellations between layers.
+The following sufficient test retains the exact clean transition products and
+bounds the nonlinear remainder separately. It is a finite-radius statement,
+not an inference from the infinitesimal Jacobian alone.
+
+Write the $H=L-1$ hidden layers in column-vector convention as
+$h_s=\tanh(W_sh_{s-1})$, with output $z=v^\top h_H$ and width $N$.
+Fix an input and its clean preactivations $a_s=W_sh_{s-1}$. Define
+\[
+ A_s=\operatorname{diag}(\operatorname{sech}^2 a_s)W_s,
+ \qquad P_{s,t}=A_s\cdots A_{t+1}\ (t<s),\quad P_{s,s}=I.
+\]
+The Gramian for normalized additive hidden disturbances is
+\[
+ G_1=NI,\qquad G_s=A_sG_{s-1}A_s^\top+NI.
+\]
+For a proposed total-noise radius $r$, recursively put $u_1=0$ and, for $s\ge2$,
+\begin{align}
+ b_s&=r\sqrt{\operatorname{diag}(W_sG_{s-1}W_s^\top)}
+       +\sum_{t=2}^{s-1}|W_sP_{s-1,t}|u_t,\label{eq:transport-b}\\
+ u_s&=\frac{2}{3\sqrt3}\,b_s^{\odot2}.\label{eq:transport-u}
+\end{align}
+Absolute values, the square root, and the square in these expressions are
+coordinatewise. Finally define
+\begin{equation}\label{eq:transport-output}
+ B(r,x)=r\sqrt{v^\top G_Hv+1}
+                  +\sum_{t=2}^H|v^\top P_{H,t}|u_t.
+\end{equation}
+
+\begin{proposition}[Finite-radius transport certificate]
+Every simultaneous postactivation and readout disturbance satisfying
+$\sum_{s=1}^H\|\eta_s\|^2/N+\eta_{\rm out}^2\le r^2$ changes the output
+at $x$ by at most $B(r,x)$. Consequently, if $B(r,x)<|z(x)|$ on the full
+input cube, the network preserves its own clean signs throughout this ball.
+\end{proposition}
+\begin{proof}
+Let $\Delta h_s$ be the hidden displacement and write its exact recursion as
+\[
+ \Delta h_s=A_s\Delta h_{s-1}+\eta_s+R_s,
+ \qquad
+ \Delta h_s=\sum_{t=1}^sP_{s,t}\eta_t+\sum_{t=2}^sP_{s,t}R_t.
+\]
+There is no input perturbation, so $R_1=0$. The global scalar bound
+$|\tanh''|\le4/(3\sqrt3)$ implies
+$|R_s|\le[2/(3\sqrt3)]|W_s\Delta h_{s-1}|^{\odot2}$.
+Assuming $|R_t|\le u_t$ at preceding layers, Cauchy--Schwarz applied to the
+linear disturbance map, followed by the coordinatewise triangle inequality
+for the remainder terms, gives $|W_s\Delta h_{s-1}|\le b_s$.
+This proves $|R_s|\le u_s$ inductively. At the readout, Cauchy--Schwarz
+including scalar output noise gives the first term of~\eqref{eq:transport-output};
+the remainder sum gives the second. No statistical independence or
+small-noise approximation is used.
+\end{proof}
+
+The test can be sharpened by replacing the global curvature bound in
+\eqref{eq:transport-u} with the supremum of $|\tanh''|$ on
+$[a_{s,j}-b_{s,j},a_{s,j}+b_{s,j}]$. An alternative exact scalar remainder
+envelope evaluates
+$\tanh(a+q)-\tanh(a)-\operatorname{sech}^2(a)q$
+at $q=\pm b$ and at $q=-2a$ when $|2a|\le b$: these and $q=0$ exhaust
+its extrema on the interval. The global-curvature version above already
+suffices for the numerical improvement below.
+
+
+The numerical condition in Section~\ref{sec:numerical-stability} is certified at an input whenever $B(r_{\rm num},x)\le1/16$. Floating-point evaluations of this sufficient test are distinguished from interval-verified statements in the experimental section.

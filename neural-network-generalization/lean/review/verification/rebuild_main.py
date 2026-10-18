@@ -22,6 +22,7 @@ MAINS = {
     "above": ("NeuralGeneralization.AboveMeanFieldMain", "AboveMeanFieldGeneralization", "aboveMeanField"),
     "meanfield": ("NeuralGeneralization.MeanFieldMain", "MeanFieldGeneralization", "meanField"),
     "subcritical": ("NeuralGeneralization.SubcriticalMain", "SubcriticalExponentialLowerBound", "subcriticalExponential"),
+    "robust": ("NeuralGeneralization.RobustMain", "RobustPolynomialDepthGeneralization", "robustPolynomialDepth"),
 }
 CONFIGS = ("lean-toolchain", "lakefile.toml", "lake-manifest.json")
 
@@ -129,13 +130,18 @@ def package_artifacts(packages: Path) -> dict[str, str]:
 def audit_source(targets) -> str:
     lines = [f"import {module}" for module, _, _ in targets]
     lines += ["import Lean.Util.CollectAxioms", "import Lean.Elab.Command", ""]
-    for _, statement, proof in targets:
-        lines += [f"example : NeuralGeneralization.MainStatements.{statement} :=",
-                  f"  NeuralGeneralization.MainProofs.{proof}",
-                  f"#print axioms NeuralGeneralization.MainProofs.{proof}"]
+    qualified = []
+    for module, statement, proof in targets:
+        prefix = "Robust" if module == "NeuralGeneralization.RobustMain" else ""
+        statement_name = f"NeuralGeneralization.{prefix}MainStatements.{statement}"
+        proof_name = f"NeuralGeneralization.{prefix}MainProofs.{proof}"
+        qualified.append((statement_name, proof_name))
+        lines += [f"example : {statement_name} := {proof_name}",
+                  f"#print axioms {proof_name}"]
     lines += ["", "open Lean Elab Command Meta in", "run_cmd do", "  let targets := #["]
-    lines += [f"    (``NeuralGeneralization.MainStatements.{s}, ``NeuralGeneralization.MainProofs.{p})" +
-              ("," if i+1 < len(targets) else "]") for i, (_, s, p) in enumerate(targets)]
+    lines += [f"    (``{statement}, ``{proof})" +
+              ("," if i+1 < len(qualified) else "]")
+              for i, (statement, proof) in enumerate(qualified)]
     lines += [
         "  for (statement, proofName) in targets do",
         "    let info ← getConstInfo proofName",

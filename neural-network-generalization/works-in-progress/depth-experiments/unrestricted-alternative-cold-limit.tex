@@ -1,0 +1,162 @@
+\section{A target-relative reduction in the fixed-width cold limit}
+\label{sec:cold-limit-reduction}
+
+The unrestricted Gaussian question can be reduced to an approximation
+energy comparison without interchanging width, depth, and variance limits.
+This reduction does not by itself provide the missing function-level
+energy lower bound.
+
+Fix dimension $d$, width $N$, and depth $L$. In the energy coordinates of
+the model the raw Gaussian is $\mathcal N(0,\sigma^2 I)$, and the squared
+Euclidean norm is $\kappa_N$. For a Boolean function $g$, define
+\[
+ e_{N,L}(g)=\inf\{\kappa_N(w):g(x)z_w(x)\ge1/2
+                           \text{ for all }x\in\{-1,1\}^d\},
+\]
+with infimum $+\infty$ if the set is empty.
+These are approximation costs of Boolean functions, not costs of specified
+implementations.
+
+\begin{proposition}[Exact fixed-width cold posterior rates]
+\label{prop:cold-posterior-rates}
+Let $S$ be any fixed noiseless labeled sample for which the posterior is
+defined, and let $\mathcal V_S$ be the Boolean functions consistent with
+its labels. Put $e_S=\min_{g\in\mathcal V_S}e_{N,L}(g)$.
+For every subset $\mathcal A$ of Boolean functions with
+$\mathcal A\cap\mathcal V_S\ne\varnothing$,
+\[
+ \lim_{\sigma\downarrow0}-2\sigma^2\log\Pi_{N,\sigma}
+               (\mathcal A\mid S)
+ =\min_{g\in\mathcal A\cap\mathcal V_S}e_{N,L}(g)-e_S.
+\]
+The identity is interpreted in the extended real sense when all functions
+in the numerator have infinite cost. In particular, the cold posterior
+concentrates on the functions of minimum energy in the version space.
+At a fixed $N\ge2$, this cold limit is also obtained along the exponent
+convention $\sigma^2=N^{-\gamma}$ by taking $\gamma\to\infty$.
+\end{proposition}
+
+\begin{proof}
+The finite-dimensional Gaussian large-deviation principle has speed
+$1/(2\sigma^2)$ and rate $\kappa_N$. The strict-margin event
+$A_g=\{g(x)z_w(x)>1/2\text{ for all }x\}$ is open. Its closure is
+exactly the corresponding closed-margin event: for a network in the
+latter, multiplying its readout by $1+\eta$ puts it in $A_g$, and its
+energy tends to the old energy as $\eta\downarrow0$.
+Thus the upper and lower large-deviation bounds agree, giving
+$-2\sigma^2\log\mu_{N,\sigma}(A_g)\to e_{N,L}(g)$.
+The globally margin-conditioned, sign-consistent posterior has function
+probabilities proportional to $\mu_{N,\sigma}(A_g)$ for
+$g\in\mathcal V_S$. There are finitely many Boolean functions at fixed
+$d$, so each sum has rate equal to its least constituent energy. Taking
+the ratio proves the claim. Coercivity and closedness ensure that every
+finite minimum energy is attained.
+\end{proof}
+
+\begin{lemma}[A uniformly cheap sample memorizer]
+\label{lem:sample-memorizer-energy}
+For integers $d,n\ge1$, set
+\[
+ C_n=2n+1,\quad b=\log(16(n+1)),\quad R_n=4+(d+1)b,
+\]
+\[
+ M=\left\lceil\max\{8,C_n,2R_n,dC_n(d+1)R_n^2\}\right\rceil,
+ \qquad T=20M(n+1).
+\]
+Every noiseless labeled sample of size at most $n$ has a consistent
+Boolean memorizer with unit-margin realizations at every width $N\ge M$
+and every depth $L\ge2$, of energy at most
+\[
+ K_{\rm mem}(d,n,L)=
+ \begin{cases}
+  2+2T,&L=2,\\
+  2+(L+14)(2T)^{1/(L-1)},&L\ge3.
+ \end{cases}
+\]
+Here $M,T$ are polynomial in $d,n$. In particular, if
+$L\ge3$ and $L-1\ge\log(2T)$, then
+\[
+ K_{\rm mem}(d,n,L)\le L+B(d,n),\qquad
+ B(d,n)=16+32\log(2T)=O(\log(d+n)).
+\]
+\end{lemma}
+
+\begin{proof}
+Let $P$ be the set of distinct positively labeled sample inputs, and put
+$p=|P|\le n$. For each $a\in P$, set
+\[
+ h_a(x)=\tanh\bigl(b(a\cdot x-d+1/2)\bigr).
+\]
+Its distance from $2\mathbf1\{x=a\}-1$ is at most
+$2e^{-b}=1/[8(n+1)]$. Consequently
+\[
+ z(x)=2\left[-1+\sum_{a\in P}(h_a(x)+1)\right]
+\]
+has signed margin at least $7/4$ for the Boolean function that is positive
+on $P$ and negative elsewhere. It fits all sample labels.
+Implement the constant term using $p+1$ constant hidden neurons, each
+with activation $1/2$ and readout weight $4(p-1)/(p+1)$.
+The $p$ isolator readout weights are two. Thus there are $2p+1\le C_n$
+neurons, all weights are bounded by $R_n$, and
+\[
+ \|v\|_2^2=4p+16(p-1)^2/(p+1)\le20(n+1).
+\]
+The construction includes $p=0$, where it is the constant negative
+classifier. Zero-padding to width $M$ gives first-layer energy at most
+one and readout energy at most $T$. Balanced cloning to every $N\ge M$
+increases each by at most a factor of two. The shallow scalar-transmission
+construction, with its final readout doubled, therefore gives the stated
+$K_{\rm mem}$ at every depth. Its constants and argument are exactly those
+in the shallow-target theorem from the preceding round.
+Finally, putting $u=\log(2T)/(L-1)\le1$ and using $e^u\le1+2u$ gives
+\[
+ K_{\rm mem}\le L+16+
+       2\frac{L+14}{L-1}\log(2T)
+ \le L+16+32\log(2T).
+\]
+\end{proof}
+
+For a test distribution $D$, target $f$, and $0<\varepsilon<1$, define
+the best energy of an accurate Boolean function by
+\[
+ e_{N,L}^{\varepsilon}(f;D)
+ =\min_{g:\Pr_D(g(X)\ne f(X))\le\varepsilon}e_{N,L}(g).
+\]
+
+\begin{corollary}[A sufficient energy barrier for posterior failure]
+\label{cor:cold-approximation-barrier}
+Fix $d,n,L$, a width $N\ge\max\{2,M,C_L(f)\}$, a target $f$, and a
+test distribution $D$. If for some $\Delta>0$,
+\[
+ e_{N,L}^{\varepsilon}(f;D)
+     \ge K_{\rm mem}(d,n,L)+\Delta,
+\]
+then, uniformly over all size-$n$ noiseless training samples from $f$,
+the posterior mass of functions with error at most $\varepsilon$ tends
+to zero as $\sigma\downarrow0$. More precisely, for all sufficiently
+small $\sigma$ this mass is at most $\exp[-\Delta/(4\sigma^2)]$.
+The posterior Gibbs error consequently has limit inferior at least
+$\varepsilon$. The conclusion holds along arbitrarily large
+$\gamma$ under $\sigma^2=N^{-\gamma}$.
+\end{corollary}
+
+\begin{proof}
+The memorizer ensures $e_S\le K_{\rm mem}$ for every sample. The exact
+cold posterior rate of the accurate set is therefore at least $\Delta$.
+Its mass is eventually at most the displayed exponential. There are only
+finitely many input sequences of length $n$ at fixed $d$, so the cold
+threshold can be chosen uniformly over all such samples. Thus it is not
+a sample-dependent choice of prior scale. The Gibbs-error conclusion
+follows by assigning error at least $\varepsilon$ to the complement.
+\end{proof}
+
+This is a genuine conditional posterior comparison, but its hypothesis
+is not established for a small-circuit target. A large cost for one
+particular implementation, a cloning obstruction, or a lower bound only
+for the exact target $f$ is insufficient: the barrier must cover every
+accurate competing Boolean function, with arbitrary allowed weights at
+the chosen width and depth. For depths exceeding a constant multiple of
+$\log(d+n)$, the missing barrier is above an energy benchmark
+$L+O(\log(d+n))$. An explicit small-circuit family satisfying such an
+approximation barrier would resolve a substantive part of the unrestricted
+question negatively. No such family is proved here.

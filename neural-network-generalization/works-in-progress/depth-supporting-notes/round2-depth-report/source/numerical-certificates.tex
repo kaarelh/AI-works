@@ -1,0 +1,203 @@
+\section{Finite-noise certificates that permit expansion and contraction}
+\label{sec:numeric-certificates}
+
+Numerical stability need not be enforced by making every layer nonexpansive
+in the ordinary Euclidean norm. Diagonal quadratic metrics provide a
+global, finite-noise certificate that allows intermediate expansion and
+subsequent contraction. They also give a concrete optimization objective.
+
+Write $H=L-1$ for the number of hidden layers. Let $M_s$ be diagonal
+positive semidefinite matrices, and suppose
+\begin{equation}\label{eq:diagonal-storage}
+ M_H\succeq vv^\top,\qquad
+ (W^s)^\top M_sW^s\preceq M_{s-1}\quad(2\le s\le H).
+\end{equation}
+Define
+\[
+ Q_M=N\sum_{s=1}^H\lambda_{\max}(M_s).
+\]
+
+\begin{proposition}[A diagonal-metric finite-noise certificate]
+\label{prop:diagonal-numeric}
+Under~\eqref{eq:diagonal-storage}, for every input and every finite
+simultaneous postactivation and output disturbance,
+\[
+ |z_w(x;\eta)-z_w(x)|\le\sqrt{1+Q_M}\,\|\eta\|_*.
+\]
+In particular this is a global finite-radius statement, not a bound only
+on the clean Jacobian.
+\end{proposition}
+\begin{proof}
+Coordinatewise $1$-Lipschitzness of $\tanh$ makes it nonexpansive in every
+diagonal seminorm $\|u\|_{M_s}=\sqrt{u^\top M_su}$.
+If $\Delta h_s$ denotes the difference of the noisy and clean states,
+\eqref{eq:diagonal-storage} gives
+\[
+ \|\Delta h_s\|_{M_s}
+ \le\|\Delta h_{s-1}\|_{M_{s-1}}+\|\eta_s\|_{M_s}.
+\]
+The first layer has $\Delta h_1=\eta_1$, since there is no input noise.
+Therefore
+\[
+ |\Delta z|\le
+   \sum_{s=1}^H\sqrt{\lambda_{\max}(M_s)}\,\|\eta_s\|_2
+       +|\eta_{\rm out}|.
+\]
+Cauchy--Schwarz in the RMS-normalized disturbance coordinates gives the
+claim. No assumption on activation signs, margins, or smallness of the
+perturbations has been used.
+\end{proof}
+
+If all internal operator norms are at most one, taking
+$M_s=\|v\|^2I$ recovers $Q_M=H E_v$. But the metric condition is weaker.
+For example, consider a scalar hidden stack with alternating internal
+weights $2,1/2,2,1/2,\ldots$. Let
+$p_s=\prod_{j=s+1}^H|W^j|$ and take $M_s=v^2p_s^2$.
+Every matrix inequality in~\eqref{eq:diagonal-storage} is an equality,
+every $p_s\le2$, and $Q_M\le4H E_v$. The noise gain is therefore only
+$O(\sqrt H)$ despite expansive layers at a positive fraction of depths.
+The product of the factors $\max\{1,|W^j|\}$ would instead be exponential
+in depth. The certificate accounts for the compensating contractions.
+
+The certificate is also output-specific. For instance, with two hidden
+coordinates, readout $v=(1,0)^\top$, and every internal matrix
+$W^s=\operatorname{diag}(1,10)$, take
+$M_s=\operatorname{diag}(1,0)$. The second coordinate may have a very large
+local gain but never affects the output; the certificate gives
+$Q_M=H E_v$ nonetheless. Thus irrelevant expansive directions need not
+be suppressed.
+
+\paragraph{Computing and training the certificate.}
+For fixed weights, minimizing $\sum_s b_s$ subject to
+\eqref{eq:diagonal-storage} and $0\preceq M_s\preceq b_sI$, with diagonal
+$M_s$, is a semidefinite program: every displayed constraint is affine in
+the diagonal metric entries and $b_s$. Its value certifies a finite-noise
+gain. One can penalize this certified gain during training, or use the
+parameterization
+\[
+ W^s=D_s^{-1}A_sD_{s-1},\qquad \|A_s\|_{\rm op}\le1,
+ \qquad v=D_Hu,\quad\|u\|_2\le1,
+\]
+with positive diagonal $D_s$ and $M_s=D_s^2$.
+Spectral normalization or projection enforces the constraints on $A_s$;
+the diagonal scales allow expansion and contraction in the original
+coordinates. This is a proposed training constraint or regularizer, not
+an assertion that unconstrained gradient descent automatically satisfies it.
+
+For the numerical radius~\eqref{eq:numeric-radius}, a certificate satisfying
+\[
+ \frac{1+Q_M}{1+H E_v}\le\left(\frac{1000}{16}\right)^2
+\]
+proves the prior's $1/16$ output-stability condition. More generally, let
+$R(L)\ge1$ be any fixed polynomial and replace that radius by
+\begin{equation}\label{eq:poly-transient-radius}
+ \frac{1}{1000R(L)\sqrt{1+H E_v}}.
+\end{equation}
+A certificate $Q_M\le R(L)^2H E_v$ then guarantees output change at most
+$1/1000$ throughout the ball. The polynomial-depth learning theorem remains
+valid: the target cylinder still belongs to the support because the radius
+is smaller, and the common compression radius after the readout-tail
+truncation is still inverse polynomial in depth.
+This permits polynomial intermediate amplification, not just contraction.
+For example, internal maps with operator norms at most $1+B/L$ have suffix
+gain at most $e^B$; if $B=O(\log L)$, this is polynomial and fits such a
+calibration. Applying this observation to a different residual-network
+architecture would still require matching that architecture's prior and
+target-mass calculation.
+
+The metric inequalities are sufficient certificates for membership in the
+numerical prior. If one instead restricts the prior to these particular
+certificates, the existing digital target cylinder is not automatically
+known to remain inside that stricter support; that would be an additional
+expressivity and probability question.
+
+\subsection{A finite-tube version that uses saturation}
+
+The global diagonal-metric test can be conservative for saturated units.
+There is a rigorous finite-tube variant. Fix an input, a proposed radius
+$r$, and positive definite diagonal $M_s$. Let $a_s=W^sh_{s-1}$ be the
+clean preactivations. Put
+\[
+ B_s=N\sum_{j=1}^s\lambda_{\max}(M_j),\qquad
+ R_{s,i}=r\sqrt{B_{s-1}}
+       \sqrt{(W^sM_{s-1}^{-1}(W^s)^\top)_{ii}}
+       \quad(s\ge2),
+\]
+and define diagonal matrices $U_s$ by
+\[
+ (U_s)_{ii}
+  =\sup_{|q|\le R_{s,i}}\operatorname{sech}^2(a_{s,i}+q)
+  =\operatorname{sech}^2\bigl((|a_{s,i}|-R_{s,i})_+\bigr).
+\]
+Suppose
+\begin{equation}\label{eq:tube-metric}
+ M_H\succeq vv^\top,\qquad
+ (W^s)^\top U_sM_sU_sW^s\preceq M_{s-1}\quad(2\le s\le H).
+\end{equation}
+Then every disturbance with $\|\eta\|_*\le r$ changes the output at this
+input by at most $r\sqrt{1+B_H}$.
+
+Indeed, induction gives
+$\|\Delta h_s\|_{M_s}\le\sum_{j\le s}\|\eta_j\|_{M_j}
+\le r\sqrt{B_s}$.
+The preceding-layer bound places each preactivation displacement in its
+specified interval $[-R_{s,i},R_{s,i}]$. The coordinatewise mean-value
+slopes are consequently between zero and the corresponding entries of
+$U_s$. Since $M_s$ is diagonal,~\eqref{eq:tube-metric} gives the same
+contraction inequality as before. This closes the induction and proves the
+finite-noise bound, including scalar output noise by Cauchy--Schwarz.
+The construction is self-consistent: the interval widths are computed
+before accepting the matrix inequalities, rather than assumed from the
+clean Jacobian alone.
+
+To certify the prior, this test must hold at every required input, with
+the resulting output bound at most $1/16$. Metrics may be chosen separately
+at different inputs. Checking only a finite test set supplies evidence on
+those inputs, not a global certificate. Unlike the global test, optimizing
+the finite-tube metrics is not in general a single convex semidefinite
+program, because the slope bounds depend on the candidate metrics.
+
+\subsection{Large output amplification does not automatically repair this condition}
+
+Let $w$ be fixed with $E_v>0$, and let $w^{(A)}$ be obtained by multiplying
+only its readout by $A>0$.
+For an input $x$, let
+\[
+ G_{\rm hid}(w,x)^2
+  =N\sum_{s=1}^H
+       \left\|\frac{\partial z_w(x;\eta)}{\partial\eta_s}
+                     \bigg|_{\eta=0}\right\|_2^2.
+\]
+This is the squared clean gain from RMS-normalized hidden disturbances;
+it does not include the scalar output-noise coordinate. With $c=1/1000$
+and $r_A=c/\sqrt{1+H A^2E_v}$,
+\begin{equation}\label{eq:readout-scaling-limit}
+ \lim_{A\to\infty}
+   \sup_{\|\eta\|_*\le r_A}
+     |z_{w^{(A)}}(x;\eta)-z_{w^{(A)}}(x)|
+   =\frac{c\,G_{\rm hid}(w,x)}{\sqrt{H E_v}}.
+\end{equation}
+The convergence is uniform over the finite Boolean cube.
+To prove it, write $\eta=r_Au$. Smoothness gives
+\[
+ z_{w^{(A)}}(x;r_Au)-z_{w^{(A)}}(x)
+   =A r_A\,\ell_x(u_{\rm hid})+r_Au_{\rm out}
+                                      +O(A r_A^2),
+\]
+uniformly on the unit disturbance ball, where $\ell_x$ is the clean hidden
+linear response. Since $A r_A\to c/\sqrt{HE_v}$,
+$r_A\to0$, and $A r_A^2\to0$, taking the supremum gives
+\eqref{eq:readout-scaling-limit}. Finiteness of the cube makes the remainder
+uniform over inputs.
+
+Consequently, if
+\[
+ \max_x\frac{G_{\rm hid}(w,x)}{\sqrt{H E_v}}>62.5,
+\]
+then no sufficiently large readout amplification makes the network satisfy
+the numerical support rule. For a nonexpansive hidden stack the ratio is
+at most one. This distinguishes numerical stability from the earlier
+calibrated sign condition, whose required radius could always be met by
+sufficiently large amplification of a nonvanishing finite-cube network.
+The limiting clean gain is used here only for an asymptotic scaling
+obstruction; the positive certificates above control finite disturbances.

@@ -1,0 +1,2503 @@
+Representation constraints and polynomial-depth learning
+in Gaussian Bayesian networks
+Dmitry Vaintrob
+Kaarel Hänni
+OpenAI Codex
+Research draft — 18 October 2026
+Abstract
+We study Gaussian-prior tanh networks conditioned on a clean output margin throughout
+the Boolean cube and on noiseless training signs. For every fixed ζ > 0 and exponent γ ≥1 + ζ,
+a posterior trained on n examples at depth L ≥3 and sufficiently large polynomial width assigns
+mass at least 1 −β to Boolean functions with same-depth unit-margin representatives whose
+product of Frobenius norms is polynomial in d, n. A general polynomial sample theorem would
+therefore require a corresponding approximation representation theorem.
+Conversely, a target with depth D0 and product norm P has polynomial sample complexity,
+simultaneously at every width above its actual bounded-weight network complexity, after only
+O(log(d+D0+P)) additional learner layers. The original target width and coefficient precision do
+not enter. We prove a norm-preserving width compression theorem and a further global-margin
+normal form whose entire Boolean description is polynomial in P, independently of original
+depth and width, apart from specifying at most P 2 relevant coordinate indices. At sufficiently
+large depth and width, the minimum Gaussian energy above its depth baseline is comparable to
+the logarithm of this intrinsic product complexity, together with the input-normalization cost.
+The positive results include every Boolean halfspace, independently of its original geometric
+margin and coefficient precision, at every learner depth L ≥2. For fan-in-two Boolean circuits
+of size s and depth h, put S = max{16, 2 + d + s}. At every learner depth L ≥max{2, h}, we
+obtain the upper bound SOζ(1+h/ log log S) times a polynomial in learner depth and statistical
+parameters. We give all analytic and representation arguments needed for these results. A
+polynomial sample bound for arbitrary small deep circuits, and the original critical prior γ = 1,
+remain unresolved.
+1
+Model and main conclusions
+The target f : {−1, 1}d →{−1, 1} is learned from independent examples (xi, f(xi)) drawn from an
+arbitrary input distribution D. A learner of depth L ≥2 has L −1 hidden layers, each of width N,
+and computes
+h0 = (1, x),
+hs = tanh(W shs−1)
+(1 ≤s < L),
+zw(x) = vT hL−1.
+There are no biases after the augmented input. Its Gaussian energy is
+κN(w) = d
+N ∥W 1∥2
+F +
+L−1
+X
+s=2
+∥W s∥2
+F + N∥v∥2
+2.
+The raw Gaussian has independent entry variances t2/d, t2/N, t2/N2, respectively. Put σ2 = t2/N;
+the exponent-γ convention is σ2 = N−γ. In energy coordinates its density is proportional to
+exp[−κN/(2σ2)].
+1
+
+The posterior QS is the raw Gaussian conditioned on
+|zw(x)| > 1/2
+for every x ∈{−1, 1}d,
+f(xi)zw(xi) > 0
+for every training input.
+“Unrestricted” retains this all-input output-margin condition and means that no additional internal
+robustness restriction is imposed. Let CL(f) be the least width admitting a depth-L representation
+with all physical weights bounded by that width and signed output greater than 1/2 everywhere.
+This is the actual bounded-weight network complexity at the specified learner depth.
+Our new representation constraint is Theorem 3.2. At every learner depth L ≥3, for every
+consistently labeled sample of size at most n, every 0 < β < 1, and all widths above a polynomial
+threshold, posterior mass at least 1 −β is supported on Boolean functions admitting a unit-margin
+depth-L representative with product of Frobenius norms polynomial in d, n. The threshold is
+polynomial in d, n, L, log(2/β), with degree depending on the fixed gap ζ > 0 above exponent one.
+If L is at least a constant times log(d + n), one additional layer gives a representative of energy
+L + O(log(d + n)). Corollary 3.3 turns any function-level approximation-energy lower bound into
+an actual posterior error lower bound. We do not establish such a barrier for an explicit small deep
+target here.
+Our new positive conclusion, Theorem 4.3, covers every Boolean halfspace with sample size poly-
+nomial in d, L, ε−1 and log(2/δ), simultaneously for every N ≥CL(f) and every 0 < σ2 ≤N−(1+ζ).
+Unlike a direct affine implementation, the alternative shallow representation does not depend on
+the target’s geometric margin or original weight magnitudes. The only external representation
+ingredient is the classical Goldmann–Karpinski threshold-to-majority simulation; the remaining
+analytic arguments are included below.
+The positive and negative directions meet at a function-level representation question. Theo-
+rems 9.1 and 12.3 give, respectively, a partial converse after logarithmic added depth and a finite
+Boolean description controlled by product norm alone. Theorem 13.1 then relates intrinsic product
+complexity to minimum excess Gaussian energy at sufficiently large depth and width. None of these
+statements identifies ordinary circuit size with product complexity. For a general fan-in-two circuit
+of size s and depth h, put S = max{16, 2 + d + s}. At every L ≥max{2, h}, the block construction
+gives SOζ(1+h/ log log S) sample dependence, improving the direct SOζ(h) bound while retaining a gap
+from a joint polynomial. Every fixed-depth threshold-circuit family is covered by a polynomial
+bound; thus an explicit superpolynomial-sample counterexample within NC1, at growing learner
+depth, would separate NC1 from TC0.
+We measure error primarily by posterior Gibbs error Ew∼QS PrD{sign zw(X) ̸= f(X)}. If pS(x)
+is posterior probability of the correct label, then
+D{x : pS(x) ≤q} ≤GibbsErr(QS)
+1 −q
+(0 < q < 1).
+Thus all positive results also cover correct-answer probability thresholds 2/3 and 1/2, after constant
+changes in the Gibbs error target. Posterior mixtures require no special assumption. The lower
+bound in Corollary 3.3 states its separate consequence for the 2/3 criterion explicitly.
+The polynomial degrees may depend on ζ; no uniform limit as ζ ↓0 is claimed. All results
+concern statistical sample complexity, not efficient posterior computation. The draft has received
+independent AI-agent proof audits, but is not Lean-certified.
+2
+Changing the output margin at constant additional energy
+Lemma 2.1 (One-layer margin transfer). Suppose a width-N, depth-L tanh network with linear
+readout computes a Boolean function g with global signed margin at least r > 0 and Gaussian energy
+2
+
+K. For every r′ > 0, there is a network at the same width and depth L + 1 computing g with signed
+margin at least r′ and energy at most
+K + (r′/r)2 + (r′)2.
+The construction uses no biases after the original first layer.
+Proof. Let v be the old linear readout, and write c2 = N∥v∥2
+2. The global margin implies c ≥r > 0,
+because the hidden coordinates have absolute value at most one. Define
+a2 = r′
+cr,
+b =
+r′
+tanh(ar).
+Replace the original readout by a hidden layer all of whose rows are avT , and give the new readout
+the constant entries b/N. The new output is exactly b tanh(az(x)). Oddness and monotonicity give
+the claimed signed margin. The new two-layer energy is a2c2 + b2 in place of the old readout energy
+c2.
+For every real u, | sinh u| ≥|u|, so
+tanh2 u =
+sinh2 u
+1 + sinh2 u ≥
+u2
+1 + u2 .
+Consequently
+b2 ≤(r′)2 + (r′)2
+a2r2 ,
+a2c2 + b2 ≤2cr′
+r + (r′)2.
+Completing the square gives −c2 + 2cr′/r ≤(r′/r)2, proving the result.
+For example, a globally clean residual network with signed margin at least 3/8 can be converted
+to unit margin by adding one layer and at most 73/9 energy. The increase is independent of the old
+readout cost; simply multiplying the old readout need not have that property.
+Define the approximation energy
+EL,r(f; ϵ) = inf
+(
+κN(W) : N ≥1,
+|zW (x)| ≥r for all Boolean x,
+PrX∼D{sign zW (X) ̸= f(X)} < ϵ
+)
+,
+where D is a specified input distribution and an empty infimum is +∞. The lemma implies the
+exact comparison
+EL+1,r′(f; ϵ) ≤EL,r(f; ϵ) + (r′/r)2 + (r′)2.
+Thus a unit-margin approximation-energy lower bound at one extra layer implies a lower bound at
+any fixed smaller positive margin, losing only a universal additive constant when the two margins
+are fixed.
+3
+A posterior energy ceiling and a necessary representation condi-
+tion
+The following argument identifies a necessary condition for the desired jointly polynomial unrestricted
+learning theorem. It concerns the actual finite Gaussian scales above exponent one, not just a cold
+limit. Throughout, the prior is conditioned on the original global clean margin |z(x)| > 1/2 and on
+the observed training signs.
+3
+
+Lemma 3.1 (A uniform memorizing witness). For integers d, n ≥1, there are explicitly polynomial
+quantities M = M(d, n) and T = T(d, n) ≥1 such that every consistently labeled sample of at most
+n Boolean inputs admits a globally unit-margin interpolating network at every width N ≥M and
+every depth L ≥3, with energy at most
+K = 2 + (L + 14)(2T)1/(L−1).
+One may take
+C = n + 1,
+R = max{4(n + 1), (d + 1) log(16(n + 1))},
+M =
+l
+max{4, C, 2R, dC(d + 1)R2}
+m
+,
+T = MCR2.
+In particular, if L −1 ≥log(2T), then
+K ≤L + B(d, n),
+B(d, n) = 16 + 32 log(2T) = O(log(d + n)).
+Proof. Let p1, . . . , pm be the distinct negatively labeled sample points, where 0 ≤m ≤n. Set
+a = log(16(n + 1)) and
+qj(x) = d −pj · x
+2
+,
+τj(x) = tanh
+ a(1/2 −qj(x))
+.
+Each qj is a nonnegative integer on the cube and is zero exactly at pj. Thus τj differs by at most
+2e−a from the sign which equals +1 at pj and −1 elsewhere. Since the pj are distinct,
+z(x) = −2
+
+m −1 +
+m
+X
+j=1
+τj(x)
+
+
+has the desired interpolating signs, equals +2 or −2 in the ideal sign-feature limit, and differs
+from those values by at most 4me−a < 1/4. The formula also gives the constant +2 when m = 0.
+Implement its constant term using a first-layer constant feature 1/2, whose input bias is atanh(1/2).
+Pad with zero neurons to C = n + 1. Every physical weight is bounded by the stated R, and the
+global signed margin is greater than 7/4.
+Zero-padding this shallow network to M makes its first-layer energy at most one and its weighted
+readout energy at most T. Balanced cloning to any N ≥M gives first energy at most two and
+readout energy at most 2T. The scalar-transmission construction of Lemma 15.3, applied to this
+one-hidden-layer witness, gives the displayed bound at every L ≥3.
+For the final assertion, put u = log(2T)/(L −1) ≤1. The inequality eu ≤1 + 2u on [0, 1], and
+(L + 14)/(L −1) ≤16, give
+2 + (L + 14)eu ≤L + 16 + 32 log(2T).
+Theorem 3.2 (A finite-scale posterior energy ceiling). Fix d, n ≥1, L ≥3, ζ > 0, and 0 < β < 1.
+Use the quantities M, T, K above and put
+Q∗= ((K + 2)/L)L/2.
+There is a width threshold polynomial in d, n, L, log(2/β), with degree depending only on ζ, such
+that at every width above this threshold and every 0 < σ2 ≤N−(1+ζ), the following holds for every
+consistently labeled sample of size at most n.
+4
+
+With posterior probability at least 1 −β, the posterior Boolean function has a same-width, same-
+depth realization with global signed margin greater than 3/8 and energy at most K + 1. Rescaling its
+readout gives a unit-margin realization at the same width and depth, with product of layer Frobenius
+norms bounded by
+P 2
+F ≤d−1e19(2T)3/2.
+Alternatively, it has a same-width realization at depth L + 1, with unit margin and energy at most
+K + 82/9.
+When L −1 ≥log(2T), the last energy bound is L + O(log(d + n)).
+Proof. Use Gaussian energy coordinates A1 =
+p
+d/NW 1, As = W s internally, and AL =
+√
+Nv.
+Their entries are independent N(0, σ2) and their squared Euclidean norm is κN. Write t2 = Nσ2.
+We recall the explicit estimates from the Gaussian-distance bridge. There is a closed, convex,
+centrally symmetric Gaussian set T of probability at least 1/2 whose normalized block operator
+norms are at most tb, where
+b2 = max{2(d + 1) log 2 + 4 log 8, 16 log 9 + 8 log(8L)}.
+Put
+A =
+K + 2
+L −1
+(L−1)/2
+,
+ξ = min
+(
+1,
+1
+4
+p
+L(K + 1),
+1
+8
+√
+2LA
+)
+.
+If tb ≤ξ, adding any B ∈T to any network of energy at most K + 1 changes its output uniformly
+on the cube by at most 1/8. This follows by telescoping the layer perturbations and applying
+arithmetic–geometric mean to the other L −1 layer norms.
+For the realized sample, choose the unit-margin memorizing witness wS above. Its shifted set
+wS + T lies in the conditioning event. Central symmetry and the Gaussian shift identity give
+µ(wS + T ) ≥1
+2e−K/(2σ2).
+Gaussian isoperimetry gives µ{distκ(w, T )2 > K + 1} ≤e−(K+1)/(2σ2). Dividing yields
+QS{distκ(w, T )2 > K + 1} ≤2e−1/(2σ2).
+On the complementary event, subtract the metric projection of w onto T . The residual U has
+energy at most K + 1, and its output differs by at most 1/8 everywhere. The original clean margin
+is greater than 1/2, so the residual has the same Boolean function and margin greater than 3/8.
+Multiplying its readout by 8/3 gives unit margin without changing its depth. Lemma 2.1 adds at
+most 73/9 energy to obtain unit margin at one extra layer.
+It suffices to take
+N ≥
+l
+max
+n
+M, 2, (b/ξ)2/ζ, 2 log(2/β)
+om
+.
+Indeed, t ≤N−ζ/2 and σ−2 ≥N, so both estimates hold simultaneously for every permitted scale.
+Since A ≤√eQ∗, this is a polynomial threshold in those quantities. In fact, put q2 = (2T)1/(L−1) ≥1.
+Since K + 2 ≤(L + 18)q2, one has for every L ≥3
+Q2
+∗≤e18(2T)L/(L−1) ≤e18(2T)3/2.
+Thus the threshold is polynomial in d, n, L, log(2/β) for all the stated depths. Since K+1 ≤(L+17)q2,
+the same-depth residual and arithmetic–geometric mean give, after rescaling the readout,
+dP 2
+F ≤64
+9
+K + 1
+L
+L
+≤64
+9 e17(2T)L/(L−1) ≤e19(2T)3/2.
+The additive-excess conclusion follows from the memorizing-witness lemma. All constants and the
+set T are uniform over the realized sample; only the translating witness depends on its labels.
+5
+
+Corollary 3.3 (Approximation-energy barriers force posterior error). Let f and its input distribution
+D be arbitrary. Under the conditions of Theorem 3.2, suppose
+EL+1,1(f; ϵ) > K + 82/9.
+Then, for every realized sample of at most n examples labeled by f, the posterior Gibbs error
+is at least (1 −β)ϵ. The same conclusion holds if no globally unit-margin depth-L network with
+P 2
+F ≤d−1e19(2T)3/2 has D-error less than ϵ, allowing arbitrary finite widths. If pS(x) is the posterior
+probability of the correct label, then
+Pr
+D {pS(X) ≤2/3} ≥max
+
+0, 3(1 −β)ϵ −1
+2
+
+.
+Conversely, if some sample gives posterior Gibbs error at most r, then for every r′ > r/(1 −β),
+EL+1,1(f; r′) ≤K + 82/9.
+There is also a globally unit-margin approximation of error less than r′ at the original depth L, with
+P 2
+F ≤d−1e19(2T)3/2.
+Proof. The energy ceiling puts posterior mass at least 1 −β on Boolean functions with unit-margin
+representatives of energy at most K + 82/9. Under the barrier, every such function has error at
+least ϵ. The same posterior event has the same-depth product-norm realization in the theorem,
+proving the alternative barrier statement. For the confidence claim, if the displayed confidence-error
+probability is e, then Gibbs error is at most (1 −e)/3 + e. For the converse, condition the posterior
+on its event of mass at least 1 −β. Its average error is at most r/(1 −β), so for every larger r′ it
+contains a function of error less than r′.
+Thus a jointly polynomial sample theorem for all small deep targets would imply a representation
+theorem at every L ≥3: every target learned with polynomially many samples must admit a
+constant-error, unit-margin approximation at the same depth L whose product of layer Frobenius
+norms is polynomial in the target parameters and d. At depths sufficiently large compared with
+log(d + n), every such target must admit a constant-error approximation of energy L + O(log(d + n))
+at depth L + 1. In particular, if n is polynomial in d, C, L, the required excess energy is only
+O(log(d + C + L)). This conclusion does not depend on choosing the product-norm proof strategy
+for the upper bound; it is forced by the posterior itself. No example of a small target violating this
+necessary condition has been established here.
+4
+Boolean halfspaces need no geometric-margin assumption
+The shallow-target theorem applies to every Boolean linear threshold function, even when its most
+natural affine representation has extremely small geometric margin. The relevant fact is a classical
+circuit simulation theorem; retaining the original affine representation would miss this conclusion.
+Lemma 4.1 (Classical threshold-to-majority simulation). There is a universal polynomial p with
+the following property. Every Boolean threshold function f : {−1, 1}d →{−1, 1} can be written
+f(x) = sign
+
+b0 +
+m
+X
+j=1
+bj sign
+ 
+aj0 +
+d
+X
+i=1
+ajixi
+!
+,
+where m ≤p(d), all aji, bj are integers of absolute value at most p(d), and every displayed sign has
+a nonzero argument on every Boolean input.
+6
+
+This is the depth-two majority simulation of Goldmann and Karpinski [2]. Majority gates allow
+repeated and negated inputs and constants; collecting these wires gives the integer coefficients in
+the lemma. Their size convention counts wires, so their polynomial size bound also bounds all
+these coefficients. Their paper also gives the statement directly in terms of polynomially bounded
+integer weights. This is an external circuit theorem, not a new proof of threshold simulation here. A
+threshold function initially specified with a fixed convention for ties can be put in strictly separating
+form by an arbitrarily small bias change on the finite Boolean cube.
+Lemma 4.2 (A polynomial shallow tanh realization). Every Boolean threshold function on d inputs
+has a one-hidden-layer tanh network with linear readout, global signed margin at least 3/2, and both
+width and maximum absolute physical weight bounded by a universal polynomial in d. These bounds
+are independent of the coefficients and geometric margin of its original threshold representation.
+Proof. Use Lemma 4.1. Put A = max{1, Pm
+j=1 |bj|} and λ = 1
+2 log(8A). Each inner affine form is a
+nonzero integer, so, with hj(x) denoting its sign,
+tanh
+ 
+λ
+ 
+aj0 +
+X
+i
+ajixi
+!!
+−hj(x)
+ ≤2e−2λ = 1
+4A.
+Consequently replacing all bottom signs by these tanh features changes the top affine form by at
+most 1/4. Its exact signed value is a positive integer and hence at least one. Therefore
+z(x) = 2b0 + 2
+m
+X
+j=1
+bj tanh
+ 
+λ
+ 
+aj0 +
+X
+i
+ajixi
+!!
+satisfies f(x)z(x) ≥3/2 everywhere.
+Implement the constant 2b0 by one additional hidden feature equal to 1/2, using first-layer bias
+atanh(1/2) and readout coefficient 4b0. The resulting width is m + 1, and every physical weight has
+magnitude at most
+max{λp(d), 4p(d), atanh(1/2)},
+which is polynomial in d. No later bias is used.
+Theorem 4.3 (Unrestricted learning of every Boolean halfspace). Fix ζ > 0. There is a polynomial
+Pζ such that, for every Boolean threshold target f on d inputs, every learner depth L ≥2, and every
+input distribution, a sample of size
+n ≥Pζ
+ d, L, ε−1, log(2/δ)
+
+has, with probability at least 1 −δ, the following simultaneous guarantee. At every width N ≥CL(f)
+and every prior scale 0 < σ2 ≤N−(1+ζ), the original unrestricted Gaussian posterior has Gibbs error
+at most ε. Here CL(f) is the actual bounded-weight network complexity at the specified learner depth,
+and the posterior is conditioned only on the original global clean output margin and the observed
+training labels.
+In particular, the guarantee holds for every γ ≥1+ζ, with no dependence on an inverse geometric
+margin or on the precision of a specified affine representation of f.
+Proof. Lemma 4.2 supplies polynomial-in-d values of the shallow width C and physical weight bound
+R in Theorem 18.1. Substitute these values in that theorem. Its smaller-width argument already
+covers every CL(f) ≤N < M below the polynomial-width constructed witness; no identification of
+CL(f) with that constructed width is required.
+7
+
+This is an information-theoretic posterior guarantee. It does not assert that sampling the
+conditioned posterior, or recovering the alternative shallow representation from examples, is compu-
+tationally efficient.
+5
+Targets with small Fourier spectral norm
+For a Boolean function f : {−1, 1}d →{−1, 1}, write
+f(x) =
+X
+S⊆[d]
+bf(S)χS(x),
+χS(x) =
+Y
+i∈S
+xi,
+A(f) =
+X
+S
+| bf(S)|.
+The Fourier coefficients here use the uniform distribution, even when the learning distribution
+is different.
+Parseval implies A(f) ≥1.
+The following sufficient condition imposes neither a
+Fourier-degree bound nor a bound on the number of nonzero Fourier coefficients.
+Lemma 5.1 (A shallow realization from Fourier spectral norm). Every such f, with A = A(f), has
+a one-hidden-layer tanh realization with linear readout, signed margin at least 13/8, width at most
+1 + d
+l
+128A2(d + 2) log 2
+m
+,
+and physical weights bounded by
+max{3A, d
+2 log(32Ad), 1}.
+Proof. Sample a set S with probability | bf(S)|/A and attach the sign sS = sign bf(S). The random
+function AsSχS has mean f and takes values in [−A, A]. For m = ⌈128A2(d + 2) log 2⌉, Hoeffding’s
+inequality and a union bound over the 2d inputs show that, with positive probability,
+
+A
+m
+m
+X
+j=1
+sSjχSj(x) −f(x)
+
+≤1
+8
+for every x.
+Fix one such choice.
+Each parity on k ≥1 variables admits an elementary real-output threshold expansion. Put
+t = P
+i∈S xi and θj = −k + 2j −1 for 1 ≤j ≤k. On the permitted values t ∈{−k, −k + 2, . . . , k},
+χS(x) = bk +
+k
+X
+j=1
+(−1)k−j sign(t −θj),
+bk ∈{0, 1}.
+Indeed, both sides start at (−1)k and have the same jump at each threshold; explicitly bk = 1
+for even k and zero for odd k. Every threshold has absolute affine margin at least one. With
+λ = 1
+2 log(32Ad), replace each sign by tanh(λ(t −θj)). The resulting parity approximation has
+uniform error at most
+2ke−2λ ≤
+1
+16A.
+The empty parity is the constant one. A single constant hidden neuron, whose output is tanh 1,
+supplies all constant terms.
+Replacing the m sampled parities by these approximations adds error at most 1/16. Thus the
+resulting scalar output is within 3/16 of f everywhere. Doubling the readout gives signed margin at
+least 13/8. There are at most md nonconstant hidden neurons. Their first-layer coefficients and
+biases have magnitude at most dλ; their output coefficients have magnitude at most 2A/m. The
+single constant neuron’s output coefficient has magnitude at most 2A/ tanh 1 < 3A. These are the
+stated bounds.
+8
+
+Corollary 5.2 (Unrestricted learning from small spectral norm). For each fixed ζ > 0, there is
+a polynomial Pζ such that for every Boolean target f, every input distribution, and every learner
+depth L ≥2, a sample size
+n ≥Pζ
+ d, A(f), L, ε−1, log(2/δ)
+
+gives, with probability at least 1 −δ, Gibbs error at most ε for the original unrestricted Gaussian
+posterior, simultaneously for every N ≥CL(f) and every 0 < σ2 ≤N−(1+ζ). The posterior retains
+its original conditioning on a global clean output margin and the training labels.
+Proof. Substitute Lemma 5.1 into Theorem 18.1. All witness parameters are polynomial in d and
+A(f). The all-width conclusion is the all-width conclusion of that theorem and does not require
+CL(f) to equal the width of the constructed shallow realization.
+Both the realization lemma and its learning corollary also hold with A(f) replaced by P
+S |bg(S)|
+for any real-valued Fourier polynomial g satisfying f(x)g(x) ≥1 on every input. The same sampling
+argument approximates g to error 3/16, which still leaves the stated signed margin after doubling
+the readout. Thus a small normalized coefficient sum for a margin-separated vote of parities is
+enough, even when the Boolean sign function itself has a larger Fourier norm.
+For example, every parity has A(f) = 1, independently of its degree. More generally, a function
+with s nonzero Fourier coefficients has A(f) ≤√s by Cauchy–Schwarz and Parseval. These are
+sufficient representation conditions. The argument does not assert that all small Boolean formulas
+or all narrow branching programs have polynomial Fourier spectral norm.
+Corollary 5.3 (Two-state branching programs). Every Boolean function computed by a deterministic
+layered width-two branching program of length T has A(f) ≤T +1. Consequently the sample bound in
+Corollary 5.2 is polynomial in d, T, L, ε−1, log(2/δ) for this class. The program may query variables
+repeatedly, and its two nodes in a layer may query different variables.
+Proof. Encode the two states as −1, +1, and let sj(x) be the state after j transitions. Given the
+old state +1 or −1, the next state is a Boolean function u+(x) or u−(x) of at most one input bit.
+Each such function is constant or a signed input bit, so A(u+) = A(u−) = 1. The transition can be
+written
+sj+1(x) = aj(x)sj(x) + bj(x),
+aj = (u+ −u−)/2,
+bj = (u+ + u−)/2.
+The Fourier coefficient norm is subadditive and submultiplicative: the latter follows because
+multiplication of parities uses symmetric difference of their index sets. Thus A(aj), A(bj) ≤1 and
+A(sj+1) ≤A(sj) + 1.
+The initial state is constant, so A(s0) = 1. The final output is either constant or a signed copy of
+the final state, proving the claim. Unused state slots can be filled arbitrarily. If the program uses
+absorbing states for early termination, these states count toward its width-two bound.
+The same proof allows a node to query a parity rather than a single bit, since a signed parity
+also has Fourier norm one. Decision lists with T parity tests likewise have Fourier norm at most
+T + 1, by a separate direct argument: write the output as the sum of its T + 1 signed first-accept
+and default indicators. Each indicator is a product of factors (1 ± χS)/2, each of Fourier norm
+at most one, so submultiplicativity and the triangle inequality give the bound. These extensions
+concern representation and sample bounds only; no efficient algorithm for identifying a program
+from samples is asserted.
+9
+
+6
+Constant-depth threshold circuits and a lower-bound barrier
+The coefficient-independent halfspace construction also clarifies which explicit targets could disprove
+the general unrestricted sample conjecture. Here a threshold circuit may have arbitrary real weights,
+and its size counts wires, including input and constant wires.
+Lemma 6.1 (Threshold circuits as bounded-weight tanh networks). There is a universal constant a
+such that every depth-h, h ≥1, threshold circuit of wire size at most s on d Boolean inputs has a tanh
+realization with linear readout, unit global margin, depth at most 2h, and both width and maximum
+absolute physical weight bounded by (2 + d + s)a. It uses no biases after the augmented input. The
+bound is independent of the original real coefficients and of every original gate’s geometric margin.
+Proof. Replace each threshold gate by its depth-two polynomial-size, polynomial-integer-weight
+simulation from Lemma 4.1. Each gate has at most s inputs. The total wire count, coefficient
+bound, and maximum weighted fan-in of the resulting circuit are bounded by a universal polynomial
+in d + s. Its depth is at most 2h. Subdivide skip wires by identity threshold gates to make the
+circuit layered; since h ≤s, this costs only another polynomial factor. Pad with identity gates as
+needed so that the output is at a common depth q = 2h ≥2.
+Every gate can be taken to have integer affine form with absolute value at least one on Boolean
+inputs. Let B ≥1 bound the sum of the absolute coefficients of any such affine form, including its
+constant. Put δ = 1/(4B) and λ = 2 log(8B). Replace every gate except the final output gate by
+tanh applied to λ times its affine form. If all preceding features approximate their intended signs to
+accuracy δ, the affine perturbation is at most Bδ = 1/4. Its signed value is therefore at least 3/4,
+and the new feature error is at most
+2e−3λ/2 =
+2
+(8B)3 ≤δ.
+This inductive accuracy bound does not deteriorate with depth.
+To implement constants without later biases, add a constant feature equal to 1/2 at every hidden
+layer. The first such feature has bias atanh(1/2); each later one receives weight 2 atanh(1/2) from
+the preceding constant feature. An affine constant b is then supplied by weight 2λb to this feature.
+Thus all constants are exact. The last threshold is replaced by twice its affine form, as a linear
+readout; its signed value is at least 3/2. Uniform zero-padding of the hidden layers preserves the
+function. Every used parameter is polynomial in d + s, as asserted.
+Corollary 6.2 (Precision-independent threshold-circuit learning). Fix ζ > 0. A target with a
+depth-h, wire-size-s threshold circuit has unrestricted Gaussian posterior sample complexity
+(2 + d + s)Oζ(h) L + ε−1 + log(2/δ)
+Oζ(1)
+at every learner depth L ≥2h, simultaneously for every N ≥CL(f) and every 0 < σ2 ≤N−(1+ζ).
+No original coefficient magnitude or geometric margin enters the bound. In particular, for each fixed
+h, this is polynomial in the circuit size, input dimension, learner depth, and statistical parameters.
+Proof. Apply the fixed-intrinsic-depth theorem and its quantitative corollary below to Lemma 6.1,
+with intrinsic depth D0 = 2h and polynomial bounds on the tanh width and weights.
+Recall that nonuniform TC0 consists of Boolean families having polynomial-size threshold circuits
+of some fixed depth. Consequently every such family enjoys a polynomial sample guarantee under the
+present posterior at all sufficiently large learner depths. This gives the following precise limitation
+on a negative-result route.
+10
+
+Corollary 6.3 (A circuit-complexity consequence of a counterexample). Fix ζ > 0. Suppose a
+family (fd), at learner depths L(d) →∞, requires more than every polynomial in d, L(d) examples
+for some fixed positive error and confidence targets, under the present unrestricted posterior and
+the all-admissible-width guarantee with γ ≥1 + ζ. Then (fd) /∈TC0. In particular, a family in NC1
+with this property would separate NC1 from TC0.
+Proof. If the family were in TC0, it would have fixed depth h and wire size polynomial in d.
+Eventually L(d) ≥2h, so Corollary 6.2 would supply a polynomial sample bound simultaneously for
+every admissible width and stated Gaussian scale, a contradiction.
+This is a logical consequence, not a claimed circuit separation or a proof that unrestricted
+learning is always polynomial. It also does not cover exponents approaching one with dimension,
+fixed learner depths below the alternative representation’s depth, or the mean-field case.
+7
+A depth-blocking bound for general Boolean circuits
+A simple circuit transformation slightly improves the exponential dependence on growing intrinsic
+depth. It does not make the dependence polynomial for general small circuits.
+Proposition 7.1 (Blocking Boolean layers). Let f be computed by an AND/OR/NOT circuit of
+fan-in at most two, depth h ≥1, and at most s gates and input wires. Put
+S = max{16, 2 + d + s},
+b = max{1, ⌊log2 log2 S⌋},
+a = ⌊h/b⌋,
+r = h −ab,
+q = max{2, 2a + min{2, r}}.
+Then f has a depth-q tanh representation with unit global margin, width and physical weights bounded
+by a universal polynomial in S. Consequently, for each fixed ζ > 0, at every learner depth L ≥q the
+unrestricted posterior has a sample bound of the form
+S Oζ(1+h/ log log S) L + ε−1 + log(2/δ)
+Oζ(1),
+uniformly for every actual width N ≥CL(f) and every 0 < σ2 ≤N−(1+ζ). One has q ≤max{2, h},
+so in particular the result applies at every learner depth L ≥max{2, h}. For polynomial-size
+logarithmic-depth circuits, this is exp[Oζ(log2 S/ log log S)] times a polynomial in the learner depth
+and statistical parameters.
+Proof. First insert identity gates along skip wires and at an output of depth less than h. The
+resulting layered circuit has polynomial size in S, since h ≤s after removing unused gates. Divide
+its layers into consecutive blocks of at most b layers.
+Each gate at the end of a block depends on at most 2b signals at the beginning of that block.
+Regard its subcomputation as a Boolean function of these boundary signals, and express that
+function by its full DNF. The DNF has at most
+22b ≤S
+terms, each of length at most 2b ≤log2 S. Implementing its conjunctions in one threshold layer and
+its final disjunction in the next uses polynomially many wires and integer coefficients bounded by a
+polynomial in S. A gate whose function is constant can be implemented by a constant threshold.
+Use two threshold layers for every full block. A final one-layer block can simply retain its original
+AND/OR/NOT threshold gates, rather than be expanded to two layers; a longer final partial block
+11
+
+uses two layers. The resulting threshold depth is 2a + min{2, r} ≤h. When h = 1, pad to depth
+two by inserting one identity threshold layer. All blocks together therefore form a depth-q threshold
+circuit of polynomial size and polynomial integer weights. Choose odd integer thresholds after
+doubling literal coefficients, so every gate has signed preactivation at least one on Boolean inputs.
+Here the threshold circuit already has small integer weights; no threshold-to-majority replacement
+is needed. Convert its first q −1 layers directly to tanh. If B ≥1 bounds each gate’s total absolute
+incoming coefficients, including its bias, use gain λ = 2 log(8B) and accuracy 1/(4B) at every hidden
+layer. Inductively the affine perturbation from preceding approximate signs is at most 1/4, and the
+tanh error is at most 2e−3λ/2 ≤1/(4B). Biases are represented by an exact hidden constant 1/2,
+propagated using weight 2 arctanh(1/2); its contribution is included in B. At the last threshold,
+use twice the affine form as the linear readout. It has signed value at least 3/2. This construction
+has exactly q weighted layers, no later biases, and polynomial width and weights.
+The quantified fixed-intrinsic-depth theorem then gives a sample bound SOζ(q) times the displayed
+polynomial in L and the statistical parameters. Since q = O(1 + h/ log log S), this is the claimed
+estimate. Its small-width part is already expressed using the actual complexity CL(f), so the
+alternative circuit’s larger width does not impose an additional lower-width assumption.
+This is a circuit-size/depth tradeoff rather than a polynomial-product representation theorem.
+In particular, for balanced recursive majority it improves the available quasipolynomial upper bound
+but does not settle whether a polynomial bound is possible.
+8
+Formula targets independently of their original depth
+Formula balancing is classical, following Spira [3]. We include the elementary construction needed
+here to make the resulting sample bound explicit. This section does not claim a new circuit-balancing
+theorem.
+Lemma 8.1 (Polynomial-size balancing of a Boolean formula). An AND/OR/NOT formula with s
+gates and literal occurrences has an equivalent fan-in-two circuit of size polynomial in s + 2 and
+depth O(log(s + 2)), regardless of the original formula depth.
+Proof. Push negations to the leaves using De Morgan’s laws, eliminate double negations, and simplify
+constants. This does not increase the number of literal occurrences. Binarize any larger-fan-in
+AND/OR gates; this adds only linearly many gates and does not change the leaf count. A constant
+formula is immediate. Otherwise let n denote its number of literal occurrences, counting repeated
+occurrences separately.
+For n ≥2 there is a subformula g with between n/3 and 2n/3 literal occurrences. To find one,
+descend from the root while a child has more than 2n/3 leaves. At the last such node both children
+have at most 2n/3 leaves, and at least one has at least n/3 leaves. Regard this one occurrence of g
+as a formal Boolean input. After substituting either value b ∈{0, 1} and simplifying constants, the
+remaining formula Fb has at most n −|g| ≤2n/3 literal occurrences. The Shannon identity is
+F = (g ∧F1) ∨(¬g ∧F0).
+It is valid even if variables appearing in g also occur elsewhere in the original formula.
+Recursively balance g, F0, F1 and join the three resulting circuits by the four indicated Boolean
+gates. Their depths increase by at most three, and each recursive subproblem has at most 2n/3
+occurrences. Hence the depth is O(log(n + 1)). There are at most three recursive subproblems per
+call, so the size is polynomial; for example a bound O((n + 1)4) follows immediately by induction.
+12
+
+Reuse the balanced output of g in its two appearances in the displayed identity. This establishes
+the asserted circuit bounds.
+Corollary 8.2 (A quasipolynomial bound for arbitrary formulas). Let f have a Boolean formula with
+at most s gates and literal occurrences, and put S = max{16, 2 + d + s}. There is a tanh realization
+with unit margin, polynomial-in-S width and physical weight bounds, and depth q satisfying
+2 ≤q ≤C
+log S
+log log S
+for a universal constant C. For each fixed ζ > 0 and every learner depth L ≥q, the unrestricted
+posterior sample bound is
+exp
+"
+Oζ
+ 
+log2 S
+log log S
+!#
+ L + ε−1 + log(2/δ)
+Oζ(1),
+simultaneously for all actual widths N ≥CL(f) and all 0 < σ2 ≤N−(1+ζ). This applies in particular
+to read-once formulas and does not depend on the depth of the given formula.
+Proof. Lemma 8.1 gives a circuit of polynomial size and depth O(log S). Apply Proposition 7.1 to
+that circuit. The logarithm of its size parameter is O(log S) and its double logarithm is comparable
+to log log S. Its blocked tanh depth is therefore O(log S/ log log S), with polynomial width and
+weights. The quantified intrinsic-depth bound gives the displayed sample estimate. All-width
+coverage is inherited from that bound, not from identifying the target’s actual minimum width with
+the construction.
+When a supplied formula is already shallower, its original blocked representation can be used
+instead. The result above is still quasipolynomial in formula size; it does not resolve polynomial
+sample complexity for all polynomial-size formulas.
+9
+Polynomial product norm suffices after logarithmic added depth
+The posterior representation ceiling has a partial converse for a specified finite-width target represen-
+tation. Polynomial product norm alone does not balance the physical tanh layers, but small-prefix
+linearization and unequal clone counts balance all retained hidden layers. Only a polynomial readout
+cost then needs to be transmitted.
+Theorem 9.1 (Deep targets with polynomial product norm). Suppose a width-C, depth-D0 ≥2
+tanh network has global signed margin at least one for f, and product of layer Frobenius norms at
+most P. Put P0 = max{1, P} and
+τ 2 =
+1
+16P0D0(d + 1)3/2 ,
+T = 32CP 2
+0
+τ 2
+.
+For every fixed ζ > 0, the original unrestricted Gaussian posterior has sample complexity polynomial
+in
+d, C, D0, P0, L, ε−1, log(2/δ)
+at every learner depth
+L ≥D0 + ⌈log T⌉,
+simultaneously for every N ≥CL(f) and every 0 < σ2 ≤N−(1+ζ). The same polynomial conclusion
+holds under the alternative depth condition L ≥2D0. There is no bound on the individual weights
+of the specified target representation and no internal robustness restriction.
+13
+
+Proof. Write Mj for the actual Frobenius norm of its jth matrix, including the readout, and
+Sj = Q
+i≤j Mi for the prefix products. All norms are positive, since the global margin excludes a
+zero map. The augmented input norm is R0 =
+√
+d + 1. At every hidden layer, boundedness of tanh
+and the suffix Lipschitz bound give
+1 ≤|z(x)| ≤
+√
+C P
+Sj
+,
+Sj ≤P
+√
+C.
+Using an upper bound P instead of the exact full product only weakens this inequality.
+Replace the tanh activation by the identity at each hidden layer whose original prefix product
+satisfies Sj < τ. The inequality |u −tanh u| ≤|u|3/3 and a telescoping argument give total output
+change at most
+X
+j:Sj<τ
+P
+Sj
+(SjR0)3
+3
+≤PD0τ 2R3
+0
+3
+≤1
+48.
+The same prefix and suffix bounds apply throughout this telescoping, since both identity and tanh
+are zero-preserving and one-Lipschitz. Collapse the resulting consecutive linear matrices into their
+next nonlinear layer or the final readout, then double the readout. The result still computes f with
+unit margin.
+If every hidden activation was removed, f is a Boolean halfspace, and Theorem 4.3 proves
+the claim. Otherwise let H ≥1 be the number of retained hidden layers, with original indices
+j1 < · · · < jH. Their retained prefix bounds satisfy
+τ ≤Sjs ≤P0
+√
+C.
+The first collapsed matrix has Frobenius norm at most Sj1; the sth has norm at most Sjs/Sjs−1;
+and the doubled readout has norm at most 2P0/SjH. These are assigned norm bounds; matrix
+multiplication can make the actual norms smaller without affecting any subsequent upper bound.
+In particular every collapsed physical weight is at most
+R = max{1, 2P0
+√
+C/τ}.
+Define
+a = dτ 2
+8C ,
+rs =
+a
+dS2
+js
+=
+τ 2
+8CS2
+js
+,
+rmin =
+τ 2
+8C2P 2
+0
+.
+Then rmin ≤rs ≤1/(8C) and a < 1/8. At common width N, give every original neuron in retained
+layer s exactly cs = ⌈Nrs⌉clones, divide outgoing weights by cs, and fill the remaining positions
+with zero neurons. For
+N ≥M := ⌈max{2C, 8D0/rmin, 2R, 4T, 4}⌉,
+the clone counts fit in width N and Nrs ≤cs ≤Nrs(1 + 1/(8D0)). This preserves the collapsed
+network exactly. Its pre-readout energy and readout energy obey
+Epre ≤a
+
+1 +
+1
+8D0
+
++ (H −1)
+
+1 +
+1
+8D0
+
+≤H,
+c2 = N∥vN∥2
+2 ≤dS2
+jH
+a
+4P 2
+0
+S2
+jH
+= 32CP 2
+0
+τ 2
+= T.
+For the first inequality, H ≤D0 −1 and a < 1/8 leave more than enough slack to absorb all clone
+rounding.
+14
+
+Replace the readout by the scalar-transmission construction with m = L −H weighted layers,
+and double its final readout as in the shallow-target proof. The resulting unit-margin witness has
+energy
+K ≤H + (m + 15)T 1/m.
+The stated depth conditions ensure m ≥2. If L ≥D0 + ⌈log T⌉, then m ≥log T, and eu ≤1 + 2u
+for 0 ≤u ≤1 gives
+K ≤L + 15 + 32 log T.
+Hence the Gaussian-distance parameter is bounded by
+Q2
+∗= ((K + 2)/L)L ≤e17T 32.
+Under the alternative condition L ≥2D0, one has L/m ≤2 and the direct estimate
+K + 2 ≤(L + 17)T 1/m,
+Q2
+∗≤e17T 2.
+In either case, K, Q∗and M are polynomial in the stated target parameters and learner depth. The
+Gaussian-distance theorem therefore gives the required sample bound for all N ≥M.
+We check the actual smaller-width convention. The collapsed weights are at most R ≤M/2,
+and cloning can only reduce internal and readout weights. The first scalar-transmission matrix
+has weights at most 1.1R < M. If q2 = max{c2, 1}1/m ≤T, the remaining scalar weights have
+magnitudes at most 2.2q/N and 2q/N. Since M ≥4T ≥4, these are less than M. Thus the
+constructed width-M target is admissible and CL(f) ≤M. For CL(f) ≤N < M, clone a defining
+minimum-width target and double its readout; its width and weights are bounded by a polynomial
+in M. The finite-width theorem supplies the same polynomial sample form. Intersect the two
+sample events, with failure probabilities δ/2 each, to conclude.
+The theorem is polynomial in P itself. For a generic bounded-weight deep circuit, P may still
+grow exponentially with its depth. Thus this does not settle the unrestricted general small-circuit
+conjecture. It does show that a polynomial product-norm representation is a sufficient target
+condition after a logarithmic number of additional layers, without imposing that condition on the
+support of the prior.
+10
+Width compression with controlled product norm
+The width dependence in Theorem 9.1 can be removed. Boundedness and near-linearity of tanh
+permit a norm-preserving compression: very large normalized rows can be dropped, very small rows
+can be linearized, and the remaining neurons can be sampled with a probability chosen to balance
+their two adjacent norms.
+Theorem 10.1 (Finite-set width compression for tanh). Let X be a nonempty finite set of inputs
+of norm at most R ≥1. Suppose a depth-D0 ≥2 tanh network with linear readout, arbitrary finite
+hidden widths, and no later biases has product of Frobenius norms at most P0 ≥1. For every
+0 < ϵ < 1, it has a same-depth approximation ez such that
+max
+x∈X |z(x) −ez(x)| ≤ϵ,
+D0
+Y
+j=1
+∥f
+W j∥F ≤2P0,
+and every new hidden width is bounded by a universal polynomial in
+P0, D0, R, log(2|X|), ϵ−1.
+15
+
+The bound is independent of the original widths and individual weights. An augmented constant
+input is allowed and counts toward R.
+Proof. Put H = D0 −1, P∗= 2P0, e = ϵ/(8H) and η = 1/(4H). We compress the hidden layers in
+order from the first to the last. At each step the product norm increases by at most 1 + η, and
+the output changes by at most 6e on X. Thus every intermediate product is below P∗, and the
+final product is at most e1/4P0 < 2P0, while total error is less than ϵ. A zero matrix makes the
+entire network zero and is trivial, so all prefix and pair norms used below may be assumed positive.
+If a compression step produces a zero matrix, stop and use the zero network with width one; the
+accumulated approximation estimates still apply.
+Consider a hidden matrix W and its immediately following matrix V ; the latter may be the
+final linear readout. Let S be the product of all Frobenius norms strictly before W, with S = 1 at
+the first layer, and put
+A = ∥W∥F ∥V ∥F .
+The incoming feature vector h(x) has norm at most SR. The part strictly after V has Lipschitz
+constant at most P∗/(SA). If wT
+i is row i of W and vi is column i of V , write ai = ∥wi∥2 and
+bi = ∥vi∥2. Zero rows or zero outgoing columns can be deleted.
+Set
+B = P∗/e,
+τ 2 = 3e/(P∗R3),
+∆= e/(P∗R),
+Q = (B/τ)2.
+Partition neurons into large, small and middle according as Sai > B, Sai < τ, or τ ≤Sai ≤B.
+There are at most S2∥W∥2
+F /B2 large neurons. Their activation vector has norm at most the square
+root of this count. Deleting them therefore changes the final output by at most P∗/B = e.
+For the small neurons, replace tanh by the identity. Since |u −tanh u| ≤|u|3/3, their combined
+activation error has norm at most τ 2R3S∥W∥F /3. Propagation through the suffix bounds the
+output error by P∗τ 2R3/3 = e. Their resulting contribution to the next preactivation is the linear
+map
+B0 =
+X
+i small
+viwT
+i ,
+∥B0∥∗≤
+X
+i small
+aibi,
+where ∥· ∥∗is the nuclear norm.
+Let Am = P
+i middle aibi. If Am < ∆A, delete all middle neurons: their output contribution is at
+most P∗RAm/A ≤e. Otherwise Am ≥∆A > 0, and we approximate their contribution by sampling.
+Define
+Z =
+X
+i middle
+bi/ai,
+pi = (bi/ai)/Z.
+Draw m independent indices from (pi). A sampled neuron keeps its incoming row wT
+i and has
+outgoing column vi/(mpi). If bA = (Z/m) Pm
+r=1 a2
+ir and c = m/Z, its new incoming and outgoing
+squared Frobenius norms are exactly
+c bA
+and
+bA/c.
+Moreover E bA = Am. Since middle row norms lie between τ/S and B/S, one has
+Z max
+i
+a2
+i ≤AmQ ≤AQ.
+The random vector vi tanh(wT
+i h(x))/pi has norm at most AQSR, uniformly on X.
+Consequently some choice of the samples has both
+bA ≤Am + ηA
+16
+
+and middle-preactivation approximation error at most eSA/P∗simultaneously for every x ∈X,
+provided
+m ≥64Q2 max{η−2, (P∗R/e)2} log(8(|X| + 1)).
+Here and below take integer ceilings. For detail, the scalar random variables Za2
+i /A are bounded by
+Q, so Hoeffding controls their mean. For a Hilbert-valued random vector bounded by AQSR, the
+mean deviation has expectation at most AQSR/√m; bounded differences gives a dimension-free tail.
+A union bound over X and the scalar condition has positive success probability with the displayed
+constant. Propagation of the vector error gives final output error at most e.
+We next compress the linear branch. Truncate the singular-value decomposition of B0 to rank
+k = ⌈P∗R/e⌉,
+obtaining Bk = UV0 with ∥U∥2
+F = ∥V0∥2
+F = ν := ∥Bk∥∗≤∥B0∥∗. The residual operator norm is
+at most ∥B0∥∗/(k + 1) ≤A/(k + 1), so its final output error is at most P∗R/(k + 1) ≤e. If ν = 0,
+omit the linear branch entirely.
+When the middle branch was sampled, retain c = m/Z. When it was deleted and ν > 0, choose
+c = 1/(νS2) instead. Represent Bk approximately using K copies of each of its at most k singular
+channels: their incoming rows are the rows of
+p
+c/K V0, repeated K times, and their outgoing
+columns are the corresponding columns of U/
+√
+cK. Their total incoming and outgoing squared
+norms are cν and ν/c. Their linear limit is exactly Bkh. The tanh linearization error at the next
+preactivation has norm at most
+cν2(SR)3
+3K
+.
+After propagation this is at most P∗cνS2R3/(3K), using ν ≤A. In the sampled case,
+Z ≥AmS2/B2,
+cνS2 ≤mB2/∆;
+in the deleted case this quantity equals one. Hence it suffices to use
+K =
+&
+P∗R3
+e
+max{1, mB2/∆}
+'
+.
+The linear-channel approximation then contributes at most e error. When there is no sampled
+middle branch, the same bound is harmless; one may use the displayed deterministic value of m
+merely to define a common width upper bound.
+Combining the sampled and linear branches gives pair product norm
+bA + ν ≤Am +
+X
+i small
+aibi + ηA ≤(1 + η)A.
+The last inequality is Cauchy–Schwarz over the original rows and columns. If the middle branch was
+deleted, the pair product is simply ν ≤A. These are exact norm calculations for the constructed
+tanh matrices, not only bounds on their linear limits.
+The compressed hidden width is at most m + kK. All quantities in this bound are universal
+polynomials in P0, H, R, e−1 and log(2|X|). Crucially, no original dimension of either adjacent
+hidden layer occurs. Only the two adjacent matrices are altered. Processing the next hidden
+layer changes its own width without undoing the width bound for the preceding one. Uniform
+zero-padding at the end makes all hidden widths equal if desired. Summing the at most six errors
+and multiplying the pair-product bounds proves the theorem.
+17
+
+Corollary 10.2 (Uniform compression on a bounded input set). If the input dimension is q and X
+is any subset of the Euclidean ball of radius R ≥1, the same conclusion holds with width polynomial
+in q, P0, D0, R, ϵ−1, independently of whether X is finite.
+Proof. Choose an ϵ/(6P0)-net of the radius-R ball with at most (1 + 12P0R/ϵ)q points. Apply the
+finite-set theorem to this net with error ϵ/2. The original and compressed networks have Lipschitz
+constants at most P0 and 2P0, respectively. Their difference therefore changes by at most ϵ/2
+between any point and its nearest net point. This proves uniform error at most ϵ. The logarithm of
+the net size is polynomial in the displayed quantities.
+Corollary 10.3 (A width-free sufficient representation condition). Suppose f has some finite-width,
+depth-D0 tanh representation with unit global margin and product of Frobenius norms at most
+P0 ≥1. For each fixed ζ > 0, there are universal polynomials and a universal constant c such that
+its unrestricted Gaussian posterior sample complexity is polynomial in
+d, D0, P0, L, ε−1, log(2/δ)
+whenever
+L ≥D0 + c log(2 + d + D0 + P0),
+simultaneously for every N ≥CL(f) and every 0 < σ2 ≤N−(1+ζ). The same conclusion holds at
+every L ≥2D0. There is no dependence on the original width or on individual weights.
+Proof. Apply Theorem 10.1 with the augmented Boolean cube, R =
+√
+d + 1, |X| = 2d, and
+approximation error 1/4. The resulting representation has width polynomial in d, D0, P0, the same
+depth, and global signed margin at least 3/4. Double its readout to obtain unit margin and product
+norm at most 4P0. Theorem 9.1 then applies. Its T is polynomial in d, D0, P0, so the required
+logarithmic overhead has the displayed form after increasing a universal constant.
+Together with the posterior ceiling, this identifies polynomial product norm as a substantive
+representation criterion for this prior. The necessity statement concerns constant-error approx-
+imations at the same learner depth; the sufficiency statement above assumes an exact Boolean
+representation and permits logarithmically many added layers. These qualifications prevent treating
+the two statements as an exact equivalence.
+11
+What width compression does and does not say about circuits
+Corollary 11.1 (A finite-description normal form). Suppose a Boolean function on {−1, 1}d has
+an arbitrary finite-width, depth-D ≥2 tanh representation with global signed margin at least one
+and product of Frobenius norms at most P ≥1. There is a representation of the same function,
+with margin at least one, using at most D weighted layers, polynomial width and polynomially
+bounded individual weights in d, D, P, and product norm at most 8P. Here a purely affine function
+of the augmented input is allowed as the case of one weighted layer. The weights may moreover
+be chosen dyadic with polynomial bit length, at the expense of replacing the product bound by 16P.
+Consequently the function has a Boolean circuit of size polynomial in d, D, P, with no dependence
+on the original widths, weights, or their precision.
+Proof. Apply Theorem 10.1 on the augmented cube with error 1/4, and double its readout. This
+gives width C = poly(d, D, P), product at most P1 = 4P, and signed margin at least 3/2. Apply
+the small-prefix linearization from the proof of Theorem 9.1, with
+τ 2 =
+1
+16P1D(d + 1)3/2 .
+18
+
+It changes every output by at most 1/48. Collapse the resulting linear blocks and double the final
+readout. The resulting signed margin exceeds two, the product is at most 2P1 = 8P, and every
+physical weight is at most
+R = max{1, 2P1
+√
+C/τ} = poly(d, D, P).
+The number of weighted layers does not increase.
+If every hidden activation is removed, the
+remaining affine map has norm at most 2P1 and satisfies the same claims.
+For completeness, polynomial precision can be imposed without assuming that the displayed
+real weights were efficiently computable. Let D′ be the remaining depth and choose a polynomial
+B ≥2 that bounds the Frobenius norm and the row absolute sum of every remaining matrix, and
+also bounds all input and hidden dimensions. Each matrix norm Mj satisfies
+Mj ≥
+1
+√
+d + 1 BD′−1 .
+Indeed the margin gives 1 ≤|z(x)| ≤
+√
+d + 1 Q
+i Mi, and all other norms are at most B. Round
+each entry to a dyadic mesh 2−b, where
+b = O
+ D′ log B + log(d + D′ + 2)
+
+with a sufficiently large universal constant. The matrix Frobenius perturbations are then at most
+Mj/(4D′), so the product increases by at most (1 + 1/(4D′))D′ < 2. The standard layerwise error
+recursion, using the row-sum bound B and the one-Lipschitz property of tanh, makes the total
+output change less than 1/2 at the same precision. The initial margin exceeding two therefore leaves
+margin at least one. There are polynomially many entries and b is polynomial in d, D, P.
+Finally, evaluate each affine map and tanh to sufficiently many binary digits and propagate a
+total error smaller than 1/2. Arithmetic on these polynomial-length numbers and approximation of
+tanh on the polynomially bounded preactivation range use polynomial-size Boolean circuits. The
+output sign remains exact because of the margin.
+The converse direction is not supplied by width compression: a polynomial-size Boolean circuit
+is not thereby given a polynomial product-norm tanh representation. In particular, widening
+an existing implementation is not itself a proof of such a bound. If a polynomial product-norm
+implementation exists at any finite width, the corollary shows that a polynomial-width, finite-
+description implementation exists as well.
+Nor does this normal form impose constant threshold depth. The rank-one approximation
+argument gives retained depth of order dP 2 log(2P), which is only a polynomial depth bound when
+P is polynomial. Its combination with width compression therefore gives no inclusion in TC0 or
+NC1 and no separation of those circuit classes.
+12
+Product norm controls Boolean description size independently
+of depth
+The rank-one bottleneck strategy of Golowich–Rakhlin–Shamir [4] underlies depth-independent
+norm-based complexity bounds. Here we use it for a more specific representation statement: global
+Boolean margin permits a short, polynomial-norm tanh implementation of the scalar suffix, without
+carrying a constant rail through the retained prefix. The conclusion bounds a finite Boolean
+description independently of the original depth as well as width.
+19
+
+Lemma 12.1 (Relevant coordinates and freezing). A Boolean function with a globally unit-margin
+tanh representation of product norm at most P depends on at most P 2 coordinates. After deleting
+all irrelevant coordinates, it has a representation of the same depth and no larger product norm.
+Proof. Let T = Q
+j≥2 ∥W j∥F . For every relevant coordinate i, some cube edge in that coordinate
+has opposite labels at its endpoints. The two outputs differ by at least two, whereas the Lipschitz
+bound along that edge is 2∥W 1ei∥2T. Thus ∥W 1ei∥2T ≥1. Squaring and summing over the relevant
+coordinates gives their number at most ∥W 1∥2
+F T 2 ≤P 2.
+Freeze each irrelevant coordinate i to an independent uniform sign ai. This replaces the first-
+layer bias column w0 by w0 + P
+i aiwi, while retaining the relevant columns. Its expected squared
+Frobenius norm is exactly the original squared Frobenius norm. Some assignment therefore does
+not increase that norm. Since the function is independent of these coordinates, the reduced network
+retains its unit margin on the full reduced cube.
+Lemma 12.2 (A bias-free odd scalar classifier). Let P, R ≥1 and let g : [−R, R] →R be odd and
+P-Lipschitz. Let T ⊂[−R, R] be finite and nonempty, with |g(t)| ≥7/8 for t ∈T. There is a tanh
+network with two hidden layers, a linear readout and no biases, whose sign agrees with g on T and
+whose signed output there is at least 7/4. Its width, weights, and product of Frobenius norms are
+bounded by universal polynomials in P, R.
+Proof. Extend the set to T ∪(−T) and sort its positive absolute values. All are at least 7/(8P),
+since g(0) = 0. Consecutive values with opposite signs of g are separated by at least 7/(4P). Place
+a threshold θj at the midpoint of each such transition gap. There are m ≤2PR transitions, every
+0 < θj ≤R, and every actual absolute value is at distance at least 7/(8P) from every threshold.
+The resulting odd step classifier has the exact expression
+F(t) = c0 sign(t) +
+m
+X
+j=1
+cj sign
+ t −θj sign(t)
+,
+|c0| ≤1,
+cj ∈{−1, 1}.
+Indeed, the positive-side label changes by 2cj at transition j. The changes alternate, so the coefficient
+c0 = ℓ0 + P
+j cj is in {−1, 0, 1}, where ℓ0 is the first positive-side label. The displayed formula is the
+odd extension of this step classifier and equals sign g(t) on T.
+Set
+ρ = 1
+2P ,
+δ = min
+ ρ
+4R,
+1
+32(m + 1)
+
+,
+A = 1
+2ρ log 2
+δ ,
+α2 =
+ρ
+4R3 ,
+B = ρ−1 log(64(m + 1)),
+c = arctanh(1/2).
+The first hidden layer computes u(t) = tanh(αt) and s(t) = tanh(At). On T ∪(−T),
+|u(t)/α −t| ≤ρ/12,
+|s(t) −sign(t)| ≤δ.
+Thus replacing t −θj sign(t) by u(t)/α −θjs(t) changes it by at most ρ/12 + Rδ ≤ρ/3. The original
+magnitude exceeds ρ, so its sign is unchanged and its new magnitude exceeds ρ/2. The second
+hidden layer computes
+r(t) = tanh(cs(t)),
+vj(t) = tanh
+ B[u(t)/α −θjs(t)]
+.
+Consequently 2r(t) approximates sign(t) to error at most 2δ, and each vj approximates its desired
+sign to error at most 1/[32(m + 1)]. Therefore
+z(t) = 2
+
+2c0r(t) +
+m
+X
+j=1
+cjvj(t)
+
+
+20
+
+has signed value at least 2[1 −2δ −m/(32(m + 1))] ≥15/8 > 7/4 on T. This includes m = 0, when
+only the sign rail is needed.
+The three squared matrix norms are bounded respectively by
+α2 + A2,
+c2 + mB2(α−2 + R2),
+16 + 4m.
+Since m ≤2PR, these expressions, their product, and every physical weight are polynomially
+bounded in P, R. All biases are zero.
+Theorem 12.3 (A depth-independent Boolean normal form). There is a universal polynomial p
+with the following property. Suppose f : {−1, 1}d →{−1, 1} has some finite-depth, finite-width
+tanh representation with unit global margin and product of Frobenius norms at most P ≥1. Then
+f has a globally unit-margin representation using only its relevant input coordinates, with depth,
+hidden widths, individual weights, and product of Frobenius norms at most p(P). Its weights can
+be chosen dyadic with at most p(P) bits each. The bounds are independent of the original depth,
+widths, individual weights and their precision. There are at most P 2 relevant coordinates.
+Proof. First use Lemma 12.1. If no coordinate is relevant, a constant network of width one and depth
+two suffices. Otherwise write k ≤P 2 for the number of remaining coordinates and R =
+√
+k + 1. Let
+D be the remaining original depth, and put
+r =
+l
+128P 2R2 log(2PR)
+m
+.
+If D ≤r + 2, retain the network for the moment. Otherwise we produce a representation with at
+most r + 2 weighted layers and polynomial product norm.
+Write Mj = ∥W j∥F , sj = ∥W j∥op and srj = M2
+j /s2
+j. Unit margin implies Q
+j sj ≥1/R, because
+all activations are zero-preserving and one-Lipschitz. Hence
+X
+j
+log srj = 2 log
+Q
+j Mj
+Q
+j sj
+≤2 log(PR).
+Among the first r hidden layers choose one, j, with log srj ≤2 log(PR)/r. Replace W j by its leading
+singular component sjuvT . The discarded operator norm is at most Mj
+q
+1 −1/ srj ≤Mj
+plog srj.
+Propagation through the original prefix and suffix therefore changes every output by at most
+PR
+q
+2 log(PR)/r ≤1/8.
+The modified network retains the target’s signs and margin at least 7/8.
+Put S = Q
+i<j Mi, with S = 1 if j = 1, and normalize the bottleneck scalar as t(x) = vT hj−1(x)/S.
+Its absolute value is at most R. Everything from the rank-one matrix onward is an odd scalar
+function g(t) with Lipschitz constant at most sjS Q
+i>j Mi ≤P. Apply Lemma 12.2 on the finite
+set of these actual scalar values.
+Attach its two-hidden-layer classifier to the original prefix. The first two new rows are αvT /S
+and AvT /S. Their common factor 1/S cancels the prefix product S in the total Frobenius product.
+Thus the complete new network has polynomial product norm in P, R, independent of every original
+dimension and weight scale. Its depth is j + 2 ≤r + 2, and it has the required global signs with
+margin at least 7/4.
+In either case we now have depth and product norm polynomial in P, while widths may still be
+arbitrary. Apply the finite-description normal form, Corollary 11.1, with input dimension k ≤P 2.
+It gives polynomial width, physical weights and dyadic bit length, keeping unit margin and a
+21
+
+polynomial product norm. Restore zero columns for the irrelevant original coordinates if a d-input
+network is desired. If the normal form is purely affine, apply tanh to that affine output and append
+the readout 2; its unit margin is preserved and all bounds remain polynomial, now within the usual
+architecture with a hidden layer.
+Corollary 12.4 (Counting globally margined product-norm classifiers). Let HP contain all Boolean
+functions admitting any finite-depth, finite-width globally unit-margin tanh representation with
+product norm at most P ≥1. For a universal polynomial p,
+log |HP | ≤p(P) + P 2 log(d + 1).
+Consequently, with probability at least 1 −δ, every member of HP consistent with n independent
+realizable examples has error at most ε, provided
+n ≥p(P) + P 2 log(d + 1) + log(1/δ)
+ε
+.
+There is no depth or width restriction in this simultaneous event.
+Proof. There are at most (d+1)⌊P 2⌋possible ordered lists of relevant coordinates, allowing a padding
+symbol. Once the coordinates are chosen, Theorem 12.3 encodes the entire polynomial-size dyadic
+network in p(P) bits, after enlarging a universal polynomial. Count these descriptions and apply the
+usual union bound: an error-ε classifier is consistent with n independent examples with probability
+at most e−nε.
+In particular, counting implies that most Boolean functions of k variables require product norm
+at least 2ck for some universal c > 0, even when arbitrary depth and width are allowed. This is
+not a small-circuit lower bound: those generic functions also require exponentially large ordinary
+Boolean descriptions.
+13
+Excess Gaussian energy and intrinsic product complexity
+Define a function-level complexity, allowing all finite architectures, by
+P(f) = inf
+
+
+
+Y
+j
+∥W j∥F : f(x)zw(x) ≥1 on the entire cube
+
+
+.
+The infimum permits arbitrary finite depth and width, retains tanh hidden layers and a linear
+readout, and allows biases only through the augmented input. It is finite, for example by a truth-table
+shallow construction. It is also at least one: the network extends oddly to the full augmented cube
+{−1, 1}d+1 and has absolute margin at least one there. This nonconstant odd Boolean extension
+has a bichromatic cube edge. Along that edge the product of layer operator norms, and hence the
+Frobenius product, must be at least one.
+Let JL,N(f) be the infimum of the Gaussian energy κN over width-N, depth-L unit-margin
+representations of f, with JL,N(f) = +∞if none exists. This is a deterministic energy quantity, not
+a finite-temperature posterior probability.
+Theorem 13.1 (Intrinsic product complexity characterizes excess energy). For every d ≥1, L ≥2
+and N ≥1,
+JL,N(f) ≥L + log d + 2 log P(f).
+22
+
+Conversely, there are universal polynomials p, q and a universal constant c such that
+L ≥p(P(f)) + c log(d + 1),
+N ≥q(d, P(f))
+imply
+JL,N(f) ≤L + c log(2dP(f)).
+The upper-bound witness can be chosen with all physical weights at most q(d, P(f)). The polynomials
+do not depend on any supplied representation’s depth, width, or coefficient precision.
+Proof. The product of the L weighted layer energies is d Q
+j ∥W j∥2
+F . Arithmetic–geometric mean
+and eu ≥1 + u therefore give
+κN ≥L
+
+d
+Y
+j
+∥W j∥2
+F
+
+
+1/L
+≥L + log d + 2 log P(f).
+This proves the lower bound without any width or depth restriction.
+Choose a finite representation of product norm less than 2P(f). The depth-independent normal
+form supplies a unit-margin representation whose depth D0, width C, physical weights and product
+norm P0 are all polynomial in P(f). Apply the product-target construction of Theorem 9.1. Its
+width threshold M and transmission parameter T are polynomial in d, C, D0, P0, hence polynomial
+in d, P(f), and do not depend on the subsequently chosen learner depth. For L ≥D0 + ⌈log T⌉,
+that construction has energy at most
+L + 15 + 32 log T.
+If the small-prefix linearization in that proof removes every hidden activation, its separate halfspace
+learning conclusion is not needed here. The collapsed affine map has norm at most 2P0 and margin
+greater than one. Apply tanh to that map and append readout 2. This is a width-one shallow unit-
+margin representation with weights polynomial in P0. The shallow scalar-transmission construction
+therefore supplies, at every sufficiently large polynomial width and every L ≥2 + O(log(d + P0)),
+energy L+O(log(2dP0)). It also has polynomially bounded physical weights. Thus the affine branch
+has the same claimed upper-bound form.
+Its physical weights are bounded by a polynomial width threshold. Since log T = O(log(d + 1) +
+log P(f)), increasing universal polynomials and constants gives the stated conditions and upper
+bound. No attainment of the infimum defining P(f) was assumed.
+Corollary 13.2 (Learning from intrinsic product complexity). For each fixed ζ > 0, the unrestricted
+Gaussian posterior has a sample bound polynomial in
+d, P(f), L, ε−1, log(2/δ)
+at every L ≥p(P(f)) + c log(d + 1), simultaneously for all actual widths N ≥CL(f) and all
+0 < σ2 ≤N−(1+ζ).
+Proof. Use the same depth-independent normal form and apply the all-width product-target learning
+theorem.
+Its intrinsic parameters are all polynomial in P(f).
+Its finite-width branch covers
+the interval between the actual minimum width and the constructed polynomial-width witness
+threshold.
+23
+
+Thus, once depth and width are sufficiently large, the excess above the depth baseline is,
+up to universal constants, the logarithm of intrinsic product complexity together with the input
+normalization cost log d. This does not identify P(f) with ordinary circuit size. The normal form
+proves that ordinary Boolean description size is polynomial in P(f); a converse polynomial bound
+for arbitrary small deep circuits remains the central unresolved representation question. The learning
+corollary also retains its displayed learner-depth threshold.
+Analytic and representation foundations
+The following sections provide the full supporting arguments. They are included to make this paper
+independent of earlier drafts in this research program.
+14
+Unrestricted learning at bounded widths
+A robustness restriction is unnecessary when the learner’s width is itself polynomially bounded. The
+following elementary argument retains the original all-input clean margin and Gaussian conditioning
+conventions, and is uniform in the Gaussian scale. It also covers analog target networks at their
+original depth, without digital simulation.
+Let PN = N(d + 2) + (L −2)N2 be the parameter count, and let µN,t denote the raw Gaussian
+with variances t2/d, t2/N, t2/N2, respectively. Thus κN = (t2/N)χ2
+PN under µN,t. Fix integers
+1 ≤C ≤M and suppose, for some D ≥1, that
+µN,t{w : f(x)zw(x) > 1/2 for every x} ≥exp(−DN/t2).
+(1)
+This holds for C ≤N ≤M and 0 < t ≤1. Only this target-mass hypothesis is needed; posterior
+networks may be fragile.
+Theorem 14.1. For 0 < ε, δ < 1, set
+B = 4D + 2[d + 2 + (L −2)M] log 2 + 4 log(2/ε),
+A =
+√
+MB,
+T = d + 1 + M(L −1),
+q = [4T(MA)L−1]−1.
+If
+n ≥2
+ε [log M + PM log(5A/q) + log(1/δ)] ,
+then, with probability at least 1 −δ over independent examples from any input distribution, the
+unrestricted Gaussian posterior has Gibbs error at most ε, simultaneously for every C ≤N ≤M
+and 0 < t ≤1. Here “unrestricted” retains the original conditioning on |zw(x)| > 1/2 for all inputs,
+but imposes no internal robustness condition. The same sample event works after any number
+of additional correctly labeled examples. In particular, if D and M are polynomial in d, L, C, the
+sample bound is polynomial in d, L, C, ε−1, log(1/δ), uniformly for all γ ≥1 with t2 = N1−γ.
+Proof. For every sample, the event used to condition the raw Gaussian contains the target event
+in (1). The chi-square exponential moment therefore gives
+QS,N,t{κN > B} ≤exp
+DN
+t2
++ PN
+2 log 2 −NB
+4t2
+
+≤ε/2.
+The last inequality uses PN/N ≤d + 2 + (L −2)M, N ≥1, and t ≤1. This bound holds for every
+sample, without a probabilistic qualification.
+24
+
+If κN ≤B, every physical parameter has magnitude at most A. Round each to the nearest
+multiple of q, using at most 5A/q grid values per coordinate. For the maximum coordinatewise
+hidden-state discrepancies, boundedness and the Lipschitz property of tanh give
+e1 ≤(d + 1)q,
+es ≤NAes−1 + Nq,
+|z −zgrid| ≤NAeL−1 + Nq.
+Consequently, uniformly over Boolean inputs,
+|z −zgrid| ≤q[d + 1 + M(L −1)](MA)L−1 = 1/4.
+Rounding thus preserves the entire Boolean function of every posterior network with energy at most
+B.
+The union of these grid classifiers over C ≤N ≤M has logarithmic cardinality at most
+log M +PM log(5A/q). A consistency union bound gives one sample event on which every consistent
+grid classifier has true error at most ε/2. Every good-energy posterior draw has the same function
+as such a classifier; the remaining posterior mass is at most ε/2. This proves the Gibbs bound.
+The finite class is independent of t, and consistency only becomes more restrictive as examples are
+added.
+The logarithm of the grid size satisfies
+log(5A/q) = log(20AT) + (L −1) log(MA).
+The exponentially small parameter precision costs only a polynomial in L in this logarithm. The
+unresolved unrestricted problem is therefore uniformity at learner widths larger than every polynomial
+in the specified target complexity and depth; this theorem does not show those larger widths actually
+require more samples.
+Corollary 14.2 (Same-depth bounded-weight analog targets). Suppose a width-C, depth-L tanh
+network realizes f with f(x)z(x) ≥1 on every Boolean input and weights of magnitude at most
+R ≥1. Fix M ≥C and set
+K = 2[d(d + 1) + (L −1)C2]R2,
+a = [4(d + 1 + M(L −1))(MR)L−1]−1,
+D = max{1, K + [d + 2 + (L −2)M][2 + log(1/a)]}.
+Then (1) holds with this D. Thus Theorem 14.1 supplies a polynomial sample bound at the original
+depth for every C ≤N ≤M, with dependence on R only through log R in the final sample bound.
+No robustness condition on the target implementation or prior support is needed. A target with the
+original strict margin > 1/2 satisfies the displayed hypothesis after doubling its readout.
+Proof. Clone the C neurons into balanced nonempty groups of sizes ni summing to N. Copy
+first-layer rows and replace internal and readout weights by Wij/nj and vi/ni. This preserves the
+exact function. Since maxi ni/ mini ni ≤2, its energy is at most K, and its weights remain bounded
+by R. A physical-coordinate perturbation of magnitude at most a changes every output by at most
+1/4, by the recurrence above.
+Use isotropic coordinates y = (
+√
+d W 1,
+√
+N W internal, Nv), so y ∼N(0, t2I) and ∥y∗∥2 ≤NK for
+the cloned center. The standard-normal-coordinate box |yj/t −y∗,j/t| ≤a lies within the physical
+box, because all coordinate scalings are at least one and t ≤1. Its probability is at least
+ 2a
+√
+2π
+PN
+exp
+
+−1
+2
+X
+j
+(|y∗,j|/t + a)2
+
+
+≥exp[−NK/t2 −PN(2 + log(1/a))] ≥exp(−DN/t2).
+25
+
+Here (u + a)2 ≤2u2 + 2a2 and a ≤1 suffice. Every network in this box has target margin at least
+3/4.
+This is an elementary finite-parameter learning result, rather than a new claim about the general
+VC dimension of neural networks. Its role is to isolate which width regime remains open under the
+exact prior conventions.
+15
+A width-independent tanh bound without robustness
+We first establish the width-independent function-class bound used to control the low-energy signal
+extracted from a posterior draw.
+The proof accounts for the fact that tanh is not positively
+homogeneous.
+The normalized-activation and exponential-moment method is closely related to Nakhleh–
+Nowak’s treatment of deep neural variation spaces [5], which explicitly uses tanh(st)/s and slope
+discretization, and to the exponential peeling argument of Golowich–Rakhlin–Shamir [4]. We give a
+self-contained product-Frobenius version for the present Gaussian-energy conventions; we do not
+claim the underlying proof technique is new.
+Theorem 15.1 (Product-Frobenius bound for tanh). Let FL,P contain all scalar-output tanh
+networks with L −1 hidden layers, arbitrary finite widths, a linear readout, and product of layer
+Frobenius norms at most P. Biases are absent except through an augmented input. On every sample
+x1, . . . , xn with ∥xi∥≤R,
+bRn(FL,P ) ≤PR
+√n
+
+2 +
+q
+2(L −1) log
+ 3 + n(L −1)2
+.
+The bound is independent of every hidden width and of the individual layer norms apart from their
+product.
+Proof. If R = 0, every sampled input and every network output on the sample is zero, so the
+bound is immediate. Assume R > 0 below. Define ϕs(u) = tanh(su)/s for s > 0, ϕ0(u) = u, and
+ϕ∞(u) = 0. These functions are odd, 1-Lipschitz, and zero at zero. For finite s, t ≥0 and r ≥0,
+ϕs(ru) = rϕsr(u),
+|ϕs(u) −ϕt(u)| ≤u2|s −t|,
+|ϕs(u)| ≤1/s
+(s > 0).
+The derivative bound follows by differentiating ϕs(u) = u
+R 1
+0 sech2(suv) dv.
+Let G0 contain the identity feature map. Inductively allow arbitrary finite-dimensional features
+gj(x) = ϕsj(aT
+j h(x)),
+h ∈Gℓ−1,
+X
+j
+∥aj∥2 ≤1,
+sj ∈[0, ∞].
+All these feature vectors have norm at most R on the sample. Put Bℓ(ϵ) = supg∈Gℓ∥P
+i ϵig(xi)∥for
+independent Rademacher signs. Writing aj = rjuj and using the scaling identity shows
+Bℓ≤
+sup
+h, ∥u∥≤1, s∈[0,∞]
+
+X
+i
+ϵiϕs(uT h(xi))
+ .
+For any η > 0, uniformly on [−R, R] the slope family admits an η/n approximation using at most
+J = 3 + n2R2/η2 choices: truncate s > n/η to the zero function, and round slopes below that
+threshold down at mesh η/(nR2). The error in the Rademacher sum is at most η.
+26
+
+We use the convex contraction principle
+EG
+ 
+sup
+t∈T
+X
+i
+ϵiψi(ti)
+!
+≤EG
+ 
+sup
+t∈T
+X
+i
+ϵiti
+!
+for convex nondecreasing G and 1-Lipschitz ψi vanishing at zero. For completeness, the single-
+coordinate proof compares X± = supt(at ± ψ(tk)) and Y± = supt(at ± tk). One has max(Y+, Y−) ≥
+max(X+, X−) by |ψ(t)| ≤|t|. An approximately maximizing pair for X+, X−also gives Y+ + Y−≥
+X+ + X−, by the Lipschitz property. Convex monotonicity therefore gives G(Y+) + G(Y−) ≥
+G(X+) + G(X−); iterate over coordinates. Bounded separable classes follow by approximation from
+finite classes. In our application, u ranges symmetrically and ϕs is odd, so the absolute supremum
+is the same as the one-sided supremum.
+Apply this principle with G(t) = eλt to each grid slope, then bound the exponential of a maximum
+by the sum of the exponentials:
+EeλBℓ≤eληJ EeλBℓ−1.
+Furthermore, EB0 ≤R√n, and bounded differences gives EeλB0 ≤eλR√n+λ2nR2/2. Writing H =
+L −1, iteration and Jensen yield
+EBH ≤Hη + R√n + H log J
+λ
++ λnR2
+2
+.
+Take η = R√n/H and optimize λ to obtain EBH ≤R√n[2 +
+p
+2H log(3 + nH2)].
+Finally, for a particular original network, write Mℓ= ∥W ℓ∥F and Sℓ= Q
+j≤ℓMj. Dividing its
+ℓth hidden vector by Sℓchanges its recursion to ϕSℓ((W ℓ/Mℓ)gℓ−1). Thus its normalized hidden
+features belong to the enlarged classes above, and its scalar output is at most P times a norm-one
+linear readout of GH. Zero-norm layers give the zero function and require no normalization. This
+proves the theorem. All suprema are measurable by countable approximation of finite-dimensional
+parameter spaces and then union over widths.
+For the Gaussian energy in our model, the product of the L weighted squared layer norms is
+dP 2. Consequently
+P ≤d−1/2(κN/L)L/2 ≤d−1/2eB/2
+if κN ≤L + B.
+Applying the theorem to the ramp loss ℓ(yz) = min{1, max{0, 1 −2yz}} gives the following explicit
+bound.
+Corollary 15.2 (All widths at bounded excess energy). Fix B ≥0. With probability at least 1 −δ,
+every sample-consistent depth-L network, at any finite width, with training margins at least 1/2 and
+energy κN ≤L + B has sign error at most
+4
+√
+2eB/2
+√n
+
+2 +
+q
+2(L −1) log
+ 3 + n(L −1)2
++
+s
+log(1/δ)
+2n
+.
+No internal robustness assumption is imposed.
+Proof. Augmented Boolean inputs have norm
+√
+d + 1, so PR ≤
+√
+2eB/2. The ramp loss is bounded
+by one and is 2-Lipschitz.
+Symmetrization, scalar contraction, and bounded differences give
+population loss at most empirical loss plus four times the network Rademacher bound and the
+stated confidence term. Empirical loss is zero and population loss upper-bounds sign error.
+27
+
+Lemma 15.3 (A scalar transmission construction). For every real D > 0 and integer m ≥2, there
+are positive scalar weights α, b2, . . . , bm−1, c such that
+r1 = tanh α,
+rs = tanh(bsrs−1),
+crm−1 = 1/2,
+and, writing D′ = max{D, 4},
+Dα2 +
+m−1
+X
+s=2
+b2
+s + c2 ≤(m + 12)(D′/4)1/m,
+c2 = (D′/4)1/m.
+Proof. Set q = (D′/4)1/(2m), ks = min{s, m −s}, and rs = qs/(
+√
+D′ks). Then 0 < rs ≤1/(2qks) ≤
+1/2 and rm−1 = 1/(2q). Choose α = atanh r1, bs = atanh(rs)/rs−1 and c = q. For 0 < u ≤1/2
+the power series gives (atanh(u)/u)2 ≤1 + u2.
+Writing Rs = ks−1/ks, the reciprocal pairs
+k/(k + 1), (k + 1)/k satisfy
+k + 1
+k
+2
++
+
+k
+k + 1
+2
+−2 ≤4/k2.
+Consequently Pm−1
+s=2 R2
+s ≤m −2 + 7, Rs ≤2, and Pm−1
+s=1 k−2
+s
+< 4. Using q2m = D′/4 therefore gives
+Dα2 ≤q2 + 1/4,
+m−1
+X
+s=2
+b2
+s ≤q2(m −2 + 7) + 4,
+c2 = q2.
+Their sum is at most (m + 12)q2. Empty internal sums at m = 2 satisfy the same estimates.
+16
+Unrestricted finite-variance learning for γ > 1
+There is a stronger bridge than concentration of the full Frobenius energy. A typical Gaussian bulk
+has small operator norms when γ > 1, even when its total Frobenius energy is large. Gaussian
+isoperimetry shows that the posterior lies near such a bulk, with the remaining signal having energy
+close to a target witness’s. Removing the bulk then preserves all Boolean signs under an explicit
+product-norm condition. No additional restriction of prior support is used.
+Write σ2 = t2/N, so the original Gaussian has independent entry variances Nσ2/d, σ2, σ2/N.
+Its energy coordinates are
+A1 =
+q
+d/N W 1,
+As = W s (2 ≤s < L),
+AL =
+√
+N v,
+and all their entries are independent N(0, σ2). Their squared Euclidean norm is exactly κN.
+Theorem 16.1 (Unrestricted learning above exponent one). Fix integers d ≥1, L ≥2, C ≥1, and
+a real K ≥L. Use tanh hidden activations and a linear readout. Suppose that for every N ≥C
+there is a width-N, depth-L target witness satisfying
+f(x)z(x) ≥1
+for every Boolean input,
+κN ≤K.
+Put
+Q∗=
+K + 2
+L
+L/2
+.
+For every fixed ζ > 0, every 0 < ε, δ < 1, and every distribution D on the Boolean cube, the
+original Gaussian learner, conditioned only on the original global clean margin and noiseless training
+consistency, has a sample bound polynomial in
+d, L, C, K, Q∗, ε−1, log(1/δ)
+28
+
+which, with probability at least 1 −δ over independent training inputs drawn from D and labeled by
+f, gives Gibbs error at most ε, simultaneously for all N ≥C and all 0 < σ2 ≤N−(1+ζ). Thus it
+covers all γ ≥1 + ζ at their actual finite Gaussian scales. The polynomial degree may depend on ζ;
+no uniform claim as ζ ↓0 is made.
+We prove the statement with explicit width thresholds and sample inequalities. The hypothesis
+K ≥L costs nothing: averaging over the cube and using AM–GM shows that a global unit-margin
+witness has κN ≥Ld1/L ≥L.
+A perturbation estimate using operator norms.
+Normalize hidden states by
+√
+N and the
+augmented input by
+√
+d. The input norm is at most
+√
+2, all coordinate activations remain 1-Lipschitz
+and zero-preserving, and the layer maps are the As above. If U has energy at most K + 1, and an
+additive weight perturbation B has operator norm at most η in every normalized layer, telescoping
+one layer at a time gives
+sup
+x |zU+B(x) −zU(x)| ≤
+√
+2 Lη
+"
+K + 1 + 2η
+p
+L(K + 1) + Lη2
+L −1
+#(L−1)/2
+.
+(2)
+Indeed, each summand is at most
+√
+2η times a product of L −1 other layer norms. The sum of
+squares of all perturbed layer-norm bounds is at most the numerator, and AM–GM bounds each
+such product. Set
+A =
+K + 2
+L −1
+(L−1)/2
+,
+η = min
+(
+1,
+1
+4
+p
+L(K + 1),
+1
+8
+√
+2 LA
+)
+.
+The numerator in (2) is at most K +2, so the output change is at most 1/8. Furthermore A ≤√e Q∗,
+hence η−1 is polynomial in L, K, Q∗.
+A symmetric typical Gaussian set.
+For completely explicit constants, put
+a2
+d = 2(d + 1) log 2 + 4 log 8,
+b2
+L = 16 log 9 + 8 log(8L),
+b = max{ad, bL}.
+Let T consist of bulk matrices whose first and last energy-coordinate Frobenius norms are at most
+tad, and whose internal operator norms are at most tbL. Then T is closed, convex and centrally
+symmetric, and
+µN,t(T) ≥1/2.
+(3)
+For the first block, its squared Frobenius norm is (t2/N)χ2
+N(d+1); the readout is the same expression
+with d + 1 replaced by one. The exponential moment of χ2 bounds each failure probability by 1/8.
+For an internal matrix tG/
+√
+N, a 1/4-net of the unit sphere has at most 9N points, and the two-net
+scalar Gaussian bound gives
+Pr{∥tG/
+√
+N∥op > tbL} ≤2 exp(2N log 9 −Nb2
+L/8) ≤1
+4L.
+Union bounding over the L −2 internal blocks proves (3). Every normalized block of a member of
+T has operator norm at most tb.
+29
+
+Target mass by a Gaussian shift.
+Suppose tb ≤η. For a target witness w∗, the shifted set
+w∗+ T has target margin at least 7/8, by (2). Central symmetry and the Gaussian change-of-mean
+identity yield
+µ(w∗+ T) = e−κN(w∗)/(2σ2)
+Z
+T
+e−⟨w∗,B⟩κ/σ2 dµ(B)
+≥e−K/(2σ2)µ(T) ≥1
+2e−K/(2σ2).
+The inequality follows by pairing B with −B and using cosh u ≥1. This lower bound holds for the
+raw probability of the conditioning event for every correctly labeled sample.
+The posterior is close to the typical set.
+Let dκ(w, T) be Euclidean distance in energy
+coordinates. Gaussian isoperimetry [1] and (3) imply
+µ{dκ(w, T) > r} ≤e−r2/(2σ2).
+Dividing by the preceding target-mass lower bound gives, for every sample,
+Qs{dκ(w, T)2 > K + 1} ≤2e−1/(2σ2).
+(4)
+On the complement, let B be the metric projection of w onto T and write U = w−B. The projection
+is well defined and continuous, since T is nonempty, closed and convex. Then κN(U) ≤K + 1
+and supx |zw(x) −zU(x)| ≤1/8. The original posterior has clean margin > 1/2 everywhere, so U
+has exactly the same Boolean function as w and training margins > 3/8. It is enough to use a
+margin-1/4 ramp loss below.
+A polynomial width split.
+Take β = ε/2 and
+M =
+l
+max
+n
+C, 2, (b/η)2/ζ, 2 log(2/β)
+om
+.
+For every N ≥M and σ2 ≤N−(1+ζ), one has t ≤N−ζ/2, hence tb ≤η, and 2e−1/(2σ2) ≤β. The
+product norm of U is at most d−1/2[(K + 1)/L]L/2. Write
+G =
+q
+(d + 1)/d
+K + 1
+L
+L/2
+,
+H = L −1.
+The product-norm Rademacher bound, now with the 4-Lipschitz ramp loss min{1, max{0, 1 −4yz}},
+gives one sample event of probability at least 1−δ/2 on which every such consistent residual network
+has error at most
+Fn = 8G
+√n
+
+2 +
+q
+2H log(3 + nH2)
+
++
+s
+log(2/δ)
+2n
+.
+(5)
+This event already includes all finite widths. When Fn ≤ε/2, adding the posterior exceptional mass
+β proves the required bound for every N ≥M and every stated scale.
+For C ≤N ≤M, use Theorem 14.1. Here is a target-mass constant requiring only the present
+witness assumption. Every witness weight is at most R =
+√
+MK. Put
+a = [4(d + 1 + M(L −1))(MR)L−1]−1,
+DM = max{1, K + [d + 2 + (L −2)M][2 + log(1/a)]}.
+30
+
+The same Gaussian-coordinate box calculation as in the finite-width proof has physical perturbation
+at most a, retains target margin at least 3/4, and has mass at least exp(−NDM/t2). Applying that
+theorem with error ε and failure probability δ/2 controls all these widths and all t ≤1 simultaneously.
+Its finite-grid logarithm is polynomial in M, d, L, log K. The union of the two sample events proves
+the theorem. Finally, G ≤
+√
+2Q∗, b2 = O(d + log L) and A ≤√eQ∗show that M and a sample size
+satisfying all the displayed inequalities are polynomial in the stated arguments for fixed ζ. This
+proves the asserted quantitative dependence.
+Scope.
+This argument does not apply at γ = 1: the Gaussian bulk’s operator norm does not
+tend to zero with width there. It also does not make Q∗polynomial for every small circuit. If a
+fixed base witness can be padded with energy K = L + B, where B is independent of the added
+depth, then Q∗≤e(B+2)/2. The theorem therefore removes exponential dependence on additional
+depth, at every width and every fixed exponent above one, while retaining a potentially exponential
+dependence on base-witness energy. Stronger target-specific energy estimates can make Q∗itself
+polynomial.
+17
+A polynomially quantified mean-field prefactor window
+The bulk-subtraction proof depends on the prefactor t, not directly on the exponent γ. This gives a
+separate finite-temperature statement at mean-field scaling. It does not include the original critical
+convention t = 1.
+Theorem 17.1 (Small prefactor at every width). Assume the witness hypothesis of Theorem 16.1,
+with parameters d, L, C, K and Q∗= [(K + 2)/L]L/2. Define
+A =
+K + 2
+L −1
+(L−1)/2
+,
+η = min
+(
+1,
+1
+4
+p
+L(K + 1),
+1
+8
+√
+2 LA
+)
+,
+b2 = max{2(d + 1) log 2 + 4 log 8, 16 log 9 + 8 log(8L)},
+t0 = min
+(
+1, η
+b ,
+1
+p
+2 log(4/ε)
+)
+.
+There is a sample bound polynomial in d, L, K, Q∗, ε−1, log(2/δ) such that, with probability at least
+1 −δ, the unrestricted posterior has Gibbs error at most ε, simultaneously for all N ≥C and all
+0 < t ≤t0,
+σ2 = t2/N.
+The inverse threshold t−1
+0
+is polynomial in d, L, K, Q∗, ε−1. Neither bound depends on the realized
+training sample or on its size through a circular condition.
+Proof. Use the typical set T and the perturbation estimate from Section 16. For every width in the
+statement, tb ≤η, so the target shift has raw mass at least 1
+2e−K/(2σ2). The posterior distance tail
+is therefore
+QS{dκ(w, T)2 > K + 1} ≤2e−1/(2σ2) = 2e−N/(2t2) ≤ε/2.
+Every remaining draw has exactly the same Boolean function as a residual of energy at most K + 1,
+with training margin greater than 3/8. The single width-independent generalization event underlying
+(5) controls all of these residuals simultaneously. Choosing its right-hand side at most ε/2 proves
+the claim. This sample choice is polynomial: for example, if G =
+p
+(d + 1)/d[(K + 1)/L]L/2, then a
+sufficiently large universal constant times
+[1 + G + L + ε−1 + log(4/δ)]12
+31
+
+suffices. Finally G ≤
+√
+2Q∗and A ≤√eQ∗give all the stated polynomial dependences. This proof
+requires no width split, because the small-bulk condition has been imposed directly on t.
+A sample bound without an additional depth factor.
+The global-margin counting theorem
+gives a sharper choice of sample size in Theorem 17.1. Put
+P = max
+(
+1,
+8
+3
+√
+d
+K + 1
+L
+L/2)
+.
+Rescale the residual readout by 8/3. Its Boolean function now belongs to HP from Corollary 12.4.
+Therefore it suffices to use
+n ≥2
+ε
+h
+p(P) + P 2 log(d + 1) + log(2/δ)
+i
+,
+for a universal polynomial p. In particular, if K ≤L + B with B independent of the learner depth,
+then
+P ≤max{1, (8/3)d−1/2e(B+1)/2}.
+The required sample size has no remaining learner-depth dependence. The sufficient prefactor t0 still
+depends on L, and the original critical choice t = 1 is still excluded. Likewise, when this argument
+is combined with the small-width fallback below, that finite-width part retains its polynomial
+dependence on L.
+Corollary 17.2 (Polynomial product targets at mean-field scaling). Suppose f has an arbitrary
+finite-width, depth-D0 tanh representation with unit global margin and product norm at most P ≥1.
+There are universal polynomials p, q and a universal constant c such that, whenever
+L ≥D0 + c log(2 + d + D0 + P)
+or
+L ≥2D0,
+sample size at least
+p(d, D0, P, L, ε−1, log(2/δ))
+gives Gibbs error at most ε with probability at least 1 −δ, simultaneously for every actual width
+N ≥CL(f) and every mean-field scale
+σ2 = t2/N,
+0 < t ≤q(d, D0, P, L, ε−1, log(2/δ))−1.
+For a bounded shallow target, or for a Boolean halfspace using Theorem 4.3, the corresponding
+statement holds at every L ≥2, with the same polynomial dependence as in those positive theorems.
+The original critical prior t = 1 is not asserted to satisfy this condition.
+Proof. The width-compression and product-target constructions provide a polynomial threshold
+M and, at all N ≥M, unit-margin witnesses with K and Q∗polynomial in d, D0, P, L. Apply
+Theorem 17.1 to these widths. The physical weight bound in that construction gives CL(f) ≤M.
+For the remaining interval CL(f) ≤N < M, choose an actual minimum-width bounded-weight
+witness and double its readout. It now has unit margin and weights at most 2M. Balanced cloning
+gives unit-margin witnesses throughout this finite width interval with energy polynomial in d, L, M.
+The finite-width theorem, with its Gaussian-coordinate-box denominator, gives a polynomial sample
+bound uniformly for all t ≤1. Its constants can be bounded using M and 2M, independently of the
+actual minimum width. Union bound this sample event and the large-width event, each with failure
+probability δ/2. Their thresholds are deterministic polynomials of the displayed parameters. The
+same proof applies to the bounded shallow and halfspace witnesses at all L ≥2.
+32
+
+18
+Polynomial unrestricted learning of shallow targets at every
+depth
+A shallow target can have a small first-layer Gaussian energy at a polynomial base width simply by
+adding zero neurons. Its readout energy is then polynomial. Distributing that readout cost over the
+learner’s remaining layers makes the product-norm parameter polynomial uniformly in depth. This
+gives a family for which neither arbitrary width nor arbitrary added depth requires a robustness
+restriction.
+Theorem 18.1 (Shallow targets, all depths and all admissible widths). Suppose a Boolean target
+f : {−1, 1}d →{−1, 1} has a one-hidden-layer representation
+z(x) =
+C
+X
+j=1
+vj tanh(aT
+j ¯x),
+¯x = (1, x),
+f(x)z(x) ≥1
+with every coordinate of aj and every vj bounded in absolute value by R ≥1. Let CL(f) denote its
+bounded-weight network complexity at depth L: the least width N admitting a realization with all
+weights at most N in absolute value and signed output greater than 1/2 everywhere.
+For each fixed ζ > 0, the original unrestricted Gaussian learner has sample complexity polynomial
+in
+d, C, R, L, ε−1, log(1/δ),
+for every specified learner depth L ≥2 and every input distribution, simultaneously for every width
+N ≥CL(f) and every γ ≥1 + ζ. With probability at least 1 −δ over a sample of that size, posterior
+Gibbs error is at most ε simultaneously at all these widths and all prior scales 0 < σ2 ≤N−(1+ζ).
+The polynomial’s degree may depend on ζ. The prior is conditioned only on the original global clean
+margin and the training labels.
+Proof. Let A have rows aT
+j , and set
+M =
+l
+max{4, C, 2R, d∥A∥2
+F }
+m
+,
+T = max{1, M∥v∥2
+2}.
+Both are polynomial in d, C, R. Add zero hidden neurons to obtain width M. This preserves the
+function, and its first-layer and readout energies satisfy
+Epre = d
+M ∥A∥2
+F ≤1,
+c2 = M∥v∥2
+2 ≤T.
+In fact M∥v∥2
+2 ≥1, since unit margin and | tanh | ≤1 imply ∥v∥2 ≥1/
+√
+C, but the maximum makes
+this unneeded.
+For any N ≥M, balanced cloning of this shallow network preserves its output exactly and gives
+Epre ≤2,
+c2 = N∥vN∥2
+2 ≤2T.
+Explicitly, assign each of the M original neurons either ⌊N/M⌋or ⌈N/M⌉clones, copy its incoming
+weights, and divide its readout weight by its number of clones. The first cost increases by at most
+M⌈N/M⌉/N ≤2, and the readout cost by at most N/(M⌊N/M⌋) ≤2. For learner depth L = 2 we
+already have a unit-margin witness with
+K2 = 2 + 2T,
+Q2
+∗=
+K2 + 2
+2
+2
+= (T + 2)2.
+33
+
+For L ≥3, apply Lemma 15.3 with D = 4c2 and m = L −1. Replace the old readout by a
+layer whose every row is 2αvT
+N. Follow it with the scalar transmission layers, implemented by equal
+coordinates with dense matrix entries bs/N, and final readout entries q/N, where
+q2 = max{c2, 1}1/(L−1) ≤(2T)1/(L−1).
+The target had margin at least one, hence in particular at least 1/2, so the scalar construction gives
+margin at least 1/2. Double its final readout to restore margin at least one. This adds 3q2 to the
+energy. Thus every width N ≥M has a depth-L unit-margin witness with
+κN ≤KL := 2 + (L + 14)(2T)1/(L−1).
+Writing q2
+∗= (2T)1/(L−1) ≥1, we have KL + 2 ≤(L + 18)q2
+∗. Consequently
+Q2
+∗=
+KL + 2
+L
+L
+≤e18(2T)L/(L−1) ≤e18(2T)3/2
+(L ≥3).
+(6)
+The exponent L/(L −1) is at most 3/2 for L ≥3. Theorem 16.1, with base width M, therefore
+provides a sample bound polynomial in the stated quantities for all N ≥M.
+We verify admissible smaller widths rather than silently identifying M with the target’s minimum
+complexity. First, CL(f) ≤M for all L ≥2. At width M, the original incoming weights have
+magnitude at most R ≤M/2. In the added scalar channel, α ≤atanh(1/2) < 0.55, so its first
+weights 2αvj have magnitude at most 1.1R < M. The scalar construction has bs ≤2.2q and final
+weights 2q/M. Since T ≤MCR2 ≤M4 and L ≥3,
+q ≤(2T)1/4 ≤21/4M,
+bs/M < 3 ≤M,
+2q/M < 3 ≤M.
+Thus this depth-L, width-M circuit satisfies the bounded-weight convention and has margin at least
+one. The case L = 2 is immediate.
+For CL(f) ≤N < M, start from a defining width-CL(f) circuit, clone it to width N, and
+double its readout. It has margin greater than one, all weights at most 2M, and Gaussian energy
+bounded by a polynomial in d, L, M. The Gaussian box estimate and Theorem 14.1 consequently
+give a sample bound polynomial in d, L, M, ε−1, log(1/δ), simultaneously for all these widths and all
+t ≤1. Use failure probability δ/2 for this event and δ/2 for the preceding event for N ≥M. Their
+intersection proves the claim.
+The complexity parameter controlling this theorem’s sample size is the size and weight bound
+of a shallow representation. Its width admissibility is the actual depth-L complexity CL(f). The
+theorem does not identify shallow complexity with the minimum complexity of an arbitrary deep
+circuit, and therefore does not settle the unrestricted problem for all small deep circuits. It also
+makes no claim at γ = 1.
+Corollary 18.2 (Parity at arbitrary depth and admissible width). For every fixed ζ > 0, parity of
+any k ≥1 chosen coordinates in {−1, 1}d has unrestricted Gaussian posterior sample complexity
+polynomial in d, k, L, ε−1, log(1/δ), for every L ≥2, every N ≥CL(f), and every γ ≥1 + ζ. The
+bound holds for every input distribution and for the original finite-variance posterior.
+Proof. Let q = (k −P
+i∈S xi)/2 ∈{0, . . . , k} count negative coordinates, and put a = log(16k).
+Define
+τj(x) = tanh
+ a(q −j + 1/2)
+,
+1 ≤j ≤k.
+34
+
+Every argument has magnitude at least a/2, so |τj −sign(q −j + 1/2)| ≤2e−a = 1/(8k). Writing
+ck = 1 for even k and ck = 0 for odd k, the exact step identity is
+(−1)q = ck +
+k
+X
+j=1
+(−1)j sign(q −j + 1/2).
+Hence F = ck + P
+j(−1)jτj satisfies |F −(−1)q| ≤1/8. Represent the constant by one extra hidden
+neuron with augmented-input weight atanh(1/2) and no other incoming weights. A linear readout
+equal to 2F has signed margin at least 7/4. Its threshold-neuron readout weights are 2(−1)j, and
+its constant-neuron weight is 4ck. Its incoming weights have magnitude at most a(k + 1). Thus
+C = k + 1 and R = max{4, a(k + 1)} are polynomial in k. Apply Theorem 18.1.
+Corollary 18.3 (Symmetric Boolean targets). The conclusion of Corollary 18.2 holds for any
+Boolean function of the Hamming weight of k selected coordinates.
+Proof. If its values are h(0), . . . , h(k) ∈{−1, 1}, then
+h(q) = h(0) + h(k)
+2
++
+k
+X
+j=1
+h(j) −h(j −1)
+2
+sign(q −j + 1/2).
+Each coefficient has magnitude at most one. Replacing the signs by the same τj and doubling the
+output gives margin at least 7/4, using the same width and weight bounds as in the parity proof.
+Corollary 18.4 (Polynomial-size DNF and CNF targets). A Boolean function on d bits represented
+by a DNF or CNF with s ≥1 clauses has unrestricted Gaussian posterior sample complexity
+polynomial in d, s, L, ε−1, log(1/δ), for every specified L ≥2, every N ≥CL(f), and every γ ≥1 + ζ,
+with ζ > 0 fixed.
+Proof. For a DNF, let qj(x) be the number of false literals in clause j, and put a = log(16s) and
+τj(x) = tanh(a(1/2 −qj(x))). The exact clause indicator is [1 + sign(1/2 −qj)]/2. Thus
+H(x) = s −1 +
+s
+X
+j=1
+sign(1/2 −qj(x))
+is −1 when no clause is satisfied and at least 1 otherwise. Replacing the signs by τj changes H
+by at most 1/8. Doubling the resulting expression gives global signed margin at least 7/4. It is
+a shallow tanh network with s + 1 features: the extra feature is the constant 1/2, with readout
+weight 4(s −1). After removing duplicate literals and discarding contradictory clauses, each clause
+has at most d literals. Each qj is affine in the bits, so the remaining incoming and readout weights
+have magnitude at most R = max{4s, a(d + 1)}. The shallow-target theorem applies. A CNF is the
+negation of a DNF in negated literals, and negating the readout preserves every bound. Constant
+functions are immediate.
+18.1
+Targets of any fixed intrinsic depth
+The shallow-target argument extends to any fixed target depth by using different numbers of clones
+at its successive hidden layers. The degree of the resulting polynomial may depend on the target
+depth, but not on the learner’s additional depth.
+35
+
+Corollary 18.5 (Fixed target depth, arbitrary learner depth). Fix an integer D0 ≥2 and ζ > 0.
+Suppose f has a width-C, depth-D0 tanh realization in the present architecture, with signed output
+at least one on the Boolean cube and all weights bounded by R ≥1. For every specified learner depth
+L ≥D0, the original unrestricted Gaussian learner has sample complexity polynomial in
+d, C, R, L, ε−1, log(1/δ).
+The degree and constants may depend on D0 and ζ. For every input distribution, one sample event
+of probability at least 1 −δ gives Gibbs error at most ε simultaneously for every N ≥CL(f) and
+every 0 < σ2 ≤N−(1+ζ). Here CL(f) is the actual bounded-weight network complexity defined in
+Theorem 18.1. The prior retains the original global clean-margin conditioning and sign-only training
+likelihood.
+Proof. Put H = D0 −1. Pad the target’s hidden layers to width C with zero neurons if necessary,
+and write W 1, . . . , W H, v for its weights. Choose an integer
+B =
+
+max
+
+4, 2R, d
+C ∥W 1∥2
+F , ∥W 2∥2
+F , . . . , ∥W H∥2
+F
+
+,
+M = CBH,
+omitting the internal-layer terms when H = 1. Since ∥W 1∥2
+F ≤C(d + 1)R2 and ∥W s∥2
+F ≤C2R2
+internally, B is polynomial in d, C, R, and so is M for fixed D0.
+At hidden layer s, give each original neuron exactly
+ns = BH−s
+active copies, and fill the other positions up to width M with zero neurons. Copy first-layer rows.
+For s ≥2, give every edge from a copy of source j to a copy of target i weight W s
+ij/ns−1. All unused
+edges are zero. Since nH = 1, retain the original readout on the final active neurons. This preserves
+the function exactly. The first-layer and internal energy terms are respectively
+d
+M n1∥W 1∥2
+F =
+d
+CB ∥W 1∥2
+F ≤1,
+ns
+ns−1
+∥W s∥2
+F = 1
+B ∥W s∥2
+F ≤1.
+Thus the energy before the readout is at most H. Put
+T = max{1, M∥v∥2
+2} ≤MCR2.
+It is polynomial in d, C, R for fixed D0.
+Balanced cloning of this width-M network into any N ≥M preserves the function and gives
+Epre ≤2H,
+c2 = N∥vN∥2
+2 ≤2T.
+If L = D0, these are already unit-margin witnesses with K = 2H + 2T, and
+Q2
+∗=
+K + 2
+D0
+D0
+≤(4T)D0.
+If L > D0, set m = L −H ≥2. Replace the old readout by the scalar transmission from
+Lemma 15.3, using D = 4c2, and double the final scalar readout to obtain unit margin. Its readout
+cost before doubling is q2 = max{c2, 1}1/m ≤(2T)1/m. The total energy is at most
+KL = 2H + (m + 15)(2T)1/m.
+36
+
+This is the desired depth: the H old hidden layers and m −1 new hidden layers total L −1. Since
+(2T)1/m ≥1,
+Q2
+∗=
+KL + 2
+L
+L
+≤
+
+1 + H + 17
+L
+L
+(2T)L/(L−H)
+≤eH+17(2T)(D0+1)/2.
+The last step uses L/(L −H) = 1 + H/m ≤1 + H/2. For L ≥2D0, the sharper upper bound
+Q2
+∗≤eH+17(2T)2 also holds. Both KL and Q∗are polynomial in the stated parameters when D0 is
+fixed, uniformly over the learner depth. Theorem 16.1 now controls every N ≥M.
+It remains to check admissible widths below M. First CL(f) ≤M at every L ≥D0. The
+tapered construction has all original weights at most R ≤M/2. In a padded scalar channel,
+α ≤atanh(1/2) < 0.55, so its first added weights 2αvj have magnitude less than M. The scalar
+construction has bs < 2.2q, and
+T ≤MCR2 ≤M4,
+q ≤(2T)1/4 ≤21/4M.
+Its dense internal entries bs/M and final readout entries 2q/M are therefore less than 3 ≤M. This
+gives a bounded-weight width-M witness with unit margin at each learner depth; for L = D0 no
+scalar channel is needed.
+For CL(f) ≤N < M, clone a defining width-CL(f) realization to width N and double its
+readout. Its margin is greater than one and all weights are at most 2M. The Gaussian box estimate
+and Theorem 14.1 give a bound polynomial in d, L, M, ε−1, log(1/δ) for all these widths and all
+t ≤1. Allocate failure probability δ/2 to this event and to the preceding event for N ≥M. Their
+intersection proves the claim.
+Thus polynomial dependence on learner depth holds for targets of any fixed intrinsic depth with
+polynomial target-size dependence. The width M = CBD0−1 and the exponents above explain why
+this does not give a single polynomial jointly in the intrinsic target depth and target size. The
+mean-field exponent γ = 1 is also still outside this result.
+Corollary 18.6 (Quantitative dependence on intrinsic depth). Fix ζ > 0. There are constants
+aζ, bζ > 0, independent of the intrinsic depth, with the following property. Suppose f has a width-C,
+depth-D0 tanh realization with unit signed margin and weights bounded by R ≥1, where D0 ≥2,
+and set S = 2 + d + C + R. For every specified learner depth L ≥D0, the sample bound
+n ≥
+l
+SaζD0 L + ε−1 + log(2/δ)
+bζm
+suffices for posterior Gibbs error at most ε, with probability at least 1−δ for every input distribution,
+simultaneously for all N ≥CL(f) and 0 < σ2 ≤N−(1+ζ). The prior and likelihood are those of
+Corollary 18.5.
+Thus the dependence on intrinsic depth is exp[Oζ(D0 log S)], while the dependence on learner
+depth remains polynomial with degree independent of D0. In particular, if D0 ≤c log S for a fixed
+constant c, the target-parameter factor is at most exp[Oζ,c((log S)2)]. This is a quasipolynomial
+bound in S, not a single polynomial jointly in intrinsic depth and target size.
+37
+
+Proof. First suppose L ≥2D0. Use the tapered construction in the preceding proof, with H = D0−1,
+M = CBH, and T = max{1, M∥v∥2
+2}. Its explicit definition gives B ≤S5, so M ≤S5D0 and
+T ≤MCR2 ≤S7D0. Put m = L −H. Since L ≥2D0, one has L/m ≤2 and
+KL = 2H + (m + 15)(2T)1/m = O(LT),
+Q2
+∗≤eH+17(2T)L/m ≤eH+17(2T)2 = SO(D0).
+For the remaining range D0 ≤L < 2D0, do not taper the target. Instead pad its original
+realization to M0 = ⌈max{4, C, 2R}⌉≤S2, and put T0 = max{1, M0∥v∥2
+2} ≤S5. Balanced cloning
+to every N ≥M0 gives
+Epre ≤2HS4,
+c2 ≤2T0.
+At L = D0, retain the readout. For L > D0, append the same scalar transmission with m = L−H ≥2.
+These constructions give, respectively,
+KL ≤2HS4 + 2T0,
+KL ≤2HS4 + (m + 15)(2T0)1/m.
+In either case KL ≤19LS5. Therefore
+Q2
+∗≤(20S5)L ≤S7L ≤S14D0.
+The width-M0 witness has weights bounded by M0: the original weights satisfy R ≤M0/2, and the
+scalar-channel check from the preceding proof applies because T0 ≤M4
+0 . Thus CL(f) ≤M0 in this
+range.
+In both depth ranges, the polynomial in Theorem 16.1 has degree and constants depending only
+on ζ. Substituting the corresponding bounds gives the stated sample form above the respective base
+width M or M0. For smaller admissible widths, the defining-witness and Gaussian-box argument in
+the preceding proof gives a sample bound polynomial in d, L, M, ε−1, log(1/δ) (or with M0 in place
+of M), with degree independent of D0. Substitution gives the same sample form. Split the failure
+probability between the two width ranges and enlarge aζ, bζ to finish.
+19
+A finite-sample extension to targets close to a shallow function
+The denominator witness need only interpolate the observed labels. This permits a limited positive
+extension beyond targets having an exact cheap shallow representation. The restriction below is
+quantitative: the target disagreement probability times the chosen sample size must fit a prescribed
+patch budget. It is not an unrestricted theorem for every fixed nonzero corruption rate at arbitrarily
+large sample sizes or confidence levels.
+Lemma 19.1 (Patching finitely many Boolean inputs). Suppose a shallow width-C tanh network
+zg has weights bounded by R ≥1 and satisfies g(x)zg(x) ≥1 on the Boolean cube. For an integer
+b ≥0, define
+Z = CR,
+a = log(16(b + 1)(Z + 1)),
+Cb = C + 2b + 1,
+Rb = max{2R, 4Z, (d + 1)a}.
+For any set P of at most b cube inputs, the Boolean function obtained by flipping g exactly on P
+has a shallow width-Cb, weight-bound-Rb representation with unit signed margin.
+Proof. For each p ∈P, let
+hp(x) = tanh
+ a(p · x −d + 1/2)
+,
+Ip(x) = 1 + hp(x)
+2
+,
+cp = −2zg(p).
+38
+
+Then |Ip(x) −1{x = p}| ≤e−a and |cp| ≤2Z. The ideal expression zg(x) + P
+p cp1{x = p} has
+signed margin at least one for the flipped function. Replacing each indicator by Ip changes it by
+at most 2Zbe−a < 1/8. Double the resulting expression. Its original-feature readout weights are
+2vj; its isolator readout weights are cp; and its additional constant output is P
+p cp. Implement this
+constant with |P| + 1 neurons of activation 1/2, each having readout weight 2 P
+p cp/(|P| + 1), of
+magnitude at most 4Z. Their bias is atanh(1/2) and their other incoming weights are zero. The
+number and weight bounds follow, and the signed margin is greater than 7/4.
+Theorem 19.2 (A finite-sample target-corruption guarantee). Fix ζ > 0. There is a polynomial
+Pζ, whose degree and constants depend only on ζ, with the following property. Let D be any input
+distribution on the Boolean cube, let f be any Boolean target, and let g have the shallow representation
+in Lemma 19.1. Put ρ = PrD{f(X) ̸= g(X)}. Fix a learner depth L ≥2, 0 < ε, δ < 1, and an
+integer patch budget b ≥4 log(2/δ). For any integer sample size n satisfying both
+n ≥Pζ(d, L, Cb, Rb, ε−1, log(2/δ)),
+ρn ≤b/4,
+the original Gaussian posterior, conditioned only on global clean output margin and on ordinary
+training signs, has Gibbs error at most ε with probability at least 1 −δ. The sample event is
+simultaneous for every actual admissible width N ≥CL(f) and every 0 < σ2 ≤N−(1+ζ). No shallow
+representation or circuit-size bound for the exact target f is assumed.
+Proof. The number of observed disagreements between f and g is binomial with mean ρn ≤b/4. A
+Chernoff bound gives
+Pr{more than b disagreements} ≤(e/4)b ≤δ/2.
+On the complementary event, flip g at the distinct observed disagreement inputs. Lemma 19.1
+supplies a globally unit-margin, sample-consistent shallow witness with the same deterministic
+parameter bounds Cb, Rb, independently of which disagreements occur.
+Apply zero-padding, balanced cloning, and scalar transmission to this witness. With
+M =
+l
+max{4, Cb, 2Rb, dCb(d + 1)R2
+b}
+m
+,
+T = MCbR2
+b,
+one obtains unit-margin interpolants at every N ≥M, with energy K2 = 2 + 2T at depth two and
+KL = 2 + (L + 14)(2T)1/(L−1) at depth L ≥3. Their energy-product parameters are polynomial in
+d, Cb, Rb, uniformly over L.
+The Gaussian-distance proof uses its witness only to lower-bound the raw probability of the
+posterior conditioning event. A globally margin-valid sample interpolant suffices for that step; its
+labels away from the sample need not equal f. Therefore the same proof yields, on a sample event
+of probability at least 1 −δ/2, the desired risk bound whenever the disagreement budget is met.
+The uniform Rademacher and finite-grid sample events depend only on the displayed deterministic
+bounds, not on the locations or labels of the patched inputs. There is no union bound over patch
+sets in this argument.
+For completeness, this also handles every smaller actual admissible width. The Gaussian-distance
+argument has a deterministic polynomial width cutoff W ≥M. For CL(f) ≤N < W, a defining
+width-CL(f) realization of the true target has weights at most CL(f) ≤W. Clone it to width N
+and double its readout. Its weights are at most 2W, and its energy and Gaussian-box target-mass
+exponent are polynomial in d, L, W. The finite-grid proof therefore applies uniformly to this width
+range. If CL(f) ≥W, that range is empty. In either case its sample bound has the stated polynomial
+form and does not require an upper bound on CL(f) as a separate parameter. Combining the two
+sample events proves the theorem.
+39
+
+For example, choose b = ⌈4 log(2/δ)⌉and take n to be the ceiling of the displayed polynomial
+bound. The permitted corruption level b/(4n) is inverse polynomial in the base representation and
+the statistical parameters. This is stronger than the elementary comparison that requires observing
+no disagreement, whose failure probability is controlled only when ρn ≲δ. Here a nonzero number
+of contradictory training labels is explicitly interpolated. The two inequalities on n are essential:
+this argument does not imply that the guarantee persists for every larger sample size at a fixed
+positive corruption probability.
+20
+A limitation of neuronwise cloning, even at polynomial path
+weight
+The previous representation limitation based on absolute path weight does not exhaust the ob-
+struction to improving the intrinsic-depth exponent. Even a circuit with polynomial absolute path
+weight can have a quasipolynomial minimum product of layer Frobenius norms under all neuronwise
+cloning choices. The statement below concerns an exact representation-preserving method; it is
+not a lower bound on the minimum energy of the represented Boolean function, which may have a
+different and much cheaper realization.
+Proposition 20.1 (Complete-tree cloning obstruction). Let H ≥1, d = 2H, and consider a
+complete binary computation tree with H hidden layers. Layer s contains ns = 2H−s computational
+neurons. Each neuron has two computational incoming edges of absolute weight a > 0; the first
+layer takes its two inputs from distinct Boolean coordinates. The final scalar readout has absolute
+weight β > 0. Arbitrary additional bias-supply neurons and edges are permitted.
+Replace every computational neuron by any positive integer number of identical copies, divide its
+outgoing edges by the number of its copies, and fill unused positions with zero neurons to obtain
+common hidden width N. Write E1, . . . , EH+1 for the weighted squared layer norms of the resulting
+network. Then
+H+1
+Y
+s=1
+Es ≥dβ2(2a2)H2H(H−1)/2.
+Consequently its Gaussian energy satisfies
+κN ≥(H + 1)
+h
+dβ2(2a2)H2H(H−1)/2i1/(H+1) .
+The computational input-to-output absolute path sum is merely β(2a)H. For fixed a, β > 0, this is
+polynomial in d, whereas the lower bound on the product of layer energies is exp(Ω((log d)2)).
+Proof. For a computational node v, let rv > 0 denote its number of copies divided by N. Discard
+all non-computational edges when lower-bounding layer energies. The remaining contributions are
+F1 = 2da2
+X
+v at level 1
+rv,
+Fs = a2
+X
+v at level s
+X
+u a child of v
+rv
+ru
+(2 ≤s ≤H),
+FH+1 =
+β2
+rroot
+.
+Each Fs is a convex function of the log multiplicities yv = log rv, being a sum of exponentials of
+affine functions. Average y over the finite automorphism group of the complete binary tree. The
+group preserves every Fs and acts transitively on each level, so Jensen’s inequality decreases every
+Fs simultaneously and makes rv = rs constant on level s. This averaging is used only for a lower
+bound and need not give integer clone counts. The width constraints also remain valid, by convexity
+of the exponential, although that fact is not needed for the lower bound.
+40
+
+At these averaged log multiplicities,
+F1 = 2da2n1r1,
+Fs = 2a2ns
+rs
+rs−1
+,
+FH+1 = β2
+rH
+.
+Their product telescopes to dβ2(2a2)H QH
+s=1 ns. Since Es ≥Fs before averaging and every Fs
+decreases on averaging, this lower-bounds the original product of layer energies. Now Q
+s ns =
+2H(H−1)/2, and arithmetic–geometric mean gives the energy bound. There are 2H computational
+input-to-output paths, each with absolute weight βaH, proving the last assertion.
+In particular, allowing nonuniform clone counts within a layer does not turn a polynomial absolute
+path bound into the polynomial energy-product bound needed by the unrestricted Gaussian-distance
+theorem. A proof of that implication would need a change of representation beyond exact cloning,
+or a different posterior argument.
+21
+What remains unresolved
+The necessary condition concerns functions up to approximation, not a particular implementation.
+The depth-independent product normal form proves that ordinary Boolean description size is
+polynomial in intrinsic product complexity. The converse polynomial comparison is not known,
+and even such a comparison would retain the learner-depth qualification in our present sufficiency
+theorem. The exact-cloning obstruction above therefore does not supply the missing function-level
+lower bound. Conversely, the shallow and halfspace results do not identify shallow representation
+size with arbitrary deep circuit size. A joint polynomial theorem for every small deep target, or an
+explicit counterexample to it under this posterior, remains open.
+The exponent γ = 1 lies outside the Gaussian-distance argument: its typical hidden Gaussian
+bulk has order-one operator norm, so the uniform subtraction estimate used here does not become
+small with width. This observation is a proof limitation, not a sample lower bound. Removing the
+original all-input output-margin conditioning is also outside the present statements.
+References
+[1] C. Borell. The Brunn–Minkowski inequality in Gauss space. Inventiones Mathematicae 30,
+207–216, 1975. https://doi.org/10.1007/BF01425510.
+[2] M. Goldmann and M. Karpinski. Simulating threshold circuits by majority circuits. SIAM
+Journal on Computing 27, 230–246, 1998. https://doi.org/10.1137/S0097539794274519.
+[3] P. M. Spira. On time-hardware complexity tradeoffs for Boolean functions. Proceedings of
+the Fourth Hawaii International Symposium on System Sciences, 525–527, 1971. https://
+ndlsearch.ndl.go.jp/en/books/R100000136-I1571135650878062336.
+[4] N. Golowich, A. Rakhlin, and O. Shamir. Size-independent sample complexity of neural networks.
+COLT, 2018. https://proceedings.mlr.press/v75/golowich18a.html.
+[5] J. Nakhleh and R. D. Nowak. Deep Neural Variation Spaces: A Unifying Perspective on Depth
+and Complexity. 2026. https://arxiv.org/abs/2607.05546.
+41

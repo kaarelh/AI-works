@@ -1,0 +1,43 @@
+\paragraph{Exact clean-output enclosures at dataset scale.}
+For the finite held-out set, the stored float32 inputs and weights are
+dyadic rational numbers. We approximate hidden states at denominator
+$Q_h=2^{24}$ and weights at denominator $Q_w=2^{30}$, and compute all
+approximate affine maps by integer matrix multiplication. Before every
+product, an exact bound on the sum of absolute products rules out
+signed 64-bit overflow, including intermediate accumulation.
+The resulting affine arguments are therefore exact rational numbers.
+
+The activation computation uses a piecewise-linear tanh table on
+$[-12,12]$ with grid spacing $h=1/4096$. Every proposed table value is
+independently enclosed using outward interval arithmetic. Since
+$|\tanh''|\le1$, interpolation adds at most $h^2/8$ to the maximum
+table-entry error; rounding the interpolated value adds at most
+$1/(2Q_h)$. Outside the table, the approximation is the appropriate
+sign and its error is at most $2e^{-24}$. Thus every approximate
+activation has a common rigorously established coordinate error
+$\tau$, without trusting floating-point evaluations of tanh.
+
+If a clean hidden state is enclosed around its approximate value with
+Euclidean error $e$, then the next state's error is at most
+\[
+ e'\le\|W\|_{\rm op}e
+       +\sqrt N\,\|W-\widetilde W\|_F+\sqrt N\,\tau.
+\]
+Here $\|W\|_{\rm op}$ has an exact matrix-factor certificate,
+the quantization residual is evaluated exactly, and the approximate
+hidden coordinates remain in $[-1,1]$. The first layer separately
+accounts for input quantization through the exact identity
+\[
+ xW-\widetilde x\widetilde W
+  =x(W-\widetilde W)+(x-\widetilde x)\widetilde W.
+\]
+It uses column sums for the first term and exact integer products for
+the second. The final scalar error is at most
+$\|v\|_2e+\|v-\widetilde v\|_1$.
+These bounds produce a clean-output interval at every recorded input.
+Combining each interval with an independently verified global
+disturbance bound gives a pointwise clipped-score certificate whenever
+the resulting interval comparison succeeds. Every remaining input must
+receive a separate local proof before a full held-out-set conclusion
+is drawn. The method certifies the specified finite dataset, not the
+input distribution or all possible images.

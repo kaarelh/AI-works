@@ -1,0 +1,47 @@
+Independent audit by depth2_alternatives, 17 October 2026.
+
+PASS: exact_covariance_state_point.py, mathematical certificate and code.
+
+Use row-vector hidden states, and let A_s=W_s D_s be the clean Jacobian
+of an internal layer. The exact displacement recurrence is
+    delta_s = delta_{s-1} A_s + eta_s + R_s.
+Separate the response linear in all hidden disturbances from the
+nonlinear remainder. The linear map's Gram matrix obeys
+    G_1=I, G_s=A_s^T G_{s-1} A_s+I.
+The simultaneous hidden-noise constraint implies total Euclidean norm
+at most eta=r sqrt(N), so its state norm is at most
+eta sqrt(||G_s||op). The nonlinear part has norm at most
+    rho_s=||A_s||op rho_{s-1}+||R_s||_2.
+Using the previous total state bound B_{s-1} in
+|preactivation displacement_j|<=||W_:j||_2 B_{s-1} gives an inductive,
+finite-radius enclosure. There is no infinitesimal-only approximation.
+
+For tanh, scalar Taylor remainder extrema occur at tube endpoints,
+u=0, and u=-2a when it lies in the tube. The script encloses all of
+these with interval arithmetic, and intersects with the valid global
+bound |R(u)|<=u^2/2 (since |tanh''|<=1). This produces a valid norm
+bound even when some signed remainder intervals include both signs.
+
+The clean derivatives are nonnegative, so rounding derivative caps
+upward bounds ||W D_clean|| by ||W D_upper||. The exact matrix norm
+helper validates the latter independently of floating SVD accuracy.
+The Gram recurrence uses outward integer interval products. Its
+operator norm is bounded by a certified norm of a dyadic midpoint
+plus a Frobenius bound for the entire entrywise interval error.
+
+Finally |delta z|<=||v||_2 B_H+r is valid. Separately maximizing the
+hidden and scalar-output budgets is conservative; it does not require
+independence or permit an underestimated joint-noise response. The
+clipped output enclosure then proves the stated score condition.
+
+The certificate covers only the declared exact Boolean vertex. Any
+global-cube conclusion must combine it with certificates covering all
+other vertices; this single-point script alone does not do that.
+The proof trusts the stated integer/rational and outward interval
+arithmetic implementation, and is not a Lean formalization.
+
+Reproduction: reran exact_covariance_state_point.py for model505,
+vertex325, c=1/1000. It completed in 15.21 seconds and again certified
+zero clipped-score change, with final state displacement upper bound
+0.1151921478866047 and output enclosure approximately
+[-2.586690407572032,-2.2262908420035368].

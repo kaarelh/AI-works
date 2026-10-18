@@ -1,0 +1,135 @@
+\section{Unrestricted learning at bounded widths}
+\label{sec:finitewidth-unrestricted}
+
+A robustness restriction is unnecessary when the learner's width is itself
+polynomially bounded. The following elementary argument retains the original
+all-input clean margin and Gaussian conditioning conventions, and is uniform
+in the Gaussian scale. It also covers analog target networks at their original
+depth, without digital simulation.
+
+Let $P_N=N(d+2)+(L-2)N^2$ be the parameter count, and let $\mu_{N,t}$ denote
+the raw Gaussian with variances $t^2/d,t^2/N,t^2/N^2$, respectively. Thus
+$\kappa_N=(t^2/N)\chi^2_{P_N}$ under $\mu_{N,t}$. Fix integers
+$1\le C\le M$ and suppose, for some $D\ge1$, that
+\begin{equation}\label{eq:finitewidth-targetmass}
+ \mu_{N,t}\{w:f(x)z_w(x)>1/2\text{ for every }x\}
+ \ge \exp(-DN/t^2).
+\end{equation}
+This holds for $C\le N\le M$ and $0<t\le1$. Only this target-mass
+hypothesis is needed; posterior networks may be fragile.
+
+\begin{theorem}\label{thm:finitewidth-unrestricted}
+For $0<\varepsilon,\delta<1$, set
+\begin{align*}
+ B&=4D+2[d+2+(L-2)M]\log2+4\log(2/\varepsilon),\\
+ A&=\sqrt{MB},\qquad T=d+1+M(L-1),\qquad
+ q=[4T(MA)^{L-1}]^{-1}.
+\end{align*}
+If
+\[
+ n\ge\frac2\varepsilon\left[
+ \log M+P_M\log(5A/q)+\log(1/\delta)\right],
+\]
+then, with probability at least $1-\delta$ over independent examples from any
+input distribution, the unrestricted Gaussian posterior has Gibbs error at
+most $\varepsilon$, simultaneously for every $C\le N\le M$ and $0<t\le1$.
+Here ``unrestricted'' retains the original conditioning on
+$|z_w(x)|>1/2$ for all inputs, but imposes no internal robustness condition.
+The same sample event works after any number of additional correctly labeled
+examples. In particular, if $D$ and $M$ are polynomial in $d,L,C$, the sample
+bound is polynomial in $d,L,C,\varepsilon^{-1},\log(1/\delta)$, uniformly for
+all $\gamma\ge1$ with $t^2=N^{1-\gamma}$.
+\end{theorem}
+
+\begin{proof}
+For every sample, the event used to condition the raw Gaussian contains the
+target event in~\eqref{eq:finitewidth-targetmass}. The chi-square exponential
+moment therefore gives
+\[
+ Q_{S,N,t}\{\kappa_N>B\}
+ \le\exp\left(\frac{DN}{t^2}+\frac{P_N}2\log2-
+                       \frac{NB}{4t^2}\right)
+ \le\varepsilon/2.
+\]
+The last inequality uses $P_N/N\le d+2+(L-2)M$, $N\ge1$, and $t\le1$.
+This bound holds for every sample, without a probabilistic qualification.
+
+If $\kappa_N\le B$, every physical parameter has magnitude at most $A$.
+Round each to the nearest multiple of $q$, using at most $5A/q$ grid values
+per coordinate. For the maximum coordinatewise hidden-state discrepancies,
+boundedness and the Lipschitz property of tanh give
+\[
+ e_1\le(d+1)q,\qquad e_s\le NAe_{s-1}+Nq,\qquad
+ |z-z_{\rm grid}|\le NAe_{L-1}+Nq.
+\]
+Consequently, uniformly over Boolean inputs,
+\[
+ |z-z_{\rm grid}|\le q[d+1+M(L-1)](MA)^{L-1}=1/4.
+\]
+Rounding thus preserves the entire Boolean function of every posterior
+network with energy at most $B$.
+
+The union of these grid classifiers over $C\le N\le M$ has logarithmic
+cardinality at most $\log M+P_M\log(5A/q)$. A consistency union bound gives
+one sample event on which every consistent grid classifier has true error
+at most $\varepsilon/2$. Every good-energy posterior draw has the same
+function as such a classifier; the remaining posterior mass is at most
+$\varepsilon/2$. This proves the Gibbs bound. The finite class is independent
+of $t$, and consistency only becomes more restrictive as examples are added.
+\end{proof}
+
+The logarithm of the grid size satisfies
+\[
+ \log(5A/q)=\log(20AT)+(L-1)\log(MA).
+\]
+The exponentially small parameter precision costs only a polynomial in
+$L$ in this logarithm. The unresolved unrestricted problem is therefore
+uniformity at learner widths \emph{larger than every polynomial in the
+specified target complexity and depth}; this theorem does not show those
+larger widths actually require more samples.
+
+\begin{corollary}[Same-depth bounded-weight analog targets]
+Suppose a width-$C$, depth-$L$ tanh network realizes $f$ with
+$f(x)z(x)\ge1$ on every Boolean input and weights of magnitude at most
+$R\ge1$. Fix $M\ge C$ and set
+\begin{align*}
+ K&=2[d(d+1)+(L-1)C^2]R^2,\\
+ a&=[4(d+1+M(L-1))(MR)^{L-1}]^{-1},\\
+ D&=\max\{1,K+[d+2+(L-2)M][2+\log(1/a)]\}.
+\end{align*}
+Then~\eqref{eq:finitewidth-targetmass} holds with this $D$.
+Thus Theorem~\ref{thm:finitewidth-unrestricted} supplies a polynomial sample
+bound at the original depth for every $C\le N\le M$, with dependence on
+$R$ only through $\log R$ in the final sample bound. No robustness condition
+on the target implementation or prior support is needed. A target with the
+original strict margin $>1/2$ satisfies the displayed hypothesis after
+doubling its readout.
+\end{corollary}
+
+\begin{proof}
+Clone the $C$ neurons into balanced nonempty groups of sizes $n_i$ summing
+to $N$. Copy first-layer rows and replace internal and readout weights by
+$W_{ij}/n_j$ and $v_i/n_i$. This preserves the exact function. Since
+$\max_i n_i/\min_i n_i\le2$, its energy is at most $K$, and its weights
+remain bounded by $R$. A physical-coordinate perturbation of magnitude
+at most $a$ changes every output by at most $1/4$, by the recurrence above.
+
+Use isotropic coordinates
+$y=(\sqrt d\,W^1,\sqrt N\,W^{\rm internal},Nv)$, so
+$y\sim\mathcal N(0,t^2I)$ and $\|y_*\|^2\le NK$ for the cloned center.
+The standard-normal-coordinate box
+$|y_j/t-y_{*,j}/t|\le a$ lies within the physical box, because all coordinate
+scalings are at least one and $t\le1$. Its probability is at least
+\begin{align*}
+ &\left(\frac{2a}{\sqrt{2\pi}}\right)^{P_N}
+ \exp\left[-\frac12\sum_j(|y_{*,j}|/t+a)^2\right]\\
+ &\qquad\ge\exp[-NK/t^2-P_N(2+\log(1/a))]
+ \ge\exp(-DN/t^2).
+\end{align*}
+Here $(u+a)^2\le2u^2+2a^2$ and $a\le1$ suffice. Every network in this box
+has target margin at least $3/4$.
+\end{proof}
+
+This is an elementary finite-parameter learning result, rather than a new
+claim about the general VC dimension of neural networks. Its role is to
+isolate which width regime remains open under the exact prior conventions.

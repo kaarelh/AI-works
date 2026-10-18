@@ -1,0 +1,220 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,microtype}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Representation constraints and polynomial-depth learning in Gaussian Bayesian networks},pdfauthor={Dmitry Vaintrob, Kaarel Hanni, OpenAI Codex}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\op}{\mathrm{op}}
+\newcommand{\poly}{\operatorname{poly}}
+\title{Representation constraints and polynomial-depth learning\\
+in Gaussian Bayesian networks}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex}
+\date{Research draft --- 18 October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We study Gaussian-prior tanh networks conditioned on a clean output
+margin throughout the Boolean cube and on noiseless training signs.
+For every fixed $\zeta>0$ and exponent $\gamma\ge1+\zeta$, a
+posterior trained on $n$ examples at depth $L\ge3$ and sufficiently
+large polynomial width assigns mass at least $1-\beta$ to Boolean
+functions with same-depth unit-margin representatives whose product
+of Frobenius norms is polynomial in $d,n$. A general polynomial
+sample theorem would therefore require a corresponding approximation
+representation theorem.
+
+Conversely, a target with depth $D_0$ and product norm $P$ has
+polynomial sample complexity, simultaneously at every width above
+its actual bounded-weight network complexity, after only
+$O(\log(d+D_0+P))$ additional learner layers. The original target
+width and coefficient precision do not enter. We prove a
+norm-preserving width compression theorem and a further global-margin
+normal form whose entire Boolean description is polynomial in $P$,
+independently of original depth and width, apart from specifying at
+most $P^2$ relevant coordinate indices. At sufficiently large depth
+and width, the minimum Gaussian energy above its depth baseline is
+comparable to the logarithm of this intrinsic product complexity,
+together with the input-normalization cost.
+
+The positive results include every Boolean halfspace, independently
+of its original geometric margin and coefficient precision, at every
+learner depth $L\ge2$. For fan-in-two Boolean circuits of size $s$
+and depth $h$, put $S=\max\{16,2+d+s\}$. At every learner depth
+$L\ge\max\{2,h\}$, we obtain the upper bound
+$S^{O_\zeta(1+h/\log\log S)}$ times a polynomial in learner depth and
+statistical parameters. We give all analytic and representation
+arguments needed for these results. A polynomial sample bound for
+arbitrary small deep circuits, and the original critical prior
+$\gamma=1$, remain unresolved.
+\end{abstract}
+
+\section{Model and main conclusions}
+
+The target $f:\{-1,1\}^d\to\{-1,1\}$ is learned from independent
+examples $(x_i,f(x_i))$ drawn from an arbitrary input distribution $D$.
+A learner of depth $L\ge2$ has $L-1$ hidden layers, each of width $N$,
+and computes
+\[
+ h^0=(1,x),\qquad h^s=\tanh(W^sh^{s-1})\quad(1\le s<L),
+ \qquad z_w(x)=v^Th^{L-1}.
+\]
+There are no biases after the augmented input. Its Gaussian energy is
+\[
+ \kappa_N(w)=\frac dN\|W^1\|_F^2+
+    \sum_{s=2}^{L-1}\|W^s\|_F^2+N\|v\|_2^2.
+\]
+The raw Gaussian has independent entry variances
+$t^2/d,t^2/N,t^2/N^2$, respectively. Put $\sigma^2=t^2/N$;
+the exponent-$\gamma$ convention is $\sigma^2=N^{-\gamma}$.
+In energy coordinates its density is proportional to
+$\exp[-\kappa_N/(2\sigma^2)]$.
+
+The posterior $Q_S$ is the raw Gaussian conditioned on
+\[
+ |z_w(x)|>1/2\quad\text{for every }x\in\{-1,1\}^d,
+ \qquad f(x_i)z_w(x_i)>0\quad\text{for every training input}.
+\]
+``Unrestricted'' retains this all-input output-margin condition and
+means that no additional internal robustness restriction is imposed.
+Let $C_L(f)$ be the least width admitting a depth-$L$ representation
+with all physical weights bounded by that width and signed output
+greater than $1/2$ everywhere. This is the actual bounded-weight
+network complexity at the specified learner depth.
+
+Our new representation constraint is
+Theorem~\ref{thm:posterior-energy-ceiling}. At every learner depth $L\ge3$, for every consistently labeled
+sample of size at most $n$, every $0<\beta<1$, and all widths above a
+polynomial threshold, posterior mass at least $1-\beta$ is supported on
+Boolean functions admitting a unit-margin
+depth-$L$ representative with product of Frobenius norms polynomial
+in $d,n$. The threshold is polynomial in $d,n,L,\log(2/\beta)$, with degree depending
+on the fixed gap $\zeta>0$ above exponent one. If $L$ is at least a
+constant times $\log(d+n)$, one additional layer gives a representative
+of energy $L+O(\log(d+n))$. Corollary~\ref{cor:approximation-energy-obstruction}
+turns any function-level approximation-energy lower bound into an
+actual posterior error lower bound. We do not establish such a barrier
+for an explicit small deep target here.
+
+Our new positive conclusion,
+Theorem~\ref{thm:halfspace-unrestricted-all-depths}, covers every Boolean
+halfspace with sample size polynomial in $d,L,\varepsilon^{-1}$ and
+$\log(2/\delta)$, simultaneously for every $N\ge C_L(f)$ and every
+$0<\sigma^2\le N^{-(1+\zeta)}$. Unlike a direct affine implementation,
+the alternative shallow representation does not depend on the target's
+geometric margin or original weight magnitudes. The only external
+representation ingredient is the classical Goldmann--Karpinski
+threshold-to-majority simulation; the remaining analytic arguments are
+included below.
+
+The positive and negative directions meet at a function-level
+representation question. Theorems~\ref{thm:product-target-log-padding}
+and~\ref{thm:depth-independent-pf-normal-form} give, respectively,
+a partial converse after logarithmic added depth and a finite Boolean
+description controlled by product norm alone.
+Theorem~\ref{thm:intrinsic-product-energy} then relates intrinsic
+product complexity to minimum excess Gaussian energy at sufficiently
+large depth and width. None of these statements identifies ordinary
+circuit size with product complexity. For a general fan-in-two circuit
+of size $s$ and depth $h$, put $S=\max\{16,2+d+s\}$. At every
+$L\ge\max\{2,h\}$, the block construction gives
+$S^{O_\zeta(1+h/\log\log S)}$ sample dependence, improving the direct
+$S^{O_\zeta(h)}$ bound while retaining a gap from a joint polynomial.
+Every fixed-depth threshold-circuit family is covered by a polynomial
+bound; thus an explicit superpolynomial-sample counterexample within
+$\mathsf{NC}^1$, at growing learner depth, would separate
+$\mathsf{NC}^1$ from $\mathsf{TC}^0$.
+
+We measure error primarily by posterior Gibbs error
+$\mathbb E_{w\sim Q_S}\Pr_D\{\operatorname{sign}z_w(X)\ne f(X)\}$.
+If $p_S(x)$ is posterior probability of the correct label, then
+\[
+ D\{x:p_S(x)\le q\}\le
+ \frac{\operatorname{GibbsErr}(Q_S)}{1-q}\qquad(0<q<1).
+\]
+Thus all positive results also cover correct-answer probability
+thresholds $2/3$ and $1/2$, after constant changes in the Gibbs error
+target. Posterior mixtures require no special assumption. The lower
+bound in Corollary~\ref{cor:approximation-energy-obstruction} states
+its separate consequence for the $2/3$ criterion explicitly.
+
+The polynomial degrees may depend on $\zeta$; no uniform limit as
+$\zeta\downarrow0$ is claimed. All results concern statistical sample
+complexity, not efficient posterior computation. The draft has received
+independent AI-agent proof audits, but is not Lean-certified.
+
+\input{unrestricted-primary-margin-transfer.tex}
+\input{unrestricted-primary-posterior-ceiling.tex}
+\input{unrestricted-primary-halfspaces.tex}
+\input{unrestricted-fourier-spectral-targets.tex}
+\input{unrestricted-primary-threshold-circuits.tex}
+\input{unrestricted-primary-boolean-blocking.tex}
+\input{unrestricted-formula-balancing.tex}
+\input{unrestricted-primary-product-targets.tex}
+\input{unrestricted-primary-width-compression.tex}
+\input{unrestricted-alternative-product-normal-form.tex}
+\input{unrestricted-primary-depth-saturation.tex}
+\input{unrestricted-primary-functional-energy.tex}
+
+\section*{Analytic and representation foundations}
+The following sections provide the full supporting arguments. They are
+included to make this paper independent of earlier drafts in this
+research program.
+
+\input{unrestricted-background-finitewidth.tex}
+\input{unrestricted-background-productnorm.tex}
+\input{unrestricted-background-gaussian-distance.tex}
+\input{unrestricted-primary-small-prefactor.tex}
+\input{unrestricted-background-shallow-targets.tex}
+\input{unrestricted-background-fixed-depth.tex}
+\input{unrestricted-background-intrinsic-quantitative.tex}
+\input{unrestricted-alternative-target-corruption.tex}
+\input{unrestricted-primary-cloning-barrier.tex}
+
+\section{What remains unresolved}
+
+The necessary condition concerns functions up to approximation, not a
+particular implementation. The depth-independent product normal form
+proves that ordinary Boolean description size is polynomial in intrinsic
+product complexity. The converse polynomial comparison is not known,
+and even such a comparison would retain the learner-depth qualification
+in our present sufficiency theorem. The exact-cloning obstruction above therefore
+does not supply the missing function-level lower bound. Conversely,
+the shallow and halfspace results do not identify shallow representation
+size with arbitrary deep circuit size. A joint polynomial theorem for
+every small deep target, or an explicit counterexample to it under this
+posterior, remains open.
+
+The exponent $\gamma=1$ lies outside the Gaussian-distance argument:
+its typical hidden Gaussian bulk has order-one operator norm, so the
+uniform subtraction estimate used here does not become small with width.
+This observation is a proof limitation, not a sample lower bound.
+Removing the original all-input output-margin conditioning is also
+outside the present statements.
+
+\begin{thebibliography}{9}
+\bibitem{borell1975} C. Borell.
+The Brunn--Minkowski inequality in Gauss space.
+\emph{Inventiones Mathematicae} 30, 207--216, 1975.
+\url{https://doi.org/10.1007/BF01425510}.
+\bibitem{goldmann1998} M. Goldmann and M. Karpinski.
+Simulating threshold circuits by majority circuits.
+\emph{SIAM Journal on Computing} 27, 230--246, 1998.
+\url{https://doi.org/10.1137/S0097539794274519}.
+\bibitem{spira1971} P. M. Spira.
+On time-hardware complexity tradeoffs for Boolean functions.
+\emph{Proceedings of the Fourth Hawaii International Symposium on
+System Sciences}, 525--527, 1971.
+\url{https://ndlsearch.ndl.go.jp/en/books/R100000136-I1571135650878062336}.
+\bibitem{golowich2018} N. Golowich, A. Rakhlin, and O. Shamir.
+Size-independent sample complexity of neural networks.
+\emph{COLT}, 2018.
+\url{https://proceedings.mlr.press/v75/golowich18a.html}.
+\bibitem{nakhleh2026} J. Nakhleh and R. D. Nowak.
+Deep Neural Variation Spaces: A Unifying Perspective on Depth and Complexity.
+2026. \url{https://arxiv.org/abs/2607.05546}.
+\end{thebibliography}
+\end{document}

@@ -1,0 +1,149 @@
+\section{A necessary depth for bounded absolute rate}
+\label{sec:critical-entropy-transport}
+
+The common limiting rate does not mean that a bounded rate is attained
+at every depth. Gaussian entropy transport gives a complementary
+constraint. This is a statement about representation rates, not a
+sample-complexity lower bound.
+
+For $y=(y_0,\ldots,y_d)\in\{-1,1\}^{d+1}$ define the odd extension
+\[
+ \widetilde f(y)=y_0 f(y_1/y_0,\ldots,y_d/y_0),
+\]
+and let $k=k_{\rm aug}(f)$ be its number of relevant coordinates.
+Here a coordinate is relevant when some edge parallel to that coordinate
+has opposite endpoint labels. Since $\widetilde f$ is odd, $1\le k\le d+1$.
+The count is unchanged by permutations of the augmented coordinates.
+In particular, constants and dictators both have $k=1$. A parity of
+original degree $j$ has $k=j$ when $j$ is odd and $k=j+1$ when $j$ is even.
+
+\begin{theorem}[Entropy transport and depth]
+\label{thm:critical-entropy-transport}
+Let $J=J_L(f)$ and $h=L-2$. Put
+\[
+ B_h(J)=
+ \begin{cases}(1+\sqrt{2J/h})^{2h},&h\ge1,\\1,&h=0.\end{cases}
+\]
+Then
+\begin{align}
+ k_{\rm aug}(f)&\le64J B_h(J),
+ \label{eq:critical-transport-relevance}\\
+ d&\le8J\bigl(1+\sqrt{2J/k_{\rm aug}(f)}\bigr)^2 B_h(J).
+ \label{eq:critical-transport-dimension}
+\end{align}
+In particular $B_h(J)\le\exp(2\sqrt{2hJ})$. If $J_L(f)\le K$ and
+$d>8K(1+\sqrt{2K})^2$, then
+\[
+ L\ge2+\frac{1}{8K}
+ \left[\log\frac{d}{8K(1+\sqrt{2K})^2}\right]^2.
+\]
+Thus every target, including a constant, requires depth
+$\Omega((\log d)^2)$ to have a uniformly bounded critical rate as
+$d\to\infty$.
+\end{theorem}
+
+We use the Gaussian transport inequality in its correlated form. If
+$\eta\ll\mathcal N(0,Q)$ has entropy $D$, there is a coupling $(Z,G)$
+with these two marginals such that
+\begin{equation}
+ \mathbb E\|Q^{+1/2}(Z-G)\|^2\le2D.
+ \label{eq:critical-gaussian-transport}
+\end{equation}
+Both variables lie in $\operatorname{range}Q$. This is the standard
+Gaussian quadratic transport inequality~\cite{talagrand}, applied after whitening on that
+range; singularity causes no change. In particular one common coupling
+works for all input coordinates, rather than separate coordinatewise
+couplings.
+
+\begin{proof}[Proof of Theorem~\ref{thm:critical-entropy-transport}]
+Take any admissible variational path of total cost
+$A=r+\sum_{s=1}^{L-1}D_s<\infty$, where $r$ is its readout cost.
+Extend every feature oddly to the augmented cube as above. This is an
+injective linear transformation of the feature vector and preserves
+relative entropy. The Gaussian reference and the tanh map commute with
+this extension. Finite entropy ensures that every feature coordinate is
+in $(-1,1)$, so coordinatewise $\operatorname{atanh}$ lifts each controlled
+feature law to its preactivation law with exactly the same entropy.
+
+For a later hidden layer with input second moment $Q$, apply
+\eqref{eq:critical-gaussian-transport}. For any two augmented inputs
+$y,y'$, put $b=e_y-e_{y'}$. Cauchy--Schwarz on
+$\operatorname{range}Q$ and Minkowski give
+\[
+ \|b^TZ\|_{L^2}
+ \le\|b^TG\|_{L^2}+\|b^T(Z-G)\|_{L^2}
+ \le(1+\sqrt{2D_s})\sqrt{b^TQb}.
+\]
+Since tanh is $1$-Lipschitz, the $L^2$ distance of the two output
+features is at most this bound. Hence each later layer multiplies
+pairwise feature distances by at most $1+\sqrt{2D_s}$. Write
+\[
+ P=\prod_{s=2}^{L-1}(1+\sqrt{2D_s}),
+\]
+with the empty product equal to one.
+
+At the first layer, the field $y\mapsto W\cdot y$ identifies $W$
+uniquely. Its controlled law has entropy $D_1$ relative to
+$\mathcal N(0,I_{d+1}/d)$. The Gaussian transport coupling therefore
+satisfies $\mathbb E\|W-G\|^2\le2D_1/d$. If $I$ is the set of the
+$k$ relevant augmented coordinates, projection and Minkowski give
+\begin{equation}
+ \sum_{i\in I}\mathbb EW_i^2
+ \le\frac1d\bigl(\sqrt k+\sqrt{2D_1}\bigr)^2,
+ \qquad
+ \mathbb E\|W\|^2
+ \le\frac1d\bigl(\sqrt{d+1}+\sqrt{2D_1}\bigr)^2.
+ \label{eq:critical-transport-first-trace}
+\end{equation}
+A first-layer edge in direction $i$ has feature distance at most
+$2\sqrt{\mathbb EW_i^2}$.
+
+The readout admits a representation $z(y)=\mathbb E[a(H)H(y)]$
+with $\mathbb Ea(H)^2=2r$: one may take
+$a(H)=z^TQ^+H$. Each relevant direction has a bichromatic edge, and
+the output margin makes the output difference on that edge at least
+one. Consequently
+\[
+ 1\le2\sqrt{2r}\,P\sqrt{\mathbb EW_i^2}\qquad(i\in I).
+\]
+Summing the squared inequalities and applying the first estimate in
+\eqref{eq:critical-transport-first-trace} proves the sharper budget form
+\begin{equation}
+ d\le8rP^2\bigl(1+\sqrt{2D_1/k}\bigr)^2.
+ \label{eq:critical-transport-exact-budget}
+\end{equation}
+Using the full trace instead gives
+\[
+ k\le\frac{8rP^2}{d}
+       \bigl(\sqrt{d+1}+\sqrt{2D_1}\bigr)^2.
+\]
+If $A<d$, its right side is at most $64AP^2$. If $A\ge d$,
+the same conclusion follows from $k\le d+1\le2A$.
+
+The function $u\mapsto\log(1+\sqrt{2u})$ is concave on
+$[0,\infty)$. For $h\ge1$, Jensen's inequality and
+$\sum_{s=2}^{L-1}D_s\le A$ give
+\[
+ P^2\le(1+\sqrt{2A/h})^{2h}
+       \le e^{2\sqrt{2hA}}.
+\]
+The same assertion with $P=1$ holds for $h=0$. Substituting
+$r,D_1\le A$ in the preceding bounds and taking $A\downarrow J$
+proves both inequalities. The final depth bound follows by taking
+logarithms of \eqref{eq:critical-transport-dimension} and using $k\ge1$.
+\end{proof}
+
+\begin{remark}[What the bound does and does not control]
+For fixed rate budget $K$, \eqref{eq:critical-transport-relevance}
+also requires depth $\Omega((\log k)^2)$ when $k\to\infty$.
+Any Boolean predictor that has uniform-distribution error strictly less
+than $1/2$ on a parity of $j$ specified coordinates must depend on each
+of those coordinates. Thus the same relevant-coordinate restriction
+applies to every such predictor. Neither statement compares posterior
+masses of functions consistent with a training sample. A bound on
+pairwise feature distances also does not by itself bound the number of
+possible correlated feature laws, so it cannot be read as a learning
+theorem. The ambient-dimension restriction above is compatible with
+Theorem~\ref{thm:critical-rate-flattening}, whose sufficient depth is
+polynomial in $d$.
+\end{remark}

@@ -1,0 +1,145 @@
+\section{Pointwise support checks with an explicit unlabeled-data cost}
+\label{sec:unlabeled-stability-pool}
+
+There is another way to avoid a global support restriction or a
+low-complexity family of exceptional regions: use enough unlabeled
+inputs to pay for unrestricted variation of the instability sets.
+The price is an unlabeled sample size that depends on width and prior
+scale. The labeled sample bound remains width independent.
+
+Fix one Gaussian learner, with width $N$, $0<t\le1$, and raw prior
+$\mu=\mu_{N,t}$. Put $a=N/t^2$. Let $\mathsf{Stable}(w,x)$ denote
+the primary clipped-score condition at the single input $x$, with
+its calibrated radius $r_c(w)$. The margin-band or two-margin
+conditions may be used instead. Define
+\[
+ b(w)=D\{x:\mathsf{Stable}(w,x)\text{ fails}\}.
+\]
+Draw an independent unlabeled sample $U=(U_1,\ldots,U_m)$ and a
+labeled sample $S=((X_i,f(X_i)))_{i=1}^n$. Condition
+the raw Gaussian on stability at every input in $U$ and $S$, then
+apply the usual likelihood $f(X_i)z_w(X_i)>1/2$.
+Thus the support restriction depends on input locations but not on
+their labels. Optional original global clean-margin conditioning
+may also be retained. Write $Q_{U,S}$ for the resulting posterior.
+
+\begin{lemma}[Uniform coverage from an unlabeled stability pool]
+\label{lem:unlabeled-stability-pacbayes}
+With probability at least $1-\delta_U$ over $U$, every probability
+law $Q$ supported on stability at all $U_j$ satisfies
+\[
+ \mathbb E_Q b(w)
+ \le \frac{2}{m}\left[D_{\mathrm{KL}}(Q\Vert\mu)
+                       +\log(1/\delta_U)\right].
+\]
+The assertion includes laws selected after observing the labeled
+sample and its labels.
+\end{lemma}
+
+\begin{proof}
+For a fixed $w$, the probability of stability at all $U_j$ is
+$(1-b(w))^m$. Consequently
+\[
+ \mathbb E_U\int
+ e^{m b(w)/2}\mathbf1\{\mathsf{Stable}(w,U_j)\text{ for every }j\}
+ \,d\mu(w)
+ \le\int e^{m b(w)/2}(1-b(w))^m\,d\mu(w)\le1.
+\]
+Markov's inequality bounds the displayed integral by $1/\delta_U$
+on an event of probability at least $1-\delta_U$. On this event apply
+the entropy variational inequality to the measure with density
+$e^{m b/2}$ on the empirical stability set and zero outside it.
+Since $Q$ is supported on that set, it gives
+\[
+ \frac m2\mathbb E_Qb
+ \le D_{\mathrm{KL}}(Q\Vert\mu)+\log(1/\delta_U).
+\]
+Equivalently one may first truncate the logarithmic density below
+and then pass to the limit. This proves the simultaneous assertion.
+\end{proof}
+
+\begin{theorem}[Width-independent labeled complexity with an unlabeled pool]
+\label{thm:unlabeled-stability-pool}
+Under the Boolean-target assumptions of the main theorem, let $D_*$
+be its polynomial target-cylinder cost, so that the raw target cylinder
+has mass at least $e^{-aD_*}$. For every fixed $N\ge C$ and
+$0<t\le1$, there is a labeled sample bound polynomial in the same
+parameters as the main theorem, independent of $N$ and $t$, such that
+the following holds. If
+\[
+ m\ge\frac8\varepsilon
+       \left[aD_*+\log(2/\delta)\right],
+\]
+then, with probability at least $1-\delta$ over $U,S$, the posterior
+$Q_{U,S}$ has Gibbs test-margin error at most $\varepsilon$.
+The usual posterior-confidence consequences follow.
+\end{theorem}
+
+\begin{proof}
+Every member of the target cylinder is stable on the entire cube
+and has the correct signed margin greater than one. Thus it belongs
+to every conditioning event here, for every realization of $U,S$.
+The posterior is a raw Gaussian conditioned on an event of probability
+at least $e^{-aD_*}$, and therefore
+\[
+ D_{\mathrm{KL}}(Q_{U,S}\Vert\mu)\le aD_*.
+\]
+Lemma~\ref{lem:unlabeled-stability-pacbayes}, with
+$\delta_U=\delta/2$, gives
+$\mathbb E_{Q_{U,S}}b(w)\le\varepsilon/4$ under the displayed
+unlabeled sample bound.
+
+The same entropy bound gives the main theorem's readout truncation
+and width-independent compressor. Choose the discarded posterior
+mass at most $\beta=\varepsilon/4$ and the coupling failure probability
+$\alpha=\varepsilon/12$. All posterior draws are stable at the labeled
+input locations, so the finite candidate law has empirical ramp loss
+at most $\alpha$. The same uniform finite-class event over $S$ bounds
+its population ramp loss by
+$2\alpha+8[\log|\mathcal H|+\log(2/\delta)]/n$.
+
+At a fresh test input, loss transfer can fail only on a compression
+failure or when the original network is unstable at that input.
+Restoring the truncated mass and weighting the conditional instability
+term by its retained mass gives
+\[
+ R(Q_{U,S})\le
+ \beta+3\alpha+
+ \frac{8[\log|\mathcal H|+\log(2/\delta)]}{n}
+ +\mathbb E_{Q_{U,S}}b(w).
+\]
+Choose $n$ so that the finite-class term is at most $\varepsilon/4$.
+The four terms then sum to $\varepsilon$. The compression class has
+the same polynomial logarithmic size as before, independently of
+$N,t,U,S$. The two sample events have total failure probability at
+most $\delta$.
+\end{proof}
+
+This is an input-adapted prior with the usual label likelihood. In
+particular, observing each labeled input also imposes an additional
+label-free stability constraint; this is a specified change to the
+learning rule, not a theorem about the original fixed prior. It
+requires stability only at finitely many specified inputs, so it does
+not infer region-wide stability from pointwise certificates. It also
+does not provide a width-independent bound on the total data used:
+at $t=N^{(1-\gamma)/2}$ its unlabeled cost contains $a=N^\gamma$.
+For each fixed learner the probability statement above is complete.
+To cover a prescribed countable collection of widths and scales
+simultaneously, use the one common finite-class event for the labeled
+sample with failure probability $\delta/2$, and allocate unlabeled
+failure probabilities $\delta_j$ with $\sum_j\delta_j\le\delta/2$.
+Use unlabeled sizes
+$m_j\ge8[a_jD_*+\log(1/\delta_j)]/\varepsilon$; the labeled sample
+size is unchanged, and the unlabeled pools may be nested prefixes
+of one iid sequence. No
+simultaneous statement over a continuum of changing Gaussian priors
+is asserted without further argument.
+
+An equivalent semi-supervised protocol chooses the prior before any
+labels are revealed. Draw one iid pool of $M\ge\max\{m,n\}$ input
+locations, impose stability on the whole pool, and then reveal the
+labels of its first $n$ points. The coverage argument uses all $M$
+inputs, and the finite-class generalization event uses the first $n$.
+These two events need not be independent: each has its stated marginal
+probability, and their failures are combined by a union bound. The same
+guarantee therefore holds, with $n$ labels and $M$ input locations.

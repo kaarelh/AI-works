@@ -1,0 +1,194 @@
+\section{Sufficient stability conditions and finite-radius certificates}
+\label{sec:standalone-stability-certificates}
+
+The support condition is a finite-perturbation requirement. Clean
+Jacobians, loss Hessians, or held-out margins alone do not prove it.
+The following certificates make the condition explicit. They are
+sufficient tests for membership in the support already defined, not
+additional restrictions on that support. Restricting the prior to only
+networks passing a particular conservative test would require a new
+target-mass argument.
+
+\subsection{Global spectral and diagonal-metric conditions}
+
+For $1\le j\le H$, put
+\[
+ p_j=\prod_{s=j+1}^H\|W^s\|_{\rm op},\qquad S=\sum_{j=1}^H p_j^2,
+\]
+where the empty product is one. For every input and every finite
+postactivation disturbance,
+\begin{equation}\label{eq:standalone-spectral-certificate}
+ |z_w(x;\eta)-z_w(x)|
+ \le \sqrt{1+E_vS}\,\|\eta\|_*.
+\end{equation}
+Indeed, $\tanh$ is $1$-Lipschitz, so the final hidden-state difference
+is at most $\sum_jp_j\|\eta_j\|_2$ in Euclidean norm. Apply the readout,
+add the output disturbance, and use Cauchy--Schwarz in the normalized
+noise coordinates. In particular,
+\begin{equation}\label{eq:standalone-spectral-condition}
+ c^2\frac{1+E_v S}{1+H E_v}\le\frac1{256}
+\end{equation}
+is sufficient for the clipped support condition globally. If every
+internal operator norm is at most one, then $S\le H$; hence every such
+network qualifies whenever $c\le1/16$, without a restriction on its
+first layer or readout.
+
+The suffix products permit compensating expansion and contraction.
+For scalar internal weights alternating between $2$ and $1/2$, every
+$p_j\le2$, so $S\le4H$. Thus $c\le1/32$ suffices, even though a
+positive fraction of the layers expand by a factor two. More generally,
+if $p_j\le R$ for every $j$, where $R\ge1$, then the output change
+at the calibrated radius is at most $cR$. The point of controlling
+suffix products is that noise can enter at every depth: a bound on only
+the product of all layer norms does not control this situation.
+
+A sharper global certificate can ignore expansive directions that
+never affect the output. Suppose diagonal positive semidefinite matrices
+$M_1,\ldots,M_H$ satisfy
+\begin{equation}\label{eq:standalone-diagonal-metric}
+ M_H\succeq vv^\top,\qquad
+ (W^s)^\top M_sW^s\preceq M_{s-1}\quad(2\le s\le H).
+\end{equation}
+Then, writing $Q_M=N\sum_s\lambda_{\max}(M_s)$,
+\begin{equation}\label{eq:standalone-diagonal-certificate}
+ |z_w(x;\eta)-z_w(x)|\le\sqrt{1+Q_M}\,\|\eta\|_*.
+\end{equation}
+To prove this, use the diagonal seminorms
+$\|u\|_{M_s}=\sqrt{u^\top M_su}$. Coordinatewise $1$-Lipschitzness
+implies
+\[
+ \|\Delta h_s\|_{M_s}
+ \le\|\Delta h_{s-1}\|_{M_{s-1}}+\|\eta_s\|_{M_s}.
+\]
+At the first layer $\Delta h_1=\eta_1$. Sum, apply
+$M_H\succeq vv^\top$, and use Cauchy--Schwarz. Diagonality matters:
+a coordinatewise contraction need not contract an arbitrary quadratic
+form with off-diagonal entries.
+
+Taking $M_s=\|v\|^2p_s^2I$ recovers the spectral certificate. With
+$W^s=\operatorname{diag}(1,10)$ and $v=(1,0)^\top$, however, taking
+$M_s=\operatorname{diag}(1,0)$ gives $Q_M=H E_v$ despite the
+exponentially large spectral suffix products. For fixed weights,
+minimizing $\sum_sb_s$ under~\eqref{eq:standalone-diagonal-metric}
+and $0\preceq M_s\preceq b_sI$ is a semidefinite program. Penalizing
+this certificate during training is a concrete proposed regularizer;
+it is not a claim that ordinary gradient descent automatically produces
+such matrices with a favorable value.
+
+\subsection{A clean-Jacobian bound with an explicit finite-radius remainder}
+
+There is also a sufficient condition that uses the clean trajectory
+but controls the nonlinear remainder quantitatively. Fix $x$ and write
+$a_s=W^sh_{s-1}$ and $D_s=\operatorname{diag}(\operatorname{sech}^2 a_s)$
+for $s\ge2$. On the stacked space $\mathbb R^{HN}$, let $A$ be strictly
+block lower bidiagonal, with block $A_{s,s-1}=D_sW^s$ and all other
+blocks zero. Define
+\[
+ K=(I-A)^{-1},\qquad
+ k=\|K\|_{\rm op},\qquad
+ \ell=v^\top P_HK,\qquad g=\|\ell\|_2,
+\]
+where $P_H$ selects the last hidden-state block. The inverse exists
+because $A$ is nilpotent. Put
+\[
+ b=\max_{2\le s\le H}\|W^s\|_{\rm op},\qquad
+ b_\infty=\max_{\substack{2\le s\le H\\1\le i\le N}}\|(W^s)_{i,:}\|_2.
+\]
+When $H=1$, set $b=b_\infty=0$. Given $r>0$, set
+\[
+ R=r\sqrt N,\qquad \theta=2bb_\infty k^2R.
+\]
+
+\begin{proposition}[Finite-radius Jacobian certificate]
+\label{prop:standalone-jacobian-curvature}
+If $\theta<1$, then every disturbance with $\|\eta\|_*\le r$ satisfies
+\begin{equation}\label{eq:standalone-jacobian-bound}
+ |z_w(x;\eta)-z_w(x)|
+ \le r\sqrt{1+Ng^2(1+\theta)^2}.
+\end{equation}
+Consequently a right-hand side at most $1/16$ certifies the support
+condition at $x$ and radius $r$.
+\end{proposition}
+
+\begin{proof}
+Let $X$ stack all hidden-state differences, and let $\eta_h$ stack the
+hidden injections. Taylor expansion about the clean preactivations gives
+\[
+ X=AX+\eta_h+e(X),\qquad X=K(\eta_h+e(X)).
+\]
+Let $B$ be the block operator sending $X$ to the stacked internal
+preactivation changes. Then $\|B\|_{\rm op}\le b$ and
+$\|BX\|_\infty\le b_\infty\|X\|_2$. Since
+$\sup_{u\in\mathbb R}|\tanh''(u)|=4/(3\sqrt3)<1$,
+\begin{equation}\label{eq:standalone-curvature-remainder}
+ \|e(X)\|_2
+ \le\tfrac12\|BX\|_\infty\|BX\|_2
+ \le\tfrac12bb_\infty\|X\|_2^2.
+\end{equation}
+
+Put $u=\|\eta_h\|_2\le R$. If $u=0$, then $X=0$.
+If $u>0$, vary the hidden injection continuously from zero to
+$\eta_h$. The corresponding feedforward states depend continuously
+on this variation. At a first crossing of $\|X\|_2=2ku$, the preceding
+identity would imply
+\[
+ 2ku\le ku+\tfrac12kbb_\infty(2ku)^2
+       =ku\bigl(1+2bb_\infty k^2u\bigr)<2ku,
+\]
+a contradiction. Thus $\|X\|_2<2ku$ throughout the homotopy.
+Applying the last-layer readout to the exact identity gives
+\[
+ |v^\top P_HX|
+ \le gu+\tfrac12gbb_\infty(2ku)^2
+ \le g(1+\theta)u.
+\]
+Finally combine this with $|\eta_{\rm out}|$ by Cauchy--Schwarz,
+using $u^2/N+|\eta_{\rm out}|^2\le r^2$.
+\end{proof}
+
+The proposition permits cancellations in the clean transport and
+saturation along the clean trajectory. Its curvature condition is
+essential: a small clean Jacobian alone gives no positive finite-radius
+guarantee. One can upper-bound $k$ using the $H\times H$ block-norm
+matrix with entries
+\[
+ T_{sj}=\begin{cases}
+ 1,&s=j,\\
+ \|D_sW^s\cdots D_{j+1}W^{j+1}\|_{\rm op},&s>j,\\
+ 0,&s<j.
+ \end{cases}
+\]
+Then $k\le\|T\|_{\rm op}$; replacing each product norm by the product
+of its factor norms is another valid, more conservative upper bound.
+The quantity $g^2$ is the sum of squared Euclidean norms of the clean
+readout derivatives with respect to all hidden injections.
+
+Finite reachable-tube certificates offer a different refinement:
+they bound derivatives throughout explicitly bounded reachable activation
+intervals and propagate those bounds. They can succeed when the preceding
+single global curvature budget fails. Conversely, retaining signed
+products in $K$ may exploit cancellation lost by scalar interval
+propagation. Neither method generally dominates the other. Both certify
+finite disturbances; an uncorrected clean-Jacobian test does not.
+
+\subsection{Using clipping and controlling the domain}
+
+Any raw-output certificate $|z_w(x;\eta)-z_w(x)|\le B(x)$ can be
+converted to the sharper clipped certificate
+\[
+ \max\{T(z_w(x)+B(x))-T(z_w(x)),\,
+          T(z_w(x))-T(z_w(x)-B(x))\}\le1/16.
+\]
+Monotonicity of clipping proves this implication. In particular,
+large raw-output variation can be harmless when the entire certified
+interval lies beyond the same training-margin endpoint.
+
+Global spectral or diagonal-metric certificates hold on the entire
+input domain automatically. The trajectory-dependent certificates are
+pointwise. Testing them at independent held-out inputs estimates their
+success probability for one fixed network; it does not establish global
+membership or the low-complexity exceptional-set hypothesis of the
+localized posterior theorem. To certify an input region, its clean
+activation ranges and noise-perturbed ranges must both be controlled
+uniformly over that region. The distinction is necessary even for a
+finite pixel grid or a Boolean encoding of images.

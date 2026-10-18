@@ -1,0 +1,131 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,microtype}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Bounded critical Gaussian cost for every Boolean function at quadratic depth},pdfauthor={Dmitry Vaintrob, Kaarel Hanni, OpenAI Codex}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\Prb}{\mathbb P}
+\title{Bounded critical Gaussian cost for every\\Boolean function at quadratic depth}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex}
+\date{Research draft --- 17 October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+Consider fully connected tanh networks with the critical, or mean-field,
+Gaussian prior: first-layer, internal-layer, and readout entry variances
+are $1/d$, $1/N$, and $1/N^2$, respectively. We prove that there are
+universal constants $A,K_0$ such that, at one common depth
+$L_d\le A(d+1)^2$, every Boolean function on $d$ inputs has global-margin
+large-deviation rate at most $K_0$. The depth is independent of the function.
+The proof first bounds every eigenvalue of the initial tanh feature kernel
+below by $\exp[-O(d)]$. Small rank-one covariance tilts then amplify an
+arbitrary Boolean component at bounded total relative-entropy cost.
+This disproves a polynomial bound on absolute-rate sublevel cardinalities
+jointly in dimension and depth, even at a fixed rate threshold. It does
+not prove a Bayesian sample-complexity lower bound for a small-circuit
+target: differences between competing rates remain uncontrolled.
+\end{abstract}
+
+\section{Model, meaning of the result, and proof organization}
+
+Let $\mathcal X=\{-1,1\}^d$, with $d\ge1$, and let $L\ge2$.
+A width-$N$ network has $L-1$ hidden layers and computes
+\[
+ h^0=\bar x=(1,x),\qquad h^s=\tanh(W^s h^{s-1})\quad(1\le s<L),
+ \qquad z_w(x)=v^T h^{L-1}.
+\]
+There are no biases after the augmented input. Under the raw prior
+$\mu_{N,1}$, all weights are independent centered Gaussians, with entry
+variances $1/d$ in $W^1$, $1/N$ in internal matrices, and $1/N^2$ in $v$.
+For a Boolean target $f$, write
+\[
+ A_{N,f}=\{w:f(x)z_w(x)>1/2\text{ for every }x\in\mathcal X\}.
+\]
+At fixed $d,L$, the limit
+\[
+ J_L(f)=\lim_{N\to\infty}-\frac1N\log\mu_{N,1}(A_{N,f})
+\]
+exists. We reproduce its proof in Appendix~\ref{sec:critical-variational}.
+In particular the limit is taken in width with dimension and depth fixed;
+no uniform interchange of these limits is asserted.
+
+For a feature law $\nu$ on $[-1,1]^{\mathcal X}$, define
+$Q(\nu)=\mathbb E_\nu hh^T$. Let $\mathsf M_Q$ be the law of
+coordinatewise tanh applied to a centered Gaussian with covariance $Q$,
+and set $Q_0(x,y)=(1+x\cdot y)/d$. The rate has the variational formula
+\[
+ \begin{split}
+ J_L(f)=\inf\biggl\{&D(\nu_1\Vert\mathsf M_{Q_0})+
+  \sum_{s=2}^{L-1}D(\nu_s\Vert\mathsf M_{Q(\nu_{s-1})})
+  +\tfrac12 z^TQ(\nu_{L-1})^+z:\\[-2pt]
+ &\hspace{40mm}f(x)z(x)\ge1/2\text{ for every }x\biggr\}.
+ \end{split}
+\]
+The final term is infinite when $z$ is outside the covariance range.
+All covariance matrices here are uncentered feature second moments.
+The constructed feature laws happen to have zero mean, so those two
+notions agree for the main construction.
+
+Theorem~\ref{thm:critical-constant-rate} proves that universal finite
+$A,K_0$ exist such that, for each $d$, one common integer
+$L_d\le A(d+1)^2$ satisfies $J_{L_d}(f)\le K_0$ for every Boolean $f$.
+Thus
+\[
+ \log\#\{f:J_{L_d}(f)\le K_0\}=2^d\log2.
+\]
+No polynomial in $d,L$ can bound this logarithmic cardinality at the
+fixed threshold $K_0$. Equivalently, for every fixed $d$ and $\eta>0$,
+all functions have raw probability at least
+$\exp[-N(K_0+\eta)]$ once $N$ is sufficiently large. The width threshold
+in this equivalent asymptotic statement is not quantified here.
+
+We first lower-bound the initial feature spectrum. We then track a
+rank-one component $vff^T$ through three stages: free variance reduction,
+amplification of its fraction of the covariance, and amplification of its
+absolute size. The total Gaussian relative entropy stays bounded, and a
+final readout realizes $f$ with unit margin at bounded cost.
+The proof has received independent AI-agent mathematical reviews; it has
+not been formalized in Lean. Constants are deliberately nonoptimized.
+
+\input{paper-critical-spectrum.tex}
+\input{unrestricted-critical-constant-rate.tex}
+
+\section{What the capacity obstruction does not establish}
+
+The result is about absolute rates. Under the prior conditioned on global
+output margin and on a fixed noiseless training sample $S$, the exponential
+posterior rate of a consistent function is
+\[
+ J_L(f)-\min_{g\text{ consistent with }S}J_L(g).
+\]
+This follows from the finite sum of global-margin function probabilities,
+as detailed in the appendix. A universal upper bound on all the $J_L(f)$
+does not control these differences. A positive rate gap, however small,
+is multiplied by $N$ and can suppress a competitor in the width limit.
+Nor does the theorem assert that all Boolean functions have small circuits.
+Consequently it is neither a simple-target learning lower bound nor a
+claim that the conditioned prior is uniform over Boolean functions.
+
+The restriction to the critical Gaussian scaling also matters. This
+construction exploits the relative-entropy cost of changing a whole
+hidden feature law at the same speed $N$ as the output event. It does
+not identify the corresponding rate or posterior at exponents
+$\gamma>1$ or $\gamma<1$.
+
+\appendix
+\input{critical-variational-background.tex}
+
+\begin{thebibliography}{9}
+\bibitem{andreis2026} L. Andreis, F. Bassetti, and C. Hirsch.
+LDP for the covariance process in fully connected Gaussian neural networks.
+\emph{Electronic Journal of Probability} 31, 2026.
+\url{https://doi.org/10.1214/26-ejp1477}.
+\bibitem{dembozeitouni} A. Dembo and O. Zeitouni.
+\emph{Large Deviations Techniques and Applications}. Second edition,
+Springer, 1998.
+\end{thebibliography}
+\end{document}

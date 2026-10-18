@@ -1,0 +1,125 @@
+\section{A posterior certificate using robustness only where it is needed}
+\label{sec:pointwise}
+
+The earlier compression proof uses robustness only at its final prediction
+comparison. This permits a version that does not assume robust support.
+Fix a radius $0<r\le1$. Define
+\[
+ b_w(x;r)=\mathbf1\{\text{some perturbation of total RMS norm at most }r
+ \text{ makes }\sgn z_w(x)\,z_w(x;\eta)\le0\}.
+\]
+Clean zeros are declared bad. For a parameter law $Q$, write
+$b_Q(x;r)=\E_Q b_w(x;r)$, and let $b_D(Q;r)$ and $b_s(Q;r)$ be its
+population and empirical input averages. The reference measure $D$ here is
+the input distribution, not a target-mass exponent.
+
+\begin{proposition}[Compression with a pointwise defect]
+For $D_{\rm KL}(Q\Vert\mu_{N,t})\le NK/t^2$, the same finite class
+$\mathcal H(d,L,K,r,\alpha)$ from the earlier robust entropy-compression
+theorem admits a probability law $\Gamma_Q$ with
+\[
+ \left|\E_Q\mathbf1\{\sgn z_w(x)\ne f(x)\}
+       -\E_{h\sim\Gamma_Q}\mathbf1\{h(x)\ne f(x)\}\right|
+ \le\alpha+b_Q(x;r)\qquad(x\in\{-1,1\}^d).
+\]
+The construction and the class do not depend on the target $f$.
+\end{proposition}
+\begin{proof}
+Run the earlier construction for the unrestricted law $Q$. Its entropy
+budgets, clipping bounds, moment estimates, and common candidate marginal
+do not use robustness. At each fixed input, its comparison coupling has
+the original full-network marginal $Q$ and, except with probability less
+than $\alpha/4$, produces an exact postactivation perturbation of norm
+less than $r/2$. When $b_w(x;r)=0$, the candidate has the original sign
+and margin greater than $r/2$: otherwise an additional output injection
+within the remaining norm budget could reach zero. The same finite-grid
+rounding preserves that sign. In the small-width branch, good parameter
+clipping likewise preserves the original network until rounding; local
+robustness gives its output margin greater than $r$. Adding the probability
+$b_Q(x;r)$ to the original exceptional probability proves the assertion.
+No conditioning on a robustness event is performed, so no extra entropy
+cost or inconsistency between pointwise couplings is introduced.
+\end{proof}
+
+\begin{theorem}[Robustness-defect certificate for a consistent posterior]
+With probability at least $1-\delta$ over $n$ iid labeled examples,
+simultaneously for all $N,t,Q$ with the stated entropy bound,
+\[
+ \operatorname{GibbsErr}_D(Q)
+ \le 2\operatorname{GibbsErr}_s(Q)+3\alpha+b_D(Q;r)+2b_s(Q;r)
+       +\frac{8[\log|\mathcal H|+\log(1/\delta)]}{n}.
+\]
+In particular the empirical Gibbs error term vanishes for the original
+noiseless-consistent Gaussian posterior. This statement imposes no
+robustness restriction on that prior.
+\end{theorem}
+\begin{proof}
+On the usual finite-class relative-Chernoff event,
+$\operatorname{err}_D(h)\le2\operatorname{err}_s(h)
++8[\log|\mathcal H|+\log(1/\delta)]/n$ for every $h\in\mathcal H$.
+Average under the common law $\Gamma_Q$ and use the preceding proposition
+once on the population and once on the empirical inputs.
+\end{proof}
+
+For a fixed posterior selected without using an independent unlabeled
+sample $U$ of size $m$, Hoeffding also gives
+\[
+ b_D(Q;r)\le b_U(Q;r)+\sqrt{\log(1/\delta')/(2m)}
+\]
+with probability at least $1-\delta'$. Sound upper certificates for
+$b_w(x;r)$ may replace its exact value. This is a mathematical posterior
+certificate; one trained network is not automatically a draw from the
+specified Bayesian posterior. The training defect cannot simply be omitted:
+the posterior depends on the training inputs, so small population defect
+alone does not establish a small empirical defect.
+
+\subsection{A distributional prior with robust training likelihood}
+There is also a genuine learning theorem under a weaker prior restriction.
+Suppose the input distribution $D$ is known before the labels, set
+$J=L-1$, $E_v=N\|v\|^2$, and put
+\[
+ r_{\rm ref}(w)=\frac{1}{100\sqrt{1+J E_v}}.
+\]
+For fixed $0\le\rho<1$, condition the raw Gaussian only on
+\[
+ D\{x:b_w(x;r_{\rm ref}(w))=1\}\le\rho.
+\]
+Unlike the earlier prior, this condition imposes no all-input clean margin.
+For every observed example $(x_i,y_i)$, use the likelihood requiring
+$y_i z_w(x_i;\eta)>0$ for every perturbation of norm at most
+$r_{\rm ref}(w)$. Thus the likelihood enforces a robust answer on training
+inputs. This is a modified learning rule, not the original sign-only
+likelihood with a silently omitted empirical defect.
+
+\begin{corollary}[Polynomial-depth learning up to a distributional defect]
+For targets with a width-$C$, depth-$(L-1)$ layered Boolean circuit, this
+posterior has Gibbs error at most $\rho+\varepsilon$ after
+$\operatorname{poly}(d,L,C,\varepsilon^{-1},\log(1/\delta))$ examples,
+simultaneously for all $N\ge C$ and all $0<t\le1$. The polynomial has
+degree independent of depth, width, and Gaussian scale.
+\end{corollary}
+\begin{proof}
+The earlier robust target cylinder belongs to this prior support and
+satisfies the robust training likelihood for every sample. If its raw
+mass is at least $\exp(-ND_*/t^2)$, posterior KL is at most $ND_*/t^2$.
+With $B=\max\{8,8[D_*+\log(1/\beta)]\}$, the same Gaussian readout tail
+bound gives posterior mass at most $\beta$ to $E_v>B$. On the complementary
+event the required radius is at least
+$r_0=1/[100\sqrt{1+JB}]$. The conditional posterior has entropy bound
+$N(D_*+1)/t^2$, population robustness defect at most $\rho$, and empirical
+defect zero. Apply the preceding theorem and add the discarded mass:
+\[
+ \operatorname{GibbsErr}_D(Q_s)
+ \le\beta+3\alpha+\rho
+       +8[\log|\mathcal H|+\log(1/\delta)]/n.
+\]
+Choosing $\beta=\varepsilon/4$, $\alpha=\varepsilon/12$ and the earlier
+polynomial sample size proves the claim. The finite class is independent
+of $N,t$, which gives one simultaneous sample event.
+\end{proof}
+
+If a fixed reference input distribution $\nu$ is used instead, and
+$D\le M\nu$, replace the population defect $\rho$ by $M\rho$. This makes
+explicit what distributional information enters the prior. The result
+does not assert that the support can be estimated from arbitrary unlabeled
+data without an additional uniform-convergence argument.

@@ -1,0 +1,218 @@
+\section{What ordinary training and other stability notions do not guarantee}
+\label{sec:naturalness-obstructions}
+
+The following results delimit the empirical question. They do not imply
+that fragile outcomes are common under standard initialization, or that
+their Boolean functions are statistically difficult.
+
+\begin{proposition}[An open gradient-descent basin of fragile exact fits]
+For every even $L\ge256$, there is a width-one, depth-$L$ tanh network
+on $x\in\{-1,1\}$ with output $z(x)=x$, energy $\kappa_1\le L+76$,
+and a postactivation sign-changing disturbance of size at most
+\[
+ \frac2L e^{-\sqrt L/4}.
+\]
+This disturbance is smaller than both calibrated support radii
+\[
+ r_{\rm ref}=\frac{.01}{\sqrt{1+(L-1)E_v}},\qquad
+ r_S=\frac{.01}{\sqrt{1+S}}
+\]
+from the preceding report.
+For sufficiently small fixed step size, full-batch gradient descent on
+the unregularized squared loss for the two labeled inputs has an
+\emph{open set} of initializations converging to nearby exact fits that
+still violate both support conditions.
+\end{proposition}
+
+\begin{proof}
+Put $k_s=\min(s,L-s)$ and
+\[
+ r_s=\frac{\exp[-(k_s-1)/\sqrt L]}{2k_s},\quad
+ a=\operatorname{atanh}(1/2),\quad
+ b_s=\frac{\operatorname{atanh}(r_s)}{r_{s-1}},\quad v=2.
+\]
+Use first-layer input coefficient $a$ and bias zero, followed by scalar
+weights $b_s$. Then $h_s(x)=r_sx$ and $z(x)=x$.
+The reciprocal-ratio estimate from the preceding report's bounded-excess
+construction gives $\kappa_1\le L+76$; replacing its constant input by
+$x$ preserves the computation and reduces the first-layer energy charge.
+Also $b_s\ge e^{-1/2}/2>0.30$.
+
+At $x=1$, the middle-layer disturbance $-2r_{L/2}$ changes the entire
+remaining computation to its negative and gives final output $-1$.
+Its norm is at most $2L^{-1}e^{-\sqrt L/4}$. Here $E_v=4$, so the ratio
+of this upper bound to $r_{\rm ref}$ is at most
+$400e^{-\sqrt L/4}/\sqrt L<1$ for $L\ge256$.
+Since $S=\kappa_1\le L+76$ and $L+77\le4L-3$, it is also below $r_S$.
+
+For the training claim, let $F(\theta)=(z_\theta(1),z_\theta(-1))$ and
+$\ell(\theta)=\frac12\|F(\theta)-(1,-1)\|^2$.
+At the constructed point $\theta_*$, the columns of $DF$ corresponding
+to the first input coefficient and bias are $(c,-c)$ and $(c,c)$,
+respectively, with $c>0$. Thus $DF$ has full row rank.
+In a sufficiently small closed ball about $\theta_*$, its least singular
+value is at least $\mu>0$, its norm is at most $G$, and
+$\|\nabla^2\ell\|\le M$. The clean margins remain $>1/2$, and the
+\emph{fixed} middle-layer attack remains strictly inside both calibrated
+balls and gives strictly negative output.
+
+For $0<\eta\le1/M$, the descent lemma gives, as long as the iterates
+remain in this neighborhood,
+\[
+ \ell(\theta_{j+1})\le(1-\eta\mu^2)\ell(\theta_j).
+\]
+Their total movement is at most
+\[
+ \frac{\eta G\sqrt{2\ell(\theta_0)}}{1-\sqrt{1-\eta\mu^2}}
+ \le \frac{2G\sqrt{2\ell(\theta_0)}}{\mu^2}.
+\]
+Starting in a sufficiently small open ball makes this displacement smaller
+than the distance to the boundary, proving by induction that the iterates
+stay inside. The summable increments give convergence, and the geometric
+loss decay gives exact interpolation at the limit. Every limit retains the
+strict fragility witness.
+\end{proof}
+
+A nondegenerate Gaussian initialization gives this open basin positive
+probability. There is no useful lower bound here on that probability;
+the result rules out a universal guarantee, not a typical-case guarantee.
+It concerns unregularized full-batch squared-loss GD, rather than arbitrary
+weight decay, Adam, or a prescribed finite training budget.
+
+The same construction also violates the numerical-stability rule with
+the radius in~\eqref{eq:numeric-radius} and permitted output change $1/16$.
+For even $L\ge1024$, the attack-to-radius ratio is at most
+$4000e^{-\sqrt L/4}/\sqrt L<1$, and the attack changes the output by two.
+The same open-basin argument applies. Thus that alternative condition is
+also not a universal consequence of ordinary gradient descent.
+
+\begin{proposition}[Parameter flatness need not give activation robustness]
+The networks just constructed preserve their correct signs under every
+simultaneous Euclidean parameter perturbation of norm at most $1/4$.
+At the exact fit their squared-loss Hessian has operator norm $O(L)$.
+Nevertheless their absolute internal-noise radius is at most
+$2L^{-1}e^{-\sqrt L/4}$.
+\end{proposition}
+\begin{proof}
+Every internal scalar weight and the readout stay positive under the stated
+parameter perturbation. At both inputs the first signed preactivation is
+at least $\operatorname{atanh}(1/2)-\sqrt2/4>0$. Odd monotonic tanh
+layers therefore retain the signs throughout the parameter ball.
+
+For $t>0$, $t\tanh'(t)/\tanh(t)\le1$, since
+$\sinh(t)\cosh(t)\ge t$. Each internal log-weight elasticity of the
+positive output is consequently at most one. All scalar weights are
+bounded below by a positive numerical constant, so every parameter
+derivative at either input is bounded by a numerical constant.
+There are $L+1$ parameters, and at interpolation
+$\nabla^2\ell=DF^\top DF$; its norm is therefore $O(L)$.
+\end{proof}
+
+This is a separation between stability notions. Parameter flatness could
+still support a different learning theorem, but it cannot be substituted
+for absolute activation robustness in the existing proof.
+
+\begin{proposition}[Eventual membership after readout amplification]
+Every fixed network with nonzero outputs on the finite Boolean cube belongs
+to either calibrated support after sufficiently large positive readout
+amplification.
+\end{proposition}
+\begin{proof}
+Continuity and finiteness of the input set give $\rho,m>0$ such that every
+hidden disturbance of total normalized norm at most $\rho$ preserves each
+clean sign and leaves unscaled signed output at least $m$.
+Multiplying the readout by $A$ makes either calibrated radius $r_A$ tend
+to zero. For large enough $A$, $r_A<\rho$ and $Am>r_A$, so even adding
+the permitted scalar output noise cannot change a sign. Increasing $A$
+also makes the clean output margin exceed $1/2$.
+\end{proof}
+
+This does not remove the Gaussian cost: the readout energy grows as $A^2$,
+and the required $A$ may be exponentially large. It does mean that empirical
+membership before and after output rescaling answers different questions.
+The calibrated condition is a joint restriction on robustness and scale.
+
+\begin{proposition}[Global and typical margins can differ exponentially]
+There is a one-hidden-unit network with bounded input weight norm and
+Boolean function $x_1$ whose minimum output margin is $\tanh(2^{-d})$.
+Enforcing the original global clean margin $>1/2$ by readout amplification
+requires a multiplier at least $2^{d-1}$, while permitting an exceptional
+fraction of inputs requires only polynomial amplification in the reciprocal
+exceptional fraction.
+\end{proposition}
+\begin{proof}
+Take
+\[
+ a_d(x)=\sum_{j=1}^d2^{-j}x_j,\qquad z_d(x)=\tanh(a_d(x)).
+\]
+The squared input weight norm is less than $1/3$. The first coefficient
+exceeds the sum of the others, so the sign is $x_1$, and the minimum
+absolute preactivation is $2^{-d}$. Thus the global clean-margin multiplier
+must exceed $[2\tanh(2^{-d})]^{-1}\ge2^{d-1}$.
+Under the uniform cube, $a_d$ is uniform on the odd multiples of $2^{-d}$
+in $(-1,1)$, giving
+\[
+ \Pr(|a_d(X)|\le u)\le u+2^{-d}\qquad(0\le u\le1).
+\]
+Consequently for $A\ge1$,
+\[
+ \Pr(|Az_d(X)|\le1/2)
+ \le\operatorname{atanh}(1/(2A))+2^{-d}
+ \le A^{-1}+2^{-d}.
+\]
+For example, $A\ge2/\epsilon$ suffices when $2^{-d}\le\epsilon/2$.
+\end{proof}
+
+The last example concerns the inherited global clean-margin convention,
+not an additional failure of internal robustness. It motivates distinguishing
+training, held-out, and worst-input quantities, and investigating support
+conditions that explicitly tolerate a small exceptional input mass.
+
+\begin{proposition}[A generic Gaussian halfspace has a tiny cube margin]
+Let $d\ge64$ and $w\sim\mathcal N(0,I_d/d)$. Then
+\[
+ \Pr\left\{\min_{x\in\{-1,1\}^d}|w\cdot x|
+                    \le d^2 2^{-d}\right\}\ge1-\frac6d.
+\]
+On this event, the one-hidden-unit output $A\tanh(w\cdot x)$ needs
+$A>2^{d-1}/d^2$ to satisfy the global clean margin $>1/2$.
+This is a statement about Gaussian coefficients, not the distribution of
+weights after training and not a sample-complexity lower bound.
+\end{proposition}
+\begin{proof}
+For $0<\tau\le d^{-1/2}$ put
+$Z=2^{-d}\sum_x\mathbf1\{|w\cdot x|\le\tau\}$ and
+$p=\mathbb EZ=\Pr(|G|\le\tau)$ for $G\sim\mathcal N(0,1)$.
+For independent uniform cube points $x,x'$, their Gaussian evaluations
+have correlation $\rho=d^{-1}\sum_jx_jx'_j$.
+When $\rho\ne\pm1$, the bivariate Gaussian density bound gives
+\[
+ \frac{\Pr(|w\cdot x|\le\tau,\ |w\cdot x'|\le\tau)}{p^2}
+ \le\frac{e^{\tau^2}}{\sqrt{1-\rho^2}},
+\]
+using $p\ge\sqrt{2/\pi}\,\tau e^{-\tau^2/2}$.
+The antipodal or identical pairs have total probability $2^{1-d}$.
+For $|\rho|\le1/2$, $(1-\rho^2)^{-1/2}\le1+\rho^2$.
+Otherwise, excluding the two degenerate correlations, this factor is at
+most $\sqrt{d/2}$. Since $\mathbb E\rho^2=1/d$ and
+$\Pr(|\rho|>1/2)\le2e^{-d/8}$,
+\[
+ \mathbb E\!\left[
+   \frac{\mathbf1\{\rho\ne\pm1\}}{\sqrt{1-\rho^2}}\right]
+ \le1+\frac1d+\sqrt{2d}\,e^{-d/8}\le1+\frac2d.
+\]
+Here the last inequality holds for $d\ge64$.
+Using $p\ge\tau/2$ and $e^{\tau^2}\le1+2/d$, Chebyshev gives
+\[
+ \Pr(Z=0)\le\frac{\operatorname{Var}Z}{p^2}
+ \le\frac{2^{2-d}}\tau+\frac5d.
+\]
+Take $\tau=d^22^{-d}$; this is at most $d^{-1/2}$ for $d\ge64$.
+The right-hand side is at most $6/d$. The output-scaling claim follows
+from $|\tanh u|\le|u|$.
+\end{proof}
+
+The same observation includes a Gaussian first-layer bias by passing to
+the $(d+1)$-dimensional cube: absolute affine values on the original cube
+are exactly absolute homogeneous values on one representative from every
+antipodal pair of the augmented cube.

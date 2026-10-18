@@ -1,0 +1,428 @@
+\section{A common limiting critical rate for all Boolean functions}
+\label{sec:critical-rate-flattening}
+
+The critical rate admits a sharper description than a universal constant
+upper bound. At sufficiently large depth, every Boolean function has
+nearly the same absolute rate. The common value is an elementary scalar
+control problem. The theorem below does not determine the ordering of
+the small remaining rate differences. Consequently it does not establish
+a posterior sample-complexity lower bound in the width-first convention.
+
+We use the critical variational functional $J_L$ defined in this paper,
+with output margin $1/2$. All logarithms are natural.
+
+\begin{definition}[Scalar control value]
+For $q>0$, a scalar path of length $m\ge0$ starts at $q_0=q$.
+At step $j$, choose a probability law $\eta_j$ on $\mathbb R$ with
+finite entropy relative to $\mathcal N(0,q_{j-1})$, and set
+\[
+ q_j=\int\tanh^2 z\,d\eta_j(z).
+\]
+Its total cost is
+\[
+ \sum_{j=1}^{m}D(\eta_j\Vert\mathcal N(0,q_{j-1}))
+       +\frac1{8q_m}.
+\]
+Let $V(q)$ be the infimum of these costs over all finite paths, including
+the length-zero path. Define
+\[
+ V_*:=\lim_{q\downarrow0}V(q).
+\]
+The next lemma establishes that this limit exists and is finite.
+\end{definition}
+
+\begin{theorem}[Quantitative flattening of critical rates]
+\label{thm:critical-rate-flattening}
+There are universal constants $C<\infty$ and $V_*\in(1,2)$ such that,
+with $D=d+1$, every Boolean function $f$ satisfies
+\[
+ J_L(f)\ge V_*-\frac C{\sqrt L}\qquad(d\ge1,\ L\ge2),
+\]
+and, whenever $L\ge C D^2$,
+\[
+ J_L(f)\le V_*+
+ C\left[\left(\frac DL\right)^{1/3}+\frac{D^2}{L}\right].
+\]
+In particular, $J_L(f)\to V_*$ as $L\to\infty$ for every fixed input
+dimension, uniformly over all Boolean functions on that cube. For every
+$\varepsilon>0$, a depth polynomial in $d$ and $1/\varepsilon$ puts
+every function's rate within $\varepsilon$ of the same constant.
+\end{theorem}
+
+\subsection{Properties of the scalar value}
+
+\begin{lemma}[Scalar value and short increasing paths]
+\label{lem:scalar-value-properties}
+The function $V$ is nonincreasing, $1<V_*<2$, and there is a
+universal constant $C_0$ such that
+\[
+ 0\le V_*-V(q)\le C_0q\qquad(0<q\le1/128).
+\]
+For every $0<p\le1/128$, a scalar path of cost at most $V(p)+p$ can
+be chosen with strictly increasing states and at most $C_0p^{-2}$ steps.
+\end{lemma}
+
+\begin{proof}
+Monotonicity follows from rescaling controls. If one starts a path at a
+larger variance, rescale its first preactivation control by the square
+root of the variance ratio. Relative entropy from the corresponding
+Gaussian is unchanged, while the next second moment increases because
+$|\tanh z|$ increases with $|z|$. Repeat this at every step. The final
+readout cost decreases. Taking infima proves that $V$ is nonincreasing.
+
+Put $F(u)=\mathbb E\tanh^2(\sqrt uZ)$. The elementary inequality
+$\tanh^2z\ge z^2/(1+z^2)$ and Cauchy--Schwarz give
+$F(u)\ge u/(1+3u)$.
+Here is an elementary uniform upper bound. For $q<1/10$, replace its
+reference Gaussian by $\mathcal N(0,(1+6q)q)$, at entropy cost at most
+$9q^2$. The bound $F(u)\ge u/(1+3u)$ gives
+\[
+ q'-q\ge\frac{q^2(3-18q)}{1+3q+18q^2}>0.
+\]
+The cost divided by this variance increment is at most
+\[
+ R_0(q)=\frac{3(1+3q+18q^2)}{1-6q},
+\]
+which is increasing on $[0,1/10]$. Repeatedly take full steps while the
+new state remains below $1/10$. Their total cost is bounded by
+\[
+ \int_0^{1/10}R_0(q)\,dq=-\frac{69}{200}+\log(5/2).
+\]
+On the last step, continuously reduce the variance inflation to hit
+$1/10$ exactly; this costs at most $9/100$. The readout then costs
+$5/4$. The total is at most $199/200+\log(5/2)<2$.
+For starting states at least $1/10$, the length-zero path already costs
+at most $5/4$. Thus $V(q)<2$ for all $q>0$.
+Since $V$ is nonincreasing, its limit at zero exists and is at most two.
+
+For a quantitative small-state bridge, let $q\le p_0:=1/128$ and
+replace its reference Gaussian by
+$\mathcal N(0,(1+16q)q)$. The entropy cost is at most $64q^2$.
+The first Hermite coefficient
+and Gaussian integration by parts give
+\[
+ F(u)\ge u[1-F(u)]^2\ge u(1-2u).
+\]
+Consequently this control gives a new state satisfying
+\[
+ q+4q^2\le q'\le q+16q^2\qquad(q\le p_0).
+\]
+The scalar exponential potential from
+Lemma~\ref{lem:critical-exponential-potential}, at $t=1$ and $a=1$,
+gives entropy cost at least $2(q_j-q_{j-1})$ at each step. Summing and
+including the readout shows $V(q)\ge1-2q$, so $V_*\ge1$.
+In fact the inequality is strict in the limit. Let
+\[
+ g(q)=2q-\log\mathbb E\exp\{2\tanh^2(\sqrt qZ)\}.
+\]
+The strict heat-equation inequality gives $g(q)>0$ for $q>0$.
+Consider a path from $q<1/100$ with cost at most two. If its final
+state is below $1/10$, its readout alone costs more than $5/4$.
+Otherwise consider its first crossing of $1/10$.
+The preceding state must exceed $1/100$: a transition with
+$q'/q\ge10$ has entropy at least
+$[10-1-\log10]/2>2$. To see this, its preactivation second moment
+is at least $q'$, since $\tanh^2z\le z^2$; Gaussian entropy duality
+gives the lower bound $[r-1-\log r]/2$ at a second-moment ratio $r\ge1$.
+The pre-crossing state therefore belongs to $[1/100,1/10]$.
+Summing the strengthened step bounds
+$D\ge2(q'-q)+g(q)$, and minimizing the terminal
+$2q_m+1/(8q_m)$, gives total cost at least
+$1-2q+\min_{[1/100,1/10]}g$.
+The alternative final-state-below-$1/10$ case satisfies the same bound,
+since $\min_{[1/100,1/10]}g\le g(1/100)\le1/50<1/4$.
+Paths of cost greater than two satisfy a stronger bound automatically.
+Letting $q\downarrow0$ proves $V_*>1$.
+
+The same Gaussian-growth construction, stopped exactly at any
+$p\le p_0$, costs at most $17p$ when started at an arbitrarily small
+positive state. Indeed all full steps cost at most 16 times their
+variance increment. For the last step, continuously reduce the variance
+inflation to hit $p$ exactly; its cost is at most $64p^2\le p$.
+Appending a nearly optimal path from $p$ and letting the starting state
+tend to zero yields $V_*\le17p+V(p)$.
+
+We also need a strict dissipation estimate. There is a universal $c>0$
+such that
+\begin{equation}\label{eq:strict-critical-potential}
+ \log\mathbb E\exp\{\tanh^2(\sqrt qZ)\}\le q-cq^2,
+ \qquad 0\le q\le1.
+\end{equation}
+For a direct verification, $G(z)=\exp(\tanh^2z)$ satisfies $G''<2G$
+away from zero. The heat equation gives a strict inequality
+$\log\mathbb EG(\sqrt qZ)<q$ for $q>0$.
+Taylor expansion gives
+$\log\mathbb EG(\sqrt qZ)=q-q^2+O(q^3)$ at zero. Compactness on
+$[0,1]$ therefore gives a positive $c$ in~\eqref{eq:strict-critical-potential}.
+Entropy duality now implies
+\begin{equation}\label{eq:scalar-step-dissipation}
+ D(\eta_j\Vert\mathcal N(0,q_{j-1}))
+ \ge q_j-q_{j-1}+cq_{j-1}^2.
+\end{equation}
+
+An arbitrary finite path can be made strictly increasing without raising
+its cost. If a step decreases or preserves the state, delete that step.
+Start the remaining controls at the larger preceding state and rescale
+each successive control as in the monotonicity argument. Their entropies
+are unchanged and the final readout cost cannot increase. Repeat until
+there are no nonincreasing steps; the procedure terminates because each
+deletion shortens the path. Take a path within $p$ of $V(p)$ and apply
+this procedure. Its cost is below three, and every retained step costs at
+least $cp^2$ by~\eqref{eq:scalar-step-dissipation}. Thus it has at most
+$3/(cp^2)$ steps. Increasing $C_0$ proves the lemma.
+\end{proof}
+
+\subsection{A small-variance layer forces the scalar cost}
+
+\begin{lemma}[Comparison of a signed pair with the scalar control problem]
+\label{lem:critical-pair-scalar-comparison}
+For any admissible critical variational path and any signed input pair,
+put $b=(e_x+se_y)/2$, $s\in\{-1,1\}$, and $v_j=b^TQ_jb$.
+If the output satisfies $|b^Tz|\ge1/2$, the part of the path after
+layer $j$, including the readout, costs at least $V(v_j)$.
+\end{lemma}
+
+\begin{proof}
+It suffices to compare one transition. Lift a finite-entropy feature
+law through the inverse coordinatewise tanh map to its preactivation
+law. Under the reference law, the preactivation combination $b^TG$ is
+$\mathcal N(0,v)$. Under the controlled law, denote its distribution by
+$\eta$. Data processing bounds its Gaussian relative entropy by the
+original layer entropy. The pair contraction inequality gives
+\[
+ \int\tanh^2z\,d\eta(z)\ge v',
+\]
+where $v'$ is the next feature-pair second moment. If the left side is
+$q'$, the definition of $V$ and its monotonicity imply
+\[
+ V(v)\le D(\eta\Vert\mathcal N(0,v))+V(q')
+       \le D(\nu'\Vert\mathsf M_Q)+V(v').
+\]
+The final readout costs at least $1/(8v_{L-1})\ge V(v_{L-1})$.
+Telescoping proves the assertion. Zero-variance or singular-covariance
+cases cause no problem: a finite-cost path reaching the stipulated
+nonzero pair output must have positive pair variance at every relevant
+step, and Cauchy--Schwarz is taken on the covariance range.
+\end{proof}
+
+\begin{proof}[Proof of the lower bound in Theorem~\ref{thm:critical-rate-flattening}]
+Choose opposite labels at adjacent cube vertices if $f$ is nonconstant;
+for a constant function choose equal labels at antipodal vertices.
+In either case the relevant signed pair starts with $v_0=1/d\le1$.
+Pair contraction and~\eqref{eq:strict-critical-potential} give
+\[
+ D(\nu_j\Vert\mathsf M_{Q_{j-1}})
+       \ge v_j-v_{j-1}+cv_{j-1}^2.
+\]
+For any path of total cost at most three, summation implies
+\[
+ \sum_{j=0}^{L-2}v_j^2\le\frac4c.
+\]
+Some $v_j$ is therefore at most $C_1/\sqrt{L-1}$.
+Lemma~\ref{lem:critical-pair-scalar-comparison} and monotonicity show
+that the full cost is at least $V(C_1/\sqrt{L-1})$.
+Paths of cost greater than three satisfy the same bound because $V\le2$.
+Taking infima and applying Lemma~\ref{lem:scalar-value-properties}
+gives the stated $V_*-C/\sqrt L$ lower bound, after increasing the
+universal constant to cover the finitely bounded range where
+$C_1/\sqrt{L-1}>1/128$.
+\end{proof}
+
+\subsection{Holding and growing an arbitrarily weak target component}
+
+Suppose a feature second moment has the decomposition
+\[
+ Q=vff^T+R,\qquad R\succeq0,\qquad R(x,x)=r\quad\hbox{for every }x.
+\]
+Its diagonal is $q=v+r$. Inflate only the target component, taking the
+next preactivation covariance to be $Q+\epsilon vff^T$.
+Its entropy cost is at most $\epsilon^2/4$ by the rank-one Gaussian
+formula. Put
+\[
+ \psi_r(z)=\mathbb E\tanh(z+\sqrt rZ),\qquad
+ v'=\mathbb E\psi_r(\sqrt{(1+\epsilon)v}Z)^2,
+ \qquad q'=F(q+\epsilon v).
+\]
+Conditional expectation gives $Q'\succeq v'ff^T$.
+Conditional Gaussian Poincare, using the unit Lipschitz constant of tanh,
+also gives
+\begin{equation}\label{eq:critical-residual-nonincreasing}
+ r':=q'-v'\le r.
+\end{equation}
+The map $\epsilon\mapsto v'$ is continuous and nondecreasing. At
+$\epsilon=0$ it is at most $v$, while the first Hermite projection gives
+\begin{equation}\label{eq:critical-component-growth}
+ v'\ge(1+\epsilon)v[1-F(q+\epsilon v)]^2
+       \ge(1+\epsilon)v[1-2(q+\epsilon v)].
+\end{equation}
+These statements depend only on the tracked scalars $v,r,\epsilon$,
+not on the remaining entries of $R$ or on the choice of $f$.
+
+\begin{lemma}[Cheap holding and prescribed growth]
+\label{lem:critical-cheap-holding}
+There are universal constants $A,B,C_2$ with the following properties.
+Let $D=d+1$ and $0<\delta\le p\le1/128$.
+Starting from the unperturbed first feature law, at zero entropy cost
+and after at most $B/\delta$ hidden layers, one can track
+\[
+ Q\succeq v_0ff^T,\qquad v_0=\delta e^{-AD},\qquad Q(x,x)\le\delta.
+\]
+One may hold this $v_0$ exactly fixed for any specified number $H$ of
+layers, at total entropy cost at most $64H\delta^2$, retaining diagonal
+residual at most $\delta$.
+Thereafter one can grow the tracked component exactly to $p$ in at most
+$BD/\delta$ layers, with entropy cost at most
+\[
+ C_2p+C_2D\delta,
+\]
+and with residual diagonal still at most $\delta$.
+The number of growth layers is fixed in advance from $v_0,\delta,p$,
+so it is independent of the preceding holding time and of $f$.
+\end{lemma}
+
+\begin{proof}
+The first unperturbed covariance has smallest eigenvalue at least
+$e^{-13D}$ by Lemma~\ref{lem:first-tanh-spectrum}. Since the cube has
+$2^d\le e^D$ points, it dominates $e^{-14D}ff^T$ for every $f$.
+Lemma~\ref{lem:critical-free-cooling} shows that, after $O(1/\delta)$
+unmodified layers, the diagonal lies in $[\delta/2,\delta]$ and the
+tracked target component is at least $b\delta e^{-14D}$.
+Enlarging $A$ gives the displayed common
+lower component $v_0$; reduce the tracked component to precisely that
+value if necessary.
+
+For holding, use an inflation $\epsilon\in[0,16\delta]$ chosen to
+make $v'=v_0$. Such a choice exists by continuity: at zero inflation
+$v'\le v_0$, and~\eqref{eq:critical-component-growth} gives $v'\ge v_0$
+at $16\delta$ when $q\le\delta\le1/128$.
+The residual does not increase, so the same argument applies at every
+holding layer. Each costs at most $64\delta^2$.
+
+For growth, prescribe the scalar sequence
+\[
+ v_{j+1}=\min\{p,\ v_j[1+2(\delta+v_j)]\},
+\]
+stopping upon reaching $p$. Throughout it, $r\le\delta$ and $v_j\le p$.
+At inflation $\epsilon=16(\delta+v_j)$,
+\eqref{eq:critical-component-growth} gives
+$v'\ge v_j[1+4(\delta+v_j)]$.
+Therefore an inflation no larger than this realizes the prescribed next
+value exactly. Its entropy cost is at most $64(\delta+v_j)^2$.
+For a full step, with $\Delta v=2(\delta+v_j)v_j$, this cost is
+\[
+ 32\Delta v+32\delta\frac{\Delta v}{v_j}.
+\]
+Here $\Delta v/v_j\le4p<1$, so
+$\Delta v/v_j\le2\log(v_{j+1}/v_j)$.
+Summing, bounding the possible last step separately by $256p^2$, and
+using $\delta\log(p/\delta)\le p/e$, proves a bound
+$C_2p+C_2D\delta$.
+
+Before $v$ reaches $\delta$, each full step multiplies it by at least
+$1+2\delta$, so at most $AD/\delta+1$ steps are needed.
+Afterwards each full step decreases $1/v$ by at least one, so at most
+$1/\delta+1$ further full steps and one final step are needed.
+This proves the stated $BD/\delta$ length bound. The prescribed scalar
+sequence fixes the length independently of the residual or holding time.
+\end{proof}
+
+\subsection{Stable lifting of scalar controls}
+
+\begin{lemma}[Lifting with a small residual]
+\label{lem:critical-scalar-lift}
+Suppose $Q\succeq pff^T$ has constant diagonal $p+r$, with
+$0\le r\le\delta$. Take a scalar path of length $m$ starting at $p$.
+It can be lifted to a vector feature path with no greater total hidden
+entropy. Its final second moment dominates
+\[
+ (1-\delta)^{2m}q_mff^T.
+\]
+The residual diagonal stays at most $\delta$ throughout. If the scalar
+path has total cost at most three and $2m\delta\le1/2$, the lifted path,
+including output $z=f/2$, costs at most the scalar cost plus $12m\delta$.
+\end{lemma}
+
+\begin{proof}
+For $z\ge0$ and $r\ge0$, symmetry of a standard Gaussian gives
+\[
+ \psi_r(z)=\mathbb E\tanh(z+\sqrt rZ)
+ \ge[1-F(r)]\tanh z\ge(1-r)\tanh z.
+\]
+Indeed, writing $u=\tanh z$ and $w=\tanh(\sqrt rZ)$, the average of
+the two values corresponding to $w$ and $-w$ is
+$u(1-w^2)/(1-u^2w^2)\ge u(1-w^2)$. Oddness gives the corresponding
+absolute-value inequality for all real $z$.
+
+Suppose the current tracked vector component is $v$, whereas the
+nominal scalar state is $q$. Rescale the nominal scalar preactivation
+control $\eta$ by $\sqrt{v/q}$. Its entropy relative to
+$\mathcal N(0,v)$ equals the nominal entropy relative to
+$\mathcal N(0,q)$. Independently add a centered Gaussian with the
+residual covariance. Data processing bounds the vector feature entropy
+by that same scalar entropy. Its new tracked component is the second
+moment of the conditional feature mean.
+Since $\tanh(cz)\ge c\tanh z$ for $z\ge0$ and $0\le c\le1$,
+the new component $v'$ obeys
+\[
+ \frac{v'}{q'}\ge(1-\delta)^2\min\{1,v/q\},
+\]
+where $q'$ is the nominal next scalar state.
+The conditional-variance argument from
+\eqref{eq:critical-residual-nonincreasing} applies equally to a
+non-Gaussian scalar control, so the residual diagonal never increases.
+Starting from $v=q=p$ proves the component bound by induction.
+
+The lifted readout cost is at most the nominal readout cost divided by
+$(1-\delta)^{2m}\ge1-2m\delta$. If $2m\delta\le1/2$, its increase is
+at most $4m\delta$ times the nominal readout cost, which is at most three.
+This proves the final assertion.
+\end{proof}
+
+\begin{proof}[Proof of the upper bound in Theorem~\ref{thm:critical-rate-flattening}]
+Choose a sufficiently large universal constant $B_1$ and set
+\[
+ \delta=B_1D/L,\qquad p=(D/L)^{1/3}.
+\]
+By taking the universal threshold in $L\ge CD^2$ large enough, we have
+$\delta\le p\le1/128$. Choose a scalar path from $p$ with cost at most
+$V(p)+p$ and length $m\le C_0p^{-2}$, as in
+Lemma~\ref{lem:scalar-value-properties}.
+
+Use Lemma~\ref{lem:critical-cheap-holding} to cool and then grow the
+component to $p$, inserting a holding interval between these operations.
+With $B_1$ large enough, cooling and growth together use at most $L/4$
+hidden layers. Increasing the threshold constant again makes
+$m+1\le L/4$. Choose the holding interval to fill exactly the remaining
+layers, so that the complete network has the specified depth $L$.
+This is possible because the growth length is prescribed in advance.
+
+The total holding cost is at most $64L\delta^2=O(D^2/L)$, and growth
+costs at most $C_2p+C_2D\delta=O(p+D^2/L)$.
+At the start of the scalar path the tracked component is exactly $p$
+and residual diagonal is at most $\delta$.
+Moreover
+\[
+ m\delta\le C_0B_1\frac{D}{Lp^2}=C_0B_1p,
+\]
+so $2m\delta\le1/2$ after increasing the threshold constant.
+Lemma~\ref{lem:critical-scalar-lift} bounds the additional lifting cost
+by $O(m\delta)=O(p)$. The scalar cost is at most $V(p)+p\le V_*+p$.
+Adding these bounds proves
+\[
+ J_L(f)\le V_*+C\bigl(p+D^2/L\bigr),
+\]
+as required. All tracked scalar recursions and all layer counts are
+independent of $f$, so the construction works at the same specified
+depth for every Boolean function on the cube.
+\end{proof}
+
+\paragraph{What this does and does not imply.}
+The theorem shows that the absolute critical-rate landscape becomes
+flat at polynomially large depth. It strengthens the obstruction to
+using an absolute rate budget as a circuit-complexity certificate.
+It does not make the remaining gaps zero. In a width-first posterior,
+a fixed positive gap is multiplied by $N$; even the displayed small
+gaps may therefore completely determine which interpolants are selected.
+An actual learning lower bound still requires a target-relative ordering
+or a finite-width comparison precise on the $1/N$ scale. No such claim
+is made here.

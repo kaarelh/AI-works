@@ -1,0 +1,85 @@
+\section{Formula targets independently of their original depth}
+\label{sec:formula-balancing}
+
+Formula balancing is classical, following Spira~\cite{spira1971}.
+We include the elementary construction needed here to make the resulting
+sample bound explicit. This section does not claim a new circuit-balancing
+theorem.
+
+\begin{lemma}[Polynomial-size balancing of a Boolean formula]
+\label{lem:formula-balancing}
+An AND/OR/NOT formula with $s$ gates and literal occurrences has an
+equivalent fan-in-two circuit of size polynomial in $s+2$ and depth
+$O(\log(s+2))$, regardless of the original formula depth.
+\end{lemma}
+
+\begin{proof}
+Push negations to the leaves using De Morgan's laws, eliminate double
+negations, and simplify constants. This does not increase the number
+of literal occurrences. Binarize any larger-fan-in AND/OR gates; this
+adds only linearly many gates and does not change the leaf count.
+A constant formula is immediate. Otherwise
+let $n$ denote its number of literal occurrences, counting repeated
+occurrences separately.
+
+For $n\ge2$ there is a subformula $g$ with between $n/3$ and $2n/3$
+literal occurrences. To find one, descend from the root while a child
+has more than $2n/3$ leaves. At the last such node both children have
+at most $2n/3$ leaves, and at least one has at least $n/3$ leaves.
+Regard this one occurrence of $g$ as a formal Boolean input. After
+substituting either value $b\in\{0,1\}$ and simplifying constants,
+the remaining formula $F_b$ has at most $n-|g|\le2n/3$ literal
+occurrences. The Shannon identity is
+\[
+ F=(g\wedge F_1)\vee(\neg g\wedge F_0).
+\]
+It is valid even if variables appearing in $g$ also occur elsewhere
+in the original formula.
+
+Recursively balance $g,F_0,F_1$ and join the three resulting circuits
+by the four indicated Boolean gates. Their depths increase by at most
+three, and each recursive subproblem has at most $2n/3$ occurrences.
+Hence the depth is $O(\log(n+1))$. There are at most three recursive
+subproblems per call, so the size is polynomial; for example a bound
+$O((n+1)^4)$ follows immediately by induction. Reuse the balanced
+output of $g$ in its two appearances in the displayed identity.
+This establishes the asserted circuit bounds.
+\end{proof}
+
+\begin{corollary}[A quasipolynomial bound for arbitrary formulas]
+\label{cor:arbitrary-formula-learning}
+Let $f$ have a Boolean formula with at most $s$ gates and literal
+occurrences, and put $S=\max\{16,2+d+s\}$. There is a tanh realization
+with unit margin, polynomial-in-$S$ width and physical weight bounds,
+and depth $q$ satisfying
+\[
+ 2\le q\le C\frac{\log S}{\log\log S}
+\]
+for a universal constant $C$. For each fixed $\zeta>0$ and every
+learner depth $L\ge q$, the unrestricted posterior sample bound is
+\[
+ \exp\!\left[O_\zeta\!\left(\frac{\log^2S}{\log\log S}\right)\right]
+ \bigl(L+\varepsilon^{-1}+\log(2/\delta)\bigr)^{O_\zeta(1)},
+\]
+simultaneously for all actual widths $N\ge C_L(f)$ and all
+$0<\sigma^2\le N^{-(1+\zeta)}$.
+This applies in particular to read-once formulas and does not depend
+on the depth of the given formula.
+\end{corollary}
+
+\begin{proof}
+Lemma~\ref{lem:formula-balancing} gives a circuit of polynomial size
+and depth $O(\log S)$. Apply
+Proposition~\ref{prop:boolean-layer-blocking} to that circuit.
+The logarithm of its size parameter is $O(\log S)$ and its double
+logarithm is comparable to $\log\log S$. Its blocked tanh depth is
+therefore $O(\log S/\log\log S)$, with polynomial width and weights.
+The quantified intrinsic-depth bound gives the displayed sample
+estimate. All-width coverage is inherited from that bound, not from
+identifying the target's actual minimum width with the construction.
+\end{proof}
+
+When a supplied formula is already shallower, its original blocked
+representation can be used instead. The result above is still
+quasipolynomial in formula size; it does not resolve polynomial sample
+complexity for all polynomial-size formulas.
