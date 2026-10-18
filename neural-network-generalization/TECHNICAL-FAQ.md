@@ -147,7 +147,7 @@ The $\gamma\le0$ exponential result is included in the [main subcritical paper](
 
 ## 9. Can we classify **all** tuples of layerwise scaling exponents?
 
-**Open. We do not have an exhaustive classification.** Write a general variance tuple as
+**We don't have learning results for all exponent tuples.** Write a general variance tuple as
 
 $$
 \mathrm{Var}\,W^1=c_1N^{-a_1}/d,
@@ -235,11 +235,11 @@ The condition has a recognizable interpretation: the prediction score must survi
 
 It is nevertheless a particular sufficient condition, with a strong “every input, every perturbation” quantifier. Calling it natural does not establish that arbitrary trained networks satisfy it.
 
-## 13. What is a nonexpansive network, and must every layer be nonexpansive?
+## 13. How can we check whether a network satisfies the robustness condition?
 
-A map is nonexpansive if it does not increase Euclidean distances. Tanh applied coordinatewise is nonexpansive; a linear layer has this property when its operator norm is at most one. If the internal weight matrices have operator norm at most one, disturbances cannot be amplified as they travel through those layers. Cauchy–Schwarz then bounds the readout change by $c$ under the calibrated noise budget above. Thus $c\le1/16$ supplies a simple sufficient certificate.
+A sufficient check bounds how much disturbances introduced at each layer can change the final prediction. One simple certificate requires the internal layers not to amplify Euclidean distances, a property called **nonexpansiveness**. Tanh applied coordinatewise has this property, as does a linear layer whose operator norm is at most one. Under these layerwise bounds, Cauchy–Schwarz bounds the readout change by $c$ under the calibrated noise budget above. Thus $c\le1/16$ supplies a sufficient certificate.
 
-**Proved:** the robustness restriction used for polynomial-depth generalization does not require all those operator norms to be at most one. Finite-radius Jacobian bounds, bounds on reachable activation intervals, and suitable weighted layer metrics can also certify the restriction. These allow expansion in one direction or layer when later contraction or saturation controls the total effect.
+**Proved:** the robustness restriction used for polynomial-depth generalization also admits more flexible certificates. Finite-radius Jacobian bounds, bounds on reachable activation intervals, and suitable weighted layer metrics can certify the restriction. These allow expansion in one direction or layer when later contraction or saturation controls the total effect; individual operator norms can exceed one.
 
 A Jacobian computed only at the clean network state is not a finite-perturbation certificate. Likewise, flatness under parameter perturbations, a small training-loss Hessian, or robustness to one kind of input noise does not by itself control arbitrary internal disturbances. Explicit examples separate these properties.
 
