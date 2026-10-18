@@ -25,7 +25,7 @@ For independent label flips of probability $\eta$, the bound becomes a resource-
 
 All logarithms are natural.
 
-Let $d,C,H$ be positive integers, put $L=H+1$, and let $X=\lbrace-1,1\rbrace^d$ and $M=2^d$. A width-$N$ network has $H$ tanh hidden layers and a linear readout:
+Let $d,C,H$ be positive integers, put $L=H+1$, and let $X=\lbrace-1,1\rbrace^d$ and $M=2^d$. A network of width $N$ has $H$ tanh hidden layers and a linear readout:
 
 $$
  h^0(x)=(1,x_1,\ldots,x_d),\qquad
@@ -49,7 +49,7 @@ $$
 
 After training, condition exactly on the observed labels. The likelihood is unchanged: it neither knows the flip rate nor permits training errors.
 
-Assume the clean target $f:X\to\lbrace-1,1\rbrace$ has a width-$C$, depth-$L$ implementation $z_f$, all of whose weights have magnitude at most $C$, with
+Assume the clean target $f:X\to\lbrace-1,1\rbrace$ has an implementation of width $C$ and depth $L$ $z_f$, all of whose weights have magnitude at most $C$, with
 
 $$
  f(x)z_f(x)>1/2,\qquad |z_f(x)|\leq U
@@ -261,7 +261,7 @@ $$
  T_0=d(d+1)C^2+(H+3)C^4.
 $$
 
-To embed a width-$C$ network into any larger width $N_t$, replace each hidden neuron by $k=\lfloor N_t/C\rfloor$ copies, divide outgoing weights by $k$, and pad unused coordinates with zero weights. This preserves the output. The first-layer contribution does not increase, internal contributions are unchanged, and the readout contribution increases by less than two. Using the ambient $N$ rather than $N_t$ multiplies that readout cost by at most another two. The clean branch therefore costs at most $4T_0$.
+To embed a network of width $C$ into any larger width $N_t$, replace each hidden neuron by $k=\lfloor N_t/C\rfloor$ copies, divide outgoing weights by $k$, and pad unused coordinates with zero weights. This preserves the output. The first-layer contribution does not increase, internal contributions are unchanged, and the readout contribution increases by less than two. Using the ambient $N$ rather than $N_t$ multiplies that readout cost by at most another two. The clean branch therefore costs at most $4T_0$.
 
 Use zero cross-block weights and add the branch outputs through the final readout. We have constructed, at every $N\geq W_s:=2(C+m_s)$, a globally strict-margin noisy interpolant of energy at most
 
@@ -276,7 +276,7 @@ The resulting conditioning event has positive Gaussian probability: the finitely
 
 The needed count has exponent $H$ in energy. A general polynomial complexity comparison is too coarse for this purpose.
 
-For a class $\mathcal F$ evaluated on a fixed $m$-point sample, write
+For a class $\mathcal F$ evaluated on a fixed sample of $m$ points, write
 
 $$
  \mathrm{Rad}_m(\mathcal F)
@@ -372,7 +372,7 @@ $$
  J\leq2(M+1)^{d+1},\qquad \log J\leq(d+2)^2.
 $$
 
-Count the regions cut out by the $M$ linear inequalities in the $(d+1)$-dimensional parameter space; boundary labels can be realized by a small bias perturbation. A log-sum and exponential-moment argument for a finite class of $J$ sign vectors gives Rademacher complexity at most $\sqrt{2\log J/m}$.
+Count the regions cut out by the $M$ linear inequalities in the parameter space of dimension $d+1$; boundary labels can be realized by a small bias perturbation. A log-sum and exponential-moment argument for a finite class of $J$ sign vectors gives Rademacher complexity at most $\sqrt{2\log J/m}$.
 
 Every affine-tanh feature is an average of affine halfspaces: for a random scalar threshold $T$ with distribution function $(1+\tanh t)/2$,
 
@@ -450,7 +450,7 @@ The coefficient $b_1$ is polynomial jointly in $d,U,H$. The baseline $b_0$ is po
 
 ## 5. Generalization and the strong-prior posterior
 
-For a fixed Boolean predictor with clean whole-cube error $p$, its number $Z$ of clean disagreements on a uniform $n$-subset is hypergeometric. The elementary symmetric-mean inequality gives
+For a fixed Boolean predictor with clean whole-cube error $p$, its number $Z$ of clean disagreements on a uniform subset of $n$ distinct inputs is hypergeometric. The elementary symmetric-mean inequality gives
 
 $$
  \mathbb E e^{-tZ}\leq(1-p+pe^{-t})^n.
@@ -555,7 +555,7 @@ The unchanged strong-prior tanh learner now has a paper proof of tolerance to a 
 
 The stronger circuit-style target remains open: a clean-risk envelope tending to zero with $\eta$ alone, uniformly over input dimension after paying a target-dependent sample overhead. The present coefficient of $\eta$ grows polynomially in dimension and depth; for a general analog teacher it also depends on its output bound. A fixed numerical noise rate can therefore make this upper bound vacuous as dimension grows. No claim of perfect clean recovery at fixed positive noise is made.
 
-There is a simple obstruction to removing all dimension dependence by sharpening the present global count. For every $s$-element subset $T$ of the cube, the comparator construction places the function obtained by flipping $f$ exactly on $T$ in the same class $\mathcal G_{K_s}$. These functions are distinct. Consequently, for $1\leq s\leq M$,
+There is a simple obstruction to removing all dimension dependence by sharpening the present global count. For every subset with $s$ elements $T$ of the cube, the comparator construction places the function obtained by flipping $f$ exactly on $T$ in the same class $\mathcal G_{K_s}$. These functions are distinct. Consequently, for $1\leq s\leq M$,
 
 $$
  |\mathcal G_{K_s}|\geq {M\choose s},\qquad

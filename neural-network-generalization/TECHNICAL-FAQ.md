@@ -20,11 +20,11 @@ The posterior then conditions on the observed training signs. Under that prior r
 
 “Circuit prior” is a claim about the **prior on functions**: its preference for different functions approximately tracks the complexity of small circuits implementing them. In the slides' strong-prior setting, this is made precise through the Gaussian energy cost $\kappa_N(f)$, which determines the leading exponential order of prior probability ratios and is polynomially related to bounded-weight network complexity at fixed depth, uniformly over all learner widths $N\ge C_L(f)$.
 
-The sample-complexity theorem is a **consequence** of that prior-complexity comparison, together with a bound on the number of low-complexity competitors. A polynomial sample bound alone is not the definition of a circuit prior. “Approximately” here allows polynomial distortion and dimension/depth dependence; it does not assert an exact ordering of every pair by circuit size or efficient posterior sampling. [Question 22](#22-do-we-now-have-a-useful-lower-bound-on-the-prior-probability-of-a-function) gives the precise strong-prior comparison.
+The sample-complexity theorem is a **consequence** of that prior-complexity comparison, together with a bound on the number of low-complexity competitors. A polynomial sample bound alone is not the definition of a circuit prior. “Approximately” here allows polynomial distortion and dimension/depth dependence; it does not assert an exact ordering of every pair by circuit size or efficient posterior sampling. [Question 22](#22-can-we-bound-the-prior-probability-of-a-function) gives the precise strong-prior comparison.
 
 There are two different comparator complexities:
 
-- The original $C_L(f)$ is the least width of a depth-$L$ neural network realizing $f$ with the prescribed margin and with every physical weight bounded by that width.
+- The original $C_L(f)$ is the least width of a neural network of depth $L$ realizing $f$ with the prescribed margin and with every physical weight bounded by that width.
 - The polynomial-depth generalization theorem under a robustness restriction uses the width of a layered **Boolean** circuit at the required depth, counting constant wires and any compilation overhead.
 
 These should not be interchanged without a representation theorem. See the [strong-prior paper](main-results/strong-prior-generalization/paper.pdf) and [robust polynomial-depth paper](main-results/robust-polynomial-depth/paper.pdf).
@@ -49,7 +49,7 @@ For a finite input cube and nonzero clean outputs, sufficiently large readout am
 
 ## 4. Can we drop the requirement of a margin on every input before training?
 
-**Yes under the new robustness restriction; not as an automatic corollary of the old unrestricted theorems.** The polynomial-depth generalization theorem allows the prior to contain outputs arbitrarily close to zero at unobserved inputs. It still uses the training likelihood
+**Yes, under the internal-stability restriction described in Question 12.** The polynomial-depth generalization theorem allows the prior to contain outputs arbitrarily close to zero at unobserved inputs. It still uses the training likelihood
 
 $$
 f(X_i)z_w(X_i)>1/2,
@@ -57,7 +57,7 @@ $$
 
 and bounds the posterior probability of test-margin error $f(X)z_w(X)\le1/4$. Consequently it also bounds sign error. Keeping the original all-input clean-margin restriction is permitted and gives the same conclusion.
 
-The replacement assumption is a finite internal-noise stability condition on the prior's support. This is doing real work. We have not shown that one can simultaneously remove the original global margin restriction **and** the new stability restriction while retaining the same guarantees.
+The replacement assumption is a finite internal-noise stability condition on the prior's support. This is doing real work. We have not shown that one can simultaneously remove the original global margin restriction **and** the internal-stability restriction while retaining the same guarantees.
 
 The constants $1/2$ and $1/4$ are not fundamental. The robust argument has a version with training margin $m$, test threshold $u<m$, and quantitative dependence on the gap $m-u$. Taking $u=0$ addresses sign prediction directly. Merely conditioning on positive training signs with no quantitative training margin is a different problem.
 
@@ -87,7 +87,7 @@ The second is informative only when its numerator is positive.
 
 **Extension suggested by the proof:** the cutoffs in those two proofs can be made smaller to bring the Gibbs lower bound closer to $1/2$, at the cost of a smaller exponential sample constant. This strongly suggests the same qualitative result for each fixed $q>1/2$. The stated main theorem is still the $2/3$ version; this FAQ is not a substitute for writing out that extension.
 
-For $\gamma<0$, the current direct confidence argument is different: a log-concavity step naturally reaches thresholds above $1-e^{-1}\approx0.632$. It does not establish the entire interval $q>1/2$. For the newer **critical** $\gamma=1$ polynomial parity lower bound, Gibbs error tends to $1/2$, so every fixed $q>1/2$ is covered, but majority failure still does not follow.
+For $\gamma<0$, the direct confidence argument is different: a log-concavity step naturally reaches thresholds above $1-e^{-1}\approx0.632$. It does not establish the entire interval $q>1/2$. For the **critical** $\gamma=1$ polynomial parity lower bound, Gibbs error tends to $1/2$, so every fixed $q>1/2$ is covered, but majority failure still does not follow.
 
 **Open in these lower-bound arguments:** the exact $1/2$ threshold. It is possible for $p_S(x)=0.5001$ at every input: Gibbs error is almost $1/2$, yet the posterior majority is correct everywhere. A result about confidence bounded away from $1/2$ is therefore not automatically a result about majority prediction. The distinction between $<$, $\le$, and the rule for ties should also be specified when stating an exact theorem.
 
@@ -97,7 +97,7 @@ For $\gamma<0$, the current direct confidence argument is different: a log-conca
 
 A majority of bad predictors can nevertheless be accurate. Their mistakes may occur on different inputs. Thus the proof never needed a unique minimizer for its $2/3$ conclusion, but a majority lower bound would require additional information about how the minimizers' errors align.
 
-An earlier informal explanation that treated mixture ties as a problem unique to a particular scaling regime was too broad. The right questions are the available Gibbs-error bound, the requested confidence threshold, and whether a stronger pointwise or voting argument is available.
+In each regime, the relevant quantities are the Gibbs-error bound, the requested confidence threshold, and any additional control over how the predictors vote at individual inputs.
 
 ## 7. How do the NNBayes results here relate to NNGP and kernel regression?
 
@@ -137,7 +137,7 @@ The table concerns this particular family and the indicated conditioning convent
 | Regime | Current conclusion | Important qualification |
 |---|---|---|
 | Strong-prior limit at fixed $N$ | Prior rate polynomially equivalent to bounded-weight network complexity at fixed depth; consequently polynomial samples, uniformly in the sample bound over all $N\ge C_L(f)$. | Variance tends to zero **after fixing width**; no width-uniform variance threshold. |
-| Fixed $\gamma>1$ | Polynomial samples at fixed depth for every actual $N\ge C_L(f)$. New unrestricted results also remove bad learner-depth dependence for substantial target classes. | The old polynomial degree depends on depth and on the gap above one. The full arbitrary-deep-target problem remains open. |
+| Fixed $\gamma>1$ | Polynomial samples at fixed depth for every actual $N\ge C_L(f)$. Unrestricted results also remove bad learner-depth dependence for substantial target classes. | The general bound’s polynomial degree depends on depth and on the gap above one. The full arbitrary-deep-target problem remains open. |
 | $\gamma=1$ | Polynomial samples at each fixed depth, every actual $N\ge C_L(f)$. With the robustness restriction, jointly polynomial dependence on depth for Boolean-circuit targets. | A joint polynomial-depth theorem for the original unrestricted critical prior is open. |
 | $0<\gamma<1$ | A Gaussian minimum-energy description at leading exponential order; exponential full-parity confidence lower bound. | This is not exact Gaussian-posterior equivalence throughout the interval. Limits are width first. |
 | $\gamma=0$ | A fixed-margin globally conditioned Gaussian limit; exponential full-parity confidence lower bound. | The global margin remains in the limiting law. |
@@ -197,9 +197,11 @@ For $k\le d^{1-\eta}$ with fixed $\eta>0$, this is $d^{\Omega(k)}$. For $k=d$, i
 
 - **Proved for $\gamma<0$:** the natural sparse scale, at the $2/3$ confidence criterion, with width taken first. The theorem's universal failure fraction is positive but small; it is not a claim of, say, 10% error.
 - **Proved for $0<\gamma<1$:** for growing sparse parity, a lower bound of the form
+
   $$
   n\le\exp\!\left(c\max\left\lbrace k,\sqrt{k}\log\frac{e(d+1)}{\sqrt{k}}\right\rbrace \right).
   $$
+
   This includes the desired $\exp(\Omega(k))$ obstruction, but does not give the full natural sparse scale.
 - **Open:** that full growing-sparse scale for $0<\gamma<1$, and the corresponding growing-sparse endpoint problem at $\gamma=0$.
 
@@ -209,7 +211,7 @@ See [sparse parity](side-results/sparse-parity/paper.pdf) and [growing positive-
 
 ## 12. What robustness condition gives polynomial depth dependence?
 
-**Proved in the new robust paper.** Add a disturbance after each hidden layer and at the readout, with total budget
+**Proved under a restriction on the prior.** Add a disturbance after each hidden layer and at the readout, with total budget
 
 $$
 \Vert \eta\Vert _*^2=\sum_{s=1}^{L-1}\frac{\Vert \eta^s\Vert _2^2}{N}+|\eta^{\mathrm{out}}|^2.
@@ -274,9 +276,9 @@ Other candidates include robustness to dropout, random quantization, or random i
 
 **Open for the general learning question.** The original depth example and later critical-rate constructions show that broad low-energy sets can contain enormously many functions. They obstruct certain norm-counting proofs. They do not establish that a particular small target needs exponentially many examples: one must show that the bad competitors retain enough posterior mass after the labels are observed.
 
-There is now substantial positive evidence against treating bad depth dependence as automatic. For every fixed gap $\gamma\ge1+\zeta$, the [unrestricted-depth paper](works-in-progress/unrestricted-depth/paper.pdf) gives polynomial dependence on learner depth for all bounded-weight shallow tanh targets and for all Boolean halfspaces, at every actual width above the original $C_L(f)$. The halfspace result does not depend on the target's original coefficient precision or geometric margin. Other covered classes include fixed-depth threshold circuits and functions with polynomially bounded Fourier $\ell_1$ norm, including parity.
+Polynomial dependence on learner depth is possible for substantial target classes. For every fixed gap $\gamma\ge1+\zeta$, the [unrestricted-depth paper](works-in-progress/unrestricted-depth/paper.pdf) gives polynomial dependence on learner depth for all bounded-weight shallow tanh targets and for all Boolean halfspaces, at every actual width above the original $C_L(f)$. The halfspace result does not depend on the target's original coefficient precision or geometric margin. Other covered classes include fixed-depth threshold circuits and functions with polynomially bounded Fourier $\ell_1$ norm, including parity.
 
-For a general fan-in-two Boolean circuit of size $s$, logical depth $h$, and $S=\max\lbrace 16,2+d+s\rbrace $, a current bound is
+For a general fan-in-two Boolean circuit of size $s$, logical depth $h$, and $S=\max\lbrace 16,2+d+s\rbrace $, a proved bound is
 
 $$
 S^{O_\zeta(1+h/\log\log S)}\,
@@ -287,7 +289,7 @@ at learner depths $L\ge\max\lbrace 2,h\rbrace $. This improves the direct expone
 
 The same paper identifies a function-level product-norm representation barrier: low sample complexity forces suitable approximate low-product-norm representatives in a specified large-width regime. No explicit small deep circuit violating the necessary approximation condition is known here. Indeed, an explicit superpolynomial-sample counterexample within $\mathsf{NC}^1$, in the regime covered by these positive results, would separate $\mathsf{NC}^1$ from $\mathsf{TC}^0$. This is a reason for caution about easy purported counterexamples, not a proof that the desired theorem is true.
 
-## 17. What does the new critical-depth result imply about learning?
+## 17. What does the critical-depth result imply about learning?
 
 **It gives both rate information and a separate, more limited learning lower bound.** At $\gamma=1$, define the raw prior rate
 
@@ -315,7 +317,7 @@ For fixed $\eta>0$, $M\to\infty$, and $n\le M^{1-\eta}$, the limiting Gibbs erro
 
 **For substantial classes, yes; for every small deep neural circuit, not yet.** Teacher depth, learner depth, and the norm of a teacher representation are different parameters.
 
-The new unrestricted results remove dependence on a chosen teacher's depth when the function has another controlled shallow representation. More generally, a globally unit-margin network with product of Frobenius norms $P$ has a Boolean normal form with depth, width, and finite description polynomial in $P$, apart from specifying at most $P^2$ relevant input coordinates. This bound is independent of the original teacher's depth and width. The learning theorem for product-controlled targets has an explicit additional-learner-depth requirement.
+The unrestricted results remove dependence on a chosen teacher's depth when the function has another controlled shallow representation. More generally, a globally unit-margin network with product of Frobenius norms $P$ has a Boolean normal form with depth, width, and finite description polynomial in $P$, apart from specifying at most $P^2$ relevant input coordinates. This bound is independent of the original teacher's depth and width. The learning theorem for product-controlled targets has an explicit additional-learner-depth requirement.
 
 However, $P$ can itself grow exponentially with the depth of a bounded-weight teacher. Replacing teacher depth by $P$ does not prove a polynomial bound in arbitrary neural-circuit size. Nor does it show that a same-depth, same-width robust realization always exists. Digital simulation of a margin-separated real neural circuit may add depth and width, and those costs must be counted.
 
@@ -376,13 +378,13 @@ for one universal constant $A$. This comes from the formal proof's more conserva
 
 For the fixed-width strong-prior argument, the most portable idea is a large-deviation rate $I(w)$: if function probabilities have rate given by the minimum $I$ over their realizations, and $I$ has suitable cloning and compression properties, the relevance argument can be repeated. A prior with a rate uniformly comparable to the weighted quadratic energy is a plausible candidate. This is a conditional proof strategy, not a theorem for every independent sub-Gaussian distribution.
 
-Laplace-type priors suggest an $\ell_1$-type cost; other generalized Gaussian priors suggest $\ell_p$ costs. Their width normalization and cloning algebra must be redone. Discrete support can fail to realize targets or give no open target neighborhood; bounded support and heavy tails can change the rare-event mechanism substantially. Even a universality theorem for typical random features would not automatically survive the rare global-margin conditioning.
+Laplace-type priors suggest a cost based on the $\ell_1$ norm; other generalized Gaussian priors suggest $\ell_p$ costs. Their width normalization and cloning algebra must be redone. Discrete support can fail to realize targets or give no open target neighborhood; bounded support and heavy tails can change the rare-event mechanism substantially. Even a universality theorem for typical random features would not automatically survive the rare global-margin conditioning.
 
 **Open:** a useful broad non-Gaussian universality theorem for the finite-variance all-width conclusions, and a corresponding classification of subcritical learning behavior. Robust entropy compression suggests investigating product measures with appropriate transport and moment inequalities, but the target-mass construction and all width factors still have to be checked.
 
 ## 21. What about ReLU, sigmoid, GELU, or other activations?
 
-**Proved:** the original strong-prior compression theorem, and the fixed-$\gamma>1$ argument using it, allow bounded Lipschitz activations once the target has the required representation. Tanh is not essential to those statements. A rescaled bounded sigmoid or a bounded clipped activation is therefore a natural fit, with constants and representation assumptions made explicit.
+**Proved:** the original strong-prior compression theorem, and the argument for fixed $\gamma>1$ using it, allow bounded Lipschitz activations once the target has the required representation. Tanh is not essential to those statements. A rescaled bounded sigmoid or a bounded clipped activation is therefore a natural fit, with constants and representation assumptions made explicit.
 
 The more specialized results use more structure. Robust digital implementations use reliable gate restoration under finite noise. The subcritical kernel and sharp conditioning results use the tanh saturation limit. The critical rate constructions use particular tanh inequalities. “Bounded Lipschitz” is not a license to import all of those conclusions unchanged.
 
@@ -390,7 +392,7 @@ The more specialized results use more structure. Robust digital implementations 
 
 Hard threshold activations have the opposite issue: they are bounded but discontinuous, so the numerical compression proof does not transfer directly. Universal approximation by itself also supplies neither the quantitative circuit size nor the robustness needed here. See [Appendix L of the audit](side-results/strong-prior-appendix-audit/paper.pdf).
 
-## 22. Do we now have a useful lower bound on the prior probability of a function?
+## 22. Can we bound the prior probability of a function?
 
 **Yes. In particular, the strong-prior argument establishes a prior-complexity comparison, not only a learning guarantee.** It identifies the fixed-width rate
 
@@ -461,7 +463,7 @@ m\le\frac{\log M_0}{\beta\log(1/(1-\alpha))}
 \le\frac{\log M_0}{\alpha\beta}.
 $$
 
-Thus the proposed 10%/10% condition gives fewer than $66(b+1)$ mistakes. If this condition continues to hold as the sequence grows, it bounds the total number of mistakes. A circuit over a fixed finite gate basis has description length polynomial in its width, depth, and input dimension, so this gives the desired polynomial bound **conditional on the genericity premise**. Counting wrong hypotheses in the original pool would not suffice: they may already have been ruled out.
+For example, the 10%/10% condition gives fewer than $66(b+1)$ mistakes. If this condition continues to hold as the sequence grows, it bounds the total number of mistakes. A circuit over a fixed finite gate basis has description length polynomial in its width, depth, and input dimension, so this gives the desired polynomial bound **conditional on the genericity premise**. Counting wrong hypotheses in the original pool would not suffice: they may already have been ruled out.
 
 One probabilistic formulation makes the intended typicality explicit. Let $Z_t$ indicate that the simplest survivor is wrong, and let $q_t$ be the fraction of current survivors wrong on that same input. The condition
 
@@ -477,11 +479,11 @@ The heuristic part is whether this genericity premise holds for relevant tasks, 
 
 ## 24. Do the good generalization results survive a small amount of label noise?
 
-**There is now a positive result for the original strong-prior learner with exact fit, including every flipped label. The strongest fixed-noise question remains open.** The [new research note](works-in-progress/noisy-interpolation/README.md) gives a proof for tanh networks at every fixed depth. It has undergone independent AI-agent mathematical checks, but is not Lean verified or part of the five main results.
+**Yes, when the noise rate is sufficiently small relative to dimension, depth, and target complexity.** The [noisy-interpolation theorem](works-in-progress/noisy-interpolation/README.md) gives a clean-error bound for fixed-depth tanh networks that fit every training label, including flipped labels. Its proof has undergone independent AI-agent mathematical checks; it is a supporting result, not a Lean-verified main result.
 
 The sampling convention matters: choose $n$ distinct points uniformly from the Boolean cube, flip each label independently with probability $\eta$, and evaluate against the underlying clean function. Keep the original Gaussian prior, its all-input margin restriction, and exact conditioning on the observed labels. Thus the clean target itself is excluded when any label flips; the proof constructs a different, inexpensive network that fits all the corruptions.
 
-Suppose the clean target has a depth-$L$, width-$C$ implementation with weights bounded by $C$, margin above $1/2$, and output magnitude at most $U\ge1$. At every sufficiently large learner width $N$, the strong-prior limit satisfies a bound of the form
+Suppose the clean target has an implementation of depth $L$ and width $C$ with weights bounded by $C$, margin above $1/2$, and output magnitude at most $U\ge1$. At every sufficiently large learner width $N$, the strong-prior limit satisfies a bound of the form
 
 $$
 \limsup_{\sigma\downarrow0}R_{\mathrm{clean}}(N,\sigma)
@@ -500,17 +502,17 @@ $$
 \frac{B_L(d,C,U)+P(d,L,U)s+8\log(1/\delta)}{n}.
 $$
 
-This handles a number of corruptions proportional to $n$, rather than only a bounded or slowly growing number. For accuracy $\varepsilon$, it gives polynomial sample complexity at fixed depth when $\eta$ is smaller than $\varepsilon$ divided by a resource polynomial. To measure error on unseen inputs, multiply the whole-cube bound by at most $2^d/(2^d-n)$; this is at most two when $n\le2^{d-1}$. Failure to assign the correct label probability strictly above $q<1$ costs a further factor $1/(1-q)$, hence three for the usual $2/3$ criterion.
+The allowed number of corruptions can be proportional to $n$. For accuracy $\varepsilon$, it gives polynomial sample complexity at fixed depth when $\eta$ is smaller than $\varepsilon$ divided by a resource polynomial. To measure error on unseen inputs, multiply the whole-cube bound by at most $2^d/(2^d-n)$; this is at most two when $n\le2^{d-1}$. Failure to assign the correct label probability strictly above $q<1$ costs a further factor $1/(1-q)$, hence three for the usual $2/3$ criterion.
 
-**What remains open:** can we replace the resource-dependent noise term by $\rho(\eta)$, where $\rho(\eta)\to0$ as $\eta\to0$ independently of input dimension and target complexity, after paying a polynomial sample overhead? Our new bound can become vacuous at a fixed numerical noise rate as dimension grows. It therefore does not yet give the strongest circuit-style noisy-learning guarantee. Nor does it claim arbitrarily accurate clean recovery at a fixed positive noise rate.
+**What remains open:** can we replace the resource-dependent noise term by $\rho(\eta)$, where $\rho(\eta)\to0$ as $\eta\to0$ independently of input dimension and target complexity, after paying a polynomial sample overhead? The proved bound can become vacuous at a fixed numerical noise rate as dimension grows. It does not establish such a dimension-independent guarantee or arbitrarily accurate clean recovery at a fixed positive noise rate.
 
-The Occam idea is still useful, but the relevant comparator is the clean implementation **plus a correction that fits the flips**. Polynomial equivalence between circuit complexity and neural prior complexity alone does not control the cost of this correction sharply enough: raising a cost proportional to $s\simeq\eta n$ to a power greater than one can destroy the sample bound. The new proof instead matches two exponents. With $H=L-1$ hidden layers, the correction has energy at most $K_0+K_1(s+1)^{1/H}$, and the logarithm of the number of globally separated functions of energy at most $K$ grows at most like a resource factor times $(K+1)^H$. Their combination gives the required bound linear in $s$.
+The Occam argument compares the learner with the clean implementation **plus a correction that fits the flips**. Polynomial equivalence between circuit complexity and neural prior complexity alone does not control the cost of this correction sharply enough: raising a cost proportional to $s\simeq\eta n$ to a power greater than one can destroy the sample bound. The proof matches two exponents. With $H=L-1$ hidden layers, the correction has energy at most $K_0+K_1(s+1)^{1/H}$, and the logarithm of the number of globally separated functions of energy at most $K$ grows at most like a resource factor times $(K+1)^H$. Their combination gives the required bound linear in $s$.
 
 There is a precise limitation to improving this particular counting argument. Our common energy budget contains the target with **every possible set of $s$ cube labels flipped**, so its function class has at least $\binom{2^d}{s}$ members. Its log-cardinality is therefore at least $s\log(2^d/s)$, which carries a dimension factor when $s$ is polynomial in $d$. This is a limitation of using that entire class in one union bound, not evidence that the learner itself generalizes badly.
 
 One promising next step is to make the correction cheaper by allowing it to change some unseen labels. Approximate-membership constructions used in circuit learning trade a controlled amount of off-sample error for a shorter description. Obtaining a corresponding sharp neural-energy bound could help; alternatively, a more selective counting argument might avoid paying for all those almost-correct functions. Neither improvement has yet been proved for this posterior.
 
-These conclusions are specific to the stated sampling and interpolation conventions. Repeated inputs with contradictory labels would make exact conditioning impossible. If we instead allow training errors, ordinary finite-class noisy-error minimization has standard clean-learning guarantees, but that is a different learner. Replacing exact fit by a positive noisy likelihood also needs care in the **strong-prior-first limit**: its likelihood ratios are at most $((1-\eta)/\eta)^n$, whereas a fixed prior-energy gap contributes $\exp[-\Delta\kappa/(2\sigma^2)]$. At fixed $n$, the prior gap wins as $\sigma\to0$. The new theorem avoids this issue by keeping the exact-fit likelihood throughout.
+These conclusions are specific to the stated sampling and interpolation conventions. Repeated inputs with contradictory labels would make exact conditioning impossible. If we instead allow training errors, ordinary finite-class noisy-error minimization has standard clean-learning guarantees, but that is a different learner. Replacing exact fit by a positive noisy likelihood also needs care in the **strong-prior-first limit**: its likelihood ratios are at most $((1-\eta)/\eta)^n$, whereas a fixed prior-energy gap contributes $\exp[-\Delta\kappa/(2\sigma^2)]$. At fixed $n$, the prior gap wins as $\sigma\to0$. The noisy-interpolation theorem uses the exact-fit likelihood throughout.
 
 ## 25. What other questions matter before interpreting this as an explanation of practical deep learning?
 
@@ -519,7 +521,7 @@ The largest missing links are:
 - **Finite width in the negative regimes.** The exponential parity results take $N\to\infty$ at fixed dimension, depth, and sample. They do not provide a useful width threshold uniform in growing $d,k,n$. The positive all-width theorems have a stronger finite-width quantifier.
 - **Orders of limits.** Fixing width and shrinking variance, taking width first at a specified scaling, and growing dimension and width together can give different answers. Theorems should specify which is being taken.
 - **Computational cost.** Exact posterior conditioning and sampling may be intractable. Polynomial examples do not imply polynomial computation, and no theorem here identifies SGD's output law with that posterior.
-- **Noisy or misspecified data.** There is now a strong-prior exact-interpolation theorem with resource-dependent noise tolerance. The [label-noise discussion](#24-do-the-good-generalization-results-survive-a-small-amount-of-label-noise) explains its scope; dimension-independent fixed-noise tolerance and broader misspecification remain open.
+- **Noisy or misspecified data.** The strong-prior exact-interpolation theorem has resource-dependent noise tolerance. The [label-noise discussion](#24-do-the-good-generalization-results-survive-a-small-amount-of-label-noise) explains its scope; dimension-independent fixed-noise tolerance and broader misspecification remain open.
 - **Typical data and architectures.** Uniform parity is a useful separation, not a model of all natural data. Current empirical certificates do not establish a theorem for modern large-model training.
 - **Prediction rules.** Gibbs draws, posterior majority, mean-score prediction, and confidence-threshold success are different losses. A statement about one should not be relabeled as a statement about another.
 - **Selection of examples.** Passive iid sample lower bounds need not hold for active learning, teaching sets, or adversarially selected informative inputs. They are also usually stated for each specified sample size, not on one common event for every prefix of an infinite stream.
@@ -528,6 +530,6 @@ The largest missing links are:
 
 The repository includes closed Lean formalizations of all five main learning statements, including the polynomial-depth generalization theorem under a robustness restriction; their exact theorem declarations, hypotheses, dependencies, and build instructions are the appropriate source for the machine-checked scope. A successful Lean build verifies the formal statements actually written, so alignment with the intended analytic network model is a separate review obligation.
 
-The [verification record](lean/VERIFICATION.md) gives the exact-type gates, independent source rebuild, and axiom checks. The formal proof under the robustness restriction uses a looser Pinsker-and-energy construction; its exact learning statement does not include every optional posterior variant or sharp manuscript constant. The other recent depth manuscripts and the new noisy-interpolation note have undergone independent AI-agent mathematical audits but remain outside the main Lean verification. An audited manuscript or exact numerical certificate is not thereby a Lean proof. The FAQ's heuristic extensions and open-problem assessments are not formalized theorems.
+The [verification record](lean/VERIFICATION.md) gives the exact-type gates, independent source rebuild, and axiom checks. The formal proof under the robustness restriction uses a looser Pinsker-and-energy construction; its exact learning statement does not include every optional posterior variant or sharp manuscript constant. The supporting depth manuscripts and the noisy-interpolation note have undergone independent AI-agent mathematical audits but remain outside the main Lean verification. An audited manuscript or exact numerical certificate is not thereby a Lean proof. The FAQ's heuristic extensions and open-problem assessments are not formalized theorems.
 
 Readers should start with the main theorem and conventions in the relevant paper, then use this FAQ to identify the limitations and possible extensions. The [collection index](README.md) distinguishes main results, side results, and work in progress.
