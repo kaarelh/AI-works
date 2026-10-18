@@ -1,0 +1,48 @@
+# p1_locality.py seed=20261017
+
+== A. semimeasure convention: cumulative loss in every order = -log nu(D) + log nu(empty) = -log nu(prove joint cell) + log nu(empty)
+   226 instances, 1700 reveal orders; max |cumulative loss - (-log nu(D) + log nu(empty))| = 8.88e-16 bits
+
+== B. normalised convention is not local and depends on the order
+   G1 (else silent)   nu(empty)=1 nu(D)=1/2 | semimeasure loss 1.0000 bits | normalised loss -0.0000 bits
+   G2 (else refutes)  nu(empty)=1 nu(D)=1/2 | semimeasure loss 1.0000 bits | normalised loss 1.0000 bits
+   G3: semimeasure loss 2.0000 bits in both orders; normalised loss 2.0000 (a first) vs 1.5850 (weaker datum first)
+
+== C. three-valued convention: cumulative loss = -log nu3(D) + log nu3(empty), every order
+   259 (instance, order) pairs; three-valued conditionals sum to 1 at every step (asserted, exact); max deviation from telescoping 8.88e-16 bits
+
+== D. random questions: separation probability of a dithered grid of width Delta, and near-point forecasts
+   d =  0.10: separation probability (MC, 200000 dithers) 0.1007, min(d/Delta, 1) = 0.1000
+   d =  0.50: separation probability (MC, 200000 dithers) 0.5016, min(d/Delta, 1) = 0.5000
+   d =  0.90: separation probability (MC, 200000 dithers) 0.8998, min(d/Delta, 1) = 0.9000
+   d =  1.00: separation probability (MC, 200000 dithers) 1.0000, min(d/Delta, 1) = 1.0000
+   d =  2.50: separation probability (MC, 200000 dithers) 1.0000, min(d/Delta, 1) = 1.0000
+   d = 10.00: separation probability (MC, 200000 dithers) 1.0000, min(d/Delta, 1) = 1.0000
+   near-point forecast P = (1-s) delta_y + s Unif[-R/2, R/2), truth x = 0, R = 64, Delta = 1 (exact over the dither):
+      d=0.25 s=1e-02: E loss =   3.1717 bits; E loss - sep*log2(1/s) = 1.5107 (sep*log2(R/Delta) = 1.5000); ratio to log2(1/s) 0.4774 -> sep 0.2500
+      d=0.25 s=1e-04: E loss =   4.8220 bits; E loss - sep*log2(1/s) = 1.5001 (sep*log2(R/Delta) = 1.5000); ratio to log2(1/s) 0.3629 -> sep 0.2500
+      d=0.25 s=1e-08: E loss =   8.1439 bits; E loss - sep*log2(1/s) = 1.5000 (sep*log2(R/Delta) = 1.5000); ratio to log2(1/s) 0.3064 -> sep 0.2500
+      d=0.50 s=1e-02: E loss =   6.3291 bits; E loss - sep*log2(1/s) = 3.0071 (sep*log2(R/Delta) = 3.0000); ratio to log2(1/s) 0.9526 -> sep 0.5000
+      d=0.50 s=1e-04: E loss =   9.6439 bits; E loss - sep*log2(1/s) = 3.0001 (sep*log2(R/Delta) = 3.0000); ratio to log2(1/s) 0.7258 -> sep 0.5000
+      d=0.50 s=1e-08: E loss =  16.2877 bits; E loss - sep*log2(1/s) = 3.0000 (sep*log2(R/Delta) = 3.0000); ratio to log2(1/s) 0.6129 -> sep 0.5000
+      d=1.00 s=1e-02: E loss =  12.6439 bits; E loss - sep*log2(1/s) = 6.0000 (sep*log2(R/Delta) = 6.0000); ratio to log2(1/s) 1.9031 -> sep 1.0000
+      d=1.00 s=1e-04: E loss =  19.2877 bits; E loss - sep*log2(1/s) = 6.0000 (sep*log2(R/Delta) = 6.0000); ratio to log2(1/s) 1.4515 -> sep 1.0000
+      d=1.00 s=1e-08: E loss =  32.5754 bits; E loss - sep*log2(1/s) = 6.0000 (sep*log2(R/Delta) = 6.0000); ratio to log2(1/s) 1.2258 -> sep 1.0000
+      d=4.00 s=1e-02: E loss =  12.6439 bits; E loss - sep*log2(1/s) = 6.0000 (sep*log2(R/Delta) = 6.0000); ratio to log2(1/s) 1.9031 -> sep 1.0000
+      d=4.00 s=1e-04: E loss =  19.2877 bits; E loss - sep*log2(1/s) = 6.0000 (sep*log2(R/Delta) = 6.0000); ratio to log2(1/s) 1.4515 -> sep 1.0000
+      d=4.00 s=1e-08: E loss =  32.5754 bits; E loss - sep*log2(1/s) = 6.0000 (sep*log2(R/Delta) = 6.0000); ratio to log2(1/s) 1.2258 -> sep 1.0000
+   squared distance on 0, 1, 2: d(0,2) = 4 > d(0,1) + d(1,2) = 2, so it is not a pseudometric and is no separation probability; |x-y| ^ Delta / Delta is (the dithered grid).
+
+== E. uniform on 5 nearby values {-2..2} vs 5 scattered values {-20,-10,0,10,20}, truth 0; expected loss per
+   datum (bits) when the datum is the cell of a dithered grid of width Delta (exact: piecewise constant in u)
+   Delta =    0.5: near 2.3219, far 2.3219 bits
+   Delta =    1.0: near 2.3219, far 2.3219 bits
+   Delta =    2.0: near 1.3219, far 2.3219 bits
+   Delta =    5.0: near 0.4236, far 2.3219 bits
+   Delta =   10.0: near 0.2118, far 2.3219 bits
+   Delta =   20.0: near 0.1059, far 1.3219 bits
+   Delta =   50.0: near 0.0424, far 0.4236 bits
+   Delta =  100.0: near 0.0212, far 0.2118 bits
+   (fixed cells of width Delta < 1 around the truth: both log2 5 = 2.3219)
+
+# done

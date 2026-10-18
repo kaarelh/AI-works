@@ -1,0 +1,28 @@
+# p4_toy.py (deterministic)
+
+== Toy 1: A errors U[-1,1]; B errors -M, 0, M w.p. rho/2, 1-rho, rho/2 (M = 1000, rho = 0.2)
+   A (U[-1,1])                        max    1.000  RMS    0.577  mean|e|    0.500  CRPS(calibrated)    0.333
+                                      fitted Gaussian 1.2546, Laplace 1.4427, uniform 1.0000  (+ log2(1/Delta) at fine Delta)
+                                      SAI rate: D=0.01: 7.6475  D=0.1: 4.3580  D=0.5: 2.1803  D=1: 1.3607  D=1.5: 0.9560  D=2: 0.7213  D=10: 0.1443  D=100: 0.0144  D=1000: 0.0014  D=2000: 0.0007  D=10000: 0.0001
+   B (exact w.p. 0.8, else +-1000)    max 1000.000  RMS  447.214  mean|e|  200.000  CRPS(calibrated)  180.000
+                                      fitted Gaussian 10.8519, Laplace 10.0866, uniform 10.9658  (+ log2(1/Delta) at fine Delta)
+                                      SAI rate: D=0.01: 0.9219  D=0.1: 0.9219  D=0.5: 0.9219  D=1: 0.9219  D=1.5: 0.9219  D=2: 0.9219  D=10: 0.9219  D=100: 0.9219  D=1000: 0.9219  D=2000: 0.4690  D=10000: 0.0938
+   closed forms: rate_A = 1 + Delta/(4 ln 2) - log2 Delta for Delta <= 2, (1/ln 2)/Delta for Delta >= 2; rate_B = H(B) = 0.92193 for Delta <= M
+   crossover: SAI prefers B for Delta < Delta_c = 1.558542 and A for Delta > Delta_c (all Delta checked above)
+   max, RMS, mean|e|, the fitted Gaussian/Laplace/uniform rates and the calibrated CRPS all prefer A.
+
+== Toy 2 (pointwise dominance): |e_A'(t)| <= |e_B'(t)| for every t
+   A' = s U (U[-1,1] marginally)      max    1.000  RMS    0.577  mean|e|    0.500  CRPS(calibrated)    0.333
+                                      fitted Gaussian 1.2546, Laplace 1.4427, uniform 1.0000  (+ log2(1/Delta) at fine Delta)
+                                      SAI rate: D=0.01: 7.6475  D=0.1: 4.3580  D=0.5: 2.1803  D=1: 1.3607  D=1.5: 0.9560  D=2: 0.7213  D=4: 0.3607
+   B' = s (+-1)                       max    1.000  RMS    1.000  mean|e|    1.000  CRPS(calibrated)    0.500
+                                      fitted Gaussian 2.0471, Laplace 2.4427, uniform 1.0000  (+ log2(1/Delta) at fine Delta)
+                                      SAI rate: D=0.01: 1.0000  D=0.1: 1.0000  D=0.5: 1.0000  D=1: 1.0000  D=1.5: 1.0000  D=2: 1.0000  D=4: 0.5000
+   rate_B' = 1 bit for Delta <= 2; crossover Delta_c = 1.429612: SAI prefers B' (pointwise worse at every time) for every Delta < Delta_c
+   (A' is at least as close to the truth as B' at every time; every loss that is increasing in |error| and is
+    applied to the law as a point predictor prefers A'.)
+   check rate_A closed form at Delta=0.3: 2.8451677222 vs piecewise integral 2.8451677222
+   check rate_A closed form at Delta=1.0: 1.3606737602 vs piecewise integral 1.3606737602
+   check rate_A closed form at Delta=1.7: 0.8476106460 vs piecewise integral 0.8476106460
+
+# done
