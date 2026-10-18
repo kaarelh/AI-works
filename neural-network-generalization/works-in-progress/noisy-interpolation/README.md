@@ -456,7 +456,7 @@ $$
  \mathbb E e^{-tZ}\leq(1-p+pe^{-t})^n.
 $$
 
-Indeed the expectation is an elementary symmetric mean of a list with $pM$ entries $e^{-t}$ and the remaining entries one. Such a mean is at most the arithmetic mean to the $n$th power. Taking $t=\log2$ gives
+Indeed the expectation is an elementary symmetric mean of a list with $pM$ entries $e^{-t}$ and the remaining entries one. Such a mean is at most the arithmetic mean raised to power $n$. Taking $t=\log2$ gives
 
 $$
  \Pr[Z\leq np/2]\leq e^{-np/8}.
@@ -499,11 +499,11 @@ These explicit constants have the claimed polynomial bounds. No uniqueness of a 
 Let the labels be flipped independently with probability $\eta<1/2$, and put
 
 $$
- s_* =\min\left\lbrace n,
+ s_{\star} =\min\left\lbrace n,
        \left\lceil2\eta n+2\log(2/\delta)\right\rceil\right\rbrace.
 $$
 
-For the number $S$ of flips, $\mathbb E2^S=(1+\eta)^n\leq e^{\eta n}$ implies $\Pr[S>s_*]\leq\delta/2$. Apply (1) with $s=s_*$ and failure probability $\delta/2$. For every $N\geq W_{s_*}$, sufficiently small positive variance therefore gives, with probability at least $1-\delta$,
+For the number $S$ of flips, $\mathbb E2^S=(1+\eta)^n\leq e^{\eta n}$ implies $\Pr[S>s_{\star}]\leq\delta/2$. Apply (1) with $s=s_{\star}$ and failure probability $\delta/2$. For every $N\geq W_{s_{\star}}$, sufficiently small positive variance therefore gives, with probability at least $1-\delta$,
 
 $$
  R_X(\Pi_{N,\sigma})
@@ -512,7 +512,7 @@ $$
                         +8\log(2/\delta)}n+\tau. \tag{21}
 $$
 
-At width $W_{s_*}$ the exact-conditioning posterior is guaranteed to exist on the stated high-probability event. Requiring the larger width $W_n$ ensures feasibility for every possible flip pattern, without changing the risk bound.
+At width $W_{s_{\star}}$ the exact-conditioning posterior is guaranteed to exist on the stated high-probability event. Requiring the larger width $W_n$ ensures feasibility for every possible flip pattern, without changing the risk bound.
 
 The theorem thus handles a linear number of errors. Its noise tolerance is inverse-polynomial in the displayed resources, rather than restricted to a bounded number of flips.
 
