@@ -104,9 +104,9 @@ An earlier informal explanation that treated mixture ties as a problem unique to
 **No.** A Gaussian-process prior conditioned on training signs is not the same posterior as Gaussian regression conditioned on exact real output values. Conditioning additionally on an absolute margin at every input changes it again. Moreover,
 
 $$
-\operatorname{sign}\mathbb E[z(x)\mid S]
+\mathrm{sign}\,\mathbb E[z(x)\mid S]
 \quad\text{and}\quad
-\operatorname{sign}\mathbb E[\operatorname{sign}z(x)\mid S]
+\mathrm{sign}\,\mathbb E[\mathrm{sign}\,z(x)\mid S]
 $$
 
 are different prediction rules: a few large-magnitude outputs can affect the former without affecting the latter in the same way.
@@ -120,9 +120,9 @@ There is a separate [NNGP note](side-results/nngp-sample-complexity/paper.pdf) w
 Here the entry **variances**, not standard deviations, are
 
 $$
-\operatorname{Var}W^1=N^{1-\gamma}/d,
-\qquad \operatorname{Var}W^s=N^{-\gamma}\ (1<s<L),
-\qquad \operatorname{Var}v=N^{-\gamma-1}.
+\mathrm{Var}\,W^1=N^{1-\gamma}/d,
+\qquad \mathrm{Var}\,W^s=N^{-\gamma}\ (1<s<L),
+\qquad \mathrm{Var}\,v=N^{-\gamma-1}.
 $$
 
 The table concerns this particular family and the indicated conditioning conventions.
@@ -143,9 +143,9 @@ The $\gamma\le0$ exponential result is included in the [main subcritical paper](
 **Open. We do not have an exhaustive classification.** Write a general variance tuple as
 
 $$
-\operatorname{Var}W^1=c_1N^{-a_1}/d,
-\quad \operatorname{Var}W^s=c_sN^{-a_s},
-\quad \operatorname{Var}v=c_LN^{-a_L}.
+\mathrm{Var}\,W^1=c_1N^{-a_1}/d,
+\quad \mathrm{Var}\,W^s=c_sN^{-a_s},
+\quad \mathrm{Var}\,v=c_LN^{-a_L}.
 $$
 
 Our one-parameter family occupies only the line
@@ -273,7 +273,7 @@ For a general fan-in-two Boolean circuit of size $s$, logical depth $h$, and $S=
 
 $$
 S^{O_\zeta(1+h/\log\log S)}\,
-\operatorname{poly}(L,\varepsilon^{-1},\log(1/\delta)),
+\mathrm{poly}(L,\varepsilon^{-1},\log(1/\delta)),
 $$
 
 at learner depths $L\ge\max\lbrace 2,h\rbrace $. This improves the direct exponential dependence on $h\log S$, but is not a joint polynomial. Formula balancing gives a quasipolynomial alternative for formulas, with the corresponding learner-depth qualification.
@@ -415,7 +415,7 @@ Finite-variance target-neighborhood constructions give lower bounds of the form
 
 $$
 \mu_{N,t}(\text{a target-realizing neighborhood})
-\ge\exp[-(N/t^2)\,\operatorname{poly}(\text{target resources})].
+\ge\exp[-(N/t^2)\,\mathrm{poly}(\text{target resources})].
 $$
 
 The critical paper gives a variational characterization and depth bounds for the corresponding rate. These answer parts of the slides' absolute prior-mass question. Absolute negative log probabilities can still grow with width or prior strength, consistently with the normalized rate comparison above.
