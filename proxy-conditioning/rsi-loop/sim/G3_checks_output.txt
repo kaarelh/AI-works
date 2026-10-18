@@ -1,0 +1,163 @@
+C1. Deterrence-detection inequality (G3.2)
+   t=0.02: P(defect)=0.303  dbar=0.0066  detected/undetected=0.0066  bound t/(1-t)=0.0204  E[undetected before 1st catch]: formula (1-dbar)/dbar=151.4, MC=156.2, lower bound (1-t)/t=49.0
+   [ok] ratio <= t/(1-t) at t=0.02
+   [ok] MC mean within 6% of (1-dbar)/dbar at t=0.02
+   t=0.05: P(defect)=0.465  dbar=0.0160  detected/undetected=0.0163  bound t/(1-t)=0.0526  E[undetected before 1st catch]: formula (1-dbar)/dbar=61.5, MC=61.8, lower bound (1-t)/t=19.0
+   [ok] ratio <= t/(1-t) at t=0.05
+   [ok] MC mean within 6% of (1-dbar)/dbar at t=0.05
+   t=0.10: P(defect)=0.627  dbar=0.0306  detected/undetected=0.0316  bound t/(1-t)=0.1111  E[undetected before 1st catch]: formula (1-dbar)/dbar=31.6, MC=32.5, lower bound (1-t)/t=9.0
+   [ok] ratio <= t/(1-t) at t=0.1
+   [ok] MC mean within 6% of (1-dbar)/dbar at t=0.1
+   t=0.20: P(defect)=0.805  dbar=0.0558  detected/undetected=0.0591  bound t/(1-t)=0.2500  E[undetected before 1st catch]: formula (1-dbar)/dbar=16.9, MC=16.9, lower bound (1-t)/t=4.0
+   [ok] ratio <= t/(1-t) at t=0.2
+   [ok] MC mean within 6% of (1-dbar)/dbar at t=0.2
+   t=0.50: P(defect)=0.978  dbar=0.1001  detected/undetected=0.1113  bound t/(1-t)=1.0000  E[undetected before 1st catch]: formula (1-dbar)/dbar=9.0, MC=9.3, lower bound (1-t)/t=1.0
+   [ok] ratio <= t/(1-t) at t=0.5
+   [ok] MC mean within 6% of (1-dbar)/dbar at t=0.5
+
+C2. Evals and honeypots: detection and deterrence are complementary (G3.2, Table 1)
+   AUC 0.83 -> s_ev = 1.349; careful type with t = 0.1; eval catch prob hit = 1.0; fp = 0
+   eval share 0.001: games on 0.998 of eval items, 1.000 of deployment items; catches per traffic item 9.98e-04; expected catches in 1e+04 items   10.0; P(>=1 catch) 1.000; deployment gaming per catch  1001.4
+   eval share 0.010: games on 0.865 of eval items, 0.993 of deployment items; catches per traffic item 8.65e-03; expected catches in 1e+04 items   86.5; P(>=1 catch) 1.000; deployment gaming per catch   113.7
+   eval share 0.050: games on 0.452 of eval items, 0.890 of deployment items; catches per traffic item 2.26e-02; expected catches in 1e+04 items  225.9; P(>=1 catch) 1.000; deployment gaming per catch    37.4
+   eval share 0.100: games on 0.250 of eval items, 0.750 of deployment items; catches per traffic item 2.50e-02; expected catches in 1e+04 items  249.9; P(>=1 catch) 1.000; deployment gaming per catch    27.0
+   eval share 0.300: games on 0.047 of eval items, 0.372 of deployment items; catches per traffic item 1.41e-02; expected catches in 1e+04 items  140.9; P(>=1 catch) 1.000; deployment gaming per catch    18.5
+   eval share 0.500: games on 0.011 of eval items, 0.170 of deployment items; catches per traffic item 5.32e-03; expected catches in 1e+04 items   53.2; P(>=1 catch) 1.000; deployment gaming per catch    16.0
+   [ok] per-eval-item gaming falls as eval share rises
+   [ok] total catches non-monotone in eval share (peak at an interior share)
+
+C3. Sequential test: CUSUM on flag counts, false alarms, delay and damage (G3.4)
+   Omega = ln(K n_dep / P_FA) = 17.91 nats;  defector: p_def=0.002, dbar=0.05, extra flag rate 1.0e-04/item
+   horizon total of unflagged defections = K n_dep p_def (1-dbar) = 5700
+   fp=1e-03: KL/item=4.84e-06  delay ~ Omega/KL = 3.70e+06 items = 36.99 generations; Omega/vis = 5700 (capped at horizon); vis = KL/dmg = 2.55e-03 nats per defection; MC: P(alarm within K) = 0.35, mean unflagged defections before alarm or horizon = 5382
+   [ok] fp=1e-3: predicted delay exceeds the horizon, so 'before alarm' is replaced by the horizon total
+   fp=1e-04: KL/item=3.86e-05  delay ~ Omega/KL = 4.64e+05 items = 4.64 generations; Omega/vis = 881 (capped at horizon); vis = KL/dmg = 2.03e-02 nats per defection; MC: P(alarm within K) = 1.00, mean unflagged defections before alarm or horizon = 874
+   fp=1e-05: KL/item=1.64e-04  delay ~ Omega/KL = 1.09e+05 items = 1.09 generations; Omega/vis = 208 (capped at horizon); vis = KL/dmg = 8.62e-02 nats per defection; MC: P(alarm within K) = 1.00, mean unflagged defections before alarm or horizon = 202
+   fp=0: alarm at first flag; mean items 10000; damage (1-dbar)/dbar = 19
+   MC (batches of 1000, fp=1e-04, Omega=6.0): ARL0 = 18159 batches (Lorden bound e^Omega = 403); delay = 138.0 batches; Omega/KL = 155.3; Brownian (Omega-1+e^-Omega)/KL = 129.5
+   [ok] ARL0 >= e^Omega
+   [ok] delay between the Brownian value and 1.3 Omega/KL (overshoot)
+
+C4. Stealth: the square-root law for undetected damage per generation (G3.5)
+   fp=1e-03, n=1e+05: count test P_FA=0.0088; excess flags for power 0.5 = 24.7 (z*sqrt(n fp) = 23.3); undetected damage at power 0.5 = 469; damage with power <= P_FA+0.25 against ANY test >= 67
+   fp=1e-03, n=1e+06: count test P_FA=0.0098; excess flags for power 0.5 = 74.7 (z*sqrt(n fp) = 73.6); undetected damage at power 0.5 = 1419; damage with power <= P_FA+0.25 against ANY test >= 212
+   fp=1e-04, n=1e+05: count test P_FA=0.0072; excess flags for power 0.5 = 8.7 (z*sqrt(n fp) = 7.4); undetected damage at power 0.5 = 165; damage with power <= P_FA+0.25 against ANY test >= 21
+   fp=1e-04, n=1e+06: count test P_FA=0.0088; excess flags for power 0.5 = 24.7 (z*sqrt(n fp) = 23.3); undetected damage at power 0.5 = 469; damage with power <= P_FA+0.25 against ANY test >= 67
+   fp=1e-05, n=1e+06: count test P_FA=0.0072; excess flags for power 0.5 = 8.7 (z*sqrt(n fp) = 7.4); undetected damage at power 0.5 = 165; damage with power <= P_FA+0.25 against ANY test >= 21
+   ratio of stealth damage n=1e6 vs 1e5 at fp=1e-3: 3.03 (sqrt(10) = 3.16)
+   [ok] square-root scaling within 10%
+   exact TV(Bin(n,fp+Delta/n), Bin(n,fp)) at Delta = 0.25 sqrt(2 n fp) and n = 2e+04 (not the 1e5 of the text): 0.138 (bound 0.25)
+   [ok] TV <= 0.25
+   fp=1e-05, n=1e+05: square-root guarantee   6.7 unflagged defections; coupling guarantee 5.3; the defector gets the larger
+   fp=1e-06, n=1e+05: square-root guarantee   2.1 unflagged defections; coupling guarantee 5.3; the defector gets the larger
+   fp=0e+00, n=1e+05: square-root guarantee   0.0 unflagged defections; coupling guarantee 5.3; the defector gets the larger
+
+C5. Collusion: lineage-built instruments (G3.6)
+   inh=0.0: power = 0.950 (honest-built 0.95, independent-only 0.3)
+   inh=0.5: power = 0.625 (honest-built 0.95, independent-only 0.3)
+   inh=0.9: power = 0.365 (honest-built 0.95, independent-only 0.3)
+   inh=1.0: power = 0.300 (honest-built 0.95, independent-only 0.3)
+   probe d'=0.5, icc=0.01, m=10000: m_eff=99, KL=12.4 nats if the tell transfers; power <= p_tr + (1-p_tr) P_FA = 1.000 at p_tr=1.0
+   probe d'=0.5, icc=0.01, m=10000: m_eff=99, KL=12.4 nats if the tell transfers; power <= p_tr + (1-p_tr) P_FA = 0.505 at p_tr=0.5
+   probe d'=0.5, icc=0.01, m=10000: m_eff=99, KL=12.4 nats if the tell transfers; power <= p_tr + (1-p_tr) P_FA = 0.208 at p_tr=0.2
+
+C6. Two-generation game: targeted versus mass defection (G3.7)
+   irr=0.0, N_F=  1: t*_F(1)=0.0476, t*_F(N_F)=0.048; minimal tr*p_hon for deterrence = 0.595; best plan size at tr*p_hon=0.5: 1
+   irr=0.0, N_F= 10: t*_F(1)=0.0476, t*_F(N_F)=0.333; minimal tr*p_hon for deterrence = 0.595; best plan size at tr*p_hon=0.5: 10
+   irr=0.0, N_F=100: t*_F(1)=0.0476, t*_F(N_F)=0.833; minimal tr*p_hon for deterrence = 0.834; best plan size at tr*p_hon=0.5: 100
+   irr=0.5, N_F=  1: t*_F(1)=0.0488, t*_F(N_F)=0.049; minimal tr*p_hon for deterrence = 0.610; best plan size at tr*p_hon=0.5: 1
+   irr=0.5, N_F= 10: t*_F(1)=0.0488, t*_F(N_F)=0.400; minimal tr*p_hon for deterrence = 0.707; best plan size at tr*p_hon=0.5: 10
+   irr=0.5, N_F=100: t*_F(1)=0.0488, t*_F(N_F)=1.429; minimal tr*p_hon for deterrence = none (not deterrable); best plan size at tr*p_hon=0.5: 100
+   closed form, targeted: tr*p_hon >= t*_F/(a_r hit) = 0.5952
+   tr*p_hon=1.0: needs hit >= 0.476; minimal gap g = 0.75 g_ch
+   tr*p_hon=0.8: needs hit >= 0.595; minimal gap g = 1.08 g_ch
+   tr*p_hon=0.6: needs hit >= 0.794; minimal gap g = 2.14 g_ch
+   same-lineage auditor, sab=0.0: tr=0.980, P_r(1)=0.0784 vs t*_F=0.0476: deterred
+   same-lineage auditor, sab=0.5: tr=0.490, P_r(1)=0.0392 vs t*_F=0.0476: NOT deterred
+   same-lineage auditor, sab=0.9: tr=0.098, P_r(1)=0.0078 vs t*_F=0.0476: NOT deterred
+
+C7. Trust separatrix and K-generation chain (G3.8, G3.9)
+   corr=0.0, p_hon=1.0: o_dagger = 0.405
+   corr=0.0, p_hon=0.8: o_dagger = 0.256
+   corr=0.2, p_hon=1.0: o_dagger = 0.256
+   corr=0.2, p_hon=0.8: o_dagger = 0.070
+   corr=0.4, p_hon=1.0: o_dagger = 0.008
+   corr=0.4, p_hon=0.8: o_dagger = -0.240  (no trust chain)
+   q=0.02: P(fail by K=30): none 0.455 (either of two independent lineages: 0.702), same-lineage 0.452, cross-lineage(corr 0.2) 0.000 (by construction: indicator q > o_dagger, no inheritance)
+   q=0.05: P(fail by K=30): none 0.785 (either of two independent lineages: 0.954), same-lineage 0.783, cross-lineage(corr 0.2) 0.000 (by construction: indicator q > o_dagger, no inheritance)
+   q=0.08: P(fail by K=30): none 0.918 (either of two independent lineages: 0.993), same-lineage 0.917, cross-lineage(corr 0.2) 0.000 (by construction: indicator q > o_dagger, no inheritance)
+   cross-lineage corr 0.2: o_dagger=0.256, L_dagger_tr = ln((1-o)/o) = 1.07 nats
+   L0=4.0, net ledger change +0.5/gen: P(fail by 10 / by 30): no audits 0.045 / 0.045; cross-lineage trust chain 0.000 / 0.000; rollbacks = 0.000; predicted crossing generation k_x = inf
+   L0=4.0, net ledger change +0.0/gen: P(fail by 10 / by 30): no audits 0.166 / 0.420; cross-lineage trust chain 0.000 / 0.000; rollbacks = 0.000; predicted crossing generation k_x = inf
+   L0=4.0, net ledger change -0.3/gen: P(fail by 10 / by 30): no audits 0.604 / 1.000; cross-lineage trust chain 0.000 / 1.000; rollbacks = 0.040; predicted crossing generation k_x = 9.8
+   [ok] crossing generation matches closed form
+   L0=4.0, net ledger change -0.6/gen: P(fail by 10 / by 30): no audits 0.992 / 1.000; cross-lineage trust chain 0.987 / 1.000; rollbacks = 0.035; predicted crossing generation k_x = 4.9
+
+C8. Near-misses: retrospective audits as plain measurement
+   hit_N=0.5, divergent frontier outputs per generation 20, a_r=0.01: P(detect within generation) = 0.095
+   hit_N=0.5, divergent frontier outputs per generation 20, a_r=0.05: P(detect within generation) = 0.397
+   hit_N=0.5, divergent frontier outputs per generation 100, a_r=0.01: P(detect within generation) = 0.394
+   hit_N=0.5, divergent frontier outputs per generation 100, a_r=0.05: P(detect within generation) = 0.920
+   hit_N=0.2, divergent frontier outputs per generation 100, a_r=0.01: P(detect within generation) = 0.181
+   hit_N=0.2, divergent frontier outputs per generation 100, a_r=0.05: P(detect within generation) = 0.634
+
+C9. Caught-rate CUSUM against the predicted path (T2.13 reading)
+   per-generation evidence against a visible gamer: 732 nats; against a frozen type: 0
+
+C10. Composite alternatives: fixed-reference CUSUM vs a bank of references (G3.4, adaptive defectors)
+   defector excess 1e-04/item (horizon total  5700): fixed ref 1e-4: P(alarm)=1.00, unflagged before alarm/horizon   850;  bank [0.0001, 3e-05, 1e-05]: P(alarm)=1.00,   906
+   defector excess 6e-05/item (horizon total  3420): fixed ref 1e-4: P(alarm)=0.96, unflagged before alarm/horizon  1460;  bank [0.0001, 3e-05, 1e-05]: P(alarm)=1.00,  1512
+   defector excess 4e-05/item (horizon total  2280): fixed ref 1e-4: P(alarm)=0.19, unflagged before alarm/horizon  2123;  bank [0.0001, 3e-05, 1e-05]: P(alarm)=0.72,  1869
+   defector excess 3e-05/item (horizon total  1710): fixed ref 1e-4: P(alarm)=0.04, unflagged before alarm/horizon  1688;  bank [0.0001, 3e-05, 1e-05]: P(alarm)=0.15,  1666
+   defector excess 2e-05/item (horizon total  1140): fixed ref 1e-4: P(alarm)=0.00, unflagged before alarm/horizon  1140;  bank [0.0001, 3e-05, 1e-05]: P(alarm)=0.01,  1139
+   defector excess 1e-05/item (horizon total   570): fixed ref 1e-4: P(alarm)=0.00, unflagged before alarm/horizon   570;  bank [0.0001, 3e-05, 1e-05]: P(alarm)=0.00,   570
+   defector excess 5e-06/item (horizon total   285): fixed ref 1e-4: P(alarm)=0.00, unflagged before alarm/horizon   285;  bank [0.0001, 3e-05, 1e-05]: P(alarm)=0.00,   285
+   bank with Omega at batch resolution, ln(#batches x #refs / P_FA) = 12.10 (instead of 19.01):
+      defector excess 1e-04: P(alarm)=1.00, unflagged before alarm/horizon   538
+      defector excess 6e-05: P(alarm)=1.00, unflagged before alarm/horizon   920
+      defector excess 4e-05: P(alarm)=0.95, unflagged before alarm/horizon  1226
+      defector excess 3e-05: P(alarm)=0.71, unflagged before alarm/horizon  1317
+      defector excess 2e-05: P(alarm)=0.15, unflagged before alarm/horizon  1094
+      defector excess 1e-05: P(alarm)=0.01, unflagged before alarm/horizon   569
+      MC false-alarm probability over the loop (H0, 100 runs): 0.01 (target <= 0.05)
+   end-of-horizon pooled count test (no halting before K): power 0.5 at 29.7 excess flags = 564 unflagged defections over the horizon
+   worst case over defector rates: bank at batch-resolution Omega 1317
+   scale sqrt(K n_dep fp)(1-dbar)/dbar = 329; worst cases in units of it: fixed 6.5, bank 5.7, batch-resolution bank 4.0, pooled count test 1.7, any-test guarantee 0.35
+   worst case over defector rates: fixed 2123, bank 1869; G3.5 any-test floor over the pooled horizon at Delta_pow=0.25: 116
+   [ok] bank of references lowers the worst-case damage
+   [ok] worst-case damage of the bank is above the any-test floor
+
+C11. Trust chain: base case and horizon (G3.8)
+   o_col=0.2: known horizon, untrusted terminal: full trust = True; unknown horizon: tr=1 equilibrium = True, tr=1-o_col equilibrium = False
+   o_col=0.5: known horizon, untrusted terminal: full trust = False; unknown horizon: tr=1 equilibrium = True, tr=1-o_col equilibrium = True
+   o_col=0.9: known horizon, untrusted terminal: full trust = False; unknown horizon: tr=1 equilibrium = True, tr=1-o_col equilibrium = True
+   trusted terminal re-auditor with hit_term=0.8: full trust (no o_col) iff a_r hit_term p_hon >= t*_col and a_r hit p_hon >= t*_col -> True; minimal hit_term = 0.476
+   trusted terminal re-auditor with hit_term=0.3: full trust (no o_col) iff a_r hit_term p_hon >= t*_col and a_r hit p_hon >= t*_col -> False; minimal hit_term = 0.476
+   trusted terminal re-auditor with hit_term=0.05: full trust (no o_col) iff a_r hit_term p_hon >= t*_col and a_r hit p_hon >= t*_col -> False; minimal hit_term = 0.476
+
+C12. Separatrix with inheritance, and auditor indexing (G3.9)
+   q=0.02: fixed point o_inf = q/(1-her(1-q)) <= o_dagger=0.256 iff her <= 0.941
+      her=0.0: o_inf = 0.020; first generation with o_k > o_dagger: None
+      her=0.5: o_inf = 0.039; first generation with o_k > o_dagger: None
+      her=0.8: o_inf = 0.093; first generation with o_k > o_dagger: None
+      her=0.9: o_inf = 0.169; first generation with o_k > o_dagger: None
+   q=0.05: fixed point o_inf = q/(1-her(1-q)) <= o_dagger=0.256 iff her <= 0.847
+      her=0.0: o_inf = 0.050; first generation with o_k > o_dagger: None
+      her=0.5: o_inf = 0.095; first generation with o_k > o_dagger: None
+      her=0.8: o_inf = 0.208; first generation with o_k > o_dagger: None
+      her=0.9: o_inf = 0.345; first generation with o_k > o_dagger: 8
+   ledger L0=4.0, net -0.3: first generation with q_k > o_dagger = 10; first undeterred auditee (auditor-indexed backward induction) = 9
+   [ok] first undeterred auditee is k_x - 1 under auditor indexing
+
+C13. Audit latency and irreversibility; link to T3.9's bit budget (G3.7, heuristic)
+   latency/escape time = 0.10: irr = 0.095; mass plan of size 100 deterrable at all: True
+   latency/escape time = 0.22: irr = 0.197; mass plan of size 100 deterrable at all: True
+   latency/escape time = 0.50: irr = 0.393; mass plan of size 100 deterrable at all: False
+   latency/escape time = 1.00: irr = 0.632; mass plan of size 100 deterrable at all: False
+   critical latency ratio = -ln(1 - kappa_F/(N_F g_F)) = 0.223
+   repair probability 0.000: T3.9 budget log2(K(1-p_rep)/delta) = 11.6 bits
+   repair probability 0.900: T3.9 budget log2(K(1-p_rep)/delta) = 8.2 bits
+   repair probability 0.828: T3.9 budget log2(K(1-p_rep)/delta) = 9.0 bits
+   repair probability 0.920: T3.9 budget log2(K(1-p_rep)/delta) = 7.9 bits
+
+0 failed checks

@@ -1,0 +1,64 @@
+==============================================================================
+R1. G4.10 item 4: the wall's leak when confessors game at relative rate rg.
+    Brute force from per-episode rewards (selection (D)).
+  rg=1.00: brute -0.000625  draft formula -0.000625  corrected -0.000625
+  rg=0.90: brute -0.000388  draft formula -0.000313  corrected -0.000388
+  rg=0.80: brute -0.000150  draft formula -0.000000  corrected -0.000150
+  rg=0.75: brute -0.000031  draft formula +0.000156  corrected -0.000031
+  rg=0.70: brute +0.000088  draft formula +0.000313  corrected +0.000088
+  rg=0.50: brute +0.000562  draft formula +0.000938  corrected +0.000563
+  break-even rg: brute 0.7368; draft 0.8000; corrected closed form (lm + lc dJ... ) 0.7368
+  corrected closed form for equal lambdas: rg* = (1 - dJ)/(1 - (1-aC)) = 0.7368
+==============================================================================
+R2. Per-output discard (a gate applied to every episode) is not bounded Goodhart.
+    If firing outputs are discarded and the rest feed training or the next
+    generation's data, the odds of a probe-quiet type against H move by up to
+    n w_Delta ln(1/(1-fpr_Delta)) per generation, which grows linearly in n.
+  fpr_Delta=0.05: per disagreement episode 0.0513 nats; per generation n w_D x = 25.6 nats (single final gate in the draft: 0.0115 nats)
+  fpr_Delta=0.3: per disagreement episode 0.3567 nats; per generation n w_D x = 178.3 nats (single final gate in the draft: 13.3737 nats)
+==============================================================================
+R3. The gate's exponent is not the G4.3 KL.  ln Pr_S(pass) ~ -N KL(k/N || tpr).
+  tpr=0.9: exact log odds change -177.78; -N KL(k/N||tpr) = -175.78; -N KL(tpr||fpr) (G4.3 scale) = -237.62
+  tpr=0.2: exact log odds change -5.16; -N KL(k/N||tpr) = -3.67; -N KL(tpr||fpr) (G4.3 scale) = -13.98
+  tpr=0.1: exact log odds change -0.53; -N KL(k/N||tpr) = +0.00; -N KL(tpr||fpr) (G4.3 scale) = -2.07
+==============================================================================
+R4. Model-level correlation of probe firings.  Suppose 5% of S instances have a
+    probe blind spot (tpr 0.06 on all their questions) and 95% have tpr 0.94
+    (mean tpr 0.896).  The gate's effect on S collapses from ~-178 nats.
+  i.i.d. at mean tpr: -174.3 nats;  with 5% blind-spot instances: -3.02 nats
+==============================================================================
+R5. G4.3 when the designer cannot tell disagreement questions from agreement
+    questions (no ground truth on o != b at the frontier).  Share of Delta among
+    probed questions = 0.05; probe fpr on agreement questions = 0.01.
+  tpr=0.9 fpr_D=0.05: pooled KL per question 0.0409; per Delta-question equivalent 0.818 vs draft 2.376 (ratio 0.34)
+  tpr=0.2 fpr_D=0.05: pooled KL per question 0.0020; per Delta-question equivalent 0.040 vs draft 0.140 (ratio 0.29)
+  tpr=0.9 fpr_D=0.3: pooled KL per question 0.0140; per Delta-question equivalent 0.281 vs draft 0.794 (ratio 0.35)
+==============================================================================
+R6. G4.7 when the judge's unaided detection also verifies a true confession
+    (accept w.p. a' = aC + (1-aC) dJ).  Confess-minus-deny with c_m = 0.
+  aC=0.9 dJ=0.0: draft -0.1000  correlated -0.1000
+  aC=0.9 dJ=0.05: draft -0.0500  correlated -0.0450
+  aC=0.9 dJ=0.2: draft +0.1000  correlated +0.1200
+  aC=0.95 dJ=0.0: draft -0.0500  correlated -0.0500
+  aC=0.95 dJ=0.05: draft +0.0000  correlated +0.0025
+  aC=0.95 dJ=0.2: draft +0.1500  correlated +0.1600
+  aC=0.99 dJ=0.0: draft -0.0100  correlated -0.0100
+  aC=0.99 dJ=0.05: draft +0.0400  correlated +0.0405
+  aC=0.99 dJ=0.2: draft +0.1900  correlated +0.1920
+  audit at rate a also verifies true confessions: need a >= (1-aC)/(2-aC): aC=0.9: 0.0909 (draft 0.100), aC=0.99: 0.0099 (draft 0.010)
+==============================================================================
+R7. G4.9 with a mixed gamer population: only a share s_c of gaming events is
+    confessed.  Expected rewarded events N_cl/(aC s_c) + w_F eps_F T_pat.
+  s_c=1.00: formula 3.03 nats (MC 3.03); no confessions 25.0
+  s_c=0.43: formula 6.71 nats (MC 6.72); no confessions 25.0
+  s_c=0.10: formula 28.03 nats (MC 28.01); no confessions 25.0
+  With G4.7 at d_J=0 (frontier) and no confession audit, s_c is set by tie-breaking, not incentive.
+==============================================================================
+R8. H7 reparameterised so the confession judge has the main channel's detection.
+    In H7 the main-channel judge catches nothing (J_main = w for gamers) but d_J = 0.3.
+    With the same weak judge on both channels, d_J ~ 0.  Drift Gd vs Gc per episode:
+  aC=0.95 dJ=0.3: -0.000625  (confessors gain)
+  aC=0.95 dJ=0.0: +0.000125  (deniers gain or tie)
+  aC=0.99 dJ=0.0: +0.000025  (deniers gain or tie)
+  aC=0.99 dJ=0.02: -0.000025  (confessors gain)
+  aC=1.0 dJ=0.0: -0.000000  (deniers gain or tie)

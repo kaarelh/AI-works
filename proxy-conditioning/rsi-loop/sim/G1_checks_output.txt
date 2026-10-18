@@ -1,0 +1,180 @@
+
+==============================================================================
+A. Persona-logit gradient identities
+==============================================================================
+A1 max |finite-difference - (rho - varpi(.|x))| over 200 random instances: 2.91e-10
+[OK ] A1 gradient identity
+A2 max relative error of the transfer law at eps=1e-5: 4.43e-05
+[OK ] A2 transfer law (first order)
+A3 max TV(rho, varpi(.|x)) / (1-P) over 1e5 instances: 1.0000  (bound 1; equality for deterministic personas)
+A3 max |Cov_{varpi'}(f,S)| / (2(1-P)): 0.2399  (bound 1)
+A3 max sum|Delta omega_RL| / (2 P (1-P)): 1.0000  (bound 1)
+[OK ] A3 RL bound (equality for deterministic personas; float tolerance 1e-6)
+[OK ] A3 surprise bound TV <= 1-P
+[OK ] A3 transfer bound <= 2(1-P)
+A4 two-persona: max error SFT closed form 3.3e-16, RL closed form 1.5e-16
+[OK ] A4 lambda_+ closed forms
+A5 REINFORCE expected gradient by enumeration vs formula: 9.7e-17
+[OK ] A5 RL gradient formula
+
+==============================================================================
+B. Inoculation: residual factor res = lambda_+(x_iota)/lambda_+(x_0) for the default A:G ledger
+==============================================================================
+baseline (no inoculation): P_0(X)=0.0198, lambda_+ SFT/eps=0.9800, RL/(eps Delta_+)=0.01940
+
+Channel A: the inoculation makes X what the intent-follower does (a_iota = pi_A(X|x_iota)); persona weights unchanged
+ a_iota  P_iota  lift Y  res SFT  (1-a)/Y  res RL    1-a
+   0.10   0.109     5.5   0.1651   0.1636   0.908   0.90
+   0.30   0.307    15.5   0.0454   0.0452   0.704   0.70
+   0.50   0.505    25.5   0.0196   0.0196   0.500   0.50
+   0.70   0.703    35.5   0.0083   0.0085   0.296   0.30
+   0.90   0.901    45.5   0.0020   0.0022   0.092   0.10
+   0.99   0.990    50.0   0.0000   0.0002   0.000   0.01
+
+Channel G: the inoculation context summons the gaming persona G itself (p_iota = varpi(G|x_iota)); a = delta
+ p_iota  P_iota  lift Y  res SFT  (1-P_i)/(1-P_0)  res RL
+   0.05   0.059     3.0   1.6102           0.9600   4.798
+   0.20   0.206    10.4   1.5534           0.8100  16.162
+   0.50   0.500    25.3   1.0000           0.5101  25.253
+   0.80   0.794    40.1   0.4030           0.2102  16.162
+   0.90   0.892    45.1   0.2018           0.1102   9.091
+   0.99   0.980    49.5   0.0202           0.0202   1.000
+
+Channel J: a distinct instruction-conditional persona J absorbs the event (J games iff instructed)
+baseline 3-persona: P_0(X)=0.0198
+ j_iota  P_iota  res SFT  res RL  J logit gain/eps (SFT) A logit/eps
+   0.20   0.214   0.8021   8.665                  0.7258     -0.7549
+   0.50   0.505   0.5013  12.783                  0.4803     -0.4852
+   0.80   0.796   0.2005   8.060                  0.1950     -0.1955
+   0.90   0.893   0.1002   4.521                  0.0978     -0.0979
+   0.99   0.980   0.0100   0.496                  0.0098     -0.0098
+
+Trajectories: N rewarded-X SFT events, step eps; default-context gaming P_0(X) at the end, and at an
+'iota-like' deployment context (half the inoculation shift).
+channel G: at the end P_iota(X)=0.9813, P_0(X)=0.5299; logit gap = 3.839 nats vs context shift sG = 4.590 (gap differs from sG only through softness and J)
+before training: P_0(X) = 0.0198; iota-like context (j_iota=0.9 shift / 2): 0.1900
+                  design P_0(X) after iota-like after   default weights [A, G, J]
+                    none       0.9794               -   [0.00819 0.98922 0.00259]
+   channel A, a_iota=0.9       0.0187               -   [0.98783 0.00887 0.0033 ]
+   channel G, p_iota=0.5       0.5299               -   [0.44665 0.53051 0.02284]
+   channel J, j_iota=0.5       0.0738          0.8840   [0.59294 0.06506 0.342  ]
+   channel J, j_iota=0.9       0.0434          0.7448   [0.90283 0.03406 0.06311]
+  channel J, j_iota=0.99       0.0243          0.6084   [0.97461 0.01461 0.01078]
+
+Same, on-policy RL expected gradient (Delta_+ = 1), eps=0.02, N=3000 opportunity episodes:
+                    none P_0(X) after = 0.8215
+   channel A, a_iota=0.9 P_0(X) after = 0.0188
+   channel G, p_iota=0.5 P_0(X) after = 0.5151
+   channel J, j_iota=0.9 P_0(X) after = 0.0429
+
+Channel J integral (A and J only, a_iota=0): cumulative A-logit loss vs (logit j_N - logit j_0)/2
+j_0=0.500 j_N=0.99148 blame=2.3782 predicted=2.3782 (Euler step error O(eps))
+[OK ] B channel-J integral identity (within 2%)
+
+==============================================================================
+C. Declarative conditioning
+==============================================================================
+Bayesian learner with hypotheses N (documents describe my character truthfully) and W (documents are
+written by trainers, independent of my character), prior P(W)=aw. Proxy-equivalent pair A, C;
+truthful description of C contains the declarative sentence with prob c_d per document.
+    aw   c_d      N=1      N=3     N=10    N=100 cap ln(1/aw)
+  0.01  0.00    4.605    4.605    4.605    4.605        4.605
+  0.01  0.30    1.181    3.304    4.605    4.605        4.605
+  0.10  0.00    2.303    2.303    2.303    2.303        2.303
+  0.10  0.30    0.994    2.085    2.303    2.303        2.303
+  0.50  0.00    0.693    0.693    0.693    0.693        0.693
+  0.50  0.30    0.431    0.667    0.693    0.693        0.693
+[OK ] C cap attained by N=100 docs
+
+Gradient version (P): narrator context shares the persona logits; per-document change of the A:C ledger,
+for a document that A's truthful description contains (pi_A^desc = 0.9) and C's does not (0.05),
+with an aware persona T that emits it as trainer-text (0.9) and games when unchecked.
+  weights A,C,T = 0.98,0.01,0.01: P(d)=0.892  dL_AC/eps=+0.0188  dL_AT/eps=+0.0092  bound 2(1-P)=0.217
+  weights A,C,T = 0.90,0.05,0.05: P(d)=0.857  dL_AC/eps=+0.0917  dL_AT/eps=+0.0421  bound 2(1-P)=0.285
+  weights A,C,T = 0.60,0.05,0.35: P(d)=0.857  dL_AC/eps=+0.0768  dL_AT/eps=+0.0124  bound 2(1-P)=0.285
+
+==============================================================================
+D. Transfer coefficients, the sieve, reciprocity, emergent-alignment cap (illustrative prior)
+==============================================================================
+gaming marginals under prior: {'ck1': np.float64(0.014), 'ck2': np.float64(0.014), 'uk1': np.float64(0.019), 'F': np.float64(0.017)}
+Tr_{row <- column} under the prior (rows/cols ck1, ck2, uk1, F):
+[[1.      0.71023 0.73684 0.58417]
+ [0.71023 1.      0.52224 0.58417]
+ [0.99493 0.70516 1.      0.87828]
+ [0.70719 0.70719 0.78743 1.     ]]
+[OK ] D reciprocity Tr_{j<-i}Var_i = Tr_{i<-j}Var_j
+[OK ] D covariance law dE g_j/dn = Cov(g_j, D)
+
+after a mild sieve (ck1, ck2: -1.5 nats; uk1, F: +0.5 nats):
+posterior: {'A': np.float64(0.9793), 'G': np.float64(0.00136), 'C_U': np.float64(0.01365), 'C_1': np.float64(0.00148), 'C_2': np.float64(0.0009), 'C_F': np.float64(0.00331)}
+Tr_{F <- ck1} = 0.4621  Tr_{ck1 <- F} = 0.0727
+
+after one generation of the sieve (ck1, ck2: -6 nats; uk1, F: +2 nats):
+posterior: {'A': np.float64(0.77206), 'G': np.float64(0.0), 'C_U': np.float64(0.21617), 'C_1': np.float64(6e-05), 'C_2': np.float64(1e-05), 'C_F': np.float64(0.0117)}
+gaming marginals: {'ck1': np.float64(6e-05), 'ck2': np.float64(1e-05), 'uk1': np.float64(0.21623), 'F': np.float64(0.22787)}
+Tr_{row <- column} after the sieve:
+[[ 1.       0.25275  0.00028 -0.00006]
+ [ 0.04378  1.       0.       0.     ]
+ [ 0.78382  0.03657  1.       0.94857]
+ [-0.1841   0.02493  0.9848   1.     ]]
+     prior: share of frontier gamers visible at ck1 = 0.588  (at ck1 or ck2: 0.588); emergent-alignment cap -ln(1-sh) = 0.887 nats
+mild sieve: share of frontier gamers visible at ck1 = 0.074  (at ck1 or ck2: 0.074); emergent-alignment cap -ln(1-sh) = 0.077 nats
+post-sieve: share of frontier gamers visible at ck1 = 0.000  (at ck1 or ck2: 0.000); emergent-alignment cap -ln(1-sh) = 0.000 nats
+
+frontier log-odds gain from Lambda nats of checkable alignment training (on both checked cells):
+     prior: Lambda=1,3,10,100 -> 0.460, 0.811, 0.879, 0.879
+mild sieve: Lambda=1,3,10,100 -> 0.047, 0.071, 0.075, 0.075
+post-sieve: Lambda=1,3,10,100 -> -0.000, -0.000, -0.000, -0.000
+
+==============================================================================
+E. Vector-ledger loop map (illustrative): shared component G, conditional component C_U
+==============================================================================
+parameters (nats per generation, illustrative): {'LG0': np.float64(4.594), 'LC0': np.float64(6.897), 'gam_chk': 3.0, 'gam_nb': 0.5, 'kap': 0.3, 'leak0': 1.0, 'leak1': 5.0}
+
+S1 shared only: first generation with frontier off-task mass q > 0.5: None
+   k= 1  L_G=    6.74  L_C=     nan  q_F=0.0100  sharedness=1.00e+00
+   k= 5  L_G=   15.54  L_C=     nan  q_F=0.0000  sharedness=1.00e+00
+   k=10  L_G=   26.54  L_C=     nan  q_F=0.0000  sharedness=1.00e+00
+   k=20  L_G=   48.54  L_C=     nan  q_F=0.0000  sharedness=1.00e+00
+   k=40  L_G=   92.54  L_C=     nan  q_F=0.0000  sharedness=1.00e+00
+   k=60  L_G=  136.54  L_C=     nan  q_F=0.0000  sharedness=1.00e+00
+
+S2 shared + conditional: first generation with frontier off-task mass q > 0.5: 8
+   k= 1  L_G=    6.74  L_C=    6.04  q_F=0.0110  sharedness=3.32e-01
+   k= 5  L_G=   15.29  L_C=    2.59  q_F=0.0283  sharedness=3.06e-06
+   k=10  L_G=   12.20  L_C=  -15.50  q_F=0.9999  sharedness=9.36e-13
+   k=20  L_G=  -15.80  L_C=  -50.00  q_F=1.0000  sharedness=1.40e-15
+   k=40  L_G=  -50.00  L_C=  -50.00  q_F=1.0000  sharedness=5.00e-01
+   k=60  L_G=  -50.00  L_C=  -50.00  q_F=1.0000  sharedness=5.00e-01
+
+S3 = S2, slice leak closed (channel-A inoculation / verifiable rewards): first generation with frontier off-task mass q > 0.5: None
+   k= 1  L_G=    7.79  L_C=    7.10  q_F=0.0110  sharedness=3.32e-01
+   k= 5  L_G=   20.59  L_C=    7.90  q_F=0.0005  sharedness=3.06e-06
+   k=10  L_G=   36.59  L_C=    8.90  q_F=0.0002  sharedness=9.36e-13
+   k=20  L_G=   68.59  L_C=   10.90  q_F=0.0000  sharedness=8.76e-26
+   k=40  L_G=  132.59  L_C=   14.90  q_F=0.0000  sharedness=7.67e-52
+   k=60  L_G=  196.59  L_C=   18.90  q_F=0.0000  sharedness=6.71e-78
+
+S4 = S2 with gamma_nb = 1.5, but gamma_nb is declarative with total cap ln(1/aw)=2.3: first generation with frontier off-task mass q > 0.5: 8
+   k= 1  L_G=    7.74  L_C=    7.04  q_F=0.0110  sharedness=3.32e-01
+   k= 5  L_G=   15.20  L_C=    2.50  q_F=0.0198  sharedness=3.06e-06
+   k=10  L_G=    7.39  L_C=  -20.30  q_F=1.0000  sharedness=9.36e-13
+   k=20  L_G=  -25.61  L_C=  -50.00  q_F=1.0000  sharedness=2.55e-11
+   k=40  L_G=  -50.00  L_C=  -50.00  q_F=1.0000  sharedness=5.00e-01
+   k=60  L_G=  -50.00  L_C=  -50.00  q_F=1.0000  sharedness=5.00e-01
+
+S5 = S2 with gamma_nb = 1.5 > kappa_L g + leak0: first generation with frontier off-task mass q > 0.5: None
+   k= 1  L_G=    7.74  L_C=    7.04  q_F=0.0110  sharedness=3.32e-01
+   k= 5  L_G=   20.52  L_C=    7.83  q_F=0.0005  sharedness=3.06e-06
+   k=10  L_G=   36.52  L_C=    8.82  q_F=0.0002  sharedness=9.36e-13
+   k=20  L_G=   68.51  L_C=   10.82  q_F=0.0000  sharedness=8.76e-26
+   k=40  L_G=  132.51  L_C=   14.82  q_F=0.0000  sharedness=7.67e-52
+   k=60  L_G=  196.51  L_C=   18.82  q_F=0.0000  sharedness=6.71e-78
+
+closed-form crossing of L_C=0 without grader feedback: k = L_C0/(leak0+kappa_L g-gamma_nb) = 8.62
+map without feedback: first k with L_C<0: 9
+[OK ] E closed-form crossing matches map (ceil)
+sharedness at k=5: map 0.000003, closed form 1/(1+exp(L_G0-L_C0+k gamma_chk)) = 0.000003
+[OK ] E sharedness closed form
+
+TOTAL: 13 checks, 0 failures

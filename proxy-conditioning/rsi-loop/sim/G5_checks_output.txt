@@ -1,0 +1,173 @@
+K1. On-policy filtering: break-even under gradient vs Bayes readings
+    w_k(P) = (1-(1-P)^k)/P ; gradient t* = w_k(pX)/(w_k(pX)+w_k(1-pX))
+    Bayes (T1 C-on) t* = (1-(1-pX)^k)/((1-(1-pX)^k)+(1-pX^k))
+    pX     k   t*_gradient   t*_Bayes
+    0.01   1   0.5000        0.0100
+    0.01   4   0.7960        0.0379
+    0.01   8   0.8844        0.0717
+    0.01   32  0.9646        0.2157
+    0.1    1   0.5000        0.1000
+    0.1    4   0.7558        0.2559
+    0.1    8   0.8368        0.3629
+    0.1    32  0.8968        0.4913
+    0.5    1   0.5000        0.5000
+    0.5    4   0.5000        0.5000
+    0.5    8   0.5000        0.5000
+    0.5    32  0.5000        0.5000
+  [ok] gradient t* by enumeration, pX=0.01, k=1: predicted 0.5, computed 0.5
+  [ok] gradient t* by enumeration, pX=0.01, k=8: predicted 0.88437, computed 0.88437
+  [ok] gradient t* by enumeration, pX=0.2, k=4: predicted 0.702857, computed 0.702857
+  [ok] k=1 gradient t* is exactly 1/2 (pX=0.03): predicted 0.5, computed 0.5
+  [ok] k=1 Bayes t* equals pX (pX=0.03): predicted 0.03, computed 0.03
+
+K2. Stochastic check: two persona logits (A,G), softness delta, on-policy best-of-k
+    filtering with SGD on the logits (gradient reading) vs Bayes C-on, fixed p_hat
+    k=1: gradient-reading t* at the start = 0.500
+      gradient: p_hat=0.380  mean change of L over 20000 opps = -10.529
+      [ok] sign of drift as predicted by gradient t*
+      gradient: p_hat=0.620  mean change of L over 20000 opps = +4.611
+      [ok] sign of drift as predicted by gradient t*
+    k=4: gradient-reading t* at the start = 0.776
+      gradient: p_hat=0.656  mean change of L over 20000 opps = -1.254
+      [ok] sign of drift as predicted by gradient t*
+      gradient: p_hat=0.896  mean change of L over 20000 opps = +5.299
+      [ok] sign of drift as predicted by gradient t*
+    Bayes C-on k=1: p_hat=0.3: mean change of L = +2007.61 (Bayes t* = pX = 0.056; both p_hat above it)
+      [ok] Bayes C-on restores (p_hat above its t*)
+    Bayes C-on k=1: p_hat=0.6: mean change of L = +4102.06 (Bayes t* = pX = 0.056; both p_hat above it)
+      [ok] Bayes C-on restores (p_hat above its t*)
+    gradient k=1, p_hat=0.3: mean change of L = -11.036 (the gradient reading leaks where Bayes C-on restores)
+      [ok] gradient reading leaks at p_hat=0.3
+
+K3. GRPO std-normalised advantages: break-even 1/2 whatever the penalty
+  [ok] GRPO K=4 penalty 1: break-even p_hat: predicted 0.5, computed 0.5
+  [ok] GRPO K=4 penalty 10: break-even p_hat: predicted 0.5, computed 0.5
+  [ok] GRPO K=4 penalty 100: break-even p_hat: predicted 0.5, computed 0.5
+  [ok] GRPO K=16 penalty 1: break-even p_hat: predicted 0.5, computed 0.5
+  [ok] GRPO K=16 penalty 10: break-even p_hat: predicted 0.5, computed 0.5
+  [ok] GRPO K=16 penalty 100: break-even p_hat: predicted 0.5, computed 0.5
+  [ok] plain PG (or PPO with batch-level normalisation) penalty 1: break-even: predicted 0.5, computed 0.5
+  [ok] plain PG (or PPO with batch-level normalisation) penalty 10: break-even: predicted 0.0909091, computed 0.0909091
+  [ok] plain PG (or PPO with batch-level normalisation) penalty 100: break-even: predicted 0.00990099, computed 0.00990099
+  [ok] GRPO finite-K closed form E sqrt(m(K-m))/K, K=16, pX=0.05: predicted 0.155187, computed 0.155187
+
+K4. Time to flip (z from -ln O to 0) vs prior odds, mean-field ODE dz/dn = c*h(P)
+    plain PG                   n* = 109, 1e+04, 1e+06, 1e+08   log-log slope (O>=1e4) = 1.000
+    GRPO population limit      n* = 19.8, 200, 2e+03, 2e+04   log-log slope (O>=1e4) = 0.500
+    GRPO K=16                  n* = 32.9, 2.6e+03, 2.58e+05, 2.58e+07   log-log slope (O>=1e4) = 0.999
+    natural gradient / tilt    n* = 4.61, 9.21, 13.8, 18.4   log-log slope (O>=1e4) = 0.075
+  [ok] plain PG slope ~ 1 (linear in O): predicted 1, computed 0.9998
+  [ok] GRPO population slope ~ 1/2 (sqrt O): predicted 0.5, computed 0.500011
+  [ok] GRPO K=16 slope ~ 1 at small P (discovery-limited): predicted 1, computed 0.999983
+  [ok] natural gradient n* = ln O at c=1 (O=1e6): predicted 13.8155, computed 13.8155
+  [ok] GRPO K=16 vs plain PG speed-up at O=1e8 ~ sqrt(K-1)=3.87: predicted 3.87298, computed 3.87298
+    Adam on a scalar gaming logit (stochastic REINFORCE, batch 64, all rewarded opps):
+      O=1e+02: median steps to flip = 329 (runs: [328, 335, 329, 327, 333])
+      O=1e+03: median steps to flip = 662 (runs: [671, 662, 632, 651, 696])
+      O=1e+04: median steps to flip = 1946 (runs: [1946, 1984, 2066, 1759, 1834])
+      O=1e+05: median steps to flip = 8237 (runs: [7888, 8237, 10164, 6764, 8345])
+      log-log slope = 0.47 (plain PG: 1; GRPO population: 0.5; ln O scaling: ~0.2 over this range)
+
+K5. Converged KL-regularised RL (per-prompt KL, coefficient b): output log-odds shift
+    shift = [(1-p_hat)D+ - p_hat D-]/b = (D+ + D-)(t* - p_hat)/b
+  [ok] KL-RL optimum shift, D+=1, D-=1, p_hat=0.2, b=0.04: predicted 15, computed 15
+  [ok] KL-RL optimum shift, D+=1, D-=9, p_hat=0.05, b=0.02: predicted 25, computed 25.0009
+  [ok] KL-RL optimum shift, D+=1, D-=3, p_hat=0.4, b=0.1: predicted -6, computed -6
+    Two-type mixture, KL only on opportunity prompts: q_G at the optimum
+      L0=5     shift s=3.0: optimal q_G = 0.248
+      L0=5     shift s=5.0: optimal q_G = 0.719
+      L0=5     shift s=8.0: optimal q_G = 0.990
+      L0=13.8  shift s=3.0: optimal q_G = 0.162
+      L0=13.8  shift s=5.0: optimal q_G = 0.602
+      L0=13.8  shift s=8.0: optimal q_G = 0.977
+      L0=30    shift s=3.0: optimal q_G = 0.162
+      L0=30    shift s=5.0: optimal q_G = 0.602
+      L0=30    shift s=8.0: optimal q_G = 0.977
+  [ok] flip (q_G=1/2) needs shift = -logit(P_ref(X)) -> Lambda as L0 grows (L0=30): predicted 4.59512, computed 4.59512
+
+K6. DPO and IPO converged margins on a mixture of rewarded (X>I) and caught (I>X) pairs
+  [ok] DPO margin p_hat=0.1, beta=0.1: predicted 21.9722, computed 21.9722
+  [ok] DPO margin p_hat=0.3, beta=0.05: predicted 16.946, computed 16.946
+  [ok] DPO margin p_hat=0.45, beta=0.5: predicted 0.401341, computed 0.401341
+  [ok] IPO margin p_hat=0.0, tau=0.1: predicted 5, computed 5
+  [ok] IPO margin p_hat=0.2, tau=0.05: predicted 6, computed 6
+  [ok] IPO margin p_hat=0.4, tau=0.5: predicted 0.2, computed 0.2
+    per-opportunity persona-logit update at the aligned end (two types, softness 0.01, mu_G=1e-4):
+      on-policy REINFORCE (gap 1): 9.799e-05;  offline pair gradient: 9.803e-03;  ratio = 100.0 (1/(P_X P_I) = 100.0)
+  [ok] offline/on-policy ratio = 1/(P_X P_I): predicted 100.04, computed 100.04
+
+K7. Softness selected under each operator (grader with unpredictable error eps_u)
+  [ok] (B)/(C) selects delta = eps_u = 0.02: predicted 0.02, computed 0.019996
+  [ok] expected-reward (PG, D) selects sharpest delta, eps_u=0.02: predicted 0.0001, computed 0.0001
+  [ok] (B)/(C) selects delta = eps_u = 0.1: predicted 0.1, computed 0.1
+  [ok] expected-reward (PG, D) selects sharpest delta, eps_u=0.1: predicted 0.0001, computed 0.0001
+  [ok] (B)/(C) selects delta = eps_u = 0.3: predicted 0.3, computed 0.3
+  [ok] expected-reward (PG, D) selects sharpest delta, eps_u=0.3: predicted 0.0001, computed 0.0001
+    SFT on noisy labels: CE-optimal P(correct)=1-eps_u -> sampled error eps_u at T=1, 0 at T->0
+    On-policy best-of-K filtering, gradient reading: d delta ~ eps_u amp_K(delta) - (1-eps_u) amp_K(1-delta)
+    -> delta falls to 0 iff eps_u < 1/(K+1); otherwise an interior softness delta*(eps_u, K)
+      K=1   eps_u=0.05: selected delta* = 0.0000   (threshold 1/(K+1) = 0.500)
+      K=1   eps_u=0.1: selected delta* = 0.0000   (threshold 1/(K+1) = 0.500)
+      K=1   eps_u=0.2: selected delta* = 0.0000   (threshold 1/(K+1) = 0.500)
+      K=1   eps_u=0.3: selected delta* = 0.0000   (threshold 1/(K+1) = 0.500)
+      K=4   eps_u=0.05: selected delta* = 0.0000   (threshold 1/(K+1) = 0.200)
+      K=4   eps_u=0.1: selected delta* = 0.0000   (threshold 1/(K+1) = 0.200)
+      K=4   eps_u=0.2: selected delta* = 0.0000   (threshold 1/(K+1) = 0.200)
+      K=4   eps_u=0.3: selected delta* = 0.2050   (threshold 1/(K+1) = 0.200)
+      K=8   eps_u=0.05: selected delta* = 0.0000   (threshold 1/(K+1) = 0.111)
+      K=8   eps_u=0.1: selected delta* = 0.0000   (threshold 1/(K+1) = 0.111)
+      K=8   eps_u=0.2: selected delta* = 0.1570   (threshold 1/(K+1) = 0.111)
+      K=8   eps_u=0.3: selected delta* = 0.2854   (threshold 1/(K+1) = 0.111)
+      K=32  eps_u=0.05: selected delta* = 0.0341   (threshold 1/(K+1) = 0.030)
+      K=32  eps_u=0.1: selected delta* = 0.0965   (threshold 1/(K+1) = 0.030)
+      K=32  eps_u=0.2: selected delta* = 0.1999   (threshold 1/(K+1) = 0.030)
+      K=32  eps_u=0.3: selected delta* = 0.3000   (threshold 1/(K+1) = 0.030)
+  [ok] best-of-8 filtering on a grader with eps_u=0.2: stationary error: predicted 0.156998, computed 0.151226
+      K=1, eps_u=0.2: stationary error after training = 0.0008 (prediction: falls toward 0)
+      [ok] K=1 filtering sharpens
+
+K8. The slop loop
+    err_{k+1} = b0 + Pi * err_k (capped at 1/2); fixed point b0/(1-Pi), runaway iff Pi >= 1
+    b0=0.02 Pi=0.5: err after 5, 10, 40 gens = 0.039, 0.040, 0.040;  fixed point 0.04
+    b0=0.02 Pi=0.9: err after 5, 10, 40 gens = 0.082, 0.130, 0.197;  fixed point 0.20000000000000004
+    b0=0.02 Pi=0.98: err after 5, 10, 40 gens = 0.096, 0.183, 0.500;  fixed point 0.5
+    b0=0.02 Pi=1.0: err after 5, 10, 40 gens = 0.100, 0.200, 0.500;  fixed point none (runaway)
+    b0=0.02 Pi=1.2: err after 5, 10, 40 gens = 0.149, 0.500, 0.500;  fixed point none (runaway)
+  [ok] fixed point at Pi=0.9, b0=0.02: predicted 0.2, computed 0.2
+    Coupling to the intent ledger: loop margin M(err) = g0(1-err/err_g) - [kLg + n wF lam+ (eps_h + f_pr c_sl err)]
+      parameters (illustrative): gamma0=3.0, err_gamma=0.3, kappa_L g=0.5, n=1e+05, w_F=0.05, lambda+=0.001, eps_h=0.002, f_pr=0.3, c_sl=1.0
+      margin at err=0: 2.490 nats/gen; critical frontier error err_c = 0.2165
+      b0=0.02, Pi=0.5: err* = 0.040, margin = +2.030 nats/gen
+      b0=0.02, Pi=0.8: err* = 0.100, margin = +1.340 nats/gen
+      b0=0.02, Pi=0.9: err* = 0.200, margin = +0.190 nats/gen
+      b0=0.02, Pi=0.95: err* = 0.400, margin = -2.110 nats/gen
+      critical slop gain Pi_c = 1 - b0/err_c = 0.908
+  [ok] margin vanishes at Pi_c: predicted 0, computed 6.66134e-16
+    Majority vote of m graders: shared error rate c_sh plus independent error e_i
+      c_sh=0.0 e_i=0.1 m=1: vote error = 0.1000
+      c_sh=0.0 e_i=0.1 m=5: vote error = 0.0086
+      c_sh=0.0 e_i=0.1 m=25: vote error = 0.0000
+      c_sh=0.03 e_i=0.1 m=1: vote error = 0.1270
+      c_sh=0.03 e_i=0.1 m=5: vote error = 0.0383
+      c_sh=0.03 e_i=0.1 m=25: vote error = 0.0300
+      c_sh=0.1 e_i=0.1 m=1: vote error = 0.1900
+      c_sh=0.1 e_i=0.1 m=5: vote error = 0.1077
+      c_sh=0.1 e_i=0.1 m=25: vote error = 0.1000
+  [ok] vote error floor -> c_sh (m=25, c_sh=0.1): predicted 0.1, computed 0.1
+
+K9. Binormal recognition: audit-to-real likelihood ratio at real-opportunity quantiles
+    AUC 0.75: d'=0.95; LR at real-opportunity quantiles 50%,10%,1%,0.1% = 6.34e-01, 1.87e-01, 6.90e-02, 3.33e-02
+    AUC 0.83: d'=1.35; LR at real-opportunity quantiles 50%,10%,1%,0.1% = 4.02e-01, 7.14e-02, 1.74e-02, 6.22e-03
+    AUC 0.9: d'=1.81; LR at real-opportunity quantiles 50%,10%,1%,0.1% = 1.94e-01, 1.90e-02, 2.86e-03, 7.15e-04
+    AUC 0.95: d'=2.33; LR at real-opportunity quantiles 50%,10%,1%,0.1% = 6.68e-02, 3.39e-03, 2.98e-04, 5.05e-05
+  [ok] AUC 0.9 -> d' = 1.812: predicted 1.812, computed 1.81239
+    With (D)/GRPO t*=1/2, the pointwise condition needs a h f_a/(v f_r) >= 1 everywhere;
+    at AUC 0.9, covering the most real-looking 1% of opportunities needs audits at about
+    1/LR = 350 times the real-opportunity rate.
+
+K10. Order-of-magnitude anchors for evidence per training example (heuristic)
+    Betley et al.: ~6000 insecure-code examples, misaligned answers ~0.1% -> 20% (baseline assumed): 5.52 nats / 6e+03 = 9.2e-04 nats per example
+    Wang et al.: 'a few hundred' benign examples reverse it (take 300, 20% -> 1%): 3.21 nats / 3e+02 = 1.1e-02 nats per example
+    Tice et al.: ~2.1 nats moved by ~1e9 tokens (~1e6 documents of 1k tokens): 2.10 nats / 1e+06 = 2.1e-06 nats per example
+
+TOTAL explicit checks: 50, mismatches: 0

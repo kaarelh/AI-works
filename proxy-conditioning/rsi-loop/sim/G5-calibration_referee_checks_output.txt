@@ -1,0 +1,59 @@
+R1. Bayes C-on: expected change of mu_G (probability) vs log-odds drift
+   K=1 mu_G=0.05: break-even of E[d mu_G] = 0.50000; G5.1 gradient t* = 0.50000; T1 Bayes log-odds t* = 0.05900
+   K=1 mu_G=0.3: break-even of E[d mu_G] = 0.50000; G5.1 gradient t* = 0.50000; T1 Bayes log-odds t* = 0.30400
+   K=4 mu_G=0.05: break-even of E[d mu_G] = 0.77497; G5.1 gradient t* = 0.77497; T1 Bayes log-odds t* = 0.17758
+   K=4 mu_G=0.3: break-even of E[d mu_G] = 0.63864; G5.1 gradient t* = 0.63864; T1 Bayes log-odds t* = 0.43564
+   K=8 mu_G=0.05: break-even of E[d mu_G] = 0.86002; G5.1 gradient t* = 0.86002; T1 Bayes log-odds t* = 0.27810
+   K=8 mu_G=0.3: break-even of E[d mu_G] = 0.68390; G5.1 gradient t* = 0.68390; T1 Bayes log-odds t* = 0.48586
+   exact chain K=1, L0=3, p_hat=0.3, 4000 opps: P(end with L<0) = 0.1156  vs mu_G(0) = 0.0474
+   mean final mu_G = 0.1156 (submartingale: must be >= 0.0474)
+
+R2. Gradient-reading rejection sampling: interior fixed point pi_X* where t*(pi_X*) = p_hat
+   K=4 p_hat=0.3: pi_X* = 0.795; drift(pi*-0.05)=+0.121, drift(pi*+0.05)=-0.121 (attracting)
+   K=4 p_hat=0.5: pi_X* = 0.500; drift(pi*-0.05)=+0.138, drift(pi*+0.05)=-0.138 (attracting)
+   K=4 p_hat=0.7: pi_X* = 0.205; drift(pi*-0.05)=+0.121, drift(pi*+0.05)=-0.121 (attracting)
+   K=8 p_hat=0.3: pi_X* = 0.715; drift(pi*-0.05)=+0.193, drift(pi*+0.05)=-0.210 (attracting)
+   K=8 p_hat=0.5: pi_X* = 0.500; drift(pi*-0.05)=+0.194, drift(pi*+0.05)=-0.194 (attracting)
+   K=8 p_hat=0.7: pi_X* = 0.285; drift(pi*-0.05)=+0.210, drift(pi*+0.05)=-0.193 (attracting)
+   stochastic K=8, p_hat=0.5: final pi_X = 0.529; predicted 0.500
+   stochastic K=8, p_hat=0.3: final pi_X = 0.710; predicted 0.715
+
+R3. GRPO with per-sample monitor flags (X flagged independently w.p. p_hat)
+   K=4, pi_X=0.05, Delta+=1, penalty Delta-=1: break-even p_hat = 0.5000
+   K=4, pi_X=0.05, Delta+=1, penalty Delta-=10: break-even p_hat = 0.4892
+   K=4, pi_X=0.05, Delta+=1, penalty Delta-=100: break-even p_hat = 0.4877
+   K=8, pi_X=0.05, Delta+=1, penalty Delta-=1: break-even p_hat = 0.5000
+   K=8, pi_X=0.05, Delta+=1, penalty Delta-=10: break-even p_hat = 0.4678
+   K=8, pi_X=0.05, Delta+=1, penalty Delta-=100: break-even p_hat = 0.4639
+   K=8, pi_X=0.3, penalty 1: break-even p_hat = 0.5000
+   K=8, pi_X=0.3, penalty 10: break-even p_hat = 0.3445
+   K=8, pi_X=0.3, penalty 100: break-even p_hat = 0.3258
+
+R4. Adam on a scalar logit (G5_checks settings), extended to larger O
+   O=1e+03: median steps to flip = 656
+   O=1e+04: median steps to flip = 1920
+   O=1e+05: median steps to flip = 7630
+   O=1e+06: median steps to flip = 57456
+   O=1e+07: median steps to flip = 599348
+   local slope 1e+03->1e+04: 0.47
+   local slope 1e+04->1e+05: 0.60
+   local slope 1e+05->1e+06: 0.88
+   local slope 1e+06->1e+07: 1.02
+
+R5. Natural-gradient REINFORCE with sampled batches (B=64, lr=0.05, batch-mean baseline)
+   O=1e+02: median steps = 90; mean-field ln(O)/lr = 92; O/B = 2
+   O=1e+03: median steps = 128; mean-field ln(O)/lr = 138; O/B = 16
+   O=1e+04: median steps = 116; mean-field ln(O)/lr = 184; O/B = 156
+   O=1e+05: median steps = 850; mean-field ln(O)/lr = 230; O/B = 1562
+   O=1e+06: median steps = 8500; mean-field ln(O)/lr = 276; O/B = 15625
+
+R6. Best-of-K filtering with independent per-sample grader noise eps
+   K=8, eps=0.2: d delta/dt sign at delta=0.2: -1 (always sharpening)
+   K=8, eps=0.3: d delta/dt sign at delta=0.2: -1 (always sharpening)
+   K=32, eps=0.2: d delta/dt sign at delta=0.2: -1 (always sharpening)
+   K=32, eps=0.3: d delta/dt sign at delta=0.2: -1 (always sharpening)
+   stochastic K=8, eps=0.2 per-sample noise: final error = 0.0007 (G5.6(3) per-prompt model: 0.157)
+
+R7. G5.8 recomputed
+   M(0)=2.490, delta_c=0.2165, Pi_c=0.9076; M(1/2)=-3.260 (<0 needed for 'fails before supercritical')
+   with delta_gamma=3 (alignment work robust to error): M(1/2) = 1.240 > 0 -> loop survives even saturated slop

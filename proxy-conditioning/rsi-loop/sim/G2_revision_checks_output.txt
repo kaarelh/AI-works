@@ -1,0 +1,93 @@
+==============================================================================
+S11. Additive law, corrected justification.
+  (a) Linear parametrisation of non-recognition m, expected gradient: dm/dn = -lr*ah*Dm
+      (per episode).  Caught rate ah*m.  Total caught = m0^2/(2 lr Dm), free of ah.
+      ah=0.003 : total caught=12.500; formula m0^2/(2 lr Dm)=12.500; episodes to exhaust=16667
+      ah=0.03  : total caught=12.500; formula m0^2/(2 lr Dm)=12.500; episodes to exhaust=1667
+      ah=0.3   : total caught=12.500; formula m0^2/(2 lr Dm)=12.500; episodes to exhaust=167
+  (b) Template memorisation: J equiprobable audit templates, each caught template is
+      learned for good.  Non-recognition drops by m0/J per catch: exactly additive, total J.
+==============================================================================
+S12. Non-recognition floor.  m(R) = m_fl + (m0-m_fl) e^{-R}; caught rate ah*m(R);
+     dR/dn = varpi*ah*m(R) (shared clock).  Closed form: e^R = [m0 e^{varpi ah m_fl n} - (m0-m_fl)]/m_fl.
+     L(n)-L0 = (lam-/varpi) R(n) - lam+ v n.  Long-run slope lam(ah m_fl - v).
+  m_fl=0.0 (floor ratio ah m_fl lam-/(v lam+)=0.00, long-run slope -0.04457): n=500:      3.43 (ODE      3.43); n=5000:   -124.52 (ODE   -124.52); n=50000:  -2029.63 (ODE  -2029.63)
+  m_fl=0.1 (floor ratio ah m_fl lam-/(v lam+)=0.31, long-run slope -0.03079): n=500:      4.96 (ODE      4.96); n=5000:    -89.02 (ODE    -89.02); n=50000:  -1465.41 (ODE  -1465.41)
+  m_fl=0.2 (floor ratio ah m_fl lam-/(v lam+)=0.62, long-run slope -0.01700): n=500:      6.59 (ODE      6.59); n=5000:    -44.30 (ODE    -44.30); n=50000:   -807.99 (ODE   -807.99)
+  m_fl=0.4 (floor ratio ah m_fl lam-/(v lam+)=1.24, long-run slope +0.01057): n=500:     10.20 (ODE     10.20); n=5000:     63.07 (ODE     63.07); n=50000:    538.69 (ODE    538.69)
+  Large-n form: N_c ~ ah m_fl n + (1/varpi) ln(m0/m_fl).
+==============================================================================
+S13. Doubling a under T1's parametrisation v=(1-a) eps (varpi=0.1, no floor):
+  n=   500: doubling a adds   17.08 nats, of which displacement lam+ a eps n =   0.69
+  n=  5000: doubling a adds   35.96 nats, of which displacement lam+ a eps n =   6.89
+  n= 50000: doubling a adds  100.47 nats, of which displacement lam+ a eps n =  68.93
+==============================================================================
+S14. Remark 0.2: filtering operators.  Caught samples carry no gradient (varpi_R=0);
+     recognition grows on kept samples, dR/dn = varpi' v.  Turn at n=M0/(varpi' v);
+     bank = (lam+/varpi')(e^{M0}-1-M0)  [using lam- u0/v = lam+ e^{M0}].
+  varpi'=0.01: n_turn=  4494.1, bank formula=  50.76, numerical=  50.76; compare (B)-free gradient case (lam-/varpi)B(M0) at varpi=varpi':   37.95
+  varpi'=0.1: n_turn=   449.4, bank formula=   5.08, numerical=   5.08; compare (B)-free gradient case (lam-/varpi)B(M0) at varpi=varpi':    3.80
+==============================================================================
+S15. G2.3 with v(n)=c/(n+100), varpi=0.1: minimum of L at c=8, and boundary case c=10.
+  c=8.0: min L =  -48.24 at n =      2167; L at 1e6,1e9,1e12 =    -2.50,    60.95,   124.44
+  c=10.0: min L =  -87.17 at n = 72004384964; L at 1e6,1e9,1e12 =   -87.15,   -87.17,   -87.17
+==============================================================================
+S16. G2.6 equality case and graded concealment.
+  tpr_c = t* = 0.25 (Bernoulli concealment, varpi_T=40, c_init=0.01, L0=0):
+    L at n=1e3,1e5,1e7,1e9,1e11: 4.105, 8.753, 9.946, 10.369, 10.787  (grows, slowly)
+  Equality case, event-space identity (small q): dL/dH = (lp+lm)(tpr-t*)/(varpi_T b c), so
+  L-L0 = k[(H - e^-H) - (H0 - e^-H0)], k=(lp+lm)(tpr-t*)/(varpi_T (tpr-tpr_c)); L -> inf like k/(k+1) ln n.
+    L0=6, n=1e+03: L-L0=0.158, identity 0.158, H=-4.58
+    L0=6, n=1e+05: L-L0=2.897, identity 2.899, H=-4.25
+    L0=6, n=1e+07: L-L0=7.430, identity 7.433, H=-3.26
+    L0=6, n=1e+09: L-L0=10.689, identity 10.691, H=3.35
+    L0=6, n=1e+11: L-L0=11.148, identity 11.151, H=7.91
+  tpr_c = 0.3 > t*: L at n=1e3..1e11: 4.11, 8.82, 12.19, 16.16, 20.74  (~ ln n)
+  Graded concealment: mean level mu in [0,1], det(mu) = tpr - b mu, b = tpr - tpr_c;
+  Gaussian-policy REINFORCE: dmu/dN_g = varpi_G b  (no factor of the concealment probability).
+  Turn at mu_turn=(tpr-t*)/b after N=(tpr-t*)/(varpi_G b^2) gaming events; since dL/dN_g
+  falls linearly from S to 0 along the path, bank = S*N/2 = (lp+lm)(tpr-t*)^2/(2 varpi_G b^2).
+    varpi_G=0.05: bank formula  19.60 nats; ODE L-L0 at turn (L0=0.0) =  18.60; Bernoulli bank with c_init=0.01, varpi_T=varpi_G:   5600.0
+    varpi_G=0.05: bank formula  19.60 nats; ODE L-L0 at turn (L0=4.0) =  19.58; Bernoulli bank with c_init=0.01, varpi_T=varpi_G:   5600.0
+    varpi_G=0.4: bank formula   2.45 nats; ODE L-L0 at turn (L0=0.0) =   1.64; Bernoulli bank with c_init=0.01, varpi_T=varpi_G:    700.0
+    varpi_G=0.4: bank formula   2.45 nats; ODE L-L0 at turn (L0=4.0) =   2.43; Bernoulli bank with c_init=0.01, varpi_T=varpi_G:    700.0
+==============================================================================
+S17. G2.9 exact best-of-k entrenchment under (C) with softness delta=0.01.
+     entrench iff (1-x)^k ln((1-x)/delta) > (1-(1-x)^k) ln((1-delta)/x).
+  x_I=0.01: entrenches for k <=  68; old +-Lambda formula threshold  68.97
+  x_I=0.05: entrenches for k <=  18; old +-Lambda formula threshold  13.51
+  x_I=0.10: entrenches for k <=  10; old +-Lambda formula threshold   6.58
+  x_I=0.20: entrenches for k <=   5; old +-Lambda formula threshold   3.11
+==============================================================================
+S18. Selecting 1 of k runs by a detector (independent runs, gamer probability q=0.1).
+  k=  2: ln k= 0.69; perfect detector log-odds gain=  2.40; noisy (tpr 0.9, fpr 0.1) gain= 1.35 (cap ln((1-f)/(1-r))=2.20)
+  k=  4: ln k= 1.39; perfect detector log-odds gain=  7.01; noisy (tpr 0.9, fpr 0.1) gain= 2.16 (cap ln((1-f)/(1-r))=2.20)
+  k= 16: ln k= 2.77; perfect detector log-odds gain= 34.64; noisy (tpr 0.9, fpr 0.1) gain= 2.20 (cap ln((1-f)/(1-r))=2.20)
+  k=256: ln k= 5.55; perfect detector log-odds gain=587.26; noisy (tpr 0.9, fpr 0.1) gain= 2.20 (cap ln((1-f)/(1-r))=2.20)
+  Probability of the event 'selected run is an undetected evader' rises by at most k.
+    k= 2: evader share 0.01 -> selected 0.0117 (ratio 1.17, bound k=2)
+    k= 4: evader share 0.01 -> selected 0.0121 (ratio 1.21, bound k=4)
+    k=16: evader share 0.01 -> selected 0.0121 (ratio 1.21, bound k=16)
+==============================================================================
+S19. G2.10 with a floor: break-even rewarded rate v* = A(n)/(lam+ n), varpi=0.1, ah=0.03, m0=0.5.
+  m_fl=0.00: v* = n=500: 1.12e-02; n=5000: 4.28e-03; n=50000: 8.66e-04; n=500000: 1.32e-04  (limit ah m_fl = 0.00e+00)
+  m_fl=0.05: v* = n=500: 1.15e-02; n=5000: 5.00e-03; n=50000: 1.96e-03; n=500000: 1.55e-03  (limit ah m_fl = 1.50e-03)
+  m_fl=0.20: v* = n=500: 1.26e-02; n=5000: 7.77e-03; n=50000: 6.18e-03; n=500000: 6.02e-03  (limit ah m_fl = 6.00e-03)
+  Common scale-up by alpha of lam and varpi: separable audit term / rewarded cost, n=5000, varpi=0.1:
+    alpha= 1: separable term    98.3, rewarded cost    222.9, ratio 0.441
+    alpha= 4: separable term   157.8, rewarded cost    891.5, ratio 0.177
+    alpha=16: separable term   220.4, rewarded cost   3565.8, ratio 0.062
+  G2.10.1 clamp example: R_gap=0.1, Y=-0.3, X=varpi ah n=1.5: f(0) = -0.175 < 0, so the map needs max(0, f).
+==============================================================================
+S20. Kernel form of the exchange rate (tangent model, exact for linear-in-parameter logits).
+  mixing 0.2: dL/dR = 0.4634; k_ra/(k_aa-k_ra) = 0.4634; kernel correlation k_ra/k_aa = 0.317
+  mixing 0.5: dL/dR = 2.0538; k_ra/(k_aa-k_ra) = 2.0538; kernel correlation k_ra/k_aa = 0.673
+  mixing 0.9: dL/dR = 6.7203; k_ra/(k_aa-k_ra) = 6.7203; kernel correlation k_ra/k_aa = 0.870
+==============================================================================
+S21. Bayes clock: posterior share at the critical L0 (G2.4).
+  critical L0=-3.772: gamer posterior share sigma(-L0) = 0.9775
+  critical L0=+0.773: gamer posterior share sigma(-L0) = 0.3158
+  critical L0=+2.004: gamer posterior share sigma(-L0) = 0.1188
+S22. Units of S5: D* in reward units x Lambda = nats under (D) with Delta/beta = Lambda.
+  0.00436 reward units -> 0.0200 nats
+  0.00116 reward units -> 0.0053 nats

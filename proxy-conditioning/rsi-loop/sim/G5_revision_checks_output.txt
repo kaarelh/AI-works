@@ -1,0 +1,118 @@
+V1. On-policy filtering: expected-probability identity and interior attractor
+  [ok] E[d mu_G] closed form K=1 mu=0.05 p_hat=0.2: predicted 0.02793, computed 0.02793
+  [ok] E[d mu_G] closed form K=1 mu=0.05 p_hat=0.6: predicted -0.00931, computed -0.00931
+  [ok] E[d mu_G] closed form K=1 mu=0.3 p_hat=0.2: predicted 0.12348, computed 0.12348
+  [ok] E[d mu_G] closed form K=1 mu=0.3 p_hat=0.6: predicted -0.04116, computed -0.04116
+  [ok] E[d mu_G] closed form K=4 mu=0.05 p_hat=0.2: predicted 0.126394, computed 0.126394
+  [ok] E[d mu_G] closed form K=4 mu=0.05 p_hat=0.6: predicted 0.0384631, computed 0.0384631
+  [ok] E[d mu_G] closed form K=4 mu=0.3 p_hat=0.2: predicted 0.35586, computed 0.35586
+  [ok] E[d mu_G] closed form K=4 mu=0.3 p_hat=0.6: predicted 0.0313478, computed 0.0313478
+  [ok] E[d mu_G] closed form K=8 mu=0.05 p_hat=0.2: predicted 0.233254, computed 0.233254
+  [ok] E[d mu_G] closed form K=8 mu=0.05 p_hat=0.6: predicted 0.0918929, computed 0.0918929
+  [ok] E[d mu_G] closed form K=8 mu=0.3 p_hat=0.2: predicted 0.452623, computed 0.452623
+  [ok] E[d mu_G] closed form K=8 mu=0.3 p_hat=0.6: predicted 0.0784777, computed 0.0784777
+  [ok] t*_grad strictly decreasing in pi_X, K=2; range 0.6667 -> 0.3333 (K/(K+1)=0.6667, 1/(K+1)=0.3333)
+  [ok] t*_grad strictly decreasing in pi_X, K=4; range 0.8000 -> 0.2000 (K/(K+1)=0.8000, 1/(K+1)=0.2000)
+  [ok] t*_grad strictly decreasing in pi_X, K=8; range 0.8889 -> 0.1111 (K/(K+1)=0.8889, 1/(K+1)=0.1111)
+  [ok] t*_grad strictly decreasing in pi_X, K=32; range 0.9697 -> 0.0303 (K/(K+1)=0.9697, 1/(K+1)=0.0303)
+  interior attractor pi_X* solving t*_grad(pi_X*) = p_hat:
+    K=4: p_hat=0.1: 1 (full gaming); p_hat=0.3: 0.795; p_hat=0.5: 0.500; p_hat=0.7: 0.205
+    K=8: p_hat=0.1: 1 (full gaming); p_hat=0.3: 0.715; p_hat=0.5: 0.500; p_hat=0.7: 0.285
+    K=32: p_hat=0.1: 0.904; p_hat=0.3: 0.700; p_hat=0.5: 0.500; p_hat=0.7: 0.300
+  [ok] R2 value K=8 p_hat=0.3: predicted 0.715, computed 0.714562
+  [ok] G5.6(3) softness = G5.1 attractor with p_hat=1-eps_u, K=8, eps_u=0.2: predicted 0.156998, computed 0.156998
+  [ok] G5.6(3) softness = G5.1 attractor with p_hat=1-eps_u, K=4, eps_u=0.3: predicted 0.204958, computed 0.204958
+  [ok] G5.6(3) softness = G5.1 attractor with p_hat=1-eps_u, K=32, eps_u=0.1: predicted 0.0964855, computed 0.0964855
+
+V2. Discovery bound: no update before the first sampled X
+  With a mean baseline (group or batch), an all-I batch has zero advantage, so pi_X is frozen
+  until the first X is drawn; the draw count is geometric with mean 1/pi_X = 1+O.
+  [ok] mean draws to first X, O=1e+02: predicted 101, computed 100.835
+  [ok] mean draws to first X, O=1e+04: predicted 10001, computed 10013.5
+  [ok] mean draws to first X, O=1e+06: predicted 1e+06, computed 1.00276e+06
+  Compare with sampled optimisers (B=64 draws per step): lower bound O/B steps (mean), 0.69 O/B (median)
+    O=1e+05 nat-grad R5: median steps 850; ln2*O/B = 1083; ratio 0.78
+    O=1e+06 nat-grad R5: median steps 8500; ln2*O/B = 10830; ratio 0.78
+    O=1e+06 Adam R4: median steps 57456; ln2*O/B = 10830; ratio 5.31
+    O=1e+07 Adam R4: median steps 599348; ln2*O/B = 108304; ratio 5.53
+
+V3. GRPO with per-sample monitor flags (each X flagged independently w.p. p_hat)
+  [ok] R3 K=8 pi=0.3 penalty 10: predicted 0.3445, computed 0.344524
+  [ok] R3 K=8 pi=0.3 penalty 100: predicted 0.3258, computed 0.325829
+  break-even p_hat by pi_X (K=8), penalties 1 / 10 / 100 / 1e4:
+    pi_X=0.001 : 0.500 / 0.499 / 0.499 / 0.499
+    pi_X=0.01  : 0.500 / 0.493 / 0.493 / 0.493
+    pi_X=0.05  : 0.500 / 0.468 / 0.464 / 0.463
+    pi_X=0.1   : 0.500 / 0.438 / 0.430 / 0.429
+    pi_X=0.3   : 0.500 / 0.345 / 0.326 / 0.324
+    pi_X=0.5   : 0.500 / 0.290 / 0.266 / 0.263
+    pi_X=0.8   : 0.500 / 0.255 / 0.227 / 0.224
+  small-pi_X limit: groups with an X have m=1 w.p. -> 1, two reward levels, so t* -> 1/2 for any penalty
+  [ok] pi_X=1e-3, K=8, penalty 1e4: break-even near 1/2: predicted 0.5, computed 0.49925
+  group-level audits (all samples of an audited prompt penalised): break-even 1/2 (K3 of G5_checks)
+
+V4. KL anchors: summed-KL PPO tilt vs GRPO with the k3-as-loss KL term
+  [ok] E[grad k3] = d KL(ref||pi)/dz = pi - pi_ref, pi_ref=0.01, z=-2.0: predicted 0.109203, computed 0.109203
+  [ok] E[grad k3] = d KL(ref||pi)/dz = pi - pi_ref, pi_ref=0.2, z=1.0: predicted 0.531059, computed 0.531059
+  [ok] E[grad k3] = d KL(ref||pi)/dz = pi - pi_ref, pi_ref=0.5, z=3.0: predicted 0.452574, computed 0.452574
+  GRPO + k3 KL fixed point: (1-2 p_hat) S_K(pi) = b (pi - pi_ref)  [opportunity-level audits]
+    K=16  b=0.04   p_hat=0.0 pi_ref=0.01  : pi_X* = 0.98937 (1-pi_X* = 1.06e-02; approx b(1-pi_ref)/((1-2p_hat)sqrt(K-1)) = 1.02e-02)
+    K=16  b=0.04   p_hat=0.0 pi_ref=0.0001: pi_X* = 0.98926 (1-pi_X* = 1.07e-02; approx b(1-pi_ref)/((1-2p_hat)sqrt(K-1)) = 1.03e-02)
+    K=16  b=0.04   p_hat=0.3 pi_ref=0.01  : pi_X* = 0.97175 (1-pi_X* = 2.83e-02; approx b(1-pi_ref)/((1-2p_hat)sqrt(K-1)) = 2.56e-02)
+    K=16  b=0.04   p_hat=0.3 pi_ref=0.0001: pi_X* = 0.97143 (1-pi_X* = 2.86e-02; approx b(1-pi_ref)/((1-2p_hat)sqrt(K-1)) = 2.58e-02)
+    K=16  b=0.001  p_hat=0.0 pi_ref=0.01  : pi_X* = 0.99974 (1-pi_X* = 2.56e-04; approx b(1-pi_ref)/((1-2p_hat)sqrt(K-1)) = 2.56e-04)
+    K=16  b=0.001  p_hat=0.0 pi_ref=0.0001: pi_X* = 0.99974 (1-pi_X* = 2.58e-04; approx b(1-pi_ref)/((1-2p_hat)sqrt(K-1)) = 2.58e-04)
+    K=16  b=0.001  p_hat=0.3 pi_ref=0.01  : pi_X* = 0.99936 (1-pi_X* = 6.41e-04; approx b(1-pi_ref)/((1-2p_hat)sqrt(K-1)) = 6.39e-04)
+    K=16  b=0.001  p_hat=0.3 pi_ref=0.0001: pi_X* = 0.99935 (1-pi_X* = 6.47e-04; approx b(1-pi_ref)/((1-2p_hat)sqrt(K-1)) = 6.45e-04)
+    K=64  b=0.04   p_hat=0.0 pi_ref=0.01  : pi_X* = 0.99452 (1-pi_X* = 5.48e-03; approx b(1-pi_ref)/((1-2p_hat)sqrt(K-1)) = 4.99e-03)
+    K=64  b=0.04   p_hat=0.0 pi_ref=0.0001: pi_X* = 0.99446 (1-pi_X* = 5.54e-03; approx b(1-pi_ref)/((1-2p_hat)sqrt(K-1)) = 5.04e-03)
+    K=64  b=0.04   p_hat=0.3 pi_ref=0.01  : pi_X* = 0.98398 (1-pi_X* = 1.60e-02; approx b(1-pi_ref)/((1-2p_hat)sqrt(K-1)) = 1.25e-02)
+    K=64  b=0.04   p_hat=0.3 pi_ref=0.0001: pi_X* = 0.98377 (1-pi_X* = 1.62e-02; approx b(1-pi_ref)/((1-2p_hat)sqrt(K-1)) = 1.26e-02)
+    K=64  b=0.001  p_hat=0.0 pi_ref=0.01  : pi_X* = 0.99987 (1-pi_X* = 1.25e-04; approx b(1-pi_ref)/((1-2p_hat)sqrt(K-1)) = 1.25e-04)
+    K=64  b=0.001  p_hat=0.0 pi_ref=0.0001: pi_X* = 0.99987 (1-pi_X* = 1.26e-04; approx b(1-pi_ref)/((1-2p_hat)sqrt(K-1)) = 1.26e-04)
+    K=64  b=0.001  p_hat=0.3 pi_ref=0.01  : pi_X* = 0.99969 (1-pi_X* = 3.14e-04; approx b(1-pi_ref)/((1-2p_hat)sqrt(K-1)) = 3.12e-04)
+    K=64  b=0.001  p_hat=0.3 pi_ref=0.0001: pi_X* = 0.99968 (1-pi_X* = 3.17e-04; approx b(1-pi_ref)/((1-2p_hat)sqrt(K-1)) = 3.15e-04)
+  [ok] stochastic GRPO+k3 (K=16, b=0.04, pi_ref=0.01): time-avg pi_X vs fixed point: predicted 0.989369, computed 0.98945
+  [ok] GRPO+k3 stationary point unique on [pi_ref,1) over K in {4,16,64}, b in {.04,.1,.5}, p_hat in {0,.3,.45}: number of grids without exactly one root: predicted 0, computed 0
+  Exact reverse-KL gradient instead of k3: (1-2p_hat) S_K(pi) = b pi(1-pi)(z - z_ref), solved stably:
+    K=16 b=0.04 pi_ref=0.01: fixed-point logit shift z*-z_ref = 96.8 nats (asymptote sqrt(K-1)/b = 97; summed-KL PPO tilt with gaps 1 and p_hat=0: 25)
+    K=64 b=0.04 pi_ref=0.01: fixed-point logit shift z*-z_ref = 198.4 nats (asymptote sqrt(K-1)/b = 198; summed-KL PPO tilt with gaps 1 and p_hat=0: 25)
+  Summed-KL PPO tilt (G5.4): shift (D+ + D-)(t* - p_hat)/b protects the output only if it is below -logit pi_ref:
+    b=0.02, pi_ref=0.01: needs (t*-p_hat) < b*4.6/2 = 0.046 (gaps 1)
+    b=0.02, pi_ref=0.0001: needs (t*-p_hat) < b*9.2/2 = 0.092 (gaps 1)
+    b=0.04, pi_ref=0.01: needs (t*-p_hat) < b*4.6/2 = 0.092 (gaps 1)
+    b=0.04, pi_ref=0.0001: needs (t*-p_hat) < b*9.2/2 = 0.184 (gaps 1)
+    b=0.1, pi_ref=0.01: needs (t*-p_hat) < b*4.6/2 = 0.230 (gaps 1)
+    b=0.1, pi_ref=0.0001: needs (t*-p_hat) < b*9.2/2 = 0.461 (gaps 1)
+
+V5. Per-generation leak: ledger version vs discovery-limited version (illustrative)
+  n w_F eps_F = 5000 frontier opportunities with a predictable error per generation; step 1e-3 nats
+  (i) ledger (Bayes/preconditioned/off-policy): 5.0 nats per generation; persona odds 1e6 last 2.76 generations
+  (ii) discovery-limited (plain on-policy PG on a shared factor whose logit starts at logit pi_ref^F):
+       generations to flip = (O_F - 1/O_F + 2 ln O_F)/c_gen, O_F = (1-pi_ref^F)/pi_ref^F
+       pi_ref^F=0.0001 : O_F=   9999.0, initial leak 5.00e-04 nats/gen, generations to flip    2003.5
+       pi_ref^F=0.001  : O_F=    999.0, initial leak 5.00e-03 nats/gen, generations to flip     202.6
+       pi_ref^F=0.01   : O_F=     99.0, initial leak 4.95e-02 nats/gen, generations to flip      21.6
+       pi_ref^F=0.1    : O_F=      9.0, initial leak 4.50e-01 nats/gen, generations to flip       2.7
+       pi_ref^F=0.3    : O_F=      2.3, initial leak 1.05e+00 nats/gen, generations to flip       0.7
+  [ok] discovery-limited time at pi_ref=1e-2: predicted 21.636, computed 21.636
+
+V6. Slop reproduction number with a shared/learnable channel
+  c_sl=1, f_pr=0.3, f_sh=0.0, r_op=0.0: Pi_gr = 0.00
+  c_sl=1, f_pr=0.3, f_sh=0.0, r_op=0.5: Pi_gr = 0.35
+  c_sl=1, f_pr=0.3, f_sh=0.0, r_op=1.0: Pi_gr = 0.70
+  c_sl=1, f_pr=0.3, f_sh=0.3, r_op=0.0: Pi_gr = 0.30
+  c_sl=1, f_pr=0.3, f_sh=0.3, r_op=0.5: Pi_gr = 0.50
+  c_sl=1, f_pr=0.3, f_sh=0.3, r_op=1.0: Pi_gr = 0.70
+  c_sl=1, f_pr=0.3, f_sh=0.6, r_op=0.0: Pi_gr = 0.60
+  c_sl=1, f_pr=0.3, f_sh=0.6, r_op=0.5: Pi_gr = 0.65
+  c_sl=1, f_pr=0.3, f_sh=0.6, r_op=1.0: Pi_gr = 0.70
+  [ok] Pi_gr at f_sh=0.3, r_op=0 (RL only): predicted 0.3, computed 0.3
+
+V7. G5.8 margin M(delta) and its two side conditions
+  delta_gamma=0.3: M(0)=2.490, delta_c=0.2165, M(1/2)=-3.260, Pi_c=0.9076
+  delta_gamma=3.0: M(0)=2.490, delta_c=0.9960, M(1/2)=+1.240, Pi_c=none (M(1/2)>0: saturated slop does not break the loop)
+  [ok] R7 delta_c: predicted 0.2165, computed 0.216522
+  per-grader total error in K8 ensembles with shared 0.03 and independent 0.1: 0.127
+
+TOTAL explicit checks: 34, mismatches: 0

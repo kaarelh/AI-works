@@ -1,0 +1,57 @@
+
+========================================================================
+E1. Protection bought by dK bits of prior: tilt (ln O) versus plain PG on mixture logits (O)
+========================================================================
+matched rates: eta = 2/beta, so both operators move L at the same speed at L = 0
+ratio n*_PG / n*_tilt = F(ln O) / (4 ln O)
+dK =   5 bits (ln O =   3.47 nats): ratio = 2.81;  tilt-equivalent protection = 9.73 nats instead of 3.47
+dK =  10 bits (ln O =   6.93 nats): ratio = 37.4;  tilt-equivalent protection = 259 nats instead of 6.93
+dK =  20 bits (ln O =  13.86 nats): ratio = 1.89e+04;  tilt-equivalent protection = 2.62e+05 nats instead of 13.86
+dK =  40 bits (ln O =  27.73 nats): ratio = 9.91e+09;  tilt-equivalent protection = 2.75e+11 nats instead of 27.73
+P1 of train_sim, eta = 0.25, Dr = 0.0145: dK = 10 bits -> n*_PG = 1.43e+05, n*_tilt(beta = 2/eta) = 3.82e+03 episodes
+P1 of train_sim, eta = 0.25, Dr = 0.0145: dK = 20 bits -> n*_PG = 1.45e+08, n*_tilt(beta = 2/eta) = 7.65e+03 episodes
+
+========================================================================
+E2. Drift tolerated by one generation of n = 1e6 episodes, tilt reading: D <= dK ln2 / n
+========================================================================
+cap dK =    20 bits: D <= 1.39e-05 nats/episode
+cap dK =    40 bits: D <= 2.77e-05 nats/episode
+cap dK =   100 bits: D <= 6.93e-05 nats/episode
+cap dK =  1000 bits: D <= 6.93e-04 nats/episode
+strict P1 with l(R) = 20..40 bits gives 1.4e-5..2.8e-5; Delta_w(G) = 1000 bits would give 7e-4
+
+========================================================================
+E3. T3.9 failure budget: required bits if an off-task generation is repaired with probability p_rep
+========================================================================
+K=30, delta=0.01, repair prob p_rep=0.00: need log2(K(1-p_rep)/delta) = 11.55 bits; tolerable off-tolerance conditional mass = 3.33e-04 (acceptable mass >= 99.967%)
+K=30, delta=0.01, repair prob p_rep=0.50: need log2(K(1-p_rep)/delta) = 10.55 bits; tolerable off-tolerance conditional mass = 6.66e-04 (acceptable mass >= 99.933%)
+K=30, delta=0.01, repair prob p_rep=0.90: need log2(K(1-p_rep)/delta) =  8.23 bits; tolerable off-tolerance conditional mass = 3.32e-03 (acceptable mass >= 99.668%)
+K=30, delta=0.01, repair prob p_rep=0.99: need log2(K(1-p_rep)/delta) =  4.91 bits; tolerable off-tolerance conditional mass = 3.23e-02 (acceptable mass >= 96.774%)
+
+========================================================================
+E4. Self-written data: required nu_I/nu_R if pointer length is e_sal * (-log2 share)
+========================================================================
+P2 is e_sal = 1 (Shannon code); e_sal is a stand-in for any other monotone salience code
+e_sal = 0.5: fixed point dK = e_sal log2(nu_I/nu_R); need nu_I/nu_R >= (K/delta)^(1/e_sal) = 9,000,000
+e_sal = 1.0: fixed point dK = e_sal log2(nu_I/nu_R); need nu_I/nu_R >= (K/delta)^(1/e_sal) = 3,000
+e_sal = 2.0: fixed point dK = e_sal log2(nu_I/nu_R); need nu_I/nu_R >= (K/delta)^(1/e_sal) = 55
+e_sal = 4.0: fixed point dK = e_sal log2(nu_I/nu_R); need nu_I/nu_R >= (K/delta)^(1/e_sal) = 7
+
+========================================================================
+E5. T3.5 break-even gap g0: exponential versus power-law runtime (c_k = 10, o_R = 1%)
+========================================================================
+exponential t = 2^d (alpha = 1): g0 = 0.550
+power law t = d^1: g0 = 1.554
+power law t = d^2: g0 = 1.068
+power law t = d^4: g0 = 0.740
+the existence of a break-even is common to these models; its value is not
+
+========================================================================
+E6. T3.7 compile time n = b ln2 / (kappa_t log2(1 + o_C)): depends on kappa_t, o_C, b, not on alpha
+========================================================================
+kappa_t = 0.001, o_C = 0.01: b = 10 bits -> n = 482,851; b = 30 bits -> n = 1,448,554
+kappa_t = 0.001, o_C = 0.10: b = 10 bits -> n = 50,409; b = 30 bits -> n = 151,228
+kappa_t = 0.010, o_C = 0.01: b = 10 bits -> n = 48,285; b = 30 bits -> n = 144,855
+kappa_t = 0.010, o_C = 0.10: b = 10 bits -> n = 5,041; b = 30 bits -> n = 15,123
+kappa_t = 0.100, o_C = 0.01: b = 10 bits -> n = 4,829; b = 30 bits -> n = 14,486
+kappa_t = 0.100, o_C = 0.10: b = 10 bits -> n = 504; b = 30 bits -> n = 1,512

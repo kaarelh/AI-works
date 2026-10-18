@@ -1,0 +1,48 @@
+R1. Eval table (G3.2 / C2): catches per unit of traffic, and P(caught) at fixed traffic
+   pe=0.001: games on 0.998 of evals, 1.000 of deployment; catches per traffic item 9.98e-04; expected catches in 1e+04 items    10.0; P(at least one) 1.000; deployment gaming per catch  1001.4
+   pe=0.010: games on 0.865 of evals, 0.993 of deployment; catches per traffic item 8.65e-03; expected catches in 1e+04 items    86.5; P(at least one) 1.000; deployment gaming per catch   113.7
+   pe=0.050: games on 0.452 of evals, 0.890 of deployment; catches per traffic item 2.26e-02; expected catches in 1e+04 items   225.9; P(at least one) 1.000; deployment gaming per catch    37.4
+   pe=0.100: games on 0.250 of evals, 0.750 of deployment; catches per traffic item 2.50e-02; expected catches in 1e+04 items   249.9; P(at least one) 1.000; deployment gaming per catch    27.0
+   pe=0.300: games on 0.047 of evals, 0.372 of deployment; catches per traffic item 1.41e-02; expected catches in 1e+04 items   140.9; P(at least one) 1.000; deployment gaming per catch    18.5
+   pe=0.500: games on 0.011 of evals, 0.170 of deployment; catches per traffic item 5.32e-03; expected catches in 1e+04 items    53.2; P(at least one) 1.000; deployment gaming per catch    16.0
+   -> catches per traffic item are non-monotone in pe (peak near pe ~ 0.1); with fp = 0 a single catch is decisive, so the type is caught w.p. ~1 at every pe >= 0.01 here.
+
+R2. CUSUM with a fixed alternative vs a defector below the reference value (G3.4)
+   design alternative excess 1.0e-04/item; zero-drift excess (reference value) = 4.43e-05/item; Omega = 17.91
+   defector excess 1.0e-04/item (p_def = 0.0020): P(alarm within K=30 gens) = 1.00; mean unflagged defections before alarm or horizon = 875
+   defector excess 6.0e-05/item (p_def = 0.0012): P(alarm within K=30 gens) = 0.94; mean unflagged defections before alarm or horizon = 1537
+   defector excess 4.0e-05/item (p_def = 0.0008): P(alarm within K=30 gens) = 0.27; mean unflagged defections before alarm or horizon = 2030
+   defector excess 3.0e-05/item (p_def = 0.0006): P(alarm within K=30 gens) = 0.04; mean unflagged defections before alarm or horizon = 1700
+   defector excess 2.0e-05/item (p_def = 0.0004): P(alarm within K=30 gens) = 0.00; mean unflagged defections before alarm or horizon = 1140
+   -> below the reference value the CUSUM essentially never alarms; damage over the horizon is linear in K n_dep, not Omega/vis. Use a GLR / mixture CUSUM or a bank of references.
+
+R3. C3 fp = 1e-3 row: predicted delay vs horizon
+   delay = 37.0 generations > K = 30; total unflagged defections over the whole horizon = 5700 < the tabulated 7,029 'before alarm'
+   MC: P(alarm within 30 generations) = 0.34
+
+R4. G3.4a: a stable off-task lineage is not invisible to a raw disagreement statistic
+   disagreement rate (A,A) = 0.039; (X,X) = 0.320: differs although theta_k = theta_k+1. Zero evidence holds only for a change-point test whose baseline is the lineage's own history.
+
+R5. G3.7: false flags (T2.1') shift the deterrence condition
+   rollback prob on compliant work rho0 = 0.00: minimal tr*p_hon = 0.595 (draft, rho0 = 0: 0.595)
+   rollback prob on compliant work rho0 = 0.05: minimal tr*p_hon = 0.595 (draft, rho0 = 0: 0.595)
+   rollback prob on compliant work rho0 = 0.20: minimal tr*p_hon = 0.595 (draft, rho0 = 0: 0.595)
+   -> unchanged: rollbacks from false flags independent of defection multiply both payoffs by (1-rho0). False flags act on G3.7 only through p_hon (designer reluctance), not through t*_F as in T2.1'.
+
+R6. G3.8: base case matters. Trusted terminal auditor, and infinite-horizon multiplicity
+   o_col=0.2: G3.8 full trust (untrusted terminal) = True; with trusted terminal auditor of equal hit = True; infinite horizon: tr=1 is an equilibrium = True, tr=1-o_col is an equilibrium = False
+   o_col=0.5: G3.8 full trust (untrusted terminal) = False; with trusted terminal auditor of equal hit = True; infinite horizon: tr=1 is an equilibrium = True, tr=1-o_col is an equilibrium = True
+   o_col=0.9: G3.8 full trust (untrusted terminal) = False; with trusted terminal auditor of equal hit = True; infinite horizon: tr=1 is an equilibrium = True, tr=1-o_col is an equilibrium = True
+   trusted terminal auditor with hit 0.8: chain fully trusted iff a_r*hit_term*p_hon >= t* -> True
+   trusted terminal auditor with hit 0.3: chain fully trusted iff a_r*hit_term*p_hon >= t* -> False
+   trusted terminal auditor with hit 0.05: chain fully trusted iff a_r*hit_term*p_hon >= t* -> False
+
+R7. G3.9(3): non-stationary backward induction vs the closed-form k_x
+   o_dagger = 0.256, L_dagger = 1.07; closed-form k_x = 10; first undeterred generation under non-stationary backward induction (auditor's o at k+1) = 9
+   same with o_col at the auditee's index: first undeterred = 10
+   undeterred pattern (1 = deterred), auditor-indexed: 111111111000000000000000000000
+
+R8. G3.5 at small n*fp: the chi-square/Pinsker bound vs the exact fp = 0 case
+   fp=1e-05, n=1e+05: G3.5 guarantee    6.7 unflagged defections; exact fp=0 benchmark 5.3 (bound is loose when n*fp <~ 1)
+   fp=1e-06, n=1e+05: G3.5 guarantee    2.1 unflagged defections; exact fp=0 benchmark 5.3 (bound is loose when n*fp <~ 1)
+   fp=0e+00, n=1e+05: G3.5 guarantee    0.0 unflagged defections; exact fp=0 benchmark 5.3 (bound is loose when n*fp <~ 1)

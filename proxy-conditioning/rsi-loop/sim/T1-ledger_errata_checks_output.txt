@@ -1,0 +1,52 @@
+worked example: u0=0.01500 v0=0.00970 Lam=4.5951 q_dag=0.0829 L_dag=2.4034 n|D0|=12.177, per-generation sd Lam sqrt(n w) = 16.15
+
+E1. T1.7q with (B) noise: exact DP over the lattice (multinomial episode counts, n = 500)
+   L0 =  1.00: noise-free T1.7q 0.2689 | quenched with noise (DP) 0.4793 | annealed with noise (DP, L < -20 by gen 40) 0.9545
+CHECK E1 quenched DP vs R3 Monte Carlo, L0=1.00: reference 0.4794, computed 0.47927  -> OK
+CHECK E1 annealed DP vs R3 Monte Carlo, L0=1.00: reference 0.9529, computed 0.95448  -> OK
+   L0 =  2.00: noise-free T1.7q 0.1192 | quenched with noise (DP) 0.3571 | annealed with noise (DP, L < -20 by gen 40) 0.6832
+CHECK E1 quenched DP vs R3 Monte Carlo, L0=2.00: reference 0.3567, computed 0.35705  -> OK
+CHECK E1 annealed DP vs R3 Monte Carlo, L0=2.00: reference 0.6831, computed 0.683248  -> OK
+   L0 =  2.40: noise-free T1.7q 0.0832 | quenched with noise (DP) 0.3255 | annealed with noise (DP, L < -20 by gen 40) 0.5604
+CHECK E1 quenched DP vs R3 Monte Carlo, L0=2.40: reference 0.3253, computed 0.325511  -> OK
+CHECK E1 annealed DP vs R3 Monte Carlo, L0=2.40: reference 0.5578, computed 0.560379  -> OK
+   L0 =  3.00: noise-free T1.7q 0.0474 | quenched with noise (DP) 0.2913 | annealed with noise (DP, L < -20 by gen 40) 0.4278
+CHECK E1 quenched DP vs R3 Monte Carlo, L0=3.00: reference 0.2927, computed 0.291285  -> OK
+CHECK E1 annealed DP vs R3 Monte Carlo, L0=3.00: reference 0.4309, computed 0.427831  -> OK
+   L0 = 13.82: noise-free T1.7q 0.0000 | quenched with noise (DP) 0.1102 | annealed with noise (DP, L < -20 by gen 40) 0.1323
+CHECK E1 quenched DP vs R3 Monte Carlo, L0=13.82: reference 0.1113, computed 0.110199  -> OK
+CHECK E1 annealed DP vs R3 Monte Carlo, L0=13.82: reference 0.1308, computed 0.132341  -> OK
+   quenched < annealed at every L0: True
+   L0 = 3: quenched P(fail) accumulated by generations 0, 1, 2, 5, 39: 0.047, 0.215, 0.256, 0.285, 0.291
+
+E2. Step size, continued regime, n = 8000 g episodes per generation (n_ref = 2000 at g = 1/4), eps_h = 0.02 + 0.02 g
+   L_base =  4.0: P(fail) by number of generations N = 1/g: N=8: 0.412, N=64: 0.577, N=256: 0.696, N=1024: 0.743, N=4096: 0.756
+   L_base =  4.0: limit g -> 0 (check after every episode, eps_h = 0.02): ever-dip probability 0.758
+   L_base = 10.0: P(fail) by number of generations N = 1/g: N=8: 0.365, N=64: 0.461, N=256: 0.536, N=1024: 0.565, N=4096: 0.574
+   L_base = 10.0: limit g -> 0 (check after every episode, eps_h = 0.02): ever-dip probability 0.576
+
+E3. T1.9 in regime (ii), discriminating data channel (sim defaults: m = 100, rho = 0.1)
+   Xi = 8.109 nats, sd = 3.973 nats, q_u = 0.0361, z_K = 1.998 (K = 30)
+CHECK E3 closed-form threshold odds (reconciliation: 0.044): reference 0.044, computed 0.0443894  -> OK
+   mean-map threshold q_u/(1-q_u) e^Xi = 124.47; frozen threshold q_u/(1-q_u) = 0.0374
+   r = 0.032: per-generation P(band mass > q_u) = 0.0168; P(fail within 30) = 0.398 (binomial channel, band only)
+   r = 0.042: per-generation P(band mass > q_u) = 0.0271; P(fail within 30) = 0.561 (binomial channel, band only)
+   r = 0.044: per-generation P(band mass > q_u) = 0.0271; P(fail within 30) = 0.561 (binomial channel, band only)
+   r = 0.056: per-generation P(band mass > q_u) = 0.0271; P(fail within 30) = 0.561 (binomial channel, band only)
+   binomial version: P(fail within 30) crosses 1/2 at r = 0.0374 (a step of the discrete channel)
+
+E4. Realised (B) flip: the m-th exploited error, m = floor(ln O / Lam) + 1 (negative binomial)
+   sim P0, eps = 0.02, O = 1e+02: m = 2, median episode of the flip 84, mean 100; deterministic ln O/(eps Lam) = 50
+   sim P0, eps = 0.02, O = 1e+04: m = 3, median episode of the flip 134, mean 150; deterministic ln O/(eps Lam) = 100
+   sim P0, eps = 0.02, O = 1e+06: m = 4, median episode of the flip 184, mean 200; deterministic ln O/(eps Lam) = 150
+   T1 example, eps = 0.01, O = 1e+02: m = 2, median episode of the flip 168, mean 200; deterministic ln O/(eps Lam) = 100
+   T1 example, eps = 0.01, O = 1e+04: m = 3, median episode of the flip 268, mean 300; deterministic ln O/(eps Lam) = 200
+   T1 example, eps = 0.01, O = 1e+06: m = 4, median episode of the flip 367, mean 400; deterministic ln O/(eps Lam) = 301
+
+E5. T1.10s with small evidence per event, same event rates as the worked example (eta = 0.5, n = 500)
+   lambda = 4.595, L_b =  3.0: z =   1.34, Phi(-z) = 9.04e-02; simulated per-generation P(first dip below L_dag) = 6.47e-02 (99845 events)
+   lambda = 4.595, L_b = 10.0: z =   1.71, Phi(-z) = 4.33e-02; simulated per-generation P(first dip below L_dag) = 3.23e-02 (96189 events)
+   lambda = 0.500, L_b =  3.0: z =   1.60, Phi(-z) = 5.48e-02; simulated per-generation P(first dip below L_dag) = 4.07e-02 (98332 events)
+   lambda = 0.500, L_b = 10.0: z =   5.05, Phi(-z) = 2.21e-07; simulated per-generation P(first dip below L_dag) = 3.00e-07 (3 events)
+   lambda = 0.050, L_b =  3.0: z =   4.25, Phi(-z) = 1.09e-05; simulated per-generation P(first dip below L_dag) = 1.06e-05 (106 events)
+   lambda = 0.050, L_b = 10.0: z =  38.75, Phi(-z) = 0.00e+00; simulated per-generation P(first dip below L_dag) = 0.00e+00 (0 events)

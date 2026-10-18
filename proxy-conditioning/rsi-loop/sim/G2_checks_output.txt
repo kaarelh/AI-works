@@ -1,0 +1,150 @@
+==============================================================================
+S0. Worked-example constants
+Lambda=4.5951 u0=0.015 v=0.0097 audit margin M0=ln(u0 lam-/(v lam+))=0.4359
+bank function B(M0)=M0-1+exp(-M0)=0.0826; small-M approx M0^2/2=0.0950
+==============================================================================
+S1. Additive law: each caught event lowers non-recognition m=1-s by varpi_A.
+    Claim: total caught events = ceil(m0/varpi_A), independent of the audit rate.
+  audit-opportunity rate a h=0.003 : caught total mean=10.000 (sd 0.000); mean episodes to exhaust=    19712, harmonic formula=    19526
+  audit-opportunity rate a h=0.03  : caught total mean=10.000 (sd 0.000); mean episodes to exhaust=     1960, harmonic formula=     1953
+  audit-opportunity rate a h=0.3   : caught total mean=10.000 (sd 0.000); mean episodes to exhaust=      196, harmonic formula=      195
+  prediction m0/varpi_A = 10.0
+==============================================================================
+S2. Multiplicative law (gradient on a recognition logit): each caught event
+    multiplies m by exp(-varpi).  Mean field: N_c(n)=ln(1+varpi u0 n)/varpi;
+    ledger L(n)-L0 = (lam-/varpi) ln(1+varpi u0 n) - lam+ v n;
+    turn at n_turn=(e^M0-1)/(varpi u0); max bank=(lam-/varpi) B(M0).
+  varpi=0.01 : n_turn formula=  3642.6, mean-field argmax=  3657; max bank formula= 37.952, mean-field max= 37.951, MC max of E[L]= 38.036 at n=3657
+        E[N_c] at n~n_turn: MC=  43.73, mean field=  43.73, ln(e^M0)/varpi=  43.59
+        n=  556: E[L]-L0 MC=   11.88, formula=   12.03; no-learning n(u0-v)Lambda=   13.54
+        n= 5009: E[L]-L0 MC=   33.98, formula=   34.24; no-learning n(u0-v)Lambda=  121.99
+  varpi=0.1  : n_turn formula=   364.3, mean-field argmax=   362; max bank formula=  3.795, mean-field max=  3.795, MC max of E[L]=  4.523 at n=404
+        E[N_c] at n~n_turn: MC=   4.55, mean field=   4.47, ln(e^M0)/varpi=   4.36
+        n=  502: E[L]-L0 MC=    4.24, formula=    3.42; no-learning n(u0-v)Lambda=   12.23
+  varpi=1.0  : n_turn formula=    36.4, mean-field argmax=    36; max bank formula=  0.380, mean-field max=  0.379, MC max of E[L]=  0.493 at n=51
+        E[N_c] at n~n_turn: MC=   0.45, mean field=   0.43, ln(e^M0)/varpi=   0.44
+        n=  502: E[L]-L0 MC=  -11.58, formula=  -12.53; no-learning n(u0-v)Lambda=   12.23
+  Persistence with decaying rewarded rate v(n)=c/(n+n0), n0=100, varpi=0.1:
+  restoring persists (L->+inf) iff c*lam+ < lam-/varpi (here c < 10).
+    c=  2.0: L at n=1e3,1e5,1e7,1e9 =    20.07,   167.06,   336.05,   505.34
+    c=  8.0: L at n=1e3,1e5,1e7,1e9 =   -46.04,   -23.42,    18.63,    60.95
+    c= 12.0: L at n=1e3,1e5,1e7,1e9 =   -90.12,  -150.41,  -192.98,  -235.30
+    c= 30.0: L at n=1e3,1e5,1e7,1e9 =  -288.45,  -721.85, -1145.24, -1568.47
+==============================================================================
+S3. Bayes clock: ledger moves at the counterfactual rate, the gamer learns only
+    on its own realised events (share q=sigmoid(-L)).  Claim: selection wins
+    forever iff (varpi/lam-) ln(1+e^{-L0}) < B(M0).
+  varpi=0.1: analytic critical L0 =  -3.772
+     L0= -4.072: L at end of run =    -30.00
+     L0= -3.472: L at end of run =  10856.83
+  varpi=1.0: analytic critical L0 =   0.773
+     L0=  0.473: L at end of run =    -30.00
+     L0=  1.073: L at end of run =  19650.93
+  varpi=3.0: analytic critical L0 =   2.004
+     L0=  1.704: L at end of run =    -30.00
+     L0=  2.304: L at end of run =  20741.15
+==============================================================================
+S4. Gradient model in one network: gaming logits theta (real inputs) and
+    theta-psi (audit inputs); expected REINFORCE with step sizes c0, c1.
+    Claim (small-pi limit): max bank in -theta = (c0/c1) B(M0), M0=ln(ah e^{-psi0} Dm/(v Dp)).
+  theta0= -6.0 c0/c1=1.0/1.0: max bank=   0.084 (pred   0.083); gaming prob on real at n=4e6: 0.9999
+  theta0= -6.0 c0/c1=1.0/0.25: max bank=   0.334 (pred   0.330); gaming prob on real at n=4e6: 0.9998
+  theta0= -6.0 c0/c1=1.0/0.0: max bank=   3.981 (pred     inf); gaming prob on real at n=4e6: 0.0000
+  theta0= -2.0 c0/c1=1.0/1.0: max bank=   0.139 (pred   0.083); gaming prob on real at n=4e6: 0.9999
+  theta0= -2.0 c0/c1=1.0/0.25: max bank=   0.503 (pred   0.330); gaming prob on real at n=4e6: 0.9998
+  theta0= -2.0 c0/c1=1.0/0.0: max bank=   7.962 (pred     inf); gaming prob on real at n=4e6: 0.0000
+  theta0=  0.0 c0/c1=1.0/1.0: max bank=   0.475 (pred   0.083); gaming prob on real at n=4e6: 0.9999
+  theta0=  0.0 c0/c1=1.0/0.25: max bank=   1.182 (pred   0.330); gaming prob on real at n=4e6: 0.9998
+  theta0=  0.0 c0/c1=1.0/0.0: max bank=   9.962 (pred     inf); gaming prob on real at n=4e6: 0.0000
+==============================================================================
+S5. ROC version: logistic gaming policy sigma(th0 - th1 z) on a binormal feature
+    (real z~N(0,1), synthetic audits z~N(d',1)); a fraction c_r of audits are
+    perturbed real episodes (z~N(0,1)).  Expected policy gradient, Dp=Dm=1.
+  d'=1.9 (AUC 0.91), c_r=0.0: learned-policy drift 0.00435 per episode, best-responder D* 0.00436; c_r*ah/v=0.00
+     (step, th0, th1, P(game | real)): (0,-1.16,0.45,0.248); (40000,6.52,18.79,0.635); (80000,7.84,22.40,0.636); (120000,8.71,24.82,0.637); (160000,9.38,26.69,0.637); (199999,9.94,28.23,0.637)
+  d'=1.9 (AUC 0.91), c_r=0.5: learned-policy drift -0.00000 per episode, best-responder D* 0.00000; c_r*ah/v=1.55
+     (step, th0, th1, P(game | real)): (0,-1.16,0.22,0.241); (40000,-9.84,0.76,0.000); (80000,-10.54,0.76,0.000); (120000,-10.94,0.76,0.000); (160000,-11.23,0.76,0.000); (199999,-11.45,0.76,0.000)
+  d'=1.9 (AUC 0.91), c_r=0.2: learned-policy drift 0.00115 per episode, best-responder D* 0.00116; c_r*ah/v=0.62
+     (step, th0, th1, P(game | real)): (0,-1.16,0.36,0.245); (40000,-0.73,15.43,0.481); (80000,-0.80,18.41,0.483); (120000,-0.85,20.40,0.483); (160000,-0.89,21.93,0.484); (199999,-0.93,23.20,0.484)
+  Learnable separation: d' grows by varpi_d per caught event, best responder.
+  caught rate = ah*Phi(-d'/2 - M/d'), M=ln(ah lam-/(v lam+)); total caught grows ~ sqrt(log n).
+   varpi_d=0.0: N_c at n=1e3..1e8:      1.5,     15.5,    154.9,   1549.5,  15494.7, 154946.8
+   varpi_d=0.05: N_c at n=1e3..1e8:      1.6,     18.8,     69.4,    105.8,    133.0,    155.7
+   varpi_d=0.2: N_c at n=1e3..1e8:      1.8,     12.5,     23.2,     30.7,     36.8,     42.0
+==============================================================================
+S6. Concealment vs selection (gradient form).  Gaming prob p=sigmoid(-L);
+    given gaming, conceal w.p. c=sigmoid(H).  Detection det=tpr(1-c)+tpr_c c.
+    dL/dn = w p(1-p)(lp+lm)(det-t*),  dH/dn = w p varpi_T (tpr-tpr_c) c(1-c).
+    Closed form (small p, small c_init): takeover after N_b=1/(varpi_T (tpr-tpr_c) c_init)
+    gaming events; horizon n_b=(e^{B_T}-1)/(k w q0), B_T=k N_b, k=(lp+lm)(tpr-t*).
+  tpr=0.6 tpr_c=0.1 varpi_T=1.0 c_init=0.01: B_T= 280.00; n_b formula ~ e^280 (beyond any run)
+  tpr=0.6 tpr_c=0.1 varpi_T=10.0 c_init=0.01 L0=0.0: B_T=  28.00 nats, n_b formula= 4.132e+13, ODE turn= 2.272e+13, L-L0 at turn= 27.19
+  tpr=0.6 tpr_c=0.1 varpi_T=20.0 c_init=0.01 L0=0.0: B_T=  14.00 nats, n_b formula= 3.436e+07, ODE turn= 1.305e+07, L-L0 at turn= 13.10
+  tpr=0.6 tpr_c=0.1 varpi_T=40.0 c_init=0.01 L0=0.0: B_T=   7.00 nats, n_b formula= 3.130e+04, ODE turn= 9.346e+03, L-L0 at turn=  6.05
+  tpr=0.6 tpr_c=0.1 varpi_T=40.0 c_init=0.01 L0=4.0: B_T=   7.00 nats, n_b formula= 8.702e+05, ODE turn= 1.331e+06, L-L0 at turn=  7.03
+  tpr=0.6 tpr_c=0.1 varpi_T=20.0 c_init=0.01 L0=4.0: B_T=  14.00 nats, n_b formula= 9.552e+08, ODE turn= 1.902e+09, L-L0 at turn= 14.08
+  tpr=0.6 tpr_c=0.1 varpi_T=40.0 c_init=0.001: B_T=  70.00; n_b formula ~ e^70 (beyond any run)
+  tpr=0.6 tpr_c=0.3 varpi_T=40.0 c_init=0.01 L0=0.0: B_T=  11.67 nats, n_b formula= 3.332e+06, ODE turn=       inf, L-L0 at turn= 29.94
+  If tpr_c >= t* the takeover never reverses the drift: check tpr_c=0.3 > t*=0.25:
+    L at n=1e3,1e5,1e7,1e9: 4.11, 8.82, 12.19, 16.16; c at end: 0.996
+  KL-anchored optimum (T1 operator (D) at its fixed point): honest iff for the concealed
+  strategy  lam+(1-tpr_c) - lam- tpr_c <= K_c ln2  (nats, reward/beta units).
+  Example in reward/beta units lam+=5, lam-=15 (t*=0.25), fixed-reference KL:
+    K_c= 2 bits: honest iff tpr_c >= 0.181
+    K_c= 5 bits: honest iff tpr_c >= 0.077
+    K_c=10 bits: honest iff tpr_c >= 0.000
+    and with the KL coefficient doubled (lam+=2.5, lam-=7.5):
+    K_c= 2 bits: honest iff tpr_c >= 0.111
+    K_c= 5 bits: honest iff tpr_c >= 0.000
+==============================================================================
+S7. Discovery.  Exploit j has complexity K_j bits and opportunity rate eps_j;
+    the policy tries it w.p. 2^-(K_j - S) per opportunity (S = search bits).
+    Claim: exploited rate eps_eff(N,S) ~ eps_bit * (S + log2(N eps_j)) (one exploit per bit).
+  S= 0: N=1e+03: exact   0.85e-3 approx   0.00e-3 | N=1e+05: exact   6.98e-3 approx   6.64e-3 | N=1e+07: exact  13.62e-3 approx  13.29e-3
+  S= 5: N=1e+03: exact   4.02e-3 approx   5.00e-3 | N=1e+05: exact  11.98e-3 approx  11.64e-3 | N=1e+07: exact  18.62e-3 approx  18.29e-3
+  S=10: N=1e+03: exact   7.18e-3 approx  10.00e-3 | N=1e+05: exact  16.98e-3 approx  16.64e-3 | N=1e+07: exact  23.62e-3 approx  23.29e-3
+==============================================================================
+S8. Rotation: N_gen audit families, each audit drawn uniformly; a caught event on
+    family i lowers m_i by varpi_A and m_j (j!=i) by sigma_tr*varpi_A.
+    Claim: total caught -> (m0/varpi_A) N_gen/(1+(N_gen-1) sigma_tr).
+  N_gen= 1 sigma_tr=0.00: mean total caught=  10.00, prediction=  10.00
+  N_gen= 1 sigma_tr=0.25: mean total caught=  10.00, prediction=  10.00
+  N_gen= 1 sigma_tr=1.00: mean total caught=  10.00, prediction=  10.00
+  N_gen= 4 sigma_tr=0.00: mean total caught=  40.00, prediction=  40.00
+  N_gen= 4 sigma_tr=0.25: mean total caught=  24.51, prediction=  22.86
+  N_gen= 4 sigma_tr=1.00: mean total caught=  10.00, prediction=  10.00
+  N_gen=16 sigma_tr=0.00: mean total caught= 160.00, prediction= 160.00
+  N_gen=16 sigma_tr=0.25: mean total caught=  37.03, prediction=  33.68
+  N_gen=16 sigma_tr=1.00: mean total caught=  10.00, prediction=  10.00
+  Fluid-limit check (varpi_A=0.005, 100 events per family):
+    N_gen=4 sigma_tr=0.25: mean=230.4, prediction=228.6
+    N_gen=16 sigma_tr=0.25: mean=343.7, prediction=336.8
+  Held-out diagnostic: ln(caught rate on held-out family / on trained family)
+  = (1-sigma_tr) R  under the multiplicative law; e.g. R=2 nats, sigma_tr=0.25 -> 1.5.
+==============================================================================
+S9. Loop map with learning.  Fresh audit generators each generation.
+    R0_{k+1} = R_gap + (sig_w - iota) ln(1 + varpi a h n e^{-R0_k})  (arms race)
+    L_{k+1}  = L_k + (lam/varpi) ln(1+varpi a h n e^{-R0_k}) - lam v n + gamma - kL g
+  no learning (T1)                : R0*=0.693; L_k for k=1..10:    15.2,    27.4,    39.5,    51.7,    63.9,    76.1,    88.2,   100.4,   112.6,   124.8
+  learning, no realism transfer   : R0*=0.843; L_k for k=1..10:     6.4,     6.7,     7.4,     8.0,     8.6,     9.2,     9.8,    10.4,    11.0,    11.6
+  learning, iota = sigma_w        : R0*=0.693; L_k for k=1..10:     6.4,     9.9,    13.3,    16.7,    20.1,    23.6,    27.0,    30.4,    33.9,    37.3
+  learning, v/10 (verifiable)     : R0*=0.693; L_k for k=1..10:    26.5,    50.0,    73.5,    96.9,   120.4,   143.9,   167.4,   190.9,   214.4,   237.9
+  varpi=1, v/10                   : R0*=0.693; L_k for k=1..10:    10.6,    18.2,    25.8,    33.4,    41.0,    48.6,    56.2,    63.8,    71.4,    79.1
+  varpi=1, v/100                  : R0*=0.693; L_k for k=1..10:    12.6,    22.2,    31.8,    41.4,    51.1,    60.7,    70.3,    79.9,    89.5,    99.1
+  Learning loop inequality (per generation): (lam-/varpi) ln(1+varpi u0 n) + gamma >
+  lam+ v n + kL g.  For n=500, u0=0.015, varpi=0.1 the audit term is 25.7 nats;
+  break-even v = 25.7/(500*4.6) = 0.0112; at varpi=1: audit term 6.4, v* = 0.0028.
+   varpi= 0.01: n=   500: audit term=   33.23 nats; break-even v*=1.45e-02 (no learning: v*=u0=0.015)
+   varpi= 0.01: n=  5000: audit term=  257.15 nats; break-even v*=1.12e-02 (no learning: v*=u0=0.015)
+   varpi= 0.01: n= 50000: audit term=  983.39 nats; break-even v*=4.28e-03 (no learning: v*=u0=0.015)
+   varpi=  0.1: n=   500: audit term=   25.72 nats; break-even v*=1.12e-02 (no learning: v*=u0=0.015)
+   varpi=  0.1: n=  5000: audit term=   98.34 nats; break-even v*=4.28e-03 (no learning: v*=u0=0.015)
+   varpi=  0.1: n= 50000: audit term=  199.00 nats; break-even v*=8.66e-04 (no learning: v*=u0=0.015)
+   varpi=  1.0: n=   500: audit term=    9.83 nats; break-even v*=4.28e-03 (no learning: v*=u0=0.015)
+   varpi=  1.0: n=  5000: audit term=   19.90 nats; break-even v*=8.66e-04 (no learning: v*=u0=0.015)
+   varpi=  1.0: n= 50000: audit term=   30.43 nats; break-even v*=1.32e-04 (no learning: v*=u0=0.015)
+==============================================================================
+S10. Doubling the audit rate versus halving the rewarded rate (varpi=0.1).
+  n=   500: doubling audits adds   16.39 nats (limit (lam/varpi) ln2 = 31.85); halving v adds    11.14; without learning doubling audits adds    34.46
+  n=  5000: doubling audits adds   29.07 nats (limit (lam/varpi) ln2 = 31.85); halving v adds   111.43; without learning doubling audits adds   344.63
+  n= 50000: doubling audits adds   31.55 nats (limit (lam/varpi) ln2 = 31.85); halving v adds  1114.32; without learning doubling audits adds  3446.34

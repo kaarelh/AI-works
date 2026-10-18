@@ -1,0 +1,185 @@
+==============================================================================
+H1. Drift of the overseer-simulator S against the honest reporter H with an
+    internals check in the reward (G4.4).  Per disagreement question:
+    D_S = (lam+ + lam-) (t* - tpr + (1-t*) fpr_D).  Brute force from rewards.
+  lam+=0.05 lam-=0.15 t*=0.250  w_Delta=0.005000000000000001  n=100000
+  no check                                 tpr=0.00 fpr=0.00: D_S per Delta-question=+0.0500  per generation n w_D D_S=  +25.00 nats  (brute +0.0500)
+  [ok] formula = brute force (no check)
+  probe, plain lies                        tpr=0.90 fpr=0.05: D_S per Delta-question=-0.1225  per generation n w_D D_S=  -61.25 nats  (brute -0.1225)
+  [ok] formula = brute force (probe, plain lies)
+  probe, fpr on honest disagreement 0.3    tpr=0.90 fpr=0.30: D_S per Delta-question=-0.0850  per generation n w_D D_S=  -42.50 nats  (brute -0.0850)
+  [ok] formula = brute force (probe, fpr on honest disagreement 0.3)
+  weak probe                               tpr=0.30 fpr=0.05: D_S per Delta-question=-0.0025  per generation n w_D D_S=   -1.25 nats  (brute -0.0025)
+  [ok] formula = brute force (weak probe)
+  best reachable concealment               tpr=0.20 fpr=0.05: D_S per Delta-question=+0.0175  per generation n w_D D_S=   +8.75 nats  (brute +0.0175)
+  [ok] formula = brute force (best reachable concealment)
+  concealment, high fpr                    tpr=0.20 fpr=0.30: D_S per Delta-question=+0.0550  per generation n w_D D_S=  +27.50 nats  (brute +0.0550)
+  [ok] formula = brute force (concealment, high fpr)
+  belief capture H_o (probe fires at fpr_eq=0.01) vs H, fpr_D=0.05: per Delta-question +0.0555; per generation +27.75 nats (no check: +25.00)
+  [ok] H_o drift formula = brute force (fpr_D=0.05)
+  belief capture H_o (probe fires at fpr_eq=0.01) vs H, fpr_D=0.3: per Delta-question +0.0930; per generation +46.50 nats (no check: +25.00)
+  [ok] H_o drift formula = brute force (fpr_D=0.3)
+==============================================================================
+H2. Measurement use: evidence per disagreement question (G4.3).
+    E_S[LLR] = KL(Bern(tpr)||Bern(fpr)); E_H[-LLR] = KL(Bern(fpr)||Bern(tpr)).
+  tpr=0.90 fpr=0.05: KL(S||H)=2.376 nats/question, KL(H||S)=1.994; questions for ln(1e6)=13.8 nats against S:      5.8
+  tpr=0.60 fpr=0.05: KL(S||H)=1.145 nats/question, KL(H||S)=0.698; questions for ln(1e6)=13.8 nats against S:     12.1
+  tpr=0.20 fpr=0.05: KL(S||H)=0.140 nats/question, KL(H||S)=0.094; questions for ln(1e6)=13.8 nats against S:     98.8
+  tpr=0.90 fpr=0.30: KL(S||H)=0.794 nats/question, KL(H||S)=1.033; questions for ln(1e6)=13.8 nats against S:     17.4
+  tpr=0.06 fpr=0.05: KL(S||H)=0.001 nats/question, KL(H||S)=0.001; questions for ln(1e6)=13.8 nats against S:  13925.4
+  [ok] MC mean LLR under S matches KL (tpr .6, fpr .05)
+  Assumption 2 dropped: Delta membership unknown.  A share p_D of probed questions is in Delta;
+  the probe fires at fpr_eq on agreement questions.  Pooled KL <= p_D KL(tpr||fpr_D) (joint convexity).
+    tpr=0.9 fpr_D=0.05: pooled 0.0409 per probed question = 0.818 per Delta-question (known Delta 2.376; ratio 0.34)
+  [ok] pooled <= p_D KL (tpr 0.9, fpr 0.05)
+    tpr=0.2 fpr_D=0.05: pooled 0.0020 per probed question = 0.040 per Delta-question (known Delta 0.140; ratio 0.29)
+  [ok] pooled <= p_D KL (tpr 0.2, fpr 0.05)
+    tpr=0.9 fpr_D=0.3: pooled 0.0140 per probed question = 0.281 per Delta-question (known Delta 0.794; ratio 0.35)
+  [ok] pooled <= p_D KL (tpr 0.9, fpr 0.3)
+  Assumption 1 dropped: model-level correlation.  A share p_bl of H_sim instances is blind
+  (tpr 0.06 on all its questions), the rest has tpr 0.94 (mean 0.896).  Gate N=100, k=10.
+    p_bl=0.05: i.i.d. at the mean tpr -174.3 nats; with blind instances -3.02 nats; floor ln p_bl = -3.00
+  [ok] correlated gate effect >= ln p_bl + ln(P_blind/P_H) (p_bl=0.05)
+    p_bl=0.01: i.i.d. at the mean tpr -174.3 nats; with blind instances -4.63 nats; floor ln p_bl = -4.61
+  [ok] correlated gate effect >= ln p_bl + ln(P_blind/P_H) (p_bl=0.01)
+==============================================================================
+H3. Gate (measurement used only to accept or reject a trained model).
+    Posterior odds of type theta vs H after the gate are multiplied by
+    P_theta(pass)/P_H(pass) <= 1/P_H(pass).  Gate: pass iff fires <= k of N.
+  N=100 disagreement questions, threshold k=10, honest fpr=0.05: P_H(pass)=0.9885; max odds gain for any type = 1/P_H = 1.0116 (0.0115 nats)
+  S, no concealment (tpr .9)      : P(pass)=6.110e-78; log odds change vs H = -177.780 nats
+  concealer tpr_c .2              : P(pass)=5.696e-03; log odds change vs H =   -5.156 nats
+  concealer tpr_c .1              : P(pass)=5.832e-01; log odds change vs H =   -0.528 nats
+  perfect concealer tpr_c = fpr   : P(pass)=9.885e-01; log odds change vs H =   +0.000 nats
+    S, no concealment (tpr .9): Chernoff -N KL(k/N||tpr) = -175.78; G4.3 scale -N KL(tpr||fpr_D) = -237.62
+    concealer tpr_c .2: Chernoff -N KL(k/N||tpr) = -3.67; G4.3 scale -N KL(tpr||fpr_D) = -13.98
+  Output-level filtering: every firing output is discarded and the rest feeds gradients or data.
+  Each disagreement output is its own gate: bound n w_D ln(1/(1-fpr_D)) per generation.
+    fpr_D=0.05: 0.0513 nats per disagreement output; 25.6 nats per generation (one lineage gate: 0.0115)
+    fpr_D=0.3: 0.3567 nats per disagreement output; 178.3 nats per generation (one lineage gate: 13.3737)
+    accepted share H: MC 0.9701  formula 0.9683
+    accepted share S: MC 0.0000  formula 0.0000
+    accepted share Cc: MC 0.0299  formula 0.0317
+  [ok] retry-until-pass = posterior conditioned on pass
+  Training use, same detector, G2.6 constants (lam+=1, lam-=3, tpr .6, tpr_c .1, w .05, q0 .018):
+    varpi_T=  20, run n=1e+06: selection beats concealment learning iff K_c > 5.67 bits (needed bank 7.14 nats)
+    varpi_T=  20, run n=1e+08: selection beats concealment learning iff K_c > 6.39 bits (needed bank 11.74 nats)
+    varpi_T=  40, run n=1e+06: selection beats concealment learning iff K_c > 6.67 bits (needed bank 7.14 nats)
+    varpi_T=  40, run n=1e+08: selection beats concealment learning iff K_c > 7.39 bits (needed bank 11.74 nats)
+==============================================================================
+H4. Confession channel, incentive compatibility for G (G4.7).
+    Confess iff v_c + d_J - 1 >= c_m v_c (1 - d_J).  Brute force from payoffs.
+  [ok] confess-minus-deny payoff = (v_c+d_J-1) - c_m v_c (1-d_J) on a grid
+  largest main-channel penalty c_m that keeps confessing IC:
+    v_c=0.90: d_J=0, .05, .2, .5 ->   none    none    0.139   0.889
+    v_c=0.95: d_J=0, .05, .2, .5 ->   none    0.000   0.197   0.947
+    v_c=0.99: d_J=0, .05, .2, .5 ->   none    0.043   0.240   0.990
+    v_c=1.00: d_J=0, .05, .2, .5 ->   0.000   0.053   0.250   1.000
+  audit of the confession channel at rate a_c: effective d_J' = d_J + a_c (1-d_J).
+    v_c=0.9: with d_J=0 need a_c >= 1-v_c = 0.100
+    v_c=0.99: with d_J=0 need a_c >= 1-v_c = 0.010
+    v_c=0.999: with d_J=0 need a_c >= 1-v_c = 0.001
+  Correlated detection: a judge that finds the gaming also accepts a true confession,
+  acceptance a + (1-a) d.  Confess-minus-deny (c_m=0) = a(1-d) - (1-2d).
+    v_c=0.9: audit threshold (1-a)/(2-a) = 0.0909 (independent detection: 0.100)
+    v_c=0.95: audit threshold (1-a)/(2-a) = 0.0476 (independent detection: 0.050)
+    v_c=0.99: audit threshold (1-a)/(2-a) = 0.0099 (independent detection: 0.010)
+  [ok] correlated confess-minus-deny = a(1-d) - (1-2d)
+==============================================================================
+H5. Confession channel for a careful gamer with stake Omega on exposure (G4.8).
+    Same algebra with c_m -> Omega: confess iff d_J' >= threshold.
+  v_c=0.95, Omega=   0.1: confesses only if d_J' >= 0.1324
+  v_c=0.95, Omega=   1.0: confesses only if d_J' >= 0.5128
+  v_c=0.95, Omega=  10.0: confesses only if d_J' >= 0.9095
+  v_c=0.95, Omega= 100.0: confesses only if d_J' >= 0.9901
+  [ok] threshold -> 1 as Omega -> inf (v_c=0.95)
+  v_c=0.99, Omega=   0.1: confesses only if d_J' >= 0.0992
+  v_c=0.99, Omega=   1.0: confesses only if d_J' >= 0.5025
+  v_c=0.99, Omega=  10.0: confesses only if d_J' >= 0.9092
+  v_c=0.99, Omega= 100.0: confesses only if d_J' >= 0.9901
+  [ok] threshold -> 1 as Omega -> inf (v_c=0.99)
+==============================================================================
+H6. Frontier-slice leak with confessions plus class patching (G4.9).
+  J=50 classes, sum eps_F=0.050, w_F=0.1, v_c=0.9, latency 1000 episodes, lam+=0.05
+  bound on total leak: lam+ (J/v_c + T_pat w_F sum eps) = 3.03 nats; without confessions: 25.0 nats per generation of n=100000
+  (expected leak equals the bound when the generation is long enough; P(class unpatched by n) ~ exp(-n w_F eps_j v_c) = 1.2e-04)
+  simulated mean total leak 3.03 nats (bound 3.03)
+  [ok] simulated leak matches bound (expectation)
+  Mixed population: a share cr of gaming events is confessed.  Finite-n simulation: per class,
+  Poisson arrivals, each accepted w.p. v_c cr, patch T_pat later, generation of n episodes.
+  Capped bound: sum_j min(1/(v_c cr) + w_F eps_j T_pat, n w_F eps_j).
+    cr=1.00: uncapped 3.03, capped bound 3.03, finite-n simulation 3.03 nats (no confessions 25.0)
+  [ok] simulation <= capped bound (cr=1.0)
+    cr=0.43: uncapped 6.71, capped bound 6.71, finite-n simulation 6.76 nats (no confessions 25.0)
+  [ok] simulation <= capped bound (cr=0.43)
+    cr=0.10: uncapped 28.03, capped bound 25.00, finite-n simulation 17.57 nats (no confessions 25.0)
+  [ok] simulation <= capped bound (cr=0.1)
+==============================================================================
+H7. Two channels, four personas (G4.10): main channel trained on a weak RM
+    that pays for gaming; walled-off confession channel rewarded for accuracy.
+    Selection (D): log-weight_theta += lam_main J_main + lam_conf J_conf per episode.
+  v_c=0.95, d_J=0.3:  episodes   P(game)  P(confess | game)
+                     0   0.0700   0.4286
+                  1000   0.3728   0.5835
+                  2000   0.8375   0.7236
+                  4000   0.9979   0.9014
+  v_c=0.99, d_J=0.02:  episodes   P(game)  P(confess | game)
+                     0   0.0700   0.4286
+                  4000   0.9993   0.4532
+                 40000   1.0000   0.6709
+  [ok] illustrative: confession share among gamers rises while gaming rises
+  [ok] calibrated (same weak judge): confession share still below 0.7 after 40000 episodes
+  v_c=0.95 d_J=0.3: drift Gc vs A = +0.002375; drift Gd vs Gc = -lam_conf w (v_c+d_J-1) = -0.000625 per episode
+  v_c=0.99 d_J=0.02: drift Gc vs A = +0.002475; drift Gd vs Gc = -lam_conf w (v_c+d_J-1) = -0.000025 per episode
+  v_c=0.95 d_J=0.0: drift Gc vs A = +0.002375; drift Gd vs Gc = -lam_conf w (v_c+d_J-1) = +0.000125 per episode
+  Wall leak: confessors game at relative rate rg.  Gc games on rg w episodes (confession accepted
+  w.p. v_c) and complies, confessing truthfully, on (1-rg) w; Gd games on all w, denial rejected w.p. d_J.
+    v_c=0.95 d_J=0.3: break-even rg* = (1-d_J)/v_c = 0.7368;  rg=1.0: -0.000625  rg=0.9: -0.000388  rg=0.75: -0.000031  rg=0.7: +0.000088
+  [ok] wall-leak formula = brute force (v_c=0.95, d_J=0.3)
+  [ok] drift vanishes at rg* (v_c=0.95, d_J=0.3)
+    v_c=0.99 d_J=0.02: break-even rg* = (1-d_J)/v_c = 0.9899;  rg=1.0: -0.000025  rg=0.9: +0.000223  rg=0.75: +0.000594  rg=0.7: +0.000718
+  [ok] wall-leak formula = brute force (v_c=0.99, d_J=0.02)
+  [ok] drift vanishes at rg* (v_c=0.99, d_J=0.02)
+==============================================================================
+H8. From honesty to intent: effective off-task builder mass (G4.11) and
+    transfer of honesty training to intent (G4.12).
+  confessions acted on=0, frontier confession acceptance v_c=0.95: q_eff = 0.1000 (raw off-task mass 0.10)
+  confessions acted on=0, frontier confession acceptance v_c=0.5: q_eff = 0.1000 (raw off-task mass 0.10)
+  confessions acted on=1, frontier confession acceptance v_c=0.95: q_eff = 0.0715 (raw off-task mass 0.10)
+  confessions acted on=1, frontier confession acceptance v_c=0.5: q_eff = 0.0850 (raw off-task mass 0.10)
+  after honesty training removes Gd: A 0.9375, Gc 0.0312, Cs 0.0312
+  Tr(intent <- training-visible honesty) = P(A|h=1)-P(A|h=0) = 0.9375 - 0.0000 = 0.9375
+  [ok] removing Gd raises intent mass to P(A | h=1)
+  share of off-intent mass that is visibly dishonest in training h_vis = 0.400; intent log-odds gain = 0.5108 nats; cap -ln(1-h_vis) = 0.5108
+  [ok] gain equals cap when all visible dishonesty is removed
+  Discarding confessed outputs from the data: per gamed output, the retained data's Gd:Gc
+  likelihood ratio moves by ln(1/(1 - v_c p_act)).
+    v_c=0.95 p_act=1.0: 2.996 nats per gamed output toward deniers
+    v_c=0.95 p_act=0.5: 0.644 nats per gamed output toward deniers
+    v_c=0.5 p_act=1.0: 0.693 nats per gamed output toward deniers
+==============================================================================
+H9. Honesty basin (G4.13, conjecture): honest red-teaming keeps the cheapest
+    unhardened concealment K_c bits deep; G2.6's bank B_T grows like 2^K_c.
+    Map: K_{k+1} = K_k + rt (1 - q_k) - nr;  q_k = 0 if B_T(K_k) > need, else q rises.
+  threshold K* = 6.67 bits (n=1e6, varpi_T=40)
+  rt=3.0 nr=2.0 K0=8.0: first generation with concealment winning = None; K after 15 gens = 22.0
+  rt=2.0 nr=3.0 K0=12.0: first generation with concealment winning = 6; K after 15 gens = -17.0
+  rt=3.0 nr=2.0 K0=6.0: first generation with concealment winning = 0; K after 15 gens = -20.5
+  Finite horizon: with rt < nr the basin is left after about (K0 - K*)/(nr - rt) generations.
+    rt=2.0 nr=3.0 K0=12.0: (K0-K*)/(nr-rt) = 5.3 generations
+    rt=2.5 nr=3.0 K0=12.0: (K0-K*)/(nr-rt) = 10.7 generations
+  K* grows with run length n (bank needed ln(1 + S w q0 n)):
+    n=1e+06: K* = 6.67 bits
+    n=1e+07: K* = 7.08 bits
+    n=1e+08: K* = 7.39 bits
+    n=1e+09: K* = 7.65 bits
+    n=1e+12: K* = 8.23 bits
+==============================================================================
+H10. Belief capture (G4.4b): H_o vs H with no internals check.
+    Drift per episode w_D lam+ - w_use lam-; H_o loses iff w_use/w_D > t*/(1-t*).
+  w_use=0.0: drift +0.000250 per episode, +25.00 nats per generation (H_o gains); threshold w_use/w_D = t*/(1-t*) = 0.333
+  w_use=0.001: drift +0.000100 per episode, +10.00 nats per generation (H_o gains); threshold w_use/w_D = t*/(1-t*) = 0.333
+  w_use=0.0017: drift -0.000005 per episode, -0.50 nats per generation (H gains); threshold w_use/w_D = t*/(1-t*) = 0.333
+  w_use=0.005: drift -0.000500 per episode, -50.00 nats per generation (H gains); threshold w_use/w_D = t*/(1-t*) = 0.333
+
+0 failed checks
