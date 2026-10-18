@@ -23,3 +23,5 @@ Run `bash build.sh` from this directory with a standard TeX Live installation. I
 `verification/source-provenance.json` lists the original source hashes. The publication build check compares extracted PDF text with the preserved manuscript.
 
 The [latest Boolean-depth revision record](../../verification/boolean-depth-structure-2026-10-18.json) records the current source and PDF hashes and matching isolated rebuild. The [earlier record](../../verification/boolean-depth-progress-2026-10-18.json) preserves the finite-bottleneck and shallow/deep separation snapshot. The added theorems have independent mathematical audits in `verification/`; they are not Lean verified.
+
+The [input-editing section](source/unrestricted-primary-input-editing.tex) proves depth-independent product-cost bounds for changing finitely many Boolean labels or multiplying by a low-Fourier-variation predicate. Its current source and independent audit are included in the [critical-learning and representation revision record](../../verification/critical-learning-2026-10-19.json).

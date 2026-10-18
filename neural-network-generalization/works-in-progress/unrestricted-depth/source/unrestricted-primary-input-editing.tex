@@ -1,0 +1,209 @@
+\section{Depth-independent input editing}
+\label{sec:primary-input-editing}
+
+A shallow computation placed before an arbitrarily deep network can
+modify its Boolean function without carrying extra features through
+the old depth. We use this observation to change finitely many labels,
+and to combine a network with a predicate of small Fourier variation.
+The product bounds depend nearly linearly on the old product, with
+no dependence on the old depth.
+
+Write $\bar x=(1,x)$ and let $z(u)$ denote the extension of a network
+to arbitrary augmented inputs $u\in\mathbb R^{d+1}$. If its Frobenius
+product is $P$, then
+\[
+ z(-u)=-z(u),\qquad |z(u)-z(v)|\le P\|u-v\|_2.
+\]
+The first identity uses tanh hidden activations, a linear readout, and
+the absence of biases after the augmented input.
+
+\begin{lemma}[Vector-output cloning and precomposition]
+\label{lem:primary-vector-cloning}
+For a shallow vector map
+\[
+ T(u)=\sum_j b_j\tanh(a_j^{\mathsf T}u),
+ \qquad V=\sum_j\|a_j\|_2\|b_j\|_2,
+\]
+finite neuron cloning gives an identical map whose two matrix
+Frobenius norms have product at most $2V$. If this map is placed
+before a network of product $P$, its linear output can be merged
+with the old first matrix. The resulting product is at most $2PV$,
+and only one hidden layer is added.
+\end{lemma}
+
+\begin{proof}
+Cloning neuron $j$ exactly $c_j$ times and dividing its outgoing
+vector by $c_j$ gives product
+\[
+ \left\{\left(\sum_jc_j\|a_j\|_2^2\right)
+              \left(\sum_j\|b_j\|_2^2/c_j\right)\right\}^{1/2}.
+\]
+After omitting zero terms, choose
+$c_j=\lceil t\|b_j\|_2/\|a_j\|_2\rceil$ and let $t$ increase.
+The expression tends to $V$, so a finite choice is within a factor
+two. If the map's matrices are $A,B$ and the old first matrix is
+$W_1$, use $\|W_1B\|_F\le\|W_1\|_F\|B\|_F$.
+\end{proof}
+
+\begin{theorem}[Changing finitely many Boolean labels]
+\label{thm:primary-finite-label-editing}
+Suppose $g(x)z(\bar x)\ge1$ everywhere on the $d$-dimensional
+Boolean cube, $d\ge1$, and the supplied representation has product
+$P\ge1$. Let $E$ contain $k\ge1$ distinct inputs, and set
+$f=-g$ on $E$ and $f=g$ elsewhere. There is a unit-margin
+representation of $f$ with one additional hidden layer and product
+at most
+\[
+ CP\left\{d+1+kd\sqrt{d+1}\,
+                   \log\bigl(8Pk\sqrt{d+1}\bigr)\right\}.
+\]
+Here $C$ is universal. The new prefix has finite width polynomial
+in $d,k,\log(P+2)$. The bound is independent of the old depth and
+width. The same inequality holds with $P=\mathfrak P(g)$, after
+enlarging $C$.
+\end{theorem}
+
+\begin{proof}
+Set $R=\sqrt{d+1}$, $h=1-2\mathbf1_E$, and
+\[
+ T(x)=h(x)\bar x
+     =\bar x-2\sum_{e\in E}\bar e\,\mathbf1_{\{x=e\}}.
+\]
+Oddness gives $z(T(x))=h(x)z(\bar x)$, so its signed margin for
+$f$ is at least one, including when $g$ is constant.
+
+For every $e\in E$, the affine form
+$s_e(x)=e^{\mathsf T}x-d+1$ is $+1$ at $e$ and at most $-1$
+elsewhere. Put
+\[
+ \delta=\frac1{4PkR},\qquad
+ \lambda=\tfrac12\log(8PkR),\qquad
+ t_e(x)=\tanh(\lambda s_e(x)).
+\]
+Then $|t_e-(2\mathbf1_{\{x=e\}}-1)|\le\delta$. Consequently
+\[
+ \widetilde T(x)=\bar x-\sum_{e\in E}\bar e\,(1+t_e(x)),
+ \qquad
+ \|\widetilde T(x)-T(x)\|_2\le kR\delta=\frac1{4P}.
+\]
+It follows that $2z(\widetilde T(x))$ has signed margin at least
+$3/2$ for $f$.
+
+This vector map has a shallow tanh realization. Write
+$\alpha=\operatorname{atanh}(1/2)$, $\tau=\tanh(1)$, and let
+$e_0,\ldots,e_d$ denote the standard coordinate vectors. Use one
+constant neuron with incoming row $\alpha e_0^{\mathsf T}$ and
+outgoing vector $2(e_0-\sum_{e\in E}\bar e)$; $d$ identity neurons
+with incoming rows $e_i^{\mathsf T}$ and outgoing vectors
+$e_i/\tau$; and the $k$ point neurons with incoming rows
+$\lambda(1-d,e^{\mathsf T})$ and outgoing vectors $-\bar e$.
+The identity coordinates are exact on the cube, since
+$\tanh(x_i)=\tau x_i$. The variation of this vector map is at most
+\[
+ V\le2\alpha(1+kR)+d/\tau+k\lambda dR,
+\]
+using $\sqrt{(d-1)^2+d}\le d$. Apply
+Lemma~\ref{lem:primary-vector-cloning}, merge the prefix, and double
+the old readout. This gives product at most $4PV$, as required.
+
+For the width assertion, the explicit choice
+$t=\max_j\|a_j\|_2/\|b_j\|_2$ in the cloning proof gives product
+at most $\sqrt2V$: the ceiling contributes at most
+$t\|a_j\|_2\|b_j\|_2$ to the incoming squared norm. For the
+displayed nonzero rows and columns, both this $t$ and every ratio
+$\|b_j\|_2/\|a_j\|_2$ are polynomial in $d,k,\lambda$.
+Thus the number of clones is polynomial as claimed.
+
+For intrinsic complexity, take a finite representation of product
+at most $2\mathfrak P(g)$ and increase the universal constant.
+No attainment of the defining infimum is needed.
+\end{proof}
+
+\begin{lemma}[Fourier input editing]
+\label{lem:primary-fourier-input-editing}
+Suppose $T:\{-1,1\}^d\to\mathbb R^r$ has vector Fourier
+expansion $T=\sum_S b_S\chi_S$ and variation
+$A=\sum_S\|b_S\|_2>0$. For $0<\eta<1$, a shallow tanh vector
+map approximates $T$ uniformly in Euclidean norm to error $\eta$
+with product at most
+\[
+ C(d+1)^2A\log\left(\frac{2(d+1)\max\{A,1\}}{\eta}\right).
+\]
+If a network of product $P\ge1$ has signed margin one after exact
+composition with $T$, the composed Boolean function has a
+representation with one additional hidden layer and product at most
+\[
+ CP(d+1)^2A\log\bigl(8(d+1)\max\{A,1\}P\bigr).
+\]
+\end{lemma}
+
+\begin{proof}
+For $S\ne\varnothing$, write $s=|S|$ and let $t$ be the number
+of negative selected input coordinates. The exact identity
+\[
+ \chi_S(x)=b_0+\sum_{j=1}^{s}(-1)^j
+                    \operatorname{sign}(2t-2j+1),
+ \qquad b_0=1+\sum_{j=1}^{s}(-1)^j\in\{0,1\},
+\]
+represents parity using affine thresholds of integer margin one.
+Replacing their signs by tanh at steepness
+$\tfrac12\log(2s/\delta)$ approximates parity to error $\delta$.
+Its scalar variation is at most
+$C(d+1)^2\log(2(d+1)/\delta)$. A constant neuron supplies $b_0$
+exactly, and also supplies the empty-set parity.
+
+Take $\delta=\min\{1/2,\eta/(2\max\{A,\eta\})\}$ and
+multiply the outgoing coefficients of the $S$th parity approximation
+by $b_S$. The vector error is at most $A\delta\le\eta$, and
+the sum of vector variations has the asserted bound.
+Lemma~\ref{lem:primary-vector-cloning} supplies the matrix-product
+bound. For composition take $\eta=1/(4P)$, use the old network's
+$P$-Lipschitz property, merge the prefix, and double the final
+readout.
+\end{proof}
+
+\begin{corollary}[Multiplication by a low-variation predicate]
+\label{cor:primary-predicate-modulation}
+Let $h$ be Boolean with Fourier variation
+$H=\sum_S|\widehat h(S)|$. Then
+\[
+ \mathfrak P(gh)
+ \le C\mathfrak P(g)(d+1)^3H
+       \log\bigl(8(d+1)^2H\mathfrak P(g)\bigr).
+\]
+In particular, multiplying by any signed parity has a cost
+polynomial in $d$ and nearly linear in $\mathfrak P(g)$,
+independently of the depth of a supplied representation of $g$.
+The same order of bound holds for $g\mathbin{\mathrm{AND}}h$
+and $g\mathbin{\mathrm{OR}}h$, with $+1$ representing true.
+\end{corollary}
+
+\begin{proof}
+For multiplication use $T(x)=h(x)\bar x$. Each coordinate has
+Fourier variation $H$, so its vector Fourier variation is at most
+$(d+1)H$. Oddness of the old network and
+Lemma~\ref{lem:primary-fourier-input-editing} prove the bound.
+A signed parity has $H=1$.
+
+For AND, if $g(a)=-1$ at some cube point $a$, use
+\[
+ T(x)=\left(1,\frac{1+h(x)}2x+\frac{1-h(x)}2a\right).
+\]
+It equals $\bar x$ when $h=+1$ and $\bar a$ when $h=-1$,
+and has vector Fourier variation at most $C(d+1)(H+1)$.
+If $g$ is the constant $+1$, the answer is $h$, which has a direct
+shallow representation by the parity construction in the preceding
+proof. The constant $-1$ case is immediate. OR uses a positive
+witness and the reversed selector. These are existence statements;
+no efficient procedure for finding the witness is required.
+\end{proof}
+
+These results do not prove closure under majority of arbitrary
+polynomial-product networks. A general deep predicate need not
+have small Fourier variation. Constructing the vector map
+$h(x)(1,x)$ from such a predicate with polynomial product remains
+an identity-augmentation problem: carrying $x$ through all its
+layers by parallel coordinates incurs the existing depth cost.
+Likewise, finite-label editing supplies an exact interpolation
+witness but does not compare it with inaccurate interpolants, so
+it is not by itself a noisy-label generalization theorem.

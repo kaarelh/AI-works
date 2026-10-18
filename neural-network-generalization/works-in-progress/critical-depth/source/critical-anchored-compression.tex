@@ -1,0 +1,363 @@
+\section{Finite realization by preserving an anchor covariance block}
+\label{sec:critical-anchored-compression}
+
+A finite representation does not require approximation of the full
+Gaussian covariance in Bures distance. We preserve a selected block
+exactly and compare each remaining query jointly with that block.
+Entropy selects a small block on which the controls can be conditioned;
+importance sampling then preserves its covariance without adding depth.
+The resulting network has arbitrary finite real weights. This section
+bounds its width, not its product norm.
+
+\begin{theorem}[Finite realization with an entropy-length bound]
+\label{thm:anchored-critical-compression}
+\label{thm:critical-anchored-compression}
+Let $X=\{-1,1\}^d$, and consider a critical variational path with
+$H=L-1\ge1$ hidden layers, entropy costs $D_1,\ldots,D_H$, and
+output $z$ of readout action $r$. Set
+\[
+ A_0=\max\left\{1,\sum_{j=1}^H D_j+r\right\},
+ \qquad S=\sum_{j=1}^H\sqrt{D_j}.
+\]
+There is an ordinary depth-$L$ tanh network with finite real weights,
+width at most
+\[
+ n\le C(d+L+A_0)^{30}\exp(20S),
+\]
+and output $\widehat z$ satisfying
+$\|z-\widehat z\|_\infty\le3/32$ on $X$.
+In particular, if $f(x)z(x)\ge1/2$ everywhere, the finite network
+has signed margin at least $13/32>1/4$.
+
+If the original path is globally margined and has total action at most
+$V_*+\varepsilon$, then its width is at most
+\[
+ \operatorname{poly}(d,L,A_0)\exp\{C\sqrt{L\varepsilon}\},
+\]
+where the polynomial has universal degree.
+\end{theorem}
+
+\subsection{Selecting anchors for all controls and for the readout}
+
+Write $Q_0,\ldots,Q_H$ for the original path's second moments.
+Lift its controlled feature laws through coordinatewise
+$\operatorname{atanh}$, obtaining preactivation laws
+$\rho_j\ll N(0,Q_{j-1})$ of entropy $D_j$.
+For $T\subseteq X$ put
+\[
+ I_j(T)=D\bigl((\rho_j)_T\Vert N(0,Q_{j-1,TT})\bigr).
+\]
+The empty-set value is zero. These quantities are monotone under
+inclusion and bounded above by $D_j$. The entropy increment upon
+adjoining $x$ is exactly the average conditional entropy of $G_x$
+given $G_T$, relative to its conditional Gaussian reference.
+
+Represent the terminal kernel by vectors $h_x$ in a finite Hilbert
+space, with $\langle h_x,h_y\rangle=Q_H(x,y)$, and choose a readout
+vector $u$ with
+\[
+ z(x)=\langle u,h_x\rangle,\qquad \|u\|^2=2r.
+\]
+Let $P_T$ be projection onto the span of the vectors $h_a$, $a\in T$.
+Fix $0<\delta\le1/8$ and $t>0$. Starting at $T=\varnothing$,
+repeatedly add an input whenever either
+\[
+ I_j(T\cup\{x\})-I_j(T)>\delta
+ \quad\hbox{for some }j,
+ \qquad\hbox{or}\qquad
+ |\langle u-P_Tu,h_x\rangle|>t.
+\]
+In the second case, adjoining the unit residual direction of $h_x$
+increases $\|P_Tu\|^2$ by more than $t^2$, since
+$\|h_x\|^2=Q_H(x,x)\le1$. Therefore each addition increases
+\[
+ \sum_j I_j(T)+\frac{\delta}{t^2}\|P_Tu\|^2
+\]
+by more than $\delta$. The procedure terminates with
+\begin{equation}\label{eq:critical-anchor-count}
+ |T|\le\frac{\sum_jD_j}{\delta}+\frac{2r}{t^2}.
+\end{equation}
+At termination all the conditional entropy increments are at most
+$\delta$, and the projected readout
+$z_T(x)=\langle P_Tu,h_x\rangle$ obeys
+\begin{equation}\label{eq:critical-anchor-readout}
+ \|z-z_T\|_\infty\le t,
+ \qquad z_T(x)=Q_H(x,T)\beta,
+ \qquad \beta^{\mathsf T}Q_{H,TT}\beta\le2r
+\end{equation}
+for some finite coefficient vector $\beta$. There is no required
+bound on $\|\beta\|_1$. Both conditions are rechecked after every
+addition: their individual pointwise residuals need not decrease.
+
+\subsection{An anchor-preserving Gaussian comparison}
+
+For positive semidefinite kernels $K,K'$ with the same $TT$ block
+$C$, define
+\[
+ v_K(x)=C^{+1/2}K(T,x),\qquad
+ \sigma_K(x)=\bigl(K(x,x)-\|v_K(x)\|^2\bigr)^{1/2},
+\]
+and
+\[
+ d_T(K,K')=\max_{x\in X}
+ \left(\|v_K(x)-v_{K'}(x)\|^2
+             +|\sigma_K(x)-\sigma_{K'}(x)|^2\right)^{1/2}.
+\]
+All cross vectors lie in the range of $C$, so these expressions are
+well-defined even when $C$ is singular. This is a pseudometric on
+kernels with a fixed anchor block. For each query $x$, it is the
+least Gaussian RMS difference between the query coordinates when
+the two Gaussian anchor vectors are coupled identically. The minimum
+uses a common Gaussian for the two scalar conditional residuals.
+Different queries may use different extensions of the same anchor
+coupling.
+
+We will also use its second-moment version. If, for each $x$, a
+coupling of feature vectors at $T\cup\{x\}$ has identical anchor
+features, then its query RMS difference bounds $d_T$ at that query.
+Indeed the uncentered second-moment block of this coupling is a
+valid centered Gaussian covariance, and the two Gaussian anchor
+vectors coincide almost surely. This argument does not require
+zero-mean feature laws.
+
+Replace $\rho_j$ by its Rao--Blackwellized law $\rho_j^T$: it has
+the same anchor marginal as $\rho_j$ and the Gaussian conditional
+law elsewhere, given those anchors. Its density relative to
+$N(0,Q_{j-1})$ is a function $w_j(G_T)$, and its entropy is
+$I_j(T)\le D_j$. Its output anchor second moments remain exactly
+$Q_{j,TT}$.
+At any query, conditional Gaussian quadratic transport and the
+anchor selection give a coupling with identical $G_T$ and
+\[
+ \mathbb E|G_x-G'_x|^2
+ \le2\operatorname{Var}_{N(0,Q_{j-1})}(G_x\mid G_T)\delta
+ \le4\delta.
+\]
+The final bound uses $Q_{0,xx}=(d+1)/d\le2$ at the input and
+$Q_{j-1,xx}\le1$ at later layers. Zero conditional variances cause
+no difficulty, because finite conditional entropy then forces equality.
+Applying tanh and the second-moment observation bounds the resulting
+$d_T$ error by $2\sqrt\delta$.
+
+\begin{lemma}[Propagation with an exact anchor block]
+\label{lem:critical-anchor-propagation}
+Suppose $K_{TT}=K'_{TT}$, and $w(G_T)$ is a density integrating
+to one under their common Gaussian anchor law. Its entropy is $D$.
+Let $\mathsf F_w(K)$ and $\mathsf F_w(K')$ be the feature second
+moments obtained by tilting the two Gaussian laws by this same
+density and then applying tanh. Their anchor blocks agree, and
+\[
+ d_T(\mathsf F_w(K),\mathsf F_w(K'))
+ \le(1+\sqrt{2D})d_T(K,K').
+\]
+\end{lemma}
+
+\begin{proof}
+For a fixed query couple the reference Gaussian anchor vectors
+identically and optimally couple the scalar conditional residuals.
+Tilt this joint law by $w(G_T)$. Both marginals are the required
+controlled laws, and the joint entropy relative to its Gaussian
+reference equals $D$. Whiten the reference Gaussian on its support.
+For any scalar row $a$, Gaussian quadratic transport and Minkowski's
+inequality give
+\[
+ \bigl(\mathbb E_{\rm tilted}|aZ|^2\bigr)^{1/2}
+ \le(1+\sqrt{2D})\|a\|_2.
+\]
+Apply this to the difference of the two query coordinates, then use
+tanh's Lipschitz property and the second-moment observation.
+The anchor features coincide pointwise, so the output anchor block
+is exactly common. Although query couplings differ, the two marginal
+controlled laws are fixed by the same anchor density and do not
+depend on the queried input.
+\end{proof}
+
+\subsection{Finite quadrature that preserves the anchor block exactly}
+
+\begin{lemma}[Importance sampling and exact covariance correction]
+\label{lem:critical-exact-anchor-quadrature}
+Let $\nu$ be any probability law on $[-1,1]^X$, with second-moment
+kernel $K$, and let $|T|=q$. For $0<\eta\le1/8$, there are
+\[
+ n\le C(q+1)^4\eta^{-2}\{d+\log(q+2)+1\}
+\]
+feature vectors $h_1,\ldots,h_n$ chosen by importance sampling from
+$\nu$, positive weights
+$p_1,\ldots,p_n$, and a positive definite matrix $B$ on
+$\mathbb R^n$ such that, on putting
+\[
+ F_x=\left(\frac{h_i(x)}{\sqrt{np_i}}\right)_{i=1}^n,
+ \qquad K'(x,y)=F_x^{\mathsf T}BF_y,
+\]
+one has $K'_{TT}=K_{TT}$ and $d_T(K,K')\le6\sqrt\eta$.
+The matrix satisfies $\|B\|_{\rm op}\le2$.
+\end{lemma}
+
+\begin{proof}
+Write $K_{TT}=U\Lambda U^{\mathsf T}$ on its range, of dimension
+$s\le q$, and put $a(h)=\Lambda^{-1/2}U^{\mathsf T}h_T$.
+Then $\mathbb E_\nu aa^{\mathsf T}=I_s$, and
+$h_T=U\Lambda^{1/2}a(h)$ almost surely. Sample under the importance
+law $p(h)\nu(dh)$, where
+\[
+ p(h)=\frac{1+\|a(h)\|^2}{s+1}.
+\]
+This density is positive and normalized, and both
+$\|a(h)/\sqrt{p(h)}\|$ and $|h(x)|/\sqrt{p(h)}$ are at most
+$\sqrt{s+1}$.
+For independent samples form the matrix $E$ with rows
+$a(h_i)^{\mathsf T}/\sqrt{np_i}$, and set
+\[
+ M=E^{\mathsf T}E,\quad
+ \widehat v_x=E^{\mathsf T}F_x,\quad
+ \widehat k_x=\|F_x\|^2,\quad
+ v_x=\mathbb E_\nu[a(h)h(x)].
+\]
+Entrywise Hoeffding bounds and a union bound give a realization with
+\begin{equation}\label{eq:critical-anchor-quadrature-errors}
+ \|M-I_s\|_{\rm op}\le\eta,\quad
+ \sup_x\|\widehat v_x-v_x\|\le\eta,\quad
+ \sup_x|\widehat k_x-K(x,x)|\le\eta.
+\end{equation}
+For completeness, require each Gram entry to have error at most
+$\eta/(s+1)$ and each cross entry error at most
+$\eta/\sqrt{s+1}$. The variables have magnitude at most $s+1$,
+and there are at most $s^2+s2^d+2^d$ entries. The asserted width,
+with a universal constant enlarged, makes their joint success
+probability positive. Since $K$ is positive semidefinite,
+$\|v_x\|\le\sqrt{K(x,x)}\le1$.
+
+Define
+\[
+ B=I_n+E(M^{-2}-M^{-1})E^{\mathsf T}.
+\]
+If an eigenvalue of $M$ is $\lambda$, $B$ acts on its corresponding
+left singular direction by $\lambda^{-1}$; on the orthogonal
+complement it is the identity. Thus $B$ is positive definite and
+$\|B\|_{\rm op}\le2$. Writing $C=\Lambda^{1/2}U^{\mathsf T}$,
+we have $F_T=EC$ and
+\[
+ E^{\mathsf T}BE=I_s,\qquad
+ K'_{TT}=C^{\mathsf T}C=K_{TT}.
+\]
+The normalized cross vector for $K'$ is, in the $U$ coordinates,
+$v'_x=M^{-1}\widehat v_x$. The errors above give
+\[
+ \|v'_x-v_x\|\le4\eta,\qquad
+ |K'(x,x)-K(x,x)|\le10\eta.
+\]
+To check the second estimate, use
+\[
+ K'(x,x)=\widehat k_x+
+        \widehat v_x^{\mathsf T}(M^{-2}-M^{-1})\widehat v_x,
+ \qquad \|M^{-2}-M^{-1}\|\le4\eta,
+ \quad\|\widehat v_x\|\le1+\eta.
+\]
+Since $\|v'_x\|\le3$, the two conditional residual variances
+differ by at most $26\eta$. The square-root inequality
+$|\sqrt a-\sqrt b|^2\le|a-b|$ now yields
+\[
+ d_T(K,K')^2\le16\eta^2+26\eta\le28\eta<36\eta.
+\]
+If $s=0$, take $p=1$, let $E$ be empty, and set $B=I_n$;
+only the diagonal estimate is needed.
+\end{proof}
+
+\subsection{Recursive network construction and error bound}
+
+We now prove Theorem~\ref{thm:critical-anchored-compression}.
+Choose the common anchor set by the first subsection. Start with the
+exact original input covariance $Q_0$. Suppose the previously stored
+ordinary tanh neurons give a finite feature embedding $F_x$ and
+covariance factor $B$ as in the quadrature lemma. A Gaussian incoming
+row with the corresponding coefficient covariance has preactivation
+field of covariance $F_x^{\mathsf T}BF_y$. Tilt this Gaussian row by
+$w_j(G_T)$. This is a normalized law: the finite covariance has exactly
+the original anchor block $Q_{j-1,TT}$. Its activated field is still
+the output of an ordinary tanh neuron on the stored preceding neurons.
+Apply Lemma~\ref{lem:critical-exact-anchor-quadrature} to this
+activated-feature law, select its finite rows, and construct the next
+factor $B_j$.
+
+The weights $1/\sqrt{np_i}$ and the factor $B_j^{1/2}$ are absorbed
+into the incoming coefficients of the next layer. They introduce no
+additional nonlinear layer. At the first layer the incoming field is
+realized by the original Gaussian input weights, tilted and importance
+sampled in the same way. All selected coefficients are finite almost
+surely. No upper bound on their magnitude is used. The sampling proves
+existence of a deterministic network; it does not assert that its weight
+law is the original prior.
+
+Let $\widehat Q_j$ be the corrected finite kernel after layer $j$.
+Its anchor block is exactly $Q_{j,TT}$. Set
+$e_j=d_T(Q_j,\widehat Q_j)$, with $e_0=0$.
+Compare the original control first to its Rao--Blackwellized version
+at $Q_{j-1}$, then propagate the latter control from
+$\widehat Q_{j-1}$, and finally apply finite quadrature. With
+$\eta=\delta$, the triangle inequality and the preceding lemmas give
+\[
+ e_j\le(1+\sqrt{2D_j})e_{j-1}+8\sqrt\delta.
+\]
+Consequently
+\[
+ e_H\le8H\sqrt\delta\prod_j(1+\sqrt{2D_j})
+       \le8H\sqrt\delta\,e^{\sqrt2S}.
+\]
+At the final layer use the anchor-supported readout from
+\eqref{eq:critical-anchor-readout}. Because the anchor block is
+exact, the same coefficient vector $\beta$ gives the finite output
+$\widehat z(x)=\widehat Q_H(x,T)\beta$ and
+\[
+ |z_T(x)-\widehat z(x)|
+ \le\sqrt{2r}\,d_T(Q_H,\widehat Q_H).
+\]
+For example, this follows by coupling the two query Gaussians with
+identical anchors and applying Cauchy--Schwarz to the common scalar
+$\beta^{\mathsf T}G_T$. This readout is an ordinary linear combination
+of the final stored neuron outputs; its covariance factor is absorbed
+into those linear coefficients.
+
+Take
+\[
+ t=\frac1{16},\qquad
+ \delta=\eta=
+ \left[256H\sqrt{\max\{2r,1\}}\,e^{\sqrt2S}\right]^{-2}.
+\]
+Then
+\[
+ \|z-\widehat z\|_\infty
+ \le t+8\sqrt{2r}H\sqrt\delta\,e^{\sqrt2S}
+ \le\frac1{16}+\frac1{32}=\frac3{32}.
+\]
+The anchor count is at most $A_0/\delta+512r$.
+The quadrature width is therefore at most
+\[
+ C H^{12}A_0^{10}e^{12\sqrt2S}
+       \{d+\log(H+A_0+2)+S+1\}.
+\]
+The inequality
+$S\le\sqrt{HA_0}$ absorbs this last factor into a universal
+polynomial. Enlarging constants gives the displayed bound with
+polynomial degree $30$ and exponential coefficient $20$.
+Layers may be padded with zero outgoing weights to a common width.
+Finally the near-baseline assertion follows from
+Lemma~\ref{lem:critical-sqrt-entropy-budget}.
+
+
+\begin{corollary}[A statement for the infimum rate]
+\label{cor:anchored-critical-rate-compression}
+If the critical function rate satisfies $J_L(f)\le V_*+\varepsilon$,
+$\varepsilon\ge0$, then $f$ has a depth-$L$ tanh realization with
+margin at least $1/4$ and width
+\[
+ \operatorname{poly}(d,L,1+J_L(f))\exp\{C\sqrt{L\varepsilon}\}.
+\]
+No attainment of the variational infimum is assumed.
+\end{corollary}
+
+\begin{proof}
+Choose an admissible path of action at most $J_L(f)+1/L$ and apply
+the theorem with excess $\varepsilon+1/L$. The extra factor
+$\exp\{C\sqrt{L\varepsilon+1}\}$ is at most a universal constant
+times $\exp\{C\sqrt{L\varepsilon}\}$ after enlarging $C$.
+\end{proof}

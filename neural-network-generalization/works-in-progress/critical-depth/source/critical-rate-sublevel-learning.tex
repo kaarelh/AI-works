@@ -1,0 +1,231 @@
+\section{A sample bound from critical-rate sublevel sets}
+\label{sec:critical-sublevel-learning}
+
+A finite representation theorem gives a learning bound even when its
+weights have no useful numerical bound. The relevant fact about tanh
+is that the class of networks with a fixed finite architecture has
+polynomial VC dimension in its number of parameters. This allows us
+to count the Boolean functions below a critical-rate threshold.
+The resulting bound applies to the original Gaussian prior; it does
+not condition that prior on an additional stability event.
+
+\begin{lemma}[Counting finite tanh networks]\label{lem:critical-tanh-count}
+Let $\mathcal T_{d,L,M}$ be the Boolean sign functions on
+$\{-1,1\}^d$ represented by depth-$L$ tanh networks with at most $M$
+neurons per hidden layer and a linear readout. Their real parameters
+are unrestricted. There is a universal constant $C$ such that
+\[
+ \log|\mathcal T_{d,L,M}|
+ \le C(d+1)(d+L+1)^4(M+1)^8.
+\]
+Here $L\ge2$ and logarithms are natural.
+\end{lemma}
+
+\begin{proof}
+Pad every hidden layer to width $M$ with zero neurons. For an upper
+bound we allow arbitrary biases at every layer, whether or not they
+were present in the original representation. The resulting fixed
+architecture has at most
+\[
+ W\le C(d+L+1)(M+1)^2
+\]
+weights and biases. The classical sigmoid-network bound of Karpinski
+and Macintyre~\cite{karpinski1997} gives VC dimension at most $CW^4$,
+with a universal constant independent of depth and parameter values.
+It applies to tanh because
+$\tanh(t)=2\sigma(2t)-1$, where $\sigma(t)=(1+e^{-t})^{-1}$:
+rescale the incoming weights and absorb the additive constants into
+the biases in the next layer and the final linear readout.
+This preserves the fixed architecture up to a universal factor in
+its parameter count. The threshold at the readout is absorbed into
+its bias.
+
+If $v\ge1$ bounds the VC dimension, Sauer's lemma bounds the number
+of dichotomies on $m=2^d$ points by $(m+1)^v$; the same bound holds
+when $v\ge m$, since there are at most $2^m$ dichotomies. Hence
+$\log|\mathcal T_{d,L,M}|\le v(d+1)\log2$. Substitute the parameter
+bound. In particular, finite parameter precision and a bound on
+weight magnitudes are unnecessary.
+\end{proof}
+
+\begin{theorem}[Critical-rate sublevel capacity]
+\label{thm:critical-rate-sublevel-capacity}
+There are universal constants $c,C>0$ such that, for every $d\ge1$,
+$L\ge2$, and $a\ge0$, the class
+\[
+ \mathcal F_{L,a}=\{g:\{-1,1\}^d\to\{-1,1\}:J_L(g)\le a\}
+\]
+satisfies
+\begin{equation}\label{eq:critical-sublevel-cardinality}
+ \log\max\{1,|\mathcal F_{L,a}|\}
+ \le C\bigl[(d+1)(L+1)(a+2)\bigr]^c
+       \exp\!\left(C\sqrt{L(a-V_*)_+}\right).
+\end{equation}
+Consequently, for every $\eta\ge0$,
+\begin{equation}\label{eq:critical-sublevel-excess-cardinality}
+ \log\max\{1,|\mathcal F_{L,V_*+\eta}|\}
+ \le C\bigl[(d+1)(L+1)(\eta+3)\bigr]^c
+       e^{C\sqrt{L\eta}}.
+\end{equation}
+The polynomial degree and exponential constant are universal.
+\end{theorem}
+
+\begin{proof}
+For every member $g$ of the class choose an admissible path of cost
+$A\le a+1/L$; this needs no attainment of the variational infimum.
+It satisfies
+\[
+ A\le V_*+\eta_a,\qquad
+ \eta_a=(a-V_*)_++1/L.
+\]
+Lemma~\ref{lem:critical-sqrt-entropy-budget} therefore gives
+\[
+ S:=\sum_{j=1}^{L-1}\sqrt{D_j}
+ \le C\log(L+1)+C\sqrt{L(a-V_*)_+}+C.
+\]
+The lemma is valid for all nonnegative excesses. For excess at least
+$1/4$, its proof simply uses
+$\sum_jD_j\le V_*+\eta_a\le9\eta_a$ and Cauchy--Schwarz;
+there is no small-excess restriction here.
+
+Theorem~\ref{thm:anchored-critical-compression} supplies a depth-$L$
+tanh realization of the same Boolean function with width
+\[
+ M\le C\bigl[(d+1)(L+1)(a+2)\bigr]^{c_0}
+          e^{C\sqrt{L(a-V_*)_+}}
+\]
+for universal constants. Its positive margin ensures exact equality
+of sign functions on the whole cube. This width bound is common to
+all members of $\mathcal F_{L,a}$, although the networks and their
+real weights may differ. Round the displayed upper bound upward and
+apply Lemma~\ref{lem:critical-tanh-count}. Absorb fixed powers into
+$c,C$. Finally substitute $a=V_*+\eta$ and use $V_*<2$.
+\end{proof}
+
+\begin{theorem}[Learning from the target's critical excess rate]
+\label{thm:critical-excess-learning}
+There are universal $c,C>0$ with the following property. Fix a Boolean
+target $f$, dimension $d\ge1$, learner depth $L\ge2$, any input
+distribution $\mathcal D$ on the cube, and accuracy and confidence
+parameters $\varepsilon,\delta\in(0,1)$. Suppose $J_L(f)\le a<\infty$.
+A sufficient number of independent training examples, labeled by $f$, is
+\begin{equation}\label{eq:critical-excess-sample}
+ n\ge\frac{C}{\varepsilon}\left\{
+   \bigl[(d+1)(L+1)(a+2)\bigr]^c
+     e^{C\sqrt{L(a-V_*)_+}}
+   +\log(1/\delta)\right\}.
+\end{equation}
+Then there is a finite $N_0$, independent of the realized sample,
+such that for every learner width $N\ge N_0$, with sample probability
+at least $1-\delta$, the original globally margin-conditioned critical
+posterior with exact training fit satisfies
+\[
+ \mathcal D\{x:p_N(f(x)\mid x)\le2/3\}\le\varepsilon.
+\]
+The result allows arbitrary posterior mixtures of tied rate minimizers.
+It does not give a quantitative bound on $N_0$ or an efficient sampling
+algorithm for the posterior.
+\end{theorem}
+
+\begin{proof}
+Use the target-relative class
+$\mathcal A_f=\{g:J_L(g)\le J_L(f)\}\subseteq\mathcal F_{L,a}$.
+Each member whose error exceeds $\varepsilon/6$ agrees with all $n$
+independent labels with probability at most $e^{-n\varepsilon/6}$.
+A union bound and Theorem~\ref{thm:critical-rate-sublevel-capacity}
+show that, under \eqref{eq:critical-excess-sample}, with probability
+at least $1-\delta$, every sample-consistent member of $\mathcal A_f$
+has error at most $\varepsilon/6$.
+
+Write $\pi_N$ for the original globally margin-conditioned critical
+prior on Boolean functions. There are finitely many such functions
+at fixed $d$. The exact rate formula therefore gives
+\[
+ \frac{\pi_N(\mathcal A_f^c)}{\pi_N(f)}\longrightarrow0
+ \qquad(N\to\infty).
+\]
+Indeed every function outside $\mathcal A_f$ has rate strictly greater
+than $J_L(f)$, and the minimum of these finitely many positive gaps
+is positive whenever the complement is nonempty. For every sample
+labeled by $f$, its posterior normalizer is at least $\pi_N(f)$.
+Thus, at every sufficiently large width, posterior mass outside
+$\mathcal A_f$ is at most $\varepsilon/6$, simultaneously for all
+realized samples. On the good-sample event, posterior Gibbs error is
+at most $\varepsilon/3$. At an input where correct-label probability
+is at most $2/3$, the wrong-label probability is at least $1/3$.
+Integrating proves the displayed confidence-error bound.
+\end{proof}
+
+\begin{corollary}[Fourier variation and every parity]
+\label{cor:critical-fourier-learning}
+Put
+\[
+ A_F(f)=\sum_{S\subseteq[d]}|\widehat f(S)|,\qquad
+ T_f=\log(d+L+2)+\log A_F(f).
+\]
+There are universal constants $C_0,c,C>0$ such that, whenever
+$L\ge C_0T_f$, a sufficient sample size in
+Theorem~\ref{thm:critical-excess-learning} is
+\[
+ n\ge\frac{C}{\varepsilon}
+ \left\{\bigl[(d+L+2)A_F(f)\bigr]^c+\log(1/\delta)\right\}.
+\]
+In particular, every signed parity $f=\pm\chi_S$, including constants,
+is learned with a sample bound polynomial in $d,L,1/\varepsilon$ and
+$\log(1/\delta)$ whenever $L\ge C_0\log(d+L+2)$.
+This statement is uniform in the parity degree. The prior has no
+additional robustness restriction.
+\end{corollary}
+
+\begin{proof}
+The controlled Fourier-seed theorem gives
+$J_L(f)\le a:=V_*+C_1T_f^2/L$. Consequently
+$\sqrt{L(a-V_*)}=\sqrt{C_1}T_f$.
+The exponential factor in \eqref{eq:critical-excess-sample} is therefore
+at most $[(d+L+2)A_F(f)]^C$.
+Since $A_F(f)\ge1$, the polynomial prefactor involving $d,L,a+2$
+is bounded by a fixed power of the same quantity. Apply the theorem.
+All signed parities have $A_F(f)=1$.
+Only the original seed condition $L\ge C_0T_f$ is needed: if
+$C_1T_f^2/L\ge1/4$, the large-excess branch of the square-root entropy
+lemma still gives the required bound. No squared-logarithmic minimum
+depth is imposed by the learning argument.
+\end{proof}
+
+\begin{corollary}[Bounded-weight teachers and growing learner depth]
+\label{cor:critical-analog-teacher-learning}
+Suppose $f$ has a depth-$D$, width-$C_T$ tanh teacher with parameter
+magnitudes at most $B\ge1$ and output margin at least $1/2$ on the
+cube. Put $R=d+C_T+B+D+L+2$. There are universal constants $c,C_0,C$
+such that, whenever
+\[
+ L\ge C_0(D+1)\log R,
+\]
+a sufficient sample size for the original critical learner is
+\[
+ n\ge\frac{C}{\varepsilon}
+          \left\{R^{c(D+1)}+\log(1/\delta)\right\}.
+\]
+This is polynomial in the learner depth $L$ for every fixed teacher
+depth $D$. The degree depends linearly on $D$, so the result does not
+settle the desired bound polynomial jointly in teacher width and depth.
+\end{corollary}
+
+\begin{proof}
+Corollary~\ref{cor:analog-teacher-critical-rate} supplies
+\[
+ J_L(f)\le V_*+C\frac{(D+1)^2\log^2R}{L}
+\]
+under the stated depth hypothesis. In
+Theorem~\ref{thm:critical-excess-learning}, the exponential factor
+is at most $e^{C(D+1)\log R}=R^{C(D+1)}$; its polynomial prefactor
+is absorbed in the same expression.
+\end{proof}
+
+The theorem concerns the width-first critical scaling $\gamma=1$.
+Its finite-network realizations are certificates used to count competing
+functions; the learner still uses the original unrestricted Gaussian
+prior and may be much wider than those certificates. The argument
+makes no assertion that the posterior is computationally tractable,
+that the certificate has a small product of weight norms, or that the
+result automatically transfers to a different order of limits.

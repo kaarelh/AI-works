@@ -11,45 +11,44 @@
 \newtheorem{definition}[theorem]{Definition}
 \newtheorem{remark}[theorem]{Remark}
 \newcommand{\Prb}{\mathbb P}
-\title{Depth dependence of Gaussian prior costs in critical neural networks}
+\title{Depth and learning bounds for critical Bayesian neural networks}
 \author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex}
-\date{18 October 2026}
-\hypersetup{pdftitle={Depth dependence of Gaussian prior costs in critical neural networks},pdfauthor={Dmitry Vaintrob, Kaarel Hanni, OpenAI Codex}}
+\date{19 October 2026}
+\hypersetup{pdftitle={Depth and learning bounds for critical Bayesian neural networks},pdfauthor={Dmitry Vaintrob, Kaarel Hanni, OpenAI Codex}}
 \begin{document}
 \maketitle
 \begin{abstract}
-For fully connected tanh networks under the critical Gaussian prior, we
-study the exponential probability cost of realizing a Boolean function
-with a fixed output margin on the entire input cube. We prove that this
-cost converges, with increasing depth, to the same universal constant
-$V_*$ for every Boolean function. The constant satisfies $1<V_*<2$ and
-is characterized by a one-dimensional relative-entropy control problem.
-Quantitative bounds are uniform over all functions on $d$ inputs.
-For structured targets, controlled feature laws give sharper bounds:
-Fourier norm and circuit depth enter through small target components
-that can be amplified at low entropy cost. In particular, every parity
-attains a bounded rate at depth $\Theta((\log d)^2)$, the same scale
-required even by constants and dictators. A layerwise construction also
-gives polynomial teacher-depth dependence in the rate upper bound for
-arbitrary bounded-weight, globally margined tanh teachers on the cube.
+Can an unrestricted Bayesian neural network learn with polynomial
+rather than exponential dependence on its depth? We prove a
+representation and learning theorem for the original critical
+Gaussian prior on tanh networks, conditioned on a fixed output
+margin throughout the Boolean cube. If a target has critical rate
+at most $V_*+\eta$, with $\eta\ge0$, the sufficient sample size is a universal
+polynomial in dimension, learner depth, and $1+\eta$, multiplied by
+$\exp(C\sqrt{L\eta})$, with the usual accuracy and confidence
+factors. Here $V_*\in(1,2)$ is a universal scalar baseline. The
+learning statement holds at all sufficiently large widths, with
+no additional robustness restriction and with arbitrary mixtures
+of posterior rate minimizers.
 
-Every consistently labeled sample of $n$ points has a globally margined
-extension with rate at most
-$V_*+O(\log^2(d+n+L)/L)$ at sufficient depth. The actual width-first
-posterior consequently concentrates below this ceiling. These results
-do not establish polynomial-depth learning: small differences inside
-that interval can determine which extensions the posterior prefers.
-A separate comparison does give a sample lower bound for full parity:
-for depths up to a small constant times $\eta\log d/\log\log d$,
-$n\le d^{(1-\eta)/(L-1)}$ examples leave
-limiting Gibbs error $1/2$ with high sample probability, for every
-fixed $\eta>0$. This is a polynomial lower bound, not an exponential
-bound in parity degree. We also bound the accumulated square-root
-layer entropy by $O(\log L+\sqrt{L\epsilon})$ for a path of cost at
-most $V_*+\epsilon$. This yields matching excess-rate bounds
-$J_L(f)-V_*=\Theta(\log^2 d/L)$ for constants, dictators, and parities
-over a specified depth range. The proofs include the finite-domain
-large-deviation foundation and exact feature constructions.
+The key step compresses any finite-action controlled Gaussian path
+into an ordinary finite tanh network. Its width is polynomial in
+input dimension, depth, and total action, times the exponential of
+the sum of square roots of layer entropies. A small set of input
+anchors is preserved exactly; importance sampling approximates all
+remaining inputs without requiring low rank of the full covariance.
+Classical sigmoid VC bounds then count the possible Boolean functions.
+
+Together with controlled feature constructions, this proves polynomial
+sample complexity for every parity, regardless of degree, once learner
+depth is at least a sufficiently large multiple of $\log(d+L+2)$.
+More generally, the bound is polynomial in Fourier variation. For an
+arbitrary bounded-weight tanh teacher of depth $D$, the sample bound
+is $R^{O(D+1)}$, where $R$ includes dimension, teacher resources, and
+learner depth. Joint polynomial dependence on teacher width and depth
+remains open. We also prove universal rate flattening, quantitative
+excess-rate estimates, and a parity sample lower bound at smaller
+depths. All width limits keep dimension and depth fixed first.
 \end{abstract}
 
 \section{Model and meaning of the result}
@@ -89,117 +88,140 @@ The last term is infinite outside the covariance range. The matrices
 $Q(\nu)$ are uncentered second moments, not necessarily centered
 covariances.
 
-The main result, Theorem~\ref{thm:critical-rate-flattening}, identifies
-a universal constant $V_*$ such that, with $D=d+1$,
+\subsection{Learning from the rate above a common baseline}
+
+There is a universal scalar baseline $V_*\in(1,2)$. It is the
+limiting cost of producing a unit-sign output from a vanishing
+one-dimensional Gaussian state, and its construction is given below.
+The principal learning result is Theorem~\ref{thm:critical-excess-learning}.
+If $J_L(f)\le a$, a sufficient sample size is
+\[
+ n\ge\frac{C}{\varepsilon}\left\{
+ [(d+1)(L+1)(a+2)]^c
+ \exp\!\left(C\sqrt{L(a-V_*)_+}\right)
+ +\log(1/\delta)\right\},
+\]
+where $c,C$ are universal. Training examples are independent draws
+from any distribution $\mathcal D$ on the cube and have noiseless
+labels $f(x)$. At every sufficiently large width, with sample
+probability at least $1-\delta$, the posterior gives the correct
+label probability greater than $2/3$ outside a set of
+$\mathcal D$-mass at most $\varepsilon$.
+The sufficiently large width threshold can be chosen independently
+of the realized sample, but is not quantitatively bounded here.
+
+The posterior is the original Gaussian prior conditioned on
+$|z_w(x)|>1/2$ at every cube input and on exact training signs.
+No internal stability or robustness event is added. The theorem
+includes arbitrary mixtures of tied minimizing functions; it does
+not replace the posterior by one selected minimizer.
+
+Two consequences illustrate the depth dependence.
+For Fourier variation
+$A_F(f)=\sum_{S\subseteq[d]}|\widehat f(S)|$, a sufficient sample
+bound is polynomial in $(d+L+2)A_F(f)$ whenever
+\[
+ L\ge C_0[\log(d+L+2)+\log A_F(f)].
+\]
+Every signed parity has $A_F(f)=1$, so every parity is learned with
+polynomially many examples at sufficiently large logarithmic depth,
+uniformly in its degree. This includes full $d$-bit parity.
+
+For a depth-$D$, width-$C_T$ tanh teacher with weights bounded by
+$B$ and output margin at least $1/2$, put
+$R=d+C_T+B+D+L+2$. At learner depth
+$L\ge C_0(D+1)\log R$, the sufficient sample bound is
+\[
+ \frac{C}{\varepsilon}\{R^{c(D+1)}+\log(1/\delta)\}.
+\]
+This is polynomial in learner depth for fixed teacher depth.
+The exponent still depends on teacher depth: a bound jointly
+polynomial in teacher width and depth remains open. The result
+also does not establish the same depth bound at every width above
+target complexity, or in a different order of limits.
+
+\subsection{Why the finite representation is possible}
+
+For a path with layer entropies $D_s$ and action at most
+$V_*+\eta$, Lemma~\ref{lem:critical-sqrt-entropy-budget} gives
+\[
+ S:=\sum_s\sqrt{D_s}
+ \le C[\log(L+1)+\sqrt{L\eta}].
+\]
+Theorem~\ref{thm:anchored-critical-compression} constructs a
+same-depth finite tanh network with the same Boolean function and
+width at most $\operatorname{poly}(d,L,a+1)e^{CS}$.
+A greedy procedure selects inputs whose evaluations account for
+all significant conditional entropies and for the readout. Their
+covariance block is then preserved exactly at every layer.
+Leverage-based importance sampling and a positive definite correction
+approximate each remaining input jointly with these anchors.
+The correction is absorbed into the next incoming matrix, so it
+adds no nonlinear layer.
+
+This construction avoids requiring a low-rank approximation in the
+full Gaussian-coupling metric. Such an approximation can be impossible
+for a high-rank covariance, even when only one final Boolean readout
+matters. The compressed network's weights may be very large; the
+classical polynomial VC bound for sigmoid networks still controls
+its number of Boolean sign patterns. Applying a finite-class
+consistency bound to all functions of rate at most $J_L(f)$ then
+gives the posterior theorem.
+
+\subsection{Rate estimates and complementary lower bounds}
+
+The rate estimates used in the learning theorem are proved in this
+paper. Universal flattening gives, for every Boolean function,
 \[
  V_*-\frac C{L-1}\le J_L(f)\le
- V_*+C\frac{D^2+[\log(2L)]^2}{L}
- \qquad(L\ge CD).
+ V_*+C\frac{(d+1)^2+[\log(2L)]^2}{L}
+ \qquad(L\ge C(d+1)).
 \]
-The same bound holds for every Boolean function at the same specified
-depth. In particular, an absolute rate budget cannot provide a
-polynomial bound on the logarithm of the number of possible functions:
-at sufficiently large polynomial depth, a fixed budget already contains
-all $2^{2^d}$ functions.
+A bound polynomial in normalized excess alone would be insufficient:
+at sufficiently large polynomial depth that quantity is polynomial
+for every truth table, whereas arbitrary truth tables require
+exponentially many observations. The exponential of its square root
+in our capacity bound is consistent with this obstruction.
 
-There are sharper upper bounds for small implementations.
-Corollary~\ref{cor:analog-teacher-critical-rate} applies to any
-depth-$D$, width-$C$ tanh teacher with weights bounded by $B$ and
-signed output at least $1/2$ on the cube. Put
-$R=d+C+B+D+L+2$. At learner depth $L\ge A(D+1)\log R$, it gives
+Controlled Fourier features give
 \[
- J_L(f)\le V_*+A\frac{(D+1)^2\log^2 R}{L}.
+ J_L(f)\le V_*+
+ C\frac{[\log(d+L+2)+\log A_F(f)]^2}{L}
 \]
-The constant $A$ is universal. Thus exponential teacher-depth
-dependence can be removed from this critical prior-rate upper bound
-without restricting the prior's support. The proof compiles the
-teacher at finite precision, propagates exact Boolean gate vectors
-through low-entropy mixture laws, and then amplifies the target
-component. Theorem~\ref{thm:controlled-fourier-seed} supplies another
-bound through the Fourier $\ell^1$ norm. In particular, all parities
-attain a bounded rate at depth of order $(\log d)^2$.
+under the stated depth condition. A layerwise circuit simulation and
+finite-precision teacher compilation give
+$J_L(f)\le V_*+C(D+1)^2\log^2R/L$ for the teachers above.
+These constructions supply the two learning corollaries.
+Every sample of $n$ consistently labeled points also has an
+extension with excess rate $O(\log^2(d+n+L)/L)$ at sufficient depth.
+This bounds the posterior's rate without asserting that all such
+extensions are accurate.
 
-Theorem~\ref{thm:near-baseline-posterior-ceiling} gives a different,
-sample-dependent comparison: every consistent sample of at most $n$
-points has an extension with rate at most
-$V_*+A\log^2(d+n+L+2)/L$ when $L\ge A\log(d+n+L+2)$.
-The actual width-first posterior concentrates below this ceiling.
-This narrows the interval in which accurate and inaccurate extensions
-must be compared; it does not supply that comparison.
-
-Theorems~\ref{thm:critical-directional-budget}
-and~\ref{thm:critical-excess-dimension-lower} describe the paths inside
-this interval. For a path with hidden entropy costs $D_s$ and total
-cost at most $V_*+\epsilon$, they give
+The excess-rate scale is sharp for constants, dictators, and all
+parities: it is $\Theta(\log^2d/L)$ between sufficiently large
+logarithmic depth and a sufficiently small fixed power of dimension.
+The lower bound holds for every Boolean function. A separate
+comparison proves that full parity still has limiting Gibbs error
+$1/2$ with high training probability when
 \[
- \sum_s\sqrt{D_s}\le C\{\log(L+1)+\sqrt{L\epsilon}\},
- \qquad
- J_L(f)\ge V_*+c\frac{\log^2 d}{L}
- \quad(2\le L\le d^{c_0},\ d\ge d_0).
+ 2\le L\le c\theta\frac{\log d}{\log\log d},
+ \qquad n\le d^{(1-\theta)/(L-1)},\qquad 0<\theta<1.
 \]
-The latter bound holds for every Boolean function. Together with the
-Fourier construction it determines the excess-rate scale for constants,
-dictators, and all parities when $C\log(d+2)\le L\le d^{c_0}$.
-It does not determine their ordering within that scale.
+Its confidence-error lower limit is at least $1/4$, including
+mixtures of minimizers. This polynomial lower bound at smaller
+depths is consistent with the positive logarithmic-depth result.
 
-Section~\ref{sec:critical-bures-transfer} turns the entropy estimate
-into a covariance-stability theorem. Under a suitable transfer of
-the controlled laws, one hidden transition amplifies Gaussian-coupling
-distance by at most $1+\sqrt{2D_s}$. Thus the complete factor is
-at most $C(L+1)^C\exp\{C\sqrt{L\epsilon}\}$. This is polynomial
-in depth when $L\epsilon=O(\log^2 L)$. A corresponding readout
-transfer bounds uniform output error without a factor depending on
-the number of inputs. The theorem does not construct a small finite
-network: generic high-rank covariances cannot be approximated by
-low-rank ones in this distance.
-
-A further decomposition separates changes to one selected input pair
-from the remaining conditional entropy. When the latter vanishes, a
-symmetry argument gives a shallow polynomial-product implementation.
-An independent Fourier argument gives such an implementation whenever
-the terminal kernel is invariant under Boolean translations. Neither
-restriction is known for arbitrary optimizing paths. Small positive
-conditional entropy alone is insufficient for depth-uniform stability;
-Section~\ref{sec:critical-boolean-kernel-geometry} gives an explicit
-example. Turning the square-root entropy estimate into a general
-representation bound remains open.
-
-This is not a claim that the conditioned prior is approximately uniform.
-For a fixed training sample $S$, its exponential posterior rate at a
-consistent function is
+Neither rate flattening nor our learning proof makes the function
+prior uniform. For a sample $S$, a consistent function's exponential
+posterior rate is
 \[
- J_L(f)-\min_{g\text{ consistent with }S}J_L(g).
+ J_L(g)-\min_{h\text{ consistent with }S}J_L(h).
 \]
-Any positive difference, however small, is multiplied by width $N$.
-The theorem neither orders these differences nor controls finite-width
-probabilities to accuracy $1/N$. The general sample-complexity question
-for small deep circuits remains open. All limits in width are taken
-with dimension and depth fixed before studying the resulting function
-$J_L$ as depth varies.
-
-A complementary theorem describes the cost scale at every depth. Put
-\[
- \Phi_L(d)=1+L\bigl(d^{1/(2L)}-1\bigr)^2.
-\]
-Theorem~\ref{thm:critical-depth-profile} gives universal constants
-$0<c<C$ such that every target has $J_L(f)\ge c\Phi_L(d)$, while
-constants and dictators have $J_L(f)\le C\Phi_L(d)$.
-Thus this expression characterizes the minimum absolute-rate scale
-without asserting which function minimizes the exact rate at every
-dimension and depth. Later sections give a target-relative separation
-and a polynomial sample lower bound. The sharper comparison in
-Theorem~\ref{thm:critical-nearly-logarithmic-depth} covers growing
-depths $L\le c\eta\log d/\log\log d$, with limiting Gibbs error
-$1/2$ and confidence-error lower limit at least $1/4$. It concerns
-the actual posterior, including mixtures of minimizing functions.
-
-The proof first supplies a finite-width exponential potential. It then
-uses a quantitative first-layer spectrum bound to seed an arbitrary
-Boolean component, reduces the unused variance without entropy cost,
-and amplifies that component through small covariance changes. A scalar
-control problem describes the universal final cost. The arguments have
-received independent AI-agent mathematical review; they have not been
-formalized in Lean. Constants are not optimized.
+Any positive gap is multiplied by width $N$. Throughout, dimension,
+depth, and sample size are fixed before width tends to infinity.
+The analytic proofs have received independent AI-agent mathematical
+review; they have not been formalized in Lean. Constants are not
+optimized, and no efficient posterior-sampling algorithm is claimed.
 
 \input{critical-main-theorem.tex}
 \input{unrestricted-critical-baseline.tex}
@@ -212,11 +234,13 @@ formalized in Lean. Constants are not optimized.
 \input{critical-near-baseline-decomposition.tex}
 \input{critical-square-root-entropy.tex}
 \input{critical-bures-transfer.tex}
+\input{critical-anchored-compression.tex}
 \input{critical-rate-upper-proof.tex}
 \input{critical-controlled-fourier-seeds.tex}
 \input{critical-exact-feature-repair.tex}
 \input{critical-circuit-rate-steering.tex}
 \input{critical-analog-teacher-circuit-rate.tex}
+\input{critical-rate-sublevel-learning.tex}
 \input{critical-near-baseline-posterior.tex}
 \input{critical-learning-comparison.tex}
 \input{critical-boolean-kernel-geometry.tex}
@@ -237,6 +261,12 @@ formalized in Lean. Constants are not optimized.
 \input{critical-variational-background.tex}
 
 \begin{thebibliography}{9}
+\bibitem{karpinski1997}
+M. Karpinski and A. Macintyre.
+Polynomial bounds for VC dimension of sigmoidal and general Pfaffian
+neural networks.
+\emph{Journal of Computer and System Sciences} 54(1), 169--176, 1997.
+\url{https://doi.org/10.1006/jcss.1997.1477}.
 \bibitem{hesse2002}
 W. Hesse, E. Allender, and D. A. Mix Barrington.
 Uniform constant-depth threshold circuits for division and iterated multiplication.
