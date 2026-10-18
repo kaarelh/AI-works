@@ -4,7 +4,7 @@ This FAQ explains what the current results say, which assumptions matter, and wh
 
 **Status labels:** **Proved** means that the linked manuscript contains a proof under its stated assumptions. **Extension suggested by the proof** means that we have identified a plausible adaptation but are not citing a completed theorem. **Heuristic** is an informed expectation. **Open** means that the available results do not settle the question. Machine verification is a separate issue; see the final question.
 
-**Jump to:** [prediction thresholds](#5-what-changes-if-correctness-means-posterior-probability-above-12-rather-than-23) · [scaling tuples](#9-can-we-classify-all-tuples-of-layerwise-scaling-exponents) · [robustness and depth](#12-what-robustness-condition-gives-polynomial-depth-dependence) · [label noise](#24-do-the-good-generalization-results-survive-a-small-amount-of-label-noise) · [formal verification](#26-how-much-of-this-is-formally-verified)
+**Jump to:** [prediction thresholds](#5-what-changes-if-correctness-means-posterior-probability-above-12-rather-than-23) · [scaling tuples](#9-can-we-classify-all-tuples-of-layerwise-scaling-exponents) · [robustness and depth](#12-what-robustness-condition-gives-polynomial-depth-dependence) · [out-of-distribution learning](#why-expect-occam-learning-to-transfer-out-of-distribution) · [label noise](#24-do-the-good-generalization-results-survive-a-small-amount-of-label-noise) · [formal verification](#26-how-much-of-this-is-formally-verified)
 
 ## 1. What is the basic model, and what does “a circuit prior” mean here?
 
@@ -432,12 +432,22 @@ Conversely, a tiny target probability alone is not a sample lower bound. A prior
 | Remove bad depth dependence | **Partly resolved.** Joint polynomial depth under the robust support restriction; unrestricted positive results for substantial classes. General unrestricted small-deep-target case remains open. |
 | Lower-bound log prior mass | **Partly resolved.** The strong-prior rate is polynomially equivalent to bounded-weight network complexity; finite-variance target-mass bounds also exist. Sharp absolute-mass formulas remain open. |
 | Classify scaling regimes | **Partly resolved on a particular one-parameter line.** All tuples, mixed regimes, and broad non-Gaussian universality remain open. |
-| Out-of-distribution learning | **No general guarantee.** The iid conclusions use the same training and test distribution; arbitrary distribution shift admits elementary counterexamples. |
+| Out-of-distribution learning | **A plausible benefit of Occam learning, beyond the present iid theorems.** Identifying a shared simple rule can support good predictions in new regimes. Competing simple explanations limit this expectation; see the [discussion below](#why-expect-occam-learning-to-transfer-out-of-distribution). |
 | Online mistake bounds | **Open for the desired width-uniform neural statement.** Generic Bayesian code-length bounds exist, but the slides' stronger heuristic is not established. Cheapest-consistent circuit/formula analogies can fail. |
 | Other architectures | **Open here.** CNN weight sharing, recurrence, attention, normalization, and residual structure need their own prior and complexity accounting. |
 | Gradient descent | **Open as a learning theorem.** The experiments concern a sufficient stability property, not equivalence between SGD and the exact Bayesian posterior. |
 
 The [appendix audit](side-results/strong-prior-appendix-audit/paper.pdf) checks every original appendix in turn. In particular, the original depth example is a capacity/proof obstruction rather than a sample lower bound; the scaling classification is not exhaustive; the kernel-to-classification inference needed repair; and some online-learning claims were false under their stated conventions. These qualifications are part of the current account, not claims silently inherited from the slides.
+
+### Why expect Occam learning to transfer out of distribution?
+
+**Heuristic: useful OOD generalization is a reasonable expectation for an ideal Occam learner on many structured problems.** The physicist's argument is that observations often arise from a compact rule whose domain of validity extends beyond the observed cases. Discovering that rule lets us predict new regimes. When a competing explanation needs extra exceptions tied to the training regime, simplicity gives a reason to prefer the more reusable rule.
+
+For example, if the same target function governs training and testing, recovering its circuit gives correct predictions under any reweighting of the input distribution, including on previously unobserved inputs. The important possibility is that training reveals the rule itself. This motivates expecting substantially better transfer than the current iid error bounds alone establish. It is also a reason to care about a circuit prior as a preference among functions, beyond its consequences for iid sample complexity.
+
+The key qualification is whether the observations distinguish the relevant rule from other comparably simple explanations. If two input coordinates always agree during training, predicting either coordinate is equally simple; they can disagree at test time. A shortcut can therefore be as simple as, or simpler than, the rule we want. The representation and prior matter, as does whether the underlying mechanism continues to apply after the shift.
+
+The current theorems allow an arbitrary **common** training and test distribution; they do not prove this broader OOD expectation. Arbitrary shifts admit counterexamples, but that limits a universal guarantee rather than showing that Occam learning should usually transfer poorly. Making “generically works well” a theorem would require a model of natural tasks and shifts. For the present NNBayes program, good transfer under shifts that preserve a shared simple mechanism is a plausible research expectation, not an empirical conclusion established here.
 
 ## 24. Do the good generalization results survive a small amount of label noise?
 
