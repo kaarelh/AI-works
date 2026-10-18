@@ -16,7 +16,7 @@ $$
 |z_w(x)|>1/2\qquad\text{at every Boolean input }x.
 $$
 
-The posterior then conditions on the observed training signs. Under that prior restriction, this is equivalent to requiring $f(X_i)z_w(X_i)>1/2$ at each training input. Training inputs are iid; positive results allow an arbitrary common input distribution, whereas the parity lower bounds use the uniform distribution.
+The posterior then conditions on the observed training signs. Under that prior restriction, this is equivalent to requiring $f(X_i)z_w(X_i)>1/2$ at each noiseless training input. In the main results, training inputs are iid; positive results allow an arbitrary common input distribution, whereas the parity lower bounds use the uniform distribution. The separate noisy-interpolation result in Question 24 uses distinct uniformly sampled inputs.
 
 “Circuit prior” is a claim about the **prior on functions**: its preference for different functions approximately tracks the complexity of small circuits implementing them. In the slides' strong-prior setting, this is made precise through the Gaussian energy cost $\kappa_N(f)$, which determines the leading exponential order of prior probability ratios and is polynomially related to bounded-weight network complexity at fixed depth, uniformly over all learner widths $N\ge C_L(f)$.
 
@@ -45,7 +45,7 @@ Multiplying the readout by $A>0$ preserves signs and can improve output margins,
 
 For a finite input cube and nonzero clean outputs, sufficiently large readout amplification can eventually enforce the clipped-score stability condition used below. This does not show that the **raw trained network** satisfies the condition, or that the required amplification has polynomial cost. The robust Boolean-circuit construction instead supplies a controlled implementation and a controlled neighborhood of prior mass around it.
 
-**Open:** an equally general theory for real-valued regression targets, noisy observations, or multiclass outputs. The binary margin proofs suggest useful starting points, but they are not regression theorems.
+**Open:** an equally general theory for real-valued regression with noisy observations, or for multiclass outputs. The binary margin proofs suggest useful starting points, but they are not regression theorems. Binary label noise is discussed in [Question 24](#24-do-the-good-generalization-results-survive-a-small-amount-of-label-noise).
 
 ## 4. Can we drop the requirement of a margin on every input before training?
 
@@ -439,8 +439,8 @@ Conversely, a tiny target probability alone is not a sample lower bound. A prior
 | Remove bad depth dependence | **Partly resolved.** Joint polynomial depth under the robust support restriction; unrestricted positive results for substantial classes. General unrestricted small-deep-target case remains open. |
 | Lower-bound log prior mass | **Partly resolved.** The strong-prior rate is polynomially equivalent to bounded-weight network complexity; finite-variance target-mass bounds also exist. Sharp absolute-mass formulas remain open. |
 | Classify scaling regimes | **Partly resolved on a particular one-parameter line.** All tuples, mixed regimes, and broad non-Gaussian universality remain open. |
-| Out-of-distribution learning | **A plausible benefit of Occam learning, beyond the present iid theorems.** Identifying a shared simple rule can support good predictions in new regimes. Competing simple explanations limit this expectation; see the [discussion below](#why-expect-occam-learning-to-transfer-out-of-distribution). |
-| Online mistake bounds | **Open for the desired width-uniform neural statement.** Generic Bayesian code-length bounds exist, but the slides' stronger heuristic is not established. Cheapest-consistent circuit/formula analogies can fail. |
+| Out-of-distribution learning | **Heuristic.** Mistakes by the simplest consistent hypothesis may often eliminate many surviving low-complexity competitors, even as the input distribution changes. The [conditional online argument below](#why-expect-occam-learning-to-transfer-out-of-distribution) makes this expectation precise; its genericity premise remains unproved. |
+| Online mistake bounds | **Open for the desired width-uniform neural statement.** The genericity argument below gives a conditional bound for a simplest-consistent learner; its premise and its analogue for the NNBayes posterior remain unproved. Generic Bayesian code-length bounds also exist. |
 | Other architectures | **Open here.** CNN weight sharing, recurrence, attention, normalization, and residual structure need their own prior and complexity accounting. |
 | Gradient descent | **Open as a learning theorem.** The experiments concern a sufficient stability property, not equivalence between SGD and the exact Bayesian posterior. |
 
@@ -448,37 +448,69 @@ The [appendix audit](side-results/strong-prior-appendix-audit/paper.pdf) checks 
 
 ### Why expect Occam learning to transfer out of distribution?
 
-**Heuristic: useful OOD generalization is a reasonable expectation for an ideal Occam learner on many structured problems.** The physicist's argument is that observations often arise from a compact rule whose domain of validity extends beyond the observed cases. Discovering that rule lets us predict new regimes. When a competing explanation needs extra exceptions tied to the training regime, simplicity gives a reason to prefer the more reusable rule.
+**Heuristic: when the simplest surviving explanation is wrong, its mistake often rules out many other surviving explanations.** The physicist's argument is that the simplest hypothesis still consistent with the observations is not too atypical of the remaining hypotheses simpler than the target. When it makes a mistake, a substantial fraction of those hypotheses should often make the same mistake. Revealing the correct label then eliminates them together. There can only be logarithmically many substantial reductions of a finite candidate pool.
 
-For example, if the same target function governs training and testing, recovering its circuit gives correct predictions under any reweighting of the input distribution, including on previously unobserved inputs. The important possibility is that training reveals the rule itself. This motivates expecting substantially better transfer than the current iid error bounds alone establish. It is also a reason to care about a circuit prior as a preference among functions, beyond its consequences for iid sample complexity.
+Here is a conditional counting argument. Suppose the target $f$ has a description of length $b$ bits. Let $V_t$ contain all descriptions of length at most $b$ still consistent with the labels observed before round $t$, and predict with a shortest consistent description. Include descriptions of the same length as the target so that ties are covered. The target's description always survives. Write $M_0=|V_0|$; for binary descriptions, $M_0<2^{b+1}$.
 
-The key qualification is whether the observations distinguish the relevant rule from other comparably simple explanations. If two input coordinates always agree during training, predicting either coordinate is equally simple; they can disagree at test time. A shortcut can therefore be as simple as, or simpler than, the rule we want. The representation and prior matter, as does whether the underlying mechanism continues to apply after the shift.
+Suppose that among the first $m$ mistakes, at least $\beta m$ of them each eliminate at least an $\alpha$ fraction of the **current survivors**. Then
 
-The current theorems allow an arbitrary **common** training and test distribution; they do not prove this broader OOD expectation. Arbitrary shifts admit counterexamples, but that limits a universal guarantee rather than showing that Occam learning should usually transfer poorly. Making “generically works well” a theorem would require a model of natural tasks and shifts. For the present NNBayes program, good transfer under shifts that preserve a shared simple mechanism is a plausible research expectation, not an empirical conclusion established here.
+$$
+1\le |V_{\mathrm{after}}|\le M_0(1-\alpha)^{\beta m},
+\qquad
+m\le\frac{\log M_0}{\beta\log(1/(1-\alpha))}
+\le\frac{\log M_0}{\alpha\beta}.
+$$
+
+Thus the proposed 10%/10% condition gives fewer than $66(b+1)$ mistakes. If this condition continues to hold as the sequence grows, it bounds the total number of mistakes. A circuit over a fixed finite gate basis has description length polynomial in its width, depth, and input dimension, so this gives the desired polynomial bound **conditional on the genericity premise**. Counting wrong hypotheses in the original pool would not suffice: they may already have been ruled out.
+
+One probabilistic formulation makes the intended typicality explicit. Let $Z_t$ indicate that the simplest survivor is wrong, and let $q_t$ be the fraction of current survivors wrong on that same input. The condition
+
+$$
+\mathbb E[q_t\mid Z_t=1,\text{past observations}]\ge c>0
+$$
+
+says that, conditional on a mistake by the simplest survivor, a uniformly sampled surviving description also has a nonnegligible chance of being wrong. It implies an expected total mistake bound of $\log M_0/c$: revealing a label decreases $\log|V_t|$ by $-\log(1-q_t)\ge q_t$, and the total available decrease is at most $\log M_0$. This is a precise version of the heuristic that the simplest predictor's errors are not usually exceptional among the other low-complexity candidates. Approximate independence of the two error events would suffice if the comparison candidate's error probability were also bounded below; independence alone does not supply that lower bound.
+
+The counting step needs no iid assumption. It allows inputs from changing or previously unseen regions, provided the genericity premise continues to hold and the true label is revealed after each prediction. This is why the argument is relevant to OOD learning. It gives an **online mistake bound with feedback**, rather than a guarantee for a predictor trained once and then tested without further labels under an arbitrary shift.
+
+The heuristic part is whether this genericity premise holds for relevant tasks, representations, and input sequences. A sequence can instead expose errors peculiar to the current simplest hypothesis, eliminating very few other candidates at each mistake. Establishing that such behavior is atypical, and transferring the argument from a simplest-consistent description to the actual NNBayes posterior, remain open. The present iid theorems do not establish those claims.
 
 ## 24. Do the good generalization results survive a small amount of label noise?
 
-**Noisy Occam learning is possible, but the present posterior theorems do not automatically extend. There is also a real issue with the strong-prior limit.** It matters whether “noise” means independent random label flips, input-dependent flip probabilities uniformly below one half, or adversarial corruptions, and whether test error is measured against the clean target or a fresh noisy label.
+**There is now a positive result for the original strong-prior learner with exact fit, including every flipped label. The strongest fixed-noise question remains open.** The [new research note](works-in-progress/noisy-interpolation/README.md) gives a proof for tanh networks at every fixed depth. It has undergone independent AI-agent mathematical checks, but is not Lean verified or part of the five main results.
 
-With the **current exact-consistency learner**, two observations of the same input with opposite labels make the conditioning event empty. Even without repeated inputs, a flipped label excludes the clean target from the posterior. The target-neighborhood comparison used in the existing proofs is therefore lost; the learner would need to interpolate the corrupted labels, and we have no theorem here saying that the resulting posterior still generalizes well.
+The sampling convention matters: choose $n$ distinct points uniformly from the Boolean cube, flip each label independently with probability $\eta$, and evaluate against the underlying clean function. Keep the original Gaussian prior, its all-input margin restriction, and exact conditioning on the observed labels. Thus the clean target itself is excluded when any label flips; the proof constructs a different, inexpensive network that fits all the corruptions.
 
-Your Occam intuition is right at the level of **learning from a controlled-complexity class**. For example, let a finite class $H$ contain the clean target, and independently flip each training label with probability $\eta<1/2$. If a predictor has clean error $e$, its expected noisy-label error is
-
-$$
-\eta+(1-2\eta)e.
-$$
-
-Thus empirical noisy-error minimization can still identify a predictor with small clean error. A simple union-bound/Hoeffding argument gives the sufficient bound
+Suppose the clean target has a depth-$L$, width-$C$ implementation with weights bounded by $C$, margin above $1/2$, and output magnitude at most $U\ge1$. At every sufficiently large learner width $N$, the strong-prior limit satisfies a bound of the form
 
 $$
-n=O\!\left(\frac{\log|H|+\log(1/\delta)}{(1-2\eta)^2\varepsilon^2}\right)
+\limsup_{\sigma\downarrow0}R_{\mathrm{clean}}(N,\sigma)
+\le P(d,L,U)\eta+
+\frac{B_L(d,C,U)+P(d,L,U)\log(2/\delta)}{n}
+\quad\text{with probability at least }1-\delta.
 $$
 
-for clean error at most $\varepsilon$. This deliberately loose bound illustrates the point: a polynomial description-length bound can yield a polynomial noisy-learning bound. Analogous finite-class arguments work for independent input-dependent flip probabilities uniformly bounded by $\eta<1/2$. These are standard noisy-learning observations, **not yet an extension proved for our exact Bayesian learner**.
+Here $R_{\mathrm{clean}}$ is posterior average error against the clean function on the full cube. The function $P$ is a polynomial jointly in its arguments; $B_L$ is polynomial in $d,C,U$ at each fixed depth, with potentially bad depth dependence. Constants are absorbed into these two functions. Every bounded-weight target has $U\le C^2$, so this covers the original target class. A layered Boolean circuit can instead be implemented with $U=1$, counting constant wires and compilation overhead: **for these targets the coefficient of the noise rate is independent of circuit width**, although the sample overhead still depends on it.
 
-There is a subtle obstruction to simply replacing hard consistency by an ordinary noisy likelihood and then taking the same **strong-prior-first limit**. For a fixed sample of size $n$ and fixed $0<\eta<1/2$, the likelihood ratio of any two Boolean hypotheses is at most $((1-\eta)/\eta)^n$. But if their prior rates differ by $\Delta\kappa>0$, their prior probability ratio has an exponential factor $\exp[-\Delta\kappa/(2\sigma^2)]$. As $\sigma\to0$ at fixed width and fixed $n$, the prior-rate difference wins. The positive noisy likelihood cannot exclude a strictly cheaper wrong hypothesis in the way exact consistency does. Consequently, **a naive noisy-likelihood substitution can fail even with very little noise**. A successful extension needs a specified balance between prior strength, likelihood strength, and sample size, or a different rule such as a controlled empirical-error constraint; it is not a free corollary of the noiseless theorem.
+The learner width must be large enough to accommodate the corruptions: a sufficient threshold is a constant times $C$, plus a polynomial in $d,U$ times $\eta n+\log(2/\delta)+1$. The theorem holds at **every** width above that threshold, with prior variance tending to zero separately at each fixed width. It does not retain the noiseless condition $N\ge C_L(f)$ alone; a network just large enough for the clean target may be unable to interpolate the noisy labels. The proof controls all minimum-energy consistent functions, so mixtures of tied minimizers cause no gap.
 
-My expectation is that useful noisy analogues can be proved using the compression/Occam structure with an appropriately calibrated learner. The right result should state the noise model and order of limits explicitly, and account for the complexity of fitting or tolerating corruptions. Arbitrary adversarial corruption is a different problem and generally prevents arbitrarily small clean error at a fixed positive corruption rate without more assumptions. Finally, if confidence refers to a **fresh noisy label**, rather than the latent clean function, even knowing the target perfectly gives confidence only $1-\eta$ under symmetric flips.
+The stronger statement proved in the note allows **any** $s$ corrupted labels, even chosen after seeing the sample, and bounds clean error by
+
+$$
+\frac{B_L(d,C,U)+P(d,L,U)s+8\log(1/\delta)}{n}.
+$$
+
+This handles a number of corruptions proportional to $n$, rather than only a bounded or slowly growing number. For accuracy $\varepsilon$, it gives polynomial sample complexity at fixed depth when $\eta$ is smaller than $\varepsilon$ divided by a resource polynomial. To measure error on unseen inputs, multiply the whole-cube bound by at most $2^d/(2^d-n)$; this is at most two when $n\le2^{d-1}$. Failure to assign the correct label probability strictly above $q<1$ costs a further factor $1/(1-q)$, hence three for the usual $2/3$ criterion.
+
+**What remains open:** can we replace the resource-dependent noise term by $\rho(\eta)$, where $\rho(\eta)\to0$ as $\eta\to0$ independently of input dimension and target complexity, after paying a polynomial sample overhead? Our new bound can become vacuous at a fixed numerical noise rate as dimension grows. It therefore does not yet give the strongest circuit-style noisy-learning guarantee. Nor does it claim arbitrarily accurate clean recovery at a fixed positive noise rate.
+
+The Occam idea is still useful, but the relevant comparator is the clean implementation **plus a correction that fits the flips**. Polynomial equivalence between circuit complexity and neural prior complexity alone does not control the cost of this correction sharply enough: raising a cost proportional to $s\simeq\eta n$ to a power greater than one can destroy the sample bound. The new proof instead matches two exponents. With $H=L-1$ hidden layers, the correction has energy at most $K_0+K_1(s+1)^{1/H}$, and the logarithm of the number of globally separated functions of energy at most $K$ grows at most like a resource factor times $(K+1)^H$. Their combination gives the required bound linear in $s$.
+
+There is a precise limitation to improving this particular counting argument. Our common energy budget contains the target with **every possible set of $s$ cube labels flipped**, so its function class has at least $\binom{2^d}{s}$ members. Its log-cardinality is therefore at least $s\log(2^d/s)$, which carries a dimension factor when $s$ is polynomial in $d$. This is a limitation of using that entire class in one union bound, not evidence that the learner itself generalizes badly.
+
+One promising next step is to make the correction cheaper by allowing it to change some unseen labels. Approximate-membership constructions used in circuit learning trade a controlled amount of off-sample error for a shorter description. Obtaining a corresponding sharp neural-energy bound could help; alternatively, a more selective counting argument might avoid paying for all those almost-correct functions. Neither improvement has yet been proved for this posterior.
+
+These conclusions are specific to the stated sampling and interpolation conventions. Repeated inputs with contradictory labels would make exact conditioning impossible. If we instead allow training errors, ordinary finite-class noisy-error minimization has standard clean-learning guarantees, but that is a different learner. Replacing exact fit by a positive noisy likelihood also needs care in the **strong-prior-first limit**: its likelihood ratios are at most $((1-\eta)/\eta)^n$, whereas a fixed prior-energy gap contributes $\exp[-\Delta\kappa/(2\sigma^2)]$. At fixed $n$, the prior gap wins as $\sigma\to0$. The new theorem avoids this issue by keeping the exact-fit likelihood throughout.
 
 ## 25. What other questions matter before interpreting this as an explanation of practical deep learning?
 
@@ -487,7 +519,7 @@ The largest missing links are:
 - **Finite width in the negative regimes.** The exponential parity results take $N\to\infty$ at fixed dimension, depth, and sample. They do not provide a useful width threshold uniform in growing $d,k,n$. The positive all-width theorems have a stronger finite-width quantifier.
 - **Orders of limits.** Fixing width and shrinking variance, taking width first at a specified scaling, and growing dimension and width together can give different answers. Theorems should specify which is being taken.
 - **Computational cost.** Exact posterior conditioning and sampling may be intractable. Polynomial examples do not imply polynomial computation, and no theorem here identifies SGD's output law with that posterior.
-- **Noisy or misspecified data.** Exact sign/margin consistency assumes realizability. The [label-noise discussion](#24-do-the-good-generalization-results-survive-a-small-amount-of-label-noise) explains both the noisy-Occam route and the obstruction from taking the strong-prior limit first.
+- **Noisy or misspecified data.** There is now a strong-prior exact-interpolation theorem with resource-dependent noise tolerance. The [label-noise discussion](#24-do-the-good-generalization-results-survive-a-small-amount-of-label-noise) explains its scope; dimension-independent fixed-noise tolerance and broader misspecification remain open.
 - **Typical data and architectures.** Uniform parity is a useful separation, not a model of all natural data. Current empirical certificates do not establish a theorem for modern large-model training.
 - **Prediction rules.** Gibbs draws, posterior majority, mean-score prediction, and confidence-threshold success are different losses. A statement about one should not be relabeled as a statement about another.
 - **Selection of examples.** Passive iid sample lower bounds need not hold for active learning, teaching sets, or adversarially selected informative inputs. They are also usually stated for each specified sample size, not on one common event for every prefix of an infinite stream.
@@ -496,6 +528,6 @@ The largest missing links are:
 
 The repository includes closed Lean formalizations of all five main learning statements, including the polynomial-depth generalization theorem under a robustness restriction; their exact theorem declarations, hypotheses, dependencies, and build instructions are the appropriate source for the machine-checked scope. A successful Lean build verifies the formal statements actually written, so alignment with the intended analytic network model is a separate review obligation.
 
-The [verification record](lean/VERIFICATION.md) gives the exact-type gates, independent source rebuild, and axiom checks. The formal proof under the robustness restriction uses a looser Pinsker-and-energy construction; its exact learning statement does not include every optional posterior variant or sharp manuscript constant. The other recent depth manuscripts have undergone independent AI-agent mathematical audits but remain outside the main Lean verification. An audited manuscript or exact numerical certificate is not thereby a Lean proof. The FAQ's heuristic extensions and open-problem assessments are not formalized theorems.
+The [verification record](lean/VERIFICATION.md) gives the exact-type gates, independent source rebuild, and axiom checks. The formal proof under the robustness restriction uses a looser Pinsker-and-energy construction; its exact learning statement does not include every optional posterior variant or sharp manuscript constant. The other recent depth manuscripts and the new noisy-interpolation note have undergone independent AI-agent mathematical audits but remain outside the main Lean verification. An audited manuscript or exact numerical certificate is not thereby a Lean proof. The FAQ's heuristic extensions and open-problem assessments are not formalized theorems.
 
 Readers should start with the main theorem and conventions in the relevant paper, then use this FAQ to identify the limitations and possible extensions. The [collection index](README.md) distinguishes main results, side results, and work in progress.

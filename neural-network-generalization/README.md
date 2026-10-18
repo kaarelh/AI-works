@@ -106,6 +106,12 @@ These manuscripts are retained because their proofs or scope can still be useful
 
 The principal unfinished target is the fixed-depth natural sparse-parity lower bound for $0<\gamma<1$, with uniform IID samples and the actual posterior-confidence criterion. Selected-example results, symmetry-restricted certificates, and analytic reductions are side results, not a resolution of that target.
 
+## Label-noise research
+
+[Exact noisy interpolation in the strong-prior limit](works-in-progress/noisy-interpolation/README.md) is a new supporting research note. For distinct uniformly sampled Boolean inputs, it proves a clean-error bound linear in the corrupted fraction, with a resource-dependent coefficient, for the original tanh/Gaussian exact-fit learner at every sufficiently large width. The proof covers arbitrary corruptions and posterior mixtures. For bounded-output Boolean-circuit implementations, the noise coefficient is independent of teacher width; dependence on dimension remains. A noise bound uniform in dimension and target complexity is still open.
+
+This note is not Lean verified and remains separate from the main results. The [label-noise FAQ](TECHNICAL-FAQ.md#24-do-the-good-generalization-results-survive-a-small-amount-of-label-noise) gives the conventions, width requirement, and remaining question.
+
 ## Recent depth research
 
 These are supporting results and works in progress, retained separately from the main generalization theorem under a robustness restriction. In particular, the improvements for the unrestricted learner are promising but do not resolve the general small-deep-circuit problem.
