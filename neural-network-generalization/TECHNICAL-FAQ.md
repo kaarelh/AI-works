@@ -330,7 +330,7 @@ $$
 
 All signed parities have $A_F(f)=1$, regardless of their degree. The statement therefore includes full parity at $L\ge C_0\log(d+L+2)$. Reaching a *bounded absolute rate* requires depth of order $(\log d)^2$; that is a different criterion, and the learning result does not require it.
 
-For an arbitrary depth-$D$ tanh teacher of width $C_T$, parameter magnitudes at most $B$, and global signed margin at least $1/2$, put $R=d+C_T+B+D+L+2$. When $L\ge C_0(D+1)\log R$, the sufficient sample bound is
+For an arbitrary tanh teacher of depth $D$ and width $C_T$, parameter magnitudes at most $B$, and global signed margin at least $1/2$, put $R=d+C_T+B+D+L+2$. When $L\ge C_0(D+1)\log R$, the sufficient sample bound is
 
 $$
 n\ge\frac{C}{\varepsilon}\left[R^{c(D+1)}+\log(1/\delta)\right].
