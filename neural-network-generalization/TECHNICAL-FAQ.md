@@ -311,7 +311,7 @@ $$
 J_L(f)=\lim_{N\to\infty}-\frac1N\log\Pr\lbrace f(x)z_w(x)>1/2\text{ for all }x\rbrace .
 $$
 
-The [critical-depth paper](works-in-progress/critical-depth/paper.pdf) proves that the absolute rates of all Boolean functions approach the same universal $V_*\in(1,2)$ as depth increases, with quantitative polynomial-depth bounds. It also identifies the minimum rate scale, up to universal factors, as
+The [critical-depth paper](works-in-progress/critical-depth/paper.pdf) proves that the absolute rates of all Boolean functions approach the same universal $V_{\ast}\in(1,2)$ as depth increases, with quantitative polynomial-depth bounds. It also identifies the minimum rate scale, up to universal factors, as
 
 $$
 1+L\bigl(d^{1/(2L)}-1\bigr)^2.
@@ -322,13 +322,13 @@ $$
 Controlled feature laws give much sharper upper bounds for structured functions. Every parity, including full parity, reaches a fixed universal rate budget at depth $\Theta(\log^2(d+2))$, matching the necessary scale even for constants and dictators. More generally, a depth $D$ tanh teacher of width $C$, weights bounded by $B$, and global signed margin at least $1/2$ has
 
 $$
-J_L(f)\le V_*+a\frac{(D+1)^2\log^2 R}{L},
+J_L(f)\le V_{\ast}+a\frac{(D+1)^2\log^2 R}{L},
 \qquad R=d+C+B+D+L+2,
 $$
 
 when $L\ge a(D+1)\log R$, for a universal constant $a$. The construction inserts a small controlled contribution for each circuit layer and then amplifies the resulting target component. It removes exponential teacher-depth dependence from this **prior-rate upper bound**. It does not yet remove it from the sample bound.
 
-There is also an actual-posterior comparison: every consistently labeled sample of at most $n$ points has a globally margined extension with rate at most $V_*+a\log^2(d+n+L+2)/L$, once $L\ge a\log(d+n+L+2)$. With dimension, depth, and sample fixed, the posterior concentrates below this ceiling as width grows. Thus the remaining learning problem concerns the relative rates of accurate and inaccurate extensions inside a narrow interval around $V_*$. The upper bound for the teacher alone does not settle that comparison.
+There is also an actual-posterior comparison: every consistently labeled sample of at most $n$ points has a globally margined extension with rate at most $V_{\ast}+a\log^2(d+n+L+2)/L$, once $L\ge a\log(d+n+L+2)$. With dimension, depth, and sample fixed, the posterior concentrates below this ceiling as width grows. Thus the remaining learning problem concerns the relative rates of accurate and inaccurate extensions inside a narrow interval around $V_{\ast}$. The upper bound for the teacher alone does not settle that comparison.
 
 A separate rate comparison does prove a critical parity lower bound. At fixed $L\ge2$, put
 
