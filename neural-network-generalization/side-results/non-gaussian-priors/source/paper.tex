@@ -1,0 +1,298 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools,microtype,xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black,citecolor=blue!50!black]{hyperref}
+\newtheorem{theorem}{Theorem}[section]\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}\newcommand{\Prb}{\mathbb P}\renewcommand{\Pr}{\mathbb P}\newcommand{\R}{\mathbb R}
+\newcommand{\norm}[1]{\left\Vert#1\right\Vert}
+\setlength{\emergencystretch}{3em}
+\hypersetup{pdftitle={Bayesian neural-network learning with non-Gaussian weight priors},pdfauthor={Dmitry Vaintrob; Kaarel Hanni; OpenAI Codex}}
+\title{Bayesian neural-network learning\\with non-Gaussian weight priors}
+\author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex\thanks{AI assistant; contributed to mathematical analysis and drafting. This research draft has not been formalized in Lean.}}
+\date{October 18, 2026}
+\begin{document}\maketitle
+\begin{abstract}
+Can a Bayesian neural network learn a small circuit when its independent
+weight priors are not Gaussian? We prove that three width-independent
+learning guarantees survive for a natural family of non-Gaussian coordinate
+laws: even densities $Z^{-1}e^{-V}$, with variance one and curvature bounded
+above and below by positive constants. The guarantees cover the strong-prior
+limit at every finite width, and the finite-scale regimes $\gamma>1$ and
+$\gamma=1$ at every width above the target's bounded-weight network
+complexity. The sample bound is polynomial in input dimension and target
+complexity at each fixed depth, independently of the learner's width.
+The model uses tanh hidden layers, a linear readout, an absolute output
+margin imposed at every Boolean input before training, and exact
+conditioning on noiseless labels. The prediction guarantee controls the
+actual posterior, including mixtures: its correct-label probability exceeds
+$2/3$ on almost all test inputs.
+The proof uses a translation-entropy bound for target mass and concentration
+of strongly log-concave measures. At mean-field scaling, a relative Lindeberg
+estimate controls log partition functions for finite covariance tests
+with polynomial losses;
+an ordinary central limit approximation would not provide the needed bound.
+We also give a broader quadratic-tail extension of the strong-prior result.
+No efficient posterior computation or polynomial dependence on depth is
+asserted.
+\end{abstract}
+
+\section{Introduction}
+A useful sample bound for a large Bayesian neural network should depend on
+the size of a small implementation of the target, rather than on the number
+of parameters available to the learner. Gaussian weight priors permit such
+bounds in several small-scale and mean-field regimes. This paper establishes
+that exact Gaussianity is unnecessary for three of those guarantees.
+
+Our main family consists of independent coordinates with a fixed even
+density $q(t)=Z^{-1}e^{-V(t)}$, standardized to variance one, where
+\begin{equation}\label{eq:curvature}
+ V\in C^2(\R),\qquad 0<m\leq V''(t)\leq M<\infty
+ \quad(t\in\R).
+\end{equation}
+The lower bound supplies concentration. The upper bound makes a translated
+copy of a small target inexpensive in relative entropy. These are
+restrictions on a one-dimensional weight law, rather than restrictions
+selected separately for each network function. A genuinely non-Gaussian
+example is the variance-standardized law with density proportional to
+$\exp\{-t^2/2-b\log\cosh t\}$, for any fixed $b>0$.
+
+We retain the same layer scales and the same learning rule throughout.
+Before training, the prior is conditioned to produce outputs of absolute
+value greater than $1/2$ at every Boolean input. Training then conditions
+on exact agreement with noiseless labels. At each fixed depth, we prove a
+sample bound polynomial in dimension and bounded-weight target complexity,
+uniformly over every learner width at least that complexity. There are
+three regimes: a common scale tending to zero at fixed width; finite-scale
+priors with exponent $\gamma>1$; and the mean-field endpoint $\gamma=1$.
+The latter two statements require neither a small-scale limit nor an
+infinite-width limit.
+
+The three proofs use a shared statistical principle. A finite collection
+of simply describable functions contains all but a sufficiently small
+amount of prior mass relative to the target. A union bound eliminates its
+inaccurate members after polynomially many examples. In the strong-prior
+limit, quadratic tail envelopes select functions of bounded weighted
+squared norm. For $\gamma>1$, concentration permits a spectral truncation
+with the same effect. At $\gamma=1$, the bulk internal matrices cannot be
+removed that way. We instead approximate empirical hidden-layer covariances
+by controlled exponential tilts, and then realize those covariances by
+small finite networks.
+
+The new difficulty at the mean-field endpoint is that non-Gaussian internal
+rows are not determined by their covariance. We resolve it with a relative
+Lindeberg comparison for log partition functions. Its error is polynomial
+in the tilt budget and independent of the number of input points. This
+avoids both an exponential dependence on the tilt budget and a factor equal
+to the size of the Boolean cube. All supporting compression and posterior
+arguments are included below and in the appendices.
+
+\section{Model and guarantees}\label{sec:model}
+Let $d\geq1$, $L\geq2$, and $\mathcal X=\{-1,1\}^d$. Write
+$\bar x=(1,x_1,\ldots,x_d)$. A depth-$L$ network has $L-1$ hidden layers
+of common width $N$ and computes
+\[
+ h^0(x)=\bar x,\qquad h^s(x)=\tanh(W^s h^{s-1}(x))\ (1\leq s<L),
+ \qquad z_w(x)=W^Lh^{L-1}(x).
+\]
+There are no separate internal biases. For a Boolean function $g$, let
+\[
+ U_{N,g}=\{w:g(x)z_w(x)>1/2\ \text{for every }x\in\mathcal X\},
+ \qquad U_N=\bigcup_g U_{N,g}.
+\]
+If $\mu$ is the independent-coordinate parameter prior, its induced
+function prior is $\pi(g)=\mu(U_{N,g})/\mu(U_N)$. All priors used below
+have positive densities, so any nonempty strict-margin region has positive
+mass. In particular the learner is defined whenever the target has a
+finite implementation at the chosen width.
+
+Let $C_L(f)$ be the least integer $C\geq1$ for which $f$ has a
+width-$C$, depth-$L$ implementation with the stated strict margin and all
+weights at most $C$ in absolute value. This combines width and weight
+magnitude at the specified depth; it is not an unrestricted gate count.
+Given independent inputs $x_1,\ldots,x_n\sim D$ and labels $f(x_i)$,
+the posterior is
+\[
+ \Pi(g\mid S_n)=
+ \frac{\pi(g)\mathbf1\{g(x_i)=f(x_i)\ \forall i\}}
+ {\sum_h\pi(h)\mathbf1\{h(x_i)=f(x_i)\ \forall i\}}.
+\]
+Define its Gibbs risk and confidence-failure probability by
+\[
+ R_D(\Pi)=\E_{g\sim\Pi}\Pr_{x\sim D}\{g(x)\ne f(x)\},\qquad
+ F_q(\Pi)=\Pr_{x\sim D}\{\Pi(g(x)=f(x)\mid S_n)\leq q\}.
+\]
+For every posterior,
+\begin{equation}\label{eq:confidence}
+ F_q(\Pi)\leq\frac{R_D(\Pi)}{1-q}.
+\end{equation}
+Thus the statements below control the entire posterior, rather than a
+selected minimizer or the mean of its real-valued outputs. Posterior-majority
+error is at most $2R_D(\Pi)$, including arbitrary tie breaking.
+
+Let $\xi$ have density satisfying \eqref{eq:curvature}, be even, and have
+variance one. Independent copies are used for all scalar weights. The
+\emph{strong-prior scales} are
+\begin{equation}\label{eq:strong-scales}
+ W^1_{ij}=\sigma\sqrt{N/d}\,\xi^1_{ij},\qquad
+ W^s_{ij}=\sigma\xi^s_{ij}\ (2\leq s<L),\qquad
+ W^L_j=\sigma N^{-1/2}\xi^L_j.
+\end{equation}
+The \emph{finite-scale exponent family} is
+\begin{equation}\label{eq:gamma-scales}
+ W^1_{ij}=N^{(1-\gamma)/2}\xi^1_{ij}/\sqrt d,\qquad
+ W^s_{ij}=N^{-\gamma/2}\xi^s_{ij}\ (2\leq s<L),\qquad
+ W^L_j=N^{-(\gamma+1)/2}\xi^L_j.
+\end{equation}
+These are exactly \eqref{eq:strong-scales} at $\sigma=N^{-\gamma/2}$.
+At $\gamma=1$, the first-layer, internal, and readout variances are
+$1/d$, $1/N$, and $1/N^2$.
+
+\begin{theorem}[Strong-prior learning]\label{thm:strong-main}
+Fix $L$ and a coordinate law as above. There is a polynomial $p_L$, with
+coefficients allowed to depend on the law, such that the following holds.
+Let $C=C_L(f)<\infty$, $N\geq C$, and $\varepsilon\in(0,1)$.
+There is $\sigma_0>0$ such that for every $0<\sigma<\sigma_0$, every
+input distribution $D$, every $\delta\in(0,1)$, and
+\[
+ n\geq\frac6\varepsilon
+       \left[p_L(d,C)+\log\frac1\delta\right],
+\]
+with probability at least $1-\delta$,
+$R_D(\Pi)\leq\varepsilon/3$ and $F_{2/3}(\Pi)\leq\varepsilon$.
+The sample polynomial is independent of $N$. The threshold $\sigma_0$
+may depend on the finite width, target, and desired accuracy; no uniform
+small-scale threshold over all widths is asserted.
+\end{theorem}
+
+\begin{theorem}[Finite-scale learning for every $\gamma\geq1$]
+\label{thm:finite-main}
+Fix $L$, a coordinate law as above, and $\gamma\geq1$. There is a
+polynomial $p_{L,\gamma}$ such that, for every $C=C_L(f)<\infty$,
+every $N\geq C$, every distribution $D$ on $\mathcal X$, and every
+$\varepsilon,\delta\in(0,1)$, the condition
+\begin{equation}\label{eq:main-sample}
+ n\geq\frac6\varepsilon\left[
+ p_{L,\gamma}\!\left(d,C,\log\frac1\varepsilon\right)
+ +\log\frac6{\varepsilon\delta}\right]
+\end{equation}
+implies, with probability at least $1-\delta$,
+\[
+ R_D(\Pi)\leq\varepsilon/3,\qquad F_{2/3}(\Pi)\leq\varepsilon.
+\]
+This is a finite-width statement for the actual non-Gaussian prior
+\eqref{eq:gamma-scales}. The polynomial is independent of $N$, but its
+degree and constants may depend on $L$, $\gamma$, and the coordinate law.
+No uniformity as $\gamma\downarrow1$ is claimed for the $\gamma>1$ proof;
+the endpoint has its own proof.
+\end{theorem}
+
+Theorems~\ref{thm:strong-main} and \ref{thm:finite-main} are noiseless,
+statistical statements. They do not provide efficient posterior algorithms,
+useful optimized numerical exponents, or polynomial dependence on depth.
+A different fixed confidence threshold in $(0,1)$ follows from
+\eqref{eq:confidence} by changing constants.
+
+\section{Two elementary posterior estimates}\label{sec:posterior}
+\begin{lemma}[A finite relevant class]\label{lem:finite-posterior}
+Suppose a prior on finitely many functions assigns positive mass to $f$.
+Let $\mathcal H$ contain $f$, with $\log|\mathcal H|\leq H$ and
+$\pi(\mathcal H^c)/\pi(f)\leq\tau$. If
+$n\geq a^{-1}[H+\log(1/\delta)]$, then its consistency posterior has
+risk at most $a+\tau$ with sample probability at least $1-\delta$.
+\end{lemma}
+\begin{proof}
+Each function of true error greater than $a$ survives all $n$ labels with
+probability at most $e^{-na}$. A union bound excludes all such survivors
+in $\mathcal H$ with the stated probability. For every sample the
+posterior denominator is at least $\pi(f)$, so its mass outside
+$\mathcal H$ is at most $\tau$.
+\end{proof}
+
+\begin{lemma}[Learning from target mass]\label{lem:target-posterior}
+If $-\log\pi(f)\leq B$, then
+$n\geq a^{-1}[B+\log(1/(\tau\delta))]$ implies posterior risk at most
+$a+\tau$ with sample probability at least $1-\delta$.
+\end{lemma}
+\begin{proof}
+Let $Z$ be posterior mass on functions of error greater than $a$. The
+target lower-bounds the posterior denominator, whence
+\[
+ \E Z\leq\pi(f)^{-1}\sum_{g:\mathrm{err}_D(g)>a}
+       \pi(g)(1-\mathrm{err}_D(g))^n\leq e^{B-na}.
+\]
+Markov's inequality gives $Z\leq\tau$ with probability at least
+$1-\delta$. All other functions have error at most $a$.
+\end{proof}
+
+\input{target-mass.tex}
+\input{strong.tex}
+\input{above.tex}
+\input{meanfield.tex}
+\input{prior-complexity.tex}
+
+\section{Scope and remaining questions}
+The assumptions identify a broad sufficient family rather than a
+classification of non-Gaussian priors. In particular, Laplace, Student,
+uniform, and pure quartic-exponential coordinate laws are not covered by
+Theorem~\ref{thm:finite-main}. Strong log-concavity alone would allow
+superquadratic tails, whereas the upper curvature bound here prices a
+translated target quadratically. A compactly supported coordinate law has
+a more immediate difficulty in the fixed-width strong-prior limit: for
+sufficiently small scale all possible outputs may fail the global margin,
+leaving the conditioned learner undefined.
+
+The strong-prior theorem actually needs only two-sided Gaussian tail
+envelopes and permits asymmetric and nonconvex densities; see
+Section~\ref{sec:strong}. At finite scale, symmetry supplies centering in
+the translated conditional law, while strong log-concavity controls that
+law even after a convex cylinder restriction. Removing either condition
+requires a replacement for that target-mass argument. The mean-field
+comparison itself needs substantially less: centered variance-one internal
+coordinates with $\E[|\xi|^3e^{|\xi|}]<\infty$, suitable square-exponential
+moments at the boundary layers, and a separate target-mass lower bound.
+
+The theorems preserve the original global margin restriction. They do not
+assert the same result after conditioning only on margins at training
+points, under label noise, or for ReLU activations. Neither do they settle
+which non-Gaussian laws at their natural width scales retain exactly the
+same ordering of functions by prior probability, beyond the polynomial
+comparison proved in Corollary~\ref{cor:prior-complexity}. For laws with asymptotically
+quadratic log density, the strong-prior ordering is exactly the same
+weighted quadratic-energy ordering; see Proposition~\ref{prop:ordering}.
+
+\begingroup
+\small
+\begin{thebibliography}{9}
+\setlength{\itemsep}{2pt}
+\bibitem{hoeffding} W. Hoeffding.
+Probability inequalities for sums of bounded random variables.
+\emph{Journal of the American Statistical Association} 58 (1963), 13--30.
+\bibitem{brascamp-lieb} H. J. Brascamp and E. H. Lieb.
+On extensions of the Brunn--Minkowski and Pr\'ekopa--Leindler theorems,
+including inequalities for log concave functions, and with an application
+to the diffusion equation. \emph{Journal of Functional Analysis} 22
+(1976), 366--389.
+\bibitem{caffarelli} L. A. Caffarelli.
+Monotonicity properties of optimal transportation and the FKG and related
+inequalities. \emph{Communications in Mathematical Physics} 214 (2000),
+547--563.
+\bibitem{ledoux} M. Ledoux.
+\emph{The Concentration of Measure Phenomenon}.
+American Mathematical Society, 2001.
+\end{thebibliography}
+\endgroup
+
+\appendix
+\section{Compression of bounded-energy networks}\label{sec:norm-appendix}
+The following deterministic result supplies the width-independent count
+used in the strong-prior and $\gamma>1$ arguments. It depends on neither
+Gaussianity nor any probabilistic property of the weights.
+\input{norm-compression.tex}
+\input{sparse-dual.tex}
+\input{tilt-compression.tex}
+
+
+\end{document}

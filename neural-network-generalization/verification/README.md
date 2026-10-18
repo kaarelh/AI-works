@@ -18,6 +18,8 @@ Run these commands from the collection root. They require Python 3, `pdflatex`, 
 
 The latest full collection rebuild is recorded in [depth-publication-all-builds.json](depth-publication-all-builds.json). The five main papers were subsequently revised editorially and independently rebuilt; their source and PDF hashes are in the [editorial revision record](main-papers-editorial-revision-2026-10-18.json). A subsequent [robust-paper abstract clarification](robust-abstract-revision-2026-10-18.json) records that paper's current hashes and independent rebuild. The earlier `build-results.json` remains the 16 October snapshot.
 
+The non-Gaussian extension was added separately after that full rebuild. Its [review and build record](../side-results/non-gaussian-priors/verification/README.md) includes an isolated source rebuild with identical extracted PDF text and no unresolved references or LaTeX warnings. The collection contains 38 catalogued papers after this addition; the historical counts below describe their respective publication snapshots. The extension is not Lean verified.
+
 ## Publication checks, 16 October 2026
 
 - All 30 papers rebuilt successfully from the copied source dependencies using two LaTeX passes. No unresolved references or LaTeX warnings were reported.

@@ -1,0 +1,248 @@
+\section{The mean-field endpoint \texorpdfstring{$\gamma=1$}{gamma = 1}}\label{sec:meanfield}
+At this endpoint an internal non-Gaussian row has the same covariance as
+its Gaussian counterpart but a different distribution. The following
+comparison is uniform in the number of input coordinates of the field.
+The vector dimension below will eventually be $2^d$.
+
+\begin{lemma}[A relative Lindeberg estimate]\label{lem:lindeberg}
+Let $a_1,\ldots,a_N\in\R^s$ obey $\|a_j\|_\infty\leq N^{-1/2}$.
+Let $\xi_j$ be independent centered variance-one variables with law $\nu$,
+and let $g_j$ be independent standard Gaussians. Define
+\[
+ Z_\nu=\sum_j a_j\xi_j,\qquad Z_G=\sum_j a_jg_j,\qquad
+ F_\Gamma(z)=\tanh(z)^T\Gamma\tanh(z),
+\]
+where $\|\Gamma\|_{1,\mathrm{ent}}\leq G$. Write
+\[
+ P(G)=24G+36G^2+8G^3,\qquad
+ J_\nu=\E[|\xi|^3e^{|\xi|}]+\E[|g|^3e^{|g|}],\qquad
+ c_\nu=eJ_\nu/6.
+\]
+If $N\geq4G^2$, then
+\begin{equation}\label{eq:lindeberg}
+ \left|\log\E e^{F_\Gamma(Z_\nu)}-
+             \log\E e^{F_\Gamma(Z_G)}\right|
+ \leq c_\nu P(G)/\sqrt N.
+\end{equation}
+The constant is finite for the curvature family. The conclusion requires
+only the displayed moment, centering, and variance assumptions.
+\end{lemma}
+\begin{proof}
+Using $|\tanh|,|\tanh'|\leq1$, $|\tanh''|\leq2$, and
+$|\tanh'''|\leq6$, differentiation in a direction $a$ with
+$\|a\|_\infty\leq N^{-1/2}$ gives
+\[
+ |D_aF_\Gamma|\leq2G/\sqrt N,\quad
+ |D_a^2F_\Gamma|\leq6G/N,\quad
+ |D_a^3F_\Gamma|\leq24G/N^{3/2}.
+\]
+Thus $|D_a^3e^{F_\Gamma}|\leq P(G)N^{-3/2}e^{F_\Gamma}$.
+Fix the residual vector $z$ in a one-coordinate replacement and put
+$f_z(t)=e^{F_\Gamma(z+at)}$ and $\lambda=2G/\sqrt N\leq1$.
+The first derivative bound implies
+\[
+ e^{-\lambda|t|}f_z(0)\leq f_z(t)\leq e^{\lambda|t|}f_z(0).
+\]
+Taylor expansion through order two with integral remainder yields
+\[
+ |f_z(t)-f_z(0)-tf_z'(0)-t^2f_z''(0)/2|
+ \leq\frac{P(G)}{6N^{3/2}}|t|^3e^{\lambda|t|}f_z(0).
+\]
+The first three averaged terms match for $\xi$ and $g$. The difference
+of the one-coordinate expectations is therefore at most
+$P(G)J_\nu f_z(0)/(6N^{3/2})$. Both expectations are at least
+$e^{-1}f_z(0)$, since Jensen and variance one give
+$\E e^{-\lambda|\xi|}\geq e^{-\lambda\E|\xi|}\geq e^{-1}$.
+The same holds for $g$.
+
+Averaging over any independent random residual $z$ preserves both bounds.
+The inequality $|\log u-\log v|\leq|u-v|/\min\{u,v\}$ shows that
+the logarithms differ by at most $c_\nu P(G)N^{-3/2}$ at this
+replacement. Telescoping over all $N$ coordinates proves
+\eqref{eq:lindeberg}. No inverse global partition-function bound was
+used; such a bound would have introduced an unnecessary exponential in
+$G$.
+\end{proof}
+
+Let $s=2^d$, $r=L-1$, and index fields and covariance matrices by all
+inputs. Write
+\[
+ Q_{\ell,N}=\frac1N\sum_{i=1}^N h_i^\ell(h_i^\ell)^T.
+\]
+For a law $\mu$ on $[-1,1]^s$, define
+\begin{equation}\label{eq:certificate}
+ \mathcal J_G(\widehat Q;\mu)=
+ \max_{\|\Gamma\|_{1,\mathrm{ent}}\leq G}
+ \left\{\langle\Gamma,\widehat Q\rangle
+       -\log\E_{h\sim\mu}e^{h^T\Gamma h}\right\}.
+\end{equation}
+Appendix~\ref{sec:sparse-dual} proves, for any law $\mu$, that an
+empirical second moment from $N$ independent rows satisfies
+\begin{equation}\label{eq:certificate-tail}
+ \Pr\{\mathcal J_G(\widehat Q;\mu)>K\}
+ \leq\exp\{q\log(2s^2+1)-N(K-1)\},\qquad q=\lceil G^2/2\rceil.
+\end{equation}
+It also proves that $\mathcal J_G\leq K$ supplies a quadratic
+exponential tilt, of parameter norm at most $G$, whose second moment is
+within $K/G$ of $\widehat Q$ in entrywise maximum norm. These facts
+are distribution-free.
+
+Let $\mu_0$ be the actual first-layer activation-field law, obtained
+from independent $\nu$ weights divided by $\sqrt d$. Keep this law
+exactly; its dimension need not tend to infinity. For later layers write
+$\mathsf M_Q$ for the activation law of a Gaussian field of covariance
+$Q$, and $\mathsf F_\Gamma(Q)$ for its second moment after tilting by
+$e^{h^T\Gamma h}$. Lemma~\ref{lem:tilted-covariance} proves
+\begin{equation}\label{eq:covariance-stability}
+ \|\mathsf F_\Gamma(Q)-\mathsf F_\Gamma(Q')\|_{\max}
+ \leq8(1+G)^2\|Q-Q'\|_{\max}.
+\end{equation}
+This comparison concerns an auxiliary Gaussian family; the Bayesian
+learner still has non-Gaussian weights at every layer.
+
+Conditional on the preceding activations $h_1,\ldots,h_N$, an internal
+row has preactivation $N^{-1/2}\sum_j\xi_jh_j$. Apply
+Lemma~\ref{lem:lindeberg} with $a_j=h_j/\sqrt N$. Its Gaussian
+comparison has covariance exactly $Q=N^{-1}\sum_jh_jh_j^T$.
+If $\mu_{\mathrm{act}}$ is the true conditional activation law, then
+\begin{equation}\label{eq:certificate-transfer}
+ \mathcal J_G(\widehat Q;\mathsf M_Q)
+ \leq\mathcal J_G(\widehat Q;\mu_{\mathrm{act}})
+       +c_\nu P(G)/\sqrt N.
+\end{equation}
+This step does not assume that the actual row law is determined by $Q$.
+
+\subsection{A likely finite class}
+Let $K\geq4$ and $\bar K=K+1$. Choose the budgets backward:
+\begin{equation}\label{eq:budgets}
+ G_r=32r\bar K^2,\qquad
+ G_\ell=8G_{\ell+1}(1+G_{\ell+1})^2\quad(\ell<r),
+ \qquad b_\ell=8(1+G_\ell)^2.
+\end{equation}
+Set $q_1=\lceil G_1^2/2\rceil$, $\ell_0=\log(2s^2+1)$, and
+\begin{equation}\label{eq:meanfield-threshold}
+ T(K)=\left\lceil\max\left\{1,\frac{2q_1\ell_0}{K-1},
+                    4G_1^2,c_\nu^2P(G_1)^2\right\}\right\rceil.
+\end{equation}
+These quantities have polynomial majorants in $d,K$ at each fixed depth:
+$\ell_0\leq(2d+2)\log2$ and the recursion in \eqref{eq:budgets} has
+only the fixed number $r$ of steps.
+
+\begin{lemma}[Likely proxy covariances]\label{lem:proxy}
+There is a constant $c>0$, depending only on the coordinate law, such
+that for all sufficiently large fixed-law $K$ and $N\geq T(K)$,
+except on a parameter event of probability at most $Le^{-cNK}$, the
+following hold simultaneously: $N\|W^L\|_2^2\leq K$, and there are
+symmetric matrices $\Gamma_\ell$ with
+$\|\Gamma_\ell\|_{1,\mathrm{ent}}\leq G_\ell$ such that the tower
+\[
+ Q_1^*=\frac{\E_{h\sim\mu_0}[hh^Te^{h^T\Gamma_1h}]}
+                    {\E_{h\sim\mu_0}e^{h^T\Gamma_1h}},
+ \qquad Q_\ell^*=\mathsf F_{\Gamma_\ell}(Q_{\ell-1}^*)\ (\ell\geq2)
+\]
+satisfies $\|Q_{r,N}-Q_r^*\|_{\max}\leq1/(32\bar K)$.
+\end{lemma}
+\begin{proof}
+Apply \eqref{eq:certificate-tail} to each actual conditional row law,
+including $\mu_0$ in the first layer. The threshold gives each failure
+probability at most
+$e^{-N(K-1)/2}\leq e^{-NK/4}$. By
+\eqref{eq:certificate-transfer} and \eqref{eq:meanfield-threshold},
+every internal Gaussian certificate is at most $K+1=\bar K$.
+The first-layer certificate is at most $K$ and needs no comparison.
+The bounded-dual lift in Appendix~\ref{sec:sparse-dual} therefore
+supplies the tilt matrices with local covariance error at most
+$\bar K/G_\ell$.
+
+Let $e_\ell=\|Q_{\ell,N}-Q_\ell^*\|_{\max}$.
+Then $e_1\leq\bar K/G_1$, and
+$e_\ell\leq\bar K/G_\ell+b_\ell e_{\ell-1}$ for $\ell\geq2$,
+by \eqref{eq:covariance-stability}. The backward budgets give
+\[
+ e_r\leq\sum_{\ell=1}^r\frac{\bar K}{G_\ell}
+                  \prod_{j=\ell+1}^r b_j
+       =\frac1{32\bar K}.
+\]
+For the readout, \eqref{eq:square-moment} gives
+\[
+ \Pr\{N\|W^L\|_2^2>K\}
+ \leq\exp\{-mNK/4+(N/2)\log2\}\leq e^{-mNK/8}
+\]
+when $K\geq4\log2/m$. Thus $c=\min\{1/4,m/8\}$ works after
+requiring $K\geq\max\{4,4\log2/m\}$.
+\end{proof}
+
+\begin{lemma}[A bounded dual readout]\label{lem:readout-dual}
+Suppose $H$ is an $s\times N$ feature matrix and a readout $v$ obeys
+$g_i(Hv)_i>1/2$ and $N\|v\|_2^2\leq K$. Put $Q=HH^T/N$.
+There is $\beta\in\R^s$ with $\|\beta\|_1\leq2K$ and
+$g_i(Q\beta)_i\geq1/2$ for every $i$.
+\end{lemma}
+\begin{proof}
+Minimize $N\|u\|_2^2/2$ subject to $g_i(Hu)_i\geq1/2$.
+The strictly feasible $v$ gives the convex optimality conditions with
+multipliers $\lambda_i\geq0$:
+$Nu=H^T\beta$, $\beta_i=g_i\lambda_i$, and
+$\lambda_i[g_i(Hu)_i-1/2]=0$. Hence $Hu=Q\beta$ and
+\[
+ \tfrac12\|\beta\|_1=\beta^THu=N\|u\|_2^2\leq K.
+\]
+No inversion or nonsingularity of $Q$ is needed.
+\end{proof}
+
+\begin{proposition}[Mean-field aggregate mass bound]\label{prop:mf-aggregate}
+For each $K$ as in Lemma~\ref{lem:proxy}, there is a finite class
+$\mathcal H_K$, independent of learner width, with
+$\log|\mathcal H_K|\leq\widetilde H_{L,\nu}(d,K)$ for a
+polynomially bounded function at fixed depth, such that
+\[
+ \mu_{N,1}\!\left(\bigcup_{g\notin\mathcal H_K}U_{N,g}\right)
+ \leq Le^{-cNK}\qquad(N\geq T(K)).
+\]
+\end{proposition}
+\begin{proof}
+Fix a full-margin draw in the likely set of Lemma~\ref{lem:proxy}.
+Lemma~\ref{lem:readout-dual} gives $\|\beta\|_1\leq2K$ and margin
+at least $1/2$ for $Q_{r,N}\beta$. Replacing $Q_{r,N}$ by $Q_r^*$
+changes the output by at most $2K/(32\bar K)\leq1/16$.
+Consequently $2Q_r^*\beta$ has signed margin at least $7/8$.
+
+Proposition~\ref{prop:tilt-compress} realizes this tower within $1/8$
+by a finite depth-$L$ network with width and weights polynomially bounded
+in $d,\bar K,G_1$. Its first hidden layer is sampled from the true
+first-layer law with the tilt; subsequent layers use Gaussian rows to
+realize the auxiliary Gaussian tower. This constructs a deterministic
+short description of the sign function, without changing the learner.
+The realized margin is at least $3/4$. Define $\mathcal H_K$ to be all
+sign functions admitting these common width and weight bounds with margin
+at least $3/4$, padding by zero neurons to the common width when needed.
+Lemma~\ref{lem:tilt-count} bounds this class's logarithmic cardinality
+polynomially in $d,K$ at fixed depth. In particular every member of
+$\mathcal H_K$ has the stated bounded implementation; the grid is used
+only to count such functions. Every full-margin draw outside this class
+must fail the likely event, giving the stated aggregate bound.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:finite-main} for $\gamma=1$]
+Let $A=A_L(d,C)$ and choose
+\[
+ K\geq\max\{4,4\log2/m,\ c^{-1}[A+\log(6L/\varepsilon)]\}.
+\]
+For $N\geq T(K)$, Proposition~\ref{prop:mf-aggregate} and the target
+mass give
+\[
+ \frac{\pi(\mathcal H_K^c)}{\pi(f)}
+ \leq Le^{-N(cK-A)}\leq\varepsilon/6.
+\]
+The target therefore belongs to $\mathcal H_K$.
+Lemma~\ref{lem:finite-posterior} gives risk at most $\varepsilon/3$
+provided $n\geq(6/\varepsilon)[\widetilde H_{L,\nu}(d,K)+
+\log(1/\delta)]$.
+For every remaining width $C\leq N<T(K)$, the target lower bound gives
+$-\log\pi(f)\leq AT(K)$. Lemma~\ref{lem:target-posterior} supplies
+the same risk at sample size
+$(6/\varepsilon)[AT(K)+\log(6/(\varepsilon\delta))]$.
+Both $\widetilde H_{L,\nu}(d,K)$ and $AT(K)$ have polynomial
+majorants in $d,C,\log(1/\varepsilon)$ at fixed depth. Taking a common
+majorant and applying \eqref{eq:confidence} completes the proof.
+\end{proof}

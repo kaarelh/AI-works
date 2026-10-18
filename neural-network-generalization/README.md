@@ -6,7 +6,7 @@ Papers and notes by Dmitry Vaintrob, Kaarel Hänni, and OpenAI Codex (credited a
 
 The five papers below are the main results. The remaining papers are listed as side results, earlier treatments, or works in progress. “Side result” does not mean unproved: several contain complete theorems, but they are not the main presentation of this project. These are research drafts, not externally peer-reviewed publications; the FAQ distinguishes proved statements from plausible extensions and open questions.
 
-Every paper has a PDF, editable LaTeX source, and a build script. The collection contains 37 distinct papers and notes, with experimental code and selected exact certificates. The [catalog](catalog.json) identifies the canonical manuscripts; older treatments retain their historical scope and open-status remarks.
+Every paper has a PDF, editable LaTeX source, and a build script. The collection contains 38 distinct papers and notes, with experimental code and selected exact certificates. The [catalog](catalog.json) identifies the canonical manuscripts; older treatments retain their historical scope and open-status remarks.
 
 ## Lean verification
 
@@ -72,6 +72,7 @@ These results develop the model, strengthen special cases, or analyze ingredient
 
 | Paper | Scope |
 |---|---|
+| [Bayesian neural-network learning with non-Gaussian weight priors](side-results/non-gaussian-priors/paper.pdf) · [source and reviews](side-results/non-gaussian-priors/) | Extends main results 1–3 to independent symmetric densities whose negative log has positive curvature bounded above and below, at the original layer scales and every width above target complexity. Includes polynomial prior-complexity comparison and a broader strong-prior extension. Conventional proof, not Lean verified. |
 | [Small circuits under Gaussian-process classification: what sample complexity follows from the actual posterior?](side-results/nngp-sample-complexity/paper.pdf) · [source](side-results/nngp-sample-complexity/) | NNGP regression, classification, and confidence are distinguished; a specified deep tanh family has an exponential confidence sample requirement. |
 | [The fixed-kernel regime of a margin-conditioned Bayesian neural-network prior](side-results/gamma-below-one/paper.pdf) · [source](side-results/gamma-below-one/) | Kernel freezing and the three width-first limits for positive, zero, and negative gamma. Its original sample-bound discussion predates the main exponential theorem. |
 | [Small circuits can have exponentially large prior complexity below the mean-field scaling](side-results/subcritical-circuit-prior/paper.pdf) · [source](side-results/subcritical-circuit-prior/) | Small circuits can have exponentially large normalized prior complexity. A prior-mass separation alone is not a sample lower bound. |
@@ -137,5 +138,7 @@ The [technical FAQ](TECHNICAL-FAQ.md) explains the distinction between teacher a
 Each paper folder contains `paper.pdf`, its complete source dependencies under `source/`, and `build.sh`. Run a paper's script to rebuild it with a standard TeX Live installation. The collection also includes relevant mathematical review records and the computational certificate archives used by the structured papers.
 
 The earlier collection's PDFs retain their original text. The seven new depth manuscripts were independently rebuilt from their complete source and checked against the frozen manuscripts' extracted PDF text. Existing internal mathematical audits are retained where available; they are not external peer review. The separate Lean project has the precisely delimited scope described above. Packaging checks are recorded in [verification/README.md](verification/README.md); the new paper builds are recorded in [depth-publication-builds.json](verification/depth-publication-builds.json). [catalog.json](catalog.json) records the canonical paper inventory and PDF checksums; [SHA256SUMS](SHA256SUMS) records the published file checksums.
+
+The non-Gaussian extension has its own [source-build and mathematical review record](side-results/non-gaussian-priors/verification/README.md). Its publication does not extend the scope of the Lean verification.
 
 The paper collection was assembled on `codex/neural-network-generalization-papers-2026-10-16`; the Lean formalization was prepared on `codex/neural-network-lean-2026-10-16`. This folder on `main` contains the papers and their supporting records; exploratory scratch work remains outside the published collection.

@@ -1,0 +1,116 @@
+\section{Finite-scale learning for \texorpdfstring{$\gamma>1$}{gamma > 1}}\label{sec:above}
+\begin{lemma}[A non-Gaussian singular-value tail]\label{lem:spectral}
+Let $B=\sigma Z$ be an $N\times N$ matrix with independent $\nu$
+coordinates. If $a\geq16\sigma\sqrt{N/m}$ and $B_{>a}$ retains
+exactly the singular values greater than $a$, then
+\[
+ \Pr\{\|B_{>a}\|_F^2>K\}\leq e^{-mK/(8\sigma^2)}.
+\]
+\end{lemma}
+\begin{proof}
+The net proof in Section~\ref{sec:target-mass} gives
+\[
+ \Pr\{\|B\|_{\mathrm{op}}>8\sigma\sqrt{N/m}\}
+ \leq2e^{(2\log9-8)N}<1/2.
+\]
+The convex ball $\mathcal B=\{T:\|T\|_{\mathrm{op}}\leq a/2\}$
+therefore has probability at least $1/2$. Its Frobenius distance from $B$
+is
+\[
+ D(B)^2=\sum_j(s_j(B)-a/2)_+^2.
+\]
+The enlargement inequality \eqref{eq:enlargement}, after scaling by
+$\sigma$, implies $\Pr\{D(B)>r\}\leq e^{-mr^2/(2\sigma^2)}$.
+Since $s>a$ implies $s\leq2(s-a/2)$,
+$\|B_{>a}\|_F\leq2D(B)$. Take $r=\sqrt K/2$.
+\end{proof}
+
+For later use, \eqref{eq:conditional-subgaussian} and a one-dimensional
+Gaussian integration identity give
+\begin{equation}\label{eq:square-moment}
+ \E e^{m\xi^2/4}\leq\sqrt2.
+\end{equation}
+Indeed $e^{m x^2/4}=\E_G e^{\sqrt{m/2}Gx}$, with $G$ standard normal;
+condition first on $G$. For $D_0$ independent coordinates, Markov's
+inequality consequently gives
+\begin{equation}\label{eq:sum-squares}
+ \Pr\{\textstyle\sum_{j=1}^{D_0}\xi_j^2>u\}
+ \leq2^{D_0/2}e^{-mu/4}\leq e^{-mu/8}
+ \quad(mu\geq8D_0).
+\end{equation}
+
+\begin{lemma}[Aggregate structural tail]\label{lem:structural}
+Set
+\[
+ a_K=[8L(\sqrt K+1)^{L-2}]^{-1},\qquad J_K=(L+3)K,
+ \qquad K\geq1.
+\]
+If
+\begin{equation}\label{eq:width-above}
+ N^{\gamma-1}\geq8(d+1)/m,\qquad
+ N^{\gamma-1}\geq256/(ma_K^2),
+\end{equation}
+then
+\[
+ \mu_{N,\gamma}\!\left(\bigcup_{g:\kappa_N(g)>J_K}U_{N,g}\right)
+ \leq L e^{-mKN^\gamma/8}.
+\]
+\end{lemma}
+\begin{proof}
+Consider the event
+\[
+ \tfrac dN\|W^1\|_F^2\leq K,\quad
+ N\|W^L\|_2^2\leq K,\quad
+ \|(W^s)_{>a_K}\|_F^2\leq K\ (2\leq s<L).
+\]
+The first and last weighted norms are $N^{-\gamma}$ times sums of
+$N(d+1)$ and $N$ standardized squares. Equation~\eqref{eq:sum-squares}
+and the first width condition bound their tails by $e^{-mKN^\gamma/8}$.
+The second width condition permits Lemma~\ref{lem:spectral} at each
+internal layer. A union bound bounds failure of the event by
+$Le^{-mKN^\gamma/8}$.
+
+For a draw in this event, retain only internal singular values greater
+than $a_K$. The retained matrices have operator norm at most $\sqrt K$;
+each discarded matrix has norm at most $a_K$. If $e_s$ is the Euclidean
+activation error, then $e_1=0$ and
+$e_s\leq\sqrt K e_{s-1}+a_K\sqrt N$. The readout norm is at most
+$\sqrt{K/N}$, so the uniform output error is at most
+\[
+ a_K\sum_{j=1}^{L-2}K^{j/2}\leq1/8.
+\]
+For $L=2$ there is no change. A strict-margin draw therefore retains
+margin greater than $3/8$. Doubling its readout restores margin greater
+than $1/2$ and gives energy at most
+$K+(L-2)K+4K=J_K$. Every full-margin draw outside the asserted function
+class must belong to the exceptional parameter event, proving the lemma.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:finite-main} for $\gamma>1$]
+Write $A=A_L(d,C)$ and choose
+\[
+ K=\max\{1,\tfrac8m[A+\log(6L/\varepsilon)]\},\qquad
+ T=\left\lceil\max\{C,[8(d+1)/m]^{1/(\gamma-1)},
+                [256/(ma_K^2)]^{1/(\gamma-1)}\}\right\rceil.
+\]
+For $N\geq T$, divide the aggregate tail by the target lower bound
+\eqref{eq:target-mass}. Global-margin normalization cancels and gives
+\[
+ \frac{\pi(\{g:\kappa_N(g)>J_K\})}{\pi(f)}
+ \leq L e^{-N^\gamma(mK/8-A)}\leq\varepsilon/6.
+\]
+Necessarily $f$ belongs to the remaining class, since otherwise the ratio
+would be at least one. Its log cardinality is at most $H_L(d,J_K)$.
+Lemma~\ref{lem:finite-posterior}, with $a=\tau=\varepsilon/6$, gives
+the claimed risk for
+$n\geq(6/\varepsilon)[H_L(d,J_K)+\log(1/\delta)]$.
+
+For $C\leq N<T$, the target mass gives
+$-\log\pi(f)\leq AN^\gamma\leq AT^\gamma$.
+Lemma~\ref{lem:target-posterior} gives the same risk if
+$n\geq(6/\varepsilon)[AT^\gamma+\log(6/(\varepsilon\delta))]$.
+At fixed $L,\gamma,m,M$, all of $K,T,T^\gamma$ have polynomial
+majorants in $d,C,\log(1/\varepsilon)$. Majorize
+$\max\{H_L(d,J_K),AT^\gamma\}$ by $p_{L,\gamma}$ and use
+\eqref{eq:confidence}. This covers every $N\geq C$.
+\end{proof}

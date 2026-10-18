@@ -1,0 +1,175 @@
+\section{Covariance stability and finite realization}\label{sec:compression}
+Write $\phi=\tanh$. Write $\|A\|_{\max}=\max_{ij}|A_{ij}|$ and
+$\|A\|_{1,\mathrm{ent}}=\sum_{ij}|A_{ij}|$ for matrices on the finite input
+set. These are different norms; their dual pairing is what avoids a factor
+of $2^d$ below.
+For a positive semidefinite covariance $Q$ and a symmetric matrix $\Gamma$,
+let
+\[
+ \mathsf F_\Gamma(Q)=
+ \frac{\mathbb E_{Z\sim\mathcal N(0,Q)}
+ [\phi(Z)\phi(Z)^\top\exp\{\phi(Z)^\top\Gamma\phi(Z)\}]}
+ {\mathbb E_{Z\sim\mathcal N(0,Q)}
+ [\exp\{\phi(Z)^\top\Gamma\phi(Z)\}]}.
+\]
+All activations are coordinatewise. The definition is valid for singular $Q$.
+
+\begin{lemma}[A dimension-independent covariance comparison]\label{lem:tilted-covariance}
+If $g=\|\Gamma\|_{1,\mathrm{ent}}$, then for all positive semidefinite
+$Q,Q'$ of the same size,
+\[
+ \|\mathsf F_\Gamma(Q)-\mathsf F_\Gamma(Q')\|_{\max}
+ \leq 8(1+g)^2\|Q-Q'\|_{\max}.
+\]
+\end{lemma}
+\begin{proof}
+Put $V(z)=\phi(z)^\top\Gamma\phi(z)$ and
+$Q_t=(1-t)Q+tQ'$. For a twice differentiable bounded test function $F$, let
+$\mathbb E_t$ denote expectation under the Gaussian of covariance $Q_t$
+reweighted by $e^V$. Gaussian differentiation and the quotient rule give
+\begin{align*}
+ \frac{d}{dt}\mathbb E_tF
+ =\frac12\sum_{a,b}(Q'-Q)_{ab}\bigl\{
+ &\mathbb E_t[\partial_{ab}F+
+       \partial_aF\partial_bV+\partial_bF\partial_aV]\\
+ &+\operatorname{Cov}_t(F,\partial_{ab}V+
+                                   \partial_aV\partial_bV)\bigr\}.
+\end{align*}
+This formula has no reciprocal partition-function bound: all terms are
+expectations under a probability measure. Define
+$M_1(H)=\sup_z\sum_a|\partial_aH(z)|$ and
+$M_2(H)=\sup_z\sum_{a,b}|\partial_{ab}H(z)|$.
+Because $|\phi|,|\phi'|\leq1$ and $|\phi''|\leq2$,
+\[
+ M_1(V)\leq2g,\qquad M_2(V)\leq6g.
+\]
+For $F(z)=\phi(z_i)\phi(z_j)$, including $i=j$,
+$\|F\|_\infty\leq1$, $M_1(F)\leq2$, and $M_2(F)\leq6$.
+The absolute derivative is therefore at most
+\[
+ \frac12\|Q-Q'\|_{\max}
+ \{6+8g+2(6g+4g^2)\}
+ =(3+10g+4g^2)\|Q-Q'\|_{\max}.
+\]
+Integrating in $t$ proves the assertion, with the displayed slightly larger
+constant. One may initially replace both covariances by $Q+\epsilon I$ and
+$Q'+\epsilon I$. The functions and all derivatives used above are bounded,
+and the partition functions lie between $e^{-g}$ and $e^g$, so weak Gaussian
+convergence lets $\epsilon\downarrow0$. This also proves the singular case.
+\end{proof}
+
+\begin{proposition}[Finite realization of a bounded-tilt tower]\label{prop:tilt-compress}
+Fix $L\geq2$, $K\geq1$, and $G\geq1$. Let $\mu_0$ be the actual
+first-layer activation-field law, with independent incoming coordinates
+$\xi_j/\sqrt d$ of law $\nu$. Suppose symmetric matrices $\Gamma_1,\ldots,\Gamma_{L-1}$ and a vector
+$\beta\in\mathbb R^{\mathcal X}$ satisfy
+\[
+ \|\Gamma_s\|_{1,\mathrm{ent}}\leq G,\qquad
+ \|\beta\|_1\leq4K.
+\]
+Define $Q_1$ by tilting $\mu_0$ with $e^{h^T\Gamma_1h}$,
+and $Q_s=\mathsf F_{\Gamma_s}(Q_{s-1})$ for $s\geq2$.
+Then the function $z(x)=(Q_{L-1}\beta)_x$ can be uniformly approximated to
+accuracy $1/8$ by a depth-$L$ network whose width and weights are bounded by
+$\operatorname{poly}_L(d,K,G)$.
+If $f(x)z(x)\geq7/8$ everywhere, the finite network implements $f$ with margin at least $3/4$.
+\end{proposition}
+\begin{proof}
+Let $b=8(1+G)^2$ and
+\[
+ \eta=[32K(L-1)b^{L-2}]^{-1}.
+\]
+Choose the common width $n$ to be the least integer satisfying
+\[
+ n\geq2\eta^{-2}\log\bigl(8(L-1)\,2^{2d}\bigr).
+\]
+The construction is random only to prove existence.
+The matrices $\Gamma_s$ may be indexed by the entire cube; they select the
+sampling laws, but are not stored or evaluated by the resulting finite
+network. No efficient sampling or construction algorithm is claimed.
+At the first layer, independently sample $n$ weight vectors from their
+actual independent $\nu$ coordinate law divided by $\sqrt d$, tilted by
+\[
+ \exp\{h(w_i)^\top\Gamma_1h(w_i)\},\qquad
+ h(w_i)_x=\phi(w_i\cdot\bar x).
+\]
+Their activation vectors have exactly the tilted law defining $Q_1$.
+At each subsequent hidden layer, conditional on the already sampled previous
+activation vectors $h_1,\ldots,h_n$, independently sample $n$ standard
+Gaussian row vectors $\xi_j\in\mathbb R^n$ tilted by
+\[
+ \exp\{\phi(Z_j)^\top\Gamma_s\phi(Z_j)\},
+ \qquad Z_j(x)=\frac1{\sqrt n}\sum_{i=1}^n\xi_{ji}h_i(x).
+\]
+Use the actual network weights $\xi_{ji}/\sqrt n$.
+If $\widehat Q_{s-1}=n^{-1}\sum_i h_ih_i^\top$ is the preceding empirical
+activation covariance, then, conditionally, $Z_j$ before tilting is Gaussian
+with exactly that covariance. Thus the new activation vectors are
+conditionally independent, with second moment
+$\mathsf F_{\Gamma_s}(\widehat Q_{s-1})$.
+
+Every covariance entry is the empirical mean of $n$ variables in $[-1,1]$.
+Hoeffding's inequality, a union bound over $2^{2d}$ entries, and conditioning
+at successive layers show, with probability at least $3/4$, that
+\[
+ \|\widehat Q_1-Q_1\|_{\max}\leq\eta,\qquad
+ \|\widehat Q_s-\mathsf F_{\Gamma_s}(\widehat Q_{s-1})\|_{\max}\leq\eta
+ \quad(2\leq s<L).
+\]
+Lemma~\ref{lem:tilted-covariance} then implies
+\[
+ \|\widehat Q_{L-1}-Q_{L-1}\|_{\max}
+ \leq (L-1)b^{L-2}\eta.
+\]
+For each last-layer activation vector $h_i$, choose the deterministic
+readout weight $v_i=(\beta\cdot h_i)/n$. The resulting output is
+$\widehat z(x)=(\widehat Q_{L-1}\beta)_x$, and therefore
+\[
+ \|\widehat z-z\|_\infty
+ \leq4K(L-1)b^{L-2}\eta=1/8.
+\]
+Although $\beta$ is indexed by the entire input cube, its only role in the
+finite network is to select these $n$ real readout weights; each satisfies
+$|v_i|\leq4K/n$. It is not an additional computational input to the network.
+
+It remains to bound the sampled weights without losing polynomial size.
+For every sampled row, its tilted density relative to its reference
+is at most $e^{2G}$, since the quadratic tilt lies in $[-G,G]$.
+Put $a_0=\min\{m/4,1/4\}$ and $B_0=\sqrt2$.
+Equation~\eqref{eq:square-moment} and the Gaussian square moment show
+that every raw reference coordinate obeys $\E e^{a_0\xi^2}\leq B_0$.
+This also bounds the actual first-layer coordinates divided by $\sqrt d$.
+Let $D_n=n(d+1)+(L-2)n^2$ and choose
+\[
+ B=\left[\frac{2G+\log(4B_0\max\{D_n,1\})}{a_0}\right]^{1/2}.
+\]
+The probability that any one coordinate exceeds $B$ in absolute value
+is at most $B_0e^{2G-a_0B^2}$, also conditionally on previous layers.
+A union bound gives probability at most $1/4$ that any incoming coordinate
+exceeds $B$. The actual internal weights divide the raw coordinates by
+$\sqrt n$ and so satisfy the same bound. Intersecting this event with the
+covariance-approximation event leaves probability at least $1/2$.
+Fix a realization in the intersection. Both $n$ and
+$\max\{B,4K/n\}$ are bounded by
+polynomials in $d,K,G$ at fixed depth. The stated margin follows from $7/8-1/8=3/4$.
+\end{proof}
+
+\begin{lemma}[Counting finite realizations]\label{lem:tilt-count}
+Fix $L$, width $n$, and an entrywise bound $B\geq1$. The Boolean functions
+having depth-$L$, width-$n$ implementations with margin at least $3/4$ and
+weights bounded by $B$ number at most
+\[
+ \exp\{P\log(3+16B\Lambda)\},\qquad
+ P=n(d+1)+(L-2)n^2+n,
+ \quad \Lambda=(d+Ln)[1+n(B+1)]^{L-1}.
+\]
+\end{lemma}
+\begin{proof}
+Round every weight to a multiple of $(8\Lambda)^{-1}$.
+The first hidden layer's coordinatewise error is at most $(d+1)/(8\Lambda)$.
+Every subsequent hidden layer has error at most $n(B+1)$ times the preceding
+error plus $n/(8\Lambda)$; the same estimate applies at the linear readout.
+Induction bounds the final error by $1/8$. Each rounded coordinate has at
+most $3+16B\Lambda$ possible values, so the $P$-parameter grid has the stated
+size. Rounding preserves every represented Boolean sign function.
+\end{proof}

@@ -1,0 +1,186 @@
+\section{A target-mass bound at every width}\label{sec:target-mass}
+Throughout this section $\nu$ has the even density in
+\eqref{eq:curvature}. Adding a constant to $V$ changes nothing, so take
+$V(0)=0$. Evenness gives $V'(0)=0$ and hence
+$m t^2/2\leq V(t)\leq Mt^2/2$.
+
+\begin{lemma}[Concentration and translation]\label{lem:concentration}
+A product of $\nu$ coordinates, conditioned on any centrally symmetric
+convex set of positive probability, is centered and satisfies
+\begin{equation}\label{eq:conditional-subgaussian}
+ \E e^{\lambda u\cdot Z}\leq
+        \exp\{\lambda^2\|u\|_2^2/(2m)\}.
+\end{equation}
+For the unconditioned product measure $\mu$, Euclidean enlargement obeys
+\begin{equation}\label{eq:enlargement}
+ \mu(A_r)\geq\Phi\bigl(\Phi^{-1}(\mu(A))+\sqrt m\,r\bigr).
+\end{equation}
+Finally, if $E$ is any centrally symmetric event of positive probability
+and $a$ is deterministic, then
+\begin{equation}\label{eq:translation-mass}
+ \mu(E+a)\geq\mu(E)\exp\{-M\|a\|_2^2/2\}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Conditioning on a convex set preserves $m$-strong log-concavity. The
+Brascamp--Lieb variance inequality \cite{brascamp-lieb}, applied after
+any linear exponential tilt, bounds the Hessian of its log moment
+generating function by $m^{-1}I$. Central symmetry makes the first
+derivative at zero vanish. Integrating twice proves
+\eqref{eq:conditional-subgaussian}. Convex indicator potentials follow
+by approximation with smooth convex barriers.
+
+For \eqref{eq:enlargement}, the Caffarelli contraction theorem
+\cite{caffarelli} gives an $m^{-1/2}$-Lipschitz transport from standard
+Gaussian measure to $\mu$. The inverse image of $A_r$ contains the
+$\sqrt m\,r$ enlargement of the inverse image of $A$. Gaussian
+isoperimetry \cite{ledoux} gives the displayed inequality.
+
+For the last assertion let $Q$ be the law of $Z+a$ conditional on
+$Z\in E$. Direct calculation of relative entropy gives
+\[
+ D(Q\Vert\mu)=-\log\mu(E)
+ +\E\left[\sum_i(V(Z_i+a_i)-V(Z_i))\mid E\right].
+\]
+Taylor's theorem bounds the sum by
+$\sum_i a_i V'(Z_i)+M\|a\|_2^2/2$. The conditional expectation of
+its linear term is zero because $V'$ is odd and the conditional law is
+invariant under simultaneous negation. Since $Q$ is supported on $E+a$,
+$D(Q\Vert\mu)\geq-\log\mu(E+a)$. This proves
+\eqref{eq:translation-mass}.
+\end{proof}
+
+\begin{lemma}[One-dimensional small balls]\label{lem:small-ball}
+Every centered even log-concave variable $Y$ of variance at most $1/m$
+satisfies
+\[
+ \Pr\{|Y|\leq\rho\}\geq c_m\rho\quad(0<\rho\leq1),
+ \qquad c_m=\tfrac38\min\{1,\sqrt m\}.
+\]
+This applies to every normalized sum of disjoint coordinates of $Z$.
+\end{lemma}
+\begin{proof}
+Let $R=2\max\{1,m^{-1/2}\}$. Chebyshev gives probability at least
+$3/4$ in $[-R,R]$. Symmetric unimodality gives probability at least
+$(\rho/R)(3/4)$ in $[-\rho,\rho]$. Log-concavity is preserved by
+convolution and linear projection, and normalized independent sums retain
+variance at most $1/m$.
+\end{proof}
+
+We first construct an exact clone of a target. Partition the $N$ neurons
+of each hidden layer into $C$ groups of sizes $k_a\in\{\lfloor N/C\rfloor,
+\lceil N/C\rceil\}$. Copy the corresponding teacher neuron throughout
+each group. For an internal teacher weight $W_{ab}$ use $W_{ab}/k_b$
+on every edge from group $b$ to group $a$. Divide the readout weight
+from group $a$ by $k_a$. The cloned network computes exactly the same
+function. Let $P$ project onto the group-constant subspace, with orthonormal
+basis $u_a=k_a^{-1/2}\mathbf1_{\mathrm{group}\ a}$.
+
+Define the weighted energy
+\begin{equation}\label{eq:kappa}
+ \kappa_N(w)=\frac dN\|W^1\|_F^2+
+     \sum_{s=2}^{L-1}\|W^s\|_F^2+N\|W^L\|_2^2,
+ \qquad \kappa_N(g)=\inf_{w\in U_{N,g}}\kappa_N(w).
+\end{equation}
+The first-layer clone contribution is at most $d(d+1)C^2$.
+Because $\max k_a/\min k_a\leq2$ and $N/\min k_a\leq2C$,
+its internal contribution is at most $2(L-2)C^4$ and its readout
+contribution at most $2C^4$. Amplify the teacher readout by three; the
+resulting exact clone has signed margin greater than $3/2$. A convenient
+common bound for its energy is
+\begin{equation}\label{eq:B0}
+ B_0=d(d+1)C^2+2(L-2)C^4+36C^4.
+\end{equation}
+The larger final constant leaves harmless slack.
+
+\begin{proposition}[Target mass]\label{prop:target-mass}
+For each fixed $L$ there is a polynomially bounded function $A_L(d,C)$,
+depending also on $m,M$, such that
+\begin{equation}\label{eq:target-mass}
+ \mu_{N,\gamma}(U_{N,f})\geq e^{-A_L(d,C)N^\gamma}
+ \qquad(\gamma\geq1,\ N\geq C=C_L(f)).
+\end{equation}
+\end{proposition}
+\begin{proof}
+Put $t=N^{(1-\gamma)/2}\leq1$. In standardized coordinates impose the
+centered cylinder $\mathcal C_\rho$ consisting of the following constraints:
+all first-layer and readout coordinates have absolute value at most $\rho$;
+each internal row obeys $|\langle Z_{j,*},u_a\rangle|\leq\rho$ for
+every group $a$. These constraints involve independent random variables:
+within an internal row the sums concern disjoint groups. There are
+\[
+ r_0=N[d+2+(L-2)C]
+\]
+constraints. Lemma~\ref{lem:small-ball} gives
+$\mu(\mathcal C_\rho)\geq(c_m\rho)^{r_0}$.
+
+Conditional on the cylinder, every internal matrix is centered and
+$m$-strongly log-concave. For unit vectors $u,v$, the scalar $u^TZv$
+is therefore $m^{-1/2}$-sub-Gaussian. Two $1/4$-nets, each with at most
+$9^N$ elements, give
+\[
+ \Pr\{\|Z\|_{\mathrm{op}}>2q\sqrt N\mid\mathcal C_\rho\}
+ \leq2\exp\{(2\log9-mq^2/2)N\}.
+\]
+Take
+\[
+ b_{m,L}=2\sqrt{\frac2m(2\log9+\log(4L))}.
+\]
+Each conditional failure probability for
+$\|Z\|_{\mathrm{op}}\leq b_{m,L}\sqrt N$ is at most $1/(2L)$.
+Let $E$ be the cylinder intersected with these bounds for all internal
+layers. It is centrally symmetric and has
+$\mu(E)\geq\tfrac12(c_m\rho)^{r_0}$.
+
+Translate this event by the amplified clone in standardized coordinates.
+The internal weight perturbation decomposes as
+\[
+ \frac t{\sqrt N}Z=R+E_\perp,
+ \qquad R=\frac t{\sqrt N}ZP,
+ \qquad E_\perp=\frac t{\sqrt N}Z(I-P),
+\]
+where
+$\|R\|_{\mathrm{op}}\leq\rho t\sqrt C$,
+$E_\perp P=0$, and $\|E_\perp\|_{\mathrm{op}}\leq b_{m,L}t$.
+We detail stability to make the role of the cylinder explicit. Write
+$e_s=N^{-1/2}\|h^s-h_*^s\|_2$, with $h_*^s$ the exact clone's
+activations. Its internal matrices have norm at most $\sqrt2C^2$, and
+$h_*^s\in\mathrm{range}(P)$. The first layer has
+\[
+ e_1\leq \rho t(d+1)/\sqrt d\leq\rho(d+1).
+\]
+For $s\geq2$, boundedness and the contraction property of tanh give
+\[
+ e_s\leq(\sqrt2C^2+b_{m,L})e_{s-1}+\rho\sqrt C.
+\]
+Set $A_0=2+3C^2+b_{m,L}$. Induction bounds
+$e_{L-1}\leq\rho(d+L+1)A_0^{L-2}$.
+The cloned readout has $\sqrt N\|v_*\|_2\leq3\sqrt2 C^2$,
+and the perturbation readout has $\ell^1$ norm at most $\rho t\leq\rho$.
+Consequently the output error is at most
+\[
+ 3\sqrt2 C^2\rho(d+L+1)A_0^{L-2}+\rho.
+\]
+Choose
+\[
+ \rho=[2+9C^2(d+L+1)A_0^{L-2}]^{-1}.
+\]
+The last error is strictly smaller than $1/2$, so the translated event
+lies in $U_{N,f}$, indeed with signed margin greater than one.
+
+If $a$ is the standardized translation, then
+$\|a\|_2^2=N^\gamma\kappa_N(w_*)\leq B_0N^\gamma$.
+Lemma~\ref{lem:concentration} gives
+\[
+ -\log\mu_{N,\gamma}(U_{N,f})
+ \leq\tfrac M2B_0N^\gamma
+ +N[d+2+(L-2)C]\log\frac1{c_m\rho}+\log2.
+\]
+Since $N\leq N^\gamma$, one may take
+\begin{equation}\label{eq:Aexplicit}
+ A_L(d,C)=1+\tfrac M2B_0+
+ [d+2+(L-2)C]\log\frac1{c_m\rho}+\log2.
+\end{equation}
+At fixed depth and fixed curvature constants this has a polynomial
+majorant in $d,C$.
+\end{proof}

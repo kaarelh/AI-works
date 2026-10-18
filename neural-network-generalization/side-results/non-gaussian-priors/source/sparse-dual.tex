@@ -1,0 +1,165 @@
+% Self-contained proof fragment. Requires amsmath, amssymb, amsthm and
+% theorem environments lemma/proposition. No references to older manuscripts.
+\section{A finite family of entropy certificates}\label{sec:sparse-dual}
+The following bound replaces a discretization of the full feature space by
+sparse linear tests. Its logarithmic dependence on the number of observables
+is essential when those observables are indexed by all pairs of Boolean
+inputs.
+
+Let $(\Omega,\mathcal A,\mu)$ be any probability space, let
+$F=(F_1,\ldots,F_D):\Omega\to[-1,1]^D$ be measurable, and write
+\[
+ \Lambda(\lambda)=\log\int e^{\lambda\cdot F}\,d\mu,
+ \qquad
+ \Psi_G(q)=\max_{\|\lambda\|_1\leq G}
+       \{\lambda\cdot q-\Lambda(\lambda)\},\qquad G>0.
+\]
+The maximum exists: its domain is compact and its objective is continuous.
+The norm $\|\lambda\|_1$ here is the sum of the absolute values of its
+$D$ coordinates.
+
+\begin{lemma}[A bounded exponential tilt with controlled error]
+\label{lem:bounded-dual-lift}
+For every $q\in\mathbb R^D$, there is a maximizer $\lambda_*$ in the
+preceding display such that the probability measure
+\[
+ \frac{d\nu_*}{d\mu}
+     =\exp\{\lambda_*\cdot F-\Lambda(\lambda_*)\}
+\]
+satisfies the exact identity
+\begin{equation}\label{eq:dual-lift-identity}
+ \Psi_G(q)
+   =D(\nu_*\Vert\mu)
+      +G\left\|q-\int F\,d\nu_*\right\|_\infty.
+\end{equation}
+Consequently, if $\Psi_G(q)\leq K$, then
+\[
+ D(\nu_*\Vert\mu)\leq K,
+ \qquad
+ \left\|q-\int F\,d\nu_*\right\|_\infty\leq K/G.
+\]
+\end{lemma}
+\begin{proof}
+Boundedness of $F$ permits differentiation under the integral and gives
+$\nabla\Lambda(\lambda_*)=\int F\,d\nu_*=:m_*$. The first-order
+condition for a differentiable concave function maximized over the convex
+$\ell^1$ ball is
+\[
+ (q-m_*)\cdot(\lambda-\lambda_*)\leq0
+       \qquad(\|\lambda\|_1\leq G).
+\]
+Taking the maximum of the left linear functional over that ball gives
+\[
+ \lambda_*\cdot(q-m_*)=G\|q-m_*\|_\infty.
+\]
+Moreover,
+$D(\nu_*\Vert\mu)=\lambda_*\cdot m_*-\Lambda(\lambda_*)$.
+Adding these two identities proves \eqref{eq:dual-lift-identity}.
+Relative entropy is nonnegative, which proves the stated consequences.
+The log density of $\nu_*$ relative to $\mu$ is bounded, so its entropy
+is finite. No support, density, or nonsingularity assumption on $\mu$
+was used.
+\end{proof}
+
+For an integer $s\geq1$, introduce the finite set
+\[
+ \mathcal V_{G,s}
+ =\left\{\frac1s\sum_{j=1}^s a_j:
+        a_j\in\{0,Ge_1,-Ge_1,\ldots,Ge_D,-Ge_D\}\right\}.
+\]
+Thus $\#\mathcal V_{G,s}\leq(2D+1)^s$ and every vector in this set has
+$\ell^1$ norm at most $G$.
+
+\begin{lemma}[Sparse approximation of the dual value]
+\label{lem:sparse-dual-net}
+For every $q\in\mathbb R^D$,
+\begin{equation}\label{eq:sparse-dual-net}
+ \Psi_G(q)\leq\frac{G^2}{2s}
+   +\max_{v\in\mathcal V_{G,s}}
+        \{v\cdot q-\Lambda(v)\}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Fix $\lambda$ with $\|\lambda\|_1\leq G$. Let the random vector $A$
+take the value $G\operatorname{sign}(\lambda_i)e_i$ with probability
+$|\lambda_i|/G$ for each nonzero coordinate, and take value zero with the
+remaining probability. Then $\mathbb EA=\lambda$.
+Take independent copies $A_1,\ldots,A_s$ and put
+$V=s^{-1}\sum_j A_j\in\mathcal V_{G,s}$.
+For each fixed $\omega\in\Omega$, the scalar $A\cdot F(\omega)$ lies
+in $[-G,G]$. Hoeffding's exponential-moment inequality therefore gives
+\[
+ \mathbb E\exp\{(V-\lambda)\cdot F(\omega)\}
+ \leq\exp\{G^2/(2s)\}.
+\]
+Tonelli's theorem and Jensen's inequality imply
+\begin{align*}
+ \mathbb E\Lambda(V)
+ &=\mathbb E\log\int e^{V\cdot F}\,d\mu\\
+ &\leq\log\mathbb E\int e^{V\cdot F}\,d\mu\\
+ &\leq\Lambda(\lambda)+G^2/(2s).
+\end{align*}
+Since $\mathbb E(V\cdot q)=\lambda\cdot q$, at least one realization
+$v\in\mathcal V_{G,s}$ satisfies
+\[
+ v\cdot q-\Lambda(v)
+ \geq\lambda\cdot q-\Lambda(\lambda)-G^2/(2s).
+\]
+Take $\lambda$ to be a maximizer defining $\Psi_G(q)$.
+\end{proof}
+
+\begin{proposition}[A nonasymptotic entropy certificate]
+\label{prop:finite-entropy-certificate}
+Let $X_1,\ldots,X_N$ be independent with law $\mu$, and put
+$q_N=N^{-1}\sum_{i=1}^N F(X_i)$. For every $K>0$, $G>0$, and integer
+$s\geq1$,
+\begin{equation}\label{eq:finite-entropy-tail}
+ \Pr\{\Psi_G(q_N)>K\}
+ \leq\exp\left\{s\log(2D+1)
+          -N\left(K-\frac{G^2}{2s}\right)\right\}.
+\end{equation}
+Outside this exceptional event, the empirical moment vector is within
+$K/G$ in maximum norm of the moments of an exponential tilt with parameter
+$\ell^1$ norm at most $G$ and relative entropy at most $K$.
+In particular, choosing $s=\lceil G^2\rceil$ bounds the right side by
+$\exp\{\lceil G^2\rceil\log(2D+1)-N(K-1/2)\}$.
+\end{proposition}
+\begin{proof}
+For each fixed $v\in\mathcal V_{G,s}$, independence gives exactly
+\[
+ \mathbb E\exp\{N[v\cdot q_N-\Lambda(v)]\}=1.
+\]
+Markov's inequality bounds the probability that its bracket exceeds
+$K-G^2/(2s)$ by $\exp\{-N(K-G^2/(2s))\}$.
+The sparse approximation lemma and a union bound over
+$\mathcal V_{G,s}$ prove \eqref{eq:finite-entropy-tail}.
+The bounded-dual lift lemma gives the final assertion.
+\end{proof}
+
+\paragraph{Application to hidden-layer covariances.}
+Take $m$ input points, $D=m^2$, $\mu=\mathcal N(0,Q)$ for any positive
+semidefinite covariance $Q$, and $F_{ij}(z)=\tanh(z_i)\tanh(z_j)$,
+indexed by all ordered pairs $(i,j)$. Reshape a maximizing parameter
+$\lambda_*$ into a matrix and replace it by its symmetric part $\Gamma$.
+This preserves its quadratic form and does not increase its entrywise
+$\ell^1$ norm. The lifted covariance is then exactly
+\[
+ \mathsf F_\Gamma(Q)=
+ \frac{\mathbb E_{Z\sim\mathcal N(0,Q)}
+    [\tanh(Z)\tanh(Z)^\top e^{\tanh(Z)^\top\Gamma\tanh(Z)}]}
+      {\mathbb E_{Z\sim\mathcal N(0,Q)}
+    e^{\tanh(Z)^\top\Gamma\tanh(Z)}}.
+\]
+Thus, except with the probability in \eqref{eq:finite-entropy-tail}, the
+empirical activation covariance $\widehat Q$ satisfies
+\[
+ \|\widehat Q-\mathsf F_\Gamma(Q)\|_{\max}\leq K/G,
+ \qquad \|\Gamma\|_{1,\mathrm{ent}}\leq G.
+\]
+This assertion applies directly to Gaussian conditional row laws, uniformly
+in their covariance, including singular covariances. For the actual
+non-Gaussian rows in this paper, apply the distribution-free certificate
+to their true law and then use the relative Lindeberg comparison
+\eqref{eq:certificate-transfer}. On the Boolean cube,
+$m=2^d$ and the logarithmic factor is
+$\log(2m^2+1)\leq(2d+2)\log2$, which is linear in $d$.

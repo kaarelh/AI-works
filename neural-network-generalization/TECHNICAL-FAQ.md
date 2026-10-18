@@ -376,13 +376,22 @@ for one universal constant $A$. This comes from the formal proof's more conserva
 
 ## 20. Do independent non-Gaussian weight priors give the same results?
 
-**Independence alone is not enough.** The Gaussian proofs use more than independence: quadratic small-noise rates, concentration, Gaussian conditional laws, relative-entropy transport, and sometimes exact kernel or spectral calculations.
+**Yes, for a substantial family of independent coordinate laws.** The [non-Gaussian paper](side-results/non-gaussian-priors/paper.pdf) proves the analogues of main results 1, 2, and 3 for tanh networks when each standardized weight has an even, variance-one density
 
-For the fixed-width strong-prior argument, the most portable idea is a large-deviation rate $I(w)$: if function probabilities have rate given by the minimum $I$ over their realizations, and $I$ has suitable cloning and compression properties, the relevance argument can be repeated. A prior with a rate uniformly comparable to the weighted quadratic energy is a plausible candidate. This is a conditional proof strategy, not a theorem for every independent sub-Gaussian distribution.
+$$
+q(u)=Z^{-1}e^{-V(u)},\qquad V\in C^2,\qquad
+0<m\le V''(u)\le M<\infty.
+$$
 
-Laplace-type priors suggest a cost based on the $\ell_1$ norm; other generalized Gaussian priors suggest $\ell_p$ costs. Their width normalization and cloning algebra must be redone. Discrete support can fail to realize targets or give no open target neighborhood; bounded support and heavy tails can change the rare-event mechanism substantially. Even a universality theorem for typical random features would not automatically survive the rare global-margin conditioning.
+The constants $m,M$ are fixed independently of width. This says that the negative log density has positive curvature bounded above and below; it need not be quadratic. For example, take the variance-standardized version of the density proportional to $e^{-u^2/2-b\log\cosh u}$, for any fixed $b>0$.
 
-**Open:** a useful broad non-Gaussian universality theorem for the finite-variance all-width conclusions, and a corresponding classification of subcritical learning behavior. Robust entropy compression suggests investigating product measures with appropriate transport and moment inequalities, but the target-mass construction and all width factors still have to be checked.
+The conclusions retain the original layer scales, global margin conditioning, exact noiseless-label posterior, arbitrary common training/test distribution, and **every learner width $N\ge C_L(f)$**. At each fixed depth, the sample bound is polynomial in dimension and target complexity, independently of learner width. This covers both the strong-prior limit at each fixed width and the finite-scale regimes $\gamma>1$ and $\gamma=1$. Correct-label posterior probability exceeds $2/3$ on almost all test inputs, including when the posterior mixes different functions. No added restriction on which network functions the prior supports is needed.
+
+The proof replaces Gaussian target-mass calculations with a translation bound and concentration for the stated coordinate laws. At $\gamma=1$, a quantitative replacement argument compares **log partition functions for bounded covariance tests**, with only polynomial losses in the test budget. Auxiliary Gaussian distributions help construct short descriptions of likely functions; the learner itself keeps its non-Gaussian weights. The paper also proves polynomial comparison between bounded-weight circuit complexity and normalized negative log function prior mass.
+
+**The strong-prior result permits more general laws.** Two-sided quadratic density envelopes suffice, without symmetry or log-concavity. If the negative log density is asymptotic to a common quadratic coefficient times $u^2$, the original weighted-energy ordering of function probabilities holds exactly at exponential-rate level. Curvature bounds alone give the learning guarantee and polynomial comparisons, but need not give a limiting exact rate.
+
+These are conventional proofs with [independent AI-agent review records](side-results/non-gaussian-priors/verification/README.md); the extension is a side result and **has not been Lean verified**. The sample polynomials may depend on the coordinate law and depth. The theorem does not cover Laplace, uniform, Student, or pure quartic-exponential coordinates at the original scales. For a compactly supported law, taking the scale to zero at fixed width can even make the global-margin conditioning event empty. Broader families, alternative width normalizations, and non-Gaussian subcritical learning remain open.
 
 ## 21. What about ReLU, sigmoid, GELU, or other activations?
 
@@ -442,7 +451,7 @@ Conversely, a tiny target probability alone is not a sample lower bound. A prior
 | Improve the polynomial | **Open.** Explicit bounds exist, but are far from optimized; no near-description-length Gaussian-prior theorem. |
 | Remove bad depth dependence | **Partly resolved.** Joint polynomial depth under the robust support restriction; unrestricted positive results for substantial classes. General unrestricted small-deep-target case remains open. |
 | Lower-bound log prior mass | **Partly resolved.** The strong-prior rate is polynomially equivalent to bounded-weight network complexity; finite-variance target-mass bounds also exist. Sharp absolute-mass formulas remain open. |
-| Classify scaling regimes | **Partly resolved on a particular one-parameter line.** All tuples, mixed regimes, and broad non-Gaussian universality remain open. |
+| Classify scaling regimes | **Partly resolved on a particular one-parameter line.** The three positive learning regimes also extend to the non-Gaussian family in [question 20](#20-do-independent-non-gaussian-weight-priors-give-the-same-results). General exponent tuples, mixed regimes, and non-Gaussian subcritical behavior remain open. |
 | Out-of-distribution learning | **Heuristic.** Mistakes by the simplest consistent hypothesis may often eliminate many surviving low-complexity competitors, even as the input distribution changes. The [conditional online argument below](#why-expect-occam-learning-to-transfer-out-of-distribution) makes this expectation precise; its genericity premise remains unproved. |
 | Online mistake bounds | **Open for the desired width-uniform neural statement.** The genericity argument below gives a conditional bound for a simplest-consistent learner; its premise and its analogue for the NNBayes posterior remain unproved. Generic Bayesian code-length bounds also exist. |
 | Other architectures | **Open here.** CNN weight sharing, recurrence, attention, normalization, and residual structure need their own prior and complexity accounting. |
