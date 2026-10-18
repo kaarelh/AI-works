@@ -14,24 +14,81 @@
 \date{October 15, 2026}
 \begin{document}\maketitle
 \begin{abstract}
-We prove polynomial sample complexity for Bayesian learning of Boolean
-functions by fixed-depth tanh networks at mean-field Gaussian scaling,
-uniformly at every hidden width at least the target's bounded-weight network
-complexity. The prior is restricted to networks having absolute margin
-greater than $1/2$ on the entire input cube; learning then conditions on
-noiseless training labels. With polynomially many examples, the posterior
-assigns the correct label probability strictly greater than $2/3$ on almost
-all test inputs, for any input distribution.
-The proof is finite-dimensional and nonasymptotic. Sparse exponential tests
-control empirical hidden-layer covariances using only the logarithm of the
-number of input pairs. Convex duality converts these tests into bounded
-quadratic tilts; a dimension-independent covariance estimate and a backward
-choice of layer budgets then compress every likely margin-separated draw
-into a polynomial-size network. This bounds the aggregate prior mass of
-functions outside one polynomially described class. A Gaussian cylinder
-construction supplies target mass at every admissible width and handles the
-remaining polynomial range of widths. No infinite-width limit is required.
+We prove a sample bound for Bayesian neural-network learning that depends
+on the size of a small target implementation and is independent of the
+learner's potentially much larger width. The model is a fixed-depth tanh
+network at mean-field Gaussian scaling: internal weight variance is $1/N$
+and readout variance is $1/N^2$
+at hidden width $N$. Before training, the prior retains only networks whose
+outputs have absolute value greater than $1/2$ on the entire Boolean input
+cube. Learning then conditions on noiseless labels. The sample bound is
+polynomial in input dimension and the target's bounded-weight network
+complexity, uniformly at every width at least that complexity. For any
+common training and test input distribution, sufficiently many examples
+make the posterior assign the correct label probability strictly greater
+than $2/3$ on almost all test inputs.
+The proof bounds the total prior probability of functions lacking a small
+description and compares it with the probability assigned to the target.
+Its main step compresses likely hidden-layer covariance patterns into
+finite networks. All arguments apply at finite width; no infinite-width
+limit is required. The polynomial degree and constants depend on depth,
+so the theorem does not provide a bound polynomial in depth.
 \end{abstract}
+
+\section{Introduction}
+A network with many more parameters than training examples can represent
+many functions that fit the data. To explain why Bayesian learning should
+nevertheless generalize, one would like a sample bound determined by the
+complexity of the target, rather than by the number of parameters available
+to the learner. This paper proves such a bound for a Gaussian neural-network
+prior at mean-field scaling.
+
+The model is a fully connected tanh network of depth $L$ and hidden width
+$N$, with a linear readout. The Gaussian variances are $1/d$ in the input
+layer, $1/N$ in internal layers, and $1/N^2$ in the readout. We retain only
+networks with absolute output margin greater than $1/2$ at every Boolean
+input, then condition on exact agreement with noiseless training labels.
+This defines a probability distribution over Boolean functions and, after
+training, a posterior distribution over their predictions. The global
+margin restriction is part of the prior, including at unobserved inputs.
+
+Suppose the target has a depth-$L$, width-$C$ implementation with that
+strict margin and all weights bounded by $C$. Our result gives a sample
+bound polynomial in $d,C$, the inverse desired error, and the logarithm of
+the inverse failure probability, uniformly for every learner width
+$N\geq C$. It holds for any common training and test distribution on the
+Boolean cube. In particular, on almost all test inputs the posterior gives
+the correct label probability greater than $2/3$. Section~2 states the precise guarantee in
+terms of the smallest such implementation size $C_L(f)$.
+
+The result is finite-dimensional throughout. It does not require the learner
+to be much wider than the target, and it does not take a width limit before
+training. The complexity measure is a bounded-weight network complexity at
+the specified depth, so no translation from arbitrary Boolean circuits is
+implicit. Depth remains fixed in the sample bound: its polynomial degree
+and constants may grow rapidly with $L$. As with an Occam learning bound,
+the conclusion is statistical and does not establish an efficient method
+for computing the posterior.
+
+\paragraph{How excess width is controlled.}
+We compare the prior mass of the target with the total mass of functions
+that cannot be described by small networks. A small target can be embedded
+at any larger width by replicating its neurons; a neighborhood of this
+embedding supplies a lower bound on its prior mass. For the competing
+functions, we show that all but a sufficiently small amount of prior mass
+can be compressed into one finite family whose size is independent of $N$.
+Training labels rule out the inaccurate members of this family by an
+elementary union bound. This last step explains why a bound on the
+\emph{total} exceptional mass is needed, rather than a separate small
+probability estimate for each complicated function.
+
+The main difficulty is to construct that finite family at the mean-field
+scaling, where the random internal matrices retain operator norm of
+constant order as width grows. We work instead with the correlations of
+hidden activations across inputs. Finite exponential tests, a convex
+duality argument, and covariance stability permit these correlations to be
+represented by smaller networks. The formal proof below supplies all three
+ingredients and then completes the posterior estimate.
 
 \section{Model and main result}
 Let $d\geq1$, $L\geq2$, and $\mathcal X=\{-1,1\}^d$.
@@ -48,7 +105,9 @@ independent centered entries with standard deviations
  \sigma_s=N^{-1/2}\quad(2\leq s<L),\qquad
  \sigma_L=N^{-1}.
 \]
-These are the mean-field, or $\gamma=1$, conventions.
+These are the mean-field conventions used here. In the broader family with
+variances $N^{1-\gamma}/d$, $N^{-\gamma}$, and $N^{-\gamma-1}$, they
+correspond to $\gamma=1$; no other scaling regime is needed in this paper.
 For a Boolean function $g$ write
 \[
  A_{N,g}=\{w:g(x)z_w(x)>1/2\text{ for every }x\in\mathcal X\},
@@ -98,15 +157,20 @@ efficient construction of the compressed network is not asserted.
 A fixed confidence threshold greater than $1/2$ can replace $2/3$, with the
 corresponding change in constants.
 
-The proof has three finite-width ingredients. First, a cloned target network
-has a Gaussian neighborhood of probability at least $e^{-N\operatorname{poly}_L(d,C)}$.
-Second, each empirical hidden covariance is close to a bounded quadratic
-tilt except on an event exponentially small in $N$; sparse exponential tests
-make the exponent's prefactor polynomial in $d$, despite the $2^d$ inputs.
-Third, a backward choice of tilt bounds permits a polynomial finite network
-to reproduce every likely full-margin sign function. A finite-class
-posterior argument applies at all sufficiently large polynomial widths;
-the target-mass bound handles every smaller width $N\geq C$.
+\paragraph{Proof roadmap.}
+Section~\ref{sec:cloning} constructs a Gaussian neighborhood of the embedded
+target with probability at least $e^{-N\operatorname{poly}_L(d,C)}$.
+Section~\ref{sec:sparse-dual} develops finite tests for empirical hidden-layer
+covariances. These tests identify a family of controlled changes of measure,
+called quadratic tilts, whose covariances approximate the observed ones;
+the exceptional probability is exponentially small in $N$.
+Section~\ref{sec:compression} proves stability of the tilted covariances and
+represents them by finite networks. We then choose the approximation budgets
+backward through the layers, obtaining a description bound independent of
+learner width. The final section compares the exceptional mass with the
+target mass and applies a finite-class posterior estimate. A direct
+target-mass estimate covers every smaller width where the compression
+probability bound is unavailable.
 
 \input{cloning.tex}
 \input{sparse-dual.tex}

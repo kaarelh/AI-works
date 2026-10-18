@@ -18,117 +18,216 @@
 \newcommand{\op}{\mathrm{op}}
 \newcommand{\poly}{\operatorname{poly}}
 \newcommand{\sgn}{\operatorname{sign}}
-\title{Polynomial depth from stability of clipped neural-network predictions}
+\title{A polynomial-depth learning bound for NNBayes on robust networks}
 \author{Dmitry Vaintrob \and Kaarel H\"anni \and OpenAI Codex}
 \date{18 October 2026}
-\hypersetup{pdftitle={Polynomial depth from stability of clipped neural-network predictions},pdfauthor={Dmitry Vaintrob, Kaarel Hanni, OpenAI Codex}}
+\hypersetup{pdftitle={A polynomial-depth learning bound for NNBayes on robust networks},pdfauthor={Dmitry Vaintrob, Kaarel Hanni, OpenAI Codex}}
 \begin{document}
 \maketitle
 \begin{abstract}
-We study Gaussian Bayesian learning of Boolean functions by fully connected
-tanh networks. We restrict the prior using stability of the output clipped
-at the training margin, under simultaneous small internal perturbations.
-The condition permits arbitrarily small clean outputs on unobserved inputs
-and ignores changes between sufficiently confident outputs of the same sign.
-For every layered Boolean target circuit, the resulting posterior has a
-sample bound polynomial in circuit width, input dimension, and network depth,
-simultaneously at every network width above circuit width and at every
-Gaussian exponent $\gamma\ge1$, including the finite-variance mean-field
-scale. The noise calibration is explicit, and its constant can be varied
-without changing the qualitative theorem. We also prove a weaker
-margin-band version and a localized version allowing network-dependent
-exceptional regions of controlled complexity. We give self-contained proofs
-and an empirical assessment on networks trained by gradient methods, with
-selected exact-arithmetic certificates. The evidence is mixed: exact
-certificates establish global stability for some fully fitted image models
-and full-domain stability for two 64-hidden-layer Boolean classifiers.
-Another fitted image model has a verified confident-input counterexample,
-although exact certificates establish stability on all 10,000 of its
-official held-out images at the same radius.
-An exact gradient-descent construction shows that
-on-distribution stability alone cannot imply the global condition.
-The empirical calibration may decrease polynomially with depth without
-losing the polynomial sample theorem.
-The empirical question is whether trained parameterizations satisfy this
-specified support condition; it is distinct from a theorem about the
-generalization of gradient descent or an experiment sampling the Bayesian
-posterior.
+Can Bayesian neural networks learn small circuits with sample complexity
+polynomial in both circuit size and network depth, independently of the
+learner's width? For mean-field and stronger Gaussian prior scalings, this
+remains open in general without an internal-stability restriction. We prove
+such a bound after restricting the prior to networks whose
+predictions are stable under a calibrated ball of simultaneous internal
+perturbations. The networks are fully connected, with tanh activations and
+a linear readout. For a Boolean target given by a layered circuit of width
+$C$, one polynomial bounds the required number of examples jointly in
+input dimension, circuit width, network depth, robustness calibration,
+and statistical parameters. The guarantee holds simultaneously at every
+learner width $N\ge C$ and every Gaussian scale $0<t\le1$, including the
+finite-variance mean-field scale and stronger priors. Training requires
+exact label agreement with a fixed margin; the conclusion controls
+posterior test error at a smaller margin and hence sign error. The proof
+combines a robust implementation of each Boolean circuit with enough
+Gaussian probability around it, posterior compression, and stability of
+clipped predictions. We give the argument in full and separately assess
+when trained networks satisfy the prior restriction.
 \end{abstract}
 
-\section{Introduction and scope}
+\section{Introduction}
 
-Small parameter perturbations, small internal activation perturbations,
-and stability of classification are different properties. A network may
-have stable confident predictions despite changes in the magnitude of a
-large output. Conversely, a network can fit its training set accurately
-and be highly sensitive at inputs away from the data distribution. A useful
-prior restriction must make its input domain, disturbance model, and output
-criterion explicit.
+A function with a small circuit should be learnable from relatively few
+examples, even by a neural network much larger than that circuit. For
+Bayesian neural-network learning, or NNBayes, this asks whether conditioning
+a prior on the training labels produces a posterior that predicts the
+target well. A particularly useful guarantee would have sample complexity
+polynomial in input dimension, target circuit size, and network depth,
+with no dependence on the learner's potentially much larger width.
 
-We use the output margin already present in the likelihood to define a
-bounded prediction score. Training requires signed output greater than
-$1/2$. We clip raw outputs at $\pm1/2$, and require a score change of at
-most $1/16$ under a specified ball of simultaneous internal perturbations.
-The test guarantee controls signed outputs at most $1/4$. Thus stability
-is calibrated to the gap between training and test margins. It does not
-forbid every sign change: moving from $0.02$ to $-0.02$ changes the score
-by only $0.04$. The statistical proof shows that weak or incorrect test
-outputs receive little posterior mass after sufficiently many examples.
+The depth requirement is substantial. A bound polynomial in target size
+at each fixed depth can still become exponential as depth grows. General
+compression arguments for Gaussian neural-network priors incur such depth
+costs because small errors introduced inside the network may be amplified
+through successive layers. The full joint polynomial learning guarantee
+remains open for Gaussian priors at mean-field and stronger-prior scalings
+without an additional internal-stability restriction. Special target
+classes permit better learner-depth bounds, but do not yet settle the case
+of arbitrary small deep circuits.
 
-The main theorem concerns a particular restricted Gaussian prior and an
-exact margin-conditioning likelihood. Its comparator complexity is the
-width of a layered Boolean circuit. It does not assume that every small
-analog neural circuit has a robust implementation of the same width and
-depth. Nor does it assert that ordinary gradient descent samples this
-posterior. These distinctions matter when assessing the empirical evidence.
+This paper obtains a joint polynomial bound by restricting the prior.
+We discard network parameterizations whose predictions are too sensitive
+to small simultaneous disturbances of their internal activations. The
+restriction concerns the computation performed by the network: changing
+an internal value slightly should not substantially alter its prediction
+score. We prove that every layered Boolean target circuit still has a
+robust implementation with enough probability under the Gaussian prior.
+Thus the restriction removes fragile implementations without requiring
+the target function to be supplied with a robust neural implementation.
 
+\paragraph{The learning guarantee.}
+Consider a fully connected tanh network with $H=L-1$ hidden layers of
+width $N$ and a real linear readout. The target is any Boolean function
+on $d$ bits represented by a layered Boolean circuit of width $C$ and
+at most $H$ stages; $C$ counts constant wires and any compilation or
+padding needed for this representation. Inputs are sampled independently
+from any fixed distribution. We start from independent Gaussian weights
+with layer-dependent variances, restrict the prior by the stability
+condition, and condition on signed training outputs greater than $1/2$.
+For a fixed stability calibration $c>0$, a sufficient sample size is
+\[
+ n\ge\operatorname{poly}
+       \bigl(d,L,C,c+c^{-1},\varepsilon^{-1},\log(1/\delta)\bigr).
+\]
+With probability at least $1-\delta$ over the sample, the posterior's
+average probability of a signed test output at most $1/4$ is then at
+most $\varepsilon$. The polynomial degree does not grow with depth.
+One sample event gives this guarantee for every $N\ge C$ and every
+Gaussian scale $0<t\le1$ in the model of Section~\ref{sec:theory-model}.
+In the exponent convention $t=N^{(1-\gamma)/2}$, this includes
+$\gamma=1$ at finite width as well as every $\gamma>1$; no width or
+small-variance limit is needed.
+
+The conclusion controls sign error and posterior confidence as well as
+this test-margin loss. For example, the test-distribution mass of inputs at which
+the posterior assigns probability at most $2/3$ to the correct sign is
+at most $3\varepsilon$. The guarantee concerns exact Bayesian conditioning;
+it does not supply an efficient posterior-sampling algorithm.
+
+\paragraph{What the restriction requires.}
+We clip the output at the training margin, obtaining a score in
+$[-1/2,1/2]$. At every Boolean input, this score must change by at most
+$1/16$ under every simultaneous internal and output disturbance in a
+specified ball. Its radius is calibrated by depth and readout energy,
+as defined in Section~\ref{sec:theory-model}. Clipping makes the condition
+insensitive to large changes between already confident outputs of the
+same sign: a change from $10$ to $1$ leaves the score unchanged. The
+condition also permits small clean outputs at unobserved inputs; the
+learning argument, rather than an all-input margin assumption, makes
+weak or incorrect test predictions rare. This is a learning theorem
+under a robustness restriction, not a claim that every trained network
+satisfies that restriction.
+
+\paragraph{Why the proof gives polynomial depth.}
+First, we implement the target circuit robustly at every width $N\ge C$
+and bound the Gaussian probability of a neighborhood of that
+implementation. This bounds the posterior's relative entropy with
+respect to the original Gaussian. Second, an entropy-compression argument
+constructs a distribution on one finite candidate class shared by all
+widths and scales. At each input, the candidate and posterior computations
+can be coupled through small internal disturbances, with the same
+marginal distributions at every input. The support restriction then
+controls the prediction error directly, without multiplying
+worst-case amplification factors across layers. Finally, a uniform
+sampling bound for that finite class transfers training fit to test
+accuracy. The result is polynomial jointly in depth and the other
+parameters, although the polynomial is too loose to provide practical
+sample estimates.
+
+\paragraph{Relation to prior work and verification.}
 Compression through noise stability and all-layer margins has precedents
 in work of Arora et al.\ and Wei and Ma~\cite{arora,weima}.
 Wei, Chen, and Ma~\cite{weichenma} prove polynomial circuit-size sample
 bounds for overparameterized feedforward networks using a suitable
-all-layer-margin surrogate and robust circuit simulation. Thus the general
-idea that robust simulation can avoid exponential depth factors predates
-this paper. Here the object being analyzed is the posterior of a specified
-Gaussian prior, including its target probability and uniformity over widths
-and finite Gaussian scales.
-Our proof uses Gaussian entropy and transport to construct one finite
-candidate class shared by all widths and scales. We include that construction
-and the Gaussian target-mass bound, so the result can be read independently.
-The polynomial constants are deliberately loose and do not provide practical
-sample estimates. The mathematical arguments have been reviewed independently
-by AI agents; a companion Lean development now verifies the qualitative main learning theorem for the exact robust-only posterior, with a looser polynomial bound from a Pinsker-and-energy construction. It does not certify every quantitative constant, extension, or empirical certificate in this manuscript.
+all-layer-margin surrogate and robust circuit simulation. The role of
+robust simulation in avoiding exponential depth factors therefore
+predates this paper. Here we analyze the posterior of a specified
+Gaussian prior, including its target probability and a single learning
+guarantee uniform over widths and finite Gaussian scales.
+A companion Lean development verifies the qualitative main learning
+theorem for the exact robust-only posterior, using a looser polynomial
+from a Pinsker-and-energy construction. It does not certify every
+quantitative constant, extension, or empirical certificate in this paper.
 
-Published experiments support internal noise stability as a research
-direction, with different quantifiers from our support condition.
-Arora et al.\ report attenuation of injected Gaussian activation noise
-in a VGG-19 trained on CIFAR-10 and measure their stability quantities
-on training inputs~\cite{arora}. Yu and Tomasi report improved noise
-stability in residual networks relative to matched plain
-networks~\cite{yutomasi}. Neither establishes stability at every input
-under every simultaneous disturbance in our calibrated ball. The
-experiments below test that particular condition directly in the tanh
-architecture of the theorem. They do not establish its prevalence in
-modern convolutional networks or transformers.
+\paragraph{Organization.}
+Section~\ref{sec:theory-model} specifies the prior and loss, and
+Section~\ref{sec:theory-main} states the theorem.
+Sections~\ref{sec:theory-statistical} and~\ref{sec:theory-target-cylinder}
+give the statistical argument and robust target construction;
+Appendix~\ref{sec:robust-entropy} supplies the full compression proof.
+Section~\ref{sec:restriction-in-practice} discusses the meaning of the
+restriction for trained networks. The remaining appendices give
+certificates, weaker and localized restrictions, and the detailed
+empirical evidence. The main result and its proof can be read without
+any companion paper.
 
 \input{robustness-theory.tex}
-\input{robustness-variants.tex}
-\input{margin-band-variant.tex}
-\input{localized-prior-theorem.tex}
-\input{stability-certificates.tex}
-\input{naturalness-gd-counterexample.tex}
-\input{output-rescaling.tex}
-\input{empirical-interpretation.tex}
-\IfFileExists{empirical-results.tex}{\input{empirical-results.tex}}{}
-\IfFileExists{certificates/report-fragment.tex}{\input{certificates/report-fragment.tex}}{}
+
+\section{What the restriction means for trained networks}
+\label{sec:restriction-in-practice}
+
+The theorem's prior restriction is motivated by stability of a computation,
+but its empirical relevance is a separate question. It quantifies over
+every Boolean input and every allowed finite disturbance. Stability to
+random noise on a test set is useful evidence, but has different
+quantifiers. Published experiments report attenuation of injected
+activation noise in a VGG-19 trained on CIFAR-10~\cite{arora}, and improved
+noise stability in residual networks relative to matched plain
+networks~\cite{yutomasi}. They do not establish the support condition
+used here.
+
+There are concrete sufficient conditions. If every internal hidden-layer
+map is nonexpansive, meaning it does not increase Euclidean distances,
+then the readout-and-depth calibration makes the required bound hold
+for $c\le1/16$. Individual layers need not all be nonexpansive: bounds
+on their combined effects, or saturation of tanh along the reachable
+computations, can also certify stability.
+Appendix~\ref{sec:standalone-stability-certificates} develops these tests.
+A calibration $c$ that decreases only polynomially with depth still gives
+a polynomial sample bound.
+
+Our experiments and exact-arithmetic certificates give mixed evidence.
+Some image classifiers fitted to every training label satisfy a global
+stability certificate at the stated small calibrations, and two trained
+64-hidden-layer Boolean classifiers satisfy the condition on their entire
+finite input domains. Another fitted image model has a verified
+confident-input counterexample even though it satisfies certificates
+on all 10,000 official held-out images at the same radius.
+The experiments, domain conventions, and certificate scopes are reported
+in Appendices~\ref{sec:empirical-interpretation},
+\ref{sec:image-experiments}, and~\ref{sec:verified-trained-networks}.
+In particular, a certificate at one input covers that input only, and
+failure to find an adversarial disturbance is not a certificate.
+
+Gradient descent does not automatically enforce the condition:
+Appendix~\ref{sec:analytic-gd-counterexample} gives an exact construction
+that is stable on the data distribution and fragile elsewhere.
+Localized versions of the prior can allow exceptional input regions when
+their complexity is controlled (Appendix~\ref{sec:localized-prior-theorem}).
+Whether the global condition, or such a localized version, commonly holds
+for relevant trained networks remains a substantive empirical question.
+These investigations concern membership in the restricted prior;
+they do not identify the distribution of gradient-descent outputs with
+the Bayesian posterior analyzed by the theorem.
 
 \clearpage
 \appendix
 \input{compression-proof.tex}
+\input{stability-certificates.tex}
+\input{robustness-variants.tex}
+\input{localized-prior-theorem.tex}
+\input{margin-band-variant.tex}
 \input{distributional-only-obstruction.tex}
 \input{analog-target-digital-simulation.tex}
 \input{two-margin-transport.tex}
 \input{unlabeled-stability-pool.tex}
 \input{certified-input-neighborhoods.tex}
+\input{naturalness-gd-counterexample.tex}
+\input{output-rescaling.tex}
+\input{empirical-interpretation.tex}
+\IfFileExists{empirical-results.tex}{\input{empirical-results.tex}}{}
+\IfFileExists{certificates/report-fragment.tex}{\input{certificates/report-fragment.tex}}{}
 
 \begin{thebibliography}{9}
 \bibitem{arora}

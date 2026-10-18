@@ -2,7 +2,7 @@
 
 **Status:** Main result
 
-For every fixed gamma > 1 and fixed depth, polynomial sample complexity at every width N >= C_L(f), at the specified nonzero Gaussian variance. Bounded Lipschitz hidden activations, a linear readout, and global margin conditioning.
+If a Boolean target has a small bounded-weight neural-network implementation, the Bayesian learner needs polynomially many examples even when its own width is arbitrarily larger. For every fixed gamma > 1 and fixed depth, the bound holds at every width N >= C_L(f), at the specified nonzero Gaussian variance. The model uses bounded Lipschitz hidden activations, a linear readout, and global margin conditioning. The polynomial degree may depend on depth; this is not a polynomial-depth bound.
 
 [Paper (PDF)](paper.pdf) · [LaTeX source](source/gamma-above-one.tex) · [Collection index](../../README.md)
 
@@ -14,4 +14,4 @@ The main learning statement is proved by [`MainProofs.aboveMeanField`](../../lea
 
 Run `bash build.sh` in this directory with a standard TeX Live installation. The script runs two LaTeX passes, stores temporary output in `build/`, and refreshes `paper.pdf`. No network access is required.
 
-The PDF is the existing manuscript copied into this collection; its mathematical text has not been rewritten for publication here. Later results and current scope are summarized in the collection index.
+The introduction and abstract present the model and result independently of the companion papers. The [collection index](../../README.md) compares their scope.

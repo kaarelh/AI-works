@@ -2,7 +2,9 @@
 
 **Status:** Main result
 
-For every fixed gamma < 1 and fixed depth, full parity in dimension d requires exp(Omega(d)) samples under uniform IID training and the width-first posterior. For each n <= exp(c d), confidence failure is at least 1/16 with sample probability at least 3/4. This is the full-parity exponential result, not the still-open fixed-depth natural sparse-parity scale exp(Omega(k log(ed/k))).
+Parity has a Boolean circuit with O(d) gates and a polynomial-size, polynomial-weight tanh network, yet the Bayesian learner studied here requires exp(Omega(d)) examples. The result holds for every fixed prior-scaling exponent gamma < 1 and fixed depth, under uniform IID training and the width-first posterior. For each n <= exp(c d), confidence failure is at least 1/16 with sample probability at least 3/4. Here failure means that the correct label has posterior probability at most 2/3.
+
+The paper defines the prior and conditioning conventions independently. The result concerns full parity; the fixed-depth natural sparse-parity scale exp(Omega(k log(ed/k))) remains open.
 
 [Paper (PDF)](paper.pdf) · [LaTeX source](source/subcritical-exponential.tex) · [Collection index](../../README.md)
 
@@ -14,4 +16,4 @@ The main learning statement is proved by [`MainProofs.subcriticalExponential`](.
 
 Run `bash build.sh` in this directory with a standard TeX Live installation. The script runs two LaTeX passes, stores temporary output in `build/`, and refreshes `paper.pdf`. No network access is required.
 
-The PDF is the existing manuscript copied into this collection; its mathematical text has not been rewritten for publication here. Later results and current scope are summarized in the collection index.
+The abstract and introduction were revised for a standalone presentation; the mathematical statements and proofs are unchanged. Later results and current scope are summarized in the collection index.

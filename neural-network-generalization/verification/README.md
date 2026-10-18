@@ -16,7 +16,7 @@ python verify_collection.py --rebuild --jobs 4
 
 Run these commands from the collection root. They require Python 3, `pdflatex`, `pdfinfo`, and `pdftotext`; no network access is needed. Published PDFs are not changed by the verification script.
 
-The latest full paper rebuild is recorded in [depth-publication-all-builds.json](depth-publication-all-builds.json). The earlier `build-results.json` remains the 16 October snapshot.
+The latest full collection rebuild is recorded in [depth-publication-all-builds.json](depth-publication-all-builds.json). The five main papers were subsequently revised editorially and independently rebuilt; their current source and PDF hashes are in the [editorial revision record](main-papers-editorial-revision-2026-10-18.json). The earlier `build-results.json` remains the 16 October snapshot.
 
 ## Publication checks, 16 October 2026
 
@@ -39,3 +39,10 @@ To verify all published file checksums, run `sha256sum -c SHA256SUMS` from the c
 - The selected exact model-105 counterexample, model-500 all-domain certificate, and model-301 global certificate were replayed from the packaged inputs. Their computational checks are separate from Lean verification. [Representative replay](../works-in-progress/depth-experiments/reproducibility/representative-replay.json) · [Model-301 replay](../works-in-progress/depth-experiments/reproducibility/model301-replay.json).
 
 The Lean theorem gate and its precise scope are recorded separately in [the Lean verification record](../lean/VERIFICATION.md). Package checks do not establish mathematical correctness or extend the scope of a formal theorem.
+
+## Main-paper editorial revision, 18 October 2026
+
+- All five main papers now introduce their learning question, prior, prediction convention, and quantifiers before the technical proof machinery. The robust-prior paper is retitled **A polynomial-depth learning bound for NNBayes on robust networks** and collects variants and detailed experiments in appendices.
+- All five published PDFs match independent clean builds of their revised source after text extraction, with no unresolved references. The [revision record](main-papers-editorial-revision-2026-10-18.json) records the current hashes and per-paper checks. Earlier records describe earlier snapshots.
+- Every formal theorem, lemma, proposition, corollary, definition, remark, and proof environment in the LaTeX source was compared with the preceding Git version and is unchanged. All non-entry source dependencies are byte-for-byte unchanged. Section numbering changes in the robust and mean-field papers. These comparisons establish the scope of the editorial changes, not a new correctness proof.
+- The Lean sources and their verification scope are unchanged; the Lean build was not rerun for this editorial revision.

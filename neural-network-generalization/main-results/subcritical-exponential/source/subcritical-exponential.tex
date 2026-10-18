@@ -23,26 +23,71 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-We prove an exponential sample lower bound for learning parity with a
-specified Bayesian neural-network prior throughout its subcritical scaling
-regime. The network has fixed depth, Gaussian weights, $\tanh$ hidden
-activations, and a linear readout. Before training, its prior is conditioned
-to have a fixed absolute output margin at every Boolean input; training
-then conditions on exact observed labels. For every fixed $\gamma<1$,
-there is $c>0$ such that each sample size $n\le e^{ck}$ leaves at least
-$1/16$ of the inputs of $k$-bit parity without correct-label posterior
-probability greater than $2/3$, with probability at least $3/4$ over
-independent uniform training inputs, in the width-first limit.
-The proof treats the sign-conditioned Gaussian limit, the Gaussian limit
-with a fixed global margin, and concentration on minimum-energy sign
-functions. Its main ingredients are one-sided squared-loss sampling in
-$O(D\log D)$ examples, a discrete Laplacian identity for clipped parity
-correlation, sharp kernel spectra, and a conditioning estimate forcing
-large output magnitudes at the fixed-margin Gaussian endpoint. The result
-concerns the actual posterior confidence, includes every sample size below
-the exponential threshold, and permits arbitrary weights among tied
-minimum-energy functions.
+Parity is easy to compute: the XOR of $d$ input bits has a Boolean circuit
+with $O(d)$ gates and a polynomial-size, polynomial-weight $\tanh$ network.
+We show that a family of Bayesian neural-network learners nevertheless
+requires exponentially many examples to learn it. The networks have fixed
+depth, independent Gaussian weights, and a width-dependent prior specified
+by an exponent $\gamma$. For every fixed $\gamma<1$, there is $c>0$
+such that each sample size $n\le e^{cd}$ leaves at least $1/16$ of Boolean inputs without
+correct-label posterior probability greater than $2/3$, with probability
+at least $3/4$ over uniform independent training inputs. This conclusion
+takes width to infinity before dimension or sample size grows. The prior
+is conditioned on a fixed absolute output margin at every input, and
+training conditions on the observed labels. We prove the bound for that
+posterior, including mixtures of tied minimum-energy sign functions.
+The proof combines the network's Gaussian width limits with kernel
+spectra, uniform sampling bounds, and estimates of parity correlation.
 \end{abstract}
+
+\section*{Introduction}
+A target function may have a small neural-network implementation without
+being easy to learn under a particular neural-network prior. The
+statistical question is whether the prior gives enough preference to
+simple implementations that their labels can be inferred from few
+examples. Parity provides a useful test. On $d$ Boolean inputs, it is
+computed by a circuit with $O(d)$ gates; it also has a polynomial-size,
+polynomial-weight $\tanh$ implementation even at fixed depth. A learning
+guarantee polynomial in these complexity measures would therefore learn
+parity from polynomially many examples.
+
+We prove that such a guarantee fails for the family of priors studied
+here. The learner is a fully connected $\tanh$ network with Gaussian
+weights and a linear readout. Its prior variances depend on width $N$
+through an exponent $\gamma$, with the exact scaling given in
+\eqref{eq:weights}. We call the range $\gamma<1$ \emph{subcritical}.
+For every exponent in this range and every fixed depth, full parity
+requires $\exp(\Omega(d))$ examples under the width-first limiting
+learner. More precisely, below that sample scale, a constant fraction
+of test inputs fails the requirement that the correct label have
+posterior probability strictly greater than $2/3$.
+
+The conditioning and prediction conventions matter. Before training,
+we restrict the prior to networks whose real output has absolute value
+greater than a fixed margin at every Boolean input. We then condition
+on agreement with the observed training labels. Prediction uses the
+posterior probability of a label. These conventions give a different
+learning problem from Gaussian regression on exact real-valued
+observations or prediction by a posterior mean. Our lower bound applies
+to the resulting label probabilities themselves.
+
+The order of limits also matters. We first send width to infinity at a
+fixed input dimension and a fixed training sample; only afterward do we
+study increasing dimension and sample size. The theorem covers every
+specified sample size below the exponential threshold, without assuming
+that error is monotone in the number of examples. It concerns full parity
+on all $d$ coordinates. It does not establish the conjectured
+$\exp(\Omega(k\log(ed/k)))$ scale for parity on $k$ coordinates inside a
+larger ambient dimension $d$.
+
+The proof identifies three limiting posteriors within the subcritical
+range. Negative exponents give a Gaussian process conditioned on the
+training signs; exponent zero retains the global margin condition;
+positive exponents concentrate on sign functions of minimum Gaussian
+energy. We treat these cases separately after developing their common
+spectral and sampling estimates. In the last case, the argument allows
+arbitrary posterior weights among tied minimizers, which is necessary
+for a conclusion about posterior confidence.
 
 \section{Model and main theorem}
 Let $\mathcal X=\{-1,1\}^d$, with uniform probability measure, and let
@@ -97,12 +142,11 @@ assert a single event for every prefix of an infinite sample sequence.
 In particular, the proof does not assume monotonicity of this learner's
 fixed-target risk in sample size.
 
-Parity has a Boolean circuit with $O(d)$ gates. It also has a
-polynomial-size, polynomial-weight $\tanh$ realization at every fixed
-depth, as shown in Appendix~\ref{sec:paritycircuit}. The theorem therefore
-rules out a sample guarantee polynomial in those complexity measures for
-this width-first learner. It does not claim that identifying parity from
-examples is intrinsically exponentially difficult.
+Appendix~\ref{sec:paritycircuit} supplies the small bounded-weight
+$\tanh$ realization of parity used to compare this lower bound with
+implementation complexity. The obstruction is a property of the specified
+Bayesian learner: identifying parity from examples is not intrinsically
+exponentially difficult.
 
 \subsection{Proof structure and the three limiting posteriors}
 Write $\Psi(t)=2\arcsin(t)/\pi$ and $\beta=2^{-(L-1)}$. The relevant
@@ -121,15 +165,18 @@ For $0<\gamma<1$ the actual network posterior concentrates on compatible
 globally separated functions of minimum Gaussian energy; the proof needs
 no formula for the weights of ties.
 
-The common obstacle is to control low-degree functions selected after
-seeing the training data. We prove a uniform squared negative-part
-estimate using the stronger metric bound inside Lee's chaining argument
-\cite{Lee2023}. A discrete Laplacian identity then converts an $L^2$
-bound on a degree-$r$ polynomial into a clipped parity-correlation bound
-with factor $r/d$. An additional short band of Fourier levels handles the
-gaps between adjacent sampling thresholds. At $\gamma=0$, Gaussian
-entropy bounds and an auxiliary independent sample preserve the exact
-globally conditioned posterior throughout the argument.
+The proof has three tasks. First, we derive these width limits from
+the network prior and estimate the Fourier spectrum of $K$. Second, we
+control low-degree functions chosen after seeing the training sample.
+For this we prove a uniform squared negative-part estimate, using the
+stronger metric bound inside Lee's chaining argument \cite{Lee2023}.
+A discrete Laplacian identity converts the resulting $L^2$ control of a
+degree-$r$ polynomial into a clipped parity-correlation bound with factor
+$r/d$. A short additional band of Fourier levels covers the gaps between
+adjacent sampling thresholds. Third, we turn these estimates into
+confidence lower bounds for each of the three posteriors. The case
+$\gamma=0$ requires separate Gaussian entropy bounds and an auxiliary
+independent sample to retain the exact global margin conditioning.
 
 \input{width-limits}
 \input{spectral}

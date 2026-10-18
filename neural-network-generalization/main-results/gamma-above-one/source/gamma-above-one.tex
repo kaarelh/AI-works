@@ -23,15 +23,87 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-We study noiseless Bayesian learning by fully connected neural networks with bounded Lipschitz activations, a linear readout, and a Gaussian weight prior with scale $\sigma=N^{-\gamma/2}$. Before observing data the prior is conditioned on a fixed absolute margin at every input of the Boolean cube. For every fixed depth and every fixed $\gamma>1$, we prove a sample bound polynomial in the input dimension and the bounded-weight network size of the target, uniformly over every larger learner width. The result holds at the specified nonzero prior variance, rather than only in a small-variance limit at fixed width. A cylinder construction gives a common target-mass lower bound for all $\gamma\geq1$. Above the critical scaling, Gaussian isoperimetry controls the Frobenius mass of singular values outside the vanishing operator-norm bulk. This yields a bound on the total probability of functions that lack a small description. Combining this bound with compression and a finite-class posterior argument proves width-uniform generalization without an exponential-in-dimension width assumption. A separate elementary argument covers the remaining smaller widths. We also prove polynomial equivalence between normalized negative log prior mass and bounded-weight network complexity. The full-depth learning theorem proved here is for $\gamma>1$; a companion paper treats the tanh mean-field endpoint through a different compression argument.
+A neural-network learner can be much larger than the network needed to
+represent its target. We prove that, for a family of Gaussian weight priors,
+this excess width does not increase the number of examples needed to learn.
+The model is a fully connected network with bounded Lipschitz hidden
+activations and a linear readout. The prior retains only networks whose
+outputs have absolute value greater than $1/2$ on the entire Boolean input
+cube, and learning conditions on noiseless labels. Internal weight variance
+is $N^{-\gamma}$ at width $N$, with corresponding input and readout scalings.
+For every fixed depth and every fixed $\gamma>1$, the sample bound is
+polynomial in the input dimension and the target's bounded-weight network
+complexity, uniformly at every width at least that complexity. The theorem
+holds at the specified positive variances, without taking an infinite-width
+or zero-variance limit. It controls both posterior average error and the
+fraction of inputs receiving correct-label probability at most $2/3$.
+The proof compares the prior mass of a small target with the total mass of
+functions lacking a small description, using a Gaussian neighborhood
+construction, singular-value bounds, and network compression. We also relate
+normalized negative log prior mass to bounded-weight network complexity.
+The polynomial degree may depend on depth and on $\gamma$; a bound polynomial
+in depth is not established here.
 \end{abstract}
 
-\section{Introduction and result}
-The probability assigned to a function by a neural-network weight prior reflects both the cost of its smallest representation and the volume of its other representations. In a sufficiently strong Gaussian prior, the first quantity is easier to isolate. Earlier small-variance arguments take the variance to zero at each fixed width. Here we instead specify the variance as a power of the width and prove a bound valid at every width, for every fixed exponent above the mean-field value.
+\section{Introduction}
+Suppose a Boolean function can be computed by a small neural network, but
+the learner uses a much wider network. Can a Gaussian weight prior still
+favor that simple target strongly enough to learn it from few examples?
+A bound based only on the learner's number of parameters cannot answer this
+question: that number grows with width even when the target is unchanged.
+The desired guarantee instead depends on the size of a small implementation
+of the target, uniformly over the learner's excess width.
 
-Our result is the following. Fix the depth $L$ and $\gamma>1$. If a Boolean target has a width-$C$ implementation with weights bounded by $C$, then the Bayesian learner defined below has sample complexity polynomial in $d,C,1/\varepsilon$, and $\log(1/\delta)$, independently of its width $N\geq C$. The polynomial degree may depend on $L$ and $\gamma$. The conclusion concerns posterior label error, with a corresponding bound for posterior majority prediction. It makes no claim about the computation needed to sample the posterior.
+We prove such a guarantee for noiseless Bayesian classification. The learner
+places independent Gaussian priors on its weights, restricts this prior to
+networks with an absolute output margin on every Boolean input, and then
+conditions on agreement with the training labels. The prior family is
+indexed by an exponent $\gamma$: the input, internal, and readout variances
+are respectively $N^{1-\gamma}/d$, $N^{-\gamma}$, and $N^{-\gamma-1}$.
+The value $\gamma=1$ is the mean-field scaling in this convention;
+$\gamma>1$ makes all three variances smaller by the common factor
+$N^{1-\gamma}$.
 
-The proof develops the argument in Vaintrob and H\"anni's lecture notes~\cite{notes} and the finite-$\gamma$ draft~\cite{fable}. It has three quantitative ingredients. First, a small target can be cloned into any larger network while constraining only linearly many Gaussian coordinates. Second, at $\gamma>1$, the total probability of functions whose implementation needs large weighted norm is exponentially small on the $N^\gamma$ scale. Third, bounded weighted norm implies a width-independent finite description. The second step controls a single exceptional parameter event, avoiding a union bound over all Boolean functions. We include the compression proof in an appendix so that the learning theorem is self-contained apart from standard Gaussian concentration and isoperimetry.
+Our main result is that, for every fixed depth $L$ and fixed $\gamma>1$,
+this learner has sample complexity polynomial in the input dimension $d$,
+the target complexity $C$, the inverse desired error, and the logarithm of
+the inverse failure probability, for every width $N\geq C$.
+Here $C=C_L(f)$ is the smallest width of a depth-$L$ implementation of the
+target that has strict output margin greater than $1/2$ and weights bounded
+in absolute value by $C$. The training and test inputs may follow any common
+distribution on the Boolean cube. With sufficiently many examples, the
+posterior assigns the correct label probability greater than $2/3$ on all
+but the desired fraction of test inputs; it also has small average label
+error. The precise statement is Theorem~\ref{thm:all-width-gamma-gt-one}.
+
+The width is finite and can be as small as the target complexity. The
+variance is the specified nonzero value at that width; it is not sent to
+zero after fixing the network. Depth, however, is held fixed: the degree of
+the sample polynomial may depend on $L$ and $\gamma$. The theorem also
+concerns the exact Bayesian posterior, without an assertion that it can be
+computed efficiently.
+
+\paragraph{Why the prior learns small targets.}
+For a Bayesian learning bound, it is not enough to exhibit one inexpensive
+set of target weights. We need to compare the probability of the target
+with the probability of competing functions. The proof has three steps.
+First, replicate the neurons of a small target network to embed it at any
+larger width, and lower-bound the Gaussian probability of a neighborhood
+that still computes the target. Second, use $\gamma>1$ to show that, apart
+from an event of small total probability, a margin-separated draw has a
+low-norm implementation after truncating small singular values. Third,
+compress every such implementation into a network whose description length
+is independent of learner width. A finite-class argument then excludes
+inaccurate functions using the training labels. A direct target-probability
+bound covers the smaller widths where the spectral estimate is unavailable.
+
+This develops the strong-prior argument in Vaintrob and H\"anni's lecture
+notes~\cite{notes} and the finite-$\gamma$ draft~\cite{fable}. The presentation
+includes the model, probability bounds, and complete compression argument;
+no companion paper is needed for the learning proof. The external tools
+are standard Gaussian concentration and isoperimetry. The final section on
+prior mass also makes precise a relation between function probability and
+bounded-weight network complexity.
 
 \section{Model and prediction convention}\label{sec:model}
 Fix $d\geq1$, $L\geq2$, and $\mathcal X=\{-1,1\}^d$. Let $\bar x=(1,x_1,\ldots,x_d)$, and let $\phi:\R\to[-1,1]$ be $1$-Lipschitz. The architecture has $L-1$ hidden layers of common width $N$ and a linear readout:
@@ -81,7 +153,16 @@ The global margin condition applies before training, including at unobserved inp
 \section{Scope of the result}
 The theorem supplies an explicit finite-variance extension of the strong-prior argument. For large enough width the relevant-class sample bound depends on $L,d,C,\log(1/\varepsilon)$ but not on $\gamma$; $\gamma$ determines when the spectral cutoff lies above the Gaussian bulk. Covering all widths uses a polynomial whose degree grows as $\gamma$ approaches one. This is a limitation of the present argument, rather than a lower bound asserting that such deterioration is necessary.
 
-The cloning bound is uniform over $\gamma\geq1$, including the endpoint. At $\gamma=1$ the internal Gaussian matrices have a bulk of constant operator norm, so the small-cutoff argument does not establish a full-depth compression theorem. The companion mean-field paper~\cite{critical} gives a different proof for tanh at arbitrary fixed depth: it compresses the quadratic-tilt representations of exact rate minimizers and obtains polynomial sample complexity for all sufficiently large widths. Its width threshold is not quantified. For one hidden layer, a direct chi-square argument gives the stronger every-width conclusion for all $\gamma\geq1$ and any bounded $1$-Lipschitz activation.
+The cloning bound is uniform over $\gamma\geq1$, including the endpoint.
+At $\gamma=1$ the internal Gaussian matrices have a bulk of constant
+operator norm, so the small-cutoff argument used here does not establish a
+full-depth compression theorem. A separate mean-field paper~\cite{critical}
+proves polynomial sample complexity for tanh at every width
+$N\geq C_L(f)$, at arbitrary fixed depth, using finite-width covariance
+estimates and a different compression argument. That result is not needed
+for the present proof. For one hidden layer, a direct chi-square argument
+already gives the every-width conclusion for all $\gamma\geq1$ and any
+bounded $1$-Lipschitz activation.
 
 For $\gamma<1$, tanh's diverging preactivation variance leads to a saturated, iterated-arcsine kernel. Under global margin conditioning its learning limit depends further on the sign of $\gamma$. The companion kernel note~\cite{subcritical} treats these limits and explains why a lower bound for regression using the posterior mean cannot be substituted for a classification lower bound under the present conventions.
 
@@ -99,7 +180,7 @@ Lecture notes, 2026.
 \emph{The circuit prior across the whole strong prior regime: cloning and subsampling at every $\gamma>1$}.
 Draft dated August 27, 2026, prepared from an outline by Dmitry Vaintrob and Kaarel H\"anni; supplied by the authors.
 \bibitem{critical} Dmitry Vaintrob, Kaarel H\"anni, and OpenAI Codex.
-\emph{Bayesian circuit learning at mean-field scaling: a variational principle and width-independent generalization}.
+\emph{Mean-field Bayesian circuit learning at every width above target complexity}.
 Companion manuscript, October 2026.
 \bibitem{subcritical} Dmitry Vaintrob, Kaarel H\"anni, and OpenAI Codex.
 \emph{The fixed-kernel regime of a margin-conditioned Bayesian neural-network prior}.
