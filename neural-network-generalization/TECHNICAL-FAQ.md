@@ -359,7 +359,7 @@ $$
 2\le L\le c\eta\frac{\log d}{\log\log d},
 $$
 
-for a universal $c>0$ and sufficiently large $d$. The confidence-error lower limit is at least $1/4$, with training probability at least $1-1/(2d^{1/(L-1)})$. Dimension, depth, and sample size are fixed before width tends to infinity; mixtures of minimizers are included. This is a **polynomial** sample lower bound, not the subcritical exponential bound or a disproof of joint polynomial-depth learning. It does not reach the order-$\log^2 d$ depths at which parity has bounded absolute rate.
+for a universal $c>0$ and sufficiently large $d$. The confidence-error lower limit is at least $1/4$, with training probability at least $1-1/(2d^{1/(L-1)})$. Dimension, depth, and sample size are fixed before width tends to infinity; mixtures of minimizers are included. This is a **polynomial** sample lower bound, not the subcritical exponential bound or a disproof of joint polynomial-depth learning. It does not reach depths of order $\log^2 d$, at which parity has bounded absolute rate.
 
 ## 18. Can the exponential dependence on the *teacher's* depth be removed unconditionally?
 
