@@ -1,0 +1,119 @@
+# p6_revision.py seed=20261018 numpy 2.4.6
+
+== A. fixed against randomised question families (author's example, truth x = 0)
+   Delta | near: dithered  fixed-centred  fixed-best  fixed-worst | scattered: dithered  fixed-worst  fixed-best | every fixed grid ranks near <= scattered?
+       1 |   2.3219    2.3219    2.3219    2.3219 |   2.3219    2.3219    2.3219 | yes
+       2 |   1.3219    1.3219    1.3219    1.3219 |   2.3219    2.3219    2.3219 | yes
+       3 |   0.7370    0.7370    0.7370    0.7370 |   2.3219    2.3219    2.3219 | yes
+       5 |   0.4236   -0.0000   -0.0000    0.7370 |   2.3219    2.3219    2.3219 | yes
+      10 |   0.2118   -0.0000   -0.0000    0.7370 |   2.3219    2.3219    2.3219 | yes
+      40 |   0.0529   -0.0000   -0.0000    0.7370 |   0.5294    0.7370    0.3219 | yes
+     100 |   0.0212   -0.0000   -0.0000    0.7370 |   0.2118    0.7370   -0.0000 | yes
+   -> at cell width 5 or more EVERY fixed grid ranks the near forecast better: a fixed family encodes 'good
+      enough at resolution Delta', and the dithered loss is the offset-average of fixed-grid losses.
+
+   near-point forecasts P = (1-s) delta_y + s Unif(circle of length Rc), truth 0, Rc = 1000 Delta, s = 1e-6:
+   exact: S = sigma * log(Rc/(s Delta)) + (1 - sigma) * (-log(1 - s + s Delta/Rc)), sigma = min(|y|/Delta, 1)
+     y/Delta =  0.00: sigma 0.000 | S exact    0.0000, by quadrature over the dither    0.0000 | fixed grids give only 0.000001 or 29.8974
+     y/Delta =  0.10: sigma 0.100 | S exact    2.9897, by quadrature over the dither    2.9897 | fixed grids give only 0.000001 or 29.8974
+     y/Delta =  0.25: sigma 0.250 | S exact    7.4743, by quadrature over the dither    7.4743 | fixed grids give only 0.000001 or 29.8974
+     y/Delta =  0.50: sigma 0.500 | S exact   14.9487, by quadrature over the dither   14.9487 | fixed grids give only 0.000001 or 29.8974
+     y/Delta =  0.75: sigma 0.750 | S exact   22.4230, by quadrature over the dither   22.4230 | fixed grids give only 0.000001 or 29.8974
+     y/Delta =  1.00: sigma 1.000 | S exact   29.8974, by quadrature over the dither   29.8974 | fixed grids give only 0.000001 or 29.8974
+     y/Delta =  2.00: sigma 1.000 | S exact   29.8974, by quadrature over the dither   29.8974 | fixed grids give only 0.000001 or 29.8974
+     y/Delta = 10.00: sigma 1.000 | S exact   29.8974, by quadrature over the dither   29.8974 | fixed grids give only 0.000001 or 29.8974
+   -> a fixed grid grades a near-point miss by one cut (0 or 1); the dither grades it by sigma = min(|y|/Delta,1),
+      bounded and constant beyond one cell width.  S/log(1/s) -> sigma slowly; quote the decomposition.
+
+== B. the price of a miss is set by the forecaster's own error model (truth x = 0, forecast centred at y)
+   Gaussian N(y,1) forecasts; extra price S(y) - S(0) in bits, against y^2/(2 ln2)
+     Delta  0.1 | y=1: fixed 0.721, dithered 0.721 [0.721]; y=2: fixed 2.883, dithered 2.883 [2.885]; y=4: fixed 11.532, dithered 11.532 [11.542]; y=6: fixed 25.947, dithered 25.947 [25.969]; y=10: fixed 72.075, dithered 72.075 [72.135]
+     Delta  1.0 | y=1: fixed 0.664, dithered 0.664 [0.721]; y=2: fixed 2.660, dithered 2.661 [2.885]; y=4: fixed 10.706, dithered 10.708 [11.542]; y=6: fixed 24.268, dithered 24.272 [25.969]; y=10: fixed 68.306, dithered 68.310 [72.135]
+     Delta  4.0 | y=1: fixed 0.184, dithered 0.294 [0.721]; y=2: fixed 0.933, dithered 1.251 [2.885]; y=4: fixed 5.391, dithered 5.957 [11.542]; y=6: fixed 14.879, dithered 15.517 [25.969]; y=10: fixed 50.447, dithered 51.117 [72.135]
+   Laplace(y,1) forecasts; extra price S(y) - S(0) in bits, against |y|/ln2
+     Delta  0.1 | y=1: fixed 1.406, dithered 1.394 [1.443]; y=2: fixed 2.849, dithered 2.837 [2.885]; y=4: fixed 5.734, dithered 5.722 [5.771]; y=6: fixed 8.620, dithered 8.608 [8.656]; y=10: fixed 14.390, dithered 14.379 [14.427]
+     Delta  1.0 | y=1: fixed 1.037, dithered 0.937 [1.443]; y=2: fixed 2.480, dithered 2.380 [2.885]; y=4: fixed 5.365, dithered 5.266 [5.771]; y=6: fixed 8.251, dithered 8.151 [8.656]; y=10: fixed 14.022, dithered 13.922 [14.427]
+     Delta  4.0 | y=1: fixed 0.128, dithered 0.288 [1.443]; y=2: fixed 0.817, dithered 1.024 [2.885]; y=4: fixed 3.702, dithered 3.490 [5.771]; y=6: fixed 6.588, dithered 6.375 [8.656]; y=10: fixed 12.358, dithered 12.146 [14.427]
+   -> on a FIXED partition too, the Gaussian forecaster pays ~ y^2/(2 ln 2) bits for a miss of y and the Laplace
+      forecaster ~ |y|/ln 2: how much a miss costs is chosen by each hypothesis's error model, without bound;
+      the uniform-on-5 forecasts of part A pay the same for every miss beyond their support of the true cell.
+      The question family sets only the resolution (and, randomised, a bounded smoothing up to one cell width).
+
+== C. the fine limit T3.3(b) beyond bounded densities
+   arcsine law on [-1, 1] (density 1/(pi sqrt(1-x^2)), unbounded; h = log2(pi/2) = 0.651496 bits)
+   coarse check (Delta >= 2): r = (1/Delta) int H2(F) dx
+     Delta 2.0: r 0.85045412, (1/Delta) int H2(F) 0.85045412
+     Delta 4.0: r 0.42522706, (1/Delta) int H2(F) 0.42522706
+     Delta  1.0e+00: r   1.505683, r - log2(1/Delta)  1.505683, gap to h 8.542e-01
+     Delta  3.0e-01: r   2.860516, r - log2(1/Delta)  1.123551, gap to h 4.721e-01; log10(gap ratio)/log10(Delta ratio) = 0.493
+     Delta  1.0e-01: r   4.246805, r - log2(1/Delta)  0.924877, gap to h 2.734e-01; log10(gap ratio)/log10(Delta ratio) = 0.497
+     Delta  5.0e-02: r   5.166890, r - log2(1/Delta)  0.844962, gap to h 1.935e-01; log10(gap ratio)/log10(Delta ratio) = 0.499
+     Delta  1.0e-02: r   7.381930, r - log2(1/Delta)  0.738074, gap to h 8.658e-02; log10(gap ratio)/log10(Delta ratio) = 0.500
+     Delta  1.0e-03: r  10.644663, r - log2(1/Delta)  0.678879, gap to h 2.738e-02; log10(gap ratio)/log10(Delta ratio) = 0.500
+     Delta  1.0e-04: r  13.947868, r - log2(1/Delta)  0.660155, gap to h 8.659e-03; log10(gap ratio)/log10(Delta ratio) = 0.500
+     Delta  1.0e-05: r  17.263875, r - log2(1/Delta)  0.654234, gap to h 2.738e-03; log10(gap ratio)/log10(Delta ratio) = 0.500
+     Delta  1.0e-06: r  20.583931, r - log2(1/Delta)  0.652362, gap to h 8.659e-04; log10(gap ratio)/log10(Delta ratio) = 0.500
+   uniform on [-1, 1] for comparison (bounded density): gap = Delta/(4 ln 2) exactly for Delta <= 2
+   -> the arcsine rate converges to h - log Delta (gap -> 0, at about the rate sqrt(Delta) up to logarithms),
+      as the general proof (lower semicontinuity of relative entropy) says; at 2.5% of the range it is 0.193 bits
+      above it.
+
+   Cantor law on [0, 1] (singular, no atoms; level-18 approximation, 2^18 atoms at interval midpoints)
+     Delta 3^-1  = 3.333e-01: r   1.8393, -log2 Q(Delta)   1.0000 (lower bound), r - log2(1/Delta)   0.2544  [j*(1 - log3 2)*log2 3 = -0.5850]
+     Delta 3^-2  = 1.111e-01: r   2.8393, -log2 Q(Delta)   2.0000 (lower bound), r - log2(1/Delta)  -0.3306  [j*(1 - log3 2)*log2 3 = -1.1699]
+     Delta 3^-4  = 1.235e-02: r   4.8393, -log2 Q(Delta)   4.0000 (lower bound), r - log2(1/Delta)  -1.5005  [j*(1 - log3 2)*log2 3 = -2.3399]
+     Delta 3^-6  = 1.372e-03: r   6.8393, -log2 Q(Delta)   6.0000 (lower bound), r - log2(1/Delta)  -2.6705  [j*(1 - log3 2)*log2 3 = -3.5098]
+     Delta 3^-8  = 1.524e-04: r   8.8393, -log2 Q(Delta)   8.0000 (lower bound), r - log2(1/Delta)  -3.8404  [j*(1 - log3 2)*log2 3 = -4.6797]
+     Delta 3^-10 = 1.694e-05: r  10.8393, -log2 Q(Delta)  10.0000 (lower bound), r - log2(1/Delta)  -5.0103  [j*(1 - log3 2)*log2 3 = -5.8496]
+   -> r -> infinity (no atoms: Q(Delta) -> 0 and r >= -log Q), while r - log2(1/Delta) -> -infinity (no density):
+      the statement 'r(Delta) - log(1/Delta) -> h(e) in [-inf, inf)' covers every law with bounded support.
+
+== D. T4(a) as ideal forecasts on non-nested information (explicit model on a circle)
+   model: Z ~ U[0, 10000) on a circle, f_A = Z, e_A ~ U[-1,1], q = f_A - e_A, e_B in {-M,0,M} w.p. {.1,.8,.1}
+          (M = 1000), f_B = q + e_B; Z independent of (e_A, e_B), so f_B = Z - e_A + e_B is uniform and
+          independent of (e_A, e_B): e_A is independent of f_A and e_B of f_B (exactly).  n = 400000
+   plug-in mutual information (bits; bias ~ (cells-1)/(2 n ln2) ~ 1e-4): I(e_B; f_B in 50 bins) 0.00012, I(e_A in 10 bins; f_A in 50 bins) 0.00076
+   the pair determines q: e_B decoded as the element of {-M,0,M} nearest to f_A - f_B on 400000 of 400000 data; I(e_B; f_A - f_B) = H(e_B) = 0.92384
+   expected log score (bits) of the two ideal forecasts on dithered cells of width Delta:
+     Delta 0.1000: A 4.3577 (closed form 4.3580) | B 0.9238 (H = 0.9219) | log score prefers B
+     Delta 1.0000: A 1.3614 (closed form 1.3607) | B 0.9238 (H = 0.9219) | log score prefers B
+     Delta 1.5000: A 0.9551 (closed form 0.9560) | B 0.9238 (H = 0.9219) | log score prefers B
+     Delta 1.6000: A 0.8986 (closed form 0.8990) | B 0.9238 (H = 0.9219) | log score prefers A
+     Delta 2.0000: A 0.7196 (closed form 0.7213) | B 0.9238 (H = 0.9219) | log score prefers A
+     Delta 10.0000: A 0.1447 (closed form 0.1443) | B 0.9238 (H = 0.9219) | log score prefers A
+   CRPS of the two ideal forecasts: A 0.3333 (exact 1/3) | B 179.16 (exact 180): CRPS prefers A at every Delta
+   -> both forecasts are ideal (auto-calibrated: the conditional law of q given the law's own prediction); the
+      information sets sigma(f_A), sigma(f_B) are not nested, and the strictly proper log score (at Delta below
+      1.5585) and CRPS rank them oppositely.  The forecaster with sigma(f_A, f_B) is a point mass and beats both
+      under every proper score (nested case).  No forecaster here is miscalibrated relative to its information.
+
+== E. square loss on [-1, 1] (B = 1): largest eta for which a pool is dominated (bisection, 20001 outcomes)
+   two endpoints {-1, 1}:
+     p(-1) = 0.50: largest eta 0.60938
+     p(-1) = 0.30: largest eta 0.62580
+     p(-1) = 0.10: largest eta 0.71060
+     p(-1) = 0.01: largest eta 0.96340
+   central pairs {-a, a}, p = 1/2:
+     a = 1.00: largest eta 0.60938
+     a = 0.50: largest eta 0.52213
+     a = 0.20: largest eta 0.50336
+     a = 0.10: largest eta 0.50083
+     a = 0.05: largest eta 0.50021
+     a = 0.01: largest eta 0.50001
+   asymmetric pairs:
+     {-1.00, 0.00}, p = 0.5: largest eta 0.68485
+     {0.00, 0.10}, p = 0.5: largest eta 0.50146
+     {0.90, 1.00}, p = 0.5: largest eta > 2 (dominated at every eta tried)
+     {-0.05, 0.05}, p = 0.2: largest eta 0.50028
+   3000 random pools of 2-4 points at eta = 0.505: largest infeasibility margin 1.206e-04 at (array([-0.147,  0.131,  0.187,  0.071]), array([0.586, 0.108, 0.209, 0.096]))
+   -> the threshold 1/(2B^2) is approached by narrow pools near the centre (a -> 0), not by the endpoint pool,
+      which stays dominated up to eta ~ 0.609 when p = 1/2 (cosh(2 eta) <= e^eta).
+
+== F. T1.5(e) for sub-probabilities: forecast of total mass m on J = [0, L], L <= Delta, truth at an atom
+     trial 0: m = 0.443, L = 0.612: exact dither integral 1.3252280975, formula 1.3252280975
+     trial 1: m = 0.387, L = 0.692: exact dither integral 2.8981259461, formula 2.8981259461
+     trial 2: m = 0.186, L = 0.814: exact dither integral 2.9676297387, formula 2.9676297387
+   200 random forecasts: max |exact - formula| = 8.88e-16 bits
+   -> with m < 1 the no-grid-point case costs -log m, not 0; for m = 1 the formula is CRIGN/Delta.
+
+# done

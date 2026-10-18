@@ -1,0 +1,53 @@
+# p3_errormodels.py seed=20261017 numpy 2.4.6
+
+== A. ML scale in location-scale error families: numerical minimum vs closed form (bits)
+   Gaussian sample            Gaussian 12142.7718 / 12142.7718 | Laplace 12483.7383 / 12483.7383 | uniform 16924.6901 | gen.Gauss p=4 12506.4980 / 12506.4980
+   Laplace sample             Gaussian 10258.7771 / 10258.7771 | Laplace 9696.3342 / 9696.3342 | uniform 19900.4455 | gen.Gauss p=4 11940.6671 / 11940.6671
+   arcsine (sinusoid) sample  Gaussian 7831.5289 / 7831.5289 | Laplace 9102.2827 / 9102.2827 | uniform 5000.0000 | gen.Gauss p=4 6883.0972 / 6883.0972
+   constant 2 Gamma(1+1/p) (p e)^(1/p) at p =    2: 4.132731   (p=1: 2e = 5.436564; p=2: sqrt(2 pi e) = 4.132731; limit 2)
+   constant 2 Gamma(1+1/p) (p e)^(1/p) at p =    8: 2.767804   (p=1: 2e = 5.436564; p=2: sqrt(2 pi e) = 4.132731; limit 2)
+   constant 2 Gamma(1+1/p) (p e)^(1/p) at p =   32: 2.260203   (p=1: 2e = 5.436564; p=2: sqrt(2 pi e) = 4.132731; limit 2)
+   constant 2 Gamma(1+1/p) (p e)^(1/p) at p =  128: 2.084245   (p=1: 2e = 5.436564; p=2: sqrt(2 pi e) = 4.132731; limit 2)
+   constant 2 Gamma(1+1/p) (p e)^(1/p) at p = 1024: 2.014417   (p=1: 2e = 5.436564; p=2: sqrt(2 pi e) = 4.132731; limit 2)
+
+== B. E_u H(cell | u) against h(e + V) - log2 Delta, and against (1/Delta) int H2(F_e) when Delta >= 2 max|e|
+   error law                        Delta |      E_u H h(e+V)-logD |     coarse
+   uniform[-1,1]                     0.05 |    5.33996    5.33996 |        nan
+   uniform[-1,1]                     0.25 |    3.09017    3.09017 |        nan
+   uniform[-1,1]                     1.00 |    1.36067    1.36067 |        nan
+   uniform[-1,1]                     2.00 |    0.72135    0.72135 |    0.72135
+   uniform[-1,1]                     4.00 |    0.36067    0.36067 |    0.36067
+   uniform[-1,1]                     8.00 |    0.18034    0.18034 |    0.18034
+   uniform[-1,1]                    16.00 |    0.09017    0.09017 |    0.09017
+   arcsine (sinusoid)                0.05 |    5.16689    5.16689 |        nan
+   arcsine (sinusoid)                0.25 |    3.08274    3.08274 |        nan
+   arcsine (sinusoid)                1.00 |    1.50569    1.50568 |        nan
+   arcsine (sinusoid)                2.00 |    0.85046    0.85045 |    0.85045
+   arcsine (sinusoid)                4.00 |    0.42523    0.42523 |    0.42523
+   arcsine (sinusoid)                8.00 |    0.21262    0.21261 |    0.21261
+   arcsine (sinusoid)               16.00 |    0.10631    0.10631 |    0.10631
+   atoms -1,0,1 (0.1,0.8,0.1)        0.05 |    0.92193    0.92163 |        nan
+   atoms -1,0,1 (0.1,0.8,0.1)        0.25 |    0.92193    0.92191 |        nan
+   atoms -1,0,1 (0.1,0.8,0.1)        1.00 |    0.92193    0.92193 |        nan
+   atoms -1,0,1 (0.1,0.8,0.1)        2.00 |    0.46900    0.46899 |    0.46900
+   atoms -1,0,1 (0.1,0.8,0.1)        4.00 |    0.23450    0.23450 |    0.23450
+   atoms -1,0,1 (0.1,0.8,0.1)        8.00 |    0.11725    0.11724 |    0.11725
+   atoms -1,0,1 (0.1,0.8,0.1)       16.00 |    0.05862    0.05862 |    0.05862
+   0.9 U[-.05,.05] + 0.1 U[-4,4]     0.05 |    2.40754    2.40754 |        nan
+   0.9 U[-.05,.05] + 0.1 U[-4,4]     0.25 |    1.19244    1.19244 |        nan
+   0.9 U[-.05,.05] + 0.1 U[-4,4]     1.00 |    0.74161    0.74161 |        nan
+   0.9 U[-.05,.05] + 0.1 U[-4,4]     2.00 |    0.54879    0.54879 |        nan
+   0.9 U[-.05,.05] + 0.1 U[-4,4]     4.00 |    0.33491    0.33491 |        nan
+   0.9 U[-.05,.05] + 0.1 U[-4,4]     8.00 |    0.16776    0.16776 |    0.16776
+   0.9 U[-.05,.05] + 0.1 U[-4,4]    16.00 |    0.08388    0.08388 |    0.08388
+   per-straddle c_F (band [-1,1]): uniform |e| 0.7213 (paper 0.7213), sinusoid 0.8505 (paper's Gibbs bound 0.8510 on a test half)
+   fine limit: h(arcsine on [-1,1]) = log2(pi/2) = 0.65150 bits; h(U[-1,1]) = 1 bit; atoms: H = 0.92193 bits
+
+== C. rearrangement: a 40-bin histogram error law and a bin permutation of it (same masses, other places)
+   histogram      RMS 0.7237  mean|e| 0.6440  max 1.6890 | h = 1.2988 bits | rate - (h - log2 Delta) at Delta = w/64: 0.0001, w/8: 0.0010 | rate at w/2: 5.8686, 1: 1.5866, coarse (Delta = 2L): 0.5285
+   bins permuted  RMS 0.9830  mean|e| 0.8500  max 1.6890 | h = 1.2988 bits | rate - (h - log2 Delta) at Delta = w/64: 0.0031, w/8: 0.0246 | rate at w/2: 5.9629, 1: 1.9684, coarse (Delta = 2L): 0.7235
+   (as Delta -> 0 both rates approach h - log2 Delta = H(bins) + log2(w/Delta), and h is the same; the permutation
+    changes the rate only through the smoothing at bin edges, O(Delta/w) bits; at coarser Delta the rates differ,
+    and the coarse rate (1/Delta) int H2(F) sees where the mass is, at scales up to Delta)
+
+# done

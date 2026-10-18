@@ -1,0 +1,35 @@
+# rb2_scores.py seed=20261018 (referee B, independent of checks/p2_scores.py)
+
+== A. truth x = 0; scores as losses (lower is better)
+   forecast                         LS bits  CRPS ker  CRPS int     CRIGN   ES_0.5     ES_1
+   near {-2..2}                      2.3219    0.4000    0.4000    2.1178   0.4174   0.4000
+   scattered {-20,-10,0,10,20}       2.3219    4.0000    4.0000   21.1779   1.3200   4.0000
+   scattered {-37,0,12,55,81}        2.3219   13.7200   13.7200   67.8341   2.2574  13.7200
+   scattered, 0.21 on truth          2.2515    3.9006    3.9006   20.8484   1.2872   3.9006
+   refs-report {-40,-17,0,23,51}     2.3219    8.4400    8.4400   45.8970   1.8962   8.4400
+   (CRPS kernel and integral forms agree EXACTLY in rationals; ES_1 = CRPS as it must)
+
+== B. reversal: scattered forecast with mass m on the truth and (1-m)/4 on each of -20,-10,10,20
+   m=1/5    LS 2.3219 (near 2.3219) CRPS 4.0000 (near 0.4000): LS prefers tie, CRPS prefers near
+   m=201/1000 LS 2.3147 (near 2.3219) CRPS 3.9900 (near 0.4000): LS prefers scattered, CRPS prefers near
+   m=21/100 LS 2.2515 (near 2.3219) CRPS 3.9006 (near 0.4000): LS prefers scattered, CRPS prefers near
+   m=1/2    LS 1.0000 (near 2.3219) CRPS 1.5625 (near 0.4000): LS prefers scattered, CRPS prefers near
+   m=9/10   LS 0.1520 (near 2.3219) CRPS 0.0625 (near 0.4000): LS prefers scattered, CRPS prefers scattered
+   m=99/100 LS 0.0145 (near 2.3219) CRPS 0.0006 (near 0.4000): LS prefers scattered, CRPS prefers scattered
+   CRPS of the scattered family equals the near forecast's at m* = 0.747018: for 1/5 < m < m* the two scores rank the pair oppositely
+
+== C. truth P = 0.5 N(-1, 0.1^2) + 0.5 N(1, 0.1^2); family N(0, s^2)
+   log-optimal s = sqrt(E X^2) = 1.004988; CRPS-optimal s (bounded scalar minimisation of quad integral) = 1.202985
+   N(0,s_log^2): E log score 2.05427 bits | E CRPS 0.60447 (quad) 0.60363 (Monte Carlo, n=400000)
+   N(0,s_crps^2): E log score 2.09580 bits | E CRPS 0.59725 (quad) 0.59680 (Monte Carlo, n=400000)
+   -> each proper score prefers its own projection: E LS(s_log) < E LS(s_crps), E CRPS(s_crps) < E CRPS(s_log)
+
+== D. local rules: propriety checks (expected loss sum_w p(w) s(q(w)) minimised over q in the simplex)
+   local Brier s(x)=(1-x)^2, m=3          max improvement found 2.881e-02  (p=[0.113 0.457 0.431], q=[0.    0.514 0.486])
+   linear s(x)=-x, m=3                    max improvement found 1.656e-01  (p=[0.687 0.171 0.142], q=[1. 0. 0.])
+   log s(x)=-ln x, m=3                    max improvement found 0.000e+00
+   log s(x)=-ln x, m=5                    max improvement found 0.000e+00
+   kinked s(x)=-ln x + 0.3[x>1/2], m=3    max improvement found 1.612e-01  (p=[0.576 0.095 0.329], q=[0.5   0.111 0.389])
+   binary Brier written as a function of q(realised) only: minimiser within 2.5e-04 of p on 200 random p (proper)
+
+# done
