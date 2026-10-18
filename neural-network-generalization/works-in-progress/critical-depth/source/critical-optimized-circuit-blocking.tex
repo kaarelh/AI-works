@@ -1,0 +1,199 @@
+\section{Optimizing the circuit prefix and blocking Boolean layers}
+\label{sec:critical-optimized-blocking}
+
+The circuit construction can spend more than $1/L$ entropy in its
+prefix. Optimizing that expenditure for the sample bound improves the
+teacher-width and depth dependence. Blocking several Boolean layers
+into a truth-table computation gives a further improvement. These
+bounds still do not give polynomial sample complexity for general
+small deep circuits.
+
+\begin{proposition}[A prefix budget adapted to learning]
+\label{prop:critical-optimized-prefix-budget}
+Consider a layered Boolean threshold implementation of depth $q\ge1$.
+Let $C_j$ be its state width at stage $j$. Suppose the exact feature
+repair for every gate at that stage has entropy cost at most $P_j/r$
+when the incoming covariance dominates $rHH^{\mathsf T}$, where
+$P_j\ge1$. For $L\ge q$, put
+\[
+ T=1+\log d+\log(2L)+
+          \sum_{j=1}^q\log\left(\frac{4C_jP_jL}{q}\right).
+\]
+There are universal constants $C_0,C_1$ such that
+\[
+ L\ge C_0T\quad\Longrightarrow\quad
+ J_L(f)\le V_*+C_1T^2/L.
+\]
+Consequently a sufficient sample size for the original critical
+learner is
+\[
+ n\ge\frac{C}{\varepsilon}
+       \{e^{CT}+\log(1/\delta)\}.
+\]
+The statistical conclusion has the same width-first quantifiers as
+Theorem~\ref{thm:critical-excess-learning}.
+\end{proposition}
+
+\begin{proof}
+In the proof of Lemma~\ref{lem:controlled-circuit-prefix}, replace
+the entropy budget $1/(qL)$ at each stage by $\eta=q/L$.
+Starting with $r_0=1/d$, use the rare-mixture weight
+$\theta_j=\eta r_{j-1}/P_j$ and tracked component
+\[
+ r_j=\frac{\eta r_{j-1}}{4C_jP_j}.
+\]
+Inductively $r_j\le1$, so $0<\theta_j\le1$.
+Entropy convexity gives cost at most $\eta$ per stage. The prefix
+therefore costs at most $q^2/L$, has constant diagonal, and retains
+the target component with
+\[
+ \log(1/r_q)=\log d+
+       \sum_{j=1}^q\log\left(\frac{4C_jP_jL}{q}\right).
+\]
+In particular $T\ge q$. Increasing $C_0$ ensures
+$L-q\ge L/2$ and the hypothesis of
+Lemma~\ref{lem:steering-after-prefix}. That lemma gives
+\[
+ J_L(f)\le V_*+\frac{q^2}{L}
+       +C\frac{(1+\log(1/r_q))^2+\log^2(2L)}{L-q}
+ \le V_*+C_1T^2/L.
+\]
+Apply Theorem~\ref{thm:critical-excess-learning}.
+Its exponential term is $e^{CT}$; its polynomial prefactor is
+absorbed in that expression because $T\ge\log(d+L+2)-C$.
+The entropy and compression bounds allow arbitrary nonnegative
+excess, so the prefix cost $q^2/L$ need not be bounded by a
+universal constant.
+\end{proof}
+
+For a bounded-fan-in Boolean gate library, the repair constants $P_j$
+are universal. A depth-$h$, width-$C$ implementation therefore has
+the rate and learning bounds above with
+\[
+ T\le C_2\{\log(d+L+2)+h\log((C+2)(2+L/h))\}.
+\]
+This improves the earlier fixed-budget prefix factor $h\log(hL)$.
+
+\begin{theorem}[Boolean layer blocking]
+\label{thm:critical-boolean-blocking}
+Suppose $f$ has a layered AND/OR/NOT circuit of fan-in at most two,
+width $C$, and depth $h\ge1$, including constant rails. For an integer
+$1\le b\le h$, put $k=\lceil h/b\rceil$ and
+\[
+ T_b=\log(d+L+2)+
+       k\{\log(C+2)+2^b+\log(2+L/k)\}.
+\]
+There are universal constants $C_0,C_1,C_2$ such that, if
+$L\ge C_0T_b$, then
+\[
+ J_L(f)\le V_*+C_1T_b^2/L,
+ \qquad
+ n\ge\frac{C_2}{\varepsilon}
+            \{e^{C_2T_b}+\log(1/\delta)\}
+\]
+is sufficient for posterior confidence-error at most $\varepsilon$
+with sample probability at least $1-\delta$, at every sufficiently
+large learner width. The width threshold is independent of the
+realized sample.
+\end{theorem}
+
+\begin{proof}
+Divide the $h$ layers into $k$ blocks. Each output of a block depends
+on at most $2^b$ signals at its entrance, so a full DNF uses at most
+$2^{2^b}$ terms. Use one threshold layer for those conjunctions and
+one for their disjunction. Constants are treated as constant gates.
+This gives exactly $q=2k$ threshold stages after harmless identity
+padding. Their widths are at most
+$C_3(C+1)2^{C_3 2^b}$.
+
+Normalize the integer threshold scores to have margin one.
+Each conjunction has at most $2^b$ inputs and each disjunction at
+most $2^{2^b}$ inputs. Their coefficient norms are polynomial in
+those quantities. Lemma~\ref{lem:exact-feature-repair}, applied to
+the gate's actual inputs and its constant rail, therefore gives
+$P_j\le2^{C_4 2^b}$. Apply
+Proposition~\ref{prop:critical-optimized-prefix-budget}.
+Its parameter is at most $C_5T_b$. The stated depth hypothesis
+ensures $L\ge q$ and all other required inequalities.
+\end{proof}
+
+\begin{corollary}[An adaptive choice of block length]
+\label{cor:critical-adaptive-blocking}
+In the theorem put
+\[
+ a=\log(C+2)+\log(2+L/h),\qquad
+ T_* =\log(d+L+2)+a\left(1+\frac{h}{\log(a+2)}\right).
+\]
+The same rate and sample bounds hold with $T_b$ replaced by $T_*$,
+after increasing the universal constants, under $L\ge C_0T_*$.
+\end{corollary}
+
+\begin{proof}
+Choose $b=\min\{h,\max\{1,\lfloor\log_2(a+2)\rfloor\}\}$.
+Then $2^b\le a+2$, $k\le1+h/b$, and
+\[
+ \log(2+L/k)\le\log(2+bL/h)
+                    \le\log b+\log(2+L/h).
+\]
+Moreover $b$ is at least a universal constant times
+$\min\{h,\log(a+2)\}$, and $\log b\le C a$.
+Substitution gives $T_b\le C T_*$.
+\end{proof}
+
+\begin{corollary}[General circuits and formulas]
+\label{cor:critical-formula-blocking}
+Let a bounded-fan-in Boolean circuit have depth $h$ and size at most
+$s$, and put $S=\max\{16,d+s+2\}$. If
+\[
+ L\ge C\log(S+L)
+                   \left(1+\frac{h}{\log\log(S+L)}\right),
+\]
+then a sufficient sample size is
+\[
+ \frac{C}{\varepsilon}
+ \left\{(S+L)^{C(1+h/\log\log(S+L))}
+                    +\log(1/\delta)\right\}.
+\]
+For a formula of size $s$, its original depth can be replaced by
+$C\log S$ in these displays, after increasing constants.
+At learner depths polynomial in $S$, this yields
+$\exp\{O(\log^2S/\log\log S)\}$ samples, apart from the
+statistical factors.
+\end{corollary}
+
+\begin{proof}
+Layer a circuit by inserting identity gates along skipped wires;
+the width is $O(S)$. In the preceding theorem choose
+$b=\min\{h,\max\{1,\lfloor\log_2\log(S+L)\rfloor\}\}$.
+The claimed parameter bound follows directly from the formula for
+$T_b$.
+
+A binary formula of size $m$ has a rooted subformula $G$ with size
+between $m/3-O(1)$ and $2m/3+O(1)$. Replace that occurrence by
+zero and one to obtain outer formulas $F_0,F_1$. The identity
+\[
+ F=(G\mathbin{\mathrm{AND}}F_1)
+       \mathbin{\mathrm{OR}}
+       ((\mathop{\mathrm{NOT}}G)\mathbin{\mathrm{AND}}F_0)
+\]
+permits parallel recursive construction of three formulas of size
+at most $2m/3+O(1)$, followed by constant-depth logic. Simplify
+unary gates and constants first. The resulting circuit has
+polynomial size and depth $O(\log m)$ by the corresponding size
+and depth recurrences. Apply the circuit result to this balanced
+implementation.
+\end{proof}
+
+A fixed-width deterministic branching program of length $t$ likewise
+has a polynomial-size bounded-fan-in circuit of depth $O(\log t)$:
+multiply its constant-dimensional Boolean transition matrices in a
+balanced tree. Each transition entry is an input literal or a constant,
+and repeated queries remain explicit at the leaves. This gives the
+same quasipolynomial sample bound. It does not justify treating the
+program's work register as the full hidden state of a sequential
+network; the queried input information cannot be discarded.
+
+The bounds improve the teacher-depth dependence but remain
+quasipolynomial for general polynomial-size logarithmic-depth circuits.
+They do not establish a jointly polynomial theorem for arbitrary
+small deep circuits, formulas, or constant-width branching programs.

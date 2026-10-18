@@ -1,0 +1,278 @@
+\section{Finite-width entropy certificates on input witnesses}
+\label{sec:critical-finite-witness}
+
+The finite-width argument uses forward conditional entropy and a finite
+set of input probes. It does not replace a continuous empirical measure
+by an absolutely continuous law of the same moments. Instead, a short
+revealed prefix of an exchangeable layer supplies a conditional one-row
+law whose moments approximate the empirical moments. This permits an
+additive action error, with a polynomial width requirement.
+
+\begin{lemma}[Exchangeable entropy decrement]
+\label{lem:critical-entropy-decrement}
+Let $P_N\ll\mu^{\otimes N}$ be exchangeable, with
+$B=D(P_N\Vert\mu^{\otimes N})<\infty$, and let
+$1\le K\le N-2$. Independently choose $k$ uniformly from
+$\{0,\ldots,K-1\}$ and put
+$\nu=P_N(X_{k+1}\in\cdot\mid X_1,\ldots,X_k)$.
+Then
+\[
+ \mathbb E D(\nu\Vert\mu)\le\frac B{N-K}.
+\]
+For every measurable $\phi:E\to[-1,1]$,
+\begin{equation}\label{eq:critical-entropy-decrement-moment}
+ \mathbb E\left|\frac1N\sum_{i=1}^N\phi(X_i)-\nu(\phi)\right|^2
+ \le8(K/N)^2+\frac2{N-K}
+                 +2\sqrt{\frac{2B}{K(N-K)}}.
+\end{equation}
+The same assertions hold conditionally on a past variable, and may
+then be averaged over that variable.
+\end{lemma}
+
+\begin{proof}
+Write
+$a_j=\mathbb E D(P_N(X_{j+1}\in\cdot\mid X_1,\ldots,X_j)
+\Vert\mu)$. The entropy chain rule gives $\sum_{j=0}^{N-1}a_j=B$.
+Exchangeability and the conditional entropy chain rule give
+\[
+ a_{j+1}-a_j
+ =I(X_{j+2};X_{j+1}\mid X_1,\ldots,X_j)\ge0.
+\]
+Consequently $a_j\le B/(N-j)$ and
+\[
+ \frac1K\sum_{j=0}^{K-1}
+ I(X_{j+2};X_{j+1}\mid X_1,\ldots,X_j)
+ \le\frac B{K(N-K)}.
+\]
+Given the realized prefix, denote the relative entropy of the
+conditional pair law to the product of its marginals by $I_k$.
+The unrevealed empirical average has conditional mean $\nu(\phi)$
+and conditional variance at most
+$1/(N-k)+\sqrt{2I_k}$: the diagonal terms are at most one, and
+Pinsker's inequality bounds each off-diagonal covariance by
+$\sqrt{2I_k}$. Replacing this average by the full empirical average
+changes it by at most $2K/N$. Squaring, averaging and using concavity
+of the square root proves
+\eqref{eq:critical-entropy-decrement-moment}.
+\end{proof}
+
+Let $\Pi_N$ denote the original, unconditioned critical Gaussian
+network prior. A \emph{function event} means an event determined by
+the network's real-valued input--output function. In the following
+lemma it is enough that the event be invariant under hidden-neuron
+permutations. Covariances are uncentered second moments throughout.
+
+\begin{lemma}[An approximate path from a finite-width event]
+\label{lem:critical-finite-witness-extraction}
+Fix a nonempty set $Z$ of $m$ cube inputs. Let $E$ be a function event
+on which every output at $Z$ has absolute value at least $1/2$, and
+suppose $\Pi_N(E)\ge e^{-NA}>0$. Let $H=L-1\ge1$,
+$0<\Delta\le1$ and $0<\tau\le1$.
+There is a universal polynomial $p$ such that, whenever
+\[
+ N\ge p(m,H,A+1,\Delta^{-1},\tau^{-1}),
+\]
+there is a realization in $E$, with empirical hidden kernels
+$Q_0,\ldots,Q_H$ on $Z$ and output $z$, and controlled laws
+$\rho_j\ll\mathcal N(0,Q_{j-1})$, for which
+\[
+ \left\|\mathbb E_{\rho_j}[\tanh(G)\tanh(G)^{\mathsf T}]-Q_j
+                         \right\|_{\max}\le\Delta,
+\]
+\[
+ \sum_{j=1}^H D(\rho_j\Vert\mathcal N(0,Q_{j-1}))
+          +\frac12z^{\mathsf T}Q_H^\dagger z\le A+\tau.
+\]
+Here $Q_0$ is the original input kernel, $Q_0(x,x)\le2$,
+$Q_j(x,x)\le1$ for $j\ge1$, and $z\in\operatorname{range}(Q_H)$.
+\end{lemma}
+
+\begin{proof}
+Let $P=\Pi_N(\cdot\mid E)$, so $D(P\Vert\Pi_N)\le NA$.
+Disintegrate $P$ in forward order by hidden weight blocks and then
+the readout. Let $B_j$ and $B_{\rm out}$ be the resulting conditional
+relative entropies. Thus
+\[
+ \sum_j\mathbb E B_j+\mathbb E B_{\rm out}\le NA.
+\]
+Given all preceding weight blocks, the current block is exchangeable
+in its rows under $P$. Indeed, permuting these rows and the corresponding
+columns of the next block preserves the prior and $E$; all future
+blocks have been integrated out. Its reference law is the original
+product Gaussian row law. On $Z$ a reference row has preactivation
+law exactly $\mathcal N(0,Q_{j-1})$.
+
+At each hidden layer apply Lemma~\ref{lem:critical-entropy-decrement},
+using an independently randomized prefix length. Push the resulting
+conditional row law to its preactivations on $Z$, calling it $\rho_j$,
+and put $D_j=D(\rho_j\Vert\mathcal N(0,Q_{j-1}))$ and
+$\widetilde Q_j=\mathbb E_{\rho_j}\tanh(G)\tanh(G)^{\mathsf T}$.
+Data processing and the lemma give
+\[
+ \mathbb E\sum_j D_j\le\frac{\sum_j\mathbb E B_j}{N-K}
+\]
+and, after summing the $m^2$ bounded covariance observables,
+\begin{equation}\label{eq:critical-finite-witness-moment-sum}
+ \mathbb E\sum_j\|\widetilde Q_j-Q_j\|_F^2
+ \le m^2\left\{8H(K/N)^2+\frac{2H}{N-K}
+               +2\sqrt{\frac{2HNA}{K(N-K)}}\right\}.
+\end{equation}
+The last term uses Cauchy--Schwarz across layers.
+
+We retain the actual random readout. Given the hidden blocks, its
+output under the reference prior is Gaussian with covariance $Q_H/N$.
+For $r=\tfrac12z^{\mathsf T}Q_H^\dagger z$ and $0<s<1$,
+Gaussian integration, including singular $Q_H$, gives
+\[
+ \log\mathbb E_{\Pi_N}\left[e^{(1-s)Nr}\mid\text{hidden blocks}\right]
+ =\frac{\operatorname{rank}(Q_H)}2\log(1/s)
+ \le\frac m2\log(1/s).
+\]
+Entropy duality therefore implies
+\[
+ \mathbb E r\le
+ \frac{\mathbb E B_{\rm out}/N+(m/(2N))\log(1/s)}{1-s}.
+\]
+In particular, if $K/N\le\eta$ and $s=\eta\le1/16$,
+\begin{equation}\label{eq:critical-finite-witness-action-mean}
+ \mathbb E\left(\sum_jD_j+r\right)
+ \le\frac{A+(m/(2N))\log(1/\eta)}{1-\eta}.
+\end{equation}
+The projected readout has rank at most $m$, so there is no
+width-independent additive energy penalty.
+
+For explicit polynomial choices take
+\[
+ \eta=\min\{1/16,\tau/[32(A+1)]\},\qquad
+ \kappa=\min\{\eta,\Delta\sqrt\eta/(32m\sqrt H)\},
+ \qquad K=\lfloor\kappa N\rfloor.
+\]
+It suffices to require, for a large universal $C$,
+\[
+ N\ge C\left\{\kappa^{-1}
+       +\frac{Hm^2}{\eta\Delta^2}
+       +\frac{HA m^4}{\kappa\eta^2\Delta^4}
+       +\frac{m\log(1/\eta)}\tau\right\}.
+\]
+Then $1\le K\le N-2$ and
+\eqref{eq:critical-finite-witness-moment-sum} is at most
+$\eta\Delta^2$. With probability at least $1-\eta$, all moment
+errors are at most $\Delta$. Dividing the expectation in
+\eqref{eq:critical-finite-witness-action-mean} by $1-\eta$ shows that
+some realization in this good event has action at most $A+\tau$.
+All preceding conditions are polynomial in the stated arguments.
+The kernels and output of this realization have the remaining
+properties by their empirical Gram representation. No conditioning
+on future weight blocks was used in defining the layer costs.
+\end{proof}
+
+\begin{theorem}[Finite-width representation on an input witness]
+\label{thm:critical-finite-witness-compression}
+There is a universal $C$ with the following property. Put
+\[
+ \epsilon=(A-V_*)_+,\qquad
+ R=(d+L+A+2)^C\exp(C\sqrt{L\epsilon}).
+\]
+The universal constant can be chosen so that, for every set $Z$ of
+$m$ cube inputs and every function event $E$ satisfying
+$\Pi_N(E)\ge e^{-NA}>0$ and $|z(x)|\ge1/2$ on $Z$,
+\[
+ N\ge R(m+1)^C
+\]
+implies that the sign restriction to $Z$ of some realization in $E$
+is represented by an ordinary depth-$L$ tanh network of width at most
+$R$. Its weights are arbitrary finite real numbers.
+\end{theorem}
+
+\begin{proof}
+The empty witness is trivial. Apply
+Lemma~\ref{lem:critical-finite-witness-extraction} with
+$\tau=1/(10L)$ and a moment tolerance $\Delta$ to be chosen.
+Write $D_j$ for the extracted layer costs and $r$ for its terminal
+readout cost. Lemma~\ref{lem:critical-approximate-entropy-budget}
+gives
+\[
+ S:=\sum_j\sqrt{D_j}
+ \le C\{\log(L+1)+\sqrt{L\epsilon+1}\},
+\]
+provided $\Delta\le c/L^4$.
+
+For positive semidefinite $m$ by $m$ matrices whose entries differ by
+at most $\Delta$, the square-root Gaussian coupling gives
+\[
+ \Delta_\infty(Q,\widetilde Q)
+ \le\|Q^{1/2}-\widetilde Q^{1/2}\|_F
+ \le\|Q-\widetilde Q\|_*^{1/2}
+ \le m\sqrt\Delta.
+\]
+Here the middle inequality is the standard square-root trace inequality.
+Starting from the original input kernel, repeatedly transfer the
+extracted control law to the constructed preceding kernel using the
+controlled Gaussian-coupling transfer theorem. This does not increase
+its relative entropy. The constructed output kernels $Q'_j$ obey
+\[
+ e_j:=\Delta_\infty(Q_j,Q'_j)
+ \le(1+\sqrt{2D_j})e_{j-1}+m\sqrt\Delta,\qquad e_0=0.
+\]
+Thus $e_H\le Hm\sqrt\Delta\,e^{\sqrt2 S}$.
+The readout transfer has cost at most $r$ and changes each output by
+at most $\sqrt{2r}\,e_H$. Choose $\Delta$ small enough that this is
+at most $1/16$. Together with $\Delta\le c/L^4$, the choice can be
+made with
+\[
+ \Delta^{-1}\le (m+1)^C(d+L+A+2)^C
+                           e^{C\sqrt{L\epsilon}}.
+\]
+Consequently the polynomial width requirement in the extraction lemma
+is bounded by $R(m+1)^C$, on enlarging $C$.
+
+The resulting consistent controlled path has the same input kernel,
+layer costs at most $D_j$, and outputs with the original signs and
+margin at least $7/16$ on $Z$. Apply the anchored compression theorem
+(Theorem~\ref{thm:anchored-critical-compression}) to this path. Its
+proof applies on any finite set, with $\log|Z|$ in place of the cube
+union-bound factor $d$; since $|Z|\le2^d$, the same stated bound using
+$d$ applies. The uniform compression error is at most $3/32$, so all
+signs are preserved. Its width is at most
+$\operatorname{poly}(d,L,A+2)e^{CS}$, which is bounded by $R$.
+\end{proof}
+
+\begin{corollary}[A finite-width exceptional-mass bound]
+\label{cor:critical-finite-width-exceptional-mass}
+There are universal $C,c>0$ such that, for $A\ge0$ and
+\[
+ R=(d+L+A+2)^C\exp(C\sqrt{L(A-V_*)_+}),
+\]
+one can choose a class $\mathcal G_A$ of Boolean functions with
+$\operatorname{VCdim}(\mathcal G_A)\le R$ for which, at every
+$N\ge R^C$,
+\[
+ \Pi_N\{\text{global margin, sign}(z)\notin\mathcal G_A\}
+ \le \exp(dR\log2-NA).
+\]
+The class is independent of the training sample and may be chosen
+independent of $N$.
+\end{corollary}
+
+\begin{proof}
+Let $M$ be the witness-compression width from
+Theorem~\ref{thm:critical-finite-witness-compression}, and let $v$ be
+a universal upper bound for the VC dimension of depth-$L$, width-$M$
+tanh networks on the cube. The standard polynomial VC bound for tanh
+networks gives $v\le\operatorname{poly}(d,L,M)$.
+Take $m=\lfloor v\rfloor+1$ and enlarge $R$ so that $m\le R$.
+If $m>2^d$, use the class of all Boolean functions and the conclusion
+is immediate.
+
+Otherwise define $\mathcal G_A$ to contain those functions whose
+restriction to every $m$-element input set is represented by a
+width-$M$, depth-$L$ tanh network. If this class shattered an
+$m$-element set, the representing networks would also shatter it,
+contrary to their VC bound. Hence its VC dimension is less than $m$.
+For each fixed $m$-element set $Z$, let $E_Z$ be the event of a
+globally margined network whose sign restriction at $Z$ has no such
+representation. The preceding theorem implies $\Pi_N(E_Z)<e^{-NA}$
+whenever $N\ge R^C$. A union bound over at most $(2^d)^m$ choices
+of $Z$ gives the claimed exceptional-mass estimate. All constructions
+depend on $A,d,L$, but not on the training sample or on $N$.
+\end{proof}

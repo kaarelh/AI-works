@@ -1,0 +1,111 @@
+\section{The entropy budget for an approximate covariance path}
+\label{sec:critical-approximate-entropy}
+
+The near-baseline entropy estimate is stable under entrywise errors
+in the covariance recursion. This statement does not require a
+finite-width large-deviation approximation.
+
+\begin{lemma}[Approximate covariance paths]
+\label{lem:critical-approximate-entropy-budget}
+Let $H\ge1$, let $X$ be a nonempty finite set of inputs, and let
+$Q_0,\ldots,Q_H$ be positive semidefinite matrices on $X$.
+Suppose $Q_0(x,x)\le2$ and $Q_j(x,x)\le1$ for $j\ge1$.
+At layer $j$, let $\rho_j$ be a controlled preactivation law of
+finite entropy
+\[
+ D_j=D(\rho_j\Vert\mathcal N(0,Q_{j-1})),
+\]
+and write
+$\widetilde Q_j=\mathbb E_{\rho_j}[\tanh(G)\tanh(G)^{\mathsf T}]$.
+Assume, for some $0\le\Delta\le1$,
+\[
+ \|\widetilde Q_j-Q_j\|_{\max}\le\Delta
+                    \qquad(1\le j\le H).
+\]
+Let $z$ lie in the range of $Q_H$, suppose
+$|z(x_0)|\ge1/2$ at some $x_0\in X$, and put
+\[
+ r=\tfrac12 z^{\mathsf T}Q_H^\dagger z,\qquad
+ A=r+\sum_{j=1}^H D_j.
+\]
+There is a universal $C$ such that, for every $\epsilon\ge0$ with
+$A\le V_*+\epsilon$,
+\[
+ \sum_{j=1}^H\sqrt{D_j}
+ \le C\left\{\log(H+2)+
+       \sqrt{H\bigl(\epsilon+CH\sqrt\Delta\bigr)}\right\}.
+\]
+In particular, $\Delta\le c\tau^2/H^2$ permits the replacement of
+$CH\sqrt\Delta$ by $\tau$, after a universal adjustment of $c$.
+The hypothesis uses only one nonzero-margin output; no signed pair
+or cube-edge condition is needed.
+\end{lemma}
+
+\begin{proof}
+Set $q_j=Q_j(x_0,x_0)$ and
+$\widetilde q_j=\widetilde Q_j(x_0,x_0)$. The last variance is
+positive, and RKHS Cauchy--Schwarz gives $r\ge1/(8q_H)\ge V(q_H)$.
+For each layer, data processing to coordinate $x_0$ and the scalar
+Bellman inequality give
+\[
+ V(q_{j-1})\le D_j+V(\widetilde q_j).
+\]
+When $q_{j-1}=0$, finite entropy forces the corresponding controlled
+Gaussian coordinate to be zero, so $\widetilde q_j=0$; the displayed
+inequality remains valid with $V(0)=V_*$.
+
+The uniform scalar-value modulus
+(Lemma~\ref{lem:scalar-value-modulus}) gives
+\[
+ V(q_{j-1})\le D_j+V(q_j)+C\sqrt\Delta.
+\]
+Telescoping from any hidden index $i$ through the readout yields
+\[
+ r+\sum_{j=i+1}^H D_j
+       \ge V(q_i)-C(H-i)\sqrt\Delta.
+\]
+Consequently, using $V_*-V(q)\le C_0q$ on $[0,1]$,
+\begin{equation}\label{eq:approx-critical-prefix-budget}
+ \sum_{j=1}^iD_j
+       \le\epsilon+C_0q_i+CH\sqrt\Delta
+                         \qquad(1\le i\le H).
+\end{equation}
+
+For $j\ge2$, scalar strict dissipation at the reference variance
+$q_{j-1}\le1$ gives
+\[
+ D_j\ge\widetilde q_j-q_{j-1}+cq_{j-1}^2
+       \ge q_j-q_{j-1}+cq_{j-1}^2-\Delta.
+\]
+Thus the inflated costs $E_j=D_j+\Delta$ satisfy exact dissipation.
+With
+\[
+ e=\epsilon+C_1H\sqrt\Delta
+\]
+and $C_1$ sufficiently large, \eqref{eq:approx-critical-prefix-budget}
+implies
+\[
+ \sum_{j=1}^iE_j\le e+C_0q_i,\qquad
+ \sum_{j=1}^H E_j\le V_*+e.
+\]
+If $e\ge1/4$, Cauchy--Schwarz immediately bounds
+$\sum_j\sqrt{D_j}$ by $C\sqrt{He}$.
+
+Suppose $e<1/4$. Apply the last-exit dyadic-band proof of
+Lemma~\ref{lem:critical-sqrt-entropy-budget} to the states
+$q_1,\ldots,q_H$ and costs $E_2,\ldots,E_H$, using the preceding
+prefix inequalities. Its small-band cutoff is
+$\max\{e,(H+1)^{-1}\}$. That argument bounds
+\[
+ \sum_{j=2}^H\sqrt{E_j}
+        \le C\{\log(H+2)+\sqrt{He}\}.
+\]
+Zero states are allowed here: they occur only in the initial
+low-band part, where the argument uses Cauchy--Schwarz, while every
+reciprocal telescoping division is performed on a band with a
+strictly positive lower endpoint. If the minimum state is positive,
+the original proof applies without change. The discarded first
+transition contributes at most $\sqrt{D_1}\le\sqrt A<\sqrt3$.
+Since $D_j\le E_j$, this proves the lemma. The case $H=1$ follows
+from the same bound on the first transition.
+\end{proof}

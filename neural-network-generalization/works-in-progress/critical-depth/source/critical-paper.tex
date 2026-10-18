@@ -18,37 +18,35 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-Can an unrestricted Bayesian neural network learn with polynomial
-rather than exponential dependence on its depth? We prove a
-representation and learning theorem for the original critical
-Gaussian prior on tanh networks, conditioned on a fixed output
-margin throughout the Boolean cube. If a target has critical rate
-at most $V_*+\eta$, with $\eta\ge0$, the sufficient sample size is a universal
-polynomial in dimension, learner depth, and $1+\eta$, multiplied by
-$\exp(C\sqrt{L\eta})$, with the usual accuracy and confidence
-factors. Here $V_*\in(1,2)$ is a universal scalar baseline. The
-learning statement holds at all sufficiently large widths, with
-no additional robustness restriction and with arbitrary mixtures
-of posterior rate minimizers.
+Can a Bayesian neural network learn with polynomial dependence on its
+learner depth, without restricting the prior to internally stable networks?
+We prove such bounds for the original critical Gaussian prior on tanh
+networks, with the usual global output-margin condition and exact noiseless
+training fit. The bounds hold at every width capable of implementing the
+target. Every parity has polynomial sample complexity once learner depth
+is a sufficiently large multiple of $\log(d+L+2)$, independently of parity
+degree. More generally the bound is polynomial in Fourier variation.
+A bounded-weight tanh teacher of depth $D$ gives $R^{O(D+1)}$ samples,
+where $R$ includes dimension, teacher resources, and learner depth, when
+$L\ge C(D+1)\log R$. Boolean threshold teachers need no bound on their
+original coefficient magnitudes. The exponent still grows with teacher
+depth: joint polynomial dependence on arbitrary teacher width and depth
+remains open.
 
-The key step compresses any finite-action controlled Gaussian path
-into an ordinary finite tanh network. Its width is polynomial in
-input dimension, depth, and total action, times the exponential of
-the sum of square roots of layer entropies. A small set of input
-anchors is preserved exactly; importance sampling approximates all
-remaining inputs without requiring low rank of the full covariance.
-Classical sigmoid VC bounds then count the possible Boolean functions.
+The proof gives an intrinsic theorem at every finite width $N$. If
+$a_N$ is the target's normalized negative log-prior mass, the sample bound
+is a universal polynomial in dimension, depth, $a_N$, and logarithmic
+accuracy factors, times $\exp(C\sqrt{L(a_N-V_*)_+})$, where
+$V_*\in(1,2)$ is a scalar baseline. Forward conditional entropy extracts
+approximate covariance paths from finite-width events. Preserving a small
+input-anchor covariance block then gives finite tanh representations and
+VC bounds. A separate finite-width construction tracks the target signal
+and residual variances to bound its actual prior mass. Ordinary VC bounds
+cover the remaining small widths.
 
-Together with controlled feature constructions, this proves polynomial
-sample complexity for every parity, regardless of degree, once learner
-depth is at least a sufficiently large multiple of $\log(d+L+2)$.
-More generally, the bound is polynomial in Fourier variation. For an
-arbitrary bounded-weight tanh teacher of depth $D$, the sample bound
-is $R^{O(D+1)}$, where $R$ includes dimension, teacher resources, and
-learner depth. Joint polynomial dependence on teacher width and depth
-remains open. We also prove universal rate flattening, quantitative
-excess-rate estimates, and a parity sample lower bound at smaller
-depths. All width limits keep dimension and depth fixed first.
+We also obtain depth-independent bounds for several sequential target
+classes, a quasipolynomial bound for general formulas, sharp excess-rate
+estimates, and complementary parity lower bounds at smaller depths.
 \end{abstract}
 
 \section{Model and meaning of the result}
@@ -88,57 +86,108 @@ The last term is infinite outside the covariance range. The matrices
 $Q(\nu)$ are uncentered second moments, not necessarily centered
 covariances.
 
-\subsection{Learning from the rate above a common baseline}
+\subsection{Learning at every realizable width}
 
-There is a universal scalar baseline $V_*\in(1,2)$. It is the
-limiting cost of producing a unit-sign output from a vanishing
-one-dimensional Gaussian state, and its construction is given below.
-The principal learning result is Theorem~\ref{thm:critical-excess-learning}.
-If $J_L(f)\le a$, a sufficient sample size is
-\[
- n\ge\frac{C}{\varepsilon}\left\{
- [(d+1)(L+1)(a+2)]^c
- \exp\!\left(C\sqrt{L(a-V_*)_+}\right)
- +\log(1/\delta)\right\},
-\]
-where $c,C$ are universal. Training examples are independent draws
-from any distribution $\mathcal D$ on the cube and have noiseless
-labels $f(x)$. At every sufficiently large width, with sample
-probability at least $1-\delta$, the posterior gives the correct
-label probability greater than $2/3$ outside a set of
-$\mathcal D$-mass at most $\varepsilon$.
-The sufficiently large width threshold can be chosen independently
-of the realized sample, but is not quantitatively bounded here.
+A width is \emph{realizable} if a depth-$L$, width-$N$ tanh network
+of the specified architecture implements the target's signs on the cube.
+Rescaling its readout gives strict output margin $1/2$; continuity then
+makes $A_{N,f}$ have positive Gaussian probability. Our target-based
+learning theorems hold at every such width, without an additional width
+threshold. In particular, they hold at every width above the minimum
+implementing width at the specified learner depth.
 
-The posterior is the original Gaussian prior conditioned on
-$|z_w(x)|>1/2$ at every cube input and on exact training signs.
-No internal stability or robustness event is added. The theorem
-includes arbitrary mixtures of tied minimizing functions; it does
-not replace the posterior by one selected minimizer.
+Training inputs are independent draws from any distribution
+$\mathcal D$ on the cube and have noiseless labels $f(x)$. The learner
+conditions the original Gaussian prior on $|z_w(x)|>1/2$ at every input
+and on exact training signs. No internal stability event is added.
+Every sample bound below ensures, with training probability at least
+$1-\delta$, that the correct-label posterior probability exceeds $2/3$
+outside a set of $\mathcal D$-mass at most $\varepsilon$.
+The conclusions apply to the full posterior, including mixtures.
 
-Two consequences illustrate the depth dependence.
 For Fourier variation
-$A_F(f)=\sum_{S\subseteq[d]}|\widehat f(S)|$, a sufficient sample
-bound is polynomial in $(d+L+2)A_F(f)$ whenever
+$A_F(f)=\sum_{S\subseteq[d]}|\widehat f(S)|$, put
+$R_F=(d+L+2)A_F(f)$. Theorem~\ref{thm:critical-all-width-fourier-learning}
+gives the sufficient sample bound
 \[
- L\ge C_0[\log(d+L+2)+\log A_F(f)].
+ n\ge\frac C\varepsilon\left\{
+ R_F^c(1+\log(1/\varepsilon))^c+\log(1/\delta)\right\}
+ \qquad\text{if }L\ge C_0\log R_F.
 \]
-Every signed parity has $A_F(f)=1$, so every parity is learned with
-polynomially many examples at sufficiently large logarithmic depth,
-uniformly in its degree. This includes full $d$-bit parity.
+Every signed parity has $A_F=1$. This therefore gives polynomial
+samples for all parities, including full parity, at every realizable
+width and at sufficiently large logarithmic learner depth.
 
-For a depth-$D$, width-$C_T$ tanh teacher with weights bounded by
-$B$ and output margin at least $1/2$, put
-$R=d+C_T+B+D+L+2$. At learner depth
-$L\ge C_0(D+1)\log R$, the sufficient sample bound is
+For a depth-$D$, width-$C_T$ tanh teacher with parameter magnitudes
+bounded by $B\ge1$ and global signed output margin at least $1/2$, put
+$R=d+C_T+B+D+L+2$. Corollary~\ref{cor:critical-all-width-analog-teacher-learning}
+gives
 \[
- \frac{C}{\varepsilon}\{R^{c(D+1)}+\log(1/\delta)\}.
+ n\ge\frac C\varepsilon\left\{
+ R^{c(D+1)}(1+\log(1/\varepsilon))^c+\log(1/\delta)\right\}
+ \qquad\text{if }L\ge C_0(D+1)\log R.
 \]
-This is polynomial in learner depth for fixed teacher depth.
-The exponent still depends on teacher depth: a bound jointly
-polynomial in teacher width and depth remains open. The result
-also does not establish the same depth bound at every width above
-target complexity, or in a different order of limits.
+The constants $c,C,C_0$ are universal. Thus learner depth enters
+polynomially for each fixed teacher depth. The exponent still depends
+on teacher depth, and joint polynomial dependence on arbitrary teacher
+width and depth remains open.
+
+For Boolean threshold teachers, the corresponding bound does not depend
+on the magnitudes or precision of their real coefficients. A teacher of
+width $C_T$ and depth $h$ gives $R^{O(h)}$ samples with
+$R=d+C_T+h+L+2$, at $L\ge Ch\log R$; see
+Corollary~\ref{cor:critical-all-width-real-threshold-learning}.
+In particular every Boolean halfspace has a polynomial sample bound
+at every width $N\ge1$ under the logarithmic learner-depth condition.
+
+Several target classes permit stronger dependence on their original
+sequential depth. Decision trees and two-state branching programs have
+polynomial Fourier variation. Programs over fixed solvable finite groups,
+including permutation programs of width at most four, have polynomial
+sample bounds independently of their sequential length except through
+that length as a size parameter. A fixed-rank first-layer bottleneck gives
+polynomial dependence on teacher product norm even when the remaining
+teacher depth is arbitrary. For general formulas the bound is quasipolynomial in dimension and
+formula size at polynomial learner depth.
+The precise resource and depth conditions, all at every realizable width,
+appear in Section~\ref{sec:critical-all-width-target-learning}.
+
+\subsection{An intrinsic bound and its limiting-rate counterpart}
+
+There is a universal scalar baseline $V_*\in(1,2)$, defined below
+as the limiting scalar cost of producing the required output margin
+from a vanishing Gaussian state. At a realizable width put
+\[
+ a_N(f)=-\frac1N\log\mu_{N,1}(A_{N,f}).
+\]
+Theorem~\ref{thm:critical-intrinsic-finite-width-learning} proves the
+following sufficient sample bound at that exact width:
+\[
+ \frac C\varepsilon\left\{
+ \big[(d+L+a_N(f)+2)(1+\log(1/\varepsilon))\big]^c
+ \exp\!\left(C\sqrt{L(a_N(f)-V_*)_+}\right)
+ +\log(1/\delta)\right\}.
+\]
+It depends on width only through the actual raw target cost.
+The finite-width constructions in
+Sections~\ref{sec:critical-finite-width-channel} and
+\ref{sec:critical-finite-width-circuit-mass} bound this cost explicitly
+for the preceding target classes once width exceeds a quantified
+threshold. Ordinary network VC bounds handle all smaller realizable
+widths. This is how the target-based conclusions remove that threshold.
+
+A limiting-rate version is also useful. If $J_L(f)\le a$, then
+Theorem~\ref{thm:critical-excess-learning} gives, at all sufficiently
+large widths,
+\[
+ n\ge\frac C\varepsilon\left\{
+ [(d+1)(L+1)(a+2)]^c
+ \exp\!\left(C\sqrt{L(a-V_*)_+}\right)+\log(1/\delta)\right\}.
+\]
+This rate-based statement alone does not quantify its width threshold.
+The finite-width constructions bound the cost of explicit target
+representations; they do not assert convergence within $1/L$ to the
+unknown optimal rate $J_L(f)$ for every target.
 
 \subsection{Why the finite representation is possible}
 
@@ -166,7 +215,16 @@ matters. The compressed network's weights may be very large; the
 classical polynomial VC bound for sigmoid networks still controls
 its number of Boolean sign patterns. Applying a finite-class
 consistency bound to all functions of rate at most $J_L(f)$ then
-gives the posterior theorem.
+gives the rate-based posterior theorem.
+
+For finite width, forward conditional entropy and exchangeability
+extract approximate covariance paths on a finite set of input probes.
+A projected readout entropy bound preserves the scalar baseline, and
+the entropy estimate is stable under the resulting moment errors.
+Local finite-network representations then give a sample-independent
+class of controlled VC dimension and a quantitative bound on its
+exceptional prior mass. Ordinary network VC bounds cover the remaining
+smaller widths.
 
 \subsection{Rate estimates and complementary lower bounds}
 
@@ -217,12 +275,15 @@ posterior rate is
 \[
  J_L(g)-\min_{h\text{ consistent with }S}J_L(h).
 \]
-Any positive gap is multiplied by width $N$. Throughout, dimension,
-depth, and sample size are fixed before width tends to infinity.
+Any positive gap is multiplied by width $N$. In the rate-based
+statements, dimension, depth, and sample size are fixed before width
+tends to infinity. The intrinsic theorem and target-based every-width theorems instead
+apply at each specified realizable width.
 The analytic proofs have received independent AI-agent mathematical
 review; they have not been formalized in Lean. Constants are not
 optimized, and no efficient posterior-sampling algorithm is claimed.
 
+\input{critical-all-width-target-learning.tex}
 \input{critical-main-theorem.tex}
 \input{unrestricted-critical-baseline.tex}
 \input{paper-critical-spectrum.tex}
@@ -233,6 +294,7 @@ optimized, and no efficient posterior-sampling algorithm is claimed.
 \input{critical-rate-lower-proof.tex}
 \input{critical-near-baseline-decomposition.tex}
 \input{critical-square-root-entropy.tex}
+\input{critical-approximate-entropy-budget.tex}
 \input{critical-bures-transfer.tex}
 \input{critical-anchored-compression.tex}
 \input{critical-rate-upper-proof.tex}
@@ -241,6 +303,15 @@ optimized, and no efficient posterior-sampling algorithm is claimed.
 \input{critical-circuit-rate-steering.tex}
 \input{critical-analog-teacher-circuit-rate.tex}
 \input{critical-rate-sublevel-learning.tex}
+\input{critical-sequential-program-learning.tex}
+\input{critical-low-rank-bottleneck.tex}
+\input{critical-optimized-circuit-blocking.tex}
+\input{critical-finite-width-certificate.tex}
+\input{critical-finite-width-learning.tex}
+\input{critical-finite-width-channel.tex}
+\input{critical-finite-width-circuit-prefix.tex}
+\input{critical-finite-width-circuit-mass.tex}
+\input{critical-weight-independent-threshold-compiler.tex}
 \input{critical-near-baseline-posterior.tex}
 \input{critical-learning-comparison.tex}
 \input{critical-boolean-kernel-geometry.tex}

@@ -1,0 +1,257 @@
+\section{Target-based learning bounds at every realizable width}
+\label{sec:critical-all-width-target-learning}
+
+The quantitative target-mass constructions remove the width-limit
+qualification from several learning bounds. Throughout this section,
+training inputs are iid from any distribution $D$ on the Boolean cube,
+labels are noiseless, and the learner is the original critical Gaussian
+prior conditioned on a global absolute output margin and exact training
+signs. A conclusion at \emph{every realizable width} means every integer
+$N\ge1$ for which $\mu_N(\mathcal A_{N,f})>0$. Equivalently, a depth-$L$,
+width-$N$ network of the specified architecture realizes the signs of $f$
+with no zero output on the cube: rescaling its readout gives strict margin
+$1/2$, and continuity makes that event have positive Gaussian probability.
+
+Every sample bound below guarantees, with sample probability at least
+$1-\delta$,
+\[
+ D\{x:p_N(f(x)\mid x)\le2/3\}\le\varepsilon,
+ \qquad 0<\varepsilon,\delta<1.
+\]
+All constants are universal. The mild logarithmic accuracy factor comes
+from the intrinsic finite-width theorem; no efficient posterior algorithm
+is asserted.
+
+\begin{lemma}[From a quantitative target mass to every-width learning]
+\label{lem:critical-mass-to-all-width-learning}
+Suppose $T\ge\log(d+L+2)$, $L\ge T$, and for a universal $c_0$ the
+raw target cost obeys
+\[
+ a_N(f)\le V_*+c_0T^2/L\qquad(N\ge e^{c_0T}).
+\]
+Then, at every realizable width, a sufficient sample size is
+\[
+ n\ge\frac C\varepsilon
+   \left\{e^{CT}(1+\log(1/\varepsilon))^c+\log(1/\delta)\right\}.
+\]
+\end{lemma}
+
+\begin{proof}
+Above the displayed width threshold, apply
+Theorem~\ref{thm:critical-intrinsic-finite-width-learning}.
+The target cost is at most $2+c_0T$, and its exponential factor is at
+most $e^{CT}$. Since $d+L\le e^T$, all remaining resource factors are
+absorbed in the asserted bound.
+
+Below that threshold, the whole class of depth-$L$, width-$N$ tanh sign
+networks has VC dimension polynomial in $d,L,N$, hence at most $e^{CT}$.
+Sauer's lemma on the finite cube gives at most $\exp(e^{CT})$ distinct
+sign functions after increasing $C$. A finite-class consistency bound
+therefore makes every posterior-supported function have test error at
+most $\varepsilon/3$ with the required sample probability. Averaging
+and the probability-$2/3$ criterion give the result. Positive target
+mass ensures that the conditioning event is nonempty for every sample.
+\end{proof}
+
+\begin{theorem}[Every-width learning from Fourier variation]
+\label{thm:critical-all-width-fourier-learning}
+Put $A_F(f)=\sum_S|\widehat f(S)|$ and $R=(d+L+2)A_F(f)$.
+If $L\ge C\log R$, then at every realizable width a sufficient sample
+size is
+\[
+ n\ge\frac C\varepsilon
+ \left\{R^c(1+\log(1/\varepsilon))^c+\log(1/\delta)\right\}.
+\]
+In particular this is polynomial for every signed parity, independently
+of its degree. The same conclusion holds for a decision tree with $s$
+leaves or a length-$t$ binary-state branching program, with $R$ replaced
+by $d+L+s+2$ or $d+L+t+2$, respectively. The latter programs may query
+different coordinates in different states and may repeat queries.
+\end{theorem}
+
+\begin{proof}
+Corollary~\ref{cor:critical-finite-fourier-mass} supplies the preceding
+lemma with $T$ a universal multiple of $\log R$; enlarge the depth
+constant accordingly. Every signed parity has $A_F=1$, while
+Proposition~\ref{prop:critical-binary-state-learning} gives $A_F\le s$
+for the tree and $A_F\le t+1$ for the binary-state program. Products
+such as $(d+L+2)(t+1)$ are bounded by a universal power of the stated
+replacement resource.
+\end{proof}
+
+\begin{theorem}[Every-width learning from a bounded threshold implementation]
+\label{thm:critical-all-width-threshold-learning}
+Suppose $f$ has a layered Boolean threshold implementation of depth
+$h\ge1$, width at most $C_T$ including constant wires, unit gate margins,
+and gate coefficient Euclidean norms at most $B\ge1$. Put
+\[
+ T=\log(d+2)+h\log(C_T+B+h+L+2).
+\]
+If $L\ge C T$, then at every realizable width a sufficient sample size is
+\[
+ n\ge\frac C\varepsilon
+   \left\{e^{CT}(1+\log(1/\varepsilon))^c+\log(1/\delta)\right\}.
+\]
+In particular, the conclusion holds for every $N\ge C_T$.
+\end{theorem}
+
+\begin{proof}
+The depth hypothesis implies the remaining-depth requirement
+$L-h\ge C_0T$ in Corollary~\ref{cor:critical-finite-circuit-mass},
+after increasing its universal constant. That corollary gives the
+raw target-cost hypothesis of
+Lemma~\ref{lem:critical-mass-to-all-width-learning}.
+
+For the final assertion, multiply the coefficients of every circuit
+gate by one sufficiently large common gain and replace its sign by
+tanh. The unit margins and finitely many gates ensure that all hidden
+activations uniformly approximate the corresponding Boolean wires
+closely enough to preserve every later gate sign. Constant wires are
+included in this approximation. Thus $h$ hidden layers of width $C_T$
+and a linear readout realize the target. Any further hidden layers may
+propagate its scalar output through a positive multiple of tanh,
+preserving its sign. Rescale the final readout and pad unused neurons
+with zero weights. This gives a strict-margin realization at every
+$N\ge C_T$ and $L\ge h+1$, as ensured by the stated depth condition.
+\end{proof}
+
+\begin{corollary}[Real threshold teachers without a weight bound]
+\label{cor:critical-all-width-real-threshold-learning}
+Suppose $f$ has a layered real threshold circuit of depth $h\ge1$
+and width $C_T\ge1$, with arbitrary coefficients and biases and a fixed
+tie convention at each gate. Put $R=d+C_T+h+L+2$. If
+$L\ge Ch\log R$, then at every realizable width a sufficient sample
+size is
+\[
+ n\ge\frac C\varepsilon\left\{
+ R^{ch}(1+\log(1/\varepsilon))^c+\log(1/\delta)\right\}.
+\]
+There is no dependence on the original coefficient magnitudes or
+precisions. In particular, every Boolean halfspace has a universal
+polynomial sample bound at every width $N\ge1$, whenever
+$L\ge C\log(d+L+2)$.
+\end{corollary}
+
+\begin{proof}
+Lemma~\ref{lem:critical-weight-independent-threshold-compiler} gives a
+unit-margin implementation of depth $O(h)$, width and gate norms bounded
+by a universal polynomial in $d+C_T+h+2$. Apply
+Theorem~\ref{thm:critical-all-width-threshold-learning}; its parameter
+is at most $Ch\log R$.
+For a halfspace, perturb its bias if necessary to obtain strict signs
+on the finite cube. A width-one tanh network realizes those signs at
+any depth: use the affine form in the first layer and positive scalar
+weights in each subsequent hidden layer, then scale the readout.
+Thus every width is realizable.
+\end{proof}
+
+\begin{corollary}[Bounded-weight tanh teachers]
+\label{cor:critical-all-width-analog-teacher-learning}
+Suppose a depth-$D$, width-$C_T$ tanh teacher has parameter magnitudes
+at most $B\ge1$ and output margin $1/2$ on the cube. Put
+$R=d+C_T+B+D+L+2$. If $L\ge C(D+1)\log R$, then at every realizable
+width a sufficient sample size is
+\[
+ n\ge\frac C\varepsilon
+ \left\{R^{c(D+1)}(1+\log(1/\varepsilon))^c+\log(1/\delta)\right\}.
+\]
+\end{corollary}
+
+\begin{proof}
+Lemma~\ref{lem:analog-teacher-threshold-compilation} gives a threshold
+circuit of depth $O(D+1)$, with width and gate coefficient norms bounded
+by a universal polynomial in $d+C_T+B+D+2$. Its arithmetic circuits
+use unweighted majority gates: the required precision does not introduce
+a polynomial degree depending on $D$. The preceding theorem therefore
+has $T\le C(D+1)\log R$ and proves the claim.
+\end{proof}
+
+\begin{corollary}[Low-rank teachers and solvable-group programs]
+\label{cor:critical-all-width-structured-targets}
+The following two classes have every-width bounds.
+\begin{enumerate}
+\item Suppose $f$ has a unit-margin tanh representation with product of
+layer Frobenius norms at most $P\ge1$, and first-layer rank at most $r\ge1$.
+Put $S=1+\log(d+L+2)+r\log(P+r+2)$. If $L\ge CS$, a sufficient sample
+size at every realizable width is
+\[
+ \frac C\varepsilon\left\{
+ (d+L+2)^c(P+r+2)^{cr}(1+\log(1/\varepsilon))^c
+ +\log(1/\delta)\right\}.
+\]
+The approximate-rank condition in
+Corollary~\ref{cor:critical-approx-low-rank-targets} has the same
+consequence with $P$ replaced by $8P/7$.
+\item Suppose $f$ is a length-$t$ program over a solvable group of
+order $q\ge2$ and derived length $\ell\ge1$. Put $R=d+q+t+L+2$.
+If $L\ge C\ell\log R$, a sufficient sample size at every realizable
+width is
+\[
+ \frac C\varepsilon\left\{
+ R^{c\ell}(1+\log(1/\varepsilon))^c+\log(1/\delta)\right\}.
+\]
+This includes a universal polynomial bound for permutation branching
+programs of width at most four, independently of their sequential length.
+\end{enumerate}
+\end{corollary}
+
+\begin{proof}
+The proof of Theorem~\ref{thm:critical-low-rank-targets} constructs a
+three-stage threshold circuit. Its width and gate norms are polynomial
+in $P,r$ and the number of boxes $M\le(CP^2\sqrt r)^r$. The parameter
+in Theorem~\ref{thm:critical-all-width-threshold-learning} is thus at
+most $CS$. This proves the first assertion and its approximate-rank
+variant. For the second,
+Lemma~\ref{lem:critical-solvable-group-compiler} gives depth $O(\ell)$
+and universal polynomial width and gate norms in $q,t$. The same
+parameter is at most $C\ell\log R$. The permutation corollary uses
+the bounded order and derived length of $S_4$, as before.
+\end{proof}
+
+\begin{theorem}[Every-width learning after Boolean layer blocking]
+\label{thm:critical-all-width-boolean-blocking}
+Suppose $f$ has a layered fan-in-two AND/OR/NOT circuit of width $C_T$
+and depth $h\ge1$. For $1\le b\le h$, put $k=\lceil h/b\rceil$ and
+\[
+ U_b=\log(d+2)+k\{\log(C_T+h+L+2)+2^b\}.
+\]
+If $L\ge CU_b$, a sufficient sample size at every realizable width is
+\[
+ n\ge\frac C\varepsilon\left\{
+ e^{CU_b}(1+\log(1/\varepsilon))^c+\log(1/\delta)\right\}.
+\]
+Consequently, for a fan-in-two circuit of size $s$, depth $h$, and
+$S=\max\{16,d+s+2\}$, the conditions
+\[
+ L\ge C\log(S+L)
+                \left(1+\frac h{\log\log(S+L)}\right),
+\]
+\[
+ n\ge\frac C\varepsilon\left\{
+ (S+L)^{C(1+h/\log\log(S+L))}
+ (1+\log(1/\varepsilon))^c+\log(1/\delta)\right\}
+\]
+suffice at every realizable width. For formulas, $h$ may be replaced
+by $C\log S$ after changing universal constants. At sufficiently large
+learner depths polynomial in $S$, this is
+$\exp\{O(\log^2S/\log\log S)\}$ apart from statistical factors.
+\end{theorem}
+
+\begin{proof}
+The block construction in Theorem~\ref{thm:critical-boolean-blocking}
+has $2k$ threshold stages, width at most
+$(C_T+1)2^{C2^b}$, and coefficient norms at most $2^{C2^b}$ up to
+universal factors. Its finite-width mass parameter is at most $CU_b$,
+so apply Theorem~\ref{thm:critical-all-width-threshold-learning}.
+For a size-$s$ circuit insert identity gates along skipped wires,
+then use the same block choice and formula-balancing argument as in
+Corollary~\ref{cor:critical-formula-blocking}. This yields
+$U_b\le C\log(S+L)(1+h/\log\log(S+L))$.
+\end{proof}
+
+The parameter $U_b$ records the finite-width construction proved here.
+We have not asserted that the sharper optimized-prefix parameter $T_b$
+or $T_*$ in Section~\ref{sec:critical-optimized-blocking} has the same
+finite-width target-mass estimate. The every-width formula bound does
+retain the stated quasipolynomial order. None of these conclusions proves
+joint polynomial sample complexity for arbitrary small deep circuits.

@@ -1,0 +1,150 @@
+\section{Low-dimensional target representations with arbitrarily deep suffixes}
+\label{sec:critical-low-rank-targets}
+
+A low-rank first layer gives another target class for which the
+critical learner has a polynomial sample bound without a restriction
+on the prior. The teacher's remaining depth and width can be arbitrary.
+The useful parameters are its projection rank and its product norm.
+
+\begin{theorem}[Low-rank target representations]
+\label{thm:critical-low-rank-targets}
+Suppose a Boolean target $f$ has a finite tanh representation with
+$f(x)z(x)\ge1$ on the full cube. Let $P\ge1$ bound the product of
+its layer Frobenius norms, and suppose its first weight matrix,
+including the constant input coordinate, has rank at most $r\ge1$.
+Put
+\[
+ S=1+\log(d+L+2)+r\log(P+r+2).
+\]
+There are universal constants $C_0,C_1,C_2$ such that
+\[
+ L\ge C_0S\quad\Longrightarrow\quad
+ J_L(f)\le V_*+C_1S^2/L.
+\]
+Under that depth condition, a sufficient sample size for the original
+critical posterior is
+\[
+ n\ge\frac{C_2}{\varepsilon}
+ \left\{(d+L+2)^{C_2}(P+r+2)^{C_2r}
+                    +\log(1/\delta)\right\}.
+\]
+The posterior conclusion and width-first quantifiers are those of
+Theorem~\ref{thm:critical-excess-learning}. In particular, the width
+threshold is finite and independent of the realized sample, but is
+not quantified here. For fixed $r$, the bound is polynomial and
+independent of the teacher's depth and width.
+\end{theorem}
+
+\begin{proof}
+Constant functions have constant-size threshold implementations, so
+consider a nonconstant target. There are at most $P^2$ relevant
+coordinates. Indeed, if coordinate $i$ is relevant, a bichromatic
+cube edge and the network's Lipschitz bound give
+\[
+ \|W^1e_i\|_2\prod_{j\ge2}\|W^j\|_F\ge1.
+\]
+Square and sum this inequality over relevant coordinates.
+
+Freeze every irrelevant coordinate to an independent uniform sign.
+Its first-layer column is absorbed into the bias column. The expected
+squared Frobenius norm of the resulting first matrix is the original
+squared norm, so some freezing does not increase it. The new matrix's
+range is contained in the original range, and therefore its rank
+also does not increase. The function is unchanged. Write $k\le P^2$
+for the reduced input dimension, $m=k+1$ and $R=\sqrt m$.
+We keep the original ambient $d$ in the learner's prior normalization.
+
+Factor the reduced first matrix as $UV^{\mathsf T}$, where the columns
+of $V$ are orthonormal and their number is at most $r$; decrease $r$
+for the construction if necessary. The network output has the form
+\[
+ z(x)=g(V^{\mathsf T}\bar x),\qquad \bar x=(x,1),
+\]
+where $g$ is $P$-Lipschitz. This follows because
+$\|U\|_{\rm op}=\|W^1\|_{\rm op}$ and every tanh map is
+one-Lipschitz. Oppositely labeled inputs consequently obey
+\begin{equation}\label{eq:low-rank-projected-separation}
+ \|V^{\mathsf T}\bar x-V^{\mathsf T}\bar y\|_2\ge2/P.
+\end{equation}
+
+Choose powers of two $a,\eta$ with
+\[
+ \frac1{128P\sqrt r}<a\le\frac1{64P\sqrt r},\qquad
+ \frac{a}{200m}<\eta\le\frac{a}{100m}.
+\]
+Round each entry of $V^{\mathsf T}$ to a multiple of $\eta$, obtaining
+$B$. On every cube input this changes each projection coordinate by
+at most $m\eta/2\le a/200$. Each coordinate of $B\bar x$ is an
+integer multiple of $\eta$, and $a/\eta$ is an integer.
+
+For each positive input choose a nearest center in the grid
+$a\mathbb Z^r$, with arbitrary deterministic tie breaking. Retain
+all centers obtained in this way. Their number satisfies
+\[
+ M\le(CPR\sqrt r)^r\le(CP^2\sqrt r)^r.
+\]
+For each selected center $c$, define a box predicate by
+$|(B\bar x)_j-c_j|\le a$ for every $j$. Every positive input lies
+in its selected box. No negative input lies in a selected box:
+if $y$ is a positive input selecting $c$ and $x$ lies in that box,
+their rounded projections differ in every coordinate by at most
+$3a/2$. Their true projections then differ in Euclidean norm by less
+than $2a\sqrt r\le1/(32P)$, contradicting
+\eqref{eq:low-rank-projected-separation}.
+Thus the target is the disjunction of these box predicates.
+
+The construction has bounded integer coefficients and internal
+margins. On the projection lattice, the lower and upper box
+inequalities have the same signs as
+\[
+ (B\bar x)_j-(c_j-a-\eta/2),\qquad
+ (c_j+a+\eta/2)-(B\bar x)_j,
+\]
+respectively. Every score has absolute value at least $\eta/2$.
+Multiplying by $2/\eta$ gives integer coefficients and margin at
+least one. Their norms are bounded by a universal polynomial in
+$P,r$, since $m\le P^2+1$ and $|c_j|\le R+a$.
+An AND of the $2r$ signed inequalities is implemented by the score
+$\sum_i t_i-(2r-1)$, and an OR of the $M$ signed box outputs by
+$\sum_c u_c+(M-1)$. These also have integer margin at least one.
+Constant rails supply the offsets.
+
+We have obtained a threshold circuit with three nonconstant stages,
+width at most $C(rM+P^2+1)$ and coefficient norms bounded by a fixed
+polynomial in $P,r,M$. Apply the controlled circuit seed theorem
+and the steering-after-prefix lemma. The logarithmic resource
+parameter is at most
+\[
+ C\{1+\log(d+L+2)+\log(M+2)+\log(P+r+2)\}\le CS.
+\]
+The original input coordinates can be restored as zero columns;
+only their Gaussian normalization contributes the displayed $d$.
+This proves the rate and learner-depth bounds. Finally,
+Theorem~\ref{thm:critical-excess-learning} bounds the sample factor
+by a polynomial prefactor times $e^{CS}$, which has the form stated
+in the theorem after increasing $C_2$.
+\end{proof}
+
+\begin{corollary}[An approximate first-layer bottleneck]
+\label{cor:critical-approx-low-rank-targets}
+The theorem also applies when the first matrix $W^1$ has a rank-$r$
+truncated singular-value decomposition $A$ such that
+\[
+ \sqrt{d+1}\,\|W^1-A\|_{\rm op}
+              \prod_{j\ge2}\|W^j\|_{\rm op}\le1/8,
+\]
+with $P$ replaced by $8P/7$.
+\end{corollary}
+
+\begin{proof}
+The replacement changes every output by at most $1/8$ and does not
+increase the first Frobenius norm. Multiply the readout by $8/7$
+to restore unit margin, and apply the theorem.
+\end{proof}
+
+This is a restriction on a target representation, not on prior
+support. It does not show that product norm alone permits a critical
+rate excess of order $\log^2(d+L+P)/L$. A product bound controls the
+sum of logarithms of layer stable ranks, but a margin-preserving
+rank-one truncation generally needs a much smaller discarded
+singular value than that budget alone supplies.

@@ -1,0 +1,134 @@
+\section{Removing threshold-weight magnitudes from the teacher parameters}
+\label{sec:critical-weight-independent-threshold}
+
+A Boolean threshold gate may be specified using arbitrarily large or
+arbitrarily precise real coefficients. These numerical parameters are
+unnecessary for the learning bound. The gate's Boolean input set admits
+an equivalent separator with polynomially many bits, and constant-depth
+majority arithmetic evaluates that separator using polynomially bounded
+gate coefficients. This is an existence result; it does not require an
+algorithm that receives or computes with the original real coefficients.
+
+\begin{lemma}[Small-bit integer separators]
+\label{lem:critical-small-bit-separator}
+Let $S\subseteq\{-1,1\}^k$, where $k\ge0$, and suppose
+$g:S\to\{-1,1\}$ agrees with an affine real threshold, with either fixed
+choice of sign at zero. There are integers $b_0,\ldots,b_k$ such that
+\[
+ g(u)\left(b_0+\sum_{j=1}^k b_j u_j\right)\ge1
+ \quad(u\in S),\qquad
+ |b_j|\le (k+1)^{(k+1)/2}.
+\]
+In particular, each coefficient has
+$O((k+1)\log(k+2))$ bits, with a universal constant.
+The assertion applies to the full Boolean cube or to only the states
+realized by earlier gates.
+\end{lemma}
+
+\begin{proof}
+The empty set is immediate, so assume $S$ is nonempty. If any original
+scores vanish, change the bias by a sufficiently small quantity whose
+sign is the specified sign at zero. Finiteness of $S$ ensures that this
+does not change the sign of any nonzero score. All desired inequalities
+then become strict. Scale the coefficients so that every signed score
+is at least one.
+
+Put $m=k+1$ and form the matrix $A$ whose row for $u\in S$ is
+$g(u)(1,u_1,\ldots,u_k)$. Thus $A$ has entries in $\{-1,1\}$ and
+$Aw\ge\boldsymbol1$ is feasible. Let $r=\operatorname{rank}A$, so
+$1\le r\le m$, and retain $r$ linearly independent columns to obtain
+$A_J$. These columns span the column space of $A$, so
+$A_Jv\ge\boldsymbol1$ remains feasible.
+
+We verify directly that this latter system has a feasible point with
+$r$ linearly independent tight inequalities. Start at any feasible
+point. If its tight rows have rank less than $r$, choose a nonzero
+direction orthogonal to all of them. Since $A_J$ has column rank $r$,
+some row has a nonzero inner product with the direction. Reverse the
+direction if necessary so that at least one row has negative inner
+product. Every such row is currently slack. Move until the first of
+these finitely many rows becomes tight: the permitted distance is the
+positive minimum of its slack divided by the negative directional
+derivative. All old tight rows stay tight, feasibility is preserved,
+and a new tight row is independent of them because it is not
+orthogonal to the chosen direction. After at most $r$ iterations the
+tight rows have rank $r$.
+
+Choose $r$ independent tight rows, forming a nonsingular integer
+matrix $M\in\{-1,1\}^{r\times r}$. At the resulting feasible point,
+$Mv=\boldsymbol1$. Cramer's rule gives
+\[
+ v_j=\frac{\det M_j}{\det M},
+\]
+where $M_j$ replaces column $j$ by $\boldsymbol1$. Multiply the
+feasible coefficient vector by $|\det M|$, and put zero in the omitted
+coordinates. The retained coefficients are the integers
+$\operatorname{sign}(\det M)\det M_j$. Their signed scores are at
+least $|\det M|\ge1$. All entries of $M_j$ still have absolute value
+one. Hadamard's determinant bound therefore gives
+\[
+ |\det M_j|\le r^{r/2}\le m^{m/2},
+\]
+as required. This also covers $k=0$, where $r=m=1$.
+\end{proof}
+
+\begin{lemma}[A weight-independent threshold compiler]
+\label{lem:critical-weight-independent-threshold-compiler}
+There is a universal integer $a$ with the following property. Suppose
+a Boolean target on $\{-1,1\}^d$ has a layered real threshold circuit
+of depth $h\ge1$ and width at most $C\ge1$. Threshold gates may have
+arbitrary real coefficients and biases, and may use either fixed tie
+convention. Put $K=d+C+h+2$.
+The target has a layered Boolean threshold implementation with depth
+at most $ah$, width at most $K^a$, and Euclidean norm of every gate
+coefficient vector at most $K^a$. Every gate has signed score at least
+one on its realized Boolean states. Constant wires and layering
+overhead are included. The bounds are independent of all original
+coefficient magnitudes and precisions.
+\end{lemma}
+
+\begin{proof}
+Apply Lemma~\ref{lem:critical-small-bit-separator} separately to every
+gate, either on its full Boolean input cube or on its realized input
+states. The maximum fan-in is at most $\max\{d,C\}$, after combining
+duplicate wires; biases are included in the constant coefficient.
+Thus every gate has an equivalent integer description with
+polynomially many bits in $K$. Choosing these descriptions is
+nonuniform and requires no representation of the original real
+numbers.
+
+Use the standard constant-depth majority-arithmetic theorem: iterated
+addition and comparison of polynomially many polynomial-bit integers
+have polynomial-size, constant-depth circuits of unweighted majority
+and Boolean gates, with universal depth and polynomial degree. This
+is part of the usual arithmetic threshold-circuit toolkit; the
+stronger division and iterated-multiplication theorem is proved in
+Hesse--Allender--Barrington~\cite{hesse2002}. To apply it here, hardcode
+the integer coefficients in binary. Each input bit selects either
+zero or the corresponding fixed summand. Sum positive and negative
+parts separately and compare them, including the constant term. All
+intermediate integers have polynomially many bits. This construction
+uses the binary coefficients as input constants to the arithmetic
+circuit; it does not put exponentially large bit-position weights
+on the new threshold gates.
+
+Replace each original gate by this constant-depth majority circuit.
+All gates from one original level are evaluated in parallel. The
+total depth is $O(h)$, and the total number of gates and wires is a
+universal polynomial in $K$. Insert identity gates where necessary
+to obtain a layered circuit and propagate a constant wire. This
+costs only a polynomial in the size and depth.
+
+Finally, every unweighted majority, AND, OR, or NOT gate has an
+integer threshold realization with coefficients polynomially bounded
+in its fan-in. Put its threshold halfway between consecutive allowed
+integer sums and multiply the score by two if needed. On all Boolean
+inputs its score has absolute value at least one and the prescribed
+sign. Its bias is supplied by the constant wire, so its coefficient
+Euclidean norm is polynomial in the total circuit size. Increasing
+the universal exponent $a$ proves the stated simultaneous bounds.
+\end{proof}
+
+This replacement acts on Boolean states. It does not remove a weight
+bound from a real-valued tanh teacher: preserving intermediate real
+activations is a different approximation problem.

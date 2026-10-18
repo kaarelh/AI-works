@@ -144,7 +144,7 @@ The table concerns this particular family and the indicated conditioning convent
 |---|---|---|
 | Strong-prior limit at fixed $N$ | Prior rate polynomially equivalent to bounded-weight network complexity at fixed depth; consequently polynomial samples, uniformly in the sample bound over all $N\ge C_L(f)$. | Variance tends to zero **after fixing width**; no width-uniform variance threshold. |
 | Fixed $\gamma>1$ | Polynomial samples at fixed depth for every actual $N\ge C_L(f)$. Unrestricted results also remove bad learner-depth dependence for substantial target classes. | The general bound’s polynomial degree depends on depth and on the gap above one. The full arbitrary-deep-target problem remains open. |
-| $\gamma=1$ | Polynomial samples at each fixed depth, every actual $N\ge C_L(f)$. Without a robustness restriction, the width-first critical theorem also gives polynomial learner-depth bounds for low-Fourier-variation targets, including all parities at sufficient logarithmic depth. With the robustness restriction, jointly polynomial dependence on depth for Boolean-circuit targets. | Joint polynomial dependence on teacher width and depth for the unrestricted prior remains open; the new depth bound has no quantitative width threshold. |
+| $\gamma=1$ | Polynomial samples at each fixed depth, every actual $N\ge C_L(f)$. Without a robustness restriction, the critical theorem also gives polynomial learner-depth bounds at every realizable width for low-Fourier-variation targets, including all parities at sufficient logarithmic depth. With the robustness restriction, jointly polynomial dependence on depth for Boolean-circuit targets. | Joint polynomial dependence on arbitrary teacher width and depth for the unrestricted prior remains open. |
 | $0<\gamma<1$ | A Gaussian minimum-energy description at leading exponential order; exponential full-parity confidence lower bound. | This is not exact Gaussian-posterior equivalence throughout the interval. Limits are width first. |
 | $\gamma=0$ | A fixed-margin globally conditioned Gaussian limit; exponential full-parity confidence lower bound. | The global margin remains in the limiting law. |
 | $\gamma<0$ | After output normalization, a Gaussian law conditioned on training signs; exponential full-parity and stronger sparse-parity lower bounds. | The original fixed margin vanishes under this normalization. |
@@ -305,59 +305,44 @@ The same paper identifies a function-level product-norm representation barrier: 
 
 ## 17. What does the critical-depth result imply about learning?
 
-**There is a learning theorem for the original critical prior, with polynomial learner-depth dependence for substantial target classes.** It uses the original global output-margin condition and exact training fit, with no additional robustness restriction. The [critical-depth paper](works-in-progress/critical-depth/paper.pdf) proves it at all sufficiently large widths. The width threshold is not quantified, so this is not an all-width theorem of the form of main result 3.
+**The original critical prior has polynomial learner-depth bounds for substantial target classes, at every width capable of representing the target.** The [critical-depth paper](works-in-progress/critical-depth/paper.pdf) uses the original global output-margin condition and exact noiseless training fit. It adds no internal robustness restriction. These results remain independently reviewed research drafts, outside the five promoted main results; they are not Lean verified.
 
-At $\gamma=1$, define the raw prior rate
+“Every realizable width” means every width at which the specified depth admits a tanh network implementing the target's signs. Rescaling the readout gives strict margin $1/2$, so the target event has positive Gaussian probability. There is no additional lower bound on learner width. The input distribution on the Boolean cube is arbitrary. The conclusions concern the full posterior, including mixtures: with training probability at least $1-\delta$, the correct-label probability exceeds $2/3$ except on test mass at most $\varepsilon$.
 
-$$
-J_L(f)=\lim_{N\to\infty}-\frac1N\log\Pr\lbrace f(x)z_w(x)>1/2\text{ for all }x\rbrace .
-$$
-
-There is a universal scalar baseline $V_{\ast}\in(1,2)$. If $J_L(f)\le V_{\ast}+\eta$ with $\eta\ge0$, a sufficient number of iid training examples is
+**Every parity has polynomial sample complexity at sufficiently large logarithmic learner depth.** More generally, let $A_F(f)=\sum_S|\widehat f(S)|$, the Fourier variation, and put $R_F=(d+L+2)A_F(f)$. At every realizable width, a sufficient sample size is
 
 $$
-n\ge\frac{C}{\varepsilon}\left[\bigl((d+1)(L+1)(\eta+3)\bigr)^c
-\exp\bigl(C\sqrt{L\eta}\bigr)+\log(1/\delta)\right],
+n\ge\frac C\varepsilon\left[R_F^c(1+\log(1/\varepsilon))^c+\log(1/\delta)\right]
+\qquad\text{if }L\ge C_0\log R_F.
 $$
 
-for universal constants $c,C$. At every sufficiently large width, with training probability at least $1-\delta$, the correct-label posterior probability exceeds $2/3$ outside a test set of probability at most $\varepsilon$. The input distribution is arbitrary. Mixtures of tied rate minimizers are included.
+The constants are universal. All signed parities have $A_F=1$, regardless of degree, so this includes full parity. Reaching a *bounded absolute prior rate* requires depth of order $(\log d)^2$; that is a different criterion, and the learning theorem does not require it.
 
-**In particular, every parity has polynomial sample complexity at sufficiently large logarithmic learner depth.** More generally, put $A_F(f)=\sum_S|\widehat f(S)|$, the Fourier variation. The sufficient sample bound is polynomial in $d,L,A_F(f),1/\varepsilon$ and $\log(1/\delta)$ whenever
-
-$$
-L\ge C_0\bigl[\log(d+L+2)+\log A_F(f)\bigr].
-$$
-
-All signed parities have $A_F(f)=1$, regardless of their degree. The statement therefore includes full parity at $L\ge C_0\log(d+L+2)$. Reaching a *bounded absolute rate* requires depth of order $(\log d)^2$; that is a different criterion, and the learning result does not require it.
-
-For an arbitrary tanh teacher of depth $D$ and width $C_T$, parameter magnitudes at most $B$, and global signed margin at least $1/2$, put $R=d+C_T+B+D+L+2$. When $L\ge C_0(D+1)\log R$, the sufficient sample bound is
+For a tanh teacher of depth $D$, width $C_T$, parameter magnitudes at most $B$, and global signed output margin at least $1/2$, put $R=d+C_T+B+D+L+2$. When $L\ge C_0(D+1)\log R$, the sufficient sample size at every realizable width is
 
 $$
-n\ge\frac{C}{\varepsilon}\left[R^{c(D+1)}+\log(1/\delta)\right].
+n\ge\frac C\varepsilon\left[R^{c(D+1)}(1+\log(1/\varepsilon))^c+\log(1/\delta)\right].
 $$
 
-This is polynomial in learner depth for each fixed teacher depth. Its exponent still grows with teacher depth. **The bound jointly polynomial in teacher width and depth remains open.**
+This is polynomial in learner depth for every fixed teacher depth. For Boolean threshold circuits, the original coefficients may be arbitrary real numbers: a teacher of depth $h$ and width $C_T$ gives the analogous $R^{O(h)}$ bound with $R=d+C_T+h+L+2$, independent of coefficient magnitudes or precision. In particular, Boolean halfspaces have a polynomial bound at every width $N\ge1$ under the logarithmic depth condition.
 
-The proof uses a finite representation theorem. For layer entropies $D_s$ and total action at most $V_{\ast}+\eta$, the accumulated distortion obeys
+Some long sequential computations also have polynomial bounds. These include two-state branching programs, programs over fixed solvable finite groups, and permutation branching programs of width at most four. A teacher with a fixed-rank first-layer bottleneck has a polynomial bound in its product norm even when its remaining depth is arbitrary. General formulas have a quasipolynomial bound in dimension and formula size. **Joint polynomial sample complexity in arbitrary teacher width and depth remains open.** The paper states the precise resource and minimum-depth conditions for each class.
 
-$$
-\sum_s\sqrt{D_s}\le C\bigl[\log(L+1)+\sqrt{L\eta}\bigr].
-$$
-
-A small set of input anchors accounts for the controls and readout. Preserving its covariance block exactly lets us approximate all other inputs by a finite tanh network, with width polynomial in dimension and depth times $\exp(C\sqrt{L\eta})$. A polynomial VC bound for sigmoid networks then counts the possible Boolean functions. The finite network's weights may be large; a small product of weight norms is not asserted. The learner itself still uses the original Gaussian prior.
-
-This is compatible with the rate and counting obstructions. All Boolean functions have $J_L(f)\to V_{\ast}$ as depth grows, but a tiny positive rate difference is multiplied by width $N$ and can govern the posterior. A polynomial sample bound in $d,L$ and the normalized excess $L[J_L(f)-V_{\ast}]_+$ alone would be false for arbitrary truth tables. The theorem instead has exponential dependence on the square root of that excess.
-
-There is also a complementary lower bound at smaller depths. For full parity, fixed $0<\theta<1$, and sufficiently large $d$, at
+The general finite-width theorem uses the target's actual raw prior cost
 
 $$
-2\le L\le c\theta\frac{\log d}{\log\log d},
-\qquad n\le d^{(1-\theta)/(L-1)},
+a_N(f)=-\frac1N\log\Pr\lbrace f(x)z_w(x)>1/2\text{ for every }x\rbrace .
 $$
 
-the limiting Gibbs error is $1/2$ and the confidence-error lower limit is at least $1/4$, with training probability at least $1-1/(2d^{1/(L-1)})$. These bounds include posterior mixtures and are consistent with the positive result at sufficiently large logarithmic depth.
+There is a universal baseline $V_{\ast}\in(1,2)$. At every realizable width, the sample bound is a universal polynomial in $d,L,a_N(f),1/\varepsilon$ and $\log(1/\delta)$, multiplied by
 
-The paper includes the rate constructions, finite representation proof, and posterior argument. These additions have independent AI-agent mathematical reviews and reproducible PDF builds; they are **not Lean verified** and remain outside the five promoted main results.
+$$
+\exp\bigl(C\sqrt{L[a_N(f)-V_{\ast}]_+}\bigr).
+$$
+
+The proof has two parts. Forward conditional entropy extracts approximate covariance paths from finite-width events. Preserving a small set of input-anchor covariances then produces finite tanh representations, whose VC dimension controls competing functions. Separately, a finite-width construction tracks a planted target signal and residual variance to lower-bound the target's actual prior probability. That construction needs a quantified width threshold; ordinary VC bounds handle every smaller realizable width. The resulting learning theorem has no such threshold.
+
+This does not make the function prior uniform or approximate circuit description length exactly. Its limiting rate $J_L(f)=\lim_N a_N(f)$ still controls exponential preferences at large width, and small positive rate differences are multiplied by $N$. The explicit finite-width construction need not be optimal for a target. Nor does the theorem bound the compressed network's weight norms or give an efficient posterior-sampling algorithm.
 
 ## 18. Can the exponential dependence on the *teacher's* depth be removed unconditionally?
 
@@ -399,7 +384,7 @@ suffices in the strong-prior limit. This displays the bad depth dependence rathe
 
 The fixed-depth all-width mean-field proof is quantitative but grows rapidly with depth: one intermediate truncation budget has order $O_L(dK^{4\cdot3^{L-2}-1})$. That is an intermediate proof quantity, not an optimized final sample exponent.
 
-The width-first critical theorem in Question 17 has a different finite-representation estimate. A path of action at most $A_0\ge1$ and square-root entropy sum $S$ has a same-depth tanh realization of width at most $C(d+L+A_0)^{30}e^{20S}$. The standard sigmoid VC bound is quartic in parameter count. The resulting sample polynomial has a universal, unoptimized degree; its depth dependence also uses the scalar entropy estimate to bound $S$. This argument does not quantify the sufficiently large learner-width threshold.
+The critical theorems in Question 17 use a different finite-representation estimate. A path of action at most $A_0\ge1$ and square-root entropy sum $S$ has a same-depth tanh realization of width at most $C(d+L+A_0)^{30}e^{20S}$. The standard sigmoid VC bound is quartic in parameter count. The resulting sample polynomial has a universal, unoptimized degree; its depth dependence also uses the scalar entropy estimate to bound $S$. The finite-width extension adds an exchangeability argument and an explicit target-mass construction. Their unoptimized polynomial width thresholds are absorbed into the learning bound by a VC argument for smaller widths, so the target-based guarantees hold at every realizable width.
 
 The robust proof replaces depth-dependent polynomial degrees by a universal degree. It supplies explicit nested compression parameters and a bound of the form
 

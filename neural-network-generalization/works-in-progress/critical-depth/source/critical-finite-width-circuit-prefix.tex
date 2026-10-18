@@ -1,0 +1,193 @@
+\section{Finite-width circuit seeds from Gaussian mean shifts}
+\label{sec:critical-finite-width-circuit-prefix}
+
+A Boolean circuit can be planted into a finite Gaussian network using
+small, prescribed groups of neurons.  Every weight retains its original
+Gaussian variance.  Only the means change, and the total relative
+entropy of these changes is small.  Saturation corrects the approximation
+error at each gate; no exact finite-state repair is needed.
+
+\begin{lemma}[A finite-width Boolean circuit prefix]
+\label{lem:critical-finite-circuit-prefix}
+Let $H^{(0)}(x)=(1,x_1,\ldots,x_d)$ and let
+$H^{(j)}(x)\in\{-1,1\}^{C_j}$, $1\le j\le h$, be a layered
+threshold circuit with a constant wire at every level.  Suppose
+\[
+ H_i^{(j)}(x)=\operatorname{sign}(w_{j,i}\cdot H^{(j-1)}(x)),
+ \qquad |w_{j,i}\cdot H^{(j-1)}(x)|\ge1,
+ \qquad \|w_{j,i}\|_2\le B,
+\]
+where $B\ge1$.  Put $C=\max_j C_j$ and $W=\max(d+1,C)$.
+For $L\ge h+1$, $0<\delta<1$, and
+$0<\eta\le(4B\sqrt W)^{-1}$, define
+\[
+ a=4+\log(8/\eta),\qquad p_0=1/d,\qquad
+ p_j=\frac{p_{j-1}}{8C_jhLa^2B^2},\qquad k_j=\lceil Np_j\rceil.
+\]
+If
+\begin{equation}\label{eq:critical-finite-prefix-width}
+ Np_h\ge16\eta^{-2}
+       \left[d+\log\frac{8h(C+1)}\delta\right],
+\end{equation}
+there is a product Gaussian law $P$ on the first $h$ hidden weight
+matrices such that
+\[
+ D(P\Vert\mu_N^{\rm prefix})\le\frac{N}{8L}.
+\]
+Here the covariance of every weight row is unchanged from the critical
+prior.  Under $P$, with probability at least $1-\delta$, the following
+hold simultaneously on every input in $\{-1,1\}^d$.
+Each circuit wire $i$ at layer $j$ has a prescribed group of $k_j$
+neurons whose empirical mean $m_{j,i}$ satisfies
+\[
+ \|m_{j,i}-H_i^{(j)}\|_\infty\le\eta.
+\]
+If $q_j(x)=N^{-1}\|h_j(x)\|_2^2$, set
+\begin{align*}
+ \theta_j&=C_jk_j/N, & \bar q_0&=(d+1)/d,\\
+ \bar q_j&=(1-\theta_j)F(\bar q_{j-1})+\theta_j,
+ & F(q)&=\mathbb E\tanh^2(\sqrt qZ).
+\end{align*}
+Then $\|q_j-\bar q_j\|_\infty\le2j\eta$.
+If a final wire is $f$, there is a deterministic unit vector
+$u\in\mathbb R^N$ such that, writing $p=k_h/N$ and
+$c(x)=N^{-1/2}\langle u,h_h(x)\rangle$,
+\begin{align}
+ |c(x)-\sqrt p f(x)|&\le\sqrt p\eta,
+ \label{eq:critical-finite-prefix-score}\\
+ |q_h(x)-c(x)^2-(\bar q_h-p)|&\le(2h+3)\eta,
+ \qquad \bar q_h-p\ge0.
+ \label{eq:critical-finite-prefix-residual}
+\end{align}
+Consequently its scalar-channel metric error relative to the ideal seed
+$(v,r)=(p,\bar q_h-p)$ is at most $\sqrt{(2h+4)\eta}$.
+\end{lemma}
+
+\begin{proof}
+Choose disjoint deterministic groups of size $k_j$, one for each wire
+at layer $j$.  They fit within the width: the hypothesis gives
+$Np_j\ge1$, and hence
+\[
+ \theta_j\le2C_jp_j\le\frac1{4hLa^2B^2}\le\frac14.
+\]
+Rows outside these groups retain their original Gaussian law.  A row
+in the first-layer group for gate $i$ has mean $aw_{1,i}$ and covariance
+$I/d$.  At layer $j\ge2$, the row mean is $aw_{j,i,g}/k_{j-1}$ on
+each coordinate of the preceding group for wire $g$, and zero on the
+remaining coordinates; its covariance is $I/N$.  These weight means
+are deterministic, so all the weight rows remain independent under $P$.
+The resulting preactivation mean is exactly
+\[
+ a\sum_g w_{j,i,g}m_{j-1,g}(x).
+\]
+The relative entropy of each controlled row is at most
+$a^2B^2/(2p_{j-1})$, including the first layer with $p_0=1/d$.
+For later layers this follows directly from
+\[
+ \frac N2\sum_g k_{j-1}
+       \left(\frac{aw_{j,i,g}}{k_{j-1}}\right)^2
+ \le\frac{a^2B^2}{2p_{j-1}}.
+\]
+Gaussian additivity therefore gives
+\[
+ \frac1N D(P\Vert\mu_N^{\rm prefix})
+ \le\sum_{j=1}^h\frac{\theta_ja^2B^2}{2p_{j-1}}
+ \le\sum_{j=1}^h\frac1{8hL}=\frac1{8L}.
+\]
+This bound does not depend on any concentration event.
+
+Suppose the preceding empirical gate means have error at most $\eta$.
+Every controlled preactivation then has the correct sign and mean
+magnitude at least
+\[
+ a(1-B\sqrt W\eta)\ge3a/4\ge a/2.
+\]
+Its variance is at most two in the first layer and at most one
+thereafter.  For a Gaussian variable $V$ of variance at most two whose
+mean has absolute value at least $a/2$, Gaussian exponential moments
+and $1-\tanh t\le2e^{-2t}$ give
+\[
+ |\mathbb E\tanh V-\operatorname{sign}(\mathbb EV)|
+       \le2e^{-a+4}\le\eta/4,
+ \qquad
+ 1-\mathbb E\tanh^2V\le4e^{-a+4}\le\eta/2.
+\]
+Thus each new gate mean is close to its Boolean value independently
+of the size of the preceding error, provided that error stays below
+the stated gate-margin threshold.
+
+Conditionally on the preceding layers, the rows in each group are
+independent and identically distributed.  Hoeffding's inequality,
+followed by a union over all $2^d$ inputs, bounds the chance that any
+empirical gate mean differs from its conditional mean by more than
+$\eta/2$ by
+\[
+ 2C_j2^d\exp(-k_j\eta^2/8).
+\]
+The resulting error relative to the Boolean wire is less than $\eta$.
+The squared features are independent, bounded in $[0,1]$, and need
+not have identical laws.  Their empirical average differs from its
+conditional mean by at most $\eta$ everywhere except with probability
+at most $2\cdot2^d\exp(-2N\eta^2)$.
+
+The function $F$ is one-Lipschitz on $[0,\infty)$: its heat derivative
+is
+\[
+ F'(q)=\mathbb E\bigl[1-4\tanh^2(\sqrt qZ)
+                              +3\tanh^4(\sqrt qZ)\bigr],
+\]
+whose absolute value is at most one.  The conditional diagonal mean
+is within $\theta_j\eta/2$ of
+$(1-\theta_j)F(q_{j-1}(x))+\theta_j$.  Therefore, on the
+concentration events,
+\[
+ |q_j(x)-\bar q_j|
+ \le |q_{j-1}(x)-\bar q_{j-1}|+3\eta/2\le2j\eta.
+\]
+Conditional union bounds over the layers and
+\eqref{eq:critical-finite-prefix-width} prove that all these events
+hold with probability at least $1-\delta$.
+
+Take $u$ to be the target-group indicator divided by $\sqrt{k_h}$.
+Then $\|u\|_2=1$ and $c=\sqrt p\,m_{h,\mathrm{target}}$, giving
+\eqref{eq:critical-finite-prefix-score}.  Also
+$|c^2-p|\le3p\eta$, which proves
+\eqref{eq:critical-finite-prefix-residual}; its deterministic residual
+is nonnegative because $\bar q_h\ge\theta_h=C_hp\ge p$.
+Finally $(\sqrt u-\sqrt v)^2\le|u-v|$ gives the stated metric
+bound.  Orthogonally projecting the next Gaussian weight row onto $u$
+yields an exact independent Gaussian score/residual decomposition,
+not an approximate positive-semidefinite covariance inequality.
+\end{proof}
+
+\begin{remark}[Seed-relative accuracy and the circuit depth parameter]
+\label{rem:critical-finite-prefix-accuracy}
+Put
+\[
+ R=d+C+B+h+L+2,\qquad
+ T=\log(d+2)+h\log(C+B+h+L+2).
+\]
+If subsequent scalar steering needs $\eta\le cR^{-b}p_h^b$ for
+some fixed universal $b$, choose $a=KT$ and $\eta=8e^{4-a}$ with
+a sufficiently large universal $K$.  The gate-margin condition then
+holds.  Moreover, since $T\ge h\log(h+2)$,
+\[
+ h\log T=h\log h+h\log(T/h)\le2T.
+\]
+Consequently
+\[
+ \log(1/p_h)=\log d+
+       \sum_{j=1}^h\log(8C_jhLa^2B^2)
+       \le C_0(1+\log K)T.
+\]
+The required accuracy inequality follows by taking $K$ sufficiently
+large: the coefficient in $\log(1/\eta)$ is linear in $K$, whereas
+the coefficient on the right is logarithmic in $K$.  The same reasoning
+allows any fixed requirement $\eta\le e^{-c_1T}$.
+For $\delta^{-1}\le e^{c_2T}$ with a fixed universal $c_2$, the
+width condition \eqref{eq:critical-finite-prefix-width} is therefore
+satisfied by $N\ge e^{C_1T}$, for a universal constant $C_1$ depending
+on the required fixed accuracy exponents.  In particular this is
+$R^{O(h)}$.  Arbitrary smaller failure probabilities contribute the
+additional factor $1+\log(1/\delta)$ in the explicit width condition.
+\end{remark}

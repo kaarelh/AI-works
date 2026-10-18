@@ -1,0 +1,346 @@
+\section{Finite-width realization of a planted scalar channel}
+\label{sec:critical-finite-width-channel}
+
+The construction below gives a finite-width lower bound on the raw
+probability of a target.  It follows a scalar component and diagonal
+variances, rather than approximating an entire hidden covariance matrix.
+In particular its width depends on the logarithm of the input-set size.
+
+Let $X=\{-1,1\}^d$, $m=|X|$, $H=L-1\ge1$, and let
+$f:X\to\{-1,1\}$.  We first specify the controlled data used by the
+construction.  All auxiliary variables below are absent from the final
+network; they are used only in its probabilistic construction.
+
+\begin{definition}[A scalar-channel program]
+\label{def:critical-scalar-channel-program}
+The initial controlled row law, including auxiliary variables, has entropy
+at most $D_1$ relative to a reference law whose weight marginal is the
+original first-row Gaussian.  Write $h(x)=\tanh(w\cdot\bar x)$.
+It has a score $b_1$ and numbers $v_1>0,r_1\ge0$ satisfying
+\[
+ \mathbb E b_1^2=1,\quad |b_1|\le B,\quad
+ \mathbb E[b_1h(x)]=\sqrt{v_1}f(x),\quad
+ \mathbb E h(x)^2=v_1+r_1\le1.
+\]
+For $2\le j\le H$, a controlled law of $(Z,U)$ has entropy at
+most $D_j$ relative to a reference law whose $Z$ marginal is
+$\mathcal N(0,1)$.  With an independent standard Gaussian $G$, put
+\[
+ T_{j,x}=\tanh\!\left(\sqrt{v_{j-1}}f(x)Z+
+                                      \sqrt{r_{j-1}}G\right).
+\]
+There is a score $b_j=b_j(Z,U)$ such that
+\[
+ \mathbb E b_j^2=1,\quad |b_j|\le B,\quad
+ \mathbb E[b_jT_{j,x}]=\sqrt{v_j}f(x),\quad
+ \mathbb E T_{j,x}^2=v_j+r_j\le1,
+\]
+where $v_j>0$ and $r_j\ge0$.  Define the cost and accumulated
+entropy distortion by
+\[
+ A=\sum_{j=1}^H D_j+\frac1{8v_H},\qquad
+ S=\sum_{j=2}^H\sqrt{D_j},\qquad B\ge1.
+\]
+The auxiliary part of each reference law may depend on its Gaussian
+coordinate.  Its marginal on the actual incoming weights is always the
+original Gaussian law.
+\end{definition}
+
+\begin{theorem}[A quantitative raw target-probability bound]
+\label{thm:critical-finite-channel-mass}
+There is a universal $C$ such that a scalar-channel program has the
+following consequence.  For every $\tau>0$ and every integer width
+\begin{equation}\label{eq:critical-channel-width}
+ N\ge C B^4H^4 e^{4S}(A+1)^6(1+\tau^{-1})^4
+       \left[\log(2m)+\log(H+A+\tau^{-1}+3)\right],
+\end{equation}
+the original critical Gaussian network satisfies
+\[
+ \mu_N\{f(x)z_w(x)>1/2\text{ for all }x\in X\}
+       \ge e^{-N(A+\tau)}.
+\]
+No conditioning or support restriction is added to this prior.
+\end{theorem}
+
+\begin{proof}
+We give the metric, the finite realization, and the probability comparison
+separately.  All expectations in the construction refer to the indicated
+controlled law.
+
+\paragraph{Projection onto a bounded score.}
+For bounded features $h(x)$ and a scalar score $b$ with
+$\mathbb E b^2=1$, set
+\[
+ c(x)=\mathbb E[bh(x)],\qquad
+ q(x)=\mathbb E h(x)^2,\qquad
+ s(x)=\sqrt{q(x)-c(x)^2}.
+\]
+For $N$ independent rows let
+\[
+ M=\frac1N\sum_i b_i^2,\quad
+ \widehat c(x)=\frac{N^{-1}\sum_i b_i h_i(x)}{\sqrt M},\quad
+ \widehat q(x)=\frac1N\sum_i h_i(x)^2,
+ \quad \widehat s(x)=\sqrt{\widehat q(x)-\widehat c(x)^2}.
+\]
+Suppose $|M-1|$, all errors in $N^{-1}\sum_i b_i h_i(x)$,
+and all errors in $\widehat q(x)$ are at most $\alpha\le1/4$.
+Then Cauchy--Schwarz and elementary square-root estimates give
+\begin{equation}\label{eq:critical-channel-sampling-metric}
+ \max_x\sqrt{(\widehat c(x)-c(x))^2+
+                         (\widehat s(x)-s(x))^2}
+       \le8\sqrt\alpha.
+\end{equation}
+Indeed $|\widehat c-c|\le4\alpha$, $|c|\le1$, and
+$|(\widehat q-\widehat c^2)-(q-c^2)|\le13\alpha$.
+The inequality $(\sqrt u-\sqrt v)^2\le|u-v|$ finishes the bound.
+
+The coefficients $a_i=b_i/(N\sqrt M)$ satisfy
+$\|a\|_2^2=1/N$.  Consequently the actual empirical feature kernel
+has the exact decomposition
+\begin{equation}\label{eq:critical-channel-exact-component}
+ K(x,y)=\frac1N\sum_i h_i(x)h_i(y)
+       =\widehat c(x)\widehat c(y)+R(x,y),\qquad R\succeq0.
+\end{equation}
+No approximate covariance inequality is needed.
+
+\paragraph{Propagation of the component metric.}
+Suppose the current finite features have coefficient $c(x)=a^Th(x)$,
+$\|a\|^2=1/N$, and residual diagonal $s(x)^2$ in
+\eqref{eq:critical-channel-exact-component}.  Compare them with the
+ideal coefficient $\sqrt v f(x)$ and residual diagonal $r$ using
+\[
+ e=\max_x\sqrt{(c(x)-\sqrt v f(x))^2+(s(x)-\sqrt r)^2}.
+\]
+Set $u=\sqrt N a$, a unit vector.  Sample an incoming Gaussian
+coordinate $Z$ with the prescribed controlled auxiliary law, and an
+independent standard Gaussian vector $\xi\in\mathbb R^N$.  The
+actual incoming row is
+\[
+ w=\{Zu+(I-uu^T)\xi\}/\sqrt N.
+\]
+Under its reference law this row is exactly $\mathcal N(0,I/N)$.
+Its preactivation at $x$ is distributed as $c(x)Z+s(x)G$, with $G$
+standard Gaussian independent of $(Z,U)$.  For comparison with the
+ideal preactivation use the same $Z,U,G$ at this one input.
+
+Data processing and Gaussian entropy duality imply
+\[
+ \max\{1,\mathbb E Z^2\}\le e^{2\sqrt{D_j}}.
+\]
+For completeness, writing $t=\mathbb E Z^2$, one has
+$D_j\ge(t-1-\log t)/2$; for $t\ge1$, the latter is at least
+$(\log t)^2/4$.  Independence and the zero mean of $G$ therefore
+bound the preactivation RMS difference by $e^{\sqrt{D_j}}e$.
+The same bound holds after tanh.
+
+Projection onto the common unit vector $b_j$ in the coupled
+$L^2$ space is contractive.  The difference of the norms of its two
+orthogonal residuals is bounded by their $L^2$ distance.  Hence the
+population next coefficient and residual RMS, compared with
+$\sqrt{v_j}f$ and $\sqrt{r_j}$, have metric error at most
+$e^{\sqrt{D_j}}e$.  This argument uses only one-input marginal
+couplings; the actual sampled network has its usual joint law on all
+inputs.  No simultaneous choice of the comparison residual correlations
+is required.
+
+Applying \eqref{eq:critical-channel-sampling-metric} at the new
+layer now gives the recursion
+\begin{equation}\label{eq:critical-channel-metric-recursion}
+ e_1\le8\sqrt\alpha,\qquad
+ e_j\le e^{\sqrt{D_j}}e_{j-1}+8\sqrt\alpha,
+ \qquad e_H\le8H e^S\sqrt\alpha.
+\end{equation}
+
+\paragraph{Uniform concentration at finite width.}
+At every stage, conditional on the complete previous construction,
+the new rows and their scores are independent.  The observables
+$b^2$, $bh(x)$, and $h(x)^2$ are bounded by $B^2,B,1$ in absolute
+value.  Hoeffding's inequality and a union bound over the $2m+1$
+observables, then over the $H$ stages, show that all the required
+moment estimates hold with probability at least $1-\kappa/2$ if
+\begin{equation}\label{eq:critical-channel-hoeffding}
+ N\ge C B^4\alpha^{-2}\log\frac{8H(2m+1)}\kappa.
+\end{equation}
+The same assertion follows by successive conditioning, since the
+bound is uniform in the realized previous layers.  Stop using the
+controlled construction if a score Gram $M$ is outside $[1/2,3/2]$;
+thereafter use the original prior.  This defines the construction on
+every outcome, and the good moment event never triggers stopping.
+
+Choose
+\[
+ \kappa=\min\left\{\frac14,\frac\tau{32(A+1)}\right\},\qquad
+ \alpha=\left(\frac{\kappa\sqrt{v_H}}{64He^S}\right)^2.
+\]
+On the good event, \eqref{eq:critical-channel-metric-recursion} gives
+$e_H\le\kappa\sqrt{v_H}/8$.  In particular the final coefficient
+satisfies $f(x)c(x)\ge\sqrt{v_H}(1-\kappa/8)$ everywhere.
+
+\paragraph{Readout and change of measure.}
+When this final inequality holds, shift the Gaussian readout mean to
+$ta$, where $\|a\|^2=1/N$ is its final score coefficient vector and
+\[
+ t=\frac{1+\kappa}{2\sqrt{v_H}}.
+\]
+The mean output then has signed margin at least $1/2+\kappa/4$.
+At all other histories use zero readout mean.  The conditional readout
+noise has variance $K(x,x)/N\le1/N$ at every input.  A Gaussian tail
+bound and union bound make its maximum absolute value smaller than
+$\kappa/8$ with probability at least $1-\kappa/2$, provided
+$N\ge C\kappa^{-2}\log(4m/\kappa)$.  The complete controlled
+construction, denoted $Q_N$, therefore produces the strict target
+event $E_f$ with probability at least $1-\kappa$.
+
+Augment the original network prior with the same reference auxiliary
+kernels used above.  Conditional on the complete past, each reference
+incoming weight row remains its original Gaussian, including under
+the history-dependent orthogonal decomposition.  Chain rule and data
+processing bound each controlled hidden block's relative entropy by
+$ND_j$; stopping can only reduce this bound.  The shifted readout
+has relative entropy $Nt^2/2$.  Consequently, after discarding all
+auxiliary variables,
+\[
+ D(Q_N\Vert\mu_N)\le
+ N\left[\sum_jD_j+\frac{(1+\kappa)^2}{8v_H}\right]
+ \le N(A+3A\kappa).
+\]
+Binary relative entropy for the event $E_f$ gives
+\[
+ -\frac1N\log\mu_N(E_f)
+ \le\frac{A+3A\kappa+N^{-1}\log2}{1-\kappa}
+ \le A+\tau
+\]
+when $N\ge8/\tau$.  Finally $v_H^{-1}\le8A$ and the definition
+of $\kappa$ show that \eqref{eq:critical-channel-width} implies
+all three numerical width conditions above.  This proves the theorem.
+\end{proof}
+
+\begin{corollary}[Beginning with an approximate finite prefix]
+\label{cor:critical-channel-approximate-prefix}
+Suppose a controlled finite prefix has relative entropy at most $NE$
+against the corresponding original Gaussian blocks.  With probability
+at least $1-\kappa/4$, suppose its feature kernel has a measurable
+coefficient $c(x)=a^Th(x)$, $\|a\|^2=1/N$, and residual diagonal
+$s(x)^2$, such that
+\[
+ \max_x\sqrt{(c(x)-\sqrt{v_0}f(x))^2+
+                            (s(x)-\sqrt{r_0})^2}
+ \le\frac{\kappa\sqrt{v_M}}{64e^S}.
+\]
+Here a scalar-channel continuation has $M\ge1$ remaining hidden
+stages, starts at $v_0,r_0$, ends at $v_M$, has score bound $B$, and
+has costs $D_1,\ldots,D_M$.  Put
+\[
+ A=E+\sum_{j=1}^M D_j+\frac1{8v_M},\qquad
+ S=\sum_{j=1}^M\sqrt{D_j},\qquad
+ \kappa=\min\{1/4,\tau/[32(A+1)]\}.
+\]
+For widths satisfying \eqref{eq:critical-channel-width} with $H$
+replaced by $M$, after a universal change of its constant, the full
+network has raw target probability at least $e^{-N(A+\tau)}$.
+The prefix and its ideal comparison parameters may depend on $N$,
+provided these displayed bounds hold uniformly.
+\end{corollary}
+
+\begin{proof}
+On a bad prefix use the original subsequent prior.  On a good prefix
+run the controlled scalar continuation.  Its metric recursion gives
+\[
+ e_M\le e^S\{e_0+8M\sqrt\alpha\}.
+\]
+Use $\sqrt\alpha=\kappa\sqrt{v_M}/(128Me^S)$ and assign failure
+probability $\kappa/4$ to each of the prefix, subsequent moment
+estimates, and readout noise.  Then $e_M<\kappa\sqrt{v_M}/8$,
+and total target success probability is at least $1-\kappa$.
+The joint entropy is at most $N(A+3A\kappa)$ by chain rule.
+The proof of Theorem~\ref{thm:critical-finite-channel-mass} now
+applies without any other change.
+\end{proof}
+
+\begin{remark}[Reducing a tracked component]
+\label{rem:critical-channel-reduction}
+Write $\psi_r(t)=\mathbb E\tanh(t+\sqrt rG)$ and let
+$v_{\max}=\mathbb E\psi_r(\sqrt vZ)^2>0$.  The full conditional
+mean component uses the score
+\[
+ b=\psi_r(\sqrt vZ)/\sqrt{v_{\max}}.
+\]
+Any smaller prescribed component $0<v'\le v_{\max}$ can instead
+be obtained with the unit score
+\[
+ b=\sqrt{\frac{v'}{v_{\max}}}
+       \frac{\psi_r(\sqrt vZ)}{\sqrt{v_{\max}}}
+       +\sqrt{1-\frac{v'}{v_{\max}}}\,U,
+\]
+where $U$ is an independent random sign.  Its coefficient is
+$\sqrt{v'}f$, and $|b|\le1+(v')^{-1/2}$.  The auxiliary sign adds
+no entropy.  This implements every deliberate reduction of a tracked
+component in the scalar steering construction.
+\end{remark}
+
+\begin{corollary}[Finite-width target mass for Fourier seeds]
+\label{cor:critical-finite-fourier-mass}
+There are universal $c,C_0,C_1>0$ with the following property.  Put
+\[
+ A_F(f)=\sum_T|\widehat f(T)|,\qquad
+ R=(d+L+2)A_F(f).
+\]
+If $L\ge C_0\log R$, then for every $N\ge R^c$ the original
+critical prior satisfies
+\[
+ \mu_N(E_f)\ge
+ \exp\left[-N\left\{V_*+C_1\frac{\log^2R}{L}\right\}\right].
+\]
+In particular the sufficient width is polynomial for every parity,
+independently of its degree.  This corollary is a target-probability
+lower bound, not by itself a posterior learning theorem.
+\end{corollary}
+
+\begin{proof}
+Use the controlled Fourier mixture with exact mean $f/Z_f$,
+$Z_f\le8(d+1)A_F(f)$, and common diagonal.  Its rare component
+has probability $\theta=(D_*L)^{-1}$, where
+$D_*=C(d+1)^3\log^2(d+2)$.  Retain its Bernoulli mixture tag and
+use $b_1=\boldsymbol1_{\{\mathrm{rare}\}}/\sqrt\theta$.
+Then $\mathbb E b_1^2=1$, the coefficient is exactly
+$\sqrt\theta f/Z_f$, and $v_1=\theta/Z_f^2$.
+Using the same component tags in the reference law bounds the joint
+row entropy by $\theta D_*\le1/L$.
+
+The established cooling, holding, prescribed growth, purification,
+and scalar continuation form a scalar-channel program.  Use the
+conditional-mean scores at each stage and
+Remark~\ref{rem:critical-channel-reduction} for any deliberate
+reduction of the tracked component.  Its total cost satisfies
+\[
+ A\le V_*+C\log^2R/L.
+\]
+All tracked positive components are at least $R^{-C}$: the first
+one is inverse polynomial; cooling retains at least a constant times
+the cooling scale times that component; the holding value is
+$v_0=\delta e^{-C S_0}$ with $S_0=O(\log R)$ and
+$\delta\ge c/L$; growth and purification retain at least $v_0$.
+The final scalar path is increasing from $p\ge c/L$ and has
+$O(1/p)$ steps.  Its stable lift retains a fixed positive fraction
+of every scalar state, because purification leaves residual
+$O(\delta L^{-4})$.  Thus its tracked components are also inverse
+polynomial.  All scores are consequently bounded by $B\le R^C$.
+
+The square-root entropy budget also applies when the numbers $D_j$
+are upper bounds on the actual feature entropies.  Indeed its proof
+uses only scalar dissipation, Bellman suffix lower bounds, and the
+total cost; all three remain valid with these larger nonnegative
+costs.  Applying that proof to this program gives
+\[
+ S\le C\log(L+1)+C\sqrt{L(A-V_*)_+}\le C\log R.
+\]
+Take $\tau=1/L$ in Theorem~\ref{thm:critical-finite-channel-mass}.
+Its sufficient width is at most $R^c$ after enlarging a universal
+exponent, and its extra $1/L$ cost is absorbed into the displayed
+constant $C_1$.
+\end{proof}
+
+The finite-width bound is close to the cost of the explicit scalar-channel
+construction.  It does not assert a bound within $1/L$ of the unknown
+minimum rate $J_L(f)$ for an arbitrary target.  A collective bound on
+competing functions is a separate ingredient in any learning consequence.

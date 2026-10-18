@@ -1,0 +1,265 @@
+\section{Deep sequential computations with polynomial sample bounds}
+\label{sec:critical-sequential-programs}
+
+Some computations have long sequential implementations while admitting
+sample bounds without a teacher-depth exponent. Decision trees and
+binary-state branching programs have small Fourier variation. A different
+argument handles permutation programs with solvable transition groups,
+even when their Fourier variation is exponential. All results in this
+section concern the original unrestricted critical prior and inherit the
+sufficiently-large-width convention of
+Theorem~\ref{thm:critical-excess-learning}.
+
+\begin{proposition}[Decision trees and binary-state programs]
+\label{prop:critical-binary-state-learning}
+A Boolean function computed by a decision tree with $s$ leaves satisfies
+$A_F(f)\le s$. A function computed by a deterministic layered branching
+program of width at most two and length $T$ satisfies $A_F(f)\le T+1$.
+The branching program may query different input coordinates in its two
+states, and may query a coordinate repeatedly.
+
+Consequently, there are universal $c,C>0$ such that a sufficient sample
+bound for either class is
+\[
+ n\ge\frac C\varepsilon
+       \left\{(d+L+K+2)^c+\log(1/\delta)\right\},
+ \qquad L\ge C\log(d+L+K+2),
+\]
+where $K=s$ for the tree and $K=T+1$ for the branching program.
+The guarantee is distribution-free on the cube, uses exact training fit,
+and requires correct-label posterior probability greater than $2/3$
+except on mass at most $\varepsilon$.
+\end{proposition}
+
+\begin{proof}
+The indicator of a nonempty decision-tree leaf is a conjunction of input
+literals, after removing repeated queries and contradictory branches.
+Its Fourier $\ell^1$ norm is one. Expressing $f$ as the sum of its signed
+leaf indicators proves the first assertion.
+
+For the second, encode the two states by $\{-1,1\}$ and let $s_i(x)$
+be the state after step $i$. Let $t_i^+(x)$ and $t_i^-(x)$ be the next
+states selected from the two current states. Each is a unary Boolean
+function of the coordinate queried at that state, hence a constant or a
+signed input bit. Put
+\[
+ a_i=\frac{t_i^+-t_i^-}{2},\qquad
+ b_i=\frac{t_i^++t_i^-}{2}.
+\]
+Then $s_i=a_is_{i-1}+b_i$, and the triangle inequality gives
+$A_F(a_i),A_F(b_i)\le1$.
+Fourier $\ell^1$ norm is submultiplicative: multiplication is convolution
+on the group of subsets under symmetric difference. Therefore
+\[
+ A_F(s_i)\le A_F(s_{i-1})+1.
+\]
+The initial state is constant, so induction gives $A_F(s_T)\le T+1$.
+The final output map is either constant or a signed copy of the state.
+Neither case increases this bound. Apply
+Corollary~\ref{cor:critical-fourier-learning}.
+\end{proof}
+
+Here width two counts discrete control states; it does not mean two
+continuously valued neural activations. For a layered decision tree of
+width $C$ and depth $h$, its number of leaves is at most $1+Ch$.
+Thus the tree bound is jointly polynomial in its width and depth,
+regardless of tree imbalance. Sharing in a general circuit can make a
+decision-tree representation much larger.
+
+\subsection{Solvable-group programs}
+
+A length-$T$ program over a finite group $G$ chooses a group element
+$g_i(x)$ at step $i$ according to one queried input bit, and outputs
+\[
+ f(x)=\phi(g_1(x)\cdots g_T(x)),\qquad
+ \phi:G\longrightarrow\{-1,1\}.
+\]
+The queried coordinates may repeat. The group and the output table are
+part of the specified implementation. The derived length of a solvable
+group is the number of abelian quotients in its derived series.
+
+\begin{lemma}[A uniform threshold compiler for solvable groups]
+\label{lem:critical-solvable-group-compiler}
+There is a universal $C$ such that the following holds. Suppose $G$ is
+a finite solvable group of order $q\ge2$ and derived length $\ell\ge1$.
+Every length-$T$ group program has a layered Boolean threshold
+implementation with
+\[
+ h\le C\ell,\qquad
+ C_T\le q^C(T+1)^C,\qquad
+ B_T\le q^C(T+1)^C.
+\]
+Here $h$ is depth, $C_T$ is width including constant rails and layering
+overhead, and $B_T$ bounds the Euclidean norms of gate coefficient
+vectors. Gate scores have absolute value at least one on every
+realized Boolean input. The constants are independent of the group.
+\end{lemma}
+
+\begin{proof}
+We prove the stronger assertion that one circuit computes one-hot
+encodings of every prefix product from one-hot encodings of the letters. A lookup involving at most three elements
+of a group of order at most $q$ is a constant-depth Boolean circuit
+of size $O(q^4)$: form the relevant conjunctions, then their disjunctions
+for each output value. Its coefficients and fan-ins are polynomial in
+$q$, with universal degrees.
+
+For an abelian group, use a decomposition into cyclic groups of orders
+$q_j\le q$, with at most $\log_2q$ factors. For one cyclic factor, let
+$v_i\in\{0,\ldots,q_j-1\}$ be the input values. For every prefix length $i\le T$, form the
+integer score
+\[
+ U_i=\sum_{r=1}^i\sum_{a=0}^{q_j-1}a\,\boldsymbol1_{\{v_r=a\}}.
+\]
+Compute $z_{i,s}=\boldsymbol1_{\{U_i\ge s\}}$ for
+$1\le s\le(q_j-1)i$. For each residue $u$, put
+$\psi_u(t)=2\boldsymbol1_{\{t\equiv u\pmod{q_j}\}}-1$.
+On this integer interval the exact identity
+\[
+ \psi_u(U_i)=\psi_u(0)+
+   \sum_{s=1}^{(q_j-1)i}[\psi_u(s)-\psi_u(s-1)]z_{i,s}
+\]
+shows that one further threshold layer computes the residue indicator.
+For each prefix, combining the cyclic coordinates uses one conjunction
+per group element: there are at most $q$ valid tuples, with at most
+$\log_2q$ coordinates each. Computing all prefixes uses
+$q^{O(1)}(T+1)^2$ gates. The size, fan-ins, and coefficients are
+polynomial in $q,T$, with universal degrees, and the depth is
+universally bounded. Half-integer threshold
+offsets, followed by multiplication by two, give integer margins at
+least one. Switching between $\{0,1\}$ and $\{-1,1\}$ conventions
+preserves these polynomial bounds.
+
+For the inductive step, take a nontrivial abelian normal subgroup
+$A\triangleleft G$ such that $H=G/A$ has smaller derived length;
+the last nontrivial term of the derived series suffices. Fix a section
+$s:H\to G$ with $s(e)=e$, and write $g_i=a_i s(h_i)$ uniquely.
+Set $H_i=h_1\cdots h_i$, with $H_0=e$. Define the finite tables
+\[
+ \alpha_h(a)=s(h)as(h)^{-1},\qquad
+ c(h,h')=s(h)s(h')s(hh')^{-1}\in A.
+\]
+The group need not be a split extension. Compute all $H_i$ in parallel
+using one copy of the stronger induction hypothesis, and then put
+\[
+ t_i=\alpha_{H_{i-1}}(a_i)c(H_{i-1},h_i)\in A.
+\]
+These are finite lookups. Multiplying the decompositions gives
+\[
+ g_1\cdots g_i=(t_1\cdots t_i)s(H_i),\qquad 1\le i\le T.
+\]
+Indeed a prefix $A_{i-1}s(H_{i-1})$ times $a_i s(h_i)$ equals
+$A_{i-1}\alpha_{H_{i-1}}(a_i)c(H_{i-1},h_i)s(H_i)$.
+All prefix products of the $t_i$ lie in the abelian group $A$ and are
+computed simultaneously by the preceding construction. Final lookups
+combine them with their corresponding $H_i$.
+
+Each extension step increases depth by a universal constant and adds
+$q^{O(1)}(T+1)^2$ gates to one quotient-prefix circuit. More explicitly,
+for universal $c,C$, the raw size satisfies
+\[
+ F(G,T)\le F(G/A,T)+Cq^c(T+1)^2.
+\]
+The quotient order decreases by at least a factor two at every step,
+so summing this geometric bound gives $F(G,T)\le Cq^c(T+1)^2$.
+Every new gate has fan-in and coefficients polynomial in $q,T$ with
+universal degrees. No step enlarges previously constructed coefficients.
+The same uniform bound therefore holds for gate coefficient norms. Layering with identity gates and constant rails costs
+only a polynomial in raw size and depth. Since $\ell\le\log_2q$, it is
+absorbed in the stated width bound and does not increase coefficient
+norms except by a universal polynomial factor.
+
+Finally, choosing between two group letters requires only literals and
+constants in their one-hot encoding. The output map $\phi$ is a finite
+lookup. These additions preserve all bounds.
+\end{proof}
+
+\begin{theorem}[Learning solvable-group programs]
+\label{thm:critical-solvable-group-learning}
+There are universal $c,C>0$ such that the following holds. Let $f$ be
+a length-$T$ program over a solvable group of order $q\ge2$ and derived
+length $\ell\ge1$, and put $R=d+q+T+L+2$. If
+\[
+ L\ge C\ell\log R,
+\]
+a sufficient sample size for the original critical posterior is
+\[
+ n\ge\frac C\varepsilon
+          \left\{R^{c\ell}+\log(1/\delta)\right\}.
+\]
+The prediction and width guarantees are those of
+Theorem~\ref{thm:critical-excess-learning}. In particular, for bounded
+derived length the bound is jointly polynomial in group order, program
+length, and learner depth.
+\end{theorem}
+
+\begin{proof}
+Apply Lemma~\ref{lem:critical-solvable-group-compiler}. The parameter in
+Theorem~\ref{thm:controlled-circuit-rate} satisfies
+\[
+ T_c=\log(d+2)+h\log(\max\{d+1,C_T\}+B_T+h+L+2)
+       \le C\ell\log R.
+\]
+The depth hypothesis ensures $L-h\ge L/2$ and $L-h\ge C_0T_c$ after
+increasing the universal constant. Thus
+\[
+ J_L(f)\le V_*+C\frac{\ell^2\log^2R}{L}.
+\]
+The exponential factor in
+Theorem~\ref{thm:critical-excess-learning} is at most $R^{C\ell}$.
+Its remaining polynomial prefactor is absorbed in the same power,
+since $\ell\le\log_2q$ and the displayed rate bound is polynomial in
+$R$.
+\end{proof}
+
+\begin{corollary}[Permutation programs of width at most four]
+\label{cor:critical-width-four-permutation-learning}
+There are universal $c,C>0$ such that every length-$T$ permutation
+branching program of width at most four has sufficient sample size
+\[
+ n\ge\frac C\varepsilon
+       \left\{(d+T+L+2)^c+\log(1/\delta)\right\},
+ \qquad L\ge C\log(d+T+L+2).
+\]
+Its original sequential depth $T$ is unrestricted.
+\end{corollary}
+
+\begin{proof}
+A width-$w$ permutation program is a group program over $S_w$, with
+its output determined by the action of the product on a fixed initial
+state. For $w\le4$, the order and derived length are universally bounded.
+The normal series
+$\{e\}\triangleleft V_4\triangleleft A_4\triangleleft S_4$
+has abelian successive quotients, so $S_4$ and its subgroups are solvable.
+Apply the theorem. Width one gives a constant target, already covered
+by Corollary~\ref{cor:critical-fourier-learning}.
+\end{proof}
+
+The permutation condition is material: the group proof does not cover
+arbitrary noninvertible transformation programs of width three or four.
+Nor does it prove a lower bound for nonsolvable groups. These are
+restricted positive results for deep computations, and leave general
+small-circuit learning unresolved.
+
+\paragraph{Large Fourier variation can coexist with polynomial learning.}
+For $b_i\in\{0,1\}$ and $x_i=(-1)^{b_i}$, consider the three-state
+program
+\[
+ f(x)=2\boldsymbol1_{\{\sum_i b_i\equiv0\pmod3\}}-1.
+\]
+With $\alpha=(1+\sqrt3)/2>1$, it satisfies
+\[
+ A_F(f)\ge\tfrac13\alpha^d-\tfrac23.
+\]
+Indeed the roots-of-unity formula gives, for a nonempty Fourier set of
+size $k$,
+\[
+ \widehat f(S)=\frac4{3\,2^d}3^{k/2}
+                   \cos(d\pi/3-k\pi/2),
+\]
+with an additional $-1/3$ for the empty set. Retain the even $k$ terms,
+use $|\cos(d\pi/3)|\ge1/2$, and apply the binomial theorem.
+Nevertheless this is a program over the cyclic group of order three,
+so Theorem~\ref{thm:critical-solvable-group-learning} gives polynomial
+sample complexity at logarithmic learner depth. Large Fourier variation
+alone is therefore insufficient for an adverse critical-prior learning
+bound.

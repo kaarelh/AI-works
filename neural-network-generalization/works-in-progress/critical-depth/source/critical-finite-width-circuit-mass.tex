@@ -1,0 +1,125 @@
+\section{Finite-width target probability for circuit teachers}
+\label{sec:critical-finite-width-circuit-mass}
+
+The finite circuit prefix and scalar-channel realization together give a
+quantitative width threshold for the original critical prior.  The
+dependence on teacher depth is explicit; no stability restriction is
+imposed on the learner's support.
+
+\begin{corollary}[Finite-width target mass for a threshold circuit]
+\label{cor:critical-finite-circuit-mass}
+Suppose $f:\{-1,1\}^d\to\{-1,1\}$ is the final wire of the
+depth-$h$ layered threshold circuit in
+Lemma~\ref{lem:critical-finite-circuit-prefix}.  Its maximum hidden
+width is $C$, its gate weight norms are at most $B\ge1$, and its
+gate margins on Boolean inputs are at least one.  Put
+\[
+ T=\log(d+2)+h\log(C+B+h+L+2).
+\]
+There are universal constants $c_0,c_1,c_2>0$ such that, if
+$L-h\ge c_0T$, then for every integer $N\ge\exp(c_1T)$ the
+original critical Gaussian prior satisfies
+\[
+ \mu_N\{f(x)z_w(x)>1/2\text{ for all }x\in\{-1,1\}^d\}
+ \ge
+ \exp\!\left[-N\left\{V_*+c_2\frac{T^2}{L}\right\}\right].
+\]
+The sufficient width is polynomial in $d,C,B,L$ at every fixed
+teacher depth $h$.  All statements concern the raw unrestricted prior.
+\end{corollary}
+
+\begin{proof}
+We keep track of the accuracy needed by the continuation, since it is
+not enough merely to plant approximately correct gate signs.  Choose
+the prefix parameters
+\[
+ a=KT,\qquad \eta=8e^{4-KT},
+\]
+where the universal constant $K$ will be fixed below.  The prefix
+construction has entropy at most $N/(8L)$ and, except on an event
+of a prescribed small probability, ends at a kernel with an exact
+score component whose metric error relative to
+\[
+ (v_0,r_0)=(p,\bar q_h-p),\qquad p=k_h/N\in[p_h,2p_h],
+\]
+is at most $\sqrt{(2h+4)\eta}$.  The ideal diagonal is at most
+one.  These assertions hold uniformly at all widths satisfying the
+prefix bound, even though $p$ and $\bar q_h$ may depend on $N$.
+
+The estimate in Remark~\ref{rem:critical-finite-prefix-accuracy} gives
+\begin{equation}\label{eq:critical-finite-circuit-seed-log}
+ S_0:=1+\log(1/p)+\log(L+2)
+       \le C(1+\log K)T.
+\end{equation}
+Apply the scalar cooling, holding, growth, purification, and final
+scalar-continuation construction to this ideal seed.  There are
+$M=L-h-1$ remaining hidden layers.  Increasing $c_0$ by a universal
+amount makes $M\ge L/2$ and $M\ge C S_0$, so that construction
+fits into exactly the available number of layers.  With the prefix
+cost included, it has
+\begin{equation}\label{eq:critical-finite-circuit-program-cost}
+ A:=\frac1{8L}+\sum_{j=1}^M D_j+\frac1{8v_M}
+       \le V_*+C\frac{S_0^2}{L}.
+\end{equation}
+All tracked components in this program are at least $e^{-CS_0}$.
+Indeed cooling loses only a polynomial factor in its scale; holding
+uses a component $\delta e^{-CS_0}$ with $\delta\ge c/L$;
+growth and purification retain that lower bound; and the final
+increasing scalar path starts at $p_{\rm sc}\ge c/L$.  The
+purified residual is $O(\delta L^{-4})$, so its stable lift retains
+a fixed fraction of every scalar state.  The bounded-score
+construction of Remark~\ref{rem:critical-channel-reduction} therefore
+gives a common score bound $B_{\rm sc}\le e^{CS_0}$.
+
+The square-root entropy estimate applies to this continuation alone,
+with its stated upper entropy costs $D_j$.  To check the initial
+condition, its ideal starting diagonal is at most one; the Bellman
+suffix lower bound and total cost
+\eqref{eq:critical-finite-circuit-program-cost} give the same prefix
+budget used in the occupation proof.  Thus no Gaussian assumption
+on the initial seed is needed.  Consequently
+\begin{equation}\label{eq:critical-finite-circuit-score-budget}
+ S:=\sum_{j=1}^M\sqrt{D_j}
+ \le C\log(L+2)+C\sqrt{L(A-V_*)_+}
+ \le C S_0.
+\end{equation}
+
+Set $\tau=1/L$ and
+$\kappa=\min\{1/4,\tau/[32(A+1)]\}$.  By
+\eqref{eq:critical-finite-circuit-seed-log}--
+\eqref{eq:critical-finite-circuit-score-budget}, all factors in
+\[
+ \frac{\kappa\sqrt{v_M}}{64e^S}
+\]
+are bounded below by $\exp[-C(1+\log K)T]$.  Fix $K$ sufficiently
+large that
+\[
+ \sqrt{(2h+4)\eta}
+ \le\frac{\kappa\sqrt{v_M}}{64e^S}
+\]
+holds uniformly.  This is possible because the logarithmic decay of
+$\eta$ is linear in $K$, whereas the required exponent grows only
+as $1+\log K$.  The gate-margin condition on $\eta$ is absorbed
+by the same choice.  Choose the prefix failure probability at most
+$\kappa/4$, using a uniform lower bound on $\kappa$ if its ideal
+parameters depend on $N$.
+
+After fixing these universal constants, the prefix width condition
+and the sufficient width in
+Corollary~\ref{cor:critical-channel-approximate-prefix} are both
+at most $\exp(c_1T)$.  In the latter bound this follows from
+$B_{\rm sc}\le e^{CS_0}$, $S\le CS_0$, $M\le L$,
+$A\le V_*+CS_0^2/L$, and $\log|X|=d\le e^T$.
+That corollary yields raw target mass at least $e^{-N(A+1/L)}$.
+Finally \eqref{eq:critical-finite-circuit-seed-log} absorbs both the
+fixed $K$ and the extra $1/L$ into $c_2T^2/L$.
+\end{proof}
+
+The gate-margin and gate-norm assumptions are automatically satisfied
+with bounded constants for fan-in-two AND and OR gates and unary NOT
+gates, after including constant wires.  Any other fixed Boolean gate
+basis can first be compiled into this basis with constant overhead.
+More general threshold gates are covered
+with the displayed dependence on $B$.  Compiling or grouping a circuit
+before applying the corollary is allowed, but its actual resulting
+depth, width, and gate norms must be substituted in $T$.
