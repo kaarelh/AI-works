@@ -1,0 +1,157 @@
+\section{Depth alignment and majority combinations}
+\label{sec:pf-majority-closure}
+
+A possible route from distribution-dependent approximation to exact
+representation uses minimax and a majority of approximants. The unresolved
+step is combining their different nonlinear computations at polynomial
+product cost. Unequal depths alone are not an obstruction: a scalar
+readout can be padded at constant product cost. A stronger conclusion
+holds when the approximants already share their nonlinear feature map.
+
+\begin{lemma}[Constant-product scalar padding]
+\label{lem:pf-scalar-padding}
+A depth-$D$ tanh network with global signed margin at least one and
+Frobenius product $P$ has, for every integer $T\ge1$, a depth-$(D+T)$
+realization of the same Boolean function, with global signed margin
+at least one and product at most $3P/2$. No new biases are required.
+\end{lemma}
+
+\begin{proof}
+Write $z$ for the old readout and $R=\sqrt{d+1}$.
+Zero preservation and one-Lipschitzness give $|z(x)|\le PR$.
+Put $M=\max\{1,PR\}$ and $\eta=(M\sqrt T)^{-1}$, and replace the
+readout by
+\[
+ h_1=\tanh(\eta z),\qquad h_{s+1}=\tanh(h_s),\qquad
+ z_{\rm new}=\frac{3h_T}{2\eta}.
+\]
+The hidden absolute values are at most $T^{-1/2}$. The inequality
+$\tanh u\ge u-u^3/3$ for $u\ge0$ and Bernoulli's inequality imply
+\[
+ |h_T|\ge\eta|z|\left(1-\frac1{3T}\right)^T
+           \ge\frac23\eta|z|.
+\]
+Oddness preserves the sign. The original readout norm is multiplied
+by $\eta$, the next $T-1$ scalar weights equal one, and the new
+readout weight is $3/(2\eta)$. Their product changes by only $3/2$.
+\end{proof}
+
+\begin{proposition}[A disjoint-branch product bound]
+\label{prop:pf-parallel-holder}
+Suppose $m$ independent branches of common weighted depth $D$ are
+stacked at their first layer, remain disjoint internally, and are
+combined linearly at the readout. Let $a_{i\ell}>0$ be branch $i$'s
+layer norms, including its voting coefficient in its final norm, and
+put $P_i=\prod_\ell a_{i\ell}$. The complete product satisfies
+\[
+ P_{\rm total}\ge
+       \left(\sum_{i=1}^m P_i^{2/D}\right)^{D/2}.
+\]
+In particular, averaging $m$ nonconstant globally unit-margin branches
+has product at least $m^{D/2-1}$, regardless of their internal widths
+or neuron-cloning choices.
+\end{proposition}
+
+\begin{proof}
+Each full matrix has squared Frobenius norm $\sum_i a_{i\ell}^2$.
+H\"older's inequality gives
+\[
+ \sum_i\prod_\ell a_{i\ell}^{2/D}
+ \le\prod_\ell\left(\sum_i a_{i\ell}^2\right)^{1/D}.
+\]
+Raise this to power $D/2$. Every nonconstant unit-margin Boolean
+branch has product at least one, by a bichromatic cube edge.
+Including its averaging coefficient gives $P_i\ge1/m$.
+These are the products of the actual branches after any cloning,
+which proves the last assertion.
+\end{proof}
+
+Uniform cloning of a whole layer preserves its branch product, but
+neuron-by-neuron cloning can reduce it. The proposition uses the
+resulting products and their intrinsic margin lower bounds, so it does
+not require the stronger, false invariance claim. It is an obstruction
+to a disjoint architecture, not a lower bound on every implementation
+of the resulting majority function.
+
+\begin{theorem}[Voting with a shared nonlinear feature map]
+\label{thm:pf-shared-feature-voting}
+Let $h(x)$ be one common tanh feature map with prefix product $S$.
+Suppose $z_i(x)=v_i^Th(x)$ satisfy $|z_i(x)|\ge1$ everywhere,
+let $g_i=\operatorname{sign}z_i$, and put $P_i=S\|v_i\|_2$.
+If $\lambda_i\ge0$, $\sum_i\lambda_i=1$, and
+\[
+ f(x)\sum_i\lambda_i g_i(x)\ge\gamma>0
+ \quad\hbox{at every input},
+\]
+then
+\[
+ \mathfrak P(f)\le
+ \frac{\log(4/\gamma)}{\gamma}\sum_i\lambda_iP_i.
+\]
+A concrete finite-width realization attains at most twice the displayed
+bound and adds just one weighted layer relative to the networks $z_i$.
+It uses no new biases.
+\end{theorem}
+
+\begin{proof}
+Set $A=\tfrac12\log(4/\gamma)$. Since $|z_i|\ge1$,
+$|\tanh(Az_i)-g_i|\le\gamma/2$. Therefore
+\[
+ z_{\rm new}=\frac2\gamma\sum_i\lambda_i\tanh(Av_i^Th)
+\]
+has global signed margin at least one. Clone its $i$th new hidden
+neuron $c_i$ times and divide its outgoing coefficient by $c_i$;
+this leaves the function exactly unchanged. Its product is
+\[
+ \frac{2AS}{\gamma}
+ \sqrt{\left(\sum_i c_i\|v_i\|_2^2\right)
+       \left(\sum_i\lambda_i^2/c_i\right)}.
+\]
+Omit zero coefficients and take
+$c_i=\lceil t\lambda_i/\|v_i\|_2\rceil$.
+As $t\to\infty$, the square root tends to
+$\sum_i\lambda_i\|v_i\|_2$. This gives the intrinsic infimum bound;
+a sufficiently large finite $t$ gives its factor-two version.
+The vectors $v_i$ are nonzero by their margin assumption.
+\end{proof}
+
+For an odd unweighted majority, $\gamma=1/m$, so the bound is
+$O(m\log(m+1)\max_iP_i)$. For a fixed positive voting margin it is
+$O(\max_iP_i)$, independently of the number of voters.
+
+\begin{corollary}[Weak-to-exact representation with shared features]
+\label{cor:pf-shared-feature-minimax}
+Fix the feature map $h$ and a budget $P$. Suppose that for every
+probability distribution $\mu$ on the cube there is a readout $v_\mu$
+with global margin $|v_\mu^Th|\ge1$, product
+$S\|v_\mu\|_2\le P$, and correlation
+\[
+ \mathbb E_\mu\bigl[f(x)\operatorname{sign}(v_\mu^Th(x))\bigr]
+ \ge\gamma>0.
+\]
+Then
+\[
+ \mathfrak P(f)\le P\frac{\log(4/\gamma)}{\gamma}.
+\]
+Consequently the depth-independent normal form gives a finite
+polynomial-size representation in this product bound.
+\end{corollary}
+
+\begin{proof}
+Retain one admissible readout for every distinct Boolean sign pattern
+in the specified class. The class is finite because the input set is
+finite. The finite minimax theorem gives a probability distribution on
+these readouts whose signed vote is at least $\gamma$ at every input.
+Apply Theorem~\ref{thm:pf-shared-feature-voting}.
+\end{proof}
+
+The shared feature map is a substantive hypothesis. It is not supplied
+by allowing a different arbitrary low-product network for each input
+distribution. General polynomial closure under majority remains open.
+Preserving the original shallow depth is already false: the functions
+$q_j=\operatorname{sign}(2\sum_i u_iv_i-2j+1)$ in
+Section~\ref{sec:shallow-product-separation} have shallow polynomial
+product on shared pairwise-AND features, while the alternating votes
+$(-1)^jq_j$ and the optional constant vote form an odd majority equal
+to $\mathrm{IP}_n$. The latter has exponential shallow product, though
+one additional layer gives polynomial product.

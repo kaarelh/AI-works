@@ -3,6 +3,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{lmodern,amsmath,amssymb,amsthm,microtype,booktabs,graphicx}
 \usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\setlength{\emergencystretch}{1.5em}
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{lemma}[theorem]{Lemma}
 \newtheorem{proposition}[theorem]{Proposition}
@@ -39,11 +40,16 @@ posterior consequently concentrates below this ceiling. These results
 do not establish polynomial-depth learning: small differences inside
 that interval can determine which extensions the posterior prefers.
 A separate comparison does give a sample lower bound for full parity:
-at each fixed depth $L$, $n\le d^{(1-\eta)/(L-1)}$ examples leave
+for depths up to a small constant times $\eta\log d/\log\log d$,
+$n\le d^{(1-\eta)/(L-1)}$ examples leave
 limiting Gibbs error $1/2$ with high sample probability, for every
 fixed $\eta>0$. This is a polynomial lower bound, not an exponential
-bound in parity degree. The proofs include the finite-domain
-large-deviation foundation and the exact feature constructions.
+bound in parity degree. We also bound the accumulated square-root
+layer entropy by $O(\log L+\sqrt{L\epsilon})$ for a path of cost at
+most $V_*+\epsilon$. This yields matching excess-rate bounds
+$J_L(f)-V_*=\Theta(\log^2 d/L)$ for constants, dictators, and parities
+over a specified depth range. The proofs include the finite-domain
+large-deviation foundation and exact feature constructions.
 \end{abstract}
 
 \section{Model and meaning of the result}
@@ -121,6 +127,43 @@ The actual width-first posterior concentrates below this ceiling.
 This narrows the interval in which accurate and inaccurate extensions
 must be compared; it does not supply that comparison.
 
+Theorems~\ref{thm:critical-directional-budget}
+and~\ref{thm:critical-excess-dimension-lower} describe the paths inside
+this interval. For a path with hidden entropy costs $D_s$ and total
+cost at most $V_*+\epsilon$, they give
+\[
+ \sum_s\sqrt{D_s}\le C\{\log(L+1)+\sqrt{L\epsilon}\},
+ \qquad
+ J_L(f)\ge V_*+c\frac{\log^2 d}{L}
+ \quad(2\le L\le d^{c_0},\ d\ge d_0).
+\]
+The latter bound holds for every Boolean function. Together with the
+Fourier construction it determines the excess-rate scale for constants,
+dictators, and all parities when $C\log(d+2)\le L\le d^{c_0}$.
+It does not determine their ordering within that scale.
+
+Section~\ref{sec:critical-bures-transfer} turns the entropy estimate
+into a covariance-stability theorem. Under a suitable transfer of
+the controlled laws, one hidden transition amplifies Gaussian-coupling
+distance by at most $1+\sqrt{2D_s}$. Thus the complete factor is
+at most $C(L+1)^C\exp\{C\sqrt{L\epsilon}\}$. This is polynomial
+in depth when $L\epsilon=O(\log^2 L)$. A corresponding readout
+transfer bounds uniform output error without a factor depending on
+the number of inputs. The theorem does not construct a small finite
+network: generic high-rank covariances cannot be approximated by
+low-rank ones in this distance.
+
+A further decomposition separates changes to one selected input pair
+from the remaining conditional entropy. When the latter vanishes, a
+symmetry argument gives a shallow polynomial-product implementation.
+An independent Fourier argument gives such an implementation whenever
+the terminal kernel is invariant under Boolean translations. Neither
+restriction is known for arbitrary optimizing paths. Small positive
+conditional entropy alone is insufficient for depth-uniform stability;
+Section~\ref{sec:critical-boolean-kernel-geometry} gives an explicit
+example. Turning the square-root entropy estimate into a general
+representation bound remains open.
+
 This is not a claim that the conditioned prior is approximately uniform.
 For a fixed training sample $S$, its exponential posterior rate at a
 consistent function is
@@ -144,8 +187,11 @@ constants and dictators have $J_L(f)\le C\Phi_L(d)$.
 Thus this expression characterizes the minimum absolute-rate scale
 without asserting which function minimizes the exact rate at every
 dimension and depth. Later sections give a target-relative separation
-and a polynomial sample lower bound at fixed depth, with an extension
-to a specified slowly growing-depth regime.
+and a polynomial sample lower bound. The sharper comparison in
+Theorem~\ref{thm:critical-nearly-logarithmic-depth} covers growing
+depths $L\le c\eta\log d/\log\log d$, with limiting Gibbs error
+$1/2$ and confidence-error lower limit at least $1/4$. It concerns
+the actual posterior, including mixtures of minimizing functions.
 
 The proof first supplies a finite-width exponential potential. It then
 uses a quantitative first-layer spectrum bound to seed an arbitrary
@@ -163,12 +209,18 @@ formalized in Lean. Constants are not optimized.
 \input{critical-rate-foundations.tex}
 \input{critical-scalar-paths.tex}
 \input{critical-rate-lower-proof.tex}
+\input{critical-near-baseline-decomposition.tex}
+\input{critical-square-root-entropy.tex}
+\input{critical-bures-transfer.tex}
 \input{critical-rate-upper-proof.tex}
 \input{critical-controlled-fourier-seeds.tex}
 \input{critical-exact-feature-repair.tex}
 \input{critical-circuit-rate-steering.tex}
 \input{critical-analog-teacher-circuit-rate.tex}
 \input{critical-near-baseline-posterior.tex}
+\input{critical-learning-comparison.tex}
+\input{critical-boolean-kernel-geometry.tex}
+\input{critical-invariant-kernel-product.tex}
 \input{unrestricted-alternative-finite-width-upper.tex}
 \input{unrestricted-critical-counting-obstruction.tex}
 \input{unrestricted-critical-projective-symmetry.tex}
@@ -178,6 +230,7 @@ formalized in Lean. Constants are not optimized.
 \input{critical-depth-profile-plot.tex}
 \input{unrestricted-critical-shallow-ordering.tex}
 \input{unrestricted-critical-polynomial-sample-lower.tex}
+\input{critical-nearly-logarithmic-depth.tex}
 \input{unrestricted-critical-scalar-expansion.tex}
 
 \appendix

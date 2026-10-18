@@ -1,0 +1,153 @@
+\section{A product-complexity bound for invariant terminal kernels}
+\label{sec:critical-invariant-kernel-product}
+
+The general passage from critical rate to intrinsic product complexity
+remains open. There is a depth-independent bound when the terminal
+feature covariance retains Boolean translation invariance. This is a
+sufficient condition on a variational path; a general minimizing path
+need not satisfy it.
+
+For a Boolean function $f$, define
+\[
+ \mathfrak P(f)=\inf\left\{\prod_j\|W^j\|_F:
+ f(x)z_w(x)\ge1\text{ for every }x\in\{-1,1\}^d\right\}.
+\]
+The infimum allows arbitrary finite depth and width, tanh hidden layers,
+a linear readout, and biases only through the augmented input.
+
+\begin{lemma}[Fourier variation and a shallow representation]
+\label{lem:critical-fourier-product}
+Suppose a real function $g$ satisfies $f(x)g(x)\ge1$ on the cube, and
+write
+\[
+ g(x)=\sum_{S\subseteq[d]}\widehat g(S)\chi_S(x),
+ \qquad \chi_S(x)=\prod_{i\in S}x_i,
+ \qquad A=\sum_S|\widehat g(S)|.
+\]
+There is a universal constant $C$ such that
+\[
+ \mathfrak P(f)\le C(d+1)^2A\log\bigl(2(d+1)A\bigr).
+\]
+A depth-two tanh network of finite width attains this bound after
+increasing $C$ by a universal factor.
+\end{lemma}
+
+\begin{proof}
+The margin implies $A\ge1$. Fix a nonempty $S$ and put $k=|S|$.
+For $j=1,\ldots,k$, define
+\[
+ q_j(x)=\operatorname{sign}\left(-\sum_{i\in S}x_i+k-2j+1\right).
+\]
+If exactly $t$ of the selected coordinates equal $-1$, the expression
+inside this sign is $2t-2j+1$. Consequently
+\[
+ \chi_S(x)=b_0+\sum_{j=1}^k(-1)^j q_j(x),
+ \qquad b_0=1+\sum_{j=1}^k(-1)^j\in\{0,1\}.
+\]
+All threshold preactivations are odd integers and have absolute value
+at least one. For $0<\delta<1$, replace their signs by tanh after
+multiplying the preactivation by
+\[
+ \tau=\tfrac12\log(2k/\delta).
+\]
+Since $|\tanh t-\operatorname{sign}t|\le2e^{-2|t|}$, the resulting
+parity approximation has uniform error at most $\delta$. The constant
+term is represented exactly by the augmented-input neuron
+$\tanh(\operatorname{atanh}(1/2))=1/2$, with readout coefficient $2b_0$.
+The squared Frobenius norm of the input matrix is
+$O(\tau^2k^3+1)$, and the squared readout norm is $O(k+1)$.
+Its product is therefore at most
+\[
+ C(d+1)^2\log\bigl(2(d+1)/\delta\bigr).
+\]
+The same bound holds for its shallow variation sum, namely the sum of
+absolute outgoing coefficients times incoming-row norms, by
+Cauchy--Schwarz. The empty-set character is supplied exactly by a
+constant neuron and obeys the same bound.
+
+Take $\delta=1/(4A)$, and combine these parity approximations with
+coefficients $\widehat g(S)$. The resulting output differs from $g$
+uniformly by at most $A\delta=1/4$. Doubling its readout gives signed
+margin at least $3/2$, and its variation sum is at most
+\[
+ C(d+1)^2 A\log\bigl(2(d+1)A\bigr).
+\]
+It remains to relate variation to a Frobenius product without paying
+for the number of Fourier characters.
+
+For any finite shallow network with incoming rows $w_i$ and outgoing
+coefficients $v_i$, clone row $i$ exactly $c_i$ times and divide its
+outgoing coefficient by $c_i$. This leaves its function unchanged and
+gives product
+\[
+ \left\{\left(\sum_i c_i\|w_i\|_2^2\right)
+             \left(\sum_i v_i^2/c_i\right)\right\}^{1/2}.
+\]
+Omit zero rows and zero coefficients. Choosing
+$c_i=\lceil t|v_i|/\|w_i\|_2\rceil$ and letting $t$ increase makes
+this expression converge to $\sum_i|v_i|\|w_i\|_2$.
+A sufficiently large finite $t$ is within a fixed constant factor.
+This proves the claim, without any bound on the supplied Fourier
+support size.
+\end{proof}
+
+\begin{proposition}[An invariant-kernel product bound]
+\label{prop:critical-invariant-kernel-product}
+Let $K$ be a positive semidefinite kernel on the Boolean cube, invariant
+under simultaneous Boolean translations:
+\[
+ K(ax,ay)=K(x,y)\quad\text{for every }a,x,y\in\{-1,1\}^d,
+\]
+where multiplication is coordinatewise. Write $q=K(x,x)$.
+If $g$ belongs to its finite-set reproducing-kernel Hilbert space and
+$f(x)g(x)\ge1$ everywhere, then, with $B=\|g\|_K\sqrt q$,
+\[
+ \mathfrak P(f)\le C(d+1)^2B\log\bigl(2(d+1)B\bigr).
+\]
+In particular, suppose an admissible critical variational path has
+total action at most $J$ and ends at a translation-invariant covariance
+$Q$ of diagonal $q\le1$. Its globally margined classifier satisfies
+\[
+ \mathfrak P(f)\le C(d+1)^2\sqrt{8Jq}\,
+            \log\bigl(2(d+1)\sqrt{8Jq}\bigr).
+\]
+There is no dependence on the path's depth in these bounds.
+\end{proposition}
+
+\begin{proof}
+Write $K(x,y)=\kappa(xy)$. Relative to the uniform input measure, the
+characters diagonalize the kernel operator, with nonnegative eigenvalues
+\[
+ \lambda_S=\mathbb E_t\kappa(t)\chi_S(t),
+ \qquad \sum_S\lambda_S=q.
+\]
+The Fourier coefficients of an RKHS function vanish whenever
+$\lambda_S=0$, and
+\[
+ \|g\|_K^2=\sum_{S:\lambda_S>0}\frac{|\widehat g(S)|^2}{\lambda_S}.
+\]
+Equivalently this norm is $g^TK^\dagger g$ when $K$ denotes the
+unnormalized kernel matrix. Cauchy--Schwarz gives
+\[
+ \sum_S|\widehat g(S)|
+ \le\left(\sum_S\frac{|\widehat g(S)|^2}{\lambda_S}\right)^{1/2}
+      \left(\sum_S\lambda_S\right)^{1/2}
+ =\|g\|_K\sqrt q=B.
+\]
+The unit margin makes $B\ge1$. Apply
+Lemma~\ref{lem:critical-fourier-product}; its right side is increasing
+in the variation bound for arguments at least one.
+
+For the critical path, its readout $z$ has signed margin at least $1/2$
+and readout action $\tfrac12 z^TQ^\dagger z\le J$.
+Thus $g=2z$ has unit margin and RKHS norm at most $\sqrt{8J}$.
+The preceding assertion gives the second bound.
+\end{proof}
+
+The free Gaussian kernel tower preserves translation invariance, so the
+proposition applies to its readouts at arbitrary depth. It also applies
+to controlled paths whose terminal covariance has that invariance.
+An arbitrary controlled path can create a component proportional to
+$ff^T$, which generally breaks the symmetry. Charging the entropy cost
+of creating such structure remains necessary for a general bridge.
+The proposition alone is not a posterior sample-complexity theorem.

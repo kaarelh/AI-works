@@ -1,0 +1,235 @@
+\section{Parity remains hard at nearly logarithmic learner depth}
+\label{sec:critical-nearly-logarithmic-depth}
+
+The comparison can be extended to a larger growing-depth range by
+retaining the leading constant in both the interpolating competitor's
+rate and the transport lower bound. The first improvement comes from
+tracking the freely cooling feature variance during mean amplification.
+It avoids charging a fixed loss at every hidden layer.
+
+\begin{lemma}[Mean amplification with its leading constant]
+\label{lem:critical-sharp-mean-amplification}
+Fix $a\in(0,1]$. Suppose a first-feature law $\nu$ has entropy at most
+$D\ge1$ relative to the unmodified first-feature law $\mu$, and its
+mean $h$ satisfies $g(x)h(x)\ge a$ everywhere, for a Boolean $g$.
+Put $q=(D/a^2)^{1/L}$. There are constants $K,P,C$, depending only on
+$a$, such that, if $L\ge2$ and $q\ge KL^P$, then
+\[
+ J_L(g)\le\frac q2\{L+C\log L\}.
+\]
+The first law and the subsequent covariance diagonals need not be
+constant over inputs.
+\end{lemma}
+
+\begin{proof}
+Let $F(v)=\mathbb E\tanh^2(\sqrt vZ)$ and $u_s=F^s(2)$.
+The function $F$ is nondecreasing and one-Lipschitz. Monotonicity is
+pointwise in $v$, and Gaussian differentiation gives $F'\le1$ because
+$(\tanh^2)''\le2$. On $[0,2]$, one has $v-F(v)\ge cv^2$ with
+universal $c>0$: the ratio tends to two at zero and is strictly
+positive away from zero. It follows that
+\[
+ u_1<1,\qquad u_s\le\frac{C_0}{s+1},\qquad
+ \sum_{s=1}^L u_s\le C_1\log(L+1).
+\]
+For a centered Gaussian $G$ of variance $v$, the same second-derivative
+bound and symmetry give
+\[
+ \mathbb E\tanh^2(G+t)\le F(v)+t^2.
+\]
+For $t\ge0$, integration of
+$\mathbb E\operatorname{sech}^2(G+s)\ge1-v-s^2$ gives the convenient
+weaker estimate
+\[
+ \mathbb E\tanh(G+t)\ge t(1-v-t^2).
+\]
+
+Set $\theta=q/(2D)=1/(2a^2q^{L-1})$.
+Use $(1-\theta)\mu+\theta\nu$ at the first hidden layer. Its entropy
+is at most $q/2$, and its second moment dominates $b_1b_1^T$ with
+$b_1=\sqrt\theta h$. Its maximum diagonal is at most $u_1+\theta$.
+For $L=2$, a readout proportional to $b_1$ costs at most $q/4$,
+proving the assertion. Assume henceforth $L\ge3$.
+
+Let $\kappa=1-u_1>0$, $\epsilon=\kappa/(8L^2)$, and
+\[
+ c_s=1-u_{s-1}-\epsilon\qquad(2\le s\le L-1).
+\]
+These constants are uniformly positive. The preceding bounds on $u_s$
+imply, for universal constants $A_0,C_2$,
+\[
+ \prod_{s=2}^{L-1}c_s^{-1}\le L^{A_0},\qquad
+ \sum_{s=2}^{L-1}c_s^{-2}\le L-2+C_2\log L.
+\]
+Indeed, $-\log c_s$ and $c_s^{-2}-1$ are both at most a universal
+multiple of $u_{s-1}+\epsilon$.
+
+At hidden layer $s$, shift the reference Gaussian by
+\[
+ m_s(x)=\frac{\sqrt q}{c_s}b_{s-1}(x),
+\]
+and let $b_s$ be its tanh feature mean. For $s=2$, $b_1$ denotes
+the tracked component just constructed; thereafter $b_{s-1}$ is the
+actual preceding mean. In either case its outer product is dominated
+by the preceding second moment. Thus the shift lies in the covariance
+range and costs at most $q/(2c_s^2)$, including singular references.
+
+The centered-Gaussian mean $\mathbb E\tanh(G+t)$ is odd, has the sign
+of $t$, and has absolute value at most $|t|$. Therefore, without yet
+using a variance bound,
+\[
+ \max_x|m_s(x)|
+ \le\frac{L^{A_0}}{\sqrt2a}\,q^{-(L-s)/2}.
+\]
+For $q\ge2$, summing the resulting geometric series gives
+\[
+ \theta+\sum_{s=2}^{L-1}\max_x|m_s(x)|^2
+ \le C_a L^{2A_0}/q.
+\]
+Choose $K,P$ so that $q\ge KL^P$ makes this at most $\epsilon$;
+the same choice ensures $\theta\le1$.
+Since $F$ is one-Lipschitz, the shifted-square estimate gives inductively
+\[
+ \max_x Q_s(x,x)
+ \le u_s+\theta+\sum_{t=2}^s\max_x|m_t(x)|^2.
+\]
+In particular the variance error before layer $s$, together with the
+squared current shift, is at most $\epsilon$.
+The shifted-mean estimate consequently yields
+\[
+ g(x)b_s(x)\ge c_s g(x)m_s(x)
+             =\sqrt q\,g(x)b_{s-1}(x).
+\]
+The last hidden mean has global signed margin at least
+\[
+ \sqrt\theta a q^{(L-2)/2}=\frac1{\sqrt{2q}}.
+\]
+A readout proportional to this mean has output margin $1/2$ and costs
+at most $q/4$. Adding all costs gives
+\[
+ \frac q2+\frac q2\sum_{s=2}^{L-1}c_s^{-2}+\frac q4
+ \le\frac q2\{L+C\log L\},
+\]
+as required.
+\end{proof}
+
+\begin{lemma}[Joint optimization of the transport budget]
+\label{lem:critical-joint-budget}
+If a Boolean function depends on all $d$ original input coordinates,
+then any admissible critical path of cost $A$ satisfies, for every $t>0$,
+\[
+ d\le8(2+1/t)^{L-2}
+ \left(\frac{A+(L-2)t}{L-1}\right)^{L-1}
+ \exp\!\left(2\sqrt{2A/d}\right).
+\]
+In particular, if $A\le(q/2)\{L+C\log L\}$, then
+\[
+ d\le4q^{L-1}
+ \exp\!\left(C'\log L+C'L/\sqrt q+2\sqrt{2A/d}\right),
+\]
+where $C'$ depends only on $C$.
+\end{lemma}
+
+\begin{proof}
+Use the sharper pathwise transport inequality
+\eqref{eq:critical-transport-exact-budget}, with readout cost $r$,
+hidden costs $D_s$, and $k\ge d$ relevant augmented coordinates.
+Cauchy--Schwarz gives
+\[
+ (1+\sqrt{2D_s})^2\le(2+1/t)(D_s+t).
+\]
+The arithmetic-geometric mean inequality gives
+\[
+ r\prod_{s=2}^{L-1}(D_s+t)
+ \le\left(\frac{A+(L-2)t}{L-1}\right)^{L-1}.
+\]
+The first-layer factor is at most $\exp(2\sqrt{2A/d})$.
+Combining these facts proves the first display, also when $L=2$ and
+the products are empty. For the second choose $t=\sqrt q$, factor out
+$2^{L-2}$ and $(q/2)^{L-1}$, and use
+$\log(1+u)\le u$. The resulting errors are bounded by
+$C'\log L+C'L/\sqrt q$.
+\end{proof}
+
+\begin{theorem}[Critical parity lower bound at nearly logarithmic depth]
+\label{thm:critical-nearly-logarithmic-depth}
+Fix $0<\eta<1$. Let the target be full parity on $d$ coordinates and
+let integer depths $L=L(d)\ge2$ satisfy
+\[
+ L=o\!\left(\frac{\log d}{\log\log d}\right).
+\]
+Put $M=d^{1/(L-1)}$, and draw
+$1\le n\le M^{1-\eta}$ independent uniform cube inputs, labeled by
+parity. For all sufficiently large $d$, with training probability at
+least $1-1/(2M)$, the original globally margin-conditioned posterior at
+$\gamma=1$ satisfies
+\[
+ \lim_{N\to\infty}\text{Gibbs error}=\frac12,
+ \qquad
+ \liminf_{N\to\infty}\Pr_x\{p_N(x)<2/3\}\ge\frac14.
+\]
+For each $d$, the width limit fixes $d,L,n$ first. Moreover, there is a
+universal $c>0$ for which the same conclusion holds for every
+\[
+ 2\le L\le c\eta\frac{\log d}{\log\log d},
+\]
+once $d$ is sufficiently large depending on $\eta$.
+\end{theorem}
+
+\begin{proof}
+Let $m$ be the smallest odd integer at least
+$12n\log(2M(n+1))$. For large $d$,
+\[
+ m\le50n\log M\le50M^{1-\eta}\log M=o(M)\le o(d).
+\]
+Lemma~\ref{lem:critical-oriented-majority} supplies, with the stated
+training probability, a consistent Boolean function and a first-feature
+law of entropy $D=dm$ and global signed mean at least $a=1/100$.
+Put $q=(10000dm)^{1/L}$. The depth hypothesis implies
+\[
+ \log q\ge\frac{\log d}{L}\gg\log\log d,
+\]
+so $q$ exceeds every fixed power of $L$.
+Lemma~\ref{lem:critical-sharp-mean-amplification} gives a consistent
+competitor of rate at most $U=(q/2)\{L+C\log L\}$.
+
+Suppose a Boolean function retaining all $d$ coordinates had rate at
+most $U$. Apply Lemma~\ref{lem:critical-joint-budget} to paths whose
+costs approach its infimum, then use continuity and monotonicity in
+the budget. It follows that
+\[
+ \log\frac d{q^{L-1}}
+ \le\log4+C'\log L+C'L/\sqrt q+2\sqrt{2U/d}.
+\]
+The last two terms tend to zero. For $L\ge3$, use $m\le d$,
+$q\le(10000d^2)^{1/L}$, and $L=O(\log d)$ to see $U/d\to0$.
+For $L=2$, use $m\le50d^{1-\eta}\log d$ instead.
+On the other hand, the sample bound and $q^L=10000dm$ give
+\[
+ \log\frac d{q^{L-1}}
+ \ge\frac{\eta\log d}{L}-\log(500000\log M).
+\]
+Here the first term dominates $\log\log d$, whereas the other
+logarithmic terms are $O(\log\log d)$. This is a contradiction.
+There is therefore a strict rate gap between the consistent competitor
+and every Boolean function retaining all $d$ input coordinates.
+
+The exact finite-domain posterior rate principle makes posterior mass
+on the latter class tend to zero. Every remaining function omits a
+parity coordinate and has uniform parity error exactly $1/2$.
+This proves the Gibbs limit, and Markov's inequality gives the displayed
+confidence-error bound from $\mathbb E_xp_N(x)\to1/2$.
+
+For the final depth range, choose the universal $c$ small enough that
+$\log q\ge\log d/L$ guarantees the fixed power of $L$ required by
+the amplification lemma, and that
+$\eta\log d/L$ exceeds $(C'+2)\log\log d$ by a fixed factor.
+This is possible independently of $\eta\le1$.
+The remaining estimates hold for all sufficiently large $d$ depending
+on $\eta$, completing the proof.
+\end{proof}
+
+This theorem concerns the actual posterior, including mixtures of
+minimizers. It does not reach the order-$\log^2d$ depths at which
+controlled parity seeds attain a bounded absolute rate, and it does
+not by itself give an exponential-in-teacher-depth lower bound.

@@ -330,13 +330,36 @@ when $L\ge a(D+1)\log R$, for a universal constant $a$. The construction inserts
 
 There is also an actual-posterior comparison: every consistently labeled sample of at most $n$ points has a globally margined extension with rate at most $V_{\ast}+a\log^2(d+n+L+2)/L$, once $L\ge a\log(d+n+L+2)$. With dimension, depth, and sample fixed, the posterior concentrates below this ceiling as width grows. Thus the remaining learning problem concerns the relative rates of accurate and inaccurate extensions inside a narrow interval around $V_{\ast}$. The upper bound for the teacher alone does not settle that comparison.
 
+The excess rate itself now has matching bounds for simple targets. For constants, dictators, and every parity,
+
+$$
+J_L(f)-V_{\ast}=\Theta\!\left(\frac{\log^2 d}{L}\right)
+\qquad\text{when }C\log(d+2)\le L\le d^{c_0},
+$$
+
+for universal constants and sufficiently large $d$. The lower bound holds for every Boolean function. The proof controls the accumulated layerwise entropy above the common scalar cost: a path with layer costs $D_s$ and total cost at most $V_{\ast}+\epsilon$ satisfies
+
+$$
+\sum_s\sqrt{D_s}\le C\left[\log(L+1)+\sqrt{L\epsilon}\right].
+$$
+
+This controls one source of depth dependence: the paper proves a covariance-stability theorem with amplification at most $\mathrm{poly}(L)\exp(C\sqrt{L\epsilon})$, including uniform output transfer. This factor is polynomial in depth when $L\epsilon=O(\log^2 L)$. The transfer changes the controlled feature laws; it does not assert robustness of arbitrary sampled networks.
+
+The needed representation theorem is still missing. In particular, a polynomial sample bound in $d,L$ and the normalized excess $L[J_L(f)-V_{\ast}]_+$ alone cannot suffice: at quadratic depth that quantity is polynomial for **every** Boolean truth table, and arbitrary truth tables still need exponentially many observations. Nor does a small conditional-entropy budget by itself force a simple predictor uniformly over depth; later layers can amplify small differences. The paper proves shallow representation bounds under two additional structural hypotheses, and states a target-relative error-set criterion that would suffice for learning. Neither hypothesis is established for general posterior minimizers.
+
 A separate rate comparison does prove a critical parity lower bound. At fixed $L\ge2$, put
 
 $$
 M=\min\lbrace k,d^{1/(L-1)}\rbrace .
 $$
 
-For fixed $\eta>0$, $M\to\infty$, and $n\le M^{1-\eta}$, the limiting Gibbs error is $1/2$ with high probability over uniform training inputs. Thus full parity remains difficult up to $d^{(1-\eta)/(L-1)}$ examples. This is a **polynomial** lower bound, not the subcritical exponential bound. It is compatible with the fixed-depth polynomial upper theorem and does not resolve the unrestricted joint polynomial-depth question.
+For fixed $0<\eta<1$, $M\to\infty$, and $n\le M^{1-\eta}$, the limiting Gibbs error is $1/2$ with high probability over uniform training inputs. For **full parity**, the bound up to $d^{(1-\eta)/(L-1)}$ examples also holds throughout
+
+$$
+2\le L\le c\eta\frac{\log d}{\log\log d},
+$$
+
+for a universal $c>0$ and sufficiently large $d$. The confidence-error lower limit is at least $1/4$, with training probability at least $1-1/(2d^{1/(L-1)})$. Dimension, depth, and sample size are fixed before width tends to infinity; mixtures of minimizers are included. This is a **polynomial** sample lower bound, not the subcritical exponential bound or a disproof of joint polynomial-depth learning. It does not reach the order-$\log^2 d$ depths at which parity has bounded absolute rate.
 
 ## 18. Can the exponential dependence on the *teacher's* depth be removed unconditionally?
 

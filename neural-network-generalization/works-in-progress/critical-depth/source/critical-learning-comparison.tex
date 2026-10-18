@@ -1,0 +1,141 @@
+\section{What a rate bound does and does not imply for learning}
+\label{sec:critical-learning-comparison}
+
+The controlled-circuit theorem is a target representation bound. A
+learning theorem additionally needs to compare the inaccurate extensions
+of a training sample with its true target. The next proposition shows
+that normalized excess rate alone cannot supply a general complexity
+measure for learning.
+
+\begin{proposition}[Normalized action alone does not control learning]
+\label{prop:critical-action-learning-obstruction}
+There are depths $L_d=\Theta((d+1)^2)$ and a universal constant $C$
+such that every Boolean function satisfies
+\[
+ \max\{0,L_d[J_{L_d}(f)-V_*]\}\le C(d+1)^2.
+\]
+Nevertheless, let $m=2^d$ and $n\le m/4$. For every learning rule
+that assigns probabilities to the two labels after seeing $n$ uniform
+cube inputs and their correct labels, there is a Boolean target $f$
+for which
+\[
+ \Pr_S\!\left\{
+   \Pr_X\{p_S(f(X)\mid X)<2/3\}\ge1/4
+ \right\}\ge1-e^{-m/24}.
+\]
+This holds for iid inputs and for sampling without replacement.
+Randomness of the learning rule may be included in the probability.
+Consequently no universal sample bound can be polynomial solely in
+$d$, $L$, and positive normalized excess $L[J_L(f)-V_*]$.
+The hard target in this statement need not have a small circuit.
+\end{proposition}
+
+\begin{proof}
+The uniform all-function rate upper bound in
+Theorem~\ref{thm:critical-rate-flattening} gives
+\[
+ J_L(f)\le V_*+C\frac{(d+1)^2+\log^2(2L)}L
+ \qquad\text{when }L\ge C_0(d+1).
+\]
+Take $L_d$ to be a sufficiently large universal multiple of
+$(d+1)^2$, rounded up.
+
+For the learning claim, first choose the entire target truth table
+using independent fair signs. Condition on the sample inputs, their
+observed labels, and the learner's randomness. At least
+$u\ge m-n\ge3m/4$ inputs are unobserved. Their labels are still
+independent fair signs, while the prediction probabilities are fixed.
+At any such input at most one label can have probability at least
+$2/3$, so the failure indicator has probability at least $1/2$.
+These indicators are independent across the unobserved inputs.
+Hoeffding's inequality gives
+\[
+ \Pr\{\text{fewer than }u/3\text{ unseen inputs fail}\}
+ \le e^{-u/18}\le e^{-m/24}.
+\]
+Otherwise at least $u/3\ge m/4$ inputs fail. Averaging over the
+random truth table supplies a deterministic target with the asserted
+sample probability. Repeated observations only increase the number
+of unobserved inputs. Finally, any fixed polynomial in the displayed
+complexity parameters is eventually smaller than $2^d/4$.
+The obstruction also applies to guarantees valid at all sufficiently
+large widths with a target-dependent width threshold: at each fixed
+$d$ there are finitely many targets, so one can take the maximum of
+their thresholds before applying the learning lower bound.
+\end{proof}
+
+\paragraph{Why direct prior-mass comparisons retain a width cost.}
+Write $\pi_N$ for the original globally margin-conditioned critical
+prior on Boolean functions, and $J_{\min}=\min_gJ_L(g)$. At fixed
+domain and depth the exact finite-class rates imply
+\[
+ -\frac1N\log\pi_N(f)\longrightarrow J_L(f)-J_{\min}.
+\]
+Thus a point-mass PAC-Bayes comparator retains a linear width cost
+whenever the target rate exceeds the minimum. More generally, if a
+comparator law $Q_N$ is supported on a nonempty function class
+$\mathcal B$, then
+\[
+ D(Q_N\Vert\pi_N)\ge-\log\pi_N(\mathcal B)
+ =N\left[\min_{g\in\mathcal B}J_L(g)-J_{\min}\right]+o(N).
+\]
+The inequality follows by conditioning $\pi_N$ on $\mathcal B$.
+This does not refute width-independent learning; it explains why the
+fixed-depth proofs instead control competing functions whose rates
+are no larger than the target's.
+
+\begin{proposition}[A target-relative error-witness criterion]
+\label{prop:critical-error-witnesses}
+Fix a Boolean target $f$, a distribution $\mathcal D$, and
+$\epsilon,\delta\in(0,1)$. Define
+\[
+ \mathcal A_f=\{g:J_L(g)\le J_L(f)\}.
+\]
+Suppose there are sets $B_1,\ldots,B_M$ such that every
+$g\in\mathcal A_f$ of error greater than $\epsilon/6$ has some
+index $j$ with
+\[
+ B_j\subseteq\{x:g(x)\ne f(x)\},\qquad
+ \mathcal D(B_j)\ge\epsilon/12.
+\]
+The sets may depend on $f$ and $\mathcal D$, but not on the sample.
+If
+\[
+ n\ge\frac{12}{\epsilon}
+       \left[\log M+\log(1/\delta)\right],
+\]
+then, at all sufficiently large learner widths, the original critical
+posterior has confidence error
+$\mathcal D\{x:p_N(f(x)\mid x)<2/3\}\le\epsilon$
+with sample probability at least $1-\delta$.
+The width threshold can be chosen uniformly over the realized sample.
+\end{proposition}
+
+\begin{proof}
+An inaccurate consistent function in $\mathcal A_f$ forces the sample
+to miss one of the $B_j$. A union bound bounds this event by
+$M\exp(-n\epsilon/12)\le\delta$. On the complementary event,
+all consistent members of $\mathcal A_f$ have error at most
+$\epsilon/6$.
+
+Finiteness of the Boolean function class and the exact prior rates give
+\[
+ \frac{\pi_N(\mathcal A_f^c)}{\pi_N(f)}\longrightarrow0.
+\]
+For every sample labeled by $f$, its posterior normalizer is at least
+$\pi_N(f)$. Thus, for all sufficiently large widths, posterior mass
+outside $\mathcal A_f$ is at most $\epsilon/6$, uniformly over
+the sample. On the good-sample event its Gibbs error is at most
+$\epsilon/3$. At every point of confidence error the posterior
+wrong-label probability exceeds $1/3$, giving the claimed bound.
+Mixtures of tied rate minimizers are included in this argument.
+\end{proof}
+
+The witness condition is a one-sided containment statement about error
+sets. An ordinary $L^1(\mathcal D)$ cover does not suffice: a predictor
+can change its labels on a small-measure set chosen to contain the
+observed points. Taking one witness for each inaccurate function
+recovers the usual cardinality proof. A substantially smaller common
+family could give a learning theorem even when that proof is wasteful;
+the controlled-circuit rate upper bound alone does not provide such
+a family.

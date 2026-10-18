@@ -1,0 +1,272 @@
+\section{Separating the scalar baseline from directional entropy}
+\label{sec:critical-near-baseline-decomposition}
+
+This section gives a structural consequence of a critical variational
+path whose cost is close to the universal scalar value $V_*$. It does
+not yet give a product-norm or sample-complexity bound.
+
+\begin{lemma}[Last-exit occupation with an additive budget]
+\label{lem:critical-additive-occupation}
+Let $q_0,\ldots,q_H\in(0,1]$ and $D_1,\ldots,D_H\ge0$ satisfy
+\[
+ D_j\ge q_j-q_{j-1}+cq_{j-1}^2,\qquad
+ \sum_{j=1}^iD_j\le\varepsilon+C_0q_i,
+ \qquad \sum_{j=1}^H D_j\le3,
+\]
+where $c,C_0>0$ are fixed and $0\le\varepsilon\le1$.
+Writing $m=\min_{0\le j\le H}q_j$, there is a constant $C$,
+depending only on $c,C_0$, such that
+\[
+ H\le C\left(\frac1m+\frac{\varepsilon}{m^2}\right).
+\]
+Consequently, for $H\ge1$,
+\[
+ m\le\frac{C'}H+C'\sqrt{\frac{\varepsilon}H}.
+\]
+\end{lemma}
+
+\begin{proof}
+For an interval of $\ell$ transitions whose pre-states are at least
+$u>0$, the dissipation inequality and concavity of $q\mapsto-1/q$
+give
+\[
+ c\ell\le
+ \frac{\text{entropy on the interval}}{u^2}
+ +\frac1{q_{\rm end}}-\frac1{q_{\rm start}}.
+\]
+Fix a universal $u_*\in(0,1/4)$. If $m\ge u_*$, applying this
+bound to the entire path gives a universal upper bound for $H$,
+which suffices. Otherwise choose the least $J$ with
+$u_J=2^Jm\ge u_*$. Define the nondecreasing last-exit indices
+\[
+ \tau_j=\max\{i:q_i\le u_j\},\qquad 0\le j\le J.
+\]
+The prefix ending at $\tau_0$ has entropy at most
+$\varepsilon+C_0m$ and all its states are at least $m$, so its
+length is at most $C(\varepsilon/m^2+1/m)$.
+
+For a nonempty block from $\tau_j$ to $\tau_{j+1}$, remove its
+first transition. All remaining pre-states exceed $u_j$, and the
+endpoint lies in $(u_j,2u_j]$. The entropy of this interval is at
+most the full prefix entropy at $\tau_{j+1}$, hence at most
+$\varepsilon+2C_0u_j$. Its length is therefore at most
+$C(\varepsilon/u_j^2+1/u_j)$. Restoring the removed step adds one.
+After $\tau_J$, remove one first step if present; the remaining
+pre-states exceed $u_J\ge u_*$ and the remaining entropy is at
+most three, so this tail has universally bounded length.
+Summing the geometric series in $u_j^{-1}$ and $u_j^{-2}$,
+and absorbing the at most $J$ removed transitions, proves the first
+claim. Solving $Hm^2\le C(m+\varepsilon)$ proves the second.
+\end{proof}
+
+\begin{theorem}[Near-baseline directional budget]
+\label{thm:critical-directional-budget}
+Consider an admissible critical variational path of depth $L\ge2$
+with hidden second moments $Q_0,\ldots,Q_H$, $H=L-1$, hidden
+entropy costs $D_1,\ldots,D_H$, output $z$, and readout cost
+\[
+ r=\tfrac12z^{\mathsf T}Q_H^+z.
+\]
+Assume its total cost $A=\sum_{j=1}^H D_j+r$ satisfies
+$A\le V_*+\varepsilon$ with $0\le\varepsilon\le1$ and $A\le3$,
+and that $f(x)z(x)\ge1/2$ on the Boolean cube.
+
+Choose a bichromatic cube edge if $f$ is nonconstant, and an
+antipodal pair if $f$ is constant. In the first case set
+$b=(e_x-e_y)/2$; in the second set $b=(e_x+e_y)/2$.
+Write
+\[
+ v_j=b^{\mathsf T}Q_jb,\qquad
+ a=b^{\mathsf T}z,\qquad
+ m=\min_{0\le j\le H}v_j,
+\]
+and choose an index $i$ attaining the minimum. All $v_j$ are
+positive, $v_0=1/d$, and
+\[
+ m\le\frac C H+C\sqrt{\frac{\varepsilon}H}.
+\]
+
+For each $j>i$, lift the controlled feature law through the inverse
+coordinatewise $\tanh$ map to a preactivation law $\rho_j$.
+Let $\eta_j$ be its pushforward under $G\mapsto b^{\mathsf T}G$,
+and define the conditional entropy
+\[
+ E_j=D(\rho_j\Vert N(0,Q_{j-1}))
+       -D(\eta_j\Vert N(0,v_{j-1}))\ge0.
+\]
+Then the nonnegative quantities
+\[
+ r_\perp=r-\frac{a^2}{2v_H},\qquad
+ r_{\rm amp}=\frac{a^2-1/4}{2v_H}
+\]
+satisfy
+\[
+ \boxed{\quad
+ \sum_{j=1}^iD_j+\sum_{j=i+1}^H E_j
+       +r_\perp+r_{\rm amp}
+ \le\varepsilon+C_0m.
+ \quad}
+\]
+In particular this budget is at most
+$C\{\varepsilon+H^{-1}+\sqrt{\varepsilon/H}\}$.
+More precisely, define the nonnegative scalar Bellman slacks
+\[
+ s_j=D(\eta_j\Vert N(0,v_{j-1}))+V(v_j)-V(v_{j-1}),\qquad
+ s_{\rm out}=\frac1{8v_H}-V(v_H).
+\]
+They satisfy the exact decomposition
+\[
+ A-V(m)=\sum_{j=1}^iD_j+\sum_{j=i+1}^H(E_j+s_j)
+          +r_\perp+r_{\rm amp}+s_{\rm out}.
+\]
+Thus all the displayed nonnegative terms together obey the same
+upper bound $\varepsilon+C_0m$.
+\end{theorem}
+
+\begin{proof}
+The chosen pair has $|a|\ge1/2$ and input variance $v_0=1/d$.
+The signed-pair comparison in
+Lemma~\ref{lem:critical-pair-scalar-comparison} gives, for every
+prefix,
+\[
+ \sum_{j=1}^tD_j\le A-V(v_t)
+ \le\varepsilon+C_0v_t.
+\]
+Here $V_*-V(v)\le C_0v$ extends from small $v$ to $(0,1]$
+by increasing $C_0$, since $0\le V(v)\le V_*<2$.
+The same comparison gives the dissipation inequality, and the full
+hidden entropy is at most $A\le3$. Thus
+Lemma~\ref{lem:critical-additive-occupation} gives the claimed
+minimum-variance bound. Positivity follows because a zero signed-pair
+variance propagates under every finite-entropy transition and is
+incompatible with $|a|\ge1/2$.
+
+Coordinatewise $\tanh$ is a measurable bijection onto its image, so
+lifting preserves relative entropy. The chain rule under the scalar
+projection gives $D_j=D_j^{\rm sc}+E_j$, where
+$D_j^{\rm sc}=D(\eta_j\Vert N(0,v_{j-1}))$; equivalently, $E_j$
+is the average KL divergence of the controlled conditional law given
+$b^{\mathsf T}G$ from the corresponding conditional Gaussian law.
+This identity remains valid for singular covariances by disintegration
+on their Gaussian support.
+
+The signed-pair contraction inequality gives
+$\int\tanh^2s\,d\eta_j(s)\ge v_j$. The scalar Bellman inequality
+and monotonicity of $V$ therefore imply
+\[
+ D_j^{\rm sc}\ge V(v_{j-1})-V(v_j).
+\]
+This proves $s_j\ge0$, while the length-zero scalar path gives
+$s_{\rm out}\ge0$.
+After summing over $j>i$ and adding $1/(8v_H)\ge V(v_H)$,
+\[
+ \sum_{j=i+1}^H D_j^{\rm sc}+\frac1{8v_H}\ge V(v_i).
+\]
+The finite readout cost implies $z\in\operatorname{range}Q_H$.
+Cauchy--Schwarz on that range gives $r_\perp\ge0$, and
+$r_{\rm amp}\ge0$ follows from $|a|\ge1/2$. Since
+\[
+ r=\frac1{8v_H}+r_\perp+r_{\rm amp},
+\]
+the total path cost is at least
+\[
+ \sum_{j=1}^iD_j+\sum_{j=i+1}^H E_j
+       +r_\perp+r_{\rm amp}+V(v_i).
+\]
+Subtract $V(v_i)$ and use $A\le V_*+\varepsilon$ and $v_i=m$
+to obtain the boxed inequality. Retaining the scalar slacks in the
+same telescoping calculation gives the asserted exact decomposition.
+\end{proof}
+
+\begin{corollary}[Exact classification by one anchored kernel section]
+\label{cor:critical-anchored-section}
+Under the theorem's hypotheses set $B=\varepsilon+C_0m$.
+If $B<1/8$, then on the entire Boolean cube
+\[
+ f=\operatorname{sign}\!\left(\frac a{v_H}Q_Hb\right).
+\]
+If $B\le1/32$, then the signed section
+$\operatorname{sign}(a)Q_Hb$ has uniform margin at least
+$1/(16A)\ge1/48$ for $f$.
+\end{corollary}
+
+\begin{proof}
+Put $z_\perp=z-(a/v_H)Q_Hb$. Orthogonal decomposition in the
+$Q_H^+$ seminorm gives
+\[
+ \tfrac12z_\perp^{\mathsf T}Q_H^+z_\perp=r_\perp\le B.
+\]
+Since $Q_H(u,u)\le1$, coordinatewise Cauchy--Schwarz gives
+$|z_\perp(u)|\le\sqrt{2B}$. This is strictly less than the output
+margin $1/2$ when $B<1/8$, proving the sign identity. If $B\le1/32$,
+the anchored output has margin at least $1/4$. Finally
+$a^2/(2v_H)\le A$ and $|a|\ge1/2$ imply
+$|a|/v_H\le4A$. Dividing the anchored output by that factor gives
+the asserted margin for the unscaled signed section.
+\end{proof}
+
+\begin{proposition}[Zero directional entropy gives a shallow classifier]
+\label{prop:critical-zero-directional-entropy}
+Under the theorem's hypotheses, suppose additionally that
+\[
+ \sum_{j=1}^iD_j=0,\qquad
+ \sum_{j=i+1}^H E_j=0,\qquad r_\perp<1/8.
+\]
+Then $f$ has a depth-two $\tanh$ implementation with unit global
+margin, width polynomial in $d$, and product of layer Frobenius
+norms polynomial in $d$. The bounds are independent of $L$.
+\end{proposition}
+
+\begin{proof}
+Let $\mathcal G$ be the group of signed coordinate permutations
+fixing the two selected cube inputs individually. It fixes the vector
+$b$ under its induced permutation of input indices. The raw input
+covariance is invariant under this group, and the zero-entropy prefix
+is exactly the uncontrolled feature recursion, so $Q_i$ is invariant.
+
+At a later layer, $E_j=0$ means that the controlled preactivation
+law is obtained by changing only the distribution of
+$S=b^{\mathsf T}G$ and retaining the reference conditional Gaussian
+law given $S$. If the reference covariance is $\mathcal G$ invariant,
+so is this conditional construction, because $S$ is fixed by every
+group element. Coordinatewise $\tanh$ preserves the invariance.
+Induction therefore makes $Q_H$ invariant. The anchored section
+$Q_Hb$ is consequently constant on every $\mathcal G$ orbit.
+The readout residual bound, by the preceding proof, identifies its
+sign with $f$.
+
+After an input sign change, an edge pair is
+$(1,\ldots,1)$ and $(-1,1,\ldots,1)$. Permuting coordinates
+$2,\ldots,d$ shows that $f$ depends only on $x_1$ and
+$\sum_{j=2}^d x_j$, giving at most $2d$ orbit classes.
+These classes have distinct, separated integer codes
+\[
+ t(x)=(d+1)x_1+\sum_{j=2}^d x_j.
+\]
+For an antipodal pair the corresponding orbit classes are determined
+by $t(x)=\sum_{j=1}^d x_j$ and number at most $d+1$.
+In either case the codes have magnitude $O(d)$ and gaps at least one.
+
+Order their distinct values $t_1<\cdots<t_M$, and let $f_j$ be the
+desired sign at $t_j$. With thresholds halfway between consecutive
+values, the exact step expansion is
+\[
+ f(x)=c_0+\sum_{j=1}^{M-1}c_j
+             \operatorname{sign}(t(x)-\theta_j),
+ \qquad c_j=(f_{j+1}-f_j)/2,\quad c_0=(f_1+f_M)/2.
+\]
+All these coefficients have absolute value at most one.
+Replace each step by $\tanh(A(t-\theta_j))$ with
+$A=C\log(d+2)$. The sum's uniform error is at most $1/4$ for a
+sufficiently large universal $C$. A constant first-layer feature
+implements $c_0$ exactly by adjusting its readout coefficient.
+The resulting width, incoming coefficients, and readout norm are
+polynomial in $d$, and doubling the readout gives unit margin.
+Input sign changes preserve Frobenius norms. This proves the claim.
+\end{proof}
+
+The zero-entropy proposition is a rigidity statement. A quantitative
+version controlling intrinsic product norm by
+$\operatorname{poly}(d,L)\exp\{C\sqrt{L\varepsilon}\}$ would require
+stability of the conditional-Gaussian suffix under the small
+directional budget. That implication is not proved here.

@@ -1,0 +1,208 @@
+\section{Boolean feature geometry and the limits of a stability argument}
+\label{sec:critical-boolean-kernel-geometry}
+
+The continuous-domain depth lower bound uses exponentially close inputs
+with separated target values. Boolean coding does not preserve that
+obstruction automatically. The free critical kernel retains polynomial
+separation between distinct Boolean inputs, even after arbitrarily many
+layers. Entropy-controlled paths behave differently, however, and can
+contract a selected pair at stretched-exponential speed. These are
+statements about feature geometry, not posterior sample lower bounds.
+
+\begin{proposition}[The free kernel retains linear input geometry]
+\label{prop:critical-free-boolean-geometry}
+Let $\mathcal X\subseteq\{-1,1\}^d$, put $H(x)=(1,x)$, and define
+\[
+ Q_0=d^{-1}HH^{\mathsf T},\qquad
+ Q_{s+1}=\mathbb E[\tanh(G_s)\tanh(G_s)^{\mathsf T}],
+ \qquad G_s\sim N(0,Q_s).
+\]
+There are universal constants $c,C>0$ such that, for every $s\ge0$,
+$Q_s$ has constant diagonal $q_s$ and
+\[
+ \frac c{s+1}\le q_s\le\frac C{s+1},\qquad
+ \frac{Q_s}{q_s}\succeq\frac c{d+1}HH^{\mathsf T}.
+\]
+Consequently, for every $x,y\in\mathcal X$,
+\[
+ Q_s(x,x)+Q_s(y,y)-2Q_s(x,y)
+       \ge\frac{c\,d_{\rm H}(x,y)}{d(s+1)},
+ \qquad
+ 1-\frac{Q_s(x,y)}{q_s}
+       \ge\frac{c\,d_{\rm H}(x,y)}{d+1},
+\]
+where $d_{\rm H}$ is Hamming distance. The constants do not depend on
+the subset or any sampling distribution on it.
+\end{proposition}
+
+\begin{proof}
+Write $F(q)=\mathbb E\tanh^2(\sqrt qZ)$ for a standard Gaussian $Z$.
+The diagonal follows $q_{s+1}=F(q_s)$, starting at
+$q_0=(d+1)/d\in[1,2]$. The expansion
+$F(q)=q-2q^2+O(q^3)$ and compactness give
+$q-F(q)\ge a q^2$ on $(0,2]$, for a universal $a>0$.
+Thus $1/q_{s+1}\ge1/q_s+a$.
+Also $\sinh^2t\ge t^2$ implies
+$\tanh^2t\ge t^2/(1+t^2)$, and Cauchy--Schwarz yields
+\[
+ F(q)\ge q\,\mathbb E\frac{Z^2}{1+qZ^2}
+       \ge\frac q{1+3q}.
+\]
+Hence $1/q_{s+1}\le1/q_s+3$, proving the diagonal bounds.
+
+For any centered Gaussian $G$ of constant diagonal $q$, let
+$h(q)=\mathbb E\operatorname{sech}^2(\sqrt qZ)=1-F(q)$.
+Gaussian integration by parts gives
+\[
+ \mathbb E[\tanh(G)G^{\mathsf T}]=h(q)Q.
+\]
+The residual $R=\tanh(G)-h(q)G$ is therefore orthogonal in $L^2$
+to every coordinate of $G$, and
+\[
+ \mathbb E[\tanh(G)\tanh(G)^{\mathsf T}]
+   =h(q)^2Q+\mathbb E[RR^{\mathsf T}]\succeq h(q)^2Q.
+\]
+Representing a singular Gaussian as a linear image of a standard
+Gaussian proves the same identity without a nondegeneracy assumption.
+
+Track $r_0=1/d$ and $r_{s+1}=r_sh(q_s)^2$. Then
+$Q_s\succeq r_sHH^{\mathsf T}$, and $r_s/q_s$ is multiplied by
+\[
+ R_0(q_s)=\frac{q_s[1-F(q_s)]^2}{F(q_s)}.
+\]
+The expansion of $F$ gives $R_0(q)=1+O(q^2)$ at zero.
+Positivity and compactness on $(0,2]$ consequently imply
+$|\log R_0(q)|\le A q^2$ for a universal $A$.
+Moreover
+\[
+ \sum_{s\ge0}q_s^2\le a^{-1}\sum_{s\ge0}(q_s-q_{s+1})\le2/a.
+\]
+The product of all ratio factors is bounded below by $e^{-2A/a}$.
+Since $r_0/q_0=1/(d+1)$, this proves the matrix bound.
+Apply it to $e_x-e_y$ and use
+$\|H(x)-H(y)\|_2^2=4d_{\rm H}(x,y)$ to obtain both distance
+estimates.
+\end{proof}
+
+Thus neither physical Boolean distances nor the free normalized feature
+metric supplies exponentially close pairs when dimension and depth are
+polynomially related. Increasing $d$ exponentially with depth can make
+the normalized distances exponentially small, but a resulting lower
+bound may then be only polynomial in $d$.
+
+\begin{proposition}[A bounded-entropy path can contract one Boolean pair]
+\label{prop:critical-controlled-pair-contraction}
+Fix $T\ge1$, $J>0$, and $d\ge4(1+3T)$. For any specified Boolean
+pair $x,y$ differing in one coordinate, there is a controlled critical
+feature path of $T$ transitions, defined on the entire cube, whose
+total hidden relative entropy is at most $J$ and whose final covariance
+satisfies
+\[
+ Q_T(x,x)=Q_T(y,y)=q_T\ge\frac3{4(1+3T)},
+ \qquad
+ 1-\frac{Q_T(x,y)}{q_T}
+ \le\frac{8(1+3T)}{3d}\exp\{-2\sqrt{TJ}\}.
+\]
+\end{proposition}
+
+\begin{proof}
+At each stage write the selected pair covariance as
+$\left(\begin{smallmatrix}q_s&c_s\\c_s&q_s\end{smallmatrix}\right)$,
+with common variance $a_s=(q_s+c_s)/2$ and contrast variance
+$b_s=(q_s-c_s)/2$. Initially $a_0=1$, $b_0=1/d$.
+In the reference Gaussian, the pair can be written $(A+B,A-B)$,
+where $A,B$ are independent with variances $a_s,b_s$.
+Put $t=\exp(-\sqrt{J/T})$.
+
+In the full reference Gaussian process, decompose
+$G=\mathbb E[G\mid B]+R$ with $R$ independent of $B$.
+Replace it by $t\mathbb E[G\mid B]+R$.
+This changes only the contrast marginal and retains its conditional
+Gaussian law, so its relative entropy is exactly
+\[
+ k(t)=\tfrac12(t^2-1-\log t^2)\le J/T.
+\]
+The inequality follows from $e^{-2u}\le1-2u+2u^2$ for $u\ge0$.
+The construction is valid on the Gaussian support even when the full
+covariance is singular. The contrast remains positive at every finite
+step, because $t>0$ and tanh is strictly increasing. Tanh pushforward
+cannot increase the entropy.
+
+The controlled feature pair is
+$(\tanh(A+tB),\tanh(A-tB))$. Its diagonal is equal, and
+\[
+ q_{s+1}=F\bigl(q_s-(1-t^2)b_s\bigr),\qquad
+ b_{s+1}=\tfrac14\mathbb E\bigl[(\tanh(A+tB)-\tanh(A-tB))^2\bigr]
+                  \le t^2b_s.
+\]
+Thus $b_s\le t^{2s}/d$.
+The function $F$ is increasing and one-Lipschitz: differentiation gives
+\[
+ 0\le F'(q)
+   =\mathbb E\frac{Z\tanh(\sqrt qZ)
+                   \operatorname{sech}^2(\sqrt qZ)}{\sqrt q}
+   \le\mathbb EZ^2=1.
+\]
+Let $\bar q_s$ be the free diagonal sequence from the same initial
+value. Monotonicity and the Lipschitz bound imply
+\[
+ 0\le\bar q_s-q_s\le\sum_{j<s}(1-t^2)b_j\le1/d.
+\]
+Since $\bar q_s\ge1/(1+3s)$, the assumed dimension gives
+$q_s\ge3/[4(1+3s)]$ for $s\le T$.
+Finally $1-c_T/q_T=2b_T/q_T$ gives the claimed estimate, and summing
+$k(t)$ over the $T$ transitions gives the entropy bound.
+\end{proof}
+
+This proposition does not produce a hard target or a low-cost globally
+margined readout separating the pair. It shows why the free-kernel
+separation estimate cannot be imposed on every controlled path.
+A posterior lower bound would additionally need a function-level
+approximation obstruction and a comparison with the cost of fitting the
+training data.
+
+\begin{corollary}[No depth-uniform stability from vanishing directional entropy]
+\label{cor:critical-no-uniform-orbit-stability}
+There are a fixed Boolean target on three inputs and critical paths of
+increasing depth for which the sum of prefix entropy and subsequent
+conditional entropy in
+Theorem~\ref{thm:critical-directional-budget} tends to zero, and the
+readout becomes exactly an anchored kernel classifier, but the target
+stays a fixed positive distance from every function invariant under
+permutations fixing its two anchors. Consequently no modulus tending
+to zero with that entropy budget alone can bound uniform approximation
+by the invariant class independently of depth.
+\end{corollary}
+
+\begin{proof}
+Take $f(u)=u_1u_2$ on $\{-1,1\}^3$, with anchors
+$x=(1,1,1)$ and $y=(-1,1,1)$. They form a bichromatic edge.
+Their stabilizer contains the transposition of coordinates $2$ and
+$3$, under which $f$ is not invariant. For example it exchanges
+$(1,1,-1)$ and $(1,-1,1)$, whose labels are opposite.
+Every invariant real function therefore differs from $f$ by at least
+one at one of these inputs; an invariant Boolean classifier must
+misclassify at least one of them.
+
+The universal upper bound in
+Theorem~\ref{thm:critical-rate-flattening} supplies, for all sufficiently
+large $L$, admissible paths with
+\[
+ A_L\le V_*+\varepsilon_L,
+ \qquad \varepsilon_L=O\!\left(\frac{(1+\log L)^2}{L}\right)
+                  \longrightarrow0.
+\]
+Allow an additional $o(1/L)$ if the variational infimum is not attained.
+Apply Theorem~\ref{thm:critical-directional-budget} to the fixed edge.
+Its minimum pair variance $m_L$ tends to zero, and the prefix plus
+conditional entropy is at most $\varepsilon_L+C_0m_L\to0$.
+The same bound controls the readout's orthogonal slack, so
+Corollary~\ref{cor:critical-anchored-section} identifies its classifier
+exactly with $f$ for large $L$. The invariant-class obstruction above
+remains unchanged, proving the claim.
+\end{proof}
+
+This failure of depth-uniform stability is consistent with a bound
+involving $\sqrt{L\varepsilon}$ or another depth-dependent quantity.
+The example itself has small intrinsic product complexity and is not a
+counterexample to the proposed critical-rate-to-product bound.

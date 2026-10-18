@@ -1,0 +1,234 @@
+\section{Stable transfer of covariance controls}
+\label{sec:critical-bures-transfer}
+
+There is a covariance metric in which free Gaussian feature propagation
+is nonexpansive and an entropy-controlled step has expansion at most
+$1+\sqrt{2D}$. Together with the preceding entropy-budget bound, this
+gives a depth factor $C(H+2)^C\exp(C\sqrt{H\varepsilon})$ when the
+action exceeds the scalar baseline by at most $\varepsilon$.
+This is polynomial in $H$ when $H\varepsilon=O(\log^2(H+2))$.
+Stability does not by itself give a finite-rank or product-norm
+approximation.
+
+Fix a finite input set $X$ and nonnegative weights $w_x$. They may sum
+to one, in which case they define a test distribution. Put
+$\|u\|_w^2=\sum_xw_xu_x^2$. For positive semidefinite matrices
+$Q,Q'$ on $X$, define the weighted Gaussian Bures distance by
+\[
+ d_w(Q,Q')^2=\min_{(G,G')}\mathbb E\|G-G'\|_w^2,
+\]
+where the minimum ranges over centered joint Gaussian couplings with
+marginals $N(0,Q)$ and $N(0,Q')$. The minimum exists. For strictly positive weights this is the usual
+Gaussian quadratic Wasserstein distance after coordinate rescaling;
+zero weights give the corresponding pseudometric. For uniform control,
+we also use the maximum-coordinate Gaussian coupling distance
+\[
+ \Delta_\infty(Q,Q')=
+ \min_{(G,G')}\max_{x\in X}
+       (\mathbb E|G_x-G'_x|^2)^{1/2},
+\]
+with the same class of centered joint Gaussian couplings. Its minimum
+also exists, since the feasible cross-covariance matrices form a compact
+set. Gaussian gluing and Minkowski's inequality give the triangle
+inequality. Both definitions allow singular covariance blocks. In the
+statements below, $\mathfrak d$ may denote either $d_w$ or
+$\Delta_\infty$, with one choice fixed throughout each application;
+the transferred law may depend on that choice.
+
+\begin{lemma}[Second moments give a Gaussian coupling]
+\label{lem:critical-second-moment-coupling}
+For any jointly distributed real vectors $(U,U')$ of finite second
+moment, let $K=\mathbb E UU^{\mathsf T}$ and
+$K'=\mathbb E U'U'^{\mathsf T}$. Then
+\[
+ d_w(K,K')^2\le\mathbb E\|U-U'\|_w^2.
+\]
+Likewise,
+\[
+ \Delta_\infty(K,K')\le
+ \max_x(\mathbb E|U_x-U'_x|^2)^{1/2}.
+\]
+No zero-mean assumption on $U$ or $U'$ is needed.
+\end{lemma}
+
+\begin{proof}
+The uncentered second-moment block of $(U,U')$ is positive semidefinite.
+Use that block as the covariance of a centered joint Gaussian. Its
+weighted difference cost is exactly the right-hand side.
+\end{proof}
+
+\begin{theorem}[Transfer of one controlled transition]
+\label{thm:critical-bures-transfer}
+Let $\rho\ll N(0,Q)$ have finite entropy
+$D=D(\rho\Vert N(0,Q))$, and let
+$K=\mathbb E_\rho[\tanh(G)\tanh(G)^{\mathsf T}]$.
+For every positive semidefinite $Q'$ there is a preactivation law
+$\rho'\ll N(0,Q')$ whose corresponding feature second moment $K'$
+satisfies
+\[
+ D(\rho'\Vert N(0,Q'))\le D,\qquad
+ \mathfrak d(K,K')\le(1+\sqrt{2D})\mathfrak d(Q,Q').
+\]
+The controlled law is transferred; its density formula is not required
+to remain fixed when the reference covariance changes.
+\end{theorem}
+
+\begin{proof}
+Choose an optimal centered joint Gaussian coupling $(G,G')$ for the
+chosen distance between the reference laws. Denote this joint law by $\mu$ and multiply it by
+the density $d\rho/dN(0,Q)$ evaluated at $G$. The resulting joint
+law $\widetilde\rho$ has first marginal $\rho$, joint entropy
+$D(\widetilde\rho\Vert\mu)=D$, and a second marginal $\rho'$
+of entropy at most $D$ by data processing.
+
+Write the reference joint Gaussian as $(G,G')=TZ$, where $Z$ is
+standard Gaussian on the support dimension and $T$ is injective.
+The tilted law corresponds to a law $\eta$ for $Z$ of the same
+entropy $D$. Let $A$ be the linear map taking this whitened variable
+to the weighted difference $(\sqrt{w_x}(G_x-G'_x))_x$. First consider
+$\mathfrak d=d_w$. Then
+\[
+ \operatorname{tr}(AA^{\mathsf T})=d_w(Q,Q')^2.
+\]
+Gaussian quadratic transport, as in
+\eqref{eq:critical-gaussian-transport}, couples $Z_\eta\sim\eta$
+and $Z_0\sim N(0,I)$ with
+$\mathbb E\|Z_\eta-Z_0\|_2^2\le2D$. Hence Minkowski's inequality
+and $\|A\|_{\rm op}\le\|A\|_F$ give
+\[
+ \bigl(\mathbb E_\eta\|AZ\|_2^2\bigr)^{1/2}
+ \le\|A\|_F+\sqrt{2D}\|A\|_{\rm op}
+ \le(1+\sqrt{2D})d_w(Q,Q').
+\]
+Coordinatewise $\tanh$ is one-Lipschitz, so applying it to the
+tilted coupling does not increase this difference norm. Finally apply
+Lemma~\ref{lem:critical-second-moment-coupling} to the resulting
+feature pair.
+
+For $\mathfrak d=\Delta_\infty$, choose its optimal joint Gaussian
+coupling at the start and apply the same transport estimate to each
+scalar row $A_xZ=G_x-G'_x$ separately. Since the operator and Frobenius
+norms of a scalar row agree, the single tilted joint coupling satisfies
+\[
+ (\mathbb E_{\widetilde\rho}|G_x-G'_x|^2)^{1/2}
+ \le(1+\sqrt{2D})(\mathbb E_\mu|G_x-G'_x|^2)^{1/2}
+ \quad\text{for every }x.
+\]
+Apply $\tanh$ and the maximum-coordinate second-moment coupling
+bound. Thus no factor depending on $|X|$ is needed for uniform control.
+This also proves the assertion in singular cases.
+\end{proof}
+
+\begin{corollary}[Free blocks are nonexpansive]
+\label{cor:critical-free-bures-nonexpansion}
+Let $\mathcal F(Q)=\mathbb E_{N(0,Q)}\tanh(G)\tanh(G)^{\mathsf T}$.
+For every integer $t\ge0$,
+\[
+ \mathfrak d(\mathcal F^{\,t}(Q),\mathcal F^{\,t}(Q'))
+ \le \mathfrak d(Q,Q').
+\]
+On two input coordinates, for all covariance matrices with diagonal
+at most two, the map to an entry of $\mathcal F^{\,t}(Q)$ is
+uniformly one-half-H\"older in the three input covariance entries,
+with a constant independent of $t\ge1$.
+\end{corollary}
+
+\begin{proof}
+Take $D=0$ in the theorem and iterate. For the last assertion, in
+dimension two the elementary bound
+$d(Q,Q')\le C\|Q-Q'\|_{\max}^{1/2}$ holds for the unweighted
+distance. One way to see this is to put
+$S=Q+(Q'-Q)_+=Q'+(Q-Q')_+$. Couple each Gaussian to $N(0,S)$ by
+adding independent Gaussian noise, then use the triangle inequality.
+The squared upper bound is at most
+$2\|Q-Q'\|_*\le C\|Q-Q'\|_{\max}$.
+After at least one feature step, all diagonal entries are at most
+one. Under an optimal output Gaussian coupling, Cauchy--Schwarz
+bounds the difference of any second-moment entry by twice the Bures
+distance. Combining the two estimates proves the claim.
+\end{proof}
+
+\begin{corollary}[Near-baseline path stability]
+\label{cor:critical-near-baseline-bures-stability}
+Suppose a critical path has hidden transition entropies
+$D_1,\ldots,D_H$ and starts at $Q_0$. For any starting covariance
+$Q'_0$, there is a transferred path with each hidden entropy no
+larger than the original one and
+\[
+ \mathfrak d(Q_H,Q'_H)
+ \le \mathfrak d(Q_0,Q'_0)\prod_{j=1}^H(1+\sqrt{2D_j})
+ \le \mathfrak d(Q_0,Q'_0)
+       \exp\!\left(\sqrt2\sum_{j=1}^H\sqrt{D_j}\right).
+\]
+If the original path represents a globally margined Boolean function
+with total cost at most $V_*+\varepsilon$, where $\varepsilon\ge0$, then
+\[
+ \mathfrak d(Q_H,Q'_H)
+ \le C(H+2)^C\exp\{C\sqrt{H\varepsilon}\}\,\mathfrak d(Q_0,Q'_0).
+\]
+The second assertion uses the original path's near-baseline
+property; the transferred path is not asserted to preserve its
+global output margins.
+\end{corollary}
+
+\begin{proof}
+Apply Theorem~\ref{thm:critical-bures-transfer} inductively. Lifting
+a feature law through $\operatorname{atanh}$ preserves its entropy,
+so the theorem applies to every hidden control. Use
+$\log(1+u)\le u$ for the first exponential bound and
+Lemma~\ref{lem:critical-sqrt-entropy-budget} for the last bound.
+\end{proof}
+
+\begin{lemma}[Transfer of a readout]
+\label{lem:critical-bures-readout}
+Let $z\in\operatorname{range}Q$ have readout cost
+$r=\tfrac12z^{\mathsf T}Q^+z$. For every positive semidefinite
+$Q'$ there is $z'\in\operatorname{range}Q'$ with
+\[
+ \tfrac12(z')^{\mathsf T}(Q')^+z'\le r,
+ \qquad \|z-z'\|_w\le\sqrt{2r}\,d_w(Q,Q').
+\]
+The same assertion holds with the second estimate replaced by
+$\|z-z'\|_\infty\le\sqrt{2r}\,\Delta_\infty(Q,Q')$.
+\end{lemma}
+
+\begin{proof}
+Use an optimal Gaussian coupling $(G,G')$ for the chosen distance and set
+$\beta=Q^+z$, $Y=\beta^{\mathsf T}G$, and $z'=\mathbb E(G'Y)$.
+Gaussian linear regression shows that $z'$ has readout cost at most
+$\tfrac12\mathbb EY^2=r$. Equivalently this follows from the
+Schur-complement inequality for the joint covariance, including
+singular matrices. Since $z=\mathbb E(GY)$, Hilbert-space
+Cauchy--Schwarz gives
+\[
+ \|z-z'\|_w
+ \le(\mathbb EY^2)^{1/2}
+       (\mathbb E\|G-G'\|_w^2)^{1/2}.
+\]
+This is the required weighted estimate. Applying the same scalar
+Cauchy--Schwarz bound at every coordinate gives the stated uniform
+estimate for a coupling attaining $\Delta_\infty$.
+\end{proof}
+
+For probability weights the readout estimate is in
+$L^2(\mathcal D)$. Using $\Delta_\infty$ instead gives a uniform
+output estimate, without a factor depending on the number of inputs.
+Combining path and readout transfer produces a path with no larger
+total action whose output differs uniformly by at most
+\[
+ \sqrt{2r}\,C(H+2)^C\exp\{C\sqrt{H\varepsilon}\}
+       \Delta_\infty(Q_0,Q'_0).
+\]
+In particular, an error smaller than the original margin preserves
+all output signs. None of these estimates guarantees that
+a high-rank free Gaussian covariance admits a low-rank approximation
+in this metric. For example, with uniform weights on $m$ inputs,
+the identity covariance has squared Bures distance at least
+$1-n/m$ from every covariance of rank at most $n$, and the same lower
+bound holds for $\Delta_\infty^2$. To check this, the unweighted
+Gaussian Bures distance squared from $I_m$ is
+$\sum_i(1-\sqrt{\lambda_i(Q')})^2\ge m-n$; the maximum
+coordinate coupling cost is at least the average coupling cost.
+Thus the stability theorem supplies a controlled propagation factor,
+while a finite representation or compression theorem remains a
+separate requirement.

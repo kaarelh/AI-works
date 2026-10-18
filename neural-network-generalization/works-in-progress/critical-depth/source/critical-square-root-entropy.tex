@@ -1,0 +1,211 @@
+\section{The entropy budget above the scalar baseline}
+\label{sec:critical-sqrt-entropy}
+
+The total action includes an unavoidable scalar cost. Removing that
+baseline gives a stronger bound on the accumulated layerwise distortion
+than Cauchy--Schwarz applied to the total action. The resulting estimate
+also gives a dimension-dependent lower bound on the excess rate.
+Neither conclusion is a posterior sample-complexity theorem.
+
+\begin{lemma}[Square-root entropy along a near-baseline path]
+\label{lem:critical-sqrt-entropy-budget}
+There is a universal $C$ such that every admissible critical path with
+$H=L-1$ hidden transitions, layer entropies $D_1,\ldots,D_H$, and total
+action $A\le V_*+\epsilon$, $\epsilon\ge0$, satisfies
+\[
+ \sum_{j=1}^H\sqrt{D_j}
+ \le C\bigl[\log(H+2)+\sqrt{H\epsilon}\bigr].
+\]
+The path need not have monotone variances or constant diagonal.
+\end{lemma}
+
+\begin{proof}
+Choose the signed pair from the proof of
+Theorem~\ref{thm:critical-sharp-lower}: opposite labels on a cube edge
+for a nonconstant target, or equal labels on an antipodal pair for a
+constant target. Its successive half-difference or half-sum variances
+are $q_0,\ldots,q_H\in(0,1]$, with $q_0=1/d$.
+Positivity follows because zero variance could never subsequently
+produce the required nonzero readout at finite entropy cost.
+The pair comparison and scalar suffix bound give, for universal $c,C_0>0$,
+\begin{equation}\label{eq:critical-sqrt-path-conditions}
+ D_j\ge q_j-q_{j-1}+cq_{j-1}^2,
+ \qquad S_i:=\sum_{j=1}^iD_j
+ \le A-V(q_i)\le\epsilon+C_0q_i.
+\end{equation}
+The small-state bridge extends the last inequality to all $q_i\le1$
+by increasing $C_0$. These are inequalities for the full vector-layer
+entropies, not just their selected-pair marginals.
+
+If $\epsilon\ge1/4$, then $S_H\le V_*+\epsilon\le9\epsilon$,
+and Cauchy--Schwarz gives the claim. Hence assume $\epsilon<1/4$,
+so $S_H<3$. Put $u_*=1/4$ and
+\[
+ a=\max\{\epsilon,(H+1)^{-1}\}.
+\]
+If $a\ge u_*$, then $H$ is universally bounded and the result is
+immediate. We may suppose $a<u_*$.
+
+We use an occupation estimate that does not require monotonicity.
+For any consecutive interval of $\ell$ transitions with pre-states
+at least $u>0$, division of
+\eqref{eq:critical-sqrt-path-conditions} by $q_{j-1}^2$ gives
+\begin{equation}\label{eq:critical-sqrt-occupation}
+ c\ell\le \frac{E}{u^2}+\frac1{q_{\rm end}}-
+                                  \frac1{q_{\rm start}},
+\end{equation}
+where $E$ is its entropy expenditure. Indeed
+\[
+ \frac{q_j-q_{j-1}}{q_{j-1}^2}
+ \ge \frac1{q_{j-1}}-\frac1{q_j};
+\]
+the difference is $(q_j-q_{j-1})^2/(q_{j-1}^2q_j)$.
+If the endpoint is also at least $u$, the interval length is at most
+$(E/u^2+1/u)/c$.
+
+Let $b=\min_iq_i$. If $b\ge u_*$, applying the occupation estimate
+to the whole path bounds $H$ by a universal constant. Otherwise set
+$u_0=\max\{a,b\}<u_*$. Let $J$ be the least integer such that
+$u_J=2^Ju_0\ge u_*$, and define
+\[
+ \tau_j=\max\{i:q_i\le u_j\},\qquad 0\le j\le J.
+\]
+These indices exist and are nondecreasing, and
+$J=O(\log(H+2))$ because $u_0\ge(H+1)^{-1}$.
+
+For the prefix ending at $\tau_0$, consider two cases. If $b\le a$,
+its entropy is at most $\epsilon+C_0a$ and its length at most $H$.
+Its square-root entropy sum is therefore at most
+\[
+ \sqrt{H(\epsilon+C_0a)}
+ \le C\bigl(1+\sqrt{H\epsilon}\bigr).
+\]
+If $b>a$, its endpoint is $b$ and its entropy is at most
+$(1+C_0)b$. Every pre-state is at least $b$, so the occupation estimate
+bounds its length by $C/b$. Cauchy--Schwarz then bounds its
+square-root entropy sum by a universal constant.
+
+For a nonempty block from $\tau_j$ to $\tau_{j+1}$, temporarily
+remove its first transition. All remaining pre-states exceed $u_j$,
+and its endpoint lies in $(u_j,2u_j]$. Its entropy is at most
+\[
+ S_{\tau_{j+1}}\le\epsilon+2C_0u_j\le(1+2C_0)u_j.
+\]
+The occupation estimate bounds its length by $C/u_j$; restoring the
+first transition preserves that form. The entire block has the same
+entropy upper bound. Cauchy--Schwarz therefore bounds its square-root
+entropy sum by a universal constant. Empty blocks contribute zero.
+
+After $\tau_J$, remove a first transition if present. Every remaining
+pre-state and the endpoint exceed $u_J\ge u_*$, while the total
+entropy is below three. The remaining length and its square-root
+entropy sum are universally bounded. Restoring the first transition
+changes only the constant. Summing the initial prefix, the $J$
+blocks, and this final suffix proves the lemma.
+\end{proof}
+
+\begin{theorem}[A lower bound on excess critical rate]
+\label{thm:critical-excess-dimension-lower}
+There is a universal $C$ such that, for every Boolean target $f$,
+input dimension $d\ge1$, and depth $L\ge2$,
+\[
+ \log d\le C\log(L+1)+
+             C\sqrt{L\bigl(J_L(f)-V_*\bigr)_+},
+ \qquad t_+:=\max\{t,0\}.
+\]
+Consequently there are universal $c_0,c_1>0$ and $d_0$ such that
+\[
+ J_L(f)\ge V_*+c_1\frac{\log^2d}{L}
+ \qquad(d\ge d_0,\quad 2\le L\le d^{c_0}).
+\]
+Both statements include constant targets.
+\end{theorem}
+
+\begin{proof}
+Consider an admissible path of cost $A\le V_*+\epsilon$ and the
+same signed pair as in Lemma~\ref{lem:critical-sqrt-entropy-budget}.
+At transition $j$, its scalar preactivation coordinate $B$ is Gaussian
+with variance $q_{j-1}$ under the reference law. Under the controlled
+law, put $r=\mathbb EB^2/q_{j-1}$. Oddness and one-Lipschitzness of
+tanh imply $q_j\le\mathbb EB^2$, for both the half-sum and
+half-difference conventions. Data processing and Gaussian entropy
+duality give
+\[
+ D_j\ge\tfrac12(r-1-\log r).
+\]
+If $q_j>q_{j-1}$, then $r\ge q_j/q_{j-1}>1$. For $r\ge1$,
+$r-1-\log r\ge\tfrac12\log^2r$, since
+$e^s-1-s\ge s^2/2$ for $s\ge0$. Thus in all cases
+\[
+ q_j\le q_{j-1}e^{2\sqrt{D_j}},\qquad
+ q_H\le d^{-1}\exp\left(2\sum_j\sqrt{D_j}\right).
+\]
+The selected scalar variance is positive, so this argument also covers
+singular full covariance matrices.
+
+Let $b$ be the signed pair vector including its factor $1/2$. The
+readout $z$ has $|b^Tz|\ge1/2$ and $b^TQ_Hb=q_H$. Its quadratic action
+and RKHS Cauchy--Schwarz imply
+\[
+ \frac14\le (z^TQ_H^\dagger z)q_H\le2Aq_H.
+\]
+Consequently
+\[
+ \log d\le\log(8A)+2\sum_j\sqrt{D_j}
+ \le C\log(L+1)+C\sqrt{L\epsilon}.
+\]
+Here the lemma bounds the sum. The remaining logarithm is absorbed
+using $A\le V_*+\epsilon<2+\epsilon$:
+it is uniformly bounded for $\epsilon\le1$ and is at most
+$C+C\sqrt\epsilon$ for larger $\epsilon$.
+
+Apply this inequality to arbitrarily near-minimizing paths and let
+$\epsilon$ decrease to $(J_L(f)-V_*)_+$. No attainment of the
+variational infimum is needed. If $J_L(f)<V_*$, paths of cost below
+$V_*$ directly give the same conclusion with $\epsilon=0$.
+
+Finally choose $c_0>0$ sufficiently small and $d_0$ sufficiently large
+that $C\log(L+1)\le\tfrac12\log d$ whenever
+$d\ge d_0$ and $L\le d^{c_0}$. The first inequality then forces
+$J_L(f)>V_*$ and gives the second with $c_1=1/(4C^2)$.
+\end{proof}
+
+\begin{corollary}[Matching excess-rate order for parities]
+\label{cor:critical-parity-excess-order}
+There are universal $c,C,C_0,c_0>0$ and $d_0$, with $c_0\le1$, such
+that every signed parity $f=\pm\chi_S$, $S\subseteq[d]$, satisfies
+\[
+ c\frac{\log^2d}{L}\le J_L(f)-V_*
+       \le C\frac{\log^2d}{L}
+\]
+whenever $d\ge d_0$ and
+\[
+ C_0\log(d+2)\le L\le d^{c_0}.
+\]
+This includes both constants and signed dictators, and the constants
+are independent of the parity degree.
+\end{corollary}
+
+\begin{proof}
+The lower bound is Theorem~\ref{thm:critical-excess-dimension-lower}.
+For every signed parity, the Fourier variation is $A(f)=1$.
+Theorem~\ref{thm:controlled-fourier-seed} therefore gives the upper
+bound $C\log^2(d+L+2)/L$ when $L\ge C'\log(d+L+2)$.
+Because $c_0\le1$, the stated upper depth bound implies $L\le d$.
+Thus $\log(d+L+2)=O(\log(d+2))$, and increasing the universal lower
+depth constant $C_0$ ensures the Fourier theorem's condition.
+For $d\ge d_0\ge2$, this gives the asserted upper bound.
+\end{proof}
+
+The matching order does not say that these targets have the same rate
+or the same leading constant. It leaves their relative ordering, and
+the resulting posterior preference among sample-consistent functions,
+undetermined.
+
+The theorem does not imply $J_L(f)\ge V_*$ outside the stated
+small-polynomial depth range. At other depths the positive part in the
+first inequality can vanish; the separate lower bound
+$V_*-O(1/L)$ remains applicable. Nor does the square-root entropy
+estimate by itself compress an arbitrary controlled path into a
+polynomial-product finite network. Such a compression theorem is the
+remaining step in that proposed route to a learning bound.

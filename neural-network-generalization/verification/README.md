@@ -2,7 +2,7 @@
 
 This record concerns packaging and source reproducibility. Mathematical review records are retained in the relevant paper folders.
 
-The current inventory contains **40 papers and notes**. The [Boolean-depth revision record](boolean-depth-progress-2026-10-18.json) covers the latest changes to the unrestricted-depth and critical-depth works in progress: independently reviewed theorem additions, exact source hashes, and clean isolated rebuilds with matching PDF text. These additions are not Lean verified. The general polynomial-depth Boolean learning problem remains open; in particular, the critical result is a prior-rate bound, not a new general sample-complexity theorem. Counts in older records below refer to their publication snapshots.
+The current inventory contains **40 papers and notes**. The [latest Boolean-depth revision record](boolean-depth-structure-2026-10-18.json) covers the unrestricted-depth and critical-depth works in progress: independently reviewed structural theorems, a stronger actual parity learning lower bound, exact source hashes, and clean isolated rebuilds with matching PDF text. These additions are not Lean verified. The general polynomial-depth Boolean learning problem remains open. The [earlier revision record](boolean-depth-progress-2026-10-18.json) preserves the preceding circuit-rate and finite-bottleneck snapshot; counts in older records refer to their publication snapshots.
 
 To check the catalog, PDF checksums, and local Markdown links:
 
