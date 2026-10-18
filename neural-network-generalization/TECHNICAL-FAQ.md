@@ -18,12 +18,14 @@ $$
 
 The posterior then conditions on the observed training signs. Under that prior restriction, this is equivalent to requiring $f(X_i)z_w(X_i)>1/2$ at each training input. Training inputs are iid; positive results allow an arbitrary common input distribution, whereas the parity lower bounds use the uniform distribution.
 
-“Circuit prior” is shorthand for a statistical guarantee: a target with a small specified implementation can be learned with a number of examples polynomial in its complexity, independently of the learner's potentially much larger width. It does **not** mean that its prior probability equals an exponential of ordinary Boolean circuit description length, that the posterior finds the smallest circuit, or that an efficient algorithm samples the posterior.
+“Circuit prior” is a claim about the **prior on functions**: its preference for different functions approximately tracks the complexity of small circuits implementing them. In the slides' strong-prior setting, this is made precise through the Gaussian energy cost $\kappa_N(f)$, which determines the leading exponential order of prior probability ratios and is polynomially related to bounded-weight network complexity at fixed depth, uniformly over all learner widths $N\ge C_L(f)$.
+
+The sample-complexity theorem is a **consequence** of that prior-complexity comparison, together with a bound on the number of low-complexity competitors. A polynomial sample bound alone is not the definition of a circuit prior. “Approximately” here allows polynomial distortion and dimension/depth dependence; it does not assert an exact ordering of every pair by circuit size or efficient posterior sampling. [Question 22](#22-do-we-now-have-a-useful-lower-bound-on-the-prior-probability-of-a-function) gives the precise strong-prior comparison.
 
 There are two different comparator complexities:
 
 - The original $C_L(f)$ is the least width of a depth-$L$ neural network realizing $f$ with the prescribed margin and with every physical weight bounded by that width.
-- The new robustness theorem uses the width of a layered **Boolean** circuit at the required depth, counting constant wires and any compilation overhead.
+- The polynomial-depth generalization theorem under a robustness restriction uses the width of a layered **Boolean** circuit at the required depth, counting constant wires and any compilation overhead.
 
 These should not be interchanged without a representation theorem. See the [strong-prior paper](main-results/strong-prior-generalization/paper.pdf) and [robust polynomial-depth paper](main-results/robust-polynomial-depth/paper.pdf).
 
@@ -47,7 +49,7 @@ For a finite input cube and nonzero clean outputs, sufficiently large readout am
 
 ## 4. Can we drop the requirement of a margin on every input before training?
 
-**Yes in the new robust theorem; not as an automatic corollary of the old unrestricted theorems.** The robust theorem allows the prior to contain outputs arbitrarily close to zero at unobserved inputs. It still uses the training likelihood
+**Yes under the new robustness restriction; not as an automatic corollary of the old unrestricted theorems.** The polynomial-depth generalization theorem allows the prior to contain outputs arbitrarily close to zero at unobserved inputs. It still uses the training likelihood
 
 $$
 f(X_i)z_w(X_i)>1/2,
@@ -127,7 +129,7 @@ The table concerns this particular family and the indicated conditioning convent
 
 | Regime | Current conclusion | Important qualification |
 |---|---|---|
-| Strong-prior limit at fixed $N$ | Polynomial samples at fixed depth, uniformly in the sample bound over all $N\ge C_L(f)$. | Variance tends to zero **after fixing width**; no width-uniform variance threshold. |
+| Strong-prior limit at fixed $N$ | Prior rate polynomially equivalent to bounded-weight network complexity at fixed depth; consequently polynomial samples, uniformly in the sample bound over all $N\ge C_L(f)$. | Variance tends to zero **after fixing width**; no width-uniform variance threshold. |
 | Fixed $\gamma>1$ | Polynomial samples at fixed depth for every actual $N\ge C_L(f)$. New unrestricted results also remove bad learner-depth dependence for substantial target classes. | The old polynomial degree depends on depth and on the gap above one. The full arbitrary-deep-target problem remains open. |
 | $\gamma=1$ | Polynomial samples at each fixed depth, every actual $N\ge C_L(f)$. With the robustness restriction, jointly polynomial dependence on depth for Boolean-circuit targets. | A joint polynomial-depth theorem for the original unrestricted critical prior is open. |
 | $0<\gamma<1$ | A Gaussian minimum-energy description at leading exponential order; exponential full-parity confidence lower bound. | This is not exact Gaussian-posterior equivalence throughout the interval. Limits are width first. |
@@ -230,7 +232,7 @@ It is nevertheless a particular sufficient condition, with a strong “every inp
 
 A map is nonexpansive if it does not increase Euclidean distances. Tanh applied coordinatewise is nonexpansive; a linear layer has this property when its operator norm is at most one. If the internal weight matrices have operator norm at most one, disturbances cannot be amplified as they travel through those layers. Cauchy–Schwarz then bounds the readout change by $c$ under the calibrated noise budget above. Thus $c\le1/16$ supplies a simple sufficient certificate.
 
-**Proved:** the robust theorem does not require all those operator norms to be at most one. Finite-radius Jacobian bounds, bounds on reachable activation intervals, and suitable weighted layer metrics can also certify it. These allow expansion in one direction or layer when later contraction or saturation controls the total effect.
+**Proved:** the robustness restriction used for polynomial-depth generalization does not require all those operator norms to be at most one. Finite-radius Jacobian bounds, bounds on reachable activation intervals, and suitable weighted layer metrics can also certify the restriction. These allow expansion in one direction or layer when later contraction or saturation controls the total effect.
 
 A Jacobian computed only at the clean network state is not a finite-perturbation certificate. Likewise, flatness under parameter perturbations, a small training-loss Hessian, or robustness to one kind of input noise does not by itself control arbitrary internal disturbances. Explicit examples separate these properties.
 
@@ -383,11 +385,31 @@ Hard threshold activations have the opposite issue: they are bounded but discont
 
 ## 22. Do we now have a useful lower bound on the prior probability of a function?
 
-**Yes in several precise senses, but not a width-free Solomonoff-style formula.** The strong-prior theorem identifies the fixed-width rate
+**Yes. In particular, the strong-prior argument establishes a prior-complexity comparison, not only a learning guarantee.** It identifies the fixed-width rate
 
 $$
 2\sigma^2\log\mu_{N,\sigma}(U_f)\longrightarrow-\kappa_N(f).
 $$
+
+Here $\kappa_N(f)$ is the infimum weighted squared parameter norm over networks realizing $f$ with the prescribed margin. For the globally margin-conditioned function prior $\pi_{N,\sigma}$, the common normalization cancels in ratios, so at fixed $d,L,N$, for functions $f,g$ realizable at width $N$ with the prescribed margin,
+
+$$
+\lim_{\sigma\downarrow0}2\sigma^2
+\log\frac{\pi_{N,\sigma}(g)}{\pi_{N,\sigma}(f)}
+=\kappa_N(f)-\kappa_N(g).
+$$
+
+Thus if $\kappa_N(g)>\kappa_N(f)$, the prior ratio $\pi_{N,\sigma}(g)/\pi_{N,\sigma}(f)$ tends to zero. Cloning and compression give the two directions of the complexity comparison: for fixed depth $L$, there are polynomials $P_L,Q_L$, independent of learner width, such that for every $N\ge C_L(f)$,
+
+$$
+\kappa_N(f)\le P_L(d,C_L(f)),
+\qquad
+C_L(f)\le Q_L(d,1+\kappa_N(f)).
+$$
+
+This is the slides' circuit-prior claim in a quantitative form: prior preference is governed by a complexity measure polynomially equivalent to small-network complexity. It need not preserve the ordering of two functions with similar circuit sizes. Counting the functions whose energy is no greater than the target's then gives the strong-prior generalization theorem. See the Gaussian-rate lemma and the “Uniform count and complexity comparison” proposition in the [strong-prior paper](main-results/strong-prior-generalization/paper.pdf).
+
+The main Lean gate certifies the learning theorem and the ingredients used in its proof; it does not separately assert this displayed two-sided complexity comparison as an additional main theorem. The [coverage inventory](lean/review/formal-coverage-inventory.txt) distinguishes these scopes.
 
 Finite-variance target-neighborhood constructions give lower bounds of the form
 
@@ -396,9 +418,9 @@ $$
 \ge\exp[-(N/t^2)\,\operatorname{poly}(\text{target resources})].
 $$
 
-The critical paper gives a variational characterization and depth bounds for the corresponding rate. These answer parts of the slides' prior-mass question, but their logarithms can still grow with width.
+The critical paper gives a variational characterization and depth bounds for the corresponding rate. These answer parts of the slides' absolute prior-mass question. Absolute negative log probabilities can still grow with width or prior strength, consistently with the normalized rate comparison above.
 
-This does not contradict width-independent learning. The generalization argument controls competitors relative to the target, or compresses a posterior with controlled relative entropy. It need not pay the full raw $-\log\mu(U_f)$ as a sample bound. The globally conditioned function prior also includes a normalization denominator that must not be dropped when comparing regimes.
+This does not contradict width-independent learning. The generalization argument controls competitors relative to the target, or compresses a posterior with controlled relative entropy. It need not pay the full raw $-\log\mu(U_f)$ as a sample bound. The globally conditioned function prior also includes a normalization denominator that must be retained for absolute probabilities and comparisons across different priors; it cancels when comparing two functions under the same prior, as above.
 
 Conversely, a tiny target probability alone is not a sample lower bound. A prior can assign a target tiny mass while assigning almost all remaining mass to a single competitor that one informative example eliminates. Both this mistake and the omission of the global-conditioning denominator occurred in heuristic arguments discussed in the [appendix audit](side-results/strong-prior-appendix-audit/paper.pdf).
 
@@ -408,7 +430,7 @@ Conversely, a tiny target probability alone is not a sample lower bound. A prior
 |---|---|
 | Improve the polynomial | **Open.** Explicit bounds exist, but are far from optimized; no near-description-length Gaussian-prior theorem. |
 | Remove bad depth dependence | **Partly resolved.** Joint polynomial depth under the robust support restriction; unrestricted positive results for substantial classes. General unrestricted small-deep-target case remains open. |
-| Lower-bound log prior mass | **Partly resolved.** Quantitative target neighborhoods and rate formulas exist; no general width-free circuit-code interpretation. |
+| Lower-bound log prior mass | **Partly resolved.** The strong-prior rate is polynomially equivalent to bounded-weight network complexity; finite-variance target-mass bounds also exist. Sharp absolute-mass formulas remain open. |
 | Classify scaling regimes | **Partly resolved on a particular one-parameter line.** All tuples, mixed regimes, and broad non-Gaussian universality remain open. |
 | Out-of-distribution learning | **No general guarantee.** The iid conclusions use the same training and test distribution; arbitrary distribution shift admits elementary counterexamples. |
 | Online mistake bounds | **Open for the desired width-uniform neural statement.** Generic Bayesian code-length bounds exist, but the slides' stronger heuristic is not established. Cheapest-consistent circuit/formula analogies can fail. |
@@ -455,8 +477,8 @@ The largest missing links are:
 
 ## 26. How much of this is formally verified?
 
-The repository includes closed Lean formalizations of all five main learning statements, including the robustness-restricted polynomial-depth theorem; their exact theorem declarations, hypotheses, dependencies, and build instructions are the appropriate source for the machine-checked scope. A successful Lean build verifies the formal statements actually written, so alignment with the intended analytic network model is a separate review obligation.
+The repository includes closed Lean formalizations of all five main learning statements, including the polynomial-depth generalization theorem under a robustness restriction; their exact theorem declarations, hypotheses, dependencies, and build instructions are the appropriate source for the machine-checked scope. A successful Lean build verifies the formal statements actually written, so alignment with the intended analytic network model is a separate review obligation.
 
-The [verification record](lean/VERIFICATION.md) gives the exact-type gates, independent source rebuild, and axiom checks. The robustness formalization uses a looser Pinsker-and-energy construction; its exact learning statement does not include every optional posterior variant or sharp manuscript constant. The other recent depth manuscripts have undergone independent AI-agent mathematical audits but remain outside the main Lean verification. An audited manuscript or exact numerical certificate is not thereby a Lean proof. The FAQ's heuristic extensions and open-problem assessments are not formalized theorems.
+The [verification record](lean/VERIFICATION.md) gives the exact-type gates, independent source rebuild, and axiom checks. The formal proof under the robustness restriction uses a looser Pinsker-and-energy construction; its exact learning statement does not include every optional posterior variant or sharp manuscript constant. The other recent depth manuscripts have undergone independent AI-agent mathematical audits but remain outside the main Lean verification. An audited manuscript or exact numerical certificate is not thereby a Lean proof. The FAQ's heuristic extensions and open-problem assessments are not formalized theorems.
 
 Readers should start with the main theorem and conventions in the relevant paper, then use this FAQ to identify the limitations and possible extensions. The [collection index](README.md) distinguishes main results, side results, and work in progress.

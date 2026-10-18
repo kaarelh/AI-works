@@ -14,7 +14,7 @@ All five main learning statements have closed Lean proofs. The earlier four conc
 
 [Lean project and instructions](lean/) · [Exact statements](lean/NeuralGeneralization/Statements.lean) · [Verification record](lean/VERIFICATION.md) · [Coverage and auxiliary exclusions](lean/review/formal-coverage-inventory.txt)
 
-The new robustness theorem is proved for its actual robustness-restricted Gaussian posterior, with one sample event uniform over every eligible width and variance. Its [exact statement](lean/NeuralGeneralization/RobustStatements.lean) and [closed proof](lean/NeuralGeneralization/RobustMain.lean) are included. The verification record identifies the checked scope and independent source rebuild. Some formal proofs use different sufficient estimates from the papers. Lean coverage does not extend automatically to every appendix, sharp constant, or side paper.
+The polynomial-depth generalization theorem is proved for its actual robustness-restricted Gaussian posterior, with one sample event uniform over every eligible width and variance. Its [exact statement](lean/NeuralGeneralization/RobustStatements.lean) and [closed proof](lean/NeuralGeneralization/RobustMain.lean) are included. The verification record identifies the checked scope and independent source rebuild. Some formal proofs use different sufficient estimates from the papers. Lean coverage does not extend automatically to every appendix, sharp constant, or side paper.
 
 ## Main results
 
@@ -108,7 +108,7 @@ The principal unfinished target is the fixed-depth natural sparse-parity lower b
 
 ## Recent depth research
 
-These are supporting results and works in progress, retained separately from the main robustness theorem. In particular, the improvements for the unrestricted learner are promising but do not resolve the general small-deep-circuit problem.
+These are supporting results and works in progress, retained separately from the main generalization theorem under a robustness restriction. In particular, the improvements for the unrestricted learner are promising but do not resolve the general small-deep-circuit problem.
 
 | Paper or package | Scope |
 |---|---|

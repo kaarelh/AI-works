@@ -48,7 +48,7 @@ subcritical lower bound uses uniform IID inputs and holds for each specified
 sample size, with common constants. It does not assert one event for all
 prefixes of a sample sequence or monotonicity of this learner in sample size.
 
-## The robustness theorem's distinct conventions
+## Conventions for generalization under a robustness restriction
 
 [RobustModel.lean](NeuralGeneralization/RobustModel.lean) defines stability of the clipped score under a ball of simultaneous hidden-activation and output perturbations. Its radius is calibrated by depth and readout energy. The Gaussian prior is restricted to this support event; **no clean-output margin on every input is imposed**. Training requires signed output strictly above `1/2`; test risk uses signed output at most `1/4`.
 

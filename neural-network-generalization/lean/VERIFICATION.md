@@ -1,6 +1,6 @@
 # Verification record
 
-**PASS — 18 October 2026.** All **five exact main learning theorems**, the parity supplement, and the aggregate axiom audit pass in an independent project-source rebuild. The new result is the robustness-restricted polynomial-depth theorem.
+**PASS — 18 October 2026.** All **five exact main learning theorems**, the parity supplement, and the aggregate axiom audit pass in an independent project-source rebuild. The new result is the polynomial-depth generalization theorem under a robustness restriction.
 
 ## Current exact proof targets
 
@@ -16,7 +16,9 @@ The first four propositions are in [Statements.lean](NeuralGeneralization/Statem
 
 The [new exact-type audit](review/verification/robust-2026-10-18/ExactMainAudit.log) passes for all five. [CheckMain.lean](CheckMain.lean), [CheckRobust.lean](CheckRobust.lean), and [CheckParity.lean](CheckParity.lean) also pass. The [aggregate audit](review/verification/robust-2026-10-18/Audit.log) checks **7,202 proved project declarations** and reports **5 / 5** exact main results.
 
-## Robustness theorem: scope and correspondence
+<a name="robustness-theorem-scope-and-correspondence"></a>
+
+## Generalization under a robustness restriction: scope and correspondence
 
 The new theorem concerns the actual finite Gaussian network conditioned on the stated internal-noise robustness event, followed by signed training output strictly above `1/2`. It does not impose a clean-output margin at every input before training. Test risk uses margin `1/4`; the final conclusion includes the strict `>2/3` posterior-confidence rule.
 
@@ -69,7 +71,7 @@ python3 review/verification/verify_supplement.py \
   --destination /tmp/neural-lean-independent-check
 ```
 
-The destination must not already exist. `--main all` now checks all five main theorems; `--main robust` checks the robustness theorem alone. The supplement command expects the all-main rebuild. The [procedure](review/verification/rebuild-procedure.txt) explains the trust boundary and optional `--fresh-dependencies` mode. The [Lean README](README.md) explains the model conventions and coverage.
+The destination must not already exist. `--main all` now checks all five main theorems; `--main robust` checks the polynomial-depth generalization theorem alone. The supplement command expects the all-main rebuild. The [procedure](review/verification/rebuild-procedure.txt) explains the trust boundary and optional `--fresh-dependencies` mode. The [Lean README](README.md) explains the model conventions and coverage.
 
 ---
 
