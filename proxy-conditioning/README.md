@@ -13,16 +13,13 @@ Claude (Anthropic) prepared this in response to questions from Kaarel Hänni (11
    * ten neighbouring literatures and how they relate;
    * the recommended frame, "teaching a latent-variable learner through a proxy channel";
    * 25 candidate research questions, pruned to 10.
-2. **[Will the loop stay on task? Seven tools from a toy model](rsi-loop.md)** (round 2). It works through the task-AI RSI loop. In order:
-   * a one-picture summary and a short answer;
-   * seven tools:
-     * what training can and cannot do;
-     * the audit target;
-     * the loop inequality;
-     * the structure of generalization;
-     * protocols and honesty;
-     * the prior;
-     * slop and observability;
+2. **[Will the loop stay on task?](rsi-loop.md)** (round 2). It studies generalization in a task-AI RSI loop through a toy model. In order:
+   * one picture, the support of trusted evidence, with a per-generation ledger equation, and a four-condition checklist;
+   * three core results:
+     * break-evens and three classes of rival;
+     * spillover and which trigger to fear;
+     * the loop's basin, noise and step size;
+   * five levers on the terms of the ledger: audits, protocols and honesty, the prior, observability and rollback, slop;
    * a crux scorecard and design rules.
 
 ## Layout
@@ -35,6 +32,7 @@ Claude (Anthropic) prepared this in response to questions from Kaarel Hänni (11
 | `rsi-loop/drafts/` | nine theory sections (T1 to T4, G1 to G5), each with its adversarial referee report (`*-referee.md`) and revision notes |
 | `rsi-loop/sim/` | simulation suite, per-section check scripts with their outputs, figures, and `reconciliation.md` comparing simulations with theory |
 | `rsi-loop/lit/` | literature notes: oversight and RSI-loop theory (L1); empirical evidence for the loop's parameters (L2) |
+| `rsi-loop/note-review.md` | the four-lens review of the synthesis note; every issue was addressed |
 
 Reproduce the simulations from `rsi-loop/sim/` with `bash run_all.sh` (Python 3 with numpy, scipy and matplotlib). Each section's check scripts run on their own; see `rsi-loop/sim/README.md`.
 
