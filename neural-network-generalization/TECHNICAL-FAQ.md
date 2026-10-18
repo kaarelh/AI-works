@@ -290,6 +290,8 @@ The mechanism is that the teacher separates outputs at exponentially close input
 
 Polynomial dependence on learner depth is possible for substantial target classes. For every fixed gap $\gamma\ge1+\zeta$, the [unrestricted-depth paper](works-in-progress/unrestricted-depth/paper.pdf) gives polynomial dependence on learner depth for all bounded-weight shallow tanh targets and for all Boolean halfspaces, at every actual width above the original $C_L(f)$. The halfspace result does not depend on the target's original coefficient precision or geometric margin. Other covered classes include fixed-depth threshold circuits and functions with polynomially bounded Fourier $\ell_1$ norm, including parity.
 
+A further positive case allows arbitrarily deep computation after a small set of hidden states. Suppose a bounded-weight teacher of depth $D$ takes only $K$ distinct hidden-state values after a fixed number of initial layers. The sample bound is polynomial in $K$, teacher resources, and learner depth, at every $L\ge D$ and every actual width $N\ge C_L(f)$, for each fixed exponent above one. No robustness condition is added to the prior. Examples include a fixed-width first layer with polynomially bounded integer weights, or a first layer driven by a fixed number of groupwise bit counts. The proof replaces the remaining computation by a lookup circuit; it does not require the hidden states to be well separated. The initial number of layers must be fixed, and $K$ can be exponential for an arbitrary teacher.
+
 For a general fan-in-two Boolean circuit of size $s$, logical depth $h$, and $S=\max\lbrace 16,2+d+s\rbrace $, a proved bound is
 
 $$
@@ -316,6 +318,17 @@ $$
 $$
 
 **This does not make the conditioned function prior uniform.** A width-first posterior is governed by differences $N[J_L(f)-J_L(g)]$. A tiny positive rate gap can dominate when $N\to\infty$. Near equality of absolute rates is not a sample-complexity lower bound.
+
+Controlled feature laws give much sharper upper bounds for structured functions. Every parity, including full parity, reaches a fixed universal rate budget at depth $\Theta(\log^2(d+2))$, matching the necessary scale even for constants and dictators. More generally, a depth $D$ tanh teacher of width $C$, weights bounded by $B$, and global signed margin at least $1/2$ has
+
+$$
+J_L(f)\le V_*+a\frac{(D+1)^2\log^2 R}{L},
+\qquad R=d+C+B+D+L+2,
+$$
+
+when $L\ge a(D+1)\log R$, for a universal constant $a$. The construction inserts a small controlled contribution for each circuit layer and then amplifies the resulting target component. It removes exponential teacher-depth dependence from this **prior-rate upper bound**. It does not yet remove it from the sample bound.
+
+There is also an actual-posterior comparison: every consistently labeled sample of at most $n$ points has a globally margined extension with rate at most $V_*+a\log^2(d+n+L+2)/L$, once $L\ge a\log(d+n+L+2)$. With dimension, depth, and sample fixed, the posterior concentrates below this ceiling as width grows. Thus the remaining learning problem concerns the relative rates of accurate and inaccurate extensions inside a narrow interval around $V_*$. The upper bound for the teacher alone does not settle that comparison.
 
 A separate rate comparison does prove a critical parity lower bound. At fixed $L\ge2$, put
 

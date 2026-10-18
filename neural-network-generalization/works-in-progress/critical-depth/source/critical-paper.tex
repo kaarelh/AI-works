@@ -23,25 +23,27 @@ with a fixed output margin on the entire input cube. We prove that this
 cost converges, with increasing depth, to the same universal constant
 $V_*$ for every Boolean function. The constant satisfies $1<V_*<2$ and
 is characterized by a one-dimensional relative-entropy control problem.
-Quantitative bounds are uniform over all functions on $d$ inputs: a
-depth polynomial in $d$ and inverse accuracy makes their absolute rates
-nearly equal. A separate finite-width baseline bound applies to every Gaussian
-exponent at least one. Entropy transport also shows that any uniformly
-bounded critical rate requires depth of order at least $(\log d)^2$.
-More precisely, the rate of constants and dictators is comparable,
-uniformly at every dimension and depth, to
-$1+L(d^{1/(2L)}-1)^2$; the same expression is a universal lower bound
-up to a constant factor. At fixed depth, functions depending on a growing
-number of augmented coordinates have asymptotically greater cost.
-The proofs include the finite-domain large-deviation foundation.
-These rate bounds do not settle general learning: small remaining rate
-differences can govern a width-first posterior. A separate comparison
-does give a sample lower bound for full parity: at each fixed depth $L$,
-$n\le d^{(1-\eta)/(L-1)}$ examples leave limiting Gibbs error $1/2$
-with high sample probability, for every fixed $\eta>0$. This is a
-polynomial lower bound, not an exponential bound in parity degree.
-For parity on $k$ coordinates, the corresponding effective dimension is
-$\min\{k,d^{1/(L-1)}\}$.
+Quantitative bounds are uniform over all functions on $d$ inputs.
+For structured targets, controlled feature laws give sharper bounds:
+Fourier norm and circuit depth enter through small target components
+that can be amplified at low entropy cost. In particular, every parity
+attains a bounded rate at depth $\Theta((\log d)^2)$, the same scale
+required even by constants and dictators. A layerwise construction also
+gives polynomial teacher-depth dependence in the rate upper bound for
+arbitrary bounded-weight, globally margined tanh teachers on the cube.
+
+Every consistently labeled sample of $n$ points has a globally margined
+extension with rate at most
+$V_*+O(\log^2(d+n+L)/L)$ at sufficient depth. The actual width-first
+posterior consequently concentrates below this ceiling. These results
+do not establish polynomial-depth learning: small differences inside
+that interval can determine which extensions the posterior prefers.
+A separate comparison does give a sample lower bound for full parity:
+at each fixed depth $L$, $n\le d^{(1-\eta)/(L-1)}$ examples leave
+limiting Gibbs error $1/2$ with high sample probability, for every
+fixed $\eta>0$. This is a polynomial lower bound, not an exponential
+bound in parity degree. The proofs include the finite-domain
+large-deviation foundation and the exact feature constructions.
 \end{abstract}
 
 \section{Model and meaning of the result}
@@ -94,6 +96,31 @@ polynomial bound on the logarithm of the number of possible functions:
 at sufficiently large polynomial depth, a fixed budget already contains
 all $2^{2^d}$ functions.
 
+There are sharper upper bounds for small implementations.
+Corollary~\ref{cor:analog-teacher-critical-rate} applies to any
+depth-$D$, width-$C$ tanh teacher with weights bounded by $B$ and
+signed output at least $1/2$ on the cube. Put
+$R=d+C+B+D+L+2$. At learner depth $L\ge A(D+1)\log R$, it gives
+\[
+ J_L(f)\le V_*+A\frac{(D+1)^2\log^2 R}{L}.
+\]
+The constant $A$ is universal. Thus exponential teacher-depth
+dependence can be removed from this critical prior-rate upper bound
+without restricting the prior's support. The proof compiles the
+teacher at finite precision, propagates exact Boolean gate vectors
+through low-entropy mixture laws, and then amplifies the target
+component. Theorem~\ref{thm:controlled-fourier-seed} supplies another
+bound through the Fourier $\ell^1$ norm. In particular, all parities
+attain a bounded rate at depth of order $(\log d)^2$.
+
+Theorem~\ref{thm:near-baseline-posterior-ceiling} gives a different,
+sample-dependent comparison: every consistent sample of at most $n$
+points has an extension with rate at most
+$V_*+A\log^2(d+n+L+2)/L$ when $L\ge A\log(d+n+L+2)$.
+The actual width-first posterior concentrates below this ceiling.
+This narrows the interval in which accurate and inaccurate extensions
+must be compared; it does not supply that comparison.
+
 This is not a claim that the conditioned prior is approximately uniform.
 For a fixed training sample $S$, its exponential posterior rate at a
 consistent function is
@@ -137,6 +164,11 @@ formalized in Lean. Constants are not optimized.
 \input{critical-scalar-paths.tex}
 \input{critical-rate-lower-proof.tex}
 \input{critical-rate-upper-proof.tex}
+\input{critical-controlled-fourier-seeds.tex}
+\input{critical-exact-feature-repair.tex}
+\input{critical-circuit-rate-steering.tex}
+\input{critical-analog-teacher-circuit-rate.tex}
+\input{critical-near-baseline-posterior.tex}
 \input{unrestricted-alternative-finite-width-upper.tex}
 \input{unrestricted-critical-counting-obstruction.tex}
 \input{unrestricted-critical-projective-symmetry.tex}
@@ -152,6 +184,11 @@ formalized in Lean. Constants are not optimized.
 \input{critical-variational-background.tex}
 
 \begin{thebibliography}{9}
+\bibitem{hesse2002}
+W. Hesse, E. Allender, and D. A. Mix Barrington.
+Uniform constant-depth threshold circuits for division and iterated multiplication.
+\emph{Journal of Computer and System Sciences} 65(4), 695--716, 2002.
+\url{https://doi.org/10.1016/S0022-0000(02)00025-9}.
 \bibitem{andreis2026}
 L. Andreis, F. Bassetti, and C. Hirsch.
 LDP for the covariance process in fully connected Gaussian neural networks.

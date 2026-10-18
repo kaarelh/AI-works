@@ -1,0 +1,151 @@
+\section{Boolean functions implemented by real-valued tanh teachers}
+\label{sec:analog-teacher-critical-rate}
+
+The circuit-rate bound also applies to Boolean targets specified by a
+bounded-weight tanh teacher. Finite precision is enough because the
+teacher's final output has a fixed margin. The necessary precision
+grows linearly with teacher depth, and each numerical layer has a
+constant-depth threshold implementation of polynomial size.
+No stability condition on the teacher's hidden states is needed.
+
+\begin{lemma}[Finite-precision threshold compilation]
+\label{lem:analog-teacher-threshold-compilation}
+There is a universal integer $a$ with the following property.
+Suppose a tanh network on $\{-1,1\}^d$ has depth $D\ge1$, hidden
+width at most $C$, parameter magnitudes at most $B\ge1$, and a linear
+readout $z_T$ satisfying
+\[
+ f(x)z_T(x)\ge\tfrac12\qquad\hbox{for every }x,
+ \qquad f:\{-1,1\}^d\to\{-1,1\}.
+\]
+Depth counts affine maps, including the linear readout. Biases may be
+present; the original model with a constant input and no internal
+biases is a special case.
+Then $f$ has a layered Boolean threshold implementation of depth
+$h\le a(D+1)$, width at most $K^a$, and gate coefficient Euclidean
+norm at most $K^a$, where
+\[
+ K=d+C+B+D+2.
+\]
+Every Boolean gate has margin at least one, and constant rails and
+layering overhead are included in these bounds.
+\end{lemma}
+
+\begin{proof}
+We use the standard arithmetic threshold-circuit theorem: addition,
+comparison, division, and iterated multiplication of polynomially many
+polynomial-bit integers have constant-depth, polynomial-size circuits
+of unweighted majority and Boolean gates; see
+Hesse--Allender--Barrington~\cite{hesse2002} for the nontrivial division
+and iterated-multiplication assertions. The depth and polynomial degree
+are universal. Thus this theorem provides majority gates, rather than
+arbitrary threshold gates with uncontrolled coefficient magnitudes.
+
+First consider approximating a single scalar tanh.
+For a dyadic input $u$ with $|u|\le R$ and desired error $2^{-p}$,
+put $t=2|u|$ and
+\[
+ E_m(t)=\sum_{j=0}^{m-1}\frac{t^j}{j!},
+ \qquad m=\lceil40(R+p+2)\rceil.
+\]
+The Taylor remainder satisfies
+\[
+ 0\le e^t-E_m(t)
+ \le e^{2R}\frac{(2R)^m}{m!}
+ \le e^{2R}\left(\frac{2eR}{m}\right)^m
+ <2^{-p-4}.
+\]
+Write the sum over a common denominator. All its powers, factorial
+constants, integer products, and sums involve polynomially many bits
+in $R$, $p$, and the input bit length. They can therefore be computed
+in constant threshold depth by the arithmetic theorem. Since
+$E_m(t)\ge1$, the map $v\mapsto(v-1)/(v+1)$ has derivative at most
+one for $v\ge1$. Division followed by rounding to $p+2$ fractional
+bits gives
+\[
+ \operatorname{sign}(u)\frac{E_m(2|u|)-1}{E_m(2|u|)+1}
+\]
+to total error less than $2^{-p}$ from $\tanh u$.
+Choose the rounding convention to keep the result in $[-1,1]$.
+This is a constant-depth majority circuit whose size is polynomial
+in the stated numerical parameters, with universal degree.
+
+For the teacher, set
+\[
+ K_0=4(d+C+1)(B+1),\qquad
+ p=\left\lceil(D+3)\log_2 K_0\right\rceil+5.
+\]
+Round every parameter to $p$ fractional bits and hardcode these bits
+in the circuit. This is a nonuniform existence statement and requires
+no computability assumption on the original real parameters.
+Starting from the exact
+Boolean input, evaluate each affine map on the stored dyadic values
+exactly, and evaluate each tanh to error at most $2^{-p}$ by the
+preceding construction. All stored hidden values have magnitude at
+most one, so every preactivation has magnitude at most
+$R=(d+C+1)(B+1)$.
+Parameter rounding contributes at most $(d+C+1)2^{-p}$ at any layer.
+Since tanh is one-Lipschitz, a conservative induction bounds the
+error after $j$ affine maps by $K_0^{j+1}2^{-p}$, including the linear
+readout. The final error is therefore less than $1/16$.
+Its sign is exactly $f$ by the margin assumption.
+
+The arithmetic at every layer has constant threshold depth and
+polynomial size in $d,C,B,D$: the precision $p$, the range $R$, all
+intermediate bit lengths, and the number of Taylor terms are polynomial
+in these parameters. Stack these blocks over $D$ layers and append a
+sign comparison. The resulting depth is at most $a(D+1)$ and its
+total size is at most $K^a$ after increasing a universal $a$.
+Make it layered by identity gates and propagate a constant wire.
+This introduces only polynomial overhead and a universal constant
+factor in depth.
+
+Finally, an unweighted majority or Boolean gate with fan-in at most
+the total circuit size can be written as an integer threshold gate
+with coefficients of polynomial magnitude and margin at least one.
+For example, place the threshold halfway between the two neighboring
+allowed integer sums, and multiply the score by two if necessary.
+The constant rail carries the threshold. Its coefficient norm is
+polynomial in the circuit size. Increasing $a$ once more proves all
+three bounds simultaneously.
+\end{proof}
+
+\begin{corollary}[Polynomial teacher-depth dependence of the critical rate]
+\label{cor:analog-teacher-critical-rate}
+For a Boolean target with the tanh-teacher implementation in
+Lemma~\ref{lem:analog-teacher-threshold-compilation}, there is a
+universal $A$ such that, whenever
+\[
+ L\ge A(D+1)\log(d+C+B+D+L+2),
+\]
+the original unrestricted Gaussian learner satisfies
+\[
+ J_L(f)\le V_*+
+ A\frac{(D+1)^2\log^2(d+C+B+D+L+2)}L.
+\]
+In particular, every
+\[
+ L\ge A(D+1)^2\log^2(d+C+B+D+2)
+\]
+puts $f$ below a fixed universal absolute critical-rate budget.
+\end{corollary}
+
+\begin{proof}
+Apply the compiler lemma. Its threshold depth is $h\le a(D+1)$,
+while its state width and normalized gate coefficient norms are
+polynomial in $K=d+C+B+D+2$.
+The parameter $T$ in Theorem~\ref{thm:controlled-circuit-rate}
+is consequently at most $A_0(D+1)\log(K+L)$.
+Increase the universal $A$ so that the displayed depth condition
+ensures $L-h\ge L/2$ and $L-h\ge C_0T$.
+The theorem gives the rate estimate. Its fixed-budget conclusion,
+or the same squared-logarithm comparison used in its proof, gives
+the final assertion.
+\end{proof}
+
+The result concerns the rate of the target's full Boolean sign pattern
+under the original Gaussian prior. It removes an exponential
+teacher-depth cost from this rate upper bound. It does not prove that
+posterior conditioning on polynomially many examples favors that target
+over inaccurate extensions, and therefore does not settle the general
+sample-complexity question.

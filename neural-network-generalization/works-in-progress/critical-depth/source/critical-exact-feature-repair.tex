@@ -1,0 +1,180 @@
+\section{Exact Boolean feature means with a common diagonal}
+\label{sec:exact-feature-repair}
+
+The next construction propagates exact Boolean gate vectors through a
+controlled feature law. Both the mean and the diagonal second moment
+are exact. In particular, approximation errors do not accumulate across
+the circuit layers. The number of mixture components can be exponential
+in the state width; only its logarithm enters the entropy bound.
+
+\begin{lemma}[Exact finite-state feature repair]
+\label{lem:exact-feature-repair}
+Let $X$ be a finite set, and let $H:X\to\{-1,1\}^s$ contain a
+constant coordinate $H_0=1$. Regard $H$ also as the matrix whose rows
+are indexed by $X$. Suppose
+\[
+ Q\succeq rHH^{\mathsf T},\qquad r>0,
+ \qquad Q(x,x)=q\le2\quad(x\in X).
+\]
+Let $g(x)=\operatorname{sign}(w\cdot H(x))$, where
+$|w\cdot H(x)|\ge1$ everywhere. There is a feature law $\nu_g$ such
+that
+\[
+ \mathbb E_{\nu_g}U(x)=a g(x),\qquad
+ \mathbb E_{\nu_g}U(x)^2=q_*\quad(x\in X),
+ \qquad a\ge\tfrac12,\quad q_*\ge\tfrac12,
+\]
+and
+\[
+ D(\nu_g\Vert\mathsf M_Q)
+ \le \frac{C(s+1)^2\{\|w\|_2^2+(s+1)^2\}}r.
+\]
+Here $\mathsf M_Q=\tanh_*N(0,Q)$, and $C$ is universal. For fixed
+$H$ and $Q$, the same $a$ and $q_*$ work for every gate $g$.
+The law $\nu_g$ is a finite mixture of Gaussian mean shifts followed
+by coordinatewise $\tanh$. The covariance $Q$ may be singular.
+\end{lemma}
+
+\begin{proof}
+For every coefficient vector $c$, the covariance inequality gives
+$Hc\in\operatorname{range}Q$ and
+\[
+ (Hc)^{\mathsf T}Q^+(Hc)\le\|c\|_2^2/r.
+\]
+Indeed, $rQ^{+/2}HH^{\mathsf T}Q^{+/2}\preceq I$ on the
+covariance range, which bounds the operator norm of
+$\sqrt r\,Q^{+/2}H$ by one. A Gaussian mean shift by $Hc$
+therefore has relative entropy at most $\|c\|_2^2/(2r)$.
+The same upper bound holds after applying $\tanh$.
+
+Write $T=H(X)$ for the distinct realized states and $M=|T|$.
+The constant coordinate implies $M\le2^{s-1}$. Set
+\[
+ F(q)=\mathbb E\tanh^2(\sqrt qZ),\qquad
+ c_*=1-F(2)>0,\qquad
+ \varepsilon=\frac{c_*^2}{10^6M}.
+\]
+Choose $A\ge1$ with
+$4e^{-2A+4}\le\varepsilon$ and $A\le C(s+1)$.
+If a Gaussian variable has variance at most two and mean of absolute
+value at least $A$, its expected $\tanh$ differs from the mean's
+sign by at most $\varepsilon/2$, and its second moment belongs to
+$[1-\varepsilon,1]$. For positive means this follows from
+\[
+ 1-\tanh u\le2e^{-2u},\qquad
+ \operatorname{sech}^2u\le4e^{-2u};
+\]
+negative means follow by symmetry.
+
+For each $p\in T$ define
+\[
+ d_p(H)=\frac{s-p\cdot H}{2}.
+\]
+This is zero at state $p$, is a positive integer at every other state,
+and is at most $s$. Using the constant coordinate, both $d_p(H)$
+and $1-2d_p(H)$ are linear combinations of the coordinates of $H$
+with coefficient norm at most $Cs$.
+
+We use the following feature laws, all obtained from a Gaussian of
+covariance $Q$ by a mean shift and then $\tanh$:
+\begin{itemize}
+\item $P_g$ has preactivation mean $Aw\cdot H$. Write its feature
+mean as $m_g$; then $\|m_g-g\|_\infty\le\varepsilon/2$.
+\item $P_p$ has preactivation mean $A(1-2d_p(H))$. Its feature
+mean approximates $2\boldsymbol1_{\{H=p\}}-1$ to error at most
+$\varepsilon/2$.
+\item $P_c$ has the constant preactivation mean $As$. Write its
+constant feature mean as $m_c$ and second moment as $s_c$.
+\item $R_c$ is the equal mixture of $P_c$ and its output-negated
+law; its mean is zero and its second moment is $s_c$.
+\item $R_p$ is the equal mixture of the shifts with preactivation
+means $Ad_p(H)$ and $-Ad_p(H)$. Its mean is zero. Its second
+moment is $F(q)$ at state $p$ and belongs to $[1-\varepsilon,1]$
+elsewhere.
+\end{itemize}
+The diagonals of $P_g,P_p,P_c,R_c$ all belong to
+$[1-\varepsilon,1]$. Each law above has entropy at most
+\[
+ E=\frac{CA^2(\|w\|_2^2+s^2)}r.
+\]
+For the mixtures this follows from entropy convexity. Output negation
+preserves the raw law and is realized by negating the mean shift,
+so it preserves these entropy bounds. Because $Q$ has constant
+diagonal, every mean and second moment just described depends only
+on the state $H(x)$.
+
+\paragraph{Repairing the mean.}
+Let $B_p=(P_p+P_c)/2$. Its mean on $T$ approximates the point
+indicator of $p$ to error at most $\varepsilon/2$. The square
+matrix $V$ with these means as columns consequently satisfies
+\[
+ \|V-I\|_{\infty\to\infty}\le M\varepsilon/2<1/2,
+ \qquad \|V^{-1}\|_{\infty\to\infty}\le2.
+\]
+Put $t_1=4M\varepsilon$ and solve
+\[
+ Vc=(1-t_1)(g-m_g).
+\]
+Then $\|c\|_\infty\le\varepsilon$ and
+$\sum_p|c_p|\le M\varepsilon<t_1$. Define
+\[
+ \nu_1=(1-t_1)P_g+
+       \sum_p|c_p|\,\operatorname{sign}(c_p)B_p+
+       \Bigl(t_1-\sum_p|c_p|\Bigr)R_c,
+\]
+where multiplication of a law by $-1$ denotes its pushforward by
+output negation; terms with $c_p=0$ are omitted. This is a probability
+mixture. Its mean is exactly $(1-t_1)g$, its diagonal $s_1(x)$
+belongs to $[1-\varepsilon,1]$, and its entropy is at most $E$.
+
+\paragraph{Repairing the diagonal with positive weights.}
+Let $u_p(x)$ be the second moment of $R_p$, and on the state set
+$T$ form the matrix
+\[
+ D_{x,p}=s_c-u_p(x).
+\]
+For a centered Gaussian, the absolute value after a mean shift is
+stochastically increasing in the absolute mean. Since
+$|Ad_p(H)|\le As$, the entries of $D$ are nonnegative. Its diagonal
+is the common number
+\[
+ c=s_c-F(q)\ge c_*-\varepsilon\ge c_*/2,
+\]
+and every off-diagonal entry is at most $\varepsilon$. Thus
+$D=cI+E_0$ with $\|E_0\|_{\infty\to\infty}\le M\varepsilon$.
+
+Set
+\[
+ t_2=32M\varepsilon/c_*,\qquad
+ b_x=4\varepsilon-(1-t_2)(s_c-s_1(x)).
+\]
+Both $t_1,t_2$ lie in $(0,1/10)$, and
+$3\varepsilon\le b_x\le5\varepsilon$. Let $\lambda=D^{-1}b$.
+With $\delta=\|E_0\|_{\infty\to\infty}/c\le2c_*/10^6$,
+the Neumann series gives
+\[
+ \|\lambda-b/c\|_\infty
+ \le\frac{\delta}{1-\delta}\frac{5\varepsilon}{c}.
+\]
+The right side is less than $3\varepsilon/(10c)$, so every
+$\lambda_p$ is strictly positive. Moreover,
+\[
+ \|\lambda\|_\infty
+ \le\frac{5\varepsilon}{c(1-\delta)}
+ \le\frac{12\varepsilon}{c_*},\qquad
+ \sum_p\lambda_p<t_2.
+\]
+The probability mixture
+\[
+ \nu_g=(1-t_2)\nu_1+\sum_p\lambda_p R_p+
+              \Bigl(t_2-\sum_p\lambda_p\Bigr)R_c
+\]
+has exact mean $ag$, where
+$a=(1-t_1)(1-t_2)\ge1/2$, and exact diagonal
+\[
+ (1-t_2)s_1+t_2s_c-D\lambda=s_c-4\varepsilon=:q_*\ge1/2.
+\]
+Neither $a$ nor $q_*$ depends on the gate. Entropy convexity gives
+$D(\nu_g\Vert\mathsf M_Q)\le E$. Finally,
+$A\le C(s+1)$ gives the asserted polynomial numerator.
+\end{proof}

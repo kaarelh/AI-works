@@ -1,0 +1,254 @@
+\section{Controlled feature laws for arbitrary Boolean circuits}
+\label{sec:controlled-circuit-rates}
+
+The Fourier construction can be replaced by a layerwise simulation of a
+Boolean circuit. The controlled laws used in this simulation are rare
+mixture components. Their probabilities become small with circuit depth,
+but the logarithm of the resulting target component grows only linearly
+with that depth. An exact repair of feature means and diagonal second
+moments makes this compatible with the subsequent scalar steering.
+This section bounds the critical prior rate; it does not establish a
+sample-complexity guarantee.
+
+\begin{definition}[Layered Boolean threshold implementation]
+Let $H^{(0)}(x)=(1,x_1,\ldots,x_d)$. A depth-$h$ implementation consists
+of state vectors $H^{(j)}:\{-1,1\}^d\to\{-1,1\}^{C_j}$,
+$1\le j\le h$, each containing a constant coordinate, with
+\[
+ H^{(j)}_i(x)=\operatorname{sign}(w_{j,i}\cdot H^{(j-1)}(x)),
+ \qquad
+ |w_{j,i}\cdot H^{(j-1)}(x)|\ge1
+ \quad\hbox{for every }x.
+\]
+One coordinate of $H^{(h)}$ is the target $f$.
+Write $C=\max_j C_j$, $W=\max\{d+1,C\}$, and assume
+$\|w_{j,i}\|_2\le B$ with $B\ge1$.
+The constant coordinate allows affine gates without adding internal
+biases to the neural-network model. A bounded-fan-in AND/OR/NOT circuit
+has such an implementation with universal $B$, after a fixed scaling
+of each gate's coefficients.
+\end{definition}
+
+\begin{theorem}[A circuit-dependent critical-rate bound]
+\label{thm:controlled-circuit-rate}
+There are universal constants $C_0,C_1,C_2$ with the following property.
+Suppose $f$ has the implementation above, with $h\ge1$, and put
+\[
+ T=\log(d+2)+h\log(W+B+h+L+2).
+\]
+If the learner depth satisfies $L-h\ge C_0T$, then
+\[
+ J_L(f)\le V_*+C_1\frac{T^2}{L-h}.
+\]
+In particular, every
+\[
+ L\ge C_2 h^2\log^2(W+B+h+2)
+\]
+puts $f$ below a fixed universal absolute critical-rate budget.
+The prior remains the original independent Gaussian prior; no
+robustness restriction is imposed on its support.
+\end{theorem}
+
+\begin{corollary}[Bounded-fan-in Boolean circuits]
+\label{cor:controlled-boolean-circuit-rate}
+For a layered bounded-fan-in AND/OR/NOT circuit of width $C$ and depth
+$h\ge1$, including constant rails, define
+\[
+ T_{\rm B}=\log(d+2)+h\log(C+h+L+2).
+\]
+If $L-h\ge C_0T_{\rm B}$, then
+\[
+ J_L(f)\le V_*+C_1\frac{T_{\rm B}^2}{L-h}.
+\]
+Consequently every
+\[
+ L\ge C_2[\log(d+2)+h\log(C+h+2)]^2
+\]
+puts $f$ below a fixed universal absolute critical-rate budget.
+The constants may depend on the fixed fan-in bound and gate library.
+\end{corollary}
+
+The local ingredient is Lemma~\ref{lem:exact-feature-repair} below.
+It constructs an exact Boolean feature mean and an exactly constant
+diagonal at polynomial entropy cost. The exponentially many states
+used in its repair do not cause exponential cost: each component has
+polynomial entropy cost, and convexity bounds the cost of their mixture
+by the same bound. Individual repair weights are exponentially small;
+their total mass is a small constant.
+
+\subsection{A low-cost circuit prefix}
+
+\begin{lemma}[Circuit prefix]
+\label{lem:controlled-circuit-prefix}
+For every $L\ge h+1$, the first $h$ hidden feature laws can be chosen
+at total relative entropy at most $1/L$, so that their final second
+moment has constant diagonal in $(0,1]$ and satisfies
+\[
+ Q_h\succeq r_h H^{(h)}(H^{(h)})^T,
+ \qquad
+ 1+\log(1/r_h)\le C[\log(d+2)+h\log(W+B+h+L+2)].
+\]
+\end{lemma}
+
+\begin{proof}
+The input covariance has the exact representation
+\[
+ Q_0=d^{-1}H^{(0)}(H^{(0)})^T,
+ \qquad Q_0(x,x)=(d+1)/d\le2.
+\]
+Set $r_0=1/d$, and choose the universal polynomial
+\[
+ P=C_*(W+1)^2\{B^2+(W+1)^2\}\ge1
+\]
+large enough to bound the numerator in
+Lemma~\ref{lem:exact-feature-repair} for every gate.
+Suppose $Q_{j-1}$ has constant diagonal and dominates
+$r_{j-1}H^{(j-1)}(H^{(j-1)})^T$.
+For each gate in the next state, that lemma gives a feature law with
+mean $a_j H^{(j)}_i$, where $a_j\ge1/2$, and entropy at most
+$P/r_{j-1}$ relative to $\mathsf M_{Q_{j-1}}$.
+For this fixed state and reference covariance, all the laws have the
+same $a_j$ and the same constant diagonal.
+
+Average these controlled laws uniformly over the $C_j$ gates. Their
+mixture $\nu_j$ has constant diagonal and satisfies
+\[
+ Q(\nu_j)\succeq \frac1{4C_j}H^{(j)}(H^{(j)})^T,
+ \qquad
+ D(\nu_j\Vert\mathsf M_{Q_{j-1}})\le\frac P{r_{j-1}}.
+\]
+Use the diluted law
+\[
+ \widetilde\nu_j=(1-\theta_j)\mathsf M_{Q_{j-1}}+\theta_j\nu_j,
+ \qquad
+ \theta_j=\frac{r_{j-1}}{PhL},
+ \qquad
+ r_j=\frac{r_{j-1}}{4C_jPhL}.
+\]
+Here $0<\theta_j\le1$ because $r_{j-1}\le1$.
+Entropy convexity bounds the layer cost by $1/(hL)$, and its second
+moment dominates $r_jH^{(j)}(H^{(j)})^T$.
+The uncontrolled law has constant diagonal whenever its reference
+does, so dilution preserves this property. Every hidden diagonal is
+at most one, and its constant rail makes it strictly positive.
+Induction therefore applies through all $h$ layers. Finally,
+\[
+ \log(1/r_h)=\log d+\sum_{j=1}^h\log(4C_jPhL)
+ \le\log d+h\log(4WPhL),
+\]
+which gives the stated estimate.
+\end{proof}
+
+\subsection{Steering from an arbitrary positive constant diagonal}
+
+\begin{lemma}[Steering after a prescribed prefix]
+\label{lem:steering-after-prefix}
+Suppose a prefix of $h$ hidden layers has entropy cost $E$ and ends at
+a second moment $Q$ with constant diagonal $q\in(0,1]$ and
+$Q\succeq vff^T$, where $0<v\le1$. Write
+$S=1+\log(1/v)$ and $R=L-h$.
+For $R\ge CS$, it can be completed to the exact learner depth $L$ with
+\[
+ J_L(f)\le E+V_*+C\frac{S^2+\log^2(2R)}R.
+\]
+\end{lemma}
+
+\begin{proof}
+Only the initial cooling step of
+Theorem~\ref{thm:critical-target-seed-upper} needs adjustment.
+For $q\in(0,1]$, the estimates in
+Lemma~\ref{lem:critical-free-cooling} hold uniformly:
+$q-F(q)\ge cq^2$, and the product of the factors
+\[
+ \frac{q[1-F(q)]^2}{F(q)}
+\]
+along a free trajectory is bounded below by a universal positive
+constant. The latter follows from a logarithm of order $O(q^2)$ at
+zero, positivity on $(0,1]$, and the uniformly bounded sum of $q_j^2$.
+If the current diagonal exceeds a desired level $\delta$, cool to the
+first diagonal below $\delta$. This takes $O(1/\delta)$ layers,
+ends with diagonal at least $c\delta$, and retains a tracked component
+at least $c\delta v$; the initial diagonal is at most one.
+If $q\le\delta$ already, skip cooling. Its existing component $v$
+is also at least $c\delta v$.
+
+In either case reduce the tracked component to the exact value
+$v_0=\delta e^{-AS}$ for a sufficiently large universal $A$.
+The residual diagonal is at most $\delta$.
+The holding and prescribed-growth arguments of
+Lemma~\ref{lem:critical-cheap-holding} use precisely this upper bound;
+they do not require an initial diagonal bounded below by $\delta$.
+Consequently holding costs $O(H\delta^2)$ for a prescribed $H$,
+and growth to $p\ge\delta$ takes $O(S/\delta)$ layers with entropy
+$O(p+S\delta)$.
+
+Choose $\delta=B_1S/R$ and
+$p=B_2\{S+\log(2R)\}/R$, as in the target-component theorem.
+Its purification, stable scalar lifting, and exact-depth padding
+then fit among the remaining $R-1$ hidden layers for $R\ge CS$,
+after increasing the universal constants.
+The cost after the prefix is at most
+\[
+ V_*+C\{R\delta^2+S\delta+p+p\log(2R)+R^{-4}\}
+ \le V_*+C\frac{S^2+\log^2(2R)}R.
+\]
+The prefix cost adds $E$, as claimed.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:controlled-circuit-rate}]
+Apply Lemma~\ref{lem:controlled-circuit-prefix} and retain the coordinate
+corresponding to $f$, giving $Q_h\succeq r_hff^T$ with
+$S=1+\log(1/r_h)\le CT$. Apply
+Lemma~\ref{lem:steering-after-prefix} with $E\le1/L$ and $R=L-h$.
+Since $h\ge1$, the definition of $T$ also absorbs $\log(2R)$.
+This proves the displayed rate bound. The equality between strict
+margin rates and their variational infima gives its prior-probability
+interpretation.
+
+For the fixed-budget claim, put $K=W+B+h+2$ and note $K\ge h+2$.
+At $L\ge C h^2\log^2K$, increasing $C$ ensures $L-h\ge L/2$,
+the required depth condition, and a universal bound for
+$h^2[\log K+\log L]^2/L$.
+Indeed $(\log K+\log L)^2/L$ is decreasing on this range, and its
+value at the lower endpoint is $O(h^{-2})$.
+The rate bound is therefore uniformly bounded there.
+\end{proof}
+
+\begin{proof}[Proof of Corollary~\ref{cor:controlled-boolean-circuit-rate}]
+For each gate apply Lemma~\ref{lem:exact-feature-repair} only to its
+input wires and the constant coordinate. This restricted state has
+bounded width, its threshold coefficient norm is universally bounded,
+and $Q\succeq rHH^T$ implies domination of the restricted state's
+second moment with the same $r$.
+The controlled gate law therefore costs at most $P_*/r$ with universal
+$P_*$. Its mean amplitude is at least $1/2$ and its diagonal is constant.
+These constants need not agree between different gates: a mixture of
+laws whose diagonals are individually constant still has constant
+diagonal, and the uniform amplitude lower bound suffices for covariance
+domination.
+
+Repeat the prefix proof with $P=P_*$ and $C_j\le C$. This gives
+\[
+ 1+\log(1/r_h)
+ \le1+\log d+h\log(4CP_*hL)\le C_*T_{\rm B}.
+\]
+The same steering proves the rate bound.
+For the final assertion put
+$A=\log(d+2)+h\log(C+h+2)$. Then $A\ge h\log(h+2)$ and
+$T_{\rm B}\le A+h\log(L+1)+C_*h$.
+At $L=C_2A^2$, one has $h\log(L+1)=O(A)$, apart from the harmless
+constant $h\log C_2$, since $h\log A=O(A)$ for
+$A\ge h\log(h+2)$. Increasing $C_2$ gives the depth requirement
+and a universal bound on $T_{\rm B}^2/(L-h)$ at that point.
+The bound persists for all larger $L$: the function
+$(A+h\log(L+1)+C_*h)^2/L$ is decreasing once
+$A+h\log(L+1)+C_*h>2h$, and $L-h\ge L/2$ on the specified range.
+\end{proof}
+
+Combining this construction with the Fourier and unmodified-kernel
+constructions permits the best of their upper bounds for any particular
+target. The new construction avoids exponential dependence on the
+teacher's depth in the critical prior-rate upper bound. A learning
+theorem still requires a comparison with inaccurate sample-consistent
+functions; the near-baseline posterior ceiling does not provide that
+comparison by itself.

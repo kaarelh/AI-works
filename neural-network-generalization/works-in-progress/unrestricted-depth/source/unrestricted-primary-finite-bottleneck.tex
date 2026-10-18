@@ -1,0 +1,250 @@
+\section{Finite hidden-state bottlenecks give polynomial depth bounds}
+\label{sec:finite-state-bottleneck}
+
+Boolean inputs permit a positive result that has no analogue for a
+continuously varying scalar input. If a short initial part of the teacher
+produces only polynomially many distinct hidden states, its remaining
+computation can be replaced by a lookup circuit. The remaining teacher
+layers may be arbitrarily expansive. No additional condition is imposed
+on the learner's prior.
+
+\begin{proposition}[A finite first-layer state set]
+\label{prop:first-layer-finite-state}
+Suppose a tanh network in the present architecture computes
+$f:\{-1,1\}^d\to\{-1,1\}$ and its first hidden vector has $C$
+coordinates and at most $K$ distinct values on the cube. Then $f$ has a
+depth-three threshold circuit with $O(KC(d+1))$ wires. Consequently it
+has a globally unit-margin tanh realization of depth six, with width
+and individual weights polynomial in $d,C,K$.
+There is no bound on the depth, coefficients, or numerical stability
+of the specified teacher's remaining computation.
+\end{proposition}
+
+\begin{proof}
+For every attained hidden vector $v$, its label is well-defined because
+all subsequent computation depends only on that vector. Tanh is
+injective. Thus the condition that its $j$th coordinate equals $v_j$
+can be tested by requiring the original affine preactivation to lie
+between two thresholds that isolate its corresponding value from all
+other attained preactivation values. There are only finitely many such
+values. Choose separating endpoints strictly between consecutive values;
+at an extreme, omit the unnecessary test or use a constant predicate.
+
+Equality to $v$ is therefore a conjunction of at most $2C$ affine
+threshold predicates of the original input. Use one threshold layer for
+these predicates, a second for each state conjunction, and a final OR
+over the positively labeled states. There are at most $K$ states and
+each first-layer predicate uses at most $d+1$ wires. Constant functions
+are immediate. Lemma~\ref{lem:threshold-circuit-tanh} gives the stated
+bounded-weight tanh realization. In particular, arbitrarily small gaps
+between attained real values cause no coefficient-size loss in the
+resulting realization.
+\end{proof}
+
+The proposition already gives a sample polynomial in $d,C,K,L$ and the
+statistical parameters at every learner depth $L\ge6$, simultaneously
+for all $N\ge C_L(f)$ and all
+$0<\sigma^2\le N^{-(1+\zeta)}$, for each fixed $\zeta>0$.
+The next result allows a bottleneck after any fixed number of teacher
+layers. Its proof uses binary precision, rather than a lower bound on
+the gaps between all attained states.
+
+\begin{lemma}[Fixed-depth tanh evaluation by threshold circuits]
+\label{lem:fixed-prefix-tc-evaluation}
+Fix $j\ge1$. Consider the first $j$ hidden layers of a tanh network
+with widths at most $C$, input $(1,x)$ for $x\in\{-1,1\}^d$, and
+weights of magnitude at most $B\ge1$. For every integer $p\ge1$, a
+threshold circuit of depth depending only on $j$ and wire size
+polynomial in $d,C,B,p$ produces a dyadic vector $\widehat h(x)$ such
+that
+\[
+ \sup_x\|\widehat h(x)-h^j(x)\|_\infty\le2^{-p}.
+\]
+The polynomial degree may depend on $j$. Its advice consists of
+polynomially many bits of the specified real parameters; no
+computability assumption on those real parameters is required.
+\end{lemma}
+
+\begin{proof}
+We use the theorem of Hesse--Allender--Barrington
+\cite{hesse2002}: division and iterated multiplication of polynomially
+many polynomial-bit integers have polynomial-size constant-depth
+threshold circuits. Addition, iterated addition, and comparison also
+have such circuits. Only their nonuniform consequence is needed here.
+
+First consider a dyadic scalar $t=a/2^b$ with $|t|\le R$, $R\ge1$.
+Tanh can be approximated to error $2^{-p}$ by a constant-depth
+threshold circuit of size polynomial in $b,R,p$. Indeed, take the
+degree-$m$ Taylor polynomial of $e^{2t}$, with
+$m=\lceil40(R+p+2)\rceil$. Its uniform remainder is at most
+\[
+ e^{2R}\frac{(2R)^{m+1}}{(m+1)!}
+ \le e^{2R}\left(\frac{2eR}{m+1}\right)^{m+1}
+ <2^{-p-4}.
+\]
+The polynomial is the exact rational number $U/V$, where
+\[
+ V=2^{bm}m!,\qquad
+ U=\sum_{k=0}^m (2a)^k2^{b(m-k)}\frac{m!}{k!}.
+\]
+All products and sums involve polynomially many integers with
+$O(m(b+\log(R+1)+\log(m+1)))$ bits. Negative summands are handled
+exactly; cancellation does not introduce numerical error.
+The quoted arithmetic theorem computes these quantities at constant
+depth. Since $U/V$ is within $2^{-p-4}$ of a nonnegative number,
+$U/V+1\ge3/4$. Hence
+\[
+ \frac{U-V}{U+V}
+\]
+approximates $(e^{2t}-1)/(e^{2t}+1)=\tanh t$ to error less than
+$2^{-p-2}$. A final rational division and dyadic rounding give the
+required error. Clamping the result to $[-1,1]$ can only decrease its
+distance from $\tanh t$.
+
+To evaluate the prefix, round each parameter to absolute error
+$2^{-q}$ and approximate every tanh to the same error, where
+\[
+ q=p+\left\lceil\log_2\bigl(4j(d+C+2)(2CB)^j\bigr)\right\rceil.
+\]
+Clamp all approximate hidden coordinates to $[-1,1]$.
+If $E_s$ is the maximum hidden-coordinate error after layer $s$, then
+\[
+ E_1\le(d+2)2^{-q},\qquad
+ E_s\le CB E_{s-1}+(C+1)2^{-q}\quad(2\le s\le j).
+\]
+Therefore
+\[
+ E_j\le j(d+C+2)(2CB)^j2^{-q}\le2^{-p}.
+\]
+The rounded preactivations have magnitude at most
+$(d+C+1)(B+1)$ and polynomial bit length. Every affine calculation
+uses only a constant number of the arithmetic operations above, and
+each tanh uses the preceding scalar construction. Composing the fixed
+number $j$ of stages preserves constant threshold depth and polynomial
+wire size. The rounded matrices have polynomial total description
+length. Their bits are fixed circuit advice, rather than quantities
+the circuit is required to extract from arbitrary real numbers.
+\end{proof}
+
+\begin{theorem}[A finite bottleneck after a fixed prefix]
+\label{thm:fixed-prefix-finite-state}
+Fix $j\ge1$ and $\zeta>0$. Suppose a width-$C$, depth-$D>j$ tanh
+teacher has weights bounded by $B\ge1$, signed output at least $1/2$
+on the Boolean cube, and at most $K$ distinct vectors after its $j$th
+hidden layer. There are a constant $q_j$ and a polynomial $p_j$, with
+degrees depending only on $j$, such that $f$ has a globally
+unit-margin tanh realization of depth $q_j$, width and weights at most
+$p_j(d,C,B,K,D)$.
+
+Consequently the original unrestricted Gaussian posterior has sample
+complexity polynomial in
+\[
+ d,C,B,K,D,L,\varepsilon^{-1},\log(2/\delta)
+\]
+at every learner depth $L\ge q_j$, simultaneously for every
+$N\ge C_L(f)$ and every $0<\sigma^2\le N^{-(1+\zeta)}$.
+The same polynomial form holds at every learner depth $L\ge D$,
+including the possible bounded-depth range below $q_j$.
+The constants and polynomial degrees may depend on $j$ and $\zeta$,
+but not on the remaining teacher depth $D-j$.
+\end{theorem}
+
+\begin{proof}
+In the infinity norm, the teacher suffix from its $j$th hidden layer
+to the linear readout is Lipschitz with constant at most
+\[
+ S=(CB)^{D-j}.
+\]
+Oppositely labeled inputs have outputs differing by at least one.
+Consequently their $j$th hidden states are separated in infinity norm
+by at least $S^{-1}$. Set
+\[
+ p=\lceil\log_2(32S)\rceil,\qquad \eta=2^{-p}.
+\]
+The required precision is only $O(1+D\log(2CB))$ bits, despite the
+possibly exponentially small separation.
+
+Apply Lemma~\ref{lem:fixed-prefix-tc-evaluation} to produce
+$\widehat h(x)$ within $\eta$ of the true prefix state. For each
+attained state $v$, hardcode a dyadic center $\widehat v$ within
+$\eta$ of $v$, and hardcode its Boolean label. Output $+1$ exactly
+when $\widehat h(x)$ lies within $3\eta$ in every coordinate of at
+least one positive center. A positive input lies within $2\eta$ of
+its own center. A negative input is at distance at least
+$S^{-1}-2\eta\ge30\eta$ from every positive center. Thus the
+lookup returns the correct label everywhere.
+
+There are at most $K$ centers, each described by $O(Cp)$ bits.
+Subtraction, comparison, a conjunction over coordinates, and a
+disjunction over centers are constant-depth threshold operations of
+polynomial size. Together with the fixed-depth prefix evaluation,
+this gives a threshold circuit of depth depending only on $j$ and
+size polynomial in $d,C,B,K,D$. Apply
+Lemma~\ref{lem:threshold-circuit-tanh} and pad the resulting fixed
+depth to a constant $q_j$. This proves the representation statement.
+
+The fixed-intrinsic-depth learning theorem gives the claimed
+all-admissible-width guarantee for $L\ge q_j$. To cover every
+$L\ge D$, it remains only to consider $D<q_j$ and $L<q_j$.
+There are finitely many such intrinsic teacher depths, bounded in terms
+of $j$ alone. Double the supplied teacher's readout and apply the same
+fixed-intrinsic-depth theorem directly to that teacher. Taking the
+maximum of these finitely many polynomial bounds gives the stated
+form. The prior throughout retains only its original global output
+margin restriction and the observed training signs.
+\end{proof}
+
+In the representation proof it would suffice to cover the attained
+prefix states by $K$ infinity-norm balls of radius $\eta$, with centers
+chosen among those states. Use boxes of radius $4\eta$ in the lookup.
+Opposite labels cannot occur in the same such ball, and the same
+separation argument applies. Exact finite-state count is a particularly
+simple sufficient condition; no separation of same-label states is
+needed.
+
+\begin{corollary}[Discrete input statistics]
+\label{cor:discrete-statistic-bottleneck}
+The following teachers satisfy Proposition~\ref{prop:first-layer-finite-state}.
+\begin{enumerate}
+\item If the nonconstant entries of first-layer row $j$ are
+$A_{ji}/Q_j$, with integers $A_{ji}$ and $Q_j>0$, put
+$R_j=\sum_{i=1}^d|A_{ji}|$. Its state count is at most
+\[
+ K\le\prod_{j=1}^C(2R_j+1).
+\]
+Its first-layer biases may be arbitrary real numbers. In particular,
+first-layer input weights bounded by $B$ with common denominator $Q$
+give $K\le(2dBQ+1)^C$. For fixed $C$ and polynomially bounded $B,Q$,
+the sample bound is polynomial in input dimension and learner depth,
+independently of all later teacher computation.
+\item If the first-layer matrix has at most $k$ distinct nonconstant
+input-column vectors, let $d_1,\ldots,d_k$ be their multiplicities.
+Then
+\[
+ K\le\prod_{a=1}^k(d_a+1)\le(d+1)^k.
+\]
+For fixed $k$, the sample bound is polynomial in $d,C,L$ and the
+statistical parameters, with no dependence on the precision or
+magnitude of the specified teacher coefficients. Functions of a fixed
+number of coordinate-block Hamming weights are examples.
+\end{enumerate}
+\end{corollary}
+
+\begin{proof}
+In the first case, the integer sum in row $j$ lies between $-R_j$
+and $R_j$, so it has at most $2R_j+1$ values. A fixed bias and tanh
+do not increase this count. In the second case, the first affine map
+depends only on the sum of the Boolean inputs in each column group.
+A group of size $d_a$ has exactly $d_a+1$ possible sums. All later
+computation factors through the resulting state vector. Apply the
+proposition and the fixed-intrinsic-depth learning theorem.
+\end{proof}
+
+These results use finite information passed by a teacher prefix,
+rather than stability of the prior's networks. They do not imply a
+joint polynomial theorem for an arbitrary growing prefix depth or
+unrestricted state count. Even one bounded real affine projection can
+take $2^d$ distinct values on the cube. Rounding that projection while
+preserving a long suffix's output signs may require exponentially fine
+precision in depth, so it does not establish the required polynomial
+state bound for a general teacher.

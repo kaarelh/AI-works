@@ -1,0 +1,218 @@
+\section{Controlled Fourier seeds and the depth needed by parity}
+\label{sec:controlled-fourier-seeds}
+
+A weak component already present in the unmodified first-layer kernel
+can be amplified at small entropy cost. There is another option: change
+the first feature law slightly to insert a stronger component. For parity,
+this changes the sufficient depth from a degree-dependent bound to the
+same order as for constants and dictators. More generally, the Fourier
+$\ell^1$ norm controls a useful family of initial components.
+
+Use the normalized Fourier expansion on the Boolean cube,
+\[
+ f=\sum_{S\subseteq[d]}\widehat f(S)\chi_S,\qquad
+ \chi_S(x)=\prod_{i\in S}x_i,\qquad
+ A(f)=\sum_S|\widehat f(S)|.
+\]
+For Boolean $f$, Parseval implies $A(f)\ge1$.
+
+\begin{theorem}[A controlled Fourier-seed bound]
+\label{thm:controlled-fourier-seed}
+There are universal constants $C_0,C_1$ such that, if
+\[
+ T_f=\log(d+L+2)+\log A(f),\qquad L\ge C_0T_f,
+\]
+then
+\[
+ J_L(f)\le V_*+C_1\frac{T_f^2}{L}.
+\]
+In particular, a depth at least
+$C[\log(d+2)+\log A(f)]^2$ puts $f$ below a fixed universal absolute
+critical-rate budget.
+\end{theorem}
+
+\begin{corollary}[Parity and juntas]
+\label{cor:controlled-parity-junta-depth}
+Every parity, irrespective of its degree, attains a fixed universal
+critical-rate budget at depth $O(\log^2(d+2))$.
+The universal lower bound in Theorem~\ref{thm:critical-entropy-transport}
+makes $\Theta(\log^2(d+2))$ the necessary and sufficient depth scale
+for attaining some fixed universal budget, as $d$ grows.
+Every function depending on at most $k$ coordinates attains such a
+budget at depth $O((k+\log(d+2))^2)$.
+These are statements about prior rates, not sample-complexity guarantees.
+\end{corollary}
+
+\subsection{A common polynomial-cost family of parity laws}
+
+\begin{lemma}[Parity mean and constant diagonal]
+\label{lem:controlled-parity-law}
+For every $S\subseteq[d]$, there is a first-feature law $\nu_S$ with
+\[
+ D(\nu_S\Vert\mathsf M_{Q_0})\le D_*:=C(d+1)^3\log^2(d+2),
+ \qquad \mathbb E_{\nu_S}H=c_S\chi_S,
+ \qquad c_S\ge\frac1{8(d+1)}.
+\]
+Its second-moment diagonal is constant and belongs to $[F(1),1]$, where
+$F(q)=\mathbb E\tanh^2(\sqrt qZ)$ as above. Increase the universal $C$
+if necessary so that $D_*\ge1$.
+\end{lemma}
+
+\begin{proof}
+First construct a law with a signed mean margin, then symmetrize it.
+Let $k=|S|\ge1$ and $u(x)=\sum_{i\in S}x_i$.
+At its possible values $u_j=-k+2j$, the parity equals
+$f_j=(-1)^{k-j}$. Thus
+\[
+ \chi_S(x)=c_0+\sum_{j=1}^k c_j
+       \operatorname{sign}(u(x)-(-k+2j-1)),
+ \qquad |c_0|\le1,\quad c_j=(f_j-f_{j-1})/2\in\{-1,1\}.
+\]
+Put $M=4+\log(64(k+1))$.
+Shift a first-row Gaussian weight vector to have mean coefficient $M$
+on each coordinate in $S$, zero on the other inputs, and bias
+$-M(-k+2j-1)$. Its preactivation mean has the required sign and
+absolute value at least $M$ at every cube input. Its variance remains
+$q_0=(d+1)/d\le2$. For a centered Gaussian $G$ of variance at most two,
+\[
+ 1-\mathbb E\tanh(t+G)\le2e^{-2t+4}\qquad(t\ge0).
+\]
+The expected feature $v_j$ therefore approximates its ideal step to
+maximum error $1/[16(k+1)]$.
+A constant bias shift supplies a constant mean $c_{\rm const}\ge1/2$.
+
+Take $\lambda=1/[4(k+1)]$. Mix the appropriately signed detector
+laws with probabilities $\lambda|c_j|$, and the appropriately signed
+constant law with probability $\lambda|c_0|/c_{\rm const}$.
+Their sum is at most $\lambda(k+2)\le1$; use the unmodified law for
+the remaining probability. Its feature mean is zero. The resulting
+mean $m_S$ obeys
+\[
+ \chi_S(x)m_S(x)\ge\lambda\left(1-\frac{k}{16(k+1)}\right)
+                  \ge\frac1{8(k+1)}
+ \qquad\text{for every }x.
+\]
+Every detector shift has Gaussian relative entropy at most
+\[
+ \frac d2 M^2\{k+(-k+2j-1)^2\}
+ \le C(d+1)(k+1)^2\log^2(k+2).
+\]
+Convexity and data processing give the common bound $D_*$ for this
+feature law. The case $k=0$ uses only a positive constant bias shift,
+with constant positive mean and entropy $O(d)$.
+
+For $b\in\{-1,1\}^d$, transform features by
+\[
+ (T_bH)(x)=\chi_S(b)H(b_1x_1,\ldots,b_dx_d).
+\]
+Input weight sign changes and a simultaneous sign change of all weights
+implement this transformation. It preserves the raw first Gaussian
+law. Average the transformed controlled laws over $b$.
+Their entropies are unchanged individually, so convexity bounds the
+mixture's entropy by $D_*$. Its mean is exactly
+\[
+ \mathbb E_b\chi_S(b)m_S(bx)
+   =c_S\chi_S(x),\qquad
+ c_S=\mathbb E_x\chi_S(x)m_S(x)\ge\frac1{8(k+1)}.
+\]
+Transitivity of cube translations makes its diagonal second moment
+constant. Each original component was a Gaussian mean shift with
+unchanged covariance. For centered Gaussian $G$, $|G+t|$ stochastically
+dominates $|G|$, so
+$\mathbb E\tanh^2(G+t)\ge\mathbb E\tanh^2(G)$.
+Every diagonal before and after symmetrization is consequently at least
+$F(q_0)\ge F(1)$ and at most one.
+Only the first feature law has been symmetrized; no convexity of entire
+covariance trajectories is asserted.
+\end{proof}
+
+\subsection{From a Fourier mixture to a small initial entropy cost}
+
+\begin{proof}[Proof of Theorem~\ref{thm:controlled-fourier-seed}]
+Negating a whole feature preserves the raw first law and negates its
+mean. Choose the corresponding sign of each law in
+Lemma~\ref{lem:controlled-parity-law}, and set
+\[
+ Z_f=\sum_S\frac{|\widehat f(S)|}{c_S}
+       \le8(d+1)A(f).
+\]
+Mix these laws with probabilities
+$|\widehat f(S)|/(c_SZ_f)$. The resulting law $\nu_f$ has entropy
+at most $D_*$, mean exactly $f/Z_f$, and second moment
+\[
+ Q(\nu_f)\succeq Z_f^{-2}ff^T.
+\]
+Its diagonal is constant in $[F(1),1]$. The component diagonals may
+have different values, but each is constant over inputs. Convexity
+introduces no factor for the number of Fourier components.
+
+Now replace the original first law by
+\[
+ \widetilde\nu_f=(1-\theta)\mathsf M_{Q_0}+\theta\nu_f,
+ \qquad \theta=(D_*L)^{-1}.
+\]
+Its entropy is at most $1/L$, its diagonal remains constant in
+$[F(1),1]$, and
+\[
+ Q(\widetilde\nu_f)\succeq vff^T,
+ \qquad v=\frac1{D_*LZ_f^2}.
+\]
+This uses the second moment of the mixture; it does not square the
+mixing probability. Hence
+\[
+ S_v:=1+\log(1/v)\le C[\log(d+L+2)+\log A(f)]=CT_f.
+\]
+
+We spell out the initial-condition adjustment in the existing steering
+argument. Lemma~\ref{lem:critical-free-cooling} is stated for an
+initial diagonal in $[F(1),F(2)]$, but its proof works on $[F(1),1]$.
+Indeed $F(q)<q$, $(q-F(q))/q^2$ has a positive lower bound on $(0,1]$,
+and
+\[
+ R(q)=\frac{q[1-F(q)]^2}{F(q)}>0,
+ \qquad \log R(q)=O(q^2)\quad(q\downarrow0).
+\]
+Compactness extends the required estimates to the enlarged interval.
+The same telescoping proof reaches diagonal $\delta$ in $O(1/\delta)$
+free layers while retaining a component at least $c\delta v$.
+
+The proof of Theorem~\ref{thm:critical-target-seed-upper} then applies
+with $S_v$ in place of $S_f$ and with the first-law entropy $1/L$
+added. For clarity, set $\delta=B_1S_v/L$ and
+$p=B_2(S_v+\log(2L))/L$ with the sufficiently large universal constants
+used there. Prescribed rank-one growth costs $O(p+S_v\delta)$ and
+uses $O(S_v/\delta)$ layers. Exact holding in the unused layers
+costs $O(L\delta^2)$. Purification costs $O(p\log(2L))$, leaves
+residual $O(\delta L^{-4})$, and the scalar path costs at most
+$V(p)+p\le V_*+p$, with $O(L^{-4})$ additional readout cost.
+All stage lengths fit when $L\ge CS_v$, and holding gives the exact
+specified depth. Adding the initial entropy yields
+\[
+ J_L(f)\le V_*+\frac1L+
+ C\frac{S_v^2+\log^2(2L)}L
+ \le V_*+C_1\frac{T_f^2}L.
+\]
+The strict-margin rate equals its closed-margin variational infimum
+by Corollary~\ref{cor:critical-margin-rates}, so this construction
+has precisely the prior-rate interpretation in the theorem.
+
+Finally let $B=\log(d+2)+\log A(f)\ge1$.
+One has $T_f\le B+\log(L+1)+C$. For every $L\ge CB^2$, increasing
+$C$ if necessary makes $T_f/L$ satisfy the depth requirement and
+bounds $T_f^2/L$ by a universal constant. This proves the fixed-budget
+assertion.
+\end{proof}
+
+\begin{proof}[Proof of Corollary~\ref{cor:controlled-parity-junta-depth}]
+A parity has $A(f)=1$. For a $k$-junta the Fourier support has at most
+$2^k$ elements, so Parseval and Cauchy--Schwarz give
+$A(f)\le2^{k/2}$. Substitute these bounds into the theorem.
+The matching necessary depth for any fixed rate budget follows from
+Theorem~\ref{thm:critical-entropy-transport}.
+\end{proof}
+
+The controlled mixture explains why a small eigenvalue in the original
+first-layer kernel cannot by itself give a large critical-rate lower
+bound. The mixture inserts a stronger component at entropy $1/L$.
+The theorem gives no lower bound ordering the competing extensions of
+a training sample; the next section isolates that remaining question.

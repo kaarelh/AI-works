@@ -1,0 +1,194 @@
+\section{A shallow product-norm obstruction that depth removes}
+\label{sec:shallow-product-separation}
+
+One possible route to a stronger normal form would replace every
+small-product deep network by a one-hidden-layer network with polynomial
+product cost. This is false, even for a Boolean target that the present
+unrestricted posterior learns with polynomial sample complexity.
+The obstruction concerns shallow representation, rather than the
+learner's ability to use a different deep representation.
+
+For $x,y\in\{-1,1\}^n$, put $u_i=(1-x_i)/2$, $v_i=(1-y_i)/2$, and define
+\[
+ \mathrm{IP}_n(x,y)=(-1)^{\sum_{i=1}^n u_iv_i}.
+\]
+This is the Boolean inner-product function on $2n$ input coordinates.
+As elsewhere, depth counts weighted layers: one hidden layer has depth
+two, and two hidden layers have depth three.
+
+\begin{theorem}[Exponential shallow cost, polynomial deep cost]
+\label{thm:ip-shallow-product-separation}
+For every $n\ge1$, every finite-width one-hidden-layer tanh network
+\[
+ z(x,y)=\sum_{a=1}^m v_a\tanh\bigl(w_a^T(1,x,y)\bigr)
+\]
+with $\mathrm{IP}_n(x,y)z(x,y)\ge1$ on the entire cube satisfies
+\[
+ \|v\|_2\|W\|_F
+ \ge \frac{2^{n/2}}{(2n+3)\sqrt{2n+1}},
+ \qquad W=(w_a^T)_{a=1}^m.
+\]
+There is, however, a depth-three, width-$(n+1)$ tanh realization in the
+present architecture, with signed margin at least one and
+\[
+ \prod_{\ell=1}^3\|W^\ell\|_F
+ \le20n^{5/2}\log^2(8n).
+\]
+It uses only the augmented first-layer input, with no later biases.
+Its individual weights are polynomially bounded in $n$.
+\end{theorem}
+
+We first prove a correlation estimate. All expectations in this section
+are under independent uniform Boolean inputs.
+
+\begin{lemma}[Halfspaces against a Hadamard sign matrix]
+\label{lem:ip-halfspace-correlation}
+Let $N=2^n$ and $H_{uv}=(-1)^{u\cdot v}$ for
+$u,v\in\{0,1\}^n$. If $H'$ is obtained from $H$ by independently
+changing row and column signs, then every matrix
+\[
+ A_{uv}=\operatorname{sign}(\alpha_u+\beta_v+c)
+\]
+satisfies
+\[
+ \left|\frac1{N^2}\sum_{u,v}H'_{uv}A_{uv}\right|
+ \le \kappa_n:=\frac{2n+3}{\sqrt N}.
+\]
+The choice of sign at zero is immaterial.
+\end{lemma}
+
+\begin{proof}
+The Hadamard identity $HH^T=NI$ gives
+$\|H'\|_{\mathrm{op}}=\sqrt N$. Order the columns by decreasing
+$\beta_v$. The positive entries of each row of $A$ then form a prefix.
+Thus $A=2B-J$, where $B$ is the indicator of these row prefixes and
+$J$ is the all-ones matrix.
+
+Decompose each prefix into aligned dyadic intervals, using at most one
+interval of each length $2^\ell$, $0\le\ell\le n$. At a fixed scale,
+the resulting part of $B$ is a sum of rectangles
+$\mathbf1_{R_I}\mathbf1_I^T$, where the column intervals $I$ are
+disjoint and each row belongs to at most one $R_I$. Its nuclear norm
+is at most
+\[
+ \sum_I\sqrt{|R_I|2^\ell}
+ \le\sqrt{\frac{N}{2^\ell}\,2^\ell\sum_I|R_I|}
+ \le N.
+\]
+Summing over the $n+1$ scales and using $\|J\|_*=N$ gives
+\[
+ \|A\|_*\le2\|B\|_*+\|J\|_*\le N(2n+3).
+\]
+By nuclear/operator norm duality, the normalized inner product is at
+most $N^{-2}\|H'\|_{\mathrm{op}}\|A\|_*\le\kappa_n$.
+Column permutations preserve the norms used in this argument.
+\end{proof}
+
+\begin{proof}[Proof of the lower bound in
+Theorem~\ref{thm:ip-shallow-product-separation}]
+Every affine threshold of $(1,x,y)$ has the matrix form in
+Lemma~\ref{lem:ip-halfspace-correlation}. The function
+$\phi(t)=\operatorname{sech}^2(t)$ tends to zero at both infinities
+and has total variation two. Hence
+\[
+ \phi(s)=\frac12\int_{\mathbb R}\phi'(t)
+                   \operatorname{sign}(s-t)\,dt,
+ \qquad \frac12\int_{\mathbb R}|\phi'(t)|\,dt=1.
+\]
+Integrating the halfspace correlation estimate therefore shows that
+\[
+ \left|\mathbb E H'\operatorname{sech}^2
+                   \bigl(w^T(1,x,y)\bigr)\right|\le\kappa_n
+\]
+for every $w$ and every allowed row/column sign change $H'$.
+
+Write $\bar x=(1,x,y)$. Since tanh vanishes at zero,
+\[
+ \tanh(w^T\bar x)
+ =\int_0^1\sum_{i=0}^{2n}w_i\bar x_i
+                  \operatorname{sech}^2(sw^T\bar x)\,ds.
+\]
+Multiplying $H$ by any coordinate $\bar x_i$ changes only row signs,
+only column signs, or neither. Consequently
+\begin{equation}\label{eq:ip-tanh-weight-correlation}
+ \left|\mathbb E\mathrm{IP}_n\tanh(w^T\bar x)\right|
+ \le\kappa_n\|w\|_1
+ \le\kappa_n\sqrt{2n+1}\|w\|_2.
+\end{equation}
+The unit-margin hypothesis gives $\mathbb E\mathrm{IP}_n z\ge1$.
+Sum~\eqref{eq:ip-tanh-weight-correlation} over the hidden neurons and
+apply Cauchy--Schwarz:
+\[
+ 1\le\kappa_n\sqrt{2n+1}\sum_a|v_a|\|w_a\|_2
+ \le\kappa_n\sqrt{2n+1}\|v\|_2\|W\|_F.
+\]
+This proves the lower bound, with no restriction on hidden width or
+individual coefficient magnitudes. It also lower-bounds the shallow
+variation cost $\sum_a|v_a|\|w_a\|_2$ by the same quantity.
+\end{proof}
+
+\begin{proof}[Proof of the upper bound in
+Theorem~\ref{thm:ip-shallow-product-separation}]
+Set $\lambda=\log(8n)$ and $c=\operatorname{atanh}(1/2)$.
+The first hidden layer computes
+\[
+ h_i=\tanh\bigl(\lambda(-x_i-y_i-1)\bigr),\quad 1\le i\le n,
+ \qquad h_0=\tanh(c)=\tfrac12.
+\]
+Let $s_i=+1$ exactly when $u_i=v_i=1$. The corresponding affine
+preactivation has absolute value at least one, so
+\[
+ |h_i-s_i|\le2e^{-2\lambda}=\frac1{32n^2}.
+\]
+The second hidden layer computes
+\[
+ r_j=\tanh\left(\lambda\left[\sum_{i=1}^n h_i+n-2j+1\right]\right),
+ \quad 1\le j\le n,
+ \qquad r_0=\tanh(2ch_0)=\tfrac12.
+\]
+The constant term in row $j$ is supplied by weight
+$2\lambda(n-2j+1)$ from $h_0$. Put $m=\sum_i u_iv_i$. The intended
+second-layer sign is $q_j=\operatorname{sign}(2m-2j+1)$.
+The perturbation of this odd integer is at most $1/(32n)$, so
+its magnitude remains at least $3/4$. It follows that
+\[
+ |r_j-q_j|\le2e^{-3\lambda/2}\le\frac1{8n}.
+\]
+With $b_0=1+\sum_{j=1}^n(-1)^j\in\{0,1\}$, the identity
+\[
+ (-1)^m=b_0+\sum_{j=1}^n(-1)^jq_j
+\]
+shows that the linear readout
+\[
+ z=2\sum_{j=1}^n(-1)^jr_j+4b_0r_0
+\]
+has signed margin at least $2(1-1/8)=7/4$.
+
+The first squared Frobenius norm is $3n\lambda^2+c^2\le4n\lambda^2$.
+For the second it is
+\[
+ n^2\lambda^2+4\lambda^2\sum_{j=1}^n(n-2j+1)^2+4c^2
+ =n^2\lambda^2+\frac{4n(n^2-1)}3\lambda^2+4c^2
+ \le4n^3\lambda^2.
+\]
+The readout squared norm is $4n+16b_0^2\le20n$. Thus the three
+norms are bounded by $2\sqrt n\lambda$, $2n^{3/2}\lambda$, and
+$5\sqrt n$, whose product is the asserted upper bound. The
+construction has uniform hidden width $n+1$ and no internal biases.
+\end{proof}
+
+The theorem rules out a polynomial-cost flattening into a single hidden
+layer, even when arbitrarily many hidden units and arbitrarily precise
+real coefficients are allowed. It does not rule out a polynomial-size
+constant-depth threshold representation; the displayed target already
+has one. Nor does this unit-margin exact-representation lower bound by
+itself lower-bound the error of approximate sign representations.
+
+In fact Corollary~\ref{cor:fixed-intrinsic-depth} applied to the explicit
+depth-three construction gives the original unrestricted posterior a
+sample bound polynomial in $n,L,\varepsilon^{-1},\log(2/\delta)$ for
+every $L\ge3$, every actual width $N\ge C_L(\mathrm{IP}_n)$, and every
+$0<\sigma^2\le N^{-(1+\zeta)}$, for each fixed $\zeta>0$.
+An exponential shallow norm is therefore compatible with efficient
+statistical learning by this deep posterior. It cannot on its own
+supply the missing unrestricted-depth counterexample.
