@@ -4,7 +4,7 @@ This FAQ explains what the current results say, which assumptions matter, and wh
 
 **Status labels:** **Proved** means that the linked manuscript contains a proof under its stated assumptions. **Extension suggested by the proof** means that we have identified a plausible adaptation but are not citing a completed theorem. **Heuristic** is an informed expectation. **Open** means that the available results do not settle the question. Machine verification is a separate issue; see the final question.
 
-**Jump to:** [prediction thresholds](#5-what-changes-if-correctness-means-posterior-probability-above-12-rather-than-23) · [scaling tuples](#9-can-we-classify-all-tuples-of-layerwise-scaling-exponents) · [robustness and depth](#12-what-robustness-condition-gives-polynomial-depth-dependence) · [out-of-distribution learning](#why-expect-occam-learning-to-transfer-out-of-distribution) · [label noise](#24-do-the-good-generalization-results-survive-a-small-amount-of-label-noise) · [SLT likelihoods](#do-the-polynomial-bounds-survive-the-likelihood-based-setup-used-in-singular-learning-theory) · [comparing generalization bounds](#does-slt-already-give-comparable-generalization-bounds) · [formal verification](#26-how-much-of-this-is-formally-verified)
+**Jump to:** [prediction thresholds](#5-what-changes-if-correctness-means-posterior-probability-above-12-rather-than-23) · [scaling tuples](#9-can-we-classify-all-tuples-of-layerwise-scaling-exponents) · [targets beyond parity](#is-the-bad-sample-complexity-specific-to-parity) · [robustness and depth](#12-what-robustness-condition-gives-polynomial-depth-dependence) · [out-of-distribution learning](#why-expect-occam-learning-to-transfer-out-of-distribution) · [label noise](#24-do-the-good-generalization-results-survive-a-small-amount-of-label-noise) · [SLT likelihoods](#do-the-polynomial-bounds-survive-the-likelihood-based-setup-used-in-singular-learning-theory) · [comparing generalization bounds](#does-slt-already-give-comparable-generalization-bounds) · [formal verification](#26-how-much-of-this-is-formally-verified)
 
 ## 1. What is the basic model, and what does “a circuit prior” mean here?
 
@@ -122,7 +122,7 @@ $$
 
 are different prediction rules: a few large-magnitude outputs can affect the former without affecting the latter in the same way.
 
-A small parity eigenvalue, or poor correlation of the regression mean, is therefore not by itself a lower bound for the posterior-confidence convention used here. This was a substantive gap in the original slides' kernel discussion. The later lower bounds analyze the appropriate conditioned law.
+A small parity eigenvalue, or poor correlation of the regression mean, is therefore not by itself a lower bound for the posterior-confidence convention used here. This was a substantive gap in the original slides' kernel discussion. The later lower bounds analyze the appropriate conditioned law. For targets other than parity the two notions come apart further: majority is costly for squared-error regression but cheap for the sign posteriors ([details](#is-the-bad-sample-complexity-specific-to-parity)).
 
 Nor does every Gaussian rate description identify an exact GP posterior: this distinction is important for $0<\gamma<1$, as explained in [Question 10](#10-does-a-quantitative-central-limit-theorem-make-all-0gamma1-into-gaussian-conditioning).
 
@@ -244,6 +244,41 @@ This includes the desired $\exp(\Omega(k))$ obstruction, but does not give the f
 There is a genuine regime distinction: a one-coordinate parity learns with $O(\log d)$ examples for $0<\gamma<1$. A uniform $d^{ck}$ claim covering all $k\ge1$ in that regime is therefore false. This does not disprove the proposed bound restricted to sufficiently growing $k$.
 
 See [sparse parity](side-results/sparse-parity/paper.pdf) and [growing positive-subcritical parity](side-results/growing-sparse-positive/paper.pdf). These are iid-sample results, not lower bounds for an active learner allowed to choose informative inputs. Typical sampling is essential: [deliberately selected](side-results/selected-examples-parity/paper.pdf) training sets of size $d^{O_\delta(\sqrt k)}$ teach sufficiently large odd $k$ when $d\ge(C_Lk)^{C_Lk}$.
+
+For targets other than parity, see the [next question](#is-the-bad-sample-complexity-specific-to-parity).
+
+## Is the bad sample complexity specific to parity?
+
+**No. But Fourier degree is the right measure only for squared-error regression, not for the learners in our lower bounds.** The [supporting note](works-in-progress/beyond-parity/README.md) gives the statements, proofs, and checks behind this answer. It was written after the 19 October review. Its new arguments are short derivations from lemmas of the subcritical paper, with an independent AI-agent check; they are not Lean verified and have not been reviewed by a human.
+
+**Kernel regression: high Fourier weight is costly, even for targets that SGD learns quickly.** The NNGP posterior mean given exact real labels is kernel regression. For this kernel and uniformly sampled inputs, its expected squared error depends on the target only through its Fourier weight at each degree. This is proved by a symmetry argument. Weight at degree $k$ stays unlearned until roughly $d^{k^*}$ samples, where $k^*$ rounds $k$ up to an odd integer. The rounding comes from the odd activation and the bias coordinate, which make $x_1x_2$ exactly as expensive as $x_1x_2x_3$. This matches the polynomial-regime kernel literature, for example [Mei, Misiakiewicz, and Montanari](https://arxiv.org/abs/2101.10588), whose examples include the hypercube. Two refinements:
+
+- **Weight matters, not degree.** AND of all $d$ bits has degree $d$, but almost all of its weight is at degree zero. Majority keeps weight of order $k^{-1/2}$ above every degree $k$, so squared error $\varepsilon$ costs $d^{\Omega(1/\varepsilon^2)}$ samples.
+- **Targets that SGD learns quickly are included.** $x_4\,?\,x_1x_2x_3:\mathrm{MAJ}(x_1,x_2,x_3)$ has leap one and $9/16$ of its weight at degree four. Kernel regression therefore keeps squared error at least about $9/16$ until roughly $d^5$ samples. [Abbe, Boix-Adserà, and Misiakiewicz](https://arxiv.org/abs/2202.08658) show that SGD on two-layer mean-field networks learns such leap-one (merged-staircase) targets from $O(d)$ samples.
+
+**Sign posteriors and confidence: the measure is threshold degree with margin, not Fourier degree.** Our lower bounds concern these posteriors, not the regression mean. A sign predictor needs only a polynomial with the right sign: majority has full Fourier degree, yet the sign of its degree-one part is majority itself.
+
+The parity proofs combine three steps:
+
+1. every labeling has a cheap globally margined interpolant;
+2. the kernel's spectral decay therefore forces posterior-typical functions close to low-degree polynomial threshold functions;
+3. parity is far from those threshold functions.
+
+Only the third step depends on the target. Replacing it by the distance $\mathrm{err}_r(f)$ of $f$ from degree-$r$ threshold functions gives lower bounds for every target. Fix a junta of threshold degree $t\ge2$, and let $\kappa=t^*$.
+
+- **$\gamma<0$ (proved).** Confidence failure is at least $\mathrm{err}_{\kappa-2}(f)/2>0$ on every training set with $n\le c_fd^{\kappa}$, and about $d^{\kappa+1}$ samples suffice.
+- **$0<\gamma<1$ (proved).** For typical iid samples with $n\le c_fd^{\kappa-\beta}$, every minimum-energy sign function has error at least $\mathrm{err}_{\kappa-2}(f)/2$, and about $d^{\kappa}$ samples suffice. This bounds Gibbs error; by [Question 5](#5-what-changes-if-correctness-means-posterior-probability-above-12-rather-than-23), this becomes a confidence lower bound only above $1/3$.
+- **Threshold degree one (proved).** Every such junta is learned from at most about $d^2$ samples. This includes majority, AND, and all halfspaces. The proofs are PAC-Bayes and margin bounds.
+
+Two-bit XOR thus keeps $\gamma<0$ confidence failure at least $1/4-o(1)$ on every training set with $n=o(d^3)$. Majority is learned at polynomial cost despite its Fourier degree. We have no fixed-degree lower bound at $\gamma=0$.
+
+**Relation to leap.** Every Boolean function satisfies $\mathrm{Leap}(f)\le\mathrm{thr}(f)\le\deg f$; the proof is elementary. Moreover, $\mathrm{err}_r(f)\le W^{>r}(f)$, the Fourier weight above degree $r$. So targets that are hard for SGD in the leap sense are hard for these posteriors, and targets that are hard for these posteriors are hard for squared-error regression. The converses fail. The target $x_4\,?\,x_1x_2x_3:\mathrm{MAJ}$ has leap one but threshold degree three, so the $\gamma<0$ learner needs at least about $d^3$ samples where SGD needs about $d$. Such leap-one targets of threshold degree at least two are the typical case: they make up 97.5% of the four-bit functions that have leap one and depend on all four bits. For $k$-sparse parity, leap, threshold degree, and degree all equal $k$. SGD there takes $d^{O(k)}$ iterations, close to the statistical-query limit ([Barak et al.](https://arxiv.org/abs/2207.08799)), so the gap is only polynomial. The SGD statements are about exponents for fixed juntas, taken from the abstracts of the cited papers; no theorem here relates SGD to these posteriors.
+
+**Exponential failure uses more of parity's structure.** The same arguments give superpolynomial lower bounds for every target that stays a constant distance from threshold functions of slowly growing degree. Most Boolean functions are such targets, but every learner fails on them. Parity is not: threshold functions of degree about $\sqrt d$ approximate it well. Main result 4 instead reaches $\exp(\Omega(d))$ through three margin-sensitive lemmas, which use that parity changes sign along every edge of the cube. **Extension suggested by the proof:** these lemmas should carry over to targets that restrict to large parities, such as inner product mod 2.
+
+Exact threshold degree is a worst-case notion. Functions with high threshold degree, such as the Minsky–Papert AND of ORs, can be nearly constant under uniform inputs. At depth linear in $d$, the deep NNGP and $\gamma\le0$ families fail for every target, so those results do not single out parity at all.
+
+**Scope.** These are statements about the kernel-limit learners of the $\gamma<1$ regimes. The $\gamma\ge1$ regimes learn every small circuit, parity included ([Question 8](#8-what-is-actually-known-for-the-one-parameter-family-of-scalings)). The note's numerical illustrations use $d\le12$ and only illustrate the asymptotic statements. In them, majority of seven bits reaches $\gamma<0$ confidence failure $0.03$ at $n=200$. Three-bit parity needs about $2400$ samples to reach zero. The leap-one target above still fails on $23\%$ of inputs at $n=2400$.
 
 ## 12. What robustness condition gives polynomial depth dependence?
 
@@ -735,7 +770,7 @@ The largest missing links are:
 - **Orders of limits.** Fixing width and shrinking variance, taking width first at a specified scaling, and growing dimension and width together can give different answers. Theorems should specify which is being taken.
 - **Computational cost.** Exact posterior conditioning and sampling may be intractable. Polynomial examples do not imply polynomial computation, and no theorem here identifies SGD's output law with that posterior.
 - **Noisy or misspecified data.** The strong-prior exact-interpolation theorem has resource-dependent noise tolerance. The [label-noise discussion](#24-do-the-good-generalization-results-survive-a-small-amount-of-label-noise) explains its scope; dimension-independent fixed-noise tolerance and broader misspecification remain open.
-- **Typical data and architectures.** Uniform parity is a useful separation, not a model of all natural data. Current empirical certificates do not establish a theorem for modern large-model training.
+- **Typical data and architectures.** Uniform parity is a useful separation, not a model of all natural data. [Which other targets are hard](#is-the-bad-sample-complexity-specific-to-parity) for the subcritical learners is a separate question. Current empirical certificates do not establish a theorem for modern large-model training.
 - **Prediction rules.** Gibbs draws, posterior majority, mean-score prediction, and confidence-threshold success are different losses. A statement about one should not be relabeled as a statement about another.
 - **Selection of examples.** Passive iid sample lower bounds need not hold for active learning, teaching sets, or adversarially selected informative inputs. They are also usually stated for each specified sample size, not on one common event for every prefix of an infinite stream.
 
