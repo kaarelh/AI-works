@@ -168,20 +168,53 @@ $$
 =(\gamma-1,\gamma,\ldots,\gamma,\gamma+1).
 $$
 
-In contrast, the usual nondegenerate tanh NNGP scaling is $(0,1,\ldots,1,1)$. Calling both constructions “NNGP-like” does not make their kernels or conditioning identical.
+In contrast, the usual nondegenerate tanh NNGP scaling is $(0,1,\ldots,1,1)$. All discussion below fixes depth and dimension before taking width to infinity, and retains our global output-margin and exact-label conditioning conventions.
 
-**Heuristic for typical unconditioned amplitudes:** for fixed depth, tanh, fixed dimension, and nondegenerate coordinates, let the hidden activation variance scale like $N^{-b_s}$. Then
+**What is the layer-collapse argument?** The slides try to reduce the many layer scales to a small number of effective learners by asking where it is cheapest to perform the computation. They first assume that the *conditioned* network has order-one hidden preactivations: no hidden layer becomes nearly linear through vanishing amplitudes, or fully saturated through diverging amplitudes. They also take the first layer to be a fixed random embedding. Under those assumptions, the proposed argument is:
+
+1. **Assign each layer a price.** With order-one incoming activations, making a positive fraction of a hidden layer's neurons perform a specified task has a Gaussian energy price of order $p_s=1/\sigma_s^2=N^{a_s}$, when this is a rare event. A single readout has price $p_L=1/(N\sigma_L^2)=N^{a_L-1}$. Prices here mean negative log-probability scales; they omit representation entropy and the task's geometry.
+2. **An expensive layer followed by a cheaper one can shrink and amplify.** Suppose a useful feature comes from the term of degree $k$ in tanh's Taylor expansion. Shrinking the incoming weights by $t$ makes that feature smaller by $t^k$. Amplifying it downstream by $t^{-k}$ restores its size. The schematic cost is
+
+   $$
+   p_s t^2+p_{s+1}t^{-2k},\qquad
+   t_{\mathrm{opt}}=\left(\frac{k p_{s+1}}{p_s}\right)^{1/(2k+2)}.
+   $$
+
+   If the earlier layer is increasingly more expensive, the optimum has $t\to0$. This is the proposed **collapse**: a layer operates near zero, and a later layer amplifies its small signal. Recovering a particular nonlinear term also requires cancelling lower Taylor terms; simple amplification alone does not do that. The slides exclude this outcome using their order-one-activation assumption. They do not classify the collapsed learner.
+3. **A cheaper prefix followed by an expensive suffix might finish early.** The proposed “truncation” is to compute the answer in the cheap prefix and have the expensive tail transmit it. The resulting prior would resemble a shallower learner. This step needs an efficient way to move the computation into the prefix; universal approximation alone does not provide one.
+4. **Balance the remaining live layers.** If the internal variances are comparable, equating their price to the readout price gives $a_L=a_s+1$. At the fan-in scale $a_s=1$, changing an empirical feature distribution costs order $N$, whereas forcing a margin through the readout costs order $N^{a_L-1}$. Their competition occurs at $a_L=2$, the critical case. This motivates the slides' kernel/feature-learning picture.
+
+**Why isn't that a proof?** For several inputs at once, prescribing preactivations $u$ from an incoming feature matrix $A$ costs $u^\top(AA^\top)^+u/(2\sigma^2)$, when feasible. The full Gram matrix controls which computations are possible and affordable. Scalar prices miss its rank and conditioning, representation entropy, and changes in earlier features induced by later labels. Collapsing, saturating, and unequal-depth representations are also legitimate possibilities for the actual prior. [Appendix I of the audit](side-results/strong-prior-appendix-audit/paper.pdf) explains these gaps. The heuristic is useful, but its standing assumption excludes part of the space we want to understand.
+
+For bookkeeping outside that assumption, let typical *unconditioned* hidden activation variance scale as $N^{-b_s}$. For fixed-depth tanh networks the amplitude heuristic is
 
 $$
 b_1\approx\max\lbrace a_1,0\rbrace ,\qquad
 b_s\approx\max\lbrace a_s+b_{s-1}-1,0\rbrace ,
 $$
 
-and the output variance has scale $N^{1-a_L-b_{L-1}}$. This suggests linear, order-one nonlinear, and saturated layers. It is useful bookkeeping, **not a classification of the conditioned Bayesian learner**. Covariances can degenerate, boundary constants matter, and rare margin conditioning can select features that are atypical under the unconditioned calculation.
+and output variance has scale $N^{1-a_L-b_{L-1}}$. A negative value before taking a maximum indicates diverging preactivations and saturation. This recursion helps locate possible linear or saturated layers; it does not determine what rare conditioning selects.
 
-The deeper obstruction to the slides' proposed classification is that implementing a layer simultaneously on many inputs depends on the full feature Gram matrix. For incoming feature matrix $A$, a prescribed preactivation vector $b$ has Gaussian cost proportional to $b^\top(AA^\top)^+b$, when feasible. Scalar amplitude prices omit rank, conditioning, and the entropy of possible feature representations. Downstream labels can also change the upstream feature law.
+**Do we still expect just circuit learning versus exponential sample complexity?** Those remain useful broad possibilities, but I would not currently conjecture an exhaustive two-way classification of *all* tuples. In particular, a different prior mechanism need not imply a different sample-complexity outcome. Here are concrete predictions, with their status:
 
-Consequently, the slides' “step-up collapse,” “step-down truncation,” and reduction of every scaling to a short list remain heuristics. Neither the table above nor the amplitude recursion fills the remaining tuples. See [Appendix I of the audit](side-results/strong-prior-appendix-audit/paper.pdf).
+| Exponent tuples | Prediction and current status |
+|---|---|
+| $a_1\le0$, every internal $a_s\le1$, and $a_L<2$ | **Conjectured frozen-feature region.** Hidden activations remain order one, possibly saturated. With a nondegenerate limiting kernel and empirical-kernel deviations costing order $N$, forcing margins costs only $N^{a_L-1}=o(N)$ when $1<a_L<2$. Thus conditioning should leave the leading kernel fixed. Exponential parity sample bounds are plausible but still require a spectrum and posterior-confidence argument for these kernels. |
+| Exact fan-in hidden scaling $(0,1,\ldots,1,a_L)$ with $a_L\ge2$ | **Conjectured circuit-learning side.** The endpoint $a_L=2$ is proved in our critical results. For $a_L>2$, changing features can be cheaper than forcing the output through fixed features; I expect positive learning results, but output-dominated saturation and subleading costs need analysis. This does not assert the same circuit-prior ordering at every exponent. |
+| One hidden layer: $(a_1,a_L)=(a,b)$ with $a>0$ and $a\le b\le a+2$ | **Tentative larger circuit-learning region.** Using $M=N^{(b-a)/2}$ active neurons balances feature cost $MN^a$ against readout cost $N^b/M$. At $b=a+2$ this is the established balanced strong-prior family; the interior suggests that a smaller active population can suffice. A construction alone does not control the remaining neurons or the posterior. |
+| One hidden layer: $a>b>1$ | **Proved degree-based prior ordering; learning rate open.** The collapsing layer produces the threshold-degree hierarchy below. It is not a circuit-size prior, but it could still have exponential parity sample complexity. |
+
+In the frozen-feature prediction, $a_L<1$ gives a normalized GP with vanishing absolute margin, $a_L=1$ retains a fixed global margin, and $1<a_L<2$ gives a Gaussian minimum-energy description at leading order. The last statement does not determine posterior weights among tied minimizers. These distinctions already occur within the proposed hard-learning side.
+
+**A collapse calculation can actually be made rigorous.** For one hidden tanh layer with $a>b>1$, let $r(f)$ be the smallest degree of a real polynomial whose sign equals $f$, and let $k$ be the smallest positive odd integer at least $r(f)$. Then the raw probability of implementing $f$ with the global margin satisfies
+
+$$
+\Pr(A_{N,f})=\exp\!\left[-\Theta_f\!\left(N^{(ka+b)/(k+1)}\right)\right].
+$$
+
+The [proof note](works-in-progress/scaling-tuples/README.md) supplies matching Taylor-expansion lower bounds and finite-neuron constructions, and converts their energy costs into Gaussian probability bounds. Consequently, after conditioning on any fixed training set, the width-first posterior first minimizes **odd-rounded polynomial threshold degree** among consistent functions. Constants and widths in this result are not uniform in growing dimension; the proof has independent AI-agent checks but is not Lean verified.
+
+This can sharply disagree with circuit size: for even dimension, full parity is less probable asymptotically than every other Boolean function except its negation, including functions of exponentially greater circuit complexity. However, excluding the exact target from the limiting posterior does not imply poor test predictions: the remaining functions might be almost correct. So this result establishes a distinct prior-ordering mechanism, **not a third sample-complexity phase or an exponential sample lower bound**. Establishing the learning behavior of this explicit collapsed region is a useful next test of the proposed broad dichotomy.
 
 ## 10. Does a quantitative central limit theorem make all $0<\gamma<1$ into Gaussian conditioning?
 

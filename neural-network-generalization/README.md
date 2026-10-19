@@ -1,12 +1,12 @@
 # Bayesian neural-network generalization
 
-Papers and notes by Dmitry Vaintrob, Kaarel Hänni, and OpenAI Codex (credited as ChatGPT in the earliest manuscripts). Public research snapshot, updated 18 October 2026.
+Papers and notes by Dmitry Vaintrob, Kaarel Hänni, and OpenAI Codex (credited as ChatGPT in the earliest manuscripts). Public research snapshot, updated 19 October 2026.
 
 **Start here:** [main results](#main-results) · [technical FAQ: assumptions, interpretation, and open problems](TECHNICAL-FAQ.md) · [Lean verification](lean/VERIFICATION.md) · [recent depth research](#recent-depth-research)
 
 The five papers below are the main results. The remaining papers are listed as side results, earlier treatments, or works in progress. “Side result” does not mean unproved: several contain complete theorems, but they are not the main presentation of this project. These are research drafts, not externally peer-reviewed publications; the FAQ distinguishes proved statements from plausible extensions and open questions.
 
-Every paper has a PDF, editable LaTeX source, and a build script. The collection contains 40 distinct papers and notes, with experimental code and selected exact certificates. The [catalog](catalog.json) identifies the canonical manuscripts; older treatments retain their historical scope and open-status remarks.
+Every paper has a PDF, editable LaTeX source, and a build script. The collection contains 40 PDF manuscripts, additional research notes, experimental code, and selected exact certificates. The [catalog](catalog.json) identifies the canonical manuscripts; older treatments retain their historical scope and open-status remarks.
 
 ## Lean verification
 
@@ -98,6 +98,7 @@ These manuscripts are retained because their proofs or scope can still be useful
 
 | Paper | Scope |
 |---|---|
+| [Layerwise scaling and collapsed-layer priors](works-in-progress/scaling-tuples/README.md) (Markdown research note) | For a one-hidden-layer Gaussian prior with input exponent $a>b>1$ and readout exponent $b$, proves a hierarchy by odd-rounded polynomial threshold degree. Gives conjectured learning regions for other tuples. The prior-ordering theorem is not a sample-complexity classification; not Lean verified. |
 | [Bayesian circuit learning at mean-field scaling: a variational principle and width-independent generalization](side-results/gamma-ge1-endpoint/paper.pdf) · [source](side-results/gamma-ge1-endpoint/) | Earlier mean-field variational proof, with an unquantified sufficiently-large-width threshold. Its all-width question is resolved by main result 3. |
 | [An explicit sufficient width for mean-field Bayesian circuit learning](side-results/meanfield-quantified-width/paper.pdf) · [source](side-results/meanfield-quantified-width/) | Earlier quantified sufficient-width theorem. Main result 3 removes the extra width threshold. |
 | [Superpolynomial sample lower bounds for globally margin-conditioned Bayesian neural networks below the mean-field scaling](side-results/subcritical-sample-complexity/paper.pdf) · [source](side-results/subcritical-sample-complexity/) | Earlier superpolynomial lower bound, valid for every training set of the indicated size. The stronger IID exponential theorem is main result 4. |
