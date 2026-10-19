@@ -664,15 +664,21 @@ $$
 
 That particular certificate therefore retains a quadratic width cost, regardless of the Gaussian variances. A teacher-sized asymptotic coefficient does not remove it. This is a limitation of that construction, **not** a lower bound on the learner or on every possible SLT-inspired proof. Moreover, a cumulative predictive-loss bound cannot simply be differenced to bound the final predictor.
 
-**An explicit finite-volume argument can improve on parameter counting.** The [supporting note](works-in-progress/slt-finite-sample/README.md) gives a direct calculation for tanh networks with the standard independent Gaussian fan-in prior: variance $1/(d+1)$ in the first layer and $1/N$ in subsequent layers, including the readout. The likelihood is Gaussian with fixed variance.
+**A finite-sample variational argument can improve on parameter counting.** The [supporting note](works-in-progress/slt-finite-sample/README.md) gives a direct calculation for tanh networks with the standard independent Gaussian fan-in prior: variance $1/(d+1)$ in the first layer and $1/N$ in subsequent layers, including the readout. The likelihood is Gaussian with fixed variance.
 
-A teacher has hidden width $C\le N$, depth $L$, and weights bounded by $B$. Place a Gaussian comparison distribution around its zero-padded implementation. Only the weights **entering the teacher's neurons**, and the readout, need smaller variances. There are
+A teacher has hidden width $C\le N$, depth $L$, and weights bounded by $B$. Use a product Gaussian comparison distribution whose mean is the zero-padded teacher. Only the weights **entering the teacher's neurons**, and the readout, need smaller variances. There are
 
 $$
 Q=C(d+1)+(L-2)CN+N
 $$
 
-such coordinates. The other hidden weights retain their prior distribution; bounded tanh activations control their influence. Both the teacher's mean-shift cost and this variance-shrinkage cost are linear in $N$ at fixed teacher resources. The resulting **nonasymptotic final-posterior** guarantee needs $O(N)$ samples for fixed accuracy and confidence. It applies to clean real-valued teacher outputs under the chosen Gaussian likelihood, and ensures greater than $2/3$ posterior probability of an accurate latent output on most test inputs. The explicit bound is polynomial in depth as well, while retaining its learner-width dependence. For genuinely Gaussian-noisy observations, the note also proves an expected averaged-predictive log-loss bound with the same width scaling.
+such coordinates. The other hidden weights retain their prior distribution; bounded tanh activations control their influence. Both the teacher's mean-shift cost and this variance-shrinkage cost are linear in $N$ at fixed teacher resources.
+
+**This comparison distribution is broad in parameter space.** When the learner is much wider than the teacher, most hidden weights retain their full prior fluctuations; the distribution is not concentrated in a small ball around the teacher. The proof uses independent, centered perturbations of incoming weights, whose variances add within each neuron's weighted sum. This bounds expected **squared** output error at each input; errors are not canceled across training inputs. An entropy inequality then lower-bounds the posterior's normalizing integral. The comparison Gaussian is an auxiliary distribution, not a claimed description of the posterior.
+
+This is a quantitative finite-sample variational calculation, rather than a derivation from the usual SLT local asymptotic expansion. SLT can also integrate along redundant parameter directions, so the distinction is not that every SLT argument requires a tiny Euclidean ball. The result below specifically uses broad parameter fluctuations and explicit moment and entropy bounds; it does not establish that the standard local-coefficient calculation yields the same guarantee.
+
+The resulting **nonasymptotic final-posterior** guarantee needs $O(N)$ samples for fixed accuracy and confidence. It applies to clean real-valued teacher outputs under the chosen Gaussian likelihood, and ensures greater than $2/3$ posterior probability of an accurate latent output on most test inputs. The explicit bound is polynomial in depth as well, while retaining its learner-width dependence. For genuinely Gaussian-noisy observations, the note also proves an expected averaged-predictive log-loss bound with the same width scaling.
 
 For $L\ge3$, the full parameter count is
 

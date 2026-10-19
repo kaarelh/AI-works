@@ -118,6 +118,20 @@ $$
 
 Call the first $C$ hidden neurons in each layer the selected neurons. The other neurons need not approximate any teacher value: tanh keeps their activations bounded by one. All edges entering selected neurons are controlled, including edges from these otherwise unconstrained neurons.
 
+### Parameter-space extent and the role of averaging
+
+The comparison distribution is an auxiliary measure used to lower-bound the posterior normalizer. It is not an approximation asserted for the posterior itself, and it is not supported on a small parameter ball. Every unselected hidden row retains its complete Gaussian prior law. If $w_T$ denotes the zero-padded teacher and $U$ the coordinates of these unselected rows, then
+
+$$
+\mathbb E_{q_t}\lVert(w-w_T)_U\rVert_2^2=(L-1)(N-C).
+$$
+
+The first layer contributes $(N-C)D$ variances of size $1/D$; each of the $L-2$ subsequent hidden layers contributes $(N-C)N$ variances of size $1/N$. At fixed teacher width and depth, this expected squared displacement grows linearly with learner width. Shrinking $t$ does not narrow the distribution in these directions.
+
+The approximation estimate below concerns the expectation of squared error at each fixed input. Independent centered weight perturbations add in variance within a neuron, and their cross term with the discrepancy propagated from previous layers has conditional expectation zero. There is no cancellation of squared losses across inputs, and no claim that every parameter vector in the support computes an accurate function. The order is a supremum over inputs of an expected squared error, not an expected supremum over inputs.
+
+These moment estimates and the explicit relative-entropy cost supply a finite-sample variational certificate. They do not come from a local Taylor approximation or an SLT learning coefficient. SLT can itself integrate over redundant directions or neighborhoods of a set of equivalent parameters; a small isotropic ball is not a universal description of its proofs. The particular guarantee here relies on the stated finite-scale probabilistic bounds.
+
 ### Uniform expected approximation error
 
 For the first hidden layer, each selected preactivation has the teacher value as its mean and Gaussian noise variance at most
