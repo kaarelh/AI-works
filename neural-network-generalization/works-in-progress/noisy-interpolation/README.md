@@ -17,7 +17,7 @@ $$
 A(d,L,U)=O\!\left(U^2d(d+1)(d^2+L^2)\right).
 $$
 
-The parameter $U$ bounds the clean teacher's real output. One may always take $U=C^2$, since a width-$C$ implementation with weights bounded by $C$ has $|z_f|\leq C^2$. Standard saturated implementations of Boolean circuits have $U=1$, so their corruption coefficient is independent of circuit width.
+The parameter $U$ bounds the clean teacher's real output. One may always take $U=C^2$, since a width-$`C`$ implementation with weights bounded by $C$ has $|z_f|\leq C^2$. Standard saturated implementations of Boolean circuits have $U=1$, so their corruption coefficient is independent of circuit width.
 
 For independent label flips of probability $\eta$, the bound becomes a resource-dependent multiple of $\eta$, plus a term decreasing with sample size. **This does not yet give a noise floor depending only on $\eta$, uniformly over input dimension.** It does establish tolerance of a positive fraction of corruptions that is sufficiently small relative to the displayed resource polynomial. The clean sample overhead can still have bad depth dependence.
 

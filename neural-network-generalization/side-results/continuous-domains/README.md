@@ -6,7 +6,7 @@
 
 The main result concerns learning a teacher's **real-valued output** on a compact continuous domain, including the entire unit sphere or ball. The input distribution can be arbitrary. There is no global output-margin condition on the prior, and the teacher can cross zero.
 
-Suppose a tanh teacher has depth $L$, width $C$, and weights bounded in absolute value by $B$. For **every learner width $N\ge C$**, the sample bound is polynomial in dimension, teacher resources, and accuracy parameters at each fixed depth, independently of $N$. Width and weight magnitude are counted separately; the result does not give a width-only bound for arbitrarily large teacher weights.
+Suppose a tanh teacher has depth $L$, width $C$, and weights bounded in absolute value by $B$. For **every learner width $`N\ge C`$**, the sample bound is polynomial in dimension, teacher resources, and accuracy parameters at each fixed depth, independently of $N$. Width and weight magnitude are counted separately; the result does not give a width-only bound for arbitrarily large teacher weights.
 
 ## Regression theorem
 

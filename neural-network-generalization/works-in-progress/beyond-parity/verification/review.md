@@ -1,6 +1,6 @@
 # Independent check of the beyond-parity note
 
-19 October 2026. The [note](../README.md) and its [FAQ question](../../../TECHNICAL-FAQ.md#is-the-bad-sample-complexity-specific-to-parity) were checked in three rounds by AI agents that had not written them. Each reviewer read the cited lemmas in the subcritical paper's source rather than the note's paraphrases. The reviews are AI checks, not human review.
+19 October 2026. The [note](../README.md) and its [FAQ question](../../../TECHNICAL-FAQ.md#for-gamma1-is-the-bad-sample-complexity-specific-to-parity) were checked in three rounds by AI agents that had not written them. Each reviewer read the cited lemmas in the subcritical paper's source rather than the note's paraphrases. The reviews are AI checks, not human review.
 
 ## Round 1
 
@@ -15,7 +15,7 @@
 - the leap definition, the greedy closure, and the Fourier argument of Proposition 7, together with $\mathrm{err}_r\le W^{>r}$;
 - the parity-specific lemma list and the restriction-parity examples in Section 6.
 
-The two incorrect upper-bound statements were these: the $0<\gamma<1$ limit statement assumed that tie weights converge, and the $\gamma\le0$ upper bound omitted a $\ln(1/\varepsilon)$ term. Its other findings were a status claim, overstatements, and small gaps. The most substantive was a missed result: a fixed-degree **$\gamma=0$ analogue** follows from the paper's denominator, quadratic-entropy, and amplitude lemmas. It is now Proposition 4′.
+The two incorrect upper-bound statements were these: the $0<\gamma<1$ limit statement assumed that tie weights converge, and the $\gamma\le0$ upper bound omitted a $\ln(1/\varepsilon)$ term. Its other findings were a status claim, overstatements, and small gaps. The most substantive was a missed result: a fixed-degree **$`\gamma=0`$ analogue** follows from the paper's denominator, quadratic-entropy, and amplitude lemmas. It is now Proposition 4′.
 
 **Numbers, code, and citations.** A second agent reran every section of the check script; its output matched the recorded output line for line. It recomputed the sign-GP table from the raw rows. It reviewed the Krawtchouk, leap, linear-programming, and exhaustive-search code. It checked the HMC sampler against 4-million-draw rejection sampling at $n=4$, and the Rao–Blackwellized predictor. It found no substantive error. Most citations were confirmed from abstracts and proceedings pages; full texts could not be fetched. Three were only partly confirmed:
 
@@ -69,7 +69,7 @@ Two were auditors. One checked every round-1 finding against the revised text an
 **Changes made after round 2.** All were precision or consistency fixes:
 
 - **Proposition 4′.**
-  - Its proof now cites the $r$-independent rough cost bound, and the quadratic-entropy lemma for the target's own labels. The previous citation was the parity-labelled display.
+  - Its proof now cites the $`r`$-independent rough cost bound, and the quadratic-entropy lemma for the target's own labels. The previous citation was the parity-labelled display.
   - The amplitude threshold was renamed, to avoid a clash with the paper's notation.
   - The range of $r$ starts at one.
   - A sentence notes that its constants are large.
@@ -110,3 +110,9 @@ The consistency reader found the following:
 - **Stale checksums.** `SHA256SUMS` had not been regenerated. It was regenerated for publication.
 - **Wording.** It found several wording mismatches, now fixed, and confirmed every number, label, link, anchor, and rendering hazard it checked.
 
+## Later rewrite of the FAQ question
+
+After these rounds, the FAQ question was rewritten so that it reads on its own and centres on the subcritical learners, with kernel regression as a comparison. Its heading now names the $\gamma<1$ regime. Its claims were checked for fidelity against the note and the previous version by a further agent, and its readability by an agent without other context. Two claims were added in the rewrite, and the fidelity check covers them:
+
+- the upper bound $d^2/\varepsilon^2$ at $0<\gamma<1$ for majority of all $d$ bits, from Proposition 5;
+- the remark that for fixed $k$ the sparse-parity bounds are at the natural scale of FAQ Question 11.

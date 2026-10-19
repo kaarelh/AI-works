@@ -14,7 +14,7 @@ Exploratory runs of the limiting $\gamma<0$ learner of the [subcritical paper](.
 - **Runs.** Two chains of 1500 draws each, after 300 burn-in steps.
 - **Training inputs.** $n$ iid uniform draws per seed, shared by all targets.
 
-**Validation.** `validate_sampler.py` compares the sampler at $n=8$ with quasi-exact orthant-probability ratios, with maximum error in $q$ of $1.1\times10^{-3}$. At $n=150$–$300$ it compares with an independent coordinatewise Gibbs sampler, with maximum difference 0.014 in $q$ and 0.005 in $F$. Results are in `validate_sampler.json`. Across all runs the two chains differ in $F$ by at most 0.009.
+**Validation.** `validate_sampler.py` compares the sampler at $n=8$ with quasi-exact orthant-probability ratios, with maximum error in $q$ of $1.1\times10^{-3}$. At $`n=150`$–$`300`$ it compares with an independent coordinatewise Gibbs sampler, with maximum difference 0.014 in $q$ and 0.005 in $F$. Results are in `validate_sampler.json`. Across all runs the two chains differ in $F$ by at most 0.009.
 
 **Targets.** All targets are juntas on the first coordinates (`targets.py`, profiles in `targets.json`). Exact distances from low-degree threshold functions, computed by mixed-integer programming, are in `ptf_disagreement.json`.
 

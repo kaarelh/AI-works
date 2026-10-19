@@ -1,4 +1,4 @@
-# Bayesian neural network generalization
+# Bayesian neural-network generalization
 
 Papers and notes by Dmitry Vaintrob, Kaarel Hänni, and OpenAI Codex, with contributions from Claude. Public research snapshot, updated 19 October 2026.
 
@@ -32,19 +32,19 @@ This paper takes the prior variance to zero at each fixed width. It does not cla
 
 [Paper (PDF)](main-results/gamma-above-one/paper.pdf) · [Source and build instructions](main-results/gamma-above-one/)
 
-**Width-uniform Bayesian generalization above the mean-field scaling.** For every fixed depth and every fixed $\gamma>1$, proves polynomial sample complexity at the specified nonzero Gaussian variance for **every width $N\ge C_L(f)$**. The result allows bounded 1-Lipschitz hidden activations and arbitrary input distributions. The polynomial may depend on depth and $\gamma$; there is no uniform claim as $\gamma$ approaches one.
+**Width-uniform Bayesian generalization above the mean-field scaling.** For every fixed depth and every fixed $\gamma>1$, proves polynomial sample complexity at the specified nonzero Gaussian variance for **every width $`N\ge C_L(f)`$**. The result allows bounded 1-Lipschitz hidden activations and arbitrary input distributions. The polynomial may depend on depth and $\gamma$; there is no uniform claim as $\gamma$ approaches one.
 
 ### 3. $\gamma=1$: every width above target complexity
 
 [Paper (PDF)](main-results/meanfield-all-width/paper.pdf) · [Source and build instructions](main-results/meanfield-all-width/)
 
-**Mean-field Bayesian circuit learning at every width above target complexity.** A standalone finite-width proof for fixed-depth tanh networks, with polynomial sample complexity for **every width $N\ge C_L(f)$** and arbitrary input distributions. No infinite-width limit or extra minimum-width hypothesis is needed. This resolves the all-width question left open in the earlier mean-field papers.
+**Mean-field Bayesian circuit learning at every width above target complexity.** A standalone finite-width proof for fixed-depth tanh networks, with polynomial sample complexity for **every width $`N\ge C_L(f)`$** and arbitrary input distributions. No infinite-width limit or extra minimum-width hypothesis is needed. This resolves the all-width question left open in the earlier mean-field papers.
 
 ### 4. $\gamma<1$: an exponential sample-complexity lower bound
 
 [Paper (PDF)](main-results/subcritical-exponential/paper.pdf) · [Source and build instructions](main-results/subcritical-exponential/)
 
-**Exponential parity sample complexity throughout the subcritical width regime.** For every fixed $\gamma<1$ and fixed depth, proves an $\exp(\Omega(k))$ sample lower bound for full $k$-bit parity under uniform IID training inputs. Here the ambient dimension is $d=k$.
+**Exponential parity sample complexity throughout the subcritical width regime.** For every fixed $\gamma<1$ and fixed depth, proves an $\exp(\Omega(k))$ sample lower bound for full $`k`$-bit parity under uniform IID training inputs. Here the ambient dimension is $d=k$.
 
 More precisely, there are $c>0$ and $k_0$ such that, for every $k\ge k_0$ and each specified integer $0\le n\le e^{ck}$, with probability at least $3/4$ over the training sample, the limiting fraction of test inputs whose correct label has posterior probability at most $2/3$ is at least $1/16$ (in the liminf sense). Width tends to infinity first, with dimension, sample, margin, depth, and $\gamma$ fixed. The paper does not give a quantitative minimum width or a joint-limit theorem. The guarantee is for each specified sample size, not a simultaneous statement about all prefixes of one sample sequence.
 
@@ -54,7 +54,7 @@ This is the completed full-parity exponential theorem. The stronger fixed-depth 
 
 [Paper (PDF)](main-results/robust-polynomial-depth/paper.pdf) · [Source and build instructions](main-results/robust-polynomial-depth/) · [Robustness FAQ](TECHNICAL-FAQ.md#12-what-robustness-condition-gives-polynomial-depth-dependence)
 
-**A polynomial-depth learning bound for NNBayes on robust networks.** Restrict the Gaussian prior to networks whose clipped predictions survive a calibrated ball of simultaneous internal activation and output perturbations. For layered Boolean-circuit targets of width $C$, one universal polynomial bounds sample complexity jointly in input dimension, depth, circuit width, robustness calibration, and statistical parameters, simultaneously at **every width $N\ge C$ and every $\gamma\ge1$**.
+**A polynomial-depth learning bound for NNBayes on robust networks.** Restrict the Gaussian prior to networks whose clipped predictions survive a calibrated ball of simultaneous internal activation and output perturbations. For layered Boolean-circuit targets of width $C$, one universal polynomial bounds sample complexity jointly in input dimension, depth, circuit width, robustness calibration, and statistical parameters, simultaneously at **every width $N\ge C$ and every $`\gamma\ge1`$**.
 
 The learner conditions on signed training output above $1/2$ and controls posterior test-margin error at $1/4$, hence sign error and confidence failure. The main theorem needs no all-input clean-output margin; the manuscript also treats an optional extra conditioning variant, outside the exact Lean learning statement. The comparator is a layered Boolean circuit with constant wires and compilation overhead counted; this is not an unconditional polynomial-depth theorem for every small analog neural circuit.
 
@@ -66,7 +66,7 @@ In the four earlier main papers, the learner conditions the Gaussian parameter p
 
 At fixed depth, $C_L(f)$ is the bounded-weight network complexity defined in the papers: the smallest eligible width $C$ with weights bounded by $C$. Circuit simulations are proved where used; arbitrary circuit size is not silently identified with fixed-depth network complexity.
 
-For prediction, the success criterion is correct-label posterior probability **strictly greater than $2/3$**. The first papers phrase their main bounds in posterior average error; the confidence guarantee follows by rescaling the accuracy parameter by three. The later papers state the confidence convention explicitly.
+For prediction, the success criterion is correct-label posterior probability **strictly greater than $`2/3`$**. The first papers phrase their main bounds in posterior average error; the confidence guarantee follows by rescaling the accuracy parameter by three. The later papers state the confidence convention explicitly.
 
 ## Side results
 
