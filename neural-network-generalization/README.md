@@ -1,4 +1,4 @@
-# Bayesian neural-network generalization
+# Bayesian neural network generalization
 
 Papers and notes by Dmitry Vaintrob, Kaarel Hänni, and OpenAI Codex, with contributions from Claude. Public research snapshot, updated 19 October 2026.
 
