@@ -35,7 +35,7 @@ later layers, at fixed depth, with width $N\to\infty$ first. The prior is
 conditioned on an output margin $|z(x)|>a$ at every Boolean input and then
 on the training signs; prediction counts as correct only when the correct
 label has posterior probability greater than $2/3$. For $\tanh$ networks
-of every fixed depth and every choice of layer gains, we prove that
+of every fixed depth and every choice of layer gains, we prove that, for all large $d$,
 $n\le\exp(\frac1{20}\sqrt d\log d)$ uniform independent examples of full
 parity on $d$ bits leave, with probability $1-e^{-\Omega(d)}$ over the
 sample, at least a $1/16$ fraction of inputs without confident correct
@@ -95,7 +95,7 @@ with $b<1$ (Remark~\ref{rem:readout}).
 \item \textbf{Margin learner, typical samples} (Theorem~\ref{thm:margin},
 proved). For $\tanh$ at every fixed depth and every choice of gains and
 margin, $n\le\exp(\frac1{20}\sqrt d\log d)$ iid uniform examples of full
-parity leave, with probability at least $1-e^{-d/10}$, Gibbs error at least
+parity leave, for $d\ge d_0$ (not explicit) and with probability at least $1-e^{-d/10}$, Gibbs error at least
 $3/8$ and confidence failure at least $1/16$ in the width limit.
 \item \textbf{The exponential question} (open). We do not know whether
 $\exp(\Omega(d))$ samples are needed. Proposition~\ref{prop:obstruction}
@@ -115,8 +115,11 @@ coefficients of $\tanh$ (Lemma~\ref{lem:tanh}).
 \paragraph{What this paper does not show.} We prove no $\exp(\Omega(d))$
 lower bound and no upper bound for either learner. We do not decide whether
 the exponent $\sqrt d\log d$ is the truth. The margin theorem is proved for
-$\tanh$ and for activations whose dual coefficients decay at most like
-$e^{-o(\sqrt m\log m)}$ (Remark~\ref{rem:activations}). It does not cover
+$\tanh$, and for odd bounded continuous activations whose first-layer dual
+coefficients are all positive and decay at most like
+$e^{-o(\sqrt m\log m)}$ (Remark~\ref{rem:activations}). It holds for
+$d\ge d_0$, where $d_0$ depends on the depth, gains and margin and is not
+explicit, because we prove no rate for the coefficient tail $T(s)$. It does not cover
 $\operatorname{erf}$, whose coefficients decay geometrically. As in
 \cite{nngpnote,subcritical}, the results concern the exact posterior;
 nothing is claimed about computing it.
@@ -555,8 +558,10 @@ Gaussian integration by parts gives $\E[g(G)He_m(G)]=\E g^{(m)}(G)$ for
 smooth $g$ with bounded derivatives. With $g(t)=\tanh(\sigma t)$ this gives
 $\beta_m=\sigma^m\E[\tanh^{(m)}(\sigma G)]/\sqrt{m!}$. The function
 $\operatorname{sech}^2=\tanh'$ has Fourier transform
-$\int_\R\operatorname{sech}^2(y)e^{-i\omega y}dy=\pi\omega/\sinh(\pi\omega/2)$
-\cite[3.986.2]{GR}, which is positive, even and exponentially decaying.
+$\int_\R\operatorname{sech}^2(y)e^{-i\omega y}dy=\pi\omega/\sinh(\pi\omega/2)$.
+This follows from the beta integral
+$\int_\R e^{-i\omega y}\operatorname{sech}^2(y)dy=2\Gamma(1+\frac{i\omega}2)\Gamma(1-\frac{i\omega}2)$
+(substitute $u=(1+\tanh y)/2$, so $du=\frac12\operatorname{sech}^2y\,dy$ and $e^{2y}=u/(1-u)$) and $|\Gamma(1+ix)|^2=\pi x/\sinh(\pi x)$; see \cite[Sections~3.98 and~8.33]{GR}. The transform is positive, even and exponentially decaying.
 Fourier inversion and Fubini therefore give, for even $k=m-1$,
 \[
  \E[\tanh^{(m)}(\sigma G)]
@@ -604,14 +609,14 @@ $(m+1)^{-1/2}\ge e^{-\sqrt{m+1}}$ and $\sqrt{m+1}\le\sqrt{2m}$.
 Let $F$ be odd with $c_m\ge\kappa e^{-\psi(m)}$ for every odd $m$, where
 $\kappa>0$ and $\psi$ is nondecreasing. For $d\ge101$:
 \begin{enumerate}
-\item[(a)] $\binom dq\lambda_q\ \ge\ \varepsilon_d:=\dfrac{A\kappa\,
+\item[(a)] $\binom dq\lambda_q\ \ge\ \dfrac{A\kappa\,
 e^{-\psi(40D)}}{2D(D+1)}$ for every $0\le q\le0.49d$;
 \item[(b)] the smallest eigenvalue of the matrix $K$ satisfies
 $v_{\min}(K)\ge\frac{A\kappa}8e^{-\psi(\lceil10D\log(2D)\rceil)}$.
 \end{enumerate}
 \end{lemma}
 \begin{proof}
-Poissonize the walk. If the number of steps is $N_t\sim\mathrm{Poisson}(t)$,
+Poissonize the walk. If the number of steps is $\Pi_t\sim\mathrm{Poisson}(t)$, written $\Pi_t$ to avoid confusion with the width,,
 the coordinates flip independently, each an odd number of times with
 probability $p(t)=(1-e^{-2t/D})/2$. Hence
 $\sum_m\pi_t(m)p_m(j)=p(t)^j(1-p(t))^{D-j}$, where
@@ -619,14 +624,14 @@ $\pi_t(m)=e^{-t}t^m/m!$. For odd $j$, only odd $m$ contribute, and
 $p_m(j)\le1$ and $\pi_t(m)\le1$. Hence, for every integer $m_1$,
 \begin{equation}\label{eq:poisson}
  a_j\ \ge\ \Bigl(\min_{m\le m_1,\ m\text{ odd}}c_m\Bigr)
- \Bigl[p(t)^j(1-p(t))^{D-j}-\Pp\{N_t>m_1\}\Bigr],
+ \Bigl[p(t)^j(1-p(t))^{D-j}-\Pp\{\Pi_t>m_1\}\Bigr],
 \end{equation}
-and $\Pp\{N_t>m_1\}\le(et/m_1)^{m_1}$ for $m_1>t$.
+and $\Pp\{\Pi_t>m_1\}\le(et/m_1)^{m_1}$ whenever $et<m_1$, by the Chernoff bound $\Pp\{\Pi_t\ge m\}\le e^{-t}(et/m)^m$ at $m=m_1+1$.
 
 (a) Let $0\le q\le0.49d$ and let $j\in\{q,q+1\}$ be odd. Then
 $j\le0.49d+1\le0.495D$ because $D\ge102$. Choose $t$ with
 $p(t)=j/D$; then $t=\frac D2\log\frac D{D-2j}\le\frac D2\log100<2.31D$.
-Take $m_1=40D$. Then $\Pp\{N_t>m_1\}\le0.158^{40D}<e^{-73D}$. The
+Take $m_1=40D$. Then $\Pp\{\Pi_t>m_1\}\le0.158^{40D}<e^{-73D}$. The
 $\mathrm{Bin}(D,j/D)$ probability of its mode $j$ is at least $1/(D+1)$,
 so \eqref{eq:poisson} gives
 $\binom Dja_j\ge\kappa e^{-\psi(40D)}[\frac1{D+1}-2^De^{-73D}]\ge
@@ -638,7 +643,7 @@ follows.
 (b) Let $j\le D$ be odd, $t=\frac D2\log(2D)$ and
 $m_1=\lceil10D\log(2D)\rceil\ge20t$. Then
 $p(t)^j(1-p(t))^{D-j}\ge2^{-D}(1-\frac1{2D})^D\ge2^{-D-1}$, and
-$\Pp\{N_t>m_1\}\le(e/20)^{m_1}<2^{-D}/4$. Thus $a_j\ge\kappa
+$\Pp\{\Pi_t>m_1\}\le(e/20)^{m_1}<2^{-D}/4$. Thus $a_j\ge\kappa
 e^{-\psi(m_1)}2^{-D}/4$. Every $\lambda_q$ equals $Aa_j$ for an odd $j\le D$,
 and the matrix eigenvalues are $M\lambda_q=2^{D-1}\lambda_q$.
 \end{proof}
@@ -660,12 +665,12 @@ repeat the parts of that proof that involve the kernel.
 
 \begin{lemma}[Globally margined interpolation]\label{lem:bump}
 Suppose $\varepsilon_d=\min_{q\le0.49d}\binom dq\lambda_q>0$, and let
-$v=v_{\min}(K)$. Put
+$v_{\min}=v_{\min}(K)$ (the smallest eigenvalue of the matrix $K$). Put
 \[
  E_b=\frac{400}{(d+1)\varepsilon_d}+\frac{(d+1)e^{-0.0062d}}v .
 \]
 Let $X_1,\ldots,X_n$ be independent and uniform, with $n(0.2)^{0.1d}\le0.04$.
-With probability at least $1-n^2e^{-0.19d}-n\sqrt{A\,0.72^d/v}$, the
+With probability at least $1-n^2e^{-0.19d}-n\sqrt{A\,0.72^d/v_{\min}}$, the
 following holds simultaneously for every labeling $y$ and every $A'>0$.
 There is $h:\X\to\R$ with $|h(x)|>A'$ for all $x$, $y_ih(X_i)>A'$ for all
 $i$, and
@@ -688,18 +693,18 @@ Therefore
  +\frac{2^d}v\sum_{j>0.49d}\binom dj0.55^{2(d-j)}0.45^{2j}
  \le E_b,
 \]
-using $\lambda_j\ge v/M$. For the last sum, the exponent
+using $\lambda_j\ge v_{\min}/M$. For the last sum, the exponent
 $\log2+\mathsf h(t)+2(1-t)\log0.55+2t\log0.45$, with $\mathsf h$ the binary
 entropy in nats, decreases for $t\ge0.49$ and is below $-0.0062$ at
 $t=0.49$, as computed in \cite[proof of Lemma~7.2]{subcritical}.
 
 Let $J(z,w)=\langle b_z,b_w\rangle_K=\sum_U\nu_{|U|}\chi_U(z)\chi_U(w)$, with
-$\nu_j=\widehat b_j^2/\lambda_j\le0.36^dM/v=0.72^d/v$. For independent
+$\nu_j=\widehat b_j^2/\lambda_j\le0.36^dM/v_{\min}=0.72^d/v_{\min}$. For independent
 uniform $X,Y$, Parseval gives
 $\E J(X,Y)^2=\sum_j\binom dj\nu_j^2\le\nu_{\max}\|b_z\|_K^2$. Since
-$\|b_z\|_K^2\ge b_z(z)^2/K(z,z)=1/A$, Markov's inequality gives
+$E_b\ge\|b_z\|_K^2\ge b_z(z)^2/K(z,z)=1/A$, Markov's inequality gives
 $\Pp\{\sum_{i\ne j}|J(X_i,X_j)|>nE_b\}\le n\sqrt{\nu_{\max}/E_b}\le
-n\sqrt{A\,0.72^d/v}$. On the complement, every subset $T$ of the indices
+n\sqrt{A\,0.72^d/v_{\min}}$. On the complement, every subset $T$ of the indices
 satisfies $\|\sum_{i\in T}b_{X_i}\|_K^2\le|T|E_b+\sum_{i\ne j}|J|\le2nE_b$.
 
 With probability at least $1-n^2e^{-0.19d}$ all pairwise distances exceed
@@ -778,7 +783,7 @@ on the same sample event, for every target $f$ and every odd $s<d$,
 \begin{proof}
 \emph{Spectral inputs.} By Corollary~\ref{cor:composite},
 Lemma~\ref{lem:eiglower} applies with $\psi(m)=C_\phi\sqrt m$. Thus
-$\varepsilon_d\ge e^{-C\sqrt d}$ and $v\ge e^{-C\sqrt{d\log d}}$ for large
+$\varepsilon_d\ge e^{-C\sqrt d}$ and $v_{\min}\ge e^{-C\sqrt{d\log d}}$ for large
 $d$, where here and below $C$ denotes constants depending only on $L$, the
 gains and $a$. In particular $E_b\le e^{C\sqrt d}$. Also
 $\lambda_0=Aa_1\ge Ac_1/D$, since $p_1(1)=1/D$.
@@ -810,7 +815,7 @@ large $d$, and \eqref{eq:mixture} gives the bound on $F_N$.
 \begin{remark}[Thresholds, constants, activations]\label{rem:activations}
 (1) Taking $s+1\le\delta\sqrt d$ in the proof gives
 $\lim_NR_N\ge\frac12-\frac\delta{\sqrt{2\pi}}-o(1)$ for
-$n\le\exp(\frac\delta4\sqrt d\log d)$. By the second inequality in FAQ
+$n\le\exp(\frac\delta4\sqrt d\log d)$. For $q>1/2$ take any $\delta<\sqrt{2\pi}(q-\frac12)$ and $c_q=\delta/4$; the inequality below holds at every width and passes to the limit since $R_N\to R_S$. By the second inequality in FAQ
 Question~5, $F_q\ge(R-(1-q))/q$, so for each fixed $q>1/2$ the
 fraction of inputs with correct-label probability at most $q$ stays
 bounded below in a range $n\le\exp(c_q\sqrt d\log d)$. (2) The constant
@@ -818,9 +823,11 @@ $\frac1{20}$ is not optimized. (3) The proof uses $\tanh$ only through
 oddness, Assumption~\ref{ass:act}, and the lower bound of
 Corollary~\ref{cor:composite}. It works verbatim for any odd activation
 satisfying Assumption~\ref{ass:act} whose composite coefficients satisfy
-$c_m\ge\kappa e^{-\psi(m)}$ for odd $m$, with $\psi$ nondecreasing and
+$c_m\ge\kappa e^{-\psi(m)}$ for odd $m$ (by the argument of
+Corollary~\ref{cor:composite} it suffices that the first-layer coefficients
+satisfy this and that $c_1(q_\ell)>0$ for $\ell\ge2$), with $\psi$ nondecreasing and
 $\psi(m)=o(\sqrt m\log m)$. Then $E_b=e^{o(\sqrt d\log d)}$,
-$v\ge e^{-o(d)}$, and the same threshold results. The error function is not covered: since
+$v_{\min}\ge e^{-o(d)}$, and the same threshold results. The error function is not covered: since
 $\E\operatorname{erf}(\sigma U)\operatorname{erf}(\sigma V)=\frac2\pi
 \arcsin\bigl(\frac{2\sigma^2\rho}{1+2\sigma^2}\bigr)$, its dual
 coefficients decay geometrically in $m$. (4) For $k$-sparse
@@ -964,14 +971,21 @@ bound
 \begin{equation}\label{eq:matching}
  \frac{\mathcal D(S)}n\le\frac{K\,a^2}{\tau_r\,(b_r+rH_r)},
 \end{equation}
-with $K$ independent of $d$, $n$ and $\rho$. Take
+with $K$ independent of $d$, $n$ and $\rho$. Work on the intersection of
+that event with the coercivity event and the event of Lemma~\ref{lem:gram}
+(probability at least $3/4-2\delta$), for
+$\exp((\log(d+1))^3)\le n\le e^{c_1d}$, and take
 $u=r+2\lceil10\log(d+1)\rceil$. The head bound would then give
 $\E^*\|G_{\le r}\|_2^2\le8\tau_r+16Ka^2$. Lemma~\ref{lem:entropy} with
 $\lambda_{r+1}\le\tau_r/\binom D{r+2}$ and
 $n/\binom D{r+2}\le CA_\delta rH_r$ would bound the band $(r,u]$ by
 $2\tau_r+CKa^2$. The same lemma with
 $\lambda_{u+1}\le\tau_r/\binom D{u+2}$ and the geometric decay of
-$\binom D{r+2}/\binom D{u+2}$ would make the tail above $u$ $o(1)$. The
+$\binom D{r+2}/\binom D{u+2}$ would make the tail above $u$ $o(1)$: it is at most
+$2\tau_r+4Ka^2\,n/\bigl(\binom D{u+2}(b_r+rH_r)\bigr)\le2\tau_r+
+CKa^2\binom D{r+2}/\binom D{u+2}$, and the binomial ratio is at most
+$d^{-10}$ for $r\le\alpha d$ with $\alpha$ small, as in
+\cite[Lemma~6.4]{subcritical}. The
 clipped-parity lemma would then give
 $|\E^*\E_xf\sign G|\le C\rho\sqrt K+o(1)$, which is an $\exp(\Omega(d))$
 bound once $\rho\le\alpha$ is small enough. Proposition~\ref{prop:obstruction}
@@ -1092,7 +1106,7 @@ The expressive power of voting polynomials.
 \emph{Combinatorica} 14(2):135--148, 1994.
 \bibitem{GR}
 I. S. Gradshteyn and I. M. Ryzhik. \emph{Table of Integrals, Series, and
-Products}, 7th ed. Academic Press, 2007. Formula 3.986.2.
+Products}, 7th ed. Academic Press, 2007.
 \bibitem{daniely}
 A. Daniely, R. Frostig, and Y. Singer. Toward deeper understanding of
 neural networks: the power of initialization and a dual view on
