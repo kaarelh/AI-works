@@ -40,15 +40,17 @@ $n\le\exp(\frac1{20}\sqrt d\log d)$ uniform independent examples of full
 parity on $d$ bits leave, with probability $1-e^{-\Omega(d)}$ over the
 sample, at least a $1/16$ fraction of inputs without confident correct
 prediction. For the learner without the global margin, conditioned only on
-the training signs, the same superpolynomial threshold holds on every
+the training signs, a threshold of the same form $d^{\Theta(\sqrt d)}$
+(explicitly $d^{\sqrt d/10-1/2}/6000$ for $d\ge25$) holds on every
 training set, for every bounded continuous nonconstant activation, every
 depth and every gain; the argument is kernel-agnostic and also gives the
 scale $d^k$ for fixed $k$-sparse parity. An $\exp(\Omega(d))$ lower bound,
 the analogue of the subcritical theorem in this collection, remains open.
 We prove that the step of that theorem which bounds the posterior's
 conditioning cost by a polynomial per sample is false at the standard
-scaling: for $\tanh$ networks and $n\ge\exp(d^{\epsilon})$, the cost per
-sample is superpolynomial in $d$. Numerical spectra and small-dimensional
+scaling: for $\tanh$ networks and $\exp(d^{\epsilon})\le n\le e^{cd}$, the
+cost per sample is superpolynomial in $d$ with high probability. A matching
+upper bound on that cost would complete an exponential proof. Numerical spectra and small-dimensional
 posterior computations illustrate the results.
 \end{abstract}
 
@@ -83,7 +85,8 @@ converge to those of the conditioned Gaussian process.
 (Theorem~\ref{thm:signonly} and Corollary~\ref{cor:signonly}, proved).
 Without the global margin, for every such activation, every depth and every
 gain, every training set of size
-$n\le d^{\sqrt d/10-1/2}/6000$ leaves at least a quarter of the inputs of
+$n\le d^{\sqrt d/10-1/2}/6000$ (with $d\ge25$; the explicit bound exceeds
+one only for $d\ge385$) leaves, in the width limit, at least a quarter of the inputs of
 full parity without confidence above $2/3$. For $k$-sparse parity the
 threshold is $\binom d{\lfloor\sqrt k/5\rfloor}/6000$, and for fixed $k$
 the failure fraction is at least $2^{-k}-O(n/\binom dk)$. The same bounds
@@ -96,10 +99,12 @@ parity leave, with probability at least $1-e^{-d/10}$, Gibbs error at least
 $3/8$ and confidence failure at least $1/16$ in the width limit.
 \item \textbf{The exponential question} (open). We do not know whether
 $\exp(\Omega(d))$ samples are needed. Proposition~\ref{prop:obstruction}
-(proved) shows that one specific step of the subcritical proof fails: its
-bound of order $d^{1+\beta}$ on the conditioning cost per sample has no
-analogue, because here that cost is superpolynomial in $d$ once
-$n\ge\exp(d^\epsilon)$.
+(proved) shows that one specific step of the subcritical proof fails. That
+step bounds the conditioning cost per sample by a polynomial in $d$ (at
+most $Cd^{1+\beta}$). Here, for $\exp(d^\epsilon)\le n\le e^{c_1d}$ and with
+probability at least $1-2\delta$, that cost is superpolynomial in $d$. We
+also identify a matching upper bound on that cost which would complete an
+$\exp(\Omega(d))$ proof (Section~\ref{sec:obstruction}).
 \end{enumerate}
 The sign-only result uses only a universal inequality between consecutive
 level masses of an isotropic kernel (Lemma~\ref{lem:levels}). The margin
@@ -299,7 +304,7 @@ $a_j=\sum_mc_mp_m(j)$, and:
 \item[(b)] $a_j>0$ if and only if $c_m>0$ for some $m\ge j$ with
 $m\equiv j\pmod 2$;
 \item[(c)] on $\X$, $K(x,y)=\sum_{U\subseteq[d]}\lambda_{|U|}\chi_U(x)
-\chi_U(y)$ with $\lambda_q=A(a_q+a_{q+1})$ (and $a_{D+1}:=0$), and
+\chi_U(y)$ with $\lambda_q=A(a_q+a_{q+1})$, and
 $\lambda_q$ is nonincreasing in $q$;
 \item[(d)] if infinitely many $c_m$ are positive, every $\lambda_q$ is
 positive and $K$ is positive definite;
@@ -316,7 +321,8 @@ $p_{m+1}(j)=\frac jDp_m(j-1)+\frac{D-j}Dp_m(j+1)$ gives
  =j[p_m(j-1)-p_m(j+1)]+(D-j-2)[p_m(j+1)-p_m(j+3)],
 \]
 with $p_m(i):=0$ for $i\notin[0,D]$, and induction from $m=0$ gives
-$p_m(j)\ge p_m(j+2)$; average against $c_m\ge0$. For (b),
+$p_m(j)\ge p_m(j+2)$ (the case $j+1=D-1$ of the hypothesis is
+$p_m(D-1)\ge p_m(D+1)=0$, which is trivial); average against $c_m\ge0$. For (b),
 $p_m(j)>0$ exactly when $m\ge j$ and $m\equiv j$. For (c), restrict to
 $u=(1,x)$: $\chi_V(1,x)=\chi_{V\setminus\{0\}}(x)$, and each $U\subseteq[d]$
 arises from $V=U$ and $V=U\cup\{0\}$. Monotonicity follows from (a):
@@ -391,7 +397,7 @@ every training sequence and every $0\le v<d$:
 \begin{enumerate}
 \item[(i)] $\|m\|_K^2\le s$;
 \item[(ii)] if $\sigma_x>0$ and $q_S(x)>\theta$, then $f(x)m(x)>c_\theta\sigma_x$;
-\item[(iii)] $\Pp_x\{\sigma_x^2<\tau_v/2\}\le2n\lambda_{v+1}/\tau_v$;
+\item[(iii)] $\Pp_x\{\sigma_x^2<\tau_v/2\}\le2s\lambda_{v+1}/\tau_v\le2n\lambda_{v+1}/\tau_v$;
 \item[(iv)] $\|m-m_{\le v}\|_2^2\le n\lambda_{v+1}$.
 \end{enumerate}
 \end{lemma}
@@ -509,9 +515,9 @@ the $\gamma<0$ case of \cite[Proposition~2.2]{subcritical}.
 \begin{remark}\label{rem:signonly}
 (1) The bound holds on \emph{every} training set, including deliberately
 chosen ones, and uniformly in depth, gain and activation. Depth may even
-grow with $d$; this is consistent with the $\Theta(2^d)$ bound of
-\cite[Theorem~7.1]{nngpnote} at depth $O(d)$, which is stronger in that
-regime. (2) Theorem~\ref{thm:signonly} is
+grow with $d$. For comparison, \cite[Theorem~7.1]{nngpnote} proves a
+$\Theta(2^d)$ bound for a different learner, the margin learner with
+specified gains, at depth at least $C_a(d+1)$. (2) Theorem~\ref{thm:signonly} is
 \cite[Proposition~3]{beyondparity} with the arcsine eigenvalue ratio
 replaced by Lemma~\ref{lem:levels}(a). (3) For the arcsine kernel the
 subcritical paper improves $\sqrt d\log d$ to $d$, for typical samples
@@ -520,8 +526,12 @@ $\lambda_{r+1}/\tau_r\asymp1/(r\binom D{r+2})$ at $r$ linear in $d$, and
 regular decay of the level masses $\binom dq\lambda_q$. For $\tanh$ the
 level masses decay much faster (Section~\ref{sec:numerics}), and we have
 not proved the matching estimates. The scale $\sqrt d\log d$
-comes from the Aspnes--Beigel--Furst--Rudich lemma and is all that
-Lemma~\ref{lem:levels}(a) can give.
+comes from requiring $\err_r(f)$ to stay bounded below (the
+Aspnes--Beigel--Furst--Rudich lemma); with Lemma~\ref{lem:levels} alone,
+larger $r$ yields only a polynomially small failure fraction. For odd
+activations the paired form improves the binomial factor, for example to
+$\binom{d+1}{k+1}$ in Corollary~\ref{cor:signonly}(c) when $k$ is even,
+without changing the exponent in (a) and (b).
 \end{remark}
 
 \section{Hermite coefficients of tanh and eigenvalue lower bounds}
@@ -819,25 +829,28 @@ $e^{C\sqrt d}\ll\binom D{\delta\sqrt k}$, roughly
 $k\ge Cd/\log^2d$; we have not pursued smaller $k$.
 \end{remark}
 
-\section{Why the exponential proof does not transfer}\label{sec:obstruction}
+\section{Where the exponential proof breaks}\label{sec:obstruction}
 The $\gamma=0$ part of the subcritical theorem \cite[Theorem~9.2]{subcritical}
 covers $n$ up to $e^{cd}$. It chooses an adaptive odd cutoff $r$ with
 $n\approx A_\delta D_r\log D_r$, where $D_r=\sum_{q\le r}\binom dq$. Its
 key normalized estimate is
 \[
  \frac{\mathcal D(S)}n\le Cd\rho^{-\beta},\qquad \rho=r/d,
- \qquad\text{\cite[eq.~(42)]{subcritical}}.
+ \qquad\text{\cite[eq.~(42)]{subcritical}},
 \]
-It combines this with the head bound
+a bound polynomial in $d$ (at most $Cd^{1+\beta}$). It combines this with
+the head bound
 $\E^*\|G_{\le r}\|_2^2\le8\tau_r+16b_r\tau_r\mathcal D/n$
-\cite[eq.~(45)]{subcritical}, where
-$\E^*$ is the posterior expectation and $b_r$ bounds the sampled Gram
-matrix of the tail kernel. The posterior output amplitude is large there,
-of order $d^{(1-\beta)/2}$ \cite[Lemma~7.5]{subcritical}, and the
-clipped-parity lemma is applied at that scale. At the standard scaling the
-second step has no analogue, since the high-degree variance $\tau_u$ is tiny
-and the posterior amplitude need not grow. The first step fails outright, as
-we now show.
+\cite[eq.~(45)]{subcritical}, where $\E^*$ is the posterior expectation
+and $b_r$ bounds the sampled Gram matrix of the tail kernel. The clipped
+parity lemma is then applied at the scale of the posterior output
+amplitude, which is of order $d^{(1-\beta)/2}$ there
+\cite[Lemma~7.5]{subcritical}. That amplitude step uses the variance
+$\tau_u\asymp d^{-\beta}$ of the Fourier levels above $u\approx d/50$; at the
+standard scaling this variance is tiny, and Lemma~7.5 gives no useful
+amplitude. We show below that the normalization (42) also fails: the
+conditioning cost per sample is superpolynomial in $d$. We then explain
+what estimate would let the rest of the argument go through.
 
 Fix $\delta\in(0,1/8)$, let $A_\delta$ be the sampling constant of
 \cite[Lemma~4.4]{subcritical} (squared coercivity: with probability at
@@ -888,7 +901,7 @@ $2c_1<\log2-\mathsf h(1/4)$. Choosing $z$ as a $\delta$-dependent multiple
 of the sum of the four terms gives the claim.
 \end{proof}
 
-\begin{proposition}[The conditioning cost per sample is large]
+\begin{proposition}[The conditioning cost per sample is superpolynomial]
 \label{prop:obstruction}
 Let $\phi=\tanh$; fix $L$, gains, $a$ and $\delta\in(0,1/8)$. For large $d$
 and every $n$ with $\exp((\log(d+1))^3)\le n\le e^{c_1d}$, with probability
@@ -897,10 +910,13 @@ at least $1-2\delta$ over iid uniform inputs labelled by full parity,
  \frac{\mathcal D(S)}n\ \ge\ \frac{a^2-10\tau_r}
  {\tau_r\bigl(16b_r+4CA_\delta rH_r\bigr)} ,\qquad r=r(n).
 \]
-Consequently, for every $\epsilon>0$ and $k$, if
-$n\ge\exp(d^\epsilon)$ then $\mathcal D(S)/n\ge d^k$ for all large $d$.
-On the event of Lemma~\ref{lem:cost}, also $\mathcal D(S)/n\le e^{C\sqrt d}$
-when $n\ge d^2$.
+Consequently, for every $\epsilon>0$ and $k$, for all large $d$ and every
+$n$ with $\exp(d^\epsilon)\le n\le e^{c_1d}$, on the same event,
+$\mathcal D(S)/n\ge d^k$. In the other direction, on the event of
+Lemma~\ref{lem:bump}, $\mathcal D(S)/n\le e^{C\sqrt d}$ for every $n\ge1$.
+(Some upper limit on $n$ is necessary in the first statement: for fixed $d$,
+$\mathcal D(S)$ is bounded by the cost of the full sign pattern of $f$, so
+$\mathcal D(S)/n\to0$ as $n\to\infty$.)
 \end{proposition}
 \begin{proof}
 Work on the intersection of the squared-coercivity event and the event of
@@ -937,42 +953,68 @@ Lemma~\ref{lem:cost} and $E_b\le e^{C\sqrt d}$.
 \end{proof}
 
 \paragraph{What this shows and does not show.} The proposition is about a
-proof technique, not about sample complexity. With $\mathcal D/n$
-superpolynomial, the head bound above certifies only
-$\E^*\|G_{\le r}\|_2^2\lesssim b_r\tau_r\mathcal D/n$. That is at least of
-order $a^2$, so the low-degree part of the posterior is not shown to be
-small. The arcsine argument fed exactly this smallness, measured against
-the large posterior amplitude, into the clipped-parity lemma
-\cite[Lemma~6.1]{subcritical}. An $\exp(\Omega(d))$ bound for the standard
-scaling needs a different handle. For example, it would suffice to show
+proof technique, not about sample complexity, and it refutes only the
+normalization (42). It does not show that the subcritical strategy fails.
+The clipped-parity lemma at scale $a$ only needs the posterior's
+low-degree part to be $O(a)$ in $L^2$, not small, because it is multiplied
+by $u/d\approx\rho$, and $\rho$ can be chosen small. The following is an
+\emph{extension suggested by the proof}, not proved here. Suppose that on
+a sample event of probability at least $3/4$ there were a matching upper
+bound
+\begin{equation}\label{eq:matching}
+ \frac{\mathcal D(S)}n\le\frac{K\,a^2}{\tau_r\,(b_r+rH_r)},
+\end{equation}
+with $K$ independent of $d$, $n$ and $\rho$. Take
+$u=r+2\lceil10\log(d+1)\rceil$. The head bound would then give
+$\E^*\|G_{\le r}\|_2^2\le8\tau_r+16Ka^2$. Lemma~\ref{lem:entropy} with
+$\lambda_{r+1}\le\tau_r/\binom D{r+2}$ and
+$n/\binom D{r+2}\le CA_\delta rH_r$ would bound the band $(r,u]$ by
+$2\tau_r+CKa^2$. The same lemma with
+$\lambda_{u+1}\le\tau_r/\binom D{u+2}$ and the geometric decay of
+$\binom D{r+2}/\binom D{u+2}$ would make the tail above $u$ $o(1)$. The
+clipped-parity lemma would then give
+$|\E^*\E_xf\sign G|\le C\rho\sqrt K+o(1)$, which is an $\exp(\Omega(d))$
+bound once $\rho\le\alpha$ is small enough. Proposition~\ref{prop:obstruction}
+says that \eqref{eq:matching} cannot hold with a smaller right-hand side
+by more than a constant factor. So the missing ingredient is an upper
+bound on the conditioning cost that matches the proposition up to
+constants. The only upper bound we have is the bump bound $e^{C\sqrt d}$.
+
+A second sufficient route avoids the adaptive cutoff. It would suffice to
+show that, for a small fixed $\alpha$,
 \[
  \E^*\|G_{\le\alpha d}\|_2^2\le C\quad\text{and}\quad
- \E^*\|G_{>\alpha d}\|_2^2=o(1)
+ \E^*\|G_{>\alpha d}\|_2^2=o(1),
 \]
-for a small fixed $\alpha$. By the clipped-parity lemma at scale $a$,
-$|\E_xf\sign G|\le\frac{\alpha d}{ad}\|G_{\le\alpha d}\|_2+
-\|G_{>\alpha d}\|_2/a$. The second condition holds for every $n\le e^{c_\alpha d}$, on the
-sample event of Theorem~\ref{thm:margin}: Lemma~\ref{lem:entropy} gives
+with $C$ independent of $\alpha$. By the clipped-parity lemma at scale $a$,
+$|\E_xf\sign G|\le\frac\alpha a\|G_{\le\alpha d}\|_2+\|G_{>\alpha d}\|_2/a$,
+so it is enough that $\alpha\sqrt C/a\le1/4-o(1)$. The second condition
+holds for $n\le e^{c_\alpha d}$ with
+$c_\alpha<\min\{\mathsf h(\alpha)/2,0.09\}$, on the event of
+Lemma~\ref{lem:bump}, which then has probability at least
+$1-e^{-c'd}$. Indeed Lemma~\ref{lem:entropy} gives
 $\E^*\|G_{>s}\|_2^2\le2\tau_s+4\lambda_{s+1}\mathcal D$, and
 Lemmas~\ref{lem:levels} and~\ref{lem:cost} make the right side
-$O(T(s))+e^{C\sqrt d}n/\binom D{s+2}$ at odd $s\approx\alpha d$. The first is an upper bound
-on the posterior's low-degree amplitude, and we do not know how to prove
-it. The entropy bound alone gives
-$\E^*\|G\|_2^2\le2A+4\lambda_0\mathcal D=O(\mathcal D/d)$, which is useful
-only for $n=O(d^2)$.
+$O(T(s))+e^{C\sqrt d}n/\binom D{s+2}$ at odd $s\approx\alpha d$. The first
+condition is an upper bound on the posterior's low-degree amplitude, and
+we do not know how to prove it. The entropy bound gives only
+$\E^*\|G\|_2^2\le2A+4\lambda_0\mathcal D=O(1+\mathcal D/d)$, which is
+$O(1)$ only if $\mathcal D=O(d)$; no bound here provides that.
 
-\paragraph{Heuristic picture} (heuristic; not used above). The
-proposition and the bump construction place the conditioning cost per
-sample between $d^{\omega(1)}$ and $e^{C\sqrt d}$. The lower bound comes
-from the global margin, which forces jumps of size $2a$ across every
-boundary edge of the sign pattern. Only the high-degree part of $G$ can
-make such jumps, and it has tiny variance $\tau_r$. Functions that are
-correlated with parity need Fourier mass of order one at degree
-$\Theta(d)$, at Gaussian price about $\binom D{\Theta(d)}$, or a low-degree
-polynomial threshold of large amplitude. In the arcsine case the
-subcritical theorem rules out the second option. If the analogous
-statement holds here, the learner should need $\exp(\Omega(d))$ examples.
-We have not proved this, and the numerics below are too small to test it.
+\paragraph{Heuristic picture} (heuristic; not used above). For
+$\exp(d^\epsilon)\le n\le e^{c_1d}$, the proposition and the bump
+construction place the conditioning cost per sample between
+$d^{\omega(1)}$ and $e^{C\sqrt d}$. The mechanism behind the lower bound is
+coercivity. At the training inputs parity cannot be followed by a
+low-degree polynomial, so the low-degree part is dominated by the
+high-degree part there. Yet the global margin forces $\|G\|_2\ge a$. So
+the posterior must place $L^2$ mass of order $a^2$ above degree $r$, where
+the prior variance $\tau_r$ is tiny. If that mass sits mainly in the band
+just above $r$, the cost should match the proposition, and the argument
+above would give $\exp(\Omega(d))$. If instead the posterior used
+large-amplitude low-degree thresholds that approximate parity, the bound
+could fail. We have not ruled this out, and the numerics below are too
+small to test it.
 
 \section{Numerical illustrations}\label{sec:numerics}
 All scripts and outputs are in \texttt{numerics/} next to this paper. They
@@ -1020,10 +1062,10 @@ Margin learner, $\tanh$, typical samples: $\exp(\frac1{20}\sqrt d\log d)$
 & Proved (Thm.~\ref{thm:margin})\\
 Same for odd activations with
 $c_m\ge e^{-o(\sqrt m\log m)}$ & Proved (Remark~\ref{rem:activations})\\
-Per-sample conditioning cost superpolynomial for $n\ge e^{d^\epsilon}$;
-the subcritical normalization fails & Proved (Prop.~\ref{prop:obstruction})\\
+Per-sample conditioning cost superpolynomial for $e^{d^\epsilon}\le n\le e^{c_1d}$ (w.p.\ $\ge1-2\delta$); the subcritical normalization (42) fails & Proved (Prop.~\ref{prop:obstruction})\\
+A matching upper bound on that cost would give $\exp(\Omega(d))$ & Extension suggested by the proof (Section~\ref{sec:obstruction})\\
 $\exp(\Omega(d))$ for either learner at fixed depth & Open\\
-Exponential behaviour expected & Heuristic (Section~\ref{sec:obstruction})\\
+Which of the two posterior behaviours in Section~\ref{sec:obstruction} occurs & Open (heuristic discussion only)\\
 Margin learner for $\operatorname{erf}$, or for sparse parity with
 $k\ll d/\log^2d$ & Open\\
 \bottomrule

@@ -111,11 +111,17 @@ def main():
     a = ap.parse_args(); build()
     jobs = []
     for kname, L in [("tanh-unit", 2), ("tanh-unit", 3), ("tanh-specified", 3), ("arcsine", 2)]:
-        for d, ngrid in [(10, [100, 200, 400, 800]), (12, [200, 400, 800, 1600, 2400])]:
+        for d, ngrid in [(10, [100, 200, 400, 800]), (12, [200, 400, 800, 1600])]:
             for n in ngrid:
                 for seed in range(3):
                     jobs.append((kname, d, L, seed, n, 1500, 300))
-    out = open(os.path.join(HERE, "signgp_parity.jsonl"), "w")
+    path = os.path.join(HERE, "signgp_parity.jsonl")
+    done = set()
+    if os.path.exists(path):  # resumable: skip completed (kernel, d, L, seed, n)
+        for l in open(path):
+            r = json.loads(l); done.add((r["kernel"], r["d"], r["L"], r["seed"], r["n"]))
+    jobs = [j for j in jobs if j[:5] not in done]
+    out = open(path, "a")
     with Pool(a.workers) as p:
         for row in p.imap_unordered(job, jobs):
             out.write(json.dumps(row) + "\n"); out.flush()

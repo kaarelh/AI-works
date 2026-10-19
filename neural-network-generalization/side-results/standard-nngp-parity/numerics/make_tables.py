@@ -45,20 +45,20 @@ if os.path.exists(path):
     kernels = [("tanh-unit", 2, r"$\tanh$ unit gain, $L=2$"), ("tanh-unit", 3, r"$\tanh$ unit gain, $L=3$"),
                ("tanh-specified", 3, r"$\tanh$ specified gain, $L=3$"), ("arcsine", 2, r"arcsine, $L=2$")]
     lines = []
-    for d, ns in [(10, [100, 200, 400, 800]), (12, [200, 400, 800, 1600, 2400])]:
-        lines.append(r"\multicolumn{6}{@{}l}{$d=" + str(d) + r"$, $n=" + ",".join(map(str, ns)) + r"$}\\")
+    for d, ns in [(10, [100, 200, 400, 800]), (12, [200, 400, 800, 1600])]:
+        lines.append(r"\multicolumn{5}{@{}l}{$d=" + str(d) + r"$, $n=" + ",".join(map(str, ns)) + r"$}\\")
         for k, L, lab in kernels:
             cells = []
             for n in ns:
                 rr = [x for x in R if x["kernel"] == k and x["L"] == L and x["d"] == d and x["n"] == n]
                 cells.append(f"{np.mean([x['F'] for x in rr]):.2f} ({np.mean([x['F_unseen'] for x in rr]):.2f})" if rr else "--")
-            while len(cells) < 5:
+            while len(cells) < 4:
                 cells.append("")
             lines.append(lab + " & " + " & ".join(cells) + r"\\")
     maxdiff = max(x["F_chain_diff"] for x in R)
     tab = r"""\begin{table}[ht]
 \centering\small
-\begin{tabular}{@{}lccccc@{}}
+\begin{tabular}{@{}lcccc@{}}
 \toprule
 """ + "\n".join(lines) + r"""
 \bottomrule
