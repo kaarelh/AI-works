@@ -65,19 +65,19 @@ The polynomial is independent of $N$. The threshold $\sigma_0$ may depend on the
 Balanced cloning gives an exact implementation of $f$ at every $N\ge C$ with energy at most
 
 $$
-E_*=d(d+1)B^2+2(L-1)C^2B^2.
+E_{\star}=d(d+1)B^2+2(L-1)C^2B^2.
 $$
 
 The [continuous-domain paper](../../side-results/continuous-domains/paper.pdf), sections “Cloning and the mass of a teacher tube” and “Uniform covers for bounded energy,” proves this estimate and the following cover property: for fixed $L$, outputs with $\kappa_N\le K$ admit a finite uniform cover of accuracy $a$ whose logarithmic cardinality is polynomial in $d,K,1/a$, independently of $N$. See also its [source](../../side-results/continuous-domains/source/paper.tex). These deterministic statements apply on compact subsets of the coordinate cube.
 
-Set $K=E_*+1$. First, the posterior mass of $J_S>K$ tends to zero uniformly over samples of the selected size. In coordinates $u$ with $\kappa_N=\lVert u\rVert^2$, a small ball around the clone has $J_S\le E_*+1/2$, uniformly over samples: continuity is uniform on compact $X$, and the ball may depend on $n,N$. Its contribution lower-bounds the posterior normalizer. If $p$ is the parameter dimension and $\theta=1/(4K)$, the integral over $J_S>K$ is at most
+Set $K=E_{\star}+1$. First, the posterior mass of $J_S>K$ tends to zero uniformly over samples of the selected size. In coordinates $u$ with $\kappa_N=\lVert u\rVert^2$, a small ball around the clone has $J_S\le E_{\star}+1/2$, uniformly over samples: continuity is uniform on compact $X$, and the ball may depend on $n,N$. Its contribution lower-bounds the posterior normalizer. If $p$ is the parameter dimension and $\theta=1/(4K)$, the integral over $J_S>K$ is at most
 
 $$
 \exp\!\left[-\frac{(1-\theta)K}{2\sigma^2}\right]
 (2\pi\sigma^2/\theta)^{p/2}.
 $$
 
-Here we used $J_S\ge\kappa_N$. Since $(1-\theta)K=E_*+3/4$, division by the ball contribution makes this bound tend to zero. Choose $\sigma_0$ so that the exceptional posterior mass is at most $\varepsilon/6$.
+Here we used $J_S\ge\kappa_N$. Since $(1-\theta)K=E_{\star}+3/4$, division by the ball contribution makes this bound tend to zero. Choose $\sigma_0$ so that the exceptional posterior mass is at most $\varepsilon/6$.
 
 Next let $\mathcal H$ be an output cover at accuracy $\tau/8$ for $\kappa_N\le K$, of cardinality $M$. For each center $h$ put
 
