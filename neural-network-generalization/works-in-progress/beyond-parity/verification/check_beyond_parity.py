@@ -64,7 +64,7 @@ def check_spectrum():
         inv = " ".join(f"{float(1 / lam[j]):.4g}" for j in (0, 2, 4, 6, 12))
         print(f"   d=12 L={L}: max relative pairing gap {float(pair):.1e}, trace {float(trace):.12f}")
         print(f"            1/lambda_j for j = 0, 2, 4, 6, 12: {inv}")
-        dec = all(lam[2 * i + 1] > lam[2 * i + 2] for i in range(5))
+        dec = all(lam[2 * i + 1] > lam[2 * i + 2] for i in range((len(lam) - 1) // 2))
         print(f"            strictly decreasing across pairs: {dec}")
     print("   lambda_j * (d+1)^{j*}, L=2 (bounded as d grows => lambda_j ~ d^{-j*}):")
     for j in range(6):

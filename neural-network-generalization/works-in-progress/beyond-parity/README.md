@@ -6,10 +6,13 @@ Claude · 19 October 2026
 
 ## Summary
 
-- **Regression.** The NNGP posterior mean given exact real labels is kernel regression. Its expected squared error depends on the target only through the Fourier weight at each degree. Weight at degree $k$ stays unlearned until roughly $d^{k^*}$ samples, where $k^*$ is $k$ rounded up to an odd integer. Squared error is therefore poor for every target with substantial high-degree weight, including targets that SGD learns from $O(d)$ samples (Section 1).
-- **Sign posteriors.** For the $\gamma<1$ posteriors, the governing quantity is the distance $\mathrm{err}_r(f)$ of the target from degree-$r$ polynomial threshold functions, not its Fourier degree. Take a fixed junta with threshold degree $t\ge2$, and let $\kappa$ be $t$ rounded up to an odd integer. The $\gamma<0$ learner then needs between about $d^{\kappa}$ and $d^{\kappa+1}$ samples. The $0<\gamma<1$ minimizers show the same behaviour for Gibbs error, with exponents $\kappa-\beta$ and $\kappa$. Juntas of threshold degree one need at most about $d^2$ samples; these include majority, AND, and every halfspace (Sections 2–4).
-- **Leap.** Every Boolean function satisfies $\mathrm{Leap}(f)\le\mathrm{thr}(f)\le\deg f$. Targets that are hard for SGD in the leap sense are therefore also hard for these learners. The converse fails: $x_4\,?\,x_1x_2x_3:\mathrm{MAJ}(x_1,x_2,x_3)$ has leap one and threshold degree three (Section 5).
-- **Exponential lower bounds.** These require targets that remain far from polynomial threshold functions of growing degree, and an argument sensitive to margins at linear degree. On our reading, main result 4 uses parity in only three lemmas, and they appear to extend to targets that restrict to large parities, such as inner product mod 2 (Section 6).
+- **Regression.** The NNGP posterior mean given exact real labels is kernel regression. Its expected squared error depends on the target only through the Fourier weight at each degree. Weight at degree $k$ stays essentially unlearned while $n$ is below about $d^{k^*}(d\log d)^{-\beta}$, where $k^*$ is $k$ rounded up to an odd integer. Squared error is therefore poor for every target with substantial high-degree weight. This includes leap-one targets, for which the merged-staircase property is nearly sufficient for SGD to learn from $O(d)$ samples (Section 1).
+- **Sign posteriors.** For the $\gamma<1$ posteriors, our lower bounds are governed by the distance $\mathrm{err}_r(f)$ of the target from degree-$r$ polynomial threshold functions, not by its Fourier degree. Our upper bounds use exact sign representations with margin. Take a fixed junta with threshold degree $t\ge2$, and let $\kappa$ be $t$ rounded up to an odd integer.
+  - The $\gamma<0$ learner needs between about $d^{\kappa}$ and $d^{\kappa+1}$ samples, with the lower bound holding for every training set.
+  - For typical iid samples, Gibbs error stays bounded below up to about $d^{\kappa-2\beta}$ samples at $\gamma=0$ and $d^{\kappa-\beta}$ at $0<\gamma<1$. About $d^{\kappa+1}$ and $d^{\kappa}$ samples suffice, respectively.
+  - Halfspaces on a fixed set of coordinates have threshold degree one and need at most about $d^2$ samples. They include majority and AND of a fixed number of bits (Sections 2–4).
+- **Leap.** Every Boolean function satisfies $\mathrm{Leap}(f)\le\mathrm{thr}(f)\le\deg f$, and $\mathrm{err}_r(f)\le W^{>r}(f)$. Targets that are hard for SGD in the leap sense are therefore also hard for these learners. The converse fails: $x_4\,?\,x_1x_2x_3:\mathrm{MAJ}(x_1,x_2,x_3)$ has leap one and threshold degree three (Section 5).
+- **Exponential lower bounds.** Our arguments need targets that remain far from polynomial threshold functions of growing degree, plus an argument sensitive to margins at linear degree. On our reading, main result 4 uses parity through two margin-sensitive lemmas, plus a sign-only bound for small samples. These appear to extend to targets that restrict to large parities, such as inner product mod 2 (Section 6).
 
 ## Setting and notation
 
@@ -53,7 +56,7 @@ $$
 \mathbb E_S\lVert f-P_Sf\rVert_2^2=\sum_{k=0}^dW^k(f)\,m_k(n),
 $$
 
-where $m_k(n)$ is the expected error for a single degree-$k$ character. The same holds for every kernel that depends only on Hamming distance.
+where $m_k(n)$ is the expected error for a single degree-$k$ character. The same holds for every kernel that depends only on Hamming distance, provided $K_{XX}+\sigma^2I$ is invertible.
 
 *Proof.* Let $A=\mathbb E_S[(I-P_S)^*(I-P_S)]$, with adjoints in $L^2$ of the uniform measure. Coordinate permutations and sign flips preserve the kernel and the law of $S$, and $P_{gS}(f\circ g^{-1})=(P_Sf)\circ g^{-1}$. Hence $A$ commutes with their action on functions. Distinct characters $\chi_U$ restrict to distinct characters of the sign-flip group, so commuting with sign flips makes $A$ diagonal in the Walsh basis. Commuting with permutations makes its diagonal entries depend only on $\lvert U\rvert$. ∎
 
@@ -98,7 +101,7 @@ By (K2) and (K3), for fixed $k$ the high-degree weight $W^{\ge k}(f)$ remains es
 
 The parity lower bounds of main result 4 combine three ingredients:
 
-1. a cheap globally margined interpolant for every labeling of the sample;
+1. control of the posterior for every labeling of the sample. For $\gamma\ge0$ this is a cheap globally margined interpolant; for $\gamma<0$ it is the bound $\lVert m\rVert_K^2\le n$ on the Gaussian posterior mean;
 2. spectral decay, which forces posterior-typical functions to lie near low-degree polynomial threshold functions;
 3. distance of the target from those threshold functions.
 
@@ -132,17 +135,35 @@ $$
 
 *Proof.* On this sample event, the paper's strict-margin comparator gives, for every labeling, a feasible $h$ with $\lVert h\rVert_K^2\le C_La^2(d+nd^\beta)$. Every minimizer $z$ therefore satisfies the same bound. Write $z=z_{\le r}+z_{>r}$. Then $\lVert z_{>r}\rVert_2^2\le\lambda_{r+1}\lVert z\rVert_K^2$. Since $\lvert z\rvert\ge a$ everywhere, the event $\lbrace fz_{\le r}\le0\rbrace$ is contained in $\lbrace fz<0\rbrace\cup\lbrace\lvert z_{>r}\rvert\ge a\rbrace$. Chebyshev's inequality completes the proof. ∎
 
-Proposition 4 bounds Gibbs error. By the mixture inequality $F\ge(3R-1)/2$ ([FAQ Questions 5 and 6](../../TECHNICAL-FAQ.md#5-what-changes-if-correctness-means-posterior-probability-above-12-rather-than-23)), it gives a confidence lower bound only when its right side exceeds $1/3$. We have no fixed-degree analogue for $\gamma=0$.
+Proposition 4 bounds Gibbs error. By the mixture inequality $F\ge(3R-1)/2$ ([FAQ Questions 5 and 6](../../TECHNICAL-FAQ.md#5-what-changes-if-correctness-means-posterior-probability-above-12-rather-than-23)), it gives a confidence lower bound only when its right side exceeds $1/3$.
+
+**Proposition 4′ ($\gamma=0$, Gibbs error; proved).** Fix $L\ge2$ and $a>0$. Let $d$ be sufficiently large, and draw $1\le n\le e^{d/25}$ iid uniform inputs. With probability at least $1-e^{-cd}$, the following holds simultaneously for every target $f$ and every odd $r\le(d+1)/8$:
+
+$$
+R_S\ \ge\ \mathrm{err}_r(f)-\frac{C_{L,a}}{d}-C_{L,a}\,\frac{\tau_r+\lambda_{r+1}(d^2+nd^{1+\beta})}{d^{1-\beta}}.
+$$
+
+*Proof.* The paper's adaptive conditioning-cost lemma gives, on this sample event and for every labeling, $\mathcal D(S)=-\log\Pr(A_S)\le C(d^2+nd^{1+\beta})$, where $A_S$ is the conditioning event. This is at most $e^{.045d}$ for large $d$. Write $\mathbb E^*$ for the posterior expectation. The paper's quadratic-entropy bound (its display for the population tail) gives $\mathbb E^*\lVert G_{>r}\rVert_2^2\le2\tau_r+4\lambda_{r+1}\mathcal D$. Its posterior-amplitude lemma gives $\mathbb E^*\Pr_x\lbrace\lvert G(x)\rvert\le A_d\rbrace\le C/d$ with $A_d=b\,d^{(1-\beta)/2}$.
+
+Now fix a posterior draw. Where $fG>0$ but $fG_{\le r}\le0$, we have $\lvert G_{>r}\rvert\ge fG=\lvert G\rvert$. Hence
+
+$$
+\lbrace fG_{\le r}\le0\rbrace\subseteq\lbrace fG<0\rbrace\cup\lbrace\lvert G\rvert\le A_d\rbrace\cup\lbrace\lvert G_{>r}\rvert\ge A_d\rbrace .
+$$
+
+Since $G_{\le r}$ has degree at most $r$, the left side has probability at least $\mathrm{err}_r(f)$. Take probabilities, apply Chebyshev's inequality to the last set, and average over the posterior. ∎
+
+The amplitude lemma is what makes a fixed cutoff possible here. The paper's own small-sample argument at $\gamma=0$ instead takes $r\asymp d^{1/3}$, so that $\tau_r=o(1)$. This proposition was suggested by the independent check recorded in [verification/review.md](verification/review.md).
 
 ## 3. Upper bounds
 
-**Proposition 5 (standard arguments, adapted).** Let $p$ be a real polynomial with $f(x)p(x)\ge1$ on $X$, and put $t_0^2=2\ln(2^{d+2})$. Let $n\ge8$ training inputs be iid from any law $\mathcal D$ on $X$, and measure error under $\mathcal D$. With probability at least $1-\delta$:
+**Proposition 5 (proved; standard arguments).** Let $p$ be a real polynomial with $f(x)p(x)\ge1$ on $X$, and put $t_0^2=2\ln(2^{d+2})$. Let $n\ge8$ training inputs be iid from any law $\mathcal D$ on $X$, and measure error under $\mathcal D$. With probability at least $1-\delta$:
 
 - for $\gamma<0$, the limiting Gibbs error satisfies $R_S\le\frac1n\left[(d+2)\ln2\,\lVert p\rVert_K^2+\ln2+\ln(2\sqrt n/\delta)\right]$;
 - for $\gamma=0$, the same holds with $\tfrac12(a+t_0)^2$ in place of $(d+2)\ln2=\tfrac12t_0^2$;
 - for $0<\gamma<1$, every minimizer has error at most $2\lVert p\rVert_K/\sqrt n+\sqrt{\ln(1/\delta)/(2n)}$.
 
-In each case the limiting confidence-failure fraction is at most $3R$, and so is the $\limsup$ of the finite-width strict-$2/3$ fraction. Also $\lVert p\rVert_K^2\le\lVert p\rVert_2^2/\lambda_{\deg p}$ by (K1).
+For $\gamma\le0$, the limiting confidence-failure fraction is at most $3R_S$, and so is the $\limsup$ of the finite-width strict-$2/3$ fraction. For $0<\gamma<1$, tied minimizers may carry weights that do not converge. Markov's inequality at each width, together with the paper's rate proposition, gives $\limsup_NF_N\le3\max_z\Pr_x[\mathrm{sign}\,z\ne f]$ over the minimizers $z$. Also $\lVert p\rVert_K^2\le\lVert p\rVert_2^2/\lambda_{\deg p}$ by (K1).
 
 *Proof.* For $\gamma\le0$, the limiting posterior is the prior conditioned on the version space $V_S$. The PAC-Bayes bound in [Maurer's form](https://arxiv.org/abs/cs/0411099), $\mathrm{kl}(\hat R\Vert R)\le[\mathrm{KL}(Q\Vert\Pi)+\ln(2\sqrt n/\delta)]/n$ for $n\ge8$, has $\hat R=0$ and $\mathrm{KL}=\ln(1/\Pi(V_S))$ here. Since $\mathrm{kl}(0\Vert R)\ge R$, it gives $R_S\le[\ln(1/\Pi(V_S))+\ln(2\sqrt n/\delta)]/n$.
 
@@ -150,20 +171,21 @@ In each case the limiting confidence-failure fraction is at most $3R$, and so is
 - For $\gamma=0$: $\Pi(V_S)\ge\Pr\lbrace f(x)G(x)>a\ \forall x\rbrace$, and the shift $h=(a+t_0)p$ works the same way.
 - For $0<\gamma<1$: the comparator $ap$ is feasible. So every minimizer lies in the $K$-ball of radius $a\lVert p\rVert_K$ and has training margin $a$. That ball has Rademacher complexity at most $a\lVert p\rVert_K/\sqrt n$, because $K(x,x)=1$. The standard margin bound gives the claim.
 
-The limits use Markov's inequality, $F\le3R$, and the fact that $q_S(x)>2/3$ in the limit implies $q_N(x)>2/3$ at large width. ∎
+For $\gamma\le0$, the limits use Markov's inequality, $F\le3R$, and the fact that $q_S(x)>2/3$ in the limit implies $q_N(x)>2/3$ at large width. ∎
 
 ## 4. Fixed juntas
 
-**Corollary 6 (proved, from Propositions 3–5).** Let $f$ depend on a fixed set of $P$ coordinates as $d$ grows, let $t=\mathrm{thr}(f)$ and $\kappa=t^*$. The constants $c_f,C_f$ depend on $f$ and $L$.
+**Corollary 6 (proved, from Propositions 3–5).** Let $f$ depend on a fixed set of $P$ coordinates as $d$ grows, let $t=\mathrm{thr}(f)$ and $\kappa=t^*$. The constants $c_f,C_f$ depend on $f$ and $L$, and at $\gamma=0$ also on $a$.
 
 1. Let $t\ge2$. Then $\mathrm{err}_{\kappa-2}(f)\ge2^{-P}$, and:
-   - for $\gamma<0$, every training sample with $n\le c_fd^{\kappa}$ has $F_{13/20}(S)\ge\mathrm{err}_{\kappa-2}(f)/2$. Conversely, $n\ge C_f(d^{\kappa+1}+\ln(1/\delta))/\varepsilon$ iid samples give limiting confidence failure at most $\varepsilon$ with probability $1-\delta$, and the same holds for $\gamma=0$;
+   - for $\gamma<0$, every training sample with $n\le c_fd^{\kappa}$ has $F_{13/20}(S)\ge\mathrm{err}_{\kappa-2}(f)/2$. Conversely, $n\ge C_f(d^{\kappa+1}+\ln(1/(\varepsilon\delta)))/\varepsilon$ iid samples give limiting confidence failure at most $\varepsilon$ with probability $1-\delta$;
+   - for $\gamma=0$, with probability $1-e^{-cd}$, the Gibbs error is at least $\mathrm{err}_{\kappa-2}(f)/2$ when $n\le c_fd^{\kappa-2\beta}$. The same upper bound as for $\gamma<0$ holds;
    - for $0<\gamma<1$, with probability $1-e^{-cd}$, every minimizer has error at least $\mathrm{err}_{\kappa-2}(f)/2$ when $n\le c_fd^{\kappa-\beta}$. Conversely, $n\ge C_f(d^{\kappa}+\ln(1/\delta))/\varepsilon^2$ samples make every minimizer's error at most $\varepsilon$ with probability $1-\delta$.
-2. Let $t=1$, so that $f$ is a halfspace on its $P$ coordinates. Examples are majority and AND. Then $C_f(d^2+\ln(1/\delta))/\varepsilon$ samples suffice for $\gamma\le0$, and $C_f(d+\ln(1/\delta))/\varepsilon^2$ for $0<\gamma<1$.
+2. Let $t=1$, so that $f$ is a halfspace on its $P$ coordinates. Examples are majority and AND of $P$ bits. Then $C_f(d^2+\ln(1/(\varepsilon\delta)))/\varepsilon$ samples suffice for $\gamma\le0$, and $C_f(d+\ln(1/\delta))/\varepsilon^2$ for $0<\gamma<1$. Majority of all $d$ bits is not a fixed junta: the sign representation $\sum_ix_i$ has $\lVert p\rVert_K^2\asymp d^2$, giving about $d^3/\varepsilon$ samples for $\gamma\le0$.
 
-*Proof.* In part 1, fix the coordinates outside the junta. A polynomial of degree $\kappa-2<t$ restricts to a polynomial of the same degree in the junta coordinates. This restriction cannot sign-represent $f$, so it errs on at least one of the $2^P$ junta cells. Apply Proposition 3 with $r=\kappa-2$ and $\binom{d+1}{\kappa}\asymp d^\kappa$, and Proposition 4 with $\lambda_{\kappa-1}=\lambda_\kappa\asymp d^{-\kappa}$. For the upper bounds, scale a degree-$t$ sign representation in the junta coordinates so that $fp\ge1$. Then $\lVert p\rVert_K^2\le\lVert p\rVert_2^2/\lambda_t\le C_fd^{\kappa}$, and Proposition 5 applies. Part 2 is the same with $\lambda_1\asymp1/d$. ∎
+*Proof.* In part 1, fix the coordinates outside the junta. A polynomial of degree at most $\kappa-2<t$ restricts to a polynomial of degree at most $\kappa-2$ in the junta coordinates. This restriction cannot sign-represent $f$, so it errs on at least one of the $2^P$ junta cells. Apply Proposition 3 with $r=\kappa-2$ and $\binom{d+1}{\kappa}\asymp d^\kappa$, and Propositions 4 and 4′ with $\lambda_{\kappa-1}=\lambda_\kappa\asymp d^{-\kappa}$ and $\tau_{\kappa-2}\le1$. For the upper bounds, scale a degree-$t$ sign representation in the junta coordinates so that $fp\ge1$. Then $\lVert p\rVert_K^2\le\lVert p\rVert_2^2/\lambda_t\le C_fd^{\kappa}$, and Proposition 5 applies. Part 2 is the same with $\lambda_1\asymp1/d$. ∎
 
-For threshold degree at most one, the available lower bounds are weaker. For $\gamma<0$ every target needs $n\gtrsim d$, by [the sparse-parity paper's](../../side-results/sparse-parity/paper.pdf) universal bound $F_\theta(S)\ge1-(2+1/(\pi(\theta-1/2)^2))\,n/(d+1)$. For $0<\gamma<1$, constants and dictators are learned from $O(\log d)$ samples ([FAQ Question 11](../../TECHNICAL-FAQ.md#11-how-close-are-we-to-a-domegak-sparse-xor-lower-bound)).
+For threshold degree at most one, the available lower bounds are weaker. For $\gamma<0$ every target needs $n\gtrsim d$, by [the sparse-parity paper's](../../side-results/sparse-parity/paper.pdf) universal bound $F_\theta(S)\ge1-(2+1/(\pi(\theta-1/2)^2))\,n/(d+1)$. For $0<\gamma<1$, a dictator is learned from $O(\log d)$ samples, by the sparse-parity paper's `thm:dictator-fast`.
 
 **Examples.** All values below are exact, from linear programming in the [check script](verification/check_beyond_parity.py), section 3.
 
@@ -179,6 +201,8 @@ For threshold degree at most one, the available lower bounds are weaker. For $\g
 | $x_5\,?\,x_1x_2x_3x_4:\mathrm{sign}(2x_1+x_2+x_3+x_4)$ | 5 | 1 | 4 | 5 | 1/32 |
 
 For $\gamma<0$, two-bit XOR therefore has confidence failure at least $1/4-o(1)$ on every training sample with $n=o(d^3)$. The leap-one target $x_4\,?\,x_1x_2x_3:\mathrm{MAJ}$ has failure at least $3/16-o(1)$ in the same range. For fixed $k$, Proposition 3 gives $k$-sparse parity failure fraction $\mathrm{err}_{k^*-2}(\chi_k)$ at the natural scale $n=o(d^{k^*})$. That fraction decays with $k$. The sparse-parity paper instead proves a small universal fraction that also covers growing $k$.
+
+Taking instead an odd $r\le c\sqrt k$, the bound of Aspnes, Beigel, Furst, and Rudich (the subcritical paper's `lem:ptf-parity`, applied on the $k$ relevant coordinates) keeps $\mathrm{err}_r(\chi_k)$ above a positive constant. So at $\gamma<0$, by Proposition 3, every training set of size below $c'(d/\sqrt k)^{c\sqrt k}$ leaves confidence failure bounded below. This holds for deliberately selected training sets too. Compare the $0<\gamma<1$ [selected-examples paper](../../side-results/selected-examples-parity/paper.pdf), where selected sets of size $d^{O(\sqrt k)}$ suffice.
 
 ## 5. Leap and threshold degree
 
@@ -202,19 +226,20 @@ The check script confirms Proposition 7 on all $2^{16}$ Boolean functions of fou
 
 | learner | exponent | status |
 |---|---|---|
-| online SGD, two-layer network | $\max(\mathrm{Leap}-1,1)$ | conjectured ([Abbe, Boix-Adserà, and Misiakiewicz 2023](https://arxiv.org/abs/2302.11055), stated as time $d^{\max(\mathrm{Leap},2)}$); proved for a class of Gaussian-data problems, and for leap one in the mean-field setting of the 2022 paper |
+| online SGD, two-layer network | $\max(\mathrm{Leap}-1,1)$ | conjectured ([Abbe, Boix-Adserà, and Misiakiewicz 2023](https://arxiv.org/abs/2302.11055), stated as time $d^{\max(\mathrm{Leap},2)}$); proved for a class of Gaussian-data problems. For leap one, the 2022 paper shows the merged-staircase property necessary and nearly sufficient in the mean-field setting |
 | $\gamma<0$ sign posterior | between $\kappa$ and $\kappa+1$ if $\mathrm{thr}\ge2$; at most $2$ if $\mathrm{thr}\le1$ | Corollary 6 |
+| $\gamma=0$ and $0<\gamma<1$, Gibbs error | at least $\kappa-2\beta$ and $\kappa-\beta$ if $\mathrm{thr}\ge2$; at most $\kappa+1$ and $\kappa$ | Corollary 6 |
 | kernel-regression squared error below the top-degree weight | at least $(\deg f)^*$, up to $(d\log d)^\beta$ | Proposition 2 |
 
-Since $\kappa\ge\mathrm{thr}\ge\mathrm{Leap}$, whenever $\mathrm{thr}(f)\ge2$ the $\gamma<0$ posterior needs at least about $d$ times as many samples as the conjectured online-SGD rate. Leap-one juntas of threshold degree at least two give gaps of $d^2$ or more, and the census suggests they are the typical case among juntas. For $k$-sparse parity, all three exponents are of order $k$, and [Barak, Edelman, Goel, Kakade, Malach, and Zhang 2022](https://arxiv.org/abs/2207.08799) find SGD needing $d^{O(k)}$ iterations, near the statistical-query limit. Reusing batches can beat the correlational exponents, at least for Gaussian data ([Dandi et al. 2024](https://arxiv.org/abs/2402.03220); [Lee, Oko, Suzuki, and Wu 2024](https://arxiv.org/abs/2406.01581)). [Glasgow 2024](https://arxiv.org/abs/2309.15111) shows that minibatch SGD on a standard two-layer network learns two-bit XOR on the hypercube from $d\,\mathrm{polylog}\,d$ samples. The SGD statements concern exponents for fixed juntas and are taken from abstracts. No theorem here relates SGD to these posteriors.
+Since $\kappa\ge\mathrm{thr}\ge\mathrm{Leap}$, whenever $\mathrm{thr}(f)\ge2$ the $\gamma<0$ posterior needs at least about $d$ times as many samples as the conjectured online-SGD rate. Leap-one juntas of threshold degree at least two give gaps of $d^2$ or more, and the four-bit census suggests they are the typical case among juntas. For $k$-sparse parity, the three exponents differ only by a constant. [Barak, Edelman, Goel, Kakade, Malach, and Zhang 2022](https://arxiv.org/abs/2207.08799) find SGD taking $d^{O(k)}$ iterations, near the statistical-query limit. Reusing batches can beat the correlational exponents, at least for Gaussian data ([Dandi et al. 2024](https://arxiv.org/abs/2402.03220); [Lee, Oko, Suzuki, and Wu 2024](https://arxiv.org/abs/2406.01581)). [Glasgow 2024](https://arxiv.org/abs/2309.15111) shows that minibatch SGD on a standard two-layer network learns two-bit XOR on the hypercube from $d\,\mathrm{polylog}\,d$ samples. The SGD statements concern exponents for fixed juntas and are taken from abstracts. No theorem here relates SGD to these posteriors.
 
 ## 6. Superpolynomial and exponential sample sizes
 
-**Growing degree.** Suppose $\mathrm{err}_r(f)\ge c$ for some $r=r(d)\to\infty$ with $r\le(d+1)/8$. Then Proposition 3 shows that the $\gamma<0$ learner keeps confidence failure at least $c/2$ unless $n\gtrsim r\binom{d+1}{r+2}$, which is superpolynomial in $d$. At linear $r$ this is exponential. Most Boolean functions qualify by a counting argument, but they need about $2^d$ samples for every learner, so they say nothing specific about these learners.
+**Growing degree.** Suppose $\mathrm{err}_r(f)\ge c$ for some odd $r=r(d)\to\infty$ with $r\le(d+1)/8$. Then Proposition 3 shows that the $\gamma<0$ learner keeps confidence failure at least $c/2$ on every training set unless $n\gtrsim r\binom{d+1}{r+2}$, which is superpolynomial in $d$. Propositions 4 and 4′ give the corresponding Gibbs-error statements for typical samples at $0<\gamma<1$ and $\gamma=0$, with an extra polynomial factor. At linear $r$ this is exponential. Most Boolean functions qualify by a counting argument, but they need about $2^d$ samples for every learner, so they say nothing specific about these learners.
 
-**Parity needs more.** Parity is close to low-degree threshold functions. Under uniform inputs, a univariate polynomial in $\sum_ix_i$ of degree $O(\sqrt{d\log(1/\varepsilon)})$ alternates in sign on the central range and has the sign of parity outside probability $\varepsilon$. So the route above gives only $\exp(\Theta(\sqrt d\log d))$ for parity, which is the scale of the [earlier superpolynomial paper](../../side-results/subcritical-sample-complexity/paper.pdf). Main result 4 reaches $\exp(\Omega(d))$ through three margin-sensitive lemmas. On our reading, they are the only places its proof uses parity:
+**Parity needs more.** Parity is close to low-degree threshold functions. Under uniform inputs, a univariate polynomial in $\sum_ix_i$ of degree $O(\sqrt{d\log(1/\varepsilon)})$ alternates in sign on the central range and has the sign of parity outside probability $\varepsilon$. So the route above gives only $\exp(\Theta(\sqrt d\log d))$ for parity, which is the scale of the [earlier superpolynomial paper](../../side-results/subcritical-sample-complexity/paper.pdf). Main result 4 reaches $\exp(\Omega(d))$ through two margin-sensitive lemmas. It also uses a sign-only bound for small samples. On our reading, these three lemmas, together with `lem:small-cutoff`, which uses parity only through the first of them, are the only places its proof uses parity:
 
-- `lem:ptf-parity`, the bound of Aspnes, Beigel, Furst, and Rudich, for small samples;
+- `lem:ptf-parity`, the bound of Aspnes, Beigel, Furst, and Rudich, used only for $n\le\exp((\log d)^3)$;
 - `lem:parity-squared-balance`, $\mathbb E(fP)_-^2\ge(1/2-\sqrt{r/d})\lVert P\rVert_2^2$ for $\deg P\le r$, used for $r$ up to a small multiple of $d$;
 - `lem:clipped-parity`, $\lvert\mathbb E f\,\mathrm{clip}(P/b)\rvert\le\lVert\Delta P\rVert_1/(bd)$, through the discrete Laplacian $\Delta$.
 
@@ -228,13 +253,13 @@ All three use that parity changes sign along every edge of the cube.
 
 The squared-balance lemma additionally needs a hypercontractive bound on the exceptional restrictions. This has not been written out. Targets such as $\mathrm{MAJ}_3\circ\mathrm{XOR}_{d/3}$, whose restrictions fail to be large parities with constant probability, are not covered.
 
-**Worst-case measures do not transfer.** Exact threshold degree is a worst-case notion. The Minsky–Papert AND of ORs has threshold degree $\Theta(d^{1/3})$, and some AC⁰ functions have threshold degree $\Omega(d^{1-\epsilon})$ (Sherstov and Wu, STOC 2019). Yet such functions can be nearly constant under uniform inputs. ODD-MAX-BIT has threshold degree one with exponentially small degree-one margin. Under uniform inputs, however, it is $2^{-m}$-close to a function of its last $m$ bits. These learners respond to $\mathrm{err}_r(f)$ under the input distribution, together with margins, not to worst-case threshold degree.
+**Worst-case measures do not transfer.** Exact threshold degree is a worst-case notion. The Minsky–Papert AND of ORs has threshold degree $\Theta(d^{1/3})$, and some AC⁰ functions have threshold degree $\Omega(d^{1-\epsilon})$ (Sherstov and Wu, STOC 2019). Yet such functions can be nearly constant under uniform inputs. ODD-MAX-BIT has threshold degree one with exponentially small degree-one margin. Under uniform inputs, however, it is $2^{-m}$-close to a function of its last $m$ bits. Our lower bounds respond to $\mathrm{err}_r(f)$ under the input distribution, not to worst-case threshold degree. Our upper bounds need exact sign representations with margin on every input. So neither settles such targets.
 
 **Deep families fail for every target.** At depth growing linearly in $d$, the deep tanh NNGP family ([NNGP note](../../side-results/nngp-sample-complexity/paper.pdf), `thm:tanh`) and the deep $\gamma\le0$ family ([near-independent confidence](../../side-results/gamma-below-one/paper.pdf), `thm:deep-confidence`) learn nothing beyond the observed inputs, for every target. Those exponential bounds are not about parity at all.
 
 ## 7. Numerical illustrations
 
-Sign-GP learner ($\gamma<0$), $d=12$, $L=2$, exact Hamiltonian Monte Carlo for the orthant-truncated Gaussian. The table gives the confidence-failure fraction $F$ by number of iid samples $n$. Each entry is the mean over 5 seeds, or 3 seeds at the two largest sizes, with training inputs shared across targets. Observed inputs count as successes.
+Sign-GP learner ($\gamma<0$), $d=12$, $L=2$, exact Hamiltonian Monte Carlo for the orthant-truncated Gaussian. The table gives the strict confidence-failure fraction $F_{2/3}=\Pr_x\lbrace q_S(x)\le2/3\rbrace$ by number of iid samples $n$. Each entry is the mean over 5 seeds, or 3 seeds at the two largest sizes, with training inputs shared across targets. Observed inputs count as successes.
 
 | target | 100 | 200 | 400 | 800 | 1600 | 2400 |
 |---|---|---|---|---|---|---|
@@ -243,7 +268,9 @@ Sign-GP learner ($\gamma<0$), $d=12$, $L=2$, exact Hamiltonian Monte Carlo for t
 | $x_4\,?\,x_1x_2x_3:\mathrm{MAJ}(x_1,x_2,x_3)$ | .60 | .55 | .52 | .44 | .32 | .23 |
 | full parity | .81 | .84 | .81 | .76 | .64 | .54 |
 
-On unseen inputs alone, the leap-one target's failure at $n=2400$ is $0.41$, and full parity's is $0.97$. The two chains agree to within $0.004$ in $F$ for every new run. One natural sign representation of the leap-one target is $p=x_1x_2x_3+(1-x_4)(x_1+x_2+x_3)$, with $\lVert p\rVert_K^2=1/\lambda_3+3/\lambda_1+3/\lambda_2\approx4/\lambda_3$. That is four times the norm of $x_1x_2x_3$, which may explain the slower learning at equal $\kappa$; this explanation is heuristic. At $d=12$, $\binom{13}{3}=286$, so these runs cannot resolve the asymptotic windows of Corollary 6.
+On unseen inputs alone, the leap-one target's failure at $n=2400$ is $0.41$, and full parity's is $0.97$. For each run of the leap-one target, the two chains agree to within $0.005$ in $F$; over all runs the largest difference is $0.009$.
+
+A plausible but heuristic explanation for the leap-one target's slower learning at equal $\kappa$ is its larger kernel norm. The sign representation $p=x_1x_2x_3+(1-x_4)(x_1+x_2+x_3)$ has $\lVert p\rVert_K^2=1/\lambda_3+3/\lambda_1+3/\lambda_2\approx4/\lambda_3$, four times the squared norm of $x_1x_2x_3$. It is the least squared norm among margin-one sign representations of degree at most three. Allowing degree four lowers the minimum to about $2.4/\lambda_3$ at $d=12$; the minimum approaches $4/\lambda_3$ as $d$ grows. At $d=12$, $\binom{13}{3}=286$, so these runs cannot resolve the asymptotic windows of Corollary 6.
 
 ## Files
 
