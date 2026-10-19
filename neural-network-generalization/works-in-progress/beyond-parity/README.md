@@ -2,17 +2,17 @@
 
 Claude · 19 October 2026
 
-**Work in progress.** This note asks whether the bad sample complexity of the $\gamma<1$ learners is specific to parity. Its propositions are short arguments built from lemmas of the [subcritical paper](../../main-results/subcritical-exponential/paper.pdf), standard learning-theory bounds, and an elementary Boolean-function fact. They were written after the 19 October collection review and were not part of it. They have had an independent AI-agent check ([record](verification/review.md)), but they are not Lean verified and have not been reviewed by a human. Literature statements were checked against abstracts and search summaries, not full texts. The [technical FAQ](../../TECHNICAL-FAQ.md#is-the-bad-sample-complexity-specific-to-parity) gives the interpretation.
+**Work in progress.** This note asks whether the bad sample complexity of the $\gamma<1$ learners is specific to parity. Its propositions are short arguments built from lemmas of the [subcritical paper](../../main-results/subcritical-exponential/paper.pdf), standard learning-theory bounds, and an elementary Boolean-function fact. They were written after the 19 October collection review and were not part of it. They have had two rounds of independent AI-agent checks ([record](verification/review.md)), but they are not Lean verified and have not been reviewed by a human. Literature statements were checked against abstracts and search summaries, not full texts. The [technical FAQ](../../TECHNICAL-FAQ.md#is-the-bad-sample-complexity-specific-to-parity) gives the interpretation.
 
 ## Summary
 
 - **Regression.** The NNGP posterior mean given exact real labels is kernel regression. Its expected squared error depends on the target only through the Fourier weight at each degree. Weight at degree $k$ stays essentially unlearned while $n$ is below about $d^{k^*}(d\log d)^{-\beta}$, where $k^*$ is $k$ rounded up to an odd integer. Squared error is therefore poor for every target with substantial high-degree weight. This includes leap-one targets, for which the merged-staircase property is nearly sufficient for SGD to learn from $O(d)$ samples (Section 1).
 - **Sign posteriors.** For the $\gamma<1$ posteriors, our lower bounds are governed by the distance $\mathrm{err}_r(f)$ of the target from degree-$r$ polynomial threshold functions, not by its Fourier degree. Our upper bounds use exact sign representations with margin. Take a fixed junta with threshold degree $t\ge2$, and let $\kappa$ be $t$ rounded up to an odd integer.
   - The $\gamma<0$ learner needs between about $d^{\kappa}$ and $d^{\kappa+1}$ samples, with the lower bound holding for every training set.
-  - For typical iid samples, Gibbs error stays bounded below up to about $d^{\kappa-2\beta}$ samples at $\gamma=0$ and $d^{\kappa-\beta}$ at $0<\gamma<1$. About $d^{\kappa+1}$ and $d^{\kappa}$ samples suffice, respectively.
-  - Halfspaces on a fixed set of coordinates have threshold degree one and need at most about $d^2$ samples. They include majority and AND of a fixed number of bits (Sections 2–4).
-- **Leap.** Every Boolean function satisfies $\mathrm{Leap}(f)\le\mathrm{thr}(f)\le\deg f$, and $\mathrm{err}_r(f)\le W^{>r}(f)$. Targets that are hard for SGD in the leap sense are therefore also hard for these learners. The converse fails: $x_4\,?\,x_1x_2x_3:\mathrm{MAJ}(x_1,x_2,x_3)$ has leap one and threshold degree three (Section 5).
-- **Exponential lower bounds.** Our arguments need targets that remain far from polynomial threshold functions of growing degree, plus an argument sensitive to margins at linear degree. On our reading, main result 4 uses parity through two margin-sensitive lemmas, plus a sign-only bound for small samples. These appear to extend to targets that restrict to large parities, such as inner product mod 2 (Section 6).
+  - For typical uniform iid samples, Gibbs error stays bounded below up to about $d^{\kappa-2\beta}$ samples at $\gamma=0$ and $d^{\kappa-\beta}$ at $0<\gamma<1$. About $d^{\kappa+1}/\varepsilon$ (up to a logarithm) and $d^{\kappa}/\varepsilon^2$ samples bring the error below $\varepsilon$, respectively. These Gibbs-error lower bounds never reach the $1/3$ needed for a confidence statement.
+- **Halfspaces.** Halfspaces on a fixed set of coordinates have threshold degree one and need at most about $d^2$ samples. They include majority and AND of a fixed number of bits (Sections 2–4).
+- **Leap.** Every Boolean function satisfies $\mathrm{Leap}(f)\le\mathrm{thr}(f)\le\deg f$, and $\mathrm{err}_r(f)\le W^{>r}(f)$. For fixed juntas, targets that are hard for SGD in the leap sense are therefore also hard for these learners (in Gibbs error for $\gamma\ge0$). The converse fails: $x_4\,?\,x_1x_2x_3:\mathrm{MAJ}(x_1,x_2,x_3)$ has leap one and threshold degree three (Section 5).
+- **Exponential lower bounds.** Targets far from threshold functions of linear degree get exponential bounds directly, but most such functions are hard for every learner. Parity is close to threshold functions of degree $O(\sqrt d)$. So main result 4 needs, on our reading, two margin-sensitive lemmas, plus a sign-only bound for small samples. These appear to extend to targets that restrict to large parities, such as inner product mod 2 (Section 6).
 
 ## Setting and notation
 
@@ -36,7 +36,7 @@ All limits are width first, at fixed $d$, $L$, and training sample. The Gibbs er
 - **(K3)** The least eigenvalue $\nu_{\min}$ of the $2^d\times2^d$ kernel matrix satisfies $\nu_{\min}\ge c_L(d\log d)^{-\beta}$.
 - **(K4)** For odd $r\le(d+1)/8$, $\lambda_{r+1}/\tau_r\asymp1/(r\binom{d+1}{r+2})$, where $\tau_r=\sum_{\lvert U\rvert>r}\lambda_{\lvert U\rvert}$.
 
-Constants $c,C$ depend only on $L$ unless stated otherwise. The pairing comes from the odd activation and the bias coordinate: the kernel is an odd function of the inner product of $(1,x)$ and $(1,y)$. Thus $x_1x_2$ costs exactly as much as $x_1x_2x_3$, and the constant function as much as a single coordinate. For $L=2$, the exact values of $\lambda_j(d+1)^{j^*}$ at $d=40,80,160$ approach $2/\pi$, $2/\pi$, and $18/\pi$ for $j^*=1,3,5$, the leading coefficients $c_{j^*}j^*!$ of the arcsine series ([check script](verification/check_beyond_parity.py), section 1).
+Constants $c,C$ depend only on $L$ unless stated otherwise. The pairing comes from the odd activation and the bias coordinate: the kernel is an odd function of the inner product of $(1,x)$ and $(1,y)$. Thus $x_1x_2$ costs exactly as much as $x_1x_2x_3$, and the constant function as much as a single coordinate. For $L=2$, the exact values of $\lambda_j(d+1)^{j^*}$ at $d=40,80,160$ approach $2/\pi$, $2/\pi$, and $18/\pi$ for $j^*=1,3,5$. These are the coefficients of $t^{j^*}$ in $\frac2\pi\arcsin t$, times $j^*!$ ([check script](verification/check_beyond_parity.py), section 1).
 
 **Boolean quantities.**
 
@@ -82,12 +82,12 @@ $$
 
 since $K_{XX}$ is a principal submatrix of the full kernel matrix. The second display follows from Proposition 1, since $m_j(n)\ge0$ for every $j$, and since $\lambda_j\le\lambda_k$ for $j\ge k$ by (K1). ∎
 
-By (K2) and (K3), for fixed $k$ the high-degree weight $W^{\ge k}(f)$ remains essentially unlearned while $n=o\big(d^{k^*}(d\log d)^{-\beta}\big)$. This is the lower half of the standard picture in which kernel regression in the polynomial regime learns approximately the eigenspaces with eigenvalues much larger than $1/n$: [Ghorbani, Mei, Misiakiewicz, and Montanari 2021](https://arxiv.org/abs/1904.12191) on the sphere, [Mei, Misiakiewicz, and Montanari 2022](https://arxiv.org/abs/2101.10588), whose examples include the hypercube, and [Misiakiewicz 2022](https://arxiv.org/abs/2204.10425). We have not checked their hypotheses for this $d$-dependent kernel, and the matching upper half is not used below. For parities, [Hsu](https://arxiv.org/abs/2508.13346) proves $n\ge(1-\varepsilon)\binom dk$ for every kernel method against the class of $k$-sparse parities. [Simon, Dickens, Karkada, and DeWeese](https://arxiv.org/abs/2110.03922) give about $2^{d-1}(1-\sqrt\varepsilon)$ for full parity under every rotation-invariant kernel.
+By (K2) and (K3), for fixed $k$ the high-degree weight $W^{\ge k}(f)$ remains essentially unlearned while $n=o\big(d^{k^*}(d\log d)^{-\beta}\big)$. This is the lower half of the standard picture in which kernel regression in the polynomial regime learns approximately the eigenspaces with eigenvalues much larger than $1/n$: [Ghorbani, Mei, Misiakiewicz, and Montanari 2021](https://arxiv.org/abs/1904.12191) on the sphere, [Mei, Misiakiewicz, and Montanari 2022](https://arxiv.org/abs/2101.10588), whose examples include the hypercube, and [Misiakiewicz 2022](https://arxiv.org/abs/2204.10425). We have not checked their hypotheses for this $d$-dependent kernel, and the matching upper half is not used below. For parities, [Hsu](https://arxiv.org/abs/2508.13346) gives a dimension lower bound of about $(1-\varepsilon)\binom dk$ samples for squared error $\varepsilon$, for every kernel method against the class of $k$-sparse parities. We saw this bound only through its abstract and a citing paper. [Simon, Dickens, Karkada, and DeWeese](https://arxiv.org/abs/2110.03922) give about $2^{d-1}(1-\sqrt\varepsilon)$ for full parity under every rotation-invariant kernel.
 
 **Consequences.**
 
 - **Weight matters, not degree.** AND of all $d$ bits has Fourier degree $d$, but all except $O(2^{-d})$ of its weight is at degree zero.
-- **Majority.** [O'Donnell, §5.3](https://www.contrib.andrew.cmu.edu/~ryanod/?p=877) gives $W^{>k}(\mathrm{MAJ})\sim(2/\pi)^{3/2}k^{-1/2}$ for odd $k$, in the limit of many inputs. So squared error $\varepsilon$ requires $n\ge d^{\Omega(1/\varepsilon^2)}$, up to the factor $(d\log d)^\beta$, once $d$ is large compared with $1/\varepsilon^2$. Yet $\mathrm{sign}\sum_ix_i$ is majority itself. At $d=12$ and $L=2$, regression on the majority of seven bits has squared error $0.120$ at $n=2400$, while its sign errs on $0.1\%$ of inputs (check script, section 5).
+- **Majority.** For majority of all $d$ bits ($d$ odd), [O'Donnell, §5.3](https://www.contrib.andrew.cmu.edu/~ryanod/?p=877) gives $W^{>k}(\mathrm{MAJ})\sim(2/\pi)^{3/2}k^{-1/2}$ for odd $k$, in the limit of many inputs. So squared error $\varepsilon$ requires $n\gtrsim\binom{d+1}{c/\varepsilon^2}(d\log d)^{-\beta}$. This is $d^{\Omega(1/\varepsilon^2)}$ once $d\ge\varepsilon^{-2-\eta}$ for a fixed $\eta>0$. Yet $\mathrm{sign}\sum_ix_i$ is majority itself. At $d=12$ and $L=2$, regression on the majority of seven bits has squared error $0.120$ at $n=2400$, while its sign errs on $0.1\%$ of inputs (check script, section 5).
 - **Leap one.** Let $g=x_4\,?\,x_1x_2x_3:\mathrm{MAJ}(x_1,x_2,x_3)$, meaning $x_1x_2x_3$ when $x_4=1$ and the majority of $x_1,x_2,x_3$ when $x_4=-1$. Then
 
   $$
@@ -99,13 +99,13 @@ By (K2) and (K3), for fixed $k$ the high-degree weight $W^{\ge k}(f)$ remains es
 
 ## 2. Lower bounds for the sign posteriors
 
-The parity lower bounds of main result 4 combine three ingredients:
+The small-sample part of the parity lower bounds of main result 4 combines three ingredients:
 
 1. control of the posterior for every labeling of the sample. For $\gamma\ge0$ this is a cheap globally margined interpolant; for $\gamma<0$ it is the bound $\lVert m\rVert_K^2\le n$ on the Gaussian posterior mean;
 2. spectral decay, which forces posterior-typical functions to lie near low-degree polynomial threshold functions;
 3. distance of the target from those threshold functions.
 
-The first two do not depend on the target. Replacing the third by $\mathrm{err}_r(f)$ gives the following.
+The first two do not depend on the target. At exponential sample sizes, parity also enters the second ingredient, through the squared-balance lemma of Section 6. Replacing the third ingredient by $\mathrm{err}_r(f)$ gives the following.
 
 **Proposition 3 ($\gamma<0$, every target, every training set; proved).** Fix $L\ge2$. There is $C_L$ such that the following holds for every $d$, every odd $r$ with $1\le r\le(d+1)/8$, every target $f$, and every training sample $S$ of size $n$. The sample may be iid, selected, or contain repeats.
 
@@ -121,7 +121,7 @@ For each fixed $\gamma<0$, the same lower bound holds for $\liminf_{N\to\infty}$
 - $\Pr_x\lbrace\sigma_x^2<\tau_r/2\rbrace\le2n\lambda_{r+1}/\tau_r$;
 - $\lVert m-\Pi_{\le r}m\rVert_2^2\le n\lambda_{r+1}$.
 
-By Chebyshev's inequality, $\Pr_x\lbrace\lvert m-\Pi_{\le r}m\rvert\ge c_\theta\sqrt{\tau_r/2}\rbrace\le2n\lambda_{r+1}/(c_\theta^2\tau_r)$. Outside these two sets, confidence above $13/20$ forces $f\,\Pi_{\le r}m>0$. Since $\Pi_{\le r}m$ has degree at most $r$, we get $F_{13/20}(S)\ge\mathrm{err}_r(f)-(2+2/c_\theta^2)\,n\lambda_{r+1}/\tau_r$. Now apply (K4). The paper's conditional width limit and $13/20<2/3$ give the finite-width statement. ∎
+By Markov's inequality for the square, $\Pr_x\lbrace\lvert m-\Pi_{\le r}m\rvert\ge c_\theta\sqrt{\tau_r/2}\rbrace\le2n\lambda_{r+1}/(c_\theta^2\tau_r)$. Outside these two sets, confidence above $13/20$ forces $f\,\Pi_{\le r}m>0$. Since $\Pi_{\le r}m$ has degree at most $r$, we get $F_{13/20}(S)\ge\mathrm{err}_r(f)-(2+2/c_\theta^2)\,n\lambda_{r+1}/\tau_r$. Now apply (K4). The paper's conditional width limit and $13/20<2/3$ give the finite-width statement. ∎
 
 This is the paper's own small-sample argument, from the last part of the proof of its $\gamma<0$ theorem, with its parity threshold-function lemma replaced by $\mathrm{err}_r(f)$.
 
@@ -133,27 +133,27 @@ $$
 \lambda_{r+1}=\lambda_{r+2}\asymp\frac{(r+2)^{-1-\beta}}{\binom{d+1}{r+2}}.
 $$
 
-*Proof.* On this sample event, the paper's strict-margin comparator gives, for every labeling, a feasible $h$ with $\lVert h\rVert_K^2\le C_La^2(d+nd^\beta)$. Every minimizer $z$ therefore satisfies the same bound. Write $z=z_{\le r}+z_{>r}$. Then $\lVert z_{>r}\rVert_2^2\le\lambda_{r+1}\lVert z\rVert_K^2$. Since $\lvert z\rvert\ge a$ everywhere, the event $\lbrace fz_{\le r}\le0\rbrace$ is contained in $\lbrace fz<0\rbrace\cup\lbrace\lvert z_{>r}\rvert\ge a\rbrace$. Chebyshev's inequality completes the proof. ∎
+*Proof.* On this sample event, the paper's strict-margin comparator gives, for every labeling, a feasible $h$ with $\lVert h\rVert_K^2\le C_La^2(d+nd^\beta)$. Every minimizer $z$ therefore satisfies the same bound. Write $z=z_{\le r}+z_{>r}$. Then $\lVert z_{>r}\rVert_2^2\le\lambda_{r+1}\lVert z\rVert_K^2$. Since $\lvert z\rvert\ge a$ everywhere, the event $\lbrace fz_{\le r}\le0\rbrace$ is contained in $\lbrace fz<0\rbrace\cup\lbrace\lvert z_{>r}\rvert\ge a\rbrace$. Markov's inequality for $z_{>r}^2$ completes the proof. ∎
 
-Proposition 4 bounds Gibbs error. By the mixture inequality $F\ge(3R-1)/2$ ([FAQ Questions 5 and 6](../../TECHNICAL-FAQ.md#5-what-changes-if-correctness-means-posterior-probability-above-12-rather-than-23)), it gives a confidence lower bound only when its right side exceeds $1/3$.
-
-**Proposition 4′ ($\gamma=0$, Gibbs error; proved).** Fix $L\ge2$ and $a>0$. Let $d$ be sufficiently large, and draw $1\le n\le e^{d/25}$ iid uniform inputs. With probability at least $1-e^{-cd}$, the following holds simultaneously for every target $f$ and every odd $r\le(d+1)/8$:
+**Proposition 4′ ($\gamma=0$, Gibbs error; proved).** Fix $L\ge2$ and $a>0$. Let $d$ be sufficiently large, and draw $1\le n\le e^{d/25}$ iid uniform inputs. With probability at least $1-e^{-cd}$, the following holds simultaneously for every target $f$ and every odd $r$ with $1\le r\le(d+1)/8$:
 
 $$
 R_S\ \ge\ \mathrm{err}_r(f)-\frac{C_{L,a}}{d}-C_{L,a}\,\frac{\tau_r+\lambda_{r+1}(d^2+nd^{1+\beta})}{d^{1-\beta}}.
 $$
 
-*Proof.* The paper's adaptive conditioning-cost lemma gives, on this sample event and for every labeling, $\mathcal D(S)=-\log\Pr(A_S)\le C(d^2+nd^{1+\beta})$, where $A_S$ is the conditioning event. This is at most $e^{.045d}$ for large $d$. Write $\mathbb E^*$ for the posterior expectation. The paper's quadratic-entropy bound (its display for the population tail) gives $\mathbb E^*\lVert G_{>r}\rVert_2^2\le2\tau_r+4\lambda_{r+1}\mathcal D$. Its posterior-amplitude lemma gives $\mathbb E^*\Pr_x\lbrace\lvert G(x)\rvert\le A_d\rbrace\le C/d$ with $A_d=b\,d^{(1-\beta)/2}$.
+*Proof.* Let $A_S$ be the conditioning event for the labels $f(X_i)$. The rough bound `eq:zero-rough-cost` of the paper's conditioning-cost lemma does not depend on $r$. It gives, on this sample event and for every labeling at once, $\mathcal D(S)=-\log\Pr(A_S)\le C(d^2+nd^{1+\beta})$, which is at most $e^{.045d}$ for large $d$. Write $\mathbb E^*$ for the posterior expectation. The paper's quadratic-entropy lemma `lem:zero-quadratic` applies to $2^{-d/2}G_{>r}$ under the posterior, whose relative entropy from the prior is exactly $\mathcal D(S)$. It gives $\mathbb E^*\lVert G_{>r}\rVert_2^2\le2\tau_r+4\lambda_{r+1}\mathcal D$; the paper's display `eq:zero-tail-population` is the parity instance. Its posterior-amplitude lemma gives $\mathbb E^*\Pr_x\lbrace\lvert G(x)\rvert\le b_d\rbrace\le C/d$ with $b_d=b\,d^{(1-\beta)/2}$.
 
 Now fix a posterior draw. Where $fG>0$ but $fG_{\le r}\le0$, we have $\lvert G_{>r}\rvert\ge fG=\lvert G\rvert$. Hence
 
 $$
-\lbrace fG_{\le r}\le0\rbrace\subseteq\lbrace fG<0\rbrace\cup\lbrace\lvert G\rvert\le A_d\rbrace\cup\lbrace\lvert G_{>r}\rvert\ge A_d\rbrace .
+\lbrace fG_{\le r}\le0\rbrace\subseteq\lbrace fG<0\rbrace\cup\lbrace\lvert G\rvert\le b_d\rbrace\cup\lbrace\lvert G_{>r}\rvert\ge b_d\rbrace .
 $$
 
-Since $G_{\le r}$ has degree at most $r$, the left side has probability at least $\mathrm{err}_r(f)$. Take probabilities, apply Chebyshev's inequality to the last set, and average over the posterior. ∎
+Since $G_{\le r}$ has degree at most $r$, the left side has probability at least $\mathrm{err}_r(f)$. Take probabilities, apply Markov's inequality for $G_{>r}^2$ to the last set, and average over the posterior. ∎
 
-The amplitude lemma is what makes a fixed cutoff possible here. The paper's own small-sample argument at $\gamma=0$ instead takes $r\asymp d^{1/3}$, so that $\tau_r=o(1)$. This proposition was suggested by the independent check recorded in [verification/review.md](verification/review.md).
+The amplitude lemma is what makes a fixed cutoff possible here. The paper's own small-sample argument at $\gamma=0$ instead takes $r\asymp d^{1/3}$, so that $\tau_r=o(1)$. The constants inherited from the amplitude lemma are large, so the bound is asymptotic and says nothing at the dimensions of Section 7. This proposition was suggested by the independent check recorded in [verification/review.md](verification/review.md).
+
+Propositions 4 and 4′ bound Gibbs error. By the mixture inequality $F\ge(3R-1)/2$ ([FAQ Questions 5 and 6](../../TECHNICAL-FAQ.md#5-what-changes-if-correctness-means-posterior-probability-above-12-rather-than-23)), they give a confidence lower bound only when the right side exceeds $1/3$. That requires $\mathrm{err}_r(f)>1/3$.
 
 ## 3. Upper bounds
 
@@ -175,15 +175,15 @@ For $\gamma\le0$, the limits use Markov's inequality, $F\le3R$, and the fact tha
 
 ## 4. Fixed juntas
 
-**Corollary 6 (proved, from Propositions 3–5).** Let $f$ depend on a fixed set of $P$ coordinates as $d$ grows, let $t=\mathrm{thr}(f)$ and $\kappa=t^*$. The constants $c_f,C_f$ depend on $f$ and $L$, and at $\gamma=0$ also on $a$.
+**Corollary 6 (proved, from Propositions 3–5).** Let $f$ depend on a fixed set of $P$ coordinates as $d$ grows, let $t=\mathrm{thr}(f)$ and $\kappa=t^*$. The constants $c_f,C_f$ depend on $f$ and $L$, and at $\gamma\ge0$ also on $a$. The statements hold for $d\ge d_f$; the case $n=0$ is trivial, since the posterior is then symmetric under $G\mapsto-G$ and every Gibbs error equals $1/2$.
 
 1. Let $t\ge2$. Then $\mathrm{err}_{\kappa-2}(f)\ge2^{-P}$, and:
    - for $\gamma<0$, every training sample with $n\le c_fd^{\kappa}$ has $F_{13/20}(S)\ge\mathrm{err}_{\kappa-2}(f)/2$. Conversely, $n\ge C_f(d^{\kappa+1}+\ln(1/(\varepsilon\delta)))/\varepsilon$ iid samples give limiting confidence failure at most $\varepsilon$ with probability $1-\delta$;
-   - for $\gamma=0$, with probability $1-e^{-cd}$, the Gibbs error is at least $\mathrm{err}_{\kappa-2}(f)/2$ when $n\le c_fd^{\kappa-2\beta}$. The same upper bound as for $\gamma<0$ holds;
-   - for $0<\gamma<1$, with probability $1-e^{-cd}$, every minimizer has error at least $\mathrm{err}_{\kappa-2}(f)/2$ when $n\le c_fd^{\kappa-\beta}$. Conversely, $n\ge C_f(d^{\kappa}+\ln(1/\delta))/\varepsilon^2$ samples make every minimizer's error at most $\varepsilon$ with probability $1-\delta$.
-2. Let $t=1$, so that $f$ is a halfspace on its $P$ coordinates. Examples are majority and AND of $P$ bits. Then $C_f(d^2+\ln(1/(\varepsilon\delta)))/\varepsilon$ samples suffice for $\gamma\le0$, and $C_f(d+\ln(1/\delta))/\varepsilon^2$ for $0<\gamma<1$. Majority of all $d$ bits is not a fixed junta: the sign representation $\sum_ix_i$ has $\lVert p\rVert_K^2\asymp d^2$, giving about $d^3/\varepsilon$ samples for $\gamma\le0$.
+   - for $\gamma=0$, with probability $1-e^{-cd}$ over uniform iid samples, the Gibbs error is at least $\mathrm{err}_{\kappa-2}(f)/2$ when $n\le c_fd^{\kappa-2\beta}$. The same upper bound as for $\gamma<0$ holds;
+   - for $0<\gamma<1$, with probability $1-e^{-cd}$ over uniform iid samples, every minimizer has error at least $\mathrm{err}_{\kappa-2}(f)/2$ when $n\le c_fd^{\kappa-\beta}$. Conversely, $n\ge C_f(d^{\kappa}+\ln(1/\delta))/\varepsilon^2$ samples make every minimizer's error at most $\varepsilon$ with probability $1-\delta$.
+2. Let $t=1$, so that $f$ is a halfspace on its $P$ coordinates. Examples are majority and AND of $P$ bits. Then $C_f(d^2+\ln(1/(\varepsilon\delta)))/\varepsilon$ samples suffice for $\gamma\le0$, and $C_f(d+\ln(1/\delta))/\varepsilon^2$ for $0<\gamma<1$. Majority of all $d$ bits ($d$ odd) is not a fixed junta: the sign representation $\sum_ix_i$ has $\lVert p\rVert_K^2\asymp d^2$, giving about $d^3/\varepsilon$ samples for $\gamma\le0$.
 
-*Proof.* In part 1, fix the coordinates outside the junta. A polynomial of degree at most $\kappa-2<t$ restricts to a polynomial of degree at most $\kappa-2$ in the junta coordinates. This restriction cannot sign-represent $f$, so it errs on at least one of the $2^P$ junta cells. Apply Proposition 3 with $r=\kappa-2$ and $\binom{d+1}{\kappa}\asymp d^\kappa$, and Propositions 4 and 4′ with $\lambda_{\kappa-1}=\lambda_\kappa\asymp d^{-\kappa}$ and $\tau_{\kappa-2}\le1$. For the upper bounds, scale a degree-$t$ sign representation in the junta coordinates so that $fp\ge1$. Then $\lVert p\rVert_K^2\le\lVert p\rVert_2^2/\lambda_t\le C_fd^{\kappa}$, and Proposition 5 applies. Part 2 is the same with $\lambda_1\asymp1/d$. ∎
+*Proof.* In part 1, fix the coordinates outside the junta. A polynomial of degree at most $\kappa-2<t$ restricts to a polynomial of degree at most $\kappa-2$ in the junta coordinates. This restriction cannot sign-represent $f$, so it errs on at least one of the $2^P$ junta cells. Apply Proposition 3 with $r=\kappa-2$ and $\binom{d+1}{\kappa}\asymp d^\kappa$, and Propositions 4 and 4′ with $\lambda_{\kappa-1}=\lambda_\kappa\asymp d^{-\kappa}$ and $\tau_{\kappa-2}\le1$. In Proposition 4′ the terms not involving $n$ are $O(d^{-(1-\beta)}+d^{1+\beta-\kappa})=o(1)$, since $\kappa\ge3$. For the upper bounds, scale a degree-$t$ sign representation in the junta coordinates so that $fp\ge1$. Then $\lVert p\rVert_K^2\le\lVert p\rVert_2^2/\lambda_t\le C_fd^{\kappa}$, and Proposition 5 applies. Part 2 is the same with $\lambda_1\asymp1/d$. ∎
 
 For threshold degree at most one, the available lower bounds are weaker. For $\gamma<0$ every target needs $n\gtrsim d$, by [the sparse-parity paper's](../../side-results/sparse-parity/paper.pdf) universal bound $F_\theta(S)\ge1-(2+1/(\pi(\theta-1/2)^2))\,n/(d+1)$. For $0<\gamma<1$, a dictator is learned from $O(\log d)$ samples, by the sparse-parity paper's `thm:dictator-fast`.
 
@@ -200,9 +200,11 @@ For threshold degree at most one, the available lower bounds are weaker. For $\g
 | $x_1x_2x_3x_4$ | 4 | 4 | 4 | 5 | 1/16 |
 | $x_5\,?\,x_1x_2x_3x_4:\mathrm{sign}(2x_1+x_2+x_3+x_4)$ | 5 | 1 | 4 | 5 | 1/32 |
 
-For $\gamma<0$, two-bit XOR therefore has confidence failure at least $1/4-o(1)$ on every training sample with $n=o(d^3)$. The leap-one target $x_4\,?\,x_1x_2x_3:\mathrm{MAJ}$ has failure at least $3/16-o(1)$ in the same range. For fixed $k$, Proposition 3 gives $k$-sparse parity failure fraction $\mathrm{err}_{k^*-2}(\chi_k)$ at the natural scale $n=o(d^{k^*})$. That fraction decays with $k$. The sparse-parity paper instead proves a small universal fraction that also covers growing $k$.
+Since $\mathrm{err}_r(f)\le1/2$, the $\gamma\ge0$ bounds of part 1 never exceed $1/4$. So they are Gibbs-error statements only and give no confidence-failure bound. For $\gamma<0$, two-bit XOR has confidence failure at least $1/4-o(1)$ on every training sample with $n=o(d^3)$. The leap-one target $x_4\,?\,x_1x_2x_3:\mathrm{MAJ}$ has failure at least $3/16-o(1)$ in the same range. For fixed $k$, Proposition 3 gives $k$-sparse parity failure fraction $\mathrm{err}_{k^*-2}(\chi_k)$ at the natural scale $n=o(d^{k^*})$. That fraction decays with $k$. The sparse-parity paper instead proves a small universal fraction that also covers growing $k$.
 
-Taking instead an odd $r\le c\sqrt k$, the bound of Aspnes, Beigel, Furst, and Rudich (the subcritical paper's `lem:ptf-parity`, applied on the $k$ relevant coordinates) keeps $\mathrm{err}_r(\chi_k)$ above a positive constant. So at $\gamma<0$, by Proposition 3, every training set of size below $c'(d/\sqrt k)^{c\sqrt k}$ leaves confidence failure bounded below. This holds for deliberately selected training sets too. Compare the $0<\gamma<1$ [selected-examples paper](../../side-results/selected-examples-parity/paper.pdf), where selected sets of size $d^{O(\sqrt k)}$ suffice.
+Instead, fix $c\le1/2$, let $k\ge k_0(c,L)$ and $d\ge64$, and let $r$ be the largest odd integer at most $c\sqrt k$. The bound of Aspnes, Beigel, Furst, and Rudich (the subcritical paper's `lem:ptf-parity`, applied on the $k$ relevant coordinates) gives $\mathrm{err}_r(\chi_k)\ge2^{-k}\sum_{j\le(k-r-1)/2}\binom kj$, which is about $\Phi(-c)$ for large $k$. So at $\gamma<0$, Proposition 3 gives the following. Every training set with $n\le c'r\binom{d+1}{r+2}$, where $c'=\mathrm{err}_r(\chi_k)/(2C_L)$, keeps $F_{13/20}(S)$ and the finite-width $\liminf$ at least $\mathrm{err}_r(\chi_k)/2$. For $k\ge k_0$ this range includes every $n\le(d/\sqrt k)^{c\sqrt k}$. The bound holds for deliberately selected training sets too.
+
+Compare the $0<\gamma<1$ [selected-examples paper](../../side-results/selected-examples-parity/paper.pdf). There, for sufficiently large odd $k$ and $d\ge(C_Lk)^{C_Lk}$, selected sets of size $d^{O_\delta(\sqrt k)}$ make every minimizer's error at most $\delta$. The two exponents are of the same order $\sqrt k$. Whether selected sets of that size suffice at $\gamma<0$, rather than the iid natural scale, is open.
 
 ## 5. Leap and threshold degree
 
@@ -218,7 +220,7 @@ $$
 
 So $\lvert\hat g(\varnothing)\rvert\ge1$ and $g$ is constant. Then $f$ depends only on $x_T$, and every support set lies in $T$, a contradiction. ∎
 
-A companion inequality links threshold functions to Fourier weight: $\mathrm{err}_r(f)\le W^{>r}(f)$ for every $r$. Indeed, $\mathrm{sign}(f_{\le r})$ can differ from $f$ only where $\lvert f-f_{\le r}\rvert\ge1$. With Proposition 2, a target that keeps $\mathrm{err}_r(f)\ge c$ in Proposition 3 or 4 therefore also keeps squared regression error at least $c-o(1)$ until $n$ is about $d^{(r+1)^*}$.
+A companion inequality links threshold functions to Fourier weight: $\mathrm{err}_r(f)\le W^{>r}(f)$ for every $r$. Indeed, $\mathrm{sign}(f_{\le r})$ can differ from $f$ only where $\lvert f-f_{\le r}\rvert\ge1$. With Proposition 2, a target that keeps $\mathrm{err}_r(f)\ge c$, for fixed odd $r$, therefore also keeps squared regression error at least $c-o(1)$ while $n=o(d^{r+2}(d\log d)^{-\beta})$.
 
 The check script confirms Proposition 7 on all $2^{16}$ Boolean functions of four bits. In the same census, 62,144 functions depend on all four bits and have leap one. Of these, 1,536 have threshold degree one, 53,856 have threshold degree two, and 6,752 have threshold degree three.
 
@@ -235,7 +237,7 @@ Since $\kappa\ge\mathrm{thr}\ge\mathrm{Leap}$, whenever $\mathrm{thr}(f)\ge2$ th
 
 ## 6. Superpolynomial and exponential sample sizes
 
-**Growing degree.** Suppose $\mathrm{err}_r(f)\ge c$ for some odd $r=r(d)\to\infty$ with $r\le(d+1)/8$. Then Proposition 3 shows that the $\gamma<0$ learner keeps confidence failure at least $c/2$ on every training set unless $n\gtrsim r\binom{d+1}{r+2}$, which is superpolynomial in $d$. Propositions 4 and 4′ give the corresponding Gibbs-error statements for typical samples at $0<\gamma<1$ and $\gamma=0$, with an extra polynomial factor. At linear $r$ this is exponential. Most Boolean functions qualify by a counting argument, but they need about $2^d$ samples for every learner, so they say nothing specific about these learners.
+**Growing degree.** Suppose $\mathrm{err}_r(f)\ge c$ for some odd $r=r(d)\to\infty$ with $r\le(d+1)/8$. Then Proposition 3 shows that the $\gamma<0$ learner keeps confidence failure at least $c/2$ on every training set unless $n\gtrsim r\binom{d+1}{r+2}$, which is superpolynomial in $d$. Propositions 4 and 4′ give the corresponding Gibbs-error statements for typical samples at $0<\gamma<1$ and $\gamma=0$, with an extra polynomial factor, but only for $n\le e^{d/25}$. At linear $r$ all of these are exponential. Most Boolean functions qualify by a counting argument, but they need about $2^d$ samples for every learner, so they say nothing specific about these learners.
 
 **Parity needs more.** Parity is close to low-degree threshold functions. Under uniform inputs, a univariate polynomial in $\sum_ix_i$ of degree $O(\sqrt{d\log(1/\varepsilon)})$ alternates in sign on the central range and has the sign of parity outside probability $\varepsilon$. So the route above gives only $\exp(\Theta(\sqrt d\log d))$ for parity, which is the scale of the [earlier superpolynomial paper](../../side-results/subcritical-sample-complexity/paper.pdf). Main result 4 reaches $\exp(\Omega(d))$ through two margin-sensitive lemmas. It also uses a sign-only bound for small samples. On our reading, these three lemmas, together with `lem:small-cutoff`, which uses parity only through the first of them, are the only places its proof uses parity:
 
@@ -243,7 +245,7 @@ Since $\kappa\ge\mathrm{thr}\ge\mathrm{Leap}$, whenever $\mathrm{thr}(f)\ge2$ th
 - `lem:parity-squared-balance`, $\mathbb E(fP)_-^2\ge(1/2-\sqrt{r/d})\lVert P\rVert_2^2$ for $\deg P\le r$, used for $r$ up to a small multiple of $d$;
 - `lem:clipped-parity`, $\lvert\mathbb E f\,\mathrm{clip}(P/b)\rvert\le\lVert\Delta P\rVert_1/(bd)$, through the discrete Laplacian $\Delta$.
 
-All three use that parity changes sign along every edge of the cube.
+The two margin-sensitive lemmas use that parity changes sign along every edge of the cube. The ABFR lemma uses that parity is orthogonal to every polynomial of degree below $d$.
 
 **Extension suggested by the proof.** The three lemmas appear to transfer, one restriction at a time, to restriction parities. These are targets for which some set $A$ of coordinates has the following property: after $x_A$ is fixed uniformly at random, the restriction equals $\pm$ a parity of at least $cd$ remaining coordinates, except with probability $e^{-cd}$. Examples:
 
