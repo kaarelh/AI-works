@@ -1,0 +1,59 @@
+1. Kernel spectrum
+   d=12 L=2: max relative pairing gap 7.0e-80, trace 1.000000000000
+            1/lambda_j for j = 0, 2, 4, 6, 12: 19.53 2113 1.3e+04 2.344e+04 3.481e+04
+            strictly decreasing across pairs: True
+   d=12 L=3: max relative pairing gap 2.6e-80, trace 1.000000000000
+            1/lambda_j for j = 0, 2, 4, 6, 12: 30.03 1951 7223 1e+04 1.219e+04
+            strictly decreasing across pairs: True
+   lambda_j * (d+1)^{j*}, L=2 (bounded as d grows => lambda_j ~ d^{-j*}):
+     j=0 (j*=1): d=40: 0.6447  d=80: 0.6406  d=160: 0.6386
+     j=1 (j*=1): d=40: 0.6447  d=80: 0.6406  d=160: 0.6386
+     j=2 (j*=3): d=40: 0.7148  d=80: 0.6740  d=160: 0.6549
+     j=3 (j*=3): d=40: 0.7148  d=80: 0.6740  d=160: 0.6549
+     j=4 (j*=5): d=40: 7.9589  d=80: 6.7226  d=160: 6.2004
+     j=5 (j*=5): d=40: 7.9589  d=80: 6.7226  d=160: 6.2004
+2. Regression identity (exact average over all training sets)
+   d=5, n=4, L=2: 35960 training sets; largest off-diagonal Walsh entry 4.8e-15;
+   largest spread of diagonal entries within one degree 2.0e-15
+   per-degree expected MSE of a single character: m_0=0.4549, m_1=0.4549, m_2=1.2504, m_3=1.2504, m_4=1.2919, m_5=1.2919
+3. Example targets: Fourier degree, leap, threshold degree t, kappa = 2*floor(t/2)+1,
+   and err_{kappa-2} (exact; only for t >= 2)
+   MAJ5                                 deg 5  leap 1  t 1  kappa 1  err -       weights by degree 0.000 0.703 0.000 0.156 0.000 0.141
+   AND4 (+1 iff all bits are -1)        deg 4  leap 1  t 1  kappa 1  err -       weights by degree 0.766 0.062 0.094 0.062 0.016
+   LTF sign(4x1+3x2+2x3+x4+x5)          deg 5  leap 1  t 1  kappa 1  err -       weights by degree 0.000 0.703 0.000 0.281 0.000 0.016
+   XOR2                                 deg 2  leap 2  t 2  kappa 3  err 1/4     weights by degree 0.000 0.000 1.000
+   MUX x1 ? x2 : x3                     deg 2  leap 1  t 2  kappa 3  err 1/8     weights by degree 0.000 0.500 0.500 0.000
+   IP2 = AND(x1,x2) xor AND(x3,x4)      deg 4  leap 1  t 2  kappa 3  err 2/16    weights by degree 0.062 0.250 0.375 0.250 0.062
+   XOR3                                 deg 3  leap 3  t 3  kappa 3  err 2/8     weights by degree 0.000 0.000 0.000 1.000
+   x4 ? x1x2x3 : MAJ(x1,x2,x3)          deg 4  leap 1  t 3  kappa 3  err 3/16    weights by degree 0.000 0.188 0.188 0.062 0.562
+   XOR4                                 deg 4  leap 4  t 4  kappa 5  err 1/16    weights by degree 0.000 0.000 0.000 0.000 1.000
+   x5 ? x1x2x3x4 : sign(2x1+x2+x3+x4)   deg 5  leap 1  t 4  kappa 5  err 1/32    weights by degree 0.000 0.188 0.188 0.062 0.312 0.250
+4. Census of all 65536 Boolean functions of 4 bits
+   violations of leap <= threshold degree: 0
+   (leap, threshold degree): number of functions
+     (0, 0): 2
+     (1, 1): 1880
+     (1, 2): 54304
+     (1, 3): 6752
+     (2, 2): 1388
+     (2, 3): 1168
+     (3, 3): 40
+     (4, 4): 2
+   leap-1 functions depending on all 4 bits: 62144; by threshold degree: t=1: 1536, t=2: 53856, t=3: 6752
+5. Kernel regression (GP posterior mean on exact labels, no ridge), d=12, L=2,
+   n iid uniform draws with repeats removed, 4 seeds; squared error and sign error
+   n=  200  MAJ(x1..x7): 0.312 / 0.048   x1x2x3: 0.725 / 0.259   x4 ? x1x2x3 : MAJ3: 0.784 / 0.314
+   n=  800  MAJ(x1..x7): 0.210 / 0.013   x1x2x3: 0.218 / 0.002   x4 ? x1x2x3 : MAJ3: 0.560 / 0.199
+   n= 2400  MAJ(x1..x7): 0.120 / 0.001   x1x2x3: 0.035 / 0.000   x4 ? x1x2x3 : MAJ3: 0.270 / 0.041
+6. Least ||p||_K^2 with f p >= 1, f = x4 ? x1x2x3 : MAJ3, L=2, in units of 1/lambda_3
+   (primal value; the dual lower bound is checked to agree)
+   d=  12: degree <= 3: 4.028   degree <= 4: 2.434
+   d=  20: degree <= 3: 4.008   degree <= 4: 3.532
+   d=  40: degree <= 3: 4.002   degree <= 4: 3.899
+   d=  80: degree <= 3: 4.000   degree <= 4: 3.976
+   d= 160: degree <= 3: 4.000   degree <= 4: 3.994
+7. err_1 of MAJ(x1x2, x3x4, x5x6) by mixed-integer programming
+HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+HighsMipSolverData::transformNewIntegerFeasibleSolution tmpSolver.run();
+   threshold degree 2; minimum disagreements 22/64 (status 0, coefficients bounded by 1000); exceeds 1/3: True
