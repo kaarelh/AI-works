@@ -270,7 +270,7 @@ The $1$ is the constant input coordinate.
 
 - **$`\gamma<0`$.** After the output normalization of Question 8, the posterior is the law of a centered Gaussian process $G$ on the cube with covariance $K$, conditioned on the training signs.
 - **$`\gamma=0`$.** $G$ is also conditioned on a fixed absolute margin, $\lvert G(x)\rvert>a$ at every input, where $a>0$ comes from the global output-margin condition of Question 1.
-- **$`0<\gamma<1`$.** The posterior concentrates on the signs of the functions $z$ that minimize the energy $z^{\mathsf T}K^{-1}z$ subject to two constraints: $\lvert z(x)\rvert\ge a$ at every input, and the correct signs at the training inputs. Tied minimizers may receive any weights (Question 10).
+- **$`0<\gamma<1`$.** The posterior concentrates on the signs of the functions $z$ that minimize the energy $z^{\mathsf T}K^{-1}z$, the squared $`K`$-norm, subject to two constraints: $\lvert z(x)\rvert\ge a$ at every input, and the correct signs at the training inputs. Tied minimizers may receive any weights (Question 10).
 
 As in Question 5, the **Gibbs error** is the expected error of one posterior draw. The **confidence failure** is the fraction of test inputs at which the posterior gives the correct label probability at most $2/3$.
 
@@ -287,13 +287,13 @@ Other notation:
 - $\beta=2^{-(L-1)}$ governs the decay of the kernel's spectrum, and costs a factor $d^{\beta}$ or $d^{2\beta}$ in some bounds below.
 - The constants $c_f,C_f>0$ depend on $f$, the depth, and at $0\le\gamma<1$ the margin $a$, but not on $d$. The statements hold for large $d$.
 
-**Lower bounds for every target.** The subcritical paper proves its parity lower bounds in three steps:
+**Lower bounds for every target.** For smaller training sets, the subcritical paper proves its parity lower bounds in three steps:
 
 1. For typical uniform iid training inputs, every labeling has an interpolant of small $`K`$-norm that satisfies the margin condition at every input. At $\gamma<0$, where there is no such margin, the analogue holds for every training set: the posterior mean has squared $`K`$-norm at most $n$.
 2. The eigenvalues of $K$ decay with Fourier degree, so posterior-typical functions are close to polynomial threshold functions of low degree.
 3. Parity is far from all such functions.
 
-For large training sets, the paper's step 2 also uses properties of parity. The note instead uses a simpler step 2 that does not depend on the target at any sample size: it bounds the high-degree part of the posterior by Markov's inequality. Replacing step 3 by $\mathrm{err}_r(f)$ then gives a lower bound for every target. The bound holds while $n$ stays well below about $\binom{d+1}{r+2}$, up to small polynomial factors. At $\gamma=0$ the fixed-degree version also uses the paper's posterior-amplitude lemma.
+For large training sets, the paper instead replaces steps 2 and 3 by the margin-sensitive parity lemmas described below. The note uses a simpler step 2 that does not depend on the target at any sample size: it bounds the high-degree part of the posterior by Markov's inequality. Replacing step 3 by $\mathrm{err}_r(f)$ then gives a lower bound for every target. The bound holds while $n$ stays well below about $\binom{d+1}{r+2}$, up to small polynomial factors. At $\gamma=0$ the fixed-degree version also uses the paper's posterior-amplitude lemma.
 
 For a junta $f$ with $t=\mathrm{thr}(f)\ge2$:
 
@@ -319,7 +319,7 @@ The $`k`$-bit parity $\chi_k(x)=x_1\cdots x_k$ with fixed $k\ge2$ is also covere
 
 Full Fourier degree is therefore no obstacle for these learners. A sign prediction needs only a polynomial with the right sign, and the sign of majority's degree-one part is majority itself.
 
-**Exponential failure uses more of parity's structure.** The same arguments give exponential lower bounds for every target that stays a constant distance from threshold functions of degree linear in $d$. At $\gamma<0$ they hold on every training set. At $0\le\gamma<1$ they hold for typical samples, up to $n\le e^{d/25}$. Most Boolean functions are of this kind, but that says little, since a random function needs exponentially many samples for any learner.
+**Exponential failure uses more of parity's structure.** The same arguments give exponential lower bounds for every target that stays a constant distance from threshold functions of degree linear in $d$. At $\gamma<0$ they hold on every training set. At $0\le\gamma<1$ they hold in Gibbs error for typical samples, and only for $n\le e^{d/25}$. Most Boolean functions are of this kind, but that says little, since a random function needs exponentially many samples for any learner.
 
 Parity, by contrast, is close to threshold functions of degree about $\sqrt d$, so this route gives it only $\exp(\Theta(\sqrt d\log d))$. The subcritical paper's exponential parity theorem reaches $\exp(\Omega(d))$ through two further margin-sensitive lemmas. Both use the fact that parity changes sign along every edge of the cube.
 
@@ -348,20 +348,20 @@ Every Boolean function satisfies $\mathrm{Leap}(f)\le\mathrm{thr}(f)\le\deg f$; 
 
 The converse fails. The leap-one target $g$ needs at least about $d^3$ samples at $\gamma<0$, while SGD is conjectured to need about $d$. The note's exhaustive four-bit census suggests that targets like $g$ are common: 97.5% of the leap-one functions depending on all four of their bits have threshold degree at least two.
 
-For $`k`$-sparse parity, leap, threshold degree, and degree all equal $k$. Under the conjectured rate, SGD needs about $d^{k-1}$ samples. At $\gamma<0$ these learners need between about $d^{k^*}$ and $d^{k^*+1}$. At $0\le\gamma<1$ they need at least about $d^{k^*}$ up to a factor $d^{2\beta}$, in Gibbs error. So the exponents differ only by a small constant. [Barak et al.](https://arxiv.org/abs/2207.08799) find SGD taking $d^{O(k)}$ iterations on sparse parity, near the statistical-query limit.
+For $`k`$-sparse parity with fixed $k\ge2$, leap, threshold degree, and degree all equal $k$. Under the conjectured rate, SGD needs about $d^{k-1}$ samples. At $\gamma<0$ these learners need between about $d^{k^*}$ and $d^{k^*+1}$. At $0\le\gamma<1$ they need at least about $d^{k^*}$ up to a factor $d^{2\beta}$, in Gibbs error. So the exponents differ only by a small constant. [Barak et al.](https://arxiv.org/abs/2207.08799) find SGD taking $d^{O(k)}$ iterations on sparse parity, near the statistical-query limit.
 
 **Comparison with kernel regression.** For contrast, consider a different predictor built from the same kernel $K$. It is the posterior mean of the centered Gaussian process with covariance $K$, given the noiseless labels as real values. That process is the NNGP of the sign-activation network in Setting, not the standard-scaling NNGP of Question 7. This posterior mean is kernel interpolation, called kernel regression below. Its squared error is governed by Fourier weight rather than by distance from threshold functions.
 
 Write $\mathrm{wt}_k(f)$ for the Fourier weight of $f$ at degree $k$, and $\mathrm{wt}_{>r}(f)$ for its total weight above degree $r$.
 
-For uniformly sampled inputs, the expected squared error of kernel regression depends on the target only through the weights $\mathrm{wt}_k(f)$. The note proves this by a symmetry argument. For fixed $k$ and $n\le c\,d^{k^*}(d\log d)^{-\beta}$, at least half of the weight at degrees $k$ and above remains as squared error. For $n=o(d^{k^*}(d\log d)^{-\beta})$, all of it remains up to $o(1)$.
+For uniformly sampled inputs, the expected squared error of kernel regression depends on the target only through the weights $\mathrm{wt}_k(f)$. The note proves this by a symmetry argument. For fixed $k$ and $n\le c_k\,d^{k^*}(d\log d)^{-\beta}$, where $c_k>0$ depends on $k$ and the depth, at least half of the weight at degrees $k$ and above remains as squared error. For $n=o(d^{k^*}(d\log d)^{-\beta})$, all of it remains up to $o(1)$.
 
 The odd rounding comes from the odd activation and the constant input coordinate, which together give $x_1x_2$ the same eigenvalue as $x_1x_2x_3$. This is the lower-bound half of the standard polynomial-regime picture of kernel regression, as in [Mei, Misiakiewicz, and Montanari](https://arxiv.org/abs/2101.10588), whose examples include the hypercube. We have not checked that paper's hypotheses for this kernel.
 
 The two criteria differ:
 
 - **Majority of all $d$ bits** keeps weight of order $k^{-1/2}$ above every degree $k\ll d$. Squared error $\varepsilon$ therefore needs at least $d^{\Omega(1/\varepsilon^2)}$ samples once $d$ is polynomially larger than $1/\varepsilon^2$. The sign posteriors learn majority at polynomial cost.
-- **AND of all $d$ bits** has degree $d$, but all except $O(2^{-d})$ of its weight is at degree zero. So the regression lower bound gives nothing for it: Fourier degree alone does not make regression hard.
+- **AND of all $d$ bits** has degree $d$, but all except $O(2^{-d})$ of its weight is at degree zero. So the regression lower bound gives nothing for it: that bound depends on high-degree weight, not on Fourier degree.
 - **The target $`g`$** has $9/16$ of its weight at degree four. Regression keeps its squared error at least $9/16-o(1)$ while $n=o(d^5(d\log d)^{-\beta})$.
 
 In one direction the criteria are linked. Since $\mathrm{err}_r(f)\le\mathrm{wt}_{>r}(f)$, every target that our lower bounds certify as hard for the sign posteriors is also hard for squared-error regression.
