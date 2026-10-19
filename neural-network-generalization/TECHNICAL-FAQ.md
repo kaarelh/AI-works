@@ -237,13 +237,13 @@ $$
 n\le\exp\!\left(c\max\left\lbrace k,\sqrt{k}\log\frac{e(d+1)}{\sqrt{k}}\right\rbrace \right).
 $$
 
-This includes the desired $\exp(\Omega(k))$ obstruction, but does not give the full natural sparse scale.
+This includes the desired $\exp(\Omega(k))$ obstruction, but does not give the full natural sparse scale. For $k\le d^{1-\eta}$, a [refinement](side-results/intermediate-parity/paper.pdf) proves failure at specified sample sizes $n$ with $\log n$ of order $\max\lbrace k^{\theta}\log(ed/k),\,k[\log(ed/k)]^{2-1/\theta}\rbrace$, where $\theta=\theta_L\in(1/2,1)$ and $\theta_2\approx0.719$; it does not assert failure at every smaller $n$. When depth grows as $\log_2\log\log d+O(1)$ and $d^{\eta_1}\le k\le d^{1-\eta_2}$, the [growing-depth paper](side-results/growing-depth-parity/paper.pdf) reaches the natural scale at specified sample sizes. Neither settles the fixed-depth natural scale.
 
 **Open:** that full growing-sparse scale for $0<\gamma<1$, and the corresponding growing-sparse endpoint problem at $\gamma=0$.
 
 There is a genuine regime distinction: a one-coordinate parity learns with $O(\log d)$ examples for $0<\gamma<1$. A uniform $d^{ck}$ claim covering all $k\ge1$ in that regime is therefore false. This does not disprove the proposed bound restricted to sufficiently growing $k$.
 
-See [sparse parity](side-results/sparse-parity/paper.pdf) and [growing positive-subcritical parity](side-results/growing-sparse-positive/paper.pdf). These are iid-sample results, not lower bounds for an active learner allowed to choose informative inputs.
+See [sparse parity](side-results/sparse-parity/paper.pdf) and [growing positive-subcritical parity](side-results/growing-sparse-positive/paper.pdf). These are iid-sample results, not lower bounds for an active learner allowed to choose informative inputs. Typical sampling is essential: [deliberately selected](side-results/selected-examples-parity/paper.pdf) training sets of size $d^{O_\delta(\sqrt k)}$ teach sufficiently large odd $k$ when $d\ge(C_Lk)^{C_Lk}$.
 
 ## 12. What robustness condition gives polynomial depth dependence?
 
@@ -310,7 +310,7 @@ Other candidates include robustness to dropout, random quantization, or random i
 
 ## 16. Is exponential depth dependence necessary without any robustness restriction?
 
-**Yes for unrestricted continuous-output regression; open for the original Boolean-cube model.** The [continuous-depth lower bound](works-in-progress/continuous-depth-lower-bound/) gives teachers of constant width, weights bounded by 30, and growing depth on the unit circle. For a fixed, nonatomic input distribution, learning their real outputs requires exponentially many samples in depth. This holds in the strong-prior limit, at every fixed exponent $\gamma>1$ at sufficiently large finite widths, and at mean-field scaling in the width-first limit. Training and test tolerances are fixed constants, and the failure concerns the actual posterior-confidence criterion, including mixtures. The mean-field result does not give a quantitative width threshold.
+**Yes for unrestricted continuous-output regression; open for the original Boolean-cube model.** The [continuous-depth lower bound](works-in-progress/continuous-depth-lower-bound/) gives teachers of constant width, weights bounded by 30, and growing depth on the unit circle. For a fixed, nonatomic input distribution, learning their real outputs requires exponentially many samples in depth. This holds in the strong-prior limit at every fixed width above a threshold polynomial in the sample size, at every fixed exponent $\gamma>1$ at widths above a threshold polynomial in the sample size and depth, and at mean-field scaling in the width-first limit. These thresholds are far above teacher width, so the result refutes guarantees asserted at every width $N\ge C$, not behavior near the teacher width. Training and test tolerances are fixed constants, and the failure concerns the actual posterior-confidence criterion, including mixtures. The mean-field result does not give a quantitative width threshold.
 
 The mechanism is that the teacher separates outputs at exponentially close input pairs. For the strong-prior and above-mean-field cases, a small random sample can instead be fit exactly by a network whose energy permits only a polynomial-in-sample-size Lipschitz constant, independently of depth. The posterior favors those fits, which must fail on at least one member of every close pair. This also gives a lower bound for minimum-energy exact interpolation and the specified strong-prior-then-zero-tolerance posterior limit. The mean-field proof uses a separate entropy-rate comparison and the same paired inputs. The fixed input distribution is supported on a Cantor subset of the circle; smooth densities depending on depth are also covered. Uniform spherical inputs remain open.
 
@@ -478,15 +478,15 @@ $$
 =\kappa_N(f)-\kappa_N(g).
 $$
 
-Thus if $\kappa_N(g)>\kappa_N(f)$, the prior ratio $\pi_{N,\sigma}(g)/\pi_{N,\sigma}(f)$ tends to zero. Cloning and compression give the two directions of the complexity comparison: for fixed depth $L$, there are polynomials $P_L,Q_L$, independent of learner width, such that for every $N\ge C_L(f)$,
+Thus if $\kappa_N(g)>\kappa_N(f)$, the prior ratio $\pi_{N,\sigma}(g)/\pi_{N,\sigma}(f)$ tends to zero. Cloning and compression give the two directions of the complexity comparison: for fixed depth $L$, there are polynomials $P_L,M_L$, independent of learner width, such that for every $N\ge C_L(f)$,
 
 $$
 \kappa_N(f)\le P_L(d,C_L(f)),
 \qquad
-C_L(f)\le Q_L(d,1+\kappa_N(f)).
+C_L(f)\le M_L(d,1+\kappa_N(f)).
 $$
 
-This is the slides' circuit-prior claim in a quantitative form: prior preference is governed by a complexity measure polynomially equivalent to small-network complexity. It need not preserve the ordering of two functions with similar circuit sizes. Counting the functions whose energy is no greater than the target's then gives the strong-prior generalization theorem. See the Gaussian-rate lemma and the “Uniform count and complexity comparison” proposition in the [strong-prior paper](main-results/strong-prior-generalization/paper.pdf).
+In the paper, $M_L(d,K)$ can be taken to be the compression width $m_L(d,\max\lbrace K,2\rbrace)$; this differs from the log-count $Q_L$ of Question 19. This is the slides' circuit-prior claim in a quantitative form: prior preference is governed by a complexity measure polynomially equivalent to small-network complexity. It need not preserve the ordering of two functions with similar circuit sizes. Counting the functions whose energy is no greater than the target's then gives the strong-prior generalization theorem. See the Gaussian-rate lemma and the “Uniform count and complexity comparison” proposition in the [strong-prior paper](main-results/strong-prior-generalization/paper.pdf).
 
 The main Lean gate certifies the learning theorem and the ingredients used in its proof; it does not separately assert this displayed two-sided complexity comparison as an additional main theorem. The [coverage inventory](lean/review/formal-coverage-inventory.txt) distinguishes these scopes.
 
@@ -549,7 +549,7 @@ The heuristic part is whether this genericity premise holds for relevant tasks, 
 
 ## 24. Do the good generalization results survive a small amount of label noise?
 
-**Yes, when the noise rate is sufficiently small relative to dimension, depth, and target complexity.** The [noisy-interpolation theorem](works-in-progress/noisy-interpolation/README.md) gives a clean-error bound for fixed-depth tanh networks that fit every training label, including flipped labels. Its proof has undergone independent AI-agent mathematical checks; it is a supporting result, not a Lean-verified main result.
+**Yes, when the noise rate is sufficiently small relative to dimension, depth, and target complexity.** The tolerance is inverse-polynomial with large explicit constants: the coefficient of the corrupted fraction exceeds $10^6$ times a polynomial in $d$, so as stated the bound is informative only in high dimension. The constants were not optimized. The [noisy-interpolation theorem](works-in-progress/noisy-interpolation/README.md) gives a clean-error bound for fixed-depth tanh networks that fit every training label, including flipped labels. Its proof has undergone independent AI-agent mathematical checks; it is a supporting result, not a Lean-verified main result.
 
 The sampling convention matters: choose $n$ distinct points uniformly from the Boolean cube, flip each label independently with probability $\eta$, and evaluate against the underlying clean function. Keep the original Gaussian prior, its all-input margin restriction, and exact conditioning on the observed labels. Thus the clean target itself is excluded when any label flips; the proof constructs a different, inexpensive network that fits all the corruptions.
 

@@ -11,13 +11,13 @@ $$
   +\frac{8\log(1/\delta)}{n}+\tau,
 $$
 
-where at most $s$ training labels are corrupted. The bound holds at every sufficiently large learner width and controls posterior mixtures, including mixtures of tied minimum-energy functions. Here $B_L$ is polynomial in the input dimension and target complexity at each fixed depth, while
+where at most $s$ training labels are corrupted. The bound holds at every learner width $N\geq W_s=O(C+U^2d^2(s+1))$, a threshold that grows with the number of corruptions, and controls posterior mixtures, including mixtures of tied minimum-energy functions. Here $B_L$ is polynomial in the input dimension and target complexity at each fixed depth, while
 
 $$
 A(d,L,U)=O\!\left(U^2d(d+1)(d^2+L^2)\right).
 $$
 
-The parameter $U$ bounds the clean teacher's real output. One always has $U=C^2$ for the bounded-weight complexity used below. Standard saturated implementations of Boolean circuits have $U=1$, so their corruption coefficient is independent of circuit width.
+The parameter $U$ bounds the clean teacher's real output. One may always take $U=C^2$, since a width-$C$ implementation with weights bounded by $C$ has $|z_f|\leq C^2$. Standard saturated implementations of Boolean circuits have $U=1$, so their corruption coefficient is independent of circuit width.
 
 For independent label flips of probability $\eta$, the bound becomes a resource-dependent multiple of $\eta$, plus a term decreasing with sample size. **This does not yet give a noise floor depending only on $\eta$, uniformly over input dimension.** It does establish tolerance of a positive fraction of corruptions that is sufficiently small relative to the displayed resource polynomial. The clean sample overhead can still have bad depth dependence.
 
@@ -49,7 +49,7 @@ $$
 
 After training, condition exactly on the observed labels. The likelihood is unchanged: it neither knows the flip rate nor permits training errors.
 
-Assume the clean target $f:X\to\lbrace-1,1\rbrace$ has an implementation of width $C$ and depth $L$ $z_f$, all of whose weights have magnitude at most $C$, with
+Assume the clean target $f:X\to\lbrace-1,1\rbrace$ has an implementation $z_f$ of width $C$ and depth $L$, all of whose weights have magnitude at most $C$, with
 
 $$
  f(x)z_f(x)>1/2,\qquad |z_f(x)|\leq U
@@ -120,7 +120,7 @@ $$
  \sum_{j=0}^t(-1)^j{q\choose j}=(-1)^t{q-1\choose t}.
 $$
 
-The lower bound follows from ${2m\choose m}/4^m\geq1/(2\sqrt m)$ for $m\geq1$. An elementary induction proves it: consecutive central-binomial ratios differ by $(2m-1)/(2m)\geq\sqrt{(m-1)/m}$. The case $k=1$ is direct.
+The lower bound follows from ${2m\choose m}/4^m\geq1/(2\sqrt m)$ for $m\geq1$. An elementary induction proves it: the ratio of consecutive terms is $(2m-1)/(2m)$, which is at least the ratio $\sqrt{(m-1)/m}$ of consecutive values of $1/(2\sqrt m)$, and both sequences equal $1/2$ at $m=1$. The case $k=1$ is direct.
 
 Choose the common slope
 
@@ -261,7 +261,7 @@ $$
  T_0=d(d+1)C^2+(H+3)C^4.
 $$
 
-To embed a network of width $C$ into any larger width $N_t$, replace each hidden neuron by $k=\lfloor N_t/C\rfloor$ copies, divide outgoing weights by $k$, and pad unused coordinates with zero weights. This preserves the output. The first-layer contribution does not increase, internal contributions are unchanged, and the readout contribution increases by less than two. Using the ambient $N$ rather than $N_t$ multiplies that readout cost by at most another two. The clean branch therefore costs at most $4T_0$.
+To embed a network of width $C$ into any larger width $N_t$, replace each hidden neuron by $k=\lfloor N_t/C\rfloor$ copies, divide outgoing weights by $k$, and pad unused coordinates with zero weights. This preserves the output. The first-layer contribution does not increase, internal contributions are unchanged, and the readout contribution increases by a factor less than two. Using the ambient $N$ rather than $N_t$ multiplies that readout cost by at most another two. The clean branch therefore costs at most $4T_0$.
 
 Use zero cross-block weights and add the branch outputs through the final readout. We have constructed, at every $N\geq W_s:=2(C+m_s)$, a globally strict-margin noisy interpolant of energy at most
 
@@ -551,7 +551,7 @@ independently of circuit width. The sample overhead and adequate learner width s
 
 ## 8. What this resolves, and what remains open
 
-The unchanged strong-prior tanh learner now has a paper proof of tolerance to a sufficiently small positive corruption fraction for arbitrary bounded-weight targets at every fixed depth, at every sufficiently large learner width. The proof uses exact interpolation and the original global margin conditioning. It applies to adversarial corruption locations as well as independent flips.
+For distinct uniformly sampled inputs and error under the uniform distribution, the unchanged strong-prior tanh learner now has a paper proof of tolerance to a sufficiently small positive corruption fraction for arbitrary bounded-weight targets at every fixed depth, at every learner width $N\geq W_s$. The proof uses exact interpolation and the original global margin conditioning. It applies to adversarial corruption locations as well as independent flips.
 
 The stronger circuit-style target remains open: a clean-risk envelope tending to zero with $\eta$ alone, uniformly over input dimension after paying a target-dependent sample overhead. The present coefficient of $\eta$ grows polynomially in dimension and depth; for a general analog teacher it also depends on its output bound. A fixed numerical noise rate can therefore make this upper bound vacuous as dimension grows. No claim of perfect clean recovery at fixed positive noise is made.
 
