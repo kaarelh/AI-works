@@ -4,7 +4,7 @@ This FAQ explains what the current results say, which assumptions matter, and wh
 
 **Status labels:** **Proved** means that the linked manuscript contains a proof under its stated assumptions. **Extension suggested by the proof** means that we have identified a plausible adaptation but are not citing a completed theorem. **Heuristic** is an informed expectation. **Open** means that the available results do not settle the question. Machine verification is a separate issue; see the final question.
 
-**Jump to:** [prediction thresholds](#5-what-changes-if-correctness-means-posterior-probability-above-12-rather-than-23) · [scaling tuples](#9-can-we-classify-all-tuples-of-layerwise-scaling-exponents) · [robustness and depth](#12-what-robustness-condition-gives-polynomial-depth-dependence) · [out-of-distribution learning](#why-expect-occam-learning-to-transfer-out-of-distribution) · [label noise](#24-do-the-good-generalization-results-survive-a-small-amount-of-label-noise) · [formal verification](#26-how-much-of-this-is-formally-verified)
+**Jump to:** [prediction thresholds](#5-what-changes-if-correctness-means-posterior-probability-above-12-rather-than-23) · [scaling tuples](#9-can-we-classify-all-tuples-of-layerwise-scaling-exponents) · [robustness and depth](#12-what-robustness-condition-gives-polynomial-depth-dependence) · [out-of-distribution learning](#why-expect-occam-learning-to-transfer-out-of-distribution) · [label noise](#24-do-the-good-generalization-results-survive-a-small-amount-of-label-noise) · [SLT likelihoods](#do-the-polynomial-bounds-survive-the-likelihood-based-setup-used-in-singular-learning-theory) · [formal verification](#26-how-much-of-this-is-formally-verified)
 
 ## 1. What is the basic model, and what does “a circuit prior” mean here?
 
@@ -583,6 +583,50 @@ There is a precise limitation to improving this particular counting argument. Ou
 One promising next step is to make the correction cheaper by allowing it to change some unseen labels. Approximate-membership constructions used in circuit learning trade a controlled amount of off-sample error for a shorter description. Obtaining a corresponding sharp neural-energy bound could help; alternatively, a more selective counting argument might avoid paying for all those almost-correct functions. Neither improvement has yet been proved for this posterior.
 
 These conclusions are specific to the stated sampling and interpolation conventions. Repeated inputs with contradictory labels would make exact conditioning impossible. If we instead allow training errors, ordinary finite-class noisy-error minimization has standard clean-learning guarantees, but that is a different learner. Replacing exact fit by a positive noisy likelihood also needs care in the **strong-prior-first limit**: its likelihood ratios are at most $((1-\eta)/\eta)^n$, whereas a fixed prior-energy gap contributes $\exp[-\Delta\kappa/(2\sigma^2)]$. At fixed $n$, the prior gap wins as $\sigma\to0$. The noisy-interpolation theorem uses the exact-fit likelihood throughout.
+
+## Do the polynomial bounds survive the likelihood-based setup used in singular learning theory?
+
+**Yes, for a Gaussian likelihood scaled together with the prior: we get polynomial sample bounds in the strong-prior and all finite-exponent regimes $\gamma\ge1$. Simply substituting a fixed Gaussian or logistic likelihood does not preserve the main results.** The balance between likelihood strength and prior strength matters. This is a statement about the learner itself, independent of which generalization bound one uses to analyze it. The [supporting proof note](works-in-progress/slt-likelihood/README.md) gives positive variants and counterexamples; these are conventional arguments with independent AI-agent checks, not Lean-verified main results.
+
+Singular learning theory (SLT) studies a broad class of statistical models, rather than specifying one neural-network prior. Its usual Bayesian setup is
+
+$$
+Q_{\beta,S}(dw)\ \propto\ \pi(dw)\prod_{i=1}^n p_w(Y_i\mid X_i)^\beta.
+$$
+
+Here $\beta=1$ is ordinary Bayes; other temperatures give a power posterior. For example, Gaussian regression uses a likelihood proportional to $\exp[-(y-z_w(x))^2/(2s^2)]$, and binary logistic classification uses $(1+e^{-yz_w(x)})^{-1}$. These give positive weight to imperfect fits. Our main papers instead impose hard training constraints, assigning zero likelihood to violations. See [Watanabe's definition of the posterior and predictive distribution](https://jmlr.org/papers/volume11/watanabe10a/watanabe10a.pdf), equations (1)–(2). Nothing about that definition fixes how network width, weight variance, observation variance, and sample size should scale together.
+
+**Why a fixed smooth likelihood can fail with our shrinking priors.** Under the raw Gaussian prior in our finite-exponent models, the bounded hidden activations and readout variance give
+
+$$
+\mathbb E[z_w(x)^2]\le N^{-\gamma}.
+$$
+
+For every $\gamma>0$, all scores at a fixed finite set of inputs therefore approach zero as width grows. At a fixed sample size and temperature, the Gaussian or logistic likelihood approaches a positive constant under this prior. Reweighting by it barely changes the prior: the posterior approaches the prior in total variation. Consequently latent-sign confidence approaches $1/2$, and logistic posterior-predictive confidence does too, **even for the constant target**. This rules out our width-independent confidence guarantee for the raw prior with that likelihood. The same argument applies at fixed width as the prior variance tends to zero. It does not prove failure of the sign of the posterior mean: a vanishingly small positive bias could still have the right sign.
+
+Keeping the original global-margin restriction also does not automatically rescue the strong-prior theorem. There is an explicit two-bit XOR counterexample: at depth two and every fixed width $N\ge3$, the least-energy globally margined functions are constants and signed coordinates. Each has error $1/2$ against XOR. A fixed positive Gaussian or logistic likelihood cannot overcome their strict prior-energy advantage as the prior variance tends to zero, for any fixed finite training sample. Mixtures still have Gibbs error $1/2$. XOR itself has an exact width-three, bounded-weight real-output implementation, so lack of representation is not the issue. This example takes the **strong-prior limit after choosing the sample size**; it does not say that more data cannot eventually overcome a fixed prior.
+
+**A positive result with an ordinary Gaussian likelihood.** Let the prior density be proportional to $\exp[-\kappa_N(w)/(2\sigma^2)]$, and choose Gaussian observation variance $\sigma^2$ as well. For clean observations $Y_i=f(X_i)$, ordinary Bayes then gives
+
+$$
+Q_{\sigma,S}(dw)\ \propto
+\exp\left[-\frac{\kappa_N(w)+\sum_{i=1}^n(z_w(X_i)-f(X_i))^2}{2\sigma^2}\right]dw.
+$$
+
+At every fixed depth, this learner has a sample bound polynomial in input dimension, teacher width, teacher weight bound, inverse accuracy, inverse output tolerance, and log inverse failure probability, **independent of every learner width above teacher width**. With high probability over training data, the posterior assigns probability above $2/3$ to $|z_w(x)-f(x)|\le\tau$ outside a test set of probability at most $\varepsilon$. Inputs can have any distribution on a compact subset of the unit ball, or the coordinate cube. No global-margin conditioning is needed. There are two versions:
+
+- **Strong-prior limit:** choose a sufficient sample size and a finite learner width, then take $\sigma\to0$. The required small variance may depend on both; this version alone supplies no uniform positive variance threshold over all widths.
+- **Finite exponents:** for every fixed $\gamma\ge1$, use our finite-exponent weight prior and Gaussian observation variance $N^{-\gamma}$. A separate argument gives the polynomial bound at **every $N\ge C$**, with no limit required. The polynomial may depend on fixed depth and fixed $\gamma$; the mean-field endpoint $\gamma=1$ is included.
+
+Both versions observe clean labels from the teacher. They do not assert the same bound for data corrupted by fixed positive observation noise.
+
+For the strong-prior version, a replicated teacher has bounded energy independent of learner width, so the posterior concentrates on networks whose **energy plus total squared training error** is bounded by the teacher's energy. Our compression argument covers all such bounded-energy networks with a finite collection of size independent of learner width. A sampling bound then rules out appreciable test error. The finite-exponent proof instead combines the existing teacher-neighborhood mass estimates and covers of most prior outputs with a bound on posterior training loss; it does not assume that typical mean-field networks have bounded total energy. The [note](works-in-progress/slt-likelihood/README.md) spells out both arguments. A Boolean sign teacher gives positive variants of both Gaussian results after adding one tanh layer to approximate its labels; a logistic analogue works when its inverse temperature grows together with prior strength. These are explicit changes of scale, not a claim about the unchanged fixed-likelihood model.
+
+**What about the usual fixed-likelihood setup?** At fixed architecture and fixed prior, standard prior-mass arguments do give sample upper bounds. They pay for the negative log prior mass of a small neighborhood of the teacher. Our available neighborhood estimate grows like $N^\gamma$ in the finite-exponent models with fixed $\gamma\ge1$, yielding polynomial bounds when learner width is itself polynomially bounded by teacher resources, but not the arbitrary-width guarantee of the main papers. A different prior with a sufficiently strong, quantitative circuit-description mass bound could give better results. Calling a model “SLT” alone supplies neither that prior-mass bound nor an all-width learning theorem.
+
+**Still open here:** a complete smooth-likelihood theorem with joint polynomial dependence on depth under our robustness restriction. The regularized-loss argument makes this a reasonable target, but we have not checked the required prior mass and cover estimates within that restricted support. The unrestricted polynomial-depth problem is also not settled. Without rescaling the likelihood, the counterexamples above already prevent a blanket transfer of the main guarantees.
+
+Finally, prediction conventions must match. Logistic posterior-predictive confidence is $\mathbb E_Q[(1+e^{-yz_w(x)})^{-1}]$, whereas our classification papers use $Q(yz_w(x)>0)$. A score margin of $1/2$ gives only about $0.622$ logistic label probability, even if the parameters are known exactly. A $2/3$ predictive guarantee therefore needs a suitable link scale or a larger score margin. The Gaussian result above controls proximity of the latent output to the clean teacher; a future noisy observation is a separate random quantity.
 
 ## 25. What other questions matter before interpreting this as an explanation of practical deep learning?
 
