@@ -19,7 +19,7 @@ At each fixed depth, the paper proves a sample bound polynomial in input dimensi
 2. Finite scale with any fixed $\gamma>1$.
 3. Mean-field scaling, $\gamma=1$.
 
-Each theorem covers **every width $N\ge C_L(f)$**, where $C_L(f)$ counts both width and weight magnitude at the specified depth. The original layer scalings are retained. The networks have tanh hidden layers, a linear readout, and the original global margin restriction on all Boolean inputs. Training conditions on exact agreement with noiseless labels. For any common training/test distribution, correct-label posterior probability exceeds $2/3$ on all but an arbitrarily small fraction of test inputs, with high probability over training samples. The result controls posterior mixtures.
+Each theorem covers **every width $`N\ge C_L(f)`$**, where $C_L(f)$ counts both width and weight magnitude at the specified depth. The original layer scalings are retained. The networks have tanh hidden layers, a linear readout, and the original global margin restriction on all Boolean inputs. Training conditions on exact agreement with noiseless labels. For any common training/test distribution, correct-label posterior probability exceeds $2/3$ on all but an arbitrarily small fraction of test inputs, with high probability over training samples. The result controls posterior mixtures.
 
 The paper also proves polynomial comparison between bounded-weight circuit complexity and normalized negative log function prior mass. For the strong-prior result alone, two-sided quadratic density envelopes suffice without symmetry or log-concavity; asymptotically quadratic log densities give the original weighted-energy prior ordering at exponential-rate level.
 

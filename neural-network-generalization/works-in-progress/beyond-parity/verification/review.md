@@ -1,6 +1,6 @@
 # Independent check of the beyond-parity note
 
-19 October 2026. The [note](../README.md) and its [FAQ question](../../../TECHNICAL-FAQ.md#is-the-bad-sample-complexity-specific-to-parity) were checked in three rounds by AI agents that had not written them. Each reviewer read the cited lemmas in the subcritical paper's source rather than the note's paraphrases. The reviews are AI checks, not human review.
+19 October 2026. The [note](../README.md) and its [FAQ question](../../../TECHNICAL-FAQ.md#for-gamma1-is-the-bad-sample-complexity-specific-to-parity) were checked in three rounds by AI agents that had not written them. Each reviewer read the cited lemmas in the subcritical paper's source rather than the note's paraphrases. The reviews are AI checks, not human review.
 
 ## Round 1
 
@@ -110,3 +110,9 @@ The consistency reader found the following:
 - **Stale checksums.** `SHA256SUMS` had not been regenerated. It was regenerated for publication.
 - **Wording.** It found several wording mismatches, now fixed, and confirmed every number, label, link, anchor, and rendering hazard it checked.
 
+## Later rewrite of the FAQ question
+
+After these rounds, the FAQ question was rewritten so that it reads on its own and centres on the subcritical learners, with kernel regression as a comparison. Its heading now names the $\gamma<1$ regime. Its claims were checked for fidelity against the note and the previous version by a further agent, and its readability by an agent without other context. Two claims were added in the rewrite, and the fidelity check covers them:
+
+- the upper bound $d^2/\varepsilon^2$ at $0<\gamma<1$ for majority of all $d$ bits, from Proposition 5;
+- the remark that for fixed $k$ the sparse-parity bounds are at the natural scale of FAQ Question 11.
