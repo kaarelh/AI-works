@@ -13,7 +13,7 @@ for name in names:
         r = [x for x in sp["spectra"] if x["name"] == name and x["d"] == d][0]
         cells = []
         for q in qs:
-            if q > d or (name.startswith("arcsine") and q > 33):
+            if q > d or (name.startswith("arcsine") and q > (33 if d == 160 else 17)):
                 cells.append("--")
             else:
                 cells.append(f"{r['log10_level_mass'][q]:.2f}")
@@ -31,9 +31,9 @@ kernel & $d$ & """ + " & ".join(f"$q={q}$" for q in qs) + r""" & $v_{\min}$\\
 \caption{$\log_{10}$ of the level mass $\binom dq\lambda_q/A$ of the normalized kernel $F((1+x\cdot y)/(d+1))$,
 and $\log_{10}$ of the smallest eigenvalue of the matrix $F((1+x\cdot y)/(d+1))_{x,y}$. Unit gain means
 $\sigma_\ell=1$ for all $\ell$; specified gain is the family of \cite[Section~7]{nngpnote} at $L=3$.
-Arcsine entries above $q=33$ are omitted because the computation truncates its slowly decaying
-coefficients at $m=600$ (omitted mass $0.021$); for the arcsine kernel the reported $v_{\min}$ is
-therefore only an approximation. All checks listed in Section~\ref{sec:numerics} passed for every row.}
+The computation truncates the slowly decaying arcsine
+coefficients at $m=600$ (omitted mass $0.021$), so arcsine entries are shown only where the omitted terms
+are negligible ($q\le17$ at $d=80$, $q\le33$ at $d=160$), and the arcsine $v_{\min}$ is only a lower bound. All checks listed in Section~\ref{sec:numerics} passed for every row.}
 \label{tab:spectrum}
 \end{table}
 """
