@@ -46,7 +46,7 @@ This paper takes the prior variance to zero at each fixed width. It does not cla
 
 More precisely, there are $c>0$ and $k_0$ such that, for every $k\ge k_0$ and each specified integer $0\le n\le e^{ck}$, with probability at least $3/4$ over the training sample, the limiting fraction of test inputs whose correct label has posterior probability at most $2/3$ is at least $1/16$ (in the liminf sense). Width tends to infinity first, with dimension, sample, margin, depth, and $\gamma$ fixed. The paper does not give a quantitative minimum width or a joint-limit theorem. The guarantee is for each specified sample size, not a simultaneous statement about all prefixes of one sample sequence.
 
-This is the completed full-parity exponential theorem. The stronger fixed-depth sparse-parity target $\exp\lbrace \Omega(k\log(ed/k))\rbrace $ in the positive subcritical regime is still open; the partial results below do not replace that target with a solved claim.
+This is the completed full-parity exponential theorem. The stronger fixed-depth sparse-parity target $\exp(\Omega(k\log(ed/k)))$ in the positive subcritical regime is still open; the partial results below do not replace that target with a solved claim.
 
 ### 5. Robust priors: polynomial dependence on depth
 

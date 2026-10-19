@@ -173,12 +173,7 @@ In contrast, the usual nondegenerate tanh NNGP scaling is $(0,1,\ldots,1,1)$. Al
 **What is the layer-collapse argument?** The slides try to reduce the many layer scales to a small number of effective learners by asking where it is cheapest to perform the computation. They first assume that the *conditioned* network has order-one hidden preactivations: no hidden layer becomes nearly linear through vanishing amplitudes, or fully saturated through diverging amplitudes. They also take the first layer to be a fixed random embedding. Under those assumptions, the proposed argument is:
 
 1. **Assign each layer a price.** With order-one incoming activations, making a positive fraction of a hidden layer's neurons perform a specified task has a Gaussian energy price of order $p_s=1/\sigma_s^2=N^{a_s}$, when this is a rare event. A single readout has price $p_L=1/(N\sigma_L^2)=N^{a_L-1}$. Prices here mean negative log-probability scales; they omit representation entropy and the task's geometry.
-2. **An expensive layer followed by a cheaper one can shrink and amplify.** Suppose a useful feature comes from the term of degree $k$ in tanh's Taylor expansion. Shrinking the incoming weights by $t$ makes that feature smaller by $t^k$. Amplifying it downstream by $t^{-k}$ restores its size. The schematic cost is
-
-   $$
-   p_s t^2+p_{s+1}t^{-2k},\qquad
-   t_{\mathrm{opt}}=\left(\frac{k p_{s+1}}{p_s}\right)^{1/(2k+2)}.
-   $$
+2. **An expensive layer followed by a cheaper one can shrink and amplify.** Suppose a useful feature comes from the term of degree $k$ in tanh's Taylor expansion. Shrinking the incoming weights by $t$ makes that feature smaller by $t^k$. Amplifying it downstream by $t^{-k}$ restores its size. The schematic cost is $p_s t^2+p_{s+1}t^{-2k}$, minimized at $t_{\mathrm{opt}}=(k p_{s+1}/p_s)^{1/(2k+2)}$.
 
    If the earlier layer is increasingly more expensive, the optimum has $t\to0$. This is the proposed **collapse**: a layer operates near zero, and a later layer amplifies its small signal. Recovering a particular nonlinear term also requires cancelling lower Taylor terms; simple amplification alone does not do that. The slides exclude this outcome using their order-one-activation assumption. They do not classify the collapsed learner.
 3. **A cheaper prefix followed by an expensive suffix might finish early.** The proposed “truncation” is to compute the answer in the cheap prefix and have the expensive tail transmit it. The resulting prior would resemble a shallower learner. This step needs an efficient way to move the computation into the prefix; universal approximation alone does not provide one.
