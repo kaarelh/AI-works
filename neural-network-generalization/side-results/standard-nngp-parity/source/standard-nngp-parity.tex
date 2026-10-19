@@ -1,0 +1,1127 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools,booktabs}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Parity under standard-scaling neural-network Gaussian processes},pdfauthor={Claude}}
+\setlength{\emergencystretch}{2em}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}\newtheorem{assumption}[theorem]{Assumption}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\sign}{sign}
+\DeclareMathOperator{\dist}{dist}
+\DeclareMathOperator{\err}{err}
+\DeclareMathOperator{\clip}{clip}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\X}{\mathcal X}
+\newcommand{\R}{\mathbb R}
+\newcommand{\sub}{\textup{[SE]}}
+\title{Parity under standard-scaling neural-network\\Gaussian processes: superpolynomial sample\\lower bounds at fixed depth, and an obstruction}
+\author{Claude}
+\date{October 19, 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We study Bayesian learning of parity by fully connected networks with the
+standard neural-network Gaussian-process (NNGP) prior scaling: weight
+variances $\sigma_1^2/(d+1)$ in the first layer and $\sigma_\ell^2/N$ in
+later layers, at fixed depth, with width $N\to\infty$ first. The prior is
+conditioned on an output margin $|z(x)|>a$ at every Boolean input and then
+on the training signs; prediction counts as correct only when the correct
+label has posterior probability greater than $2/3$. For $\tanh$ networks
+of every fixed depth and every choice of layer gains, we prove that, for all large $d$,
+$n\le\exp(\frac1{20}\sqrt d\log d)$ uniform independent examples of full
+parity on $d$ bits leave, with probability $1-e^{-\Omega(d)}$ over the
+sample, at least a $1/16$ fraction of inputs without confident correct
+prediction. For the learner without the global margin, conditioned only on
+the training signs, a threshold of the same form $d^{\Theta(\sqrt d)}$
+(explicitly $d^{\sqrt d/10-1/2}/6000$ for $d\ge25$) holds on every
+training set, for every bounded continuous nonconstant activation, every
+depth and every gain; the argument is kernel-agnostic and also gives the
+scale $d^k$ for fixed $k$-sparse parity. An $\exp(\Omega(d))$ lower bound,
+the analogue of the subcritical theorem in this collection, remains open.
+We prove that the step of that theorem which bounds the posterior's
+conditioning cost by a polynomial per sample is false at the standard
+scaling: for $\tanh$ networks, each fixed $\delta>0$ and
+$\exp(d^{\epsilon})\le n\le e^{c(\delta)d}$, with probability at least
+$1-2\delta$ the cost per sample is superpolynomial in $d$. We explain why
+an upper bound on that cost matching our lower bound would complete an
+exponential proof. Numerical spectra and small-dimensional
+posterior computations illustrate the results.
+\end{abstract}
+
+\section{Introduction and results}
+The collection's subcritical theorem \cite{subcritical} proves an
+$\exp(\Omega(d))$ sample lower bound for full parity under a family of
+Gaussian network priors whose width scaling is indexed by an exponent
+$\gamma<1$. In that family the hidden preactivations diverge with width,
+$\tanh$ acts as a sign function, and the limiting covariance is the
+iterated arcsine kernel. The usual NNGP scaling is different: it keeps the
+preactivations of order one, so the limit is the dual-activation kernel of
+$\tanh$ itself. In the exponent notation of the collection's FAQ
+(Question~9) this scaling is the tuple $(0,1,\ldots,1,1)$, which is not on
+the one-parameter line $(\gamma-1,\gamma,\ldots,\gamma,\gamma+1)$.
+The collection's NNGP note \cite{nngpnote} proves a $\Theta(2^d)$ bound
+for a $\tanh$ NNGP whose depth grows linearly with $d$, and states that the
+fixed-depth problem is open.
+
+We ask whether parity needs exponentially many samples for the fixed-depth
+standard-scaling learner. The answer we can prove is partial.
+
+\paragraph{Results.} All statements take width to infinity first, at fixed
+dimension, depth, gains, margin and training sample.
+\begin{enumerate}
+\item \textbf{Width limits} (Proposition~\ref{prop:width}, proved). For
+every bounded continuous nonconstant activation the network output
+converges to a nondegenerate Gaussian process with a dot-product kernel
+$K=A\,F((1+x\cdot y)/(d+1))$, where $F$ has nonnegative Taylor coefficients
+that do not depend on $d$. Both learners' posterior label probabilities
+converge to those of the conditioned Gaussian process.
+\item \textbf{Sign-only learner, every training set}
+(Theorem~\ref{thm:signonly} and Corollary~\ref{cor:signonly}, proved).
+Without the global margin, for every such activation, every depth and every
+gain, every training set of size
+$n\le d^{\sqrt d/10-1/2}/6000$ (with $d\ge25$; the explicit bound exceeds
+one only for $d\ge385$) leaves, in the width limit, at least a quarter of the inputs of
+full parity without confidence above $2/3$. For $k$-sparse parity the
+threshold is $\binom d{\lfloor\sqrt k/5\rfloor}/6000$ (for $k\ge25$), and for fixed $k$
+the failure fraction is at least $2^{-k}-O(n/\binom dk)$. The same bounds
+hold for the margin learner when the readout variance is $\sigma_L^2N^{-b}$
+with $b<1$ (Remark~\ref{rem:readout}).
+\item \textbf{Margin learner, typical samples} (Theorem~\ref{thm:margin},
+proved). For $\tanh$ at every fixed depth and every choice of gains and
+margin, $n\le\exp(\frac1{20}\sqrt d\log d)$ iid uniform examples of full
+parity leave, for $d\ge d_0$ (not explicit) and with probability at least $1-e^{-d/10}$, Gibbs error at least
+$3/8$ and confidence failure at least $1/16$ in the width limit.
+\item \textbf{The exponential question} (open). We do not know whether
+$\exp(\Omega(d))$ samples are needed. Proposition~\ref{prop:obstruction}
+(proved) shows that one specific step of the subcritical proof fails. That
+step bounds the conditioning cost per sample by a polynomial in $d$ (at
+most $Cd^{1+\beta}$). Here, for each fixed $\delta>0$, with probability at least $1-2\delta$ and for $\exp(d^\epsilon)\le n\le e^{c_1(\delta)d}$, that cost is superpolynomial in $d$. We
+also identify a matching upper bound on that cost which would complete an
+$\exp(\Omega(d))$ proof (Section~\ref{sec:obstruction}).
+\end{enumerate}
+The sign-only result uses only a universal inequality between consecutive
+level masses of an isotropic kernel (Lemma~\ref{lem:levels}). The margin
+result additionally needs a lower bound on every eigenvalue of the kernel.
+We derive it from an explicit Fourier-integral formula for the Hermite
+coefficients of $\tanh$ (Lemma~\ref{lem:tanh}).
+
+\paragraph{What this paper does not show.} We prove no $\exp(\Omega(d))$
+lower bound and no upper bound for either learner. We do not decide whether
+the exponent $\sqrt d\log d$ is the truth. The margin theorem is proved for
+$\tanh$, and for odd bounded continuous activations whose first-layer dual
+coefficients are all positive and decay at most like
+$e^{-o(\sqrt m\log m)}$, provided the linear coefficient $c_1(q_\ell)$
+is positive at every later layer (Remark~\ref{rem:activations}). It holds for
+$d\ge d_0$, where $d_0$ depends on the depth, gains and margin and is not
+explicit, because we prove no rate for the coefficient tail $T(s)$. It does not cover
+$\operatorname{erf}$, whose coefficients decay geometrically. As in
+\cite{nngpnote,subcritical}, the results concern the exact posterior;
+nothing is claimed about computing it.
+
+\paragraph{Relation to kernel regression.} The NNGP posterior mean given
+real-valued labels is kernel interpolation. For it, the span argument of
+\cite[Proposition~4.1]{nngpnote} and the lower bounds of Hsu and of Simon
+et al.\ for kernel regression concern squared error or correlation of the
+mean. Our learners condition on signs, or on signs and a global margin, and
+are judged by posterior confidence. That is a different criterion
+(\cite[Section~5]{nngpnote}; FAQ Question~7).
+
+\section{Model, width limits, and the cube spectrum}
+\label{sec:model}
+\subsection{Network and learners}
+Let $\X=\{-1,1\}^d$ with the uniform probability measure, $M=2^d$ and
+$D=d+1$. Fix a depth $L\ge2$, an activation $\phi:\R\to\R$, gains
+$\sigma_1,\ldots,\sigma_L>0$, and a margin $a>0$. For width $N$ put
+\[
+ h^0(x)=(1,x)\in\R^D,\qquad h^\ell(x)=\phi(W^\ell h^{\ell-1}(x))
+ \ (1\le\ell\le L-1),\qquad z_N(x)=W^Lh^{L-1}(x),
+\]
+with independent centered Gaussian weights of variances
+\begin{equation}\label{eq:weights}
+ \Var W^1_{ij}=\frac{\sigma_1^2}{D},\qquad
+ \Var W^\ell_{ij}=\frac{\sigma_\ell^2}N\ (2\le\ell\le L-1),\qquad
+ \Var W^L_i=\frac{\sigma_L^2}N .
+\end{equation}
+All hidden layers have width $N$, and there are no biases besides the
+constant input coordinate. The \emph{unit-gain} network has every
+$\sigma_\ell=1$. The specified-gain family of \cite[Section~7]{nngpnote}
+has $\sigma_1=1$ and $\sigma_\ell^2=1/\E\tanh^2(G)$ for $\ell\ge2$, with
+$G\sim N(0,1)$; at fixed depth it is another instance of
+\eqref{eq:weights}.
+
+\begin{assumption}\label{ass:act}
+$\phi$ is bounded, continuous and not constant.
+\end{assumption}
+
+Let $f:\X\to\{-1,1\}$ be a target and $S=(X_1,\ldots,X_n)$ a sequence of
+training inputs. Define the events
+\begin{align*}
+ B^{\rm mar}_S&=\{z:\ |z(x)|>a\ \forall x\in\X,\ f(X_i)z(X_i)>0\ \forall i\},\\
+ B^{\rm sgn}_S&=\{z:\ f(X_i)z(X_i)>0\ \forall i\}.
+\end{align*}
+The \emph{margin learner} is the prior conditioned on $B^{\rm mar}_S$; this
+is the collection's convention (FAQ Question~1). The \emph{sign-only
+learner} is the prior conditioned on $B^{\rm sgn}_S$. For either learner put
+\begin{align*}
+ q_{N,S}(x)&=\Pp\{f(x)z_N(x)>0\mid z_N\in B_S\},\\
+ F_N(S)&=\Pp_x\{q_{N,S}(x)\le2/3\},\qquad
+ R_N(S)=\E_x[1-q_{N,S}(x)].
+\end{align*}
+$F_N$ is the confidence-failure fraction and $R_N$ the Gibbs error. For
+every posterior and every $N$,
+\begin{equation}\label{eq:mixture}
+ R_N\le\frac{1-F_N}3+F_N,\qquad\text{so}\qquad F_N\ge\frac{3R_N-1}2,
+\end{equation}
+since $1-q\le1$ on the failure set and $1-q<1/3$ off it.
+
+\subsection{Dual activations}
+For $q>0$ write $v_\phi(q)=\E\phi(\sqrt qG)^2$ and, for $\rho\in[-1,1]$,
+\[
+ \widehat\phi_q(\rho)=\frac{\E\phi(\sqrt qU)\phi(\sqrt qV)}{v_\phi(q)},
+\]
+where $(U,V)$ are standard Gaussians with correlation $\rho$.
+Under Assumption~\ref{ass:act}, $v_\phi(q)>0$.
+
+\begin{lemma}[Dual activations]\label{lem:dual}
+Expand $\phi(\sqrt q g)=\sum_{m\ge0}\beta_m He_m(g)/\sqrt{m!}$ in
+$L^2(N(0,1))$, with probabilists' Hermite polynomials $He_m$. Then
+\[
+ \widehat\phi_q(\rho)=\sum_{m\ge0}c_m(q)\rho^m,\qquad
+ c_m(q)=\frac{\beta_m^2}{\sum_k\beta_k^2}\ge0,\qquad \sum_mc_m(q)=1,
+\]
+with absolute convergence on $[-1,1]$. If $\phi$ is odd, $c_m(q)=0$ for
+even $m$. Under Assumption~\ref{ass:act}, infinitely many $c_m(q)$ are
+positive.
+\end{lemma}
+\begin{proof}
+For correlated standard Gaussians,
+$\E He_m(U)He_k(V)=\delta_{mk}\,m!\,\rho^m$; compare coefficients of
+$s^mt^k$ in $\E e^{sU-s^2/2}e^{tV-t^2/2}=e^{\rho st}$. The bilinear
+expansion of $\E\phi(\sqrt qU)\phi(\sqrt qV)$ then converges absolutely,
+because $|\rho|\le1$ and $\sum\beta_m^2=v_\phi(q)<\infty$. Odd functions
+have no even Hermite components. A bounded nonconstant function is not a
+polynomial, so infinitely many $\beta_m$ are nonzero.
+\end{proof}
+
+Define $q_1=\sigma_1^2$, $v_\ell=v_\phi(q_\ell)$,
+$q_{\ell+1}=\sigma_{\ell+1}^2v_\ell$ for $1\le\ell\le L-2$, and
+\begin{equation}\label{eq:kernel}
+ A=\sigma_L^2v_{L-1},\qquad
+ F=\widehat\phi_{q_{L-1}}\circ\cdots\circ\widehat\phi_{q_1},\qquad
+ K(x,y)=A\,F\!\left(\frac{1+x\cdot y}D\right).
+\end{equation}
+\begin{lemma}\label{lem:composite}
+$F(t)=\sum_{m\ge0}c_mt^m$ with $c_m\ge0$ and $\sum_mc_m=1$. The
+coefficients $c_m$ and the scale $A$ depend on $\phi$, $L$ and the gains,
+but not on $d$. If $\phi$ is odd, $F$ is odd. Under
+Assumption~\ref{ass:act}, infinitely many $c_m$ are positive.
+\end{lemma}
+\begin{proof}
+Composition of power series with nonnegative coefficients summing to one
+preserves both properties, and composition of odd series is odd. The
+variances $q_\ell$ do not involve $d$, because $\|h^0(x)\|^2=D$ for every
+input. For the last claim, induct on the number of layers. Suppose $H$ has
+infinitely many positive coefficients and $H(1)=1$. Some $c_k(q)$ with
+$k\ge1$ is positive; otherwise $\widehat\phi_q$ would be the constant
+$c_0(q)=1$, forcing $\beta_m=0$ for $m\ge1$ and $\phi$ constant on the
+support of a Gaussian. The series $H^{k-1}$ has some positive coefficient,
+at degree $e$ say, so $H^k=H\cdot H^{k-1}$ has a positive coefficient at
+degree $e+m$ for each of the infinitely many $m$ with $[t^m]H>0$.
+\end{proof}
+
+\subsection{Width limits}
+\begin{proposition}[Width limits]\label{prop:width}
+Under Assumption~\ref{ass:act}, fix $d,L$ and the gains.
+\begin{enumerate}
+\item[(i)] As $N\to\infty$, $z_N$ converges in law on $\R^\X$ to
+$G\sim N(0,K)$, with $K$ as in \eqref{eq:kernel}.
+\item[(ii)] $K$ is positive definite (Lemma~\ref{lem:spectrum}).
+\item[(iii)] For every target $f$, training sequence $S$ and margin $a>0$,
+and for either learner, $\Pp\{z_N\in B_S\}\to\Pp\{G\in B_S\}>0$, and
+$q_{N,S}(x)\to q_S(x):=\Pp\{f(x)G(x)>0\mid G\in B_S\}$ for every $x$.
+Consequently $R_N(S)\to R_S:=\E_x[1-q_S(x)]$,
+$\liminf_NF_N(S)\ge(3R_S-1)/2$, and
+$\liminf_NF_N(S)\ge\Pp_x\{q_S(x)<2/3\}$.
+\end{enumerate}
+\end{proposition}
+\begin{proof}
+(i) For a positive semidefinite matrix $\Sigma$ on $\X$ let
+$\Gamma(\Sigma)=\E[\phi(u)\phi(u)^{\mathsf T}]$ with $u\sim N(0,\Sigma)$.
+The map $\Gamma$ is continuous on the positive semidefinite cone: if
+$\Sigma_k\to\Sigma$, then $\Sigma_k^{1/2}\xi\to\Sigma^{1/2}\xi$ for every
+$\xi$, and dominated convergence applies because $\phi$ is bounded and
+continuous. Write $Q^\ell_N(x,y)=N^{-1}\sum_ih^\ell_i(x)h^\ell_i(y)$ and
+let $\mathcal F_\ell$ be generated by the first $\ell$ layers of weights.
+The first-layer rows are independent, and each row's preactivation vector
+is $N(0,\Sigma_1)$ with $\Sigma_1(x,y)=\sigma_1^2(1+x\cdot y)/D$.
+Conditionally on $\mathcal F_{\ell-1}$ with $\ell\ge2$, the rows of the
+$\ell$th layer are independent with preactivation law
+$N(0,\sigma_\ell^2Q^{\ell-1}_N)$. Hence
+$\E[Q^\ell_N\mid\mathcal F_{\ell-1}]=\Gamma(\sigma_\ell^2Q^{\ell-1}_N)$
+(with $\Gamma(\Sigma_1)$ at $\ell=1$), and every entry has conditional
+variance at most $\|\phi\|_\infty^4/N$. By Chebyshev's inequality and the
+continuous mapping theorem, induction on $\ell$ gives
+$Q^\ell_N\to K^\ell$ in probability, where $K^1=\Gamma(\Sigma_1)$ and
+$K^\ell=\Gamma(\sigma_\ell^2K^{\ell-1})$. Every diagonal entry of
+$\sigma_\ell^2K^{\ell-1}$ equals $q_\ell$, and the correlations follow
+the recursion $\rho_1=(1+x\cdot y)/D$, $\rho_{\ell+1}=\widehat\phi_{q_\ell}
+(\rho_\ell)$. Therefore $\sigma_L^2K^{L-1}=K$. Finally
+$z_N\mid\mathcal F_{L-1}\sim N(0,\sigma_L^2Q^{L-1}_N)$, so for each
+$t\in\R^\X$ the characteristic function is
+$\E\exp(-\tfrac12\sigma_L^2t^{\mathsf T}Q^{L-1}_Nt)$, which converges to
+$\exp(-\tfrac12t^{\mathsf T}Kt)$ by bounded convergence.
+
+(iii) Every coordinate $G(x)$ has variance $A>0$. The boundary of
+$B_S$, and of $B_S\cap\{f(x)z(x)>0\}$, lies in the finite union of
+hyperplanes $\{z(y)=\pm a\}$ and $\{z(y)=0\}$, which is $G$-null. By the
+portmanteau theorem these probabilities converge. The limit of the
+denominator is positive because $K$ is nonsingular and $B_S$ is a nonempty
+open set. The last assertions follow from \eqref{eq:mixture}, from the
+finiteness of $\X$, and from the fact that $q_S(x)<2/3$ forces
+$q_{N,S}(x)<2/3$ for all large $N$.
+\end{proof}
+
+The quantifier order is the one in the main results: $N\to\infty$ at fixed
+$d$, $L$, gains, $a$ and $S$. No quantitative width is claimed.
+
+\subsection{The kernel on the cube}
+For $V\subseteq\{0,1,\ldots,d\}$ write $\chi_V(u)=\prod_{i\in V}u_i$ on
+$\{-1,1\}^D$, and $\chi_U$ for $U\subseteq[d]$ on $\X$. Let $p_m(j)$ be
+the probability that the walk on $\{-1,1\}^D$ which flips one uniformly
+chosen coordinate per step is, after $m$ steps, at a specified vertex at
+distance $j$ from its start.
+
+\begin{lemma}[Cube spectrum; the kernel-free part of {\cite[Lemma~3.1]{subcritical}}]
+\label{lem:spectrum}
+Let $F=\sum_mc_mt^m$ with $c_m\ge0$ and $\sum c_m=1$. Then
+$F(u\cdot u'/D)=\sum_Va_{|V|}\chi_V(u)\chi_V(u')$ on $\{-1,1\}^D$, with
+$a_j=\sum_mc_mp_m(j)$, and:
+\begin{enumerate}
+\item[(a)] $a_j\ge a_{j+2}$ for $0\le j\le D-2$;
+\item[(b)] $a_j>0$ if and only if $c_m>0$ for some $m\ge j$ with
+$m\equiv j\pmod 2$;
+\item[(c)] on $\X$, $K(x,y)=\sum_{U\subseteq[d]}\lambda_{|U|}\chi_U(x)
+\chi_U(y)$ with $\lambda_q=A(a_q+a_{q+1})$, and
+$\lambda_q$ is nonincreasing in $q$;
+\item[(d)] if infinitely many $c_m$ are positive, every $\lambda_q$ is
+positive and $K$ is positive definite;
+\item[(e)] if $F$ is odd, $\lambda_{2k}=\lambda_{2k+1}=Aa_{2k+1}$.
+\end{enumerate}
+\end{lemma}
+\begin{proof}
+Expanding $(u\cdot u'/D)^m$ as an average over $m$ independent uniform
+coordinates shows that its coefficient of $\chi_V(u)\chi_V(u')$ is
+$p_m(|V|)$. For (a), the one-step recursion
+$p_{m+1}(j)=\frac jDp_m(j-1)+\frac{D-j}Dp_m(j+1)$ gives
+\[
+ D[p_{m+1}(j)-p_{m+1}(j+2)]
+ =j[p_m(j-1)-p_m(j+1)]+(D-j-2)[p_m(j+1)-p_m(j+3)],
+\]
+with $p_m(i):=0$ for $i\notin[0,D]$, and induction from $m=0$ gives
+$p_m(j)\ge p_m(j+2)$ (the case $j+1=D-1$ of the hypothesis is
+$p_m(D-1)\ge p_m(D+1)=0$, which is trivial); average against $c_m\ge0$. For (b),
+$p_m(j)>0$ exactly when $m\ge j$ and $m\equiv j$. For (c), restrict to
+$u=(1,x)$: $\chi_V(1,x)=\chi_{V\setminus\{0\}}(x)$, and each $U\subseteq[d]$
+arises from $V=U$ and $V=U\cup\{0\}$. Monotonicity follows from (a):
+$\lambda_{q+1}/A=a_{q+1}+a_{q+2}\le a_{q+1}+a_q$. For (d), given $q$ there
+is $m\ge q+1$ with $c_m>0$, and by (b) one of $a_q,a_{q+1}$ (the one whose
+index has the parity of $m$) is positive. The matrix $K$ has eigenvalue
+$M\lambda_{|U|}$ on $\chi_U$. Part (e) is (c) with $a_{\rm even}=0$.
+\end{proof}
+
+Throughout, $\lambda_q$ denotes these \emph{normalized} eigenvalues of $K$
+itself, so they include the factor $A$. For $g:\X\to\R$ write
+$\widehat g(U)=\E_xg(x)\chi_U(x)$, $\|g\|_2^2=\E_xg(x)^2$,
+$g_{\le r}=\sum_{|U|\le r}\widehat g(U)\chi_U$ and $g_{>r}=g-g_{\le r}$.
+The Gaussian energy is $\|g\|_K^2=g^{\mathsf T}K^{-1}g=\sum_U\widehat g(U)^2/
+\lambda_{|U|}$, the convention of \cite{subcritical}. Let
+\[
+ \tau_r=\sum_{q>r}\binom dq\lambda_q=\Var G_{>r}(x),\qquad
+ T(r)=\sum_{m>r}c_m .
+\]
+
+\begin{lemma}[Level-mass inequalities]\label{lem:levels}
+Let $F$ be as in Lemma~\ref{lem:spectrum} and $0\le r<d$.
+\begin{enumerate}
+\item[(a)] $\binom d{r+1}\lambda_{r+1}\le\tau_r$.
+\item[(b)] If $F$ is odd and $r$ is odd, $\binom D{r+2}\lambda_{r+1}\le\tau_r$.
+\item[(c)] $\tau_r\le A\,T(r)$.
+\item[(d)] $s_{2,r}:=\sum_{q>r}\binom dq\lambda_q^2\le\lambda_{r+1}\tau_r$.
+\end{enumerate}
+\end{lemma}
+\begin{proof}
+(a) $\tau_r$ contains the term $q=r+1$. (b) Here $\lambda_{r+1}=\lambda_{r+2}$
+by Lemma~\ref{lem:spectrum}(e), and
+$\binom d{r+1}+\binom d{r+2}=\binom D{r+2}$. (c) By the grouping in
+Lemma~\ref{lem:spectrum}(c),
+$\tau_r/A=\sum_{V:\,|V\setminus\{0\}|>r}a_{|V|}\le\sum_{j>r}\binom Dja_j$,
+and $\binom Dja_j=\sum_mc_m\Pp\{\text{walk at distance $j$ at time $m$}\}$.
+Distance $j$ at time $m$ requires $m\ge j$, so
+$\sum_{j>r}\binom Dja_j\le\sum_{m>r}c_m$. (d) Bound one factor
+$\lambda_q$ by $\lambda_{r+1}$, using monotonicity.
+\end{proof}
+
+Inequality (a) is what makes the sign-only argument kernel-agnostic. The
+subcritical paper uses the sharper arcsine ratio
+$\lambda_{r+1}/\tau_r\asymp1/(r\binom D{r+2})$ \cite[Lemma~3.2]{subcritical};
+we use only (a) and (b), which hold for every such kernel.
+
+\section{The sign-only learner on every training set}
+\label{sec:signonly}
+In this section $K$ is any positive-definite covariance on $\X$ that
+depends only on Hamming distance and whose degree eigenvalues
+$\lambda_q$ are nonincreasing. By Lemma~\ref{lem:spectrum} this includes
+every kernel \eqref{eq:kernel} under Assumption~\ref{ass:act}, for every
+depth and gain. Let $G\sim N(0,K)$ and
+\[
+ q_S(x)=\Pp\{f(x)G(x)>0\mid f(X_i)G(X_i)>0\ \forall i\}.
+\]
+For $0\le r<d$ let
+\[
+ \err_r(f)=\min_{\deg p\le r}\Pp_x\{f(x)p(x)\le0\},
+\]
+the least error of a degree-$r$ polynomial threshold function with zeros
+counted as errors. A small constant shift of $p$ removes its zeros without
+creating new errors, so this agrees with the definition used in
+\cite{beyondparity}.
+
+\begin{lemma}[Gaussian mean and confidence {\cite[Lemma~10.1]{subcritical}}]
+\label{lem:meanconf}
+Let $\theta=13/20$ and $c_\theta=\sqrt{2\pi}(e^{-1}-7/20)$. Let
+$m=\E[G\mid f(X_i)G(X_i)>0\ \forall i]$, let $s\le n$ be the number of
+distinct training inputs, and let $\sigma_x^2=\Var(G(x)\mid G_S)$. Then for
+every training sequence and every $0\le v<d$:
+\begin{enumerate}
+\item[(i)] $\|m\|_K^2\le s$;
+\item[(ii)] if $\sigma_x>0$ and $q_S(x)>\theta$, then $f(x)m(x)>c_\theta\sigma_x$;
+\item[(iii)] $\Pp_x\{\sigma_x^2<\tau_v/2\}\le2s\lambda_{v+1}/\tau_v\le2n\lambda_{v+1}/\tau_v$;
+\item[(iv)] $\|m-m_{\le v}\|_2^2\le n\lambda_{v+1}$.
+\end{enumerate}
+\end{lemma}
+\begin{proof}
+This is \cite[Lemma~10.1]{subcritical}. Its proof uses Gaussianity,
+positive definiteness, Pr\'ekopa's theorem and Fourier orthogonality.
+It uses the kernel only through two facts: the high-degree part $G_{>v}$
+is independent of $G_{\le v}$ and has constant variance $\tau_v$, and the
+largest normalized eigenvalue above degree $v$ is $\lambda_{v+1}$. The
+second fact holds here by monotonicity. For (iii): conditioning also on
+$G_{\le v}$ can only lower the conditional variance, so
+$\sigma_x^2\ge\tau_v-R(x,x)$, where
+$R=Q_{\X S}Q_{SS}^{\dagger}Q_{S\X}$ and $Q$ is the covariance of $G_{>v}$.
+$R$ is positive semidefinite of rank at most $s$, with
+$\operatorname{tr}R\le s\|Q\|_{\rm op}=sM\lambda_{v+1}$. Markov's inequality
+then gives (iii). Part (iv) follows from (i), since
+$\|m_{>v}\|_2^2=\sum_{|U|>v}\widehat m(U)^2\le\lambda_{v+1}\|m\|_K^2$.
+\end{proof}
+
+\begin{theorem}[Sign-only learner]\label{thm:signonly}
+For every target $f$, every sequence $S$ of $n$ inputs (repeats and
+deliberately chosen inputs allowed), and every $0\le r<d$,
+\begin{equation}\label{eq:signonly}
+ \Pp_x\{q_S(x)\le13/20\}\ \ge\ \err_r(f)-C_0\frac{n\lambda_{r+1}}{\tau_r}
+ \ \ge\ \err_r(f)-\frac{C_0\,n}{\binom d{r+1}},
+ \qquad C_0=2+\frac2{c_\theta^2}<1000 .
+\end{equation}
+If the eigenvalues are paired as in Lemma~\ref{lem:spectrum}(e) and $r$ is
+odd, $\binom d{r+1}$ may be replaced by $\binom{d+1}{r+2}$.
+\end{theorem}
+\begin{proof}
+Let $p=m_{\le r}$. Let $E_1=\{\sigma_x^2<\tau_r/2\}$ and
+$E_2=\{|m-p|\ge c_\theta\sqrt{\tau_r/2}\}$. By Lemma~\ref{lem:meanconf}(iii),
+(iv) and Markov's inequality,
+$\Pp(E_1)+\Pp(E_2)\le(2+2/c_\theta^2)n\lambda_{r+1}/\tau_r$. Outside
+$E_1\cup E_2$, the inequality $q_S(x)>13/20$ implies
+$f(x)m(x)>c_\theta\sigma_x\ge c_\theta\sqrt{\tau_r/2}>|m(x)-p(x)|$, hence
+$f(x)p(x)>0$. Therefore
+$\{fp\le0\}\subseteq\{q_S\le13/20\}\cup E_1\cup E_2$. Since $p$ has degree at
+most $r$, $\Pp_x\{fp\le0\}\ge\err_r(f)$. The second inequality in
+\eqref{eq:signonly} is Lemma~\ref{lem:levels}(a), and the paired version is
+Lemma~\ref{lem:levels}(b). Numerically $c_\theta=0.04481\ldots$, so
+$C_0=997.7\ldots$.
+\end{proof}
+
+\begin{lemma}[Parity is far from low-degree thresholds]\label{lem:abfr}
+Let $\chi_k(x)=x_1\cdots x_k$ with $1\le k\le d$, and let $0\le s<k$. Then
+\[
+ \err_s(\chi_k)\ \ge\ 2^{-k}\sum_{j\le(k-s-1)/2}\binom kj
+ \ \ge\ \max\Bigl\{2^{-k},\ \frac12-\frac{s+1}{\sqrt{2\pi k}}\Bigr\}.
+\]
+\end{lemma}
+\begin{proof}
+On the $k$-cube the first inequality is the Aspnes--Beigel--Furst--Rudich
+bound \cite{ABFR}, proved in \cite[Lemma~6.2]{subcritical}. For $d>k$,
+fixing the coordinates outside $[k]$ turns a degree-$s$ polynomial into a
+degree-$s$ polynomial on the $k$-cube; average over the fixed
+coordinates. The term $j=0$ gives $2^{-k}$. Write
+$t=\lfloor(k-s-1)/2\rfloor$ and $B\sim\mathrm{Bin}(k,1/2)$. By symmetry,
+$\Pp\{B\le t\}=\tfrac12(1-\Pp\{t<B<k-t\})$. The middle range contains
+$k-2t-1\le s+1$ integers, each of probability at most $\sqrt{2/(\pi k)}$.
+\end{proof}
+
+\begin{corollary}[Networks without the global margin]\label{cor:signonly}
+Under Assumption~\ref{ass:act}, for every depth $L\ge2$ and all gains, the
+sign-only network learner satisfies, for every target $f$, every training
+sequence $S$ of length $n$ and every $0\le r<d$,
+\[
+ \liminf_{N\to\infty}F_N(S)\ \ge\ \err_r(f)-\frac{C_0\,n}{\binom d{r+1}}.
+\]
+In particular:
+\begin{enumerate}
+\item[(a)] \emph{Full parity} ($f=\chi_d$, $d\ge25$): every training
+sequence with $n\le\binom d{\lfloor\sqrt d/5\rfloor}/(6C_0)$, and hence every
+one with $n\le d^{\sqrt d/10-1/2}/6000$, has $\liminf_NF_N(S)\ge1/4$.
+\item[(b)] \emph{Sparse parity} ($f=\chi_k$, $25\le k\le d$): every training
+sequence with $n\le\binom d{\lfloor\sqrt k/5\rfloor}/(6C_0)$ has
+$\liminf_NF_N(S)\ge1/4$.
+\item[(c)] \emph{Fixed $k$}: $\liminf_NF_N(S)\ge2^{-k}-C_0n/\binom dk$ for
+every training sequence.
+\end{enumerate}
+These constants do not depend on $L$, the gains, or $\phi$.
+\end{corollary}
+\begin{proof}
+Combine Proposition~\ref{prop:width}(iii), the inclusion
+$\{q_S\le13/20\}\subseteq\{q_S<2/3\}$, and Theorem~\ref{thm:signonly}.
+For (a) and (b) take $r+1=\lfloor\sqrt k/5\rfloor$ (with $k=d$ in (a)).
+Lemma~\ref{lem:abfr} gives $\err_r\ge\frac12-\frac1{5\sqrt{2\pi}}>0.42$,
+and the sample bound makes the subtracted term at most $1/6$. For the
+explicit form in (a), $\binom dt\ge(d/t)^t$ with
+$t=\lfloor\sqrt d/5\rfloor\ge\sqrt d/5-1$, so
+$\log\binom dt\ge(\sqrt d/5-1)\log(5\sqrt d)\ge\frac{\sqrt d}{10}\log d
+-\frac12\log d$. For (c) take $r=k-1$ and use $\err_{k-1}(\chi_k)\ge2^{-k}$.
+\end{proof}
+
+\begin{remark}[Larger readout variance]\label{rem:readout}
+Corollary~\ref{cor:signonly} also covers the \emph{margin} learner when
+the readout variance is $\sigma_L^2N^{-b}$ with $b<1$, all other variances
+being as in \eqref{eq:weights}. This is the tuple $(0,1,\ldots,1,b)$ in the
+notation of FAQ Question~9. Indeed $z_N=N^{(1-b)/2}\tilde z_N$, where
+$\tilde z_N$ is the output at $b=1$. So the margin event is
+$\{|\tilde z_N(x)|>\varepsilon_N\ \forall x\}$ with
+$\varepsilon_N=aN^{-(1-b)/2}\to0$. For fixed $\varepsilon>0$ and large $N$,
+$B_\varepsilon\subseteq B_{\varepsilon_N}\subseteq B^{\rm sgn}_S$, where
+$B_\varepsilon$ adds the condition $|z|>\varepsilon$ everywhere to the
+training signs. Proposition~\ref{prop:width}(i) and the portmanteau theorem
+bound the liminf and limsup of $\Pp\{\tilde z_N\in B_{\varepsilon_N}\}$ by
+$\Pp\{G\in B_\varepsilon\}$ and $\Pp\{G\in B^{\rm sgn}_S\}$. Letting
+$\varepsilon\downarrow0$ shows that these agree in the limit, since
+$\Pp\{G(x)=0\text{ for some }x\}=0$. The same holds with the extra event
+$\{f(x)z(x)>0\}$. So $q_{N,S}(x)$ converges to the sign-only $q_S(x)$, as in
+the $\gamma<0$ case of \cite[Proposition~2.2]{subcritical}.
+\end{remark}
+
+\begin{remark}\label{rem:signonly}
+(1) The bound holds on \emph{every} training set, including deliberately
+chosen ones, and uniformly in depth, gain and activation. Depth may even
+grow with $d$. For comparison, \cite[Theorem~7.1]{nngpnote} proves a
+$\Theta(2^d)$ bound for a different learner, the margin learner with
+specified gains, at depth at least $C_a(d+\log(1/\eta)+1)$ for a fixed accuracy parameter $\eta$. (2) Theorem~\ref{thm:signonly} is
+\cite[Proposition~3]{beyondparity} with the arcsine eigenvalue ratio
+replaced by Lemma~\ref{lem:levels}(a). (3) For the arcsine kernel the
+subcritical paper improves $\sqrt d\log d$ to $d$, for typical samples
+\cite[Theorem~10.2]{subcritical}. That argument needs the sharp ratio
+$\lambda_{r+1}/\tau_r\asymp1/(r\binom D{r+2})$ at $r$ linear in $d$, and
+regular decay of the level masses $\binom dq\lambda_q$. For $\tanh$ the
+level masses decay much faster (Section~\ref{sec:numerics}), and we have
+not proved the matching estimates. The scale $\sqrt d\log d$
+comes from requiring $\err_r(f)$ to stay bounded below (the
+Aspnes--Beigel--Furst--Rudich lemma); with Lemma~\ref{lem:levels} alone,
+larger $r$ yields at most a polynomially small failure fraction. For odd
+activations the paired form improves the binomial factor, for example to
+$\binom{d+1}{k+1}$ in Corollary~\ref{cor:signonly}(c) when $k$ is even,
+without changing the exponent in (a) and (b).
+\end{remark}
+
+\section{Hermite coefficients of tanh and eigenvalue lower bounds}
+\label{sec:tanh}
+\begin{lemma}[Hermite coefficients of $\tanh$]\label{lem:tanh}
+Let $\sigma>0$, $v=\E\tanh^2(\sigma G)$, and for odd $m$
+\[
+ I_m(\sigma)=\int_0^\infty\frac{\omega^m e^{-\sigma^2\omega^2/2}}
+ {\sinh(\pi\omega/2)}\,d\omega .
+\]
+The dual coefficients of $\phi=\tanh$ at variance $\sigma^2$ are
+$c_m(\sigma^2)=\sigma^{2m}I_m(\sigma)^2/(m!\,v)$ for odd $m$ and $0$ for
+even $m$. In particular every odd coefficient is positive, and
+\begin{equation}\label{eq:tanhlower}
+ c_m(\sigma^2)\ \ge\ \frac{2\sqrt{2\pi}}{\sigma^2v\sqrt{m+1}}\,
+ e^{-\pi\sqrt{m+1}/\sigma}\qquad(m\text{ odd}).
+\end{equation}
+\end{lemma}
+\begin{proof}
+Gaussian integration by parts gives $\E[g(G)He_m(G)]=\E g^{(m)}(G)$ for
+smooth $g$ with bounded derivatives. With $g(t)=\tanh(\sigma t)$ this gives
+$\beta_m=\sigma^m\E[\tanh^{(m)}(\sigma G)]/\sqrt{m!}$. The function
+$\operatorname{sech}^2=\tanh'$ has Fourier transform
+$\int_\R\operatorname{sech}^2(y)e^{-i\omega y}dy=\pi\omega/\sinh(\pi\omega/2)$.
+This follows from the beta integral
+$\int_\R e^{-i\omega y}\operatorname{sech}^2(y)dy=2\Gamma(1+\frac{i\omega}2)\Gamma(1-\frac{i\omega}2)$
+(substitute $u=(1+\tanh y)/2$, so $du=\frac12\operatorname{sech}^2y\,dy$ and $e^{2y}=u/(1-u)$) and $|\Gamma(1+ix)|^2=\pi x/\sinh(\pi x)$; see \cite[Sections~3.98 and~8.33]{GR}. The transform is positive, even and exponentially decaying.
+Fourier inversion and Fubini therefore give, for even $k=m-1$,
+\[
+ \E[\tanh^{(m)}(\sigma G)]
+ =\frac1{2\pi}\int_\R\frac{\pi\omega}{\sinh(\pi\omega/2)}(i\omega)^{k}
+  e^{-\sigma^2\omega^2/2}d\omega
+ =(-1)^{(m-1)/2}I_m(\sigma),
+\]
+so $c_m=\beta_m^2/v=\sigma^{2m}I_m^2/(m!v)$. For the lower bound use
+$1/\sinh y\ge2e^{-y}$. Let $J_m=\int_0^\infty\omega^me^{-\sigma^2\omega^2/2}
+d\omega=\sigma^{-m-1}2^{(m-1)/2}\Gamma(\frac{m+1}2)$, and let $W$ have
+density proportional to $\omega^me^{-\sigma^2\omega^2/2}$ on $(0,\infty)$.
+By Jensen's inequality,
+$I_m\ge2J_m\E e^{-\pi W/2}\ge2J_me^{-\pi\E W/2}$. Here
+$\E W=J_{m+1}/J_m=\sqrt2\,\Gamma(\frac m2+1)/(\sigma\Gamma(\frac{m+1}2))
+\le\sqrt{m+1}/\sigma$, by $\Gamma(x+\frac12)\le\sqrt x\,\Gamma(x)$. Finally
+the duplication formula gives
+$\sigma^{2m}J_m^2/m!=\sigma^{-2}\frac{\sqrt\pi}2\Gamma(\frac{m+1}2)/
+\Gamma(\frac m2+1)\ge\sigma^{-2}\frac{\sqrt\pi}2\sqrt{2/(m+1)}$, again by
+$\Gamma(x+\frac12)\le\sqrt x\,\Gamma(x)$ with $x=\frac{m+1}2$.
+\end{proof}
+
+The formula is checked numerically in \texttt{numerics/spectrum.py}: the
+computed coefficients sum to one up to the truncation mass, and they
+reproduce a direct quadrature of the kernel (Section~\ref{sec:numerics}).
+
+\begin{corollary}\label{cor:composite}
+For $\phi=\tanh$ and every depth and gains, the composite coefficients of
+$F$ satisfy, for every odd $m$,
+\[
+ c_m\ \ge\ \kappa\,e^{-C_\phi\sqrt m},\qquad
+ \kappa=\frac{2\sqrt{2\pi}}{\sigma_1^2v_1}\prod_{\ell=2}^{L-1}c_1(q_\ell)>0,
+ \qquad C_\phi=\sqrt2\Bigl(\frac\pi{\sigma_1}+1\Bigr).
+\]
+\end{corollary}
+\begin{proof}
+Since every $\widehat\phi_{q_\ell}$ has nonnegative coefficients,
+$\widehat\phi_{q_\ell}(u)\ge c_1(q_\ell)u$ coefficientwise, so
+$[t^m]F\ge\prod_{\ell\ge2}c_1(q_\ell)\cdot c_m(q_1)$. Here
+$c_1(q)=q(\E\operatorname{sech}^2(\sqrt qG))^2/v_\phi(q)>0$. Apply
+\eqref{eq:tanhlower} with $\sigma=\sigma_1$, and use
+$(m+1)^{-1/2}\ge e^{-\sqrt{m+1}}$ and $\sqrt{m+1}\le\sqrt{2m}$.
+\end{proof}
+
+\begin{lemma}[Eigenvalue lower bounds]\label{lem:eiglower}
+Let $F$ be odd with $c_m\ge\kappa e^{-\psi(m)}$ for every odd $m$, where
+$\kappa>0$ and $\psi$ is nondecreasing. For $d\ge101$:
+\begin{enumerate}
+\item[(a)] $\binom dq\lambda_q\ \ge\ \dfrac{A\kappa\,
+e^{-\psi(40D)}}{2D(D+1)}$ for every $0\le q\le0.49d$;
+\item[(b)] the smallest eigenvalue of the matrix $K$ satisfies
+$v_{\min}(K)\ge\frac{A\kappa}8e^{-\psi(\lceil10D\log(2D)\rceil)}$.
+\end{enumerate}
+\end{lemma}
+\begin{proof}
+Poissonize the walk. If the number of steps is $\Pi_t\sim\mathrm{Poisson}(t)$, written $\Pi_t$ to avoid confusion with the width,
+the coordinates flip independently, each an odd number of times with
+probability $p(t)=(1-e^{-2t/D})/2$. Hence
+$\sum_m\pi_t(m)p_m(j)=p(t)^j(1-p(t))^{D-j}$, where
+$\pi_t(m)=e^{-t}t^m/m!$. For odd $j$, only odd $m$ contribute, and
+$p_m(j)\le1$ and $\pi_t(m)\le1$. Hence, for every integer $m_1$,
+\begin{equation}\label{eq:poisson}
+ a_j\ \ge\ \Bigl(\min_{m\le m_1,\ m\text{ odd}}c_m\Bigr)
+ \Bigl[p(t)^j(1-p(t))^{D-j}-\Pp\{\Pi_t>m_1\}\Bigr],
+\end{equation}
+and $\Pp\{\Pi_t>m_1\}\le(et/m_1)^{m_1}$ whenever $et<m_1$, by the Chernoff bound $\Pp\{\Pi_t\ge m\}\le e^{-t}(et/m)^m$ at $m=m_1+1$.
+
+(a) Let $0\le q\le0.49d$ and let $j\in\{q,q+1\}$ be odd. Then
+$j\le0.49d+1\le0.495D$ because $D\ge102$. Choose $t$ with
+$p(t)=j/D$; then $t=\frac D2\log\frac D{D-2j}\le\frac D2\log100<2.31D$.
+Take $m_1=40D$. Then $\Pp\{\Pi_t>m_1\}\le0.158^{40D}<e^{-73D}$. The
+$\mathrm{Bin}(D,j/D)$ probability of its mode $j$ is at least $1/(D+1)$,
+so \eqref{eq:poisson} gives
+$\binom Dja_j\ge\kappa e^{-\psi(40D)}[\frac1{D+1}-2^De^{-73D}]\ge
+\kappa e^{-\psi(40D)}/(2(D+1))$. Since
+$\lambda_q=Aa_j$ by Lemma~\ref{lem:spectrum}(e), and
+$\binom dq/\binom Dj\ge\min\{\frac{D-q}D,\frac{q+1}D\}\ge\frac1D$, part (a)
+follows.
+
+(b) Let $j\le D$ be odd, $t=\frac D2\log(2D)$ and
+$m_1=\lceil10D\log(2D)\rceil\ge20t$. Then
+$p(t)^j(1-p(t))^{D-j}\ge2^{-D}(1-\frac1{2D})^D\ge2^{-D-1}$, and
+$\Pp\{\Pi_t>m_1\}\le(e/20)^{m_1}<2^{-D}/4$. Thus $a_j\ge\kappa
+e^{-\psi(m_1)}2^{-D}/4$. Every $\lambda_q$ equals $Aa_j$ for an odd $j\le D$,
+and the matrix eigenvalues are $M\lambda_q=2^{D-1}\lambda_q$.
+\end{proof}
+
+\section{The margin learner}\label{sec:margin}
+Let $G\sim N(0,K)$ with $K$ as in \eqref{eq:kernel}, $F$ odd, and
+\[
+ A_S=\{|G(x)|>a\ \forall x;\ y_iG(X_i)>0\ \forall i\},\qquad
+ \mathcal D(S,y)=-\log\Pp(A_S)
+\]
+for labels $y\in\{-1,1\}^n$. The posterior is the law of $G$ given $A_S$;
+its relative entropy from $N(0,K)$ is exactly $\mathcal D(S,y)$. This is the
+$\gamma=0$ structure of \cite[Section~7]{subcritical}, with the arcsine
+kernel replaced by $K$.
+
+\subsection{Conditioning cost}
+The bump functions below are those of \cite[Lemma~7.2]{subcritical}; we
+repeat the parts of that proof that involve the kernel.
+
+\begin{lemma}[Globally margined interpolation]\label{lem:bump}
+Suppose $\varepsilon_d=\min_{q\le0.49d}\binom dq\lambda_q>0$, and let
+$v_{\min}=v_{\min}(K)$ (the smallest eigenvalue of the matrix $K$). Put
+\[
+ E_b=\frac{400}{(d+1)\varepsilon_d}+\frac{(d+1)e^{-0.0062d}}{v_{\min}} .
+\]
+Let $X_1,\ldots,X_n$ be independent and uniform, with $n(0.2)^{0.1d}\le0.04$.
+With probability at least $1-n^2e^{-0.19d}-n\sqrt{A\,0.72^d/v_{\min}}$, the
+following holds simultaneously for every labeling $y$ and every $A'>0$.
+There is $h:\X\to\R$ with $|h(x)|>A'$ for all $x$, $y_ih(X_i)>A'$ for all
+$i$, and
+\[
+ \|h\|_K^2\le8A'^2\Bigl(\frac1{\lambda_0}+8nE_b\Bigr).
+\]
+\end{lemma}
+\begin{proof}
+For $z\in\X$ let $b_z(x)=20\int_{2/5}^{9/20}(1-2p)^{\dist(x,z)}dp$. Then
+$b_z(z)=1$, $0\le b_z(x)\le(1/5)^{\dist(x,z)}$, and
+$\widehat{b_z}(U)=\chi_U(z)\widehat b_{|U|}$ with
+$\widehat b_j=20\int_{2/5}^{9/20}(1-p)^{d-j}p^jdp$. Hence
+$\binom dj\widehat b_j\le20/(d+1)$ and $\widehat b_j\le(3/5)^d$, and for
+$j>0.49d$ the integrand increases in $p$, so
+$\widehat b_j\le0.55^{d-j}0.45^j$ \cite[proof of Lemma~7.2]{subcritical}.
+Therefore
+\[
+ \|b_z\|_K^2=\sum_j\binom dj\frac{\widehat b_j^2}{\lambda_j}
+ \le\sum_{j\le0.49d}\frac{(20/(d+1))^2}{\varepsilon_d}
+ +\frac{2^d}{v_{\min}}\sum_{j>0.49d}\binom dj0.55^{2(d-j)}0.45^{2j}
+ \le E_b,
+\]
+using $\lambda_j\ge v_{\min}/M$. For the last sum, the exponent
+$\log2+\mathsf h(t)+2(1-t)\log0.55+2t\log0.45$, with $\mathsf h$ the binary
+entropy in nats, decreases for $t\ge0.49$ and is below $-0.0062$ at
+$t=0.49$, as computed in \cite[proof of Lemma~7.2]{subcritical}.
+
+Let $J(z,w)=\langle b_z,b_w\rangle_K=\sum_U\nu_{|U|}\chi_U(z)\chi_U(w)$, with
+$\nu_j=\widehat b_j^2/\lambda_j\le0.36^dM/v_{\min}=0.72^d/v_{\min}$. For independent
+uniform $X,Y$, Parseval gives
+$\E J(X,Y)^2=\sum_j\binom dj\nu_j^2\le\nu_{\max}\|b_z\|_K^2$. Since
+$E_b\ge\|b_z\|_K^2\ge b_z(z)^2/K(z,z)=1/A$, Markov's inequality gives
+$\Pp\{\sum_{i\ne j}|J(X_i,X_j)|>nE_b\}\le n\sqrt{\nu_{\max}/E_b}\le
+n\sqrt{A\,0.72^d/v_{\min}}$. On the complement, every subset $T$ of the indices
+satisfies $\|\sum_{i\in T}b_{X_i}\|_K^2\le|T|E_b+\sum_{i\ne j}|J|\le2nE_b$.
+
+With probability at least $1-n^2e^{-0.19d}$ all pairwise distances exceed
+$0.2d$, since $\log2-\mathsf h(0.2)>0.19$. Then each $x$ has at most one
+sample point within distance $0.1d$, so
+$\sum_{i\in T}b_{X_i}(x)\le1+n(0.2)^{0.1d}$, and the sum is at most
+$0.2+0.04$ unless $x=X_i$ with $i\in T$, where it is at least $1$. Take
+$T=\{i:y_i=-1\}$ and $h=2A'(1-2\sum_{i\in T}b_{X_i})$. Then $h\le-2A'$ on
+$T$ and $h\ge1.04A'$ elsewhere. Finally
+$\|h\|_K^2\le8A'^2(\|1\|_K^2+4\|\sum_Tb\|_K^2)$, and
+$\|1\|_K^2=1/\lambda_0$.
+\end{proof}
+
+\begin{lemma}[Conditioning cost]\label{lem:cost}
+On the event of Lemma~\ref{lem:bump}, for every labeling,
+\[
+ \mathcal D(S,y)\le\log2+4A'^2\Bigl(\frac1{\lambda_0}+8nE_b\Bigr),
+ \qquad A'=a+\sqrt{2A\log(4M)} .
+\]
+\end{lemma}
+\begin{proof}
+Let $t_0=\sqrt{2A\log(4M)}$ and $B=\{\max_x|G(x)|\le t_0\}$. A Gaussian
+tail and union bound give $\Pp(B)\ge1/2$. With $h$ from
+Lemma~\ref{lem:bump} at level $A'=a+t_0$, $h+B\subseteq A_S$. For a
+symmetric set $B$, the Cameron--Martin formula and $\cosh\ge1$ give
+$\Pp(G\in h+B)\ge\Pp(B)e^{-\|h\|_K^2/2}$, as in
+\cite[proof of Lemma~7.1]{subcritical}.
+\end{proof}
+
+\subsection{Gibbs error}
+\begin{lemma}[Gaussian quadratic entropy {\cite[Lemma~9.1]{subcritical}}]
+\label{lem:entropy}
+If $Z$ is a linear image of a centered Gaussian vector, with covariance of
+trace $t$ and largest eigenvalue $\ell$, then $\E_Q\|Z\|^2\le2t+4\ell D_0$
+for every law $Q$ of the underlying vector whose relative entropy from
+the Gaussian law is at most $D_0$.
+\end{lemma}
+
+\begin{proposition}[Gibbs error for every target]\label{prop:gibbs}
+Let $K$ be any positive-definite covariance on $\X$ that depends only on
+Hamming distance and has nonincreasing degree eigenvalues. For every
+target $f$, sample $S$ and $0\le s<d$, the posterior given
+$A_S$ (labels $y_i=f(X_i)$) satisfies
+\[
+ R_S:=\E\bigl[\Pp_x\{f(x)G(x)<0\}\bigm|A_S\bigr]
+ \ \ge\ \err_s(f)-\frac{2\tau_s+4\lambda_{s+1}\mathcal D(S,f)}{a^2}.
+\]
+\end{proposition}
+\begin{proof}
+Apply Lemma~\ref{lem:entropy} to $Z=M^{-1/2}G_{>s}$, whose covariance has
+trace $\tau_s$ and largest eigenvalue $\lambda_{s+1}$. This gives
+$\E[\|G_{>s}\|_2^2\mid A_S]\le2\tau_s+4\lambda_{s+1}\mathcal D$. Fix a
+posterior draw and let $p=G_{\le s}$. Where $f(x)p(x)\le0<f(x)G(x)$ we have
+$|G-p|\ge fG=|G|>a$. Hence
+$\Pp_x\{fp\le0\}\le\Pp_x\{fG<0\}+\|G_{>s}\|_2^2/a^2$, and the left side is
+at least $\err_s(f)$. Take the posterior expectation.
+\end{proof}
+
+\begin{theorem}[Margin learner, $\tanh$]\label{thm:margin}
+Let $\phi=\tanh$, and fix $L\ge2$, gains $\sigma_1,\ldots,\sigma_L>0$ and a
+margin $a>0$. There is $d_0$ such that for every $d\ge d_0$ and every
+integer $0\le n\le\exp(\frac1{20}\sqrt d\log d)$ the following holds.
+With probability at least $1-e^{-d/10}$ over independent uniform training
+inputs, the margin learner for full parity $f=\chi_d$ satisfies
+\[
+ \lim_{N\to\infty}R_N(S)\ge\frac38,\qquad
+ \liminf_{N\to\infty}F_N(S)\ge\frac1{16}.
+\]
+More generally, there is $C$, depending on $L$, the gains and $a$, such that
+on the same sample event, for every target $f$ and every odd $s<d$,
+\begin{equation}\label{eq:everytarget}
+ \lim_{N\to\infty}R_N(S)\ \ge\ \err_s(f)-\frac{2A\,T(s)}{a^2}
+ \Bigl(1+\frac{2C(d^2+n\,e^{C\sqrt d})}{\binom{d+1}{s+2}}\Bigr).
+\end{equation}
+\end{theorem}
+\begin{proof}
+\emph{Spectral inputs.} By Corollary~\ref{cor:composite},
+Lemma~\ref{lem:eiglower} applies with $\psi(m)=C_\phi\sqrt m$. Thus
+$\varepsilon_d\ge e^{-C\sqrt d}$ and $v_{\min}\ge e^{-C\sqrt{d\log d}}$ for large
+$d$, where here and below $C$ denotes constants depending only on $L$, the
+gains and $a$. In particular $E_b\le e^{C\sqrt d}$. Also
+$\lambda_0=Aa_1\ge Ac_1/D$, since $p_1(1)=1/D$.
+
+\emph{Sample event.} Let $n\le\exp(\frac1{20}\sqrt d\log d)=e^{o(d)}$. Then
+$n(0.2)^{0.1d}\le0.04$, and the failure probability in
+Lemma~\ref{lem:bump} is at most
+$e^{-0.18d}+e^{-0.16d+C\sqrt{d\log d}}\le e^{-d/10}$ for large $d$. On this
+event Lemma~\ref{lem:cost} and $A'^2\le Cd$ give, for every labeling,
+$\mathcal D(S,y)\le C(d^2+n e^{C\sqrt d})$.
+
+\emph{Every target.} Combine Proposition~\ref{prop:gibbs} with
+Lemma~\ref{lem:levels}(b),(c), which give
+$\lambda_{s+1}\le\tau_s/\binom D{s+2}$ and $\tau_s\le AT(s)$. Then
+Proposition~\ref{prop:width}(iii) gives \eqref{eq:everytarget}.
+
+\emph{Parity.} Let $s$ be the largest odd integer with
+$s+1\le\sqrt d/5$. Lemma~\ref{lem:abfr} gives $\err_s(\chi_d)>0.42$. Since
+$s+2\ge\sqrt d/5-1$,
+$\log\binom D{s+2}\ge(s+2)\log\frac D{s+2}\ge\frac1{10}\sqrt d\log d-\log d$.
+For $n\le\exp(\frac1{20}\sqrt d\log d)$ the fraction in
+\eqref{eq:everytarget} is therefore at most
+$\exp(-\frac1{20}\sqrt d\log d+C\sqrt d+C\log d)\to0$. Also $T(s)\to0$ as
+$d\to\infty$, because $s\to\infty$ and $T$ does not depend on $d$
+(Lemma~\ref{lem:composite}). Hence $\lim_NR_N(S)\ge0.42-o(1)\ge3/8$ for
+large $d$, and \eqref{eq:mixture} gives the bound on $F_N$.
+\end{proof}
+
+\begin{remark}[Thresholds, constants, activations]\label{rem:activations}
+(1) Taking $s+1\le\delta\sqrt d$ in the proof gives
+$\lim_NR_N\ge\frac12-\frac\delta{\sqrt{2\pi}}-o(1)$ for
+$n\le\exp(\frac\delta4\sqrt d\log d)$. For $q>1/2$ take any $\delta<\sqrt{2\pi}(q-\frac12)$ and $c_q=\delta/4$; the inequality below holds at every width and passes to the limit since $R_N\to R_S$. By the second inequality in FAQ
+Question~5, $F_q\ge(R-(1-q))/q$, so for each fixed $q>1/2$ the
+fraction of inputs with correct-label probability at most $q$ stays
+bounded below in a range $n\le\exp(c_q\sqrt d\log d)$. (2) The constant
+$\frac1{20}$ is not optimized. (3) The proof uses $\tanh$ only through
+oddness, Assumption~\ref{ass:act}, and the lower bound of
+Corollary~\ref{cor:composite}. It works verbatim for any odd activation
+satisfying Assumption~\ref{ass:act} whose composite coefficients satisfy
+$c_m\ge\kappa e^{-\psi(m)}$ for odd $m$ (by the argument of
+Corollary~\ref{cor:composite} it suffices that the first-layer coefficients
+satisfy this and that $c_1(q_\ell)>0$ for $\ell\ge2$), with $\psi$ nondecreasing and
+$\psi(m)=o(\sqrt m\log m)$. Then $E_b=e^{o(\sqrt d\log d)}$,
+$v_{\min}\ge e^{-o(d)}$, and the same threshold results. The error function is not covered: since
+$\E\operatorname{erf}(\sigma U)\operatorname{erf}(\sigma V)=\frac2\pi
+\arcsin\bigl(\frac{2\sigma^2\rho}{1+2\sigma^2}\bigr)$, its dual
+coefficients decay geometrically in $m$. (4) For $k$-sparse
+parity the same proof needs
+$e^{C\sqrt d}\ll\binom D{\delta\sqrt k}$, roughly
+$k\ge Cd/\log^2d$; we have not pursued smaller $k$.
+\end{remark}
+
+\section{Where the exponential proof breaks}\label{sec:obstruction}
+The $\gamma=0$ part of the subcritical theorem \cite[Theorem~9.2]{subcritical}
+covers $n$ up to $e^{cd}$. It chooses an adaptive odd cutoff $r$ with
+$n\approx A_\delta D_r\log D_r$, where $D_r=\sum_{q\le r}\binom dq$. Its
+key normalized estimate is
+\[
+ \frac{\mathcal D(S)}n\le Cd\rho^{-\beta},\qquad \rho=r/d,
+ \qquad\text{\cite[eq.~(42)]{subcritical}},
+\]
+a bound polynomial in $d$ (at most $Cd^{1+\beta}$). It combines this with
+the head bound
+$\E^*\|G_{\le r}\|_2^2\le8\tau_r+16b_r\tau_r\mathcal D/n$
+\cite[eq.~(45)]{subcritical}, where $\E^*$ is the posterior expectation
+and $b_r$ bounds the sampled Gram matrix of the tail kernel. The clipped
+parity lemma is then applied at the scale of the posterior output
+amplitude, which is of order $d^{(1-\beta)/2}$ there
+\cite[Lemma~7.5]{subcritical}. That amplitude step uses the variance
+$\tau_u\asymp d^{-\beta}$ of the Fourier levels above $u\approx d/50$; at the
+standard scaling this variance is tiny, and Lemma~7.5 gives no useful
+amplitude. We show below that the normalization (42) also fails: the
+conditioning cost per sample is superpolynomial in $d$. We then explain
+what estimate would let the rest of the argument go through.
+
+Fix $\delta\in(0,1/8)$, let $A_\delta$ be the sampling constant of
+\cite[Lemma~4.4]{subcritical} (squared coercivity: with probability at
+least $1-\delta$, $\frac1n\sum_i(f(X_i)P(X_i))_-^2\ge\frac14\|P\|_2^2$
+for all $P$ of degree at most $r$, if $r\le d/64$ and
+$n\ge A_\delta D_r\log(2D_r)$), and let $r=r(n)$ be the largest odd integer
+with $A_\delta D_r\log(2D_r)\le n$.
+
+\begin{lemma}[Universal tail-Gram bound]\label{lem:gram}
+Let $F$ be odd. There are $c_1>0$ and $C_\delta$, depending only on
+$\delta$ and $A_\delta$, such that for large $d$, every $n$ with
+$\exp((\log(d+1))^3)\le n\le e^{c_1d}$, and $r=r(n)$, the following holds.
+With probability at least $1-\delta$ over iid uniform inputs, the matrix
+$Q_{SS}=((K_{>r})(X_i,X_j))_{i,j\le n}$ satisfies
+\[
+ \|Q_{SS}\|_{\rm op}\le b_r\tau_r,\qquad
+ b_r=C_\delta\bigl(1+\sqrt{d\,rH_r}+rH_r\bigr),\qquad H_r=\log(eD/r),
+\]
+and $r\le d/64$, $r\ge(\log d)^2/4$.
+\end{lemma}
+\begin{proof}
+The range of $r$ follows exactly as in \cite[Lemma~6.4]{subcritical}, which
+uses only binomial estimates. That lemma's argument also gives
+$n<A_\delta D_{r+2}\log(2D_{r+2})\le CA_\delta\binom D{r+2}rH_r$.
+\cite[Lemma~5.2]{subcritical} bounds
+$\Pp\{\|Q_{SS}-\tau I\|>z\tau\}$ in terms of four quantities. Its proof
+uses only these properties of $Q$: positive semidefinite, constant diagonal
+$\tau=\tau_r$, $\max_x\sum_yQ(x,y)^2=Ms_{2,r}$, $\|Q\|_{\rm op}=M\lambda_{r+1}$,
+and the far-pair bound $\eta_r=\max_{d/4\le\dist\le3d/4}|Q(x,y)|$. Here
+\[
+ \frac{n\lambda_{r+1}}{\tau_r}\le\frac n{\binom D{r+2}}\le CA_\delta rH_r,
+ \qquad
+ \frac{\sqrt{n\cdot2\log M\cdot s_{2,r}}}{\tau_r}
+ \le\sqrt{2d\log2\,\frac n{\binom D{r+2}}}\le C\sqrt{A_\delta d\,rH_r},
+\]
+by Lemma~\ref{lem:levels}(b),(d). For the far pairs, the proof of
+\cite[Lemma~5.1]{subcritical} gives
+$\eta_r\le\tau_r(C\sqrt De^{-r/8}+e^{-c_0D})$, once two of its steps are
+reread. First, its bound for $r<j\le D-r$ uses only the Krawtchouk estimate
+(20) of that paper together with $\sum_{j>r}\binom Dja_j=\tau_r/A$ (here
+$Q=\sum_{j\ge r+2,\ j\text{ odd}}Aa_j\mathsf K_j$, because $F$ is odd and
+$r$ is odd). Second, for $j>D-r$ it uses monotonicity:
+$a_j\le a_{b}\le\tau_r/(A\binom Db)$ for an odd $b$ near $D/4$. Thus
+$2\log M\cdot\eta_r/\tau_r\to0$ for $r\ge(\log d)^2/4$. The near-pair and
+collision terms are at most $3ne^{d\mathsf h(1/4)}/2^d$ and
+$n^2\cdot3e^{d\mathsf h(1/4)}/2^d$. They vanish when
+$2c_1<\log2-\mathsf h(1/4)$. Choosing $z$ as a $\delta$-dependent multiple
+of the sum of the four terms gives the claim.
+\end{proof}
+
+\begin{proposition}[The conditioning cost per sample is superpolynomial]
+\label{prop:obstruction}
+Let $\phi=\tanh$; fix $L$, gains, $a$ and $\delta\in(0,1/8)$. For large $d$
+and every $n$ with $\exp((\log(d+1))^3)\le n\le e^{c_1d}$, with probability
+at least $1-2\delta$ over iid uniform inputs labelled by full parity,
+\[
+ \frac{\mathcal D(S)}n\ \ge\ \frac{a^2-10\tau_r}
+ {\tau_r\bigl(16b_r+4CA_\delta rH_r\bigr)} ,\qquad r=r(n).
+\]
+Consequently, for every $\epsilon>0$ and $k$, for all large $d$ and every
+$n$ with $\exp(d^\epsilon)\le n\le e^{c_1d}$, on the same event,
+$\mathcal D(S)/n\ge d^k$. In the other direction, on the event of
+Lemma~\ref{lem:bump}, $\mathcal D(S)/n\le e^{C\sqrt d}$ for every $n\ge1$ with $n(0.2)^{0.1d}\le0.04$.
+(Some upper limit on $n$ is necessary in the first statement: for fixed $d$,
+$\mathcal D(S)$ is bounded by the cost of the full sign pattern of $f$, so
+$\mathcal D(S)/n\to0$ as $n\to\infty$.)
+\end{proposition}
+\begin{proof}
+Work on the intersection of the squared-coercivity event and the event of
+Lemma~\ref{lem:gram}. Write $p=G_{\le r}$ and $\E^*$ for the posterior
+expectation. Every posterior draw has $|G|>a$ everywhere, so
+$\E^*\|G\|_2^2\ge a^2$. At the training inputs, $f(X_i)G(X_i)>0$ implies
+$(f(X_i)p(X_i))_-\le|G_{>r}(X_i)|$. Coercivity gives
+$\|p\|_2^2\le\frac4n\sum_iG_{>r}(X_i)^2$. Lemma~\ref{lem:entropy}, applied
+to $n^{-1/2}(G_{>r}(X_i))_i$, whose covariance $Q_{SS}/n$ has trace
+$\tau_r$ and largest eigenvalue at most $b_r\tau_r/n$, gives
+$\E^*\frac1n\sum_iG_{>r}(X_i)^2\le2\tau_r+4b_r\tau_r\mathcal D/n$.
+Applied to $M^{-1/2}G_{>r}$ it gives
+$\E^*\|G_{>r}\|_2^2\le2\tau_r+4\lambda_{r+1}\mathcal D$, with
+$\lambda_{r+1}\le\tau_r/\binom D{r+2}\le\tau_rCA_\delta rH_r/n$. Hence
+\[
+ a^2\le\E^*\|p\|_2^2+\E^*\|G_{>r}\|_2^2
+ \le10\tau_r+\frac{\tau_r\mathcal D}n\bigl(16b_r+4CA_\delta rH_r\bigr),
+\]
+which is the first claim. For the second, the $\tanh$ dual activations have
+all moments finite: if $h(g)=\tanh(\sqrt qg)$, the identity
+$\E[h^{(k)}(G)He_j(G)]=\E[h(G)He_{j+k}(G)]$ gives
+$\sum_m\frac{m!}{(m-k)!}\beta_m^2=\E[h^{(k)}(G)^2]<\infty$. Regard $(c_m)$ as a probability distribution on degrees. For a
+composition $\widehat\phi\circ H$, the degree distribution is the law of
+a random sum $\sum_{i\le Y}J_i$, where $Y$ has the distribution of the
+coefficients of $\widehat\phi$ and the $J_i$ are independent copies of
+the degree under $H$, independent of $Y$. Since
+$(\sum_{i\le Y}J_i)^k\le Y^{k-1}\sum_{i\le Y}J_i^k$, we get
+$\E(\sum_{i\le Y}J_i)^k\le\E Y^k\,\E J^k$. So
+$T(r)\le C_kr^{-k}$ for every $k$, and $\tau_r\le AT(r)$. If
+$n\ge\exp(d^\epsilon)$, then $D_{r+2}\log(2D_{r+2})>n/A_\delta$ forces
+$r\ge d^{\epsilon/2}$ for large $d$, so $\tau_r\le d^{-k'}$ for every $k'$,
+while $b_r+rH_r\le Cd\log d$. The upper bound follows from
+Lemma~\ref{lem:cost} and $E_b\le e^{C\sqrt d}$.
+\end{proof}
+
+\paragraph{What this shows and does not show.} The proposition is about a
+proof technique, not about sample complexity, and it refutes only the
+normalization (42). It does not show that the subcritical strategy fails.
+The clipped-parity lemma at scale $a$ only needs the posterior's
+low-degree part to be $O(a)$ in $L^2$, not small, because it is multiplied
+by $u/d\approx\rho$, and $\rho=r(n)/d\le\alpha$ for any fixed small $\alpha$ once $n\le e^{c_\alpha d}$ (smaller $n$ are covered by Theorem~\ref{thm:margin}). The following is an
+\emph{extension suggested by the proof}, not proved here. Suppose that on
+a sample event of probability at least $3/4$ there were a matching upper
+bound
+\begin{equation}\label{eq:matching}
+ \frac{\mathcal D(S)}n\le\frac{K\,a^2}{\tau_r\,(b_r+rH_r)},
+\end{equation}
+with $K$ independent of $d$, $n$ and $\rho$. Work on the intersection of
+that event with the coercivity event and the event of Lemma~\ref{lem:gram}
+(probability at least $3/4-2\delta$), for
+$\exp((\log(d+1))^3)\le n\le e^{c_1d}$, and take
+$u=r+2\lceil10\log(d+1)\rceil$. The head bound would then give
+$\E^*\|G_{\le r}\|_2^2\le8\tau_r+16Ka^2$. Lemma~\ref{lem:entropy} with
+$\lambda_{r+1}\le\tau_r/\binom D{r+2}$ and
+$n/\binom D{r+2}\le CA_\delta rH_r$ would bound the band $(r,u]$ by
+$2\tau_r+CKa^2$. The same lemma with
+$\lambda_{u+1}\le\tau_r/\binom D{u+2}$ and the geometric decay of
+$\binom D{r+2}/\binom D{u+2}$ would make the tail above $u$ $o(1)$ (recall $\tau_r\le AT(r)\to0$, as $r\ge(\log d)^2/4$): it is at most
+$2\tau_r+4Ka^2\,n/\bigl(\binom D{u+2}(b_r+rH_r)\bigr)\le2\tau_r+
+CKa^2\binom D{r+2}/\binom D{u+2}$, and the binomial ratio is at most
+$d^{-10}$ for $r\le\alpha d$ with $\alpha$ small, as in
+\cite[Lemma~6.4]{subcritical}. The
+clipped-parity lemma would then give
+$|\E^*\E_xf\sign G|\le C\rho\sqrt K+o(1)$, which is an $\exp(\Omega(d))$
+bound once $\rho\le\alpha$ is small enough. Proposition~\ref{prop:obstruction}
+says that \eqref{eq:matching} cannot hold with a smaller right-hand side
+by more than a constant factor. So the missing ingredient is an upper
+bound on the conditioning cost that matches the proposition up to
+constants. The only upper bound we have is the bump bound $e^{C\sqrt d}$.
+
+A second sufficient route avoids the adaptive cutoff. It would suffice to
+show that, for a small fixed $\alpha$,
+\[
+ \E^*\|G_{\le\alpha d}\|_2^2\le C\quad\text{and}\quad
+ \E^*\|G_{>\alpha d}\|_2^2=o(1),
+\]
+with $C$ independent of $\alpha$. By the clipped-parity lemma at scale $a$,
+$|\E_xf\sign G|\le\frac\alpha a\|G_{\le\alpha d}\|_2+\|G_{>\alpha d}\|_2/a$,
+so it is enough that $\alpha\sqrt C/a\le1/4-o(1)$. The second condition
+holds for $n\le e^{c_\alpha d}$ with
+$c_\alpha<\min\{\mathsf h(\alpha)/2,0.09\}$, on the event of
+Lemma~\ref{lem:bump}, which then has probability at least
+$1-e^{-c'd}$. Indeed Lemma~\ref{lem:entropy} gives
+$\E^*\|G_{>s}\|_2^2\le2\tau_s+4\lambda_{s+1}\mathcal D$, and
+Lemmas~\ref{lem:levels} and~\ref{lem:cost} make the right side
+$O(T(s))+e^{C\sqrt d}n/\binom D{s+2}$ at odd $s\approx\alpha d$. The first
+condition is an upper bound on the posterior's low-degree amplitude, and
+we do not know how to prove it. The entropy bound gives only
+$\E^*\|G\|_2^2\le2A+4\lambda_0\mathcal D=O(1+\mathcal D/d)$, which is
+$O(1)$ only if $\mathcal D=O(d)$; no bound here provides that.
+
+\paragraph{Heuristic picture} (heuristic; not used above). For
+$\exp(d^\epsilon)\le n\le e^{c_1d}$, the proposition and the bump
+construction place the conditioning cost per sample between
+$d^{\omega(1)}$ and $e^{C\sqrt d}$. The mechanism behind the lower bound is
+coercivity. At the training inputs parity cannot be followed by a
+low-degree polynomial, so the low-degree part is dominated by the
+high-degree part there. Yet the global margin forces $\|G\|_2\ge a$. So
+the posterior must place $L^2$ mass of order $a^2$ above degree $r$, where
+the prior variance $\tau_r$ is tiny. If that mass sits mainly in the band
+just above $r$, the cost should match the proposition, and the argument
+above would give $\exp(\Omega(d))$. If instead the posterior used
+large-amplitude low-degree thresholds that approximate parity, the bound
+could fail. We have not ruled this out, and the numerics below are too
+small to test it.
+
+\section{Numerical illustrations}\label{sec:numerics}
+All scripts and outputs are in \texttt{numerics/} next to this paper. They
+are illustrations, not evidence about asymptotic exponents.
+
+\paragraph{Spectra} (\texttt{spectrum.py}, \texttt{spectrum.txt}). We compute
+the composite coefficients $c_m$ from Lemma~\ref{lem:tanh} for the unit-gain
+network at $L=2,3,4$ and for the specified-gain network at $L=3$, for
+$m\le600$. We then compute the cube eigenvalues through the walk
+representation $a_j=\sum_mc_mp_m(j)$, which involves no cancellation, at
+$d=20,40,80,160$. At $d=10$ the eigenvalues agree with a direct
+Gauss--Hermite evaluation of the layer recursion followed by a Krawtchouk
+transform. The checks confirm positivity, monotonicity and pairing
+(Lemma~\ref{lem:spectrum}), and the inequalities of
+Lemma~\ref{lem:levels}(b),(c) and \eqref{eq:tanhlower}. Over the computed
+range, the level masses $\binom dq\lambda_q$ of the $\tanh$ kernels decay
+much faster than those of the arcsine kernel, whose level masses decay like
+$q^{-3/2}$ at $L=2$ \cite[Lemma~3.2]{subcritical}. Table~\ref{tab:spectrum} records representative values.
+
+\input{spectrum-table}
+
+\paragraph{Sign-only posteriors} (\texttt{signgp\_parity.py},
+\texttt{signgp\_parity.txt}). We run exact Hamiltonian Monte Carlo for the
+orthant-truncated Gaussian, using the validated sampler of
+\cite{beyondparity}, for full parity at $d=10,12$. The kernels are $\tanh$
+unit gain at $L=2,3$, $\tanh$ specified gain at $L=3$, and the arcsine
+kernel at $L=2$. Table~\ref{tab:signgp} gives the confidence-failure
+fraction. In this range all four kernels fail on most unseen inputs (at least $71\%$ of them in every cell). The whole-cube fraction falls mainly because more inputs are observed. The $\tanh$ kernels fail somewhat less often than the arcsine kernel, and the three $\tanh$ kernels are nearly indistinguishable. At these dimensions the numbers say nothing about the exponent.
+
+\input{signgp-table}
+
+\section{Status summary}
+\begin{center}
+\begin{tabular}{@{}p{0.45\textwidth}p{0.47\textwidth}@{}}
+\toprule
+Statement & Status\\
+\midrule
+Width limit to a nondegenerate GP, both learners & Proved (Prop.~\ref{prop:width})\\
+Sign-only learner, every training set, every activation/depth/gain:
+$\exp(\Omega(\sqrt d\log d))$ for full parity, $d^k$ for fixed $k$-sparse
+parity & Proved (Thm.~\ref{thm:signonly}, Cor.~\ref{cor:signonly})\\
+Margin learner with readout exponent $b<1$, tuple $(0,1,\ldots,1,b)$: same
+bounds & Proved (Remark~\ref{rem:readout})\\
+Margin learner, $\tanh$, typical samples: $\exp(\frac1{20}\sqrt d\log d)$
+& Proved (Thm.~\ref{thm:margin})\\
+Same for odd activations with
+$c_m\ge e^{-o(\sqrt m\log m)}$ & Proved (Remark~\ref{rem:activations})\\
+Per-sample conditioning cost superpolynomial for $e^{d^\epsilon}\le n\le e^{c_1d}$ (w.p.\ $\ge1-2\delta$); the subcritical normalization (42) fails & Proved (Prop.~\ref{prop:obstruction})\\
+A matching upper bound on that cost would give $\exp(\Omega(d))$ & Extension suggested by the proof (Section~\ref{sec:obstruction})\\
+$\exp(\Omega(d))$ for either learner at fixed depth & Open\\
+Which of the two posterior behaviours in Section~\ref{sec:obstruction} occurs & Open (heuristic discussion only)\\
+Margin learner for $\operatorname{erf}$, or for sparse parity with
+$k\ll d/\log^2d$ & Open\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{thebibliography}{99}
+\bibitem{subcritical}
+D. Vaintrob, K. H\"anni, and OpenAI Codex.
+Exponential parity sample complexity throughout the subcritical width regime.
+This collection, \texttt{main-results/subcritical-exponential}, 2026.
+Lemma and equation numbers refer to its current PDF.
+\bibitem{nngpnote}
+D. Vaintrob, K. H\"anni, and ChatGPT.
+Small circuits under Gaussian-process classification: what sample
+complexity follows from the actual posterior?
+This collection, \texttt{side-results/nngp-sample-complexity}, 2026.
+\bibitem{beyondparity}
+Claude. Which targets are hard for the subcritical learners?
+This collection, \texttt{works-in-progress/beyond-parity}, 2026.
+\bibitem{ABFR}
+J. Aspnes, R. Beigel, M. Furst, and S. Rudich.
+The expressive power of voting polynomials.
+\emph{Combinatorica} 14(2):135--148, 1994.
+\bibitem{GR}
+I. S. Gradshteyn and I. M. Ryzhik. \emph{Table of Integrals, Series, and
+Products}, 7th ed. Academic Press, 2007.
+\bibitem{daniely}
+A. Daniely, R. Frostig, and Y. Singer. Toward deeper understanding of
+neural networks: the power of initialization and a dual view on
+expressivity. \emph{NeurIPS}, 2016.
+\bibitem{neal}
+R. M. Neal. \emph{Bayesian Learning for Neural Networks}. Springer, 1996.
+\bibitem{leeetal}
+J. Lee, Y. Bahri, R. Novak, S. S. Schoenholz, J. Pennington, and
+J. Sohl-Dickstein. Deep neural networks as Gaussian processes.
+\emph{ICLR}, 2018.
+\bibitem{matthews}
+A. G. de G. Matthews, J. Hron, M. Rowland, R. E. Turner, and
+Z. Ghahramani. Gaussian process behaviour in wide deep neural networks.
+\emph{ICLR}, 2018.
+\end{thebibliography}
+\end{document}
