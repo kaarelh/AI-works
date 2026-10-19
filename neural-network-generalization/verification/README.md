@@ -2,7 +2,7 @@
 
 This record concerns packaging and source reproducibility. Mathematical review records are retained in the relevant paper folders.
 
-The [SLT comparison review](slt-bounds-comparison-2026-10-19.md) records the primary sources, targeted checks of Claude's reports, and exact Gaussian example behind the FAQ's comparison of generalization bounds. It is a source and mathematical review, not an extension of the Lean verification.
+The [SLT comparison review](slt-bounds-comparison-2026-10-19.md) records the primary sources, targeted checks of Claude's reports, and counterexamples to a finite-sample reduction to local asymptotic data. Its reassessment also links the [standard fan-in finite-sample theorem and mathematical review](../works-in-progress/slt-finite-sample/verification/README.md). It is a source and mathematical review, not an extension of the Lean verification.
 
 The current inventory contains **40 papers and notes**. The [latest Boolean-depth revision record](boolean-depth-structure-2026-10-18.json) covers the unrestricted-depth and critical-depth works in progress: independently reviewed structural theorems, a stronger actual parity learning lower bound, exact source hashes, and clean isolated rebuilds with matching PDF text. These additions are not Lean verified. The general polynomial-depth Boolean learning problem remains open. The [earlier revision record](boolean-depth-progress-2026-10-18.json) preserves the preceding circuit-rate and finite-bottleneck snapshot; counts in older records refer to their publication snapshots.
 

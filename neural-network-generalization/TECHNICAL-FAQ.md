@@ -630,9 +630,9 @@ Finally, prediction conventions must match. Logistic posterior-predictive confid
 
 ## Does SLT already give comparable generalization bounds?
 
-**SLT gives a substantive explanation of why Bayesian complexity can be much smaller than parameter count. Some neural-network results already have leading terms controlled by the teacher rather than the learner. What the standard asymptotic formulas do not automatically supply is a polynomial, width-independent sample threshold for our specified posterior-confidence guarantee.** Neither approach is uniformly better: they answer overlapping questions with different strengths and assumptions.
+**The usual SLT asymptotic formulas do not give our finite-sample learning guarantees, and finite-sample generalization has not been reduced to the learning coefficient and other local asymptotic quantities.** Prior scale and the amount of prior mass near good predictors can dominate learning at the sample sizes of interest, even when the leading coefficients are known exactly. Finite-sample Bayesian bounds can nevertheless exploit a small teacher inside a much larger learner. The question is how their full constants depend on teacher resources, learner width, and prior scaling.
 
-For ordinary Bayes, under the relevant realizability, analyticity, and integrability assumptions, the familiar fixed-model expansions are
+**What the asymptotic formulas establish.** Under the appropriate realizability and regularity assumptions, ordinary Bayes at a fixed model and prior satisfies
 
 $$
 \mathbb E[B_n]-L_0=\frac{\lambda}{n}+o(1/n),
@@ -640,57 +640,60 @@ $$
 \mathbb E[G_n]-L_0=\frac{\lambda+\nu}{n}+o(1/n).
 $$
 
-Here $B_n$ is the test log loss of the **posterior predictive distribution**, while $G_n$ averages the test log loss of an **individual posterior draw**. The expectations also average over training samples. The learning coefficient $\lambda$ measures local loss geometry; $\nu$ is the singular fluctuation at inverse temperature one. The baseline $L_0$ is log loss, not a classification-error probability. In a regular, realizable model with $P$ identifiable parameters, $\lambda=\nu=P/2$; singular models can have substantially smaller coefficients. See [Watanabe's equations of states](https://arxiv.org/abs/0712.0653), Corollary 3, and the broader assumptions in [Watanabe (2010)](https://jmlr.org/papers/volume11/watanabe10a/watanabe10a.pdf), sections 2.3 and 4.3.
+Here $B_n$ is posterior-predictive test log loss, $G_n$ averages test log loss over individual posterior draws, and the expectations include the training sample. The baseline $L_0$ is optimal log loss; $\lambda$ is the learning coefficient and $\nu$ the singular fluctuation at inverse temperature one. See [Watanabe's equations of states](https://arxiv.org/abs/0712.0653), Corollary 3. These are leading large-sample expansions. They give neither a numerical error bound at a specified sample size nor uniform control as architecture and prior scale vary.
 
-This supports [Daniel Murfet's point](https://www.lesswrong.com/posts/ALJYj4PpkqyseL7kZ/my-criticism-of-singular-learning-theory?commentId=KYT7aPu5LhktFQ6LR): relating generalization to these quantities is a nontrivial reduction. His full comment also explicitly flags asymptotic applicability and the Bayesian-posterior versus SGD distinction, and does not claim that the good behavior of neural networks on natural data has been explained. To obtain the particular sample theorem sought here, the reduction needs quantitative control of the coefficients **and of when the approximation becomes accurate**, uniformly over the growing problem parameters. The corresponding [local-posterior theorem](https://arxiv.org/abs/2308.12108v1) describes a restricted neighborhood; it does not establish that the global learner selects that neighborhood.
+[Daniel Murfet's comment](https://www.lesswrong.com/posts/ALJYj4PpkqyseL7kZ/my-criticism-of-singular-learning-theory?commentId=KYT7aPu5LhktFQ6LR) describes a reduction of generalization questions to understanding $L_0,\lambda,\nu$. Read as a claim about **finite-sample overparameterized generalization**, that reduction has not been supplied and those quantities are insufficient. Read as a claim about the **leading fixed-model asymptotic term**, it is correct and mathematically substantive. His full comment acknowledges asymptotic applicability and the separate gap between Bayesian posteriors and SGD. Those qualifications do not supply the missing finite-sample theorem. A [local-posterior expansion](https://arxiv.org/abs/2308.12108v1) also does not show that the global posterior selects the neighborhood being analyzed.
 
-**A concrete positive precedent matters.** For a realizable deep ReLU teacher with Gaussian observation noise and bounded input support, [Nagayasu–Watanabe (2023)](https://arxiv.org/pdf/2303.15739v3), Theorem 3.1, gives a free-energy bound
-
-$$
-\mathbb E[F_n]-nL_0\le \frac{P_T}{2}\log n+C_0,
-$$
-
-where $P_T$ counts teacher parameters, independently of additional learner width and depth, under their embedding and prior-support conditions. This is a genuine teacher-dependent result. However, the theorem does not bound $C_0$ uniformly in learner architecture and prior scale. The free-energy bound controls cumulative expected predictive excess log loss, hence its average over sample sizes. It cannot simply be differenced to bound the predictor at the final sample size; the paper explicitly makes its pointwise asymptotic conclusion conditional on an appropriate expansion. Thus it is relevant prior work, but not already our finite-sample all-width theorem.
-
-**Why the remainder can matter even with perfectly understood coefficients.** Consider the elementary model $Y_i\sim\mathcal N(\theta,1)$, true mean $1$, and prior $\theta\sim\mathcal N(0,1/a)$. At every fixed $a>0$, $\lambda=\nu=1/2$. Nevertheless, an exact calculation gives expected Gibbs excess log loss
+**Why prior scaling is more than a technical remainder issue.** Take observations from $\mathcal N(1,1)$, model $\mathcal N(\theta,1)$, and prior $\theta\sim\mathcal N(0,1/a)$. Every fixed prior precision $a>0$ has $\lambda=\nu=1/2$. Yet the exact expected Gibbs excess log loss is
 
 $$
 \mathbb E[G_n]-L_0=\frac{a^2+2n+a}{2(n+a)^2}.
 $$
 
-It is at least $1/8$ whenever $n\le a$, although its asymptotic leading term is always $1/n$. The prior precision $a$ can be arbitrarily large. Knowing the same small coefficients therefore permits arbitrarily delayed learning. This is already a regular one-parameter example, not a pathology specific to singular neural networks. The [comparison record](verification/slt-bounds-comparison-2026-10-19.md) gives the calculation.
+This is at least $1/8$ for every $n\le a$, although its asymptotic leading term is always $1/n$. Thus the same coefficients allow arbitrarily delayed learning. Calling the prior-dependent contribution “lower order” describes a limit with $a$ fixed; it says little when $a$ is large relative to the available data.
 
-The useful comparison is therefore:
+There is a stronger version: smooth positive priors can agree exactly near the truth, with identical local asymptotic constants, while their useful neighborhoods shrink and learning is arbitrarily delayed. The [review record](verification/slt-bounds-comparison-2026-10-19.md#identical-local-information-does-not-give-a-uniform-sample-threshold) gives a construction. Quantitative neighborhood radii and masses detect this problem; local asymptotic invariants alone do not. We therefore do not need to establish a polynomial-versus-exponential parity separation for a smooth likelihood to demonstrate the failure of the proposed finite-sample reduction.
 
-| Approach | What it controls | Where it is especially useful |
+**Do finite-sample SLT-based bounds exist at all?** It would be too broad to say none exist. For example, [Wang–Yang (2026)](https://arxiv.org/abs/2604.17219), Theorem 5, gives a high-probability PAC-Bayes bound involving the full population integral $\int e^{-c n R(w)}\pi(dw)$ under a moment condition. Replacing that integral by an SLT expression introduces an uncontrolled additive constant. Their neural-network specialization does not quantify that constant uniformly in width. This is useful additional finite-sample analysis, but it does not make the local coefficients sufficient.
+
+**A teacher-sized leading term can hide a parameter-sized volume cost.** [Nagayasu–Watanabe (2023)](https://arxiv.org/pdf/2303.15739v3), Theorem 3.1, gives a free-energy upper bound for a realizable Gaussian-noise ReLU teacher on bounded input support, under their embedding and prior-support conditions. Its coefficient of $\log n$ is half the teacher parameter count; its additive constant is not controlled uniformly in learner architecture. In their concrete neighborhood construction, all incoming weights to redundant neurons in an internal layer have specified negative signs. Under independent centered Gaussian priors, for learner width $N$ and active teacher width $C$, that sign event alone costs at least
+
+$$
+-\log\pi(\text{neighborhood})\ge (N-C)N\log 2.
+$$
+
+That particular certificate therefore retains a quadratic width cost, regardless of the Gaussian variances. A teacher-sized asymptotic coefficient does not remove it. This is a limitation of that construction, **not** a lower bound on the learner or on every possible SLT-inspired proof. Moreover, a cumulative predictive-loss bound cannot simply be differenced to bound the final predictor.
+
+**Can an explicit finite-volume argument nevertheless beat parameter counting under a standard prior? Yes.** Inspired by the local-volume question in Claude's reports, the [supporting note](works-in-progress/slt-finite-sample/README.md) gives a direct calculation for tanh networks with the standard independent Gaussian fan-in prior: variance $1/(d+1)$ in the first layer and $1/N$ in subsequent layers, including the readout. The likelihood is Gaussian with fixed variance.
+
+A teacher has hidden width $C\le N$, depth $L$, and weights bounded by $B$. Place a Gaussian comparison distribution around its zero-padded implementation. Only the weights **entering the teacher's neurons**, and the readout, need smaller variances. There are
+
+$$
+Q=C(d+1)+(L-2)CN+N
+$$
+
+such coordinates. The other hidden weights retain their prior distribution; bounded tanh activations control their influence. Both the teacher's mean-shift cost and this variance-shrinkage cost are linear in $N$ at fixed teacher resources. The resulting **nonasymptotic final-posterior** guarantee needs $O(N)$ samples for fixed accuracy and confidence. It applies to clean real-valued teacher outputs under the chosen Gaussian likelihood, and ensures greater than $2/3$ posterior probability of an accurate latent output on most test inputs. The explicit bound is polynomial in depth as well, while retaining its learner-width dependence. For genuinely Gaussian-noisy observations, the note also proves an expected averaged-predictive log-loss bound with the same width scaling.
+
+For $L\ge3$, the full parameter count is
+
+$$
+P_N=N(d+1)+(L-2)N^2+N.
+$$
+
+Consequently there are regimes where this certificate is useful with far fewer samples than parameters. This answers the existence question positively for a conventional prior scaling. It does **not** establish practical numerical sharpness, or a theorem uniform over arbitrarily large width at fixed sample size. These are explicit variational calculations, not consequences of $\lambda,\nu$ alone; the note has independent AI-agent mathematical checks but is not Lean verified.
+
+**Which bounds are useful where?**
+
+| Bound | What must be controlled | Relevant regime and limitation |
 |---|---|---|
-| Whole-class VC/PAC bounds | Finite-sample error uniformly over a hypothesis class, with complexity measured by its VC dimension or related capacity. | Modest learner capacity; guarantees for many learning algorithms without specifying a Bayesian prior. |
-| SLT asymptotics | Leading expected predictive or Gibbs log loss through effective learning coefficients, rather than raw parameter count. | Fixed models in a quantitatively or empirically justified asymptotic regime; singular geometry, model comparison, and finer learning-curve predictions. |
-| Finite-sample Bayesian prior-mass or variational bounds | Evidence, cumulative predictive loss, or posterior risk, depending on the theorem and its conversion. | Explicit good neighborhoods or comparison distributions; often useful before a deepest-singularity asymptotic approximation is accurate. |
-| Our NNBayes upper bounds | High-probability control of the posterior at the stated sample size, polynomial in bounded-weight teacher resources at fixed depth, independently of learner width. | A small teacher inside an arbitrarily wider learner, under the particular prior, likelihood, and limit conventions proved here. |
+| Parameter-counting PAC bounds | Capacity of the whole learner class, with activation-dependent factors. | Often useful for a modest-size learner; typically uninformative when that capacity greatly exceeds sample size. |
+| Standard SLT expansions | Local coefficients **and a justified asymptotic regime**. | Describe leading learning curves at fixed model and prior; do not alone certify finite-sample error. |
+| Quantitative prior-mass or variational bounds | The full cost of a good neighborhood or comparison distribution. | Can work with many more parameters than samples; width and prior-scale costs must actually be calculated. |
+| This collection's all-width NNBayes upper bounds | Teacher resources and the specified prior, likelihood, and limit conventions. | Polynomial teacher-complexity bounds at fixed depth, independent of arbitrarily larger learner width; generally unoptimized constants. |
 
-For scale, a standard realizable VC argument gives a sufficient sample size of order
+Having fewer samples than parameters does not invalidate every classical bound. Norm, margin, compression, and PAC-Bayes bounds can use other complexity measures; for example, [spectral norm and margin bounds](https://arxiv.org/abs/1706.08498). Nor is a fixed finite Boolean domain a useful way to separate bounds indefinitely as width grows: its finite support supplies another capacity ceiling. The positive comparison above also permits continuous inputs.
 
-$$
-\frac{v\log(1/\varepsilon)+\log(1/\delta)}{\varepsilon},
-$$
-
-where $v$ is the learner class's VC dimension. Architecture bounds on $v$ commonly grow with learner parameter count, with activation-dependent factors; one should not identify $v$ with parameter count for every network. For example, the familiar $O(PL\log P)$ bound is for [piecewise-linear networks](https://jmlr.org/papers/volume20/17-612/17-612.pdf), not a tanh theorem. Having fewer samples than parameters is not itself proof that every classical bound is vacuous. When learner width is near teacher width, capacity bounds can be sharper and simpler than our large, unoptimized polynomials. Our advantage is the stated independence from arbitrarily large learner width, not a claim to the best numerical bound in every regime.
-
-Nor does all classical theory count parameters: [norm and margin bounds](https://arxiv.org/abs/1706.08498), compression, description-length arguments, and PAC-Bayes can exploit other notions of complexity. A separate task is to prove that the **specified neural posterior** puts its mass on predictors meeting the needed complexity condition. Showing that a small teacher exists does not alone establish that fact. This is a central ingredient of our positive proofs.
-
-**The parity and small-circuit examples illustrate an intermediate case.** Claude's research reports, reviewed for this comparison, construct explicit finite-sample certificates from neighborhoods of small tanh implementations. For a one-hidden-layer teacher with $C$ units inside width $N$, their logarithmic certificate coefficient is $(C(d+1)+N)/2$, rather than half the full learner parameter count. This improves on confining every parameter, but retains a learner-width cost. Their main guarantees concern online mistakes or an averaged predictive distribution over training stages; they do not claim our final-posterior guarantee. Their priors and likelihood scales also differ. These are useful Bayesian variational arguments; calling them “SLT-style” does not make them consequences of $\lambda/n$ alone. The [review record](verification/slt-bounds-comparison-2026-10-19.md) distinguishes these constructive claims from the reports' heuristic phase-model comparisons. Those comparisons do not prove that SLT fails to explain parity learning.
-
-An SLT expansion at fixed architecture as $n\to\infty$ also does not contradict an exponential parity sample lower bound in a width-first regime. The prior, likelihood, prediction rule, and dependence on dimension and width have to match before those claims can be compared.
-
-Finally, different loss conventions can often be reconciled. For deterministic labels and predictive correct-label probability $p_f(x)$,
-
-$$
-D\lbrace p_f\le2/3\rbrace
-\le \frac{\mathbb E_x[-\log p_f(x)]}{\log(3/2)}.
-$$
-
-Thus a suitable log-loss theorem can imply a confidence guarantee. But predictive probabilities and posterior latent-sign probabilities are different, realizability must be checked, and an expectation bound does not automatically give logarithmic dependence on training failure probability. In particular, using a Gaussian likelihood on clean labels, as in the preceding section, does not make the observations a well-specified noisy Gaussian model. Our results also leave substantial questions open: noisy and misspecified learning, sharper polynomial degrees, general depth dependence, and the connection to SGD. SLT can be more informative on some of these questions without already proving our particular sample bounds.
+Our assessment is that **finite-sample generalization cannot in general be reduced to the usual local SLT quantities**, and the cited asymptotic results do not establish our all-width learning guarantees. But neither an unavoidable failure of all finite-volume arguments at large width nor a claim that reasonable priors never allow useful overparameterized bounds is supported. What remains to understand is which prior scalings allow sufficiently cheap good-function neighborhoods, and when that yields a teacher-complexity guarantee independent of learner width. Width-first parity lower bounds, finite-width guarantees with sample size growing with width, and fixed-model large-sample asymptotics address different limits.
 
 ## 25. What other questions matter before interpreting this as an explanation of practical deep learning?
 
