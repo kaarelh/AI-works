@@ -2,6 +2,12 @@
 
 **PASS — 18 October 2026.** All **five exact main learning theorems**, the parity supplement, and the aggregate axiom audit pass in an independent project-source rebuild. The new result is the polynomial-depth generalization theorem under a robustness restriction.
 
+## Independent full-source rebuild, 19 October 2026
+
+During the [collection review of 19 October](../verification/review-2026-10-19.md), the project was rebuilt from a fresh checkout with the pinned Lean 4.32.0 release and mathlib revision `81a5d257c8e410db227a6665ed08f64fea08e997`. No mathlib cache was used, so every imported mathlib module was also compiled from source. The build succeeded, and `Audit.lean` (7,202 declarations, 5 / 5 main results), `CheckMain.lean`, `CheckParity.lean`, and `CheckRobust.lean` all pass. The Lean library sources are unchanged from the snapshot recorded below.
+
+The same run checks a new supplement, [CheckConfidence.lean](CheckConfidence.lean). It proves the strict `>2/3` confidence versions of the strong-prior and gamma > 1 theorems as closed corollaries, using only the standard axioms. Like `CheckParity.lean`, it is not imported by the library. Outputs and environment details are in [review/verification/review-2026-10-19/gates.txt](review/verification/review-2026-10-19/gates.txt).
+
 ## Current exact proof targets
 
 | Proposition | Closed theorem |

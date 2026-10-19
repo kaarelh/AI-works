@@ -10,7 +10,7 @@ If a Boolean target has a small bounded-weight neural-network implementation, th
 
 ## Formal main theorem
 
-The main learning statement is proved by [`MainProofs.aboveMeanField`](../../lean/NeuralGeneralization/AboveMeanFieldMain.lean). See the [Lean verification record](../../lean/VERIFICATION.md) for reproduction and the precise scope; this does not claim that every auxiliary assertion in the PDF is formalized.
+The main learning statement is proved by [`MainProofs.aboveMeanField`](../../lean/NeuralGeneralization/AboveMeanFieldMain.lean). Its strict `>2/3` confidence version is the closed corollary `aboveMeanFieldConfidence` in [CheckConfidence.lean](../../lean/CheckConfidence.lean). See the [Lean verification record](../../lean/VERIFICATION.md) for reproduction and the precise scope; this does not claim that every auxiliary assertion in the PDF is formalized.
 
 ## Build
 

@@ -35,9 +35,9 @@ defines exact noiseless conditioning, posterior risk, confidence failure, and
 the finite IID sample distribution. Prediction succeeds when the correct-label
 posterior probability is **strictly greater than 2/3**; equality counts as
 failure. The mean-field and subcritical statements use this criterion directly.
-The strong-prior and gamma > 1 statements bound posterior average error; the
-confidence version follows by applying them at accuracy `epsilon/3` with
-`ModelLearning.network_confidenceFailure_le_three_risk`. Prediction is not
+The strong-prior and gamma > 1 statements bound posterior average error; their
+confidence versions, obtained by applying them at accuracy `epsilon/3`, are
+closed theorems in [CheckConfidence.lean](CheckConfidence.lean). Prediction is not
 defined by the sign of the posterior mean.
 
 The strong-prior result fixes width before taking the variance small. Its
@@ -110,6 +110,7 @@ lake env lean Audit.lean
 lake env lean CheckMain.lean
 lake env lean CheckParity.lean
 lake env lean CheckRobust.lean
+lake env lean CheckConfidence.lean
 ```
 
 The cache command is optional. Without access to the official cache, Lake can

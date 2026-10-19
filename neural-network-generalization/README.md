@@ -10,7 +10,7 @@ Every paper has a PDF, editable LaTeX source, and a build script. The collection
 
 ## Lean verification
 
-All five main learning statements have closed Lean proofs. The earlier four concern the original Gaussian model and its all-input margin convention; the stated strict `>2/3` confidence guarantees are included or follow from the checked risk-to-confidence conversion. The subcritical theorem covers **all gamma < 1, including gamma = 0 and gamma < 0**. A polynomial version of the parity-network appendix is also formalized, with bounded-weight complexity at most `32*(d+1)^2` at every depth; the appendix's sharper weights are not formalized.
+All five main learning statements have closed Lean proofs. The earlier four concern the original Gaussian model and its all-input margin convention; the stated strict `>2/3` confidence guarantees are part of the mean-field, subcritical, and robust statements, and are closed corollaries of the strong-prior and gamma > 1 statements in [CheckConfidence.lean](lean/CheckConfidence.lean). The subcritical theorem covers **all gamma < 1, including gamma = 0 and gamma < 0**. A polynomial version of the parity-network appendix is also formalized, with bounded-weight complexity at most `32*(d+1)^2` at every depth; the appendix's sharper weights are not formalized.
 
 [Lean project and instructions](lean/) · [Exact statements](lean/NeuralGeneralization/Statements.lean) · [Verification record](lean/VERIFICATION.md) · [Coverage and auxiliary exclusions](lean/review/formal-coverage-inventory.txt)
 
