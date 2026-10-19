@@ -219,7 +219,7 @@ The [Gaussian-conditioning paper](side-results/subcritical-gaussian-conditioning
 
 Thus the moderate-deviation intuition was useful and partly correct. The stronger claim “the whole posterior is just a Gaussian conditioned on the observations throughout $\gamma<1$” is false. The exponential parity lower bound survives because it controls all the relevant minimizers, rather than choosing Gaussian mixture weights among ties.
 
-## 11. How close are we to a $d^{\Omega(k)}$ sparse-XOR lower bound?
+## 11. For $\gamma<1$, how close are we to a $d^{\Omega(k)}$ lower bound on the sample complexity of sparse XOR?
 
 Let $k$ be the parity size and $d$ the ambient dimension. The natural scale is
 
