@@ -1,6 +1,6 @@
 # Independent check of the beyond-parity note
 
-19 October 2026. The [note](../README.md) and its [FAQ question](../../../TECHNICAL-FAQ.md#is-the-bad-sample-complexity-specific-to-parity) were checked in two rounds by AI agents that had not written them. Each reviewer read the cited lemmas in the subcritical paper's source rather than the note's paraphrases. The reviews are AI checks, not human review.
+19 October 2026. The [note](../README.md) and its [FAQ question](../../../TECHNICAL-FAQ.md#is-the-bad-sample-complexity-specific-to-parity) were checked in three rounds by AI agents that had not written them. Each reviewer read the cited lemmas in the subcritical paper's source rather than the note's paraphrases. The reviews are AI checks, not human review.
 
 ## Round 1
 
@@ -15,11 +15,11 @@
 - the leap definition, the greedy closure, and the Fourier argument of Proposition 7, together with $\mathrm{err}_r\le W^{>r}$;
 - the parity-specific lemma list and the restriction-parity examples in Section 6.
 
-Its other findings were a status claim, overstatements, and small gaps. Two of the gaps were incorrect as written: the $0<\gamma<1$ limit statement assumed that tie weights converge, and the $\gamma\le0$ upper bound omitted a $\ln(1/\varepsilon)$ term. The most substantive was a missed result: a fixed-degree **$\gamma=0$ analogue** follows from the paper's denominator, quadratic-entropy, and amplitude lemmas. It is now Proposition 4′.
+The two incorrect upper-bound statements were these: the $0<\gamma<1$ limit statement assumed that tie weights converge, and the $\gamma\le0$ upper bound omitted a $\ln(1/\varepsilon)$ term. Its other findings were a status claim, overstatements, and small gaps. The most substantive was a missed result: a fixed-degree **$\gamma=0$ analogue** follows from the paper's denominator, quadratic-entropy, and amplitude lemmas. It is now Proposition 4′.
 
 **Numbers, code, and citations.** A second agent reran every section of the check script; its output matched the recorded output line for line. It recomputed the sign-GP table from the raw rows. It reviewed the Krawtchouk, leap, linear-programming, and exhaustive-search code. It checked the HMC sampler against 4-million-draw rejection sampling at $n=4$, and the Rao–Blackwellized predictor. It found no substantive error. Most citations were confirmed from abstracts and proceedings pages; full texts could not be fetched. Three were only partly confirmed:
 
-- Hsu's $(1-\varepsilon)\binom dk$ bound, seen only through a citing paper;
+- Hsu's $(1-\varepsilon)\binom dk$ bound, seen only through its abstract and a citing paper;
 - the exact form of the Simon et al. parity bound, which the note already qualifies with "about";
 - the final form of Maurer's bound: its moment bound for $n\ge8$ was confirmed, and the stated $\mathrm{kl}$ bound is its standard consequence.
 
@@ -91,3 +91,22 @@ Two were auditors. One checked every round-1 finding against the revised text an
   - The summary's exponential-bound sentence no longer states a necessity, and its halfspace sentence is now a separate bullet.
 
 The reviewers worked from abstracts and search summaries for the literature; full texts could not be fetched in this environment.
+
+## Round 3
+
+Two more agents read the final text: one for mathematics and claims, one for consistency, numbers, references, and rendering. The mathematics reader confirmed the arguments of Propositions 1–5, 4′ and 7 as stated, the exponents in Corollary 6, and the sparse-parity remark. It found:
+
+- **One false sentence in the FAQ.** It said parity is not far from threshold functions of slowly growing degree. Parity is far from threshold functions of degree $o(\sqrt d)$; the intended contrast was with linear degree. The sentence was corrected.
+- **"Never reach 1/3" was too strong.** The note and FAQ said the $\gamma\ge0$ junta bounds never reach the $1/3$ confidence threshold. That holds only for the halved form stated in Corollary 6. The sharper form $\mathrm{err}_{\kappa-2}(f)-o(1)$ gives confidence failure whenever $\mathrm{err}_{\kappa-2}(f)>1/3$. For $\mathrm{MAJ}(x_1x_2,x_3x_4,x_5x_6)$, with $\mathrm{err}_1=11/32$, that is at least $1/64-o(1)$. Both texts now say this, and the check script records the mixed-integer computation of $\mathrm{err}_1$ (section 7).
+- **Smaller points.**
+  - The FAQ's Question 11 sentence now states the restriction $c\le1/2$.
+  - The FAQ's leap-transfer sentence now names the regime of each conclusion.
+  - The $n=0$ remark in Corollary 6 now applies only to $\gamma=0$; Proposition 4 covers $n=0$ through the constant comparator.
+
+The consistency reader found the following:
+
+- **A missing output file.** The check-script output had been saved under a name matched by the project's ignore rules, so it was never committed. It is now `check_beyond_parity.txt`.
+- **An unrecorded computation.** The minimum-norm figures in Section 7 had no recorded source. The check script now computes them exactly, by least-distance programming with a matching dual bound (section 6).
+- **Stale checksums.** `SHA256SUMS` had not been regenerated. It was regenerated for publication.
+- **Wording.** It found several wording mismatches, now fixed, and confirmed every number, label, link, anchor, and rendering hazard it checked.
+

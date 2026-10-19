@@ -20,7 +20,7 @@ Requires numpy, scipy (HiGHS linear programming) and mpmath.
    while its sign is learned, and a leap-1 target of threshold degree 3 is slower
    than three-bit parity.
 
-Usage: python3 check_beyond_parity.py [section numbers]; with no arguments all run.
+Usage: python3 check_beyond_parity.py [section numbers]; with no arguments all run.\nThe recorded output is check_beyond_parity.txt.
 """
 import itertools
 import math
@@ -282,8 +282,72 @@ def check_regression(d=12, L=2, seeds=4):
             f"{k}: {np.mean([a for a, _ in v]):.3f} / {np.mean([b for _, b in v]):.3f}" for k, v in acc.items()))
 
 
+# ---------------------------------------------------------------- 6. minimum norm
+def min_kernel_norm(f, k, lam, maxdeg):
+    """min sum_U c_U^2 / lam_|U| over c with f(x) sum_U c_U chi_U(x) >= 1 on the k-cube.
+    With c_U = sqrt(lam_|U|) u_U this is a least-distance problem, min |u|^2 subject to B u >= 1,
+    solved exactly by nonnegative least squares (Lawson and Hanson, Solving Least Squares
+    Problems, ch. 23). Returns the minimum and a matching lower bound from the dual."""
+    from scipy.optimize import nnls
+    X = cube(k)
+    mons = monomials(k, maxdeg)
+    Phi = np.array([[np.prod(x[list(U)]) for U in mons] for x in X])
+    B = (f[:, None] * Phi) * np.sqrt(np.array([lam[len(U)] for U in mons]))[None, :]
+    E = np.vstack([B.T, np.ones((1, len(X)))])
+    rhs = np.zeros(E.shape[0])
+    rhs[-1] = 1.0
+    mu, _ = nnls(E, rhs, maxiter=100000)
+    res = E @ mu - rhs
+    u = -res[:-1] / res[-1]
+    assert np.min(B @ u) > 1 - 1e-9, "primal infeasible"
+    primal = float(u @ u)
+    nu = mu * (2 / -res[-1]) * primal / 2  # rescaled multipliers; any nu >= 0 gives a lower bound
+    t = (nu.sum()) / (0.5 * (B.T @ nu) @ (B.T @ nu))  # best scaling of nu in the dual
+    dual = float(t * nu.sum() - 0.25 * t * t * (B.T @ nu) @ (B.T @ nu))
+    return primal, dual
+
+
+def check_min_norm():
+    print("6. Least ||p||_K^2 with f p >= 1, f = x4 ? x1x2x3 : MAJ3, L=2, in units of 1/lambda_3")
+    print("   (primal value; the dual lower bound is checked to agree)")
+    X = cube(4)
+    f = np.where(X[:, 3] == 1, X[:, 0] * X[:, 1] * X[:, 2], np.sign(X[:, :3].sum(1)))
+    for d in (12, 20, 40, 80, 160):
+        lam = walsh_eigenvalues(d, 2)
+        rel = [float(lam[j] / lam[3]) for j in range(5)]  # eigenvalues in units of lambda_3
+        row = []
+        for maxdeg in (3, 4):
+            primal, dual = min_kernel_norm(f, 4, rel, maxdeg)
+            assert abs(primal - dual) <= 1e-6 * primal, (primal, dual)
+            row.append(primal)
+        print(f"   d={d:4d}: degree <= 3: {row[0]:.3f}   degree <= 4: {row[1]:.3f}")
+
+
+# ---------------------------------------------------------------- 7. MILP
+def check_far_junta():
+    from scipy.optimize import milp, LinearConstraint, Bounds
+    print("7. err_1 of MAJ(x1x2, x3x4, x5x6) by mixed-integer programming")
+    X = cube(6)
+    y = X[:, 0::2] * X[:, 1::2]
+    f = np.sign(y.sum(1))
+    t = threshold_degree(f, 6)
+    Phi = features(6, 1)
+    P, N, Cb = Phi.shape[1], len(X), 1000.0
+    M = 1.0 + Cb * P
+    cons = LinearConstraint(np.hstack([f[:, None] * Phi, M * np.eye(N)]), lb=np.ones(N), ub=np.inf)
+    res = milp(np.concatenate([np.zeros(P), np.ones(N)]), constraints=[cons],
+               integrality=np.concatenate([np.zeros(P), np.ones(N)]),
+               bounds=Bounds(np.concatenate([-Cb * np.ones(P), np.zeros(N)]),
+                             np.concatenate([Cb * np.ones(P), np.ones(N)])))
+    m = int(round(res.fun))
+    keep = np.array([i for i in range(N) if res.x[P + i] < 0.5])
+    assert ptf_feasible(f, 6, 1, keep)
+    print(f"   threshold degree {t}; minimum disagreements {m}/64 (status {res.status}, coefficients bounded by 1000);"
+          f" exceeds 1/3: {m / 64 > 1 / 3}")
+
+
 if __name__ == "__main__":
-    which = sys.argv[1:] or ["1", "2", "3", "4", "5"]
+    which = sys.argv[1:] or ["1", "2", "3", "4", "5", "6", "7"]
     if "1" in which:
         check_spectrum()
     if "2" in which:
@@ -294,3 +358,7 @@ if __name__ == "__main__":
         check_census()
     if "5" in which:
         check_regression()
+    if "6" in which:
+        check_min_norm()
+    if "7" in which:
+        check_far_junta()
