@@ -1,6 +1,6 @@
 # Technical FAQ: Bayesian neural-network generalization
 
-This FAQ explains what the current results say, which assumptions matter, and where we expect extensions. It is intended for readers considering this research program, including readers of the original [Vaintrob–Hänni slides](https://kaarelh.github.io/ai/nnbayes-generalization.pdf). It is a research snapshot, not a claim that the open questions below have been resolved.
+This FAQ explains what the current results say, which assumptions matter, where we expect extensions, and what the main open problems are.
 
 **Status labels:** **Proved** means that the linked manuscript contains a proof under its stated assumptions. **Extension suggested by the proof** means that we have identified a plausible adaptation but are not citing a completed theorem. **Heuristic** is an informed expectation. **Open** means that the available results do not settle the question. Machine verification is a separate issue; see the final question.
 
