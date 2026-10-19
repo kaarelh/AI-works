@@ -1,6 +1,6 @@
 # Bayesian neural-network generalization
 
-Papers and notes by Dmitry Vaintrob, Kaarel Hänni, and OpenAI Codex (credited as ChatGPT in the earliest manuscripts). Public research snapshot, updated 19 October 2026.
+Papers and notes by Dmitry Vaintrob, Kaarel Hänni, and OpenAI Codex, with contributions from Claude. Public research snapshot, updated 19 October 2026.
 
 **Start here:** [main results](#main-results) · [technical FAQ: assumptions, interpretation, and open problems](TECHNICAL-FAQ.md) · [Lean verification](lean/VERIFICATION.md) · [recent depth research](#recent-depth-research)
 

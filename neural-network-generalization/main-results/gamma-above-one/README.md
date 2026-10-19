@@ -2,6 +2,8 @@
 
 **Status:** Main result
 
+**Authors:** Dmitry Vaintrob, Kaarel Hänni, OpenAI Codex, and Claude.
+
 If a Boolean target has a small bounded-weight neural-network implementation, the Bayesian learner needs polynomially many examples even when its own width is arbitrarily larger. For every fixed gamma > 1 and fixed depth, the bound holds at every width N >= C_L(f), at the specified nonzero Gaussian variance. The model uses bounded Lipschitz hidden activations, a linear readout, and global margin conditioning. The polynomial degree may depend on depth; this is not a polynomial-depth bound.
 
 [Paper (PDF)](paper.pdf) · [LaTeX source](source/gamma-above-one.tex) · [Collection index](../../README.md)

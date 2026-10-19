@@ -2,6 +2,8 @@
 
 **Status:** Earlier supporting research report; superseded in part
 
+**Authors:** OpenAI Codex and Claude.
+
 Second investigation, including numerical-output stability, localized/trusted-region variants, diagonal-metric exploration, unrestricted structured-target results, critical-rate constructions, and earlier empirical findings. Preserved as a supporting report, with the newer standalone papers preferred for current statements.
 
 [Paper (PDF)](paper.pdf) · [LaTeX source](source/report.tex) · [Collection index](../../../README.md)

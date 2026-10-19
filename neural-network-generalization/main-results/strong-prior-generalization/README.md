@@ -2,6 +2,8 @@
 
 **Status:** Main result
 
+**Authors:** Dmitry Vaintrob, Kaarel Hänni, ChatGPT, and Claude.
+
 A self-contained proof that a Bayesian neural network can learn a target with a small bounded-weight implementation even when the learner is arbitrarily wide. At fixed depth, the sample bound is polynomial in the input dimension and target complexity, uniformly over every learner width `N >= C_L(f)`. The Gaussian variance tends to zero separately at each fixed width.
 
 The proof develops the original strong-prior slides: a Gaussian rate calculation orders functions by minimum weighted norm, while cloning and compression relate that norm to implementation complexity. The bound is polynomial at fixed depth; it does not give polynomial dependence on depth or a width-independent variance threshold.

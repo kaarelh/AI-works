@@ -2,6 +2,8 @@
 
 **Status:** Main result; public research draft
 
+**Authors:** Dmitry Vaintrob, Kaarel Hänni, OpenAI Codex, and Claude.
+
 Can Bayesian neural networks learn small circuits with sample complexity polynomial in circuit width and depth? This paper proves such a bound after restricting the Gaussian prior to networks whose clipped predictions are stable under calibrated internal perturbations. One polynomial works jointly in input dimension, layered Boolean-circuit width, learner depth, robustness calibration, and statistical parameters, simultaneously at every learner width above circuit width and every Gaussian scale in the stated family, including all $\gamma\ge1$. The full joint polynomial result without this additional restriction remains open.
 
 The paper defines the learning setup and restriction before stating the theorem, then gives the statistical proof and robust target construction. Certificates, variants, and detailed experiments are collected in appendices. Training requires signed output above $1/2$; test error is measured at margin $1/4$, which also controls sign error. No global clean-output margin is assumed.

@@ -2,6 +2,8 @@
 
 **Status:** Earlier supporting research report; superseded in part
 
+**Authors:** OpenAI Codex and Claude.
+
 First depth investigation: robust compression, calibrated internal margins, input-Lipschitz counterexamples, simple Gaussian targets, and early experiments. Later standalone papers refine its conventions and results; this historical report is not an additional main result.
 
 [Paper (PDF)](paper.pdf) · [LaTeX source](source/report.tex) · [Collection index](../../../README.md)
