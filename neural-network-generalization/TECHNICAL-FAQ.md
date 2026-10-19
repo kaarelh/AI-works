@@ -181,14 +181,14 @@ In contrast, the usual nondegenerate tanh NNGP scaling is $(0,1,\ldots,1,1)$. Al
 
 **Why isn't that a proof?** For several inputs at once, prescribing preactivations $u$ from an incoming feature matrix $A$ costs $u^\top(AA^\top)^+u/(2\sigma^2)$, when feasible. The full Gram matrix controls which computations are possible and affordable. Scalar prices miss its rank and conditioning, representation entropy, and changes in earlier features induced by later labels. Collapsing, saturating, and unequal-depth representations are also legitimate possibilities for the actual prior. [Appendix I of the audit](side-results/strong-prior-appendix-audit/paper.pdf) explains these gaps. The heuristic is useful, but its standing assumption excludes part of the space we want to understand.
 
-For bookkeeping outside that assumption, let typical *unconditioned* hidden activation variance scale as $N^{-b_s}$. For fixed-depth tanh networks the amplitude heuristic is
+For bookkeeping outside that assumption, let typical *unconditioned* hidden activation variance scale as $N^{-h_s}$. For fixed-depth tanh networks the amplitude heuristic is
 
 $$
-b_1\approx\max\lbrace a_1,0\rbrace ,\qquad
-b_s\approx\max\lbrace a_s+b_{s-1}-1,0\rbrace ,
+h_1\approx\max\lbrace a_1,0\rbrace ,\qquad
+h_s\approx\max\lbrace a_s+h_{s-1}-1,0\rbrace ,
 $$
 
-and output variance has scale $N^{1-a_L-b_{L-1}}$. A negative value before taking a maximum indicates diverging preactivations and saturation. This recursion helps locate possible linear or saturated layers; it does not determine what rare conditioning selects.
+and output variance has scale $N^{1-a_L-h_{L-1}}$. A negative value before taking a maximum indicates diverging preactivations and saturation. This recursion helps locate possible linear or saturated layers; it does not determine what rare conditioning selects.
 
 **Do we still expect just circuit learning versus exponential sample complexity?** Those remain useful broad possibilities, but I would not currently conjecture an exhaustive two-way classification of *all* tuples. In particular, a different prior mechanism need not imply a different sample-complexity outcome. Here are concrete predictions, with their status:
 
@@ -196,7 +196,7 @@ and output variance has scale $N^{1-a_L-b_{L-1}}$. A negative value before takin
 |---|---|
 | $a_1\le0$, every internal $a_s\le1$, and $a_L<2$ | **Conjectured frozen-feature region.** Hidden activations remain order one, possibly saturated. With a nondegenerate limiting kernel and empirical-kernel deviations costing order $N$, forcing margins costs only $N^{a_L-1}=o(N)$ when $1<a_L<2$. Thus conditioning should leave the leading kernel fixed. Exponential parity sample bounds are plausible but still require a spectrum and posterior-confidence argument for these kernels. |
 | Exact fan-in hidden scaling $(0,1,\ldots,1,a_L)$ with $a_L\ge2$ | **Conjectured circuit-learning side.** The endpoint $a_L=2$ is proved in our critical results. For $a_L>2$, changing features can be cheaper than forcing the output through fixed features; I expect positive learning results, but output-dominated saturation and subleading costs need analysis. This does not assert the same circuit-prior ordering at every exponent. |
-| One hidden layer: $(a_1,a_L)=(a,b)$ with $a>0$ and $a\le b\le a+2$ | **Tentative larger circuit-learning region.** Using $M=N^{(b-a)/2}$ active neurons balances feature cost $MN^a$ against readout cost $N^b/M$. At $b=a+2$ this is the established balanced strong-prior family; the interior suggests that a smaller active population can suffice. A construction alone does not control the remaining neurons or the posterior. |
+| One hidden layer: $(a_1,a_L)=(a,b)$ with $a>0$ and $a\le b\le a+2$ | **Tentative larger circuit-learning region.** Using $M=N^{(b-a)/2}$ active neurons balances feature cost $MN^a$ against readout cost $N^b/M$. At $b=a+2$ (so $M=N$) this is the one-hidden-layer case of the established $\gamma=a+1>1$ family (main result 2). In the interior, the active block is itself a $\gamma'=(a+b)/(b-a)>1$ network at its own width $M$, which suggests that a smaller active population can suffice. A construction alone does not control the remaining neurons or the posterior. |
 | One hidden layer: $a>b>1$ | **Proved degree-based prior ordering; learning rate open.** The collapsing layer produces the threshold-degree hierarchy below. It is not a circuit-size prior, but it could still have exponential parity sample complexity. |
 
 In the frozen-feature prediction, $a_L<1$ gives a normalized GP with vanishing absolute margin, $a_L=1$ retains a fixed global margin, and $1<a_L<2$ gives a Gaussian minimum-energy description at leading order. The last statement does not determine posterior weights among tied minimizers. These distinctions already occur within the proposed hard-learning side.
