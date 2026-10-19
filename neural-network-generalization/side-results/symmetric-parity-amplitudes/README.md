@@ -2,7 +2,7 @@
 
 **Status:** Proved side result
 
-Proves exponential L1 amplitude growth for symmetric margin-one parity approximants of sufficiently small linear degree, and diverging repair costs in the stated cusp model. Symmetric or block-symmetric sign assumptions are explicit; no general posterior reduction is proved.
+Proves L1 amplitude growth exp(c sqrt k), exponential in sqrt k, for symmetric margin-one parity approximants of sufficiently small linear degree, and diverging repair costs in the stated cusp model. Symmetric or block-symmetric sign assumptions are explicit; no general posterior reduction is proved.
 
 [Paper (PDF)](paper.pdf) · [LaTeX source](source/symmetric-parity-amplitudes.tex) · [Collection index](../../README.md)
 
