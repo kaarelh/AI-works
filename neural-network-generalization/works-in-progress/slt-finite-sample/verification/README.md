@@ -20,3 +20,20 @@ One Codex agent developed the Gaussian comparison distribution. The parent indep
 The result uses bounded tanh hidden activations, a bounded-weight teacher at the learner depth, the stated independent Gaussian prior, and a fixed Gaussian likelihood. It does not assert exact interpolation or condition on a global margin. The clean-data theorem concerns posterior latent-output accuracy; the noisy variant concerns predictive densities. The O(N) sample cost is eventually smaller than the quadratic parameter count at fixed depth at least three, but is not uniform in arbitrarily large N. This does not establish practical numerical sharpness, superiority to all classical complexity bounds, or the behavior of typical SGD-trained networks.
 
 The main manuscripts, PDFs, and Lean sources are unchanged. The collection checker, local links, and file checksums are checked separately for publication.
+
+## Raw-prior-mass obstructions
+
+The [companion note](../PRIOR-MASS-OBSTRUCTIONS.md) adds conventional proofs concerning the cost of direct raw-prior and variational certificates. It does not assert new sample-complexity lower bounds and is not Lean verified.
+
+One agent independently derived the vanishing-scale, growing-scale, and binary-event entropy bounds. The coordinating reviewer derived the Gaussian Fourier variance-budget argument and the constant-target moment-generating-function bound; a second agent independently checked the Fourier argument and developed the complete one-hidden-layer power-scaling classification. The final proofs and FAQ scope were checked across these reviews.
+
+The checks cover:
+
+- The exact constant-target raw-mass and relative-entropy cost under Gaussian readout variance N to the power minus gamma minus one, for any input distribution and any bounded hidden-layer prior.
+- The extra anti-concentration assumption needed when output variance grows, and the distinction between qualitative convergence and a quantitative rate.
+- Parseval's variance budget, Gaussian coefficient tails, the comparison-distribution entropy bound, and transfer of closed output balls by Portmanteau at each fixed input dimension.
+- The uniform normalized fourth-moment estimate for tanh features, concentration of the conditional covariance, and Gaussian limits for vanishing, finite, and diverging first-layer scales.
+- The variance exponent for arbitrary deterministic input/readout power scalings, and the shallow threshold construction giving hard teachers of polynomially bounded width and weights.
+- The distinctions between raw and conditioned priors, real-output and sign accuracy, width cost and teacher-complexity cost, and certificate limitations versus actual learning behavior.
+
+In the balanced Gaussian case, dimension-independent scaling constants ensure that the limiting variance does not erase the exponential-in-dimension conclusion. This result does not classify general deep networks or establish a finite-width threshold uniform in growing input dimension.

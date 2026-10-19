@@ -699,7 +699,33 @@ Consequently there are regimes where this certificate is useful with far fewer s
 
 Having fewer samples than parameters does not invalidate every classical bound. Norm, margin, compression, and PAC-Bayes bounds can use other complexity measures; for example, [spectral norm and margin bounds](https://arxiv.org/abs/1706.08498). Nor is a fixed finite Boolean domain a useful way to separate bounds indefinitely as width grows: its finite support supplies another capacity ceiling. The positive comparison above also permits continuous inputs.
 
-The open question is which prior scalings give accurate predictors enough prior mass to obtain a sample bound polynomial in teacher resources and independent of learner width. Such a bound requires quantitative control at the sample sizes of interest. The linear-width certificate above, the parity lower bounds obtained by taking width to infinity before increasing sample size, and fixed-model large-sample asymptotics concern different limits.
+## Can prior scaling obstruct a width-independent log-prior bound?
+
+**Yes, for direct bounds based on the raw prior probability of accurately reproducing a prescribed real-valued function.** Such a bound pays a cost like $-\log\pi_N(G)$, where $G$ is a set of accurate predictors. A variational proof instead pays the relative entropy of an accurate comparison distribution. These costs can rule out a bound that is both independent of learner width and polynomial in teacher resources. The [supporting analysis](works-in-progress/slt-finite-sample/PRIOR-MASS-OBSTRUCTIONS.md) proves the following distinctions.
+
+**Shrinking output scale forces a width cost.** If the prior output tends to zero, its probability of approximating a fixed nonzero value tends to zero. In our Gaussian finite-exponent priors, bounded hidden activations and readout variance $N^{-\gamma-1}$ give a particularly strong statement. For any input distribution, approximating the constant function $1$ within root-mean-square error $\rho<1$ has raw prior cost at least
+
+$$
+-\log\pi_N\big(\lVert z_w-1\rVert_{L^2}\le\rho\big)
+\ge\frac{(1-\rho)^2}{2}N^\gamma.
+$$
+
+The same lower bound holds for the relative entropy of any comparison distribution whose expected squared prediction error is at most $\rho^2$. Thus allowing a broad comparison distribution does not remove this obstruction when $\gamma>0$.
+
+**Growing output scale also costs probability when a bounded amplitude is required.** For a centered Gaussian output of standard deviation $s_N\to\infty$, hitting a fixed bounded interval has probability $O(1/s_N)$ and hence a cost at least $\log s_N-O(1)$. The interval probability also tends to zero for Gaussian readout mixtures when their conditional variance diverges in probability; a quantitative rate requires quantitative concentration. Diverging unconditional variance alone is insufficient: rare large outputs can inflate variance while most prior mass remains at a useful scale.
+
+**An order-one Gaussian-process limit has a different obstruction: target complexity.** Suppose the raw function prior converges to a centered GP on the Boolean cube, with average output variance at most $V>0$, and that the limiting law is invariant under coordinate permutations. For every parity $\chi_S$ on $k$ coordinates and every $0<\rho<1$,
+
+$$
+-\log\Pr\big(\lVert F-\chi_S\rVert_{L^2}\le\rho\big)
+\ge\frac{(1-\rho)^2}{2V}\binom dk,
+$$
+
+where $L^2$ uses the uniform input distribution. The proof is a Fourier variance budget: the total variance of all parity coefficients is $V$, and the $\binom dk$ coefficients of a given degree have equal variance. Approximating a parity requires its coefficient to be close to one. When $V$ is bounded or grows at most polynomially in $d$, taking $k$ near $d/2$ gives an exponential log-prior cost, although parity has a small circuit and can be approximated by a shallow tanh teacher with polynomially bounded resources. Without permutation symmetry, a related argument still finds at least one hard parity. These are bounds on raw good-function mass, not posterior sample-complexity lower bounds.
+
+Output variance of order one **does not by itself imply a GP**. The Gaussian limit needs a separate argument about the architecture and coordinate laws. A structured mixture that first chooses a small circuit can have order-one output variance and a circuit prior. The supporting analysis proves a restricted classification for one hidden tanh layer with independent Gaussian weights and power-law variance scalings. For that family, direct raw-prior certificates incur either a width cost or a nonpolynomial teacher-complexity cost. It does not classify every deep architecture or scaling tuple.
+
+The distinction from the main learning theorems is essential. Sign-only predictions are unchanged by positive output rescaling, and conditioning the prior on global margins changes the probabilities being compared. A common amplitude penalty can cancel between numerator and denominator. Our positive results use additional structure, including relative prior costs, posterior concentration, and compression. A diverging raw log-prior penalty therefore does not contradict those theorems or prove that the actual learner needs more samples. For the Gaussian families covered by these obstructions, a successful width-independent, teacher-polynomial proof must use information beyond a direct raw-mass certificate.
 
 ## 25. What other questions matter before interpreting this as an explanation of practical deep learning?
 

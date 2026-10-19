@@ -8,6 +8,8 @@ A depth at least three tanh network with hidden width $N$ has order $N^2$ parame
 
 The [mathematical review](verification/README.md) records the independent checks. See the [FAQ comparison](../../TECHNICAL-FAQ.md#does-slt-already-give-comparable-generalization-bounds) and the separate [note on likelihood choices](../slt-likelihood/README.md).
 
+The companion [analysis of raw-prior costs](PRIOR-MASS-OBSTRUCTIONS.md) proves an obstruction to removing width dependence from direct prior-mass certificates: across all power scalings of a one-hidden-layer Gaussian tanh network, these costs either grow with width or are exponential for some small teacher. This is a limitation of that proof route, not a sample-complexity lower bound.
+
 ## 1. Network, prior, and data
 
 Let $d\ge1$, $D=d+1$, $L\ge3$, let $C,N$ be positive integers with $C\le N$, and let inputs have any probability distribution $\mu$ on $[-1,1]^d$. Augment each input by a constant coordinate: $\bar x=(1,x)\in\mathbb R^D$. A depth $L$ learner has $L-1$ hidden layers of width $N$, coordinatewise tanh activations, and a scalar linear readout:
