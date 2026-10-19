@@ -19,7 +19,7 @@ includes gamma = 0 and gamma < 0. Its constants are chosen before gamma, and it
 covers every specified sample size from zero to `exp(c*d)`. Its target is full
 parity, `k = d`; the stronger sparse-parity question remains open.
 
-The parity-network appendix is also proved: [`ParityNetwork.exists_parity_complexity`](NeuralGeneralization/ParityNetworkDepth.lean) gives actual bounded-weight
+A polynomial version of the parity-network appendix is also proved: [`ParityNetwork.exists_parity_complexity`](NeuralGeneralization/ParityNetworkDepth.lean) gives actual bounded-weight
 complexity at most `32*(d+1)^2` at every depth.
 [`subcriticalSmallNetworkLowerBound`](NeuralGeneralization/SubcriticalCircuitCorollary.lean) combines this construction with the exponential posterior lower bound.
 The construction uses a simpler polynomial bound than the appendix's optimized logarithmic weights.
@@ -29,11 +29,16 @@ The construction uses a simpler polynomial bound than the appendix's optimized l
 For the first four theorems, [Network.lean](NeuralGeneralization/Network.lean) defines the concrete network,
 all weight coordinates, and bounded-weight network complexity. Depth is `r + 2`.
 [Model.lean](NeuralGeneralization/Model.lean) defines the independent Gaussian
-weight laws, the strict absolute output margin at **every** Boolean input,
-exact noiseless conditioning, and the finite IID sample distribution.
-Prediction succeeds when the correct-label posterior probability is **strictly
-greater than 2/3**; equality counts as failure. Prediction is not defined by
-the sign of the posterior mean.
+weight laws. Network.lean also defines the strict output margin at **every**
+Boolean input, and [FunctionPrior.lean](NeuralGeneralization/FunctionPrior.lean)
+defines exact noiseless conditioning, posterior risk, confidence failure, and
+the finite IID sample distribution. Prediction succeeds when the correct-label
+posterior probability is **strictly greater than 2/3**; equality counts as
+failure. The mean-field and subcritical statements use this criterion directly.
+The strong-prior and gamma > 1 statements bound posterior average error; the
+confidence version follows by applying them at accuracy `epsilon/3` with
+`ModelLearning.network_confidenceFailure_le_three_risk`. Prediction is not
+defined by the sign of the posterior mean.
 
 The strong-prior result fixes width before taking the variance small. Its
 variance threshold may depend on width, but precedes the input law, sample
@@ -52,7 +57,7 @@ prefixes of a sample sequence or monotonicity of this learner in sample size.
 
 [RobustModel.lean](NeuralGeneralization/RobustModel.lean) defines stability of the clipped score under a ball of simultaneous hidden-activation and output perturbations. Its radius is calibrated by depth and readout energy. The Gaussian prior is restricted to this support event; **no clean-output margin on every input is imposed**. Training requires signed output strictly above `1/2`; test risk uses signed output at most `1/4`.
 
-The target is a concrete [layered Boolean circuit](NeuralGeneralization/RobustCircuit.lean) of width `C`, with its constant wire and compilation resources counted. It is not an arbitrary small analog neural circuit. There exist universal constants `A > 0` and a natural-number exponent `m`, chosen before dimension, depth, target circuit, robustness calibration, and statistical parameters, giving a bound
+The target is a concrete [layered Boolean circuit](NeuralGeneralization/RobustCircuit.lean) of width `C`, with its constant wire and compilation resources counted. Lean reserves one constant-true wire at every stage, while the manuscript counts a constant wire only where a gate needs one. For `C >= 2` the two conventions compute the same functions; the only manuscript case not covered is learner width `N = 1` for width-one targets other than the constant `+1`. It is not an arbitrary small analog neural circuit. There exist universal constants `A > 0` and a natural-number exponent `m`, chosen before dimension, depth, target circuit, robustness calibration, and statistical parameters, giving a bound
 
 ```text
 A * (2 + d + C + r + c + 1/c + 1/epsilon + log(1/delta))^m
