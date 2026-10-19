@@ -44,7 +44,7 @@ This paper takes the prior variance to zero at each fixed width. It does not cla
 
 [Paper (PDF)](main-results/subcritical-exponential/paper.pdf) · [Source and build instructions](main-results/subcritical-exponential/)
 
-**Exponential parity sample complexity throughout the subcritical width regime.** For every fixed $\gamma<1$ and fixed depth, proves an $\exp(\Omega(k))$ sample lower bound for full $k$-bit parity under uniform IID training inputs. Here the ambient dimension is $d=k$.
+**Exponential parity sample complexity throughout the subcritical width regime.** For every fixed $\gamma<1$ and fixed depth, proves an $\exp(\Omega(k))$ sample lower bound for full $`k`$-bit parity under uniform IID training inputs. Here the ambient dimension is $d=k$.
 
 More precisely, there are $c>0$ and $k_0$ such that, for every $k\ge k_0$ and each specified integer $0\le n\le e^{ck}$, with probability at least $3/4$ over the training sample, the limiting fraction of test inputs whose correct label has posterior probability at most $2/3$ is at least $1/16$ (in the liminf sense). Width tends to infinity first, with dimension, sample, margin, depth, and $\gamma$ fixed. The paper does not give a quantitative minimum width or a joint-limit theorem. The guarantee is for each specified sample size, not a simultaneous statement about all prefixes of one sample sequence.
 

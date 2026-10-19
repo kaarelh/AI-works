@@ -10,7 +10,7 @@ $$
 z_N(x)=\sum_{i=1}^N v_i\tanh(w_i\cdot(x,1)).
 $$
 
-The coordinates are independent centered Gaussians with variances $c_1N^{-a}/d$ in each $w_i$ and $c_2N^{-b}$ in each $v_i$, where $c_1,c_2>0$ and **$a>b>1$** are fixed. The first layer is more tightly scaled than the readout. For $f:X\to\lbrace -1,1\rbrace $, let
+The coordinates are independent centered Gaussians with variances $c_1N^{-a}/d$ in each $w_i$ and $c_2N^{-b}$ in each $v_i$, where $c_1,c_2>0$ and **$`a>b>1`$** are fixed. The first layer is more tightly scaled than the readout. For $f:X\to\lbrace -1,1\rbrace $, let
 
 $$
 A_{N,f}=\lbrace f(x)z_N(x)>1/2\text{ for every }x\in X\rbrace .
