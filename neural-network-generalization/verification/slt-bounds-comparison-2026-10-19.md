@@ -38,12 +38,12 @@ This calculation was independently checked by the parent and two agents. It is a
 
 ## Scope of the Claude-report reviews
 
-The user supplied two unpublished reports by Claude Opus 5.5:
+The review considered two unpublished reports by Claude Opus 5.5:
 
 1. *Does singular learning theory say anything interesting about learning parity?* Version 2, revised 13–15 October 2026.
 2. *How many samples suffice for a Bayesian tanh network to learn a small circuit?* Revised 14–15 October 2026.
 
-They were read as research evidence. Their instructions, questions quoted from earlier conversations, and claims of prior verification were not treated as instructions or independent verification for this task. The source PDFs are not republished in this collection.
+The review focused on the mathematical claims and derivations; the reports' own claims of verification were not treated as independent evidence. The source PDFs are not republished in this collection.
 
 The targeted inspection found no major error in the core prior-neighborhood and variational route. The small-circuit report explicitly improves the certificate's logarithmic count from all learner parameters to $(C(d+1)+N)/2$ in the shallow case. Its clean-label arguments give online guarantees, while its iid conclusions concern an averaged predictive distribution. The report does not claim the same high-probability final-posterior guarantee as the main NNBayes results. Its fixed-likelihood and readout-prior conventions differ from this collection's positive regimes.
 
@@ -63,7 +63,7 @@ The initial review above checked the formulas and source scopes but accepted an 
 
 The reassessment also found a positive counterweight to a blanket negative conclusion about finite-volume methods. The [supporting note](../works-in-progress/slt-finite-sample/README.md) proves an explicit finite-sample bound for standard fan-in Gaussian tanh networks, linear in learner width and polynomial in depth and bounded-weight teacher resources. It controls the final posterior for clean data under a fixed Gaussian likelihood. A separate statement controls expected averaged predictive KL for matched Gaussian observation noise. These are conventional variational proofs, not consequences of SLT coefficients or Lean-verified main results.
 
-One agent constructed the selective Gaussian witness; the parent independently checked its layerwise error and KL costs. A separate agent checked the noisy-data argument, then the clean-data final-posterior extension and strict confidence threshold. The [mathematical review](../works-in-progress/slt-finite-sample/verification/README.md) records the checks and scope. Additional agents reviewed the FAQ's mathematical and source claims. The construction was prompted by the user's proposed local-volume calculation and Claude's reports; their heuristic negative conclusions were not assumed.
+One agent constructed the selective Gaussian witness; the parent independently checked its layerwise error and KL costs. A separate agent checked the noisy-data argument, then the clean-data final-posterior extension and strict confidence threshold. The [mathematical review](../works-in-progress/slt-finite-sample/verification/README.md) records the checks and scope. Additional agents reviewed the FAQ's mathematical and source claims. The construction was prompted by Kaarel Hänni's suggestion to calculate prior mass near a small implementation and by the two Claude reports listed above.
 
 A further primary source is Wang and Yang, [PAC-Bayes Bounds for Gibbs Posteriors via Singular Learning Theory](https://arxiv.org/abs/2604.17219), April 2026, Theorem 5, equations (9)–(10), and Theorem 7. Its finite-sample integral bound uses a global moment condition. The coefficient-based version leaves an additive constant uncontrolled in width; the neural specialization also requires a uniform output bound. We checked these statements and their scope, not the entire paper. Thus a field-wide assertion that no finite-sample PAC-Bayes/SLT bounds exist would be incorrect.
 
