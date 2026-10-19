@@ -1,4 +1,4 @@
-# Exponential parity sample complexity throughout the subcritical width regime
+# Exponential parity sample complexity below the mean-field scaling
 
 **Status:** Main result
 
