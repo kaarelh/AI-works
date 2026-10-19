@@ -244,7 +244,7 @@ $$
 
 The parity obstruction in Section 3 applies. The covariance is also invariant under permutations of input coordinates, so its sparse-parity conclusion applies as well.
 
-Thus **none of these power scalings gives a negative log raw good-function mass bounded polynomially in teacher width, input dimension, weight bound and inverse accuracy, uniformly over learner widths and teachers**. Away from $e=0$, even a constant teacher has a width-diverging cost. At $e=0$, some depth-two teacher of width $O(d)$ and polynomially bounded weights has an exponential-in-$d$ cost. Dimension-independent $A,B$ ensure that $V$ does not erase this exponential factor; polynomially growing $V$ would also suffice. This is a complete classification of this restricted prior-mass question, not of posterior learning behavior or general deep networks.
+Thus **none of these power scalings gives a negative log raw good-function mass bounded polynomially in teacher width, input dimension, weight bound and inverse accuracy, uniformly over learner widths and teachers**. Away from $e=0$, even a constant teacher has a width-diverging cost. At $e=0$, some depth-two teacher of width $O(d)$ and polynomially bounded weights has a cost exponential in $d$. Dimension-independent $A,B$ ensure that $V$ does not erase this exponential factor; polynomially growing $V$ would also suffice. This is a complete classification of this restricted prior-mass question, not of posterior learning behavior or general deep networks.
 
 ## 6. Scope: prior certificates, conditioning, and actual learning
 
