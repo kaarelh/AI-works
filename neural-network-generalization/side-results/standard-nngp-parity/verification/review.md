@@ -79,4 +79,30 @@ It found **two errors** and several imprecisions.
 
 ## Round 2
 
-See the section below, added after the second round.
+A fresh auditor checked every round-1 fix against the revised text and the cited sources. It also re-read Section 6, the new readout-variance remark, the Fourier-pair derivation, and the README, FAQ and collection README.
+
+**No mathematical error was found.** It confirmed:
+
+- every round-1 fix;
+- the universal tail-Gram lemma and the obstruction proposition;
+- the conditional sketch around the matching-bound equation. The head, band and tail bounds and the clipped-parity step hold, and the sketch is clearly labelled as not proved. The proposition forces the form of the matching bound up to constants;
+- the second sufficient route and its constants;
+- the sandwich and portmanteau argument for readout variance $N^{-b}$, $b<1$;
+- the factor 2 in the beta-integral derivation (the value at $\omega=0$ is $\int\mathrm{sech}^2=2$).
+
+**Wording findings, all fixed:**
+
+1. The symbol $v$ remained in two places of the bump lemma, and there was a stray comma.
+2. The upper bound on the cost per sample now carries the hypothesis $n(0.2)^{0.1d}\le0.04$ of the bump lemma.
+3. The abstract now says "we explain why" a matching upper bound would complete an exponential proof. It no longer asserts this as a result.
+4. The extension paragraph now records three facts: $\tau_r\to0$; that $\rho\le\alpha$ follows from restricting $n$; and that smaller $n$ are covered by the margin theorem.
+5. The abstract and introduction now state the probability $1-2\delta$ and $c_1=c_1(\delta)$.
+6. The activation hypothesis in the introduction and README now includes positivity of the linear coefficient at later layers.
+7. The README, FAQ and collection index now state "for large $d$", the probability, $d\ge25$ and $k\ge25$, and where the explicit bound exceeds one.
+8. "Needs about $d^{\sqrt d/10}$" became "needs at least about", since only a lower bound is proved.
+9. The comparison with the NNGP note now gives that theorem's depth condition exactly.
+10. "Only polynomially small" became "at most polynomially small".
+
+## Numerical checks
+
+`numerics/spectrum.py` reproduces the spectral lemmas numerically. At $d=10$ it agrees with an independent Gauss–Hermite and Krawtchouk computation to $5\times10^{-8}$ relative error. Round 1 also checked the coefficient formula, the coefficient lower bound and the Fourier pair independently. The sign-only posterior runs use the HMC sampler validated in the beyond-parity package. The two chains agree in $F$ within $0.006$.

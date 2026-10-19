@@ -48,9 +48,11 @@ scale $d^k$ for fixed $k$-sparse parity. An $\exp(\Omega(d))$ lower bound,
 the analogue of the subcritical theorem in this collection, remains open.
 We prove that the step of that theorem which bounds the posterior's
 conditioning cost by a polynomial per sample is false at the standard
-scaling: for $\tanh$ networks and $\exp(d^{\epsilon})\le n\le e^{cd}$, the
-cost per sample is superpolynomial in $d$ with high probability. A matching
-upper bound on that cost would complete an exponential proof. Numerical spectra and small-dimensional
+scaling: for $\tanh$ networks, each fixed $\delta>0$ and
+$\exp(d^{\epsilon})\le n\le e^{c(\delta)d}$, with probability at least
+$1-2\delta$ the cost per sample is superpolynomial in $d$. We explain why
+an upper bound on that cost matching our lower bound would complete an
+exponential proof. Numerical spectra and small-dimensional
 posterior computations illustrate the results.
 \end{abstract}
 
@@ -88,7 +90,7 @@ gain, every training set of size
 $n\le d^{\sqrt d/10-1/2}/6000$ (with $d\ge25$; the explicit bound exceeds
 one only for $d\ge385$) leaves, in the width limit, at least a quarter of the inputs of
 full parity without confidence above $2/3$. For $k$-sparse parity the
-threshold is $\binom d{\lfloor\sqrt k/5\rfloor}/6000$, and for fixed $k$
+threshold is $\binom d{\lfloor\sqrt k/5\rfloor}/6000$ (for $k\ge25$), and for fixed $k$
 the failure fraction is at least $2^{-k}-O(n/\binom dk)$. The same bounds
 hold for the margin learner when the readout variance is $\sigma_L^2N^{-b}$
 with $b<1$ (Remark~\ref{rem:readout}).
@@ -101,8 +103,7 @@ $3/8$ and confidence failure at least $1/16$ in the width limit.
 $\exp(\Omega(d))$ samples are needed. Proposition~\ref{prop:obstruction}
 (proved) shows that one specific step of the subcritical proof fails. That
 step bounds the conditioning cost per sample by a polynomial in $d$ (at
-most $Cd^{1+\beta}$). Here, for $\exp(d^\epsilon)\le n\le e^{c_1d}$ and with
-probability at least $1-2\delta$, that cost is superpolynomial in $d$. We
+most $Cd^{1+\beta}$). Here, for each fixed $\delta>0$, with probability at least $1-2\delta$ and for $\exp(d^\epsilon)\le n\le e^{c_1(\delta)d}$, that cost is superpolynomial in $d$. We
 also identify a matching upper bound on that cost which would complete an
 $\exp(\Omega(d))$ proof (Section~\ref{sec:obstruction}).
 \end{enumerate}
@@ -117,7 +118,8 @@ lower bound and no upper bound for either learner. We do not decide whether
 the exponent $\sqrt d\log d$ is the truth. The margin theorem is proved for
 $\tanh$, and for odd bounded continuous activations whose first-layer dual
 coefficients are all positive and decay at most like
-$e^{-o(\sqrt m\log m)}$ (Remark~\ref{rem:activations}). It holds for
+$e^{-o(\sqrt m\log m)}$, provided the linear coefficient $c_1(q_\ell)$
+is positive at every later layer (Remark~\ref{rem:activations}). It holds for
 $d\ge d_0$, where $d_0$ depends on the depth, gains and margin and is not
 explicit, because we prove no rate for the coefficient tail $T(s)$. It does not cover
 $\operatorname{erf}$, whose coefficients decay geometrically. As in
@@ -520,7 +522,7 @@ the $\gamma<0$ case of \cite[Proposition~2.2]{subcritical}.
 chosen ones, and uniformly in depth, gain and activation. Depth may even
 grow with $d$. For comparison, \cite[Theorem~7.1]{nngpnote} proves a
 $\Theta(2^d)$ bound for a different learner, the margin learner with
-specified gains, at depth at least $C_a(d+1)$. (2) Theorem~\ref{thm:signonly} is
+specified gains, at depth at least $C_a(d+\log(1/\eta)+1)$ for a fixed accuracy parameter $\eta$. (2) Theorem~\ref{thm:signonly} is
 \cite[Proposition~3]{beyondparity} with the arcsine eigenvalue ratio
 replaced by Lemma~\ref{lem:levels}(a). (3) For the arcsine kernel the
 subcritical paper improves $\sqrt d\log d$ to $d$, for typical samples
@@ -531,7 +533,7 @@ level masses decay much faster (Section~\ref{sec:numerics}), and we have
 not proved the matching estimates. The scale $\sqrt d\log d$
 comes from requiring $\err_r(f)$ to stay bounded below (the
 Aspnes--Beigel--Furst--Rudich lemma); with Lemma~\ref{lem:levels} alone,
-larger $r$ yields only a polynomially small failure fraction. For odd
+larger $r$ yields at most a polynomially small failure fraction. For odd
 activations the paired form improves the binomial factor, for example to
 $\binom{d+1}{k+1}$ in Corollary~\ref{cor:signonly}(c) when $k$ is even,
 without changing the exponent in (a) and (b).
@@ -616,7 +618,7 @@ $v_{\min}(K)\ge\frac{A\kappa}8e^{-\psi(\lceil10D\log(2D)\rceil)}$.
 \end{enumerate}
 \end{lemma}
 \begin{proof}
-Poissonize the walk. If the number of steps is $\Pi_t\sim\mathrm{Poisson}(t)$, written $\Pi_t$ to avoid confusion with the width,,
+Poissonize the walk. If the number of steps is $\Pi_t\sim\mathrm{Poisson}(t)$, written $\Pi_t$ to avoid confusion with the width,
 the coordinates flip independently, each an odd number of times with
 probability $p(t)=(1-e^{-2t/D})/2$. Hence
 $\sum_m\pi_t(m)p_m(j)=p(t)^j(1-p(t))^{D-j}$, where
@@ -667,7 +669,7 @@ repeat the parts of that proof that involve the kernel.
 Suppose $\varepsilon_d=\min_{q\le0.49d}\binom dq\lambda_q>0$, and let
 $v_{\min}=v_{\min}(K)$ (the smallest eigenvalue of the matrix $K$). Put
 \[
- E_b=\frac{400}{(d+1)\varepsilon_d}+\frac{(d+1)e^{-0.0062d}}v .
+ E_b=\frac{400}{(d+1)\varepsilon_d}+\frac{(d+1)e^{-0.0062d}}{v_{\min}} .
 \]
 Let $X_1,\ldots,X_n$ be independent and uniform, with $n(0.2)^{0.1d}\le0.04$.
 With probability at least $1-n^2e^{-0.19d}-n\sqrt{A\,0.72^d/v_{\min}}$, the
@@ -690,7 +692,7 @@ Therefore
 \[
  \|b_z\|_K^2=\sum_j\binom dj\frac{\widehat b_j^2}{\lambda_j}
  \le\sum_{j\le0.49d}\frac{(20/(d+1))^2}{\varepsilon_d}
- +\frac{2^d}v\sum_{j>0.49d}\binom dj0.55^{2(d-j)}0.45^{2j}
+ +\frac{2^d}{v_{\min}}\sum_{j>0.49d}\binom dj0.55^{2(d-j)}0.45^{2j}
  \le E_b,
 \]
 using $\lambda_j\ge v_{\min}/M$. For the last sum, the exponent
@@ -920,7 +922,7 @@ at least $1-2\delta$ over iid uniform inputs labelled by full parity,
 Consequently, for every $\epsilon>0$ and $k$, for all large $d$ and every
 $n$ with $\exp(d^\epsilon)\le n\le e^{c_1d}$, on the same event,
 $\mathcal D(S)/n\ge d^k$. In the other direction, on the event of
-Lemma~\ref{lem:bump}, $\mathcal D(S)/n\le e^{C\sqrt d}$ for every $n\ge1$.
+Lemma~\ref{lem:bump}, $\mathcal D(S)/n\le e^{C\sqrt d}$ for every $n\ge1$ with $n(0.2)^{0.1d}\le0.04$.
 (Some upper limit on $n$ is necessary in the first statement: for fixed $d$,
 $\mathcal D(S)$ is bounded by the cost of the full sign pattern of $f$, so
 $\mathcal D(S)/n\to0$ as $n\to\infty$.)
@@ -964,7 +966,7 @@ proof technique, not about sample complexity, and it refutes only the
 normalization (42). It does not show that the subcritical strategy fails.
 The clipped-parity lemma at scale $a$ only needs the posterior's
 low-degree part to be $O(a)$ in $L^2$, not small, because it is multiplied
-by $u/d\approx\rho$, and $\rho$ can be chosen small. The following is an
+by $u/d\approx\rho$, and $\rho=r(n)/d\le\alpha$ for any fixed small $\alpha$ once $n\le e^{c_\alpha d}$ (smaller $n$ are covered by Theorem~\ref{thm:margin}). The following is an
 \emph{extension suggested by the proof}, not proved here. Suppose that on
 a sample event of probability at least $3/4$ there were a matching upper
 bound
@@ -981,7 +983,7 @@ $\lambda_{r+1}\le\tau_r/\binom D{r+2}$ and
 $n/\binom D{r+2}\le CA_\delta rH_r$ would bound the band $(r,u]$ by
 $2\tau_r+CKa^2$. The same lemma with
 $\lambda_{u+1}\le\tau_r/\binom D{u+2}$ and the geometric decay of
-$\binom D{r+2}/\binom D{u+2}$ would make the tail above $u$ $o(1)$: it is at most
+$\binom D{r+2}/\binom D{u+2}$ would make the tail above $u$ $o(1)$ (recall $\tau_r\le AT(r)\to0$, as $r\ge(\log d)^2/4$): it is at most
 $2\tau_r+4Ka^2\,n/\bigl(\binom D{u+2}(b_r+rH_r)\bigr)\le2\tau_r+
 CKa^2\binom D{r+2}/\binom D{u+2}$, and the binomial ratio is at most
 $d^{-10}$ for $r\le\alpha d$ with $\alpha$ small, as in
