@@ -2,7 +2,7 @@
 
 **Status:** Proved side result
 
-At gamma = 0, one noiseless label can already produce a posterior mean with growing RKHS energy after global margin conditioning. Rules out a proposed dimension-free O(n/tau) mean-energy estimate; does not itself establish a new parity sample bound.
+At gamma = 0, one noiseless label can already produce a posterior mean with growing RKHS energy after global margin conditioning. At depth L >= 3, this rules out a proposed dimension-free O(n/tau) mean-energy estimate (the divergence is not claimed at L = 2); it does not itself establish a new parity sample bound.
 
 [Paper (PDF)](paper.pdf) · [LaTeX source](source/gamma-zero-mean-energy.tex) · [Collection index](../../README.md)
 

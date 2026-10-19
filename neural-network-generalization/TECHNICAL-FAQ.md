@@ -181,14 +181,14 @@ In contrast, the usual nondegenerate tanh NNGP scaling is $(0,1,\ldots,1,1)$. Al
 
 **Why isn't that a proof?** For several inputs at once, prescribing preactivations $u$ from an incoming feature matrix $A$ costs $u^\top(AA^\top)^+u/(2\sigma^2)$, when feasible. The full Gram matrix controls which computations are possible and affordable. Scalar prices miss its rank and conditioning, representation entropy, and changes in earlier features induced by later labels. Collapsing, saturating, and unequal-depth representations are also legitimate possibilities for the actual prior. [Appendix I of the audit](side-results/strong-prior-appendix-audit/paper.pdf) explains these gaps. The heuristic is useful, but its standing assumption excludes part of the space we want to understand.
 
-For bookkeeping outside that assumption, let typical *unconditioned* hidden activation variance scale as $N^{-b_s}$. For fixed-depth tanh networks the amplitude heuristic is
+For bookkeeping outside that assumption, let typical *unconditioned* hidden activation variance scale as $N^{-h_s}$. For fixed-depth tanh networks the amplitude heuristic is
 
 $$
-b_1\approx\max\lbrace a_1,0\rbrace ,\qquad
-b_s\approx\max\lbrace a_s+b_{s-1}-1,0\rbrace ,
+h_1\approx\max\lbrace a_1,0\rbrace ,\qquad
+h_s\approx\max\lbrace a_s+h_{s-1}-1,0\rbrace ,
 $$
 
-and output variance has scale $N^{1-a_L-b_{L-1}}$. A negative value before taking a maximum indicates diverging preactivations and saturation. This recursion helps locate possible linear or saturated layers; it does not determine what rare conditioning selects.
+and output variance has scale $N^{1-a_L-h_{L-1}}$. A negative value before taking a maximum indicates diverging preactivations and saturation. This recursion helps locate possible linear or saturated layers; it does not determine what rare conditioning selects.
 
 **Do we still expect just circuit learning versus exponential sample complexity?** Those remain useful broad possibilities, but I would not currently conjecture an exhaustive two-way classification of *all* tuples. In particular, a different prior mechanism need not imply a different sample-complexity outcome. Here are concrete predictions, with their status:
 
@@ -196,7 +196,7 @@ and output variance has scale $N^{1-a_L-b_{L-1}}$. A negative value before takin
 |---|---|
 | $a_1\le0$, every internal $a_s\le1$, and $a_L<2$ | **Conjectured frozen-feature region.** Hidden activations remain order one, possibly saturated. With a nondegenerate limiting kernel and empirical-kernel deviations costing order $N$, forcing margins costs only $N^{a_L-1}=o(N)$ when $1<a_L<2$. Thus conditioning should leave the leading kernel fixed. Exponential parity sample bounds are plausible but still require a spectrum and posterior-confidence argument for these kernels. |
 | Exact fan-in hidden scaling $(0,1,\ldots,1,a_L)$ with $a_L\ge2$ | **Conjectured circuit-learning side.** The endpoint $a_L=2$ is proved in our critical results. For $a_L>2$, changing features can be cheaper than forcing the output through fixed features; I expect positive learning results, but output-dominated saturation and subleading costs need analysis. This does not assert the same circuit-prior ordering at every exponent. |
-| One hidden layer: $(a_1,a_L)=(a,b)$ with $a>0$ and $a\le b\le a+2$ | **Tentative larger circuit-learning region.** Using $M=N^{(b-a)/2}$ active neurons balances feature cost $MN^a$ against readout cost $N^b/M$. At $b=a+2$ this is the established balanced strong-prior family; the interior suggests that a smaller active population can suffice. A construction alone does not control the remaining neurons or the posterior. |
+| One hidden layer: $(a_1,a_L)=(a,b)$ with $a>0$ and $a\le b\le a+2$ | **Tentative larger circuit-learning region.** Using $M=N^{(b-a)/2}$ active neurons balances feature cost $MN^a$ against readout cost $N^b/M$. At $b=a+2$ (so $M=N$) this is the one-hidden-layer case of the established $\gamma=a+1>1$ family (main result 2). In the interior, the active block is itself a $\gamma'=(a+b)/(b-a)>1$ network at its own width $M$, which suggests that a smaller active population can suffice. A construction alone does not control the remaining neurons or the posterior. |
 | One hidden layer: $a>b>1$ | **Proved degree-based prior ordering; learning rate open.** The collapsing layer produces the threshold-degree hierarchy below. It is not a circuit-size prior, but it could still have exponential parity sample complexity. |
 
 In the frozen-feature prediction, $a_L<1$ gives a normalized GP with vanishing absolute margin, $a_L=1$ retains a fixed global margin, and $1<a_L<2$ gives a Gaussian minimum-energy description at leading order. The last statement does not determine posterior weights among tied minimizers. These distinctions already occur within the proposed hard-learning side.
@@ -237,13 +237,13 @@ $$
 n\le\exp\!\left(c\max\left\lbrace k,\sqrt{k}\log\frac{e(d+1)}{\sqrt{k}}\right\rbrace \right).
 $$
 
-This includes the desired $\exp(\Omega(k))$ obstruction, but does not give the full natural sparse scale.
+This includes the desired $\exp(\Omega(k))$ obstruction, but does not give the full natural sparse scale. For $k\le d^{1-\eta}$, a [refinement](side-results/intermediate-parity/paper.pdf) proves failure at specified sample sizes $n$ with $\log n$ of order $\max\lbrace k^{\theta}\log(ed/k),\,k[\log(ed/k)]^{2-1/\theta}\rbrace$, where $\theta=\theta_L\in(1/2,1)$ and $\theta_2\approx0.719$; it does not assert failure at every smaller $n$. When depth grows as $\log_2\log\log d+O(1)$ and $d^{\eta_1}\le k\le d^{1-\eta_2}$, the [growing-depth paper](side-results/growing-depth-parity/paper.pdf) reaches the natural scale at specified sample sizes. Neither settles the fixed-depth natural scale.
 
 **Open:** that full growing-sparse scale for $0<\gamma<1$, and the corresponding growing-sparse endpoint problem at $\gamma=0$.
 
 There is a genuine regime distinction: a one-coordinate parity learns with $O(\log d)$ examples for $0<\gamma<1$. A uniform $d^{ck}$ claim covering all $k\ge1$ in that regime is therefore false. This does not disprove the proposed bound restricted to sufficiently growing $k$.
 
-See [sparse parity](side-results/sparse-parity/paper.pdf) and [growing positive-subcritical parity](side-results/growing-sparse-positive/paper.pdf). These are iid-sample results, not lower bounds for an active learner allowed to choose informative inputs.
+See [sparse parity](side-results/sparse-parity/paper.pdf) and [growing positive-subcritical parity](side-results/growing-sparse-positive/paper.pdf). These are iid-sample results, not lower bounds for an active learner allowed to choose informative inputs. Typical sampling is essential: [deliberately selected](side-results/selected-examples-parity/paper.pdf) training sets of size $d^{O_\delta(\sqrt k)}$ teach sufficiently large odd $k$ when $d\ge(C_Lk)^{C_Lk}$.
 
 ## 12. What robustness condition gives polynomial depth dependence?
 
@@ -310,7 +310,7 @@ Other candidates include robustness to dropout, random quantization, or random i
 
 ## 16. Is exponential depth dependence necessary without any robustness restriction?
 
-**Yes for unrestricted continuous-output regression; open for the original Boolean-cube model.** The [continuous-depth lower bound](works-in-progress/continuous-depth-lower-bound/) gives teachers of constant width, weights bounded by 30, and growing depth on the unit circle. For a fixed, nonatomic input distribution, learning their real outputs requires exponentially many samples in depth. This holds in the strong-prior limit, at every fixed exponent $\gamma>1$ at sufficiently large finite widths, and at mean-field scaling in the width-first limit. Training and test tolerances are fixed constants, and the failure concerns the actual posterior-confidence criterion, including mixtures. The mean-field result does not give a quantitative width threshold.
+**Yes for unrestricted continuous-output regression; open for the original Boolean-cube model.** The [continuous-depth lower bound](works-in-progress/continuous-depth-lower-bound/) gives teachers of constant width, weights bounded by 30, and growing depth on the unit circle. For a fixed, nonatomic input distribution, learning their real outputs requires exponentially many samples in depth. This holds in the strong-prior limit at every fixed width above a threshold polynomial in the sample size, at every fixed exponent $\gamma>1$ at widths above a threshold polynomial in the sample size and depth, and at mean-field scaling in the width-first limit. These thresholds are far above teacher width, so the result refutes guarantees asserted at every width $N\ge C$, not behavior near the teacher width. Training and test tolerances are fixed constants, and the failure concerns the actual posterior-confidence criterion, including mixtures. The mean-field result does not give a quantitative width threshold.
 
 The mechanism is that the teacher separates outputs at exponentially close input pairs. For the strong-prior and above-mean-field cases, a small random sample can instead be fit exactly by a network whose energy permits only a polynomial-in-sample-size Lipschitz constant, independently of depth. The posterior favors those fits, which must fail on at least one member of every close pair. This also gives a lower bound for minimum-energy exact interpolation and the specified strong-prior-then-zero-tolerance posterior limit. The mean-field proof uses a separate entropy-rate comparison and the same paired inputs. The fixed input distribution is supported on a Cantor subset of the circle; smooth densities depending on depth are also covered. Uniform spherical inputs remain open.
 
@@ -478,15 +478,15 @@ $$
 =\kappa_N(f)-\kappa_N(g).
 $$
 
-Thus if $\kappa_N(g)>\kappa_N(f)$, the prior ratio $\pi_{N,\sigma}(g)/\pi_{N,\sigma}(f)$ tends to zero. Cloning and compression give the two directions of the complexity comparison: for fixed depth $L$, there are polynomials $P_L,Q_L$, independent of learner width, such that for every $N\ge C_L(f)$,
+Thus if $\kappa_N(g)>\kappa_N(f)$, the prior ratio $\pi_{N,\sigma}(g)/\pi_{N,\sigma}(f)$ tends to zero. Cloning and compression give the two directions of the complexity comparison: for fixed depth $L$, there are polynomials $P_L,M_L$, independent of learner width, such that for every $N\ge C_L(f)$,
 
 $$
 \kappa_N(f)\le P_L(d,C_L(f)),
 \qquad
-C_L(f)\le Q_L(d,1+\kappa_N(f)).
+C_L(f)\le M_L(d,1+\kappa_N(f)).
 $$
 
-This is the slides' circuit-prior claim in a quantitative form: prior preference is governed by a complexity measure polynomially equivalent to small-network complexity. It need not preserve the ordering of two functions with similar circuit sizes. Counting the functions whose energy is no greater than the target's then gives the strong-prior generalization theorem. See the Gaussian-rate lemma and the “Uniform count and complexity comparison” proposition in the [strong-prior paper](main-results/strong-prior-generalization/paper.pdf).
+In the paper, $M_L(d,K)$ can be taken to be the compression width $m_L(d,\max\lbrace K,2\rbrace)$; this differs from the log-count $Q_L$ of Question 19. This is the slides' circuit-prior claim in a quantitative form: prior preference is governed by a complexity measure polynomially equivalent to small-network complexity. It need not preserve the ordering of two functions with similar circuit sizes. Counting the functions whose energy is no greater than the target's then gives the strong-prior generalization theorem. See the Gaussian-rate lemma and the “Uniform count and complexity comparison” proposition in the [strong-prior paper](main-results/strong-prior-generalization/paper.pdf).
 
 The main Lean gate certifies the learning theorem and the ingredients used in its proof; it does not separately assert this displayed two-sided complexity comparison as an additional main theorem. The [coverage inventory](lean/review/formal-coverage-inventory.txt) distinguishes these scopes.
 
@@ -549,7 +549,7 @@ The heuristic part is whether this genericity premise holds for relevant tasks, 
 
 ## 24. Do the good generalization results survive a small amount of label noise?
 
-**Yes, when the noise rate is sufficiently small relative to dimension, depth, and target complexity.** The [noisy-interpolation theorem](works-in-progress/noisy-interpolation/README.md) gives a clean-error bound for fixed-depth tanh networks that fit every training label, including flipped labels. Its proof has undergone independent AI-agent mathematical checks; it is a supporting result, not a Lean-verified main result.
+**Yes, when the noise rate is sufficiently small relative to dimension, depth, and target complexity.** The tolerance is inverse-polynomial with large explicit constants: the coefficient of the corrupted fraction exceeds $10^6$ times a polynomial in $d$, so as stated the bound is informative only when the corrupted fraction is below about $10^{-6}$ divided by a polynomial in $d$. Since there are only $2^d$ distinct inputs, a single corruption already makes it vacuous unless $2^d$ exceeds that coefficient (about $d\ge44$ even for $U=1$). The constants were not optimized. The [noisy-interpolation theorem](works-in-progress/noisy-interpolation/README.md) gives a clean-error bound for fixed-depth tanh networks that fit every training label, including flipped labels. Its proof has undergone independent AI-agent mathematical checks; it is a supporting result, not a Lean-verified main result.
 
 The sampling convention matters: choose $n$ distinct points uniformly from the Boolean cube, flip each label independently with probability $\eta$, and evaluate against the underlying clean function. Keep the original Gaussian prior, its all-input margin restriction, and exact conditioning on the observed labels. Thus the clean target itself is excluded when any label flips; the proof constructs a different, inexpensive network that fits all the corruptions.
 

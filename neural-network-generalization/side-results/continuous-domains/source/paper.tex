@@ -27,7 +27,8 @@ and a family of smooth, strongly log-concave non-Gaussian weights are covered.
 Training observes clean real-valued labels and conditions on fitting them
 within a positive tolerance $\rho$; testing uses a larger tolerance
 $\tau>\rho$. The full posterior assigns probability greater than $2/3$
-to a prediction within $\tau$ on almost all test inputs. No restriction
+to a prediction within $\tau$ on all test inputs outside a set of
+probability at most $\varepsilon$, with high probability over the sample. No restriction
 on the input distribution beyond its support is needed, and no global
 output-margin condition is imposed on the prior.
 The continuous-domain argument uses a finite input net only inside the
@@ -70,7 +71,8 @@ an exact-interpolation corollary by taking the strong-prior limit first and
 then sending the training tolerance to zero, in that specified order.
 
 The proofs have three parts. First, a neighborhood of a cloned teacher has
-enough prior mass, uniformly in the learner width. Second, a finite family
+enough prior mass, with an exponential rate independent of the learner
+width (the mass itself may decrease with width). Second, a finite family
 approximates all but a sufficiently small amount of prior mass. Third, a
 union bound shows that an inaccurate member of this family is unlikely to
 fit the data. For continuous domains, Lipschitz control lets us use a finite
@@ -496,10 +498,10 @@ Equation~\eqref{eq:confidence} finishes the proof.
 \end{proof}
 
 The same proof uses only independent coordinate densities with common
-two-sided envelopes $c_j e^{-b_0t^2}\leq q_j(t)\leq C_j e^{-a_0t^2}$,
-where $0<a_0\leq b_0<\infty$ do not depend on width. Symmetry and
+two-sided envelopes $c_j e^{-c_+t^2}\leq q_j(t)\leq C_j e^{-c_-t^2}$,
+where $0<c_-\leq c_+<\infty$ do not depend on width. Symmetry and
 log-concavity are unnecessary in this strong-prior extension. Replace
-$K$ by $(b_0/a_0)E_*+2$; prefactors affect only the fixed-width scale
+$K$ by $(c_+/c_-)E_*+2$; prefactors affect only the fixed-width scale
 threshold.
 
 \begin{lemma}[Spectral truncation at $\gamma>1$]\label{lem:spectral}
@@ -668,8 +670,10 @@ avoids zero. Classification requires a separate denominator argument.
 Let $g:X\to\{-1,1\}$ and suppose a teacher of width $C$, depth $L$,
 and weight bound $B$ satisfies $g(x)z_*(x)\geq r>0$ on $X$.
 Condition the raw prior only on the training margins
-$g(x_i)z_w(x_i)>1/2$. For both the strong-prior regime and every fixed
-$\gamma\geq1$, there are fixed-depth sample bounds polynomial in
+$g(x_i)z_w(x_i)>1/2$. For both the strong-prior regime (at each fixed
+$N\geq C$, for all $\sigma$ below a threshold that may depend on $N$, the
+teacher, $r$, and $\varepsilon$, as in Theorem~\ref{thm:strong}) and every
+fixed $\gamma\geq1$, there are fixed-depth sample bounds polynomial in
 $d,C,B,1/r$ and the accuracy parameters, independent of learner width
 for every $N\geq C$, such that with sample probability at least
 $1-\delta$,

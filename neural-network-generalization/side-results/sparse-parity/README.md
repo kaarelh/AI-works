@@ -2,7 +2,7 @@
 
 **Status:** Proved side result
 
-For gamma < 0, proves the natural exp(Omega(k log(ed/k))) sparse-parity lower bound at every specified sample size below the bound. For 0 < gamma < 1, a one-coordinate parity instead learns with O(log d) samples. Growing sparse parity at gamma = 0 and the positive-regime natural scale remain outside this result.
+For gamma < 0, proves the natural exp(Omega(k log(ed/k))) sparse-parity scale: for d >= d_0 and each specified sample size below it, with probability at least 3/4 over uniform IID samples, a universal fraction epsilon of about 7.85e-6 of inputs keeps correct-label posterior probability at most 2/3 in the width-first limit. The fraction is positive but small; constant-size error is not claimed. For 0 < gamma < 1, a one-coordinate parity instead learns with O(log d) samples. Growing sparse parity at gamma = 0 and the positive-regime natural scale remain outside this result.
 
 [Paper (PDF)](paper.pdf) · [LaTeX source](source/sparse-parity.tex) · [Collection index](../../README.md)
 

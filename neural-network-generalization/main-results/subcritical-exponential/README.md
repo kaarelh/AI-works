@@ -2,7 +2,7 @@
 
 **Status:** Main result
 
-Parity has a Boolean circuit with O(d) gates and a polynomial-size, polynomial-weight tanh network, yet the Bayesian learner studied here requires exp(Omega(d)) examples. The result holds for every fixed prior-scaling exponent gamma < 1 and fixed depth, under uniform IID training and the width-first posterior. For each n <= exp(c d), confidence failure is at least 1/16 with sample probability at least 3/4. Here failure means that the correct label has posterior probability at most 2/3.
+Parity has a Boolean circuit with O(d) gates and a polynomial-size, polynomial-weight tanh network, yet the Bayesian learner studied here requires exp(Omega(d)) examples. The result holds for every fixed prior-scaling exponent gamma < 1 and fixed depth, under uniform IID training and the width-first posterior. For each n <= exp(c d), with sample probability at least 3/4, confidence failure is at least 1/16 in the infinite-width limit (a liminf as N tends to infinity, at fixed dimension and sample). Here failure means that the correct label has posterior probability at most 2/3.
 
 The paper defines the prior and conditioning conventions independently. The result concerns full parity; the fixed-depth natural sparse-parity scale exp(Omega(k log(ed/k))) remains open.
 
