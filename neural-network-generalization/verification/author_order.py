@@ -27,7 +27,8 @@ was replaced by this rule before it was applied.
 Usage:
   python3 verification/author_order.py            # compute the assignment from the current titles
   python3 verification/author_order.py --write    # ... and write the record
-  python3 verification/author_order.py --check    # recompute from the titles frozen in the record
+  python3 verification/author_order.py --check    # recompute from the titles frozen in the record,
+                                                  # and check every source against the record
 """
 import hashlib
 import json
@@ -88,6 +89,31 @@ def current_items():
     return items
 
 
+def source_orders(key):
+    """Orders found in an item's author line, PDF metadata and README byline."""
+    cat = {e["slug"]: e for e in json.loads((ROOT / "catalog.json").read_text(encoding="utf-8"))}
+    found = {}
+    if key in cat:
+        e = cat[key]
+        src = (ROOT / e["path"] / e["source_entry"]).read_text(encoding="utf-8")
+        a = src[src.find("\\author"):][:80]
+        found["author"] = a.find("Kaarel") < a.find("Vaintrob")
+        i = src.find("pdfauthor")
+        if i >= 0:
+            m = src[i:i + 80]
+            found["pdfauthor"] = m.find("Kaarel") < m.find("Vaintrob")
+        readme = ROOT / e["path"] / "README.md"
+        for line in (readme.read_text(encoding="utf-8").splitlines() if readme.exists() else []):
+            if line.startswith("**Authors:**"):
+                found["readme"] = line.find("Kaarel") < line.find("Vaintrob")
+        if "authors" in e:
+            found["catalog"] = e["authors"].index("Kaarel Hänni") < e["authors"].index("Dmitry Vaintrob")
+    else:
+        line = next(l for l in (ROOT / key).read_text(encoding="utf-8").splitlines() if "Vaintrob" in l)
+        found["byline"] = line.find("Kaarel") < line.find("Vaintrob")
+    return {where: "Hänni first" if hanni else "Vaintrob first" for where, hanni in found.items()}
+
+
 def main():
     if "--check" in sys.argv:
         rec = json.loads(RECORD.read_text(encoding="utf-8"))
@@ -96,7 +122,12 @@ def main():
         for r in rows:
             print(f"{r['key']}: {r['order']}" + (f" (rank {r['rank']})" if r["rank"] else " (fixed)"))
         print(split)
-        print("all assignments reproduce" if not bad else f"{bad} mismatches")
+        for r in rec["assignments"]:
+            for where, got in source_orders(r["key"]).items():
+                if got != r["order"]:
+                    bad += 1
+                    print(f"SOURCE MISMATCH {r['key']} ({where}): {got}, record says {r['order']}")
+        print("all assignments reproduce and every source follows them" if not bad else f"{bad} mismatches")
         sys.exit(1 if bad else 0)
     rows, split = assign(current_items())
     for r in rows:

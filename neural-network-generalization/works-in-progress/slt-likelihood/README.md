@@ -1,6 +1,6 @@
 # Smooth likelihoods and polynomial learning bounds for NNBayes
 
-Dmitry Vaintrob, Kaarel Hänni, and OpenAI Codex · 19 October 2026
+Kaarel Hänni, Dmitry Vaintrob, and OpenAI Codex · 19 October 2026
 
 **Work in progress.** This note gives conventional proofs of several likelihood-sensitive results. It has received independent AI-agent mathematical review ([strong-prior positive results](verification/positive-review.md), [finite-scale extension](verification/finite-scale-review.md), [obstructions](verification/obstructions-review.md)); it is not Lean verified.
 
