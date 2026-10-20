@@ -1,6 +1,6 @@
 # Order of the two human authors
 
-20 October 2026. Dmitry Vaintrob and Kaarel Hänni are the two human authors of most papers in this collection. This record fixes the order of their two names on each paper and shows how anyone can check it.
+20 October 2026. Dmitry Vaintrob and Kaarel Hänni are the two human authors of most papers in this collection. This record fixes the order of their two names on each paper or note that lists both of them, and shows how anyone can check it.
 
 ## The rule
 
@@ -14,22 +14,32 @@ Three orders were decided by the authors:
 
 Every other paper or note with both names as authors was randomized: 35 in all, 33 catalogued papers and two Markdown notes. The draw gives one order to 18 of them and the other to 17, and a separate random bit decides which order gets 18.
 
-1. **Ranking.** Each title is hashed with SHA-256 (UTF-8 encoding); the digests, read as integers, rank the 35 items, smallest first. The title is the `title` field in [catalog.json](../catalog.json), or a note's first heading, as recorded in [author-order-2026-10-20.json](author-order-2026-10-20.json).
-2. **Split bit.** The 35 titles are sorted in code-point order, joined with newlines and hashed with SHA-256. If the last bit of the digest is 0, Kaarel Hänni is first on the first 18 items in the ranking. If it is 1, he is first on the first 17.
+1. **Ranking.** Each title is hashed with SHA-256 (UTF-8 encoding). The digests, read as 256-bit big-endian integers (equivalently, the hex digests sorted as strings), rank the 35 items, smallest first. The title is the `title` field in [catalog.json](../catalog.json), or a note's first heading, as recorded in [author-order-2026-10-20.json](author-order-2026-10-20.json).
+2. **Split bit.** The 35 titles are sorted in code-point order and joined with single newlines, with no trailing newline; the UTF-8 bytes are hashed with SHA-256. If the last bit of the digest is 0 (its last hex digit is even), Kaarel Hänni is first on the first 18 items in the ranking. If it is 1, he is first on the first 17.
 3. **Other authors.** Every other author keeps their position; only the two human names move.
 
-Given the titles, the hash ranking behaves like a uniformly random permutation, and its first $m$ items like a uniformly random set of $m$. Each paper therefore gets either order with probability 1/2, and the total split is 18/17 one way or the other. Unlike independent coin flips per paper, the outcomes are not independent across papers: fixing the totals makes them slightly negatively correlated.
+Treat SHA-256 as a random function, the usual heuristic for hash draws. The ranking is then a uniformly random permutation of the 35 items. The split bit is an independent fair coin, since its input, all titles joined, differs from every single title. So each item gets Kaarel Hänni first with probability ½·18/35 + ½·17/35 = 1/2, and the totals are exactly 18/17 one way or the other. Unlike independent coin flips, the outcomes for different items are not independent: fixing the totals gives any two items a correlation of −1/35.
 
 **The draw.** The split digest is `058250d591652459c3073746f1f7f9ceaa740ae2ac1371bea445f81a5c661240`. Its last bit is 0, so Kaarel Hänni is first on 18 randomized items and Dmitry Vaintrob on 17. With the three fixed papers, each is first on 19 of the 38.
 
 ## Commit order
 
-The rule was committed before it was computed, so that the outcome could not have shaped it.
+Each rule was committed, and pushed to GitHub, before it was run and before any paper was changed. Git records this order. It cannot by itself show that a rule was not computed privately before it was committed.
 
-- Commit `50f6df57` fixed a first rule: the parity of each title's letter sum. When computed, it gave 21 items to one order and 14 to the other. At the authors' request it was replaced, before it was applied to any paper.
-- Commit `52360309` fixed the rule above, again before it was computed. Its rule code is unchanged in [author_order.py](author_order.py); the script later gained only a check of the sources.
+- Commit `50f6df57` fixed a first rule: the parity of each title's letter sum. When computed, it put Kaarel Hänni first on 21 items and Dmitry Vaintrob first on 14. That is not the exact 18/17 split the authors asked for, so at their request it was replaced before it was applied to any paper. With the three fixed papers, the replacement lowered Kaarel Hänni's total from 22 to 19.
+- Commit `52360309` fixed the rule above, before it was run. Its rule code is unchanged in [author_order.py](author_order.py); the script later gained only checks of the sources. The docstring committed there says "before any outcome was computed" and "before this script was first run". Both refer to the second rule and that version of the script; the first rule had been computed with the `50f6df57` version. Its "21 papers" means 21 items, including the two notes.
 
-The canonical certified protocol is the American Economic Association's author randomization tool. It records each draw publicly, and papers using it mark the order with ⓡ ([Ray ⓡ Robson, 2018](https://doi.org/10.1257/aer.20161492)). This record uses an offline hash draw instead, which anyone can rerun without a third party.
+These commits are on the working branch `claude/sharp-brahmagupta-6rkm74`, not on `main`, which receives one publish commit per update. To check their order:
+
+```sh
+git fetch origin claude/sharp-brahmagupta-6rkm74
+git log --format="%h %cI %s" origin/claude/sharp-brahmagupta-6rkm74 -- neural-network-generalization/verification/author_order.py
+git show 52360309:neural-network-generalization/verification/author_order.py
+```
+
+## Other protocols
+
+The best-known protocol for certified random author order is the American Economic Association's randomization tool. It records each draw publicly, and papers using it mark the order with ⓡ ([Ray ⓡ Robson, 2018](https://doi.org/10.1257/aer.20161492)). This record uses an offline hash draw instead, which anyone can rerun without a third party. The papers carry no ⓡ mark, since this draw is not an independent uniform order for each paper. A future draw could also hash in a public randomness value fixed in advance, such as a named round of a public randomness beacon, so that the outcome could not be computed before that round.
 
 ## Result
 
@@ -75,13 +85,17 @@ Randomized items, in ranking order (the first 18 get Kaarel Hänni first):
 
 ## What changed
 
-- **Author lines.** The `\author` line and PDF metadata of the 17 papers that now have Kaarel Hänni first: strong-prior-generalization and the 16 catalogued items above whose order changed. Before this change every paper and note listed Dmitry Vaintrob first, so only the items assigned Kaarel Hänni first changed. The strong-prior paper's README and catalog entry, and the bylines of the two notes, were updated too. These PDFs were rebuilt, and nothing else in them changed.
-- **Citations.** One citation inside the collection changed: the continuous-domains paper cites the non-Gaussian-priors paper, whose order changed. The other citations of collection papers were checked and need no change, because they cite papers whose order is unchanged:
+- **Author lines.** The `\author` line of the 17 papers that now have Kaarel Hänni first, and their PDF author metadata where the source sets it: strong-prior-generalization and the 16 catalogued items above whose order changed. Two of them, cubic-parity-repair-certificate and gamma-zero-mean-energy, set no PDF author metadata, before or after. Before this change every paper and note listed Dmitry Vaintrob first, so only the items assigned Kaarel Hänni first changed. The strong-prior paper's README and catalog entry, and the bylines of the two notes, were updated too. These PDFs were rebuilt; apart from the citation below, nothing else in them changed, as a comparison of their extracted text before and after confirms.
+- **Citations.** One citation inside the collection changed: the continuous-domains paper cites the non-Gaussian-priors paper, whose order changed. The other citations of collection papers that name the authors cite papers whose order is unchanged:
   - gamma-above-one cites meanfield-all-width, gamma-below-one and subcritical-exponential;
   - gamma-below-one cites nngp-sample-complexity;
   - meanfield-quantified-width cites gamma-ge1-endpoint;
-  - standard-nngp-parity cites subcritical-exponential and nngp-sample-complexity.
-- **A stale title.** standard-nngp-parity cited main result 4 under its former title. The citation now uses the current title, and that paper was rebuilt.
+  - standard-nngp-parity cites subcritical-exponential and nngp-sample-complexity;
+  - the round-1 depth report cites the collection as a whole, under its unchanged byline.
+
+  The remaining citations of collection papers give only titles or paths, so nothing in them depends on author order.
+- **A stale title.** While checking citations, a stale title unrelated to author order was also fixed. standard-nngp-parity cited subcritical-exponential (main result 4) under its former title, *Exponential parity sample complexity throughout the subcritical width regime*. It now uses the current title, and that paper was rebuilt.
+- **Two papers with one printed title.** positive-subcritical-sample-complexity, an earlier version, prints the same title as subcritical-sample-complexity. Their catalog titles differ, and the draw used those, so the two now have opposite orders.
 
 ## Not covered by the rule
 
@@ -90,8 +104,8 @@ Randomized items, in ranking order (the first 18 get Kaarel Hänni first):
   - gamma-proof-audit (OpenAI Codex);
   - the two depth round reports (OpenAI Codex and Claude);
   - strong-prior-appendix-audit (prepared by ChatGPT for the two authors).
-- **Works outside the collection.** Citations of the Vaintrob–Hänni lecture notes and slides, and of the arXiv paper *Width-Robust Learnability in Mean-Field Bayesian Neural Networks*, keep their published order.
-- **Byline and records.** The collection README's byline is unchanged. So are historical records and frozen build inputs: the copies in `works-in-progress/depth-experiments/` and its `root-audits/`, and the earlier JSON records.
+- **Works outside the collection.** Citations of the Vaintrob–Hänni lecture notes (also cited as slides), and of the arXiv paper *Width-Robust Learnability in Mean-Field Bayesian Neural Networks*, keep their published order. So does the credit to the two authors for the outline of the Claude Fable 5 draft cited by gamma-above-one.
+- **Byline and records.** The collection README's byline is unchanged. So are historical records and frozen build inputs: the copies in `works-in-progress/depth-experiments/` and its `root-audits/`, and the earlier JSON records. In particular, the strong-prior author order and PDF hashes in [claude-authorship-2026-10-19.json](claude-authorship-2026-10-19.json) are superseded by this record.
 
 ## How to check
 
@@ -101,4 +115,14 @@ From the collection root:
 python3 verification/author_order.py --check
 ```
 
-This recomputes the ranking, the split bit and every assignment from the titles frozen in the record. It also checks each paper's `\author` line, PDF metadata, README `**Authors:**` line and catalog entry, and each note's byline, against the record. It exits nonzero on any mismatch. The commit order can be checked with `git log --follow verification/author_order.py`.
+This recomputes the ranking, the split bit and every assignment from the titles frozen in the record. It confirms that the record covers exactly the papers and notes that currently list both authors, with the same titles. It checks the following against the record, and exits nonzero on any mismatch, including a missing name:
+
+- each paper's `\author` line;
+- the `pdfauthor` setting in its source;
+- its README `**Authors:**` line and catalog entry;
+- each note's byline;
+- every bibliography entry in the collection that cites a recorded title and names both authors.
+
+It does not open the PDFs. Their checksums, which `verify_collection.py` checks against the catalog, tie them to these sources.
+
+Running the script without `--check` recomputes everything from the current catalog titles and note headings, and gives the same assignment. To confirm that the frozen titles are the ones that stood when the rule was committed, compare the record with `git show 52360309:neural-network-generalization/catalog.json` on the working branch; the commands are under [Commit order](#commit-order).

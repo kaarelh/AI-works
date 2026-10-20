@@ -28,10 +28,13 @@ Usage:
   python3 verification/author_order.py            # compute the assignment from the current titles
   python3 verification/author_order.py --write    # ... and write the record
   python3 verification/author_order.py --check    # recompute from the titles frozen in the record,
-                                                  # and check every source against the record
+                                                  # and check the item set, every author line and
+                                                  # every citation of a recorded title against it
 """
 import hashlib
 import json
+import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -89,29 +92,74 @@ def current_items():
     return items
 
 
+def braced(text, start):
+    """The {...} group opening at or after start, with nested braces matched."""
+    i = text.index("{", start)
+    depth = 0
+    for j in range(i, len(text)):
+        depth += {"{": 1, "}": -1}.get(text[j], 0)
+        if depth == 0:
+            return text[i + 1:j]
+    raise ValueError("unbalanced braces")
+
+
+def order_of(text):
+    """'Hänni first', 'Vaintrob first', or None if either name is missing."""
+    k = min((i for i in (text.find("Kaarel"), text.find("H\\\"anni"), text.find("Hänni"), text.find("Hanni")) if i >= 0),
+            default=-1)
+    v = text.find("Vaintrob")
+    if k < 0 or v < 0:
+        return None
+    return "Hänni first" if k < v else "Vaintrob first"
+
+
 def source_orders(key):
-    """Orders found in an item's author line, PDF metadata and README byline."""
+    """Orders found in an item's author line, pdfauthor setting, README byline and catalog entry."""
     cat = {e["slug"]: e for e in json.loads((ROOT / "catalog.json").read_text(encoding="utf-8"))}
     found = {}
     if key in cat:
         e = cat[key]
         src = (ROOT / e["path"] / e["source_entry"]).read_text(encoding="utf-8")
-        a = src[src.find("\\author"):][:80]
-        found["author"] = a.find("Kaarel") < a.find("Vaintrob")
-        i = src.find("pdfauthor")
-        if i >= 0:
-            m = src[i:i + 80]
-            found["pdfauthor"] = m.find("Kaarel") < m.find("Vaintrob")
+        found["author"] = order_of(braced(src, src.index("\\author")))
+        if "pdfauthor" in src:
+            found["pdfauthor"] = order_of(braced(src, src.index("pdfauthor")))
         readme = ROOT / e["path"] / "README.md"
         for line in (readme.read_text(encoding="utf-8").splitlines() if readme.exists() else []):
             if line.startswith("**Authors:**"):
-                found["readme"] = line.find("Kaarel") < line.find("Vaintrob")
+                found["readme"] = order_of(line)
         if "authors" in e:
-            found["catalog"] = e["authors"].index("Kaarel Hänni") < e["authors"].index("Dmitry Vaintrob")
+            found["catalog"] = order_of(" ".join(e["authors"]))
     else:
         line = next(l for l in (ROOT / key).read_text(encoding="utf-8").splitlines() if "Vaintrob" in l)
-        found["byline"] = line.find("Kaarel") < line.find("Vaintrob")
-    return {where: "Hänni first" if hanni else "Vaintrob first" for where, hanni in found.items()}
+        found["byline"] = order_of(line)
+    return found
+
+
+def letters(text):
+    return re.sub(r"[^a-z0-9]", "", text.lower())
+
+
+def citation_orders(rec):
+    """(file, cited key, order) for every bibliography entry in the collection that cites a recorded
+    title and names both authors. Frozen build inputs under works-in-progress/depth-experiments/ are
+    historical copies and are skipped."""
+    titles = {letters(r["title"]): r["key"] for r in rec["assignments"]}
+    try:
+        files = subprocess.run(["git", "ls-files", "*.tex", "*.bib"], cwd=ROOT, capture_output=True,
+                               text=True, check=True).stdout.split()
+    except (OSError, subprocess.CalledProcessError):  # not a git checkout, e.g. a downloaded archive
+        files = sorted(str(f.relative_to(ROOT)) for ext in ("*.tex", "*.bib") for f in ROOT.rglob(ext))
+    out = []
+    for f in files:
+        if f.startswith("works-in-progress/depth-experiments/"):
+            continue
+        text = (ROOT / f).read_text(encoding="utf-8", errors="replace")
+        for entry in re.split(r"\\bibitem|\\end\{thebibliography\}|@\w+\{", text)[1:]:
+            flat = letters(entry)
+            for t, key in titles.items():
+                if t in flat and order_of(entry):
+                    out.append((f, key, order_of(entry)))
+    return out
 
 
 def main():
@@ -122,11 +170,24 @@ def main():
         for r in rows:
             print(f"{r['key']}: {r['order']}" + (f" (rank {r['rank']})" if r["rank"] else " (fixed)"))
         print(split)
+        current = dict(current_items())
+        recorded = {r["key"]: r["title"] for r in rec["assignments"]}
+        if current != recorded:
+            bad += 1
+            print("ITEM SET MISMATCH: only now", sorted(set(current.items()) - set(recorded.items())),
+                  "only in record", sorted(set(recorded.items()) - set(current.items())))
+        orders = {r["key"]: r["order"] for r in rec["assignments"]}
         for r in rec["assignments"]:
             for where, got in source_orders(r["key"]).items():
                 if got != r["order"]:
                     bad += 1
-                    print(f"SOURCE MISMATCH {r['key']} ({where}): {got}, record says {r['order']}")
+                    print(f"SOURCE MISMATCH {r['key']} ({where}): {got or 'a name is missing'}, record says {r['order']}")
+        cites = citation_orders(rec)
+        for f, key, got in cites:
+            if got != orders[key]:
+                bad += 1
+                print(f"CITATION MISMATCH {f} cites {key}: {got}, record says {orders[key]}")
+        print(f"checked {len(cites)} citations of recorded titles")
         print("all assignments reproduce and every source follows them" if not bad else f"{bad} mismatches")
         sys.exit(1 if bad else 0)
     rows, split = assign(current_items())
