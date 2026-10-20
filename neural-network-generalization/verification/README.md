@@ -72,3 +72,12 @@ The [FAQ question on targets other than parity](../TECHNICAL-FAQ.md#for-gamma1-i
 ## Standard-scaling NNGP parity, 19 October 2026
 
 The [standard-scaling NNGP parity paper](../side-results/standard-nngp-parity/README.md) brings the inventory to 41 papers. It proves superpolynomial parity lower bounds at the usual NNGP scaling and identifies where the subcritical exponential proof breaks; $\exp(\Omega(d))$ remains open there. Its [review record](../side-results/standard-nngp-parity/verification/review.md) describes two rounds of independent AI-agent review. Its numerics folder contains the spectrum and posterior computations. The paper builds from source with two LaTeX passes, without warnings or unresolved references. It is a conventional proof, outside the Lean verification.
+
+## Standard-scaling NNGP parity revision, 20 October 2026
+
+The [standard-scaling NNGP parity paper](../side-results/standard-nngp-parity/README.md) was revised in two ways.
+
+- **New theorem.** It adds a nearly exponential typical-sample lower bound for the learner conditioned only on training signs. The coercivity input of that bound is the Lean theorem `parity_squared_coercivity_probability`.
+- **Correction.** The obstruction section is corrected: a conditional "matching upper bound" paragraph had a false premise. It is replaced by a sharper lower bound on the conditioning cost per sample.
+
+The [revision record](../side-results/standard-nngp-parity/verification/review.md#revision-of-20-october-2026) describes the exploration, the independent AI-agent reviews and the supporting files. The revised paper builds from source in two LaTeX passes, without warnings or unresolved references. The inventory is unchanged at 41 papers.
