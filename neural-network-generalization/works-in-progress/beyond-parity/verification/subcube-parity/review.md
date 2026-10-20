@@ -73,6 +73,19 @@ Five reviewers read the finished material, each with one lens. Together they mad
   - **Earlier outputs.** The `.out` files the comparisons refer to are not included, and the README now says so.
 - **Rendering and links.** Underscores and asterisks inside plain inline math can pair into emphasis on GitHub. Every such span in the note, the companion note and the FAQ section now uses the `` $`...`$ `` form. Every relative link and anchor resolves.
 
+## Runs added after the first publication
+
+Sixteen training runs finished after the package was first assembled; they are in `numerics/runs/` and `numerics/results.md`. They add, all numerically:
+
+- the two-head runs at $d=35$ and the control at $d=31$;
+- parity alone on the three-layer trunk with one readout at $d=19$, 23, 27 and 31, none learned within its budget;
+- the plain MLP with Gaussian initialization at $d=19$, 23 and 27, which learned the parity half of $`f^*`$ only at $d=19$;
+- second seeds;
+- one SGD run;
+- default-initialization runs at $d=35$.
+
+The note's Section 3.2, its Summary, this package's README and the FAQ section were updated to match. An independent agent checked every changed number against the run summaries, and checked that the wording stays within what the runs show.
+
 ## Not checked
 
 - Full texts of the cited literature.

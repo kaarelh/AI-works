@@ -38,16 +38,24 @@ Common settings: square loss on $`\pm1`$ labels, batch 512, fresh uniform sample
 | run | target | d | architecture | init | optimizer | seed | budget | samples to 0.05: zneg | zpos | all | final samples | final err: all | zneg | zpos | stop |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | `ctrl19_s1` | `ctrl` | 19 | two-head trunk 3×512 | `gaussian` | Adam 1e-3 | 1 | 3.00e7 | 9.98e6 | 5.12e4 | 9.98e6 | 1.05e7 | 0.0068 | 0.0135 | 0.0000 | early |
+| `ctrl19_s2` | `ctrl` | 19 | two-head trunk 3×512 | `gaussian` | Adam 1e-3 | 2 | 3.00e7 | 1.79e7 | 5.12e4 | 1.77e7 | 1.84e7 | 0.0004 | 0.0009 | 0.0000 | early |
 | `ctrl23_s1` | `ctrl` | 23 | two-head trunk 3×512 | `gaussian` | Adam 1e-3 | 1 | 4.00e7 | 1.89e7 | 5.12e4 | 1.84e7 | 1.95e7 | 0.0027 | 0.0054 | 0.0000 | early |
+| `ctrl23_s2` | `ctrl` | 23 | two-head trunk 3×512 | `gaussian` | Adam 1e-3 | 2 | 4.00e7 | 2.61e7 | 5.12e4 | 2.59e7 | 2.66e7 | 0.0082 | 0.0165 | 0.0000 | early |
 | `ctrl27_s1` | `ctrl` | 27 | two-head trunk 3×512 | `gaussian` | Adam 1e-3 | 1 | 4.00e7 | – | 5.12e4 | – | 4.00e7 | 0.2502 | 0.5004 | 0.0000 | cap |
 | `ctrl31_s1` | `ctrl` | 31 | two-head trunk 3×512 | `gaussian` | Adam 1e-3 | 1 | 6.00e7 | – | 5.12e4 | – | 6.00e7 | 0.2508 | 0.5015 | 0.0000 | cap |
+| `mlpmix19_s1` | `mix` | 19 | MLP 3×512 | `gaussian` | Adam 1e-3 | 1 | 3.00e7 | 3.33e6 | 3.33e6 | 3.33e6 | 3.84e6 | 0.0188 | 0.0050 | 0.0326 | early |
+| `mlpmix23_s1` | `mix` | 23 | MLP 3×512 | `gaussian` | Adam 1e-3 | 1 | 5.00e7 | – | 7.94e6 | – | 5.00e7 | 0.2500 | 0.4991 | 0.0009 | cap |
+| `mlpmix27_s1` | `mix` | 27 | MLP 3×512 | `gaussian` | Adam 1e-3 | 1 | 6.00e7 | – | 1.92e7 | – | 6.00e7 | 0.2526 | 0.5003 | 0.0049 | cap |
+| `mix35def_s1` | `mix` | 35 | two-head trunk 3×512 | `default` | Adam 1e-3 | 1 | 8.00e7 | 7.14e7 | – | 7.63e7 | 8.00e7 | 0.0427 | 0.0153 | 0.0701 | cap |
 | `mix19_s1` | `mix` | 19 | two-head trunk 3×512 | `gaussian` | Adam 1e-3 | 1 | 3.00e7 | 2.82e6 | 3.33e6 | 2.82e6 | 3.84e6 | 0.0159 | 0.0046 | 0.0272 | early |
 | `mix19_s2` | `mix` | 19 | two-head trunk 3×512 | `gaussian` | Adam 1e-3 | 2 | 3.00e7 | 2.56e6 | 3.33e6 | 2.82e6 | 3.84e6 | 0.0181 | 0.0079 | 0.0284 | early |
 | `mix23_s1` | `mix` | 23 | two-head trunk 3×512 | `gaussian` | Adam 1e-3 | 1 | 5.00e7 | 9.47e6 | 1.15e7 | 1.02e7 | 1.20e7 | 0.0269 | 0.0121 | 0.0417 | early |
 | `mix23_s2` | `mix` | 23 | two-head trunk 3×512 | `gaussian` | Adam 1e-3 | 2 | 5.00e7 | 8.19e6 | 1.05e7 | 8.70e6 | 1.10e7 | 0.0249 | 0.0050 | 0.0449 | early |
 | `mix27_s1` | `mix` | 27 | two-head trunk 3×512 | `gaussian` | Adam 1e-3 | 1 | 8.00e7 | 1.66e7 | 2.71e7 | 2.02e7 | 2.76e7 | 0.0239 | 0.0039 | 0.0439 | early |
+| `mix27_s2` | `mix` | 27 | two-head trunk 3×512 | `gaussian` | Adam 1e-3 | 2 | 8.00e7 | 1.66e7 | 2.41e7 | 1.92e7 | 2.46e7 | 0.0253 | 0.0011 | 0.0495 | early |
 | `mix31_s1` | `mix` | 31 | two-head trunk 3×512 | `gaussian` | Adam 1e-3 | 1 | 8.00e7 | 4.81e7 | 6.76e7 | 5.58e7 | 6.99e7 | 0.0260 | 0.0079 | 0.0442 | early |
 | `mix35_s1` | `mix` | 35 | two-head trunk 3×512 | `gaussian` | Adam 1e-3 | 1 | 2.20e8 | 7.55e7 | 1.05e8 | 8.06e7 | 1.06e8 | 0.0244 | 0.0007 | 0.0481 | early |
+| `sgd19a_s1` | `mix` | 19 | two-head trunk 3×512 | `gaussian` | sgd 0.05 mom 0.9 | 1 | 3.00e7 | 6.40e6 | 8.45e6 | 7.17e6 | 8.96e6 | 0.0257 | 0.0083 | 0.0430 | early |
 
 ### Single targets
 
@@ -55,16 +63,21 @@ Common settings: square loss on $`\pm1`$ labels, batch 512, fresh uniform sample
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | `par1L31def_s1` | `par` | 31 | MLP 1×1024 | `default` | Adam 1e-3 | 1 | 6.00e7 | 3.07e6 | 3.58e6 | 0.0088 | early |
 | `par1L31def_s2` | `par` | 31 | MLP 1×1024 | `default` | Adam 1e-3 | 2 | 6.00e7 | 3.33e6 | 3.84e6 | 0.0187 | early |
+| `par1L35def_s1` | `par` | 35 | MLP 1×1024 | `default` | Adam 1e-3 | 1 | 6.00e7 | – | 6.00e7 | 0.4934 | cap |
 | `par1L31d0_s1` | `par` | 31 | MLP 1×1024 | `default0` | Adam 1e-3 | 1 | 3.00e7 | 7.68e6 | 8.19e6 | 0.0467 | early |
 | `par1L19_s1` | `par` | 19 | MLP 1×1024 | `gaussian` | Adam 1e-3 | 1 | 3.00e7 | 2.30e6 | 2.82e6 | 0.0060 | early |
 | `par1L23_s1` | `par` | 23 | MLP 1×1024 | `gaussian` | Adam 1e-3 | 1 | 3.00e7 | 3.84e6 | 4.35e6 | 0.0179 | early |
 | `par1L27_s1` | `par` | 27 | MLP 1×1024 | `gaussian` | Adam 1e-3 | 1 | 3.00e7 | 1.64e7 | 1.69e7 | 0.0271 | early |
+| `par1L27_s2` | `par` | 27 | MLP 1×1024 | `gaussian` | Adam 1e-3 | 2 | 6.00e7 | 5.89e6 | 6.40e6 | 0.0265 | early |
 | `par1L31L_s1` | `par` | 31 | MLP 1×1024 | `gaussian` | Adam 1e-3 | 1 | 1.50e8 | – | 1.50e8 | 0.4986 | cap |
 | `par1L31_s1` | `par` | 31 | MLP 1×1024 | `gaussian` | Adam 1e-3 | 1 | 3.00e7 | – | 3.00e7 | 0.5009 | cap |
 | `par1L31g3_s1` | `par` | 31 | MLP 1×1024 | `gaussian3` | Adam 1e-3 | 1 | 3.00e7 | – | 3.00e7 | 0.4984 | cap |
 | `par1L31g3U_s1` | `par` | 31 | MLP 1×1024 | `gaussian3U` | Adam 1e-3 | 1 | 3.00e7 | – | 3.00e7 | 0.5035 | cap |
 | `par1L31gU_s1` | `par` | 31 | MLP 1×1024 | `gaussianU` | Adam 1e-3 | 1 | 3.00e7 | – | 3.00e7 | 0.5007 | cap |
+| `par19_s1` | `par` | 19 | one-head trunk 3×512 | `gaussian` | Adam 1e-3 | 1 | 2.00e7 | – | 2.00e7 | 0.4983 | cap |
+| `par23_s1` | `par` | 23 | one-head trunk 3×512 | `gaussian` | Adam 1e-3 | 1 | 2.00e7 | – | 2.00e7 | 0.4994 | cap |
 | `par27_s1` | `par` | 27 | one-head trunk 3×512 | `gaussian` | Adam 1e-3 | 1 | 3.00e7 | – | 3.00e7 | 0.4992 | cap |
+| `par31_s1` | `par` | 31 | one-head trunk 3×512 | `gaussian` | Adam 1e-3 | 1 | 6.00e7 | – | 6.00e7 | 0.5020 | cap |
 
 ### Run details
 
@@ -73,46 +86,45 @@ Wall time is on a shared machine running two jobs at once. At small $`D`$ the 20
 | run | wall time (s) | resampled training points | distinct test points | parameters |
 |---|---|---|---|---|
 | `ctrl19_s1` | 748 | 201919 | 19821 | 536578 |
+| `ctrl19_s2` | 1000 | 355154 | 19805 | 536578 |
 | `ctrl23_s1` | 1293 | 22959 | 19978 | 538626 |
+| `ctrl23_s2` | 1457 | 32024 | 19981 | 538626 |
 | `ctrl27_s1` | 2764 | 2977 | 20000 | 540674 |
 | `ctrl31_s1` | 4721 | 286 | 20000 | 542722 |
+| `mlpmix19_s1` | 204 | 74099 | 19821 | 536577 |
+| `mlpmix23_s1` | 2806 | 59755 | 19978 | 538625 |
+| `mlpmix27_s1` | 3313 | 4497 | 20000 | 540673 |
+| `mix35def_s1` | 4343 | 14 | 20000 | 544770 |
 | `mix19_s1` | 253 | 73499 | 19821 | 536578 |
 | `mix19_s2` | 260 | 74215 | 19805 | 536578 |
 | `mix23_s1` | 801 | 14183 | 19978 | 538626 |
 | `mix23_s2` | 686 | 13226 | 19981 | 538626 |
 | `mix27_s1` | 1802 | 2073 | 20000 | 540674 |
+| `mix27_s2` | 1208 | 1834 | 20000 | 540674 |
 | `mix31_s1` | 5336 | 318 | 20000 | 542722 |
 | `mix35_s1` | 8702 | 23 | 20000 | 544770 |
+| `sgd19a_s1` | 417 | 172414 | 19821 | 536578 |
 | `par1L31def_s1` | 48 | 36 | 20000 | 33793 |
 | `par1L31def_s2` | 57 | 26 | 20000 | 33793 |
+| `par1L35def_s1` | 506 | 30 | 20000 | 37889 |
 | `par1L31d0_s1` | 122 | 86 | 20000 | 33793 |
 | `par1L19_s1` | 82 | 109749 | 19627 | 21505 |
 | `par1L23_s1` | 116 | 10453 | 19975 | 25601 |
 | `par1L27_s1` | 238 | 2599 | 19999 | 29697 |
+| `par1L27_s2` | 50 | 970 | 19998 | 29697 |
 | `par1L31L_s1` | 2429 | 1424 | 20000 | 33793 |
 | `par1L31_s1` | 437 | 273 | 20000 | 33793 |
 | `par1L31g3_s1` | 457 | 273 | 20000 | 33793 |
 | `par1L31g3U_s1` | 447 | 273 | 20000 | 33793 |
 | `par1L31gU_s1` | 453 | 273 | 20000 | 33793 |
+| `par19_s1` | 1020 | 778287 | 19627 | 536065 |
+| `par23_s1` | 1019 | 47550 | 19975 | 538113 |
 | `par27_s1` | 1987 | 4412 | 19999 | 540161 |
+| `par31_s1` | 3418 | 557 | 20000 | 542209 |
 
 ### Pending
 
-These entries of `jobs.txt` have no summary in `runs/` yet (queued, running, or interrupted). They are left out of the tables above.
-
-- `par31_s1`: `par 31 --seed 1 --max_samples 6e7`
-- `mix27_s2`: `mix 27 --seed 2 --max_samples 8e7`
-- `par1L35def_s1`: `par 35 --arch mlp --depth 1 --width 1024 --init default --seed 1 --max_samples 6e7`
-- `par23_s1`: `par 23 --seed 1 --max_samples 2e7`
-- `par19_s1`: `par 19 --seed 1 --max_samples 2e7`
-- `ctrl19_s2`: `ctrl 19 --seed 2 --max_samples 3e7`
-- `ctrl23_s2`: `ctrl 23 --seed 2 --max_samples 4e7`
-- `par1L27_s2`: `par 27 --arch mlp --depth 1 --width 1024 --seed 2 --max_samples 6e7`
-- `mlpmix19_s1`: `mix 19 --arch mlp --seed 1 --max_samples 3e7`
-- `mlpmix23_s1`: `mix 23 --arch mlp --seed 1 --max_samples 5e7`
-- `mlpmix27_s1`: `mix 27 --arch mlp --seed 1 --max_samples 6e7`
-- `sgd19a_s1`: `mix 19 --opt sgd --lr 0.05 --momentum 0.9 --seed 1 --max_samples 3e7`
-- `mix35def_s1`: `mix 35 --init default --seed 1 --max_samples 8e7`
+None: every entry of `jobs.txt` has a summary.
 
 ## PyTorch-default-initialization runs (`round1-default-init/gd_train.py`)
 
