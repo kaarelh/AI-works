@@ -118,9 +118,10 @@ w(f"Common settings: square loss on $`\\pm1`$ labels, batch 512, fresh uniform s
   f"seeded generator (10000 in each $`z`$-half for two-half targets). Any training point that coincides "
   f"with a test point is resampled, so the test points are never trained on. Errors are sign errors on the "
   f"test set. Evaluation every 100 steps up to step 2000 and every 500 steps after. "
-  f"\"Samples to {THR}\" is the first evaluation at which that error is at most {THR}. "
-  f"A run stops early (\"early\") once every tracked error (both halves, or the single error) has been at "
-  f"most {THR} at 3 consecutive evaluations; otherwise it runs to its budget (\"cap\"). "
+  f"\"Samples to {THR}\" is the first evaluation at which that error is less than {THR} (errors are computed "
+  f"in single precision, so an error of exactly {THR} does not count). "
+  f"A run stops early (\"early\") once every tracked error (both halves, or the single error) has been "
+  f"less than {THR} at 3 consecutive evaluations; otherwise it runs to its budget (\"cap\"). "
   f"\"Final\" is the last evaluation. Optimizer: Adam, learning rate 1e-3, unless stated.\n")
 
 two = [(n, S) for n, S in runs if S["args"]["target"] in ("mix", "ctrl")]
