@@ -251,16 +251,17 @@ For targets other than parity, see the [next question](#for-gamma1-is-the-bad-sa
 
 ## For $\gamma<1$, is the bad sample complexity specific to parity?
 
-**No. Many other targets also need a high power of $d$ samples; only the exponential bound relies on special properties of parity.** The exponential lower bounds for $\gamma<1$ summarized in Question 8 come from the [subcritical paper](main-results/subcritical-exponential/paper.pdf). They are stated for parity. Applied to another target, the same proof gives a bound governed by how far the target is from polynomial threshold functions of low degree. Concretely:
+**No. Many other targets also need a high power of $d$ samples, and the exponential bound needs only a large parity on part of the cube.** The exponential lower bounds for $\gamma<1$ summarized in Question 8 come from the [subcritical paper](main-results/subcritical-exponential/paper.pdf). They are stated for parity. Applied to another target, the same proof gives a bound governed by how far the target is from polynomial threshold functions of low degree. Concretely:
 
 - **Many targets other than parity need a high power of $d$ samples.**
   - For a target that depends on a constant number of coordinates, the exponent is roughly its threshold degree, defined below.
   - For example, $h=\mathrm{MAJ}(x_1x_2,x_3x_4,x_5x_6)$ needs at least about $d^2$ samples in every $\gamma<1$ regime, and about $d^3$ at $\gamma<0$. This holds even under the confidence criterion of Question 5.
   - A function $g$ that mixes a three-bit parity with a three-bit majority needs at least about $d^3$ samples at $\gamma<0$, although SGD is expected to learn it from about $d$.
 - **Some targets with full Fourier degree are cheap.** Majority of all $d$ bits is learned from polynomially many samples.
-- **Exponential bounds need more.** Parity is close to threshold functions of degree about $\sqrt d$, so the distance argument gives it only $\exp(\Theta(\sqrt d\log d))$. The exponential parity bound uses two further margin-sensitive lemmas, and these appear to extend to some parity-like targets.
+- **Exponential bounds need a large parity somewhere.** Parity is close to threshold functions of degree about $\sqrt d$, so the distance argument gives it only $\exp(\Theta(\sqrt d\log d))$. The exponential parity bound uses two further margin-sensitive lemmas. These localize: a target that equals a parity of linearly many bits on a subcube of constant codimension needs $\exp(\Omega(d))$ samples, whatever it does elsewhere.
+- **Such a target can be one that gradient descent climbs.** The target $`f^*`$ defined below is a sign-staircase on half of the cube and full parity on the other half. These learners need exponentially many samples for it (proved). A layerwise greedy learner provably learns it from polynomially many, and Adam on a two-head network learned it at every dimension tested (numerical, $d\le31$).
 
-The [supporting note](works-in-progress/beyond-parity/README.md) gives the statements, proofs, and checks behind this answer. Its new arguments combine lemmas of the subcritical paper, standard learning-theory bounds, and an elementary Boolean-function fact. They have independent AI-agent checks, but they are not Lean verified and have not been reviewed by a human.
+The [supporting note](works-in-progress/beyond-parity/README.md) gives the statements, proofs, and checks behind this answer, and a [second note](works-in-progress/beyond-parity/subcube-parity.md) covers parity on a subcube and the target $`f^*`$. Their new arguments combine lemmas of the subcritical paper, standard learning-theory bounds, and elementary Boolean-function facts. They have independent AI-agent checks, but they are not Lean verified and have not been reviewed by a human.
 
 **Setting.** As the width tends to infinity at fixed $\gamma<1$, the hidden preactivations diverge and tanh acts as a sign function. Each layer then maps the correlation between two inputs through the arcsine function $\Psi$ below. The three $\gamma<1$ learners of Question 8 are thus described by one kernel on the cube:
 
@@ -325,7 +326,14 @@ Full Fourier degree is therefore no obstacle for these learners. A sign predicti
 
 Parity, by contrast, is close to threshold functions of degree about $\sqrt d$, so this route gives it only $\exp(\Theta(\sqrt d\log d))$. The subcritical paper's exponential parity theorem reaches $\exp(\Omega(d))$ through two further margin-sensitive lemmas. Both use the fact that parity changes sign along every edge of the cube.
 
-**Extension suggested by the proof:** these lemmas appear to carry over to a wider class of targets. After some coordinates are fixed at random, such a target becomes $\pm$ a parity of linearly many bits, except with exponentially small probability. Inner product mod 2 is an example.
+**Parity on a subcube (proved).** These lemmas localize to any subcube on which the target is a parity. Write inputs as $(x,z)$ with $x\in\lbrace -1,1\rbrace ^d$ and $z\in\lbrace -1,1\rbrace ^k$. Suppose that on one subcube $\lbrace z=z_0\rbrace$ the target equals $\pm$ a parity of at least $c_Rd$ of the $`x`$-coordinates, with arbitrary values elsewhere. Fix $k$, $c_R$, the depth, and the margin. Then there is $c>0$ such that, for large $d$, every $n\le e^{cd}$, and every fixed $\gamma<1$, the following holds with probability at least $3/4$ over uniform iid samples:
+
+- in the width limit, at least $1/16$ of the subcube fails the confidence criterion, so at least $2^{-k}/16$ of all inputs fail;
+- at $\gamma<0$, at least $3/8$ of the subcube fails even with the threshold lowered to $13/20$.
+
+Labels off the subcube enter the subcritical paper's proof only through bounds that hold for every labeling, so they cannot help on the subcube. The proof loses a factor of order $8^{-k}$ in $c$.
+
+**Extension suggested by the proof:** targets that become a large parity only after linearly many coordinates are fixed are not covered. Inner product mod 2 is an example: fixing half of its coordinates leaves a parity of about a quarter of them.
 
 Exact threshold degree is a worst-case notion. Functions with high threshold degree, such as the Minsky–Papert AND of ORs, can be nearly constant under uniform inputs. For such targets our lower bounds are weak, because $\mathrm{err}_r(f)$ is small. Our upper bounds are also weak, because exact sign representations need high degree or tiny margins. So the sample complexity of such targets for these learners remains open.
 
@@ -351,6 +359,27 @@ Every Boolean function satisfies $\mathrm{Leap}(f)\le\mathrm{thr}(f)\le\deg f$; 
 The converse fails. The leap-one target $g$ needs at least about $d^3$ samples at $\gamma<0$, while SGD is conjectured to need about $d$. The note's exhaustive four-bit census suggests that targets like $g$ are common: 97.5% of the leap-one functions depending on all four of their bits have threshold degree at least two.
 
 For $`k`$-sparse parity with fixed $k\ge2$, leap, threshold degree, and degree all equal $k$. Under the conjectured rate, SGD needs about $d^{k-1}$ samples. At $\gamma<0$ these learners need between about $d^{k^*}$ and $d^{k^*+1}$. At $0\le\gamma<1$ they need at least about $d^{k^*}$ up to a factor $d^{2\beta}$, in Gibbs error. So the exponents differ only by a small constant. [Barak et al.](https://arxiv.org/abs/2207.08799) find SGD taking $d^{O(k)}$ iterations on sparse parity, near the statistical-query limit.
+
+**A target that gradient descent can climb.** For an exponential gap, let $d$ be odd and add one selector bit $z$ to $x\in\lbrace -1,1\rbrace ^d$:
+
+$$
+f^*(x,z)=\begin{cases}
+\mathrm{sign}\left(x_1+x_1x_2+\cdots+x_1x_2\cdots x_d\right),&z=+1,\\
+x_1x_2\cdots x_d,&z=-1.
+\end{cases}
+$$
+
+On $z=+1$ it is the sign of a staircase. Each prefix parity $x_1\cdots x_t$ correlates with $`f^*`$ at order $d^{-1/2}$, and each extends the previous one by one coordinate, so a learner can find them one at a time. The last of them is the full parity that $`f^*`$ equals on $z=-1$.
+
+- **These learners need $\exp(\Omega(d))$ samples (proved).** This is the subcube theorem above with $k=1$. In the width limit, for every $n\le e^{cd}$ and with probability at least $3/4$ over uniform iid samples, at least $1/32$ of all inputs fail the confidence criterion, and at least $3/16$ at $\gamma<0$.
+- **A layerwise learner provably climbs it (proved).** Consider a greedy procedure in the spirit of the staircase learner of [Abbe et al.](https://arxiv.org/abs/2108.10573). It grows product units $x_{i_1}\cdots x_{i_m}$ one coordinate at a time, keeping a unit when its correlation with the target, or with $z$ times the target, is above a threshold. It then trains two linear heads on these units, one for each value of $z$. It finds exactly the $d$ prefix parities from $O(d\log d)$ samples, and the heads reach error $\varepsilon$ from $O(d^2/\varepsilon)$ more. It is a correlation-query procedure, not gradient descent on a standard network. It stalls on parity alone, and on the control target that is $x_1$ on $z=+1$ and parity on $z=-1$.
+- **Adam on a two-head network learned it at every dimension tested (numerical).** A ReLU network computes three hidden layers of width 512 from $x$, and outputs $a\cdot h(x)+z\,b\cdot h(x)$. It was trained with Gaussian initialization and fresh samples. Its error on the parity half fell below 5% after about $2.7\cdot10^6$, $8.8\cdot10^6$, $1.7\cdot10^7$, and $4.8\cdot10^7$ samples at $d=19$, 23, 27, and 31. On the control target, the parity half took about $10^7$ samples at $d=19$ and $1.9\cdot10^7$ at $d=23$, and was not learned within $4\cdot10^7$ at $d=27$. Parity alone, on a one-hidden-layer network with Gaussian initialization, was not learned within $1.5\cdot10^8$ samples at $d=31$.
+- **What the numerics do not show.** These are one or two seeds per dimension at $d\le31$, and this range cannot distinguish polynomial from exponential growth. With PyTorch's default uniform initialization, the one-hidden-layer network learns parity alone at $d=31$ from about $3\cdot10^6$ samples. So in this range the comparison with parity alone depends on the initialization, as it does in [Abbe, Cornacchia, Hązła, and Kougang-Yombi](https://arxiv.org/abs/2412.04910). We found no theorem in which end-to-end SGD from a continuous initialization learns a linear-degree parity, or $`f^*`$, on uniform inputs (searched at abstract level).
+- **Two-head Bayesian learners (proved, given the subcritical paper's limit theorems).** Give the Bayesian network the same two-head shape, with equal variances for the two readouts. In the width limit its $\gamma<1$ posterior then splits into independent posteriors on the two halves. So the parity half fails exactly as in the subcritical paper, and the separation holds at matched topology.
+
+Both halves are needed. If a target is within distance $\eta$ of a single parity, all its other Fourier coefficients are at most $2\eta$, so there is little low-degree signal to climb. Suppose instead that a target becomes $\pm$ a parity of at least $cd$ bits after a random set of coordinates is fixed, except with probability $\delta$. Then its Fourier weight below degree $cd$ is at most $\delta$. $`f^*`$ avoids both obstacles. It is at distance about $1/4$ or more from every parity, and at least about $c/\pi$ of its Fourier weight lies below degree $cd$. Yet it equals a parity exactly on half of the cube.
+
+Without the parity half, the sign-staircase alone needs at least $\exp(\Omega(\sqrt d\log d))$ samples for these learners in all three regimes (proved). The distance argument cannot give more, because the sign-staircase is close to threshold functions of degree $O(\sqrt{d\log(1/\varepsilon)})$. Whether it is exponentially hard is open. Every symmetric target $h(\sum_ix_i)$ has the same ceiling. Parity itself is learned by SGD with $\pm1$ (Rademacher) initialization, but not with Gaussian initialization ([Abbe et al.](https://arxiv.org/abs/2412.04910)); that is an effect of initialization rather than of the target.
 
 **Comparison with kernel regression.** For contrast, consider a different predictor built from the same kernel $K$. It is the posterior mean of the centered Gaussian process with covariance $K$, given the noiseless labels as real values. That process is the NNGP of the sign-activation network in Setting, not the standard-scaling NNGP of Question 7. This posterior mean is kernel interpolation, called kernel regression below. Its squared error is governed by Fourier weight rather than by distance from threshold functions.
 
