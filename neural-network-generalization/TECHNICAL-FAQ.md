@@ -251,7 +251,9 @@ For targets other than parity, see the [next question](#for-gamma1-is-the-bad-sa
 
 ## For $\gamma<1$, is the bad sample complexity specific to parity?
 
-**No. Many other targets also need a high power of $d$ samples, and the exponential bound extends to every target that equals a large parity on a subcube of constant codimension.** The exponential lower bounds for $\gamma<1$ summarized in Question 8 come from the [subcritical paper](main-results/subcritical-exponential/paper.pdf). They are stated for parity. Applied to another target, the same proof gives a bound governed by how far the target is from polynomial threshold functions of low degree. Concretely:
+**Largely no, and certainly not technically.** Many other targets also need a high power of $d$ samples. More strikingly, some targets with small circuits that gradient descent appears to learn quickly still need exponentially many samples in this regime. The clearest example is the target $`f^*`$ below, computed by a Boolean circuit of $O(d)$ gates. The $\gamma<1$ learners provably need $\exp(\Omega(d))$ samples for it. A layerwise learner provably learns it from polynomially many, and Adam on a two-head network learned it at every dimension tested (numerical). Some restricted class of targets may still be learned well in this regime, but we do not have a good characterization.
+
+The exponential lower bounds for $\gamma<1$ summarized in Question 8 come from the [subcritical paper](main-results/subcritical-exponential/paper.pdf). They are stated for parity. Applied to another target, the same proof gives a bound governed by how far the target is from polynomial threshold functions of low degree. Concretely:
 
 - **Many targets other than parity need a high power of $d$ samples.**
   - For a target that depends on a constant number of coordinates, the exponent is roughly its threshold degree, defined below.
@@ -260,6 +262,7 @@ For targets other than parity, see the [next question](#for-gamma1-is-the-bad-sa
 - **Some targets with full Fourier degree are cheap.** Majority of all $d$ bits is learned from polynomially many samples.
 - **A large parity on a subcube is enough for an exponential bound.** Parity is close to threshold functions of degree about $\sqrt d$, so the distance argument gives it only $\exp(\Theta(\sqrt d\log d))$. The exponential parity bound uses two further margin-sensitive lemmas. These localize. Suppose the target equals a parity of linearly many bits wherever a constant number of other coordinates take fixed values. Then it needs $\exp(\Omega(d))$ samples, whatever it does elsewhere.
 - **Such a target can still be easy for a layerwise learner.** The target $`f^*`$ defined below is a sign-staircase on half of the cube and full parity on the other half. The $\gamma<1$ learners need exponentially many samples for it (proved). A layerwise greedy learner provably learns it from polynomially many. Adam on a two-head network learned it at every dimension tested, up to $d=35$, but this range cannot separate polynomial from exponential growth, and a plain fully connected network did not learn it at $d=31$ (numerical).
+- **Which targets are learned well is open.** Every fixed junta is learned from polynomially many samples, with an exponent set by its threshold degree, and so is majority of all $d$ bits (proved). Beyond such examples, we know no natural class of targets of growing complexity that these learners learn well, and no characterization.
 
 The [supporting note](works-in-progress/beyond-parity/README.md) gives the statements, proofs, and checks behind this answer, and a [second note](works-in-progress/beyond-parity/subcube-parity.md), the subcube note, covers parity on a subcube and the target $`f^*`$. Their new arguments combine lemmas of the subcritical paper, standard learning-theory bounds, and elementary Boolean-function facts. They have independent AI-agent checks, but they are not Lean verified and have not been reviewed by a human.
 
@@ -371,7 +374,7 @@ x_1x_2\cdots x_d,&z=-1.
 \end{cases}
 $$
 
-On $z=+1$ it is the sign of a staircase. For $t<d$, each prefix parity $`x_1\cdots x_t`$ correlates with $`f^*`$ at about $(2\pi d)^{-1/2}$, and each extends the previous one by one coordinate, so a learner can find them one at a time. The last, $`x_1\cdots x_d`$, is the full parity that $`f^*`$ equals on $z=-1$.
+On $z=+1$ it is the sign of a staircase. A chain of XOR gates computes the prefix parities, a linear-size majority circuit combines them, and one selector picks the half, so $`f^*`$ has a Boolean circuit of $O(d)$ gates. For $t<d$, each prefix parity $`x_1\cdots x_t`$ correlates with $`f^*`$ at about $(2\pi d)^{-1/2}$, and each extends the previous one by one coordinate, so a learner can find them one at a time. The last, $`x_1\cdots x_d`$, is the full parity that $`f^*`$ equals on $z=-1$.
 
 On the Bayesian side:
 
