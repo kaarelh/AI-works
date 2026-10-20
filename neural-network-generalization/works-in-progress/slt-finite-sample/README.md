@@ -1,6 +1,6 @@
 # Finite-sample Bayesian learning beyond parameter counting
 
-Kaarel Hänni, Dmitry Vaintrob, and OpenAI Codex · 19 October 2026
+ChatGPT-6 Astra, Kaarel Hänni, and Dmitry Vaintrob[^order] · 19 October 2026
 
 **Work in progress; not Lean verified.** This note gives an explicit finite-sample calculation for a standard Gaussian neural-network prior. It separates two questions: whether useful Bayesian bounds exist in an overparameterized regime, and whether local asymptotic learning coefficients alone provide such bounds. The first has a positive answer in the model below; the second does not.
 
@@ -255,3 +255,5 @@ Conversely, useful finite-sample bounds need not charge for every parameter. Our
 The certificate retains a linear learner-width cost. It therefore does not reproduce the arbitrary-width, teacher-complexity guarantees in the main papers, and it becomes uninformative at fixed sample size as width grows. Its polynomial depth dependence is compatible with this limitation: width independence is the missing property. The proof requires finite-scale bounds on approximation error and relative entropy with respect to the prior. These quantitative inputs are not supplied by $\lambda$ and $\nu$ alone.
 
 **Acknowledgments.** Claude's reports on parity and small-circuit learning, described in the [source review](../../verification/slt-bounds-comparison-2026-10-19.md#scope-of-the-claude-report-reviews), prompted this examination of local-volume certificates. The selective Gaussian witness and final-posterior calculation are presented explicitly here so their scope can be checked independently.
+
+[^order]: Authors are listed in alphabetical order.

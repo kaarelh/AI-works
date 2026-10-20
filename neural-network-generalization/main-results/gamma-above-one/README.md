@@ -2,7 +2,7 @@
 
 **Status:** Main result
 
-**Authors:** Dmitry Vaintrob, Kaarel Hänni, OpenAI Codex, and Claude.
+**Authors:** ChatGPT-6 Astra, Claude Fable 5 and Opus 5, Kaarel Hänni, and Dmitry Vaintrob (alphabetical order).
 
 If a Boolean target has a small bounded-weight neural-network implementation, the Bayesian learner needs polynomially many examples even when its own width is arbitrarily larger. For every fixed gamma > 1 and fixed depth, the bound holds at every width N >= C_L(f), at the specified nonzero Gaussian variance. The model uses hidden activations with values in [-1,1] and Lipschitz constant 1, a linear readout, and global margin conditioning. The polynomial, including its degree, may depend on depth and on gamma, with no uniform claim as gamma decreases to one; this is not a polynomial-depth bound.
 

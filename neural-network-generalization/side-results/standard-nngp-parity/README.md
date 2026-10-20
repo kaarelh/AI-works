@@ -2,7 +2,7 @@
 
 [Paper (PDF)](paper.pdf) · [LaTeX source](source/standard-nngp-parity.tex) · [Review record](verification/review.md) · [Revision records](verification/revision-2026-10-20/) · [Numerics](numerics/) · [Collection index](../../README.md)
 
-**Status:** Proved side result with independent AI-agent mathematical reviews. The one-sided coercivity theorem used by the typical-sample bounds is a theorem of the collection's Lean project; the rest is conventional proof, not Lean verified, not reviewed by a human, and not externally peer reviewed. Byline: Claude. Revised 20 October 2026: new nearly exponential typical-sample theorem; Section 7 (formerly 6) corrected.
+**Status:** Proved side result with independent AI-agent mathematical reviews. The one-sided coercivity theorem used by the typical-sample bounds is a theorem of the collection's Lean project; the rest is conventional proof, not Lean verified, not reviewed by a human, and not externally peer reviewed. Authors: Claude Opus 5.5, Kaarel Hänni, and Dmitry Vaintrob (alphabetical order). Revised 20 October 2026: new nearly exponential typical-sample theorem; Section 7 (formerly 6) corrected.
 
 ## Question
 

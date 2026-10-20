@@ -1,6 +1,6 @@
 # Smooth likelihoods and polynomial learning bounds for NNBayes
 
-Kaarel Hänni, Dmitry Vaintrob, and OpenAI Codex · 19 October 2026
+ChatGPT-6 Astra, Kaarel Hänni, and Dmitry Vaintrob[^order] · 19 October 2026
 
 **Work in progress.** This note gives conventional proofs of several likelihood-sensitive results. It has received independent AI-agent mathematical review ([strong-prior positive results](verification/positive-review.md), [finite-scale extension](verification/finite-scale-review.md), [obstructions](verification/obstructions-review.md)); it is not Lean verified.
 
@@ -306,3 +306,5 @@ For fixed $\gamma\ge1$, our available finite-scale teacher-tube estimate is $p\g
 The finite-scale theorem above removes this width dependence when observation variance is instead $N^{-\gamma}$. Its proof explicitly controls growing-width effects. For the globally margin-conditioned width-first model with a **fixed** smooth likelihood, the raw-prior total-variation argument does not apply; a full classification for every $\gamma\ge1$ remains open here.
 
 Finally, bounded-energy compression is the ingredient that could carry a polynomial-depth theorem under a suitable internal-stability support restriction. One must also supply an admissible teacher comparator and positive prior mass near it within that support. We have not checked a complete smooth-likelihood analogue of the robust-prior theorem. Neither that analogue nor the unrestricted polynomial-depth problem is settled by this note.
+
+[^order]: Authors are listed in alphabetical order.

@@ -2,7 +2,7 @@
 
 **Status:** Earlier supporting research report; superseded in part
 
-**Authors:** OpenAI Codex and Claude.
+**Authors:** ChatGPT-6 Astra and Claude (Fable 5 and Opus 5), in alphabetical order.
 
 Second investigation, including numerical-output stability, localized/trusted-region variants, diagonal-metric exploration, unrestricted structured-target results, critical-rate constructions, and earlier empirical findings. Preserved as a supporting report, with the newer standalone papers preferred for current statements.
 
