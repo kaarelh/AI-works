@@ -13,27 +13,25 @@ and $F_\theta(S)=\Pp_x\{q_S(x)\le\theta\}$, with $\theta=13/20$ and
 $c_\theta$ as in Lemma~\ref{lem:meanconf}. The
 main result of this section, Theorem~\ref{thm:S1}, says that for $\tanh$ at every fixed
 depth and gains, $n\le\exp(10^{-3}d\log\log d/\log d)$ examples leave
-$F_\theta(S)\ge3/8$ with probability at least $3/4$ over the sample. The
-proof follows the skeleton of \cite[Theorem~10.2]{subcritical}, with three
-changes. The clipped-parity lemma, which is linear in the amplitude of the
-posterior mean, is replaced by a restriction lemma that is logarithmic in
-it (Section~\ref{sec:restriction}). The sharp arcsine level estimates are
+$F_\theta(S)\ge3/8$ with probability at least $13/16$ over the sample. The
+proof follows the skeleton of the paper proof of
+\cite[Theorem~10.2]{subcritical}, with three changes. The clipped-parity
+lemma, which is linear in the amplitude of the posterior mean, is replaced
+by a restriction lemma that is logarithmic in it
+(Section~\ref{sec:restriction}). The sharp arcsine level estimates are
 replaced by a two-step regularity of the $\tanh$ dual coefficients
 (Section~\ref{sec:twostep}). The far-pair analysis of the sampled tail
 Gram matrix is replaced by an intrinsic-dimension matrix Chernoff bound
 (Section~\ref{sec:intdim}).
 
-\emph{Status.} For $n\le n_0(d)$ (defined in Section~\ref{sec:S1}) the
-theorem follows from Theorem~\ref{thm:signonly} and is unconditional. For
-larger $n$ the proof uses the squared coercivity lemma
-\cite[Lemma~4.4]{subcritical}, whose proof rests on
-\cite[Lemma~4.1]{subcritical}. That lemma is a bound for a squared
-Lipschitz process; its proof uses a homogeneous form of the intermediate
-estimate (2.20) in the proof of Lee's chaining theorem
-\cite[Lemma~2.12]{lee}, justified in \cite[Remark~4.2]{subcritical}. We use
-\cite[Lemma~4.1]{subcritical} as a black box. So Theorem~\ref{thm:S1} is proved conditionally on
-\cite[Lemma~4.1]{subcritical}, the lemma on which the subcritical theorem
-\cite[Theorem~1.1]{subcritical} also rests (Remark~\ref{rem:S1status}).
+\emph{Status.} Theorem~\ref{thm:S1} is proved. For $n\le n_0(d)$ (defined
+in Section~\ref{sec:S1}) it follows from Theorem~\ref{thm:signonly}. For
+larger $n$ the proof also uses a squared coercivity theorem with an
+explicit sample budget, Theorem~\ref{thm:leancoer}, which this paper does
+not prove. It is a theorem of the collection's Lean project, closed with
+the standard axioms, and the collection's main subcritical theorem uses it
+in its Lean proof. The rest of the proof is conventional and not
+formalized (Remark~\ref{rem:S1status}).
 
 \subsection{Parity after a random restriction}\label{sec:restriction}
 For integers $j,k\ge0$ let
@@ -360,10 +358,94 @@ the event
  \frac1n\sum_{i=1}^n\bigl(f(X_i)P(X_i)\bigr)_-^2\ \ge\ \frac14\|P\|_2^2
  \qquad\text{for every }P:\X\to\R\text{ with }\deg P\le r,
 \]
-where $t_-=\max\{-t,0\}$. By \cite[Lemma~4.4]{subcritical}, for each
-$\delta>0$ there is a constant $A_\delta$, which we may take to be at least
-$1$, such that $\Pp\{\mathrm{Coer}(r)\}\ge1-\delta$ whenever $r\le d/64$,
-$n\ge A_\delta D_r\log(2D_r)$ and the inputs are independent and uniform.
+where $t_-=\max\{-t,0\}$. For integers $d\ge1$ and $r\ge0$ and real
+$x\ge1$ put
+\begin{equation}\label{eq:leanbudget}
+ \mathsf B(d,r,x)=2^{76}D_r\bigl(\log(8x)+\lceil\log_2D_r\rceil+1\bigr).
+\end{equation}
+
+\begin{theorem}[Squared coercivity with an explicit budget]\label{thm:leancoer}
+Let $d,n\ge1$ and $r\ge0$ be integers with $64r\le d$ and
+$\mathsf B(d,r,n)\le n$. If $X_1,\ldots,X_n$ are independent and uniform
+on $\X$ and $f=\chi_{[d]}$, then $\Pp\{\mathrm{Coer}(r)\}\ge15/16$.
+\end{theorem}
+
+This paper does not prove Theorem~\ref{thm:leancoer}. It is the theorem
+\texttt{parity\_\allowbreak squared\_\allowbreak coercivity\_\allowbreak
+probability} in the file
+\texttt{lean/\allowbreak NeuralGeneralization/\allowbreak
+ParitySquaredSampling.lean} of the collection's Lean project
+\cite{leanproject}, with the
+same hypotheses $0<d$, $64r\le d$, $0<n$ and $\mathsf B(d,r,n)\le n$. In
+that statement $D_r$ is \texttt{lowDimension d r}, the number of subsets of
+$[d]$ of size at most $r$; $\lceil\log_2D_r\rceil$ is
+\texttt{Nat.clog 2} of it; the probability is the exact product law of $n$
+independent uniform points of the cube; $P$ ranges over all real Walsh
+expansions whose coefficients vanish above degree $r$; and $\|P\|_2^2$ is
+the uniform average of $P^2$. The constant $2^{76}$ is the one proved in
+Lean and is not optimized. The Lean proof of the collection's main
+subcritical theorem (\texttt{MainProofs.\allowbreak subcriticalExponential})
+uses this theorem. The project's verification record
+(\texttt{lean/\allowbreak VERIFICATION.md}) reports that this proof depends
+only on the axioms \texttt{propext}, \texttt{Classical.choice} and
+\texttt{Quot.sound}, and the log of its aggregate audit \texttt{Audit.lean}
+reports the same for all 7,202 proved project declarations. The record
+does not name Theorem~\ref{thm:leancoer}. But \texttt{Audit.lean} checks
+every theorem of the project in the import closure of the library's root
+module, and the recorded closure contains
+\texttt{ParitySquaredSampling.lean} (see \texttt{Audit.log} and
+\texttt{project-\allowbreak import-\allowbreak closure.json} in
+\texttt{lean/\allowbreak review/\allowbreak verification/\allowbreak
+robust-2026-10-18/}), so the audit covers Theorem~\ref{thm:leancoer}. Its
+Lean proof is a finite chaining argument formalized in the project; it does
+not use \cite[Lemma~4.1]{subcritical}. We did not rerun Lean for this
+paper. The record lists the SHA-256 hashes of the 621 files of the source
+snapshot audited on 18 October 2026, and we checked that each of these
+files is byte-identical in the current project; the record also states
+that the library sources were unchanged at the independent rebuild of
+19 October. The project's only \texttt{.lean} files outside that snapshot
+are a supplementary check and two exact-type audit scripts kept with the
+verification evidence; the library does not import them.
+For comparison, \cite[Lemma~4.4]{subcritical} gives
+$\Pp\{\mathrm{Coer}(r)\}\ge1-\delta$ for each $\delta>0$ when $r\le d/64$
+and $n\ge A_\delta D_r\log(2D_r)$, with a constant $A_\delta\ge1$ that is
+not explicit; its proof rests on \cite[Lemma~4.1]{subcritical}
+(Remark~\ref{rem:S1status}). Section~\ref{sec:obstruction} uses it for
+general $\delta$.
+
+\begin{lemma}[Inverting the budget]\label{lem:invert}
+Let $d,v\ge1$ be integers, and put $a=2^{76}D_v$ and
+$\ell=\lceil\log_2D_v\rceil+1$, so that $\mathsf B(d,v,x)=a(\log(8x)+\ell)$.
+\begin{enumerate}
+\item[(a)] The function $x\mapsto\mathsf B(d,v,x)/x$ decreases on
+$[1,\infty)$. Hence, if $x_0\ge1$ and $\mathsf B(d,v,x_0)\le x_0$, then
+$\mathsf B(d,v,x)\le x$ for every $x\ge x_0$.
+\item[(b)] If $x\ge1$ and $x<\mathsf B(d,v,x)$, then
+$x<a\,(2\log(8a)+3\ell)$.
+\item[(c)] If moreover $v\le(d+1)/3$, then
+$x<2^{77}\binom dv\bigl(120+7v\log\frac{ed}v\bigr)$.
+\end{enumerate}
+\end{lemma}
+\begin{proof}
+Since $D_v\ge d+1\ge2$, we have $\ell\ge2$. (a) The derivative of
+$(\log(8x)+\ell)/x$ is $(1-\log(8x)-\ell)/x^2<0$ for $x\ge1$. (b) The
+function $g(y)=y/(\log(8y)+\ell)$ increases on $[1,\infty)$, since
+$g'(y)=(\log(8y)+\ell-1)/(\log(8y)+\ell)^2>0$. Put $N=a(2\log(8a)+3\ell)\ge1$
+and $w=\log(8a)+2\ell$. Then $2\log(8a)+3\ell\le2w$, and $\log(2w)\le w$
+because $e^w\ge2w$ for every real $w$. Hence
+\[
+ \log(8N)+\ell=\log(8a)+\log(2\log(8a)+3\ell)+\ell
+ \le\log(8a)+w+\ell=2\log(8a)+3\ell,
+\]
+that is, $g(N)\ge a$. The hypothesis says $g(x)<a$, so $x<N$.
+(c) For $1\le q\le(d+1)/3$ we have
+$\binom d{q-1}=\frac q{d-q+1}\binom dq\le\frac12\binom dq$, so
+$D_v\le2\binom dv$; and $\binom dv\le(ed/v)^v$. With $h=v\log(ed/v)$ this
+gives $\log D_v\le\log2+h$ and $\ell\le\log_2D_v+2\le3+h/\log2$. Hence
+$2\log(8a)+3\ell=158\log2+2\log D_v+3\ell\le160\log2+9+(2+3/\log2)h
+<120+7h$, and $a\le2^{77}\binom dv$. Apply (b).
+\end{proof}
+
 For a sequence $S$ with $s$ distinct inputs $S'=(x'_1,\ldots,x'_s)$ and for
 $0\le v<d$, write $Q_v=K_{>v}$ and $Q_{v,SS}=(Q_v(X_i,X_j))_{i,j\le n}$,
 repeats included.
@@ -444,134 +526,145 @@ $k_d=\lceil\log d\rceil$,
 \]
 \[
  \varepsilon_0=\frac1{64(2+8/c_\theta^2)},\qquad
- \mathsf B_*=32\bigl((e-1)A_{1/8}+1\bigr)+A_{1/8},
+ \mathsf B_*=32\bigl((e-1)2^{77}+1\bigr)+2^{77},
 \]
-with $C_0$ as in Theorem~\ref{thm:signonly} and $A_{1/8}\ge1$ the constant
-of \cite[Lemma~4.4]{subcritical} at $\delta=1/8$. Let $\eta=\eta(\sigma_1)$
+with $C_0$ as in Theorem~\ref{thm:signonly}. Let $\eta=\eta(\sigma_1)$
 and $c_1$ be as in Lemma~\ref{lem:composite-reg}. For odd $r$ put
 \[
- \Lambda_r=2\log4+2(r+2)\log\frac{ed}{r+2},\qquad
+ \Lambda_r=120+7(r+2)\log\frac{ed}{r+2},\qquad
  \Lambda'_r=(r+2)\log\frac{eD}{r+2}+\frac{r+1}2\log\frac1\eta
  +\log\frac1{c_1},
 \]
 \[
- \mathsf B_r=32\bigl((e-1)A_{1/8}\Lambda_r+\Lambda'_r\bigr)+A_{1/8}\Lambda_r,
+ \mathsf B_r=32\bigl((e-1)2^{77}\Lambda_r+\Lambda'_r\bigr)+2^{77}\Lambda_r,
 \]
 and let
 \[
  \mathsf T_d=\log\Bigl(1+\frac4\eta\Bigr)\Bigl(1+\frac{\log d
- +\log(A_{1/8}/\varepsilon_0)}{2\log\frac{\log d}{1.3c_*}}\Bigr),
+ +\log(2^{77}/\varepsilon_0)}{2\log\frac{\log d}{1.3c_*}}\Bigr),
 \]
 \[
  \mathsf J_d=\log d+1+\log\frac{256\mathsf B_*}{c_\theta^2}+\mathsf T_d,\qquad
  \mathsf r_d=1.1\Bigl(\frac{c_*}{\log d}+\frac2d\Bigr).
 \]
-Let $d_0\ge3000$ be such that the following hold for every $d\ge d_0$.
+Let $d_0\ge3000$ be such that the following hold for every $d\ge d_0$,
+with the budget $\mathsf B$ of \eqref{eq:leanbudget}.
 \begin{enumerate}
-\item[(L1)] $A_{1/8}(d+1)\log(2d+2)<n_0(d)$.
-\item[(L2)] $\frac{4A_{1/8}}{125}\frac{\log d}d\le\frac1{23C_0}$.
-\item[(L3)] $c_*\frac d{\log d}+2\le\min\{\frac d{64},\frac{d+1}3\}$ and
+\item[(L1)] $\mathsf B(d,t-3,n_0(d))\le n_0(d)$.
+\item[(L2)] $c_*\frac d{\log d}+2\le\min\{\frac d{64},\frac{d+1}3\}$ and
 $\lceil c_*d/\log d\rceil\le d/e$.
-\item[(L4)] $2k_d\le0.1(t-2)$.
-\item[(L5)] $1.1(c_*\frac d{\log d}+2)\le0.1d$.
-\item[(L6)] $1.25(\frac{c_*}{\log d}+\frac2d)\le\frac{1.3c_*}{\log d}$ and
+\item[(L3)] $2k_d\le0.1(t-2)$.
+\item[(L4)] $1.1(c_*\frac d{\log d}+2)\le0.1d$.
+\item[(L5)] $1.25(\frac{c_*}{\log d}+\frac2d)\le\frac{1.3c_*}{\log d}$ and
 $\log\frac{\log d}{1.3c_*}\ge1$.
-\item[(L7)] $\Lambda_r\le d$ and $\Lambda'_r\le d$ for every odd
+\item[(L6)] $\Lambda_r\le d$ and $\Lambda'_r\le d$ for every odd
 $r<c_*d/\log d$.
-\item[(L8)] $A_{1/8}/\varepsilon_0\le d$.
-\item[(L9)] $\mathsf J_d\le e^2(t-4)$, $\mathsf J_d\mathsf r_d\le
+\item[(L7)] $2^{77}/\varepsilon_0\le d$.
+\item[(L8)] $\mathsf J_d\le e^2(t-4)$, $\mathsf J_d\mathsf r_d\le
 \pi/(256e^2)$ and $\mathsf r_d\le1/(8e^2\log32)$.
 \end{enumerate}
-Such a $d_0$ exists. Indeed, $\log n_0(d)\ge\frac{\sqrt d}{10}\log d
--\frac12\log d-\log(23C_0)$ (proof of Corollary~\ref{cor:signonly});
-$\Lambda_r$ and $\Lambda'_r$ are $O(c_*d\log\log d/\log d)$ for
+Such a $d_0$ exists. For (L1), let $d\ge3000$, so that $t\ge10$ and
+$n_0(d)\ge(5\sqrt d)^{10}/(23C_0)\ge1$. By the estimate
+$\binom d{q-1}\le\frac12\binom dq$ for $q\le(d+1)/3$ (proof of
+Lemma~\ref{lem:invert}) and by
+$\binom d{t-3}\le\binom dt(\frac t{d-t+1})^3\le\frac8{125d^{3/2}}\binom dt$,
+we have $D_{t-3}\le\frac{16}{125d^{3/2}}\binom dt$, and also
+$\log(8n_0(d))+\lceil\log_2D_{t-3}\rceil+1\le6+3t\log\frac{ed}t$. Hence
+\[
+ \frac{\mathsf B(d,t-3,n_0(d))}{n_0(d)}\ \le\
+ \frac{2^{80}\cdot23C_0}{125\,d^{3/2}}\Bigl(6+3t\log\frac{ed}t\Bigr)
+ =O\Bigl(\frac{\log d}d\Bigr).
+\]
+Further, $\Lambda_r$ and $\Lambda'_r$ are $O(c_*d\log\log d/\log d)$ for
 $r<c_*d/\log d$; $\mathsf T_d=(1+o(1))\frac12\log(1+\frac4\eta)
 \frac{\log d}{\log\log d}$, so $\mathsf J_d=(1+o(1))\log d$; and
 $\mathsf r_d=(1+o(1))1.1c_*/\log d$. Hence
 $\mathsf J_d\mathsf r_d\to1.1c_*<\pi/(256e^2)=1.66\ldots\cdot10^{-3}$, and
-every other condition holds for large $d$ as well.
+every other condition holds for large $d$ as well. Every constant in
+(L1)--(L8) is explicit, so $d_0$ can be computed from $\sigma_1$ and $c_1$;
+it is astronomically large (Remark~\ref{rem:d0}).
 
 \begin{theorem}[Sign-only learner, typical samples]\label{thm:S1}
 Let $\phi=\tanh$, and fix $L\ge2$ and gains $\sigma_1,\ldots,\sigma_L>0$.
-There is $d_0$, depending only on $\sigma_1$,
-$c_1=\prod_{\ell<L}c_1(q_\ell)$ and $A_{1/8}$, such that for every
+There is $d_0$, depending only on $\sigma_1$ and
+$c_1=\prod_{\ell<L}c_1(q_\ell)$, such that for every
 $d\ge d_0$ and every integer $0\le n\le n_{\max}(d)
 =\exp(10^{-3}d\log\log d/\log d)$ the following holds. If
 $X_1,\ldots,X_n$ are independent and uniform on $\X$ and $f=\chi_{[d]}$,
 then
 \[
- \Pp_S\Bigl\{\Pp_x\{q_S(x)\le\tfrac{13}{20}\}\ge\tfrac38\Bigr\}\ \ge\ \frac34 ,
+ \Pp_S\Bigl\{\Pp_x\{q_S(x)\le\tfrac{13}{20}\}\ge\tfrac38\Bigr\}\ \ge\
+ \frac{13}{16} ,
 \]
 and on the same event the sign-only network learner satisfies
 $\liminf_{N\to\infty}F_N(S)\ge3/8$. If $n\le n_0(d)$, the inner inequality
 holds for every training sequence.
 \end{theorem}
-Through $c_1$, the threshold $d_0$ depends on the depth and on
-$\sigma_1,\ldots,\sigma_{L-1}$, but not on $\sigma_L$; indeed $q_S$ does
-not change when $K$ is multiplied by a constant. The limit $N\to\infty$ is
-taken at fixed $d$, $L$, gains and $S$. By Remark~\ref{rem:readout}, the
-conclusion $\liminf_NF_N(S)\ge3/8$ also holds, on the same event and with
-the same status, for the margin learner whose readout variance is
-$\sigma_L^2N^{-b}$ with $b<1$: its correct-label probabilities converge to
-the same $q_S(x)$. Two lemmas come first.
+The theorem is proved. Its coercivity input, Theorem~\ref{thm:leancoer},
+is a theorem of the collection's Lean project, closed with the standard
+axioms; the rest of the proof is conventional and not formalized
+(Remark~\ref{rem:S1status}). Through $c_1$, the threshold $d_0$ depends on
+the depth and on $\sigma_1,\ldots,\sigma_{L-1}$, but not on $\sigma_L$;
+indeed $q_S$ does not change when $K$ is multiplied by a constant. The
+limit $N\to\infty$ is taken at fixed $d$, $L$, gains and $S$. By
+Remark~\ref{rem:readout}, the conclusion $\liminf_NF_N(S)\ge3/8$ also
+holds, on the same event and with the same status, for the margin learner
+whose readout variance is $\sigma_L^2N^{-b}$ with $b<1$: its correct-label
+probabilities converge to the same $q_S(x)$. Two lemmas come first.
 
 \begin{lemma}[Adaptive cutoff]\label{lem:cutoff}
 Let $d\ge d_0$ and $n_0(d)<n\le n_{\max}(d)$.
 \begin{enumerate}
-\item[(a)] Some odd $r\ge1$ has $A_{1/8}D_r\log(2D_r)\le n$; let $r$ be the
+\item[(a)] Some odd $r\ge1$ has $\mathsf B(d,r,n)\le n$; let $r$ be the
 largest one.
-\item[(b)] $t-4\le r<c_*d/\log d$; in particular $r\le d/64$ and
+\item[(b)] $t-4\le r<c_*d/\log d$; in particular $64r\le d$ and
 $r+2\le(d+1)/3$.
-\item[(c)] $n/\binom D{r+2}<A_{1/8}\Lambda_r$ and
-$n\lambda_{r+1}/\tau_r<A_{1/8}\Lambda_r$.
+\item[(c)] $n/\binom D{r+2}<2^{77}\Lambda_r$ and
+$n\lambda_{r+1}/\tau_r<2^{77}\Lambda_r$.
 \item[(d)] Put $\hat\rho=1.25(r+2)/d$ and
-$k^*=\lceil\log(A_{1/8}\Lambda_r/\varepsilon_0)/(2\log(1/\hat\rho))\rceil$.
+$k^*=\lceil\log(2^{77}\Lambda_r/\varepsilon_0)/(2\log(1/\hat\rho))\rceil$.
 Then $0\le k^*\le k_d$, and $u=r+2k^*$ satisfies $u+1\le D/2$,
 $\rho_u=u/d\le1.1(r+2)/d\le\mathsf r_d$ and
 $n\lambda_{u+1}/\tau_u\le n/\binom D{u+2}<\varepsilon_0$.
 \end{enumerate}
 \end{lemma}
 \begin{proof}
-Two binomial facts are used. First,
-$\binom d{q-1}=\frac q{d-q+1}\binom dq\le\frac12\binom dq$ for
-$1\le q\le(d+1)/3$, hence $D_v\le2\binom dv$ for $v\le(d+1)/3$. Second,
+The budget $\mathsf B(d,v,x)$ is nondecreasing in $v$, and
+$\mathsf B(d,v,x)\ge D_v$ for $x\ge1$. We also use
 $\binom D{j+2}/\binom Dj=\frac{(D-j)(D-j-1)}{(j+1)(j+2)}\ge
 (\frac{D-j-1}{j+2})^2$.
 
-(a) $D_1=d+1$, and $A_{1/8}D_1\log(2D_1)<n_0(d)<n$ by (L1).
+(a) We have $n>n_0(d)\ge1$ and $t-3\ge1$, so (L1) and
+Lemma~\ref{lem:invert}(a) give $\mathsf B(d,1,n)\le\mathsf B(d,t-3,n)\le n$.
 
-(b) Suppose $r\ge r_1:=\lceil c_*d/\log d\rceil$. Since $A_{1/8}\ge1$ and
-$\log(2D_r)\ge1$, $n\ge D_r\ge\binom d{r_1}\ge(d/r_1)^{r_1}$. The function
+(b) Suppose $r\ge r_1:=\lceil c_*d/\log d\rceil$. Then
+$n\ge\mathsf B(d,r,n)\ge D_r\ge\binom d{r_1}\ge(d/r_1)^{r_1}$. The function
 $x\mapsto x\log(d/x)$ increases on $(0,d/e]$, and
-$c_*d/\log d\le r_1\le d/e$ by (L3), so
+$c_*d/\log d\le r_1\le d/e$ by (L2), so
 $\log n\ge\frac{c_*d}{\log d}\log\frac{\log d}{c_*}>\log n_{\max}(d)$, a
-contradiction. Hence $r<c_*d/\log d$, and (L3) gives the two consequences.
-Now suppose $r+2\le t':=t-3$. Then $t'\le(d+1)/3$, so
-$D_{t'}\le2\binom d{t'}$ and $\log(2D_{t'})\le\log4+t'\log(ed)\le
-\frac{\sqrt d}4\log d$ for $d\ge3000$. Also
-$\binom d{t'}\le\binom dt(\frac t{d-t+1})^3\le\binom dt\frac8{125d^{3/2}}$.
-By maximality of $r$ and (L2),
-\[
- n<A_{1/8}D_{r+2}\log(2D_{r+2})\le A_{1/8}D_{t'}\log(2D_{t'})
- \le\frac{4A_{1/8}}{125}\frac{\log d}d\binom dt\le n_0(d),
-\]
-a contradiction. Hence $r\ge t-4$.
+contradiction. Hence $r<c_*d/\log d$, and (L2) gives the two consequences.
+Now suppose $r+2\le t-3$. Maximality of $r$, monotonicity in $v$, (L1) and
+Lemma~\ref{lem:invert}(a) give
+$n<\mathsf B(d,r+2,n)\le\mathsf B(d,t-3,n)\le n$, a contradiction. Hence
+$r\ge t-4$.
 
-(c) By maximality $n<A_{1/8}D_{r+2}\log(2D_{r+2})$, while
-$D_{r+2}\le2\binom d{r+2}\le2\binom D{r+2}$ and
-$\log(2D_{r+2})\le\log4+(r+2)\log\frac{ed}{r+2}$ by
-$\binom dv\le(ed/v)^v$. The second claim follows from
-Lemma~\ref{lem:levels}(b).
+(c) By maximality $n<\mathsf B(d,r+2,n)$, and $r+2\le(d+1)/3$ by (b).
+Lemma~\ref{lem:invert}(c) with $v=r+2$ gives
+$n<2^{77}\binom d{r+2}\Lambda_r\le2^{77}\binom D{r+2}\Lambda_r$. The second
+claim follows from Lemma~\ref{lem:levels}(b). Since
+$(r+2)\log\frac{ed}{r+2}\le3rH_r$ with $H_r=\log(eD/r)>5$ for
+$1\le r\le d/64$, this is a bound of the form
+$n/\binom D{r+2}\le C\,rH_r$, with $\Lambda_r\le45\,rH_r$.
 
-(d) By (L6), $\hat\rho\le1.3c_*/\log d$ and $\log(1/\hat\rho)\ge1$; by
-(L7) and (L8), $\log(A_{1/8}\Lambda_r/\varepsilon_0)\le2\log d$. So
-$k^*\le k_d$, and $k^*\ge0$ because $A_{1/8}\Lambda_r>\varepsilon_0$. For
-odd $j\in[r+2,u]$, (L4) and $r\ge t-4$ give $j+2\le r+2k_d+2\le1.1(r+2)$,
-and (L5) gives $D-j-1\ge d-1.1(r+2)\ge0.9d$. Hence
+(d) By (L5), $\hat\rho\le1.3c_*/\log d$ and $\log(1/\hat\rho)\ge1$; by
+(L6) and (L7), $\log(2^{77}\Lambda_r/\varepsilon_0)\le2\log d$. So
+$k^*\le k_d$, and $k^*\ge0$ because $2^{77}\Lambda_r>\varepsilon_0$. For
+odd $j\in[r+2,u]$, (L3) and $r\ge t-4$ give $j+2\le r+2k_d+2\le1.1(r+2)$,
+and (L4) gives $D-j-1\ge d-1.1(r+2)\ge0.9d$. Hence
 $(j+2)/(D-j-1)\le\frac{1.1}{0.9}\frac{r+2}d<\hat\rho$ and
 $\binom D{j+2}\ge\hat\rho^{-2}\binom Dj$. Iterating,
 $\binom D{u+2}\ge\hat\rho^{-2k^*}\binom D{r+2}$, so by (c)
-$n/\binom D{u+2}<A_{1/8}\Lambda_r\hat\rho^{2k^*}\le\varepsilon_0$ by the
+$n/\binom D{u+2}<2^{77}\Lambda_r\hat\rho^{2k^*}\le\varepsilon_0$ by the
 choice of $k^*$. Lemma~\ref{lem:levels}(b) at $u$ gives
 $n\lambda_{u+1}/\tau_u\le n/\binom D{u+2}$. Finally
 $u+1<u+2\le1.1(r+2)\le D/2$, and $\rho_u\le1.1(r+2)/d\le\mathsf r_d$ by
@@ -585,17 +678,18 @@ $\log(\tau_r/\tau_u)\le k^*\log(1+4/\eta)\le\mathsf T_d$.
 \begin{proof}
 Lemma~\ref{lem:transfer}(c) applies, with the $\eta$ of
 \eqref{eq:twostep}, because $u+1\le D/2$. By definition
-$k^*\le1+\log(A_{1/8}\Lambda_r/\varepsilon_0)/(2\log(1/\hat\rho))$; use
-$\Lambda_r\le d$ (L7) and $\hat\rho\le1.3c_*/\log d$ (L6).
+$k^*\le1+\log(2^{77}\Lambda_r/\varepsilon_0)/(2\log(1/\hat\rho))$; use
+$\Lambda_r\le d$ (L6) and $\hat\rho\le1.3c_*/\log d$ (L5).
 \end{proof}
 
 So $\tau_r/\tau_u\le e^{\mathsf T_d}=d^{o(1)}$, uniformly in $n$, with
 $u-r=2k^*=O(\log d/\log(1/\rho))$ for $\rho=r/d$. The convergence is slow:
-at $\sigma_1=1$, $A_{1/8}=1$ and $d=10^{58}$, $\mathsf T_d=51.0$, while
-the leading term $\frac12\log(1+\frac4\eta)\log d/\log\log d$ is $94.9$.
-The difference comes mainly from the term $\log(1/(1.3c_*))\approx6.6$ in
-the denominator $2\log(\log d/(1.3c_*))$ of $\mathsf T_d$, which at this $d$
-still exceeds $\log\log d\approx4.9$.
+at $\sigma_1=1$ and $d=10^{176}$, $\mathsf T_d=136.5$, while the leading
+term $\frac12\log(1+\frac4\eta)\log d/\log\log d$ is $234.7$. The
+difference comes mainly from the term $\log(1/(1.3c_*))\approx6.6$ in the
+denominator $2\log(\log d/(1.3c_*))$ of $\mathsf T_d$, which at this $d$
+still exceeds $\log\log d\approx6.0$. (These values are computed by the
+script of Remark~\ref{rem:d0}.)
 
 \begin{proof}[Proof of Theorem~\ref{thm:S1}]
 The statement about $\liminf_NF_N(S)$ follows from
@@ -611,11 +705,11 @@ So $F_\theta(S)>0.3767>3/8$ for every training sequence.
 \emph{Regime II: $n_0(d)<n\le n_{\max}(d)$.} Take $r$, $k^*$ and $u$ from
 Lemma~\ref{lem:cutoff}, and let $\mathsf E_{\rm coer}=\mathrm{Coer}(r)$ and
 $\mathsf E_{\rm gram}=\{\|Q_{r,SS}\|_{\rm op}\le8\,\E\|Q_{r,SS}\|_{\rm op}\}$.
-Since $r\le d/64$ and $n\ge A_{1/8}D_r\log(2D_r)$,
-\cite[Lemma~4.4]{subcritical} gives $\Pp(\mathsf E_{\rm coer})\ge7/8$, and
+Since $64r\le d$ and $\mathsf B(d,r,n)\le n$,
+Theorem~\ref{thm:leancoer} gives $\Pp(\mathsf E_{\rm coer})\ge15/16$, and
 Markov's inequality gives $\Pp(\mathsf E_{\rm gram})\ge7/8$. Fix
 $S\in\mathsf E_{\rm coer}\cap\mathsf E_{\rm gram}$, an event of probability
-at least $3/4$.
+at least $1-\frac1{16}-\frac18=\frac{13}{16}$.
 
 \emph{Step 1 (head and band).} By Lemma~\ref{lem:tailgram},
 Lemma~\ref{lem:intdim-tanh} (which gives
@@ -625,7 +719,7 @@ $\log(\tau_r/\lambda_{r+1})\le\Lambda'_r$) and Lemma~\ref{lem:cutoff}(c),
  +\tau_r\log\frac{\tau_r}{\lambda_{r+1}}\Bigr]+n\lambda_{r+1}
  \le\tau_r\mathsf B_r\le\mathsf B_*d\,\tau_r,
 \]
-the last step by (L7).
+the last step by (L6).
 
 \emph{Step 2 (amplitude).} By Lemma~\ref{lem:band},
 \[
@@ -634,16 +728,16 @@ the last step by (L7).
  \Bigr)^{k^*}.
 \]
 Let $J=\max\{1,\lceil\log(32\bar{\mathcal R})\rceil\}$. Then
-$\bar{\mathcal R}e^{-J}\le1/32$. Since $\mathsf B_r\ge\Lambda_r\ge2\log4$ and
+$\bar{\mathcal R}e^{-J}\le1/32$. Since $\mathsf B_r\ge\Lambda_r\ge120$ and
 $c_\theta<1$, we have $32\bar{\mathcal R}\ge256\mathsf B_r/c_\theta^2>1$, so
 $J=\lceil\log(32\bar{\mathcal R})\rceil$, and by Step~1 and
 Lemma~\ref{lem:band}, $J\le1+\log(32\bar{\mathcal R})\le\mathsf J_d$.
 
-\emph{Step 3 (admissibility of $J$).} By (L9) and
+\emph{Step 3 (admissibility of $J$).} By (L8) and
 Lemma~\ref{lem:cutoff}(b), $J\le\mathsf J_d\le e^2(t-4)\le e^2r\le e^2u$.
 
 \emph{Step 4.} Apply Proposition~\ref{prop:master} with these $r$, $u$ and
-$J$. By (L9) and Lemma~\ref{lem:cutoff}(d),
+$J$. By (L8) and Lemma~\ref{lem:cutoff}(d),
 $e\sqrt{Ju/(\pi d)}\le e\sqrt{\mathsf J_d\mathsf r_d/\pi}\le1/16$ and
 $\frac12e^{-Jd/(8e^2u)}\le\frac12e^{-1/(8e^2\mathsf r_d)}\le1/64$. The
 amplitude term is at most $\bar{\mathcal R}e^{-J}\le1/32$, and the last
@@ -651,22 +745,56 @@ term is at most $(2+8/c_\theta^2)\varepsilon_0=1/64$. Hence
 $F_\theta(S)\ge\frac12-\frac1{16}-\frac1{64}-\frac1{32}-\frac1{64}=\frac38$.
 \end{proof}
 
-\begin{remark}[Status, and the role of the coercivity lemma]\label{rem:S1status}
-Regime~I uses only Lemma~\ref{lem:abfr} and Theorem~\ref{thm:signonly}, and
-is unconditional. Regime~II uses \cite[Lemma~4.4]{subcritical}, whose proof
-runs through \cite[Lemma~4.3]{subcritical} to \cite[Lemma~4.1]{subcritical}.
-That lemma does not apply a stated theorem of \cite{lee}: it uses the
-intermediate metric estimate (2.20) in the proof of \cite[Lemma~2.12]{lee},
-with the energy normalization of that proof undone, and
-\cite[Remark~4.2]{subcritical} justifies this homogeneous form. We have not
-re-checked it against \cite{lee}. Theorem~\ref{thm:S1} is therefore proved
-conditionally on \cite[Lemma~4.1]{subcritical}; the subcritical theorem
-\cite[Theorem~1.1]{subcritical} rests on the same lemma, and so do the
-lower bounds on the conditioning cost in Section~\ref{sec:obstruction}
-(Propositions~\ref{prop:obstruction} and~\ref{prop:linear} and
-Corollaries~\ref{cor:matching} and~\ref{cor:route}). The
-dependence is not cosmetic. A contraction argument gives squared coercivity
-only for $n\gtrsim D_r^2$. With that sample size the band term
+\begin{remark}[Status, and the role of the coercivity theorem]\label{rem:S1status}
+Theorem~\ref{thm:S1} is proved. Regime~I uses only Lemma~\ref{lem:abfr} and
+Theorem~\ref{thm:signonly}. Regime~II also uses Theorem~\ref{thm:leancoer},
+which this paper does not prove: it is a theorem of the collection's Lean
+project, closed with the standard axioms (Section~\ref{sec:mean-train}).
+The rest of the proof is conventional mathematics and is not formalized;
+Theorem~\ref{thm:S1} itself is not a Lean theorem.
+
+The same proof also runs with \cite[Lemma~4.4]{subcritical} at
+$\delta=1/8$ in place of Theorem~\ref{thm:leancoer}: take $r$ largest odd
+with $A_{1/8}D_r\log(2D_r)\le n$, put $A_{1/8}$ in place of $2^{77}$ in
+$\mathsf B_*$, $\mathsf B_r$, $\mathsf T_d$, (L7) and
+Lemma~\ref{lem:cutoff}, put $2\log4+2(r+2)\log\frac{ed}{r+2}$ in place of
+$\Lambda_r$, and replace (L1) by
+$A_{1/8}D_{t-3}\log(2D_{t-3})\le n_0(d)$. In Step~2 the inequality
+$32\bar{\mathcal R}>1$ then follows from $\mathsf B_r\ge A_{1/8}\Lambda_r>1$
+and $c_\theta<1$. This route gives success probability
+$3/4$, with $d_0$ depending also on $A_{1/8}$, which is not explicit, and
+it is conditional on \cite[Lemma~4.1]{subcritical}. Indeed the proof of
+\cite[Lemma~4.4]{subcritical} runs through \cite[Lemma~4.3]{subcritical}
+to \cite[Lemma~4.1]{subcritical}. That lemma does not apply a stated
+theorem of \cite{lee}: it uses the intermediate metric estimate (2.20) in
+the proof of \cite[Lemma~2.12]{lee}, with the energy normalization of that
+proof undone, and \cite[Remark~4.2]{subcritical} justifies this homogeneous
+form. We have not re-checked it against \cite{lee}.
+
+The paper proof of the subcritical theorem \cite[Theorem~1.1]{subcritical}
+uses \cite[Lemma~4.4]{subcritical}, but its Lean proof uses
+Theorem~\ref{thm:leancoer} instead. So the subcritical theorem, in its Lean
+form \texttt{MainProofs.\allowbreak subcriticalExponential}, does not
+depend on \cite[Lemma~4.1]{subcritical}. That this Lean statement
+expresses \cite[Theorem~1.1]{subcritical} (probability at least $3/4$ and
+confidence-failure fraction at least $1/16$, for every $\gamma<1$) is the
+finding of the project's semantic review (\texttt{lean/\allowbreak
+review/\allowbreak subcritical-\allowbreak main-\allowbreak
+semantic-\allowbreak review.txt}), not something Lean checks. The Lean
+proof covers only this conclusion. As the project's coverage inventory
+(\texttt{lean/\allowbreak review/\allowbreak formal-\allowbreak
+coverage-\allowbreak inventory.txt}) notes, it does not cover the stronger
+regime theorems of \cite{subcritical}: Gibbs error at least $3/8$ at
+$\gamma=0$ \cite[Theorem~9.2]{subcritical}, and $F_{13/20}\ge3/8$ for the
+sign posterior at $\gamma<0$ \cite[Theorem~10.2]{subcritical}. Their paper
+proofs use \cite[Lemma~4.4]{subcritical}, so they rest on
+\cite[Lemma~4.1]{subcritical}. Section~\ref{sec:obstruction}
+uses \cite[Lemma~4.4]{subcritical} for general $\delta$ and
+Theorem~\ref{thm:leancoer} at $\delta=1/16$
+(Proposition~\ref{prop:uncond}).
+
+The log-linear size of the budget is not cosmetic. A contraction argument
+gives squared coercivity only for $n\gtrsim D_r^2$. With that sample size the band term
 $n\lambda_{r+1}/\tau_r$ would be of order $D_r^2/\binom D{r+2}$, the
 amplitude ratio would have logarithm of order $r\log(d/r)$,
 Corollary~\ref{cor:restriction} would force $r^2\log(d/r)\lesssim d$, and the
@@ -683,30 +811,35 @@ can be brought to $1+o(1)$, so the same proof gives every fixed
 $c_*<\pi/(64e^2)=6.6\ldots\cdot10^{-3}$. The method stops there because
 $\log\bar{\mathcal R}=(1+o(1))\log d$, so Corollary~\ref{cor:restriction}
 forces $\rho_u\lesssim1/\log d$.
-(2) The threshold $d_0$ is not explicit, because $A_{1/8}$ is not, and the
-conditions (L1)--(L9) make it astronomically large even with the smallest
-value the proof allows, $A_{1/8}=1$. For $L=2$, the condition
-$\mathsf J_d\mathsf r_d\le\pi/(256e^2)$ of (L9) first holds at
-$\log_{10}d\approx30.7$, $37.1$, $42.3$, $58.2$, $94.3$, $157.1$, $273.5$
-for $\sigma_1=8,3,2,1,0.5,0.3,0.2$ when $A_{1/8}=1$, and at $36.9$, $44.3$,
-$50.2$, $68.2$, $108.7$, $177.8$, $302.9$ when $A_{1/8}=100$. For these gains
-and $1\le A_{1/8}\le100$ all other conditions hold once
-$d\ge2.6\cdot10^7$. The cause is the slow convergence of
-$\mathsf J_d/\log d$ to $1$: at $\sigma_1=1$, $A_{1/8}=1$ and $d=10^{58}$,
-$\mathsf J_d/\log d=1.511$, against the allowed value $1.510$.
+(2) Every constant in (L1)--(L8) is explicit, so $d_0$ can be computed,
+but the conditions make it astronomically large. For $L=2$, the condition
+$\mathsf J_d\mathsf r_d\le\pi/(256e^2)$ of (L8) holds at every scanned $d$
+with $\log_{10}d$ above $105.5$, $122.7$, $136.2$, $176.0$, $259.1$,
+$387.5$ and $593.8$ for $\sigma_1=8,3,2,1,0.5,0.3,0.2$, and for these gains
+all other conditions hold at every scanned $d$ above $10^{28.6}$, the last
+of them being (L7). The cause is the slow convergence of
+$\mathsf J_d/\log d$ to $1$, which the explicit budget slows further:
+$\log\mathsf B_*$ and $\mathsf T_d$ each contain $\log2^{77}\approx53.4$.
+Just below the threshold, at $\sigma_1=1$ and $d=10^{176}$,
+$\mathsf J_d/\log d=1.5099$ still exceeds the allowed value $1.5098$. The
+$A_{1/8}$ route of Remark~\ref{rem:S1status} would give a smaller
+threshold for this condition if $A_{1/8}$ were small (for instance
+$\log_{10}d\approx58.2$ at $\sigma_1=1$ if $A_{1/8}=1$), but $A_{1/8}$ is
+not known.
 (3) Even apart from $d_0$, the theorem adds to Theorem~\ref{thm:signonly}
 only where $n_{\max}(d)>n_0(d)$, that is, for $d$ above a crossover
 $d_\times\approx2.58\cdot10^8$; the ratio $\log n_{\max}(d)/\log n_0(d)$ is
 $0.67$, $1.78$ and $4.82$ at $d=10^8,10^9,10^{10}$. A direct evaluation of
 the inequalities that Regime~II actually uses, with the actual $r$, $k^*$,
-$u$ and $J$ in place of the uniform bounds (L4)--(L9), found all of them
-satisfied at $26$ grid dimensions between $10^{8.42}$ and $10^{180}$, for
-$L=2$, $\sigma_1\in\{0.3,1,3\}$ and $A_{1/8}\in\{1,100\}$; the largest value
-of $Ju/d$ was $6.6\cdot10^{-4}$, against the requirement $1.66\cdot10^{-3}$.
-This is a numerical observation at grid points, conditional on the unknown
-value of $A_{1/8}$; it is not part of the theorem. The scripts are in the
-verification record (\texttt{verification/\allowbreak
-revision-2026-10-20/\allowbreak scripts/\allowbreak fix\_S1}).
+$u$ and $J$ in place of the uniform bounds of (L1)--(L8), found all of them
+satisfied at $29$ grid dimensions between $10^{8.42}$ and $10^{300}$, for
+$L=2$ and $\sigma_1\in\{0.3,1,3\}$; the largest value of $Ju/d$ was
+$1.54\cdot10^{-3}$, at $d=10^{8.42}$ and $\sigma_1=0.3$, against the
+requirement $1.66\cdot10^{-3}$. This is a numerical observation at grid
+points; it is not part of the theorem. The script
+\texttt{numerics/\allowbreak s1\_constants.py} computes the numbers in (2)
+and (3) and those in the paragraph after Lemma~\ref{lem:band}; its output
+is \texttt{numerics/\allowbreak s1\_constants.txt}.
 \end{remark}
 
 \begin{remark}[Why the restriction lemma succeeds where clipped parity does
@@ -721,7 +854,11 @@ Corollary~\ref{cor:restriction} is logarithmic in it. For the arcsine kernel
 the sharp ratio $\theta_r=\binom D{r+2}\lambda_{r+1}/\tau_r\asymp1/r$
 \cite[Lemma~3.2]{subcritical} cancels the factor $r$ of the coercivity
 threshold, the amplitude ratio is bounded at fixed $\rho=r/d$, and the
-linear bound suffices at linear degree \cite[Theorem~10.2]{subcritical}.
+linear bound suffices at linear degree, in the paper proof of
+\cite[Theorem~10.2]{subcritical}. That proof also uses
+\cite[Lemma~4.4]{subcritical}, and the Lean project formalizes only the
+weaker conclusion of \cite[Theorem~1.1]{subcritical}
+(Remark~\ref{rem:S1status}).
 For $\tanh$ the bounds proved here give only an amplitude ratio of order
 $\mathsf B_r\,d^{o(1)}$, where $\mathsf B_r$ is of order $rH_r$, with
 $H_r=\log(eD/r)$, through both $n/\binom D{r+2}$ (the logarithm in the
@@ -773,9 +910,11 @@ every $P$ of degree at most $r$.
 probability at least $1-\delta$,
 $\|Q_{r,SS}\|_{\rm op}\le C^{\rm Gram}_\delta(\tau_r+n\lambda_{r+1})$.
 \end{enumerate}
-\cite[Lemma~4.4]{subcritical} has the form of (C) with
-$\varkappa_\delta=A_\delta\log(2D_r)$ and $c^{\rm coer}_\delta=1/4$; this
-factor depends on $d$, which (C) does not allow.
+Theorem~\ref{thm:leancoer} has the form of (C) at $\delta=1/16$, with
+$c^{\rm coer}=1/4$ and with $2^{76}(\log(8n)+\lceil\log_2D_r\rceil+1)$ in
+place of $\varkappa_\delta$, and \cite[Lemma~4.4]{subcritical} has it with
+$\varkappa_\delta=A_\delta\log(2D_r)$; both factors grow with $d$, which
+(C) does not allow.
 Equation~\eqref{eq:gram-lower} shows that (G) would be sharp up to the
 constant. Run the proof of Theorem~\ref{thm:S1} with the cutoff
 $\varkappa_\delta(\rho_*)D_r\le n<\varkappa_\delta(\rho_*)D_{r+2}$ for a

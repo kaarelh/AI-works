@@ -268,7 +268,7 @@ $$\frac{\upsilon_m^4}{(m+1)(m+2)}\ \le\ \frac{c_{m+2}(\sigma^2)}{c_m(\sigma^2)}\
 
 Numerically, the minimal ratio over odd $m\le4001$ is attained at $m=1$. It equals $0.0034,\ 0.0152,\ 0.0601,\ 0.1181,\ 0.1410$ for $\sigma=0.3,0.5,1,2,3$, against $\gamma(\sigma)=1.1\cdot10^{-4},\ 5.7\cdot10^{-4},\ 3.8\cdot10^{-3},\ 1.6\cdot10^{-2},\ 3.1\cdot10^{-2}$. The sharper bound $\upsilon_m^4/((m+1)(m+2))$ also held at every $m$ (§8.3).
 
-**Lemma 3.2 (composites; random-sum argument).** Let $H(t)=\sum_{m\ge1}h_mt^m$ and $G(t)=\sum_{k\ge0}g_kt^k$ have nonnegative coefficients. Suppose $h_{m+2}\ge\gamma h_m$ for all $m\ge1$. Then $[t^{m+2}](G\circ H)\ge\gamma\,[t^m](G\circ H)$ for all $m\ge1$.
+**Lemma 3.2 (composites; random-sum argument).** Let $H(t)=\sum_{m\ge1}h_mt^m$ and $G(t)=\sum_{k\ge0}g_kt^k$ have nonnegative coefficients. Suppose $h_{m+2}\ge\gamma h_m$ for all $m\ge1$. Then $[t^{m+2}]\,(G\circ H)\ge\gamma\,[t^m]\,(G\circ H)$ for all $m\ge1$.
 
 In particular, the composite $\tanh$ coefficients satisfy, with $\gamma=\gamma(\sigma_1)$ and $c_1=\prod_\ell c_1(q_\ell)>0$:
 $$c_{m+2}\ge\gamma\,c_m\quad(m\ \text{odd}),\qquad c_m\ge\gamma^{(m-1)/2}c_1\quad(m\ \text{odd}). \tag{3.2}$$
@@ -278,7 +278,7 @@ $$c_{m+2}\ge\gamma\,c_m\quad(m\ \text{odd}),\qquad c_m\ge\gamma^{(m-1)/2}c_1\qua
 1. **One power.** $[t^m]H^k=\sum h_{j_1}\cdots h_{j_k}$ over compositions $j_1+\dots+j_k=m$ with $j_i\ge1$. The map $(j_1,\dots,j_k)\mapsto(j_1+2,j_2,\dots,j_k)$ injects compositions of $m$ into compositions of $m+2$, and $h_{j_1+2}\ge\gamma h_{j_1}$. So $[t^{m+2}]H^k\ge\gamma[t^m]H^k$ for $k\ge1$.
 2. **The $k=0$ term.** It contributes only at degree $0$.
 3. **Sum over $k$.** Multiply by $g_k\ge0$ and sum.
-4. **Probabilistic reading.** If $(g_k)$ and $(h_m)$ are probability laws, then $[t^m](G\circ H)=\Pr\{\iota_1+\dots+\iota_Y=m\}$, with $Y\sim g$ and $\iota_i$ iid $\sim h$. Forcing $\iota_1\ge3$ and shifting it by 2 gives the same inequality.
+4. **Probabilistic reading.** If $(g_k)$ and $(h_m)$ are probability laws, then $[t^m]\,(G\circ H)=\Pr\{\iota_1+\dots+\iota_Y=m\}$, with $Y\sim g$ and $\iota_i$ iid $\sim h$. Forcing $\iota_1\ge3$ and shifting it by 2 gives the same inequality.
 5. **Application to $\tanh$.** Take $H=\hat\phi_{q_1}$. The hypothesis holds for odd $m$ by Lemma 3.1, and trivially for even $m$. Take $G=\hat\phi_{q_{L-1}}\circ\dots\circ\hat\phi_{q_2}$ (the identity if $L=2$).
 6. **The second bound.** Iterate from $c_1$. ∎
 
