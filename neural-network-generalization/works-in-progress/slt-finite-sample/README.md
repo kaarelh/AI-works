@@ -1,6 +1,6 @@
 # Finite-sample Bayesian learning beyond parameter counting
 
-Dmitry Vaintrob, Kaarel Hänni, and OpenAI Codex · 19 October 2026
+Kaarel Hänni, Dmitry Vaintrob, and OpenAI Codex · 19 October 2026
 
 **Work in progress; not Lean verified.** This note gives an explicit finite-sample calculation for a standard Gaussian neural-network prior. It separates two questions: whether useful Bayesian bounds exist in an overparameterized regime, and whether local asymptotic learning coefficients alone provide such bounds. The first has a positive answer in the model below; the second does not.
 
