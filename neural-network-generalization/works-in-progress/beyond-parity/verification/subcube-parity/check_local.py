@@ -1,6 +1,6 @@
 """Sanity checks for the subcube-localized lower bound (../../subcube-parity.md, Section 1).
 
-(1) Localized squared balance and clipped parity on a subcube, for chi_R with |R| < d,
+(1) Localized squared balance and clipped parity on a subcube, for chi_R with |R| <= d,
     exhaustively over the d-cube, for random and adversarial low-degree polynomials
     obtained by restricting polynomials on the (d+k)-cube.
 (2) Spectral bookkeeping on the (d+k)-cube: r*binom(d+1,r+2)*lambda_{r+1}/tau_r stays

@@ -58,5 +58,5 @@ for _ in range(200):
     f = chi.copy(); flip = rng.random(2**D) < rng.random()*0.2; f[flip] *= -1
     c = wht(f); A = 2**D - 1; others = np.abs(np.delete(c, A)).max(); worst = max(worst, others/(2*np.mean(flip)) if flip.any() else 0)
 print("tension (a): max ratio |f^(S)|/(2 dist) over trials =", round(worst, 4))
-# 1/m1^2 <= 2(d-1) analytic check via C(2m,m)/4^m >= 1/(2 sqrt m) for m up to 5000
+# 1/m1^2 <= 2(d-1) analytic check via C(2m,m)/4^m >= 1/(2 sqrt m) for m up to 1500
 print("C(2m,m)^2*4m >= 16^m for m<=1500:", all(math.comb(2*m, m)**2 * 4*m >= 16**m for m in range(1, 1501)))

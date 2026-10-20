@@ -56,7 +56,7 @@ Five reviewers read the finished material, each with one lens. Together they mad
 - **Sections 3–6.** Every number in the training tables was checked against the run summaries. The fixes:
   - **Wrong attribution.** A claim that exact Walsh transforms confirm the trunks found on the control and on parity alone was removed; no script checks them.
   - **Overclaims and scope.**
-    - The summary now states that a plain fully connected network, the shape of Theorem A's learner, did not learn $`f^*`$ at $d=25$ or $31$, so the positive gradient evidence is for the two-head shape.
+    - The summary now states that a plain fully connected network, the shape of Theorem A's learner, did not learn $`f^*`$ at $d=31$, so the positive gradient evidence is for the two-head shape.
     - The summary's claim about symmetric targets now matches Section 5.2.
     - The literature negative now says "Gaussian initialization", because $\pm1$ weights with small Gaussian perturbations do learn almost-full parities.
   - **Imprecise comparisons.** Sample counts compared unlike quantities, and some input-coverage fractions were imprecise.
