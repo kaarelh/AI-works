@@ -16,7 +16,7 @@ The input is $`(x,z)`$ with $`x\in\lbrace -1,1\rbrace ^d`$ and one selector bit 
 
 ## Architectures and initializations
 
-- **two-head trunk** depth×width: a ReLU MLP on $`x`$ only, with output $`a\cdot h(x)+z\,b\cdot h(x)`$; $`z`$ only selects the readout.
+- **two-head trunk** depth×width: a ReLU MLP on $`x`$ only, with output $`a\cdot h(x)+z\,b\cdot h(x)`$; $`z`$ only selects the readout. For `par` and `stair`, which have no $`z`$, the same trunk has the single readout $`a\cdot h(x)`$ (**one-head trunk**).
 - **MLP** depth×width: a plain ReLU MLP on all $`D`$ input bits, so $`z`$ is an ordinary input.
 - All layers are `torch.nn.Linear`, with biases. Initializations:
   - `gaussian`: every weight N(0, 1/fan_in), every bias 0.
@@ -40,12 +40,14 @@ Common settings: square loss on $`\pm1`$ labels, batch 512, fresh uniform sample
 | `ctrl19_s1` | `ctrl` | 19 | two-head trunk 3×512 | `gaussian` | Adam 1e-3 | 1 | 3.00e7 | 9.98e6 | 5.12e4 | 9.98e6 | 1.05e7 | 0.0068 | 0.0135 | 0.0000 | early |
 | `ctrl23_s1` | `ctrl` | 23 | two-head trunk 3×512 | `gaussian` | Adam 1e-3 | 1 | 4.00e7 | 1.89e7 | 5.12e4 | 1.84e7 | 1.95e7 | 0.0027 | 0.0054 | 0.0000 | early |
 | `ctrl27_s1` | `ctrl` | 27 | two-head trunk 3×512 | `gaussian` | Adam 1e-3 | 1 | 4.00e7 | – | 5.12e4 | – | 4.00e7 | 0.2502 | 0.5004 | 0.0000 | cap |
+| `ctrl31_s1` | `ctrl` | 31 | two-head trunk 3×512 | `gaussian` | Adam 1e-3 | 1 | 6.00e7 | – | 5.12e4 | – | 6.00e7 | 0.2508 | 0.5015 | 0.0000 | cap |
 | `mix19_s1` | `mix` | 19 | two-head trunk 3×512 | `gaussian` | Adam 1e-3 | 1 | 3.00e7 | 2.82e6 | 3.33e6 | 2.82e6 | 3.84e6 | 0.0159 | 0.0046 | 0.0272 | early |
 | `mix19_s2` | `mix` | 19 | two-head trunk 3×512 | `gaussian` | Adam 1e-3 | 2 | 3.00e7 | 2.56e6 | 3.33e6 | 2.82e6 | 3.84e6 | 0.0181 | 0.0079 | 0.0284 | early |
 | `mix23_s1` | `mix` | 23 | two-head trunk 3×512 | `gaussian` | Adam 1e-3 | 1 | 5.00e7 | 9.47e6 | 1.15e7 | 1.02e7 | 1.20e7 | 0.0269 | 0.0121 | 0.0417 | early |
 | `mix23_s2` | `mix` | 23 | two-head trunk 3×512 | `gaussian` | Adam 1e-3 | 2 | 5.00e7 | 8.19e6 | 1.05e7 | 8.70e6 | 1.10e7 | 0.0249 | 0.0050 | 0.0449 | early |
 | `mix27_s1` | `mix` | 27 | two-head trunk 3×512 | `gaussian` | Adam 1e-3 | 1 | 8.00e7 | 1.66e7 | 2.71e7 | 2.02e7 | 2.76e7 | 0.0239 | 0.0039 | 0.0439 | early |
 | `mix31_s1` | `mix` | 31 | two-head trunk 3×512 | `gaussian` | Adam 1e-3 | 1 | 8.00e7 | 4.81e7 | 6.76e7 | 5.58e7 | 6.99e7 | 0.0260 | 0.0079 | 0.0442 | early |
+| `mix35_s1` | `mix` | 35 | two-head trunk 3×512 | `gaussian` | Adam 1e-3 | 1 | 2.20e8 | 7.55e7 | 1.05e8 | 8.06e7 | 1.06e8 | 0.0244 | 0.0007 | 0.0481 | early |
 
 ### Single targets
 
@@ -62,6 +64,7 @@ Common settings: square loss on $`\pm1`$ labels, batch 512, fresh uniform sample
 | `par1L31g3_s1` | `par` | 31 | MLP 1×1024 | `gaussian3` | Adam 1e-3 | 1 | 3.00e7 | – | 3.00e7 | 0.4984 | cap |
 | `par1L31g3U_s1` | `par` | 31 | MLP 1×1024 | `gaussian3U` | Adam 1e-3 | 1 | 3.00e7 | – | 3.00e7 | 0.5035 | cap |
 | `par1L31gU_s1` | `par` | 31 | MLP 1×1024 | `gaussianU` | Adam 1e-3 | 1 | 3.00e7 | – | 3.00e7 | 0.5007 | cap |
+| `par27_s1` | `par` | 27 | one-head trunk 3×512 | `gaussian` | Adam 1e-3 | 1 | 3.00e7 | – | 3.00e7 | 0.4992 | cap |
 
 ### Run details
 
@@ -72,12 +75,14 @@ Wall time is on a shared machine running two jobs at once. At small $`D`$ the 20
 | `ctrl19_s1` | 748 | 201919 | 19821 | 536578 |
 | `ctrl23_s1` | 1293 | 22959 | 19978 | 538626 |
 | `ctrl27_s1` | 2764 | 2977 | 20000 | 540674 |
+| `ctrl31_s1` | 4721 | 286 | 20000 | 542722 |
 | `mix19_s1` | 253 | 73499 | 19821 | 536578 |
 | `mix19_s2` | 260 | 74215 | 19805 | 536578 |
 | `mix23_s1` | 801 | 14183 | 19978 | 538626 |
 | `mix23_s2` | 686 | 13226 | 19981 | 538626 |
 | `mix27_s1` | 1802 | 2073 | 20000 | 540674 |
 | `mix31_s1` | 5336 | 318 | 20000 | 542722 |
+| `mix35_s1` | 8702 | 23 | 20000 | 544770 |
 | `par1L31def_s1` | 48 | 36 | 20000 | 33793 |
 | `par1L31def_s2` | 57 | 26 | 20000 | 33793 |
 | `par1L31d0_s1` | 122 | 86 | 20000 | 33793 |
@@ -89,14 +94,12 @@ Wall time is on a shared machine running two jobs at once. At small $`D`$ the 20
 | `par1L31g3_s1` | 457 | 273 | 20000 | 33793 |
 | `par1L31g3U_s1` | 447 | 273 | 20000 | 33793 |
 | `par1L31gU_s1` | 453 | 273 | 20000 | 33793 |
+| `par27_s1` | 1987 | 4412 | 19999 | 540161 |
 
 ### Pending
 
 These entries of `jobs.txt` have no summary in `runs/` yet (queued, running, or interrupted). They are left out of the tables above.
 
-- `mix35_s1`: `mix 35 --seed 1 --max_samples 2.2e8`
-- `ctrl31_s1`: `ctrl 31 --seed 1 --max_samples 6e7`
-- `par27_s1`: `par 27 --seed 1 --max_samples 3e7`
 - `par31_s1`: `par 31 --seed 1 --max_samples 6e7`
 - `mix27_s2`: `mix 27 --seed 2 --max_samples 8e7`
 - `par1L35def_s1`: `par 35 --arch mlp --depth 1 --width 1024 --init default --seed 1 --max_samples 6e7`

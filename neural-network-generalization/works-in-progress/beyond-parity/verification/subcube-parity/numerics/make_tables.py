@@ -60,8 +60,11 @@ def fe(x):
     return "–" if x is None else f"{x:.4f}"
 
 
-def arch_str(arch, depth, width):
-    return f"{'two-head trunk' if arch == 'trunk' else 'MLP'} {depth}×{width}"
+def arch_str(arch, depth, width, target=None):
+    if arch != "trunk":
+        return f"MLP {depth}×{width}"
+    # par and stair have no selector bit, so the trunk then has a single readout
+    return f"{'one-head trunk' if target in ('par', 'stair') else 'two-head trunk'} {depth}×{width}"
 
 
 def r1_parse(cmd):
@@ -105,7 +108,8 @@ w("\nThe input is $`(x,z)`$ with $`x\\in\\lbrace -1,1\\rbrace ^d`$ and one selec
   "targets, so $`D=d+1`$ input bits; $`D=d`$ for `par` and `stair`. Inputs are uniform.\n")
 w("## Architectures and initializations\n")
 w("- **two-head trunk** depth×width: a ReLU MLP on $`x`$ only, with output $`a\\cdot h(x)+z\\,b\\cdot h(x)`$; "
-  "$`z`$ only selects the readout.")
+  "$`z`$ only selects the readout. For `par` and `stair`, which have no $`z`$, the same trunk has the single "
+  "readout $`a\\cdot h(x)`$ (**one-head trunk**).")
 w("- **MLP** depth×width: a plain ReLU MLP on all $`D`$ input bits, so $`z`$ is an ordinary input.")
 w("- All layers are `torch.nn.Linear`, with biases. Initializations:")
 for k, v in INITS.items():
@@ -146,7 +150,7 @@ if two:
     w("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
     for n, S in sorted(two, key=key):
         a, h, f = S["args"], S["hit_samples"], S["final"]
-        w(f"| `{n}` | `{a['target']}` | {a['d']} | {arch_str(a['arch'], a['depth'], a['width'])} | `{a['init']}` "
+        w(f"| `{n}` | `{a['target']}` | {a['d']} | {arch_str(a['arch'], a['depth'], a['width'], a['target'])} | `{a['init']}` "
           f"| {opt_str(a)} | {a['seed']} | {fn(a['max_samples'])} | {fn(h.get('zneg'))} | {fn(h.get('zpos'))} "
           f"| {fn(h.get('all'))} | {fn(f['samples'])} | {fe(f.get('err_all'))} | {fe(f.get('err_zneg'))} "
           f"| {fe(f.get('err_zpos'))} | {'early' if S['stopped_early'] else 'cap'} |")
@@ -158,7 +162,7 @@ if one:
     w("|---|---|---|---|---|---|---|---|---|---|---|---|")
     for n, S in sorted(one, key=key):
         a, h, f = S["args"], S["hit_samples"], S["final"]
-        w(f"| `{n}` | `{a['target']}` | {a['d']} | {arch_str(a['arch'], a['depth'], a['width'])} | `{a['init']}` "
+        w(f"| `{n}` | `{a['target']}` | {a['d']} | {arch_str(a['arch'], a['depth'], a['width'], a['target'])} | `{a['init']}` "
           f"| {opt_str(a)} | {a['seed']} | {fn(a['max_samples'])} | {fn(h.get('all'))} | {fn(f['samples'])} "
           f"| {fe(f.get('err_all'))} | {'early' if S['stopped_early'] else 'cap'} |")
     w("")
@@ -210,7 +214,7 @@ for name, cmd in R1.items():
     st, smp, ea, en, ep = ev[-1]
     stop = "cap" if int(st) == a["steps"] else "stopped"
     rows.append(((a["target"], a["arch"], a["depth"], a["init"], a["d"], a["seed"], name),
-                 f"| `{name}.txt` | `{a['target']}` | {a['d']} | {arch_str(a['arch'], a['depth'], a['width'])} "
+                 f"| `{name}.txt` | `{a['target']}` | {a['d']} | {arch_str(a['arch'], a['depth'], a['width'], a['target'])} "
                  f"| `{a['init']}` | {a['seed']} | {fn(a['steps'] * a['batch'])} | {fn(hit.get('zneg'))} "
                  f"| {fn(hit.get('zpos'))} | {fn(hit.get('all'))} | {fn(float(smp))} | {fe(float(ea))} "
                  f"| {fe(None if en is None else float(en))} | {fe(None if ep is None else float(ep))} | {stop} |"))
