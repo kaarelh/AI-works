@@ -111,7 +111,7 @@ A fresh auditor checked every round-1 fix against the revised text and the cited
 
 ### What was wrong in the 19 October version
 
-The two rounds above did not catch one error in Section 6 (now Section 7). That version said an upper bound on the margin learner's conditioning cost per sample, matching Proposition 6.2 up to constants, "would complete an $\exp(\Omega(d))$ proof" (eq. (matching), "extension suggested by the proof"). It also said the proposition forces that bound's form up to constants. The implication itself is valid, but its premise is false:
+The two rounds above did not catch one error in Section 6 (now Section 7). That version said an upper bound on the margin learner's conditioning cost per sample, matching Proposition 6.2 (now Proposition 7.2) up to constants, "would complete an $\exp(\Omega(d))$ proof" (eq. (matching), "extension suggested by the proof"). It also said the proposition forces that bound's form up to constants. The implication itself is valid, but its premise is false:
 
 - a sharper lower bound (now Proposition 7.3) puts the cost per sample above any such matching bound once $d$ is large;
 - with the paper's tail-Gram bound, the subcritical head-bound argument at the margin scale therefore cannot give an exponential bound (Corollaries 7.4 and 7.5).
@@ -120,7 +120,7 @@ Rounds 1 and 2 above refer to the superseded paragraph in several places: Round 
 
 Two statements in my chat-level analysis were also corrected, and are reflected in the paper:
 
-- the level-mass ratio $\theta_r$ was said to be $\Theta(1)$ at linear degree for $\tanh$; that was a $d\le160$ artifact, and numerically $\theta_r\asymp r^{-1/2}$;
+- the level-mass ratio $\theta_r$ was said to be $\Theta(1)$ at linear degree for $\tanh$; that was a $d\le160$ artifact, and numerically $\theta_r\ge c\,r^{-1/2}$ ($\theta_r\sqrt r\ge0.61$ for $d\le3200$), while whether $\theta_r\le C\,r^{-1/2}$ is not settled;
 - the claim that the subcritical theorem "rests on" [SE, Lemma 4.1] was inaccurate. Its paper proof uses that lemma, but its Lean proof uses a separately proved sampling theorem.
 
 ### What was added
@@ -147,4 +147,4 @@ All checks were by AI agents that had not written the text they checked. The rec
 
    A repair and a final check followed; the final verdict was ready.
 
-The cited Lean theorem was checked against its source and the existing audit logs; Lean itself was not re-run. Lee's chaining paper could not be accessed, so the general-$\delta$ statements that rely on [SE, Lemma 4.1] remain marked conditional.
+The cited Lean theorem was checked against its source and the existing audit logs; Lean itself was not re-run. Lee's chaining paper could not be accessed, so the general-$`\delta`$ statements that rely on [SE, Lemma 4.1] remain marked conditional.
