@@ -1,8 +1,8 @@
 # Technical FAQ: Bayesian neural-network generalization
 
-This FAQ explains what the current results say, which assumptions matter, and where we expect extensions. It is intended for readers considering this research program, including readers of the original [Vaintrob–Hänni slides](https://kaarelh.github.io/ai/nnbayes-generalization.pdf). It is a research snapshot, not a claim that the open questions below have been resolved.
+This FAQ explains what the current results say, which assumptions matter, where we expect extensions, and what the main open problems are.
 
-**Status labels:** **Proved** means that the linked manuscript contains a proof under its stated assumptions. **Extension suggested by the proof** means that we have identified a plausible adaptation but are not citing a completed theorem. **Heuristic** is an informed expectation. **Open** means that the available results do not settle the question. Machine verification is a separate issue; see the final question.
+**Status labels:** **Proved** means that the linked manuscript contains a proof under its stated assumptions. **Extension suggested by the proof** means that we have identified a plausible adaptation but are not citing a completed theorem. **Heuristic** is an informed expectation. **Open** means that the available results do not settle the question. **Numerical** means computer experiments at small sizes, which are evidence rather than proof. **Literature (abstract-level)** means a published result checked only against its abstract. Machine verification is a separate issue; see the final question.
 
 **Jump to:** [prediction thresholds](#5-what-changes-if-correctness-means-posterior-probability-above-12-rather-than-23) · [scaling tuples](#9-can-we-classify-all-tuples-of-layerwise-scaling-exponents) · [targets beyond parity](#for-gamma1-is-the-bad-sample-complexity-specific-to-parity) · [robustness and depth](#12-what-robustness-condition-gives-polynomial-depth-dependence) · [out-of-distribution learning](#why-expect-occam-learning-to-transfer-out-of-distribution) · [label noise](#24-do-the-good-generalization-results-survive-a-small-amount-of-label-noise) · [SLT likelihoods](#do-the-polynomial-bounds-survive-the-likelihood-based-setup-used-in-singular-learning-theory) · [comparing generalization bounds](#does-slt-already-give-comparable-generalization-bounds) · [formal verification](#26-how-much-of-this-is-formally-verified)
 
@@ -251,16 +251,20 @@ For targets other than parity, see the [next question](#for-gamma1-is-the-bad-sa
 
 ## For $\gamma<1$, is the bad sample complexity specific to parity?
 
-**No. Many other targets also need a high power of $d$ samples; only the exponential bound relies on special properties of parity.** The exponential lower bounds for $\gamma<1$ summarized in Question 8 come from the [subcritical paper](main-results/subcritical-exponential/paper.pdf). They are stated for parity. Applied to another target, the same proof gives a bound governed by how far the target is from polynomial threshold functions of low degree. Concretely:
+**Largely no, and certainly not technically.** Many other targets also need a high power of $d$ samples. More strikingly, some targets with small circuits that gradient descent appears to learn quickly still need exponentially many samples in this regime. The clearest example is the target $`f^*`$ below, computed by a Boolean circuit of $O(d)$ gates. The $\gamma<1$ learners provably need $\exp(\Omega(d))$ samples for it. A layerwise learner provably learns it from polynomially many, and Adam on a two-head network learned it at every dimension tested (numerical). Some restricted class of targets may still be learned well in this regime, but we do not have a good characterization.
+
+The exponential lower bounds for $\gamma<1$ summarized in Question 8 come from the [subcritical paper](main-results/subcritical-exponential/paper.pdf). They are stated for parity. Applied to another target, the same proof gives a bound governed by how far the target is from polynomial threshold functions of low degree. Concretely:
 
 - **Many targets other than parity need a high power of $d$ samples.**
   - For a target that depends on a constant number of coordinates, the exponent is roughly its threshold degree, defined below.
-  - For example, $h=\mathrm{MAJ}(x_1x_2,x_3x_4,x_5x_6)$ needs at least about $d^2$ samples in every $\gamma<1$ regime, and about $d^3$ at $\gamma<0$. This holds even under the confidence criterion of Question 5.
+  - For example, $`h=\mathrm{MAJ}(x_1x_2,x_3x_4,x_5x_6)`$ needs at least about $d^2$ samples in every $\gamma<1$ regime, and about $d^3$ at $\gamma<0$. This holds even under the confidence criterion of Question 5.
   - A function $g$ that mixes a three-bit parity with a three-bit majority needs at least about $d^3$ samples at $\gamma<0$, although SGD is expected to learn it from about $d$.
 - **Some targets with full Fourier degree are cheap.** Majority of all $d$ bits is learned from polynomially many samples.
-- **Exponential bounds need more.** Parity is close to threshold functions of degree about $\sqrt d$, so the distance argument gives it only $\exp(\Theta(\sqrt d\log d))$. The exponential parity bound uses two further margin-sensitive lemmas, and these appear to extend to some parity-like targets.
+- **A large parity on a subcube is enough for an exponential bound.** Parity is close to threshold functions of degree about $\sqrt d$, so the distance argument gives it only $\exp(\Theta(\sqrt d\log d))$. The exponential parity bound uses two further margin-sensitive lemmas. These localize. Suppose the target equals a parity of linearly many bits wherever a constant number of other coordinates take fixed values. Then it needs $\exp(\Omega(d))$ samples, whatever it does elsewhere.
+- **Such a target can still be easy for a layerwise learner.** The target $`f^*`$ defined below is a sign-staircase on half of the cube and full parity on the other half. The $\gamma<1$ learners need exponentially many samples for it (proved). A layerwise greedy learner provably learns it from polynomially many. Adam on a two-head network learned it at every dimension tested, up to $d=35$, but this range cannot separate polynomial from exponential growth, and a plain fully connected network did not learn it at $d=31$ (numerical).
+- **Which targets are learned well is open.** Every fixed junta is learned from polynomially many samples, with an exponent set by its threshold degree, and so is majority of all $d$ bits (proved). Beyond such examples, we know no natural class of targets of growing complexity that these learners learn well, and no characterization.
 
-The [supporting note](works-in-progress/beyond-parity/README.md) gives the statements, proofs, and checks behind this answer. Its new arguments combine lemmas of the subcritical paper, standard learning-theory bounds, and an elementary Boolean-function fact. They have independent AI-agent checks, but they are not Lean verified and have not been reviewed by a human.
+The [supporting note](works-in-progress/beyond-parity/README.md) gives the statements, proofs, and checks behind this answer, and a [second note](works-in-progress/beyond-parity/subcube-parity.md), the subcube note, covers parity on a subcube and the target $`f^*`$. Their new arguments combine lemmas of the subcritical paper, standard learning-theory bounds, and elementary Boolean-function facts. They have independent AI-agent checks, but they are not Lean verified and have not been reviewed by a human.
 
 **Setting.** As the width tends to infinity at fixed $\gamma<1$, the hidden preactivations diverge and tanh acts as a sign function. Each layer then maps the correlation between two inputs through the arcsine function $\Psi$ below. The three $\gamma<1$ learners of Question 8 are thus described by one kernel on the cube:
 
@@ -272,22 +276,22 @@ The $1$ is the constant input coordinate.
 
 - **$`\gamma<0`$.** After the output normalization of Question 8, the posterior is the law of a centered Gaussian process $G$ on the cube with covariance $K$, conditioned on the training signs.
 - **$`\gamma=0`$.** $G$ is also conditioned on a fixed absolute margin, $\lvert G(x)\rvert>a$ at every input, where $a>0$ comes from the global output-margin condition of Question 1.
-- **$`0<\gamma<1`$.** The posterior concentrates on the signs of the functions $z$ that minimize the energy $z^{\mathsf T}K^{-1}z$, the squared $`K`$-norm, subject to two constraints: $\lvert z(x)\rvert\ge a$ at every input, and the correct signs at the training inputs. Tied minimizers may receive any weights (Question 10).
+- **$`0<\gamma<1`$.** The posterior concentrates on the signs of the functions $v$ that minimize the energy $v^{\mathsf T}K^{-1}v$, the squared $`K`$-norm, subject to two constraints: $\lvert v(x)\rvert\ge a$ at every input, and the correct signs at the training inputs. Tied minimizers may receive any weights (Question 10).
 
 As in Question 5, the **Gibbs error** is the expected error of one posterior draw. The **confidence failure** is the fraction of test inputs at which the posterior gives the correct label probability at most $2/3$.
 
 For a target $f$ on $\lbrace -1,1\rbrace ^d$:
 
 - Its **threshold degree** $\mathrm{thr}(f)$ is the least degree of a real polynomial whose sign equals $f$ at every input; Question 9 writes $r(f)$. Every nonconstant halfspace, including majority and AND, has threshold degree one. Parity of $k$ bits has threshold degree $k$.
-- $\mathrm{err}_r(f)$ is the least fraction of uniformly distributed inputs on which a polynomial threshold function of degree at most $r$ disagrees with $f$. It is positive exactly when $r<\mathrm{thr}(f)$.
+- $`\mathrm{err}_r(f)`$ is the least fraction of uniformly distributed inputs on which a polynomial threshold function of degree at most $r$ disagrees with $f$. It is positive exactly when $r<\mathrm{thr}(f)$.
 
 Other notation:
 
 - A **junta** is a target that depends on a constant number of coordinates, independent of $d$.
-- For an integer $k$, $k^*$ denotes $k$ rounded up to an odd integer.
+- For an integer $k$, $`k^*`$ denotes $k$ rounded up to an odd integer.
 - $n$ is the number of training examples.
 - $\beta=2^{-(L-1)}$ governs the decay of the kernel's spectrum, and costs a factor $d^{\beta}$ or $d^{2\beta}$ in some bounds below.
-- The constants $c_f,C_f>0$ depend on $f$, the depth, and at $0\le\gamma<1$ the margin $a$, but not on $d$. The statements hold for large $d$.
+- The constants $`c_f,C_f>0`$ depend on $f$, the depth, and at $0\le\gamma<1$ the margin $a$, but not on $d$. The statements hold for large $d$.
 
 **Lower bounds for every target.** For smaller training sets, the subcritical paper proves its parity lower bounds in three steps:
 
@@ -295,24 +299,24 @@ Other notation:
 2. The eigenvalues of $K$ decay with Fourier degree, so posterior-typical functions are close to polynomial threshold functions of low degree.
 3. Parity is far from all such functions.
 
-For large training sets, the paper instead replaces steps 2 and 3 by the margin-sensitive parity lemmas described below. The note uses a simpler step 2 that does not depend on the target at any sample size: it bounds the high-degree part of the posterior by Markov's inequality. Replacing step 3 by $\mathrm{err}_r(f)$ then gives a lower bound for every target. The bound holds while $n$ stays well below about $\binom{d+1}{r+2}$, up to small polynomial factors. At $\gamma=0$ the fixed-degree version also uses the paper's posterior-amplitude lemma.
+For large training sets, the paper instead replaces steps 2 and 3 by the margin-sensitive parity lemmas described below. The supporting note uses a simpler step 2 that does not depend on the target at any sample size: it bounds the high-degree part of the posterior by Markov's inequality. Replacing step 3 by $`\mathrm{err}_r(f)`$ then gives a lower bound for every target. The bound holds while $n$ stays well below about $\binom{d+1}{r+2}$, up to small polynomial factors. At $\gamma=0$ the fixed-degree version also uses the paper's posterior-amplitude lemma.
 
 For a junta $f$ with $t=\mathrm{thr}(f)\ge2$:
 
-- **$`\gamma<0`$ (proved).** Confidence failure is at least $\mathrm{err}_{t^*-2}(f)/2>0$ on every training set with $n\le c_fd^{t^*}$. Up to a logarithmic term, $C_fd^{t^*+1}/\varepsilon$ iid samples bring it below $\varepsilon$.
-- **$`\gamma=0`$ (proved).** For typical uniform iid samples with $n\le c_fd^{t^*-2\beta}$, the Gibbs error is at least $\mathrm{err}_{t^*-2}(f)/2$. As at $\gamma<0$, about $C_fd^{t^*+1}/\varepsilon$ iid samples bring the confidence failure below $\varepsilon$.
-- **$`0<\gamma<1`$ (proved).** For typical uniform iid samples with $n\le c_fd^{t^*-\beta}$, every minimum-energy sign function has error at least $\mathrm{err}_{t^*-2}(f)/2$. Order $C_fd^{t^*}/\varepsilon^2$ samples bring every minimizer's error below $\varepsilon$.
+- **$`\gamma<0`$ (proved).** Confidence failure is at least $`\mathrm{err}_{t^*-2}(f)/2>0`$ on every training set with $`n\le c_fd^{t^*}`$. Up to a logarithmic term, $`C_fd^{t^*+1}/\varepsilon`$ iid samples bring it below $\varepsilon$.
+- **$`\gamma=0`$ (proved).** For typical uniform iid samples with $`n\le c_fd^{t^*-2\beta}`$, the Gibbs error is at least $`\mathrm{err}_{t^*-2}(f)/2`$. As at $\gamma<0$, about $`C_fd^{t^*+1}/\varepsilon`$ iid samples bring the confidence failure below $\varepsilon$.
+- **$`0<\gamma<1`$ (proved).** For typical uniform iid samples with $`n\le c_fd^{t^*-\beta}`$, every minimum-energy sign function has error at least $`\mathrm{err}_{t^*-2}(f)/2`$. Order $`C_fd^{t^*}/\varepsilon^2`$ samples bring every minimizer's error below $\varepsilon$.
 
-The sample-size exponents of these lower and upper bounds differ by at most two. The proofs also give more than these halved bounds. For $n=o(d^{t^*})$ at $\gamma<0$, $n=o(d^{t^*-2\beta})$ at $\gamma=0$, and $n=o(d^{t^*-\beta})$ at $0<\gamma<1$, the lower bound is $\mathrm{err}_{t^*-2}(f)-o(1)$.
+The sample-size exponents of these lower and upper bounds differ by at most two. The proofs also give more than these halved bounds. For $`n=o(d^{t^*})`$ at $\gamma<0$, $`n=o(d^{t^*-2\beta})`$ at $\gamma=0$, and $`n=o(d^{t^*-\beta})`$ at $0<\gamma<1$, the lower bound is $`\mathrm{err}_{t^*-2}(f)-o(1)`$.
 
-At $0\le\gamma<1$ these lower bounds concern Gibbs error. By Question 5's second inequality at $q=2/3$, a Gibbs-error lower bound $R$ gives a confidence-failure lower bound $(3R-1)/2$, which is positive only when $R>1/3$. Since $\mathrm{err}_r(f)\le1/2$, the halved bounds never give a confidence statement, but the sharper ones can. Two examples:
+At $0\le\gamma<1$ these lower bounds concern Gibbs error. By Question 5's second inequality at $q=2/3$, a Gibbs-error lower bound $R$ gives a confidence-failure lower bound $(3R-1)/2$, which is positive only when $R>1/3$. Since $`\mathrm{err}_r(f)\le1/2`$, the halved bounds never give a confidence statement, but the sharper ones can. Two examples:
 
-- **A majority of XORs.** $h=\mathrm{MAJ}(x_1x_2,x_3x_4,x_5x_6)$ has threshold degree two and $\mathrm{err}_1=11/32>1/3$.
+- **A majority of XORs.** $`h=\mathrm{MAJ}(x_1x_2,x_3x_4,x_5x_6)`$ has threshold degree two and $`\mathrm{err}_1=11/32>1/3`$.
   - At $\gamma<0$, its confidence failure stays at least $11/32-o(1)$ on every training set with $n=o(d^3)$.
   - At $0\le\gamma<1$, its confidence failure is at least $(3\cdot11/32-1)/2-o(1)=1/64-o(1)$, for $n=o(d^{3-2\beta})$ at $\gamma=0$ and $n=o(d^{3-\beta})$ at $0<\gamma<1$.
-- **A parity–majority mixture.** Let $g$ be the function equal to $x_1x_2x_3$ when $x_4=1$ and to $\mathrm{MAJ}(x_1,x_2,x_3)$ when $x_4=-1$. It has threshold degree three and $\mathrm{err}_1=3/16$, so at $\gamma<0$ it needs at least about $d^3$ samples.
+- **A parity–majority mixture.** Let $g$ be the function equal to $`x_1x_2x_3`$ when $`x_4=1`$ and to $`\mathrm{MAJ}(x_1,x_2,x_3)`$ when $`x_4=-1`$. It has threshold degree three and $`\mathrm{err}_1=3/16`$, so at $\gamma<0$ it needs at least about $d^3$ samples.
 
-The $`k`$-bit parity $\chi_k(x)=x_1\cdots x_k$ with fixed $k\ge2$ is also covered, at the natural scale $d^{\Omega(k)}$ of Question 11. For example, two-bit XOR has $\mathrm{err}_1=1/4$, so at $\gamma<0$ its confidence failure stays at least $1/4-o(1)$ on every training set with $n=o(d^3)$. At $0\le\gamma<1$ these sparse-parity bounds hold only for Gibbs error. Question 11's open problems concern $k$ growing with $d$, where the constants and $\mathrm{err}_{k^*-2}(\chi_k)$ degrade.
+The $`k`$-bit parity $`\chi_k(x)=x_1\cdots x_k`$ with fixed $k\ge2$ is also covered, at the natural scale $d^{\Omega(k)}$ of Question 11. For example, two-bit XOR has $`\mathrm{err}_1=1/4`$, so at $\gamma<0$ its confidence failure stays at least $1/4-o(1)$ on every training set with $n=o(d^3)$. At $0\le\gamma<1$ these sparse-parity bounds hold only for Gibbs error. Question 11's open problems concern $k$ growing with $d$, where the constants and $`\mathrm{err}_{k^*-2}(\chi_k)`$ degrade.
 
 **Cheap targets: threshold degree one (proved; standard PAC-Bayes and margin arguments).**
 
@@ -325,19 +329,28 @@ Full Fourier degree is therefore no obstacle for these learners. A sign predicti
 
 Parity, by contrast, is close to threshold functions of degree about $\sqrt d$, so this route gives it only $\exp(\Theta(\sqrt d\log d))$. The subcritical paper's exponential parity theorem reaches $\exp(\Omega(d))$ through two further margin-sensitive lemmas. Both use the fact that parity changes sign along every edge of the cube.
 
-**Extension suggested by the proof:** these lemmas appear to carry over to a wider class of targets. After some coordinates are fixed at random, such a target becomes $\pm$ a parity of linearly many bits, except with exponentially small probability. Inner product mod 2 is an example.
+**Parity on a subcube (proved).** These lemmas localize to any subcube on which the target is a parity. Write inputs as $(x,z)$ with $x\in\lbrace -1,1\rbrace ^d$ and $z\in\lbrace -1,1\rbrace ^k$, and let the learners of Setting act on all $d+k$ input bits, with $d+k$ in place of $d$ in the kernel. Fixing $`z=z_0`$ gives a subcube of codimension $k$; here $k$ is the codimension, not a parity size. Suppose that on one such subcube the target equals $\pm$ a parity of at least $`c_Rd`$ of the $`x`$-coordinates, with arbitrary values elsewhere. Fix $k$, $`c_R`$, the depth, and the margin. Then there is $c>0$ such that, for large $d$, every $n\le e^{cd}$, and every fixed $\gamma<1$, the following holds with probability at least $3/4$ over uniform iid samples:
 
-Exact threshold degree is a worst-case notion. Functions with high threshold degree, such as the Minsky–Papert AND of ORs, can be nearly constant under uniform inputs. For such targets our lower bounds are weak, because $\mathrm{err}_r(f)$ is small. Our upper bounds are also weak, because exact sign representations need high degree or tiny margins. So the sample complexity of such targets for these learners remains open.
+- in the width limit, at least $1/16$ of the subcube fails the confidence criterion, so at least $2^{-k}/16$ of all inputs fail;
+- at $\gamma<0$, at least $3/8$ of the subcube fails even with the threshold lowered to $13/20$.
 
-**Scope.** All results in this answer concern the $\gamma<1$ learners described in Setting. The $\gamma\ge1$ regimes learn every small circuit, parity included ([Question 8](#8-what-is-actually-known-for-the-one-parameter-family-of-scalings)). At depth linear in $d$, the deep NNGP family of [Question 7](#7-how-do-the-nnbayes-results-here-relate-to-nngp-and-kernel-regression) and a [deep $\gamma\le0$ family](side-results/gamma-below-one/paper.pdf) fail on every target, so their lower bounds say nothing specific about parity.
+Labels off the subcube enter the subcritical paper's proof only through bounds that hold for every labeling, so they cannot help on the subcube. The proof's constant $c$ is at worst of order $8^{-k}$.
 
-The note's numerical illustrations only illustrate the asymptotic statements. At $d=12$, $L=2$, and $\gamma<0$:
+**Open:** targets that are a large parity only on subcubes of linear codimension. Inner product mod 2 is an example: fixing half of its coordinates leaves a parity of about a quarter of them. The supporting note suggests that the margin-sensitive lemmas transfer to such targets one restriction at a time (extension suggested by the proof), but this has not been written out.
+
+**Targets without a parity subcube.** The sign-staircase $`\mathrm{sign}(x_1+x_1x_2+\cdots+x_1\cdots x_d)`$, with $d$ odd, needs at least $\exp(\Omega(\sqrt d\log d))$ samples for these learners in all three regimes (proved). The distance argument cannot give more, because the sign-staircase is close to threshold functions of degree $O(\sqrt{d\log(1/\varepsilon)})$. Whether it is exponentially hard is open. Every function of $`\sum_ix_i`$ alone has the same ceiling for the distance argument. Some such functions still reach $\exp(\Omega(d))$, for example $(-1)^{\lfloor w/2\rfloor}$, where $w$ is the number of coordinates equal to $-1$. The argument uses a random restriction that ties coordinates together in blocks (extension suggested by the proof: the target-dependent steps of the subcritical paper were audited, but the transferred proof has not been written out).
+
+Exact threshold degree is a worst-case notion. Functions with high threshold degree, such as the Minsky–Papert AND of ORs, can be nearly constant under uniform inputs. For such targets our lower bounds are weak, because $`\mathrm{err}_r(f)`$ is small. Our upper bounds are also weak, because exact sign representations need high degree or tiny margins. So the sample complexity of such targets for these learners remains open.
+
+**Scope.** All Bayesian results in this answer concern the $\gamma<1$ learners described in Setting, except the two-head variant below. The greedy learner and the Adam runs below are other learners, included for comparison. The $\gamma\ge1$ regimes learn every small circuit, parity included ([Question 8](#8-what-is-actually-known-for-the-one-parameter-family-of-scalings)). At depth linear in $d$, the deep NNGP family of [Question 7](#7-how-do-the-nnbayes-results-here-relate-to-nngp-and-kernel-regression) and a [deep $\gamma\le0$ family](side-results/gamma-below-one/paper.pdf) fail on every target, so their lower bounds say nothing specific about parity.
+
+The supporting note's numerical illustrations only illustrate the asymptotic statements. At $d=12$, $L=2$, and $\gamma<0$:
 
 - majority of seven bits reaches confidence failure $0.03$ at $n=200$;
 - three-bit parity falls below $0.01$ by $n=2400$;
 - $g$ still fails at $n=2400$ on $23\%$ of all inputs and $41\%$ of unseen ones.
 
-In these runs, $g$ is learned more slowly than three-bit parity. The note's explanation, via $g$'s larger kernel norm, is heuristic.
+In these runs, $g$ is learned more slowly than three-bit parity. The supporting note's explanation, via $g$'s larger kernel norm, is heuristic.
 
 **Comparison with SGD.** The **leap** $\mathrm{Leap}(f)$ of a target is the least $\ell$ such that the sets in its Fourier support can be ordered so that each contains at most $\ell$ coordinates outside the union of the earlier ones.
 
@@ -348,17 +361,42 @@ These SGD statements concern exponents for fixed juntas and are taken from the p
 
 Every Boolean function satisfies $\mathrm{Leap}(f)\le\mathrm{thr}(f)\le\deg f$; the proof is elementary. So a junta of leap $\ell\ge2$ has threshold degree at least $\ell$. These learners then need at least about $d^{\ell}$ samples: in confidence on every training set at $\gamma<0$, and in Gibbs error for typical samples at $0\le\gamma<1$, up to a factor $d^{2\beta}$.
 
-The converse fails. The leap-one target $g$ needs at least about $d^3$ samples at $\gamma<0$, while SGD is conjectured to need about $d$. The note's exhaustive four-bit census suggests that targets like $g$ are common: 97.5% of the leap-one functions depending on all four of their bits have threshold degree at least two.
+The converse fails. The leap-one target $g$ needs at least about $d^3$ samples at $\gamma<0$, while SGD is conjectured to need about $d$. The supporting note's exhaustive four-bit census suggests that targets like $g$ are common: 97.5% of the leap-one functions depending on all four of their bits have threshold degree at least two.
 
-For $`k`$-sparse parity with fixed $k\ge2$, leap, threshold degree, and degree all equal $k$. Under the conjectured rate, SGD needs about $d^{k-1}$ samples. At $\gamma<0$ these learners need between about $d^{k^*}$ and $d^{k^*+1}$. At $0\le\gamma<1$ they need at least about $d^{k^*}$ up to a factor $d^{2\beta}$, in Gibbs error. So the exponents differ only by a small constant. [Barak et al.](https://arxiv.org/abs/2207.08799) find SGD taking $d^{O(k)}$ iterations on sparse parity, near the statistical-query limit.
+For $`k`$-sparse parity with fixed $k\ge2$, leap, threshold degree, and degree all equal $k$. Under the conjectured rate, SGD needs about $d^{k-1}$ samples. At $\gamma<0$ these learners need between about $`d^{k^*}`$ and $`d^{k^*+1}`$. At $0\le\gamma<1$ they need at least about $`d^{k^*}`$ up to a factor $d^{2\beta}$, in Gibbs error. So the exponents differ only by a small constant. [Barak et al.](https://arxiv.org/abs/2207.08799) find SGD taking $d^{O(k)}$ iterations on sparse parity, near the statistical-query limit.
+
+**A target that gradient descent can climb.** For an exponential gap, let $d$ be odd and add one selector bit $z$ to $x\in\lbrace -1,1\rbrace ^d$:
+
+$$
+f^*(x,z)=\begin{cases}
+\mathrm{sign}\left(x_1+x_1x_2+\cdots+x_1x_2\cdots x_d\right),&z=+1,\\
+x_1x_2\cdots x_d,&z=-1.
+\end{cases}
+$$
+
+On $z=+1$ it is the sign of a staircase. A chain of XOR gates computes the prefix parities, a linear-size majority circuit combines them, and one selector picks the half, so $`f^*`$ has a Boolean circuit of $O(d)$ gates. For $t<d$, each prefix parity $`x_1\cdots x_t`$ correlates with $`f^*`$ at about $(2\pi d)^{-1/2}$, and each extends the previous one by one coordinate, so a learner can find them one at a time. The last, $`x_1\cdots x_d`$, is the full parity that $`f^*`$ equals on $z=-1$.
+
+On the Bayesian side:
+
+- **The $\gamma<1$ learners need $\exp(\Omega(d))$ samples (proved).** This is the subcube theorem above with codimension $k=1$, for the learners of Setting on all $d+1$ bits. In the width limit, for every $n\le e^{cd}$ and with probability at least $3/4$ over uniform iid samples, at least $1/32$ of all inputs fail the confidence criterion, and at least $3/16$ at $\gamma<0$.
+- **Two-head Bayesian networks (proved).** Give the network a shared stack of hidden layers that sees only $x$, and two readouts with equal variances, one used when $z=+1$ and one when $z=-1$. In the width limit, at $\gamma\le0$ the posterior splits into independent posteriors on the two halves, and at $0<\gamma<1$ the minimum-energy problem splits. So the parity half fails exactly as in the subcritical paper. This is a modified prior. Its width limit is two independent Gaussian processes, so its hardness is that of parity on one half.
+
+On the gradient side:
+
+- **A layerwise learner provably climbs it (proved).** Consider a greedy procedure in the spirit of the staircase learner of [Abbe, Boix-Adserà, Brennan, Bresler, and Nagaraj](https://arxiv.org/abs/2108.10573). It grows product units $`x_{i_1}\cdots x_{i_m}`$ one coordinate at a time, keeping a unit when its correlation with the target, or with $z$ times the target, is above a threshold. It then trains two linear heads on these units, one for each value of $z$. It finds exactly the $d$ prefix parities from $O(d\log d)$ samples, and the heads reach error $\varepsilon$ from $O(d^2/\varepsilon)$ more. It is a correlation-query procedure, not gradient descent on a standard network. It stalls on parity alone, and on the control target that is $`x_1`$ on $z=+1$ and parity on $z=-1$.
+- **Adam on a two-head network learned it at every dimension tested (numerical).** A ReLU network computes three hidden layers of width 512 from $x$, giving $\phi(x)$, and outputs $`w_1\cdot\phi(x)+z\,w_2\cdot\phi(x)`$. It was trained with Gaussian initialization on fresh samples. Its error on the parity half fell below 5% after about $2.7\cdot10^6$, $8.8\cdot10^6$, $1.7\cdot10^7$, $4.8\cdot10^7$, and $7.6\cdot10^7$ samples at $d=19$, 23, 27, 31, and 35. On the control target, the parity half needed about $10^7$ samples at $d=19$ and $1.9\cdot10^7$ at $d=23$, and was not learned within $4\cdot10^7$ at $d=27$ or $6\cdot10^7$ at $d=31$. Parity alone, on the same hidden layers with one readout, was not learned within $3\cdot10^7$ samples at $d=27$. So in every case tested, the staircase half sped up learning of the parity half.
+- **What the numerics do not show.** There are one or two seeds per dimension, $d\le35$, and at $d=19$ the runs used more samples than there are inputs. This range cannot separate polynomial from exponential growth. A plain fully connected network with $z$ as an ordinary input, the shape of the learners in the subcube theorem, learned $`f^*`$ at $d=21$, but only after more samples than there are inputs, and not at $d=31$ within $6\cdot10^7$ samples (PyTorch's default initialization). Parity alone, on a smaller one-hidden-layer network with Gaussian initialization, was learned at $d=19$, 23, and 27 from $2.3\cdot10^6$, $3.8\cdot10^6$, and $1.6\cdot10^7$ samples, no more than the parity half of $`f^*`$ needed. It was not learned within $1.5\cdot10^8$ samples at $d=31$. With PyTorch's default uniform initialization, the same network learned parity alone at $d=31$ from about $3\cdot10^6$ samples. So the comparison with parity alone depends on the initialization and on the architecture.
+- **Open: no theorem for end-to-end SGD.** We found no theorem in which end-to-end SGD from a Gaussian initialization learns a linear-degree parity, or $`f^*`$, on uniform inputs; the search was at abstract level. The positive results for almost-full parities, by [Abbe, Cornacchia, Hązła, and Kougang-Yombi](https://arxiv.org/abs/2412.04910), start from $\pm1$ first-layer weights, possibly with Gaussian perturbations of size $O(1/d)$, and a large Gaussian perturbation prevents learning (literature, abstract-level). We read this as an effect of initialization (heuristic).
+
+**Why both halves (heuristic).** Two proved facts suggest why simpler targets do not work for the available proof routes. If a target is within distance $\eta$ of a single parity, all its other Fourier coefficients are at most $2\eta$, so there is little low-degree signal to climb. If instead a target becomes $\pm$ a parity of at least $\alpha d$ bits once some coordinates are fixed at uniformly random values, except with probability $\delta$, then its Fourier weight below degree $\alpha d$ is at most $\delta$. $`f^*`$ avoids both. It is at distance about $1/4$ or more from every parity, and at least about $\alpha/\pi$ of its Fourier weight lies below degree $\alpha d$. Yet it equals a parity exactly on half of the cube.
 
 **Comparison with kernel regression.** For contrast, consider a different predictor built from the same kernel $K$. It is the posterior mean of the centered Gaussian process with covariance $K$, given the noiseless labels as real values. That process is the NNGP of the sign-activation network in Setting, not the standard-scaling NNGP of Question 7. This posterior mean is kernel interpolation, called kernel regression below. Its squared error is governed by Fourier weight rather than by distance from threshold functions.
 
-Write $\mathrm{wt}_k(f)$ for the Fourier weight of $f$ at degree $k$, and $\mathrm{wt}_{>r}(f)$ for its total weight above degree $r$.
+Write $`\mathrm{wt}_k(f)`$ for the Fourier weight of $f$ at degree $k$, and $`\mathrm{wt}_{>r}(f)`$ for its total weight above degree $r$.
 
-For uniformly sampled inputs, the expected squared error of kernel regression depends on the target only through the weights $\mathrm{wt}_k(f)$. The note proves this by a symmetry argument. For fixed $k$ and $n\le c_k\,d^{k^*}(d\log d)^{-\beta}$, where $c_k>0$ depends on $k$ and the depth, at least half of the weight at degrees $k$ and above remains as squared error. For $n=o(d^{k^*}(d\log d)^{-\beta})$, all of it remains up to $o(1)$.
+For uniformly sampled inputs, the expected squared error of kernel regression depends on the target only through the weights $`\mathrm{wt}_k(f)`$. The supporting note proves this by a symmetry argument. For fixed $k$ and $`n\le c_k\,d^{k^*}(d\log d)^{-\beta}`$, where $`c_k>0`$ depends on $k$ and the depth, at least half of the weight at degrees $k$ and above remains as squared error. For $`n=o(d^{k^*}(d\log d)^{-\beta})`$, all of it remains up to $o(1)$.
 
-The odd rounding comes from the odd activation and the constant input coordinate, which together give $x_1x_2$ the same eigenvalue as $x_1x_2x_3$. This is the lower-bound half of the standard polynomial-regime picture of kernel regression, as in [Mei, Misiakiewicz, and Montanari](https://arxiv.org/abs/2101.10588), whose examples include the hypercube. We have not checked that paper's hypotheses for this kernel.
+The odd rounding comes from the odd activation and the constant input coordinate, which together give $`x_1x_2`$ the same eigenvalue as $`x_1x_2x_3`$. This is the lower-bound half of the standard polynomial-regime picture of kernel regression, as in [Mei, Misiakiewicz, and Montanari](https://arxiv.org/abs/2101.10588), whose examples include the hypercube. We have not checked that paper's hypotheses for this kernel.
 
 The two criteria differ:
 
@@ -366,7 +404,7 @@ The two criteria differ:
 - **AND of all $d$ bits** has degree $d$, but all except $O(2^{-d})$ of its weight is at degree zero. So the regression lower bound gives nothing for it: that bound depends on high-degree weight, not on Fourier degree.
 - **The target $`g`$** has $9/16$ of its weight at degree four. Regression keeps its squared error at least $9/16-o(1)$ while $n=o(d^5(d\log d)^{-\beta})$.
 
-In one direction the criteria are linked. Since $\mathrm{err}_r(f)\le\mathrm{wt}_{>r}(f)$, every target that our lower bounds certify as hard for the sign posteriors is also hard for squared-error regression.
+In one direction the criteria are linked. Since $`\mathrm{err}_r(f)\le\mathrm{wt}_{>r}(f)`$, every target that our lower bounds certify as hard for the sign posteriors is also hard for squared-error regression.
 
 ## 12. What robustness condition gives polynomial depth dependence?
 
@@ -637,7 +675,7 @@ Conversely, a tiny target probability alone is not a sample lower bound. A prior
 | Out-of-distribution learning | **Heuristic.** Mistakes by the simplest consistent hypothesis may often eliminate many surviving low-complexity competitors, even as the input distribution changes. The [conditional online argument below](#why-expect-occam-learning-to-transfer-out-of-distribution) makes this expectation precise; its genericity premise remains unproved. |
 | Online mistake bounds | **Open for the desired width-uniform neural statement.** The genericity argument below gives a conditional bound for a simplest-consistent learner; its premise and its analogue for the NNBayes posterior remain unproved. Generic Bayesian code-length bounds also exist. |
 | Other architectures | **Open here.** CNN weight sharing, recurrence, attention, normalization, and residual structure need their own prior and complexity accounting. |
-| Gradient descent | **Open as a learning theorem.** The experiments concern a sufficient stability property, not equivalence between SGD and the exact Bayesian posterior. |
+| Gradient descent | **Open as a learning theorem.** The robustness experiments concern a sufficient stability property, not equivalence between SGD and the exact Bayesian posterior. The [targets-beyond-parity question](#for-gamma1-is-the-bad-sample-complexity-specific-to-parity) adds Adam runs on a target that the $\gamma<1$ learners provably need exponentially many samples for (numerical, $d\le35$). |
 
 The [appendix audit](side-results/strong-prior-appendix-audit/paper.pdf) checks every original appendix in turn. In particular, the original depth example is a capacity/proof obstruction rather than a sample lower bound; the scaling classification is not exhaustive; the kernel-to-classification inference needed repair; and some online-learning claims were false under their stated conventions. These qualifications are part of the current account, not claims silently inherited from the slides.
 

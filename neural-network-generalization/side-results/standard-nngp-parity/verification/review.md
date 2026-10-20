@@ -54,7 +54,7 @@ It also suggested two improvements: the paired form for odd activations, and sta
 The proposition (cost per sample at least $(a^2-10\tau_r)/(\tau_r(16b_r+4CA_\delta rH_r))$), the universal tail-Gram lemma, the moment argument and the upper bound were confirmed. The referee also checked:
 
 - that subcritical Lemmas 5.1 and 5.2 use only the listed properties of the tail covariance;
-- that the odd-$F$, odd-$r$ identity for the tail kernel holds;
+- that the odd-$`F`$, odd-$`r`$ identity for the tail kernel holds;
 - that the cited equation numbers (42) and (45) are correct.
 
 It found **two errors** and several imprecisions.
