@@ -73,6 +73,29 @@ Five reviewers read the finished material, each with one lens. Together they mad
   - **Earlier outputs.** The `.out` files the comparisons refer to are not included, and the README now says so.
 - **Rendering and links.** Underscores and asterisks inside plain inline math can pair into emphasis on GitHub. Every such span in the note, the companion note and the FAQ section now uses the `` $`...`$ `` form. Every relative link and anchor resolves.
 
+## Runs added after the package was first assembled
+
+Sixteen training runs finished after the package was first assembled; they are in `numerics/runs/` and `numerics/results.md`. Three were added before the first publication; the other 13 came later. They add, all numerically:
+
+- the two-head run at $d=35$ with Gaussian initialization, and the control at $d=31$;
+- parity alone on the three-layer trunk with one readout at $d=19$, 23, 27 and 31, none learned within its budget;
+- the plain MLP with Gaussian initialization at $d=19$, 23 and 27, which learned the parity half of $`f^*`$ only at $d=19$;
+- second seeds;
+- one SGD run;
+- default-initialization runs at $d=35$.
+
+The following were updated to match:
+
+- the note's Summary;
+- Section 3.2 (Tables 1 and 1b, their bullets, and the text after Tables 3 and 4);
+- Section 5.3;
+- Section 6, item 6;
+- this package's README;
+- the FAQ section;
+- the collection README's row.
+
+Two independent agents then checked the changes, one for numbers and one for wording. Every number matched the run summaries, and the refitted growth rates were reproduced. The wording check found one overstatement. The text had said the staircase half is what made the parity learnable on the trunk, but the control target's parity half was also learned at $d=19$ and 23. The text now says that parity was learned there only as half of a two-half target, and at $d=27$ and 31 only next to the staircase half. Smaller fixes covered seed counts, the SGD sample counts, statements that the default-initialization run at $d=35$ contradicted, and caveats in this package's README that had been attached to the wrong network.
+
 ## Not checked
 
 - Full texts of the cited literature.
