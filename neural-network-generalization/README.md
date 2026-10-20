@@ -151,3 +151,7 @@ PDFs rebuilt after editorial, statement-precision, or attribution revisions, inc
 The non-Gaussian extension has its own [source-build and mathematical review record](side-results/non-gaussian-priors/verification/README.md). Its publication does not extend the scope of the Lean verification.
 
 The paper collection was assembled on `codex/neural-network-generalization-papers-2026-10-16`; the Lean formalization was prepared on `codex/neural-network-lean-2026-10-16`. This folder on `main` contains the papers and their supporting records; exploratory scratch work remains outside the published collection.
+
+## Acknowledgments
+
+We thank Lucius Bushnaq, Sam Eisenstat, Lawrence Chan, Jake Mendel, and Lauren Greenspan for discussion and ideas.
