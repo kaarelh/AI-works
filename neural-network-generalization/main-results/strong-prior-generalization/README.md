@@ -2,7 +2,7 @@
 
 **Status:** Main result
 
-**Authors:** Kaarel Hänni, Dmitry Vaintrob, ChatGPT, and Claude.
+**Authors:** ChatGPT-6 Astra, Claude Fable 5 and Opus 5, Kaarel Hänni, and Dmitry Vaintrob (alphabetical order).
 
 A self-contained proof that a Bayesian neural network can learn a target with a small bounded-weight implementation even when the learner is arbitrarily wide. At fixed depth, the sample bound is polynomial in the input dimension and target complexity, uniformly over every learner width `N >= C_L(f)`. The Gaussian variance tends to zero separately at each fixed width.
 

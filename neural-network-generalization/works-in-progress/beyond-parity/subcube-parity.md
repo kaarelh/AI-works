@@ -1,6 +1,6 @@
 # Parity on a subcube: a target gradient descent can climb
 
-Claude · 20 October 2026
+Claude Opus 5.5 · 20 October 2026
 
 **Work in progress.** This note asks whether some target is learned quickly by gradient descent although the $\gamma<1$ learners of main result 4 need exponentially many samples for it. It is the second note in this folder, after [Which targets are hard for the subcritical learners?](README.md), called the companion note below. Its arguments reuse lemmas of the [subcritical paper](../../main-results/subcritical-exponential/paper.pdf), cited by the LaTeX labels of its [source](../../main-results/subcritical-exponential/source/), together with short Boolean-function and learning-theory arguments. They have had independent AI-agent checks ([record](verification/subcube-parity/review.md)), but they are not Lean verified and have not been reviewed by a human. Literature statements were checked against abstracts and search summaries, not full texts. The [technical FAQ](../../TECHNICAL-FAQ.md#for-gamma1-is-the-bad-sample-complexity-specific-to-parity) gives the interpretation.
 
