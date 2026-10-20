@@ -2,9 +2,9 @@
 \usepackage[margin=1in]{geometry}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
-\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools,booktabs}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools,booktabs,array,longtable,needspace}
 \usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
-\hypersetup{pdftitle={Parity under standard-scaling neural-network Gaussian processes},pdfauthor={Claude}}
+\hypersetup{pdftitle={Parity under standard-scaling neural-network Gaussian processes: superpolynomial and nearly exponential sample lower bounds at fixed depth},pdfauthor={Claude}}
 \setlength{\emergencystretch}{2em}
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{lemma}[theorem]{Lemma}
@@ -17,14 +17,15 @@
 \DeclareMathOperator{\dist}{dist}
 \DeclareMathOperator{\err}{err}
 \DeclareMathOperator{\clip}{clip}
+\DeclareMathOperator{\agr}{agr}
 \newcommand{\E}{\mathbb E}
 \newcommand{\Pp}{\mathbb P}
 \newcommand{\X}{\mathcal X}
 \newcommand{\R}{\mathbb R}
 \newcommand{\sub}{\textup{[SE]}}
-\title{Parity under standard-scaling neural-network\\Gaussian processes: superpolynomial sample\\lower bounds at fixed depth, and an obstruction}
+\title{Parity under standard-scaling neural-network\\Gaussian processes: superpolynomial and nearly\\exponential sample lower bounds at fixed depth}
 \author{Claude}
-\date{October 19, 2026}
+\date{October 20, 2026}
 \begin{document}
 \maketitle
 \begin{abstract}
@@ -44,16 +45,32 @@ the training signs, a threshold of the same form $d^{\Theta(\sqrt d)}$
 (explicitly $d^{\sqrt d/10-1/2}/6000$ for $d\ge25$) holds on every
 training set, for every bounded continuous nonconstant activation, every
 depth and every gain; the argument is kernel-agnostic and also gives the
-scale $d^k$ for fixed $k$-sparse parity. An $\exp(\Omega(d))$ lower bound,
-the analogue of the subcritical theorem in this collection, remains open.
-We prove that the step of that theorem which bounds the posterior's
-conditioning cost by a polynomial per sample is false at the standard
-scaling: for $\tanh$ networks, each fixed $\delta>0$ and
-$\exp(d^{\epsilon})\le n\le e^{c(\delta)d}$, with probability at least
-$1-2\delta$ the cost per sample is superpolynomial in $d$. We explain why
-an upper bound on that cost matching our lower bound would complete an
-exponential proof. Numerical spectra and small-dimensional
-posterior computations illustrate the results.
+scale $d^k$ for fixed $k$-sparse parity. On typical samples this learner
+fails far longer: for $\tanh$ at every fixed depth and gains,
+$n\le\exp(10^{-3}d\log\log d/\log d)$ examples leave, for all large $d$ and
+with probability at least $3/4$, at least $3/8$ of the inputs without
+confident correct prediction. This is proved conditionally on the chaining
+estimate on which the collection's subcritical theorem also rests; the
+proof uses a random-restriction form of the Aspnes--Beigel--Furst--Rudich
+bound that depends only logarithmically on the amplitude of the posterior
+mean. An $\exp(\Omega(d))$ lower bound, the analogue of the subcritical
+theorem in this collection, remains open for both learners. For the
+sign-only learner the proof suggests that it would follow from two open
+log-free estimates at linear degree, for one-sided coercivity and for the
+sampled tail Gram matrix. For the margin learner we prove, again
+conditionally on that chaining estimate, that the step of the subcritical
+theorem which bounds the posterior's conditioning cost by a polynomial per
+sample is false at the standard scaling: for $\tanh$ networks, each fixed
+$\delta\in(0,1/8)$ and $\exp(d^{\epsilon})\le n\le e^{c_{\rm G}(\delta)d}$, with
+probability at least $1-2\delta$ the cost per sample is superpolynomial in
+$d$. A sharper lower bound with the same status, of order $a^2$ over the
+prior tail variance per sample when $\log n\asymp d$, shows that no upper
+bound on that cost can
+match the first one, and that with our tail-Gram bound the head-bound
+argument of the subcritical paper, applied at the margin scale, cannot give
+an exponential bound whatever upper bound on the cost holds. Numerical
+spectra and small-dimensional posterior computations illustrate the
+results.
 \end{abstract}
 
 \section{Introduction and results}
@@ -62,8 +79,9 @@ $\exp(\Omega(d))$ sample lower bound for full parity under a family of
 Gaussian network priors whose width scaling is indexed by an exponent
 $\gamma<1$. In that family the hidden preactivations diverge with width,
 $\tanh$ acts as a sign function, and the limiting covariance is the
-iterated arcsine kernel. The usual NNGP scaling is different: it keeps the
-preactivations of order one, so the limit is the dual-activation kernel of
+iterated arcsine kernel. The usual NNGP scaling
+\cite{neal,leeetal,matthews} is different: it keeps the preactivations of
+order one, so the limit is the dual-activation kernel \cite{daniely} of
 $\tanh$ itself. In the exponent notation of the collection's FAQ
 (Question~9) this scaling is the tuple $(0,1,\ldots,1,1)$, which is not on
 the one-parameter line $(\gamma-1,\gamma,\ldots,\gamma,\gamma+1)$.
@@ -99,38 +117,96 @@ proved). For $\tanh$ at every fixed depth and every choice of gains and
 margin, $n\le\exp(\frac1{20}\sqrt d\log d)$ iid uniform examples of full
 parity leave, for $d\ge d_0$ (not explicit) and with probability at least $1-e^{-d/10}$, Gibbs error at least
 $3/8$ and confidence failure at least $1/16$ in the width limit.
+\item \textbf{Sign-only learner, typical samples} (Theorem~\ref{thm:S1}).
+For $\tanh$ at every fixed depth and every choice of gains,
+$n\le\exp(10^{-3}d\log\log d/\log d)$ iid uniform examples of full parity
+leave, for $d\ge d_0$ and with probability at least $3/4$, at least $3/8$
+of the inputs without confidence above $2/3$ in the width limit. This is
+proved conditionally on \cite[Lemma~4.1]{subcritical}, on which the
+subcritical theorem \cite[Theorem~1.1]{subcritical} also rests, and
+unconditionally for $n\le n_0(d)=d^{\Theta(\sqrt d)}$. The
+threshold $d_0$ is not explicit, and with our constants it is astronomically
+large (Remark~\ref{rem:d0}). The same proof covers $\operatorname{erf}$
+(Remark~\ref{rem:S1act}), and by Remark~\ref{rem:readout} the conclusion
+also holds for the margin learner with readout variance $\sigma_L^2N^{-b}$,
+$b<1$.
 \item \textbf{The exponential question} (open). We do not know whether
-$\exp(\Omega(d))$ samples are needed. Proposition~\ref{prop:obstruction}
-(proved) shows that one specific step of the subcritical proof fails. That
+$\exp(\Omega(d))$ samples are needed. For the margin learner,
+Section~\ref{sec:obstruction} shows that one specific step of the
+subcritical proof fails. Its lower bounds on the conditioning cost
+(Propositions~\ref{prop:obstruction} and~\ref{prop:linear},
+Corollaries~\ref{cor:matching} and~\ref{cor:route}) are proved
+conditionally on \cite[Lemma~4.1]{subcritical}, like
+Theorem~\ref{thm:S1}. That
 step bounds the conditioning cost per sample by a polynomial in $d$ (at
-most $Cd^{1+\beta}$). Here, for each fixed $\delta>0$, with probability at least $1-2\delta$ and for $\exp(d^\epsilon)\le n\le e^{c_1(\delta)d}$, that cost is superpolynomial in $d$. We
-also identify a matching upper bound on that cost which would complete an
-$\exp(\Omega(d))$ proof (Section~\ref{sec:obstruction}).
+most $Cd^{1+\beta}$). Here, for each fixed $\delta\in(0,1/8)$, with
+probability at least $1-2\delta$ and for
+$\exp(d^\epsilon)\le n\le e^{c_{\rm G}(\delta)d}$, where
+$c_{\rm G}(\delta)>0$ is the constant of Lemma~\ref{lem:gram}, that cost is
+superpolynomial in $d$ (Proposition~\ref{prop:obstruction}). A sharper
+bound (Proposition~\ref{prop:linear}) puts the cost per sample
+above $c_\delta(a^2/\tau_r)\min\{1,A_\delta\sqrt{rH_r/d}\}$, which is of
+order $a^2/\tau_r$ at linear cutoffs; here $\tau_r$ is the prior variance
+above the adaptive cutoff degree $r$ and $H_r=\log(e(d+1)/r)$. So no upper
+bound matching the first one exists. With our tail-Gram bound, the
+subcritical head estimate followed by the clipped-parity lemma at the
+margin scale gives nothing at linear cutoffs, whatever upper bound on the
+cost holds; we do not exclude the clipped-parity lemma at a larger amplitude
+scale (Section~\ref{sec:obstruction}). For the sign-only learner,
+$\exp(\Omega(d))$ would follow from two open estimates, a log-free
+one-sided coercivity bound at linear degree and a log-free bound on the
+sampled tail Gram matrix (Remark~\ref{rem:CG}; an extension suggested by
+the proof, not a result).
 \end{enumerate}
-The sign-only result uses only a universal inequality between consecutive
-level masses of an isotropic kernel (Lemma~\ref{lem:levels}). The margin
-result additionally needs a lower bound on every eigenvalue of the kernel.
-We derive it from an explicit Fourier-integral formula for the Hermite
-coefficients of $\tanh$ (Lemma~\ref{lem:tanh}).
+The sign-only result on every training set uses only a universal
+inequality between consecutive level masses of an isotropic kernel
+(Lemma~\ref{lem:levels}). The margin result additionally needs a lower
+bound on every eigenvalue of the kernel. We derive it from an explicit
+Fourier-integral formula for the Hermite coefficients of $\tanh$
+(Lemma~\ref{lem:tanh}). The typical-sample result needs no eigenvalue
+lower bound. It uses a two-step regularity $c_{m+2}\ge\eta c_m$ of the
+$\tanh$ dual coefficients, an intrinsic-dimension matrix Chernoff bound for
+the sampled tail Gram matrix, and a restriction lemma that bounds the
+agreement of a low-degree function with parity logarithmically, not
+linearly, in its amplitude (Section~\ref{sec:typical}).
 
 \paragraph{What this paper does not show.} We prove no $\exp(\Omega(d))$
 lower bound and no upper bound for either learner. We do not decide whether
-the exponent $\sqrt d\log d$ is the truth. The margin theorem is proved for
+the exponents $\sqrt d\log d$ of the margin theorem and
+$d\log\log d/\log d$ of the typical-sample sign-only theorem are the truth.
+The margin theorem is proved for
 $\tanh$, and for odd bounded continuous activations whose first-layer dual
 coefficients are all positive and decay at most like
 $e^{-o(\sqrt m\log m)}$, provided the linear coefficient $c_1(q_\ell)$
 is positive at every later layer (Remark~\ref{rem:activations}). It holds for
 $d\ge d_0$, where $d_0$ depends on the depth, gains and margin and is not
 explicit, because we prove no rate for the coefficient tail $T(s)$. It does not cover
-$\operatorname{erf}$, whose coefficients decay geometrically. As in
+$\operatorname{erf}$, whose coefficients decay geometrically; the
+typical-sample theorem does. Theorem~\ref{thm:S1} is proved for
+$n>n_0(d)$ conditionally on \cite[Lemma~4.1]{subcritical}, a bound for a
+squared Lipschitz process whose proof uses a homogeneous form of the
+intermediate estimate (2.20) in the proof of \cite[Lemma~2.12]{lee},
+justified in \cite[Remark~4.2]{subcritical}; we use that lemma without
+re-verifying it. The subcritical theorem \cite[Theorem~1.1]{subcritical}
+and the lower bounds on the margin learner's conditioning cost in
+Section~\ref{sec:obstruction} (Propositions~\ref{prop:obstruction}
+and~\ref{prop:linear}, Corollaries~\ref{cor:matching} and~\ref{cor:route})
+rest on the same lemma. The threshold $d_0$ of Theorem~\ref{thm:S1} is not explicit and,
+with our constants, astronomically large (Remark~\ref{rem:d0}), so the
+theorem is a purely asymptotic statement. The route to $\exp(\Omega(d))$
+in Remark~\ref{rem:CG} assumes two estimates that are open, and the lower
+bound $\theta_r\ge c\,r^{-1/2}$ on the spectral ratio that enters the
+exact-norm part of Section~\ref{sec:obstruction} is only observed
+numerically, for the depth-$2$ $\tanh$ kernel (Section~\ref{sec:numerics}).
+As in
 \cite{nngpnote,subcritical}, the results concern the exact posterior;
 nothing is claimed about computing it.
 
 \paragraph{Relation to kernel regression.} The NNGP posterior mean given
 real-valued labels is kernel interpolation. For it, the span argument of
-\cite[Proposition~4.1]{nngpnote} and the lower bounds of Hsu and of Simon
-et al.\ for kernel regression concern squared error or correlation of the
-mean. Our learners condition on signs, or on signs and a global margin, and
+\cite[Proposition~4.1]{nngpnote} and the known lower bounds for kernel
+methods on parities (references in \cite{beyondparity}) concern squared
+error or correlation of the mean. Our learners condition on signs, or on signs and a global margin, and
 are judged by posterior confidence. That is a different criterion
 (\cite[Section~5]{nngpnote}; FAQ Question~7).
 
@@ -345,8 +421,10 @@ The Gaussian energy is $\|g\|_K^2=g^{\mathsf T}K^{-1}g=\sum_U\widehat g(U)^2/
 \lambda_{|U|}$, the convention of \cite{subcritical}. Let
 \[
  \tau_r=\sum_{q>r}\binom dq\lambda_q=\Var G_{>r}(x),\qquad
- T(r)=\sum_{m>r}c_m .
+ T(r)=\sum_{m>r}c_m ,
 \]
+and let $D_r=\sum_{q\le r}\binom dq$ be the number of Walsh characters of
+degree at most $r$.
 
 \begin{lemma}[Level-mass inequalities]\label{lem:levels}
 Let $F$ be as in Lemma~\ref{lem:spectrum} and $0\le r<d$.
@@ -372,7 +450,9 @@ $\lambda_q$ by $\lambda_{r+1}$, using monotonicity.
 Inequality (a) is what makes the sign-only argument kernel-agnostic. The
 subcritical paper uses the sharper arcsine ratio
 $\lambda_{r+1}/\tau_r\asymp1/(r\binom D{r+2})$ \cite[Lemma~3.2]{subcritical};
-we use only (a) and (b), which hold for every such kernel.
+we use only (a) and (b), which hold for every such kernel, and in
+Section~\ref{sec:typical} a two-step regularity of the $\tanh$ level
+masses (Lemma~\ref{lem:transfer}).
 
 \section{The sign-only learner on every training set}
 \label{sec:signonly}
@@ -408,7 +488,8 @@ every training sequence and every $0\le v<d$:
 \end{lemma}
 \begin{proof}
 This is \cite[Lemma~10.1]{subcritical}. Its proof uses Gaussianity,
-positive definiteness, Pr\'ekopa's theorem and Fourier orthogonality.
+positive definiteness, Pr\'ekopa's theorem \cite{prekopa} and Fourier
+orthogonality.
 It uses the kernel only through two facts: the high-degree part $G_{>v}$
 is independent of $G_{\le v}$ and has constant variance $\tau_v$, and the
 largest normalized eigenvalue above degree $v$ is $\lambda_{v+1}$. The
@@ -514,7 +595,8 @@ $\Pp\{G\in B_\varepsilon\}$ and $\Pp\{G\in B^{\rm sgn}_S\}$. Letting
 $\varepsilon\downarrow0$ shows that these agree in the limit, since
 $\Pp\{G(x)=0\text{ for some }x\}=0$. The same holds with the extra event
 $\{f(x)z(x)>0\}$. So $q_{N,S}(x)$ converges to the sign-only $q_S(x)$, as in
-the $\gamma<0$ case of \cite[Proposition~2.2]{subcritical}.
+the $\gamma<0$ case of \cite[Proposition~2.2]{subcritical}. The same
+transfer applies to the typical-sample bound of Theorem~\ref{thm:S1}.
 \end{remark}
 
 \begin{remark}\label{rem:signonly}
@@ -522,18 +604,26 @@ the $\gamma<0$ case of \cite[Proposition~2.2]{subcritical}.
 chosen ones, and uniformly in depth, gain and activation. Depth may even
 grow with $d$. For comparison, \cite[Theorem~7.1]{nngpnote} proves a
 $\Theta(2^d)$ bound for a different learner, the margin learner with
-specified gains, at depth at least $C_a(d+\log(1/\eta)+1)$ for a fixed accuracy parameter $\eta$. (2) Theorem~\ref{thm:signonly} is
+specified gains, at depth at least $C_a(d+\log(1/\epsilon_{\rm acc})+1)$
+for a fixed accuracy parameter $\epsilon_{\rm acc}$. (2) Theorem~\ref{thm:signonly} is
 \cite[Proposition~3]{beyondparity} with the arcsine eigenvalue ratio
-replaced by Lemma~\ref{lem:levels}(a). (3) For the arcsine kernel the
-subcritical paper improves $\sqrt d\log d$ to $d$, for typical samples
-\cite[Theorem~10.2]{subcritical}. That argument needs the sharp ratio
-$\lambda_{r+1}/\tau_r\asymp1/(r\binom D{r+2})$ at $r$ linear in $d$, and
-regular decay of the level masses $\binom dq\lambda_q$. For $\tanh$ the
-level masses decay much faster (Section~\ref{sec:numerics}), and we have
-not proved the matching estimates. The scale $\sqrt d\log d$
+replaced by Lemma~\ref{lem:levels}(a). (3) The scale $\sqrt d\log d$
 comes from requiring $\err_r(f)$ to stay bounded below (the
 Aspnes--Beigel--Furst--Rudich lemma); with Lemma~\ref{lem:levels} alone,
-larger $r$ yields at most a polynomially small failure fraction. For odd
+larger $r$ yields at most a polynomially small failure fraction. It is not
+the limit for typical samples. For the arcsine kernel the subcritical paper
+improves $\sqrt d\log d$ to $d$ \cite[Theorem~10.2]{subcritical}, using the
+sharp ratio $\lambda_{r+1}/\tau_r\asymp1/(r\binom D{r+2})$ at $r$ linear in
+$d$ together with the clipped-parity lemma. A large improvement does not
+need the sharp ratio: for $\tanh$, Theorem~\ref{thm:S1} (proved
+conditionally on \cite[Lemma~4.1]{subcritical}, and only for $d\ge d_0$
+with $d_0$ astronomically large; Remarks~\ref{rem:S1status}
+and~\ref{rem:d0}) reaches
+$\log n$ of order $d\log\log d/\log d$ using only a two-step regularity of
+the dual coefficients, an intrinsic-dimension bound for the sampled tail
+Gram matrix and a restriction lemma that is logarithmic in the amplitude of
+the posterior mean (Section~\ref{sec:typical}, Remark~\ref{rem:loglinear}).
+For odd
 activations the paired form improves the binomial factor, for example to
 $\binom{d+1}{k+1}$ in Corollary~\ref{cor:signonly}(c) when $k$ is even,
 without changing the exponent in (a) and (b).
@@ -838,6 +928,8 @@ $e^{C\sqrt d}\ll\binom D{\delta\sqrt k}$, roughly
 $k\ge Cd/\log^2d$; we have not pursued smaller $k$.
 \end{remark}
 
+\input{typical-sample}
+
 \section{Where the exponential proof breaks}\label{sec:obstruction}
 The $\gamma=0$ part of the subcritical theorem \cite[Theorem~9.2]{subcritical}
 covers $n$ up to $e^{cd}$. It chooses an adaptive odd cutoff $r$ with
@@ -850,18 +942,34 @@ key normalized estimate is
 a bound polynomial in $d$ (at most $Cd^{1+\beta}$). It combines this with
 the head bound
 $\E^*\|G_{\le r}\|_2^2\le8\tau_r+16b_r\tau_r\mathcal D/n$
-\cite[eq.~(45)]{subcritical}, where $\E^*$ is the posterior expectation
-and $b_r$ bounds the sampled Gram matrix of the tail kernel. The clipped
+(\cite[eq.~(45)]{subcritical} states it with that paper's Gram bound
+\cite[eq.~(44)]{subcritical}; the form with $b_r\tau_r$ follows in the same
+way from \cite[eqs.~(41) and (43)]{subcritical}), where $\E^*$ is the
+posterior expectation and $b_r\tau_r$ bounds the sampled Gram matrix of
+the tail kernel. The clipped
 parity lemma is then applied at the scale of the posterior output
 amplitude, which is of order $d^{(1-\beta)/2}$ there
 \cite[Lemma~7.5]{subcritical}. That amplitude step uses the variance
 $\tau_u\asymp d^{-\beta}$ of the Fourier levels above $u\approx d/50$; at the
-standard scaling this variance is tiny, and Lemma~7.5 gives no useful
-amplitude. We show below that the normalization (42) also fails: the
-conditioning cost per sample is superpolynomial in $d$. We then explain
-what estimate would let the rest of the argument go through.
+standard scaling this variance is tiny, and \cite[Lemma~7.5]{subcritical}
+gives no useful amplitude. We show below that the normalization
+\cite[eq.~(42)]{subcritical} also fails: the
+conditioning cost per sample is superpolynomial in $d$. We then prove a
+sharper lower bound, of order $a^2/\tau_r$ per sample up to a factor
+$\min\{1,A_\delta\sqrt{rH_r/d}\}$, with $H_r=\log(eD/r)$, that is of order
+one when $\log n\asymp d$. So no upper bound on the cost can match the
+first lower bound, and with our tail-Gram bound the subcritical head
+estimate at the margin scale cannot give an exponential bound (it gives
+nothing at linear cutoffs), whatever upper bound on the cost holds. Like
+Theorem~\ref{thm:S1} for $n>n_0(d)$, the lower bounds on the cost in
+Propositions~\ref{prop:obstruction} and~\ref{prop:linear} and
+Corollaries~\ref{cor:matching} and~\ref{cor:route} use the squared
+coercivity lemma \cite[Lemma~4.4]{subcritical}, so they rest on
+\cite[Lemma~4.1]{subcritical} (Remark~\ref{rem:S1status}).
+Lemma~\ref{lem:gram}, the upper bound in Proposition~\ref{prop:obstruction}
+and \eqref{eq:gram-lower} do not use it.
 
-Fix $\delta\in(0,1/8)$, let $A_\delta$ be the sampling constant of
+Fix $\delta\in(0,1/8)$, let $A_\delta\ge1$ be the sampling constant of
 \cite[Lemma~4.4]{subcritical} (squared coercivity: with probability at
 least $1-\delta$, $\frac1n\sum_i(f(X_i)P(X_i))_-^2\ge\frac14\|P\|_2^2$
 for all $P$ of degree at most $r$, if $r\le d/64$ and
@@ -869,9 +977,9 @@ $n\ge A_\delta D_r\log(2D_r)$), and let $r=r(n)$ be the largest odd integer
 with $A_\delta D_r\log(2D_r)\le n$.
 
 \begin{lemma}[Universal tail-Gram bound]\label{lem:gram}
-Let $F$ be odd. There are $c_1>0$ and $C_\delta$, depending only on
+Let $F$ be odd. There are $c_{\rm G}>0$ and $C_\delta$, depending only on
 $\delta$ and $A_\delta$, such that for large $d$, every $n$ with
-$\exp((\log(d+1))^3)\le n\le e^{c_1d}$, and $r=r(n)$, the following holds.
+$\exp((\log(d+1))^3)\le n\le e^{c_{\rm G}d}$, and $r=r(n)$, the following holds.
 With probability at least $1-\delta$ over iid uniform inputs, the matrix
 $Q_{SS}=((K_{>r})(X_i,X_j))_{i,j\le n}$ satisfies
 \[
@@ -888,7 +996,7 @@ $n<A_\delta D_{r+2}\log(2D_{r+2})\le CA_\delta\binom D{r+2}rH_r$.
 $\Pp\{\|Q_{SS}-\tau I\|>z\tau\}$ in terms of four quantities. Its proof
 uses only these properties of $Q$: positive semidefinite, constant diagonal
 $\tau=\tau_r$, $\max_x\sum_yQ(x,y)^2=Ms_{2,r}$, $\|Q\|_{\rm op}=M\lambda_{r+1}$,
-and the far-pair bound $\eta_r=\max_{d/4\le\dist\le3d/4}|Q(x,y)|$. Here
+and the far-pair bound $\varepsilon^{\rm far}_r=\max_{d/4\le\dist\le3d/4}|Q(x,y)|$. Here
 \[
  \frac{n\lambda_{r+1}}{\tau_r}\le\frac n{\binom D{r+2}}\le CA_\delta rH_r,
  \qquad
@@ -897,30 +1005,30 @@ and the far-pair bound $\eta_r=\max_{d/4\le\dist\le3d/4}|Q(x,y)|$. Here
 \]
 by Lemma~\ref{lem:levels}(b),(d). For the far pairs, the proof of
 \cite[Lemma~5.1]{subcritical} gives
-$\eta_r\le\tau_r(C\sqrt De^{-r/8}+e^{-c_0D})$, once two of its steps are
+$\varepsilon^{\rm far}_r\le\tau_r(C\sqrt De^{-r/8}+e^{-c_0D})$, once two of its steps are
 reread. First, its bound for $r<j\le D-r$ uses only the Krawtchouk estimate
 (20) of that paper together with $\sum_{j>r}\binom Dja_j=\tau_r/A$ (here
 $Q=\sum_{j\ge r+2,\ j\text{ odd}}Aa_j\mathsf K_j$, because $F$ is odd and
 $r$ is odd). Second, for $j>D-r$ it uses monotonicity:
 $a_j\le a_{b}\le\tau_r/(A\binom Db)$ for an odd $b$ near $D/4$. Thus
-$2\log M\cdot\eta_r/\tau_r\to0$ for $r\ge(\log d)^2/4$. The near-pair and
+$2\log M\cdot\varepsilon^{\rm far}_r/\tau_r\to0$ for $r\ge(\log d)^2/4$. The near-pair and
 collision terms are at most $3ne^{d\mathsf h(1/4)}/2^d$ and
 $n^2\cdot3e^{d\mathsf h(1/4)}/2^d$. They vanish when
-$2c_1<\log2-\mathsf h(1/4)$. Choosing $z$ as a $\delta$-dependent multiple
+$2c_{\rm G}<\log2-\mathsf h(1/4)$. Choosing $z$ as a $\delta$-dependent multiple
 of the sum of the four terms gives the claim.
 \end{proof}
 
 \begin{proposition}[The conditioning cost per sample is superpolynomial]
 \label{prop:obstruction}
 Let $\phi=\tanh$; fix $L$, gains, $a$ and $\delta\in(0,1/8)$. For large $d$
-and every $n$ with $\exp((\log(d+1))^3)\le n\le e^{c_1d}$, with probability
+and every $n$ with $\exp((\log(d+1))^3)\le n\le e^{c_{\rm G}d}$, with probability
 at least $1-2\delta$ over iid uniform inputs labelled by full parity,
 \[
  \frac{\mathcal D(S)}n\ \ge\ \frac{a^2-10\tau_r}
  {\tau_r\bigl(16b_r+4CA_\delta rH_r\bigr)} ,\qquad r=r(n).
 \]
 Consequently, for every $\epsilon>0$ and $k$, for all large $d$ and every
-$n$ with $\exp(d^\epsilon)\le n\le e^{c_1d}$, on the same event,
+$n$ with $\exp(d^\epsilon)\le n\le e^{c_{\rm G}d}$, on the same event,
 $\mathcal D(S)/n\ge d^k$. In the other direction, on the event of
 Lemma~\ref{lem:bump}, $\mathcal D(S)/n\le e^{C\sqrt d}$ for every $n\ge1$ with $n(0.2)^{0.1d}\le0.04$.
 (Some upper limit on $n$ is necessary in the first statement: for fixed $d$,
@@ -961,40 +1069,233 @@ while $b_r+rH_r\le Cd\log d$. The upper bound follows from
 Lemma~\ref{lem:cost} and $E_b\le e^{C\sqrt d}$.
 \end{proof}
 
-\paragraph{What this shows and does not show.} The proposition is about a
-proof technique, not about sample complexity, and it refutes only the
-normalization (42). It does not show that the subcritical strategy fails.
-The clipped-parity lemma at scale $a$ only needs the posterior's
-low-degree part to be $O(a)$ in $L^2$, not small, because it is multiplied
-by $u/d\approx\rho$, and $\rho=r(n)/d\le\alpha$ for any fixed small $\alpha$ once $n\le e^{c_\alpha d}$ (smaller $n$ are covered by Theorem~\ref{thm:margin}). The following is an
-\emph{extension suggested by the proof}, not proved here. Suppose that on
-a sample event of probability at least $3/4$ there were a matching upper
-bound
-\begin{equation}\label{eq:matching}
- \frac{\mathcal D(S)}n\le\frac{K\,a^2}{\tau_r\,(b_r+rH_r)},
+\begin{proposition}[A sharper lower bound on the cost per sample]
+\label{prop:linear}
+Let $\phi=\tanh$; fix $L$, gains, $a$ and $\delta\in(0,1/8)$, and let
+$c_{\rm G}$, $C_\delta$ and $b_r$ be as in Lemma~\ref{lem:gram}. For large
+$d$ and every $n$ with $\exp((\log(d+1))^3)\le n\le e^{c_{\rm G}d}$, with
+probability at least $1-4\delta$ over iid uniform inputs labelled by full
+parity,
+\begin{equation}\label{eq:linear-cost}
+ \mathcal D(S)\ \ge\ \frac{\delta na^2}{\tau_r}
+ \min\Bigl\{\frac1{16},\frac{A_\delta\log(2D_r)}{128\,b_r}\Bigr\}-\log2,
+ \qquad r=r(n).
 \end{equation}
-with $K$ independent of $d$, $n$ and $\rho$. Work on the intersection of
-that event with the coercivity event and the event of Lemma~\ref{lem:gram}
-(probability at least $3/4-2\delta$), for
-$\exp((\log(d+1))^3)\le n\le e^{c_1d}$, and take
-$u=r+2\lceil10\log(d+1)\rceil$. The head bound would then give
-$\E^*\|G_{\le r}\|_2^2\le8\tau_r+16Ka^2$. Lemma~\ref{lem:entropy} with
-$\lambda_{r+1}\le\tau_r/\binom D{r+2}$ and
-$n/\binom D{r+2}\le CA_\delta rH_r$ would bound the band $(r,u]$ by
-$2\tau_r+CKa^2$. The same lemma with
-$\lambda_{u+1}\le\tau_r/\binom D{u+2}$ and the geometric decay of
-$\binom D{r+2}/\binom D{u+2}$ would make the tail above $u$ $o(1)$ (recall $\tau_r\le AT(r)\to0$, as $r\ge(\log d)^2/4$): it is at most
-$2\tau_r+4Ka^2\,n/\bigl(\binom D{u+2}(b_r+rH_r)\bigr)\le2\tau_r+
-CKa^2\binom D{r+2}/\binom D{u+2}$, and the binomial ratio is at most
-$d^{-10}$ for $r\le\alpha d$ with $\alpha$ small, as in
-\cite[Lemma~6.4]{subcritical}. The
-clipped-parity lemma would then give
-$|\E^*\E_xf\sign G|\le C\rho\sqrt K+o(1)$, which is an $\exp(\Omega(d))$
-bound once $\rho\le\alpha$ is small enough. Proposition~\ref{prop:obstruction}
-says that \eqref{eq:matching} cannot hold with a smaller right-hand side
-by more than a constant factor. So the missing ingredient is an upper
-bound on the conditioning cost that matches the proposition up to
-constants. The only upper bound we have is the bump bound $e^{C\sqrt d}$.
+Consequently, on the same event,
+\begin{equation}\label{eq:linear-persample}
+ \frac{\mathcal D(S)}n\ \ge\ c_\delta\,\frac{a^2}{\tau_r}
+ \min\Bigl\{1,A_\delta\sqrt{rH_r/d}\Bigr\},\qquad
+ c_\delta=\frac\delta2\min\Bigl\{\frac1{16},\frac1{480C_\delta}\Bigr\}.
+\end{equation}
+Only the training margins $y_iG(X_i)>a$ are used. Moreover, for every
+sequence $S$ of $n$ inputs and every $0\le r<d$,
+\begin{equation}\label{eq:gram-lower}
+ \|Q_{SS}\|_{\rm op}\ \ge\ \max\{n\lambda_{r+1},\tau_r\}.
+\end{equation}
+\end{proposition}
+\begin{proof}
+Write $y_i=f(X_i)$, $p=G_{\le r}$, $t=G_{>r}$, and $t_S=(t(X_i))_{i\le n}$,
+a centered Gaussian vector with covariance $Q_{SS}$. Put
+\[
+ \varepsilon^2=\sum_{|U|\le r}\Bigl(\frac1n\sum_{i=1}^ny_i\chi_U(X_i)\Bigr)^2 .
+\]
+Since $y_i\chi_U(X_i)=\chi_{[d]\setminus U}(X_i)$ and
+$[d]\setminus U\ne\emptyset$, each inner average has mean zero and variance
+$1/n$, so $\E\varepsilon^2=D_r/n$. For $i\ne j$ only $U=[d]$ survives in
+$\E[y_iy_jQ(X_i,X_j)]$, which is therefore $\lambda_d$; and
+$Q(X_i,X_i)=\tau_r$. Hence
+$\E\,y^{\mathsf T}Q_{SS}y=n\tau_r+n(n-1)\lambda_d\le2n\tau_r$, because
+$\tau_r\ge\lambda_d\sum_{q>r}\binom dq\ge2^{d-1}\lambda_d$ by monotonicity
+($r<d/2$) and $n\le e^{c_{\rm G}d}\le2^{d-1}$ (the proof of
+Lemma~\ref{lem:gram} takes $2c_{\rm G}<\log2-\mathsf h(1/4)$, so
+$c_{\rm G}<\frac12\log2$). Let $E$ be the intersection of the coercivity
+event of \cite[Lemma~4.4]{subcritical} at degree $r$ (it applies since
+$r\le d/64$ by Lemma~\ref{lem:gram} and $n\ge A_\delta D_r\log(2D_r)$ by the
+choice of $r$), the event of Lemma~\ref{lem:gram},
+$\{\varepsilon^2\le D_r/(n\delta)\}$ and
+$\{y^{\mathsf T}Q_{SS}y\le2n\tau_r/\delta\}$. By Markov's inequality,
+$\Pp(E)\ge1-4\delta$. Fix a sample in $E$.
+
+Every $G\in A_S$ has $y_iG(X_i)>a$ for all $i$. Cauchy--Schwarz in the Walsh
+basis gives $\sum_iy_ip(X_i)\le n\varepsilon\|p\|_2$, so
+$na<n\varepsilon\|p\|_2+y^{\mathsf T}t_S$. If $2\varepsilon\|p\|_2\le a$,
+then $y^{\mathsf T}t_S>na/2$. Otherwise $(y_ip(X_i))_-\le|t(X_i)|$ and
+coercivity give
+\[
+ \|t_S\|^2\ge\frac n4\|p\|_2^2>\frac{na^2}{16\varepsilon^2}
+ \ge\frac{\delta n^2a^2}{16D_r}\ge s:=\frac{\delta A_\delta\log(2D_r)}{16}\,na^2,
+\]
+using $n\ge A_\delta D_r\log(2D_r)$. Thus
+$A_S\subseteq\{y^{\mathsf T}t_S>na/2\}\cup\{\|t_S\|^2>s\}$. The first event
+has probability at most
+$\exp(-n^2a^2/(8y^{\mathsf T}Q_{SS}y))\le\exp(-\delta na^2/(16\tau_r))$. For
+the second, take $\vartheta=1/(4\|Q_{SS}\|_{\rm op})$. Since
+$-\log(1-x)\le2x\log2$ for $0\le x\le\frac12$, the Gaussian moment
+generating function satisfies
+$\log\E e^{\vartheta\|t_S\|^2}\le2\vartheta\log2\operatorname{tr}Q_{SS}
+=2\vartheta n\tau_r\log2$. With Lemma~\ref{lem:gram},
+\[
+ \Pp\{\|t_S\|^2>s\}\le\exp\Bigl(-\frac{s-2n\tau_r\log2}
+ {4\|Q_{SS}\|_{\rm op}}\Bigr)\le\exp\Bigl(-\frac{s}{8b_r\tau_r}\Bigr),
+\]
+where the last step uses $s\ge4n\tau_r\log2$, valid for large $d$ since
+$\tau_r\le A$ and $\log(2D_r)\ge\log(2d)$. Adding the two bounds proves
+\eqref{eq:linear-cost}. For $1\le r\le d/64$ we have
+$\log(2D_r)\ge r\log(d/r)\ge0.8\,rH_r$ and $rH_r\le0.081d$; hence
+$1\le rH_r\le\sqrt{d\,rH_r}$ and $b_r\le3C_\delta\sqrt{d\,rH_r}$, and the
+minimum in \eqref{eq:linear-cost} is at least
+$\min\{\frac1{16},\frac1{480C_\delta}\}\min\{1,A_\delta\sqrt{rH_r/d}\}$.
+For large $d$ the term $\log2$ is at most half of the resulting main term,
+which accounts for the factor $\frac12$ in $c_\delta$: indeed
+$na^2/\tau_r\ge na^2/A$, $\min\{1,A_\delta\sqrt{rH_r/d}\}\ge
+\min\{1,A_\delta\}/\sqrt d$ because $rH_r\ge1$, and
+$n\ge\exp((\log(d+1))^3)$.
+
+For \eqref{eq:gram-lower}, fix $U_0$ with $|U_0|=r+1$ and put
+$v=(\chi_{U_0}(X_i))_{i\le n}$. Every term of
+$Q=\sum_{|U|>r}\lambda_{|U|}\chi_U\chi_U^{\mathsf T}$ is positive
+semidefinite, so $Q_{SS}\succeq\lambda_{r+1}vv^{\mathsf T}$ and
+$\|Q_{SS}\|_{\rm op}\ge v^{\mathsf T}Q_{SS}v/\|v\|^2\ge\lambda_{r+1}\|v\|^2
+=n\lambda_{r+1}$. Also $\|Q_{SS}\|_{\rm op}\ge\operatorname{tr}Q_{SS}/n=\tau_r$.
+\end{proof}
+
+The proof of \eqref{eq:gram-lower} uses only that
+$Q=\sum_{|U|>r}\lambda_{|U|}\chi_U\chi_U^{\mathsf T}$ with every
+$\lambda_q\ge0$ and that $Q$ has constant diagonal $\tau_r$. So it holds
+for every covariance on $\X$ that depends only on Hamming distance, in
+particular for every kernel as in Section~\ref{sec:signonly}, and it uses
+neither the coercivity lemma nor the sample distribution.
+
+\begin{corollary}[The matching bound fails]\label{cor:matching}
+In the setting of Proposition~\ref{prop:linear}, for every $\Xi>0$ there is
+$d_0(\Xi)$ such that, for $d\ge d_0(\Xi)$ and every $n$ with
+$\exp((\log(d+1))^3)\le n\le e^{c_{\rm G}d}$, every sample in the event of
+Proposition~\ref{prop:linear} satisfies
+\[
+ \frac{\mathcal D(S)}n\cdot\frac{\tau_r(b_r+rH_r)}{a^2}\ \ge\
+ \frac\delta2\min\Bigl\{\frac{C_\delta\sqrt{d\,rH_r}}{16},
+ \frac{A_\delta rH_r}{160}\Bigr\}\ >\ \Xi,\qquad r=r(n).
+\]
+Hence the inequality
+\begin{equation}\label{eq:matching}
+ \frac{\mathcal D(S)}n\le\frac{\Xi\,a^2}{\tau_r\,(b_r+rH_r)}
+\end{equation}
+holds with probability at most $4\delta<1/2$ over the sample, and no
+sample event of probability greater than $4\delta$ carries it.
+\end{corollary}
+\begin{proof}
+Multiply \eqref{eq:linear-cost} by $\tau_r(b_r+rH_r)/(na^2)$. Since
+$b_r+rH_r\ge b_r\ge C_\delta\sqrt{d\,rH_r}$ and $\log(2D_r)\ge0.8\,rH_r$
+(proof of Proposition~\ref{prop:linear}), the main term is at least
+$\delta\min\{C_\delta\sqrt{d\,rH_r}/16,\,A_\delta rH_r/160\}$. It tends to
+infinity uniformly in $n$, because $\sqrt{d\,rH_r}\ge\sqrt d$ and
+$rH_r\ge r\ge(\log d)^2/4$ (Lemma~\ref{lem:gram}). The term coming from
+$\log2$ is $\log2\cdot\tau_r(b_r+rH_r)/(na^2)\le Cd/n$, because
+$\tau_r\le A$, $rH_r\le0.081d$ and $b_r\le3C_\delta\sqrt{d\,rH_r}$; it tends
+to zero. So for large $d$ the left side is at least half the main term and
+exceeds $\Xi$. If \eqref{eq:matching} held on a sample event of probability
+greater than $4\delta$, that event would meet the event of
+Proposition~\ref{prop:linear}, a contradiction.
+\end{proof}
+
+The constant $\Xi$ may depend on $\delta$, $a$, $L$ and the gains, but not on
+$d$. Even a $\Xi$ that grows with $d$ must be at least
+$c\min\{\sqrt{d\,rH_r},A_\delta rH_r\}$, which is at least of order
+$(\log d)^3$ at the bottom of the range and of order $d$ at linear cutoffs.
+
+\begin{corollary}[The head-bound route at the margin scale]\label{cor:route}
+On the event of Proposition~\ref{prop:linear}, let
+$\bar{\mathcal D}\ge\mathcal D(S)$ be any upper bound on the cost, let
+$\rho=r/d$ with $r=r(n)$, and let $u\ge r$. Then:
+\begin{enumerate}
+\item[(a)] $16\|Q_{SS}\|_{\rm op}\bar{\mathcal D}/n\ge16c_\delta a^2\,
+(n\lambda_{r+1}/\tau_r)\min\{1,A_\delta\sqrt{rH_r/d}\}$, and
+$4\lambda_{r+1}\bar{\mathcal D}$ is at least a quarter of the right side;
+\item[(b)] $16b_r\tau_r\bar{\mathcal D}/n\ge16c_\delta C_\delta a^2
+\min\{\sqrt{d\,rH_r},A_\delta rH_r\}\ge16c_\delta C_\delta a^2\rho\,dH_r$;
+\item[(c)] for every $b>0$,
+\[
+ \frac u{bd}\Bigl(8\tau_r+16b_r\tau_r\frac{\bar{\mathcal D}}n\Bigr)^{1/2}
+ \ \ge\ \frac ab\cdot4\sqrt{c_\delta C_\delta}\,(\rho^3dH_r)^{1/2}.
+\]
+\end{enumerate}
+\end{corollary}
+\begin{proof}
+(a) follows from \eqref{eq:gram-lower} and \eqref{eq:linear-persample},
+since $\bar{\mathcal D}\ge\mathcal D(S)$. (b) follows from
+\eqref{eq:linear-persample} and $b_r\ge C_\delta\sqrt{d\,rH_r}$, together
+with $\min\{\sqrt{d\,rH_r},A_\delta rH_r\}\ge rH_r=\rho\,dH_r$, which holds
+because $rH_r\le d$ and $A_\delta\ge1$. (c) follows from (b) and
+$u/d\ge\rho$.
+\end{proof}
+
+\paragraph{What this shows and does not show.}
+Proposition~\ref{prop:obstruction} is about a proof technique, not about
+sample complexity, and it refutes the normalization
+\cite[eq.~(42)]{subcritical}.
+Proposition~\ref{prop:linear} is sharper. Its proof splits the statistic
+$\sum_iy_iG(X_i)>na$ into a low-degree part, which coercivity controls, and
+the high-degree part $y^{\mathsf T}t_S$. The prior variance
+$y^{\mathsf T}Q_{SS}y$ of the latter is of order $n\tau_r$ on typical
+samples, not $n\|Q_{SS}\|_{\rm op}$, because parity is orthogonal to every
+Walsh character of degree below $d$. The resulting lower bound exceeds that
+of Proposition~\ref{prop:obstruction} by a factor of order
+$\min\{\sqrt{d\,rH_r},A_\delta rH_r\}$, which tends to infinity. The factor
+$\min\{1,A_\delta\sqrt{rH_r/d}\}$ in Proposition~\ref{prop:linear} is of
+order one when $\log n\asymp d$; at $n=\exp((\log(d+1))^3)$ the cutoff has
+$rH_r=(1+o(1))(\log d)^3$, and the factor is of order
+$A_\delta(\log d)^{3/2}/\sqrt d$. So Proposition~\ref{prop:obstruction} is
+not sharp, and no upper bound on the cost matches it: by
+Corollary~\ref{cor:matching}, for every fixed $\Xi$, all large $d$ and every
+$n$ in its range, the inequality \eqref{eq:matching} fails on the event of
+Proposition~\ref{prop:linear}, hence with probability at least $1-4\delta$.
+
+Nor can any upper bound on the cost make the head-bound argument of
+\cite{subcritical}, with Lemma~\ref{lem:gram}, work at the margin scale
+$a$ at any fixed $\rho>0$. The clipped-parity lemma at scale $a$ only needs
+the posterior's low-degree part to be $O(a)$ in $L^2$, not small, because
+it is multiplied by $u/d\approx\rho$ \cite[eq.~(24)]{subcritical}. The
+entropy bound at the training inputs and coercivity,
+\cite[eqs.~(41) and (43)]{subcritical}, control that part by
+$\E^*\|G_{\le r}\|_2^2\le8\tau_r+16\|Q_{SS}\|_{\rm op}\mathcal D/n$; this is
+the argument of \cite[eq.~(45)]{subcritical}, which then inserts that
+paper's Gram bound \cite[eq.~(44)]{subcritical}. By
+Corollary~\ref{cor:route}(a), whatever upper bound on $\mathcal D$ is
+inserted, the right side is at least
+$16c_\delta a^2(n\lambda_{r+1}/\tau_r)\min\{1,A_\delta\sqrt{rH_r/d}\}$, and
+the entropy estimate $2\tau_r+4\lambda_{r+1}\mathcal D$ of the band $(r,u]$
+is at least a quarter of that. With the bound $b_r\tau_r$ of
+Lemma~\ref{lem:gram} in place of $\|Q_{SS}\|_{\rm op}$, the head estimate is
+at least $16c_\delta C_\delta a^2\min\{\sqrt{d\,rH_r},A_\delta rH_r\}$
+(Corollary~\ref{cor:route}(b)). The resulting bound on
+$|\E^*\E_xf\sign G|$ is then at least $4(c_\delta C_\delta\rho^3dH_r)^{1/2}$
+(Corollary~\ref{cor:route}(c) with $b=a$), which exceeds one at every fixed
+$\rho>0$ once $d$ is large. With the exact norm $\|Q_{SS}\|_{\rm op}$ the
+same happens if $n\lambda_{r+1}/\tau_r\to\infty$ at fixed $\rho$. That is a
+question about the spectrum alone: it holds if
+$\theta_r=\binom D{r+2}\lambda_{r+1}/\tau_r\ge c/\sqrt r$, which we observe
+numerically for the depth-$2$ $\tanh$ kernel at three gains and $d\le3200$
+(Section~\ref{sec:numerics}) but have not proved.
+If that ratio were only of order $1/r$, then $n\lambda_{r+1}/\tau_r$ would
+stay bounded at fixed $\rho$, and this argument would not exclude the
+exact-norm estimate. So an $\exp(\Omega(d))$ proof by the head-bound
+argument at the margin scale needs, with the bound of Lemma~\ref{lem:gram}
+(and with the exact norm too, if $\theta_r\ge c/\sqrt r$), a bound on the
+posterior's low-degree part that does not pass through
+$\|Q_{SS}\|_{\rm op}\mathcal D/n$, such as the route below.
+
+These estimates concern the margin scale. If the clipped-parity lemma is
+applied at a scale $b>a$ instead, as \cite{subcritical} does at the
+amplitude scale of \cite[Lemma~7.5]{subcritical}, the lower bound above is
+multiplied by $a/b$ (Corollary~\ref{cor:route}(c)). It still exceeds one if
+$b\le4a(c_\delta C_\delta\rho^3dH_r)^{1/2}$, so at fixed $\rho$ for every
+$b=o(\sqrt d)$; but for $b$ of order $\sqrt d$ it tends to zero as
+$\rho\to0$, so it is no obstruction there. With Lemma~\ref{lem:gram}, such
+a version of the argument therefore needs an amplitude bound
+$\E^*\Pp_x\{|G(x)|\le b\}=o(1)$ at a scale $b$ of order at least $\sqrt d$.
+\cite[Lemma~7.5]{subcritical} does not give one at the standard scaling,
+and we neither prove nor exclude one. The only upper bound on the cost we
+have is the bump bound $e^{C\sqrt d}$.
 
 A second sufficient route avoids the adaptive cutoff. It would suffice to
 show that, for a small fixed $\alpha$,
@@ -1004,7 +1305,9 @@ show that, for a small fixed $\alpha$,
 \]
 with $C$ independent of $\alpha$. By the clipped-parity lemma at scale $a$,
 $|\E_xf\sign G|\le\frac\alpha a\|G_{\le\alpha d}\|_2+\|G_{>\alpha d}\|_2/a$,
-so it is enough that $\alpha\sqrt C/a\le1/4-o(1)$. The second condition
+so it is enough that $\alpha\sqrt C/a\le1/4-o(1)$. By the Laplacian form
+\cite[eq.~(23)]{subcritical} of the clipped-parity lemma, the constant term
+may be excluded from the first condition. The second condition
 holds for $n\le e^{c_\alpha d}$ with
 $c_\alpha<\min\{\mathsf h(\alpha)/2,0.09\}$, on the event of
 Lemma~\ref{lem:bump}, which then has probability at least
@@ -1015,22 +1318,28 @@ $O(T(s))+e^{C\sqrt d}n/\binom D{s+2}$ at odd $s\approx\alpha d$. The first
 condition is an upper bound on the posterior's low-degree amplitude, and
 we do not know how to prove it. The entropy bound gives only
 $\E^*\|G\|_2^2\le2A+4\lambda_0\mathcal D=O(1+\mathcal D/d)$, which is
-$O(1)$ only if $\mathcal D=O(d)$; no bound here provides that.
+$O(1)$ only if $\mathcal D=O(d)$; by Proposition~\ref{prop:linear}, with
+probability at least $1-4\delta$, $\mathcal D/d\ge c\,n/d^{3/2}\to\infty$
+uniformly for $\exp((\log(d+1))^3)\le n\le e^{c_{\rm G}d}$.
 
 \paragraph{Heuristic picture} (heuristic; not used above). For
-$\exp(d^\epsilon)\le n\le e^{c_1d}$, the proposition and the bump
-construction place the conditioning cost per sample between
-$d^{\omega(1)}$ and $e^{C\sqrt d}$. The mechanism behind the lower bound is
-coercivity. At the training inputs parity cannot be followed by a
-low-degree polynomial, so the low-degree part is dominated by the
-high-degree part there. Yet the global margin forces $\|G\|_2\ge a$. So
-the posterior must place $L^2$ mass of order $a^2$ above degree $r$, where
-the prior variance $\tau_r$ is tiny. If that mass sits mainly in the band
-just above $r$, the cost should match the proposition, and the argument
-above would give $\exp(\Omega(d))$. If instead the posterior used
-large-amplitude low-degree thresholds that approximate parity, the bound
-could fail. We have not ruled this out, and the numerics below are too
-small to test it.
+$\exp(d^\epsilon)\le n\le e^{c_{\rm G}d}$, Proposition~\ref{prop:linear} and
+the bump construction place the conditioning cost per sample between
+$c_\delta(a^2/\tau_r)\min\{1,A_\delta\sqrt{rH_r/d}\}$ and $e^{C\sqrt d}$; the
+lower end is superpolynomial in $d$. The mechanism behind the lower bound
+is coercivity together with the sign-aligned statistic. At the training
+inputs parity cannot be followed by a low-degree polynomial, so a
+low-degree part that carried the training margins would force a large
+high-degree part there; and a high-degree part that carries them by itself
+costs order $na^2/\tau_r$, because parity is nearly orthogonal to the top
+eigenvectors of $Q_{SS}$. This holds whatever the posterior does: on the
+event of Proposition~\ref{prop:linear} the cost exceeds the bound of
+Proposition~\ref{prop:obstruction} by a factor tending to infinity. The
+bounds on the cost do not decide whether the posterior's low-degree part
+stays of order $a$, as the clipped-parity lemma at scale $a$ needs, or
+whether the posterior uses large-amplitude low-degree thresholds that
+approximate parity. We have not ruled out the second behaviour, and the
+numerics below are too small to test it.
 
 \section{Numerical illustrations}\label{sec:numerics}
 All scripts and outputs are in \texttt{numerics/} next to this paper. They
@@ -1052,6 +1361,41 @@ $q^{-3/2}$ at $L=2$ \cite[Lemma~3.2]{subcritical}. Table~\ref{tab:spectrum} reco
 
 \input{spectrum-table}
 
+\paragraph{The share of the first level pair} (\texttt{theta.py},
+\texttt{theta.txt}). For large $d$ the fast decay in
+Table~\ref{tab:spectrum} cannot continue at a fixed geometric rate up to
+linear degree: by Lemma~\ref{lem:eiglower}(a) and
+Corollary~\ref{cor:composite}, every level mass $\binom dq\lambda_q$ with
+$q\le0.49d$ is at least $e^{-C\sqrt d}$, with $C$ depending on the depth and
+gains, whereas a fixed factor below one per level would make it $e^{-cd}$
+near $q=0.49d$. For odd $F$ and odd $r$ let
+\[
+ \theta_r=\frac{\binom D{r+2}\lambda_{r+1}}{\tau_r}
+ =\frac{W_{r+2}}{\sum_{j\ge r+2,\ j\text{ odd}}W_j}\in(0,1],
+\]
+the share of the first level pair above $r$ in the tail variance $\tau_r$
+(see \eqref{eq:pairs} and Lemma~\ref{lem:levels}(b)). For the depth-$2$
+$\tanh$ kernel we computed $\theta_r$ at $d=160,200,400,800,1600,3200$, with
+the coefficients of Lemma~\ref{lem:tanh} and the exact walk recursion. Over
+all odd $r\le0.065d$, $\theta_r\sqrt r$ lies in $[0.804,3.06]$ for
+$\sigma_1=1$, in $[0.945,5.43]$ for $\sigma_1=0.5$ and in $[0.610,1.63]$ for
+$\sigma_1=2$. In each case the minimum is at $r=1$, and the maximum is at the
+largest $r$ and still increases with $d$: from $1.88$ to $3.06$
+($\sigma_1=1$), from $2.54$ to $5.43$ ($\sigma_1=0.5$) and from $1.20$ to
+$1.63$ ($\sigma_1=2$) between $d=160$ and $d=3200$. So in the computed range
+$\theta_r\ge c\,r^{-1/2}$, with $\theta_r\sqrt r\ge0.61$ in all three cases,
+while the data do not settle
+whether $\theta_r\le C\,r^{-1/2}$; for the arcsine kernel
+$\theta_r\asymp1/r$ \cite[Lemma~3.2]{subcritical}. Correspondingly, the
+ratio $W_{j+2}/W_j$ of consecutive pair masses at $j\approx d/4$ is $0.48$
+at $d=160$ and grows to $0.62$, $0.78$ and $0.84$ at $d=400$, $1600$ and
+$3200$ ($\sigma_1=1$), so in the computed range the decay per level seen at
+$d\le160$ weakens as $d$ grows. We prove neither bound on $\theta_r$. The
+lower bound $\theta_r\ge c\,r^{-1/2}$ enters the exact-norm form of the
+obstruction in Section~\ref{sec:obstruction}; the upper bound would be
+needed by the variant of the conditional route mentioned in
+Remark~\ref{rem:CG}.
+
 \paragraph{Sign-only posteriors} (\texttt{signgp\_parity.py},
 \texttt{signgp\_parity.txt}). We run exact Hamiltonian Monte Carlo for the
 orthant-truncated Gaussian, using the validated sampler of
@@ -1062,31 +1406,82 @@ fraction. In this range all four kernels fail on most unseen inputs (at least $7
 
 \input{signgp-table}
 
+\needspace{10\baselineskip}
 \section{Status summary}
-\begin{center}
-\begin{tabular}{@{}p{0.45\textwidth}p{0.47\textwidth}@{}}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.45\textwidth}
+ >{\raggedright\arraybackslash}p{0.47\textwidth}@{}}
 \toprule
 Statement & Status\\
 \midrule
-Width limit to a nondegenerate GP, both learners & Proved (Prop.~\ref{prop:width})\\
+\endhead
+\bottomrule
+\endfoot
+Width limit to a nondegenerate GP, both learners & Proved (Prop.~\ref{prop:width})\\\addlinespace[3pt]
 Sign-only learner, every training set, every activation/depth/gain:
 $\exp(\Omega(\sqrt d\log d))$ for full parity, $d^k$ for fixed $k$-sparse
-parity & Proved (Thm.~\ref{thm:signonly}, Cor.~\ref{cor:signonly})\\
+parity & Proved (Thm.~\ref{thm:signonly}, Cor.~\ref{cor:signonly})\\\addlinespace[3pt]
 Margin learner with readout exponent $b<1$, tuple $(0,1,\ldots,1,b)$: same
-bounds & Proved (Remark~\ref{rem:readout})\\
+bounds & Proved (Remark~\ref{rem:readout})\\\addlinespace[3pt]
 Margin learner, $\tanh$, typical samples: $\exp(\frac1{20}\sqrt d\log d)$
-& Proved (Thm.~\ref{thm:margin})\\
-Same for odd activations with
-$c_m\ge e^{-o(\sqrt m\log m)}$ & Proved (Remark~\ref{rem:activations})\\
-Per-sample conditioning cost superpolynomial for $e^{d^\epsilon}\le n\le e^{c_1d}$ (w.p.\ $\ge1-2\delta$); the subcritical normalization (42) fails & Proved (Prop.~\ref{prop:obstruction})\\
-A matching upper bound on that cost would give $\exp(\Omega(d))$ & Extension suggested by the proof (Section~\ref{sec:obstruction})\\
-$\exp(\Omega(d))$ for either learner at fixed depth & Open\\
-Which of the two posterior behaviours in Section~\ref{sec:obstruction} occurs & Open (heuristic discussion only)\\
+& Proved (Thm.~\ref{thm:margin})\\\addlinespace[3pt]
+Same for odd activations whose first-layer coefficients are at least
+$e^{-o(\sqrt m\log m)}$, with $c_1(q_\ell)>0$ at every later layer
+& Proved (Remark~\ref{rem:activations})\\\addlinespace[3pt]
+Restriction lemma: the agreement of a degree-$u$ function with parity
+depends logarithmically on its amplitude & Proved
+(Lemma~\ref{lem:restriction}, Cor.~\ref{cor:restriction})\\\addlinespace[3pt]
+Two-step regularity $c_{m+2}\ge\eta c_m$ of the $\tanh$ dual coefficients
+at every depth; $\tau_r\le(1+4/\eta)\tau_{r+2}$ & Proved
+(Lemmas~\ref{lem:twostep}--\ref{lem:transfer})\\\addlinespace[3pt]
+Intrinsic-dimension bound
+$\E\|Q_{r,SS}\|_{\rm op}\le(e-1)n\lambda_{r+1}+\tau_r\log(\tau_r/\lambda_{r+1})$
+& Proved, citing Lieb's concavity theorem (Prop.~\ref{prop:intdim},
+Lemma~\ref{lem:tailgram})\\\addlinespace[3pt]
+Gram lower bound $\|Q_{SS}\|_{\rm op}\ge\max\{n\lambda_{r+1},\tau_r\}$ on
+every sample & Proved (eq.~\eqref{eq:gram-lower})\\\addlinespace[3pt]
+Sign-only learner, $\tanh$, typical samples:
+$n\le\exp(10^{-3}d\log\log d/\log d)$ leaves failure fraction $\ge3/8$
+w.p.\ $\ge3/4$, for $d\ge d_0$ with $d_0$ astronomically large; the same for
+the margin learner with readout exponent $b<1$ & Proved conditionally on
+\cite[Lemma~4.1]{subcritical}, which the subcritical theorem
+\cite[Theorem~1.1]{subcritical} also uses; unconditional for
+$n\le n_0(d)$ (Thm.~\ref{thm:S1}, Remarks~\ref{rem:readout}
+and~\ref{rem:d0})\\\addlinespace[3pt]
+Same for odd activations with two-step regularity of the first-layer
+coefficients and $c_1(q_\ell)>0$ at every layer, e.g.\
+$\operatorname{erf}$ & Proved, with the same condition
+(Remark~\ref{rem:S1act})\\\addlinespace[3pt]
+Per-sample conditioning cost superpolynomial for
+$e^{d^\epsilon}\le n\le e^{c_{\rm G}d}$ (w.p.\ $\ge1-2\delta$); the
+subcritical normalization \cite[eq.~(42)]{subcritical} fails & Proved
+conditionally on \cite[Lemma~4.1]{subcritical}
+(Prop.~\ref{prop:obstruction})\\\addlinespace[3pt]
+Lower bound $c_\delta(a^2/\tau_r)\min\{1,A_\delta\sqrt{rH_r/d}\}$ on the
+cost per sample (w.p.\ $\ge1-4\delta$), so no upper bound matches
+Prop.~\ref{prop:obstruction}; with Lemma~\ref{lem:gram}, the head-bound
+argument of \cite{subcritical} at the margin scale $a$ cannot give
+$\exp(\Omega(d))$; with the exact Gram norm the same holds if
+$\theta_r\ge c/\sqrt r$; clipping at a scale of order $\sqrt d$ is not
+excluded & Proved conditionally on \cite[Lemma~4.1]{subcritical}
+(Prop.~\ref{prop:linear}, Cors.~\ref{cor:matching} and~\ref{cor:route});
+the exact-norm part also needs $\theta_r\ge c/\sqrt r$, which is only
+observed numerically\\\addlinespace[3pt]
+$\exp(\Omega(d))$ for either learner at fixed depth & Open\\\addlinespace[3pt]
+$\exp(\Omega(d))$ for the sign-only learner from log-free one-sided
+coercivity at linear degree and a log-free tail-Gram bound & Extension
+suggested by the proof, conditional on two open estimates
+(Remark~\ref{rem:CG})\\\addlinespace[3pt]
+For $\tanh$, the level-mass decay seen at $d\le160$ cannot continue at a
+fixed rate up to degree $0.49d$ & Proved (Lemma~\ref{lem:eiglower}(a),
+Cor.~\ref{cor:composite})\\\addlinespace[3pt]
+$\theta_r\ge c\,r^{-1/2}$ for the depth-$2$ $\tanh$ kernel
+($\theta_r\sqrt r\ge0.61$ in all tested cases, $d\le3200$); whether
+$\theta_r\le C\,r^{-1/2}$ is not settled & Numerical
+(Section~\ref{sec:numerics})\\\addlinespace[3pt]
+Which of the two posterior behaviours in Section~\ref{sec:obstruction} occurs & Open (heuristic discussion only)\\\addlinespace[3pt]
 Margin learner for $\operatorname{erf}$, or for sparse parity with
 $k\ll d/\log^2d$ & Open\\
-\bottomrule
-\end{tabular}
-\end{center}
+\end{longtable}
 
 \begin{thebibliography}{99}
 \bibitem{subcritical}
@@ -1101,7 +1496,7 @@ complexity follows from the actual posterior?
 This collection, \texttt{side-results/nngp-sample-complexity}, 2026.
 \bibitem{beyondparity}
 Claude. Which targets are hard for the subcritical learners?
-This collection, \texttt{works-in-progress/beyond-parity}, 2026.
+This collection, \texttt{works-\allowbreak in-\allowbreak progress/\allowbreak beyond-parity}, 2026.
 \bibitem{ABFR}
 J. Aspnes, R. Beigel, M. Furst, and S. Rudich.
 The expressive power of voting polynomials.
@@ -1123,5 +1518,20 @@ J. Sohl-Dickstein. Deep neural networks as Gaussian processes.
 A. G. de G. Matthews, J. Hron, M. Rowland, R. E. Turner, and
 Z. Ghahramani. Gaussian process behaviour in wide deep neural networks.
 \emph{ICLR}, 2018.
+\bibitem{lee}
+J. R. Lee. Spectral hypergraph sparsification via chaining.
+arXiv:2209.04539. Section~2.4, Lemma~2.12 and equation~(2.20).
+\bibitem{lieb}
+E. H. Lieb. Convex trace functions and the Wigner--Yanase--Dyson
+conjecture. \emph{Advances in Mathematics} 11:267--288, 1973.
+\bibitem{tropp2012}
+J. A. Tropp. User-friendly tail bounds for sums of random matrices.
+\emph{Foundations of Computational Mathematics} 12:389--434, 2012.
+\bibitem{tropp2015}
+J. A. Tropp. An introduction to matrix concentration inequalities.
+\emph{Foundations and Trends in Machine Learning} 8:1--230, 2015.
+\bibitem{prekopa}
+A. Pr\'ekopa. On logarithmic concave measures and functions.
+\emph{Acta Scientiarum Mathematicarum} 34:335--343, 1973.
 \end{thebibliography}
 \end{document}
