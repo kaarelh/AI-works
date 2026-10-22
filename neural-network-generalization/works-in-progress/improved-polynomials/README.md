@@ -1,6 +1,6 @@
 # Better polynomial bounds for NNBayes
 
-Four research papers with independent AI-agent mathematical review. Each paper lists its authors alphabetically; papers using the inherited robust construction retain the contributions of ChatGPT-6 Astra and Claude alongside the new work by OpenAI Codex. These results are **not Lean verified** and have not received a full human mathematical review.
+Four research papers with independent AI-agent mathematical review. Each paper lists its authors alphabetically, using ChatGPT-6 Astra for the OpenAI model credit. Papers using the inherited robust construction also credit Claude. These results are **not Lean verified** and have not received a full human mathematical review.
 
 The earlier [robust-prior paper](../../main-results/robust-polynomial-depth/) gives a polynomial-depth theorem at every mean-field-or-stronger scale. Its conservative manuscript budget has degree 510 in the sum of the parameters; the more conservative [formal construction](../../lean/VERIFICATION.md#generalization-under-a-robustness-restriction-scope-and-correspondence) has a checked degree-10974 budget. The papers here obtain much smaller powers, including under the original restriction throughout the entire `gamma >= 1` regime.
 
@@ -66,7 +66,7 @@ If hidden coefficients are at most `C` and readout coefficients are bounded inde
 - [Independent mathematical review of neuron averaging and its extensions](verification/neuron-averaging-review.md).
 - [Independent review of the complete all-scales theorem and final sources](verification/all-scales-review.md).
 - [Second derivation of the improved reconstruction lemma](verification/reconstruction-independent-derivation.md).
-- [Build and publication record](verification/publication-build.json).
+- [Initial build and publication record](verification/publication-build.json) and [attribution correction with current builds](verification/attribution-correction-2026-10-22.json).
 - [All-layer-margin audit](supporting-notes/all-layer-margin-audit.md): why a standard matrix-cover argument does not yet prove the desired quadratic rate.
 
 The quartic original-support paper adapts the compressor from the [earlier depth report](../depth-supporting-notes/round1-depth-report/); the new paper states its adaptation and the finite-scale consequence explicitly. The old Markov-compression prototype is not published here as another new result.

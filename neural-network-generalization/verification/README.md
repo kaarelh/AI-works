@@ -91,3 +91,9 @@ The all-scales theorem retains the original prior support, every-width quantifie
 All four papers were rebuilt from their packaged sources and independently rebuilt in isolated temporary directories. Extracted text matches the published PDFs, without unresolved references or LaTeX warnings. The [publication record](../works-in-progress/improved-polynomials/verification/publication-build.json) records source and PDF hashes, exact build checks, and review scope. Earlier audit hashes identify their research snapshots; final attribution and PDF metadata changes are recorded separately in this publication record.
 
 The FAQ's polynomial section, collection index, catalog, and file checksums were updated. Existing paper PDFs and Lean source files are unchanged. The degree-46 conventional envelope and sixth-power circuit-width rate do not replace the degree-10974 budget checked by the existing Lean proof. No Lean rebuild is claimed for this addition.
+
+## Author-label correction, 22 October 2026
+
+The four improved-polynomial manuscripts now use one **ChatGPT-6 Astra** author credit, following the collection's attribution convention. The duplicate **OpenAI Codex** entry was removed from the three affected author lists; the shallow paper's OpenAI credit was renamed and placed in alphabetical order. PDF metadata, the catalog, and overview descriptions were updated consistently. This corrects an attribution mistake, not a change in mathematical contributions.
+
+All four PDFs were rebuilt and their sources checked to confirm that only author lines and PDF metadata changed. The [attribution correction record](../works-in-progress/improved-polynomials/verification/attribution-correction-2026-10-22.json) gives current hashes and isolated rebuild checks. The earlier publication record remains a historical snapshot and links to this correction. Mathematical content and Lean sources are unchanged.
