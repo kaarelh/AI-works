@@ -466,6 +466,8 @@ There is a stronger positive observation at a smaller radius. In an explicitly e
 
 The image checks are finite collections of exact inequalities, not a population coverage theorem. The models, calibration choices, exploratory follow-ups, and certificate provenance are recorded in the [experimental package](works-in-progress/depth-experiments/). Successful pointwise checks are evidence for investigating a distributional version, not evidence that the existing global-support theorem already applies to that model.
 
+The stronger neuron-merging restriction used for quadratic width dependence has its own [naturality study](#how-natural-is-the-neuron-merging-restriction), with fresh trained examples and different certificates. Membership in one condition should not be inferred from membership in the other.
+
 ## 15. Can robustness be required only near the data, or on average?
 
 **Yes with additional bookkeeping; arbitrary average robustness is not currently enough.** There are several proved variants in the [robust paper](main-results/robust-polynomial-depth/paper.pdf):
@@ -572,7 +574,7 @@ The first three rows compare with layered Boolean circuits, including constant w
 
 The improvement comes from sampling source neurons partly uniformly and partly according to their contribution to retained directions, then matching the sampled covariance more accurately. This removes large truncation losses from the original compression proof. The [paper](works-in-progress/improved-polynomials/original-support-all-scales/) gives all intermediate budgets; the displayed sixth power describes dependence on $C$, **not** degree six in all parameters. A quadratic bound for this unchanged support condition remains open. The simpler quartic proof at $\gamma\ge2$ controls total network energy directly; that argument alone cannot discard the growing Gaussian background at mean-field scaling.
 
-**What the quadratic alternative assumes.** The added condition requires a balanced grouping of neurons into at most $1+N\lVert v\rVert_2^2$ groups per hidden layer such that averaging weights within the groups barely changes clipped predictions. The prior does not know the target's width, but it explicitly requires a small compressed representation relative to readout energy. Imposing this in addition to internal-noise stability further restricts the prior, and the added condition has not been established for relevant trained networks.
+**What the quadratic alternative assumes.** The added condition requires a balanced grouping of neurons into at most $1+N\lVert v\rVert_2^2$ groups per hidden layer such that averaging weights within the groups barely changes clipped predictions. The prior does not know the target's width, but it explicitly requires a small compressed representation relative to readout energy. Imposing this in addition to internal-noise stability further restricts the prior, and is a substantive structural assumption. A [follow-up theorem and naturality study](works-in-progress/improved-polynomials/neuron-merging-naturality/) allows signed, unequal groups and an output-normalized count budget while retaining quadratic dependence. It gives some rigorously certified ordinarily trained examples; no general training guarantee is established.
 
 At fixed calibration, a sharper bound for this prior is
 
@@ -588,6 +590,26 @@ n\ge\frac{A}{\varepsilon}\left[C^2S_0^9+\log(1/\delta)\right],
 $$
 
 for a universal constant $A$. It uses the bounded fan-in and single-output convention to prune irrelevant teacher wires and absorb their logarithmic cost into depth. A different, stronger calibration of the permitted group count gives approximately $\widetilde O((LdC+L^2C^2)/\varepsilon)$ at fixed calibration, accuracy, and confidence. Changing that calibration changes the prior restriction.
+
+### How natural is the neuron-merging restriction?
+
+**Every eligible layered Boolean circuit has a suitable implementation, but the condition is a real additional assumption on the learner.** At every `N >= C`, the construction assigns cloned neurons to the circuit's wires. Merging preserves its output, and an explicit neighborhood with positive Gaussian probability also satisfies the restriction. This proves existence of good implementations, not that all implementations of the same function qualify.
+
+The original unsigned condition has an artificial dependence on neuron signs: flipping a tanh neuron's incoming and outgoing signs preserves the function and Gaussian density but can break averaging. The [signed-merging paper](works-in-progress/improved-polynomials/neuron-merging-naturality/paper.pdf) fixes this and also permits unequal group sizes. Both changes preserve quadratic teacher-width and polynomial depth dependence for every `gamma >= 1` and every `N >= C`.
+
+The group-count calibration also matters. With `Ev = N ||v||²`, the original budget `q <= 1 + Ev` permits the identity partition whenever `Ev >= N-1`. Such membership does not demonstrate compression. A proved alternative is
+
+$$
+(q-1)\left(\max_x|z_w(x)|\right)^2\le4E_v(w).
+$$
+
+This count budget is independent of a global readout rescaling. The complete condition still uses clipped outputs and fixed margins. A more local sufficient condition asks neurons in a signed group to respond similarly to signals constant within the preceding groups; together with the original internal-noise condition, it implies merging stability and still gives the quadratic bound. These variants are more principled, but none is established as a general property of gradient training.
+
+**The empirical evidence is mixed and search-dependent.** All 40 fresh tanh networks in the [reproduction package](works-in-progress/improved-polynomials/neuron-merging-naturality/experiments/) fit their training margins after ordinary SGD or Adam from mean-field initialization. Five pass the original count budget automatically. Among the remaining 35, unsigned balanced activation clustering found no witnesses; signed clustering found six, and an additional output-aware sign search raised the total to 14. Across all 40 models, that follow-up found 11 networks reducible to one signed population per layer. The searches use the network's own activations and outputs, not target labels. A failed search does not prove failure of an existential condition.
+
+Three examples have exhaustive interval certificates, including a width-32, four-hidden-layer Adam network whose clipped outputs are preserved exactly by one signed population on all 256 inputs. Other witnesses use exhaustive float64 checks. These certify merging stability, not automatically internal-noise robustness or Bayesian learning behavior. The local operator-norm certificate is too conservative to explain these examples at the small noise calibrations previously tested. A quadratic bound under the original internal-noise restriction alone remains open.
+
+### Other polynomial estimates and verification
 
 **The shallow bound is affine in a weighted squared norm, with a dimension overhead.** For a width-$C$ teacher with hidden matrix $W$ and readout $a$, write
 

@@ -1,0 +1,517 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,geometry,amsmath,amssymb,amsthm,mathtools,enumitem}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue]{hyperref}
+\hypersetup{pdftitle={Quadratic-width learning with symmetry-invariant neuron merging},pdfauthor={ChatGPT-6 Astra; Claude Fable 5 and Opus 5; Kaarel Hanni; Dmitry Vaintrob}}
+\geometry{margin=1in}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Prb}{\mathbb P}
+\newcommand{\norm}[1]{\left\|#1\right\|}
+\newcommand{\clip}{\operatorname{clip}}
+\title{Quadratic-width learning with\protect\\symmetry-invariant neuron merging}
+\author{ChatGPT-6 Astra \and Claude Fable 5 and Opus 5 \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{Research draft, 21 October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We strengthen a quadratic-width Bayesian learning theorem by removing two
+artifacts of its neuron-merging restriction: dependence on arbitrary hidden
+neuron signs and the requirement of nearly equal population sizes. The
+new condition allows signed populations of arbitrary sizes, with different
+population counts in different layers. A mass-normalized representation
+makes every compressed Gaussian coordinate have the same variance,
+independently of the smallest population. A scale-normalized readout budget
+controls the number of populations. The resulting sample bound remains
+quadratic in Boolean teacher width, up to logarithms, with polynomial depth
+dependence, at every learner width and every specified Gaussian scale at or
+above mean field. We also give a local operator-norm certificate: approximate
+agreement of rows on population-constant states, together with internal-noise
+robustness, implies prediction-preserving merging. These are structural
+prior restrictions; the paper does not establish that ordinary trained
+networks satisfy them. The results are not Lean verified.
+\end{abstract}
+
+\section{Which aspects of neuron merging are natural?}
+
+Clustering redundant neurons is a plausible way to reduce a large network
+to a smaller representation. A theorem based on this idea should respect
+exact symmetries of the network, and should not require every cluster to
+have almost the same size. Both requirements matter mathematically.
+
+The previous population-averaging condition can distinguish two identical
+functions solely because one hidden neuron has been sign-flipped. Take
+$d=1$, $N=2$, one hidden layer, first-layer rows $(2,0),(2,0)$, and readout
+$(3/8,3/8)$. The output is $(3/4)\tanh(2x)$ and $E_v=N\norm v_2^2=9/16$.
+The previous budget $q\le1+E_v$ permits only one population, whose averaging
+preserves this network exactly. Flip the second row and its readout sign.
+The function and Gaussian density are unchanged, but one-population
+averaging now gives the zero function, changing clipped scores by $1/2$.
+Both representations satisfy the internal-noise condition below at $c=0.1$:
+the calibrated ball changes their raw outputs by at most $0.1$, and the
+clean output magnitude is greater than $0.7$.
+
+Allowing signed populations repairs this defect. Allowing arbitrary group
+sizes is more subtle: ordinary compressed weights can become large when a
+population is small. We remove this difficulty by rescaling compressed
+hidden states by the square root of their population mass. The resulting
+activation family is uniformly Lipschitz in its scale parameter, so even
+very small populations admit a finite code independent of learner width.
+
+The final section gives a local sufficient condition for merging. It uses
+operator norms of explicit weight defects instead of assuming directly that
+predictions are preserved. The empirical prevalence of either condition
+remains an open question.
+
+\section{Model and a symmetry-respecting support condition}
+
+Let $H=L-1\ge1$, $d\ge1$, and $\mathcal X=\{-1,1\}^d$. The learner has
+$H$ hidden tanh layers of width $N$, first-layer augmented input
+$\bar x=(x,1)$, and linear readout:
+\[
+ h^1=\tanh(W^1\bar x),\qquad h^s=\tanh(W^sh^{s-1}),\qquad
+ z_w(x)=v^\top h^H.
+\]
+Under $\mu_{N,t}$, independent Gaussian entries have variances
+$t^2/d$, $t^2/N$, and $t^2/N^2$ in the first layer, subsequent hidden
+layers, and readout, respectively; $0<t\le1$. Taking
+$t=N^{(1-\gamma)/2}$ includes every $\gamma\ge1$. Set
+\[
+ E_v=N\norm v_2^2,\qquad M(w)=\max_{x\in\mathcal X}|z_w(x)|,
+ \qquad T(u)=\clip(u,-1/2,1/2).
+\]
+
+At hidden layer $s$, choose a partition into $q_s$ nonempty groups of
+arbitrary sizes $k_{s,a}$ and a sign $\sigma_i\in\{-1,1\}$ for each neuron.
+Let $F_s$ have column $a$ equal to the signed normalized indicator of that
+population: its entries there are $\sigma_i/\sqrt{k_{s,a}}$. Then
+$F_s^\top F_s=I$, and $R_s=F_sF_s^\top$ averages neurons after aligning
+their signs. Define the merged network by
+\begin{equation}\label{eq:projection}
+ \bar W^1=R_1W^1,\qquad
+ \bar W^s=R_sW^sR_{s-1},\qquad \bar v=R_Hv.
+\end{equation}
+Write $q=\max_s q_s$. The new event $\mathcal A_N$ requires the existence
+of such signed populations satisfying
+\begin{equation}\label{eq:population-condition}
+ (q-1)M(w)^2\le4E_v(w),\qquad
+ \max_x|T(z_w(x))-T(z_{\bar w}(x))|\le1/16.
+\end{equation}
+The division-free budget includes $M=0$ without a special convention.
+It is invariant under readout rescaling. The clipped-score comparison uses
+fixed margins and retains their output-scale dependence. The complete
+condition is invariant under hidden-neuron sign flips and permutations.
+Indeed, a sign change $S_s$ replaces $F_s$ by $S_sF_s$ and preserves all
+functions and energies in the condition. All witnesses are finite choices
+at fixed $N$, so the event is Borel.
+
+We can additionally impose internal-noise robustness. Add disturbances
+after every activation and at the output, with
+\[
+ \norm\eta_*^2=\sum_s\norm{\eta^s}_2^2/N+|\eta^{\rm out}|^2,
+ \qquad r_c(w)=c/\sqrt{1+HE_v(w)},\quad c>0.
+\]
+Let $\mathcal R_{N,c}$ require
+\begin{equation}\label{eq:rms-condition}
+ |T(z_w(x;\eta))-T(z_w(x))|\le1/16
+ \quad(x\in\mathcal X,\ \norm\eta_*\le r_c(w)).
+\end{equation}
+The prior is the raw Gaussian conditioned on $\mathcal A_N$, optionally
+also on $\mathcal R_{N,c}$. Training further conditions on
+$f(X_i)z_w(X_i)>1/2$. All statements concern exact Bayesian conditioning.
+
+\section{An exact normalized representation}
+
+Put $a_{s,b}=\sqrt{k_{s,b}/N}$ and define
+\[
+ B^1=F_1^\top W^1/\sqrt N,\qquad
+ B^s=F_s^\top W^sF_{s-1},\qquad b=\sqrt N F_H^\top v.
+\]
+The merged network has exactly the following compressed representation:
+\begin{equation}\label{eq:perspective-network}
+ g^1=\phi_{a_1}(B^1\bar x),\qquad
+ g^s=\phi_{a_s}(B^sg^{s-1}),\qquad z_{\bar w}=b^\top g^H,
+\end{equation}
+where the activation is applied coordinatewise and
+\[
+ \phi_a(u)=a\tanh(u/a)\quad(a>0),\qquad \phi_0(u)=0.
+\]
+To verify the identity, the full hidden state is $\sqrt N F_sg^s$;
+oddness of tanh gives \eqref{eq:perspective-network} at every layer.
+
+\begin{lemma}[Lipschitz scale coordinates]\label{lem:perspective}
+For $a,b\ge0$ and real $u,v$,
+\[
+ |\phi_a(u)-\phi_a(v)|\le|u-v|,\qquad
+ |\phi_a(u)-\phi_b(u)|\le|a-b|.
+\]
+\end{lemma}
+\begin{proof}
+The input derivative is $\operatorname{sech}^2(u/a)$. The scale derivative
+is $\tanh y-y\operatorname{sech}^2y$, where $y=u/a$. It is odd and,
+for $y\ge0$, increases from 0 to 1: its derivative is
+$2y\operatorname{sech}^2y\tanh y\ge0$. Continuity at $a=0$ follows from
+$|\phi_a(u)|\le a$.
+\end{proof}
+
+For fixed populations, every entry of $\sqrt d B^1$, $B^s$ for $s\ge2$,
+and $b$ is an independent Gaussian of variance exactly $t^2/N$.
+This follows from the orthonormal columns of $F_s$, and is independent of
+the group sizes. Write
+\[
+ \kappa=d\norm{B^1}_F^2+\sum_{s=2}^H\norm{B^s}_F^2+\norm b_2^2,
+ \quad P=q_1(d+1)+\sum_{s=2}^Hq_sq_{s-1}+q_H.
+\]
+Then
+\begin{equation}\label{eq:mgf}
+ \E e^{N\kappa/(4t^2)}=2^{P/2},\qquad
+ P/N\le d+2+(H-1)Q\quad(q_s\le\min(N,Q)).
+\end{equation}
+The auxiliary representation uses perspective activations; the learner
+itself continues to use ordinary tanh.
+
+\section{A quadratic sample bound}
+
+The Boolean teacher has width $C$ and depth $H$, with NAND, copy, and
+negation gates. Constant wires and basis-compilation overhead count toward
+these resources. Define
+\begin{align}
+ e_*&=(16\sqrt{2C})^{-1},&\tau_0&=e_*/4,\notag\\
+ b_L&=\sqrt{16\log9+8\log(4L)},&A&=\max\{32b_L,2\log(8/e_*)\},\notag\\
+ a&=\max\{4,256c\},&\rho&=\min\{1/4,A/[4(d+1)],Ae_*/(64\sqrt C)\},\notag\\
+ q_0&=d+2+(H-1)C,&B_0&=9dA^2+18(H-1)CA^2+2a^2C,\notag\\
+ D_*&=B_0+q_0\log\frac{e\sqrt{2\pi}}{2\rho}+\log2.
+ \label{eq:target-constants}
+\end{align}
+Appendix~\ref{app:cylinder} proves that the target has a cylinder of raw
+probability at least $e^{-ND_*/t^2}$ in the stated support, for every
+$N\ge C$. In particular
+$D_*=O((d+LC)\log^2(2dLC)+c^2C)$.
+
+For $0<\varepsilon,\delta<1$, set
+\begin{align}
+ B&=\max\{8,8[D_*+\log(4/\varepsilon)]\},\qquad Q=\lceil1+16B\rceil,\notag\\
+ J&=4\left[D_*+\log(4/\varepsilon)+H\log Q+H\log(2Q)
+       +\tfrac{\log2}{2}\{d+2+(H-1)Q\}\right],\notag\\
+ R&=1+\sqrt J,\qquad A_g=2+d+(Q+1)(R+1),\notag\\
+ \zeta&=[32(H+1)A_g^{H+1}]^{-1},\qquad
+ D_Q=Q(d+2)+(H-1)Q^2+HQ.\label{eq:budget}
+\end{align}
+
+\begin{theorem}\label{thm:main}
+If
+\[
+ n\ge\frac2\varepsilon
+       [D_Q\log(3+4R/\zeta)+\log(1/\delta)],
+\]
+then, with probability at least $1-\delta$ over iid inputs from any
+fixed distribution $D$, the posterior satisfies
+\[
+ \E_{w\sim Q_{S,N,t,c}}\Prb_{X\sim D}\{f(X)z_w(X)\le1/4\}\le\varepsilon
+\]
+simultaneously for every $N\ge C$ and $0<t\le1$. All normalizers are
+positive. The theorem applies with or without the additional condition
+$\mathcal R_{N,c}$.
+\end{theorem}
+\begin{proof}
+The target cylinder lies in every noiseless training event, so the posterior
+normalizer relative to the raw Gaussian is at least $e^{-ND_*/t^2}$.
+Since $NE_v/t^2$ is chi-square with $N$ degrees of freedom,
+\[
+ \mu_{N,t}(E_v>B)\le e^{-NB/(8t^2)}\quad(B\ge8).
+\]
+After normalization this event has probability at most $\varepsilon/4$.
+A nonempty successful training sample forces $M>1/2$; therefore
+\eqref{eq:population-condition} implies $q<1+16E_v$. On the retained
+posterior, all witnessing population counts are at most $Q$.
+
+There are at most $Q^H(2Q)^{HN}$ tuples of signed partitions with each
+$q_s\le\min(N,Q)$. From \eqref{eq:mgf}, the raw probability that any such
+tuple has $\kappa>J$ is at most
+\[
+ \exp\left(H\log Q+HN\log(2Q)
+ +\tfrac N2[d+2+(H-1)Q]\log2-\frac{NJ}{4t^2}\right).
+\]
+The choice of $J$, using $N/t^2\ge1$ and $t\le1$, bounds this by
+$e^{-ND_*/t^2}e^{-(N/t^2)\log(4/\varepsilon)}$. Its posterior probability
+is at most $\varepsilon/4$. This is a union over all partitions before
+selecting a witness from the weights.
+
+Every retained compressed coefficient is bounded by $\sqrt J$, and every
+scale is in $[0,1]$. Pad to width $Q$ with zero scales. Round coefficients
+and scales to fixed grids with error at most $\zeta$, preserving zero and
+the interval $[0,1]$ for scales. Lemma~\ref{lem:perspective} gives hidden
+coordinate errors
+\[
+ e_1\le(d+2)\zeta,\qquad
+ e_s\le QR e_{s-1}+(Q+1)\zeta.
+\]
+The output error is at most $QR e_H+Q\zeta\le1/32$. These rounded
+functions form a class $\mathcal G$, independent of $N,t$, with
+\[
+ \log|\mathcal G|\le D_Q\log(3+4R/\zeta).
+\]
+The score difference from the original predictor is at most
+$1/16+1/32=3/32$.
+
+Use a ramp loss on $f(x)T(h(x))$ equal to one below $11/32$, zero above
+$13/32$, and affine between these thresholds. Each retained predictor has
+a candidate in $\mathcal G$ with zero empirical ramp loss whose population
+ramp loss bounds the original predictor's test-margin error. A finite-class
+zero-loss bound gives, with probability at least $1-\delta$,
+\[
+ \Prb_D\{fz_w\le1/4\}
+ \le [\log|\mathcal G|+\log(1/\delta)]/n
+\]
+for every retained predictor. For completeness, a fixed $[0,1]$-valued loss
+of mean $r$ is zero on all $n$ examples with probability at most
+$(1-r)^n\le e^{-nr}$; then union bound. Add the discarded posterior mass
+$\varepsilon/2$. The candidate class, and hence this sample event, is
+independent of learner width and Gaussian scale.
+\end{proof}
+
+The sample rate is
+\[
+ \widetilde O\left(\frac{LdQ+L^2Q^2+\log(1/\delta)}\varepsilon\right),
+ \qquad Q=\widetilde O(d+LC+c^2C+\log(1/\varepsilon)).
+\]
+For a single-output bounded-fan-in teacher, pruning the output's ancestors
+gives width $C'\le\min(C,2^{H-1}+1)$, including at most one constant wire
+per stage. Thus $\log C'=O(L)$. To make the polynomial degree explicit, put
+$S=2+d+L+c+\log(4/\varepsilon)$. The cylinder parameters satisfy
+$A,a=O(S)$ and $\log(1/\rho)=O(S)$; hence
+\[
+ D_*=O(C'S^3),\quad Q=O(C'S^3),\quad J=O(C'S^4),\quad
+ D_Q=O(C'^2S^7),
+\]
+while $\log(3+4R/\zeta)=O(S^2)$. Consequently there is an absolute
+constant $K_0$ for which
+\[
+ n\ge\frac{K_0}\varepsilon
+ [C^2(2+d+L+c+\log(4/\varepsilon))^9+\log(1/\delta)]
+\]
+is sufficient. The extra $HQ$ scale parameters do not change this degree.
+
+\section{A local weight certificate for merging}
+
+Signed population projections commute with the property of being a tanh
+hidden state: applying tanh to a vector in their range keeps it in their
+range. For proposed signed projections $R_s$, define
+\[
+ \Delta_1=\sqrt{(d+1)/N}\norm{(I-R_1)W^1}_{\rm op},\qquad
+ \Delta_s=\norm{(I-R_s)W^sR_{s-1}}_{\rm op}\quad(s\ge2).
+\]
+These measure disagreement of rows after restricting their inputs to
+population-constant states. They permit arbitrary weights on directions
+orthogonal to the preceding populations.
+
+\begin{proposition}[Local agreement implies prediction stability]
+If $w\in\mathcal R_{N,c}$ and $\sum_s\Delta_s^2\le r_c(w)^2$, then the
+merged network obeys the score comparison in
+\eqref{eq:population-condition}.
+\end{proposition}
+\begin{proof}
+Run the merged network. Its preceding hidden state lies in the range of
+$R_{s-1}$ and has norm at most $\sqrt N$. The difference between its next
+hidden state and $\tanh(W^s\bar h^{s-1})$ has RMS norm at most $\Delta_s$,
+by tanh's Lipschitz property. The first-layer bound follows from
+$\norm{\bar x}_2=\sqrt{d+1}$. Thus the complete merged trajectory is the
+original network under postactivation disturbances of total norm at most
+$(\sum_s\Delta_s^2)^{1/2}$. The readout agrees because the last hidden
+state lies in the range of $R_H$. Apply \eqref{eq:rms-condition}.
+\end{proof}
+
+Consequently we may replace the direct output-comparison support condition
+by the existence of populations satisfying the same count budget and this
+local certificate, together with $\mathcal R_{N,c}$. The target cylinder
+still has enough mass. In \eqref{eq:target-constants}, shrink $\rho$ further
+to
+\begin{equation}\label{eq:local-radius}
+ \rho\le\frac{c}{2\sqrt{1+4Ha^2C}}
+ \left[\frac{(d+1)^2}{d}+(H-1)C\right]^{-1/2}.
+\end{equation}
+On the cylinder, $E_v\le4a^2C$,
+$\Delta_1\le\rho(d+1)/\sqrt d$, and
+$\Delta_s\le\rho\sqrt C$ for $s\ge2$. Indeed, the teacher is exactly
+population-constant, and the Gaussian bulk annihilates the previous
+population subspace. Equation~\eqref{eq:local-radius} therefore gives the
+local certificate uniformly throughout the cylinder.
+
+Recompute $D_*$ with this smaller radius. Theorem~\ref{thm:main} applies
+unchanged. The additional mass cost is logarithmic in the reciprocal radius:
+\[
+ D_*=O\left((d+LC)[\log^2(2dLC)+\log(2+c+c^{-1})]+c^2C\right).
+\]
+Thus width dependence remains quadratic up to logarithms. A literal degree-nine
+envelope also holds after adding $c^{-1}$ to the displayed parameter sum.
+This condition is a concrete approximate agreement of block row sums,
+sometimes called an approximate equitable partition or lumpability
+condition. It is still restrictive, and no claim about its prevalence in
+trained networks follows from the theorem.
+
+\section{Other calibrations and remaining questions}
+
+A purely parameter-based alternative replaces $M(w)$ by $\norm v_1$:
+\[
+ (q-1)\norm v_1^2\le4N\norm v_2^2.
+\]
+The same theorem and constants apply. The target cylinder has
+$\norm v_1\le a+\rho$, and any successful nonempty training sample forces
+$\norm v_1>1/2$. This condition is stronger than the $M$-normalized one.
+It uses the standard effective support size
+$\norm v_1^2/\norm v_2^2$: the population budget is bounded by four times
+the inverse effective fraction of readout neurons, plus one. It can reject
+diffuse dense readouts, so easier evaluation should not be confused with
+empirical naturality.
+
+The original unnormalized count budget $q\le1+E_v$ is also compatible with
+signed arbitrary-size populations: replace $Q$ by $\lceil1+B\rceil$ and
+leave the remaining proof unchanged.
+
+\paragraph{Why ordinary dropout needs a separate argument.}
+Stability under neuron removal is another natural candidate, but the present
+target cylinder does not automatically establish it at mean-field scale.
+For example, let a Gaussian bulk row satisfy
+\[
+ E\sim\mathcal N\!\left(0,\frac{t^2}{N}
+       \left[I-\frac{\boldsymbol1\boldsymbol1^\top}{N}\right]\right).
+\]
+Its clean action on the constant state is exactly zero. If $m$ uniform
+coordinates are sampled with replacement and rescaled by $N/m$, the
+resulting random state $a$ instead has
+\[
+ \E(Ea)^2=t^2(N-1)/m.
+\]
+Indeed, its multinomial count vector gives
+$\E\norm a_2^2=N+N(N-1)/m$ and
+$\boldsymbol1^\top a=N$. Sampling without replacement gives
+$t^2(N/m-1)$. Thus a fixed retained width can amplify Gaussian bulk noise
+as $N$ grows. This obstructs a direct transfer of the existing cylinder
+proof to dropout stability; it is not a theorem ruling out every dropout
+prior or learning guarantee.
+
+These extensions remove exact representation artifacts. They do not prove
+that an arbitrary robust network has a small population description. Small
+activation distances on a training sample do not by themselves imply the
+uniform condition, and arbitrary soft projections need not preserve tanh's
+nonlinear structure. The local certificate separates one sufficient weight
+condition from these unresolved empirical and structural questions.
+
+\paragraph{Acknowledgments and verification.}
+This note builds on the earlier collaborative robust-prior construction,
+including contributions from Claude. Independent AI-agent checks examined
+the sign counterexample, mass normalization, Gaussian partition bound,
+scale-sensitive grid, and local certificate. This is a research draft,
+not a Lean-verified theorem or a claim of empirical validation.
+
+\appendix
+\section{A target implementation of sufficient prior mass}\label{app:cylinder}
+
+\begin{lemma}[Stable Boolean cylinder]\label{lem:cylinder}
+For every $N\ge C$ and $0<t\le1$, there is a set of weights contained in
+$\mathcal A_N\cap\mathcal R_{N,c}$ on which $f(x)z_w(x)>1$ for every
+input, with raw Gaussian probability at least $\exp(-ND_*/t^2)$.
+\end{lemma}
+\begin{proof}
+Partition the neurons into $C$ balanced clone groups of sizes $k_b$.
+Then $C/2\le N/k_b\le2C$. Fill unused logical slots with constants or
+copies, so the ideal Boolean state $b^s(x)$ has entries in $\{-1,1\}$,
+is constant on each group, and has norm $\sqrt N$. Write $P$ for averaging
+within the clone groups.
+
+Use gain $A$ in every gate. NAND has signed affine expression $1-u-v$;
+copies and negations use $u$ and $-u$. Count constant wires in internal
+layers. Each ideal signed preactivation is at least $A$. Divide each
+coefficient from a logical wire equally among its clones, and let the
+readout average the output-wire clones with total coefficient $a$.
+Denote these teacher weights by $w_*$.
+
+In coordinates $\sqrt d W^1$, $\sqrt N W^s$, and $Nv$, all raw entries
+have variance $t^2$. Restrict every first-layer coordinate, every internal
+row's coordinate along each normalized clone-group direction, and every
+readout coordinate to within $\rho t$ of its teacher value. Internal
+matrices then have the form
+\[
+ W^s=W_*^s+R^s+E^s,\qquad
+ R^s=R^sP,\quad \norm{R^s}_{\rm op}\le\rho t\sqrt C,
+ \quad E^sP=0.
+\]
+The unconstrained $E^s$ are independent Gaussian bulk matrices. Two
+$1/4$-nets, each of cardinality at most $9^N$, give
+\[
+ \Prb\{\norm{E^s}_{\rm op}>b_Lt\}
+ \le2\exp(2N\log9-Nb_L^2/8)\le\frac1{2L}.
+\]
+Indeed, each fixed bilinear form has variance at most $t^2/N$, and the
+operator norm is at most twice its maximum over the two nets.
+All bulk norm bounds therefore hold with conditional probability at least
+$1/2$.
+
+We check finite disturbance stability, allowing RMS disturbance $\tau_0$
+separately at each hidden layer and scalar disturbance at most $\tau_0$
+at the output. This contains the total-budget ball $\norm\eta_*\le\tau_0$.
+Put $e_s=\norm{h^s_\eta-b^s}_2/\sqrt N$. If $e_{s-1}\le e_*$, each
+group mean differs from its ideal bit by at most
+$e_*\sqrt{N/k_b}\le1/16$. At most three teacher coefficients enter a
+gate, so its intended signed preactivation remains at least $A/2$.
+For $\xi\in\{-1,1\}$ the elementary bound
+\[
+ \xi q\ge A/2\quad\Longrightarrow\quad
+ |\tanh(q+u)-\xi|\le2e^{-A/2}+8|u|/A
+\]
+follows by considering $|u|<A/4$ and its complement. Since
+$E^sb^{s-1}=0$ and $\norm{h^{s-1}_\eta}_2/\sqrt N\le1+\tau_0$,
+\[
+ e_s\le2e^{-A/2}+(8/A)\rho\sqrt C(1+\tau_0)
+                 +(8b_L/A)e_{s-1}+\tau_0\le e_*.
+\]
+Each term is at most $e_*/4$. In the first layer, the preactivation
+perturbation is at most $\rho(d+1)\le A/4$, which initializes the same
+invariant. At the readout,
+\[
+ f(x)z_w(x;\eta)\ge15a/16-\rho(1+\tau_0)-\tau_0>1.
+\]
+Furthermore, $\sqrt N\norm{v_*}_2\ge a\sqrt{C/2}$ and
+$\sqrt N\norm{v-v_*}_2\le\rho$, so
+\[
+ E_v\ge a^2C/8\ge2C,\qquad
+ r_c(w)\le\frac{2\sqrt2c}{a\sqrt C}\le\tau_0.
+\]
+Thus all noisy and clean clipped outputs on the calibrated ball equal
+$f(x)/2$, establishing membership in $\mathcal R_{N,c}$.
+
+The same clone projections in \eqref{eq:projection} map this cylinder
+back into itself. Averaging rows preserves the coordinate intervals because
+the teacher rows agree within each group. Double projection kills the
+bulk, since $E^sP=0$. The first-layer and readout intervals are likewise
+preserved. The averaged network therefore also has signed margin greater
+than 1 on every input. Its clipped predictions agree exactly with the
+original network, and its population count is $C$. Moreover,
+\[
+ \sqrt{E_v}\ge a\sqrt{C/2}-\rho\ge(5/8)a\sqrt C,\qquad
+ M(w)\le\norm v_1\le a+\rho\le5a/4.
+\]
+Thus $(C-1)M(w)^2\le4E_v$, proving membership in $\mathcal A_N$.
+
+There are $Nq_0$ independent constrained scalar coordinates; the sum of
+squares of their centers is at most $NB_0$. For $Z\sim\mathcal N(0,t^2)$,
+$\rho\le1/4$, and any center $m$,
+\[
+ \Prb\{|Z-m|\le\rho t\}
+ \ge\frac{2\rho}{e\sqrt{2\pi}}e^{-m^2/t^2}.
+\]
+This follows by bounding the Gaussian density throughout the interval,
+using $(|m|/t+\rho)^2/2\le m^2/t^2+\rho^2$.
+Multiply the interval estimates and the bulk probability $1/2$.
+Since $N/t^2\ge1$ and $t\le1$, the result is at least
+$\exp(-ND_*/t^2)$ with \eqref{eq:target-constants}.
+\end{proof}
+
+
+\end{document}

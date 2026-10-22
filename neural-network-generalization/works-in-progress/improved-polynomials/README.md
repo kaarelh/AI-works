@@ -1,6 +1,6 @@
 # Better polynomial bounds for NNBayes
 
-Four research papers with independent AI-agent mathematical review. Each paper lists its authors alphabetically, using ChatGPT-6 Astra for the OpenAI model credit. Papers using the inherited robust construction also credit Claude. These results are **not Lean verified** and have not received a full human mathematical review.
+Five research papers with independent AI-agent mathematical review. Each paper lists its authors alphabetically, using ChatGPT-6 Astra for the OpenAI model credit. Papers using the inherited robust construction also credit Claude. These results are **not Lean verified** and have not received a full human mathematical review.
 
 The earlier [robust-prior paper](../../main-results/robust-polynomial-depth/) gives a polynomial-depth theorem at every mean-field-or-stronger scale. Its conservative manuscript budget has degree 510 in the sum of the parameters; the more conservative [formal construction](../../lean/VERIFICATION.md#generalization-under-a-robustness-restriction-scope-and-correspondence) has a checked degree-10974 budget. The papers here obtain much smaller powers, including under the original restriction throughout the entire `gamma >= 1` regime.
 
@@ -8,6 +8,7 @@ The earlier [robust-prior paper](../../main-results/robust-polynomial-depth/) gi
 |---|---|---|
 | [A sharper polynomial learning bound for NNBayes on robust networks](original-support-all-scales/paper.pdf) · [source and build](original-support-all-scales/) | `O(C^6 log^13(2+C))` at fixed remaining parameters, and a conservative joint degree-46 envelope. | **Original support condition**, every `gamma >= 1` and every `N >= C`, including finite mean field. |
 | [Quadratic-width learning bounds for Bayesian networks with stable neuron populations](neuron-averaging/paper.pdf) · [source and build](neuron-averaging/) | Quadratic dependence on Boolean teacher width, polynomial in depth, at every learner width above the teacher width and every `gamma >= 1`. | Adds a **stronger neuron-averaging support condition**. It is not proved to follow from the original internal-noise condition or to hold for ordinary trained networks. |
+| [Quadratic-width learning with symmetry-invariant neuron merging](neuron-merging-naturality/paper.pdf) · [source, naturality analysis, and experiments](neuron-merging-naturality/) | Retains quadratic teacher-width and polynomial depth dependence for signed, unequal neuron populations, with an output-normalized count budget. | Every `N >= C` and `gamma >= 1`. Repairs an exact sign-symmetry defect; every eligible Boolean circuit has a positive-mass implementation. Some ordinarily trained networks have certified merging witnesses; general empirical applicability is unproved. |
 | [Low-degree all-width learning bounds for shallow Bayesian neural networks](shallow/paper.pdf) · [source and build](shallow/) | A sample bound affine in the teacher's weighted squared norm, with a dimension overhead, at every eligible learner width and every `gamma >= 1`. | Covers the raw Gaussian prior as well as the globally margin-conditioned and shallow robust priors. Training still requires a positive output margin. Quadratic teacher-width dependence needs bounded readout coefficients; the original larger coefficient class gives a quartic sufficient bound. |
 | [A quartic-width learning bound for Bayesian networks stable under internal noise](original-support/paper.pdf) · [source and build](original-support/) | `O(C^4 log^9(2+C))` samples with other parameters fixed; polynomial depth dependence and a `1/epsilon` statistical factor. | Retains the **original support condition**, in the strong-prior regime and at finite scales with `gamma >= 2`. This argument does not supply that rate at `1 <= gamma < 2`. |
 
@@ -42,6 +43,8 @@ $$
 
 for a universal constant `A`. Its proof prunes irrelevant circuit wires before bounding logarithmic factors; it does not hide exponential depth dependence in the coefficient of `C²`.
 
+The [signed-merging extension and naturality study](neuron-merging-naturality/) removes the balance and unsigned-grouping requirements, gives an output-normalized count budget and a local sufficient certificate, and investigates 40 fresh gradient-trained networks. It retains quadratic width dependence.
+
 ## The shallow bound
 
 For a width-`C` teacher with hidden matrix `W` and readout `a`, put
@@ -71,8 +74,8 @@ If hidden coefficients are at most `C` and readout coefficients are bounded inde
 
 The quartic original-support paper adapts the compressor from the [earlier depth report](../depth-supporting-notes/round1-depth-report/); the new paper states its adaptation and the finite-scale consequence explicitly. The old Markov-compression prototype is not published here as another new result.
 
-A quadratic-width bound under the original internal-noise restriction alone remains open. So does a quadratic bound for the full original shallow complexity convention, including readout coefficients as large as the width. Whether useful weaker neuron-merging conditions hold for relevant trained networks is also unresolved.
+A quadratic-width bound under the original internal-noise restriction alone remains open. So does a quadratic bound for the full original shallow complexity convention, including readout coefficients as large as the width. The [naturality study](neuron-merging-naturality/) proves weaker, symmetry-respecting neuron-merging conditions and certifies some ordinarily trained examples; their prevalence and usefulness for broader trained-network classes remain unresolved.
 
 All guarantees concern ideal Bayesian conditioning. Quadratic dependence is a useful benchmark for dense real-valued networks, but it is not an established optimal lower bound for the bounded-fan-in Boolean teachers: their descriptions can be substantially shorter than a dense parameter array.
 
-To rebuild all four PDFs, run `./build.sh`. Each paper also has its own build script. The builds require a standard LaTeX installation with `pdflatex` and the packages imported by the sources; Pandoc is not needed.
+To rebuild all five PDFs, run `./build.sh`. Each paper also has its own build script. The builds require a standard LaTeX installation with `pdflatex` and the packages imported by the sources; Pandoc is not needed.

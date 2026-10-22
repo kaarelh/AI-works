@@ -8,7 +8,7 @@ The five papers below are the main results. The remaining papers are listed as s
 
 **Review status.** Most of this material has not yet been carefully reviewed by a human. The checks so far are the Lean proofs of the five main learning theorems, with the scope described [below](#lean-verification), and AI reviews. These include the audit records in the paper folders and a collection-wide review by Claude on 19 October 2026, recorded in [verification/review-2026-10-19.md](verification/review-2026-10-19.md). That review found and repaired several local errors but found no false theorem. It does not replace expert human review, and anything added or changed after the review was not part of it.
 
-Every paper has a PDF, editable LaTeX source, and a build script. The collection contains 45 PDF manuscripts, additional research notes, experimental code, and selected exact certificates. The [catalog](catalog.json) identifies the canonical manuscripts; older treatments retain their historical scope and open-status remarks.
+Every paper has a PDF, editable LaTeX source, and a build script. The collection contains 46 PDF manuscripts, additional research notes, experimental code, and selected exact certificates. The [catalog](catalog.json) identifies the canonical manuscripts; older treatments retain their historical scope and open-status remarks.
 
 ## Lean verification
 
@@ -120,7 +120,7 @@ The principal unfinished target is the fixed-depth natural sparse-parity lower b
 
 ## Improved polynomial bounds
 
-[Four papers, sources, and independent reviews](works-in-progress/improved-polynomials/) · [FAQ: explicit polynomials](TECHNICAL-FAQ.md#19-what-are-the-actual-polynomials-are-practical-sample-bounds-close)
+[Five papers, sources, and independent reviews](works-in-progress/improved-polynomials/) · [FAQ: explicit polynomials](TECHNICAL-FAQ.md#19-what-are-the-actual-polynomials-are-practical-sample-bounds-close)
 
 These supporting papers improve the polynomial dependence on target width. Their proofs have independent AI-agent mathematical reviews, but are outside the current Lean verification and remain separate from the five main results.
 
@@ -129,6 +129,7 @@ These supporting papers improve the polynomial dependence on target width. Their
 | [Original robust support, all mean-field-or-stronger scales](works-in-progress/improved-polynomials/original-support-all-scales/paper.pdf) | $O(C^6\log^{13}(2+C))$ at fixed remaining parameters, simultaneously for every $N\ge C$ and every $\gamma\ge1$. No extra restriction. Joint polynomial envelope of degree 46. |
 | [Original robust support, stronger scales](works-in-progress/improved-polynomials/original-support/paper.pdf) | $O(C^4\log^9(2+C))$ at fixed remaining parameters, for every $N\ge C$ at $\gamma\ge2$ and in the strong-prior limit. |
 | [Stable neuron populations](works-in-progress/improved-polynomials/neuron-averaging/paper.pdf) | Quadratic Boolean teacher-width dependence and polynomial depth dependence at every $\gamma\ge1$, with an **additional neuron-averaging restriction**. Its empirical relevance remains unestablished. |
+| [Symmetry-invariant neuron merging](works-in-progress/improved-polynomials/neuron-merging-naturality/) | Quadratic width and polynomial depth at every `gamma >= 1`, allowing signed, unequal populations and a scale-normalized count budget. Boolean implementations have positive prior mass; trained-network study includes exhaustive interval certificates. |
 | [One hidden layer](works-in-progress/improved-polynomials/shallow/paper.pdf) | A bound in the teacher's weighted squared norm, at every $\gamma\ge1$, including for the raw Gaussian prior. Quadratic width dependence with bounded readout coefficients; the full original coefficient convention gives a quartic sufficient bound. |
 
 Quadratic dependence under the original robust restriction throughout all $\gamma\ge1$ remains open. The original formal theorem and its degree-10974 sufficient budget are unchanged.
