@@ -2,6 +2,8 @@
 
 [Paper (PDF)](paper.pdf) · [LaTeX source](source/paper.tex) · [Independent mathematical review](verification/mathematical-review.md)
 
+The [unified activation paper](../unbounded-activations/) extends the learning guarantee to every `gamma >= 1`, including multiple hidden layers, for ReLU, GELU, and all fixed globally Lipschitz activations vanishing at zero. This earlier paper remains useful for its simpler argument and sharper explicit ReLU strong-prior bounds; its discussion of the remaining deep-scaling gap describes its original scope.
+
 This note proves a learning guarantee for ReLU networks on the Boolean cube under the original strong-prior convention: condition the parameter prior on an absolute output margin greater than 1/2 at every input, then condition on exact training labels. For every learner width at least the teacher width, a sufficiently small prior variance gives a sample bound independent of learner width. No internal-stability restriction is imposed.
 
 Let the teacher have depth `L`, hidden width `C`, and product of layer Frobenius norms `P`. Writing `H=L−1`, define

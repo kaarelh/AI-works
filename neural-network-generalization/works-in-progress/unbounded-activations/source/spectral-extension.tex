@@ -1,0 +1,198 @@
+% Standalone input fragment. Expects amsmath,amssymb,amsthm, proposition,
+% lemma,theorem environments. All macros below use standard LaTeX.
+\section{Target mass and spectral compression}
+\label{sec:allgamma-spectral}
+This section extends the Gaussian spectral argument to unbounded
+activations. Let $\phi(0)=0$ and let $\phi$ be $\lambda$-Lipschitz; replace
+$\lambda$ by $\max\{1,\lambda\}$, so throughout $\lambda\ge1$.
+For $\gamma\ge1$, the independent coordinate variances are
+$N^{1-\gamma}/d$ in the first layer, $N^{-\gamma}$ internally, and
+$N^{-1-\gamma}$ at the readout. Write $U_{N,g}$ for the globally
+strict-margin event $g(x)z_w(x)>1/2$ for every cube input.
+The normalized energy is
+\[
+ \kappa_N(w)=\frac dN\|W^1\|_F^2+
+ \sum_{s=2}^{L-1}\|W^s\|_F^2+N\|v\|_2^2.
+\]
+No uniform bound on $\phi$ or on individual hidden activations is imposed.
+
+\subsection{A target cylinder for linearly growing activations}
+Let a depth-$L$, width-$C$ teacher have every weight bounded by $C$ and
+strict output margin $1/2$. Multiplying only its readout by three gives
+strict margin $3/2$. Set
+\begin{align*}
+ M&=(d+1)(\lambda C^2)^{L-1},&
+ b&=2+\sqrt{2\log(2L)},\\
+ B&=2+\lambda(\sqrt2 C^2+\sqrt C+b),&
+ E&=\lambda M(1+LC)B^{L-2},\\
+ \rho&=\left[4\{(3\sqrt2 C^2+1)E+M\}\right]^{-1},\\
+ B_0&=d(d+1)C^2+2(L-2)C^4+36C^4,&
+ D_0&=d+2+(L-2)C,\\
+ A&=2B_0+4D_0/\rho+2.
+\end{align*}
+These quantities are independent of learner width and polynomially bounded
+in $d,C$ for fixed $L,\lambda$. In particular $0<\rho\le1$ and $A\ge1$.
+
+\begin{proposition}[Unbounded-activation target mass]
+\label{prop:unbounded-target-mass}
+At every $N\ge C$ and every $\gamma\ge1$, the raw Gaussian probability
+of the target event satisfies
+\[
+ \mu_{N,\gamma}(U_{N,f})\ge \exp(-AN^\gamma/2).
+\]
+\end{proposition}
+\begin{proof}
+Partition the $N$ neurons into $C$ groups of sizes $k_a$ differing by at
+most one. Then $N/k_a\le2C$ and $k_a/k_b\le2$. Clone the teacher by
+copying each first-layer row throughout its group, replacing an internal
+weight $B^s_{ba}$ by $B^s_{ba}/k_a$ on edges from group $a$ to group $b$,
+and replacing readout weight $v_b$ by $v_b/k_b$. This preserves the exact
+real-valued function for any activation. Every cloned hidden state is
+group-constant. Let $P$ project onto that subspace.
+
+Because $|\phi(u)|\le\lambda|u|$, all teacher hidden coordinates are
+bounded in magnitude by $M$: the first layer is bounded by
+$\lambda C(d+1)$, and each next hidden layer multiplies this bound by at
+most $\lambda C^2$. The cloned internal operator norms are at most
+$\sqrt2 C^2$, and the scaled readout norm is at most
+$\sqrt N\|v_*\|_2\le3\sqrt2 C^2$.
+
+Put $t=N^{(1-\gamma)/2}\le1$. In the first layer constrain each
+$\sqrt d W^1_{ij}$ within $\rho t$ of its cloned value. In each internal
+row, constrain its $C$ coordinates along the normalized group indicators,
+after multiplying the row by $\sqrt N$, within $\rho t$ of their cloned
+values. Finally constrain each $Nv_j$ within $\rho t$ of its cloned
+value. All these are independent scalar Gaussian coordinates of variance
+$t^2$. Write the resulting internal matrices as
+\[
+ W^s=W_*^s+R^s+E^s,\qquad R^s=R^sP,\quad E^sP=0.
+\]
+The constrained error obeys $\|R^s\|_F\le\rho t\sqrt C$; the free
+part is $(t/\sqrt N)G^s(I-P)$, independently of the constrained
+coordinates, with standard Gaussian $G^s$. The Gaussian operator-norm
+bound and a union bound give conditional probability at least $1/2$ that
+$\|E^s\|_{\rm op}\le bt$ for all internal layers.
+
+On this event put
+$e_s(x)=N^{-1/2}\|h_w^s(x)-h_*^s(x)\|_2$. Uniformly over the cube,
+\[
+ e_1\le\lambda\rho(d+1),\qquad
+ e_s\le B e_{s-1}+\lambda\rho\sqrt C\,M.
+\]
+The second estimate uses $E^sh_*^{s-1}=0$, the bound on the teacher hidden
+states, and Lipschitz continuity. It does not bound the perturbed states
+by one. Since $M\ge d+1$ and $B\ge1$, induction gives
+$e_{L-1}\le\rho E$. The readout error has scaled norm at most $\rho$,
+so
+\[
+ \sup_x|z_w(x)-z_*(x)|
+ \le (3\sqrt2 C^2+1)e_{L-1}+\rho M\le1/4.
+\]
+Thus every such draw lies in $U_{N,f}$ with room to spare.
+
+There are $ND_0$ constrained coordinates and their squared centers sum
+to at most $NB_0$. For $Z\sim N(0,t^2)$,
+\[
+ \mathbb P\{|Z-a|\le\rho t\}
+ \ge\frac{2\rho}{\sqrt{2\pi}}e^{-a^2/t^2-\rho^2}.
+\]
+Multiplying these bounds, retaining the independent operator-norm event,
+and using $N\le N^\gamma$ gives
+\[
+ -\log\mu_{N,\gamma}(U_{N,f})
+ \le N^\gamma B_0+ND_0\log\frac{e\sqrt{2\pi}}{2\rho}+\log2
+ \le AN^\gamma/2.
+\]
+Here $\log(e\sqrt{2\pi}/(2\rho))\le2/\rho$ for $0<\rho\le1$.
+\end{proof}
+
+\subsection{Spectral truncation with controlled hidden RMS norms}
+\begin{lemma}[Gaussian spectral tail]
+\label{lem:unbounded-spectral-tail}
+If $W$ is an $N\times N$ matrix with independent $N(0,\sigma^2)$ entries,
+$a\ge8\sigma\sqrt N$, and $W_{>a}$ retains singular values greater than
+$a$, then
+\[
+ \mathbb P\{\|W_{>a}\|_F^2>K\}\le e^{-K/(8\sigma^2)}.
+\]
+\end{lemma}
+\begin{proof}
+The Gaussian operator-norm inequality
+$\mathbb P\{\|W\|_{\rm op}>2\sigma\sqrt N+\sigma u\}\le e^{-u^2/2}$
+shows that the operator-norm ball of radius $a/2$ has probability greater
+than $1/2$. Its Frobenius distance from $W$ is
+$D(W)=[\sum_j(s_j(W)-a/2)_+^2]^{1/2}$. Gaussian isoperimetry gives
+$\mathbb P\{D(W)>r\}\le e^{-r^2/(2\sigma^2)}$.
+Since $s\le2(s-a/2)$ when $s>a$, one has
+$\|W_{>a}\|_F\le2D(W)$. Take $r=\sqrt K/2$.
+\end{proof}
+
+For $K\ge1$, define
+\[
+ a_K=\left[16L\lambda^L(K+1)(\sqrt K+1)^{L-2}\right]^{-1},
+ \qquad J_K=(L+3)K.
+\]
+Use the auxiliary class $\mathcal F(J)$ from Corollary~\ref{cor:count};
+it includes the Boolean functions admitting a strict margin-$1/2$,
+depth-$L$, fixed-$\phi$ implementation of energy at most $J$ at some
+finite width.
+
+\begin{proposition}[Aggregate functional tail]
+\label{prop:unbounded-aggregate}
+Suppose $\gamma>1$ and
+\[
+ N^{\gamma-1}\ge8(d+1),\qquad
+ N^{\gamma-1}\ge64a_K^{-2}.
+\]
+Then
+\[
+ \mu_{N,\gamma}\!\left(\bigcup_{g\notin\mathcal F(J_K)}U_{N,g}\right)
+ \le L e^{-KN^\gamma/8}.
+\]
+\end{proposition}
+\begin{proof}
+Outside an event of probability at most $Le^{-KN^\gamma/8}$,
+\[
+ \frac dN\|W^1\|_F^2\le K,\quad N\|v\|_2^2\le K,
+ \quad\|(W^s)_{>a_K}\|_F^2\le K\quad(2\le s<L).
+\]
+Indeed, the first and last random quantities are respectively
+$N^{-\gamma}\chi^2_{N(d+1)}$ and $N^{-\gamma}\chi^2_N$.
+For $u\ge8D$, Markov's inequality with exponential parameter $3/8$ gives
+$\mathbb P\{\chi_D^2>u\}\le 2^D e^{-3u/8}\le e^{-u/4}$; the first width condition
+therefore suffices. The second width condition permits
+Lemma~\ref{lem:unbounded-spectral-tail} on each internal matrix.
+
+Replace each internal matrix by its $>a_K$ part. Retained operator norms
+are at most $\sqrt K$ and discarded operator norms at most $a_K\le1$.
+For the original hidden states write
+$M_s=N^{-1/2}\sup_x\|h_w^s(x)\|_2$. The zero-at-zero and Lipschitz
+assumptions imply
+\[
+ M_s\le\sqrt{2K}\,\lambda^s(\sqrt K+1)^{s-1}.
+\]
+In particular individual neurons need not be bounded, but their normalized
+Euclidean norm is controlled uniformly over inputs. If $e_s$ is the
+normalized Euclidean difference between original and truncated hidden
+states, then
+\[
+ e_1=0,\qquad e_s\le\lambda\sqrt K\,e_{s-1}+\lambda a_K M_{s-1}.
+\]
+Induction gives, for $s\ge2$,
+\[
+ e_s\le a_K(s-1)\sqrt{2K}\lambda^s(\sqrt K+1)^{s-2}.
+\]
+The output discrepancy is consequently at most
+\[
+ a_K(L-2)\sqrt2K\lambda^{L-1}(\sqrt K+1)^{L-3}<1/8
+\]
+when $L\ge3$. It is zero when $L=2$.
+A globally margin-separated original draw therefore retains strict margin
+$3/8$ after truncation. Doubling the readout gives strict margin $3/4$
+and energy at most $K+(L-2)K+4K=J_K$. Its Boolean function belongs
+to $\mathcal F(J_K)$, proving the claimed aggregate tail.
+\end{proof}
+
+The small spectral cutoff requires a sufficiently strong scale. At mean
+field, the Gaussian bulk has operator norm of constant order; the next
+sections control its functional effect through covariance reconstruction.

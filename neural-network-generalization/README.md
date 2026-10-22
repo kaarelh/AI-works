@@ -8,7 +8,7 @@ The five papers below are the main results. The remaining papers are listed as s
 
 **Review status.** Most of this material has not yet been carefully reviewed by a human. The checks so far are the Lean proofs of the five main learning theorems, with the scope described [below](#lean-verification), and AI reviews. These include the audit records in the paper folders and a collection-wide review by Claude on 19 October 2026, recorded in [verification/review-2026-10-19.md](verification/review-2026-10-19.md). That review found and repaired several local errors but found no false theorem. It does not replace expert human review, and anything added or changed after the review was not part of it.
 
-Every paper has a PDF, editable LaTeX source, and a build script. The collection contains 49 PDF manuscripts, additional research notes, experimental code, and selected exact certificates. The [catalog](catalog.json) identifies the canonical manuscripts; older treatments retain their historical scope and open-status remarks.
+Every paper has a PDF, editable LaTeX source, and a build script. The collection contains 52 PDF manuscripts, additional research notes, experimental code, and selected exact certificates. The [catalog](catalog.json) identifies the canonical manuscripts; older treatments retain their historical scope and open-status remarks.
 
 ## Lean verification
 
@@ -134,16 +134,19 @@ These supporting papers improve the polynomial dependence on target width. Their
 
 Quadratic dependence under the original robust restriction throughout all $\gamma\ge1$ remains open. The original formal theorem and its degree-10974 sufficient budget are unchanged.
 
-## Total mistakes and ReLU learning
+## Total mistakes, unbounded activations, and depth
 
-Two [online-learning papers and a neural converse note](works-in-progress/online-mistakes/), together with a [ReLU learning paper](works-in-progress/relu-learning/), study the full learning process and extend the activation class. Their proofs have independent AI-agent mathematical reviews and are not Lean verified.
+The [online-learning papers and neural converses](works-in-progress/online-mistakes/) study the full learning process. The [unified activation theorem](works-in-progress/unbounded-activations/) covers ReLU, GELU, and every fixed Lipschitz activation vanishing at zero at all mean-field-or-stronger scales. Separate restricted-prior results give polynomial depth dependence. These supporting papers have independent AI-agent mathematical reviews and are not Lean verified.
 
 | Result | Scope |
 |---|---|
 | [Polynomially many total mistakes](works-in-progress/online-mistakes/upper/paper.pdf) | All three original good NNBayes regimes, at every eligible width, under uniform iid Boolean inputs or a random full-domain permutation. Expected and high-probability bounds for posterior sampling, majority, and strict `>2/3` confidence. Includes a nonuniform expectation extension and polynomial-depth neuron-merging variants. |
 | [Circuit-induction converses](works-in-progress/online-mistakes/circuit-converse/paper.pdf) | Few mistakes force small unrestricted-depth NAND circuits: linear in mistakes for minimum-consistent-circuit induction, and polynomial in expected sampling mistakes for two explicit Bayesian circuit priors. Full-domain or support-relative coverage is required. |
 | [Neural converse note](works-in-progress/online-mistakes/nn-converse.md) | An exponential converse under original support, and a polynomial converse with a fixed output cap, in the strong-prior-then-width limit. The original fixed-width polynomial converse remains open. |
-| [ReLU learning](works-in-progress/relu-learning/paper.pdf) | Polynomial fixed-depth sample bounds at every width above teacher width, with the original global output-margin convention. Strong-prior limit; finite `gamma >= 2`; and finite `gamma >= 1` for one hidden layer. No robustness restriction. Deep finite `1 <= gamma < 2` remains open. |
+| [ReLU learning: the simpler norm argument](works-in-progress/relu-learning/paper.pdf) | Earlier strong-prior and finite-scale results, with sharper explicit ReLU estimates. Its open deep-scaling range is covered by the unified paper below. |
+| [ReLU, GELU, and general Lipschitz activations](works-in-progress/unbounded-activations/paper.pdf) | One fixed-depth polynomial sample bound, simultaneously for every `N >= C` and every mean-field-or-stronger Gaussian scale, including deep `gamma = 1`. Original global margins; no added robustness. Auxiliary activation classes handle large Gaussian contributions. |
+| [Polynomial-depth ReLU/GELU learning](works-in-progress/relu-gelu-polynomial-depth/paper.pdf) | Quadratic Boolean teacher-width dependence up to logarithms, and polynomial depth, for every `gamma >= 1` under unsigned neuron-merging stability. All learner widths above compiled teacher width; positive-mass Boolean implementations. |
+| [Polynomial-depth neural converse](works-in-progress/online-mistakes/depth-polynomial-converse/paper.pdf) | Few total mistakes imply a small tanh network, with fourth-power mistake dependence and polynomial depth. Requires an output cap and controlled internal amplification, complete input coverage, and the strong-prior-then-width limit. |
 
 The [FAQ](TECHNICAL-FAQ.md#can-we-bound-total-mistakes-and-recover-circuit-complexity-from-them) distinguishes total mistakes from fixed-accuracy sample complexity, the input-order assumptions, and the separate sampling and majority converses.
 

@@ -1,6 +1,6 @@
 # Total mistakes, circuit complexity, and NNBayes
 
-[NNBayes total-mistake paper](upper/paper.pdf) · [circuit converse paper](circuit-converse/paper.pdf) · [neural converse note](nn-converse.md)
+[NNBayes total-mistake paper](upper/paper.pdf) · [circuit converse paper](circuit-converse/paper.pdf) · [neural converse note](nn-converse.md) · [polynomial-depth neural converse](depth-polynomial-converse/paper.pdf)
 
 These supporting results study the entire noiseless learning process: each input is presented, a prediction is made, and its true label is revealed. A mistake bound counts all errors, including errors on rare inputs that appear much later. It is stronger than achieving a fixed test accuracy after a finite sample. The three original neural regimes retain their all-input absolute-margin support restriction: `|z(x)| > 1/2` before training.
 
@@ -9,9 +9,9 @@ These supporting results study the entire noiseless learning process: each input
 | Do the good NNBayes regimes make only polynomially many mistakes in total? | **Yes under uniform random Boolean inputs.** All three original positive regimes have width-independent polynomial bounds in expectation and with high probability, for posterior sampling, majority, and the strict `>2/3` confidence criterion. Uniform sampling without replacement is also covered. |
 | Does this extend to other input distributions? | An expected bound depends on `log(1/p_min)`, where `p_min` is the smallest positive input probability. It remains polynomial if that logarithm does. Arbitrary-order or distribution-free cumulative claims require more than the existing class-count argument. |
 | Does a small mistake count force a small circuit for circuit induction? | **Yes for specified rules.** Minimum-consistent-circuit mistakes `B` imply `C(f) <= (3d+3)B`. Bayesian sampling under a geometric gate-count/uniform-wiring prior gives `C(f)=O(d M log(d+dM))` for expected mistakes `M`; an explicit prefix prior improves this to `O(dM+1)`. These count total NAND gates without a depth restriction. |
-| Does the polynomial converse hold for the original NNBayes learner? | **Not yet proved.** A strong-prior-then-width-limit argument gives an exponential converse. Adding a fixed output cap gives a polynomial converse in that same limit. The original fixed-width polynomial converse remains open. |
+| Does the polynomial converse hold for NNBayes? | In the strong-prior-then-width limit, an output cap gives a fixed-depth polynomial converse. Adding controlled internal amplification gives a [polynomial-depth converse](depth-polynomial-converse/), with fourth-power mistake dependence. The original fixed-width polynomial converse remains open. |
 | Can the cumulative bound be polynomial in depth? | Yes under the deterministic neuron-merging restrictions, for layered Boolean-circuit teachers with constant wires and compilation overhead counted. The original internal-noise restriction's current approximate-compression proof does not yet give the desired polynomial-depth cumulative extension. |
-| What about ReLU? | The [ReLU learning theorem](../relu-learning/) gives cumulative bounds in the strong-prior regime, at finite `gamma >= 2`, and at every finite `gamma >= 1` for one hidden layer. |
+| What about ReLU and GELU? | The [unified activation theorem](../unbounded-activations/) supplies the same finite-class premise throughout `gamma >= 1`, at every fixed depth, for every fixed globally Lipschitz activation vanishing at zero. The cumulative argument therefore extends to these cases. |
 
 ## Why the upper bounds work
 
@@ -35,4 +35,4 @@ The [neural note](nn-converse.md) identifies the remaining obstruction in transf
 
 ## Verification
 
-The papers and neural note have independent AI-agent mathematical reviews. They are not Lean verified and do not change the five main formalized results. Each paper has editable sources, a build script, an independent review, and a publication record. Run `./build.sh` here to rebuild both PDFs. The [neural-note review](verification/nn-converse-review.md) records its narrower scope.
+The papers and neural note have independent AI-agent mathematical reviews. They are not Lean verified and do not change the five main formalized results. Each paper has editable sources, a build script, an independent review, and a publication record. Run `./build.sh` here to rebuild the two original online-learning PDFs; the polynomial-depth converse has its own build script. The [neural-note review](verification/nn-converse-review.md) records its narrower scope.

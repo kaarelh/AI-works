@@ -145,7 +145,7 @@ The table concerns this particular family and the indicated conditioning convent
 | Regime | Current conclusion | Important qualification |
 |---|---|---|
 | Strong-prior limit at fixed $N$ | Prior rate polynomially equivalent to bounded-weight network complexity at fixed depth; consequently polynomial samples, uniformly in the sample bound over all $N\ge C_L(f)$. | Variance tends to zero **after fixing width**; no width-uniform variance threshold. |
-| Fixed $\gamma>1$ | Polynomial samples at fixed depth for every actual $N\ge C_L(f)$. Unrestricted results also remove bad learner-depth dependence for substantial target classes. | The general bound’s polynomial degree depends on depth and on the gap above one. The full arbitrary-deep-target problem remains open. |
+| Fixed $\gamma>1$ | Polynomial samples at fixed depth for every actual $N\ge C_L(f)$. Unrestricted results also remove bad learner-depth dependence for substantial target classes. | The original bound depends on the gap above one; the [unified activation theorem](works-in-progress/unbounded-activations/) removes that dependence with one polynomial for all $\gamma\ge1$. Its degree still depends on depth. The full arbitrary-deep-target problem remains open. |
 | $\gamma=1$ | Polynomial samples at each fixed depth, every actual $N\ge C_L(f)$. Without a robustness restriction, the critical theorem also gives polynomial learner-depth bounds at every realizable width for low-Fourier-variation targets, including all parities at sufficient logarithmic depth. With the robustness restriction, jointly polynomial dependence on depth for Boolean-circuit targets. | Joint polynomial dependence on arbitrary teacher width and depth for the unrestricted prior remains open. |
 | $0<\gamma<1$ | A Gaussian minimum-energy description at leading exponential order; exponential full-parity confidence lower bound. | This is not exact Gaussian-posterior equivalence throughout the interval. Limits are width first. |
 | $\gamma=0$ | A fixed-margin globally conditioned Gaussian limit; exponential full-parity confidence lower bound. | The global margin remains in the limiting law. |
@@ -440,11 +440,13 @@ $$
 
 at every input and every disturbance in that ball.
 
-For a layered Boolean target circuit of width $C$, this gives sample complexity polynomial jointly in $d,L,C,c+c^{-1},\varepsilon^{-1},\log(1/\delta)$, simultaneously for every $N\ge C$ and every $\gamma\ge1$. The proof builds a robust implementation with enough Gaussian prior mass and compresses posterior draws through small internal disturbances.
+For the tanh learner and a layered Boolean target circuit of width $C$, this gives sample complexity polynomial jointly in $d,L,C,c+c^{-1},\varepsilon^{-1},\log(1/\delta)$, simultaneously for every $N\ge C$ and every $\gamma\ge1$. The proof builds a robust implementation with enough Gaussian prior mass and compresses posterior draws through small internal disturbances.
 
 The condition has a recognizable interpretation: the prediction score must survive a small amount of simultaneous internal numerical error. Clipping avoids treating a change from output $10$ to output $1$ as a prediction failure. The RMS normalization makes perturbations comparable across widths. The radius compensates for accumulating layer disturbances and readout amplification.
 
 It is nevertheless a particular sufficient condition, with a strong “every input, every perturbation” quantifier. Calling it natural does not establish that arbitrary trained networks satisfy it.
+
+For ReLU and GELU, a [separate polynomial-depth theorem](works-in-progress/relu-gelu-polynomial-depth/) instead restricts the prior by stability under merging neuron populations. It gives quadratic width dependence up to logarithms. That condition is not proved equivalent to the internal-noise condition above; its definition and polynomial are discussed in [Question 19](#19-what-are-the-actual-polynomials-are-practical-sample-bounds-close).
 
 ## 13. How can we check whether a network satisfies the robustness condition?
 
@@ -609,6 +611,14 @@ This count budget is independent of a global readout rescaling. The complete con
 
 Three examples have exhaustive interval certificates, including a width-32, four-hidden-layer Adam network whose clipped outputs are preserved exactly by one signed population on all 256 inputs. Other witnesses use exhaustive float64 checks. These certify merging stability, not automatically internal-noise robustness or Bayesian learning behavior. The local operator-norm certificate is too conservative to explain these examples at the small noise calibrations previously tested. A quadratic bound under the original internal-noise restriction alone remains open.
 
+**For ReLU and GELU, the analogous merging restriction also gives a quadratic bound.** The [separate paper](works-in-progress/relu-gelu-polynomial-depth/paper.pdf) uses unsigned populations of arbitrary sizes and the same output-normalized count budget. It proves, for every $\gamma\ge1$,
+
+$$
+n\ge\frac{A}{\varepsilon}\left[C^2\bigl(2+d+L+\log(4/\varepsilon)\bigr)^9+\log(1/\delta)\right]
+$$
+
+as a sufficient sample budget for a single-output bounded-fan-in Boolean teacher. Here $C$ counts the Boolean circuit's width, including constant wires; the eligible learner widths are $N\ge C$ for ReLU and $N\ge2C$ for the exact GELU compilation. A more informative nested budget has $O(C^2\log^3(2+C))$ dependence at fixed other resources. ReLU removes population-size parameters by homogeneity; GELU retains them but they admit a uniformly controlled finite cover. This is a conventional, independently reviewed result, not an update to the Lean polynomial.
+
 ### Other polynomial estimates and verification
 
 **The shallow bound is affine in a weighted squared norm, with a dimension overhead.** For a width-$C$ teacher with hidden matrix $W$ and readout $a$, write
@@ -685,23 +695,31 @@ These are conventional proofs with [independent AI-agent review records](side-re
 
 ## 21. What about ReLU, sigmoid, GELU, or other activations?
 
-**Proved:** the original strong-prior compression theorem, and the argument for fixed $\gamma>1$ using it, allow bounded Lipschitz activations once the target has the required representation. Tanh is not essential to those statements. A rescaled bounded sigmoid or a bounded clipped activation is therefore a natural fit, with constants and representation assumptions made explicit.
+**The positive learning theorem extends to every fixed globally Lipschitz activation that vanishes at zero, including ReLU, exact GELU, SiLU, and tanh.** The [unified activation paper](works-in-progress/unbounded-activations/paper.pdf) proves a polynomial sample bound at fixed depth, independent of learner width, throughout the mean-field-or-stronger Gaussian regime. No additional robustness restriction is needed for this fixed-depth result.
 
-The more specialized results use more structure. Robust digital implementations use reliable gate restoration under finite noise. The subcritical kernel and sharp conditioning results use the tanh saturation limit. The critical rate constructions use particular tanh inequalities. “Bounded Lipschitz” is not a license to import all of those conclusions unchanged.
-
-**ReLU has a separate positive theorem.** The [ReLU paper](works-in-progress/relu-learning/) proves polynomial fixed-depth sample complexity at every learner width above teacher width in the strong-prior limit, with the original all-input margin restriction and exact training-label conditioning. Positive homogeneity lets us balance the layers without changing the function. The Gaussian energy then bounds the product of layer Frobenius norms independently of width, and a norm-based capacity bound replaces bounded-activation compression. The theorem handles arbitrary input distributions on the Boolean cube and posterior mixtures, with no additional robustness restriction.
-
-If a depth-$L$, width-$C$ ReLU teacher has all weights bounded by $C$, one sufficient strong-prior sample bound is
+More precisely, use independent Gaussian variances
 
 $$
-n=O\!\left(\frac{L(d+1)^3 C^{4L-2}+\log(1/\delta)}{\varepsilon}\right).
+\frac{t^2}{d},\qquad \frac{t^2}{N},\qquad \frac{t^2}{N^2}
 $$
 
-There is also a product-norm version and a sharper Boolean-gate implementation bound. These are polynomial at fixed depth, with poor depth dependence. A quantitative Gaussian-neighborhood argument proves finite-variance learning for every $\gamma\ge2$; for one hidden layer it works for **every $\gamma\ge1$**, including mean field. The deeper finite-variance range $1\le\gamma<2$ remains open here. The new proofs have independent AI-agent reviews and are not Lean verified.
+in the first layer, internal layers, and linear readout, respectively, with $0<t\le1$. The prior retains the original absolute output margin greater than $1/2$ at every Boolean input, and training conditions on exact labels. A target with an implementing network of depth $L$, width $C$, weights bounded by $C$, and signed output margin strictly greater than $1/2$ at every input can be learned from
 
-This does not settle other unbounded activations such as GELU or SiLU. ReLU's exact positive homogeneity is used essentially in this proof. Compact inputs alone do not uniformly bound all hidden states over the prior and every width, so the earlier bounded-activation argument still cannot simply be reused.
+$$
+n\ge\frac{p_{L,\lambda}(d,C,\log(1/\varepsilon))+O(\log(1/\delta))}{\varepsilon}
+$$
 
-Hard threshold activations have the opposite issue: they are bounded but discontinuous, so the numerical compression proof does not transfer directly. Universal approximation by itself also supplies neither the quantitative circuit size nor the robustness needed here. See [Appendix L of the audit](side-results/strong-prior-appendix-audit/paper.pdf).
+examples, where $\lambda$ bounds the activation's Lipschitz constant. One sample event works simultaneously for every $N\ge C$ and every $0<t\le1$. Taking $t=N^{(1-\gamma)/2}$ covers **all $\gamma\ge1$, including deep mean field**, with one polynomial that does not deteriorate as $\gamma$ approaches one. The bound controls posterior average sign error; a factor of three in accuracy gives the usual strict `>2/3` confidence guarantee. The polynomial is large and its degree depends on depth.
+
+**What replaces bounded hidden activations?** First, a product-of-layer-norm capacity bound works even for an auxiliary class with different Lipschitz activations at different neurons. Second, the mean-field proof separates each Gaussian layer into a bounded part and a controlled collection of large contributions. Gaussian concentration bounds the total cost of those contributions, and they can be represented by a small auxiliary network. Simply discarding large neurons would miss events that matter after conditioning on the target. At smaller variances, spectral truncation supplies a simpler argument. Combining these estimates gives the uniform scale bound.
+
+The auxiliary networks are used to count possible sign functions. For an arbitrary activation, this step is **not** a claim that the reconstructed network uses that same activation, or a converse comparing its smallest fixed-activation implementation with prior probability. The Bayesian learner itself always uses the original fixed activation.
+
+**Ordinary Boolean circuits are covered for ReLU and GELU.** Layered NOR/COPY/NOT circuits have exact ReLU implementations. An exact two-neuron GELU identity implements each gate without adding hidden layers, with weights bounded by four; constant wires and compilation overhead must be counted. Thus these results apply to small Boolean circuits, not only to an assumed analog teacher. The [earlier ReLU paper](works-in-progress/relu-learning/) retains a simpler proof and sharper explicit strong-prior estimates using positive homogeneity.
+
+**Our polynomial-depth theorem uses a separate condition.** The [ReLU/GELU neuron-merging paper](works-in-progress/relu-gelu-polynomial-depth/) gives quadratic teacher-width dependence up to logarithms and polynomial depth dependence for every $\gamma\ge1$. Its prior keeps networks whose clipped predictions survive averaging neurons into suitably few populations. Every eligible Boolean circuit has a positive-mass implementation satisfying this condition. It is not proved equivalent to the original internal-noise restriction or typical of gradient-trained networks. See [Question 19](#19-what-are-the-actual-polynomials-are-practical-sample-bounds-close) for the explicit polynomial.
+
+The $\gamma<1$ lower bounds and the tanh-specific unrestricted-depth constructions require separate analysis for these activations. A centered bounded sigmoid is covered by the positive theorem; an activation with a nonzero value at zero is outside it as stated. Hard thresholds fail its Lipschitz assumption. Universal approximation alone supplies neither the quantitative teacher complexity nor the required learning bound. These new activation results have independent AI-agent mathematical reviews and reproducible PDFs; **they are not Lean verified**.
 
 ## 22. Can we bound the prior probability of a function?
 
@@ -773,7 +791,7 @@ $$
 
 where $H_r$ is the harmonic sum. Take $\beta=2^{-d}$. The existing exact-function compression theorems pay only polynomially for $\log(1/\beta)$, giving $O(d(h+1))$ expected mistakes. The smaller-width branches use the direct Bayesian log-prior bound. High-probability bounds also hold, with polynomial dependence on $\log(1/\delta)$. The constants are independent of learner width; the strong-prior variance threshold is still chosen separately at each width, and one sufficiently small variance works for the entire stream. These cumulative high-probability statements concern each fixed learner with width-independent constants, not one event simultaneously controlling every learner width.
 
-This argument permits mixtures of tied minimizers. Counting a failure whenever the correct label has probability at most $\theta<1$ costs a factor of at most $1/(1-\theta)$ relative to cumulative posterior error; majority errors cost at most two. Thus it covers the usual strict `>2/3` convention. The neuron-merging restrictions also retain joint polynomial depth dependence for layered Boolean-circuit teachers, counting constant wires and compilation overhead. The weaker internal-noise condition's current approximate compressor does not yet establish that polynomial-depth cumulative extension. The [ReLU regimes](works-in-progress/relu-learning/) have cumulative bounds too.
+This argument permits mixtures of tied minimizers. Counting a failure whenever the correct label has probability at most $\theta<1$ costs a factor of at most $1/(1-\theta)$ relative to cumulative posterior error; majority errors cost at most two. Thus it covers the usual strict `>2/3` convention. The neuron-merging restrictions also retain joint polynomial depth dependence for layered Boolean-circuit teachers, counting constant wires and compilation overhead. The weaker internal-noise condition's current approximate compressor does not yet establish that polynomial-depth cumulative extension. The general finite-class argument also applies to the [unified Lipschitz-activation theorem](works-in-progress/unbounded-activations/), including deep ReLU and GELU at every $\gamma\ge1$: its exceptional-mass budget is polynomial in $\log(1/\beta)$, as required here.
 
 **Input order matters for this proof.** On a nonuniform finite support, an expected bound depends on $\log(1/p_{\min})$, where $p_{\min}$ is the smallest positive input probability. It remains polynomial when that logarithm does. A finite class with very unequal prior weights can make many mistakes under an adverse order, or a sufficiently nonuniform iid distribution. This refutes an arbitrary-order inference from class cardinality alone, not the desired claim for the specific Gaussian priors. Arbitrary-order Gaussian guarantees still need another argument, such as a suitable version of the genericity premise below.
 
@@ -791,7 +809,25 @@ $$
 C_L(f)\le\mathrm{poly}_L(d)\exp(O_L(m)).
 $$
 
-Adding the prior restriction $1/2<|z_w(x)|<U$ on every input, for fixed $U>1$, improves this to a polynomial in $d,U,m$ at fixed depth. These statements cover sampling, majority, and confidence mistakes, including ties. They do not prove the original fixed-width polynomial converse. The two remaining issues are the cost of overwriting a potentially large real output and making room for a correction without repeatedly multiplying energy by a constant.
+Adding the prior restriction $1/2<|z_w(x)|<U$ on every input, for fixed $U>1$, improves this to a polynomial in $d,U,m$ at fixed depth. These statements cover sampling, majority, and confidence mistakes, including ties.
+
+**A stronger restricted-prior converse has polynomial depth dependence.** The [controlled-amplification paper](works-in-progress/online-mistakes/depth-polynomial-converse/) adds a certificate bounding how finite internal disturbances reach the output. Requiring all internal matrices to have operator norm less than one is sufficient; the certificate also allows some expansions compensated by later layers. With fixed cap $U$ and certificate parameter $\Lambda>1$, put
+
+$$
+K=1+P(d,L,U)(m+1)^2,
+\qquad P=O\!\left(d^3\log^2(2+d)+L(U+1)^2\right).
+$$
+
+The target then has a network of the same depth, with width and individual weights bounded by
+
+$$
+\left\lceil65536\Lambda^2K\bigl[1+(L-1)K\bigr]
+\bigl[d+\log(400L)\bigr]\right\rceil.
+$$
+
+Thus the leading mistake dependence is fourth power, and no exponent grows with depth. An exact singleton correction increases the square root of minimum energy by only a polynomial-depth additive cost. Every increase in minimum compatible energy forces a mistake, even with tied minimizers; a deterministic compressor gives the small network.
+
+This theorem still takes the strong-prior limit before the width limit and requires complete input coverage. It does not prove the converse at every fixed realizable width, remove the output cap, or show that every small deep Boolean circuit has a cheap implementation satisfying the stronger certificate. Those remain separate questions. The reconstructed small network need not satisfy the prior restriction. The new converse is independently AI-reviewed, not Lean verified.
 
 ### Why expect Occam learning to transfer out of distribution?
 
