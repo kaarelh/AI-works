@@ -134,6 +134,8 @@ These supporting papers improve the polynomial dependence on target width. Their
 
 Quadratic dependence under the original robust restriction throughout all $\gamma\ge1$ remains open. The original formal theorem and its degree-10974 sufficient budget are unchanged.
 
+[Alternative-restriction research notes](works-in-progress/robustness-alternatives/) compare numerical stability, path norms, and severe dropout with neuron merging. Internal-noise stability plus bounded noisy activity gives polynomial-depth ReLU/GELU learning with roughly sixth-power teacher width in the strong-prior limit and at every $\gamma\ge2$. A severe-dropout condition gives a quadratic-width tanh result in those regimes. A hard ReLU path-norm cap gives a quadratic-budget bound at every Gaussian scale, including a quadratic-width guarantee for Boolean formulas. Each alternative has a different scope; none establishes the desired natural quadratic-width restriction for all small circuits throughout $\gamma\ge1$.
+
 ## Total mistakes, unbounded activations, and depth
 
 The [online-learning papers and neural converses](works-in-progress/online-mistakes/) study the full learning process. The [unified activation theorem](works-in-progress/unbounded-activations/) covers ReLU, GELU, and every fixed Lipschitz activation vanishing at zero at all mean-field-or-stronger scales. Separate restricted-prior results give polynomial depth dependence. These supporting papers have independent AI-agent mathematical reviews and are not Lean verified.
@@ -148,7 +150,7 @@ The [online-learning papers and neural converses](works-in-progress/online-mista
 | [Polynomial-depth ReLU/GELU learning](works-in-progress/relu-gelu-polynomial-depth/paper.pdf) | Quadratic Boolean teacher-width dependence up to logarithms, and polynomial depth, for every `gamma >= 1` under unsigned neuron-merging stability. All learner widths above compiled teacher width; positive-mass Boolean implementations. |
 | [Polynomial-depth neural converse](works-in-progress/online-mistakes/depth-polynomial-converse/paper.pdf) | Few total mistakes imply a small tanh network, with fourth-power mistake dependence and polynomial depth. Requires an output cap and controlled internal amplification, complete input coverage, and the strong-prior-then-width limit. |
 
-The [FAQ](TECHNICAL-FAQ.md#can-we-bound-total-mistakes-and-recover-circuit-complexity-from-them) distinguishes total mistakes from fixed-accuracy sample complexity, the input-order assumptions, and the separate sampling and majority converses.
+The FAQ has separate sections on [total mistakes](TECHNICAL-FAQ.md#can-we-bound-the-total-number-of-mistakes-during-learning) and [converses](TECHNICAL-FAQ.md#does-making-few-mistakes-imply-that-the-target-has-a-small-circuit), including the input-order, prediction-rule, and coverage assumptions.
 
 ## Label-noise research
 
