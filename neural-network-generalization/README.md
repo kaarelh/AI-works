@@ -1,14 +1,14 @@
 # Bayesian neural network generalization
 
-Papers and notes by ChatGPT-6 Astra, Claude (Fable 5, Opus 5, and Opus 5.5), Kaarel Hänni, and Dmitry Vaintrob. Authors are listed in alphabetical order, here and on every paper; each paper names its own authors. Public research snapshot, updated 20 October 2026.
+Papers and notes by ChatGPT-6 Astra, Claude (Fable 5, Opus 5, and Opus 5.5), Kaarel Hänni, OpenAI Codex, and Dmitry Vaintrob. Authors are listed in alphabetical order, here and on every paper; each paper names its own authors. Public research snapshot, updated 21 October 2026.
 
-**Start here:** [main results](#main-results) · [technical FAQ: assumptions, interpretation, and open problems](TECHNICAL-FAQ.md) · [Lean verification](lean/VERIFICATION.md) · [recent depth research](#recent-depth-research)
+**Start here:** [main results](#main-results) · [technical FAQ: assumptions, interpretation, and open problems](TECHNICAL-FAQ.md) · [Lean verification](lean/VERIFICATION.md) · [improved polynomial bounds](#improved-polynomial-bounds) · [recent depth research](#recent-depth-research)
 
 The five papers below are the main results. The remaining papers are listed as side results, earlier treatments, or works in progress. “Side result” does not mean unproved: several contain complete theorems, but they are not the main presentation of this project. These are research drafts, not externally peer-reviewed publications; the FAQ distinguishes proved statements from plausible extensions and open questions.
 
 **Review status.** Most of this material has not yet been carefully reviewed by a human. The checks so far are the Lean proofs of the five main learning theorems, with the scope described [below](#lean-verification), and AI reviews. These include the audit records in the paper folders and a collection-wide review by Claude on 19 October 2026, recorded in [verification/review-2026-10-19.md](verification/review-2026-10-19.md). That review found and repaired several local errors but found no false theorem. It does not replace expert human review, and anything added or changed after the review was not part of it.
 
-Every paper has a PDF, editable LaTeX source, and a build script. The collection contains 41 PDF manuscripts, additional research notes, experimental code, and selected exact certificates. The [catalog](catalog.json) identifies the canonical manuscripts; older treatments retain their historical scope and open-status remarks.
+Every paper has a PDF, editable LaTeX source, and a build script. The collection contains 45 PDF manuscripts, additional research notes, experimental code, and selected exact certificates. The [catalog](catalog.json) identifies the canonical manuscripts; older treatments retain their historical scope and open-status remarks.
 
 ## Lean verification
 
@@ -57,6 +57,8 @@ This is the completed full-parity exponential theorem. The stronger fixed-depth 
 **A polynomial-depth learning bound for NNBayes on robust networks.** Restrict the Gaussian prior to networks whose clipped predictions survive a calibrated ball of simultaneous internal activation and output perturbations. For layered Boolean-circuit targets of width $C$, one universal polynomial bounds sample complexity jointly in input dimension, depth, circuit width, robustness calibration, and statistical parameters, simultaneously at **every width $N\ge C$ and every $`\gamma\ge1`$**.
 
 The learner conditions on signed training output above $1/2$ and controls posterior test-margin error at $1/4$, hence sign error and confidence failure. The main theorem needs no all-input clean-output margin; the manuscript also treats an optional extra conditioning variant, outside the exact Lean learning statement. The comparator is a layered Boolean circuit with constant wires and compilation overhead counted; this is not an unconditional polynomial-depth theorem for every small analog neural circuit.
+
+A [new supporting paper](works-in-progress/improved-polynomials/original-support-all-scales/paper.pdf) sharpens the sufficient bound to $O(C^6\log^{13}(2+C))$ at fixed remaining parameters under this **same restriction**, for every $\gamma\ge1$ and every $N\ge C$. It also improves the conservative joint polynomial envelope to degree 46. These sharper exponents have independent AI-agent review but are not yet Lean verified.
 
 The [experiments](works-in-progress/depth-experiments/) include genuine trained-network certificates and counterexamples. They support studying the condition, but do not establish it for arbitrary gradient-descent-trained networks or validate Bayesian posterior sample complexity empirically.
 
@@ -116,6 +118,21 @@ These manuscripts are retained because their proofs or scope can still be useful
 
 The principal unfinished target is the fixed-depth natural sparse-parity lower bound for $0<\gamma<1$, with uniform IID samples and the actual posterior-confidence criterion. Selected-example results, symmetry-restricted certificates, and analytic reductions are side results, not a resolution of that target.
 
+## Improved polynomial bounds
+
+[Four papers, sources, and independent reviews](works-in-progress/improved-polynomials/) · [FAQ: explicit polynomials](TECHNICAL-FAQ.md#19-what-are-the-actual-polynomials-are-practical-sample-bounds-close)
+
+These supporting papers improve the polynomial dependence on target width. Their proofs have independent AI-agent mathematical reviews, but are outside the current Lean verification and remain separate from the five main results.
+
+| Paper | Sample bound and scope |
+|---|---|
+| [Original robust support, all mean-field-or-stronger scales](works-in-progress/improved-polynomials/original-support-all-scales/paper.pdf) | $O(C^6\log^{13}(2+C))$ at fixed remaining parameters, simultaneously for every $N\ge C$ and every $\gamma\ge1$. No extra restriction. Joint polynomial envelope of degree 46. |
+| [Original robust support, stronger scales](works-in-progress/improved-polynomials/original-support/paper.pdf) | $O(C^4\log^9(2+C))$ at fixed remaining parameters, for every $N\ge C$ at $\gamma\ge2$ and in the strong-prior limit. |
+| [Stable neuron populations](works-in-progress/improved-polynomials/neuron-averaging/paper.pdf) | Quadratic Boolean teacher-width dependence and polynomial depth dependence at every $\gamma\ge1$, with an **additional neuron-averaging restriction**. Its empirical relevance remains unestablished. |
+| [One hidden layer](works-in-progress/improved-polynomials/shallow/paper.pdf) | A bound in the teacher's weighted squared norm, at every $\gamma\ge1$, including for the raw Gaussian prior. Quadratic width dependence with bounded readout coefficients; the full original coefficient convention gives a quartic sufficient bound. |
+
+Quadratic dependence under the original robust restriction throughout all $\gamma\ge1$ remains open. The original formal theorem and its degree-10974 sufficient budget are unchanged.
+
 ## Label-noise research
 
 [Exact noisy interpolation in the strong-prior limit](works-in-progress/noisy-interpolation/README.md) is a new supporting research note. For distinct uniformly sampled Boolean inputs, it proves a clean-error bound linear in the corrupted fraction, with a resource-dependent coefficient, for the original tanh/Gaussian exact-fit learner at every width of order at least $C+U^2d^2(s+1)$, where $U$ bounds the teacher's output; this threshold grows linearly with the number $s$ of corruptions. The proof covers arbitrary corruptions and posterior mixtures. For bounded-output Boolean-circuit implementations, the noise coefficient is independent of teacher width; polynomial dependence on dimension and depth remains. A noise bound uniform in dimension and target complexity is still open.
@@ -147,7 +164,7 @@ The [technical FAQ](TECHNICAL-FAQ.md) explains the distinction between teacher a
 
 Each paper folder contains `paper.pdf`, its complete source dependencies under `source/`, and `build.sh`. Run a paper's script to rebuild it with a standard TeX Live installation. The collection also includes relevant mathematical review records and the computational certificate archives used by the structured papers.
 
-Every catalogued paper's PDF was last rebuilt from its included source on 20 October 2026; [catalog.json](catalog.json) (`pdf_preparation`) records each PDF's earlier revisions. The [19 October review record](verification/review-2026-10-19.md) lists the latest mathematical revisions. On 20 October every paper's author list was put in alphabetical order; the [verification record](verification/README.md) describes this attribution revision. The seven new depth manuscripts were independently rebuilt from their complete source and checked against the frozen manuscripts' extracted PDF text. Existing internal mathematical audits are retained where available; they are not external peer review. The separate Lean project has the precisely delimited scope described above. Packaging checks are recorded in [verification/README.md](verification/README.md); the new paper builds are recorded in [depth-publication-builds.json](verification/depth-publication-builds.json). [catalog.json](catalog.json) records the canonical paper inventory and PDF checksums; [SHA256SUMS](SHA256SUMS) records the published file checksums.
+The earlier 41 catalogued PDFs were rebuilt from their included source on 20 October 2026. The four [improved-polynomial papers](works-in-progress/improved-polynomials/) were added on 21 October with clean isolated rebuilds and independent mathematical review; their [build record](works-in-progress/improved-polynomials/verification/publication-build.json) identifies the published source and PDF hashes. Neither those additions nor their smaller exponents are Lean verified. For the earlier papers, [catalog.json](catalog.json) (`pdf_preparation`) records each PDF's earlier revisions. The [19 October review record](verification/review-2026-10-19.md) records the collection-wide mathematical review at that date. On 20 October every paper's author list was put in alphabetical order; the [verification record](verification/README.md) describes this attribution revision. The seven new depth manuscripts were independently rebuilt from their complete source and checked against the frozen manuscripts' extracted PDF text. Existing internal mathematical audits are retained where available; they are not external peer review. The separate Lean project has the precisely delimited scope described above. Packaging checks are recorded in [verification/README.md](verification/README.md); the new paper builds are recorded in [depth-publication-builds.json](verification/depth-publication-builds.json). [catalog.json](catalog.json) records the canonical paper inventory and PDF checksums; [SHA256SUMS](SHA256SUMS) records the published file checksums.
 
 The non-Gaussian extension has its own [source-build and mathematical review record](side-results/non-gaussian-priors/verification/README.md). Its publication does not extend the scope of the Lean verification.
 

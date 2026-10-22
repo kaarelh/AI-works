@@ -557,15 +557,73 @@ Thus we should not advertise “depth dependence eliminated for all small neural
 
 ## 19. What are the actual polynomials? Are practical sample bounds close?
 
-**The present bounds are constructive but very loose.** “Polynomial” refers to the stated parameters with the stated fixed quantities; it is not shorthand for a small numerical exponent.
+**Substantially smaller bounds are available in several settings, but these are still theoretical sample guarantees.** The [improved-polynomials papers](works-in-progress/improved-polynomials/) give explicit estimates, with independent AI-agent mathematical reviews. They are supporting research papers, **not Lean-verified improvements** to the five main theorems. In the table, the powers of teacher width hold with input dimension, depth, calibration, accuracy, and confidence fixed; the papers also specify those dependences.
 
-For example, the original strong-prior proof bounds target energy by
+| Setting | Dependence on teacher width | Scope |
+|---|---|---|
+| [Original internal-noise robustness restriction, every mean-field-or-stronger scale](works-in-progress/improved-polynomials/original-support-all-scales/paper.pdf) | $O(C^6\log^{13}(2+C))$ | One sample event works at every $N\ge C$ and every $\gamma\ge1$, including the actual finite mean-field prior. No neuron-averaging assumption is added. |
+| [Original restriction, stronger scales](works-in-progress/improved-polynomials/original-support/paper.pdf) | $O(C^4\log^9(2+C))$ | Strong-prior limit at each width, and actual finite priors at every $\gamma\ge2$. The quartic argument does not cover $1\le\gamma<2$. |
+| [Additional stability under neuron averaging](works-in-progress/improved-polynomials/neuron-averaging/paper.pdf) | Quadratic, with polynomial depth dependence | Every $N\ge C$ and $\gamma\ge1$, but under a **stronger structural support condition**. This is not a quadratic bound for the original restriction alone. |
+| [One hidden layer](works-in-progress/improved-polynomials/shallow/paper.pdf) | Quadratic when teacher readout coefficients are bounded independently of width; a quartic term for the original larger coefficient class | Every $N\ge C$ and $\gamma\ge1$. Covers the raw Gaussian prior as well as the globally margin-conditioned and shallow robust priors. Positive training margins are still required. |
+
+The first three rows compare with layered Boolean circuits, including constant wires and compilation overhead. The shallow row compares with an implementing tanh network and states its coefficient assumptions separately. None of these rates is a lower bound or a claim of optimality.
+
+**The original robust prior throughout $\gamma\ge1$.** The sextic bound retains exactly the main robustness theorem's learner: clipped predictions survive a calibrated ball of simultaneous internal disturbances; training requires signed output above $1/2$; test error uses margin $1/4$. Its sample polynomial is joint in depth and the other resources, independent of learner width and Gaussian scale. It controls the posterior average, so a strict $2/3$ confidence guarantee follows by rescaling the error tolerance by three.
+
+The improvement comes from sampling source neurons partly uniformly and partly according to their contribution to retained directions, then matching the sampled covariance more accurately. This removes large truncation losses from the original compression proof. The [paper](works-in-progress/improved-polynomials/original-support-all-scales/) gives all intermediate budgets; the displayed sixth power describes dependence on $C$, **not** degree six in all parameters. A quadratic bound for this unchanged support condition remains open. The simpler quartic proof at $\gamma\ge2$ controls total network energy directly; that argument alone cannot discard the growing Gaussian background at mean-field scaling.
+
+**What the quadratic alternative assumes.** The added condition requires a balanced grouping of neurons into at most $1+N\lVert v\rVert_2^2$ groups per hidden layer such that averaging weights within the groups barely changes clipped predictions. The prior does not know the target's width, but it explicitly requires a small compressed representation relative to readout energy. Imposing this in addition to internal-noise stability further restricts the prior, and the added condition has not been established for relevant trained networks.
+
+At fixed calibration, a sharper bound for this prior is
 
 $$
-B_L(d,C)=d(d+1)C^2+LC^4.
+n=\widetilde O\!\left(\frac{L^2(d+LC)^2+\log(1/\delta)}{\varepsilon}\right),
 $$
 
-Its compression width at energy $K$ can be taken as
+where the notation suppresses logarithmic factors, including accuracy logarithms. A literal quadratic-width envelope, with no hidden logarithms of $C$, is
+
+$$
+n\ge\frac{A}{\varepsilon}\left[C^2S_0^9+\log(1/\delta)\right],
+\qquad S_0=2+d+L+c+\log(4/\varepsilon),
+$$
+
+for a universal constant $A$. It uses the bounded fan-in and single-output convention to prune irrelevant teacher wires and absorb their logarithmic cost into depth. A different, stronger calibration of the permitted group count gives approximately $\widetilde O((LdC+L^2C^2)/\varepsilon)$ at fixed calibration, accuracy, and confidence. Changing that calibration changes the prior restriction.
+
+**The shallow bound is affine in a weighted squared norm, with a dimension overhead.** For a width-$C$ teacher with hidden matrix $W$ and readout $a$, write
+
+$$
+\kappa_C=\frac dC\lVert W\rVert_F^2+C\lVert a\rVert_2^2.
+$$
+
+For the raw Gaussian or globally margin-conditioned prior, a sufficient sample bound is
+
+$$
+n=\widetilde O\!\left(\frac{d(\kappa_C+d)+\log(1/\delta)}{\varepsilon}\right).
+$$
+
+The additional $d^2$ term comes from the target-neighborhood probability estimate; the teacher norm need not dominate $d$. The shallow robust prior is also covered, with calibration dependence. If hidden coefficients are at most $C$ and readout coefficients are bounded by a fixed constant, this is quadratic in $C$ up to logarithms; a second estimate is literally quadratic with a worse dimension factor. If **all** coefficients may be as large as $C$, then $\kappa_C$ can contain a $C^4$ readout term. The paper does not prove that this quartic dependence is necessary. Its argument controls the readout norm and represents tanh units as mixtures of halfspaces, avoiding the deep-network compressor.
+
+**What is formally checked?** The existing Lean proof of the robust main theorem still has its deliberately loose sufficient budget
+
+$$
+A\left[2+d+C+(L-2)+c+c^{-1}+\varepsilon^{-1}+\log(1/\delta)\right]^{10974}.
+$$
+
+The original manuscript's transport construction has a conservative degree-510 estimate. The new all-scales paper gives a much smaller conventional envelope,
+
+$$
+n\ge A\left[2+d+L+C+c+c^{-1}+\varepsilon^{-1}+\log(1/\delta)\right]^{46}.
+$$
+
+This degree-46 bound is still deliberately loose; the paper's explicit nested budget and the $C^6\log^{13}(2+C)$ rate are more informative. These are upper bounds from particular proof constructions, not necessary exponents. The smaller rates above have conventional proofs and separate review records; they have not been substituted into the [Lean verification record](lean/VERIFICATION.md#generalization-under-a-robustness-restriction-scope-and-correspondence).
+
+**The unrestricted deep bounds retain poor depth dependence.** For comparison, the original strong-prior proof bounds target energy by
+
+$$
+B_L(d,C)=d(d+1)C^2+LC^4
+$$
+
+and uses compression width
 
 $$
 \rho=\frac{2^{-L}K^{-(L-1)/2}}{12(L-1)},
@@ -574,37 +632,15 @@ m_L(d,K)=\max\!\left\lbrace \lceil9K\rceil,
 \left\lceil256\rho^{-4}[d+\log(L/\rho)]\right\rceil\right\rbrace .
 $$
 
-Counting the compressed networks gives an explicit log-class-size bound $Q_L(d,K)$ in the paper, and
+If $Q_L(d,K)$ denotes the resulting log-class-size bound in that paper, then
 
 $$
-n\ge\frac2\varepsilon\left[
-Q_L(d,B_L(d,C)+1)+\log(1/\delta)\right]
+n\ge\frac2\varepsilon\left[Q_L(d,B_L(d,C)+1)+\log(1/\delta)\right]
 $$
 
-suffices in the strong-prior limit. This displays the bad depth dependence rather than hiding it behind “fixed depth.”
+suffices in the strong-prior limit. The fixed-depth all-width mean-field proof likewise has rapidly growing intermediate budgets, including $O_L(dK^{4\cdot3^{L-2}-1})$. The unrestricted critical-depth results in Question 17 use a different finite-representation argument; their polynomials are also not optimized. Neither the robustness improvements nor the shallow theorem establishes a small joint polynomial for arbitrary unrestricted deep teachers.
 
-The fixed-depth all-width mean-field proof is quantitative but grows rapidly with depth: one intermediate truncation budget has order $O_L(dK^{4\cdot3^{L-2}-1})$. That is an intermediate proof quantity, not an optimized final sample exponent.
-
-The critical theorems in Question 17 use a different finite-representation estimate. A path of action at most $A_0\ge1$ and square-root entropy sum $S$ has a same-depth tanh realization of width at most $C(d+L+A_0)^{30}e^{20S}$. The standard sigmoid VC bound is quartic in parameter count. The resulting sample polynomial has a universal, unoptimized degree; its depth dependence also uses the scalar entropy estimate to bound $S$. The finite-width extension adds an exchangeability argument and an explicit target-mass construction. Their unoptimized polynomial width thresholds are absorbed into the learning bound by a VC argument for smaller widths, so the target-based guarantees hold at every realizable width.
-
-The robust proof replaces depth-dependent polynomial degrees by a universal degree. It supplies explicit nested compression parameters and a bound of the form
-
-$$
-n\ge\frac{16}{\varepsilon}
-\left[\log|\mathcal H|+\log(1/\delta)\right],
-$$
-
-where its appendix constructs $\mathcal H$ with polynomial log-cardinality in the displayed theorem parameters. It is a qualitative statistical theorem, not a prediction of MNIST sample counts.
-
-The current Lean resource accounting also verifies a deliberately loose explicit envelope for the formal proof's finite-class sample budget:
-
-$$
-A\left[2+d+C+(L-2)+c+c^{-1}+\varepsilon^{-1}+\log(1/\delta)\right]^{10974},
-$$
-
-for one universal constant $A$. This comes from the formal proof's more conservative entropy estimates and rounding bounds; it is not a claim that exponent $10974$ is necessary, or that the manuscript's sharper argument has been optimized. Both the degree calculation and the analytic construction are machine-checked. The exact formal scope is stated below. Improving these enormous exponents is a major open problem.
-
-**Hope, not theorem:** substantially smaller complexity dependence, perhaps near quadratic in the bounded-width parameter in suitable settings, or near description length for a better complexity measure. A generic prefix-code prior over Boolean circuits can give Occam bounds of order circuit description length divided by error tolerance. Showing that this Gaussian neural prior matches that behavior is the problem, not a consequence of the generic bound. Counting many functions at width $C$ also does not prove that every such function individually needs $\Omega(C^2)$ examples under every distribution.
+**Is quadratic the right target?** It is a useful dense-parameter benchmark, but not a universal lower bound. Bounded-fan-in Boolean circuits can have descriptions of order $LC\log(C+d)$ rather than $LC^2$ real parameters. A generic circuit-code prior can turn that description length into an Occam bound. Obtaining comparably sharp behavior for these Gaussian neural priors remains open, as does predicting useful numerical sample counts from the present estimates.
 
 ## 20. Do independent non-Gaussian weight priors give the same results?
 
@@ -680,7 +716,7 @@ Conversely, a tiny target probability alone is not a sample lower bound. A prior
 
 | Original direction | Current status |
 |---|---|
-| Improve the polynomial | **Open.** Explicit bounds exist, but are far from optimized; no near-description-length Gaussian-prior theorem. |
+| Improve the polynomial | **Partly resolved.** [Question 19](#19-what-are-the-actual-polynomials-are-practical-sample-bounds-close) gives sextic width dependence under the original robust restriction at every gamma >= 1, a quartic stronger-scale bound, and quadratic bounds with additional assumptions. Quadratic dependence for the original robust prior and near-description-length guarantees remain open. |
 | Remove bad depth dependence | **Partly resolved.** Joint polynomial depth under the robust support restriction; unrestricted positive results for substantial Boolean classes. The general Boolean case remains open. Continuous-output regression has an exponential-depth lower bound without a robustness restriction. |
 | Lower-bound log prior mass | **Partly resolved.** The strong-prior rate is polynomially equivalent to bounded-weight network complexity; finite-variance target-mass bounds also exist. Sharp absolute-mass formulas remain open. |
 | Classify scaling regimes | **Partly resolved on a particular one-parameter line.** The three positive learning regimes also extend to the non-Gaussian family in [question 20](#20-do-independent-non-gaussian-weight-priors-give-the-same-results). General exponent tuples, mixed regimes, and non-Gaussian subcritical behavior remain open. |

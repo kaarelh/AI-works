@@ -1,0 +1,421 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools}
+\usepackage[margin=1in]{geometry}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\setlength{\emergencystretch}{3em}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\newcommand{\R}{\mathbb R}
+\author{ChatGPT-6 Astra \and Claude Fable 5 and Opus 5 \and Kaarel H\"anni \and OpenAI Codex \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{Research draft, 21 October 2026}
+\title{A quartic-width learning bound for Bayesian networks stable under internal noise}
+\hypersetup{pdftitle={A quartic-width learning bound for Bayesian networks stable under internal noise},pdfauthor={ChatGPT-6 Astra; Claude Fable 5 and Opus 5; Kaarel Hanni; OpenAI Codex; Dmitry Vaintrob}}
+\begin{document}
+\maketitle
+\begin{abstract}
+We give an explicit sample-complexity bound for Gaussian Bayesian tanh
+networks restricted by stability of clipped predictions under simultaneous
+internal disturbances. For a layered Boolean target circuit of width $C$,
+the sufficient number of examples is $O(C^4\log^9(2+C))$ when the other
+parameters are fixed. The dependence on depth is polynomial, and the
+statistical accuracy factor is $1/\varepsilon$. The guarantee holds at every
+learner width above the teacher width in the strong-prior regime, and at
+every actual finite-width Gaussian scaling with exponent $\gamma\ge2$.
+The proof adapts an earlier pruning-and-Bernstein compression argument to
+the clipped-score prior and supplies explicit Gaussian posterior thresholds.
+It does not establish quadratic dependence on teacher width, or this
+improved rate at mean-field scaling. The proof has independent AI-agent
+mathematical review but is not Lean verified.
+\end{abstract}
+
+\section{Model and purpose}
+A polynomial-depth learning theorem is more useful when the polynomial has
+a manageable degree. This paper extracts an explicit quartic dependence on
+Boolean teacher width for a particular Gaussian neural-network prior,
+without strengthening its existing internal-noise support condition.
+The proof uses the deterministic compressor in the earlier depth
+report~\cite{depth-report}; that compressor is not new here. The contributions
+are its adaptation to clipped-score stability, explicit rate bookkeeping,
+and the finite-scale posterior conclusion.
+
+Let $d\ge1$, $L\ge2$, $H=L-1$, and $\mathcal X=\{-1,1\}^d$.
+The network has $H$ tanh hidden layers, all of width $N$, and a linear
+readout:
+\[
+ h^1=\tanh(W^1\bar x),\qquad h^s=\tanh(W^sh^{s-1}),\qquad
+ z_w=v^\top h^H,\qquad \bar x=(x,1).
+\]
+The independent Gaussian entries have variances $t^2/d$ in $W^1$,
+$t^2/N$ in internal matrices, and $t^2/N^2$ in $v$, for $0<t\le1$.
+Write
+\[
+ \kappa_N(w)=\frac dN\|W^1\|_F^2+
+ \sum_{s=2}^H\|W^s\|_F^2+N\|v\|_2^2,
+ \qquad E_v=N\|v\|_2^2.
+\]
+The scale $t=N^{(1-\gamma)/2}$ corresponds to exponent $\gamma$.
+
+Disturbances are added after every hidden activation and at the output:
+\[
+ h^1_\eta=\tanh(W^1\bar x)+\eta^1,\quad
+ h^s_\eta=\tanh(W^sh^{s-1}_\eta)+\eta^s,\quad
+ z_w(x;\eta)=v^\top h^H_\eta+\eta^{\rm out},
+\]
+with $\|\eta\|_*^2=\sum_s\|\eta^s\|_2^2/N+|\eta^{\rm out}|^2$.
+Let $T(u)=\max\{-1/2,\min\{1/2,u\}\}$ and fix $c>0$.
+The prior conditions the raw Gaussian $\mu_{N,t}$ on the event
+\[
+ \mathcal R_{N,c}=\left\{w:
+ |T(z_w(x;\eta))-T(z_w(x))|\le1/16\quad
+ \text{for every }x,\ \|\eta\|_*\le
+ r_c(w):=\frac{c}{\sqrt{1+HE_v(w)}}\right\}.
+\]
+The noisy hidden values need not lie in $[-1,1]$.
+For iid inputs $X_i\sim D$, training further conditions on
+$f(X_i)z_w(X_i)>1/2$. Denote this posterior by $Q_{S,N,t,c}$.
+The risk is $R(Q)=\mathbb E_{w\sim Q,X\sim D}
+\mathbf1\{f(X)z_w(X)\le1/4\}$, which bounds ordinary sign error.
+No initial clean-output margin is required at unobserved inputs.
+
+The target $f$ is computed by a layered Boolean circuit of width $C$ and
+$H$ stages, using NAND, copy, and negation gates. Constant wires and any
+compilation overhead count toward width; its output is one final wire.
+Idle stages can be padded with copies. This is a Boolean-circuit comparator,
+not an arbitrary real-weight neural implementation.
+
+\section{An explicit learning theorem}
+The target construction in Appendix~\ref{sec:theory-target-cylinder}
+gives an explicit $D_*=D_*(d,L,C,c)\ge1$ such that, for every $N\ge C$,
+a subset of $\mathcal R_{N,c}$ has correct margin on the entire cube and
+raw Gaussian mass at least $e^{-ND_*/t^2}$. In particular, all posteriors
+used below are well-defined.
+
+For $K\ge1$, define
+\begin{align*}
+ r&=\min\{1/6,c/\sqrt{1+HK}\},&
+ m&=\left\lceil256Kr^{-2}[d+\log(400L)]\right\rceil,\\
+ B&=\sqrt{4mK},&
+ u&=\frac1{48(d+1+Lm)(1+m(B+1))^L},\\
+ P&=m(d+1)+(L-2)m^2+m,&
+ J&=P\log(3+2B/u).
+\end{align*}
+
+\begin{theorem}\label{thm:main}
+For $0<\varepsilon,\delta<1$, it suffices to take
+\begin{equation}\label{eq:sample}
+ n\ge\frac2\varepsilon[J+\log(1/\delta)].
+\end{equation}
+The following choices of $K$ and scales are valid:
+\begin{enumerate}
+\item Set $K=8D_*$. At every $N\ge C$, allow all scales satisfying
+\[
+ t^2\le\min\left\{1,
+ \frac{ND_*}{(P_N/2)\log2+\log(2/\varepsilon)}\right\},
+ \quad P_N=N(d+1)+(L-2)N^2+N.
+\]
+\item Set $K=8D_*+4(d+L)+4\log(2/\varepsilon)$. Allow every $N\ge C$
+and $0<t\le N^{-1/2}$, including every exponent $\gamma\ge2$.
+\end{enumerate}
+With probability at least $1-\delta$ over the sample, $R(Q_{S,N,t,c})\le
+\varepsilon$ simultaneously over the indicated widths and scales.
+\end{theorem}
+
+For the original strong-prior parameter $\sigma$, one has $t=\sqrt N\sigma$.
+The first clause supplies a sufficiently small positive threshold at every
+fixed width. The second clause concerns actual finite-variance priors.
+The sample event is independent of width and scale in both clauses.
+
+The code budget satisfies
+\[
+ J=O\!\left[
+ \left(dLKr^{-2}(d+\log L)+L^2K^2r^{-4}(d+\log L)^2\right)
+ \log(2+d+L+K+r^{-1})\right].
+\]
+The appendix's formulas give, with a universal constant,
+\[
+ D_*\le O\!\left((d+LC)
+ [\log^2(2C)+\log(2L)+\log(2+d+C)]+(1+c^2)C\right).
+\]
+Consequently the sample bound is polynomial in depth and
+$O(C^4\log^9(2+C))$ when the remaining parameters are fixed.
+The exact sample formula retains the $1/\varepsilon$ factor and the
+additional logarithmic dependence entering the finite-scale energy cutoff.
+
+\section{Uniform compression on an energy sublevel}
+Fix $w$ with $\kappa_N(w)\le K$. Put $k_s=\|W^s\|_F^2$ for internal
+layers and $k_L=N\|v\|_2^2$, so their sum is at most $K$.
+In every internal row, and in the readout, delete entries with magnitude
+larger than
+\[
+ \frac{8\sqrt K\,\|\text{row}\|_2}{r\sqrt N}.
+\]
+Zero rows remain zero. Denote the pruned weights by bars. The total
+absolute mass removed from a nonzero row is at most its squared norm
+divided by the threshold. Therefore, on any vector in $[-1,1]^N$,
+the internal pruning error has norm at most $r\sqrt{Nk_s/K}/8$;
+the readout error is at most $r\sqrt{k_L/K}/8$.
+
+Independently choose $m$ uniform indices $S^s_j$ with replacement at every
+hidden layer. Keep the selected first-layer rows and multiply every
+subsequent sampled source weight by $N/m$. The virtual full-width pass is
+\begin{align*}
+ \widetilde h^1&=\tanh(W^1\bar x),\\
+ \widetilde h^s_i&=\tanh\!\left(\frac Nm\sum_{j=1}^m
+ \bar W^s_{i,S^{s-1}_j}\widetilde h^{s-1}_{S^{s-1}_j}\right),\\
+ \widetilde z&=\frac Nm\sum_{j=1}^m
+ \bar v_{S^H_j}\widetilde h^H_{S^H_j}.
+\end{align*}
+Its stored coordinates form an ordinary width-$m$ network, including
+when indices repeat or $m>N$.
+
+Conditional on $S^1,\ldots,S^{s-2}$, the virtual state
+$\widetilde h^{s-1}$ is independent of the fresh list $S^{s-1}$.
+For one uniform source index $I$, put
+$Y=N\bar W^s_{:,I}\widetilde h^{s-1}_I$. The variance and norm bounds are
+\[
+ \mathbb E\|Y-\mathbb EY\|_2^2\le Nk_s,
+ \qquad \|Y-\mathbb EY\|_2\le16\sqrt{NKk_s}/r.
+\]
+Hilbert-space Bernstein~\cite{tarres-yao}, with tolerance
+$r\sqrt{Nk_s/K}/8$, bounds failure by
+\[
+ 2\exp\!\left(-\frac{3mr^2}{640K}\right)
+ \le2\exp\!\left(-\frac{mr^2}{256K}\right).
+\]
+The readout calculation is identical without factors $\sqrt N$.
+Zero-energy stages have zero error. A union bound over the $2^d$ inputs
+and at most $L$ stages makes total failure at most $1/200$ by the chosen $m$.
+
+On success, pruning and sampling together have normalized stage error at
+most $r\sqrt{k_s/K}/4$. Define disturbances in the original network by
+\[
+ \eta^1=0,\qquad
+ \eta^s=\widetilde h^s-\tanh(W^s\widetilde h^{s-1}),\qquad
+ \eta^{\rm out}=\widetilde z-v^\top\widetilde h^H.
+\]
+Since tanh is 1-Lipschitz, the original disturbed network produces the
+virtual states exactly and, simultaneously at every input,
+\[
+ \|\eta\|_*^2\le\sum_s\frac{r^2k_s}{16K}\le r^2/16.
+\]
+No product of downstream operator norms is required in this comparison.
+
+The expected energy of the sampled network is at most $K$:
+\[
+ \frac dm\mathbb E\|W^1_{\rm comp}\|_F^2
+   =\frac dN\|W^1\|_F^2,\qquad
+ \mathbb E\|W^s_{\rm comp}\|_F^2\le\|W^s\|_F^2,\qquad
+ m\mathbb E\|v_{\rm comp}\|_2^2\le N\|v\|_2^2.
+\]
+These identities use independent index lists in adjacent layers; pruning
+can only decrease the corresponding expectations. Markov's inequality
+gives compressed energy at most $4K$ with probability at least $3/4$.
+Its intersection with the all-input noise event is nonempty.
+
+If $w\in\mathcal R_{N,c}$, then $r\le r_c(w)$. Choose a sampled network
+in that intersection. Its clipped output differs from the original's by
+at most $1/16$ everywhere, and every weight has magnitude at most
+$B=\sqrt{4mK}$. Round its weights to a fixed grid with coordinate error
+at most $u$. A forward Lipschitz recurrence, using rounded weights at
+most $B+1$, bounds the output change by
+\[
+ u(d+1+Lm)(1+m(B+1))^L\le1/48.
+\]
+Clipping is 1-Lipschitz. Thus the rounded network has clipped discrepancy
+at most $1/12$ everywhere. There are at most $e^J$ rounded networks.
+This finite class is independent of $N,t$, and of the original network.
+
+\section{Generalization and the posterior energy tail}
+Use the ramp $\psi$ which is one at signed clipped scores at most $1/3$,
+zero at scores at least $5/12$, and linear in between. If a robust network
+of energy at most $K$ fits every training margin, its associated rounded
+network $h$ has $\psi(f(X_i)T(h(X_i)))=0$ on all training points.
+Every original test-margin failure has compressed ramp loss one.
+For any fixed $h$ with population ramp loss greater than
+$\varepsilon/2$, the probability of zero empirical ramp loss is at most
+$e^{-n\varepsilon/2}$. Indeed, the probability of positive loss is at least
+its mean. A union bound over the finite class and \eqref{eq:sample} show
+that every robust fitting network of energy at most $K$ has risk at most
+$\varepsilon/2$, on one event of sample probability at least $1-\delta$.
+This event is simultaneous over widths and applies to all posterior
+mixtures supported on that energy sublevel.
+
+Under the raw Gaussian, $N\kappa_N/t^2$ has the chi-square distribution
+with $P_N$ degrees of freedom. Its exponential moment and the target
+cylinder's mass give, uniformly over training samples,
+\begin{equation}\label{eq:posterior-tail}
+ Q_{S,N,t,c}\{\kappa_N>K\}
+ \le\exp\!\left[-\frac{NK}{4t^2}+\frac{P_N}2\log2+
+                      \frac{ND_*}{t^2}\right].
+\end{equation}
+For $K=8D_*$, the first scale threshold in Theorem~\ref{thm:main}
+makes this at most $\varepsilon/2$.
+If $t^2\le1/N$, then $t^2P_N/N\le d+L$. Multiplying the exponent by
+$t^2/N$ bounds it by
+\[
+ -K/4+D_*+(d+L)(\log2)/2\le-\log(2/\varepsilon)
+\]
+for the second choice of $K$. Since $N/t^2\ge1$, the tail is again at
+most $\varepsilon/2$. The retained-risk bound plus this discarded mass
+proves the theorem.
+
+\section{Scope and provenance}
+The quartic rate was already implicit in the energy-compression argument
+of the 17 October depth report~\cite{depth-report}. The present argument
+adapts that proof to the clipped-score support and makes its finite
+Gaussian consequence explicit. The target construction below is reproduced
+from the robust-prior paper~\cite{robust-paper}, including work to which
+Claude contributed. The review records accompanying this paper identify
+the independent AI-agent mathematical checks; this paper is not Lean
+verified and has not received a full human mathematical review.
+
+At mean-field scaling, the expected internal Frobenius energy grows with
+width; for $1<\gamma<2$, it grows as $N^{2-\gamma}$. The full-energy
+argument above therefore does not give this rate in that range. This is
+a limitation of the proof, not a lower bound on learning. The larger
+entropy-compression proof in the earlier robust-prior paper covers those
+scales, with a much worse explicit polynomial. Obtaining quadratic
+teacher-width dependence under the same support condition remains open.
+
+\appendix
+\section{A robust target cylinder at every width}
+\label{sec:theory-target-cylinder}
+
+We give the probability bound used in the statistical proof. It uses a
+robust digital implementation, not a claim that every implementation is
+stable. Let $N\ge C$. Partition the neurons into $C$ balanced clone groups
+of sizes $k_a\in\{\lfloor N/C\rfloor,\lceil N/C\rceil\}$, so
+$C/2\le N/k_a\le2C$. Let $P$ project onto vectors constant on each clone
+group. Fill unused logical slots with available constants or copies of an
+existing Boolean wire. The ideal wire
+vector $b^s(x)$ then has entries in $\{-1,1\}$, belongs to the range of
+$P$, and has Euclidean norm $\sqrt N$.
+
+Use gain $A$ in the tanh simulation of every Boolean gate. For example,
+NAND on $u,v\in\{-1,1\}$ is the sign of $1-u-v$; copies and negations
+use $u$ and $-u$. Bias constants in internal layers are supplied by counted
+constant wires. The ideal signed preactivation of every gate is at least
+$A$. In the clone implementation, each coefficient from a logical wire is
+divided equally among that wire's clones. Set
+\begin{align*}
+ e_*&=\frac1{16\sqrt{2C}},&
+ \tau_0&=\frac{e_*}{4},&
+ b_L&=\sqrt{16\log9+8\log(4L)},\\
+ A&=\max\{32b_L,2\log(8/e_*)\},&
+ a&=\max\{2,256c\},&
+ \rho&=\min\{1/4,A/[4(d+1)],Ae_*/(64\sqrt C)\}.
+\end{align*}
+The teacher readout averages the clones of the output wire with total
+coefficient $a$.
+
+In Gaussian coordinates $\sqrt d\,W^1$, $\sqrt N\,W^s$, and $Nv$, all
+entries have variance $t^2$. Restrict each first-layer coordinate, each
+internal row's projection onto every normalized clone-group direction, and
+each readout coordinate to an interval of radius $\rho t$ about its teacher
+value. The internal matrices then decompose as
+\[
+ W^s=W_*^s+R^s+E^s,\qquad
+ R^s=R^sP,\quad \|R^s\|_{\rm op}\le\rho t\sqrt C,
+ \quad E^sP=0.
+\]
+The remaining Gaussian bulk $E^s$ is independent of the constrained
+coordinates. A $1/4$-net of the unit sphere has at most $9^N$ points,
+and the usual two-net Gaussian bound gives
+\[
+ \Pr\{\|E^s\|_{\rm op}>b_Lt\}
+ \le2\exp(2N\log9-Nb_L^2/8)\le\frac1{2L}.
+\]
+Thus all bulk norms are at most $b_Lt$ with conditional probability at
+least $1/2$.
+
+\paragraph{Finite disturbance robustness.}
+Allow a separate RMS disturbance of size $\tau_0$ at each hidden layer and
+scalar output disturbance at most $\tau_0$. This includes the entire
+total-budget ball $\|\eta\|_*\le\tau_0$.
+Write $e_s=\|h^s_\eta-b^s\|_2/\sqrt N$.
+If $e_{s-1}\le e_*$, every clone-group mean differs from its ideal bit by
+at most $e_*\sqrt{N/k_a}\le1/16$. At most three teacher coefficients,
+including a constant coefficient, enter a gate, so its intended signed
+preactivation remains at least $A/2$.
+For $\epsilon\in\{-1,1\}$ and real $u$, the elementary global secant bound
+\[
+ \epsilon q\ge A/2
+ \quad\Longrightarrow\quad
+ |\tanh(q+u)-\epsilon|\le2e^{-A/2}+8|u|/A
+\]
+holds: for $|u|<A/4$ use saturation, and otherwise the linear term is at
+least two. Since $E^sb^{s-1}=0$ and
+$\|h^{s-1}_\eta\|_2/\sqrt N\le1+\tau_0$, it follows that
+\[
+ e_s\le2e^{-A/2}+
+          (8/A)\rho\sqrt C(1+\tau_0)
+          +(8b_L/A)e_{s-1}+\tau_0\le e_*.
+\]
+Each of the four terms is at most $e_*/4$.
+The first layer initializes the same invariant: its coordinatewise
+preactivation perturbation is at most $\rho(d+1)\le A/4$, and its
+postactivation disturbance contributes at most $\tau_0$ in RMS norm.
+Consequently the noisy signed readout is at least
+\[
+ f(x)z_w(x;\eta)
+ \ge\frac{15a}{16}-\rho(1+\tau_0)-\tau_0>1
+ \qquad(x\in\mathcal X,\ \|\eta\|_*\le\tau_0).
+\]
+
+The readout center satisfies $\sqrt N\|v_*\|\ge a\sqrt{C/2}$, and its
+permitted perturbation has $\sqrt N\|v-v_*\|\le\rho$.
+Therefore $E_v\ge a^2C/8$, whence
+\[
+ r_c(w)\le\frac{2\sqrt2c}{a\sqrt C}
+       \le\frac1{64\sqrt{2C}}=\tau_0.
+\]
+All clean and noisy clipped scores on the calibrated ball equal $f(x)/2$.
+The entire cylinder, with the bulk-norm event imposed, therefore belongs
+to $\mathcal R_{N,c}$ and satisfies the training likelihood for every sample.
+This also proves why every fixed $c>0$ is allowed: a larger calibration
+requires only a polynomially larger readout coefficient.
+
+\paragraph{Gaussian mass.}
+There are $Nq$ constrained independent scalar coordinates, where
+$q=d+2+(L-2)C$. The sum of their squared centers is at most $NB_0$, with
+\[
+ B_0=9dA^2+18(L-2)CA^2+2a^2C.
+\]
+These loose constants cover the fan-in-two gate implementation above.
+For $Z\sim\mathcal N(0,t^2)$, $\rho\le1/4$, and any center $m$,
+\[
+ \Pr\{|Z-m|\le\rho t\}
+ \ge\frac{2\rho}{e\sqrt{2\pi}}\exp(-m^2/t^2).
+\]
+Multiplication over the coordinates and the independent bulk event gives
+\begin{equation}\label{eq:standalone-cylinder-mass}
+ \mu_{N,t}(\text{target cylinder})
+ \ge\exp(-ND_*/t^2),\qquad
+ D_*=B_0+q\log\frac{e\sqrt{2\pi}}{2\rho}+\log2.
+\end{equation}
+Here $D_*\ge1$ and is bounded by a universal polynomial in $d,L,C,c$.
+The construction and estimate hold at every integer width $N\ge C$.
+
+\begin{thebibliography}{9}
+\bibitem{depth-report}
+ChatGPT-6 Astra and Claude (Fable 5 and Opus 5).
+\emph{Depth dependence, internal robustness, and Bayesian neural-network learning}.
+Research report, 17 October 2026, Section 3, Theorem 3.1.
+\href{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/depth-supporting-notes/round1-depth-report}{Source and build instructions}.
+\bibitem{robust-paper}
+ChatGPT-6 Astra, Claude Fable 5 and Opus 5, Kaarel H\"anni, and Dmitry Vaintrob.
+\emph{A polynomial-depth learning bound for NNBayes on robust networks}.
+Research manuscript, 18 October 2026.
+\href{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/main-results/robust-polynomial-depth}{Source and build instructions}.
+\bibitem{tarres-yao}
+Pierre Tarr\`es and Yuan Yao.
+\emph{Online learning as stochastic approximation of regularization paths:
+optimality and almost-sure convergence}.
+Appendix A, Corollary A.2, equation (A-1).
+\url{https://arxiv.org/abs/1103.5538}.
+\end{thebibliography}
+\end{document}

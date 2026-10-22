@@ -1,0 +1,551 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,amsmath,amssymb,amsthm,mathtools}
+\usepackage[margin=1in]{geometry}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\setlength{\emergencystretch}{3em}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\newcommand{\R}{\mathbb R}
+\author{Kaarel H\"anni \and OpenAI Codex \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{Research draft, 21 October 2026}
+\title{Low-degree all-width learning bounds for shallow Bayesian neural networks}
+\hypersetup{pdftitle={Low-degree all-width learning bounds for shallow Bayesian neural networks},pdfauthor={Kaarel Hanni; OpenAI Codex; Dmitry Vaintrob}}
+\begin{document}
+\maketitle
+\begin{abstract}
+For a tanh network with one hidden layer, we prove an all-width Gaussian
+Bayesian learning bound essentially linear in the weighted squared norm
+of a small teacher. The result includes the raw Gaussian prior, the prior
+conditioned on an absolute margin everywhere, and a specified robust prior.
+Training requires signed outputs above a fixed positive margin. The sample
+bound is independent of learner width and holds at every mean-field or
+stronger Gaussian scale. With hidden coefficients at most the teacher width
+and bounded readout coefficients, the width dependence is quadratic.
+Allowing the readout coefficients also to reach the width gives a quartic
+sufficient bound. The proof represents tanh ridges as
+mixtures of halfspaces, compresses their votes, and controls posterior
+readout energy. Independent AI-agent review checked the argument; it is
+not Lean verified.
+\end{abstract}
+\section{Result and scope}\label{result-and-scope}
+
+For one hidden layer, the mean-field-and-stronger Gaussian learner
+admits a direct finite-class argument. Its sample bound is linear, up to
+logarithms, in a normalized target-cylinder cost. No deep-network
+compression is needed.
+
+Let \(d,C\ge1\), put \(\bar x=(x,1)\), and write the learner as
+\(z_w(x)=\sum_{r=1}^N v_r\tanh(W_r\cdot\bar x)\). For a teacher
+
+\[
+z_*(x)=\sum_{j=1}^{C}a_j\tanh(b_j\cdot\bar x),\qquad
+f(x)z_*(x)>\tfrac12\quad(x\in\{-1,1\}^d),
+\]
+
+write \(A_1=\sum_j|a_j|\), \(A_2^2=\sum_j a_j^2\), and
+\(U=d\min\{\max_j\|b_j\|_2^2,(2/C)\sum_j\|b_j\|_2^2\}\). The learner has
+arbitrary width \(N\ge C\), independent Gaussian entries of variance
+\(t^2/d\) in the first layer and \(t^2/N^2\) in the readout, where
+\(0<t\le1\).
+
+Any of the following priors is allowed:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  The Gaussian prior conditioned on \(|z(x)|>1/2\) at every Boolean
+  input.
+\item
+  A robustness-restricted prior, using one hidden layer, radius
+  \(c/\sqrt{1+E_v}\), \(E_v=N\|v\|_2^2\), clipped-score tolerance
+  \(1/16\), and optional additional global-margin conditioning.
+\item
+  The raw Gaussian prior, with no initial margin or robustness
+  restriction.
+\end{enumerate}
+
+Here the shallow robustness event means the following. Put
+\(T(u)=\max\{-1/2,\min\{1/2,u\}\}\), add disturbances by
+\(z_w(x;\eta)=v^\top[\tanh(W\bar x)+\eta^1]+\eta^{\rm out}\), and let
+\(\|\eta\|_*^2=\|\eta^1\|_2^2/N+|\eta^{\rm out}|^2\).
+The event requires
+\[
+ |T(z_w(x;\eta))-T(z_w(x))|\le1/16
+ \quad\text{for every }x\in\{-1,1\}^d,
+ \quad\|\eta\|_*\le c/\sqrt{1+N\|v\|_2^2}.
+\]
+The calibration \(c>0\) is fixed before training.
+
+Fix an arbitrary input distribution \(D\) on the Boolean cube and draw the inputs independently from \(D\). In all three cases, training conditions on \(f(X_i)z(X_i)>1/2\). Test
+error means \(f(X)z(X)\le1/4\), which bounds ordinary sign error. With
+global-margin conditioning, the two errors coincide; this equality is
+not asserted for the raw or robust-only priors.
+
+Let \(s=3\) in cases 1 and 3, and \(s=2c+3\) in case 2. Set
+
+\[
+\rho=\frac1{4[1+sA_1(d+1)/\sqrt d]},\qquad
+D_*=U+2s^2C A_2^2+(d+2)\log\frac{e\sqrt{2\pi}}{2\rho}.
+\]
+
+Then \(D_*>1\). For \(0<\varepsilon,\delta<1\), define
+
+\[
+B^2=8\left[D_*+\log\frac4\varepsilon\right],\qquad
+m=\left\lceil512 B^2\log\frac{24}{\varepsilon}\right\rceil,
+\qquad h_d=(d+1)(1+d\log2).
+\]
+
+A sufficient sample size is
+
+\[
+\boxed{\quad n\ge\frac{16}{\varepsilon}
+\left[m h_d+\log\frac1\delta\right].\quad}
+\]
+
+With probability at least \(1-\delta\), the posterior-averaged
+test-margin error is at most \(\varepsilon\), simultaneously for all
+\(N\ge C\) and \(0<t\le1\).
+
+Thus the bound is
+
+\[
+O\!\left(\frac{d^2[D_*+\log(1/\varepsilon)]\log(1/\varepsilon)
+ +\log(1/\delta)}{\varepsilon}\right).
+\]
+
+A sharper alternative, proved below by a relative growth-function
+argument, is obtained by setting
+
+\[
+T=\frac{64}{\varepsilon}
+\left[m(d+1)+\log\frac{4(m+2)}{\delta}\right]
+\]
+
+and taking \(n\ge\lceil4T\log(8eT)\rceil\). Up to logarithms, this is
+\(\widetilde O((dD_*+\log(1/\delta))/\varepsilon)\), improving the
+dimension factor from \(d^2\) to \(d\).
+
+The displayed constants are deliberately loose; the useful improvement
+is in the powers.
+
+In terms of the teacher's weighted squared norm
+
+\[
+\kappa_C=\frac dC\sum_j\|b_j\|_2^2+C\sum_j a_j^2,
+\]
+
+one has \(D_*\le2s^2\kappa_C+(d+2)\log(e\sqrt{2\pi}/(2\rho))\). Thus the
+sample bound is essentially \textbf{linear in the teacher's weighted
+squared norm}.
+
+\subsection{Width consequences}\label{width-consequences}
+
+If first-layer entries satisfy \(|b_{ji}|\le W\) and readout entries
+satisfy \(|a_j|\le V\), then
+
+\[
+D_*\le d(d+1)W^2+2s^2 C^2V^2
+ +(d+2)\log\!\left(2e\sqrt{2\pi}[1+sCV(d+1)/\sqrt d]\right).
+\]
+
+\begin{itemize}
+\tightlist
+\item
+  For fixed \(V\), with \(W\le C\), this gives a genuinely quadratic
+  dependence on teacher width \(C\). The first, finite-cube bound is
+  literally \(O(C^2)\) when the other parameters are fixed: its additive
+  \(\log C\) target-cost term is absorbed into \(C^2\). The
+  dimension-sharpened bound has an additional logarithmic factor in
+  \(C\). Both statements hold even for the raw Gaussian prior, without
+  an initial margin or robustness restriction.
+\item
+  Under the original bounded-weight-complexity convention \(W,V\le C\),
+  it gives \(D_*=O(d^2C^2+s^2C^4+d\log(dCs))\), and hence quartic
+  dependence on \(C\). This proof does \textbf{not} establish quadratic
+  dependence for that full class.
+\item
+  Width alone cannot be substituted for the theorem's teacher resources
+  without controlling coefficient magnitudes or another implementation
+  cost.
+\end{itemize}
+
+\section{Proof}\label{proof}
+
+\subsection{1. A target cylinder at every
+width}\label{a-target-cylinder-at-every-width}
+
+Partition the \(N\) hidden neurons into \(C\) balanced groups with
+positive sizes \(k_j\). Then \(N/k_j\le2C\) and \(k_j/N\le2/C\). Give
+each member of group \(j\) first-layer row \(b_j\) and readout
+coefficient \(sa_j/k_j\). This clone has output \(sz_*\).
+
+The Gaussian coordinates are \(\sqrt d\,W_{ri}\) and \(Nv_r\), all
+independent \(N(0,t^2)\). Require every coordinate to lie within
+\(\rho t\) of its clone center. On this cylinder,
+
+\[
+|z_w(x)-sz_*(x)|
+\le \rho+sA_1\rho(d+1)/\sqrt d=\tfrac14
+\]
+
+simultaneously on the entire Boolean cube. The first term is the readout
+perturbation, using bounded activations; the second is the changed
+hidden activations weighted by the cloned readout.
+
+In cases 1 and 3 this gives \(f(x)z_w(x)>5/4\). In case 2 it gives
+\(f(x)z_w(x)>c+5/4\).
+
+For a shallow network, a simultaneous hidden-and-output disturbance
+obeys
+
+\[
+|z_w(x;\eta)-z_w(x)|
+=|v\cdot\eta^1+\eta^{\rm out}|
+\le\sqrt{1+E_v}\,\|\eta\|_*.
+\]
+
+Consequently the calibrated ball changes any output by at most \(c\).
+Every cylinder network in case 2 remains above signed margin \(5/4\)
+throughout that ball. Its clipped score is constant there, so it lies in
+the robust support. (In fact, for \(c\le1/16\), every shallow network
+lies in that support, because clipping is 1-Lipschitz.)
+
+There are \(N(d+2)\) independent constrained coordinates. Their squared
+centers sum to at most
+
+\[
+N U+s^2N^2\sum_j a_j^2/k_j\le N[U+2s^2C A_2^2].
+\]
+
+For \(Z\sim N(0,t^2)\), \(0<\rho\le1/4\),
+
+\[
+\Pr(|Z-u|\le\rho t)
+\ge\frac{2\rho}{e\sqrt{2\pi}}e^{-u^2/t^2}.
+\]
+
+Multiplying, and using \(t\le1\), proves that the cylinder has raw mass
+at least \(e^{-ND_*/t^2}\). It lies in every correctly labeled
+posterior-conditioning event. In case 3 that event consists only of the
+training-margin constraints; no initial support restriction is used.
+
+\subsection{2. A width-independent readout-energy
+tail}\label{a-width-independent-readout-energy-tail}
+
+Under the raw Gaussian, \(NE_v/t^2\) has the chi-square distribution
+with \(N\) degrees of freedom. For \(R\ge8\), its exponential moment
+gives
+
+\[
+\Pr(E_v>R)\le e^{-NR/(8t^2)}.
+\]
+
+Dividing by the posterior denominator from step 1, and taking \(R=B^2\),
+shows that the posterior mass of \(E_v>B^2\) is at most
+\(\varepsilon/4\), on every sample. Every retained network has
+
+\[
+\sum_{r=1}^N|v_r|\le\sqrt N\,\|v\|_2\le B.
+\]
+
+Let \(Q'\) be the posterior conditioned on this readout-energy event.
+
+\subsection{3. A bounded-variation shallow network is a mixture of
+halfspaces}\label{a-bounded-variation-shallow-network-is-a-mixture-of-halfspaces}
+
+Let \(T\) have continuous distribution function
+\(\Pr(T\le u)=(1+\tanh u)/2\). Then
+
+\[
+\tanh(u)=\mathbb E_T\operatorname{sign}(u-T).
+\]
+
+Thus each ridge \(\tanh(b\cdot\bar x)\) is an average of Boolean affine
+halfspaces on the cube. A sign change of a halfspace is another
+halfspace pattern; zero-probability boundary ties can be ignored because
+the input set is finite.
+
+Every retained output \(z\) therefore satisfies
+
+\[
+z(x)=B\,\mathbb E H(x)
+\]
+
+for a distribution on Boolean affine-halfspace patterns \(H\). Assign
+mass \(|v_r|/B\) to the corresponding signed ridge mixture. Fill any
+remaining mass with equal probabilities on the two constant halfspaces.
+
+The number \(M_d\) of distinct affine-halfspace patterns on the cube is
+at most
+
+\[
+M_d\le(e2^d)^{d+1},\qquad\log M_d\le h_d,
+\]
+
+by the VC dimension \(d+1\) and Sauer's lemma.
+
+Independently sample \(m\) halfspaces from the representation of \(z\)
+and put
+
+\[
+h(x)=\frac Bm\sum_{j=1}^m H_j(x).
+\]
+
+For every fixed input \(x\), Hoeffding's inequality gives
+
+\[
+\Pr(|h(x)-z(x)|>1/16)
+\le2e^{-m/(512B^2)}\le\alpha:=\varepsilon/12.
+\]
+
+The compressed outputs lie in one fixed finite family \(\mathcal H\),
+with \(\log|\mathcal H|\le m h_d\). Its sampling distribution may depend
+on \(z\), but does not depend on the input being tested. Averaging these
+distributions over \(w\sim Q'\) gives a common law \(\Gamma\) on
+\(\mathcal H\).
+
+\subsection{4. Generalization of the compressed
+mixture}\label{generalization-of-the-compressed-mixture}
+
+Use the ramp loss
+
+\[
+\psi(u)=\begin{cases}
+1,&u\le5/16,\\
+(7-16u)/2,&5/16<u<7/16,\\
+0,&u\ge7/16.
+\end{cases}
+\]
+
+On a training point, a successful approximation has signed compressed
+output strictly above \(7/16\), because every original posterior draw
+has signed output above \(1/2\). Therefore
+
+\[
+\mathbb E_{h\sim\Gamma}\widehat R_\psi(h)\le\alpha.
+\]
+
+At a test input where \(fz_w\le1/4\), successful approximation gives
+\(fh\le5/16\), hence unit ramp loss. Thus
+
+\[
+R_{1/4}(Q')\le\mathbb E_{h\sim\Gamma}R_\psi(h)+\alpha.
+\]
+
+For a finite family of bounded losses, the relative Chernoff inequality
+and a union bound imply, with probability at least \(1-\delta\),
+
+\[
+R_\psi(h)\le2\widehat R_\psi(h)
++\frac{8[\log|\mathcal H|+\log(1/\delta)]}{n}
+\quad\text{for every }h\in\mathcal H.
+\]
+
+This event is independent of \(N,t\), and holds for all mixture laws on
+\(\mathcal H\), including the data-dependent law \(\Gamma\). Hence
+
+\[
+R_{1/4}(Q)\le\varepsilon/4+3\alpha
++\frac{8[mh_d+\log(1/\delta)]}{n}\le\varepsilon.
+\]
+
+This proves the simultaneous theorem.
+
+\section{Checks and limitations}\label{checks-and-limitations}
+
+\begin{itemize}
+\tightlist
+\item
+  The proof controls the posterior average, so tied minimizers and
+  posterior mixtures cause no problem. A correct-margin posterior
+  confidence threshold \(q<1\) follows by using risk tolerance
+  \((1-q)\varepsilon\).
+\item
+  The arbitrary first-layer weights of posterior draws do not enter the
+  compressed family. Only the halfspace patterns matter.
+\item
+  The raw-prior version still uses hard training-margin conditioning. It
+  does not assert the same result for Gaussian regression, logistic
+  likelihoods, or conditioning only on training signs without a positive
+  margin.
+\item
+  The theorem works with the existing Gaussian mean-field and stronger
+  scalings: \(t=N^{(1-\gamma)/2}\) gives every \(\gamma\ge1\). It also
+  covers every sufficiently strong finite-width scale of the original
+  strong-prior parametrization, by setting \(t=\sqrt N\sigma\le1\).
+\item
+  The first bound uses simple finite-cube counting. The additional
+  argument below improves the dimension factor to \(d\), up to
+  logarithms, by counting the sample patterns of voted halfspaces.
+\item
+  A Boolean circuit with a single output gate and only one Boolean stage
+  is a small target class regardless of the number of unused wires. The
+  meaningful shallow comparator here is a real-valued tanh hidden layer
+  and linear readout implementing a Boolean function.
+\item
+  This is an independent derivation, not a claimed optimization of the
+  old degree-510/10974 compression formulas.
+\end{itemize}
+
+\section{Sharpening the dimension factor by counting sample
+patterns}\label{sharpening-the-dimension-factor-by-counting-sample-patterns}
+
+The preceding proof counted halfspaces on the entire cube. Counting only
+their patterns on a sample improves the dimension factor from \(d^2\) to
+\(d\), up to logarithms. Here is a self-contained argument with
+deliberately generous constants.
+
+\subsection{A relative growth-function
+lemma}\label{a-relative-growth-function-lemma}
+
+Let \(\mathcal A\) be a finite class of measurable sets and let
+\(\Pi_{\mathcal A}(r)\) be its maximum number of distinct membership
+patterns on \(r\) points. For an iid sample of size \(n\), with
+probability at least \(1-\delta\),
+
+\[
+P(A)\le2P_n(A)+\frac{32}{n}
+\log\frac{4\Pi_{\mathcal A}(2n)}{\delta}
+\quad\text{for all }A\in\mathcal A.
+\]
+
+To prove this, let \(u>0\) with \(nu\ge32\log2\), and suppose some set
+has \(p=P(A)>2P_n(A)+u\). Conditional on the first sample and a selected
+witness \(A\), an independent ghost sample satisfies \(P'_n(A)\ge3p/4\)
+with probability at least \(1/2\): the lower Chernoff tail is at most
+\(e^{-np/32}\). Hence the probability of a witness is at most twice the
+probability that
+
+\[
+P'_n(A)>\tfrac32P_n(A)+\tfrac34u
+\]
+
+for some \(A\).
+
+Pool the two samples and split their \(2n\) positions uniformly into two
+groups of size \(n\). A fixed membership pattern with \(k\) positive
+positions has a hypergeometric number \(K\) of positives in the first
+group, with mean \(k/2\). The displayed event implies
+
+\[
+K<\tfrac25k-\tfrac3{10}nu,
+\]
+
+so the sampling-without-replacement form of Hoeffding's inequality
+gives, for \(k>0\),
+
+\[
+\Pr\left(K<\tfrac25k-\tfrac3{10}nu\right)
+\le \exp\!\left[-\frac{2(k/10+3nu/10)^2}{k}\right]
+\le e^{-6nu/25}.
+\]
+
+For the last inequality, expand the exponent and use
+\(k/50+9(nu)^2/(50k)\ge3nu/25\). The case \(k=0\) is impossible. A union
+bound over at most \(\Pi_{\mathcal A}(2n)\) patterns therefore bounds
+the witness probability by \(2\Pi_{\mathcal A}(2n)e^{-6nu/25}\). Taking
+\(u=(32/n)\log[4\Pi_{\mathcal A}(2n)/\delta]\) proves the lemma.
+
+\subsection{Applying the lemma to the compressed ramp
+losses}\label{applying-the-lemma-to-the-compressed-ramp-losses}
+
+Work on labeled examples \((x,y)\). Consider all sets
+
+\[
+\{(x,y):\psi(yh(x))>q\},\qquad h\in\mathcal H,\quad 0\le q\le1.
+\]
+
+This is a finite set class: each compressed output is a vote of \(m\)
+Boolean halfspaces and has at most \(m+1\) possible output values, so
+varying \(q\) gives at most \(m+2\) membership patterns for a fixed
+vote.
+
+On any \(r\) input points, one affine halfspace has at most
+\((er)^{d+1}\) patterns. Choosing \(m\) such patterns gives at most
+\((er)^{m(d+1)}\) voted outputs. Multiplication by the fixed labels of
+the sample does not increase this number. Consequently the
+loss-level-set growth function satisfies
+
+\[
+\Pi(r)\le(m+2)(er)^{m(d+1)}.
+\]
+
+Apply the relative growth-function lemma to all these level sets and
+integrate in \(q\). The layer-cake identity for a bounded nonnegative
+loss gives, simultaneously for every \(h\in\mathcal H\),
+
+\[
+R_\psi(h)\le2\widehat R_\psi(h)
++\frac{32}{n}\left[m(d+1)\log(2en)
++\log\frac{4(m+2)}{\delta}\right].
+\]
+
+The same averaging and readout-tail argument as above therefore gives
+posterior risk at most \(\varepsilon\) whenever
+
+\[
+\boxed{\quad n\ge\frac{64}{\varepsilon}
+\left[m(d+1)\log(2en)+\log\frac{4(m+2)}{\delta}\right].\quad}
+\]
+
+For a fully explicit sufficient bound, put
+
+\[
+T=\frac{64}{\varepsilon}
+\left[m(d+1)+\log\frac{4(m+2)}{\delta}\right].
+\]
+
+Then it suffices to take
+
+\[
+\boxed{\qquad n\ge\left\lceil4T\log(8eT)\right\rceil.\qquad}
+\]
+
+Indeed, write \(A=64m(d+1)/\varepsilon\) and
+\(B_0=64\log[4(m+2)/\delta]/\varepsilon\), so \(T=A+B_0\). At
+\(n_0=4T\log(8eT)\), the quantity \(A\log(2en_0)+B_0\) is at most
+\(T[\log(8eT)+\log\log(8eT)+1]\le n_0\). The difference
+\(n-A\log(2en)-B_0\) is increasing for \(n\ge n_0>A\).
+
+Up to logarithmic factors, this yields the sharper sample bound
+
+\[
+\boxed{\quad n=\widetilde O\!\left(
+\frac{dD_*+\log(1/\delta)}{\varepsilon}\right).\quad}
+\]
+
+The exact formulas above include the logarithms in \(\varepsilon\),
+\(D_*\), \(d\), and confidence. The sample event remains independent of
+learner width and Gaussian scale.
+
+\subsection{References for the elementary
+ingredients}\label{references-for-the-elementary-ingredients}
+
+\begin{itemize}
+\tightlist
+\item
+  W. Hoeffding, ``Probability inequalities for sums of bounded random
+  variables,'' \emph{Journal of the American Statistical Association}
+  \textbf{58} (1963), 13--30. The sampling-without-replacement
+  inequality is included in Section 6.
+\item
+  N. Sauer, ``On the density of families of sets,'' \emph{Journal of
+  Combinatorial Theory, Series A} \textbf{13} (1972), 145--147.
+\end{itemize}
+
+The relative growth-function statement used here was proved above,
+rather than being assumed as an external theorem.
+
+\paragraph{Acknowledgments and status.}
+The parameter conventions and prior-conditioning questions come from the
+collaborative NNBayes research program. This paper supplies a separate
+shallow proof; the accompanying review records describe its independent
+AI-agent mathematical checks. The paper has not received a full human
+mathematical review.
+\end{document}
