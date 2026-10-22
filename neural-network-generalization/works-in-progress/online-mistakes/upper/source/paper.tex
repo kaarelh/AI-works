@@ -1,0 +1,581 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,geometry,amsmath,amssymb,amsthm,mathtools,booktabs}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue]{hyperref}
+\geometry{margin=1in}
+\setlength{\emergencystretch}{3em}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}\newcommand{\Pp}{\mathbb P}
+\newcommand{\R}{\mathbb R}\newcommand{\cX}{\mathcal X}
+\newcommand{\HH}{\mathsf H}
+\hypersetup{pdftitle={Polynomially many total mistakes for Bayesian neural-network learning},pdfauthor={ChatGPT-6 Astra; Claude Fable 5 and Opus 5; Kaarel Hanni; Dmitry Vaintrob}}
+\title{Polynomially many total mistakes\\for Bayesian neural-network learning}
+\author{ChatGPT-6 Astra \and Claude Fable 5 and Opus 5 \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{Research draft, 21 October 2026}
+\begin{document}\maketitle
+\begin{abstract}
+For uniformly sampled Boolean inputs, the strong-prior, above-mean-field,
+and mean-field learning results imply a stronger conclusion than eventual
+fixed accuracy: the total number of mistakes over an infinite learning
+stream has a polynomial bound, independent of learner width. The bound
+holds in expectation and with high probability, and applies both to
+posterior sampling and to counting a prediction as a failure unless the
+correct label has posterior probability greater than $2/3$. The new
+statistical argument works for any consistency posterior whose relevant
+functions have a short finite description, even if their prior weights are
+extremely unequal. Deleting repeated inputs reduces the infinite iid
+stream to a uniformly random permutation. A harmonic bound over its random
+prefixes then gives an overhead of order the input dimension. We state
+precisely the structural facts imported from the neural-network papers,
+give explicit budgets, and distinguish this result from an arbitrary-order
+mistake guarantee. A prediction-preserving neuron-merging restriction also
+retains polynomial dependence on depth. These new cumulative conclusions
+have not been Lean verified.
+\end{abstract}
+
+\section{Prediction protocol and the result}
+
+Let $\cX$ be a finite set of size $m\ge2$, let
+$f:\cX\to\{-1,1\}$, and let $\pi$ be a prior on Boolean functions
+with $\pi(f)>0$. Before round $j$, the learner has seen the true labels
+of the preceding inputs and forms the exact consistency posterior
+$\Pi_{j-1}$. The next input $X_j$ is then presented, a prediction is
+made, and its true label $f(X_j)$ is revealed. Every label is revealed,
+including after a correct prediction. Define
+\[
+ q_j=\Pi_{j-1}\{g:g(X_j)\ne f(X_j)\},\qquad
+ S=\sum_j q_j.
+\]
+Thus $S$ is cumulative posterior error probability. If the learner draws
+a function from the current posterior at each round, its total number of
+incorrect labels is denoted $Z$. The expected values of $Z$ and $S$ agree.
+For a fixed $0<\theta<1$, define the confidence-failure count
+\[
+ F_\theta=\sum_j\mathbf1\{\Pi_{j-1}(g(X_j)=f(X_j))\le\theta\}.
+\]
+The $>2/3$ confidence convention is $F_{2/3}$. Pointwise,
+\begin{equation}\label{eq:confidence}
+ F_\theta\le S/(1-\theta).
+\end{equation}
+Any majority classifier's number of errors is at most $2S$, including
+arbitrary decisions at ties. These inequalities allow posterior mixtures;
+they require neither a unique minimum-complexity function nor posterior
+concentration on one function.
+
+We consider either a uniformly random permutation of $\cX$, used once,
+or an infinite iid stream uniform on $\cX$. In the latter protocol every
+repeated input has posterior correctness probability one, and duplicating
+a hard conditioning constraint leaves the posterior unchanged. The order
+of first appearances is a uniformly random permutation. Consequently the
+total variables $S,F_\theta,Z$ have the same laws in the two protocols
+(using fresh posterior randomness on first appearances). We can therefore
+prove all bounds for $m$ rounds without replacement.
+
+For $\cX=\{-1,1\}^d$, the neural-network consequences are:
+\begin{itemize}
+\item At every fixed depth, the strong-prior learner has a total mistake
+bound polynomial in $d$ and bounded-weight target-network complexity,
+at every width above that complexity, once its variance is sufficiently
+small at that fixed width.
+\item At every fixed depth and every fixed $\gamma>1$, the specified
+finite-variance learner has the same type of polynomial bound, uniformly
+over all admissible widths. Its polynomial may depend on $\gamma$.
+\item The finite-variance mean-field tanh learner, $\gamma=1$, also has
+the same polynomial bound at every admissible width.
+\end{itemize}
+High-probability bounds are polynomial in $\log(1/\delta)$ as well.
+The theorem does not replace uniform random input order by arbitrary order.
+
+\section{A cumulative bound from a finite relevant class}
+
+Write $\HH_r=\sum_{k=1}^r1/k$. The following theorem is the new statistical
+ingredient. In particular, it does not bound mistakes by the negative log
+prior probability of the target.
+
+\begin{theorem}[Random-order cumulative errors]\label{thm:finite}
+Suppose $A$ is a finite set of Boolean functions containing $f$ and
+\begin{equation}\label{eq:relevant}
+ \log|A|\le h,\qquad \pi(A^c)\le\beta\pi(f),\qquad 0\le\beta<1.
+\end{equation}
+Under either uniform input protocol above,
+\begin{equation}\label{eq:expectation}
+ \E S=\E Z\le B_E:=1+2(h+1)\HH_{m-1}+m\beta.
+\end{equation}
+For $0<\delta<1$, put
+\[
+ a=h+\log(2m/\delta),\qquad
+ B_\delta=1+2a\HH_{m-1}+m\beta,\qquad
+ U_\delta=(e-1)B_\delta+\log(2/\delta).
+\]
+Then $\Pp\{S>U_\delta\}\le\delta$ and
+$\Pp\{Z>U_\delta\}\le\delta$. These are separate probability statements;
+replace $\delta$ by $\delta/2$ to require both simultaneously.
+Equation~\eqref{eq:confidence} gives the corresponding bounds for every
+confidence threshold and for majority errors.
+\end{theorem}
+
+\begin{proof}
+After any correctly labeled history, the posterior denominator is at least
+$\pi(f)$. Hence the posterior mass outside $A$ is at most $\beta$,
+uniformly over all histories.
+
+Let $S_n$ now denote the set of the first $n$ inputs of the permutation,
+and let
+\[
+ R_n=\max_{g\in A:\,g=f\text{ on }S_n}
+       \frac1m|\{x:g(x)\ne f(x)\}|.
+\]
+The maximum exists because $f$ is included. A function with $k$ errors
+survives a uniform size-$n$ prefix with probability
+\[
+ \frac{\binom{m-k}{n}}{\binom mn}
+ \le(1-k/m)^n\le e^{-nk/m},
+\]
+with survival probability zero when $n>m-k$. A union bound gives
+\begin{equation}\label{eq:prefix-tail}
+ \Pp\{R_n>u\}\le\min\{1,e^{h-nu}\},\qquad
+ \E R_n\le\frac{h+1}{n}\quad(1\le n<m).
+\end{equation}
+All errors of a surviving function are among the remaining $m-n$ inputs.
+Conditional on the history, the expected posterior error on the next
+uniformly chosen remaining input is therefore at most
+\begin{equation}\label{eq:conditional-risk}
+ \frac m{m-n}R_n+\beta.
+\end{equation}
+The first round costs at most one. Summing expectations and using
+\[
+ \sum_{n=1}^{m-1}\frac{m}{n(m-n)}=2\HH_{m-1}
+\]
+proves~\eqref{eq:expectation}. For posterior sampling, condition additionally
+on the current input before taking the expectation of the sampled label.
+
+For high probability, let $E_n=\{R_n\le a/n\}$. By
+\eqref{eq:prefix-tail}, the probability that any $E_n$ fails is at most
+$(m-1)e^{h-a}\le\delta/2$. Stop counting at the first failed prefix
+event. More precisely, replace the round-$n+1$ variable $Y_{n+1}$ by
+$Y'_{n+1}=Y_{n+1}\mathbf1\{E_1,\ldots,E_n\}$, with the indicator one
+at $n=0$, where $Y$ is either $q$ or the sampled error indicator.
+The indicator is known before the next input. The sum of conditional
+expectations of $Y'$ is at most $B_\delta$, by
+\eqref{eq:conditional-risk}. For any adapted variables $0\le Y'_j\le1$,
+the elementary bound
+\[
+ \E[e^{Y'_j}\mid\mathcal F_{j-1}]
+ \le1+(e-1)\E[Y'_j\mid\mathcal F_{j-1}]
+ \le\exp((e-1)\E[Y'_j\mid\mathcal F_{j-1}])
+\]
+shows that
+$\exp(\sum_jY'_j-(e-1)\sum_j\E[Y'_j\mid\mathcal F_{j-1}])$
+is a nonnegative supermartingale. Markov's inequality bounds
+$\Pp\{\sum Y'_j>U_\delta\}$ by $\delta/2$. On all good prefixes,
+$\sum Y'_j=\sum Y_j$; a union bound proves the claim.
+\end{proof}
+
+For $m=2^d$, take $\beta=1/m$. Then $\HH_{m-1}\le1+d\log2$, so
+\begin{equation}\label{eq:polynomial-overhead}
+ B_E\le2+2(h+1)(1+d\log2),\qquad
+ U_\delta=O((h+d+\log(1/\delta))(d+1)).
+\end{equation}
+The relevant description bound need only remain polynomial when
+$\log(1/\beta)=d\log2$; it need not be independent of the desired tail.
+
+\paragraph{What is uniform in width?}
+The numerical bounds below hold for each admissible learner width with
+the same constants. The high-probability theorem is applied to a fixed
+learner and its posterior randomness. It does not assert that one event
+simultaneously controls independently sampled predictions of every learner.
+
+\section{The direct prior-mass bound}
+
+The smaller-width branches of the finite-variance neural-network proofs
+use a different, simpler estimate.
+
+\begin{lemma}[Exact Bayesian telescoping]\label{lem:telescoping}
+For every input sequence, including adaptively chosen inputs,
+\[
+ S\le\sum_j-\log(1-q_j)\le-\log\pi(f)=:J.
+\]
+Thus $F_\theta\le J/(1-\theta)$ deterministically. Posterior sampling
+satisfies $\E Z\le J$, and
+\[
+ \Pp\{Z>(e-1)J+\log(1/\delta)\}\le\delta.
+\]
+\end{lemma}
+\begin{proof}
+The product $\prod_j(1-q_j)$ is the prior probability that a function
+fits all revealed labels, and is at least $\pi(f)$. Use
+$q\le-\log(1-q)$. The sampled-error assertion follows from the same
+exponential supermartingale as above, conditional on each revealed query.
+Finite-horizon bounds extend to infinite streams by monotone convergence.
+\end{proof}
+
+This lemma alone generally costs a factor growing with neural-network
+width and inverse prior variance. The relevant-class theorem avoids that
+factor at large widths; the lemma covers the remaining widths where its
+cost is already polynomial.
+
+\section{Application to the three neural-network regimes}
+
+\subsection{Model and imported structural results}
+
+The domain is $\{-1,1\}^d$. A depth-$L$ network has $L-1$ hidden layers
+of width $N$, a constant input coordinate, bounded $1$-Lipschitz hidden
+activation, and a linear readout. Define
+\[
+ \kappa_N(w)=\frac dN\|W^1\|_F^2+
+ \sum_{s=2}^{L-1}\|W^s\|_F^2+N\|W^L\|_2^2.
+\]
+The raw Gaussian is conditioned, before training, on
+$|z_w(x)|>1/2$ for every input. It therefore induces a prior on Boolean
+sign functions. Training uses exact label agreement. Let $C=C_L(f)$ be
+the least width of a depth-$L$ implementation with strict margin $1/2$
+and all weights bounded in magnitude by that width.
+
+We use the following proved structural facts from
+\cite{strong,above,meanfield}. These are imports, not newly established
+Gaussian-compression theorems. Their explicit scalar budgets appear in
+Appendix~\ref{app:budgets}.
+\begin{enumerate}
+\item There is a common finite set containing every sign function whose
+minimum weighted energy is at most $J$, with log cardinality at most
+$F_L(d,J)$. This is polynomial in $d,J$ at fixed $L$.
+Cloning gives $\kappa_N(f)\le B_L(d,C):=d(d+1)C^2+LC^4$.
+\item A raw target neighborhood has mass at least
+$\exp(-AN^\gamma/2)$ for every $N\ge C$, where
+$A=A_L(d,C)\ge1$ is polynomial at fixed depth and the Gaussian variances
+are $N^{1-\gamma}/d,N^{-\gamma},N^{-\gamma-1}$.
+\item At fixed $\gamma>1$, for $K\ge1$ and widths satisfying
+\[
+ N^{\gamma-1}\ge8(d+1),\qquad
+ N^{\gamma-1}\ge64a_K^{-2},\qquad
+ a_K=[8L(\sqrt K+1)^{L-2}]^{-1},
+\]
+the raw total mass of full-margin functions with minimum energy greater
+than $(L+3)K$ is at most $L e^{-KN^\gamma/8}$.
+\item For tanh at $\gamma=1$, if $K\ge4$ and $N\ge T_L(d,K)$,
+the raw total mass of full-margin functions outside a common finite class
+of log cardinality at most $G_L(d,K)$ is at most $L e^{-NK/8}$.
+Both $T_L$ and $G_L$ are polynomial at fixed depth.
+\end{enumerate}
+The last two bounds concern total exceptional mass, not one exceptional
+function at a time. This distinction is essential for this application.
+
+\subsection{Strong-prior limit}
+
+In the strong-prior parameterization, the energy coordinates are independent
+centered Gaussians of variance $\sigma^2$. At fixed width,
+\[
+ 2\sigma^2\log\mu_{N,\sigma}\{w:g(x)z_w(x)>1/2\ \forall x\}
+ \longrightarrow-\kappa_N(g).
+\]
+There are finitely many Boolean functions. Hence, with
+$A_{N,f}=\{g:\kappa_N(g)\le\kappa_N(f)\}$,
+\[
+ \frac{\pi_{N,\sigma}(A_{N,f}^c)}{\pi_{N,\sigma}(f)}\longrightarrow0.
+\]
+All functions tied with the target's energy remain in this set. By cloning
+and compression, its log cardinality is at most
+$h=F_L(d,B_L(d,C))$.
+
+\begin{corollary}[Strong-prior cumulative learning]\label{cor:strong}
+At every fixed $L$, for every $N\ge C$ there is $\sigma_0>0$ such that
+all $0<\sigma<\sigma_0$ satisfy Theorem~\ref{thm:finite} with
+$m=2^d$, $\beta=2^{-d}$, and $h=F_L(d,B_L(d,C))$.
+Consequently the total expected and high-probability mistake bounds are
+polynomial in $d,C$ (and $\log(1/\delta)$ for high probability), independently
+of $N$. The threshold $\sigma_0$ may depend on $N,d,L,f$ and the activation;
+it need not be uniform in width. One fixed sufficiently small variance
+works for the entire infinite stream.
+\end{corollary}
+
+The same bounds hold for any limit of these finite-domain posterior laws
+as $\sigma\downarrow0$. No selection of a unique energy minimizer is
+required. Ordinary function-MAP prediction also obeys the corresponding
+finite-class random-order bound: when $\beta<1$, every function outside
+$A_{N,f}$ has smaller prior mass than the consistent target and cannot be
+MAP. Ties must be selected independently of the next input. Parameter MAP
+and a choice of an unattained minimum-energy parameter are different
+notions and are not identified with function MAP here.
+
+\subsection{Every fixed exponent \texorpdfstring{$\gamma>1$}{gamma > 1}}
+
+Set $m=2^d$, $A=A_L(d,C)$, and
+\begin{align*}
+ K&=4A+8\log(Lm),\qquad a=a_K,\\
+ T&=\left\lceil\max\{C,[8(d+1)]^{1/(\gamma-1)},
+                         (8/a)^{2/(\gamma-1)}\}\right\rceil,\\
+ h&=F_L(d,(L+3)K),\qquad J=AT^\gamma/2.
+\end{align*}
+At $N\ge T$, the relative exceptional mass is at most
+\[
+ L\exp\{-(K/8-A/2)N^\gamma\}
+ =L(Lm)^{-N^\gamma}\le1/m.
+\]
+The corresponding finite set necessarily contains $f$, since otherwise
+the ratio would be at least one. At $C\le N<T$,
+$-\log\pi(f)\le AN^\gamma/2\le J$.
+
+\begin{corollary}[Above-mean-field cumulative learning]\label{cor:above}
+For every fixed $L$ and $\gamma>1$, Theorem~\ref{thm:finite} applies
+at $N\ge T$ with the preceding $h,\beta=1/m$;
+Lemma~\ref{lem:telescoping} applies at $C\le N<T$ with cost $J$.
+Taking the maximum of the two budgets gives total expected and
+high-probability mistake bounds polynomial in $d,C,\log(1/\delta)$,
+uniformly for every $N\ge C$. These are statements at the specified
+positive variances. The polynomial's degree may depend on $L,\gamma$;
+this proof makes no uniform claim as $\gamma\downarrow1$.
+\end{corollary}
+
+\subsection{Mean field}
+
+For tanh at $\gamma=1$, put
+\[
+ K=4A+8\log(Lm),\qquad T=T_L(d,K),\qquad
+ h=G_L(d,K),\qquad J=AT/2.
+\]
+The same calculation gives relative exceptional mass at most $1/m$ for
+$N\ge T$. Below $T$, the direct target cost is at most $J$.
+
+\begin{corollary}[Mean-field cumulative learning]\label{cor:meanfield}
+The finite-variance mean-field tanh learner has total expected and
+high-probability mistake bounds polynomial in $d,C,\log(1/\delta)$,
+uniformly over every $N\ge C$, by combining Theorem~\ref{thm:finite}
+and Lemma~\ref{lem:telescoping} with the preceding budgets.
+The polynomial degree may depend on depth.
+\end{corollary}
+
+\paragraph{Why $2^{-d}$ does not create an exponential sample cost.}
+The relative tail is reduced to $2^{-d}$ by increasing the structural
+budget by $O(d)$. The log size of the finite relevant class is polynomial
+in this budget. One never requests an approximation accuracy of $2^{-d}$
+from a compression theorem whose cost is polynomial in inverse accuracy.
+
+\subsection{An extension to ReLU}
+
+The ReLU manuscript~\cite{relu} replaces bounded-activation compression by
+product-norm capacity control. Its independently reviewed structural bounds
+can be inserted into the same cumulative theorem. For a concrete
+depth-$L$, width-$C$ ReLU margin teacher, set
+\[
+ P_* = \prod_{s=1}^L\|W_*^s\|_F,\qquad
+ a_H=1+\sqrt{2(L-1)\log2},\qquad
+ v_*=\lceil4e(d+1)P_*^2a_H^2\rceil.
+\]
+The ReLU strong-prior proof gives a finite relevant class with
+$h=v_*\log(m+1)$, independent of learner width. Choose the variance small
+enough at each fixed $N\ge C$ that its relative tail is at most $1/m$.
+Theorem~\ref{thm:finite} then gives expected total errors $O(v_*d^2)$,
+with the stated logarithmic-confidence extension. For a bounded-weight
+teacher, $P_*^2\le(d+1)C^{4L-2}$, so this is polynomial at fixed depth.
+
+There is also a specified finite-variance result for ReLU, without a
+small-variance limit. The same manuscript proves the following energy
+tail and count. Define
+\begin{align*}
+ K_R&=L(4dP_*^2)^{1/L},\qquad S_R=d+L,\\
+ r_R&=\min\{1,[4\sqrt{2L}(\sqrt{K_R/L}+1)^{L-1}]^{-1}\},\\
+ B_R&=\tfrac12(\sqrt{K_R}+r_R)^2+
+       S_R\log\left(3\max\{1,\sqrt{S_R}/r_R\}\right),\\
+ T_R&=4[B_R+(S_R/2)\log2+\log m],\\
+ v_R&=\left\lceil\frac{4(d+1)}d(T_R/L)^La_H^2\right\rceil.
+\end{align*}
+For every $N\ge C$ and every $\gamma\ge2$, the Gaussian with energy
+coordinate variance $N^{-\gamma}$, globally margin-conditioned as above,
+has relative function mass at most $1/m$ outside a finite class with
+$h=v_R\log(m+1)$. Thus Theorem~\ref{thm:finite} gives an all-width total
+mistake bound polynomial at fixed depth, uniformly over $\gamma\ge2$.
+For one hidden layer, $L=2$, the same statement holds for every
+$\gamma\ge1$. The deeper finite-variance range $1\le\gamma<2$ is not
+settled by this imported ReLU argument. These assertions use the
+ReLU paper's homogeneous balancing and capacity proofs, not an extension
+of the bounded-activation compression theorem by assertion.
+
+\section{Depth-polynomial support restrictions}
+
+In this section $C$ denotes the width of a layered \emph{Boolean} circuit
+whose stages fit the learner's hidden layers. Constant wires and any
+fixed-basis compilation overhead count toward its width and depth. This
+is the teacher convention of the neuron-merging results; it is a stronger
+requirement than a comparably small arbitrary real-valued neural teacher.
+
+The same statistical proof applies to finite loss classes, not just
+Boolean hypotheses. Suppose a posterior of real-output networks admits,
+apart from posterior mass at most $\beta$ at every history, a map into
+a finite collection of losses $\ell_h:\cX\to[0,1]$ such that
+\[
+ \ell_h(X_i)=0\text{ on every training input},\qquad
+ \mathbf1\{f(x)z_w(x)\le1/4\}\le\ell_h(x)\quad\text{for every }x.
+\]
+For a loss with mean $u$, at least $mu$ inputs have positive loss, so the
+probability that its empirical loss is zero on a size-$n$ random prefix
+is at most $e^{-nu}$. Its remaining mean equals $m/(m-n)$ times its
+full-domain mean. Every step of Theorem~\ref{thm:finite} therefore applies
+unchanged. The map may depend on the retained network and the history;
+the finite loss class must be fixed before drawing the input order. Here
+the cumulative posterior error variable uses the tested margin event
+$fz_w\le1/4$; the resulting bounds also control sign errors.
+
+The neuron-merging papers~\cite{merging,naturality} supply exactly this
+form of deterministic compression. Retained networks have a compressed
+grid representative whose clipped output differs uniformly by at most
+$3/32$. Training uses signed margin $>1/2$, so the representative has
+signed clipped output $\ge13/32$ on training inputs. A tested margin error
+$fz_w\le1/4$ gives representative signed clipped output at most $11/32$.
+Use a ramp loss equal to one at or below $11/32$ and zero at or above
+$13/32$. The resulting finite class has log size polynomial jointly in
+$d,L,C,c+c^{-1},\log(1/\beta)$, independently of $N$ and the scale
+$0<t\le1$. Choosing $\beta=1/m$ proves a total mistake bound polynomial
+in depth as well as width for those structural support restrictions.
+At fixed remaining parameters, the teacher-width dependence remains
+quadratic up to logarithms, with an extra factor polynomial in $d$.
+
+This does not by itself establish a polynomial-depth total mistake bound
+under the weaker internal-noise restriction alone. Its current entropy
+compression couples predictions with an error probability $\alpha$ and
+has size polynomial in $1/\alpha$. Taking $\alpha$ of order $2^{-d}$
+would destroy the desired dimension dependence. That is a limitation of
+this extension, not a counterexample to such a cumulative theorem. If the
+weaker support is additionally globally margin-conditioned, the exact
+finite-function mean-field argument still gives the fixed-depth cumulative
+result after using its robust target-mass cylinder; it does not preserve
+the improved polynomial depth dependence.
+
+\section{Which input assumptions matter?}
+
+\paragraph{Uniform random order is doing real work.}
+A class of $m+1$ simple functions can require $m$ mistakes in a prescribed
+order despite log cardinality only $\log(m+1)$. Let $f\equiv+1$ and let
+$g_i$ differ from $f$ only at point $x_i$. Give $g_i$ prior weight
+$R^{m-i+1}$ and $f$ weight one, and reveal $x_1,\ldots,x_m$.
+Before $x_i$, $g_i$ has posterior mass greater than $1-1/R$, because the
+previous candidates have been eliminated. For $R>3$, every round is a
+$2/3$-confidence failure, majority prediction is wrong every time, and
+expected posterior-sampling mistakes exceed $(1-1/R)m$.
+All functions are individually simple point exceptions on the Boolean
+cube. This is a counterexample to an arbitrary-order conclusion from a
+finite relevant-class count alone. It is not a counterexample proved for
+the particular Gaussian neural-network priors.
+
+An arbitrary iid input distribution is also different from uniform iid.
+In this same example, take probabilities proportional to
+$1,\rho,\ldots,\rho^{m-1}$. The chance that the first occurrence of
+$x_{i+1}$ precedes that of $x_i$ is $\rho/(1+\rho)$. A union bound shows
+that the first-appearance order is the displayed adverse order with
+probability at least $1-(m-1)\rho$. Thus even iid sampling can be almost
+adverse when point probabilities range over sufficiently many scales.
+Again, this isolates a limitation of the statistical inference rather than
+proving failure of a specific neural-network prior.
+
+\paragraph{A useful nonuniform extension.}
+For any iid distribution on a finite support of size $m$ and minimum
+positive probability $p_{\min}$, the same relevant-class assumptions give
+\[
+ \E S\le 3+(h+1)(1+\log T)+m\beta,
+ \qquad T=\left\lceil p_{\min}^{-1}\log(2/p_{\min})\right\rceil.
+\]
+Indeed, expected relevant-class risk after $n$ labels is at most
+$(h+1)/n$. It is also at most the expected unseen probability, which is
+at most $e^{-np_{\min}}$. Sum the first bound through $T$ and the second
+afterwards. The outside-class contribution is at most $\beta$ times the
+unseen probability at every history, and the sum of the expected unseen
+probabilities equals the support size $m$. In particular, the total bound
+stays polynomial whenever $\log(1/p_{\min})$ does. Uniform sampling is a
+clean special case, not the only useful one.
+
+\paragraph{What this does not show about a converse.}
+Few realized mistakes in one run do not alone imply that the target has a
+small circuit: favorable random guesses and incomplete domain coverage
+must be excluded. Nor does a general bounded-mistake learner automatically
+supply a small circuit unless its predictions have controlled computational
+descriptions. The results here establish the upper direction for specified
+Bayesian learners; a converse requires an additional argument.
+
+\appendix
+\section{Explicit imported neural-network budgets}\label{app:budgets}
+
+For reproducibility, the quantities below are the scalar bounds supplied
+by the earlier proofs. Their mathematical roles are stated in Section~4.
+They are intentionally loose.
+
+\paragraph{A common norm-sublevel count.}
+For $J\ge1$, put
+\begin{align*}
+ \rho_J&=\frac{2^{-L}(J+1)^{-(L-1)/2}}{12(L-1)},\\
+ u&=\max\left\{\lceil9(J+1)\rceil,
+       \left\lceil256\rho_J^{-4}[d+\log(L/\rho_J)]\right\rceil\right\},\\
+ F_L(d,J)&=[u(d+2)+(L-2)u^2]\,
+ \log\left(3+16Lu\max\{u,d+1\}[u(u+1)]^{L-1}\right).
+\end{align*}
+The norm-compression theorem preserves all Boolean signs and yields a
+width-$u$, weight-bounded implementation. Uniform parameter rounding gives
+the count $F_L$. The class is common to all original learner widths.
+
+\paragraph{The target cylinder.}
+Set
+\begin{align*}
+ b_L&=\sqrt{16\log9+8\log(4L)},\qquad a_0=2+3C^2+b_L,\\
+ \rho_0&=[2+9C^2(d+L+1)a_0^{L-2}]^{-1},\\
+ B_0&=d(d+1)C^2+2(L-2)C^4+36C^4,\\
+ A_L(d,C)&=2B_0+4[d+2+(L-2)C]/\rho_0+2.
+\end{align*}
+The earlier cylinder proof gives raw target mass at least
+$\exp(-A_L(d,C)N^\gamma/2)$ for every $\gamma\ge1,N\ge C$.
+
+\paragraph{Mean-field exact-function compression.}
+Let $r=L-1$, $K\ge4$, and choose backwards
+\[
+ g_r=32rK^2,\qquad
+ g_s=8g_{s+1}(1+g_{s+1})^2\quad(s=r-1,\ldots,1).
+\]
+Put
+\[
+ q=\lceil g_1^2/2\rceil,\quad
+ \ell=\log(2\cdot2^{2d}+1),\quad
+ T_L(d,K)=\left\lceil\max\{1,2q\ell/(K-1)\}\right\rceil.
+\]
+For the finite-description bound, write $g=g_1$, $b=8(1+g)^2$, and set
+\begin{align*}
+ \eta&=[32Kr b^{r-1}]^{-1},&
+ u_*&=\lceil2\eta^{-2}\log(8r\,2^{2d})\rceil,\\
+ D_*&=u_*(d+1)+(L-2)u_*^2,&
+ B_*&=\max\{1,\sqrt{4g+2\log(8\max\{D_*,1\})},4K/u_*\},\\
+ P_*&=D_*+u_*,&
+ \Lambda_*&=(d+Lu_*)[1+u_*(B_*+1)]^{L-1}.
+\end{align*}
+Then $G_L(d,K)=P_*\log(3+16B_*\Lambda_*)$ is valid. At fixed depth,
+$T_L$ and $G_L$ have polynomial majorants in $d,K$. The covariance
+compression uses the global margin to recover exactly the whole Boolean
+sign function. It is not merely an average-error approximation.
+
+\begin{thebibliography}{9}
+\bibitem{strong} ChatGPT-6 Astra, Claude Fable 5 and Opus 5, Kaarel H\"anni,
+and Dmitry Vaintrob. \emph{Width-independent generalization in the
+strong-prior limit of Bayesian neural networks}.
+Research manuscript, 2026.
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/main-results/strong-prior-generalization}.
+\bibitem{above} ChatGPT-6 Astra, Claude Fable 5 and Opus 5, Kaarel H\"anni,
+and Dmitry Vaintrob. \emph{Width-uniform Bayesian generalization above the
+mean-field scaling}. Research manuscript, 2026.
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/main-results/gamma-above-one}.
+\bibitem{meanfield} ChatGPT-6 Astra, Kaarel H\"anni, and Dmitry Vaintrob.
+\emph{Mean-field Bayesian circuit learning at every width above target
+complexity}. Research manuscript, 2026.
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/main-results/meanfield-all-width}.
+\bibitem{merging} ChatGPT-6 Astra, Claude Fable 5 and Opus 5, Kaarel H\"anni,
+and Dmitry Vaintrob. \emph{Quadratic-width learning bounds for Bayesian
+networks with stable neuron populations}. Research manuscript, 2026.
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/improved-polynomials/neuron-averaging}.
+\bibitem{naturality} ChatGPT-6 Astra, Claude Fable 5 and Opus 5, Kaarel H\"anni,
+and Dmitry Vaintrob. \emph{Quadratic-width learning with symmetry-invariant
+neuron merging}. Research manuscript, 2026.
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/improved-polynomials/neuron-merging-naturality}.
+\bibitem{relu} ChatGPT-6 Astra, Claude Fable 5 and Opus 5, Kaarel H\"anni,
+and Dmitry Vaintrob. \emph{Polynomial sample complexity for ReLU NNBayes
+with strong Gaussian priors}. Research manuscript, 2026.
+\end{thebibliography}
+\end{document}

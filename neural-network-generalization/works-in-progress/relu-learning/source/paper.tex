@@ -1,0 +1,406 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools,microtype,booktabs,xcolor}
+\usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}\newcommand{\E}{\mathbb E}\newcommand{\Prb}{\mathbb P}
+\newcommand{\relu}{\operatorname{ReLU}}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\cX}{\mathcal X}\newcommand{\cF}{\mathcal F}\newcommand{\cG}{\mathcal G}
+\newcommand{\err}{\operatorname{err}}\newcommand{\Rad}{\widehat{\mathfrak R}}
+\setlength{\emergencystretch}{2em}
+\hypersetup{pdftitle={Polynomial sample complexity for ReLU NNBayes with strong Gaussian priors},pdfauthor={ChatGPT-6 Astra; Claude Fable 5 and Opus 5; Kaarel Hanni; Dmitry Vaintrob}}
+\title{Polynomial sample complexity for ReLU NNBayes with strong Gaussian priors}
+\author{ChatGPT-6 Astra \and Claude Fable 5 and Opus 5 \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{October 21, 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+Can the strong-prior generalization guarantee for Bayesian neural networks survive replacing bounded hidden activations by ReLU? We prove that it does. At any fixed depth, a Boolean target implemented by a bounded-weight ReLU network of width $C$ can be learned from polynomially many examples at every learner width $N\ge C$. The prior is the same layer-scaled Gaussian, conditioned before training on an absolute output margin at every Boolean input. The variance tends to zero after fixing width. Positive homogeneity permits exact layer balancing and width enlargement at no increase in the relevant energy. A width-independent product-Frobenius Rademacher bound then controls the number of globally margin-separated functions at no larger energy than the target. This gives an explicit sample bound with $1/\varepsilon$ accuracy dependence and a product-norm refinement. We also give an exact ReLU implementation of layered Boolean circuits. No robustness restriction is needed. A separate quantitative argument gives an all-width theorem at prescribed variances $\sigma^2=N^{-\gamma}$ for every $\gamma\ge2$. For a single hidden layer the finite-variance theorem also covers $\gamma\ge1$, including mean-field scaling. The depth dependence remains poor.
+\end{abstract}
+
+\section{Introduction}
+Bayesian neural-network learning, or NNBayes, conditions a parameter prior on the observed training labels. A central question is whether a small implementing network is enough to obtain a sample bound independent of the learner's much larger width. Earlier strong-prior arguments for bounded activations use neuron sampling and compression. Their bounded-activation estimates do not apply directly to ReLU, whose hidden states can be arbitrarily large.
+
+ReLU admits a different proof. Its positive homogeneity turns the Gaussian weighted energy into a bound on the product of layer Frobenius norms, with no remaining dependence on width. Standard norm-based capacity estimates then control the class of functions with a fixed output margin. Combining that estimate with the small-variance Gaussian rate calculation gives a learning theorem at every width above the teacher's width.
+
+We also prove a finite-variance extension for every $\gamma\ge2$. There the total unconditioned weighted Gaussian energy remains bounded as width increases; an explicit target-neighborhood lower bound and a Gaussian energy tail replace the small-variance limit.
+
+The proof uses established ingredients from norm-based generalization theory, including exponential Rademacher peeling~\cite{golowich} and finite-class Occam learning~\cite{blumer}. We provide the needed arguments, the exact Gaussian normalization, and the order of quantifiers. The contribution here is their assembly for the ReLU version of the stated NNBayes learner. This is an information-theoretic statement about exact posterior conditioning; it does not provide an efficient inference algorithm.
+
+\section{Model and main theorem}
+Fix $d\ge1$ and $L\ge2$. Write $H=L-1$, $\cX=\{-1,1\}^d$, and $\bar x=(1,x_1,\ldots,x_d)$. A width-$N$ network has $H$ hidden ReLU layers and a linear readout:
+\[
+ h^0(x)=\bar x,\qquad h^s(x)=\relu(W^s h^{s-1}(x))\quad(1\le s<L),
+ \qquad z_w(x)=W^Lh^{L-1}(x).
+\]
+All hidden layers have width $N$. There are no separate biases after the first layer; constant hidden wires may transmit offsets. Define
+\[
+ \kappa_N(w)=\frac dN\norm{W^1}_F^2+
+ \sum_{s=2}^{L-1}\norm{W^s}_F^2+N\norm{W^L}_2^2.
+\]
+Under the raw Gaussian law $\mu_{N,\sigma}$ the entries are independent, with standard deviations
+\[
+ \sqrt{N/d}\,\sigma\quad\hbox{in the first layer},\qquad
+ \sigma\quad\hbox{internally},\qquad
+ \sigma/\sqrt N\quad\hbox{in the readout}.
+\]
+Its density is proportional to $\exp[-\kappa_N(w)/(2\sigma^2)]$.
+
+For a Boolean function $g$ define
+\[
+ U_{N,g}=\{w:g(x)z_w(x)>1/2\text{ for every }x\in\cX\},
+ \qquad U_N=\bigcup_g U_{N,g}.
+\]
+The prior is $\mu_{N,\sigma}$ conditioned on $U_N$. Thus it imposes an absolute output margin at every input before observing labels. Its induced function probability is
+\[
+ \pi_{N,\sigma}(g)=\frac{\mu_{N,\sigma}(U_{N,g})}{\mu_{N,\sigma}(U_N)}.
+\]
+Given iid noiseless samples $S_n=((X_i,f(X_i)))_{i=1}^n$ from an arbitrary distribution $D$ on $\cX$, condition this function prior on exact agreement with all training labels. Denote the resulting posterior by $\Pi_{N,\sigma}(\cdot\mid S_n)$, and write
+\[
+ R_D(\Pi)=\E_{g\sim\Pi}\Prb_{X\sim D}\{g(X)\ne f(X)\}.
+\]
+
+Suppose a concrete width-$C$, depth-$L$ ReLU teacher $w_*$ satisfies $f(x)z_{w_*}(x)>1/2$ everywhere. Its product complexity is
+\[
+ P_*:=\prod_{s=1}^L\norm{W_*^s}_F>0,
+ \qquad a_H:=1+\sqrt{2H\log2}.
+\]
+For the scalar readout the Frobenius and Euclidean norms coincide.
+
+\begin{theorem}[Strong-prior ReLU learning at every realizable width]
+\label{thm:main}
+Set
+\[
+ v_*:=\left\lceil4e(d+1)P_*^2 a_H^2\right\rceil,
+ \qquad B_*:=v_*\log(2^d+1).
+\]
+For every integer $N\ge C$ and every $0<\varepsilon<1$, there is $\sigma_0(N)>0$ such that, for every $0<\sigma<\sigma_0(N)$, every input distribution $D$, every $0<\delta<1$, and every
+\begin{equation}\label{eq:sample-main}
+ n\ge\frac2\varepsilon\left[B_*+\log(1/\delta)\right],
+\end{equation}
+with probability at least $1-\delta$ over the iid sample,
+\[
+ R_D\bigl(\Pi_{N,\sigma}(\cdot\mid S_n)\bigr)\le\varepsilon.
+\]
+The variance threshold may depend on $d,L,N,w_*,\varepsilon$, but not on $D,n,\delta$. The sample bound is independent of learner width. The same high-probability sample event can be chosen to work for every $N\ge C$, each with its own variance threshold.
+\end{theorem}
+
+If $p_S(x)$ denotes the posterior probability of the correct label, the conclusion gives
+\[
+ D\{x:p_S(x)\le q\}\le\frac{\varepsilon}{1-q}\qquad(0<q<1).
+\]
+In particular it implies the strict $>2/3$ confidence guarantee after replacing $\varepsilon$ by one third of the desired confidence-failure rate. It also bounds posterior-majority error by $2\varepsilon$.
+
+Define $C_L^{\relu}(f)$ to be the smallest integer $C$ with a depth-$L$, width-$C$ teacher of the stated global margin whose individual weights have absolute value at most $C$.
+\begin{corollary}[Bounded-weight width complexity]
+\label{cor:width}
+For fixed $L$, the theorem gives a polynomial sample bound for every $N\ge C=C_L^{\relu}(f)$. More explicitly, one may take
+\[
+ n=O\!\left(\frac{L(d+1)^3 C^{4L-2}+\log(1/\delta)}{\varepsilon}\right),
+\]
+with a universal implicit constant.
+\end{corollary}
+\begin{proof}
+The teacher's squared layer norms are at most $(d+1)C^3$ in the first layer, $C^4$ in each of the $L-2$ internal layers, and $C^3$ at the readout. Hence
+\[
+ P_*^2\le(d+1)C^{4L-2}.
+\]
+Use $a_H^2=O(L)$ and $\log(2^d+1)=O(d+1)$ in \eqref{eq:sample-main}.
+\end{proof}
+
+\section{Homogeneity and the Gaussian energy}
+For a physical network define $P(w)=\prod_{s=1}^L\norm{W^s}_F$. Introduce weighted layer matrices
+\[
+ A_1=\sqrt{d/N}\,W^1,\qquad A_s=W^s\ (2\le s<L),\qquad A_L=\sqrt N\,W^L.
+\]
+Their squared Frobenius norms sum to $\kappa_N(w)$ and their product is $\sqrt d\,P(w)$. Arithmetic--geometric mean therefore gives
+\begin{equation}\label{eq:product-energy}
+ P(w)\le d^{-1/2}\left(\frac{\kappa_N(w)}L\right)^{L/2}.
+\end{equation}
+
+\begin{lemma}[Exact balancing and enlargement]
+\label{lem:balance}
+For any nonzero-output depth-$L$ ReLU network $w$, rescaling its layer matrices by positive factors with product one preserves the real-valued function. Such rescaling can attain energy
+\[
+ L\bigl(dP(w)^2\bigr)^{1/L}.
+\]
+A width-$C$ network can be enlarged to every width $N\ge C$ and then balanced to attain that same energy and the same output function.
+\end{lemma}
+\begin{proof}
+ReLU satisfies $\relu(au)=a\relu(u)$ for $a>0$, so multiplying successive matrices by $b_1,\ldots,b_L$ multiplies the output by $\prod_s b_s$. None of the layer norms is zero when the output is nonzero. If $m_s=\norm{A_s}_F$ and $p=\prod_s m_s$, choose $b_s=p^{1/L}/m_s$. Their product is one and every rescaled weighted layer norm is $p^{1/L}$, giving energy $Lp^{2/L}=L(dP(w)^2)^{1/L}$.
+
+For enlargement, embed every matrix in the upper-left block of a width-$N$ network and fill all other entries with zero. Since $\relu(0)=0$, the output and the physical Frobenius norms are unchanged. Although the weighted first and last norms change with $N$, their product remains $\sqrt d\,P(w)$. Apply the balancing just proved.
+\end{proof}
+
+Set
+\[
+ K_*:=L(dP_*^2)^{1/L},\qquad K_+:=(1+1/L)K_*.
+\]
+The teacher has an implementation of energy $K_*$ at every $N\ge C$. By \eqref{eq:product-energy}, any network of energy below $K_+$ has
+\[
+ P(w)<(1+1/L)^{L/2}P_*\le\sqrt e\,P_*.
+\]
+These relations use no bound on hidden activations.
+
+\section{A width-independent ReLU capacity estimate}
+For sample vectors $x_1,\ldots,x_m\in\R^p$, define empirical Rademacher complexity by
+\[
+ \Rad_m(\cF)=\frac1m\E_\epsilon\sup_{F\in\cF}\sum_{i=1}^m\epsilon_iF(x_i),
+\]
+where the $\epsilon_i$ are independent signs. Widths below may be arbitrary finite integers and may differ across layers.
+
+\begin{lemma}[Product-Frobenius Rademacher bound]
+\label{lem:rad}
+Let $\cF_{L,P}$ be the class of scalar depth-$L$ ReLU networks with linear readout, no separate biases, and product of layer Frobenius norms at most $P$. If $\norm{x_i}_2\le R$, then
+\[
+ \Rad_m(\cF_{L,P})\le\frac{PR}{\sqrt m}\left[1+\sqrt{2(L-1)\log2}\right].
+\]
+\end{lemma}
+\begin{proof}
+Normalize every nonzero layer matrix by its Frobenius norm. Positive homogeneity shows that the original output is its product norm times a network whose layer Frobenius norms are at most one. Zero layers give the zero function.
+
+Let $\cG_s$ contain all vector-valued features obtained after $s$ such normalized hidden layers; $\cG_0$ consists of the identity feature map. Put
+\[
+ Z_s(\epsilon)=\sup_{h\in\cG_s}\norm{\sum_i\epsilon_i h(x_i)}_2.
+\]
+All feature norms on the sample are at most $R$. For a new matrix with rows $b_j=r_ju_j$, where $\norm{u_j}\le1$ and $\sum_jr_j^2\le1$, ReLU homogeneity gives
+\[
+ Z_s\le\sup_{h\in\cG_{s-1},\,\norm{u}\le1}
+ \left|\sum_i\epsilon_i\relu(u^\top h(x_i))\right|.
+\]
+For any finite class of real arrays, the convex contraction principle, with a convex nondecreasing function $G$, states that applying a $1$-Lipschitz scalar map vanishing at zero cannot increase
+$\E G(\sup_t\sum_i\epsilon_it_i)$. A short proof is as follows. For one sign coordinate, write
+\[
+ X_\pm=\sup_t(a_t\pm\phi(t_k)),\qquad
+ Y_\pm=\sup_t(a_t\pm t_k).
+\]
+The bounds $|\phi(t)|\le|t|$ and $|\phi(t)-\phi(s)|\le|t-s|$ imply
+$\max Y_\pm\ge\max X_\pm$ and $Y_++Y_-\ge X_++X_-$. For the latter, use approximately maximizing indices for $X_+,X_-$ and choose the better assignment of their two linear signs. Convex monotonicity gives
+$G(Y_+)+G(Y_-)\ge G(X_+)+G(X_-)$. Iterating over coordinates proves the principle. Approximation extends it to the bounded separable classes here.
+
+Use $G(u)=e^{\lambda u}$ and $\phi=\relu$. The exponential of an absolute supremum is at most the sum of the two one-sided exponentials; the two expectations agree by sign symmetry. Consequently
+\[
+ \E e^{\lambda Z_s}\le2\E e^{\lambda Z_{s-1}}.
+\]
+The linear supremum appearing after contraction equals $Z_{s-1}$. Also
+\[
+ \E Z_0\le R\sqrt m,
+ \qquad
+ \E e^{\lambda Z_0}\le\exp\left(\lambda R\sqrt m+\frac{\lambda^2mR^2}{2}\right),
+\]
+where the second estimate follows from the bounded-difference moment bound. Iterate through $H=L-1$ hidden layers and use Jensen:
+\[
+ \E Z_H\le R\sqrt m+\frac{H\log2}{\lambda}+\frac{\lambda mR^2}{2}.
+\]
+Optimizing $\lambda$ gives $R\sqrt m\,a_H$. The final norm-one linear readout and the product-norm factor $P$ give the result. Measurability follows by countable parameter approximation at each finite width, followed by a countable union over widths.
+\end{proof}
+
+\begin{lemma}[Counting globally separated functions]
+\label{lem:count}
+Let $\cG(P)$ consist of all Boolean functions on $\cX$ implemented with strict global margin $1/2$ by a depth-$L$ ReLU network of any finite width and product norm at most $P$. Put
+\[
+ v(P)=\left\lceil4(d+1)P^2a_H^2\right\rceil.
+\]
+Then
+\[
+ \log|\cG(P)|\le v(P)\log(2^d+1).
+\]
+\end{lemma}
+\begin{proof}
+If $m$ cube points are shattered by $\cG(P)$, every Rademacher labeling has a realizing real-valued output with $\epsilon_i z(x_i)>1/2$. Thus the empirical Rademacher complexity of the corresponding real-output class is at least $1/2$. The augmented inputs have norm $\sqrt{d+1}$, so Lemma~\ref{lem:rad} implies
+\[
+ m\le4(d+1)P^2a_H^2.
+\]
+The VC dimension is therefore at most $v(P)$. Sauer's lemma bounds the number of patterns on the $M=2^d$ domain points by $\sum_{j=0}^{v(P)}\binom Mj$. For an integer $v(P)\ge1$, this is at most $(M+1)^{v(P)}$: list each subset in increasing order and pad the list to length $v(P)$ with a distinguished symbol. This also covers $v(P)>M$. Taking logarithms proves the claim. If the class is empty there is nothing to prove.
+\end{proof}
+
+\section{Small-variance posterior comparison and proof of the theorem}
+Let
+\[
+ \kappa_N(g)=\inf_{w\in U_{N,g}}\kappa_N(w),
+\]
+with the value $+\infty$ if the event is empty. ReLU networks are continuous in their weights. Since the input set is finite and all margin inequalities are strict, every nonempty $U_{N,g}$ is open.
+
+\begin{lemma}[Gaussian rate]
+\label{lem:rate}
+For each fixed finite $d,L,N$ and every $g$ with $U_{N,g}\ne\varnothing$,
+\[
+ \lim_{\sigma\downarrow0}2\sigma^2\log\mu_{N,\sigma}(U_{N,g})=-\kappa_N(g).
+\]
+\end{lemma}
+\begin{proof}
+In weighted coordinates all parameters form a vector $u\sim N(0,\sigma^2I_p)$ with $\kappa_N=\norm u^2$. If $b=\inf_{U_{N,g}}\norm u^2$, exponential Markov gives, for $0<\theta<1$,
+\[
+ \mu_{N,\sigma}(U_{N,g})\le\theta^{-p/2}
+ \exp\left[-\frac{(1-\theta)b}{2\sigma^2}\right].
+\]
+Take the upper limit and then let $\theta\downarrow0$. Conversely, for every $a>0$ openness supplies a positive-volume ball within the event on which $\norm u^2<b+a$. Integrating the Gaussian density over that ball gives the matching lower rate as $a\downarrow0$.
+\end{proof}
+
+Define the finite relevant set
+\[
+ A_{N,f}=\{g:U_{N,g}\ne\varnothing,\ \kappa_N(g)\le\kappa_N(f)\}.
+\]
+It contains $f$. By Lemma~\ref{lem:balance}, $\kappa_N(f)\le K_*$. Every $g\in A_{N,f}$ therefore has a strict-margin representative of energy below $K_+$, whether or not its energy infimum is attained. Hence
+\[
+ \bigcup_{N\ge C} A_{N,f}\subseteq\cG(\sqrt e P_*),
+ \qquad \log|\cG(\sqrt e P_*)|\le B_*.
+\]
+
+For each function outside $A_{N,f}$, Lemma~\ref{lem:rate} gives
+\[
+ \frac{\pi_{N,\sigma}(g)}{\pi_{N,\sigma}(f)}\longrightarrow0.
+\]
+There are only finitely many Boolean functions on the fixed cube. Thus, after choosing $\sigma_0(N)$ sufficiently small,
+\[
+ \pi_{N,\sigma}(A_{N,f}^{\mathrm c})\le\frac\varepsilon2\,\pi_{N,\sigma}(f)
+ \qquad(0<\sigma<\sigma_0(N)).
+\]
+The target is consistent with every noiseless sample. Dividing by a posterior normalizer at least $\pi_{N,\sigma}(f)$ shows that posterior mass outside $A_{N,f}$ is at most $\varepsilon/2$, on every such sample. This choice of variance threshold is independent of $D,n,\delta$.
+
+A fixed function of true error greater than $\varepsilon/2$ agrees with all $n$ independent labels with probability at most $e^{-n\varepsilon/2}$. A union bound over the common finite class $\cG(\sqrt e P_*)$ shows that, under \eqref{eq:sample-main}, with probability at least $1-\delta$ every consistent member of that class has error at most $\varepsilon/2$. The relevant portion of every stated posterior has at most this error; the remaining posterior mass contributes at most $\varepsilon/2$. This proves Theorem~\ref{thm:main}, including its simultaneous sample event.
+
+\section{Exact implementation of Boolean circuits}
+A useful circuit basis is NOR, COPY, and NOT, using bits in $\{0,1\}$. On Boolean inputs,
+\[
+ \operatorname{NOR}(a,b)=\relu(1-a-b),\qquad
+ \operatorname{COPY}(a)=\relu(a),\qquad
+ \operatorname{NOT}(a)=\relu(1-a).
+\]
+NOR alone is universal. A true constant is propagated by $\relu(1)=1$. Thus a layered circuit in this basis is implemented exactly by one ReLU hidden layer per logical stage, with a counted constant wire available for offsets. Initial input bits are $a_i=(1+x_i)/2$; substituting these affine forms into the first-layer gates uses the augmented input coordinate. The final linear readout is $z=2a_{\rm out}-1$, using the final constant wire, so $f(x)z(x)=1$ everywhere.
+
+\begin{corollary}[Layered Boolean circuits]
+Suppose $f$ is computed by a layered NOR/COPY/NOT circuit of $H=L-1$ stages and width $C$, counting the constant wires used by the implementation. Then the strong-prior ReLU learner succeeds at every $N\ge C$ with a sample bound
+\[
+ n=O\!\left(\frac{L(d+1)^2(5C)^{L-1}+\log(1/\delta)}{\varepsilon}\right).
+\]
+\end{corollary}
+\begin{proof}
+Each first-layer row has squared norm at most one after substituting input bits. Each subsequent gate row has squared norm at most five: distinct-input NOR uses coefficients $1,-1,-1$, while a repeated input can combine to a coefficient of magnitude two. COPY, NOT, and the constant wire obey the same bound. Padding unused slots with zero rows changes nothing. The first-layer squared Frobenius norm is at most $C$, each internal squared norm at most $5C$, and the readout squared norm at most five. Thus
+\[
+ P_*^2\le C(5C)^{L-2}\cdot5=(5C)^{L-1}.
+\]
+Apply Theorem~\ref{thm:main}.
+\end{proof}
+
+A circuit specified in another fixed bounded-fan-in universal basis can be compiled into NOR gadgets of constant size and depth. Parallel gadgets and padding by copies give constant-factor overhead in width and depth; those compiled resources, including constants, must be used in the corollary. We do not identify an arbitrary analog ReLU teacher with a Boolean circuit of the same width and depth.
+
+\section{A finite-variance result for exponents at least two}
+The strong-prior theorem fixes width before taking the variance small. For sufficiently strong width-dependent Gaussian scaling, a quantitative argument removes that variance limit. With a single hidden layer the same argument reaches mean-field scaling. Keep the same globally margin-conditioned learner, but now prescribe
+\[
+ \sigma^2=N^{-\gamma},\qquad \gamma\ge2.
+\]
+In particular, the physical coordinate variances are $N^{1-\gamma}/d$ in the first layer, $N^{-\gamma}$ internally, and $N^{-1-\gamma}$ at the readout.
+
+\begin{theorem}[Prescribed variance, all widths, and every $\gamma\ge2$]
+\label{thm:finite}
+For the same margin teacher of product norm $P_*$, define
+\begin{align*}
+ K&=L(4dP_*^2)^{1/L}, & S&=d+L,\\
+ r&=\min\left\{1,\frac1{4\sqrt{2L}(\sqrt{K/L}+1)^{L-1}}\right\},\\
+ B_0&=\frac{(\sqrt K+r)^2}{2}
+       +S\log\left(3\max\left\{1,\frac{\sqrt S}{r}\right\}\right),\\
+ T&=4\left[B_0+\frac S2\log2+\log(2/\varepsilon)\right], &
+ v_T&=\left\lceil\frac{4(d+1)}d(T/L)^L a_H^2\right\rceil.
+\end{align*}
+For every $N\ge C$, $\gamma\ge2$, arbitrary input distribution $D$, and $0<\varepsilon,\delta<1$, the posterior at the specified variance $\sigma^2=N^{-\gamma}$ has average sign error at most $\varepsilon$ with sample probability at least $1-\delta$ whenever
+\[
+ n\ge\frac2\varepsilon\left[v_T\log(2^d+1)+\log(1/\delta)\right].
+\]
+If $L=2$, the same statement and constants hold for every $\gamma\ge1$. A common sample event works simultaneously for all the stated widths and exponents. The bound is polynomial in bounded-weight teacher width and input dimension at each fixed depth, including logarithms of inverse accuracy. No variance limit is taken.
+\end{theorem}
+
+\begin{proof}
+Use weighted matrices $U^s=\sqrt{c_s}W^s$, with $c_1=d/N$, $c_s=1$ internally, and $c_L=N$. Their entries are independent $N(0,\sigma^2)$ variables, and positive homogeneity gives the exact identities
+\[
+ z_W(x)=d^{-1/2}F_U(\bar x),\qquad
+ \kappa_N(W)=\sum_s\norm{U^s}_F^2,
+\]
+where $F_U$ is the ordinary ReLU network with matrices $U^s$. The number of coordinates and their total variance satisfy
+\[
+ p=N(d+2)+(L-2)N^2,\qquad p\sigma^2\le S,\qquad \sigma^2\le1.
+\]
+For $L=2$ the quadratic term vanishes, so these inequalities remain valid for every $\gamma\ge1$. The rest of the proof uses only these inequalities and therefore covers that case too.
+
+Double the original teacher output and balance the enlarged network as in Lemma~\ref{lem:balance}. Its weighted parameter vector $U_*$ has squared norm $K$, every layer norm is $\sqrt{K/L}$, and every signed output exceeds one. For a perturbation $\Delta$ of combined Frobenius norm at most $r\le1$, telescope through the layers and use the one-Lipschitz property of ReLU. Since $\norm{\bar x}/\sqrt d\le\sqrt2$ and $\sum_s\norm{\Delta^s}_F\le\sqrt L\norm\Delta_F$, this gives
+\[
+ \sup_{x\in\cX}|z_{U_*+\Delta}(x)-z_{U_*}(x)|
+ \le\sqrt{2L}\norm\Delta_F
+       (\sqrt{K/L}+1)^{L-1}\le\tfrac14.
+\]
+Thus the entire radius-$r$ Euclidean ball about $U_*$ lies inside the correct-label event $U_{N,f}$ in weighted coordinates.
+
+For a centered $p$-dimensional Gaussian vector $G$ of coordinate variance $\sigma^2$, a coordinate cube inside its radius-$r$ ball gives
+\[
+ \Prb\{\norm G\le r\}\ge
+ \left[\frac13\min\left\{1,\frac r{\sigma\sqrt p}\right\}\right]^p.
+\]
+Indeed $\Prb\{|Z|\le t\}\ge\frac13\min\{1,t\}$ for a standard Gaussian $Z$, as follows by integrating its density on $[-\min\{1,t\},\min\{1,t\}]$.
+The Gaussian density ratio after translation by $U_*$ is at least
+$\exp[-(K/2+r\sqrt K)/\sigma^2]$ throughout this centered ball. Therefore
+\begin{align*}
+ \sigma^2\log\frac1{\Prb\{G\in B(U_*,r)\}}
+ &\le \frac K2+r\sqrt K+
+ p\sigma^2\log\left(3\max\left\{1,\frac{\sigma\sqrt p}r\right\}\right)\\
+ &\le B_0.
+\end{align*}
+The cost is independent of width: the dimension enters through $p\sigma^2\le S$, including inside the logarithm. There is no remaining $\log N$ term.
+
+The exact Gaussian moment identity
+\[
+ \E\exp\left(\frac{\kappa_N}{4\sigma^2}\right)=2^{p/2}
+\]
+now bounds the raw-prior high-energy tail relative to this target ball:
+\[
+ \frac{\Prb\{\kappa_N>T\}}{\Prb\{G\in B(U_*,r)\}}
+ \le\exp\left[-\frac{T/4-B_0-(S/2)\log2}{\sigma^2}\right]
+ \le\frac\varepsilon2.
+\]
+The normalizer of every noiseless training posterior includes the target ball. The prior's initial margin-conditioning normalizer cancels in this ratio. Hence every such parameter posterior has mass at most $\varepsilon/2$ on $\kappa_N>T$, regardless of the training sample.
+
+By \eqref{eq:product-energy}, every globally margin-separated function represented at energy at most $T$ lies in the common class
+\[
+ \cG\!\left(d^{-1/2}(T/L)^{L/2}\right).
+\]
+Lemma~\ref{lem:count} bounds its log cardinality by $v_T\log(2^d+1)$, uniformly over learner widths and exponents. The same consistency union bound used in Theorem~\ref{thm:main} makes every consistent member's true error at most $\varepsilon/2$ on a sample event of probability at least $1-\delta$. The remaining posterior mass contributes at most another $\varepsilon/2$.
+\end{proof}
+
+For depth $L>2$, the restriction $\gamma\ge2$ is a limitation of this total-energy argument. When $1\le\gamma<2$ and there is an internal square weight matrix, the unconditioned total weighted energy can grow with width. The theorem does not establish failure of learning in that range; it leaves that range undecided for ReLU networks with more than one hidden layer.
+
+\section{Scope and remaining questions}
+Neither theorem requires an internal-stability restriction. Both cover every finite learner width above the teacher width. The first takes the small-variance limit after fixing width; the second prescribes $\sigma^2=N^{-\gamma}$ for every $\gamma\ge2$. For a single hidden layer ($L=2$), the finite-variance result extends to every $\gamma\ge1$, including mean field. With more hidden layers, the range $1\le\gamma<2$ remains open here.
+
+The global output-margin conditioning is part of the stated learner and of the finite-function counting step. Merely applying the sign map to a norm-bounded ReLU network without a margin constraint would not justify Lemma~\ref{lem:count}. Positive homogeneity lets such a network be scaled to arbitrarily small energy without changing its signs, which makes an explicit margin convention essential to this argument.
+
+The rate statement identifies the Gaussian function-prior exponent with minimum weighted energy. Our learning proof bounds the number of functions below the target's rate by a product-norm capacity estimate. It does not establish a converse polynomial equivalence between minimum ReLU circuit width and that rate, nor precise pairwise prior ordering by ordinary Boolean circuit size.
+
+The displayed bounds are polynomial in teacher complexity at fixed depth. Their polynomial degree grows with depth, and the Boolean-circuit corollary contains $(5C)^{L-1}$. Improving that dependence, determining the remaining finite-variance regimes, and obtaining sharper shallow-ReLU bounds are separate questions. The proofs here have independent AI-agent mathematical review; they have not been formalized in Lean.
+
+\paragraph{Acknowledgments and provenance.}
+The Gaussian strong-prior setup and the finite relevant-set proof follow the earlier NNBayes slides and manuscript~\cite{slides,strong}. Claude contributed to that earlier material. The ReLU argument here replaces bounded-activation compression with homogeneous norm balancing and product-norm capacity control. No claim is made that norm-based ReLU generalization or the underlying Rademacher technique is new.
+
+\begin{thebibliography}{9}
+\bibitem{golowich} N. Golowich, A. Rakhlin, and O. Shamir.
+\emph{Size-independent sample complexity of neural networks.}
+Proceedings of COLT, PMLR 75, 2018.
+\url{https://proceedings.mlr.press/v75/golowich18a.html}.
+\bibitem{blumer} A. Blumer, A. Ehrenfeucht, D. Haussler, and M. K. Warmuth.
+\emph{Occam's razor.} Information Processing Letters 24(6), 377--380, 1987.
+\bibitem{sauer} N. Sauer. \emph{On the density of families of sets.}
+Journal of Combinatorial Theory, Series A 13(1), 145--147, 1972.
+\bibitem{slides} D. Vaintrob and K. H\"anni.
+\emph{A circuit prior in NN Bayes: generalization notes.}
+\url{https://kaarelh.github.io/ai/nnbayes-generalization.pdf}.
+\bibitem{strong} ChatGPT-6 Astra, Claude Fable 5 and Opus 5, K. H\"anni, and D. Vaintrob.
+\emph{Width-independent generalization in the strong-prior limit of Bayesian neural networks.} 2026.
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/main-results/strong-prior-generalization}.
+\end{thebibliography}
+\end{document}

@@ -1,0 +1,458 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype,geometry,amsmath,amssymb,amsthm,mathtools}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Few online mistakes imply a small Boolean circuit for explicit circuit-induction rules},pdfauthor={ChatGPT-6 Astra; Kaarel Hanni; Dmitry Vaintrob}}
+\geometry{margin=1in}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Prb}{\mathbb P}
+\newcommand{\cC}{\mathcal C}
+\newcommand{\cX}{\mathcal X}
+\newcommand{\cH}{\mathcal H}
+\newcommand{\1}{\mathbf 1}
+\title{Few online mistakes imply a small Boolean circuit\\for explicit circuit-induction rules}
+\author{ChatGPT-6 Astra \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{21 October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+A small circuit gives an online mistake bound under an appropriate circuit
+prior. We prove converses for three concrete learning rules. A learner that
+always selects a smallest consistent circuit makes at least
+$C(f)/(3d+3)$ mistakes before learning a Boolean function on its full
+$d$-dimensional domain. For Bayesian posterior sampling with a geometric
+gate-count prior and uniform wiring, expected total mistakes $M$ imply
+$C(f)=O(dM\log(d+dM))$. A prefix circuit language with explicit exception
+constructors improves this to $O(dM+1)$ while retaining the usual
+$O(C(f)\log(d+C(f))+1)$ upper bound. The Bayesian proofs control logarithmic
+loss by sampling mistakes using injective, cheap repairs of circuit
+descriptions. They apply to any order revealing the whole domain and to
+infinite iid sampling on any fixed support. Coverage, the specified learning
+rule, and posterior sampling are substantive hypotheses. The conclusions
+do not hold for arbitrary learners or arbitrary priors, and the Bayesian
+argument gives no converse for majority prediction. These are mathematical
+results, not Lean-verified formalizations.
+\end{abstract}
+
+\section{Setup and what a converse can say}
+
+Fix $d\ge1$ and $\cX=\{0,1\}^d$. A deterministic target is
+$f:\cX\to\{0,1\}$. A circuit consists of a topologically ordered list of
+two-input NAND gates. Its available initial wires are the $d$ input bits
+and constants $0,1$. Each gate chooses an ordered pair of earlier wires,
+with repetitions allowed. The output is the last gate; the empty list
+outputs the constant zero. Dead gates are permitted. Its size $|c|$ is its
+number of gates. Let
+\[
+ C_A(f)=\min\{|c|:c(x)=f(x)\text{ for every }x\in A\},
+ \qquad C(f)=C_{\cX}(f).
+\]
+All these minima exist. Our conclusions concern total NAND gate count,
+with no fixed-depth restriction.
+
+At round $t$, an input $x_t$ is selected, the learner predicts, and the
+correct label $f(x_t)$ is revealed. Repetitions have the same label.
+The input may depend on past predictions and labels, but it must be
+selected before the fresh random prediction on that round. Write
+$A_t=\{x_1,\ldots,x_t\}$. A complete reveal of $A$ means that precisely
+points from $A$ have been queried and every point of $A$ has appeared at
+least once. Inputs outside $A$ need not be learned.
+
+Coverage is unavoidable: labels on a small set of easy inputs cannot
+determine the target's complexity elsewhere. Likewise, an arbitrary
+learner may hard-code a highly complex target and make no mistakes. The
+theorems below concern specified circuit-induction procedures and their
+complete observations, not a representation theorem for every successful
+predictor.
+
+\section{A one-point circuit repair}
+
+Put $R_d=3d+3$.
+
+\begin{lemma}[Injective overwrite]\label{lem:repair}
+For each $(x,y)\in\cX\times\{0,1\}$ there is a map
+$P_{x,y}:\cC\to\cC$ that appends exactly $r_x\le R_d$ gates and obeys
+\[
+ P_{x,y}(c)(z)=
+ \begin{cases}y,&z=x,\\c(z),&z\ne x.\end{cases}
+\]
+The number $r_x$ is independent of the source circuit, and the map is
+injective on circuit descriptions.
+\end{lemma}
+\begin{proof}
+Starting from the constant-one wire, form the equality indicator
+$e_x(z)=\bigwedge_{j=1}^d\1\{z_j=x_j\}$. A negative literal requires one
+NAND gate; conjoining the next literal to the accumulator requires two.
+This costs $2d+\#\{j:x_j=0\}\le3d$ gates. If $y=0$, compute
+$c(z)\wedge\neg e_x(z)$ in three further NAND gates. If $y=1$, compute
+$c(z)\vee e_x(z)$ in three further gates. The original output wire is
+available in both cases, including the empty circuit's constant-zero
+output. Deleting the final $r_x=2d+\#\{j:x_j=0\}+3$ gates recovers
+the original ordered list, proving injectivity. No simplification of dead
+or redundant gates is performed.
+\end{proof}
+
+For a noiseless history, overwriting the current input with its true label
+preserves all earlier labels. This remains true for repeated inputs.
+Injectivity is a statement about descriptions, not functions: two
+different functions can coincide after their value at one point is
+overwritten. Distinguishing these facts matters for prior-mass estimates.
+
+\section{A linear converse for minimum-consistent-circuit prediction}
+
+\begin{theorem}[Deterministic Occam converse]\label{thm:occam}
+At every round let the learner predict with any minimum-size circuit
+consistent with the preceding observations, with arbitrary tie-breaking.
+If it has made $B_t$ mistakes through round $t$, then
+\[
+ C_{A_t}(f)\le R_d B_t.
+\]
+In particular a complete reveal of $A$ entails at least
+$C_A(f)/R_d$ mistakes, and a complete reveal of the cube entails at least
+$C(f)/R_d$ mistakes.
+\end{theorem}
+\begin{proof}
+Initially the minimum consistent size is zero. Adding a constraint cannot
+decrease that minimum. If the current prediction is correct, the selected
+minimum-size circuit remains consistent, so the minimum does not change.
+If the prediction is wrong, Lemma~\ref{lem:repair} produces a consistent
+circuit with at most $R_d$ additional gates. Induction proves the result.
+\end{proof}
+
+This is a converse, not a polynomial upper bound on the mistakes of
+arbitrary minimum-size tie-breaking. The proof does not assert that a
+wrong prediction eliminates a substantial fraction of competing circuits.
+Exact minimum-circuit selection can be computationally intractable; no
+efficient implementation is claimed.
+
+\section{Bayesian sampling, log loss, and complete reveals}
+
+Let $\pi$ be a prior on a countable set of circuit descriptions, with every
+finite noiseless history assigned positive mass. Let
+\[
+ E_t=\{c:c(x_i)=f(x_i)\ (1\le i\le t)\},\qquad
+ Z_t=\pi(E_t),\qquad L_t=-\log Z_t.
+\]
+The posterior is $\pi(\cdot\mid E_{t-1})$. Define
+\[
+ p_t=\pi\{c(x_t)=f(x_t)\mid E_{t-1}\},\quad q_t=1-p_t,
+ \quad m_t=\sum_{i=1}^t q_i.
+\]
+A posterior-sampling predictor draws a fresh circuit from that posterior
+and outputs its label. Its conditional mistake probability is exactly
+$q_t$. For a fixed input sequence, $m_t$ is its expected number of
+mistakes. For an adaptive or random input sequence, $m_t$ is the random
+sum of these conditional probabilities, and expected actual mistakes are
+$\E m_t$ (or the analogous stopped/infinite sum).
+
+Irrespective of the query order, exact conditioning gives
+\begin{equation}\label{eq:logloss}
+ L_t=\sum_{i=1}^t-\log p_i,\qquad m_t\le L_t.
+\end{equation}
+On a complete reveal of $A$, the final value is the deterministic quantity
+\[
+ L_A=-\log\pi\{c:c|_A=f|_A\}.
+\]
+The forward inequality $m_t\le L_t$ does not by itself give a converse:
+one incorrect prediction can correspond to an arbitrarily unlikely
+correct label and hence arbitrarily large log loss. The next sections
+prevent this by repairing descriptions at controlled prior cost.
+
+\section{A natural geometric gate-count prior}
+
+Define $\pi_d$ by first drawing $S$ with
+$\Prb(S=s)=2^{-(s+1)}$, $s=0,1,\ldots$. Conditional on $S=s$, draw the
+ordered inputs to gate $i$ independently and uniformly from its
+$d+i+1$ earlier wires. Thus each particular circuit $c$ of size $s$ has
+\begin{equation}\label{eq:prior}
+ \pi_d(c)=2^{-(s+1)}\prod_{i=1}^s(d+i+1)^{-2}.
+\end{equation}
+This is a normalized probability distribution: the product counts the
+inverse of the number of wiring lists of length $s$. It is a prior on
+descriptions and induces a prior on functions by summing their masses.
+
+For $u\ge0$, put
+\begin{equation}\label{eq:A}
+ A_d(u)=\log(4/3)+R_d\log2+
+          2R_d\log\bigl(u/\log2+4d+6\bigr).
+\end{equation}
+
+\begin{lemma}[A lower bound on predictive label mass]\label{lem:predictive}
+Under \eqref{eq:prior}, any noiseless history and any next input satisfy
+\[
+ p_t\ge \exp[-A_d(L_{t-1})].
+\]
+Consequently every finite history satisfies
+\begin{equation}\label{eq:pathwise}
+ L_t\le2A_d(L_t)m_t.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Set $K=\lceil L_{t-1}/\log2\rceil+1$. Since
+$\pi_d(S>K)=2^{-(K+1)}$, the posterior mass on $S>K$ is at most
+$2^{-(K+1)}e^{L_{t-1}}\le1/4$. At least $3/4$ of posterior mass
+therefore lies on consistent source circuits of size at most $K$.
+
+Repair every such source using $P_{x_t,f(x_t)}$. The resulting descriptions
+are distinct, fit all the observations including the new one, and have
+prior-to-source probability ratio
+\[
+ 2^{-r_{x_t}}\prod_{i=s+1}^{s+r_{x_t}}(d+i+1)^{-2}
+ \ge\bigl[2(d+K+R_d+1)^2\bigr]^{-R_d}.
+\]
+Summing over the injective image and dividing by the preceding normalizer
+gives the lower bound on $p_t$, because
+$d+K+R_d+1\le L_{t-1}/\log2+4d+6$.
+
+For $0<b\le p\le1$,
+\[
+ -\log p\le\frac{-\log b}{1-b}(1-p).
+\]
+Indeed, $(-\log p)/(1-p)$ decreases with $p$, with the continuous value
+one at $p=1$. The function $A_d$ is increasing and exceeds $\log2$.
+Use the common lower bound $b=e^{-A_d(L_t)}\le1/2$ for all rounds up to
+$t$ and sum. This gives \eqref{eq:pathwise}.
+\end{proof}
+
+\begin{theorem}[Geometric circuit-prior converse]\label{thm:bayes}
+Suppose posterior sampling with prior \eqref{eq:prior} completely reveals
+$A\subseteq\cX$. Let $M$ be its expected total number of mistakes,
+including any randomness in a predictable query order. Put $C=C_A(f)$.
+Then
+\begin{align}
+ M&\ge\frac{C\log2}{2A_d(C\log2)},\label{eq:lower}\\
+ C&\le\frac{12R_dM}{\log2}
+       \log\left(4d+6+\frac{12R_dM}{\log2}\right).
+       \label{eq:inverted}
+\end{align}
+In particular $C=O(dM\log(d+dM))$. Conversely,
+\begin{equation}\label{eq:forward}
+ M\le(C+1)\log2+2C\log(d+C+1).
+\end{equation}
+All constants are independent of the reveal order and of $|A|$.
+\end{theorem}
+\begin{proof}
+Any circuit agreeing with $f$ on $A$ has at least $C$ gates, so
+$\pi_d(E_A)\le\pi_d(S\ge C)=2^{-C}$ and $L_A\ge C\log2$.
+The function $u/A_d(u)$ is increasing on $[0,\infty)$: its derivative
+has numerator
+\[
+ A_d(u)-uA_d'(u)
+ =\log(4/3)+R_d\log2+
+ 2R_d\left[\log v-\frac{v-(4d+6)}v\right]>0,
+ \quad v=u/\log2+4d+6\ge10.
+\]
+Equation~\eqref{eq:pathwise} on each complete-reveal path therefore gives
+\[
+ m\ge \frac{L_A}{2A_d(L_A)}
+     \ge \frac{C\log2}{2A_d(C\log2)}.
+\]
+Taking expectations proves \eqref{eq:lower}.
+
+Since $C+4d+6\ge10$ and $R_d\ge6$,
+$A_d(C\log2)\le3R_d\log(C+4d+6)$. Hence
+$C\le a\log(b+C)$ with
+$a=6R_dM/\log2$ and $b=4d+6$.
+For $a>0,b\ge e$, the implication
+\[
+ x\le a\log(b+x)\quad\Longrightarrow\quad
+ x\le2a\log(b+2a)
+\]
+follows by setting $x_0=2a\log(b+2a)$, observing
+$b+x_0\le(b+2a)^2$, and using the increase of
+$x-a\log(b+x)$ for $x\ge x_0$. This proves \eqref{eq:inverted};
+if $M=0$, \eqref{eq:lower} already forces $C=0$.
+
+For the upper bound, choose a minimum consistent circuit of size $C$.
+Its probability in \eqref{eq:prior} is at least
+$2^{-(C+1)}(d+C+1)^{-2C}$. Thus
+$m\le L_A\le(C+1)\log2+2C\log(d+C+1)$ on every complete path.
+Taking expectations gives \eqref{eq:forward}.
+\end{proof}
+
+\begin{remark}[Partial histories]
+Before full revelation, \eqref{eq:pathwise} still holds, and applying
+the same reasoning gives a small circuit consistent with the observed
+points in terms of $m_t$. It bounds $C_{A_t}(f)$, not the unrestricted
+$C(f)$. No inference about unobserved labels is implicit.
+\end{remark}
+
+\section{A prefix circuit prior with a sharper converse}
+
+The logarithmic factor in Theorem~\ref{thm:bayes} comes from the wire
+addresses of appended gates: an exception appended to a longer circuit
+costs more prior probability. An explicit exception constructor removes
+this dependence. The following is a precise prior, not an assertion that
+all circuit encodings have this property.
+
+Use the following prefix language, with $d$ known to the decoder.
+\begin{itemize}
+\item The string \texttt{00} denotes constant zero.
+\item A string \texttt{01}$b$ denotes a NAND circuit with $s\ge1$ gates.
+The prefix $b$ starts with the unary length $1^s0$, followed, for each
+gate $i$, by two wire addresses of length
+$\lceil\log_2(d+i+1)\rceil$. Out-of-range addresses are invalid.
+\item A string \texttt{1}$xyp$ denotes the overwrite of program $p$ at
+input $x$ with label $y$, where $x$ is encoded in exactly $d$ bits, $y$
+in one bit, and $p$ is another valid program.
+\end{itemize}
+The valid finite strings are prefix-free: the initial tags separate the
+cases, unary lengths determine base-code lengths, and the recursive case
+has fixed-size metadata before its single prefix-free child. Every
+program denotes a Boolean function and every Boolean circuit has such a
+description. A program of bit length $\ell$ compiles into a NAND circuit
+of at most $3\ell$ gates, by Lemma~\ref{lem:repair} and
+$R_d\le3(d+2)$.
+
+For valid strings $p$, define
+\begin{equation}\label{eq:prefixprior}
+ \widetilde\pi_d(p)=Z_d^{-1}2^{-2\ell(p)},\qquad
+ Z_d=\sum_{p\text{ valid}}2^{-2\ell(p)}.
+\end{equation}
+Kraft's inequality and the code \texttt{00} imply
+$1/16\le Z_d\le1$. Thus this is a proper circuit-description prior.
+Write $K_A(f)$ for the shortest program length agreeing with $f$ on $A$.
+
+\begin{theorem}[Linear converse with exception codes]\label{thm:prefix}
+For posterior sampling with \eqref{eq:prefixprior} and a complete reveal
+of $A$, expected mistakes $M$ satisfy
+\[
+ C_A(f)\le
+ \frac{6(d+2)}{1-2^{-2(d+2)}}M+12.
+\]
+Moreover $M\le2K_A(f)\log2$, and
+$K_A(f)=O(C_A(f)\log(d+C_A(f))+1)$. Consequently this same prior has
+both an $O(dM+1)$ converse and the usual circuit-size upper bound.
+\end{theorem}
+\begin{proof}
+The map $p\mapsto\texttt{1}xyp$ is injective, preserves earlier consistent
+labels when $y=f(x)$, and adds exactly $d+2$ bits. Its prior ratio is
+the constant $\beta=2^{-2(d+2)}$. Applying it to all descriptions in
+the preceding version space gives predictive correct-label probability
+at least $\beta$. Therefore
+\[
+ L_A\le\frac{2(d+2)\log2}{1-\beta}\,m
+\]
+on every complete path.
+
+For any real $r\ge0$, Kraft's inequality gives
+\[
+ \widetilde\pi_d\{\ell(p)\ge r\}
+ \le Z_d^{-1}2^{-r}\sum_p2^{-\ell(p)}\le16\,2^{-r}.
+\]
+Every program agreeing with $f$ on $A$ has length at least $C_A(f)/3$,
+since its compiled circuit has at most three times its length in gates.
+It follows that
+$L_A\ge(C_A(f)/3)\log2-\log16$. Combine the two inequalities and
+take expectations for the asserted converse. A shortest fitting program
+has probability $2^{-2K_A(f)}/Z_d$, so
+$m\le L_A\le2K_A(f)\log2+\log Z_d\le2K_A(f)\log2$.
+Finally a circuit of size $s\ge1$ has a base description of length
+\[
+ s+3+2\sum_{i=1}^s\lceil\log_2(d+i+1)\rceil
+ \le s+3+2s\lceil\log_2(d+s+1)\rceil.
+\]
+For $s=0$, use \texttt{00}. This proves the forward complexity estimate.
+\end{proof}
+
+The squared code weight in \eqref{eq:prefixprior} is useful: prefix
+freeness alone does not give an exponentially decreasing tail for the
+ordinary weights $2^{-\ell(p)}$. The additional length penalty makes
+the tail estimate uniform over this language. The result is about the
+specified prior, not an invariant property of all ``universal'' priors.
+
+\section{Random input orders and iid sampling}
+
+All results above hold for any fixed reveal order. The Bayesian lower
+bounds were established pathwise for the sum of conditional mistake
+probabilities, using a final log loss depending only on the revealed
+set. Consequently the same bounds hold after averaging over random
+orders, including orders selected using previous sampled predictions.
+The input for the current round must still precede that round's sample.
+
+\begin{corollary}[Infinite iid input sequence]\label{cor:iid}
+Let $D$ be any distribution on $\cX$ and
+$A=\{x:D(x)>0\}$. Run any of the specified learners on an infinite iid
+input sequence from $D$. Every point of $A$ is eventually seen almost
+surely. Theorem~\ref{thm:occam} holds for its total actual mistakes, and
+Theorems~\ref{thm:bayes} and \ref{thm:prefix} hold for expected total
+posterior-sampling mistakes, with target complexity $C_A(f)$.
+When $D$ has full support this is $C(f)$.
+\end{corollary}
+\begin{proof}
+The set $A$ is finite, and each of its points has a finite first-occurrence
+time almost surely. After all have appeared, every consistent predictor
+is correct on all future draws. Predictions at repetitions are already
+correct before this stopping time as well. Thus there are at most $|A|$
+possible mistake rounds. Conditional expectation and Tonelli's theorem
+identify expected actual mistakes with the expected sum of conditional
+mistake probabilities; the complete-reveal results then apply.
+\end{proof}
+
+No lower bound on the positive probabilities $D(x)$ is required for
+total mistakes. Such a bound would matter for how long it takes to
+reveal the support: very rare inputs can postpone the decisive mistakes
+for arbitrarily many rounds. A small asymptotic error rate or a small
+number of mistakes over a finite horizon is therefore a different claim
+from a small total number of mistakes over the infinite sequence.
+
+\section{Limits of the converse}
+
+\paragraph{Arbitrary learners.}
+For any prescribed function $f$, a learner that always returns $f(x)$
+makes zero mistakes. By counting NAND circuits, there are Boolean
+functions with circuit size of order $2^d/d$. Thus no bound in terms of
+mistakes and $d$ alone holds for arbitrary learners without restricting
+their initial knowledge or representation. The same observation applies
+to an arbitrarily selected prior: a point mass on a complex $f$ makes
+zero posterior-sampling mistakes. Even full support does not repair this.
+For example, assigning mass $1-\eta$ to $f$ and spreading the remaining
+$\eta$ over all Boolean functions gives cumulative sampling mistakes at
+most $-\log(1-\eta)$, however complex $f$ is.
+
+\paragraph{Unrevealed inputs.}
+For $d\ge2$, a learner can observe only a point where $f=0$, while the
+remaining truth table has almost arbitrary circuit complexity. Taking
+the input distribution to be concentrated on that point gives no control
+of global $C(f)$. The valid complexity in the iid theorem is the minimum
+size needed to match $f$ on the distribution's support.
+
+\paragraph{Posterior majority.}
+Sampling mistake probability is $1-p_t$, whereas majority prediction is
+correct whenever $p_t>1/2$. A sequence with $p_t=3/4$ on every round has
+no majority mistakes but positive sampling mistakes and log loss on every
+round. This can occur for a prior with independently biased truth-table
+bits. The mass-repair proofs therefore do not establish a majority
+converse, even though they establish one for posterior sampling. The
+separate deterministic Occam theorem concerns minimum-size consistent
+circuits, not posterior majorities.
+
+\paragraph{A minimum description versus a function prior.}
+The geometric and prefix priors here assign mass to descriptions, and
+multiple descriptions of the same function are all retained. Injectivity
+of repairs makes their masses add correctly. For a prior specified
+directly on functions, the overwrite map has up to two preimages and
+its weights must be checked separately. Merely declaring that the prior
+``prefers smaller circuits'' does not imply the quantitative ratios or
+tail bounds used above.
+
+\paragraph{Depth, noise, and computation.}
+The conclusions count all NAND gates and allow their depth to grow.
+One-point overwrites do not preserve a fixed depth architecture. Repeated
+conflicting labels are excluded; without realizability the consistent
+posterior can be empty. These are statistical and representation
+statements, with no efficient circuit minimization or posterior sampler
+asserted.
+
+\paragraph{Acknowledgment and status.}
+The argument develops the one-point exception-repair and log-loss ideas
+in the collaborative circuit-induction discussion. The explicit circuit
+priors, injectivity checks, and converse estimates are supplied here.
+This manuscript has not been formalized in Lean.
+\end{document}

@@ -689,7 +689,17 @@ These are conventional proofs with [independent AI-agent review records](side-re
 
 The more specialized results use more structure. Robust digital implementations use reliable gate restoration under finite noise. The subcritical kernel and sharp conditioning results use the tanh saturation limit. The critical rate constructions use particular tanh inequalities. “Bounded Lipschitz” is not a license to import all of those conclusions unchanged.
 
-**Open in this program:** the corresponding full results for ReLU and other unbounded activations such as GELU or SiLU. ReLU is Lipschitz and positively homogeneous, which gives useful alternative norm tools, but it is not bounded. The original width-independent truncation/subsampling proof uses bounded hidden states. Restricting attention to a compact input domain does not by itself bound those states uniformly over the prior and all widths. A separate argument is needed.
+**ReLU has a separate positive theorem.** The [ReLU paper](works-in-progress/relu-learning/) proves polynomial fixed-depth sample complexity at every learner width above teacher width in the strong-prior limit, with the original all-input margin restriction and exact training-label conditioning. Positive homogeneity lets us balance the layers without changing the function. The Gaussian energy then bounds the product of layer Frobenius norms independently of width, and a norm-based capacity bound replaces bounded-activation compression. The theorem handles arbitrary input distributions on the Boolean cube and posterior mixtures, with no additional robustness restriction.
+
+If a depth-$L$, width-$C$ ReLU teacher has all weights bounded by $C$, one sufficient strong-prior sample bound is
+
+$$
+n=O\!\left(\frac{L(d+1)^3 C^{4L-2}+\log(1/\delta)}{\varepsilon}\right).
+$$
+
+There is also a product-norm version and a sharper Boolean-gate implementation bound. These are polynomial at fixed depth, with poor depth dependence. A quantitative Gaussian-neighborhood argument proves finite-variance learning for every $\gamma\ge2$; for one hidden layer it works for **every $\gamma\ge1$**, including mean field. The deeper finite-variance range $1\le\gamma<2$ remains open here. The new proofs have independent AI-agent reviews and are not Lean verified.
+
+This does not settle other unbounded activations such as GELU or SiLU. ReLU's exact positive homogeneity is used essentially in this proof. Compact inputs alone do not uniformly bound all hidden states over the prior and every width, so the earlier bounded-activation argument still cannot simply be reused.
 
 Hard threshold activations have the opposite issue: they are bounded but discontinuous, so the numerical compression proof does not transfer directly. Universal approximation by itself also supplies neither the quantitative circuit size nor the robustness needed here. See [Appendix L of the audit](side-results/strong-prior-appendix-audit/paper.pdf).
 
@@ -743,11 +753,45 @@ Conversely, a tiny target probability alone is not a sample lower bound. A prior
 | Lower-bound log prior mass | **Partly resolved.** The strong-prior rate is polynomially equivalent to bounded-weight network complexity; finite-variance target-mass bounds also exist. Sharp absolute-mass formulas remain open. |
 | Classify scaling regimes | **Partly resolved on a particular one-parameter line.** The three positive learning regimes also extend to the non-Gaussian family in [question 20](#20-do-independent-non-gaussian-weight-priors-give-the-same-results). General exponent tuples, mixed regimes, and non-Gaussian subcritical behavior remain open. |
 | Out-of-distribution learning | **Heuristic.** Mistakes by the simplest consistent hypothesis may often eliminate many surviving low-complexity competitors, even as the input distribution changes. The [conditional online argument below](#why-expect-occam-learning-to-transfer-out-of-distribution) makes this expectation precise; its genericity premise remains unproved. |
-| Online mistake bounds | **Open for the desired width-uniform neural statement.** The genericity argument below gives a conditional bound for a simplest-consistent learner; its premise and its analogue for the NNBayes posterior remain unproved. Generic Bayesian code-length bounds also exist. |
+| Online mistake bounds | **Proved for uniform random Boolean inputs.** All three positive NNBayes regimes have polynomial expected and high-probability total mistake bounds, independent of learner width. Circuit-induction converses are proved for specified rules; the original fixed-width neural polynomial converse and arbitrary-order Gaussian guarantees remain open. See [the cumulative-mistake discussion](#can-we-bound-total-mistakes-and-recover-circuit-complexity-from-them). |
 | Other architectures | **Open here.** CNN weight sharing, recurrence, attention, normalization, and residual structure need their own prior and complexity accounting. |
 | Gradient descent | **Open as a learning theorem.** The robustness experiments concern a sufficient stability property, not equivalence between SGD and the exact Bayesian posterior. The [targets-beyond-parity question](#for-gamma1-is-the-bad-sample-complexity-specific-to-parity) adds Adam runs on a target that the $\gamma<1$ learners provably need exponentially many samples for (numerical, $d\le35$). |
 
 The [appendix audit](side-results/strong-prior-appendix-audit/paper.pdf) checks every original appendix in turn. In particular, the original depth example is a capacity/proof obstruction rather than a sample lower bound; the scaling classification is not exhaustive; the kernel-to-classification inference needed repair; and some online-learning claims were false under their stated conventions. These qualifications are part of the current account, not claims silently inherited from the slides.
+
+### Can we bound total mistakes and recover circuit complexity from them?
+
+**The total-mistake upper bound holds for all three original positive NNBayes regimes under uniform random Boolean inputs. Circuit converses also hold for specified induction rules; the original fixed-width neural polynomial converse remains open.** The [papers and neural note](works-in-progress/online-mistakes/) give the precise statements and proofs. They have independent AI-agent mathematical reviews, not Lean formalizations.
+
+At each round the learner sees an input, predicts, and then receives its true label, even after a correct prediction. Exact conditioning makes every later repetition of that input correct. An infinite uniform iid stream therefore has the same total-mistake law as a uniformly random permutation of the cube. This is a cumulative guarantee over the whole learning process, rather than a bound on error after some fixed sample size.
+
+If a fixed relevant function class has log cardinality at most $h$, and posterior mass outside it is at most $\beta$ after every history, the expected total posterior-sampling mistakes are at most
+
+$$
+1+2(h+1)H_{2^d-1}+2^d\beta,
+$$
+
+where $H_r$ is the harmonic sum. Take $\beta=2^{-d}$. The existing exact-function compression theorems pay only polynomially for $\log(1/\beta)$, giving $O(d(h+1))$ expected mistakes. The smaller-width branches use the direct Bayesian log-prior bound. High-probability bounds also hold, with polynomial dependence on $\log(1/\delta)$. The constants are independent of learner width; the strong-prior variance threshold is still chosen separately at each width, and one sufficiently small variance works for the entire stream. These cumulative high-probability statements concern each fixed learner with width-independent constants, not one event simultaneously controlling every learner width.
+
+This argument permits mixtures of tied minimizers. Counting a failure whenever the correct label has probability at most $\theta<1$ costs a factor of at most $1/(1-\theta)$ relative to cumulative posterior error; majority errors cost at most two. Thus it covers the usual strict `>2/3` convention. The neuron-merging restrictions also retain joint polynomial depth dependence for layered Boolean-circuit teachers, counting constant wires and compilation overhead. The weaker internal-noise condition's current approximate compressor does not yet establish that polynomial-depth cumulative extension. The [ReLU regimes](works-in-progress/relu-learning/) have cumulative bounds too.
+
+**Input order matters for this proof.** On a nonuniform finite support, an expected bound depends on $\log(1/p_{\min})$, where $p_{\min}$ is the smallest positive input probability. It remains polynomial when that logarithm does. A finite class with very unequal prior weights can make many mistakes under an adverse order, or a sufficiently nonuniform iid distribution. This refutes an arbitrary-order inference from class cardinality alone, not the desired claim for the specific Gaussian priors. Arbitrary-order Gaussian guarantees still need another argument, such as a suitable version of the genericity premise below.
+
+**The circuit converses can be made precise.** Here $C(f)$ counts NAND gates, with unrestricted depth, and the full input domain must eventually be revealed.
+
+- A learner that always predicts with a smallest consistent circuit satisfies $C(f)\le(3d+3)B$, where $B$ is its actual total mistake count. A correct prediction leaves minimum consistent size unchanged; a mistake can be repaired with at most $3d+3$ extra gates.
+- For Bayesian posterior sampling, use a geometric distribution on gate count and uniformly random wiring conditional on that count. Expected total mistakes $m$ imply $C(f)=O(dm\log(d+dm))$. The same prior has an upper bound $O(C(f)\log(d+C(f))+1)$ for any input order.
+- An explicit prefix circuit language with a short exception constructor improves the converse to $O(dm+1)$. Its prior has an additional length penalty that supplies the needed exponential description-length tail.
+
+Injectivity of repairs and their probability cost matter: a prior that merely favors small circuits is not enough. These Bayesian converses are for posterior sampling, not a proved converse for posterior majority. For an infinite iid stream, any full-support input distribution suffices for the converse; without full support the conclusion concerns a small circuit agreeing with the target on that support. An arbitrary learner or prior can hard-code a complex target and make no mistakes.
+
+**For neural minimum-energy learning, there is a partial converse.** Here $m$ may be expected total mistakes, and $C_L(f)$ is bounded-weight depth-$L$ neural-network width, rather than the NAND gate count above. In the limit that first takes prior variance to zero at fixed width and then lets width grow, an exact tanh singleton repair gives
+
+$$
+C_L(f)\le\mathrm{poly}_L(d)\exp(O_L(m)).
+$$
+
+Adding the prior restriction $1/2<|z_w(x)|<U$ on every input, for fixed $U>1$, improves this to a polynomial in $d,U,m$ at fixed depth. These statements cover sampling, majority, and confidence mistakes, including ties. They do not prove the original fixed-width polynomial converse. The two remaining issues are the cost of overwriting a potentially large real output and making room for a correction without repeatedly multiplying energy by a constant.
 
 ### Why expect Occam learning to transfer out of distribution?
 
