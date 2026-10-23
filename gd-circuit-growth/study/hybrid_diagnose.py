@@ -14,11 +14,17 @@ Measures (real-valued outputs standardised on a probe set of 16384 fresh uniform
       part with the network's.
     * the output split by Fourier degree over all d coordinates: degree 1, degree 2, degree >= 3 (variance shares,
       correlations with the network's).
+    * the degree-1 sample noise: the cosine between the network's degree-1 Fourier coefficients on the irrelevant
+      coordinates and each learner's (references: the raw Hebbian vector E_S[(y - ybar) x], ridge least squares).
     * error location on the test set: error rates on boundary points (some relevant coordinate flips the label) and on
       interior points; agreement with the label of the nearest training point; P(network errs | race errs?, kernel errs?).
+    * swaps (diagnostic only, uses the relevant variables): sign(A's relevant part + B's sample-noise pattern rescaled to
+      A's noise variance), scored like a learner.
 Writes study/hybrid_diagnose.json and prints the summary tables used in HYBRID.md.
 
-    OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python hybrid_diagnose.py
+    OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python hybrid_diagnose.py            # full run (about 15 min)
+    python hybrid_diagnose.py summary                                             # tables from the saved json
+    python hybrid_diagnose.py ceiling                                             # network-vs-network references
 """
 import os, sys, json, itertools, numpy as np
 from scipy.linalg import cho_factor, cho_solve
@@ -166,6 +172,16 @@ def main():
                     m = (er == a1) & (ek == b1)
                     r[f"P(nn err|race{a1},kernel{b1})"] = float(en[m].mean()) if m.any() else np.nan
                     r[f"frac(race{a1},kernel{b1})"] = float(m.mean())
+                # degree-1 sample noise: the learners' degree-1 Fourier coefficients on the irrelevant coordinates,
+                # against the network's; references: the raw Hebbian vector E_S[(y - ybar) x] and ridge least squares
+                irr = [j for j in range(C.D) if j not in rel]
+                c1 = {k: PROBE.T @ pr[k]["v"] / len(PROBE) for k in L}
+                c1["hebbian"] = X.T @ (y - y.mean()) / len(y)
+                c1["ridge-ls"] = np.linalg.solve(X.T @ X + np.eye(C.D), X.T @ (y - y.mean()))
+                for k in c1:
+                    u, v_ = c1["nn"][irr], c1[k][irr]
+                    r[f"{k}/cos_deg1_noise"] = float(u @ v_ / np.sqrt((u @ u) * (v_ @ v_) + 1e-30))
+                    r[f"{k}/deg1_noise_frac"] = float(np.linalg.norm(v_) / max(np.linalg.norm(c1[k]), 1e-30))
                 rows.append(r)
                 print(f"{fn:10s} n={int(n):5d} s={s} " + " ".join(f"{k}:err {r[k+'/err']:.2f} perp {r[k+'/corr_perp']:.2f} R {r[k+'/corr_R']:.2f}"
                                                          for k in L if k != "nn"), flush=True)
@@ -206,6 +222,9 @@ def summarize(rows):
             cs = [avg(f"{k}/corr_{q}", split)[0] if k != "nn" else np.nan for q in ("R", "perp", "d1", "d2", "d3")]
             print(f"| {k} | {avg(k+'/err', split)[0]:.3f} | {avg(k+'/share_perp', split)[0]:.2f} | " + " | ".join(f"{c:.2f}" for c in cs)
                   + f" | {avg(k+'/phi_err', split)[0]:.2f} | {avg(k+'/agree_1nn', split)[0]:.3f} | {avg(k+'/err_boundary', split)[0]:.2f} / {avg(k+'/err_interior', split)[0]:.2f} |")
+        print("degree-1 sample noise (irrelevant coordinates): cosine with the network's, and noise / total degree-1 norm")
+        for k in ["nn", "race", "kernel", "hybrid", "nn-sgd", "nn-reinit", "hebbian", "ridge-ls"]:
+            print(f"   {k:10s} cos {avg(k + '/cos_deg1_noise', split)[0]:.2f}   noise fraction {avg(k + '/deg1_noise_frac', split)[0]:.2f}")
         print("P(nn err | race err?, kernel err?) and cell fractions:")
         for a1, b1 in itertools.product((0, 1), (0, 1)):
             print(f"   race {'wrong' if a1 else 'right'}, kernel {'wrong' if b1 else 'right'}: P(nn wrong) = {avg(f'P(nn err|race{a1},kernel{b1})', split)[0]:.2f}"
