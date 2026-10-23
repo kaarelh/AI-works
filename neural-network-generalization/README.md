@@ -52,7 +52,7 @@ This is the completed full-parity exponential theorem. The stronger fixed-depth 
 
 ### 5. Robust priors: polynomial dependence on depth
 
-[Paper (PDF)](main-results/robust-polynomial-depth/paper.pdf) · [Source and build instructions](main-results/robust-polynomial-depth/) · [Robustness FAQ](TECHNICAL-FAQ.md#23-what-robustness-condition-gives-polynomial-depth-dependence)
+[Paper (PDF)](main-results/robust-polynomial-depth/paper.pdf) · [Source and build instructions](main-results/robust-polynomial-depth/) · [Robustness FAQ](TECHNICAL-FAQ.md#15-what-robustness-condition-gives-polynomial-depth-dependence)
 
 **A polynomial-depth learning bound for NNBayes on robust networks.** Restrict the Gaussian prior to networks whose clipped predictions survive a calibrated ball of simultaneous internal activation and output perturbations. For layered Boolean-circuit targets of width $C$, one universal polynomial bounds sample complexity jointly in input dimension, depth, circuit width, robustness calibration, and statistical parameters, simultaneously at **every width $N\ge C$ and every $`\gamma\ge1`$**.
 
@@ -120,7 +120,7 @@ The principal unfinished target is the fixed-depth natural sparse-parity lower b
 
 ## Improved polynomial bounds
 
-[Five papers, sources, and independent reviews](works-in-progress/improved-polynomials/) · [FAQ: explicit polynomials](TECHNICAL-FAQ.md#31-what-are-the-explicit-sample-complexity-polynomials-and-are-practical-sample-bounds-close)
+[Five papers, sources, and independent reviews](works-in-progress/improved-polynomials/) · [FAQ: explicit polynomials](TECHNICAL-FAQ.md#23-what-are-the-explicit-sample-complexity-polynomials-and-are-practical-sample-bounds-close)
 
 These supporting papers improve the polynomial dependence on target width. Their proofs have independent AI-agent mathematical reviews, but are outside the current Lean verification and remain separate from the five main results.
 
@@ -150,13 +150,13 @@ The [online-learning papers and neural converses](works-in-progress/online-mista
 | [Polynomial-depth ReLU/GELU learning](works-in-progress/relu-gelu-polynomial-depth/paper.pdf) | Quadratic Boolean teacher-width dependence up to logarithms, and polynomial depth, for every `gamma >= 1` under unsigned neuron-merging stability. All learner widths above compiled teacher width; positive-mass Boolean implementations. |
 | [Polynomial-depth neural converse](works-in-progress/online-mistakes/depth-polynomial-converse/paper.pdf) | Few total mistakes imply a small tanh network, with fourth-power mistake dependence and polynomial depth. Requires an output cap and controlled internal amplification, complete input coverage, and the strong-prior-then-width limit. |
 
-The FAQ has separate sections on [total mistakes](TECHNICAL-FAQ.md#38-can-we-bound-the-total-number-of-mistakes-during-online-learning) and [converses](TECHNICAL-FAQ.md#39-does-making-few-mistakes-imply-that-the-target-has-a-small-circuit), including the input-order, prediction-rule, and coverage assumptions.
+The FAQ has separate sections on [total mistakes](TECHNICAL-FAQ.md#30-can-we-bound-the-total-number-of-mistakes-during-online-learning) and [converses](TECHNICAL-FAQ.md#31-does-making-few-mistakes-imply-that-the-target-has-a-small-circuit), including the input-order, prediction-rule, and coverage assumptions.
 
 ## Label-noise research
 
 [Exact noisy interpolation in the strong-prior limit](works-in-progress/noisy-interpolation/README.md) is a new supporting research note. For distinct uniformly sampled Boolean inputs, it proves a clean-error bound linear in the corrupted fraction, with a resource-dependent coefficient, for the original tanh/Gaussian exact-fit learner at every width of order at least $C+U^2d^2(s+1)$, where $U$ bounds the teacher's output; this threshold grows linearly with the number $s$ of corruptions. The proof covers arbitrary corruptions and posterior mixtures. For bounded-output Boolean-circuit implementations, the noise coefficient is independent of teacher width; polynomial dependence on dimension and depth remains. A noise bound uniform in dimension and target complexity is still open.
 
-This note is not Lean verified and remains separate from the main results. The [label-noise FAQ](TECHNICAL-FAQ.md#41-do-the-good-generalization-results-survive-a-small-amount-of-label-noise) gives the conventions, width requirement, and remaining question.
+This note is not Lean verified and remains separate from the main results. The [label-noise FAQ](TECHNICAL-FAQ.md#33-do-the-good-generalization-results-survive-a-small-amount-of-label-noise) gives the conventions, width requirement, and remaining question.
 
 ## Recent depth research
 
