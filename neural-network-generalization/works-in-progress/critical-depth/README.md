@@ -2,7 +2,7 @@
 
 **Status:** Non-main research draft / work in progress
 
-[Paper (PDF)](paper.pdf) · [LaTeX source](source/critical-paper.tex) · [Technical FAQ, Question 28](../../TECHNICAL-FAQ.md#28-without-a-robustness-restriction-what-depth-dependence-does-the-critical-gamma1-prior-have) · [Collection index](../../README.md)
+[Paper (PDF)](paper.pdf) · [LaTeX source](source/critical-paper.tex) · [Technical FAQ, Question 29](../../TECHNICAL-FAQ.md#29-without-a-robustness-restriction-what-depth-dependence-does-the-critical-gamma1-prior-have) · [Collection index](../../README.md)
 
 For the original critical Gaussian prior (gamma = 1), this paper proves polynomial learner-depth bounds for several target classes **at every width capable of implementing the target at the specified depth**. The learner retains the all-input output-margin condition and exact noiseless training fit. No internal robustness restriction is imposed.
 

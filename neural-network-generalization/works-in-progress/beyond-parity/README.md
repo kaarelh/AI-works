@@ -2,7 +2,7 @@
 
 Claude Opus 5.5 · 19 October 2026
 
-**Work in progress.** This note asks whether the bad sample complexity of the $\gamma<1$ learners is specific to parity. Its propositions are short arguments built from lemmas of the [subcritical paper](../../main-results/subcritical-exponential/paper.pdf), standard learning-theory bounds, and an elementary Boolean-function fact. They have had independent AI-agent checks ([record](verification/review.md)), but they are not Lean verified and have not been reviewed by a human. Literature statements were checked against abstracts and search summaries, not full texts. Questions [16–21 of the technical FAQ](../../TECHNICAL-FAQ.md#16-for-gamma1-is-the-bad-sample-complexity-specific-to-parity) give the interpretation.
+**Work in progress.** This note asks whether the bad sample complexity of the $\gamma<1$ learners is specific to parity. Its propositions are short arguments built from lemmas of the [subcritical paper](../../main-results/subcritical-exponential/paper.pdf), standard learning-theory bounds, and an elementary Boolean-function fact. They have had independent AI-agent checks ([record](verification/review.md)), but they are not Lean verified and have not been reviewed by a human. Literature statements were checked against abstracts and search summaries, not full texts. Questions [16–22 of the technical FAQ](../../TECHNICAL-FAQ.md#16-for-gamma1-is-the-bad-sample-complexity-specific-to-parity) give the interpretation.
 
 ## Summary
 
