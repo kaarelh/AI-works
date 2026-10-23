@@ -141,7 +141,7 @@ class Hybrid:
         if self.mode == "static":
             return np.inf if self.rho is None else self.rho * n ** self.beta
         if self.mode == "flow":
-            return np.inf if (self.c_bg is None or t <= 0) else self.c_bg * n / t
+            return np.inf if (self.c_bg is None or t <= 0) else self.c_bg * n ** self.beta / t
         if self.mode == "none":
             return np.inf
         raise ValueError(self.mode)
