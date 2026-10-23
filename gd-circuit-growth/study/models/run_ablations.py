@@ -41,6 +41,10 @@ ABLATIONS = {
     "P1":         dict(P=1),
     "P32":        dict(P=32),
     "nostop":     dict(stop="none"),
+    "nostop-g160": dict(stop="none", gmax=160),
+    "iters1":     dict(iters=1),
+    "iters32":    dict(iters=32),
+    "gmax96":     dict(gmax=96),
     "oracle-align":  dict(oracle=True, noise="align"),
     "oracle-search": dict(oracle=True, noise="search"),
     # independent search sample of the SAME size n as the training set (oracle=0 means N = n): same noise level,
@@ -51,12 +55,20 @@ ABLATIONS = {
 
 
 class Recorder:
-    """Wraps a model; records circuit diagnostics of every fit (fn set by the driver)."""
+    """Wraps a model; records circuit diagnostics of every fit (fn set by the driver), including the test error
+    along the trajectory (after every firing), computed after fit() has returned."""
     def __init__(self, model):
         self.m, self.name, self.fn, self.rows = model, model.name, None, []
 
     def fit(self, X, y, rng):
         r = self.m.fit(X, y, rng)
+        Xte, yte = C.test_data(self.fn)
+        traj = []
+        if "columns" in r:
+            Gz = r["columns"](Xte)
+            e0 = float(np.mean(np.where(np.full(len(yte), r["c0"]) > 0, 1.0, -1.0) != yte))
+            traj = [(0.0, e0)] + [(float(tt), float(np.mean(np.where(r["c0"] + Gz[:, :j + 1] @ aj > 0, 1.0, -1.0) != yte)))
+                                  for j, ((tt, _), aj) in enumerate(zip(r["trace"][1:], r["readouts"]))]
         rel = set(C.SUITE[self.fn]["relevant"])
         sup = r.get("supports", [])
         true = [s <= rel for s in sup]
@@ -65,7 +77,8 @@ class Recorder:
                               true_at_fit=int(sum(true[:r.get("gates_at_fit") or 0])),
                               covers=bool(rel <= set().union(*[s for s, t in zip(sup, true) if t])) if any(true) else False,
                               orders=[int(o) for o in r["orders"]], fanin=r["fanin"],
-                              time=r["time"], stop_time=r["stop_time"]))
+                              time=r["time"], stop_time=r["stop_time"],
+                              train_traj=[(float(a), float(b)) for a, b in r["trace"]], test_traj=traj))
         return r
 
 

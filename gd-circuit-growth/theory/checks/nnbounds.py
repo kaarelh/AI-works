@@ -108,7 +108,11 @@ def spectral_bound(margins, Xnorm_F, s, b, W, delta=0.05, q=1.1, base=1e-2, gmax
         g = gmax * q ** (-k)
         emp = ramp(margins, g).mean()
         rho = Xnorm_F * np.sqrt(np.log(2 * W ** 2)) * RA / g
-        rad = (12 * rho / n) * (1 + np.log(n / (3 * rho))) if 3 * rho <= n else 1.0  # 1.0 = trivial cap
+        # Dudley applied to (ramp class) U {0} (revision r2: BFT Lemma A.5 assumes 0 in the class); adding 0 costs
+        # ln N -> ln N + ln 2, i.e. at most min(12 sqrt(ln2/n), 3 ln2/rho) on Rhat_S.  Never reached on the study's
+        # networks, where 3 rho > n always (24 rho / n >= 679).
+        rad = ((12 * rho / n) * (1 + np.log(n / (3 * rho))) + min(12 * np.sqrt(np.log(2) / n), 3 * np.log(2) / rho)
+               if 3 * rho <= n else 1.0)  # 1.0 = trivial cap
         conf = 3 * np.sqrt((np.log(2 / delta) + logw + np.log((k + 1) * (k + 2))) / (2 * n))
         bd = emp + 2 * rad + conf
         if bd < best[0]:

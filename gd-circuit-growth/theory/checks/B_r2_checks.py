@@ -16,6 +16,10 @@ Runs in about a minute (forward passes only; no training, no PAC-Bayes search).
   6. Theorem B3.3(d) (new): constants of the a priori SGD versions (referee major 2).
   7. Miscellaneous numbers quoted in the revision (referee minors 6, 9, 13): Dudley extra term, Adam ratio
      over C_50, read-off disagreements and x1x2x3x4 certificates.
+  8. Proposition B3.4 evaluated (referee minor 9): one-pass Adam (the study's online protocol: lr 1e-3,
+     batch 64, muP multipliers) on x1, MAJ3 and x1x2x3, logging the progressive errors e_k; three windows of
+     1000 steps fixed in advance (delta = 0.05 / 3 each), against the measured mean test error of the
+     iterates in the window and the final network's test error.
 
 usage: OPENBLAS_NUM_THREADS=1 RESULTS=<sweep output folder> python3 B_r2_checks.py > B_r2_checks.out
 """
@@ -219,3 +223,33 @@ for fn, nn_ in [("par4", 2048), ("par3", 256), ("dlist5", 256), ("stair5", 2048)
     print(f"   read-off {fn} n={nn_}: bounds " + ", ".join(f"{r['bound']:.3f}" for r in rs) + f";  mean {np.mean([r['bound'] for r in rs]):.3f}")
 K = 3; d = 30
 print(f"   ln(1/pi) for k = 3: {math.log(7 * math.comb(d, K) * 2 ** (2 ** K)):.3f}")
+
+# ------------------------------------------------------------------------------------------------ 8
+print("\n== 8. Proposition B3.4 on one-pass Adam (progressive errors logged) ==")
+import nn_train as nt
+import jax, jax.numpy as jnp
+STEPS, W, BATCH, DELTA = 3000, 1000, 64, 0.05
+step = jax.jit(nt.make_step("adam", 1e-3))
+errf = jax.jit(lambda p, X, y: jnp.mean(y * nt.forward(p, X)[0] <= 0))
+for fn in ["dict", "maj3", "par3"]:
+    Xte, yte = nt.make_test(fn); Xte, yte = jnp.array(Xte), jnp.array(yte)
+    p0 = nt.init_params(jax.random.PRNGKey(7))
+    z = jax.tree_util.tree_map(jnp.zeros_like, p0)
+    st = (p0, z, z, 0)
+    rng = np.random.default_rng([nt._fn_seed(fn), 888])
+    e, te = [], []
+    for k in range(1, STEPS + 1):
+        Xb = rng.choice(np.array([-1.0, 1.0], dtype=np.float32), size=(BATCH, nt.D))
+        yb = nt.SUITE[fn]["fn"](Xb).astype(np.float32)
+        Xb, yb = jnp.array(Xb), jnp.array(yb)
+        e.append(float(errf(st[0], Xb, yb)))          # e_k: pre-update parameters theta_{k-1} on the fresh batch
+        te.append(float(errf(st[0], Xte, yte)))       # test error of theta_{k-1} (4096 held-out inputs)
+        st = step(st, Xb, yb)
+    e, te = np.array(e), np.array(te)
+    slack = math.sqrt(math.log(3 / DELTA) / (2 * W * BATCH))
+    final_te = float(errf(st[0], Xte, yte))
+    for w in range(STEPS // W):
+        sl = slice(w * W, (w + 1) * W)
+        print(f"   {fn:5s} window steps {w * W + 1:4d}-{(w + 1) * W:4d}: mean e_k {e[sl].mean():.4f}  bound {e[sl].mean() + slack:.4f}"
+              f"  (slack {slack:.4f})  measured mean test err of the iterates {te[sl].mean():.4f}")
+    print(f"   {fn:5s} final network after {STEPS} steps: test err {final_te:.4f}")

@@ -162,7 +162,12 @@ def _best_relu(s, r):
 class Race:
     name = "race"
 
-    def __init__(self, theta=3.0, lam=1e-3, Q=3, K=4, P=8, iters=8, gmax=48, depth=2, stop_mse=None, gate='thr', verbose=False):
+    def __init__(self, theta=3.0, lam=1e-3, Q=3, K=4, P=8, iters=8, gmax=48, depth=2, stop_mse=None, gate='thr', verbose=False,
+                 csq=None):
+        # csq (optional, default off): an order-k >= 2 unit can follow its aligned direction only if the signal of the
+        # empirical utility at its current overlap, lam * m^(k-1), exceeds the sampling noise csq / sqrt(n) along it.
+        # From m ~ D^-1/2 this is the correlational-SQ law n >~ csq^2 D^(k-1) / lam^2 (see study/DSCALE.md).
+        self.csq = None if csq is None else float(csq)
         self.theta, self.lam, self.Q, self.K, self.P = float(theta), float(lam), int(Q), int(K), int(P)
         self.iters, self.gmax, self.depth, self.verbose = int(iters), int(gmax), int(depth), verbose
         self.stop_mse = stop_mse
@@ -237,6 +242,8 @@ class Race:
                     s = U[:, :Dk] @ w.astype(F32)
                     Ug, b = (_best_threshold if self.gate == 'thr' else _best_relu)(np.rint(s).astype(np.int64), r64 - r64.mean())
                     if b is None or Ug <= 1e-9:
+                        continue
+                    if self.csq is not None and k >= 2 and lamv[p] * mv[p] ** (k - 1) < self.csq / np.sqrt(n):
                         continue
                     Tal = _align_time(k, lamv[p], mv[p])
                     T = Tal + max(0.0, self.theta - pk["c"][p]) / Ug

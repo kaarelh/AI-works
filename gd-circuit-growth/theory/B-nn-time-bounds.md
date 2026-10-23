@@ -2,6 +2,8 @@
 
 Notes by Claude, prompted by Kaarel Hänni. Research note, 23 October 2026; not reviewed by a human.
 
+*Revision 2, after referee round 1 ([`checks/referee_B_r1.json`](checks/referee_B_r1.json)). Every flagged item is addressed; the changes are listed in the [revision notes](#revision-notes). The revision has not been re-refereed.*
+
 **Question (from the user).** *Can we get generalization bounds of the form "training has not taken long, so the learned circuit cannot be big yet, so a Chernoff bound over all small circuits says train and test loss are close"?* This file does it for the **actual network** of the study, with no discrete model in between. It is meant as the honest baseline that the circuit-based bounds (tasks A and C) should beat.
 
 **Status labels**, as in [`neural-network-generalization/`](../../neural-network-generalization/TECHNICAL-FAQ.md):
@@ -20,38 +22,50 @@ Notes by Claude, prompted by Kaarel Hänni. Research note, 23 October 2026; not 
 5. [B4: numbers](#5-b4-numbers)
 6. [What the circuit bounds of tasks A and C have to beat](#6-what-the-circuit-bounds-have-to-beat)
 7. [Files](#7-files) and [references](#references)
+8. [Revision notes](#revision-notes)
 
 ## 0. Short answer
 
 The intuition goes through rigorously, but in **parameter space**, not circuit space, and it is **numerically weak**:
 
-1. **Time bounds displacement (Proved).** For gradient flow with per-layer learning-rate multipliers $M$ (the μP multipliers), $\|\theta(t)-\theta(0)\|_{M^{-1}}\le\sqrt{t\,(L_S(\theta_0)-L_S(\theta(t)))}\le\sqrt{t\,L_S(\theta_0)}$ (Theorem B1.1). For GD this needs a descent condition (Corollary B1.2); for SGD it holds in expectation under smoothness (Proposition B1.3); with no assumptions, the worst-case gradient-norm bound is useless after a fraction of one step (Remark B1.5). For Adam the correct worst-case per-coordinate step is $C_t\cdot\mathrm{lr}$ with $C_t\uparrow 7.27$ for $(\beta_1,\beta_2)=(0.9,0.999)$, not $\mathrm{lr}$ (Lemma B1.4). The folklore value $1$ is exceeded whenever gradients grow, as they do at saddle escapes. Real runs reach $1.5$–$1.7$.
-2. **Small displacement implies generalization (Proved).** The cleanest combination is a PAC-Bayes bound with a Gaussian prior **centred at the initialization**: the KL term is $\sum_g\|\theta_g-\theta_{0,g}\|^2/2\sigma_g^2$, which by B1 is at most $t\,L_S(\theta_0)\max_g m_g/2\sigma_g^2$, i.e. **linear in training time** (Theorems B3.2, B3.3). This is the rigorous form of "the circuit cannot have grown big yet": the number of nats by which the trained network differs from the initialization, at the resolution $\sigma$ at which the network is noise-robust, grows at most linearly in $t$.
-3. **Norm-based uniform convergence is vacuous here, already at initialization.** The usual capacity measures (Frobenius product, Golowich–Rakhlin–Shamir; $\ell_1$ path norm, Neyshabur–Tomioka–Srebro; spectral, Bartlett–Foster–Telgarsky) are dominated by the random features present at μP initialization. At initialization the path norm is about $(2/\pi)^{3/2}\sqrt{Nd}\approx 31$ and the Frobenius product about $\sqrt N\approx 11$. With the sharpest constants I could prove (Propositions B2.2, B2.3), the margin bounds are vacuous for every trained network in the sweep at every $n\le 16384$. The closest case, $x_1$ at $n=16384$, gives 1.13 for the path norm. Section 5.
-4. **The data-dependent PAC-Bayes bound is non-vacuous at the largest sample size.** On the final Adam networks of the sweep, the bound on the *deterministic* network's test error is $0.26$–$0.56$ at $n=16384$ for the five targets with at most three relevant variables, For our own runs on $x_1$ and MAJ$_3$, stopped after 100–300 steps of SGD or Adam, it is $0.10$–$0.23$. It is $0.55$–$1.0$ at $n=2048$ and vacuous at $n=256$. For targets with 4–6 relevant variables it is uninformative even at $n=16384$ ($0.79$–$1.0$) (Section 5.2).
-5. **The time-based version works only during the first escape.** It is rigorous for gradient flow, for GD in the descent regime, for SGD through the measured energy, and for Adam through Lemma B1.4. It gives $0.39$–$0.76$ (Gibbs network) while the first feature is being learned. It is non-vacuous only for roughly the first $10^2$ steps at the study's learning rates, i.e. gradient-flow time $t\lesssim50$ (Section 5.3). Two discrete-time effects are measured:
-   - at the study's learning rate, full-batch GD violates the descent condition (it oscillates);
+1. **Time bounds displacement (Proved).** For gradient flow with per-layer learning-rate multipliers $M$ (the μP multipliers), $\|\theta(t)-\theta(0)\|_{M^{-1}}\le\sqrt{t\,(L_S(\theta_0)-L_S(\theta(t)))}\le\sqrt{t\,L_S(\theta_0)}$ (Theorem B1.1). For GD the same holds with a factor $1/c$ under a descent condition (Corollary B1.2). For SGD only a weaker statement is available, in expectation and under smoothness (Proposition B1.3): $\mathbb E\|\Delta\theta\|_{M^{-1}}^2\le4tL_0+2\eta t\nu^2(1+\beta t)/B$, i.e. a factor $4$ and an additive noise term that grows like $t^2$ at fixed $\eta$. With no assumptions, the worst-case gradient-norm bound is useless after a fraction of one step (Remark B1.5). For Adam the correct worst-case per-coordinate step is $C_t\cdot\mathrm{lr}$ with $C_t\uparrow 7.27$ for $(\beta_1,\beta_2)=(0.9,0.999)$, not $\mathrm{lr}$ (Lemma B1.4). The folklore value $1$ is exceeded whenever gradients grow, as they do at saddle escapes. Real runs reach $1.5$–$1.7$.
+2. **Small displacement implies generalization (Proved).** The cleanest combination is a PAC-Bayes bound with a Gaussian prior **centred at the initialization**: the KL term is $\sum_g\|\theta_g-\theta_{0,g}\|^2/2\sigma_g^2$ (Theorem B3.2). For gradient flow, and for full-batch GD while the descent condition (D) holds, B1 bounds it by $t\,L_S(\theta_0)\max_g m_g/2c\sigma_g^2$, i.e. **linearly in training time** (Theorem B3.3(a)). This is the rigorous form of "the circuit cannot have grown big yet" for these dynamics: the number of nats by which the trained network differs from the initialization, at the resolution $\sigma$ at which the network is noise-robust, grows at most linearly in $t$. For the other optimizers the time-based KL bounds grow faster than linearly. For SGD, the measured-energy bound B3.3(b) is $t_KE_K$, and the energy $E_K$ itself grows under minibatch noise; the a priori SGD bound B3.3(d) needs smoothness and has a noise term quadratic in $t$. For Adam, B3.3(c) is quadratic in the number of steps.
+3. **Norm-based uniform convergence is vacuous here.** I evaluated the usual capacity measures (Frobenius product, Golowich–Rakhlin–Shamir; $\ell_1$ path norm, Neyshabur–Tomioka–Srebro; spectral, Bartlett–Foster–Telgarsky) on the 49 final Adam networks of the sweep at $n\in\{256,2048,16384\}$. With the sharpest constants I could prove (Propositions B2.2, B2.3), the margin bounds are vacuous for all of them. For each network, the complexity term at unit margin, $c=2\kappa\phi/\sqrt n$, is at least $\max(1,\text{mean positive train margin})$, and this forces the bound above $1$ at every margin (Lemma B2.1a). The closest case is $x_1$ at $n=16384$, with $c_{\rm path}=1.46$. The complexity term exceeds $1$ already at the initialization's norms: there the path norm is about $(2/\pi)^{3/2}\sqrt{Nd}\approx 31$ and the Frobenius product about $\sqrt N\approx 11$. *(Heuristic reading: the norms are dominated by the random features present at μP initialization. Training can also lower them: the path norm of $x_1$ at $n=16384$ is $26$ after training against $32$ at initialization.)* Section 5.
+4. **The data-dependent PAC-Bayes bound is non-vacuous at the largest sample size.** On the final Adam networks of the sweep, the bound on the *deterministic* network's test error is $0.26$–$0.56$ at $n=16384$ for the five targets with at most three relevant variables ($x_1$, AND$_3$, MAJ$_3$, $x_1x_2$, $x_1x_2x_3$). It is $0.55$–$1.0$ at $n=2048$ and vacuous at $n=256$. For targets with 4–6 relevant variables it is uninformative even at $n=16384$ ($0.79$–$1.0$) (Section 5.2). For our own runs on $x_1$ and MAJ$_3$ at $n=16384$, checkpoints after 100–300 steps of SGD or Adam give $0.10$–$0.34$. Each checkpoint's bound holds on its own. With a union bound over the 10 checkpoints evaluated per target, the best values are $0.11$ for $x_1$ and $0.23$ for MAJ$_3$ (Section 5.3).
+5. **The time-based version works only during and just after the first escape.** Its rigorous forms are:
+   - B3.3(a) for gradient flow, and for GD while (D) holds;
+   - B3.3(b) for any optimizer, through the measured energy. It is a diagnostic rather than an answer, because it is always weaker than B3.2 with the measured displacement;
+   - B3.3(c) for Adam, through Lemma B1.4;
+   - B3.3(d) for SGD under smoothness. Smoothness fails for ReLU, so (d) is not evaluated.
+
+   Along the runs of Section 5.3 the rigorous values for the Gibbs network are:
+   - (a), GD at $\eta=0.02$: $0.59$–$0.77$ over steps 200–1000 ($t=4$–$20$), while the test error falls from 4.7% to 0.3%;
+   - (b): $0.39$ for SGD on $x_1$ at step 20 ($t=4$; the test error is already $0.001$) and $0.46$ for GD at $\eta=0.2$ at step 20, then at least $0.9$ from step 100 ($t=20$) on in both; for GD at $\eta=0.02$, where (D) holds, $0.45$–$0.71$ over steps 200–1000;
+   - (c), Adam: $0.44$–$0.56$ at step 50, $0.78$–$0.84$ at step 100, and vacuous by step 200.
+
+   So the time-based bounds are informative ($<0.5$) only at the first checkpoints, up to gradient-flow time $t\approx4$: 20 steps at $\eta=0.2$, 200 steps at $\eta=0.02$, or 50 steps of Adam. Two discrete-time effects are measured:
+   - at the study's learning rate, full-batch GD satisfies the descent condition only for its first 20 steps and then oscillates;
    - the SGD energy $\sqrt{tE}$ overshoots the actual displacement by $43\times$.
-6. **One-pass (online) SGD needs no capacity argument at all (Proved, Proposition B3.4).** The progressive minibatch error is an unbiased running estimate of the test error; the slack is $0.005$ over a window of 1000 steps. This is the cumulative-mistake picture of the sibling project.
-7. **Algorithmic stability (Hardt–Recht–Singer) and mutual-information bounds (Xu–Raginsky, SGLD) do not apply as stated** (Section 4.5). Their assumptions fail: smoothness, Lipschitzness, bounded loss, $c/t$ steps, injected noise. Where they can be forced to apply, they are vacuous.
-8. **A naive circuit bound already beats all of this a posteriori (Proposition 6.1, Proved).** Read a small junta off the trained network, bound the junta by an Occam/Chernoff argument, and pay for the read-off with the disagreement measured on fresh *unlabeled* inputs. This gives $0.04$–$0.12$ at $n=256$ for $x_1$, $x_1x_2$, AND$_3$ and MAJ$_3$, where every parameter-space bound is vacuous. At $n=2048$ it gives $0.01$–$0.10$ for 4–6-variable targets (staircase, multiplexer, decision list, MAJ of parities), where PAC-Bayes is vacuous on the ones evaluated. This is the bar for tasks A and C: an *a priori* (time- or move-based) argument that the network is close to a small circuit would turn it into a "short training implies generalization" theorem.
+6. **One-pass (online) training needs no capacity argument at all (Proved, Proposition B3.4).** For a window of steps fixed in advance, the mean progressive minibatch error bounds the mean test error of the iterates in the window, i.e. the test error of a randomly chosen iterate. The slack is $0.005$ over 1000 steps of batch 64. On one-pass Adam runs logged for this purpose, the bound is within $0.006$ of the measured value in every window (Section 4, after Proposition B3.4). This is the cumulative-mistake picture of the sibling project.
+7. **Algorithmic stability (Hardt–Recht–Singer) does not apply** (Section 4.5). Its assumptions fail: smoothness, Lipschitzness, bounded loss, $c/t$ steps, and Adam is not SGM. **Mutual-information bounds** (Xu–Raginsky; the conditional version of Steinke–Zakynthinou) do apply to the 0-1 loss for any algorithm. But the only bounds on $I(S;W)$ and on the CMI available here make them vacuous. SGLD-type bounds need noise injected at every step.
+8. **A naive circuit bound already beats all of this a posteriori (Proposition 6.1, Proved).** Read a small junta off the trained network, bound the junta by an Occam/Chernoff argument, and pay for the read-off with the disagreement measured on fresh *unlabeled* inputs. At $n=256$ this gives $0.04$–$0.12$ for $x_1$, $x_1x_2$, AND$_3$ and MAJ$_3$, and $0.16$ for the decision list, where every parameter-space bound is vacuous. At $n=2048$ it gives $0.01$–$0.10$ for the staircase, multiplexer, decision list and MAJ of parities, and $0.22$ (worst seed $0.46$) for $x_1x_2x_3x_4$. PAC-Bayes is vacuous at $n=2048$ on the three 4–6-variable targets on which it was evaluated. This is the bar for tasks A and C: an *a priori* (time- or move-based) argument that the network is close to a small circuit would turn it into a "short training implies generalization" theorem.
 
 | result | statement (short) | status | vacuous at $n\le16384$? |
 |---|---|---|---|
 | B1.1 | GF: $\Vert \Delta\theta\Vert _{M^{-1}}\le\sqrt{t(L_0-L_t)}$, per-layer $\Vert \Delta\theta_g\Vert ^2\le m_g\,t\,E_g$ | Proved | — |
 | B1.2 | GD: same with $1/c$ under the descent condition $L_{k+1}\le L_k-c\eta\Vert g_k\Vert _M^2$; any update: $\Vert \Delta\theta\Vert _{M^{-1}}\le\Lambda_K\le\sqrt{t_KE_K}$ | Proved | — |
-| B1.3 | SGD, smooth loss: $\mathbb E\Vert \Delta\theta\Vert ^2_{M^{-1}}\le4tL_0+2\eta t\sigma^2(1+\beta t)/B$ | Proved (assumptions fail for ReLU) | — |
+| B1.3 | SGD, smooth loss: $\mathbb E\Vert \Delta\theta\Vert ^2_{M^{-1}}\le4tL_0+2\eta t\nu^2(1+\beta t)/B$ | Proved (assumptions fail for ReLU) | — |
 | B1.4 | Adam: $\lvert\hat m_t\rvert/\sqrt{\hat v_t}\le C_t$, exact supremum, $C_\infty=7.27$ | Proved, tight | a priori bounds: yes, beyond $\sim10^2$ steps |
-| B1.5 | worst-case gradient-norm bound (no smoothness) | Proved | yes, after $10^{-4}$ steps |
-| B2.1 | margin bound with union over norm and margin grids, measured norms allowed | Proved (from Literature L1) | — |
-| B2.2 | $\ell_1$ path norm: $\hat{\mathfrak R}_S\le\phi\sqrt{2\ln(8(d+1))/n}$, biases included | Proved | yes (trained nets) |
-| B2.3 | Frobenius: $\hat{\mathfrak R}_S\le P_F\sqrt{d+1}\,(1+\sqrt{4\ln 2})/\sqrt n$, $P_F=\Vert a\Vert (\Vert [W_1\,b_1]\Vert _F\Vert W_2\Vert _F+\Vert b_2\Vert )$ | Proved (cf. GRS Thm 1) | yes, even at init |
-| B2.4 | spectral (BFT), reference matrices = init | Literature + Proved assembly | yes, by $10^3$–$10^4\times$ |
-| B3.1 | a priori: GF/GD + Frobenius | Proved | yes, even at $t=0$ |
+| B1.5 | worst-case gradient-norm bound (no smoothness) | Proved | yes, after $5\times10^{-5}$ steps |
+| B2.1 | margin bound with union over norm and margin grids, measured norms allowed; Lemma B2.1a: vacuous at every margin when $c\ge\max(1,\bar m_+)$ | Proved (from Literature L1) | — |
+| B2.2 | $\ell_1$ path norm: $\hat{\mathfrak R}_S\le\phi\sqrt{2\ln(8(d+1))/n}$, biases included | Proved | yes (all 49 trained nets evaluated; $c_{\rm path}\ge1.46$) |
+| B2.3 | Frobenius: $\hat{\mathfrak R}_S\le P_F\sqrt{d+1}\,(1+\sqrt{4\ln 2})/\sqrt n$, $P_F=\Vert a\Vert (\Vert [W_1\,b_1]\Vert _F\Vert W_2\Vert _F+\Vert b_2\Vert )$ | Proved (cf. GRS Thm 1) | yes, even at the initialization's norms ($c_F\ge2.8$) |
+| B2.4 | spectral (BFT), reference matrices = init | Literature + Proved assembly | yes: complexity at unit margin $7\times10^2$–$2\times10^4$ |
+| B3.1 | a priori: GF/GD + Frobenius | Proved | yes, even at $t=0$ ($c_F=2.8$–$22$) |
 | B3.2 | PAC-Bayes, prior at init, measured displacement, derandomized | Proved (from Literature L5) | **no at $n=16384$**; yes at $n=256$ |
-| B3.3 | PAC-Bayes with KL $\le t\,L_0\max_g m_g/2\sigma_g^2$ (GF), or with measured energies (SGD), or with $S_K$ (Adam) | Proved | non-vacuous only for short runs (Section 5.3) |
-| B3.4 | online SGD: progressive error bounds the test error of a random late iterate | Proved | no (essentially exact) |
-| 4.5 | stability (HRS Thm 3.12), information theory (Xu–Raginsky, SGLD) | Literature | do not apply / vacuous |
+| B3.3 | PAC-Bayes with a time-based KL: (a) $\le tL_0\max_gm_g/2c\sigma_g^2$ (GF; GD under (D)), linear in $t$; (b) $t_K\sum_gm_gE_{K,g}/2\sigma_g^2$ (any update, measured); (c) $\sum_gp_g(\eta m_gS_K)^2/2\sigma_g^2$ (Adam), quadratic in $K$; (d) $\lambda_\sigma V(t)$, for a mixture over SGD runs or divided by $\delta'$ with high probability (SGD, smooth loss), with a $t^2$ noise term | Proved | non-vacuous only for short runs (Section 5.3); (d) not evaluated |
+| B3.4 | online: the progressive error over a window fixed in advance bounds the mean test error of the window's iterates | Proved | no: within $0.006$ of the measured value (one-pass Adam) |
+| 4.5 | stability (HRS Thm 3.12); information theory (Xu–Raginsky, CMI, SGLD) | Literature | HRS does not apply; Xu–Raginsky and CMI apply but are vacuous; SGLD needs injected noise |
 | 6.1 | read-off junta + Occam + unlabeled disagreement | Proved | **no, already at $n=256$** for small juntas |
 
 ## 1. Setting and notation
@@ -123,19 +137,19 @@ and the last integral is $\beta\eta^2\|g\|_M^2/2$. $\square$
 Assume:
 - $L_S$ is β-smooth in the $M$-geometry on a convex set containing all iterates, and $\eta\le1/\beta$;
 - $\hat g_k$ is the average of $B$ per-example gradients at indices drawn uniformly with replacement and independently of the past, so that $\mathbb E[\hat g_k\mid\mathcal F_k]=g_k:=\nabla L_S(\theta_k)$;
-- $\mathbb E[\|\hat g_k-g_k\|_M^2\mid\mathcal F_k]\le\sigma^2/B$, where $\sigma^2\ge\sup_\theta\frac1n\sum_i\|\nabla\ell_i(\theta)-\nabla L_S(\theta)\|_M^2$.
+- $\mathbb E[\|\hat g_k-g_k\|_M^2\mid\mathcal F_k]\le\nu^2/B$, where $\nu^2\ge\sup_\theta\frac1n\sum_i\|\nabla\ell_i(\theta)-\nabla L_S(\theta)\|_M^2$. (Revision 2 writes $\nu$ for this gradient-noise constant, to keep $\sigma$ for the PAC-Bayes noise levels.)
 
 Then
-$$\mathbb E\|\theta_K-\theta_0\|_{M^{-1}}^2\le4t\,(L_0-\mathbb EL_S(\theta_K))+\frac{2\eta t\sigma^2(1+\beta t)}{B},\qquad t=\eta K.$$
+$$\mathbb E\|\theta_K-\theta_0\|_{M^{-1}}^2\le4t\,(L_0-\mathbb EL_S(\theta_K))+\frac{2\eta t\nu^2(1+\beta t)}{B},\qquad t=\eta K.$$
 
 *Proof.* Write $\xi_k=\hat g_k-g_k$ and $\theta_K-\theta_0=-\eta\sum_kMg_k-\eta\sum_kM\xi_k$, so $\|\Delta\|^2\le2\|\eta\sum Mg_k\|^2+2\|\eta\sum M\xi_k\|^2$ (both norms $M^{-1}$).
-- **Noise part.** The $\xi_k$ are martingale differences, so the cross terms vanish in expectation: $\mathbb E\|\eta\sum_kM\xi_k\|^2_{M^{-1}}=\eta^2\sum_k\mathbb E\|\xi_k\|_M^2\le\eta t\sigma^2/B$.
+- **Noise part.** The $\xi_k$ are martingale differences, so the cross terms vanish in expectation: $\mathbb E\|\eta\sum_kM\xi_k\|^2_{M^{-1}}=\eta^2\sum_k\mathbb E\|\xi_k\|_M^2\le\eta t\nu^2/B$.
 - **Drift part.** By Cauchy–Schwarz, $\|\eta\sum Mg_k\|_{M^{-1}}^2\le t\cdot\eta\sum_k\|g_k\|_M^2$.
-- **Descent lemma.** $L_S(\theta_{k+1})\le L_S(\theta_k)-\eta\langle g_k,M\hat g_k\rangle+\frac{\beta\eta^2}2\|\hat g_k\|_M^2$. Taking conditional expectations, $\eta(1-\frac{\beta\eta}2)\|g_k\|_M^2\le L_S(\theta_k)-\mathbb E[L_S(\theta_{k+1})\mid\mathcal F_k]+\frac{\beta\eta^2\sigma^2}{2B}$. Summing, and using $1-\beta\eta/2\ge1/2$, gives $\eta\sum_k\mathbb E\|g_k\|_M^2\le2(L_0-\mathbb EL_S(\theta_K))+\beta\eta t\sigma^2/B$.
+- **Descent lemma.** $L_S(\theta_{k+1})\le L_S(\theta_k)-\eta\langle g_k,M\hat g_k\rangle+\frac{\beta\eta^2}2\|\hat g_k\|_M^2$. Taking conditional expectations, $\eta(1-\frac{\beta\eta}2)\|g_k\|_M^2\le L_S(\theta_k)-\mathbb E[L_S(\theta_{k+1})\mid\mathcal F_k]+\frac{\beta\eta^2\nu^2}{2B}$. Summing, and using $1-\beta\eta/2\ge1/2$, gives $\eta\sum_k\mathbb E\|g_k\|_M^2\le2(L_0-\mathbb EL_S(\theta_K))+\beta\eta t\nu^2/B$.
 
 Combining the three gives the claim. $\square$
 
-The noise term vanishes as $\eta\to0$ at fixed $t$, recovering B1.1. For ReLU networks the assumptions fail globally, as in B1.2. In practice one uses the measurable statement B1.2(a).
+This is weaker than B1.1 in two ways: the factor is $4$ instead of $1$, and there is an additive noise term $2\eta t\nu^2/B+2\eta\beta\nu^2t^2/B$, which is quadratic in $t$ at fixed $\eta$. The noise term vanishes as $\eta\to0$ at fixed $t$. For ReLU networks the assumptions fail globally, as in B1.2. In practice one uses the measurable statement B1.2(a). Theorem B3.3(d) turns B1.3 into an a priori PAC-Bayes bound for SGD.
 
 ### Lemma B1.4 (Adam: the exact worst-case step; Proved)
 
@@ -184,6 +198,14 @@ $$R(\theta)\le\hat R_{\gamma_k}(\theta)+\frac{2\kappa\,\phi_0q^{j(\theta)}}{\gam
 
 Because the statement is uniform in $\theta$, $C(\theta)$ may be **measured after training**, or replaced by any upper bound on it, data-dependent ones included. In Section 5, $q=1.1$, $\phi_0=1$, $\gamma_{\max}=4$ and $\delta=0.05$, and the bound is minimized over $k$.
 
+### Lemma B2.1a (when B2.1 is vacuous; Proved)
+
+Write $c(\theta)=2\kappa\,\phi_0q^{j(\theta)}/\sqrt n$ for the complexity term of B2.1 at unit margin, and $\bar m_+(\theta)=\frac1n\sum_i(y_if_\theta(x_i))_+$ for the mean positive train margin. If $c(\theta)\ge\max(1,\bar m_+(\theta))$, then the right side of B2.1 is at least $1$ for every $k$, whatever $\gamma_{\max}$ is.
+
+*Proof.* The ramp satisfies $\varphi_\gamma(u)\ge1-u_+/\gamma$ for every $u$: for $u<0$ both sides are at most $1=\varphi_\gamma(u)$, for $0\le u\le\gamma$ they are equal, and for $u>\gamma$ the right side is negative. Hence $\hat R_\gamma\ge1-\bar m_+/\gamma$. If $\gamma_k\le1$, the complexity term alone is $c/\gamma_k\ge c\ge1$. If $\gamma_k>1$, then $\hat R_{\gamma_k}+c/\gamma_k\ge1+(c-\bar m_+)/\gamma_k\ge1$. The confidence term is positive. $\square$
+
+All the trained networks of Section 5 have $\bar m_+$ between $0.99$ and $1.01$ (square loss on $\pm1$ labels), so for them the bound is vacuous as soon as $c\ge1.01$. When $c<1$ and every train margin is at least some grid margin $\gamma_k$, the bound at that $k$ is $c/\gamma_k$ plus the confidence term. When the bound is vacuous, its minimized value is not informative: the minimum then sits at the grid edge $\gamma=\gamma_{\max}$ and tends to $1$ from above as $\gamma_{\max}$ grows. **Section 5 therefore reports $c$, not the minimized bound.**
+
 ### Lemma B2.0 (comparison inequality for convex increasing functions; Proved)
 
 *Literature: Ledoux–Talagrand, Probability in Banach Spaces (1991), Theorem 4.12 and its proof; from memory.*
@@ -219,7 +241,9 @@ For $d=30$ the constant is $\kappa_{\rm path}=\sqrt{2\ln248}=3.321$. With $L$ we
    - $\le4\cdot2D\,e^{\lambda^2\phi^2n/2}$, by Hoeffding's lemma for each of the $2D$ signed coordinate sums ($|\hat x_{ij}|\le1$).
 4. **Optimize.** By Jensen, $n\hat{\mathfrak R}_S\le\frac{\ln(8D)}\lambda+\frac{\lambda\phi^2n}2$; take $\lambda=\sqrt{2\ln(8D)/(\phi^2n)}$. The bound $|f|\le\phi_1$ follows from the rebalanced form. $\square$
 
-**Sharpness of the constant (Proved / Numerical).** The class $\{\phi_1\le1\}$ contains $\pm x_j/2=\pm\frac12(\sigma(\sigma(x_j))-\sigma(\sigma(-x_j)))$ and $\pm\frac12$. Hence $\hat{\mathfrak R}_S\ge\mathbb E\max_j|\sum_i\epsilon_i\hat x_{ij}|/2n\approx1.17/\sqrt n$ on uniform samples ([`checks/rademacher_lower.out`](checks/rademacher_lower.out)), so $\kappa_{\rm path}=3.32$ is within a factor $2.8$ of the truth. The same witnesses, with $\pm w\cdot x$ for $\|w\|_2\le1$, put $\kappa_F$ within a factor of about $7.5$ (the class $\{P_F\le1\}$ contains $\pm w\cdot x/2\sqrt2$). **The vacuity in Section 5 comes from the size of the measured norms, not from the constants.**
+**Sharpness of the constant (Proved / Numerical).** The class $\{\phi_1\le1\}$ contains $\pm x_j/2=\pm\frac12(\sigma(\sigma(x_j))-\sigma(\sigma(-x_j)))$ and $\pm\frac12$. Hence $\hat{\mathfrak R}_S\ge\mathbb E\max_j|\sum_i\epsilon_i\hat x_{ij}|/2n\approx1.17/\sqrt n$ on uniform samples ([`checks/rademacher_lower.out`](checks/rademacher_lower.out)), so $\kappa_{\rm path}=3.32$ is within a factor $2.8$ of the truth. The same witnesses, with $\pm w\cdot x$ for $\|w\|_2\le1$, put $\kappa_F$ within a factor of about $7.5$ (the class $\{P_F\le1\}$ contains $\pm w\cdot x/2\sqrt2$).
+
+**Does the constant decide vacuity?** For most networks of Section 5 it does not: $c_{\rm path}$ would stay above $1$ even if $\kappa_{\rm path}$ were at the lower estimate $1.17$. For the borderline cases it does. For $x_1$, AND$_3$ and $x_1x_2$ at $n=16384$, and for one of the three MAJ$_3$ networks there, $c_{\rm path}$ would fall below $1$ with $\kappa=1.17$ (for $x_1$, from $1.46$ to $0.51$). There the constant and the proof technique, not only the measured norms, decide whether the path-norm bound is vacuous ([`checks/B_r2_checks.out`](checks/B_r2_checks.out), part 1).
 
 **Comparison (Literature).** Neyshabur–Tomioka–Srebro (COLT 2015) bound the same class by a constant of order $2^L\sqrt{\ln(2D)}$, i.e. exponential in depth (Corollary 7 there; constant checked only against a secondary source). For $L=3$ that is about $5\times$ larger than $\kappa_{\rm path}$. Gonon–Brisebarre–Riccietti–Gribonval (ICLR 2024) prove path-norm bounds for general DAG ReLU networks with biases and polynomial depth dependence (constants not checked).
 
@@ -243,30 +267,35 @@ $$\hat{\mathfrak R}_S(\mathcal F_P)\le P\,\sqrt D\,\big(1+\sqrt{2(L-1)\ln2}\big)
 *Literature: Bartlett–Foster–Telgarsky (NeurIPS 2017), Theorem 3.3; from memory.* Take bias-free networks $\hat x\mapsto A_3\sigma(A_2\sigma(A_1\hat x))$ with reference matrices $M_i$ fixed in advance, $\|A_i\|_2\le s_i$, $\|(A_i-M_i)^\top\|_{2,1}\le b_i$ (sum of the row $\ell_2$ norms of $A_i-M_i$), and all dimensions at most $W$. For the data matrix $\hat X$,
 $$\ln\mathcal N(\mathcal F|_S,\varepsilon,\|\cdot\|_2)\le\frac{\|\hat X\|_F^2\ln(2W^2)}{\varepsilon^2}R_{s,b}^2,\qquad R_{s,b}=\prod_is_i\Big(\sum_i(b_i/s_i)^{2/3}\Big)^{3/2}.$$
 
-*Literature: Dudley's entropy integral* (e.g. Srebro–Sridharan–Tewari 2010, Lemma A.3; BFT Lemma A.5; constants from memory). For a class with values in $[0,1]$,
+*Literature: Dudley's entropy integral* (e.g. Srebro–Sridharan–Tewari 2010, Lemma A.3; BFT Lemma A.5; constants from memory). For a class with values in $[0,1]$ that contains the zero function (as I recall, BFT's Lemma A.5 assumes $0\in\mathcal F$),
 $$\hat{\mathfrak R}_S\le\inf_{\alpha>0}\Big(\frac{4\alpha}{\sqrt n}+\frac{12}n\int_\alpha^{\sqrt n}\sqrt{\ln\mathcal N(\varepsilon)}\,d\varepsilon\Big).$$
 
 *Assembly (Proved).*
 - **Ramp class.** The ramp is $1/\gamma$-Lipschitz, so the ramp class has $\ln\mathcal N(\varepsilon)\le\varrho^2/\varepsilon^2$ with $\varrho=\|\hat X\|_F\sqrt{\ln(2W^2)}R_{s,b}/\gamma$.
-- **Dudley.** Choosing $\alpha=3\varrho/\sqrt n$ gives $\hat{\mathfrak R}_S\le\frac{12\varrho}n(1+\ln\frac n{3\varrho})$ when $3\varrho\le n$.
+- **Zero function.** The ramp class need not contain $0$. Apply Dudley to the class with $0$ added. This can only increase $\hat{\mathfrak R}_S$, and it adds one element to each cover, so $\ln\mathcal N(\varepsilon)\le\varrho^2/\varepsilon^2+\ln2$. Since $\sqrt{a^2+b}\le a+\min(\sqrt b,\,b/2a)$, the integrand grows by at most $\min(\sqrt{\ln 2},\,\varepsilon\ln2/2\varrho)$, and the bound on $\hat{\mathfrak R}_S$ by at most $\min(12\sqrt{\ln2/n},\,3\ln2/\varrho)$.
+- **Dudley.** Choosing $\alpha=3\varrho/\sqrt n$ gives $\hat{\mathfrak R}_S\le\frac{12\varrho}n(1+\ln\frac n{3\varrho})+\min(12\sqrt{\ln2/n},\,3\ln2/\varrho)$ when $3\varrho\le n$.
 - **Generalization.** Combine with the empirical-Rademacher form of L1 and a union bound over geometric grids for the six numbers $s_i,b_i$ and for $\gamma$, as in B2.1.
 
-For the study: $W=129$, $\|\hat X\|_F=\sqrt{31n}$, and the augmentation uses $c=1$. With $M_i$ the initialization this is the "distance from init" variant. Section 5 reports $24\varrho/n$ at $\gamma=1$ (grid-rounded norms). Whenever $3\varrho\le n$ it is a lower bound on the complexity term $2\hat{\mathfrak R}_S$ at that margin, and when $3\varrho>n$ the complexity term exceeds $1$ anyway. So values $\gg1$ mean vacuous. The confidence term in [`checks/nnbounds.py`](checks/nnbounds.py) uses the conservative $3\sqrt{\ln(2/\delta)/2n}$ form.
+For the study: $W=129$, $\|\hat X\|_F=\sqrt{31n}$, and the augmentation uses $c=1$. With $M_i$ the initialization this is the "distance from init" variant. Section 5 reports $24\varrho/n$ at $\gamma=1$ (grid-rounded norms). Whenever $3\varrho\le n$, this is a lower bound on the BFT+Dudley *upper bound* on $2\hat{\mathfrak R}_S$ at that margin. It is not a lower bound on $2\hat{\mathfrak R}_S$ itself, which is at most $2$. When $3\varrho>n$, the computable Dudley bound is minimized at $\alpha=\sqrt n$, where it equals $4$, so it exceeds $1$ anyway. So values $\gg1$ mean that this route is vacuous. On the study's networks $24\varrho/n\ge667$, so $3\varrho>n$ always and the zero-function term never enters. The confidence term in [`checks/nnbounds.py`](checks/nnbounds.py) uses the conservative $3\sqrt{\ln(2/\delta)/2n}$ form.
 
 ### Why distance from initialization does not rescue the norm bounds (Proved / Numerical)
 
-Rademacher complexity is invariant under a fixed shift ($\mathbb E\sum\epsilon_ic_i=0$), so a data-independent initialization costs nothing *as a function*. But all three norms above are norms of the **weights**, and at μP initialization the hidden layers already carry large random features:
-- in expectation, $\phi_1(\theta_0)\approx(2/\pi)^{3/2}\sqrt{Nd}=31.5$ (measured $32.5$);
+Rademacher complexity is invariant under a fixed shift ($\mathbb E\sum\epsilon_ic_i=0$), so a data-independent initialization costs nothing *as a function*. But all three norms above are norms of the **weights**, and at μP initialization they are already large:
+- in expectation, $\phi_1(\theta_0)\approx(2/\pi)^{3/2}\sqrt{Nd}=31.5$ (measured $31.1$–$32.8$ for the study's three seeds);
 - $P_F(\theta_0)\approx N^{-1/2}\cdot N^{1/2}\cdot N^{1/2}=\sqrt N=11.3$ (measured $11.7$);
 - yet the initial outputs are tiny: $|f_{\theta_0}(x)|\approx\|h_2(x)\|/N\approx0.05$.
 
-Since a margin $\gamma\approx1$ is needed, Theorem B2.1 is vacuous **already at $t=0$**:
-- **path norm:** for $n\lesssim(2q\kappa_{\rm path}\cdot31.5/\gamma)^2\approx5\times10^4$;
+The trained networks have train margins near $1$, so the relevant quantity is the complexity term at unit margin, $c$ of Lemma B2.1a. At the initialization's norms it already exceeds $1$:
+- **path norm:** for $n\lesssim(2q\kappa_{\rm path}\cdot31.5)^2\approx5\times10^4$;
 - **Frobenius:** for $n\lesssim(2q\kappa_F\cdot11.3)^2\approx1.4\times10^5$.
+
+So, by Lemma B2.1a, any network with mean positive train margin at most about $1$ whose norms are at least those of the initialization gets a vacuous norm bound at these $n$. (The bound evaluated at $\theta_0$ itself is vacuous for a trivial reason: the initial margins are about $0.05$. The statement here is about the size of the norms.)
+
+*Reading (Heuristic).* The norm-based terms are dominated by the random features present at initialization, which play no role in the learned function. This is an interpretation, not a theorem, and training does not always increase the norms: the trained path norm of $x_1$ at $n=16384$ is $26$, against $32$ at initialization for the same seeds ([`checks/B_r2_checks.out`](checks/B_r2_checks.out), part 1).
 
 Reference matrices (B2.4) subtract the initialization inside $\|\cdot\|_{2,1}$. They still keep the product of spectral norms, and they pay up to $\sqrt N$ for spreading a Frobenius displacement over $N$ rows. A Gaussian prior centred at $\theta_0$ removes the initialization exactly. That is why the PAC-Bayes route of Section 4 is the one that works.
 
-**Minimal-norm comparison.** The target $x_1$ is computed by $\sigma(\sigma(x_1))-\sigma(\sigma(-x_1))$, which has path norm $2$ and margin $1$. For it, B2.2 would give $0.14$ at $n=16384$. The trained networks have path norm $26$–$543$ (Section 5).
+**Minimal-norm comparison.** The target $x_1$ is computed by $\sigma(\sigma(x_1))-\sigma(\sigma(-x_1))$, which has path norm $2$ and margin $1$. For it, B2.2 would give $0.14$ at $n=16384$. The trained networks have path norm $26$–$610$ (Section 5).
 
 ## 4. B3: combined theorems
 
@@ -282,7 +311,9 @@ A closed-form upper bound is $P^{\max}(\rho)\le(A_0+\sqrt{m_3}\rho)\big((F_1+\sq
 
 **Explicit form.** In terms of $(t,n,d,N,\alpha,\eta)$, with the study's μP initialization at scale $\alpha=1$ and $F_1\approx F_2\approx\alpha\sqrt N$, $A_0\approx\alpha/\sqrt N$:
 $$F=\frac{2q\sqrt{d+1}(1+\sqrt{4\ln2})}{\gamma\sqrt n}\Big(\frac{\alpha}{\sqrt N}+\sqrt{m_3tL_0}\Big)\Big((\alpha\sqrt N+\sqrt{m_1tL_0})(\alpha\sqrt N+\sqrt{m_2tL_0})+\sqrt{m_2tL_0}\Big)+\text{conf},\qquad t=\eta K .$$
-At $t=0$ this is already $\approx369/(\gamma\sqrt n)$: vacuous for all $n\le16384$.
+At $t=0$ the complexity term alone is already $\approx369/(\gamma\sqrt n)$. With the measured $P_F(\theta_0)=11.7$ rounded up to the grid it is $2.8$ at $n=16384$, $7.8$ at $n=2048$ and $22$ at $n=256$ (at $\gamma=1$). So the bound is above $1$ for all $n\le16384$ at every $\gamma\le1$, and by Lemma B2.1a at every $\gamma$ for networks with margins near $1$. (The values printed in [`checks/summary_tables.txt`](checks/summary_tables.txt) at $t=0$, $2$–$3$, are minimized over $\gamma\le4$. They are trivially above $1$ because the initial margins are about $0.05$.)
+
+**Evaluating $P^{\max}$.** Section 5.3 and [`checks/summary_tables.txt`](checks/summary_tables.txt) use the closed form above, which is a certified upper bound on $P^{\max}$. Round 1 used a random search on the sphere, which gives a *lower* estimate of $P^{\max}$ and therefore not a certified bound. The closed form is larger by a factor $1.0$–$3.4$ over the runs of Section 5.3 ([`checks/B_r2_checks.out`](checks/B_r2_checks.out), part 3). The conclusion, vacuous, is unchanged.
 
 **Small-initialization reading (Heuristic).** In the README's experiments all layers start at $\alpha$ times fan-in scale, so the initial term is about $\alpha^3N$ and vanishes as $\alpha\to0$. The bound then behaves like $\kappa_F(tL_0)^{3/2}\sqrt{m_1m_2m_3}/(\gamma\sqrt n)$, which is small only if $t\lesssim n^{1/3}$. But by the rate law the first feature is learned only at $t\approx\alpha^{-1}$ (depth 3). So the a priori bound certifies generalization only for $n\gtrsim\alpha^{-3}$, however simple the learned function. This is the plateau problem of Section 2 in quantitative form.
 

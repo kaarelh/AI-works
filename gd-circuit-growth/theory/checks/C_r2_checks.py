@@ -158,6 +158,9 @@ def part4(m_pairs=40000, m_infl=2000, delta=0.05):
     print(f"    over all {len(allA)} networks: J <= S always: {bool(np.all(allA[:,2] <= allA[:,3] * 1.05 + 1e-4))};"
           f" S/E5 ranges {np.min(allA[:,3]/allA[:,4]):.2f}-{np.max(allA[:,3]/allA[:,4]):.2f} (median "
           f"{np.median(allA[:,3]/allA[:,4]):.2f}); UCB(Jc) max {allA[:,1].max():.4f}; ({time.time()-t0:.0f}s)")
+    big = allA[:, 3] > 1e-3
+    print(f"    networks with S > 1e-3: {int(big.sum())}; S/E5 ranges {np.min(allA[big,3]/allA[big,4]):.2f}-"
+          f"{np.max(allA[big,3]/allA[big,4]):.2f}")
     for n in (2048, 16384):
         B = np.concatenate([out[(fn, n)] for fn in FNS])
         print(f"    n={n}: UCB(Jc) <= {B[:,1].max():.4f} for all 39 networks; median {np.median(B[:,1]):.4f}")

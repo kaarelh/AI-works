@@ -28,7 +28,8 @@ Constructor arguments of Race (theta, lam, Q, K, P, iters, gmax, depth, gate, st
 
 fit() additionally returns 'supports': for each gate the set of input coordinates it depends on (through depth-1
 wires), for post-hoc analysis only (true vs spurious gates); and 'gates_at_fit' (number of gates when the training
-error first dropped to <= 0.1).
+error first dropped to <= 0.1); 'columns' and 'readouts' (the circuit after every firing, so that the test error
+along the trajectory can be computed after fit() has returned).
 """
 import numpy as np
 from models.race import Race, _order_k, _align_time, _overlap_after, _best_threshold, _best_relu, F32
@@ -76,7 +77,7 @@ class RaceAblation(Race):
         for k in range(2, K + 1):
             pool[k] = dict(V=self._rand_dir(rng, d, P), c=np.zeros(P),
                            sgn=np.ones(P) if k % 2 else np.where(np.arange(P) % 2 == 0, 1.0, -1.0))
-        gates, cols, supports = [], [], []
+        gates, cols, supports, readouts = [], [], [], []
         wire_support = [frozenset([i]) for i in range(d)]
         Gm = np.zeros((0, 0)); Fy = np.zeros(0)
         c0 = y.mean(); a = np.zeros(0)
@@ -207,6 +208,7 @@ class RaceAblation(Race):
             supports.append(sup)
             a = np.linalg.solve(Gm + self.lam * n * np.eye(len(cols)), Fy)
             f = c0 + np.stack(cols, 1) @ a
+            readouts.append(a.copy())
             err = float(np.mean(np.where(f > 0, 1.0, -1.0) != y))
             trace.append((t, err))
             if t_fit is None and err <= 0.1:
@@ -229,7 +231,22 @@ class RaceAblation(Race):
                 out += a_[j] * (gv - gmu) / gsd
             return np.where(out > 0, 1.0, -1.0)
 
+        def columns(Z):
+            """Standardised gate outputs (m, #gates) on Z: with readouts[j] they give the circuit after j+1 gates."""
+            Z = np.asarray(Z, dtype=F32)
+            W = np.zeros((len(Z), d + len(G_)), dtype=F32); W[:, :d] = Z
+            Dz = d; out = np.zeros((len(Z), len(G_)))
+            for j, (gw, gb, gwire, gsd, gmu) in enumerate(G_):
+                sz = np.rint(W[:, :len(gw)] @ gw.astype(F32)).astype(np.float64)
+                ind = (sz > gb).astype(np.float64)
+                gv = np.maximum(sz - gb, 0.0) if relu else ind
+                if gwire is not None:
+                    W[:, Dz] = 2 * ind - 1; Dz += 1
+                out[:, j] = (gv - gmu) / gsd
+            return out
+
         return dict(predict=predict, time=float(t_fit if t_fit is not None else t), stop_time=float(t),
+                    columns=columns, readouts=readouts, c0=c_,
                     size=len(gates), trace=trace, orders=[g[3] for g in gates],
                     fanin=[int(np.count_nonzero(g[0])) for g in gates], supports=supports,
                     gates_at_fit=g_fit if g_fit is not None else len(gates))

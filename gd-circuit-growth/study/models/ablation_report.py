@@ -88,6 +88,25 @@ def time_split(res, fns=None, ncut=4096):
     return out
 
 
+def time_log(res, fns=None):
+    """Magnitude-sensitive time agreement over cells where both reach test error 0.1: Pearson r of log times, and
+    the scatter (std, log2 units) of log2(model time / NN steps) around its mean, i.e. how well ONE unit conversion
+    maps the model's clock onto network steps (NN steps are on a 1-2-5 checkpoint grid, ~0.3 log2 quantisation)."""
+    out = {}
+    for nm, r in res.items():
+        P = []
+        for fn in (fns or [f for f in C.FNS if f in r["fns"]]):
+            nn = C.nn_fixed(fn, "adam"); ns = np.array(r["ns"]); idx = [list(nn["ns"]).index(n) for n in ns]
+            nt = nn["steps_to_gen"][idx]; mt = np.where(r["test_err"][fn] <= 0.1, r["time"][fn], np.nan)
+            for a in range(len(ns)):
+                for b in range(min(nt.shape[1], mt.shape[1])):
+                    if np.isfinite(nt[a, b]) and np.isfinite(mt[a, b]) and nt[a, b] > 0 and mt[a, b] > 0:
+                        P.append((np.log2(nt[a, b]), np.log2(mt[a, b])))
+        P = np.array(P)
+        out[nm] = (float(np.corrcoef(P[:, 0], P[:, 1])[0, 1]), float(np.std(P[:, 1] - P[:, 0])), len(P)) if len(P) > 5 else (np.nan, np.nan, 0)
+    return out
+
+
 def diag(names):
     """Circuit diagnostics at the NN's critical n (the grid n just below and just above n*_NN)."""
     L = ["| ablation | gates (mean) | spurious gates at n < n*_NN | spurious at n >= 2 n*_NN | true features covered at n >= 2 n*_NN | order mix of gates (1/2/3/4) |",
@@ -116,6 +135,7 @@ if __name__ == "__main__":
     print("\n".join(per_fn(res))); print()
     print("\n".join(family_ratio(res))); print()
     print("\n".join(diag(names))); print()
-    print("| ablation | time Spearman n >= 4096 (cells) | time Spearman n < 4096 (cells) |"); print("|---|---|---|")
+    tl = time_log(res)
+    print("| ablation | time Spearman n >= 4096 (cells) | time Spearman n < 4096 (cells) | Pearson r of log times | scatter of log2 time ratio |"); print("|---|---|---|---|---|")
     for nm, (a, na, b, nb) in time_split(res).items():
-        print(f"| {nm} | {a:.2f} ({na}) | {b:.2f} ({nb}) |")
+        print(f"| {nm} | {a:.2f} ({na}) | {b:.2f} ({nb}) | {tl[nm][0]:.2f} | {tl[nm][1]:.2f} ({tl[nm][2]}) |")

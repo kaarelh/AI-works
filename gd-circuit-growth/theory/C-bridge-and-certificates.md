@@ -1,6 +1,6 @@
 # C. Bridges from the network to small circuits, and certificates without labelled hold-out data
 
-Notes by Claude (Opus 5.5), prompted by Kaarel Hänni. Research note, 23 October 2026. Not reviewed by a human.
+Notes by Claude (Opus 5.5), prompted by Kaarel Hänni. Research note, 23 October 2026. Not reviewed by a human. Revision 2, after the round-1 referee report ([`checks/referee_C_r1.json`](checks/referee_C_r1.json)); the changes are listed in the [Revision notes](#revision-notes) at the end.
 
 **Question (from the user).** *"Try to see if you can get some generalization bounds for this. I guess I can see how one would have a result saying that you get good generalization if training hasn't taken too long because the circuit cannot have grown that big yet, and then one has a Chernoff guarantee for all small circuits that their train and test loss are similar? Here we could imagine doing full batch but with a train/test split, or SGD; either should make sense."*
 
@@ -21,48 +21,49 @@ Notes by Claude (Opus 5.5), prompted by Kaarel Hänni. Research note, 23 October
 1. **A trained network can be certified without labelled hold-out data (Theorem C1, Proved).** Let $h$ be the trained network's sign function and let $g$ be *any* predictor from a fixed hierarchy $\{\mathcal H_c\}$ of circuit classes, chosen after seeing the training set $S$, the network, and unlabelled inputs. Then, with probability $1-\delta_1-\delta_2$, simultaneously for all $c$ and $g\in\mathcal H_c$,
    $$\mathrm{err}(h)\;\le\;\mathrm{kl}^{-1}_+\!\Big(\widehat{\mathrm{err}}_S(g),\ \tfrac{\ln|\mathcal H_c|+\ln\frac1{\pi(c)}+\ln\frac1{\delta_1}}{n}\Big)\;+\;\mathrm{kl}^{-1}_+\!\Big(\widehat{\mathrm{dis}}_U(h,g),\ \tfrac{\ln|\mathcal H_c|+\ln\frac1{\pi(c)}+\ln\frac J{\delta_2}}{m}\Big),$$
    where $J$ is the number of checkpoints certified and $m$ the number of unlabelled inputs. The only independence needed is that the unlabelled inputs are not used in training. Three natural classes are counted (Propositions C1.2–C1.4): signs of $T$ Fourier characters and fan-in-2 circuits with $T$ gates, by explicit upper bounds checked against brute force, and $k$-juntas, exactly.
-   - **Numerical.** On the saved final Adam networks of the sweep, the certificate is below $0.5$ for all 13 targets and every seed at $n=2048$, and below $0.04$ for 9 of the targets. Every network at $n=16384$ is certified at $\le0.021$. The Fourier-sign class certifies MAJ$_9$ at $0.034$, and the 10-variable threshold function at $0.09$–$0.10$ ($n=2048$) and $0.02$ ($n=16384$). B's junta read-off fails on these two targets. No certificate falls below the true error. See §1.4.
-   - **Numerical, along training** (§1.6). Computed from the saved test-set predictions alone, the certified circuit grows in discrete stages. For example, stair5 is certified as $x_1$ (5 nats) during steps 50–200 and as a 5-junta (34 nats) from step 500 on; dnf3 goes through 0.7, 60, 263 and 332 nats.
+   - **Numerical.** On the saved final Adam networks of the sweep (rebuilt from their float16-saved parameters, §1.3), the certificate is below $0.5$ for all 13 targets and every seed at $n=2048$, and below $0.04$ for 9 of the targets. Every network at $n=16384$ is certified at $\le0.021$. The Fourier-sign class certifies MAJ$_9$ at $0.034$, and the 10-variable threshold function at $0.09$–$0.10$ ($n=2048$) and $0.02$ ($n=16384$). B's junta read-off fails on these two targets. No certificate falls below the true error. See §1.4.
+   - **Numerical, along training** (§1.6). Computed from the saved test-set predictions alone, the class that minimizes the certificate grows in discrete stages. For example, for stair5 it is $x_1$ alone (5 nats; test error $0.30$–$0.34$, certificate $0.35$–$0.43$) during steps 50–200, and a 5-junta (34 nats) from step 500 on; for dnf3 it goes through 0.7, 60, 263 and 332 nats. The selected class trades error against size; it is not the size of a circuit the network is known to be close to.
 2. **Time limits circuit size, rigorously, in a diagonal linear network (C2, Proved).** For $f_w=\sum_Sw_S\chi_S$ over all characters of degree $\le k$, with $w=u\odot u-v\odot v$ and $u(0)=v(0)=\alpha\mathbf 1$, gradient flow has the closed form $w(t)=-2\alpha^2\sinh(4G(t))$, where $G(t)=\int_0^t\nabla L$ (Lemma C2.1, verified numerically to $10^{-8}$). Let $\Theta_\varepsilon=\frac14\operatorname{arsinh}\frac{\varepsilon}{2\alpha^2}\approx\frac14\ln\frac{\varepsilon}{\alpha^2}$, and let $\tau(t)=\int_0^t\|r\|_n\le t$ be the effective time of A. Then:
    - **(a)** no coordinate reaches $\varepsilon$ before $\tau(t)=\Theta_\varepsilon$. The first escape happens at $t\in[\Theta_\varepsilon/(U_0+\varepsilon_D),\ \Theta_\varepsilon/(U_0-\varepsilon_D)]$, where $U_0$ is the largest initial utility (Theorem C2.2);
-   - **(b)** the number $N_\varepsilon(t)$ of coordinates with $|w_S(t)|\ge\varepsilon$ satisfies $N_\varepsilon\le\kappa\,\tau(t)^2/\Theta_\varepsilon^2$ and $N_\varepsilon\le(\int_0^t\|\nabla L\|_2)^2/\Theta_\varepsilon^2$ (Theorem C2.3). The first is tight for a single-character target;
-   - **(c)** with probability $1-\delta$, simultaneously for all $t$ and $\varepsilon$, the test error of $\mathrm{sgn}\,f_{w(t)}$ is at most a kl-Chernoff term with complexity $\ln\binom{D}{N_\varepsilon(t)}+\ln\Phi(2^{\min(N_\varepsilon,d+1)},N_\varepsilon)$, evaluated at the training margin $2\mu_\varepsilon(t)$ (Theorem C2.4). The dictionary size $D$ enters only through $\ln D$, both in the capacity and in the unit of time $\Theta\approx\frac14\ln\frac{\gamma}{4D\alpha^2}$ (Corollary C2.5).
-   - **(d)** the same holds for discrete GD and minibatch SGD, with time measured by the logged minibatch losses (Proposition C2.6).
-   - **Numerical** ($d=10$, $D=176$): the bounds hold in every run, and certify $0.08$–$0.28$ test error for par2, maj3 and and3 from $n=100$–$400$ samples.
+   - **(b)** the number $N_\varepsilon(t)$ of coordinates with $|w_S(t)|\ge\varepsilon$ satisfies $N_\varepsilon\le\kappa_B\,\tau(t)^2/\Theta_\varepsilon^2$, with $\kappa_B$ the top eigenvalue of the Gram matrix of the grown set, and $N_\varepsilon\le(\int_0^t\|\nabla L\|_2)^2/\Theta_\varepsilon^2$ (Theorem C2.3). The first is tight for a single-character target in the limit $\alpha\to0$;
+   - **(c)** with probability $1-\delta$, simultaneously for all $t$ and $\varepsilon$, the test error of $\mathrm{sgn}\,f_{w(t)}$ is at most a kl-Chernoff term with complexity $\ln\binom{D}{N_\varepsilon(t)}+\ln\Phi(2^{\min(N_\varepsilon,d+1)},N_\varepsilon)$, evaluated at the training margin $2\mu_\varepsilon(t)$ (Theorem C2.4). Corollary C2.5 makes the complexity a function of time: with the data-dependent $\kappa_B$, or, through the coherence of the training inputs, a function of $(n,D,\tau(t))$ alone once $n\gtrsim2(\tau/\Theta_\gamma)^4\ln(2D_{2k}/\delta')$. The dictionary size $D$ enters only through $\ln D$, both in the capacity and in the unit of time $\Theta_\gamma\approx\frac14\ln\frac{\gamma}{4D\alpha^2}$.
+   - **(d)** the same holds for discrete GD and minibatch SGD (Proposition C2.6). No coordinate grows before the minibatch effective time, computed from the logged minibatch losses, reaches about $\Theta_\varepsilon$. The SGD size bound is in terms of the integrated minibatch gradient norms, not the losses.
+   - **Numerical** ($d=10$, $D=176$): the bounds hold in every run. Theorem C2.4 certifies $0.08$–$0.28$ test error for par2, maj3 and and3 from $n=100$–$400$ samples. The time-indexed Corollary C2.5 gives $0.11$–$0.48$ with the measured $\kappa_B$, but its form in terms of $(n,D,\tau)$ alone is non-vacuous only for par2 at $\alpha=10^{-8}$ ($0.16$).
 3. **ReLU networks (C3).**
    - *Literature:* the rigorous results cover early alignment and the first escape in two-layer and homogeneous networks, and exact saddle-to-saddle limits only for diagonal networks.
-   - *Proved:* a per-neuron Gronwall bound for two-layer ReLU networks, $\rho_j(t)\le\rho_j(0)e^{2\sqrt{\lambda_X}\tau(t)}$ (Lemma C3.1, also for discrete GD), and a deep homogeneous bound $Q(t)^{1-L/2}\ge Q(0)^{1-L/2}-(L-2)\sqrt{\lambda_X}\tau(t)$ (Lemma C3.2). These are the "no growth before $\log(1/\alpha)/U$" and "fresh chains cost $\alpha^{-(L-2)}$" laws, as one-sided bounds.
-   - *Proved, conditional:* under an explicitly stated **saddle-to-saddle approximation hypothesis**, the network inherits the race model's time-indexed Occam bound (Theorem C3.4). The hypothesis comes in a sign form and an $L^2$ form. It can be tested with unlabelled inputs, and whenever the test passes, C1 already gives an unconditional certificate (Corollary C3.5).
-   - *Numerical, first test* (§3.4): on the saved μP Adam runs, the network sits *exactly* at the race's constant saddle state during its first plateau (and3, dnf3). During transitions it is only partly close to race states, at disagreement $0.1$–$0.3$. For par3 the fan-in-2 race never starts while the network succeeds. So SSA in this crude form describes plateaus, not transitions.
+   - *Proved:* a per-neuron Gronwall bound for two-layer ReLU networks, $\rho_j(t)\le\rho_j(0)e^{2\sqrt{\lambda_X}\tau(t)}$ (Lemma C3.1, also for discrete GD), and a deep homogeneous bound $Q(t)^{1-L/2}\ge Q(0)^{1-L/2}-(L-2)\sqrt{\lambda_X}\tau(t)$ (Lemma C3.2). These are the "no growth before $\log(1/\alpha)/U$" and "fresh chains cost $\alpha^{-(L-2)}$" laws, as one-sided bounds for small-initialization GD on these architectures. The study's μP Adam networks are outside both lemmas.
+   - *Proved, conditional:* under an explicitly stated **saddle-to-saddle approximation hypothesis**, the network inherits the race model's time-indexed Occam bound (Theorem C3.4), for a finite gate library, with counting constants that differ for Boolean and real-valued gates. The hypothesis comes in a sign form and an $L^2$ form. It can be tested with unlabelled inputs, and whenever the test passes, C1 already gives an unconditional certificate (Corollary C3.5).
+   - *Numerical, first test* (§3.4): on the saved μP Adam runs, during the first plateau the network predicts the majority label everywhere (and3, dnf3), which is the race's constant $s=0$ state. Any learner that fits the mean first does this, so it is no evidence for circuit growth. During the transitions, which are the real test, the network is only partly close to race states, at disagreement $0.1$–$0.3$. For par3 the fan-in-2 race never starts while the network succeeds. So this crude form of SSA is supported only in the trivial constant state.
 4. **Online protocol (C4, Proved unless marked).**
    - The prequential (online) error bounds the test error of a uniformly random iterate, with a fast-rate form $\frac{\lambda M+\ln(1/\delta)}{(1-e^{-\lambda})N}$ for $M$ online mistakes (Proposition C4.1).
    - Every later sample is a free test point for every earlier iterate. This certifies the *best* checkpoint, and, through unlabelled disagreement, the *final* iterate (Proposition C4.2).
-   - Circuit size turns into a time-to-learn bound through the race's clock noise. One correct move costs $O(\ln|\mathcal M|/\gamma^2)$ fresh samples, independently of $\alpha$, $\eta$ and $b$ (Proposition C4.3, proved in the race model). A run of $T$ moves needs about $(t^*/\Delta)^2\ln|\mathcal M|$ samples, which is at least $T\ln|\mathcal M|/(\kappa(\Delta/\Theta)^2)$ by A's size bound (Heuristic C4.4): "description length over relative margin squared", where the Occam batch learner pays description length over $\varepsilon$.
+   - Circuit size turns into a time-to-learn bound through the race's clock noise. At the smallest admissible sampling rate $b/\eta$, one correct move costs at most about $100\ln(2|\mathcal M|/\delta)/\gamma^2+b$ fresh samples, independently of $\Theta$ and hence of $\alpha$ (Proposition C4.3, proved in the race model). A run of $T$ moves needs about $(t^*/\Delta)^2\ln|\mathcal M|$ samples, which is at least $T\ln|\mathcal M|/(\kappa(\Delta/\Theta)^2)$ by A's size bound, with a data-dependent $\kappa$ (Heuristic C4.4, for the pure attach race): "description length over relative margin squared", where the Occam batch learner pays description length over $\varepsilon$.
 
 | result | content | status |
 |---|---|---|
-| Lemma C0.1–C0.3 | kl-Chernoff; Cover's count; VC dimension of sign classes of vector spaces | Proved |
+| Lemma C0.1–C0.3 | kl-Chernoff (also for $[0,1]$-valued variables); Cover's count; VC dimension of sign classes of vector spaces | Proved |
 | Theorem C1 | distillation certificate, uniform over classes, selections and checkpoints | Proved |
 | Proposition C1.2 | Fourier-sign class: VC $=T+1$ per support; $\ln\lvert\mathcal F_{k,T}\rvert\le\ln\binom{D_k^*}{T}+\ln\Phi(2^{\min(T,d)},T)$ | Proved |
 | Proposition C1.3 | fan-in-2 circuits: $\lvert\mathcal C_{\le T}\rvert\le\sum_{s\le T}(16(d+s)^2)^s(d+s)/s!$ | Proved |
 | Proposition C1.4 | juntas: exact count $\sum_j\binom dj N_j$ | Proved |
-| Proposition C1.5 | Fourier concentration or small irrelevant influence implies a certificate exists | Proved |
+| Proposition C1.5 | Fourier concentration or small irrelevant influence implies a certificate exists (sufficient, not necessary) | Proved |
+| §1.2, after C1.5 | distance of the saved final networks to the best real-valued junta on the relevant set, by a pair estimator | Numerical |
 | §1.4 | certificates for the saved networks | Numerical |
-| §1.6 | certificates along training from saved predictions; the certified circuit grows in stages | Numerical |
+| §1.6 | certificates along training from saved predictions; the certificate-minimizing class grows in stages | Numerical |
 | Lemma C2.1 | closed form and mirror-flow form of the diagonal network | Proved; Numerical check |
 | Theorem C2.2 | no growth before $\tau=\Theta_\varepsilon$; first-escape bracket | Proved |
 | Theorem C2.3 | $N_\varepsilon\le\kappa\tau^2/\Theta_\varepsilon^2$; $N_\varepsilon\le(\int\lVert\nabla L\rVert_2)^2/\Theta_\varepsilon^2$; $\ell_1$ identity | Proved |
-| Theorem C2.4, Corollary C2.5 | generalization uniform in $t$ and $\varepsilon$, $\ln D$ dependence | Proved |
-| Proposition C2.6 | the same for discrete GD and minibatch SGD, with minibatch effective time | Proved |
+| Theorem C2.4, Corollary C2.5 | generalization uniform in $t$ and $\varepsilon$; time-indexed size term (data-dependent $\kappa_B$, empirical coherence, or a function of $(n,D,\tau)$ alone); $\ln D$ dependence | Proved |
+| Proposition C2.6 | the same for discrete GD and minibatch SGD: no early growth in minibatch effective time; size via integrated gradient norms | Proved |
 | §3.1 | what is known for ReLU networks from small initialization | Literature |
-| Lemma C3.1, C3.2 | Gronwall no-growth bounds (two-layer per neuron; deep homogeneous) | Proved |
+| Lemma C3.1, C3.2 | Gronwall no-growth bounds (two-layer per neuron; deep homogeneous); not covering the study's μP Adam runs | Proved |
 | Lemma C3.3 | race size bound $T\le\kappa(\tau/\Theta)^2$ (A's Theorem A2.3, re-proved) | Proved |
-| Theorem C3.4 | network inherits the race bound under hypothesis SSA (sign or $L^2$ form) | Proved (conditional) |
+| Theorem C3.4 | network inherits the race bound under hypothesis SSA (sign or $L^2$ form); finite library, Boolean or real-valued gates | Proved (conditional) |
 | Corollary C3.5 | testing SSA with unlabelled inputs; unconditional certificate | Proved |
-| §3.4 | SSA tested on the saved runs: exact on the first plateau, partial in transitions, fails for par3 | Numerical |
+| §3.4 | SSA tested on the saved runs: holds only in the trivial constant state of the first plateau, partly in transitions, fails for par3 | Numerical |
 | Proposition C4.1, C4.2 | online-to-batch (Hoeffding, fast rate); best and final iterate | Proved |
-| Proposition C4.3 | first move of the online race: $N_1=O(\ln\lvert\mathcal M\rvert/\gamma^2)$ samples | Proved (race model) |
-| C4.4 | multi-move time-to-learn $\approx(t^*/\Delta)^2\ln\lvert\mathcal M\rvert$ | Heuristic |
+| Proposition C4.3 | first move of the online race: $N_1=O(\ln\lvert\mathcal M\rvert/\gamma^2)+b$ samples at the smallest admissible sampling rate | Proved (race model) |
+| C4.4 | multi-move time-to-learn $\approx(t^*/\Delta)^2\ln\lvert\mathcal M\rvert$ (pure attach race) | Heuristic |
 
 ---
 
@@ -70,7 +71,7 @@ Notes by Claude (Opus 5.5), prompted by Kaarel Hänni. Research note, 23 October
 
 **Data.** $\mathcal X=\{-1,1\}^d$, here $d=30$, with $x$ uniform and $y=f^\star(x)\in\{-1,1\}$; most statements hold for any $P$ on $\mathcal X\times\{-1,1\}$ whose input marginal $P_X$ we can sample. The training set $S=((x_i,y_i))_{i\le n}$ is iid from $P$. For $h,g:\mathcal X\to\{-1,1\}$,
 $$\mathrm{err}(h)=P(h(x)\ne y),\qquad \mathrm{dis}(h,g)=P_X(h(x)\ne g(x)),$$
-and $\widehat{\mathrm{err}}_S$, $\widehat{\mathrm{dis}}_U$ are the empirical versions on $S$ and on an unlabelled sample $U=(u_1,\dots,u_m)$. For a real function $f$, $\mathrm{err}(\mathrm{sgn} f)$ is read conservatively as $P(yf(x)\le0)$. Write $\langle a,b\rangle_n=\frac1n\sum_ia(x_i)b(x_i)$ and $\|a\|_n$. Logarithms are natural.
+and $\widehat{\mathrm{err}}_S$, $\widehat{\mathrm{dis}}_U$ are the empirical versions on $S$ and on an unlabelled sample $U=(u_1,\dots,u_m)$. For a real function $f$, $\mathrm{sgn}f$ uses the convention $\mathrm{sgn}(0)=+1$, as the scripts do, and $\mathrm{err}(\mathrm{sgn}f)=P(\mathrm{sgn}f(x)\ne y)$; this is what Theorem C1 bounds. The margin results (Theorems C2.4 and C3.4(2)) bound the larger quantity $P(yf(x)\le0)$, so they hold under either convention. Write $\langle a,b\rangle_n=\frac1n\sum_ia(x_i)b(x_i)$ and $\|a\|_n$. Logarithms are natural.
 
 **Characters.** For $S\subseteq[d]$, $\chi_S(x)=\prod_{i\in S}x_i$; distinct characters are orthonormal in $L^2(P_X)$. $D_k=\sum_{i=0}^k\binom di$ counts the characters of degree $\le k$, and $D_k^*=D_k-1$ the non-constant ones.
 
@@ -82,11 +83,11 @@ The first follows from $\mathrm{kl}(q\|p)\ge(p-q)^2/(2p)$ for $q\le p$, the seco
 
 ### Lemma C0.1 (kl-Chernoff) — Proved
 
-Let $\hat p$ be the mean of $n$ iid Bernoulli($p$) variables, and $\varepsilon\ge0$. Then $P\big(p>\mathrm{kl}^{-1}_+(\hat p,\varepsilon)\big)\le e^{-n\varepsilon}$.
+Let $\hat p$ be the mean of $n$ iid Bernoulli($p$) variables, and $\varepsilon\ge0$. Then $P\big(p>\mathrm{kl}^{-1}_+(\hat p,\varepsilon)\big)\le e^{-n\varepsilon}$. The same holds for iid variables $Z_i$ with values in $[0,1]$ and mean $p$.
 
 *Proof.*
 1. *Chernoff.* For $0\le q\le p$, $P(\hat p\le q)\le e^{-n\,\mathrm{kl}(q\|p)}$. For $q=0$ this is $(1-p)^n$. For $q>0$ and $\lambda\ge0$, Markov's inequality gives $P(\hat p\le q)\le e^{\lambda nq}(1-p+pe^{-\lambda})^n$. With $e^{-\lambda}=\frac{q(1-p)}{p(1-q)}\le1$ the right side is $e^{-n\,\mathrm{kl}(q\|p)}$.
-2. *Inversion.* Since $p'\mapsto\mathrm{kl}(\hat p\|p')$ increases on $[\hat p,1]$, the event $p>\mathrm{kl}^{-1}_+(\hat p,\varepsilon)$ equals $\{\hat p<p,\ \mathrm{kl}(\hat p\|p)>\varepsilon\}$. The map $q\mapsto\mathrm{kl}(q\|p)$ decreases continuously on $[0,p]$ from $\mathrm{kl}(0\|p)$ to $0$. If $\mathrm{kl}(0\|p)\le\varepsilon$ the event is empty. Otherwise there is $q^*\in(0,p)$ with $\mathrm{kl}(q^*\|p)=\varepsilon$, and the event is $\{\hat p<q^*\}$, whose probability is at most $e^{-n\varepsilon}$ by step 1. ∎
+2. *Inversion.* Since $p'\mapsto\mathrm{kl}(\hat p\|p')$ increases on $[\hat p,1]$, the event $p>\mathrm{kl}^{-1}_+(\hat p,\varepsilon)$ equals $\{\hat p<p,\ \mathrm{kl}(\hat p\|p)>\varepsilon\}$. The map $q\mapsto\mathrm{kl}(q\|p)$ decreases continuously on $[0,p]$ from $\mathrm{kl}(0\|p)$ to $0$. If $\mathrm{kl}(0\|p)\le\varepsilon$ the event is empty. Otherwise there is $q^*\in(0,p)$ with $\mathrm{kl}(q^*\|p)=\varepsilon$, and the event is $\{\hat p<q^*\}$, whose probability is at most $e^{-n\varepsilon}$ by step 1.\n3. *$[0,1]$-valued variables.* Step 1 used only $\mathbb E e^{-\lambda Z}\le1-p+pe^{-\lambda}$, which holds for $Z\in[0,1]$ with mean $p$ by convexity of $z\mapsto e^{-\lambda z}$. For $q=0$, $P(Z=0)\le1-p$ because $P(Z>0)\ge\mathbb EZ$. Step 2 is unchanged. ∎
 
 ### Lemma C0.2 (Cover's count of threshold functions) — Proved
 
@@ -224,7 +225,7 @@ where $N_j$ is the number of functions of $j$ variables that depend on all of th
 
 **Brute-force checks** (same file): the junta formula matches enumeration for $(d,k)=(3,2),(4,2),(4,3)$, giving $38,70,942$. The circuit bound exceeds the exact counts of functions of $B_2$-circuit size $\le T$: $16$ for $d=2$ and $38,152$ for $d=3$, $T=1,2$. Random search over weights finds at most as many Fourier-sign functions on $\{-1,1\}^3$ as Proposition C1.2 allows. The count of 104 for $k=1$, $T=3$ is the number of threshold functions of three variables, against a bound of 128.
 
-**Which class wins.** For $r$ relevant variables with no structure, juntas cost $2^r\ln2+\ln\binom dr$. Fourier-sign classes cost about $T(\ln D_k+\min(T,d)\ln 2)$ and win for threshold-like targets, where $T=r$ characters of degree 1 suffice. Circuits cost at most about $\ln(16d^2)$ nats per gate, less the $\ln T!$ saving, and win for structured targets with many variables. PAR$_8$, for example, costs 65 nats as a 7-gate circuit and 193 nats as a junta.
+**Which class wins.** For $r$ relevant variables with no structure, juntas cost $2^r\ln2+\ln\binom dr$. Fourier-sign classes cost about $T(\ln D_k+\min(T,d)\ln 2)$ and win for targets that are signs of few characters: threshold-like targets, where $T=r$ characters of degree 1 suffice, and parities. PAR$_8=\chi_{[8]}$ lies in $\mathcal F_{8,1}$, at $\ln D_8^*+\ln4=17.4$ nats, against 65 nats as a 7-gate circuit and 193 nats as an 8-junta. Circuits cost at most about $\ln(16d^2)$ nats per gate, less the $\ln T!$ saving, and win for structured targets whose sign representations need many characters, such as DNFs. dnf3, an OR of three 3-literal ANDs on disjoint variables, has an 8-gate circuit, at $\ln|\mathcal C_{\le8}|=73.4$ nats. Its obvious Fourier-sign representation $\mathrm{sgn}(p_1+p_2+p_3-\frac12)$, with $p_j\in\{0,1\}$ the indicator of term $j$, uses 21 characters of degree $\le3$, at $392$ nats. As a 9-junta it costs $371$ nats ([`checks/C_r2_checks.out`](checks/C_r2_checks.out) §1).
 
 ### Proposition C1.5 (when a certificate exists) — Proved
 
@@ -241,7 +242,14 @@ $$\mathrm{dis}(h,g_R)\le\tfrac12\sum_{S\not\subseteq R}\hat h(S)^2\le\tfrac12\su
    - each $S\not\subseteq R$ contains some $i\notin R$;
    - $\mathrm{Inf}_i(h)=\mathbb E[(D_ih)^2]=\sum_{S\ni i}\hat h(S)^2$, where $D_ih=(h-h\circ\oplus_i)/2=\sum_{S\ni i}\hat h(S)\chi_S$. ∎
 
-So the certificates of §1.4 exist exactly when the network's *sign function* is close to Fourier-sparse, or has small total influence outside a small set. The study saves $\mathrm{infl\_irr}$, the mean over irrelevant coordinates of $\mathbb E(f-f\circ\oplus_i)^2/4$ for the *real* output $f$. By the same computation, $(d-|R|)\cdot\mathrm{infl\_irr}\ge\|f-\mathbb E[f\mid x_R]\|_{L^2}^2$, the squared distance from the network to the best real-valued junta on the relevant set $R$. This holds up to the sampling error of $\mathrm{infl\_irr}$, which the study estimates on 1024 test inputs. That is an $L^2$ closeness statement of the kind used in §3.3.
+So certificates of the kind used in §1.4 exist in particular when the network's *sign function* is close to Fourier-sparse, or has small total influence outside a small set. The conditions are sufficient, not necessary: Fourier-sign certificates also cover threshold-like functions that are far from Fourier-sparse. MAJ$_9$ has level-1 Fourier weight $9\cdot(70/256)^2=0.673$, so item 1 with its 9 linear characters guarantees only $\mathrm{dis}\le0.327$. Yet $\mathrm{sgn}(\sum_{i\le9}x_i)=\mathrm{MAJ}_9$ exactly, and §1.4 certifies maj9 at $0.034$ through $\mathcal F_{1,9}$ ([`checks/referee_C_r1_small.out`](checks/referee_C_r1_small.out)).
+
+**Distance to the best real-valued junta.** For a real function $f$ and a coordinate set $R$, the computation in item 2 gives
+$$\|f-\mathbb E[f\mid x_R]\|_{L^2}^2=\sum_{S\not\subseteq R}\hat f(S)^2\ \le\ \sum_{i\notin R}\mathrm{Inf}_i(f),\qquad \mathrm{Inf}_i(f)=\tfrac14\mathbb E(f-f\circ\oplus_i)^2 .$$
+The left side is the squared $L^2$ distance from $f$ to the best real-valued junta on $R$.
+- *What the study saves.* $\mathrm{infl\_irr}$ is the mean of $\mathrm{Inf}_i(f)$ over only the *first 5* of the $d-|R|$ irrelevant coordinates (`nn_train.py`: `irr = [...][:5]`), estimated on 1024 test inputs. So the 5 measured terms give a *lower* bound on $\sum_{i\notin R}\mathrm{Inf}_i(f)$, up to sampling error. $(d-|R|)\cdot\mathrm{infl\_irr}$ is an extrapolation. Training is equivariant under permutations of the irrelevant coordinates, so it is unbiased for the expected sum over training runs, but it is not an upper bound for a given network, and it cannot certify $L^2$ closeness.
+- *A rigorous estimate.* Draw $x$ uniform, and $x'$ with $x'_R=x_R$ and the other coordinates fresh. Then $\mathbb E\,\frac12(f(x)-f(x'))^2=\mathbb E\,\mathrm{Var}(f\mid x_R)=\|f-\mathbb E[f\mid x_R]\|^2$. For $\mathrm{clip}f$ the summand lies in $[0,2]$, so Lemma C0.1 for $[0,1]$-valued variables, applied to half the summand, gives an upper confidence bound. This needs the network itself, so it is available only where parameters are saved, that is, at the final checkpoint.
+- **Numerical** ([`checks/C_r2_checks.out`](checks/C_r2_checks.out) §4; 40000 pairs per network, $\delta=0.05$ per network). On the 117 saved final networks of §1.4, the upper confidence bound on $\|\mathrm{clip}f-\mathbb E[\mathrm{clip}f\mid x_R]\|^2$ is at most $0.0072$ at $n=16384$. At $n=2048$ its median is $0.0034$ and its maximum $0.29$ (par4, whose networks there have test error up to $0.36$). The full influence sum over all irrelevant coordinates, estimated on 2000 inputs, is $0.73$–$1.55$ times the saved extrapolation $(d-|R|)\cdot\mathrm{infl\_irr}$ for the 81 networks where the sum exceeds $10^{-3}$, with median $1.02$ over all 117. So the extrapolation is right on average but off by up to a factor of about 1.5 for individual networks.
 
 ### 1.3 How the certificate is computed (no labels outside $S$)
 
@@ -256,27 +264,29 @@ So the certificates of §1.4 exist exactly when the network's *sign function* is
 
 The true error, measured on $U_B$ using the target, is reported for comparison only.
 
+**Which network is certified.** `study/nn_train.py` saves the final parameters in float16, so the certificates, and the true-error column, refer to the network rebuilt from the float16-rounded parameters, not to the float32 network that was trained. Over all 429 saved networks, the rebuilt network disagrees with the float32 network's saved sign predictions on at most 2 of the 4096 test inputs ([`checks/referee_C_r1_fp16.out`](checks/referee_C_r1_fp16.out)). The test inputs are independent of training, so one more disagreement term transfers the certificate: with additional failure probability $0.01$, $\mathrm{err}(h_{32})\le\mathrm{cert}(h_{16})+\mathrm{kl}^{-1}_+(2/4096,\ln(100)/4096)=\mathrm{cert}(h_{16})+0.0024$ ([`checks/C_r2_checks.out`](checks/C_r2_checks.out) §3).
+
 ### 1.4 Table: certificates for the saved networks
 
-**Numerical** ([`checks/c1_fourier_cert.txt`](checks/c1_fourier_cert.txt)). Entries are the true error (mean over 3 seeds) and the certificate (range over seeds). The last column is the class of the best certificate at $n=2048$, with the best certificate from the other family in brackets. $\delta=0.05$ in total.
+**Numerical** ([`checks/c1_fourier_cert.txt`](checks/c1_fourier_cert.txt); per-seed pairs in [`checks/C_r2_checks.out`](checks/C_r2_checks.out) §6). Entries are *true error / certificate* for seeds 0, 1, 2. A single pair means the three seeds agree to three decimals, and an error of $0$ means below $0.0005$. A certificate above 1 is the sum of two terms, each at most 1. The last column is the class of the best certificate at $n=2048$, with the best certificate from the other family in brackets. $\delta=0.05$ in total.
 
-| target | rel. vars | $n=256$: error / certificate | $n=2048$: error / certificate | $n=16384$: error / certificate | best class at $n=2048$ |
+| target | rel. vars | $n=256$ | $n=2048$ | $n=16384$ | best class at $n=2048$ |
 |---|---|---|---|---|---|
 | dict ($x_1$) | 1 | 0 / 0.043 | 0 / 0.006 | 0 / 0.001 | $\mathcal F_{1,1}$ (junta 0.006) |
-| and3 | 3 | 0.031 / 0.096–0.131 | 0 / 0.010 | 0 / 0.001 | 3-junta ($\mathcal F_{1,3}$: 0.011) |
-| maj3 | 3 | 0.042 / 0.119–0.126 | 0 / 0.010 | 0 / 0.001 | 3-junta ($\mathcal F_{1,3}$: 0.011) |
-| maj9 | 9 | 0.101 / 0.344–0.357 | 0 / **0.034** | 0 / 0.004 | $\mathcal F_{1,9}$ (junta: 0.41–0.43) |
-| thr10 | 10 | 0.129 / 0.40–0.45 | 0.029 / **0.088–0.100** | 0.003 / **0.019–0.021** | $\mathcal F_{1,9\text{–}10}$, logistic refit (junta: 0.20) |
-| par2 | 2 | 0.001 / 0.054–0.057 | 0 / 0.007 | 0 / 0.001 | $\mathcal F_{2,1}$ |
-| par3 | 3 | 0.478 / 0.97–1.0 | 0 / 0.008 | 0 / 0.001 | $\mathcal F_{3,1}$ |
-| par4 | 4 | 0.500 / 0.95–1.0 | 0.171 / 0.034–0.379 | 0 / 0.001 | $\mathcal F_{4,1}$ |
-| dnf3 | 9 | 0.173 / 0.50–0.70 | 0 / **0.126–0.143** | 0 / 0.017–0.021 | $\mathcal F_{2\text{–}3,18}$ (junta: 0.28–0.33) |
-| majpar | 6 | 0.328 / 0.63–0.71 | 0.065 / 0.060–0.101 | 0 / 0.002 | $\mathcal F_{2,3}$ (junta: 0.08–0.12) |
-| mux | 4 | 0.347 / 0.70–0.83 | 0 / 0.014 | 0 / 0.002 | 4-junta ($\mathcal F_{4,4\text{–}5}$: 0.027–0.033) |
-| parmaj | 6 | 0.330 / 0.67–0.91 | 0 / 0.031 | 0 / 0.004 | 6-junta ($\mathcal F_{2,9}$: 0.046) |
-| stair5 | 5 | 0.355 / 0.62–0.77 | 0.003 / 0.020–0.031 | 0 / 0.003 | 5-junta ($\mathcal F_{4,5}$: 0.033–0.045) |
+| and3 | 3 | 0.025 / 0.104; 0.050 / 0.131; 0.017 / 0.096 | 0 / 0.010 | 0 / 0.001 | 3-junta ($\mathcal F_{1,3}$: 0.011) |
+| maj3 | 3 | 0.038 / 0.119; 0.045 / 0.126; 0.042 / 0.123 | 0 / 0.010 | 0 / 0.001 | 3-junta ($\mathcal F_{1,3}$: 0.011) |
+| maj9 | 9 | 0.097 / 0.344; 0.109 / 0.357; 0.097 / 0.344 | 0 / **0.034** | 0 / 0.004 | $\mathcal F_{1,9}$ (junta: 0.41–0.43) |
+| thr10 | 10 | 0.126 / 0.403; 0.124 / 0.449; 0.136 / 0.420 | 0.029 / **0.088**; 0.028 / **0.100**; 0.029 / **0.094** | 0.004 / **0.020**; 0.003 / **0.019**; 0.003 / **0.021** | $\mathcal F_{1,9\text{–}10}$, logistic refit (junta: 0.20) |
+| par2 | 2 | 0.003 / 0.057; 0.001 / 0.055; 0 / 0.054 | 0 / 0.007 | 0 / 0.001 | $\mathcal F_{2,1}$ |
+| par3 | 3 | 0.482 / 1.017; 0.480 / 0.968; 0.473 / 0.975 | 0 / 0.008 | 0 / 0.001 | $\mathcal F_{3,1}$ |
+| par4 | 4 | 0.500 / 0.997; 0.502 / 0.949; 0.497 / 0.976 | 0.022 / 0.034; 0.361 / 0.379; 0.131 / 0.146 | 0 / 0.001 | $\mathcal F_{4,1}$ |
+| dnf3 | 9 | 0.151 / 0.687; 0.196 / 0.698; 0.171 / 0.496 | 0 / **0.143**; 0 / **0.143**; 0 / **0.126** | 0 / 0.021; 0 / 0.017; 0 / 0.021 | $\mathcal F_{2\text{–}3,18}$ (junta: 0.28–0.33) |
+| majpar | 6 | 0.307 / 0.634; 0.350 / 0.711; 0.328 / 0.642 | 0.042 / 0.060; 0.081 / 0.101; 0.070 / 0.090 | 0 / 0.002 | $\mathcal F_{2,3}$ (junta: 0.08–0.12) |
+| mux | 4 | 0.334 / 0.829; 0.351 / 0.700; 0.355 / 0.755 | 0 / 0.014 | 0 / 0.002 | 4-junta ($\mathcal F_{4,4\text{–}5}$: 0.027–0.033) |
+| parmaj | 6 | 0.324 / 0.751; 0.378 / 0.914; 0.287 / 0.672 | 0 / 0.031 | 0 / 0.004 | 6-junta ($\mathcal F_{2,9}$: 0.046) |
+| stair5 | 5 | 0.330 / 0.624; 0.364 / 0.768; 0.369 / 0.695 | 0 / 0.020; 0.009 / 0.031; 0 / 0.020 | 0 / 0.003 | 5-junta ($\mathcal F_{4,5}$: 0.033–0.045) |
 
-No certificate in the 117 runs falls below the network's true error.
+No certificate in the 117 runs falls below the network's true error; the smallest gap, certificate minus error, is $0.0009$.
 
 ### 1.5 Reading
 
@@ -292,12 +302,12 @@ No certificate in the 117 runs falls below the network's true error.
 - **Where it fails.** It fails exactly where the network fails: par3 and par4 at $n=256$, and the error-0.17–0.35 networks of dnf3, majpar, mux, parmaj and stair5 at $n=256$. A certificate cannot fall below the true error by more than the deviation terms. When the network is close to the target, the certificate tracks the network's error: for par4 at $n=2048$ the seeds have error $0.022,0.361,0.131$ and certificates $0.034,0.379,0.146$.
 - **What it does not explain.** It is a posteriori. It says nothing about why gradient descent produced a network that is close to a Fourier-sparse sign function or a junta. That is the job of C2 and C3.
 
-### 1.6 Along training: the certified circuit grows in stages (Numerical)
+### 1.6 Along training: the certificate-minimizing class grows in stages (Numerical)
 
 [`checks/c1_trajectory_cert.py`](checks/c1_trajectory_cert.py) produces [`checks/c1_trajectory_cert.txt`](checks/c1_trajectory_cert.txt). It computes the same certificate at all 15 checkpoints of the seed-0 runs ($n=2048$ and $16384$), from the **saved test-set predictions alone**.
 - **Inputs.** The 4096 saved test inputs are split into 2048 for selection and 2048 for estimating the disagreement. Their labels are not used.
 - **Candidates.** All characters of degree $\le3$ on all 30 coordinates; no logistic refit.
-- **Uniformity.** The union over the 15 checkpoints is paid in the disagreement term (Theorem C1), so all entries hold simultaneously.
+- **Uniformity.** The union over the 15 checkpoints of a run is paid in the disagreement term (Theorem C1), so the entries of one run hold simultaneously over its checkpoints, each at confidence $1-\delta$ with $\delta=0.05$. Across the 8 targets of the table the failure probabilities add.
 
 Each entry gives the best class, its log-size, and test error / certificate ($n=16384$). "Vacuous" means a certificate $\ge0.5$, with the test error in brackets.
 
@@ -313,13 +323,13 @@ Each entry gives the best class, its log-size, and test error / certificate ($n=
 | par3 | vacuous (0.49) | vacuous (0.49) | vacuous (0.48) | vacuous (0.48) | $\mathcal F_{3,1}$, 10 nats: 0.00 / 0.01 | $\mathcal F_{3,1}$, 10 nats: 0.00 / 0.01 |
 
 **Reading.**
-- **Stages.** The certified complexity is a step function of training time:
+- **Stages.** The log-size of the class that minimizes the certificate is a step function of training time:
   - stair5: 5 nats ($x_1$ alone, steps 50–200), then 34 nats (a 5-junta, from step 500);
   - mux: a 3-junta (14 nats, steps 100–200), then a 4-junta (21 nats);
   - dnf3: the constant (steps 20–50), then 9 degree-1 characters (60 nats), then 18–19 characters of degree $\le3$ (263–332 nats);
   - majpar and par3: nothing certifiable until the checkpoint at which the target's own 21-nat or 10-nat representation appears.
 
-  This is the empirical shape of "the circuit cannot have grown big yet". At every checkpoint, the network is certifiably close to a circuit whose description length grows in discrete steps over training. §3.4 shows that these intermediate circuits are not, in general, the toy race's.
+  This is the empirical shape of "the circuit cannot have grown big yet", with a caveat. The selected class minimizes a bound that trades error against size; it is not the size of a circuit the network is known to be close to. For stair5 at steps 50–200, for example, the best certificate uses $x_1$ alone, with test error $0.30$–$0.34$ and certificate $0.35$–$0.43$: the network is not close to $x_1$, but no larger class pays for itself yet. Where the certificate is small, as for six of the eight targets from step 500 on (not thr10 and, at step 500, stair5), the disagreement term is small too, and the network *is* certifiably close to a predictor in the selected class. §3.4 shows that the intermediate predictors are not, in general, the toy race's.
 - **Cost of using only saved data.** With 2048 unlabelled points instead of 50000, and no refit, the final certificates are somewhat weaker than in §1.4: for thr10, 0.13 instead of 0.02.
 - **Which class wins can change during training.** maj3 is certified as a 6-character Fourier sign at step 20 and as a 3-junta afterwards. The class is chosen per checkpoint, and the price of that choice is already in the prior $\pi$.
 
@@ -360,13 +370,13 @@ The inequality uses $\operatorname{arsinh}z\ge\ln 2z$ for $z>0$. So the results 
 ### Theorem C2.2 (no early growth; first escape) — Proved
 
 1. For all $t$ and $S$: $|G_S(t)|\le\int_0^t|\langle r,\chi_S\rangle_n|\le\tau(t)\le t\,\|y\|_n$. Hence $|w_S(t)|\le2\alpha^2\sinh(4\tau(t))$, and **no coordinate reaches $\varepsilon$ while $\tau(t)<\Theta_\varepsilon$**. In particular, with $G_{\max}=\sup_s\|g(s)\|_\infty\le\|y\|_n=1$, this holds for all $t<\Theta_\varepsilon/G_{\max}$, and so for all $t<\frac{\ln(\varepsilon/\alpha^2)}{4G_{\max}}$.
-2. **First escape.** Let $U_0=\max_S|\langle y,\chi_S\rangle_n|$, $\varepsilon_D=\min\{D\varepsilon,\sqrt{\lambda_{\max}(K)D}\,\varepsilon\}$, and $t_\varepsilon=\inf\{t:\max_S|w_S(t)|\ge\varepsilon\}$. If $U_0>\varepsilon_D$, then
+2. **First escape.** Let $U_0=\max_S|\langle y,\chi_S\rangle_n|$, $\varepsilon_D=\sqrt{\lambda_{\max}(K)D}\,\varepsilon$, and $t_\varepsilon=\inf\{t:\max_S|w_S(t)|\ge\varepsilon\}$. Since $\lambda_{\max}(K)\le\mathrm{tr}K=D$, $\varepsilon_D\le D\varepsilon$. If $U_0>\varepsilon_D$, then
 $$\frac{\Theta_\varepsilon}{U_0+\varepsilon_D}\ \le\ t_\varepsilon\ \le\ \frac{\Theta_\varepsilon}{U_0-\varepsilon_D}.$$
 
 *Proof.*
 1. $G_S=\int g_S$, and $|g_S|=|\langle r,\chi_S\rangle_n|\le\|r\|_n$ by Lemma C2.1. Then $|w_S|=2\alpha^2\sinh(4|G_S|)$ is increasing in $|G_S|$.
 2. Bracket for $t_\varepsilon$:
-   - For $t\le t_\varepsilon$, every $|w_S(t)|\le\varepsilon$. So $\|Xw\|_n\le\sum_S|w_S|\le D\varepsilon$, and also $\|Xw\|_n^2=w^\top Kw\le\lambda_{\max}(K)D\varepsilon^2$. Since $\langle r,\chi_S\rangle_n=\langle y,\chi_S\rangle_n-\langle Xw,\chi_S\rangle_n$, every utility stays within $\varepsilon_D$ of its initial value.
+   - For $t\le t_\varepsilon$, every $|w_S(t)|\le\varepsilon$. So $\|Xw\|_n^2=w^\top Kw\le\lambda_{\max}(K)\|w\|_2^2\le\lambda_{\max}(K)D\varepsilon^2$. Since $\langle r,\chi_S\rangle_n=\langle y,\chi_S\rangle_n-\langle Xw,\chi_S\rangle_n$ and $|\langle Xw,\chi_S\rangle_n|\le\|Xw\|_n$, every utility stays within $\varepsilon_D$ of its initial value.
    - *Lower bound.* $|G_S(t)|\le(U_0+\varepsilon_D)t$ for all $S$ and $t\le t_\varepsilon$. At $t_\varepsilon$ some $|w_S|=\varepsilon$, that is, $|G_S|=\Theta_\varepsilon$.
    - *Upper bound.* For $S^*$ attaining $U_0$, with $\sigma=\mathrm{sgn}\langle y,\chi_{S^*}\rangle_n$, we have $-\sigma G_{S^*}(t)\ge(U_0-\varepsilon_D)t$ for $t\le t_\varepsilon$. If $t_\varepsilon>\Theta_\varepsilon/(U_0-\varepsilon_D)$, then at $t=\Theta_\varepsilon/(U_0-\varepsilon_D)<t_\varepsilon$ we would already have $|w_{S^*}|\ge\varepsilon$, a contradiction. ∎
 
@@ -378,7 +388,7 @@ Let $B=B_\varepsilon(t)=\{S:|w_S(t)|\ge\varepsilon\}$, $N_\varepsilon(t)=|B|$, a
 1. **(integrated gradient norm)** $N_\varepsilon(t)\le\Big(\int_0^t\|\nabla L(w(s))\|_2\,ds\Big)^2\Big/\Theta_\varepsilon^2$;
 2. **(incoherence)** $N_\varepsilon(t)\le\kappa_B\,\tau(t)^2/\Theta_\varepsilon^2$;
    - With the coherence $\mu_n=\max_{S\ne S'}|\langle\chi_S,\chi_{S'}\rangle_n|$, Gershgorin's theorem gives $\kappa_B\le1+(N_\varepsilon-1)\mu_n$. Writing $x=(\tau/\Theta_\varepsilon)^2$, whenever $\mu_nx<1$ this gives $N_\varepsilon\le\frac{(1-\mu_n)x}{1-\mu_nx}$.
-   - For uniform inputs, $\mu_n\le\sqrt{2\ln(2D_{2k}/\delta)/n}$ with probability $1-\delta$. This follows from Hoeffding's inequality over the at most $D_{2k}$ nonempty sets $S\triangle S'$.
+   - For uniform inputs and the dictionary of all characters of degree $\le k$, $\mu_n\le\bar\mu:=\sqrt{2\ln(2D_{\min(2k,d)}/\delta')/n}$ with probability $1-\delta'$. This follows from Hoeffding's inequality over the fewer than $D_{\min(2k,d)}$ nonempty sets $S\triangle S'$.
 3. **(the $\ell_1$ identity)** $\sum_S|w_S(t)|\,|G_S(t)|=\langle R(t),f_{w(t)}\rangle_n$. Consequently
 $$\sum_{S\in B_\varepsilon(t)}|w_S(t)|\le\frac{\langle R(t),f_{w(t)}\rangle_n}{\Theta_\varepsilon}\le\frac{\tau(t)\,\|f_{w(t)}\|_n}{\Theta_\varepsilon}\le\frac{2\tau(t)}{\Theta_\varepsilon}.$$
 
@@ -389,7 +399,7 @@ $$N\Theta_\varepsilon\le\sum_{S\in B}|G_S|=\int_0^t\Big\langle r(s),\sum_{S\in B
    Rearranging gives the claim. For the Gershgorin form, substitute $\kappa_B\le1+(N-1)\mu_n$ into $N\le\kappa_Bx$ and solve. For the coherence bound, $\langle\chi_S,\chi_{S'}\rangle_n$ is the empirical mean of $\chi_{S\triangle S'}$, which has population mean $0$; apply Hoeffding and a union bound.
 3. $|w_S||G_S|=w_S\cdot(-G_S)=w_S\int_0^t\langle r,\chi_S\rangle_n$, because $\mathrm{sgn}\,w_S=-\mathrm{sgn}\,G_S$. Summing over $S$ gives $\int_0^t\langle r(s),f_{w(t)}\rangle_n\,ds$. The inequalities follow from $|G_S|\ge\Theta_\varepsilon$ on $B$, Cauchy–Schwarz, and $\|f\|_n\le\|y\|_n+\|r\|_n\le2$. ∎
 
-Item 2 is tight: for $y=\chi_{S^*}$ in the dictionary, $r$ stays parallel to $\chi_{S^*}$, so $|G_{S^*}|=\tau$ exactly. The numerical check finds $N/\text{bound}=1.00$ for par2 at $\alpha=10^{-8}$. Note also that *every* coordinate is nonzero for $t>0$. The bound counts coordinates that have **grown**, which is the precise sense of "the circuit cannot have grown big yet".
+Item 2 is tight in the following sense. Let $y=\chi_{S^*}$ be in the dictionary. If $\langle\chi_{S^*},\chi_S\rangle_n=0$ for all $S\ne S^*$, as for an empirically orthogonal dictionary such as the full cube, every other coordinate has zero gradient, $r$ stays parallel to $\chi_{S^*}$, and $|G_{S^*}|=\tau$ exactly; so at the first crossing $N=1=\tau^2/\Theta_\varepsilon^2$. At finite $n$ with nonzero coherence ($\mu_n=0.30$ at $n=100$ in the check) every coordinate moves, $r$ is not exactly parallel, and the inequality is strict; it becomes tight as $\alpha\to0$ at fixed $\varepsilon$ (sketch: until the first crossing every other utility is at most $\mu_n+o(1)$, so the other coordinates are $O(\alpha^{2(1-\mu_n)})$, and $|G_{S^*}|/\tau\to1$). The numerical check finds $N/\text{bound}=1.00$ for par2 at $\alpha=10^{-8}$; the printed value $1.0000000016$ (`c2_diag_check.json`) exceeds 1 only by integration error. Note also that *every* coordinate is nonzero for $t>0$. The bound counts coordinates that have **grown**, which is the precise sense of "the circuit cannot have grown big yet".
 
 ### Theorem C2.4 (generalization, uniform in time and threshold) — Proved
 
@@ -409,23 +419,34 @@ $$\mathrm{err}\big(\mathrm{sgn}f_{w(t)}\big)\ \le\ \mathrm{kl}^{-1}_+\Big(\wideh
    - On training points: $yf_L\le\mu$ implies $yf_{w(t)}\le2\mu$, so $\widehat P_S(yf_L\le\mu)\le\widehat P_S(yf_{w(t)}\le2\mu)$.
 4. *Conclusion.* The set $\{yf_L\le\mu\}$ belongs to $\mathcal A_{N_\varepsilon(t)}$, whatever the data-dependence of $B$, $w$ and $\mu$. Apply step 2 and the monotonicity of $\mathrm{kl}^{-1}_+$. ∎
 
-### Corollary C2.5 (the a priori, time-indexed form) — Proved
+### Corollary C2.5 (the time-indexed form) — Proved
 
-Fix $\gamma\in(0,1]$, put $\Theta_\gamma:=\frac14\operatorname{arsinh}\frac{\gamma}{4D\alpha^2}$, and let $\bar\kappa$ be any number with $\kappa_B\le\bar\kappa$ for $B=B_{\gamma/(2D)}(t)$. Define
-$$\bar N(t)=\min\Big\{D,\Big\lfloor\bar\kappa\,\frac{\tau(t)^2}{\Theta_\gamma^2}\Big\rfloor\Big\},\qquad \ell^*_N=\max_{N'\le N}\ell_{N'} .$$
-On the event of Theorem C2.4, for all $t$ and $\gamma$,
-$$\mathrm{err}(\mathrm{sgn}f_{w(t)})\le\mathrm{kl}^{-1}_+\Big(\widehat P_S[yf_{w(t)}\le\gamma],\ \frac{\ell^*_{\bar N(t)}+\ln\frac{(\bar N+1)(\bar N+2)}\delta}{n}\Big),$$
-with $\tau(t)\le t$. The Gershgorin choice $\bar\kappa=1+(\bar N-1)\mu_n$ makes this fully a priori, at the cost of the condition $\mu_n(\tau/\Theta_\gamma)^2<1$.
+Fix $\gamma\in(0,1]$, put $\varepsilon=\gamma/(2D)$, $\Theta_\gamma:=\Theta_\varepsilon=\frac14\operatorname{arsinh}\frac{\gamma}{4D\alpha^2}$, $x(t):=(\tau(t)/\Theta_\gamma)^2$ and $\ell^*_N=\max_{N'\le N}\ell_{N'}$. Let $\bar N(t)\le D$ be any quantity, possibly data-dependent, with $N_\varepsilon(t)\le\bar N(t)$. On the event of Theorem C2.4, for all $t$ and $\gamma$,
+$$\mathrm{err}(\mathrm{sgn}f_{w(t)})\le\mathrm{kl}^{-1}_+\Big(\widehat P_S[yf_{w(t)}\le\gamma],\ \frac{\ell^*_{\bar N(t)}+\ln\frac{(\bar N+1)(\bar N+2)}\delta}{n}\Big).$$
+Three admissible choices of $\bar N$, from most to least data-dependent:
+1. **Measured $\kappa$.** $\bar N_\kappa(t)=\min\{D,\lfloor\kappa_B\,x(t)\rfloor\}$ with $B=B_\varepsilon(t)$. This is time-indexed, but $\kappa_B$ is the top eigenvalue of the Gram matrix of the trajectory's own grown set, so it is data-dependent.
+2. **Empirical coherence.** If $\mu_nx(t)<1$: $\bar N_G(t)=\min\big\{D,\big\lfloor\frac{(1-\mu_n)x(t)}{1-\mu_nx(t)}\big\rfloor\big\}$. The data enter only through the coherence $\mu_n$ of the training inputs and through $\tau(t)$.
+3. **Coherence bound.** For uniform inputs and the dictionary of all characters of degree $\le k$, let $\bar\mu=\sqrt{2\ln(2D_{\min(2k,d)}/\delta')/n}$, and let $\bar x$ be either $x(t)$ or $(t/\Theta_\gamma)^2$. If $\bar\mu\bar x<1$: $\bar N_H(t)=\min\big\{D,\big\lfloor\frac{(1-\bar\mu)\bar x}{1-\bar\mu\bar x}\big\rfloor\big\}$. The bound then holds for all $t$ and $\gamma$ with probability at least $1-\delta-\delta'$. With $\bar x=(t/\Theta_\gamma)^2$ its capacity term depends only on $(n,d,k,\alpha,\gamma,t,\delta,\delta')$. With $\bar x=x(t)$ it depends on the data only through the training-loss curve, since $\tau(t)=\int_0^t\sqrt{2L(w(s))}\,ds$.
 
-*Proof.* Take $\varepsilon=\gamma/(2D)$ in Theorem C2.4. Then $2\mu_\varepsilon\le2D\varepsilon=\gamma$, and $\Theta_\varepsilon=\Theta_\gamma$. By Theorem C2.3(2), $N_\varepsilon(t)\le\bar N(t)$, and the bound is monotone in $N$ once $\ell$ is replaced by $\ell^*$. ∎
+*Proof.*
+- *Main inequality.* Take $\varepsilon=\gamma/(2D)$ in Theorem C2.4. Then $2\mu_\varepsilon\le2D\varepsilon=\gamma$, so the empirical margin term is at most $\widehat P_S[yf_{w(t)}\le\gamma]$. The event of Theorem C2.4 is uniform over $N$, and $\mathrm{kl}^{-1}_+$, $\ell^*_N$ and $(N+1)(N+2)$ are nondecreasing, so the bound with $N_\varepsilon(t)$ implies the bound with any $\bar N\ge N_\varepsilon(t)$, however $\bar N$ depends on the data.
+- *Choice 1* is Theorem C2.3(2).
+- *Choice 2.* Write $N=N_\varepsilon(t)$; if $N=0$ there is nothing to prove. $K_B$ has unit diagonal and off-diagonal entries of absolute value at most $\mu_n$, so Gershgorin's theorem gives $\kappa_B\le1+(N-1)\mu_n$. With Theorem C2.3(2), $N\le(1+(N-1)\mu_n)x$, that is, $N(1-\mu_nx)\le(1-\mu_n)x$. Divide by $1-\mu_nx>0$; $N$ is an integer. The definition is not circular: $\mu_n$ and $x(t)$ do not depend on $N$.
+- *Choice 3.* On the Hoeffding event of Theorem C2.3(2), $\mu_n\le\bar\mu$, and $x(t)\le\bar x$ because $\tau(t)\le t$. So $\mu_nx(t)\le\bar\mu\bar x<1$. Let $\varphi(\mu,x)=\frac{(1-\mu)x}{1-\mu x}$ on $\{\mu x<1\}$. Then $\partial_x\varphi=\frac{1-\mu}{(1-\mu x)^2}\ge0$ and $\partial_\mu\varphi=\frac{x(x-1)}{(1-\mu x)^2}$.
+  - If $x(t)<1$, then $\varphi(\mu_n,x(t))<1$, so $N=0$ by choice 2.
+  - If $x(t)\ge1$, then $\varphi$ is nondecreasing in $\mu$ along $\{x(t)\}\times[\mu_n,\bar\mu]$, and in $x$ along $\{\bar\mu\}\times[x(t),\bar x]$, both inside $\{\mu x<1\}$. So $N\le\varphi(\mu_n,x(t))\le\varphi(\bar\mu,x(t))\le\varphi(\bar\mu,\bar x)$.
+  
+  A union bound over the two events gives probability $1-\delta-\delta'$. ∎
 
 **What the corollary says.** In the diagonal network:
 - **Time.** "Training has not taken long" means $\tau(t)/\Theta_\gamma$ is small, with
 $$\Theta_\gamma\approx\tfrac14\ln\frac{\gamma}{4D\alpha^2}=\tfrac12\ln\frac1\alpha-\tfrac14\ln\frac{4D}{\gamma}.$$
-- **Size.** The number of grown coordinates is then at most $\bar\kappa(\tau/\Theta_\gamma)^2$.
+- **Size.** The number of grown coordinates is then at most $\kappa_B(\tau/\Theta_\gamma)^2$. Through coherence it is at most $\frac{(1-\mu)x}{1-\mu x}$, which is about $x=(\tau/\Theta_\gamma)^2$ when $\mu x\ll1$.
 - **Generalization.** Chernoff over all margin events of that many characters controls the test error, with capacity $\ell_N\le N\ln\frac{eD}N+N\min(N,d+1)\ln2+\ln2$.
 
-The dictionary size enters only logarithmically, in both places. This is the user's proposed argument, made rigorous: time bounds the circuit, and the Chernoff bound holds over all small circuits.
+The dictionary size enters only logarithmically, in all three places. This is the user's proposed argument, made rigorous in the diagonal network: time bounds the number of grown coordinates, and the Chernoff bound holds over all small sparse-plus-small predictors. The size term is a function of time alone only in choice 3. That needs $\bar\mu\bar x<1$, that is,
+$$n\ >\ 2\ln\frac{2D_{\min(2k,d)}}{\delta'}\Big(\frac{\tau}{\Theta_\gamma}\Big)^4 ,$$
+so the sample size must grow like the fourth power of the effective time measured in units of $\Theta_\gamma$. Choices 1 and 2 avoid that condition at the price of a data-dependent $\kappa_B$ or $\mu_n$.
 
 ### Proposition C2.6 (discrete GD and minibatch SGD) — Proved
 
@@ -440,7 +461,7 @@ Gradient steps on $(u,v)$ with step size $\eta$ are $u_{j+1}=u_j\odot(1-2\eta g_
 4. **Count, any batches.** $N_\varepsilon(K)\le\big(c\,\eta\sum_{j<K}\|g_j\|_2\big)^2/\Theta_\varepsilon^2$.
 5. **Count, full batch.** With $\Phi_K=\frac12\sum_{j<K}\frac{(2\eta\|g_j\|_\infty)^3}{3(1-(2\eta\|g_j\|_\infty)^2)}$, whenever $\Theta_\varepsilon>\Phi_K$,
 $$N_\varepsilon(K)\le\kappa_B\,\tau_K^2/(\Theta_\varepsilon-\Phi_K)^2,\qquad \tau_K=\eta\sum_{j<K}\|r_j\|_n .$$
-6. **Generalization.** Theorem C2.4 holds verbatim for the iterates of *any* algorithm, because it is a statement about all sparse-plus-small predictors. With items 3–5 in place of Theorem C2.3, Corollary C2.5 holds for GD and SGD, with $\tau$ replaced by $\tau_K$ and $\Theta_\gamma$ by $\Theta_\gamma-\Phi_K$ (GD), or with the item-4 count (SGD).
+6. **Generalization.** Theorem C2.4 holds verbatim for the iterates of *any* algorithm, because it is a statement about all sparse-plus-small predictors. With items 4–5 in place of Theorem C2.3, Corollary C2.5 holds for GD and SGD. For full-batch GD, item 5 replaces $x(t)$ by $x_K=\tau_K^2/(\Theta_\gamma-\Phi_K)^2$ in all three choices of $\bar N$, with $\bar x=x_K$ in choice 3 (discrete GD need not keep $\|r_j\|_n\le1$, so $\tau_K\le\eta K$ is not claimed). For SGD, $\bar N$ is the item-4 count.
 
 *Proof.*
 1. *Product form.* By induction, $u_K=\alpha\prod_j(1-2\eta g_j)$ and $v_K=\alpha\prod_j(1+2\eta g_j)$, both positive. Then $u_Kv_K=\alpha^2\prod_j(1-4\eta^2g_j^2)\in(0,\alpha^2]$ and $\frac12\ln(v_K/u_K)=\psi_K$. Finally $u^2-v^2=uv(u/v-v/u)=-2uv\sinh(2\psi)$.
@@ -452,10 +473,15 @@ $$2N\Theta_\varepsilon\le\sum_{S\in B}\sigma_S\psi_{K,S}\le-2\eta\sum_j\Big\lang
    as in Theorem C2.3(2). Rearrange.
 6. *Generalization.* Theorem C2.4's proof uses only the decomposition of the current predictor. ∎
 
-So the user's two protocols, full batch on a fixed training set and SGD, are covered in the diagonal model with the same structure. Effective time is measured by the **minibatch losses**, which are logged during training anyway. The discretization costs only the factors $1-4\eta^2G^2$ and $\Phi_K=O(\eta^2G^2\tau_K)$. **Numerical** ([`checks/c2_discrete_check.txt`](checks/c2_discrete_check.txt)): GD with $\eta=0.05$–$0.1$ and SGD with batch 16–32 and $\eta=0.02$, on maj3, and3 and par2.
+So the user's two protocols, full batch on a fixed training set and SGD, are covered in the diagonal model, but not with the same structure.
+- **No early growth** (item 3) is in terms of the **minibatch effective time** $\tau^{\rm b}$, computed from the minibatch losses, which are logged during training anyway.
+- **The SGD size bound** (item 4) is not in terms of losses. It uses the integrated minibatch gradient norms $\eta\sum_j\|g_j\|_2$ over all $D$ coordinates. Since $\|g_j\|_2^2=\sum_S\langle r_j,\chi_S\rangle_{B_j}^2\le D\|r_j\|_{B_j}^2$, these can exceed $\eta\sum_j\|r_j\|_{B_j}$ by a factor up to $\sqrt D$. So under SGD the count is not of the $\kappa\tau^2$ form, and it is loose.
+- **The full-batch size bound** (item 5) has the $\kappa\tau^2$ form, and the discretization costs only the factors $1-4\eta^2G^2$ and $\Phi_K=O(\eta^2G^2\tau_K)$.
+
+**Numerical** ([`checks/c2_discrete_check.txt`](checks/c2_discrete_check.txt)): GD with $\eta=0.05$–$0.1$ and SGD with batch 16–32 and $\eta=0.02$, on maj3, and3 and par2.
 - The product form holds to $10^{-13}$, and $uv/\alpha^2$ never exceeds 1.
 - Item 3 holds at every escape. For par2 under SGD it is nearly tight: $\tau^{\rm b}=1.78$ against the bound $1.72$.
-- The worst ratios $N/\text{bound}$ are $0.07$–$0.55$ for item 4 and $0.62$–$0.80$ for item 5.
+- The worst ratios $N/\text{bound}$ for item 4 are $0.27$–$0.55$ under GD but only $0.07$–$0.12$ under SGD. For item 5 (GD) they are $0.62$–$0.80$.
 
 ### 2.2 Numerical check
 
@@ -472,23 +498,24 @@ So the user's two protocols, full batch on a fixed training set and SGD, are cov
 | Theorem C2.3(1), (2) | hold at every time and every $\varepsilon$ on a grid; worst ratio $N/(\kappa_B\tau^2/\Theta^2)$ is $0.33$–$0.94$, and $1.00$ for par2 at $\alpha=10^{-8}$ |
 | Theorem C2.3(3), $\ell_1$ identity | relative error $\le2\cdot10^{-15}$ |
 
-The generalization bounds at the end of training ($t=60$). The C2.4 column takes the best $\varepsilon$ on a grid, which is legitimate because the theorem is uniform in $\varepsilon$:
+The generalization bounds at the end of training ($t=60$). The C2.4 column takes the best $\varepsilon$ on a grid, which is legitimate because the theorem is uniform in $\varepsilon$. The three C2.5 columns are the three choices of $\bar N$, at $\gamma=\frac12$ and $t=60$, with $\bar x=x(t)$ in choice 3. Choice 3 uses $\bar\mu=0.457$ ($n=100$) or $0.228$ ($n=400$) at $\delta'=0.05$, so its total failure probability is $0.1$ ([`checks/C_r2_checks.out`](checks/C_r2_checks.out) §2).
 
-| target | $n$ | $\alpha$ | test error | grown coords $N_{10^{-2}}$ | C2.4 bound | C2.5, measured $\kappa$ | C2.5, Gershgorin |
-|---|---|---|---|---|---|---|---|
-| par2 | 100 | $10^{-3}$ | 0 | 1 | 0.107 | 0.218 | vacuous |
-| maj3 | 100 | $10^{-3}$ | 0 | 4 | 0.275 | 0.810 | vacuous |
-| maj3 | 400 | $10^{-3}$ | 0 | 4 | 0.077 | 0.316 | vacuous |
-| and3 | 400 | $10^{-3}$ | 0 | 8 | 0.166 | 0.477 | vacuous |
-| maj5 | 100 | $10^{-3}$ | 0.073 | 48 | 0.951 | 0.998 | vacuous |
-| par4 | 100 | $10^{-3}$ | 0.516 | 73 | 0.988 | 1.0 | vacuous |
-| par2 | 100 | $10^{-8}$ | 0 | 1 | 0.107 | 0.107 | 0.107 |
-| maj3 | 400 | $10^{-8}$ | 0 | 4 | 0.077 | 0.141 | vacuous |
-| and3 | 400 | $10^{-8}$ | 0 | 8 | 0.166 | 0.304 | vacuous |
+| target | $n$ | $\alpha$ | test error | grown coords $N_{10^{-2}}$ | C2.4 bound | C2.5(1), measured $\kappa_B$ | C2.5(2), empirical $\mu_n$ | C2.5(3), Hoeffding $\bar\mu$ |
+|---|---|---|---|---|---|---|---|---|
+| par2 | 100 | $10^{-3}$ | 0 | 1 | 0.107 | 0.218 | vacuous | vacuous |
+| maj3 | 100 | $10^{-3}$ | 0 | 4 | 0.275 | 0.810 | vacuous | vacuous |
+| maj3 | 400 | $10^{-3}$ | 0 | 4 | 0.077 | 0.316 | vacuous | vacuous |
+| and3 | 400 | $10^{-3}$ | 0 | 8 | 0.166 | 0.477 | vacuous | vacuous |
+| maj5 | 100 | $10^{-3}$ | 0.073 | 48 | 0.951 | 0.998 | vacuous | vacuous |
+| par4 | 100 | $10^{-3}$ | 0.516 | 73 | 0.988 | 1.0 | vacuous | vacuous |
+| par2 | 100 | $10^{-8}$ | 0 | 1 | 0.107 | 0.107 | 0.107 | 0.163 |
+| maj3 | 400 | $10^{-8}$ | 0 | 4 | 0.077 | 0.141 | vacuous | vacuous |
+| and3 | 400 | $10^{-8}$ | 0 | 8 | 0.166 | 0.304 | vacuous | vacuous |
 
 Reading:
 - **C2.4.** The a posteriori bound is non-vacuous whenever the target is sparse in the dictionary, already at $n=100$. maj5 is not in the dictionary: the flow keeps growing coordinates, 48 of them by $t=60$, and the bound degrades to vacuous while the true error stays at 0.07. On maj5 the best value along the trajectory is 0.39, at $t=30$ with $\alpha=10^{-8}$.
-- **C2.5.** The a priori bound with measured $\kappa$ is non-vacuous for the sparse targets at $n=400$, and for par2 at $n=100$: $0.11$–$0.48$. It is $0.81$ for maj3 at $n=100$. It improves as $\alpha\to0$, because $\Theta_\gamma$ grows like $\frac12\ln\frac1\alpha$ while the $\ln(4D/\gamma)$ penalty stays fixed. The fully a priori Gershgorin version needs $\mu_n(\tau/\Theta_\gamma)^2<1$. That fails at these sizes ($\mu_n=0.16$–$0.30$), except for a single-character target at $\alpha=10^{-8}$.
+- **C2.5(1).** The time-indexed bound with the measured, data-dependent $\kappa_B$ is non-vacuous for the sparse targets at $n=400$, and for par2 at $n=100$: $0.11$–$0.48$. It is $0.81$ for maj3 at $n=100$. It improves as $\alpha\to0$, because $\Theta_\gamma$ grows like $\frac12\ln\frac1\alpha$ while the $\ln(4D/\gamma)$ penalty stays fixed.
+- **C2.5(2)–(3).** The forms without $\kappa_B$ need $\mu(\tau/\Theta_\gamma)^2<1$. With the empirical $\mu_n=0.16$–$0.30$ this fails at these sizes except for par2 at $\alpha=10^{-8}$, where $(\tau/\Theta_\gamma)^2=1.48$. With the Hoeffding $\bar\mu$, which makes the size term a function of $(n,D,\tau)$ alone, par2 at $\alpha=10^{-8}$ gives $0.163$. With raw time $t$ in place of $\tau$ it gives $0.275$ at $t=10$, the best of the printed times (legitimate, since the bound is uniform in $t$), and it is vacuous at $t=60$. Everything else is vacuous. In this toy, then, the time-only form of the user's argument works only for a single-character target at tiny $\alpha$, evaluated soon after the escape; the form with measured $\kappa_B$ works for every sparse target.
 - **par4** is a degree-4 parity with zero correlation with every dictionary element. Nothing grows until $t\approx\Theta/0.3$, the noise level; after that only noise coordinates grow. The bound correctly certifies nothing. This is A's Proposition A2.6 in the actual flow.
 
 ---
@@ -519,7 +546,7 @@ All entries are **Literature**. Abstracts and venues were checked by search; the
 - any such statement for depth $\ge3$ beyond the first escape;
 - any of this at μP initialization with finite width, which is the experiment's setting. There, $W_1$ and $W_2$ start at $O(1)$ scale, and only the readout is small.
 
-So the deep part of the README's model is conjectural, as the README says. What can be proved for the actual network is one-sided: *upper bounds on growth*.
+So the deep part of the README's model is conjectural, as the README says. What can be proved for small-initialization gradient descent on these architectures (one hidden layer, Lemma C3.1; bias-free homogeneous networks, Lemma C3.2) is one-sided: *upper bounds on growth*. The study's networks are outside both lemmas. They have two hidden layers with a hidden bias $b_2$, so they are neither one-hidden-layer nor homogeneous; they start at μP scale, not small scale; and they are trained by Adam with per-layer multipliers, not by gradient descent.
 
 ### Lemma C3.1 (two-layer per-neuron growth bound) — Proved
 
@@ -577,8 +604,10 @@ This is the rigorous lower half of the README's fresh-chain law $T\approx\alpha^
 ### 3.2 The race size bound, restated
 
 The conditional theorem uses A's (LS) clock race (A, Definition 2.1), recalled here:
-- **Fired gates and refit.** Gates from a library $G$ of fan-in at most $k$ fire when their clock $|S_m(t)|=|\int_{a_m}^t\langle r,g_m\rangle_n|$ reaches $\Theta$. The readout is refit by least squares with an intercept.
-- **Notation.** $\tau(t)=\int_0^t\|r\|_n$, and $K_B$ is the centred empirical Gram matrix of a set $B$ of fired gates, with $\kappa_B=\lambda_{\max}(K_B)$.
+- **Fired gates and refit.** Gates from a *finite* library $G$ of functions $[-1,1]^k\to[-1,1]$, of fan-in at most $k$, fire when their clock $|S_m(t)|=|\int_{a_m}^t\langle r,g_m\rangle_n|$ reaches $\Theta$. The readout is refit by least squares with an intercept.
+- **Boolean and real-valued gates.** The library is *Boolean* if every $g\in G$ maps $\{-1,1\}^k$ into $\{-1,1\}$, so that every gate of every circuit is $\pm1$-valued on the cube. A's toy library $\{\mathrm{id},\mathrm{AND}(\pm a,\pm b),\mathrm{XOR}\}$, used in §3.4, is Boolean. A library of ReLU neurons with a finite set of (for example quantized) weights is real-valued.
+- **Notation.** $\tau(t)=\int_0^t\|r\|_n$, and $K_B$ is the centred empirical Gram matrix of a set $B$ of fired gates, with $\kappa_B=\lambda_{\max}(K_B)$. Since $\|r\|_n\le1$ (A, Lemma 2.2(1)), $\tau(t)\le t$.
+- **Units of $\Theta$.** $\Theta$ is the race's threshold. For a model started at scale $\alpha$ it is $c\ln(1/\alpha)+O(1)$, with a constant $c$ that depends on the parametrization. In C2's diagonal network $c=\frac12$, since $\Theta_\varepsilon\approx\frac14\ln(\varepsilon/\alpha^2)$; the factor $\frac12$ comes from $u$ appearing twice in $u\odot u$. For a two-layer ReLU unit with $\rho(0)\approx2\alpha^2$, Lemma C3.1 needs $\int U^*\ge\ln(1/\alpha)-\frac12\ln2$ before $\rho=O(1)$, so $c=1$. Statements below are in units of $\Theta$ and do not depend on $c$.
 
 ### Lemma C3.3 (A's Theorem A2.3) — Proved
 
@@ -605,22 +634,24 @@ Let $\theta(t)$ be the network's training trajectory on $S$, and $\mathcal T$ a 
 The $L^2$ form is what dynamical approximation theorems naturally deliver: the α→0 limits of Pesme–Flammarion and Kunin et al. are statements about trajectories, hence about functions. It also tolerates the small random part of the network's function. The sign form does not, because the sign of a tiny random function is arbitrary.
 
 **Library constants.** Let $W_T=\sum_{t\le T}(\ln|G|+k\ln(d+t-1))$ be the circuit-wiring count (A, Lemma 1.1: gate $t$ has at most $|G|(d+t-1)^k$ choices). Put
-$$L^{\rm sgn}_T=W_T+\ln\Phi(2^{\min(T,d)},T),\qquad L^{\rm mar}_T=W_T+\ln\Phi(2^{\min(T+1,d+1)},T+1) .$$
+$$L^{\rm sgn}_T=W_T+\ln\Phi(2^{\min(T,d)},T),\qquad L^{\rm mar}_T=W_T+\ln\Phi(2^{\min(T+1,d+1)},T+1)\qquad\text{(Boolean library)},$$
+$$L^{\rm sgn}_T=W_T+\ln\Phi(2^{d},T),\qquad L^{\rm mar}_T=W_T+\ln\Phi(2^{d+1},T+1)\qquad\text{(real-valued library)}.$$
+The difference is the number of points on which the readout acts. For a Boolean library the gate vector $(g_1(x),\dots,g_T(x))$ lies in $\{-1,1\}^T$, so it takes at most $2^{\min(T,d)}$ values. For real-valued gates it can take all $2^d$ values. This is the distinction of A, Lemma 1.2 ($\rho_T=\ln\Phi(2^d,T)$ for real-valued gates).
 
 ### Theorem C3.4 (the network inherits the race bound) — Proved (conditional on SSA at the checkpoints where it is invoked)
 
-There is an event of probability at least $1-\delta$ over $S$, not depending on the network, on which the following holds for every checkpoint $t\in\mathcal T$. Write $s=s(t)$ and $T=T^M(s)$, and recall that $T\le\kappa^M(s)(\tau^M(s)/\Theta)^2$ by Lemma C3.3.
+Let the library $G$ be finite, Boolean or real-valued, with the matching constants $L^{\rm sgn}_T$ and $L^{\rm mar}_T$ above. There is an event of probability at least $1-\delta$ over $S$, not depending on the network, on which the following holds for every checkpoint $t\in\mathcal T$. Write $s=s(t)$ and $T=T^M(s)$, and recall that $T\le\kappa^M(s)(\tau^M(s)/\Theta)^2$ by Lemma C3.3.
 1. If SSA holds at $t$ in sign form,
 $$\mathrm{err}\big(\mathrm{sgn}f_{\theta(t)}\big)\le\eta(t)+\mathrm{kl}^{-1}_+\Big(\widehat{\mathrm{err}}_S(h^M_s),\ \frac{L^{\rm sgn}_T+\ln\frac{2(T+1)(T+2)}\delta}n\Big).$$
 2. If SSA holds at $t$ in $L^2$ form, then for every $\gamma\in(0,1)$,
 $$\mathrm{err}\big(\mathrm{sgn}f_{\theta(t)}\big)\le\frac{\eta(t)^2}{\gamma^2}+\mathrm{kl}^{-1}_+\Big(\widehat P_S\big[yf^M_s(x)\le\gamma\big],\ \frac{L^{\rm mar}_T+\ln\frac{2(T+1)(T+2)}\delta}n\Big).$$
 
-In words: under SSA, the network at time $t$ has the discrete model's Occam bound at race time $s(t)$, plus $\eta$ or $\eta^2/\gamma^2$. With $s(t)\le ct$, the gate count is at most $\kappa(ct/\Theta)^2$, so the bound is a function of training time measured in units of $\Theta\approx\log(1/\alpha)$.
+In words: under SSA, the network at time $t$ has the discrete model's Occam bound at race time $s(t)$, plus $\eta$ or $\eta^2/\gamma^2$. With $s(t)\le ct$ and $\tau^M(s)\le s$, the gate count is at most $\kappa^M(s(t))\,(ct/\Theta)^2$. Here $\kappa^M$ is the top eigenvalue of the centred Gram matrix, on $S$, of the race's own fired gates, so it is data-dependent, as in Corollary C2.5(1). The bound is therefore time-indexed with a data-dependent $\kappa$, not a function of training time alone; a time-only version would need a coherence bound for the library on $S$, as in Corollary C2.5(3). Time is in units of the race threshold $\Theta$ (§3.2).
 
 *Proof.*
 1. *Occam events.* Let $E$ be the intersection of two events, each of probability at least $1-\delta/2$, built as in Theorem C1 step 1 with weights $\frac{\delta/2}{(T+1)(T+2)}$:
-   - the Occam event for all threshold-readout circuit predictors with $T$ gates, for all $T$: $\ln|\mathcal H_T|\le L^{\rm sgn}_T$, by counting circuits and then Lemma C0.2 on the image of $x\mapsto(g_1(x),\dots,g_T(x))$, which has at most $2^{\min(T,d)}$ points;
-   - the Occam event for all margin sets $\{(x,y):y(c_0+\sum_mc_mg_m(x))\le\theta\}$: the features $(y,yg_1,\dots,yg_T)\in\{-1,1\}^{T+1}$ take at most $2^{\min(T+1,d+1)}$ values, and Lemma C0.2 applies in $\mathbb R^{T+1}$.
+   - the Occam event for all threshold-readout circuit predictors with $T$ gates, for all $T$: $\ln|\mathcal H_T|\le L^{\rm sgn}_T$, by counting circuits ($e^{W_T}$ of them) and then Lemma C0.2 on the image of $x\mapsto(g_1(x),\dots,g_T(x))$. That image has at most $2^d$ points, since $x$ ranges over the cube, and for a Boolean library it lies in $\{-1,1\}^T$, so it has at most $2^{\min(T,d)}$ points;
+   - the Occam event for all margin sets $\{(x,y):y(c_0+\sum_mc_mg_m(x))\le\theta\}$, an affine threshold of the feature vector $(y,yg_1(x),\dots,yg_T(x))\in\mathbb R^{T+1}$. It is a function of $(x,y)$, so it takes at most $2^{d+1}$ values, and for a Boolean library it lies in $\{-1,1\}^{T+1}$, so it takes at most $2^{\min(T+1,d+1)}$ values. Lemma C0.2 applies in $\mathbb R^{T+1}$.
    
    $E$ is defined before any training and holds for every circuit of every size.
 2. *Sign form.* $h^M_s$ is one such predictor with $T$ gates, so $\mathrm{err}(h^M_s)$ is bounded on $E$. Then use $\mathrm{err}(\mathrm{sgn}f_\theta)\le\mathrm{err}(h^M_s)+\mathrm{dis}$.
