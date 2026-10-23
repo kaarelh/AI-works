@@ -302,7 +302,7 @@ How to read the columns:
 
 ### 2.3 Generalization bounds
 
-Three derivations ([`theory/A-discrete-model.md`](theory/A-discrete-model.md), [`theory/B-nn-time-bounds.md`](theory/B-nn-time-bounds.md), [`theory/C-bridge-and-certificates.md`](theory/C-bridge-and-certificates.md)). Adversarial referees read A and B. They checked every proof step of B, and A's core results, and found them correct. They flagged mislabelled or overstated claims, listed in [`theory/README.md`](theory/README.md) and in 2.4 below. C's referee pass was still running at the end of the session.
+Three derivations ([`theory/A-discrete-model.md`](theory/A-discrete-model.md), [`theory/B-nn-time-bounds.md`](theory/B-nn-time-bounds.md), [`theory/C-bridge-and-certificates.md`](theory/C-bridge-and-certificates.md)). Adversarial referees read A and B. They checked every proof step of B, and A's core results, and found them correct. They flagged mislabelled or overstated claims, listed in [`theory/README.md`](theory/README.md); A has been revised accordingly, and B has not. C's referee pass was stopped part-way; the numerical checks it had completed found no problems.
 
 **Your sketch works, with one correction.**
 - **The Chernoff/Occam step needs no assumption on the dynamics.** For any learner whose output after $T$ gates is a circuit from a fixed library followed by a threshold readout, the realizable test error is at most about $\bigl(T(\log|G|+k\log(d+T))+T^2\log2+\log\frac{(T+1)(T+2)}\delta\bigr)/n$ simultaneously for all $T$ (Theorem A1, Proved).
@@ -350,11 +350,11 @@ Three derivations ([`theory/A-discrete-model.md`](theory/A-discrete-model.md), [
   - the third model design;
   - the judge/refinement stage;
   - the referee pass on C, and repairs to B: Theorem B3.3's "linear in training time" holds only for gradient flow and GD under a descent condition.
-- **Corrections from A's referee, not yet incorporated:**
-  - Proposition A3.4(2) (multi-epoch reuse) is labelled Proved but is not proved; it should be Heuristic.
-  - Proposition A2.2(3) (duplicate gates always fire together) is false as stated.
-  - The $\alpha$-invariance of Lemma 2.2(4) holds only for the pure $k=2$ race.
-  - The summary's "SGD reproduces the population run" holds only under the stated utility-gap assumptions.
+- **A's referee corrections were incorporated** in revision 2 of [`theory/A-discrete-model.md`](theory/A-discrete-model.md), which has not been re-refereed. The main changes:
+  - Proposition A3.4(2), the multi-epoch reuse claim, was split into a proved conditional statement and a new proved Theorem A3.5 (large batches with reuse reproduce the population run); the small-batch reading is Heuristic.
+  - Proposition A2.2(3) was restricted to duplicates with equal availability.
+  - The $\alpha$-invariance claim was restricted to the pure $k=2$ race.
+  - A genuinely time-only gate-count bound, A2.5(a′), was added; it is weak.
   - The referee found no false core theorem: A1, A2.1, A2.3 and A2.4 stand.
 - **Natural next steps:**
   - test whether the race model's three constants transfer to other widths, depths and optimizers;
